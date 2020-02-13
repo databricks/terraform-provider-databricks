@@ -109,6 +109,46 @@ resource "databricks_sql_table" "thing_view" {
 }
 ```
 
+## Use an Identity Column
+
+```hcl
+resource "databricks_catalog" "sandbox" {
+  name    = "sandbox"
+  comment = "this catalog is managed by terraform"
+  properties = {
+    purpose = "testing"
+  }
+}
+resource "databricks_schema" "things" {
+  catalog_name = databricks_catalog.sandbox.id
+  name         = "things"
+  comment      = "this database is managed by terraform"
+  properties = {
+    kind = "various"
+  }
+}
+resource "databricks_sql_table" "thing" {
+  provider           = databricks.workspace
+  name               = "quickstart_table"
+  catalog_name       = databricks_catalog.sandbox.name
+  schema_name        = databricks_schema.things.name
+  table_type         = "MANAGED"
+  data_source_format = "DELTA"
+  storage_location   = ""
+  column {
+    name = "id"
+    type = "bigint"
+    identity = "default"
+  }
+  column {
+    name    = "name"
+    type    = "string"
+    comment = "name of thing"
+  }
+  comment = "this table is managed by terraform"
+}
+```
+
 ## Argument Reference
 
 The following arguments are supported:
@@ -137,6 +177,7 @@ Currently, changing the column definitions for a table will require dropping and
 
 * `name` - User-visible name of column
 * `type` - Column type spec (with metadata) as SQL text. Not supported for `VIEW` table_type.
+* `identity` - (Optional) Whether field is an identity column. Can be `default`, `always` or `false`. (Default: `false`)
 * `comment` - (Optional) User-supplied free-form text.
 * `nullable` - (Optional) Whether field is nullable (Default: `true`)
 

@@ -1,0 +1,35 @@
+# Databricks Terraform Provider Installation
+
+A Terraform provider for Databricks workspace components
+
+## Installing `databricks-tf-provider` with Go
+
+* Install Go 1.13. For previous versions, you may have to set your `$GOPATH` manually, if you haven't done it yet visit [here](https://golang.org/doc/install).
+* Install Terraform 0.12.x [from here](https://www.terraform.io/downloads.html) and save it into `/usr/local/bin/terraform` folder (create it if it doesn't exists). This provider DOES NOT SUPPORT Terraform 0.12 or above.
+* Download the code by issuing a `go get` command.
+
+```bash
+# Download the source code for databricks-tf-provider
+# and build the needed binary, by saving it inside $GOPATH/bin
+$ go get -u github.com/stikkireddy/databricks-tf-provider
+
+# After fetching the code base we will switch into the directory for the code base.
+$ cd $GOPATH/src/github.com/stikkireddy/databricks-tf-provider 
+
+# Once in the directory you will run the build using the make command provided by the make file
+$ make build
+
+# Once the file is made we will then move the file to where terraform can pick it up
+$ mv terraform-provider-db /usr/local/bin/
+```
+
+If you wish to uninstall the binary simply remove the file from the directory.
+
+```bash
+$ rm /usr/local/bin/terraform-provider-db
+```
+
+## Using `databricks-tf-provider` with Docker (TODO!!)
+
+
+

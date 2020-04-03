@@ -1,0 +1,6 @@
+client_id="azure-enterprise-app-client-id"
+client_secret="azure-enterprise-app-secret"
+tenant_id="azure active directory tenant id"
+subscription_id="azure subscription of workspace"
+resource_group="azure resource group for workspace"
+managed_resource_group_name="managed resource group for the azure databricks workspace"

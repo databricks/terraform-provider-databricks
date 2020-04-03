@@ -1,4 +1,35 @@
 # Databricks Terraform Provider
+
+## Table Of Contents
+  * [Getting Started](#getting-started)
+  * [Project Components](#project-components)
+    + [High Level Databricks Client CR[U]D](#high-level-databricks-client-cr-u-d)
+      - [Clusters](#clusters)
+      - [Libraries](#libraries)
+      - [Jobs API](#jobs-api)
+      - [Secrets](#secrets)
+        * [Secret Scope](#secret-scope)
+        * [Secret](#secret)
+        * [Secret ACL](#secret-acl)
+      - [Token API](#token-api)
+      - [Workspace (Notebooks) API](#workspace--notebooks--api)
+      - [SCIM API](#scim-api)
+        * [Users](#users)
+        * [Groups](#groups)
+        * [Group Member](#group-member)
+        * [Group entitlements](#group-entitlements)
+      - [MLFlow API](#mlflow-api)
+      - [Instance Profiles API (AWS Only)](#instance-profiles-api--aws-only-)
+      - [DBFS](#dbfs)
+    + [Databricks terraform provider resources](#databricks-terraform-provider-resources)
+  * [Testing](#testing)
+  * [Project Support](#project-support)
+  * [Building the Project](#building-the-project)
+  * [Deploying / Installing the Project](#deploying---installing-the-project)
+  * [Releasing the Project](#releasing-the-project)
+  * [Using the Project](#using-the-project)
+  
+  
 ## Getting Started
 Please note that there is a Makefile which contains all the commands you would need to run this project.
 
@@ -9,7 +40,8 @@ This code base to contribute to requires the following software:
 * python 3.6.X 
 
 ## Project Components
-###High Level Databricks Client CR[U]D
+
+### High Level Databricks Client CR[U]D
 The client folder contains all the code for the golang sdk for the Databricks REST API. It is kept separate from the databricks terraform provider with its own unit/integration tests. The client so far supports the following:
 
 #### Clusters
@@ -121,7 +153,7 @@ TBD!
 * For the Read operation there were no direct rest api calls for read so it is a list and search for the item and return the metadata from the list.
 
 
-###Databricks terraform provider resources
+### Databricks terraform provider resources
 
 * [x] Instance pools
 * [x] Scim groups

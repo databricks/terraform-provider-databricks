@@ -5,7 +5,7 @@ import (
 	"encoding/base64"
 	"encoding/gob"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/stikkireddy/databricks-tf-provider/client/service"
+	"github.com/databrickslabs/databricks-terraform/client/service"
 	"strings"
 )
 

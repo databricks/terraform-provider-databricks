@@ -2,7 +2,7 @@ package service
 
 import (
 	"encoding/json"
-	"github.com/stikkireddy/databricks-tf-provider/client/model"
+	"github.com/databrickslabs/databricks-terraform/client/model"
 	"log"
 	"net/http"
 )

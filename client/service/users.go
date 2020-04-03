@@ -3,7 +3,7 @@ package service
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/stikkireddy/databricks-tf-provider/client/model"
+	"github.com/databrickslabs/databricks-terraform/client/model"
 	"net/http"
 )
 

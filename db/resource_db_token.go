@@ -2,7 +2,7 @@ package db
 
 import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/stikkireddy/databricks-tf-provider/client/service"
+	"github.com/databrickslabs/databricks-terraform/client/service"
 )
 
 func resourceToken() *schema.Resource {

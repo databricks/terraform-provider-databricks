@@ -1,7 +1,7 @@
 package service
 
 import (
-	db "github.com/stikkireddy/databricks-tf-provider/client"
+	db "github.com/databrickslabs/databricks-terraform/client"
 )
 
 var scimHeaders = map[string]string{
@@ -53,6 +53,11 @@ func (c DBApiClient) Users() UsersAPI {
 func (c DBApiClient) Groups() GroupsAPI {
 	var groupsAPI GroupsAPI
 	return groupsAPI.init(c)
+}
+
+func (c DBApiClient) Notebooks() NotebooksAPI {
+	var notebooksApi NotebooksAPI
+	return notebooksApi.init(c)
 }
 
 func (c DBApiClient) InstancePools() InstancePoolsAPI {

@@ -1,7 +1,7 @@
 package service
 
 import (
-	"github.com/stikkireddy/databricks-tf-provider/client/model"
+	"github.com/databrickslabs/databricks-terraform/client/model"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )

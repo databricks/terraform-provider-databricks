@@ -1,8 +1,8 @@
 package db
 
 import (
-	"github.com/stikkireddy/databricks-tf-provider/client"
-	"github.com/stikkireddy/databricks-tf-provider/client/model"
+	"github.com/databrickslabs/databricks-terraform/client"
+	"github.com/databrickslabs/databricks-terraform/client/model"
 	"github.com/stretchr/testify/assert"
 	"log"
 	"os"

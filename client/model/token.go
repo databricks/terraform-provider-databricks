@@ -13,14 +13,3 @@ type TokenInfo struct {
 	ExpiryTime   int64  `json:"expiry_time,omitempty"`
 	Comment      string `json:"comment,omitempty"`
 }
-
-//
-//{
-//"token_value":"dapideadbeefdeadbeefdeadbeefdeadbeef",
-//"token_info": {
-//"token_id":"5715498424f15ee0213be729257b53fc35a47d5953e3bdfd8ed22a0b93b339f4",
-//"creation_time":1513120516294,
-//"expiry_time":1513120616294,
-//"comment":"this is an example token"
-//}
-//}

@@ -61,11 +61,11 @@ Note: For reading a secret it will only fetch the metadata so the value of the s
 * [x] Delete Secret ACL
 
 #### Token API
-* [ ] Create Token
+* [x] Create Token
 
-* [ ] Read Token*
+* [x] Read Token*
 
-* [ ] Delete (Revoke) Token
+* [x] Delete (Revoke) Token
 
 #### Workspace (Notebooks) API
 * [ ] Import/create Workspace Path (notebooks)
@@ -76,33 +76,33 @@ Note: For reading a secret it will only fetch the metadata so the value of the s
 
 #### SCIM API
 ##### Users
-* [ ] Create User
+* [x] Create User
 
-* [ ] Update User
+* [x] Update User
 
-* [ ] Delete User
+* [x] Delete User
 
 Note: For updating a user use Patch for entitlements, Put for everything else. We May want to deal with entitlements as a separate resource to make it easy to manage. Creating the user object and then mapping entitlements are two separate activities.
 
 ##### Groups
-* [ ] Create Group
+* [x] Create Group
 
-* [ ] Get Group*
+* [x] Get Group*
 
-* [ ] Delete Group
+* [x] Delete Group
 
 ##### Group Member
-* [ ] Create Member
+* [x] Create Member
 
-* [ ] Get Member*
+* [x] Get Member*
 
-* [ ] Delete Member
+* [x] Delete Member
 
 ##### Group entitlements
 TBD!
 
 #### MLFlow API
-TODO!
+TBD!
 
 #### Instance Profiles API (AWS Only)
 * [ ] Create IAM Instance Profile Link
@@ -121,9 +121,40 @@ TODO!
 * For the Read operation there were no direct rest api calls for read so it is a list and search for the item and return the metadata from the list.
 
 
+###Databricks terraform provider resources
+
+* [x] Instance pools
+* [x] Scim groups
+* [x] Scim users
+* [x] Secret scopes
+* [x] Secrets
+* [x] Secret acls
+* [ ] Clusters
+* [ ] Cluster Policies
+* [ ] Entitlements
+* [ ] IAM Instance Profiles
+
 ## Testing
 
 ###TODOs
 
 * [ ] Integration tests should be run at a client level against both azure and aws to maintain sdk parity against both apis **(currently only on one cloud)**
 * [ ] Terraform acceptance tests should be run against both aws and azure to maintain parity of provider between both cloud services **(currently only on one cloud)**
+
+## Project Support
+Please note that all projects in the /databrickslabs github account are provided for your exploration only, and are not formally supported by Databricks with Service Level Agreements (SLAs).  They are provided AS-IS and we do not make any guarantees of any kind.  Please do not submit a support ticket relating to any issues arising from the use of these projects.
+
+Any issues discovered through the use of this project should be filed as GitHub Issues on the Repo.  They will be reviewed as time permits, but there are no formal SLAs for support.
+
+
+## Building the Project
+Instructions for how to build the project
+
+## Deploying / Installing the Project
+Instructions for how to deploy the project, or install it
+
+## Releasing the Project
+Instructions for how to release a version of the project
+
+## Using the Project
+Simple examples on how to use the project

@@ -2,8 +2,8 @@ package db
 
 import (
 	"encoding/json"
-	"github.com/stikkireddy/databricks-tf-provider/client"
-	"github.com/stikkireddy/databricks-tf-provider/client/service"
+	"github.com/databrickslabs/databricks-terraform/client"
+	"github.com/databrickslabs/databricks-terraform/client/service"
 	"log"
 	"net/http"
 )

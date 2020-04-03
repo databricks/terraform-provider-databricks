@@ -124,6 +124,7 @@ func PerformQuery(option DBClientOption, method, path string, apiVersion string,
 			return nil, err
 		}
 		requestURL += "?" + params.Encode()
+		log.Println(string(requestURL))
 	} else {
 		if marshalJson {
 			bodyBytes, err := json.Marshal(data)

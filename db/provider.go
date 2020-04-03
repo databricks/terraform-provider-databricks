@@ -3,8 +3,8 @@ package db
 import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
-	"github.com/stikkireddy/databricks-tf-provider/client"
-	"github.com/stikkireddy/databricks-tf-provider/client/service"
+	"github.com/databrickslabs/databricks-terraform/client"
+	"github.com/databrickslabs/databricks-terraform/client/service"
 	"log"
 	"os"
 )

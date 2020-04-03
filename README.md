@@ -2,7 +2,7 @@
 
 ## Table Of Contents
 
-- [*Quickstart*: Building and Using the Provider](#-quickstart---building-and-using-the-provider)
+- [Quickstart: Building and Using the Provider](#quickstart--building-and-using-the-provider)
   * [Setup](#setup)
   * [Downloading the source code and installing the artifact](#downloading-the-source-code-and-installing-the-artifact)
   * [Basic Terraform example](#basic-terraform-example)
@@ -33,7 +33,7 @@
 
 
   
-## *Quickstart*: Building and Using the Provider
+## Quickstart: Building and Using the Provider
 
 ### Setup 
 

@@ -80,7 +80,13 @@ This program built for i386-apple-darwin11.3.0
 * After installing `golang`, `terraform`, and `make` you will now build the artifact.
 
 ```bash
-$ go get -u github.com/databrickslabs/databricks-terraform && cd $GOPATH/src/github.com/databrickslabs/databricks-terraform 
+$ go get -v -u github.com/databrickslabs/databricks-terraform && cd $GOPATH/src/github.com/databrickslabs/databricks-terraform 
+```
+
+:warning: If you are fetching from a private repository please use the following command:
+
+```bash
+$ GOSUMDB=off GOPROXY=direct go get -v -u github.com/databrickslabs/databricks-terraform && cd $GOPATH/src/github.com/databrickslabs/databricks-terraform
 ```
 
 * When you are in the root directory of the repository please run:

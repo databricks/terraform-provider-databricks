@@ -14,4 +14,5 @@ Click on the installation section to get started with installing the provider.
 
    Databricks Provider Overview <readme_link>
    Installation <provider/installation.md>
-   Provider Details <provider/provider.md>
+   Databricks Provider <provider/provider.md>
+   Resources <provider/resources_index.md>

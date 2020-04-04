@@ -30,7 +30,7 @@ If you wish to uninstall the binary simply remove the file from the directory.
 $ rm /usr/local/bin/terraform-provider-db
 ```
 
-## Using `databricks-terraform` with Docker (TODO!!)
+## Using `databricks-terraform` with Docker (TBD!)
 
 
 

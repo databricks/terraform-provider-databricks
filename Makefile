@@ -31,7 +31,7 @@ python-setup:
 
 docs:
 	@echo "==> Building Docs ..."
-	@cd docs && source venv/bin/activate && make html
+	@cd docs && source venv/bin/activate && make clean && make html
 
 opendocs: docs
 	@echo "==> Opening Docs ..."

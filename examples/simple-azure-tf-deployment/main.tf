@@ -91,7 +91,7 @@ resource "db_instance_pool" "my-pool" {
   node_type_id = "Standard_DS3_v2"
   idle_instance_autotermination_minutes = 10
   disk_spec = {
-    ebs_volume_type = "GENERAL_PURPOSE_SSD"
+    azure_disk_volume_type = "PREMIUM_LRS"
     disk_size = 80
     disk_count = 1
   }

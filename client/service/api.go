@@ -55,11 +55,6 @@ func (c DBApiClient) Groups() GroupsAPI {
 	return groupsAPI.init(c)
 }
 
-func (c DBApiClient) Notebooks() NotebooksAPI {
-	var notebooksApi NotebooksAPI
-	return notebooksApi.init(c)
-}
-
 func (c DBApiClient) InstancePools() InstancePoolsAPI {
 	var instancePoolsAPI InstancePoolsAPI
 	return instancePoolsAPI.init(c)

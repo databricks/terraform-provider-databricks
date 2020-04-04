@@ -110,7 +110,7 @@ Now your plugin for the Databricks Terraform provider is installed correctly. Yo
 
 Sample terraform code
 
-```hcl-terraform
+```terraform
 provider "db" {
   host = "http://databrickshost.com"
   token = "dapitokenhere"

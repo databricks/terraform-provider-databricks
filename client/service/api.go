@@ -60,6 +60,11 @@ func (c DBApiClient) Notebooks() NotebooksAPI {
 	return notebooksAPI.init(c)
 }
 
+func (c DBApiClient) Jobs() JobsAPI {
+	var jobsAPI JobsAPI
+	return jobsAPI.init(c)
+}
+
 func (c DBApiClient) InstancePools() InstancePoolsAPI {
 	var instancePoolsAPI InstancePoolsAPI
 	return instancePoolsAPI.init(c)

@@ -39,12 +39,3 @@ func TestNotebookParentDir(t *testing.T) {
 	dir := filepath.Dir(path)
 	t.Log(dir)
 }
-
-func TestNotebookPathRecursion(t *testing.T) {
-	path := "/AWS-CDL-devdays/"
-	client := GetIntegrationDBAPIClient()
-
-	notebookList, _ := client.Notebooks().List(path, true)
-
-	t.Log(notebookList)
-}

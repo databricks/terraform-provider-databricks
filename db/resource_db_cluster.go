@@ -68,6 +68,26 @@ func resourceCluster() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
+						"instance_profile_arn": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"first_on_demand": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"ebs_volume_type": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"ebs_volume_count": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"ebs_volume_size": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
 					},
 				},
 			},
@@ -305,6 +325,21 @@ func resourceClusterRead(d *schema.ResourceData, m interface{}) error {
 		if _, ok := d.GetOk("aws_attributes.spot_bid_price_percent"); ok {
 			awsAtts["spot_bid_price_percent"] = strconv.Itoa(int(clusterInfo.AwsAttributes.SpotBidPricePercent))
 		}
+		if _, ok := d.GetOk("aws_attributes.instance_profile_arn"); ok {
+			awsAtts["instance_profile_arn"] = clusterInfo.AwsAttributes.InstanceProfileArn
+		}
+		if _, ok := d.GetOk("aws_attributes.first_on_demand"); ok {
+			awsAtts["first_on_demand"] = strconv.Itoa(int(clusterInfo.AwsAttributes.FirstOnDemand))
+		}
+		if _, ok := d.GetOk("aws_attributes.ebs_volume_type"); ok {
+			awsAtts["ebs_volume_type"] = string(clusterInfo.AwsAttributes.EbsVolumeType)
+		}
+		if _, ok := d.GetOk("aws_attributes.ebs_volume_count"); ok {
+			awsAtts["ebs_volume_count"] = strconv.Itoa(int(clusterInfo.AwsAttributes.EbsVolumeCount))
+		}
+		if _, ok := d.GetOk("aws_attributes.ebs_volume_size"); ok {
+			awsAtts["ebs_volume_size"] = strconv.Itoa(int(clusterInfo.AwsAttributes.EbsVolumeSize))
+		}
 		err = d.Set("aws_attributes", awsAtts)
 		if err != nil {
 			return err
@@ -340,13 +375,27 @@ func resourceClusterRead(d *schema.ResourceData, m interface{}) error {
 		if clusterInfo.ClusterLogConf.Dbfs != nil {
 			clusterLogConf["dbfs_destination"] = clusterInfo.ClusterLogConf.Dbfs.Destination
 		} else {
-			clusterLogConf["s3_destination"] = clusterInfo.ClusterLogConf.S3.Destination
-			clusterLogConf["s3_region"] = clusterInfo.ClusterLogConf.S3.Region
-			clusterLogConf["s3_endpoint"] = clusterInfo.ClusterLogConf.S3.Endpoint
-			clusterLogConf["s3_enable_encryption"] = strconv.FormatBool(clusterInfo.ClusterLogConf.S3.EnableEncryption)
-			clusterLogConf["s3_encryption_type"] = clusterInfo.ClusterLogConf.S3.EncryptionType
-			clusterLogConf["s3_kms_key"] = clusterInfo.ClusterLogConf.S3.KmsKey
-			clusterLogConf["s3_canned_acl"] = clusterInfo.ClusterLogConf.S3.CannedACL
+			if _, ok := d.GetOk("cluster_log_conf.s3_destination"); ok {
+				clusterLogConf["s3_destination"] = clusterInfo.ClusterLogConf.S3.Destination
+			}
+			if _, ok := d.GetOk("cluster_log_conf.s3_region"); ok {
+				clusterLogConf["s3_region"] = clusterInfo.ClusterLogConf.S3.Region
+			}
+			if _, ok := d.GetOk("cluster_log_conf.s3_endpoint"); ok {
+				clusterLogConf["s3_endpoint"] = clusterInfo.ClusterLogConf.S3.Endpoint
+			}
+			if _, ok := d.GetOk("cluster_log_conf.s3_enable_encryption"); ok {
+				clusterLogConf["s3_enable_encryption"] = strconv.FormatBool(clusterInfo.ClusterLogConf.S3.EnableEncryption)
+			}
+			if _, ok := d.GetOk("cluster_log_conf.s3_encryption_type"); ok {
+				clusterLogConf["s3_encryption_type"] = clusterInfo.ClusterLogConf.S3.EncryptionType
+			}
+			if _, ok := d.GetOk("cluster_log_conf.s3_kms_key"); ok {
+				clusterLogConf["s3_kms_key"] = clusterInfo.ClusterLogConf.S3.KmsKey
+			}
+			if _, ok := d.GetOk("cluster_log_conf.s3_canned_acl"); ok {
+				clusterLogConf["s3_canned_acl"] = clusterInfo.ClusterLogConf.S3.CannedACL
+			}
 		}
 		err = d.Set("cluster_log_conf", clusterLogConf)
 		if err != nil {
@@ -361,9 +410,15 @@ func resourceClusterRead(d *schema.ResourceData, m interface{}) error {
 			if v.Dbfs != nil {
 				initScriptStorageConfig["dbfs_destination"] = v.Dbfs.Destination
 			} else {
-				initScriptStorageConfig["s3_destination"] = v.S3.Destination
-				initScriptStorageConfig["s3_region"] = v.S3.Region
-				initScriptStorageConfig["s3_endpoint"] = v.S3.Endpoint
+				if len(v.S3.Destination) > 0 {
+					initScriptStorageConfig["s3_destination"] = v.S3.Destination
+				}
+				if len(v.S3.Region) > 0 {
+					initScriptStorageConfig["s3_region"] = v.S3.Region
+				}
+				if len(v.S3.Endpoint) > 0 {
+					initScriptStorageConfig["s3_endpoint"] = v.S3.Endpoint
+				}
 			}
 			listOfInitScripts = append(listOfInitScripts, initScriptStorageConfig)
 		}
@@ -539,6 +594,24 @@ func parseSchemaToCluster(d *schema.ResourceData) model.Cluster {
 		} else {
 			awsAttributes.SpotBidPricePercent = int32(100)
 		}
+		if instanceProfileArn, ok := awsAttributesMap["instance_profile_arn"]; ok {
+			awsAttributes.InstanceProfileArn = instanceProfileArn.(string)
+		}
+		if firstOnDemand, ok := awsAttributesMap["first_on_demand"]; ok {
+			val, _ := strconv.ParseInt(firstOnDemand.(string), 10, 32)
+			awsAttributes.FirstOnDemand = int32(val)
+		}
+		if ebsVolumeType, ok := awsAttributesMap["ebs_volume_type"]; ok {
+			awsAttributes.EbsVolumeType = model.EbsVolumeType(ebsVolumeType.(string))
+		}
+		if ebsVolumeCount, ok := awsAttributesMap["ebs_volume_count"]; ok {
+			val, _ := strconv.ParseInt(ebsVolumeCount.(string), 10, 32)
+			awsAttributes.FirstOnDemand = int32(val)
+		}
+		if ebsVolumeSize, ok := awsAttributesMap["ebs_volume_size"]; ok {
+			val, _ := strconv.ParseInt(ebsVolumeSize.(string), 10, 32)
+			awsAttributes.EbsVolumeSize = int32(val)
+		}
 		cluster.AwsAttributes = &awsAttributes
 	}
 
@@ -651,11 +724,6 @@ func parseSchemaToCluster(d *schema.ResourceData) model.Cluster {
 	//Deal with spark environment variables
 	if sparkEnv, ok := d.GetOk("spark_env_vars"); ok {
 		cluster.SparkEnvVars = convertMapStringInterfaceToStringString(sparkEnv.(map[string]interface{}))
-	}
-
-	//Deal with auto termination minutes
-	if autoTerminationMinutes, ok := d.GetOk("autotermination_minutes"); ok {
-		cluster.AutoterminationMinutes = int32(autoTerminationMinutes.(int))
 	}
 
 	//Deal with auto termination minutes

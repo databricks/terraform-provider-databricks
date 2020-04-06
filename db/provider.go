@@ -25,6 +25,7 @@ func Provider() terraform.ResourceProvider {
 			"db_scim_group":    resourceScimGroup(),
 			"db_notebook":      resourceNotebook(),
 			"db_cluster":       resourceCluster(),
+			"db_job":           resourceJob(),
 		},
 		Schema: map[string]*schema.Schema{
 			"host": &schema.Schema{

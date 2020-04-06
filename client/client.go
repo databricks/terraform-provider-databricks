@@ -96,6 +96,14 @@ func (o *DBClientOption) getRequestURI(path string, apiVersion string) (string, 
 	return requestURI, nil
 }
 
+func onlyNBytes(buf []byte, numBytes int64) []byte {
+	if len(buf) > int(numBytes) {
+		return buf[:numBytes]
+	} else {
+		return buf
+	}
+}
+
 // PerformQuery can be used in a client or directly
 func PerformQuery(option DBClientOption, method, path string, apiVersion string, headers map[string]string, marshalJson bool, useRawPath bool, data interface{}) ([]byte, error) {
 
@@ -133,7 +141,7 @@ func PerformQuery(option DBClientOption, method, path string, apiVersion string,
 			}
 
 			requestBody = bodyBytes
-			log.Println(string(requestBody))
+			log.Println(string(onlyNBytes(requestBody, 1e3)))
 		} else {
 			requestBody = []byte(data.(string))
 		}

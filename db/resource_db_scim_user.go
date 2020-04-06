@@ -1,9 +1,9 @@
 package db
 
 import (
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/databrickslabs/databricks-terraform/client/model"
 	"github.com/databrickslabs/databricks-terraform/client/service"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"log"
 )
 
@@ -34,8 +34,8 @@ func resourceScimUser() *schema.Resource {
 			"entitlements": &schema.Schema{
 				Type:     schema.TypeSet,
 				Optional: true,
-				Elem: &schema.Schema{Type: schema.TypeString},
-				Set:  schema.HashString,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+				Set:      schema.HashString,
 			},
 		},
 	}

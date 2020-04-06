@@ -32,7 +32,7 @@ func (a ClustersAPI) Create(cluster model.Cluster) (model.ClusterInfo, error) {
 }
 
 // Update edits the configuration of a cluster to match the provided attributes and size
-func (a ClustersAPI) Edit(clusterInfo model.ClusterInfo) error {
+func (a ClustersAPI) Edit(clusterInfo model.Cluster) error {
 	_, err := a.Client.performQuery(http.MethodPost, "/clusters/edit", "2.0", nil, clusterInfo)
 	return err
 }

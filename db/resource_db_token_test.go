@@ -3,11 +3,11 @@ package db
 import (
 	"errors"
 	"fmt"
+	"github.com/databrickslabs/databricks-terraform/client/model"
+	"github.com/databrickslabs/databricks-terraform/client/service"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
-	"github.com/databrickslabs/databricks-terraform/client/model"
-	"github.com/databrickslabs/databricks-terraform/client/service"
 	"testing"
 )
 

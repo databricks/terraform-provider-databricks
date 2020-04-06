@@ -12,8 +12,10 @@ import (
 func Provider() terraform.ResourceProvider {
 	provider := &schema.Provider{
 		DataSourcesMap: map[string]*schema.Resource{
-			"db_notebook":       dataSourceNotebook(),
-			"db_notebook_paths": dataSourceNotebookPaths(),
+			"db_notebook":        dataSourceNotebook(),
+			"db_notebook_paths":  dataSourceNotebookPaths(),
+			"db_dbfs_file":       dataSourceDBFSFile(),
+			"db_dbfs_file_paths": dataSourceDBFSFilePaths(),
 		},
 		ResourcesMap: map[string]*schema.Resource{
 			"db_token":         resourceToken(),
@@ -26,6 +28,7 @@ func Provider() terraform.ResourceProvider {
 			"db_notebook":      resourceNotebook(),
 			"db_cluster":       resourceCluster(),
 			"db_job":           resourceJob(),
+			"db_dbfs_file":     resourceDBFSFile(),
 		},
 		Schema: map[string]*schema.Schema{
 			"host": &schema.Schema{

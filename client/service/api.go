@@ -65,6 +65,11 @@ func (c DBApiClient) Jobs() JobsAPI {
 	return jobsAPI.init(c)
 }
 
+func (c DBApiClient) DBFS() DBFSAPI {
+	var DBFSAPI DBFSAPI
+	return DBFSAPI.init(c)
+}
+
 func (c DBApiClient) InstancePools() InstancePoolsAPI {
 	var instancePoolsAPI InstancePoolsAPI
 	return instancePoolsAPI.init(c)

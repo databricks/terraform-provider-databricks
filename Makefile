@@ -29,11 +29,11 @@ python-setup:
 	@cd docs && python -m virtualenv venv
 	@cd docs && source venv/bin/activate && python -m pip install -r requirements.txt
 
-docs:
+docs: python-setup
 	@echo "==> Building Docs ..."
 	@cd docs && source venv/bin/activate && make clean && make html
 
-opendocs: docs
+opendocs: python-setup docs
 	@echo "==> Opening Docs ..."
 	@cd docs && open build/html/index.html
 

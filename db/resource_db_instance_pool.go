@@ -1,9 +1,9 @@
 package db
 
 import (
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/databrickslabs/databricks-terraform/client/model"
 	"github.com/databrickslabs/databricks-terraform/client/service"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"strconv"
 )
 
@@ -38,27 +38,23 @@ func resourceInstancePool() *schema.Resource {
 			"aws_attributes": &schema.Schema{
 				Type:     schema.TypeMap,
 				Optional: true,
-				Computed: true,
 				ForceNew: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"availability": {
 							Type:     schema.TypeString,
 							Optional: true,
-							Computed: true,
 							ForceNew: true,
 						},
 						"zone_id": {
 							Type:     schema.TypeString,
 							Optional: true,
-							Computed: true,
 							ForceNew: true,
 						},
 						"spot_bid_price_percent": {
 							Type:     schema.TypeString,
 							Default:  "100",
 							Optional: true,
-							Computed: true,
 							ForceNew: true,
 						},
 					},
@@ -163,10 +159,11 @@ func resourceInstancePoolCreate(d *schema.ResourceData, m interface{}) error {
 			instancePoolAwsAttributes.Availability = model.AwsAvailability(availability.(string))
 		}
 		if zoneId, ok := awsAttributesMap["zone_id"]; ok {
-			instancePoolAwsAttributes.ZoneId = zoneId.(string)
+			instancePoolAwsAttributes.ZoneID = zoneId.(string)
 		}
 		if spotBidPricePercent, ok := awsAttributesMap["spot_bid_price_percent"]; ok {
-			instancePoolAwsAttributes.SpotBidPricePercent = int32(spotBidPricePercent.(int))
+			val, _ := strconv.ParseInt(spotBidPricePercent.(string), 10, 32)
+			instancePoolAwsAttributes.SpotBidPricePercent = int32(val)
 		} else {
 			instancePoolAwsAttributes.SpotBidPricePercent = int32(100)
 		}
@@ -246,17 +243,24 @@ func resourceInstancePoolRead(d *schema.ResourceData, m interface{}) error {
 		return err
 	}
 	err = d.Set("idle_instance_autotermination_minutes", int(instancePoolInfo.IdleInstanceAutoTerminationMinutes))
+
 	if instancePoolInfo.AwsAttributes != nil {
-		awsAttributes := map[string]interface{}{
-			"availability":           instancePoolInfo.AwsAttributes.Availability,
-			"zone_id":                instancePoolInfo.AwsAttributes.ZoneId,
-			"spot_bid_price_percent": strconv.Itoa(int(instancePoolInfo.AwsAttributes.SpotBidPricePercent)),
+		awsAtts := map[string]string{}
+		if _, ok := d.GetOk("aws_attributes.availability"); ok {
+			awsAtts["availability"] = string(instancePoolInfo.AwsAttributes.Availability)
 		}
-		err = d.Set("aws_attributes", awsAttributes)
+		if _, ok := d.GetOk("aws_attributes.zone_id"); ok {
+			awsAtts["zone_id"] = instancePoolInfo.AwsAttributes.ZoneID
+		}
+		if _, ok := d.GetOk("aws_attributes.spot_bid_price_percent"); ok {
+			awsAtts["spot_bid_price_percent"] = strconv.Itoa(int(instancePoolInfo.AwsAttributes.SpotBidPricePercent))
+		}
+		err = d.Set("aws_attributes", awsAtts)
 		if err != nil {
 			return err
 		}
 	}
+
 	err = d.Set("node_type_id", instancePoolInfo.NodeTypeId)
 	if err != nil {
 		return err

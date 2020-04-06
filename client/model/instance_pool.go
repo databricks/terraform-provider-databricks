@@ -2,7 +2,7 @@ package model
 
 type InstancePoolAwsAttributes struct {
 	Availability        AwsAvailability `json:"availability,omitempty"`
-	ZoneId              string          `json:"zone_id,omitempty"`
+	ZoneID              string          `json:"zone_id,omitempty"`
 	SpotBidPricePercent int32           `json:"spot_bid_price_percent,omitempty"`
 }
 

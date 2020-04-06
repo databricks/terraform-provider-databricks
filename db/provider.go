@@ -1,16 +1,20 @@
 package db
 
 import (
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 	"github.com/databrickslabs/databricks-terraform/client"
 	"github.com/databrickslabs/databricks-terraform/client/service"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 	"log"
 	"os"
 )
 
 func Provider() terraform.ResourceProvider {
 	provider := &schema.Provider{
+		DataSourcesMap: map[string]*schema.Resource{
+			"db_notebook":       dataSourceNotebook(),
+			"db_notebook_paths": dataSourceNotebookPaths(),
+		},
 		ResourcesMap: map[string]*schema.Resource{
 			"db_token":         resourceToken(),
 			"db_secret_scope":  resourceSecretScope(),
@@ -19,6 +23,8 @@ func Provider() terraform.ResourceProvider {
 			"db_instance_pool": resourceInstancePool(),
 			"db_scim_user":     resourceScimUser(),
 			"db_scim_group":    resourceScimGroup(),
+			"db_notebook":      resourceNotebook(),
+			"db_cluster":       resourceCluster(),
 		},
 		Schema: map[string]*schema.Schema{
 			"host": &schema.Schema{

@@ -321,3 +321,4 @@ pip-selfcheck.json
 **/*.tfvars
 /*.tf
 .DS_Store
+/*.dbc

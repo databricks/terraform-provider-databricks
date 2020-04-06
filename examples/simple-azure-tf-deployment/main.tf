@@ -106,10 +106,28 @@ resource "db_token" "my-token" {
   comment = "Testing terraform v2"
 }
 
+resource "db_notebook" "my-dbc-base" {
+  content = filebase64("${path.module}/demo-terraform.dbc")
+  path = "/terraform-test-folder/folder1/folder2/terraformsamplecode"
+  overwrite = false
+  mkdirs = true
+  format = "DBC"
+}
+
+data "db_notebook" "my-notebook" {
+  path = "/terraform-test-folder/folder1/folder2/terraformsamplecode"
+  format = "DBC"
+}
+
+
 output "db_user_ids" {
   value = db_scim_user.my-user[*].id
 }
 
 output "db_scope" {
   value = db_secret_scope.my-scope.name
+}
+
+output "notebook-content" {
+  value = data.db_notebook.my-notebook.content
 }

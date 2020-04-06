@@ -198,21 +198,31 @@ type NodeType struct {
 	NodeInfo       *ClusterCloudProviderNodeInfo `json:"node_info,omitempty"`
 }
 
+type DockerBasicAuth struct {
+	Username string `json:"username,omitempty"`
+	Password string `json:"password,omitempty"`
+}
+
+type DockerImage struct {
+	Url       string           `json:"url,omitempty"`
+	BasicAuth *DockerBasicAuth `json:"basic_auth,omitempty"`
+}
+
 type Cluster struct {
-	ClusterId        string            `json:"cluster_id,omitempty"`
-	NumWorkers       int32             `json:"num_workers,omitempty"`
-	Autoscale        *AutoScale        `json:"autoscale,omitempty"`
-	ClusterName      string            `json:"cluster_name,omitempty"`
-	SparkVersion     string            `json:"spark_version,omitempty"`
-	SparkConf        map[string]string `json:"spark_conf,omitempty"`
-	AwsAttributes    *AwsAttributes    `json:"aws_attributes,omitempty"`
-	NodeTypeID       string            `json:"node_type_id,omitempty"`
-	DriverNodeTypeID string            `json:"driver_node_type_id,omitempty"`
-	SSHPublicKeys    []string          `json:"ssh_public_keys,omitempty"`
-	CustomTags       map[string]string `json:"custom_tags,omitempty"`
-	ClusterLogConf   *StorageInfo      `json:"cluster_log_conf,omitempty"`
-	InitScripts      []StorageInfo     `json:"init_scripts,omitempty"`
-	//TODO: Update docker image portion here
+	ClusterId              string            `json:"cluster_id,omitempty"`
+	NumWorkers             int32             `json:"num_workers,omitempty"`
+	Autoscale              *AutoScale        `json:"autoscale,omitempty"`
+	ClusterName            string            `json:"cluster_name,omitempty"`
+	SparkVersion           string            `json:"spark_version,omitempty"`
+	SparkConf              map[string]string `json:"spark_conf,omitempty"`
+	AwsAttributes          *AwsAttributes    `json:"aws_attributes,omitempty"`
+	NodeTypeID             string            `json:"node_type_id,omitempty"`
+	DriverNodeTypeID       string            `json:"driver_node_type_id,omitempty"`
+	SSHPublicKeys          []string          `json:"ssh_public_keys,omitempty"`
+	CustomTags             map[string]string `json:"custom_tags,omitempty"`
+	ClusterLogConf         *StorageInfo      `json:"cluster_log_conf,omitempty"`
+	InitScripts            []StorageInfo     `json:"init_scripts,omitempty"`
+	DockerImage            *DockerImage      `json:"docker_image,omitempty"`
 	SparkEnvVars           map[string]string `json:"spark_env_vars,omitempty"`
 	AutoterminationMinutes int32             `json:"autotermination_minutes,omitempty"`
 	EnableElasticDisk      bool              `json:"enable_elastic_disk,omitempty"`
@@ -242,7 +252,9 @@ type ClusterInfo struct {
 	SparkEnvVars           map[string]string  `json:"spark_env_vars,omitempty"`
 	AutoterminationMinutes int32              `json:"autotermination_minutes,omitempty"`
 	EnableElasticDisk      bool               `json:"enable_elastic_disk,omitempty"`
+	InstancePoolId         string             `json:"instance_pool_id,omitempty"`
 	ClusterSource          AwsAvailability    `json:"cluster_source,omitempty"`
+	DockerImage            *DockerImage       `json:"docker_image,omitempty"`
 	State                  ClusterState       `json:"state,omitempty"`
 	StateMessage           string             `json:"state_message,omitempty"`
 	StartTime              int64              `json:"start_time,omitempty"`
@@ -251,7 +263,7 @@ type ClusterInfo struct {
 	LastActivityTime       int64              `json:"last_activity_time,omitempty"`
 	ClusterMemoryMb        int64              `json:"cluster_memory_mb,omitempty"`
 	ClusterCores           float32            `json:"cluster_cores,omitempty"`
-	DefaultTags            map[string]string  `json:"DefaultTags,omitempty"`
+	DefaultTags            map[string]string  `json:"default_tags,omitempty"`
 	ClusterLogStatus       *LogSyncStatus     `json:"cluster_log_status,omitempty"`
 	TerminationReason      *TerminationReason `json:"termination_reason,omitempty"`
 }

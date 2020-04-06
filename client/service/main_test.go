@@ -2,9 +2,9 @@ package service
 
 import (
 	"encoding/json"
+	"github.com/databrickslabs/databricks-terraform/client"
 	"github.com/joho/godotenv"
 	"github.com/r3labs/diff"
-	"github.com/databrickslabs/databricks-terraform/client"
 	"github.com/stretchr/testify/assert"
 	"log"
 	"net/http"

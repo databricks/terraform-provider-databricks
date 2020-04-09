@@ -1,10 +1,12 @@
 package db
 
 import (
+	"fmt"
 	"github.com/databrickslabs/databricks-terraform/client/model"
 	"github.com/databrickslabs/databricks-terraform/client/service"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"log"
+	"strings"
 )
 
 func resourceScimGroup() *schema.Resource {
@@ -20,10 +22,18 @@ func resourceScimGroup() *schema.Resource {
 				Required: true,
 			},
 			"members": &schema.Schema{
-				Type:     schema.TypeSet,
+				Type:     schema.TypeList,
 				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Set:      schema.HashString,
+				//Computed: true,
+				//ConfigMode: schema.SchemaConfigModeAttr,
+				Elem: &schema.Schema{Type: schema.TypeString},
+				//Set:  schema.HashString,
+
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					log.Println("suppressing members group")
+					log.Println(k, old, new)
+					return false
+				},
 			},
 		},
 	}
@@ -43,7 +53,7 @@ func resourceScimGroupCreate(d *schema.ResourceData, m interface{}) error {
 	var members []string
 
 	if rMembers, ok := d.GetOk("members"); ok {
-		members = convertInterfaceSliceToStringSlice(rMembers.(*schema.Set).List())
+		members = convertInterfaceSliceToStringSlice(rMembers.([]interface{}))
 		log.Println(members)
 	}
 	group, err := client.Groups().Create(groupName, members)
@@ -60,22 +70,21 @@ func getListOfMemberRefs(memberList []model.GroupMember) []string {
 	for _, member := range memberList {
 		resp = append(resp, member.Value)
 	}
+	log.Println("Members list =")
+	log.Println(resp)
 	return resp
 }
-
-//func getListOfEntitlements(entitlementList []model.EntitlementsListItem) []string {
-//	resp := []string{}
-//	for _, entitlement := range entitlementList {
-//		resp = append(resp, string(entitlement.Value))
-//	}
-//	return resp
-//}
 
 func resourceScimGroupRead(d *schema.ResourceData, m interface{}) error {
 	id := d.Id()
 	client := m.(service.DBApiClient)
 	group, err := client.Groups().Read(id)
 	if err != nil {
+		if isScimGroupMissing(err.Error(), id) {
+			log.Printf("Missing scim group with id: %s.", id)
+			d.SetId("")
+			return nil
+		}
 		return err
 	}
 
@@ -113,7 +122,7 @@ func resourceScimGroupUpdate(d *schema.ResourceData, m interface{}) error {
 	}
 	remoteMembers := getListOfMemberRefs(group.Members)
 	if members, ok := d.GetOk("members"); ok {
-		currentMembers = convertInterfaceSliceToStringSlice(members.(*schema.Set).List())
+		currentMembers = convertInterfaceSliceToStringSlice(members.([]interface{}))
 	}
 	addMembers := diff(currentMembers, remoteMembers)
 	removeMembers := diff(remoteMembers, currentMembers)
@@ -133,4 +142,10 @@ func resourceScimGroupDelete(d *schema.ResourceData, m interface{}) error {
 	client := m.(service.DBApiClient)
 	err := client.Groups().Delete(id)
 	return err
+}
+
+func isScimGroupMissing(errorMsg, resourceId string) bool {
+	return strings.Contains(errorMsg, "urn:ietf:params:scim:api:messages:2.0:Error") &&
+		strings.Contains(errorMsg, fmt.Sprintf("Group with id %s not found.", resourceId)) &&
+		strings.Contains(errorMsg, "404")
 }

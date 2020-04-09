@@ -86,6 +86,11 @@ func ContainsClusterState(clusterStates []ClusterState, searchState ClusterState
 	return false
 }
 
+type ZonesInfo struct {
+	Zones       []string `json:"zones,omitempty"`
+	DefaultZone string   `json:"default_zone,omitempty"`
+}
+
 type AwsAttributes struct {
 	FirstOnDemand       int32           `json:"first_on_demand,omitempty"`
 	Availability        AwsAvailability `json:"availability,omitempty"`

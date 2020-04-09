@@ -68,6 +68,7 @@ func (a UsersAPI) Update(userId string, userName string, displayName string, ent
 		Entitlements []model.EntitlementsListItem `json:"entitlements,omitempty"`
 		DisplayName  string                       `json:"displayName,omitempty"`
 		Roles        []model.RoleListItem         `json:"roles,omitempty"`
+		Groups       []model.GroupsListItem       `json:"groups,omitempty"`
 	}{}
 	scimUserUpdateRequest.Schemas = []model.URN{model.UserSchema}
 	scimUserUpdateRequest.UserName = userName
@@ -80,7 +81,13 @@ func (a UsersAPI) Update(userId string, userName string, displayName string, ent
 	for _, role := range roles {
 		scimUserUpdateRequest.Roles = append(scimUserUpdateRequest.Roles, model.RoleListItem{Value: role})
 	}
-	_, err := a.Client.performQuery(http.MethodPut, userPath, "2.0", scimHeaders, scimUserUpdateRequest)
+	//Get any existing groups that the user is part of
+	user, err := a.Read(userId)
+	if err != nil {
+		return err
+	}
+	scimUserUpdateRequest.Groups = user.Groups
+	_, err = a.Client.performQuery(http.MethodPut, userPath, "2.0", scimHeaders, scimUserUpdateRequest)
 	return err
 }
 

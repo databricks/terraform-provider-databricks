@@ -1,10 +1,13 @@
 package db
 
 import (
+	"fmt"
 	"github.com/databrickslabs/databricks-terraform/client/model"
 	"github.com/databrickslabs/databricks-terraform/client/service"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"log"
 	"strconv"
+	"strings"
 )
 
 func resourceInstancePool() *schema.Resource {
@@ -36,23 +39,25 @@ func resourceInstancePool() *schema.Resource {
 				Required: true,
 			},
 			"aws_attributes": &schema.Schema{
-				Type:     schema.TypeMap,
+				Type:     schema.TypeList,
 				Optional: true,
+				MaxItems: 1,
 				ForceNew: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"availability": {
 							Type:     schema.TypeString,
 							Optional: true,
+							Default:  "SPOT",
 							ForceNew: true,
 						},
 						"zone_id": {
 							Type:     schema.TypeString,
-							Optional: true,
+							Required: true,
 							ForceNew: true,
 						},
 						"spot_bid_price_percent": {
-							Type:     schema.TypeString,
+							Type:     schema.TypeInt,
 							Default:  "100",
 							Optional: true,
 							ForceNew: true,
@@ -154,7 +159,7 @@ func resourceInstancePoolCreate(d *schema.ResourceData, m interface{}) error {
 	instancePool.IdleInstanceAutoTerminationMinutes = int32(d.Get("idle_instance_autotermination_minutes").(int))
 
 	if awsAttributesSchema, ok := d.GetOk("aws_attributes"); ok {
-		awsAttributesMap := awsAttributesSchema.(map[string]interface{})
+		awsAttributesMap := getMapFromOneItemList(awsAttributesSchema)
 		if availability, ok := awsAttributesMap["availability"]; ok {
 			instancePoolAwsAttributes.Availability = model.AwsAvailability(availability.(string))
 		}
@@ -162,10 +167,8 @@ func resourceInstancePoolCreate(d *schema.ResourceData, m interface{}) error {
 			instancePoolAwsAttributes.ZoneID = zoneId.(string)
 		}
 		if spotBidPricePercent, ok := awsAttributesMap["spot_bid_price_percent"]; ok {
-			val, _ := strconv.ParseInt(spotBidPricePercent.(string), 10, 32)
-			instancePoolAwsAttributes.SpotBidPricePercent = int32(val)
-		} else {
-			instancePoolAwsAttributes.SpotBidPricePercent = int32(100)
+			//val, _ := strconv.ParseInt(spotBidPricePercent.(string), 10, 32)
+			instancePoolAwsAttributes.SpotBidPricePercent = int32(spotBidPricePercent.(int))
 		}
 		instancePool.AwsAttributes = &instancePoolAwsAttributes
 	}
@@ -227,6 +230,11 @@ func resourceInstancePoolRead(d *schema.ResourceData, m interface{}) error {
 	client := m.(service.DBApiClient)
 	instancePoolInfo, err := client.InstancePools().Read(id)
 	if err != nil {
+		if isInstancePoolMissing(err.Error(), id) {
+			log.Printf("Missing instance pool with id: %s.", id)
+			d.SetId("")
+			return nil
+		}
 		return err
 	}
 
@@ -245,17 +253,18 @@ func resourceInstancePoolRead(d *schema.ResourceData, m interface{}) error {
 	err = d.Set("idle_instance_autotermination_minutes", int(instancePoolInfo.IdleInstanceAutoTerminationMinutes))
 
 	if instancePoolInfo.AwsAttributes != nil {
-		awsAtts := map[string]string{}
-		if _, ok := d.GetOk("aws_attributes.availability"); ok {
-			awsAtts["availability"] = string(instancePoolInfo.AwsAttributes.Availability)
-		}
-		if _, ok := d.GetOk("aws_attributes.zone_id"); ok {
-			awsAtts["zone_id"] = instancePoolInfo.AwsAttributes.ZoneID
-		}
-		if _, ok := d.GetOk("aws_attributes.spot_bid_price_percent"); ok {
-			awsAtts["spot_bid_price_percent"] = strconv.Itoa(int(instancePoolInfo.AwsAttributes.SpotBidPricePercent))
-		}
-		err = d.Set("aws_attributes", awsAtts)
+		awsAtts := map[string]interface{}{}
+		//if _, ok := d.GetOk("aws_attributes.availability"); ok {
+		awsAtts["availability"] = string(instancePoolInfo.AwsAttributes.Availability)
+		//}
+		//if _, ok := d.GetOk("aws_attributes.zone_id"); ok {
+		awsAtts["zone_id"] = instancePoolInfo.AwsAttributes.ZoneID
+		//}
+		//if _, ok := d.GetOk("aws_attributes.spot_bid_price_percent"); ok {
+		awsAtts["spot_bid_price_percent"] = int(instancePoolInfo.AwsAttributes.SpotBidPricePercent)
+		//}
+		awsAttsList := []map[string]interface{}{awsAtts}
+		err = d.Set("aws_attributes", awsAttsList)
 		if err != nil {
 			return err
 		}
@@ -334,4 +343,9 @@ func resourceInstancePoolDelete(d *schema.ResourceData, m interface{}) error {
 	id := d.Id()
 	err := client.InstancePools().Delete(id)
 	return err
+}
+
+func isInstancePoolMissing(errorMsg, resourceId string) bool {
+	return strings.Contains(errorMsg, "RESOURCE_DOES_NOT_EXIST") &&
+		strings.Contains(errorMsg, fmt.Sprintf("Can't find an instance pool with id: %s", resourceId))
 }

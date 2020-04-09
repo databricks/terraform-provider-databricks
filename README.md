@@ -129,6 +129,30 @@ Please refer to the detailed documentation provided in the html documentation fo
 
 Also refer to these [examples](examples/) for more scenarios. 
 
+
+### Docker commands
+
+To install and build the code if you dont want to install golang, terraform, etc. All you need is docker and git.
+
+First make sure you clone the repository and you are in the directory.
+
+Then build the docker image with this command:
+
+```bash
+$ docker build -t databricks-terraform . 
+```
+
+Then run the execute the terraform binary via the following command and volume mount. Make sure that you are in the directory
+ with the terraform code. The following command you can execute the following commands and additional ones as part of 
+ the terraform binary.
+ 
+```bash
+$ docker run -it -v $(pwd):/workpace -w /workpace databricks-terraform init
+$ docker run -it -v $(pwd):/workpace -w /workpace databricks-terraform plan
+$ docker run -it -v $(pwd):/workpace -w /workpace databricks-terraform apply
+
+```
+
 ## Project Components
 
 ### High Level Databricks Client CR[U]D
@@ -257,14 +281,32 @@ Note: For updating a user use Patch for entitlements, Put for everything else. W
 * [x] Secret scopes
 * [x] Secrets
 * [x] Secret acls
-* [ ] Jobs
-* [ ] Clusters (EC2 based example)
-* [ ] IAM Instance Profiles
-* [ ] Notebooks
-* [ ] DBFS
-* [ ] Libraries 
+* [x] Jobs
+* [x] Clusters + Libraries
+* [x] IAM Instance Profiles
+* [x] Notebooks
+* [x] DBFS File
+* [x] DBFS File Sync (stateful sync from src to target)
 * [ ] Cluster Policies (private preview)
 * [ ] Entitlements (private preview)
+
+### Databricks terraform provider docs
+
+* [x] Instance pools
+* [x] Scim groups
+* [x] Scim users
+* [x] Secret scopes
+* [x] Secrets
+* [x] Secret acls
+* [ ] Jobs
+* [ ] Clusters + Libraries
+* [ ] IAM Instance Profiles
+* [ ] Notebooks
+* [ ] DBFS File
+* [ ] DBFS File Sync (stateful sync from src to target)
+* [ ] Cluster Policies (private preview)
+* [ ] Entitlements (private preview)
+
 
 ## Testing
 

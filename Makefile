@@ -42,6 +42,10 @@ vendor:
 	@go mod vendor
 
 # INTEGRATION TESTING WITH TERRAFORM EXAMPLES
+terraform-acc: fmt build
+	@echo "==> Running Terraform Acceptance Tests..."
+	@TF_ACC=1 go test -v -short ./db/...
+
 terraform-setup: fmt build
 	@echo "==> Initializing Terraform..."
 	@terraform init

@@ -27,9 +27,9 @@ func TestJobsCreate(t *testing.T) {
 			NotebookPath: "/Users/sri.tikkireddy@databricks.com/demo-terraform/demo-notebook",
 		},
 		Name: "1-sri-test-job",
-		Libraries: []model.JobLibrary{
-			model.JobLibrary{
-				Maven: &model.MavenLibrary{
+		Libraries: []model.Library{
+			model.Library{
+				Maven: &model.Maven{
 					Coordinates: "org.jsoup:jsoup:1.7.2",
 				},
 			},

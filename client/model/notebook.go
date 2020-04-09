@@ -21,9 +21,9 @@ const (
 )
 
 const (
-	Notebook  ObjectType = "NOTEBOOK"
-	Directory ObjectType = "DIRECTORY"
-	Library   ObjectType = "LIBRARY"
+	Notebook      ObjectType = "NOTEBOOK"
+	Directory     ObjectType = "DIRECTORY"
+	LibraryObject ObjectType = "LIBRARY"
 )
 
 type NotebookInfo struct {

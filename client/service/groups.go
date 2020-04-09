@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/databrickslabs/databricks-terraform/client/model"
+	"log"
 	"net/http"
 )
 
@@ -51,6 +52,8 @@ func (a GroupsAPI) Read(groupID string) (model.Group, error) {
 	if err != nil {
 		return group, err
 	}
+	log.Println("PRINTING GROUP READ")
+	log.Println(string(resp))
 
 	err = json.Unmarshal(resp, &group)
 	return group, err

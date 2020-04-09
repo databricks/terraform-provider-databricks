@@ -1,9 +1,18 @@
 package service
 
 import (
+	"archive/zip"
+	"bufio"
+	"bytes"
+	"encoding/base64"
+	"encoding/json"
 	"github.com/databrickslabs/databricks-terraform/client/model"
 	"github.com/stretchr/testify/assert"
+	"hash/crc32"
+	"io"
 	"path/filepath"
+	"sort"
+	"strconv"
 	"testing"
 )
 
@@ -14,7 +23,7 @@ func TestNotebookCreate(t *testing.T) {
 		t.Skip("skipping integration test in short mode.")
 	}
 
-	path := "/Users/sri.tikkireddy@databricks.com/demo-notebook-rbc"
+	path := "/Users/sri.tikkireddy@databricks.com/helloworld/demo-notebook-rbc"
 	format := model.DBC
 	language := model.Python
 
@@ -38,4 +47,87 @@ func TestNotebookParentDir(t *testing.T) {
 	path := "/Users/sri.tikkireddy@databricks.com/demo-notebook-rbc/test-terraform-deploy"
 	dir := filepath.Dir(path)
 	t.Log(dir)
+}
+
+func TestNotebookUnzip(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping integration test in short mode.")
+	}
+
+	//path := "/Users/sri.tikkireddy@databricks.com/"
+	path := "/Users/sri.tikkireddy@databricks.com/helloworld/demo-notebook-rbc"
+	format := model.DBC
+
+	client := GetIntegrationDBAPIClient()
+	export, err := client.Notebooks().Export(path, format)
+	assert.NoError(t, err, err)
+
+	t.Log(convertBase64ToCheckSum(export))
+	t.Log(convertBase64ToCheckSum(fileContent))
+}
+
+func convertBase64ToCheckSum(b64 string) (string, error) {
+	dataArr, err := base64.StdEncoding.DecodeString(b64)
+	if err != nil {
+		return "error", err
+	}
+	checksum, err := convertZipBytesToCRC(dataArr)
+	if err != nil {
+		return strconv.Itoa(int(crc32.ChecksumIEEE(dataArr))), nil
+	}
+	return checksum, nil
+
+}
+
+func convertZipBytesToCRC(b64 []byte) (string, error) {
+	r, err := zip.NewReader(bytes.NewReader(b64), int64(len(b64)))
+	if err != nil {
+		return "0", err
+	}
+	var totalSum int64
+	for _, f := range r.File {
+		if f.FileInfo().IsDir() == false {
+			file, err := f.Open()
+			if err != nil {
+				return "", err
+			}
+			crc, err := getDBCCheckSumForCommands(file)
+			if err != nil {
+				return "", err
+			}
+			totalSum += int64(crc)
+		}
+	}
+	return strconv.Itoa(int(totalSum)), nil
+}
+
+func getDBCCheckSumForCommands(fileIO io.ReadCloser) (int, error) {
+	var stringBuff bytes.Buffer
+	scanner := bufio.NewScanner(fileIO)
+	buf := make([]byte, 0, 64*1024)
+	scanner.Buffer(buf, 1024*1024)
+	for scanner.Scan() {
+		stringBuff.WriteString(scanner.Text())
+	}
+	jsonString := stringBuff.Bytes()
+	var notebook map[string]interface{}
+	err := json.Unmarshal(jsonString, &notebook)
+	if err != nil {
+		return 0, err
+	}
+	var commandsBuffer bytes.Buffer
+	commandsMap := map[int]string{}
+	commands := notebook["commands"].([]interface{})
+	for _, command := range commands {
+		commandsMap[int(command.(map[string]interface{})["position"].(float64))] = command.(map[string]interface{})["command"].(string)
+	}
+	keys := make([]int, 0, len(commandsMap))
+	for k := range commandsMap {
+		keys = append(keys, k)
+	}
+	sort.Ints(keys)
+	for _, k := range keys {
+		commandsBuffer.WriteString(commandsMap[k])
+	}
+	return int(crc32.ChecksumIEEE(commandsBuffer.Bytes())), nil
 }

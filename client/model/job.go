@@ -22,31 +22,6 @@ type SparkSubmitTask struct {
 	Parameters []string `json:"parameters,omitempty"`
 }
 
-type PyPiLibrary struct {
-	Package string `json:"package,omitempty"`
-	Repo    string `json:"repo,omitempty"`
-}
-
-type MavenLibrary struct {
-	Coordinates string   `json:"coordinates,omitempty"`
-	Repo        string   `json:"repo,omitempty"`
-	Exclusions  []string `json:"exclusions,omitempty"`
-}
-
-type CranLibrary struct {
-	Package string `json:"package,omitempty"`
-	Repo    string `json:"repo,omitempty"`
-}
-
-type JobLibrary struct {
-	Jar   string        `json:"jar,omitempty"`
-	Egg   string        `json:"egg,omitempty"`
-	Whl   string        `json:"whl,omitempty"`
-	Pypi  *PyPiLibrary  `json:"pypi,omitempty"`
-	Maven *MavenLibrary `json:"maven,omitempty"`
-	Cran  *CranLibrary  `json:"cran,omitempty"`
-}
-
 type JobEmailNotifications struct {
 	OnStart               []string `json:"on_start,omitempty"`
 	OnSuccess             []string `json:"on_success,omitempty"`
@@ -67,7 +42,7 @@ type JobSettings struct {
 	SparkPythonTask        *SparkPythonTask       `json:"spark_python_task,omitempty"`
 	SparkSubmitTask        *SparkSubmitTask       `json:"spark_submit_task,omitempty"`
 	Name                   string                 `json:"name,omitempty"`
-	Libraries              []JobLibrary           `json:"libraries,omitempty"`
+	Libraries              []Library              `json:"libraries,omitempty"`
 	EmailNotifications     *JobEmailNotifications `json:"email_notifications,omitempty"`
 	TimeoutSeconds         int32                  `json:"timeout_seconds,omitempty"`
 	MaxRetries             int32                  `json:"max_retries,omitempty"`

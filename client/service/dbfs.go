@@ -28,6 +28,9 @@ func (a DBFSAPI) Create(path string, overwrite bool, data string) error {
 	if err != nil {
 		return err
 	}
+	defer func() {
+		err = a.closeHandle(handle)
+	}()
 	for _, byteChunk := range byteChunks {
 		b64Data := base64.StdEncoding.EncodeToString(byteChunk)
 		err := a.addBlock(b64Data, handle)
@@ -35,7 +38,6 @@ func (a DBFSAPI) Create(path string, overwrite bool, data string) error {
 			return err
 		}
 	}
-	err = a.closeHandle(handle)
 	return err
 }
 
@@ -61,6 +63,56 @@ func (a DBFSAPI) Read(path string) (string, error) {
 	return resp, nil
 }
 
+func (a DBFSAPI) Copy(src string, tgt string, client *DBApiClient, overwrite bool) error {
+	handle, err := a.createHandle(tgt, overwrite)
+	if err != nil {
+		return err
+	}
+	defer func() {
+		err = a.closeHandle(handle)
+	}()
+	fetchLoop := true
+	offSet := int64(0)
+	length := int64(1e6)
+	for fetchLoop == true {
+		var api DBFSAPI
+		if client == nil {
+			api = a
+		} else {
+			api = client.DBFS()
+		}
+		bytesRead, b64String, err := api.ReadString(src, offSet, length)
+		if err != nil {
+			return err
+		}
+		log.Println(bytesRead)
+		if bytesRead == 0 || bytesRead < length {
+			fetchLoop = false
+		}
+
+		err = a.addBlock(b64String, handle)
+		if err != nil {
+			return err
+		}
+
+		offSet = offSet + length
+	}
+
+	return err
+}
+
+func (a DBFSAPI) Move(src string, tgt string) error {
+	moveRequest := struct {
+		SourcePath      string `json:"source_path,omitempty" url:"source_path,omitempty"`
+		DestinationPath string `json:"destination_path,omitempty" url:"destination_path,omitempty"`
+	}{
+		SourcePath:      src,
+		DestinationPath: tgt,
+	}
+	_, err := a.Client.performQuery(http.MethodPost, "/dbfs/move", "2.0", nil, moveRequest)
+	return err
+}
+
 func (a DBFSAPI) Delete(path string, recursive bool) error {
 	deleteRequest := struct {
 		Path      string `json:"path,omitempty" url:"path,omitempty"`
@@ -74,7 +126,7 @@ func (a DBFSAPI) Delete(path string, recursive bool) error {
 	return err
 }
 
-func (a DBFSAPI) read(path string, offset, length int64) (int64, []byte, error) {
+func (a DBFSAPI) ReadString(path string, offset, length int64) (int64, string, error) {
 	var readBytes struct {
 		BytesRead int64  `json:"bytes_read,omitempty" url:"bytes_read,omitempty"`
 		Data      string `json:"data,omitempty" url:"data,omitempty"`
@@ -90,14 +142,17 @@ func (a DBFSAPI) read(path string, offset, length int64) (int64, []byte, error) 
 	}
 	resp, err := a.Client.performQuery(http.MethodGet, "/dbfs/read", "2.0", nil, readRequest)
 	if err != nil {
-		return readBytes.BytesRead, []byte{}, err
+		return readBytes.BytesRead, readBytes.Data, err
 	}
 	err = json.Unmarshal(resp, &readBytes)
-	if err != nil {
-		return 0, []byte{}, err
-	}
-	dataBytes, err := base64.StdEncoding.DecodeString(readBytes.Data)
-	return readBytes.BytesRead, dataBytes, err
+
+	return readBytes.BytesRead, readBytes.Data, err
+}
+
+func (a DBFSAPI) read(path string, offset, length int64) (int64, []byte, error) {
+	bytesRead, data, err := a.ReadString(path, offset, length)
+	dataBytes, err := base64.StdEncoding.DecodeString(data)
+	return bytesRead, dataBytes, err
 }
 
 func (a DBFSAPI) Status(path string) (model.FileInfo, error) {

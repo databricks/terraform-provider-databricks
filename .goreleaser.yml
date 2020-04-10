@@ -3,6 +3,7 @@
 before:
   hooks:
     # You may remove this if you don't use go modules.
+    - make singlehtmldocs
     - go mod download
 builds:
 - env:
@@ -20,12 +21,16 @@ archives:
     darwin: Darwin
     linux: Linux
     windows: Windows
-    386: i386
-    amd64: x86_64
+    amd64: 64-bit
+    386: 32-bit
+  format_overrides:
+    - goos: windows
+      format: zip
   files:
     - LICENSE*
     - CHANGELOG*
     - NOTICE*
+    - docs/build/singlehtml/**/*
 checksum:
   name_template: 'checksums.txt'
 snapshot:

@@ -1,9 +1,11 @@
 package db
 
 import (
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"fmt"
 	"github.com/databrickslabs/databricks-terraform/client/model"
 	"github.com/databrickslabs/databricks-terraform/client/service"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"log"
 	"strings"
 )
 
@@ -66,17 +68,21 @@ func resourceSecretAclRead(d *schema.ResourceData, m interface{}) error {
 	if err != nil {
 		return err
 	}
+	client := m.(service.DBApiClient)
+	secretAcl, err := client.SecretAcls().Read(scope, principal)
+	if err != nil {
+		if isSecretAclMissing(err.Error(), scope, principal) {
+			log.Printf("Missing secret acl in scope with id: %s and principal: %s.", scope, principal)
+			d.SetId("")
+			return nil
+		}
+		return err
+	}
 	err = d.Set("scope", scope)
 	if err != nil {
 		return err
 	}
 	err = d.Set("principal", principal)
-	if err != nil {
-		return err
-	}
-
-	client := m.(service.DBApiClient)
-	secretAcl, err := client.SecretAcls().Read(scope, principal)
 	if err != nil {
 		return err
 	}
@@ -93,4 +99,9 @@ func resourceSecretAclDelete(d *schema.ResourceData, m interface{}) error {
 	}
 	err = client.SecretAcls().Delete(scope, key)
 	return err
+}
+
+func isSecretAclMissing(errorMsg, scope string, principal string) bool {
+	return strings.Contains(errorMsg, "RESOURCE_DOES_NOT_EXIST") &&
+		strings.Contains(errorMsg, fmt.Sprintf("Failed to get secret acl for principal %s for scope %s.", principal, scope))
 }

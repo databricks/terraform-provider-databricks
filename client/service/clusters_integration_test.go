@@ -6,6 +6,14 @@ import (
 	"testing"
 )
 
+func TestGetDefaultTags(t *testing.T) {
+	client := GetIntegrationDBAPIClient()
+
+	cinfo, _ := client.Clusters().Get("0406-034153-ship215")
+	t.Log(cinfo.DefaultTags)
+
+}
+
 func TestListClustersIntegration(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping integration test in short mode.")

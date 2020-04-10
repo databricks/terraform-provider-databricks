@@ -32,9 +32,19 @@ func (a ClustersAPI) Create(cluster model.Cluster) (model.ClusterInfo, error) {
 }
 
 // Update edits the configuration of a cluster to match the provided attributes and size
-func (a ClustersAPI) Edit(clusterInfo model.ClusterInfo) error {
+func (a ClustersAPI) Edit(clusterInfo model.Cluster) error {
 	_, err := a.Client.performQuery(http.MethodPost, "/clusters/edit", "2.0", nil, clusterInfo)
 	return err
+}
+
+func (a ClustersAPI) ListZones() (model.ZonesInfo, error) {
+	var zonesInfo model.ZonesInfo
+	resp, err := a.Client.performQuery(http.MethodGet, "/clusters/list-zones", "2.0", nil, nil)
+	if err != nil {
+		return zonesInfo, err
+	}
+	err = json.Unmarshal(resp, &zonesInfo)
+	return zonesInfo, err
 }
 
 // Start starts a terminated Spark cluster given its ID
@@ -112,19 +122,6 @@ func (a ClustersAPI) WaitForClusterTerminated(clusterID string, sleepDurationSec
 		return errors.New("Timed out cluster has not reached terminated state")
 	}
 }
-
-//// Resize resizes a cluster to have a desired number of workers. This will fail unless the cluster is in a RUNNING state.
-//func (a ClustersAPI) Resize(clusterID string, clusterSize models.ClusterSize) error {
-//	data := struct {
-//		ClusterID string `json:"cluster_id,omitempty" url:"cluster_id,omitempty"`
-//		models.ClusterSize
-//	}{
-//		clusterID,
-//		clusterSize,
-//	}
-//	_, err := a.Client.performQuery(http.MethodPost, "/clusters/resize", data, nil)
-//	return err
-//}
 
 // Terminate terminates a Spark cluster given its ID
 func (a ClustersAPI) Terminate(clusterID string) error {
@@ -224,37 +221,3 @@ func (a ClustersAPI) ListNodeTypes() ([]model.NodeType, error) {
 	err = json.Unmarshal(resp, &nodeTypeList)
 	return nodeTypeList.NodeTypes, err
 }
-
-//// SparkVersions return the list of available Spark versions
-//func (a ClustersAPI) SparkVersions() ([]model.SparkVersion, error) {
-//	var versionsList = struct {
-//		Versions []models.SparkVersion `json:"versions,omitempty" url:"versions,omitempty"`
-//	}{}
-//
-//	resp, err := a.Client.performQuery(http.MethodGet, "/clusters/spark-versions", nil, nil)
-//	if err != nil {
-//		return versionsList.Versions, err
-//	}
-//
-//	err = json.Unmarshal(resp, &versionsList)
-//	return versionsList.Versions, err
-//}
-
-// ClustersListZonesResponse is the response from ListZones
-//type ClustersListZonesResponse struct {
-//	Zones       []string `json:"zones,omitempty" url:"zones,omitempty"`
-//	DefaultZone string   `json:"default_zone,omitempty" url:"default_zone,omitempty"`
-//}
-//
-//// ListZones returns a list of availability zones where clusters can be created in (ex: us-west-2a)
-//func (a ClustersAPI) ListZones() (ClustersListZonesResponse, error) {
-//	var zonesList ClustersListZonesResponse
-//
-//	resp, err := a.Client.performQuery(http.MethodGet, "/clusters/list-zones", nil, nil)
-//	if err != nil {
-//		return zonesList, err
-//	}
-//
-//	err = json.Unmarshal(resp, &zonesList)
-//	return zonesList, err
-//}

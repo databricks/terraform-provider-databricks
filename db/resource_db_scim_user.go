@@ -1,10 +1,13 @@
 package db
 
 import (
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"fmt"
 	"github.com/databrickslabs/databricks-terraform/client/model"
 	"github.com/databrickslabs/databricks-terraform/client/service"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"log"
+	"sort"
+	"strings"
 )
 
 func resourceScimUser() *schema.Resource {
@@ -27,16 +30,14 @@ func resourceScimUser() *schema.Resource {
 			"roles": &schema.Schema{
 				Type:     schema.TypeSet,
 				Optional: true,
-				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Set:      schema.HashString,
 			},
 			"entitlements": &schema.Schema{
 				Type:     schema.TypeSet,
 				Optional: true,
-				//Computed: true,
-				Elem: &schema.Schema{Type: schema.TypeString},
-				Set:  schema.HashString,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+				Set:      schema.HashString,
 			},
 		},
 	}
@@ -47,6 +48,7 @@ func convertInterfaceSliceToStringSlice(input []interface{}) []string {
 	for _, item := range input {
 		resp = append(resp, item.(string))
 	}
+	sort.Strings(resp)
 	return resp
 }
 
@@ -67,15 +69,11 @@ func resourceScimUserCreate(d *schema.ResourceData, m interface{}) error {
 		entitlements = convertInterfaceSliceToStringSlice(rEntitlements.(*schema.Set).List())
 		log.Println(entitlements)
 	}
-	user, err := client.Users().Create(userName, displayName, roles, entitlements)
+	user, err := client.Users().Create(userName, displayName, entitlements, roles)
 	if err != nil {
 		return err
 	}
 	d.SetId(user.ID)
-	err = d.Set("entitlements", entitlements)
-	if err != nil {
-		return err
-	}
 	return resourceScimUserRead(d, m)
 }
 
@@ -99,11 +97,24 @@ func resourceScimUserRead(d *schema.ResourceData, m interface{}) error {
 	client := m.(service.DBApiClient)
 	user, err := client.Users().Read(id)
 	if err != nil {
+		if isScimUserMissing(err.Error(), id) {
+			log.Printf("Missing scim user with id: %s.", id)
+			d.SetId("")
+			return nil
+		}
 		return err
 	}
 
 	roles := getListOfRoles(user.Roles)
 	//entitlements := getListOfEntitlements(user.Entitlements)
+	var entitlements []string
+	for _, entitlement := range user.Entitlements {
+		entitlements = append(entitlements, string(entitlement.Value))
+	}
+	err = d.Set("entitlements", entitlements)
+	if err != nil {
+		return err
+	}
 
 	err = d.Set("display_name", user.DisplayName)
 	if err != nil {
@@ -134,7 +145,7 @@ func resourceScimUserUpdate(d *schema.ResourceData, m interface{}) error {
 	if rEntitlements, ok := d.GetOk("entitlements"); ok {
 		entitlements = convertInterfaceSliceToStringSlice(rEntitlements.(*schema.Set).List())
 	}
-	err := client.Users().Update(id, userName, displayName, roles, entitlements)
+	err := client.Users().Update(id, userName, displayName, entitlements, roles)
 	if err != nil {
 		return err
 	}
@@ -146,4 +157,10 @@ func resourceScimUserDelete(d *schema.ResourceData, m interface{}) error {
 	client := m.(service.DBApiClient)
 	err := client.Users().Delete(id)
 	return err
+}
+
+func isScimUserMissing(errorMsg, resourceId string) bool {
+	return strings.Contains(errorMsg, "urn:ietf:params:scim:api:messages:2.0:Error") &&
+		strings.Contains(errorMsg, fmt.Sprintf("User with id %s not found.", resourceId)) &&
+		strings.Contains(errorMsg, "404")
 }

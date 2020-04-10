@@ -3,6 +3,7 @@ package service
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"github.com/databrickslabs/databricks-terraform/client/model"
 	"net/http"
 )
@@ -77,5 +78,5 @@ func (a SecretsAPI) Read(scope string, key string) (model.SecretMetadata, error)
 			return secret, nil
 		}
 	}
-	return secretMeta, errors.New("No Secret Scope found with secret metadata scope name " + scope + " and key " + key)
+	return secretMeta, errors.New(fmt.Sprintf("No Secret Scope found with secret metadata scope name: %s and key: %s.", scope, key))
 }

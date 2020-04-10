@@ -1,38 +1,5 @@
 # Databricks Terraform Provider
 
-## Table Of Contents
-
-- [Quickstart: Building and Using the Provider](#quickstart--building-and-using-the-provider)
-  * [Setup](#setup)
-  * [Downloading the source code and installing the artifact](#downloading-the-source-code-and-installing-the-artifact)
-  * [Basic Terraform example](#basic-terraform-example)
-- [Project Components](#project-components)
-  * [High Level Databricks Client CR[U]D](#high-level-databricks-client-cr-u-d)
-    + [Clusters](#clusters)
-    + [Libraries](#libraries)
-    + [Jobs API](#jobs-api)
-    + [Secrets](#secrets)
-      - [Secret Scope](#secret-scope)
-      - [Secret](#secret)
-      - [Secret ACL](#secret-acl)
-    + [Token API](#token-api)
-    + [Workspace (Notebooks) API](#workspace--notebooks--api)
-    + [SCIM API](#scim-api)
-      - [Users](#users)
-      - [Groups](#groups)
-      - [Group Member](#group-member)
-    + [Instance Profiles API (AWS Only)](#instance-profiles-api--aws-only-)
-    + [DBFS](#dbfs)
-  * [Databricks terraform provider resources](#databricks-terraform-provider-resources)
-- [Testing](#testing)
-- [Project Support](#project-support)
-- [Building the Project](#building-the-project)
-- [Deploying / Installing the Project](#deploying---installing-the-project)
-- [Releasing the Project](#releasing-the-project)
-- [Using the Project](#using-the-project)
-
-
-  
 ## Quickstart: Building and Using the Provider
 
 ### Setup 
@@ -129,6 +96,10 @@ Please refer to the detailed documentation provided in the html documentation fo
 
 Also refer to these [examples](examples/) for more scenarios. 
 
+### Provider Documentation
+
+Provider documentation can be located in the releases tab and documentation is packaged up along with 
+the binary of choice.
 
 ### Docker commands
 

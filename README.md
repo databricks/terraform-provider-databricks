@@ -287,6 +287,7 @@ Note: For updating a user use Patch for entitlements, Put for everything else. W
 * [x] Notebooks
 * [x] DBFS File
 * [x] DBFS File Sync (stateful sync from src to target)
+* [x] Mounting file systems
 * [ ] Cluster Policies (private preview)
 * [ ] Entitlements (private preview)
 

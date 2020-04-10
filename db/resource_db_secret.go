@@ -1,11 +1,10 @@
 package db
 
 import (
-	"bytes"
-	"encoding/base64"
-	"encoding/gob"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"fmt"
 	"github.com/databrickslabs/databricks-terraform/client/service"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"log"
 	"strings"
 )
 
@@ -32,38 +31,12 @@ func resourceSecret() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
+			"last_updated_timestamp": &schema.Schema{
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
 		},
 	}
-}
-
-type SecretId map[string]string
-
-// go binary encoder
-func toGOB64(m SecretId) (string, error) {
-	b := bytes.Buffer{}
-	e := gob.NewEncoder(&b)
-	err := e.Encode(m)
-	if err != nil {
-		return "", err
-	}
-	return base64.StdEncoding.EncodeToString(b.Bytes()), nil
-}
-
-// go binary decoder
-func fromGOB64(str string) (SecretId, error) {
-	m := SecretId{}
-	by, err := base64.StdEncoding.DecodeString(str)
-	if err != nil {
-		return m, err
-	}
-	b := bytes.Buffer{}
-	b.Write(by)
-	d := gob.NewDecoder(&b)
-	err = d.Decode(&m)
-	if err != nil {
-		return m, err
-	}
-	return m, nil
 }
 
 func getSecretId(scope string, key string) (string, error) {
@@ -93,15 +66,31 @@ func resourceSecretCreate(d *schema.ResourceData, m interface{}) error {
 
 func resourceSecretRead(d *schema.ResourceData, m interface{}) error {
 	id := d.Id()
+	client := m.(service.DBApiClient)
 	scope, key, err := getScopeAndKeyFromSecretId(id)
 	if err != nil {
 		return err
 	}
+	secretMetaData, err := client.Secrets().Read(scope, key)
+	if err != nil {
+		if isSecretMissing(err.Error(), scope, key) {
+			log.Printf("Missing secret with id: %s in scope with id: %s.", scope, key)
+			d.SetId("")
+			return nil
+		}
+		return err
+	}
+
+	err = d.Set("last_updated_timestamp", secretMetaData.LastUpdatedTimestamp)
+	if err != nil {
+		return err
+	}
+
 	err = d.Set("scope", scope)
 	if err != nil {
 		return err
 	}
-	err = d.Set("key", key)
+	err = d.Set("key", secretMetaData.Key)
 	if err != nil {
 		return err
 	}
@@ -118,4 +107,9 @@ func resourceSecretDelete(d *schema.ResourceData, m interface{}) error {
 	}
 	err = client.Secrets().Delete(scope, key)
 	return err
+}
+
+func isSecretMissing(errorMsg, scope string, key string) bool {
+	return strings.Contains(errorMsg, fmt.Sprintf("No Secret Scope found with secret metadata "+
+		"scope name: %s and key: %s.", scope, key))
 }

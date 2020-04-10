@@ -1,8 +1,11 @@
 package db
 
 import (
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"fmt"
 	"github.com/databrickslabs/databricks-terraform/client/service"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"log"
+	"strings"
 )
 
 func resourceToken() *schema.Resource {
@@ -58,11 +61,17 @@ func resourceTokenCreate(d *schema.ResourceData, m interface{}) error {
 	}
 	return resourceTokenRead(d, m)
 }
+
 func resourceTokenRead(d *schema.ResourceData, m interface{}) error {
-	tokenId := d.Id()
+	id := d.Id()
 	client := m.(service.DBApiClient)
-	token, err := client.Tokens().Read(tokenId)
+	token, err := client.Tokens().Read(id)
 	if err != nil {
+		if isTokenMissing(err.Error(), id) {
+			log.Printf("Missing databricks api token with id: %s.", id)
+			d.SetId("")
+			return nil
+		}
 		return err
 	}
 	err = d.Set("creation_time", token.CreationTime)
@@ -72,9 +81,14 @@ func resourceTokenRead(d *schema.ResourceData, m interface{}) error {
 	err = d.Set("expiry_time", token.ExpiryTime)
 	return err
 }
+
 func resourceTokenDelete(d *schema.ResourceData, m interface{}) error {
 	tokenId := d.Id()
 	client := m.(service.DBApiClient)
 	err := client.Tokens().Delete(tokenId)
 	return err
+}
+
+func isTokenMissing(errorMsg, resourceId string) bool {
+	return strings.Contains(errorMsg, fmt.Sprintf("Unable to locate token: %s", resourceId))
 }

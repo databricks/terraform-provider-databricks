@@ -187,7 +187,7 @@ func TestInstancePoolsAPI_Read(t *testing.T) {
 				MinIdleInstances: 0,
 				AwsAttributes: &model.InstancePoolAwsAttributes{
 					Availability:        model.AwsAvailabilitySpot,
-					ZoneId:              "us-west-2a",
+					ZoneID:              "us-west-2a",
 					SpotBidPricePercent: 100,
 				},
 				NodeTypeId:                         "c4.2xlarge",

@@ -1,24 +1,41 @@
 package db
 
 import (
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 	"github.com/databrickslabs/databricks-terraform/client"
 	"github.com/databrickslabs/databricks-terraform/client/service"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 	"log"
 	"os"
 )
 
 func Provider() terraform.ResourceProvider {
 	provider := &schema.Provider{
+		DataSourcesMap: map[string]*schema.Resource{
+			"db_notebook":        dataSourceNotebook(),
+			"db_notebook_paths":  dataSourceNotebookPaths(),
+			"db_dbfs_file":       dataSourceDBFSFile(),
+			"db_dbfs_file_paths": dataSourceDBFSFilePaths(),
+			"db_zones":           dataSourceClusterZones(),
+		},
 		ResourcesMap: map[string]*schema.Resource{
-			"db_token":         resourceToken(),
-			"db_secret_scope":  resourceSecretScope(),
-			"db_secret":        resourceSecret(),
-			"db_secret_acl":    resourceSecretAcl(),
-			"db_instance_pool": resourceInstancePool(),
-			"db_scim_user":     resourceScimUser(),
-			"db_scim_group":    resourceScimGroup(),
+			"db_token":                 resourceToken(),
+			"db_secret_scope":          resourceSecretScope(),
+			"db_secret":                resourceSecret(),
+			"db_secret_acl":            resourceSecretAcl(),
+			"db_instance_pool":         resourceInstancePool(),
+			"db_scim_user":             resourceScimUser(),
+			"db_scim_group":            resourceScimGroup(),
+			"db_notebook":              resourceNotebook(),
+			"db_cluster":               resourceCluster(),
+			"db_job":                   resourceJob(),
+			"db_dbfs_file":             resourceDBFSFile(),
+			"db_dbfs_file_sync":        resourceDBFSFileSync(),
+			"db_instance_profile":      resourceInstanceProfile(),
+			"db_aws_s3_mount":          resourceAWSS3Mount(),
+			"db_azure_blob_mount":      resourceAzureBlobMount(),
+			"db_azure_adls_gen1_mount": resourceAzureAdlsGen1Mount(),
+			"db_azure_adls_gen2_mount": resourceAzureAdlsGen2Mount(),
 		},
 		Schema: map[string]*schema.Schema{
 			"host": &schema.Schema{

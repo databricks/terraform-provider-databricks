@@ -55,11 +55,41 @@ func (c DBApiClient) Groups() GroupsAPI {
 	return groupsAPI.init(c)
 }
 
+func (c DBApiClient) Notebooks() NotebooksAPI {
+	var notebooksAPI NotebooksAPI
+	return notebooksAPI.init(c)
+}
+
+func (c DBApiClient) Jobs() JobsAPI {
+	var jobsAPI JobsAPI
+	return jobsAPI.init(c)
+}
+
+func (c DBApiClient) DBFS() DBFSAPI {
+	var DBFSAPI DBFSAPI
+	return DBFSAPI.init(c)
+}
+
+func (c DBApiClient) Libraries() LibrariessAPI {
+	var librariesAPI LibrariessAPI
+	return librariesAPI.init(c)
+}
+
 func (c DBApiClient) InstancePools() InstancePoolsAPI {
 	var instancePoolsAPI InstancePoolsAPI
 	return instancePoolsAPI.init(c)
 }
 
+func (c DBApiClient) InstanceProfiles() InstanceProfilesAPI {
+	var instanceProfilesAPI InstanceProfilesAPI
+	return instanceProfilesAPI.init(c)
+}
+
+func (c DBApiClient) Commands() CommandsAPI {
+	var commandsAPI CommandsAPI
+	return commandsAPI.init(c)
+}
+
 func (c *DBApiClient) performQuery(method, path string, apiVersion string, headers map[string]string, data interface{}) ([]byte, error) {
-	return db.PerformQuery(c.Option, method, path, "2.0", headers, true, false, data)
+	return db.PerformQuery(c.Option, method, path, apiVersion, headers, true, false, data)
 }

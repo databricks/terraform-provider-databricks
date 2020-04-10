@@ -3,7 +3,7 @@
 before:
   hooks:
     # You may remove this if you don't use go modules.
-    - make singlehtmldocs
+    - make docs
     - go mod download
 builds:
 - env:
@@ -30,7 +30,7 @@ archives:
     - LICENSE*
     - CHANGELOG*
     - NOTICE*
-    - docs/build/singlehtml/**/*
+    - docs/build/html/**/*
 checksum:
   name_template: 'checksums.txt'
 snapshot:

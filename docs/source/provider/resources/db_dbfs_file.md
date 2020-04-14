@@ -42,6 +42,9 @@ it will attempt to do a delete, create.
 
 In addition to all arguments above, the following attributes are exported:
 
+.. _r_dbfs_file_id:
+* :ref:`id <r_dbfs_file_id>` - The id for the dbfs file object.
+
 .. _r_dbfs_file_file_size:
 * :ref:`file_size <r_dbfs_file_file_size>` - The file size of the file that is being tracked by this resource in bytes.
 

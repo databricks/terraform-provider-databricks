@@ -370,8 +370,11 @@ cluster belongs. Refer to Instance Pools API for details.
 
 In addition to all arguments above, the following attributes are exported:
 
+.. _r_job_id:
+* :ref:`id <r_job_id>` - The id for the job object.
+
 .. _r_job_job_id:
-* :ref:`job_id <r_job_job_id>` - 	The canonical identifier for the newly created job.
+* :ref:`job_id <r_job_job_id>` - The canonical identifier for the newly created job.
 
 .. _r_job_creator_user_name:
 * :ref:`creator_user_name <r_job_creator_user_name>` - The creator user name. This field won’t be included in 

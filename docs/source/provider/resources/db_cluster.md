@@ -1,6 +1,6 @@
 # Resource: db_cluster
 
-
+This resource allows you to create, update, and delete clusters.  
 
 ## Example Usage
 

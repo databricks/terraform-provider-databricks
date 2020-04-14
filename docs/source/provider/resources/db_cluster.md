@@ -297,6 +297,9 @@ suffix should be .wheelhouse.zip.
 
 In addition to all arguments above, the following attributes are exported:
 
+.. _r_cluster_id:
+* :ref:`id <r_cluster_id>` - The id for the cluster object.
+
 .. _r_cluster_cluster_id:
 * :ref:`cluster_id <r_cluster_cluster_id>` - Canonical identifier for the cluster.
 

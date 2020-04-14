@@ -49,6 +49,9 @@ By default, this is SOURCE. However it may be one of: SOURCE, HTML, JUPYTER, DBC
 
 In addition to all arguments above, the following attributes are exported:
 
+.. _r_notebook_id:
+* :ref:`id <r_notebook_id>` - The id for the notebook object.
+
 .. _r_notebook_object_id:
 * :ref:`object_id <r_notebook_object_id>` - Unique identifier for a NOTEBOOK or DIRECTORY.
 

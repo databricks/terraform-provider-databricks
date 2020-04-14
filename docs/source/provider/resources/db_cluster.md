@@ -198,12 +198,100 @@ feature requires specific AWS permissions to function correctly - refer to Autos
 cluster belongs. Refer to Instance Pools API for details.
 
 .. _r_cluster_idempotency_token:
-* :ref:`autotermination_minutes <r_cluster_autotermination_minutes>` - **(Optional)** An optional token that can be 
+* :ref:`idempotency_token <r_cluster_idempotency_token>` - **(Optional)** An optional token that can be 
 used to guarantee the idempotency of cluster creation requests. If an active cluster with the provided token already 
 exists, the request will not create a new cluster, but it will return the ID of the existing cluster instead. The 
 existence of a cluster with the same token is not checked against terminated clusters. If you specify the idempotency 
 token, upon failure you can retry until the request succeeds. Databricks will guarantee that exactly one cluster will 
 be launched with that idempotency token. This token should have at most 64 characters.
+
+.. _r_job_library_jar:
+* :ref:`library_jar <r_job_library_jar>` - **(Optional)** URI of the JAR to be installed. 
+DBFS and S3 URIs are supported. For example: "dbfs:/mnt/databricks/library.jar", "s3://my-bucket/library.jar". 
+If S3 is used, make sure the cluster has read access on the library. You may need to launch the cluster with an 
+instance profile to access the S3 URI.
+
+    * `path` - **(Required)** Path of the jar in dbfs or in S3. For example: "dbfs:/mnt/databricks/library.jar", 
+    "s3://my-bucket/library.jar". 
+    
+    * `messages` - **(Required)** Messages of the results of the library installation
+    
+    * `status` - **(Required)** The status of the library installation. Possible statuses are: PENDING, RESOLVING, 
+    INSTALLING, INSTALLED, FAILED, and UNINSTALL_ON_RESTART.
+       
+
+.. _r_job_library_egg:
+* :ref:`existing_cluster_id <r_job_library_egg>` - **(Optional)**  URI of the egg to be installed. 
+DBFS and S3 URIs are supported. For example: "dbfs:/my/egg", "s3://my-bucket/egg" }. 
+If S3 is used, make sure the cluster has read access on the library. You may need to launch the cluster 
+with an instance profile to access the S3 URI.
+
+    * `path` - **(Required)** Path of the egg in dbfs or in S3. For example: "dbfs:/mnt/databricks/library.egg", 
+    "s3://my-bucket/library.egg". 
+    
+    * `messages` - **(Required)** Messages of the results of the library installation
+    
+    * `status` - **(Required)** The status of the library installation. Possible statuses are: PENDING, RESOLVING, 
+    INSTALLING, INSTALLED, FAILED, and UNINSTALL_ON_RESTART.
+
+.. _r_job_library_whl:
+* :ref:`library_whl <r_job_library_whl>` - **(Optional)** If whl, URI of the wheel or zipped wheels to be installed. 
+DBFS and S3 URIs are supported. For example: "dbfs:/my/whl", "s3://my-bucket/whl". If S3 is used, make sure the cluster 
+has read access on the library. You may need to launch the cluster with an instance profile to access the S3 URI. 
+Also the wheel file name needs to use the correct convention. If zipped wheels are to be installed, the file name 
+suffix should be .wheelhouse.zip.
+
+    * `path` - **(Required)** Path of the whl in dbfs or in S3. For example: "dbfs:/mnt/databricks/library.whl", 
+    "s3://my-bucket/library.whl". 
+    
+    * `messages` - **(Required)** Messages of the results of the library installation
+    
+    * `status` - **(Required)** The status of the library installation. Possible statuses are: PENDING, RESOLVING, 
+    INSTALLING, INSTALLED, FAILED, and UNINSTALL_ON_RESTART.
+
+.. _r_job_library_pypi:
+* :ref:`library_pypi <r_job_library_pypi>` - **(Optional)** Specification of a PyPI library to be installed.
+
+    * `package` - **(Required)**  The name of the PyPI package to install. An optional exact version specification 
+    is also supported. Examples: simplejson and simplejson==3.8.0. This field is required.
+    
+    * `repo` - **(Optional)** The repository where the package can be found. If not specified, 
+    the default pip index is used.
+    
+    * `messages` - **(Required)** Messages of the results of the library installation
+        
+    * `status` - **(Required)** The status of the library installation. Possible statuses are: PENDING, RESOLVING, 
+    INSTALLING, INSTALLED, FAILED, and UNINSTALL_ON_RESTART.
+
+.. _r_job_library_maven:
+* :ref:`library_maven <r_job_library_maven>` - **(Optional)** Specification of a Maven library to be installed.
+
+    * `coordinates` - **(Required)** Gradle-style Maven coordinates. For example: org.jsoup:jsoup:1.7.2. 
+    This field is required.
+    
+    * `repo` - **(Optional)** Maven repo to install the Maven package from. If omitted, both Maven Central 
+    Repository and Spark Packages are searched.
+    
+    * `exclusions` - **(Optional)** List of dependences to exclude. For example: 
+    ("slf4j:slf4j", "*:hadoop-client"). 
+    
+    * `messages` - **(Required)** Messages of the results of the library installation
+        
+    * `status` - **(Required)** The status of the library installation. Possible statuses are: PENDING, RESOLVING, 
+    INSTALLING, INSTALLED, FAILED, and UNINSTALL_ON_RESTART.
+    
+.. _r_job_library_cran:
+* :ref:`library_cran <r_job_library_cran>` - **(Optional)** Specification of a CRAN library to be installed.
+
+    * `package` - **(Required)** The name of the CRAN package to install. This field is required.
+    
+    * `repo` - **(Optional)** The repository where the package can be found. If not specified, 
+    the default CRAN repo is used.
+    
+    * `messages` - **(Required)** Messages of the results of the library installation
+        
+    * `status` - **(Required)** The status of the library installation. Possible statuses are: PENDING, RESOLVING, 
+    INSTALLING, INSTALLED, FAILED, and UNINSTALL_ON_RESTART.
 
 ## Attribute Reference
 

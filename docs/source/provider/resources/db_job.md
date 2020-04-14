@@ -81,31 +81,32 @@ suffix should be .wheelhouse.zip.
 .. _r_job_library_pypi:
 * :ref:`library_pypi <r_job_library_pypi>` - **(Optional)** Specification of a PyPI library to be installed.
 
-    * :ref:`package` - **(Required)**  The name of the PyPI package to install. An optional exact version specification 
+    * `package` - **(Required)**  The name of the PyPI package to install. An optional exact version specification 
     is also supported. Examples: simplejson and simplejson==3.8.0. This field is required.
     
-    * :ref:`repo` - **(Optional)** The repository where the package can be found. If not specified, 
+    * `repo` - **(Optional)** The repository where the package can be found. If not specified, 
     the default pip index is used.
 
 .. _r_job_library_maven:
 * :ref:`library_maven <r_job_library_maven>` - **(Optional)** Specification of a Maven library to be installed.
 
-    * :ref:`coordinates` - **(Required)** Gradle-style Maven coordinates. For example: org.jsoup:jsoup:1.7.2. 
+    * `coordinates` - **(Required)** Gradle-style Maven coordinates. For example: org.jsoup:jsoup:1.7.2. 
     This field is required.
     
-    * :ref:`repo` - **(Optional)** Maven repo to install the Maven package from. If omitted, both Maven Central 
+    * `repo` - **(Optional)** Maven repo to install the Maven package from. If omitted, both Maven Central 
     Repository and Spark Packages are searched.
     
-    * :ref:`exclusions` - **(Optional)** List of dependences to exclude. For example: 
-    ["slf4j:slf4j", "*:hadoop-client"]. 
+    * `exclusions` - **(Optional)** List of dependences to exclude. For example: 
+    ("slf4j:slf4j", "*:hadoop-client"). 
     
 .. _r_job_library_cran:
 * :ref:`library_cran <r_job_library_cran>` - **(Optional)** Specification of a CRAN library to be installed.
 
-    * :ref:`package` - **(Required)** The name of the CRAN package to install. This field is required.
+    * `package` - **(Required)** The name of the CRAN package to install. This field is required.
     
-    * :ref:`repo` - **(Optional)** The repository where the package can be found. If not specified, 
+    * `repo` - **(Optional)** The repository where the package can be found. If not specified, 
     the default CRAN repo is used.
+
 
 .. _r_job_notebook_path:
 * :ref:`notebook_path <r_job_notebook_path>` - **(Optional)** The absolute path of the notebook to be run in the 
@@ -129,8 +130,8 @@ SparkContext.getOrCreate to obtain a Spark context; otherwise, runs of the job w
 * :ref:`library_maven <r_job_jar_parameters>` - **(Optional)** Parameters that will be passed to the main method.
 
 .. _r_job_python_file:
-* :ref:`python_file <r_job_python_file>` - **(Optional)** 	The URI of the Python file to be executed. 
-DBFS and S3 paths are supported. This field is required.
+* :ref:`python_file <r_job_python_file>` - **(Optional)** The URI of the Python file to be executed. DBFS and S3 paths 
+are supported. This field is required.
 
 .. _r_job_python_parameters:
 * :ref:`python_parameters <r_job_python_parameters>` - **(Optional)** Command line parameters that will be passed to 
@@ -144,19 +145,19 @@ to spark submit.
 * :ref:`email_notifications <r_job_email_notifications>` - **(Optional)** An optional set of email addresses notified 
 when runs of this job begin and complete and when this job is deleted. The default behavior is to not send any emails.
 
-    * :ref:`on_start` - **(Optional)** A list of email addresses to be notified when a run begins. 
+    * `on_start` - **(Optional)** A list of email addresses to be notified when a run begins. 
     If not specified upon job creation or reset, the list will be empty, i.e., no address will be notified.
     
-    * :ref:`on_success` - **(Optional)** A list of email addresses to be notified when a run successfully completes. 
+    * :`on_success` - **(Optional)** A list of email addresses to be notified when a run successfully completes. 
     A run is considered to have completed successfully if it ends with a TERMINATED life_cycle_state and a SUCCESSFUL 
     result_state. If not specified upon job creation or reset, the list will be empty, i.e., no address will be notified.
     
-    * :ref:`on_failure` - **(Optional)** A list of email addresses to be notified when a run unsuccessfully completes. 
+    * `on_failure` - **(Optional)** A list of email addresses to be notified when a run unsuccessfully completes. 
     A run is considered to have completed unsuccessfully if it ends with an INTERNAL_ERROR life_cycle_state or a 
     SKIPPED, FAILED, or TIMED_OUT result_state. If not specified upon job creation or reset, the list will be empty, 
     i.e., no address will be notified.
     
-    * :ref:`no_alert_for_skipped_runs` - **(Optional)** If true, do not send email to recipients specified in 
+    * `no_alert_for_skipped_runs` - **(Optional)** If true, do not send email to recipients specified in 
     on_failure if the run is skipped.
 
 .. _r_job_timeout_seconds:
@@ -183,11 +184,11 @@ a job when it times out. The default behavior is to not retry on timeout.
 The default behavior is that the job runs when triggered by clicking Run Now in the Jobs UI or sending an API 
 request to runNow.
 
-    * :ref:`quartz_cron_expression` - **(Optional)** 	A Cron expression using Quartz syntax that describes 
+    * `quartz_cron_expression` - **(Optional)** 	A Cron expression using Quartz syntax that describes 
     the schedule for a job. See [Cron Trigger](http://www.quartz-scheduler.org/documentation/quartz-2.3.0/tutorials/crontrigger.html) 
     for details. This field is required.
     
-    * :ref:`timezone_id` - **(Optional)** A Java timezone ID. The schedule for a job will be resolved with respect 
+    * `timezone_id` - **(Optional)** A Java timezone ID. The schedule for a job will be resolved with respect 
     to this timezone. See [Java TimeZone](https://docs.oracle.com/javase/7/docs/api/java/util/TimeZone.html) for 
     details. This field is required.
 
@@ -213,10 +214,10 @@ A cluster has one Spark Driver and num_workers Executors for a total of num_work
 * :ref:`autoscale <r_job_autoscale>` - **(Optional)** Parameters needed in order to automatically scale clusters up 
 and down based on load.
 
-    * :ref:`min_workers` - **(Optional)** The minimum number of workers to which the cluster can scale down when 
+    * `min_workers` - **(Optional)** The minimum number of workers to which the cluster can scale down when 
     underutilized. It is also the initial number of workers the cluster will have after creation.
     
-    * :ref:`max_workers` - **(Optional)** 	The maximum number of workers to which the cluster can scale up when 
+    * `max_workers` - **(Optional)** 	The maximum number of workers to which the cluster can scale up when 
     overloaded. max_workers must be strictly greater than min_workers.
 
 .. _r_job_cluster_name:
@@ -236,36 +237,36 @@ spark.driver.extraJavaOptions and spark.executor.extraJavaOptions respectively.
 * :ref:`aws_attributes <r_job_aws_attributes>` - **(Optional)** Attributes related to clusters running on 
 Amazon Web Services. If not specified at cluster creation, a set of default values will be used.
 
-    * :ref:`zone_id` - **(Required)** Identifier for the availability zone/datacenter in which the cluster resides. 
+    * `zone_id` - **(Required)** Identifier for the availability zone/datacenter in which the cluster resides. 
     This string will be of a form like “us-west-2a”. The provided availability zone must be in the same region as the 
     Databricks deployment. For example, “us-west-2a” is not a valid zone ID if the Databricks deployment resides in the 
     “us-east-1” region. 
     
-    * :ref:`availability` - **(Optional)** 	Availability type used for all subsequent nodes past the first_on_demand 
+    * `availability` - **(Optional)** 	Availability type used for all subsequent nodes past the first_on_demand 
     ones. Note: If first_on_demand is zero, this availability type will be used for the entire cluster.
     
-    * :ref:`spot_bid_price_percent` - **(Optional)** The max price for AWS spot instances, as a percentage of the 
+    * `spot_bid_price_percent` - **(Optional)** The max price for AWS spot instances, as a percentage of the 
     corresponding instance type’s on-demand price. For example, if this field is set to 50, and the cluster needs a new 
     i3.xlarge spot instance, then the max price is half of the price of on-demand i3.xlarge instances. Similarly, if 
     this field is set to 200, the max price is twice the price of on-demand i3.xlarge instances. If not specified, the 
     default value is 100. When spot instances are requested for this cluster, only spot instances whose max price 
     percentage matches this field will be considered. For safety, we enforce this field to be no more than 10000.
     
-    * :ref:`instance_profile_arn` - **(Optional)** Nodes for this cluster will only be placed on AWS instances with 
+    * `instance_profile_arn` - **(Optional)** Nodes for this cluster will only be placed on AWS instances with 
     this instance profile. If omitted, nodes will be placed on instances without an instance profile. The instance 
     profile must have previously been added to the Databricks environment by an account administrator.
 
-    * :ref:`first_on_demand` - **(Optional)** The first first_on_demand nodes of the cluster will be placed on on-demand 
+    * `first_on_demand` - **(Optional)** The first first_on_demand nodes of the cluster will be placed on on-demand 
     instances. If this value is greater than 0, the cluster driver node will be placed on an on-demand instance. If this 
     value is greater than or equal to the current cluster size, all nodes will be placed on on-demand instances. If this 
     value is less than the current cluster size, first_on_demand nodes will be placed on on-demand instances and the 
     remainder will be placed on availability instances. This value does not affect cluster size and cannot be mutated 
     over the lifetime of a cluster.
     
-    * :ref:`ebs_volume_type` - **(Optional)** The type of EBS volumes that will be launched with this cluster. 
+    * `ebs_volume_type` - **(Optional)** The type of EBS volumes that will be launched with this cluster. 
     GENERAL_PURPOSE_SSD or THROUGHPUT_OPTIMIZED_HDD
     
-    * :ref:`ebs_volume_count` - **(Optional)** The number of volumes launched for each instance. You can choose up to 
+    * `ebs_volume_count` - **(Optional)** The number of volumes launched for each instance. You can choose up to 
     10 volumes. This feature is only enabled for supported node types. Legacy node types cannot specify custom EBS 
     volumes. For node types with no instance store, at least one EBS volume needs to be specified; otherwise, cluster 
     creation will fail. These EBS volumes will be mounted at /ebs0, /ebs1, and etc. Instance store volumes will 
@@ -274,7 +275,7 @@ Amazon Web Services. If not specified at cluster creation, a set of default valu
     inefficient disk utilization. If no EBS volumes are attached, Databricks will configure Spark to use instance 
     store volumes. If EBS volumes are specified, then the Spark configuration spark.local.dir will be overridden.
     
-    * :ref:`ebs_volume_size` - **(Optional)** The size of each EBS volume (in GiB) launched for each instance. 
+    * `ebs_volume_size` - **(Optional)** The size of each EBS volume (in GiB) launched for each instance. 
     For general purpose SSD, this value must be within the range 100 - 4096. For throughput optimized HDD, this 
     value must be within the range 500 - 4096. Custom EBS volumes cannot be specified for the legacy node types
     (memory-optimized and compute-optimized).
@@ -304,27 +305,27 @@ long-term storage destination. Only one destination can be specified for one clu
 will be delivered to the destination every 5 mins. The destination of driver logs is <destination>/<cluster-id>/driver, 
 while the destination of executor logs is <destination>/<cluster-id>/executor.
 
-    * :ref:`dbfs_destination` - **(Optional)** DBFS location of cluster log. destination must be provided. For example, 
+    * `dbfs_destination` - **(Optional)** DBFS location of cluster log. destination must be provided. For example, 
     "dbfs:/home/cluster_log"
     
-    * :ref:`s3_destination` - **(Optional)** S3 destination, e.g. s3://my-bucket/some-prefix You must configure the 
+    * `s3_destination` - **(Optional)** S3 destination, e.g. s3://my-bucket/some-prefix You must configure the 
     cluster with an instance profile and the instance profile must have write access to the destination. You cannot use 
     AWS keys.
     
-    * :ref:`s3_region` - **(Optional)** S3 region, e.g. us-west-2. Either region or endpoint must be set. If both are 
+    * `s3_region` - **(Optional)** S3 region, e.g. us-west-2. Either region or endpoint must be set. If both are 
     set, endpoint is used.
     
-    * :ref:`s3_endpoint` - **(Optional)** S3 endpoint, e.g. https://s3-us-west-2.amazonaws.com. Either region or endpoint 
+    * `s3_endpoint` - **(Optional)** S3 endpoint, e.g. https://s3-us-west-2.amazonaws.com. Either region or endpoint 
     needs to be set. If both are set, endpoint is used.
     
-    * :ref:`s3_enable_encryption` - **(Optional)** Enable server side encryption, false by default.
+    * `s3_enable_encryption` - **(Optional)** Enable server side encryption, false by default.
     
-    * :ref:`s3_encryption_type` - **(Optional)** The encryption type, it could be sse-s3 or sse-kms. 
+    * `s3_encryption_type` - **(Optional)** The encryption type, it could be sse-s3 or sse-kms. 
     It is used only when encryption is enabled and the default type is sse-s3.
     
-    * :ref:`s3_kms_key` - **(Optional)** KMS key used if encryption is enabled and encryption type is set to sse-kms.
+    * `s3_kms_key` - **(Optional)** KMS key used if encryption is enabled and encryption type is set to sse-kms.
     
-    * :ref:`s3_canned_acl` - **(Optional)** Set canned access control list, e.g. bucket-owner-full-control. 
+    * `s3_canned_acl` - **(Optional)** Set canned access control list, e.g. bucket-owner-full-control. 
     If canned_cal is set, the cluster instance profile must have s3:PutObjectAcl permission on the destination bucket 
     and prefix. The full list of possible canned ACL can be found [here](https://docs.aws.amazon.com/AmazonS3/latest/dev/acl-overview.html#canned-acl). 
     By default only the object owner gets full control. If you are using cross account role for writing data, you may 
@@ -335,17 +336,17 @@ while the destination of executor logs is <destination>/<cluster-id>/executor.
 scripts can be specified. The scripts are executed sequentially in the order provided. If cluster_log_conf is specified, 
 init script logs are sent to <destination>/<cluster-id>/init_scripts.
 
-    * :ref:`dbfs_destination` - **(Optional)** DBFS location of init script. Destination must be provided. For example, 
+    * `dbfs_destination` - **(Optional)** DBFS location of init script. Destination must be provided. For example, 
     "dbfs:/home/cluster_log"
     
-    * :ref:`s3_destination` - **(Optional)** S3 destination, e.g. s3://my-bucket/some-prefix You must configure the 
+    * `s3_destination` - **(Optional)** S3 destination, e.g. s3://my-bucket/some-prefix You must configure the 
     cluster with an instance profile and the instance profile must have write access to the destination. You cannot use 
     AWS keys.
     
-    * :ref:`s3_region` - **(Optional)** S3 region, e.g. us-west-2. Either region or endpoint must be set. If both are 
+    * `s3_region` - **(Optional)** S3 region, e.g. us-west-2. Either region or endpoint must be set. If both are 
     set, endpoint is used.
     
-    * :ref:`s3_endpoint` - **(Optional)** S3 endpoint, e.g. https://s3-us-west-2.amazonaws.com. Either region or endpoint 
+    * `s3_endpoint` - **(Optional)** S3 endpoint, e.g. https://s3-us-west-2.amazonaws.com. Either region or endpoint 
     needs to be set. If both are set, endpoint is used.
 
 .. _r_job_spark_env_vars:

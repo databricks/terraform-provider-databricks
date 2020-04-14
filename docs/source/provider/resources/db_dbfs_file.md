@@ -19,10 +19,10 @@ This is a resource that lets you create, get and delete files in DBFS (Databrick
 The following arguments are supported:
 
 .. _r_dbfs_file_content:
-* :ref:`content <r_dbfs_file_content_>` - **(Required)** The content of the file as a base64 encoded string.
+* :ref:`content <r_dbfs_file_content>` - **(Required)** The content of the file as a base64 encoded string.
 
 .. _r_dbfs_file_path:
-* :ref:`path <r_dbfs_file_path_>` - **(Optional)** The path of the file in which you wish to save.
+* :ref:`path <r_dbfs_file_path>` - **(Optional)** The path of the file in which you wish to save.
 
 .. _r_dbfs_file_overwrite:
 * :ref:`overwrite <r_dbfs_file_overwrite>` - **(Optional)** This is used to determine whether it should delete the 

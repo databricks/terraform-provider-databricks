@@ -12,7 +12,9 @@ This section contains all the resources that can be managed by the Databricks Te
    :maxdepth: 3
    :caption: Contents:
 
+   db_job <resources/db_job.md>
    db_instance_pool <resources/db_instance_pool.md>
+   db_notebook <resources/db_notebook.md>
    db_scim_group <resources/db_scim_group.md>
    db_scim_user <resources/db_scim_user.md>
    db_secret <resources/db_secret.md>

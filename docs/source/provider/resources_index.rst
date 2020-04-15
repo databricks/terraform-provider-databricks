@@ -14,6 +14,7 @@ This section contains all the resources that can be managed by the Databricks Te
 
    db_cluster <resources/db_cluster.md>
    db_dbfs_file <resources/db_dbfs_file.md>
+   db_dbfs_file_sync <resources/db_dbfs_file_sync.md>
    db_job <resources/db_job.md>
    db_instance_pool <resources/db_instance_pool.md>
    db_instance_profile <resources/db_instance_profile.md>

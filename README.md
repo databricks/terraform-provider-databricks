@@ -1,38 +1,5 @@
 # Databricks Terraform Provider
 
-## Table Of Contents
-
-- [Quickstart: Building and Using the Provider](#quickstart--building-and-using-the-provider)
-  * [Setup](#setup)
-  * [Downloading the source code and installing the artifact](#downloading-the-source-code-and-installing-the-artifact)
-  * [Basic Terraform example](#basic-terraform-example)
-- [Project Components](#project-components)
-  * [High Level Databricks Client CR[U]D](#high-level-databricks-client-cr-u-d)
-    + [Clusters](#clusters)
-    + [Libraries](#libraries)
-    + [Jobs API](#jobs-api)
-    + [Secrets](#secrets)
-      - [Secret Scope](#secret-scope)
-      - [Secret](#secret)
-      - [Secret ACL](#secret-acl)
-    + [Token API](#token-api)
-    + [Workspace (Notebooks) API](#workspace--notebooks--api)
-    + [SCIM API](#scim-api)
-      - [Users](#users)
-      - [Groups](#groups)
-      - [Group Member](#group-member)
-    + [Instance Profiles API (AWS Only)](#instance-profiles-api--aws-only-)
-    + [DBFS](#dbfs)
-  * [Databricks terraform provider resources](#databricks-terraform-provider-resources)
-- [Testing](#testing)
-- [Project Support](#project-support)
-- [Building the Project](#building-the-project)
-- [Deploying / Installing the Project](#deploying---installing-the-project)
-- [Releasing the Project](#releasing-the-project)
-- [Using the Project](#using-the-project)
-
-
-  
 ## Quickstart: Building and Using the Provider
 
 ### Setup 
@@ -129,6 +96,10 @@ Please refer to the detailed documentation provided in the html documentation fo
 
 Also refer to these [examples](examples/) for more scenarios. 
 
+### Provider Documentation
+
+Provider documentation can be located in the releases tab and documentation is packaged up along with 
+the binary of choice.
 
 ### Docker commands
 
@@ -155,158 +126,47 @@ $ docker run -it -v $(pwd):/workpace -w /workpace databricks-terraform apply
 
 ## Project Components
 
-### High Level Databricks Client CR[U]D
-The client folder contains all the code for the golang sdk for the Databricks REST API. It is kept separate from the databricks terraform provider with its own unit/integration tests. The client so far supports the following:
+### Databricks Terraform Provider Resources State
 
-#### Clusters
-* [ ] Create cluster
+| Resource                 | Implemented        | Import Support       | Acceptance Tests     | Documentation        | Reviewed             | Finalize Schema      |
+|--------------------------|--------------------|----------------------|----------------------|----------------------|----------------------|----------------------|
+| db_token                 | :white_check_mark: | :white_large_square: | :white_check_mark:   | :white_check_mark:   | :white_large_square: | :white_large_square: |
+| db_secret_scope          | :white_check_mark: | :white_large_square: | :white_check_mark:   | :white_check_mark:   | :white_large_square: | :white_large_square: |
+| db_secret                | :white_check_mark: | :white_large_square: | :white_check_mark:   | :white_check_mark:   | :white_large_square: | :white_large_square: |
+| db_secret_acl            | :white_check_mark: | :white_large_square: | :white_check_mark:   | :white_check_mark:   | :white_large_square: | :white_large_square: |
+| db_instance_pool         | :white_check_mark: | :white_large_square: | :white_large_square: | :white_check_mark:   | :white_large_square: | :white_large_square: |
+| db_scim_user             | :white_check_mark: | :white_large_square: | :white_check_mark:   | :white_check_mark:   | :white_large_square: | :white_large_square: |
+| db_scim_group            | :white_check_mark: | :white_large_square: | :white_large_square: | :white_check_mark:   | :white_large_square: | :white_large_square: |
+| db_notebook              | :white_check_mark: | :white_large_square: | :white_large_square: | :white_check_mark:   | :white_large_square: | :white_large_square: |
+| db_cluster               | :white_check_mark: | :white_large_square: | :white_large_square: | :white_check_mark:   | :white_large_square: | :white_large_square: |
+| db_job                   | :white_check_mark: | :white_large_square: | :white_large_square: | :white_check_mark:   | :white_large_square: | :white_large_square: |
+| db_dbfs_file             | :white_check_mark: | :white_large_square: | :white_large_square: | :white_check_mark:   | :white_large_square: | :white_large_square: |
+| db_dbfs_file_sync        | :white_check_mark: | :white_large_square: | :white_large_square: | :white_check_mark:   | :white_large_square: | :white_large_square: |
+| db_instance_profile      | :white_check_mark: | :white_large_square: | :white_large_square: | :white_check_mark:   | :white_large_square: | :white_large_square: |
+| db_aws_s3_mount          | :white_check_mark: | :white_large_square: | :white_large_square: | :white_check_mark:   | :white_large_square: | :white_large_square: |
+| db_azure_blob_mount      | :white_check_mark: | :white_large_square: | :white_large_square: | :white_check_mark:   | :white_large_square: | :white_large_square: |
+| db_azure_adls_gen1_mount | :white_check_mark: | :white_large_square: | :white_large_square: | :white_check_mark:   | :white_large_square: | :white_large_square: |
+| db_azure_adls_gen2_mount | :white_check_mark: | :white_large_square: | :white_large_square: | :white_check_mark:   | :white_large_square: | :white_large_square: |
 
-* [ ] Get cluster
+### Databricks Terraform Data Sources State
 
-* [ ] Update cluster
-
-* [ ] Delete cluster
-
-#### Libraries
-* [ ] Create Library Installation
-
-* [ ] Get Library Installation (cluster-status api)
-
-* [ ] Delete Library Installation
-
-> Note: All library manipulation for clusters must be performed when the cluster is in a running state.
-
-#### Jobs API
-* [ ] Create job
-
-* [ ] Get job
-
-* [ ] Update job
-
-* [ ] Delete job
-
-Instance Pools
-* [x] Create Instance Pools
-
-* [x] Read Instance Pools
-
-* [x] Update Instance Pools
-
-* [x] Delete Instance Pools
-
-#### Secrets
-##### Secret Scope
-* [x] Create Secret Scope
-
-* [x] Read Secret Scope*
-
-* [x] Delete Secret Scope
-
-##### Secret
-* [x] Create Secret
-
-* [x] Read Secret*
-
-* [x] Delete Secret
-
-Note: For reading a secret it will only fetch the metadata so the value of the secret is only accessible via the databricks runtime in databricks.
-
-##### Secret ACL
-* [x] Create Secret ACL
-
-* [x] Read Secret ACL*
-
-* [x] Delete Secret ACL
-
-#### Token API
-* [x] Create Token
-
-* [x] Read Token*
-
-* [x] Delete (Revoke) Token
-
-#### Workspace (Notebooks) API
-* [ ] Import/create Workspace Path (notebooks)
-
-* [ ] Get Workspace Path (notebooks)
-
-* [ ] Delete Workspace Path (notebooks)
-
-#### SCIM API
-##### Users
-* [x] Create User
-
-* [x] Update User
-
-* [x] Delete User
-
-Note: For updating a user use Patch for entitlements, Put for everything else. We May want to deal with entitlements as a separate resource to make it easy to manage. Creating the user object and then mapping entitlements are two separate activities.
-
-##### Groups
-* [x] Create Group
-
-* [x] Get Group*
-
-* [x] Delete Group
-
-##### Group Member
-* [x] Create Member
-
-* [x] Get Member*
-
-* [x] Delete Member
-
-#### Instance Profiles API (AWS Only)
-* [ ] Create IAM Instance Profile Link
-
-* [ ] Get IAM Instance Profile Link
-
-* [ ] Delete IAM Instance Profile Link
-
-#### DBFS
-* [ ] Create Object from local file path (/dbfs/put)
-
-* [ ] Get Object (metadata; /dbfs/get-status)
-
-* [ ] Delete Object (metadata; /dbfs/get-status)
-
-* For the Read operation there were no direct rest api calls for read so it is a list and search for the item and return the metadata from the list.
-
-
-### Databricks terraform provider resources
-
-* [x] Instance pools
-* [x] Scim groups
-* [x] Scim users
-* [x] Secret scopes
-* [x] Secrets
-* [x] Secret acls
-* [x] Jobs
-* [x] Clusters + Libraries
-* [x] IAM Instance Profiles
-* [x] Notebooks
-* [x] DBFS File
-* [x] DBFS File Sync (stateful sync from src to target)
-* [x] Mounting file systems
-* [ ] Cluster Policies (private preview)
-* [ ] Entitlements (private preview)
-
-### Databricks terraform provider docs
-
-* [x] Instance pools
-* [x] Scim groups
-* [x] Scim users
-* [x] Secret scopes
-* [x] Secrets
-* [x] Secret acls
-* [ ] Jobs
-* [ ] Clusters + Libraries
-* [ ] IAM Instance Profiles
-* [ ] Notebooks
-* [ ] DBFS File
-* [ ] DBFS File Sync (stateful sync from src to target)
-* [ ] Cluster Policies (private preview)
-* [ ] Entitlements (private preview)
+| Data Source         | Implemented          | Acceptance Tests     | Documentation        | Reviewed             |
+|---------------------|----------------------|----------------------|----------------------|----------------------|
+| db_notebook         | :white_check_mark:   | :white_large_square: | :white_large_square: | :white_large_square: |
+| db_notebook_paths   | :white_check_mark:   | :white_large_square: | :white_large_square: | :white_large_square: |
+| db_dbfs_file        | :white_check_mark:   | :white_large_square: | :white_large_square: | :white_large_square: |
+| db_dbfs_file_paths  | :white_check_mark:   | :white_large_square: | :white_large_square: | :white_large_square: |
+| db_zones            | :white_large_square: | :white_large_square: | :white_large_square: | :white_large_square: |
+| db_runtimes         | :white_large_square: | :white_large_square: | :white_large_square: | :white_large_square: |
+| db_instance_pool    | :white_large_square: | :white_large_square: | :white_large_square: | :white_large_square: |
+| db_scim_user        | :white_large_square: | :white_large_square: | :white_large_square: | :white_large_square: |
+| db_scim_group       | :white_large_square: | :white_large_square: | :white_large_square: | :white_large_square: |
+| db_cluster          | :white_large_square: | :white_large_square: | :white_large_square: | :white_large_square: |
+| db_job              | :white_large_square: | :white_large_square: | :white_large_square: | :white_large_square: |
+| db_mount            | :white_large_square: | :white_large_square: | :white_large_square: | :white_large_square: |
+| db_instance_profile | :white_large_square: | :white_large_square: | :white_large_square: | :white_large_square: |
+| db_database         | :white_large_square: | :white_large_square: | :white_large_square: | :white_large_square: |
+| db_table            | :white_large_square: | :white_large_square: | :white_large_square: | :white_large_square: |
 
 
 ## Testing
@@ -319,15 +179,3 @@ Please note that all projects in the /databrickslabs github account are provided
 
 Any issues discovered through the use of this project should be filed as GitHub Issues on the Repo.  They will be reviewed as time permits, but there are no formal SLAs for support.
 
-
-## Building the Project
-Instructions for how to build the project
-
-## Deploying / Installing the Project
-Instructions for how to deploy the project, or install it
-
-## Releasing the Project
-Instructions for how to release a version of the project
-
-## Using the Project
-Simple examples on how to use the project

@@ -37,6 +37,10 @@ opendocs: python-setup docs
 	@echo "==> Opening Docs ..."
 	@cd docs && open build/html/index.html
 
+singlehtmldocs: python-setup
+	@echo "==> Building Docs ..."
+	@cd docs && source venv/bin/activate && make clean && make singlehtml
+
 vendor:
 	@echo "==> Filling vendor folder with library code..."
 	@go mod vendor

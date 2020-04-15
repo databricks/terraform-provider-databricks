@@ -49,7 +49,7 @@ func resourceJob() *schema.Resource {
 								},
 							},
 						},
-						"name": &schema.Schema{
+						"cluster_name": &schema.Schema{
 							Type:     schema.TypeString,
 							Optional: true,
 							Computed: true,
@@ -193,6 +193,7 @@ func resourceJob() *schema.Resource {
 							},
 							//	Validate less than 10 values
 						},
+						//TODO: Docker does not seem to be supported by jobs
 						"docker_image": &schema.Schema{
 							Type:     schema.TypeSet,
 							Optional: true,
@@ -219,6 +220,7 @@ func resourceJob() *schema.Resource {
 							Type:     schema.TypeMap,
 							Optional: true,
 						},
+						//TODO: This should probably be removed jobs dont auto terminate
 						"autotermination_minutes": &schema.Schema{
 							Type:     schema.TypeInt,
 							Optional: true,
@@ -265,7 +267,7 @@ func resourceJob() *schema.Resource {
 					Schema: map[string]*schema.Schema{
 						"package": {
 							Type:     schema.TypeString,
-							Optional: true,
+							Required: true,
 						},
 						"repo": {
 							Type:     schema.TypeString,
@@ -281,7 +283,7 @@ func resourceJob() *schema.Resource {
 					Schema: map[string]*schema.Schema{
 						"coordinates": {
 							Type:     schema.TypeString,
-							Optional: true,
+							Required: true,
 						},
 						"repo": {
 							Type:     schema.TypeString,
@@ -302,7 +304,7 @@ func resourceJob() *schema.Resource {
 					Schema: map[string]*schema.Schema{
 						"package": {
 							Type:     schema.TypeString,
-							Optional: true,
+							Required: true,
 						},
 						"repo": {
 							Type:     schema.TypeString,
@@ -499,7 +501,7 @@ func resourceJobRead(d *schema.ResourceData, m interface{}) error {
 		autoscaleSet := []map[string]int{autoscale}
 		newClusterSettings["autoscale"] = autoscaleSet
 
-		newClusterSettings["name"] = job.Settings.NewCluster.ClusterName
+		newClusterSettings["cluster_name"] = job.Settings.NewCluster.ClusterName
 
 		newClusterSettings["spark_version"] = job.Settings.NewCluster.SparkVersion
 

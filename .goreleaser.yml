@@ -3,18 +3,34 @@
 before:
   hooks:
     # You may remove this if you don't use go modules.
+    - make docs
     - go mod download
 builds:
 - env:
-  - CGO_ENABLED=0
-  binary: terraform-provider-db
+    - CGO_ENABLED=0
+  binary: terraform-provider-db_{{ replace .Version "-next" "" }}
+  goos:
+    - darwin
+    - linux
+    - windows
+  goarch:
+    - 386
+    - amd64
 archives:
 - replacements:
-    darwin: Darwin
+    darwin: macOS
     linux: Linux
     windows: Windows
-    386: i386
-    amd64: x86_64
+    amd64: 64-bit
+    386: 32-bit
+  format_overrides:
+    - goos: windows
+      format: zip
+  files:
+    - LICENSE*
+    - CHANGELOG*
+    - NOTICE*
+    - docs/build/html/**/*
 checksum:
   name_template: 'checksums.txt'
 snapshot:

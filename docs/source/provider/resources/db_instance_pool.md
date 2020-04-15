@@ -19,10 +19,15 @@ cluster to use. Only clusters attached to a pool can use that pool’s idle inst
 .. code-block:: tf
 
     resource "db_instance_pool" "my-pool" {
-      instance_pool_name = "tushars-pool"
+      instance_pool_name = "demo-terraform-pool"
       min_idle_instances = 0
       max_capacity = 5
       node_type_id = "i3.xlarge"
+      aws_attributes {
+        availability = "ON_DEMAND"
+        zone_id = "us-east-1a"
+        spot_bid_price_percent = "100"
+      }
       idle_instance_autotermination_minutes = 10
       disk_spec = {
         ebs_volume_type = "GENERAL_PURPOSE_SSD"

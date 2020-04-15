@@ -138,15 +138,15 @@ $ docker run -it -v $(pwd):/workpace -w /workpace databricks-terraform apply
 | db_scim_user             | :white_check_mark: | :white_large_square: | :white_check_mark:   | :white_check_mark:   | :white_large_square: | :white_large_square: |
 | db_scim_group            | :white_check_mark: | :white_large_square: | :white_large_square: | :white_check_mark:   | :white_large_square: | :white_large_square: |
 | db_notebook              | :white_check_mark: | :white_large_square: | :white_large_square: | :white_check_mark:   | :white_large_square: | :white_large_square: |
-| db_cluster               | :white_check_mark: | :white_large_square: | :white_large_square: | :white_large_square: | :white_large_square: | :white_large_square: |
-| db_job                   | :white_check_mark: | :white_large_square: | :white_large_square: | :white_large_square: | :white_large_square: | :white_large_square: |
-| db_dbfs_file             | :white_check_mark: | :white_large_square: | :white_large_square: | :white_large_square: | :white_large_square: | :white_large_square: |
-| db_dbfs_file_sync        | :white_check_mark: | :white_large_square: | :white_large_square: | :white_large_square: | :white_large_square: | :white_large_square: |
-| db_instance_profile      | :white_check_mark: | :white_large_square: | :white_large_square: | :white_large_square: | :white_large_square: | :white_large_square: |
-| db_aws_s3_mount          | :white_check_mark: | :white_large_square: | :white_large_square: | :white_large_square: | :white_large_square: | :white_large_square: |
-| db_azure_blob_mount      | :white_check_mark: | :white_large_square: | :white_large_square: | :white_large_square: | :white_large_square: | :white_large_square: |
-| db_azure_adls_gen1_mount | :white_check_mark: | :white_large_square: | :white_large_square: | :white_large_square: | :white_large_square: | :white_large_square: |
-| db_azure_adls_gen2_mount | :white_check_mark: | :white_large_square: | :white_large_square: | :white_large_square: | :white_large_square: | :white_large_square: |
+| db_cluster               | :white_check_mark: | :white_large_square: | :white_large_square: | :white_check_mark:   | :white_large_square: | :white_large_square: |
+| db_job                   | :white_check_mark: | :white_large_square: | :white_large_square: | :white_check_mark:   | :white_large_square: | :white_large_square: |
+| db_dbfs_file             | :white_check_mark: | :white_large_square: | :white_large_square: | :white_check_mark:   | :white_large_square: | :white_large_square: |
+| db_dbfs_file_sync        | :white_check_mark: | :white_large_square: | :white_large_square: | :white_check_mark:   | :white_large_square: | :white_large_square: |
+| db_instance_profile      | :white_check_mark: | :white_large_square: | :white_large_square: | :white_check_mark:   | :white_large_square: | :white_large_square: |
+| db_aws_s3_mount          | :white_check_mark: | :white_large_square: | :white_large_square: | :white_check_mark:   | :white_large_square: | :white_large_square: |
+| db_azure_blob_mount      | :white_check_mark: | :white_large_square: | :white_large_square: | :white_check_mark:   | :white_large_square: | :white_large_square: |
+| db_azure_adls_gen1_mount | :white_check_mark: | :white_large_square: | :white_large_square: | :white_check_mark:   | :white_large_square: | :white_large_square: |
+| db_azure_adls_gen2_mount | :white_check_mark: | :white_large_square: | :white_large_square: | :white_check_mark:   | :white_large_square: | :white_large_square: |
 
 ### Databricks Terraform Data Sources State
 

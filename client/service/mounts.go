@@ -116,7 +116,7 @@ except Exception as e:
   dbutils.fs.unmount("/mnt/%s")
   raise e
 dbutils.notebook.exit("success")
-`, m.ContainerName, m.StorageAccountName, m.Directory, m.MountName, confKey, m.SecretScope, m.SecretKey, m.MountName, m.MountName)
+`, m.ContainerName, m.StorageAccountName, m.Directory, m.MountName, confKey, m.SecretScope, m.SecretKey, m.MountName)
 	resp, err := client.Commands().Execute(clusterId, "python", iamMountCommand)
 	if err != nil {
 		return err
@@ -209,7 +209,7 @@ except Exception as e:
   raise e
 dbutils.notebook.exit("success")
 `, m.PrefixType, m.PrefixType, m.ClientId, m.PrefixType, m.SecretScope, m.SecretKey, m.PrefixType, m.TenantId,
-		m.StorageResource, m.Directory, m.MountName, m.MountName, m.MountName)
+		m.StorageResource, m.Directory, m.MountName, m.MountName)
 	resp, err := client.Commands().Execute(clusterId, "python", iamMountCommand)
 	if err != nil {
 		return err
@@ -301,7 +301,7 @@ except Exception as e:
   dbutils.fs.unmount("/mnt/%s")
   raise e
 dbutils.notebook.exit("success")
-`, m.ClientId, m.SecretScope, m.SecretKey, m.TenantId, m.ContainerName, m.StorageAccountName, m.Directory, m.MountName, m.MountName, m.MountName)
+`, m.ClientId, m.SecretScope, m.SecretKey, m.TenantId, m.ContainerName, m.StorageAccountName, m.Directory, m.MountName, m.MountName)
 	resp, err := client.Commands().Execute(clusterId, "python", iamMountCommand)
 	if err != nil {
 		return err

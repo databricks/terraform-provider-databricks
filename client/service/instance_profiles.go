@@ -13,11 +13,6 @@ type InstanceProfilesAPI struct {
 	Client DBApiClient
 }
 
-func (a InstanceProfilesAPI) init(client DBApiClient) InstanceProfilesAPI {
-	a.Client = client
-	return a
-}
-
 func (a InstanceProfilesAPI) Create(instanceProfileARN string, skipValidation bool) error {
 	addInstanceProfileRequest := struct {
 		InstanceProfileArn string `json:"instance_profile_arn,omitempty" url:"instance_profile_arn,omitempty"`

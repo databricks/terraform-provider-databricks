@@ -74,8 +74,8 @@ const (
 	ClusterStateUnknown     = "UNKNOWN"
 )
 
-var ClusterStateNonRunnable []ClusterState = []ClusterState{ClusterStateTerminating, ClusterStateTerminated, ClusterStateError, ClusterStateUnknown}
-var ClusterStateNonTerminating []ClusterState = []ClusterState{ClusterStatePending, ClusterStateRunning, ClusterStateRestarting, ClusterStateResizing}
+var ClusterStateNonRunnable = []ClusterState{ClusterStateTerminating, ClusterStateTerminated, ClusterStateError, ClusterStateUnknown}
+var ClusterStateNonTerminating = []ClusterState{ClusterStatePending, ClusterStateRunning, ClusterStateRestarting, ClusterStateResizing}
 
 func ContainsClusterState(clusterStates []ClusterState, searchState ClusterState) bool {
 	for _, state := range clusterStates {
@@ -135,43 +135,8 @@ type SparkNode struct {
 	HostPrivateIP     string                  `json:"host_private_ip,omitempty"`
 }
 
-type TerminationCode string
-
-const (
-	TerminationCodeUserRequest                = "USER_REQUEST"
-	TerminationCodeJobFinished                = "JOB_FINISHED"
-	TerminationCodeInactivity                 = "INACTIVITY"
-	TerminationCodeCloudProviderShutdown      = "CLOUD_PROVIDER_SHUTDOWN"
-	TerminationCodeCommunicationLost          = "COMMUNICATION_LOST"
-	TerminationCodeCloudProviderLaunchFailure = "CLOUD_PROVIDER_LAUNCH_FAILURE"
-	TerminationCodeSparkStartupFailure        = "SPARK_STARTUP_FAILURE"
-	TerminationCodeInvalidArgument            = "INVALID_ARGUMENT"
-	TerminationCodeUnexpectedLaunchFailure    = "UNEXPECTED_LAUNCH_FAILURE"
-	TerminationCodeInternalError              = "INTERNAL_ERROR"
-	TerminationCodeInstanceUnreachable        = "INSTANCE_UNREACHABLE"
-	TerminationCodeRequestRejected            = "REQUEST_REJECTED"
-	TerminationCodeInitScriptFailure          = "INIT_SCRIPT_FAILURE"
-	TerminationCodeTrialExpired               = "TRIAL_EXPIRED"
-)
-
-type TerminationParameter string
-
-const (
-	TerminationParameterUsername                 = "username"
-	TerminationParameterAwsAPIErrorCode          = "aws_api_error_code"
-	TerminationParameterAwsInstanceStateReason   = "aws_instance_state_reason"
-	TerminationParameterAwsSpotRequestStatus     = "aws_spot_request_status"
-	TerminationParameterAwsSpotRequestFaultCode  = "aws_spot_request_fault_code"
-	TerminationParameterAwsImpairedStatusDetails = "aws_impaired_status_details"
-	TerminationParameterAwsInstanceStatusEvent   = "aws_instance_status_event"
-	TerminationParameterAwsErrorMessage          = "aws_error_message"
-	TerminationParameterDatabricksErrorMessage   = "databricks_error_message"
-	TerminationParameterInactivityDurationMin    = "inactivity_duration_min"
-	TerminationParameterInstanceID               = "instance_id"
-)
-
 type TerminationReason struct {
-	Code       TerminationCode   `json:"code,omitempty"`
+	Code       string            `json:"code,omitempty"`
 	Parameters map[string]string `json:"parameters,omitempty"`
 }
 
@@ -180,17 +145,10 @@ type LogSyncStatus struct {
 	LastException string `json:"last_exception,omitempty"`
 }
 
-type ClusterCloudProviderNodeStatus string
-
-const (
-	ClusterCloudProviderNodeStatusNotEnabledOnSubscription = "NotEnabledOnSubscription"
-	ClusterCloudProviderNodeStatusNotAvailableInRegion     = "NotAvailableInRegion"
-)
-
 type ClusterCloudProviderNodeInfo struct {
-	Status             []ClusterCloudProviderNodeStatus `json:"status,omitempty"`
-	AvailableCoreQuota float32                          `json:"available_core_quota,omitempty"`
-	TotalCoreQuota     float32                          `json:"total_core_quota,omitempty"`
+	Status             []string `json:"status,omitempty"`
+	AvailableCoreQuota float32  `json:"available_core_quota,omitempty"`
+	TotalCoreQuota     float32  `json:"total_core_quota,omitempty"`
 }
 
 type NodeType struct {

@@ -7,16 +7,11 @@ import (
 )
 
 // TokensAPI exposes the Secrets API
-type LibrariessAPI struct {
+type LibrariesAPI struct {
 	Client DBApiClient
 }
 
-func (a LibrariessAPI) init(client DBApiClient) LibrariessAPI {
-	a.Client = client
-	return a
-}
-
-func (a LibrariessAPI) Create(clusterId string, libraries []model.Library) error {
+func (a LibrariesAPI) Create(clusterId string, libraries []model.Library) error {
 	var libraryInstallRequest = struct {
 		ClusterId string          `json:"cluster_id,omitempty" url:"cluster_id,omitempty"`
 		Libraries []model.Library `json:"libraries,omitempty" url:"libraries,omitempty"`
@@ -30,7 +25,7 @@ func (a LibrariessAPI) Create(clusterId string, libraries []model.Library) error
 	return err
 }
 
-func (a LibrariessAPI) Delete(clusterId string, libraries []model.Library) error {
+func (a LibrariesAPI) Delete(clusterId string, libraries []model.Library) error {
 	var libraryInstallRequest = struct {
 		ClusterId string          `json:"cluster_id,omitempty" url:"cluster_id,omitempty"`
 		Libraries []model.Library `json:"libraries,omitempty" url:"libraries,omitempty"`
@@ -44,7 +39,7 @@ func (a LibrariessAPI) Delete(clusterId string, libraries []model.Library) error
 	return err
 }
 
-func (a LibrariessAPI) List(clusterId string) ([]model.LibraryStatus, error) {
+func (a LibrariesAPI) List(clusterId string) ([]model.LibraryStatus, error) {
 	var libraryStatusListResp struct {
 		ClusterId       string                `json:"cluster_id,omitempty" url:"cluster_id,omitempty"`
 		LibraryStatuses []model.LibraryStatus `json:"library_statuses,omitempty" url:"libraries,omitempty"`

@@ -5,16 +5,12 @@ import (
 	"fmt"
 	"github.com/databrickslabs/databricks-terraform/client/model"
 	"net/http"
+	"sort"
 )
 
-// TokensAPI exposes the Secrets API
+// UsersAPI exposes the scim user API
 type UsersAPI struct {
 	Client DBApiClient
-}
-
-func (a UsersAPI) init(client DBApiClient) UsersAPI {
-	a.Client = client
-	return a
 }
 
 func (a UsersAPI) Create(userName string, displayName string, entitlements []string, roles []string) (model.User, error) {
@@ -57,6 +53,19 @@ func (a UsersAPI) Read(userId string) (model.User, error) {
 	}
 
 	err = json.Unmarshal(resp, &user)
+
+	//get groups
+	var groups []model.Group
+	for _, group := range user.Groups {
+		group, err := a.Client.Groups().Read(group.Value)
+		if err != nil {
+			return user, err
+		}
+		groups = append(groups, group)
+	}
+	inherited, unInherited, err := a.getInheritedAndNonInheritedRoles(user, groups)
+	user.InheritedRoles = inherited
+	user.UnInheritedRoles = unInherited
 	return user, err
 }
 
@@ -97,4 +106,89 @@ func (a UsersAPI) Delete(userId string) error {
 
 	_, err := a.Client.performQuery(http.MethodDelete, userPath, "2.0", scimHeaders, nil)
 	return err
+}
+
+func (a UsersAPI) SetUserAsAdmin(userId string, adminGroupId string) error {
+	userPath := fmt.Sprintf("/preview/scim/v2/Users/%v", userId)
+
+	var addOperations model.UserPatchOperations
+
+	userPatchRequest := model.UserPatchRequest{
+		Schemas:    []model.URN{model.PatchOp},
+		Operations: []model.UserPatchOperations{},
+	}
+
+	addOperations = model.UserPatchOperations{
+		Op: "add",
+		Value: &model.GroupsValue{
+			Groups: []model.ValueListItem{model.ValueListItem{Value: adminGroupId}},
+		},
+	}
+	userPatchRequest.Operations = append(userPatchRequest.Operations, addOperations)
+
+	_, err := a.Client.performQuery(http.MethodPatch, userPath, "2.0", scimHeaders, userPatchRequest)
+
+	return err
+}
+
+func (a UsersAPI) VerifyUserAsAdmin(userId string, adminGroupId string) (bool, error) {
+	user, err := a.Read(userId)
+	if err != nil {
+		return false, err
+	}
+	for _, group := range user.Groups {
+		if group.Value == adminGroupId {
+			return true, nil
+		}
+	}
+
+	return false, nil
+}
+
+func (a UsersAPI) RemoveUserAsAdmin(userId string, adminGroupId string) error {
+	userPath := fmt.Sprintf("/preview/scim/v2/Users/%v", userId)
+
+	var removeOperations model.UserPatchOperations
+
+	userPatchRequest := model.UserPatchRequest{
+		Schemas:    []model.URN{model.PatchOp},
+		Operations: []model.UserPatchOperations{},
+	}
+
+	path := fmt.Sprintf("groups[value eq \"%s\"]", adminGroupId)
+	removeOperations = model.UserPatchOperations{
+		Op:   "remove",
+		Path: path,
+	}
+	userPatchRequest.Operations = append(userPatchRequest.Operations, removeOperations)
+
+	_, err := a.Client.performQuery(http.MethodPatch, userPath, "2.0", scimHeaders, userPatchRequest)
+
+	return err
+}
+
+func (a UsersAPI) getInheritedAndNonInheritedRoles(user model.User, groups []model.Group) (inherited []model.RoleListItem, unInherited []model.RoleListItem, err error) {
+	allRoles := user.Roles
+	var inheritedRoles []model.RoleListItem
+	inheritedRolesKeys := []string{}
+	inheritedRolesMap := map[string]model.RoleListItem{}
+	for _, group := range groups {
+		for _, role := range group.Roles {
+			inheritedRoles = append(inheritedRoles, role)
+		}
+	}
+	for _, role := range inheritedRoles {
+		inheritedRolesKeys = append(inheritedRolesKeys, role.Value)
+		inheritedRolesMap[role.Value] = role
+	}
+	sort.Strings(inheritedRolesKeys)
+	for _, roleKey := range inheritedRolesKeys {
+		inherited = append(inherited, inheritedRolesMap[roleKey])
+	}
+	for _, role := range allRoles {
+		if _, ok := inheritedRolesMap[role.Value]; !ok {
+			unInherited = append(unInherited, role)
+		}
+	}
+	return inherited, unInherited, nil
 }

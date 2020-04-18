@@ -26,14 +26,21 @@ type Email struct {
 }
 
 type User struct {
-	ID           string                 `json:"id,omitempty"`
-	Emails       []Email                `json:"emails,omitempty"`
-	DisplayName  string                 `json:"displayName,omitempty"`
-	Active       bool                   `json:"active,omitempty"`
-	Schemas      []URN                  `json:"schemas,omitempty"`
-	UserName     string                 `json:"userName,omitempty"`
-	Groups       []GroupsListItem       `json:"groups,omitempty"`
-	Name         map[string]string      `json:"name,omitempty"`
-	Roles        []RoleListItem         `json:"roles,omitempty"`
-	Entitlements []EntitlementsListItem `json:"entitlements,omitempty"`
+	ID               string                 `json:"id,omitempty"`
+	Emails           []Email                `json:"emails,omitempty"`
+	DisplayName      string                 `json:"displayName,omitempty"`
+	Active           bool                   `json:"active,omitempty"`
+	Schemas          []URN                  `json:"schemas,omitempty"`
+	UserName         string                 `json:"userName,omitempty"`
+	Groups           []GroupsListItem       `json:"groups,omitempty"`
+	Name             map[string]string      `json:"name,omitempty"`
+	Roles            []RoleListItem         `json:"roles,omitempty"`
+	Entitlements     []EntitlementsListItem `json:"entitlements,omitempty"`
+	UnInheritedRoles []RoleListItem         `json:"uninherited_roles,omitempty"`
+	InheritedRoles   []RoleListItem         `json:"inherited_roles,omitempty"`
+}
+
+type UserPatchRequest struct {
+	Schemas    []URN                 `json:"schemas,omitempty"`
+	Operations []UserPatchOperations `json:"Operations,omitempty"`
 }

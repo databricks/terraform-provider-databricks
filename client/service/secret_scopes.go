@@ -13,11 +13,6 @@ type SecretScopesAPI struct {
 	Client DBApiClient
 }
 
-func (a SecretScopesAPI) init(client DBApiClient) SecretScopesAPI {
-	a.Client = client
-	return a
-}
-
 // CreateSecretScope creates a new secret scope
 func (a SecretScopesAPI) Create(scope string, initialManagePrincipal string) error {
 	data := struct {

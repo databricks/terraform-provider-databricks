@@ -13,11 +13,6 @@ type ClustersAPI struct {
 	Client DBApiClient
 }
 
-func (a ClustersAPI) init(client DBApiClient) ClustersAPI {
-	a.Client = client
-	return a
-}
-
 // Create creates a new Spark cluster
 func (a ClustersAPI) Create(cluster model.Cluster) (model.ClusterInfo, error) {
 	var clusterInfo model.ClusterInfo

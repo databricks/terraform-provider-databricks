@@ -7,8 +7,6 @@ import (
 	"testing"
 )
 
-
-
 func GenString(times int) []byte {
 	var buf bytes.Buffer
 	for i := 0; i < times; i++ {

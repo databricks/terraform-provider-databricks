@@ -11,11 +11,6 @@ type JobsAPI struct {
 	Client DBApiClient
 }
 
-func (a JobsAPI) init(client DBApiClient) JobsAPI {
-	a.Client = client
-	return a
-}
-
 func (a JobsAPI) Create(jobSettings model.JobSettings) (model.Job, error) {
 	var job model.Job
 	resp, err := a.Client.performQuery(http.MethodPost, "/jobs/create", "2.0", nil, jobSettings)

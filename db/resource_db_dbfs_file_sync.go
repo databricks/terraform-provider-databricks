@@ -136,12 +136,12 @@ func resourceDBFSFileSyncDelete(d *schema.ResourceData, m interface{}) error {
 func parseSchemaToDBAPIClient(d *schema.ResourceData) *service.DBApiClient {
 	host, hostOk := d.GetOk("host")
 	token, tokenOk := d.GetOk("token")
-	var option clientLib.DBClientOption
+	var option clientLib.DBApiClientConfig
 	if hostOk && tokenOk {
 		option.Host = host.(string)
 		option.Token = token.(string)
 		var dbClient service.DBApiClient
-		dbClient.Init(option)
+		dbClient.SetConfig(&option)
 		return &dbClient
 	}
 	return nil

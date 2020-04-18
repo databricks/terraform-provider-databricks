@@ -5,7 +5,6 @@ import (
 	"testing"
 )
 
-
 func TestParseURI(t *testing.T) {
 
 	u, err := url.Parse("adl://sritikkireddyterraadls1.azuredatalakestore.net/")

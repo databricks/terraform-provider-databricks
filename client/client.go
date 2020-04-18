@@ -20,8 +20,8 @@ const (
 	Azure CloudServiceProvider = "Azure"
 )
 
-// DBClientOption is used to configure the DataBricks Client
-type DBClientOption struct {
+// DBApiClientConfig is used to configure the DataBricks Client
+type DBApiClientConfig struct {
 	Host               string
 	Token              string
 	DefaultHeaders     map[string]string
@@ -31,47 +31,43 @@ type DBClientOption struct {
 	cloudProvider      CloudServiceProvider
 }
 
-// Init initializes the client
-func (o *DBClientOption) Init() {
-	if o.TimeoutSeconds == 0 {
-		o.TimeoutSeconds = 10
+// SetConfig initializes the client
+func (c *DBApiClientConfig) Setup() {
+	if c.TimeoutSeconds == 0 {
+		c.TimeoutSeconds = 10
 	}
-	o.client = http.Client{
-		Timeout: time.Duration(time.Duration(o.TimeoutSeconds) * time.Second),
+	c.client = http.Client{
+		Timeout: time.Duration(time.Duration(c.TimeoutSeconds) * time.Second),
 		Transport: &http.Transport{
 			TLSClientConfig: &tls.Config{
-				InsecureSkipVerify: o.InsecureSkipVerify,
+				InsecureSkipVerify: c.InsecureSkipVerify,
 			},
 		},
 	}
 }
 
-func (o *DBClientOption) getHTTPClient() http.Client {
-	return o.client
-}
-
-func (o *DBClientOption) getAuthHeader() map[string]string {
+func (c DBApiClientConfig) getAuthHeader() map[string]string {
 	auth := make(map[string]string)
-	auth["Authorization"] = "Bearer " + o.Token
+	auth["Authorization"] = "Bearer " + c.Token
 	auth["Content-Type"] = "application/json"
 	return auth
 }
 
-func (o *DBClientOption) getUserAgentHeader() map[string]string {
+func (c DBApiClientConfig) getUserAgentHeader() map[string]string {
 	return map[string]string{
-		"User-Agent": fmt.Sprintf("databricks-sdk-golang-%s", SdkVersion),
+		"User-Agent": fmt.Sprintf("databricks-go-client-sdk/%s", ClientVersion),
 	}
 }
 
-func (o *DBClientOption) getDefaultHeaders() map[string]string {
-	auth := o.getAuthHeader()
-	userAgent := o.getUserAgentHeader()
+func (c DBApiClientConfig) getDefaultHeaders() map[string]string {
+	auth := c.getAuthHeader()
+	userAgent := c.getUserAgentHeader()
 
 	defaultHeaders := make(map[string]string)
 	for k, v := range auth {
 		defaultHeaders[k] = v
 	}
-	for k, v := range o.DefaultHeaders {
+	for k, v := range c.DefaultHeaders {
 		defaultHeaders[k] = v
 	}
 	for k, v := range userAgent {
@@ -80,7 +76,7 @@ func (o *DBClientOption) getDefaultHeaders() map[string]string {
 	return defaultHeaders
 }
 
-func (o *DBClientOption) getRequestURI(path string, apiVersion string) (string, error) {
+func (c DBApiClientConfig) getRequestURI(path string, apiVersion string) (string, error) {
 	var apiVersionString string
 	if apiVersion == "" {
 		apiVersionString = "2.0"
@@ -88,7 +84,7 @@ func (o *DBClientOption) getRequestURI(path string, apiVersion string) (string, 
 		apiVersionString = apiVersion
 	}
 
-	parsedURI, err := url.Parse(o.Host)
+	parsedURI, err := url.Parse(c.Host)
 	if err != nil {
 		return "", err
 	}
@@ -104,8 +100,7 @@ func onlyNBytes(buf []byte, numBytes int64) []byte {
 	}
 }
 
-// PerformQuery can be used in a client or directly
-func PerformQuery(option DBClientOption, method, path string, apiVersion string, headers map[string]string, marshalJson bool, useRawPath bool, data interface{}) ([]byte, error) {
+func PerformQuery(option *DBApiClientConfig, method, path string, apiVersion string, headers map[string]string, marshalJson bool, useRawPath bool, data interface{}) ([]byte, error) {
 
 	var requestURL string
 	var err error
@@ -147,8 +142,6 @@ func PerformQuery(option DBClientOption, method, path string, apiVersion string,
 		}
 	}
 
-	client := option.getHTTPClient()
-
 	request, err := http.NewRequest(method, requestURL, bytes.NewBuffer(requestBody))
 	if err != nil {
 		return nil, err
@@ -157,7 +150,7 @@ func PerformQuery(option DBClientOption, method, path string, apiVersion string,
 		request.Header.Set(k, v)
 	}
 
-	resp, err := client.Do(request)
+	resp, err := option.client.Do(request)
 	if err != nil {
 		return nil, err
 	}

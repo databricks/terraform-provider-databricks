@@ -13,11 +13,6 @@ type DBFSAPI struct {
 	Client DBApiClient
 }
 
-func (a DBFSAPI) init(client DBApiClient) DBFSAPI {
-	a.Client = client
-	return a
-}
-
 func (a DBFSAPI) Create(path string, overwrite bool, data string) error {
 	byteArr, err := base64.StdEncoding.DecodeString(data)
 	if err != nil {

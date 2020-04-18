@@ -30,13 +30,6 @@ type InstancePool struct {
 	PreloadedSparkVersions             []string                   `json:"preloaded_spark_versions,omitempty"`
 }
 
-type InstancePoolState string
-
-const (
-	InstancePoolStateActive  InstancePoolState = "ACTIVE"
-	InstancePoolStateDeleted InstancePoolState = "DELETED"
-)
-
 type InstancePoolStats struct {
 	UsedCount        int32 `json:"used_count,omitempty"`
 	IdleCount        int32 `json:"idle_count,omitempty"`
@@ -57,6 +50,6 @@ type InstancePoolInfo struct {
 	EnableElasticDisk                  bool                       `json:"enable_elastic_disk,omitempty"`
 	DiskSpec                           *InstancePoolDiskSpec      `json:"disk_spec,omitempty"`
 	PreloadedSparkVersions             []string                   `json:"preloaded_spark_versions,omitempty"`
-	State                              InstancePoolState          `json:"state,omitempty"`
+	State                              string                     `json:"state,omitempty"`
 	Stats                              *InstancePoolStats         `json:"stats,omitempty"`
 }

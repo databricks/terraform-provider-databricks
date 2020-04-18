@@ -9,12 +9,7 @@ import (
 
 // TokensAPI exposes the Secrets API
 type TokensAPI struct {
-	Client DBApiClient
-}
-
-func (a TokensAPI) init(client DBApiClient) TokensAPI {
-	a.Client = client
-	return a
+	Client *DBApiClient
 }
 
 func (a TokensAPI) Create(lifeTimeSeconds int32, comment string) (model.TokenResponse, error) {

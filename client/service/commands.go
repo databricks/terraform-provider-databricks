@@ -15,20 +15,12 @@ type CommandsAPI struct {
 	Client DBApiClient
 }
 
-func (a CommandsAPI) init(client DBApiClient) CommandsAPI {
-	a.Client = client
-	return a
-}
-
 func (a CommandsAPI) Execute(clusterId, langauge, commandStr string) (model.Command, error) {
 	var resp model.Command
 	context, err := a.createContext(langauge, clusterId)
 	if err != nil {
 		return resp, err
 	}
-	//defer func() {
-	//
-	//}()
 	err = a.waitForContextReady(context, clusterId, 1, 10)
 	if err != nil {
 		return resp, err

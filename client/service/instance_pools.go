@@ -11,11 +11,6 @@ type InstancePoolsAPI struct {
 	Client DBApiClient
 }
 
-func (a InstancePoolsAPI) init(client DBApiClient) InstancePoolsAPI {
-	a.Client = client
-	return a
-}
-
 // Create creates the instance pool to given the instance pool configuration
 func (a InstancePoolsAPI) Create(instancePool model.InstancePool) (model.InstancePoolInfo, error) {
 	var instancePoolInfo model.InstancePoolInfo

@@ -11,11 +11,6 @@ type NotebooksAPI struct {
 	Client DBApiClient
 }
 
-func (a NotebooksAPI) init(client DBApiClient) NotebooksAPI {
-	a.Client = client
-	return a
-}
-
 func (a NotebooksAPI) Create(path string, content string, language model.Language, format model.ExportFormat, overwrite bool) error {
 	notebookCreateRequest := struct {
 		Content   string             `json:"content,omitempty"`

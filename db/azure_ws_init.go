@@ -42,7 +42,7 @@ type WorkspaceRequest struct {
 	Location   string   `json:"location"`
 }
 
-func (a *AzureAuth) getManagementToken(option client.DBClientOption) error {
+func (a *AzureAuth) getManagementToken(config *client.DBApiClientConfig) error {
 	log.Println("Creating Azure Databricks management OAuth token.")
 	url := "https://login.microsoftonline.com/" + a.TokenPayload.TenantID + "/oauth2/token"
 	payload := "grant_type=client_credentials&client_id=" + a.TokenPayload.ClientID + "&client_secret=" + a.TokenPayload.ClientSecret + "&resource=" + ManagementResourceEndpoint
@@ -52,7 +52,7 @@ func (a *AzureAuth) getManagementToken(option client.DBClientOption) error {
 	}
 
 	var responseMap map[string]interface{}
-	resp, err := client.PerformQuery(option, http.MethodPost, url, "2.0", headers, false, true, payload)
+	resp, err := client.PerformQuery(config, http.MethodPost, url, "2.0", headers, false, true, payload)
 	if err != nil {
 		return err
 	}
@@ -64,7 +64,7 @@ func (a *AzureAuth) getManagementToken(option client.DBClientOption) error {
 	return nil
 }
 
-func (a *AzureAuth) getWorkspaceId(option client.DBClientOption) error {
+func (a *AzureAuth) getWorkspaceId(config *client.DBApiClientConfig) error {
 	log.Println("Getting Workspace ID via management token.")
 	url := "https://management.azure.com/subscriptions/" + a.TokenPayload.SubscriptionId + "/resourceGroups/" + a.TokenPayload.ResourceGroup + "/providers/Microsoft.Databricks/workspaces/" + a.TokenPayload.WorkspaceName + "" +
 		"?api-version=2018-04-01"
@@ -81,7 +81,7 @@ func (a *AzureAuth) getWorkspaceId(option client.DBClientOption) error {
 	}
 
 	var responseMap map[string]interface{}
-	resp, err := client.PerformQuery(option, http.MethodPut, url, "2.0", headers, true, true, payload)
+	resp, err := client.PerformQuery(config, http.MethodPut, url, "2.0", headers, true, true, payload)
 	if err != nil {
 		return err
 	}
@@ -94,7 +94,7 @@ func (a *AzureAuth) getWorkspaceId(option client.DBClientOption) error {
 	return err
 }
 
-func (a *AzureAuth) getADBPlatformToken(option client.DBClientOption) error {
+func (a *AzureAuth) getADBPlatformToken(clientConfig *client.DBApiClientConfig) error {
 	log.Println("Creating Azure Databricks platform OAuth token.")
 	url := "https://login.microsoftonline.com/" + a.TokenPayload.TenantID + "/oauth2/token"
 	payload := "grant_type=client_credentials&client_id=" + a.TokenPayload.ClientID + "&client_secret=" + a.TokenPayload.ClientSecret + "&resource=" + ADBResourceID
@@ -104,7 +104,7 @@ func (a *AzureAuth) getADBPlatformToken(option client.DBClientOption) error {
 	}
 
 	var responseMap map[string]interface{}
-	resp, err := client.PerformQuery(option, http.MethodPost, url, "2.0", headers, false, true, payload)
+	resp, err := client.PerformQuery(clientConfig, http.MethodPost, url, "2.0", headers, false, true, payload)
 	if err != nil {
 		return err
 	}
@@ -116,7 +116,7 @@ func (a *AzureAuth) getADBPlatformToken(option client.DBClientOption) error {
 	return nil
 }
 
-func (a *AzureAuth) getWorkspaceAccessToken(option client.DBClientOption) error {
+func (a *AzureAuth) getWorkspaceAccessToken(config *client.DBApiClientConfig) error {
 	log.Println("Creating workspace token")
 	apiLifeTimeInSeconds := int32(600)
 	comment := "Secret made via SP"
@@ -137,7 +137,7 @@ func (a *AzureAuth) getWorkspaceAccessToken(option client.DBClientOption) error 
 	}
 
 	var responseMap map[string]interface{}
-	resp, err := client.PerformQuery(option, http.MethodPost, url, "2.0", headers, true, true, payload)
+	resp, err := client.PerformQuery(config, http.MethodPost, url, "2.0", headers, true, true, payload)
 	if err != nil {
 		return err
 	}
@@ -149,30 +149,30 @@ func (a *AzureAuth) getWorkspaceAccessToken(option client.DBClientOption) error 
 	return nil
 }
 
-func (a *AzureAuth) initWorkspaceAndGetClient(option client.DBClientOption) (service.DBApiClient, error) {
+func (a *AzureAuth) initWorkspaceAndGetClient(config *client.DBApiClientConfig) (service.DBApiClient, error) {
 	var dbClient service.DBApiClient
-	err := a.getManagementToken(option)
+	err := a.getManagementToken(config)
 	if err != nil {
 		return dbClient, err
 	}
 
-	err = a.getWorkspaceId(option)
+	err = a.getWorkspaceId(config)
 	if err != nil {
 		return dbClient, err
 	}
-	err = a.getADBPlatformToken(option)
+	err = a.getADBPlatformToken(config)
 	if err != nil {
 		return dbClient, err
 	}
-	err = a.getWorkspaceAccessToken(option)
+	err = a.getWorkspaceAccessToken(config)
 	if err != nil {
 		return dbClient, err
 	}
 
-	var newOption client.DBClientOption
+	var newOption client.DBApiClientConfig
 	newOption.Token = a.AdbAccessToken
 	newOption.Host = "https://" + a.TokenPayload.AzureRegion + ".azuredatabricks.net"
-	dbClient.Init(newOption)
+	dbClient.SetConfig(&newOption)
 
 	_, err = dbClient.Clusters().ListNodeTypes()
 	return dbClient, err

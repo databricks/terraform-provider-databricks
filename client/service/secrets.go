@@ -13,11 +13,6 @@ type SecretsAPI struct {
 	Client DBApiClient
 }
 
-func (a SecretsAPI) init(client DBApiClient) SecretsAPI {
-	a.Client = client
-	return a
-}
-
 // PutSecretString creates or modifies a string secret depends on the type of scope backend
 func (a SecretsAPI) Create(stringValue, scope, key string) error {
 	data := struct {

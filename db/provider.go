@@ -103,17 +103,17 @@ func Provider() terraform.ResourceProvider {
 }
 
 func providerConfigure(d *schema.ResourceData, s string) (interface{}, error) {
-	var option client.DBClientOption
+	var config client.DBApiClientConfig
 	if azureAuth, ok := d.GetOk("azure_auth"); !ok {
 		if host, ok := d.GetOk("host"); ok {
-			option.Host = host.(string)
+			config.Host = host.(string)
 		} else {
-			option.Host = os.Getenv("HOST")
+			config.Host = os.Getenv("HOST")
 		}
 		if token, ok := d.GetOk("token"); ok {
-			option.Token = token.(string)
+			config.Token = token.(string)
 		} else {
-			option.Token = os.Getenv("TOKEN")
+			config.Token = os.Getenv("TOKEN")
 		}
 	} else {
 		log.Println("Creating db client via azure auth!")
@@ -161,10 +161,10 @@ func providerConfigure(d *schema.ResourceData, s string) (interface{}, error) {
 			AdbPlatformToken:       "",
 		}
 		log.Println("Running Azure Auth")
-		return azureAuthSetup.initWorkspaceAndGetClient(option)
+		return azureAuthSetup.initWorkspaceAndGetClient(&config)
 	}
 
 	var dbClient service.DBApiClient
-	dbClient.Init(option)
+	dbClient.SetConfig(&config)
 	return dbClient, nil
 }

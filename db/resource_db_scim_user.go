@@ -28,10 +28,25 @@ func resourceScimUser() *schema.Resource {
 				Optional: true,
 			},
 			"roles": &schema.Schema{
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Set:      schema.HashString,
+				Type:       schema.TypeSet,
+				Optional:   true,
+				ConfigMode: schema.SchemaConfigModeAttr,
+				Elem:       &schema.Schema{Type: schema.TypeString},
+				Set:        schema.HashString,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					inheritedRoles := convertListInterfaceToString(d.Get("inherited_roles").(*schema.Set).List())
+					if new == "0" {
+						return true
+					}
+					if new == "" {
+						for _, role := range inheritedRoles {
+							if old == role {
+								return true
+							}
+						}
+					}
+					return false
+				},
 			},
 			"entitlements": &schema.Schema{
 				Type:     schema.TypeSet,
@@ -39,7 +54,24 @@ func resourceScimUser() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Set:      schema.HashString,
 			},
+			"inherited_roles": &schema.Schema{
+				Type:     schema.TypeSet,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+				Set:      schema.HashString,
+			},
+			"set_admin": &schema.Schema{
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+				Set:      schema.HashString,
+			},
 		},
+		//CustomizeDiff: customdiff.IfValueChange("roles", func(old, new, meta interface{}) bool {
+		//	return true
+		//}, func(resourceDiff *schema.ResourceDiff, i interface{}) error {
+		//	return fmt.Errorf("Failed")
+		//}),
 	}
 }
 
@@ -55,6 +87,7 @@ func convertInterfaceSliceToStringSlice(input []interface{}) []string {
 func resourceScimUserCreate(d *schema.ResourceData, m interface{}) error {
 	client := m.(service.DBApiClient)
 	userName := d.Get("user_name").(string)
+	setAdmin := d.Get("set_admin").(bool)
 	var displayName string
 	var roles []string
 	var entitlements []string
@@ -73,7 +106,18 @@ func resourceScimUserCreate(d *schema.ResourceData, m interface{}) error {
 	if err != nil {
 		return err
 	}
+	if setAdmin {
+		adminGroup, err := client.Groups().GetAdminGroup()
+		if err != nil {
+			return err
+		}
+		err = client.Users().SetUserAsAdmin(user.ID, adminGroup.ID)
+		if err != nil {
+			return err
+		}
+	}
 	d.SetId(user.ID)
+
 	return resourceScimUserRead(d, m)
 }
 
@@ -105,6 +149,19 @@ func resourceScimUserRead(d *schema.ResourceData, m interface{}) error {
 		return err
 	}
 
+	adminGroup, err := client.Groups().GetAdminGroup()
+	if err != nil {
+		return err
+	}
+	isAdmin, err := client.Users().VerifyUserAsAdmin(user.ID, adminGroup.ID)
+	if err != nil {
+		return err
+	}
+	err = d.Set("set_admin", isAdmin)
+	if err != nil {
+		return err
+	}
+
 	roles := getListOfRoles(user.Roles)
 	//entitlements := getListOfEntitlements(user.Entitlements)
 	var entitlements []string
@@ -120,6 +177,13 @@ func resourceScimUserRead(d *schema.ResourceData, m interface{}) error {
 	if err != nil {
 		return err
 	}
+
+	inheritedRoles := getListOfRoles(user.InheritedRoles)
+	err = d.Set("inherited_roles", inheritedRoles)
+	if err != nil {
+		return err
+	}
+
 	err = d.Set("roles", roles)
 	if err != nil {
 		return err
@@ -148,6 +212,28 @@ func resourceScimUserUpdate(d *schema.ResourceData, m interface{}) error {
 	err := client.Users().Update(id, userName, displayName, entitlements, roles)
 	if err != nil {
 		return err
+	}
+	if d.HasChange("set_admin") {
+		setAdmin := d.Get("set_admin").(bool)
+		if setAdmin == true {
+			adminGroup, err := client.Groups().GetAdminGroup()
+			if err != nil {
+				return err
+			}
+			err = client.Users().SetUserAsAdmin(id, adminGroup.ID)
+			if err != nil {
+				return err
+			}
+		} else {
+			adminGroup, err := client.Groups().GetAdminGroup()
+			if err != nil {
+				return err
+			}
+			err = client.Users().RemoveUserAsAdmin(id, adminGroup.ID)
+			if err != nil {
+				return err
+			}
+		}
 	}
 	return resourceScimUserRead(d, m)
 }

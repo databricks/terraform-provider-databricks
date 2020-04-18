@@ -40,17 +40,17 @@ func compare(t *testing.T, a interface{}, b interface{}) {
 }
 
 func GetIntegrationDBAPIClient() *DBApiClient {
-	var o client.DBClientOption
-	o.Token = os.Getenv("TOKEN")
-	o.Host = os.Getenv("HOST")
+	var config client.DBApiClientConfig
+	config.Token = os.Getenv("TOKEN")
+	config.Host = os.Getenv("HOST")
 
 	var c DBApiClient
-	c.Init(o)
+	c.SetConfig(&config)
 	return &c
 }
 
 func GetCloudInstanceType(c *DBApiClient) string {
-	if strings.Contains(c.Option.Host, "azure") {
+	if strings.Contains(c.config.Host, "azure") {
 		return "Standard_DS3_v2"
 	} else {
 		return "i3.xlarge"
@@ -76,10 +76,10 @@ func AssertRequestWithMockServer(t *testing.T, rawPayloadArgs interface{}, reque
 	}))
 	// Close the server when test finishes
 	defer server.Close()
-	var o client.DBClientOption
-	o.Host = server.URL
+	var config client.DBApiClientConfig
+	config.Host = server.URL
 
-	dbClient := DBApiClient{Option: o}
+	dbClient := DBApiClient{config: &config}
 
 	output, err := apiCall(dbClient)
 

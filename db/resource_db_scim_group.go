@@ -22,18 +22,44 @@ func resourceScimGroup() *schema.Resource {
 				Required: true,
 			},
 			"members": &schema.Schema{
-				Type:     schema.TypeList,
+				Type:     schema.TypeSet,
 				Optional: true,
 				//Computed: true,
 				//ConfigMode: schema.SchemaConfigModeAttr,
 				Elem: &schema.Schema{Type: schema.TypeString},
-				//Set:  schema.HashString,
-
+				Set:  schema.HashString,
+			},
+			"roles": &schema.Schema{
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+				Set:      schema.HashString,
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					log.Println("suppressing members group")
-					log.Println(k, old, new)
+					inheritedRoles := convertListInterfaceToString(d.Get("inherited_roles").(*schema.Set).List())
+					if new == "0" {
+						return true
+					}
+					if new == "" {
+						for _, role := range inheritedRoles {
+							if old == role {
+								return true
+							}
+						}
+					}
 					return false
 				},
+			},
+			"inherited_roles": &schema.Schema{
+				Type:     schema.TypeSet,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+				Set:      schema.HashString,
+			},
+			"entitlements": &schema.Schema{
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+				Set:      schema.HashString,
 			},
 		},
 	}
@@ -53,10 +79,21 @@ func resourceScimGroupCreate(d *schema.ResourceData, m interface{}) error {
 	var members []string
 
 	if rMembers, ok := d.GetOk("members"); ok {
-		members = convertInterfaceSliceToStringSlice(rMembers.([]interface{}))
-		log.Println(members)
+		members = convertInterfaceSliceToStringSlice(rMembers.(*schema.Set).List())
 	}
-	group, err := client.Groups().Create(groupName, members)
+	var roles []string
+
+	if rRoles, ok := d.GetOk("roles"); ok {
+		roles = convertInterfaceSliceToStringSlice(rRoles.(*schema.Set).List())
+	}
+
+	var entitlements []string
+
+	if rEntitlements, ok := d.GetOk("entitlements"); ok {
+		entitlements = convertInterfaceSliceToStringSlice(rEntitlements.(*schema.Set).List())
+	}
+
+	group, err := client.Groups().Create(groupName, members, roles, entitlements)
 	if err != nil {
 		return err
 	}
@@ -93,6 +130,20 @@ func resourceScimGroupRead(d *schema.ResourceData, m interface{}) error {
 		return err
 	}
 
+	err = d.Set("roles", getListOfRoles(group.Roles))
+	if err != nil {
+		return err
+	}
+	err = d.Set("inherited_roles", getListOfRoles(group.InheritedRoles))
+	if err != nil {
+		return err
+	}
+
+	err = d.Set("entitlements", getListOfEntitlements(group.Entitlements))
+	if err != nil {
+		return err
+	}
+
 	return err
 }
 
@@ -115,25 +166,62 @@ func diff(sliceA []string, sliceB []string) []string {
 func resourceScimGroupUpdate(d *schema.ResourceData, m interface{}) error {
 	id := d.Id()
 	client := m.(service.DBApiClient)
-	var currentMembers []string
+
 	group, err := client.Groups().Read(id)
 	if err != nil {
 		return err
 	}
-	remoteMembers := getListOfMemberRefs(group.Members)
-	if members, ok := d.GetOk("members"); ok {
-		currentMembers = convertInterfaceSliceToStringSlice(members.([]interface{}))
+
+	// In the future we may want these to be in one patch statement as opposed to 3 separate patches to make a
+	// better all or none scenario
+	if d.HasChange("members") {
+		oldMembersInterface, newMembersInterface := d.GetChange("members")
+		oldMembers := convertInterfaceSliceToStringSlice(oldMembersInterface.(*schema.Set).List())
+		newMembers := convertInterfaceSliceToStringSlice(newMembersInterface.(*schema.Set).List())
+		addMembers := diff(newMembers, oldMembers)
+		removeMembers := diff(oldMembers, newMembers)
+		log.Println("add members")
+		log.Println(addMembers)
+		log.Println("remove members")
+		log.Println(removeMembers)
+		err = client.Groups().Patch(group.ID, addMembers, removeMembers, model.GroupMembersPath)
+		if err != nil {
+			return err
+		}
 	}
-	addMembers := diff(currentMembers, remoteMembers)
-	removeMembers := diff(remoteMembers, currentMembers)
-	log.Println("add members")
-	log.Println(addMembers)
-	log.Println("remove members")
-	log.Println(removeMembers)
-	err = client.Groups().Update(group.ID, addMembers, removeMembers)
-	if err != nil {
-		return err
+
+	if d.HasChange("roles") {
+		oldRolesInterface, newRolesInterface := d.GetChange("roles")
+		oldRoles := convertInterfaceSliceToStringSlice(oldRolesInterface.(*schema.Set).List())
+		newRoles := convertInterfaceSliceToStringSlice(newRolesInterface.(*schema.Set).List())
+		addRoles := diff(newRoles, oldRoles)
+		removeRoles := diff(oldRoles, newRoles)
+		log.Println("add roles")
+		log.Println(addRoles)
+		log.Println("remove roles")
+		log.Println(removeRoles)
+		err = client.Groups().Patch(group.ID, addRoles, removeRoles, model.GroupRolesPath)
+		if err != nil {
+			return err
+		}
 	}
+
+	if d.HasChange("entitlements") {
+		oldEntitlementsInterface, newEntitlementsInterface := d.GetChange("entitlements")
+		oldEntitlements := convertInterfaceSliceToStringSlice(oldEntitlementsInterface.(*schema.Set).List())
+		newEntitlements := convertInterfaceSliceToStringSlice(newEntitlementsInterface.(*schema.Set).List())
+		addEntitlements := diff(newEntitlements, oldEntitlements)
+		removeEntitlements := diff(oldEntitlements, newEntitlements)
+		log.Println("add entitlements")
+		log.Println(addEntitlements)
+		log.Println("remove entitlements")
+		log.Println(removeEntitlements)
+		err = client.Groups().Patch(group.ID, addEntitlements, removeEntitlements, model.GroupEntitlementsPath)
+		if err != nil {
+			return err
+		}
+	}
+
 	return resourceScimGroupRead(d, m)
 }
 

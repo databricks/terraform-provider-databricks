@@ -11,11 +11,6 @@ type SecretAclsAPI struct {
 	Client DBApiClient
 }
 
-func (a SecretAclsAPI) init(client DBApiClient) SecretAclsAPI {
-	a.Client = client
-	return a
-}
-
 // Create creates or overwrites the ACL associated with the given principal (user or group) on the specified scope point
 func (a SecretAclsAPI) Create(scope string, principal string, permission model.AclPermission) error {
 	data := struct {

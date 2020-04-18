@@ -11,10 +11,10 @@ import (
 	"testing"
 )
 
-func GetIntegrationDBClientOptions() *client.DBClientOption {
-	var o client.DBClientOption
+func GetIntegrationDBClientOptions() *client.DBApiClientConfig {
+	var config client.DBApiClientConfig
 
-	return &o
+	return &config
 }
 
 func TestAzureAuthCreateApiToken(t *testing.T) {
@@ -40,7 +40,7 @@ func TestAzureAuthCreateApiToken(t *testing.T) {
 	azureAuth.TokenPayload.ClientSecret = os.Getenv("ARM_CLIENT_SECRET")
 	option := GetIntegrationDBClientOptions()
 	//Hack
-	api, err := azureAuth.initWorkspaceAndGetClient(*option)
+	api, err := azureAuth.initWorkspaceAndGetClient(option)
 	//err := azureAuth.getManagementToken(*option)
 	assert.NoError(t, err, err)
 

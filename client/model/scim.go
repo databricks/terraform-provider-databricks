@@ -10,11 +10,29 @@ const (
 )
 
 type MembersValue struct {
-	Members []MemberListItem `json:"members,omitempty"`
+	Members []ValueListItem `json:"members,omitempty"`
+}
+
+type RolesValue struct {
+	Roles []ValueListItem `json:"roles,omitempty"`
+}
+
+type ValueList struct {
+	Value []ValueListItem `json:"value,omitempty"`
+}
+
+type GroupsValue struct {
+	Groups []ValueListItem `json:"groups,omitempty"`
 }
 
 type GroupPatchOperations struct {
-	Op    string        `json:"op,omitempty"`
-	Path  string        `json:"path,omitempty"`
-	Value *MembersValue `json:"value,omitempty"`
+	Op    string          `json:"op,omitempty"`
+	Path  GroupPathType   `json:"path,omitempty"`
+	Value []ValueListItem `json:"value,omitempty"`
+}
+
+type UserPatchOperations struct {
+	Op    string       `json:"op,omitempty"`
+	Path  string       `json:"path,omitempty"`
+	Value *GroupsValue `json:"value,omitempty"`
 }

@@ -27,7 +27,7 @@ const (
 )
 
 type NotebookInfo struct {
-	ObjectId   int32      `json:"object_id,omitempty"`
+	ObjectId   int64      `json:"object_id,omitempty"`
 	ObjectType ObjectType `json:"object_type,omitempty"`
 	Path       string     `json:"path,omitempty"`
 	Language   Language   `json:"language,omitempty"`

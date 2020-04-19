@@ -1,4 +1,4 @@
-package client
+package service
 
 import (
 	"bytes"
@@ -10,6 +10,7 @@ import (
 	"log"
 	"net/http"
 	"net/url"
+	"reflect"
 	"time"
 )
 
@@ -20,10 +21,37 @@ const (
 	Azure CloudServiceProvider = "Azure"
 )
 
+type DBApiErrorBody struct {
+	ErrorCode string `json:"error_code,omitempty"`
+	Message string `json:"message,omitempty"`
+	// The following two are for scim api only for RFC 7644 Section 3.7.3 https://tools.ietf.org/html/rfc7644#section-3.7.3
+	ScimDetail string `json:"detail,omitempty"`
+	ScimStatus string `json:"status,omitempty"`
+}
+
+type DBApiError struct {
+	ErrorBody *DBApiErrorBody
+	StatusCode int
+	Err error
+}
+
+func (r DBApiError) Error() string {
+	return fmt.Sprintf("status %d: err %v", r.StatusCode, r.Err)
+}
+
+
+type AuthType string
+
+const (
+	BasicAuth AuthType = "BASIC"
+)
+
 // DBApiClientConfig is used to configure the DataBricks Client
 type DBApiClientConfig struct {
 	Host               string
 	Token              string
+	AuthType		   AuthType
+	UserAgent		   string
 	DefaultHeaders     map[string]string
 	InsecureSkipVerify bool
 	TimeoutSeconds     int
@@ -31,7 +59,7 @@ type DBApiClientConfig struct {
 	cloudProvider      CloudServiceProvider
 }
 
-// SetConfig initializes the client
+// Setup initializes the client
 func (c *DBApiClientConfig) Setup() {
 	if c.TimeoutSeconds == 0 {
 		c.TimeoutSeconds = 10
@@ -48,14 +76,23 @@ func (c *DBApiClientConfig) Setup() {
 
 func (c DBApiClientConfig) getAuthHeader() map[string]string {
 	auth := make(map[string]string)
-	auth["Authorization"] = "Bearer " + c.Token
+	if c.AuthType == BasicAuth {
+		auth["Authorization"] = "Basic " + c.Token
+	} else {
+		auth["Authorization"] = "Bearer " + c.Token
+	}
 	auth["Content-Type"] = "application/json"
 	return auth
 }
 
 func (c DBApiClientConfig) getUserAgentHeader() map[string]string {
+	if reflect.ValueOf(c.UserAgent).IsZero() {
+		return map[string]string{
+			"User-Agent": fmt.Sprintf("databricks-go-client-sdk"),
+		}
+	}
 	return map[string]string{
-		"User-Agent": fmt.Sprintf("databricks-go-client-sdk/%s", ClientVersion),
+		"User-Agent": c.UserAgent,
 	}
 }
 
@@ -92,18 +129,50 @@ func (c DBApiClientConfig) getRequestURI(path string, apiVersion string) (string
 	return requestURI, nil
 }
 
-func onlyNBytes(buf []byte, numBytes int64) []byte {
-	if len(buf) > int(numBytes) {
-		return buf[:numBytes]
+func onlyNBytes(j string, numBytes int64) string {
+	if len([]byte(j)) > int(numBytes) {
+		return string([]byte(j)[:numBytes])
 	} else {
-		return buf
+		return j
 	}
 }
 
-func PerformQuery(option *DBApiClientConfig, method, path string, apiVersion string, headers map[string]string, marshalJson bool, useRawPath bool, data interface{}) ([]byte, error) {
+func auditNonGetPayload(method string, uri string, object interface{}, mask *SecretsMask) {
+	logStmt := struct {
+		Method string
+		Uri string
+		Payload interface{}
+	}{
+		Method:  method,
+		Uri:     uri,
+		Payload: object,
+	}
+	jsonStr, _ := json.Marshal(Mask(logStmt))
+	if mask != nil {
+		log.Println(onlyNBytes(mask.MaskString(string(jsonStr)), 1e3))
+	} else {
+		log.Println(onlyNBytes(string(jsonStr), 1e3))
+	}
+}
 
+func auditGetPayload(uri string, mask *SecretsMask) {
+	logStmt := struct {
+		Method string
+		Uri string
+	}{
+		Method:  "GET",
+		Uri: uri,
+	}
+	jsonStr, _ := json.Marshal(Mask(logStmt))
+	if mask != nil {
+		log.Println(onlyNBytes(mask.MaskString(string(jsonStr)), 1e3))
+	} else {
+		log.Println(onlyNBytes(string(jsonStr), 1e3))
+	}
+}
+
+func PerformQuery(option *DBApiClientConfig, method, path string, apiVersion string, headers map[string]string, marshalJson bool, useRawPath bool, data interface{}, secretsMask *SecretsMask) (body []byte, err error) {
 	var requestURL string
-	var err error
 	if useRawPath {
 		requestURL = path
 	} else {
@@ -123,11 +192,13 @@ func PerformQuery(option *DBApiClientConfig, method, path string, apiVersion str
 	var requestBody []byte
 	if method == "GET" {
 		params, err := query.Values(data)
+
 		if err != nil {
 			return nil, err
 		}
 		requestURL += "?" + params.Encode()
-		log.Println(string(requestURL))
+		auditGetPayload(requestURL, secretsMask)
+
 	} else {
 		if marshalJson {
 			bodyBytes, err := json.Marshal(data)
@@ -136,10 +207,11 @@ func PerformQuery(option *DBApiClientConfig, method, path string, apiVersion str
 			}
 
 			requestBody = bodyBytes
-			log.Println(string(onlyNBytes(requestBody, 1e3)))
 		} else {
 			requestBody = []byte(data.(string))
+
 		}
+		auditNonGetPayload(method, requestURL, data, secretsMask)
 	}
 
 	request, err := http.NewRequest(method, requestURL, bytes.NewBuffer(requestBody))
@@ -155,15 +227,28 @@ func PerformQuery(option *DBApiClientConfig, method, path string, apiVersion str
 		return nil, err
 	}
 
-	defer resp.Body.Close()
+	defer func() {
+		if ferr := resp.Body.Close(); ferr != nil {
+			err = ferr
+		}
+	}()
 
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err = ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return nil, err
 	}
 
 	if resp.StatusCode >= 400 {
-		return nil, fmt.Errorf("Response from server (%d) %s", resp.StatusCode, string(body))
+		var errorBody DBApiErrorBody
+		err = json.Unmarshal(body, &errorBody)
+		if err != nil {
+			return nil, fmt.Errorf("Response from server (%d) %s", resp.StatusCode, string(body))
+		}
+		return nil, DBApiError{
+			ErrorBody:  &errorBody,
+			StatusCode: resp.StatusCode,
+			Err:        fmt.Errorf("Response from server %s", string(body)),
+		}
 	}
 
 	return body, nil

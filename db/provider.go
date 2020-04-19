@@ -1,7 +1,6 @@
 package db
 
 import (
-	"github.com/databrickslabs/databricks-terraform/client"
 	"github.com/databrickslabs/databricks-terraform/client/service"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
@@ -103,7 +102,7 @@ func Provider() terraform.ResourceProvider {
 }
 
 func providerConfigure(d *schema.ResourceData, s string) (interface{}, error) {
-	var config client.DBApiClientConfig
+	var config service.DBApiClientConfig
 	if azureAuth, ok := d.GetOk("azure_auth"); !ok {
 		if host, ok := d.GetOk("host"); ok {
 			config.Host = host.(string)
@@ -164,6 +163,9 @@ func providerConfigure(d *schema.ResourceData, s string) (interface{}, error) {
 		return azureAuthSetup.initWorkspaceAndGetClient(&config)
 	}
 
+	//TODO: Bake the version of the provider using -ldflags to tell the golang linker to send
+	//version information from go-releaser
+	config.UserAgent = "databricks-tf-provider"
 	var dbClient service.DBApiClient
 	dbClient.SetConfig(&config)
 	return dbClient, nil

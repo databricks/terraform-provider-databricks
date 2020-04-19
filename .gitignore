@@ -320,5 +320,7 @@ pip-selfcheck.json
 # Remove tfvars to prevent secrets from leaking and ignore any terraform files in root folder
 **/*.tfvars
 /*.tf
+
 .DS_Store
 /*.dbc
+/*.bck

@@ -1,6 +1,7 @@
 package service
 
 import (
+	"github.com/databrickslabs/databricks-terraform/client/model"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
@@ -11,78 +12,64 @@ func TestContext(t *testing.T) {
 	}
 
 	client := GetIntegrationDBAPIClient()
-	clusterId := "0408-231224-veeps362"
+
+	cluster := model.Cluster{
+		NumWorkers:  1,
+		ClusterName: "my-cluster",
+		SparkEnvVars: map[string]string{
+			"PYSPARK_PYTHON": "/databricks/python3/bin/python3",
+		},
+		AwsAttributes: &model.AwsAttributes{
+			EbsVolumeType:       model.EbsVolumeTypeGeneralPurposeSsd,
+			EbsVolumeCount:      1,
+			EbsVolumeSize:       32,
+		},
+		SparkVersion:           "6.2.x-scala2.11",
+		NodeTypeID:             GetCloudInstanceType(client),
+		DriverNodeTypeID:       GetCloudInstanceType(client),
+		IdempotencyToken:       "my-cluster",
+		AutoterminationMinutes: 20,
+	}
+
+
+	clusterInfo, err := client.Clusters().Create(cluster)
+	assert.NoError(t, err, err)
+	defer func() {
+		err := client.Clusters().PermanentDelete(clusterInfo.ClusterID)
+		assert.NoError(t, err, err)
+	}()
+
+
+	clusterId := clusterInfo.ClusterID
+
+	err = client.Clusters().WaitForClusterRunning(clusterId, 10, 20)
+	assert.NoError(t, err, err)
+
 	context, err := client.Commands().createContext("python", clusterId)
 	assert.NoError(t, err, err)
 	t.Log(context)
 
-	defer func() {
-		err := client.Commands().deleteContext(context, clusterId)
-		assert.NoError(t, err, err)
-	}()
 
 	err = client.Commands().waitForContextReady(context, clusterId, 1, 1)
 	assert.NoError(t, err, err)
 
 	status, err := client.Commands().getContext(context, clusterId)
 	assert.NoError(t, err, err)
+	assert.True(t, status == "Running")
 	t.Log(status)
 
 	commandId, err := client.Commands().createCommand(context, clusterId, "python", "print('hello world')")
 	assert.NoError(t, err, err)
-	t.Log(commandId)
 
 	err = client.Commands().waitForCommandFinished(commandId, context, clusterId, 5, 20)
 	assert.NoError(t, err, err)
 
 	resp, err := client.Commands().getCommand(commandId, context, clusterId)
 	assert.NoError(t, err, err)
-	t.Log(resp.Results.Data)
-}
+	assert.NotNil(t, resp.Results.Data)
 
-func TestListDirectory(t *testing.T) {
-	if testing.Short() {
-		t.Skip("skipping integration test in short mode.")
-	}
-	client := GetIntegrationDBAPIClient()
-	status, err := client.DBFS().List("/mnt/sri_test_mount_test123/", false)
+	// Testing the public api Execute
+	command, err := client.Commands().Execute(clusterId, "python", "print('hello world')")
 	assert.NoError(t, err, err)
-	t.Log(status)
-}
-
-func TestMnt(t *testing.T) {
-	if testing.Short() {
-		t.Skip("skipping integration test in short mode.")
-	}
-	client := GetIntegrationDBAPIClient()
-	clusterId := "0408-231224-veeps362"
-	langauge := "python"
-	command := `AWS_BUCKET_NAME = "dredge-notebook-data-123"
-MOUNT_NAME = "sri_test_mount_test123"
-dbutils.fs.mount("s3a://%s" % AWS_BUCKET_NAME, "/mnt/%s" % MOUNT_NAME)
-dbutils.fs.refreshMounts()
-`
-	commandResp, err := client.Commands().Execute(clusterId, langauge, command)
-	assert.NoError(t, err, err)
-	t.Log(commandResp.Results.ResultType) //error on failure, table on success
-	t.Log(commandResp.Results.Data)
-}
-
-func TestUnmount(t *testing.T) {
-	if testing.Short() {
-		t.Skip("skipping integration test in short mode.")
-	}
-	client := GetIntegrationDBAPIClient()
-	clusterId := "0408-231224-veeps362"
-	langauge := "python"
-	command := `AWS_BUCKET_NAME = "dredge-notebook-data-123"
-MOUNT_NAME = "sri_test_mount_test123"
-#dbutils.fs.unmount("/mnt/%s" % MOUNT_NAME)
-dbutils.fs.refreshMounts()
-dbutils.notebook.exit("success")
-`
-	commandResp, err := client.Commands().Execute(clusterId, langauge, command)
-	assert.NoError(t, err, err)
-	t.Log(commandResp.Results.ResultType) //error on failure, table/text on success
-	t.Log(commandResp.Results.Data)
+	assert.NotNil(t, command.Results.Data)
 }

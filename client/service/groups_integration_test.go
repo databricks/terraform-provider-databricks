@@ -38,7 +38,8 @@ func TestGroup(t *testing.T) {
 	}()
 
 	group, err = client.Groups().Read(group.ID)
-	//t.Log(group.ID)
+	assert.NoError(t, err, err)
+
 	err = client.Groups().Patch(group.ID, []string{user.ID, user2.ID}, nil, model.GroupMembersPath)
 	assert.NoError(t, err, err)
 
@@ -46,6 +47,7 @@ func TestGroup(t *testing.T) {
 	assert.NoError(t, err, err)
 
 	group, err = client.Groups().Read(group.ID)
+	assert.NoError(t, err, err)
 	assert.True(t, len(group.Members) == 1)
 	assert.True(t, group.Members[0].Value == user2.ID)
 }
@@ -57,7 +59,8 @@ func TestGetAdminGroup(t *testing.T) {
 	client := GetIntegrationDBAPIClient()
 	grp, err := client.Groups().GetAdminGroup()
 	assert.NoError(t, err, err)
-	t.Log(grp)
+	assert.NotNil(t, grp)
+	assert.True(t, len(grp.ID) > 0)
 }
 
 func TestReadInheritedRolesFromGroup(t *testing.T) {
@@ -65,8 +68,51 @@ func TestReadInheritedRolesFromGroup(t *testing.T) {
 		t.Skip("skipping integration test in short mode.")
 	}
 	client := GetIntegrationDBAPIClient()
-	grp, err := client.Groups().Read("101358")
+	myTestRole := "arn:aws:iam::123456789012:instance-profile/go-sdk-integeration-testing"
+	err := client.InstanceProfiles().Create(myTestRole, true)
 	assert.NoError(t, err, err)
-	t.Log(grp.InheritedRoles)
-	t.Log(grp.Groups)
+	defer func() {
+		err := client.InstanceProfiles().Delete(myTestRole)
+		assert.NoError(t, err, err)
+	}()
+
+	myTestGroup, err := client.Groups().Create("my-test-group", nil, nil, nil)
+	assert.NoError(t, err, err)
+
+	defer func() {
+		err := client.Groups().Delete(myTestGroup.ID)
+		assert.NoError(t, err, err)
+	}()
+
+	myTestSubGroup, err := client.Groups().Create("my-test-sub-group", nil, nil, nil)
+	assert.NoError(t, err, err)
+
+	defer func() {
+		err := client.Groups().Delete(myTestSubGroup.ID)
+		assert.NoError(t, err, err)
+	}()
+
+
+	err = client.Groups().Patch(myTestGroup.ID, []string{myTestRole}, nil , model.GroupRolesPath)
+	assert.NoError(t, err, err)
+
+
+
+	err = client.Groups().Patch(myTestGroup.ID, []string{myTestSubGroup.ID}, nil , model.GroupMembersPath)
+	assert.NoError(t, err, err)
+
+	myTestGroupInfo, err := client.Groups().Read(myTestSubGroup.ID)
+	assert.NoError(t, err, err)
+
+	assert.True(t, len(myTestGroupInfo.InheritedRoles) > 0)
+	assert.True(t, func(roles []model.RoleListItem, testRole string) bool {
+		for _, role := range roles {
+			if role.Value == testRole {
+				return true
+			}
+		}
+		return false
+	}(myTestGroupInfo.InheritedRoles, myTestRole) )
+
+
 }

@@ -3,7 +3,6 @@ package service
 import (
 	"encoding/json"
 	"github.com/databrickslabs/databricks-terraform/client/model"
-	"log"
 	"net/http"
 )
 
@@ -15,18 +14,17 @@ type InstancePoolsAPI struct {
 func (a InstancePoolsAPI) Create(instancePool model.InstancePool) (model.InstancePoolInfo, error) {
 	var instancePoolInfo model.InstancePoolInfo
 
-	resp, err := a.Client.performQuery(http.MethodPost, "/instance-pools/create", "2.0", nil, instancePool)
+	resp, err := a.Client.performQuery(http.MethodPost, "/instance-pools/create", "2.0", nil, instancePool, nil)
 	if err != nil {
 		return instancePoolInfo, err
 	}
-	log.Println(resp)
 	err = json.Unmarshal(resp, &instancePoolInfo)
 	return instancePoolInfo, err
 }
 
 // Update edits the configuration of a instance pool to match the provided attributes and size
 func (a InstancePoolsAPI) Update(instancePoolInfo model.InstancePoolInfo) error {
-	_, err := a.Client.performQuery(http.MethodPost, "/instance-pools/edit", "2.0", nil, instancePoolInfo)
+	_, err := a.Client.performQuery(http.MethodPost, "/instance-pools/edit", "2.0", nil, instancePoolInfo, nil)
 	return err
 }
 
@@ -39,7 +37,7 @@ func (a InstancePoolsAPI) Read(instancePoolId string) (model.InstancePoolInfo, e
 	}{
 		instancePoolId,
 	}
-	resp, err := a.Client.performQuery(http.MethodGet, "/instance-pools/get", "2.0", nil, data)
+	resp, err := a.Client.performQuery(http.MethodGet, "/instance-pools/get", "2.0", nil, data, nil)
 	if err != nil {
 		return instancePoolInfo, err
 	}
@@ -55,6 +53,6 @@ func (a InstancePoolsAPI) Delete(instancePoolId string) error {
 	}{
 		instancePoolId,
 	}
-	_, err := a.Client.performQuery(http.MethodPost, "/instance-pools/delete", "2.0", nil, data)
+	_, err := a.Client.performQuery(http.MethodPost, "/instance-pools/delete", "2.0", nil, data, nil)
 	return err
 }

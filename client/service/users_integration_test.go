@@ -28,7 +28,7 @@ func TestCreateUser(t *testing.T) {
 	assert.NoError(t, err, err)
 
 	err = client.Users().Update(user.ID, "newtestuser@databricks.com", "Test User", []string{string(model.AllowClusterCreateEntitlement)}, nil)
-	t.Log(user)
+	//t.Log(user)
 	assert.NoError(t, err, err)
 
 }
@@ -74,10 +74,6 @@ func TestCreateAdminUser(t *testing.T) {
 	assert.NoError(t, err, err)
 	assert.True(t, userIsAdmin == false)
 	log.Println(userIsAdmin)
-
-	//err = client.Users().Update(user.ID, "newtestuser@databricks.com", "Test User", []string{string(model.AllowClusterCreateEntitlement)}, nil)
-	//t.Log(user)
-	//assert.NoError(t, err, err)
 
 }
 

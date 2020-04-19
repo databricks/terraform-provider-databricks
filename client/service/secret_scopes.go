@@ -22,7 +22,7 @@ func (a SecretScopesAPI) Create(scope string, initialManagePrincipal string) err
 		scope,
 		initialManagePrincipal,
 	}
-	_, err := a.Client.performQuery(http.MethodPost, "/secrets/scopes/create", "2.0", nil, data)
+	_, err := a.Client.performQuery(http.MethodPost, "/secrets/scopes/create", "2.0", nil, data, nil)
 	return err
 }
 
@@ -33,7 +33,7 @@ func (a SecretScopesAPI) Delete(scope string) error {
 	}{
 		scope,
 	}
-	_, err := a.Client.performQuery(http.MethodPost, "/secrets/scopes/delete", "2.0", nil, data)
+	_, err := a.Client.performQuery(http.MethodPost, "/secrets/scopes/delete", "2.0", nil, data, nil)
 	return err
 }
 
@@ -43,7 +43,7 @@ func (a SecretScopesAPI) List() ([]model.SecretScope, error) {
 		Scopes []model.SecretScope `json:"scopes,omitempty"`
 	}
 
-	resp, err := a.Client.performQuery(http.MethodGet, "/secrets/scopes/list", "2.0", nil, nil)
+	resp, err := a.Client.performQuery(http.MethodGet, "/secrets/scopes/list", "2.0", nil, nil, nil)
 	if err != nil {
 		return listSecretScopesResponse.Scopes, err
 	}

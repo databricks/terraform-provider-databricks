@@ -10,7 +10,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"hash/crc32"
 	"io"
-	"path/filepath"
+	"net/url"
 	"sort"
 	"strconv"
 	"testing"
@@ -23,17 +23,18 @@ func TestNotebookCreate(t *testing.T) {
 		t.Skip("skipping integration test in short mode.")
 	}
 
-	path := "/Users/sri.tikkireddy@databricks.com/helloworld/demo-notebook-rbc"
+	path := "/demo-notebook-rbc"
 	format := model.DBC
 	language := model.Python
 
 	client := GetIntegrationDBAPIClient()
+	err := client.Notebooks().Create(path, fileContent, language, format, false)
+	assert.NoError(t, err, err)
+
 	defer func() {
 		err := client.Notebooks().Delete(path, true)
 		assert.NoError(t, err, err)
 	}()
-	err := client.Notebooks().Create(path, fileContent, language, format, false)
-	assert.NoError(t, err, err)
 
 	notebookInfo, err := client.Notebooks().Read(path)
 	assert.NoError(t, err, err)
@@ -43,27 +44,35 @@ func TestNotebookCreate(t *testing.T) {
 	t.Log(notebookInfo)
 }
 
-func TestNotebookParentDir(t *testing.T) {
-	path := "/Users/sri.tikkireddy@databricks.com/demo-notebook-rbc/test-terraform-deploy"
-	dir := filepath.Dir(path)
-	t.Log(dir)
+func TestUri(t *testing.T) {
+	uri := "https://sri-e2-test-workspace-3.cloud.databricks.com/api/2.0/workspace/export?format=DBC\u0026path=/demo-notebook-rbc"
+	t.Log(url.PathUnescape(uri))
 }
-
 func TestNotebookUnzip(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping integration test in short mode.")
 	}
 
-	//path := "/Users/sri.tikkireddy@databricks.com/"
-	path := "/Users/sri.tikkireddy@databricks.com/helloworld/demo-notebook-rbc"
+	path := "/demo-notebook-rbc"
 	format := model.DBC
 
 	client := GetIntegrationDBAPIClient()
-	export, err := client.Notebooks().Export(path, format)
+
+	err := client.Notebooks().Create(path, fileContent, model.Python, format, false)
 	assert.NoError(t, err, err)
 
-	t.Log(convertBase64ToCheckSum(export))
-	t.Log(convertBase64ToCheckSum(fileContent))
+	defer func() {
+		err := client.Notebooks().Delete(path, true)
+		assert.NoError(t, err, err)
+	}()
+
+	export, err := client.Notebooks().Export(path, format)
+	assert.NoError(t, err, err)
+	exportCRC, err := convertBase64ToCheckSum(export)
+	assert.NoError(t, err, err)
+	expectedCRC, err := convertBase64ToCheckSum(fileContent)
+	assert.NoError(t, err, err)
+	assert.Equal(t, expectedCRC, exportCRC)
 }
 
 func convertBase64ToCheckSum(b64 string) (string, error) {

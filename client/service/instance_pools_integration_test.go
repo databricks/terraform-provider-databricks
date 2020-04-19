@@ -16,6 +16,13 @@ func TestInstancePools(t *testing.T) {
 		InstancePoolName:                   "my_instance_pool",
 		MinIdleInstances:                   0,
 		MaxCapacity:                        10,
+		DiskSpec: &model.InstancePoolDiskSpec{
+			DiskType:  &model.InstancePoolDiskType{
+				EbsVolumeType:       model.EbsVolumeTypeGeneralPurposeSsd,
+			},
+			DiskCount: 1,
+			DiskSize:  32,
+		},
 		NodeTypeId:                         GetCloudInstanceType(client),
 		IdleInstanceAutoTerminationMinutes: 20,
 		PreloadedSparkVersions: []string{
@@ -44,6 +51,13 @@ func TestInstancePools(t *testing.T) {
 		InstancePoolName:                   "my_instance_pool",
 		MinIdleInstances:                   0,
 		MaxCapacity:                        20,
+		DiskSpec: &model.InstancePoolDiskSpec{
+			DiskType:  &model.InstancePoolDiskType{
+				EbsVolumeType:       model.EbsVolumeTypeGeneralPurposeSsd,
+			},
+			DiskCount: 1,
+			DiskSize:  32,
+		},
 		NodeTypeId:                         GetCloudInstanceType(client),
 		IdleInstanceAutoTerminationMinutes: 20,
 		PreloadedSparkVersions: []string{

@@ -17,7 +17,7 @@ func TestSecretsScopesAclsIntegration(t *testing.T) {
 	testSecret := "my-test-secret"
 	initialManagePrincipal := "users"
 	//TODO: Please replace it with users api and get random user
-	testPrincipal := "simon.zamarin@databricks.com"
+	testPrincipal := "users"
 
 	err := client.SecretScopes().Create(testScope, initialManagePrincipal)
 	assert.NoError(t, err, err)
@@ -30,7 +30,7 @@ func TestSecretsScopesAclsIntegration(t *testing.T) {
 
 	scopes, err := client.SecretScopes().List()
 	assert.NoError(t, err, err)
-	assert.True(t, len(scopes) > 1, "Scopes are empty list")
+	assert.True(t, len(scopes) >= 1, "Scopes are empty list")
 
 	scope, err := client.SecretScopes().Read(testScope)
 	assert.NoError(t, err, err)

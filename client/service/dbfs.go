@@ -104,7 +104,7 @@ func (a DBFSAPI) Move(src string, tgt string) error {
 		SourcePath:      src,
 		DestinationPath: tgt,
 	}
-	_, err := a.Client.performQuery(http.MethodPost, "/dbfs/move", "2.0", nil, moveRequest)
+	_, err := a.Client.performQuery(http.MethodPost, "/dbfs/move", "2.0", nil, moveRequest, nil)
 	return err
 }
 
@@ -116,7 +116,7 @@ func (a DBFSAPI) Delete(path string, recursive bool) error {
 		Path:      path,
 		Recursive: recursive,
 	}
-	_, err := a.Client.performQuery(http.MethodPost, "/dbfs/delete", "2.0", nil, deleteRequest)
+	_, err := a.Client.performQuery(http.MethodPost, "/dbfs/delete", "2.0", nil, deleteRequest, nil)
 
 	return err
 }
@@ -135,7 +135,7 @@ func (a DBFSAPI) ReadString(path string, offset, length int64) (int64, string, e
 		Offset: offset,
 		Length: length,
 	}
-	resp, err := a.Client.performQuery(http.MethodGet, "/dbfs/read", "2.0", nil, readRequest)
+	resp, err := a.Client.performQuery(http.MethodGet, "/dbfs/read", "2.0", nil, readRequest, nil)
 	if err != nil {
 		return readBytes.BytesRead, readBytes.Data, err
 	}
@@ -157,7 +157,7 @@ func (a DBFSAPI) Status(path string) (model.FileInfo, error) {
 	}{
 		Path: path,
 	}
-	resp, err := a.Client.performQuery(http.MethodGet, "/dbfs/get-status", "2.0", nil, statusRequest)
+	resp, err := a.Client.performQuery(http.MethodGet, "/dbfs/get-status", "2.0", nil, statusRequest, nil)
 	if err != nil {
 		return fileInfo, err
 	}
@@ -195,7 +195,7 @@ func (a DBFSAPI) list(path string) ([]model.FileInfo, error) {
 	}{}
 	listRequest.Path = path
 
-	resp, err := a.Client.performQuery(http.MethodGet, "/dbfs/list", "2.0", nil, listRequest)
+	resp, err := a.Client.performQuery(http.MethodGet, "/dbfs/list", "2.0", nil, listRequest, nil)
 	if err != nil {
 		return dbfsList.Files, err
 	}
@@ -210,7 +210,7 @@ func (a DBFSAPI) Mkdirs(path string) error {
 	}{}
 	mkDirsRequest.Path = path
 
-	_, err := a.Client.performQuery(http.MethodPost, "/dbfs/mkdirs", "2.0", nil, mkDirsRequest)
+	_, err := a.Client.performQuery(http.MethodPost, "/dbfs/mkdirs", "2.0", nil, mkDirsRequest, nil)
 
 	return err
 }
@@ -227,7 +227,7 @@ func (a DBFSAPI) createHandle(path string, overwrite bool) (int64, error) {
 		Overwrite: overwrite,
 	}
 
-	resp, err := a.Client.performQuery(http.MethodPost, "/dbfs/create", "2.0", nil, createDBFSHandleRequest)
+	resp, err := a.Client.performQuery(http.MethodPost, "/dbfs/create", "2.0", nil, createDBFSHandleRequest, nil)
 	if err != nil {
 		return handle.Handle, err
 	}
@@ -244,7 +244,7 @@ func (a DBFSAPI) addBlock(data string, handle int64) error {
 		Data:   data,
 		Handle: handle,
 	}
-	_, err := a.Client.performQuery(http.MethodPost, "/dbfs/add-block", "2.0", nil, addDBFSBlockRequest)
+	_, err := a.Client.performQuery(http.MethodPost, "/dbfs/add-block", "2.0", nil, addDBFSBlockRequest, nil)
 	return err
 }
 
@@ -255,7 +255,7 @@ func (a DBFSAPI) closeHandle(handle int64) error {
 		Handle: handle,
 	}
 
-	_, err := a.Client.performQuery(http.MethodPost, "/dbfs/close", "2.0", nil, closeHandleRequest)
+	_, err := a.Client.performQuery(http.MethodPost, "/dbfs/close", "2.0", nil, closeHandleRequest, nil)
 	return err
 }
 

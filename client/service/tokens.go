@@ -23,7 +23,7 @@ func (a TokensAPI) Create(lifeTimeSeconds int32, comment string) (model.TokenRes
 		comment,
 	}
 
-	tokenCreateResponse, err := a.Client.performQuery(http.MethodPost, "/token/create", "2.0", nil, tokenCreateRequest)
+	tokenCreateResponse, err := a.Client.performQuery(http.MethodPost, "/token/create", "2.0", nil, tokenCreateRequest, nil)
 	if err != nil {
 		return tokenData, err
 	}
@@ -36,7 +36,7 @@ func (a TokensAPI) List() ([]model.TokenInfo, error) {
 	var tokenListResult struct {
 		TokenInfos []model.TokenInfo `json:"token_infos,omitempty"`
 	}
-	tokenListResponse, err := a.Client.performQuery(http.MethodGet, "/token/list", "2.0", nil, tokenListResult)
+	tokenListResponse, err := a.Client.performQuery(http.MethodGet, "/token/list", "2.0", nil, tokenListResult, nil)
 	if err != nil {
 		return tokenListResult.TokenInfos, err
 	}
@@ -64,6 +64,6 @@ func (a TokensAPI) Delete(tokenID string) error {
 	}{
 		tokenID,
 	}
-	_, err := a.Client.performQuery(http.MethodPost, "/token/delete", "2.0", nil, tokenDeleteRequest)
+	_, err := a.Client.performQuery(http.MethodPost, "/token/delete", "2.0", nil, tokenDeleteRequest, nil)
 	return err
 }

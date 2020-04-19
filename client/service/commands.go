@@ -56,7 +56,7 @@ func (a CommandsAPI) createCommand(contextId, clusterId, language, commandStr st
 		ContextId: contextId,
 		Command:   commandStr,
 	}
-	resp, err := a.Client.performQuery(http.MethodPost, "/commands/execute", "1.2", nil, commandRequest)
+	resp, err := a.Client.performQuery(http.MethodPost, "/commands/execute", "1.2", nil, commandRequest, nil)
 	if err != nil {
 		return command.Id, nil
 	}
@@ -76,7 +76,7 @@ func (a CommandsAPI) getCommand(commandId, contextId, clusterId string) (model.C
 		ContextId: contextId,
 		ClusterId: clusterId,
 	}
-	resp, err := a.Client.performQuery(http.MethodGet, "/commands/status", "1.2", nil, contextGetRequest)
+	resp, err := a.Client.performQuery(http.MethodGet, "/commands/status", "1.2", nil, contextGetRequest, nil)
 	if err != nil {
 		return commandResp, err
 	}
@@ -120,7 +120,7 @@ func (a CommandsAPI) deleteCommand(commandId, contextId, clusterId string) error
 		ContextId: contextId,
 		ClusterId: clusterId,
 	}
-	_, err := a.Client.performQuery(http.MethodPost, "/commands/cancel", "1.2", nil, contextDeleteRequest)
+	_, err := a.Client.performQuery(http.MethodPost, "/commands/cancel", "1.2", nil, contextDeleteRequest, nil)
 	return err
 }
 
@@ -132,7 +132,7 @@ func (a CommandsAPI) deleteContext(contextId, clusterId string) error {
 		ContextId: contextId,
 		ClusterId: clusterId,
 	}
-	_, err := a.Client.performQuery(http.MethodPost, "/contexts/destroy", "1.2", nil, contextDeleteRequest)
+	_, err := a.Client.performQuery(http.MethodPost, "/contexts/destroy", "1.2", nil, contextDeleteRequest, nil)
 	return err
 }
 
@@ -173,7 +173,7 @@ func (a CommandsAPI) getContext(contextId, clusterId string) (string, error) {
 		ContextId: contextId,
 		ClusterId: clusterId,
 	}
-	resp, err := a.Client.performQuery(http.MethodGet, "/contexts/status", "1.2", nil, contextGetRequest)
+	resp, err := a.Client.performQuery(http.MethodGet, "/contexts/status", "1.2", nil, contextGetRequest, nil)
 	if err != nil {
 		return contextStatus.Status, err
 	}
@@ -193,7 +193,7 @@ func (a CommandsAPI) createContext(language, clusterId string) (string, error) {
 		ClusterId: clusterId,
 	}
 
-	resp, err := a.Client.performQuery(http.MethodPost, "/contexts/create", "1.2", nil, contextRequest)
+	resp, err := a.Client.performQuery(http.MethodPost, "/contexts/create", "1.2", nil, contextRequest, nil)
 	if err != nil {
 		return context.Id, nil
 	}

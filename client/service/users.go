@@ -34,7 +34,7 @@ func (a UsersAPI) Create(userName string, displayName string, entitlements []str
 		scimUserRequest.Roles = append(scimUserRequest.Roles, model.RoleListItem{Value: role})
 	}
 
-	resp, err := a.Client.performQuery(http.MethodPost, "/preview/scim/v2/Users", "2.0", scimHeaders, scimUserRequest)
+	resp, err := a.Client.performQuery(http.MethodPost, "/preview/scim/v2/Users", "2.0", scimHeaders, scimUserRequest, nil)
 	if err != nil {
 		return user, err
 	}
@@ -47,7 +47,7 @@ func (a UsersAPI) Read(userId string) (model.User, error) {
 	var user model.User
 	userPath := fmt.Sprintf("/preview/scim/v2/Users/%v", userId)
 
-	resp, err := a.Client.performQuery(http.MethodGet, userPath, "2.0", scimHeaders, nil)
+	resp, err := a.Client.performQuery(http.MethodGet, userPath, "2.0", scimHeaders, nil, nil)
 	if err != nil {
 		return user, err
 	}
@@ -96,7 +96,7 @@ func (a UsersAPI) Update(userId string, userName string, displayName string, ent
 		return err
 	}
 	scimUserUpdateRequest.Groups = user.Groups
-	_, err = a.Client.performQuery(http.MethodPut, userPath, "2.0", scimHeaders, scimUserUpdateRequest)
+	_, err = a.Client.performQuery(http.MethodPut, userPath, "2.0", scimHeaders, scimUserUpdateRequest, nil)
 	return err
 }
 
@@ -104,7 +104,7 @@ func (a UsersAPI) Delete(userId string) error {
 
 	userPath := fmt.Sprintf("/preview/scim/v2/Users/%v", userId)
 
-	_, err := a.Client.performQuery(http.MethodDelete, userPath, "2.0", scimHeaders, nil)
+	_, err := a.Client.performQuery(http.MethodDelete, userPath, "2.0", scimHeaders, nil, nil)
 	return err
 }
 
@@ -126,7 +126,7 @@ func (a UsersAPI) SetUserAsAdmin(userId string, adminGroupId string) error {
 	}
 	userPatchRequest.Operations = append(userPatchRequest.Operations, addOperations)
 
-	_, err := a.Client.performQuery(http.MethodPatch, userPath, "2.0", scimHeaders, userPatchRequest)
+	_, err := a.Client.performQuery(http.MethodPatch, userPath, "2.0", scimHeaders, userPatchRequest, nil)
 
 	return err
 }
@@ -162,7 +162,7 @@ func (a UsersAPI) RemoveUserAsAdmin(userId string, adminGroupId string) error {
 	}
 	userPatchRequest.Operations = append(userPatchRequest.Operations, removeOperations)
 
-	_, err := a.Client.performQuery(http.MethodPatch, userPath, "2.0", scimHeaders, userPatchRequest)
+	_, err := a.Client.performQuery(http.MethodPatch, userPath, "2.0", scimHeaders, userPatchRequest, nil)
 
 	return err
 }

@@ -16,7 +16,7 @@ type SecretsAPI struct {
 // PutSecretString creates or modifies a string secret depends on the type of scope backend
 func (a SecretsAPI) Create(stringValue, scope, key string) error {
 	data := struct {
-		StringValue string `json:"string_value,omitempty"`
+		StringValue string `json:"string_value,omitempty" mask:"true"`
 		Scope       string `json:"scope,omitempty"`
 		Key         string `json:"key,omitempty"`
 	}{
@@ -24,7 +24,7 @@ func (a SecretsAPI) Create(stringValue, scope, key string) error {
 		scope,
 		key,
 	}
-	_, err := a.Client.performQuery(http.MethodPost, "/secrets/put", "2.0", nil, data)
+	_, err := a.Client.performQuery(http.MethodPost, "/secrets/put", "2.0", nil, data, nil)
 	return err
 }
 
@@ -37,7 +37,7 @@ func (a SecretsAPI) Delete(scope, key string) error {
 		scope,
 		key,
 	}
-	_, err := a.Client.performQuery(http.MethodPost, "/secrets/delete", "2.0", nil, data)
+	_, err := a.Client.performQuery(http.MethodPost, "/secrets/delete", "2.0", nil, data, nil)
 	return err
 }
 
@@ -53,7 +53,7 @@ func (a SecretsAPI) List(scope string) ([]model.SecretMetadata, error) {
 		scope,
 	}
 
-	resp, err := a.Client.performQuery(http.MethodGet, "/secrets/list", "2.0", nil, data)
+	resp, err := a.Client.performQuery(http.MethodGet, "/secrets/list", "2.0", nil, data, nil)
 	if err != nil {
 		return secretsList.Secrets, err
 	}

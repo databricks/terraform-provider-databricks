@@ -1,19 +1,15 @@
 package service
 
-import (
-	db "github.com/databrickslabs/databricks-terraform/client"
-)
-
 var scimHeaders = map[string]string{
 	"Content-Type": "application/scim+json",
 }
 
 type DBApiClient struct {
-	config *db.DBApiClientConfig
+	config *DBApiClientConfig
 }
 
 // SetConfig initializes the client
-func (c *DBApiClient) SetConfig(clientConfig *db.DBApiClientConfig) DBApiClient {
+func (c *DBApiClient) SetConfig(clientConfig *DBApiClientConfig) DBApiClient {
 	c.config = clientConfig
 	clientConfig.Setup()
 	return *c
@@ -76,6 +72,6 @@ func (c DBApiClient) Commands() CommandsAPI {
 	return CommandsAPI{Client: c}
 }
 
-func (c DBApiClient) performQuery(method, path string, apiVersion string, headers map[string]string, data interface{}) ([]byte, error) {
-	return db.PerformQuery(c.config, method, path, apiVersion, headers, true, false, data)
+func (c DBApiClient) performQuery(method, path string, apiVersion string, headers map[string]string, data interface{}, secretsMask *SecretsMask) ([]byte, error) {
+	return PerformQuery(c.config, method, path, apiVersion, headers, true, false, data, secretsMask)
 }

@@ -20,7 +20,7 @@ func (a LibrariesAPI) Create(clusterId string, libraries []model.Library) error 
 		Libraries: libraries,
 	}
 
-	_, err := a.Client.performQuery(http.MethodPost, "/libraries/install", "2.0", nil, libraryInstallRequest)
+	_, err := a.Client.performQuery(http.MethodPost, "/libraries/install", "2.0", nil, libraryInstallRequest, nil)
 
 	return err
 }
@@ -34,7 +34,7 @@ func (a LibrariesAPI) Delete(clusterId string, libraries []model.Library) error 
 		Libraries: libraries,
 	}
 
-	_, err := a.Client.performQuery(http.MethodPost, "/libraries/uninstall", "2.0", nil, libraryInstallRequest)
+	_, err := a.Client.performQuery(http.MethodPost, "/libraries/uninstall", "2.0", nil, libraryInstallRequest, nil)
 
 	return err
 }
@@ -50,7 +50,7 @@ func (a LibrariesAPI) List(clusterId string) ([]model.LibraryStatus, error) {
 		ClusterId: clusterId,
 	}
 
-	resp, err := a.Client.performQuery(http.MethodGet, "/libraries/cluster-status", "2.0", nil, libraryInstallRequest)
+	resp, err := a.Client.performQuery(http.MethodGet, "/libraries/cluster-status", "2.0", nil, libraryInstallRequest, nil)
 	if err != nil {
 		return libraryStatusListResp.LibraryStatuses, err
 	}

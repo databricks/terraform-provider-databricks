@@ -3,16 +3,9 @@ package service
 import (
 	"github.com/databrickslabs/databricks-terraform/client/model"
 	"github.com/stretchr/testify/assert"
+	"reflect"
 	"testing"
 )
-
-func TestGetDefaultTags(t *testing.T) {
-	client := GetIntegrationDBAPIClient()
-
-	cinfo, _ := client.Clusters().Get("0406-034153-ship215")
-	t.Log(cinfo.DefaultTags)
-
-}
 
 func TestListClustersIntegration(t *testing.T) {
 	if testing.Short() {
@@ -27,6 +20,11 @@ func TestListClustersIntegration(t *testing.T) {
 		SparkEnvVars: map[string]string{
 			"PYSPARK_PYTHON": "/databricks/python3/bin/python3",
 		},
+		AwsAttributes: &model.AwsAttributes{
+			EbsVolumeType:       model.EbsVolumeTypeGeneralPurposeSsd,
+			EbsVolumeCount:      1,
+			EbsVolumeSize:       32,
+		},
 		SparkVersion:           "6.2.x-scala2.11",
 		NodeTypeID:             GetCloudInstanceType(client),
 		DriverNodeTypeID:       GetCloudInstanceType(client),
@@ -39,10 +37,25 @@ func TestListClustersIntegration(t *testing.T) {
 
 	clusterReadInfo, err := client.Clusters().Get(clusterInfo.ClusterID)
 	assert.NoError(t, err, err)
+	assert.True(t, clusterReadInfo.NumWorkers==cluster.NumWorkers)
+	assert.True(t, clusterReadInfo.ClusterName==cluster.ClusterName)
+	assert.True(t, reflect.DeepEqual(clusterReadInfo.SparkEnvVars, cluster.SparkEnvVars))
+	assert.True(t, clusterReadInfo.SparkVersion==cluster.SparkVersion)
+	assert.True(t, clusterReadInfo.NodeTypeID==cluster.NodeTypeID)
+	assert.True(t, clusterReadInfo.DriverNodeTypeID==cluster.DriverNodeTypeID)
+	assert.True(t, clusterReadInfo.AutoterminationMinutes==cluster.AutoterminationMinutes)
+
 
 	defer func() {
+		err = client.Clusters().Delete(clusterReadInfo.ClusterID)
+		assert.NoError(t, err, err)
+
 		err = client.Clusters().WaitForClusterTerminated(clusterReadInfo.ClusterID, 10, 20)
 		assert.NoError(t, err, err)
+
+		clusterReadInfo, err = client.Clusters().Get(clusterInfo.ClusterID)
+		assert.NoError(t, err, err)
+		assert.True(t, clusterReadInfo.State == model.ClusterStateTerminated)
 
 		err = client.Clusters().Unpin(clusterReadInfo.ClusterID)
 		assert.NoError(t, err, err)
@@ -57,7 +70,8 @@ func TestListClustersIntegration(t *testing.T) {
 	err = client.Clusters().WaitForClusterRunning(clusterReadInfo.ClusterID, 10, 20)
 	assert.NoError(t, err, err)
 
-	err = client.Clusters().Delete(clusterReadInfo.ClusterID)
+	clusterReadInfo, err = client.Clusters().Get(clusterInfo.ClusterID)
 	assert.NoError(t, err, err)
+	assert.True(t, clusterReadInfo.State == model.ClusterStateRunning)
 
 }

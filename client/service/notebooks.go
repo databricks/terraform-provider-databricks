@@ -13,7 +13,7 @@ type NotebooksAPI struct {
 
 func (a NotebooksAPI) Create(path string, content string, language model.Language, format model.ExportFormat, overwrite bool) error {
 	notebookCreateRequest := struct {
-		Content   string             `json:"content,omitempty"`
+		Content   string             `json:"content,omitempty" mask:"true"`
 		Path      string             `json:"path,omitempty"`
 		Language  model.Language     `json:"language,omitempty"`
 		Overwrite bool               `json:"overwrite,omitempty"`
@@ -25,7 +25,7 @@ func (a NotebooksAPI) Create(path string, content string, language model.Languag
 	notebookCreateRequest.Format = format
 	notebookCreateRequest.Overwrite = overwrite
 
-	_, err := a.Client.performQuery(http.MethodPost, "/workspace/import", "2.0", nil, notebookCreateRequest)
+	_, err := a.Client.performQuery(http.MethodPost, "/workspace/import", "2.0", nil, notebookCreateRequest, nil)
 	return err
 }
 
@@ -35,7 +35,7 @@ func (a NotebooksAPI) Read(path string) (model.NotebookInfo, error) {
 		Path string `json:"path,omitempty" url:"path,omitempty"`
 	}{}
 	notebookGetStatusRequest.Path = path
-	resp, err := a.Client.performQuery(http.MethodGet, "/workspace/get-status", "2.0", nil, notebookGetStatusRequest)
+	resp, err := a.Client.performQuery(http.MethodGet, "/workspace/get-status", "2.0", nil, notebookGetStatusRequest, nil)
 	if err != nil {
 		return notebookInfo, err
 	}
@@ -52,7 +52,7 @@ func (a NotebooksAPI) Export(path string, format model.ExportFormat) (string, er
 	}{}
 	notebookExportRequest.Path = path
 	notebookExportRequest.Format = format
-	resp, err := a.Client.performQuery(http.MethodGet, "/workspace/export", "2.0", nil, notebookExportRequest)
+	resp, err := a.Client.performQuery(http.MethodGet, "/workspace/export", "2.0", nil, notebookExportRequest, nil)
 	if err != nil {
 		return notebookContent["content"], err
 	}
@@ -67,7 +67,7 @@ func (a NotebooksAPI) Mkdirs(path string) error {
 	}{}
 	mkDirsRequest.Path = path
 
-	_, err := a.Client.performQuery(http.MethodPost, "/workspace/mkdirs", "2.0", nil, mkDirsRequest)
+	_, err := a.Client.performQuery(http.MethodPost, "/workspace/mkdirs", "2.0", nil, mkDirsRequest, nil)
 
 	return err
 }
@@ -102,7 +102,7 @@ func (a NotebooksAPI) list(path string) ([]model.NotebookInfo, error) {
 	}{}
 	listRequest.Path = path
 
-	resp, err := a.Client.performQuery(http.MethodGet, "/workspace/list", "2.0", nil, listRequest)
+	resp, err := a.Client.performQuery(http.MethodGet, "/workspace/list", "2.0", nil, listRequest, nil)
 	if err != nil {
 		return notebookList.Objects, err
 	}
@@ -118,6 +118,6 @@ func (a NotebooksAPI) Delete(path string, recursive bool) error {
 	}{}
 	notebookDelete.Path = path
 	notebookDelete.Recursive = recursive
-	_, err := a.Client.performQuery(http.MethodPost, "/workspace/delete", "2.0", nil, notebookDelete)
+	_, err := a.Client.performQuery(http.MethodPost, "/workspace/delete", "2.0", nil, notebookDelete, nil)
 	return err
 }

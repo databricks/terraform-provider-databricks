@@ -51,10 +51,10 @@ func TestJobsCreate(t *testing.T) {
 	job, err := client.Jobs().Create(jobSettings)
 	assert.NoError(t, err, err)
 	id := job.JobId
-	//defer func() {
-	//	err := client.Jobs().Delete(id)
-	//	assert.NoError(t, err, err)
-	//}()
+	defer func() {
+		err := client.Jobs().Delete(id)
+		assert.NoError(t, err, err)
+	}()
 	t.Log(id)
 	job, err = client.Jobs().Read(id)
 	assert.NoError(t, err, err)

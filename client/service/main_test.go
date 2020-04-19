@@ -2,7 +2,6 @@ package service
 
 import (
 	"encoding/json"
-	"github.com/databrickslabs/databricks-terraform/client"
 	"github.com/joho/godotenv"
 	"github.com/r3labs/diff"
 	"github.com/stretchr/testify/assert"
@@ -40,7 +39,7 @@ func compare(t *testing.T, a interface{}, b interface{}) {
 }
 
 func GetIntegrationDBAPIClient() *DBApiClient {
-	var config client.DBApiClientConfig
+	var config DBApiClientConfig
 	config.Token = os.Getenv("TOKEN")
 	config.Host = os.Getenv("HOST")
 
@@ -53,7 +52,7 @@ func GetCloudInstanceType(c *DBApiClient) string {
 	if strings.Contains(c.config.Host, "azure") {
 		return "Standard_DS3_v2"
 	} else {
-		return "i3.xlarge"
+		return "m4.large"
 	}
 }
 
@@ -76,7 +75,7 @@ func AssertRequestWithMockServer(t *testing.T, rawPayloadArgs interface{}, reque
 	}))
 	// Close the server when test finishes
 	defer server.Close()
-	var config client.DBApiClientConfig
+	var config DBApiClientConfig
 	config.Host = server.URL
 
 	dbClient := DBApiClient{config: &config}

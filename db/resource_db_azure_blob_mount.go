@@ -86,7 +86,7 @@ func resourceAzureBlobMountCreate(d *schema.ResourceData, m interface{}) error {
 	tokenSecretScope := d.Get("token_secret_scope").(string)
 	tokenSecretKey := d.Get("token_secret_key").(string)
 
-	blobMount := service.NewAzureBlobMount(containerName, storageAccountName, directory, mountName, authType,
+	blobMount := NewAzureBlobMount(containerName, storageAccountName, directory, mountName, authType,
 		tokenSecretScope, tokenSecretKey)
 
 	err = blobMount.Create(client, clusterId)
@@ -131,7 +131,7 @@ func resourceAzureBlobMountRead(d *schema.ResourceData, m interface{}) error {
 	tokenSecretScope := d.Get("token_secret_scope").(string)
 	tokenSecretKey := d.Get("token_secret_key").(string)
 
-	blobMount := service.NewAzureBlobMount(containerName, storageAccountName, directory, mountName, authType,
+	blobMount := NewAzureBlobMount(containerName, storageAccountName, directory, mountName, authType,
 		tokenSecretScope, tokenSecretKey)
 
 	url, err := blobMount.Read(client, clusterId)
@@ -143,7 +143,7 @@ func resourceAzureBlobMountRead(d *schema.ResourceData, m interface{}) error {
 		}
 		return err
 	}
-	container, storageAcc, dir, err := service.ProcessAzureWasbAbfssUris(url)
+	container, storageAcc, dir, err := ProcessAzureWasbAbfssUris(url)
 	err = d.Set("container_name", container)
 	if err != nil {
 		return err
@@ -171,7 +171,7 @@ func resourceAzureBlobMountDelete(d *schema.ResourceData, m interface{}) error {
 	tokenSecretScope := d.Get("token_secret_scope").(string)
 	tokenSecretKey := d.Get("token_secret_key").(string)
 
-	blobMount := service.NewAzureBlobMount(containerName, storageAccountName, directory, mountName, authType,
+	blobMount := NewAzureBlobMount(containerName, storageAccountName, directory, mountName, authType,
 		tokenSecretScope, tokenSecretKey)
 	return blobMount.Delete(client, clusterId)
 }

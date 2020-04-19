@@ -93,7 +93,7 @@ func resourceAzureAdlsGen1Create(d *schema.ResourceData, m interface{}) error {
 	clientSecretScope := d.Get("client_secret_scope").(string)
 	clientSecretKey := d.Get("client_secret_key").(string)
 
-	adlsGen1Mount := service.NewAzureADLSGen1Mount(storageResourceName, directory, mountName,
+	adlsGen1Mount := NewAzureADLSGen1Mount(storageResourceName, directory, mountName,
 		sparkConfPrefix, clientId, tenantId, clientSecretScope, clientSecretKey)
 
 	err = adlsGen1Mount.Create(client, clusterId)
@@ -149,7 +149,7 @@ func resourceAzureAdlsGen1Read(d *schema.ResourceData, m interface{}) error {
 	clientSecretScope := d.Get("client_secret_scope").(string)
 	clientSecretKey := d.Get("client_secret_key").(string)
 
-	adlsGen1Mount := service.NewAzureADLSGen1Mount(storageResourceName, directory, mountName,
+	adlsGen1Mount := NewAzureADLSGen1Mount(storageResourceName, directory, mountName,
 		sparkConfPrefix, clientId, tenantId, clientSecretScope, clientSecretKey)
 
 	url, err := adlsGen1Mount.Read(client, clusterId)
@@ -162,7 +162,7 @@ func resourceAzureAdlsGen1Read(d *schema.ResourceData, m interface{}) error {
 		}
 		return err
 	}
-	storageResourceName, dir, err := service.ProcessAzureAdlsGen1Uri(url)
+	storageResourceName, dir, err := ProcessAzureAdlsGen1Uri(url)
 	err = d.Set("storage_resource_name", storageResourceName)
 	if err != nil {
 		return err
@@ -187,7 +187,7 @@ func resourceAzureAdlsGen1Delete(d *schema.ResourceData, m interface{}) error {
 	clientSecretScope := d.Get("client_secret_scope").(string)
 	clientSecretKey := d.Get("client_secret_key").(string)
 
-	adlsGen1Mount := service.NewAzureADLSGen1Mount(storageResourceName, directory, mountName,
+	adlsGen1Mount := NewAzureADLSGen1Mount(storageResourceName, directory, mountName,
 		sparkConfPrefix, clientId, tenantId, clientSecretScope, clientSecretKey)
 	return adlsGen1Mount.Delete(client, clusterId)
 }

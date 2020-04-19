@@ -1,17 +1,18 @@
-package service
+package db
 
 import (
 	"errors"
 	"fmt"
+	"github.com/databrickslabs/databricks-terraform/client/service"
 	"log"
 	"net/url"
 	"strings"
 )
 
 type Mount interface {
-	Create(client DBApiClient, clusterId string) error
-	Delete(client DBApiClient, clusterId string) error
-	Read(client DBApiClient, clusterId string) (string, error)
+	Create(client service.DBApiClient, clusterId string) error
+	Delete(client service.DBApiClient, clusterId string) error
+	Read(client service.DBApiClient, clusterId string) (string, error)
 }
 
 type AWSIamMount struct {
@@ -24,7 +25,7 @@ func NewAWSIamMount(s3BucketName string, mountName string) *AWSIamMount {
 	return &AWSIamMount{S3BucketName: s3BucketName, MountName: mountName}
 }
 
-func (m AWSIamMount) Create(client DBApiClient, clusterId string) error {
+func (m AWSIamMount) Create(client service.DBApiClient, clusterId string) error {
 	iamMountCommand := fmt.Sprintf(`
 dbutils.fs.mount("s3a://%s", "/mnt/%s")
 dbutils.fs.ls("/mnt/%s")
@@ -41,7 +42,7 @@ dbutils.notebook.exit("success")
 	return nil
 }
 
-func (m AWSIamMount) Delete(client DBApiClient, clusterId string) error {
+func (m AWSIamMount) Delete(client service.DBApiClient, clusterId string) error {
 	iamMountCommand := fmt.Sprintf(`
 dbutils.fs.unmount("/mnt/%s")
 dbutils.fs.refreshMounts()
@@ -58,7 +59,7 @@ dbutils.notebook.exit("success")
 	return nil
 }
 
-func (m AWSIamMount) Read(client DBApiClient, clusterId string) (string, error) {
+func (m AWSIamMount) Read(client service.DBApiClient, clusterId string) (string, error) {
 	iamMountCommand := fmt.Sprintf(`
 dbutils.fs.ls("/mnt/%s")
 for mount in dbutils.fs.mounts():
@@ -98,7 +99,7 @@ func NewAzureBlobMount(containerName string, storageAccountName string, director
 	return &AzureBlobMount{ContainerName: containerName, StorageAccountName: storageAccountName, Directory: directory, MountName: mountName, AuthType: authType, SecretScope: secretScope, SecretKey: secretKey}
 }
 
-func (m AzureBlobMount) Create(client DBApiClient, clusterId string) error {
+func (m AzureBlobMount) Create(client service.DBApiClient, clusterId string) error {
 	var confKey string
 
 	if m.AuthType == "SAS" {
@@ -128,7 +129,7 @@ dbutils.notebook.exit("success")
 	return nil
 }
 
-func (m AzureBlobMount) Delete(client DBApiClient, clusterId string) error {
+func (m AzureBlobMount) Delete(client service.DBApiClient, clusterId string) error {
 	iamMountCommand := fmt.Sprintf(`
 dbutils.fs.unmount("/mnt/%s")
 dbutils.fs.refreshMounts()
@@ -145,7 +146,7 @@ dbutils.notebook.exit("success")
 	return nil
 }
 
-func (m AzureBlobMount) Read(client DBApiClient, clusterId string) (string, error) {
+func (m AzureBlobMount) Read(client service.DBApiClient, clusterId string) (string, error) {
 	iamMountCommand := fmt.Sprintf(`
 dbutils.fs.ls("/mnt/%s")
 for mount in dbutils.fs.mounts():
@@ -193,7 +194,7 @@ func NewAzureADLSGen1Mount(storageResource string, directory string, mountName s
 	return &AzureADLSGen1Mount{StorageResource: storageResource, Directory: directory, MountName: mountName, PrefixType: prefixType, ClientId: clientId, TenantId: tenantId, SecretScope: secretScope, SecretKey: secretKey}
 }
 
-func (m AzureADLSGen1Mount) Create(client DBApiClient, clusterId string) error {
+func (m AzureADLSGen1Mount) Create(client service.DBApiClient, clusterId string) error {
 	iamMountCommand := fmt.Sprintf(`
 try:
   configs = {"%s.oauth2.access.token.provider.type": "ClientCredential",
@@ -221,7 +222,7 @@ dbutils.notebook.exit("success")
 	return nil
 }
 
-func (m AzureADLSGen1Mount) Delete(client DBApiClient, clusterId string) error {
+func (m AzureADLSGen1Mount) Delete(client service.DBApiClient, clusterId string) error {
 	iamMountCommand := fmt.Sprintf(`
 dbutils.fs.unmount("/mnt/%s")
 dbutils.fs.refreshMounts()
@@ -238,7 +239,7 @@ dbutils.notebook.exit("success")
 	return nil
 }
 
-func (m AzureADLSGen1Mount) Read(client DBApiClient, clusterId string) (string, error) {
+func (m AzureADLSGen1Mount) Read(client service.DBApiClient, clusterId string) (string, error) {
 	iamMountCommand := fmt.Sprintf(`
 dbutils.fs.ls("/mnt/%s")
 for mount in dbutils.fs.mounts():
@@ -285,7 +286,7 @@ func NewAzureADLSGen2Mount(containerName string, storageAccountName string, dire
 	return &AzureADLSGen2Mount{ContainerName: containerName, StorageAccountName: storageAccountName, Directory: directory, MountName: mountName, ClientId: clientId, TenantId: tenantId, SecretScope: secretScope, SecretKey: secretKey}
 }
 
-func (m AzureADLSGen2Mount) Create(client DBApiClient, clusterId string) error {
+func (m AzureADLSGen2Mount) Create(client service.DBApiClient, clusterId string) error {
 	iamMountCommand := fmt.Sprintf(`
 try:
   configs = {"fs.azure.account.auth.type": "OAuth",
@@ -313,7 +314,7 @@ dbutils.notebook.exit("success")
 	return nil
 }
 
-func (m AzureADLSGen2Mount) Delete(client DBApiClient, clusterId string) error {
+func (m AzureADLSGen2Mount) Delete(client service.DBApiClient, clusterId string) error {
 	iamMountCommand := fmt.Sprintf(`
 dbutils.fs.unmount("/mnt/%s")
 dbutils.fs.refreshMounts()
@@ -330,7 +331,7 @@ dbutils.notebook.exit("success")
 	return nil
 }
 
-func (m AzureADLSGen2Mount) Read(client DBApiClient, clusterId string) (string, error) {
+func (m AzureADLSGen2Mount) Read(client service.DBApiClient, clusterId string) (string, error) {
 	iamMountCommand := fmt.Sprintf(`
 dbutils.fs.ls("/mnt/%s")
 for mount in dbutils.fs.mounts():

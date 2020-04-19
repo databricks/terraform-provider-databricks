@@ -41,7 +41,7 @@ func resourceAWSS3Create(d *schema.ResourceData, m interface{}) error {
 	s3BucketName := d.Get("s3_bucket_name").(string)
 	mountName := d.Get("mount_name").(string)
 
-	s3BucketMount := service.NewAWSIamMount(s3BucketName, mountName)
+	s3BucketMount := NewAWSIamMount(s3BucketName, mountName)
 
 	err = s3BucketMount.Create(client, clusterId)
 	if err != nil {
@@ -72,7 +72,7 @@ func resourceAWSS3Read(d *schema.ResourceData, m interface{}) error {
 	s3BucketName := d.Get("s3_bucket_name").(string)
 	mountName := d.Get("mount_name").(string)
 
-	s3BucketMount := service.NewAWSIamMount(s3BucketName, mountName)
+	s3BucketMount := NewAWSIamMount(s3BucketName, mountName)
 
 	s3BucketNameMounted, err := s3BucketMount.Read(client, clusterId)
 	if err != nil {
@@ -92,6 +92,6 @@ func resourceAWSS3Delete(d *schema.ResourceData, m interface{}) error {
 	}
 	s3BucketName := d.Get("s3_bucket_name").(string)
 	mountName := d.Get("mount_name").(string)
-	s3BucketMount := service.NewAWSIamMount(s3BucketName, mountName)
+	s3BucketMount := NewAWSIamMount(s3BucketName, mountName)
 	return s3BucketMount.Delete(client, clusterId)
 }

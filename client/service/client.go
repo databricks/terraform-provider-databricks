@@ -23,22 +23,21 @@ const (
 
 type DBApiErrorBody struct {
 	ErrorCode string `json:"error_code,omitempty"`
-	Message string `json:"message,omitempty"`
+	Message   string `json:"message,omitempty"`
 	// The following two are for scim api only for RFC 7644 Section 3.7.3 https://tools.ietf.org/html/rfc7644#section-3.7.3
 	ScimDetail string `json:"detail,omitempty"`
 	ScimStatus string `json:"status,omitempty"`
 }
 
 type DBApiError struct {
-	ErrorBody *DBApiErrorBody
+	ErrorBody  *DBApiErrorBody
 	StatusCode int
-	Err error
+	Err        error
 }
 
 func (r DBApiError) Error() string {
 	return fmt.Sprintf("status %d: err %v", r.StatusCode, r.Err)
 }
-
 
 type AuthType string
 
@@ -50,8 +49,8 @@ const (
 type DBApiClientConfig struct {
 	Host               string
 	Token              string
-	AuthType		   AuthType
-	UserAgent		   string
+	AuthType           AuthType
+	UserAgent          string
 	DefaultHeaders     map[string]string
 	InsecureSkipVerify bool
 	TimeoutSeconds     int
@@ -139,8 +138,8 @@ func onlyNBytes(j string, numBytes int64) string {
 
 func auditNonGetPayload(method string, uri string, object interface{}, mask *SecretsMask) {
 	logStmt := struct {
-		Method string
-		Uri string
+		Method  string
+		Uri     string
 		Payload interface{}
 	}{
 		Method:  method,
@@ -158,10 +157,10 @@ func auditNonGetPayload(method string, uri string, object interface{}, mask *Sec
 func auditGetPayload(uri string, mask *SecretsMask) {
 	logStmt := struct {
 		Method string
-		Uri string
+		Uri    string
 	}{
-		Method:  "GET",
-		Uri: uri,
+		Method: "GET",
+		Uri:    uri,
 	}
 	jsonStr, _ := json.Marshal(Mask(logStmt))
 	if mask != nil {

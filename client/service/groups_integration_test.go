@@ -92,13 +92,10 @@ func TestReadInheritedRolesFromGroup(t *testing.T) {
 		assert.NoError(t, err, err)
 	}()
 
-
-	err = client.Groups().Patch(myTestGroup.ID, []string{myTestRole}, nil , model.GroupRolesPath)
+	err = client.Groups().Patch(myTestGroup.ID, []string{myTestRole}, nil, model.GroupRolesPath)
 	assert.NoError(t, err, err)
 
-
-
-	err = client.Groups().Patch(myTestGroup.ID, []string{myTestSubGroup.ID}, nil , model.GroupMembersPath)
+	err = client.Groups().Patch(myTestGroup.ID, []string{myTestSubGroup.ID}, nil, model.GroupMembersPath)
 	assert.NoError(t, err, err)
 
 	myTestGroupInfo, err := client.Groups().Read(myTestSubGroup.ID)
@@ -112,7 +109,6 @@ func TestReadInheritedRolesFromGroup(t *testing.T) {
 			}
 		}
 		return false
-	}(myTestGroupInfo.InheritedRoles, myTestRole) )
-
+	}(myTestGroupInfo.InheritedRoles, myTestRole))
 
 }

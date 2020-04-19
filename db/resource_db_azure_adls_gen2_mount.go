@@ -90,7 +90,7 @@ func resourceAzureAdlsGen2Create(d *schema.ResourceData, m interface{}) error {
 	clientSecretScope := d.Get("client_secret_scope").(string)
 	clientSecretKey := d.Get("client_secret_key").(string)
 
-	adlsGen2Mount := service.NewAzureADLSGen2Mount(containerName, storageAccountName, directory, mountName, clientId, tenantId,
+	adlsGen2Mount := NewAzureADLSGen2Mount(containerName, storageAccountName, directory, mountName, clientId, tenantId,
 		clientSecretScope, clientSecretKey)
 
 	err = adlsGen2Mount.Create(client, clusterId)
@@ -142,7 +142,7 @@ func resourceAzureAdlsGen2Read(d *schema.ResourceData, m interface{}) error {
 	clientSecretScope := d.Get("client_secret_scope").(string)
 	clientSecretKey := d.Get("client_secret_key").(string)
 
-	adlsGen2Mount := service.NewAzureADLSGen2Mount(containerName, storageAccountName, directory, mountName, clientId, tenantId,
+	adlsGen2Mount := NewAzureADLSGen2Mount(containerName, storageAccountName, directory, mountName, clientId, tenantId,
 		clientSecretScope, clientSecretKey)
 
 	url, err := adlsGen2Mount.Read(client, clusterId)
@@ -155,7 +155,7 @@ func resourceAzureAdlsGen2Read(d *schema.ResourceData, m interface{}) error {
 		}
 		return err
 	}
-	container, storageAcc, dir, err := service.ProcessAzureWasbAbfssUris(url)
+	container, storageAcc, dir, err := ProcessAzureWasbAbfssUris(url)
 	err = d.Set("container_name", container)
 	if err != nil {
 		return err
@@ -184,7 +184,7 @@ func resourceAzureAdlsGen2Delete(d *schema.ResourceData, m interface{}) error {
 	clientSecretScope := d.Get("client_secret_scope").(string)
 	clientSecretKey := d.Get("client_secret_key").(string)
 
-	adlsGen2Mount := service.NewAzureADLSGen2Mount(containerName, storageAccountName, directory, mountName, clientId, tenantId,
+	adlsGen2Mount := NewAzureADLSGen2Mount(containerName, storageAccountName, directory, mountName, clientId, tenantId,
 		clientSecretScope, clientSecretKey)
 	return adlsGen2Mount.Delete(client, clusterId)
 }

@@ -44,7 +44,7 @@ func maskRecursive(copy, original reflect.Value, mask bool) {
 	// we would end up with an actual pointer
 	case reflect.Interface:
 		// Get rid of the wrapping interface
-		if !original.IsZero(){
+		if !original.IsZero() {
 			originalValue := original.Elem()
 			// Create a new object. Now new gives us a pointer, but we want the value it
 			// points to, so we have to call Elem() to unwrap it
@@ -58,7 +58,7 @@ func maskRecursive(copy, original reflect.Value, mask bool) {
 		for i := 0; i < original.NumField(); i += 1 {
 			//log.Println()
 			maskValue, maskInStruct := original.Type().Field(i).Tag.Lookup("mask")
-			maskIsTrue, _  := strconv.ParseBool(maskValue)
+			maskIsTrue, _ := strconv.ParseBool(maskValue)
 			maskRecursive(copy.Field(i), original.Field(i), maskInStruct && maskIsTrue)
 		}
 

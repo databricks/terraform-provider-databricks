@@ -13,12 +13,12 @@ func TestInstancePools(t *testing.T) {
 	client := GetIntegrationDBAPIClient()
 
 	pool := model.InstancePool{
-		InstancePoolName:                   "my_instance_pool",
-		MinIdleInstances:                   0,
-		MaxCapacity:                        10,
+		InstancePoolName: "my_instance_pool",
+		MinIdleInstances: 0,
+		MaxCapacity:      10,
 		DiskSpec: &model.InstancePoolDiskSpec{
-			DiskType:  &model.InstancePoolDiskType{
-				EbsVolumeType:       model.EbsVolumeTypeGeneralPurposeSsd,
+			DiskType: &model.InstancePoolDiskType{
+				EbsVolumeType: model.EbsVolumeTypeGeneralPurposeSsd,
 			},
 			DiskCount: 1,
 			DiskSize:  32,
@@ -47,13 +47,13 @@ func TestInstancePools(t *testing.T) {
 	assert.Equal(t, pool.IdleInstanceAutoTerminationMinutes, poolReadInfo.IdleInstanceAutoTerminationMinutes)
 
 	err = client.InstancePools().Update(model.InstancePoolInfo{
-		InstancePoolId:                     poolReadInfo.InstancePoolId,
-		InstancePoolName:                   "my_instance_pool",
-		MinIdleInstances:                   0,
-		MaxCapacity:                        20,
+		InstancePoolId:   poolReadInfo.InstancePoolId,
+		InstancePoolName: "my_instance_pool",
+		MinIdleInstances: 0,
+		MaxCapacity:      20,
 		DiskSpec: &model.InstancePoolDiskSpec{
-			DiskType:  &model.InstancePoolDiskType{
-				EbsVolumeType:       model.EbsVolumeTypeGeneralPurposeSsd,
+			DiskType: &model.InstancePoolDiskType{
+				EbsVolumeType: model.EbsVolumeTypeGeneralPurposeSsd,
 			},
 			DiskCount: 1,
 			DiskSize:  32,

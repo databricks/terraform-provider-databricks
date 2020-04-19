@@ -20,9 +20,9 @@ func TestContext(t *testing.T) {
 			"PYSPARK_PYTHON": "/databricks/python3/bin/python3",
 		},
 		AwsAttributes: &model.AwsAttributes{
-			EbsVolumeType:       model.EbsVolumeTypeGeneralPurposeSsd,
-			EbsVolumeCount:      1,
-			EbsVolumeSize:       32,
+			EbsVolumeType:  model.EbsVolumeTypeGeneralPurposeSsd,
+			EbsVolumeCount: 1,
+			EbsVolumeSize:  32,
 		},
 		SparkVersion:           "6.2.x-scala2.11",
 		NodeTypeID:             GetCloudInstanceType(client),
@@ -31,14 +31,12 @@ func TestContext(t *testing.T) {
 		AutoterminationMinutes: 20,
 	}
 
-
 	clusterInfo, err := client.Clusters().Create(cluster)
 	assert.NoError(t, err, err)
 	defer func() {
 		err := client.Clusters().PermanentDelete(clusterInfo.ClusterID)
 		assert.NoError(t, err, err)
 	}()
-
 
 	clusterId := clusterInfo.ClusterID
 
@@ -48,7 +46,6 @@ func TestContext(t *testing.T) {
 	context, err := client.Commands().createContext("python", clusterId)
 	assert.NoError(t, err, err)
 	t.Log(context)
-
 
 	err = client.Commands().waitForContextReady(context, clusterId, 1, 1)
 	assert.NoError(t, err, err)

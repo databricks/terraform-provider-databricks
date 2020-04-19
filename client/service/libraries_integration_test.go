@@ -20,9 +20,9 @@ func TestLibraryCreate(t *testing.T) {
 			"PYSPARK_PYTHON": "/databricks/python3/bin/python3",
 		},
 		AwsAttributes: &model.AwsAttributes{
-			EbsVolumeType:       model.EbsVolumeTypeGeneralPurposeSsd,
-			EbsVolumeCount:      1,
-			EbsVolumeSize:       32,
+			EbsVolumeType:  model.EbsVolumeTypeGeneralPurposeSsd,
+			EbsVolumeCount: 1,
+			EbsVolumeSize:  32,
 		},
 		SparkVersion:           "6.2.x-scala2.11",
 		NodeTypeID:             GetCloudInstanceType(client),
@@ -31,7 +31,6 @@ func TestLibraryCreate(t *testing.T) {
 		AutoterminationMinutes: 20,
 	}
 
-
 	clusterInfo, err := client.Clusters().Create(cluster)
 	assert.NoError(t, err, err)
 	defer func() {
@@ -39,12 +38,10 @@ func TestLibraryCreate(t *testing.T) {
 		assert.NoError(t, err, err)
 	}()
 
-
 	clusterId := clusterInfo.ClusterID
 
 	err = client.Clusters().WaitForClusterRunning(clusterId, 10, 20)
 	assert.NoError(t, err, err)
-
 
 	libraries := []model.Library{
 		{
@@ -66,8 +63,6 @@ func TestLibraryCreate(t *testing.T) {
 		err = client.Libraries().Delete(clusterId, libraries)
 		assert.NoError(t, err, err)
 	}()
-
-
 
 	libraryStatusList, err := client.Libraries().List(clusterId)
 	assert.NoError(t, err, err)

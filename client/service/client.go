@@ -171,17 +171,17 @@ func auditGetPayload(uri string, mask *SecretsMask) {
 	}
 }
 
-func PerformQuery(option *DBApiClientConfig, method, path string, apiVersion string, headers map[string]string, marshalJson bool, useRawPath bool, data interface{}, secretsMask *SecretsMask) (body []byte, err error) {
+func PerformQuery(config *DBApiClientConfig, method, path string, apiVersion string, headers map[string]string, marshalJson bool, useRawPath bool, data interface{}, secretsMask *SecretsMask) (body []byte, err error) {
 	var requestURL string
 	if useRawPath {
 		requestURL = path
 	} else {
-		requestURL, err = option.getRequestURI(path, apiVersion)
+		requestURL, err = config.getRequestURI(path, apiVersion)
 		if err != nil {
 			return nil, err
 		}
 	}
-	requestHeaders := option.getDefaultHeaders()
+	requestHeaders := config.getDefaultHeaders()
 
 	if headers != nil && len(headers) > 0 {
 		for k, v := range headers {
@@ -222,7 +222,7 @@ func PerformQuery(option *DBApiClientConfig, method, path string, apiVersion str
 		request.Header.Set(k, v)
 	}
 
-	resp, err := option.client.Do(request)
+	resp, err := config.client.Do(request)
 	if err != nil {
 		return nil, err
 	}

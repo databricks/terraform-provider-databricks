@@ -1,18 +1,17 @@
 package db
 
 import (
-	"github.com/databrickslabs/databricks-terraform/client"
 	"github.com/databrickslabs/databricks-terraform/client/model"
+	"github.com/databrickslabs/databricks-terraform/client/service"
 	"github.com/stretchr/testify/assert"
-	"log"
 	"os"
 
 	//"os"
 	"testing"
 )
 
-func GetIntegrationDBClientOptions() *client.DBApiClientConfig {
-	var config client.DBApiClientConfig
+func GetIntegrationDBClientOptions() *service.DBApiClientConfig {
+	var config service.DBApiClientConfig
 
 	return &config
 }
@@ -54,7 +53,6 @@ func TestAzureAuthCreateApiToken(t *testing.T) {
 			"6.3.x-scala2.11",
 		},
 	})
-	log.Println(instancePoolInfo)
 	defer func() {
 		err := api.InstancePools().Delete(instancePoolInfo.InstancePoolId)
 		assert.NoError(t, err, err)

@@ -1,7 +1,6 @@
 package db
 
 import (
-	clientLib "github.com/databrickslabs/databricks-terraform/client"
 	"github.com/databrickslabs/databricks-terraform/client/service"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"path/filepath"
@@ -136,12 +135,13 @@ func resourceDBFSFileSyncDelete(d *schema.ResourceData, m interface{}) error {
 func parseSchemaToDBAPIClient(d *schema.ResourceData) *service.DBApiClient {
 	host, hostOk := d.GetOk("host")
 	token, tokenOk := d.GetOk("token")
-	var option clientLib.DBApiClientConfig
+	var config service.DBApiClientConfig
 	if hostOk && tokenOk {
-		option.Host = host.(string)
-		option.Token = token.(string)
+		config.Host = host.(string)
+		config.Token = token.(string)
+		config.UserAgent = "databricks-tf-provider"
 		var dbClient service.DBApiClient
-		dbClient.SetConfig(&option)
+		dbClient.SetConfig(&config)
 		return &dbClient
 	}
 	return nil

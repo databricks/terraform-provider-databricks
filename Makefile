@@ -12,6 +12,10 @@ coverage: test
 	@echo "==> Opening coverage for unit tests..."
 	@go tool cover -html=coverage.out
 
+coverage-int: int
+	@echo "==> Opening coverage for unit tests..."
+	@go tool cover -html=coverage.out
+
 int-build: int build
 
 build:

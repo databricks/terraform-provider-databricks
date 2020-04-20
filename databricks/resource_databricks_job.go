@@ -869,8 +869,8 @@ func parseSchemaToJobSettings(d *schema.ResourceData) model.JobSettings {
 
 	var jobSettings model.JobSettings
 
-	if existingClusterId, ok := d.GetOk("existing_cluster_id"); ok {
-		jobSettings.ExistingClusterID = existingClusterId.(string)
+	if existingClusterID, ok := d.GetOk("existing_cluster_id"); ok {
+		jobSettings.ExistingClusterID = existingClusterID.(string)
 	}
 
 	cluster := parseSchemaToCluster(d, "new_cluster.0.")
@@ -1096,7 +1096,7 @@ func parseSchemaToLibraries(d *schema.ResourceData) []model.Library {
 	return libraryList
 }
 
-func isJobMissing(errorMsg, resourceId string) bool {
+func isJobMissing(errorMsg, resourceID string) bool {
 	return strings.Contains(errorMsg, "INVALID_PARAMETER_VALUE") &&
-		strings.Contains(errorMsg, fmt.Sprintf("Job %s does not exist.", resourceId))
+		strings.Contains(errorMsg, fmt.Sprintf("Job %s does not exist.", resourceID))
 }

@@ -74,6 +74,6 @@ func resourceSecretScopeDelete(d *schema.ResourceData, m interface{}) error {
 	return err
 }
 
-func isSecretScopeMissing(errorMsg, resourceId string) bool {
-	return strings.Contains(errorMsg, fmt.Sprintf("No Secret Scope found with scope name %s.", resourceId))
+func isSecretScopeMissing(errorMsg, resourceID string) bool {
+	return strings.Contains(errorMsg, fmt.Sprintf("no Secret Scope found with scope name %s", resourceID))
 }

@@ -144,7 +144,7 @@ func resourceDBFSFileDelete(d *schema.ResourceData, m interface{}) error {
 	return err
 }
 
-func isDBFSFileMissing(errorMsg, resourceId string) bool {
+func isDBFSFileMissing(errorMsg, resourceID string) bool {
 	return strings.Contains(errorMsg, "RESOURCE_DOES_NOT_EXIST") &&
-		strings.Contains(errorMsg, fmt.Sprintf("No file or directory exists on path %s.", resourceId))
+		strings.Contains(errorMsg, fmt.Sprintf("No file or directory exists on path %s.", resourceID))
 }

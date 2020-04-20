@@ -40,9 +40,8 @@ func resourceAzureBlobMount() *schema.Resource {
 					directory := val.(string)
 					if strings.HasPrefix(directory, "/") {
 						return
-					} else {
-						errors = append(errors, fmt.Errorf("%s must start with /, got: %s", key, val))
 					}
+					errors = append(errors, fmt.Errorf("%s must start with /, got: %s", key, val))
 					return
 				},
 			},
@@ -73,8 +72,8 @@ func resourceAzureBlobMount() *schema.Resource {
 
 func resourceAzureBlobMountCreate(d *schema.ResourceData, m interface{}) error {
 	client := m.(service.DBApiClient)
-	clusterId := d.Get("cluster_id").(string)
-	err := changeClusterIntoRunningState(clusterId, client)
+	clusterID := d.Get("cluster_id").(string)
+	err := changeClusterIntoRunningState(clusterID, client)
 	if err != nil {
 		return err
 	}
@@ -89,11 +88,11 @@ func resourceAzureBlobMountCreate(d *schema.ResourceData, m interface{}) error {
 	blobMount := NewAzureBlobMount(containerName, storageAccountName, directory, mountName, authType,
 		tokenSecretScope, tokenSecretKey)
 
-	err = blobMount.Create(client, clusterId)
+	err = blobMount.Create(client, clusterID)
 
 	d.SetId(mountName)
 
-	err = d.Set("cluster_id", clusterId)
+	err = d.Set("cluster_id", clusterID)
 	if err != nil {
 		return err
 	}
@@ -118,8 +117,8 @@ func resourceAzureBlobMountCreate(d *schema.ResourceData, m interface{}) error {
 }
 func resourceAzureBlobMountRead(d *schema.ResourceData, m interface{}) error {
 	client := m.(service.DBApiClient)
-	clusterId := d.Get("cluster_id").(string)
-	err := changeClusterIntoRunningState(clusterId, client)
+	clusterID := d.Get("cluster_id").(string)
+	err := changeClusterIntoRunningState(clusterID, client)
 	if err != nil {
 		return err
 	}
@@ -134,7 +133,7 @@ func resourceAzureBlobMountRead(d *schema.ResourceData, m interface{}) error {
 	blobMount := NewAzureBlobMount(containerName, storageAccountName, directory, mountName, authType,
 		tokenSecretScope, tokenSecretKey)
 
-	url, err := blobMount.Read(client, clusterId)
+	url, err := blobMount.Read(client, clusterID)
 	if err != nil {
 		//Reset id in case of inability to find mount
 		if strings.Contains(err.Error(), "Unable to find mount point!") {
@@ -158,8 +157,8 @@ func resourceAzureBlobMountRead(d *schema.ResourceData, m interface{}) error {
 
 func resourceAzureBlobMountDelete(d *schema.ResourceData, m interface{}) error {
 	client := m.(service.DBApiClient)
-	clusterId := d.Get("cluster_id").(string)
-	err := changeClusterIntoRunningState(clusterId, client)
+	clusterID := d.Get("cluster_id").(string)
+	err := changeClusterIntoRunningState(clusterID, client)
 	if err != nil {
 		return err
 	}
@@ -173,5 +172,5 @@ func resourceAzureBlobMountDelete(d *schema.ResourceData, m interface{}) error {
 
 	blobMount := NewAzureBlobMount(containerName, storageAccountName, directory, mountName, authType,
 		tokenSecretScope, tokenSecretKey)
-	return blobMount.Delete(client, clusterId)
+	return blobMount.Delete(client, clusterID)
 }

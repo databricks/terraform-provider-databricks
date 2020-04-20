@@ -53,7 +53,7 @@ func testAccCheckTokenResourceDestroy(s *terraform.State) error {
 		if err != nil {
 			return nil
 		}
-		return errors.New("Resource token is not cleaned up!")
+		return errors.New("resource token is not cleaned up")
 	}
 	return nil
 }
@@ -65,7 +65,7 @@ func testAccPreCheck(t *testing.T) {
 func testAccCheckTokenValues(tokenInfo *model.TokenInfo, comment string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if tokenInfo.Comment != comment {
-			return errors.New("The comment for the token created does not equal the value passed in!")
+			return errors.New("the comment for the token created does not equal the value passed in")
 		}
 		return nil
 	}

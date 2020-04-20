@@ -163,8 +163,8 @@ func resourceInstancePoolCreate(d *schema.ResourceData, m interface{}) error {
 		if availability, ok := awsAttributesMap["availability"]; ok {
 			instancePoolAwsAttributes.Availability = model.AwsAvailability(availability.(string))
 		}
-		if zoneId, ok := awsAttributesMap["zone_id"]; ok {
-			instancePoolAwsAttributes.ZoneID = zoneId.(string)
+		if zoneID, ok := awsAttributesMap["zone_id"]; ok {
+			instancePoolAwsAttributes.ZoneID = zoneID.(string)
 		}
 		if spotBidPricePercent, ok := awsAttributesMap["spot_bid_price_percent"]; ok {
 			//val, _ := strconv.ParseInt(spotBidPricePercent.(string), 10, 32)
@@ -173,8 +173,8 @@ func resourceInstancePoolCreate(d *schema.ResourceData, m interface{}) error {
 		instancePool.AwsAttributes = &instancePoolAwsAttributes
 	}
 
-	if nodeTypeId, ok := d.GetOk("node_type_id"); ok {
-		instancePool.NodeTypeID = nodeTypeId.(string)
+	if nodeTypeID, ok := d.GetOk("node_type_id"); ok {
+		instancePool.NodeTypeID = nodeTypeID.(string)
 	}
 
 	if customTags, ok := d.GetOk("custom_tags"); ok {
@@ -345,7 +345,7 @@ func resourceInstancePoolDelete(d *schema.ResourceData, m interface{}) error {
 	return err
 }
 
-func isInstancePoolMissing(errorMsg, resourceId string) bool {
+func isInstancePoolMissing(errorMsg, resourceID string) bool {
 	return strings.Contains(errorMsg, "RESOURCE_DOES_NOT_EXIST") &&
-		strings.Contains(errorMsg, fmt.Sprintf("Can't find an instance pool with id: %s", resourceId))
+		strings.Contains(errorMsg, fmt.Sprintf("Can't find an instance pool with id: %s", resourceID))
 }

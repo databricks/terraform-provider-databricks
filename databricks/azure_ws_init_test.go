@@ -33,7 +33,7 @@ func TestAzureAuthCreateApiToken(t *testing.T) {
 		AdbAccessToken:         "",
 		AdbPlatformToken:       "",
 	}
-	azureAuth.TokenPayload.SubscriptionId = os.Getenv("ARM_SUBSCRIPTION_ID")
+	azureAuth.TokenPayload.SubscriptionID = os.Getenv("ARM_SUBSCRIPTION_ID")
 	azureAuth.TokenPayload.TenantID = os.Getenv("ARM_TENANT_ID")
 	azureAuth.TokenPayload.ClientID = os.Getenv("ARM_CLIENT_ID")
 	azureAuth.TokenPayload.ClientSecret = os.Getenv("ARM_CLIENT_SECRET")

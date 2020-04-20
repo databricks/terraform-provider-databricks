@@ -1,4 +1,4 @@
-# Resource: db_notebook
+# Resource: databricks_notebook
 
 This resource allows you to manage the import, export, and delete notebooks. The maximum allowed size of a 
 request to resource is 10MB. 
@@ -8,7 +8,7 @@ request to resource is 10MB.
 
 .. code-block:: tf
 
-    resource "db_notebook" "my_databricks_notebook" {
+    resource "databricks_notebook" "my_databricks_notebook" {
       content = filebase64("${path.module}/demo-terraform.dbc")
       path = "/workspace/terraform-test-folder/"
       overwrite = false

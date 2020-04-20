@@ -31,7 +31,7 @@ func TestDBFSAPI_Create(t *testing.T) {
 	//var blockInput block
 	//var closeInput close
 	tests := []struct {
-		params 			params
+		params           params
 		name             string
 		response         []string
 		responseStatus   []int
@@ -44,25 +44,25 @@ func TestDBFSAPI_Create(t *testing.T) {
 	}{
 		{
 			name: "Create test",
-			params:params{
-				Path:     "my-path",
+			params: params{
+				Path:      "my-path",
 				Overwrite: true,
 				Data:      base64String,
 			},
 			response: []string{
 				`{
 					"handle": 1000
-				}`,``,``,
+				}`, ``, ``,
 			},
 			responseStatus: []int{http.StatusOK, http.StatusOK, http.StatusOK},
 			requestMethod:  []string{http.MethodPost, http.MethodPost, http.MethodPost},
 			args: []interface{}{
 				&handle{
-					Path: "my-path",
+					Path:      "my-path",
 					Overwrite: true,
 				},
 				&block{
-					Data: base64String,
+					Data:   base64String,
 					Handle: 1000,
 				},
 				&close{
@@ -74,45 +74,45 @@ func TestDBFSAPI_Create(t *testing.T) {
 				&block{},
 				&close{},
 			},
-			wantUri: []string{"/api/2.0/dbfs/create","/api/2.0/dbfs/add-block","/api/2.0/dbfs/close"},
+			wantUri: []string{"/api/2.0/dbfs/create", "/api/2.0/dbfs/add-block", "/api/2.0/dbfs/close"},
 			want:    nil,
 			wantErr: false,
 		},
 		{
 			name: "Create bad data encoding failure test",
-			params:params{
-				Path:     "my-path",
+			params: params{
+				Path:      "my-path",
 				Overwrite: true,
 				Data:      "9",
 			},
 			response: []string{
-				``,``,``,
+				``, ``, ``,
 			},
-			responseStatus: []int{},
-			requestMethod:  []string{},
-			args: []interface{}{},
+			responseStatus:   []int{},
+			requestMethod:    []string{},
+			args:             []interface{}{},
 			postStructExpect: []interface{}{},
-			wantUri: []string{},
-			want:    nil,
-			wantErr: true,
+			wantUri:          []string{},
+			want:             nil,
+			wantErr:          true,
 		},
 		{
 			name: "Create handle failure test",
-			params:params{
-				Path:     "my-path",
+			params: params{
+				Path:      "my-path",
 				Overwrite: true,
 				Data:      base64String,
 			},
 			response: []string{
 				`{
 					"handle": 1000
-				}`,``,``,
+				}`, ``, ``,
 			},
 			responseStatus: []int{http.StatusBadRequest},
 			requestMethod:  []string{http.MethodPost},
 			args: []interface{}{
 				&handle{
-					Path: "my-path",
+					Path:      "my-path",
 					Overwrite: true,
 				},
 			},
@@ -125,25 +125,25 @@ func TestDBFSAPI_Create(t *testing.T) {
 		},
 		{
 			name: "Create add block failure test",
-			params:params{
-				Path:     "my-path",
+			params: params{
+				Path:      "my-path",
 				Overwrite: true,
 				Data:      base64String,
 			},
 			response: []string{
 				`{
 					"handle": 1000
-				}`,``,``,
+				}`, ``, ``,
 			},
 			responseStatus: []int{http.StatusOK, http.StatusBadRequest},
 			requestMethod:  []string{http.MethodPost, http.MethodPost},
 			args: []interface{}{
 				&handle{
-					Path: "my-path",
+					Path:      "my-path",
 					Overwrite: true,
 				},
 				&block{
-					Data: base64String,
+					Data:   base64String,
 					Handle: 1000,
 				},
 			},
@@ -151,31 +151,31 @@ func TestDBFSAPI_Create(t *testing.T) {
 				&handle{},
 				&block{},
 			},
-			wantUri: []string{"/api/2.0/dbfs/create","/api/2.0/dbfs/add-block"},
+			wantUri: []string{"/api/2.0/dbfs/create", "/api/2.0/dbfs/add-block"},
 			want:    nil,
 			wantErr: true,
 		},
 		{
 			name: "Create close failure test",
-			params:params{
-				Path:     "my-path",
+			params: params{
+				Path:      "my-path",
 				Overwrite: true,
 				Data:      base64String,
 			},
 			response: []string{
 				`{
 					"handle": 1000
-				}`,``,``,
+				}`, ``, ``,
 			},
 			responseStatus: []int{http.StatusOK, http.StatusOK, http.StatusBadRequest},
 			requestMethod:  []string{http.MethodPost, http.MethodPost, http.MethodPost},
 			args: []interface{}{
 				&handle{
-					Path: "my-path",
+					Path:      "my-path",
 					Overwrite: true,
 				},
 				&block{
-					Data: base64String,
+					Data:   base64String,
 					Handle: 1000,
 				},
 				&close{
@@ -187,7 +187,7 @@ func TestDBFSAPI_Create(t *testing.T) {
 				&block{},
 				&close{},
 			},
-			wantUri: []string{"/api/2.0/dbfs/create","/api/2.0/dbfs/add-block","/api/2.0/dbfs/close"},
+			wantUri: []string{"/api/2.0/dbfs/create", "/api/2.0/dbfs/add-block", "/api/2.0/dbfs/close"},
 			want:    nil,
 			wantErr: true,
 		},
@@ -195,7 +195,7 @@ func TestDBFSAPI_Create(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			AssertMultipleRequestsWithMockServer(t, tt.args, tt.requestMethod, tt.wantUri, tt.postStructExpect, tt.response, tt.responseStatus, nil, tt.wantErr, func(client DBApiClient) (interface{}, error) {
-				return nil, client.DBFS().Create(tt.params.Path,tt.params.Overwrite, tt.params.Data)
+				return nil, client.DBFS().Create(tt.params.Path, tt.params.Overwrite, tt.params.Data)
 			})
 		})
 	}
@@ -219,13 +219,13 @@ func TestDBFSAPI_Copy(t *testing.T) {
 		Length int64  `json:"length,omitempty" url:"length,omitempty"`
 	}
 	type params struct {
-		Src      string `json:"src,omitempty" url:"src,omitempty"`
-		Tgt string   `json:"tgt,omitempty" url:"tgt,omitempty"`
-		Overwrite      bool `json:"overwrite,omitempty" url:"overwrite,omitempty"`
+		Src       string `json:"src,omitempty" url:"src,omitempty"`
+		Tgt       string `json:"tgt,omitempty" url:"tgt,omitempty"`
+		Overwrite bool   `json:"overwrite,omitempty" url:"overwrite,omitempty"`
 	}
 
 	tests := []struct {
-		params 			params
+		params           params
 		name             string
 		response         []string
 		responseStatus   []int
@@ -238,24 +238,24 @@ func TestDBFSAPI_Copy(t *testing.T) {
 	}{
 		{
 			name: "Copy test",
-			params:params{
-				Src:     "my-path",
-				Tgt: 	"my-path-tgt",
-				Overwrite:      true,
+			params: params{
+				Src:       "my-path",
+				Tgt:       "my-path-tgt",
+				Overwrite: true,
 			},
 			response: []string{
 				`{
 					"handle": 1000
-				}`,fmt.Sprintf(`{
+				}`, fmt.Sprintf(`{
 					"bytes_read": 10000,
 					"data": "%s"
-				}`, base64String),``,``,
+				}`, base64String), ``, ``,
 			},
-			responseStatus: []int{http.StatusOK, http.StatusOK,  http.StatusOK,  http.StatusOK},
+			responseStatus: []int{http.StatusOK, http.StatusOK, http.StatusOK, http.StatusOK},
 			requestMethod:  []string{http.MethodPost, http.MethodGet, http.MethodPost, http.MethodPost},
 			args: []interface{}{
 				&handle{
-					Path: "my-path-tgt",
+					Path:      "my-path-tgt",
 					Overwrite: true,
 				},
 				&read{
@@ -264,7 +264,7 @@ func TestDBFSAPI_Copy(t *testing.T) {
 					Length: 1e6,
 				},
 				&addBlock{
-					Data: base64String,
+					Data:   base64String,
 					Handle: 1000,
 				},
 				&closeHandle{
@@ -277,7 +277,7 @@ func TestDBFSAPI_Copy(t *testing.T) {
 				&addBlock{},
 				&closeHandle{},
 			},
-			wantUri: []string{"/api/2.0/dbfs/create","/api/2.0/dbfs/read?length=1000000&path=my-path", "/api/2.0/dbfs/add-block","/api/2.0/dbfs/close"},
+			wantUri: []string{"/api/2.0/dbfs/create", "/api/2.0/dbfs/read?length=1000000&path=my-path", "/api/2.0/dbfs/add-block", "/api/2.0/dbfs/close"},
 			want:    nil,
 			wantErr: false,
 		},
@@ -285,12 +285,11 @@ func TestDBFSAPI_Copy(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			AssertMultipleRequestsWithMockServer(t, tt.args, tt.requestMethod, tt.wantUri, tt.postStructExpect, tt.response, tt.responseStatus, nil, tt.wantErr, func(client DBApiClient) (interface{}, error) {
-				return nil, client.DBFS().Copy(tt.params.Src,tt.params.Tgt, &client, tt.params.Overwrite)
+				return nil, client.DBFS().Copy(tt.params.Src, tt.params.Tgt, &client, tt.params.Overwrite)
 			})
 		})
 	}
 }
-
 
 func TestDBFSAPI_Read(t *testing.T) {
 	type read struct {
@@ -300,10 +299,10 @@ func TestDBFSAPI_Read(t *testing.T) {
 	}
 
 	type params struct {
-		Path      string `json:"path,omitempty" url:"path,omitempty"`
+		Path string `json:"path,omitempty" url:"path,omitempty"`
 	}
 	tests := []struct {
-		params 			params
+		params           params
 		name             string
 		response         []string
 		responseStatus   []int
@@ -316,9 +315,8 @@ func TestDBFSAPI_Read(t *testing.T) {
 	}{
 		{
 			name: "Read test",
-			params:params{
-				Path:     "my-path",
-
+			params: params{
+				Path: "my-path",
 			},
 			response: []string{
 				fmt.Sprintf(`{
@@ -348,15 +346,14 @@ func TestDBFSAPI_Read(t *testing.T) {
 				&read{},
 				&read{},
 			},
-			wantUri: []string{"/api/2.0/dbfs/read?length=1000000&path=my-path","/api/2.0/dbfs/read?length=1000000&offset=1000000&path=my-path"},
+			wantUri: []string{"/api/2.0/dbfs/read?length=1000000&path=my-path", "/api/2.0/dbfs/read?length=1000000&offset=1000000&path=my-path"},
 			want:    base64String,
 			wantErr: false,
 		},
 		{
 			name: "Read fetch block failure test",
-			params:params{
-				Path:     "my-path",
-
+			params: params{
+				Path: "my-path",
 			},
 			response: []string{
 				fmt.Sprintf(`{
@@ -386,7 +383,7 @@ func TestDBFSAPI_Read(t *testing.T) {
 				&read{},
 				&read{},
 			},
-			wantUri: []string{"/api/2.0/dbfs/read?length=1000000&path=my-path","/api/2.0/dbfs/read?length=1000000&offset=1000000&path=my-path"},
+			wantUri: []string{"/api/2.0/dbfs/read?length=1000000&path=my-path", "/api/2.0/dbfs/read?length=1000000&offset=1000000&path=my-path"},
 			want:    "",
 			wantErr: true,
 		},
@@ -443,7 +440,6 @@ func TestDBFSAPI_Delete(t *testing.T) {
 	}
 }
 
-
 func TestDBFSAPI_Move(t *testing.T) {
 	type args struct {
 		SourcePath      string `json:"source_path,omitempty" url:"source_path,omitempty"`
@@ -462,7 +458,7 @@ func TestDBFSAPI_Move(t *testing.T) {
 			responseStatus: http.StatusOK,
 			args: args{
 				SourcePath:      "mypath",
-				DestinationPath:      "targetpath",
+				DestinationPath: "targetpath",
 			},
 			wantErr: false,
 		},
@@ -472,7 +468,7 @@ func TestDBFSAPI_Move(t *testing.T) {
 			responseStatus: http.StatusBadRequest,
 			args: args{
 				SourcePath:      "mypath",
-				DestinationPath:      "targetpath",
+				DestinationPath: "targetpath",
 			},
 			wantErr: true,
 		},
@@ -489,7 +485,7 @@ func TestDBFSAPI_Move(t *testing.T) {
 
 func TestDBFSAPI_Mkdirs(t *testing.T) {
 	type args struct {
-		Path      string `json:"path,omitempty" url:"path,omitempty"`
+		Path string `json:"path,omitempty" url:"path,omitempty"`
 	}
 	tests := []struct {
 		name           string
@@ -503,7 +499,7 @@ func TestDBFSAPI_Mkdirs(t *testing.T) {
 			response:       "",
 			responseStatus: http.StatusOK,
 			args: args{
-				Path:      "mypath",
+				Path: "mypath",
 			},
 			wantErr: false,
 		},
@@ -512,7 +508,7 @@ func TestDBFSAPI_Mkdirs(t *testing.T) {
 			response:       "",
 			responseStatus: http.StatusBadRequest,
 			args: args{
-				Path:      "mypath",
+				Path: "mypath",
 			},
 			wantErr: true,
 		},
@@ -529,28 +525,28 @@ func TestDBFSAPI_Mkdirs(t *testing.T) {
 
 func TestDBFSAPI_Status(t *testing.T) {
 	type args struct {
-		Path      string `json:"path,omitempty" url:"path,omitempty"`
+		Path string `json:"path,omitempty" url:"path,omitempty"`
 	}
 	tests := []struct {
 		name           string
 		response       string
 		responseStatus int
-		requestUri string
+		requestUri     string
 		args           args
-		want interface{}
+		want           interface{}
 		wantErr        bool
 	}{
 		{
-			name:           "Status test",
-			response:       `{
+			name: "Status test",
+			response: `{
 							  "path": "/a.cpp",
 							  "is_dir": false,
 							  "file_size": 261
 							}`,
-			requestUri: "/api/2.0/dbfs/get-status?path=mypath",
+			requestUri:     "/api/2.0/dbfs/get-status?path=mypath",
 			responseStatus: http.StatusOK,
 			args: args{
-				Path:      "mypath",
+				Path: "mypath",
 			},
 			want: model.FileInfo{
 				Path:     "/a.cpp",
@@ -562,12 +558,12 @@ func TestDBFSAPI_Status(t *testing.T) {
 		{
 			name:           "Status failure test",
 			response:       "",
-			requestUri: "/api/2.0/dbfs/get-status?path=mypath",
+			requestUri:     "/api/2.0/dbfs/get-status?path=mypath",
 			responseStatus: http.StatusBadRequest,
 			args: args{
-				Path:      "mypath",
+				Path: "mypath",
 			},
-			want: model.FileInfo{},
+			want:    model.FileInfo{},
 			wantErr: true,
 		},
 	}
@@ -633,8 +629,8 @@ func TestDBFSAPI_ListNonRecursive(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name: "List non recursive failure test",
-			response: ``,
+			name:           "List non recursive failure test",
+			response:       ``,
 			responseStatus: http.StatusBadRequest,
 			args: args{
 
@@ -642,7 +638,7 @@ func TestDBFSAPI_ListNonRecursive(t *testing.T) {
 				Recursive: false,
 			},
 			wantUri: "/api/2.0/dbfs/list?path=%2F",
-			want: nil,
+			want:    nil,
 			wantErr: true,
 		},
 	}
@@ -686,7 +682,7 @@ func TestDBFSAPI_ListRecursive(t *testing.T) {
 									}
 								  ]
 								}`,
-								`{
+				`{
 								  "files": [
 									{
 									  "path": "/foldera/b.cpp",
@@ -747,8 +743,8 @@ func TestDBFSAPI_ListRecursive(t *testing.T) {
 			wantErr: true,
 		},
 		{
-			name: "List first recursive test failure",
-			response: []string{``,},
+			name:           "List first recursive test failure",
+			response:       []string{``},
 			responseStatus: []int{http.StatusBadRequest},
 			args: []interface{}{
 				&args{

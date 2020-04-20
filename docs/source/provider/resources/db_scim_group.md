@@ -1,4 +1,4 @@
-# Resource: db_scim_group
+# Resource: databricks_scim_group
 
 This resource allows you to create groups in Databricks. You can also associate Databricks users to the following groups. 
 
@@ -8,7 +8,7 @@ This resource allows you to create groups in Databricks. You can also associate 
 
 .. code-block:: tf
 
-    resource "db_scim_user" "my-user" {
+    resource "databricks_scim_user" "my-user" {
           user_name = "testuser@databricks.com"
           display_name = "Test User"
           entitlements = [
@@ -16,9 +16,9 @@ This resource allows you to create groups in Databricks. You can also associate 
           ]
         }
 
-    resource "db_scim_group" "my-group" {
+    resource "databricks_scim_group" "my-group" {
       display_name = "Sri Test Group"
-      members = ["${db_scim_user.my-user.id}"]
+      members = ["${databricks_scim_user.my-user.id}"]
     }
 
 ## Argument Reference

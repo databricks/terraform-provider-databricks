@@ -20,7 +20,7 @@ int-build: int build
 
 build:
 	@echo "==> Building source code with go build..."
-	@go build -mod vendor -v -o terraform-provider-db
+	@go build -mod vendor -v -o terraform-provider-databricks
 
 fmt:
 	@echo "==> Formatting source code with gofmt..."
@@ -52,7 +52,7 @@ vendor:
 # INTEGRATION TESTING WITH TERRAFORM EXAMPLES
 terraform-acc: fmt build
 	@echo "==> Running Terraform Acceptance Tests..."
-	@TF_ACC=1 go test -v -short ./db/...
+	@TF_ACC=1 go test -v -short ./databricks/...
 
 terraform-setup: fmt build
 	@echo "==> Initializing Terraform..."

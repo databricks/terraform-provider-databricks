@@ -1,4 +1,4 @@
-# Resource: db_secret_acl
+# Resource: databricks_secret_acl
 
 Create or overwrite the ACL associated with the given principal (user or group) on the specified scope point. 
 In general, a user or group will use the most powerful permission available to them, and 
@@ -12,14 +12,14 @@ permissions are ordered as follows:
 
 .. code-block:: tf
 
-    resource "db_secret_scope" "my-scope" {
+    resource "databricks_secret_scope" "my-scope" {
       name = "terraform-demo-scope"
     }
     
-    resource "db_secret_acl" "my-acl" {
+    resource "databricks_secret_acl" "my-acl" {
       principal = "USERS"
       permission = "READ"
-      scope = "${db_secret_scope.my-scope.name}"
+      scope = "${databricks_secret_scope.my-scope.name}"
     }
 
 ## Argument Reference

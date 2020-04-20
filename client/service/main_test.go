@@ -84,7 +84,7 @@ func AssertRequestWithMockServer(t *testing.T, rawPayloadArgs interface{}, reque
 
 	output, err := apiCall(dbClient)
 
-	assert.Equal(t, reflect.TypeOf(want),reflect.TypeOf(output), "Types are not equal between output of api call and expectiation!")
+	assert.Equal(t, reflect.TypeOf(want), reflect.TypeOf(output), "Types are not equal between output of api call and expectiation!")
 	if output != nil && !reflect.ValueOf(output).IsZero() {
 		compare(t, want, output)
 	}

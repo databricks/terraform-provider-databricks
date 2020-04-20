@@ -13,35 +13,35 @@ func TestLibrariesAPI_Create(t *testing.T) {
 	}
 
 	tests := []struct {
-		name     string
-		response string
+		name           string
+		response       string
 		responseStatus int
-		args     args
-		wantErr  bool
+		args           args
+		wantErr        bool
 	}{
 		{
-			name:     "Create test",
-			response: "",
+			name:           "Create test",
+			response:       "",
 			responseStatus: http.StatusOK,
 			args: args{
 				ClusterId: "my-cluster-id",
 				Libraries: []model.Library{
 					{
-						Whl:   "dbfs:/my/dbfs/wheel.whl",
+						Whl: "dbfs:/my/dbfs/wheel.whl",
 					},
 				},
 			},
 			wantErr: false,
 		},
 		{
-			name:     "Create faulure test",
-			response: "",
+			name:           "Create faulure test",
+			response:       "",
 			responseStatus: http.StatusBadRequest,
 			args: args{
 				ClusterId: "my-cluster-id",
 				Libraries: []model.Library{
 					{
-						Whl:   "dbfs:/my/dbfs/wheel.whl",
+						Whl: "dbfs:/my/dbfs/wheel.whl",
 					},
 				},
 			},
@@ -65,11 +65,11 @@ func TestLibrariesAPI_Delete(t *testing.T) {
 	}
 
 	tests := []struct {
-		name     string
-		response string
+		name           string
+		response       string
 		responseStatus int
-		args     args
-		wantErr  bool
+		args           args
+		wantErr        bool
 	}{
 		{
 			name:           "Delete Test",
@@ -112,7 +112,7 @@ func TestLibrariesAPI_Delete(t *testing.T) {
 
 func TestLibrariesAPI_List(t *testing.T) {
 	type args struct {
-		ClusterId string          `json:"cluster_id,omitempty" url:"cluster_id,omitempty"`
+		ClusterId string `json:"cluster_id,omitempty" url:"cluster_id,omitempty"`
 	}
 	tests := []struct {
 		name           string
@@ -181,31 +181,31 @@ func TestLibrariesAPI_List(t *testing.T) {
 					},
 					Status:                          "INSTALLING",
 					IsLibraryInstalledOnAllClusters: false,
-					Messages:                        []string{"Successfully resolved package from PyPI",},
+					Messages:                        []string{"Successfully resolved package from PyPI"},
 				},
 				{
 					Library: &model.Library{
 						Cran: &model.Cran{
 							Package: "ada",
-							Repo: "https://cran.us.r-project.org",
+							Repo:    "https://cran.us.r-project.org",
 						},
 					},
 					Status:                          "FAILED",
 					IsLibraryInstalledOnAllClusters: false,
-					Messages:                        []string{"R package installation is not supported on this spark version.\nPlease upgrade to Runtime 3.2 or higher",},
+					Messages:                        []string{"R package installation is not supported on this spark version.\nPlease upgrade to Runtime 3.2 or higher"},
 				},
 			},
 			wantErr: false,
 		},
 		{
-			name: "List non recursive test",
-			response: ``,
+			name:           "List non recursive test",
+			response:       ``,
 			responseStatus: http.StatusBadRequest,
 			args: args{
 				ClusterId: "11203-my-cluster",
 			},
 			wantUri: "/api/2.0/libraries/cluster-status?cluster_id=11203-my-cluster",
-			want: nil,
+			want:    nil,
 			wantErr: true,
 		},
 	}

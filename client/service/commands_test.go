@@ -6,7 +6,6 @@ import (
 	"testing"
 )
 
-
 func TestCommandsAPI_Execute(t *testing.T) {
 	type context struct {
 		Language  string `json:"language,omitempty"`
@@ -24,12 +23,12 @@ func TestCommandsAPI_Execute(t *testing.T) {
 	}
 
 	type params struct {
-		ClusterId      string `json:"cluster_id,omitempty" url:"cluster_id,omitempty"`
-		Language      string `json:"language,omitempty" url:"language,omitempty"`
-		CommandStr      string `json:"command_str,omitempty" url:"command_str,omitempty"`
+		ClusterId  string `json:"cluster_id,omitempty" url:"cluster_id,omitempty"`
+		Language   string `json:"language,omitempty" url:"language,omitempty"`
+		CommandStr string `json:"command_str,omitempty" url:"command_str,omitempty"`
 	}
 	tests := []struct {
-		params 			params
+		params           params
 		name             string
 		response         []string
 		responseStatus   []int
@@ -42,7 +41,7 @@ func TestCommandsAPI_Execute(t *testing.T) {
 	}{
 		{
 			name: "Execute test",
-			params:params{
+			params: params{
 				ClusterId:  "my-cluster-id",
 				Language:   "python",
 				CommandStr: `print("hello world")`,
@@ -50,7 +49,7 @@ func TestCommandsAPI_Execute(t *testing.T) {
 			response: []string{
 				`{
 					"id": "my-context-id"
-				}`,`
+				}`, `
 				{
 					"status": "Running"
 				}`,
@@ -105,18 +104,18 @@ func TestCommandsAPI_Execute(t *testing.T) {
 				"/api/1.2/commands/status?clusterId=my-cluster-id&commandId=my-command-id&contextId=my-context-id",
 				"/api/1.2/commands/status?clusterId=my-cluster-id&commandId=my-command-id&contextId=my-context-id",
 				"/api/1.2/contexts/destroy"},
-			want:    model.Command{
-				ID:      "my-command-id",
-				Status:  "Finished",
+			want: model.Command{
+				ID:     "my-command-id",
+				Status: "Finished",
 				Results: &model.CommandResults{
-					Data:         "Hello world",
+					Data: "Hello world",
 				},
 			},
 			wantErr: false,
 		},
 		{
 			name: "Execute context failure test",
-			params:params{
+			params: params{
 				ClusterId:  "my-cluster-id",
 				Language:   "python",
 				CommandStr: `print("hello world")`,
@@ -124,7 +123,7 @@ func TestCommandsAPI_Execute(t *testing.T) {
 			response: []string{
 				`{
 					"id": "my-context-id"
-				}`,`
+				}`, `
 				{
 					"status": "Running"
 				}`,
@@ -184,7 +183,7 @@ func TestCommandsAPI_Execute(t *testing.T) {
 		},
 		{
 			name: "Execute context status failure test",
-			params:params{
+			params: params{
 				ClusterId:  "my-cluster-id",
 				Language:   "python",
 				CommandStr: `print("hello world")`,
@@ -192,7 +191,7 @@ func TestCommandsAPI_Execute(t *testing.T) {
 			response: []string{
 				`{
 					"id": "my-context-id"
-				}`,`
+				}`, `
 				{
 					"status": "Running"
 				}`,
@@ -252,7 +251,7 @@ func TestCommandsAPI_Execute(t *testing.T) {
 		},
 		{
 			name: "Execute command create failure test",
-			params:params{
+			params: params{
 				ClusterId:  "my-cluster-id",
 				Language:   "python",
 				CommandStr: `print("hello world")`,
@@ -260,7 +259,7 @@ func TestCommandsAPI_Execute(t *testing.T) {
 			response: []string{
 				`{
 					"id": "my-context-id"
-				}`,`
+				}`, `
 				{
 					"status": "Running"
 				}`,
@@ -320,7 +319,7 @@ func TestCommandsAPI_Execute(t *testing.T) {
 		},
 		{
 			name: "Execute command status failure test",
-			params:params{
+			params: params{
 				ClusterId:  "my-cluster-id",
 				Language:   "python",
 				CommandStr: `print("hello world")`,
@@ -328,7 +327,7 @@ func TestCommandsAPI_Execute(t *testing.T) {
 			response: []string{
 				`{
 					"id": "my-context-id"
-				}`,`
+				}`, `
 				{
 					"status": "Running"
 				}`,
@@ -388,7 +387,7 @@ func TestCommandsAPI_Execute(t *testing.T) {
 		},
 		{
 			name: "Execute command results fetch failure test",
-			params:params{
+			params: params{
 				ClusterId:  "my-cluster-id",
 				Language:   "python",
 				CommandStr: `print("hello world")`,
@@ -396,7 +395,7 @@ func TestCommandsAPI_Execute(t *testing.T) {
 			response: []string{
 				`{
 					"id": "my-context-id"
-				}`,`
+				}`, `
 				{
 					"status": "Running"
 				}`,
@@ -456,7 +455,7 @@ func TestCommandsAPI_Execute(t *testing.T) {
 		},
 		{
 			name: "Execute context close failure test",
-			params:params{
+			params: params{
 				ClusterId:  "my-cluster-id",
 				Language:   "python",
 				CommandStr: `print("hello world")`,
@@ -464,7 +463,7 @@ func TestCommandsAPI_Execute(t *testing.T) {
 			response: []string{
 				`{
 					"id": "my-context-id"
-				}`,`
+				}`, `
 				{
 					"status": "Running"
 				}`,
@@ -519,18 +518,18 @@ func TestCommandsAPI_Execute(t *testing.T) {
 				"/api/1.2/commands/status?clusterId=my-cluster-id&commandId=my-command-id&contextId=my-context-id",
 				"/api/1.2/commands/status?clusterId=my-cluster-id&commandId=my-command-id&contextId=my-context-id",
 				"/api/1.2/contexts/destroy"},
-			want:    model.Command{
-				ID:      "my-command-id",
-				Status:  "Finished",
+			want: model.Command{
+				ID:     "my-command-id",
+				Status: "Finished",
 				Results: &model.CommandResults{
-					Data:         "Hello world",
+					Data: "Hello world",
 				},
 			},
 			wantErr: true,
 		},
 		{
 			name: "Execute context invalid state failure test",
-			params:params{
+			params: params{
 				ClusterId:  "my-cluster-id",
 				Language:   "python",
 				CommandStr: `print("hello world")`,
@@ -538,7 +537,7 @@ func TestCommandsAPI_Execute(t *testing.T) {
 			response: []string{
 				`{
 					"id": "my-context-id"
-				}`,`
+				}`, `
 				{
 					"status": "Error"
 				}`,
@@ -598,7 +597,7 @@ func TestCommandsAPI_Execute(t *testing.T) {
 		},
 		{
 			name: "Execute command invalid state failure test",
-			params:params{
+			params: params{
 				ClusterId:  "my-cluster-id",
 				Language:   "python",
 				CommandStr: `print("hello world")`,
@@ -606,7 +605,7 @@ func TestCommandsAPI_Execute(t *testing.T) {
 			response: []string{
 				`{
 					"id": "my-context-id"
-				}`,`
+				}`, `
 				{
 					"status": "Running"
 				}`,
@@ -668,7 +667,7 @@ func TestCommandsAPI_Execute(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			AssertMultipleRequestsWithMockServer(t, tt.args, tt.requestMethod, tt.wantUri, tt.postStructExpect, tt.response, tt.responseStatus, tt.want, tt.wantErr, func(client DBApiClient) (interface{}, error) {
-				return client.Commands().Execute(tt.params.ClusterId,tt.params.Language, tt.params.CommandStr)
+				return client.Commands().Execute(tt.params.ClusterId, tt.params.Language, tt.params.CommandStr)
 			})
 		})
 	}

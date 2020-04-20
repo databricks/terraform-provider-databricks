@@ -40,7 +40,7 @@ resource "azurerm_databricks_workspace" "demo_test_workspace" {
 
 
 
-provider "db" {
+provider "databricks" {
   azure_auth = {
     managed_resource_group = azurerm_databricks_workspace.demo_test_workspace.managed_resource_group_name
     azure_region = azurerm_databricks_workspace.demo_test_workspace.location
@@ -55,7 +55,7 @@ provider "db" {
 
 //
 
-resource "db_scim_user" "my-user" {
+resource "databricks_scim_user" "my-user" {
   count = 2
   user_name = join("", ["demo-test-user", "+",count.index,"@databricks.com"])
   display_name = "demo Test User"
@@ -64,27 +64,27 @@ resource "db_scim_user" "my-user" {
   ]
 }
 
-resource "db_scim_group" "my-group" {
+resource "databricks_scim_group" "my-group" {
   display_name = "demo Test Group"
-  members = [db_scim_user.my-user[0].id]
+  members = [databricks_scim_user.my-user[0].id]
 }
-resource "db_secret_scope" "my-scope" {
+resource "databricks_secret_scope" "my-scope" {
   name = "terraform-demo-scope2"
 }
 
-resource "db_secret" "test_secret" {
+resource "databricks_secret" "test_secret" {
   key = "demo-test-secret-1"
   string_value = "hello world 123"
-  scope = db_secret_scope.my-scope.name
+  scope = databricks_secret_scope.my-scope.name
 }
 
-resource "db_secret_acl" "my-acl" {
+resource "databricks_secret_acl" "my-acl" {
   principal = "USERS"
   permission = "READ"
-  scope = db_secret_scope.my-scope.name
+  scope = databricks_secret_scope.my-scope.name
 }
 
-resource "db_instance_pool" "my-pool" {
+resource "databricks_instance_pool" "my-pool" {
   instance_pool_name = "demo-terraform-pool"
   min_idle_instances = 0
   max_capacity = 5
@@ -101,12 +101,12 @@ resource "db_instance_pool" "my-pool" {
   }
 }
 
-resource "db_token" "my-token" {
+resource "databricks_token" "my-token" {
   lifetime_seconds = 6000
   comment = "Testing terraform v2"
 }
 
-resource "db_notebook" "my-dbc-base" {
+resource "databricks_notebook" "my-dbc-base" {
   content = filebase64("${path.module}/demo-terraform.dbc")
   path = "/terraform-test-folder/folder1/folder2/terraformsamplecode"
   overwrite = false
@@ -114,20 +114,20 @@ resource "db_notebook" "my-dbc-base" {
   format = "DBC"
 }
 
-data "db_notebook" "my-notebook" {
+data "databricks_notebook" "my-notebook" {
   path = "/terraform-test-folder/folder1/folder2/terraformsamplecode"
   format = "DBC"
 }
 
 
-output "db_user_ids" {
-  value = db_scim_user.my-user[*].id
+output "databricks_user_ids" {
+  value = databricks_scim_user.my-user[*].id
 }
 
-output "db_scope" {
-  value = db_secret_scope.my-scope.name
+output "databricks_scope" {
+  value = databricks_secret_scope.my-scope.name
 }
 
 output "notebook-content" {
-  value = data.db_notebook.my-notebook.content
+  value = data.databricks_notebook.my-notebook.content
 }

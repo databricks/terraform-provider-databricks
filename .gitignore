@@ -315,6 +315,7 @@ pip-selfcheck.json
 
 # End of https://www.gitignore.io/api/go,python,terraform,virtualenv,pycharm+iml,intellij+all,visualstudiocode
 /terraform-provider-db*
+/terraform-provider-databricks*
 /.vscode/
 
 # Remove tfvars to prevent secrets from leaking and ignore any terraform files in root folder

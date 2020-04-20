@@ -1,4 +1,4 @@
-# Resource: db_secret
+# Resource: databricks_secret
 
 With this resource you can insert a secret under the provided scope with the given name. If a secret already exists 
 with the same name, this command overwrites the existing secret’s value. The server encrypts the secret using the 
@@ -15,15 +15,15 @@ have at least READ permission.
 
 .. code-block:: tf
 
-    resource "db_secret_scope" "my-scope" {
+    resource "databricks_secret_scope" "my-scope" {
       name = "terraform-demo-scope"
       initial_manage_principal = "users"
     }
     
-    resource "db_secret" "my_secret" {
+    resource "databricks_secret" "my_secret" {
       key = "test-secret-1"
       string_value = "hello world 123"
-      scope = "${db_secret_scope.my-scope.name}"
+      scope = "${databricks_secret_scope.my-scope.name}"
     }
 
 ## Argument Reference

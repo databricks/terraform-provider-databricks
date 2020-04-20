@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/databrickslabs/databricks-terraform/db"
+	"github.com/databrickslabs/databricks-terraform/databricks"
 	"github.com/hashicorp/terraform-plugin-sdk/plugin"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
@@ -9,7 +9,7 @@ import (
 func main() {
 	plugin.Serve(&plugin.ServeOpts{
 		ProviderFunc: func() terraform.ResourceProvider {
-			return db.Provider()
+			return databricks.Provider()
 		},
 	})
 }

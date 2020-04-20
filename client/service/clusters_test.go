@@ -11,15 +11,15 @@ func TestClustersAPI_Create(t *testing.T) {
 	type args model.Cluster
 
 	tests := []struct {
-		name     string
-		response string
+		name           string
+		response       string
 		responseStatus int
-		args     args
-		want	interface{}
-		wantErr  bool
+		args           args
+		want           interface{}
+		wantErr        bool
 	}{
 		{
-			name:     "Create test",
+			name: "Create test",
 			response: `{
 						  "cluster_id": "my-cluster"
 						}`,
@@ -27,17 +27,17 @@ func TestClustersAPI_Create(t *testing.T) {
 			args: args{
 				ClusterId: "my-cluster-id",
 			},
-			want: model.ClusterInfo{ClusterID:"my-cluster"},
+			want:    model.ClusterInfo{ClusterID: "my-cluster"},
 			wantErr: false,
 		},
 		{
-			name:     "Create faulure test",
-			response: "",
+			name:           "Create faulure test",
+			response:       "",
 			responseStatus: http.StatusBadRequest,
 			args: args{
 				ClusterId: "my-cluster-id",
 			},
-			want: model.ClusterInfo{},
+			want:    model.ClusterInfo{},
 			wantErr: true,
 		},
 	}
@@ -53,7 +53,7 @@ func TestClustersAPI_Create(t *testing.T) {
 
 func TestClustersAPI_Get(t *testing.T) {
 	type args struct {
-		ClusterId string          `json:"cluster_id,omitempty" url:"cluster_id,omitempty"`
+		ClusterId string `json:"cluster_id,omitempty" url:"cluster_id,omitempty"`
 	}
 	tests := []struct {
 		name           string
@@ -139,22 +139,22 @@ func TestClustersAPI_Get(t *testing.T) {
 			},
 			wantUri: "/api/2.0/clusters/get?cluster_id=11203-my-cluster",
 			want: model.ClusterInfo{
-				AutoScale:              &model.AutoScale{
+				AutoScale: &model.AutoScale{
 					MinWorkers: 2,
 					MaxWorkers: 8,
 				},
-				ClusterID:              "11203-my-cluster",
-				CreatorUserName:        "unit.test@databricks.com",
-				Driver:                 &model.SparkNode{
+				ClusterID:       "11203-my-cluster",
+				CreatorUserName: "unit.test@databricks.com",
+				Driver: &model.SparkNode{
 					PrivateIP:         "10.0.0.10",
 					PublicDNS:         "",
 					NodeID:            "node_id",
 					InstanceID:        "i-instanceid",
 					StartTimestamp:    1587334045988,
-					NodeAwsAttributes: &model.SparkNodeAwsAttributes{IsSpot:false},
+					NodeAwsAttributes: &model.SparkNodeAwsAttributes{IsSpot: false},
 					HostPrivateIP:     "10.0.0.11",
 				},
-				Executors:              []model.SparkNode{
+				Executors: []model.SparkNode{
 					{
 
 						PrivateIP:         "10.0.0.20",
@@ -162,23 +162,23 @@ func TestClustersAPI_Get(t *testing.T) {
 						NodeID:            "workernode_id",
 						InstanceID:        "i-workerinstance",
 						StartTimestamp:    1587334045953,
-						NodeAwsAttributes: &model.SparkNodeAwsAttributes{IsSpot:true},
+						NodeAwsAttributes: &model.SparkNodeAwsAttributes{IsSpot: true},
 						HostPrivateIP:     "10.0.0.21",
 					},
 				},
-				SparkContextID:         51523452250940270,
-				JdbcPort:               10000,
-				ClusterName:            "unit-test-demo",
-				SparkVersion:           "6.4.x-scala2.11",
-				AwsAttributes:          &model.AwsAttributes{
+				SparkContextID: 51523452250940270,
+				JdbcPort:       10000,
+				ClusterName:    "unit-test-demo",
+				SparkVersion:   "6.4.x-scala2.11",
+				AwsAttributes: &model.AwsAttributes{
 					FirstOnDemand:       1,
 					Availability:        "SPOT_WITH_FALLBACK",
 					ZoneID:              "us-west-2b",
 					SpotBidPricePercent: 100,
 					EbsVolumeCount:      0,
 				},
-				NodeTypeID:             "i3.xlarge",
-				DriverNodeTypeID:       "i3.xlarge",
+				NodeTypeID:       "i3.xlarge",
+				DriverNodeTypeID: "i3.xlarge",
 				SparkEnvVars: map[string]string{
 					"PYSPARK_PYTHON": "/databricks/python3/bin/python3",
 				},
@@ -192,27 +192,26 @@ func TestClustersAPI_Get(t *testing.T) {
 				LastStateLossTime:      0,
 				LastActivityTime:       1587335172192,
 
-
-				ClusterMemoryMb:        93696,
-				ClusterCores:           12.0,
+				ClusterMemoryMb: 93696,
+				ClusterCores:    12.0,
 				DefaultTags: map[string]string{
-					"Vendor": "Databricks",
-					"Creator": "unit.test@databricks.com",
+					"Vendor":      "Databricks",
+					"Creator":     "unit.test@databricks.com",
 					"ClusterName": "unit-test-demo",
-					"ClusterId": "11203-my-cluster",
+					"ClusterId":   "11203-my-cluster",
 				},
 			},
 			wantErr: false,
 		},
 		{
-			name: "Get failure test",
-			response: ``,
+			name:           "Get failure test",
+			response:       ``,
 			responseStatus: http.StatusBadRequest,
 			args: args{
 				ClusterId: "11203-my-cluster",
 			},
 			wantUri: "/api/2.0/clusters/get?cluster_id=11203-my-cluster",
-			want: model.ClusterInfo{},
+			want:    model.ClusterInfo{},
 			wantErr: true,
 		},
 	}
@@ -225,7 +224,6 @@ func TestClustersAPI_Get(t *testing.T) {
 		})
 	}
 }
-
 
 func TestClustersAPI_List(t *testing.T) {
 
@@ -262,21 +260,21 @@ func TestClustersAPI_List(t *testing.T) {
 						   ]
 						}`,
 			responseStatus: http.StatusOK,
-			wantUri: "/api/2.0/clusters/list?",
+			wantUri:        "/api/2.0/clusters/list?",
 			want: []model.ClusterInfo{
 				{
-					ClusterName:"autoscaling-cluster",
-					SparkVersion:"5.3.x-scala2.11",
-					NodeTypeID:"i3.xlarge",
+					ClusterName:  "autoscaling-cluster",
+					SparkVersion: "5.3.x-scala2.11",
+					NodeTypeID:   "i3.xlarge",
 					AutoScale: &model.AutoScale{
 						MinWorkers: 2,
 						MaxWorkers: 50,
 					},
 				},
 				{
-					ClusterName:"autoscaling-cluster2",
-					SparkVersion:"5.3.x-scala2.11",
-					NodeTypeID:"i3.xlarge",
+					ClusterName:  "autoscaling-cluster2",
+					SparkVersion: "5.3.x-scala2.11",
+					NodeTypeID:   "i3.xlarge",
 					AutoScale: &model.AutoScale{
 						MinWorkers: 2,
 						MaxWorkers: 50,
@@ -286,12 +284,12 @@ func TestClustersAPI_List(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name: "List failure test",
-			response: ``,
+			name:           "List failure test",
+			response:       ``,
 			responseStatus: http.StatusBadRequest,
-			wantUri: "/api/2.0/clusters/list?",
-			want: []model.ClusterInfo{},
-			wantErr: true,
+			wantUri:        "/api/2.0/clusters/list?",
+			want:           []model.ClusterInfo{},
+			wantErr:        true,
 		},
 	}
 	for _, tt := range tests {
@@ -324,24 +322,23 @@ func TestClustersAPI_ListZones(t *testing.T) {
 							"default_zone": "us-west-2b"
 						}`,
 			responseStatus: http.StatusOK,
-			wantUri: "/api/2.0/clusters/list-zones?",
+			wantUri:        "/api/2.0/clusters/list-zones?",
 			want: model.ZonesInfo{
 
-					Zones: []string{"us-west-2b",
-						"us-west-2c",
-						"us-west-2a"},
-					DefaultZone: "us-west-2b",
-
+				Zones: []string{"us-west-2b",
+					"us-west-2c",
+					"us-west-2a"},
+				DefaultZone: "us-west-2b",
 			},
 			wantErr: false,
 		},
 		{
-			name: "ListZones failure test",
-			response: ``,
+			name:           "ListZones failure test",
+			response:       ``,
 			responseStatus: http.StatusBadRequest,
-			wantUri: "/api/2.0/clusters/list-zones?",
-			want: model.ZonesInfo{},
-			wantErr: true,
+			wantUri:        "/api/2.0/clusters/list-zones?",
+			want:           model.ZonesInfo{},
+			wantErr:        true,
 		},
 	}
 	for _, tt := range tests {
@@ -412,7 +409,7 @@ func TestClustersAPI_ListNodeTypes(t *testing.T) {
 							]
 						}`,
 			responseStatus: http.StatusOK,
-			wantUri: "/api/2.0/clusters/list-node-types?",
+			wantUri:        "/api/2.0/clusters/list-node-types?",
 			want: []model.NodeType{
 				{
 					NodeTypeID:     "r3.xlarge",
@@ -430,17 +427,16 @@ func TestClustersAPI_ListNodeTypes(t *testing.T) {
 					InstanceTypeID: "r3.2xlarge",
 					IsDeprecated:   false,
 				},
-
 			},
 			wantErr: false,
 		},
 		{
-			name: "ListNodeTypes failure test",
-			response: ``,
+			name:           "ListNodeTypes failure test",
+			response:       ``,
 			responseStatus: http.StatusBadRequest,
-			wantUri: "/api/2.0/clusters/list-node-types?",
-			want: []model.NodeType{},
-			wantErr: true,
+			wantUri:        "/api/2.0/clusters/list-node-types?",
+			want:           []model.NodeType{},
+			wantErr:        true,
 		},
 	}
 	for _, tt := range tests {
@@ -454,15 +450,15 @@ func TestClustersAPI_ListNodeTypes(t *testing.T) {
 
 func TestClustersAPI_WaitForClusterRunning(t *testing.T) {
 	type args struct {
-		ClusterId      string `json:"cluster_id"`
-		SleepDurationSeconds time.Duration `json:"sleep_duration_seconds"`
+		ClusterId              string        `json:"cluster_id"`
+		SleepDurationSeconds   time.Duration `json:"sleep_duration_seconds"`
 		TimeoutDurationMinutes time.Duration `json:"timeout_duration_minutes"`
 	}
 	tests := []struct {
 		name           string
 		response       []string
 		responseStatus []int
-		requestMethod []string
+		requestMethod  []string
 		args           []interface{}
 		wantUri        []string
 		want           []model.NotebookInfo
@@ -473,10 +469,10 @@ func TestClustersAPI_WaitForClusterRunning(t *testing.T) {
 			response: []string{`{
 									"state": "PENDING"				
 								}`,
-								`{
+				`{
 									"state": "PENDING"				
 								}`,
-								`{
+				`{
 									"state": "RUNNING"				
 								}`,
 			},
@@ -494,8 +490,8 @@ func TestClustersAPI_WaitForClusterRunning(t *testing.T) {
 			},
 			wantUri: []string{"/api/2.0/clusters/get?cluster_id=11203-my-cluster",
 				"/api/2.0/clusters/get?cluster_id=11203-my-cluster",
-				"/api/2.0/clusters/get?cluster_id=11203-my-cluster", },
-			want: nil,
+				"/api/2.0/clusters/get?cluster_id=11203-my-cluster"},
+			want:    nil,
 			wantErr: false,
 		},
 		{
@@ -524,8 +520,8 @@ func TestClustersAPI_WaitForClusterRunning(t *testing.T) {
 			},
 			wantUri: []string{"/api/2.0/clusters/get?cluster_id=11203-my-cluster",
 				"/api/2.0/clusters/get?cluster_id=11203-my-cluster",
-				"/api/2.0/clusters/get?cluster_id=11203-my-cluster", },
-			want: nil,
+				"/api/2.0/clusters/get?cluster_id=11203-my-cluster"},
+			want:    nil,
 			wantErr: true,
 		},
 		{
@@ -554,8 +550,8 @@ func TestClustersAPI_WaitForClusterRunning(t *testing.T) {
 			},
 			wantUri: []string{"/api/2.0/clusters/get?cluster_id=11203-my-cluster",
 				"/api/2.0/clusters/get?cluster_id=11203-my-cluster",
-				"/api/2.0/clusters/get?cluster_id=11203-my-cluster", },
-			want: nil,
+				"/api/2.0/clusters/get?cluster_id=11203-my-cluster"},
+			want:    nil,
 			wantErr: true,
 		},
 		{
@@ -584,8 +580,8 @@ func TestClustersAPI_WaitForClusterRunning(t *testing.T) {
 			},
 			wantUri: []string{"/api/2.0/clusters/get?cluster_id=11203-my-cluster",
 				"/api/2.0/clusters/get?cluster_id=11203-my-cluster",
-				"/api/2.0/clusters/get?cluster_id=11203-my-cluster", },
-			want: nil,
+				"/api/2.0/clusters/get?cluster_id=11203-my-cluster"},
+			want:    nil,
 			wantErr: true,
 		},
 	}
@@ -600,15 +596,15 @@ func TestClustersAPI_WaitForClusterRunning(t *testing.T) {
 
 func TestClustersAPI_WaitForClusterTerminated(t *testing.T) {
 	type args struct {
-		ClusterId      string `json:"cluster_id"`
-		SleepDurationSeconds time.Duration `json:"sleep_duration_seconds"`
+		ClusterId              string        `json:"cluster_id"`
+		SleepDurationSeconds   time.Duration `json:"sleep_duration_seconds"`
 		TimeoutDurationMinutes time.Duration `json:"timeout_duration_minutes"`
 	}
 	tests := []struct {
 		name           string
 		response       []string
 		responseStatus []int
-		requestMethod []string
+		requestMethod  []string
 		args           []interface{}
 		wantUri        []string
 		want           []model.NotebookInfo
@@ -640,8 +636,8 @@ func TestClustersAPI_WaitForClusterTerminated(t *testing.T) {
 			},
 			wantUri: []string{"/api/2.0/clusters/get?cluster_id=11203-my-cluster",
 				"/api/2.0/clusters/get?cluster_id=11203-my-cluster",
-				"/api/2.0/clusters/get?cluster_id=11203-my-cluster", },
-			want: nil,
+				"/api/2.0/clusters/get?cluster_id=11203-my-cluster"},
+			want:    nil,
 			wantErr: false,
 		},
 		{
@@ -670,8 +666,8 @@ func TestClustersAPI_WaitForClusterTerminated(t *testing.T) {
 			},
 			wantUri: []string{"/api/2.0/clusters/get?cluster_id=11203-my-cluster",
 				"/api/2.0/clusters/get?cluster_id=11203-my-cluster",
-				"/api/2.0/clusters/get?cluster_id=11203-my-cluster", },
-			want: nil,
+				"/api/2.0/clusters/get?cluster_id=11203-my-cluster"},
+			want:    nil,
 			wantErr: true,
 		},
 		{
@@ -700,8 +696,8 @@ func TestClustersAPI_WaitForClusterTerminated(t *testing.T) {
 			},
 			wantUri: []string{"/api/2.0/clusters/get?cluster_id=11203-my-cluster",
 				"/api/2.0/clusters/get?cluster_id=11203-my-cluster",
-				"/api/2.0/clusters/get?cluster_id=11203-my-cluster", },
-			want: nil,
+				"/api/2.0/clusters/get?cluster_id=11203-my-cluster"},
+			want:    nil,
 			wantErr: true,
 		},
 		{
@@ -730,8 +726,8 @@ func TestClustersAPI_WaitForClusterTerminated(t *testing.T) {
 			},
 			wantUri: []string{"/api/2.0/clusters/get?cluster_id=11203-my-cluster",
 				"/api/2.0/clusters/get?cluster_id=11203-my-cluster",
-				"/api/2.0/clusters/get?cluster_id=11203-my-cluster", },
-			want: nil,
+				"/api/2.0/clusters/get?cluster_id=11203-my-cluster"},
+			want:    nil,
 			wantErr: true,
 		},
 	}
@@ -748,15 +744,15 @@ func TestClustersAPI_Edit(t *testing.T) {
 	type args model.Cluster
 
 	tests := []struct {
-		name     string
-		response string
+		name           string
+		response       string
 		responseStatus int
-		args     args
-		want	interface{}
-		wantErr  bool
+		args           args
+		want           interface{}
+		wantErr        bool
 	}{
 		{
-			name:     "Edit test",
+			name: "Edit test",
 			response: `{
 						  "cluster_name": "my-cluster"
 						}`,
@@ -764,17 +760,17 @@ func TestClustersAPI_Edit(t *testing.T) {
 			args: args{
 				ClusterName: "my-cluster-id",
 			},
-			want: nil,
+			want:    nil,
 			wantErr: false,
 		},
 		{
-			name:     "Edit faulure test",
-			response: "",
+			name:           "Edit faulure test",
+			response:       "",
 			responseStatus: http.StatusBadRequest,
 			args: args{
 				ClusterName: "my-cluster-id",
 			},
-			want: nil,
+			want:    nil,
 			wantErr: true,
 		},
 	}
@@ -788,38 +784,37 @@ func TestClustersAPI_Edit(t *testing.T) {
 	}
 }
 
-
 func TestClustersAPI_Start(t *testing.T) {
 	type args struct {
 		ClusterId string `json:"cluster_id,omitempty"`
 	}
 
 	tests := []struct {
-		name     string
-		response string
+		name           string
+		response       string
 		responseStatus int
-		args     args
-		want	interface{}
-		wantErr  bool
+		args           args
+		want           interface{}
+		wantErr        bool
 	}{
 		{
-			name:     "Start test",
-			response: ``,
+			name:           "Start test",
+			response:       ``,
 			responseStatus: http.StatusOK,
 			args: args{
 				ClusterId: "my-cluster-id",
 			},
-			want: nil,
+			want:    nil,
 			wantErr: false,
 		},
 		{
-			name:     "Start faulure test",
-			response: "",
+			name:           "Start faulure test",
+			response:       "",
 			responseStatus: http.StatusBadRequest,
 			args: args{
 				ClusterId: "my-cluster-id",
 			},
-			want: nil,
+			want:    nil,
 			wantErr: true,
 		},
 	}
@@ -833,38 +828,37 @@ func TestClustersAPI_Start(t *testing.T) {
 	}
 }
 
-
 func TestClustersAPI_Restart(t *testing.T) {
 	type args struct {
 		ClusterId string `json:"cluster_id,omitempty"`
 	}
 
 	tests := []struct {
-		name     string
-		response string
+		name           string
+		response       string
 		responseStatus int
-		args     args
-		want	interface{}
-		wantErr  bool
+		args           args
+		want           interface{}
+		wantErr        bool
 	}{
 		{
-			name:     "Restart test",
-			response: ``,
+			name:           "Restart test",
+			response:       ``,
 			responseStatus: http.StatusOK,
 			args: args{
 				ClusterId: "my-cluster-id",
 			},
-			want: nil,
+			want:    nil,
 			wantErr: false,
 		},
 		{
-			name:     "Restart faulure test",
-			response: "",
+			name:           "Restart faulure test",
+			response:       "",
 			responseStatus: http.StatusBadRequest,
 			args: args{
 				ClusterId: "my-cluster-id",
 			},
-			want: nil,
+			want:    nil,
 			wantErr: true,
 		},
 	}
@@ -878,38 +872,37 @@ func TestClustersAPI_Restart(t *testing.T) {
 	}
 }
 
-
 func TestClustersAPI_Pin(t *testing.T) {
 	type args struct {
 		ClusterId string `json:"cluster_id,omitempty"`
 	}
 
 	tests := []struct {
-		name     string
-		response string
+		name           string
+		response       string
 		responseStatus int
-		args     args
-		want	interface{}
-		wantErr  bool
+		args           args
+		want           interface{}
+		wantErr        bool
 	}{
 		{
-			name:     "Pin test",
-			response: ``,
+			name:           "Pin test",
+			response:       ``,
 			responseStatus: http.StatusOK,
 			args: args{
 				ClusterId: "my-cluster-id",
 			},
-			want: nil,
+			want:    nil,
 			wantErr: false,
 		},
 		{
-			name:     "Pin faulure test",
-			response: "",
+			name:           "Pin faulure test",
+			response:       "",
 			responseStatus: http.StatusBadRequest,
 			args: args{
 				ClusterId: "my-cluster-id",
 			},
-			want: nil,
+			want:    nil,
 			wantErr: true,
 		},
 	}
@@ -923,38 +916,37 @@ func TestClustersAPI_Pin(t *testing.T) {
 	}
 }
 
-
 func TestClustersAPI_Unpin(t *testing.T) {
 	type args struct {
 		ClusterId string `json:"cluster_id,omitempty"`
 	}
 
 	tests := []struct {
-		name     string
-		response string
+		name           string
+		response       string
 		responseStatus int
-		args     args
-		want	interface{}
-		wantErr  bool
+		args           args
+		want           interface{}
+		wantErr        bool
 	}{
 		{
-			name:     "Unpin test",
-			response: ``,
+			name:           "Unpin test",
+			response:       ``,
 			responseStatus: http.StatusOK,
 			args: args{
 				ClusterId: "my-cluster-id",
 			},
-			want: nil,
+			want:    nil,
 			wantErr: false,
 		},
 		{
-			name:     "Unpin faulure test",
-			response: "",
+			name:           "Unpin faulure test",
+			response:       "",
 			responseStatus: http.StatusBadRequest,
 			args: args{
 				ClusterId: "my-cluster-id",
 			},
-			want: nil,
+			want:    nil,
 			wantErr: true,
 		},
 	}
@@ -974,31 +966,31 @@ func TestClustersAPI_Delete(t *testing.T) {
 	}
 
 	tests := []struct {
-		name     string
-		response string
+		name           string
+		response       string
 		responseStatus int
-		args     args
-		want	interface{}
-		wantErr  bool
+		args           args
+		want           interface{}
+		wantErr        bool
 	}{
 		{
-			name:     "Delete test",
-			response: ``,
+			name:           "Delete test",
+			response:       ``,
 			responseStatus: http.StatusOK,
 			args: args{
 				ClusterId: "my-cluster-id",
 			},
-			want: nil,
+			want:    nil,
 			wantErr: false,
 		},
 		{
-			name:     "Delete faulure test",
-			response: "",
+			name:           "Delete faulure test",
+			response:       "",
 			responseStatus: http.StatusBadRequest,
 			args: args{
 				ClusterId: "my-cluster-id",
 			},
-			want: nil,
+			want:    nil,
 			wantErr: true,
 		},
 	}
@@ -1018,31 +1010,31 @@ func TestClustersAPI_PermanentDelete(t *testing.T) {
 	}
 
 	tests := []struct {
-		name     string
-		response string
+		name           string
+		response       string
 		responseStatus int
-		args     args
-		want	interface{}
-		wantErr  bool
+		args           args
+		want           interface{}
+		wantErr        bool
 	}{
 		{
-			name:     "PermanentDelete test",
-			response: ``,
+			name:           "PermanentDelete test",
+			response:       ``,
 			responseStatus: http.StatusOK,
 			args: args{
 				ClusterId: "my-cluster-id",
 			},
-			want: nil,
+			want:    nil,
 			wantErr: false,
 		},
 		{
-			name:     "PermanentDelete faulure test",
-			response: "",
+			name:           "PermanentDelete faulure test",
+			response:       "",
 			responseStatus: http.StatusBadRequest,
 			args: args{
 				ClusterId: "my-cluster-id",
 			},
-			want: nil,
+			want:    nil,
 			wantErr: true,
 		},
 	}

@@ -8,7 +8,7 @@ before:
 builds:
 - env:
     - CGO_ENABLED=0
-  binary: terraform-provider-db_{{ replace .Version "-next" "" }}
+  binary: terraform-provider-databricks_{{ replace .Version "-next" "" }}
   goos:
     - darwin
     - linux

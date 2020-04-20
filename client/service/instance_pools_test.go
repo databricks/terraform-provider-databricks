@@ -50,7 +50,7 @@ func TestInstancePoolsAPI_Create(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var input model.InstancePool
-			AssertRequestWithMockServer(t, tt.args.InstancePool, http.MethodPost, "/api/2.0/instance-pools/create", &input, tt.response, tt.want, tt.wantErr, func(client DBApiClient) (interface{}, error) {
+			AssertRequestWithMockServer(t, tt.args.InstancePool, http.MethodPost, "/api/2.0/instance-pools/create", &input, tt.response, http.StatusOK, tt.want, tt.wantErr, func(client DBApiClient) (interface{}, error) {
 				return client.InstancePools().Create(*tt.args.InstancePool)
 			})
 		})
@@ -79,7 +79,7 @@ func TestInstancePoolsAPI_Delete(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var input args
-			AssertRequestWithMockServer(t, &tt.args, http.MethodPost, "/api/2.0/instance-pools/delete", &input, tt.response, nil, tt.wantErr, func(client DBApiClient) (interface{}, error) {
+			AssertRequestWithMockServer(t, &tt.args, http.MethodPost, "/api/2.0/instance-pools/delete", &input, tt.response, http.StatusOK, nil, tt.wantErr, func(client DBApiClient) (interface{}, error) {
 				return nil, client.InstancePools().Delete(tt.args.InstancePoolId)
 			})
 		})
@@ -122,7 +122,7 @@ func TestInstancePoolsAPI_Update(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var input model.InstancePoolInfo
-			AssertRequestWithMockServer(t, tt.args.InstancePoolInfo, http.MethodPost, "/api/2.0/instance-pools/edit", &input, tt.response, nil, tt.wantErr, func(client DBApiClient) (interface{}, error) {
+			AssertRequestWithMockServer(t, tt.args.InstancePoolInfo, http.MethodPost, "/api/2.0/instance-pools/edit", &input, tt.response, http.StatusOK, nil, tt.wantErr, func(client DBApiClient) (interface{}, error) {
 				return nil, client.InstancePools().Update(*tt.args.InstancePoolInfo)
 			})
 		})
@@ -222,7 +222,7 @@ func TestInstancePoolsAPI_Read(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var input model.InstancePoolInfo
-			AssertRequestWithMockServer(t, &tt.args, http.MethodGet, "/api/2.0/instance-pools/get?instance_pool_id=101-120000-brick1-pool-ABCD1234", &input, tt.response, tt.want, tt.wantErr, func(client DBApiClient) (interface{}, error) {
+			AssertRequestWithMockServer(t, &tt.args, http.MethodGet, "/api/2.0/instance-pools/get?instance_pool_id=101-120000-brick1-pool-ABCD1234", &input, tt.response, http.StatusOK, tt.want, tt.wantErr, func(client DBApiClient) (interface{}, error) {
 				return client.InstancePools().Read(tt.args.InstancePoolId)
 			})
 		})

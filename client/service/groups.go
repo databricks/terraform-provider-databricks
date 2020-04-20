@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"github.com/databrickslabs/databricks-terraform/client/model"
-	"log"
 	"net/http"
 	"sort"
 )
@@ -93,7 +92,6 @@ func (a GroupsAPI) GetAdminGroup() (model.Group, error) {
 	if err != nil {
 		return group, err
 	}
-	log.Println(string(resp))
 	err = json.Unmarshal(resp, &groups)
 
 	resources := groups.Resources

@@ -1,4 +1,4 @@
-# Resource: db_aws_s3_mount
+# Resource: databricks_aws_s3_mount
 
 This resource given a cluster id will help you create, get and delete a aws s3 mount.
 
@@ -13,7 +13,7 @@ This resource given a cluster id will help you create, get and delete a aws s3 m
 
 .. code-block:: tf
 
-    resource "db_aws_s3_mount" "my_custom_mount4" {
+    resource "databricks_aws_s3_mount" "my_custom_mount4" {
       cluster_id = "####-######-hello###"
       s3_bucket_name = "my-s3-bucket-123"
       mount_name = "my_s3_bucket_mount"

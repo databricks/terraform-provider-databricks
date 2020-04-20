@@ -7,12 +7,12 @@ terraform can provision resources in your Databricks workspace on your behalf.
 
 .. code-block:: tf
     
-    provider "db" {
+    provider "databricks" {
       host = "http://databricks.domain.com"
       token = "dapitokenhere"
     }
     
-    resource "db_scim_user" "my-user" {
+    resource "databricks_scim_user" "my-user" {
       user_name = "test-user@databricks.com"
       display_name = "Test User"
     }
@@ -37,7 +37,7 @@ Databricks CLI
 
 .. code-block:: tf
 
-    provider "db" {
+    provider "databricks" {
       host = "http://databricks.domain.com"
       token = "dapitokenhere"
     }
@@ -50,7 +50,7 @@ Databricks CLI
 
 .. code-block:: tf
 
-    provider "db" {
+    provider "databricks" {
       azure_auth = {
         managed_resource_group = "${azurerm_databricks_workspace.sri_test_workspace.managed_resource_group_name}"
         azure_region = "${azurerm_databricks_workspace.sri_test_workspace.location}"
@@ -78,7 +78,7 @@ For example you can have the following provider definition:
 
 .. code-block:: tf
 
-    provider "db" {}
+    provider "databricks" {}
 
 Then run the following code and the following environment variables will be injected into the provider.    
 

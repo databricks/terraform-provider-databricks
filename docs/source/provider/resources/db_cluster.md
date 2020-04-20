@@ -1,4 +1,4 @@
-# Resource: db_cluster
+# Resource: databricks_cluster
 
 This resource allows you to create, update, and delete clusters.  
 
@@ -6,7 +6,7 @@ This resource allows you to create, update, and delete clusters.
 
 .. code-block:: tf
 
-    resource "db_cluster" "my-cluster" {
+    resource "databricks_cluster" "my-cluster" {
       num_workers = "2"
       cluster_name = "sri-test"
       spark_version = "6.4.x-scala2.11"

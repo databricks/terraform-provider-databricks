@@ -1,4 +1,4 @@
-# Resource: db_token
+# Resource: databricks_token
 
 This resource creates an api token that can be used to create Databricks resources. 
 
@@ -9,7 +9,7 @@ This resource creates an api token that can be used to create Databricks resourc
 
 .. code-block:: tf
     
-    resource "db_token" "my-token" {
+    resource "databricks_token" "my-token" {
       lifetime_seconds = 6000
       comment = "Testing terraform v2"
     }

@@ -65,10 +65,10 @@ $ make build
 * Locate your [terraform plugins directory](https://www.terraform.io/docs/extend/how-terraform-works.html#plugin-locations) 
     or the root folder of your terraform code
 
-* Copy the `terraform-provider-db` artifact to that terraform plugins locations
+* Copy the `terraform-provider-databricks` artifact to that terraform plugins locations
 
 ```bash
-$ mkdir -p ~/.terraform.d/plugins/ && cp terraform-provider-db ~/.terraform.d/plugins/terraform-provider-db
+$ mkdir -p ~/.terraform.d/plugins/ && cp terraform-provider-databricks ~/.terraform.d/plugins/terraform-provider-databricks
 ``` 
 
 Now your plugin for the Databricks Terraform provider is installed correctly. You can actually use the provider. 
@@ -78,13 +78,13 @@ Now your plugin for the Databricks Terraform provider is installed correctly. Yo
 Sample terraform code
 
 ```terraform
-provider "db" {
+provider "databricks" {
   host = "http://databrickshost.com"
   token = "dapitokenhere"
 }
 
 // Creating a basic user
-resource "db_scim_user" "my-user" {
+resource "databricks_scim_user" "my-user" {
   user_name = join("", ["test-user", "+",count.index,"@databricks.com"])
   display_name = "Test User"
 }
@@ -128,45 +128,45 @@ $ docker run -it -v $(pwd):/workpace -w /workpace databricks-terraform apply
 
 ### Databricks Terraform Provider Resources State
 
-| Resource                 | Implemented        | Import Support       | Acceptance Tests     | Documentation        | Reviewed             | Finalize Schema      |
-|--------------------------|--------------------|----------------------|----------------------|----------------------|----------------------|----------------------|
-| db_token                 | :white_check_mark: | :white_large_square: | :white_check_mark:   | :white_check_mark:   | :white_large_square: | :white_large_square: |
-| db_secret_scope          | :white_check_mark: | :white_large_square: | :white_check_mark:   | :white_check_mark:   | :white_large_square: | :white_large_square: |
-| db_secret                | :white_check_mark: | :white_large_square: | :white_check_mark:   | :white_check_mark:   | :white_large_square: | :white_large_square: |
-| db_secret_acl            | :white_check_mark: | :white_large_square: | :white_check_mark:   | :white_check_mark:   | :white_large_square: | :white_large_square: |
-| db_instance_pool         | :white_check_mark: | :white_large_square: | :white_large_square: | :white_check_mark:   | :white_large_square: | :white_large_square: |
-| db_scim_user             | :white_check_mark: | :white_large_square: | :white_check_mark:   | :white_check_mark:   | :white_large_square: | :white_large_square: |
-| db_scim_group            | :white_check_mark: | :white_large_square: | :white_large_square: | :white_check_mark:   | :white_large_square: | :white_large_square: |
-| db_notebook              | :white_check_mark: | :white_large_square: | :white_large_square: | :white_check_mark:   | :white_large_square: | :white_large_square: |
-| db_cluster               | :white_check_mark: | :white_large_square: | :white_large_square: | :white_check_mark:   | :white_large_square: | :white_large_square: |
-| db_job                   | :white_check_mark: | :white_large_square: | :white_large_square: | :white_check_mark:   | :white_large_square: | :white_large_square: |
-| db_dbfs_file             | :white_check_mark: | :white_large_square: | :white_large_square: | :white_check_mark:   | :white_large_square: | :white_large_square: |
-| db_dbfs_file_sync        | :white_check_mark: | :white_large_square: | :white_large_square: | :white_check_mark:   | :white_large_square: | :white_large_square: |
-| db_instance_profile      | :white_check_mark: | :white_large_square: | :white_large_square: | :white_check_mark:   | :white_large_square: | :white_large_square: |
-| db_aws_s3_mount          | :white_check_mark: | :white_large_square: | :white_large_square: | :white_check_mark:   | :white_large_square: | :white_large_square: |
-| db_azure_blob_mount      | :white_check_mark: | :white_large_square: | :white_large_square: | :white_check_mark:   | :white_large_square: | :white_large_square: |
-| db_azure_adls_gen1_mount | :white_check_mark: | :white_large_square: | :white_large_square: | :white_check_mark:   | :white_large_square: | :white_large_square: |
-| db_azure_adls_gen2_mount | :white_check_mark: | :white_large_square: | :white_large_square: | :white_check_mark:   | :white_large_square: | :white_large_square: |
+| Resource                         | Implemented        | Import Support       | Acceptance Tests     | Documentation        | Reviewed             | Finalize Schema      |
+|----------------------------------|--------------------|----------------------|----------------------|----------------------|----------------------|----------------------|
+| databricks_token                 | :white_check_mark: | :white_large_square: | :white_check_mark:   | :white_check_mark:   | :white_large_square: | :white_large_square: |
+| databricks_secret_scope          | :white_check_mark: | :white_large_square: | :white_check_mark:   | :white_check_mark:   | :white_large_square: | :white_large_square: |
+| databricks_secret                | :white_check_mark: | :white_large_square: | :white_check_mark:   | :white_check_mark:   | :white_large_square: | :white_large_square: |
+| databricks_secret_acl            | :white_check_mark: | :white_large_square: | :white_check_mark:   | :white_check_mark:   | :white_large_square: | :white_large_square: |
+| databricks_instance_pool         | :white_check_mark: | :white_large_square: | :white_large_square: | :white_check_mark:   | :white_large_square: | :white_large_square: |
+| databricks_scim_user             | :white_check_mark: | :white_large_square: | :white_check_mark:   | :white_check_mark:   | :white_large_square: | :white_large_square: |
+| databricks_scim_group            | :white_check_mark: | :white_large_square: | :white_large_square: | :white_check_mark:   | :white_large_square: | :white_large_square: |
+| databricks_notebook              | :white_check_mark: | :white_large_square: | :white_large_square: | :white_check_mark:   | :white_large_square: | :white_large_square: |
+| databricks_cluster               | :white_check_mark: | :white_large_square: | :white_large_square: | :white_check_mark:   | :white_large_square: | :white_large_square: |
+| databricks_job                   | :white_check_mark: | :white_large_square: | :white_large_square: | :white_check_mark:   | :white_large_square: | :white_large_square: |
+| databricks_dbfs_file             | :white_check_mark: | :white_large_square: | :white_large_square: | :white_check_mark:   | :white_large_square: | :white_large_square: |
+| databricks_dbfs_file_sync        | :white_check_mark: | :white_large_square: | :white_large_square: | :white_check_mark:   | :white_large_square: | :white_large_square: |
+| databricks_instance_profile      | :white_check_mark: | :white_large_square: | :white_large_square: | :white_check_mark:   | :white_large_square: | :white_large_square: |
+| databricks_aws_s3_mount          | :white_check_mark: | :white_large_square: | :white_large_square: | :white_check_mark:   | :white_large_square: | :white_large_square: |
+| databricks_azure_blob_mount      | :white_check_mark: | :white_large_square: | :white_large_square: | :white_check_mark:   | :white_large_square: | :white_large_square: |
+| databricks_azure_adls_gen1_mount | :white_check_mark: | :white_large_square: | :white_large_square: | :white_check_mark:   | :white_large_square: | :white_large_square: |
+| databricks_azure_adls_gen2_mount | :white_check_mark: | :white_large_square: | :white_large_square: | :white_check_mark:   | :white_large_square: | :white_large_square: |
 
 ### Databricks Terraform Data Sources State
 
-| Data Source         | Implemented          | Acceptance Tests     | Documentation        | Reviewed             |
-|---------------------|----------------------|----------------------|----------------------|----------------------|
-| db_notebook         | :white_check_mark:   | :white_large_square: | :white_large_square: | :white_large_square: |
-| db_notebook_paths   | :white_check_mark:   | :white_large_square: | :white_large_square: | :white_large_square: |
-| db_dbfs_file        | :white_check_mark:   | :white_large_square: | :white_large_square: | :white_large_square: |
-| db_dbfs_file_paths  | :white_check_mark:   | :white_large_square: | :white_large_square: | :white_large_square: |
-| db_zones            | :white_large_square: | :white_large_square: | :white_large_square: | :white_large_square: |
-| db_runtimes         | :white_large_square: | :white_large_square: | :white_large_square: | :white_large_square: |
-| db_instance_pool    | :white_large_square: | :white_large_square: | :white_large_square: | :white_large_square: |
-| db_scim_user        | :white_large_square: | :white_large_square: | :white_large_square: | :white_large_square: |
-| db_scim_group       | :white_large_square: | :white_large_square: | :white_large_square: | :white_large_square: |
-| db_cluster          | :white_large_square: | :white_large_square: | :white_large_square: | :white_large_square: |
-| db_job              | :white_large_square: | :white_large_square: | :white_large_square: | :white_large_square: |
-| db_mount            | :white_large_square: | :white_large_square: | :white_large_square: | :white_large_square: |
-| db_instance_profile | :white_large_square: | :white_large_square: | :white_large_square: | :white_large_square: |
-| db_database         | :white_large_square: | :white_large_square: | :white_large_square: | :white_large_square: |
-| db_table            | :white_large_square: | :white_large_square: | :white_large_square: | :white_large_square: |
+| Data Source                 | Implemented          | Acceptance Tests     | Documentation        | Reviewed             |
+|-----------------------------|----------------------|----------------------|----------------------|----------------------|
+| databricks_notebook         | :white_check_mark:   | :white_large_square: | :white_large_square: | :white_large_square: |
+| databricks_notebook_paths   | :white_check_mark:   | :white_large_square: | :white_large_square: | :white_large_square: |
+| databricks_dbfs_file        | :white_check_mark:   | :white_large_square: | :white_large_square: | :white_large_square: |
+| databricks_dbfs_file_paths  | :white_check_mark:   | :white_large_square: | :white_large_square: | :white_large_square: |
+| databricks_zones            | :white_large_square: | :white_large_square: | :white_large_square: | :white_large_square: |
+| databricks_runtimes         | :white_large_square: | :white_large_square: | :white_large_square: | :white_large_square: |
+| databricks_instance_pool    | :white_large_square: | :white_large_square: | :white_large_square: | :white_large_square: |
+| databricks_scim_user        | :white_large_square: | :white_large_square: | :white_large_square: | :white_large_square: |
+| databricks_scim_group       | :white_large_square: | :white_large_square: | :white_large_square: | :white_large_square: |
+| databricks_cluster          | :white_large_square: | :white_large_square: | :white_large_square: | :white_large_square: |
+| databricks_job              | :white_large_square: | :white_large_square: | :white_large_square: | :white_large_square: |
+| databricks_mount            | :white_large_square: | :white_large_square: | :white_large_square: | :white_large_square: |
+| databricks_instance_profile | :white_large_square: | :white_large_square: | :white_large_square: | :white_large_square: |
+| databricks_database         | :white_large_square: | :white_large_square: | :white_large_square: | :white_large_square: |
+| databricks_table            | :white_large_square: | :white_large_square: | :white_large_square: | :white_large_square: |
 
 
 ## Testing

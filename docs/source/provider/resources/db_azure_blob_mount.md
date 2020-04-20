@@ -1,4 +1,4 @@
-# Resource: db_azure_blob_mount
+# Resource: databricks_azure_blob_mount
 
 This resource given a cluster id will help you create, get and delete a azure blob storage mount using SAS token or
 storage account access keys.
@@ -15,7 +15,7 @@ With the below resource the data gets mounted to `/mnt/my_cool_dbfs_mount`
 
 .. code-block:: tf
 
-    resource "db_azure_blob_mount" "my_custom_mount" {
+    resource "databricks_azure_blob_mount" "my_custom_mount" {
       cluster_id = "####-######-pear###"
       container_name = "my_storage_container"
       directory = "/my_custom_folder"

@@ -1,4 +1,4 @@
-# Resource: db_scim_user
+# Resource: databricks_scim_user
 
 This resource allows you to create users in Databricks and give them the proper level of access, as well as 
 remove access for users (deprovision them) when they leave your organization or no longer need access to Databricks.
@@ -9,7 +9,7 @@ remove access for users (deprovision them) when they leave your organization or 
 
 .. code-block:: tf
 
-    resource "db_scim_user" "my-user" {
+    resource "databricks_scim_user" "my-user" {
       user_name = "testuser@databricks.com"
       display_name = "Test User"
       entitlements = [

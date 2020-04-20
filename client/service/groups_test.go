@@ -29,14 +29,14 @@ func TestScimGroupAPI_Create(t *testing.T) {
 						}`,
 			responseStatus: http.StatusOK,
 			want: model.Group{
-				ID:       "101030",
+				ID: "101030",
 			},
 			args: args{
 				Schemas:      []model.URN{model.GroupSchema},
 				Entitlements: []model.ValueListItem{{"test-entitlement"}},
 				DisplayName:  "test group",
 				Roles:        []model.ValueListItem{{"test-role"}},
-				Members:        []model.ValueListItem{{"test-member"}},
+				Members:      []model.ValueListItem{{"test-member"}},
 			},
 			wantErr: false,
 		},
@@ -50,7 +50,7 @@ func TestScimGroupAPI_Create(t *testing.T) {
 				Entitlements: []model.ValueListItem{{"test-entitlement"}},
 				DisplayName:  "test group",
 				Roles:        []model.ValueListItem{{"test-role"}},
-				Members:        []model.ValueListItem{{"test-member"}},
+				Members:      []model.ValueListItem{{"test-member"}},
 			},
 			wantErr: true,
 		},
@@ -59,7 +59,7 @@ func TestScimGroupAPI_Create(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			var input args
 			AssertRequestWithMockServer(t, &tt.args, http.MethodPost, "/api/2.0/preview/scim/v2/Groups", &input, tt.response, tt.responseStatus, tt.want, tt.wantErr, func(client DBApiClient) (interface{}, error) {
-				return client.Groups().Create(tt.args.DisplayName, []string{tt.args.Members[0].Value},[]string{tt.args.Roles[0].Value}, []string{tt.args.Entitlements[0].Value})
+				return client.Groups().Create(tt.args.DisplayName, []string{tt.args.Members[0].Value}, []string{tt.args.Roles[0].Value}, []string{tt.args.Entitlements[0].Value})
 			})
 		})
 	}
@@ -80,7 +80,7 @@ func TestScimGroupAPI_GetAdminGroup(t *testing.T) {
 						}`,
 			responseStatus: http.StatusOK,
 			want: model.Group{
-				ID:       "101030",
+				ID: "101030",
 			},
 			wantErr: false,
 		},
@@ -91,7 +91,7 @@ func TestScimGroupAPI_GetAdminGroup(t *testing.T) {
 						}`,
 			responseStatus: http.StatusOK,
 			want: model.Group{
-				ID:       "101030",
+				ID: "101030",
 			},
 			wantErr: true,
 		},
@@ -100,7 +100,7 @@ func TestScimGroupAPI_GetAdminGroup(t *testing.T) {
 			response:       ``,
 			want:           model.Group{},
 			responseStatus: http.StatusBadRequest,
-			wantErr: true,
+			wantErr:        true,
 		},
 	}
 	for _, tt := range tests {
@@ -115,15 +115,16 @@ func TestScimGroupAPI_GetAdminGroup(t *testing.T) {
 func TestScimGroupAPI_Patch(t *testing.T) {
 	type args model.GroupPatchRequest
 	tests := []struct {
-		name           string
-		params struct{groupID string
-						addList []string
-						removeList []string
-						path model.GroupPathType
-						}
+		name   string
+		params struct {
+			groupID    string
+			addList    []string
+			removeList []string
+			path       model.GroupPathType
+		}
 		response       string
-		args args
-		requestUri string
+		args           args
+		requestUri     string
 		responseStatus int
 		want           interface{}
 		wantErr        bool
@@ -157,9 +158,9 @@ func TestScimGroupAPI_Patch(t *testing.T) {
 			wantErr:        false,
 		},
 		{
-			name:           "Patch Test Failure",
-			response:       ``,
-			want:           nil,
+			name:     "Patch Test Failure",
+			response: ``,
+			want:     nil,
 			args: args{
 				Schemas: []model.URN{model.PatchOp},
 				Operations: []model.GroupPatchOperations{
@@ -182,7 +183,7 @@ func TestScimGroupAPI_Patch(t *testing.T) {
 			}{groupID: "my-group-id", addList: []string{"100"}, removeList: []string{"200"}, path: model.GroupMembersPath},
 			requestUri:     "/api/2.0/preview/scim/v2/Groups/my-group-id",
 			responseStatus: http.StatusBadRequest,
-			wantErr: true,
+			wantErr:        true,
 		},
 	}
 	for _, tt := range tests {

@@ -1,4 +1,4 @@
-# Resource: db_instance_pool
+# Resource: databricks_instance_pool
 
 This resource allows you to manage instance pools on Databricks. 
 
@@ -18,7 +18,7 @@ cluster to use. Only clusters attached to a pool can use that pool’s idle inst
 
 .. code-block:: tf
 
-    resource "db_instance_pool" "my-pool" {
+    resource "databricks_instance_pool" "my-pool" {
       instance_pool_name = "demo-terraform-pool"
       min_idle_instances = 0
       max_capacity = 5
@@ -44,7 +44,7 @@ cluster to use. Only clusters attached to a pool can use that pool’s idle inst
 
 .. code-block:: tf
 
-    resource "db_instance_pool" "my-pool" {
+    resource "databricks_instance_pool" "my-pool" {
       instance_pool_name = "demo-terraform-pool"
       min_idle_instances = 0
       max_capacity = 5

@@ -1,4 +1,4 @@
-# Resource: db_instance_profile
+# Resource: databricks_instance_profile
 
 This resource allows you to create, get, and delete instance profiles that users can launch clusters with.
 
@@ -6,7 +6,7 @@ This resource allows you to create, get, and delete instance profiles that users
 
 .. code-block:: tf
 
-    resource "db_instance_profile" "db-instance-profile" {
+    resource "databricks_instance_profile" "db-instance-profile" {
       instance_profile_arn = "arn:aws:iam::999999999999:instance-profile/custom-s3-access-instance-profile"
       skip_validation = true
     }

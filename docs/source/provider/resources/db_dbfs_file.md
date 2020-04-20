@@ -1,4 +1,4 @@
-# Resource: db_dbfs_file
+# Resource: databricks_dbfs_file
 
 This is a resource that lets you create, get and delete files in DBFS (Databricks File System).
 
@@ -6,7 +6,7 @@ This is a resource that lets you create, get and delete files in DBFS (Databrick
 
 .. code-block:: tf
 
-    resource "db_dbfs_file" "my_dbfs_file" {
+    resource "databricks_dbfs_file" "my_dbfs_file" {
       content = filebase64("README.md")
       path = "/sri/terraformdbfs/example/README.md"
       overwrite = true

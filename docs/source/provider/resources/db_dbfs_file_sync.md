@@ -1,4 +1,4 @@
-# Resource: db_dbfs_file_sync
+# Resource: databricks_dbfs_file_sync
 
 This resource will let you create a dbfs file sync which will synchronize files between systems depending on file size 
 changes. 
@@ -11,15 +11,15 @@ it will provide a false negative in terms of determining difference.
 .. code-block:: tf
     
     
-    data "db_dbfs_file" "my_dbfs_file_data" {
+    data "databricks_dbfs_file" "my_dbfs_file_data" {
       path = "/install_wheels_sri.sh"
       limit_file_size = true
     }
     
-    resource "db_dbfs_file_sync" "my-file1-sync" {
-      src_path = data.db_dbfs_file.my_dbfs_file_data.path
+    resource "databricks_dbfs_file_sync" "my-file1-sync" {
+      src_path = data.databricks_dbfs_file.my_dbfs_file_data.path
       tgt_path = "/terraformdbfs/example/wheels.sh"
-      file_size = data.db_dbfs_file.my-dbfs-file-data.file_size
+      file_size = data.databricks_dbfs_file.my-dbfs-file-data.file_size
       mkdirs = true
     
       host = "https://<domain>.com/"

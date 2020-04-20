@@ -1,6 +1,6 @@
-# Resource: db_job
+# Resource: databricks_job
 
-The db_job resource allows you to create, edit, and delete jobs. 
+The databricks_job resource allows you to create, edit, and delete jobs. 
 
 
 ## Example Usage
@@ -9,7 +9,7 @@ The db_job resource allows you to create, edit, and delete jobs.
 
 .. code-block:: tf
 
-    resource "db_job" "my_job3" {
+    resource "databricks_job" "my_job3" {
       new_cluster {
         autoscale {
           min_workers = 2
@@ -17,7 +17,7 @@ The db_job resource allows you to create, edit, and delete jobs.
         }
         spark_version = "6.4.x-scala2.11"
         aws_attributes {
-          zone_id = data.db_zones.my_wspace_zones.default_zone
+          zone_id = data.databricks_zones.my_wspace_zones.default_zone
           spot_bid_price_percent = "100"
         }
         node_type_id = "r3.xlarge"
@@ -33,7 +33,7 @@ The db_job resource allows you to create, edit, and delete jobs.
 
 .. code-block:: tf
 
-    resource "db_job" "my_job3" {
+    resource "databricks_job" "my_job3" {
       existing_cluster_id = "<Cluster ID>"
       notebook_path = "/Users/jane.doe@databricks.com/my-demo-notebook"
       name = "my-demo-notebook"

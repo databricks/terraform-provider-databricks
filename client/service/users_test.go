@@ -90,10 +90,10 @@ func TestScimUserAPI_Update(t *testing.T) {
 									"id": "101030",
 									"userName": "test.user@databricks.com"
 								}`,
-								"",
+				"",
 			},
 			responseStatus: []int{http.StatusOK, http.StatusOK},
-			wantUri: []string{"/api/2.0/preview/scim/v2/Users/101030?", "/api/2.0/preview/scim/v2/Users/101030"},
+			wantUri:        []string{"/api/2.0/preview/scim/v2/Users/101030?", "/api/2.0/preview/scim/v2/Users/101030"},
 			args: []interface{}{
 				nil,
 				&args{
@@ -112,7 +112,7 @@ func TestScimUserAPI_Update(t *testing.T) {
 				"",
 			},
 			responseStatus: []int{http.StatusBadRequest, http.StatusOK},
-			wantUri: []string{"/api/2.0/preview/scim/v2/Users/101030?", "/api/2.0/preview/scim/v2/Users/101030"},
+			wantUri:        []string{"/api/2.0/preview/scim/v2/Users/101030?", "/api/2.0/preview/scim/v2/Users/101030"},
 			args: []interface{}{
 				nil,
 				&args{
@@ -128,7 +128,7 @@ func TestScimUserAPI_Update(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			AssertMultipleRequestsWithMockServer(t, tt.args, []string{http.MethodGet,http.MethodPut}, tt.wantUri, []interface{}{nil,&args{}}, tt.response, tt.responseStatus, nil, tt.wantErr, func(client DBApiClient) (interface{}, error) {
+			AssertMultipleRequestsWithMockServer(t, tt.args, []string{http.MethodGet, http.MethodPut}, tt.wantUri, []interface{}{nil, &args{}}, tt.response, tt.responseStatus, nil, tt.wantErr, func(client DBApiClient) (interface{}, error) {
 				return nil, client.Users().Update("101030", tt.args[1].(*args).UserName, tt.args[1].(*args).DisplayName, []string{string(tt.args[1].(*args).Entitlements[0].Value)}, []string{tt.args[1].(*args).Roles[0].Value})
 			})
 		})
@@ -254,8 +254,8 @@ func TestScimUserAPI_VerifyUserAsAdmin(t *testing.T) {
 		wantErr        bool
 	}{
 		{
-			name:           "VerifyUserAsAdmin true test",
-			response:       `{
+			name: "VerifyUserAsAdmin true test",
+			response: `{
 								   "groups":[
 									  {
 										 "display":"admins",
@@ -287,8 +287,8 @@ func TestScimUserAPI_VerifyUserAsAdmin(t *testing.T) {
 			wantErr:    false,
 		},
 		{
-			name:           "VerifyUserAsAdmin false test",
-			response:        `{
+			name: "VerifyUserAsAdmin false test",
+			response: `{
 								   "groups":[
 									  {
 										 "display":"admins",
@@ -446,7 +446,7 @@ func TestScimUserAPI_Read(t *testing.T) {
 								   "userName":"test.user@databricks.com",
 								   "displayName":"test.user@databricks.com"
 								}`,
-								`{
+				`{
 								   "schemas":[
 									  "urn:ietf:params:scim:schemas:core:2.0:Group"
 								   ],
@@ -466,7 +466,7 @@ func TestScimUserAPI_Read(t *testing.T) {
 									  }
 								   ]
 								}`,
-								`{
+				`{
 								   "schemas":[
 									  "urn:ietf:params:scim:schemas:core:2.0:Group"
 								   ],
@@ -539,7 +539,7 @@ func TestScimUserAPI_Read(t *testing.T) {
 				},
 			},
 			wantUri: []string{"/api/2.0/preview/scim/v2/Users/101030?"},
-			want: model.User{},
+			want:    model.User{},
 			wantErr: true,
 		},
 		{
@@ -554,7 +554,7 @@ func TestScimUserAPI_Read(t *testing.T) {
 				},
 			},
 			wantUri: []string{"/api/2.0/preview/scim/v2/Users/101030?"},
-			want: model.User{},
+			want:    model.User{},
 			wantErr: true,
 		},
 		{
@@ -581,8 +581,7 @@ func TestScimUserAPI_Read(t *testing.T) {
 								   "userName":"test.user@databricks.com",
 								   "displayName":"test.user@databricks.com"
 								}`,
-								``,
-
+				``,
 			},
 			responseStatus: []int{http.StatusOK, http.StatusBadRequest},
 			args: []args{

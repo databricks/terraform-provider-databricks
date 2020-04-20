@@ -1,4 +1,4 @@
-# Resource: db_azure_adls_gen1_mount
+# Resource: databricks_azure_adls_gen1_mount
 
 This resource given a cluster id will help you create, get and delete a azure data lake gen 1(ADLS gen 1) mount using a service 
 principal/enterprise ad application which will provide you a client id and client secret to authenticate.
@@ -12,7 +12,7 @@ principal/enterprise ad application which will provide you a client id and clien
 
 .. code-block:: tf
 
-    resource "db_azure_adls_gen1_mount" "my_custom_mount3" {
+    resource "databricks_azure_adls_gen1_mount" "my_custom_mount3" {
       cluster_id = "####-######-pear###"
       storage_resource_name = "my_storage_resource_name"
       mount_name = "my_adls_gen1_mount"

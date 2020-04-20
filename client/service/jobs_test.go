@@ -10,35 +10,35 @@ func TestJobsAPI_Create(t *testing.T) {
 	type args model.JobSettings
 
 	tests := []struct {
-		name     string
-		response string
+		name           string
+		response       string
 		responseStatus int
-		args     args
-		want interface{}
-		wantErr  bool
+		args           args
+		want           interface{}
+		wantErr        bool
 	}{
 		{
-			name:     "Create test",
+			name: "Create test",
 			response: `{
 						  "job_id": 1
 						}`,
 			responseStatus: http.StatusOK,
 			args: args{
-				ExistingClusterId:      "my-cluster-id",
+				ExistingClusterId: "my-cluster-id",
 			},
 			want: model.Job{
-				JobId:           1,
+				JobId: 1,
 			},
 			wantErr: false,
 		},
 		{
-			name:     "Create faulure test",
-			response: "",
+			name:           "Create faulure test",
+			response:       "",
 			responseStatus: http.StatusBadRequest,
 			args: args{
-				ExistingClusterId:      "my-cluster-id",
+				ExistingClusterId: "my-cluster-id",
 			},
-			want: model.Job{},
+			want:    model.Job{},
 			wantErr: true,
 		},
 	}
@@ -54,20 +54,20 @@ func TestJobsAPI_Create(t *testing.T) {
 
 func TestJobsAPI_Update(t *testing.T) {
 	type args struct {
-		JobId       int64              `json:"job_id,omitempty" url:"job_id,omitempty"`
+		JobId       int64             `json:"job_id,omitempty" url:"job_id,omitempty"`
 		NewSettings model.JobSettings `json:"new_settings,omitempty" url:"new_settings,omitempty"`
 	}
 
 	tests := []struct {
-		name     string
-		response string
+		name           string
+		response       string
 		responseStatus int
-		args     args
-		want 	interface{}
-		wantErr  bool
+		args           args
+		want           interface{}
+		wantErr        bool
 	}{
 		{
-			name:     "Update test",
+			name: "Update test",
 			response: `{
 						  "job_id": 1
 						}`,
@@ -76,18 +76,18 @@ func TestJobsAPI_Update(t *testing.T) {
 				JobId:       1,
 				NewSettings: model.JobSettings{},
 			},
-			want: nil,
+			want:    nil,
 			wantErr: false,
 		},
 		{
-			name:     "Update faulure test",
-			response: "",
+			name:           "Update faulure test",
+			response:       "",
 			responseStatus: http.StatusBadRequest,
 			args: args{
 				JobId:       0,
 				NewSettings: model.JobSettings{},
 			},
-			want: nil,
+			want:    nil,
 			wantErr: true,
 		},
 	}
@@ -103,15 +103,15 @@ func TestJobsAPI_Update(t *testing.T) {
 
 func TestJobsAPI_Delete(t *testing.T) {
 	type args struct {
-		JobId       int64              `json:"job_id,omitempty" url:"job_id,omitempty"`
+		JobId int64 `json:"job_id,omitempty" url:"job_id,omitempty"`
 	}
 
 	tests := []struct {
-		name     string
-		response string
+		name           string
+		response       string
 		responseStatus int
-		args     args
-		wantErr  bool
+		args           args
+		wantErr        bool
 	}{
 		{
 			name:           "Delete Test",
@@ -144,7 +144,7 @@ func TestJobsAPI_Delete(t *testing.T) {
 
 func TestJobsAPI_Read(t *testing.T) {
 	type args struct {
-		JobId       int64              `json:"job_id,omitempty" url:"job_id,omitempty"`
+		JobId int64 `json:"job_id,omitempty" url:"job_id,omitempty"`
 	}
 	tests := []struct {
 		name           string
@@ -202,23 +202,23 @@ func TestJobsAPI_Read(t *testing.T) {
 			},
 			wantUri: "/api/2.0/jobs/get?job_id=1",
 			want: model.Job{
-				JobId:           1,
+				JobId: 1,
 				Settings: &model.JobSettings{
 					NewCluster: &model.Cluster{
-						NumWorkers: 10,
+						NumWorkers:   10,
 						SparkVersion: "5.3.x-scala2.11",
 						AwsAttributes: &model.AwsAttributes{
-							Availability:        "ON_DEMAND",
+							Availability: "ON_DEMAND",
 						},
-						NodeTypeID:       "r3.xlarge",
+						NodeTypeID: "r3.xlarge",
 					},
 					SparkJarTask: &model.SparkJarTask{
 						MainClassName: "com.databricks.ComputeModels",
 					},
-					Name:      "Nightly model training",
+					Name: "Nightly model training",
 					Libraries: []model.Library{
 						{
-							Jar:   "dbfs:/my-jar.jar",
+							Jar: "dbfs:/my-jar.jar",
 						},
 						{
 							Maven: &model.Maven{
@@ -227,12 +227,12 @@ func TestJobsAPI_Read(t *testing.T) {
 						},
 					},
 					EmailNotifications: &model.JobEmailNotifications{
-						OnStart:               []string{},
-						OnSuccess:             []string{},
-						OnFailure:             []string{},
+						OnStart:   []string{},
+						OnSuccess: []string{},
+						OnFailure: []string{},
 					},
-					TimeoutSeconds:         100000000,
-					MaxRetries:             1,
+					TimeoutSeconds: 100000000,
+					MaxRetries:     1,
 					Schedule: &model.CronSchedule{
 						QuartzCronExpression: "0 15 22 ? * *",
 						TimezoneId:           "America/Los_Angeles",
@@ -243,14 +243,14 @@ func TestJobsAPI_Read(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name: "Read failure test",
-			response: ``,
+			name:           "Read failure test",
+			response:       ``,
 			responseStatus: http.StatusBadRequest,
 			args: args{
 				JobId: 1,
 			},
 			wantUri: "/api/2.0/jobs/get?job_id=1",
-			want: model.Job{},
+			want:    model.Job{},
 			wantErr: true,
 		},
 	}

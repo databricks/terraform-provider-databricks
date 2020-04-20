@@ -13,29 +13,29 @@ func TestInstanceProfilesAPI_Create(t *testing.T) {
 	}
 
 	tests := []struct {
-		name     string
-		response string
+		name           string
+		response       string
 		responseStatus int
-		args     args
-		wantErr  bool
+		args           args
+		wantErr        bool
 	}{
 		{
-			name:     "Create test",
-			response: "",
+			name:           "Create test",
+			response:       "",
 			responseStatus: http.StatusOK,
 			args: args{
 				InstanceProfileArn: "arn:aws:iam::1231231123123:instance-profile/my-instance-profile",
-				SkipValidation: true,
+				SkipValidation:     true,
 			},
 			wantErr: false,
 		},
 		{
-			name:     "Create faulure test",
-			response: "",
+			name:           "Create faulure test",
+			response:       "",
 			responseStatus: http.StatusBadRequest,
 			args: args{
 				InstanceProfileArn: "arn:aws:iam::1231231123123:instance-profile/my-instance-profile",
-				SkipValidation: true,
+				SkipValidation:     true,
 			},
 			wantErr: true,
 		},
@@ -56,11 +56,11 @@ func TestInstanceProfilesAPI_Delete(t *testing.T) {
 	}
 
 	tests := []struct {
-		name     string
-		response string
+		name           string
+		response       string
 		responseStatus int
-		args     args
-		wantErr  bool
+		args           args
+		wantErr        bool
 	}{
 		{
 			name:           "Delete Test",
@@ -92,7 +92,7 @@ func TestInstanceProfilesAPI_Delete(t *testing.T) {
 }
 
 func TestInstanceProfilesAPI_List(t *testing.T) {
-	type args struct {}
+	type args struct{}
 	tests := []struct {
 		name           string
 		response       string
@@ -110,8 +110,8 @@ func TestInstanceProfilesAPI_List(t *testing.T) {
 												{"instance_profile_arn":"arn:aws:iam::123456789:instance-profile/datascience-role3", "is_meta_instance_profile": false}]
 						}`,
 			responseStatus: http.StatusOK,
-			args: args{},
-			wantUri: "/api/2.0/instance-profiles/list?",
+			args:           args{},
+			wantUri:        "/api/2.0/instance-profiles/list?",
 			want: []model.InstanceProfileInfo{
 				{
 					InstanceProfileArn: "arn:aws:iam::123456789:instance-profile/datascience-role1",
@@ -126,13 +126,13 @@ func TestInstanceProfilesAPI_List(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name: "List failure test",
-			response: ``,
+			name:           "List failure test",
+			response:       ``,
 			responseStatus: http.StatusBadRequest,
-			args: args{},
-			wantUri: "/api/2.0/instance-profiles/list?",
-			want: nil,
-			wantErr: true,
+			args:           args{},
+			wantUri:        "/api/2.0/instance-profiles/list?",
+			want:           nil,
+			wantErr:        true,
 		},
 	}
 	for _, tt := range tests {
@@ -144,7 +144,6 @@ func TestInstanceProfilesAPI_List(t *testing.T) {
 		})
 	}
 }
-
 
 func TestInstanceProfilesAPI_Read(t *testing.T) {
 	type args struct {
@@ -171,7 +170,7 @@ func TestInstanceProfilesAPI_Read(t *testing.T) {
 				InstanceProfileArn: "arn:aws:iam::123456789:instance-profile/datascience-role1",
 			},
 			wantUri: "/api/2.0/instance-profiles/list?",
-			want: "arn:aws:iam::123456789:instance-profile/datascience-role1",
+			want:    "arn:aws:iam::123456789:instance-profile/datascience-role1",
 			wantErr: false,
 		},
 		{
@@ -186,18 +185,18 @@ func TestInstanceProfilesAPI_Read(t *testing.T) {
 				InstanceProfileArn: "arn:aws:iam::123456789:instance-profile/datascience-role4",
 			},
 			wantUri: "/api/2.0/instance-profiles/list?",
-			want: "",
+			want:    "",
 			wantErr: true,
 		},
 		{
-			name: "Read list failure test",
-			response: ``,
+			name:           "Read list failure test",
+			response:       ``,
 			responseStatus: http.StatusBadRequest,
 			args: args{
 				InstanceProfileArn: "arn:aws:iam::123456789:instance-profile/datascience-role1",
 			},
 			wantUri: "/api/2.0/instance-profiles/list?",
-			want: "",
+			want:    "",
 			wantErr: true,
 		},
 	}

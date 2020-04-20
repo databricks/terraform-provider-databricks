@@ -24,7 +24,7 @@ func TestMain(m *testing.M) {
 	os.Exit(code)
 }
 
-func DeserializeJson(req *http.Request, m interface{}) error {
+func DeserializeJSON(req *http.Request, m interface{}) error {
 	dec := json.NewDecoder(req.Body)
 	dec.DisallowUnknownFields()
 
@@ -53,9 +53,8 @@ func GetIntegrationDBAPIClient() *DBApiClient {
 func GetCloudInstanceType(c *DBApiClient) string {
 	if strings.Contains(c.config.Host, "azure") {
 		return "Standard_DS3_v2"
-	} else {
-		return "m4.large"
 	}
+	return "m4.large"
 }
 
 func AssertRequestWithMockServer(t *testing.T, rawPayloadArgs interface{}, requestMethod string, requestURI string, input interface{}, response string, responseStatus int, want interface{}, wantErr bool, apiCall func(client DBApiClient) (interface{}, error)) {
@@ -64,7 +63,7 @@ func AssertRequestWithMockServer(t *testing.T, rawPayloadArgs interface{}, reque
 		assert.Equal(t, requestMethod, req.Method)
 		assert.Equal(t, requestURI, req.RequestURI)
 		if requestMethod == http.MethodPost || requestMethod == http.MethodPatch || requestMethod == http.MethodPut {
-			err := DeserializeJson(req, &input)
+			err := DeserializeJSON(req, &input)
 			assert.NoError(t, err, err)
 			compare(t, rawPayloadArgs, input)
 		}
@@ -103,7 +102,7 @@ func AssertMultipleRequestsWithMockServer(t *testing.T, rawPayloadArgs interface
 		assert.Equal(t, requestMethod[counter], req.Method)
 		assert.Equal(t, requestURI[counter], req.RequestURI)
 		if requestMethod[counter] == http.MethodPost || requestMethod[counter] == http.MethodPatch || requestMethod[counter] == http.MethodPut {
-			err := DeserializeJson(req, &(input.([]interface{})[counter]))
+			err := DeserializeJSON(req, &(input.([]interface{})[counter]))
 			assert.NoError(t, err, err)
 			compare(t, rawPayloadArgs.([]interface{})[counter], input.([]interface{})[counter])
 		}

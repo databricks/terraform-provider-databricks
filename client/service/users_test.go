@@ -81,7 +81,7 @@ func TestScimUserAPI_Update(t *testing.T) {
 		response       []string
 		responseStatus []int
 		args           []interface{}
-		wantUri        []string
+		wantURI        []string
 		wantErr        bool
 	}{
 		{
@@ -93,7 +93,7 @@ func TestScimUserAPI_Update(t *testing.T) {
 				"",
 			},
 			responseStatus: []int{http.StatusOK, http.StatusOK},
-			wantUri:        []string{"/api/2.0/preview/scim/v2/Users/101030?", "/api/2.0/preview/scim/v2/Users/101030"},
+			wantURI:        []string{"/api/2.0/preview/scim/v2/Users/101030?", "/api/2.0/preview/scim/v2/Users/101030"},
 			args: []interface{}{
 				nil,
 				&args{
@@ -112,7 +112,7 @@ func TestScimUserAPI_Update(t *testing.T) {
 				"",
 			},
 			responseStatus: []int{http.StatusBadRequest, http.StatusOK},
-			wantUri:        []string{"/api/2.0/preview/scim/v2/Users/101030?", "/api/2.0/preview/scim/v2/Users/101030"},
+			wantURI:        []string{"/api/2.0/preview/scim/v2/Users/101030?", "/api/2.0/preview/scim/v2/Users/101030"},
 			args: []interface{}{
 				nil,
 				&args{
@@ -128,7 +128,7 @@ func TestScimUserAPI_Update(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			AssertMultipleRequestsWithMockServer(t, tt.args, []string{http.MethodGet, http.MethodPut}, tt.wantUri, []interface{}{nil, &args{}}, tt.response, tt.responseStatus, nil, tt.wantErr, func(client DBApiClient) (interface{}, error) {
+			AssertMultipleRequestsWithMockServer(t, tt.args, []string{http.MethodGet, http.MethodPut}, tt.wantURI, []interface{}{nil, &args{}}, tt.response, tt.responseStatus, nil, tt.wantErr, func(client DBApiClient) (interface{}, error) {
 				return nil, client.Users().Update("101030", tt.args[1].(*args).UserName, tt.args[1].(*args).DisplayName, []string{string(tt.args[1].(*args).Entitlements[0].Value)}, []string{tt.args[1].(*args).Roles[0].Value})
 			})
 		})
@@ -137,13 +137,13 @@ func TestScimUserAPI_Update(t *testing.T) {
 
 func TestScimUserAPI_Delete(t *testing.T) {
 	type args struct {
-		UserId string `json:"user_id,omitempty"`
+		UserID string `json:"user_id,omitempty"`
 	}
 	tests := []struct {
 		name           string
 		response       string
 		responseStatus int
-		requestUri     string
+		requestURI     string
 		args           args
 		want           interface{}
 		wantErr        bool
@@ -153,9 +153,9 @@ func TestScimUserAPI_Delete(t *testing.T) {
 			response:       "",
 			responseStatus: http.StatusOK,
 			args: args{
-				UserId: "10030",
+				UserID: "10030",
 			},
-			requestUri: "/api/2.0/preview/scim/v2/Users/10030",
+			requestURI: "/api/2.0/preview/scim/v2/Users/10030",
 			want:       nil,
 			wantErr:    false,
 		},
@@ -164,9 +164,9 @@ func TestScimUserAPI_Delete(t *testing.T) {
 			response:       "",
 			responseStatus: http.StatusBadRequest,
 			args: args{
-				UserId: "10030",
+				UserID: "10030",
 			},
-			requestUri: "/api/2.0/preview/scim/v2/Users/10030",
+			requestURI: "/api/2.0/preview/scim/v2/Users/10030",
 			want:       nil,
 			wantErr:    true,
 		},
@@ -174,8 +174,8 @@ func TestScimUserAPI_Delete(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var input args
-			AssertRequestWithMockServer(t, &tt.args, http.MethodDelete, tt.requestUri, &input, tt.response, tt.responseStatus, tt.want, tt.wantErr, func(client DBApiClient) (interface{}, error) {
-				return nil, client.Users().Delete(tt.args.UserId)
+			AssertRequestWithMockServer(t, &tt.args, http.MethodDelete, tt.requestURI, &input, tt.response, tt.responseStatus, tt.want, tt.wantErr, func(client DBApiClient) (interface{}, error) {
+				return nil, client.Users().Delete(tt.args.UserID)
 			})
 		})
 	}
@@ -183,14 +183,14 @@ func TestScimUserAPI_Delete(t *testing.T) {
 
 func TestScimUserAPI_SetUserAsAdmin(t *testing.T) {
 	type args struct {
-		UserId       string `json:"user_id,omitempty"`
-		AdminGroupId string `json:"user_id,omitempty"`
+		UserID       string `json:"user_id,omitempty"`
+		AdminGroupID string `json:"user_id,omitempty"`
 	}
 	tests := []struct {
 		name           string
 		response       string
 		responseStatus int
-		requestUri     string
+		requestURI     string
 		args           args
 		want           interface{}
 		wantErr        bool
@@ -200,10 +200,10 @@ func TestScimUserAPI_SetUserAsAdmin(t *testing.T) {
 			response:       "",
 			responseStatus: http.StatusOK,
 			args: args{
-				UserId:       "10030",
-				AdminGroupId: "10000",
+				UserID:       "10030",
+				AdminGroupID: "10000",
 			},
-			requestUri: "/api/2.0/preview/scim/v2/Users/10030",
+			requestURI: "/api/2.0/preview/scim/v2/Users/10030",
 			want:       nil,
 			wantErr:    false,
 		},
@@ -212,10 +212,10 @@ func TestScimUserAPI_SetUserAsAdmin(t *testing.T) {
 			response:       "",
 			responseStatus: http.StatusBadRequest,
 			args: args{
-				UserId:       "10030",
-				AdminGroupId: "10000",
+				UserID:       "10030",
+				AdminGroupID: "10000",
 			},
-			requestUri: "/api/2.0/preview/scim/v2/Users/10030",
+			requestURI: "/api/2.0/preview/scim/v2/Users/10030",
 			want:       nil,
 			wantErr:    true,
 		},
@@ -228,12 +228,12 @@ func TestScimUserAPI_SetUserAsAdmin(t *testing.T) {
 				Operations: []model.UserPatchOperations{
 					{
 						Op:    "add",
-						Value: &model.GroupsValue{Groups: []model.ValueListItem{model.ValueListItem{Value: tt.args.AdminGroupId}}},
+						Value: &model.GroupsValue{Groups: []model.ValueListItem{model.ValueListItem{Value: tt.args.AdminGroupID}}},
 					},
 				},
 			}
-			AssertRequestWithMockServer(t, &expectedPatchRequest, http.MethodPatch, tt.requestUri, &input, tt.response, tt.responseStatus, tt.want, tt.wantErr, func(client DBApiClient) (interface{}, error) {
-				return nil, client.Users().SetUserAsAdmin(tt.args.UserId, tt.args.AdminGroupId)
+			AssertRequestWithMockServer(t, &expectedPatchRequest, http.MethodPatch, tt.requestURI, &input, tt.response, tt.responseStatus, tt.want, tt.wantErr, func(client DBApiClient) (interface{}, error) {
+				return nil, client.Users().SetUserAsAdmin(tt.args.UserID, tt.args.AdminGroupID)
 			})
 		})
 	}
@@ -241,14 +241,14 @@ func TestScimUserAPI_SetUserAsAdmin(t *testing.T) {
 
 func TestScimUserAPI_VerifyUserAsAdmin(t *testing.T) {
 	type args struct {
-		UserId       string `json:"user_id,omitempty"`
-		AdminGroupId string `json:"user_id,omitempty"`
+		UserID       string `json:"user_id,omitempty"`
+		AdminGroupID string `json:"user_id,omitempty"`
 	}
 	tests := []struct {
 		name           string
 		response       string
 		responseStatus int
-		requestUri     string
+		requestURI     string
 		args           args
 		want           interface{}
 		wantErr        bool
@@ -279,10 +279,10 @@ func TestScimUserAPI_VerifyUserAsAdmin(t *testing.T) {
 								}`,
 			responseStatus: http.StatusOK,
 			args: args{
-				UserId:       "10030",
-				AdminGroupId: "100002",
+				UserID:       "10030",
+				AdminGroupID: "100002",
 			},
-			requestUri: "/api/2.0/preview/scim/v2/Users/10030?",
+			requestURI: "/api/2.0/preview/scim/v2/Users/10030?",
 			want:       true,
 			wantErr:    false,
 		},
@@ -312,10 +312,10 @@ func TestScimUserAPI_VerifyUserAsAdmin(t *testing.T) {
 								}`,
 			responseStatus: http.StatusOK,
 			args: args{
-				UserId:       "10030",
-				AdminGroupId: "10000",
+				UserID:       "10030",
+				AdminGroupID: "10000",
 			},
-			requestUri: "/api/2.0/preview/scim/v2/Users/10030?",
+			requestURI: "/api/2.0/preview/scim/v2/Users/10030?",
 			want:       false,
 			wantErr:    false,
 		},
@@ -324,10 +324,10 @@ func TestScimUserAPI_VerifyUserAsAdmin(t *testing.T) {
 			response:       "{}",
 			responseStatus: http.StatusBadRequest,
 			args: args{
-				UserId:       "10030",
-				AdminGroupId: "10000",
+				UserID:       "10030",
+				AdminGroupID: "10000",
 			},
-			requestUri: "/api/2.0/preview/scim/v2/Users/10030?",
+			requestURI: "/api/2.0/preview/scim/v2/Users/10030?",
 			want:       false,
 			wantErr:    true,
 		},
@@ -340,12 +340,12 @@ func TestScimUserAPI_VerifyUserAsAdmin(t *testing.T) {
 				Operations: []model.UserPatchOperations{
 					{
 						Op:    "add",
-						Value: &model.GroupsValue{Groups: []model.ValueListItem{model.ValueListItem{Value: tt.args.AdminGroupId}}},
+						Value: &model.GroupsValue{Groups: []model.ValueListItem{model.ValueListItem{Value: tt.args.AdminGroupID}}},
 					},
 				},
 			}
-			AssertRequestWithMockServer(t, &expectedPatchRequest, http.MethodGet, tt.requestUri, &input, tt.response, tt.responseStatus, tt.want, tt.wantErr, func(client DBApiClient) (interface{}, error) {
-				return client.Users().VerifyUserAsAdmin(tt.args.UserId, tt.args.AdminGroupId)
+			AssertRequestWithMockServer(t, &expectedPatchRequest, http.MethodGet, tt.requestURI, &input, tt.response, tt.responseStatus, tt.want, tt.wantErr, func(client DBApiClient) (interface{}, error) {
+				return client.Users().VerifyUserAsAdmin(tt.args.UserID, tt.args.AdminGroupID)
 			})
 		})
 	}
@@ -353,14 +353,14 @@ func TestScimUserAPI_VerifyUserAsAdmin(t *testing.T) {
 
 func TestScimUserAPI_RemoveUserAsAdmin(t *testing.T) {
 	type args struct {
-		UserId       string `json:"user_id,omitempty"`
-		AdminGroupId string `json:"user_id,omitempty"`
+		UserID       string `json:"user_id,omitempty"`
+		AdminGroupID string `json:"user_id,omitempty"`
 	}
 	tests := []struct {
 		name           string
 		response       string
 		responseStatus int
-		requestUri     string
+		requestURI     string
 		args           args
 		want           interface{}
 		wantErr        bool
@@ -370,10 +370,10 @@ func TestScimUserAPI_RemoveUserAsAdmin(t *testing.T) {
 			response:       "",
 			responseStatus: http.StatusOK,
 			args: args{
-				UserId:       "10030",
-				AdminGroupId: "10000",
+				UserID:       "10030",
+				AdminGroupID: "10000",
 			},
-			requestUri: "/api/2.0/preview/scim/v2/Users/10030",
+			requestURI: "/api/2.0/preview/scim/v2/Users/10030",
 			want:       nil,
 			wantErr:    false,
 		},
@@ -382,10 +382,10 @@ func TestScimUserAPI_RemoveUserAsAdmin(t *testing.T) {
 			response:       "",
 			responseStatus: http.StatusBadRequest,
 			args: args{
-				UserId:       "10030",
-				AdminGroupId: "10000",
+				UserID:       "10030",
+				AdminGroupID: "10000",
 			},
-			requestUri: "/api/2.0/preview/scim/v2/Users/10030",
+			requestURI: "/api/2.0/preview/scim/v2/Users/10030",
 			want:       nil,
 			wantErr:    true,
 		},
@@ -398,12 +398,12 @@ func TestScimUserAPI_RemoveUserAsAdmin(t *testing.T) {
 				Operations: []model.UserPatchOperations{
 					{
 						Op:   "remove",
-						Path: fmt.Sprintf("groups[value eq \"%s\"]", tt.args.AdminGroupId),
+						Path: fmt.Sprintf("groups[value eq \"%s\"]", tt.args.AdminGroupID),
 					},
 				},
 			}
-			AssertRequestWithMockServer(t, &expectedPatchRequest, http.MethodPatch, tt.requestUri, &input, tt.response, tt.responseStatus, tt.want, tt.wantErr, func(client DBApiClient) (interface{}, error) {
-				return nil, client.Users().RemoveUserAsAdmin(tt.args.UserId, tt.args.AdminGroupId)
+			AssertRequestWithMockServer(t, &expectedPatchRequest, http.MethodPatch, tt.requestURI, &input, tt.response, tt.responseStatus, tt.want, tt.wantErr, func(client DBApiClient) (interface{}, error) {
+				return nil, client.Users().RemoveUserAsAdmin(tt.args.UserID, tt.args.AdminGroupID)
 			})
 		})
 	}
@@ -411,14 +411,14 @@ func TestScimUserAPI_RemoveUserAsAdmin(t *testing.T) {
 
 func TestScimUserAPI_Read(t *testing.T) {
 	type args struct {
-		UserId string `json:"user_id"`
+		UserID string `json:"user_id"`
 	}
 	tests := []struct {
 		name           string
 		response       []string
 		responseStatus []int
 		args           []args
-		wantUri        []string
+		wantURI        []string
 		want           model.User
 		wantErr        bool
 	}{
@@ -490,10 +490,10 @@ func TestScimUserAPI_Read(t *testing.T) {
 			responseStatus: []int{http.StatusOK, http.StatusOK, http.StatusOK},
 			args: []args{
 				{
-					UserId: "101030",
+					UserID: "101030",
 				},
 			},
-			wantUri: []string{"/api/2.0/preview/scim/v2/Users/101030?", "/api/2.0/preview/scim/v2/Groups/100002?", "/api/2.0/preview/scim/v2/Groups/101355?"},
+			wantURI: []string{"/api/2.0/preview/scim/v2/Users/101030?", "/api/2.0/preview/scim/v2/Groups/100002?", "/api/2.0/preview/scim/v2/Groups/101355?"},
 			want: model.User{
 				ID:          "101030",
 				DisplayName: "test.user@databricks.com",
@@ -535,10 +535,10 @@ func TestScimUserAPI_Read(t *testing.T) {
 			responseStatus: []int{http.StatusBadRequest},
 			args: []args{
 				{
-					UserId: "101030",
+					UserID: "101030",
 				},
 			},
-			wantUri: []string{"/api/2.0/preview/scim/v2/Users/101030?"},
+			wantURI: []string{"/api/2.0/preview/scim/v2/Users/101030?"},
 			want:    model.User{},
 			wantErr: true,
 		},
@@ -550,10 +550,10 @@ func TestScimUserAPI_Read(t *testing.T) {
 			responseStatus: []int{http.StatusOK},
 			args: []args{
 				{
-					UserId: "101030",
+					UserID: "101030",
 				},
 			},
-			wantUri: []string{"/api/2.0/preview/scim/v2/Users/101030?"},
+			wantURI: []string{"/api/2.0/preview/scim/v2/Users/101030?"},
 			want:    model.User{},
 			wantErr: true,
 		},
@@ -586,10 +586,10 @@ func TestScimUserAPI_Read(t *testing.T) {
 			responseStatus: []int{http.StatusOK, http.StatusBadRequest},
 			args: []args{
 				{
-					UserId: "101030",
+					UserID: "101030",
 				},
 			},
-			wantUri: []string{"/api/2.0/preview/scim/v2/Users/101030?", "/api/2.0/preview/scim/v2/Groups/100002?"},
+			wantURI: []string{"/api/2.0/preview/scim/v2/Users/101030?", "/api/2.0/preview/scim/v2/Groups/100002?"},
 			want: model.User{
 				ID:          "101030",
 				DisplayName: "test.user@databricks.com",
@@ -614,8 +614,8 @@ func TestScimUserAPI_Read(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var input args
-			AssertMultipleRequestsWithMockServer(t, tt.args, []string{http.MethodGet, http.MethodGet, http.MethodGet}, tt.wantUri, []args{input}, tt.response, tt.responseStatus, tt.want, tt.wantErr, func(client DBApiClient) (interface{}, error) {
-				return client.Users().Read(tt.args[0].UserId)
+			AssertMultipleRequestsWithMockServer(t, tt.args, []string{http.MethodGet, http.MethodGet, http.MethodGet}, tt.wantURI, []args{input}, tt.response, tt.responseStatus, tt.want, tt.wantErr, func(client DBApiClient) (interface{}, error) {
+				return client.Users().Read(tt.args[0].UserID)
 			})
 		})
 	}

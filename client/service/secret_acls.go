@@ -6,7 +6,7 @@ import (
 	"net/http"
 )
 
-// SecretsAPI exposes the Secrets API
+// SecretAclsAPI exposes the Secret ACL API
 type SecretAclsAPI struct {
 	Client DBApiClient
 }

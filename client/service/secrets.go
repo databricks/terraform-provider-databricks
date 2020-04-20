@@ -2,7 +2,6 @@ package service
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"github.com/databrickslabs/databricks-terraform/client/model"
 	"net/http"
@@ -13,7 +12,7 @@ type SecretsAPI struct {
 	Client DBApiClient
 }
 
-// PutSecretString creates or modifies a string secret depends on the type of scope backend
+// Create creates or modifies a string secret depends on the type of scope backend
 func (a SecretsAPI) Create(stringValue, scope, key string) error {
 	data := struct {
 		StringValue string `json:"string_value,omitempty" mask:"true"`
@@ -28,7 +27,7 @@ func (a SecretsAPI) Create(stringValue, scope, key string) error {
 	return err
 }
 
-// DeleteSecret deletes a secret depends on the type of scope backend
+// Delete deletes a secret depends on the type of scope backend
 func (a SecretsAPI) Delete(scope, key string) error {
 	data := struct {
 		Scope string `json:"scope,omitempty"`
@@ -41,7 +40,7 @@ func (a SecretsAPI) Delete(scope, key string) error {
 	return err
 }
 
-// ListSecrets lists the secret keys that are stored at this scope
+// List lists the secret keys that are stored at this scope
 func (a SecretsAPI) List(scope string) ([]model.SecretMetadata, error) {
 	var secretsList struct {
 		Secrets []model.SecretMetadata `json:"secrets,omitempty"`
@@ -62,6 +61,7 @@ func (a SecretsAPI) List(scope string) ([]model.SecretMetadata, error) {
 	return secretsList.Secrets, err
 }
 
+// Read returns the metadata for the secret and not the contents of the secret
 func (a SecretsAPI) Read(scope string, key string) (model.SecretMetadata, error) {
 	var secretMeta model.SecretMetadata
 	secrets, err := a.List(scope)
@@ -73,5 +73,5 @@ func (a SecretsAPI) Read(scope string, key string) (model.SecretMetadata, error)
 			return secret, nil
 		}
 	}
-	return secretMeta, errors.New(fmt.Sprintf("No Secret Scope found with secret metadata scope name: %s and key: %s.", scope, key))
+	return secretMeta, fmt.Errorf("no Secret Scope found with secret metadata scope name: %s and key: %s", scope, key)
 }

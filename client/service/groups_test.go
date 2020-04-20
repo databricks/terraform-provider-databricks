@@ -124,7 +124,7 @@ func TestScimGroupAPI_Patch(t *testing.T) {
 		}
 		response       string
 		args           args
-		requestUri     string
+		requestURI     string
 		responseStatus int
 		want           interface{}
 		wantErr        bool
@@ -152,7 +152,7 @@ func TestScimGroupAPI_Patch(t *testing.T) {
 					},
 				},
 			},
-			requestUri:     "/api/2.0/preview/scim/v2/Groups/my-group-id",
+			requestURI:     "/api/2.0/preview/scim/v2/Groups/my-group-id",
 			responseStatus: http.StatusOK,
 			want:           nil,
 			wantErr:        false,
@@ -181,7 +181,7 @@ func TestScimGroupAPI_Patch(t *testing.T) {
 				removeList []string
 				path       model.GroupPathType
 			}{groupID: "my-group-id", addList: []string{"100"}, removeList: []string{"200"}, path: model.GroupMembersPath},
-			requestUri:     "/api/2.0/preview/scim/v2/Groups/my-group-id",
+			requestURI:     "/api/2.0/preview/scim/v2/Groups/my-group-id",
 			responseStatus: http.StatusBadRequest,
 			wantErr:        true,
 		},
@@ -189,7 +189,7 @@ func TestScimGroupAPI_Patch(t *testing.T) {
 	for _, tt := range tests {
 		var input args
 		t.Run(tt.name, func(t *testing.T) {
-			AssertRequestWithMockServer(t, &tt.args, http.MethodPatch, tt.requestUri, &input, tt.response, tt.responseStatus, tt.want, tt.wantErr, func(client DBApiClient) (interface{}, error) {
+			AssertRequestWithMockServer(t, &tt.args, http.MethodPatch, tt.requestURI, &input, tt.response, tt.responseStatus, tt.want, tt.wantErr, func(client DBApiClient) (interface{}, error) {
 				return nil, client.Groups().Patch(tt.params.groupID, tt.params.addList, tt.params.removeList, tt.params.path)
 			})
 		})
@@ -198,13 +198,13 @@ func TestScimGroupAPI_Patch(t *testing.T) {
 
 func TestScimGroupAPI_Delete(t *testing.T) {
 	type args struct {
-		GroupId string `json:"user_id,omitempty"`
+		GroupID string `json:"user_id,omitempty"`
 	}
 	tests := []struct {
 		name           string
 		response       string
 		responseStatus int
-		requestUri     string
+		requestURI     string
 		args           args
 		want           interface{}
 		wantErr        bool
@@ -214,9 +214,9 @@ func TestScimGroupAPI_Delete(t *testing.T) {
 			response:       "",
 			responseStatus: http.StatusOK,
 			args: args{
-				GroupId: "10030",
+				GroupID: "10030",
 			},
-			requestUri: "/api/2.0/preview/scim/v2/Groups/10030",
+			requestURI: "/api/2.0/preview/scim/v2/Groups/10030",
 			want:       nil,
 			wantErr:    false,
 		},
@@ -225,9 +225,9 @@ func TestScimGroupAPI_Delete(t *testing.T) {
 			response:       "",
 			responseStatus: http.StatusBadRequest,
 			args: args{
-				GroupId: "10030",
+				GroupID: "10030",
 			},
-			requestUri: "/api/2.0/preview/scim/v2/Groups/10030",
+			requestURI: "/api/2.0/preview/scim/v2/Groups/10030",
 			want:       nil,
 			wantErr:    true,
 		},
@@ -235,8 +235,8 @@ func TestScimGroupAPI_Delete(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var input args
-			AssertRequestWithMockServer(t, &tt.args, http.MethodDelete, tt.requestUri, &input, tt.response, tt.responseStatus, tt.want, tt.wantErr, func(client DBApiClient) (interface{}, error) {
-				return nil, client.Groups().Delete(tt.args.GroupId)
+			AssertRequestWithMockServer(t, &tt.args, http.MethodDelete, tt.requestURI, &input, tt.response, tt.responseStatus, tt.want, tt.wantErr, func(client DBApiClient) (interface{}, error) {
+				return nil, client.Groups().Delete(tt.args.GroupID)
 			})
 		})
 	}

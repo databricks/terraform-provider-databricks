@@ -6,11 +6,12 @@ import (
 	"net/http"
 )
 
-// TokensAPI exposes the Secrets API
+// JobsAPI exposes the Jobs API
 type JobsAPI struct {
 	Client DBApiClient
 }
 
+// Create creates a job on the workspace given the job settings
 func (a JobsAPI) Create(jobSettings model.JobSettings) (model.Job, error) {
 	var job model.Job
 	resp, err := a.Client.performQuery(http.MethodPost, "/jobs/create", "2.0", nil, jobSettings, nil)
@@ -22,19 +23,21 @@ func (a JobsAPI) Create(jobSettings model.JobSettings) (model.Job, error) {
 	return job, err
 }
 
-func (a JobsAPI) Update(jobId int64, jobSettings model.JobSettings) error {
+// Update updates a job given the id and a new set of job settings
+func (a JobsAPI) Update(jobID int64, jobSettings model.JobSettings) error {
 	jobResetRequest := struct {
-		JobId       int64              `json:"job_id,omitempty" url:"job_id,omitempty"`
+		JobID       int64              `json:"job_id,omitempty" url:"job_id,omitempty"`
 		NewSettings *model.JobSettings `json:"new_settings,omitempty" url:"new_settings,omitempty"`
-	}{JobId: jobId, NewSettings: &jobSettings}
+	}{JobID: jobID, NewSettings: &jobSettings}
 	_, err := a.Client.performQuery(http.MethodPost, "/jobs/reset", "2.0", nil, jobResetRequest, nil)
 	return err
 }
 
-func (a JobsAPI) Read(jobId int64) (model.Job, error) {
+// Read returns the job object with all the attributes
+func (a JobsAPI) Read(jobID int64) (model.Job, error) {
 	jobGetRequest := struct {
-		JobId int64 `json:"job_id,omitempty" url:"job_id,omitempty"`
-	}{JobId: jobId}
+		JobID int64 `json:"job_id,omitempty" url:"job_id,omitempty"`
+	}{JobID: jobID}
 
 	var job model.Job
 
@@ -48,10 +51,11 @@ func (a JobsAPI) Read(jobId int64) (model.Job, error) {
 	return job, err
 }
 
-func (a JobsAPI) Delete(jobId int64) error {
+// Delete deletes the job given a job id
+func (a JobsAPI) Delete(jobID int64) error {
 	jobDeleteRequest := struct {
-		JobId int64 `json:"job_id,omitempty" url:"job_id,omitempty"`
-	}{JobId: jobId}
+		JobID int64 `json:"job_id,omitempty" url:"job_id,omitempty"`
+	}{JobID: jobID}
 
 	_, err := a.Client.performQuery(http.MethodPost, "/jobs/delete", "2.0", nil, jobDeleteRequest, nil)
 

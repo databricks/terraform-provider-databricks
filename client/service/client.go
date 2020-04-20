@@ -14,13 +14,16 @@ import (
 	"time"
 )
 
+// CloudServiceProvider is a custom type for different types of cloud service providers
 type CloudServiceProvider string
 
+// List of CloudServiceProviders Databricks is available on
 const (
 	AWS   CloudServiceProvider = "AmazonWebServices"
 	Azure CloudServiceProvider = "Azure"
 )
 
+// DBApiErrorBody is a struct for a custom api error for all the services on databrickss.
 type DBApiErrorBody struct {
 	ErrorCode string `json:"error_code,omitempty"`
 	Message   string `json:"message,omitempty"`
@@ -29,18 +32,22 @@ type DBApiErrorBody struct {
 	ScimStatus string `json:"status,omitempty"`
 }
 
+// DBApiError is a generic struct for an api error on databricks
 type DBApiError struct {
 	ErrorBody  *DBApiErrorBody
 	StatusCode int
 	Err        error
 }
 
+// Error is a interface implementation of the error interface.
 func (r DBApiError) Error() string {
 	return fmt.Sprintf("status %d: err %v", r.StatusCode, r.Err)
 }
 
+// AuthType is a custom type for a type of authentication allowed on Databricks
 type AuthType string
 
+// List of AuthTypes supported by this go sdk.
 const (
 	BasicAuth AuthType = "BASIC"
 )
@@ -131,19 +138,18 @@ func (c DBApiClientConfig) getRequestURI(path string, apiVersion string) (string
 func onlyNBytes(j string, numBytes int64) string {
 	if len([]byte(j)) > int(numBytes) {
 		return string([]byte(j)[:numBytes])
-	} else {
-		return j
 	}
+	return j
 }
 
 func auditNonGetPayload(method string, uri string, object interface{}, mask *SecretsMask) {
 	logStmt := struct {
 		Method  string
-		Uri     string
+		URI     string
 		Payload interface{}
 	}{
 		Method:  method,
-		Uri:     uri,
+		URI:     uri,
 		Payload: object,
 	}
 	jsonStr, _ := json.Marshal(Mask(logStmt))
@@ -157,10 +163,10 @@ func auditNonGetPayload(method string, uri string, object interface{}, mask *Sec
 func auditGetPayload(uri string, mask *SecretsMask) {
 	logStmt := struct {
 		Method string
-		Uri    string
+		URI    string
 	}{
 		Method: "GET",
-		Uri:    uri,
+		URI:    uri,
 	}
 	jsonStr, _ := json.Marshal(Mask(logStmt))
 	if mask != nil {
@@ -170,7 +176,9 @@ func auditGetPayload(uri string, mask *SecretsMask) {
 	}
 }
 
-func PerformQuery(config *DBApiClientConfig, method, path string, apiVersion string, headers map[string]string, marshalJson bool, useRawPath bool, data interface{}, secretsMask *SecretsMask) (body []byte, err error) {
+// PerformQuery is a generic function that accepts a config, method, path, apiversion, headers,
+// and some flags to perform query against the Databricks api
+func PerformQuery(config *DBApiClientConfig, method, path string, apiVersion string, headers map[string]string, marshalJSON bool, useRawPath bool, data interface{}, secretsMask *SecretsMask) (body []byte, err error) {
 	var requestURL string
 	if useRawPath {
 		requestURL = path
@@ -199,7 +207,7 @@ func PerformQuery(config *DBApiClientConfig, method, path string, apiVersion str
 		auditGetPayload(requestURL, secretsMask)
 
 	} else {
-		if marshalJson {
+		if marshalJSON {
 			bodyBytes, err := json.Marshal(data)
 			if err != nil {
 				return nil, err

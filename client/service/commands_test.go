@@ -9,21 +9,21 @@ import (
 func TestCommandsAPI_Execute(t *testing.T) {
 	type context struct {
 		Language  string `json:"language,omitempty"`
-		ClusterId string `json:"clusterId,omitempty"`
+		ClusterID string `json:"clusterId,omitempty"`
 	}
 	type command struct {
 		Language  string `json:"language,omitempty"`
-		ClusterId string `json:"clusterId,omitempty"`
-		ContextId string `json:"contextId,omitempty"`
+		ClusterID string `json:"clusterId,omitempty"`
+		ContextID string `json:"contextId,omitempty"`
 		Command   string `json:"command,omitempty"`
 	}
 	type contextDelete struct {
-		ContextId string `json:"contextId,omitempty" url:"contextId,omitempty"`
-		ClusterId string `json:"clusterId,omitempty" url:"clusterId,omitempty"`
+		ContextID string `json:"contextId,omitempty" url:"contextId,omitempty"`
+		ClusterID string `json:"clusterId,omitempty" url:"clusterId,omitempty"`
 	}
 
 	type params struct {
-		ClusterId  string `json:"cluster_id,omitempty" url:"cluster_id,omitempty"`
+		ClusterID  string `json:"cluster_id,omitempty" url:"cluster_id,omitempty"`
 		Language   string `json:"language,omitempty" url:"language,omitempty"`
 		CommandStr string `json:"command_str,omitempty" url:"command_str,omitempty"`
 	}
@@ -35,14 +35,14 @@ func TestCommandsAPI_Execute(t *testing.T) {
 		requestMethod    []string
 		postStructExpect []interface{}
 		args             []interface{}
-		wantUri          []string
+		wantURI          []string
 		want             interface{}
 		wantErr          bool
 	}{
 		{
 			name: "Execute test",
 			params: params{
-				ClusterId:  "my-cluster-id",
+				ClusterID:  "my-cluster-id",
 				Language:   "python",
 				CommandStr: `print("hello world")`,
 			},
@@ -74,20 +74,20 @@ func TestCommandsAPI_Execute(t *testing.T) {
 			args: []interface{}{
 				&context{
 					Language:  "python",
-					ClusterId: "my-cluster-id",
+					ClusterID: "my-cluster-id",
 				},
 				nil,
 				&command{
 					Language:  "python",
-					ClusterId: "my-cluster-id",
-					ContextId: "my-context-id",
+					ClusterID: "my-cluster-id",
+					ContextID: "my-context-id",
 					Command:   `print("hello world")`,
 				},
 				nil,
 				nil,
 				&contextDelete{
-					ContextId: "my-context-id",
-					ClusterId: "my-cluster-id",
+					ContextID: "my-context-id",
+					ClusterID: "my-cluster-id",
 				},
 			},
 			postStructExpect: []interface{}{
@@ -98,7 +98,7 @@ func TestCommandsAPI_Execute(t *testing.T) {
 				nil,
 				&contextDelete{},
 			},
-			wantUri: []string{"/api/1.2/contexts/create",
+			wantURI: []string{"/api/1.2/contexts/create",
 				"/api/1.2/contexts/status?clusterId=my-cluster-id&contextId=my-context-id",
 				"/api/1.2/commands/execute",
 				"/api/1.2/commands/status?clusterId=my-cluster-id&commandId=my-command-id&contextId=my-context-id",
@@ -116,7 +116,7 @@ func TestCommandsAPI_Execute(t *testing.T) {
 		{
 			name: "Execute context failure test",
 			params: params{
-				ClusterId:  "my-cluster-id",
+				ClusterID:  "my-cluster-id",
 				Language:   "python",
 				CommandStr: `print("hello world")`,
 			},
@@ -148,20 +148,20 @@ func TestCommandsAPI_Execute(t *testing.T) {
 			args: []interface{}{
 				&context{
 					Language:  "python",
-					ClusterId: "my-cluster-id",
+					ClusterID: "my-cluster-id",
 				},
 				nil,
 				&command{
 					Language:  "python",
-					ClusterId: "my-cluster-id",
-					ContextId: "my-context-id",
+					ClusterID: "my-cluster-id",
+					ContextID: "my-context-id",
 					Command:   `print("hello world")`,
 				},
 				nil,
 				nil,
 				&contextDelete{
-					ContextId: "my-context-id",
-					ClusterId: "my-cluster-id",
+					ContextID: "my-context-id",
+					ClusterID: "my-cluster-id",
 				},
 			},
 			postStructExpect: []interface{}{
@@ -172,7 +172,7 @@ func TestCommandsAPI_Execute(t *testing.T) {
 				nil,
 				&contextDelete{},
 			},
-			wantUri: []string{"/api/1.2/contexts/create",
+			wantURI: []string{"/api/1.2/contexts/create",
 				"/api/1.2/contexts/status?clusterId=my-cluster-id&contextId=my-context-id",
 				"/api/1.2/commands/execute",
 				"/api/1.2/commands/status?clusterId=my-cluster-id&commandId=my-command-id&contextId=my-context-id",
@@ -184,7 +184,7 @@ func TestCommandsAPI_Execute(t *testing.T) {
 		{
 			name: "Execute context status failure test",
 			params: params{
-				ClusterId:  "my-cluster-id",
+				ClusterID:  "my-cluster-id",
 				Language:   "python",
 				CommandStr: `print("hello world")`,
 			},
@@ -216,20 +216,20 @@ func TestCommandsAPI_Execute(t *testing.T) {
 			args: []interface{}{
 				&context{
 					Language:  "python",
-					ClusterId: "my-cluster-id",
+					ClusterID: "my-cluster-id",
 				},
 				nil,
 				&command{
 					Language:  "python",
-					ClusterId: "my-cluster-id",
-					ContextId: "my-context-id",
+					ClusterID: "my-cluster-id",
+					ContextID: "my-context-id",
 					Command:   `print("hello world")`,
 				},
 				nil,
 				nil,
 				&contextDelete{
-					ContextId: "my-context-id",
-					ClusterId: "my-cluster-id",
+					ContextID: "my-context-id",
+					ClusterID: "my-cluster-id",
 				},
 			},
 			postStructExpect: []interface{}{
@@ -240,7 +240,7 @@ func TestCommandsAPI_Execute(t *testing.T) {
 				nil,
 				&contextDelete{},
 			},
-			wantUri: []string{"/api/1.2/contexts/create",
+			wantURI: []string{"/api/1.2/contexts/create",
 				"/api/1.2/contexts/status?clusterId=my-cluster-id&contextId=my-context-id",
 				"/api/1.2/commands/execute",
 				"/api/1.2/commands/status?clusterId=my-cluster-id&commandId=my-command-id&contextId=my-context-id",
@@ -252,7 +252,7 @@ func TestCommandsAPI_Execute(t *testing.T) {
 		{
 			name: "Execute command create failure test",
 			params: params{
-				ClusterId:  "my-cluster-id",
+				ClusterID:  "my-cluster-id",
 				Language:   "python",
 				CommandStr: `print("hello world")`,
 			},
@@ -284,20 +284,20 @@ func TestCommandsAPI_Execute(t *testing.T) {
 			args: []interface{}{
 				&context{
 					Language:  "python",
-					ClusterId: "my-cluster-id",
+					ClusterID: "my-cluster-id",
 				},
 				nil,
 				&command{
 					Language:  "python",
-					ClusterId: "my-cluster-id",
-					ContextId: "my-context-id",
+					ClusterID: "my-cluster-id",
+					ContextID: "my-context-id",
 					Command:   `print("hello world")`,
 				},
 				nil,
 				nil,
 				&contextDelete{
-					ContextId: "my-context-id",
-					ClusterId: "my-cluster-id",
+					ContextID: "my-context-id",
+					ClusterID: "my-cluster-id",
 				},
 			},
 			postStructExpect: []interface{}{
@@ -308,7 +308,7 @@ func TestCommandsAPI_Execute(t *testing.T) {
 				nil,
 				&contextDelete{},
 			},
-			wantUri: []string{"/api/1.2/contexts/create",
+			wantURI: []string{"/api/1.2/contexts/create",
 				"/api/1.2/contexts/status?clusterId=my-cluster-id&contextId=my-context-id",
 				"/api/1.2/commands/execute",
 				"/api/1.2/commands/status?clusterId=my-cluster-id&commandId=my-command-id&contextId=my-context-id",
@@ -320,7 +320,7 @@ func TestCommandsAPI_Execute(t *testing.T) {
 		{
 			name: "Execute command status failure test",
 			params: params{
-				ClusterId:  "my-cluster-id",
+				ClusterID:  "my-cluster-id",
 				Language:   "python",
 				CommandStr: `print("hello world")`,
 			},
@@ -352,20 +352,20 @@ func TestCommandsAPI_Execute(t *testing.T) {
 			args: []interface{}{
 				&context{
 					Language:  "python",
-					ClusterId: "my-cluster-id",
+					ClusterID: "my-cluster-id",
 				},
 				nil,
 				&command{
 					Language:  "python",
-					ClusterId: "my-cluster-id",
-					ContextId: "my-context-id",
+					ClusterID: "my-cluster-id",
+					ContextID: "my-context-id",
 					Command:   `print("hello world")`,
 				},
 				nil,
 				nil,
 				&contextDelete{
-					ContextId: "my-context-id",
-					ClusterId: "my-cluster-id",
+					ContextID: "my-context-id",
+					ClusterID: "my-cluster-id",
 				},
 			},
 			postStructExpect: []interface{}{
@@ -376,7 +376,7 @@ func TestCommandsAPI_Execute(t *testing.T) {
 				nil,
 				&contextDelete{},
 			},
-			wantUri: []string{"/api/1.2/contexts/create",
+			wantURI: []string{"/api/1.2/contexts/create",
 				"/api/1.2/contexts/status?clusterId=my-cluster-id&contextId=my-context-id",
 				"/api/1.2/commands/execute",
 				"/api/1.2/commands/status?clusterId=my-cluster-id&commandId=my-command-id&contextId=my-context-id",
@@ -388,7 +388,7 @@ func TestCommandsAPI_Execute(t *testing.T) {
 		{
 			name: "Execute command results fetch failure test",
 			params: params{
-				ClusterId:  "my-cluster-id",
+				ClusterID:  "my-cluster-id",
 				Language:   "python",
 				CommandStr: `print("hello world")`,
 			},
@@ -420,20 +420,20 @@ func TestCommandsAPI_Execute(t *testing.T) {
 			args: []interface{}{
 				&context{
 					Language:  "python",
-					ClusterId: "my-cluster-id",
+					ClusterID: "my-cluster-id",
 				},
 				nil,
 				&command{
 					Language:  "python",
-					ClusterId: "my-cluster-id",
-					ContextId: "my-context-id",
+					ClusterID: "my-cluster-id",
+					ContextID: "my-context-id",
 					Command:   `print("hello world")`,
 				},
 				nil,
 				nil,
 				&contextDelete{
-					ContextId: "my-context-id",
-					ClusterId: "my-cluster-id",
+					ContextID: "my-context-id",
+					ClusterID: "my-cluster-id",
 				},
 			},
 			postStructExpect: []interface{}{
@@ -444,7 +444,7 @@ func TestCommandsAPI_Execute(t *testing.T) {
 				nil,
 				&contextDelete{},
 			},
-			wantUri: []string{"/api/1.2/contexts/create",
+			wantURI: []string{"/api/1.2/contexts/create",
 				"/api/1.2/contexts/status?clusterId=my-cluster-id&contextId=my-context-id",
 				"/api/1.2/commands/execute",
 				"/api/1.2/commands/status?clusterId=my-cluster-id&commandId=my-command-id&contextId=my-context-id",
@@ -456,7 +456,7 @@ func TestCommandsAPI_Execute(t *testing.T) {
 		{
 			name: "Execute context close failure test",
 			params: params{
-				ClusterId:  "my-cluster-id",
+				ClusterID:  "my-cluster-id",
 				Language:   "python",
 				CommandStr: `print("hello world")`,
 			},
@@ -488,20 +488,20 @@ func TestCommandsAPI_Execute(t *testing.T) {
 			args: []interface{}{
 				&context{
 					Language:  "python",
-					ClusterId: "my-cluster-id",
+					ClusterID: "my-cluster-id",
 				},
 				nil,
 				&command{
 					Language:  "python",
-					ClusterId: "my-cluster-id",
-					ContextId: "my-context-id",
+					ClusterID: "my-cluster-id",
+					ContextID: "my-context-id",
 					Command:   `print("hello world")`,
 				},
 				nil,
 				nil,
 				&contextDelete{
-					ContextId: "my-context-id",
-					ClusterId: "my-cluster-id",
+					ContextID: "my-context-id",
+					ClusterID: "my-cluster-id",
 				},
 			},
 			postStructExpect: []interface{}{
@@ -512,7 +512,7 @@ func TestCommandsAPI_Execute(t *testing.T) {
 				nil,
 				&contextDelete{},
 			},
-			wantUri: []string{"/api/1.2/contexts/create",
+			wantURI: []string{"/api/1.2/contexts/create",
 				"/api/1.2/contexts/status?clusterId=my-cluster-id&contextId=my-context-id",
 				"/api/1.2/commands/execute",
 				"/api/1.2/commands/status?clusterId=my-cluster-id&commandId=my-command-id&contextId=my-context-id",
@@ -530,7 +530,7 @@ func TestCommandsAPI_Execute(t *testing.T) {
 		{
 			name: "Execute context invalid state failure test",
 			params: params{
-				ClusterId:  "my-cluster-id",
+				ClusterID:  "my-cluster-id",
 				Language:   "python",
 				CommandStr: `print("hello world")`,
 			},
@@ -562,20 +562,20 @@ func TestCommandsAPI_Execute(t *testing.T) {
 			args: []interface{}{
 				&context{
 					Language:  "python",
-					ClusterId: "my-cluster-id",
+					ClusterID: "my-cluster-id",
 				},
 				nil,
 				&command{
 					Language:  "python",
-					ClusterId: "my-cluster-id",
-					ContextId: "my-context-id",
+					ClusterID: "my-cluster-id",
+					ContextID: "my-context-id",
 					Command:   `print("hello world")`,
 				},
 				nil,
 				nil,
 				&contextDelete{
-					ContextId: "my-context-id",
-					ClusterId: "my-cluster-id",
+					ContextID: "my-context-id",
+					ClusterID: "my-cluster-id",
 				},
 			},
 			postStructExpect: []interface{}{
@@ -586,7 +586,7 @@ func TestCommandsAPI_Execute(t *testing.T) {
 				nil,
 				&contextDelete{},
 			},
-			wantUri: []string{"/api/1.2/contexts/create",
+			wantURI: []string{"/api/1.2/contexts/create",
 				"/api/1.2/contexts/status?clusterId=my-cluster-id&contextId=my-context-id",
 				"/api/1.2/commands/execute",
 				"/api/1.2/commands/status?clusterId=my-cluster-id&commandId=my-command-id&contextId=my-context-id",
@@ -598,7 +598,7 @@ func TestCommandsAPI_Execute(t *testing.T) {
 		{
 			name: "Execute command invalid state failure test",
 			params: params{
-				ClusterId:  "my-cluster-id",
+				ClusterID:  "my-cluster-id",
 				Language:   "python",
 				CommandStr: `print("hello world")`,
 			},
@@ -630,20 +630,20 @@ func TestCommandsAPI_Execute(t *testing.T) {
 			args: []interface{}{
 				&context{
 					Language:  "python",
-					ClusterId: "my-cluster-id",
+					ClusterID: "my-cluster-id",
 				},
 				nil,
 				&command{
 					Language:  "python",
-					ClusterId: "my-cluster-id",
-					ContextId: "my-context-id",
+					ClusterID: "my-cluster-id",
+					ContextID: "my-context-id",
 					Command:   `print("hello world")`,
 				},
 				nil,
 				nil,
 				&contextDelete{
-					ContextId: "my-context-id",
-					ClusterId: "my-cluster-id",
+					ContextID: "my-context-id",
+					ClusterID: "my-cluster-id",
 				},
 			},
 			postStructExpect: []interface{}{
@@ -654,7 +654,7 @@ func TestCommandsAPI_Execute(t *testing.T) {
 				nil,
 				&contextDelete{},
 			},
-			wantUri: []string{"/api/1.2/contexts/create",
+			wantURI: []string{"/api/1.2/contexts/create",
 				"/api/1.2/contexts/status?clusterId=my-cluster-id&contextId=my-context-id",
 				"/api/1.2/commands/execute",
 				"/api/1.2/commands/status?clusterId=my-cluster-id&commandId=my-command-id&contextId=my-context-id",
@@ -666,8 +666,8 @@ func TestCommandsAPI_Execute(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			AssertMultipleRequestsWithMockServer(t, tt.args, tt.requestMethod, tt.wantUri, tt.postStructExpect, tt.response, tt.responseStatus, tt.want, tt.wantErr, func(client DBApiClient) (interface{}, error) {
-				return client.Commands().Execute(tt.params.ClusterId, tt.params.Language, tt.params.CommandStr)
+			AssertMultipleRequestsWithMockServer(t, tt.args, tt.requestMethod, tt.wantURI, tt.postStructExpect, tt.response, tt.responseStatus, tt.want, tt.wantErr, func(client DBApiClient) (interface{}, error) {
+				return client.Commands().Execute(tt.params.ClusterID, tt.params.Language, tt.params.CommandStr)
 			})
 		})
 	}

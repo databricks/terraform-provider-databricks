@@ -54,10 +54,10 @@ func TestSecretsScopesAclsIntegration(t *testing.T) {
 	assert.NoError(t, err, err)
 	assert.True(t, len(secretAcls) > 0, "Secrets acls are empty list")
 
-	secretAcl, err := client.SecretAcls().Read(testScope, testPrincipal)
+	secretACL, err := client.SecretAcls().Read(testScope, testPrincipal)
 	assert.NoError(t, err, err)
-	assert.Equal(t, testPrincipal, secretAcl.Principal, "Secret lookup does not yield same key")
-	assert.Equal(t, model.ACLPermissionManage, secretAcl.Permission, "Secret lookup does not yield same key")
+	assert.Equal(t, testPrincipal, secretACL.Principal, "Secret lookup does not yield same key")
+	assert.Equal(t, model.ACLPermissionManage, secretACL.Permission, "Secret lookup does not yield same key")
 
 	err = client.Secrets().Delete(testScope, testKey)
 	assert.NoError(t, err, err)

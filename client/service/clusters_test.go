@@ -25,7 +25,7 @@ func TestClustersAPI_Create(t *testing.T) {
 						}`,
 			responseStatus: http.StatusOK,
 			args: args{
-				ClusterId: "my-cluster-id",
+				ClusterID: "my-cluster-id",
 			},
 			want:    model.ClusterInfo{ClusterID: "my-cluster"},
 			wantErr: false,
@@ -35,7 +35,7 @@ func TestClustersAPI_Create(t *testing.T) {
 			response:       "",
 			responseStatus: http.StatusBadRequest,
 			args: args{
-				ClusterId: "my-cluster-id",
+				ClusterID: "my-cluster-id",
 			},
 			want:    model.ClusterInfo{},
 			wantErr: true,

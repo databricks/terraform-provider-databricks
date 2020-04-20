@@ -147,12 +147,12 @@ func TestNotebooksAPI_ListNonRecursive(t *testing.T) {
 			wantUri: "/api/2.0/workspace/list?path=%2Ftest%2Fpath",
 			want: []model.NotebookInfo{
 				{
-					ObjectId:   123,
+					ObjectID:   123,
 					ObjectType: model.Directory,
 					Path:       "/Users/user@example.com/project",
 				},
 				{
-					ObjectId:   456,
+					ObjectID:   456,
 					ObjectType: model.Notebook,
 					Language:   model.Python,
 					Path:       "/Users/user@example.com/PythonExampleNotebook",
@@ -223,13 +223,13 @@ func TestNotebooksAPI_ListRecursive(t *testing.T) {
 			wantUri: []string{"/api/2.0/workspace/list?path=%2Ftest%2Fpath", "/api/2.0/workspace/list?path=%2FUsers%2Fuser%40example.com%2Fproject"},
 			want: []model.NotebookInfo{
 				{
-					ObjectId:   457,
+					ObjectID:   457,
 					ObjectType: model.Notebook,
 					Language:   model.Python,
 					Path:       "/Users/user@example.com/Notebook2",
 				},
 				{
-					ObjectId:   456,
+					ObjectID:   456,
 					ObjectType: model.Notebook,
 					Language:   model.Python,
 					Path:       "/Users/user@example.com/PythonExampleNotebook",
@@ -303,7 +303,7 @@ func TestNotebooksAPI_Read(t *testing.T) {
 			},
 			responseStatus: http.StatusOK,
 			want: model.NotebookInfo{
-				ObjectId:   789,
+				ObjectID:   789,
 				ObjectType: model.Notebook,
 				Path:       "/Users/user@example.com/project/ScalaExampleNotebook",
 				Language:   model.Scala,

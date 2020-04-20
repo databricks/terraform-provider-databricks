@@ -1,34 +1,37 @@
 package model
 
+// ScopeBackendType is a custom type for the backend type for secret scopes
 type ScopeBackendType string
 
+// List of constants of ScopeBackendType
 const (
 	ScopeBackendTypeDatabricks ScopeBackendType = "DATABRICKS"
 )
 
+// SecretScope is a struct that encapsulates the secret scope
 type SecretScope struct {
 	Name        string           `json:"name,omitempty"`
 	BackendType ScopeBackendType `json:"backend_type,omitempty"`
 }
 
+// SecretMetadata is a struct that encapsulates the metadata for a secret object in a scope
 type SecretMetadata struct {
 	Key                  string `json:"key,omitempty"`
 	LastUpdatedTimestamp int64  `json:"last_updated_timestamp,omitempty"`
 }
 
-type AclPermission string
+// ACLPermission is a custom type for acl permissions
+type ACLPermission string
 
+// List of possible ACL Permissions on Databricks
 const (
-	AclPermissionRead   AclPermission = "READ"
-	AclPermissionWrite  AclPermission = "WRITE"
-	AclPermissionManage AclPermission = "MANAGE"
+	ACLPermissionRead   ACLPermission = "READ"
+	ACLPermissionWrite  ACLPermission = "WRITE"
+	ACLPermissionManage ACLPermission = "MANAGE"
 )
 
-func ValidSecretAclPermissions() []AclPermission {
-	return []AclPermission{AclPermissionManage, AclPermissionRead, AclPermissionWrite}
-}
-
-type AclItem struct {
+// ACLItem is a struct that contains information about a secret scope acl
+type ACLItem struct {
 	Principal  string        `json:"principal,omitempty"`
-	Permission AclPermission `json:"permission,omitempty"`
+	Permission ACLPermission `json:"permission,omitempty"`
 }

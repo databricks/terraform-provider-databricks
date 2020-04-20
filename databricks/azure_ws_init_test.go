@@ -47,14 +47,14 @@ func TestAzureAuthCreateApiToken(t *testing.T) {
 		InstancePoolName:                   "my_instance_pool",
 		MinIdleInstances:                   0,
 		MaxCapacity:                        10,
-		NodeTypeId:                         "Standard_DS3_v2",
+		NodeTypeID:                         "Standard_DS3_v2",
 		IdleInstanceAutoTerminationMinutes: 20,
 		PreloadedSparkVersions: []string{
 			"6.3.x-scala2.11",
 		},
 	})
 	defer func() {
-		err := api.InstancePools().Delete(instancePoolInfo.InstancePoolId)
+		err := api.InstancePools().Delete(instancePoolInfo.InstancePoolID)
 		assert.NoError(t, err, err)
 	}()
 

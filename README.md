@@ -16,7 +16,7 @@ To make sure everything is installed correctly please run the following commands
 
 Testing go installation:
 ```bash
-$ python --version 
+$ go version 
 go version go1.13.3 darwin/amd64
 ```
 

@@ -75,22 +75,32 @@ func (a NotebooksAPI) Mkdirs(path string) error {
 func (a NotebooksAPI) List(path string, recursive bool) ([]model.NotebookInfo, error) {
 	if recursive == true {
 		var paths []model.NotebookInfo
-		a.recursiveAddPaths(path, &paths)
-		return paths, nil
+		err := a.recursiveAddPaths(path, &paths)
+		if err != nil {
+			return nil, err
+		}
+		return paths, err
 	} else {
 		return a.list(path)
 	}
 }
 
-func (a NotebooksAPI) recursiveAddPaths(path string, pathList *[]model.NotebookInfo) {
-	notebookInfoList, _ := a.list(path)
+func (a NotebooksAPI) recursiveAddPaths(path string, pathList *[]model.NotebookInfo) error {
+	notebookInfoList, err := a.list(path)
+	if err != nil {
+		return err
+	}
 	for _, v := range notebookInfoList {
 		if v.ObjectType == model.Notebook {
 			*pathList = append(*pathList, v)
 		} else if v.ObjectType == model.Directory {
-			a.recursiveAddPaths(v.Path, pathList)
+			err := a.recursiveAddPaths(v.Path, pathList)
+			if err != nil {
+				return err
+			}
 		}
 	}
+	return err
 }
 
 func (a NotebooksAPI) list(path string) ([]model.NotebookInfo, error) {

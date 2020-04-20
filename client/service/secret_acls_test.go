@@ -34,7 +34,7 @@ func TestSecretAclsAPI_Create(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var input args
-			AssertRequestWithMockServer(t, &tt.args, http.MethodPost, "/api/2.0/secrets/acls/put", &input, tt.response, nil, tt.wantErr, func(client DBApiClient) (interface{}, error) {
+			AssertRequestWithMockServer(t, &tt.args, http.MethodPost, "/api/2.0/secrets/acls/put", &input, tt.response, http.StatusOK, nil, tt.wantErr, func(client DBApiClient) (interface{}, error) {
 				return nil, client.SecretAcls().Create(tt.args.Scope, tt.args.Principal, tt.args.Permission)
 			})
 		})
@@ -65,7 +65,7 @@ func TestSecretAclsAPI_Delete(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var input args
-			AssertRequestWithMockServer(t, &tt.args, http.MethodPost, "/api/2.0/secrets/acls/delete", &input, tt.response, nil, tt.wantErr, func(client DBApiClient) (interface{}, error) {
+			AssertRequestWithMockServer(t, &tt.args, http.MethodPost, "/api/2.0/secrets/acls/delete", &input, tt.response, http.StatusOK, nil, tt.wantErr, func(client DBApiClient) (interface{}, error) {
 				return nil, client.SecretAcls().Delete(tt.args.Scope, tt.args.Principal)
 			})
 		})
@@ -115,7 +115,7 @@ func TestSecretAclsAPI_List(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var input args
-			AssertRequestWithMockServer(t, &tt.args, http.MethodGet, "/api/2.0/secrets/acls/list?scope=my-scope", &input, tt.response, tt.want, tt.wantErr, func(client DBApiClient) (interface{}, error) {
+			AssertRequestWithMockServer(t, &tt.args, http.MethodGet, "/api/2.0/secrets/acls/list?scope=my-scope", &input, tt.response, http.StatusOK, tt.want, tt.wantErr, func(client DBApiClient) (interface{}, error) {
 				return client.SecretAcls().List(tt.args.Scope)
 			})
 		})
@@ -154,7 +154,7 @@ func TestSecretAclsAPI_Read(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var input args
-			AssertRequestWithMockServer(t, &tt.args, http.MethodGet, "/api/2.0/secrets/acls/get?principal=my-principal&scope=my-scope", &input, tt.response, tt.want, tt.wantErr, func(client DBApiClient) (interface{}, error) {
+			AssertRequestWithMockServer(t, &tt.args, http.MethodGet, "/api/2.0/secrets/acls/get?principal=my-principal&scope=my-scope", &input, tt.response, http.StatusOK, tt.want, tt.wantErr, func(client DBApiClient) (interface{}, error) {
 				return client.SecretAcls().Read(tt.args.Scope, tt.args.Principal)
 			})
 		})

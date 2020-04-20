@@ -71,12 +71,15 @@ func (a ClustersAPI) WaitForClusterRunning(clusterID string, sleepDurationSecond
 			clusterInfo, err := a.Get(clusterID)
 			if err != nil {
 				errChan <- err
+				return
 			}
 			if clusterInfo.State == model.ClusterStateRunning {
 				errChan <- nil
+				return
 			} else if model.ContainsClusterState(model.ClusterStateNonRunnable, clusterInfo.State) {
 				errChan <- errors.New("Cluster is in a non runnable state will not be able to transition to running, needs " +
 					"to be started again. Current state: " + string(clusterInfo.State))
+				return
 			}
 			log.Println("Waiting for cluster to go to running, current state is: " + string(clusterInfo.State))
 			time.Sleep(sleepDurationSeconds * time.Second)
@@ -86,7 +89,6 @@ func (a ClustersAPI) WaitForClusterRunning(clusterID string, sleepDurationSecond
 	case err := <-errChan:
 		return err
 	case <-time.After(timeoutDurationMinutes * time.Minute):
-		defer a.Start(clusterID)
 		return errors.New("Timed out cluster has not reached running state")
 	}
 }
@@ -98,12 +100,15 @@ func (a ClustersAPI) WaitForClusterTerminated(clusterID string, sleepDurationSec
 			clusterInfo, err := a.Get(clusterID)
 			if err != nil {
 				errChan <- err
+				return
 			}
 			if clusterInfo.State == model.ClusterStateTerminated {
 				errChan <- nil
+				return
 			} else if model.ContainsClusterState(model.ClusterStateNonTerminating, clusterInfo.State) {
 				errChan <- errors.New("Cluster is in a non runnable state will not be able to transition to terminated, needs " +
 					"to be terminated again. Current state: " + string(clusterInfo.State))
+				return
 			}
 			log.Println("Waiting for cluster to go to terminate, current state is: " + string(clusterInfo.State))
 			time.Sleep(sleepDurationSeconds * time.Second)
@@ -113,7 +118,6 @@ func (a ClustersAPI) WaitForClusterTerminated(clusterID string, sleepDurationSec
 	case err := <-errChan:
 		return err
 	case <-time.After(timeoutDurationMinutes * time.Minute):
-		defer a.Delete(clusterID)
 		return errors.New("Timed out cluster has not reached terminated state")
 	}
 }

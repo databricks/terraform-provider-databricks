@@ -18,11 +18,16 @@ coverage-int: int
 
 int-build: int build
 
-build:
+build: fmt
 	@echo "==> Building source code with go build..."
 	@go build -mod vendor -v -o terraform-provider-databricks
 
-fmt:
+lint:
+	@echo "==> Linting source code with golint..."
+	@golint -set_exit_status ./databricks/...
+	@golint -set_exit_status ./client/...
+
+fmt: lint
 	@echo "==> Formatting source code with gofmt..."
 	@go fmt ./...
 
@@ -54,7 +59,7 @@ terraform-acc: fmt build
 	@echo "==> Running Terraform Acceptance Tests..."
 	@TF_ACC=1 go test -v -short ./databricks/...
 
-terraform-setup: fmt build
+terraform-setup: build
 	@echo "==> Initializing Terraform..."
 	@terraform init
 

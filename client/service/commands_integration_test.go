@@ -38,35 +38,35 @@ func TestContext(t *testing.T) {
 		assert.NoError(t, err, err)
 	}()
 
-	clusterId := clusterInfo.ClusterID
+	clusterID := clusterInfo.ClusterID
 
-	err = client.Clusters().WaitForClusterRunning(clusterId, 10, 20)
+	err = client.Clusters().WaitForClusterRunning(clusterID, 10, 20)
 	assert.NoError(t, err, err)
 
-	context, err := client.Commands().createContext("python", clusterId)
+	context, err := client.Commands().createContext("python", clusterID)
 	assert.NoError(t, err, err)
 	t.Log(context)
 
-	err = client.Commands().waitForContextReady(context, clusterId, 1, 1)
+	err = client.Commands().waitForContextReady(context, clusterID, 1, 1)
 	assert.NoError(t, err, err)
 
-	status, err := client.Commands().getContext(context, clusterId)
+	status, err := client.Commands().getContext(context, clusterID)
 	assert.NoError(t, err, err)
 	assert.True(t, status == "Running")
 	t.Log(status)
 
-	commandId, err := client.Commands().createCommand(context, clusterId, "python", "print('hello world')")
+	commandID, err := client.Commands().createCommand(context, clusterID, "python", "print('hello world')")
 	assert.NoError(t, err, err)
 
-	err = client.Commands().waitForCommandFinished(commandId, context, clusterId, 5, 20)
+	err = client.Commands().waitForCommandFinished(commandID, context, clusterID, 5, 20)
 	assert.NoError(t, err, err)
 
-	resp, err := client.Commands().getCommand(commandId, context, clusterId)
+	resp, err := client.Commands().getCommand(commandID, context, clusterID)
 	assert.NoError(t, err, err)
 	assert.NotNil(t, resp.Results.Data)
 
 	// Testing the public api Execute
-	command, err := client.Commands().Execute(clusterId, "python", "print('hello world')")
+	command, err := client.Commands().Execute(clusterID, "python", "print('hello world')")
 	assert.NoError(t, err, err)
 	assert.NotNil(t, command.Results.Data)
 }

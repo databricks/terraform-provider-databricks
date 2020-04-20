@@ -19,51 +19,49 @@ type typeCheckerReturnString interface {
 	setNext(typeCheckerReturnString)
 }
 
-type StringChecker struct {
+type stringChecker struct {
 	next typeCheckerReturnString
 }
 
-func (r *StringChecker) execute(p interface{}) string {
+func (r *stringChecker) execute(p interface{}) string {
 	stringVal, ok := p.(string)
 	if ok {
 		if len(stringVal) > 0 {
 			return stringVal
-		} else {
-			return ""
 		}
+		return ""
 	}
 	return r.next.execute(p)
 }
 
-func (r *StringChecker) setNext(next typeCheckerReturnString) {
+func (r *stringChecker) setNext(next typeCheckerReturnString) {
 	r.next = next
 }
 
-type IntChecker struct {
+type intChecker struct {
 	next typeCheckerReturnString
 }
 
-func (r *IntChecker) execute(p interface{}) string {
+func (r *intChecker) execute(p interface{}) string {
 	intVal, ok := p.(int)
 	if ok {
 		if intVal > 0 {
 			return strconv.Itoa(intVal)
-		} else {
-			return ""
 		}
+		return ""
 	}
 	return r.next.execute(p)
 }
 
-func (r *IntChecker) setNext(next typeCheckerReturnString) {
+func (r *intChecker) setNext(next typeCheckerReturnString) {
 	r.next = next
 }
 
-type BoolChecker struct {
+type boolChecker struct {
 	next typeCheckerReturnString
 }
 
-func (r *BoolChecker) execute(p interface{}) string {
+func (r *boolChecker) execute(p interface{}) string {
 	boolVal, ok := p.(bool)
 	if ok {
 		return strconv.FormatBool(boolVal)
@@ -71,15 +69,15 @@ func (r *BoolChecker) execute(p interface{}) string {
 	return r.next.execute(p)
 }
 
-func (r *BoolChecker) setNext(next typeCheckerReturnString) {
+func (r *boolChecker) setNext(next typeCheckerReturnString) {
 	r.next = next
 }
 
-type StringSliceChecker struct {
+type stringSliceChecker struct {
 	next typeCheckerReturnString
 }
 
-func (r *StringSliceChecker) execute(p interface{}) string {
+func (r *stringSliceChecker) execute(p interface{}) string {
 	sliceVal, ok := p.([]string)
 	if ok {
 		var stringSlice []string
@@ -88,20 +86,19 @@ func (r *StringSliceChecker) execute(p interface{}) string {
 		}
 		sort.Strings(stringSlice)
 		return strings.Join(stringSlice, "")
-	} else {
-		return ""
 	}
+	return ""
 }
 
-func (r *StringSliceChecker) setNext(next typeCheckerReturnString) {
+func (r *stringSliceChecker) setNext(next typeCheckerReturnString) {
 	r.next = next
 }
 
 func fetchStringFromCheckers(strVal interface{}) string {
-	stringChecker := &StringChecker{}
-	intChecker := &IntChecker{}
-	boolChecker := &BoolChecker{}
-	sliceChecker := &StringSliceChecker{}
+	stringChecker := &stringChecker{}
+	intChecker := &intChecker{}
+	boolChecker := &boolChecker{}
+	sliceChecker := &stringSliceChecker{}
 	stringChecker.setNext(intChecker)
 	intChecker.setNext(boolChecker)
 	boolChecker.setNext(sliceChecker)
@@ -114,7 +111,7 @@ func mapHash(v interface{}) int {
 	m := v.(map[string]interface{})
 
 	var keys []string
-	for k, _ := range m {
+	for k := range m {
 		keys = append(keys, k)
 	}
 	sort.Strings(keys)
@@ -181,9 +178,9 @@ func determineAwsAttributesDiff(diff *schema.ResourceDiff, m interface{}) error 
 	return err
 }
 
-func changeClusterIntoRunningState(clusterId string, client service.DBApiClient) error {
+func changeClusterIntoRunningState(clusterID string, client service.DBApiClient) error {
 	//return nil
-	clusterInfo, err := client.Clusters().Get(clusterId)
+	clusterInfo, err := client.Clusters().Get(clusterID)
 	if err != nil {
 		return err
 	}
@@ -195,7 +192,7 @@ func changeClusterIntoRunningState(clusterId string, client service.DBApiClient)
 	}
 
 	if model.ContainsClusterState([]model.ClusterState{model.ClusterStatePending, model.ClusterStateResizing, model.ClusterStateRestarting}, currentState) {
-		err := client.Clusters().WaitForClusterRunning(clusterId, 5, 180)
+		err := client.Clusters().WaitForClusterRunning(clusterID, 5, 180)
 		if err != nil {
 			return err
 		}
@@ -204,17 +201,17 @@ func changeClusterIntoRunningState(clusterId string, client service.DBApiClient)
 	}
 
 	if model.ContainsClusterState([]model.ClusterState{model.ClusterStateTerminating}, currentState) {
-		err := client.Clusters().WaitForClusterTerminated(clusterId, 5, 180)
+		err := client.Clusters().WaitForClusterTerminated(clusterID, 5, 180)
 		if err != nil {
 			return err
 		}
-		err = client.Clusters().Start(clusterId)
+		err = client.Clusters().Start(clusterID)
 		if err != nil {
-			if !strings.Contains(err.Error(), fmt.Sprintf("Cluster %s is in unexpected state Pending.", clusterId)) {
+			if !strings.Contains(err.Error(), fmt.Sprintf("Cluster %s is in unexpected state Pending.", clusterID)) {
 				return err
 			}
 		}
-		err = client.Clusters().WaitForClusterRunning(clusterId, 5, 180)
+		err = client.Clusters().WaitForClusterRunning(clusterID, 5, 180)
 		if err != nil {
 			return err
 		}
@@ -223,14 +220,14 @@ func changeClusterIntoRunningState(clusterId string, client service.DBApiClient)
 	}
 
 	if model.ContainsClusterState([]model.ClusterState{model.ClusterStateTerminated}, currentState) {
-		err = client.Clusters().Start(clusterId)
+		err = client.Clusters().Start(clusterID)
 		if err != nil {
-			if !strings.Contains(err.Error(), fmt.Sprintf("Cluster %s is in unexpected state Pending.", clusterId)) {
+			if !strings.Contains(err.Error(), fmt.Sprintf("Cluster %s is in unexpected state Pending.", clusterID)) {
 				return err
 			}
 		}
 
-		err = client.Clusters().WaitForClusterRunning(clusterId, 5, 180)
+		err = client.Clusters().WaitForClusterRunning(clusterID, 5, 180)
 		if err != nil {
 			return err
 		}
@@ -238,6 +235,6 @@ func changeClusterIntoRunningState(clusterId string, client service.DBApiClient)
 		return nil
 	}
 
-	return errors.New(fmt.Sprintf("Cluster is in a non recoverable state: %s!", currentState))
+	return fmt.Errorf("cluster is in a non recoverable state: %s", currentState)
 
 }

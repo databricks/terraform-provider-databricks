@@ -710,7 +710,7 @@ func resourceClusterRead(d *schema.ResourceData, m interface{}) error {
 
 	if clusterInfo.DockerImage != nil {
 		dockerImage := map[string]string{}
-		dockerImage["url"] = clusterInfo.DockerImage.Url
+		dockerImage["url"] = clusterInfo.DockerImage.URL
 		if clusterInfo.DockerImage.BasicAuth != nil {
 			dockerImage["username"] = clusterInfo.DockerImage.BasicAuth.Username
 			dockerImage["password"] = clusterInfo.DockerImage.BasicAuth.Password
@@ -745,7 +745,7 @@ func resourceClusterRead(d *schema.ResourceData, m interface{}) error {
 	}
 
 	if _, ok := d.GetOk("instance_pool_id"); ok {
-		err := d.Set("instance_pool_id", clusterInfo.InstancePoolId)
+		err := d.Set("instance_pool_id", clusterInfo.InstancePoolID)
 		if err != nil {
 			return err
 		}
@@ -949,7 +949,7 @@ func resourceClusterUpdate(d *schema.ResourceData, m interface{}) error {
 
 	if model.ContainsClusterState([]model.ClusterState{model.ClusterState(model.ClusterStateTerminated)}, clusterState) {
 		cluster := parseSchemaToCluster(d, "")
-		cluster.ClusterId = id
+		cluster.ClusterID = id
 		err := client.Clusters().Edit(cluster)
 		if err != nil {
 			return err
@@ -986,7 +986,7 @@ func resourceClusterUpdate(d *schema.ResourceData, m interface{}) error {
 		return resourceClusterRead(d, m)
 	} else if model.ContainsClusterState([]model.ClusterState{model.ClusterState(model.ClusterStateRunning)}, clusterState) {
 		cluster := parseSchemaToCluster(d, "")
-		cluster.ClusterId = id
+		cluster.ClusterID = id
 
 		if len(installs) > 0 {
 			err = client.Libraries().Create(id, installs)
@@ -1020,7 +1020,7 @@ func resourceClusterUpdate(d *schema.ResourceData, m interface{}) error {
 			return err
 		}
 		cluster := parseSchemaToCluster(d, "")
-		cluster.ClusterId = id
+		cluster.ClusterID = id
 
 		if len(installs) > 0 {
 			err = client.Libraries().Create(id, installs)
@@ -1047,7 +1047,7 @@ func resourceClusterUpdate(d *schema.ResourceData, m interface{}) error {
 		return resourceClusterRead(d, m)
 	}
 
-	return errors.New("Unable to edit cluster due to cluster state not being in a runnable/terminated state.")
+	return errors.New("unable to edit cluster due to cluster state not being in a runnable/terminated state")
 }
 
 func resourceClusterDelete(d *schema.ResourceData, m interface{}) error {
@@ -1107,8 +1107,8 @@ func parseSchemaToCluster(d *schema.ResourceData, schemaAttPrefix string) model.
 		if availability, ok := awsAttributesMap["availability"]; ok {
 			awsAttributes.Availability = model.AwsAvailability(availability.(string))
 		}
-		if zoneId, ok := awsAttributesMap["zone_id"]; ok {
-			awsAttributes.ZoneID = zoneId.(string)
+		if zoneID, ok := awsAttributesMap["zone_id"]; ok {
+			awsAttributes.ZoneID = zoneID.(string)
 		}
 		if spotBidPricePercent, ok := awsAttributesMap["spot_bid_price_percent"]; ok {
 			//val, _ := strconv.ParseInt(spotBidPricePercent.(string), 10, 32)
@@ -1136,13 +1136,13 @@ func parseSchemaToCluster(d *schema.ResourceData, schemaAttPrefix string) model.
 	}
 
 	//Deal with driver node type id
-	if driverNodeTypeId, ok := d.GetOk(schemaAttPrefix + "driver_node_type_id"); ok {
-		cluster.DriverNodeTypeID = driverNodeTypeId.(string)
+	if driverNodeTypeID, ok := d.GetOk(schemaAttPrefix + "driver_node_type_id"); ok {
+		cluster.DriverNodeTypeID = driverNodeTypeID.(string)
 	}
 
 	//Deal with worker node type id
-	if nodeTypeId, ok := d.GetOk(schemaAttPrefix + "node_type_id"); ok {
-		cluster.NodeTypeID = nodeTypeId.(string)
+	if nodeTypeID, ok := d.GetOk(schemaAttPrefix + "node_type_id"); ok {
+		cluster.NodeTypeID = nodeTypeID.(string)
 	}
 
 	//Deal with worker ssh public keys
@@ -1239,7 +1239,7 @@ func parseSchemaToCluster(d *schema.ResourceData, schemaAttPrefix string) model.
 	if dockerImageSet, ok := d.GetOk(schemaAttPrefix + "docker_image"); ok {
 		dockerImageConf := getMapFromOneItemSet(dockerImageSet)
 		if url, ok := dockerImageConf["url"]; ok {
-			dockerImageData.Url = url.(string)
+			dockerImageData.URL = url.(string)
 		}
 		dockerAuthData := model.DockerBasicAuth{}
 		username, userOk := dockerImageConf["username"]
@@ -1269,7 +1269,7 @@ func parseSchemaToCluster(d *schema.ResourceData, schemaAttPrefix string) model.
 
 	//Deal with instance pool id
 	if instancePoolID, ok := d.GetOk(schemaAttPrefix + "instance_pool_id"); ok {
-		cluster.InstancePoolId = instancePoolID.(string)
+		cluster.InstancePoolID = instancePoolID.(string)
 	}
 
 	//Deal with idempotency token
@@ -1337,7 +1337,7 @@ func getMapFromOneItemSet(input interface{}) map[string]interface{} {
 	return nil
 }
 
-func isClusterMissing(errorMsg, resourceId string) bool {
+func isClusterMissing(errorMsg, resourceID string) bool {
 	return strings.Contains(errorMsg, "INVALID_PARAMETER_VALUE") &&
-		strings.Contains(errorMsg, fmt.Sprintf("Cluster %s does not exist", resourceId))
+		strings.Contains(errorMsg, fmt.Sprintf("Cluster %s does not exist", resourceID))
 }

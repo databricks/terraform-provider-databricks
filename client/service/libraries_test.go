@@ -8,7 +8,7 @@ import (
 
 func TestLibrariesAPI_Create(t *testing.T) {
 	type args struct {
-		ClusterId string          `json:"cluster_id,omitempty" url:"cluster_id,omitempty"`
+		ClusterID string          `json:"cluster_id,omitempty" url:"cluster_id,omitempty"`
 		Libraries []model.Library `json:"libraries,omitempty" url:"libraries,omitempty"`
 	}
 
@@ -24,7 +24,7 @@ func TestLibrariesAPI_Create(t *testing.T) {
 			response:       "",
 			responseStatus: http.StatusOK,
 			args: args{
-				ClusterId: "my-cluster-id",
+				ClusterID: "my-cluster-id",
 				Libraries: []model.Library{
 					{
 						Whl: "dbfs:/my/dbfs/wheel.whl",
@@ -38,7 +38,7 @@ func TestLibrariesAPI_Create(t *testing.T) {
 			response:       "",
 			responseStatus: http.StatusBadRequest,
 			args: args{
-				ClusterId: "my-cluster-id",
+				ClusterID: "my-cluster-id",
 				Libraries: []model.Library{
 					{
 						Whl: "dbfs:/my/dbfs/wheel.whl",
@@ -52,7 +52,7 @@ func TestLibrariesAPI_Create(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			var input args
 			AssertRequestWithMockServer(t, &tt.args, http.MethodPost, "/api/2.0/libraries/install", &input, tt.response, tt.responseStatus, nil, tt.wantErr, func(client DBApiClient) (interface{}, error) {
-				return nil, client.Libraries().Create(tt.args.ClusterId, tt.args.Libraries)
+				return nil, client.Libraries().Create(tt.args.ClusterID, tt.args.Libraries)
 			})
 		})
 	}
@@ -60,7 +60,7 @@ func TestLibrariesAPI_Create(t *testing.T) {
 
 func TestLibrariesAPI_Delete(t *testing.T) {
 	type args struct {
-		ClusterId string          `json:"cluster_id,omitempty" url:"cluster_id,omitempty"`
+		ClusterID string          `json:"cluster_id,omitempty" url:"cluster_id,omitempty"`
 		Libraries []model.Library `json:"libraries,omitempty" url:"libraries,omitempty"`
 	}
 
@@ -76,7 +76,7 @@ func TestLibrariesAPI_Delete(t *testing.T) {
 			response:       "",
 			responseStatus: http.StatusOK,
 			args: args{
-				ClusterId: "my-cluster-id",
+				ClusterID: "my-cluster-id",
 				Libraries: []model.Library{
 					{
 						Whl: "dbfs:/my/dbfs/wheel.whl",
@@ -90,7 +90,7 @@ func TestLibrariesAPI_Delete(t *testing.T) {
 			response:       "",
 			responseStatus: http.StatusBadRequest,
 			args: args{
-				ClusterId: "my-cluster-id",
+				ClusterID: "my-cluster-id",
 				Libraries: []model.Library{
 					{
 						Whl: "dbfs:/my/dbfs/wheel.whl",
@@ -104,7 +104,7 @@ func TestLibrariesAPI_Delete(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			var input args
 			AssertRequestWithMockServer(t, &tt.args, http.MethodPost, "/api/2.0/libraries/uninstall", &input, tt.response, tt.responseStatus, nil, tt.wantErr, func(client DBApiClient) (interface{}, error) {
-				return nil, client.Libraries().Delete(tt.args.ClusterId, tt.args.Libraries)
+				return nil, client.Libraries().Delete(tt.args.ClusterID, tt.args.Libraries)
 			})
 		})
 	}
@@ -112,14 +112,14 @@ func TestLibrariesAPI_Delete(t *testing.T) {
 
 func TestLibrariesAPI_List(t *testing.T) {
 	type args struct {
-		ClusterId string `json:"cluster_id,omitempty" url:"cluster_id,omitempty"`
+		ClusterID string `json:"cluster_id,omitempty" url:"cluster_id,omitempty"`
 	}
 	tests := []struct {
 		name           string
 		response       string
 		responseStatus int
 		args           args
-		wantUri        string
+		wantURI        string
 		want           []model.LibraryStatus
 		wantErr        bool
 	}{
@@ -161,9 +161,9 @@ func TestLibrariesAPI_List(t *testing.T) {
 						}`,
 			responseStatus: http.StatusOK,
 			args: args{
-				ClusterId: "11203-my-cluster",
+				ClusterID: "11203-my-cluster",
 			},
-			wantUri: "/api/2.0/libraries/cluster-status?cluster_id=11203-my-cluster",
+			wantURI: "/api/2.0/libraries/cluster-status?cluster_id=11203-my-cluster",
 			want: []model.LibraryStatus{
 				{
 					Library: &model.Library{
@@ -202,9 +202,9 @@ func TestLibrariesAPI_List(t *testing.T) {
 			response:       ``,
 			responseStatus: http.StatusBadRequest,
 			args: args{
-				ClusterId: "11203-my-cluster",
+				ClusterID: "11203-my-cluster",
 			},
-			wantUri: "/api/2.0/libraries/cluster-status?cluster_id=11203-my-cluster",
+			wantURI: "/api/2.0/libraries/cluster-status?cluster_id=11203-my-cluster",
 			want:    nil,
 			wantErr: true,
 		},
@@ -212,8 +212,8 @@ func TestLibrariesAPI_List(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var input args
-			AssertRequestWithMockServer(t, tt.args, http.MethodGet, tt.wantUri, &input, tt.response, tt.responseStatus, tt.want, tt.wantErr, func(client DBApiClient) (interface{}, error) {
-				return client.Libraries().List(tt.args.ClusterId)
+			AssertRequestWithMockServer(t, tt.args, http.MethodGet, tt.wantURI, &input, tt.response, tt.responseStatus, tt.want, tt.wantErr, func(client DBApiClient) (interface{}, error) {
+				return client.Libraries().List(tt.args.ClusterID)
 			})
 		})
 	}

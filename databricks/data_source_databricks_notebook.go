@@ -24,7 +24,7 @@ func dataSourceNotebook() *schema.Resource {
 				ValidateFunc: validation.StringInSlice([]string{
 					string(model.DBC),
 					string(model.Source),
-					string(model.Html),
+					string(model.HTML),
 				}, false),
 			},
 			"content": &schema.Schema{
@@ -75,7 +75,7 @@ func dataSourceNotebookRead(d *schema.ResourceData, m interface{}) error {
 	if err != nil {
 		return err
 	}
-	err = d.Set("object_id", int(notebookInfo.ObjectId))
+	err = d.Set("object_id", int(notebookInfo.ObjectID))
 	if err != nil {
 		return err
 	}

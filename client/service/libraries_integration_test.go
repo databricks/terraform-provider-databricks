@@ -38,9 +38,9 @@ func TestLibraryCreate(t *testing.T) {
 		assert.NoError(t, err, err)
 	}()
 
-	clusterId := clusterInfo.ClusterID
+	clusterID := clusterInfo.ClusterID
 
-	err = client.Clusters().WaitForClusterRunning(clusterId, 10, 20)
+	err = client.Clusters().WaitForClusterRunning(clusterID, 10, 20)
 	assert.NoError(t, err, err)
 
 	libraries := []model.Library{
@@ -56,15 +56,15 @@ func TestLibraryCreate(t *testing.T) {
 		},
 	}
 
-	err = client.Libraries().Create(clusterId, libraries)
+	err = client.Libraries().Create(clusterID, libraries)
 	assert.NoError(t, err, err)
 
 	defer func() {
-		err = client.Libraries().Delete(clusterId, libraries)
+		err = client.Libraries().Delete(clusterID, libraries)
 		assert.NoError(t, err, err)
 	}()
 
-	libraryStatusList, err := client.Libraries().List(clusterId)
+	libraryStatusList, err := client.Libraries().List(clusterID)
 	assert.NoError(t, err, err)
 	assert.Equal(t, len(libraryStatusList), len(libraries))
 }

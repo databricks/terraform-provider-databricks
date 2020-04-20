@@ -83,12 +83,12 @@ func resourceTokenRead(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceTokenDelete(d *schema.ResourceData, m interface{}) error {
-	tokenId := d.Id()
+	tokenID := d.Id()
 	client := m.(service.DBApiClient)
-	err := client.Tokens().Delete(tokenId)
+	err := client.Tokens().Delete(tokenID)
 	return err
 }
 
-func isTokenMissing(errorMsg, resourceId string) bool {
-	return strings.Contains(errorMsg, fmt.Sprintf("Unable to locate token: %s", resourceId))
+func isTokenMissing(errorMsg, resourceID string) bool {
+	return strings.Contains(errorMsg, fmt.Sprintf("Unable to locate token: %s", resourceID))
 }

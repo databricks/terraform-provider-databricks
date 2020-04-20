@@ -9,11 +9,11 @@ import (
 	"strings"
 )
 
-func resourceSecretAcl() *schema.Resource {
+func resourceSecretACL() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceSecretAclCreate,
-		Read:   resourceSecretAclRead,
-		Delete: resourceSecretAclDelete,
+		Create: resourceSecretACLCreate,
+		Read:   resourceSecretACLRead,
+		Delete: resourceSecretACLDelete,
 
 		Schema: map[string]*schema.Schema{
 			"scope": &schema.Schema{
@@ -35,43 +35,41 @@ func resourceSecretAcl() *schema.Resource {
 	}
 }
 
-type SecretAclId map[string]string
-
-func getSecretAclId(scope string, key string) (string, error) {
+func getSecretACLID(scope string, key string) (string, error) {
 	return scope + "|||" + key, nil
 }
 
-func getScopeAndKeyFromSecretAclId(SecretAclIdString string) (string, string, error) {
-	return strings.Split(SecretAclIdString, "|||")[0], strings.Split(SecretAclIdString, "|||")[1], nil
+func getScopeAndKeyFromSecretACLID(SecretACLIDString string) (string, string, error) {
+	return strings.Split(SecretACLIDString, "|||")[0], strings.Split(SecretACLIDString, "|||")[1], nil
 }
 
-func resourceSecretAclCreate(d *schema.ResourceData, m interface{}) error {
+func resourceSecretACLCreate(d *schema.ResourceData, m interface{}) error {
 	client := m.(service.DBApiClient)
 	scopeName := d.Get("scope").(string)
 	principal := d.Get("principal").(string)
-	permission := model.AclPermission(d.Get("permission").(string))
+	permission := model.ACLPermission(d.Get("permission").(string))
 	err := client.SecretAcls().Create(scopeName, principal, permission)
 	if err != nil {
 		return err
 	}
-	id, err := getSecretAclId(scopeName, principal)
+	id, err := getSecretACLID(scopeName, principal)
 	if err != nil {
 		return err
 	}
 	d.SetId(id)
-	return resourceSecretAclRead(d, m)
+	return resourceSecretACLRead(d, m)
 }
 
-func resourceSecretAclRead(d *schema.ResourceData, m interface{}) error {
+func resourceSecretACLRead(d *schema.ResourceData, m interface{}) error {
 	id := d.Id()
-	scope, principal, err := getScopeAndKeyFromSecretAclId(id)
+	scope, principal, err := getScopeAndKeyFromSecretACLID(id)
 	if err != nil {
 		return err
 	}
 	client := m.(service.DBApiClient)
-	secretAcl, err := client.SecretAcls().Read(scope, principal)
+	secretACL, err := client.SecretAcls().Read(scope, principal)
 	if err != nil {
-		if isSecretAclMissing(err.Error(), scope, principal) {
+		if isSecretACLMissing(err.Error(), scope, principal) {
 			log.Printf("Missing secret acl in scope with id: %s and principal: %s.", scope, principal)
 			d.SetId("")
 			return nil
@@ -86,14 +84,14 @@ func resourceSecretAclRead(d *schema.ResourceData, m interface{}) error {
 	if err != nil {
 		return err
 	}
-	err = d.Set("permission", secretAcl.Permission)
+	err = d.Set("permission", secretACL.Permission)
 	return err
 }
 
-func resourceSecretAclDelete(d *schema.ResourceData, m interface{}) error {
+func resourceSecretACLDelete(d *schema.ResourceData, m interface{}) error {
 	client := m.(service.DBApiClient)
 	id := d.Id()
-	scope, key, err := getScopeAndKeyFromSecretAclId(id)
+	scope, key, err := getScopeAndKeyFromSecretACLID(id)
 	if err != nil {
 		return err
 	}
@@ -101,7 +99,7 @@ func resourceSecretAclDelete(d *schema.ResourceData, m interface{}) error {
 	return err
 }
 
-func isSecretAclMissing(errorMsg, scope string, principal string) bool {
+func isSecretACLMissing(errorMsg, scope string, principal string) bool {
 	return strings.Contains(errorMsg, "RESOURCE_DOES_NOT_EXIST") &&
 		strings.Contains(errorMsg, fmt.Sprintf("Failed to get secret acl for principal %s for scope %s.", principal, scope))
 }

@@ -57,20 +57,20 @@ func TestCreateAdminUser(t *testing.T) {
 	group, err := client.Groups().GetAdminGroup()
 	assert.NoError(t, err, err)
 
-	adminGroupId := group.ID
+	adminGroupID := group.ID
 
-	err = client.Users().SetUserAsAdmin(user.ID, adminGroupId)
+	err = client.Users().SetUserAsAdmin(user.ID, adminGroupID)
 	assert.NoError(t, err, err)
 
-	userIsAdmin, err := client.Users().VerifyUserAsAdmin(user.ID, adminGroupId)
+	userIsAdmin, err := client.Users().VerifyUserAsAdmin(user.ID, adminGroupID)
 	assert.NoError(t, err, err)
 	assert.True(t, userIsAdmin == true)
 	log.Println(userIsAdmin)
 
-	err = client.Users().RemoveUserAsAdmin(user.ID, adminGroupId)
+	err = client.Users().RemoveUserAsAdmin(user.ID, adminGroupID)
 	assert.NoError(t, err, err)
 
-	userIsAdmin, err = client.Users().VerifyUserAsAdmin(user.ID, adminGroupId)
+	userIsAdmin, err = client.Users().VerifyUserAsAdmin(user.ID, adminGroupID)
 	assert.NoError(t, err, err)
 	assert.True(t, userIsAdmin == false)
 	log.Println(userIsAdmin)

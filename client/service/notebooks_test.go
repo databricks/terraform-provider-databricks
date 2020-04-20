@@ -117,7 +117,7 @@ func TestNotebooksAPI_ListNonRecursive(t *testing.T) {
 		response       string
 		responseStatus int
 		args           args
-		wantUri        string
+		wantURI        string
 		want           []model.NotebookInfo
 		wantErr        bool
 	}{
@@ -144,15 +144,15 @@ func TestNotebooksAPI_ListNonRecursive(t *testing.T) {
 				Path:      "/test/path",
 				Recursive: false,
 			},
-			wantUri: "/api/2.0/workspace/list?path=%2Ftest%2Fpath",
+			wantURI: "/api/2.0/workspace/list?path=%2Ftest%2Fpath",
 			want: []model.NotebookInfo{
 				{
-					ObjectId:   123,
+					ObjectID:   123,
 					ObjectType: model.Directory,
 					Path:       "/Users/user@example.com/project",
 				},
 				{
-					ObjectId:   456,
+					ObjectID:   456,
 					ObjectType: model.Notebook,
 					Language:   model.Python,
 					Path:       "/Users/user@example.com/PythonExampleNotebook",
@@ -164,7 +164,7 @@ func TestNotebooksAPI_ListNonRecursive(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var input args
-			AssertRequestWithMockServer(t, tt.args, http.MethodGet, tt.wantUri, &input, tt.response, tt.responseStatus, tt.want, tt.wantErr, func(client DBApiClient) (interface{}, error) {
+			AssertRequestWithMockServer(t, tt.args, http.MethodGet, tt.wantURI, &input, tt.response, tt.responseStatus, tt.want, tt.wantErr, func(client DBApiClient) (interface{}, error) {
 				return client.Notebooks().List(tt.args.Path, tt.args.Recursive)
 			})
 		})
@@ -181,7 +181,7 @@ func TestNotebooksAPI_ListRecursive(t *testing.T) {
 		response       []string
 		responseStatus []int
 		args           []interface{}
-		wantUri        []string
+		wantURI        []string
 		want           []model.NotebookInfo
 		wantErr        bool
 	}{
@@ -220,16 +220,16 @@ func TestNotebooksAPI_ListRecursive(t *testing.T) {
 					Recursive: true,
 				},
 			},
-			wantUri: []string{"/api/2.0/workspace/list?path=%2Ftest%2Fpath", "/api/2.0/workspace/list?path=%2FUsers%2Fuser%40example.com%2Fproject"},
+			wantURI: []string{"/api/2.0/workspace/list?path=%2Ftest%2Fpath", "/api/2.0/workspace/list?path=%2FUsers%2Fuser%40example.com%2Fproject"},
 			want: []model.NotebookInfo{
 				{
-					ObjectId:   457,
+					ObjectID:   457,
 					ObjectType: model.Notebook,
 					Language:   model.Python,
 					Path:       "/Users/user@example.com/Notebook2",
 				},
 				{
-					ObjectId:   456,
+					ObjectID:   456,
 					ObjectType: model.Notebook,
 					Language:   model.Python,
 					Path:       "/Users/user@example.com/PythonExampleNotebook",
@@ -263,14 +263,14 @@ func TestNotebooksAPI_ListRecursive(t *testing.T) {
 					Recursive: true,
 				},
 			},
-			wantUri: []string{"/api/2.0/workspace/list?path=%2Ftest%2Fpath", "/api/2.0/workspace/list?path=%2FUsers%2Fuser%40example.com%2Fproject"},
+			wantURI: []string{"/api/2.0/workspace/list?path=%2Ftest%2Fpath", "/api/2.0/workspace/list?path=%2FUsers%2Fuser%40example.com%2Fproject"},
 			want:    nil,
 			wantErr: true,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			AssertMultipleRequestsWithMockServer(t, tt.args, []string{http.MethodGet, http.MethodGet}, tt.wantUri, []interface{}{&args{}}, tt.response, tt.responseStatus, tt.want, tt.wantErr, func(client DBApiClient) (interface{}, error) {
+			AssertMultipleRequestsWithMockServer(t, tt.args, []string{http.MethodGet, http.MethodGet}, tt.wantURI, []interface{}{&args{}}, tt.response, tt.responseStatus, tt.want, tt.wantErr, func(client DBApiClient) (interface{}, error) {
 				return client.Notebooks().List(tt.args[0].(*args).Path, tt.args[0].(*args).Recursive)
 			})
 		})
@@ -286,7 +286,7 @@ func TestNotebooksAPI_Read(t *testing.T) {
 		response       string
 		args           args
 		responseStatus int
-		wantUri        string
+		wantURI        string
 		want           model.NotebookInfo
 		wantErr        bool
 	}{
@@ -303,12 +303,12 @@ func TestNotebooksAPI_Read(t *testing.T) {
 			},
 			responseStatus: http.StatusOK,
 			want: model.NotebookInfo{
-				ObjectId:   789,
+				ObjectID:   789,
 				ObjectType: model.Notebook,
 				Path:       "/Users/user@example.com/project/ScalaExampleNotebook",
 				Language:   model.Scala,
 			},
-			wantUri: "/api/2.0/workspace/get-status?path=%2Ftest%2Fpath",
+			wantURI: "/api/2.0/workspace/get-status?path=%2Ftest%2Fpath",
 			wantErr: false,
 		},
 
@@ -320,14 +320,14 @@ func TestNotebooksAPI_Read(t *testing.T) {
 			},
 			responseStatus: http.StatusBadRequest,
 			want:           model.NotebookInfo{},
-			wantUri:        "/api/2.0/workspace/get-status?path=%2Ftest%2Fpath",
+			wantURI:        "/api/2.0/workspace/get-status?path=%2Ftest%2Fpath",
 			wantErr:        true,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var input args
-			AssertRequestWithMockServer(t, &tt.args, http.MethodGet, tt.wantUri, &input, tt.response, tt.responseStatus, tt.want, tt.wantErr, func(client DBApiClient) (interface{}, error) {
+			AssertRequestWithMockServer(t, &tt.args, http.MethodGet, tt.wantURI, &input, tt.response, tt.responseStatus, tt.want, tt.wantErr, func(client DBApiClient) (interface{}, error) {
 				return client.Notebooks().Read(tt.args.Path)
 			})
 		})
@@ -344,7 +344,7 @@ func TestNotebooksAPI_Export(t *testing.T) {
 		response       string
 		args           args
 		responseStatus int
-		wantUri        string
+		wantURI        string
 		want           string
 		wantErr        bool
 	}{
@@ -359,7 +359,7 @@ func TestNotebooksAPI_Export(t *testing.T) {
 			},
 			responseStatus: http.StatusOK,
 			want:           "Ly8gRGF0YWJyaWNrcyBub3RlYm9vayBzb3VyY2UKMSsx",
-			wantUri:        "/api/2.0/workspace/export?format=DBC&path=%2Ftest%2Fpath",
+			wantURI:        "/api/2.0/workspace/export?format=DBC&path=%2Ftest%2Fpath",
 			wantErr:        false,
 		},
 		{
@@ -371,14 +371,14 @@ func TestNotebooksAPI_Export(t *testing.T) {
 			},
 			responseStatus: http.StatusBadRequest,
 			want:           "",
-			wantUri:        "/api/2.0/workspace/export?format=DBC&path=%2Ftest%2Fpath",
+			wantURI:        "/api/2.0/workspace/export?format=DBC&path=%2Ftest%2Fpath",
 			wantErr:        true,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var input args
-			AssertRequestWithMockServer(t, &tt.args, http.MethodGet, tt.wantUri, &input, tt.response, tt.responseStatus, tt.want, tt.wantErr, func(client DBApiClient) (interface{}, error) {
+			AssertRequestWithMockServer(t, &tt.args, http.MethodGet, tt.wantURI, &input, tt.response, tt.responseStatus, tt.want, tt.wantErr, func(client DBApiClient) (interface{}, error) {
 				return client.Notebooks().Export(tt.args.Path, tt.args.Format)
 			})
 		})

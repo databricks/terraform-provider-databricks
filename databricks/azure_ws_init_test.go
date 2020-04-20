@@ -33,7 +33,7 @@ func TestAzureAuthCreateApiToken(t *testing.T) {
 		AdbAccessToken:         "",
 		AdbPlatformToken:       "",
 	}
-	azureAuth.TokenPayload.SubscriptionId = os.Getenv("ARM_SUBSCRIPTION_ID")
+	azureAuth.TokenPayload.SubscriptionID = os.Getenv("ARM_SUBSCRIPTION_ID")
 	azureAuth.TokenPayload.TenantID = os.Getenv("ARM_TENANT_ID")
 	azureAuth.TokenPayload.ClientID = os.Getenv("ARM_CLIENT_ID")
 	azureAuth.TokenPayload.ClientSecret = os.Getenv("ARM_CLIENT_SECRET")
@@ -47,14 +47,14 @@ func TestAzureAuthCreateApiToken(t *testing.T) {
 		InstancePoolName:                   "my_instance_pool",
 		MinIdleInstances:                   0,
 		MaxCapacity:                        10,
-		NodeTypeId:                         "Standard_DS3_v2",
+		NodeTypeID:                         "Standard_DS3_v2",
 		IdleInstanceAutoTerminationMinutes: 20,
 		PreloadedSparkVersions: []string{
 			"6.3.x-scala2.11",
 		},
 	})
 	defer func() {
-		err := api.InstancePools().Delete(instancePoolInfo.InstancePoolId)
+		err := api.InstancePools().Delete(instancePoolInfo.InstancePoolID)
 		assert.NoError(t, err, err)
 	}()
 

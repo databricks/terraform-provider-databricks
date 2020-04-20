@@ -6,6 +6,7 @@ import (
 	"net/http"
 )
 
+// InstancePoolsAPI exposes the instance pools api
 type InstancePoolsAPI struct {
 	Client DBApiClient
 }
@@ -29,13 +30,13 @@ func (a InstancePoolsAPI) Update(instancePoolInfo model.InstancePoolInfo) error 
 }
 
 // Read retrieves the information for a instance pool given its identifier
-func (a InstancePoolsAPI) Read(instancePoolId string) (model.InstancePoolInfo, error) {
+func (a InstancePoolsAPI) Read(instancePoolID string) (model.InstancePoolInfo, error) {
 	var instancePoolInfo model.InstancePoolInfo
 
 	data := struct {
-		InstancePoolId string `json:"instance_pool_id,omitempty" url:"instance_pool_id,omitempty"`
+		InstancePoolID string `json:"instance_pool_id,omitempty" url:"instance_pool_id,omitempty"`
 	}{
-		instancePoolId,
+		instancePoolID,
 	}
 	resp, err := a.Client.performQuery(http.MethodGet, "/instance-pools/get", "2.0", nil, data, nil)
 	if err != nil {
@@ -46,12 +47,12 @@ func (a InstancePoolsAPI) Read(instancePoolId string) (model.InstancePoolInfo, e
 	return instancePoolInfo, err
 }
 
-// Terminate terminates a instance pool given its ID
-func (a InstancePoolsAPI) Delete(instancePoolId string) error {
+// Delete terminates a instance pool given its ID
+func (a InstancePoolsAPI) Delete(instancePoolID string) error {
 	data := struct {
-		InstancePoolId string `json:"instance_pool_id,omitempty" url:"instance_pool_id,omitempty"`
+		InstancePoolID string `json:"instance_pool_id,omitempty" url:"instance_pool_id,omitempty"`
 	}{
-		instancePoolId,
+		instancePoolID,
 	}
 	_, err := a.Client.performQuery(http.MethodPost, "/instance-pools/delete", "2.0", nil, data, nil)
 	return err

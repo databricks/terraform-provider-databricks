@@ -57,7 +57,7 @@ func testSecretResourceDestroy(s *terraform.State) error {
 		if err != nil {
 			return nil
 		}
-		return errors.New("Resource secret is not cleaned up!")
+		return errors.New("resource secret is not cleaned up")
 	}
 	return nil
 }

@@ -13,7 +13,7 @@ import (
 
 func TestAccSecretAclResource(t *testing.T) {
 	//var secretScope model.Secre
-	var secretAcl model.ACLItem
+	var secretACL model.ACLItem
 	// generate a random name for each tokenInfo test run, to avoid
 	// collisions from multiple concurrent tests.
 	// the acctest package includes many helpers such as RandStringFromCharSet
@@ -26,17 +26,17 @@ func TestAccSecretAclResource(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
-		CheckDestroy: testSecretAclResourceDestroy,
+		CheckDestroy: testSecretACLResourceDestroy,
 		Steps: []resource.TestStep{
 			{
 				// use a dynamic configuration with the random name from above
-				Config: testSecretAclResource(scope, principal, permission),
+				Config: testSecretACLResource(scope, principal, permission),
 				// compose a basic test, checking both remote and local values
 				Check: resource.ComposeTestCheckFunc(
 					// query the API to retrieve the tokenInfo object
-					testSecretAclResourceExists("databricks_secret_acl.my_secret_acl", &secretAcl, t),
+					testSecretACLResourceExists("databricks_secret_acl.my_secret_acl", &secretACL, t),
 					// verify remote values
-					testSecretAclValues(t, &secretAcl, permission, principal),
+					testSecretACLValues(t, &secretACL, permission, principal),
 					// verify local values
 					resource.TestCheckResourceAttr("databricks_secret_acl.my_secret_acl", "scope", scope),
 					resource.TestCheckResourceAttr("databricks_secret_acl.my_secret_acl", "principal", principal),
@@ -47,7 +47,7 @@ func TestAccSecretAclResource(t *testing.T) {
 	})
 }
 
-func testSecretAclResourceDestroy(s *terraform.State) error {
+func testSecretACLResourceDestroy(s *terraform.State) error {
 	client := testAccProvider.Meta().(service.DBApiClient)
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "databricks_secret_acl" {
@@ -57,16 +57,16 @@ func testSecretAclResourceDestroy(s *terraform.State) error {
 		if err != nil {
 			return nil
 		}
-		return errors.New("Resource secret acl is not cleaned up!")
+		return errors.New("resource secret acl is not cleaned up")
 	}
 	return nil
 }
 
-func testSecretAclPreCheck(t *testing.T) {
+func testSecretACLPreCheck(t *testing.T) {
 	return
 }
 
-func testSecretAclValues(t *testing.T, acl *model.ACLItem, permission, principal string) resource.TestCheckFunc {
+func testSecretACLValues(t *testing.T, acl *model.ACLItem, permission, principal string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		assert.True(t, acl.Permission == model.ACLPermissionRead)
 		assert.True(t, acl.Principal == principal)
@@ -75,7 +75,7 @@ func testSecretAclValues(t *testing.T, acl *model.ACLItem, permission, principal
 }
 
 // testAccCheckTokenResourceExists queries the API and retrieves the matching Widget.
-func testSecretAclResourceExists(n string, aclItem *model.ACLItem, t *testing.T) resource.TestCheckFunc {
+func testSecretACLResourceExists(n string, aclItem *model.ACLItem, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		// find the corresponding state object
 		rs, ok := s.RootModule().Resources[n]
@@ -99,7 +99,7 @@ func testSecretAclResourceExists(n string, aclItem *model.ACLItem, t *testing.T)
 }
 
 // testAccTokenResource returns an configuration for an Example Widget with the provided name
-func testSecretAclResource(scopeName, principal, permission string) string {
+func testSecretACLResource(scopeName, principal, permission string) string {
 	return fmt.Sprintf(`
 								resource "databricks_secret_scope" "my_scope" {
 								  name = "%s"

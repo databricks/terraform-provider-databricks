@@ -69,7 +69,7 @@ func resourceInstanceProfileDelete(d *schema.ResourceData, m interface{}) error 
 	return err
 }
 
-func isInstanceProfileMissing(errorMsg, resourceId string) bool {
+func isInstanceProfileMissing(errorMsg, resourceID string) bool {
 	return strings.Contains(errorMsg, fmt.Sprintf("Instance profile with name: %s not found in "+
-		"list of instance profiles in the workspace!", resourceId))
+		"list of instance profiles in the workspace!", resourceID))
 }

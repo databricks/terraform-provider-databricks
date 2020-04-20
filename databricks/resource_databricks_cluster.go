@@ -1047,7 +1047,7 @@ func resourceClusterUpdate(d *schema.ResourceData, m interface{}) error {
 		return resourceClusterRead(d, m)
 	}
 
-	return errors.New("Unable to edit cluster due to cluster state not being in a runnable/terminated state.")
+	return errors.New("unable to edit cluster due to cluster state not being in a runnable/terminated state")
 }
 
 func resourceClusterDelete(d *schema.ResourceData, m interface{}) error {
@@ -1107,8 +1107,8 @@ func parseSchemaToCluster(d *schema.ResourceData, schemaAttPrefix string) model.
 		if availability, ok := awsAttributesMap["availability"]; ok {
 			awsAttributes.Availability = model.AwsAvailability(availability.(string))
 		}
-		if zoneId, ok := awsAttributesMap["zone_id"]; ok {
-			awsAttributes.ZoneID = zoneId.(string)
+		if zoneID, ok := awsAttributesMap["zone_id"]; ok {
+			awsAttributes.ZoneID = zoneID.(string)
 		}
 		if spotBidPricePercent, ok := awsAttributesMap["spot_bid_price_percent"]; ok {
 			//val, _ := strconv.ParseInt(spotBidPricePercent.(string), 10, 32)
@@ -1136,13 +1136,13 @@ func parseSchemaToCluster(d *schema.ResourceData, schemaAttPrefix string) model.
 	}
 
 	//Deal with driver node type id
-	if driverNodeTypeId, ok := d.GetOk(schemaAttPrefix + "driver_node_type_id"); ok {
-		cluster.DriverNodeTypeID = driverNodeTypeId.(string)
+	if driverNodeTypeID, ok := d.GetOk(schemaAttPrefix + "driver_node_type_id"); ok {
+		cluster.DriverNodeTypeID = driverNodeTypeID.(string)
 	}
 
 	//Deal with worker node type id
-	if nodeTypeId, ok := d.GetOk(schemaAttPrefix + "node_type_id"); ok {
-		cluster.NodeTypeID = nodeTypeId.(string)
+	if nodeTypeID, ok := d.GetOk(schemaAttPrefix + "node_type_id"); ok {
+		cluster.NodeTypeID = nodeTypeID.(string)
 	}
 
 	//Deal with worker ssh public keys
@@ -1337,7 +1337,7 @@ func getMapFromOneItemSet(input interface{}) map[string]interface{} {
 	return nil
 }
 
-func isClusterMissing(errorMsg, resourceId string) bool {
+func isClusterMissing(errorMsg, resourceID string) bool {
 	return strings.Contains(errorMsg, "INVALID_PARAMETER_VALUE") &&
-		strings.Contains(errorMsg, fmt.Sprintf("Cluster %s does not exist", resourceId))
+		strings.Contains(errorMsg, fmt.Sprintf("Cluster %s does not exist", resourceID))
 }

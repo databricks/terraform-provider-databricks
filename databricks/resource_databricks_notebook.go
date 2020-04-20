@@ -248,7 +248,7 @@ func getDBCCheckSumForCommands(fileIO io.ReadCloser) (int, error) {
 	return int(crc32.ChecksumIEEE(commandsBuffer.Bytes())), nil
 }
 
-func isNotebookMissing(errorMsg, resourceId string) bool {
+func isNotebookMissing(errorMsg, resourceID string) bool {
 	return strings.Contains(errorMsg, "RESOURCE_DOES_NOT_EXIST") &&
-		strings.Contains(errorMsg, fmt.Sprintf("Path (%s) doesn't exist.", resourceId))
+		strings.Contains(errorMsg, fmt.Sprintf("Path (%s) doesn't exist.", resourceID))
 }

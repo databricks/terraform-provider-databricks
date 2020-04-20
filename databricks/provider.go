@@ -8,6 +8,7 @@ import (
 	"os"
 )
 
+// Provider returns the entire terraform provider object
 func Provider() terraform.ResourceProvider {
 	provider := &schema.Provider{
 		DataSourcesMap: map[string]*schema.Resource{
@@ -18,19 +19,19 @@ func Provider() terraform.ResourceProvider {
 			"databricks_zones":           dataSourceClusterZones(),
 		},
 		ResourcesMap: map[string]*schema.Resource{
-			"databricks_token":                 resourceToken(),
-			"databricks_secret_scope":          resourceSecretScope(),
-			"databricks_secret":                resourceSecret(),
-			"databricks_secret_acl":            resourceSecretAcl(),
-			"databricks_instance_pool":         resourceInstancePool(),
-			"databricks_scim_user":             resourceScimUser(),
-			"databricks_scim_group":            resourceScimGroup(),
-			"databricks_notebook":              resourceNotebook(),
-			"databricks_cluster":               resourceCluster(),
-			"databricks_job":                   resourceJob(),
-			"databricks_dbfs_file":             resourceDBFSFile(),
-			"databricks_dbfs_file_sync":        resourceDBFSFileSync(),
-			"databricks_instance_profile":      resourceInstanceProfile(),
+			"databricks_token":            resourceToken(),
+			"databricks_secret_scope":     resourceSecretScope(),
+			"databricks_secret":           resourceSecret(),
+			"databricks_secret_acl":       resourceSecretACL(),
+			"databricks_instance_pool":    resourceInstancePool(),
+			"databricks_scim_user":        resourceScimUser(),
+			"databricks_scim_group":       resourceScimGroup(),
+			"databricks_notebook":         resourceNotebook(),
+			"databricks_cluster":          resourceCluster(),
+			"databricks_job":              resourceJob(),
+			"databricks_dbfs_file":        resourceDBFSFile(),
+			"databricks_dbfs_file_sync":   resourceDBFSFileSync(),
+			"databricks_instance_profile": resourceInstanceProfile(),
 			"databricks_aws_s3_mount":          resourceAWSS3Mount(),
 			"databricks_azure_blob_mount":      resourceAzureBlobMount(),
 			"databricks_azure_adls_gen1_mount": resourceAzureAdlsGen1Mount(),
@@ -132,24 +133,24 @@ func providerConfigure(d *schema.ResourceData, s string) (interface{}, error) {
 			tokenPayload.WorkspaceName = workspaceName
 		}
 		if subscriptionID, ok := azureAuthMap["subscription_id"].(string); ok {
-			tokenPayload.SubscriptionId = subscriptionID
+			tokenPayload.SubscriptionID = subscriptionID
 		} else {
-			tokenPayload.SubscriptionId = os.Getenv("ARM_SUBSCRIPTION_ID")
+			tokenPayload.SubscriptionID = os.Getenv("ARM_SUBSCRIPTION_ID")
 		}
 		if clientSecret, ok := azureAuthMap["client_secret"].(string); ok {
 			tokenPayload.ClientSecret = clientSecret
 		} else {
-			tokenPayload.SubscriptionId = os.Getenv("ARM_CLIENT_SECRET")
+			tokenPayload.SubscriptionID = os.Getenv("ARM_CLIENT_SECRET")
 		}
 		if clientID, ok := azureAuthMap["client_id"].(string); ok {
 			tokenPayload.ClientID = clientID
 		} else {
-			tokenPayload.SubscriptionId = os.Getenv("ARM_CLIENT_ID")
+			tokenPayload.SubscriptionID = os.Getenv("ARM_CLIENT_ID")
 		}
 		if tenantID, ok := azureAuthMap["tenant_id"].(string); ok {
 			tokenPayload.TenantID = tenantID
 		} else {
-			tokenPayload.SubscriptionId = os.Getenv("ARM_TENANT_ID")
+			tokenPayload.SubscriptionID = os.Getenv("ARM_TENANT_ID")
 		}
 
 		azureAuthSetup := AzureAuth{

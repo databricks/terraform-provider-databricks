@@ -75,7 +75,7 @@ const (
 )
 
 var ClusterStateNonRunnable = []ClusterState{ClusterStateTerminating, ClusterStateTerminated, ClusterStateError, ClusterStateUnknown}
-var ClusterStateNonTerminating = []ClusterState{ClusterStatePending, ClusterStateRunning, ClusterStateRestarting, ClusterStateResizing}
+var ClusterStateNonTerminating = []ClusterState{ClusterStatePending, ClusterStateRunning, ClusterStateRestarting, ClusterStateResizing, ClusterStateUnknown}
 
 func ContainsClusterState(clusterStates []ClusterState, searchState ClusterState) bool {
 	for _, state := range clusterStates {

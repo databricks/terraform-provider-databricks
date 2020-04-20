@@ -39,12 +39,12 @@ func resourceSecret() *schema.Resource {
 	}
 }
 
-func getSecretId(scope string, key string) (string, error) {
+func getSecretID(scope string, key string) (string, error) {
 	return scope + "|||" + key, nil
 }
 
-func getScopeAndKeyFromSecretId(secretIdString string) (string, string, error) {
-	return strings.Split(secretIdString, "|||")[0], strings.Split(secretIdString, "|||")[1], nil
+func getScopeAndKeyFromSecretID(secretIDString string) (string, string, error) {
+	return strings.Split(secretIDString, "|||")[0], strings.Split(secretIDString, "|||")[1], nil
 }
 
 func resourceSecretCreate(d *schema.ResourceData, m interface{}) error {
@@ -56,7 +56,7 @@ func resourceSecretCreate(d *schema.ResourceData, m interface{}) error {
 	if err != nil {
 		return err
 	}
-	id, err := getSecretId(scopeName, key)
+	id, err := getSecretID(scopeName, key)
 	if err != nil {
 		return err
 	}
@@ -67,7 +67,7 @@ func resourceSecretCreate(d *schema.ResourceData, m interface{}) error {
 func resourceSecretRead(d *schema.ResourceData, m interface{}) error {
 	id := d.Id()
 	client := m.(service.DBApiClient)
-	scope, key, err := getScopeAndKeyFromSecretId(id)
+	scope, key, err := getScopeAndKeyFromSecretID(id)
 	if err != nil {
 		return err
 	}
@@ -101,7 +101,7 @@ func resourceSecretRead(d *schema.ResourceData, m interface{}) error {
 func resourceSecretDelete(d *schema.ResourceData, m interface{}) error {
 	client := m.(service.DBApiClient)
 	id := d.Id()
-	scope, key, err := getScopeAndKeyFromSecretId(id)
+	scope, key, err := getScopeAndKeyFromSecretID(id)
 	if err != nil {
 		return err
 	}

@@ -33,8 +33,8 @@ func resourceAWSS3Mount() *schema.Resource {
 
 func resourceAWSS3Create(d *schema.ResourceData, m interface{}) error {
 	client := m.(service.DBApiClient)
-	clusterId := d.Get("cluster_id").(string)
-	err := changeClusterIntoRunningState(clusterId, client)
+	clusterID := d.Get("cluster_id").(string)
+	err := changeClusterIntoRunningState(clusterID, client)
 	if err != nil {
 		return err
 	}
@@ -43,14 +43,14 @@ func resourceAWSS3Create(d *schema.ResourceData, m interface{}) error {
 
 	s3BucketMount := NewAWSIamMount(s3BucketName, mountName)
 
-	err = s3BucketMount.Create(client, clusterId)
+	err = s3BucketMount.Create(client, clusterID)
 	if err != nil {
 		return err
 	}
 
 	d.SetId(mountName)
 
-	err = d.Set("cluster_id", clusterId)
+	err = d.Set("cluster_id", clusterID)
 	if err != nil {
 		return err
 	}
@@ -64,8 +64,8 @@ func resourceAWSS3Create(d *schema.ResourceData, m interface{}) error {
 
 func resourceAWSS3Read(d *schema.ResourceData, m interface{}) error {
 	client := m.(service.DBApiClient)
-	clusterId := d.Get("cluster_id").(string)
-	err := changeClusterIntoRunningState(clusterId, client)
+	clusterID := d.Get("cluster_id").(string)
+	err := changeClusterIntoRunningState(clusterID, client)
 	if err != nil {
 		return err
 	}
@@ -74,7 +74,7 @@ func resourceAWSS3Read(d *schema.ResourceData, m interface{}) error {
 
 	s3BucketMount := NewAWSIamMount(s3BucketName, mountName)
 
-	s3BucketNameMounted, err := s3BucketMount.Read(client, clusterId)
+	s3BucketNameMounted, err := s3BucketMount.Read(client, clusterID)
 	if err != nil {
 		return err
 	}
@@ -85,13 +85,13 @@ func resourceAWSS3Read(d *schema.ResourceData, m interface{}) error {
 
 func resourceAWSS3Delete(d *schema.ResourceData, m interface{}) error {
 	client := m.(service.DBApiClient)
-	clusterId := d.Get("cluster_id").(string)
-	err := changeClusterIntoRunningState(clusterId, client)
+	clusterID := d.Get("cluster_id").(string)
+	err := changeClusterIntoRunningState(clusterID, client)
 	if err != nil {
 		return err
 	}
 	s3BucketName := d.Get("s3_bucket_name").(string)
 	mountName := d.Get("mount_name").(string)
 	s3BucketMount := NewAWSIamMount(s3BucketName, mountName)
-	return s3BucketMount.Delete(client, clusterId)
+	return s3BucketMount.Delete(client, clusterID)
 }

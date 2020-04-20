@@ -2,18 +2,17 @@ package service
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"github.com/databrickslabs/databricks-terraform/client/model"
 	"net/http"
 )
 
-// SecretsAPI exposes the Secrets API
+// SecretScopesAPI exposes the Secret Scopes API
 type SecretScopesAPI struct {
 	Client DBApiClient
 }
 
-// CreateSecretScope creates a new secret scope
+// Create creates a new secret scope
 func (a SecretScopesAPI) Create(scope string, initialManagePrincipal string) error {
 	data := struct {
 		Scope                  string `json:"scope,omitempty"`
@@ -26,7 +25,7 @@ func (a SecretScopesAPI) Create(scope string, initialManagePrincipal string) err
 	return err
 }
 
-// DeleteSecretScope deletes a secret scope
+// Delete deletes a secret scope
 func (a SecretScopesAPI) Delete(scope string) error {
 	data := struct {
 		Scope string `json:"scope,omitempty" `
@@ -52,6 +51,7 @@ func (a SecretScopesAPI) List() ([]model.SecretScope, error) {
 	return listSecretScopesResponse.Scopes, err
 }
 
+// Read will return the metadata for the secret scope
 func (a SecretScopesAPI) Read(scopeName string) (model.SecretScope, error) {
 	var secretScope model.SecretScope
 	scopes, err := a.List()
@@ -63,5 +63,5 @@ func (a SecretScopesAPI) Read(scopeName string) (model.SecretScope, error) {
 			return scope, nil
 		}
 	}
-	return secretScope, errors.New(fmt.Sprintf("No Secret Scope found with scope name %s.", scopeName))
+	return secretScope, fmt.Errorf("no Secret Scope found with scope name %s", scopeName)
 }

@@ -70,7 +70,7 @@ func TestTokensAPI_Create(t *testing.T) {
 
 func TestTokensAPI_Delete(t *testing.T) {
 	type args struct {
-		TokenId string `json:"token_id,omitempty"`
+		TokenID string `json:"token_id,omitempty"`
 	}
 	tests := []struct {
 		name           string
@@ -85,7 +85,7 @@ func TestTokensAPI_Delete(t *testing.T) {
 			response:       "",
 			responseStatus: http.StatusOK,
 			args: args{
-				TokenId: "5715498424f15ee0213be729257b53fc35a47d5953e3bdfd8ed22a0b93b339f4",
+				TokenID: "5715498424f15ee0213be729257b53fc35a47d5953e3bdfd8ed22a0b93b339f4",
 			},
 			want:    nil,
 			wantErr: false,
@@ -95,7 +95,7 @@ func TestTokensAPI_Delete(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			var input args
 			AssertRequestWithMockServer(t, &tt.args, http.MethodPost, "/api/2.0/token/delete", &input, tt.response, tt.responseStatus, tt.want, tt.wantErr, func(client DBApiClient) (interface{}, error) {
-				return nil, client.Tokens().Delete(tt.args.TokenId)
+				return nil, client.Tokens().Delete(tt.args.TokenID)
 			})
 		})
 	}
@@ -108,7 +108,7 @@ func TestTokensAPI_List(t *testing.T) {
 		response       string
 		responseStatus int
 		args           *args
-		wantUri        string
+		wantURI        string
 		want           []model.TokenInfo
 		wantErr        bool
 	}{
@@ -132,7 +132,7 @@ func TestTokensAPI_List(t *testing.T) {
 						}`,
 			responseStatus: http.StatusOK,
 			args:           nil,
-			wantUri:        "/api/2.0/token/list?",
+			wantURI:        "/api/2.0/token/list?",
 			want: []model.TokenInfo{
 				{
 					TokenID:      "5715498424f15ee0213be729257b53fc35a47d5953e3bdfd8ed22a0b93b339f4",
@@ -154,7 +154,7 @@ func TestTokensAPI_List(t *testing.T) {
 			response:       ``,
 			responseStatus: http.StatusBadRequest,
 			args:           nil,
-			wantUri:        "/api/2.0/token/list?",
+			wantURI:        "/api/2.0/token/list?",
 			want:           nil,
 			wantErr:        true,
 		},
@@ -162,7 +162,7 @@ func TestTokensAPI_List(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var input args
-			AssertRequestWithMockServer(t, tt.args, http.MethodGet, tt.wantUri, &input, tt.response, tt.responseStatus, tt.want, tt.wantErr, func(client DBApiClient) (interface{}, error) {
+			AssertRequestWithMockServer(t, tt.args, http.MethodGet, tt.wantURI, &input, tt.response, tt.responseStatus, tt.want, tt.wantErr, func(client DBApiClient) (interface{}, error) {
 				return client.Tokens().List()
 			})
 		})
@@ -171,14 +171,14 @@ func TestTokensAPI_List(t *testing.T) {
 
 func TestTokensAPI_Read(t *testing.T) {
 	type args struct {
-		TokenId string `json:"token_id,omitempty"`
+		TokenID string `json:"token_id,omitempty"`
 	}
 	tests := []struct {
 		name           string
 		response       string
 		args           args
 		responseStatus int
-		wantUri        string
+		wantURI        string
 		want           model.TokenInfo
 		wantErr        bool
 	}{
@@ -201,7 +201,7 @@ func TestTokensAPI_Read(t *testing.T) {
 						  ]
 						}`,
 			args: args{
-				TokenId: "5715498424f15ee0213be729257b53fc35a47d5953e3bdfd8ed22a0b93b339f4",
+				TokenID: "5715498424f15ee0213be729257b53fc35a47d5953e3bdfd8ed22a0b93b339f4",
 			},
 			responseStatus: http.StatusOK,
 			want: model.TokenInfo{
@@ -210,18 +210,18 @@ func TestTokensAPI_Read(t *testing.T) {
 				ExpiryTime:   1513120616294,
 				Comment:      "this is an example token",
 			},
-			wantUri: "/api/2.0/token/list?",
+			wantURI: "/api/2.0/token/list?",
 			wantErr: false,
 		},
 		{
 			name:     "Read list fails",
 			response: ``,
 			args: args{
-				TokenId: "5715498424f15ee0213be729257b53fc35a47d5953e3bdfd8ed22a0b93b339f4",
+				TokenID: "5715498424f15ee0213be729257b53fc35a47d5953e3bdfd8ed22a0b93b339f4",
 			},
 			responseStatus: http.StatusBadRequest,
 			want:           model.TokenInfo{},
-			wantUri:        "/api/2.0/token/list?",
+			wantURI:        "/api/2.0/token/list?",
 			wantErr:        true,
 		},
 		{
@@ -243,19 +243,19 @@ func TestTokensAPI_Read(t *testing.T) {
 						  ]
 						}`,
 			args: args{
-				TokenId: "5715498424f15ee0213be729257b53fc35a47d5953e3bdfd8ed22a0b93b339f4",
+				TokenID: "5715498424f15ee0213be729257b53fc35a47d5953e3bdfd8ed22a0b93b339f4",
 			},
 			responseStatus: http.StatusOK,
 			want:           model.TokenInfo{},
-			wantUri:        "/api/2.0/token/list?",
+			wantURI:        "/api/2.0/token/list?",
 			wantErr:        true,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var input args
-			AssertRequestWithMockServer(t, &tt.args, http.MethodGet, tt.wantUri, &input, tt.response, tt.responseStatus, tt.want, tt.wantErr, func(client DBApiClient) (interface{}, error) {
-				return client.Tokens().Read(tt.args.TokenId)
+			AssertRequestWithMockServer(t, &tt.args, http.MethodGet, tt.wantURI, &input, tt.response, tt.responseStatus, tt.want, tt.wantErr, func(client DBApiClient) (interface{}, error) {
+				return client.Tokens().Read(tt.args.TokenID)
 			})
 		})
 	}

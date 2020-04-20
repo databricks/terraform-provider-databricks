@@ -1,5 +1,6 @@
 package model
 
+// CommandResults is the out put when the command finishes in API 1.2
 type CommandResults struct {
 	ResultType   string      `json:"resultType,omitempty"`
 	Summary      string      `json:"summary,omitempty"`
@@ -7,17 +8,12 @@ type CommandResults struct {
 	Data         interface{} `json:"data,omitempty"`
 	Schema       interface{} `json:"schema,omitempty"`
 	Truncated    bool        `json:"truncated,omitempty"`
-	IsJsonSchema bool        `json:"isJsonSchema,omitempty"`
+	IsJSONSchema bool        `json:"isJsonSchema,omitempty"`
 }
 
+// Command is the struct that contains what the 1.2 api returns for the commands api
 type Command struct {
 	ID      string          `json:"id,omitempty"`
 	Status  string          `json:"status,omitempty"`
 	Results *CommandResults `json:"results,omitempty"`
-}
-
-type ExecutionContext struct {
-	ContextId string   `json:"contextId,omitempty"`
-	ClusterId string   `json:"clusterId,omitempty"`
-	Language  Language `json:"language,omitempty"`
 }

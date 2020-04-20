@@ -14,6 +14,7 @@ type GroupsAPI struct {
 	Client DBApiClient
 }
 
+// Create creates a scim group in the Databricks workspace
 func (a GroupsAPI) Create(groupName string, members []string, roles []string, entitlements []string) (model.Group, error) {
 	var group model.Group
 
@@ -51,6 +52,7 @@ func (a GroupsAPI) Create(groupName string, members []string, roles []string, en
 	return group, err
 }
 
+// Read reads and returns a Group object via SCIM api
 func (a GroupsAPI) Read(groupID string) (model.Group, error) {
 	var group model.Group
 	groupPath := fmt.Sprintf("/preview/scim/v2/Groups/%v", groupID)
@@ -81,7 +83,7 @@ func (a GroupsAPI) Read(groupID string) (model.Group, error) {
 	return group, err
 }
 
-// Not Crud Related
+// GetAdminGroup returns the admin group in a given workspace by fetching with query "displayName+eq+admins"
 func (a GroupsAPI) GetAdminGroup() (model.Group, error) {
 	var group model.Group
 	var groups model.GroupList
@@ -102,6 +104,7 @@ func (a GroupsAPI) GetAdminGroup() (model.Group, error) {
 	return group, errors.New("Unable to identify the admin group! ")
 }
 
+// Patch applys a patch request for a group given a path attribute
 func (a GroupsAPI) Patch(groupID string, addList []string, removeList []string, path model.GroupPathType) error {
 	groupPath := fmt.Sprintf("/preview/scim/v2/Groups/%v", groupID)
 
@@ -114,7 +117,7 @@ func (a GroupsAPI) Patch(groupID string, addList []string, removeList []string, 
 	}
 
 	if addList == nil && removeList == nil {
-		return errors.New("Empty members list to add or to remove.")
+		return errors.New("empty members list to add or to remove")
 	}
 
 	if len(addList) > 0 {
@@ -143,6 +146,7 @@ func (a GroupsAPI) Patch(groupID string, addList []string, removeList []string, 
 	return err
 }
 
+// Delete deletes a group given a group id
 func (a GroupsAPI) Delete(groupID string) error {
 	groupPath := fmt.Sprintf("/preview/scim/v2/Groups/%v", groupID)
 	_, err := a.Client.performQuery(http.MethodDelete, groupPath, "2.0", scimHeaders, nil, nil)

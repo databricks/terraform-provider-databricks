@@ -6,11 +6,12 @@ import (
 	"net/http"
 )
 
-// TokensAPI exposes the Secrets API
+// NotebooksAPI exposes the Notebooks API
 type NotebooksAPI struct {
 	Client DBApiClient
 }
 
+// Create creates a notebook given the content and path
 func (a NotebooksAPI) Create(path string, content string, language model.Language, format model.ExportFormat, overwrite bool) error {
 	notebookCreateRequest := struct {
 		Content   string             `json:"content,omitempty" mask:"true"`
@@ -29,6 +30,7 @@ func (a NotebooksAPI) Create(path string, content string, language model.Languag
 	return err
 }
 
+// Read returns the notebook metadata and not the contents
 func (a NotebooksAPI) Read(path string) (model.NotebookInfo, error) {
 	var notebookInfo model.NotebookInfo
 	notebookGetStatusRequest := struct {
@@ -44,6 +46,7 @@ func (a NotebooksAPI) Read(path string) (model.NotebookInfo, error) {
 	return notebookInfo, err
 }
 
+// Export returns the notebook content as a base64 string
 func (a NotebooksAPI) Export(path string, format model.ExportFormat) (string, error) {
 	var notebookContent map[string]string
 	notebookExportRequest := struct {
@@ -61,6 +64,7 @@ func (a NotebooksAPI) Export(path string, format model.ExportFormat) (string, er
 	return notebookContent["content"], err
 }
 
+// Mkdirs will make folders in a workspace recursively given a path
 func (a NotebooksAPI) Mkdirs(path string) error {
 	mkDirsRequest := struct {
 		Path string `json:"path,omitempty" url:"path,omitempty"`
@@ -72,6 +76,8 @@ func (a NotebooksAPI) Mkdirs(path string) error {
 	return err
 }
 
+// List will list all objects in a path on the workspace and with the recursive flag it will recursively list
+// all the objects
 func (a NotebooksAPI) List(path string, recursive bool) ([]model.NotebookInfo, error) {
 	if recursive == true {
 		var paths []model.NotebookInfo
@@ -80,9 +86,8 @@ func (a NotebooksAPI) List(path string, recursive bool) ([]model.NotebookInfo, e
 			return nil, err
 		}
 		return paths, err
-	} else {
-		return a.list(path)
 	}
+	return a.list(path)
 }
 
 func (a NotebooksAPI) recursiveAddPaths(path string, pathList *[]model.NotebookInfo) error {
@@ -121,6 +126,7 @@ func (a NotebooksAPI) list(path string) ([]model.NotebookInfo, error) {
 	return notebookList.Objects, err
 }
 
+// Delete will delete folders given a path and recursive flag
 func (a NotebooksAPI) Delete(path string, recursive bool) error {
 	notebookDelete := struct {
 		Path      string `json:"path,omitempty"`

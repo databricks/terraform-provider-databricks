@@ -163,8 +163,8 @@ func resourceInstancePoolCreate(d *schema.ResourceData, m interface{}) error {
 		if availability, ok := awsAttributesMap["availability"]; ok {
 			instancePoolAwsAttributes.Availability = model.AwsAvailability(availability.(string))
 		}
-		if zoneId, ok := awsAttributesMap["zone_id"]; ok {
-			instancePoolAwsAttributes.ZoneID = zoneId.(string)
+		if zoneID, ok := awsAttributesMap["zone_id"]; ok {
+			instancePoolAwsAttributes.ZoneID = zoneID.(string)
 		}
 		if spotBidPricePercent, ok := awsAttributesMap["spot_bid_price_percent"]; ok {
 			//val, _ := strconv.ParseInt(spotBidPricePercent.(string), 10, 32)
@@ -173,8 +173,8 @@ func resourceInstancePoolCreate(d *schema.ResourceData, m interface{}) error {
 		instancePool.AwsAttributes = &instancePoolAwsAttributes
 	}
 
-	if nodeTypeId, ok := d.GetOk("node_type_id"); ok {
-		instancePool.NodeTypeId = nodeTypeId.(string)
+	if nodeTypeID, ok := d.GetOk("node_type_id"); ok {
+		instancePool.NodeTypeID = nodeTypeID.(string)
 	}
 
 	if customTags, ok := d.GetOk("custom_tags"); ok {
@@ -221,7 +221,7 @@ func resourceInstancePoolCreate(d *schema.ResourceData, m interface{}) error {
 	if err != nil {
 		return err
 	}
-	d.SetId(instancePoolInfo.InstancePoolId)
+	d.SetId(instancePoolInfo.InstancePoolID)
 	return resourceInstancePoolRead(d, m)
 }
 
@@ -270,7 +270,7 @@ func resourceInstancePoolRead(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 
-	err = d.Set("node_type_id", instancePoolInfo.NodeTypeId)
+	err = d.Set("node_type_id", instancePoolInfo.NodeTypeID)
 	if err != nil {
 		return err
 	}
@@ -328,8 +328,8 @@ func resourceInstancePoolUpdate(d *schema.ResourceData, m interface{}) error {
 	instancePoolInfo.MinIdleInstances = int32(d.Get("min_idle_instances").(int))
 	instancePoolInfo.MaxCapacity = int32(d.Get("max_capacity").(int))
 	instancePoolInfo.IdleInstanceAutoTerminationMinutes = int32(d.Get("idle_instance_autotermination_minutes").(int))
-	instancePoolInfo.InstancePoolId = id
-	instancePoolInfo.NodeTypeId = d.Get("node_type_id").(string)
+	instancePoolInfo.InstancePoolID = id
+	instancePoolInfo.NodeTypeID = d.Get("node_type_id").(string)
 
 	err := client.InstancePools().Update(instancePoolInfo)
 	if err != nil {
@@ -345,7 +345,7 @@ func resourceInstancePoolDelete(d *schema.ResourceData, m interface{}) error {
 	return err
 }
 
-func isInstancePoolMissing(errorMsg, resourceId string) bool {
+func isInstancePoolMissing(errorMsg, resourceID string) bool {
 	return strings.Contains(errorMsg, "RESOURCE_DOES_NOT_EXIST") &&
-		strings.Contains(errorMsg, fmt.Sprintf("Can't find an instance pool with id: %s", resourceId))
+		strings.Contains(errorMsg, fmt.Sprintf("Can't find an instance pool with id: %s", resourceID))
 }

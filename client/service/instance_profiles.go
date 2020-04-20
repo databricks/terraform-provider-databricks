@@ -2,16 +2,17 @@ package service
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"github.com/databrickslabs/databricks-terraform/client/model"
 	"net/http"
 )
 
+// InstanceProfilesAPI exposes the instance profiles api on the AWS deployment of Databricks
 type InstanceProfilesAPI struct {
 	Client DBApiClient
 }
 
+// Create creates an instance profile record on Databricks
 func (a InstanceProfilesAPI) Create(instanceProfileARN string, skipValidation bool) error {
 	addInstanceProfileRequest := struct {
 		InstanceProfileArn string `json:"instance_profile_arn,omitempty" url:"instance_profile_arn,omitempty"`
@@ -24,6 +25,7 @@ func (a InstanceProfilesAPI) Create(instanceProfileARN string, skipValidation bo
 	return err
 }
 
+// Read returns the ARN back if it exists on the Databricks workspace
 func (a InstanceProfilesAPI) Read(instanceProfileARN string) (string, error) {
 	var response string
 	instanceProfiles, err := a.List()
@@ -37,10 +39,11 @@ func (a InstanceProfilesAPI) Read(instanceProfileARN string) (string, error) {
 		}
 	}
 
-	return response, errors.New(fmt.Sprintf("Instance profile with name: %s not found in "+
-		"list of instance profiles in the workspace!", instanceProfileARN))
+	return response, fmt.Errorf("Instance profile with name: %s not found in "+
+		"list of instance profiles in the workspace!", instanceProfileARN)
 }
 
+// List lists all the instance profiles in the workspace
 func (a InstanceProfilesAPI) List() ([]model.InstanceProfileInfo, error) {
 
 	var instanceProfilesArnList struct {
@@ -55,6 +58,7 @@ func (a InstanceProfilesAPI) List() ([]model.InstanceProfileInfo, error) {
 	return instanceProfilesArnList.InstanceProfiles, err
 }
 
+// Delete deletes the instance profile given an instance profile arn
 func (a InstanceProfilesAPI) Delete(instanceProfileARN string) error {
 	deleteInstanceProfileRequest := struct {
 		InstanceProfileArn string `json:"instance_profile_arn,omitempty" url:"instance_profile_arn,omitempty"`

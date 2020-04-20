@@ -76,7 +76,7 @@ func resourceNotebook() *schema.Resource {
 				ValidateFunc: validation.StringInSlice([]string{
 					string(model.DBC),
 					string(model.Source),
-					string(model.Html),
+					string(model.HTML),
 				}, false),
 			},
 			"object_type": &schema.Schema{
@@ -166,7 +166,7 @@ func resourceNotebookRead(d *schema.ResourceData, m interface{}) error {
 	if err != nil {
 		return err
 	}
-	err = d.Set("object_id", int(notebookInfo.ObjectId))
+	err = d.Set("object_id", int(notebookInfo.ObjectID))
 	if err != nil {
 		return err
 	}
@@ -248,7 +248,7 @@ func getDBCCheckSumForCommands(fileIO io.ReadCloser) (int, error) {
 	return int(crc32.ChecksumIEEE(commandsBuffer.Bytes())), nil
 }
 
-func isNotebookMissing(errorMsg, resourceId string) bool {
+func isNotebookMissing(errorMsg, resourceID string) bool {
 	return strings.Contains(errorMsg, "RESOURCE_DOES_NOT_EXIST") &&
-		strings.Contains(errorMsg, fmt.Sprintf("Path (%s) doesn't exist.", resourceId))
+		strings.Contains(errorMsg, fmt.Sprintf("Path (%s) doesn't exist.", resourceID))
 }

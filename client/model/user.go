@@ -1,30 +1,37 @@
 package model
 
+// Entitlement is a custom type that contains a set of entitlements for a user/group
 type Entitlement string
 
+// List of possible entitlement constants on Databricks
 const (
 	AllowClusterCreateEntitlement      Entitlement = "allow-cluster-create"
 	AllowInstancePoolCreateEntitlement Entitlement = "allow-instance-pool-create"
 )
 
+// GroupsListItem is a struct that contains a value of group id
 type GroupsListItem struct {
 	Value string `json:"value,omitempty"`
 }
 
+// EntitlementsListItem is a struct that contains a value of entitlement
 type EntitlementsListItem struct {
 	Value Entitlement `json:"value,omitempty"`
 }
 
+// RoleListItem is a struct that contains a value of role
 type RoleListItem struct {
 	Value string `json:"value,omitempty"`
 }
 
+// Email is a struct that contains information about a user's email
 type Email struct {
 	Type    interface{} `json:"type,omitempty"`
 	Value   string      `json:"value,omitempty"`
 	Primary interface{} `json:"primary,omitempty"`
 }
 
+// User is a struct that contains all the information about a SCIM user
 type User struct {
 	ID               string                 `json:"id,omitempty"`
 	Emails           []Email                `json:"emails,omitempty"`
@@ -40,6 +47,7 @@ type User struct {
 	InheritedRoles   []RoleListItem         `json:"inherited_roles,omitempty"`
 }
 
+// UserPatchRequest is a struct that contains all the information for a PATCH request to the SCIM users api
 type UserPatchRequest struct {
 	Schemas    []URN                 `json:"schemas,omitempty"`
 	Operations []UserPatchOperations `json:"Operations,omitempty"`

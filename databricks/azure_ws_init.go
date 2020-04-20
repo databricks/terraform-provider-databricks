@@ -7,11 +7,13 @@ import (
 	"net/http"
 )
 
+// List of management information
 const (
 	ManagementResourceEndpoint string = "https://management.core.windows.net/"
 	ADBResourceID              string = "2ff814a6-3304-4ab8-85cb-cd0e6f879c1d"
 )
 
+// AzureAuth is a struct that contains information about the azure sp authentication
 type AzureAuth struct {
 	TokenPayload           *TokenPayload
 	ManagementToken        string
@@ -20,21 +22,24 @@ type AzureAuth struct {
 	AdbPlatformToken       string
 }
 
+// TokenPayload contains all the auth information for azure sp authentication
 type TokenPayload struct {
 	ManagedResourceGroup string
 	AzureRegion          string
 	WorkspaceName        string
 	ResourceGroup        string
-	SubscriptionId       string
+	SubscriptionID       string
 	ClientSecret         string
 	ClientID             string
 	TenantID             string
 }
 
+// WsProps contains information about the workspace properties
 type WsProps struct {
 	ManagedResourceGroupID string `json:"managedResourceGroupId"`
 }
 
+// WorkspaceRequest contains the request information for getting workspace information
 type WorkspaceRequest struct {
 	Properties *WsProps `json:"properties"`
 	Name       string   `json:"name"`
@@ -63,13 +68,13 @@ func (a *AzureAuth) getManagementToken(config *service.DBApiClientConfig) error 
 	return nil
 }
 
-func (a *AzureAuth) getWorkspaceId(config *service.DBApiClientConfig) error {
+func (a *AzureAuth) getWorkspaceID(config *service.DBApiClientConfig) error {
 	log.Println("[DEBUG] Getting Workspace ID via management token.")
-	url := "https://management.azure.com/subscriptions/" + a.TokenPayload.SubscriptionId + "/resourceGroups/" + a.TokenPayload.ResourceGroup + "/providers/Microsoft.Databricks/workspaces/" + a.TokenPayload.WorkspaceName + "" +
+	url := "https://management.azure.com/subscriptions/" + a.TokenPayload.SubscriptionID + "/resourceGroups/" + a.TokenPayload.ResourceGroup + "/providers/Microsoft.Databricks/workspaces/" + a.TokenPayload.WorkspaceName + "" +
 		"?api-version=2018-04-01"
 
 	payload := &WorkspaceRequest{
-		Properties: &WsProps{ManagedResourceGroupID: "/subscriptions/" + a.TokenPayload.SubscriptionId + "/resourceGroups/" + a.TokenPayload.ManagedResourceGroup},
+		Properties: &WsProps{ManagedResourceGroupID: "/subscriptions/" + a.TokenPayload.SubscriptionID + "/resourceGroups/" + a.TokenPayload.ManagedResourceGroup},
 		Name:       a.TokenPayload.WorkspaceName,
 		Location:   a.TokenPayload.AzureRegion,
 	}
@@ -157,7 +162,7 @@ func (a *AzureAuth) initWorkspaceAndGetClient(config *service.DBApiClientConfig)
 		return dbClient, err
 	}
 
-	err = a.getWorkspaceId(config)
+	err = a.getWorkspaceID(config)
 	if err != nil {
 		return dbClient, err
 	}

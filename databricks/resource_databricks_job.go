@@ -454,8 +454,8 @@ func resourceJobCreate(d *schema.ResourceData, m interface{}) error {
 	if err != nil {
 		return err
 	}
-	log.Println(job.JobId)
-	d.SetId(strconv.Itoa(int(job.JobId)))
+	log.Println(job.JobID)
+	d.SetId(strconv.Itoa(int(job.JobID)))
 	return resourceJobRead(d, m)
 }
 
@@ -478,7 +478,7 @@ func resourceJobRead(d *schema.ResourceData, m interface{}) error {
 	}
 
 	if _, ok := d.GetOk("existing_cluster_id"); ok {
-		err := d.Set("existing_cluster_id", job.Settings.ExistingClusterId)
+		err := d.Set("existing_cluster_id", job.Settings.ExistingClusterID)
 		if err != nil {
 			return err
 		}
@@ -564,7 +564,7 @@ func resourceJobRead(d *schema.ResourceData, m interface{}) error {
 		newClusterSettings["init_scripts"] = listOfInitScripts
 
 		dockerImage := map[string]string{}
-		dockerImage["url"] = job.Settings.NewCluster.DockerImage.Url
+		dockerImage["url"] = job.Settings.NewCluster.DockerImage.URL
 		if job.Settings.NewCluster.DockerImage.BasicAuth != nil {
 			dockerImage["username"] = job.Settings.NewCluster.DockerImage.BasicAuth.Username
 			dockerImage["password"] = job.Settings.NewCluster.DockerImage.BasicAuth.Password
@@ -578,7 +578,7 @@ func resourceJobRead(d *schema.ResourceData, m interface{}) error {
 
 		newClusterSettings["enable_elastic_disk"] = job.Settings.NewCluster.EnableElasticDisk
 
-		newClusterSettings["instance_pool_id"] = job.Settings.NewCluster.InstancePoolId
+		newClusterSettings["instance_pool_id"] = job.Settings.NewCluster.InstancePoolID
 	}
 
 	libraries := job.Settings.Libraries
@@ -686,7 +686,7 @@ func resourceJobRead(d *schema.ResourceData, m interface{}) error {
 	}
 
 	if job.Settings.SparkJarTask != nil {
-		err = d.Set("jar_uri", job.Settings.SparkJarTask.JarUri)
+		err = d.Set("jar_uri", job.Settings.SparkJarTask.JarURI)
 		if err != nil {
 			return err
 		}
@@ -801,7 +801,7 @@ func resourceJobRead(d *schema.ResourceData, m interface{}) error {
 		sched := map[string]string{}
 		sched["quartz_cron_expression"] = job.Settings.Schedule.QuartzCronExpression
 
-		sched["timezone_id"] = job.Settings.Schedule.TimezoneId
+		sched["timezone_id"] = job.Settings.Schedule.TimezoneID
 
 		schedSet := []map[string]string{sched}
 		err = d.Set("schedule", schedSet)
@@ -820,7 +820,7 @@ func resourceJobRead(d *schema.ResourceData, m interface{}) error {
 		return err
 	}
 
-	err = d.Set("job_id", job.JobId)
+	err = d.Set("job_id", job.JobID)
 	if err != nil {
 		return err
 	}
@@ -869,8 +869,8 @@ func parseSchemaToJobSettings(d *schema.ResourceData) model.JobSettings {
 
 	var jobSettings model.JobSettings
 
-	if existingClusterId, ok := d.GetOk("existing_cluster_id"); ok {
-		jobSettings.ExistingClusterId = existingClusterId.(string)
+	if existingClusterID, ok := d.GetOk("existing_cluster_id"); ok {
+		jobSettings.ExistingClusterID = existingClusterID.(string)
 	}
 
 	cluster := parseSchemaToCluster(d, "new_cluster.0.")
@@ -946,7 +946,7 @@ func parseSchemaToJobSettings(d *schema.ResourceData) model.JobSettings {
 		scheduleMap := getMapFromOneItemSet(schedule)
 		jobSettings.Schedule = &model.CronSchedule{
 			QuartzCronExpression: scheduleMap["quartz_cron_expression"].(string),
-			TimezoneId:           scheduleMap["timezone_id"].(string),
+			TimezoneID:           scheduleMap["timezone_id"].(string),
 		}
 
 	}
@@ -972,7 +972,7 @@ func parseSchemaToNotebookTask(d *schema.ResourceData) *model.NotebookTask {
 func parseSchemaToSparkJarTask(d *schema.ResourceData) *model.SparkJarTask {
 	var sparkJarTask model.SparkJarTask
 	if uri, ok := d.GetOk("jar_uri"); ok {
-		sparkJarTask.JarUri = uri.(string)
+		sparkJarTask.JarURI = uri.(string)
 	}
 	if cName, ok := d.GetOk("jar_main_class_name"); ok {
 		sparkJarTask.MainClassName = cName.(string)
@@ -1096,7 +1096,7 @@ func parseSchemaToLibraries(d *schema.ResourceData) []model.Library {
 	return libraryList
 }
 
-func isJobMissing(errorMsg, resourceId string) bool {
+func isJobMissing(errorMsg, resourceID string) bool {
 	return strings.Contains(errorMsg, "INVALID_PARAMETER_VALUE") &&
-		strings.Contains(errorMsg, fmt.Sprintf("Job %s does not exist.", resourceId))
+		strings.Contains(errorMsg, fmt.Sprintf("Job %s does not exist.", resourceID))
 }

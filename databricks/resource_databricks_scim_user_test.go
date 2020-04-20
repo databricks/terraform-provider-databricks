@@ -56,7 +56,7 @@ func testScimUserResourceDestroy(s *terraform.State) error {
 		if err != nil {
 			return nil
 		}
-		return errors.New("Resource Scim User is not cleaned up!")
+		return errors.New("resource Scim User is not cleaned up")
 	}
 	return nil
 }

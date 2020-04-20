@@ -39,9 +39,8 @@ func resourceAzureAdlsGen2Mount() *schema.Resource {
 					directory := val.(string)
 					if strings.HasPrefix(directory, "/") {
 						return
-					} else {
-						errors = append(errors, fmt.Errorf("%s must start with /, got: %s", key, val))
 					}
+					errors = append(errors, fmt.Errorf("%s must start with /, got: %s", key, val))
 					return
 				},
 			},
@@ -76,8 +75,8 @@ func resourceAzureAdlsGen2Mount() *schema.Resource {
 
 func resourceAzureAdlsGen2Create(d *schema.ResourceData, m interface{}) error {
 	client := m.(service.DBApiClient)
-	clusterId := d.Get("cluster_id").(string)
-	err := changeClusterIntoRunningState(clusterId, client)
+	clusterID := d.Get("cluster_id").(string)
+	err := changeClusterIntoRunningState(clusterID, client)
 	if err != nil {
 		return err
 	}
@@ -85,21 +84,21 @@ func resourceAzureAdlsGen2Create(d *schema.ResourceData, m interface{}) error {
 	storageAccountName := d.Get("storage_account_name").(string)
 	directory := d.Get("directory").(string)
 	mountName := d.Get("mount_name").(string)
-	tenantId := d.Get("tenant_id").(string)
-	clientId := d.Get("client_id").(string)
+	tenantID := d.Get("tenant_id").(string)
+	clientID := d.Get("client_id").(string)
 	clientSecretScope := d.Get("client_secret_scope").(string)
 	clientSecretKey := d.Get("client_secret_key").(string)
 
-	adlsGen2Mount := NewAzureADLSGen2Mount(containerName, storageAccountName, directory, mountName, clientId, tenantId,
+	adlsGen2Mount := NewAzureADLSGen2Mount(containerName, storageAccountName, directory, mountName, clientID, tenantID,
 		clientSecretScope, clientSecretKey)
 
-	err = adlsGen2Mount.Create(client, clusterId)
+	err = adlsGen2Mount.Create(client, clusterID)
 	if err != nil {
 		return err
 	}
 	d.SetId(mountName)
 
-	err = d.Set("cluster_id", clusterId)
+	err = d.Set("cluster_id", clusterID)
 	if err != nil {
 		return err
 	}
@@ -107,11 +106,11 @@ func resourceAzureAdlsGen2Create(d *schema.ResourceData, m interface{}) error {
 	if err != nil {
 		return err
 	}
-	err = d.Set("tenant_id", tenantId)
+	err = d.Set("tenant_id", tenantID)
 	if err != nil {
 		return err
 	}
-	err = d.Set("client_id", clientId)
+	err = d.Set("client_id", clientID)
 	if err != nil {
 		return err
 	}
@@ -128,8 +127,8 @@ func resourceAzureAdlsGen2Create(d *schema.ResourceData, m interface{}) error {
 }
 func resourceAzureAdlsGen2Read(d *schema.ResourceData, m interface{}) error {
 	client := m.(service.DBApiClient)
-	clusterId := d.Get("cluster_id").(string)
-	err := changeClusterIntoRunningState(clusterId, client)
+	clusterID := d.Get("cluster_id").(string)
+	err := changeClusterIntoRunningState(clusterID, client)
 	if err != nil {
 		return err
 	}
@@ -137,15 +136,15 @@ func resourceAzureAdlsGen2Read(d *schema.ResourceData, m interface{}) error {
 	storageAccountName := d.Get("storage_account_name").(string)
 	directory := d.Get("directory").(string)
 	mountName := d.Get("mount_name").(string)
-	tenantId := d.Get("tenant_id").(string)
-	clientId := d.Get("client_id").(string)
+	tenantID := d.Get("tenant_id").(string)
+	clientID := d.Get("client_id").(string)
 	clientSecretScope := d.Get("client_secret_scope").(string)
 	clientSecretKey := d.Get("client_secret_key").(string)
 
-	adlsGen2Mount := NewAzureADLSGen2Mount(containerName, storageAccountName, directory, mountName, clientId, tenantId,
+	adlsGen2Mount := NewAzureADLSGen2Mount(containerName, storageAccountName, directory, mountName, clientID, tenantID,
 		clientSecretScope, clientSecretKey)
 
-	url, err := adlsGen2Mount.Read(client, clusterId)
+	url, err := adlsGen2Mount.Read(client, clusterID)
 	if err != nil {
 		//Reset id in case of inability to find mount
 		if strings.Contains(err.Error(), "Unable to find mount point!") ||
@@ -170,8 +169,8 @@ func resourceAzureAdlsGen2Read(d *schema.ResourceData, m interface{}) error {
 
 func resourceAzureAdlsGen2Delete(d *schema.ResourceData, m interface{}) error {
 	client := m.(service.DBApiClient)
-	clusterId := d.Get("cluster_id").(string)
-	err := changeClusterIntoRunningState(clusterId, client)
+	clusterID := d.Get("cluster_id").(string)
+	err := changeClusterIntoRunningState(clusterID, client)
 	if err != nil {
 		return err
 	}
@@ -179,12 +178,12 @@ func resourceAzureAdlsGen2Delete(d *schema.ResourceData, m interface{}) error {
 	storageAccountName := d.Get("storage_account_name").(string)
 	directory := d.Get("directory").(string)
 	mountName := d.Get("mount_name").(string)
-	tenantId := d.Get("tenant_id").(string)
-	clientId := d.Get("client_id").(string)
+	tenantID := d.Get("tenant_id").(string)
+	clientID := d.Get("client_id").(string)
 	clientSecretScope := d.Get("client_secret_scope").(string)
 	clientSecretKey := d.Get("client_secret_key").(string)
 
-	adlsGen2Mount := NewAzureADLSGen2Mount(containerName, storageAccountName, directory, mountName, clientId, tenantId,
+	adlsGen2Mount := NewAzureADLSGen2Mount(containerName, storageAccountName, directory, mountName, clientID, tenantID,
 		clientSecretScope, clientSecretKey)
-	return adlsGen2Mount.Delete(client, clusterId)
+	return adlsGen2Mount.Delete(client, clusterID)
 }

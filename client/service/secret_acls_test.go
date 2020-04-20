@@ -12,7 +12,7 @@ func TestSecretAclsAPI_Create(t *testing.T) {
 	type args struct {
 		Scope      string              `json:"scope"`
 		Principal  string              `json:"principal"`
-		Permission model.AclPermission `json:"permission"`
+		Permission model.ACLPermission `json:"permission"`
 	}
 	tests := []struct {
 		name     string
@@ -26,7 +26,7 @@ func TestSecretAclsAPI_Create(t *testing.T) {
 			args: args{
 				Scope:      "my-scope",
 				Principal:  "my-principal",
-				Permission: model.AclPermissionManage,
+				Permission: model.ACLPermissionManage,
 			},
 			wantErr: false,
 		},
@@ -80,7 +80,7 @@ func TestSecretAclsAPI_List(t *testing.T) {
 		name     string
 		response string
 		args     args
-		want     []model.AclItem
+		want     []model.ACLItem
 		wantErr  bool
 	}{
 		{
@@ -99,14 +99,14 @@ func TestSecretAclsAPI_List(t *testing.T) {
 			args: args{
 				Scope: "my-scope",
 			},
-			want: []model.AclItem{
+			want: []model.ACLItem{
 				{
 					Principal:  "admins",
-					Permission: model.AclPermissionManage,
+					Permission: model.ACLPermissionManage,
 				},
 				{
 					Principal:  "data-scientists",
-					Permission: model.AclPermissionRead,
+					Permission: model.ACLPermissionRead,
 				},
 			},
 			wantErr: false,
@@ -131,7 +131,7 @@ func TestSecretAclsAPI_Read(t *testing.T) {
 		name     string
 		response string
 		args     args
-		want     model.AclItem
+		want     model.ACLItem
 		wantErr  bool
 	}{
 		{
@@ -144,9 +144,9 @@ func TestSecretAclsAPI_Read(t *testing.T) {
 				Scope:     "my-scope",
 				Principal: "my-principal",
 			},
-			want: model.AclItem{
+			want: model.ACLItem{
 				Principal:  "data-scientists",
-				Permission: model.AclPermissionRead,
+				Permission: model.ACLPermissionRead,
 			},
 			wantErr: false,
 		},

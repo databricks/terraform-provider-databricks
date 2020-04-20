@@ -13,6 +13,7 @@ type UsersAPI struct {
 	Client DBApiClient
 }
 
+// Create given a username, displayname, entitlements, and roles will create a scim user via SCIM api
 func (a UsersAPI) Create(userName string, displayName string, entitlements []string, roles []string) (model.User, error) {
 	var user model.User
 	scimUserRequest := struct {
@@ -43,8 +44,9 @@ func (a UsersAPI) Create(userName string, displayName string, entitlements []str
 	return user, err
 }
 
-func (a UsersAPI) Read(userId string) (model.User, error) {
-	user, err := a.read(userId)
+// Read returns the user object and all the attributes of a scim user
+func (a UsersAPI) Read(userID string) (model.User, error) {
+	user, err := a.read(userID)
 	if err != nil {
 		return user, err
 	}
@@ -64,9 +66,9 @@ func (a UsersAPI) Read(userId string) (model.User, error) {
 	return user, err
 }
 
-func (a UsersAPI) read(userId string) (model.User, error) {
+func (a UsersAPI) read(userID string) (model.User, error) {
 	var user model.User
-	userPath := fmt.Sprintf("/preview/scim/v2/Users/%v", userId)
+	userPath := fmt.Sprintf("/preview/scim/v2/Users/%v", userID)
 
 	resp, err := a.Client.performQuery(http.MethodGet, userPath, "2.0", scimHeaders, nil, nil)
 	if err != nil {
@@ -77,8 +79,9 @@ func (a UsersAPI) read(userId string) (model.User, error) {
 	return user, err
 }
 
-func (a UsersAPI) Update(userId string, userName string, displayName string, entitlements []string, roles []string) error {
-	userPath := fmt.Sprintf("/preview/scim/v2/Users/%v", userId)
+// Update will update the user given the user id, username, display name, entitlements and roles
+func (a UsersAPI) Update(userID string, userName string, displayName string, entitlements []string, roles []string) error {
+	userPath := fmt.Sprintf("/preview/scim/v2/Users/%v", userID)
 	scimUserUpdateRequest := struct {
 		Schemas      []model.URN                  `json:"schemas,omitempty"`
 		UserName     string                       `json:"userName,omitempty"`
@@ -99,7 +102,7 @@ func (a UsersAPI) Update(userId string, userName string, displayName string, ent
 		scimUserUpdateRequest.Roles = append(scimUserUpdateRequest.Roles, model.RoleListItem{Value: role})
 	}
 	//Get any existing groups that the user is part of
-	user, err := a.read(userId)
+	user, err := a.read(userID)
 	if err != nil {
 		return err
 	}
@@ -108,16 +111,18 @@ func (a UsersAPI) Update(userId string, userName string, displayName string, ent
 	return err
 }
 
-func (a UsersAPI) Delete(userId string) error {
+// Delete will delete the user given the user id
+func (a UsersAPI) Delete(userID string) error {
 
-	userPath := fmt.Sprintf("/preview/scim/v2/Users/%v", userId)
+	userPath := fmt.Sprintf("/preview/scim/v2/Users/%v", userID)
 
 	_, err := a.Client.performQuery(http.MethodDelete, userPath, "2.0", scimHeaders, nil, nil)
 	return err
 }
 
-func (a UsersAPI) SetUserAsAdmin(userId string, adminGroupId string) error {
-	userPath := fmt.Sprintf("/preview/scim/v2/Users/%v", userId)
+// SetUserAsAdmin will add the user to a admin group given the admin group id and user id
+func (a UsersAPI) SetUserAsAdmin(userID string, adminGroupID string) error {
+	userPath := fmt.Sprintf("/preview/scim/v2/Users/%v", userID)
 
 	var addOperations model.UserPatchOperations
 
@@ -129,7 +134,7 @@ func (a UsersAPI) SetUserAsAdmin(userId string, adminGroupId string) error {
 	addOperations = model.UserPatchOperations{
 		Op: "add",
 		Value: &model.GroupsValue{
-			Groups: []model.ValueListItem{model.ValueListItem{Value: adminGroupId}},
+			Groups: []model.ValueListItem{model.ValueListItem{Value: adminGroupID}},
 		},
 	}
 	userPatchRequest.Operations = append(userPatchRequest.Operations, addOperations)
@@ -139,13 +144,14 @@ func (a UsersAPI) SetUserAsAdmin(userId string, adminGroupId string) error {
 	return err
 }
 
-func (a UsersAPI) VerifyUserAsAdmin(userId string, adminGroupId string) (bool, error) {
-	user, err := a.read(userId)
+// VerifyUserAsAdmin will verify the user belongs to the admin group given the admin group id and user id
+func (a UsersAPI) VerifyUserAsAdmin(userID string, adminGroupID string) (bool, error) {
+	user, err := a.read(userID)
 	if err != nil {
 		return false, err
 	}
 	for _, group := range user.Groups {
-		if group.Value == adminGroupId {
+		if group.Value == adminGroupID {
 			return true, nil
 		}
 	}
@@ -153,8 +159,9 @@ func (a UsersAPI) VerifyUserAsAdmin(userId string, adminGroupId string) (bool, e
 	return false, nil
 }
 
-func (a UsersAPI) RemoveUserAsAdmin(userId string, adminGroupId string) error {
-	userPath := fmt.Sprintf("/preview/scim/v2/Users/%v", userId)
+// RemoveUserAsAdmin will remove the user from the admin group given the admin group id and user id
+func (a UsersAPI) RemoveUserAsAdmin(userID string, adminGroupID string) error {
+	userPath := fmt.Sprintf("/preview/scim/v2/Users/%v", userID)
 
 	var removeOperations model.UserPatchOperations
 
@@ -163,7 +170,7 @@ func (a UsersAPI) RemoveUserAsAdmin(userId string, adminGroupId string) error {
 		Operations: []model.UserPatchOperations{},
 	}
 
-	path := fmt.Sprintf("groups[value eq \"%s\"]", adminGroupId)
+	path := fmt.Sprintf("groups[value eq \"%s\"]", adminGroupID)
 	removeOperations = model.UserPatchOperations{
 		Op:   "remove",
 		Path: path,

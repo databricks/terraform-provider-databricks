@@ -245,8 +245,8 @@ func resourceScimUserDelete(d *schema.ResourceData, m interface{}) error {
 	return err
 }
 
-func isScimUserMissing(errorMsg, resourceId string) bool {
+func isScimUserMissing(errorMsg, resourceID string) bool {
 	return strings.Contains(errorMsg, "urn:ietf:params:scim:api:messages:2.0:Error") &&
-		strings.Contains(errorMsg, fmt.Sprintf("User with id %s not found.", resourceId)) &&
+		strings.Contains(errorMsg, fmt.Sprintf("User with id %s not found.", resourceID)) &&
 		strings.Contains(errorMsg, "404")
 }

@@ -11,9 +11,9 @@ type AwsAvailability string
 
 const (
 	// AwsAvailabilitySpot is spot instance type for clusters
-	AwsAvailabilitySpot             = "SPOT"
+	AwsAvailabilitySpot = "SPOT"
 	// AwsAvailabilityOnDemand is OnDemand instance type for clusters
-	AwsAvailabilityOnDemand         = "ON_DEMAND"
+	AwsAvailabilityOnDemand = "ON_DEMAND"
 	// AwsAvailabilitySpotWithFallback is Spot instance type for clusters with option
 	// to fallback into on-demand if instance cannot be acquired
 	AwsAvailabilitySpotWithFallback = "SPOT_WITH_FALLBACK"
@@ -26,7 +26,7 @@ const (
 	// AzureDiskVolumeTypeStandard is for standard local redundant storage
 	AzureDiskVolumeTypeStandard = "STANDARD_LRS"
 	// AzureDiskVolumeTypePremium is for premium local redundant storage
-	AzureDiskVolumeTypePremium  = "PREMIUM_LRS"
+	AzureDiskVolumeTypePremium = "PREMIUM_LRS"
 )
 
 // EbsVolumeType is disk type on aws vms
@@ -34,39 +34,38 @@ type EbsVolumeType string
 
 const (
 	// EbsVolumeTypeGeneralPurposeSsd is general purpose ssd (starts at 32 gb)
-	EbsVolumeTypeGeneralPurposeSsd      = "GENERAL_PURPOSE_SSD"
+	EbsVolumeTypeGeneralPurposeSsd = "GENERAL_PURPOSE_SSD"
 	// EbsVolumeTypeThroughputOptimizedHdd is throughput optimized hdd (starts at 500 gb)
 	EbsVolumeTypeThroughputOptimizedHdd = "THROUGHPUT_OPTIMIZED_HDD"
 )
-
 
 // ClusterState is for describing possible cluster states
 type ClusterState string
 
 const (
 	// ClusterStatePending is for PENDING state
-	ClusterStatePending     = "PENDING"
+	ClusterStatePending = "PENDING"
 
 	// ClusterStateRunning is for RUNNING state
-	ClusterStateRunning     = "RUNNING"
+	ClusterStateRunning = "RUNNING"
 
 	// ClusterStateRestarting is for RESTARTING state
-	ClusterStateRestarting  = "RESTARTING"
+	ClusterStateRestarting = "RESTARTING"
 
 	// ClusterStateResizing is for RESIZING state
-	ClusterStateResizing    = "RESIZING"
+	ClusterStateResizing = "RESIZING"
 
 	// ClusterStateTerminating is for TERMINATING state
 	ClusterStateTerminating = "TERMINATING"
 
 	// ClusterStateTerminated is for TERMINATED state
-	ClusterStateTerminated  = "TERMINATED"
+	ClusterStateTerminated = "TERMINATED"
 
 	// ClusterStateError is for ERROR state
-	ClusterStateError       = "ERROR"
+	ClusterStateError = "ERROR"
 
 	// ClusterStateUnknown is for UNKNOWN state
-	ClusterStateUnknown     = "UNKNOWN"
+	ClusterStateUnknown = "UNKNOWN"
 )
 
 // ClusterStateNonRunnable is a list of states in which the cluster cannot go back into running by itself
@@ -188,14 +187,14 @@ type DockerImage struct {
 
 // Cluster contains the information when trying to submit api calls or editing a cluster
 type Cluster struct {
-	ClusterID     string            `json:"cluster_id,omitempty"`
-	NumWorkers    int32             `json:"num_workers,omitempty"`
-	Autoscale     *AutoScale        `json:"autoscale,omitempty"`
-	ClusterName   string            `json:"cluster_name,omitempty"`
-	SparkVersion  string            `json:"spark_version,omitempty"`
-	SparkConf     map[string]string `json:"spark_conf,omitempty"`
-	AwsAttributes *AwsAttributes    `json:"aws_attributes,omitempty"`
-	NodeTypeID    string            `json:"node_type_id,omitempty"`
+	ClusterID              string            `json:"cluster_id,omitempty"`
+	NumWorkers             int32             `json:"num_workers,omitempty"`
+	Autoscale              *AutoScale        `json:"autoscale,omitempty"`
+	ClusterName            string            `json:"cluster_name,omitempty"`
+	SparkVersion           string            `json:"spark_version,omitempty"`
+	SparkConf              map[string]string `json:"spark_conf,omitempty"`
+	AwsAttributes          *AwsAttributes    `json:"aws_attributes,omitempty"`
+	NodeTypeID             string            `json:"node_type_id,omitempty"`
 	DriverNodeTypeID       string            `json:"driver_node_type_id,omitempty"`
 	SSHPublicKeys          []string          `json:"ssh_public_keys,omitempty"`
 	CustomTags             map[string]string `json:"custom_tags,omitempty"`
@@ -225,20 +224,20 @@ type ClusterInfo struct {
 	AwsAttributes          *AwsAttributes     `json:"aws_attributes,omitempty"`
 	NodeTypeID             string             `json:"node_type_id,omitempty"`
 	DriverNodeTypeID       string             `json:"driver_node_type_id,omitempty"`
-	SSHPublicKeys          []string          `json:"ssh_public_keys,omitempty"`
-	CustomTags             map[string]string `json:"custom_tags,omitempty"`
-	ClusterLogConf         *StorageInfo      `json:"cluster_log_conf,omitempty"`
-	InitScripts            []StorageInfo     `json:"init_scripts,omitempty"`
-	SparkEnvVars           map[string]string `json:"spark_env_vars,omitempty"`
-	AutoterminationMinutes int32             `json:"autotermination_minutes,omitempty"`
-	EnableElasticDisk      bool              `json:"enable_elastic_disk,omitempty"`
-	InstancePoolID         string            `json:"instance_pool_id,omitempty"`
-	ClusterSource          AwsAvailability   `json:"cluster_source,omitempty"`
-	DockerImage            *DockerImage      `json:"docker_image,omitempty"`
-	State                  ClusterState      `json:"state,omitempty"`
-	StateMessage           string            `json:"state_message,omitempty"`
-	StartTime              int64             `json:"start_time,omitempty"`
-	TerminateTime          int64             `json:"terminate_time,omitempty"`
+	SSHPublicKeys          []string           `json:"ssh_public_keys,omitempty"`
+	CustomTags             map[string]string  `json:"custom_tags,omitempty"`
+	ClusterLogConf         *StorageInfo       `json:"cluster_log_conf,omitempty"`
+	InitScripts            []StorageInfo      `json:"init_scripts,omitempty"`
+	SparkEnvVars           map[string]string  `json:"spark_env_vars,omitempty"`
+	AutoterminationMinutes int32              `json:"autotermination_minutes,omitempty"`
+	EnableElasticDisk      bool               `json:"enable_elastic_disk,omitempty"`
+	InstancePoolID         string             `json:"instance_pool_id,omitempty"`
+	ClusterSource          AwsAvailability    `json:"cluster_source,omitempty"`
+	DockerImage            *DockerImage       `json:"docker_image,omitempty"`
+	State                  ClusterState       `json:"state,omitempty"`
+	StateMessage           string             `json:"state_message,omitempty"`
+	StartTime              int64              `json:"start_time,omitempty"`
+	TerminateTime          int64              `json:"terminate_time,omitempty"`
 	LastStateLossTime      int64              `json:"last_state_loss_time,omitempty"`
 	LastActivityTime       int64              `json:"last_activity_time,omitempty"`
 	ClusterMemoryMb        int64              `json:"cluster_memory_mb,omitempty"`

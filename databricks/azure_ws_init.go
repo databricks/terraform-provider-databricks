@@ -7,7 +7,7 @@ import (
 	"net/http"
 )
 
-// List of management information 
+// List of management information
 const (
 	ManagementResourceEndpoint string = "https://management.core.windows.net/"
 	ADBResourceID              string = "2ff814a6-3304-4ab8-85cb-cd0e6f879c1d"

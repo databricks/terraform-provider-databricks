@@ -53,14 +53,14 @@ func TestClustersAPI_Create(t *testing.T) {
 
 func TestClustersAPI_Get(t *testing.T) {
 	type args struct {
-		ClusterId string `json:"cluster_id,omitempty" url:"cluster_id,omitempty"`
+		ClusterID string `json:"cluster_id,omitempty" url:"cluster_id,omitempty"`
 	}
 	tests := []struct {
 		name           string
 		response       string
 		responseStatus int
 		args           args
-		wantUri        string
+		wantURI        string
 		want           interface{}
 		wantErr        bool
 	}{
@@ -135,9 +135,9 @@ func TestClustersAPI_Get(t *testing.T) {
 					}`,
 			responseStatus: http.StatusOK,
 			args: args{
-				ClusterId: "11203-my-cluster",
+				ClusterID: "11203-my-cluster",
 			},
-			wantUri: "/api/2.0/clusters/get?cluster_id=11203-my-cluster",
+			wantURI: "/api/2.0/clusters/get?cluster_id=11203-my-cluster",
 			want: model.ClusterInfo{
 				AutoScale: &model.AutoScale{
 					MinWorkers: 2,
@@ -208,9 +208,9 @@ func TestClustersAPI_Get(t *testing.T) {
 			response:       ``,
 			responseStatus: http.StatusBadRequest,
 			args: args{
-				ClusterId: "11203-my-cluster",
+				ClusterID: "11203-my-cluster",
 			},
-			wantUri: "/api/2.0/clusters/get?cluster_id=11203-my-cluster",
+			wantURI: "/api/2.0/clusters/get?cluster_id=11203-my-cluster",
 			want:    model.ClusterInfo{},
 			wantErr: true,
 		},
@@ -218,8 +218,8 @@ func TestClustersAPI_Get(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var input args
-			AssertRequestWithMockServer(t, tt.args, http.MethodGet, tt.wantUri, &input, tt.response, tt.responseStatus, tt.want, tt.wantErr, func(client DBApiClient) (interface{}, error) {
-				return client.Clusters().Get(tt.args.ClusterId)
+			AssertRequestWithMockServer(t, tt.args, http.MethodGet, tt.wantURI, &input, tt.response, tt.responseStatus, tt.want, tt.wantErr, func(client DBApiClient) (interface{}, error) {
+				return client.Clusters().Get(tt.args.ClusterID)
 			})
 		})
 	}
@@ -231,7 +231,7 @@ func TestClustersAPI_List(t *testing.T) {
 		name           string
 		response       string
 		responseStatus int
-		wantUri        string
+		wantURI        string
 		want           interface{}
 		wantErr        bool
 	}{
@@ -260,7 +260,7 @@ func TestClustersAPI_List(t *testing.T) {
 						   ]
 						}`,
 			responseStatus: http.StatusOK,
-			wantUri:        "/api/2.0/clusters/list?",
+			wantURI:        "/api/2.0/clusters/list?",
 			want: []model.ClusterInfo{
 				{
 					ClusterName:  "autoscaling-cluster",
@@ -287,14 +287,14 @@ func TestClustersAPI_List(t *testing.T) {
 			name:           "List failure test",
 			response:       ``,
 			responseStatus: http.StatusBadRequest,
-			wantUri:        "/api/2.0/clusters/list?",
+			wantURI:        "/api/2.0/clusters/list?",
 			want:           []model.ClusterInfo{},
 			wantErr:        true,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			AssertRequestWithMockServer(t, nil, http.MethodGet, tt.wantUri, nil, tt.response, tt.responseStatus, tt.want, tt.wantErr, func(client DBApiClient) (interface{}, error) {
+			AssertRequestWithMockServer(t, nil, http.MethodGet, tt.wantURI, nil, tt.response, tt.responseStatus, tt.want, tt.wantErr, func(client DBApiClient) (interface{}, error) {
 				return client.Clusters().List()
 			})
 		})
@@ -307,7 +307,7 @@ func TestClustersAPI_ListZones(t *testing.T) {
 		name           string
 		response       string
 		responseStatus int
-		wantUri        string
+		wantURI        string
 		want           interface{}
 		wantErr        bool
 	}{
@@ -322,7 +322,7 @@ func TestClustersAPI_ListZones(t *testing.T) {
 							"default_zone": "us-west-2b"
 						}`,
 			responseStatus: http.StatusOK,
-			wantUri:        "/api/2.0/clusters/list-zones?",
+			wantURI:        "/api/2.0/clusters/list-zones?",
 			want: model.ZonesInfo{
 
 				Zones: []string{"us-west-2b",
@@ -336,14 +336,14 @@ func TestClustersAPI_ListZones(t *testing.T) {
 			name:           "ListZones failure test",
 			response:       ``,
 			responseStatus: http.StatusBadRequest,
-			wantUri:        "/api/2.0/clusters/list-zones?",
+			wantURI:        "/api/2.0/clusters/list-zones?",
 			want:           model.ZonesInfo{},
 			wantErr:        true,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			AssertRequestWithMockServer(t, nil, http.MethodGet, tt.wantUri, nil, tt.response, tt.responseStatus, tt.want, tt.wantErr, func(client DBApiClient) (interface{}, error) {
+			AssertRequestWithMockServer(t, nil, http.MethodGet, tt.wantURI, nil, tt.response, tt.responseStatus, tt.want, tt.wantErr, func(client DBApiClient) (interface{}, error) {
 				return client.Clusters().ListZones()
 			})
 		})
@@ -356,7 +356,7 @@ func TestClustersAPI_ListNodeTypes(t *testing.T) {
 		name           string
 		response       string
 		responseStatus int
-		wantUri        string
+		wantURI        string
 		want           interface{}
 		wantErr        bool
 	}{
@@ -409,7 +409,7 @@ func TestClustersAPI_ListNodeTypes(t *testing.T) {
 							]
 						}`,
 			responseStatus: http.StatusOK,
-			wantUri:        "/api/2.0/clusters/list-node-types?",
+			wantURI:        "/api/2.0/clusters/list-node-types?",
 			want: []model.NodeType{
 				{
 					NodeTypeID:     "r3.xlarge",
@@ -434,14 +434,14 @@ func TestClustersAPI_ListNodeTypes(t *testing.T) {
 			name:           "ListNodeTypes failure test",
 			response:       ``,
 			responseStatus: http.StatusBadRequest,
-			wantUri:        "/api/2.0/clusters/list-node-types?",
+			wantURI:        "/api/2.0/clusters/list-node-types?",
 			want:           []model.NodeType{},
 			wantErr:        true,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			AssertRequestWithMockServer(t, nil, http.MethodGet, tt.wantUri, nil, tt.response, tt.responseStatus, tt.want, tt.wantErr, func(client DBApiClient) (interface{}, error) {
+			AssertRequestWithMockServer(t, nil, http.MethodGet, tt.wantURI, nil, tt.response, tt.responseStatus, tt.want, tt.wantErr, func(client DBApiClient) (interface{}, error) {
 				return client.Clusters().ListNodeTypes()
 			})
 		})
@@ -450,7 +450,7 @@ func TestClustersAPI_ListNodeTypes(t *testing.T) {
 
 func TestClustersAPI_WaitForClusterRunning(t *testing.T) {
 	type args struct {
-		ClusterId              string        `json:"cluster_id"`
+		ClusterID              string        `json:"cluster_id"`
 		SleepDurationSeconds   time.Duration `json:"sleep_duration_seconds"`
 		TimeoutDurationMinutes time.Duration `json:"timeout_duration_minutes"`
 	}
@@ -460,7 +460,7 @@ func TestClustersAPI_WaitForClusterRunning(t *testing.T) {
 		responseStatus []int
 		requestMethod  []string
 		args           []interface{}
-		wantUri        []string
+		wantURI        []string
 		want           []model.NotebookInfo
 		wantErr        bool
 	}{
@@ -483,12 +483,12 @@ func TestClustersAPI_WaitForClusterRunning(t *testing.T) {
 			requestMethod: []string{http.MethodGet, http.MethodGet, http.MethodGet},
 			args: []interface{}{
 				&args{
-					ClusterId:              "11203-my-cluster",
+					ClusterID:              "11203-my-cluster",
 					SleepDurationSeconds:   0,
 					TimeoutDurationMinutes: 1,
 				},
 			},
-			wantUri: []string{"/api/2.0/clusters/get?cluster_id=11203-my-cluster",
+			wantURI: []string{"/api/2.0/clusters/get?cluster_id=11203-my-cluster",
 				"/api/2.0/clusters/get?cluster_id=11203-my-cluster",
 				"/api/2.0/clusters/get?cluster_id=11203-my-cluster"},
 			want:    nil,
@@ -513,12 +513,12 @@ func TestClustersAPI_WaitForClusterRunning(t *testing.T) {
 			requestMethod: []string{http.MethodGet, http.MethodGet, http.MethodGet},
 			args: []interface{}{
 				&args{
-					ClusterId:              "11203-my-cluster",
+					ClusterID:              "11203-my-cluster",
 					SleepDurationSeconds:   0,
 					TimeoutDurationMinutes: 1,
 				},
 			},
-			wantUri: []string{"/api/2.0/clusters/get?cluster_id=11203-my-cluster",
+			wantURI: []string{"/api/2.0/clusters/get?cluster_id=11203-my-cluster",
 				"/api/2.0/clusters/get?cluster_id=11203-my-cluster",
 				"/api/2.0/clusters/get?cluster_id=11203-my-cluster"},
 			want:    nil,
@@ -543,12 +543,12 @@ func TestClustersAPI_WaitForClusterRunning(t *testing.T) {
 			requestMethod: []string{http.MethodGet, http.MethodGet, http.MethodGet},
 			args: []interface{}{
 				&args{
-					ClusterId:              "11203-my-cluster",
+					ClusterID:              "11203-my-cluster",
 					SleepDurationSeconds:   0,
 					TimeoutDurationMinutes: 1,
 				},
 			},
-			wantUri: []string{"/api/2.0/clusters/get?cluster_id=11203-my-cluster",
+			wantURI: []string{"/api/2.0/clusters/get?cluster_id=11203-my-cluster",
 				"/api/2.0/clusters/get?cluster_id=11203-my-cluster",
 				"/api/2.0/clusters/get?cluster_id=11203-my-cluster"},
 			want:    nil,
@@ -573,12 +573,12 @@ func TestClustersAPI_WaitForClusterRunning(t *testing.T) {
 			requestMethod: []string{http.MethodGet, http.MethodGet, http.MethodGet},
 			args: []interface{}{
 				&args{
-					ClusterId:              "11203-my-cluster",
+					ClusterID:              "11203-my-cluster",
 					SleepDurationSeconds:   1,
 					TimeoutDurationMinutes: 0,
 				},
 			},
-			wantUri: []string{"/api/2.0/clusters/get?cluster_id=11203-my-cluster",
+			wantURI: []string{"/api/2.0/clusters/get?cluster_id=11203-my-cluster",
 				"/api/2.0/clusters/get?cluster_id=11203-my-cluster",
 				"/api/2.0/clusters/get?cluster_id=11203-my-cluster"},
 			want:    nil,
@@ -587,8 +587,8 @@ func TestClustersAPI_WaitForClusterRunning(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			AssertMultipleRequestsWithMockServer(t, tt.args, tt.requestMethod, tt.wantUri, []interface{}{&args{}}, tt.response, tt.responseStatus, tt.want, tt.wantErr, func(client DBApiClient) (interface{}, error) {
-				return nil, client.Clusters().WaitForClusterRunning(tt.args[0].(*args).ClusterId, tt.args[0].(*args).SleepDurationSeconds, tt.args[0].(*args).TimeoutDurationMinutes)
+			AssertMultipleRequestsWithMockServer(t, tt.args, tt.requestMethod, tt.wantURI, []interface{}{&args{}}, tt.response, tt.responseStatus, tt.want, tt.wantErr, func(client DBApiClient) (interface{}, error) {
+				return nil, client.Clusters().WaitForClusterRunning(tt.args[0].(*args).ClusterID, tt.args[0].(*args).SleepDurationSeconds, tt.args[0].(*args).TimeoutDurationMinutes)
 			})
 		})
 	}
@@ -596,7 +596,7 @@ func TestClustersAPI_WaitForClusterRunning(t *testing.T) {
 
 func TestClustersAPI_WaitForClusterTerminated(t *testing.T) {
 	type args struct {
-		ClusterId              string        `json:"cluster_id"`
+		ClusterID              string        `json:"cluster_id"`
 		SleepDurationSeconds   time.Duration `json:"sleep_duration_seconds"`
 		TimeoutDurationMinutes time.Duration `json:"timeout_duration_minutes"`
 	}
@@ -606,7 +606,7 @@ func TestClustersAPI_WaitForClusterTerminated(t *testing.T) {
 		responseStatus []int
 		requestMethod  []string
 		args           []interface{}
-		wantUri        []string
+		wantURI        []string
 		want           []model.NotebookInfo
 		wantErr        bool
 	}{
@@ -629,12 +629,12 @@ func TestClustersAPI_WaitForClusterTerminated(t *testing.T) {
 			requestMethod: []string{http.MethodGet, http.MethodGet, http.MethodGet},
 			args: []interface{}{
 				&args{
-					ClusterId:              "11203-my-cluster",
+					ClusterID:              "11203-my-cluster",
 					SleepDurationSeconds:   0,
 					TimeoutDurationMinutes: 1,
 				},
 			},
-			wantUri: []string{"/api/2.0/clusters/get?cluster_id=11203-my-cluster",
+			wantURI: []string{"/api/2.0/clusters/get?cluster_id=11203-my-cluster",
 				"/api/2.0/clusters/get?cluster_id=11203-my-cluster",
 				"/api/2.0/clusters/get?cluster_id=11203-my-cluster"},
 			want:    nil,
@@ -659,12 +659,12 @@ func TestClustersAPI_WaitForClusterTerminated(t *testing.T) {
 			requestMethod: []string{http.MethodGet, http.MethodGet, http.MethodGet},
 			args: []interface{}{
 				&args{
-					ClusterId:              "11203-my-cluster",
+					ClusterID:              "11203-my-cluster",
 					SleepDurationSeconds:   0,
 					TimeoutDurationMinutes: 1,
 				},
 			},
-			wantUri: []string{"/api/2.0/clusters/get?cluster_id=11203-my-cluster",
+			wantURI: []string{"/api/2.0/clusters/get?cluster_id=11203-my-cluster",
 				"/api/2.0/clusters/get?cluster_id=11203-my-cluster",
 				"/api/2.0/clusters/get?cluster_id=11203-my-cluster"},
 			want:    nil,
@@ -689,12 +689,12 @@ func TestClustersAPI_WaitForClusterTerminated(t *testing.T) {
 			requestMethod: []string{http.MethodGet, http.MethodGet, http.MethodGet},
 			args: []interface{}{
 				&args{
-					ClusterId:              "11203-my-cluster",
+					ClusterID:              "11203-my-cluster",
 					SleepDurationSeconds:   0,
 					TimeoutDurationMinutes: 1,
 				},
 			},
-			wantUri: []string{"/api/2.0/clusters/get?cluster_id=11203-my-cluster",
+			wantURI: []string{"/api/2.0/clusters/get?cluster_id=11203-my-cluster",
 				"/api/2.0/clusters/get?cluster_id=11203-my-cluster",
 				"/api/2.0/clusters/get?cluster_id=11203-my-cluster"},
 			want:    nil,
@@ -719,12 +719,12 @@ func TestClustersAPI_WaitForClusterTerminated(t *testing.T) {
 			requestMethod: []string{http.MethodGet, http.MethodGet, http.MethodGet},
 			args: []interface{}{
 				&args{
-					ClusterId:              "11203-my-cluster",
+					ClusterID:              "11203-my-cluster",
 					SleepDurationSeconds:   1,
 					TimeoutDurationMinutes: 0,
 				},
 			},
-			wantUri: []string{"/api/2.0/clusters/get?cluster_id=11203-my-cluster",
+			wantURI: []string{"/api/2.0/clusters/get?cluster_id=11203-my-cluster",
 				"/api/2.0/clusters/get?cluster_id=11203-my-cluster",
 				"/api/2.0/clusters/get?cluster_id=11203-my-cluster"},
 			want:    nil,
@@ -733,8 +733,8 @@ func TestClustersAPI_WaitForClusterTerminated(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			AssertMultipleRequestsWithMockServer(t, tt.args, tt.requestMethod, tt.wantUri, []interface{}{&args{}}, tt.response, tt.responseStatus, tt.want, tt.wantErr, func(client DBApiClient) (interface{}, error) {
-				return nil, client.Clusters().WaitForClusterTerminated(tt.args[0].(*args).ClusterId, tt.args[0].(*args).SleepDurationSeconds, tt.args[0].(*args).TimeoutDurationMinutes)
+			AssertMultipleRequestsWithMockServer(t, tt.args, tt.requestMethod, tt.wantURI, []interface{}{&args{}}, tt.response, tt.responseStatus, tt.want, tt.wantErr, func(client DBApiClient) (interface{}, error) {
+				return nil, client.Clusters().WaitForClusterTerminated(tt.args[0].(*args).ClusterID, tt.args[0].(*args).SleepDurationSeconds, tt.args[0].(*args).TimeoutDurationMinutes)
 			})
 		})
 	}
@@ -786,7 +786,7 @@ func TestClustersAPI_Edit(t *testing.T) {
 
 func TestClustersAPI_Start(t *testing.T) {
 	type args struct {
-		ClusterId string `json:"cluster_id,omitempty"`
+		ClusterID string `json:"cluster_id,omitempty"`
 	}
 
 	tests := []struct {
@@ -802,7 +802,7 @@ func TestClustersAPI_Start(t *testing.T) {
 			response:       ``,
 			responseStatus: http.StatusOK,
 			args: args{
-				ClusterId: "my-cluster-id",
+				ClusterID: "my-cluster-id",
 			},
 			want:    nil,
 			wantErr: false,
@@ -812,7 +812,7 @@ func TestClustersAPI_Start(t *testing.T) {
 			response:       "",
 			responseStatus: http.StatusBadRequest,
 			args: args{
-				ClusterId: "my-cluster-id",
+				ClusterID: "my-cluster-id",
 			},
 			want:    nil,
 			wantErr: true,
@@ -822,7 +822,7 @@ func TestClustersAPI_Start(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			var input args
 			AssertRequestWithMockServer(t, &tt.args, http.MethodPost, "/api/2.0/clusters/start", &input, tt.response, tt.responseStatus, tt.want, tt.wantErr, func(client DBApiClient) (interface{}, error) {
-				return nil, client.Clusters().Start(tt.args.ClusterId)
+				return nil, client.Clusters().Start(tt.args.ClusterID)
 			})
 		})
 	}
@@ -830,7 +830,7 @@ func TestClustersAPI_Start(t *testing.T) {
 
 func TestClustersAPI_Restart(t *testing.T) {
 	type args struct {
-		ClusterId string `json:"cluster_id,omitempty"`
+		ClusterID string `json:"cluster_id,omitempty"`
 	}
 
 	tests := []struct {
@@ -846,7 +846,7 @@ func TestClustersAPI_Restart(t *testing.T) {
 			response:       ``,
 			responseStatus: http.StatusOK,
 			args: args{
-				ClusterId: "my-cluster-id",
+				ClusterID: "my-cluster-id",
 			},
 			want:    nil,
 			wantErr: false,
@@ -856,7 +856,7 @@ func TestClustersAPI_Restart(t *testing.T) {
 			response:       "",
 			responseStatus: http.StatusBadRequest,
 			args: args{
-				ClusterId: "my-cluster-id",
+				ClusterID: "my-cluster-id",
 			},
 			want:    nil,
 			wantErr: true,
@@ -866,7 +866,7 @@ func TestClustersAPI_Restart(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			var input args
 			AssertRequestWithMockServer(t, &tt.args, http.MethodPost, "/api/2.0/clusters/restart", &input, tt.response, tt.responseStatus, tt.want, tt.wantErr, func(client DBApiClient) (interface{}, error) {
-				return nil, client.Clusters().Restart(tt.args.ClusterId)
+				return nil, client.Clusters().Restart(tt.args.ClusterID)
 			})
 		})
 	}
@@ -874,7 +874,7 @@ func TestClustersAPI_Restart(t *testing.T) {
 
 func TestClustersAPI_Pin(t *testing.T) {
 	type args struct {
-		ClusterId string `json:"cluster_id,omitempty"`
+		ClusterID string `json:"cluster_id,omitempty"`
 	}
 
 	tests := []struct {
@@ -890,7 +890,7 @@ func TestClustersAPI_Pin(t *testing.T) {
 			response:       ``,
 			responseStatus: http.StatusOK,
 			args: args{
-				ClusterId: "my-cluster-id",
+				ClusterID: "my-cluster-id",
 			},
 			want:    nil,
 			wantErr: false,
@@ -900,7 +900,7 @@ func TestClustersAPI_Pin(t *testing.T) {
 			response:       "",
 			responseStatus: http.StatusBadRequest,
 			args: args{
-				ClusterId: "my-cluster-id",
+				ClusterID: "my-cluster-id",
 			},
 			want:    nil,
 			wantErr: true,
@@ -910,7 +910,7 @@ func TestClustersAPI_Pin(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			var input args
 			AssertRequestWithMockServer(t, &tt.args, http.MethodPost, "/api/2.0/clusters/pin", &input, tt.response, tt.responseStatus, tt.want, tt.wantErr, func(client DBApiClient) (interface{}, error) {
-				return nil, client.Clusters().Pin(tt.args.ClusterId)
+				return nil, client.Clusters().Pin(tt.args.ClusterID)
 			})
 		})
 	}
@@ -918,7 +918,7 @@ func TestClustersAPI_Pin(t *testing.T) {
 
 func TestClustersAPI_Unpin(t *testing.T) {
 	type args struct {
-		ClusterId string `json:"cluster_id,omitempty"`
+		ClusterID string `json:"cluster_id,omitempty"`
 	}
 
 	tests := []struct {
@@ -934,7 +934,7 @@ func TestClustersAPI_Unpin(t *testing.T) {
 			response:       ``,
 			responseStatus: http.StatusOK,
 			args: args{
-				ClusterId: "my-cluster-id",
+				ClusterID: "my-cluster-id",
 			},
 			want:    nil,
 			wantErr: false,
@@ -944,7 +944,7 @@ func TestClustersAPI_Unpin(t *testing.T) {
 			response:       "",
 			responseStatus: http.StatusBadRequest,
 			args: args{
-				ClusterId: "my-cluster-id",
+				ClusterID: "my-cluster-id",
 			},
 			want:    nil,
 			wantErr: true,
@@ -954,7 +954,7 @@ func TestClustersAPI_Unpin(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			var input args
 			AssertRequestWithMockServer(t, &tt.args, http.MethodPost, "/api/2.0/clusters/unpin", &input, tt.response, tt.responseStatus, tt.want, tt.wantErr, func(client DBApiClient) (interface{}, error) {
-				return nil, client.Clusters().Unpin(tt.args.ClusterId)
+				return nil, client.Clusters().Unpin(tt.args.ClusterID)
 			})
 		})
 	}
@@ -962,7 +962,7 @@ func TestClustersAPI_Unpin(t *testing.T) {
 
 func TestClustersAPI_Delete(t *testing.T) {
 	type args struct {
-		ClusterId string `json:"cluster_id,omitempty"`
+		ClusterID string `json:"cluster_id,omitempty"`
 	}
 
 	tests := []struct {
@@ -978,7 +978,7 @@ func TestClustersAPI_Delete(t *testing.T) {
 			response:       ``,
 			responseStatus: http.StatusOK,
 			args: args{
-				ClusterId: "my-cluster-id",
+				ClusterID: "my-cluster-id",
 			},
 			want:    nil,
 			wantErr: false,
@@ -988,7 +988,7 @@ func TestClustersAPI_Delete(t *testing.T) {
 			response:       "",
 			responseStatus: http.StatusBadRequest,
 			args: args{
-				ClusterId: "my-cluster-id",
+				ClusterID: "my-cluster-id",
 			},
 			want:    nil,
 			wantErr: true,
@@ -998,7 +998,7 @@ func TestClustersAPI_Delete(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			var input args
 			AssertRequestWithMockServer(t, &tt.args, http.MethodPost, "/api/2.0/clusters/delete", &input, tt.response, tt.responseStatus, tt.want, tt.wantErr, func(client DBApiClient) (interface{}, error) {
-				return nil, client.Clusters().Delete(tt.args.ClusterId)
+				return nil, client.Clusters().Delete(tt.args.ClusterID)
 			})
 		})
 	}
@@ -1006,7 +1006,7 @@ func TestClustersAPI_Delete(t *testing.T) {
 
 func TestClustersAPI_PermanentDelete(t *testing.T) {
 	type args struct {
-		ClusterId string `json:"cluster_id,omitempty"`
+		ClusterID string `json:"cluster_id,omitempty"`
 	}
 
 	tests := []struct {
@@ -1022,7 +1022,7 @@ func TestClustersAPI_PermanentDelete(t *testing.T) {
 			response:       ``,
 			responseStatus: http.StatusOK,
 			args: args{
-				ClusterId: "my-cluster-id",
+				ClusterID: "my-cluster-id",
 			},
 			want:    nil,
 			wantErr: false,
@@ -1032,7 +1032,7 @@ func TestClustersAPI_PermanentDelete(t *testing.T) {
 			response:       "",
 			responseStatus: http.StatusBadRequest,
 			args: args{
-				ClusterId: "my-cluster-id",
+				ClusterID: "my-cluster-id",
 			},
 			want:    nil,
 			wantErr: true,
@@ -1042,7 +1042,7 @@ func TestClustersAPI_PermanentDelete(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			var input args
 			AssertRequestWithMockServer(t, &tt.args, http.MethodPost, "/api/2.0/clusters/permanent-delete", &input, tt.response, tt.responseStatus, tt.want, tt.wantErr, func(client DBApiClient) (interface{}, error) {
-				return nil, client.Clusters().PermanentDelete(tt.args.ClusterId)
+				return nil, client.Clusters().PermanentDelete(tt.args.ClusterID)
 			})
 		})
 	}

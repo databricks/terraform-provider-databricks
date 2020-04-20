@@ -54,7 +54,7 @@ func TestJobsAPI_Create(t *testing.T) {
 
 func TestJobsAPI_Update(t *testing.T) {
 	type args struct {
-		JobId       int64             `json:"job_id,omitempty" url:"job_id,omitempty"`
+		JobID       int64             `json:"job_id,omitempty" url:"job_id,omitempty"`
 		NewSettings model.JobSettings `json:"new_settings,omitempty" url:"new_settings,omitempty"`
 	}
 
@@ -73,7 +73,7 @@ func TestJobsAPI_Update(t *testing.T) {
 						}`,
 			responseStatus: http.StatusOK,
 			args: args{
-				JobId:       1,
+				JobID:       1,
 				NewSettings: model.JobSettings{},
 			},
 			want:    nil,
@@ -84,7 +84,7 @@ func TestJobsAPI_Update(t *testing.T) {
 			response:       "",
 			responseStatus: http.StatusBadRequest,
 			args: args{
-				JobId:       0,
+				JobID:       0,
 				NewSettings: model.JobSettings{},
 			},
 			want:    nil,
@@ -95,7 +95,7 @@ func TestJobsAPI_Update(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			var input args
 			AssertRequestWithMockServer(t, &tt.args, http.MethodPost, "/api/2.0/jobs/reset", &input, tt.response, tt.responseStatus, tt.want, tt.wantErr, func(client DBApiClient) (interface{}, error) {
-				return nil, client.Jobs().Update(tt.args.JobId, tt.args.NewSettings)
+				return nil, client.Jobs().Update(tt.args.JobID, tt.args.NewSettings)
 			})
 		})
 	}
@@ -103,7 +103,7 @@ func TestJobsAPI_Update(t *testing.T) {
 
 func TestJobsAPI_Delete(t *testing.T) {
 	type args struct {
-		JobId int64 `json:"job_id,omitempty" url:"job_id,omitempty"`
+		JobID int64 `json:"job_id,omitempty" url:"job_id,omitempty"`
 	}
 
 	tests := []struct {
@@ -118,7 +118,7 @@ func TestJobsAPI_Delete(t *testing.T) {
 			response:       "",
 			responseStatus: http.StatusOK,
 			args: args{
-				JobId: 0,
+				JobID: 0,
 			},
 			wantErr: false,
 		},
@@ -127,7 +127,7 @@ func TestJobsAPI_Delete(t *testing.T) {
 			response:       "",
 			responseStatus: http.StatusBadRequest,
 			args: args{
-				JobId: 0,
+				JobID: 0,
 			},
 			wantErr: true,
 		},
@@ -136,7 +136,7 @@ func TestJobsAPI_Delete(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			var input args
 			AssertRequestWithMockServer(t, &tt.args, http.MethodPost, "/api/2.0/jobs/delete", &input, tt.response, tt.responseStatus, nil, tt.wantErr, func(client DBApiClient) (interface{}, error) {
-				return nil, client.Jobs().Delete(tt.args.JobId)
+				return nil, client.Jobs().Delete(tt.args.JobID)
 			})
 		})
 	}
@@ -144,14 +144,14 @@ func TestJobsAPI_Delete(t *testing.T) {
 
 func TestJobsAPI_Read(t *testing.T) {
 	type args struct {
-		JobId int64 `json:"job_id,omitempty" url:"job_id,omitempty"`
+		JobID int64 `json:"job_id,omitempty" url:"job_id,omitempty"`
 	}
 	tests := []struct {
 		name           string
 		response       string
 		responseStatus int
 		args           args
-		wantUri        string
+		wantURI        string
 		want           interface{}
 		wantErr        bool
 	}{
@@ -198,9 +198,9 @@ func TestJobsAPI_Read(t *testing.T) {
 						}`,
 			responseStatus: http.StatusOK,
 			args: args{
-				JobId: 1,
+				JobID: 1,
 			},
-			wantUri: "/api/2.0/jobs/get?job_id=1",
+			wantURI: "/api/2.0/jobs/get?job_id=1",
 			want: model.Job{
 				JobID: 1,
 				Settings: &model.JobSettings{
@@ -247,9 +247,9 @@ func TestJobsAPI_Read(t *testing.T) {
 			response:       ``,
 			responseStatus: http.StatusBadRequest,
 			args: args{
-				JobId: 1,
+				JobID: 1,
 			},
-			wantUri: "/api/2.0/jobs/get?job_id=1",
+			wantURI: "/api/2.0/jobs/get?job_id=1",
 			want:    model.Job{},
 			wantErr: true,
 		},
@@ -257,8 +257,8 @@ func TestJobsAPI_Read(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var input args
-			AssertRequestWithMockServer(t, tt.args, http.MethodGet, tt.wantUri, &input, tt.response, tt.responseStatus, tt.want, tt.wantErr, func(client DBApiClient) (interface{}, error) {
-				return client.Jobs().Read(tt.args.JobId)
+			AssertRequestWithMockServer(t, tt.args, http.MethodGet, tt.wantURI, &input, tt.response, tt.responseStatus, tt.want, tt.wantErr, func(client DBApiClient) (interface{}, error) {
+				return client.Jobs().Read(tt.args.JobID)
 			})
 		})
 	}

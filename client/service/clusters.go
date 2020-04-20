@@ -9,6 +9,7 @@ import (
 	"time"
 )
 
+// ClustersAPI is a struct that contains the Databricks api client to perform queries
 type ClustersAPI struct {
 	Client DBApiClient
 }
@@ -26,12 +27,13 @@ func (a ClustersAPI) Create(cluster model.Cluster) (model.ClusterInfo, error) {
 	return clusterInfo, err
 }
 
-// Update edits the configuration of a cluster to match the provided attributes and size
+// Edit edits the configuration of a cluster to match the provided attributes and size
 func (a ClustersAPI) Edit(clusterInfo model.Cluster) error {
 	_, err := a.Client.performQuery(http.MethodPost, "/clusters/edit", "2.0", nil, clusterInfo, nil)
 	return err
 }
 
+// ListZones returns the zones info sent by the cloud service provider
 func (a ClustersAPI) ListZones() (model.ZonesInfo, error) {
 	var zonesInfo model.ZonesInfo
 	resp, err := a.Client.performQuery(http.MethodGet, "/clusters/list-zones", "2.0", nil, nil, nil)
@@ -64,6 +66,7 @@ func (a ClustersAPI) Restart(clusterID string) error {
 	return err
 }
 
+// WaitForClusterRunning will block main thread and wait till cluster is in a RUNNING state
 func (a ClustersAPI) WaitForClusterRunning(clusterID string, sleepDurationSeconds time.Duration, timeoutDurationMinutes time.Duration) error {
 	errChan := make(chan error, 1)
 	go func() {
@@ -93,6 +96,7 @@ func (a ClustersAPI) WaitForClusterRunning(clusterID string, sleepDurationSecond
 	}
 }
 
+// WaitForClusterTerminated will block main thread and wait till cluster is in a TERMINATED state
 func (a ClustersAPI) WaitForClusterTerminated(clusterID string, sleepDurationSeconds time.Duration, timeoutDurationMinutes time.Duration) error {
 	errChan := make(chan error, 1)
 	go func() {
@@ -149,7 +153,7 @@ func (a ClustersAPI) PermanentDelete(clusterID string) error {
 	return err
 }
 
-// Read retrieves the information for a cluster given its identifier
+// Get retrieves the information for a cluster given its identifier
 func (a ClustersAPI) Get(clusterID string) (model.ClusterInfo, error) {
 	var clusterInfo model.ClusterInfo
 

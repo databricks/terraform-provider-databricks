@@ -98,7 +98,7 @@ func TestInstanceProfilesAPI_List(t *testing.T) {
 		response       string
 		responseStatus int
 		args           args
-		wantUri        string
+		wantURI        string
 		want           []model.InstanceProfileInfo
 		wantErr        bool
 	}{
@@ -111,7 +111,7 @@ func TestInstanceProfilesAPI_List(t *testing.T) {
 						}`,
 			responseStatus: http.StatusOK,
 			args:           args{},
-			wantUri:        "/api/2.0/instance-profiles/list?",
+			wantURI:        "/api/2.0/instance-profiles/list?",
 			want: []model.InstanceProfileInfo{
 				{
 					InstanceProfileArn: "arn:aws:iam::123456789:instance-profile/datascience-role1",
@@ -130,7 +130,7 @@ func TestInstanceProfilesAPI_List(t *testing.T) {
 			response:       ``,
 			responseStatus: http.StatusBadRequest,
 			args:           args{},
-			wantUri:        "/api/2.0/instance-profiles/list?",
+			wantURI:        "/api/2.0/instance-profiles/list?",
 			want:           nil,
 			wantErr:        true,
 		},
@@ -138,7 +138,7 @@ func TestInstanceProfilesAPI_List(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var input args
-			AssertRequestWithMockServer(t, tt.args, http.MethodGet, tt.wantUri, &input, tt.response, tt.responseStatus, tt.want, tt.wantErr, func(client DBApiClient) (interface{}, error) {
+			AssertRequestWithMockServer(t, tt.args, http.MethodGet, tt.wantURI, &input, tt.response, tt.responseStatus, tt.want, tt.wantErr, func(client DBApiClient) (interface{}, error) {
 				return client.InstanceProfiles().List()
 			})
 		})
@@ -154,7 +154,7 @@ func TestInstanceProfilesAPI_Read(t *testing.T) {
 		response       string
 		responseStatus int
 		args           args
-		wantUri        string
+		wantURI        string
 		want           string
 		wantErr        bool
 	}{
@@ -169,7 +169,7 @@ func TestInstanceProfilesAPI_Read(t *testing.T) {
 			args: args{
 				InstanceProfileArn: "arn:aws:iam::123456789:instance-profile/datascience-role1",
 			},
-			wantUri: "/api/2.0/instance-profiles/list?",
+			wantURI: "/api/2.0/instance-profiles/list?",
 			want:    "arn:aws:iam::123456789:instance-profile/datascience-role1",
 			wantErr: false,
 		},
@@ -184,7 +184,7 @@ func TestInstanceProfilesAPI_Read(t *testing.T) {
 			args: args{
 				InstanceProfileArn: "arn:aws:iam::123456789:instance-profile/datascience-role4",
 			},
-			wantUri: "/api/2.0/instance-profiles/list?",
+			wantURI: "/api/2.0/instance-profiles/list?",
 			want:    "",
 			wantErr: true,
 		},
@@ -195,7 +195,7 @@ func TestInstanceProfilesAPI_Read(t *testing.T) {
 			args: args{
 				InstanceProfileArn: "arn:aws:iam::123456789:instance-profile/datascience-role1",
 			},
-			wantUri: "/api/2.0/instance-profiles/list?",
+			wantURI: "/api/2.0/instance-profiles/list?",
 			want:    "",
 			wantErr: true,
 		},
@@ -203,7 +203,7 @@ func TestInstanceProfilesAPI_Read(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var input args
-			AssertRequestWithMockServer(t, tt.args, http.MethodGet, tt.wantUri, &input, tt.response, tt.responseStatus, tt.want, tt.wantErr, func(client DBApiClient) (interface{}, error) {
+			AssertRequestWithMockServer(t, tt.args, http.MethodGet, tt.wantURI, &input, tt.response, tt.responseStatus, tt.want, tt.wantErr, func(client DBApiClient) (interface{}, error) {
 				return client.InstanceProfiles().Read(tt.args.InstanceProfileArn)
 			})
 		})

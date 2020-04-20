@@ -12,6 +12,7 @@ type TokensAPI struct {
 	Client *DBApiClient
 }
 
+// Create creates a api token given a expiration duration and a comment
 func (a TokensAPI) Create(lifeTimeSeconds int32, comment string) (model.TokenResponse, error) {
 	var tokenData model.TokenResponse
 
@@ -32,6 +33,7 @@ func (a TokensAPI) Create(lifeTimeSeconds int32, comment string) (model.TokenRes
 	return tokenData, err
 }
 
+// List will list all the token metadata and not the content of the tokens in the workspace
 func (a TokensAPI) List() ([]model.TokenInfo, error) {
 	var tokenListResult struct {
 		TokenInfos []model.TokenInfo `json:"token_infos,omitempty"`
@@ -44,6 +46,7 @@ func (a TokensAPI) List() ([]model.TokenInfo, error) {
 	return tokenListResult.TokenInfos, err
 }
 
+// Read will return the token metadata and not the content of the token
 func (a TokensAPI) Read(tokenID string) (model.TokenInfo, error) {
 	var tokenInfo model.TokenInfo
 	tokenList, err := a.List()
@@ -58,9 +61,10 @@ func (a TokensAPI) Read(tokenID string) (model.TokenInfo, error) {
 	return tokenInfo, errors.New("Unable to locate token: " + tokenID)
 }
 
+// Delete will delete the token given a token id
 func (a TokensAPI) Delete(tokenID string) error {
 	tokenDeleteRequest := struct {
-		TokenId string `json:"token_id,omitempty"`
+		TokenID string `json:"token_id,omitempty"`
 	}{
 		tokenID,
 	}

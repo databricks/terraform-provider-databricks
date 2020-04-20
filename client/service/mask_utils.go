@@ -6,6 +6,7 @@ import (
 	"strings"
 )
 
+// Mask is a func given a struct it will mask everything with "[REDACTED]" if there are mask struct tags added
 func Mask(obj interface{}) interface{} {
 	// Wrap the original in a reflect.Value
 	original := reflect.ValueOf(obj)
@@ -55,7 +56,7 @@ func maskRecursive(copy, original reflect.Value, mask bool) {
 
 	// If it is a struct we Mask each field
 	case reflect.Struct:
-		for i := 0; i < original.NumField(); i += 1 {
+		for i := 0; i < original.NumField(); i++ {
 			//log.Println()
 			maskValue, maskInStruct := original.Type().Field(i).Tag.Lookup("mask")
 			maskIsTrue, _ := strconv.ParseBool(maskValue)
@@ -65,7 +66,7 @@ func maskRecursive(copy, original reflect.Value, mask bool) {
 	// If it is a slice we create a new slice and Mask each element
 	case reflect.Slice:
 		copy.Set(reflect.MakeSlice(original.Type(), original.Len(), original.Cap()))
-		for i := 0; i < original.Len(); i += 1 {
+		for i := 0; i < original.Len(); i++ {
 			maskRecursive(copy.Index(i), original.Index(i), false)
 		}
 
@@ -97,10 +98,12 @@ func maskRecursive(copy, original reflect.Value, mask bool) {
 
 }
 
+// SecretsMask is a struct that contains a list of secret strings to be redacted
 type SecretsMask struct {
 	Secrets []string
 }
 
+// MaskString given a SecretsMask and a string value return the string value with the secrets redacted
 func (a SecretsMask) MaskString(str string) string {
 	placeHolder := str
 	for _, secret := range a.Secrets {

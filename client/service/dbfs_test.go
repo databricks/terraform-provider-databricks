@@ -38,7 +38,7 @@ func TestDBFSAPI_Create(t *testing.T) {
 		requestMethod    []string
 		postStructExpect []interface{}
 		args             []interface{}
-		wantUri          []string
+		wantURI          []string
 		want             interface{}
 		wantErr          bool
 	}{
@@ -74,7 +74,7 @@ func TestDBFSAPI_Create(t *testing.T) {
 				&block{},
 				&close{},
 			},
-			wantUri: []string{"/api/2.0/dbfs/create", "/api/2.0/dbfs/add-block", "/api/2.0/dbfs/close"},
+			wantURI: []string{"/api/2.0/dbfs/create", "/api/2.0/dbfs/add-block", "/api/2.0/dbfs/close"},
 			want:    nil,
 			wantErr: false,
 		},
@@ -92,7 +92,7 @@ func TestDBFSAPI_Create(t *testing.T) {
 			requestMethod:    []string{},
 			args:             []interface{}{},
 			postStructExpect: []interface{}{},
-			wantUri:          []string{},
+			wantURI:          []string{},
 			want:             nil,
 			wantErr:          true,
 		},
@@ -119,7 +119,7 @@ func TestDBFSAPI_Create(t *testing.T) {
 			postStructExpect: []interface{}{
 				&handle{},
 			},
-			wantUri: []string{"/api/2.0/dbfs/create"},
+			wantURI: []string{"/api/2.0/dbfs/create"},
 			want:    nil,
 			wantErr: true,
 		},
@@ -151,7 +151,7 @@ func TestDBFSAPI_Create(t *testing.T) {
 				&handle{},
 				&block{},
 			},
-			wantUri: []string{"/api/2.0/dbfs/create", "/api/2.0/dbfs/add-block"},
+			wantURI: []string{"/api/2.0/dbfs/create", "/api/2.0/dbfs/add-block"},
 			want:    nil,
 			wantErr: true,
 		},
@@ -187,14 +187,14 @@ func TestDBFSAPI_Create(t *testing.T) {
 				&block{},
 				&close{},
 			},
-			wantUri: []string{"/api/2.0/dbfs/create", "/api/2.0/dbfs/add-block", "/api/2.0/dbfs/close"},
+			wantURI: []string{"/api/2.0/dbfs/create", "/api/2.0/dbfs/add-block", "/api/2.0/dbfs/close"},
 			want:    nil,
 			wantErr: true,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			AssertMultipleRequestsWithMockServer(t, tt.args, tt.requestMethod, tt.wantUri, tt.postStructExpect, tt.response, tt.responseStatus, nil, tt.wantErr, func(client DBApiClient) (interface{}, error) {
+			AssertMultipleRequestsWithMockServer(t, tt.args, tt.requestMethod, tt.wantURI, tt.postStructExpect, tt.response, tt.responseStatus, nil, tt.wantErr, func(client DBApiClient) (interface{}, error) {
 				return nil, client.DBFS().Create(tt.params.Path, tt.params.Overwrite, tt.params.Data)
 			})
 		})
@@ -232,7 +232,7 @@ func TestDBFSAPI_Copy(t *testing.T) {
 		requestMethod    []string
 		postStructExpect []interface{}
 		args             []interface{}
-		wantUri          []string
+		wantURI          []string
 		want             interface{}
 		wantErr          bool
 	}{
@@ -277,14 +277,14 @@ func TestDBFSAPI_Copy(t *testing.T) {
 				&addBlock{},
 				&closeHandle{},
 			},
-			wantUri: []string{"/api/2.0/dbfs/create", "/api/2.0/dbfs/read?length=1000000&path=my-path", "/api/2.0/dbfs/add-block", "/api/2.0/dbfs/close"},
+			wantURI: []string{"/api/2.0/dbfs/create", "/api/2.0/dbfs/read?length=1000000&path=my-path", "/api/2.0/dbfs/add-block", "/api/2.0/dbfs/close"},
 			want:    nil,
 			wantErr: false,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			AssertMultipleRequestsWithMockServer(t, tt.args, tt.requestMethod, tt.wantUri, tt.postStructExpect, tt.response, tt.responseStatus, nil, tt.wantErr, func(client DBApiClient) (interface{}, error) {
+			AssertMultipleRequestsWithMockServer(t, tt.args, tt.requestMethod, tt.wantURI, tt.postStructExpect, tt.response, tt.responseStatus, nil, tt.wantErr, func(client DBApiClient) (interface{}, error) {
 				return nil, client.DBFS().Copy(tt.params.Src, tt.params.Tgt, &client, tt.params.Overwrite)
 			})
 		})
@@ -309,7 +309,7 @@ func TestDBFSAPI_Read(t *testing.T) {
 		requestMethod    []string
 		postStructExpect []interface{}
 		args             []interface{}
-		wantUri          []string
+		wantURI          []string
 		want             interface{}
 		wantErr          bool
 	}{
@@ -346,7 +346,7 @@ func TestDBFSAPI_Read(t *testing.T) {
 				&read{},
 				&read{},
 			},
-			wantUri: []string{"/api/2.0/dbfs/read?length=1000000&path=my-path", "/api/2.0/dbfs/read?length=1000000&offset=1000000&path=my-path"},
+			wantURI: []string{"/api/2.0/dbfs/read?length=1000000&path=my-path", "/api/2.0/dbfs/read?length=1000000&offset=1000000&path=my-path"},
 			want:    base64String,
 			wantErr: false,
 		},
@@ -383,14 +383,14 @@ func TestDBFSAPI_Read(t *testing.T) {
 				&read{},
 				&read{},
 			},
-			wantUri: []string{"/api/2.0/dbfs/read?length=1000000&path=my-path", "/api/2.0/dbfs/read?length=1000000&offset=1000000&path=my-path"},
+			wantURI: []string{"/api/2.0/dbfs/read?length=1000000&path=my-path", "/api/2.0/dbfs/read?length=1000000&offset=1000000&path=my-path"},
 			want:    "",
 			wantErr: true,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			AssertMultipleRequestsWithMockServer(t, tt.args, tt.requestMethod, tt.wantUri, tt.postStructExpect, tt.response, tt.responseStatus, tt.want, tt.wantErr, func(client DBApiClient) (interface{}, error) {
+			AssertMultipleRequestsWithMockServer(t, tt.args, tt.requestMethod, tt.wantURI, tt.postStructExpect, tt.response, tt.responseStatus, tt.want, tt.wantErr, func(client DBApiClient) (interface{}, error) {
 				return client.DBFS().Read(tt.params.Path)
 			})
 		})
@@ -531,7 +531,7 @@ func TestDBFSAPI_Status(t *testing.T) {
 		name           string
 		response       string
 		responseStatus int
-		requestUri     string
+		requestURI     string
 		args           args
 		want           interface{}
 		wantErr        bool
@@ -543,7 +543,7 @@ func TestDBFSAPI_Status(t *testing.T) {
 							  "is_dir": false,
 							  "file_size": 261
 							}`,
-			requestUri:     "/api/2.0/dbfs/get-status?path=mypath",
+			requestURI:     "/api/2.0/dbfs/get-status?path=mypath",
 			responseStatus: http.StatusOK,
 			args: args{
 				Path: "mypath",
@@ -558,7 +558,7 @@ func TestDBFSAPI_Status(t *testing.T) {
 		{
 			name:           "Status failure test",
 			response:       "",
-			requestUri:     "/api/2.0/dbfs/get-status?path=mypath",
+			requestURI:     "/api/2.0/dbfs/get-status?path=mypath",
 			responseStatus: http.StatusBadRequest,
 			args: args{
 				Path: "mypath",
@@ -570,7 +570,7 @@ func TestDBFSAPI_Status(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var input args
-			AssertRequestWithMockServer(t, &tt.args, http.MethodGet, tt.requestUri, &input, tt.response, tt.responseStatus, tt.want, tt.wantErr, func(client DBApiClient) (interface{}, error) {
+			AssertRequestWithMockServer(t, &tt.args, http.MethodGet, tt.requestURI, &input, tt.response, tt.responseStatus, tt.want, tt.wantErr, func(client DBApiClient) (interface{}, error) {
 				return client.DBFS().Status(tt.args.Path)
 			})
 		})
@@ -587,7 +587,7 @@ func TestDBFSAPI_ListNonRecursive(t *testing.T) {
 		response       string
 		responseStatus int
 		args           args
-		wantUri        string
+		wantURI        string
 		want           []model.FileInfo
 		wantErr        bool
 	}{
@@ -613,7 +613,7 @@ func TestDBFSAPI_ListNonRecursive(t *testing.T) {
 				Path:      "/",
 				Recursive: false,
 			},
-			wantUri: "/api/2.0/dbfs/list?path=%2F",
+			wantURI: "/api/2.0/dbfs/list?path=%2F",
 			want: []model.FileInfo{
 				{
 					Path:     "/a.cpp",
@@ -637,7 +637,7 @@ func TestDBFSAPI_ListNonRecursive(t *testing.T) {
 				Path:      "/",
 				Recursive: false,
 			},
-			wantUri: "/api/2.0/dbfs/list?path=%2F",
+			wantURI: "/api/2.0/dbfs/list?path=%2F",
 			want:    nil,
 			wantErr: true,
 		},
@@ -645,7 +645,7 @@ func TestDBFSAPI_ListNonRecursive(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var input args
-			AssertRequestWithMockServer(t, tt.args, http.MethodGet, tt.wantUri, &input, tt.response, tt.responseStatus, tt.want, tt.wantErr, func(client DBApiClient) (interface{}, error) {
+			AssertRequestWithMockServer(t, tt.args, http.MethodGet, tt.wantURI, &input, tt.response, tt.responseStatus, tt.want, tt.wantErr, func(client DBApiClient) (interface{}, error) {
 				return client.DBFS().List(tt.args.Path, tt.args.Recursive)
 			})
 		})
@@ -662,7 +662,7 @@ func TestDBFSAPI_ListRecursive(t *testing.T) {
 		response       []string
 		responseStatus []int
 		args           []interface{}
-		wantUri        []string
+		wantURI        []string
 		want           []model.FileInfo
 		wantErr        bool
 	}{
@@ -699,7 +699,7 @@ func TestDBFSAPI_ListRecursive(t *testing.T) {
 					Recursive: true,
 				},
 			},
-			wantUri: []string{"/api/2.0/dbfs/list?path=%2F", "/api/2.0/dbfs/list?path=%2Ffoldera"},
+			wantURI: []string{"/api/2.0/dbfs/list?path=%2F", "/api/2.0/dbfs/list?path=%2Ffoldera"},
 			want: []model.FileInfo{
 				{
 					Path:     "/a.cpp",
@@ -738,7 +738,7 @@ func TestDBFSAPI_ListRecursive(t *testing.T) {
 					Recursive: true,
 				},
 			},
-			wantUri: []string{"/api/2.0/dbfs/list?path=%2F", "/api/2.0/dbfs/list?path=%2Ffoldera"},
+			wantURI: []string{"/api/2.0/dbfs/list?path=%2F", "/api/2.0/dbfs/list?path=%2Ffoldera"},
 			want:    nil,
 			wantErr: true,
 		},
@@ -752,14 +752,14 @@ func TestDBFSAPI_ListRecursive(t *testing.T) {
 					Recursive: true,
 				},
 			},
-			wantUri: []string{"/api/2.0/dbfs/list?path=%2F"},
+			wantURI: []string{"/api/2.0/dbfs/list?path=%2F"},
 			want:    nil,
 			wantErr: true,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			AssertMultipleRequestsWithMockServer(t, tt.args, []string{http.MethodGet, http.MethodGet}, tt.wantUri, []interface{}{&args{}}, tt.response, tt.responseStatus, tt.want, tt.wantErr, func(client DBApiClient) (interface{}, error) {
+			AssertMultipleRequestsWithMockServer(t, tt.args, []string{http.MethodGet, http.MethodGet}, tt.wantURI, []interface{}{&args{}}, tt.response, tt.responseStatus, tt.want, tt.wantErr, func(client DBApiClient) (interface{}, error) {
 				return client.DBFS().List(tt.args[0].(*args).Path, tt.args[0].(*args).Recursive)
 			})
 		})

@@ -6,17 +6,18 @@ import (
 	"net/http"
 )
 
-// TokensAPI exposes the Secrets API
+// LibrariesAPI exposes the Library API
 type LibrariesAPI struct {
 	Client DBApiClient
 }
 
-func (a LibrariesAPI) Create(clusterId string, libraries []model.Library) error {
+// Create installs the list of libraries given a cluster id
+func (a LibrariesAPI) Create(clusterID string, libraries []model.Library) error {
 	var libraryInstallRequest = struct {
-		ClusterId string          `json:"cluster_id,omitempty" url:"cluster_id,omitempty"`
+		ClusterID string          `json:"cluster_id,omitempty" url:"cluster_id,omitempty"`
 		Libraries []model.Library `json:"libraries,omitempty" url:"libraries,omitempty"`
 	}{
-		ClusterId: clusterId,
+		ClusterID: clusterID,
 		Libraries: libraries,
 	}
 
@@ -25,12 +26,13 @@ func (a LibrariesAPI) Create(clusterId string, libraries []model.Library) error 
 	return err
 }
 
-func (a LibrariesAPI) Delete(clusterId string, libraries []model.Library) error {
+// Delete deletes the list of given libraries from the cluster given the cluster id
+func (a LibrariesAPI) Delete(clusterID string, libraries []model.Library) error {
 	var libraryInstallRequest = struct {
-		ClusterId string          `json:"cluster_id,omitempty" url:"cluster_id,omitempty"`
+		ClusterID string          `json:"cluster_id,omitempty" url:"cluster_id,omitempty"`
 		Libraries []model.Library `json:"libraries,omitempty" url:"libraries,omitempty"`
 	}{
-		ClusterId: clusterId,
+		ClusterID: clusterID,
 		Libraries: libraries,
 	}
 
@@ -39,15 +41,16 @@ func (a LibrariesAPI) Delete(clusterId string, libraries []model.Library) error 
 	return err
 }
 
-func (a LibrariesAPI) List(clusterId string) ([]model.LibraryStatus, error) {
+// List lists all the libraries given a cluster id
+func (a LibrariesAPI) List(clusterID string) ([]model.LibraryStatus, error) {
 	var libraryStatusListResp struct {
-		ClusterId       string                `json:"cluster_id,omitempty" url:"cluster_id,omitempty"`
+		ClusterID       string                `json:"cluster_id,omitempty" url:"cluster_id,omitempty"`
 		LibraryStatuses []model.LibraryStatus `json:"library_statuses,omitempty" url:"libraries,omitempty"`
 	}
 	var libraryInstallRequest = struct {
-		ClusterId string `json:"cluster_id,omitempty" url:"cluster_id,omitempty"`
+		ClusterID string `json:"cluster_id,omitempty" url:"cluster_id,omitempty"`
 	}{
-		ClusterId: clusterId,
+		ClusterID: clusterID,
 	}
 
 	resp, err := a.Client.performQuery(http.MethodGet, "/libraries/cluster-status", "2.0", nil, libraryInstallRequest, nil)

@@ -8,11 +8,12 @@ import (
 	"net/http"
 )
 
-// TokensAPI exposes the Secrets API
+// DBFSAPI exposes the DBFS API
 type DBFSAPI struct {
 	Client DBApiClient
 }
 
+// Create creates a file in DBFS given data string in base64
 func (a DBFSAPI) Create(path string, overwrite bool, data string) (err error) {
 	byteArr, err := base64.StdEncoding.DecodeString(data)
 	if err != nil {
@@ -36,6 +37,7 @@ func (a DBFSAPI) Create(path string, overwrite bool, data string) (err error) {
 	return err
 }
 
+// Read returns the contents of a file in DBFS as a base64 encoded string
 func (a DBFSAPI) Read(path string) (string, error) {
 	var bytesFetched []byte
 	fetchLoop := true
@@ -57,6 +59,7 @@ func (a DBFSAPI) Read(path string) (string, error) {
 	return resp, nil
 }
 
+// Copy copies a file given a source location and a target location and a provided client for source location
 func (a DBFSAPI) Copy(src string, tgt string, client *DBApiClient, overwrite bool) error {
 	handle, err := a.createHandle(tgt, overwrite)
 	if err != nil {
@@ -95,6 +98,7 @@ func (a DBFSAPI) Copy(src string, tgt string, client *DBApiClient, overwrite boo
 	return err
 }
 
+// Move moves the file between DBFS locations via DBFS api
 func (a DBFSAPI) Move(src string, tgt string) error {
 	moveRequest := struct {
 		SourcePath      string `json:"source_path,omitempty" url:"source_path,omitempty"`
@@ -107,6 +111,7 @@ func (a DBFSAPI) Move(src string, tgt string) error {
 	return err
 }
 
+// Delete deletes a file in DBFS via API
 func (a DBFSAPI) Delete(path string, recursive bool) error {
 	deleteRequest := struct {
 		Path      string `json:"path,omitempty" url:"path,omitempty"`
@@ -120,6 +125,7 @@ func (a DBFSAPI) Delete(path string, recursive bool) error {
 	return err
 }
 
+// ReadString reads a "block" of data in DBFS given a offset and length as a base64 encoded string
 func (a DBFSAPI) ReadString(path string, offset, length int64) (int64, string, error) {
 	var readBytes struct {
 		BytesRead int64  `json:"bytes_read,omitempty" url:"bytes_read,omitempty"`
@@ -152,6 +158,7 @@ func (a DBFSAPI) read(path string, offset, length int64) (int64, []byte, error) 
 	return bytesRead, dataBytes, err
 }
 
+// Status returns the status of a file in DBFS
 func (a DBFSAPI) Status(path string) (model.FileInfo, error) {
 	var fileInfo model.FileInfo
 	statusRequest := struct {
@@ -167,6 +174,7 @@ func (a DBFSAPI) Status(path string) (model.FileInfo, error) {
 	return fileInfo, err
 }
 
+// List returns a list of files in DBFS and the recursive flag lets you recursively list files
 func (a DBFSAPI) List(path string, recursive bool) ([]model.FileInfo, error) {
 	if recursive == true {
 		var paths []model.FileInfo
@@ -175,9 +183,8 @@ func (a DBFSAPI) List(path string, recursive bool) ([]model.FileInfo, error) {
 			return nil, err
 		}
 		return paths, err
-	} else {
-		return a.list(path)
 	}
+	return a.list(path)
 }
 
 func (a DBFSAPI) recursiveAddPaths(path string, pathList *[]model.FileInfo) error {
@@ -216,6 +223,7 @@ func (a DBFSAPI) list(path string) ([]model.FileInfo, error) {
 	return dbfsList.Files, err
 }
 
+// Mkdirs makes the directories in DBFS include the parent paths
 func (a DBFSAPI) Mkdirs(path string) error {
 	mkDirsRequest := struct {
 		Path string `json:"path,omitempty" url:"path,omitempty"`

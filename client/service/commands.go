@@ -10,70 +10,71 @@ import (
 	"time"
 )
 
-// TokensAPI exposes the Secrets API
+// CommandsAPI exposes the Context & Commands API
 type CommandsAPI struct {
 	Client DBApiClient
 }
 
-func (a CommandsAPI) Execute(clusterId, langauge, commandStr string) (model.Command, error) {
+// Execute creates a spark context and executes a command and then closes context
+func (a CommandsAPI) Execute(clusterID, langauge, commandStr string) (model.Command, error) {
 	var resp model.Command
-	context, err := a.createContext(langauge, clusterId)
+	context, err := a.createContext(langauge, clusterID)
 	if err != nil {
 		return resp, err
 	}
-	err = a.waitForContextReady(context, clusterId, 1, 10)
+	err = a.waitForContextReady(context, clusterID, 1, 10)
 	if err != nil {
 		return resp, err
 	}
-	commandId, err := a.createCommand(context, clusterId, langauge, commandStr)
+	commandID, err := a.createCommand(context, clusterID, langauge, commandStr)
 	if err != nil {
 		return resp, err
 	}
-	err = a.waitForCommandFinished(commandId, context, clusterId, 5, 10)
+	err = a.waitForCommandFinished(commandID, context, clusterID, 5, 10)
 	if err != nil {
 		return resp, err
 	}
-	command, err := a.getCommand(commandId, context, clusterId)
+	command, err := a.getCommand(commandID, context, clusterID)
 	if err != nil {
 		return resp, err
 	}
-	err = a.deleteContext(context, clusterId)
+	err = a.deleteContext(context, clusterID)
 	return command, err
 }
 
-func (a CommandsAPI) createCommand(contextId, clusterId, language, commandStr string) (string, error) {
+func (a CommandsAPI) createCommand(contextID, clusterID, language, commandStr string) (string, error) {
 	var command struct {
-		Id string `json:"id,omitempty"`
+		ID string `json:"id,omitempty"`
 	}
 	commandRequest := struct {
 		Language  string `json:"language,omitempty"`
-		ClusterId string `json:"clusterId,omitempty"`
-		ContextId string `json:"contextId,omitempty"`
+		ClusterID string `json:"clusterId,omitempty"`
+		ContextID string `json:"contextId,omitempty"`
 		Command   string `json:"command,omitempty"`
 	}{
 		Language:  language,
-		ClusterId: clusterId,
-		ContextId: contextId,
+		ClusterID: clusterID,
+		ContextID: contextID,
 		Command:   commandStr,
 	}
 	resp, err := a.Client.performQuery(http.MethodPost, "/commands/execute", "1.2", nil, commandRequest, nil)
 	if err != nil {
-		return command.Id, err
+		return command.ID, err
 	}
 	err = json.Unmarshal(resp, &command)
-	return command.Id, err
+	return command.ID, err
 }
 
-func (a CommandsAPI) getCommand(commandId, contextId, clusterId string) (model.Command, error) {
+func (a CommandsAPI) getCommand(commandID, contextID, clusterID string) (model.Command, error) {
 	var commandResp model.Command
 	contextGetRequest := struct {
-		CommandId string `json:"commandId,omitempty" url:"commandId,omitempty"`
-		ContextId string `json:"contextId,omitempty" url:"contextId,omitempty"`
-		ClusterId string `json:"clusterId,omitempty" url:"clusterId,omitempty"`
+		CommandID string `json:"commandId,omitempty" url:"commandId,omitempty"`
+		ContextID string `json:"contextId,omitempty" url:"contextId,omitempty"`
+		ClusterID string `json:"clusterId,omitempty" url:"clusterId,omitempty"`
 	}{
-		CommandId: commandId,
-		ContextId: contextId,
-		ClusterId: clusterId,
+		CommandID: commandID,
+		ContextID: contextID,
+		ClusterID: clusterID,
 	}
 	resp, err := a.Client.performQuery(http.MethodGet, "/commands/status", "1.2", nil, contextGetRequest, nil)
 	if err != nil {
@@ -83,11 +84,11 @@ func (a CommandsAPI) getCommand(commandId, contextId, clusterId string) (model.C
 	return commandResp, err
 }
 
-func (a CommandsAPI) waitForCommandFinished(commandId, contextId, clusterID string, sleepDurationSeconds time.Duration, timeoutDurationMinutes time.Duration) error {
+func (a CommandsAPI) waitForCommandFinished(commandID, contextID, clusterID string, sleepDurationSeconds time.Duration, timeoutDurationMinutes time.Duration) error {
 	errChan := make(chan error, 1)
 	go func() {
 		for {
-			commandInfo, err := a.getCommand(commandId, contextId, clusterID)
+			commandInfo, err := a.getCommand(commandID, contextID, clusterID)
 			if err != nil {
 				errChan <- err
 				return
@@ -96,7 +97,7 @@ func (a CommandsAPI) waitForCommandFinished(commandId, contextId, clusterID stri
 				errChan <- nil
 				return
 			} else if commandInfo.Status == "Cancelling" || commandInfo.Status == "Cancelled" || commandInfo.Status == "Error" {
-				errChan <- errors.New(fmt.Sprintf("Context is in a failure state: %s.", commandInfo.Status))
+				errChan <- fmt.Errorf("context is in a failure state: %s", commandInfo.Status)
 				return
 			}
 			log.Println(fmt.Sprintf("Waiting for command to finish, current state is: %s.", commandInfo.Status))
@@ -111,37 +112,37 @@ func (a CommandsAPI) waitForCommandFinished(commandId, contextId, clusterID stri
 	}
 }
 
-func (a CommandsAPI) deleteCommand(commandId, contextId, clusterId string) error {
+func (a CommandsAPI) deleteCommand(commandID, contextID, clusterID string) error {
 	contextDeleteRequest := struct {
-		CommandId string `json:"commandId,omitempty" url:"commandId,omitempty"`
-		ContextId string `json:"contextId,omitempty" url:"contextId,omitempty"`
-		ClusterId string `json:"clusterId,omitempty" url:"clusterId,omitempty"`
+		CommandID string `json:"commandId,omitempty" url:"commandId,omitempty"`
+		ContextID string `json:"contextId,omitempty" url:"contextId,omitempty"`
+		ClusterID string `json:"clusterId,omitempty" url:"clusterId,omitempty"`
 	}{
-		CommandId: commandId,
-		ContextId: contextId,
-		ClusterId: clusterId,
+		CommandID: commandID,
+		ContextID: contextID,
+		ClusterID: clusterID,
 	}
 	_, err := a.Client.performQuery(http.MethodPost, "/commands/cancel", "1.2", nil, contextDeleteRequest, nil)
 	return err
 }
 
-func (a CommandsAPI) deleteContext(contextId, clusterId string) error {
+func (a CommandsAPI) deleteContext(contextID, clusterID string) error {
 	contextDeleteRequest := struct {
-		ContextId string `json:"contextId,omitempty" url:"contextId,omitempty"`
-		ClusterId string `json:"clusterId,omitempty" url:"clusterId,omitempty"`
+		ContextID string `json:"contextId,omitempty" url:"contextId,omitempty"`
+		ClusterID string `json:"clusterId,omitempty" url:"clusterId,omitempty"`
 	}{
-		ContextId: contextId,
-		ClusterId: clusterId,
+		ContextID: contextID,
+		ClusterID: clusterID,
 	}
 	_, err := a.Client.performQuery(http.MethodPost, "/contexts/destroy", "1.2", nil, contextDeleteRequest, nil)
 	return err
 }
 
-func (a CommandsAPI) waitForContextReady(contextId, clusterID string, sleepDurationSeconds time.Duration, timeoutDurationMinutes time.Duration) error {
+func (a CommandsAPI) waitForContextReady(contextID, clusterID string, sleepDurationSeconds time.Duration, timeoutDurationMinutes time.Duration) error {
 	errChan := make(chan error, 1)
 	go func() {
 		for {
-			status, err := a.getContext(contextId, clusterID)
+			status, err := a.getContext(contextID, clusterID)
 			if err != nil {
 				errChan <- err
 				return
@@ -150,7 +151,7 @@ func (a CommandsAPI) waitForContextReady(contextId, clusterID string, sleepDurat
 				errChan <- nil
 				return
 			} else if status == "Error" {
-				errChan <- errors.New("Context is in a errored state.")
+				errChan <- errors.New("context is in a errored state")
 				return
 			}
 			log.Println("Waiting for context to go to running, current state is pending.")
@@ -165,17 +166,17 @@ func (a CommandsAPI) waitForContextReady(contextId, clusterID string, sleepDurat
 	}
 }
 
-func (a CommandsAPI) getContext(contextId, clusterId string) (string, error) {
+func (a CommandsAPI) getContext(contextID, clusterID string) (string, error) {
 	var contextStatus struct {
-		Id     string `json:"id,omitempty"`
+		ID     string `json:"id,omitempty"`
 		Status string `json:"status,omitempty"`
 	}
 	contextGetRequest := struct {
-		ContextId string `json:"contextId,omitempty" url:"contextId,omitempty"`
-		ClusterId string `json:"clusterId,omitempty" url:"clusterId,omitempty"`
+		ContextID string `json:"contextId,omitempty" url:"contextId,omitempty"`
+		ClusterID string `json:"clusterId,omitempty" url:"clusterId,omitempty"`
 	}{
-		ContextId: contextId,
-		ClusterId: clusterId,
+		ContextID: contextID,
+		ClusterID: clusterID,
 	}
 	resp, err := a.Client.performQuery(http.MethodGet, "/contexts/status", "1.2", nil, contextGetRequest, nil)
 	if err != nil {
@@ -185,22 +186,22 @@ func (a CommandsAPI) getContext(contextId, clusterId string) (string, error) {
 	return contextStatus.Status, err
 }
 
-func (a CommandsAPI) createContext(language, clusterId string) (string, error) {
+func (a CommandsAPI) createContext(language, clusterID string) (string, error) {
 	var context struct {
-		Id string `json:"id,omitempty"`
+		ID string `json:"id,omitempty"`
 	}
 	contextRequest := struct {
 		Language  string `json:"language,omitempty"`
-		ClusterId string `json:"clusterId,omitempty"`
+		ClusterID string `json:"clusterId,omitempty"`
 	}{
 		Language:  language,
-		ClusterId: clusterId,
+		ClusterID: clusterID,
 	}
 
 	resp, err := a.Client.performQuery(http.MethodPost, "/contexts/create", "1.2", nil, contextRequest, nil)
 	if err != nil {
-		return context.Id, err
+		return context.ID, err
 	}
 	err = json.Unmarshal(resp, &context)
-	return context.Id, err
+	return context.ID, err
 }

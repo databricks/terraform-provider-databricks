@@ -49,7 +49,7 @@ func resourceSecretAclCreate(d *schema.ResourceData, m interface{}) error {
 	client := m.(service.DBApiClient)
 	scopeName := d.Get("scope").(string)
 	principal := d.Get("principal").(string)
-	permission := model.AclPermission(d.Get("permission").(string))
+	permission := model.ACLPermission(d.Get("permission").(string))
 	err := client.SecretAcls().Create(scopeName, principal, permission)
 	if err != nil {
 		return err

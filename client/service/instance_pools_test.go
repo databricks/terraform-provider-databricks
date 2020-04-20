@@ -29,7 +29,7 @@ func TestInstancePoolsAPI_Create(t *testing.T) {
 					InstancePoolName:                   "",
 					MinIdleInstances:                   0,
 					MaxCapacity:                        10,
-					NodeTypeId:                         "Standard_DS3_v2",
+					NodeTypeID:                         "Standard_DS3_v2",
 					IdleInstanceAutoTerminationMinutes: 60,
 					EnableElasticDisk:                  false,
 					DiskSpec: &model.InstancePoolDiskSpec{
@@ -42,7 +42,7 @@ func TestInstancePoolsAPI_Create(t *testing.T) {
 				},
 			},
 			want: model.InstancePoolInfo{
-				InstancePoolId: "0101-120000-brick1-pool-ABCD1234",
+				InstancePoolID: "0101-120000-brick1-pool-ABCD1234",
 			},
 			wantErr: false,
 		},
@@ -101,10 +101,10 @@ func TestInstancePoolsAPI_Update(t *testing.T) {
 			response: "",
 			args: args{
 				InstancePoolInfo: &model.InstancePoolInfo{
-					InstancePoolId:                     "0101-120000-brick1-pool-ABCD1234",
+					InstancePoolID:                     "0101-120000-brick1-pool-ABCD1234",
 					MinIdleInstances:                   0,
 					MaxCapacity:                        10,
-					NodeTypeId:                         "Standard_DS3_v2",
+					NodeTypeID:                         "Standard_DS3_v2",
 					IdleInstanceAutoTerminationMinutes: 60,
 					EnableElasticDisk:                  false,
 					DiskSpec: &model.InstancePoolDiskSpec{
@@ -182,7 +182,7 @@ func TestInstancePoolsAPI_Read(t *testing.T) {
 				InstancePoolId: "101-120000-brick1-pool-ABCD1234",
 			},
 			want: model.InstancePoolInfo{
-				InstancePoolId:   "101-120000-brick1-pool-ABCD1234",
+				InstancePoolID:   "101-120000-brick1-pool-ABCD1234",
 				InstancePoolName: "mypool",
 				MinIdleInstances: 0,
 				AwsAttributes: &model.InstancePoolAwsAttributes{
@@ -190,7 +190,7 @@ func TestInstancePoolsAPI_Read(t *testing.T) {
 					ZoneID:              "us-west-2a",
 					SpotBidPricePercent: 100,
 				},
-				NodeTypeId:                         "c4.2xlarge",
+				NodeTypeID:                         "c4.2xlarge",
 				IdleInstanceAutoTerminationMinutes: 60,
 				EnableElasticDisk:                  false,
 				DiskSpec: &model.InstancePoolDiskSpec{

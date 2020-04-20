@@ -12,11 +12,11 @@ type SecretAclsAPI struct {
 }
 
 // Create creates or overwrites the ACL associated with the given principal (user or group) on the specified scope point
-func (a SecretAclsAPI) Create(scope string, principal string, permission model.AclPermission) error {
+func (a SecretAclsAPI) Create(scope string, principal string, permission model.ACLPermission) error {
 	data := struct {
 		Scope      string              `json:"scope,omitempty"`
 		Principal  string              `json:"principal,omitempty"`
-		Permission model.AclPermission `json:"permission,omitempty"`
+		Permission model.ACLPermission `json:"permission,omitempty"`
 	}{
 		scope,
 		principal,
@@ -40,8 +40,8 @@ func (a SecretAclsAPI) Delete(scope string, principal string) error {
 }
 
 // Read describe the details about the given ACL, such as the group and permission
-func (a SecretAclsAPI) Read(scope string, principal string) (model.AclItem, error) {
-	var aclItem model.AclItem
+func (a SecretAclsAPI) Read(scope string, principal string) (model.ACLItem, error) {
+	var aclItem model.ACLItem
 
 	data := struct {
 		Scope     string `json:"scope,omitempty" url:"scope,omitempty"`
@@ -60,9 +60,9 @@ func (a SecretAclsAPI) Read(scope string, principal string) (model.AclItem, erro
 }
 
 // List lists the ACLs set on the given scope
-func (a SecretAclsAPI) List(scope string) ([]model.AclItem, error) {
+func (a SecretAclsAPI) List(scope string) ([]model.ACLItem, error) {
 	var aclItem struct {
-		Items []model.AclItem `json:"items,omitempty"`
+		Items []model.ACLItem `json:"items,omitempty"`
 	}
 
 	data := struct {

@@ -43,14 +43,14 @@ func TestJobsCreate(t *testing.T) {
 		MaxRetries:     1,
 		Schedule: &model.CronSchedule{
 			QuartzCronExpression: "0 15 22 ? * *",
-			TimezoneId:           "America/Los_Angeles",
+			TimezoneID:           "America/Los_Angeles",
 		},
 		MaxConcurrentRuns: 1,
 	}
 
 	job, err := client.Jobs().Create(jobSettings)
 	assert.NoError(t, err, err)
-	id := job.JobId
+	id := job.JobID
 	defer func() {
 		err := client.Jobs().Delete(id)
 		assert.NoError(t, err, err)

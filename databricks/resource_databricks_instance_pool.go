@@ -174,7 +174,7 @@ func resourceInstancePoolCreate(d *schema.ResourceData, m interface{}) error {
 	}
 
 	if nodeTypeId, ok := d.GetOk("node_type_id"); ok {
-		instancePool.NodeTypeId = nodeTypeId.(string)
+		instancePool.NodeTypeID = nodeTypeId.(string)
 	}
 
 	if customTags, ok := d.GetOk("custom_tags"); ok {
@@ -221,7 +221,7 @@ func resourceInstancePoolCreate(d *schema.ResourceData, m interface{}) error {
 	if err != nil {
 		return err
 	}
-	d.SetId(instancePoolInfo.InstancePoolId)
+	d.SetId(instancePoolInfo.InstancePoolID)
 	return resourceInstancePoolRead(d, m)
 }
 
@@ -270,7 +270,7 @@ func resourceInstancePoolRead(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 
-	err = d.Set("node_type_id", instancePoolInfo.NodeTypeId)
+	err = d.Set("node_type_id", instancePoolInfo.NodeTypeID)
 	if err != nil {
 		return err
 	}
@@ -328,8 +328,8 @@ func resourceInstancePoolUpdate(d *schema.ResourceData, m interface{}) error {
 	instancePoolInfo.MinIdleInstances = int32(d.Get("min_idle_instances").(int))
 	instancePoolInfo.MaxCapacity = int32(d.Get("max_capacity").(int))
 	instancePoolInfo.IdleInstanceAutoTerminationMinutes = int32(d.Get("idle_instance_autotermination_minutes").(int))
-	instancePoolInfo.InstancePoolId = id
-	instancePoolInfo.NodeTypeId = d.Get("node_type_id").(string)
+	instancePoolInfo.InstancePoolID = id
+	instancePoolInfo.NodeTypeID = d.Get("node_type_id").(string)
 
 	err := client.InstancePools().Update(instancePoolInfo)
 	if err != nil {

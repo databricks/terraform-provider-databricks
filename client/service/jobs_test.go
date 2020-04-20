@@ -24,10 +24,10 @@ func TestJobsAPI_Create(t *testing.T) {
 						}`,
 			responseStatus: http.StatusOK,
 			args: args{
-				ExistingClusterId: "my-cluster-id",
+				ExistingClusterID: "my-cluster-id",
 			},
 			want: model.Job{
-				JobId: 1,
+				JobID: 1,
 			},
 			wantErr: false,
 		},
@@ -36,7 +36,7 @@ func TestJobsAPI_Create(t *testing.T) {
 			response:       "",
 			responseStatus: http.StatusBadRequest,
 			args: args{
-				ExistingClusterId: "my-cluster-id",
+				ExistingClusterID: "my-cluster-id",
 			},
 			want:    model.Job{},
 			wantErr: true,
@@ -202,7 +202,7 @@ func TestJobsAPI_Read(t *testing.T) {
 			},
 			wantUri: "/api/2.0/jobs/get?job_id=1",
 			want: model.Job{
-				JobId: 1,
+				JobID: 1,
 				Settings: &model.JobSettings{
 					NewCluster: &model.Cluster{
 						NumWorkers:   10,
@@ -235,7 +235,7 @@ func TestJobsAPI_Read(t *testing.T) {
 					MaxRetries:     1,
 					Schedule: &model.CronSchedule{
 						QuartzCronExpression: "0 15 22 ? * *",
-						TimezoneId:           "America/Los_Angeles",
+						TimezoneID:           "America/Los_Angeles",
 					},
 				},
 				CreatedTime: 1457570074236,

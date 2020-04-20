@@ -13,7 +13,7 @@ import (
 
 func TestAccSecretAclResource(t *testing.T) {
 	//var secretScope model.Secre
-	var secretAcl model.AclItem
+	var secretAcl model.ACLItem
 	// generate a random name for each tokenInfo test run, to avoid
 	// collisions from multiple concurrent tests.
 	// the acctest package includes many helpers such as RandStringFromCharSet
@@ -66,16 +66,16 @@ func testSecretAclPreCheck(t *testing.T) {
 	return
 }
 
-func testSecretAclValues(t *testing.T, acl *model.AclItem, permission, principal string) resource.TestCheckFunc {
+func testSecretAclValues(t *testing.T, acl *model.ACLItem, permission, principal string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		assert.True(t, acl.Permission == model.AclPermissionRead)
+		assert.True(t, acl.Permission == model.ACLPermissionRead)
 		assert.True(t, acl.Principal == principal)
 		return nil
 	}
 }
 
 // testAccCheckTokenResourceExists queries the API and retrieves the matching Widget.
-func testSecretAclResourceExists(n string, aclItem *model.AclItem, t *testing.T) resource.TestCheckFunc {
+func testSecretAclResourceExists(n string, aclItem *model.ACLItem, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		// find the corresponding state object
 		rs, ok := s.RootModule().Resources[n]

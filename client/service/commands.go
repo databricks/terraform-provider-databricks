@@ -58,9 +58,8 @@ func (a CommandsAPI) createCommand(contextId, clusterId, language, commandStr st
 	}
 	resp, err := a.Client.performQuery(http.MethodPost, "/commands/execute", "1.2", nil, commandRequest, nil)
 	if err != nil {
-		return command.Id, nil
+		return command.Id, err
 	}
-	log.Println(string(resp))
 	err = json.Unmarshal(resp, &command)
 	return command.Id, err
 }
@@ -80,7 +79,6 @@ func (a CommandsAPI) getCommand(commandId, contextId, clusterId string) (model.C
 	if err != nil {
 		return commandResp, err
 	}
-	log.Println(string(resp))
 	err = json.Unmarshal(resp, &commandResp)
 	return commandResp, err
 }
@@ -92,11 +90,14 @@ func (a CommandsAPI) waitForCommandFinished(commandId, contextId, clusterID stri
 			commandInfo, err := a.getCommand(commandId, contextId, clusterID)
 			if err != nil {
 				errChan <- err
+				return
 			}
 			if commandInfo.Status == "Finished" {
 				errChan <- nil
+				return
 			} else if commandInfo.Status == "Cancelling" || commandInfo.Status == "Cancelled" || commandInfo.Status == "Error" {
 				errChan <- errors.New(fmt.Sprintf("Context is in a failure state: %s.", commandInfo.Status))
+				return
 			}
 			log.Println(fmt.Sprintf("Waiting for command to finish, current state is: %s.", commandInfo.Status))
 			time.Sleep(sleepDurationSeconds * time.Second)
@@ -143,11 +144,14 @@ func (a CommandsAPI) waitForContextReady(contextId, clusterID string, sleepDurat
 			status, err := a.getContext(contextId, clusterID)
 			if err != nil {
 				errChan <- err
+				return
 			}
 			if status == "Running" {
 				errChan <- nil
+				return
 			} else if status == "Error" {
 				errChan <- errors.New("Context is in a errored state.")
+				return
 			}
 			log.Println("Waiting for context to go to running, current state is pending.")
 			time.Sleep(sleepDurationSeconds * time.Second)
@@ -195,7 +199,7 @@ func (a CommandsAPI) createContext(language, clusterId string) (string, error) {
 
 	resp, err := a.Client.performQuery(http.MethodPost, "/contexts/create", "1.2", nil, contextRequest, nil)
 	if err != nil {
-		return context.Id, nil
+		return context.Id, err
 	}
 	err = json.Unmarshal(resp, &context)
 	return context.Id, err

@@ -44,15 +44,10 @@ func (a UsersAPI) Create(userName string, displayName string, entitlements []str
 }
 
 func (a UsersAPI) Read(userId string) (model.User, error) {
-	var user model.User
-	userPath := fmt.Sprintf("/preview/scim/v2/Users/%v", userId)
-
-	resp, err := a.Client.performQuery(http.MethodGet, userPath, "2.0", scimHeaders, nil, nil)
+	user, err := a.read(userId)
 	if err != nil {
 		return user, err
 	}
-
-	err = json.Unmarshal(resp, &user)
 
 	//get groups
 	var groups []model.Group
@@ -66,6 +61,19 @@ func (a UsersAPI) Read(userId string) (model.User, error) {
 	inherited, unInherited, err := a.getInheritedAndNonInheritedRoles(user, groups)
 	user.InheritedRoles = inherited
 	user.UnInheritedRoles = unInherited
+	return user, err
+}
+
+func (a UsersAPI) read(userId string) (model.User, error) {
+	var user model.User
+	userPath := fmt.Sprintf("/preview/scim/v2/Users/%v", userId)
+
+	resp, err := a.Client.performQuery(http.MethodGet, userPath, "2.0", scimHeaders, nil, nil)
+	if err != nil {
+		return user, err
+	}
+
+	err = json.Unmarshal(resp, &user)
 	return user, err
 }
 
@@ -91,7 +99,7 @@ func (a UsersAPI) Update(userId string, userName string, displayName string, ent
 		scimUserUpdateRequest.Roles = append(scimUserUpdateRequest.Roles, model.RoleListItem{Value: role})
 	}
 	//Get any existing groups that the user is part of
-	user, err := a.Read(userId)
+	user, err := a.read(userId)
 	if err != nil {
 		return err
 	}
@@ -132,7 +140,7 @@ func (a UsersAPI) SetUserAsAdmin(userId string, adminGroupId string) error {
 }
 
 func (a UsersAPI) VerifyUserAsAdmin(userId string, adminGroupId string) (bool, error) {
-	user, err := a.Read(userId)
+	user, err := a.read(userId)
 	if err != nil {
 		return false, err
 	}

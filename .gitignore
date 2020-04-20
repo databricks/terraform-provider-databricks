@@ -325,3 +325,4 @@ pip-selfcheck.json
 .DS_Store
 /*.dbc
 /*.bck
+/templates

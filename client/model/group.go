@@ -18,10 +18,10 @@ type GroupPathType string
 
 const (
 	// GroupMembersPath is the members path for SCIM patch operation.
-	GroupMembersPath      GroupPathType = "members"
+	GroupMembersPath GroupPathType = "members"
 
 	// GroupRolesPath is the roles path for SCIM patch operation.
-	GroupRolesPath        GroupPathType = "roles"
+	GroupRolesPath GroupPathType = "roles"
 
 	// GroupEntitlementsPath is the entitlements path for SCIM patch operation.
 	GroupEntitlementsPath GroupPathType = "entitlements"

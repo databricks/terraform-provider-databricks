@@ -40,13 +40,13 @@ type CronSchedule struct {
 
 // JobSettings contains the information for configuring a job on databricks
 type JobSettings struct {
-	ExistingClusterID string           `json:"existing_cluster_id,omitempty"`
-	NewCluster        *Cluster         `json:"new_cluster,omitempty"`
-	NotebookTask      *NotebookTask    `json:"notebook_task,omitempty"`
-	SparkJarTask      *SparkJarTask    `json:"spark_jar_task,omitempty"`
-	SparkPythonTask   *SparkPythonTask `json:"spark_python_task,omitempty"`
-	SparkSubmitTask   *SparkSubmitTask `json:"spark_submit_task,omitempty"`
-	Name              string           `json:"name,omitempty"`
+	ExistingClusterID      string                 `json:"existing_cluster_id,omitempty"`
+	NewCluster             *Cluster               `json:"new_cluster,omitempty"`
+	NotebookTask           *NotebookTask          `json:"notebook_task,omitempty"`
+	SparkJarTask           *SparkJarTask          `json:"spark_jar_task,omitempty"`
+	SparkPythonTask        *SparkPythonTask       `json:"spark_python_task,omitempty"`
+	SparkSubmitTask        *SparkSubmitTask       `json:"spark_submit_task,omitempty"`
+	Name                   string                 `json:"name,omitempty"`
 	Libraries              []Library              `json:"libraries,omitempty"`
 	EmailNotifications     *JobEmailNotifications `json:"email_notifications,omitempty"`
 	TimeoutSeconds         int32                  `json:"timeout_seconds,omitempty"`

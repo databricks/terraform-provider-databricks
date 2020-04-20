@@ -13,7 +13,7 @@ type DBFSAPI struct {
 	Client DBApiClient
 }
 
-func (a DBFSAPI) Create(path string, overwrite bool, data string) error {
+func (a DBFSAPI) Create(path string, overwrite bool, data string) (err error) {
 	byteArr, err := base64.StdEncoding.DecodeString(data)
 	if err != nil {
 		return err
@@ -46,7 +46,6 @@ func (a DBFSAPI) Read(path string) (string, error) {
 		if err != nil {
 			return "", err
 		}
-		log.Println(bytesRead)
 		if bytesRead == 0 || bytesRead < length {
 			fetchLoop = false
 		}
@@ -146,6 +145,9 @@ func (a DBFSAPI) ReadString(path string, offset, length int64) (int64, string, e
 
 func (a DBFSAPI) read(path string, offset, length int64) (int64, []byte, error) {
 	bytesRead, data, err := a.ReadString(path, offset, length)
+	if err != nil {
+		return bytesRead, nil, err
+	}
 	dataBytes, err := base64.StdEncoding.DecodeString(data)
 	return bytesRead, dataBytes, err
 }
@@ -168,22 +170,32 @@ func (a DBFSAPI) Status(path string) (model.FileInfo, error) {
 func (a DBFSAPI) List(path string, recursive bool) ([]model.FileInfo, error) {
 	if recursive == true {
 		var paths []model.FileInfo
-		a.recursiveAddPaths(path, &paths)
-		return paths, nil
+		err := a.recursiveAddPaths(path, &paths)
+		if err != nil {
+			return nil, err
+		}
+		return paths, err
 	} else {
 		return a.list(path)
 	}
 }
 
-func (a DBFSAPI) recursiveAddPaths(path string, pathList *[]model.FileInfo) {
-	fileInfoList, _ := a.list(path)
+func (a DBFSAPI) recursiveAddPaths(path string, pathList *[]model.FileInfo) error {
+	fileInfoList, err := a.list(path)
+	if err != nil {
+		return err
+	}
 	for _, v := range fileInfoList {
 		if v.IsDir == false {
 			*pathList = append(*pathList, v)
 		} else if v.IsDir == true {
-			a.recursiveAddPaths(v.Path, pathList)
+			err := a.recursiveAddPaths(v.Path, pathList)
+			if err != nil {
+				return err
+			}
 		}
 	}
+	return nil
 }
 
 func (a DBFSAPI) list(path string) ([]model.FileInfo, error) {

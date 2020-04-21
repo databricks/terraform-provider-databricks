@@ -6,12 +6,12 @@ var scimHeaders = map[string]string{
 
 // DBApiClient is the client struct that contains clients for all the services available on Databricks
 type DBApiClient struct {
-	config *DBApiClientConfig
+	Config *DBApiClientConfig
 }
 
 // SetConfig initializes the client
 func (c *DBApiClient) SetConfig(clientConfig *DBApiClientConfig) DBApiClient {
-	c.config = clientConfig
+	c.Config = clientConfig
 	clientConfig.Setup()
 	return *c
 }
@@ -87,5 +87,5 @@ func (c DBApiClient) Commands() CommandsAPI {
 }
 
 func (c DBApiClient) performQuery(method, path string, apiVersion string, headers map[string]string, data interface{}, secretsMask *SecretsMask) ([]byte, error) {
-	return PerformQuery(c.config, method, path, apiVersion, headers, true, false, data, secretsMask)
+	return PerformQuery(c.Config, method, path, apiVersion, headers, true, false, data, secretsMask)
 }

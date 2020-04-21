@@ -8,7 +8,7 @@ before:
 builds:
 - env:
     - CGO_ENABLED=0
-  binary: terraform-provider-databricks_{{ replace .Version "-next" "" }}
+  binary: terraform-provider-databricks_{{ .Version }}
   goos:
     - darwin
     - linux
@@ -34,7 +34,7 @@ archives:
 checksum:
   name_template: 'checksums.txt'
 snapshot:
-  name_template: "{{ .Tag }}-next"
+  name_template: "{{ .Tag }}-SNAPSHOT-{{ .ShortCommit }}"
 changelog:
   sort: asc
   filters:

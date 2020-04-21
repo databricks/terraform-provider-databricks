@@ -62,7 +62,7 @@ func resourceDBFSFileSyncCreate(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 
-	apiClient := parseSchemaToDBAPIClient(d)
+	apiClient := parseSchemaToDBAPIClient(d, &client)
 	err := client.DBFS().Copy(srcPath, tgtPath, apiClient, true)
 	if err != nil {
 		return err
@@ -101,7 +101,7 @@ func resourceDBFSFileSyncRead(d *schema.ResourceData, m interface{}) error {
 	tgtPath := d.Get("tgt_path").(string)
 
 	var srcAPIDBFSClient service.DBFSAPI
-	srcAPICLient := parseSchemaToDBAPIClient(d)
+	srcAPICLient := parseSchemaToDBAPIClient(d, &client)
 	if srcAPICLient != nil {
 		srcAPIDBFSClient = srcAPICLient.DBFS()
 	} else {
@@ -132,14 +132,14 @@ func resourceDBFSFileSyncDelete(d *schema.ResourceData, m interface{}) error {
 	return err
 }
 
-func parseSchemaToDBAPIClient(d *schema.ResourceData) *service.DBApiClient {
+func parseSchemaToDBAPIClient(d *schema.ResourceData, currentClient *service.DBApiClient) *service.DBApiClient {
 	host, hostOk := d.GetOk("host")
 	token, tokenOk := d.GetOk("token")
 	var config service.DBApiClientConfig
 	if hostOk && tokenOk {
 		config.Host = host.(string)
 		config.Token = token.(string)
-		config.UserAgent = "databricks-tf-provider"
+		config.UserAgent = currentClient.Config.UserAgent
 		var dbClient service.DBApiClient
 		dbClient.SetConfig(&config)
 		return &dbClient

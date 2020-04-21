@@ -6,10 +6,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
+var (
+	version = "dev"
+)
+
 func main() {
 	plugin.Serve(&plugin.ServeOpts{
 		ProviderFunc: func() terraform.ResourceProvider {
-			return databricks.Provider()
+			return databricks.Provider(version)
 		},
 	})
 }

@@ -51,7 +51,7 @@ func GetIntegrationDBAPIClient() *DBApiClient {
 }
 
 func GetCloudInstanceType(c *DBApiClient) string {
-	if strings.Contains(c.config.Host, "azure") {
+	if strings.Contains(c.Config.Host, "azure") {
 		return "Standard_DS3_v2"
 	}
 	return "m4.large"

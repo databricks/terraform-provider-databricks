@@ -1,6 +1,7 @@
 package databricks
 
 import (
+	"fmt"
 	"github.com/databrickslabs/databricks-terraform/client/service"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
@@ -9,7 +10,7 @@ import (
 )
 
 // Provider returns the entire terraform provider object
-func Provider() terraform.ResourceProvider {
+func Provider(version string) terraform.ResourceProvider {
 	provider := &schema.Provider{
 		DataSourcesMap: map[string]*schema.Resource{
 			"databricks_notebook":        dataSourceNotebook(),
@@ -96,13 +97,13 @@ func Provider() terraform.ResourceProvider {
 			// We can therefore assume that if it's missing it's 0.10 or 0.11
 			terraformVersion = "0.11+compatible"
 		}
-		return providerConfigure(d, terraformVersion)
+		return providerConfigure(d, version)
 	}
 
 	return provider
 }
 
-func providerConfigure(d *schema.ResourceData, s string) (interface{}, error) {
+func providerConfigure(d *schema.ResourceData, providerVersion string) (interface{}, error) {
 	var config service.DBApiClientConfig
 	if azureAuth, ok := d.GetOk("azure_auth"); !ok {
 		if host, ok := d.GetOk("host"); ok {
@@ -166,7 +167,7 @@ func providerConfigure(d *schema.ResourceData, s string) (interface{}, error) {
 
 	//TODO: Bake the version of the provider using -ldflags to tell the golang linker to send
 	//version information from go-releaser
-	config.UserAgent = "databricks-tf-provider"
+	config.UserAgent = fmt.Sprintf("databricks-tf-provider-%s", providerVersion)
 	var dbClient service.DBApiClient
 	dbClient.SetConfig(&config)
 	return dbClient, nil

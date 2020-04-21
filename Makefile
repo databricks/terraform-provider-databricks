@@ -24,8 +24,7 @@ build: fmt
 
 lint:
 	@echo "==> Linting source code with golint..."
-	@golint -set_exit_status ./databricks/...
-	@golint -set_exit_status ./client/...
+	@golint -set_exit_status ./databricks/... ./client/...
 
 fmt: lint
 	@echo "==> Formatting source code with gofmt..."

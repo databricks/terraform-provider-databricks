@@ -6,6 +6,7 @@ import (
 	"github.com/databrickslabs/databricks-terraform/client/service"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"log"
+	"reflect"
 	"strconv"
 	"strings"
 )
@@ -354,18 +355,8 @@ func resourceJob() *schema.Resource {
 				ConflictsWith: []string{"jar_main_class_name", "notebook_path", "python_file"},
 			},
 			"email_notifications": &schema.Schema{
-				Type:     schema.TypeList,
+				Type:     schema.TypeSet,
 				Optional: true,
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					// Suppress order change for the list
-					if k == "email_notifications.#" {
-						return true
-					}
-					if old != new {
-						return false
-					}
-					return true
-				},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"on_start": &schema.Schema{
@@ -454,7 +445,7 @@ func resourceJobCreate(d *schema.ResourceData, m interface{}) error {
 	if err != nil {
 		return err
 	}
-	log.Println(job.JobID)
+
 	d.SetId(strconv.Itoa(int(job.JobID)))
 	return resourceJobRead(d, m)
 }
@@ -564,10 +555,12 @@ func resourceJobRead(d *schema.ResourceData, m interface{}) error {
 		newClusterSettings["init_scripts"] = listOfInitScripts
 
 		dockerImage := map[string]string{}
-		dockerImage["url"] = job.Settings.NewCluster.DockerImage.URL
-		if job.Settings.NewCluster.DockerImage.BasicAuth != nil {
-			dockerImage["username"] = job.Settings.NewCluster.DockerImage.BasicAuth.Username
-			dockerImage["password"] = job.Settings.NewCluster.DockerImage.BasicAuth.Password
+		if job.Settings.NewCluster.DockerImage != nil {
+			dockerImage["url"] = job.Settings.NewCluster.DockerImage.URL
+			if job.Settings.NewCluster.DockerImage.BasicAuth != nil {
+				dockerImage["username"] = job.Settings.NewCluster.DockerImage.BasicAuth.Username
+				dockerImage["password"] = job.Settings.NewCluster.DockerImage.BasicAuth.Password
+			}
 		}
 		dockerImageSet := []map[string]string{dockerImage}
 		newClusterSettings["docker_image"] = dockerImageSet
@@ -765,11 +758,22 @@ func resourceJobRead(d *schema.ResourceData, m interface{}) error {
 		}
 		emailNotifiactions["no_alert_for_skipped_runs"] = job.Settings.EmailNotifications.NoAlertForSkippedRuns
 
-		emailNotifiactionsSet := []map[string]interface{}{emailNotifiactions}
-		err = d.Set("email_notifications", emailNotifiactionsSet)
-		if err != nil {
-			return err
+		if reflect.ValueOf(job.Settings.EmailNotifications.OnStart).IsZero() &&
+			reflect.ValueOf(job.Settings.EmailNotifications.OnSuccess).IsZero() &&
+			reflect.ValueOf(job.Settings.EmailNotifications.OnFailure).IsZero() &&
+			reflect.ValueOf(job.Settings.EmailNotifications.NoAlertForSkippedRuns).IsZero() {
+			err = d.Set("email_notifications", nil)
+			if err != nil {
+				return err
+			}
+		} else {
+			emailNotifiactionsSet := []map[string]interface{}{emailNotifiactions}
+			err = d.Set("email_notifications", emailNotifiactionsSet)
+			if err != nil {
+				return err
+			}
 		}
+
 	} else {
 		err = d.Set("email_notifications", nil)
 		if err != nil {
@@ -907,7 +911,7 @@ func parseSchemaToJobSettings(d *schema.ResourceData) model.JobSettings {
 
 	if emailNotificationsList, ok := d.GetOk("email_notifications"); ok {
 		var email model.JobEmailNotifications
-		emailNotificationsMap := getMapFromOneItemList(emailNotificationsList)
+		emailNotificationsMap := getMapFromOneItemList(emailNotificationsList.(*schema.Set).List())
 		if emailOnStart, ok := emailNotificationsMap["on_start"]; ok {
 			email.OnStart = convertListInterfaceToString(emailOnStart.(*schema.Set).List())
 		}
@@ -920,8 +924,8 @@ func parseSchemaToJobSettings(d *schema.ResourceData) model.JobSettings {
 		if noAlertForSkippedRuns, ok := emailNotificationsMap["no_alert_for_skipped_runs"]; ok {
 			email.NoAlertForSkippedRuns = noAlertForSkippedRuns.(bool)
 		}
+		log.Println(email)
 		jobSettings.EmailNotifications = &email
-
 	}
 
 	if timeoutSeconds, ok := d.GetOk("timeout_seconds"); ok {

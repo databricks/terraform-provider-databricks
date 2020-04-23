@@ -27,7 +27,6 @@ jobs:
         echo "installing hugo"
         sudo mkdir -p /home/hugo/
         curl -sSL "https://github.com/gohugoio/hugo/releases/download/v0.69.1/hugo_0.69.1_Linux-64bit.tar.gz" | sudo tar -xz -C /usr/local/bin hugo
-        sudo mv /home/hugo/hugo /usr/bin/
         echo "installing azcopy"
         sudo mkdir -p /home/azcopy/
         curl -L https://aka.ms/downloadazcopy-v10-linux | tar -zxf - --directory /home/azcopy/

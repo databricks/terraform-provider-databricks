@@ -1,5 +1,7 @@
 # Databricks Terraform Provider
 
+![Go](https://github.com/databrickslabs/databricks-terraform/workflows/Go/badge.svg?branch=master)
+
 ## Quickstart: Building and Using the Provider
 
 ### Setup 

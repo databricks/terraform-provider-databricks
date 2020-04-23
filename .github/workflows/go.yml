@@ -23,7 +23,8 @@ jobs:
       uses: actions/checkout@v2
 
     - name: Setup gotestsum
-      uses: autero1/action-gotestsum@v0.1.0
+      run: |
+        go get -u gotest.tools/gotestsum
 
     - name: Run Linting Unit tests
       run: |

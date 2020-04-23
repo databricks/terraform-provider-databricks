@@ -73,6 +73,7 @@ snapshot:
 hugo:
 	@echo "==> Making Docs..."
 	@rm -rf website/content/_index.files/*
+	@mkdir -p website/content/_index.files/
 	@cp dist/*.gz website/content/_index.files/
 	@cp dist/*.zip website/content/_index.files/
 	@cd website && hugo

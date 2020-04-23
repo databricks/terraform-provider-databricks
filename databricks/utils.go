@@ -1,12 +1,10 @@
 package databricks
 
 import (
-	"bytes"
 	"errors"
 	"fmt"
 	"github.com/databrickslabs/databricks-terraform/client/model"
 	"github.com/databrickslabs/databricks-terraform/client/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"sort"
 	"strconv"
@@ -106,24 +104,6 @@ func fetchStringFromCheckers(strVal interface{}) string {
 	return stringChecker.execute(strVal)
 }
 
-func mapHash(v interface{}) int {
-	var buf bytes.Buffer
-	m := v.(map[string]interface{})
-
-	var keys []string
-	for k := range m {
-		keys = append(keys, k)
-	}
-	sort.Strings(keys)
-	for _, k := range keys {
-		if m[k] != nil {
-			buf.WriteString(fetchStringFromCheckers(m[k]))
-		}
-	}
-	hash := hashcode.String(buf.String())
-	return hash
-}
-
 func validateClusterLogConf(value, meta interface{}) error {
 	clusterLogConfMap := getMapFromOneItemSet(value)
 	if clusterLogConfMap != nil &&
@@ -152,30 +132,6 @@ func validateInitScripts(value, meta interface{}) error {
 		}
 	}
 	return nil
-}
-
-func determineAwsAttributesDiff(diff *schema.ResourceDiff, m interface{}) error {
-	diffAwsAttributes := diff.Get("aws_attributes").(*schema.Set).List()[0].(map[string]interface{})
-
-	id := diff.Id()
-	client := m.(service.DBApiClient)
-	clusterInfo, err := client.Clusters().Get(id)
-	if err != nil {
-		return err
-	}
-	if diffAwsAttributes["availability"].(string) == "" {
-		diffAwsAttributes["availability"] = clusterInfo.AwsAttributes.Availability
-	}
-	if diffAwsAttributes["zone_id"].(string) == "" {
-		diffAwsAttributes["zone_id"] = clusterInfo.AwsAttributes.ZoneID
-	}
-	if diffAwsAttributes["spot_bid_price_percent"].(int) == 0 {
-		diffAwsAttributes["spot_bid_price_percent"] = clusterInfo.AwsAttributes.SpotBidPricePercent
-	}
-	awsAtts := []map[string]interface{}{diffAwsAttributes}
-	//err = diff.Clear("aws_attributes", awsAtts)
-	err = diff.SetNew("aws_attributes", awsAtts)
-	return err
 }
 
 func changeClusterIntoRunningState(clusterID string, client service.DBApiClient) error {

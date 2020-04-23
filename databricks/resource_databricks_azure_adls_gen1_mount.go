@@ -162,6 +162,9 @@ func resourceAzureAdlsGen1Read(d *schema.ResourceData, m interface{}) error {
 		return err
 	}
 	storageResourceName, dir, err := ProcessAzureAdlsGen1Uri(url)
+	if err != nil {
+		return err
+	}
 	err = d.Set("storage_resource_name", storageResourceName)
 	if err != nil {
 		return err

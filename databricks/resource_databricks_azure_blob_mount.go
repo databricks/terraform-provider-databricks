@@ -89,6 +89,9 @@ func resourceAzureBlobMountCreate(d *schema.ResourceData, m interface{}) error {
 		tokenSecretScope, tokenSecretKey)
 
 	err = blobMount.Create(client, clusterID)
+	if err != nil {
+		return err
+	}
 
 	d.SetId(mountName)
 
@@ -143,6 +146,9 @@ func resourceAzureBlobMountRead(d *schema.ResourceData, m interface{}) error {
 		return err
 	}
 	container, storageAcc, dir, err := ProcessAzureWasbAbfssUris(url)
+	if err != nil {
+		return err
+	}
 	err = d.Set("container_name", container)
 	if err != nil {
 		return err

@@ -1,16 +1,13 @@
 package databricks
 
 import (
-	"bytes"
 	"errors"
 	"fmt"
 	"github.com/databrickslabs/databricks-terraform/client/model"
 	"github.com/databrickslabs/databricks-terraform/client/service"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"log"
-	"sort"
 	"strings"
 	"time"
 )
@@ -464,6 +461,9 @@ func resourceClusterCreate(d *schema.ResourceData, m interface{}) error {
 
 	if len(libraries) > 0 {
 		err = client.Libraries().Create(clusterInfo.ClusterID, libraries)
+		if err != nil {
+			return err
+		}
 	}
 
 	return resourceClusterRead(d, m)
@@ -484,6 +484,9 @@ func resourceClusterRead(d *schema.ResourceData, m interface{}) error {
 	}
 
 	librariesStatuses, err := client.Libraries().List(id)
+	if err != nil {
+		return err
+	}
 
 	var jars []map[string]interface{}
 	var eggs []map[string]interface{}
@@ -641,6 +644,9 @@ func resourceClusterRead(d *schema.ResourceData, m interface{}) error {
 		}
 	} else {
 		err = d.Set("aws_attributes", nil)
+		if err != nil {
+			return err
+		}
 	}
 
 	err = d.Set("driver_node_type_id", clusterInfo.DriverNodeTypeID)
@@ -764,7 +770,7 @@ func resourceClusterRead(d *schema.ResourceData, m interface{}) error {
 
 	err = d.Set("state_message", string(clusterInfo.StateMessage))
 
-	return nil
+	return err
 }
 
 func calculateLibraryChanges(new []model.Library, old []model.Library) ([]model.Library, []model.Library) {
@@ -1277,48 +1283,6 @@ func parseSchemaToCluster(d *schema.ResourceData, schemaAttPrefix string) model.
 		cluster.IdempotencyToken = idempotencyToken.(string)
 	}
 	return cluster
-}
-
-func clusterInitScriptHash(v interface{}) int {
-	var buf bytes.Buffer
-	m := v.(map[string]interface{})
-	if v, ok := m["dbfs_destination"]; ok {
-		buf.WriteString(v.(string))
-	}
-	if v, ok := m["s3_region"]; ok {
-		buf.WriteString(v.(string))
-	}
-	if v, ok := m["s3_endpoint"]; ok {
-		buf.WriteString(v.(string))
-	}
-	return hashcode.String(buf.String())
-}
-
-func createDynamicHash(k []string) func(v interface{}) int {
-	return func(v interface{}) int {
-		var buf bytes.Buffer
-		m := v.(map[string]interface{})
-		sort.Strings(k)
-		for _, k := range k {
-			value, ok := m[k].(string)
-			if ok {
-				if m[k] != nil && len(value) > 0 {
-					buf.WriteString(value)
-				}
-			} else {
-				list, ok := m[k].([]interface{})
-				if ok {
-					for _, val := range list {
-						if val != nil && len(val.(string)) > 0 {
-							buf.WriteString(val.(string))
-						}
-					}
-				}
-			}
-
-		}
-		return hashcode.String(buf.String())
-	}
 }
 
 func getMapFromOneItemList(input interface{}) map[string]interface{} {

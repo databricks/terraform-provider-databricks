@@ -56,7 +56,7 @@ func resourceDBFSFileCreate(d *schema.ResourceData, m interface{}) error {
 	overwrite := d.Get("overwrite").(bool)
 	mkdirs := d.Get("mkdirs").(bool)
 
-	if mkdirs == true {
+	if mkdirs {
 		parentDir := filepath.Dir(path)
 		err := client.DBFS().Mkdirs(parentDir)
 		if err != nil {
@@ -107,7 +107,7 @@ func resourceDBFSFileRead(d *schema.ResourceData, m interface{}) error {
 
 	if validateRemoteFile, ok := d.GetOk("validate_remote_file"); ok {
 		validateFile := validateRemoteFile.(bool)
-		if validateFile == true {
+		if validateFile {
 			log.Println("Validating remote file!")
 			data, err := client.DBFS().Read(id)
 			if err != nil {

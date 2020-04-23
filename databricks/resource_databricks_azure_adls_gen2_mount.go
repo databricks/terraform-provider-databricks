@@ -155,6 +155,9 @@ func resourceAzureAdlsGen2Read(d *schema.ResourceData, m interface{}) error {
 		return err
 	}
 	container, storageAcc, dir, err := ProcessAzureWasbAbfssUris(url)
+	if err != nil {
+		return err
+	}
 	err = d.Set("container_name", container)
 	if err != nil {
 		return err

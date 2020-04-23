@@ -23,8 +23,8 @@ build: test fmt
 	@go build -mod vendor -v -o terraform-provider-databricks
 
 lint:
-	@echo "==> Linting source code with golint..."
-	@golint -set_exit_status ./databricks/... ./client/...
+	@echo "==> Linting source code with golangci-lint..."
+	@golangci-lint run --skip-dirs-use-default
 
 fmt: lint
 	@echo "==> Formatting source code with gofmt..."
@@ -83,4 +83,4 @@ internal-docs-sync:
 	@echo "==> Uploading Website..."
 	@azcopy login --service-principal --application-id $(AZCOPY_SPA_CLIENT_ID) --tenant-id=$(AZCOPY_SPA_TENANT_ID) && azcopy sync './website/public' '$(AZCOPY_STORAGE_ACCT)' --recursive
 
-.PHONY: build fmt python-setup docs vendor terraform-local build fmt coverage test
+.PHONY: build fmt python-setup docs vendor terraform-local build fmt coverage test lint

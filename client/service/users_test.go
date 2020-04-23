@@ -37,9 +37,9 @@ func TestScimUserAPI_Create(t *testing.T) {
 			args: args{
 				Schemas:      []model.URN{model.UserSchema},
 				UserName:     "test.user@databricks.com",
-				Entitlements: []model.EntitlementsListItem{{"test-entitlement"}},
+				Entitlements: []model.EntitlementsListItem{{Value:"test-entitlement"}},
 				DisplayName:  "test user",
-				Roles:        []model.RoleListItem{{"test-role"}},
+				Roles:        []model.RoleListItem{{Value:"test-role"}},
 			},
 			wantErr: false,
 		},
@@ -51,9 +51,9 @@ func TestScimUserAPI_Create(t *testing.T) {
 			args: args{
 				Schemas:      []model.URN{model.UserSchema},
 				UserName:     "test.user@databricks.com",
-				Entitlements: []model.EntitlementsListItem{{"test-entitlement"}},
+				Entitlements: []model.EntitlementsListItem{{Value:"test-entitlement"}},
 				DisplayName:  "test user",
-				Roles:        []model.RoleListItem{{"test-role"}},
+				Roles:        []model.RoleListItem{{Value:"test-role"}},
 			},
 			wantErr: true,
 		},
@@ -99,9 +99,9 @@ func TestScimUserAPI_Update(t *testing.T) {
 				&args{
 					Schemas:      []model.URN{model.UserSchema},
 					UserName:     "test.user@databricks.com",
-					Entitlements: []model.EntitlementsListItem{{"test-entitlement"}},
+					Entitlements: []model.EntitlementsListItem{{Value:"test-entitlement"}},
 					DisplayName:  "test user",
-					Roles:        []model.RoleListItem{{"test-role"}},
+					Roles:        []model.RoleListItem{{Value:"test-role"}},
 				},
 			},
 			wantErr: false,
@@ -118,9 +118,9 @@ func TestScimUserAPI_Update(t *testing.T) {
 				&args{
 					Schemas:      []model.URN{model.UserSchema},
 					UserName:     "test.user@databricks.com",
-					Entitlements: []model.EntitlementsListItem{{"test-entitlement"}},
+					Entitlements: []model.EntitlementsListItem{{Value:"test-entitlement"}},
 					DisplayName:  "test user",
-					Roles:        []model.RoleListItem{{"test-role"}},
+					Roles:        []model.RoleListItem{{Value:"test-role"}},
 				},
 			},
 			wantErr: true,
@@ -184,7 +184,7 @@ func TestScimUserAPI_Delete(t *testing.T) {
 func TestScimUserAPI_SetUserAsAdmin(t *testing.T) {
 	type args struct {
 		UserID       string `json:"user_id,omitempty"`
-		AdminGroupID string `json:"user_id,omitempty"`
+		AdminGroupID string `json:"admin_group_id,omitempty"`
 	}
 	tests := []struct {
 		name           string
@@ -242,7 +242,7 @@ func TestScimUserAPI_SetUserAsAdmin(t *testing.T) {
 func TestScimUserAPI_VerifyUserAsAdmin(t *testing.T) {
 	type args struct {
 		UserID       string `json:"user_id,omitempty"`
-		AdminGroupID string `json:"user_id,omitempty"`
+		AdminGroupID string `json:"admin_group_id,omitempty"`
 	}
 	tests := []struct {
 		name           string
@@ -354,7 +354,7 @@ func TestScimUserAPI_VerifyUserAsAdmin(t *testing.T) {
 func TestScimUserAPI_RemoveUserAsAdmin(t *testing.T) {
 	type args struct {
 		UserID       string `json:"user_id,omitempty"`
-		AdminGroupID string `json:"user_id,omitempty"`
+		AdminGroupID string `json:"admin_group_id,omitempty"`
 	}
 	tests := []struct {
 		name           string

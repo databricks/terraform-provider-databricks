@@ -61,10 +61,6 @@ func testScimUserResourceDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testScimUserPreCheck(t *testing.T) {
-	return
-}
-
 func testScimUserValues(t *testing.T, user *model.User, userName, displayName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		assert.True(t, user.UserName == userName)

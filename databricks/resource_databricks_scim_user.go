@@ -215,7 +215,7 @@ func resourceScimUserUpdate(d *schema.ResourceData, m interface{}) error {
 	}
 	if d.HasChange("set_admin") {
 		setAdmin := d.Get("set_admin").(bool)
-		if setAdmin == true {
+		if setAdmin {
 			adminGroup, err := client.Groups().GetAdminGroup()
 			if err != nil {
 				return err

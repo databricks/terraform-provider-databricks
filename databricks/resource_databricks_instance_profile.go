@@ -59,7 +59,7 @@ func resourceInstanceProfileRead(d *schema.ResourceData, m interface{}) error {
 		return err
 	}
 	err = d.Set("instance_profile_arn", profile)
-	return nil
+	return err
 }
 
 func resourceInstanceProfileDelete(d *schema.ResourceData, m interface{}) error {

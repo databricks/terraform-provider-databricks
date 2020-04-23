@@ -100,7 +100,7 @@ func resourceNotebookCreate(d *schema.ResourceData, m interface{}) error {
 	overwrite := d.Get("overwrite").(bool)
 	mkdirs := d.Get("mkdirs").(bool)
 
-	if mkdirs == true {
+	if mkdirs {
 		parentDir := filepath.Dir(path)
 		err := client.Notebooks().Mkdirs(parentDir)
 		if err != nil {
@@ -202,7 +202,7 @@ func convertZipBytesToCRC(b64 []byte) (string, error) {
 	}
 	var totalSum int64
 	for _, f := range r.File {
-		if f.FileInfo().IsDir() == false {
+		if f.FileInfo().IsDir() {
 			file, err := f.Open()
 			if err != nil {
 				return "", err

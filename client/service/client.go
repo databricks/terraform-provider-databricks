@@ -62,7 +62,6 @@ type DBApiClientConfig struct {
 	InsecureSkipVerify bool
 	TimeoutSeconds     int
 	client             http.Client
-	cloudProvider      CloudServiceProvider
 }
 
 // Setup initializes the client
@@ -190,7 +189,7 @@ func PerformQuery(config *DBApiClientConfig, method, path string, apiVersion str
 	}
 	requestHeaders := config.getDefaultHeaders()
 
-	if headers != nil && len(headers) > 0 {
+	if len(headers) > 0 {
 		for k, v := range headers {
 			requestHeaders[k] = v
 		}

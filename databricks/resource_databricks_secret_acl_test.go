@@ -62,10 +62,6 @@ func testSecretACLResourceDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testSecretACLPreCheck(t *testing.T) {
-	return
-}
-
 func testSecretACLValues(t *testing.T, acl *model.ACLItem, permission, principal string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		assert.True(t, acl.Permission == model.ACLPermissionRead)

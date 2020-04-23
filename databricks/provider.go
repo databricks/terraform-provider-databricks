@@ -91,12 +91,12 @@ func Provider(version string) terraform.ResourceProvider {
 	}
 
 	provider.ConfigureFunc = func(d *schema.ResourceData) (interface{}, error) {
-		terraformVersion := provider.TerraformVersion
-		if terraformVersion == "" {
+		//terraformVersion := provider.TerraformVersion
+		//if terraformVersion == "" {
 			// Terraform 0.12 introduced this field to the protocol
 			// We can therefore assume that if it's missing it's 0.10 or 0.11
-			terraformVersion = "0.11+compatible"
-		}
+			//terraformVersion = "0.11+compatible"
+		//}
 		return providerConfigure(d, version)
 	}
 

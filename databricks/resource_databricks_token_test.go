@@ -59,7 +59,6 @@ func testAccCheckTokenResourceDestroy(s *terraform.State) error {
 }
 
 func testAccPreCheck(t *testing.T) {
-	return
 }
 
 func testAccCheckTokenValues(tokenInfo *model.TokenInfo, comment string) resource.TestCheckFunc {

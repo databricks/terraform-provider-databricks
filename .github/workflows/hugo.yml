@@ -31,7 +31,11 @@ jobs:
         sudo mkdir -p /home/azcopy/
         curl -L https://aka.ms/downloadazcopy-v10-linux | tar -zxf - --directory /home/azcopy/
         sudo mv $(find /home/azcopy/ -type f -name azcopy) /usr/bin/
-        
+    - name: Run GoReleaser
+      uses: goreleaser/goreleaser-action@v1
+      with:
+        version: latest
+        args: release --rm-dist --snapshot
     - name: Build + Deploy Site
       env:
         AZCOPY_SPA_CLIENT_SECRET: ${{ secrets.AZCOPY_SPA_CLIENT_SECRET }}

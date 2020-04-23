@@ -30,6 +30,6 @@ jobs:
         AZCOPY_STORAGE_ACCT: ${{ secrets.AZCOPY_STORAGE_ACCT }}          
       run: |
         curl -sfL https://install.goreleaser.com/github.com/goreleaser/goreleaser.sh | sh
-        curl -sSL "https://aka.ms/downloadazcopy-v10-linux" | sudo tar -xz -C /usr/local/bin azcopy
+        curl -sSL "https://aka.ms/downloadazcopy-v10-linux" | sudo tar -xz azcopy_linux_amd64_10.4.0/azcopy && sudo cp azcopy_linux_amd64_10.4.0/azcopy /usr/local/bin/azcopy
         curl -sSL "https://github.com/gohugoio/hugo/releases/download/v0.69.1/hugo_0.69.1_Linux-64bit.tar.gz" | sudo tar -xz -C /usr/local/bin hugo
         make internal-docs-sync

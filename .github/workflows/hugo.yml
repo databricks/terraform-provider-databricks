@@ -1,0 +1,35 @@
+name: Docs
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+
+  build:
+    name: Hugo
+    runs-on: ubuntu-latest
+    steps:
+
+    - name: Set up Go 1.13
+      uses: actions/setup-go@v1
+      with:
+        go-version: 1.13
+      id: go
+
+    - name: Check out code into the Go module directory
+      uses: actions/checkout@v2
+
+    - name: Get dependencies
+      env:
+        AZCOPY_SPA_CLIENT_SECRET: ${{ secrets.AZCOPY_SPA_CLIENT_SECRET }}
+        AZCOPY_SPA_CLIENT_ID: ${{ secrets.AZCOPY_SPA_CLIENT_ID }} 
+        AZCOPY_SPA_TENANT_ID: ${{ secrets.AZCOPY_SPA_TENANT_ID }}
+        AZCOPY_STORAGE_ACCT: ${{ secrets.AZCOPY_STORAGE_ACCT }}          
+      run: |
+        curl -sfL https://install.goreleaser.com/github.com/goreleaser/goreleaser.sh | sh
+        curl -sSL "https://aka.ms/downloadazcopy-v10-linux" | sudo tar -xz -C /usr/local/bin azcopy
+        curl -sSL "https://github.com/gohugoio/hugo/releases/download/v0.69.1/hugo_0.69.1_Linux-64bit.tar.gz" | sudo tar -xz -C /usr/local/bin hugo
+        make internal-docs-sync

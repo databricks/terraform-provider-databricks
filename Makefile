@@ -80,6 +80,6 @@ hugo:
 
 internal-docs-sync:
 	@echo "==> Uploading Website..."
-	@azcopy login --service-principal --application-id $(AZCOPY_SPA_CLIENT_ID) --tenant-id=$(AZCOPY_SPA_TENANT_ID) && azcopy sync './website/public' '$(AZCOPY_STORAGE_ACCT)' --recursive
+	@azcopy login --service-principal --application-id $(AZCOPY_SPA_CLIENT_ID) --tenant-id=$(AZCOPY_SPA_TENANT_ID) && azcopy sync './website/public' '$(AZCOPY_STORAGE_ACCT)/$$web' --recursive
 
 .PHONY: build fmt python-setup docs vendor terraform-local build fmt coverage test lint

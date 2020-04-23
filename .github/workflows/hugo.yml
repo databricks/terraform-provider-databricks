@@ -21,8 +21,19 @@ jobs:
 
     - name: Check out code into the Go module directory
       uses: actions/checkout@v2
-
-    - name: Get dependencies
+      
+    - name: Install hugo + azcopy
+      run: |
+        echo "installing hugo"
+        sudo mkdir -p /home/hugo/
+        curl -sSL "https://github.com/gohugoio/hugo/releases/download/v0.69.1/hugo_0.69.1_Linux-64bit.tar.gz" | sudo tar -xz -C /usr/local/bin hugo
+        sudo mv /home/hugo/hugo /usr/bin/
+        echo "installing azcopy"
+        sudo mkdir -p /home/azcopy/
+        curl -L https://aka.ms/downloadazcopy-v10-linux | tar -zxf - --directory /home/azcopy/
+        sudo mv $(find /home/azcopy/ -type f -name azcopy) /usr/bin/
+        
+    - name: Build + Deploy Site
       env:
         AZCOPY_SPA_CLIENT_SECRET: ${{ secrets.AZCOPY_SPA_CLIENT_SECRET }}
         AZCOPY_SPA_CLIENT_ID: ${{ secrets.AZCOPY_SPA_CLIENT_ID }} 
@@ -30,6 +41,4 @@ jobs:
         AZCOPY_STORAGE_ACCT: ${{ secrets.AZCOPY_STORAGE_ACCT }}          
       run: |
         curl -sfL https://install.goreleaser.com/github.com/goreleaser/goreleaser.sh | sh
-        curl -sSL "https://aka.ms/downloadazcopy-v10-linux" | sudo tar -xz azcopy_linux_amd64_10.4.0/azcopy && sudo cp azcopy_linux_amd64_10.4.0/azcopy /usr/local/bin/azcopy
-        curl -sSL "https://github.com/gohugoio/hugo/releases/download/v0.69.1/hugo_0.69.1_Linux-64bit.tar.gz" | sudo tar -xz -C /usr/local/bin hugo
-        make internal-docs-sync
+        make hugo internal-docs-sync

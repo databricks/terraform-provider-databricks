@@ -26,7 +26,7 @@ linenos = true
   # editURL = ""
   display = true
   # Author of the site, will be used in meta information
-  author = "Sriharsha Tikkireddy"
+  author = "Databricks Labs"
   # Description of the site, will be used in meta information
   description = ""
   # Shows a checkmark for visited pages on the menu

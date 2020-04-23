@@ -326,3 +326,6 @@ pip-selfcheck.json
 /*.dbc
 /*.bck
 /templates
+website/**/*.tar.gz
+website/**/*.zip
+website/public/**

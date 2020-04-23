@@ -2,7 +2,7 @@ default: build
 
 test:
 	@echo "==> Running tests..."
-	@gotestsum --raw-command go test -v -json -short -coverprofile=coverage.out ./...
+	@gotestsum --format short-verbose --raw-command go test -v -json -short -coverprofile=coverage.out ./...
 
 int:
 	@echo "==> Running tests..."
@@ -69,12 +69,10 @@ terraform-apply: terraform-setup
 snapshot:
 	@echo "==> Making Snapshot..."
 	@goreleaser release --rm-dist --snapshot
-	@cp dist/*.gz website/content/_index.files/
-	@cp dist/*.zip website/content/_index.files/
 
-hugo: snapshot
+hugo:
 	@echo "==> Making Docs..."
-	@rm -rf terraform-provider-databricks website/content/_index.files/*
+	@rm -rf website/content/_index.files/*
 	@cp dist/*.gz website/content/_index.files/
 	@cp dist/*.zip website/content/_index.files/
 	@cd website && hugo

@@ -112,19 +112,20 @@ func (a CommandsAPI) waitForCommandFinished(commandID, contextID, clusterID stri
 	}
 }
 
-func (a CommandsAPI) deleteCommand(commandID, contextID, clusterID string) error {
-	contextDeleteRequest := struct {
-		CommandID string `json:"commandId,omitempty" url:"commandId,omitempty"`
-		ContextID string `json:"contextId,omitempty" url:"contextId,omitempty"`
-		ClusterID string `json:"clusterId,omitempty" url:"clusterId,omitempty"`
-	}{
-		CommandID: commandID,
-		ContextID: contextID,
-		ClusterID: clusterID,
-	}
-	_, err := a.Client.performQuery(http.MethodPost, "/commands/cancel", "1.2", nil, contextDeleteRequest, nil)
-	return err
-}
+// Commented till this will be used
+//func (a CommandsAPI) deleteCommand(commandID, contextID, clusterID string) error {
+//	contextDeleteRequest := struct {
+//		CommandID string `json:"commandId,omitempty" url:"commandId,omitempty"`
+//		ContextID string `json:"contextId,omitempty" url:"contextId,omitempty"`
+//		ClusterID string `json:"clusterId,omitempty" url:"clusterId,omitempty"`
+//	}{
+//		CommandID: commandID,
+//		ContextID: contextID,
+//		ClusterID: clusterID,
+//	}
+//	_, err := a.Client.performQuery(http.MethodPost, "/commands/cancel", "1.2", nil, contextDeleteRequest, nil)
+//	return err
+//}
 
 func (a CommandsAPI) deleteContext(contextID, clusterID string) error {
 	contextDeleteRequest := struct {

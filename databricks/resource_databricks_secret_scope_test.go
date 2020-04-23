@@ -59,10 +59,6 @@ func testSecretScopeResourceDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testSecretScopePreCheck(t *testing.T) {
-	return
-}
-
 func testSecretScopeValues(t *testing.T, secretScope *model.SecretScope, scope string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		assert.True(t, secretScope.Name == scope)

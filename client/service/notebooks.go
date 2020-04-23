@@ -79,7 +79,7 @@ func (a NotebooksAPI) Mkdirs(path string) error {
 // List will list all objects in a path on the workspace and with the recursive flag it will recursively list
 // all the objects
 func (a NotebooksAPI) List(path string, recursive bool) ([]model.NotebookInfo, error) {
-	if recursive == true {
+	if recursive {
 		var paths []model.NotebookInfo
 		err := a.recursiveAddPaths(path, &paths)
 		if err != nil {

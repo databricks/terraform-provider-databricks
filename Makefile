@@ -66,4 +66,21 @@ terraform-apply: terraform-setup
 	@echo "==> Initializing Terraform plan..."
 	@TF_LOG_PATH=log.out TF_LOG=debug terraform apply
 
+snapshot:
+	@echo "==> Making Snapshot..."
+	@goreleaser release --rm-dist --snapshot
+	@cp dist/*.gz website/content/_index.files/
+	@cp dist/*.zip website/content/_index.files/
+
+hugo: snapshot
+	@echo "==> Making Docs..."
+	@rm -rf terraform-provider-databricks website/content/_index.files/*
+	@cp dist/*.gz website/content/_index.files/
+	@cp dist/*.zip website/content/_index.files/
+	@cd website && hugo
+
+internal-docs-sync:
+	@echo "==> Uploading Website..."
+	@azcopy login --service-principal --application-id $(AZCOPY_SPA_CLIENT_ID) --tenant-id=$(AZCOPY_SPA_TENANT_ID) && azcopy sync './website/public' '$(AZCOPY_STORAGE_ACCT)' --recursive
+
 .PHONY: build fmt python-setup docs vendor terraform-local build fmt coverage test

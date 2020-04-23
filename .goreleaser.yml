@@ -3,7 +3,6 @@
 before:
   hooks:
     # You may remove this if you don't use go modules.
-    - make docs
     - go mod download
 builds:
 - env:
@@ -23,6 +22,7 @@ archives:
     windows: Windows
     amd64: 64-bit
     386: 32-bit
+  name_template: "databricks-terraform-{{ .Os }}-{{ .Arch }}-{{ .Tag }}-SNAPSHOT-{{ .ShortCommit }}"
   format_overrides:
     - goos: windows
       format: zip
@@ -30,11 +30,10 @@ archives:
     - LICENSE*
     - CHANGELOG*
     - NOTICE*
-    - docs/build/html/**/*
 checksum:
   name_template: 'checksums.txt'
 snapshot:
-  name_template: "{{ .Tag }}-SNAPSHOT-{{ .ShortCommit }}"
+  name_template: "{{ .Tag }}"
 changelog:
   sort: asc
   filters:

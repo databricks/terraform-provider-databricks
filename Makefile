@@ -1,6 +1,6 @@
 default: build
 
-test: lint
+test:
 	@echo "==> Running tests..."
 	@gotestsum --raw-command go test -v -json -short -coverprofile=coverage.out ./...
 
@@ -18,13 +18,13 @@ coverage-int: int
 
 int-build: int build
 
-build: test fmt
+build: lint test fmt
 	@echo "==> Building source code with go build..."
 	@go build -mod vendor -v -o terraform-provider-databricks
 
 lint:
-	@echo "==> Linting source code with golint..."
-	@golint -set_exit_status ./databricks/... ./client/...
+	@echo "==> Linting source code with golangci-lint..."
+	@golangci-lint run --skip-dirs-use-default
 
 fmt: lint
 	@echo "==> Formatting source code with gofmt..."
@@ -83,4 +83,4 @@ internal-docs-sync:
 	@echo "==> Uploading Website..."
 	@azcopy login --service-principal --application-id $(AZCOPY_SPA_CLIENT_ID) --tenant-id=$(AZCOPY_SPA_TENANT_ID) && azcopy sync './website/public' '$(AZCOPY_STORAGE_ACCT)' --recursive
 
-.PHONY: build fmt python-setup docs vendor terraform-local build fmt coverage test
+.PHONY: build fmt python-setup docs vendor terraform-local build fmt coverage test lint

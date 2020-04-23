@@ -54,7 +54,7 @@ func resourceDBFSFileSyncCreate(d *schema.ResourceData, m interface{}) error {
 	tgtPath := d.Get("tgt_path").(string)
 	mkdirs := d.Get("mkdirs").(bool)
 
-	if mkdirs == true {
+	if mkdirs {
 		parentDir := filepath.Dir(tgtPath)
 		err := client.DBFS().Mkdirs(parentDir)
 		if err != nil {

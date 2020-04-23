@@ -28,6 +28,7 @@ func TestCreateToken(t *testing.T) {
 	assert.NoError(t, err, err)
 
 	tokenList, err := client.Tokens().List()
+	assert.NoError(t, err, err)
 	assert.True(t, len(tokenList) > 0, "Token list is empty")
 
 }

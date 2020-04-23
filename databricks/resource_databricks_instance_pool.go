@@ -251,6 +251,9 @@ func resourceInstancePoolRead(d *schema.ResourceData, m interface{}) error {
 		return err
 	}
 	err = d.Set("idle_instance_autotermination_minutes", int(instancePoolInfo.IdleInstanceAutoTerminationMinutes))
+	if err != nil {
+		return err
+	}
 
 	if instancePoolInfo.AwsAttributes != nil {
 		awsAtts := map[string]interface{}{}

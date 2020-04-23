@@ -59,6 +59,9 @@ func dataSourceDBFSFileRead(d *schema.ResourceData, m interface{}) error {
 				return err
 			}
 			err = d.Set("content", content)
+			if err != nil {
+				return err
+			}
 		} else if fileInfo.FileSize > 4e6 {
 			err = d.Set("content", "File Size is too Large!")
 		}
@@ -68,6 +71,9 @@ func dataSourceDBFSFileRead(d *schema.ResourceData, m interface{}) error {
 			return err
 		}
 		err = d.Set("content", content)
+		if err != nil {
+			return err
+		}
 	}
 
 	return err

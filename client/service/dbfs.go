@@ -43,7 +43,7 @@ func (a DBFSAPI) Read(path string) (string, error) {
 	fetchLoop := true
 	offSet := int64(0)
 	length := int64(1e6)
-	for fetchLoop == true {
+	for fetchLoop {
 		bytesRead, bytes, err := a.read(path, offSet, length)
 		if err != nil {
 			return "", err
@@ -71,7 +71,7 @@ func (a DBFSAPI) Copy(src string, tgt string, client *DBApiClient, overwrite boo
 	fetchLoop := true
 	offSet := int64(0)
 	length := int64(1e6)
-	for fetchLoop == true {
+	for fetchLoop {
 		var api DBFSAPI
 		if client == nil {
 			api = a
@@ -176,7 +176,7 @@ func (a DBFSAPI) Status(path string) (model.FileInfo, error) {
 
 // List returns a list of files in DBFS and the recursive flag lets you recursively list files
 func (a DBFSAPI) List(path string, recursive bool) ([]model.FileInfo, error) {
-	if recursive == true {
+	if recursive {
 		var paths []model.FileInfo
 		err := a.recursiveAddPaths(path, &paths)
 		if err != nil {
@@ -193,9 +193,9 @@ func (a DBFSAPI) recursiveAddPaths(path string, pathList *[]model.FileInfo) erro
 		return err
 	}
 	for _, v := range fileInfoList {
-		if v.IsDir == false {
+		if !v.IsDir {
 			*pathList = append(*pathList, v)
-		} else if v.IsDir == true {
+		} else if v.IsDir {
 			err := a.recursiveAddPaths(v.Path, pathList)
 			if err != nil {
 				return err
@@ -287,7 +287,7 @@ func split(buf []byte, lim int) [][]byte {
 		chunks = append(chunks, chunk)
 	}
 	if len(buf) > 0 {
-		chunks = append(chunks, buf[:len(buf)])
+		chunks = append(chunks, buf[:])
 	}
 	return chunks
 }

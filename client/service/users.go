@@ -188,9 +188,7 @@ func (a UsersAPI) getInheritedAndNonInheritedRoles(user model.User, groups []mod
 	inheritedRolesKeys := []string{}
 	inheritedRolesMap := map[string]model.RoleListItem{}
 	for _, group := range groups {
-		for _, role := range group.Roles {
-			inheritedRoles = append(inheritedRoles, role)
-		}
+		inheritedRoles = append(inheritedRoles, group.Roles...)
 	}
 	for _, role := range inheritedRoles {
 		inheritedRolesKeys = append(inheritedRolesKeys, role.Value)

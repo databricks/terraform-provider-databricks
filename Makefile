@@ -1,6 +1,6 @@
 default: build
 
-test: lint
+test:
 	@echo "==> Running tests..."
 	@gotestsum --raw-command go test -v -json -short -coverprofile=coverage.out ./...
 
@@ -18,7 +18,7 @@ coverage-int: int
 
 int-build: int build
 
-build: test fmt
+build: lint test fmt
 	@echo "==> Building source code with go build..."
 	@go build -mod vendor -v -o terraform-provider-databricks
 

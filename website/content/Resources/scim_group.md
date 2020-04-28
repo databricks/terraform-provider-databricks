@@ -10,7 +10,9 @@ pre = ""
 
 This resource allows you to create groups in Databricks. You can also associate Databricks users to the following groups. 
 
-.. Important:: You must be a Databricks administrator API token to use SCIM resources.
+{{% notice note %}} 
+You must be a Databricks administrator API token to use SCIM resources.
+{{% /notice %}} 
 
 ## Example Usage
 
@@ -38,12 +40,21 @@ The following arguments are supported:
 #### - `group_members`:
 > **(Optional)** This is a list of users associated to the given group.
 
+#### - `roles`:
+> **(Optional)** This is the list of roles that you wish to attach to this group.
+
+#### - `entitlements`:
+> **(Optional)** This is the list of entitlements that you wish to attach to this group.
+
 ## Attribute Reference
 
 In addition to all arguments above, the following attributes are exported:
 
 #### - `id`:
 > The id for the scim group object.
+
+#### - `inherited_roles`:
+> The list of roles inherited by parent groups that this group is a member of.
 
 ## Import
 

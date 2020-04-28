@@ -101,7 +101,6 @@ func resourceScimGroupCreate(d *schema.ResourceData, m interface{}) error {
 	return resourceScimGroupRead(d, m)
 }
 
-//
 func getListOfMemberRefs(memberList []model.GroupMember) []string {
 	resp := []string{}
 	for _, member := range memberList {
@@ -109,6 +108,14 @@ func getListOfMemberRefs(memberList []model.GroupMember) []string {
 	}
 	log.Println("Members list =")
 	log.Println(resp)
+	return resp
+}
+
+func getListOfEntitlements(entitlementList []model.EntitlementsListItem) []string {
+	resp := []string{}
+	for _, entitlement := range entitlementList {
+		resp = append(resp, string(entitlement.Value))
+	}
 	return resp
 }
 
@@ -122,6 +129,11 @@ func resourceScimGroupRead(d *schema.ResourceData, m interface{}) error {
 			d.SetId("")
 			return nil
 		}
+		return err
+	}
+
+	err = d.Set("display_name", group.DisplayName)
+	if err != nil {
 		return err
 	}
 
@@ -184,9 +196,13 @@ func resourceScimGroupUpdate(d *schema.ResourceData, m interface{}) error {
 		log.Println(addMembers)
 		log.Println("remove members")
 		log.Println(removeMembers)
-		err = client.Groups().Patch(group.ID, addMembers, removeMembers, model.GroupMembersPath)
-		if err != nil {
-			return err
+		// We need to check if the group has any members especially if addMembers is 0 and removeMembers is not 0
+		// A user might be deleted and a patch operation on an empty group will fail
+		if len(group.Members) > 0 || len(addMembers) > 0 {
+			err = client.Groups().Patch(group.ID, addMembers, removeMembers, model.GroupMembersPath)
+			if err != nil {
+				return err
+			}
 		}
 	}
 

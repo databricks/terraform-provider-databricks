@@ -21,12 +21,31 @@ func TestAccSecretScopeResource(t *testing.T) {
 	//scope := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
 	scope := "terraform_acc_test_scope"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testSecretScopeResourceDestroy,
 		Steps: []resource.TestStep{
 			{
+				// use a dynamic configuration with the random name from above
+				Config: testSecretScopeResource(scope),
+				// compose a basic test, checking both remote and local values
+				Check: resource.ComposeTestCheckFunc(
+					// query the API to retrieve the tokenInfo object
+					testSecretScopeResourceExists("databricks_secret_scope.my_scope", &secretScope, t),
+					// verify remote values
+					testSecretScopeValues(t, &secretScope, scope),
+					// verify local values
+					resource.TestCheckResourceAttr("databricks_secret_scope.my_scope", "name", scope),
+					resource.TestCheckResourceAttr("databricks_secret_scope.my_scope", "backend_type", string(model.ScopeBackendTypeDatabricks)),
+				),
+			},
+			{
+				PreConfig: func() {
+					client := testAccProvider.Meta().(service.DBApiClient)
+					err := client.SecretScopes().Delete(scope)
+					assert.NoError(t, err, err)
+				},
 				// use a dynamic configuration with the random name from above
 				Config: testSecretScopeResource(scope),
 				// compose a basic test, checking both remote and local values

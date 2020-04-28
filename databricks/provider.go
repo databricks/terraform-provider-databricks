@@ -6,18 +6,18 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 	"log"
-	"os"
 )
 
 // Provider returns the entire terraform provider object
 func Provider(version string) terraform.ResourceProvider {
 	provider := &schema.Provider{
 		DataSourcesMap: map[string]*schema.Resource{
-			"databricks_notebook":        dataSourceNotebook(),
-			"databricks_notebook_paths":  dataSourceNotebookPaths(),
-			"databricks_dbfs_file":       dataSourceDBFSFile(),
-			"databricks_dbfs_file_paths": dataSourceDBFSFilePaths(),
-			"databricks_zones":           dataSourceClusterZones(),
+			"databricks_default_user_roles": dataSourceDefaultUserRoles(),
+			"databricks_notebook":           dataSourceNotebook(),
+			"databricks_notebook_paths":     dataSourceNotebookPaths(),
+			"databricks_dbfs_file":          dataSourceDBFSFile(),
+			"databricks_dbfs_file_paths":    dataSourceDBFSFilePaths(),
+			"databricks_zones":              dataSourceClusterZones(),
 		},
 		ResourcesMap: map[string]*schema.Resource{
 			"databricks_token":                 resourceToken(),
@@ -40,12 +40,14 @@ func Provider(version string) terraform.ResourceProvider {
 		},
 		Schema: map[string]*schema.Schema{
 			"host": &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:        schema.TypeString,
+				Optional:    true,
+				DefaultFunc: schema.EnvDefaultFunc("DATABRICKS_HOST", nil),
 			},
 			"token": &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:        schema.TypeString,
+				Optional:    true,
+				DefaultFunc: schema.EnvDefaultFunc("DATABRICKS_TOKEN", nil),
 			},
 			"azure_auth": &schema.Schema{
 				Type:     schema.TypeMap,
@@ -57,8 +59,9 @@ func Provider(version string) terraform.ResourceProvider {
 							Required: true,
 						},
 						"azure_region": {
-							Type:     schema.TypeString,
-							Required: true,
+							Type:        schema.TypeString,
+							Required:    true,
+							DefaultFunc: schema.EnvDefaultFunc("AZURE_REGION", nil),
 						},
 						"workspace_name": {
 							Type:     schema.TypeString,
@@ -69,20 +72,24 @@ func Provider(version string) terraform.ResourceProvider {
 							Required: true,
 						},
 						"subscription_id": {
-							Type:     schema.TypeString,
-							Required: true,
+							Type:        schema.TypeString,
+							Required:    true,
+							DefaultFunc: schema.EnvDefaultFunc("DATABRICKS_AZURE_SUBSCRIPTION_ID", nil),
 						},
 						"client_secret": {
-							Type:     schema.TypeString,
-							Required: true,
+							Type:        schema.TypeString,
+							Required:    true,
+							DefaultFunc: schema.EnvDefaultFunc("DATABRICKS_AZURE_CLIENT_SECRET", nil),
 						},
 						"client_id": {
-							Type:     schema.TypeString,
-							Required: true,
+							Type:        schema.TypeString,
+							Required:    true,
+							DefaultFunc: schema.EnvDefaultFunc("DATABRICKS_AZURE_CLIENT_ID", nil),
 						},
 						"tenant_id": {
-							Type:     schema.TypeString,
-							Required: true,
+							Type:        schema.TypeString,
+							Required:    true,
+							DefaultFunc: schema.EnvDefaultFunc("DATABRICKS_AZURE_TENANT_ID", nil),
 						},
 					},
 				},
@@ -93,9 +100,9 @@ func Provider(version string) terraform.ResourceProvider {
 	provider.ConfigureFunc = func(d *schema.ResourceData) (interface{}, error) {
 		//terraformVersion := provider.TerraformVersion
 		//if terraformVersion == "" {
-			// Terraform 0.12 introduced this field to the protocol
-			// We can therefore assume that if it's missing it's 0.10 or 0.11
-			//terraformVersion = "0.11+compatible"
+		// Terraform 0.12 introduced this field to the protocol
+		// We can therefore assume that if it's missing it's 0.10 or 0.11
+		//terraformVersion = "0.11+compatible"
 		//}
 		return providerConfigure(d, version)
 	}
@@ -108,13 +115,9 @@ func providerConfigure(d *schema.ResourceData, providerVersion string) (interfac
 	if azureAuth, ok := d.GetOk("azure_auth"); !ok {
 		if host, ok := d.GetOk("host"); ok {
 			config.Host = host.(string)
-		} else {
-			config.Host = os.Getenv("HOST")
 		}
 		if token, ok := d.GetOk("token"); ok {
 			config.Token = token.(string)
-		} else {
-			config.Token = os.Getenv("TOKEN")
 		}
 	} else {
 		log.Println("Creating db client via azure auth!")
@@ -135,23 +138,15 @@ func providerConfigure(d *schema.ResourceData, providerVersion string) (interfac
 		}
 		if subscriptionID, ok := azureAuthMap["subscription_id"].(string); ok {
 			tokenPayload.SubscriptionID = subscriptionID
-		} else {
-			tokenPayload.SubscriptionID = os.Getenv("ARM_SUBSCRIPTION_ID")
 		}
 		if clientSecret, ok := azureAuthMap["client_secret"].(string); ok {
 			tokenPayload.ClientSecret = clientSecret
-		} else {
-			tokenPayload.SubscriptionID = os.Getenv("ARM_CLIENT_SECRET")
 		}
 		if clientID, ok := azureAuthMap["client_id"].(string); ok {
 			tokenPayload.ClientID = clientID
-		} else {
-			tokenPayload.SubscriptionID = os.Getenv("ARM_CLIENT_ID")
 		}
 		if tenantID, ok := azureAuthMap["tenant_id"].(string); ok {
 			tokenPayload.TenantID = tenantID
-		} else {
-			tokenPayload.SubscriptionID = os.Getenv("ARM_TENANT_ID")
 		}
 
 		azureAuthSetup := AzureAuth{

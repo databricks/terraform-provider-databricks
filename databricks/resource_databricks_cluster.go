@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/databrickslabs/databricks-terraform/client/model"
 	"github.com/databrickslabs/databricks-terraform/client/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"log"
 	"strings"
@@ -122,74 +121,137 @@ func resourceCluster() *schema.Resource {
 				Optional: true,
 			},
 			"cluster_log_conf": &schema.Schema{
-				Type:       schema.TypeSet,
-				Optional:   true,
-				MaxItems:   1,
-				ConfigMode: schema.SchemaConfigModeAttr,
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				//ConfigMode: schema.SchemaConfigModeAttr,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"dbfs_destination": {
-							Type:     schema.TypeString,
+						"dbfs": {
+							Type:     schema.TypeList,
 							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"destination": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+								},
+							},
 						},
-						"s3_destination": {
-							Type:     schema.TypeString,
+						"s3": {
+							Type:     schema.TypeList,
 							Optional: true,
-						},
-						"s3_region": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"s3_endpoint": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"s3_enable_encryption": {
-							Type:     schema.TypeBool,
-							Optional: true,
-						},
-						"s3_encryption_type": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"s3_kms_key": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"s3_canned_acl": {
-							Type:     schema.TypeString,
-							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									//TODO: Validate that destination has s3:// prefix
+									"destination": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+									"region": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+									"endpoint": {
+										Type:     schema.TypeString,
+										Optional: true,
+										AtLeastOneOf: []string{
+											"cluster_log_conf.0.s3.0.region",
+											"cluster_log_conf.0.s3.0.endpoint",
+										},
+									},
+									"enable_encryption": {
+										Type:     schema.TypeBool,
+										Optional: true,
+									},
+									"encryption_type": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+									"kms_key": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+									"canned_acl": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+								},
+							},
+							ExactlyOneOf: []string{
+								"cluster_log_conf.0.dbfs",
+								"cluster_log_conf.0.s3",
+							},
 						},
 					},
 				},
 			},
 			"init_scripts": &schema.Schema{
-				Type:       schema.TypeSet,
-				Optional:   true,
-				ConfigMode: schema.SchemaConfigModeAttr,
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 10,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"dbfs_destination": {
-							Type:     schema.TypeString,
+						"dbfs": {
+							Type:     schema.TypeList,
 							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									//TODO: Validate that destination has dbfs:// prefix
+									"destination": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+								},
+							},
 						},
-						"s3_destination": {
-							Type:     schema.TypeString,
+						"s3": {
+							Type:     schema.TypeList,
 							Optional: true,
-						},
-						"s3_region": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"s3_endpoint": {
-							Type:     schema.TypeString,
-							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									//TODO: Validate that destination has s3:// prefix
+									"destination": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+									"region": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+									"endpoint": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+									"enable_encryption": {
+										Type:     schema.TypeBool,
+										Optional: true,
+									},
+									"encryption_type": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+									"kms_key": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+									"canned_acl": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+								},
+							},
 						},
 					},
 				},
 			},
 			"docker_image": &schema.Schema{
-				Type:     schema.TypeSet,
+				Type:     schema.TypeList,
 				Optional: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
@@ -198,14 +260,23 @@ func resourceCluster() *schema.Resource {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						"username": {
-							Type:     schema.TypeString,
+						"basic_auth": {
+							Type:     schema.TypeList,
 							Optional: true,
-						},
-						"password": {
-							Type:      schema.TypeString,
-							Optional:  true,
-							Sensitive: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"username": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+									"password": {
+										Type:      schema.TypeString,
+										Required:  true,
+										Sensitive: true,
+									},
+								},
+							},
 						},
 					},
 				},
@@ -411,15 +482,6 @@ func resourceCluster() *schema.Resource {
 				Computed: true,
 			},
 		},
-		CustomizeDiff: customdiff.All(
-			customdiff.ValidateValue("cluster_log_conf", validateClusterLogConf),
-			customdiff.ValidateValue("init_scripts", validateInitScripts),
-			customdiff.ComputedIf("aws_attributes", func(d *schema.ResourceDiff, meta interface{}) bool {
-				log.Println("rdiff aws_attributes")
-				log.Println(d.GetChange("aws_attributes"))
-				return false
-			}),
-		),
 	}
 }
 
@@ -622,11 +684,7 @@ func resourceClusterRead(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 
-	attributes, ok := d.GetOk("aws_attributes")
-	log.Println("AWS ATTRIBUTES")
-	log.Println(attributes)
-	log.Println(d.GetChange("aws_attributes"))
-	log.Println(d.HasChange("aws_attributes"))
+	_, ok := d.GetOk("aws_attributes")
 	if ok && clusterInfo.AwsAttributes != nil {
 		awsAtts := map[string]interface{}{}
 		awsAtts["availability"] = string(clusterInfo.AwsAttributes.Availability)
@@ -674,39 +732,61 @@ func resourceClusterRead(d *schema.ResourceData, m interface{}) error {
 	}
 
 	if clusterInfo.ClusterLogConf != nil {
-		clusterLogConfMap := map[string]interface{}{}
+		clusterLogConfList := []interface{}{}
+		clusterLogConfListItem := map[string]interface{}{}
 		if clusterInfo.ClusterLogConf.Dbfs != nil {
-			clusterLogConfMap["dbfs_destination"] = clusterInfo.ClusterLogConf.Dbfs.Destination
+			dbfsList := []interface{}{}
+			dbfsListItem := map[string]interface{}{}
+			dbfsListItem["destination"] = clusterInfo.ClusterLogConf.Dbfs.Destination
+			dbfsList = append(dbfsList, dbfsListItem)
+			clusterLogConfListItem["dbfs"] = dbfsList
 		}
 		if clusterInfo.ClusterLogConf.S3 != nil {
-			clusterLogConfMap["s3_destination"] = clusterInfo.ClusterLogConf.S3.Destination
-			clusterLogConfMap["s3_region"] = clusterInfo.ClusterLogConf.S3.Region
-			clusterLogConfMap["s3_endpoint"] = clusterInfo.ClusterLogConf.S3.Endpoint
-			clusterLogConfMap["s3_enable_encryption"] = clusterInfo.ClusterLogConf.S3.EnableEncryption
-			clusterLogConfMap["s3_encryption_type"] = clusterInfo.ClusterLogConf.S3.EncryptionType
-			clusterLogConfMap["s3_kms_key"] = clusterInfo.ClusterLogConf.S3.KmsKey
-			clusterLogConfMap["s3_canned_acl"] = clusterInfo.ClusterLogConf.S3.CannedACL
+			s3List := []interface{}{}
+			s3ListItem := map[string]interface{}{}
+			s3ListItem["destination"] = clusterInfo.ClusterLogConf.S3.Destination
+			s3ListItem["region"] = clusterInfo.ClusterLogConf.S3.Region
+			s3ListItem["endpoint"] = clusterInfo.ClusterLogConf.S3.Endpoint
+			s3ListItem["enable_encryption"] = clusterInfo.ClusterLogConf.S3.EnableEncryption
+			s3ListItem["encryption_type"] = clusterInfo.ClusterLogConf.S3.EncryptionType
+			s3ListItem["kms_key"] = clusterInfo.ClusterLogConf.S3.KmsKey
+			s3ListItem["canned_acl"] = clusterInfo.ClusterLogConf.S3.CannedACL
+			s3List = append(s3List, s3ListItem)
+			clusterLogConfListItem["s3"] = s3List
 		}
-		clusterLogConfSet := []map[string]interface{}{clusterLogConfMap}
-		err = d.Set("cluster_log_conf", clusterLogConfSet)
+		clusterLogConfList = append(clusterLogConfList, clusterLogConfListItem)
+		err = d.Set("cluster_log_conf", clusterLogConfList)
 		if err != nil {
 			return err
 		}
 	}
 
-	if len(clusterInfo.InitScripts) > 0 {
-		var listOfInitScripts []map[string]string
+	// Handle reading init scripts
+	if clusterInfo.InitScripts != nil && len(clusterInfo.InitScripts) > 0 {
+		listOfInitScripts := []interface{}{}
 		for _, v := range clusterInfo.InitScripts {
-			initScriptStorageConfig := map[string]string{}
+			initScriptListItem := map[string]interface{}{}
 			if v.Dbfs != nil {
-
-				initScriptStorageConfig["dbfs_destination"] = v.Dbfs.Destination
-			} else {
-				initScriptStorageConfig["s3_destination"] = v.S3.Destination
-				initScriptStorageConfig["s3_region"] = v.S3.Region
-				initScriptStorageConfig["s3_endpoint"] = v.S3.Endpoint
+				dbfsList := []interface{}{}
+				dbfsListItem := map[string]interface{}{}
+				dbfsListItem["destination"] = v.Dbfs.Destination
+				dbfsList = append(dbfsList, dbfsListItem)
+				initScriptListItem["dbfs"] = dbfsList
 			}
-			listOfInitScripts = append(listOfInitScripts, initScriptStorageConfig)
+			if v.S3 != nil {
+				s3List := []interface{}{}
+				s3ListItem := map[string]interface{}{}
+				s3ListItem["destination"] = v.S3.Destination
+				s3ListItem["region"] = v.S3.Region
+				s3ListItem["endpoint"] = v.S3.Endpoint
+				s3ListItem["enable_encryption"] = v.S3.EnableEncryption
+				s3ListItem["encryption_type"] = v.S3.EncryptionType
+				s3ListItem["kms_key"] = v.S3.KmsKey
+				s3ListItem["canned_acl"] = v.S3.CannedACL
+				s3List = append(s3List, s3ListItem)
+				initScriptListItem["s3"] = s3List
+			}
+			listOfInitScripts = append(listOfInitScripts, initScriptListItem)
 		}
 		err = d.Set("init_scripts", listOfInitScripts)
 		if err != nil {
@@ -715,14 +795,20 @@ func resourceClusterRead(d *schema.ResourceData, m interface{}) error {
 	}
 
 	if clusterInfo.DockerImage != nil {
-		dockerImage := map[string]string{}
-		dockerImage["url"] = clusterInfo.DockerImage.URL
+		dockerImageList := []interface{}{}
+		dockerImageListItem := map[string]interface{}{}
+		dockerImageListItem["url"] = clusterInfo.DockerImage.URL
 		if clusterInfo.DockerImage.BasicAuth != nil {
-			dockerImage["username"] = clusterInfo.DockerImage.BasicAuth.Username
-			dockerImage["password"] = clusterInfo.DockerImage.BasicAuth.Password
+			basicAuthList := []interface{}{}
+			basicAuthListItem := map[string]interface{}{}
+			basicAuthListItem["username"] = clusterInfo.DockerImage.BasicAuth.Username
+			basicAuthListItem["password"] = clusterInfo.DockerImage.BasicAuth.Password
+			basicAuthList = append(basicAuthList, basicAuthListItem)
+			dockerImageListItem["basic_auth"] = basicAuthList
 		}
-		dockerImageSet := []map[string]string{dockerImage}
-		err = d.Set("docker_image", dockerImageSet)
+
+		dockerImageList = append(dockerImageList, dockerImageListItem)
+		err = d.Set("docker_image", dockerImageList)
 		if err != nil {
 			return err
 		}
@@ -1165,44 +1251,54 @@ func parseSchemaToCluster(d *schema.ResourceData, schemaAttPrefix string) model.
 	//Deal with worker cluster log config
 	clusterLogConf := model.StorageInfo{}
 	if clusterLogConfSet, ok := d.GetOk(schemaAttPrefix + "cluster_log_conf"); ok {
-		//clusterLogConfMap := dbfsClusterLogConfSet.(*schema.Set).List()[0].(map[string]interface{})
-		clusterLogConfMap := getMapFromOneItemSet(clusterLogConfSet)
-		dbfsDestination, dbfsOk := clusterLogConfMap["dbfs_destination"]
-		if dbfsOk && len(dbfsDestination.(string)) > 0 {
-			dbfsStorage := model.DbfsStorageInfo{}
-			dbfsStorage.Destination = dbfsDestination.(string)
-			clusterLogConf.Dbfs = &dbfsStorage
-		}
-		//cluster.ClusterLogConf = &clusterLogConf
-		//}
-		//if s3clusterLogConfSet, ok := d.GetOk("s3_cluster_log_conf"); ok {
-		//clusterLogConfMap := s3clusterLogConfSet.(map[string]interface{})
-		//s3ClusterLogConf := getMapFromOneItemSet(s3clusterLogConfSet)
-		if (!dbfsOk || len(dbfsDestination.(string)) == 0) && len(clusterLogConfMap["s3_destination"].(string)) > 0 {
-			s3Storage := model.S3StorageInfo{}
-			if s3Destination, ok := clusterLogConfMap["s3_destination"]; ok {
-				s3Storage.Destination = s3Destination.(string)
+		// Fetch the cluster log config list; this should only be one item
+		clusterLogConfItemList := clusterLogConfSet.([]interface{})
+		if len(clusterLogConfItemList) > 0 {
+			// Fetch the first item and convert it to map to identify dbfs vs s3
+			clusterLogConfItemMap := clusterLogConfItemList[0].(map[string]interface{})
+
+			// DBFS PATH
+			if dbfsSpec, ok := clusterLogConfItemMap["dbfs"]; ok {
+				// Fetch the first item for dbfs config
+				dbfsStorageItemList := dbfsSpec.([]interface{})
+				if len(dbfsStorageItemList) > 0 {
+					dbfsStorage := model.DbfsStorageInfo{}
+					dbfsStorageMap := dbfsStorageItemList[0].(map[string]interface{})
+					dbfsStorage.Destination = dbfsStorageMap["destination"].(string)
+					clusterLogConf.Dbfs = &dbfsStorage
+				}
 			}
-			if s3Region, ok := clusterLogConfMap["s3_region"]; ok {
-				s3Storage.Region = s3Region.(string)
+			// S3 PATH
+			if s3Spec, ok := clusterLogConfItemMap["s3"]; ok {
+				// Fetch the first item for s3 config
+				s3StorageItemList := s3Spec.([]interface{})
+				if len(s3StorageItemList) > 0 {
+					s3StorageMap := s3StorageItemList[0].(map[string]interface{})
+					s3Storage := model.S3StorageInfo{}
+					if s3Destination, ok := s3StorageMap["destination"]; ok {
+						s3Storage.Destination = s3Destination.(string)
+					}
+					if s3Region, ok := s3StorageMap["region"]; ok {
+						s3Storage.Region = s3Region.(string)
+					}
+					if s3Endpoint, ok := s3StorageMap["endpoint"]; ok {
+						s3Storage.Endpoint = s3Endpoint.(string)
+					}
+					if s3EnableEncryption, ok := s3StorageMap["enable_encryption"]; ok {
+						s3Storage.EnableEncryption = s3EnableEncryption.(bool)
+					}
+					if s3EncrptionType, ok := s3StorageMap["encryption_type"]; ok {
+						s3Storage.EncryptionType = s3EncrptionType.(string)
+					}
+					if s3KMSKey, ok := s3StorageMap["kms_key"]; ok {
+						s3Storage.KmsKey = s3KMSKey.(string)
+					}
+					if s3CannedACL, ok := s3StorageMap["canned_acl"]; ok {
+						s3Storage.CannedACL = s3CannedACL.(string)
+					}
+					clusterLogConf.S3 = &s3Storage
+				}
 			}
-			if s3Endpoint, ok := clusterLogConfMap["s3_endpoint"]; ok {
-				s3Storage.Endpoint = s3Endpoint.(string)
-			}
-			if s3EnableEncryption, ok := clusterLogConfMap["s3_enable_encryption"]; ok {
-				//b, _ := strconv.ParseBool(s3EnableEncryption.(string))
-				s3Storage.EnableEncryption = s3EnableEncryption.(bool)
-			}
-			if s3EncrptionType, ok := clusterLogConfMap["s3_encryption_type"]; ok {
-				s3Storage.EncryptionType = s3EncrptionType.(string)
-			}
-			if s3KMSKey, ok := clusterLogConfMap["s3_kms_key"]; ok {
-				s3Storage.KmsKey = s3KMSKey.(string)
-			}
-			if s3CannedACL, ok := clusterLogConfMap["s3_canned_acl"]; ok {
-				s3Storage.CannedACL = s3CannedACL.(string)
-			}
-			clusterLogConf.S3 = &s3Storage
 		}
 		if clusterLogConf.S3 != nil || clusterLogConf.Dbfs != nil {
 			cluster.ClusterLogConf = &clusterLogConf
@@ -1211,30 +1307,52 @@ func parseSchemaToCluster(d *schema.ResourceData, schemaAttPrefix string) model.
 
 	//Deal with worker init script setup
 	if initScripts, ok := d.GetOk(schemaAttPrefix + "init_scripts"); ok {
-		initScripts := initScripts.(*schema.Set).List()
+		initScripts := initScripts.([]interface{})
 		initScriptsLocations := []model.StorageInfo{}
 		for _, v := range initScripts {
 			initScript := v.(map[string]interface{})
-			storageInfo := model.StorageInfo{}
-			if dbfsDestination, ok := initScript["dbfs_destination"]; ok && len(dbfsDestination.(string)) > 0 {
-				dbfsStorage := model.DbfsStorageInfo{}
-				dbfsStorage.Destination = dbfsDestination.(string)
-				storageInfo.Dbfs = &dbfsStorage
-				initScriptsLocations = append(initScriptsLocations, storageInfo)
-			} else {
-				s3Storage := model.S3StorageInfo{}
-				if s3Destination, ok := initScript["s3_destination"]; ok {
-					s3Storage.Destination = s3Destination.(string)
+			initScriptsConf := model.StorageInfo{}
+			if dbfsSpec, ok := initScript["dbfs"]; ok {
+				// Fetch the first item for dbfs config
+				dbfsStorageItemList := dbfsSpec.([]interface{})
+				if len(dbfsStorageItemList) > 0 {
+					dbfsStorage := model.DbfsStorageInfo{}
+					dbfsStorageMap := dbfsStorageItemList[0].(map[string]interface{})
+					dbfsStorage.Destination = dbfsStorageMap["destination"].(string)
+					initScriptsConf.Dbfs = &dbfsStorage
 				}
-				if s3Region, ok := initScript["s3_region"]; ok {
-					s3Storage.Region = s3Region.(string)
-				}
-				if s3Endpoint, ok := initScript["s3_endpoint"]; ok {
-					s3Storage.Endpoint = s3Endpoint.(string)
-				}
-				storageInfo.S3 = &s3Storage
-				initScriptsLocations = append(initScriptsLocations, storageInfo)
 			}
+			if s3Spec, ok := initScript["s3"]; ok {
+				// Fetch the first item for s3 config
+				s3StorageItemList := s3Spec.([]interface{})
+				if len(s3StorageItemList) > 0 {
+					s3StorageMap := s3StorageItemList[0].(map[string]interface{})
+					s3Storage := model.S3StorageInfo{}
+					if s3Destination, ok := s3StorageMap["destination"]; ok {
+						s3Storage.Destination = s3Destination.(string)
+					}
+					if s3Region, ok := s3StorageMap["region"]; ok {
+						s3Storage.Region = s3Region.(string)
+					}
+					if s3Endpoint, ok := s3StorageMap["endpoint"]; ok {
+						s3Storage.Endpoint = s3Endpoint.(string)
+					}
+					if s3EnableEncryption, ok := s3StorageMap["enable_encryption"]; ok {
+						s3Storage.EnableEncryption = s3EnableEncryption.(bool)
+					}
+					if s3EncrptionType, ok := s3StorageMap["encryption_type"]; ok {
+						s3Storage.EncryptionType = s3EncrptionType.(string)
+					}
+					if s3KMSKey, ok := s3StorageMap["kms_key"]; ok {
+						s3Storage.KmsKey = s3KMSKey.(string)
+					}
+					if s3CannedACL, ok := s3StorageMap["canned_acl"]; ok {
+						s3Storage.CannedACL = s3CannedACL.(string)
+					}
+					initScriptsConf.S3 = &s3Storage
+				}
+			}
+			initScriptsLocations = append(initScriptsLocations, initScriptsConf)
 		}
 		cluster.InitScripts = initScriptsLocations
 
@@ -1242,20 +1360,31 @@ func parseSchemaToCluster(d *schema.ResourceData, schemaAttPrefix string) model.
 
 	//Deal with docker image for DCS
 	dockerImageData := model.DockerImage{}
-	if dockerImageSet, ok := d.GetOk(schemaAttPrefix + "docker_image"); ok {
-		dockerImageConf := getMapFromOneItemSet(dockerImageSet)
-		if url, ok := dockerImageConf["url"]; ok {
-			dockerImageData.URL = url.(string)
+	if dockerImageList, ok := d.GetOk(schemaAttPrefix + "docker_image"); ok {
+		//dockerImageConf := getMapFromOneItemSet(dockerImageList)
+		dockerImageListInterface := dockerImageList.([]interface{})
+		if len(dockerImageListInterface) > 0 {
+			dockerImageListItem := dockerImageListInterface[0].(map[string]interface{})
+			if url, ok := dockerImageListItem["url"]; ok {
+				dockerImageData.URL = url.(string)
+			}
+			if basicAuthList, ok := dockerImageListItem["basic_auth"]; ok {
+				basicAuthListInterface := basicAuthList.([]interface{})
+				if len(basicAuthListInterface) > 0 {
+					basicAuthListItem := basicAuthListInterface[0].(map[string]interface{})
+					dockerAuthData := model.DockerBasicAuth{}
+					if username, ok := basicAuthListItem["username"]; ok {
+						dockerAuthData.Username = username.(string)
+					}
+					if password, ok := basicAuthListItem["password"]; ok {
+						dockerAuthData.Password = password.(string)
+					}
+					dockerImageData.BasicAuth = &dockerAuthData
+				}
+			}
+			cluster.DockerImage = &dockerImageData
 		}
-		dockerAuthData := model.DockerBasicAuth{}
-		username, userOk := dockerImageConf["username"]
-		password, passOk := dockerImageConf["password"]
-		if userOk && passOk {
-			dockerAuthData.Username = username.(string)
-			dockerAuthData.Password = password.(string)
-			dockerImageData.BasicAuth = &dockerAuthData
-		}
-		cluster.DockerImage = &dockerImageData
+
 	}
 
 	//Deal with spark environment variables

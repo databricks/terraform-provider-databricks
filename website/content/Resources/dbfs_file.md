@@ -30,7 +30,7 @@ The following arguments are supported:
 > **(Required)** The content of the file as a base64 encoded string.
 
 #### - `path`:
-> **(Optional)** The path of the file in which you wish to save.
+> **(Required)** The path of the file in which you wish to save.
 
 #### - `overwrite`:
 > **(Optional)** This is used to determine whether it should delete the 

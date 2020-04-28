@@ -108,10 +108,15 @@ func TestMain(m *testing.M) {
 			os.Exit(1)
 		}
 	} else {
+		exitCode := m.Run()
+
 		if acctest.TestHelper != nil {
-			defer acctest.TestHelper.Close()
+			err := acctest.TestHelper.Close()
+			if err != nil {
+				log.Printf("Error cleaning up temporary test files: %s", err)
+			}
 		}
-		os.Exit(m.Run())
+		os.Exit(exitCode)
 	}
 }
 
@@ -553,7 +558,6 @@ func Test(t TestT, c TestCase) {
 	// We require verbose mode so that the user knows what is going on.
 	if !testTesting && !testing.Verbose() && !c.IsUnitTest {
 		t.Fatal("Acceptance tests must be run with the -v flag on tests")
-		return
 	}
 
 	// get instances of all providers, so we can use the individual

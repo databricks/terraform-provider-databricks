@@ -8,6 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/stretchr/testify/assert"
 	"testing"
 )
 
@@ -20,12 +21,32 @@ func TestAccTokenResource(t *testing.T) {
 	// See https://godoc.org/github.com/hashicorp/terraform-plugin-sdk/helper/acctest
 	rComment := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckTokenResourceDestroy,
 		Steps: []resource.TestStep{
 			{
+				// use a dynamic configuration with the random name from above
+				Config: testAccTokenResource(rComment),
+				// compose a basic test, checking both remote and local values
+				Check: resource.ComposeTestCheckFunc(
+					// query the API to retrieve the tokenInfo object
+					testAccCheckTokenResourceExists("databricks_token.my-token", &tokenInfo, t),
+					// verify remote values
+					testAccCheckTokenValues(&tokenInfo, rComment),
+					// verify local values
+					resource.TestCheckResourceAttr("databricks_token.my-token", "lifetime_seconds", "6000"),
+					resource.TestCheckResourceAttr("databricks_token.my-token", "comment", rComment),
+				),
+			},
+			{
+				//Deleting and recreating the token
+				PreConfig: func() {
+					client := testAccProvider.Meta().(service.DBApiClient)
+					err := client.Tokens().Delete(tokenInfo.TokenID)
+					assert.NoError(t, err, err)
+				},
 				// use a dynamic configuration with the random name from above
 				Config: testAccTokenResource(rComment),
 				// compose a basic test, checking both remote and local values

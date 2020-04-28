@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/databrickslabs/databricks-terraform/client/model"
+	"log"
 	"net/http"
 	"sort"
 )
@@ -66,7 +67,7 @@ func (a GroupsAPI) Read(groupID string) (model.Group, error) {
 	if err != nil {
 		return group, err
 	}
-
+	log.Println(group)
 	//get inherited groups
 	var groups []model.Group
 	for _, inheritedGroup := range group.Groups {

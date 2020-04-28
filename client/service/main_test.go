@@ -42,8 +42,8 @@ func compare(t *testing.T, a interface{}, b interface{}) {
 
 func GetIntegrationDBAPIClient() *DBApiClient {
 	var config DBApiClientConfig
-	config.Token = os.Getenv("TOKEN")
-	config.Host = os.Getenv("HOST")
+	config.Token = os.Getenv("DATABRICKS_TOKEN")
+	config.Host = os.Getenv("DATABRICKS_HOST")
 
 	var c DBApiClient
 	c.SetConfig(&config)

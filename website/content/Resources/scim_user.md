@@ -15,6 +15,13 @@ remove access for users (deprovision them) when they leave your organization or 
 You must be a Databricks administrator API token to use SCIM resources.
 {{% /notice %}} 
 
+{{% notice info %}} 
+This resource is heavily reliant on inherited group information and the default_roles object, to determine deltas.
+What this means is that, even if you change the roles field, if it is inherited it will ignore the change as it is 
+inherited by parent group. It will only detect delta when it is a net new role or a net new delete not covered by 
+inherited roles or default roles.  
+{{% /notice %}} 
+
 ## Example Usage
 
 ```hcl
@@ -38,7 +45,7 @@ and identity.
 #### - `display_name`:
 > **(Optional)** This is an alias for the username can be the full name of the user.
 
-#### - `user_roles`:
+#### - `roles`:
 > **(Optional)** This is a list of roles assigned to the user, specific to the AWS environment for 
 user to assume roles on clusters.
 
@@ -46,12 +53,25 @@ user to assume roles on clusters.
 > **(Optional)** Entitlements for the user to be able to have the ability to create 
 clusters and pools. Current options are: `"allow-cluster-create", "allow-instance-pool-create"`.
 
+#### - `default_roles`:
+> **(Required)** Set of roles that are assigned to the `all_users` group in Databricks. You can use 
+>the default_user_roles data source to fetch the values for this.
+
+#### - `set_admin`:
+> **(Required)** Setting this to true will patch this user to include the admin group id as a group item and if false,
+>it will patch remove this user from the admin group.
+
+
 ## Attribute Reference
 
 In addition to all arguments above, the following attributes are exported:
 
 #### - `id`:
 > The id for the scim user object.
+
+#### - `inherited_roles`:
+> The list of roles inherited by parent and all_users groups. This is used to determine when there are no changes.
+
 
 ## Import
 

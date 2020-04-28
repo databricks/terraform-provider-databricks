@@ -6,6 +6,7 @@ import (
 	"github.com/databrickslabs/databricks-terraform/client/service"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"log"
+	"reflect"
 	"sort"
 	"strings"
 )
@@ -33,20 +34,6 @@ func resourceScimUser() *schema.Resource {
 				ConfigMode: schema.SchemaConfigModeAttr,
 				Elem:       &schema.Schema{Type: schema.TypeString},
 				Set:        schema.HashString,
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					inheritedRoles := convertListInterfaceToString(d.Get("inherited_roles").(*schema.Set).List())
-					if new == "0" {
-						return true
-					}
-					if new == "" {
-						for _, role := range inheritedRoles {
-							if old == role {
-								return true
-							}
-						}
-					}
-					return false
-				},
 			},
 			"entitlements": &schema.Schema{
 				Type:     schema.TypeSet,
@@ -60,6 +47,12 @@ func resourceScimUser() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Set:      schema.HashString,
 			},
+			"default_roles": &schema.Schema{
+				Type:     schema.TypeSet,
+				Required: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+				Set:      schema.HashString,
+			},
 			"set_admin": &schema.Schema{
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -67,11 +60,6 @@ func resourceScimUser() *schema.Resource {
 				Set:      schema.HashString,
 			},
 		},
-		//CustomizeDiff: customdiff.IfValueChange("roles", func(old, new, meta interface{}) bool {
-		//	return true
-		//}, func(resourceDiff *schema.ResourceDiff, i interface{}) error {
-		//	return fmt.Errorf("Failed")
-		//}),
 	}
 }
 
@@ -128,13 +116,6 @@ func getListOfRoles(roleList []model.RoleListItem) []string {
 	}
 	return resp
 }
-func getListOfEntitlements(entitlementList []model.EntitlementsListItem) []string {
-	resp := []string{}
-	for _, entitlement := range entitlementList {
-		resp = append(resp, string(entitlement.Value))
-	}
-	return resp
-}
 
 func resourceScimUserRead(d *schema.ResourceData, m interface{}) error {
 	id := d.Id()
@@ -184,7 +165,24 @@ func resourceScimUserRead(d *schema.ResourceData, m interface{}) error {
 		return err
 	}
 
-	err = d.Set("roles", roles)
+	myActualRolesThatAreNotInheritedFromGroups := diff(roles, inheritedRoles)
+
+	defaultRolesInterfaceList := d.Get("default_roles").(*schema.Set).List()
+	allUserInheritedRoles := convertListInterfaceToString(defaultRolesInterfaceList)
+	//allUserInheritedRoles := getListOfRoles(metaUser.Roles)
+	myActualRolesThatAreNotInherited := diff(myActualRolesThatAreNotInheritedFromGroups, allUserInheritedRoles)
+	setRoles, ok := d.GetOk("roles")
+	if ok {
+		allRules := append(inheritedRoles, allUserInheritedRoles...)
+		for _, role := range setRoles.(*schema.Set).List() {
+			if sliceContains(role.(string), allRules) {
+				myActualRolesThatAreNotInherited = append(myActualRolesThatAreNotInherited, role.(string))
+			}
+		}
+	}
+
+	log.Println(myActualRolesThatAreNotInherited)
+	err = d.Set("roles", myActualRolesThatAreNotInherited)
 	if err != nil {
 		return err
 	}
@@ -249,4 +247,13 @@ func isScimUserMissing(errorMsg, resourceID string) bool {
 	return strings.Contains(errorMsg, "urn:ietf:params:scim:api:messages:2.0:Error") &&
 		strings.Contains(errorMsg, fmt.Sprintf("User with id %s not found.", resourceID)) &&
 		strings.Contains(errorMsg, "404")
+}
+
+func sliceContains(value string, list []string) bool {
+	for _, v := range list {
+		if reflect.DeepEqual(v, value) {
+			return true
+		}
+	}
+	return false
 }

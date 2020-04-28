@@ -127,76 +127,137 @@ func resourceJob() *schema.Resource {
 							Optional: true,
 						},
 						"cluster_log_conf": &schema.Schema{
-							Type:     schema.TypeSet,
+							Type:     schema.TypeList,
 							Optional: true,
 							MaxItems: 1,
 							//ConfigMode: schema.SchemaConfigModeAttr,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"dbfs_destination": {
-										Type:     schema.TypeString,
+									"dbfs": {
+										Type:     schema.TypeList,
 										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"destination": {
+													Type:     schema.TypeString,
+													Required: true,
+												},
+											},
+										},
 									},
-									"s3_destination": {
-										Type:     schema.TypeString,
+									"s3": {
+										Type:     schema.TypeList,
 										Optional: true,
-									},
-									"s3_region": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									"s3_endpoint": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									"s3_enable_encryption": {
-										Type:     schema.TypeBool,
-										Optional: true,
-									},
-									"s3_encryption_type": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									"s3_kms_key": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									"s3_canned_acl": {
-										Type:     schema.TypeString,
-										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												//TODO: Validate that destination has s3:// prefix
+												"destination": {
+													Type:     schema.TypeString,
+													Required: true,
+												},
+												"region": {
+													Type:     schema.TypeString,
+													Optional: true,
+												},
+												"endpoint": {
+													Type:     schema.TypeString,
+													Optional: true,
+													AtLeastOneOf: []string{
+														"new_cluster.0.cluster_log_conf.0.s3.0.region",
+														"new_cluster.0.cluster_log_conf.0.s3.0.endpoint",
+													},
+												},
+												"enable_encryption": {
+													Type:     schema.TypeBool,
+													Optional: true,
+												},
+												"encryption_type": {
+													Type:     schema.TypeString,
+													Optional: true,
+												},
+												"kms_key": {
+													Type:     schema.TypeString,
+													Optional: true,
+												},
+												"canned_acl": {
+													Type:     schema.TypeString,
+													Optional: true,
+												},
+											},
+										},
+										ExactlyOneOf: []string{
+											"new_cluster.0.cluster_log_conf.0.dbfs",
+											"new_cluster.0.cluster_log_conf.0.s3",
+										},
 									},
 								},
 							},
 						},
 						"init_scripts": &schema.Schema{
-							Type:     schema.TypeSet,
+							Type:     schema.TypeList,
 							Optional: true,
-							//ConfigMode: schema.SchemaConfigModeAttr,
+							MaxItems: 10,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"dbfs_destination": {
-										Type:     schema.TypeString,
+									"dbfs": {
+										Type:     schema.TypeList,
 										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"destination": {
+													Type:     schema.TypeString,
+													Required: true,
+												},
+											},
+										},
 									},
-									"s3_destination": {
-										Type:     schema.TypeString,
+									"s3": {
+										Type:     schema.TypeList,
 										Optional: true,
-									},
-									"s3_region": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									"s3_endpoint": {
-										Type:     schema.TypeString,
-										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												//TODO: Validate that destination has s3:// prefix
+												"destination": {
+													Type:     schema.TypeString,
+													Required: true,
+												},
+												"region": {
+													Type:     schema.TypeString,
+													Optional: true,
+												},
+												"endpoint": {
+													Type:     schema.TypeString,
+													Optional: true,
+												},
+												"enable_encryption": {
+													Type:     schema.TypeBool,
+													Optional: true,
+												},
+												"encryption_type": {
+													Type:     schema.TypeString,
+													Optional: true,
+												},
+												"kms_key": {
+													Type:     schema.TypeString,
+													Optional: true,
+												},
+												"canned_acl": {
+													Type:     schema.TypeString,
+													Optional: true,
+												},
+											},
+										},
 									},
 								},
 							},
-							//	Validate less than 10 values
 						},
 						//TODO: Docker does not seem to be supported by jobs
 						"docker_image": &schema.Schema{
-							Type:     schema.TypeSet,
+							Type:     schema.TypeList,
 							Optional: true,
 							MaxItems: 1,
 							Elem: &schema.Resource{
@@ -205,14 +266,23 @@ func resourceJob() *schema.Resource {
 										Type:     schema.TypeString,
 										Required: true,
 									},
-									"username": {
-										Type:     schema.TypeString,
+									"basic_auth": {
+										Type:     schema.TypeList,
 										Optional: true,
-									},
-									"password": {
-										Type:      schema.TypeString,
-										Optional:  true,
-										Sensitive: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"username": {
+													Type:     schema.TypeString,
+													Required: true,
+												},
+												"password": {
+													Type:      schema.TypeString,
+													Required:  true,
+													Sensitive: true,
+												},
+											},
+										},
 									},
 								},
 							},
@@ -317,6 +387,7 @@ func resourceJob() *schema.Resource {
 			"notebook_path": &schema.Schema{
 				Type:          schema.TypeString,
 				Optional:      true,
+				AtLeastOneOf:  []string{"jar_main_class_name", "spark_submit_parameters", "python_file"},
 				ConflictsWith: []string{"jar_main_class_name", "spark_submit_parameters", "python_file"},
 			},
 			"notebook_base_parameters": &schema.Schema{
@@ -331,6 +402,7 @@ func resourceJob() *schema.Resource {
 			"jar_main_class_name": &schema.Schema{
 				Type:          schema.TypeString,
 				Optional:      true,
+				AtLeastOneOf:  []string{"python_file", "notebook_path", "spark_submit_parameters"},
 				ConflictsWith: []string{"python_file", "notebook_path", "spark_submit_parameters"},
 			},
 			"jar_parameters": &schema.Schema{
@@ -341,6 +413,7 @@ func resourceJob() *schema.Resource {
 			"python_file": &schema.Schema{
 				Type:          schema.TypeString,
 				Optional:      true,
+				AtLeastOneOf:  []string{"jar_main_class_name", "notebook_path", "spark_submit_parameters"},
 				ConflictsWith: []string{"jar_main_class_name", "notebook_path", "spark_submit_parameters"},
 			},
 			"python_parameters": &schema.Schema{
@@ -352,6 +425,7 @@ func resourceJob() *schema.Resource {
 				Type:          schema.TypeList,
 				Optional:      true,
 				Elem:          &schema.Schema{Type: schema.TypeString},
+				AtLeastOneOf:  []string{"jar_main_class_name", "notebook_path", "python_file"},
 				ConflictsWith: []string{"jar_main_class_name", "notebook_path", "python_file"},
 			},
 			"email_notifications": &schema.Schema{
@@ -499,14 +573,16 @@ func resourceJobRead(d *schema.ResourceData, m interface{}) error {
 		newClusterSettings["spark_conf"] = job.Settings.NewCluster.SparkConf
 
 		awsAtts := map[string]interface{}{}
-		awsAtts["availability"] = string(job.Settings.NewCluster.AwsAttributes.Availability)
-		awsAtts["zone_id"] = job.Settings.NewCluster.AwsAttributes.ZoneID
-		awsAtts["spot_bid_price_percent"] = int(job.Settings.NewCluster.AwsAttributes.SpotBidPricePercent)
-		awsAtts["instance_profile_arn"] = job.Settings.NewCluster.AwsAttributes.InstanceProfileArn
-		awsAtts["first_on_demand"] = int(job.Settings.NewCluster.AwsAttributes.FirstOnDemand)
-		awsAtts["ebs_volume_type"] = string(job.Settings.NewCluster.AwsAttributes.EbsVolumeType)
-		awsAtts["ebs_volume_count"] = int(job.Settings.NewCluster.AwsAttributes.EbsVolumeCount)
-		awsAtts["ebs_volume_size"] = int(job.Settings.NewCluster.AwsAttributes.EbsVolumeSize)
+		if job.Settings.NewCluster.AwsAttributes != nil {
+			awsAtts["availability"] = string(job.Settings.NewCluster.AwsAttributes.Availability)
+			awsAtts["zone_id"] = job.Settings.NewCluster.AwsAttributes.ZoneID
+			awsAtts["spot_bid_price_percent"] = int(job.Settings.NewCluster.AwsAttributes.SpotBidPricePercent)
+			awsAtts["instance_profile_arn"] = job.Settings.NewCluster.AwsAttributes.InstanceProfileArn
+			awsAtts["first_on_demand"] = int(job.Settings.NewCluster.AwsAttributes.FirstOnDemand)
+			awsAtts["ebs_volume_type"] = string(job.Settings.NewCluster.AwsAttributes.EbsVolumeType)
+			awsAtts["ebs_volume_count"] = int(job.Settings.NewCluster.AwsAttributes.EbsVolumeCount)
+			awsAtts["ebs_volume_size"] = int(job.Settings.NewCluster.AwsAttributes.EbsVolumeSize)
+		}
 		awsAttsSet := []map[string]interface{}{awsAtts}
 		newClusterSettings["aws_attributes"] = awsAttsSet
 
@@ -518,52 +594,79 @@ func resourceJobRead(d *schema.ResourceData, m interface{}) error {
 
 		newClusterSettings["custom_tags"] = job.Settings.NewCluster.CustomTags
 
-		clusterLogConfMap := map[string]interface{}{}
 		if job.Settings.NewCluster.ClusterLogConf != nil {
+			clusterLogConfList := []interface{}{}
+			clusterLogConfListItem := map[string]interface{}{}
 			if job.Settings.NewCluster.ClusterLogConf.Dbfs != nil {
-				clusterLogConfMap["dbfs_destination"] = job.Settings.NewCluster.ClusterLogConf.Dbfs.Destination
+				dbfsList := []interface{}{}
+				dbfsListItem := map[string]interface{}{}
+				dbfsListItem["destination"] = job.Settings.NewCluster.ClusterLogConf.Dbfs.Destination
+				dbfsList = append(dbfsList, dbfsListItem)
+				clusterLogConfListItem["dbfs"] = dbfsList
 			}
-
 			if job.Settings.NewCluster.ClusterLogConf.S3 != nil {
-				clusterLogConfMap["s3_destination"] = job.Settings.NewCluster.ClusterLogConf.S3.Destination
-				clusterLogConfMap["s3_region"] = job.Settings.NewCluster.ClusterLogConf.S3.Region
-				clusterLogConfMap["s3_endpoint"] = job.Settings.NewCluster.ClusterLogConf.S3.Endpoint
-				clusterLogConfMap["s3_enable_encryption"] = job.Settings.NewCluster.ClusterLogConf.S3.EnableEncryption
-				clusterLogConfMap["s3_encryption_type"] = job.Settings.NewCluster.ClusterLogConf.S3.EncryptionType
-				clusterLogConfMap["s3_kms_key"] = job.Settings.NewCluster.ClusterLogConf.S3.KmsKey
-				clusterLogConfMap["s3_canned_acl"] = job.Settings.NewCluster.ClusterLogConf.S3.CannedACL
+				s3List := []interface{}{}
+				s3ListItem := map[string]interface{}{}
+				s3ListItem["destination"] = job.Settings.NewCluster.ClusterLogConf.S3.Destination
+				s3ListItem["region"] = job.Settings.NewCluster.ClusterLogConf.S3.Region
+				s3ListItem["endpoint"] = job.Settings.NewCluster.ClusterLogConf.S3.Endpoint
+				s3ListItem["enable_encryption"] = job.Settings.NewCluster.ClusterLogConf.S3.EnableEncryption
+				s3ListItem["encryption_type"] = job.Settings.NewCluster.ClusterLogConf.S3.EncryptionType
+				s3ListItem["kms_key"] = job.Settings.NewCluster.ClusterLogConf.S3.KmsKey
+				s3ListItem["canned_acl"] = job.Settings.NewCluster.ClusterLogConf.S3.CannedACL
+				s3List = append(s3List, s3ListItem)
+				clusterLogConfListItem["s3"] = s3List
 			}
-			clusterLogConfSet := []map[string]interface{}{clusterLogConfMap}
-			newClusterSettings["cluster_log_conf"] = clusterLogConfSet
-		} else {
-			newClusterSettings["cluster_log_conf"] = nil
+			clusterLogConfList = append(clusterLogConfList, clusterLogConfListItem)
+			newClusterSettings["cluster_log_conf"] = clusterLogConfList
 		}
 
-		var listOfInitScripts []map[string]string
-		for _, v := range job.Settings.NewCluster.InitScripts {
-			initScriptStorageConfig := map[string]string{}
-			if v.Dbfs != nil {
-
-				initScriptStorageConfig["dbfs_destination"] = v.Dbfs.Destination
-			} else {
-				initScriptStorageConfig["s3_destination"] = v.S3.Destination
-				initScriptStorageConfig["s3_region"] = v.S3.Region
-				initScriptStorageConfig["s3_endpoint"] = v.S3.Endpoint
+		// Handle reading init scripts
+		if job.Settings.NewCluster.InitScripts != nil && len(job.Settings.NewCluster.InitScripts) > 0 {
+			listOfInitScripts := []interface{}{}
+			for _, v := range job.Settings.NewCluster.InitScripts {
+				initScriptListItem := map[string]interface{}{}
+				if v.Dbfs != nil {
+					dbfsList := []interface{}{}
+					dbfsListItem := map[string]interface{}{}
+					dbfsListItem["destination"] = v.Dbfs.Destination
+					dbfsList = append(dbfsList, dbfsListItem)
+					initScriptListItem["dbfs"] = dbfsList
+				}
+				if v.S3 != nil {
+					s3List := []interface{}{}
+					s3ListItem := map[string]interface{}{}
+					s3ListItem["destination"] = v.S3.Destination
+					s3ListItem["region"] = v.S3.Region
+					s3ListItem["endpoint"] = v.S3.Endpoint
+					s3ListItem["enable_encryption"] = v.S3.EnableEncryption
+					s3ListItem["encryption_type"] = v.S3.EncryptionType
+					s3ListItem["kms_key"] = v.S3.KmsKey
+					s3ListItem["canned_acl"] = v.S3.CannedACL
+					s3List = append(s3List, s3ListItem)
+					initScriptListItem["s3"] = s3List
+				}
+				listOfInitScripts = append(listOfInitScripts, initScriptListItem)
 			}
-			listOfInitScripts = append(listOfInitScripts, initScriptStorageConfig)
+			newClusterSettings["init_scripts"] = listOfInitScripts
 		}
-		newClusterSettings["init_scripts"] = listOfInitScripts
 
-		dockerImage := map[string]string{}
 		if job.Settings.NewCluster.DockerImage != nil {
-			dockerImage["url"] = job.Settings.NewCluster.DockerImage.URL
+			dockerImageList := []interface{}{}
+			dockerImageListItem := map[string]interface{}{}
+			dockerImageListItem["url"] = job.Settings.NewCluster.DockerImage.URL
 			if job.Settings.NewCluster.DockerImage.BasicAuth != nil {
-				dockerImage["username"] = job.Settings.NewCluster.DockerImage.BasicAuth.Username
-				dockerImage["password"] = job.Settings.NewCluster.DockerImage.BasicAuth.Password
+				basicAuthList := []interface{}{}
+				basicAuthListItem := map[string]interface{}{}
+				basicAuthListItem["username"] = job.Settings.NewCluster.DockerImage.BasicAuth.Username
+				basicAuthListItem["password"] = job.Settings.NewCluster.DockerImage.BasicAuth.Password
+				basicAuthList = append(basicAuthList, basicAuthListItem)
+				dockerImageListItem["basic_auth"] = basicAuthList
 			}
+
+			dockerImageList = append(dockerImageList, dockerImageListItem)
+			newClusterSettings["init_scripts"] = dockerImageList
 		}
-		dockerImageSet := []map[string]string{dockerImage}
-		newClusterSettings["docker_image"] = dockerImageSet
 
 		newClusterSettings["spark_env_vars"] = job.Settings.NewCluster.SparkEnvVars
 
@@ -878,17 +981,7 @@ func parseSchemaToJobSettings(d *schema.ResourceData) model.JobSettings {
 	}
 
 	cluster := parseSchemaToCluster(d, "new_cluster.0.")
-	log.Println("Parse cluster")
-	log.Println(cluster)
-	log.Println(d.Get("new_cluster"))
-	if numWorkers, ok := d.GetOk("new_cluster[0].num_workers"); ok {
-		log.Println("num_workers")
-		log.Println(numWorkers)
-	}
-	if numWorkers, ok := d.GetOk("new_cluster[0].autoscale"); ok {
-		log.Println("num_workers")
-		log.Println(numWorkers)
-	}
+
 	jobSettings.NewCluster = &cluster
 
 	if name, ok := d.GetOk("name"); ok {

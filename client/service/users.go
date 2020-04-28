@@ -2,10 +2,14 @@ package service
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/databrickslabs/databricks-terraform/client/model"
+	"log"
 	"net/http"
 	"sort"
+	"strings"
+	"time"
 )
 
 // UsersAPI exposes the scim user API
@@ -180,6 +184,50 @@ func (a UsersAPI) RemoveUserAsAdmin(userID string, adminGroupID string) error {
 	_, err := a.Client.performQuery(http.MethodPatch, userPath, "2.0", scimHeaders, userPatchRequest, nil)
 
 	return err
+}
+
+func (a UsersAPI) GetOrCreateDefaultMetaUser(metaUserDisplayName string, metaUserName string, deleteAfterCreate bool) (user model.User, err error) {
+	//var user model.User
+	var users model.UserList
+
+	metaUserQuery := fmt.Sprintf("/preview/scim/v2/Users?filter=displayName+eq+%s", metaUserDisplayName)
+
+	resp, err := a.Client.performQuery(http.MethodGet, metaUserQuery, "2.0", scimHeaders, nil, nil)
+	if err != nil {
+		return user, err
+	}
+	err = json.Unmarshal(resp, &users)
+	if err != nil {
+		return user, err
+	}
+
+	resources := users.Resources
+	if len(resources) == 1 {
+		return resources[0], err
+	} else if len(resources) > 1 {
+		return model.User{}, errors.New("more than one meta user")
+	}
+
+	log.Printf("Meta User not found will create a new meta user with name: %s\n", metaUserDisplayName)
+
+	newCreatedUser, err := a.Create(metaUserName, metaUserDisplayName, nil, nil)
+	if err != nil {
+		if strings.Contains(err.Error(), "already exists") {
+			time.Sleep(time.Second * 1)
+			return a.GetOrCreateDefaultMetaUser(metaUserDisplayName, metaUserName, deleteAfterCreate)
+		}
+		return user, err
+	}
+	if deleteAfterCreate {
+		defer func() {
+			deferErr := a.Delete(newCreatedUser.ID)
+			err = deferErr
+		}()
+	}
+	return newCreatedUser, err
+	//newCreatedUserFullInfo, err := a.Read(newCreatedUser.ID)
+	//return newCreatedUserFullInfo, err
+
 }
 
 func (a UsersAPI) getInheritedAndNonInheritedRoles(user model.User, groups []model.Group) (inherited []model.RoleListItem, unInherited []model.RoleListItem, err error) {

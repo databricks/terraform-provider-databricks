@@ -35,7 +35,27 @@ If you wish to uninstall the binary simply remove the file from the directory.
 $ rm /usr/local/bin/terraform-provider-db
 ```
 
-## Using databricks-terraform with Docker (TBD!)
+## Using with docker Docker commands
 
+To install and build the code if you dont want to install golang, terraform, etc. All you need is docker and git.
+
+First make sure you clone the repository and you are in the directory.
+
+Then build the docker image with this command (this command will trigger a multi-stage docker build):
+
+```bash
+$ docker build -t databricks-terraform . 
+```
+
+Then run the execute the terraform binary via the following command and volume mount. Make sure that you are in the directory
+ with the terraform code. The following command you can execute the following commands and additional ones as part of 
+ the terraform binary.
+ 
+```bash
+$ docker run -it -v $(pwd):/workpace -w /workpace databricks-terraform init
+$ docker run -it -v $(pwd):/workpace -w /workpace databricks-terraform plan
+$ docker run -it -v $(pwd):/workpace -w /workpace databricks-terraform apply
+
+```
 
 

@@ -1,0 +1,1225 @@
+<!DOCTYPE html>
+<html lang="en" class="js csstransforms3d">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="generator" content="Hugo 0.68.3" />
+    <meta name="description" content="">
+<meta name="author" content="Databricks Labs">
+
+    <link rel="shortcut icon" href="/favicon.png" type="image/x-icon" />
+
+    <title>scim_group :: Databricks Terraform Provider</title>
+
+    
+    <link href="/css/nucleus.css?1588061053" rel="stylesheet">
+    <link href="/css/fontawesome-all.min.css?1588061053" rel="stylesheet">
+    <link href="/css/hybrid.css?1588061053" rel="stylesheet">
+    <link href="/css/featherlight.min.css?1588061053" rel="stylesheet">
+    <link href="/css/perfect-scrollbar.min.css?1588061053" rel="stylesheet">
+    <link href="/css/auto-complete.css?1588061053" rel="stylesheet">
+    <link href="/css/atom-one-dark-reasonable.css?1588061053" rel="stylesheet">
+    <link href="/css/theme.css?1588061053" rel="stylesheet">
+    <link href="/css/hugo-theme.css?1588061053" rel="stylesheet">
+    
+    <link href="/css/theme-blue.css?1588061053" rel="stylesheet">
+    
+    <link href="/css/tabs.css?1588061053" rel="stylesheet">
+
+    <script src="/js/jquery-3.3.1.min.js?1588061053"></script>
+
+    <style>
+      :root #header + #content > #left > #rlblock_left{
+          display:none !important;
+      }
+      
+    </style>
+    
+  </head>
+  <body class="" data-url="/resources/scim_group/">
+    <nav id="sidebar" class="">
+
+
+
+  <div id="header-wrapper">
+    <div id="header">
+      <a id="logo" href="/">
+<img src="/databricks2.png">
+</a>
+    </div>
+    
+        <div class="searchbox">
+    <label for="search-by"><i class="fas fa-search"></i></label>
+    <input data-search-input id="search-by" type="search" placeholder="Search...">
+    <span data-search-clear=""><i class="fas fa-times"></i></span>
+</div>
+
+<script type="text/javascript" src="/js/lunr.min.js?1588061053"></script>
+<script type="text/javascript" src="/js/auto-complete.js?1588061053"></script>
+<script type="text/javascript">
+    
+        var baseurl = "\/";
+    
+</script>
+<script type="text/javascript" src="/js/search.js?1588061053"></script>
+
+    
+  </div>
+
+    <div class="highlightable">
+    <ul class="topics">
+
+        
+          
+          
+
+
+
+
+ 
+  
+    
+    <li data-nav-id="/quickstart/" title="Databricks Terraform Provider" class="dd-item 
+        
+        
+        
+        ">
+      <a href="/quickstart/">
+          Databricks Terraform Provider
+          
+      </a>
+      
+      
+        <ul>
+          
+          
+          
+          
+        
+          
+            
+            
+
+
+
+
+ 
+  
+    
+      <li data-nav-id="/quickstart/overview/" title="Overview" class="dd-item ">
+        <a href="/quickstart/overview/">
+        Overview
+        
+        </a>
+    </li>
+     
+  
+ 
+
+            
+          
+            
+            
+
+
+
+
+ 
+  
+    
+      <li data-nav-id="/quickstart/installation/" title="Installation" class="dd-item ">
+        <a href="/quickstart/installation/">
+        Installation
+        
+        </a>
+    </li>
+     
+  
+ 
+
+            
+          
+        
+        </ul>
+              
+    </li>
+  
+ 
+
+          
+          
+
+
+
+
+ 
+  
+    
+    <li data-nav-id="/provider/" title="Provider" class="dd-item 
+        
+        
+        
+        ">
+      <a href="/provider/">
+          Provider
+          
+      </a>
+      
+              
+    </li>
+  
+ 
+
+          
+          
+
+
+
+
+ 
+  
+    
+    <li data-nav-id="/resources/" title="Resources" class="dd-item 
+        parent
+        
+        
+        ">
+      <a href="/resources/">
+          Resources
+          
+      </a>
+      
+      
+        <ul>
+          
+          
+          
+          
+        
+          
+            
+            
+
+
+
+
+ 
+  
+    
+      <li data-nav-id="/resources/aws_s3_mount/" title="aws_s3_mount" class="dd-item ">
+        <a href="/resources/aws_s3_mount/">
+        aws_s3_mount
+        
+        </a>
+    </li>
+     
+  
+ 
+
+            
+          
+            
+            
+
+
+
+
+ 
+  
+    
+      <li data-nav-id="/resources/azure_adls_gen1_mount/" title="azure_adls_gen1_mount" class="dd-item ">
+        <a href="/resources/azure_adls_gen1_mount/">
+        azure_adls_gen1_mount
+        
+        </a>
+    </li>
+     
+  
+ 
+
+            
+          
+            
+            
+
+
+
+
+ 
+  
+    
+      <li data-nav-id="/resources/azure_adls_gen2_mount/" title="azure_adls_gen2_mount" class="dd-item ">
+        <a href="/resources/azure_adls_gen2_mount/">
+        azure_adls_gen2_mount
+        
+        </a>
+    </li>
+     
+  
+ 
+
+            
+          
+            
+            
+
+
+
+
+ 
+  
+    
+      <li data-nav-id="/resources/azure_blob_mount/" title="azure_blob_mount" class="dd-item ">
+        <a href="/resources/azure_blob_mount/">
+        azure_blob_mount
+        
+        </a>
+    </li>
+     
+  
+ 
+
+            
+          
+            
+            
+
+
+
+
+ 
+  
+    
+      <li data-nav-id="/resources/cluster/" title="cluster" class="dd-item ">
+        <a href="/resources/cluster/">
+        cluster
+        
+        </a>
+    </li>
+     
+  
+ 
+
+            
+          
+            
+            
+
+
+
+
+ 
+  
+    
+      <li data-nav-id="/resources/dbfs_file/" title="dbfs_file" class="dd-item ">
+        <a href="/resources/dbfs_file/">
+        dbfs_file
+        
+        </a>
+    </li>
+     
+  
+ 
+
+            
+          
+            
+            
+
+
+
+
+ 
+  
+    
+      <li data-nav-id="/resources/dbfs_file_sync/" title="dbfs_file_sync" class="dd-item ">
+        <a href="/resources/dbfs_file_sync/">
+        dbfs_file_sync
+        
+        </a>
+    </li>
+     
+  
+ 
+
+            
+          
+            
+            
+
+
+
+
+ 
+  
+    
+      <li data-nav-id="/resources/instance_pool/" title="instance_pool" class="dd-item ">
+        <a href="/resources/instance_pool/">
+        instance_pool
+        
+        </a>
+    </li>
+     
+  
+ 
+
+            
+          
+            
+            
+
+
+
+
+ 
+  
+    
+      <li data-nav-id="/resources/instance_profile/" title="instance_profile" class="dd-item ">
+        <a href="/resources/instance_profile/">
+        instance_profile
+        
+        </a>
+    </li>
+     
+  
+ 
+
+            
+          
+            
+            
+
+
+
+
+ 
+  
+    
+      <li data-nav-id="/resources/job/" title="job" class="dd-item ">
+        <a href="/resources/job/">
+        job
+        
+        </a>
+    </li>
+     
+  
+ 
+
+            
+          
+            
+            
+
+
+
+
+ 
+  
+    
+      <li data-nav-id="/resources/notebook/" title="notebook" class="dd-item ">
+        <a href="/resources/notebook/">
+        notebook
+        
+        </a>
+    </li>
+     
+  
+ 
+
+            
+          
+            
+            
+
+
+
+
+ 
+  
+    
+      <li data-nav-id="/resources/scim_group/" title="scim_group" class="dd-item active">
+        <a href="/resources/scim_group/">
+        scim_group
+        
+        </a>
+    </li>
+     
+  
+ 
+
+            
+          
+            
+            
+
+
+
+
+ 
+  
+    
+      <li data-nav-id="/resources/scim_user/" title="scim_user" class="dd-item ">
+        <a href="/resources/scim_user/">
+        scim_user
+        
+        </a>
+    </li>
+     
+  
+ 
+
+            
+          
+            
+            
+
+
+
+
+ 
+  
+    
+      <li data-nav-id="/resources/secret/" title="secret" class="dd-item ">
+        <a href="/resources/secret/">
+        secret
+        
+        </a>
+    </li>
+     
+  
+ 
+
+            
+          
+            
+            
+
+
+
+
+ 
+  
+    
+      <li data-nav-id="/resources/secret_acl/" title="secret_acl" class="dd-item ">
+        <a href="/resources/secret_acl/">
+        secret_acl
+        
+        </a>
+    </li>
+     
+  
+ 
+
+            
+          
+            
+            
+
+
+
+
+ 
+  
+    
+      <li data-nav-id="/resources/secret_scope/" title="secret_scope" class="dd-item ">
+        <a href="/resources/secret_scope/">
+        secret_scope
+        
+        </a>
+    </li>
+     
+  
+ 
+
+            
+          
+            
+            
+
+
+
+
+ 
+  
+    
+      <li data-nav-id="/resources/token/" title="token" class="dd-item ">
+        <a href="/resources/token/">
+        token
+        
+        </a>
+    </li>
+     
+  
+ 
+
+            
+          
+        
+        </ul>
+              
+    </li>
+  
+ 
+
+          
+         
+    </ul>
+
+    
+    
+      <section id="shortcuts">
+        <h3>More</h3>
+        <ul>
+          
+              <li> 
+                  <a class="padding" href="https://github.com/databrickslabs/databricks-terraform"><i class='fab fa-fw fa-github'></i> GitHub repo</a>
+              </li>
+          
+        </ul>
+      </section>
+    
+
+    
+    <section id="footer">
+      <center>
+    
+    <a class="github-button" href="https://github.com/databrickslabs/databricks-terraform/releases/download/v0.1.0/databricks-terraform_0.1.0_Linux_64-bit.tar.gz" data-icon="octicon-cloud-download" aria-label="Download matcornic/hugo-theme-learn on GitHub">v0.1.0</a>
+
+    
+    <a class="github-button" href="https://github.com/databrickslabs/databricks-terraform" data-icon="octicon-star" data-show-count="true" aria-label="Star matcornic/hugo-theme-learn on GitHub">Star</a>
+
+    
+    <a class="github-button" href="https://github.com/databrickslabs/databricks-terraform/fork" data-icon="octicon-repo-forked" data-show-count="true" aria-label="Fork matcornic/hugo-theme-learn on GitHub">Fork</a>
+
+    
+    <a class="github-button" href="https://github.com/databrickslabs/databricks-terraform/issues/new" data-color-scheme="no-preference: light; light: light; dark: dark;" data-show-count="true" aria-label="Issue databrickslabs/databricks-terraform on GitHub">Issue</a>
+</center>
+
+<script async defer src="https://buttons.github.io/buttons.js"></script>
+
+    </section>
+  </div>
+</nav>
+
+
+
+
+        <section id="body">
+        <div id="overlay"></div>
+        <div class="padding highlightable">
+              
+              <div>
+                <div id="top-bar">
+                
+                
+                <div id="breadcrumbs" itemscope="" itemtype="http://data-vocabulary.org/Breadcrumb">
+                    <span id="sidebar-toggle-span">
+                        <a href="#" id="sidebar-toggle" data-sidebar-toggle="">
+                          <i class="fas fa-bars"></i>
+                        </a>
+                    </span>
+                  
+                  <span id="toc-menu"><i class="fas fa-list-alt"></i></span>
+                  
+                  <span class="links">
+                 
+                 
+                    
+          
+          
+            
+            
+          
+          
+            
+            
+          
+          
+            <a href='/'>Databricks Terraform Provider</a> > <a href='/resources/'>Resources</a> > scim_group
+          
+        
+          
+        
+          
+        
+                 
+                  </span>
+                </div>
+                
+                    <div class="progress">
+    <div class="wrapper">
+<nav id="TableOfContents">
+  <ul>
+    <li><a href="#resource-databricks_scim_group">Resource: <code>databricks_scim_group</code></a></li>
+    <li><a href="#example-usage">Example Usage</a></li>
+    <li><a href="#argument-reference">Argument Reference</a>
+      <ul>
+        <li></li>
+      </ul>
+    </li>
+    <li><a href="#attribute-reference">Attribute Reference</a>
+      <ul>
+        <li></li>
+      </ul>
+    </li>
+    <li><a href="#import">Import</a></li>
+  </ul>
+</nav>
+    </div>
+</div>
+
+                
+              </div>
+            </div>
+            
+        <div id="head-tags">
+        
+        </div>
+        
+        <div id="body-inner">
+          
+            <h1>
+              
+              scim_group
+            </h1>
+          
+
+        
+
+
+<h2 id="resource-databricks_scim_group">Resource: <code>databricks_scim_group</code></h2>
+<p>This resource allows you to create groups in Databricks. You can also associate Databricks users to the following groups.</p>
+
+<div class="notices note" ><p>You must be a Databricks administrator API token to use SCIM resources.</p>
+</div>
+
+<h2 id="example-usage">Example Usage</h2>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-hcl" data-lang="hcl"><span style="color:#66d9ef">resource</span> <span style="color:#e6db74">&#34;databricks_scim_user&#34; &#34;my-user&#34;</span> {
+  user_name <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;testuser@databricks.com&#34;</span>
+  display_name <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;Test User&#34;</span>
+  entitlements <span style="color:#f92672">=</span> [
+    <span style="color:#e6db74">&#34;allow-cluster-create&#34;</span>,
+  ]
+}
+
+<span style="color:#66d9ef">resource</span> <span style="color:#e6db74">&#34;databricks_scim_group&#34; &#34;my-group&#34;</span> {
+  display_name <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;Sri Test Group&#34;</span>
+  members <span style="color:#f92672">=</span> [<span style="color:#e6db74">&#34;${databricks_scim_user.my-user.id}&#34;</span>]
+}
+</code></pre></div><h2 id="argument-reference">Argument Reference</h2>
+<p>The following arguments are supported:</p>
+<h4 id="--display_name">- <code>display_name</code>:</h4>
+<blockquote>
+<p><strong>(Required)</strong> This is the display name for the given group.</p>
+</blockquote>
+<h4 id="--group_members">- <code>group_members</code>:</h4>
+<blockquote>
+<p><strong>(Optional)</strong> This is a list of users associated to the given group.</p>
+</blockquote>
+<h4 id="--roles">- <code>roles</code>:</h4>
+<blockquote>
+<p><strong>(Optional)</strong> This is the list of roles that you wish to attach to this group.</p>
+</blockquote>
+<h4 id="--entitlements">- <code>entitlements</code>:</h4>
+<blockquote>
+<p><strong>(Optional)</strong> This is the list of entitlements that you wish to attach to this group.</p>
+</blockquote>
+<h2 id="attribute-reference">Attribute Reference</h2>
+<p>In addition to all arguments above, the following attributes are exported:</p>
+<h4 id="--id">- <code>id</code>:</h4>
+<blockquote>
+<p>The id for the scim group object.</p>
+</blockquote>
+<h4 id="--inherited_roles">- <code>inherited_roles</code>:</h4>
+<blockquote>
+<p>The list of roles inherited by parent groups that this group is a member of.</p>
+</blockquote>
+<h2 id="import">Import</h2>
+
+<div class="notices note" ><p>Importing this resource is not currently supported.</p>
+</div>
+
+
+
+<footer class="footline">
+	
+</footer>
+
+        
+        </div> 
+        
+
+      </div>
+
+    <div id="navigation">
+        
+        
+        
+        
+            
+            
+                
+                    
+                    
+                
+                
+
+                    
+                    
+                        
+                    
+                    
+
+                    
+                        
+            
+            
+                
+                    
+                        
+                        
+                    
+                
+                
+
+                    
+                    
+                    
+
+                    
+                        
+            
+            
+                
+                    
+                
+                
+
+                    
+                    
+                    
+
+                    
+            
+        
+                    
+                        
+            
+            
+                
+                    
+                
+                
+
+                    
+                    
+                    
+
+                    
+            
+        
+                    
+            
+        
+                    
+                        
+            
+            
+                
+                    
+                
+                
+
+                    
+                    
+                    
+
+                    
+            
+        
+                    
+                        
+            
+            
+                
+                    
+                    
+                
+                
+
+                    
+                    
+                    
+
+                    
+                        
+            
+            
+                
+                    
+                        
+                        
+                    
+                
+                
+
+                    
+                    
+                    
+
+                    
+            
+        
+                    
+                        
+            
+            
+                
+                    
+                
+                
+
+                    
+                    
+                    
+
+                    
+            
+        
+                    
+                        
+            
+            
+                
+                    
+                
+                
+
+                    
+                    
+                    
+
+                    
+            
+        
+                    
+                        
+            
+            
+                
+                    
+                
+                
+
+                    
+                    
+                    
+
+                    
+            
+        
+                    
+                        
+            
+            
+                
+                    
+                
+                
+
+                    
+                    
+                    
+
+                    
+            
+        
+                    
+                        
+            
+            
+                
+                    
+                
+                
+
+                    
+                    
+                    
+
+                    
+            
+        
+                    
+                        
+            
+            
+                
+                    
+                
+                
+
+                    
+                    
+                    
+
+                    
+            
+        
+                    
+                        
+            
+            
+                
+                    
+                
+                
+
+                    
+                    
+                    
+
+                    
+            
+        
+                    
+                        
+            
+            
+                
+                    
+                
+                
+
+                    
+                    
+                    
+
+                    
+            
+        
+                    
+                        
+            
+            
+                
+                    
+                
+                
+
+                    
+                    
+                    
+
+                    
+            
+        
+                    
+                        
+            
+            
+                
+                    
+                
+                
+
+                    
+                    
+                    
+
+                    
+            
+        
+                    
+                        
+            
+            
+                
+                    
+                    
+                
+                
+
+                    
+                    
+                    
+
+                    
+            
+        
+                    
+                        
+            
+            
+                
+                    
+                        
+                        
+                    
+                
+                
+
+                    
+                    
+                    
+
+                    
+            
+        
+                    
+                        
+            
+            
+                
+                    
+                
+                
+
+                    
+                    
+                    
+
+                    
+            
+        
+                    
+                        
+            
+            
+                
+                    
+                
+                
+
+                    
+                    
+                    
+
+                    
+            
+        
+                    
+                        
+            
+            
+                
+                    
+                
+                
+
+                    
+                    
+                    
+
+                    
+            
+        
+                    
+                        
+            
+            
+                
+                    
+                
+                
+
+                    
+                    
+                    
+
+                    
+            
+        
+                    
+            
+        
+                    
+            
+        
+        
+        
+
+
+	 
+	 
+    </div>
+
+    </section>
+    
+    <div style="left: -1000px; overflow: scroll; position: absolute; top: -1000px; border: none; box-sizing: content-box; height: 200px; margin: 0px; padding: 0px; width: 200px;">
+      <div style="border: none; box-sizing: content-box; height: 200px; margin: 0px; padding: 0px; width: 200px;"></div>
+    </div>
+    <script src="/js/clipboard.min.js?1588061053"></script>
+    <script src="/js/perfect-scrollbar.min.js?1588061053"></script>
+    <script src="/js/perfect-scrollbar.jquery.min.js?1588061053"></script>
+    <script src="/js/jquery.sticky.js?1588061053"></script>
+    <script src="/js/featherlight.min.js?1588061053"></script>
+    <script src="/js/highlight.pack.js?1588061053"></script>
+    <script>hljs.initHighlightingOnLoad();</script>
+    <script src="/js/modernizr.custom-3.6.0.js?1588061053"></script>
+    <script src="/js/learn.js?1588061053"></script>
+    <script src="/js/hugo-learn.js?1588061053"></script>
+
+    <link href="/mermaid/mermaid.css?1588061053" rel="stylesheet" />
+    <script src="/mermaid/mermaid.js?1588061053"></script>
+    <script>
+        mermaid.initialize({ startOnLoad: true });
+    </script>
+    <script>
+    function switchTab(tabGroup, tabId) {
+        allTabItems = jQuery("[data-tab-group='"+tabGroup+"']");
+        targetTabItems = jQuery("[data-tab-group='"+tabGroup+"'][data-tab-item='"+tabId+"']");
+
+        
+        
+        
+        var isButtonEvent = event != undefined;
+
+        if(isButtonEvent){
+            
+            var yposButton = event.target.getBoundingClientRect().top;
+        }
+
+        allTabItems.removeClass("active");
+        targetTabItems.addClass("active");
+
+        if(isButtonEvent){
+            
+            var yposButtonDiff = event.target.getBoundingClientRect().top - yposButton;
+            window.scrollTo(window.scrollX, window.scrollY+yposButtonDiff);
+
+            
+            if(window.localStorage){
+                var selectionsJSON = window.localStorage.getItem("tabSelections");
+                if(selectionsJSON){
+                    var tabSelections = JSON.parse(selectionsJSON);
+                }else{
+                    var tabSelections = {};
+                }
+                tabSelections[tabGroup] = tabId;
+                window.localStorage.setItem("tabSelections", JSON.stringify(tabSelections));
+            }
+        }
+    }
+
+    function restoreTabSelections() {
+        if(window.localStorage){
+            var selectionsJSON = window.localStorage.getItem("tabSelections");
+            if(selectionsJSON){
+                var tabSelections = JSON.parse(selectionsJSON);
+            }else{
+                var tabSelections = {};
+            }
+            Object.keys(tabSelections).forEach(function(tabGroup) {
+                var tabItem = tabSelections[tabGroup];
+                switchTab(tabGroup, tabItem);
+            });
+        }
+    }
+    jQuery(document).ready(function() {
+        restoreTabSelections();
+    });
+</script>
+  </body>
+</html>
+

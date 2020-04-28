@@ -7,6 +7,18 @@ chapter = false
 
 A Terraform provider for Databricks workspace components
 
+## Quick install using cURL
+
+To quickly install the binary please execute the following curl command in your shell.
+
+```bash
+$ curl https://raw.githubusercontent.com/databrickslabs/databricks-terraform/master/godownloader-databricks-provider.sh | bash -s -- -b $HOME/.terraform.d/plugins
+```
+
+The command should have moved the binary into your `~/.terraform.d/plugins` folder.
+
+You can `ls` the previous directory to verify.
+
 ## Installing databricks-terraform with Go
 
 * Install Go 1.13. For previous versions, you may have to set your `$GOPATH` manually, if you haven't done it yet visit [here](https://golang.org/doc/install).

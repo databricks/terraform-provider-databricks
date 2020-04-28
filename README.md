@@ -4,7 +4,19 @@
 
 ## Quickstart: Building and Using the Provider
 
-### Setup 
+### Quick install
+
+To quickly install the binary please execute the following curl command in your shell.
+
+```bash
+$ curl https://raw.githubusercontent.com/databrickslabs/databricks-terraform/master/godownloader-databricks-provider.sh | bash -s -- -b $HOME/.terraform.d/plugins
+```
+
+The command should have moved the binary into your `~/.terraform.d/plugins` folder.
+
+You can `ls` the previous directory to verify. 
+
+### Install using go 
 
 Please note that there is a Makefile which contains all the commands you would need to run this project.
 

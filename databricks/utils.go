@@ -102,36 +102,6 @@ func fetchStringFromCheckers(strVal interface{}) string {
 	return stringChecker.execute(strVal)
 }
 
-//func validateClusterLogConf(value, meta interface{}) error {
-//	clusterLogConfMap := getMapFromOneItemSet(value)
-//	if clusterLogConfMap != nil &&
-//		len(clusterLogConfMap["dbfs_destination"].(string)) > 0 &&
-//		len(clusterLogConfMap["s3_destination"].(string)) > 0 {
-//		return errors.New("S3 destination and DBFS destination cant both be filled out " +
-//			"in cluster_log_conf!")
-//	}
-//	return nil
-//}
-
-//func validateInitScripts(value, meta interface{}) error {
-//	initScripts := value.(*schema.Set).List()
-//	for _, v := range initScripts {
-//		initScriptsMap := v.(map[string]interface{})
-//		if len(initScriptsMap["dbfs_destination"].(string)) > 0 &&
-//			len(initScriptsMap["s3_destination"].(string)) > 0 {
-//			return errors.New("S3 destination and DBFS destination cant both be filled out in the " +
-//				"init scripts!")
-//		}
-//		if len(initScriptsMap["s3_destination"].(string)) > 0 &&
-//			(len(initScriptsMap["s3_region"].(string)) <= 0 &&
-//				len(initScriptsMap["s3_endpoint"].(string)) <= 0) {
-//			return errors.New("If S3 destination is set then s3_region or s3_endpoint needs " +
-//				"to be set.!")
-//		}
-//	}
-//	return nil
-//}
-
 func changeClusterIntoRunningState(clusterID string, client service.DBApiClient) error {
 	//return nil
 	clusterInfo, err := client.Clusters().Get(clusterID)

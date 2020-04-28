@@ -2,21 +2,21 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>Databricks Terraform Provider</title>
-    <link>/quickstart/</link>
+    <link>https://databrickslabs.github.io/databricks-terraform/quickstart/</link>
     <description>Recent content on Databricks Terraform Provider</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-US</language>
     <lastBuildDate>Mon, 20 Apr 2020 23:34:03 -0400</lastBuildDate>
     
-	<atom:link href="/quickstart/index.xml" rel="self" type="application/rss+xml" />
+	<atom:link href="https://databrickslabs.github.io/databricks-terraform/quickstart/index.xml" rel="self" type="application/rss+xml" />
     
     
     <item>
       <title>Overview</title>
-      <link>/quickstart/overview/</link>
+      <link>https://databrickslabs.github.io/databricks-terraform/quickstart/overview/</link>
       <pubDate>Mon, 20 Apr 2020 23:34:03 -0400</pubDate>
       
-      <guid>/quickstart/overview/</guid>
+      <guid>https://databrickslabs.github.io/databricks-terraform/quickstart/overview/</guid>
       <description>Quickstart: Building and Using the Provider Setup Please note that there is a Makefile which contains all the commands you would need to run this project.
 This code base to contribute to requires the following software:
  golang 1.13.X terraform v0.12.x make command  To make sure everything is installed correctly please run the following commands:
@@ -27,10 +27,10 @@ $ terraform --version Terraform v0.</description>
     
     <item>
       <title>Installation</title>
-      <link>/quickstart/installation/</link>
+      <link>https://databrickslabs.github.io/databricks-terraform/quickstart/installation/</link>
       <pubDate>Mon, 20 Apr 2020 23:34:03 -0400</pubDate>
       
-      <guid>/quickstart/installation/</guid>
+      <guid>https://databrickslabs.github.io/databricks-terraform/quickstart/installation/</guid>
       <description>A Terraform provider for Databricks workspace components
 Installing databricks-terraform with Go  Install Go 1.13. For previous versions, you may have to set your $GOPATH manually, if you haven&amp;rsquo;t done it yet visit here. Install Terraform 0.12.x from here and save it into /usr/local/bin/terraform folder (create it if it doesn&amp;rsquo;t exists). This provider DOES NOT SUPPORT Terraform 0.12 or above. Download the code by issuing a go get command.  # Download the source code for databricks-terraform # and build the needed binary, by saving it inside $GOPATH/bin $ go get -u github.</description>
     </item>

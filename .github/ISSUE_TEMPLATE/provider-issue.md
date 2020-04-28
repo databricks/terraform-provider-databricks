@@ -1,6 +1,6 @@
 ---
 name: Provider Issue
-about: How to create an issue
+about: Use this to identify a issue or a bug with the provider.
 title: "[ISSUE] Issue Short Description"
 labels: ''
 assignees: stikkireddy

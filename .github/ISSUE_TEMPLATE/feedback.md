@@ -1,6 +1,6 @@
 ---
 name: Feedback
-about: Describe this issue template's purpose here.
+about: Use this to provide feedback or ask questions regarding the provider.
 title: "[FEEDBACK/QUESTION] Short Description of feedback"
 labels: question
 assignees: stikkireddy

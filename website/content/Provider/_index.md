@@ -135,12 +135,12 @@ provider "databricks" {
 
 The following variables can be passed via environment variables:
 
-* `host` → `HOST`
-* `token` → `TOKEN`
-* `subscription_id` → `ARM_SUBSCRIPTION_ID`
-* `client_secret` → `ARM_CLIENT_SECRET`
-* `client_id` → `ARM_CLIENT_ID`
-* `tenant_id` → `ARM_TENANT_ID`
+* `host` → `DATABRICKS_HOST`
+* `token` → `DATABRICKS_TOKEN`
+* `subscription_id` → `DATABRICKS_AZURE_SUBSCRIPTION_ID`
+* `client_secret` → `DATABRICKS_AZURE_CLIENT_SECRET`
+* `client_id` → `DATABRICKS_AZURE_CLIENT_ID`
+* `tenant_id` → `DATABRICKS_AZURE_TENANT_ID`
 
 For example you can have the following provider definition:
 
@@ -162,11 +162,11 @@ The following arguments are supported by the db provider block:
 
 #### `host`
 > This is the host of the Databricks workspace. This is will be a url that you use to login to your workspace. 
-Alternatively you can provide this value as an environment variable `HOST`.
+Alternatively you can provide this value as an environment variable `DATABRICKS_HOST`.
 
 #### `token`:
 > This is the api token to authenticate into the workspace. Alternatively you can provide this value as an 
-environment variable `TOKEN`. 
+environment variable `DATABRICKS_TOKEN`. 
 
 #### `azure-auth`:
 > #### **Usage**
@@ -195,16 +195,16 @@ The azure_auth block contains the following arguments:` display="true" %}}
 * `resource_group` - This is the resource group in which your Azure Databricks Workspace resides in.
 
 * `subscription_id` - This is the Azure Subscription id in which your Azure Databricks Workspace resides in. 
-Alternatively you can provide this value as an environment variable `ARM_SUBSCRIPTION_ID`.
+Alternatively you can provide this value as an environment variable `DATABRICKS_AZURE_SUBSCRIPTION_ID`.
                                                                               
 * `client_secret` - This is the Azure Enterprise Application (Service principal) client secret. This service 
 principal requires contributor access to your Azure Databricks deployment. Alternatively you can provide this 
-value as an environment variable `ARM_CLIENT_SECRET`.  
+value as an environment variable `DATABRICKS_AZURE_CLIENT_SECRET`.  
 
 * `client_id` - This is the Azure Enterprise Application (Service principal) client id. This service principal 
 requires contributor access to your Azure Databricks deployment. Alternatively you can provide this value as an 
-environment variable `ARM_CLIENT_ID`.  
+environment variable `DATABRICKS_AZURE_CLIENT_ID`.  
 
 * `tenant_id` - This is the Azure Active Directory Tenant id in which the Enterprise Application (Service Principal) 
-resides in. Alternatively you can provide this value as an environment variable `ARM_TENANT_ID`.  
+resides in. Alternatively you can provide this value as an environment variable `DATABRICKS_AZURE_TENANT_ID`.  
 {{% /chevron %}}

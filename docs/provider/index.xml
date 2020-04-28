@@ -2,13 +2,13 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>Provider on Databricks Terraform Provider</title>
-    <link>https://databrickslabs.github.io/databricks-terraform/provider/</link>
+    <link>//databrickslabs.github.io/databricks-terraform/provider/</link>
     <description>Recent content in Provider on Databricks Terraform Provider</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-US</language>
     <lastBuildDate>Mon, 20 Apr 2020 23:34:03 -0400</lastBuildDate>
     
-	<atom:link href="https://databrickslabs.github.io/databricks-terraform/provider/index.xml" rel="self" type="application/rss+xml" />
+	<atom:link href="//databrickslabs.github.io/databricks-terraform/provider/index.xml" rel="self" type="application/rss+xml" />
     
     
   </channel>

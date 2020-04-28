@@ -1,4 +1,4 @@
-baseURL = "https://databrickslabs.github.io/databricks-terraform/"
+baseURL = "//databrickslabs.github.io/databricks-terraform/"
 languageCode = "en-US"
 defaultContentLanguage = "en"
 

@@ -2,21 +2,21 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>Resources on Databricks Terraform Provider</title>
-    <link>https://databrickslabs.github.io/databricks-terraform/resources/</link>
+    <link>//databrickslabs.github.io/databricks-terraform/resources/</link>
     <description>Recent content in Resources on Databricks Terraform Provider</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-US</language>
     <lastBuildDate>Mon, 20 Apr 2020 23:34:03 -0400</lastBuildDate>
     
-	<atom:link href="https://databrickslabs.github.io/databricks-terraform/resources/index.xml" rel="self" type="application/rss+xml" />
+	<atom:link href="//databrickslabs.github.io/databricks-terraform/resources/index.xml" rel="self" type="application/rss+xml" />
     
     
     <item>
       <title>aws_s3_mount</title>
-      <link>https://databrickslabs.github.io/databricks-terraform/resources/aws_s3_mount/</link>
+      <link>//databrickslabs.github.io/databricks-terraform/resources/aws_s3_mount/</link>
       <pubDate>Mon, 20 Apr 2020 23:34:03 -0400</pubDate>
       
-      <guid>https://databrickslabs.github.io/databricks-terraform/resources/aws_s3_mount/</guid>
+      <guid>//databrickslabs.github.io/databricks-terraform/resources/aws_s3_mount/</guid>
       <description>Resource: databricks_aws_s3_mount This resource given a cluster id will help you create, get and delete a aws s3 mount.
 It is important to understand that this will start up the cluster if the cluster is terminated. The read and refresh terraform command will require a cluster and make take some time to validate mount.
  You can locate the mount in dbfs at dbfs:/mnt/&amp;lt;mount_name&amp;gt;
@@ -25,30 +25,30 @@ It is important to understand that this will start up the cluster if the cluster
     
     <item>
       <title>azure_adls_gen1_mount</title>
-      <link>https://databrickslabs.github.io/databricks-terraform/resources/azure_adls_gen1_mount/</link>
+      <link>//databrickslabs.github.io/databricks-terraform/resources/azure_adls_gen1_mount/</link>
       <pubDate>Mon, 20 Apr 2020 23:34:03 -0400</pubDate>
       
-      <guid>https://databrickslabs.github.io/databricks-terraform/resources/azure_adls_gen1_mount/</guid>
+      <guid>//databrickslabs.github.io/databricks-terraform/resources/azure_adls_gen1_mount/</guid>
       <description>Resource: databricks_azure_adls_gen1_mount This resource given a cluster id will help you create, get and delete a azure data lake gen 1(ADLS gen 1) mount using a service principal/enterprise ad application which will provide you a client id and client secret to authenticate.
 It is important to understand that this will start up the cluster if the cluster is terminated. The read and refresh terraform command will require a cluster and make take some time to validate mount.</description>
     </item>
     
     <item>
       <title>azure_adls_gen2_mount</title>
-      <link>https://databrickslabs.github.io/databricks-terraform/resources/azure_adls_gen2_mount/</link>
+      <link>//databrickslabs.github.io/databricks-terraform/resources/azure_adls_gen2_mount/</link>
       <pubDate>Mon, 20 Apr 2020 23:34:03 -0400</pubDate>
       
-      <guid>https://databrickslabs.github.io/databricks-terraform/resources/azure_adls_gen2_mount/</guid>
+      <guid>//databrickslabs.github.io/databricks-terraform/resources/azure_adls_gen2_mount/</guid>
       <description>Resource: databricks_azure_adls_gen2_mount This resource given a cluster id will help you create, get and delete a azure data lake gen 2 (ADLS gen 2) mount using a service principal/enterprise ad application which will provide you a client id and client secret to authenticate.
 It is important to understand that this will start up the cluster if the cluster is terminated. The read and refresh terraform command will require a cluster and make take some time to validate mount.</description>
     </item>
     
     <item>
       <title>azure_blob_mount</title>
-      <link>https://databrickslabs.github.io/databricks-terraform/resources/azure_blob_mount/</link>
+      <link>//databrickslabs.github.io/databricks-terraform/resources/azure_blob_mount/</link>
       <pubDate>Mon, 20 Apr 2020 23:34:03 -0400</pubDate>
       
-      <guid>https://databrickslabs.github.io/databricks-terraform/resources/azure_blob_mount/</guid>
+      <guid>//databrickslabs.github.io/databricks-terraform/resources/azure_blob_mount/</guid>
       <description>Resource: databricks_azure_blob_mount This resource given a cluster id will help you create, get and delete a azure blob storage mount using SAS token or storage account access keys.
 It is important to understand that this will start up the cluster if the cluster is terminated. The read and refresh terraform command will require a cluster and make take some time to validate mount.
  You can locate the mount in dbfs at dbfs:/mnt/&amp;lt;mount_name&amp;gt;</description>
@@ -56,10 +56,10 @@ It is important to understand that this will start up the cluster if the cluster
     
     <item>
       <title>cluster</title>
-      <link>https://databrickslabs.github.io/databricks-terraform/resources/cluster/</link>
+      <link>//databrickslabs.github.io/databricks-terraform/resources/cluster/</link>
       <pubDate>Mon, 20 Apr 2020 23:34:03 -0400</pubDate>
       
-      <guid>https://databrickslabs.github.io/databricks-terraform/resources/cluster/</guid>
+      <guid>//databrickslabs.github.io/databricks-terraform/resources/cluster/</guid>
       <description>Resource: databricks_cluster This resource allows you to create, update, and delete clusters.
 Example Usage resource &amp;#34;databricks_cluster&amp;#34; &amp;#34;my-cluster&amp;#34; { num_workers = &amp;#34;2&amp;#34; cluster_name = &amp;#34;sri-test&amp;#34; spark_version = &amp;#34;6.4.x-scala2.11&amp;#34; node_type_id = &amp;#34;i3.2xlarge&amp;#34; autotermination_minutes = 30 aws_attributes { availability = &amp;#34;ON_DEMAND&amp;#34; zone_id = &amp;#34;us-east-1&amp;#34; instance_profile_arn = &amp;#34;arn:aws:iam::999999999999:instance-profile/s3-access&amp;#34; } } Argument Reference The following arguments are supported:
 - num_workers (Optional) :  (Optional) Number of worker nodes that this cluster should have. A cluster has one Spark Driver and num_workers Executors for a total of num_workers + 1 Spark node</description>
@@ -67,10 +67,10 @@ Example Usage resource &amp;#34;databricks_cluster&amp;#34; &amp;#34;my-cluster&
     
     <item>
       <title>dbfs_file</title>
-      <link>https://databrickslabs.github.io/databricks-terraform/resources/dbfs_file/</link>
+      <link>//databrickslabs.github.io/databricks-terraform/resources/dbfs_file/</link>
       <pubDate>Mon, 20 Apr 2020 23:34:03 -0400</pubDate>
       
-      <guid>https://databrickslabs.github.io/databricks-terraform/resources/dbfs_file/</guid>
+      <guid>//databrickslabs.github.io/databricks-terraform/resources/dbfs_file/</guid>
       <description>Resource: databricks_dbfs_file This is a resource that lets you create, get and delete files in DBFS (Databricks File System).
 Example Usage resource &amp;#34;databricks_dbfs_file&amp;#34; &amp;#34;my_dbfs_file&amp;#34; { content = filebase64(&amp;#34;README.md&amp;#34;) path = &amp;#34;/sri/terraformdbfs/example/README.md&amp;#34; overwrite = true mkdirs = true validate_remote_file = true } Argument Reference The following arguments are supported:
 - content:  (Required) The content of the file as a base64 encoded string.
@@ -79,10 +79,10 @@ Example Usage resource &amp;#34;databricks_dbfs_file&amp;#34; &amp;#34;my_dbfs_f
     
     <item>
       <title>dbfs_file_sync</title>
-      <link>https://databrickslabs.github.io/databricks-terraform/resources/dbfs_file_sync/</link>
+      <link>//databrickslabs.github.io/databricks-terraform/resources/dbfs_file_sync/</link>
       <pubDate>Mon, 20 Apr 2020 23:34:03 -0400</pubDate>
       
-      <guid>https://databrickslabs.github.io/databricks-terraform/resources/dbfs_file_sync/</guid>
+      <guid>//databrickslabs.github.io/databricks-terraform/resources/dbfs_file_sync/</guid>
       <description>Resource: databricks_dbfs_file_sync This resource will let you create a dbfs file sync which will synchronize files between systems depending on file size changes.
 This dbfs file sync resource only determines differences via file size so if data changes but file size does not it will provide a false negative in terms of determining difference.
  Example Usage data &amp;#34;databricks_dbfs_file&amp;#34; &amp;#34;my_dbfs_file_data&amp;#34; { path = &amp;#34;/install_wheels_sri.sh&amp;#34; limit_file_size = true } resource &amp;#34;databricks_dbfs_file_sync&amp;#34; &amp;#34;my-file1-sync&amp;#34; { src_path = data.</description>
@@ -90,20 +90,20 @@ This dbfs file sync resource only determines differences via file size so if dat
     
     <item>
       <title>instance_pool</title>
-      <link>https://databrickslabs.github.io/databricks-terraform/resources/instance_pool/</link>
+      <link>//databrickslabs.github.io/databricks-terraform/resources/instance_pool/</link>
       <pubDate>Mon, 20 Apr 2020 23:34:03 -0400</pubDate>
       
-      <guid>https://databrickslabs.github.io/databricks-terraform/resources/instance_pool/</guid>
+      <guid>//databrickslabs.github.io/databricks-terraform/resources/instance_pool/</guid>
       <description>Resource: databricks_instance_pool This resource allows you to manage instance pools on Databricks.
 An instance pool reduces cluster start and auto-scaling times by maintaining a set of idle, ready-to-use cloud instances. When a cluster attached to a pool needs an instance, it first attempts to allocate one of the pool’s idle instances. If the pool has no idle instances, it expands by allocating a new instance from the instance provider in order to accommodate the cluster’s request.</description>
     </item>
     
     <item>
       <title>instance_profile</title>
-      <link>https://databrickslabs.github.io/databricks-terraform/resources/instance_profile/</link>
+      <link>//databrickslabs.github.io/databricks-terraform/resources/instance_profile/</link>
       <pubDate>Mon, 20 Apr 2020 23:34:03 -0400</pubDate>
       
-      <guid>https://databrickslabs.github.io/databricks-terraform/resources/instance_profile/</guid>
+      <guid>//databrickslabs.github.io/databricks-terraform/resources/instance_profile/</guid>
       <description>Resource: databricks_instance_profile This resource allows you to create, get, and delete instance profiles that users can launch clusters with.
 Example Usage resource &amp;#34;databricks_instance_profile&amp;#34; &amp;#34;db-instance-profile&amp;#34; { instance_profile_arn = &amp;#34;arn:aws:iam::999999999999:instance-profile/custom-s3-access-instance-profile&amp;#34; skip_validation = true } Argument Reference The following arguments are supported:
 - instance_profile_arn:  (Required)
@@ -114,20 +114,20 @@ Example Usage resource &amp;#34;databricks_instance_profile&amp;#34; &amp;#34;db
     
     <item>
       <title>job</title>
-      <link>https://databrickslabs.github.io/databricks-terraform/resources/job/</link>
+      <link>//databrickslabs.github.io/databricks-terraform/resources/job/</link>
       <pubDate>Mon, 20 Apr 2020 23:34:03 -0400</pubDate>
       
-      <guid>https://databrickslabs.github.io/databricks-terraform/resources/job/</guid>
+      <guid>//databrickslabs.github.io/databricks-terraform/resources/job/</guid>
       <description>Resource: databricks_job The databricks_job resource allows you to create, edit, and delete jobs.
 Example Usage Databricks Example New Automated Cluster Existing Cluster  resource &amp;#34;databricks_job&amp;#34; &amp;#34;my_job3&amp;#34; { new_cluster { autoscale { min_workers = 2 max_workers = 3 } spark_version = &amp;#34;6.4.x-scala2.11&amp;#34; aws_attributes { zone_id = data.databricks_zones.my_wspace_zones.default_zone spot_bid_price_percent = &amp;#34;100&amp;#34; } node_type_id = &amp;#34;r3.xlarge&amp;#34; } notebook_path = &amp;#34;/Users/jane.doe@databricks.com/my-demo-notebook&amp;#34; name = &amp;#34;my-demo-notebook&amp;#34; timeout_seconds = 3600 max_retries = 1 max_concurrent_runs = 1 }   resource &amp;#34;databricks_job&amp;#34; &amp;#34;my_job3&amp;#34; { existing_cluster_id = &amp;#34;&amp;lt;Cluster ID&amp;gt;&amp;#34; notebook_path = &amp;#34;/Users/jane.</description>
     </item>
     
     <item>
       <title>notebook</title>
-      <link>https://databrickslabs.github.io/databricks-terraform/resources/notebook/</link>
+      <link>//databrickslabs.github.io/databricks-terraform/resources/notebook/</link>
       <pubDate>Mon, 20 Apr 2020 23:34:03 -0400</pubDate>
       
-      <guid>https://databrickslabs.github.io/databricks-terraform/resources/notebook/</guid>
+      <guid>//databrickslabs.github.io/databricks-terraform/resources/notebook/</guid>
       <description>Resource: databricks_notebook This resource allows you to manage the import, export, and delete notebooks. The maximum allowed size of a request to resource is 10MB.
 Example Usage resource &amp;#34;databricks_notebook&amp;#34; &amp;#34;my_databricks_notebook&amp;#34; { content = filebase64(&amp;#34;${path.module}/demo-terraform.dbc&amp;#34;) path = &amp;#34;/workspace/terraform-test-folder/&amp;#34; overwrite = false mkdirs = true format = &amp;#34;DBC&amp;#34; } Argument Reference The following arguments are supported:
 - content:  (Required) The base64-encoded content. If the limit (10MB) is exceeded, exception with error code MAX_NOTEBOOK_SIZE_EXCEEDED will be thrown.</description>
@@ -135,10 +135,10 @@ Example Usage resource &amp;#34;databricks_notebook&amp;#34; &amp;#34;my_databri
     
     <item>
       <title>scim_group</title>
-      <link>https://databrickslabs.github.io/databricks-terraform/resources/scim_group/</link>
+      <link>//databrickslabs.github.io/databricks-terraform/resources/scim_group/</link>
       <pubDate>Mon, 20 Apr 2020 23:34:03 -0400</pubDate>
       
-      <guid>https://databrickslabs.github.io/databricks-terraform/resources/scim_group/</guid>
+      <guid>//databrickslabs.github.io/databricks-terraform/resources/scim_group/</guid>
       <description>Resource: databricks_scim_group This resource allows you to create groups in Databricks. You can also associate Databricks users to the following groups.
 You must be a Databricks administrator API token to use SCIM resources.
  Example Usage resource &amp;#34;databricks_scim_user&amp;#34; &amp;#34;my-user&amp;#34; { user_name = &amp;#34;testuser@databricks.com&amp;#34; display_name = &amp;#34;Test User&amp;#34; entitlements = [ &amp;#34;allow-cluster-create&amp;#34;, ] } resource &amp;#34;databricks_scim_group&amp;#34; &amp;#34;my-group&amp;#34; { display_name = &amp;#34;Sri Test Group&amp;#34; members = [&amp;#34;${databricks_scim_user.my-user.id}&amp;#34;] } Argument Reference The following arguments are supported:</description>
@@ -146,10 +146,10 @@ You must be a Databricks administrator API token to use SCIM resources.
     
     <item>
       <title>scim_user</title>
-      <link>https://databrickslabs.github.io/databricks-terraform/resources/scim_user/</link>
+      <link>//databrickslabs.github.io/databricks-terraform/resources/scim_user/</link>
       <pubDate>Mon, 20 Apr 2020 23:34:03 -0400</pubDate>
       
-      <guid>https://databrickslabs.github.io/databricks-terraform/resources/scim_user/</guid>
+      <guid>//databrickslabs.github.io/databricks-terraform/resources/scim_user/</guid>
       <description>Resource: databricks_scim_user This resource allows you to create users in Databricks and give them the proper level of access, as well as remove access for users (deprovision them) when they leave your organization or no longer need access to Databricks.
 You must be a Databricks administrator API token to use SCIM resources.
  This resource is heavily reliant on inherited group information and the default_roles object, to determine deltas. What this means is that, even if you change the roles field, if it is inherited it will ignore the change as it is inherited by parent group.</description>
@@ -157,30 +157,30 @@ You must be a Databricks administrator API token to use SCIM resources.
     
     <item>
       <title>secret</title>
-      <link>https://databrickslabs.github.io/databricks-terraform/resources/secret/</link>
+      <link>//databrickslabs.github.io/databricks-terraform/resources/secret/</link>
       <pubDate>Mon, 20 Apr 2020 23:34:03 -0400</pubDate>
       
-      <guid>https://databrickslabs.github.io/databricks-terraform/resources/secret/</guid>
+      <guid>//databrickslabs.github.io/databricks-terraform/resources/secret/</guid>
       <description>Resource: databricks_secret With this resource you can insert a secret under the provided scope with the given name. If a secret already exists with the same name, this command overwrites the existing secret’s value. The server encrypts the secret using the secret scope’s encryption settings before storing it. You must have WRITE or MANAGE permission on the secret scope.
 The secret key must consist of alphanumeric characters, dashes, underscores, and periods, and cannot exceed 128 characters.</description>
     </item>
     
     <item>
       <title>secret_acl</title>
-      <link>https://databrickslabs.github.io/databricks-terraform/resources/secret_acl/</link>
+      <link>//databrickslabs.github.io/databricks-terraform/resources/secret_acl/</link>
       <pubDate>Mon, 20 Apr 2020 23:34:03 -0400</pubDate>
       
-      <guid>https://databrickslabs.github.io/databricks-terraform/resources/secret_acl/</guid>
+      <guid>//databrickslabs.github.io/databricks-terraform/resources/secret_acl/</guid>
       <description>Resource: databricks_secret_acl Create or overwrite the ACL associated with the given principal (user or group) on the specified scope point. In general, a user or group will use the most powerful permission available to them, and permissions are ordered as follows:
  MANAGE - Allowed to change ACLs, and read and write to this secret scope. WRITE - Allowed to read and write to this secret scope. READ - Allowed to read this secret scope and list what secrets are available.</description>
     </item>
     
     <item>
       <title>secret_scope</title>
-      <link>https://databrickslabs.github.io/databricks-terraform/resources/secret_scope/</link>
+      <link>//databrickslabs.github.io/databricks-terraform/resources/secret_scope/</link>
       <pubDate>Mon, 20 Apr 2020 23:34:03 -0400</pubDate>
       
-      <guid>https://databrickslabs.github.io/databricks-terraform/resources/secret_scope/</guid>
+      <guid>//databrickslabs.github.io/databricks-terraform/resources/secret_scope/</guid>
       <description>Resource: databricks_secret_scope This resource creates a Databricks-backed secret scope in which secrets are stored in Databricks-managed storage and encrypted with a cloud-based specific encryption key.
 The scope name:
  Must be unique within a workspace. Must consist of alphanumeric characters, dashes, underscores, and periods, and may not exceed 128 characters.  Example Usage resource &amp;#34;databricks_secret_scope&amp;#34; &amp;#34;my-scope&amp;#34; { name = &amp;#34;terraform-demo-scope&amp;#34; initial_manage_principal = &amp;#34;users&amp;#34; } Argument Reference The following arguments are supported:</description>
@@ -188,10 +188,10 @@ The scope name:
     
     <item>
       <title>token</title>
-      <link>https://databrickslabs.github.io/databricks-terraform/resources/token/</link>
+      <link>//databrickslabs.github.io/databricks-terraform/resources/token/</link>
       <pubDate>Mon, 20 Apr 2020 23:34:03 -0400</pubDate>
       
-      <guid>https://databrickslabs.github.io/databricks-terraform/resources/token/</guid>
+      <guid>//databrickslabs.github.io/databricks-terraform/resources/token/</guid>
       <description>Resource: databricks_token This resource creates an api token that can be used to create Databricks resources.
 This will create an API token for the user that has authenticated on the provider. So if you have used an admin user to setup the provider then you will be making API tokens for that admin user.
  Example Usage resource &amp;#34;databricks_token&amp;#34; &amp;#34;my-token&amp;#34; { lifetime_seconds = 6000 comment = &amp;#34;Testing terraform v2&amp;#34; } Argument Reference The following arguments are supported:</description>

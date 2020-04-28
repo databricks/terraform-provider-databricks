@@ -5,8 +5,6 @@ defaultContentLanguage = "en"
 title = "Databricks Terraform Provider"
 theme = ["hugo-theme-learn"]
 
-publishDir = "../docs"
-
 enableEmoji = true
 
 # For search functionality

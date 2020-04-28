@@ -8,14 +8,20 @@ pre = ""
 
 # Lets lay some bricks! 
 
-## Provider Download
+## Quick install
 
-After downloading and untaring/unzipping the artifact make sure you move it to `~/.terraform.d/plugins/`:
+To quickly install the binary please execute the following curl command in your shell.
 
-``` bash
-mkdir -p ~/.terraform.d/plugins/ && cp terraform-provider-databricks ~/.terraform.d/plugins/terraform-provider-databricks
+```bash
+$ curl https://raw.githubusercontent.com/databrickslabs/databricks-terraform/master/godownloader-databricks-provider.sh | bash -s -- -b $HOME/.terraform.d/plugins
 ```
+
+The command should have moved the binary into your `~/.terraform.d/plugins` folder.
+
+You can `ls` the previous directory to verify.
 
 ## Feedback
 
-{{% button href="https://docs.google.com/document/d/1Bws07jAwc6-lnQbXlrfMSMAnCCyeqfJUUprnbxwS46o/edit#" icon="fas fa-comment-dots" %}}Please provide feedback!{{% /button %}}
+Please provide feedback in github issues. There is a template for this:
+
+{{% button href="https://github.com/databrickslabs/databricks-terraform/issues/new/choose" icon="fas fa-comment-dots" %}}Please provide feedback!{{% /button %}}

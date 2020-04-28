@@ -1,6 +1,6 @@
 ---
 name: Docs Issue
-about: How to create an issue
+about: Use this to suggest enhancements or point out bugs for the documentation website.
 title: "[DOC] Issue Short Description"
 labels: ''
 assignees: stikkireddy

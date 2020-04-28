@@ -56,7 +56,7 @@ vendor:
 # INTEGRATION TESTING WITH TERRAFORM EXAMPLES
 terraform-acc: fmt build
 	@echo "==> Running Terraform Acceptance Tests..."
-	@TF_ACC=1 go test -v -short ./databricks/...
+	@TF_ACC=1 gotestsum --format short-verbose --raw-command go test -v -json -short -coverprofile=coverage.out ./...
 
 terraform-setup: build
 	@echo "==> Initializing Terraform..."
@@ -72,10 +72,7 @@ snapshot:
 
 hugo:
 	@echo "==> Making Docs..."
-	@rm -rf website/content/_index.files/*
-	@cp dist/*.gz website/content/_index.files/
-	@cp dist/*.zip website/content/_index.files/
-	@cd website && hugo
+	@cd website && hugo -d ../docs/
 
 internal-docs-sync:
 	@echo "==> Uploading Website..."

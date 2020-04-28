@@ -19,16 +19,37 @@ func TestAccSecretResource(t *testing.T) {
 	// the acctest package includes many helpers such as RandStringFromCharSet
 	// See https://godoc.org/github.com/hashicorp/terraform-plugin-sdk/helper/acctest
 	//scope := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
-	scope := "terraform_acc_test_scope"
+	scope := "terraform_acc_test_secret"
 	key := "my_cool_key"
 	stringValue := "my super secret key"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testSecretResourceDestroy,
 		Steps: []resource.TestStep{
 			{
+				// use a dynamic configuration with the random name from above
+				Config: testSecretResource(scope, key, stringValue),
+				// compose a basic test, checking both remote and local values
+				Check: resource.ComposeTestCheckFunc(
+					// query the API to retrieve the tokenInfo object
+					testSecretResourceExists("databricks_secret.my_secret", &secret, t),
+					// verify remote values
+					testSecretValues(t, &secret, key),
+					// verify local values
+					resource.TestCheckResourceAttr("databricks_secret.my_secret", "scope", scope),
+					resource.TestCheckResourceAttr("databricks_secret.my_secret", "key", key),
+					resource.TestCheckResourceAttr("databricks_secret.my_secret", "string_value", stringValue),
+				),
+			},
+			{
+				//Deleting and recreating the secret
+				PreConfig: func() {
+					client := testAccProvider.Meta().(service.DBApiClient)
+					err := client.Secrets().Delete(scope, secret.Key)
+					assert.NoError(t, err, err)
+				},
 				// use a dynamic configuration with the random name from above
 				Config: testSecretResource(scope, key, stringValue),
 				// compose a basic test, checking both remote and local values
@@ -50,14 +71,18 @@ func TestAccSecretResource(t *testing.T) {
 func testSecretResourceDestroy(s *terraform.State) error {
 	client := testAccProvider.Meta().(service.DBApiClient)
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "databricks_secret" {
+		if rs.Type != "databricks_secret" && rs.Type != "databricks_secret_scope" {
 			continue
 		}
 		_, err := client.Secrets().Read(rs.Primary.Attributes["scope"], rs.Primary.Attributes["key"])
-		if err != nil {
-			return nil
+		if err == nil {
+			return errors.New("resource secret is not cleaned up")
 		}
-		return errors.New("resource secret is not cleaned up")
+		_, err = client.SecretScopes().Read(rs.Primary.Attributes["scope"])
+		if err == nil {
+			return errors.New("resource secret is not cleaned up")
+		}
+
 	}
 	return nil
 }

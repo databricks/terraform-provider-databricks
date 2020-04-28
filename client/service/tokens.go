@@ -2,7 +2,7 @@ package service
 
 import (
 	"encoding/json"
-	"errors"
+	"fmt"
 	"github.com/databrickslabs/databricks-terraform/client/model"
 	"net/http"
 )
@@ -58,7 +58,7 @@ func (a TokensAPI) Read(tokenID string) (model.TokenInfo, error) {
 			return tokenInfoRecord, nil
 		}
 	}
-	return tokenInfo, errors.New("Unable to locate token: " + tokenID)
+	return tokenInfo, fmt.Errorf("Unable to locate token: %s", tokenID)
 }
 
 // Delete will delete the token given a token id

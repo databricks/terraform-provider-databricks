@@ -5,9 +5,10 @@ import (
 	"github.com/databrickslabs/databricks-terraform/client/model"
 	"github.com/databrickslabs/databricks-terraform/client/service"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 	"log"
-	"strconv"
 	"strings"
+	"time"
 )
 
 func resourceInstancePool() *schema.Resource {
@@ -86,34 +87,43 @@ func resourceInstancePool() *schema.Resource {
 				Default:  true,
 			},
 			"disk_spec": &schema.Schema{
-				Type:     schema.TypeMap,
+				Type:     schema.TypeList,
+				MaxItems: 1,
 				Optional: true,
 				ForceNew: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"ebs_volume_type": {
-							Type:     schema.TypeString,
-							Optional: true,
-							ForceNew: true,
-							Default:  nil,
+							Type:          schema.TypeString,
+							Optional:      true,
+							ForceNew:      true,
+							ConflictsWith: []string{"disk_spec.0.azure_disk_volume_type"},
+							ValidateFunc: validation.StringInSlice(
+								[]string{
+									model.EbsVolumeTypeGeneralPurposeSsd,
+									model.EbsVolumeTypeThroughputOptimizedHdd,
+								}, false),
 						},
 						"azure_disk_volume_type": {
-							Type:     schema.TypeString,
-							Optional: true,
-							ForceNew: true,
-							Default:  nil,
+							Type:          schema.TypeString,
+							Optional:      true,
+							ForceNew:      true,
+							ConflictsWith: []string{"disk_spec.0.ebs_volume_type"},
+							ValidateFunc: validation.StringInSlice(
+								[]string{
+									model.AzureDiskVolumeTypePremium,
+									model.AzureDiskVolumeTypeStandard,
+								}, false),
 						},
 						"disk_count": {
-							Type:     schema.TypeString,
+							Type:     schema.TypeInt,
 							Optional: true,
 							ForceNew: true,
-							Default:  nil,
 						},
 						"disk_size": {
-							Type:     schema.TypeString,
+							Type:     schema.TypeInt,
 							Optional: true,
 							ForceNew: true,
-							Default:  nil,
 						},
 					},
 				},
@@ -132,6 +142,9 @@ func resourceInstancePool() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
+		},
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(1 * time.Minute),
 		},
 	}
 }
@@ -187,30 +200,25 @@ func resourceInstancePoolCreate(d *schema.ResourceData, m interface{}) error {
 	}
 
 	if diskSpec, ok := d.GetOk("disk_spec"); ok {
-		diskSpecMap := diskSpec.(map[string]interface{})
-		if ebsVolumeType, ok := diskSpecMap["ebs_volume_type"]; ok {
-			instancePoolDiskSpecDiskType.EbsVolumeType = ebsVolumeType.(string)
-		}
-		if azureDiskVolumeType, ok := diskSpecMap["azure_disk_volume_type"]; ok {
-			instancePoolDiskSpecDiskType.AzureDiskVolumeType = azureDiskVolumeType.(string)
-		}
-		instancePoolDiskSpec.DiskType = &instancePoolDiskSpecDiskType
+		diskSpecList := diskSpec.([]interface{})
+		if len(diskSpecList) > 0 {
+			diskSpecMap := diskSpecList[0].(map[string]interface{})
+			if ebsVolumeType, ok := diskSpecMap["ebs_volume_type"]; ok {
+				instancePoolDiskSpecDiskType.EbsVolumeType = ebsVolumeType.(string)
+			}
+			if azureDiskVolumeType, ok := diskSpecMap["azure_disk_volume_type"]; ok {
+				instancePoolDiskSpecDiskType.AzureDiskVolumeType = azureDiskVolumeType.(string)
+			}
+			instancePoolDiskSpec.DiskType = &instancePoolDiskSpecDiskType
 
-		if diskCount, ok := diskSpecMap["disk_count"]; ok {
-			intVal, err := strconv.Atoi(diskCount.(string))
-			if err != nil {
-				return err
+			if diskCount, ok := diskSpecMap["disk_count"]; ok {
+				instancePoolDiskSpec.DiskCount = int32(diskCount.(int))
 			}
-			instancePoolDiskSpec.DiskCount = int32(intVal)
-		}
-		if diskSize, ok := diskSpecMap["disk_size"]; ok {
-			intVal, err := strconv.Atoi(diskSize.(string))
-			if err != nil {
-				return err
+			if diskSize, ok := diskSpecMap["disk_size"]; ok {
+				instancePoolDiskSpec.DiskSize = int32(diskSize.(int))
 			}
-			instancePoolDiskSpec.DiskSize = int32(intVal)
+			instancePool.DiskSpec = &instancePoolDiskSpec
 		}
-		instancePool.DiskSpec = &instancePoolDiskSpec
 	}
 
 	if sparkVersions, ok := d.GetOk("preloaded_spark_versions"); ok {
@@ -284,24 +292,26 @@ func resourceInstancePoolRead(d *schema.ResourceData, m interface{}) error {
 	}
 
 	if instancePoolInfo.DiskSpec != nil {
-		diskSpec := map[string]interface{}{}
+		diskSpecList := []interface{}{}
+		diskSpecListItem := map[string]interface{}{}
 		if instancePoolInfo.DiskSpec.DiskType != nil {
 
 			if instancePoolInfo.DiskSpec.DiskCount >= 0 {
-				diskSpec["disk_count"] = strconv.FormatInt(int64(instancePoolInfo.DiskSpec.DiskCount), 10)
+				diskSpecListItem["disk_count"] = instancePoolInfo.DiskSpec.DiskCount
 			}
 			if instancePoolInfo.DiskSpec.DiskSize >= 0 {
-				diskSpec["disk_size"] = strconv.FormatInt(int64(instancePoolInfo.DiskSpec.DiskSize), 10)
+				diskSpecListItem["disk_size"] = instancePoolInfo.DiskSpec.DiskSize
 			}
 
 		}
 		if instancePoolInfo.DiskSpec.DiskType.EbsVolumeType != "" {
-			diskSpec["ebs_volume_type"] = instancePoolInfo.DiskSpec.DiskType.EbsVolumeType
+			diskSpecListItem["ebs_volume_type"] = instancePoolInfo.DiskSpec.DiskType.EbsVolumeType
 		}
 		if instancePoolInfo.DiskSpec.DiskType.AzureDiskVolumeType != "" {
-			diskSpec["azure_disk_volume_type"] = instancePoolInfo.DiskSpec.DiskType.AzureDiskVolumeType
+			diskSpecListItem["azure_disk_volume_type"] = instancePoolInfo.DiskSpec.DiskType.AzureDiskVolumeType
 		}
-		err = d.Set("disk_spec", diskSpec)
+		diskSpecList = append(diskSpecList, diskSpecListItem)
+		err = d.Set("disk_spec", diskSpecList)
 		if err != nil {
 			return err
 		}

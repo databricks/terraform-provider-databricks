@@ -360,20 +360,24 @@ cluster resources (e.g., AWS instances and EBS volumes) with these tags in addit
  {{% tab name="DBFS" %}}
  ```hcl
 cluster_log_conf {
-  dbfs_destination = "dbfs:/my/path/in/dbfs"
+  dbfs {
+    destination = "dbfs:/my/path/in/dbfs"
+  } 
 }
  ```
  {{% /tab %}}
  {{% tab name="S3" %}}
 ```hcl
 cluster_log_conf {
-  s3_destination = "dbfs:/my/path/in/dbfs"
-  s3_region = "us-east-1"
-  s3_endpoint = "https://s3-us-east-1.amazonaws.com."
-  enable_encryption = true
-  encryption_type = "sse-kms"
-  kms_key = "my-kms-key-here"
-  canned_acl = "bucket-owner-full-control"
+  s3 {
+    destination = "s3:/my/path/in/dbfs"
+    region = "us-east-1"
+    endpoint = "https://s3-us-east-1.amazonaws.com"
+    enable_encryption = true
+    encryption_type = "sse-kms"
+    kms_key = "my-kms-key-here"
+    canned_acl = "bucket-owner-full-control" 
+  }
 }
 ```
 {{% /tab %}}
@@ -382,31 +386,35 @@ cluster_log_conf {
 > {{% chevron default="The configuration for delivering Spark logs to a long-term storage destination. Only one destination can be specified for one cluster. If the conf is given, the logs will be delivered to the destination every 5 mins. The destination of driver logs is <destination>/<cluster-id>/driver, while the destination of executor logs is <destination>/<cluster-id>/executor." display="true" %}}
 
 
-* `dbfs_destination` - **(Optional)** DBFS location of cluster log. destination must be provided. For example, 
-"dbfs:/home/cluster_log"
+* `dbfs` - Configuration for the dbfs cluster logs configuration 
 
-* `s3_destination` - **(Optional)** S3 destination, e.g. s3://my-bucket/some-prefix You must configure the 
-cluster with an instance profile and the instance profile must have write access to the destination. You cannot use 
-AWS keys.
+    * `destination` - **(Optional)** DBFS location of cluster log. destination must be provided. For example, 
+    "dbfs:/home/cluster_log"
 
-* `s3_region` - **(Optional)** S3 region, e.g. us-west-2. Either region or endpoint must be set. If both are 
-set, endpoint is used.
-
-* `s3_endpoint` - **(Optional)** S3 endpoint, e.g. https://s3-us-west-2.amazonaws.com. Either region or endpoint 
-needs to be set. If both are set, endpoint is used.
-
-* `s3_enable_encryption` - **(Optional)** Enable server side encryption, false by default.
-
-* `s3_encryption_type` - **(Optional)** The encryption type, it could be sse-s3 or sse-kms. 
-It is used only when encryption is enabled and the default type is sse-s3.
-
-* `s3_kms_key` - **(Optional)** KMS key used if encryption is enabled and encryption type is set to sse-kms.
-
-* `s3_canned_acl` - **(Optional)** Set canned access control list, e.g. bucket-owner-full-control. 
-If canned_cal is set, the cluster instance profile must have s3:PutObjectAcl permission on the destination bucket 
-and prefix. The full list of possible canned ACL can be found [here](https://docs.aws.amazon.com/AmazonS3/latest/dev/acl-overview.html#canned-acl). 
-By default only the object owner gets full control. If you are using cross account role for writing data, you may 
-want to set bucket-owner-full-control to make bucket owner able to read the logs.
+* `s3` - Configuration for the s3 cluster logs configuration
+ 
+    * `destination` - **(Optional)** S3 destination, e.g. s3://my-bucket/some-prefix You must configure the 
+    cluster with an instance profile and the instance profile must have write access to the destination. You cannot use 
+    AWS keys.
+    
+    * `region` - **(Optional)** S3 region, e.g. us-west-2. Either region or endpoint must be set. If both are 
+    set, endpoint is used.
+    
+    * `endpoint` - **(Optional)** S3 endpoint, e.g. https://s3-us-west-2.amazonaws.com. Either region or endpoint 
+    needs to be set. If both are set, endpoint is used.
+    
+    * `enable_encryption` - **(Optional)** Enable server side encryption, false by default.
+    
+    * `encryption_type` - **(Optional)** The encryption type, it could be sse-s3 or sse-kms. 
+    It is used only when encryption is enabled and the default type is sse-s3.
+    
+    * `kms_key` - **(Optional)** KMS key used if encryption is enabled and encryption type is set to sse-kms.
+    
+    * `canned_acl` - **(Optional)** Set canned access control list, e.g. bucket-owner-full-control. 
+    If canned_cal is set, the cluster instance profile must have s3:PutObjectAcl permission on the destination bucket 
+    and prefix. The full list of possible canned ACL can be found [here](https://docs.aws.amazon.com/AmazonS3/latest/dev/acl-overview.html#canned-acl). 
+    By default only the object owner gets full control. If you are using cross account role for writing data, you may 
+    want to set bucket-owner-full-control to make bucket owner able to read the logs.
 
 {{% /chevron %}}
 
@@ -415,17 +423,21 @@ want to set bucket-owner-full-control to make bucket owner able to read the logs
 > {{< tabs groupId="jobStorageConfig" >}}
  {{% tab name="DBFS" %}}
  ```hcl
-cluster_log_conf {
-  dbfs_destination = "dbfs:/my/path/in/dbfs"
+init_scripts {
+  dbfs {
+    destination = "dbfs:/my/path/in/dbfs"
+  }
 }
  ```
  {{% /tab %}}
  {{% tab name="S3" %}}
 ```hcl
 init_scripts {
-  s3_destination = "dbfs:/my/path/in/dbfs"
-  s3_region = "us-east-1"
-  s3_endpoint = "https://s3-us-east-1.amazonaws.com."
+  s3 {
+    destination = "dbfs:/my/path/in/dbfs"
+    region = "us-east-1"
+    endpoint = "https://s3-us-east-1.amazonaws.com."
+  }
 }
 ```
 {{% /tab %}}
@@ -433,18 +445,35 @@ init_scripts {
 >
 > {{%chevron default="The configuration for storing init scripts. Any number of scripts can be specified. The scripts are executed sequentially in the order provided. If cluster_log_conf is specified, init script logs are sent to <destination>/<cluster-id>/init_scripts." display="true" %}}
 
-* `dbfs_destination` - **(Optional)** DBFS location of init script. Destination must be provided. For example, 
-"dbfs:/home/cluster_log"
+* `dbfs` - Configuration for the init scripts configuration
 
-* `s3_destination` - **(Optional)** S3 destination, e.g. s3://my-bucket/some-prefix You must configure the 
-cluster with an instance profile and the instance profile must have write access to the destination. You cannot use 
-AWS keys.
+    * `destination` - **(Optional)** DBFS location of init script. Destination must be provided. For example, 
+    "dbfs:/home/cluster_log"
 
-* `s3_region` - **(Optional)** S3 region, e.g. us-west-2. Either region or endpoint must be set. If both are 
-set, endpoint is used.
+* `s3` - Configuration for the s3 init scripts configuration
 
-* `s3_endpoint` - **(Optional)** S3 endpoint, e.g. https://s3-us-west-2.amazonaws.com. Either region or endpoint 
-needs to be set. If both are set, endpoint is used.
+    * `destination` - **(Optional)** S3 destination, e.g. s3://my-bucket/some-prefix You must configure the 
+    cluster with an instance profile and the instance profile must have write access to the destination. You cannot use 
+    AWS keys.
+    
+    * `region` - **(Optional)** S3 region, e.g. us-west-2. Either region or endpoint must be set. If both are 
+    set, endpoint is used.
+    
+    * `endpoint` - **(Optional)** S3 endpoint, e.g. https://s3-us-west-2.amazonaws.com. Either region or endpoint 
+    needs to be set. If both are set, endpoint is used.
+    
+    * `enable_encryption` - **(Optional)** Enable server side encryption, false by default.
+    
+    * `encryption_type` - **(Optional)** The encryption type, it could be sse-s3 or sse-kms. 
+    It is used only when encryption is enabled and the default type is sse-s3.
+    
+    * `kms_key` - **(Optional)** KMS key used if encryption is enabled and encryption type is set to sse-kms.
+    
+    * `canned_acl` - **(Optional)** Set canned access control list, e.g. bucket-owner-full-control. 
+    If canned_cal is set, the cluster instance profile must have s3:PutObjectAcl permission on the destination bucket 
+    and prefix. The full list of possible canned ACL can be found [here](https://docs.aws.amazon.com/AmazonS3/latest/dev/acl-overview.html#canned-acl). 
+    By default only the object owner gets full control. If you are using cross account role for writing data, you may 
+    want to set bucket-owner-full-control to make bucket owner able to read the logs.
 
 {{% /chevron %}}
 

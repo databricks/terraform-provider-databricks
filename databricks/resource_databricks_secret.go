@@ -110,6 +110,5 @@ func resourceSecretDelete(d *schema.ResourceData, m interface{}) error {
 }
 
 func isSecretMissing(errorMsg, scope string, key string) bool {
-	return strings.Contains(errorMsg, fmt.Sprintf("No Secret Scope found with secret metadata "+
-		"scope name: %s and key: %s.", scope, key))
+	return strings.Contains(errorMsg, fmt.Sprintf("no Secret Scope found with secret metadata scope name: %s and key: %s", scope, key))
 }

@@ -77,7 +77,7 @@ instance profile to access the S3 URI.
 
 #### - `library_egg`:
 > **(Optional)**  URI of the egg to be installed. 
-DBFS and S3 URIs are supported. For example: "dbfs:/my/egg", "s3://my-bucket/egg" }. 
+DBFS and S3 URIs are supported. For example: "dbfs:/my/egg", "s3://my-bucket/egg". 
 If S3 is used, make sure the cluster has read access on the library. You may need to launch the cluster 
 with an instance profile to access the S3 URI.
 

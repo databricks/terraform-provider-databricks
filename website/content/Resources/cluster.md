@@ -399,7 +399,7 @@ INSTALLING, INSTALLED, FAILED, and UNINSTALL_ON_RESTART.
 {{% /chevron %}}       
 
 #### - `library_egg` **(Optional)** :
-> {{%chevron default="URI of the egg to be installed. DBFS and S3 URIs are supported. For example: 'dbfs:/my/egg', 's3://my-bucket/egg' }. If S3 is used, make sure the cluster has read access on the library. You may need to launch the cluster with an instance profile to access the S3 URI." display="true" %}}
+> {{%chevron default="URI of the egg to be installed. DBFS and S3 URIs are supported. For example: 'dbfs:/my/egg', 's3://my-bucket/egg'. If S3 is used, make sure the cluster has read access on the library. You may need to launch the cluster with an instance profile to access the S3 URI." display="true" %}}
 
 * `path` - **(Required)** Path of the egg in dbfs or in S3. For example: "dbfs:/mnt/databricks/library.egg", 
 "s3://my-bucket/library.egg". 

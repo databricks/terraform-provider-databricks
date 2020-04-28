@@ -3,126 +3,126 @@
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   
   <url>
-    <loc>https://databrickslabs.github.io/databricks-terraform/</loc>
+    <loc>//databrickslabs.github.io/databricks-terraform/</loc>
     <lastmod>2020-04-20T23:34:03-04:00</lastmod>
   </url>
   
   <url>
-    <loc>https://databrickslabs.github.io/databricks-terraform/quickstart/</loc>
+    <loc>//databrickslabs.github.io/databricks-terraform/quickstart/</loc>
     <lastmod>2020-04-20T23:34:03-04:00</lastmod>
   </url>
   
   <url>
-    <loc>https://databrickslabs.github.io/databricks-terraform/quickstart/overview/</loc>
+    <loc>//databrickslabs.github.io/databricks-terraform/quickstart/overview/</loc>
     <lastmod>2020-04-20T23:34:03-04:00</lastmod>
   </url>
   
   <url>
-    <loc>https://databrickslabs.github.io/databricks-terraform/quickstart/installation/</loc>
+    <loc>//databrickslabs.github.io/databricks-terraform/quickstart/installation/</loc>
     <lastmod>2020-04-20T23:34:03-04:00</lastmod>
   </url>
   
   <url>
-    <loc>https://databrickslabs.github.io/databricks-terraform/provider/</loc>
+    <loc>//databrickslabs.github.io/databricks-terraform/provider/</loc>
     <lastmod>2020-04-20T23:34:03-04:00</lastmod>
   </url>
   
   <url>
-    <loc>https://databrickslabs.github.io/databricks-terraform/resources/aws_s3_mount/</loc>
+    <loc>//databrickslabs.github.io/databricks-terraform/resources/aws_s3_mount/</loc>
     <lastmod>2020-04-20T23:34:03-04:00</lastmod>
   </url>
   
   <url>
-    <loc>https://databrickslabs.github.io/databricks-terraform/resources/azure_adls_gen1_mount/</loc>
+    <loc>//databrickslabs.github.io/databricks-terraform/resources/azure_adls_gen1_mount/</loc>
     <lastmod>2020-04-20T23:34:03-04:00</lastmod>
   </url>
   
   <url>
-    <loc>https://databrickslabs.github.io/databricks-terraform/resources/azure_adls_gen2_mount/</loc>
+    <loc>//databrickslabs.github.io/databricks-terraform/resources/azure_adls_gen2_mount/</loc>
     <lastmod>2020-04-20T23:34:03-04:00</lastmod>
   </url>
   
   <url>
-    <loc>https://databrickslabs.github.io/databricks-terraform/resources/azure_blob_mount/</loc>
+    <loc>//databrickslabs.github.io/databricks-terraform/resources/azure_blob_mount/</loc>
     <lastmod>2020-04-20T23:34:03-04:00</lastmod>
   </url>
   
   <url>
-    <loc>https://databrickslabs.github.io/databricks-terraform/resources/cluster/</loc>
+    <loc>//databrickslabs.github.io/databricks-terraform/resources/cluster/</loc>
     <lastmod>2020-04-20T23:34:03-04:00</lastmod>
   </url>
   
   <url>
-    <loc>https://databrickslabs.github.io/databricks-terraform/resources/dbfs_file/</loc>
+    <loc>//databrickslabs.github.io/databricks-terraform/resources/dbfs_file/</loc>
     <lastmod>2020-04-20T23:34:03-04:00</lastmod>
   </url>
   
   <url>
-    <loc>https://databrickslabs.github.io/databricks-terraform/resources/dbfs_file_sync/</loc>
+    <loc>//databrickslabs.github.io/databricks-terraform/resources/dbfs_file_sync/</loc>
     <lastmod>2020-04-20T23:34:03-04:00</lastmod>
   </url>
   
   <url>
-    <loc>https://databrickslabs.github.io/databricks-terraform/resources/instance_pool/</loc>
+    <loc>//databrickslabs.github.io/databricks-terraform/resources/instance_pool/</loc>
     <lastmod>2020-04-20T23:34:03-04:00</lastmod>
   </url>
   
   <url>
-    <loc>https://databrickslabs.github.io/databricks-terraform/resources/instance_profile/</loc>
+    <loc>//databrickslabs.github.io/databricks-terraform/resources/instance_profile/</loc>
     <lastmod>2020-04-20T23:34:03-04:00</lastmod>
   </url>
   
   <url>
-    <loc>https://databrickslabs.github.io/databricks-terraform/resources/job/</loc>
+    <loc>//databrickslabs.github.io/databricks-terraform/resources/job/</loc>
     <lastmod>2020-04-20T23:34:03-04:00</lastmod>
   </url>
   
   <url>
-    <loc>https://databrickslabs.github.io/databricks-terraform/resources/notebook/</loc>
+    <loc>//databrickslabs.github.io/databricks-terraform/resources/notebook/</loc>
     <lastmod>2020-04-20T23:34:03-04:00</lastmod>
   </url>
   
   <url>
-    <loc>https://databrickslabs.github.io/databricks-terraform/resources/</loc>
+    <loc>//databrickslabs.github.io/databricks-terraform/resources/</loc>
     <lastmod>2020-04-20T23:34:03-04:00</lastmod>
   </url>
   
   <url>
-    <loc>https://databrickslabs.github.io/databricks-terraform/resources/scim_group/</loc>
+    <loc>//databrickslabs.github.io/databricks-terraform/resources/scim_group/</loc>
     <lastmod>2020-04-20T23:34:03-04:00</lastmod>
   </url>
   
   <url>
-    <loc>https://databrickslabs.github.io/databricks-terraform/resources/scim_user/</loc>
+    <loc>//databrickslabs.github.io/databricks-terraform/resources/scim_user/</loc>
     <lastmod>2020-04-20T23:34:03-04:00</lastmod>
   </url>
   
   <url>
-    <loc>https://databrickslabs.github.io/databricks-terraform/resources/secret/</loc>
+    <loc>//databrickslabs.github.io/databricks-terraform/resources/secret/</loc>
     <lastmod>2020-04-20T23:34:03-04:00</lastmod>
   </url>
   
   <url>
-    <loc>https://databrickslabs.github.io/databricks-terraform/resources/secret_acl/</loc>
+    <loc>//databrickslabs.github.io/databricks-terraform/resources/secret_acl/</loc>
     <lastmod>2020-04-20T23:34:03-04:00</lastmod>
   </url>
   
   <url>
-    <loc>https://databrickslabs.github.io/databricks-terraform/resources/secret_scope/</loc>
+    <loc>//databrickslabs.github.io/databricks-terraform/resources/secret_scope/</loc>
     <lastmod>2020-04-20T23:34:03-04:00</lastmod>
   </url>
   
   <url>
-    <loc>https://databrickslabs.github.io/databricks-terraform/resources/token/</loc>
+    <loc>//databrickslabs.github.io/databricks-terraform/resources/token/</loc>
     <lastmod>2020-04-20T23:34:03-04:00</lastmod>
   </url>
   
   <url>
-    <loc>https://databrickslabs.github.io/databricks-terraform/categories/</loc>
+    <loc>//databrickslabs.github.io/databricks-terraform/categories/</loc>
   </url>
   
   <url>
-    <loc>https://databrickslabs.github.io/databricks-terraform/tags/</loc>
+    <loc>//databrickslabs.github.io/databricks-terraform/tags/</loc>
   </url>
   
 </urlset>

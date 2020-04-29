@@ -1,3 +1,5 @@
 .terraform
-docs
+website
+vendor
+dist
 examples

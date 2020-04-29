@@ -62,12 +62,12 @@ execute() {
 }
 get_binaries() {
   case "$PLATFORM" in
-    darwin/386) BINARIES="terraform-provider-databricks_" ;;
-    darwin/amd64) BINARIES="terraform-provider-databricks_" ;;
-    linux/386) BINARIES="terraform-provider-databricks_" ;;
-    linux/amd64) BINARIES="terraform-provider-databricks_" ;;
-    windows/386) BINARIES="terraform-provider-databricks_" ;;
-    windows/amd64) BINARIES="terraform-provider-databricks_" ;;
+    darwin/386) BINARIES="terraform-provider-databricks_${TAG}" ;;
+    darwin/amd64) BINARIES="terraform-provider-databricks_${TAG}" ;;
+    linux/386) BINARIES="terraform-provider-databricks_${TAG}" ;;
+    linux/amd64) BINARIES="terraform-provider-databricks_${TAG}" ;;
+    windows/386) BINARIES="terraform-provider-databricks_${TAG}" ;;
+    windows/amd64) BINARIES="terraform-provider-databricks_${TAG}" ;;
     *)
       log_crit "platform $PLATFORM is not supported.  Make sure this script is up-to-date and file request at https://github.com/${PREFIX}/issues/new"
       exit 1
@@ -370,9 +370,9 @@ uname_arch_check "$ARCH"
 
 parse_args "$@"
 
-get_binaries
-
 tag_to_version
+
+get_binaries
 
 adjust_format
 

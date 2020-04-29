@@ -22,7 +22,6 @@ archives:
     windows: Windows
     amd64: 64-bit
     386: 32-bit
-  name_template: "databricks-terraform-{{ .Os }}-{{ .Arch }}-{{ .Tag }}-SNAPSHOT-{{ .ShortCommit }}"
   format_overrides:
     - goos: windows
       format: zip

@@ -24,4 +24,4 @@ You can `ls` the previous directory to verify.
 
 Please provide feedback in github issues. There is a template for this:
 
-{{% button href="https://github.com/databrickslabs/databricks-terraform/issues/new/choose" icon="fas fa-comment-dots" %}}Please provide feedback!{{% /button %}}
+{{% button href="https://github.com/databrickslabs/databricks-terraform/issues/new?assignees=stikkireddy&labels=question&template=feedback.md&title=%5BFEEDBACK%2FQUESTION%5D+Short+Description+of+feedback" icon="fas fa-comment-dots" %}}Please provide feedback!{{% /button %}}

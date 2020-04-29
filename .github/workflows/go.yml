@@ -3,8 +3,12 @@ name: Go
 on:
   push:
     branches: [ master, develop ]
+    paths-ignore:
+    - 'website/**'
   pull_request:
     branches: [ master, develop ]
+    paths-ignore:
+    - 'website/**'
 
 jobs:
 

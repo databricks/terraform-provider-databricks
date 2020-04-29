@@ -5,7 +5,6 @@ weight = 5
 chapter = false
 +++
 
-
 ## Quickstart: Building and Using the Provider
 
 ### Quick install
@@ -20,7 +19,7 @@ The command should have moved the binary into your `~/.terraform.d/plugins` fold
 
 You can `ls` the previous directory to verify.
 
-### Setup 
+### Requirements 
 
 Please note that there is a Makefile which contains all the commands you would need to run this project.
 
@@ -28,7 +27,7 @@ This code base to contribute to requires the following software:
 
 * [golang 1.13.X](https://golang.org/dl/)
 * [terraform v0.12.x](https://www.terraform.io/downloads.html)
-* make command
+* make command (to build the codebase yourself)
 
 To make sure everything is installed correctly please run the following commands:
 
@@ -45,52 +44,9 @@ Terraform v0.12.19
 
 Your version of Terraform is out of date! The latest version
 is 0.12.24. You can update by downloading from https://www.terraform.io/downloads.html
-```
-
-Testing make installation:
-```bash
-$ make --version
-GNU Make 3.81
-Copyright (C) 2006  Free Software Foundation, Inc.
-This is free software; see the source for copying conditions.
-There is NO warranty; not even for MERCHANTABILITY or FITNESS FOR A
-PARTICULAR PURPOSE.
-
-This program built for i386-apple-darwin11.3.0
-```
-
-### Downloading the source code and installing the artifact
-
-* After installing `golang`, `terraform`, and `make` you will now build the artifact.
-
-```bash
-$ go get -v -u github.com/databrickslabs/databricks-terraform && cd $GOPATH/src/github.com/databrickslabs/databricks-terraform 
-```
-
-:warning: If you are fetching from a private repository please use the following command:
-
-```bash
-$ GOSUMDB=off GOPROXY=direct go get -v -u github.com/databrickslabs/databricks-terraform && cd $GOPATH/src/github.com/databrickslabs/databricks-terraform
-```
-
-* When you are in the root directory of the repository please run:
-
-```bash
-$ make build
-```
-
-* Locate your [terraform plugins directory](https://www.terraform.io/docs/extend/how-terraform-works.html#plugin-locations) 
-    or the root folder of your terraform code
-
-* Copy the `terraform-provider-databricks` artifact to that terraform plugins locations
-
-```bash
-$ mkdir -p ~/.terraform.d/plugins/ && cp terraform-provider-databricks ~/.terraform.d/plugins/terraform-provider-databricks
 ``` 
 
-Now your plugin for the Databricks Terraform provider is installed correctly. You can actually use the provider. 
-
-### Basic Terraform example
+### Basic Terraform Workflow
 
 Sample terraform code
 
@@ -106,38 +62,9 @@ resource "databricks_scim_user" "my-user" {
 }
 ```
 
-Then run `terraform init` then `terraform apply` to apply the hcl code to your databricks workspace.
+Then run `terraform init` then `terraform apply` to apply the hcl code to your Databricks workspace.
 
 Please refer to the detailed documentation provided in the html documentation for detailed use of the providers.
-
-Also refer to these [examples](examples/) for more scenarios. 
-
-### Provider Documentation
-
-Provider documentation can be located in the releases tab and documentation is packaged up along with 
-the binary of choice.
-
-### Docker commands
-
-To install and build the code if you dont want to install golang, terraform, etc. All you need is docker and git.
-
-First make sure you clone the repository and you are in the directory.
-
-Then build the docker image with this command:
-
-```bash
-$ docker build -t databricks-terraform . 
-```
-
-Then run the execute the terraform binary via the following command and volume mount. Make sure that you are in the directory
- with the terraform code. The following command you can execute the following commands and additional ones as part of 
- the terraform binary.
- 
-```bash
-$ docker run -it -v $(pwd):/workpace -w /workpace databricks-terraform init
-$ docker run -it -v $(pwd):/workpace -w /workpace databricks-terraform plan
-$ docker run -it -v $(pwd):/workpace -w /workpace databricks-terraform apply
-```
 
 ## Project Components
 
@@ -151,7 +78,7 @@ $ docker run -it -v $(pwd):/workpace -w /workpace databricks-terraform apply
 | databricks_secret_acl            | :white_check_mark: | :white_large_square: | :white_check_mark:   | :white_check_mark:   | :white_large_square: | :white_large_square: |
 | databricks_instance_pool         | :white_check_mark: | :white_large_square: | :white_large_square: | :white_check_mark:   | :white_large_square: | :white_large_square: |
 | databricks_scim_user             | :white_check_mark: | :white_large_square: | :white_check_mark:   | :white_check_mark:   | :white_large_square: | :white_large_square: |
-| databricks_scim_group            | :white_check_mark: | :white_large_square: | :white_large_square: | :white_check_mark:   | :white_large_square: | :white_large_square: |
+| databricks_scim_group            | :white_check_mark: | :white_large_square: | :white_check_mark:   | :white_check_mark:   | :white_large_square: | :white_large_square: |
 | databricks_notebook              | :white_check_mark: | :white_large_square: | :white_large_square: | :white_check_mark:   | :white_large_square: | :white_large_square: |
 | databricks_cluster               | :white_check_mark: | :white_large_square: | :white_large_square: | :white_check_mark:   | :white_large_square: | :white_large_square: |
 | databricks_job                   | :white_check_mark: | :white_large_square: | :white_large_square: | :white_check_mark:   | :white_large_square: | :white_large_square: |

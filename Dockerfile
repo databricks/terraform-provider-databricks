@@ -1,9 +1,10 @@
-FROM golang:1.13-alpine
+FROM golang:1.13
 WORKDIR /go/src/github.com/databrickslabs/databricks-terraform/
+RUN curl -sSL "https://github.com/gotestyourself/gotestsum/releases/download/v0.4.2/gotestsum_0.4.2_linux_amd64.tar.gz" | tar -xz -C /usr/local/bin gotestsum
+RUN curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.25.0
 COPY . .
-RUN apk add --update make
-RUN make build
+RUN make vendor build
 
 FROM hashicorp/terraform:latest
-COPY --from=0 /go/src/github.com/databrickslabs/databricks-terraform/terraform-provider-db /root/.terraform.d/plugins/
+COPY --from=0 /go/src/github.com/databrickslabs/databricks-terraform/terraform-provider-databricks /root/.terraform.d/plugins/
 RUN ls ~/.terraform.d/plugins

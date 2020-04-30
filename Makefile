@@ -24,7 +24,7 @@ build: lint test fmt
 
 lint:
 	@echo "==> Linting source code with golangci-lint..."
-	@golangci-lint run --skip-dirs-use-default
+	@golangci-lint run --skip-dirs-use-default --timeout 5m
 
 fmt: lint
 	@echo "==> Formatting source code with gofmt..."

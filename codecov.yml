@@ -5,3 +5,24 @@ ignore:
   - "website/**/*"
   - "dist/**/*"
   - "examples/**/*"
+
+coverage:
+  status:
+    project:
+      client:
+        target: auto
+        flags:
+          - client
+      provider:
+        target: auto
+        flags:
+          - provider
+flags:
+  client:
+    paths:
+      - "client/**/*.go"
+    carryforward: false
+  provider:
+    paths:
+      - "databricks/*.go"
+    carryforward: true

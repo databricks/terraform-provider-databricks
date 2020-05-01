@@ -24,4 +24,4 @@ jobs:
 
 after_success:
   - echo "travis go version='$TRAVIS_GO_VERSION'"
-  - bash <(curl -s https://codecov.io/bash)
+  - bash <(curl -s https://codecov.io/bash) -F client -F provider

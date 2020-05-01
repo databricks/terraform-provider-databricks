@@ -202,6 +202,9 @@ htmlcov/
 .coverage.*
 .cache
 nosetests.xml
+client-coverage.txt
+provider-coverage.txt
+coverage.txt
 coverage.xml
 *.cover
 .hypothesis/

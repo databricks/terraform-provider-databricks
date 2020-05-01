@@ -2,19 +2,27 @@ default: build
 
 test:
 	@echo "==> Running tests..."
-	@gotestsum --format short-verbose --raw-command go test -v -json -short -coverprofile=coverage.out ./...
+	@gotestsum --format short-verbose --raw-command go test -v -json -short -coverprofile=coverage.txt ./...
+
+client-test:
+	@echo "==> Running tests..."
+	@gotestsum --format short-verbose --raw-command go test -v -json -short -coverprofile=client-coverage.txt ./client/...
+
+provider-test:
+	@echo "==> Running tests..."
+	@gotestsum --format short-verbose --raw-command go test -v -json -short -coverprofile=provider-coverage.txt ./databricks/...
 
 int:
 	@echo "==> Running tests..."
-	@gotestsum --raw-command go test -v -json -coverprofile=coverage.out ./...
+	@gotestsum --raw-command go test -v -json -coverprofile=coverage.txt ./...
 
 coverage: test
 	@echo "==> Opening coverage for unit tests..."
-	@go tool cover -html=coverage.out
+	@go tool cover -html=coverage.txt
 
 coverage-int: int
 	@echo "==> Opening coverage for unit tests..."
-	@go tool cover -html=coverage.out
+	@go tool cover -html=coverage.txt
 
 int-build: int build
 
@@ -24,7 +32,7 @@ build: lint test fmt
 
 lint:
 	@echo "==> Linting source code with golangci-lint..."
-	@golangci-lint run --skip-dirs-use-default
+	@golangci-lint run --skip-dirs-use-default --timeout 5m
 
 fmt: lint
 	@echo "==> Formatting source code with gofmt..."

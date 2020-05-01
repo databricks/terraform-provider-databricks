@@ -8,5 +8,5 @@ require (
 	github.com/hashicorp/terraform-plugin-sdk v1.11.0
 	github.com/joho/godotenv v1.3.0
 	github.com/r3labs/diff v0.0.0-20191120142937-b4ed99a31f5a
-	github.com/stretchr/testify v1.3.0
+	github.com/stretchr/testify v1.5.1
 )

@@ -4,6 +4,14 @@ test:
 	@echo "==> Running tests..."
 	@gotestsum --format short-verbose --raw-command go test -v -json -short -coverprofile=coverage.txt ./...
 
+client-test:
+	@echo "==> Running tests..."
+	@gotestsum --format short-verbose --raw-command go test -v -json -short -coverprofile=client-coverage.txt ./client/...
+
+provider-test:
+	@echo "==> Running tests..."
+	@gotestsum --format short-verbose --raw-command go test -v -json -short -coverprofile=provider-coverage.txt ./databricks/...
+
 int:
 	@echo "==> Running tests..."
 	@gotestsum --raw-command go test -v -json -coverprofile=coverage.txt ./...

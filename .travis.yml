@@ -9,6 +9,8 @@ jobs:
       script:
           - curl -sSL "https://github.com/gotestyourself/gotestsum/releases/download/v0.4.2/gotestsum_0.4.2_linux_amd64.tar.gz" | sudo tar -xz -C /usr/local/bin gotestsum
           - curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.25.0
+          - time make provider-test
+          - time make client-test
           - time make build
     - go: 1.14.x
       gemfile: gemfiles/Gemfile.rails-3.0.x
@@ -19,9 +21,12 @@ jobs:
       script:
         - curl -sSL "https://github.com/gotestyourself/gotestsum/releases/download/v0.4.2/gotestsum_0.4.2_linux_amd64.tar.gz" | sudo tar -xz -C /usr/local/bin gotestsum
         - curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.25.0
+        - time make provider-test
+        - time make client-test
         - time make build
 
 
 after_success:
   - echo "travis go version='$TRAVIS_GO_VERSION'"
-  - bash <(curl -s https://codecov.io/bash) -F client -F provider
+  - bash <(curl -s https://codecov.io/bash) -f client-coverage.txt -F client
+  - bash <(curl -s https://codecov.io/bash) -f provider-coverage.txt -F provider

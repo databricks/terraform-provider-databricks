@@ -849,6 +849,12 @@ func resourceClusterRead(d *schema.ResourceData, m interface{}) error {
 			return err
 		}
 	}
+
+	err = d.Set("cluster_id", clusterInfo.ClusterID)
+	if err != nil {
+		return err
+	}
+
 	err = d.Set("state", string(clusterInfo.State))
 	if err != nil {
 		return err

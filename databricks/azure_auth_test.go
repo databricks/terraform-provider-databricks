@@ -5,7 +5,6 @@ import (
 	"github.com/databrickslabs/databricks-terraform/client/service"
 	"github.com/stretchr/testify/assert"
 	"os"
-	//"os"
 	"testing"
 )
 

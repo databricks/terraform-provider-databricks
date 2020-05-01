@@ -2,19 +2,19 @@ default: build
 
 test:
 	@echo "==> Running tests..."
-	@gotestsum --format short-verbose --raw-command go test -v -json -short -coverprofile=coverage.out ./...
+	@gotestsum --format short-verbose --raw-command go test -v -json -short -coverprofile=coverage.txt ./...
 
 int:
 	@echo "==> Running tests..."
-	@gotestsum --raw-command go test -v -json -coverprofile=coverage.out ./...
+	@gotestsum --raw-command go test -v -json -coverprofile=coverage.txt ./...
 
 coverage: test
 	@echo "==> Opening coverage for unit tests..."
-	@go tool cover -html=coverage.out
+	@go tool cover -html=coverage.txt
 
 coverage-int: int
 	@echo "==> Opening coverage for unit tests..."
-	@go tool cover -html=coverage.out
+	@go tool cover -html=coverage.txt
 
 int-build: int build
 

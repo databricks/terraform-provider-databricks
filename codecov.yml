@@ -1,0 +1,7 @@
+ignore:
+  - "client/**/*test.go"
+  - "databricks/*test.go"
+  - "vendor/**/*"
+  - "website/**/*"
+  - "dist/**/*"
+  - "examples/**/*"

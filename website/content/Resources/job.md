@@ -197,7 +197,7 @@ unsuccessful runs are immediately retried.
 > **(Optional)** 	An optional policy to specify whether to retry 
 a job when it times out. The default behavior is to not retry on timeout.
 
-#### - `job_schedule` **(Optional)** :
+#### - `schedule` **(Optional)** :
 > {{%chevron default=`An optional periodic schedule for this job. 
 The default behavior is that the job runs when triggered by clicking Run Now in the Jobs UI or sending an API 
 request to runNow.` display="true" %}}

@@ -1,6 +1,6 @@
 FROM golang:1.13.10-stretch
 
-ARG TERRAFORM_VERSION=0.12.24
+ARG TERRAFORM_VERSION=0.12.19
 
 # Configure apt, install packages and tools
 RUN apt-get update \
@@ -38,6 +38,8 @@ RUN \
     go get github.com/go-delve/delve/cmd/dlv@v1.3.2 \
     # --> Go language server
     && go get golang.org/x/tools/gopls@v0.2.1 \
+    # --> Gotestsum
+    && go get gotest.tools/gotestsum@v0.4.2 \
     # --> Go symbols and outline for go to symbol support and test support 
     && go get github.com/acroca/go-symbols@v0.1.1 && go get github.com/ramya-rao-a/go-outline@7182a932836a71948db4a81991a494751eccfe77 \
     # --> GolangCI-lint

@@ -1,0 +1,47 @@
+run:
+  deadline: 5m
+  skip-files:
+    - /databricks/provider_test.go
+  modules-download-mode: vendor
+
+
+linters-settings:
+  linters-settings.govet:
+    check-shadowing: true
+
+  linters-settings.gocyclo:
+    min-complexity: 12.0
+
+  linters-settings.maligned:
+    suggest-new: true
+
+  linters-settings.goconst:
+    min-len: 3.0
+    min-occurrences: 3.0
+
+  linters-settings.misspell:
+    locale: "US"
+    ignore-words: 
+     - listend
+     - analyses
+     - cancelling
+
+linters:
+  enable:
+    - vet
+    - golint
+    - gofmt
+    - deadcode
+    - varcheck
+    - structcheck
+    - misspell
+    - errcheck
+    - gosimple
+    - govet
+    - ineffassign
+
+issues:
+  exclude-use-default: false
+  max-per-linter: 0
+  max-same-issues: 0
+  exclude: []

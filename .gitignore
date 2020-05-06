@@ -334,3 +334,5 @@ pip-selfcheck.json
 website/**/*.tar.gz
 website/**/*.zip
 website/public/**
+
+.vscode/private.env

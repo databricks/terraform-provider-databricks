@@ -1,0 +1,83 @@
+package databricks
+
+import (
+	"fmt"
+	"os"
+	"regexp"
+	"testing"
+
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+)
+
+func TestAccAzureAdlsGen2Mount_capture_error(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		Providers: testAccProviders,
+		// CheckDestroy: testAccCheckShellScriptDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config:             testAccAzureAdlsGen2Mount_capture_error(),
+				ExpectNonEmptyPlan: true,
+				ExpectError:        regexp.MustCompile("Something went wrong!"),
+			},
+		},
+	})
+}
+
+func testAccAzureAdlsGen2Mount_capture_error() string {
+	clientID := os.Getenv("ARM_CLIENT_ID")
+	clientSecret := os.Getenv("ARM_CLIENT_SECRET")
+	tenantID := os.Getenv("ARM_TENANT_ID")
+	subscriptionID := os.Getenv("ARM_SUBSCRIPTION_ID")
+	workspaceName := os.Getenv("TEST_WORKSPACE_NAME")
+	resourceGroupName := os.Getenv("TEST_RESOURCE_GROUP")
+	managedResourceGroupName := os.Getenv("TEST_MANAGED_RESOURCE_GROUP")
+	location := os.Getenv("TEST_LOCATION")
+	gen2AdalName := os.Getenv("TEST_GEN2_ADAL_NAME")
+
+	definition := fmt.Sprintf(`
+	provider "databricks" {
+	  azure_auth = {
+		client_id       = "%[1]s"
+		client_secret   = "%[2]s"
+		tenant_id       = "%[3]s"
+		subscription_id = "%[4]s"
+
+		workspace_name         = "%[5]s"
+		resource_group         = "%[6]s"
+		managed_resource_group = "%[7]s"
+		azure_region           = "%[8]s"
+	  }
+	}
+	
+	resource "databricks_secret_scope" "terraform" {
+	  name                     = "terraform"
+	  initial_manage_principal = "users"
+	}
+	
+	resource "databricks_secret" "client_secret" {
+	  key          = "datalake_sp_secret"
+	  string_value = "%[2]s"
+	  scope        = databricks_secret_scope.terraform.name
+	}
+	
+	resource "databricks_cluster" "cluster" {
+		num_workers = 1
+		spark_version = "6.4.x-scala2.11"
+		node_type_id = "Standard_D3_v2"
+	}
+	
+	resource "databricks_azure_adls_gen2_mount" "mount" {
+	  cluster_id           = databricks_cluster.cluster.id
+	  container_name       = "dev"
+	  storage_account_name = "%[9]s"
+	  directory            = "/dir"
+	  mount_name           = "localdir"
+	  tenant_id            = "%[3]s"
+	  client_id            = "%[1]s"
+	  client_secret_scope  = databricks_secret_scope.terraform.name
+	  client_secret_key    = databricks_secret.client_secret.key
+	}
+
+`, clientID, clientSecret, tenantID, subscriptionID, workspaceName, resourceGroupName, managedResourceGroupName, location, gen2AdalName)
+	return definition
+}

@@ -4,7 +4,7 @@ ARG TERRAFORM_VERSION=0.12.19
 
 # Configure apt, install packages and tools
 RUN apt-get update \
-    && apt-get -y install --no-install-recommends apt-utils \
+    && apt-get -y install --no-install-recommends apt-utils bash-completion \
     #
     # Verify git, process tools, lsb-release (common in install instructions for CLIs) installed
     && apt-get -y install git iproute2 procps lsb-release unzip\

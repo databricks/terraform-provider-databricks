@@ -67,7 +67,7 @@ func (a *AzureAuth) getManagementToken(config *service.DBApiClientConfig) error 
 	if err != nil {
 		return err
 	}
-	err = mgmtToken.EnsureFresh()
+	err = mgmtToken.Refresh()
 	if err != nil {
 		return err
 	}
@@ -99,6 +99,7 @@ func (a *AzureAuth) getWorkspaceID(config *service.DBApiClientConfig) error {
 	if err != nil {
 		return err
 	}
+
 	err = json.Unmarshal(resp, &responseMap)
 	if err != nil {
 		return err
@@ -124,7 +125,7 @@ func (a *AzureAuth) getADBPlatformToken(clientConfig *service.DBApiClientConfig)
 		return err
 	}
 
-	err = platformToken.EnsureFresh()
+	err = platformToken.Refresh()
 	if err != nil {
 		return err
 	}
@@ -132,6 +133,44 @@ func (a *AzureAuth) getADBPlatformToken(clientConfig *service.DBApiClientConfig)
 	return nil
 }
 
+func (a *AzureAuth) getWorkspaceAccessToken(config *service.DBApiClientConfig) error {
+	log.Println("[DEBUG] Creating workspace token")
+	apiLifeTimeInSeconds := int32(600)
+	comment := "Secret made via SP"
+	url := "https://" + a.TokenPayload.AzureRegion + ".azuredatabricks.net/api/2.0/token/create"
+	payload := struct {
+		LifetimeSeconds int32  `json:"lifetime_seconds,omitempty"`
+		Comment         string `json:"comment,omitempty"`
+	}{
+		apiLifeTimeInSeconds,
+		comment,
+	}
+	headers := map[string]string{
+		"Content-Type": "application/x-www-form-urlencoded",
+		"X-Databricks-Azure-Workspace-Resource-Id": a.AdbWorkspaceResourceID,
+		"X-Databricks-Azure-SP-Management-Token":   a.ManagementToken,
+		"cache-control":                            "no-cache",
+		"Authorization":                            "Bearer " + a.AdbPlatformToken,
+	}
+
+	var responseMap map[string]interface{}
+	resp, err := service.PerformQuery(config, http.MethodPost, url, "2.0", headers, true, true, payload, nil)
+	if err != nil {
+		return err
+	}
+	err = json.Unmarshal(resp, &responseMap)
+	if err != nil {
+		return err
+	}
+	a.AdbAccessToken = responseMap["token_value"].(string)
+	return nil
+}
+
+// Main function call that gets made and it follows 4 steps at the moment:
+// 1. Get Management OAuth Token using management endpoint
+// 2. Get Workspace ID
+// 3. Get Azure Databricks Platform OAuth Token using Databricks resource id
+// 4. Get Azure Databricks Workspace Personal Access Token for the SP (60 min duration)
 func (a *AzureAuth) initWorkspaceAndGetClient(config *service.DBApiClientConfig) (service.DBApiClient, error) {
 	var dbClient service.DBApiClient
 
@@ -153,16 +192,25 @@ func (a *AzureAuth) initWorkspaceAndGetClient(config *service.DBApiClientConfig)
 		return dbClient, err
 	}
 
-	var newOption service.DBApiClientConfig
-	// Host for azure
-	newOption.Host = "https://" + a.TokenPayload.AzureRegion + ".azuredatabricks.net"
-	// Host for platform token
-	newOption.Token = a.AdbPlatformToken
-	// Headers to use aad tokens
-	newOption.DefaultHeaders = map[string]string{
-		"X-Databricks-Azure-Workspace-Resource-Id": a.AdbWorkspaceResourceID,
-		"X-Databricks-Azure-SP-Management-Token":   a.ManagementToken,
+	// Get workspace personal access token
+	err = a.getWorkspaceAccessToken(config)
+	if err != nil {
+		return dbClient, err
 	}
+
+	var newOption service.DBApiClientConfig
+
+	// TODO: Eventually change this to include new Databricks domain names. May have to add new vars and/or deprecate existing args.
+	newOption.Host = "https://" + a.TokenPayload.AzureRegion + ".azuredatabricks.net"
+	newOption.Token = a.AdbAccessToken
+
+	// Headers to use aad tokens, hidden till tokens support secrets, scopes and acls
+	//newOption.DefaultHeaders = map[string]string{
+	//	//"Content-Type": "application/x-www-form-urlencoded",
+	//	"X-Databricks-Azure-Workspace-Resource-Id": a.AdbWorkspaceResourceID,
+	//	"X-Databricks-Azure-SP-Management-Token":   a.ManagementToken,
+	//	"cache-control":                            "no-cache",
+	//}
 	dbClient.SetConfig(&newOption)
 
 	// So when the workspace is initially created sometimes it fails to perform api calls so this is a simple test

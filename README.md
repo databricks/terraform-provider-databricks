@@ -20,7 +20,7 @@ You can `ls` the previous directory to verify.
 
 Please note that there is a Makefile which contains all the commands you would need to run this project.
 
-This code base to contribute to requires the following software:
+This code base to contribute to requires the following software (this is also all configured for the [Visual Studio Code Devcontainer](#developing-with-visual-studio-code-devcontainers)):
 
 * [golang 1.13.X](https://golang.org/dl/)
 * [terraform v0.12.x](https://www.terraform.io/downloads.html)
@@ -115,7 +115,17 @@ Also refer to these [examples](examples/) for more scenarios.
 Provider documentation can be located in the releases tab and documentation is packaged up along with 
 the binary of choice.
 
-### Docker commands
+### Developing with Visual Studio Code Devcontainers
+
+This project has configuration for working with [Visual Studio Code Devcontainers](https://code.visualstudio.com/docs/remote/containers) - this allows you to containerise your development prerequisites (e.g. golang, terraform). To use this you will need [Visual Studio Code](https://code.visualstudio.com/) and [Docker](https://www.docker.com/products/docker-desktop).
+
+To get started, clone this repo and open the folder with Visual Studio Code. If you don't have the [Remote Development extension](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.vscode-remote-extensionpack) then you should be prompted to install it.
+
+Once the folder is loaded and the extension is installed you should be prompted to re-open the folder in a devcontainer. This will built and run the container image with the correct tools (and versions) ready to start working on and building the code. The in-built terminal will launch a shell inside the container for running `make` commands etc.
+
+See the docs for more details on working with [devcontainers](https://code.visualstudio.com/docs/remote/containers).
+
+### Building and Installing with Docker
 
 To install and build the code if you dont want to install golang, terraform, etc. All you need is docker and git.
 
@@ -135,7 +145,6 @@ Then run the execute the terraform binary via the following command and volume m
 $ docker run -it -v $(pwd):/workpace -w /workpace databricks-terraform init
 $ docker run -it -v $(pwd):/workpace -w /workpace databricks-terraform plan
 $ docker run -it -v $(pwd):/workpace -w /workpace databricks-terraform apply
-
 ```
 
 ## Project Components

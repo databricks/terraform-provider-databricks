@@ -65,12 +65,12 @@ vendor:
 # INTEGRATION TESTING WITH AZURE
 terraform-acc-azure: fmt
 	@echo "==> Running Terraform Acceptance Tests for Azure..."
-	@CLOUD_ENV="azure" TF_ACC=1 gotestsum --format standard-quiet --raw-command go test -v -json -tags=azure  -short -coverprofile=azure-coverage.txt ./databricks/...
+	@CLOUD_ENV="azure" TF_ACC=1 gotestsum --format short-verbose --raw-command go test -v -json -tags=azure  -short -coverprofile=azure-coverage.txt ./databricks/...
 
 # INTEGRATION TESTING WITH AWS
 terraform-acc-aws: fmt
 	@echo "==> Running Terraform Acceptance Tests for AWS..."
-	@CLOUD_ENV="aws" TF_ACC=1 gotestsum --format standard-quiet --raw-command go test -v -json -tags=aws  -short -coverprofile=aws-coverage.txt ./databricks/...
+	@CLOUD_ENV="aws" TF_ACC=1 gotestsum --format short-verbose --raw-command go test -v -json -tags=aws  -short -coverprofile=aws-coverage.txt ./databricks/...
 
 terraform-setup: build
 	@echo "==> Initializing Terraform..."

@@ -2,13 +2,14 @@ package databricks
 
 import (
 	"fmt"
-	"github.com/databrickslabs/databricks-terraform/client/model"
-	"github.com/databrickslabs/databricks-terraform/client/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"log"
 	"reflect"
 	"strconv"
 	"strings"
+
+	"github.com/databrickslabs/databricks-terraform/client/model"
+	"github.com/databrickslabs/databricks-terraform/client/service"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 func resourceJob() *schema.Resource {
@@ -980,13 +981,15 @@ func parseSchemaToJobSettings(d *schema.ResourceData) model.JobSettings {
 		jobSettings.ExistingClusterID = existingClusterID.(string)
 	}
 
-	cluster := parseSchemaToCluster(d, "new_cluster.0.")
-
-	jobSettings.NewCluster = &cluster
+	if _, ok := d.GetOk("new_cluster.0"); ok {
+		cluster := parseSchemaToCluster(d, "new_cluster.0")
+		jobSettings.NewCluster = &cluster
+	}
 
 	if name, ok := d.GetOk("name"); ok {
 		jobSettings.Name = name.(string)
 	}
+
 	libraries := parseSchemaToLibraries(d)
 	jobSettings.Libraries = libraries
 

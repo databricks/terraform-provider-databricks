@@ -68,7 +68,7 @@ type DBApiClientConfig struct {
 // Setup initializes the client
 func (c *DBApiClientConfig) Setup() {
 	if c.TimeoutSeconds == 0 {
-		c.TimeoutSeconds = 10
+		c.TimeoutSeconds = 60
 	}
 	c.client = http.Client{
 		Timeout: time.Duration(time.Duration(c.TimeoutSeconds) * time.Second),

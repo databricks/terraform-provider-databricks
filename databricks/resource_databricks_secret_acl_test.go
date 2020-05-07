@@ -20,10 +20,10 @@ func TestAccSecretAclResource(t *testing.T) {
 	// See https://godoc.org/github.com/hashicorp/terraform-plugin-sdk/helper/acctest
 	//scope := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
 	scope := "terraform_acc_test_acl"
-	principal := "USERS"
+	principal := "users"
 	permission := "READ"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testSecretACLResourceDestroy,

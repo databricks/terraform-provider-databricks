@@ -21,7 +21,7 @@ func TestAccTokenResource(t *testing.T) {
 	// See https://godoc.org/github.com/hashicorp/terraform-plugin-sdk/helper/acctest
 	rComment := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckTokenResourceDestroy,

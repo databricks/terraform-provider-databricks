@@ -23,8 +23,8 @@ func TestAccSecretResource(t *testing.T) {
 	key := "my_cool_key"
 	stringValue := "my super secret key"
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testSecretResourceDestroy,
 		Steps: []resource.TestStep{

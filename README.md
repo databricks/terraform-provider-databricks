@@ -183,10 +183,15 @@ $ docker run -it -v $(pwd):/workpace -w /workpace databricks-terraform apply
 | databricks_table            | :white_large_square: | :white_large_square: | :white_large_square: | :white_large_square: |
 
 
-## Testing
+## Development
 
-* [x] Integration tests should be run at a client level against both azure and aws to maintain sdk parity against both apis **(currently only on one cloud)**
-* [ ] Terraform acceptance tests should be run against both aws and azure to maintain parity of provider between both cloud services **(currently only on one cloud)**
+* [ ] Integration tests should be run at a client level against both azure and aws to maintain sdk parity against both apis **(currently only on one cloud)**
+* [x] Terraform acceptance tests should be run against both aws and azure to maintain parity of provider between both cloud services **(currently only on one cloud)**
+
+### Linting
+
+Please use makefile for linting. If you run `golangci-lint` by itself it will fail due to different tags containing same functions. 
+So please run `make lint` instead.
 
 ### Integration Testing
 

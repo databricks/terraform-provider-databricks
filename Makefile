@@ -62,13 +62,14 @@ vendor:
 	@echo "==> Filling vendor folder with library code..."
 	@go mod vendor
 
-# INTEGRATION TESTING WITH TERRAFORM EXAMPLES
-terraform-acc-azure:
-	@echo "==> Running Terraform Acceptance Tests..."
+# INTEGRATION TESTING WITH AZURE
+terraform-acc-azure: fmt
+	@echo "==> Running Terraform Acceptance Tests for Azure..."
 	@CLOUD_ENV="azure" TF_ACC=1 gotestsum --format short-verbose --raw-command go test -v -json -tags=azure  -short -coverprofile=coverage.out ./...
 
-terraform-acc-aws:
-	@echo "==> Running Terraform Acceptance Tests..."
+# INTEGRATION TESTING WITH AWS
+terraform-acc-aws: fmt
+	@echo "==> Running Terraform Acceptance Tests for AWS..."
 	@CLOUD_ENV="aws" TF_ACC=1 gotestsum --format short-verbose --raw-command go test -v -json -tags=aws  -short -coverprofile=coverage.out ./...
 
 terraform-setup: build

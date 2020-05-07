@@ -94,6 +94,14 @@ func resourceScimUserCreate(d *schema.ResourceData, m interface{}) error {
 	if err != nil {
 		return err
 	}
+
+	// Hack to fix user, for some reason if entitlements is empty it will auto create user with
+	// allow-cluster-create permissions so we will apply a put operation to overwrite the user
+	err = client.Users().Update(user.ID, userName, displayName, entitlements, roles)
+	if err != nil {
+		return err
+	}
+
 	if setAdmin {
 		adminGroup, err := client.Groups().GetAdminGroup()
 		if err != nil {
@@ -143,7 +151,6 @@ func resourceScimUserRead(d *schema.ResourceData, m interface{}) error {
 		return err
 	}
 
-	roles := getListOfRoles(user.Roles)
 	//entitlements := getListOfEntitlements(user.Entitlements)
 	var entitlements []string
 	for _, entitlement := range user.Entitlements {
@@ -159,6 +166,7 @@ func resourceScimUserRead(d *schema.ResourceData, m interface{}) error {
 		return err
 	}
 
+	roles := getListOfRoles(user.Roles)
 	inheritedRoles := getListOfRoles(user.InheritedRoles)
 	err = d.Set("inherited_roles", inheritedRoles)
 	if err != nil {

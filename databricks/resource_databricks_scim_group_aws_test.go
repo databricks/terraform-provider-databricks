@@ -1,3 +1,5 @@
+// +build aws
+
 package databricks
 
 import (
@@ -26,7 +28,7 @@ func TestAccScimGroupResource(t *testing.T) {
 	entitlement := "allow-cluster-create"
 	expectEntitlements := []model.EntitlementsListItem{{Value: model.AllowClusterCreateEntitlement}}
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testScimGroupResourceDestroy,
@@ -210,7 +212,6 @@ func testScimGroupResourceCreate(username, displayName, groupName, role, entitle
 
 func testScimGroupResourceUpdate(groupName string) string {
 	return fmt.Sprintf(`
-
 								resource "databricks_scim_group" "my_scim_group" {
 								  display_name = "%s"
 								}

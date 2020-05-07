@@ -24,7 +24,7 @@ func TestAccSecretResource(t *testing.T) {
 	stringValue := "my super secret key"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck: func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testSecretResourceDestroy,
 		Steps: []resource.TestStep{

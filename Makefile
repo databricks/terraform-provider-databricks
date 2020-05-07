@@ -32,7 +32,8 @@ build: lint test fmt
 
 lint:
 	@echo "==> Linting source code with golangci-lint..."
-	@golangci-lint run --skip-dirs-use-default --timeout 5m
+	@golangci-lint run --skip-dirs-use-default --timeout 5m --build-tags=azure
+	@golangci-lint run --skip-dirs-use-default --timeout 5m --build-tags=aws
 
 fmt: lint
 	@echo "==> Formatting source code with gofmt..."
@@ -62,9 +63,13 @@ vendor:
 	@go mod vendor
 
 # INTEGRATION TESTING WITH TERRAFORM EXAMPLES
-terraform-acc: fmt build
+terraform-acc-azure:
 	@echo "==> Running Terraform Acceptance Tests..."
-	@TF_ACC=1 gotestsum --format short-verbose --raw-command go test -v -json -short -coverprofile=coverage.out ./...
+	@CLOUD_ENV="azure" TF_ACC=1 gotestsum --format short-verbose --raw-command go test -v -json -tags=azure  -short -coverprofile=coverage.out ./...
+
+terraform-acc-aws:
+	@echo "==> Running Terraform Acceptance Tests..."
+	@CLOUD_ENV="aws" TF_ACC=1 gotestsum --format short-verbose --raw-command go test -v -json -tags=aws  -short -coverprofile=coverage.out ./...
 
 terraform-setup: build
 	@echo "==> Initializing Terraform..."

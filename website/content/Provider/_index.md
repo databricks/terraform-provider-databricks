@@ -137,6 +137,10 @@ The following variables can be passed via environment variables:
 
 * `host` → `DATABRICKS_HOST`
 * `token` → `DATABRICKS_TOKEN`
+* `managed_resource_group` → `DATABRICKS_AZURE_MANAGED_RESOURCE_GROUP`
+* `azure_region` → `AZURE_REGION`
+* `workspace_name` → `DATABRICKS_AZURE_WORKSPACE_NAME`
+* `resource_group` → `DATABRICKS_AZURE_RESOURCE_GROUP`
 * `subscription_id` → `DATABRICKS_AZURE_SUBSCRIPTION_ID`
 * `client_secret` → `DATABRICKS_AZURE_CLIENT_SECRET`
 * `client_id` → `DATABRICKS_AZURE_CLIENT_ID`
@@ -186,13 +190,17 @@ environment variable `DATABRICKS_TOKEN`.
 principal that has access to the workspace. This is optional as you can use the api token based auth. 
 The azure_auth block contains the following arguments:` display="true" %}}
 
-* `managed_resource_group` - This is the managed workgroup id when the Databricks workspace is provisioned
+* `managed_resource_group` - This is the managed workgroup id when the Databricks workspace is provisioned. 
+Alternatively you can provide this value as an environment variable `DATABRICKS_AZURE_MANAGED_RESOURCE_GROUP`.
 
 * `azure_region` - This is the azure region in which your workspace is deployed.
+Alternatively you can provide this value as an environment variable `AZURE_REGION`.
 
 * `workspace_name` - This is the name of your Azure Databricks Workspace.
+Alternatively you can provide this value as an environment variable `DATABRICKS_AZURE_WORKSPACE_NAME`.
 
 * `resource_group` - This is the resource group in which your Azure Databricks Workspace resides in.
+Alternatively you can provide this value as an environment variable `DATABRICKS_AZURE_RESOURCE_GROUP`.
 
 * `subscription_id` - This is the Azure Subscription id in which your Azure Databricks Workspace resides in. 
 Alternatively you can provide this value as an environment variable `DATABRICKS_AZURE_SUBSCRIPTION_ID`.

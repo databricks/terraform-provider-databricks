@@ -21,7 +21,7 @@ func TestAccSecretScopeResource(t *testing.T) {
 	//scope := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
 	scope := "terraform_acc_test_scope"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testSecretScopeResourceDestroy,

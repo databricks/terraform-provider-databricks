@@ -32,4 +32,12 @@ flags:
   provider:
     paths:
       - "databricks/*.go"
+    carryforward: false
+  aws_integration:
+    paths:
+      - "databricks/*.go"
+    carryforward: true
+  azure_integration:
+    paths:
+      - "databricks/*.go"
     carryforward: true

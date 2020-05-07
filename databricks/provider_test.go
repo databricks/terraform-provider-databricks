@@ -8,6 +8,7 @@ import (
 	"github.com/joho/godotenv"
 	"log"
 	"os"
+	"strings"
 	"testing"
 )
 
@@ -17,10 +18,11 @@ var testAccProvider *schema.Provider
 func init() {
 	testAccProvider = Provider("").(*schema.Provider)
 	cloudEnv := os.Getenv("CLOUD_ENV")
+	useSP := os.Getenv("SP_AUTH")
 
 	// If Azure inject sp based auth, this should probably have a different environment variable
 	// But for now best practice on azure is to use SP based auth
-	if cloudEnv == "azure" {
+	if cloudEnv == "azure" && strings.ToLower(useSP) == "true" {
 		var config service.DBApiClientConfig
 		testAccProvider.ConfigureFunc = func(data *schema.ResourceData) (i interface{}, e error) {
 			return providerConfigureAzureClient(data, "", &config)

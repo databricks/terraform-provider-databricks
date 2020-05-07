@@ -204,6 +204,8 @@ htmlcov/
 nosetests.xml
 client-coverage.txt
 provider-coverage.txt
+azure-coverage.txt
+aws-coverage.txt
 coverage.txt
 coverage.xml
 *.cover

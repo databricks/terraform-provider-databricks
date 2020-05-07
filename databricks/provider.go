@@ -6,6 +6,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 	"log"
+	"os"
 )
 
 // Provider returns the entire terraform provider object
@@ -55,8 +56,9 @@ func Provider(version string) terraform.ResourceProvider {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"managed_resource_group": {
-							Type:     schema.TypeString,
-							Required: true,
+							Type:        schema.TypeString,
+							Required:    true,
+							DefaultFunc: schema.EnvDefaultFunc("DATABRICKS_AZURE_MANAGED_RESOURCE_GROUP", nil),
 						},
 						"azure_region": {
 							Type:        schema.TypeString,
@@ -64,12 +66,14 @@ func Provider(version string) terraform.ResourceProvider {
 							DefaultFunc: schema.EnvDefaultFunc("AZURE_REGION", nil),
 						},
 						"workspace_name": {
-							Type:     schema.TypeString,
-							Required: true,
+							Type:        schema.TypeString,
+							Required:    true,
+							DefaultFunc: schema.EnvDefaultFunc("DATABRICKS_AZURE_WORKSPACE_NAME", nil),
 						},
 						"resource_group": {
-							Type:     schema.TypeString,
-							Required: true,
+							Type:        schema.TypeString,
+							Required:    true,
+							DefaultFunc: schema.EnvDefaultFunc("DATABRICKS_AZURE_RESOURCE_GROUP", nil),
 						},
 						"subscription_id": {
 							Type:        schema.TypeString,
@@ -110,9 +114,70 @@ func Provider(version string) terraform.ResourceProvider {
 	return provider
 }
 
+func providerConfigureAzureClient(d *schema.ResourceData, providerVersion string, config *service.DBApiClientConfig) (interface{}, error) {
+	log.Println("Creating db client via azure auth!")
+	azureAuth, _ := d.GetOk("azure_auth")
+	azureAuthMap := azureAuth.(map[string]interface{})
+	//azureAuth AzureAuth{}
+	tokenPayload := TokenPayload{}
+	// The if else is required for the reason that "azure_auth" schema object is not a block but a map
+	// Maps do not inherently auto populate defaults from environment variables unless we explicitly assign values
+	// This makes it very difficult to test
+	if managedResourceGroup, ok := azureAuthMap["managed_resource_group"].(string); ok {
+		tokenPayload.ManagedResourceGroup = managedResourceGroup
+	} else if os.Getenv("DATABRICKS_AZURE_MANAGED_RESOURCE_GROUP") != "" {
+		tokenPayload.ManagedResourceGroup = os.Getenv("DATABRICKS_AZURE_MANAGED_RESOURCE_GROUP")
+	}
+	if azureRegion, ok := azureAuthMap["azure_region"].(string); ok {
+		tokenPayload.AzureRegion = azureRegion
+	} else if os.Getenv("AZURE_REGION") != "" {
+		tokenPayload.AzureRegion = os.Getenv("AZURE_REGION")
+	}
+	if resourceGroup, ok := azureAuthMap["resource_group"].(string); ok {
+		tokenPayload.ResourceGroup = resourceGroup
+	} else if os.Getenv("DATABRICKS_AZURE_RESOURCE_GROUP") != "" {
+		tokenPayload.ResourceGroup = os.Getenv("DATABRICKS_AZURE_RESOURCE_GROUP")
+	}
+	if workspaceName, ok := azureAuthMap["workspace_name"].(string); ok {
+		tokenPayload.WorkspaceName = workspaceName
+	} else if os.Getenv("DATABRICKS_AZURE_WORKSPACE_NAME") != "" {
+		tokenPayload.WorkspaceName = os.Getenv("DATABRICKS_AZURE_WORKSPACE_NAME")
+	}
+	if subscriptionID, ok := azureAuthMap["subscription_id"].(string); ok {
+		tokenPayload.SubscriptionID = subscriptionID
+	} else if os.Getenv("DATABRICKS_AZURE_SUBSCRIPTION_ID") != "" {
+		tokenPayload.SubscriptionID = os.Getenv("DATABRICKS_AZURE_SUBSCRIPTION_ID")
+	}
+	if clientSecret, ok := azureAuthMap["client_secret"].(string); ok {
+		tokenPayload.ClientSecret = clientSecret
+	} else if os.Getenv("DATABRICKS_AZURE_CLIENT_SECRET") != "" {
+		tokenPayload.ClientSecret = os.Getenv("DATABRICKS_AZURE_CLIENT_SECRET")
+	}
+	if clientID, ok := azureAuthMap["client_id"].(string); ok {
+		tokenPayload.ClientID = clientID
+	} else if os.Getenv("DATABRICKS_AZURE_CLIENT_ID") != "" {
+		tokenPayload.ClientID = os.Getenv("DATABRICKS_AZURE_CLIENT_ID")
+	}
+	if tenantID, ok := azureAuthMap["tenant_id"].(string); ok {
+		tokenPayload.TenantID = tenantID
+	} else if os.Getenv("DATABRICKS_AZURE_TENANT_ID") != "" {
+		tokenPayload.TenantID = os.Getenv("DATABRICKS_AZURE_TENANT_ID")
+	}
+
+	azureAuthSetup := AzureAuth{
+		TokenPayload:           &tokenPayload,
+		ManagementToken:        "",
+		AdbWorkspaceResourceID: "",
+		AdbAccessToken:         "",
+		AdbPlatformToken:       "",
+	}
+	log.Println("Running Azure Auth")
+	return azureAuthSetup.initWorkspaceAndGetClient(config)
+}
+
 func providerConfigure(d *schema.ResourceData, providerVersion string) (interface{}, error) {
 	var config service.DBApiClientConfig
-	if azureAuth, ok := d.GetOk("azure_auth"); !ok {
+	if _, ok := d.GetOk("azure_auth"); !ok {
 		if host, ok := d.GetOk("host"); ok {
 			config.Host = host.(string)
 		}
@@ -120,44 +185,9 @@ func providerConfigure(d *schema.ResourceData, providerVersion string) (interfac
 			config.Token = token.(string)
 		}
 	} else {
-		log.Println("Creating db client via azure auth!")
-		azureAuthMap := azureAuth.(map[string]interface{})
-		//azureAuth AzureAuth{}
-		tokenPayload := TokenPayload{}
-		if managedResourceGroup, ok := azureAuthMap["managed_resource_group"].(string); ok {
-			tokenPayload.ManagedResourceGroup = managedResourceGroup
-		}
-		if azureRegion, ok := azureAuthMap["azure_region"].(string); ok {
-			tokenPayload.AzureRegion = azureRegion
-		}
-		if resourceGroup, ok := azureAuthMap["resource_group"].(string); ok {
-			tokenPayload.ResourceGroup = resourceGroup
-		}
-		if workspaceName, ok := azureAuthMap["workspace_name"].(string); ok {
-			tokenPayload.WorkspaceName = workspaceName
-		}
-		if subscriptionID, ok := azureAuthMap["subscription_id"].(string); ok {
-			tokenPayload.SubscriptionID = subscriptionID
-		}
-		if clientSecret, ok := azureAuthMap["client_secret"].(string); ok {
-			tokenPayload.ClientSecret = clientSecret
-		}
-		if clientID, ok := azureAuthMap["client_id"].(string); ok {
-			tokenPayload.ClientID = clientID
-		}
-		if tenantID, ok := azureAuthMap["tenant_id"].(string); ok {
-			tokenPayload.TenantID = tenantID
-		}
-
-		azureAuthSetup := AzureAuth{
-			TokenPayload:           &tokenPayload,
-			ManagementToken:        "",
-			AdbWorkspaceResourceID: "",
-			AdbAccessToken:         "",
-			AdbPlatformToken:       "",
-		}
-		log.Println("Running Azure Auth")
-		return azureAuthSetup.initWorkspaceAndGetClient(&config)
+		// Abstracted logic to another function that returns a interface{}, error to inject directly
+		// for the providers during cloud integration testing
+		return providerConfigureAzureClient(d, providerVersion, &config)
 	}
 
 	//TODO: Bake the version of the provider using -ldflags to tell the golang linker to send

@@ -5,13 +5,14 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
-	"github.com/google/go-querystring/query"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"net/url"
 	"reflect"
 	"time"
+
+	"github.com/google/go-querystring/query"
 )
 
 // CloudServiceProvider is a custom type for different types of cloud service providers
@@ -67,7 +68,7 @@ type DBApiClientConfig struct {
 // Setup initializes the client
 func (c *DBApiClientConfig) Setup() {
 	if c.TimeoutSeconds == 0 {
-		c.TimeoutSeconds = 10
+		c.TimeoutSeconds = 60
 	}
 	c.client = http.Client{
 		Timeout: time.Duration(time.Duration(c.TimeoutSeconds) * time.Second),
@@ -93,7 +94,7 @@ func (c DBApiClientConfig) getAuthHeader() map[string]string {
 func (c DBApiClientConfig) getUserAgentHeader() map[string]string {
 	if reflect.ValueOf(c.UserAgent).IsZero() {
 		return map[string]string{
-			"User-Agent": fmt.Sprintf("databricks-go-client-sdk"),
+			"User-Agent": "databricks-go-client-sdk",
 		}
 	}
 	return map[string]string{

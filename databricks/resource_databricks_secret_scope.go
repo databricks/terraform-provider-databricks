@@ -24,7 +24,7 @@ func resourceSecretScope() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
-				Default:  nil,
+				Default:  "users",
 			},
 			"backend_type": &schema.Schema{
 				Type:     schema.TypeString,

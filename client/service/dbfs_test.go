@@ -3,9 +3,10 @@ package service
 import (
 	"encoding/base64"
 	"fmt"
-	"github.com/databrickslabs/databricks-terraform/client/model"
 	"net/http"
 	"testing"
+
+	"github.com/databrickslabs/databricks-terraform/client/model"
 )
 
 var base64String = base64.StdEncoding.EncodeToString([]byte("helloworld"))
@@ -323,10 +324,10 @@ func TestDBFSAPI_Read(t *testing.T) {
 					"bytes_read": 1000000,
 					"data": "%s"
 				}`, base64String),
-				fmt.Sprintf(`{
+				`{
 					"bytes_read": 0,
 					"data": ""
-				}`),
+				}`,
 			},
 			responseStatus: []int{http.StatusOK, http.StatusOK},
 			requestMethod:  []string{http.MethodGet, http.MethodGet},
@@ -360,10 +361,10 @@ func TestDBFSAPI_Read(t *testing.T) {
 					"bytes_read": 1000000,
 					"data": "%s"
 				}`, base64String),
-				fmt.Sprintf(`{
+				`{
 					"bytes_read": 0,
 					"data": ""
-				}`),
+				}`,
 			},
 			responseStatus: []int{http.StatusOK, http.StatusBadRequest},
 			requestMethod:  []string{http.MethodGet, http.MethodGet},

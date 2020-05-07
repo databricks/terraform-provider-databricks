@@ -297,6 +297,8 @@ override.tf.json
 # http://iamzed.com/2009/05/07/a-primer-on-virtualenv/
 pyvenv.cfg
 .env
+.aws.env
+.azure.env
 .venv
 env/
 venv/

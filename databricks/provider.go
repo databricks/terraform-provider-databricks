@@ -177,6 +177,12 @@ func providerConfigureAzureClient(d *schema.ResourceData, providerVersion string
 
 func providerConfigure(d *schema.ResourceData, providerVersion string) (interface{}, error) {
 	var config service.DBApiClientConfig
+
+	//TODO: Bake the version of the provider using -ldflags to tell the golang linker to send
+	//version information from go-releaser
+	// configure user agent
+	config.UserAgent = fmt.Sprintf("databricks-tf-provider-%s", providerVersion)
+
 	if _, ok := d.GetOk("azure_auth"); !ok {
 		if host, ok := d.GetOk("host"); ok {
 			config.Host = host.(string)
@@ -190,9 +196,6 @@ func providerConfigure(d *schema.ResourceData, providerVersion string) (interfac
 		return providerConfigureAzureClient(d, providerVersion, &config)
 	}
 
-	//TODO: Bake the version of the provider using -ldflags to tell the golang linker to send
-	//version information from go-releaser
-	config.UserAgent = fmt.Sprintf("databricks-tf-provider-%s", providerVersion)
 	var dbClient service.DBApiClient
 	dbClient.SetConfig(&config)
 	return dbClient, nil

@@ -25,6 +25,7 @@ jobs:
         - time make build
     - go: 1.14.x
       stage: cloud integration tests
+      if: type IN (push, api, cron)
       cache:
         directories:
           - $HOME/.cache/go-build
@@ -40,6 +41,7 @@ jobs:
         - DATABRICKS_TOKEN=$AZURE_TOKEN
     - go: 1.14.x
       stage: cloud integration tests
+      if: type IN (push, api, cron)
       cache:
         directories:
           - $HOME/.cache/go-build
@@ -53,6 +55,7 @@ jobs:
       env:
         - DATABRICKS_HOST=$AWS_HOST
         - DATABRICKS_TOKEN=$AWS_TOKEN
+
 after_success:
   - echo "travis go version='$TRAVIS_GO_VERSION'"
   - bash <(curl -s https://codecov.io/bash) -f client-coverage.txt -F client

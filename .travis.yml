@@ -24,7 +24,7 @@ jobs:
         - time make client-test
         - time make build
     - go: 1.14.x
-      stage: azure integration tests
+      stage: cloud integration tests
       cache:
         directories:
           - $HOME/.cache/go-build
@@ -39,7 +39,7 @@ jobs:
         - DATABRICKS_HOST=$AZURE_HOST
         - DATABRICKS_TOKEN=$AZURE_TOKEN
     - go: 1.14.x
-      stage: aws integration tests
+      stage: cloud integration tests
       cache:
         directories:
           - $HOME/.cache/go-build

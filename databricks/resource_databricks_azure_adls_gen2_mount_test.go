@@ -10,14 +10,17 @@ import (
 )
 
 func TestAccAzureAdlsGen2Mount_capture_error(t *testing.T) {
+	terraformToApply := testAccAzureAdlsGen2Mount_capture_error()
+
 	resource.Test(t, resource.TestCase{
 		Providers: testAccProviders,
 		// CheckDestroy: testAccCheckShellScriptDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config:             testAccAzureAdlsGen2Mount_capture_error(),
+				Config:             terraformToApply,
 				ExpectNonEmptyPlan: true,
 				ExpectError:        regexp.MustCompile("Something went wrong!"),
+				Destroy:            false,
 			},
 		},
 	})

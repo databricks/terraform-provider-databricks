@@ -26,6 +26,7 @@ resource "azurerm_databricks_workspace" "example" {
   managed_resource_group_name = "workspace${random_string.naming.result}"
 }
 
+# Create container in storage acc and container for use by mount tests
 resource "azurerm_storage_account" "account" {
   name                     = "${random_string.naming.result}datalake"
   resource_group_name      = azurerm_resource_group.example.name
@@ -34,6 +35,12 @@ resource "azurerm_storage_account" "account" {
   account_replication_type = "GRS"
   account_kind             = "StorageV2"
   is_hns_enabled           = "true"
+}
+
+resource "azurerm_storage_container" "example" {
+  name                  = "dev"
+  storage_account_name  = azurerm_storage_account.account.name
+  container_access_type = "private"
 }
 
 output "workspace_managed_rg_name" {

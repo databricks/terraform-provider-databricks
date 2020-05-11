@@ -37,10 +37,10 @@ func testAccAzureAdlsGen2Mount_capture_error() string {
 	definition := fmt.Sprintf(`
 	provider "databricks" {
 	  azure_auth = {
-		client_id       = "%[1]s"
-		client_secret   = "%[2]s"
-		tenant_id       = "%[3]s"
-		subscription_id = "%[4]s"
+		client_id              = "%[1]s"
+		client_secret          = "%[2]s"
+		tenant_id              = "%[3]s"
+		subscription_id        = "%[4]s"
 
 		workspace_name         = "%[5]s"
 		resource_group         = "%[6]s"
@@ -48,9 +48,19 @@ func testAccAzureAdlsGen2Mount_capture_error() string {
 		azure_region           = "%[8]s"
 	  }
 	}
-	
+
+	resource "databricks_cluster" "cluster" {
+		num_workers = 1
+		spark_version = "6.4.x-scala2.11"
+		node_type_id = "Standard_D3_v2"
+		# Don't spend too much, turn off cluster after 15mins
+		autotermination_minutes = 15
+	} 
+
 	resource "databricks_secret_scope" "terraform" {
-	  name                     = "terraform"
+	  # Add the cluster ID into the secret scope to ensure 
+	  # it doesn't clash with one used by another test
+	  name                     = "terraform${databricks_cluster.cluster.cluster_id}"
 	  initial_manage_principal = "users"
 	}
 	
@@ -60,22 +70,17 @@ func testAccAzureAdlsGen2Mount_capture_error() string {
 	  scope        = databricks_secret_scope.terraform.name
 	}
 	
-	resource "databricks_cluster" "cluster" {
-		num_workers = 1
-		spark_version = "6.4.x-scala2.11"
-		node_type_id = "Standard_D3_v2"
-	}
-	
 	resource "databricks_azure_adls_gen2_mount" "mount" {
-	  cluster_id           = databricks_cluster.cluster.id
-	  container_name       = "dev"
-	  storage_account_name = "%[9]s"
-	  directory            = "/dir"
-	  mount_name           = "localdir"
-	  tenant_id            = "%[3]s"
-	  client_id            = "%[1]s"
-	  client_secret_scope  = databricks_secret_scope.terraform.name
-	  client_secret_key    = databricks_secret.client_secret.key
+	  cluster_id             = databricks_cluster.cluster.id
+	  container_name         = "dev" # Created by prereqs.tf
+	  storage_account_name   = "%[9]s"
+	  directory              = "/dir"
+	  mount_name             = "localdir${databricks_cluster.cluster.cluster_id}"
+	  tenant_id              = "%[3]s"
+	  client_id              = "%[1]s"
+	  client_secret_scope    = databricks_secret_scope.terraform.name
+	  client_secret_key      = databricks_secret.client_secret.key
+	  initialize_file_system = true
 	}
 
 `, clientID, clientSecret, tenantID, subscriptionID, workspaceName, resourceGroupName, managedResourceGroupName, location, gen2AdalName)

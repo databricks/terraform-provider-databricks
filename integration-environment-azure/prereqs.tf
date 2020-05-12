@@ -37,6 +37,16 @@ resource "azurerm_storage_account" "account" {
   is_hns_enabled           = "true"
 }
 
+data "azurerm_client_config" "current" {
+}
+
+resource "azurerm_role_assignment" "datalake" {
+  scope = azurerm_storage_account.account.id
+  #https://docs.microsoft.com/en-us/azure/role-based-access-control/built-in-roles#storage-blob-data-contributor
+  role_definition_name = "Storage Blob Data Contributor"
+  principal_id         = data.azurerm_client_config.current.object_id
+}
+
 resource "azurerm_storage_container" "example" {
   name                  = "dev"
   storage_account_name  = azurerm_storage_account.account.name

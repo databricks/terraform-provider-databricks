@@ -2,10 +2,17 @@
 set -e
 cd $(dirname "$0")
 
+# export SKIP_CLEANUP=true
+
 function cleanup()
 {
     echo -e "----> Destroy prereqs \n\n"
-    # terraform destroy -auto-approve
+    if [ -z "$SKIP_CLEANUP" ]
+    then
+        terraform destroy -auto-approve
+    else
+        echo "\$SKIP_CLEANUP is set so 'terraform destroy' not run. Warning: Resources left in subscription."
+    fi
 }
 trap cleanup EXIT
 
@@ -17,9 +24,12 @@ export ARM_CLIENT_SECRET=$DATABRICKS_AZURE_CLIENT_SECRET
 export ARM_SUBSCRIPTION_ID=$DATABRICKS_AZURE_SUBSCRIPTION_ID
 export ARM_TENANT_ID=$DATABRICKS_AZURE_TENANT_ID
 
-# Add back in before push to ensure fresh env
-# on each run of the integration tests
-# rm *.tfstate
+# Remove any old state unless SKIP_CLEANUP set
+if [ -z "$SKIP_CLEANUP" ]
+then
+    echo "\$SKIP_CLEANUP isn't set so removing any pre-existing terraform state"
+    rm -f *.tfstate
+fi
 
 terraform init
 terraform apply -auto-approve
@@ -33,4 +43,4 @@ export TEST_LOCATION=$(terraform output location)
 
 echo -e "----> Running Azure Acceptance Tests \n\n"
 # Run all Azure integration tests
-TF_ACC=1 gotestsum --format short-verbose --raw-command go test -v -json -short -coverprofile=coverage.out -test.timeout 15m -run 'TestAccAzure' ./../...
+TF_LOG=debug TF_ACC=1 gotestsum --format short-verbose --raw-command go test -v -json -short -coverprofile=coverage.out -test.timeout 15m -run 'TestAccAzure' ./../...

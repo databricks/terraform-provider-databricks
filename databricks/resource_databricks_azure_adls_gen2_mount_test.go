@@ -16,8 +16,7 @@ func TestAccAzureAdlsGen2Mount_correctly_mounts(t *testing.T) {
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config:  terraformToApply,
-				Destroy: false,
+				Config: terraformToApply,
 			},
 		},
 	})
@@ -28,12 +27,11 @@ func TestAccAzureAdlsGen2Mount_capture_error(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		Providers: testAccProviders,
-		// CheckDestroy: testAccCheckShellScriptDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config:             terraformToApply,
 				ExpectNonEmptyPlan: true,
-				ExpectError:        regexp.MustCompile("Invalid client secret is provided"),
+				ExpectError:        regexp.MustCompile("java.lang.IllegalArgumentException: Secret does not exist with scope"),
 				Destroy:            false,
 			},
 		},

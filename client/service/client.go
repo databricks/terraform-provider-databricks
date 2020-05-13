@@ -2,6 +2,7 @@ package service
 
 import (
 	"bytes"
+	"context"
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
@@ -10,9 +11,11 @@ import (
 	"net/http"
 	"net/url"
 	"reflect"
+	"strings"
 	"time"
 
 	"github.com/google/go-querystring/query"
+	"github.com/hashicorp/go-retryablehttp"
 )
 
 // CloudServiceProvider is a custom type for different types of cloud service providers
@@ -62,7 +65,12 @@ type DBApiClientConfig struct {
 	DefaultHeaders     map[string]string
 	InsecureSkipVerify bool
 	TimeoutSeconds     int
-	client             http.Client
+	client             retryablehttp.Client
+}
+
+var transientErrorStringMatches []string = []string{ // TODO: Should we make these regexes to match more of the message or is this sufficient?
+	"com.databricks.backend.manager.util.UnknownWorkerEnvironmentException",
+	"does not have any associated worker environments",
 }
 
 // Setup initializes the client
@@ -70,14 +78,53 @@ func (c *DBApiClientConfig) Setup() {
 	if c.TimeoutSeconds == 0 {
 		c.TimeoutSeconds = 60
 	}
-	c.client = http.Client{
-		Timeout: time.Duration(time.Duration(c.TimeoutSeconds) * time.Second),
-		Transport: &http.Transport{
-			TLSClientConfig: &tls.Config{
-				InsecureSkipVerify: c.InsecureSkipVerify,
+	c.client = retryablehttp.Client{
+		HTTPClient: &http.Client{
+			Timeout: time.Duration(time.Duration(c.TimeoutSeconds) * time.Second),
+			Transport: &http.Transport{
+				TLSClientConfig: &tls.Config{
+					InsecureSkipVerify: c.InsecureSkipVerify,
+				},
 			},
 		},
+		CheckRetry: checkHTTPRetry,
+		// TODO - default is exponential backoff - do we want that, or linear backoff?????????????????????
 	}
+}
+
+// checkHTTPRetry inspects HTTP errors from the Databricks API for known transient errors on Workspace creation
+func checkHTTPRetry(ctx context.Context, resp *http.Response, err error) (bool, error) {
+
+	if resp.StatusCode >= 400 {
+		// reading the body means that the caller cannot read it themselves
+		// But that's ok because we've hit an error case
+		// Our job now is to
+		//  - capture the error and return it
+		//  - determine if the error is retryable
+
+		body, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			return false, err
+		}
+
+		var errorBody DBApiErrorBody
+		err = json.Unmarshal(body, &errorBody)
+		if err != nil {
+			return false, fmt.Errorf("Response from server (%d) %s", resp.StatusCode, string(body))
+		}
+		dbAPIError := DBApiError{
+			ErrorBody:  &errorBody,
+			StatusCode: resp.StatusCode,
+			Err:        fmt.Errorf("Response from server %s", string(body)),
+		}
+		for _, substring := range transientErrorStringMatches {
+			if strings.Contains(errorBody.Message, substring) {
+				return true, dbAPIError
+			}
+		}
+		return false, dbAPIError
+	}
+	return false, nil
 }
 
 func (c DBApiClientConfig) getAuthHeader() map[string]string {
@@ -221,7 +268,7 @@ func PerformQuery(config *DBApiClientConfig, method, path string, apiVersion str
 		auditNonGetPayload(method, requestURL, data, secretsMask)
 	}
 
-	request, err := http.NewRequest(method, requestURL, bytes.NewBuffer(requestBody))
+	request, err := retryablehttp.NewRequest(method, requestURL, bytes.NewBuffer(requestBody))
 	if err != nil {
 		return nil, err
 	}
@@ -244,19 +291,8 @@ func PerformQuery(config *DBApiClientConfig, method, path string, apiVersion str
 	if err != nil {
 		return nil, err
 	}
-
-	if resp.StatusCode >= 400 {
-		var errorBody DBApiErrorBody
-		err = json.Unmarshal(body, &errorBody)
-		if err != nil {
-			return nil, fmt.Errorf("Response from server (%d) %s", resp.StatusCode, string(body))
-		}
-		return nil, DBApiError{
-			ErrorBody:  &errorBody,
-			StatusCode: resp.StatusCode,
-			Err:        fmt.Errorf("Response from server %s", string(body)),
-		}
-	}
+	// Don't need to check the status code here as the RetryCheck for
+	// retryablehttp.Client is doing that and returning an error
 
 	return body, nil
 }

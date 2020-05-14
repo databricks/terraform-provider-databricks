@@ -212,5 +212,11 @@ func (a *AzureAuth) initWorkspaceAndGetClient(config *service.DBApiClientConfig)
 	//}
 	dbClient.SetConfig(&newOption)
 
+	// Spin for a while while the workspace comes up and starts behaving.
+	_, err = dbClient.Clusters().ListNodeTypes()
+	if err != nil {
+		return dbClient, err
+	}
+
 	return dbClient, err
 }

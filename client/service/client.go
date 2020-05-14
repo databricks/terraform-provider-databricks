@@ -78,6 +78,10 @@ func (c *DBApiClientConfig) Setup() {
 	if c.TimeoutSeconds == 0 {
 		c.TimeoutSeconds = 60
 	}
+	// Set up a retryable HTTP Client to handle cases where the service returns
+	// a transient error on initial creation
+	retryDelayDuration := 10 * time.Second
+	retryMaximumDuration := 5 * time.Minute
 	c.client = retryablehttp.Client{
 		HTTPClient: &http.Client{
 			Timeout: time.Duration(time.Duration(c.TimeoutSeconds) * time.Second),
@@ -88,7 +92,15 @@ func (c *DBApiClientConfig) Setup() {
 			},
 		},
 		CheckRetry: checkHTTPRetry,
-		// TODO - default is exponential backoff - do we want that, or linear backoff?????????????????????
+		// Using a linear retry rather than the default exponential retry
+		// as the creation condition is normally passed after 30-40 seconds
+		// Setting the retry interval to 10 seconds. Setting RetryWaitMin and RetryWaitMax
+		// to the same value removes jitter (which would be useful in a high-volume traffic scenario
+		// but wouldn't add much here)
+		Backoff:      retryablehttp.LinearJitterBackoff,
+		RetryWaitMin: retryDelayDuration,
+		RetryWaitMax: retryDelayDuration,
+		RetryMax:     int(retryMaximumDuration / retryDelayDuration),
 	}
 }
 

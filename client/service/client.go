@@ -139,7 +139,7 @@ func checkHTTPRetry(ctx context.Context, resp *http.Response, err error) (bool, 
 	return false, nil
 }
 
-func (c DBApiClientConfig) getAuthHeader() map[string]string {
+func (c *DBApiClientConfig) getAuthHeader() map[string]string {
 	auth := make(map[string]string)
 	if c.AuthType == BasicAuth {
 		auth["Authorization"] = "Basic " + c.Token
@@ -150,7 +150,7 @@ func (c DBApiClientConfig) getAuthHeader() map[string]string {
 	return auth
 }
 
-func (c DBApiClientConfig) getUserAgentHeader() map[string]string {
+func (c *DBApiClientConfig) getUserAgentHeader() map[string]string {
 	if reflect.ValueOf(c.UserAgent).IsZero() {
 		return map[string]string{
 			"User-Agent": "databricks-go-client-sdk",
@@ -161,7 +161,7 @@ func (c DBApiClientConfig) getUserAgentHeader() map[string]string {
 	}
 }
 
-func (c DBApiClientConfig) getDefaultHeaders() map[string]string {
+func (c *DBApiClientConfig) getDefaultHeaders() map[string]string {
 	auth := c.getAuthHeader()
 	userAgent := c.getUserAgentHeader()
 
@@ -178,7 +178,7 @@ func (c DBApiClientConfig) getDefaultHeaders() map[string]string {
 	return defaultHeaders
 }
 
-func (c DBApiClientConfig) getRequestURI(path string, apiVersion string) (string, error) {
+func (c *DBApiClientConfig) getRequestURI(path string, apiVersion string) (string, error) {
 	var apiVersionString string
 	if apiVersion == "" {
 		apiVersionString = "2.0"

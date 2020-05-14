@@ -177,6 +177,9 @@ func providerConfigureAzureClient(d *schema.ResourceData, providerVersion string
 
 func providerConfigure(d *schema.ResourceData, providerVersion string) (interface{}, error) {
 	var config service.DBApiClientConfig
+	// Call setup to configure retryable httpclient
+	config.Setup()
+
 	if _, ok := d.GetOk("azure_auth"); !ok {
 		if host, ok := d.GetOk("host"); ok {
 			config.Host = host.(string)

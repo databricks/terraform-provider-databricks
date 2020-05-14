@@ -108,6 +108,7 @@ func (c *DBApiClientConfig) Setup() {
 func checkHTTPRetry(ctx context.Context, resp *http.Response, err error) (bool, error) {
 
 	if resp.StatusCode >= 400 {
+		log.Printf("Failed request detected. Status Code: %v\n", resp.StatusCode)
 		// reading the body means that the caller cannot read it themselves
 		// But that's ok because we've hit an error case
 		// Our job now is to
@@ -122,7 +123,7 @@ func checkHTTPRetry(ctx context.Context, resp *http.Response, err error) (bool, 
 		var errorBody DBApiErrorBody
 		err = json.Unmarshal(body, &errorBody)
 		if err != nil {
-			return false, fmt.Errorf("Response from server (%d) %s", resp.StatusCode, string(body))
+			return false, fmt.Errorf("Response from server (%d) %s: %v", resp.StatusCode, string(body), err)
 		}
 		dbAPIError := DBApiError{
 			ErrorBody:  &errorBody,
@@ -131,6 +132,7 @@ func checkHTTPRetry(ctx context.Context, resp *http.Response, err error) (bool, 
 		}
 		for _, substring := range transientErrorStringMatches {
 			if strings.Contains(errorBody.Message, substring) {
+				log.Println("Failed request detected: Retryable type found. Attempting retry...")
 				return true, dbAPIError
 			}
 		}

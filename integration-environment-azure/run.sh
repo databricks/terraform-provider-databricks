@@ -2,8 +2,6 @@
 set -e
 cd $(dirname "$0")
 
-# export SKIP_CLEANUP=true
-
 function cleanup()
 {
     echo -e "----> Destroy prereqs \n\n"
@@ -42,5 +40,7 @@ export TEST_LOCATION=$(terraform output location)
 
 
 echo -e "----> Running Azure Acceptance Tests \n\n"
+# Output debug log to file while tests run
+export TF_LOG_PATH=$PWD/tf.log
 # Run all Azure integration tests
 TF_LOG=debug TF_ACC=1 gotestsum --format short-verbose --raw-command go test -v -json -short -coverprofile=coverage.out -test.timeout 35m -run 'TestAccAzure' ./../...

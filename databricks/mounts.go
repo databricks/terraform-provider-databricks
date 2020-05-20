@@ -289,19 +289,20 @@ for mount in dbutils.fs.mounts():
 // AzureADLSGen2Mount describes the object for a azure datalake gen 2 storage mount
 type AzureADLSGen2Mount struct {
 	Mount
-	ContainerName      string
-	StorageAccountName string
-	Directory          string
-	MountName          string
-	ClientID           string
-	TenantID           string
-	SecretScope        string
-	SecretKey          string
+	ContainerName        string
+	StorageAccountName   string
+	Directory            string
+	MountName            string
+	ClientID             string
+	TenantID             string
+	SecretScope          string
+	SecretKey            string
+	InitializeFileSystem bool
 }
 
 // NewAzureADLSGen2Mount is a constructor for AzureADLSGen2Mount
-func NewAzureADLSGen2Mount(containerName string, storageAccountName string, directory string, mountName string, clientID string, tenantID string, secretScope string, secretKey string) *AzureADLSGen2Mount {
-	return &AzureADLSGen2Mount{ContainerName: containerName, StorageAccountName: storageAccountName, Directory: directory, MountName: mountName, ClientID: clientID, TenantID: tenantID, SecretScope: secretScope, SecretKey: secretKey}
+func NewAzureADLSGen2Mount(containerName string, storageAccountName string, directory string, mountName string, clientID string, tenantID string, secretScope string, secretKey string, initializeFileSystem bool) *AzureADLSGen2Mount {
+	return &AzureADLSGen2Mount{ContainerName: containerName, StorageAccountName: storageAccountName, Directory: directory, MountName: mountName, ClientID: clientID, TenantID: tenantID, SecretScope: secretScope, SecretKey: secretKey, InitializeFileSystem: initializeFileSystem}
 }
 
 // Create creates a azure datalake gen 2 storage mount
@@ -310,18 +311,22 @@ func (m AzureADLSGen2Mount) Create(client service.DBApiClient, clusterID string)
 try:
   configs = {"fs.azure.account.auth.type": "OAuth",
            "fs.azure.account.oauth.provider.type": "org.apache.hadoop.fs.azurebfs.oauth2.ClientCredsTokenProvider",
-           "fs.azure.account.oauth2.client.id": "%s",
-           "fs.azure.account.oauth2.client.secret": dbutils.secrets.get(scope = "%s", key = "%s"),
-           "fs.azure.account.oauth2.client.endpoint": "https://login.microsoftonline.com/%s/oauth2/token"}
+           "fs.azure.account.oauth2.client.id": "%[1]s",
+           "fs.azure.account.oauth2.client.secret": dbutils.secrets.get(scope = "%[2]s", key = "%[3]s"),
+		   "fs.azure.account.oauth2.client.endpoint": "https://login.microsoftonline.com/%[4]s/oauth2/token",
+		   "fs.azure.createRemoteFileSystemDuringInitialization": "%[5]t"}
   dbutils.fs.mount(
-   source = "abfss://%s@%s.dfs.core.windows.net/%s",
-   mount_point = "/mnt/%s",
+   source = "abfss://%[6]s@%[7]s.dfs.core.windows.net%[8]s",
+   mount_point = "/mnt/%[9]s",
    extra_configs = configs)
 except Exception as e:
-  dbutils.fs.unmount("/mnt/%s")
+  try:
+    dbutils.fs.unmount("/mnt/%[9]s")
+  except Exception as e2:
+    print ("Failed to unmount", e2)
   raise e
 dbutils.notebook.exit("success")
-`, m.ClientID, m.SecretScope, m.SecretKey, m.TenantID, m.ContainerName, m.StorageAccountName, m.Directory, m.MountName, m.MountName)
+`, m.ClientID, m.SecretScope, m.SecretKey, m.TenantID, m.InitializeFileSystem, m.ContainerName, m.StorageAccountName, m.Directory, m.MountName)
 	resp, err := client.Commands().Execute(clusterID, "python", iamMountCommand)
 	if err != nil {
 		return err

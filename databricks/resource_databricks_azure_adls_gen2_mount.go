@@ -33,16 +33,7 @@ func resourceAzureAdlsGen2Mount() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
-				//Default:  "/",
 				ForceNew: true,
-				ValidateFunc: func(val interface{}, key string) (warns []string, errors []error) {
-					directory := val.(string)
-					if strings.HasPrefix(directory, "/") {
-						return
-					}
-					errors = append(errors, fmt.Errorf("%s must start with /, got: %s", key, val))
-					return
-				},
 			},
 			"mount_name": {
 				Type:     schema.TypeString,
@@ -69,6 +60,11 @@ func resourceAzureAdlsGen2Mount() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
+			"initialize_file_system": {
+				Type:     schema.TypeBool,
+				Required: true,
+				ForceNew: true,
+			},
 		},
 	}
 }
@@ -88,9 +84,10 @@ func resourceAzureAdlsGen2Create(d *schema.ResourceData, m interface{}) error {
 	clientID := d.Get("client_id").(string)
 	clientSecretScope := d.Get("client_secret_scope").(string)
 	clientSecretKey := d.Get("client_secret_key").(string)
+	initializeFileSystem := d.Get("initialize_file_system").(bool)
 
 	adlsGen2Mount := NewAzureADLSGen2Mount(containerName, storageAccountName, directory, mountName, clientID, tenantID,
-		clientSecretScope, clientSecretKey)
+		clientSecretScope, clientSecretKey, initializeFileSystem)
 
 	err = adlsGen2Mount.Create(client, clusterID)
 	if err != nil {
@@ -122,6 +119,10 @@ func resourceAzureAdlsGen2Create(d *schema.ResourceData, m interface{}) error {
 	if err != nil {
 		return err
 	}
+	err = d.Set("initialize_file_system", initializeFileSystem)
+	if err != nil {
+		return err
+	}
 
 	return resourceAzureAdlsGen2Read(d, m)
 }
@@ -140,9 +141,10 @@ func resourceAzureAdlsGen2Read(d *schema.ResourceData, m interface{}) error {
 	clientID := d.Get("client_id").(string)
 	clientSecretScope := d.Get("client_secret_scope").(string)
 	clientSecretKey := d.Get("client_secret_key").(string)
+	initializeFileSystem := d.Get("initialize_file_system").(bool)
 
 	adlsGen2Mount := NewAzureADLSGen2Mount(containerName, storageAccountName, directory, mountName, clientID, tenantID,
-		clientSecretScope, clientSecretKey)
+		clientSecretScope, clientSecretKey, initializeFileSystem)
 
 	url, err := adlsGen2Mount.Read(client, clusterID)
 	if err != nil {
@@ -185,8 +187,9 @@ func resourceAzureAdlsGen2Delete(d *schema.ResourceData, m interface{}) error {
 	clientID := d.Get("client_id").(string)
 	clientSecretScope := d.Get("client_secret_scope").(string)
 	clientSecretKey := d.Get("client_secret_key").(string)
+	initializeFileSystem := d.Get("initialize_file_system").(bool)
 
 	adlsGen2Mount := NewAzureADLSGen2Mount(containerName, storageAccountName, directory, mountName, clientID, tenantID,
-		clientSecretScope, clientSecretKey)
+		clientSecretScope, clientSecretKey, initializeFileSystem)
 	return adlsGen2Mount.Delete(client, clusterID)
 }

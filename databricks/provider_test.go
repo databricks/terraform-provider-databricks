@@ -11,6 +11,7 @@ import (
 	"testing"
 )
 
+
 var testAccProviders map[string]terraform.ResourceProvider
 var testAccProvider *schema.Provider
 
@@ -29,6 +30,8 @@ func init() {
 
 	testAccProviders = map[string]terraform.ResourceProvider{
 		"databricks": testAccProvider,
+		// "azurerm":    azurerm.Provider(),
+		// "azuread":    azuread.Provider(),
 	}
 }
 

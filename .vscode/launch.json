@@ -1,0 +1,25 @@
+{
+        // Use IntelliSense to learn about possible attributes.
+        // Hover to view descriptions of existing attributes.
+        // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+        "version": "0.2.0",
+        "configurations": [
+            {
+                "name": "Launch test function",
+                "type": "go",
+                "request": "launch",
+                "mode": "test",
+                "program": "${workspaceRoot}/databricks/resource_databricks_azure_adls_gen2_mount_test.go",
+                "args": [
+                    "-test.v",
+                    "-test.run",
+                    "TestAccAzureAdlsGen2Mount_capture_error"
+                ],
+                "env": {
+                    "TF_ACC" : "1"
+                    // "TEST_RESOURCE_GROUP" : "${env:TEST_RESOURCE_GROUP}"
+                },
+                "showLog": true
+            }
+        ]
+    }

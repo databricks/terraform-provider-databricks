@@ -65,7 +65,7 @@ type DBApiClientConfig struct {
 	DefaultHeaders     map[string]string
 	InsecureSkipVerify bool
 	TimeoutSeconds     int
-	client             retryablehttp.Client
+	client             *retryablehttp.Client
 }
 
 var transientErrorStringMatches []string = []string{ // TODO: Should we make these regexes to match more of the message or is this sufficient?
@@ -82,7 +82,7 @@ func (c *DBApiClientConfig) Setup() {
 	// a transient error on initial creation
 	retryDelayDuration := 10 * time.Second
 	retryMaximumDuration := 5 * time.Minute
-	c.client = retryablehttp.Client{
+	c.client = &retryablehttp.Client{
 		HTTPClient: &http.Client{
 			Timeout: time.Duration(time.Duration(c.TimeoutSeconds) * time.Second),
 			Transport: &http.Transport{
@@ -106,7 +106,11 @@ func (c *DBApiClientConfig) Setup() {
 
 // checkHTTPRetry inspects HTTP errors from the Databricks API for known transient errors on Workspace creation
 func checkHTTPRetry(ctx context.Context, resp *http.Response, err error) (bool, error) {
-
+	if resp == nil {
+		// If response is nil we can't make retry choices.
+		// In this case don't retry and return the original error from httpclient
+		return false, err
+	}
 	if resp.StatusCode >= 400 {
 		log.Printf("Failed request detected. Status Code: %v\n", resp.StatusCode)
 		// reading the body means that the caller cannot read it themselves
@@ -250,6 +254,9 @@ func PerformQuery(config *DBApiClientConfig, method, path string, apiVersion str
 		}
 	}
 	requestHeaders := config.getDefaultHeaders()
+	if config.client == nil {
+		config.Setup()
+	}
 
 	if len(headers) > 0 {
 		for k, v := range headers {

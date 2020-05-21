@@ -141,10 +141,10 @@ The following variables can be passed via environment variables:
 * `azure_region` → `AZURE_REGION`
 * `workspace_name` → `DATABRICKS_AZURE_WORKSPACE_NAME`
 * `resource_group` → `DATABRICKS_AZURE_RESOURCE_GROUP`
-* `subscription_id` → `DATABRICKS_AZURE_SUBSCRIPTION_ID`
-* `client_secret` → `DATABRICKS_AZURE_CLIENT_SECRET`
-* `client_id` → `DATABRICKS_AZURE_CLIENT_ID`
-* `tenant_id` → `DATABRICKS_AZURE_TENANT_ID`
+* `subscription_id` → `DATABRICKS_AZURE_SUBSCRIPTION_ID` or `ARM_SUBSCRIPTION_ID`
+* `client_secret` → `DATABRICKS_AZURE_CLIENT_SECRET` or `ARM_CLIENT_SECRET`
+* `client_id` → `DATABRICKS_AZURE_CLIENT_ID` or `ARM_CLIENT_ID`
+* `tenant_id` → `DATABRICKS_AZURE_TENANT_ID` or `ARM_TENANT_ID`
 
 For example you can have the following provider definition:
 
@@ -203,16 +203,18 @@ Alternatively you can provide this value as an environment variable `DATABRICKS_
 Alternatively you can provide this value as an environment variable `DATABRICKS_AZURE_RESOURCE_GROUP`.
 
 * `subscription_id` - This is the Azure Subscription id in which your Azure Databricks Workspace resides in. 
-Alternatively you can provide this value as an environment variable `DATABRICKS_AZURE_SUBSCRIPTION_ID`.
+Alternatively you can provide this value as an environment variable `DATABRICKS_AZURE_SUBSCRIPTION_ID` or `ARM_SUBSCRIPTION_ID`.
                                                                               
 * `client_secret` - This is the Azure Enterprise Application (Service principal) client secret. This service 
 principal requires contributor access to your Azure Databricks deployment. Alternatively you can provide this 
-value as an environment variable `DATABRICKS_AZURE_CLIENT_SECRET`.  
+value as an environment variable `DATABRICKS_AZURE_CLIENT_SECRET` or `ARM_CLIENT_SECRET`.
 
 * `client_id` - This is the Azure Enterprise Application (Service principal) client id. This service principal 
 requires contributor access to your Azure Databricks deployment. Alternatively you can provide this value as an 
-environment variable `DATABRICKS_AZURE_CLIENT_ID`.  
+environment variable `DATABRICKS_AZURE_CLIENT_ID` or `ARM_CLIENT_ID`.
 
 * `tenant_id` - This is the Azure Active Directory Tenant id in which the Enterprise Application (Service Principal) 
-resides in. Alternatively you can provide this value as an environment variable `DATABRICKS_AZURE_TENANT_ID`.  
+resides in. Alternatively you can provide this value as an environment variable `DATABRICKS_AZURE_TENANT_ID` or `ARM_TENANT_ID`.
+
+Where there are multiple environment variable options, the `DATABRICKS_AZURE_*` environment variables takes precedence and the `ARM_*` environment variables provide a way to share authentication configuration when using the `databricks-terraform` provider alongside the `azurerm` provider.
 {{% /chevron %}}

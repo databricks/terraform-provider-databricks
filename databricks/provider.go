@@ -2,11 +2,12 @@ package databricks
 
 import (
 	"fmt"
+	"log"
+	"os"
+
 	"github.com/databrickslabs/databricks-terraform/client/service"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
-	"log"
-	"os"
 )
 
 // Provider returns the entire terraform provider object
@@ -78,22 +79,22 @@ func Provider(version string) terraform.ResourceProvider {
 						"subscription_id": {
 							Type:        schema.TypeString,
 							Required:    true,
-							DefaultFunc: schema.EnvDefaultFunc("DATABRICKS_AZURE_SUBSCRIPTION_ID", nil),
+							DefaultFunc: schema.MultiEnvDefaultFunc([]string{"DATABRICKS_AZURE_SUBSCRIPTION_ID", "ARM_SUBSCRIPTION_ID"}, nil),
 						},
 						"client_secret": {
 							Type:        schema.TypeString,
 							Required:    true,
-							DefaultFunc: schema.EnvDefaultFunc("DATABRICKS_AZURE_CLIENT_SECRET", nil),
+							DefaultFunc: schema.MultiEnvDefaultFunc([]string{"DATABRICKS_AZURE_CLIENT_SECRET", "ARM_CLIENT_SECRET"}, nil),
 						},
 						"client_id": {
 							Type:        schema.TypeString,
 							Required:    true,
-							DefaultFunc: schema.EnvDefaultFunc("DATABRICKS_AZURE_CLIENT_ID", nil),
+							DefaultFunc: schema.MultiEnvDefaultFunc([]string{"DATABRICKS_AZURE_CLIENT_ID", "ARM_CLIENT_ID"}, nil),
 						},
 						"tenant_id": {
 							Type:        schema.TypeString,
 							Required:    true,
-							DefaultFunc: schema.EnvDefaultFunc("DATABRICKS_AZURE_TENANT_ID", nil),
+							DefaultFunc: schema.MultiEnvDefaultFunc([]string{"DATABRICKS_AZURE_TENANT_ID", "ARM_TENANT_ID"}, nil),
 						},
 					},
 				},
@@ -143,25 +144,40 @@ func providerConfigureAzureClient(d *schema.ResourceData, providerVersion string
 	} else if os.Getenv("DATABRICKS_AZURE_WORKSPACE_NAME") != "" {
 		tokenPayload.WorkspaceName = os.Getenv("DATABRICKS_AZURE_WORKSPACE_NAME")
 	}
+
+	// This provider takes DATABRICKS_AZURE_* for client ID etc
+	// The azurerm provider uses ARM_* for the same values
+	// To make it easier to use the two providers together we use the following sources in order:
+	//  - provider config
+	//  - DATABRICKS_AZURE_* environment variables
+	//  - ARM_* environment variables
 	if subscriptionID, ok := azureAuthMap["subscription_id"].(string); ok {
 		tokenPayload.SubscriptionID = subscriptionID
 	} else if os.Getenv("DATABRICKS_AZURE_SUBSCRIPTION_ID") != "" {
 		tokenPayload.SubscriptionID = os.Getenv("DATABRICKS_AZURE_SUBSCRIPTION_ID")
+	} else if os.Getenv("ARM_SUBSCRIPTION_ID") != "" {
+		tokenPayload.SubscriptionID = os.Getenv("ARM_SUBSCRIPTION_ID")
 	}
 	if clientSecret, ok := azureAuthMap["client_secret"].(string); ok {
 		tokenPayload.ClientSecret = clientSecret
 	} else if os.Getenv("DATABRICKS_AZURE_CLIENT_SECRET") != "" {
 		tokenPayload.ClientSecret = os.Getenv("DATABRICKS_AZURE_CLIENT_SECRET")
+	} else if os.Getenv("ARM_CLIENT_SECRET") != "" {
+		tokenPayload.ClientSecret = os.Getenv("ARM_CLIENT_SECRET")
 	}
 	if clientID, ok := azureAuthMap["client_id"].(string); ok {
 		tokenPayload.ClientID = clientID
 	} else if os.Getenv("DATABRICKS_AZURE_CLIENT_ID") != "" {
 		tokenPayload.ClientID = os.Getenv("DATABRICKS_AZURE_CLIENT_ID")
+	} else if os.Getenv("ARM_CLIENT_ID") != "" {
+		tokenPayload.ClientID = os.Getenv("ARM_CLIENT_ID")
 	}
 	if tenantID, ok := azureAuthMap["tenant_id"].(string); ok {
 		tokenPayload.TenantID = tenantID
 	} else if os.Getenv("DATABRICKS_AZURE_TENANT_ID") != "" {
 		tokenPayload.TenantID = os.Getenv("DATABRICKS_AZURE_TENANT_ID")
+	} else if os.Getenv("ARM_TENANT_ID") != "" {
+		tokenPayload.TenantID = os.Getenv("ARM_TENANT_ID")
 	}
 
 	azureAuthSetup := AzureAuth{

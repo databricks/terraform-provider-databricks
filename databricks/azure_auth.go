@@ -3,14 +3,13 @@ package databricks
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/Azure/go-autorest/autorest/adal"
-	"github.com/Azure/go-autorest/autorest/azure"
-	"github.com/databrickslabs/databricks-terraform/client/service"
 	"log"
 	"net/http"
 	urlParse "net/url"
-	"strings"
-	"time"
+
+	"github.com/Azure/go-autorest/autorest/adal"
+	"github.com/Azure/go-autorest/autorest/azure"
+	"github.com/databrickslabs/databricks-terraform/client/service"
 )
 
 // List of management information
@@ -213,53 +212,11 @@ func (a *AzureAuth) initWorkspaceAndGetClient(config *service.DBApiClientConfig)
 	//}
 	dbClient.SetConfig(&newOption)
 
-	// So when the workspace is initially created sometimes it fails to perform api calls so this is a simple test
-	// to verify that the workspace has been created successfully. The retry is intentional as sometimes after workspace
-	// creation the API's will not work correctly. This may also
-	err = validateWorkspaceApis(10, 30, func(attempt int) error {
-		_, err = dbClient.Clusters().ListNodeTypes()
-		return err
-	})
+	// Spin for a while while the workspace comes up and starts behaving.
+	_, err = dbClient.Clusters().ListNodeTypes()
+	if err != nil {
+		return dbClient, err
+	}
 
 	return dbClient, err
-}
-
-func validateWorkspaceApis(sleepDurationSeconds time.Duration, timeoutDurationMinutes time.Duration, do func(attempt int) error) error {
-	errChan := make(chan error, 1)
-	var timeoutBool = false
-	var attempts int
-	var expectedError error
-	apisAreNotYetReadErr := "com.databricks.backend.manager.util.UnknownWorkerEnvironmentException: Unknown worker environment WorkerEnvId"
-	go func(attempts *int, expectedError *error, timeout *bool) {
-		for {
-			err := do(*attempts)
-			// Timeout and terminate go routine so it does not leak
-			if *timeout {
-				errChan <- err
-				return
-			}
-			if err == nil {
-				errChan <- err
-				return
-			}
-			if !strings.Contains(err.Error(), apisAreNotYetReadErr) {
-				errChan <- err
-				return
-			}
-			log.Println(fmt.Sprintf("Waiting for cluster apis to not throw error: %v", err))
-			*attempts++
-			*expectedError = err
-			time.Sleep(sleepDurationSeconds * time.Second)
-		}
-	}(&attempts, &expectedError, &timeoutBool)
-	select {
-	case err := <-errChan:
-		if err == nil {
-			log.Printf("Returned nil error after %v attempts\n", attempts)
-		}
-		return err
-	case <-time.After(timeoutDurationMinutes * time.Minute):
-		timeoutBool = true
-		return fmt.Errorf("timed out waiting for ready state after %v attempts with error %v", attempts, expectedError)
-	}
 }

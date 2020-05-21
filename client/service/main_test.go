@@ -44,6 +44,7 @@ func GetIntegrationDBAPIClient() *DBApiClient {
 	var config DBApiClientConfig
 	config.Token = os.Getenv("DATABRICKS_TOKEN")
 	config.Host = os.Getenv("DATABRICKS_HOST")
+	config.Setup()
 
 	var c DBApiClient
 	c.SetConfig(&config)
@@ -77,6 +78,7 @@ func AssertRequestWithMockServer(t *testing.T, rawPayloadArgs interface{}, reque
 	defer server.Close()
 	var config DBApiClientConfig
 	config.Host = server.URL
+	config.Setup()
 
 	var dbClient DBApiClient
 	dbClient.SetConfig(&config)
@@ -116,6 +118,7 @@ func AssertMultipleRequestsWithMockServer(t *testing.T, rawPayloadArgs interface
 	defer server.Close()
 	var config DBApiClientConfig
 	config.Host = server.URL
+	config.Setup()
 
 	var dbClient DBApiClient
 	dbClient.SetConfig(&config)

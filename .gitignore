@@ -328,3 +328,4 @@ website/**/*.zip
 website/public/**
 
 .vscode/private.env
+tf.log

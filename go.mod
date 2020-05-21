@@ -6,6 +6,7 @@ require (
 	github.com/Azure/go-autorest/autorest v0.10.1
 	github.com/Azure/go-autorest/autorest/adal v0.8.3
 	github.com/google/go-querystring v1.0.0
+	github.com/hashicorp/go-retryablehttp v0.6.6
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/hashicorp/terraform-plugin-sdk v1.12.0
 	github.com/joho/godotenv v1.3.0

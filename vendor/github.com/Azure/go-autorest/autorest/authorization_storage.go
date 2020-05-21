@@ -35,6 +35,9 @@ const (
 	// SharedKey is used to authorize against blobs, files and queues services.
 	SharedKey SharedKeyType = "sharedKey"
 
+	// SharedKey is used to authorize against the account.
+	SharedKeyForAccount SharedKeyType = "sharedKeyAccount"
+
 	// SharedKeyForTable is used to authorize against the table service.
 	SharedKeyForTable SharedKeyType = "sharedKeyTable"
 
@@ -127,6 +130,14 @@ func buildSharedKey(accName string, accKey []byte, req *http.Request, keyType Sh
 		date := time.Now().UTC().Format(http.TimeFormat)
 		req.Header.Set(headerXMSDate, date)
 	}
+
+	if keyType == SharedKeyForAccount {
+		// ensure a content length is set if appropriate
+		if req.Header.Get(headerContentLength) == "" {
+			req.Header.Set("Content-Length", fmt.Sprintf("%d", int(req.ContentLength)))
+		}
+	}
+
 	canString, err := buildCanonicalizedString(req.Method, req.Header, canRes, keyType)
 	if err != nil {
 		return "", err
@@ -145,6 +156,9 @@ func buildCanonicalizedResource(accountName, uri string, keyType SharedKeyType) 
 	if accountName != storageEmulatorAccountName {
 		cr.WriteString("/")
 		cr.WriteString(getCanonicalizedAccountName(accountName))
+		if keyType == SharedKeyForAccount {
+			cr.WriteString("/")
+		}
 	}
 
 	if len(u.Path) > 0 {
@@ -160,7 +174,7 @@ func buildCanonicalizedResource(accountName, uri string, keyType SharedKeyType) 
 	}
 
 	// See https://github.com/Azure/azure-storage-net/blob/master/Lib/Common/Core/Util/AuthenticationUtility.cs#L277
-	if keyType == SharedKey {
+	if keyType == SharedKey || keyType == SharedKeyForAccount {
 		if len(params) > 0 {
 			cr.WriteString("\n")
 
@@ -203,7 +217,7 @@ func buildCanonicalizedString(verb string, headers http.Header, canonicalizedRes
 	}
 	date := headers.Get(headerDate)
 	if v := headers.Get(headerXMSDate); v != "" {
-		if keyType == SharedKey || keyType == SharedKeyLite {
+		if keyType == SharedKey || keyType == SharedKeyForAccount || keyType == SharedKeyLite {
 			date = ""
 		} else {
 			date = v
@@ -211,7 +225,7 @@ func buildCanonicalizedString(verb string, headers http.Header, canonicalizedRes
 	}
 	var canString string
 	switch keyType {
-	case SharedKey:
+	case SharedKey, SharedKeyForAccount:
 		canString = strings.Join([]string{
 			verb,
 			headers.Get(headerContentEncoding),
@@ -295,7 +309,7 @@ func createAuthorizationHeader(accountName string, accountKey []byte, canonicali
 	signature := base64.StdEncoding.EncodeToString(h.Sum(nil))
 	var key string
 	switch keyType {
-	case SharedKey, SharedKeyForTable:
+	case SharedKey, SharedKeyForAccount, SharedKeyForTable:
 		key = "SharedKey"
 	case SharedKeyLite, SharedKeyLiteForTable:
 		key = "SharedKeyLite"

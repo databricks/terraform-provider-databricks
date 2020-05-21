@@ -2,15 +2,15 @@ package databricks
 
 import (
 	"fmt"
+	"log"
+	"os"
+	"testing"
+
 	"github.com/databrickslabs/databricks-terraform/client/service"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 	"github.com/joho/godotenv"
-	"log"
-	"os"
-	"testing"
 )
-
 
 var testAccProviders map[string]terraform.ResourceProvider
 var testAccProvider *schema.Provider
@@ -30,8 +30,6 @@ func init() {
 
 	testAccProviders = map[string]terraform.ResourceProvider{
 		"databricks": testAccProvider,
-		// "azurerm":    azurerm.Provider(),
-		// "azuread":    azuread.Provider(),
 	}
 }
 

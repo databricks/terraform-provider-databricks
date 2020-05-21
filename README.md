@@ -2,6 +2,9 @@
 
 [![Build Status](https://travis-ci.org/databrickslabs/databricks-terraform.svg?branch=master)](https://travis-ci.org/databrickslabs/databricks-terraform)
 
+If you are looking for the docs for this provider see: https://databrickslabs.github.io/databricks-terraform/overview/ 
+
+
 ## Quickstart: Building and Using the Provider
 
 ### Quick install

@@ -8,7 +8,7 @@ require (
 	github.com/google/go-querystring v1.0.0
 	github.com/hashicorp/go-retryablehttp v0.6.6
 	github.com/hashicorp/hcl v1.0.0 // indirect
-	github.com/hashicorp/terraform-plugin-sdk v1.12.0
+	github.com/hashicorp/terraform-plugin-sdk v1.13.0
 	github.com/joho/godotenv v1.3.0
 	github.com/r3labs/diff v0.0.0-20191120142937-b4ed99a31f5a
 	github.com/sergi/go-diff v1.1.0 // indirect

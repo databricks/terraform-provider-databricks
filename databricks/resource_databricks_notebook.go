@@ -29,9 +29,17 @@ func resourceNotebook() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"content": &schema.Schema{
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+				StateFunc: func(i interface{}) string {
+					base64String := i.(string)
+					base64, err := convertBase64ToCheckSum(base64String)
+					if err != nil {
+						return ""
+					}
+					return base64
+				},
 				ValidateFunc: validation.StringIsBase64,
 			},
 			"path": &schema.Schema{

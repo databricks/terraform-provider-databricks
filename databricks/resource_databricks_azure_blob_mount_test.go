@@ -1,43 +1,75 @@
 package databricks
 
 import (
-	"errors"
 	"fmt"
-	"log"
 	"os"
 	"testing"
 
+	"github.com/databrickslabs/databricks-terraform/client/model"
+	"github.com/databrickslabs/databricks-terraform/client/service"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func TestAccAzureBlobMount_correctly_mounts(t *testing.T) {
 	terraformToApply := testAccAzureBlobMount_correctly_mounts()
+	var clusterInfo model.ClusterInfo
 
 	resource.Test(t, resource.TestCase{
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config: terraformToApply,
+				Check: resource.ComposeTestCheckFunc(
+					testAccAzureBlobMount_cluster_exists("databricks_cluster.cluster", &clusterInfo),
+				),
 			},
+			// {
+			// 	PreConfig: func() { testAddAzureBlobMount_correctly_mounts_unmount() },
+			// 	Config:    terraformToApply,
+			// },
 		},
 	})
 }
 
-func testAddAzureBlobMount_correctly_mounts_unmount() {
+func testAccAzureBlobMount_cluster_exists(n string, clusterInfo *model.ClusterInfo) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		// find the corresponding state object
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
 
-	iamMountCommand := `
-dbutils.fs.unmount("/mnt/dev")
-dbutils.notebook.exit("success")
-`
-	resp, err := client.Commands().Execute(clusterID, "python", iamMountCommand)
-	if err != nil {
-		return err
-	}
-	if resp.Results.ResultType == "error" {
-		log.Println(fmt.Sprintf("[ERROR] [CAUSED BY] %s", resp.Results.Cause))
-		return errors.New(resp.Results.Summary)
+		// retrieve the configured client from the test setup
+		client := testAccProvider.Meta().(service.DBApiClient)
+		resp, err := client.Clusters().Get(rs.Primary.ID)
+		if err != nil {
+			return err
+		}
+
+		// If no error, assign the response Widget attribute to the widget pointer
+		*clusterInfo = resp
+		return nil
 	}
 }
+
+// func testAccAzureBlobMount_correctly_mounts_unmount() {
+
+// 	client := testAccProvider.Meta().(service.DBApiClient)
+
+// 	iamMountCommand := `
+// dbutils.fs.unmount("/mnt/dev")
+// dbutils.notebook.exit("success")
+// `
+// 	resp, err := client.Commands().Execute(clusterID, "python", iamMountCommand)
+// 	if err != nil {
+// 		return err
+// 	}
+// 	if resp.Results.ResultType == "error" {
+// 		log.Println(fmt.Sprintf("[ERROR] [CAUSED BY] %s", resp.Results.Cause))
+// 		return errors.New(resp.Results.Summary)
+// 	}
+// }
 
 func testAccAzureBlobMount_correctly_mounts() string {
 	clientID := os.Getenv("ARM_CLIENT_ID")

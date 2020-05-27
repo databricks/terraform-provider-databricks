@@ -9,11 +9,13 @@ import (
 	"github.com/databrickslabs/databricks-terraform/client/service"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestAccAzureBlobMount_correctly_mounts(t *testing.T) {
 	terraformToApply := testAccAzureBlobMount_correctly_mounts()
 	var clusterInfo model.ClusterInfo
+	var azureBlobMount AzureBlobMount
 
 	resource.Test(t, resource.TestCase{
 		Providers: testAccProviders,
@@ -22,12 +24,20 @@ func TestAccAzureBlobMount_correctly_mounts(t *testing.T) {
 				Config: terraformToApply,
 				Check: resource.ComposeTestCheckFunc(
 					testAccAzureBlobMount_cluster_exists("databricks_cluster.cluster", &clusterInfo),
+					testAccAzureBlobMount_mount_exists("databricks_azure_blob_mount.mount", &azureBlobMount),
 				),
 			},
-			// {
-			// 	PreConfig: func() { testAddAzureBlobMount_correctly_mounts_unmount() },
-			// 	Config:    terraformToApply,
-			// },
+			{
+				PreConfig: func() {
+					client := testAccProvider.Meta().(service.DBApiClient)
+					err := azureBlobMount.Delete(client, clusterInfo.ClusterID)
+					assert.NoError(t, err, "TestAccAzureBlobMount_correctly_mounts: Failed to remove the mount.")
+				},
+				Config: terraformToApply,
+				Check: resource.ComposeTestCheckFunc(
+					testAccAzureBlobMount_mount_exists("databricks_azure_blob_mount.mount", &azureBlobMount),
+				),
+			},
 		},
 	})
 }
@@ -53,23 +63,30 @@ func testAccAzureBlobMount_cluster_exists(n string, clusterInfo *model.ClusterIn
 	}
 }
 
-// func testAccAzureBlobMount_correctly_mounts_unmount() {
+func testAccAzureBlobMount_mount_exists(n string, azureBlobMount *AzureBlobMount) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		// find the corresponding state object
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found in tfstate: %s", n)
+		}
 
-// 	client := testAccProvider.Meta().(service.DBApiClient)
+		authType := rs.Primary.Attributes["auth_type"]
+		containerName := rs.Primary.Attributes["container_name"]
+		storageAccountName := rs.Primary.Attributes["storage_account_name"]
+		directory := rs.Primary.Attributes["directory"]
+		mountName := rs.Primary.Attributes["mount_name"]
+		tokenSecretScope := rs.Primary.Attributes["token_secret_scope"]
+		tokenSecretKey := rs.Primary.Attributes["token_secret_key"]
 
-// 	iamMountCommand := `
-// dbutils.fs.unmount("/mnt/dev")
-// dbutils.notebook.exit("success")
-// `
-// 	resp, err := client.Commands().Execute(clusterID, "python", iamMountCommand)
-// 	if err != nil {
-// 		return err
-// 	}
-// 	if resp.Results.ResultType == "error" {
-// 		log.Println(fmt.Sprintf("[ERROR] [CAUSED BY] %s", resp.Results.Cause))
-// 		return errors.New(resp.Results.Summary)
-// 	}
-// }
+		blobMount := NewAzureBlobMount(containerName, storageAccountName, directory, mountName, authType,
+			tokenSecretScope, tokenSecretKey)
+
+		*azureBlobMount = *blobMount
+		return nil
+
+	}
+}
 
 func testAccAzureBlobMount_correctly_mounts() string {
 	clientID := os.Getenv("ARM_CLIENT_ID")

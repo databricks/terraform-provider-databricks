@@ -24,11 +24,11 @@ resource "databricks_notebook" "my_databricks_notebook" {
 }
 ```
 
-For deployment of a plain Python notebook, the following example might be useful:
+For deployment of an empty Python notebook, the following example might be useful:
 
 ```hcl
 resource "databricks_notebook" "notebook" {
-  content = base64encode("# Welcome to your Jupyter notebook")
+  content = base64encode("# Welcome to your Python notebook")
   path = "/mynotebook"
   overwrite = false
   mkdirs = true
@@ -64,7 +64,7 @@ returns an error RESOURCE_ALREADY_EXISTS. If this operation fails it may have su
 
 #### - `format`:
 > **(Required)** This specifies the format of the file to be imported. 
-By default, this is SOURCE. However it may be one of: SOURCE, HTML, or DBC. The value is case sensitive. SOURCE is used for deployment of, for example, Python notebooks.
+By default, this is SOURCE (meaning code). However it may be one of: SOURCE, HTML, or DBC. The value is case sensitive. SOURCE is used for deployment of, for example, Python notebooks.
 
 ## Attribute Reference
 

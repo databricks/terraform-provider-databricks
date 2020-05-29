@@ -64,7 +64,7 @@ returns an error RESOURCE_ALREADY_EXISTS. If this operation fails it may have su
 
 #### - `format`:
 > **(Required)** This specifies the format of the file to be imported. 
-By default, this is SOURCE. However it may be one of: SOURCE, HTML, JUPYTER, DBC. The value is case sensitive.
+By default, this is SOURCE. However it may be one of: SOURCE, HTML, JUPYTER, DBC. The value is case sensitive. Note: For Azure, JUPYTER differs from other options in producing a notebook in a file format supported by the [workspace import and export API](https://docs.microsoft.com/en-us/azure/databricks/dev-tools/api/latest/workspace#--request-structure-1).
 
 ## Attribute Reference
 

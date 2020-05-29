@@ -90,7 +90,8 @@ output "rg_name" {
 }
 
 output "blob_storage_key" {
-  value = azurerm_storage_account.blobaccount.primary_access_key
+  value     = azurerm_storage_account.blobaccount.primary_access_key
+  sensitive = true
 }
 
 output "blob_storage_name" {

@@ -27,6 +27,8 @@ resource "databricks_cluster" "my-cluster" {
 }
 ```  
 
+>Note: For Azure, valid node_type_ids are the "Sizes" of the virtual machines to use as workers, e.g. Standard_DS3_v2.
+
 ## Argument Reference
 
 The following arguments are supported:
@@ -64,7 +66,7 @@ overloaded. max_workers must be strictly greater than min_workers.
 If not specified at creation, the cluster name will be an empty string.
 
 #### - `spark_version`:
-> **(Optional)** 	The Spark version of the cluster. A list of available 
+> **(Required)** 	The Spark version of the cluster. A list of available 
 Spark versions can be retrieved by using the Runtime Versions API call. This field is required.
 
 #### - `spark_conf`:
@@ -144,7 +146,7 @@ value must be within the range 500 - 4096. Custom EBS volumes cannot be specifie
 is optional; if unset, the driver node type will be set as the same value as node_type_id defined above.
 
 #### - `node_type_id`:
-> **(Optional)** This field encodes, through a single value, the resources 
+> **(Required)** This field encodes, through a single value, the resources 
 available to each of the Spark nodes in this cluster. For example, the Spark nodes can be provisioned and optimized for 
 memory or compute intensive workloads A list of available node types can be retrieved by using the List Node Types API 
 call. This field is required.

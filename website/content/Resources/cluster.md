@@ -325,6 +325,9 @@ feature requires specific AWS permissions to function correctly - refer to Autos
 > **(Optional)** The optional ID of the instance pool to which the 
 cluster belongs. Refer to Instance Pools API for details.
 
+#### - `single_user_name`:
+> **(Optional)** The optional user name of the user to assign to an interactive cluster.
+
 #### - `idempotency_token`:
 > **(Optional)** An optional token that can be 
 used to guarantee the idempotency of cluster creation requests. If an active cluster with the provided token already 

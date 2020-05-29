@@ -75,6 +75,7 @@ func resourceNotebook() *schema.Resource {
 				ForceNew: true,
 				ValidateFunc: validation.StringInSlice([]string{
 					string(model.DBC),
+					string(model.Jupyter),
 					string(model.Source),
 					string(model.HTML),
 				}, false),

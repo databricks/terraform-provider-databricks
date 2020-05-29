@@ -139,7 +139,8 @@ func resourceAzureBlobMountRead(d *schema.ResourceData, m interface{}) error {
 	url, err := blobMount.Read(client, clusterID)
 	if err != nil {
 		//Reset id in case of inability to find mount
-		if strings.Contains(err.Error(), "Unable to find mount point!") {
+		if strings.Contains(err.Error(), "Unable to find mount point!") ||
+			strings.Contains(err.Error(), fmt.Sprintf("/mnt/%s does not exist.", mountName)) {
 			d.SetId("")
 			return nil
 		}

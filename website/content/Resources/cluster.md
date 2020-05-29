@@ -146,7 +146,7 @@ value must be within the range 500 - 4096. Custom EBS volumes cannot be specifie
 is optional; if unset, the driver node type will be set as the same value as node_type_id defined above.
 
 #### - `node_type_id`:
-> **(Required)** This field encodes, through a single value, the resources 
+> **(Optional - required if instance_pool_id is not given)** This field encodes, through a single value, the resources 
 available to each of the Spark nodes in this cluster. For example, the Spark nodes can be provisioned and optimized for 
 memory or compute intensive workloads A list of available node types can be retrieved by using the List Node Types API 
 call. This field is required.
@@ -324,7 +324,7 @@ this cluster dynamically acquires additional disk space when its Spark workers a
 feature requires specific AWS permissions to function correctly - refer to Autoscaling local storage for details.
 
 #### - `instance_pool_id`:
-> **(Optional)** The optional ID of the instance pool to which the 
+> **(Optional - required if node_type_id is not given)** The optional ID of the instance pool to which the 
 cluster belongs. Refer to Instance Pools API for details.
 
 #### - `single_user_name`:

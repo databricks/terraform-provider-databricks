@@ -481,6 +481,10 @@ func resourceCluster() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"single_user_name": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 		},
 	}
 }
@@ -838,6 +842,13 @@ func resourceClusterRead(d *schema.ResourceData, m interface{}) error {
 
 	if _, ok := d.GetOk("instance_pool_id"); ok {
 		err := d.Set("instance_pool_id", clusterInfo.InstancePoolID)
+		if err != nil {
+			return err
+		}
+	}
+
+	if _, ok := d.GetOk("single_user_name"); ok {
+		err := d.Set("single_user_name", clusterInfo.SingleUserName)
 		if err != nil {
 			return err
 		}
@@ -1411,6 +1422,11 @@ func parseSchemaToCluster(d *schema.ResourceData, schemaAttPrefix string) model.
 	//Deal with instance pool id
 	if instancePoolID, ok := d.GetOk(schemaAttPrefix + "instance_pool_id"); ok {
 		cluster.InstancePoolID = instancePoolID.(string)
+	}
+
+	//Deal with single user name
+	if singleUserName, ok := d.GetOk(schemaAttPrefix + "single_user_name"); ok {
+		cluster.SingleUserName = singleUserName.(string)
 	}
 
 	//Deal with idempotency token

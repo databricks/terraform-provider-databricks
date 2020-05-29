@@ -326,7 +326,7 @@ feature requires specific AWS permissions to function correctly - refer to Autos
 cluster belongs. Refer to Instance Pools API for details.
 
 #### - `single_user_name`:
-> **(Optional)** The optional user name of the user to assign to an interactive cluster. This is required when using standard AAD Passthrough for Azure Datalake Storage (ADLS).
+> **(Optional)** The optional user name of the user to assign to an interactive cluster. This is required when using standard AAD Passthrough for Azure Datalake Storage (ADLS) with a single-user cluster (i.e. not high-concurrency clusters).
 
 #### - `idempotency_token`:
 > **(Optional)** An optional token that can be 

@@ -37,7 +37,8 @@ export TEST_WORKSPACE_NAME=$(terraform output workspace_name)
 export TEST_GEN2_ADAL_NAME=$(terraform output gen2_adal_name)
 export TEST_MANAGED_RESOURCE_GROUP=$(terraform output workspace_managed_rg_name)
 export TEST_LOCATION=$(terraform output location)
-
+export TEST_STORAGE_ACCOUNT_KEY=$(terraform output blob_storage_key)
+export TEST_STORAGE_ACCOUNT_NAME=$(terraform output blob_storage_name)
 
 echo -e "----> Running Azure Acceptance Tests \n\n"
 # Output debug log to file while tests run

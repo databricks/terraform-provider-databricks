@@ -3,12 +3,13 @@ package databricks
 import (
 	"errors"
 	"fmt"
+	"testing"
+
 	"github.com/databrickslabs/databricks-terraform/client/model"
 	"github.com/databrickslabs/databricks-terraform/client/service"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
 func TestAccSecretResource(t *testing.T) {
@@ -48,6 +49,27 @@ func TestAccSecretResource(t *testing.T) {
 				PreConfig: func() {
 					client := testAccProvider.Meta().(service.DBApiClient)
 					err := client.Secrets().Delete(scope, secret.Key)
+					assert.NoError(t, err, err)
+				},
+				// use a dynamic configuration with the random name from above
+				Config: testSecretResource(scope, key, stringValue),
+				// compose a basic test, checking both remote and local values
+				Check: resource.ComposeTestCheckFunc(
+					// query the API to retrieve the tokenInfo object
+					testSecretResourceExists("databricks_secret.my_secret", &secret, t),
+					// verify remote values
+					testSecretValues(t, &secret, key),
+					// verify local values
+					resource.TestCheckResourceAttr("databricks_secret.my_secret", "scope", scope),
+					resource.TestCheckResourceAttr("databricks_secret.my_secret", "key", key),
+					resource.TestCheckResourceAttr("databricks_secret.my_secret", "string_value", stringValue),
+				),
+			},
+			{
+				//Deleting the scope should recreate the secret
+				PreConfig: func() {
+					client := testAccProvider.Meta().(service.DBApiClient)
+					err := client.SecretScopes().Delete(scope)
 					assert.NoError(t, err, err)
 				},
 				// use a dynamic configuration with the random name from above

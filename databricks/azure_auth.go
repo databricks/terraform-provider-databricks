@@ -78,27 +78,26 @@ func (a *AzureAuth) getWorkspaceID(config *service.DBApiClientConfig) error {
 	log.Println("[DEBUG] Getting Workspace ID via management token.")
 	// Escape all the ids
 	url := fmt.Sprintf("https://management.azure.com/subscriptions/%s/resourceGroups/%s"+
-		"/providers/Microsoft.Databricks/workspaces/%s?api-version=2018-04-01",
+		"/providers/Microsoft.Databricks/workspaces/%s",
 		urlParse.PathEscape(a.TokenPayload.SubscriptionID),
 		urlParse.PathEscape(a.TokenPayload.ResourceGroup),
 		urlParse.PathEscape(a.TokenPayload.WorkspaceName))
-	payload := &WorkspaceRequest{
-		Properties: &WsProps{ManagedResourceGroupID: "/subscriptions/" + a.TokenPayload.SubscriptionID + "/resourceGroups/" + a.TokenPayload.ManagedResourceGroup},
-		Name:       a.TokenPayload.WorkspaceName,
-		Location:   a.TokenPayload.AzureRegion,
-	}
 	headers := map[string]string{
 		"Content-Type":  "application/json",
 		"cache-control": "no-cache",
 		"Authorization": "Bearer " + a.ManagementToken,
 	}
-
+	type apiVersion struct {
+		ApiVersion string `url:"api-version"`
+	}
+	uriPayload := apiVersion{
+		ApiVersion: "2018-04-01",
+	}
 	var responseMap map[string]interface{}
-	resp, err := service.PerformQuery(config, http.MethodPut, url, "2.0", headers, true, true, payload, nil)
+	resp, err := service.PerformQuery(config, http.MethodGet, url, "2.0", headers, false, true, uriPayload, nil)
 	if err != nil {
 		return err
 	}
-
 	err = json.Unmarshal(resp, &responseMap)
 	if err != nil {
 		return err

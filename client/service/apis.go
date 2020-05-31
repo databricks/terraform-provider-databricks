@@ -1,12 +1,24 @@
 package service
 
+import "fmt"
+
 var scimHeaders = map[string]string{
 	"Content-Type": "application/scim+json",
 }
 
+type WorkspaceDoesNotExistError struct {
+	WorkspaceID string
+	Err         error
+}
+
+func (e *WorkspaceDoesNotExistError) Error() string {
+	return fmt.Sprintf("The workspace does not exist: %s", e.WorkspaceID)
+}
+
 // DBApiClient is the client struct that contains clients for all the services available on Databricks
 type DBApiClient struct {
-	Config *DBApiClientConfig
+	Config       *DBApiClientConfig
+	EnsureConfig func(dbClient *DBApiClient) error // used to ensure that Config has been processed, e.g. to add auth headers
 }
 
 // SetConfig initializes the client
@@ -86,6 +98,10 @@ func (c DBApiClient) Commands() CommandsAPI {
 	return CommandsAPI{Client: c}
 }
 
-func (c DBApiClient) performQuery(method, path string, apiVersion string, headers map[string]string, data interface{}, secretsMask *SecretsMask) ([]byte, error) {
+func (c *DBApiClient) performQuery(method, path string, apiVersion string, headers map[string]string, data interface{}, secretsMask *SecretsMask) ([]byte, error) {
+	err := c.EnsureConfig(c)
+	if err != nil {
+		return []byte{}, err
+	}
 	return PerformQuery(c.Config, method, path, apiVersion, headers, true, false, data, secretsMask)
 }

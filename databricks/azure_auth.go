@@ -2,6 +2,7 @@ package databricks
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -154,6 +155,13 @@ func (a *AzureAuth) getWorkspaceAccessToken(config *service.DBApiClientConfig) e
 	var responseMap map[string]interface{}
 	resp, err := service.PerformQuery(config, http.MethodPost, url, "2.0", headers, true, true, payload, nil)
 	if err != nil {
+		var dbApiError service.DBApiError
+		if errors.As(err, dbApiError) && dbApiError.StatusCode == 404 {
+			return &service.WorkspaceDoesNotExistError{
+				WorkspaceID: a.AdbWorkspaceResourceID,
+				Err:         err,
+			}
+		}
 		return err
 	}
 	err = json.Unmarshal(resp, &responseMap)
@@ -170,30 +178,66 @@ func (a *AzureAuth) getWorkspaceAccessToken(config *service.DBApiClientConfig) e
 // 3. Get Azure Databricks Platform OAuth Token using Databricks resource id
 // 4. Get Azure Databricks Workspace Personal Access Token for the SP (60 min duration)
 func (a *AzureAuth) initWorkspaceAndGetClient(config *service.DBApiClientConfig) (service.DBApiClient, error) {
-	var dbClient service.DBApiClient
+	return service.DBApiClient{
+		EnsureConfig: func(dbClient *service.DBApiClient) error {
+			log.Print("azure_auth: EnsureConfig\n")
+			if dbClient == nil {
+				log.Print("Ooops!!!!!!!!!!!!!!!!!!!!!\n")
+				return fmt.Errorf("Got a nil dbClient")
+			}
+			if dbClient.Config != nil && dbClient.Config.Token != "" {
+				// Have a token set - no more to do
+				log.Print("azure_auth: Azure client already initialized\n")
+				return nil
+			}
+
+			newConfig, err := a.initWorkspaceAndGetClientConfig(config)
+			if err != nil {
+				log.Printf("azure_auth: Azure client initialization failed (initWorkspaceAndGetClientConfig): %s\n", err)
+				return err
+			}
+
+			// Set the new Config and test listing clusters
+			dbClient.SetConfig(newConfig)
+
+			// Spin for a while while the workspace comes up and starts behaving.
+			_, err = dbClient.Clusters().ListNodeTypes()
+			if err != nil {
+				log.Printf("azure_auth: Azure client initialization failed (list cluster nodes): %s\n", err)
+				dbClient.SetConfig(config) // revert to previous config
+				return err
+			}
+
+			log.Print("azure_auth: Successfully initialized Azure client\n")
+			return nil
+		},
+	}, nil
+}
+
+func (a *AzureAuth) initWorkspaceAndGetClientConfig(config *service.DBApiClientConfig) (*service.DBApiClientConfig, error) {
 
 	// Get management token
 	err := a.getManagementToken(config)
 	if err != nil {
-		return dbClient, err
+		return nil, err
 	}
 
 	// Get workspace access token
 	err = a.getWorkspaceID(config)
 	if err != nil {
-		return dbClient, err
+		return nil, err
 	}
 
 	// Get platform token
 	err = a.getADBPlatformToken(config)
 	if err != nil {
-		return dbClient, err
+		return nil, err
 	}
 
 	// Get workspace personal access token
 	err = a.getWorkspaceAccessToken(config)
 	if err != nil {
-		return dbClient, err
+		return nil, err
 	}
 
 	var newOption service.DBApiClientConfig
@@ -209,13 +253,5 @@ func (a *AzureAuth) initWorkspaceAndGetClient(config *service.DBApiClientConfig)
 	//	"X-Databricks-Azure-SP-Management-Token":   a.ManagementToken,
 	//	"cache-control":                            "no-cache",
 	//}
-	dbClient.SetConfig(&newOption)
-
-	// Spin for a while while the workspace comes up and starts behaving.
-	_, err = dbClient.Clusters().ListNodeTypes()
-	if err != nil {
-		return dbClient, err
-	}
-
-	return dbClient, err
+	return &newOption, nil
 }

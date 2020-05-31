@@ -156,7 +156,7 @@ func (a *AzureAuth) getWorkspaceAccessToken(config *service.DBApiClientConfig) e
 	resp, err := service.PerformQuery(config, http.MethodPost, url, "2.0", headers, true, true, payload, nil)
 	if err != nil {
 		var dbApiError service.DBApiError
-		if errors.As(err, dbApiError) && dbApiError.StatusCode == 404 {
+		if errors.As(err, &dbApiError) && dbApiError.StatusCode == 404 {
 			return &service.WorkspaceDoesNotExistError{
 				WorkspaceID: a.AdbWorkspaceResourceID,
 				Err:         err,
@@ -181,10 +181,6 @@ func (a *AzureAuth) initWorkspaceAndGetClient(config *service.DBApiClientConfig)
 	return service.DBApiClient{
 		EnsureConfig: func(dbClient *service.DBApiClient) error {
 			log.Print("azure_auth: EnsureConfig\n")
-			if dbClient == nil {
-				log.Print("Ooops!!!!!!!!!!!!!!!!!!!!!\n")
-				return fmt.Errorf("Got a nil dbClient")
-			}
 			if dbClient.Config != nil && dbClient.Config.Token != "" {
 				// Have a token set - no more to do
 				log.Print("azure_auth: Azure client already initialized\n")

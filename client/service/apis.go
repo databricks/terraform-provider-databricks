@@ -99,9 +99,11 @@ func (c DBApiClient) Commands() CommandsAPI {
 }
 
 func (c *DBApiClient) performQuery(method, path string, apiVersion string, headers map[string]string, data interface{}, secretsMask *SecretsMask) ([]byte, error) {
-	err := c.EnsureConfig(c)
-	if err != nil {
-		return []byte{}, err
+	if c.EnsureConfig != nil {
+		err := c.EnsureConfig(c)
+		if err != nil {
+			return []byte{}, err
+		}
 	}
 	return PerformQuery(c.Config, method, path, apiVersion, headers, true, false, data, secretsMask)
 }

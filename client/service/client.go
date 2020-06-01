@@ -12,6 +12,7 @@ import (
 	"net/url"
 	"reflect"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/google/go-querystring/query"
@@ -56,6 +57,8 @@ const (
 	BasicAuth AuthType = "BASIC"
 )
 
+var clientAuthorizerMutex sync.Mutex
+
 // DBApiClientConfig is used to configure the DataBricks Client
 type DBApiClientConfig struct {
 	Host               string
@@ -65,12 +68,14 @@ type DBApiClientConfig struct {
 	DefaultHeaders     map[string]string
 	InsecureSkipVerify bool
 	TimeoutSeconds     int
+	CustomAuthorizer   func(*DBApiClientConfig) error
 	client             *retryablehttp.Client
 }
 
 var transientErrorStringMatches []string = []string{ // TODO: Should we make these regexes to match more of the message or is this sufficient?
 	"com.databricks.backend.manager.util.UnknownWorkerEnvironmentException",
 	"does not have any associated worker environments",
+	"There is no worker environment with id",
 }
 
 // Setup initializes the client
@@ -123,7 +128,6 @@ func checkHTTPRetry(ctx context.Context, resp *http.Response, err error) (bool, 
 		if err != nil {
 			return false, err
 		}
-
 		var errorBody DBApiErrorBody
 		err = json.Unmarshal(body, &errorBody)
 		if err != nil {
@@ -145,7 +149,22 @@ func checkHTTPRetry(ctx context.Context, resp *http.Response, err error) (bool, 
 	return false, nil
 }
 
-func (c *DBApiClientConfig) getAuthHeader() map[string]string {
+func (c *DBApiClientConfig) getOrCreateToken() error {
+	if c.CustomAuthorizer != nil {
+		// Lock incase terraform tries to getOrCreateToken from multiple go routines on the same client ptr.
+		clientAuthorizerMutex.Lock()
+		defer clientAuthorizerMutex.Unlock()
+		if reflect.ValueOf(c.Token).IsZero() {
+			log.Println("NOT AUTHORIZED SO ATTEMPTING TO AUTHORIZE")
+			return c.CustomAuthorizer(c)
+		}
+		log.Println("ALREADY AUTHORIZED")
+		return nil
+	}
+	return nil
+}
+
+func (c DBApiClientConfig) getAuthHeader() map[string]string {
 	auth := make(map[string]string)
 	if c.AuthType == BasicAuth {
 		auth["Authorization"] = "Basic " + c.Token

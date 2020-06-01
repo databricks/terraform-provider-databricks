@@ -8,7 +8,7 @@ import (
 
 // JobsAPI exposes the Jobs API
 type JobsAPI struct {
-	Client DBApiClient
+	Client *DBApiClient
 }
 
 // Create creates a job on the workspace given the job settings

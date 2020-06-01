@@ -8,7 +8,7 @@ import (
 
 // InstancePoolsAPI exposes the instance pools api
 type InstancePoolsAPI struct {
-	Client DBApiClient
+	Client *DBApiClient
 }
 
 // Create creates the instance pool to given the instance pool configuration

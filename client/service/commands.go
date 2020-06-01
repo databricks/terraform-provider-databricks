@@ -12,7 +12,7 @@ import (
 
 // CommandsAPI exposes the Context & Commands API
 type CommandsAPI struct {
-	Client DBApiClient
+	Client *DBApiClient
 }
 
 // Execute creates a spark context and executes a command and then closes context

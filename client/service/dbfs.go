@@ -10,7 +10,7 @@ import (
 
 // DBFSAPI exposes the DBFS API
 type DBFSAPI struct {
-	Client DBApiClient
+	Client *DBApiClient
 }
 
 // Create creates a file in DBFS given data string in base64

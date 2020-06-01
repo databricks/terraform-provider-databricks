@@ -73,7 +73,7 @@ func convertInterfaceSliceToStringSlice(input []interface{}) []string {
 }
 
 func resourceScimUserCreate(d *schema.ResourceData, m interface{}) error {
-	client := m.(service.DBApiClient)
+	client := m.(*service.DBApiClient)
 	userName := d.Get("user_name").(string)
 	setAdmin := d.Get("set_admin").(bool)
 	var displayName string
@@ -127,7 +127,7 @@ func getListOfRoles(roleList []model.RoleListItem) []string {
 
 func resourceScimUserRead(d *schema.ResourceData, m interface{}) error {
 	id := d.Id()
-	client := m.(service.DBApiClient)
+	client := m.(*service.DBApiClient)
 	user, err := client.Users().Read(id)
 	if err != nil {
 		if isScimUserMissing(err.Error(), id) {
@@ -200,7 +200,7 @@ func resourceScimUserRead(d *schema.ResourceData, m interface{}) error {
 
 func resourceScimUserUpdate(d *schema.ResourceData, m interface{}) error {
 	id := d.Id()
-	client := m.(service.DBApiClient)
+	client := m.(*service.DBApiClient)
 	userName := d.Get("user_name").(string)
 	var displayName string
 	var roles []string
@@ -246,7 +246,7 @@ func resourceScimUserUpdate(d *schema.ResourceData, m interface{}) error {
 
 func resourceScimUserDelete(d *schema.ResourceData, m interface{}) error {
 	id := d.Id()
-	client := m.(service.DBApiClient)
+	client := m.(*service.DBApiClient)
 	err := client.Users().Delete(id)
 	return err
 }

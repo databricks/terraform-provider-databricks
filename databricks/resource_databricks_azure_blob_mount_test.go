@@ -29,7 +29,7 @@ func TestAccAzureBlobMount_correctly_mounts(t *testing.T) {
 			},
 			{
 				PreConfig: func() {
-					client := testAccProvider.Meta().(service.DBApiClient)
+					client := testAccProvider.Meta().(*service.DBApiClient)
 					err := azureBlobMount.Delete(client, clusterInfo.ClusterID)
 					assert.NoError(t, err, "TestAccAzureBlobMount_correctly_mounts: Failed to remove the mount.")
 				},
@@ -51,7 +51,7 @@ func testAccAzureBlobMount_cluster_exists(n string, clusterInfo *model.ClusterIn
 		}
 
 		// retrieve the configured client from the test setup
-		client := testAccProvider.Meta().(service.DBApiClient)
+		client := testAccProvider.Meta().(*service.DBApiClient)
 		resp, err := client.Clusters().Get(rs.Primary.ID)
 		if err != nil {
 			return err
@@ -82,7 +82,7 @@ func testAccAzureBlobMount_mount_exists(n string, azureBlobMount *AzureBlobMount
 		blobMount := NewAzureBlobMount(containerName, storageAccountName, directory, mountName, authType,
 			tokenSecretScope, tokenSecretKey)
 
-		client := testAccProvider.Meta().(service.DBApiClient)
+		client := testAccProvider.Meta().(*service.DBApiClient)
 		cluster_id := clusterInfo.ClusterID
 
 		message, err := blobMount.Read(client, cluster_id)

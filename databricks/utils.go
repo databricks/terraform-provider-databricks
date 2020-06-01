@@ -8,7 +8,7 @@ import (
 	"time"
 )
 
-func changeClusterIntoRunningState(clusterID string, client service.DBApiClient) error {
+func changeClusterIntoRunningState(clusterID string, client *service.DBApiClient) error {
 	//return nil
 	clusterInfo, err := client.Clusters().Get(clusterID)
 	if err != nil {

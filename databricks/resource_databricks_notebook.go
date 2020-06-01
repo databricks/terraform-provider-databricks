@@ -7,10 +7,6 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"github.com/databrickslabs/databricks-terraform/client/model"
-	"github.com/databrickslabs/databricks-terraform/client/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 	"hash/crc32"
 	"io"
 	"log"
@@ -18,6 +14,11 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+
+	"github.com/databrickslabs/databricks-terraform/client/model"
+	"github.com/databrickslabs/databricks-terraform/client/service"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 )
 
 func resourceNotebook() *schema.Resource {
@@ -35,10 +36,11 @@ func resourceNotebook() *schema.Resource {
 					base64String := i.(string)
 					base64, err := convertBase64ToCheckSum(base64String)
 					if err != nil {
-						panic(err)
+						return ""
 					}
 					return base64
 				},
+				ValidateFunc: validation.StringIsBase64,
 			},
 			"path": &schema.Schema{
 				Type:     schema.TypeString,
@@ -186,6 +188,7 @@ func resourceNotebookDelete(d *schema.ResourceData, m interface{}) error {
 func convertBase64ToCheckSum(b64 string) (string, error) {
 	dataArr, err := base64.StdEncoding.DecodeString(b64)
 	if err != nil {
+		log.Printf("Error while trying to decode base64 content: %v\n", err)
 		return "error", err
 	}
 	checksum, err := convertZipBytesToCRC(dataArr)

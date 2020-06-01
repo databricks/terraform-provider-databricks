@@ -89,7 +89,7 @@ func TestAccScimGroupResource(t *testing.T) {
 			},
 			{
 				PreConfig: func() {
-					err := testAccProvider.Meta().(service.DBApiClient).Groups().Delete(ScimGroup.ID)
+					err := testAccProvider.Meta().(*service.DBApiClient).Groups().Delete(ScimGroup.ID)
 					assert.NoError(t, err, err)
 				},
 				// use a dynamic configuration with the random name from above
@@ -131,7 +131,7 @@ func TestAccScimGroupResource(t *testing.T) {
 }
 
 func testScimGroupResourceDestroy(s *terraform.State) error {
-	client := testAccProvider.Meta().(service.DBApiClient)
+	client := testAccProvider.Meta().(*service.DBApiClient)
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "databricks_scim_group" {
 			continue
@@ -165,7 +165,7 @@ func testScimGroupResourceExists(n string, group *model.Group, t *testing.T) res
 		}
 
 		// retrieve the configured client from the test setup
-		conn := testAccProvider.Meta().(service.DBApiClient)
+		conn := testAccProvider.Meta().(*service.DBApiClient)
 		resp, err := conn.Groups().Read(rs.Primary.ID)
 		if err != nil {
 			return err

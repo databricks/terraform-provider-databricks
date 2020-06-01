@@ -35,7 +35,7 @@ func resourceSecretScope() *schema.Resource {
 }
 
 func resourceSecretScopeCreate(d *schema.ResourceData, m interface{}) error {
-	client := m.(service.DBApiClient)
+	client := m.(*service.DBApiClient)
 	scopeName := d.Get("name").(string)
 	initialManagePrincipal := d.Get("initial_manage_principal").(string)
 	err := client.SecretScopes().Create(scopeName, initialManagePrincipal)
@@ -47,7 +47,7 @@ func resourceSecretScopeCreate(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceSecretScopeRead(d *schema.ResourceData, m interface{}) error {
-	client := m.(service.DBApiClient)
+	client := m.(*service.DBApiClient)
 	id := d.Id()
 	scope, err := client.SecretScopes().Read(id)
 	if err != nil {
@@ -68,7 +68,7 @@ func resourceSecretScopeRead(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceSecretScopeDelete(d *schema.ResourceData, m interface{}) error {
-	client := m.(service.DBApiClient)
+	client := m.(*service.DBApiClient)
 	id := d.Id()
 	err := client.SecretScopes().Delete(id)
 	return err

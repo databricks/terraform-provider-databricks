@@ -49,7 +49,7 @@ func resourceDBFSFileSync() *schema.Resource {
 }
 
 func resourceDBFSFileSyncCreate(d *schema.ResourceData, m interface{}) error {
-	client := m.(service.DBApiClient)
+	client := m.(*service.DBApiClient)
 	srcPath := d.Get("src_path").(string)
 	tgtPath := d.Get("tgt_path").(string)
 	mkdirs := d.Get("mkdirs").(bool)
@@ -62,7 +62,7 @@ func resourceDBFSFileSyncCreate(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 
-	apiClient := parseSchemaToDBAPIClient(d, &client)
+	apiClient := parseSchemaToDBAPIClient(d, client)
 	err := client.DBFS().Copy(srcPath, tgtPath, apiClient, true)
 	if err != nil {
 		return err
@@ -96,12 +96,12 @@ func resourceDBFSFileSyncUpdate(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceDBFSFileSyncRead(d *schema.ResourceData, m interface{}) error {
-	client := m.(service.DBApiClient)
+	client := m.(*service.DBApiClient)
 	srcPath := d.Get("src_path").(string)
 	tgtPath := d.Get("tgt_path").(string)
 
 	var srcAPIDBFSClient service.DBFSAPI
-	srcAPICLient := parseSchemaToDBAPIClient(d, &client)
+	srcAPICLient := parseSchemaToDBAPIClient(d, client)
 	if srcAPICLient != nil {
 		srcAPIDBFSClient = srcAPICLient.DBFS()
 	} else {
@@ -125,7 +125,7 @@ func resourceDBFSFileSyncRead(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceDBFSFileSyncDelete(d *schema.ResourceData, m interface{}) error {
-	client := m.(service.DBApiClient)
+	client := m.(*service.DBApiClient)
 	id := strings.Split(d.Id(), "|||")[1]
 
 	err := client.DBFS().Delete(id, false)

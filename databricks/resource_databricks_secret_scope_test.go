@@ -42,7 +42,7 @@ func TestAccSecretScopeResource(t *testing.T) {
 			},
 			{
 				PreConfig: func() {
-					client := testAccProvider.Meta().(service.DBApiClient)
+					client := testAccProvider.Meta().(*service.DBApiClient)
 					err := client.SecretScopes().Delete(scope)
 					assert.NoError(t, err, err)
 				},
@@ -64,7 +64,7 @@ func TestAccSecretScopeResource(t *testing.T) {
 }
 
 func testSecretScopeResourceDestroy(s *terraform.State) error {
-	client := testAccProvider.Meta().(service.DBApiClient)
+	client := testAccProvider.Meta().(*service.DBApiClient)
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "databricks_secret_scope" {
 			continue
@@ -96,7 +96,7 @@ func testSecretScopeResourceExists(n string, secretScope *model.SecretScope, t *
 		}
 
 		// retrieve the configured client from the test setup
-		conn := testAccProvider.Meta().(service.DBApiClient)
+		conn := testAccProvider.Meta().(*service.DBApiClient)
 		resp, err := conn.SecretScopes().Read(rs.Primary.ID)
 		//t.Log(resp)
 		if err != nil {

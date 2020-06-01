@@ -982,7 +982,7 @@ func parseSchemaToJobSettings(d *schema.ResourceData) model.JobSettings {
 	}
 
 	if _, ok := d.GetOk("new_cluster.0"); ok {
-		cluster := parseSchemaToCluster(d, "new_cluster.0")
+		cluster := parseSchemaToCluster(d, "new_cluster.0.")
 		jobSettings.NewCluster = &cluster
 	}
 

@@ -187,8 +187,14 @@ func providerConfigureAzureClient(d *schema.ResourceData, providerVersion string
 		AdbAccessToken:         "",
 		AdbPlatformToken:       "",
 	}
-	log.Println("Running Azure Auth")
-	return azureAuthSetup.initWorkspaceAndGetClient(config)
+
+	// Setup the CustomAuthorizer Function to be called at API invoke rather than client invoke
+	config.CustomAuthorizer = func(config *service.DBApiClientConfig) error {
+		return azureAuthSetup.initWorkspaceAndGetClient(config)
+	}
+	var dbClient service.DBApiClient
+	dbClient.SetConfig(config)
+	return &dbClient, nil
 }
 
 func providerConfigure(d *schema.ResourceData, providerVersion string) (interface{}, error) {
@@ -214,5 +220,5 @@ func providerConfigure(d *schema.ResourceData, providerVersion string) (interfac
 	config.UserAgent = fmt.Sprintf("databricks-tf-provider-%s", providerVersion)
 	var dbClient service.DBApiClient
 	dbClient.SetConfig(&config)
-	return dbClient, nil
+	return &dbClient, nil
 }

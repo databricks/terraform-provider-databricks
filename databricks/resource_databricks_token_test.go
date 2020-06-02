@@ -43,7 +43,7 @@ func TestAccTokenResource(t *testing.T) {
 			{
 				//Deleting and recreating the token
 				PreConfig: func() {
-					client := testAccProvider.Meta().(service.DBApiClient)
+					client := testAccProvider.Meta().(*service.DBApiClient)
 					err := client.Tokens().Delete(tokenInfo.TokenID)
 					assert.NoError(t, err, err)
 				},
@@ -65,7 +65,7 @@ func TestAccTokenResource(t *testing.T) {
 }
 
 func testAccCheckTokenResourceDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(service.DBApiClient)
+	conn := testAccProvider.Meta().(*service.DBApiClient)
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "databricks_token" {
 			continue
@@ -101,7 +101,7 @@ func testAccCheckTokenResourceExists(n string, tokenInfo *model.TokenInfo, t *te
 		}
 
 		// retrieve the configured client from the test setup
-		conn := testAccProvider.Meta().(service.DBApiClient)
+		conn := testAccProvider.Meta().(*service.DBApiClient)
 		resp, err := conn.Tokens().Read(rs.Primary.ID)
 		if err != nil {
 			return err

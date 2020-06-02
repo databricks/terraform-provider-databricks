@@ -503,7 +503,7 @@ func convertListInterfaceToString(m []interface{}) []string {
 
 func resourceClusterCreate(d *schema.ResourceData, m interface{}) error {
 
-	client := m.(service.DBApiClient)
+	client := m.(*service.DBApiClient)
 
 	cluster := parseSchemaToCluster(d, "")
 	libraries := parseSchemaToClusterLibraries(d)
@@ -538,7 +538,7 @@ func resourceClusterCreate(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceClusterRead(d *schema.ResourceData, m interface{}) error {
-	client := m.(service.DBApiClient)
+	client := m.(*service.DBApiClient)
 	id := d.Id()
 
 	clusterInfo, err := client.Clusters().Get(id)
@@ -1041,7 +1041,7 @@ func parseSchemaToClusterLibraries(d *schema.ResourceData) []model.Library {
 }
 
 func resourceClusterUpdate(d *schema.ResourceData, m interface{}) error {
-	client := m.(service.DBApiClient)
+	client := m.(*service.DBApiClient)
 	id := d.Id()
 	clusterInfo, err := client.Clusters().Get(id)
 	if err != nil {
@@ -1163,7 +1163,7 @@ func resourceClusterUpdate(d *schema.ResourceData, m interface{}) error {
 
 func resourceClusterDelete(d *schema.ResourceData, m interface{}) error {
 	id := d.Id()
-	client := m.(service.DBApiClient)
+	client := m.(*service.DBApiClient)
 
 	err := client.Clusters().PermanentDelete(id)
 	if err != nil {

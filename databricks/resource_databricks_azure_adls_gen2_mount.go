@@ -70,7 +70,7 @@ func resourceAzureAdlsGen2Mount() *schema.Resource {
 }
 
 func resourceAzureAdlsGen2Create(d *schema.ResourceData, m interface{}) error {
-	client := m.(service.DBApiClient)
+	client := m.(*service.DBApiClient)
 	clusterID := d.Get("cluster_id").(string)
 	err := changeClusterIntoRunningState(clusterID, client)
 	if err != nil {
@@ -127,7 +127,7 @@ func resourceAzureAdlsGen2Create(d *schema.ResourceData, m interface{}) error {
 	return resourceAzureAdlsGen2Read(d, m)
 }
 func resourceAzureAdlsGen2Read(d *schema.ResourceData, m interface{}) error {
-	client := m.(service.DBApiClient)
+	client := m.(*service.DBApiClient)
 	clusterID := d.Get("cluster_id").(string)
 	err := changeClusterIntoRunningState(clusterID, client)
 	if err != nil {
@@ -173,7 +173,7 @@ func resourceAzureAdlsGen2Read(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceAzureAdlsGen2Delete(d *schema.ResourceData, m interface{}) error {
-	client := m.(service.DBApiClient)
+	client := m.(*service.DBApiClient)
 	clusterID := d.Get("cluster_id").(string)
 	err := changeClusterIntoRunningState(clusterID, client)
 	if err != nil {

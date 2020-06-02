@@ -109,6 +109,7 @@ func resourceCluster() *schema.Resource {
 				Type:          schema.TypeString,
 				Optional:      true,
 				ConflictsWith: []string{"instance_pool_id"},
+				AtLeastOneOf:  []string{"instance_pool_id"},
 			},
 			"ssh_public_keys": &schema.Schema{
 				Type:     schema.TypeSet,
@@ -300,6 +301,7 @@ func resourceCluster() *schema.Resource {
 				Type:          schema.TypeString,
 				Optional:      true,
 				ConflictsWith: []string{"node_type_id", "driver_node_type_id", "aws_attributes"},
+				AtLeastOneOf:  []string{"node_type_id"},
 			},
 			"idempotency_token": &schema.Schema{
 				Type:     schema.TypeInt,

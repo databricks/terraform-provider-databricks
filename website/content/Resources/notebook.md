@@ -23,6 +23,19 @@ resource "databricks_notebook" "my_databricks_notebook" {
   format = "DBC"
 }
 ```
+
+For deployment of an empty Python notebook, the following example might be useful:
+
+```hcl
+resource "databricks_notebook" "notebook" {
+  content = base64encode("# Welcome to your Python notebook")
+  path = "/mynotebook"
+  overwrite = false
+  mkdirs = true
+  language = "PYTHON"
+  format = "SOURCE"
+}
+```
     
 ## Argument Reference
 
@@ -33,7 +46,7 @@ The following arguments are supported:
 exception with error code MAX_NOTEBOOK_SIZE_EXCEEDED will be thrown.
 
 #### - `path`:
-> **(Required)** The absolute path of the notebook or directory. 
+> **(Required)** The absolute path of the notebook or directory, beginning with "/", e.g. "/mynotebook"
 Exporting a directory is supported only for DBC. This field is **required**.
 
 #### - `language`:
@@ -51,7 +64,7 @@ returns an error RESOURCE_ALREADY_EXISTS. If this operation fails it may have su
 
 #### - `format`:
 > **(Required)** This specifies the format of the file to be imported. 
-By default, this is SOURCE. However it may be one of: SOURCE, HTML, JUPYTER, DBC. The value is case sensitive.
+By default, this is SOURCE. However it may be one of: SOURCE, HTML, JUPYTER, DBC. The value is case sensitive. SOURCE is suitable for .scala, .py, .r, .sql extension based files, HTML for .html files, JUPYTER for .ipynb files, and DBC for .dbc files.
 
 ## Attribute Reference
 

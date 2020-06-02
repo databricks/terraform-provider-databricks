@@ -12,7 +12,7 @@ import (
 
 // GroupsAPI exposes the scim groups API
 type GroupsAPI struct {
-	Client DBApiClient
+	Client *DBApiClient
 }
 
 // Create creates a scim group in the Databricks workspace

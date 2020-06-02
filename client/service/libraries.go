@@ -8,7 +8,7 @@ import (
 
 // LibrariesAPI exposes the Library API
 type LibrariesAPI struct {
-	Client DBApiClient
+	Client *DBApiClient
 }
 
 // Create installs the list of libraries given a cluster id

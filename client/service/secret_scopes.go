@@ -9,7 +9,7 @@ import (
 
 // SecretScopesAPI exposes the Secret Scopes API
 type SecretScopesAPI struct {
-	Client DBApiClient
+	Client *DBApiClient
 }
 
 // Create creates a new secret scope

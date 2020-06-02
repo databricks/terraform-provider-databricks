@@ -50,7 +50,7 @@ func resourceDBFSFile() *schema.Resource {
 }
 
 func resourceDBFSFileCreate(d *schema.ResourceData, m interface{}) error {
-	client := m.(service.DBApiClient)
+	client := m.(*service.DBApiClient)
 	path := d.Get("path").(string)
 	content := d.Get("content").(string)
 	overwrite := d.Get("overwrite").(bool)
@@ -88,7 +88,7 @@ func resourceDBFSFileCreate(d *schema.ResourceData, m interface{}) error {
 
 func resourceDBFSFileRead(d *schema.ResourceData, m interface{}) error {
 	id := d.Id()
-	client := m.(service.DBApiClient)
+	client := m.(*service.DBApiClient)
 
 	fileInfo, err := client.DBFS().Status(id)
 	if err != nil {
@@ -139,7 +139,7 @@ func resourceDBFSFileUpdate(d *schema.ResourceData, m interface{}) error {
 }
 func resourceDBFSFileDelete(d *schema.ResourceData, m interface{}) error {
 	id := d.Id()
-	client := m.(service.DBApiClient)
+	client := m.(*service.DBApiClient)
 	err := client.DBFS().Delete(id, false)
 	return err
 }

@@ -47,7 +47,7 @@ func resourceToken() *schema.Resource {
 }
 
 func resourceTokenCreate(d *schema.ResourceData, m interface{}) error {
-	client := m.(service.DBApiClient)
+	client := m.(*service.DBApiClient)
 	lifeTimeSeconds := d.Get("lifetime_seconds").(int)
 	comment := d.Get("comment").(string)
 	tokenResp, err := client.Tokens().Create(int32(lifeTimeSeconds), comment)
@@ -64,7 +64,7 @@ func resourceTokenCreate(d *schema.ResourceData, m interface{}) error {
 
 func resourceTokenRead(d *schema.ResourceData, m interface{}) error {
 	id := d.Id()
-	client := m.(service.DBApiClient)
+	client := m.(*service.DBApiClient)
 	token, err := client.Tokens().Read(id)
 	if err != nil {
 		if isTokenMissing(err.Error(), id) {
@@ -84,7 +84,7 @@ func resourceTokenRead(d *schema.ResourceData, m interface{}) error {
 
 func resourceTokenDelete(d *schema.ResourceData, m interface{}) error {
 	tokenID := d.Id()
-	client := m.(service.DBApiClient)
+	client := m.(*service.DBApiClient)
 	err := client.Tokens().Delete(tokenID)
 	return err
 }

@@ -22,10 +22,10 @@ func TestAzureAuthCreateApiToken(t *testing.T) {
 
 	azureAuth := AzureAuth{
 		TokenPayload: &TokenPayload{
-			ManagedResourceGroup: os.Getenv("TEST_MANAGED_RESOURCE_GROUP"),
-			AzureRegion:          "centralus",
-			WorkspaceName:        os.Getenv("TEST_WORKSPACE_NAME"),
-			ResourceGroup:        os.Getenv("TEST_RESOURCE_GROUP"),
+			ManagedResourceGroup: os.Getenv("DATABRICKS_AZURE_MANAGED_RESOURCE_GROUP"),
+			AzureRegion:          os.Getenv("AZURE_REGION"),
+			WorkspaceName:        os.Getenv("DATABRICKS_AZURE_WORKSPACE_NAME"),
+			ResourceGroup:        os.Getenv("DATABRICKS_AZURE_RESOURCE_GROUP"),
 		},
 		ManagementToken:        "",
 		AdbWorkspaceResourceID: "",
@@ -36,10 +36,11 @@ func TestAzureAuthCreateApiToken(t *testing.T) {
 	azureAuth.TokenPayload.TenantID = os.Getenv("DATABRICKS_AZURE_TENANT_ID")
 	azureAuth.TokenPayload.ClientID = os.Getenv("DATABRICKS_AZURE_CLIENT_ID")
 	azureAuth.TokenPayload.ClientSecret = os.Getenv("DATABRICKS_AZURE_CLIENT_SECRET")
-	option := GetIntegrationDBClientOptions()
-	api, err := azureAuth.initWorkspaceAndGetClient(option)
+	config := GetIntegrationDBClientOptions()
+	err := azureAuth.initWorkspaceAndGetClient(config)
 	assert.NoError(t, err, err)
-
+	api := service.DBApiClient{}
+	api.SetConfig(config)
 	instancePoolInfo, instancePoolErr := api.InstancePools().Create(model.InstancePool{
 		InstancePoolName:                   "my_instance_pool",
 		MinIdleInstances:                   0,

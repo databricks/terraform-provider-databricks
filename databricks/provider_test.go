@@ -2,15 +2,18 @@ package databricks
 
 import (
 	"fmt"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"log"
 	"os"
 	"testing"
 
-	"github.com/databrickslabs/databricks-terraform/client/service"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 	"github.com/joho/godotenv"
+	"github.com/stretchr/testify/assert"
+
+	"github.com/databrickslabs/databricks-terraform/client/service"
 )
 
 var testAccProviders map[string]terraform.ResourceProvider
@@ -75,4 +78,79 @@ resource "databricks_scim_group" "my-group-azure3" {
   display_name = "Test terraform Group3"
 }
 `
+}
+
+func TestProvider(t *testing.T) {
+	if err := testAccProvider.InternalValidate(); err != nil {
+		t.Fatalf("err: %s", err)
+	}
+}
+
+func TestProvider_NoOptionsResultsInError(t *testing.T) {
+	var provider = Provider("")
+	var raw = make(map[string]interface{})
+	raw["config_file"] = "testdata/.databrickscfg_non_existant"
+	err := provider.Configure(terraform.NewResourceConfigRaw(raw))
+	assert.NotNil(t, err)
+}
+
+func TestProvider_HostTokensTakePrecedence(t *testing.T) {
+	var raw = make(map[string]interface{})
+	raw["host"] = "foo"
+	raw["token"] = "configured"
+	raw["config_file"] = "testdata/.databrickscfg"
+	err := testAccProvider.Configure(terraform.NewResourceConfigRaw(raw))
+	assert.Nil(t, err)
+
+	client := testAccProvider.Meta().(*service.DBApiClient).Config
+	assert.Equal(t, "configured", client.Token)
+}
+
+func TestProvider_MissingEnvMakesConfigRead(t *testing.T) {
+	var raw = make(map[string]interface{})
+	raw["token"] = "configured"
+	raw["config_file"] = "testdata/.databrickscfg"
+	err := testAccProvider.Configure(terraform.NewResourceConfigRaw(raw))
+	assert.Nil(t, err)
+
+	client := testAccProvider.Meta().(*service.DBApiClient).Config
+	assert.Equal(t, "PT0+IC9kZXYvdXJhbmRvbSA8PT0KYFZ", client.Token)
+}
+
+func TestProvider_NoHostGivesError(t *testing.T) {
+	var raw = make(map[string]interface{})
+	raw["config_file"] = "testdata/.databrickscfg"
+	raw["profile"] = "nohost"
+	err := testAccProvider.Configure(terraform.NewResourceConfigRaw(raw))
+	assert.NotNil(t, err)
+}
+
+func TestProvider_NoTokenGivesError(t *testing.T) {
+	var raw = make(map[string]interface{})
+	raw["config_file"] = "testdata/.databrickscfg"
+	raw["profile"] = "notoken"
+	err := testAccProvider.Configure(terraform.NewResourceConfigRaw(raw))
+	assert.NotNil(t, err)
+}
+
+func TestProvider_InvalidProfileGivesError(t *testing.T) {
+	var raw = make(map[string]interface{})
+	raw["config_file"] = "testdata/.databrickscfg"
+	raw["profile"] = "invalidhost"
+	err := testAccProvider.Configure(terraform.NewResourceConfigRaw(raw))
+	assert.NotNil(t, err)
+}
+
+func TestDatabricksCliConfigWorks(t *testing.T) {
+	resource.Test(t,
+		resource.TestCase{
+			Providers: testAccProviders,
+			Steps: []resource.TestStep{
+				{
+					Config:             `provider "databricks" {}`,
+					ExpectNonEmptyPlan: true,
+				},
+			},
+		},
+	)
 }

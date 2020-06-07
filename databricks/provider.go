@@ -8,6 +8,9 @@ import (
 	"github.com/databrickslabs/databricks-terraform/client/service"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+
+	homedir "github.com/mitchellh/go-homedir"
+	ini "gopkg.in/ini.v1"
 )
 
 // Provider returns the entire terraform provider object
@@ -50,6 +53,24 @@ func Provider(version string) terraform.ResourceProvider {
 				Type:        schema.TypeString,
 				Optional:    true,
 				DefaultFunc: schema.EnvDefaultFunc("DATABRICKS_TOKEN", nil),
+				Description: "Personal Access Token to access the Databricks REST API.\n" +
+					"Please follow instructions at https://bit.ly/2AJXCth to set it up.",
+			},
+			"config_file": &schema.Schema{
+				Type:        schema.TypeString,
+				Optional:    true,
+				DefaultFunc: schema.EnvDefaultFunc("DATABRICKS_CONFIG_FILE", "~/.databrickscfg"),
+				Description: "Location of the Databricks CLI credentials file, that is created\n" +
+					"by `databricks configure --token` command. By default, it is located\n" +
+					"in ~/.databrickscfg. Check https://bit.ly/2XCtuZU for docs. Config\n" +
+					"file credetials will only be used when host/token are not provided.",
+			},
+			"profile": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  "DEFAULT",
+				Description: "Connection profile specified within ~/.databrickscfg. Please check\n" +
+					"https://bit.ly/30g4zgo for documentation.",
 			},
 			"azure_auth": &schema.Schema{
 				Type:     schema.TypeMap,
@@ -197,6 +218,41 @@ func providerConfigureAzureClient(d *schema.ResourceData, providerVersion string
 	return &dbClient, nil
 }
 
+// tryDatabricksCliConfigFile sets Host and Token from ~/.databrickscfg file if it exists
+func tryDatabricksCliConfigFile(d *schema.ResourceData, config *service.DBApiClientConfig) error {
+	configFile, err := homedir.Expand(d.Get("config_file").(string))
+	if err != nil {
+		return err
+	}
+	cfg, err := ini.Load(configFile)
+	if err != nil {
+		return fmt.Errorf("Authentication is not configured for provider. Please configure it\n"+
+			"through one of the following options:\n"+
+			"1. DATABRICKS_HOST + DATABRICKS_TOKEN environment variables.\n"+
+			"2. host + token provider argumeents.\n"+
+			"3. Run `databricks configure --token` that will create %s file.\n\n"+
+			"Please check https://bit.ly/2XCtuZU for details", configFile)
+	}
+	if profile, ok := d.GetOk("profile"); ok {
+		dbcliConfig := cfg.Section(profile.(string))
+		token := dbcliConfig.Key("token").String()
+		if "" == token {
+			return fmt.Errorf("Config file %s is corrupt: cannot find token in %s profile",
+				configFile, profile)
+		}
+		config.Token = token
+
+		host := dbcliConfig.Key("host").String()
+		if "" == host {
+			return fmt.Errorf("Config file %s is corrupt: cannot find host in %s profile",
+				configFile, profile)
+		}
+		config.Host = host
+	}
+
+	return nil
+}
+
 func providerConfigure(d *schema.ResourceData, providerVersion string) (interface{}, error) {
 	var config service.DBApiClientConfig
 	// Call setup to configure retryable httpclient
@@ -208,6 +264,11 @@ func providerConfigure(d *schema.ResourceData, providerVersion string) (interfac
 		}
 		if token, ok := d.GetOk("token"); ok {
 			config.Token = token.(string)
+		}
+		if config.Host == "" || config.Token == "" {
+			if err := tryDatabricksCliConfigFile(d, &config); err != nil {
+				return nil, err
+			}
 		}
 	} else {
 		// Abstracted logic to another function that returns a interface{}, error to inject directly

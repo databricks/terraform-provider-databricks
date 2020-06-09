@@ -12,7 +12,7 @@ type MWSNetworksAPI struct {
 	Client *DBApiClient
 }
 
-// Create creates a set of E2 Networks for the BYOVPC
+// Create creates a set of MWS Networks for the BYOVPC
 func (a MWSNetworksAPI) Create(mwsAcctId, networkName string, VPCID string, subnetIds []string, securityGroupIds []string) (model.MWSNetwork, error) {
 	var mwsNetwork model.MWSNetwork
 	networksAPIPath := fmt.Sprintf("/accounts/%s/networks", mwsAcctId)

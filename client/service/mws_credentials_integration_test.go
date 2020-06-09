@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-func TestE2Creds(t *testing.T) {
+func TestMWSCreds(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping integration test in short mode.")
 	}

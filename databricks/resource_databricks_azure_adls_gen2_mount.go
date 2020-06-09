@@ -2,9 +2,11 @@ package databricks
 
 import (
 	"fmt"
+	"log"
+	"strings"
+
 	"github.com/databrickslabs/databricks-terraform/client/service"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"strings"
 )
 
 func resourceAzureAdlsGen2Mount() *schema.Resource {
@@ -129,10 +131,6 @@ func resourceAzureAdlsGen2Create(d *schema.ResourceData, m interface{}) error {
 func resourceAzureAdlsGen2Read(d *schema.ResourceData, m interface{}) error {
 	client := m.(*service.DBApiClient)
 	clusterID := d.Get("cluster_id").(string)
-	err := changeClusterIntoRunningState(clusterID, client)
-	if err != nil {
-		return err
-	}
 	containerName := d.Get("container_name").(string)
 	storageAccountName := d.Get("storage_account_name").(string)
 	directory := d.Get("directory").(string)
@@ -142,6 +140,16 @@ func resourceAzureAdlsGen2Read(d *schema.ResourceData, m interface{}) error {
 	clientSecretScope := d.Get("client_secret_scope").(string)
 	clientSecretKey := d.Get("client_secret_key").(string)
 	initializeFileSystem := d.Get("initialize_file_system").(bool)
+
+	err := changeClusterIntoRunningState(clusterID, client)
+	if err != nil {
+		if isClusterMissing(err.Error(), clusterID) {
+			log.Printf("Unable to refresh mount '%s' as cluster '%s' is missing", mountName, clusterID)
+			d.SetId("")
+			return nil
+		}
+		return err
+	}
 
 	adlsGen2Mount := NewAzureADLSGen2Mount(containerName, storageAccountName, directory, mountName, clientID, tenantID,
 		clientSecretScope, clientSecretKey, initializeFileSystem)

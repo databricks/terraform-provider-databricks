@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-func TestE2StorageConfigurations(t *testing.T) {
+func TestMWSStorageConfigurations(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping integration test in short mode.")
 	}

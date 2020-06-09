@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-func TestE2Networks(t *testing.T) {
+func TestMWSNetworks(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping integration test in short mode.")
 	}

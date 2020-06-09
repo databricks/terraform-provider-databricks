@@ -12,7 +12,7 @@ type MWSCredentialsAPI struct {
 	Client *DBApiClient
 }
 
-// Create creates a set of E2 Credentials for the cross account role
+// Create creates a set of MWS Credentials for the cross account role
 func (a MWSCredentialsAPI) Create(mwsAcctId, credentialsName string, roleArn string) (model.MWSCredentials, error) {
 	var mwsCreds model.MWSCredentials
 

@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-func TestE2CustomerManagedKeys(t *testing.T) {
+func TestMWSCustomerManagedKeys(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping integration test in short mode.")
 	}

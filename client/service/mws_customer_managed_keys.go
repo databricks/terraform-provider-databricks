@@ -13,7 +13,7 @@ type MWSCustomerManagedKeysAPI struct {
 	Client *DBApiClient
 }
 
-// Create creates a set of E2 CustomerManagedKeys for the BYOVPC
+// Create creates a set of MWS CustomerManagedKeys for the BYOVPC
 func (a MWSCustomerManagedKeysAPI) Create(mwsAcctId, keyArn, keyAlias, keyRegion string) (model.MWSCustomerManagedKey, error) {
 	var mwsCustomerManagedKey model.MWSCustomerManagedKey
 

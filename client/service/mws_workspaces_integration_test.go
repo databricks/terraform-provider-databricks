@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-func TestE2Workspace(t *testing.T) {
+func TestMWSWorkspace(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping integration test in short mode.")
 	}

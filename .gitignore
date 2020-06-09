@@ -329,3 +329,4 @@ website/public/**
 
 .vscode/private.env
 tf.log
+*.env

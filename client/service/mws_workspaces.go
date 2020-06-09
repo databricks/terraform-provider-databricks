@@ -76,7 +76,7 @@ func (a MWSWorkspacesAPI) WaitForWorkspaceRunning(mwsAcctId string, workspaceID 
 }
 
 // Patch will relaunch the mws workspace deployment TODO: may need to include customer managed key
-func (a MWSWorkspacesAPI) Patch(mwsAcctId string, workspaceID int64, awsRegion, credentialsID, storageConfigurationID, networkID string, isNoPublicIpEnabled bool) error {
+func (a MWSWorkspacesAPI) Patch(mwsAcctId string, workspaceID int64, awsRegion, credentialsID, storageConfigurationID, networkID, customerManagedKeyID string, isNoPublicIpEnabled bool) error {
 	workspacesAPIPath := fmt.Sprintf("/accounts/%s/workspaces/%d", mwsAcctId, workspaceID)
 
 	mwsWorkspacesRequest := model.MWSWorkspace{
@@ -88,6 +88,10 @@ func (a MWSWorkspacesAPI) Patch(mwsAcctId string, workspaceID int64, awsRegion, 
 
 	if !reflect.ValueOf(networkID).IsZero() {
 		mwsWorkspacesRequest.NetworkID = networkID
+	}
+
+	if !reflect.ValueOf(customerManagedKeyID).IsZero() {
+		mwsWorkspacesRequest.CustomerManagedKeyID = customerManagedKeyID
 	}
 
 	_, err := a.Client.performQuery(http.MethodPatch, workspacesAPIPath, "2.0", nil, mwsWorkspacesRequest, nil)

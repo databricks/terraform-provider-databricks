@@ -1,5 +1,5 @@
 +++
-title = "multiworkspace_storage_configurations"
+title = "mws_storage_configurations"
 date = 2020-04-20T23:34:03-04:00
 weight = 15
 chapter = false
@@ -7,7 +7,7 @@ pre = ""
 +++
 
 
-## Resource: `multiworkspace_storage_configurations`
+## Resource: `mws_storage_configurations`
 
 This resource to configure the root bucket for the multiple workspaces api.
 

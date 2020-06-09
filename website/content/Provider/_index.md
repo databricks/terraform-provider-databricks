@@ -31,8 +31,10 @@ resource "databricks_scim_user" "my-user" {
 ``` hcl
 provider "databricks" {
   host          = "http://databricks.domain.com"
-  token         = base64encode("${var.user}:${var.password}")
-  auth_type     = "BASIC"
+  basic_auth {
+    username = var.user
+    password = var.password
+  }
 }
 
 resource "databricks_scim_user" "my-user" {
@@ -137,6 +139,8 @@ The following variables can be passed via environment variables:
 
 * `host` → `DATABRICKS_HOST`
 * `token` → `DATABRICKS_TOKEN`
+* `basic_auth.username` → `DATABRICKS_USERNAME`
+* `basic_auth.password` → `DATABRICKS_PASSWORD`
 * `managed_resource_group` → `DATABRICKS_AZURE_MANAGED_RESOURCE_GROUP`
 * `azure_region` → `AZURE_REGION`
 * `workspace_name` → `DATABRICKS_AZURE_WORKSPACE_NAME`
@@ -172,7 +176,26 @@ Alternatively you can provide this value as an environment variable `DATABRICKS_
 > This is the api token to authenticate into the workspace. Alternatively you can provide this value as an 
 environment variable `DATABRICKS_TOKEN`. 
 
-#### `azure-auth`:
+#### `basic_auth`:
+> #### **Usage**
+>```hcl
+>basic_auth = {
+>    username = "user"
+>    password = "mypass-123"
+>}
+>```
+> {{%chevron default=`This is the authentication required to authenticate to the Databricks via basic auth through a user 
+ that has access to the workspace. This is optional as you can use the api token based auth. 
+The basic_auth block contains the following arguments:` display="true" %}}
+
+* `username` - This is the username of the user that can log into the workspace. 
+Alternatively you can provide this value as an environment variable `DATABRICKS_USERNAME`.
+
+* `password` - This is the password of the user that can log into the workspace.
+Alternatively you can provide this value as an environment variable `DATABRICKS_PASSWORD`.
+{{% /chevron %}}
+
+#### `azure_auth`:
 > #### **Usage**
 >```hcl
 >azure_auth = {

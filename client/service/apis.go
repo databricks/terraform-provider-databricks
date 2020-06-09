@@ -86,6 +86,31 @@ func (c *DBApiClient) Commands() CommandsAPI {
 	return CommandsAPI{Client: c}
 }
 
+// MWSCredentials returns an instance of MWSCredentialsAPI
+func (c *DBApiClient) MWSCredentials() MWSCredentialsAPI {
+	return MWSCredentialsAPI{Client: c}
+}
+
+// MWSStorageConfigurations returns an instance of MWSStorageConfigurationsAPI
+func (c *DBApiClient) MWSStorageConfigurations() MWSStorageConfigurationsAPI {
+	return MWSStorageConfigurationsAPI{Client: c}
+}
+
+// MWSWorkspaces returns an instance of MWSWorkspacesAPI
+func (c *DBApiClient) MWSWorkspaces() MWSWorkspacesAPI {
+	return MWSWorkspacesAPI{Client: c}
+}
+
+// MWSNetworks returns an instance of MWSNetworksAPI
+func (c *DBApiClient) MWSNetworks() MWSNetworksAPI {
+	return MWSNetworksAPI{Client: c}
+}
+
+// MWSCustomerManagedKeys returns an instance of MWSCustomerManagedKeysAPI
+func (c *DBApiClient) MWSCustomerManagedKeys() MWSCustomerManagedKeysAPI {
+	return MWSCustomerManagedKeysAPI{Client: c}
+}
+
 func (c *DBApiClient) performQuery(method, path string, apiVersion string, headers map[string]string, data interface{}, secretsMask *SecretsMask) ([]byte, error) {
 	err := c.Config.getOrCreateToken()
 	if err != nil {

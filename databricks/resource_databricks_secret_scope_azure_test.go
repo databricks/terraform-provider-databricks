@@ -11,7 +11,7 @@ import (
 	"testing"
 )
 
-func TestAccSecretScopeResource(t *testing.T) {
+func TestAccAzureSecretScopeResource(t *testing.T) {
 	var secretScope model.SecretScope
 
 	// generate a random name for each tokenInfo test run, to avoid
@@ -22,19 +22,18 @@ func TestAccSecretScopeResource(t *testing.T) {
 	scope := "terraform_acc_test_scope"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
-		CheckDestroy: testSecretScopeResourceDestroy,
+		CheckDestroy: testAzureSecretScopeResourceDestroy,
 		Steps: []resource.TestStep{
 			{
 				// use a dynamic configuration with the random name from above
-				Config: testSecretScopeResource(scope),
+				Config: testAzureSecretScopeResource(scope),
 				// compose a basic test, checking both remote and local values
 				Check: resource.ComposeTestCheckFunc(
 					// query the API to retrieve the tokenInfo object
-					testSecretScopeResourceExists("databricks_secret_scope.my_scope", &secretScope, t),
+					testAzureSecretScopeResourceExists("databricks_secret_scope.my_scope", &secretScope, t),
 					// verify remote values
-					testSecretScopeValues(t, &secretScope, scope),
+					testAzureSecretScopeValues(t, &secretScope, scope),
 					// verify local values
 					resource.TestCheckResourceAttr("databricks_secret_scope.my_scope", "name", scope),
 					resource.TestCheckResourceAttr("databricks_secret_scope.my_scope", "backend_type", string(model.ScopeBackendTypeDatabricks)),
@@ -47,13 +46,13 @@ func TestAccSecretScopeResource(t *testing.T) {
 					assert.NoError(t, err, err)
 				},
 				// use a dynamic configuration with the random name from above
-				Config: testSecretScopeResource(scope),
+				Config: testAzureSecretScopeResource(scope),
 				// compose a basic test, checking both remote and local values
 				Check: resource.ComposeTestCheckFunc(
 					// query the API to retrieve the tokenInfo object
-					testSecretScopeResourceExists("databricks_secret_scope.my_scope", &secretScope, t),
+					testAzureSecretScopeResourceExists("databricks_secret_scope.my_scope", &secretScope, t),
 					// verify remote values
-					testSecretScopeValues(t, &secretScope, scope),
+					testAzureSecretScopeValues(t, &secretScope, scope),
 					// verify local values
 					resource.TestCheckResourceAttr("databricks_secret_scope.my_scope", "name", scope),
 					resource.TestCheckResourceAttr("databricks_secret_scope.my_scope", "backend_type", string(model.ScopeBackendTypeDatabricks)),
@@ -63,7 +62,7 @@ func TestAccSecretScopeResource(t *testing.T) {
 	})
 }
 
-func testSecretScopeResourceDestroy(s *terraform.State) error {
+func testAzureSecretScopeResourceDestroy(s *terraform.State) error {
 	client := testAccProvider.Meta().(*service.DBApiClient)
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "databricks_secret_scope" {
@@ -78,7 +77,7 @@ func testSecretScopeResourceDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testSecretScopeValues(t *testing.T, secretScope *model.SecretScope, scope string) resource.TestCheckFunc {
+func testAzureSecretScopeValues(t *testing.T, secretScope *model.SecretScope, scope string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		assert.True(t, secretScope.Name == scope)
 		assert.True(t, secretScope.BackendType == model.ScopeBackendTypeDatabricks)
@@ -87,7 +86,7 @@ func testSecretScopeValues(t *testing.T, secretScope *model.SecretScope, scope s
 }
 
 // testAccCheckTokenResourceExists queries the API and retrieves the matching Widget.
-func testSecretScopeResourceExists(n string, secretScope *model.SecretScope, t *testing.T) resource.TestCheckFunc {
+func testAzureSecretScopeResourceExists(n string, secretScope *model.SecretScope, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		// find the corresponding state object
 		rs, ok := s.RootModule().Resources[n]
@@ -111,7 +110,7 @@ func testSecretScopeResourceExists(n string, secretScope *model.SecretScope, t *
 }
 
 // testAccTokenResource returns an configuration for an Example Widget with the provided name
-func testSecretScopeResource(scopeName string) string {
+func testAzureSecretScopeResource(scopeName string) string {
 	return fmt.Sprintf(`
 								resource "databricks_secret_scope" "my_scope" {
 								  name = "%s"

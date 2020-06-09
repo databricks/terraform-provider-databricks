@@ -1,6 +1,7 @@
 package databricks
 
 import (
+	"encoding/base64"
 	"fmt"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"log"
@@ -15,9 +16,11 @@ import (
 
 var testAccProviders map[string]terraform.ResourceProvider
 var testAccProvider *schema.Provider
+var testMWSProvider *schema.Provider
 
 func init() {
 	testAccProvider = Provider("").(*schema.Provider)
+	testMWSProvider = Provider("").(*schema.Provider)
 	cloudEnv := os.Getenv("CLOUD_ENV")
 
 	// If Azure inject sp based auth, this should probably have a different environment variable
@@ -31,6 +34,25 @@ func init() {
 
 	testAccProviders = map[string]terraform.ResourceProvider{
 		"databricks": testAccProvider,
+	}
+
+}
+
+func getMWSClient() *service.DBApiClient {
+	// Configure MWS Provider
+	mwsHost := os.Getenv("DATABRICKS_MWS_HOST")
+	mwsUser := os.Getenv("DATABRICKS_USERNAME")
+	mwsPass := os.Getenv("DATABRICKS_PASSWORD")
+
+	tokenUnB64 := fmt.Sprintf("%s:%s", mwsUser, mwsPass)
+	token := base64.StdEncoding.EncodeToString([]byte(tokenUnB64))
+	config := service.DBApiClientConfig{
+		Host:     mwsHost,
+		Token:    token,
+		AuthType: service.BasicAuth,
+	}
+	return &service.DBApiClient{
+		Config: &config,
 	}
 }
 

@@ -5,72 +5,70 @@ import (
 	"fmt"
 	"github.com/databrickslabs/databricks-terraform/client/model"
 	"github.com/databrickslabs/databricks-terraform/client/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
 
-func TestAccTokenResource(t *testing.T) {
-	var tokenInfo model.TokenInfo
+func TestAccAwsSecretScopeResource(t *testing.T) {
+	var secretScope model.SecretScope
 
 	// generate a random name for each tokenInfo test run, to avoid
 	// collisions from multiple concurrent tests.
 	// the acctest package includes many helpers such as RandStringFromCharSet
 	// See https://godoc.org/github.com/hashicorp/terraform-plugin-sdk/helper/acctest
-	rComment := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
+	//scope := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
+	scope := "terraform_acc_test_scope"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckTokenResourceDestroy,
+		CheckDestroy: testAwsSecretScopeResourceDestroy,
 		Steps: []resource.TestStep{
 			{
 				// use a dynamic configuration with the random name from above
-				Config: testAccTokenResource(rComment),
+				Config: testAwsSecretScopeResource(scope),
 				// compose a basic test, checking both remote and local values
 				Check: resource.ComposeTestCheckFunc(
 					// query the API to retrieve the tokenInfo object
-					testAccCheckTokenResourceExists("databricks_token.my-token", &tokenInfo, t),
+					testAwsSecretScopeResourceExists("databricks_secret_scope.my_scope", &secretScope, t),
 					// verify remote values
-					testAccCheckTokenValues(&tokenInfo, rComment),
+					testAwsSecretScopeValues(t, &secretScope, scope),
 					// verify local values
-					resource.TestCheckResourceAttr("databricks_token.my-token", "lifetime_seconds", "6000"),
-					resource.TestCheckResourceAttr("databricks_token.my-token", "comment", rComment),
+					resource.TestCheckResourceAttr("databricks_secret_scope.my_scope", "name", scope),
+					resource.TestCheckResourceAttr("databricks_secret_scope.my_scope", "backend_type", string(model.ScopeBackendTypeDatabricks)),
 				),
 			},
 			{
-				//Deleting and recreating the token
 				PreConfig: func() {
 					client := testAccProvider.Meta().(*service.DBApiClient)
-					err := client.Tokens().Delete(tokenInfo.TokenID)
+					err := client.SecretScopes().Delete(scope)
 					assert.NoError(t, err, err)
 				},
 				// use a dynamic configuration with the random name from above
-				Config: testAccTokenResource(rComment),
+				Config: testAwsSecretScopeResource(scope),
 				// compose a basic test, checking both remote and local values
 				Check: resource.ComposeTestCheckFunc(
 					// query the API to retrieve the tokenInfo object
-					testAccCheckTokenResourceExists("databricks_token.my-token", &tokenInfo, t),
+					testAwsSecretScopeResourceExists("databricks_secret_scope.my_scope", &secretScope, t),
 					// verify remote values
-					testAccCheckTokenValues(&tokenInfo, rComment),
+					testAwsSecretScopeValues(t, &secretScope, scope),
 					// verify local values
-					resource.TestCheckResourceAttr("databricks_token.my-token", "lifetime_seconds", "6000"),
-					resource.TestCheckResourceAttr("databricks_token.my-token", "comment", rComment),
+					resource.TestCheckResourceAttr("databricks_secret_scope.my_scope", "name", scope),
+					resource.TestCheckResourceAttr("databricks_secret_scope.my_scope", "backend_type", string(model.ScopeBackendTypeDatabricks)),
 				),
 			},
 		},
 	})
 }
 
-func testAccCheckTokenResourceDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*service.DBApiClient)
+func testAwsSecretScopeResourceDestroy(s *terraform.State) error {
+	client := testAccProvider.Meta().(*service.DBApiClient)
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "databricks_token" {
+		if rs.Type != "databricks_secret_scope" {
 			continue
 		}
-		_, err := conn.Tokens().Read(rs.Primary.ID)
+		_, err := client.Tokens().Read(rs.Primary.ID)
 		if err != nil {
 			return nil
 		}
@@ -79,20 +77,16 @@ func testAccCheckTokenResourceDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccPreCheck(t *testing.T) {
-}
-
-func testAccCheckTokenValues(tokenInfo *model.TokenInfo, comment string) resource.TestCheckFunc {
+func testAwsSecretScopeValues(t *testing.T, secretScope *model.SecretScope, scope string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if tokenInfo.Comment != comment {
-			return errors.New("the comment for the token created does not equal the value passed in")
-		}
+		assert.True(t, secretScope.Name == scope)
+		assert.True(t, secretScope.BackendType == model.ScopeBackendTypeDatabricks)
 		return nil
 	}
 }
 
 // testAccCheckTokenResourceExists queries the API and retrieves the matching Widget.
-func testAccCheckTokenResourceExists(n string, tokenInfo *model.TokenInfo, t *testing.T) resource.TestCheckFunc {
+func testAwsSecretScopeResourceExists(n string, secretScope *model.SecretScope, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		// find the corresponding state object
 		rs, ok := s.RootModule().Resources[n]
@@ -102,24 +96,24 @@ func testAccCheckTokenResourceExists(n string, tokenInfo *model.TokenInfo, t *te
 
 		// retrieve the configured client from the test setup
 		conn := testAccProvider.Meta().(*service.DBApiClient)
-		resp, err := conn.Tokens().Read(rs.Primary.ID)
+		resp, err := conn.SecretScopes().Read(rs.Primary.ID)
+		//t.Log(resp)
 		if err != nil {
 			return err
 		}
 
 		// If no error, assign the response Widget attribute to the widget pointer
-		*tokenInfo = resp
+		*secretScope = resp
 		return nil
 		//return fmt.Errorf("Token (%s) not found", rs.Primary.ID)
 	}
 }
 
 // testAccTokenResource returns an configuration for an Example Widget with the provided name
-func testAccTokenResource(comment string) string {
+func testAwsSecretScopeResource(scopeName string) string {
 	return fmt.Sprintf(`
-								resource "databricks_token" "my-token" {
-								  lifetime_seconds = 6000
-								  comment = "%v"
+								resource "databricks_secret_scope" "my_scope" {
+								  name = "%s"
 								}
-								`, comment)
+								`, scopeName)
 }

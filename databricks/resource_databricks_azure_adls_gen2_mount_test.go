@@ -17,7 +17,6 @@ func TestAccAzureAdlsGen2Mount_correctly_mounts(t *testing.T) {
 	terraformToApply := testAccAzureAdlsGen2Mount_correctly_mounts()
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{

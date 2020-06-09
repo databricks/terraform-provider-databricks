@@ -231,6 +231,9 @@ func providerConfigure(d *schema.ResourceData, providerVersion string) (interfac
 	// Call setup to configure retryable httpclient
 	config.Setup()
 
+	//version information from go-releaser using -ldflags to tell the golang linker to send semver info
+	config.UserAgent = fmt.Sprintf("databricks-tf-provider-%s", providerVersion)
+
 	if _, ok := d.GetOk("azure_auth"); !ok {
 		if host, ok := d.GetOk("host"); ok {
 			config.Host = host.(string)
@@ -255,9 +258,7 @@ func providerConfigure(d *schema.ResourceData, providerVersion string) (interfac
 		return providerConfigureAzureClient(d, providerVersion, &config)
 	}
 
-	//TODO: Bake the version of the provider using -ldflags to tell the golang linker to send
-	//version information from go-releaser
-	config.UserAgent = fmt.Sprintf("databricks-tf-provider-%s", providerVersion)
+
 	var dbClient service.DBApiClient
 	dbClient.SetConfig(&config)
 	return &dbClient, nil

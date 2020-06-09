@@ -12,7 +12,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestAccSecretResource(t *testing.T) {
+func TestAccAwsSecretResource(t *testing.T) {
 	//var secretScope model.Secre
 	var secret model.SecretMetadata
 	// generate a random name for each tokenInfo test run, to avoid
@@ -25,19 +25,18 @@ func TestAccSecretResource(t *testing.T) {
 	stringValue := "my super secret key"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
-		CheckDestroy: testSecretResourceDestroy,
+		CheckDestroy: testAwsSecretResourceDestroy,
 		Steps: []resource.TestStep{
 			{
 				// use a dynamic configuration with the random name from above
-				Config: testSecretResource(scope, key, stringValue),
+				Config: testAwsSecretResource(scope, key, stringValue),
 				// compose a basic test, checking both remote and local values
 				Check: resource.ComposeTestCheckFunc(
 					// query the API to retrieve the tokenInfo object
-					testSecretResourceExists("databricks_secret.my_secret", &secret, t),
+					testAwsSecretResourceExists("databricks_secret.my_secret", &secret, t),
 					// verify remote values
-					testSecretValues(t, &secret, key),
+					testAwsSecretValues(t, &secret, key),
 					// verify local values
 					resource.TestCheckResourceAttr("databricks_secret.my_secret", "scope", scope),
 					resource.TestCheckResourceAttr("databricks_secret.my_secret", "key", key),
@@ -52,13 +51,13 @@ func TestAccSecretResource(t *testing.T) {
 					assert.NoError(t, err, err)
 				},
 				// use a dynamic configuration with the random name from above
-				Config: testSecretResource(scope, key, stringValue),
+				Config: testAwsSecretResource(scope, key, stringValue),
 				// compose a basic test, checking both remote and local values
 				Check: resource.ComposeTestCheckFunc(
 					// query the API to retrieve the tokenInfo object
-					testSecretResourceExists("databricks_secret.my_secret", &secret, t),
+					testAwsSecretResourceExists("databricks_secret.my_secret", &secret, t),
 					// verify remote values
-					testSecretValues(t, &secret, key),
+					testAwsSecretValues(t, &secret, key),
 					// verify local values
 					resource.TestCheckResourceAttr("databricks_secret.my_secret", "scope", scope),
 					resource.TestCheckResourceAttr("databricks_secret.my_secret", "key", key),
@@ -73,13 +72,13 @@ func TestAccSecretResource(t *testing.T) {
 					assert.NoError(t, err, err)
 				},
 				// use a dynamic configuration with the random name from above
-				Config: testSecretResource(scope, key, stringValue),
+				Config: testAwsSecretResource(scope, key, stringValue),
 				// compose a basic test, checking both remote and local values
 				Check: resource.ComposeTestCheckFunc(
 					// query the API to retrieve the tokenInfo object
-					testSecretResourceExists("databricks_secret.my_secret", &secret, t),
+					testAwsSecretResourceExists("databricks_secret.my_secret", &secret, t),
 					// verify remote values
-					testSecretValues(t, &secret, key),
+					testAwsSecretValues(t, &secret, key),
 					// verify local values
 					resource.TestCheckResourceAttr("databricks_secret.my_secret", "scope", scope),
 					resource.TestCheckResourceAttr("databricks_secret.my_secret", "key", key),
@@ -90,7 +89,7 @@ func TestAccSecretResource(t *testing.T) {
 	})
 }
 
-func testSecretResourceDestroy(s *terraform.State) error {
+func testAwsSecretResourceDestroy(s *terraform.State) error {
 	client := testAccProvider.Meta().(*service.DBApiClient)
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "databricks_secret" && rs.Type != "databricks_secret_scope" {
@@ -109,7 +108,7 @@ func testSecretResourceDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testSecretValues(t *testing.T, secret *model.SecretMetadata, key string) resource.TestCheckFunc {
+func testAwsSecretValues(t *testing.T, secret *model.SecretMetadata, key string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		assert.True(t, secret.Key == key)
 		assert.True(t, secret.LastUpdatedTimestamp > 0)
@@ -118,7 +117,7 @@ func testSecretValues(t *testing.T, secret *model.SecretMetadata, key string) re
 }
 
 // testAccCheckTokenResourceExists queries the API and retrieves the matching Widget.
-func testSecretResourceExists(n string, secret *model.SecretMetadata, t *testing.T) resource.TestCheckFunc {
+func testAwsSecretResourceExists(n string, secret *model.SecretMetadata, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		// find the corresponding state object
 		rs, ok := s.RootModule().Resources[n]
@@ -142,7 +141,7 @@ func testSecretResourceExists(n string, secret *model.SecretMetadata, t *testing
 }
 
 // testAccTokenResource returns an configuration for an Example Widget with the provided name
-func testSecretResource(scopeName, key, value string) string {
+func testAwsSecretResource(scopeName, key, value string) string {
 	return fmt.Sprintf(`
 								resource "databricks_secret_scope" "my_scope" {
 								  name = "%s"

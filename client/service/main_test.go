@@ -1,6 +1,7 @@
 package service
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"github.com/joho/godotenv"
@@ -45,6 +46,18 @@ func GetIntegrationDBAPIClient() *DBApiClient {
 	config.Token = os.Getenv("DATABRICKS_TOKEN")
 	config.Host = os.Getenv("DATABRICKS_HOST")
 	config.Setup()
+
+	var c DBApiClient
+	c.SetConfig(&config)
+	return &c
+}
+
+func GetIntegrationMWSAPIClient() *DBApiClient {
+	var config DBApiClientConfig
+	tokenUnB64 := fmt.Sprintf("%s:%s", os.Getenv("DATABRICKS_USERNAME"), os.Getenv("DATABRICKS_PASSWORD"))
+	config.AuthType = BasicAuth
+	config.Token = base64.StdEncoding.EncodeToString([]byte(tokenUnB64))
+	config.Host = os.Getenv("DATABRICKS_MWS_HOST")
 
 	var c DBApiClient
 	c.SetConfig(&config)

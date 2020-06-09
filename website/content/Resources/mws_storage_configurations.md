@@ -7,7 +7,7 @@ pre = ""
 +++
 
 
-## Resource: `mws_storage_configurations`
+## Resource: `databricks_mws_storage_configurations`
 
 This resource to configure the root bucket for the multiple workspaces api.
 

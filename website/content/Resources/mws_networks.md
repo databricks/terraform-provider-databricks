@@ -7,7 +7,7 @@ pre = ""
 +++
 
 
-## Resource: `mws_networks`
+## Resource: `databricks_mws_networks`
 
 This resource to configure the vpc for the multiple workspaces api if the BYOVPC option is chosen.
 

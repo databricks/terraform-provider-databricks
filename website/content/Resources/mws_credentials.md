@@ -7,7 +7,7 @@ pre = ""
 +++
 
 
-## Resource: `mws_credentials`
+## Resource: `databricks_mws_credentials`
 
 This resource to configure the credentials for the multiple workspaces api.
 

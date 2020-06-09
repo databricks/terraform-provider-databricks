@@ -1,5 +1,3 @@
-// +build aws
-
 package databricks
 
 import (
@@ -13,7 +11,7 @@ import (
 	"testing"
 )
 
-func TestAccScimUserResource(t *testing.T) {
+func TestAccAwsScimUserResource(t *testing.T) {
 	//var secretScope model.Secre
 	var scimUser model.User
 	// generate a random name for each tokenInfo test run, to avoid
@@ -26,7 +24,6 @@ func TestAccScimUserResource(t *testing.T) {
 	expectEntitlements := []model.EntitlementsListItem{{Value: model.AllowClusterCreateEntitlement}}
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testScimUserResourceDestroy,
 		Steps: []resource.TestStep{

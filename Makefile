@@ -39,25 +39,6 @@ fmt: lint
 	@echo "==> Formatting source code with gofmt..."
 	@go fmt ./...
 
-
-python-setup:
-	@echo "==> Setting up virtual env and installing python libraries..."
-	@python -m pip install virtualenv
-	@cd docs && python -m virtualenv venv
-	@cd docs && source venv/bin/activate && python -m pip install -r requirements.txt
-
-docs: python-setup
-	@echo "==> Building Docs ..."
-	@cd docs && source venv/bin/activate && make clean && make html
-
-opendocs: python-setup docs
-	@echo "==> Opening Docs ..."
-	@cd docs && open build/html/index.html
-
-singlehtmldocs: python-setup
-	@echo "==> Building Docs ..."
-	@cd docs && source venv/bin/activate && make clean && make singlehtml
-
 vendor:
 	@echo "==> Filling vendor folder with library code..."
 	@go mod vendor
@@ -70,7 +51,12 @@ terraform-acc-azure: fmt
 # INTEGRATION TESTING WITH AWS
 terraform-acc-aws: fmt
 	@echo "==> Running Terraform Acceptance Tests for AWS..."
-	@CLOUD_ENV="aws" TF_ACC=1 gotestsum --format short-verbose --raw-command go test -v -json -tags=aws  -short -coverprofile=coverage.out ./...
+	@CLOUD_ENV="aws" TF_ACC=1 gotestsum --format short-verbose --raw-command go test -v -json -short -coverprofile=coverage.out -run 'TestAccAws' ./...
+
+# INTEGRATION TESTING WITH AWS
+terraform-acc-mws: fmt
+	@echo "==> Running Terraform Acceptance Tests for Multiple Workspace APIs on AWS..."
+	@/bin/bash integration-environment-mws/run.sh
 
 terraform-setup: build
 	@echo "==> Initializing Terraform..."

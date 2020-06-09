@@ -2,10 +2,12 @@ package databricks
 
 import (
 	"fmt"
+	"log"
+	"strings"
+
 	"github.com/databrickslabs/databricks-terraform/client/service"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
-	"strings"
 )
 
 func resourceAzureBlobMount() *schema.Resource {
@@ -121,10 +123,6 @@ func resourceAzureBlobMountCreate(d *schema.ResourceData, m interface{}) error {
 func resourceAzureBlobMountRead(d *schema.ResourceData, m interface{}) error {
 	client := m.(*service.DBApiClient)
 	clusterID := d.Get("cluster_id").(string)
-	err := changeClusterIntoRunningState(clusterID, client)
-	if err != nil {
-		return err
-	}
 	containerName := d.Get("container_name").(string)
 	storageAccountName := d.Get("storage_account_name").(string)
 	directory := d.Get("directory").(string)
@@ -132,6 +130,16 @@ func resourceAzureBlobMountRead(d *schema.ResourceData, m interface{}) error {
 	authType := d.Get("auth_type").(string)
 	tokenSecretScope := d.Get("token_secret_scope").(string)
 	tokenSecretKey := d.Get("token_secret_key").(string)
+
+	err := changeClusterIntoRunningState(clusterID, client)
+	if err != nil {
+		if isClusterMissing(err.Error(), clusterID) {
+			log.Printf("Unable to refresh mount '%s' as cluster '%s' is missing", mountName, clusterID)
+			d.SetId("")
+			return nil
+		}
+		return err
+	}
 
 	blobMount := NewAzureBlobMount(containerName, storageAccountName, directory, mountName, authType,
 		tokenSecretScope, tokenSecretKey)

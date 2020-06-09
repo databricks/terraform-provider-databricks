@@ -2,10 +2,11 @@ package databricks
 
 import (
 	"fmt"
-	"github.com/databrickslabs/databricks-terraform/client/model"
-	"github.com/databrickslabs/databricks-terraform/client/service"
 	"strings"
 	"time"
+
+	"github.com/databrickslabs/databricks-terraform/client/model"
+	"github.com/databrickslabs/databricks-terraform/client/service"
 )
 
 func changeClusterIntoRunningState(clusterID string, client *service.DBApiClient) error {
@@ -67,4 +68,9 @@ func changeClusterIntoRunningState(clusterID string, client *service.DBApiClient
 
 	return fmt.Errorf("cluster is in a non recoverable state: %s", currentState)
 
+}
+
+func isClusterMissing(errorMsg, resourceID string) bool {
+	return strings.Contains(errorMsg, "INVALID_PARAMETER_VALUE") &&
+		strings.Contains(errorMsg, fmt.Sprintf("Cluster %s does not exist", resourceID))
 }

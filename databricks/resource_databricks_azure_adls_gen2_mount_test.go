@@ -67,7 +67,7 @@ func TestAccAzureAdlsGen2Mount_capture_error(t *testing.T) {
 }
 
 func testAccAzureAdlsGen2Mount_correctly_mounts() string {
-	clientID := os.Getenv("DATABRICKS_AZURE_CLIENT_ID")
+	clientID := os.Getenv("ARM_CLIENT_ID")
 	clientSecret := os.Getenv("ARM_CLIENT_SECRET")
 	tenantID := os.Getenv("ARM_TENANT_ID")
 	subscriptionID := os.Getenv("ARM_SUBSCRIPTION_ID")
@@ -131,7 +131,7 @@ func testAccAzureAdlsGen2Mount_correctly_mounts() string {
 }
 
 func testAccAzureAdlsGen2Mount_capture_error() string {
-	clientID := os.Getenv("DATABRICKS_AZURE_CLIENT_ID")
+	clientID := os.Getenv("ARM_CLIENT_ID")
 	clientSecret := os.Getenv("ARM_CLIENT_SECRET")
 	tenantID := os.Getenv("ARM_TENANT_ID")
 	subscriptionID := os.Getenv("ARM_SUBSCRIPTION_ID")

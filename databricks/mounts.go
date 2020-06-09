@@ -308,6 +308,11 @@ func NewAzureADLSGen2Mount(containerName string, storageAccountName string, dire
 // Create creates a azure datalake gen 2 storage mount
 func (m AzureADLSGen2Mount) Create(client *service.DBApiClient, clusterID string) error {
 	iamMountCommand := fmt.Sprintf(`
+for mount in dbutils.fs.mounts():
+  if mount.mountPoint == "/mnt/%[9]s" and mount.source=="abfss://%[6]s@%[7]s.dfs.core.windows.net%[8]s":
+    print ("Mount already exists")
+    dbutils.notebook.exit("success")
+
 try:
   configs = {"fs.azure.account.auth.type": "OAuth",
            "fs.azure.account.oauth.provider.type": "org.apache.hadoop.fs.azurebfs.oauth2.ClientCredsTokenProvider",

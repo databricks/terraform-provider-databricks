@@ -69,6 +69,11 @@ func resourceMWSWorkspaces() *schema.Resource {
 				Type:     schema.TypeBool,
 				Required: true,
 			},
+			"customer_managed_key_id": {
+				Type:     schema.TypeString,
+				Default:  "",
+				Optional: true,
+			},
 			"network_id": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -127,14 +132,15 @@ func resourceMWSWorkspacesCreate(d *schema.ResourceData, m interface{}) error {
 	credentialsID := d.Get("credentials_id").(string)
 	storageConfigurationID := d.Get("storage_configuration_id").(string)
 	networkID := d.Get("network_id").(string)
+	customerManagedKeyId := d.Get("customer_managed_key_id").(string)
 	isNoPublicIpEnabled := d.Get("is_no_public_ip_enabled").(bool)
 	var workspace model.MWSWorkspace
 	var err error
-	workspace, err = client.MWSWorkspaces().Create(mwsAcctId, workspaceName, deploymentName, awsRegion, credentialsID, storageConfigurationID, networkID, "", isNoPublicIpEnabled)
+	workspace, err = client.MWSWorkspaces().Create(mwsAcctId, workspaceName, deploymentName, awsRegion, credentialsID, storageConfigurationID, networkID, customerManagedKeyId, isNoPublicIpEnabled)
 	// Sometimes workspaces api is buggy
 	if err != nil {
 		time.Sleep(15 * time.Second)
-		workspace, err = client.MWSWorkspaces().Create(mwsAcctId, workspaceName, deploymentName, awsRegion, credentialsID, storageConfigurationID, networkID, "", isNoPublicIpEnabled)
+		workspace, err = client.MWSWorkspaces().Create(mwsAcctId, workspaceName, deploymentName, awsRegion, credentialsID, storageConfigurationID, networkID, customerManagedKeyId, isNoPublicIpEnabled)
 		if err != nil {
 			return err
 		}
@@ -214,6 +220,10 @@ func resourceMWSWorkspacesRead(d *schema.ResourceData, m interface{}) error {
 	if err != nil {
 		return err
 	}
+	err = d.Set("customer_managed_key_id", workspace.CustomerManagedKeyID)
+	if err != nil {
+		return err
+	}
 	err = d.Set("account_id", workspace.AccountID)
 	if err != nil {
 		return err
@@ -272,9 +282,10 @@ func resourceMWSWorkspacePatch(d *schema.ResourceData, m interface{}) error {
 	credentialsID := d.Get("credentials_id").(string)
 	storageConfigurationID := d.Get("storage_configuration_id").(string)
 	networkID := d.Get("network_id").(string)
+	customerManagedKeyId := d.Get("customer_managed_key_id").(string)
 	isNoPublicIpEnabled := d.Get("is_no_public_ip_enabled").(bool)
 
-	err = client.MWSWorkspaces().Patch(packagedMwsId.MwsAcctId, idInt64, awsRegion, credentialsID, storageConfigurationID, networkID, isNoPublicIpEnabled)
+	err = client.MWSWorkspaces().Patch(packagedMwsId.MwsAcctId, idInt64, awsRegion, credentialsID, storageConfigurationID, networkID, customerManagedKeyId, isNoPublicIpEnabled)
 	if err != nil {
 		return err
 	}

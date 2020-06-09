@@ -12,6 +12,11 @@ pre = ""
 This resource to configure the vpc for the multiple workspaces api if the BYOVPC option is chosen.
 
 {{% notice warning %}}
+This provider does not yet support the customer_managed_key resource yet so you will need to manually create that 
+and provide the cmk object guid into the workspace api. You can see it on the argument reference below.  
+{{% /notice %}}
+
+{{% notice warning %}}
 It is important to understand that this will require you to configure your provider separately for the 
 multiple workspaces resources
 {{% /notice %}}
@@ -94,6 +99,9 @@ The following arguments are supported:
 
 #### - `network_id`:
 > **(Optional)** The ID of the workspace's network configuration object.
+
+#### - `customer_managed_key_id`:
+> **(Optional)** The ID of the workspace's notebook encryption key configuration object.
 
 #### - `is_no_public_ip_enabled`:
 > **(Optional)** Specifies whether secure cluster connectivity (sometimes called no public IP) is enabled on this workspace.

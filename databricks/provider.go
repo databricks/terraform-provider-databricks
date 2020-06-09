@@ -258,7 +258,6 @@ func providerConfigure(d *schema.ResourceData, providerVersion string) (interfac
 		return providerConfigureAzureClient(d, providerVersion, &config)
 	}
 
-
 	var dbClient service.DBApiClient
 	dbClient.SetConfig(&config)
 	return &dbClient, nil

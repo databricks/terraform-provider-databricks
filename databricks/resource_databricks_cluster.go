@@ -1237,7 +1237,7 @@ func parseSchemaToCluster(d *schema.ResourceData, schemaAttPrefix string) model.
 		}
 		if ebsVolumeCount, ok := awsAttributesMap["ebs_volume_count"]; ok {
 			//val, _ := strconv.ParseInt(ebsVolumeCount.(string), 10, 32)
-			awsAttributes.FirstOnDemand = int32(ebsVolumeCount.(int))
+			awsAttributes.EbsVolumeCount = int32(ebsVolumeCount.(int))
 		}
 		if ebsVolumeSize, ok := awsAttributesMap["ebs_volume_size"]; ok {
 			//val, _ := strconv.ParseInt(ebsVolumeSize.(string), 10, 32)

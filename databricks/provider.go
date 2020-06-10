@@ -97,7 +97,7 @@ func Provider(version string) terraform.ResourceProvider {
 				Optional: true,
 				Default:  "DEFAULT",
 				Description: "Connection profile specified within ~/.databrickscfg. Please check\n" +
-					"https://bit.ly/30g4zgo for documentation.",
+					"https://docs.databricks.com/dev-tools/cli/index.html#connection-profiles for documentation.",
 			},
 			"azure_auth": &schema.Schema{
 				Type:     schema.TypeMap,

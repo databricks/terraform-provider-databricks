@@ -1,5 +1,3 @@
-// +build aws
-
 package databricks
 
 import (
@@ -13,7 +11,7 @@ import (
 	"testing"
 )
 
-func TestAccScimUserResource(t *testing.T) {
+func TestAccAwsScimUserResource(t *testing.T) {
 	//var secretScope model.Secre
 	var scimUser model.User
 	// generate a random name for each tokenInfo test run, to avoid
@@ -26,7 +24,6 @@ func TestAccScimUserResource(t *testing.T) {
 	expectEntitlements := []model.EntitlementsListItem{{Value: model.AllowClusterCreateEntitlement}}
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testScimUserResourceDestroy,
 		Steps: []resource.TestStep{
@@ -83,7 +80,7 @@ func TestAccScimUserResource(t *testing.T) {
 			},
 			{
 				PreConfig: func() {
-					err := testAccProvider.Meta().(service.DBApiClient).Users().Delete(scimUser.ID)
+					err := testAccProvider.Meta().(*service.DBApiClient).Users().Delete(scimUser.ID)
 					assert.NoError(t, err, err)
 				},
 				// use a dynamic configuration with the random name from above
@@ -104,7 +101,7 @@ func TestAccScimUserResource(t *testing.T) {
 			{
 				//Create a new user
 				PreConfig: func() {
-					err := testAccProvider.Meta().(service.DBApiClient).Users().Delete(scimUser.ID)
+					err := testAccProvider.Meta().(*service.DBApiClient).Users().Delete(scimUser.ID)
 					assert.NoError(t, err, err)
 				},
 				// Create new admin user
@@ -162,7 +159,7 @@ func TestAccScimUserResource(t *testing.T) {
 }
 
 func testScimUserResourceDestroy(s *terraform.State) error {
-	client := testAccProvider.Meta().(service.DBApiClient)
+	client := testAccProvider.Meta().(*service.DBApiClient)
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "databricks_scim_user" {
 			continue
@@ -195,7 +192,7 @@ func testScimUserResourceExists(n string, user *model.User, t *testing.T) resour
 		}
 
 		// retrieve the configured client from the test setup
-		conn := testAccProvider.Meta().(service.DBApiClient)
+		conn := testAccProvider.Meta().(*service.DBApiClient)
 		resp, err := conn.Users().Read(rs.Primary.ID)
 		if err != nil {
 			return err

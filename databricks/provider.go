@@ -1,6 +1,7 @@
 package databricks
 
 import (
+	"encoding/base64"
 	"fmt"
 	"log"
 	"os"
@@ -39,6 +40,11 @@ func Provider(version string) terraform.ResourceProvider {
 			"databricks_azure_blob_mount":      resourceAzureBlobMount(),
 			"databricks_azure_adls_gen1_mount": resourceAzureAdlsGen1Mount(),
 			"databricks_azure_adls_gen2_mount": resourceAzureAdlsGen2Mount(),
+			//	MWS (multiple workspaces) resources are only limited to AWS as azure already has a built in concept of MWS
+			"databricks_mws_credentials":            resourceMWSCredentials(),
+			"databricks_mws_storage_configurations": resourceMWSStorageConfigurations(),
+			"databricks_mws_networks":               resourceMWSNetworks(),
+			"databricks_mws_workspaces":             resourceMWSWorkspaces(),
 		},
 		Schema: map[string]*schema.Schema{
 			"host": &schema.Schema{
@@ -47,9 +53,32 @@ func Provider(version string) terraform.ResourceProvider {
 				DefaultFunc: schema.EnvDefaultFunc("DATABRICKS_HOST", nil),
 			},
 			"token": &schema.Schema{
-				Type:        schema.TypeString,
-				Optional:    true,
-				DefaultFunc: schema.EnvDefaultFunc("DATABRICKS_TOKEN", nil),
+				Type:          schema.TypeString,
+				Optional:      true,
+				Sensitive:     true,
+				DefaultFunc:   schema.EnvDefaultFunc("DATABRICKS_TOKEN", nil),
+				ConflictsWith: []string{"basic_auth"},
+			},
+			"basic_auth": &schema.Schema{
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"username": &schema.Schema{
+							Type:        schema.TypeString,
+							Required:    true,
+							DefaultFunc: schema.EnvDefaultFunc("DATABRICKS_USERNAME", nil),
+						},
+						"password": &schema.Schema{
+							Type:        schema.TypeString,
+							Sensitive:   true,
+							Required:    true,
+							DefaultFunc: schema.EnvDefaultFunc("DATABRICKS_PASSWORD", nil),
+						},
+					},
+				},
+				ConflictsWith: []string{"token"},
 			},
 			"azure_auth": &schema.Schema{
 				Type:     schema.TypeMap,
@@ -187,14 +216,23 @@ func providerConfigureAzureClient(d *schema.ResourceData, providerVersion string
 		AdbAccessToken:         "",
 		AdbPlatformToken:       "",
 	}
-	log.Println("Running Azure Auth")
-	return azureAuthSetup.initWorkspaceAndGetClient(config)
+
+	// Setup the CustomAuthorizer Function to be called at API invoke rather than client invoke
+	config.CustomAuthorizer = func(config *service.DBApiClientConfig) error {
+		return azureAuthSetup.initWorkspaceAndGetClient(config)
+	}
+	var dbClient service.DBApiClient
+	dbClient.SetConfig(config)
+	return &dbClient, nil
 }
 
 func providerConfigure(d *schema.ResourceData, providerVersion string) (interface{}, error) {
 	var config service.DBApiClientConfig
 	// Call setup to configure retryable httpclient
 	config.Setup()
+
+	//version information from go-releaser using -ldflags to tell the golang linker to send semver info
+	config.UserAgent = fmt.Sprintf("databricks-tf-provider-%s", providerVersion)
 
 	if _, ok := d.GetOk("azure_auth"); !ok {
 		if host, ok := d.GetOk("host"); ok {
@@ -203,16 +241,24 @@ func providerConfigure(d *schema.ResourceData, providerVersion string) (interfac
 		if token, ok := d.GetOk("token"); ok {
 			config.Token = token.(string)
 		}
+
+		// Basic authentication setup via username and password
+		if _, ok := d.GetOk("basic_auth"); ok {
+			username, userOk := d.GetOk("basic_auth.0.username")
+			password, passOk := d.GetOk("basic_auth.0.password")
+			if userOk && passOk {
+				tokenUnB64 := fmt.Sprintf("%s:%s", username.(string), password.(string))
+				config.Token = base64.StdEncoding.EncodeToString([]byte(tokenUnB64))
+				config.AuthType = service.BasicAuth
+			}
+		}
 	} else {
 		// Abstracted logic to another function that returns a interface{}, error to inject directly
 		// for the providers during cloud integration testing
 		return providerConfigureAzureClient(d, providerVersion, &config)
 	}
 
-	//TODO: Bake the version of the provider using -ldflags to tell the golang linker to send
-	//version information from go-releaser
-	config.UserAgent = fmt.Sprintf("databricks-tf-provider-%s", providerVersion)
 	var dbClient service.DBApiClient
 	dbClient.SetConfig(&config)
-	return dbClient, nil
+	return &dbClient, nil
 }

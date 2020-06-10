@@ -163,7 +163,16 @@ func TestProvider_InvalidProfileGivesError(t *testing.T) {
 	assert.NotNil(t, err)
 }
 
-func TestDatabricksCliConfigWorks(t *testing.T) {
+func TestProvider_InvalidConfigFilePath(t *testing.T) {
+	var raw = make(map[string]interface{})
+	raw["config_file"] = "testdata/.invalid file"
+	raw["profile"] = "invalidhost"
+	err := testAccProvider.Configure(terraform.NewResourceConfigRaw(raw))
+	log.Println(err)
+	assert.NotNil(t, err)
+}
+
+func TestAccDatabricksCliConfigWorks(t *testing.T) {
 	resource.Test(t,
 		resource.TestCase{
 			Providers: testAccProviders,

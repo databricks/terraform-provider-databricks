@@ -89,7 +89,7 @@ func Provider(version string) terraform.ResourceProvider {
 				DefaultFunc: schema.EnvDefaultFunc("DATABRICKS_CONFIG_FILE", "~/.databrickscfg"),
 				Description: "Location of the Databricks CLI credentials file, that is created\n" +
 					"by `databricks configure --token` command. By default, it is located\n" +
-					"in ~/.databrickscfg. Check https://bit.ly/2XCtuZU for docs. Config\n" +
+					"in ~/.databrickscfg. Check  https://docs.databricks.com/dev-tools/cli/index.html#set-up-authentication for docs. Config\n" +
 					"file credetials will only be used when host/token are not provided.",
 			},
 			"profile": &schema.Schema{
@@ -258,7 +258,7 @@ func tryDatabricksCliConfigFile(d *schema.ResourceData, config *service.DBApiCli
 			"1. DATABRICKS_HOST + DATABRICKS_TOKEN environment variables.\n"+
 			"2. host + token provider arguments.\n"+
 			"3. Run `databricks configure --token` that will create %s file.\n\n"+
-			"Please check https://bit.ly/2XCtuZU for details", configFile)
+			"Please check https://docs.databricks.com/dev-tools/cli/index.html#set-up-authentication for details", configFile)
 	}
 	if profile, ok := d.GetOk("profile"); ok {
 		dbcliConfig := cfg.Section(profile.(string))

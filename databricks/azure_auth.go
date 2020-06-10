@@ -3,13 +3,12 @@ package databricks
 import (
 	"encoding/json"
 	"fmt"
-	"log"
-	"net/http"
-	urlParse "net/url"
-
 	"github.com/Azure/go-autorest/autorest/adal"
 	"github.com/Azure/go-autorest/autorest/azure"
 	"github.com/databrickslabs/databricks-terraform/client/service"
+	"log"
+	"net/http"
+	urlParse "net/url"
 )
 
 // List of management information
@@ -78,27 +77,26 @@ func (a *AzureAuth) getWorkspaceID(config *service.DBApiClientConfig) error {
 	log.Println("[DEBUG] Getting Workspace ID via management token.")
 	// Escape all the ids
 	url := fmt.Sprintf("https://management.azure.com/subscriptions/%s/resourceGroups/%s"+
-		"/providers/Microsoft.Databricks/workspaces/%s?api-version=2018-04-01",
+		"/providers/Microsoft.Databricks/workspaces/%s",
 		urlParse.PathEscape(a.TokenPayload.SubscriptionID),
 		urlParse.PathEscape(a.TokenPayload.ResourceGroup),
 		urlParse.PathEscape(a.TokenPayload.WorkspaceName))
-	payload := &WorkspaceRequest{
-		Properties: &WsProps{ManagedResourceGroupID: "/subscriptions/" + a.TokenPayload.SubscriptionID + "/resourceGroups/" + a.TokenPayload.ManagedResourceGroup},
-		Name:       a.TokenPayload.WorkspaceName,
-		Location:   a.TokenPayload.AzureRegion,
-	}
 	headers := map[string]string{
 		"Content-Type":  "application/json",
 		"cache-control": "no-cache",
 		"Authorization": "Bearer " + a.ManagementToken,
 	}
-
+	type apiVersion struct {
+		ApiVersion string `url:"api-version"`
+	}
+	uriPayload := apiVersion{
+		ApiVersion: "2018-04-01",
+	}
 	var responseMap map[string]interface{}
-	resp, err := service.PerformQuery(config, http.MethodPut, url, "2.0", headers, true, true, payload, nil)
+	resp, err := service.PerformQuery(config, http.MethodGet, url, "2.0", headers, false, true, uriPayload, nil)
 	if err != nil {
 		return err
 	}
-
 	err = json.Unmarshal(resp, &responseMap)
 	if err != nil {
 		return err
@@ -170,53 +168,36 @@ func (a *AzureAuth) getWorkspaceAccessToken(config *service.DBApiClientConfig) e
 // 2. Get Workspace ID
 // 3. Get Azure Databricks Platform OAuth Token using Databricks resource id
 // 4. Get Azure Databricks Workspace Personal Access Token for the SP (60 min duration)
-func (a *AzureAuth) initWorkspaceAndGetClient(config *service.DBApiClientConfig) (service.DBApiClient, error) {
-	var dbClient service.DBApiClient
+func (a *AzureAuth) initWorkspaceAndGetClient(config *service.DBApiClientConfig) error {
+	//var dbClient service.DBApiClient
 
 	// Get management token
 	err := a.getManagementToken(config)
 	if err != nil {
-		return dbClient, err
+		return err
 	}
 
 	// Get workspace access token
 	err = a.getWorkspaceID(config)
 	if err != nil {
-		return dbClient, err
+		return err
 	}
 
 	// Get platform token
 	err = a.getADBPlatformToken(config)
 	if err != nil {
-		return dbClient, err
+		return err
 	}
 
 	// Get workspace personal access token
 	err = a.getWorkspaceAccessToken(config)
 	if err != nil {
-		return dbClient, err
+		return err
 	}
 
-	var newOption service.DBApiClientConfig
+	//// TODO: Eventually change this to include new Databricks domain names. May have to add new vars and/or deprecate existing args.
+	config.Host = "https://" + a.TokenPayload.AzureRegion + ".azuredatabricks.net"
+	config.Token = a.AdbAccessToken
 
-	// TODO: Eventually change this to include new Databricks domain names. May have to add new vars and/or deprecate existing args.
-	newOption.Host = "https://" + a.TokenPayload.AzureRegion + ".azuredatabricks.net"
-	newOption.Token = a.AdbAccessToken
-
-	// Headers to use aad tokens, hidden till tokens support secrets, scopes and acls
-	//newOption.DefaultHeaders = map[string]string{
-	//	//"Content-Type": "application/x-www-form-urlencoded",
-	//	"X-Databricks-Azure-Workspace-Resource-Id": a.AdbWorkspaceResourceID,
-	//	"X-Databricks-Azure-SP-Management-Token":   a.ManagementToken,
-	//	"cache-control":                            "no-cache",
-	//}
-	dbClient.SetConfig(&newOption)
-
-	// Spin for a while while the workspace comes up and starts behaving.
-	_, err = dbClient.Clusters().ListNodeTypes()
-	if err != nil {
-		return dbClient, err
-	}
-
-	return dbClient, err
+	return nil
 }

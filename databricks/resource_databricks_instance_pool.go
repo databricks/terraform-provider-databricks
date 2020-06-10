@@ -160,7 +160,7 @@ func convertMapStringInterfaceToStringString(m map[string]interface{}) map[strin
 }
 
 func resourceInstancePoolCreate(d *schema.ResourceData, m interface{}) error {
-	client := m.(service.DBApiClient)
+	client := m.(*service.DBApiClient)
 
 	var instancePool model.InstancePool
 	var instancePoolAwsAttributes model.InstancePoolAwsAttributes
@@ -235,7 +235,7 @@ func resourceInstancePoolCreate(d *schema.ResourceData, m interface{}) error {
 
 func resourceInstancePoolRead(d *schema.ResourceData, m interface{}) error {
 	id := d.Id()
-	client := m.(service.DBApiClient)
+	client := m.(*service.DBApiClient)
 	instancePoolInfo, err := client.InstancePools().Read(id)
 	if err != nil {
 		if isInstancePoolMissing(err.Error(), id) {
@@ -334,7 +334,7 @@ func resourceInstancePoolRead(d *schema.ResourceData, m interface{}) error {
 
 func resourceInstancePoolUpdate(d *schema.ResourceData, m interface{}) error {
 	id := d.Id()
-	client := m.(service.DBApiClient)
+	client := m.(*service.DBApiClient)
 
 	var instancePoolInfo model.InstancePoolInfo
 	instancePoolInfo.InstancePoolName = d.Get("instance_pool_name").(string)
@@ -352,7 +352,7 @@ func resourceInstancePoolUpdate(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceInstancePoolDelete(d *schema.ResourceData, m interface{}) error {
-	client := m.(service.DBApiClient)
+	client := m.(*service.DBApiClient)
 	id := d.Id()
 	err := client.InstancePools().Delete(id)
 	return err

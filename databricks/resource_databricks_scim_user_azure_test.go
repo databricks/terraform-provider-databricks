@@ -1,5 +1,3 @@
-// +build azure
-
 package databricks
 
 import (
@@ -16,7 +14,7 @@ import (
 	"testing"
 )
 
-func TestAccScimUserResource(t *testing.T) {
+func TestAccAzureScimUserResource(t *testing.T) {
 	//var secretScope model.Secre
 	var scimUser model.User
 	// generate a random name for each tokenInfo test run, to avoid
@@ -29,20 +27,19 @@ func TestAccScimUserResource(t *testing.T) {
 	expectEntitlements := []model.EntitlementsListItem{{Value: model.AllowClusterCreateEntitlement}}
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
-		CheckDestroy: testScimUserResourceDestroy,
+		CheckDestroy: testAzureScimUserResourceDestroy,
 
 		Steps: []resource.TestStep{
 			{
 				// use a dynamic configuration with the random name from above
-				Config: testScimUserResourceCreate(userName, displayName),
+				Config: testAzureScimUserResourceCreate(userName, displayName),
 				// compose a basic test, checking both remote and local values
 				Check: resource.ComposeTestCheckFunc(
 					// query the API to retrieve the tokenInfo object
-					testScimUserResourceExists("databricks_scim_user.my_scim_user", &scimUser, t),
+					testAzureScimUserResourceExists("databricks_scim_user.my_scim_user", &scimUser, t),
 					// verify remote values
-					testScimUserValues(t, &scimUser, userName, displayName, expectEntitlements, "0"),
+					testAzureScimUserValues(t, &scimUser, userName, displayName, expectEntitlements, "0"),
 					// verify local values
 					resource.TestCheckResourceAttr("databricks_scim_user.my_scim_user", "user_name", userName),
 					resource.TestCheckResourceAttr("databricks_scim_user.my_scim_user", "display_name", displayName),
@@ -52,14 +49,14 @@ func TestAccScimUserResource(t *testing.T) {
 			},
 			{
 				// use a dynamic configuration with the random name from above
-				Config: testScimUserResourceUpdate(userName, displayName),
+				Config: testAzureScimUserResourceUpdate(userName, displayName),
 
 				// compose a basic test, checking both remote and local values
 				Check: resource.ComposeTestCheckFunc(
 					// query the API to retrieve the tokenInfo object
-					testScimUserResourceExists("databricks_scim_user.my_scim_user", &scimUser, t),
+					testAzureScimUserResourceExists("databricks_scim_user.my_scim_user", &scimUser, t),
 					// verify remote values
-					testScimUserValues(t, &scimUser, userName, displayName, nil, "1"),
+					testAzureScimUserValues(t, &scimUser, userName, displayName, nil, "1"),
 					// verify local values
 					resource.TestCheckResourceAttr("databricks_scim_user.my_scim_user", "user_name", userName),
 					resource.TestCheckResourceAttr("databricks_scim_user.my_scim_user", "display_name", displayName),
@@ -69,13 +66,13 @@ func TestAccScimUserResource(t *testing.T) {
 			},
 			{
 				// Recreate the user with roles and entitlements again to see if the user gets updated
-				Config: testScimUserResourceCreate(userName, displayName),
+				Config: testAzureScimUserResourceCreate(userName, displayName),
 
 				Check: resource.ComposeTestCheckFunc(
 					// query the API to retrieve the tokenInfo object
-					testScimUserResourceExists("databricks_scim_user.my_scim_user", &scimUser, t),
+					testAzureScimUserResourceExists("databricks_scim_user.my_scim_user", &scimUser, t),
 					// verify remote values
-					testScimUserValues(t, &scimUser, userName, displayName, expectEntitlements, "2"),
+					testAzureScimUserValues(t, &scimUser, userName, displayName, expectEntitlements, "2"),
 					// verify local values
 					resource.TestCheckResourceAttr("databricks_scim_user.my_scim_user", "user_name", userName),
 					resource.TestCheckResourceAttr("databricks_scim_user.my_scim_user", "display_name", displayName),
@@ -85,17 +82,17 @@ func TestAccScimUserResource(t *testing.T) {
 			},
 			{
 				PreConfig: func() {
-					err := testAccProvider.Meta().(service.DBApiClient).Users().Delete(scimUser.ID)
+					err := testAccProvider.Meta().(*service.DBApiClient).Users().Delete(scimUser.ID)
 					assert.NoError(t, err, err)
 				},
 				// use a dynamic configuration with the random name from above
-				Config: testScimUserResourceUpdate(userName, displayName),
+				Config: testAzureScimUserResourceUpdate(userName, displayName),
 				// compose a basic test, checking both remote and local values
 				Check: resource.ComposeTestCheckFunc(
 					// query the API to retrieve the tokenInfo object
-					testScimUserResourceExists("databricks_scim_user.my_scim_user", &scimUser, t),
+					testAzureScimUserResourceExists("databricks_scim_user.my_scim_user", &scimUser, t),
 					// verify remote values
-					testScimUserValues(t, &scimUser, userName, displayName, nil, "3"),
+					testAzureScimUserValues(t, &scimUser, userName, displayName, nil, "3"),
 					// verify local values
 					resource.TestCheckResourceAttr("databricks_scim_user.my_scim_user", "user_name", userName),
 					resource.TestCheckResourceAttr("databricks_scim_user.my_scim_user", "display_name", displayName),
@@ -106,17 +103,17 @@ func TestAccScimUserResource(t *testing.T) {
 			{
 				//Create a new user
 				PreConfig: func() {
-					err := testAccProvider.Meta().(service.DBApiClient).Users().Delete(scimUser.ID)
+					err := testAccProvider.Meta().(*service.DBApiClient).Users().Delete(scimUser.ID)
 					assert.NoError(t, err, err)
 				},
 				// Create new admin user
-				Config: testScimUserResourceSetAdmin(userName, displayName, true),
+				Config: testAzureScimUserResourceSetAdmin(userName, displayName, true),
 				// compose a basic test, checking both remote and local values
 				Check: resource.ComposeTestCheckFunc(
 					// query the API to retrieve the tokenInfo object
-					testScimUserResourceExists("databricks_scim_user.my_scim_user", &scimUser, t),
+					testAzureScimUserResourceExists("databricks_scim_user.my_scim_user", &scimUser, t),
 					// verify remote values
-					testScimUserValues(t, &scimUser, userName, displayName, nil, "4"),
+					testAzureScimUserValues(t, &scimUser, userName, displayName, nil, "4"),
 					// verify local values
 					resource.TestCheckResourceAttr("databricks_scim_user.my_scim_user", "user_name", userName),
 					resource.TestCheckResourceAttr("databricks_scim_user.my_scim_user", "display_name", displayName),
@@ -127,13 +124,13 @@ func TestAccScimUserResource(t *testing.T) {
 			},
 			{
 				// Update admin to false
-				Config: testScimUserResourceSetAdmin(userName, displayName, false),
+				Config: testAzureScimUserResourceSetAdmin(userName, displayName, false),
 				// compose a basic test, checking both remote and local values
 				Check: resource.ComposeTestCheckFunc(
 					// query the API to retrieve the tokenInfo object
-					testScimUserResourceExists("databricks_scim_user.my_scim_user", &scimUser, t),
+					testAzureScimUserResourceExists("databricks_scim_user.my_scim_user", &scimUser, t),
 					// verify remote values
-					testScimUserValues(t, &scimUser, userName, displayName, nil, "5"),
+					testAzureScimUserValues(t, &scimUser, userName, displayName, nil, "5"),
 					// verify local values
 					resource.TestCheckResourceAttr("databricks_scim_user.my_scim_user", "user_name", userName),
 					resource.TestCheckResourceAttr("databricks_scim_user.my_scim_user", "display_name", displayName),
@@ -144,13 +141,13 @@ func TestAccScimUserResource(t *testing.T) {
 			},
 			{
 				// Update admin back to true
-				Config: testScimUserResourceSetAdmin(userName, displayName, true),
+				Config: testAzureScimUserResourceSetAdmin(userName, displayName, true),
 				// compose a basic test, checking both remote and local values
 				Check: resource.ComposeTestCheckFunc(
 					// query the API to retrieve the tokenInfo object
-					testScimUserResourceExists("databricks_scim_user.my_scim_user", &scimUser, t),
+					testAzureScimUserResourceExists("databricks_scim_user.my_scim_user", &scimUser, t),
 					// verify remote values
-					testScimUserValues(t, &scimUser, userName, displayName, nil, "6"),
+					testAzureScimUserValues(t, &scimUser, userName, displayName, nil, "6"),
 					// verify local values
 					resource.TestCheckResourceAttr("databricks_scim_user.my_scim_user", "user_name", userName),
 					resource.TestCheckResourceAttr("databricks_scim_user.my_scim_user", "display_name", displayName),
@@ -163,8 +160,8 @@ func TestAccScimUserResource(t *testing.T) {
 	})
 }
 
-func testScimUserResourceDestroy(s *terraform.State) error {
-	client := testAccProvider.Meta().(service.DBApiClient)
+func testAzureScimUserResourceDestroy(s *terraform.State) error {
+	client := testAccProvider.Meta().(*service.DBApiClient)
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "databricks_scim_user" {
 			continue
@@ -178,7 +175,7 @@ func testScimUserResourceDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testScimUserValues(t *testing.T, user *model.User, userName, displayName string, expectEntitlements []model.EntitlementsListItem, step string) resource.TestCheckFunc {
+func testAzureScimUserValues(t *testing.T, user *model.User, userName, displayName string, expectEntitlements []model.EntitlementsListItem, step string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		var errorMsg bytes.Buffer
 
@@ -206,7 +203,7 @@ func testScimUserValues(t *testing.T, user *model.User, userName, displayName st
 }
 
 // testAccCheckTokenResourceExists queries the API and retrieves the matching Widget.
-func testScimUserResourceExists(n string, user *model.User, t *testing.T) resource.TestCheckFunc {
+func testAzureScimUserResourceExists(n string, user *model.User, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		// find the corresponding state object
 		rs, ok := s.RootModule().Resources[n]
@@ -215,7 +212,7 @@ func testScimUserResourceExists(n string, user *model.User, t *testing.T) resour
 		}
 
 		// retrieve the configured client from the test setup
-		conn := testAccProvider.Meta().(service.DBApiClient)
+		conn := testAccProvider.Meta().(*service.DBApiClient)
 		resp, err := conn.Users().Read(rs.Primary.ID)
 		if err != nil {
 			return err
@@ -228,7 +225,7 @@ func testScimUserResourceExists(n string, user *model.User, t *testing.T) resour
 	}
 }
 
-func testScimUserResourceCreate(username, displayName string) string {
+func testAzureScimUserResourceCreate(username, displayName string) string {
 	return fmt.Sprintf(`
 								resource "databricks_scim_user" "my_scim_user" {
 								  user_name = "%s"
@@ -241,7 +238,7 @@ func testScimUserResourceCreate(username, displayName string) string {
 								`, username, displayName)
 }
 
-func testScimUserResourceUpdate(username, displayName string) string {
+func testAzureScimUserResourceUpdate(username, displayName string) string {
 	return fmt.Sprintf(`
 								resource "databricks_scim_user" "my_scim_user" {
 								  user_name = "%s"
@@ -251,7 +248,7 @@ func testScimUserResourceUpdate(username, displayName string) string {
 								`, username, displayName)
 }
 
-func testScimUserResourceSetAdmin(username, displayName string, setAdmin bool) string {
+func testAzureScimUserResourceSetAdmin(username, displayName string, setAdmin bool) string {
 	return fmt.Sprintf(`
 								resource "databricks_scim_user" "my_scim_user" {
 								  user_name = "%s"

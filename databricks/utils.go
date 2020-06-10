@@ -8,7 +8,7 @@ import (
 	"time"
 )
 
-func changeClusterIntoRunningState(clusterID string, client service.DBApiClient) error {
+func changeClusterIntoRunningState(clusterID string, client *service.DBApiClient) error {
 	//return nil
 	clusterInfo, err := client.Clusters().Get(clusterID)
 	if err != nil {
@@ -67,4 +67,28 @@ func changeClusterIntoRunningState(clusterID string, client service.DBApiClient)
 
 	return fmt.Errorf("cluster is in a non recoverable state: %s", currentState)
 
+}
+
+// PackagedMWSIds is a struct that contains both the MWS acct id and the ResourceId (resources are networks, creds, etc.)
+type PackagedMWSIds struct {
+	MwsAcctId  string
+	ResourceId string
+}
+
+// Helps package up MWSAccountId with another id such as credentials id or network id
+// uses format mwsAcctId/otherId
+func packMWSAccountId(idsToPackage PackagedMWSIds) string {
+	return fmt.Sprintf("%s/%s", idsToPackage.MwsAcctId, idsToPackage.ResourceId)
+}
+
+// Helps unpackage MWSAccountId from another id such as credentials id or network id
+func unpackMWSAccountId(combined string) (PackagedMWSIds, error) {
+	var packagedMWSIds PackagedMWSIds
+	parts := strings.Split(combined, "/")
+	if len(parts) != 2 {
+		return packagedMWSIds, fmt.Errorf("unpacked account has more than or less than two parts, combined id: %s", combined)
+	}
+	packagedMWSIds.MwsAcctId = parts[0]
+	packagedMWSIds.ResourceId = parts[1]
+	return packagedMWSIds, nil
 }

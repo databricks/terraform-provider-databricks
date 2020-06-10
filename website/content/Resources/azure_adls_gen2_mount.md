@@ -16,7 +16,7 @@ It is important to understand that this will start up the cluster if the cluster
 
 The read and refresh terraform command will require a cluster and make take some time to validate mount.
 
-If the cluster associated with the mount is deleted, then the mount will be re-created by terraform on next plan. It is important to note that provided the mount path and the storage account information remains the same, the mount will not actually get re-created inside the workspace
+If the cluster associated with the mount is deleted, then the mount will be re-created by terraform on next plan. It is important to note that provided the mount path and the storage account information remains the same, the mount will not actually get re-created inside the workspace.
 {{% /notice %}}
 
 {{% notice note %}}

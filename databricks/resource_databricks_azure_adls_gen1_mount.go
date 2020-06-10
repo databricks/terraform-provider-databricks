@@ -135,10 +135,6 @@ func resourceAzureAdlsGen1Create(d *schema.ResourceData, m interface{}) error {
 func resourceAzureAdlsGen1Read(d *schema.ResourceData, m interface{}) error {
 	client := m.(*service.DBApiClient)
 	clusterID := d.Get("cluster_id").(string)
-	err := changeClusterIntoRunningState(clusterID, client)
-	if err != nil {
-		return err
-	}
 	storageResourceName := d.Get("storage_resource_name").(string)
 	sparkConfPrefix := d.Get("spark_conf_prefix").(string)
 	directory := d.Get("directory").(string)
@@ -147,7 +143,16 @@ func resourceAzureAdlsGen1Read(d *schema.ResourceData, m interface{}) error {
 	clientID := d.Get("client_id").(string)
 	clientSecretScope := d.Get("client_secret_scope").(string)
 	clientSecretKey := d.Get("client_secret_key").(string)
-
+	err := changeClusterIntoRunningState(clusterID, client)
+	if err != nil {
+		if isClusterMissing(err.Error(), clusterID) {
+			log.Printf("Unable to refresh mount '%s' as cluster '%s' is missing", mountName, clusterID)
+			d.SetId("")
+			return nil
+		}
+		return err
+	}
+	
 	adlsGen1Mount := NewAzureADLSGen1Mount(storageResourceName, directory, mountName,
 		sparkConfPrefix, clientID, tenantID, clientSecretScope, clientSecretKey)
 

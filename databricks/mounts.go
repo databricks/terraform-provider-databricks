@@ -117,16 +117,21 @@ func (m AzureBlobMount) Create(client *service.DBApiClient, clusterID string) er
 		confKey = fmt.Sprintf("fs.azure.account.key.%s.blob.core.windows.net", m.StorageAccountName)
 	}
 	iamMountCommand := fmt.Sprintf(`
+for mount in dbutils.fs.mounts():
+  if mount.mountPoint == "/mnt/%[4]s" and mount.source=="wasbs://%[1]s@%[2]s.blob.core.windows.net%[3]s":
+    print ("Mount already exists")
+    dbutils.notebook.exit("success")
+
 try:
   dbutils.fs.mount(
-    source = "wasbs://%s@%s.blob.core.windows.net%s",
-    mount_point = "/mnt/%s",
-    extra_configs = {"%s":dbutils.secrets.get(scope = "%s", key = "%s")})
+    source = "wasbs://%[1]s@%[2]s.blob.core.windows.net%[3]s",
+    mount_point = "/mnt/%[4]s",
+    extra_configs = {"%[5]s":dbutils.secrets.get(scope = "%[6]s", key = "%[7]s")})
 except Exception as e:
-  dbutils.fs.unmount("/mnt/%s")
+  dbutils.fs.unmount("/mnt/%[4]s")
   raise e
 dbutils.notebook.exit("success")
-`, m.ContainerName, m.StorageAccountName, m.Directory, m.MountName, confKey, m.SecretScope, m.SecretKey, m.MountName)
+`, m.ContainerName, m.StorageAccountName, m.Directory, m.MountName, confKey, m.SecretScope, m.SecretKey)
 	resp, err := client.Commands().Execute(clusterID, "python", iamMountCommand)
 	if err != nil {
 		return err

@@ -43,6 +43,19 @@ resource "databricks_scim_user" "my-user" {
 }
 ```
 {{% /tab %}}
+ {{% tab name="Profile" %}}
+``` hcl
+provider "databricks" {
+  config_file = "~/.databrickscfg"
+  profile     = "DEFAULT"
+}
+
+resource "databricks_scim_user" "my-user" {
+  user_name     = "test-user@databricks.com"
+  display_name  = "Test User"
+}
+```
+ {{% /tab %}}
  {{% tab name="Azure SP Auth" %}}
 ``` hcl
 provider "azurerm" {
@@ -141,6 +154,7 @@ The following variables can be passed via environment variables:
 * `token` → `DATABRICKS_TOKEN`
 * `basic_auth.username` → `DATABRICKS_USERNAME`
 * `basic_auth.password` → `DATABRICKS_PASSWORD`
+* `config_file` → `DATABRICKS_CONFIG_FILE`
 * `managed_resource_group` → `DATABRICKS_AZURE_MANAGED_RESOURCE_GROUP`
 * `azure_region` → `AZURE_REGION`
 * `workspace_name` → `DATABRICKS_AZURE_WORKSPACE_NAME`
@@ -194,6 +208,18 @@ Alternatively you can provide this value as an environment variable `DATABRICKS_
 * `password` - This is the password of the user that can log into the workspace.
 Alternatively you can provide this value as an environment variable `DATABRICKS_PASSWORD`.
 {{% /chevron %}}
+
+#### `config_file`:
+> Location of the Databricks CLI credentials file, that is created, by `databricks configure --token` command. 
+>By default, it is located in ~/.databrickscfg. Check https://docs.databricks.com/dev-tools/cli/index.html#set-up-authentication 
+>for docs. Config file credentials will only be used when host/token/basic_auth/azure_auth are not provided. 
+>Alternatively you can provide this value as an environment variable `DATABRICKS_CONFIG_FILE`. This field defaults to 
+>`~/.databrickscfg`. 
+
+#### `profile`:
+> Connection profile specified within ~/.databrickscfg. Please check 
+>https://docs.databricks.com/dev-tools/cli/index.html#connection-profiles for documentation. This field defaults to 
+>`DEFAULT`.
 
 #### `azure_auth`:
 > #### **Usage**

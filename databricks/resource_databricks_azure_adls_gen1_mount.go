@@ -2,10 +2,12 @@ package databricks
 
 import (
 	"fmt"
+	"log"
+	"strings"
+
 	"github.com/databrickslabs/databricks-terraform/client/service"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
-	"strings"
 )
 
 func resourceAzureAdlsGen1Mount() *schema.Resource {
@@ -152,7 +154,7 @@ func resourceAzureAdlsGen1Read(d *schema.ResourceData, m interface{}) error {
 		}
 		return err
 	}
-	
+
 	adlsGen1Mount := NewAzureADLSGen1Mount(storageResourceName, directory, mountName,
 		sparkConfPrefix, clientID, tenantID, clientSecretScope, clientSecretKey)
 

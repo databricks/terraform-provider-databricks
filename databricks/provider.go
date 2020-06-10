@@ -60,7 +60,7 @@ func Provider(version string) terraform.ResourceProvider {
 				Optional:      true,
 				Sensitive:     true,
 				DefaultFunc:   schema.EnvDefaultFunc("DATABRICKS_TOKEN", nil),
-				ConflictsWith: []string{"basic_auth", "config_file"},
+				ConflictsWith: []string{"basic_auth"},
 			},
 			"basic_auth": &schema.Schema{
 				Type:     schema.TypeList,
@@ -81,7 +81,7 @@ func Provider(version string) terraform.ResourceProvider {
 						},
 					},
 				},
-				ConflictsWith: []string{"token", "config_file"},
+				ConflictsWith: []string{"token"},
 			},
 			"config_file": &schema.Schema{
 				Type:        schema.TypeString,
@@ -91,7 +91,6 @@ func Provider(version string) terraform.ResourceProvider {
 					"by `databricks configure --token` command. By default, it is located\n" +
 					"in ~/.databrickscfg. Check https://bit.ly/2XCtuZU for docs. Config\n" +
 					"file credetials will only be used when host/token are not provided.",
-				ConflictsWith: []string{"token", "basic_auth"},
 			},
 			"profile": &schema.Schema{
 				Type:     schema.TypeString,
@@ -257,7 +256,7 @@ func tryDatabricksCliConfigFile(d *schema.ResourceData, config *service.DBApiCli
 		return fmt.Errorf("Authentication is not configured for provider. Please configure it\n"+
 			"through one of the following options:\n"+
 			"1. DATABRICKS_HOST + DATABRICKS_TOKEN environment variables.\n"+
-			"2. host + token provider argumeents.\n"+
+			"2. host + token provider arguments.\n"+
 			"3. Run `databricks configure --token` that will create %s file.\n\n"+
 			"Please check https://bit.ly/2XCtuZU for details", configFile)
 	}
@@ -265,14 +264,14 @@ func tryDatabricksCliConfigFile(d *schema.ResourceData, config *service.DBApiCli
 		dbcliConfig := cfg.Section(profile.(string))
 		token := dbcliConfig.Key("token").String()
 		if "" == token {
-			return fmt.Errorf("Config file %s is corrupt: cannot find token in %s profile",
+			return fmt.Errorf("config file %s is corrupt: cannot find token in %s profile",
 				configFile, profile)
 		}
 		config.Token = token
 
 		host := dbcliConfig.Key("host").String()
 		if "" == host {
-			return fmt.Errorf("Config file %s is corrupt: cannot find host in %s profile",
+			return fmt.Errorf("config file %s is corrupt: cannot find host in %s profile",
 				configFile, profile)
 		}
 		config.Host = host
@@ -296,9 +295,9 @@ func providerConfigure(d *schema.ResourceData, providerVersion string) (interfac
 		if token, ok := d.GetOk("token"); ok {
 			config.Token = token.(string)
 		}
-		if token, ok := d.GetOk("config_file"); ok {
+		if config.Host == "" || config.Token == "" {
 			if err := tryDatabricksCliConfigFile(d, &config); err != nil {
-				return nil, err
+				return nil, fmt.Errorf("failed to get credentials from config file; error msg: %w", err)
 			}
 		}
 		// Basic authentication setup via username and password

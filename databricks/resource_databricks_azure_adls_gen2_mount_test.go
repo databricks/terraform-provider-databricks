@@ -6,7 +6,11 @@ import (
 	"regexp"
 	"testing"
 
+	"github.com/databrickslabs/databricks-terraform/client/model"
+	"github.com/databrickslabs/databricks-terraform/client/service"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestAccAzureAdlsGen2Mount_correctly_mounts(t *testing.T) {
@@ -16,6 +20,29 @@ func TestAccAzureAdlsGen2Mount_correctly_mounts(t *testing.T) {
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
+				Config: terraformToApply,
+			},
+		},
+	})
+}
+
+func TestAccAzureAdlsGen2Mount_cluster_deleted_correctly_mounts(t *testing.T) {
+	terraformToApply := testAccAzureAdlsGen2Mount_correctly_mounts()
+	var cluster model.ClusterInfo
+
+	resource.Test(t, resource.TestCase{
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: terraformToApply,
+				Check:  testClusterResourceExists("databricks_cluster.cluster", &cluster, t),
+			},
+			{
+				PreConfig: func() {
+					client := testAccProvider.Meta().(*service.DBApiClient)
+					err := client.Clusters().Delete(cluster.ClusterID)
+					assert.NoError(t, err, err)
+				},
 				Config: terraformToApply,
 			},
 		},
@@ -164,4 +191,24 @@ func testAccAzureAdlsGen2Mount_capture_error() string {
 
 `, clientID, clientSecret, tenantID, subscriptionID, workspaceName, resourceGroupName, managedResourceGroupName, location, gen2AdalName)
 	return definition
+}
+
+// testClusterResourceExists queries the API and retrieves the matching Cluster.
+func testClusterResourceExists(n string, cluster *model.ClusterInfo, t *testing.T) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		// find the corresponding state object
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		conn := testAccProvider.Meta().(*service.DBApiClient)
+		resp, err := conn.Clusters().Get(rs.Primary.ID)
+		if err != nil {
+			return err
+		}
+
+		*cluster = resp
+		return nil
+	}
 }

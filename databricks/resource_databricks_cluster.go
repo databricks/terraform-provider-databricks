@@ -2,13 +2,13 @@ package databricks
 
 import (
 	"errors"
-	"fmt"
-	"github.com/databrickslabs/databricks-terraform/client/model"
-	"github.com/databrickslabs/databricks-terraform/client/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"log"
 	"strings"
 	"time"
+
+	"github.com/databrickslabs/databricks-terraform/client/model"
+	"github.com/databrickslabs/databricks-terraform/client/service"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 func resourceCluster() *schema.Resource {
@@ -1452,9 +1452,4 @@ func getMapFromOneItemSet(input interface{}) map[string]interface{} {
 		return inputList[0].(map[string]interface{})
 	}
 	return nil
-}
-
-func isClusterMissing(errorMsg, resourceID string) bool {
-	return strings.Contains(errorMsg, "INVALID_PARAMETER_VALUE") &&
-		strings.Contains(errorMsg, fmt.Sprintf("Cluster %s does not exist", resourceID))
 }

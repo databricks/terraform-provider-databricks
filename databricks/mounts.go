@@ -117,16 +117,21 @@ func (m AzureBlobMount) Create(client *service.DBApiClient, clusterID string) er
 		confKey = fmt.Sprintf("fs.azure.account.key.%s.blob.core.windows.net", m.StorageAccountName)
 	}
 	iamMountCommand := fmt.Sprintf(`
+for mount in dbutils.fs.mounts():
+  if mount.mountPoint == "/mnt/%[4]s" and mount.source=="wasbs://%[1]s@%[2]s.blob.core.windows.net%[3]s":
+    print ("Mount already exists")
+    dbutils.notebook.exit("success")
+
 try:
   dbutils.fs.mount(
-    source = "wasbs://%s@%s.blob.core.windows.net%s",
-    mount_point = "/mnt/%s",
-    extra_configs = {"%s":dbutils.secrets.get(scope = "%s", key = "%s")})
+    source = "wasbs://%[1]s@%[2]s.blob.core.windows.net%[3]s",
+    mount_point = "/mnt/%[4]s",
+    extra_configs = {"%[5]s":dbutils.secrets.get(scope = "%[6]s", key = "%[7]s")})
 except Exception as e:
-  dbutils.fs.unmount("/mnt/%s")
+  dbutils.fs.unmount("/mnt/%[4]s")
   raise e
 dbutils.notebook.exit("success")
-`, m.ContainerName, m.StorageAccountName, m.Directory, m.MountName, confKey, m.SecretScope, m.SecretKey, m.MountName)
+`, m.ContainerName, m.StorageAccountName, m.Directory, m.MountName, confKey, m.SecretScope, m.SecretKey)
 	resp, err := client.Commands().Execute(clusterID, "python", iamMountCommand)
 	if err != nil {
 		return err
@@ -210,21 +215,25 @@ func NewAzureADLSGen1Mount(storageResource string, directory string, mountName s
 // Create creates a azure datalake gen 1 storage mount given a cluster id
 func (m AzureADLSGen1Mount) Create(client *service.DBApiClient, clusterID string) error {
 	iamMountCommand := fmt.Sprintf(`
+for mount in dbutils.fs.mounts():
+  if mount.mountPoint == "/mnt/%[8]s" and mount.source=="adl://%[6]s.azuredatalakestore.net%[7]s":
+    print ("Mount already exists")
+    dbutils.notebook.exit("success")
+
 try:
-  configs = {"%s.oauth2.access.token.provider.type": "ClientCredential",
-          "%s.oauth2.client.id": "%s",
-          "%s.oauth2.credential": dbutils.secrets.get(scope = "%s", key = "%s"),
-          "%s.oauth2.refresh.url": "https://login.microsoftonline.com/%s/oauth2/token"}
+  configs = {"%[1]s.oauth2.access.token.provider.type": "ClientCredential",
+          "%[1]s.oauth2.client.id": "%[2]s",
+          "%[1]s.oauth2.credential": dbutils.secrets.get(scope = "%[3]s", key = "%[4]s"),
+          "%[1]s.oauth2.refresh.url": "https://login.microsoftonline.com/%[5]s/oauth2/token"}
   dbutils.fs.mount(
-   source = "adl://%s.azuredatalakestore.net%s",
-   mount_point = "/mnt/%s",
+   source = "adl://%[6]s.azuredatalakestore.net%[7]s",
+   mount_point = "/mnt/%[8]s",
    extra_configs = configs)
 except Exception as e:
-  dbutils.fs.unmount("/mnt/%s")
+  dbutils.fs.unmount("/mnt/%[8]s")
   raise e
 dbutils.notebook.exit("success")
-`, m.PrefixType, m.PrefixType, m.ClientID, m.PrefixType, m.SecretScope, m.SecretKey, m.PrefixType, m.TenantID,
-		m.StorageResource, m.Directory, m.MountName, m.MountName)
+`, m.PrefixType, m.ClientID, m.SecretScope, m.SecretKey, m.TenantID, m.StorageResource, m.Directory, m.MountName, m.MountName)
 	resp, err := client.Commands().Execute(clusterID, "python", iamMountCommand)
 	if err != nil {
 		return err
@@ -308,6 +317,11 @@ func NewAzureADLSGen2Mount(containerName string, storageAccountName string, dire
 // Create creates a azure datalake gen 2 storage mount
 func (m AzureADLSGen2Mount) Create(client *service.DBApiClient, clusterID string) error {
 	iamMountCommand := fmt.Sprintf(`
+for mount in dbutils.fs.mounts():
+  if mount.mountPoint == "/mnt/%[9]s" and mount.source=="abfss://%[6]s@%[7]s.dfs.core.windows.net%[8]s":
+    print ("Mount already exists")
+    dbutils.notebook.exit("success")
+
 try:
   configs = {"fs.azure.account.auth.type": "OAuth",
            "fs.azure.account.oauth.provider.type": "org.apache.hadoop.fs.azurebfs.oauth2.ClientCredsTokenProvider",

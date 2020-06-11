@@ -42,6 +42,36 @@ func TestAccAzureBlobMount_correctly_mounts(t *testing.T) {
 	})
 }
 
+func TestAccAzureBlobMount_cluster_deleted_correctly_mounts(t *testing.T) {
+	terraformToApply := testAccAzureBlobMount_correctly_mounts()
+	var clusterInfo model.ClusterInfo
+	var azureBlobMount AzureBlobMount
+
+	resource.Test(t, resource.TestCase{
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: terraformToApply,
+				Check: resource.ComposeTestCheckFunc(
+					testAccAzureBlobMount_cluster_exists("databricks_cluster.cluster", &clusterInfo),
+					testAccAzureBlobMount_mount_exists("databricks_azure_blob_mount.mount", &azureBlobMount, &clusterInfo),
+				),
+			},
+			{
+				PreConfig: func() {
+					client := testAccProvider.Meta().(*service.DBApiClient)
+					err := client.Clusters().Delete(clusterInfo.ClusterID)
+					assert.NoError(t, err, err)
+				},
+				Config: terraformToApply,
+				Check: resource.ComposeTestCheckFunc(
+					testAccAzureBlobMount_mount_exists("databricks_azure_blob_mount.mount", &azureBlobMount, &clusterInfo),
+				),
+			},
+		},
+	})
+}
+
 func testAccAzureBlobMount_cluster_exists(n string, clusterInfo *model.ClusterInfo) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		// find the corresponding state object

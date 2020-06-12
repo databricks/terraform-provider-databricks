@@ -435,3 +435,12 @@ func ProcessAzureWasbAbfssUris(uri string) (string, string, string, error) {
 	}
 	return containerName, storageAccount, directory, nil
 }
+
+// ValidateMountDirectory is a ValidateFunc that ensures the mount directory starts with a '/'
+func ValidateMountDirectory(val interface{}, key string) (warns []string, errs []error) {
+	v := val.(string)
+	if v != "" && !strings.HasPrefix(v, "/") {
+		return nil, []error{fmt.Errorf("%s must start with /, got: %s", key, v)}
+	}
+	return nil, nil
+}

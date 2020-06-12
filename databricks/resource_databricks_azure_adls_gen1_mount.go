@@ -40,14 +40,7 @@ func resourceAzureAdlsGen1Mount() *schema.Resource {
 				Computed: true,
 				//Default:  "/",
 				ForceNew: true,
-				ValidateFunc: func(val interface{}, key string) (warns []string, errors []error) {
-					directory := val.(string)
-					if strings.HasPrefix(directory, "/") {
-						return
-					}
-					errors = append(errors, fmt.Errorf("%s must start with /, got: %s", key, val))
-					return
-				},
+				ValidateFunc: ValidateMountDirectory,
 			},
 			"mount_name": {
 				Type:     schema.TypeString,

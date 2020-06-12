@@ -94,13 +94,13 @@ func testAzureJobValuesNewCluster(t *testing.T, job *model.Job) resource.TestChe
 		assert.NotNil(t, job.Settings.NotebookTask)
 		assert.Equal(t, 2, int(job.Settings.NewCluster.Autoscale.MinWorkers))
 		assert.Equal(t, 3, int(job.Settings.NewCluster.Autoscale.MaxWorkers))
-		assert.Equal(t,  "6.4.x-scala2.11", job.Settings.NewCluster.SparkVersion)
-		assert.Equal(t,  "Standard_DS3_v2", job.Settings.NewCluster.NodeTypeID)
-		assert.Equal(t,  "/Users/jane.doe@databricks.com/my-demo-notebook", job.Settings.NotebookTask.NotebookPath)
-		assert.Equal(t,  "my-demo-notebook", job.Settings.Name)
-		assert.Equal(t,  3600, int(job.Settings.TimeoutSeconds))
-		assert.Equal(t,  1, int(job.Settings.MaxRetries))
-		assert.Equal(t,  1, int(job.Settings.MaxConcurrentRuns))
+		assert.Equal(t, "6.4.x-scala2.11", job.Settings.NewCluster.SparkVersion)
+		assert.Equal(t, "Standard_DS3_v2", job.Settings.NewCluster.NodeTypeID)
+		assert.Equal(t, "/Users/jane.doe@databricks.com/my-demo-notebook", job.Settings.NotebookTask.NotebookPath)
+		assert.Equal(t, "my-demo-notebook", job.Settings.Name)
+		assert.Equal(t, 3600, int(job.Settings.TimeoutSeconds))
+		assert.Equal(t, 1, int(job.Settings.MaxRetries))
+		assert.Equal(t, 1, int(job.Settings.MaxConcurrentRuns))
 		return nil
 	}
 }

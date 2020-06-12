@@ -128,6 +128,20 @@ func TestProvider_HostTokensTakePrecedence(t *testing.T) {
 	assert.Equal(t, "configured", client.Token)
 }
 
+func TestProvider_BasicAuthTakePrecedence(t *testing.T) {
+	var raw = make(map[string]interface{})
+	raw["host"] = "foo"
+	raw["basic_auth"] = []interface{}{map[string]interface{}{"username": "user", "password": "pass"}}
+	raw["config_file"] = "testdata/.databrickscfg"
+	err := testAccProvider.Configure(terraform.NewResourceConfigRaw(raw))
+	assert.Nil(t, err)
+
+	// Basic auth convention
+	expectedToken := base64.StdEncoding.EncodeToString([]byte("user:pass"))
+	client := testAccProvider.Meta().(*service.DBApiClient).Config
+	assert.Equal(t, expectedToken, client.Token)
+}
+
 func TestProvider_MissingEnvMakesConfigRead(t *testing.T) {
 	var raw = make(map[string]interface{})
 	raw["token"] = "configured"

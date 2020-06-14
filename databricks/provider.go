@@ -50,30 +50,30 @@ func Provider(version string) terraform.ResourceProvider {
 			"databricks_mws_workspaces":             resourceMWSWorkspaces(),
 		},
 		Schema: map[string]*schema.Schema{
-			"host": &schema.Schema{
+			"host": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				DefaultFunc: schema.EnvDefaultFunc("DATABRICKS_HOST", nil),
 			},
-			"token": &schema.Schema{
+			"token": {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Sensitive:     true,
 				DefaultFunc:   schema.EnvDefaultFunc("DATABRICKS_TOKEN", nil),
 				ConflictsWith: []string{"basic_auth"},
 			},
-			"basic_auth": &schema.Schema{
+			"basic_auth": {
 				Type:     schema.TypeList,
 				Optional: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"username": &schema.Schema{
+						"username": {
 							Type:        schema.TypeString,
 							Required:    true,
 							DefaultFunc: schema.EnvDefaultFunc("DATABRICKS_USERNAME", nil),
 						},
-						"password": &schema.Schema{
+						"password": {
 							Type:        schema.TypeString,
 							Sensitive:   true,
 							Required:    true,
@@ -83,7 +83,7 @@ func Provider(version string) terraform.ResourceProvider {
 				},
 				ConflictsWith: []string{"token"},
 			},
-			"config_file": &schema.Schema{
+			"config_file": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				DefaultFunc: schema.EnvDefaultFunc("DATABRICKS_CONFIG_FILE", "~/.databrickscfg"),
@@ -92,14 +92,14 @@ func Provider(version string) terraform.ResourceProvider {
 					"in ~/.databrickscfg. Check  https://docs.databricks.com/dev-tools/cli/index.html#set-up-authentication for docs. Config\n" +
 					"file credetials will only be used when host/token are not provided.",
 			},
-			"profile": &schema.Schema{
+			"profile": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  "DEFAULT",
 				Description: "Connection profile specified within ~/.databrickscfg. Please check\n" +
 					"https://docs.databricks.com/dev-tools/cli/index.html#connection-profiles for documentation.",
 			},
-			"azure_auth": &schema.Schema{
+			"azure_auth": {
 				Type:     schema.TypeMap,
 				Optional: true,
 				Elem: &schema.Resource{

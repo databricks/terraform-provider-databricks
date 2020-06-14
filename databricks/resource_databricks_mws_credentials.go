@@ -15,13 +15,13 @@ func resourceMWSCredentials() *schema.Resource {
 		Delete: resourceMWSCredentialsDelete,
 
 		Schema: map[string]*schema.Schema{
-			"account_id": &schema.Schema{
+			"account_id": {
 				Type:      schema.TypeString,
 				Required:  true,
 				Sensitive: true,
 				ForceNew:  true,
 			},
-			"credentials_name": &schema.Schema{
+			"credentials_name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -39,7 +39,7 @@ func resourceMWSCredentials() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"credentials_id": &schema.Schema{
+			"credentials_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},

@@ -16,17 +16,17 @@ func resourceSecretACL() *schema.Resource {
 		Delete: resourceSecretACLDelete,
 
 		Schema: map[string]*schema.Schema{
-			"scope": &schema.Schema{
+			"scope": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"principal": &schema.Schema{
+			"principal": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"permission": &schema.Schema{
+			"permission": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,

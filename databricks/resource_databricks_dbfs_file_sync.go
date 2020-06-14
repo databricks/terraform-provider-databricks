@@ -15,31 +15,31 @@ func resourceDBFSFileSync() *schema.Resource {
 		Update: resourceDBFSFileSyncUpdate,
 
 		Schema: map[string]*schema.Schema{
-			"src_path": &schema.Schema{
+			"src_path": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"tgt_path": &schema.Schema{
+			"tgt_path": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"file_size": &schema.Schema{
+			"file_size": {
 				Type:     schema.TypeInt,
 				Required: true,
 				ForceNew: true,
 			},
-			"mkdirs": &schema.Schema{
+			"mkdirs": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  true,
 			},
-			"host": &schema.Schema{
+			"host": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"token": &schema.Schema{
+			"token": {
 				Type:      schema.TypeString,
 				Optional:  true,
 				Sensitive: true,

@@ -14,13 +14,13 @@ func resourceMWSStorageConfigurations() *schema.Resource {
 		Delete: resourceMWSStorageConfigurationsDelete,
 
 		Schema: map[string]*schema.Schema{
-			"account_id": &schema.Schema{
+			"account_id": {
 				Type:      schema.TypeString,
 				Required:  true,
 				Sensitive: true,
 				ForceNew:  true,
 			},
-			"storage_configuration_name": &schema.Schema{
+			"storage_configuration_name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,

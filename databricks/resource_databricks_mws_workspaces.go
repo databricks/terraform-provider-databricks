@@ -23,13 +23,13 @@ func resourceMWSWorkspaces() *schema.Resource {
 		Delete: resourceMWSWorkspacesDelete,
 
 		Schema: map[string]*schema.Schema{
-			"account_id": &schema.Schema{
+			"account_id": {
 				Type:      schema.TypeString,
 				Sensitive: true,
 				Required:  true,
 				ForceNew:  true,
 			},
-			"workspace_name": &schema.Schema{
+			"workspace_name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -87,19 +87,19 @@ func resourceMWSWorkspaces() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"workspace_status_message": &schema.Schema{
+			"workspace_status_message": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"creation_time": &schema.Schema{
+			"creation_time": {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"workspace_id": &schema.Schema{
+			"workspace_id": {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"workspace_url": &schema.Schema{
+			"workspace_url": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},

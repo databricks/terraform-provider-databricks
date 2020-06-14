@@ -51,30 +51,30 @@ func resourceMWSCredentialsCreate(d *schema.ResourceData, m interface{}) error {
 	client := m.(*service.DBApiClient)
 	credentialsName := d.Get("credentials_name").(string)
 	roleArn := d.Get("role_arn").(string)
-	mwsAcctId := d.Get("account_id").(string)
-	credentials, err := client.MWSCredentials().Create(mwsAcctId, credentialsName, roleArn)
+	mwsAcctID := d.Get("account_id").(string)
+	credentials, err := client.MWSCredentials().Create(mwsAcctID, credentialsName, roleArn)
 	if err != nil {
 		return err
 	}
-	credentialsResourceId := PackagedMWSIds{
-		MwsAcctId:  mwsAcctId,
-		ResourceId: credentials.CredentialsID,
+	credentialsResourceID := PackagedMWSIds{
+		MwsAcctID:  mwsAcctID,
+		ResourceID: credentials.CredentialsID,
 	}
-	d.SetId(packMWSAccountId(credentialsResourceId))
+	d.SetId(packMWSAccountID(credentialsResourceID))
 	return resourceMWSCredentialsRead(d, m)
 }
 
 func resourceMWSCredentialsRead(d *schema.ResourceData, m interface{}) error {
 	id := d.Id()
 	client := m.(*service.DBApiClient)
-	packagedMwsId, err := unpackMWSAccountId(id)
+	packagedMwsID, err := unpackMWSAccountID(id)
 	if err != nil {
 		return err
 	}
-	credentials, err := client.MWSCredentials().Read(packagedMwsId.MwsAcctId, packagedMwsId.ResourceId)
+	credentials, err := client.MWSCredentials().Read(packagedMwsID.MwsAcctID, packagedMwsID.ResourceID)
 	if err != nil {
 		if isMWSCredentialsMissing(err.Error()) {
-			log.Printf("Missing e2 credentials with id: %s.", packagedMwsId.ResourceId)
+			log.Printf("Missing e2 credentials with id: %s.", packagedMwsID.ResourceID)
 			d.SetId("")
 			return nil
 		}
@@ -106,11 +106,11 @@ func resourceMWSCredentialsRead(d *schema.ResourceData, m interface{}) error {
 func resourceMWSCredentialsDelete(d *schema.ResourceData, m interface{}) error {
 	id := d.Id()
 	client := m.(*service.DBApiClient)
-	packagedMwsId, err := unpackMWSAccountId(id)
+	packagedMwsID, err := unpackMWSAccountID(id)
 	if err != nil {
 		return err
 	}
-	err = client.MWSCredentials().Delete(packagedMwsId.MwsAcctId, packagedMwsId.ResourceId)
+	err = client.MWSCredentials().Delete(packagedMwsID.MwsAcctID, packagedMwsID.ResourceID)
 	return err
 }
 

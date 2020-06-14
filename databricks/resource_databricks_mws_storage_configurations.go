@@ -46,27 +46,27 @@ func resourceMWSStorageConfigurationsCreate(d *schema.ResourceData, m interface{
 	client := m.(*service.DBApiClient)
 	storageConfigurationName := d.Get("storage_configuration_name").(string)
 	bucketName := d.Get("bucket_name").(string)
-	mwsAcctId := d.Get("account_id").(string)
-	storageConfiguration, err := client.MWSStorageConfigurations().Create(mwsAcctId, storageConfigurationName, bucketName)
+	mwsAcctID := d.Get("account_id").(string)
+	storageConfiguration, err := client.MWSStorageConfigurations().Create(mwsAcctID, storageConfigurationName, bucketName)
 	if err != nil {
 		return err
 	}
-	storageConfigurationResourceId := PackagedMWSIds{
-		MwsAcctId:  mwsAcctId,
-		ResourceId: storageConfiguration.StorageConfigurationID,
+	storageConfigurationResourceID := PackagedMWSIds{
+		MwsAcctID:  mwsAcctID,
+		ResourceID: storageConfiguration.StorageConfigurationID,
 	}
-	d.SetId(packMWSAccountId(storageConfigurationResourceId))
+	d.SetId(packMWSAccountID(storageConfigurationResourceID))
 	return resourceMWSStorageConfigurationsRead(d, m)
 }
 
 func resourceMWSStorageConfigurationsRead(d *schema.ResourceData, m interface{}) error {
 	id := d.Id()
 	client := m.(*service.DBApiClient)
-	packagedMwsId, err := unpackMWSAccountId(id)
+	packagedMwsID, err := unpackMWSAccountID(id)
 	if err != nil {
 		return err
 	}
-	storageConifiguration, err := client.MWSStorageConfigurations().Read(packagedMwsId.MwsAcctId, packagedMwsId.ResourceId)
+	storageConifiguration, err := client.MWSStorageConfigurations().Read(packagedMwsID.MwsAcctID, packagedMwsID.ResourceID)
 	if err != nil {
 		if isE2StorageConfigurationsMissing(err.Error()) {
 			log.Printf("Missing mws storage configurations with id: %s.", id)
@@ -102,11 +102,11 @@ func resourceMWSStorageConfigurationsRead(d *schema.ResourceData, m interface{})
 func resourceMWSStorageConfigurationsDelete(d *schema.ResourceData, m interface{}) error {
 	id := d.Id()
 	client := m.(*service.DBApiClient)
-	packagedMwsId, err := unpackMWSAccountId(id)
+	packagedMwsID, err := unpackMWSAccountID(id)
 	if err != nil {
 		return err
 	}
-	err = client.MWSStorageConfigurations().Delete(packagedMwsId.MwsAcctId, packagedMwsId.ResourceId)
+	err = client.MWSStorageConfigurations().Delete(packagedMwsID.MwsAcctID, packagedMwsID.ResourceID)
 	return err
 }
 

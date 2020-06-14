@@ -17,7 +17,7 @@ func resourceMWSNetworks() *schema.Resource {
 		Delete: resourceMWSNetworkDelete,
 
 		Schema: map[string]*schema.Schema{
-			"account_id": &schema.Schema{
+			"account_id": {
 				Type:      schema.TypeString,
 				Required:  true,
 				Sensitive: true,

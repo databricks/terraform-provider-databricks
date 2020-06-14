@@ -9,22 +9,22 @@ func dataSourceDBFSFile() *schema.Resource {
 	return &schema.Resource{
 		Read: dataSourceDBFSFileRead,
 		Schema: map[string]*schema.Schema{
-			"path": &schema.Schema{
+			"path": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"limit_file_size": &schema.Schema{
+			"limit_file_size": {
 				Type:     schema.TypeBool,
 				Required: true,
 				ForceNew: true,
 			},
-			"content": &schema.Schema{
+			"content": {
 				Type:     schema.TypeString,
 				Computed: true,
 				ForceNew: true,
 			},
-			"file_size": &schema.Schema{
+			"file_size": {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},

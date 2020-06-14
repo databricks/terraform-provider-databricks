@@ -32,10 +32,10 @@ func resourceAzureAdlsGen2Mount() *schema.Resource {
 				ForceNew: true,
 			},
 			"directory": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ForceNew:     true,
 				ValidateFunc: ValidateMountDirectory,
 			},
 			"mount_name": {

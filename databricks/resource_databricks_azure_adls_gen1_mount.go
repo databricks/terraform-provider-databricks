@@ -39,7 +39,7 @@ func resourceAzureAdlsGen1Mount() *schema.Resource {
 				Optional: true,
 				Computed: true,
 				//Default:  "/",
-				ForceNew: true,
+				ForceNew:     true,
 				ValidateFunc: ValidateMountDirectory,
 			},
 			"mount_name": {

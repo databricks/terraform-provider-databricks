@@ -114,30 +114,30 @@ func testAwsJobValuesNewCluster(t *testing.T, job *model.Job) resource.TestCheck
 }
 
 func testAwsJobResourceNewCluster() string {
-	return fmt.Sprintf(`
-								resource "databricks_job" "my_job" {
-								  new_cluster  {
-									autoscale  {
-									  min_workers = 2
-									  max_workers = 3
-									}
-									spark_version = "6.4.x-scala2.11"
-									aws_attributes  {
-									  availability = "SPOT"
-									  zone_id = "us-east-1a"
-									  spot_bid_price_percent = "100"
-									  first_on_demand = 1
-									  ebs_volume_type = "GENERAL_PURPOSE_SSD"
-									  ebs_volume_count = 1
-									  ebs_volume_size = 32
-									}
-									node_type_id = "r3.xlarge"
-								  }
-								  notebook_path = "/Users/jane.doe@databricks.com/my-demo-notebook"
-								  name = "my-demo-notebook"
-								  timeout_seconds = 3600
-								  max_retries = 1
-								  max_concurrent_runs = 1
-								}
-								`)
+	return `
+	resource "databricks_job" "my_job" {
+	  new_cluster  {
+		autoscale  {
+		  min_workers = 2
+		  max_workers = 3
+		}
+		spark_version = "6.4.x-scala2.11"
+		aws_attributes  {
+		  availability = "SPOT"
+		  zone_id = "us-east-1a"
+		  spot_bid_price_percent = "100"
+		  first_on_demand = 1
+		  ebs_volume_type = "GENERAL_PURPOSE_SSD"
+		  ebs_volume_count = 1
+		  ebs_volume_size = 32
+		}
+		node_type_id = "r3.xlarge"
+	  }
+	  notebook_path = "/Users/jane.doe@databricks.com/my-demo-notebook"
+	  name = "my-demo-notebook"
+	  timeout_seconds = 3600
+	  max_retries = 1
+	  max_concurrent_runs = 1
+	}
+	`
 }

@@ -37,7 +37,7 @@ func resourceAzureBlobMount() *schema.Resource {
 				Optional: true,
 				Computed: true,
 				//Default:  "/",
-				ForceNew: true,
+				ForceNew:     true,
 				ValidateFunc: ValidateMountDirectory,
 			},
 			"mount_name": {

@@ -4,15 +4,21 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/databrickslabs/databricks-terraform/client/model"
 	"log"
 	"net/http"
 	"time"
+
+	"github.com/databrickslabs/databricks-terraform/client/model"
 )
 
 // CommandsAPI exposes the Context & Commands API
 type CommandsAPI struct {
 	Client *DBApiClient
+}
+
+// CommandExecutor creates a spark context and executes a command and then closes context
+type CommandExecutor interface {
+	Execute(clusterID, langauge, commandStr string) (model.Command, error)
 }
 
 // Execute creates a spark context and executes a command and then closes context

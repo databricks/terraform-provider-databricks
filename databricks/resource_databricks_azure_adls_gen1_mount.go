@@ -97,7 +97,7 @@ func resourceAzureAdlsGen1Create(d *schema.ResourceData, m interface{}) error {
 	adlsGen1Mount := NewAzureADLSGen1Mount(storageResourceName, directory, mountName,
 		sparkConfPrefix, clientID, tenantID, clientSecretScope, clientSecretKey)
 
-	err = adlsGen1Mount.Create(client, clusterID)
+	err = adlsGen1Mount.Create(client.Commands(), clusterID)
 	if err != nil {
 		return err
 	}
@@ -158,7 +158,7 @@ func resourceAzureAdlsGen1Read(d *schema.ResourceData, m interface{}) error {
 	adlsGen1Mount := NewAzureADLSGen1Mount(storageResourceName, directory, mountName,
 		sparkConfPrefix, clientID, tenantID, clientSecretScope, clientSecretKey)
 
-	url, err := adlsGen1Mount.Read(client, clusterID)
+	url, err := adlsGen1Mount.Read(client.Commands(), clusterID)
 	if err != nil {
 		//Reset id in case of inability to find mount
 		if strings.Contains(err.Error(), "Unable to find mount point!") ||
@@ -198,5 +198,5 @@ func resourceAzureAdlsGen1Delete(d *schema.ResourceData, m interface{}) error {
 
 	adlsGen1Mount := NewAzureADLSGen1Mount(storageResourceName, directory, mountName,
 		sparkConfPrefix, clientID, tenantID, clientSecretScope, clientSecretKey)
-	return adlsGen1Mount.Delete(client, clusterID)
+	return adlsGen1Mount.Delete(client.Commands(), clusterID)
 }

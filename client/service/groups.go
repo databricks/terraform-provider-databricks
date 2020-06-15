@@ -4,10 +4,11 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/databrickslabs/databricks-terraform/client/model"
 	"log"
 	"net/http"
 	"sort"
+
+	"github.com/databrickslabs/databricks-terraform/client/model"
 )
 
 // GroupsAPI exposes the scim groups API
@@ -77,7 +78,7 @@ func (a GroupsAPI) Read(groupID string) (model.Group, error) {
 		}
 		groups = append(groups, inheritedGroupFull)
 	}
-	inherited, unInherited, err := a.getInheritedAndNonInheritedRoles(group, groups)
+	inherited, unInherited := a.getInheritedAndNonInheritedRoles(group, groups)
 	group.InheritedRoles = inherited
 	group.UnInheritedRoles = unInherited
 
@@ -154,7 +155,7 @@ func (a GroupsAPI) Delete(groupID string) error {
 	return err
 }
 
-func (a GroupsAPI) getInheritedAndNonInheritedRoles(group model.Group, groups []model.Group) (inherited []model.RoleListItem, unInherited []model.RoleListItem, err error) {
+func (a GroupsAPI) getInheritedAndNonInheritedRoles(group model.Group, groups []model.Group) (inherited []model.RoleListItem, unInherited []model.RoleListItem) {
 	allRoles := group.Roles
 	var inheritedRoles []model.RoleListItem
 	inheritedRolesKeys := []string{}
@@ -175,5 +176,5 @@ func (a GroupsAPI) getInheritedAndNonInheritedRoles(group model.Group, groups []
 			unInherited = append(unInherited, role)
 		}
 	}
-	return inherited, unInherited, nil
+	return inherited, unInherited
 }

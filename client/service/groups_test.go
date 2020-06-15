@@ -1,9 +1,10 @@
 package service
 
 import (
-	"github.com/databrickslabs/databricks-terraform/client/model"
 	"net/http"
 	"testing"
+
+	"github.com/databrickslabs/databricks-terraform/client/model"
 )
 
 func TestScimGroupAPI_Create(t *testing.T) {

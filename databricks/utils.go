@@ -67,7 +67,6 @@ func changeClusterIntoRunningState(clusterID string, client *service.DBApiClient
 	}
 
 	return fmt.Errorf("cluster is in a non recoverable state: %s", currentState)
-
 }
 
 func isClusterMissing(errorMsg, resourceID string) bool {

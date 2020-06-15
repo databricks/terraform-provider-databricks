@@ -95,7 +95,6 @@ func maskRecursive(copy, original reflect.Value, mask bool) {
 	default:
 		copy.Set(original)
 	}
-
 }
 
 // SecretsMask is a struct that contains a list of secret strings to be redacted

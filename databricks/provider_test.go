@@ -31,14 +31,13 @@ func init() {
 	if cloudEnv == "azure" {
 		var config service.DBApiClientConfig
 		testAccProvider.ConfigureFunc = func(data *schema.ResourceData) (i interface{}, e error) {
-			return providerConfigureAzureClient(data, "", &config)
+			return providerConfigureAzureClient(data, &config)
 		}
 	}
 
 	testAccProviders = map[string]terraform.ResourceProvider{
 		"databricks": testAccProvider,
 	}
-
 }
 
 func getMWSClient() *service.DBApiClient {
@@ -111,7 +110,7 @@ func TestProvider(t *testing.T) {
 func TestProvider_NoOptionsResultsInError(t *testing.T) {
 	var provider = Provider("")
 	var raw = make(map[string]interface{})
-	raw["config_file"] = "testdata/.databrickscfg_non_existant"
+	raw["config_file"] = "testdata/.databrickscfg_non_existent"
 	err := provider.Configure(terraform.NewResourceConfigRaw(raw))
 	assert.NotNil(t, err)
 }

@@ -90,7 +90,7 @@ func resourceAzureBlobMountCreate(d *schema.ResourceData, m interface{}) error {
 	blobMount := NewAzureBlobMount(containerName, storageAccountName, directory, mountName, authType,
 		tokenSecretScope, tokenSecretKey)
 
-	err = blobMount.Create(client, clusterID)
+	err = blobMount.Create(client.Commands(), clusterID)
 	if err != nil {
 		return err
 	}
@@ -144,7 +144,7 @@ func resourceAzureBlobMountRead(d *schema.ResourceData, m interface{}) error {
 	blobMount := NewAzureBlobMount(containerName, storageAccountName, directory, mountName, authType,
 		tokenSecretScope, tokenSecretKey)
 
-	url, err := blobMount.Read(client, clusterID)
+	url, err := blobMount.Read(client.Commands(), clusterID)
 	if err != nil {
 		//Reset id in case of inability to find mount
 		if strings.Contains(err.Error(), "Unable to find mount point!") ||
@@ -187,5 +187,5 @@ func resourceAzureBlobMountDelete(d *schema.ResourceData, m interface{}) error {
 
 	blobMount := NewAzureBlobMount(containerName, storageAccountName, directory, mountName, authType,
 		tokenSecretScope, tokenSecretKey)
-	return blobMount.Delete(client, clusterID)
+	return blobMount.Delete(client.Commands(), clusterID)
 }

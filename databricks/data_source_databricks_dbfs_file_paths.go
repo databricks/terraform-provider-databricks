@@ -9,17 +9,17 @@ func dataSourceDBFSFilePaths() *schema.Resource {
 	return &schema.Resource{
 		Read: dataSourceDBFSFilePathsRead,
 		Schema: map[string]*schema.Schema{
-			"path": &schema.Schema{
+			"path": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"recursive": &schema.Schema{
+			"recursive": {
 				Type:     schema.TypeBool,
 				Required: true,
 				ForceNew: true,
 			},
-			"path_list": &schema.Schema{
+			"path_list": {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem: &schema.Resource{

@@ -87,10 +87,10 @@ func (a *AzureAuth) getWorkspaceID(config *service.DBApiClientConfig) error {
 		"Authorization": "Bearer " + a.ManagementToken,
 	}
 	type apiVersion struct {
-		ApiVersion string `url:"api-version"`
+		APIVersion string `url:"api-version"`
 	}
 	uriPayload := apiVersion{
-		ApiVersion: "2018-04-01",
+		APIVersion: "2018-04-01",
 	}
 	var responseMap map[string]interface{}
 	resp, err := service.PerformQuery(config, http.MethodGet, url, "2.0", headers, false, true, uriPayload, nil)

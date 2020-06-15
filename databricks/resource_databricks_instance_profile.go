@@ -15,12 +15,12 @@ func resourceInstanceProfile() *schema.Resource {
 		Delete: resourceInstanceProfileDelete,
 
 		Schema: map[string]*schema.Schema{
-			"instance_profile_arn": &schema.Schema{
+			"instance_profile_arn": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"skip_validation": &schema.Schema{
+			"skip_validation": {
 				Type:     schema.TypeBool,
 				Required: true,
 				ForceNew: true,

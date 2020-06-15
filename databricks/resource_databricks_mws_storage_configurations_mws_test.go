@@ -17,7 +17,7 @@ func TestAccMWSStorageConfigurations(t *testing.T) {
 	// the acctest package includes many helpers such as RandStringFromCharSet
 	// See https://godoc.org/github.com/hashicorp/terraform-plugin-sdk/helper/acctest
 	//scope := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
-	mwsAcctId := os.Getenv("DATABRICKS_MWS_ACCT_ID")
+	mwsAcctID := os.Getenv("DATABRICKS_MWS_ACCT_ID")
 	mwsHost := os.Getenv("DATABRICKS_MWS_HOST")
 	storageConfigName := "test-mws-storage-configurations-tf"
 	bucketName := "terraform-test-bucket"
@@ -28,13 +28,13 @@ func TestAccMWSStorageConfigurations(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				// use a dynamic configuration with the random name from above
-				Config: testMWSStorageConfigurationsCreate(mwsAcctId, mwsHost, storageConfigName, bucketName),
+				Config: testMWSStorageConfigurationsCreate(mwsAcctID, mwsHost, storageConfigName, bucketName),
 				// compose a basic test, checking both remote and local values
 				Check: resource.ComposeTestCheckFunc(
 					// query the API to retrieve the tokenInfo object
 					testMWSStorageConfigurationsResourceExists("databricks_mws_storage_configurations.my_mws_storage_configurations", &MWSStorageConfigurations, t),
 					// verify local values
-					resource.TestCheckResourceAttr("databricks_mws_storage_configurations.my_mws_storage_configurations", "account_id", mwsAcctId),
+					resource.TestCheckResourceAttr("databricks_mws_storage_configurations.my_mws_storage_configurations", "account_id", mwsAcctID),
 					resource.TestCheckResourceAttr("databricks_mws_storage_configurations.my_mws_storage_configurations", "storage_configuration_name", storageConfigName),
 					resource.TestCheckResourceAttr("databricks_mws_storage_configurations.my_mws_storage_configurations", "bucket_name", bucketName),
 				),
@@ -42,13 +42,13 @@ func TestAccMWSStorageConfigurations(t *testing.T) {
 			},
 			{
 				// use a dynamic configuration with the random name from above
-				Config: testMWSStorageConfigurationsCreate(mwsAcctId, mwsHost, storageConfigName, bucketName),
+				Config: testMWSStorageConfigurationsCreate(mwsAcctID, mwsHost, storageConfigName, bucketName),
 				// compose a basic test, checking both remote and local values
 				Check: resource.ComposeTestCheckFunc(
 					// query the API to retrieve the tokenInfo object
 					testMWSStorageConfigurationsResourceExists("databricks_mws_storage_configurations.my_mws_storage_configurations", &MWSStorageConfigurations, t),
 					// verify local values
-					resource.TestCheckResourceAttr("databricks_mws_storage_configurations.my_mws_storage_configurations", "account_id", mwsAcctId),
+					resource.TestCheckResourceAttr("databricks_mws_storage_configurations.my_mws_storage_configurations", "account_id", mwsAcctID),
 					resource.TestCheckResourceAttr("databricks_mws_storage_configurations.my_mws_storage_configurations", "storage_configuration_name", storageConfigName),
 					resource.TestCheckResourceAttr("databricks_mws_storage_configurations.my_mws_storage_configurations", "bucket_name", bucketName),
 				),
@@ -64,13 +64,13 @@ func TestAccMWSStorageConfigurations(t *testing.T) {
 					}
 				},
 				// use a dynamic configuration with the random name from above
-				Config: testMWSStorageConfigurationsCreate(mwsAcctId, mwsHost, storageConfigName, bucketName),
+				Config: testMWSStorageConfigurationsCreate(mwsAcctID, mwsHost, storageConfigName, bucketName),
 				// compose a basic test, checking both remote and local values
 				Check: resource.ComposeTestCheckFunc(
 					// query the API to retrieve the tokenInfo object
 					testMWSStorageConfigurationsResourceExists("databricks_mws_storage_configurations.my_mws_storage_configurations", &MWSStorageConfigurations, t),
 					// verify local values
-					resource.TestCheckResourceAttr("databricks_mws_storage_configurations.my_mws_storage_configurations", "account_id", mwsAcctId),
+					resource.TestCheckResourceAttr("databricks_mws_storage_configurations.my_mws_storage_configurations", "account_id", mwsAcctID),
 					resource.TestCheckResourceAttr("databricks_mws_storage_configurations.my_mws_storage_configurations", "storage_configuration_name", storageConfigName),
 					resource.TestCheckResourceAttr("databricks_mws_storage_configurations.my_mws_storage_configurations", "bucket_name", bucketName),
 				),
@@ -88,11 +88,11 @@ func testMWSStorageConfigurationsResourceDestroy(s *terraform.State) error {
 		if rs.Type != "databricks_mws_storage_configurations" {
 			continue
 		}
-		packagedMWSIds, err := unpackMWSAccountId(rs.Primary.ID)
+		packagedMWSIds, err := unpackMWSAccountID(rs.Primary.ID)
 		if err != nil {
 			return err
 		}
-		_, err = client.MWSStorageConfigurations().Read(packagedMWSIds.MwsAcctId, packagedMWSIds.ResourceId)
+		_, err = client.MWSStorageConfigurations().Read(packagedMWSIds.MwsAcctID, packagedMWSIds.ResourceID)
 		if err != nil {
 			return nil
 		}
@@ -112,11 +112,11 @@ func testMWSStorageConfigurationsResourceExists(n string, mwsCreds *model.MWSSto
 
 		// retrieve the configured client from the test setup
 		conn := getMWSClient()
-		packagedMWSIds, err := unpackMWSAccountId(rs.Primary.ID)
+		packagedMWSIds, err := unpackMWSAccountID(rs.Primary.ID)
 		if err != nil {
 			return err
 		}
-		resp, err := conn.MWSStorageConfigurations().Read(packagedMWSIds.MwsAcctId, packagedMWSIds.ResourceId)
+		resp, err := conn.MWSStorageConfigurations().Read(packagedMWSIds.MwsAcctID, packagedMWSIds.ResourceID)
 		if err != nil {
 			return err
 		}
@@ -127,7 +127,7 @@ func testMWSStorageConfigurationsResourceExists(n string, mwsCreds *model.MWSSto
 	}
 }
 
-func testMWSStorageConfigurationsCreate(mwsAcctId, mwsHost, storageConfigName, bucketName string) string {
+func testMWSStorageConfigurationsCreate(mwsAcctID, mwsHost, storageConfigName, bucketName string) string {
 	return fmt.Sprintf(`
 								provider "databricks" {
 								  host = "%s"
@@ -138,5 +138,5 @@ func testMWSStorageConfigurationsCreate(mwsAcctId, mwsHost, storageConfigName, b
 								  storage_configuration_name = "%s"
 								  bucket_name         = "%s"
 								}
-								`, mwsHost, mwsAcctId, storageConfigName, bucketName)
+								`, mwsHost, mwsAcctID, storageConfigName, bucketName)
 }

@@ -1,10 +1,11 @@
 package main
 
 import (
+	"log"
+
 	"github.com/databrickslabs/databricks-terraform/databricks"
 	"github.com/hashicorp/terraform-plugin-sdk/plugin"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
-	"log"
 )
 
 var (

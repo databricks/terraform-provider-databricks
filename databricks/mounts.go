@@ -3,10 +3,11 @@ package databricks
 import (
 	"errors"
 	"fmt"
-	"github.com/databrickslabs/databricks-terraform/client/service"
 	"log"
 	"net/url"
 	"strings"
+
+	"github.com/databrickslabs/databricks-terraform/client/service"
 )
 
 // Mount interface describes the functionality of any mount which is create, read and delete

@@ -1,9 +1,10 @@
 package service
 
 import (
-	"github.com/stretchr/testify/assert"
 	"os"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestMWSWorkspace(t *testing.T) {
@@ -15,5 +16,4 @@ func TestMWSWorkspace(t *testing.T) {
 	workspaceList, err := client.MWSWorkspaces().List(acctId)
 	assert.NoError(t, err, err)
 	t.Log(workspaceList)
-
 }

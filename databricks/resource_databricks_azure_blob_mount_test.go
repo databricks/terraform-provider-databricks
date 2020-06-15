@@ -122,7 +122,6 @@ func testAccAzureBlobMountMountExists(n string, azureBlobMount *AzureBlobMount, 
 
 		*azureBlobMount = *blobMount
 		return nil
-
 	}
 }
 

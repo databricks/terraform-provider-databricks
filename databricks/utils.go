@@ -2,9 +2,10 @@ package databricks
 
 import (
 	"fmt"
-	"github.com/aws/aws-sdk-go/aws/arn"
 	"strings"
 	"time"
+
+	"github.com/aws/aws-sdk-go/aws/arn"
 
 	"github.com/databrickslabs/databricks-terraform/client/model"
 	"github.com/databrickslabs/databricks-terraform/client/service"
@@ -110,7 +111,7 @@ func ValidateInstanceProfileARN(val interface{}, key string) (warns []string, er
 	// Parse and verify instance profiles
 	instanceProfileArn, err := arn.Parse(v)
 	if err != nil {
-		return nil, []error{fmt.Errorf("%s is invalid got: %s recieved error: %w", key, v, err)}
+		return nil, []error{fmt.Errorf("%s is invalid got: %s received error: %w", key, v, err)}
 	}
 	// Verify instance profile resource type, Resource gets parsed as instance-profile/<profile-name>
 	if !strings.HasPrefix(instanceProfileArn.Resource, "instance-profile") {

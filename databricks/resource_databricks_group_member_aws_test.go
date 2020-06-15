@@ -3,12 +3,13 @@ package databricks
 import (
 	"errors"
 	"fmt"
+	"testing"
+
 	"github.com/databrickslabs/databricks-terraform/client/model"
 	"github.com/databrickslabs/databricks-terraform/client/service"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
 func TestAccAWSGroupMemberResource(t *testing.T) {

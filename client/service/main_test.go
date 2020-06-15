@@ -4,9 +4,6 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"github.com/joho/godotenv"
-	"github.com/r3labs/diff"
-	"github.com/stretchr/testify/assert"
 	"log"
 	"net/http"
 	"net/http/httptest"
@@ -14,6 +11,10 @@ import (
 	"reflect"
 	"strings"
 	"testing"
+
+	"github.com/joho/godotenv"
+	"github.com/r3labs/diff"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestMain(m *testing.M) {
@@ -85,7 +86,6 @@ func AssertRequestWithMockServer(t *testing.T, rawPayloadArgs interface{}, reque
 		rw.WriteHeader(responseStatus)
 		_, err := rw.Write([]byte(response))
 		assert.NoError(t, err, err)
-
 	}))
 	// Close the server when test finishes
 	defer server.Close()

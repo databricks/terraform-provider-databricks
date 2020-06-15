@@ -2,13 +2,14 @@ package databricks
 
 import (
 	"fmt"
-	"github.com/databrickslabs/databricks-terraform/client/model"
-	"github.com/databrickslabs/databricks-terraform/client/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"log"
 	"reflect"
 	"sort"
 	"strings"
+
+	"github.com/databrickslabs/databricks-terraform/client/model"
+	"github.com/databrickslabs/databricks-terraform/client/service"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 func resourceScimUser() *schema.Resource {
@@ -209,7 +210,6 @@ func resourceScimUserUpdate(d *schema.ResourceData, m interface{}) error {
 		displayName = rDisplayName.(string)
 	}
 	if rRoles, ok := d.GetOk("roles"); ok {
-
 		roles = convertInterfaceSliceToStringSlice(rRoles.(*schema.Set).List())
 	}
 	if rEntitlements, ok := d.GetOk("entitlements"); ok {

@@ -1,9 +1,10 @@
 package service
 
 import (
+	"testing"
+
 	"github.com/databrickslabs/databricks-terraform/client/model"
 	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
 func TestInstancePools(t *testing.T) {
@@ -69,5 +70,4 @@ func TestInstancePools(t *testing.T) {
 	poolReadInfo, err = client.InstancePools().Read(poolInfo.InstancePoolID)
 	assert.NoError(t, err, err)
 	assert.Equal(t, poolReadInfo.MaxCapacity, int32(20))
-
 }

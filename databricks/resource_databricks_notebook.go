@@ -196,7 +196,6 @@ func convertBase64ToCheckSum(b64 string) (string, error) {
 		return strconv.Itoa(int(crc32.ChecksumIEEE(dataArr))), nil
 	}
 	return checksum, nil
-
 }
 
 func convertZipBytesToCRC(b64 []byte) (string, error) {
@@ -221,7 +220,7 @@ func convertZipBytesToCRC(b64 []byte) (string, error) {
 	return strconv.Itoa(int(totalSum)), nil
 }
 
-func getDBCCheckSumForCommands(fileIO io.ReadCloser) (int, error) {
+func getDBCCheckSumForCommands(fileIO io.Reader) (int, error) {
 	var stringBuff bytes.Buffer
 	scanner := bufio.NewScanner(fileIO)
 	buf := make([]byte, 0, 64*1024)

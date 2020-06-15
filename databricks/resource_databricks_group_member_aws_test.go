@@ -23,7 +23,8 @@ func TestAccAWSGroupMemberResource(t *testing.T) {
 	defer func() {
 		client := testAccProvider.Meta().(*service.DBApiClient)
 		if client != nil && manuallyCreatedGroup != nil {
-			client.Groups().Delete(manuallyCreatedGroup.ID)
+			err := client.Groups().Delete(manuallyCreatedGroup.ID)
+			assert.NoError(t, err, err)
 		}
 	}()
 
@@ -49,12 +50,13 @@ func TestAccAWSGroupMemberResource(t *testing.T) {
 			},
 			{
 				PreConfig: func() {
-				//	manually create subgroup c
+					//	manually create subgroup c
 					client := testAccProvider.Meta().(*service.DBApiClient)
 					subGroupC, _ := client.Groups().Create("manually-created-group", nil, nil, nil)
 					manuallyCreatedGroup = &subGroupC
-				//  Add new subgroup to current group
-					client.Groups().Patch(group.ID, []string{manuallyCreatedGroup.ID}, nil, model.GroupMembersPath)
+					//  Add new subgroup to current group
+					err := client.Groups().Patch(group.ID, []string{manuallyCreatedGroup.ID}, nil, model.GroupMembersPath)
+					assert.NoError(t, err, err)
 				},
 				Config: testAWSGroupMemberResource(groupName),
 				// compose a basic test, checking both remote and local values
@@ -89,11 +91,12 @@ func TestAccAWSGroupMemberResource(t *testing.T) {
 				// Test behavior to expect to attempt to create new role mapping because role is gone
 				PreConfig: func() {
 					client := testAccProvider.Meta().(*service.DBApiClient)
-					client.Groups().Delete(group.ID)
+					err := client.Groups().Delete(group.ID)
+					assert.NoError(t, err, err)
 				},
-				PlanOnly: true,
+				PlanOnly:           true,
 				ExpectNonEmptyPlan: true,
-				Destroy: false,
+				Destroy:            false,
 			},
 			{
 				// use a dynamic configuration with the random name from above
@@ -102,7 +105,8 @@ func TestAccAWSGroupMemberResource(t *testing.T) {
 				// Lets delete the manually created group
 				PreConfig: func() {
 					client := testAccProvider.Meta().(*service.DBApiClient)
-					client.Groups().Delete(manuallyCreatedGroup.ID)
+					err := client.Groups().Delete(manuallyCreatedGroup.ID)
+					assert.NoError(t, err, err)
 					manuallyCreatedGroup = nil
 				},
 				// compose a basic test, checking both remote and local values
@@ -138,7 +142,7 @@ func testAWSGroupMemberResourceDestroy(s *terraform.State) error {
 func testAWSGroupMemberValues(t *testing.T, group *model.Group, displayName string, memberCount int) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		assert.True(t, group.DisplayName == displayName)
-		assert.Equal(t, memberCount,len(group.Members), "member count is not matching")
+		assert.Equal(t, memberCount, len(group.Members), "member count is not matching")
 		return nil
 	}
 }

@@ -22,13 +22,13 @@ func resourceGroup() *schema.Resource {
 			},
 			"allow_cluster_create": {
 				Deprecated: "Will be deprecated in a future release for general permissions api",
-				Type:     schema.TypeBool,
-				Optional: true,
+				Type:       schema.TypeBool,
+				Optional:   true,
 			},
 			"allow_instance_pool_create": {
 				Deprecated: "Will be deprecated in a future release for general permissions api",
-				Type:     schema.TypeBool,
-				Optional: true,
+				Type:       schema.TypeBool,
+				Optional:   true,
 			},
 		},
 		Importer: &schema.ResourceImporter{
@@ -36,7 +36,6 @@ func resourceGroup() *schema.Resource {
 		},
 	}
 }
-
 
 func resourceGroupCreate(d *schema.ResourceData, m interface{}) error {
 	client := m.(*service.DBApiClient)
@@ -79,7 +78,7 @@ func resourceGroupRead(d *schema.ResourceData, m interface{}) error {
 		return err
 	}
 
-	err = d.Set("allow_cluster_create",isGroupClusterCreateEntitled(&group))
+	err = d.Set("allow_cluster_create", isGroupClusterCreateEntitled(&group))
 	if err != nil {
 		return err
 	}
@@ -134,7 +133,7 @@ func resourceGroupDelete(d *schema.ResourceData, m interface{}) error {
 }
 
 func isGroupClusterCreateEntitled(group *model.Group) bool {
-	for _, entitlement := range(group.Entitlements) {
+	for _, entitlement := range group.Entitlements {
 		if entitlement.Value == model.AllowClusterCreateEntitlement {
 			return true
 		}
@@ -143,7 +142,7 @@ func isGroupClusterCreateEntitled(group *model.Group) bool {
 }
 
 func isGroupInstancePoolCreateEntitled(group *model.Group) bool {
-	for _, entitlement := range(group.Entitlements) {
+	for _, entitlement := range group.Entitlements {
 		if entitlement.Value == model.AllowClusterCreateEntitlement {
 			return true
 		}

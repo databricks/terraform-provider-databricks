@@ -22,7 +22,7 @@ func TestAccAWSGroupResource(t *testing.T) {
 	randomStr := acctest.RandStringFromCharSet(5, acctest.CharSetAlphaNum)
 	displayName := fmt.Sprintf("tf group test %s", randomStr)
 	newDisplayName := fmt.Sprintf("new tf group test %s", randomStr)
- 	resource.Test(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		Providers:    testAccProviders,
 		CheckDestroy: testAWSGroupResourceDestroy,
 		Steps: []resource.TestStep{
@@ -34,7 +34,7 @@ func TestAccAWSGroupResource(t *testing.T) {
 					// query the API to retrieve the tokenInfo object
 					testAWSGroupResourceExists("databricks_group.my_group", &Group, t),
 					// verify remote values
-					testAWSGroupValues(t, &Group, displayName,),
+					testAWSGroupValues(t, &Group, displayName),
 					// verify local values
 					resource.TestCheckResourceAttr("databricks_group.my_group", "display_name", displayName),
 				),
@@ -44,9 +44,9 @@ func TestAccAWSGroupResource(t *testing.T) {
 				// use a dynamic configuration with the random name from above
 				Config: testAWSDatabricksGroup(newDisplayName),
 				// test to see if new resource is attempted to be planned
-				PlanOnly: true,
+				PlanOnly:           true,
 				ExpectNonEmptyPlan: true,
-				Destroy: false,
+				Destroy:            false,
 			},
 			{
 				ResourceName:      "databricks_group.my_group",
@@ -79,7 +79,7 @@ func TestAccAWSGroupResource_verify_entitlements(t *testing.T) {
 					// query the API to retrieve the tokenInfo object
 					testAWSGroupResourceExists("databricks_group.my_group", &Group, t),
 					// verify remote values
-					testAWSGroupValues(t, &Group, displayName,),
+					testAWSGroupValues(t, &Group, displayName),
 					// verify local values
 					resource.TestCheckResourceAttr("databricks_group.my_group", "allow_cluster_create", "true"),
 					resource.TestCheckResourceAttr("databricks_group.my_group", "allow_instance_pool_create", "true"),
@@ -91,9 +91,9 @@ func TestAccAWSGroupResource_verify_entitlements(t *testing.T) {
 				// use a dynamic configuration with the random name from above
 				Config: testAWSDatabricksGroup(newDisplayName),
 				// test to see if new resource is attempted to be planned
-				PlanOnly: true,
+				PlanOnly:           true,
 				ExpectNonEmptyPlan: true,
-				Destroy: false,
+				Destroy:            false,
 			},
 		},
 	})

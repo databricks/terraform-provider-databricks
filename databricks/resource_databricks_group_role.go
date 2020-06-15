@@ -31,14 +31,12 @@ func resourceGroupRole() *schema.Resource {
 	}
 }
 
-
-
 func resourceGroupRoleCreate(d *schema.ResourceData, m interface{}) error {
 	client := m.(*service.DBApiClient)
 	groupID := d.Get("group_id").(string)
 	instanceProfileID := d.Get("instance_profile_id").(string)
 	groupRoleID := &GroupRoleID{
-		GroupID: groupID,
+		GroupID:           groupID,
 		InstanceProfileID: instanceProfileID,
 	}
 
@@ -95,9 +93,8 @@ func resourceGroupRoleDelete(d *schema.ResourceData, m interface{}) error {
 	return err
 }
 
-
 type GroupRoleID struct {
-	GroupID string
+	GroupID           string
 	InstanceProfileID string
 }
 
@@ -108,13 +105,13 @@ func (g GroupRoleID) String() string {
 func parseGroupRoleID(id string) *GroupRoleID {
 	parts := strings.Split(id, "|")
 	return &GroupRoleID{
-		GroupID:parts[0],
-		InstanceProfileID:parts[1],
+		GroupID:           parts[0],
+		InstanceProfileID: parts[1],
 	}
 }
 
 func iRoleInGroup(role string, group *model.Group) bool {
-	for _, groupRole := range(group.Roles) {
+	for _, groupRole := range group.Roles {
 		if groupRole.Value == role {
 			return true
 		}

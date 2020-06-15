@@ -34,7 +34,7 @@ func TestAccAzureGroupResource(t *testing.T) {
 					// query the API to retrieve the tokenInfo object
 					testAzureGroupResourceExists("databricks_group.my_group", &Group, t),
 					// verify remote values
-					testAzureGroupValues(t, &Group, displayName,),
+					testAzureGroupValues(t, &Group, displayName),
 					// verify local values
 					resource.TestCheckResourceAttr("databricks_group.my_group", "display_name", displayName),
 				),
@@ -44,9 +44,9 @@ func TestAccAzureGroupResource(t *testing.T) {
 				// use a dynamic configuration with the random name from above
 				Config: testAzureDatabricksGroup(newDisplayName),
 				// test to see if new resource is attempted to be planned
-				PlanOnly: true,
+				PlanOnly:           true,
 				ExpectNonEmptyPlan: true,
-				Destroy: false,
+				Destroy:            false,
 			},
 		},
 	})
@@ -75,7 +75,7 @@ func TestAccAzureGroupResource_verify_entitlements(t *testing.T) {
 					// query the API to retrieve the tokenInfo object
 					testAzureGroupResourceExists("databricks_group.my_group", &Group, t),
 					// verify remote values
-					testAzureGroupValues(t, &Group, displayName,),
+					testAzureGroupValues(t, &Group, displayName),
 					// verify local values
 					resource.TestCheckResourceAttr("databricks_group.my_group", "allow_cluster_create", "true"),
 					resource.TestCheckResourceAttr("databricks_group.my_group", "allow_instance_pool_create", "true"),
@@ -87,9 +87,9 @@ func TestAccAzureGroupResource_verify_entitlements(t *testing.T) {
 				// use a dynamic configuration with the random name from above
 				Config: testAzureDatabricksGroup(newDisplayName),
 				// test to see if new resource is attempted to be planned
-				PlanOnly: true,
+				PlanOnly:           true,
 				ExpectNonEmptyPlan: true,
-				Destroy: false,
+				Destroy:            false,
 			},
 		},
 	})

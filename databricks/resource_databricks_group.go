@@ -1,10 +1,11 @@
 package databricks
 
 import (
+	"log"
+
 	"github.com/databrickslabs/databricks-terraform/client/model"
 	"github.com/databrickslabs/databricks-terraform/client/service"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"log"
 )
 
 func resourceGroup() *schema.Resource {
@@ -21,12 +22,12 @@ func resourceGroup() *schema.Resource {
 				Required: true,
 			},
 			"allow_cluster_create": {
-				Type:       schema.TypeBool,
-				Optional:   true,
+				Type:     schema.TypeBool,
+				Optional: true,
 			},
 			"allow_instance_pool_create": {
-				Type:       schema.TypeBool,
-				Optional:   true,
+				Type:     schema.TypeBool,
+				Optional: true,
 			},
 		},
 		Importer: &schema.ResourceImporter{

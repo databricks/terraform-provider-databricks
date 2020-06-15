@@ -2,11 +2,12 @@ package databricks
 
 import (
 	"fmt"
+	"log"
+	"strings"
+
 	"github.com/databrickslabs/databricks-terraform/client/model"
 	"github.com/databrickslabs/databricks-terraform/client/service"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"log"
-	"strings"
 )
 
 func resourceGroupInstanceProfile() *schema.Resource {

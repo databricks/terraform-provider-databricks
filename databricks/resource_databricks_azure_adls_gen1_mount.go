@@ -17,7 +17,7 @@ func resourceAzureAdlsGen1Mount() *schema.Resource {
 		Delete: resourceAzureAdlsGen1Delete,
 
 		Schema: map[string]*schema.Schema{
-			"cluster_id": &schema.Schema{
+			"cluster_id": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -39,15 +39,8 @@ func resourceAzureAdlsGen1Mount() *schema.Resource {
 				Optional: true,
 				Computed: true,
 				//Default:  "/",
-				ForceNew: true,
-				ValidateFunc: func(val interface{}, key string) (warns []string, errors []error) {
-					directory := val.(string)
-					if strings.HasPrefix(directory, "/") {
-						return
-					}
-					errors = append(errors, fmt.Errorf("%s must start with /, got: %s", key, val))
-					return
-				},
+				ForceNew:     true,
+				ValidateFunc: ValidateMountDirectory,
 			},
 			"mount_name": {
 				Type:     schema.TypeString,

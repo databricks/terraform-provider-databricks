@@ -2,13 +2,14 @@ package databricks
 
 import (
 	"fmt"
-	"github.com/databrickslabs/databricks-terraform/client/model"
-	"github.com/databrickslabs/databricks-terraform/client/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"log"
 	"reflect"
 	"sort"
 	"strings"
+
+	"github.com/databrickslabs/databricks-terraform/client/model"
+	"github.com/databrickslabs/databricks-terraform/client/service"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 func resourceScimUser() *schema.Resource {
@@ -19,41 +20,41 @@ func resourceScimUser() *schema.Resource {
 		Delete: resourceScimUserDelete,
 
 		Schema: map[string]*schema.Schema{
-			"user_name": &schema.Schema{
+			"user_name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"display_name": &schema.Schema{
+			"display_name": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"roles": &schema.Schema{
+			"roles": {
 				Type:       schema.TypeSet,
 				Optional:   true,
 				ConfigMode: schema.SchemaConfigModeAttr,
 				Elem:       &schema.Schema{Type: schema.TypeString},
 				Set:        schema.HashString,
 			},
-			"entitlements": &schema.Schema{
+			"entitlements": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Set:      schema.HashString,
 			},
-			"inherited_roles": &schema.Schema{
+			"inherited_roles": {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Set:      schema.HashString,
 			},
-			"default_roles": &schema.Schema{
+			"default_roles": {
 				Type:     schema.TypeSet,
 				Required: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Set:      schema.HashString,
 			},
-			"set_admin": &schema.Schema{
+			"set_admin": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
@@ -209,7 +210,6 @@ func resourceScimUserUpdate(d *schema.ResourceData, m interface{}) error {
 		displayName = rDisplayName.(string)
 	}
 	if rRoles, ok := d.GetOk("roles"); ok {
-
 		roles = convertInterfaceSliceToStringSlice(rRoles.(*schema.Set).List())
 	}
 	if rEntitlements, ok := d.GetOk("entitlements"); ok {

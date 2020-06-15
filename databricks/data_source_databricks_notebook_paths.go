@@ -2,6 +2,7 @@ package databricks
 
 import (
 	"bytes"
+
 	"github.com/databrickslabs/databricks-terraform/client/service"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
@@ -12,17 +13,17 @@ func dataSourceNotebookPaths() *schema.Resource {
 		Read: dataSourceNotebookPathsRead,
 		Schema: map[string]*schema.Schema{
 
-			"path": &schema.Schema{
+			"path": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"recursive": &schema.Schema{
+			"recursive": {
 				Type:     schema.TypeBool,
 				Required: true,
 				ForceNew: true,
 			},
-			"notebook_path_list": &schema.Schema{
+			"notebook_path_list": {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem: &schema.Resource{

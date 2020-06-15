@@ -3,9 +3,10 @@ package service
 import (
 	"encoding/base64"
 	"encoding/json"
-	"github.com/databrickslabs/databricks-terraform/client/model"
 	"log"
 	"net/http"
+
+	"github.com/databrickslabs/databricks-terraform/client/model"
 )
 
 // DBFSAPI exposes the DBFS API
@@ -53,7 +54,7 @@ func (a DBFSAPI) Read(path string) (string, error) {
 		}
 
 		bytesFetched = append(bytesFetched, bytes...)
-		offSet = offSet + length
+		offSet += length
 	}
 	resp := base64.StdEncoding.EncodeToString(bytesFetched)
 	return resp, nil
@@ -92,7 +93,7 @@ func (a DBFSAPI) Copy(src string, tgt string, client *DBApiClient, overwrite boo
 			return err
 		}
 
-		offSet = offSet + length
+		offSet += length
 	}
 
 	return err
@@ -287,7 +288,7 @@ func split(buf []byte, lim int) [][]byte {
 		chunks = append(chunks, chunk)
 	}
 	if len(buf) > 0 {
-		chunks = append(chunks, buf[:])
+		chunks = append(chunks, buf)
 	}
 	return chunks
 }

@@ -103,7 +103,6 @@ func testAwsSecretResourceDestroy(s *terraform.State) error {
 		if err == nil {
 			return errors.New("resource secret is not cleaned up")
 		}
-
 	}
 	return nil
 }

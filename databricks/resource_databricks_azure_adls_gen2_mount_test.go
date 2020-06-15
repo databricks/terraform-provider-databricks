@@ -14,7 +14,7 @@ import (
 )
 
 func TestAccAzureAdlsGen2Mount_correctly_mounts(t *testing.T) {
-	terraformToApply := testAccAzureAdlsGen2Mount_correctly_mounts()
+	terraformToApply := testAccAzureAdlsGen2MountCorrectlyMounts()
 
 	resource.Test(t, resource.TestCase{
 		Providers: testAccProviders,
@@ -27,7 +27,7 @@ func TestAccAzureAdlsGen2Mount_correctly_mounts(t *testing.T) {
 }
 
 func TestAccAzureAdlsGen2Mount_cluster_deleted_correctly_mounts(t *testing.T) {
-	terraformToApply := testAccAzureAdlsGen2Mount_correctly_mounts()
+	terraformToApply := testAccAzureAdlsGen2MountCorrectlyMounts()
 	var cluster model.ClusterInfo
 
 	resource.Test(t, resource.TestCase{
@@ -50,7 +50,7 @@ func TestAccAzureAdlsGen2Mount_cluster_deleted_correctly_mounts(t *testing.T) {
 }
 
 func TestAccAzureAdlsGen2Mount_capture_error(t *testing.T) {
-	terraformToApply := testAccAzureAdlsGen2Mount_capture_error()
+	terraformToApply := testAccAzureAdlsGen2MountCaptureError()
 
 	resource.Test(t, resource.TestCase{
 		Providers: testAccProviders,
@@ -65,7 +65,7 @@ func TestAccAzureAdlsGen2Mount_capture_error(t *testing.T) {
 	})
 }
 
-func testAccAzureAdlsGen2Mount_correctly_mounts() string {
+func testAccAzureAdlsGen2MountCorrectlyMounts() string {
 	clientID := os.Getenv("ARM_CLIENT_ID")
 	clientSecret := os.Getenv("ARM_CLIENT_SECRET")
 	tenantID := os.Getenv("ARM_TENANT_ID")
@@ -129,7 +129,7 @@ func testAccAzureAdlsGen2Mount_correctly_mounts() string {
 	return definition
 }
 
-func testAccAzureAdlsGen2Mount_capture_error() string {
+func testAccAzureAdlsGen2MountCaptureError() string {
 	clientID := os.Getenv("ARM_CLIENT_ID")
 	clientSecret := os.Getenv("ARM_CLIENT_SECRET")
 	tenantID := os.Getenv("ARM_TENANT_ID")

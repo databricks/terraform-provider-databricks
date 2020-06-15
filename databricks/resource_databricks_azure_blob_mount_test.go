@@ -13,7 +13,7 @@ import (
 )
 
 func TestAccAzureBlobMount_correctly_mounts(t *testing.T) {
-	terraformToApply := testAccAzureBlobMount_correctly_mounts()
+	terraformToApply := testAccAzureBlobMountCorrectlyMounts()
 	var clusterInfo model.ClusterInfo
 	var azureBlobMount AzureBlobMount
 
@@ -23,8 +23,8 @@ func TestAccAzureBlobMount_correctly_mounts(t *testing.T) {
 			{
 				Config: terraformToApply,
 				Check: resource.ComposeTestCheckFunc(
-					testAccAzureBlobMount_cluster_exists("databricks_cluster.cluster", &clusterInfo),
-					testAccAzureBlobMount_mount_exists("databricks_azure_blob_mount.mount", &azureBlobMount, &clusterInfo),
+					testAccAzureBlobMountClusterExists("databricks_cluster.cluster", &clusterInfo),
+					testAccAzureBlobMountMountExists("databricks_azure_blob_mount.mount", &azureBlobMount, &clusterInfo),
 				),
 			},
 			{
@@ -35,7 +35,7 @@ func TestAccAzureBlobMount_correctly_mounts(t *testing.T) {
 				},
 				Config: terraformToApply,
 				Check: resource.ComposeTestCheckFunc(
-					testAccAzureBlobMount_mount_exists("databricks_azure_blob_mount.mount", &azureBlobMount, &clusterInfo),
+					testAccAzureBlobMountMountExists("databricks_azure_blob_mount.mount", &azureBlobMount, &clusterInfo),
 				),
 			},
 		},
@@ -43,7 +43,7 @@ func TestAccAzureBlobMount_correctly_mounts(t *testing.T) {
 }
 
 func TestAccAzureBlobMount_cluster_deleted_correctly_mounts(t *testing.T) {
-	terraformToApply := testAccAzureBlobMount_correctly_mounts()
+	terraformToApply := testAccAzureBlobMountCorrectlyMounts()
 	var clusterInfo model.ClusterInfo
 	var azureBlobMount AzureBlobMount
 
@@ -53,8 +53,8 @@ func TestAccAzureBlobMount_cluster_deleted_correctly_mounts(t *testing.T) {
 			{
 				Config: terraformToApply,
 				Check: resource.ComposeTestCheckFunc(
-					testAccAzureBlobMount_cluster_exists("databricks_cluster.cluster", &clusterInfo),
-					testAccAzureBlobMount_mount_exists("databricks_azure_blob_mount.mount", &azureBlobMount, &clusterInfo),
+					testAccAzureBlobMountClusterExists("databricks_cluster.cluster", &clusterInfo),
+					testAccAzureBlobMountMountExists("databricks_azure_blob_mount.mount", &azureBlobMount, &clusterInfo),
 				),
 			},
 			{
@@ -65,14 +65,14 @@ func TestAccAzureBlobMount_cluster_deleted_correctly_mounts(t *testing.T) {
 				},
 				Config: terraformToApply,
 				Check: resource.ComposeTestCheckFunc(
-					testAccAzureBlobMount_mount_exists("databricks_azure_blob_mount.mount", &azureBlobMount, &clusterInfo),
+					testAccAzureBlobMountMountExists("databricks_azure_blob_mount.mount", &azureBlobMount, &clusterInfo),
 				),
 			},
 		},
 	})
 }
 
-func testAccAzureBlobMount_cluster_exists(n string, clusterInfo *model.ClusterInfo) resource.TestCheckFunc {
+func testAccAzureBlobMountClusterExists(n string, clusterInfo *model.ClusterInfo) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		// find the corresponding state object
 		rs, ok := s.RootModule().Resources[n]
@@ -93,7 +93,7 @@ func testAccAzureBlobMount_cluster_exists(n string, clusterInfo *model.ClusterIn
 	}
 }
 
-func testAccAzureBlobMount_mount_exists(n string, azureBlobMount *AzureBlobMount, clusterInfo *model.ClusterInfo) resource.TestCheckFunc {
+func testAccAzureBlobMountMountExists(n string, azureBlobMount *AzureBlobMount, clusterInfo *model.ClusterInfo) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		// find the corresponding state object
 		rs, ok := s.RootModule().Resources[n]
@@ -113,20 +113,20 @@ func testAccAzureBlobMount_mount_exists(n string, azureBlobMount *AzureBlobMount
 			tokenSecretScope, tokenSecretKey)
 
 		client := testAccProvider.Meta().(*service.DBApiClient)
-		cluster_id := clusterInfo.ClusterID
+		clusterID := clusterInfo.ClusterID
 
-		message, err := blobMount.Read(client.Commands(), cluster_id)
+		message, err := blobMount.Read(client.Commands(), clusterID)
+
 		if err != nil {
 			return fmt.Errorf("Error reading the mount %s: error %s", message, err)
 		}
 
 		*azureBlobMount = *blobMount
 		return nil
-
 	}
 }
 
-func testAccAzureBlobMount_correctly_mounts() string {
+func testAccAzureBlobMountCorrectlyMounts() string {
 	clientID := os.Getenv("ARM_CLIENT_ID")
 	clientSecret := os.Getenv("ARM_CLIENT_SECRET")
 	tenantID := os.Getenv("ARM_TENANT_ID")

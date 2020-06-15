@@ -4,12 +4,13 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/databrickslabs/databricks-terraform/client/model"
 	"log"
 	"net/http"
 	"sort"
 	"strings"
 	"time"
+
+	"github.com/databrickslabs/databricks-terraform/client/model"
 )
 
 // UsersAPI exposes the scim user API
@@ -64,7 +65,7 @@ func (a UsersAPI) Read(userID string) (model.User, error) {
 		}
 		groups = append(groups, group)
 	}
-	inherited, unInherited, err := a.getInheritedAndNonInheritedRoles(user, groups)
+	inherited, unInherited := a.getInheritedAndNonInheritedRoles(user, groups)
 	user.InheritedRoles = inherited
 	user.UnInheritedRoles = unInherited
 	return user, err
@@ -117,7 +118,6 @@ func (a UsersAPI) Update(userID string, userName string, displayName string, ent
 
 // Delete will delete the user given the user id
 func (a UsersAPI) Delete(userID string) error {
-
 	userPath := fmt.Sprintf("/preview/scim/v2/Users/%v", userID)
 
 	_, err := a.Client.performQuery(http.MethodDelete, userPath, "2.0", scimHeaders, nil, nil)
@@ -138,7 +138,7 @@ func (a UsersAPI) SetUserAsAdmin(userID string, adminGroupID string) error {
 	addOperations = model.UserPatchOperations{
 		Op: "add",
 		Value: &model.GroupsValue{
-			Groups: []model.ValueListItem{model.ValueListItem{Value: adminGroupID}},
+			Groups: []model.ValueListItem{{Value: adminGroupID}},
 		},
 	}
 	userPatchRequest.Operations = append(userPatchRequest.Operations, addOperations)
@@ -227,10 +227,9 @@ func (a UsersAPI) GetOrCreateDefaultMetaUser(metaUserDisplayName string, metaUse
 	return newCreatedUser, err
 	//newCreatedUserFullInfo, err := a.Read(newCreatedUser.ID)
 	//return newCreatedUserFullInfo, err
-
 }
 
-func (a UsersAPI) getInheritedAndNonInheritedRoles(user model.User, groups []model.Group) (inherited []model.RoleListItem, unInherited []model.RoleListItem, err error) {
+func (a UsersAPI) getInheritedAndNonInheritedRoles(user model.User, groups []model.Group) (inherited []model.RoleListItem, unInherited []model.RoleListItem) {
 	allRoles := user.Roles
 	var inheritedRoles []model.RoleListItem
 	inheritedRolesKeys := []string{}
@@ -251,5 +250,5 @@ func (a UsersAPI) getInheritedAndNonInheritedRoles(user model.User, groups []mod
 			unInherited = append(unInherited, role)
 		}
 	}
-	return inherited, unInherited, nil
+	return inherited, unInherited
 }

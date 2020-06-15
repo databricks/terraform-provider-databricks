@@ -31,7 +31,7 @@ func TestAccAwsJobResource(t *testing.T) {
 				// compose a basic test, checking both remote and local values
 				Check: resource.ComposeTestCheckFunc(
 					// query the API to retrieve the tokenInfo object
-					testAwsJobResourceExists("databricks_job.my_job", &job, t),
+					testAwsJobResourceExists("databricks_job.my_job", &job),
 					// verify remote values
 					testAwsJobValuesNewCluster(t, &job),
 				),
@@ -61,7 +61,7 @@ func testAwsJobResourceDestroy(s *terraform.State) error {
 }
 
 // testAccCheckTokenResourceExists queries the API and retrieves the matching Widget.
-func testAwsJobResourceExists(n string, job *model.Job, t *testing.T) resource.TestCheckFunc {
+func testAwsJobResourceExists(n string, job *model.Job) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		// find the corresponding state object
 		rs, ok := s.RootModule().Resources[n]
@@ -116,28 +116,29 @@ func testAwsJobValuesNewCluster(t *testing.T, job *model.Job) resource.TestCheck
 
 func testAwsJobResourceNewCluster() string {
 	return `
-		resource "databricks_job" "my_job" {
-			new_cluster  {
-			autoscale  {
-				min_workers = 2
-				max_workers = 3
-			}
-			spark_version = "6.4.x-scala2.11"
-			aws_attributes  {
-				availability = "SPOT"
-				zone_id = "us-east-1a"
-				spot_bid_price_percent = "100"
-				first_on_demand = 1
-				ebs_volume_type = "GENERAL_PURPOSE_SSD"
-				ebs_volume_count = 1
-				ebs_volume_size = 32
-			}
-			node_type_id = "r3.xlarge"
-			}
-			notebook_path = "/Users/jane.doe@databricks.com/my-demo-notebook"
-			name = "my-demo-notebook"
-			timeout_seconds = 3600
-			max_retries = 1
-			max_concurrent_runs = 1
-		}`
+	resource "databricks_job" "my_job" {
+	  new_cluster  {
+		autoscale  {
+		  min_workers = 2
+		  max_workers = 3
+		}
+		spark_version = "6.4.x-scala2.11"
+		aws_attributes  {
+		  availability = "SPOT"
+		  zone_id = "us-east-1a"
+		  spot_bid_price_percent = "100"
+		  first_on_demand = 1
+		  ebs_volume_type = "GENERAL_PURPOSE_SSD"
+		  ebs_volume_count = 1
+		  ebs_volume_size = 32
+		}
+		node_type_id = "r3.xlarge"
+	  }
+	  notebook_path = "/Users/jane.doe@databricks.com/my-demo-notebook"
+	  name = "my-demo-notebook"
+	  timeout_seconds = 3600
+	  max_retries = 1
+	  max_concurrent_runs = 1
+	}
+	`
 }

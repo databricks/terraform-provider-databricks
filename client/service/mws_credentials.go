@@ -3,8 +3,9 @@ package service
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/databrickslabs/databricks-terraform/client/model"
 	"net/http"
+
+	"github.com/databrickslabs/databricks-terraform/client/model"
 )
 
 // MWSCredentialsAPI exposes the mws credentials API
@@ -53,7 +54,6 @@ func (a MWSCredentialsAPI) Read(mwsAcctId, credentialsID string) (model.MWSCrede
 
 // Delete deletes the credentials object given a credentials id
 func (a MWSCredentialsAPI) Delete(mwsAcctId, credentialsID string) error {
-
 	credentialsAPIPath := fmt.Sprintf("/accounts/%s/credentials/%s", mwsAcctId, credentialsID)
 
 	_, err := a.Client.performQuery(http.MethodDelete, credentialsAPIPath, "2.0", nil, nil, nil)

@@ -18,7 +18,7 @@ type CommandsAPI struct {
 
 // CommandExecutor creates a spark context and executes a command and then closes context
 type CommandExecutor interface {
-	Execute(clusterID, langauge, commandStr string) (model.Command, error)
+	Execute(clusterID, language, commandStr string) (model.Command, error)
 }
 
 // Execute creates a spark context and executes a command and then closes context

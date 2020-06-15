@@ -4,14 +4,15 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"log"
+	"reflect"
+	"testing"
+
 	"github.com/databrickslabs/databricks-terraform/client/model"
 	"github.com/databrickslabs/databricks-terraform/client/service"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 	"github.com/stretchr/testify/assert"
-	"log"
-	"reflect"
-	"testing"
 )
 
 func TestAccAzureScimUserResource(t *testing.T) {

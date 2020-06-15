@@ -2,10 +2,11 @@ package databricks
 
 import (
 	"fmt"
-	"github.com/databrickslabs/databricks-terraform/client/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"log"
 	"strings"
+
+	"github.com/databrickslabs/databricks-terraform/client/service"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 func resourceToken() *schema.Resource {
@@ -15,29 +16,29 @@ func resourceToken() *schema.Resource {
 		Delete: resourceTokenDelete,
 
 		Schema: map[string]*schema.Schema{
-			"lifetime_seconds": &schema.Schema{
+			"lifetime_seconds": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				ForceNew: true,
 				Default:  0,
 			},
-			"comment": &schema.Schema{
+			"comment": {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
 				Default:  "",
 			},
-			"creation_time": &schema.Schema{
+			"creation_time": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"token_value": &schema.Schema{
+			"token_value": {
 				Type:      schema.TypeString,
 				Computed:  true,
 				Sensitive: true,
 			},
-			"expiry_time": &schema.Schema{
+			"expiry_time": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,

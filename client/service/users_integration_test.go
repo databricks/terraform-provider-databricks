@@ -1,10 +1,11 @@
 package service
 
 import (
-	"github.com/databrickslabs/databricks-terraform/client/model"
-	"github.com/stretchr/testify/assert"
 	"log"
 	"testing"
+
+	"github.com/databrickslabs/databricks-terraform/client/model"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestCreateUser(t *testing.T) {
@@ -30,7 +31,6 @@ func TestCreateUser(t *testing.T) {
 	err = client.Users().Update(user.ID, "newtestuser@databricks.com", "Test User", []string{string(model.AllowClusterCreateEntitlement)}, nil)
 	//t.Log(user)
 	assert.NoError(t, err, err)
-
 }
 
 func TestCreateAdminUser(t *testing.T) {
@@ -74,7 +74,6 @@ func TestCreateAdminUser(t *testing.T) {
 	assert.NoError(t, err, err)
 	assert.True(t, userIsAdmin == false)
 	log.Println(userIsAdmin)
-
 }
 
 // user id 101354

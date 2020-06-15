@@ -1,9 +1,10 @@
 package service
 
 import (
+	"testing"
+
 	"github.com/databrickslabs/databricks-terraform/client/model"
 	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
 func TestJobsCreate(t *testing.T) {
@@ -28,7 +29,7 @@ func TestJobsCreate(t *testing.T) {
 		},
 		Name: "1-sri-test-job",
 		Libraries: []model.Library{
-			model.Library{
+			{
 				Maven: &model.Maven{
 					Coordinates: "org.jsoup:jsoup:1.7.2",
 				},

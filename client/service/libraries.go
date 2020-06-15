@@ -2,8 +2,9 @@ package service
 
 import (
 	"encoding/json"
-	"github.com/databrickslabs/databricks-terraform/client/model"
 	"net/http"
+
+	"github.com/databrickslabs/databricks-terraform/client/model"
 )
 
 // LibrariesAPI exposes the Library API

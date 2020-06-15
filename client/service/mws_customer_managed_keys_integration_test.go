@@ -1,9 +1,10 @@
 package service
 
 import (
-	"github.com/stretchr/testify/assert"
 	"os"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestMWSCustomerManagedKeys(t *testing.T) {
@@ -15,5 +16,4 @@ func TestMWSCustomerManagedKeys(t *testing.T) {
 	networksList, err := client.MWSCustomerManagedKeys().List(acctId)
 	assert.NoError(t, err, err)
 	t.Log(networksList)
-
 }

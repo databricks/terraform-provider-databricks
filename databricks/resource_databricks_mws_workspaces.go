@@ -3,11 +3,12 @@ package databricks
 import (
 	"bytes"
 	"fmt"
+	"reflect"
+
 	"github.com/databrickslabs/databricks-terraform/client/model"
 	"github.com/databrickslabs/databricks-terraform/client/service"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
-	"reflect"
 
 	"log"
 	"strconv"
@@ -23,13 +24,13 @@ func resourceMWSWorkspaces() *schema.Resource {
 		Delete: resourceMWSWorkspacesDelete,
 
 		Schema: map[string]*schema.Schema{
-			"account_id": &schema.Schema{
+			"account_id": {
 				Type:      schema.TypeString,
 				Sensitive: true,
 				Required:  true,
 				ForceNew:  true,
 			},
-			"workspace_name": &schema.Schema{
+			"workspace_name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -87,19 +88,19 @@ func resourceMWSWorkspaces() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"workspace_status_message": &schema.Schema{
+			"workspace_status_message": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"creation_time": &schema.Schema{
+			"creation_time": {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"workspace_id": &schema.Schema{
+			"workspace_id": {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"workspace_url": &schema.Schema{
+			"workspace_url": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -125,35 +126,35 @@ func resourceMWSWorkspaces() *schema.Resource {
 
 func resourceMWSWorkspacesCreate(d *schema.ResourceData, m interface{}) error {
 	client := m.(*service.DBApiClient)
-	mwsAcctId := d.Get("account_id").(string)
+	mwsAcctID := d.Get("account_id").(string)
 	workspaceName := d.Get("workspace_name").(string)
 	deploymentName := d.Get("deployment_name").(string)
 	awsRegion := d.Get("aws_region").(string)
 	credentialsID := d.Get("credentials_id").(string)
 	storageConfigurationID := d.Get("storage_configuration_id").(string)
 	networkID := d.Get("network_id").(string)
-	customerManagedKeyId := d.Get("customer_managed_key_id").(string)
-	isNoPublicIpEnabled := d.Get("is_no_public_ip_enabled").(bool)
+	customerManagedKeyID := d.Get("customer_managed_key_id").(string)
+	isNoPublicIPEnabled := d.Get("is_no_public_ip_enabled").(bool)
 	var workspace model.MWSWorkspace
 	var err error
-	workspace, err = client.MWSWorkspaces().Create(mwsAcctId, workspaceName, deploymentName, awsRegion, credentialsID, storageConfigurationID, networkID, customerManagedKeyId, isNoPublicIpEnabled)
+	workspace, err = client.MWSWorkspaces().Create(mwsAcctID, workspaceName, deploymentName, awsRegion, credentialsID, storageConfigurationID, networkID, customerManagedKeyID, isNoPublicIPEnabled)
 	// Sometimes workspaces api is buggy
 	if err != nil {
 		time.Sleep(15 * time.Second)
-		workspace, err = client.MWSWorkspaces().Create(mwsAcctId, workspaceName, deploymentName, awsRegion, credentialsID, storageConfigurationID, networkID, customerManagedKeyId, isNoPublicIpEnabled)
+		workspace, err = client.MWSWorkspaces().Create(mwsAcctID, workspaceName, deploymentName, awsRegion, credentialsID, storageConfigurationID, networkID, customerManagedKeyID, isNoPublicIPEnabled)
 		if err != nil {
 			return err
 		}
 	}
-	workspaceResourceId := PackagedMWSIds{
-		MwsAcctId:  mwsAcctId,
-		ResourceId: strconv.Itoa(int(workspace.WorkspaceID)),
+	workspaceResourceID := PackagedMWSIds{
+		MwsAcctID:  mwsAcctID,
+		ResourceID: strconv.Itoa(int(workspace.WorkspaceID)),
 	}
-	d.SetId(packMWSAccountId(workspaceResourceId))
-	err = client.MWSWorkspaces().WaitForWorkspaceRunning(mwsAcctId, workspace.WorkspaceID, 10, 180)
+	d.SetId(packMWSAccountID(workspaceResourceID))
+	err = client.MWSWorkspaces().WaitForWorkspaceRunning(mwsAcctID, workspace.WorkspaceID, 10, 180)
 	if err != nil {
 		if !reflect.ValueOf(networkID).IsZero() {
-			network, networkReadErr := client.MWSNetworks().Read(mwsAcctId, networkID)
+			network, networkReadErr := client.MWSNetworks().Read(mwsAcctID, networkID)
 			if networkReadErr != nil {
 				return fmt.Errorf("Workspace failed to create: %v, network read failure error: %v", err, networkReadErr)
 			}
@@ -167,16 +168,16 @@ func resourceMWSWorkspacesCreate(d *schema.ResourceData, m interface{}) error {
 func resourceMWSWorkspacesRead(d *schema.ResourceData, m interface{}) error {
 	id := d.Id()
 	client := m.(*service.DBApiClient)
-	packagedMwsId, err := unpackMWSAccountId(id)
+	packagedMwsID, err := unpackMWSAccountID(id)
 	if err != nil {
 		return err
 	}
-	idInt64, err := strconv.ParseInt(packagedMwsId.ResourceId, 10, 64)
+	idInt64, err := strconv.ParseInt(packagedMwsID.ResourceID, 10, 64)
 	if err != nil {
 		return err
 	}
 
-	workspace, err := client.MWSWorkspaces().Read(packagedMwsId.MwsAcctId, idInt64)
+	workspace, err := client.MWSWorkspaces().Read(packagedMwsID.MwsAcctID, idInt64)
 	if err != nil {
 		if isMWSWorkspaceMissing(err.Error(), id) {
 			log.Printf("Missing e2 workspace with id: %s.", id)
@@ -186,7 +187,7 @@ func resourceMWSWorkspacesRead(d *schema.ResourceData, m interface{}) error {
 		return err
 	}
 
-	err = client.MWSWorkspaces().WaitForWorkspaceRunning(packagedMwsId.MwsAcctId, idInt64, 10, 180)
+	err = client.MWSWorkspaces().WaitForWorkspaceRunning(packagedMwsID.MwsAcctID, idInt64, 10, 180)
 	if err != nil {
 		log.Println("WORKSPACE IS NOT RUNNING")
 		err2 := d.Set("verify_workspace_runnning", false)
@@ -270,11 +271,11 @@ func resourceMWSWorkspacesRead(d *schema.ResourceData, m interface{}) error {
 func resourceMWSWorkspacePatch(d *schema.ResourceData, m interface{}) error {
 	id := d.Id()
 	client := m.(*service.DBApiClient)
-	packagedMwsId, err := unpackMWSAccountId(id)
+	packagedMwsID, err := unpackMWSAccountID(id)
 	if err != nil {
 		return err
 	}
-	idInt64, err := strconv.ParseInt(packagedMwsId.ResourceId, 10, 64)
+	idInt64, err := strconv.ParseInt(packagedMwsID.ResourceID, 10, 64)
 	if err != nil {
 		return err
 	}
@@ -282,14 +283,14 @@ func resourceMWSWorkspacePatch(d *schema.ResourceData, m interface{}) error {
 	credentialsID := d.Get("credentials_id").(string)
 	storageConfigurationID := d.Get("storage_configuration_id").(string)
 	networkID := d.Get("network_id").(string)
-	customerManagedKeyId := d.Get("customer_managed_key_id").(string)
-	isNoPublicIpEnabled := d.Get("is_no_public_ip_enabled").(bool)
+	customerManagedKeyID := d.Get("customer_managed_key_id").(string)
+	isNoPublicIPEnabled := d.Get("is_no_public_ip_enabled").(bool)
 
-	err = client.MWSWorkspaces().Patch(packagedMwsId.MwsAcctId, idInt64, awsRegion, credentialsID, storageConfigurationID, networkID, customerManagedKeyId, isNoPublicIpEnabled)
+	err = client.MWSWorkspaces().Patch(packagedMwsID.MwsAcctID, idInt64, awsRegion, credentialsID, storageConfigurationID, networkID, customerManagedKeyID, isNoPublicIPEnabled)
 	if err != nil {
 		return err
 	}
-	err = client.MWSWorkspaces().WaitForWorkspaceRunning(packagedMwsId.MwsAcctId, idInt64, 10, 180)
+	err = client.MWSWorkspaces().WaitForWorkspaceRunning(packagedMwsID.MwsAcctID, idInt64, 10, 180)
 	if err != nil {
 		return err
 	}
@@ -299,15 +300,15 @@ func resourceMWSWorkspacePatch(d *schema.ResourceData, m interface{}) error {
 func resourceMWSWorkspacesDelete(d *schema.ResourceData, m interface{}) error {
 	id := d.Id()
 	client := m.(*service.DBApiClient)
-	packagedMwsId, err := unpackMWSAccountId(id)
+	packagedMwsID, err := unpackMWSAccountID(id)
 	if err != nil {
 		return err
 	}
-	idInt64, err := strconv.ParseInt(packagedMwsId.ResourceId, 10, 64)
+	idInt64, err := strconv.ParseInt(packagedMwsID.ResourceID, 10, 64)
 	if err != nil {
 		return err
 	}
-	err = client.MWSWorkspaces().Delete(packagedMwsId.MwsAcctId, idInt64)
+	err = client.MWSWorkspaces().Delete(packagedMwsID.MwsAcctID, idInt64)
 	return err
 }
 

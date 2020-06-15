@@ -2,10 +2,11 @@ package databricks
 
 import (
 	"fmt"
-	"github.com/databrickslabs/databricks-terraform/client/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"log"
 	"strings"
+
+	"github.com/databrickslabs/databricks-terraform/client/service"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 func resourceSecretScope() *schema.Resource {
@@ -15,18 +16,18 @@ func resourceSecretScope() *schema.Resource {
 		Delete: resourceSecretScopeDelete,
 
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"initial_manage_principal": &schema.Schema{
+			"initial_manage_principal": {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
 				Default:  "users",
 			},
-			"backend_type": &schema.Schema{
+			"backend_type": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},

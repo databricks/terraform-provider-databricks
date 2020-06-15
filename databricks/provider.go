@@ -26,23 +26,27 @@ func Provider(version string) terraform.ResourceProvider {
 			"databricks_zones":              dataSourceClusterZones(),
 		},
 		ResourcesMap: map[string]*schema.Resource{
-			"databricks_token":                 resourceToken(),
-			"databricks_secret_scope":          resourceSecretScope(),
-			"databricks_secret":                resourceSecret(),
-			"databricks_secret_acl":            resourceSecretACL(),
-			"databricks_instance_pool":         resourceInstancePool(),
-			"databricks_scim_user":             resourceScimUser(),
-			"databricks_scim_group":            resourceScimGroup(),
-			"databricks_notebook":              resourceNotebook(),
-			"databricks_cluster":               resourceCluster(),
-			"databricks_job":                   resourceJob(),
-			"databricks_dbfs_file":             resourceDBFSFile(),
-			"databricks_dbfs_file_sync":        resourceDBFSFileSync(),
-			"databricks_instance_profile":      resourceInstanceProfile(),
-			"databricks_aws_s3_mount":          resourceAWSS3Mount(),
-			"databricks_azure_blob_mount":      resourceAzureBlobMount(),
-			"databricks_azure_adls_gen1_mount": resourceAzureAdlsGen1Mount(),
-			"databricks_azure_adls_gen2_mount": resourceAzureAdlsGen2Mount(),
+			"databricks_token":         resourceToken(),
+			"databricks_secret_scope":  resourceSecretScope(),
+			"databricks_secret":        resourceSecret(),
+			"databricks_secret_acl":    resourceSecretACL(),
+			"databricks_instance_pool": resourceInstancePool(),
+			"databricks_scim_user":     resourceScimUser(),
+			"databricks_scim_group":    resourceScimGroup(),
+			// Scim Group is split into multiple components for flexibility to pick and choose
+			"databricks_group":                  resourceGroup(),
+			"databricks_group_instance_profile": resourceGroupInstanceProfile(),
+			"databricks_group_member":           resourceGroupMember(),
+			"databricks_notebook":               resourceNotebook(),
+			"databricks_cluster":                resourceCluster(),
+			"databricks_job":                    resourceJob(),
+			"databricks_dbfs_file":              resourceDBFSFile(),
+			"databricks_dbfs_file_sync":         resourceDBFSFileSync(),
+			"databricks_instance_profile":       resourceInstanceProfile(),
+			"databricks_aws_s3_mount":           resourceAWSS3Mount(),
+			"databricks_azure_blob_mount":       resourceAzureBlobMount(),
+			"databricks_azure_adls_gen1_mount":  resourceAzureAdlsGen1Mount(),
+			"databricks_azure_adls_gen2_mount":  resourceAzureAdlsGen2Mount(),
 			//	MWS (multiple workspaces) resources are only limited to AWS as azure already has a built in concept of MWS
 			"databricks_mws_credentials":            resourceMWSCredentials(),
 			"databricks_mws_storage_configurations": resourceMWSStorageConfigurations(),
@@ -50,30 +54,30 @@ func Provider(version string) terraform.ResourceProvider {
 			"databricks_mws_workspaces":             resourceMWSWorkspaces(),
 		},
 		Schema: map[string]*schema.Schema{
-			"host": &schema.Schema{
+			"host": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				DefaultFunc: schema.EnvDefaultFunc("DATABRICKS_HOST", nil),
 			},
-			"token": &schema.Schema{
+			"token": {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Sensitive:     true,
 				DefaultFunc:   schema.EnvDefaultFunc("DATABRICKS_TOKEN", nil),
 				ConflictsWith: []string{"basic_auth"},
 			},
-			"basic_auth": &schema.Schema{
+			"basic_auth": {
 				Type:     schema.TypeList,
 				Optional: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"username": &schema.Schema{
+						"username": {
 							Type:        schema.TypeString,
 							Required:    true,
 							DefaultFunc: schema.EnvDefaultFunc("DATABRICKS_USERNAME", nil),
 						},
-						"password": &schema.Schema{
+						"password": {
 							Type:        schema.TypeString,
 							Sensitive:   true,
 							Required:    true,
@@ -83,7 +87,7 @@ func Provider(version string) terraform.ResourceProvider {
 				},
 				ConflictsWith: []string{"token"},
 			},
-			"config_file": &schema.Schema{
+			"config_file": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				DefaultFunc: schema.EnvDefaultFunc("DATABRICKS_CONFIG_FILE", "~/.databrickscfg"),
@@ -92,14 +96,14 @@ func Provider(version string) terraform.ResourceProvider {
 					"in ~/.databrickscfg. Check  https://docs.databricks.com/dev-tools/cli/index.html#set-up-authentication for docs. Config\n" +
 					"file credetials will only be used when host/token are not provided.",
 			},
-			"profile": &schema.Schema{
+			"profile": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  "DEFAULT",
 				Description: "Connection profile specified within ~/.databrickscfg. Please check\n" +
 					"https://docs.databricks.com/dev-tools/cli/index.html#connection-profiles for documentation.",
 			},
-			"azure_auth": &schema.Schema{
+			"azure_auth": {
 				Type:     schema.TypeMap,
 				Optional: true,
 				Elem: &schema.Resource{
@@ -163,7 +167,7 @@ func Provider(version string) terraform.ResourceProvider {
 	return provider
 }
 
-func providerConfigureAzureClient(d *schema.ResourceData, providerVersion string, config *service.DBApiClientConfig) (interface{}, error) {
+func providerConfigureAzureClient(d *schema.ResourceData, config *service.DBApiClientConfig) (interface{}, error) {
 	log.Println("Creating db client via azure auth!")
 	azureAuth, _ := d.GetOk("azure_auth")
 	azureAuthMap := azureAuth.(map[string]interface{})
@@ -199,32 +203,44 @@ func providerConfigureAzureClient(d *schema.ResourceData, providerVersion string
 	//  - provider config
 	//  - DATABRICKS_AZURE_* environment variables
 	//  - ARM_* environment variables
-	if subscriptionID, ok := azureAuthMap["subscription_id"].(string); ok {
+
+	subscriptionID, ok := azureAuthMap["subscription_id"].(string)
+	switch {
+	case ok:
 		tokenPayload.SubscriptionID = subscriptionID
-	} else if os.Getenv("DATABRICKS_AZURE_SUBSCRIPTION_ID") != "" {
+	case os.Getenv("DATABRICKS_AZURE_SUBSCRIPTION_ID") != "":
 		tokenPayload.SubscriptionID = os.Getenv("DATABRICKS_AZURE_SUBSCRIPTION_ID")
-	} else if os.Getenv("ARM_SUBSCRIPTION_ID") != "" {
-		tokenPayload.SubscriptionID = os.Getenv("ARM_SUBSCRIPTION_ID")
+	case os.Getenv("ARM_SUBSCRIPTION_ID") != "":
+		tokenPayload.SubscriptionID = os.Getenv("DATABRICKS_AZURE_SUBSCRIPTION_ID")
 	}
-	if clientSecret, ok := azureAuthMap["client_secret"].(string); ok {
+
+	clientSecret, ok := azureAuthMap["client_secret"].(string)
+	switch {
+	case ok:
 		tokenPayload.ClientSecret = clientSecret
-	} else if os.Getenv("DATABRICKS_AZURE_CLIENT_SECRET") != "" {
+	case os.Getenv("DATABRICKS_AZURE_CLIENT_SECRET") != "":
 		tokenPayload.ClientSecret = os.Getenv("DATABRICKS_AZURE_CLIENT_SECRET")
-	} else if os.Getenv("ARM_CLIENT_SECRET") != "" {
+	case os.Getenv("ARM_CLIENT_SECRET") != "":
 		tokenPayload.ClientSecret = os.Getenv("ARM_CLIENT_SECRET")
 	}
-	if clientID, ok := azureAuthMap["client_id"].(string); ok {
+
+	clientID, ok := azureAuthMap["client_id"].(string)
+	switch {
+	case ok:
 		tokenPayload.ClientID = clientID
-	} else if os.Getenv("DATABRICKS_AZURE_CLIENT_ID") != "" {
+	case os.Getenv("DATABRICKS_AZURE_CLIENT_ID") != "":
 		tokenPayload.ClientID = os.Getenv("DATABRICKS_AZURE_CLIENT_ID")
-	} else if os.Getenv("ARM_CLIENT_ID") != "" {
+	case os.Getenv("ARM_CLIENT_ID") != "":
 		tokenPayload.ClientID = os.Getenv("ARM_CLIENT_ID")
 	}
-	if tenantID, ok := azureAuthMap["tenant_id"].(string); ok {
+
+	tenantID, ok := azureAuthMap["tenant_id"].(string)
+	switch {
+	case ok:
 		tokenPayload.TenantID = tenantID
-	} else if os.Getenv("DATABRICKS_AZURE_TENANT_ID") != "" {
+	case os.Getenv("DATABRICKS_AZURE_TENANT_ID") != "":
 		tokenPayload.TenantID = os.Getenv("DATABRICKS_AZURE_TENANT_ID")
-	} else if os.Getenv("ARM_TENANT_ID") != "" {
+	case os.Getenv("ARM_TENANT_ID") != "":
 		tokenPayload.TenantID = os.Getenv("ARM_TENANT_ID")
 	}
 
@@ -237,9 +253,7 @@ func providerConfigureAzureClient(d *schema.ResourceData, providerVersion string
 	}
 
 	// Setup the CustomAuthorizer Function to be called at API invoke rather than client invoke
-	config.CustomAuthorizer = func(config *service.DBApiClientConfig) error {
-		return azureAuthSetup.initWorkspaceAndGetClient(config)
-	}
+	config.CustomAuthorizer = azureAuthSetup.initWorkspaceAndGetClient
 	var dbClient service.DBApiClient
 	dbClient.SetConfig(config)
 	return &dbClient, nil
@@ -313,11 +327,10 @@ func providerConfigure(d *schema.ResourceData, providerVersion string) (interfac
 				return nil, fmt.Errorf("failed to get credentials from config file; error msg: %w", err)
 			}
 		}
-
 	} else {
 		// Abstracted logic to another function that returns a interface{}, error to inject directly
 		// for the providers during cloud integration testing
-		return providerConfigureAzureClient(d, providerVersion, &config)
+		return providerConfigureAzureClient(d, &config)
 	}
 
 	var dbClient service.DBApiClient

@@ -19,12 +19,12 @@ func resourceCluster() *schema.Resource {
 		Delete: resourceClusterDelete,
 
 		Schema: map[string]*schema.Schema{
-			"num_workers": &schema.Schema{
+			"num_workers": {
 				Type:          schema.TypeInt,
 				Optional:      true,
 				ConflictsWith: []string{"autoscale"},
 			},
-			"autoscale": &schema.Schema{
+			"autoscale": {
 				Type:       schema.TypeSet,
 				Optional:   true,
 				MaxItems:   1,
@@ -43,20 +43,20 @@ func resourceCluster() *schema.Resource {
 				},
 				ConflictsWith: []string{"num_workers"},
 			},
-			"cluster_name": &schema.Schema{
+			"cluster_name": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"spark_version": &schema.Schema{
+			"spark_version": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"spark_conf": &schema.Schema{
+			"spark_conf": {
 				Type:     schema.TypeMap,
 				Optional: true,
 			},
-			"aws_attributes": &schema.Schema{
+			"aws_attributes": {
 				Type:     schema.TypeList,
 				Optional: true,
 				MaxItems: 1,
@@ -99,29 +99,29 @@ func resourceCluster() *schema.Resource {
 					},
 				},
 			},
-			"driver_node_type_id": &schema.Schema{
+			"driver_node_type_id": {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
 				ConflictsWith: []string{"instance_pool_id"},
 			},
-			"node_type_id": &schema.Schema{
+			"node_type_id": {
 				Type:          schema.TypeString,
 				Optional:      true,
 				ConflictsWith: []string{"instance_pool_id"},
 				AtLeastOneOf:  []string{"instance_pool_id"},
 			},
-			"ssh_public_keys": &schema.Schema{
+			"ssh_public_keys": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				//	TODO: Validate less than 10 values
 			},
-			"custom_tags": &schema.Schema{
+			"custom_tags": {
 				Type:     schema.TypeMap,
 				Optional: true,
 			},
-			"cluster_log_conf": &schema.Schema{
+			"cluster_log_conf": {
 				Type:     schema.TypeList,
 				Optional: true,
 				MaxItems: 1,
@@ -190,7 +190,7 @@ func resourceCluster() *schema.Resource {
 					},
 				},
 			},
-			"init_scripts": &schema.Schema{
+			"init_scripts": {
 				Type:     schema.TypeList,
 				Optional: true,
 				MaxItems: 10,
@@ -251,7 +251,7 @@ func resourceCluster() *schema.Resource {
 					},
 				},
 			},
-			"docker_image": &schema.Schema{
+			"docker_image": {
 				Type:     schema.TypeList,
 				Optional: true,
 				MaxItems: 1,
@@ -282,33 +282,33 @@ func resourceCluster() *schema.Resource {
 					},
 				},
 			},
-			"spark_env_vars": &schema.Schema{
+			"spark_env_vars": {
 				Type:     schema.TypeMap,
 				Optional: true,
 			},
-			"autotermination_minutes": &schema.Schema{
+			"autotermination_minutes": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Default:  60,
 				//Computed: true,
 			},
-			"enable_elastic_disk": &schema.Schema{
+			"enable_elastic_disk": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
 			},
-			"instance_pool_id": &schema.Schema{
+			"instance_pool_id": {
 				Type:          schema.TypeString,
 				Optional:      true,
 				ConflictsWith: []string{"node_type_id", "driver_node_type_id", "aws_attributes"},
 				AtLeastOneOf:  []string{"node_type_id"},
 			},
-			"idempotency_token": &schema.Schema{
+			"idempotency_token": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				ForceNew: true,
 			},
-			"library_jar": &schema.Schema{
+			"library_jar": {
 				Type:       schema.TypeSet,
 				Optional:   true,
 				ConfigMode: schema.SchemaConfigModeAttr,
@@ -332,7 +332,7 @@ func resourceCluster() *schema.Resource {
 					},
 				},
 			},
-			"library_egg": &schema.Schema{
+			"library_egg": {
 				Type:       schema.TypeSet,
 				Optional:   true,
 				ConfigMode: schema.SchemaConfigModeAttr,
@@ -356,7 +356,7 @@ func resourceCluster() *schema.Resource {
 					},
 				},
 			},
-			"library_whl": &schema.Schema{
+			"library_whl": {
 				Type:       schema.TypeSet,
 				Optional:   true,
 				ConfigMode: schema.SchemaConfigModeAttr,
@@ -380,7 +380,7 @@ func resourceCluster() *schema.Resource {
 					},
 				},
 			},
-			"library_pypi": &schema.Schema{
+			"library_pypi": {
 				Type:       schema.TypeSet,
 				Optional:   true,
 				ConfigMode: schema.SchemaConfigModeAttr,
@@ -409,7 +409,7 @@ func resourceCluster() *schema.Resource {
 					},
 				},
 			},
-			"library_maven": &schema.Schema{
+			"library_maven": {
 				Type:       schema.TypeSet,
 				Optional:   true,
 				ConfigMode: schema.SchemaConfigModeAttr,
@@ -442,7 +442,7 @@ func resourceCluster() *schema.Resource {
 					},
 				},
 			},
-			"library_cran": &schema.Schema{
+			"library_cran": {
 				Type:       schema.TypeSet,
 				Optional:   true,
 				ConfigMode: schema.SchemaConfigModeAttr,
@@ -467,23 +467,23 @@ func resourceCluster() *schema.Resource {
 					},
 				},
 			},
-			"cluster_id": &schema.Schema{
+			"cluster_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"default_tags": &schema.Schema{
+			"default_tags": {
 				Type:     schema.TypeMap,
 				Computed: true,
 			},
-			"state": &schema.Schema{
+			"state": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"state_message": &schema.Schema{
+			"state_message": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"single_user_name": &schema.Schema{
+			"single_user_name": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -502,7 +502,6 @@ func convertListInterfaceToString(m []interface{}) []string {
 }
 
 func resourceClusterCreate(d *schema.ResourceData, m interface{}) error {
-
 	client := m.(*service.DBApiClient)
 
 	cluster := parseSchemaToCluster(d, "")
@@ -683,7 +682,7 @@ func resourceClusterRead(d *schema.ResourceData, m interface{}) error {
 		return err
 	}
 
-	if len(clusterInfo.SparkConf) >= 0 {
+	if clusterInfo.SparkConf != nil {
 		err = d.Set("spark_conf", clusterInfo.SparkConf)
 		if err != nil {
 			return err
@@ -873,7 +872,7 @@ func resourceClusterRead(d *schema.ResourceData, m interface{}) error {
 		return err
 	}
 
-	err = d.Set("state_message", string(clusterInfo.StateMessage))
+	err = d.Set("state_message", clusterInfo.StateMessage)
 
 	return err
 }
@@ -883,22 +882,23 @@ func calculateLibraryChanges(new []model.Library, old []model.Library) ([]model.
 	newKeys := []string{}
 
 	for _, library := range new {
-		if len(library.Whl) > 0 {
+		switch {
+		case len(library.Whl) > 0:
 			newDictionary[library.Whl] = library
 			newKeys = append(newKeys, library.Whl)
-		} else if len(library.Egg) > 0 {
+		case len(library.Egg) > 0:
 			newDictionary[library.Egg] = library
 			newKeys = append(newKeys, library.Egg)
-		} else if len(library.Jar) > 0 {
+		case len(library.Jar) > 0:
 			newDictionary[library.Jar] = library
 			newKeys = append(newKeys, library.Jar)
-		} else if len(library.Pypi.Package) > 0 {
+		case library.Pypi != nil && len(library.Pypi.Package) > 0:
 			newDictionary[library.Pypi.Package+library.Pypi.Repo] = library
 			newKeys = append(newKeys, library.Pypi.Package+library.Pypi.Repo)
-		} else if len(library.Maven.Coordinates) > 0 {
+		case library.Maven != nil && len(library.Maven.Coordinates) > 0:
 			newDictionary[library.Maven.Coordinates+library.Maven.Repo+strings.Join(library.Maven.Exclusions, "")] = library
 			newKeys = append(newKeys, library.Maven.Coordinates+library.Maven.Repo+strings.Join(library.Maven.Exclusions, ""))
-		} else if len(library.Cran.Package) > 0 {
+		case library.Cran != nil && len(library.Cran.Package) > 0:
 			newDictionary[library.Cran.Package+library.Cran.Repo] = library
 			newKeys = append(newKeys, library.Cran.Package+library.Cran.Repo)
 		}
@@ -907,22 +907,23 @@ func calculateLibraryChanges(new []model.Library, old []model.Library) ([]model.
 	oldDictionary := map[string]model.Library{}
 	oldKeys := []string{}
 	for _, library := range old {
-		if len(library.Whl) > 0 {
+		switch {
+		case len(library.Whl) > 0:
 			oldDictionary[library.Whl] = library
 			oldKeys = append(oldKeys, library.Whl)
-		} else if len(library.Egg) > 0 {
+		case len(library.Egg) > 0:
 			oldDictionary[library.Egg] = library
 			oldKeys = append(oldKeys, library.Egg)
-		} else if len(library.Jar) > 0 {
+		case len(library.Jar) > 0:
 			oldDictionary[library.Jar] = library
 			oldKeys = append(oldKeys, library.Jar)
-		} else if len(library.Pypi.Package) > 0 {
+		case library.Pypi != nil && len(library.Pypi.Package) > 0:
 			oldDictionary[library.Pypi.Package+library.Pypi.Repo] = library
 			oldKeys = append(oldKeys, library.Pypi.Package+library.Pypi.Repo)
-		} else if len(library.Maven.Coordinates) > 0 {
+		case library.Maven != nil && len(library.Maven.Coordinates) > 0:
 			oldDictionary[library.Maven.Coordinates+library.Maven.Repo+strings.Join(library.Maven.Exclusions, "")] = library
 			oldKeys = append(oldKeys, library.Maven.Coordinates+library.Maven.Repo+strings.Join(library.Maven.Exclusions, ""))
-		} else if len(library.Cran.Package) > 0 {
+		case library.Cran != nil && len(library.Cran.Package) > 0:
 			oldDictionary[library.Cran.Package+library.Cran.Repo] = library
 			oldKeys = append(oldKeys, library.Cran.Package+library.Cran.Repo)
 		}
@@ -1058,7 +1059,8 @@ func resourceClusterUpdate(d *schema.ResourceData, m interface{}) error {
 
 	clusterState := clusterInfo.State
 
-	if model.ContainsClusterState([]model.ClusterState{model.ClusterState(model.ClusterStateTerminated)}, clusterState) {
+	switch {
+	case model.ContainsClusterState([]model.ClusterState{model.ClusterState(model.ClusterStateTerminated)}, clusterState):
 		cluster := parseSchemaToCluster(d, "")
 		cluster.ClusterID = id
 		err := client.Clusters().Edit(cluster)
@@ -1095,7 +1097,7 @@ func resourceClusterUpdate(d *schema.ResourceData, m interface{}) error {
 			}
 		}
 		return resourceClusterRead(d, m)
-	} else if model.ContainsClusterState([]model.ClusterState{model.ClusterState(model.ClusterStateRunning)}, clusterState) {
+	case model.ContainsClusterState([]model.ClusterState{model.ClusterState(model.ClusterStateRunning)}, clusterState):
 		cluster := parseSchemaToCluster(d, "")
 		cluster.ClusterID = id
 
@@ -1124,8 +1126,7 @@ func resourceClusterUpdate(d *schema.ResourceData, m interface{}) error {
 			return err
 		}
 		return resourceClusterRead(d, m)
-	} else if model.ContainsClusterState([]model.ClusterState{model.ClusterStatePending,
-		model.ClusterStateResizing}, clusterState) {
+	case model.ContainsClusterState([]model.ClusterState{model.ClusterStatePending, model.ClusterStateResizing}, clusterState):
 		err = client.Clusters().WaitForClusterRunning(clusterInfo.ClusterID, 30, 120)
 		if err != nil {
 			return err
@@ -1374,7 +1375,6 @@ func parseSchemaToCluster(d *schema.ResourceData, schemaAttPrefix string) model.
 			initScriptsLocations = append(initScriptsLocations, initScriptsConf)
 		}
 		cluster.InitScripts = initScriptsLocations
-
 	}
 
 	//Deal with docker image for DCS
@@ -1403,7 +1403,6 @@ func parseSchemaToCluster(d *schema.ResourceData, schemaAttPrefix string) model.
 			}
 			cluster.DockerImage = &dockerImageData
 		}
-
 	}
 
 	//Deal with spark environment variables

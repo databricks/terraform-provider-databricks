@@ -28,7 +28,7 @@ func resourceNotebook() *schema.Resource {
 		Delete: resourceNotebookDelete,
 
 		Schema: map[string]*schema.Schema{
-			"content": &schema.Schema{
+			"content": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -42,12 +42,12 @@ func resourceNotebook() *schema.Resource {
 				},
 				ValidateFunc: validation.StringIsBase64,
 			},
-			"path": &schema.Schema{
+			"path": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"language": &schema.Schema{
+			"language": {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
@@ -58,19 +58,19 @@ func resourceNotebook() *schema.Resource {
 					string(model.SQL),
 				}, false),
 			},
-			"overwrite": &schema.Schema{
+			"overwrite": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
 				ForceNew: true,
 			},
-			"mkdirs": &schema.Schema{
+			"mkdirs": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  true,
 				ForceNew: true,
 			},
-			"format": &schema.Schema{
+			"format": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  string(model.Source),
@@ -82,11 +82,11 @@ func resourceNotebook() *schema.Resource {
 					string(model.HTML),
 				}, false),
 			},
-			"object_type": &schema.Schema{
+			"object_type": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"object_id": &schema.Schema{
+			"object_id": {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
@@ -196,7 +196,6 @@ func convertBase64ToCheckSum(b64 string) (string, error) {
 		return strconv.Itoa(int(crc32.ChecksumIEEE(dataArr))), nil
 	}
 	return checksum, nil
-
 }
 
 func convertZipBytesToCRC(b64 []byte) (string, error) {
@@ -221,7 +220,7 @@ func convertZipBytesToCRC(b64 []byte) (string, error) {
 	return strconv.Itoa(int(totalSum)), nil
 }
 
-func getDBCCheckSumForCommands(fileIO io.ReadCloser) (int, error) {
+func getDBCCheckSumForCommands(fileIO io.Reader) (int, error) {
 	var stringBuff bytes.Buffer
 	scanner := bufio.NewScanner(fileIO)
 	buf := make([]byte, 0, 64*1024)

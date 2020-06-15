@@ -1,10 +1,11 @@
 package service
 
 import (
-	"github.com/databrickslabs/databricks-terraform/client/model"
-	"github.com/stretchr/testify/assert"
 	"reflect"
 	"testing"
+
+	"github.com/databrickslabs/databricks-terraform/client/model"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestListClustersIntegration(t *testing.T) {
@@ -72,5 +73,4 @@ func TestListClustersIntegration(t *testing.T) {
 	clusterReadInfo, err = client.Clusters().Get(clusterInfo.ClusterID)
 	assert.NoError(t, err, err)
 	assert.True(t, clusterReadInfo.State == model.ClusterStateRunning)
-
 }

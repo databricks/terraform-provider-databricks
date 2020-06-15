@@ -3,8 +3,9 @@ package service
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/databrickslabs/databricks-terraform/client/model"
 	"net/http"
+
+	"github.com/databrickslabs/databricks-terraform/client/model"
 )
 
 // MWSNetworksAPI exposes the mws networks API
@@ -13,12 +14,12 @@ type MWSNetworksAPI struct {
 }
 
 // Create creates a set of MWS Networks for the BYOVPC
-func (a MWSNetworksAPI) Create(mwsAcctId, networkName string, VPCID string, subnetIds []string, securityGroupIds []string) (model.MWSNetwork, error) {
+func (a MWSNetworksAPI) Create(mwsAcctId, networkName string, vpcID string, subnetIds []string, securityGroupIds []string) (model.MWSNetwork, error) {
 	var mwsNetwork model.MWSNetwork
 	networksAPIPath := fmt.Sprintf("/accounts/%s/networks", mwsAcctId)
 	mwsNetworksRequest := model.MWSNetwork{
 		NetworkName:      networkName,
-		VPCID:            VPCID,
+		VPCID:            vpcID,
 		SubnetIds:        subnetIds,
 		SecurityGroupIds: securityGroupIds,
 	}

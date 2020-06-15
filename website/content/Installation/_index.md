@@ -11,7 +11,7 @@ chapter = false
 * To quickly install the binary please execute the following curl command in your shell.
 
 ```bash
-$ curl https://raw.githubusercontent.com/databrickslabs/databricks-terraform/master/godownloader-databricks-provider.sh | bash -s -- -b $HOME/.terraform.d/plugins
+$ curl https://raw.githubusercontent.com/databrickslabs/terraform-provider-databricks/master/godownloader-databricks-provider.sh | bash -s -- -b $HOME/.terraform.d/plugins
 ```
 
 * The command should have moved the binary into your `~/.terraform.d/plugins` folder.
@@ -24,7 +24,7 @@ $ curl https://raw.githubusercontent.com/databrickslabs/databricks-terraform/mas
 * After installing `golang`, `terraform`, and `make` you will now build the artifact.
 
 ```bash
-$ go get -v -u github.com/databrickslabs/databricks-terraform && cd $GOPATH/src/github.com/databrickslabs/databricks-terraform 
+$ go get -v -u github.com/databrickslabs/terraform-provider-databricks && cd $GOPATH/src/github.com/databrickslabs/terraform-provider-databricks 
 ```
 
 * When you are in the root directory of the repository please run:
@@ -55,7 +55,7 @@ $ mkdir -p ~/.terraform.d/plugins/ && cp terraform-provider-databricks ~/.terraf
 * Then build the docker image with this command (this command will trigger a multi-stage docker build):
 
 ```bash
-$ docker build -t databricks-terraform . 
+$ docker build -t terraform-provider-databricks . 
 ```
 
 * Then run the execute the terraform binary via the following command and volume mount. Make sure that you are in the directory
@@ -63,9 +63,9 @@ $ docker build -t databricks-terraform .
  the terraform binary.
  
 ```bash
-$ docker run -it -v $(pwd):/workpace -w /workpace databricks-terraform init
-$ docker run -it -v $(pwd):/workpace -w /workpace databricks-terraform plan
-$ docker run -it -v $(pwd):/workpace -w /workpace databricks-terraform apply
+$ docker run -it -v $(pwd):/workpace -w /workpace terraform-provider-databricks init
+$ docker run -it -v $(pwd):/workpace -w /workpace terraform-provider-databricks plan
+$ docker run -it -v $(pwd):/workpace -w /workpace terraform-provider-databricks apply
 ```
 
 {{% /tab %}}

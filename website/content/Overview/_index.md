@@ -12,7 +12,7 @@ chapter = false
 To quickly install the binary please execute the following curl command in your shell.
 
 ```bash
-$ curl https://raw.githubusercontent.com/databrickslabs/databricks-terraform/master/godownloader-databricks-provider.sh | bash -s -- -b $HOME/.terraform.d/plugins
+$ curl https://raw.githubusercontent.com/databrickslabs/terraform-provider-databricks/master/godownloader-databricks-provider.sh | bash -s -- -b $HOME/.terraform.d/plugins
 ```
 
 The command should have moved the binary into your `~/.terraform.d/plugins` folder.

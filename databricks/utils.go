@@ -5,6 +5,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/aws/aws-sdk-go/aws/arn"
+
 	"github.com/databrickslabs/databricks-terraform/client/model"
 	"github.com/databrickslabs/databricks-terraform/client/service"
 )
@@ -96,4 +98,25 @@ func unpackMWSAccountID(combined string) (PackagedMWSIds, error) {
 	packagedMWSIds.MwsAcctID = parts[0]
 	packagedMWSIds.ResourceID = parts[1]
 	return packagedMWSIds, nil
+}
+
+// ValidateInstanceProfileARN is a ValidateFunc that ensures the role id is a valid aws iam instance profile arn
+func ValidateInstanceProfileARN(val interface{}, key string) (warns []string, errs []error) {
+	v := val.(string)
+
+	if v == "" {
+		return nil, []error{fmt.Errorf("%s is empty got: %s, must be an aws instance profile arn", key, v)}
+	}
+
+	// Parse and verify instance profiles
+	instanceProfileArn, err := arn.Parse(v)
+	if err != nil {
+		return nil, []error{fmt.Errorf("%s is invalid got: %s received error: %w", key, v, err)}
+	}
+	// Verify instance profile resource type, Resource gets parsed as instance-profile/<profile-name>
+	if !strings.HasPrefix(instanceProfileArn.Resource, "instance-profile") {
+		return nil, []error{fmt.Errorf("%s must be an instance profile resource, got: %s in %s",
+			key, instanceProfileArn.Resource, v)}
+	}
+	return nil, nil
 }

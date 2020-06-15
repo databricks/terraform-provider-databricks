@@ -5,6 +5,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/aws/aws-sdk-go/aws/arn"
+
 	"github.com/databrickslabs/databricks-terraform/client/model"
 	"github.com/databrickslabs/databricks-terraform/client/service"
 )
@@ -67,7 +69,6 @@ func changeClusterIntoRunningState(clusterID string, client *service.DBApiClient
 	}
 
 	return fmt.Errorf("cluster is in a non recoverable state: %s", currentState)
-
 }
 
 func isClusterMissing(errorMsg, resourceID string) bool {
@@ -77,24 +78,45 @@ func isClusterMissing(errorMsg, resourceID string) bool {
 
 // PackagedMWSIds is a struct that contains both the MWS acct id and the ResourceId (resources are networks, creds, etc.)
 type PackagedMWSIds struct {
-	MwsAcctId  string
-	ResourceId string
+	MwsAcctID  string
+	ResourceID string
 }
 
 // Helps package up MWSAccountId with another id such as credentials id or network id
 // uses format mwsAcctId/otherId
-func packMWSAccountId(idsToPackage PackagedMWSIds) string {
-	return fmt.Sprintf("%s/%s", idsToPackage.MwsAcctId, idsToPackage.ResourceId)
+func packMWSAccountID(idsToPackage PackagedMWSIds) string {
+	return fmt.Sprintf("%s/%s", idsToPackage.MwsAcctID, idsToPackage.ResourceID)
 }
 
 // Helps unpackage MWSAccountId from another id such as credentials id or network id
-func unpackMWSAccountId(combined string) (PackagedMWSIds, error) {
+func unpackMWSAccountID(combined string) (PackagedMWSIds, error) {
 	var packagedMWSIds PackagedMWSIds
 	parts := strings.Split(combined, "/")
 	if len(parts) != 2 {
 		return packagedMWSIds, fmt.Errorf("unpacked account has more than or less than two parts, combined id: %s", combined)
 	}
-	packagedMWSIds.MwsAcctId = parts[0]
-	packagedMWSIds.ResourceId = parts[1]
+	packagedMWSIds.MwsAcctID = parts[0]
+	packagedMWSIds.ResourceID = parts[1]
 	return packagedMWSIds, nil
+}
+
+// ValidateInstanceProfileARN is a ValidateFunc that ensures the role id is a valid aws iam instance profile arn
+func ValidateInstanceProfileARN(val interface{}, key string) (warns []string, errs []error) {
+	v := val.(string)
+
+	if v == "" {
+		return nil, []error{fmt.Errorf("%s is empty got: %s, must be an aws instance profile arn", key, v)}
+	}
+
+	// Parse and verify instance profiles
+	instanceProfileArn, err := arn.Parse(v)
+	if err != nil {
+		return nil, []error{fmt.Errorf("%s is invalid got: %s received error: %w", key, v, err)}
+	}
+	// Verify instance profile resource type, Resource gets parsed as instance-profile/<profile-name>
+	if !strings.HasPrefix(instanceProfileArn.Resource, "instance-profile") {
+		return nil, []error{fmt.Errorf("%s must be an instance profile resource, got: %s in %s",
+			key, instanceProfileArn.Resource, v)}
+	}
+	return nil, nil
 }

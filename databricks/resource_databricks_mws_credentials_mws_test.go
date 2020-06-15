@@ -3,11 +3,12 @@ package databricks
 import (
 	"errors"
 	"fmt"
+	"os"
+	"testing"
+
 	"github.com/databrickslabs/databricks-terraform/client/model"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
-	"os"
-	"testing"
 )
 
 func TestAccMWSCredentials(t *testing.T) {
@@ -17,9 +18,9 @@ func TestAccMWSCredentials(t *testing.T) {
 	// the acctest package includes many helpers such as RandStringFromCharSet
 	// See https://godoc.org/github.com/hashicorp/terraform-plugin-sdk/helper/acctest
 	//scope := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
-	mwsAcctId := os.Getenv("DATABRICKS_MWS_ACCT_ID")
+	mwsAcctID := os.Getenv("DATABRICKS_MWS_ACCT_ID")
 	mwsHost := os.Getenv("DATABRICKS_MWS_HOST")
-	awsAcctId := "999999999999"
+	awsAcctID := "999999999999"
 	credentialsName := "test-mws-credentials-tf"
 	roleName := "terraform-creds-role"
 
@@ -29,26 +30,26 @@ func TestAccMWSCredentials(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				// use a dynamic configuration with the random name from above
-				Config: testMWSCredentialsCreate(mwsAcctId, mwsHost, awsAcctId, roleName, credentialsName),
+				Config: testMWSCredentialsCreate(mwsAcctID, mwsHost, awsAcctID, roleName, credentialsName),
 				// compose a basic test, checking both remote and local values
 				Check: resource.ComposeTestCheckFunc(
 					// query the API to retrieve the tokenInfo object
 					testMWSCredentialsResourceExists("databricks_mws_credentials.my_e2_credentials", &MWSCredentials, t),
 					// verify local values
-					resource.TestCheckResourceAttr("databricks_mws_credentials.my_e2_credentials", "account_id", mwsAcctId),
+					resource.TestCheckResourceAttr("databricks_mws_credentials.my_e2_credentials", "account_id", mwsAcctID),
 					resource.TestCheckResourceAttr("databricks_mws_credentials.my_e2_credentials", "credentials_name", credentialsName),
 				),
 				Destroy: false,
 			},
 			{
 				// use a dynamic configuration with the random name from above
-				Config: testMWSCredentialsCreate(mwsAcctId, mwsHost, awsAcctId, roleName, credentialsName),
+				Config: testMWSCredentialsCreate(mwsAcctID, mwsHost, awsAcctID, roleName, credentialsName),
 				// compose a basic test, checking both remote and local values
 				Check: resource.ComposeTestCheckFunc(
 					// query the API to retrieve the tokenInfo object
 					testMWSCredentialsResourceExists("databricks_mws_credentials.my_e2_credentials", &MWSCredentials, t),
 					// verify local values
-					resource.TestCheckResourceAttr("databricks_mws_credentials.my_e2_credentials", "account_id", mwsAcctId),
+					resource.TestCheckResourceAttr("databricks_mws_credentials.my_e2_credentials", "account_id", mwsAcctID),
 					resource.TestCheckResourceAttr("databricks_mws_credentials.my_e2_credentials", "credentials_name", credentialsName),
 				),
 				ExpectNonEmptyPlan: false,
@@ -63,11 +64,11 @@ func TestAccMWSCredentials(t *testing.T) {
 					}
 				},
 				// use a dynamic configuration with the random name from above
-				Config: testMWSCredentialsCreate(mwsAcctId, mwsHost, awsAcctId, roleName, credentialsName),
+				Config: testMWSCredentialsCreate(mwsAcctID, mwsHost, awsAcctID, roleName, credentialsName),
 				// compose a basic test, checking both remote and local values
 				Check: resource.ComposeTestCheckFunc(
 					// verify local values
-					resource.TestCheckResourceAttr("databricks_mws_credentials.my_e2_credentials", "account_id", mwsAcctId),
+					resource.TestCheckResourceAttr("databricks_mws_credentials.my_e2_credentials", "account_id", mwsAcctID),
 					resource.TestCheckResourceAttr("databricks_mws_credentials.my_e2_credentials", "credentials_name", credentialsName),
 				),
 				Destroy: false,
@@ -83,11 +84,11 @@ func testMWSCredentialsResourceDestroy(s *terraform.State) error {
 		if rs.Type != "databricks_mws_credentials" {
 			continue
 		}
-		packagedMWSIds, err := unpackMWSAccountId(rs.Primary.ID)
+		packagedMWSIds, err := unpackMWSAccountID(rs.Primary.ID)
 		if err != nil {
 			return err
 		}
-		_, err = client.MWSCredentials().Read(packagedMWSIds.MwsAcctId, packagedMWSIds.ResourceId)
+		_, err = client.MWSCredentials().Read(packagedMWSIds.MwsAcctID, packagedMWSIds.ResourceID)
 		if err != nil {
 			return nil
 		}
@@ -107,11 +108,11 @@ func testMWSCredentialsResourceExists(n string, mwsCreds *model.MWSCredentials, 
 
 		// retrieve the configured client from the test setup
 		conn := getMWSClient()
-		packagedMWSIds, err := unpackMWSAccountId(rs.Primary.ID)
+		packagedMWSIds, err := unpackMWSAccountID(rs.Primary.ID)
 		if err != nil {
 			return err
 		}
-		resp, err := conn.MWSCredentials().Read(packagedMWSIds.MwsAcctId, packagedMWSIds.ResourceId)
+		resp, err := conn.MWSCredentials().Read(packagedMWSIds.MwsAcctID, packagedMWSIds.ResourceID)
 		if err != nil {
 			return err
 		}
@@ -122,7 +123,7 @@ func testMWSCredentialsResourceExists(n string, mwsCreds *model.MWSCredentials, 
 	}
 }
 
-func testMWSCredentialsCreate(mwsAcctId, mwsHost, awsAcctId, roleName, credentialsName string) string {
+func testMWSCredentialsCreate(mwsAcctID, mwsHost, awsAcctID, roleName, credentialsName string) string {
 	return fmt.Sprintf(`
 								provider "databricks" {
 								  host = "%s"
@@ -133,5 +134,5 @@ func testMWSCredentialsCreate(mwsAcctId, mwsHost, awsAcctId, roleName, credentia
 								  credentials_name = "%s"
 								  role_arn         = "arn:aws:iam::%s:role/%s"
 								}
-								`, mwsHost, mwsAcctId, credentialsName, awsAcctId, roleName)
+								`, mwsHost, mwsAcctID, credentialsName, awsAcctID, roleName)
 }

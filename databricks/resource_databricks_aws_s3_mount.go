@@ -12,7 +12,7 @@ func resourceAWSS3Mount() *schema.Resource {
 		Delete: resourceAWSS3Delete,
 
 		Schema: map[string]*schema.Schema{
-			"cluster_id": &schema.Schema{
+			"cluster_id": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,

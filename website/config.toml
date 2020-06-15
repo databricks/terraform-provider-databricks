@@ -1,4 +1,4 @@
-baseURL = "//databrickslabs.github.io/databricks-terraform/"
+baseURL = "//databrickslabs.github.io/terraform-provider-databricks/"
 languageCode = "en-US"
 defaultContentLanguage = "en"
 
@@ -14,7 +14,7 @@ home = [ "HTML", "RSS", "JSON"]
 [[Languages.en.menu.shortcuts]]
 name = "<i class='fab fa-fw fa-github'></i> GitHub repo"
 identifier = "ds"
-url = "https://github.com/databrickslabs/databricks-terraform"
+url = "https://github.com/databrickslabs/terraform-provider-databricks"
 weight = 10
 
 linenos = true

@@ -3,6 +3,7 @@ package service
 import (
 	"encoding/json"
 	"fmt"
+
 	"github.com/databrickslabs/databricks-terraform/client/model"
 
 	"net/http"
@@ -52,7 +53,6 @@ func (a MWSStorageConfigurationsAPI) Read(mwsAcctId, storageConfigurationID stri
 
 // Delete deletes the configuration for the root s3 bucket
 func (a MWSStorageConfigurationsAPI) Delete(mwsAcctId, storageConfigurationID string) error {
-
 	storageConfigurationAPIPath := fmt.Sprintf("/accounts/%s/storage-configurations/%s", mwsAcctId, storageConfigurationID)
 
 	_, err := a.Client.performQuery(http.MethodDelete, storageConfigurationAPIPath, "2.0", nil, nil, nil)

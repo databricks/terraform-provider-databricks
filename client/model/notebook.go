@@ -1,6 +1,6 @@
 package model
 
-// Language is a custom type for langauge types in Databricks notebooks
+// Language is a custom type for language types in Databricks notebooks
 type Language string
 
 // ObjectType is a custom type for object types in Databricks workspaces
@@ -17,7 +17,7 @@ const (
 	DBC     ExportFormat = "DBC"
 )
 
-// Different types of langauge formats available on Databricks
+// Different types of language formats available on Databricks
 const (
 	Scala  Language = "SCALA"
 	Python Language = "PYTHON"

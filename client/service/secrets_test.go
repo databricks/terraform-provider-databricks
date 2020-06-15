@@ -1,9 +1,10 @@
 package service
 
 import (
-	"github.com/databrickslabs/databricks-terraform/client/model"
 	"net/http"
 	"testing"
+
+	"github.com/databrickslabs/databricks-terraform/client/model"
 )
 
 //go:generate easytags $GOFILE
@@ -42,7 +43,6 @@ func TestSecretsAPI_Create(t *testing.T) {
 }
 
 func TestSecretsAPI_Delete(t *testing.T) {
-
 	type args struct {
 		Scope string `json:"scope"`
 		Key   string `json:"key"`

@@ -1,9 +1,10 @@
 package service
 
 import (
+	"testing"
+
 	"github.com/databrickslabs/databricks-terraform/client/model"
 	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
 func TestLibraryCreate(t *testing.T) {

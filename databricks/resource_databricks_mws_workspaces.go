@@ -3,11 +3,12 @@ package databricks
 import (
 	"bytes"
 	"fmt"
+	"reflect"
+
 	"github.com/databrickslabs/databricks-terraform/client/model"
 	"github.com/databrickslabs/databricks-terraform/client/service"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
-	"reflect"
 
 	"log"
 	"strconv"

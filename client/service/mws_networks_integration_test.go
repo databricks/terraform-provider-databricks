@@ -1,9 +1,10 @@
 package service
 
 import (
-	"github.com/stretchr/testify/assert"
 	"os"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestMWSNetworks(t *testing.T) {
@@ -27,5 +28,4 @@ func TestMWSNetworks(t *testing.T) {
 	myNetworkFull, err := client.MWSNetworks().Read(acctId, myNetwork.NetworkID)
 	assert.NoError(t, err, err)
 	t.Log(myNetworkFull)
-
 }

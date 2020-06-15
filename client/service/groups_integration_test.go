@@ -2,9 +2,10 @@ package service
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/databrickslabs/databricks-terraform/client/model"
 	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
 func TestFmt(t *testing.T) {
@@ -110,5 +111,4 @@ func TestReadInheritedRolesFromGroup(t *testing.T) {
 		}
 		return false
 	}(myTestGroupInfo.InheritedRoles, myTestRole))
-
 }

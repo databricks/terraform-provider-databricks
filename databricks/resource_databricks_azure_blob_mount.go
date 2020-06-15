@@ -17,7 +17,7 @@ func resourceAzureBlobMount() *schema.Resource {
 		Delete: resourceAzureBlobMountDelete,
 
 		Schema: map[string]*schema.Schema{
-			"cluster_id": &schema.Schema{
+			"cluster_id": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,

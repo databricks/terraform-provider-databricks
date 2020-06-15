@@ -18,7 +18,7 @@ func TestAccMWSWorkspaces(t *testing.T) {
 	// the acctest package includes many helpers such as RandStringFromCharSet
 	// See https://godoc.org/github.com/hashicorp/terraform-plugin-sdk/helper/acctest
 	//scope := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
-	mwsAcctId := os.Getenv("DATABRICKS_MWS_ACCT_ID")
+	mwsAcctID := os.Getenv("DATABRICKS_MWS_ACCT_ID")
 	mwsHost := os.Getenv("DATABRICKS_MWS_HOST")
 	credentialsName := "tf-workspace-test-creds"
 	roleArn := os.Getenv("TEST_MWS_CROSS_ACCT_ROLE")
@@ -28,7 +28,7 @@ func TestAccMWSWorkspaces(t *testing.T) {
 	deploymentName := fmt.Sprintf("%s-dep", workspaceName)
 	awsRegion := os.Getenv("DATABRICKS_MWS_AWS_REGION")
 	networkName := "tf-workspace-test-network"
-	vpcId := os.Getenv("TEST_MWS_VPC_ID")
+	vpcID := os.Getenv("TEST_MWS_VPC_ID")
 	subnet1 := os.Getenv("TEST_MWS_SUBNET_1")
 	subnet2 := os.Getenv("TEST_MWS_SUBNET_2")
 	sg := os.Getenv("TEST_MWS_SG")
@@ -39,8 +39,8 @@ func TestAccMWSWorkspaces(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				// use a dynamic configuration with the random name from above
-				Config: testMWSWorkspacesCreate(mwsAcctId, mwsHost, credentialsName, roleArn, storageConfigName, bucketName,
-					workspaceName, deploymentName, awsRegion, networkName, vpcId, subnet1, subnet2, sg),
+				Config: testMWSWorkspacesCreate(mwsAcctID, mwsHost, credentialsName, roleArn, storageConfigName, bucketName,
+					workspaceName, deploymentName, awsRegion, networkName, vpcID, subnet1, subnet2, sg),
 				//// compose a basic test, checking both remote and local values
 				Check: resource.ComposeTestCheckFunc(
 					// verify that after creation the workspace_status is in a running state.
@@ -59,15 +59,15 @@ func testMWSWorkspacesResourceDestroy(s *terraform.State) error {
 		if rs.Type != "databricks_mws_workspaces" {
 			continue
 		}
-		packagedMWSIds, err := unpackMWSAccountId(rs.Primary.ID)
+		packagedMWSIds, err := unpackMWSAccountID(rs.Primary.ID)
 		if err != nil {
 			return err
 		}
-		idInt64, err := strconv.ParseInt(packagedMWSIds.ResourceId, 10, 64)
+		idInt64, err := strconv.ParseInt(packagedMWSIds.ResourceID, 10, 64)
 		if err != nil {
 			return err
 		}
-		_, err = client.MWSWorkspaces().Read(packagedMWSIds.MwsAcctId, idInt64)
+		_, err = client.MWSWorkspaces().Read(packagedMWSIds.MwsAcctID, idInt64)
 		if err != nil {
 			return nil
 		}
@@ -76,8 +76,8 @@ func testMWSWorkspacesResourceDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testMWSWorkspacesCreate(mwsAcctId, mwsHost, credentialsName, roleArn, storageConfigName, bucketName,
-	workspaceName, deploymentName, awsRegion, networkName, vpcId, subnet1, subnet2, sg string) string {
+func testMWSWorkspacesCreate(mwsAcctID, mwsHost, credentialsName, roleArn, storageConfigName, bucketName,
+	workspaceName, deploymentName, awsRegion, networkName, vpcID, subnet1, subnet2, sg string) string {
 	return fmt.Sprintf(`
 								provider "databricks" {
 								  host = "%[1]s"
@@ -116,6 +116,6 @@ func testMWSWorkspacesCreate(mwsAcctId, mwsHost, credentialsName, roleArn, stora
 								  network_id = databricks_mws_networks.my_network.network_id
 								  verify_workspace_runnning = true
 								}
-								`, mwsHost, mwsAcctId, credentialsName, roleArn, storageConfigName, bucketName,
-		workspaceName, deploymentName, awsRegion, networkName, vpcId, subnet1, subnet2, sg)
+								`, mwsHost, mwsAcctID, credentialsName, roleArn, storageConfigName, bucketName,
+		workspaceName, deploymentName, awsRegion, networkName, vpcID, subnet1, subnet2, sg)
 }

@@ -78,25 +78,25 @@ func isClusterMissing(errorMsg, resourceID string) bool {
 
 // PackagedMWSIds is a struct that contains both the MWS acct id and the ResourceId (resources are networks, creds, etc.)
 type PackagedMWSIds struct {
-	MwsAcctId  string
-	ResourceId string
+	MwsAcctID  string
+	ResourceID string
 }
 
 // Helps package up MWSAccountId with another id such as credentials id or network id
 // uses format mwsAcctId/otherId
-func packMWSAccountId(idsToPackage PackagedMWSIds) string {
-	return fmt.Sprintf("%s/%s", idsToPackage.MwsAcctId, idsToPackage.ResourceId)
+func packMWSAccountID(idsToPackage PackagedMWSIds) string {
+	return fmt.Sprintf("%s/%s", idsToPackage.MwsAcctID, idsToPackage.ResourceID)
 }
 
 // Helps unpackage MWSAccountId from another id such as credentials id or network id
-func unpackMWSAccountId(combined string) (PackagedMWSIds, error) {
+func unpackMWSAccountID(combined string) (PackagedMWSIds, error) {
 	var packagedMWSIds PackagedMWSIds
 	parts := strings.Split(combined, "/")
 	if len(parts) != 2 {
 		return packagedMWSIds, fmt.Errorf("unpacked account has more than or less than two parts, combined id: %s", combined)
 	}
-	packagedMWSIds.MwsAcctId = parts[0]
-	packagedMWSIds.ResourceId = parts[1]
+	packagedMWSIds.MwsAcctID = parts[0]
+	packagedMWSIds.ResourceID = parts[1]
 	return packagedMWSIds, nil
 }
 

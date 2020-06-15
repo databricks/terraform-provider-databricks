@@ -21,12 +21,10 @@ func resourceGroup() *schema.Resource {
 				Required: true,
 			},
 			"allow_cluster_create": {
-				Deprecated: "Will be deprecated in a future release for general permissions api",
 				Type:       schema.TypeBool,
 				Optional:   true,
 			},
 			"allow_instance_pool_create": {
-				Deprecated: "Will be deprecated in a future release for general permissions api",
 				Type:       schema.TypeBool,
 				Optional:   true,
 			},

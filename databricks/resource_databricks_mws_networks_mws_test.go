@@ -17,7 +17,7 @@ func TestAccMWSNetworks(t *testing.T) {
 	// the acctest package includes many helpers such as RandStringFromCharSet
 	// See https://godoc.org/github.com/hashicorp/terraform-plugin-sdk/helper/acctest
 	//scope := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
-	mwsAcctId := os.Getenv("DATABRICKS_MWS_ACCT_ID")
+	mwsAcctID := os.Getenv("DATABRICKS_MWS_ACCT_ID")
 	mwsHost := os.Getenv("DATABRICKS_MWS_HOST")
 	networkName := "test-mws-network-tf"
 
@@ -33,26 +33,26 @@ func TestAccMWSNetworks(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				// use a dynamic configuration with the random name from above
-				Config: testMWSNetworkCreate(mwsAcctId, mwsHost, networkName, vpc, subnet1, subnet2, sg1, sg2),
+				Config: testMWSNetworkCreate(mwsAcctID, mwsHost, networkName, vpc, subnet1, subnet2, sg1, sg2),
 				// compose a basic test, checking both remote and local values
 				Check: resource.ComposeTestCheckFunc(
 					// query the API to retrieve the tokenInfo object
 					testMWSNetworkResourceExists("databricks_mws_networks.my_network", &MWSNetwork, t),
 					// verify local values
-					resource.TestCheckResourceAttr("databricks_mws_networks.my_network", "account_id", mwsAcctId),
+					resource.TestCheckResourceAttr("databricks_mws_networks.my_network", "account_id", mwsAcctID),
 					resource.TestCheckResourceAttr("databricks_mws_networks.my_network", "network_name", networkName),
 				),
 				Destroy: false,
 			},
 			{
 				// use a dynamic configuration with the random name from above
-				Config: testMWSNetworkCreate(mwsAcctId, mwsHost, networkName, vpc, subnet1, subnet2, sg1, sg2),
+				Config: testMWSNetworkCreate(mwsAcctID, mwsHost, networkName, vpc, subnet1, subnet2, sg1, sg2),
 				// compose a basic test, checking both remote and local values
 				Check: resource.ComposeTestCheckFunc(
 					// query the API to retrieve the tokenInfo object
 					testMWSNetworkResourceExists("databricks_mws_networks.my_network", &MWSNetwork, t),
 					// verify local values
-					resource.TestCheckResourceAttr("databricks_mws_networks.my_network", "account_id", mwsAcctId),
+					resource.TestCheckResourceAttr("databricks_mws_networks.my_network", "account_id", mwsAcctID),
 					resource.TestCheckResourceAttr("databricks_mws_networks.my_network", "network_name", networkName),
 				),
 				ExpectNonEmptyPlan: false,
@@ -67,13 +67,13 @@ func TestAccMWSNetworks(t *testing.T) {
 					}
 				},
 				// use a dynamic configuration with the random name from above
-				Config: testMWSNetworkCreate(mwsAcctId, mwsHost, networkName, vpc, subnet1, subnet2, sg1, sg2),
+				Config: testMWSNetworkCreate(mwsAcctID, mwsHost, networkName, vpc, subnet1, subnet2, sg1, sg2),
 				// compose a basic test, checking both remote and local values
 				Check: resource.ComposeTestCheckFunc(
 					// query the API to retrieve the tokenInfo object
 					testMWSNetworkResourceExists("databricks_mws_networks.my_network", &MWSNetwork, t),
 					// verify local values
-					resource.TestCheckResourceAttr("databricks_mws_networks.my_network", "account_id", mwsAcctId),
+					resource.TestCheckResourceAttr("databricks_mws_networks.my_network", "account_id", mwsAcctID),
 					resource.TestCheckResourceAttr("databricks_mws_networks.my_network", "network_name", networkName),
 				),
 				ExpectNonEmptyPlan: false,
@@ -90,11 +90,11 @@ func testMWSNetworkResourceDestroy(s *terraform.State) error {
 		if rs.Type != "databricks_mws_storage_configurations" {
 			continue
 		}
-		packagedMWSIds, err := unpackMWSAccountId(rs.Primary.ID)
+		packagedMWSIds, err := unpackMWSAccountID(rs.Primary.ID)
 		if err != nil {
 			return err
 		}
-		_, err = client.MWSNetworks().Read(packagedMWSIds.MwsAcctId, packagedMWSIds.ResourceId)
+		_, err = client.MWSNetworks().Read(packagedMWSIds.MwsAcctID, packagedMWSIds.ResourceID)
 		if err != nil {
 			return nil
 		}
@@ -114,11 +114,11 @@ func testMWSNetworkResourceExists(n string, mwsCreds *model.MWSNetwork, t *testi
 
 		// retrieve the configured client from the test setup
 		conn := getMWSClient()
-		packagedMWSIds, err := unpackMWSAccountId(rs.Primary.ID)
+		packagedMWSIds, err := unpackMWSAccountID(rs.Primary.ID)
 		if err != nil {
 			return err
 		}
-		resp, err := conn.MWSNetworks().Read(packagedMWSIds.MwsAcctId, packagedMWSIds.ResourceId)
+		resp, err := conn.MWSNetworks().Read(packagedMWSIds.MwsAcctID, packagedMWSIds.ResourceID)
 		if err != nil {
 			return err
 		}
@@ -129,7 +129,7 @@ func testMWSNetworkResourceExists(n string, mwsCreds *model.MWSNetwork, t *testi
 	}
 }
 
-func testMWSNetworkCreate(mwsAcctId, mwsHost, networkName, vpcId, subnetId1, subnetId2, sgId1, sgId2 string) string {
+func testMWSNetworkCreate(mwsAcctID, mwsHost, networkName, vpcID, subnetID1, subnetID2, sgID1, sgID2 string) string {
 	return fmt.Sprintf(`
 								provider "databricks" {
 								  host = "%s"
@@ -149,5 +149,5 @@ func testMWSNetworkCreate(mwsAcctId, mwsHost, networkName, vpcId, subnetId1, sub
 								  ]
 								}
 
-								`, mwsHost, mwsAcctId, networkName, vpcId, subnetId1, subnetId2, sgId1, sgId2)
+								`, mwsHost, mwsAcctID, networkName, vpcID, subnetID1, subnetID2, sgID1, sgID2)
 }

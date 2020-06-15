@@ -19,12 +19,12 @@ func resourceCluster() *schema.Resource {
 		Delete: resourceClusterDelete,
 
 		Schema: map[string]*schema.Schema{
-			"num_workers": &schema.Schema{
+			"num_workers": {
 				Type:          schema.TypeInt,
 				Optional:      true,
 				ConflictsWith: []string{"autoscale"},
 			},
-			"autoscale": &schema.Schema{
+			"autoscale": {
 				Type:       schema.TypeSet,
 				Optional:   true,
 				MaxItems:   1,
@@ -43,20 +43,20 @@ func resourceCluster() *schema.Resource {
 				},
 				ConflictsWith: []string{"num_workers"},
 			},
-			"cluster_name": &schema.Schema{
+			"cluster_name": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"spark_version": &schema.Schema{
+			"spark_version": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"spark_conf": &schema.Schema{
+			"spark_conf": {
 				Type:     schema.TypeMap,
 				Optional: true,
 			},
-			"aws_attributes": &schema.Schema{
+			"aws_attributes": {
 				Type:     schema.TypeList,
 				Optional: true,
 				MaxItems: 1,
@@ -99,29 +99,29 @@ func resourceCluster() *schema.Resource {
 					},
 				},
 			},
-			"driver_node_type_id": &schema.Schema{
+			"driver_node_type_id": {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
 				ConflictsWith: []string{"instance_pool_id"},
 			},
-			"node_type_id": &schema.Schema{
+			"node_type_id": {
 				Type:          schema.TypeString,
 				Optional:      true,
 				ConflictsWith: []string{"instance_pool_id"},
 				AtLeastOneOf:  []string{"instance_pool_id"},
 			},
-			"ssh_public_keys": &schema.Schema{
+			"ssh_public_keys": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				//	TODO: Validate less than 10 values
 			},
-			"custom_tags": &schema.Schema{
+			"custom_tags": {
 				Type:     schema.TypeMap,
 				Optional: true,
 			},
-			"cluster_log_conf": &schema.Schema{
+			"cluster_log_conf": {
 				Type:     schema.TypeList,
 				Optional: true,
 				MaxItems: 1,
@@ -190,7 +190,7 @@ func resourceCluster() *schema.Resource {
 					},
 				},
 			},
-			"init_scripts": &schema.Schema{
+			"init_scripts": {
 				Type:     schema.TypeList,
 				Optional: true,
 				MaxItems: 10,
@@ -251,7 +251,7 @@ func resourceCluster() *schema.Resource {
 					},
 				},
 			},
-			"docker_image": &schema.Schema{
+			"docker_image": {
 				Type:     schema.TypeList,
 				Optional: true,
 				MaxItems: 1,
@@ -282,33 +282,33 @@ func resourceCluster() *schema.Resource {
 					},
 				},
 			},
-			"spark_env_vars": &schema.Schema{
+			"spark_env_vars": {
 				Type:     schema.TypeMap,
 				Optional: true,
 			},
-			"autotermination_minutes": &schema.Schema{
+			"autotermination_minutes": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Default:  60,
 				//Computed: true,
 			},
-			"enable_elastic_disk": &schema.Schema{
+			"enable_elastic_disk": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
 			},
-			"instance_pool_id": &schema.Schema{
+			"instance_pool_id": {
 				Type:          schema.TypeString,
 				Optional:      true,
 				ConflictsWith: []string{"node_type_id", "driver_node_type_id", "aws_attributes"},
 				AtLeastOneOf:  []string{"node_type_id"},
 			},
-			"idempotency_token": &schema.Schema{
+			"idempotency_token": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				ForceNew: true,
 			},
-			"library_jar": &schema.Schema{
+			"library_jar": {
 				Type:       schema.TypeSet,
 				Optional:   true,
 				ConfigMode: schema.SchemaConfigModeAttr,
@@ -332,7 +332,7 @@ func resourceCluster() *schema.Resource {
 					},
 				},
 			},
-			"library_egg": &schema.Schema{
+			"library_egg": {
 				Type:       schema.TypeSet,
 				Optional:   true,
 				ConfigMode: schema.SchemaConfigModeAttr,
@@ -356,7 +356,7 @@ func resourceCluster() *schema.Resource {
 					},
 				},
 			},
-			"library_whl": &schema.Schema{
+			"library_whl": {
 				Type:       schema.TypeSet,
 				Optional:   true,
 				ConfigMode: schema.SchemaConfigModeAttr,
@@ -380,7 +380,7 @@ func resourceCluster() *schema.Resource {
 					},
 				},
 			},
-			"library_pypi": &schema.Schema{
+			"library_pypi": {
 				Type:       schema.TypeSet,
 				Optional:   true,
 				ConfigMode: schema.SchemaConfigModeAttr,
@@ -409,7 +409,7 @@ func resourceCluster() *schema.Resource {
 					},
 				},
 			},
-			"library_maven": &schema.Schema{
+			"library_maven": {
 				Type:       schema.TypeSet,
 				Optional:   true,
 				ConfigMode: schema.SchemaConfigModeAttr,
@@ -442,7 +442,7 @@ func resourceCluster() *schema.Resource {
 					},
 				},
 			},
-			"library_cran": &schema.Schema{
+			"library_cran": {
 				Type:       schema.TypeSet,
 				Optional:   true,
 				ConfigMode: schema.SchemaConfigModeAttr,
@@ -467,23 +467,23 @@ func resourceCluster() *schema.Resource {
 					},
 				},
 			},
-			"cluster_id": &schema.Schema{
+			"cluster_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"default_tags": &schema.Schema{
+			"default_tags": {
 				Type:     schema.TypeMap,
 				Computed: true,
 			},
-			"state": &schema.Schema{
+			"state": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"state_message": &schema.Schema{
+			"state_message": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"single_user_name": &schema.Schema{
+			"single_user_name": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},

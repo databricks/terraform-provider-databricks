@@ -15,18 +15,18 @@ func resourceSecretScope() *schema.Resource {
 		Delete: resourceSecretScopeDelete,
 
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"initial_manage_principal": &schema.Schema{
+			"initial_manage_principal": {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
 				Default:  "users",
 			},
-			"backend_type": &schema.Schema{
+			"backend_type": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},

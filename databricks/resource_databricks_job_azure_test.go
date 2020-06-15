@@ -106,21 +106,21 @@ func testAzureJobValuesNewCluster(t *testing.T, job *model.Job) resource.TestChe
 }
 
 func testAzureJobResourceNewCluster() string {
-	return fmt.Sprintf(`
-								resource "databricks_job" "my_job" {
-								  new_cluster  {
-									autoscale  {
-									  min_workers = 2
-									  max_workers = 3
-									}
-									spark_version = "6.4.x-scala2.11"
-									node_type_id = "Standard_DS3_v2"
-								  }
-								  notebook_path = "/Users/jane.doe@databricks.com/my-demo-notebook"
-								  name = "my-demo-notebook"
-								  timeout_seconds = 3600
-								  max_retries = 1
-								  max_concurrent_runs = 1
-								}
-								`)
+	return `
+	resource "databricks_job" "my_job" {
+	  new_cluster  {
+		autoscale  {
+		  min_workers = 2
+		  max_workers = 3
+		}
+		spark_version = "6.4.x-scala2.11"
+		node_type_id = "Standard_DS3_v2"
+	  }
+	  notebook_path = "/Users/jane.doe@databricks.com/my-demo-notebook"
+	  name = "my-demo-notebook"
+	  timeout_seconds = 3600
+	  max_retries = 1
+	  max_concurrent_runs = 1
+	}
+	`
 }

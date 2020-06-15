@@ -33,6 +33,10 @@ func Provider(version string) terraform.ResourceProvider {
 			"databricks_instance_pool":         resourceInstancePool(),
 			"databricks_scim_user":             resourceScimUser(),
 			"databricks_scim_group":            resourceScimGroup(),
+			// Scim Group is split into multiple components for flexibility to pick and choose
+			"databricks_group":            		resourceGroup(),
+			"databricks_group_role":            resourceGroupRole(),
+			"databricks_group_member":          resourceGroupMember(),
 			"databricks_notebook":              resourceNotebook(),
 			"databricks_cluster":               resourceCluster(),
 			"databricks_job":                   resourceJob(),

@@ -2,6 +2,7 @@ package databricks
 
 import (
 	"fmt"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"strings"
 	"time"
 
@@ -97,4 +98,25 @@ func unpackMWSAccountId(combined string) (PackagedMWSIds, error) {
 	packagedMWSIds.MwsAcctId = parts[0]
 	packagedMWSIds.ResourceId = parts[1]
 	return packagedMWSIds, nil
+}
+
+// ValidateAWSARN is a ValidateFunc that ensures the role id is a valid aws iam instance profile arn
+func ValidateInstanceProfileARN(val interface{}, key string) (warns []string, errs []error) {
+	v := val.(string)
+
+	if v == "" {
+		return nil, []error{fmt.Errorf("%s is empty got: %s, must be an aws instance profile arn", key, v, )}
+	}
+
+	// Parse and verify instance profiles
+	instanceProfileArn, err := arn.Parse(v)
+	if err != nil {
+		return nil, []error{fmt.Errorf("%s is invalid got: %s recieved error: %w", key, v, err)}
+	}
+	// Verify instance profile resource type, Resource gets parsed as instance-profile/<profile-name>
+	if !strings.HasPrefix(instanceProfileArn.Resource, "instance-profile") {
+		return nil, []error{fmt.Errorf("%s must be an instance profile resource, got: %s in %s",
+			key, instanceProfileArn.Resource , v)}
+	}
+	return nil, nil
 }

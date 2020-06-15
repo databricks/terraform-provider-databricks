@@ -19,41 +19,41 @@ func resourceScimUser() *schema.Resource {
 		Delete: resourceScimUserDelete,
 
 		Schema: map[string]*schema.Schema{
-			"user_name": &schema.Schema{
+			"user_name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"display_name": &schema.Schema{
+			"display_name": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"roles": &schema.Schema{
+			"roles": {
 				Type:       schema.TypeSet,
 				Optional:   true,
 				ConfigMode: schema.SchemaConfigModeAttr,
 				Elem:       &schema.Schema{Type: schema.TypeString},
 				Set:        schema.HashString,
 			},
-			"entitlements": &schema.Schema{
+			"entitlements": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Set:      schema.HashString,
 			},
-			"inherited_roles": &schema.Schema{
+			"inherited_roles": {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Set:      schema.HashString,
 			},
-			"default_roles": &schema.Schema{
+			"default_roles": {
 				Type:     schema.TypeSet,
 				Required: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Set:      schema.HashString,
 			},
-			"set_admin": &schema.Schema{
+			"set_admin": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,

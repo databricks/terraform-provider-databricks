@@ -17,31 +17,31 @@ func resourceDBFSFile() *schema.Resource {
 		Update: resourceDBFSFileUpdate,
 
 		Schema: map[string]*schema.Schema{
-			"content": &schema.Schema{
+			"content": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"path": &schema.Schema{
+			"path": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"overwrite": &schema.Schema{
+			"overwrite": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
 			},
-			"mkdirs": &schema.Schema{
+			"mkdirs": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  true,
 			},
-			"validate_remote_file": &schema.Schema{
+			"validate_remote_file": {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
-			"file_size": &schema.Schema{
+			"file_size": {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},

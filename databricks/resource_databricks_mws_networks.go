@@ -17,7 +17,7 @@ func resourceMWSNetworks() *schema.Resource {
 		Delete: resourceMWSNetworkDelete,
 
 		Schema: map[string]*schema.Schema{
-			"account_id": &schema.Schema{
+			"account_id": {
 				Type:      schema.TypeString,
 				Required:  true,
 				Sensitive: true,
@@ -89,31 +89,31 @@ func resourceMWSNetworks() *schema.Resource {
 func resourceMWSNetworkCreate(d *schema.ResourceData, m interface{}) error {
 	client := m.(*service.DBApiClient)
 	networkName := d.Get("network_name").(string)
-	mwsAcctId := d.Get("account_id").(string)
+	mwsAcctID := d.Get("account_id").(string)
 	VPCID := d.Get("vpc_id").(string)
 	subnetIds := convertListInterfaceToString(d.Get("subnet_ids").(*schema.Set).List())
 	securityGroupIds := convertListInterfaceToString(d.Get("security_group_ids").(*schema.Set).List())
 
-	network, err := client.MWSNetworks().Create(mwsAcctId, networkName, VPCID, subnetIds, securityGroupIds)
+	network, err := client.MWSNetworks().Create(mwsAcctID, networkName, VPCID, subnetIds, securityGroupIds)
 	if err != nil {
 		return err
 	}
-	networksResourceId := PackagedMWSIds{
-		MwsAcctId:  mwsAcctId,
-		ResourceId: network.NetworkID,
+	networksResourceID := PackagedMWSIds{
+		MwsAcctID:  mwsAcctID,
+		ResourceID: network.NetworkID,
 	}
-	d.SetId(packMWSAccountId(networksResourceId))
+	d.SetId(packMWSAccountID(networksResourceID))
 	return resourceMWSNetworkRead(d, m)
 }
 
 func resourceMWSNetworkRead(d *schema.ResourceData, m interface{}) error {
 	id := d.Id()
 	client := m.(*service.DBApiClient)
-	packagedMwsId, err := unpackMWSAccountId(id)
+	packagedMwsID, err := unpackMWSAccountID(id)
 	if err != nil {
 		return err
 	}
-	network, err := client.MWSNetworks().Read(packagedMwsId.MwsAcctId, packagedMwsId.ResourceId)
+	network, err := client.MWSNetworks().Read(packagedMwsID.MwsAcctID, packagedMwsID.ResourceID)
 	if err != nil {
 		if isMWSNetworkMissing(err.Error()) {
 			log.Printf("Missing e2 network with id: %s.", id)
@@ -173,11 +173,11 @@ func resourceMWSNetworkRead(d *schema.ResourceData, m interface{}) error {
 func resourceMWSNetworkDelete(d *schema.ResourceData, m interface{}) error {
 	id := d.Id()
 	client := m.(*service.DBApiClient)
-	packagedMwsId, err := unpackMWSAccountId(id)
+	packagedMwsID, err := unpackMWSAccountID(id)
 	if err != nil {
 		return err
 	}
-	err = client.MWSNetworks().Delete(packagedMwsId.MwsAcctId, packagedMwsId.ResourceId)
+	err = client.MWSNetworks().Delete(packagedMwsID.MwsAcctID, packagedMwsID.ResourceID)
 	return err
 }
 

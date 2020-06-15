@@ -3,10 +3,11 @@ package databricks
 import (
 	"errors"
 	"fmt"
-	"github.com/databrickslabs/databricks-terraform/client/service"
 	"log"
 	"net/url"
 	"strings"
+
+	"github.com/databrickslabs/databricks-terraform/client/service"
 )
 
 // Mount interface describes the functionality of any mount which is create, read and delete
@@ -164,11 +165,10 @@ dbutils.notebook.exit("success")
 // Read verifies a azure blob storage mount given a cluster id
 func (m AzureBlobMount) Read(client *service.DBApiClient, clusterID string) (string, error) {
 	iamMountCommand := fmt.Sprintf(`
-dbutils.fs.ls("/mnt/%s")
 for mount in dbutils.fs.mounts():
- if mount.mountPoint == "/mnt/%s":
-   dbutils.notebook.exit(mount.source)
-`, m.MountName, m.MountName)
+  if mount.mountPoint == "/mnt/%s":
+    dbutils.notebook.exit(mount.source)
+`, m.MountName)
 	resp, err := client.Commands().Execute(clusterID, "python", iamMountCommand)
 	if err != nil {
 		return "", err
@@ -266,11 +266,10 @@ dbutils.notebook.exit("success")
 // Read verifies the azure datalake gen 1 storage mount given a cluster id
 func (m AzureADLSGen1Mount) Read(client *service.DBApiClient, clusterID string) (string, error) {
 	iamMountCommand := fmt.Sprintf(`
-dbutils.fs.ls("/mnt/%s")
 for mount in dbutils.fs.mounts():
- if mount.mountPoint == "/mnt/%s":
-   dbutils.notebook.exit(mount.source)
-`, m.MountName, m.MountName)
+  if mount.mountPoint == "/mnt/%s":
+    dbutils.notebook.exit(mount.source)
+`, m.MountName)
 	resp, err := client.Commands().Execute(clusterID, "python", iamMountCommand)
 	if err != nil {
 		return "", err
@@ -373,11 +372,10 @@ dbutils.notebook.exit("success")
 // Read verifies the azure datalake gen 2 storage mount
 func (m AzureADLSGen2Mount) Read(client *service.DBApiClient, clusterID string) (string, error) {
 	iamMountCommand := fmt.Sprintf(`
-dbutils.fs.ls("/mnt/%s")
 for mount in dbutils.fs.mounts():
- if mount.mountPoint == "/mnt/%s":
-   dbutils.notebook.exit(mount.source)
-`, m.MountName, m.MountName)
+  if mount.mountPoint == "/mnt/%s":
+    dbutils.notebook.exit(mount.source)
+`, m.MountName)
 	resp, err := client.Commands().Execute(clusterID, "python", iamMountCommand)
 	if err != nil {
 		return "", err

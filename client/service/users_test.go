@@ -2,9 +2,10 @@ package service
 
 import (
 	"fmt"
-	"github.com/databrickslabs/databricks-terraform/client/model"
 	"net/http"
 	"testing"
+
+	"github.com/databrickslabs/databricks-terraform/client/model"
 )
 
 func TestScimUserAPI_Create(t *testing.T) {
@@ -228,7 +229,7 @@ func TestScimUserAPI_SetUserAsAdmin(t *testing.T) {
 				Operations: []model.UserPatchOperations{
 					{
 						Op:    "add",
-						Value: &model.GroupsValue{Groups: []model.ValueListItem{model.ValueListItem{Value: tt.args.AdminGroupID}}},
+						Value: &model.GroupsValue{Groups: []model.ValueListItem{{Value: tt.args.AdminGroupID}}},
 					},
 				},
 			}
@@ -340,7 +341,7 @@ func TestScimUserAPI_VerifyUserAsAdmin(t *testing.T) {
 				Operations: []model.UserPatchOperations{
 					{
 						Op:    "add",
-						Value: &model.GroupsValue{Groups: []model.ValueListItem{model.ValueListItem{Value: tt.args.AdminGroupID}}},
+						Value: &model.GroupsValue{Groups: []model.ValueListItem{{Value: tt.args.AdminGroupID}}},
 					},
 				},
 			}

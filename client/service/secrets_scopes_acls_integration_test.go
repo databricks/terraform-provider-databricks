@@ -1,9 +1,10 @@
 package service
 
 import (
+	"testing"
+
 	"github.com/databrickslabs/databricks-terraform/client/model"
 	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
 func TestSecretsScopesAclsIntegration(t *testing.T) {
@@ -64,5 +65,4 @@ func TestSecretsScopesAclsIntegration(t *testing.T) {
 
 	err = client.SecretAcls().Delete(testScope, testPrincipal)
 	assert.NoError(t, err, err)
-
 }

@@ -502,7 +502,6 @@ func convertListInterfaceToString(m []interface{}) []string {
 }
 
 func resourceClusterCreate(d *schema.ResourceData, m interface{}) error {
-
 	client := m.(*service.DBApiClient)
 
 	cluster := parseSchemaToCluster(d, "")
@@ -683,7 +682,7 @@ func resourceClusterRead(d *schema.ResourceData, m interface{}) error {
 		return err
 	}
 
-	if len(clusterInfo.SparkConf) >= 0 {
+	if clusterInfo.SparkConf != nil {
 		err = d.Set("spark_conf", clusterInfo.SparkConf)
 		if err != nil {
 			return err
@@ -873,7 +872,7 @@ func resourceClusterRead(d *schema.ResourceData, m interface{}) error {
 		return err
 	}
 
-	err = d.Set("state_message", string(clusterInfo.StateMessage))
+	err = d.Set("state_message", clusterInfo.StateMessage)
 
 	return err
 }
@@ -883,22 +882,23 @@ func calculateLibraryChanges(new []model.Library, old []model.Library) ([]model.
 	newKeys := []string{}
 
 	for _, library := range new {
-		if len(library.Whl) > 0 {
+		switch {
+		case len(library.Whl) > 0:
 			newDictionary[library.Whl] = library
 			newKeys = append(newKeys, library.Whl)
-		} else if len(library.Egg) > 0 {
+		case len(library.Egg) > 0:
 			newDictionary[library.Egg] = library
 			newKeys = append(newKeys, library.Egg)
-		} else if len(library.Jar) > 0 {
+		case len(library.Jar) > 0:
 			newDictionary[library.Jar] = library
 			newKeys = append(newKeys, library.Jar)
-		} else if len(library.Pypi.Package) > 0 {
+		case library.Pypi != nil && len(library.Pypi.Package) > 0:
 			newDictionary[library.Pypi.Package+library.Pypi.Repo] = library
 			newKeys = append(newKeys, library.Pypi.Package+library.Pypi.Repo)
-		} else if len(library.Maven.Coordinates) > 0 {
+		case library.Maven != nil && len(library.Maven.Coordinates) > 0:
 			newDictionary[library.Maven.Coordinates+library.Maven.Repo+strings.Join(library.Maven.Exclusions, "")] = library
 			newKeys = append(newKeys, library.Maven.Coordinates+library.Maven.Repo+strings.Join(library.Maven.Exclusions, ""))
-		} else if len(library.Cran.Package) > 0 {
+		case library.Cran != nil && len(library.Cran.Package) > 0:
 			newDictionary[library.Cran.Package+library.Cran.Repo] = library
 			newKeys = append(newKeys, library.Cran.Package+library.Cran.Repo)
 		}
@@ -907,22 +907,23 @@ func calculateLibraryChanges(new []model.Library, old []model.Library) ([]model.
 	oldDictionary := map[string]model.Library{}
 	oldKeys := []string{}
 	for _, library := range old {
-		if len(library.Whl) > 0 {
+		switch {
+		case len(library.Whl) > 0:
 			oldDictionary[library.Whl] = library
 			oldKeys = append(oldKeys, library.Whl)
-		} else if len(library.Egg) > 0 {
+		case len(library.Egg) > 0:
 			oldDictionary[library.Egg] = library
 			oldKeys = append(oldKeys, library.Egg)
-		} else if len(library.Jar) > 0 {
+		case len(library.Jar) > 0:
 			oldDictionary[library.Jar] = library
 			oldKeys = append(oldKeys, library.Jar)
-		} else if len(library.Pypi.Package) > 0 {
+		case library.Pypi != nil && len(library.Pypi.Package) > 0:
 			oldDictionary[library.Pypi.Package+library.Pypi.Repo] = library
 			oldKeys = append(oldKeys, library.Pypi.Package+library.Pypi.Repo)
-		} else if len(library.Maven.Coordinates) > 0 {
+		case library.Maven != nil && len(library.Maven.Coordinates) > 0:
 			oldDictionary[library.Maven.Coordinates+library.Maven.Repo+strings.Join(library.Maven.Exclusions, "")] = library
 			oldKeys = append(oldKeys, library.Maven.Coordinates+library.Maven.Repo+strings.Join(library.Maven.Exclusions, ""))
-		} else if len(library.Cran.Package) > 0 {
+		case library.Cran != nil && len(library.Cran.Package) > 0:
 			oldDictionary[library.Cran.Package+library.Cran.Repo] = library
 			oldKeys = append(oldKeys, library.Cran.Package+library.Cran.Repo)
 		}
@@ -1058,7 +1059,8 @@ func resourceClusterUpdate(d *schema.ResourceData, m interface{}) error {
 
 	clusterState := clusterInfo.State
 
-	if model.ContainsClusterState([]model.ClusterState{model.ClusterState(model.ClusterStateTerminated)}, clusterState) {
+	switch {
+	case model.ContainsClusterState([]model.ClusterState{model.ClusterState(model.ClusterStateTerminated)}, clusterState):
 		cluster := parseSchemaToCluster(d, "")
 		cluster.ClusterID = id
 		err := client.Clusters().Edit(cluster)
@@ -1095,7 +1097,7 @@ func resourceClusterUpdate(d *schema.ResourceData, m interface{}) error {
 			}
 		}
 		return resourceClusterRead(d, m)
-	} else if model.ContainsClusterState([]model.ClusterState{model.ClusterState(model.ClusterStateRunning)}, clusterState) {
+	case model.ContainsClusterState([]model.ClusterState{model.ClusterState(model.ClusterStateRunning)}, clusterState):
 		cluster := parseSchemaToCluster(d, "")
 		cluster.ClusterID = id
 
@@ -1124,8 +1126,7 @@ func resourceClusterUpdate(d *schema.ResourceData, m interface{}) error {
 			return err
 		}
 		return resourceClusterRead(d, m)
-	} else if model.ContainsClusterState([]model.ClusterState{model.ClusterStatePending,
-		model.ClusterStateResizing}, clusterState) {
+	case model.ContainsClusterState([]model.ClusterState{model.ClusterStatePending, model.ClusterStateResizing}, clusterState):
 		err = client.Clusters().WaitForClusterRunning(clusterInfo.ClusterID, 30, 120)
 		if err != nil {
 			return err
@@ -1374,7 +1375,6 @@ func parseSchemaToCluster(d *schema.ResourceData, schemaAttPrefix string) model.
 			initScriptsLocations = append(initScriptsLocations, initScriptsConf)
 		}
 		cluster.InitScripts = initScriptsLocations
-
 	}
 
 	//Deal with docker image for DCS
@@ -1403,7 +1403,6 @@ func parseSchemaToCluster(d *schema.ResourceData, schemaAttPrefix string) model.
 			}
 			cluster.DockerImage = &dockerImageData
 		}
-
 	}
 
 	//Deal with spark environment variables

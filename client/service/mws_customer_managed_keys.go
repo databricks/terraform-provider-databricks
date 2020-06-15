@@ -4,8 +4,9 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/databrickslabs/databricks-terraform/client/model"
 	"net/http"
+
+	"github.com/databrickslabs/databricks-terraform/client/model"
 )
 
 // MWSCustomerManagedKeysAPI exposes the mws customerManagedKeys API

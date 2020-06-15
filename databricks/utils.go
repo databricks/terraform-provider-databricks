@@ -99,7 +99,7 @@ func unpackMWSAccountID(combined string) (PackagedMWSIds, error) {
 	return packagedMWSIds, nil
 }
 
-// ValidateAWSARN is a ValidateFunc that ensures the role id is a valid aws iam instance profile arn
+// ValidateInstanceProfileARN is a ValidateFunc that ensures the role id is a valid aws iam instance profile arn
 func ValidateInstanceProfileARN(val interface{}, key string) (warns []string, errs []error) {
 	v := val.(string)
 

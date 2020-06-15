@@ -38,7 +38,6 @@ func TestAccAWSGroupRoleResource(t *testing.T) {
 					// verify local values
 					resource.TestCheckResourceAttr("databricks_group.my_group", "display_name", groupName),
 					resource.TestCheckResourceAttr("databricks_group_role.my_group_role", "instance_profile_id", role),
-
 				),
 				Destroy: false,
 			},
@@ -49,11 +48,12 @@ func TestAccAWSGroupRoleResource(t *testing.T) {
 				// Test behavior to expect to attempt to create new role mapping because role is gone
 				PreConfig: func() {
 					client := testAccProvider.Meta().(*service.DBApiClient)
-					client.InstanceProfiles().Delete(role)
+					err := client.InstanceProfiles().Delete(role)
+					assert.NoError(t, err, err)
 				},
-				PlanOnly: true,
+				PlanOnly:           true,
 				ExpectNonEmptyPlan: true,
-				Destroy: false,
+				Destroy:            false,
 			},
 			{
 				// use a dynamic configuration with the random name from above
@@ -62,11 +62,12 @@ func TestAccAWSGroupRoleResource(t *testing.T) {
 				// Test behavior to expect to attempt to create new role mapping because role is gone
 				PreConfig: func() {
 					client := testAccProvider.Meta().(*service.DBApiClient)
-					client.Groups().Delete(group.ID)
+					err := client.Groups().Delete(group.ID)
+					assert.NoError(t, err, err)
 				},
-				PlanOnly: true,
+				PlanOnly:           true,
 				ExpectNonEmptyPlan: true,
-				Destroy: false,
+				Destroy:            false,
 			},
 		},
 	})

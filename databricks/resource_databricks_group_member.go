@@ -31,15 +31,13 @@ func resourceGroupMember() *schema.Resource {
 	}
 }
 
-
-
 func resourceGroupMemberCreate(d *schema.ResourceData, m interface{}) error {
 	client := m.(*service.DBApiClient)
 	groupID := d.Get("group_id").(string)
 	memberID := d.Get("member_id").(string)
 
 	groupMemberID := &GroupMemberID{
-		GroupID: groupID,
+		GroupID:  groupID,
 		MemberID: memberID,
 	}
 
@@ -85,8 +83,6 @@ func resourceGroupMemberRead(d *schema.ResourceData, m interface{}) error {
 	return err
 }
 
-
-
 func resourceGroupMemberDelete(d *schema.ResourceData, m interface{}) error {
 	id := d.Id()
 	client := m.(*service.DBApiClient)
@@ -98,9 +94,8 @@ func resourceGroupMemberDelete(d *schema.ResourceData, m interface{}) error {
 	return err
 }
 
-
 type GroupMemberID struct {
-	GroupID string
+	GroupID  string
 	MemberID string
 }
 
@@ -111,13 +106,13 @@ func (g GroupMemberID) String() string {
 func parseGroupMemberID(id string) *GroupMemberID {
 	parts := strings.Split(id, "|")
 	return &GroupMemberID{
-		GroupID:parts[0],
-		MemberID:parts[1],
+		GroupID:  parts[0],
+		MemberID: parts[1],
 	}
 }
 
 func iMemberInGroup(member string, group *model.Group) bool {
-	for _, groupMember := range(group.Members) {
+	for _, groupMember := range group.Members {
 		if groupMember.Value == member {
 			return true
 		}

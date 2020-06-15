@@ -105,7 +105,7 @@ func ValidateInstanceProfileARN(val interface{}, key string) (warns []string, er
 	v := val.(string)
 
 	if v == "" {
-		return nil, []error{fmt.Errorf("%s is empty got: %s, must be an aws instance profile arn", key, v, )}
+		return nil, []error{fmt.Errorf("%s is empty got: %s, must be an aws instance profile arn", key, v)}
 	}
 
 	// Parse and verify instance profiles
@@ -116,7 +116,7 @@ func ValidateInstanceProfileARN(val interface{}, key string) (warns []string, er
 	// Verify instance profile resource type, Resource gets parsed as instance-profile/<profile-name>
 	if !strings.HasPrefix(instanceProfileArn.Resource, "instance-profile") {
 		return nil, []error{fmt.Errorf("%s must be an instance profile resource, got: %s in %s",
-			key, instanceProfileArn.Resource , v)}
+			key, instanceProfileArn.Resource, v)}
 	}
 	return nil, nil
 }

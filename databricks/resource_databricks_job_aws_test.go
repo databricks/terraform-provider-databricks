@@ -3,13 +3,14 @@ package databricks
 import (
 	"errors"
 	"fmt"
+	"strconv"
+	"testing"
+
 	"github.com/databrickslabs/databricks-terraform/client/model"
 	"github.com/databrickslabs/databricks-terraform/client/service"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 	"github.com/stretchr/testify/assert"
-	"strconv"
-	"testing"
 )
 
 func TestAccAwsJobResource(t *testing.T) {
@@ -30,7 +31,7 @@ func TestAccAwsJobResource(t *testing.T) {
 				// compose a basic test, checking both remote and local values
 				Check: resource.ComposeTestCheckFunc(
 					// query the API to retrieve the tokenInfo object
-					testAwsJobResourceExists("databricks_job.my_job", &job, t),
+					testAwsJobResourceExists("databricks_job.my_job", &job),
 					// verify remote values
 					testAwsJobValuesNewCluster(t, &job),
 				),
@@ -60,7 +61,7 @@ func testAwsJobResourceDestroy(s *terraform.State) error {
 }
 
 // testAccCheckTokenResourceExists queries the API and retrieves the matching Widget.
-func testAwsJobResourceExists(n string, job *model.Job, t *testing.T) resource.TestCheckFunc {
+func testAwsJobResourceExists(n string, job *model.Job) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		// find the corresponding state object
 		rs, ok := s.RootModule().Resources[n]

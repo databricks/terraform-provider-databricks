@@ -3,11 +3,12 @@ package databricks
 import (
 	"errors"
 	"fmt"
+	"os"
+	"testing"
+
 	"github.com/databrickslabs/databricks-terraform/client/model"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
-	"os"
-	"testing"
 )
 
 func TestAccMWSCredentials(t *testing.T) {

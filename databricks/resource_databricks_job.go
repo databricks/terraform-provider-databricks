@@ -512,7 +512,6 @@ func resourceJob() *schema.Resource {
 }
 
 func resourceJobCreate(d *schema.ResourceData, m interface{}) error {
-
 	client := m.(*service.DBApiClient)
 
 	jobSettings := parseSchemaToJobSettings(d)
@@ -877,7 +876,6 @@ func resourceJobRead(d *schema.ResourceData, m interface{}) error {
 				return err
 			}
 		}
-
 	} else {
 		err = d.Set("email_notifications", nil)
 		if err != nil {
@@ -974,7 +972,6 @@ func resourceJobDelete(d *schema.ResourceData, m interface{}) error {
 }
 
 func parseSchemaToJobSettings(d *schema.ResourceData) model.JobSettings {
-
 	var jobSettings model.JobSettings
 
 	if existingClusterID, ok := d.GetOk("existing_cluster_id"); ok {
@@ -1048,7 +1045,6 @@ func parseSchemaToJobSettings(d *schema.ResourceData) model.JobSettings {
 			QuartzCronExpression: scheduleMap["quartz_cron_expression"].(string),
 			TimezoneID:           scheduleMap["timezone_id"].(string),
 		}
-
 	}
 	if maxConcurrentRuns, ok := d.GetOk("max_concurrent_runs"); ok {
 		intVal, _ := maxConcurrentRuns.(int)

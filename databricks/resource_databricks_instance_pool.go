@@ -2,13 +2,14 @@ package databricks
 
 import (
 	"fmt"
+	"log"
+	"strings"
+	"time"
+
 	"github.com/databrickslabs/databricks-terraform/client/model"
 	"github.com/databrickslabs/databricks-terraform/client/service"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
-	"log"
-	"strings"
-	"time"
 )
 
 func resourceInstancePool() *schema.Resource {
@@ -295,14 +296,12 @@ func resourceInstancePoolRead(d *schema.ResourceData, m interface{}) error {
 		diskSpecList := []interface{}{}
 		diskSpecListItem := map[string]interface{}{}
 		if instancePoolInfo.DiskSpec.DiskType != nil {
-
 			if instancePoolInfo.DiskSpec.DiskCount >= 0 {
 				diskSpecListItem["disk_count"] = instancePoolInfo.DiskSpec.DiskCount
 			}
 			if instancePoolInfo.DiskSpec.DiskSize >= 0 {
 				diskSpecListItem["disk_size"] = instancePoolInfo.DiskSpec.DiskSize
 			}
-
 		}
 		if instancePoolInfo.DiskSpec.DiskType.EbsVolumeType != "" {
 			diskSpecListItem["ebs_volume_type"] = instancePoolInfo.DiskSpec.DiskType.EbsVolumeType

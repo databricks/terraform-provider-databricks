@@ -167,7 +167,7 @@ func Provider(version string) terraform.ResourceProvider {
 	return provider
 }
 
-func providerConfigureAzureClient(d *schema.ResourceData, providerVersion string, config *service.DBApiClientConfig) (interface{}, error) {
+func providerConfigureAzureClient(d *schema.ResourceData, config *service.DBApiClientConfig) (interface{}, error) {
 	log.Println("Creating db client via azure auth!")
 	azureAuth, _ := d.GetOk("azure_auth")
 	azureAuthMap := azureAuth.(map[string]interface{})
@@ -203,32 +203,44 @@ func providerConfigureAzureClient(d *schema.ResourceData, providerVersion string
 	//  - provider config
 	//  - DATABRICKS_AZURE_* environment variables
 	//  - ARM_* environment variables
-	if subscriptionID, ok := azureAuthMap["subscription_id"].(string); ok {
+
+	subscriptionID, ok := azureAuthMap["subscription_id"].(string)
+	switch {
+	case ok:
 		tokenPayload.SubscriptionID = subscriptionID
-	} else if os.Getenv("DATABRICKS_AZURE_SUBSCRIPTION_ID") != "" {
+	case os.Getenv("DATABRICKS_AZURE_SUBSCRIPTION_ID") != "":
 		tokenPayload.SubscriptionID = os.Getenv("DATABRICKS_AZURE_SUBSCRIPTION_ID")
-	} else if os.Getenv("ARM_SUBSCRIPTION_ID") != "" {
-		tokenPayload.SubscriptionID = os.Getenv("ARM_SUBSCRIPTION_ID")
+	case os.Getenv("ARM_SUBSCRIPTION_ID") != "":
+		tokenPayload.SubscriptionID = os.Getenv("DATABRICKS_AZURE_SUBSCRIPTION_ID")
 	}
-	if clientSecret, ok := azureAuthMap["client_secret"].(string); ok {
+
+	clientSecret, ok := azureAuthMap["client_secret"].(string)
+	switch {
+	case ok:
 		tokenPayload.ClientSecret = clientSecret
-	} else if os.Getenv("DATABRICKS_AZURE_CLIENT_SECRET") != "" {
+	case os.Getenv("DATABRICKS_AZURE_CLIENT_SECRET") != "":
 		tokenPayload.ClientSecret = os.Getenv("DATABRICKS_AZURE_CLIENT_SECRET")
-	} else if os.Getenv("ARM_CLIENT_SECRET") != "" {
+	case os.Getenv("ARM_CLIENT_SECRET") != "":
 		tokenPayload.ClientSecret = os.Getenv("ARM_CLIENT_SECRET")
 	}
-	if clientID, ok := azureAuthMap["client_id"].(string); ok {
+
+	clientID, ok := azureAuthMap["client_id"].(string)
+	switch {
+	case ok:
 		tokenPayload.ClientID = clientID
-	} else if os.Getenv("DATABRICKS_AZURE_CLIENT_ID") != "" {
+	case os.Getenv("DATABRICKS_AZURE_CLIENT_ID") != "":
 		tokenPayload.ClientID = os.Getenv("DATABRICKS_AZURE_CLIENT_ID")
-	} else if os.Getenv("ARM_CLIENT_ID") != "" {
+	case os.Getenv("ARM_CLIENT_ID") != "":
 		tokenPayload.ClientID = os.Getenv("ARM_CLIENT_ID")
 	}
-	if tenantID, ok := azureAuthMap["tenant_id"].(string); ok {
+
+	tenantID, ok := azureAuthMap["tenant_id"].(string)
+	switch {
+	case ok:
 		tokenPayload.TenantID = tenantID
-	} else if os.Getenv("DATABRICKS_AZURE_TENANT_ID") != "" {
+	case os.Getenv("DATABRICKS_AZURE_TENANT_ID") != "":
 		tokenPayload.TenantID = os.Getenv("DATABRICKS_AZURE_TENANT_ID")
-	} else if os.Getenv("ARM_TENANT_ID") != "" {
+	case os.Getenv("ARM_TENANT_ID") != "":
 		tokenPayload.TenantID = os.Getenv("ARM_TENANT_ID")
 	}
 
@@ -241,9 +253,7 @@ func providerConfigureAzureClient(d *schema.ResourceData, providerVersion string
 	}
 
 	// Setup the CustomAuthorizer Function to be called at API invoke rather than client invoke
-	config.CustomAuthorizer = func(config *service.DBApiClientConfig) error {
-		return azureAuthSetup.initWorkspaceAndGetClient(config)
-	}
+	config.CustomAuthorizer = azureAuthSetup.initWorkspaceAndGetClient
 	var dbClient service.DBApiClient
 	dbClient.SetConfig(config)
 	return &dbClient, nil
@@ -317,11 +327,10 @@ func providerConfigure(d *schema.ResourceData, providerVersion string) (interfac
 				return nil, fmt.Errorf("failed to get credentials from config file; error msg: %w", err)
 			}
 		}
-
 	} else {
 		// Abstracted logic to another function that returns a interface{}, error to inject directly
 		// for the providers during cloud integration testing
-		return providerConfigureAzureClient(d, providerVersion, &config)
+		return providerConfigureAzureClient(d, &config)
 	}
 
 	var dbClient service.DBApiClient

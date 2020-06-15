@@ -1,13 +1,14 @@
 package databricks
 
 import (
+	"log"
+	"reflect"
+	"strings"
+
 	"github.com/databrickslabs/databricks-terraform/client/model"
 	"github.com/databrickslabs/databricks-terraform/client/service"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
-	"log"
-	"reflect"
-	"strings"
 )
 
 func resourceMWSNetworks() *schema.Resource {

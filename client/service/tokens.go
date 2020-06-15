@@ -3,8 +3,9 @@ package service
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/databrickslabs/databricks-terraform/client/model"
 	"net/http"
+
+	"github.com/databrickslabs/databricks-terraform/client/model"
 )
 
 // TokensAPI exposes the Secrets API

@@ -1,10 +1,11 @@
 package databricks
 
 import (
-	"github.com/databrickslabs/databricks-terraform/client/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"path/filepath"
 	"strings"
+
+	"github.com/databrickslabs/databricks-terraform/client/service"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 func resourceDBFSFileSync() *schema.Resource {

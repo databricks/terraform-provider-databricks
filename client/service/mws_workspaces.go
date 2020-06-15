@@ -4,11 +4,12 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/databrickslabs/databricks-terraform/client/model"
 	"log"
 	"net/http"
 	"reflect"
 	"time"
+
+	"github.com/databrickslabs/databricks-terraform/client/model"
 )
 
 // MWSWorkspacesAPI exposes the mws workspaces API
@@ -61,7 +62,7 @@ func (a MWSWorkspacesAPI) WaitForWorkspaceRunning(mwsAcctId string, workspaceID 
 				errChan <- nil
 			} else if model.ContainsWorkspaceState(model.WorkspaceStatusesNonRunnable, workspace.WorkspaceStatus) {
 				errChan <- errors.New("Workspace is in a non runnable state will not be able to transition to running, needs " +
-					"to be created again. Current state: " + string(workspace.WorkspaceStatus))
+					"to be created again. Current state: " + workspace.WorkspaceStatus)
 			}
 			log.Println("Waiting for workspace to go to running, current state is: " + workspace.WorkspaceStatus)
 			time.Sleep(sleepDurationSeconds * time.Second)
@@ -116,7 +117,6 @@ func (a MWSWorkspacesAPI) Read(mwsAcctId string, workspaceID int64) (model.MWSWo
 // Delete will delete the configuration for the workspace given a workspace id and will not block. A follow up email
 // will be sent when the workspace is fully deleted.
 func (a MWSWorkspacesAPI) Delete(mwsAcctId string, workspaceID int64) error {
-
 	workspacesAPIPath := fmt.Sprintf("/accounts/%s/workspaces/%d", mwsAcctId, workspaceID)
 
 	_, err := a.Client.performQuery(http.MethodDelete, workspacesAPIPath, "2.0", nil, nil, nil)

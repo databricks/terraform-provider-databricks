@@ -9,12 +9,12 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-var executeMock func(clusterID, langauge, commandStr string) (model.Command, error)
+var executeMock func(clusterID, language, commandStr string) (model.Command, error)
 
 type commandExecutorMock struct{}
 
-func (a commandExecutorMock) Execute(clusterID, langauge, commandStr string) (model.Command, error) {
-	return executeMock(clusterID, langauge, commandStr)
+func (a commandExecutorMock) Execute(clusterID, language, commandStr string) (model.Command, error) {
+	return executeMock(clusterID, language, commandStr)
 }
 
 func TestAzureBlobMountReadRetrievesMountInformation(t *testing.T) {
@@ -58,7 +58,7 @@ func TestAzureBlobMountReadRetrievesMountInformation(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		executeMock = func(clusterID, langauge, commandStr string) (model.Command, error) {
+		executeMock = func(clusterID, language, commandStr string) (model.Command, error) {
 			return model.Command{
 				Results: tc.CommandResult,
 			}, nil
@@ -114,7 +114,7 @@ func TestAzureADLSGen1MountReadRetrievesMountInformation(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		executeMock = func(clusterID, langauge, commandStr string) (model.Command, error) {
+		executeMock = func(clusterID, language, commandStr string) (model.Command, error) {
 			return model.Command{
 				Results: tc.CommandResult,
 			}, nil
@@ -171,7 +171,7 @@ func TestAzureADLSGen2MountReadRetrievesMountInformation(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		executeMock = func(clusterID, langauge, commandStr string) (model.Command, error) {
+		executeMock = func(clusterID, language, commandStr string) (model.Command, error) {
 			return model.Command{
 				Results: tc.CommandResult,
 			}, nil
@@ -214,7 +214,7 @@ func TestProcessAzureWasbAbfssUrisCorrectlySplitsURI(t *testing.T) {
 		assert.Equal(t, tc.ExpectedStorageAcc, storageAcc)
 		assert.Equal(t, tc.ExpectedDirectory, dir)
 		assert.Nil(t, err)
-  }
+	}
 }
 
 func TestValidateMountDirectory(t *testing.T) {

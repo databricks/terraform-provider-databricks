@@ -30,8 +30,8 @@ build: lint test
 	@echo "==> Building source code with go build..."
 	@go build -mod vendor -v -o terraform-provider-databricks
 
-lint: fmt
-	@echo "==> Linting source code with golangci-lint..."
+lint:
+	@echo "==> Linting source code with golangci-lint make sure you run make fmt ..."
 	@golangci-lint run --skip-dirs-use-default --timeout 5m
 
 fmt:

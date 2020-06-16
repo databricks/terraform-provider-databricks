@@ -59,6 +59,11 @@ const (
 
 var clientAuthorizerMutex sync.Mutex
 
+// DBApiClientMetadata used for unit testing and verifying client behavior
+type DBApiClientMetadata struct {
+	AzureAuthPatTokenExpiry int32
+}
+
 // DBApiClientConfig is used to configure the DataBricks Client
 type DBApiClientConfig struct {
 	Host               string
@@ -69,6 +74,7 @@ type DBApiClientConfig struct {
 	InsecureSkipVerify bool
 	TimeoutSeconds     int
 	CustomAuthorizer   func(*DBApiClientConfig) error
+	Metadata           *DBApiClientMetadata
 	client             *retryablehttp.Client
 }
 

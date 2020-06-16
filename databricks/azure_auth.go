@@ -36,6 +36,7 @@ type TokenPayload struct {
 	ClientSecret         string
 	ClientID             string
 	TenantID             string
+	PatTokenDuration     int32
 }
 
 // WsProps contains information about the workspace properties
@@ -133,7 +134,7 @@ func (a *AzureAuth) getADBPlatformToken() error {
 
 func (a *AzureAuth) getWorkspaceAccessToken(config *service.DBApiClientConfig) error {
 	log.Println("[DEBUG] Creating workspace token")
-	apiLifeTimeInSeconds := int32(600)
+	apiLifeTimeInSeconds := a.TokenPayload.PatTokenDuration
 	comment := "Secret made via SP"
 	url := "https://" + a.TokenPayload.AzureRegion + ".azuredatabricks.net/api/2.0/token/create"
 	payload := struct {

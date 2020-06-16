@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strconv"
+	"time"
 
 	"github.com/databrickslabs/databricks-terraform/client/service"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
@@ -148,6 +150,12 @@ func Provider(version string) terraform.ResourceProvider {
 							Required:    true,
 							DefaultFunc: schema.MultiEnvDefaultFunc([]string{"DATABRICKS_AZURE_TENANT_ID", "ARM_TENANT_ID"}, nil),
 						},
+						"pat_token_duration_seconds": {
+							Type:        schema.TypeString,
+							Required:    true,
+							Description: "Currently secret scopes are not accessible via AAD tokens so we will need to create a PAT token",
+							Default:     time.Hour.String(),
+						},
 					},
 				},
 			},
@@ -244,6 +252,21 @@ func providerConfigureAzureClient(d *schema.ResourceData, config *service.DBApiC
 		tokenPayload.TenantID = os.Getenv("ARM_TENANT_ID")
 	}
 
+	// no need to ok this value has a default
+	patTokenDurationSeconds, ok := azureAuthMap["pat_token_duration_seconds"].(string)
+	if ok {
+		patTokenDuration, err := strconv.ParseInt(patTokenDurationSeconds, 10, 32)
+		if err != nil {
+			return nil, fmt.Errorf("failed to parse pat_token_duration_seconds, %w", err)
+		}
+		tokenPayload.PatTokenDuration = int32(patTokenDuration)
+		// Token metadata for token expiry: mostly just for testing
+		if config.Metadata == nil {
+			config.Metadata = &service.DBApiClientMetadata{}
+		}
+		config.Metadata.AzureAuthPatTokenExpiry = tokenPayload.PatTokenDuration
+	}
+
 	azureAuthSetup := AzureAuth{
 		TokenPayload:           &tokenPayload,
 		ManagementToken:        "",
@@ -254,6 +277,7 @@ func providerConfigureAzureClient(d *schema.ResourceData, config *service.DBApiC
 
 	// Setup the CustomAuthorizer Function to be called at API invoke rather than client invoke
 	config.CustomAuthorizer = azureAuthSetup.initWorkspaceAndGetClient
+
 	var dbClient service.DBApiClient
 	dbClient.SetConfig(config)
 	return &dbClient, nil

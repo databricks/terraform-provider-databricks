@@ -92,7 +92,7 @@ func resourceAzureAdlsGen2Create(d *schema.ResourceData, m interface{}) error {
 	adlsGen2Mount := NewAzureADLSGen2Mount(containerName, storageAccountName, directory, mountName, clientID, tenantID,
 		clientSecretScope, clientSecretKey, initializeFileSystem)
 
-	err = adlsGen2Mount.Create(client, clusterID)
+	err = adlsGen2Mount.Create(client.Commands(), clusterID)
 	if err != nil {
 		return err
 	}
@@ -155,7 +155,7 @@ func resourceAzureAdlsGen2Read(d *schema.ResourceData, m interface{}) error {
 	adlsGen2Mount := NewAzureADLSGen2Mount(containerName, storageAccountName, directory, mountName, clientID, tenantID,
 		clientSecretScope, clientSecretKey, initializeFileSystem)
 
-	url, err := adlsGen2Mount.Read(client, clusterID)
+	url, err := adlsGen2Mount.Read(client.Commands(), clusterID)
 	if err != nil {
 		//Reset id in case of inability to find mount
 		if strings.Contains(err.Error(), "Unable to find mount point!") ||
@@ -200,5 +200,5 @@ func resourceAzureAdlsGen2Delete(d *schema.ResourceData, m interface{}) error {
 
 	adlsGen2Mount := NewAzureADLSGen2Mount(containerName, storageAccountName, directory, mountName, clientID, tenantID,
 		clientSecretScope, clientSecretKey, initializeFileSystem)
-	return adlsGen2Mount.Delete(client, clusterID)
+	return adlsGen2Mount.Delete(client.Commands(), clusterID)
 }

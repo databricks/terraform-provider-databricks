@@ -7,6 +7,9 @@ import (
 	"github.com/databrickslabs/databricks-terraform/client/model"
 )
 
+// Test interface compliance
+var _ CommandExecutor = (*CommandsAPI)(nil)
+
 func TestCommandsAPI_Execute(t *testing.T) {
 	type context struct {
 		Language  string `json:"language,omitempty"`

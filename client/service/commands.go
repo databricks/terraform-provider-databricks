@@ -16,6 +16,11 @@ type CommandsAPI struct {
 	Client *DBApiClient
 }
 
+// CommandExecutor creates a spark context and executes a command and then closes context
+type CommandExecutor interface {
+	Execute(clusterID, language, commandStr string) (model.Command, error)
+}
+
 // Execute creates a spark context and executes a command and then closes context
 func (a CommandsAPI) Execute(clusterID, language, commandStr string) (model.Command, error) {
 	var resp model.Command

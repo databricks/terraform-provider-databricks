@@ -30,7 +30,7 @@ func TestAccAzureBlobMount_correctly_mounts(t *testing.T) {
 			{
 				PreConfig: func() {
 					client := testAccProvider.Meta().(*service.DBApiClient)
-					err := azureBlobMount.Delete(client, clusterInfo.ClusterID)
+					err := azureBlobMount.Delete(client.Commands(), clusterInfo.ClusterID)
 					assert.NoError(t, err, "TestAccAzureBlobMount_correctly_mounts: Failed to remove the mount.")
 				},
 				Config: terraformToApply,
@@ -115,7 +115,8 @@ func testAccAzureBlobMountMountExists(n string, azureBlobMount *AzureBlobMount, 
 		client := testAccProvider.Meta().(*service.DBApiClient)
 		clusterID := clusterInfo.ClusterID
 
-		message, err := blobMount.Read(client, clusterID)
+		message, err := blobMount.Read(client.Commands(), clusterID)
+
 		if err != nil {
 			return fmt.Errorf("Error reading the mount %s: error %s", message, err)
 		}

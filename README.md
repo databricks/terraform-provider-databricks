@@ -1,8 +1,8 @@
 # Databricks Terraform Provider
 
-[![Build Status](https://travis-ci.org/databrickslabs/databricks-terraform.svg?branch=master)](https://travis-ci.org/databrickslabs/databricks-terraform)
+[![Build Status](https://travis-ci.org/databrickslabs/terraform-provider-databricks.svg?branch=master)](https://travis-ci.org/databrickslabs/terraform-provider-databricks)
 
-If you are looking for the docs for this provider see: https://databrickslabs.github.io/databricks-terraform/overview/ 
+If you are looking for the docs for this provider see: https://databrickslabs.github.io/terraform-provider-databricks/overview/ 
 
 
 ## Quickstart: Building and Using the Provider

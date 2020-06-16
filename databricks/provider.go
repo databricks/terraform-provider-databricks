@@ -37,6 +37,7 @@ func Provider(version string) terraform.ResourceProvider {
 			"databricks_group":                  resourceGroup(),
 			"databricks_group_instance_profile": resourceGroupInstanceProfile(),
 			"databricks_group_member":           resourceGroupMember(),
+			"databricks_folder":                 resourceFolder(),
 			"databricks_notebook":               resourceNotebook(),
 			"databricks_cluster":                resourceCluster(),
 			"databricks_job":                    resourceJob(),

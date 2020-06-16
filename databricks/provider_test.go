@@ -58,6 +58,20 @@ func getMWSClient() *service.DBApiClient {
 	}
 }
 
+func getTokenBasedClient() *service.DBApiClient {
+	// Configure MWS Provider
+	host := os.Getenv("DATABRICKS_HOST")
+	token := os.Getenv("DATABRICKS_TOKEN")
+
+	config := service.DBApiClientConfig{
+		Host:  host,
+		Token: token,
+	}
+	return &service.DBApiClient{
+		Config: &config,
+	}
+}
+
 func TestMain(m *testing.M) {
 	cloudEnv := os.Getenv("CLOUD_ENV")
 	envFileName := fmt.Sprintf("../.%s.env", cloudEnv)

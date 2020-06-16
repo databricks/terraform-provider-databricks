@@ -10,10 +10,15 @@ import (
 	"hash/crc32"
 	"io"
 	"log"
+	"math/rand"
 	"path/filepath"
 	"sort"
 	"strconv"
 	"strings"
+	"time"
+
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/pkg/errors"
 
 	"github.com/databrickslabs/databricks-terraform/client/model"
 	"github.com/databrickslabs/databricks-terraform/client/service"
@@ -65,7 +70,10 @@ func resourceNotebook() *schema.Resource {
 				ForceNew: true,
 			},
 			"mkdirs": {
-				Type:     schema.TypeBool,
+				Type: schema.TypeBool,
+				Deprecated: "Please use the databricks_folder resource to create directories as this is deprecated for " +
+					"scalability reasons. This field is unstable and can cause sporadic runtime issues during apply. Will be " +
+					"removed in a future version.",
 				Optional: true,
 				Default:  true,
 				ForceNew: true,
@@ -77,9 +85,11 @@ func resourceNotebook() *schema.Resource {
 				ForceNew: true,
 				ValidateFunc: validation.StringInSlice([]string{
 					string(model.DBC),
-					string(model.Jupyter),
+					// Cannot yet support JUPYTER as diffs cannot be calculated appropriately
+					//string(model.Jupyter),
 					string(model.Source),
-					string(model.HTML),
+					// Cannot yet support HTML as diffs cannot be calculated appropriately
+					//string(model.HTML),
 				}, false),
 			},
 			"object_type": {
@@ -105,21 +115,21 @@ func resourceNotebookCreate(d *schema.ResourceData, m interface{}) error {
 
 	if mkdirs {
 		parentDir := filepath.Dir(path)
-		err := client.Notebooks().Mkdirs(parentDir)
-		if err != nil {
-			return err
+		_, err := client.Notebooks().Read(parentDir)
+		if err != nil && strings.Contains(err.Error(), "RESOURCE_DOES_NOT_EXIST") {
+			err := client.Notebooks().Mkdirs(parentDir)
+			if err != nil {
+				return errors.Wrapf(err, "failed to create directory %s", parentDir)
+			}
 		}
 	}
 
 	err := client.Notebooks().Create(path, content, model.Language(language), model.ExportFormat(format), overwrite)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "unable to create notebook")
 	}
 	d.SetId(path)
-	//err = d.Set("content", content)
-	//if err != nil {
-	//	return err
-	//}
+
 	err = d.Set("format", format)
 	if err != nil {
 		return err
@@ -146,11 +156,11 @@ func resourceNotebookRead(d *schema.ResourceData, m interface{}) error {
 			d.SetId("")
 			return nil
 		}
-		return err
+		return errors.Wrapf(err, "unable to export the notebook with id: %s", id)
 	}
 	notebookInfo, err := client.Notebooks().Read(id)
 	if err != nil {
-		return err
+		return errors.Wrapf(err, "unable to read the notebook with id: %s", id)
 	}
 	err = d.Set("path", id)
 	if err != nil {
@@ -181,19 +191,33 @@ func resourceNotebookRead(d *schema.ResourceData, m interface{}) error {
 func resourceNotebookDelete(d *schema.ResourceData, m interface{}) error {
 	id := d.Id()
 	client := m.(*service.DBApiClient)
-	err := client.Notebooks().Delete(id, true)
-	return err
+
+	return resource.Retry(5*time.Minute, func() *resource.RetryError {
+		err := client.Notebooks().Delete(id, true)
+		if err == nil {
+			return nil
+		}
+		var e *service.DBApiError
+		if errors.As(err, &e) && e.StatusCode == 429 {
+			// Wait for requests to clear up
+			baseDuration := 250 * time.Millisecond
+			jitter := time.Duration(rand.Intn(1000)) * time.Millisecond
+			// So all threads dont wake up at once
+			time.Sleep(baseDuration + jitter)
+			return resource.RetryableError(fmt.Errorf("request rate limit hit %w", err))
+		}
+		return resource.NonRetryableError(err)
+	})
 }
 
 func convertBase64ToCheckSum(b64 string) (string, error) {
 	dataArr, err := base64.StdEncoding.DecodeString(b64)
 	if err != nil {
-		log.Printf("Error while trying to decode base64 content: %v\n", err)
-		return "error", err
+		return "error", errors.Wrap(err, "error while trying to decode base64 content")
 	}
 	checksum, err := convertZipBytesToCRC(dataArr)
 	if err != nil {
-		return strconv.Itoa(int(crc32.ChecksumIEEE(dataArr))), nil
+		return strconv.Itoa(int(crc32.ChecksumIEEE(normalizeNotebookSource(dataArr)))), nil
 	}
 	return checksum, nil
 }
@@ -205,7 +229,7 @@ func convertZipBytesToCRC(b64 []byte) (string, error) {
 	}
 	var totalSum int64
 	for _, f := range r.File {
-		if f.FileInfo().IsDir() {
+		if !f.FileInfo().IsDir() {
 			file, err := f.Open()
 			if err != nil {
 				return "", err
@@ -218,6 +242,53 @@ func convertZipBytesToCRC(b64 []byte) (string, error) {
 		}
 	}
 	return strconv.Itoa(int(totalSum)), nil
+}
+
+func normalizeNotebookSource(dataArr []byte) []byte {
+	scalaMagic := "// MAGIC "
+	pythonRMagic := "# MAGIC "
+	sqlMagic := "-- MAGIC "
+	filteredDataArr := filter(strings.Split(string(dataArr), "\n"), func(s string) bool {
+		trimmedS := strings.TrimRight(s, " ")
+		scalaMagicStatements := trimmedS != strings.Trim(scalaMagic, " ")
+		pythonRMagicStatements := trimmedS != strings.Trim(pythonRMagic, " ")
+		sqlMagicStatements := trimmedS != strings.Trim(sqlMagic, " ")
+		ignoreScalaCmd := trimmedS != "// COMMAND ----------"
+		ignorePythonRCmd := trimmedS != "# COMMAND ----------"
+		ignoreSqlCmd := trimmedS != "-- COMMAND ----------"
+		ignoreNotebookHeader := !strings.HasSuffix(trimmedS, "Databricks notebook source")
+		return scalaMagicStatements && pythonRMagicStatements && sqlMagicStatements &&
+			ignoreScalaCmd && ignorePythonRCmd && ignoreSqlCmd && ignoreNotebookHeader && trimmedS != ""
+	})
+	transformedDataArr := transform(filteredDataArr, func(s string) string {
+		if strings.HasPrefix(s, scalaMagic) {
+			return strings.TrimPrefix(s, scalaMagic)
+		}
+		if strings.HasPrefix(s, pythonRMagic) {
+			return strings.TrimPrefix(s, pythonRMagic)
+		}
+		if strings.HasPrefix(s, sqlMagic) {
+			return strings.TrimPrefix(s, sqlMagic)
+		}
+		return s
+	})
+	return []byte(strings.Join(transformedDataArr, "\n"))
+}
+
+func filter(ss []string, test func(string) bool) (ret []string) {
+	for _, s := range ss {
+		if test(s) {
+			ret = append(ret, s)
+		}
+	}
+	return
+}
+
+func transform(ss []string, t func(string) string) (ret []string) {
+	for _, s := range ss {
+		ret = append(ret, t(s))
+	}
+	return
 }
 
 func getDBCCheckSumForCommands(fileIO io.Reader) (int, error) {
@@ -236,6 +307,7 @@ func getDBCCheckSumForCommands(fileIO io.Reader) (int, error) {
 	}
 	var commandsBuffer bytes.Buffer
 	commandsMap := map[int]string{}
+
 	commands := notebook["commands"].([]interface{})
 	for _, command := range commands {
 		commandsMap[int(command.(map[string]interface{})["position"].(float64))] = command.(map[string]interface{})["command"].(string)

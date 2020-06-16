@@ -11,6 +11,11 @@ pre = ""
 This resource allows you to manage the import, export, and delete notebooks. The maximum allowed size of a 
 request to resource is 10MB. 
 
+{{% notice note %}}
+Though the public workspace import api supports notebooks of type `JUPYTER` and `HTML` this resource does not support 
+those types as determining changes is quite challenging as the format includes additional information such as timestamps 
+execution counts thus a base64 diff causes issues.
+{{% /notice %}}
 
 ## Example Usage
 
@@ -57,14 +62,21 @@ this field is required; otherwise, it will be ignored. Possible choices are SCAL
 > **(Required)** The flag that specifies whether to overwrite existing object. 
 It is false by default. For DBC format, overwrite is not supported since it may contain a directory.
 
+{{% notice warning %}}
+mkdirs is deprecated for removal in a future release please use `databricks_folder` resource
+{{% /notice %}}
+
 #### - `mkdirs`:
-> **(Required)** Create the given directory and necessary parent directories 
+> **(Deprecated)** **(Required)** Create the given directory and necessary parent directories 
 if they do not exists. If there exists an object (not a directory) at any prefix of the input path, this call 
 returns an error RESOURCE_ALREADY_EXISTS. If this operation fails it may have succeeded in creating some of the necessary parent directories.
 
 #### - `format`:
 > **(Required)** This specifies the format of the file to be imported. 
-By default, this is SOURCE. However it may be one of: SOURCE, HTML, JUPYTER, DBC. The value is case sensitive. SOURCE is suitable for .scala, .py, .r, .sql extension based files, HTML for .html files, JUPYTER for .ipynb files, and DBC for .dbc files.
+By default, this is SOURCE. However it may be one of: SOURCE, or DBC. The value is case sensitive. 
+>SOURCE is suitable for .scala, .py, .r, .sql extension based files, HTML for .html files, JUPYTER for .ipynb files, 
+>and DBC for .dbc files. Though the API supports HTML and JUPYTER currently we do not support them as identifying DIFF is 
+>quite challenging.
 
 ## Attribute Reference
 

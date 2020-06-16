@@ -46,8 +46,10 @@ type DBApiError struct {
 
 // Error is a interface implementation of the error interface.
 func (r DBApiError) Error() string {
-	return fmt.Sprintf("status %d: err %v", r.StatusCode, r.Err)
+	return fmt.Sprintf("status %d; err: {%v}", r.StatusCode, r.Err)
 }
+
+func (e *DBApiError) Unwrap() error { return e.Err }
 
 // AuthType is a custom type for a type of authentication allowed on Databricks
 type AuthType string
@@ -130,13 +132,17 @@ func checkHTTPRetry(ctx context.Context, resp *http.Response, err error) (bool, 
 		}
 		var errorBody DBApiErrorBody
 		err = json.Unmarshal(body, &errorBody)
-		if err != nil {
-			return false, fmt.Errorf("Response from server (%d) %s: %v", resp.StatusCode, string(body), err)
-		}
-		dbAPIError := DBApiError{
+		dbAPIError := &DBApiError{
 			ErrorBody:  &errorBody,
 			StatusCode: resp.StatusCode,
-			Err:        fmt.Errorf("Response from server %s", string(body)),
+			Err: fmt.Errorf("method: %s; request path: %s; response: %s",
+				resp.Request.Method,
+				resp.Request.URL.Path,
+				string(body)),
+		}
+		// this nil check is tied to to the unmarshal of error body
+		if err != nil {
+			return false, dbAPIError
 		}
 		for _, substring := range transientErrorStringMatches {
 			if strings.Contains(errorBody.Message, substring) {

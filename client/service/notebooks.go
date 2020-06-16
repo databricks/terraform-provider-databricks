@@ -3,6 +3,7 @@ package service
 import (
 	"encoding/json"
 	"net/http"
+	"sync"
 
 	"github.com/databrickslabs/databricks-terraform/client/model"
 )
@@ -11,6 +12,12 @@ import (
 type NotebooksAPI struct {
 	Client *DBApiClient
 }
+
+// Mutex for synchronous deletes (api has poor limits in terms of allowed parallelism this increases stability of the deletes)
+// sometimes there will be two folders with the same name at the same level due to issues with creating directories in
+// parallel. This mutex just synchronizes everything to create folders one at a time. This mutex will be removed when mkdirs
+// is removed from the notebooks resource. Then we will switch to TF resource retry.
+var mkdirMtx = &sync.Mutex{}
 
 // Create creates a notebook given the content and path
 func (a NotebooksAPI) Create(path string, content string, language model.Language, format model.ExportFormat, overwrite bool) error {
@@ -71,6 +78,11 @@ func (a NotebooksAPI) Mkdirs(path string) error {
 		Path string `json:"path,omitempty" url:"path,omitempty"`
 	}{}
 	mkDirsRequest.Path = path
+
+	// This mutex will be removed when mkdirs is removed from the notebooks resource.
+	// Then we will switch to TF resource retry.
+	mkdirMtx.Lock()
+	defer mkdirMtx.Unlock()
 
 	_, err := a.Client.performQuery(http.MethodPost, "/workspace/mkdirs", "2.0", nil, mkDirsRequest, nil)
 

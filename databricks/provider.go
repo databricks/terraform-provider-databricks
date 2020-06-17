@@ -199,7 +199,6 @@ func providerConfigureAzureClient(d *schema.ResourceData, providerVersion string
 	} else if os.Getenv("DATABRICKS_AZURE_WORKSPACE_NAME") != "" {
 		tokenPayload.WorkspaceName = os.Getenv("DATABRICKS_AZURE_WORKSPACE_NAME")
 	}
-	// TODO: Can required field not be set?
 	if workspaceURL, ok := azureAuthMap["workspace_url"].(string); ok {
 		adbWorkspaceURL = workspaceURL
 	} else if os.Getenv("DATABRICKS_AZURE_WORKSPACE_URL") != "" {

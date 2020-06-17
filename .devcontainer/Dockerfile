@@ -37,7 +37,9 @@ RUN \
     # --> Delve for debugging
     go get github.com/go-delve/delve/cmd/dlv@v1.3.2 \
     # --> Go language server
-    && go get golang.org/x/tools/gopls@v0.2.1 \
+    && go get golang.org/x/tools/gopls@v0.4.1 \
+    # --> Goimports
+    && go get golang.org/x/tools/cmd/goimports \
     # --> Gotestsum
     && go get gotest.tools/gotestsum@v0.4.2 \
     # --> Go symbols and outline for go to symbol support and test support 

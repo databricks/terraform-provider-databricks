@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	urlParse "net/url"
 
 	"github.com/Azure/go-autorest/autorest/adal"
 	"github.com/Azure/go-autorest/autorest/azure"

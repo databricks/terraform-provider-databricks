@@ -188,25 +188,25 @@ func providerConfigureAzureClient(d *schema.ResourceData, config *service.DBApiC
 	} else if os.Getenv("DATABRICKS_AZURE_MANAGED_RESOURCE_GROUP") != "" {
 		tokenPayload.ManagedResourceGroup = os.Getenv("DATABRICKS_AZURE_MANAGED_RESOURCE_GROUP")
 	}
-	
+
 	if azureRegion, ok := azureAuthMap["azure_region"].(string); ok {
 		tokenPayload.AzureRegion = azureRegion
 	} else if os.Getenv("AZURE_REGION") != "" {
 		tokenPayload.AzureRegion = os.Getenv("AZURE_REGION")
 	}
-	
+
 	if resourceGroup, ok := azureAuthMap["resource_group"].(string); ok {
 		tokenPayload.ResourceGroup = resourceGroup
 	} else if os.Getenv("DATABRICKS_AZURE_RESOURCE_GROUP") != "" {
 		tokenPayload.ResourceGroup = os.Getenv("DATABRICKS_AZURE_RESOURCE_GROUP")
 	}
-	
+
 	if workspaceName, ok := azureAuthMap["workspace_name"].(string); ok {
 		tokenPayload.WorkspaceName = workspaceName
 	} else if os.Getenv("DATABRICKS_AZURE_WORKSPACE_NAME") != "" {
 		tokenPayload.WorkspaceName = os.Getenv("DATABRICKS_AZURE_WORKSPACE_NAME")
 	}
-	
+
 	if workspaceURL, ok := azureAuthMap["workspace_url"].(string); ok {
 		adbWorkspaceURL = workspaceURL
 	} else if os.Getenv("DATABRICKS_AZURE_WORKSPACE_URL") != "" {

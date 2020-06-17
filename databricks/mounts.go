@@ -3,10 +3,11 @@ package databricks
 import (
 	"errors"
 	"fmt"
-	"github.com/databrickslabs/databricks-terraform/client/service"
 	"log"
 	"net/url"
 	"strings"
+
+	"github.com/databrickslabs/databricks-terraform/client/service"
 )
 
 // Mount interface describes the functionality of any mount which is create, read and delete
@@ -29,13 +30,13 @@ func NewAWSIamMount(s3BucketName string, mountName string) *AWSIamMount {
 }
 
 // Create creates an aws iam mount given a cluster ID
-func (m AWSIamMount) Create(client *service.DBApiClient, clusterID string) error {
+func (m AWSIamMount) Create(exec service.CommandExecutor, clusterID string) error {
 	iamMountCommand := fmt.Sprintf(`
 dbutils.fs.mount("s3a://%s", "/mnt/%s")
 dbutils.fs.ls("/mnt/%s")
 dbutils.notebook.exit("success")
 `, m.S3BucketName, m.MountName, m.MountName)
-	resp, err := client.Commands().Execute(clusterID, "python", iamMountCommand)
+	resp, err := exec.Execute(clusterID, "python", iamMountCommand)
 	if err != nil {
 		return err
 	}
@@ -47,13 +48,13 @@ dbutils.notebook.exit("success")
 }
 
 // Delete deletes an aws iam mount given a cluster ID
-func (m AWSIamMount) Delete(client *service.DBApiClient, clusterID string) error {
+func (m AWSIamMount) Delete(exec service.CommandExecutor, clusterID string) error {
 	iamMountCommand := fmt.Sprintf(`
 dbutils.fs.unmount("/mnt/%s")
 dbutils.fs.refreshMounts()
 dbutils.notebook.exit("success")
 `, m.MountName)
-	resp, err := client.Commands().Execute(clusterID, "python", iamMountCommand)
+	resp, err := exec.Execute(clusterID, "python", iamMountCommand)
 	if err != nil {
 		return err
 	}
@@ -65,14 +66,14 @@ dbutils.notebook.exit("success")
 }
 
 // Read verifies an aws iam mount given a cluster ID
-func (m AWSIamMount) Read(client *service.DBApiClient, clusterID string) (string, error) {
+func (m AWSIamMount) Read(exec service.CommandExecutor, clusterID string) (string, error) {
 	iamMountCommand := fmt.Sprintf(`
 dbutils.fs.ls("/mnt/%s")
 for mount in dbutils.fs.mounts():
   if mount.mountPoint == "/mnt/%s":
     dbutils.notebook.exit(mount.source)
 `, m.MountName, m.MountName)
-	resp, err := client.Commands().Execute(clusterID, "python", iamMountCommand)
+	resp, err := exec.Execute(clusterID, "python", iamMountCommand)
 	if err != nil {
 		return "", err
 	}
@@ -108,7 +109,7 @@ func NewAzureBlobMount(containerName string, storageAccountName string, director
 }
 
 // Create creates a azure blob storage mount given a cluster id
-func (m AzureBlobMount) Create(client *service.DBApiClient, clusterID string) error {
+func (m AzureBlobMount) Create(exec service.CommandExecutor, clusterID string) error {
 	var confKey string
 
 	if m.AuthType == "SAS" {
@@ -117,17 +118,22 @@ func (m AzureBlobMount) Create(client *service.DBApiClient, clusterID string) er
 		confKey = fmt.Sprintf("fs.azure.account.key.%s.blob.core.windows.net", m.StorageAccountName)
 	}
 	iamMountCommand := fmt.Sprintf(`
+for mount in dbutils.fs.mounts():
+  if mount.mountPoint == "/mnt/%[4]s" and mount.source=="wasbs://%[1]s@%[2]s.blob.core.windows.net%[3]s":
+    print ("Mount already exists")
+    dbutils.notebook.exit("success")
+
 try:
   dbutils.fs.mount(
-    source = "wasbs://%s@%s.blob.core.windows.net%s",
-    mount_point = "/mnt/%s",
-    extra_configs = {"%s":dbutils.secrets.get(scope = "%s", key = "%s")})
+    source = "wasbs://%[1]s@%[2]s.blob.core.windows.net%[3]s",
+    mount_point = "/mnt/%[4]s",
+    extra_configs = {"%[5]s":dbutils.secrets.get(scope = "%[6]s", key = "%[7]s")})
 except Exception as e:
-  dbutils.fs.unmount("/mnt/%s")
+  dbutils.fs.unmount("/mnt/%[4]s")
   raise e
 dbutils.notebook.exit("success")
-`, m.ContainerName, m.StorageAccountName, m.Directory, m.MountName, confKey, m.SecretScope, m.SecretKey, m.MountName)
-	resp, err := client.Commands().Execute(clusterID, "python", iamMountCommand)
+`, m.ContainerName, m.StorageAccountName, m.Directory, m.MountName, confKey, m.SecretScope, m.SecretKey)
+	resp, err := exec.Execute(clusterID, "python", iamMountCommand)
 	if err != nil {
 		return err
 	}
@@ -139,13 +145,13 @@ dbutils.notebook.exit("success")
 }
 
 // Delete deletes a azure blob storage mount given a cluster id
-func (m AzureBlobMount) Delete(client *service.DBApiClient, clusterID string) error {
+func (m AzureBlobMount) Delete(exec service.CommandExecutor, clusterID string) error {
 	iamMountCommand := fmt.Sprintf(`
 dbutils.fs.unmount("/mnt/%s")
 dbutils.fs.refreshMounts()
 dbutils.notebook.exit("success")
 `, m.MountName)
-	resp, err := client.Commands().Execute(clusterID, "python", iamMountCommand)
+	resp, err := exec.Execute(clusterID, "python", iamMountCommand)
 	if err != nil {
 		return err
 	}
@@ -157,14 +163,13 @@ dbutils.notebook.exit("success")
 }
 
 // Read verifies a azure blob storage mount given a cluster id
-func (m AzureBlobMount) Read(client *service.DBApiClient, clusterID string) (string, error) {
+func (m AzureBlobMount) Read(exec service.CommandExecutor, clusterID string) (string, error) {
 	iamMountCommand := fmt.Sprintf(`
-dbutils.fs.ls("/mnt/%s")
 for mount in dbutils.fs.mounts():
- if mount.mountPoint == "/mnt/%s":
-   dbutils.notebook.exit(mount.source)
-`, m.MountName, m.MountName)
-	resp, err := client.Commands().Execute(clusterID, "python", iamMountCommand)
+  if mount.mountPoint == "/mnt/%s":
+    dbutils.notebook.exit(mount.source)
+`, m.MountName)
+	resp, err := exec.Execute(clusterID, "python", iamMountCommand)
 	if err != nil {
 		return "", err
 	}
@@ -208,24 +213,28 @@ func NewAzureADLSGen1Mount(storageResource string, directory string, mountName s
 }
 
 // Create creates a azure datalake gen 1 storage mount given a cluster id
-func (m AzureADLSGen1Mount) Create(client *service.DBApiClient, clusterID string) error {
+func (m AzureADLSGen1Mount) Create(exec service.CommandExecutor, clusterID string) error {
 	iamMountCommand := fmt.Sprintf(`
+for mount in dbutils.fs.mounts():
+  if mount.mountPoint == "/mnt/%[8]s" and mount.source=="adl://%[6]s.azuredatalakestore.net%[7]s":
+    print ("Mount already exists")
+    dbutils.notebook.exit("success")
+
 try:
-  configs = {"%s.oauth2.access.token.provider.type": "ClientCredential",
-          "%s.oauth2.client.id": "%s",
-          "%s.oauth2.credential": dbutils.secrets.get(scope = "%s", key = "%s"),
-          "%s.oauth2.refresh.url": "https://login.microsoftonline.com/%s/oauth2/token"}
+  configs = {"%[1]s.oauth2.access.token.provider.type": "ClientCredential",
+          "%[1]s.oauth2.client.id": "%[2]s",
+          "%[1]s.oauth2.credential": dbutils.secrets.get(scope = "%[3]s", key = "%[4]s"),
+          "%[1]s.oauth2.refresh.url": "https://login.microsoftonline.com/%[5]s/oauth2/token"}
   dbutils.fs.mount(
-   source = "adl://%s.azuredatalakestore.net%s",
-   mount_point = "/mnt/%s",
+   source = "adl://%[6]s.azuredatalakestore.net%[7]s",
+   mount_point = "/mnt/%[8]s",
    extra_configs = configs)
 except Exception as e:
-  dbutils.fs.unmount("/mnt/%s")
+  dbutils.fs.unmount("/mnt/%[8]s")
   raise e
 dbutils.notebook.exit("success")
-`, m.PrefixType, m.PrefixType, m.ClientID, m.PrefixType, m.SecretScope, m.SecretKey, m.PrefixType, m.TenantID,
-		m.StorageResource, m.Directory, m.MountName, m.MountName)
-	resp, err := client.Commands().Execute(clusterID, "python", iamMountCommand)
+`, m.PrefixType, m.ClientID, m.SecretScope, m.SecretKey, m.TenantID, m.StorageResource, m.Directory, m.MountName, m.MountName)
+	resp, err := exec.Execute(clusterID, "python", iamMountCommand)
 	if err != nil {
 		return err
 	}
@@ -237,13 +246,13 @@ dbutils.notebook.exit("success")
 }
 
 // Delete deletes a azure datalake gen 1 storage mount given a cluster id
-func (m AzureADLSGen1Mount) Delete(client *service.DBApiClient, clusterID string) error {
+func (m AzureADLSGen1Mount) Delete(exec service.CommandExecutor, clusterID string) error {
 	iamMountCommand := fmt.Sprintf(`
 dbutils.fs.unmount("/mnt/%s")
 dbutils.fs.refreshMounts()
 dbutils.notebook.exit("success")
 `, m.MountName)
-	resp, err := client.Commands().Execute(clusterID, "python", iamMountCommand)
+	resp, err := exec.Execute(clusterID, "python", iamMountCommand)
 	if err != nil {
 		return err
 	}
@@ -255,14 +264,13 @@ dbutils.notebook.exit("success")
 }
 
 // Read verifies the azure datalake gen 1 storage mount given a cluster id
-func (m AzureADLSGen1Mount) Read(client *service.DBApiClient, clusterID string) (string, error) {
+func (m AzureADLSGen1Mount) Read(exec service.CommandExecutor, clusterID string) (string, error) {
 	iamMountCommand := fmt.Sprintf(`
-dbutils.fs.ls("/mnt/%s")
 for mount in dbutils.fs.mounts():
- if mount.mountPoint == "/mnt/%s":
-   dbutils.notebook.exit(mount.source)
-`, m.MountName, m.MountName)
-	resp, err := client.Commands().Execute(clusterID, "python", iamMountCommand)
+  if mount.mountPoint == "/mnt/%s":
+    dbutils.notebook.exit(mount.source)
+`, m.MountName)
+	resp, err := exec.Execute(clusterID, "python", iamMountCommand)
 	if err != nil {
 		return "", err
 	}
@@ -306,8 +314,13 @@ func NewAzureADLSGen2Mount(containerName string, storageAccountName string, dire
 }
 
 // Create creates a azure datalake gen 2 storage mount
-func (m AzureADLSGen2Mount) Create(client *service.DBApiClient, clusterID string) error {
+func (m AzureADLSGen2Mount) Create(exec service.CommandExecutor, clusterID string) error {
 	iamMountCommand := fmt.Sprintf(`
+for mount in dbutils.fs.mounts():
+  if mount.mountPoint == "/mnt/%[9]s" and mount.source=="abfss://%[6]s@%[7]s.dfs.core.windows.net%[8]s":
+    print ("Mount already exists")
+    dbutils.notebook.exit("success")
+
 try:
   configs = {"fs.azure.account.auth.type": "OAuth",
            "fs.azure.account.oauth.provider.type": "org.apache.hadoop.fs.azurebfs.oauth2.ClientCredsTokenProvider",
@@ -327,7 +340,7 @@ except Exception as e:
   raise e
 dbutils.notebook.exit("success")
 `, m.ClientID, m.SecretScope, m.SecretKey, m.TenantID, m.InitializeFileSystem, m.ContainerName, m.StorageAccountName, m.Directory, m.MountName)
-	resp, err := client.Commands().Execute(clusterID, "python", iamMountCommand)
+	resp, err := exec.Execute(clusterID, "python", iamMountCommand)
 	if err != nil {
 		return err
 	}
@@ -339,13 +352,13 @@ dbutils.notebook.exit("success")
 }
 
 // Delete deletes a azure datalake gen 2 storage mount
-func (m AzureADLSGen2Mount) Delete(client *service.DBApiClient, clusterID string) error {
+func (m AzureADLSGen2Mount) Delete(exec service.CommandExecutor, clusterID string) error {
 	iamMountCommand := fmt.Sprintf(`
 dbutils.fs.unmount("/mnt/%s")
 dbutils.fs.refreshMounts()
 dbutils.notebook.exit("success")
 `, m.MountName)
-	resp, err := client.Commands().Execute(clusterID, "python", iamMountCommand)
+	resp, err := exec.Execute(clusterID, "python", iamMountCommand)
 	if err != nil {
 		return err
 	}
@@ -357,14 +370,13 @@ dbutils.notebook.exit("success")
 }
 
 // Read verifies the azure datalake gen 2 storage mount
-func (m AzureADLSGen2Mount) Read(client *service.DBApiClient, clusterID string) (string, error) {
+func (m AzureADLSGen2Mount) Read(exec service.CommandExecutor, clusterID string) (string, error) {
 	iamMountCommand := fmt.Sprintf(`
-dbutils.fs.ls("/mnt/%s")
 for mount in dbutils.fs.mounts():
- if mount.mountPoint == "/mnt/%s":
-   dbutils.notebook.exit(mount.source)
-`, m.MountName, m.MountName)
-	resp, err := client.Commands().Execute(clusterID, "python", iamMountCommand)
+  if mount.mountPoint == "/mnt/%s":
+    dbutils.notebook.exit(mount.source)
+`, m.MountName)
+	resp, err := exec.Execute(clusterID, "python", iamMountCommand)
 	if err != nil {
 		return "", err
 	}
@@ -420,4 +432,13 @@ func ProcessAzureWasbAbfssUris(uri string) (string, string, string, error) {
 		directory = ""
 	}
 	return containerName, storageAccount, directory, nil
+}
+
+// ValidateMountDirectory is a ValidateFunc that ensures the mount directory starts with a '/'
+func ValidateMountDirectory(val interface{}, key string) (warns []string, errs []error) {
+	v := val.(string)
+	if v != "" && !strings.HasPrefix(v, "/") {
+		return nil, []error{fmt.Errorf("%s must start with /, got: %s", key, v)}
+	}
+	return nil, nil
 }

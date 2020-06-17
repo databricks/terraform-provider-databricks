@@ -1,6 +1,6 @@
 default: build
 
-test:
+test: lint
 	@echo "==> Running tests..."
 	@gotestsum --format short-verbose --raw-command go test -v -json -short -coverprofile=coverage.txt ./...
 
@@ -26,17 +26,22 @@ coverage-int: int
 
 int-build: int build
 
-build: lint test fmt
+build: lint test
 	@echo "==> Building source code with go build..."
 	@go build -mod vendor -v -o terraform-provider-databricks
 
 lint:
-	@echo "==> Linting source code with golangci-lint..."
-	@golangci-lint run --skip-dirs-use-default --timeout 5m --build-tags=azure
-	@golangci-lint run --skip-dirs-use-default --timeout 5m --build-tags=aws
+	@echo "==> Linting source code with golangci-lint make sure you run make fmt ..."
+	@golangci-lint run --skip-dirs-use-default --timeout 5m
 
-fmt: lint
+fmt:
 	@echo "==> Formatting source code with gofmt..."
+	@goimports -w client
+	@goimports -w databricks
+	@goimports -w main.go
+	@gofmt -s -w client
+	@gofmt -s -w databricks
+	@gofmt -s -w main.go
 	@go fmt ./...
 
 vendor:
@@ -44,17 +49,17 @@ vendor:
 	@go mod vendor
 
 # INTEGRATION TESTING WITH AZURE
-terraform-acc-azure: fmt
+terraform-acc-azure: lint
 	@echo "==> Running Terraform Acceptance Tests for Azure..."
 	@/bin/bash integration-environment-azure/run.sh
 
 # INTEGRATION TESTING WITH AWS
-terraform-acc-aws: fmt
+terraform-acc-aws: lint
 	@echo "==> Running Terraform Acceptance Tests for AWS..."
 	@CLOUD_ENV="aws" TF_ACC=1 gotestsum --format short-verbose --raw-command go test -v -json -short -coverprofile=coverage.out -run 'TestAccAws' ./...
 
 # INTEGRATION TESTING WITH AWS
-terraform-acc-mws: fmt
+terraform-acc-mws: lint
 	@echo "==> Running Terraform Acceptance Tests for Multiple Workspace APIs on AWS..."
 	@/bin/bash integration-environment-mws/run.sh
 

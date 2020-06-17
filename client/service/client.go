@@ -89,7 +89,7 @@ func (c *DBApiClientConfig) Setup() {
 	retryMaximumDuration := 5 * time.Minute
 	c.client = &retryablehttp.Client{
 		HTTPClient: &http.Client{
-			Timeout: time.Duration(time.Duration(c.TimeoutSeconds) * time.Second),
+			Timeout: time.Duration(c.TimeoutSeconds) * time.Second,
 			Transport: &http.Transport{
 				TLSClientConfig: &tls.Config{
 					InsecureSkipVerify: c.InsecureSkipVerify,
@@ -292,7 +292,6 @@ func PerformQuery(config *DBApiClientConfig, method, path string, apiVersion str
 		}
 		requestURL += "?" + params.Encode()
 		auditGetPayload(requestURL, secretsMask)
-
 	} else {
 		if marshalJSON {
 			bodyBytes, err := json.Marshal(data)
@@ -303,7 +302,6 @@ func PerformQuery(config *DBApiClientConfig, method, path string, apiVersion str
 			requestBody = bodyBytes
 		} else {
 			requestBody = []byte(data.(string))
-
 		}
 		auditNonGetPayload(method, requestURL, data, secretsMask)
 	}

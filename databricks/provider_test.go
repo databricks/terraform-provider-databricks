@@ -31,14 +31,13 @@ func init() {
 	if cloudEnv == "azure" {
 		var config service.DBApiClientConfig
 		testAccProvider.ConfigureFunc = func(data *schema.ResourceData) (i interface{}, e error) {
-			return providerConfigureAzureClient(data, "", &config)
+			return providerConfigureAzureClient(data, &config)
 		}
 	}
 
 	testAccProviders = map[string]terraform.ResourceProvider{
 		"databricks": testAccProvider,
 	}
-
 }
 
 func getMWSClient() *service.DBApiClient {
@@ -111,7 +110,7 @@ func TestProvider(t *testing.T) {
 func TestProvider_NoOptionsResultsInError(t *testing.T) {
 	var provider = Provider("")
 	var raw = make(map[string]interface{})
-	raw["config_file"] = "testdata/.databrickscfg_non_existant"
+	raw["config_file"] = "testdata/.databrickscfg_non_existent"
 	err := provider.Configure(terraform.NewResourceConfigRaw(raw))
 	assert.NotNil(t, err)
 }
@@ -126,6 +125,20 @@ func TestProvider_HostTokensTakePrecedence(t *testing.T) {
 
 	client := testAccProvider.Meta().(*service.DBApiClient).Config
 	assert.Equal(t, "configured", client.Token)
+}
+
+func TestProvider_BasicAuthTakePrecedence(t *testing.T) {
+	var raw = make(map[string]interface{})
+	raw["host"] = "foo"
+	raw["basic_auth"] = []interface{}{map[string]interface{}{"username": "user", "password": "pass"}}
+	raw["config_file"] = "testdata/.databrickscfg"
+	err := testAccProvider.Configure(terraform.NewResourceConfigRaw(raw))
+	assert.Nil(t, err)
+
+	// Basic auth convention
+	expectedToken := base64.StdEncoding.EncodeToString([]byte("user:pass"))
+	client := testAccProvider.Meta().(*service.DBApiClient).Config
+	assert.Equal(t, expectedToken, client.Token)
 }
 
 func TestProvider_MissingEnvMakesConfigRead(t *testing.T) {

@@ -2,10 +2,12 @@ package databricks
 
 import (
 	"fmt"
+	"log"
+	"strings"
+
 	"github.com/databrickslabs/databricks-terraform/client/service"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
-	"strings"
 )
 
 func resourceAzureBlobMount() *schema.Resource {
@@ -15,7 +17,7 @@ func resourceAzureBlobMount() *schema.Resource {
 		Delete: resourceAzureBlobMountDelete,
 
 		Schema: map[string]*schema.Schema{
-			"cluster_id": &schema.Schema{
+			"cluster_id": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -35,15 +37,8 @@ func resourceAzureBlobMount() *schema.Resource {
 				Optional: true,
 				Computed: true,
 				//Default:  "/",
-				ForceNew: true,
-				ValidateFunc: func(val interface{}, key string) (warns []string, errors []error) {
-					directory := val.(string)
-					if strings.HasPrefix(directory, "/") {
-						return
-					}
-					errors = append(errors, fmt.Errorf("%s must start with /, got: %s", key, val))
-					return
-				},
+				ForceNew:     true,
+				ValidateFunc: ValidateMountDirectory,
 			},
 			"mount_name": {
 				Type:     schema.TypeString,
@@ -88,7 +83,7 @@ func resourceAzureBlobMountCreate(d *schema.ResourceData, m interface{}) error {
 	blobMount := NewAzureBlobMount(containerName, storageAccountName, directory, mountName, authType,
 		tokenSecretScope, tokenSecretKey)
 
-	err = blobMount.Create(client, clusterID)
+	err = blobMount.Create(client.Commands(), clusterID)
 	if err != nil {
 		return err
 	}
@@ -121,10 +116,6 @@ func resourceAzureBlobMountCreate(d *schema.ResourceData, m interface{}) error {
 func resourceAzureBlobMountRead(d *schema.ResourceData, m interface{}) error {
 	client := m.(*service.DBApiClient)
 	clusterID := d.Get("cluster_id").(string)
-	err := changeClusterIntoRunningState(clusterID, client)
-	if err != nil {
-		return err
-	}
 	containerName := d.Get("container_name").(string)
 	storageAccountName := d.Get("storage_account_name").(string)
 	directory := d.Get("directory").(string)
@@ -133,10 +124,20 @@ func resourceAzureBlobMountRead(d *schema.ResourceData, m interface{}) error {
 	tokenSecretScope := d.Get("token_secret_scope").(string)
 	tokenSecretKey := d.Get("token_secret_key").(string)
 
+	err := changeClusterIntoRunningState(clusterID, client)
+	if err != nil {
+		if isClusterMissing(err.Error(), clusterID) {
+			log.Printf("Unable to refresh mount '%s' as cluster '%s' is missing", mountName, clusterID)
+			d.SetId("")
+			return nil
+		}
+		return err
+	}
+
 	blobMount := NewAzureBlobMount(containerName, storageAccountName, directory, mountName, authType,
 		tokenSecretScope, tokenSecretKey)
 
-	url, err := blobMount.Read(client, clusterID)
+	url, err := blobMount.Read(client.Commands(), clusterID)
 	if err != nil {
 		//Reset id in case of inability to find mount
 		if strings.Contains(err.Error(), "Unable to find mount point!") ||
@@ -179,5 +180,5 @@ func resourceAzureBlobMountDelete(d *schema.ResourceData, m interface{}) error {
 
 	blobMount := NewAzureBlobMount(containerName, storageAccountName, directory, mountName, authType,
 		tokenSecretScope, tokenSecretKey)
-	return blobMount.Delete(client, clusterID)
+	return blobMount.Delete(client.Commands(), clusterID)
 }

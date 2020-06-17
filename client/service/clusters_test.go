@@ -1,10 +1,11 @@
 package service
 
 import (
-	"github.com/databrickslabs/databricks-terraform/client/model"
 	"net/http"
 	"testing"
 	"time"
+
+	"github.com/databrickslabs/databricks-terraform/client/model"
 )
 
 func TestClustersAPI_Create(t *testing.T) {
@@ -226,7 +227,6 @@ func TestClustersAPI_Get(t *testing.T) {
 }
 
 func TestClustersAPI_List(t *testing.T) {
-
 	tests := []struct {
 		name           string
 		response       string
@@ -302,7 +302,6 @@ func TestClustersAPI_List(t *testing.T) {
 }
 
 func TestClustersAPI_ListZones(t *testing.T) {
-
 	tests := []struct {
 		name           string
 		response       string
@@ -351,7 +350,6 @@ func TestClustersAPI_ListZones(t *testing.T) {
 }
 
 func TestClustersAPI_ListNodeTypes(t *testing.T) {
-
 	tests := []struct {
 		name           string
 		response       string

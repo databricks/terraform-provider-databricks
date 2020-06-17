@@ -2,11 +2,12 @@ package databricks
 
 import (
 	"fmt"
+	"log"
+	"strings"
+
 	"github.com/databrickslabs/databricks-terraform/client/model"
 	"github.com/databrickslabs/databricks-terraform/client/service"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"log"
-	"strings"
 )
 
 func resourceScimGroup() *schema.Resource {
@@ -17,11 +18,11 @@ func resourceScimGroup() *schema.Resource {
 		Delete: resourceScimGroupDelete,
 
 		Schema: map[string]*schema.Schema{
-			"display_name": &schema.Schema{
+			"display_name": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"members": &schema.Schema{
+			"members": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				//Computed: true,
@@ -29,7 +30,7 @@ func resourceScimGroup() *schema.Resource {
 				Elem: &schema.Schema{Type: schema.TypeString},
 				Set:  schema.HashString,
 			},
-			"roles": &schema.Schema{
+			"roles": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -49,13 +50,13 @@ func resourceScimGroup() *schema.Resource {
 					return false
 				},
 			},
-			"inherited_roles": &schema.Schema{
+			"inherited_roles": {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Set:      schema.HashString,
 			},
-			"entitlements": &schema.Schema{
+			"entitlements": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},

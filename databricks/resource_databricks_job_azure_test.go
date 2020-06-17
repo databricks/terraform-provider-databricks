@@ -3,13 +3,14 @@ package databricks
 import (
 	"errors"
 	"fmt"
+	"strconv"
+	"testing"
+
 	"github.com/databrickslabs/databricks-terraform/client/model"
 	"github.com/databrickslabs/databricks-terraform/client/service"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 	"github.com/stretchr/testify/assert"
-	"strconv"
-	"testing"
 )
 
 func TestAccAzureJobResource(t *testing.T) {
@@ -30,7 +31,7 @@ func TestAccAzureJobResource(t *testing.T) {
 				// compose a basic test, checking both remote and local values
 				Check: resource.ComposeTestCheckFunc(
 					// query the API to retrieve the tokenInfo object
-					testAzureJobResourceExists("databricks_job.my_job", &job, t),
+					testAzureJobResourceExists("databricks_job.my_job", &job),
 					// verify remote values
 					testAzureJobValuesNewCluster(t, &job),
 				),
@@ -60,7 +61,7 @@ func testAzureJobResourceDestroy(s *terraform.State) error {
 }
 
 // testAccCheckTokenResourceExists queries the API and retrieves the matching Widget.
-func testAzureJobResourceExists(n string, job *model.Job, t *testing.T) resource.TestCheckFunc {
+func testAzureJobResourceExists(n string, job *model.Job) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		// find the corresponding state object
 		rs, ok := s.RootModule().Resources[n]
@@ -107,20 +108,20 @@ func testAzureJobValuesNewCluster(t *testing.T, job *model.Job) resource.TestChe
 
 func testAzureJobResourceNewCluster() string {
 	return `
-			resource "databricks_job" "my_job" {
-				new_cluster  {
-				autoscale  {
-					min_workers = 2
-					max_workers = 3
-				}
-				spark_version = "6.4.x-scala2.11"
-				node_type_id = "Standard_DS3_v2"
-				}
-				notebook_path = "/Users/jane.doe@databricks.com/my-demo-notebook"
-				name = "my-demo-notebook"
-				timeout_seconds = 3600
-				max_retries = 1
-				max_concurrent_runs = 1
-			}
-			`
+	resource "databricks_job" "my_job" {
+	  new_cluster  {
+		autoscale  {
+		  min_workers = 2
+		  max_workers = 3
+		}
+		spark_version = "6.4.x-scala2.11"
+		node_type_id = "Standard_DS3_v2"
+	  }
+	  notebook_path = "/Users/jane.doe@databricks.com/my-demo-notebook"
+	  name = "my-demo-notebook"
+	  timeout_seconds = 3600
+	  max_retries = 1
+	  max_concurrent_runs = 1
+	}
+	`
 }

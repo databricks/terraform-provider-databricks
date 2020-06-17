@@ -2,10 +2,12 @@ package databricks
 
 import (
 	"fmt"
+	"log"
+	"strings"
+
 	"github.com/databrickslabs/databricks-terraform/client/service"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
-	"strings"
 )
 
 func resourceAzureAdlsGen1Mount() *schema.Resource {
@@ -15,7 +17,7 @@ func resourceAzureAdlsGen1Mount() *schema.Resource {
 		Delete: resourceAzureAdlsGen1Delete,
 
 		Schema: map[string]*schema.Schema{
-			"cluster_id": &schema.Schema{
+			"cluster_id": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -37,15 +39,8 @@ func resourceAzureAdlsGen1Mount() *schema.Resource {
 				Optional: true,
 				Computed: true,
 				//Default:  "/",
-				ForceNew: true,
-				ValidateFunc: func(val interface{}, key string) (warns []string, errors []error) {
-					directory := val.(string)
-					if strings.HasPrefix(directory, "/") {
-						return
-					}
-					errors = append(errors, fmt.Errorf("%s must start with /, got: %s", key, val))
-					return
-				},
+				ForceNew:     true,
+				ValidateFunc: ValidateMountDirectory,
 			},
 			"mount_name": {
 				Type:     schema.TypeString,
@@ -95,7 +90,7 @@ func resourceAzureAdlsGen1Create(d *schema.ResourceData, m interface{}) error {
 	adlsGen1Mount := NewAzureADLSGen1Mount(storageResourceName, directory, mountName,
 		sparkConfPrefix, clientID, tenantID, clientSecretScope, clientSecretKey)
 
-	err = adlsGen1Mount.Create(client, clusterID)
+	err = adlsGen1Mount.Create(client.Commands(), clusterID)
 	if err != nil {
 		return err
 	}
@@ -135,10 +130,6 @@ func resourceAzureAdlsGen1Create(d *schema.ResourceData, m interface{}) error {
 func resourceAzureAdlsGen1Read(d *schema.ResourceData, m interface{}) error {
 	client := m.(*service.DBApiClient)
 	clusterID := d.Get("cluster_id").(string)
-	err := changeClusterIntoRunningState(clusterID, client)
-	if err != nil {
-		return err
-	}
 	storageResourceName := d.Get("storage_resource_name").(string)
 	sparkConfPrefix := d.Get("spark_conf_prefix").(string)
 	directory := d.Get("directory").(string)
@@ -147,11 +138,20 @@ func resourceAzureAdlsGen1Read(d *schema.ResourceData, m interface{}) error {
 	clientID := d.Get("client_id").(string)
 	clientSecretScope := d.Get("client_secret_scope").(string)
 	clientSecretKey := d.Get("client_secret_key").(string)
+	err := changeClusterIntoRunningState(clusterID, client)
+	if err != nil {
+		if isClusterMissing(err.Error(), clusterID) {
+			log.Printf("Unable to refresh mount '%s' as cluster '%s' is missing", mountName, clusterID)
+			d.SetId("")
+			return nil
+		}
+		return err
+	}
 
 	adlsGen1Mount := NewAzureADLSGen1Mount(storageResourceName, directory, mountName,
 		sparkConfPrefix, clientID, tenantID, clientSecretScope, clientSecretKey)
 
-	url, err := adlsGen1Mount.Read(client, clusterID)
+	url, err := adlsGen1Mount.Read(client.Commands(), clusterID)
 	if err != nil {
 		//Reset id in case of inability to find mount
 		if strings.Contains(err.Error(), "Unable to find mount point!") ||
@@ -191,5 +191,5 @@ func resourceAzureAdlsGen1Delete(d *schema.ResourceData, m interface{}) error {
 
 	adlsGen1Mount := NewAzureADLSGen1Mount(storageResourceName, directory, mountName,
 		sparkConfPrefix, clientID, tenantID, clientSecretScope, clientSecretKey)
-	return adlsGen1Mount.Delete(client, clusterID)
+	return adlsGen1Mount.Delete(client.Commands(), clusterID)
 }

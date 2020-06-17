@@ -1,8 +1,9 @@
 package service
 
 import (
-	"github.com/stretchr/testify/assert"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestCreateToken(t *testing.T) {
@@ -30,5 +31,4 @@ func TestCreateToken(t *testing.T) {
 	tokenList, err := client.Tokens().List()
 	assert.NoError(t, err, err)
 	assert.True(t, len(tokenList) > 0, "Token list is empty")
-
 }

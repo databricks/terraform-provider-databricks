@@ -2,13 +2,14 @@ package databricks
 
 import (
 	"fmt"
+	"log"
+	"strings"
+	"time"
+
 	"github.com/databrickslabs/databricks-terraform/client/model"
 	"github.com/databrickslabs/databricks-terraform/client/service"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
-	"log"
-	"strings"
-	"time"
 )
 
 func resourceInstancePool() *schema.Resource {
@@ -23,23 +24,23 @@ func resourceInstancePool() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"instance_pool_name": &schema.Schema{
+			"instance_pool_name": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"min_idle_instances": &schema.Schema{
+			"min_idle_instances": {
 				Type:     schema.TypeInt,
 				Required: true,
 			},
-			"max_capacity": &schema.Schema{
+			"max_capacity": {
 				Type:     schema.TypeInt,
 				Required: true,
 			},
-			"idle_instance_autotermination_minutes": &schema.Schema{
+			"idle_instance_autotermination_minutes": {
 				Type:     schema.TypeInt,
 				Required: true,
 			},
-			"aws_attributes": &schema.Schema{
+			"aws_attributes": {
 				Type:     schema.TypeList,
 				Optional: true,
 				MaxItems: 1,
@@ -66,27 +67,27 @@ func resourceInstancePool() *schema.Resource {
 					},
 				},
 			},
-			"node_type_id": &schema.Schema{
+			"node_type_id": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"default_tags": &schema.Schema{
+			"default_tags": {
 				Type:     schema.TypeMap,
 				Computed: true,
 			},
-			"custom_tags": &schema.Schema{
+			"custom_tags": {
 				Type:     schema.TypeMap,
 				Optional: true,
 				ForceNew: true,
 			},
-			"enable_elastic_disk": &schema.Schema{
+			"enable_elastic_disk": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				ForceNew: true,
 				Default:  true,
 			},
-			"disk_spec": &schema.Schema{
+			"disk_spec": {
 				Type:     schema.TypeList,
 				MaxItems: 1,
 				Optional: true,
@@ -128,7 +129,7 @@ func resourceInstancePool() *schema.Resource {
 					},
 				},
 			},
-			"preloaded_spark_versions": &schema.Schema{
+			"preloaded_spark_versions": {
 				Type:     schema.TypeList,
 				Optional: true,
 				ForceNew: true,
@@ -137,7 +138,7 @@ func resourceInstancePool() *schema.Resource {
 				},
 			},
 			//TODO: Determine what this does from a state management perspective
-			"state": &schema.Schema{
+			"state": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -295,14 +296,12 @@ func resourceInstancePoolRead(d *schema.ResourceData, m interface{}) error {
 		diskSpecList := []interface{}{}
 		diskSpecListItem := map[string]interface{}{}
 		if instancePoolInfo.DiskSpec.DiskType != nil {
-
 			if instancePoolInfo.DiskSpec.DiskCount >= 0 {
 				diskSpecListItem["disk_count"] = instancePoolInfo.DiskSpec.DiskCount
 			}
 			if instancePoolInfo.DiskSpec.DiskSize >= 0 {
 				diskSpecListItem["disk_size"] = instancePoolInfo.DiskSpec.DiskSize
 			}
-
 		}
 		if instancePoolInfo.DiskSpec.DiskType.EbsVolumeType != "" {
 			diskSpecListItem["ebs_volume_type"] = instancePoolInfo.DiskSpec.DiskType.EbsVolumeType

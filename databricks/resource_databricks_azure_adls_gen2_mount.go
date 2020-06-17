@@ -2,9 +2,11 @@ package databricks
 
 import (
 	"fmt"
+	"log"
+	"strings"
+
 	"github.com/databrickslabs/databricks-terraform/client/service"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"strings"
 )
 
 func resourceAzureAdlsGen2Mount() *schema.Resource {
@@ -14,7 +16,7 @@ func resourceAzureAdlsGen2Mount() *schema.Resource {
 		Delete: resourceAzureAdlsGen2Delete,
 
 		Schema: map[string]*schema.Schema{
-			"cluster_id": &schema.Schema{
+			"cluster_id": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -30,10 +32,11 @@ func resourceAzureAdlsGen2Mount() *schema.Resource {
 				ForceNew: true,
 			},
 			"directory": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ForceNew:     true,
+				ValidateFunc: ValidateMountDirectory,
 			},
 			"mount_name": {
 				Type:     schema.TypeString,
@@ -89,7 +92,7 @@ func resourceAzureAdlsGen2Create(d *schema.ResourceData, m interface{}) error {
 	adlsGen2Mount := NewAzureADLSGen2Mount(containerName, storageAccountName, directory, mountName, clientID, tenantID,
 		clientSecretScope, clientSecretKey, initializeFileSystem)
 
-	err = adlsGen2Mount.Create(client, clusterID)
+	err = adlsGen2Mount.Create(client.Commands(), clusterID)
 	if err != nil {
 		return err
 	}
@@ -129,10 +132,6 @@ func resourceAzureAdlsGen2Create(d *schema.ResourceData, m interface{}) error {
 func resourceAzureAdlsGen2Read(d *schema.ResourceData, m interface{}) error {
 	client := m.(*service.DBApiClient)
 	clusterID := d.Get("cluster_id").(string)
-	err := changeClusterIntoRunningState(clusterID, client)
-	if err != nil {
-		return err
-	}
 	containerName := d.Get("container_name").(string)
 	storageAccountName := d.Get("storage_account_name").(string)
 	directory := d.Get("directory").(string)
@@ -143,10 +142,20 @@ func resourceAzureAdlsGen2Read(d *schema.ResourceData, m interface{}) error {
 	clientSecretKey := d.Get("client_secret_key").(string)
 	initializeFileSystem := d.Get("initialize_file_system").(bool)
 
+	err := changeClusterIntoRunningState(clusterID, client)
+	if err != nil {
+		if isClusterMissing(err.Error(), clusterID) {
+			log.Printf("Unable to refresh mount '%s' as cluster '%s' is missing", mountName, clusterID)
+			d.SetId("")
+			return nil
+		}
+		return err
+	}
+
 	adlsGen2Mount := NewAzureADLSGen2Mount(containerName, storageAccountName, directory, mountName, clientID, tenantID,
 		clientSecretScope, clientSecretKey, initializeFileSystem)
 
-	url, err := adlsGen2Mount.Read(client, clusterID)
+	url, err := adlsGen2Mount.Read(client.Commands(), clusterID)
 	if err != nil {
 		//Reset id in case of inability to find mount
 		if strings.Contains(err.Error(), "Unable to find mount point!") ||
@@ -191,5 +200,5 @@ func resourceAzureAdlsGen2Delete(d *schema.ResourceData, m interface{}) error {
 
 	adlsGen2Mount := NewAzureADLSGen2Mount(containerName, storageAccountName, directory, mountName, clientID, tenantID,
 		clientSecretScope, clientSecretKey, initializeFileSystem)
-	return adlsGen2Mount.Delete(client, clusterID)
+	return adlsGen2Mount.Delete(client.Commands(), clusterID)
 }

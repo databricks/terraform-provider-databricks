@@ -3,8 +3,9 @@ package service
 import (
 	"bytes"
 	"encoding/base64"
-	"github.com/stretchr/testify/assert"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func GenString(times int) []byte {

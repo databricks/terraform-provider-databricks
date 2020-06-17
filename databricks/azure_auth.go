@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	urlParse "net/url"
 
 	"github.com/Azure/go-autorest/autorest/adal"
 	"github.com/Azure/go-autorest/autorest/azure"
@@ -50,7 +51,7 @@ type WorkspaceRequest struct {
 	Location   string   `json:"location"`
 }
 
-func (a *AzureAuth) getManagementToken(config *service.DBApiClientConfig) error {
+func (a *AzureAuth) getManagementToken() error {
 	log.Println("[DEBUG] Creating Azure Databricks management OAuth token.")
 	mgmtTokenOAuthCfg, err := adal.NewOAuthConfigWithAPIVersion(azure.PublicCloud.ActiveDirectoryEndpoint,
 		a.TokenPayload.TenantID,
@@ -74,7 +75,7 @@ func (a *AzureAuth) getManagementToken(config *service.DBApiClientConfig) error 
 	return nil
 }
 
-func (a *AzureAuth) getADBPlatformToken(clientConfig *service.DBApiClientConfig) error {
+func (a *AzureAuth) getADBPlatformToken() error {
 	log.Println("[DEBUG] Creating Azure Databricks management OAuth token.")
 	platformTokenOAuthCfg, err := adal.NewOAuthConfigWithAPIVersion(azure.PublicCloud.ActiveDirectoryEndpoint,
 		a.TokenPayload.TenantID,
@@ -141,7 +142,7 @@ func (a *AzureAuth) initWorkspaceAndGetClient(config *service.DBApiClientConfig)
 	//var dbClient service.DBApiClient
 
 	// Get management token
-	err := a.getManagementToken(config)
+	err := a.getManagementToken()
 	if err != nil {
 		return err
 	}
@@ -152,7 +153,7 @@ func (a *AzureAuth) initWorkspaceAndGetClient(config *service.DBApiClientConfig)
 		a.TokenPayload.WorkspaceName)
 
 	// Get platform token
-	err = a.getADBPlatformToken(config)
+	err = a.getADBPlatformToken()
 	if err != nil {
 		return err
 	}

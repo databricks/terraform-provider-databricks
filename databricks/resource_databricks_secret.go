@@ -16,23 +16,23 @@ func resourceSecret() *schema.Resource {
 		Delete: resourceSecretDelete,
 
 		Schema: map[string]*schema.Schema{
-			"string_value": &schema.Schema{
+			"string_value": {
 				Type:      schema.TypeString,
 				Required:  true,
 				ForceNew:  true,
 				Sensitive: true,
 			},
-			"scope": &schema.Schema{
+			"scope": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"key": &schema.Schema{
+			"key": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"last_updated_timestamp": &schema.Schema{
+			"last_updated_timestamp": {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},

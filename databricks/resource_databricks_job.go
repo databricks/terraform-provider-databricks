@@ -20,21 +20,21 @@ func resourceJob() *schema.Resource {
 		Delete: resourceJobDelete,
 
 		Schema: map[string]*schema.Schema{
-			"existing_cluster_id": &schema.Schema{
+			"existing_cluster_id": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"new_cluster": &schema.Schema{
+			"new_cluster": {
 				Type:     schema.TypeList,
 				Optional: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"num_workers": &schema.Schema{
+						"num_workers": {
 							Type:     schema.TypeInt,
 							Optional: true,
 						},
-						"autoscale": &schema.Schema{
+						"autoscale": {
 							Type:     schema.TypeSet,
 							Optional: true,
 							MaxItems: 1,
@@ -51,20 +51,20 @@ func resourceJob() *schema.Resource {
 								},
 							},
 						},
-						"cluster_name": &schema.Schema{
+						"cluster_name": {
 							Type:     schema.TypeString,
 							Optional: true,
 							Computed: true,
 						},
-						"spark_version": &schema.Schema{
+						"spark_version": {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
-						"spark_conf": &schema.Schema{
+						"spark_conf": {
 							Type:     schema.TypeMap,
 							Optional: true,
 						},
-						"aws_attributes": &schema.Schema{
+						"aws_attributes": {
 							Type:     schema.TypeList,
 							Optional: true,
 							MaxItems: 1,
@@ -107,27 +107,27 @@ func resourceJob() *schema.Resource {
 								},
 							},
 						},
-						"driver_node_type_id": &schema.Schema{
+						"driver_node_type_id": {
 							Type:     schema.TypeString,
 							Optional: true,
 							Computed: true,
 						},
-						"node_type_id": &schema.Schema{
+						"node_type_id": {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
-						"ssh_public_keys": &schema.Schema{
+						"ssh_public_keys": {
 							Type:     schema.TypeSet,
 							Optional: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 							Set:      schema.HashString,
 							//	TODO: Validate less than 10 values
 						},
-						"custom_tags": &schema.Schema{
+						"custom_tags": {
 							Type:     schema.TypeMap,
 							Optional: true,
 						},
-						"cluster_log_conf": &schema.Schema{
+						"cluster_log_conf": {
 							Type:     schema.TypeList,
 							Optional: true,
 							MaxItems: 1,
@@ -196,7 +196,7 @@ func resourceJob() *schema.Resource {
 								},
 							},
 						},
-						"init_scripts": &schema.Schema{
+						"init_scripts": {
 							Type:     schema.TypeList,
 							Optional: true,
 							MaxItems: 10,
@@ -257,7 +257,7 @@ func resourceJob() *schema.Resource {
 							},
 						},
 						//TODO: Docker does not seem to be supported by jobs
-						"docker_image": &schema.Schema{
+						"docker_image": {
 							Type:     schema.TypeList,
 							Optional: true,
 							MaxItems: 1,
@@ -288,51 +288,51 @@ func resourceJob() *schema.Resource {
 								},
 							},
 						},
-						"spark_env_vars": &schema.Schema{
+						"spark_env_vars": {
 							Type:     schema.TypeMap,
 							Optional: true,
 						},
 						//TODO: This should probably be removed jobs dont auto terminate
-						"autotermination_minutes": &schema.Schema{
+						"autotermination_minutes": {
 							Type:     schema.TypeInt,
 							Optional: true,
 							Computed: true,
 						},
-						"enable_elastic_disk": &schema.Schema{
+						"enable_elastic_disk": {
 							Type:     schema.TypeBool,
 							Optional: true,
 							Computed: true,
 						},
-						"instance_pool_id": &schema.Schema{
+						"instance_pool_id": {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
 					},
 				},
 			},
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"library_jar": &schema.Schema{
+			"library_jar": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Set:      schema.HashString,
 			},
-			"library_egg": &schema.Schema{
+			"library_egg": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Set:      schema.HashString,
 			},
-			"library_whl": &schema.Schema{
+			"library_whl": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Set:      schema.HashString,
 			},
-			"library_pypi": &schema.Schema{
+			"library_pypi": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem: &schema.Resource{
@@ -348,7 +348,7 @@ func resourceJob() *schema.Resource {
 					},
 				},
 			},
-			"library_maven": &schema.Schema{
+			"library_maven": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem: &schema.Resource{
@@ -369,7 +369,7 @@ func resourceJob() *schema.Resource {
 					},
 				},
 			},
-			"library_cran": &schema.Schema{
+			"library_cran": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem: &schema.Resource{
@@ -385,72 +385,72 @@ func resourceJob() *schema.Resource {
 					},
 				},
 			},
-			"notebook_path": &schema.Schema{
+			"notebook_path": {
 				Type:          schema.TypeString,
 				Optional:      true,
 				AtLeastOneOf:  []string{"jar_main_class_name", "spark_submit_parameters", "python_file"},
 				ConflictsWith: []string{"jar_main_class_name", "spark_submit_parameters", "python_file"},
 			},
-			"notebook_base_parameters": &schema.Schema{
+			"notebook_base_parameters": {
 				Type:     schema.TypeMap,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"jar_uri": &schema.Schema{
+			"jar_uri": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"jar_main_class_name": &schema.Schema{
+			"jar_main_class_name": {
 				Type:          schema.TypeString,
 				Optional:      true,
 				AtLeastOneOf:  []string{"python_file", "notebook_path", "spark_submit_parameters"},
 				ConflictsWith: []string{"python_file", "notebook_path", "spark_submit_parameters"},
 			},
-			"jar_parameters": &schema.Schema{
+			"jar_parameters": {
 				Type:     schema.TypeList,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"python_file": &schema.Schema{
+			"python_file": {
 				Type:          schema.TypeString,
 				Optional:      true,
 				AtLeastOneOf:  []string{"jar_main_class_name", "notebook_path", "spark_submit_parameters"},
 				ConflictsWith: []string{"jar_main_class_name", "notebook_path", "spark_submit_parameters"},
 			},
-			"python_parameters": &schema.Schema{
+			"python_parameters": {
 				Type:     schema.TypeList,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"spark_submit_parameters": &schema.Schema{
+			"spark_submit_parameters": {
 				Type:          schema.TypeList,
 				Optional:      true,
 				Elem:          &schema.Schema{Type: schema.TypeString},
 				AtLeastOneOf:  []string{"jar_main_class_name", "notebook_path", "python_file"},
 				ConflictsWith: []string{"jar_main_class_name", "notebook_path", "python_file"},
 			},
-			"email_notifications": &schema.Schema{
+			"email_notifications": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"on_start": &schema.Schema{
+						"on_start": {
 							Type:     schema.TypeSet,
 							Optional: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 							Set:      schema.HashString,
 						},
-						"on_success": &schema.Schema{
+						"on_success": {
 							Type:     schema.TypeSet,
 							Optional: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
-						"on_failure": &schema.Schema{
+						"on_failure": {
 							Type:     schema.TypeSet,
 							Optional: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
-						"no_alert_for_skipped_runs": &schema.Schema{
+						"no_alert_for_skipped_runs": {
 							Type:     schema.TypeBool,
 							Optional: true,
 						},
@@ -458,23 +458,23 @@ func resourceJob() *schema.Resource {
 				},
 				MaxItems: 1,
 			},
-			"timeout_seconds": &schema.Schema{
+			"timeout_seconds": {
 				Type:     schema.TypeInt,
 				Optional: true,
 			},
-			"max_retries": &schema.Schema{
+			"max_retries": {
 				Type:     schema.TypeInt,
 				Optional: true,
 			},
-			"min_retry_interval_millis": &schema.Schema{
+			"min_retry_interval_millis": {
 				Type:     schema.TypeInt,
 				Optional: true,
 			},
-			"retry_on_timeout": &schema.Schema{
+			"retry_on_timeout": {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
-			"schedule": &schema.Schema{
+			"schedule": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				MaxItems: 1,
@@ -491,19 +491,19 @@ func resourceJob() *schema.Resource {
 					},
 				},
 			},
-			"max_concurrent_runs": &schema.Schema{
+			"max_concurrent_runs": {
 				Type:     schema.TypeInt,
 				Optional: true,
 			},
-			"job_id": &schema.Schema{
+			"job_id": {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"creator_user_name": &schema.Schema{
+			"creator_user_name": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"created_time": &schema.Schema{
+			"created_time": {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
@@ -512,7 +512,6 @@ func resourceJob() *schema.Resource {
 }
 
 func resourceJobCreate(d *schema.ResourceData, m interface{}) error {
-
 	client := m.(*service.DBApiClient)
 
 	jobSettings := parseSchemaToJobSettings(d)
@@ -877,7 +876,6 @@ func resourceJobRead(d *schema.ResourceData, m interface{}) error {
 				return err
 			}
 		}
-
 	} else {
 		err = d.Set("email_notifications", nil)
 		if err != nil {
@@ -974,7 +972,6 @@ func resourceJobDelete(d *schema.ResourceData, m interface{}) error {
 }
 
 func parseSchemaToJobSettings(d *schema.ResourceData) model.JobSettings {
-
 	var jobSettings model.JobSettings
 
 	if existingClusterID, ok := d.GetOk("existing_cluster_id"); ok {
@@ -1048,7 +1045,6 @@ func parseSchemaToJobSettings(d *schema.ResourceData) model.JobSettings {
 			QuartzCronExpression: scheduleMap["quartz_cron_expression"].(string),
 			TimezoneID:           scheduleMap["timezone_id"].(string),
 		}
-
 	}
 	if maxConcurrentRuns, ok := d.GetOk("max_concurrent_runs"); ok {
 		intVal, _ := maxConcurrentRuns.(int)

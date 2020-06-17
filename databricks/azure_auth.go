@@ -101,9 +101,9 @@ func (a *AzureAuth) getADBPlatformToken(clientConfig *service.DBApiClientConfig)
 
 func (a *AzureAuth) getWorkspaceAccessToken(config *service.DBApiClientConfig) error {
 	log.Println("[DEBUG] Creating workspace token")
-	apiLifeTimeInSeconds := int32(600)
+	apiLifeTimeInSeconds := int32(3600)
 	comment := "Secret made via SP"
-	url := "https://" + a.TokenPayload.AzureRegion + ".azuredatabricks.net/api/2.0/token/create"
+	url := a.AdbWorkspaceUrl + "/api/2.0/token/create"
 	payload := struct {
 		LifetimeSeconds int32  `json:"lifetime_seconds,omitempty"`
 		Comment         string `json:"comment,omitempty"`
@@ -146,8 +146,7 @@ func (a *AzureAuth) initWorkspaceAndGetClient(config *service.DBApiClientConfig)
 		return err
 	}
 
-	a.AdbWorkspaceResourceID = fmt.Sprintf("/subscriptions/%s/resourceGroups/%s"+
-		"/providers/Microsoft.Databricks/workspaces/%s",
+	a.AdbWorkspaceResourceID = fmt.Sprintf("/subscriptions/%s/resourceGroups/%s/providers/Microsoft.Databricks/workspaces/%s",
 		a.TokenPayload.SubscriptionID,
 		a.TokenPayload.ResourceGroup,
 		a.TokenPayload.WorkspaceName)

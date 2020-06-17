@@ -107,6 +107,9 @@ func testAccAzureBlobMount_correctly_mounts() string {
 		node_type_id = "Standard_D3_v2"
 		# Don't spend too much, turn off cluster after 15mins
 		autotermination_minutes = 15
+		spark_conf = {
+			"spark.databricks.delta.preview.enabled": "false"
+		}
 	} 
 
 	resource "databricks_secret_scope" "terraform" {

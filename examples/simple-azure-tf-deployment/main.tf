@@ -46,6 +46,7 @@ provider "databricks" {
     azure_region = azurerm_databricks_workspace.demo_test_workspace.location
     workspace_name = azurerm_databricks_workspace.demo_test_workspace.name
     resource_group = azurerm_databricks_workspace.demo_test_workspace.resource_group_name
+    workspace_url = azurerm_databricks_workspace.demo_test_workspace.workspace_url
     client_id = var.client_id
     client_secret = var.client_secret
     tenant_id = var.tenant_id

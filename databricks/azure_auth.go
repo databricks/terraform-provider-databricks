@@ -3,12 +3,12 @@ package databricks
 import (
 	"encoding/json"
 	"fmt"
+	"log"
+	"net/http"
+
 	"github.com/Azure/go-autorest/autorest/adal"
 	"github.com/Azure/go-autorest/autorest/azure"
 	"github.com/databrickslabs/databricks-terraform/client/service"
-	"log"
-	"net/http"
-	urlParse "net/url"
 )
 
 // List of management information
@@ -23,6 +23,7 @@ type AzureAuth struct {
 	AdbWorkspaceResourceID string
 	AdbAccessToken         string
 	AdbPlatformToken       string
+	AdbWorkspaceUrl        string
 }
 
 // TokenPayload contains all the auth information for azure sp authentication
@@ -71,38 +72,6 @@ func (a *AzureAuth) getManagementToken(config *service.DBApiClientConfig) error 
 	}
 	a.ManagementToken = mgmtToken.OAuthToken()
 	return nil
-}
-
-func (a *AzureAuth) getWorkspaceID(config *service.DBApiClientConfig) error {
-	log.Println("[DEBUG] Getting Workspace ID via management token.")
-	// Escape all the ids
-	url := fmt.Sprintf("https://management.azure.com/subscriptions/%s/resourceGroups/%s"+
-		"/providers/Microsoft.Databricks/workspaces/%s",
-		urlParse.PathEscape(a.TokenPayload.SubscriptionID),
-		urlParse.PathEscape(a.TokenPayload.ResourceGroup),
-		urlParse.PathEscape(a.TokenPayload.WorkspaceName))
-	headers := map[string]string{
-		"Content-Type":  "application/json",
-		"cache-control": "no-cache",
-		"Authorization": "Bearer " + a.ManagementToken,
-	}
-	type apiVersion struct {
-		ApiVersion string `url:"api-version"`
-	}
-	uriPayload := apiVersion{
-		ApiVersion: "2018-04-01",
-	}
-	var responseMap map[string]interface{}
-	resp, err := service.PerformQuery(config, http.MethodGet, url, "2.0", headers, false, true, uriPayload, nil)
-	if err != nil {
-		return err
-	}
-	err = json.Unmarshal(resp, &responseMap)
-	if err != nil {
-		return err
-	}
-	a.AdbWorkspaceResourceID = responseMap["id"].(string)
-	return err
 }
 
 func (a *AzureAuth) getADBPlatformToken(clientConfig *service.DBApiClientConfig) error {
@@ -177,11 +146,11 @@ func (a *AzureAuth) initWorkspaceAndGetClient(config *service.DBApiClientConfig)
 		return err
 	}
 
-	// Get workspace access token
-	err = a.getWorkspaceID(config)
-	if err != nil {
-		return err
-	}
+	a.AdbWorkspaceResourceID = fmt.Sprintf("/subscriptions/%s/resourceGroups/%s"+
+		"/providers/Microsoft.Databricks/workspaces/%s",
+		a.TokenPayload.SubscriptionID,
+		a.TokenPayload.ResourceGroup,
+		a.TokenPayload.WorkspaceName)
 
 	// Get platform token
 	err = a.getADBPlatformToken(config)
@@ -195,8 +164,7 @@ func (a *AzureAuth) initWorkspaceAndGetClient(config *service.DBApiClientConfig)
 		return err
 	}
 
-	//// TODO: Eventually change this to include new Databricks domain names. May have to add new vars and/or deprecate existing args.
-	config.Host = "https://" + a.TokenPayload.AzureRegion + ".azuredatabricks.net"
+	config.Host = a.AdbWorkspaceUrl
 	config.Token = a.AdbAccessToken
 
 	return nil

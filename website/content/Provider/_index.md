@@ -78,6 +78,7 @@ provider "databricks" {
     managed_resource_group  = azurerm_databricks_workspace.demo_test_workspace.managed_resource_group_name
     azure_region            = azurerm_databricks_workspace.demo_test_workspace.location
     workspace_name          = azurerm_databricks_workspace.demo_test_workspace.name
+    workspace_url           = azurerm_databricks_workspace.demo_test_workspace.workspace_url
     resource_group          = azurerm_databricks_workspace.demo_test_workspace.resource_group_name
     client_id               = var.client_id
     client_secret           = var.client_secret
@@ -137,6 +138,7 @@ provider "databricks" {
     managed_resource_group = "${azurerm_databricks_workspace.sri_test_workspace.managed_resource_group_name}"
     azure_region = "${azurerm_databricks_workspace.sri_test_workspace.location}"
     workspace_name = "${azurerm_databricks_workspace.sri_test_workspace.name}"
+    workspace_url = "${azurerm_databricks_workspace.sri_test_workspace.workspace_url}"
     resource_group = "${azurerm_databricks_workspace.sri_test_workspace.resource_group_name}"
     client_id = "${var.client_id}"
     client_secret = "${var.client_secret}"
@@ -158,6 +160,7 @@ The following variables can be passed via environment variables:
 * `managed_resource_group` → `DATABRICKS_AZURE_MANAGED_RESOURCE_GROUP`
 * `azure_region` → `AZURE_REGION`
 * `workspace_name` → `DATABRICKS_AZURE_WORKSPACE_NAME`
+* `workspace_url` → `DATABRICKS_AZURE_WORKSPACE_URL`
 * `resource_group` → `DATABRICKS_AZURE_RESOURCE_GROUP`
 * `subscription_id` → `DATABRICKS_AZURE_SUBSCRIPTION_ID` or `ARM_SUBSCRIPTION_ID`
 * `client_secret` → `DATABRICKS_AZURE_CLIENT_SECRET` or `ARM_CLIENT_SECRET`
@@ -228,6 +231,7 @@ Alternatively you can provide this value as an environment variable `DATABRICKS_
 >    azure_region = "centralus"
 >    managed_resource_group = "my-databricks-managed-rg"
 >    workspace_name = "test-managed-workspace"
+>    workspace_url = "adb-somenumber.19.azuredatabricks.net"
 >    resource_group = "1-test-rg"
 >    client_id = var.client_id
 >    client_secret = var.client_secret
@@ -247,6 +251,9 @@ Alternatively you can provide this value as an environment variable `AZURE_REGIO
 
 * `workspace_name` - This is the name of your Azure Databricks Workspace.
 Alternatively you can provide this value as an environment variable `DATABRICKS_AZURE_WORKSPACE_NAME`.
+
+* `workspace_url` - This is the URL of the Azure Databricks Workspace API.
+Alternatively you can provide this value as an environment variable `DATABRICKS_AZURE_WORKSPACE_URL`.
 
 * `resource_group` - This is the resource group in which your Azure Databricks Workspace resides in.
 Alternatively you can provide this value as an environment variable `DATABRICKS_AZURE_RESOURCE_GROUP`.

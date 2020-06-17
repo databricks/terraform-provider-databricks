@@ -32,16 +32,21 @@ fi
 terraform init
 terraform apply -auto-approve
 
-export TEST_RESOURCE_GROUP=$(terraform output rg_name) 
-export TEST_WORKSPACE_NAME=$(terraform output workspace_name)
+export CLOUD_ENV="azure"
 export TEST_GEN2_ADAL_NAME=$(terraform output gen2_adal_name)
-export TEST_MANAGED_RESOURCE_GROUP=$(terraform output workspace_managed_rg_name)
-export TEST_LOCATION=$(terraform output location)
 export TEST_STORAGE_ACCOUNT_KEY=$(terraform output blob_storage_key)
 export TEST_STORAGE_ACCOUNT_NAME=$(terraform output blob_storage_name)
+
+export DATABRICKS_AZURE_WORKSPACE_NAME=$(terraform output workspace_name)
+export DATABRICKS_AZURE_RESOURCE_GROUP=$(terraform output rg_name) 
+export DATABRICKS_AZURE_WORKSPACE_URL=$(terraform output workspace_url)
+export AZURE_REGION=$(terraform output location)
+export DATABRICKS_AZURE_MANAGED_RESOURCE_GROUP=$(terraform output workspace_managed_rg_name)
 
 echo -e "----> Running Azure Acceptance Tests \n\n"
 # Output debug log to file while tests run
 export TF_LOG_PATH=$PWD/tf.log
 # Run all Azure integration tests
-TF_LOG=debug TF_ACC=1 gotestsum --format short-verbose --raw-command go test -v -json -short -coverprofile=coverage.out -test.timeout 35m -run 'TestAccAzure' ./../...
+TF_LOG=debug TF_ACC=1 gotestsum --format short-verbose --raw-command \
+    go test -v -json -short -coverprofile=coverage.out \
+    -test.timeout 35m -run 'TestAccAzure' ./../...

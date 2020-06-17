@@ -46,7 +46,7 @@ vendor:
 # INTEGRATION TESTING WITH AZURE
 terraform-acc-azure: fmt
 	@echo "==> Running Terraform Acceptance Tests for Azure..."
-	@CLOUD_ENV="azure" TF_ACC=1 gotestsum --format short-verbose --raw-command go test -v -json -tags=azure  -short -coverprofile=coverage.out ./...
+	@/bin/bash integration-environment-azure/run.sh
 
 # INTEGRATION TESTING WITH AWS
 terraform-acc-aws: fmt

@@ -29,6 +29,13 @@ then
     rm -f *.tfstate
 fi
 
+if [ -n "$TEST_LOG_LEVEL" ]
+then
+    export TF_LOG=$TEST_LOG_LEVEL
+    # Output debug log to file while tests run
+    export TF_LOG_PATH=$PWD/tf.log
+fi
+
 terraform init
 terraform apply -auto-approve
 
@@ -44,9 +51,8 @@ export AZURE_REGION=$(terraform output location)
 export DATABRICKS_AZURE_MANAGED_RESOURCE_GROUP=$(terraform output workspace_managed_rg_name)
 
 echo -e "----> Running Azure Acceptance Tests \n\n"
-# Output debug log to file while tests run
-export TF_LOG_PATH=$PWD/tf.log
+
 # Run all Azure integration tests
-TF_LOG=debug TF_ACC=1 gotestsum --format short-verbose --raw-command \
+TF_ACC=1 gotestsum --format short-verbose --raw-command \
     go test -v -json -short -coverprofile=coverage.out \
     -test.timeout 35m -run 'TestAccAzure' ./../...

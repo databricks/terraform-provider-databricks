@@ -184,21 +184,25 @@ func providerConfigureAzureClient(d *schema.ResourceData, providerVersion string
 	} else if os.Getenv("DATABRICKS_AZURE_MANAGED_RESOURCE_GROUP") != "" {
 		tokenPayload.ManagedResourceGroup = os.Getenv("DATABRICKS_AZURE_MANAGED_RESOURCE_GROUP")
 	}
+	
 	if azureRegion, ok := azureAuthMap["azure_region"].(string); ok {
 		tokenPayload.AzureRegion = azureRegion
 	} else if os.Getenv("AZURE_REGION") != "" {
 		tokenPayload.AzureRegion = os.Getenv("AZURE_REGION")
 	}
+	
 	if resourceGroup, ok := azureAuthMap["resource_group"].(string); ok {
 		tokenPayload.ResourceGroup = resourceGroup
 	} else if os.Getenv("DATABRICKS_AZURE_RESOURCE_GROUP") != "" {
 		tokenPayload.ResourceGroup = os.Getenv("DATABRICKS_AZURE_RESOURCE_GROUP")
 	}
+	
 	if workspaceName, ok := azureAuthMap["workspace_name"].(string); ok {
 		tokenPayload.WorkspaceName = workspaceName
 	} else if os.Getenv("DATABRICKS_AZURE_WORKSPACE_NAME") != "" {
 		tokenPayload.WorkspaceName = os.Getenv("DATABRICKS_AZURE_WORKSPACE_NAME")
 	}
+	
 	if workspaceURL, ok := azureAuthMap["workspace_url"].(string); ok {
 		adbWorkspaceURL = workspaceURL
 	} else if os.Getenv("DATABRICKS_AZURE_WORKSPACE_URL") != "" {
@@ -218,6 +222,7 @@ func providerConfigureAzureClient(d *schema.ResourceData, providerVersion string
 	} else if os.Getenv("ARM_SUBSCRIPTION_ID") != "" {
 		tokenPayload.SubscriptionID = os.Getenv("ARM_SUBSCRIPTION_ID")
 	}
+	
 	if clientSecret, ok := azureAuthMap["client_secret"].(string); ok {
 		tokenPayload.ClientSecret = clientSecret
 	} else if os.Getenv("DATABRICKS_AZURE_CLIENT_SECRET") != "" {
@@ -225,6 +230,7 @@ func providerConfigureAzureClient(d *schema.ResourceData, providerVersion string
 	} else if os.Getenv("ARM_CLIENT_SECRET") != "" {
 		tokenPayload.ClientSecret = os.Getenv("ARM_CLIENT_SECRET")
 	}
+	
 	if clientID, ok := azureAuthMap["client_id"].(string); ok {
 		tokenPayload.ClientID = clientID
 	} else if os.Getenv("DATABRICKS_AZURE_CLIENT_ID") != "" {
@@ -232,6 +238,7 @@ func providerConfigureAzureClient(d *schema.ResourceData, providerVersion string
 	} else if os.Getenv("ARM_CLIENT_ID") != "" {
 		tokenPayload.ClientID = os.Getenv("ARM_CLIENT_ID")
 	}
+	
 	if tenantID, ok := azureAuthMap["tenant_id"].(string); ok {
 		tokenPayload.TenantID = tenantID
 	} else if os.Getenv("DATABRICKS_AZURE_TENANT_ID") != "" {

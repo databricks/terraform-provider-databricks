@@ -9,9 +9,6 @@ builds:
     - CGO_ENABLED=0
   binary: terraform-provider-databricks_{{ .Tag }}
   goos:
-    - freebsd
-    - openbsd
-    - solaris
     - windows
     - linux
     - darwin

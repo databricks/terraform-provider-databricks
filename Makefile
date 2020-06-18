@@ -48,6 +48,9 @@ vendor:
 	@echo "==> Filling vendor folder with library code..."
 	@go mod vendor
 
+local-install:
+	@/bin/bash godownloader-databricks-provider.sh -b $HOME/.terraform.d/plugins  
+
 # INTEGRATION TESTING WITH AZURE
 terraform-acc-azure: lint
 	@echo "==> Running Terraform Acceptance Tests for Azure..."

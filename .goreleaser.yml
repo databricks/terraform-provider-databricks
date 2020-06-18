@@ -42,12 +42,12 @@ snapshot:
 signs:
   - artifacts: checksum
     args:
-    - "--local-user"
-    - "{{ .Env.GPG_FINGERPRINT }}",
-    - "--output"
-    - "${signature}"
-    - "--detach-sign"
-    - "${artifact}"
+      - "--local-user"
+      - "{{ .Env.GPG_FINGERPRINT }}"
+      - "--output"
+      - "${signature}"
+      - "--detach-sign"
+      - "${artifact}"
 changelog:
   sort: asc
   filters:

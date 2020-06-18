@@ -14,6 +14,8 @@ import (
 	ini "gopkg.in/ini.v1"
 )
 
+var configFileDefault = "~/.databrickscfg"
+
 // Provider returns the entire terraform provider object
 func Provider(version string) terraform.ResourceProvider {
 	provider := &schema.Provider{
@@ -90,7 +92,7 @@ func Provider(version string) terraform.ResourceProvider {
 			"config_file": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				DefaultFunc: schema.EnvDefaultFunc("DATABRICKS_CONFIG_FILE", "~/.databrickscfg"),
+				DefaultFunc: schema.EnvDefaultFunc("DATABRICKS_CONFIG_FILE", configFileDefault),
 				Description: "Location of the Databricks CLI credentials file, that is created\n" +
 					"by `databricks configure --token` command. By default, it is located\n" +
 					"in ~/.databrickscfg. Check  https://docs.databricks.com/dev-tools/cli/index.html#set-up-authentication for docs. Config\n" +
@@ -261,18 +263,24 @@ func providerConfigureAzureClient(d *schema.ResourceData, config *service.DBApiC
 
 // tryDatabricksCliConfigFile sets Host and Token from ~/.databrickscfg file if it exists
 func tryDatabricksCliConfigFile(d *schema.ResourceData, config *service.DBApiClientConfig) error {
-	configFile, err := homedir.Expand(d.Get("config_file").(string))
+	configFile := d.Get("config_file").(string)
+	configFilePath, err := homedir.Expand(configFile)
 	if err != nil {
-		return err
+		return nil
 	}
-	cfg, err := ini.Load(configFile)
+	cfg, err := ini.Load(configFilePath)
+	if(err != nil && configFile == configFileDefault){
+		log.Println("ConfigFile has not been set. This is possibly a valid configuration for azure_auth")
+		return nil
+	}
+
 	if err != nil {
 		return fmt.Errorf("Authentication is not configured for provider. Please configure it\n"+
 			"through one of the following options:\n"+
 			"1. DATABRICKS_HOST + DATABRICKS_TOKEN environment variables.\n"+
 			"2. host + token provider arguments.\n"+
 			"3. Run `databricks configure --token` that will create %s file.\n\n"+
-			"Please check https://docs.databricks.com/dev-tools/cli/index.html#set-up-authentication for details", configFile)
+			"Please check https://docs.databricks.com/dev-tools/cli/index.html#set-up-authentication for details", configFilePath)
 	}
 	if profile, ok := d.GetOk("profile"); ok {
 		dbcliConfig := cfg.Section(profile.(string))

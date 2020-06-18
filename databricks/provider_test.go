@@ -110,7 +110,6 @@ func TestProvider(t *testing.T) {
 func TestProvider_NoOptionsResultsInNoError(t *testing.T) {
 	var provider = Provider("")
 	var raw = make(map[string]interface{})
-	raw["config_file"] = "testdata/.databrickscfg_non_existent"
 	err := provider.Configure(terraform.NewResourceConfigRaw(raw))
 	assert.Nil(t, err)
 }

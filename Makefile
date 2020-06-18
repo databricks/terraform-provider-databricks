@@ -48,8 +48,8 @@ vendor:
 	@echo "==> Filling vendor folder with library code..."
 	@go mod vendor
 
-local-install:
-	@/bin/bash godownloader-databricks-provider.sh -b $HOME/.terraform.d/plugins  
+local-install: build
+	mv terraform-provider-databricks $(HOME)/.terraform.d/plugins/terraform-provider-databricks_v0.2.0
 
 # INTEGRATION TESTING WITH AZURE
 terraform-acc-azure: lint

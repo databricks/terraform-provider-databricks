@@ -20,10 +20,6 @@ builds:
   ignore:
     - goos: darwin
       goarch: '386'
-    - goos: openbsd
-      goarch: arm
-    - goos: openbsd
-      goarch: arm64
 archives:
 - format: zip
   name_template: '{{ .ProjectName }}_{{ replace .Version "v" "" }}_{{ .Os }}_{{ .Arch }}'

@@ -269,7 +269,7 @@ func tryDatabricksCliConfigFile(d *schema.ResourceData, config *service.DBApiCli
 		return nil
 	}
 	cfg, err := ini.Load(configFilePath)
-	if(err != nil && configFile == configFileDefault){
+	if err != nil && configFile == configFileDefault {
 		log.Println("ConfigFile has not been set. This is possibly a valid configuration for azure_auth")
 		return nil
 	}

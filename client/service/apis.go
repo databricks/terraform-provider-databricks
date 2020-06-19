@@ -21,6 +21,11 @@ func (c *DBApiClient) Clusters() ClustersAPI {
 	return ClustersAPI{Client: c}
 }
 
+// ClusterPolicies returns an instance of ClusterPoliciesAPI
+func (c *DBApiClient) ClusterPolicies() ClusterPoliciesAPI {
+	return ClusterPoliciesAPI{Client: c}
+}
+
 // Secrets returns an instance of SecretsAPI
 func (c *DBApiClient) Secrets() SecretsAPI {
 	return SecretsAPI{Client: c}

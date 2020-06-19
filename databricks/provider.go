@@ -30,6 +30,7 @@ func Provider(version string) terraform.ResourceProvider {
 			"databricks_secret_scope":  resourceSecretScope(),
 			"databricks_secret":        resourceSecret(),
 			"databricks_secret_acl":    resourceSecretACL(),
+			"databricks_permissions":   resourcePermissions(),
 			"databricks_instance_pool": resourceInstancePool(),
 			"databricks_scim_user":     resourceScimUser(),
 			"databricks_scim_group":    resourceScimGroup(),

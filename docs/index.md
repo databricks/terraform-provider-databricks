@@ -106,7 +106,7 @@ There are currently two supported methods to authenticate into the Databricks pl
 * **API Token** 
 * **Azure Service Principal Authentication** 
 
-->	**Note** **Azure Service Principal Authentication** will only work on Azure Databricks where as the API Token
+-> **Note** **Azure Service Principal Authentication** will only work on Azure Databricks where as the API Token
 authentication will work on both **Azure** and **AWS**
 
 

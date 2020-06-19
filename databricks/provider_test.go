@@ -123,7 +123,6 @@ func TestProvider_InvalidConfigFilePathResultsInError(t *testing.T) {
 }
 
 func TestProvider_AzureAuthDoesNotResultInError(t *testing.T) {
-	var provider = Provider("")
 	var raw = make(map[string]interface{})
 	var azureAuth = make(map[string]interface{})
 	azureAuth["managed_resource_group"] = "test"
@@ -136,8 +135,12 @@ func TestProvider_AzureAuthDoesNotResultInError(t *testing.T) {
 	azureAuth["tenant_id"] = "test"
 	raw["azure_auth"] = azureAuth
 
-	err := provider.Configure(terraform.NewResourceConfigRaw(raw))
-	assert.NoError(t, err, err)
+	err := testAccProvider.Configure(terraform.NewResourceConfigRaw(raw))
+	assert.Nil(t, err)
+	clientMeta := testAccProvider.Meta()
+	assert.NotNil(t, clientMeta, "Provider meta is nil")
+	config := testAccProvider.Meta().(*service.DBApiClient).Config
+	assert.NotNil(t, config.CustomAuthorizer, "Config custom authorizer should not be kept as nil.")
 }
 
 func TestProvider_HostTokensTakePrecedence(t *testing.T) {

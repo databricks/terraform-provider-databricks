@@ -7,10 +7,12 @@ import (
 
 	"github.com/databrickslabs/databricks-terraform/client/model"
 	"github.com/databrickslabs/databricks-terraform/client/service"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 
 	"log"
+	"net"
 	"strconv"
 	"strings"
 	"time"
@@ -124,6 +126,21 @@ func resourceMWSWorkspaces() *schema.Resource {
 	}
 }
 
+func waitForWorkspaceURLResolution(workspace model.MWSWorkspace, timeoutDurationMinutes time.Duration) error {
+	hostAndPort := fmt.Sprintf("%s.cloud.databricks.com:443", workspace.DeploymentName)
+	url := fmt.Sprintf("https://%s.cloud.databricks.com", workspace.DeploymentName)
+	return resource.Retry(timeoutDurationMinutes, func() *resource.RetryError {
+		conn, err := net.DialTimeout("tcp", hostAndPort, 1*time.Minute)
+		if err != nil {
+			log.Printf("Cannot yet reach %s", url)
+			return resource.RetryableError(err)
+		}
+		log.Printf("Workspace %s is ready to use", url)
+		defer conn.Close()
+		return nil
+	})
+}
+
 func resourceMWSWorkspacesCreate(d *schema.ResourceData, m interface{}) error {
 	client := m.(*service.DBApiClient)
 	mwsAcctID := d.Get("account_id").(string)
@@ -160,6 +177,13 @@ func resourceMWSWorkspacesCreate(d *schema.ResourceData, m interface{}) error {
 			}
 			return fmt.Errorf("Workspace failed to create: %v, network error message: %v", err, getNetworkErrors(network.ErrorMessages))
 		}
+		return err
+	}
+	// wait maximum 5 minute for DNS caches to refresh, as 
+	// sometimes we cannot make API calls to new workspaces
+	// immediately after it's created
+	err = waitForWorkspaceURLResolution(workspace, 5*time.Minute)
+	if err != nil {
 		return err
 	}
 	return resourceMWSWorkspacesRead(d, m)

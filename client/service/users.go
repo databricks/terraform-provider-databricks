@@ -91,6 +91,7 @@ func (a UsersAPI) readByPath(userPath string) (model.User, error) {
 	return user, err
 }
 
+
 // Update will update the user given the user id, username, display name, entitlements and roles
 func (a UsersAPI) Update(userID string, userName string, displayName string, entitlements []string, roles []string) error {
 	userPath := fmt.Sprintf("/preview/scim/v2/Users/%v", userID)

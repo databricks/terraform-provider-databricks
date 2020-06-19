@@ -98,8 +98,8 @@ func Provider(version string) terraform.ResourceProvider {
 					"file credetials will only be used when host/token are not provided.",
 			},
 			"profile": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:        schema.TypeString,
+				Optional:    true,
 				DefaultFunc: schema.EnvDefaultFunc("DATABRICKS_CONFIG_PROFILE", "DEFAULT"),
 				Description: "Connection profile specified within ~/.databrickscfg. Please check\n" +
 					"https://docs.databricks.com/dev-tools/cli/index.html#connection-profiles for documentation.",

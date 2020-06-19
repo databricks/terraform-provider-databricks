@@ -179,7 +179,7 @@ func resourceMWSWorkspacesCreate(d *schema.ResourceData, m interface{}) error {
 		}
 		return err
 	}
-	// wait maximum 5 minute for DNS caches to refresh, as 
+	// wait maximum 5 minute for DNS caches to refresh, as
 	// sometimes we cannot make API calls to new workspaces
 	// immediately after it's created
 	err = waitForWorkspaceURLResolution(workspace, 5*time.Minute)

@@ -24,7 +24,7 @@
            },
            "env": {
                "TF_ACC": "1",
-               // "DATABRICKS_CONFIG_PROFILE": "${env:TEST_RESOURCE_GROUP}"
+               "DATABRICKS_CONFIG_PROFILE": "sandbox"
                // "TEST_RESOURCE_GROUP" : "${env:TEST_RESOURCE_GROUP}"
            },
            "showLog": true

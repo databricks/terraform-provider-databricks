@@ -107,11 +107,37 @@ func TestProvider(t *testing.T) {
 	}
 }
 
-func TestProvider_NoOptionsResultsInNoError(t *testing.T) {
+func TestProvider_NoOptionsDoesNotResultsInError(t *testing.T) {
 	var provider = Provider("")
 	var raw = make(map[string]interface{})
 	err := provider.Configure(terraform.NewResourceConfigRaw(raw))
 	assert.Nil(t, err)
+}
+
+func TestProvider_InvalidConfigFilePathResultsInError(t *testing.T) {
+	var provider = Provider("")
+	var raw = make(map[string]interface{})
+	raw["config_file"] = "testdata/.databrickscfg_non_existent"
+	err := provider.Configure(terraform.NewResourceConfigRaw(raw))
+	assert.Error(t, err)
+}
+
+func TestProvider_AzureAuthDoesNotResultInError(t *testing.T) {
+	var provider = Provider("")
+	var raw = make(map[string]interface{})
+	var azureAuth = make(map[string]interface{})
+	azureAuth["managed_resource_group"] = "test"
+	azureAuth["azure_region"] = "test"
+	azureAuth["workspace_name"] = "test"
+	azureAuth["resource_group"] = "test"
+	azureAuth["subscription_id"] = "test"
+	azureAuth["client_secret"] = "test"
+	azureAuth["client_id"] = "test"
+	azureAuth["tenant_id"] = "test"
+	raw["azure_auth"] = azureAuth
+
+	err := provider.Configure(terraform.NewResourceConfigRaw(raw))
+	assert.NoError(t, err, err)
 }
 
 func TestProvider_HostTokensTakePrecedence(t *testing.T) {

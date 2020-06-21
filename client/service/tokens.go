@@ -17,7 +17,7 @@ type TokensAPI struct {
 func (a TokensAPI) Create(lifeTimeSeconds int32, comment string) (model.TokenResponse, error) {
 	var tokenData model.TokenResponse
 
-	tokenCreateRequest := model.TokenRequest {
+	tokenCreateRequest := model.TokenRequest{
 		lifeTimeSeconds,
 		comment,
 	}

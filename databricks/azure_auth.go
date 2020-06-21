@@ -25,9 +25,9 @@ type AzureAuth struct {
 	AdbWorkspaceResourceID string
 	AdbAccessToken         string
 	AdbPlatformToken       string
-	// new token should be requested from 
+	// new token should be requested from
 	// the workspace before this time comes
-	PatExpiryTime		   int64
+	PatExpiryTime int64
 }
 
 // TokenPayload contains all the auth information for azure sp authentication
@@ -149,9 +149,9 @@ func (a *AzureAuth) getWorkspaceAccessToken(config *service.DBApiClientConfig) e
 	var tokenResponse model.TokenResponse
 	resp, err := service.PerformQuery(config, http.MethodPost, url, "2.0",
 		headers, true, true, model.TokenRequest{
-		int32(600),
-		"Secret made via SP",
-	}, nil)
+			int32(600),
+			"Secret made via SP",
+		}, nil)
 	if err != nil {
 		return err
 	}

@@ -6,59 +6,73 @@ description: |-
   Terraform provider databricks.
 ---
 
-# Databricks Provider
+# Authentication
+
+!> **Warning** Please be aware that hard coding any credentials is not something that is recommended. It may be best if 
+you store the credentials environment variables, `~/.databrickscfg` file or use tfvars file.
 
 The Databricks provider is what is used to interact with the Databricks resources. This needs to be configured so that 
-terraform can provision resources in your Databricks workspace on your behalf.  
+terraform can provision resources in your Databricks workspace on your behalf. There are currently three supported methods [to authenticate into](https://docs.databricks.com/dev-tools/api/latest/authentication.html) the Databricks platform to create resources:
 
-## Example Usage
+* [PAT Tokens](https://docs.databricks.com/dev-tools/api/latest/authentication.html)
+* Username+Password pair
+* Azure Active Directory Tokens
 
-### Token Based Auth
+## Authenticating with Databricks CLI credentials
+
+No configuration options given to your provider will look up configured credentials in `~/.databrickscfg` file. It is created by `databricks configure --token` command. Check  https://docs.databricks.com/dev-tools/cli/index.html#set-up-authentication for docs. Config file credetials will only be used when `host`/`token` or `azure_auth` options are not provided. This is recommended way to use Databricks Terraform provider, in case you're using the same approach with [AWS Shared Credentials File](https://www.terraform.io/docs/providers/aws/index.html#shared-credentials-file) or [Azure CLI authentication](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/guides/azure_cli).
 
 ``` hcl
 provider "databricks" {
-  host  = "http://databricks.domain.com"
-  token = "dapitokenhere"
-}
-
-resource "databricks_scim_user" "my-user" {
-  user_name     = "test-user@databricks.com"
-  display_name  = "Test User"
 }
 ```
 
-### Basic Auth
+One can specify non-standard location of configuration file through `config_file` parameter or `DATABRICKS_CONFIG_FILE` environment variable:
 
 ``` hcl
 provider "databricks" {
-  host          = "http://databricks.domain.com"
+  config_file = "/opt/databricks/cli-config"
+}
+```
+
+One can specify a [CLI connection profile](https://docs.databricks.com/dev-tools/cli/index.html#connection-profiles) through `profile` parameter or `DATABRICKS_CONFIG_PROFILE` environment variable:
+
+``` hcl
+provider "databricks" {
+  profile = "ML_WORKSPACE"
+}
+```
+
+## Authenticating with hostname and token
+
+One can use `host` and `token` parameters to supply credentials to workspace. In case environment variables are preferred, `DATABRICKS_HOST` and `DATABRICKS_TOKEN` could be used instead. This is second most recommended way of configuring this provider.
+
+``` hcl
+provider "databricks" {
+  host  = "http://abc-cdef-ghi.cloud.databricks.com"
+  token = "dapitokenhere"
+}
+```
+
+## Authenticating with hostname, username and password
+
+!> **Warning** This approach is currently recommended only for provisioning AWS workspaces and should be avoided for regular use.
+
+One can use `basic_auth` parameter to supply username and password credentials to workspace. `DATABRICKS_USERNAME` and `DATABRICKS_PASSWORD` environment variables could be used instead.
+
+``` hcl
+provider "databricks" {
+  host = "http://abc-cdef-ghi.cloud.databricks.com"
   basic_auth {
     username = var.user
     password = var.password
   }
 }
-
-resource "databricks_scim_user" "my-user" {
-  user_name     = "test-user@databricks.com"
-  display_name  = "Test User"
-}
 ```
 
-### Profile Based Auth
+## Authenticating with Azure Service Principal
 
-``` hcl
-provider "databricks" {
-  config_file = "~/.databrickscfg"
-  profile     = "DEFAULT"
-}
-
-resource "databricks_scim_user" "my-user" {
-  user_name     = "test-user@databricks.com"
-  display_name  = "Test User"
-}
-```
-
-### Azure SP Auth
+-> **Note** **Azure Service Principal Authentication** will only work on Azure Databricks where as the API Token authentication will work on both **Azure** and **AWS**. Internally `azure_auth` will generate a session-based PAT token.
 
 ``` hcl
 provider "azurerm" {
@@ -77,7 +91,7 @@ resource "azurerm_databricks_workspace" "demo_test_workspace" {
 }
 
 provider "databricks" {
-  azure_auth = {
+  azure_auth {
     managed_resource_group  = azurerm_databricks_workspace.demo_test_workspace.managed_resource_group_name
     azure_region            = azurerm_databricks_workspace.demo_test_workspace.location
     workspace_name          = azurerm_databricks_workspace.demo_test_workspace.name
@@ -95,88 +109,7 @@ resource "databricks_scim_user" "my-user" {
 }
 ```
 
-
-!> **Warning** Please be aware that hard coding credentials is not something that is recommended. It may be best if 
-you store the credentials environment variables or use tfvars file.
-
-## Authentication
-
-There are currently two supported methods to authenticate into the Databricks platform to create resources.
-
-* **API Token** 
-* **Azure Service Principal Authentication** 
-
--> **Note** **Azure Service Principal Authentication** will only work on Azure Databricks where as the API Token
-authentication will work on both **Azure** and **AWS**
-
-
-### API Token
-
-Databricks hostname for the workspace and api token can be provided here. This configuration is very similar to the 
-Databricks CLI
-
-``` hcl
-provider "databricks" {
-  host = "http://databricks.domain.com"
-  token = "dapitokenhere"
-}
-```
-
-!> **Warning** Please be aware that hard coding credentials is not something that is recommended.
-It may be best if you store the credentials environment variables or use tfvars file.
-
-
-
-### Azure Service Principal Auth
-
-``` hcl
-provider "databricks" {
-  azure_auth = {
-    managed_resource_group = "${azurerm_databricks_workspace.sri_test_workspace.managed_resource_group_name}"
-    azure_region = "${azurerm_databricks_workspace.sri_test_workspace.location}"
-    workspace_name = "${azurerm_databricks_workspace.sri_test_workspace.name}"
-    resource_group = "${azurerm_databricks_workspace.sri_test_workspace.resource_group_name}"
-    client_id = "${var.client_id}"
-    client_secret = "${var.client_secret}"
-    tenant_id = "${var.tenant_id}"
-    subscription_id = "${var.subscription_id}"
-  }
-}
-```
-
-### Environment variables
-
-The following variables can be passed via environment variables:
-
-* `host` → `DATABRICKS_HOST`
-* `token` → `DATABRICKS_TOKEN`
-* `basic_auth.username` → `DATABRICKS_USERNAME`
-* `basic_auth.password` → `DATABRICKS_PASSWORD`
-* `config_file` → `DATABRICKS_CONFIG_FILE`
-* `managed_resource_group` → `DATABRICKS_AZURE_MANAGED_RESOURCE_GROUP`
-* `azure_region` → `AZURE_REGION`
-* `workspace_name` → `DATABRICKS_AZURE_WORKSPACE_NAME`
-* `resource_group` → `DATABRICKS_AZURE_RESOURCE_GROUP`
-* `subscription_id` → `DATABRICKS_AZURE_SUBSCRIPTION_ID` or `ARM_SUBSCRIPTION_ID`
-* `client_secret` → `DATABRICKS_AZURE_CLIENT_SECRET` or `ARM_CLIENT_SECRET`
-* `client_id` → `DATABRICKS_AZURE_CLIENT_ID` or `ARM_CLIENT_ID`
-* `tenant_id` → `DATABRICKS_AZURE_TENANT_ID` or `ARM_TENANT_ID`
-
-For example you can have the following provider definition:
-
-``` hcl 
-provider "databricks" {}
-```
-
-Then run the following code and the following environment variables will be injected into the provider.    
-
-``` bash
-$ export HOST="http://databricks.domain.com"
-$ export TOKEN="dapitokenhere"
-$ terraform plan
-```
-
-## Argument Reference
+# Argument Reference
 
 The following arguments are supported by the db provider block:
 
@@ -202,9 +135,7 @@ https://docs.databricks.com/dev-tools/cli/index.html#connection-profiles for doc
 * `azure_auth` - (optional) This is a azure_auth block ([documented below]((#azure_auth-configuration-block))) required to authenticate to the Databricks via an azure service 
 principal that has access to the workspace. This is optional as you can use the api token based auth. 
 
-
-
-### basic_auth Configuration Block
+## basic_auth Configuration Block
 
 Example:
 
@@ -224,7 +155,7 @@ Alternatively you can provide this value as an environment variable `DATABRICKS_
 Alternatively you can provide this value as an environment variable `DATABRICKS_PASSWORD`.
 
 
-### azure_auth Configuration Block
+## azure_auth Configuration Block
 
 Example:
 
@@ -274,3 +205,35 @@ resides in. Alternatively you can provide this value as an environment variable 
 Where there are multiple environment variable options, the `DATABRICKS_AZURE_*` environment variables takes precedence 
 and the `ARM_*` environment variables provide a way to share authentication configuration when using the `databricks-terraform` 
 provider alongside the `azurerm` provider.
+
+# Environment variables
+
+The following variables can be passed via environment variables:
+
+* `host` → `DATABRICKS_HOST`
+* `token` → `DATABRICKS_TOKEN`
+* `basic_auth.username` → `DATABRICKS_USERNAME`
+* `basic_auth.password` → `DATABRICKS_PASSWORD`
+* `config_file` → `DATABRICKS_CONFIG_FILE`
+* `managed_resource_group` → `DATABRICKS_AZURE_MANAGED_RESOURCE_GROUP`
+* `azure_region` → `AZURE_REGION`
+* `workspace_name` → `DATABRICKS_AZURE_WORKSPACE_NAME`
+* `resource_group` → `DATABRICKS_AZURE_RESOURCE_GROUP`
+* `subscription_id` → `DATABRICKS_AZURE_SUBSCRIPTION_ID` or `ARM_SUBSCRIPTION_ID`
+* `client_secret` → `DATABRICKS_AZURE_CLIENT_SECRET` or `ARM_CLIENT_SECRET`
+* `client_id` → `DATABRICKS_AZURE_CLIENT_ID` or `ARM_CLIENT_ID`
+* `tenant_id` → `DATABRICKS_AZURE_TENANT_ID` or `ARM_TENANT_ID`
+
+For example you can have the following provider definition:
+
+``` hcl 
+provider "databricks" {}
+```
+
+Then run the following code and the following environment variables will be injected into the provider.    
+
+``` bash
+$ export HOST="http://databricks.domain.com"
+$ export TOKEN="dapitokenhere"
+$ terraform plan
+```

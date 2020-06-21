@@ -18,8 +18,8 @@ func (a TokensAPI) Create(lifeTimeSeconds int32, comment string) (model.TokenRes
 	var tokenData model.TokenResponse
 
 	tokenCreateRequest := model.TokenRequest{
-		lifeTimeSeconds,
-		comment,
+		LifetimeSeconds: lifeTimeSeconds,
+		Comment:         comment,
 	}
 
 	tokenCreateResponse, err := a.Client.performQuery(http.MethodPost, "/token/create", "2.0", nil, tokenCreateRequest, nil)

@@ -149,8 +149,8 @@ func (a *AzureAuth) getWorkspaceAccessToken(config *service.DBApiClientConfig) e
 	var tokenResponse model.TokenResponse
 	resp, err := service.PerformQuery(config, http.MethodPost, url, "2.0",
 		headers, true, true, model.TokenRequest{
-			int32(600),
-			"Secret made via SP",
+			LifetimeSeconds: int32(600),
+			Comment:         "Secret made via SP",
 		}, nil)
 	if err != nil {
 		return err

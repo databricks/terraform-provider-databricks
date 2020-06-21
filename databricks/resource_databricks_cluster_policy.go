@@ -2,6 +2,7 @@ package databricks
 
 import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 
 	"github.com/databrickslabs/databricks-terraform/client/model"
 	"github.com/databrickslabs/databricks-terraform/client/service"
@@ -14,10 +15,7 @@ func parsePolicyFromData(d *schema.ResourceData) (*model.ClusterPolicy, error) {
 		clusterPolicy.Name = name.(string)
 	}
 	if data, ok := d.GetOk("definition"); ok {
-		err := clusterPolicy.ParseDefinition(data.(string))
-		if err != nil {
-			return nil, err
-		}
+		clusterPolicy.Definition = data.(string)
 	}
 	return clusterPolicy, nil
 }
@@ -46,23 +44,10 @@ func resourceClusterPolicyRead(d *schema.ResourceData, m interface{}) error {
 	if err != nil {
 		return err
 	}
-
 	err = d.Set("definition", clusterPolicy.Definition)
 	if err != nil {
 		return err
 	}
-
-	// err = clusterPolicy.ParseDefinition(clusterPolicy.Definition)
-	// if err != nil {
-	// 	return err
-	// }
-	// policies := clusterPolicy.AttributePoliciesState()
-	// err = d.Set("attribute_policy", policies)
-	// if err != nil {
-	// 	return err
-	// }
-	// TODO: add definitions!!!
-
 	return nil
 }
 
@@ -102,67 +87,14 @@ func resourceClusterPolicy() *schema.Resource {
 				Required: true,
 				Description: "Cluster policy name. This must be unique.\n" +
 					"Length must be between 1 and 100 characters.",
+				ValidateFunc: validation.StringLenBetween(1, 100),
 			},
 			"definition": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Description: "Policy definition JSON document expressed in\n" +
 					"Databricks Policy Definition Language.",
-				ConflictsWith: []string{"attribute_policy"},
-			},
-			"attribute_policy": {
-				Type:          schema.TypeList,
-				Optional:      true,
-				MinItems:      1,
-				ConflictsWith: []string{"definition"},
-				ConfigMode:    schema.SchemaConfigModeAttr,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"type": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"path": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"value": { // type: fixed
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"default_value": { // type: limiting
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"values": { // type: limiting
-							Type:     schema.TypeSet,
-							Optional: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						"hidden": { // type: fixed
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
-						},
-						"is_optional": { // type: limiting
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
-						},
-						"pattern": { // type: regex
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"min_value": { // type: range
-							Type:     schema.TypeInt,
-							Optional: true,
-						},
-						"max_value": { // type: range
-							Type:     schema.TypeInt,
-							Optional: true,
-						},
-					},
-				},
+				ValidateFunc: validation.StringIsJSON,
 			},
 		},
 	}

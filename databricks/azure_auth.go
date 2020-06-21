@@ -9,6 +9,7 @@ import (
 
 	"github.com/Azure/go-autorest/autorest/adal"
 	"github.com/Azure/go-autorest/autorest/azure"
+	"github.com/databrickslabs/databricks-terraform/client/model"
 	"github.com/databrickslabs/databricks-terraform/client/service"
 )
 
@@ -24,6 +25,9 @@ type AzureAuth struct {
 	AdbWorkspaceResourceID string
 	AdbAccessToken         string
 	AdbPlatformToken       string
+	// new token should be requested from 
+	// the workspace before this time comes
+	PatExpiryTime		   int64
 }
 
 // TokenPayload contains all the auth information for azure sp authentication
@@ -133,16 +137,7 @@ func (a *AzureAuth) getADBPlatformToken() error {
 
 func (a *AzureAuth) getWorkspaceAccessToken(config *service.DBApiClientConfig) error {
 	log.Println("[DEBUG] Creating workspace token")
-	apiLifeTimeInSeconds := int32(600)
-	comment := "Secret made via SP"
 	url := "https://" + a.TokenPayload.AzureRegion + ".azuredatabricks.net/api/2.0/token/create"
-	payload := struct {
-		LifetimeSeconds int32  `json:"lifetime_seconds,omitempty"`
-		Comment         string `json:"comment,omitempty"`
-	}{
-		apiLifeTimeInSeconds,
-		comment,
-	}
 	headers := map[string]string{
 		"Content-Type": "application/x-www-form-urlencoded",
 		"X-Databricks-Azure-Workspace-Resource-Id": a.AdbWorkspaceResourceID,
@@ -151,16 +146,21 @@ func (a *AzureAuth) getWorkspaceAccessToken(config *service.DBApiClientConfig) e
 		"Authorization":                            "Bearer " + a.AdbPlatformToken,
 	}
 
-	var responseMap map[string]interface{}
-	resp, err := service.PerformQuery(config, http.MethodPost, url, "2.0", headers, true, true, payload, nil)
+	var tokenResponse model.TokenResponse
+	resp, err := service.PerformQuery(config, http.MethodPost, url, "2.0",
+		headers, true, true, model.TokenRequest{
+		int32(600),
+		"Secret made via SP",
+	}, nil)
 	if err != nil {
 		return err
 	}
-	err = json.Unmarshal(resp, &responseMap)
+	err = json.Unmarshal(resp, &tokenResponse)
 	if err != nil {
 		return err
 	}
-	a.AdbAccessToken = responseMap["token_value"].(string)
+	a.AdbAccessToken = tokenResponse.TokenValue
+	a.PatExpiryTime = tokenResponse.TokenInfo.ExpiryTime
 	return nil
 }
 

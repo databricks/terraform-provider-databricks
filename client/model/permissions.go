@@ -1,13 +1,27 @@
 package model
 
-// ObjectACL ...
+// ObjectACL is a structure to generically describe access control
 type ObjectACL struct {
 	ObjectID          string           `json:"object_id,omitempty"`
 	ObjectType        string           `json:"object_type,omitempty"`
 	AccessControlList []*AccessControl `json:"access_control_list"`
 }
 
-// AccessControlChangeList is wrapper around ACL changes
+// AccessControl is a structure to describe user/group permissions
+type AccessControl struct {
+	UserName       *string       `json:"user_name,omitempty"`
+	GroupName      *string       `json:"group_name,omitempty"`
+	AllPermissions []*Permission `json:"all_permissions,omitempty"`
+}
+
+// Permission is a structure to describe permission level
+type Permission struct {
+	PermissionLevel     string   `json:"permission_level"`
+	Inherited           bool     `json:"inherited,omitempty"`
+	InheritedFromObject []string `json:"inherited_from_object,omitempty"`
+}
+
+// AccessControlChangeList is wrapper around ACL changes for REST API
 type AccessControlChangeList struct {
 	AccessControlList []*AccessControlChange `json:"access_control_list"`
 }
@@ -18,20 +32,6 @@ type AccessControlChange struct {
 	GroupName            *string `json:"group_name,omitempty"`
 	ServicePrincipalName *string `json:"service_principal_name,omitempty"`
 	PermissionLevel      string  `json:"permission_level"`
-}
-
-// AccessControl ...
-type AccessControl struct {
-	UserName       *string       `json:"user_name,omitempty"`
-	GroupName      *string       `json:"group_name,omitempty"`
-	AllPermissions []*Permission `json:"all_permissions,omitempty"`
-}
-
-// Permission ...
-type Permission struct {
-	PermissionLevel     string   `json:"permission_level"`
-	Inherited           bool     `json:"inherited,omitempty"`
-	InheritedFromObject []string `json:"inherited_from_object,omitempty"`
 }
 
 // ToAccessControlChangeList converts data formats

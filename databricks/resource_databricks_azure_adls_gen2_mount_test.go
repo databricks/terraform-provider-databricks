@@ -125,19 +125,6 @@ func testAccAzureAdlsGen2MountCaptureError() string {
 	gen2AdalName := os.Getenv("TEST_GEN2_ADAL_NAME")
 
 	definition := fmt.Sprintf(`
-	provider "databricks" {
-	  azure_auth = {
-		client_id              = "%[1]s"
-		client_secret          = "%[2]s"
-		tenant_id              = "%[3]s"
-		subscription_id        = "%[4]s"
-
-		workspace_name         = "%[5]s"
-		resource_group         = "%[6]s"
-		managed_resource_group = "%[7]s"
-		azure_region           = "%[8]s"
-	  }
-	}
 
 	resource "databricks_cluster" "cluster" {
 		num_workers = 1

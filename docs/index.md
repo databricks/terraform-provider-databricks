@@ -233,7 +233,7 @@ provider "databricks" {}
 Then run the following code and the following environment variables will be injected into the provider.    
 
 ``` bash
-$ export HOST="http://databricks.domain.com"
-$ export TOKEN="dapitokenhere"
+$ export DATABRICKS_HOST="http://databricks.domain.com"
+$ export DATABRICKS_TOKEN="dapitokenhere"
 $ terraform plan
 ```

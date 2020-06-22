@@ -116,6 +116,11 @@ func (c *DBApiClient) MWSCustomerManagedKeys() MWSCustomerManagedKeysAPI {
 	return MWSCustomerManagedKeysAPI{Client: c}
 }
 
+// Permissions returns an instance of CommandsAPI
+func (c *DBApiClient) Permissions() PermissionsAPI {
+	return PermissionsAPI{Client: c}
+}
+
 func (c *DBApiClient) performQuery(method, path string, apiVersion string, headers map[string]string, data interface{}, secretsMask *SecretsMask) ([]byte, error) {
 	err := c.Config.getOrCreateToken()
 	if err != nil {

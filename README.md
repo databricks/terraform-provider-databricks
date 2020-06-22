@@ -7,11 +7,10 @@
 To quickly install the binary please execute the following curl command in your shell.
 
 ```bash
-$ curl https://raw.githubusercontent.com/databrickslabs/databricks-terraform/master/godownloader-databricks-provider.sh | bash -s -- -b $HOME/.terraform.d/plugins
-$ ls -l ~/.terraform.d/plugins
+curl https://raw.githubusercontent.com/databrickslabs/databricks-terraform/master/godownloader-databricks-provider.sh | bash -s -- -b $HOME/.terraform.d/plugins
 ```
 
-Then create a small sample file, named `main.tf` with approximately following contents. Replace `<your PAT token>` with newly created [PAT Token](https://docs.databricks.com/dev-tools/api/latest/authentication.html).
+Then create a small sample file, named `main.tf` with approximately following contents. Replace `<your PAT token>` with newly created [PAT Token](https://docs.databricks.com/dev-tools/api/latest/authentication.html). It will create [a simple cluster](https://databrickslabs.github.io/terraform-provider-databricks/resources/cluster/).
 
 ```terraform
 provider "databricks" {

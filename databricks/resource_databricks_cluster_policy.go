@@ -34,24 +34,15 @@ func resourceClusterPolicyCreate(d *schema.ResourceData, m interface{}) error {
 	return resourceClusterPolicyRead(d, m)
 }
 
-func isResourceMissing(d *schema.ResourceData, err error) error {
-	switch e := err.(type) {
-	case service.APIError:
-		if e.StatusCode == 404 {
-			d.SetId("")
-			return nil
-		}
-	default:
-		return err
-	}
-	return nil
-}
-
 func resourceClusterPolicyRead(d *schema.ResourceData, m interface{}) error {
 	client := m.(*service.DBApiClient)
 	clusterPolicy, err := client.ClusterPolicies().Get(d.Id())
+	if e, ok := err.(service.APIError); ok && e.StatusCode == 404 {
+		d.SetId("")
+		return nil
+	}
 	if err != nil {
-		return isResourceMissing(d, err)
+		return err
 	}
 	err = d.Set("name", clusterPolicy.Name)
 	if err != nil {

@@ -7,12 +7,12 @@ import (
 	"github.com/databrickslabs/databricks-terraform/client/model"
 )
 
-// PermissionsAPI ...
+// PermissionsAPI exposes general permission related methods
 type PermissionsAPI struct {
 	Client *DBApiClient
 }
 
-// AddOrModify ...
+// AddOrModify works with permissions change list
 func (a PermissionsAPI) AddOrModify(objectID string, objectACL *model.AccessControlChangeList) error {
 	_, err := a.Client.performQuery(http.MethodPatch,
 		"/preview/permissions"+objectID,
@@ -24,7 +24,7 @@ func (a PermissionsAPI) AddOrModify(objectID string, objectACL *model.AccessCont
 	return err
 }
 
-// SetOrDelete ...
+// SetOrDelete updates object permissions
 func (a PermissionsAPI) SetOrDelete(objectID string, objectACL *model.AccessControlChangeList) error {
 	_, err := a.Client.performQuery(http.MethodPut,
 		"/preview/permissions"+objectID,
@@ -36,7 +36,7 @@ func (a PermissionsAPI) SetOrDelete(objectID string, objectACL *model.AccessCont
 	return err
 }
 
-// Read ...
+// Read gets all relevant permissions for the object, including inherited ones
 func (a PermissionsAPI) Read(objectID string) (*model.ObjectACL, error) {
 	resp, err := a.Client.performQuery(http.MethodGet,
 		"/preview/permissions"+objectID,

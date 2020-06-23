@@ -5,12 +5,12 @@ go 1.13
 require (
 	github.com/Azure/go-autorest/autorest v0.10.2
 	github.com/Azure/go-autorest/autorest/adal v0.8.3
-	github.com/aws/aws-sdk-go v1.32.2
+	github.com/aws/aws-sdk-go v1.32.6
 	github.com/fatih/color v1.9.0 // indirect
 	github.com/google/go-querystring v1.0.0
 	github.com/hashicorp/go-retryablehttp v0.6.6
 	github.com/hashicorp/hcl v1.0.0 // indirect
-	github.com/hashicorp/terraform-plugin-sdk v1.13.1
+	github.com/hashicorp/terraform-plugin-sdk v1.14.0
 	github.com/joho/godotenv v1.3.0
 	github.com/mattn/go-colorable v0.1.6 // indirect
 	github.com/mitchellh/go-homedir v1.1.0

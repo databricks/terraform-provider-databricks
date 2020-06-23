@@ -191,11 +191,10 @@ func getWorkspaceAccessToken(config *service.DBApiClientConfig, managementToken,
 
 // Main function call that gets made and it follows 4 steps at the moment:
 // 1. Get Management OAuth Token using management endpoint
-// 2. Get Workspace ID
+// 2. Get Workspace ID and URL
 // 3. Get Azure Databricks Platform OAuth Token using Databricks resource id
 // 4. Get Azure Databricks Workspace Personal Access Token for the SP (60 min duration)
 func (t *TokenPayload) initWorkspaceAndGetClient(config *service.DBApiClientConfig) error {
-	//var dbClient service.DBApiClient
 
 	// Get management token
 	managementToken, err := t.getManagementToken()

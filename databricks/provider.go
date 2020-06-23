@@ -123,11 +123,6 @@ func Provider(version string) terraform.ResourceProvider {
 							Required:    true,
 							DefaultFunc: schema.EnvDefaultFunc("DATABRICKS_AZURE_WORKSPACE_NAME", nil),
 						},
-						"workspace_url": {
-							Type:        schema.TypeString,
-							Required:    true,
-							DefaultFunc: schema.EnvDefaultFunc("DATABRICKS_AZURE_WORKSPACE_URL", nil),
-						},
 						"resource_group": {
 							Type:        schema.TypeString,
 							Required:    true,
@@ -176,9 +171,7 @@ func providerConfigureAzureClient(d *schema.ResourceData, config *service.DBApiC
 	log.Println("Creating db client via azure auth!")
 	azureAuth, _ := d.GetOk("azure_auth")
 	azureAuthMap := azureAuth.(map[string]interface{})
-	//azureAuth AzureAuth{}
 	tokenPayload := TokenPayload{}
-	adbWorkspaceURL := ""
 
 	// The if else is required for the reason that "azure_auth" schema object is not a block but a map
 	// Maps do not inherently auto populate defaults from environment variables unless we explicitly assign values
@@ -205,12 +198,6 @@ func providerConfigureAzureClient(d *schema.ResourceData, config *service.DBApiC
 		tokenPayload.WorkspaceName = workspaceName
 	} else if os.Getenv("DATABRICKS_AZURE_WORKSPACE_NAME") != "" {
 		tokenPayload.WorkspaceName = os.Getenv("DATABRICKS_AZURE_WORKSPACE_NAME")
-	}
-
-	if workspaceURL, ok := azureAuthMap["workspace_url"].(string); ok {
-		adbWorkspaceURL = workspaceURL
-	} else if os.Getenv("DATABRICKS_AZURE_WORKSPACE_URL") != "" {
-		adbWorkspaceURL = os.Getenv("DATABRICKS_AZURE_WORKSPACE_URL")
 	}
 
 	// This provider takes DATABRICKS_AZURE_* for client ID etc
@@ -260,18 +247,8 @@ func providerConfigureAzureClient(d *schema.ResourceData, config *service.DBApiC
 		tokenPayload.TenantID = os.Getenv("ARM_TENANT_ID")
 	}
 
-	adbWorkspaceURL = "https://" + adbWorkspaceURL
-	azureAuthSetup := AzureAuth{
-		TokenPayload:           &tokenPayload,
-		ManagementToken:        "",
-		AdbWorkspaceResourceID: "",
-		AdbAccessToken:         "",
-		AdbPlatformToken:       "",
-		AdbWorkspaceUrl:        adbWorkspaceURL,
-	}
-
 	// Setup the CustomAuthorizer Function to be called at API invoke rather than client invoke
-	config.CustomAuthorizer = azureAuthSetup.initWorkspaceAndGetClient
+	config.CustomAuthorizer = tokenPayload.initWorkspaceAndGetClient
 	var dbClient service.DBApiClient
 	dbClient.SetConfig(config)
 	return &dbClient, nil

@@ -298,7 +298,11 @@ func providerConfigure(d *schema.ResourceData, providerVersion string) (interfac
 	//version information from go-releaser using -ldflags to tell the golang linker to send semver info
 	config.UserAgent = fmt.Sprintf("databricks-tf-provider/%s", providerVersion)
 
-	if _, ok := d.GetOk("azure_auth"); !ok {
+	if _, ok := d.GetOk("azure_auth"); ok {
+		// Abstracted logic to another function that returns a interface{}, error to inject directly
+		// for the providers during cloud integration testing
+		return providerConfigureAzureClient(d, &config)
+	} else {
 		if host, ok := d.GetOk("host"); ok {
 			config.Host = host.(string)
 		}
@@ -323,10 +327,6 @@ func providerConfigure(d *schema.ResourceData, providerVersion string) (interfac
 				return nil, fmt.Errorf("failed to get credentials from config file; error msg: %w", err)
 			}
 		}
-	} else {
-		// Abstracted logic to another function that returns a interface{}, error to inject directly
-		// for the providers during cloud integration testing
-		return providerConfigureAzureClient(d, &config)
 	}
 
 	var dbClient service.DBApiClient

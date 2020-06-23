@@ -254,7 +254,6 @@ func TestPermissionsCreate(t *testing.T) {
 			},
 		},
 	}, resourcePermissionsCreate)
-
 	assert.NoError(t, err, err)
 	assert.Equal(t, TestingUser, d.Get("access_control.0.user_name"))
 	assert.Equal(t, "CAN_READ", d.Get("access_control.0.permission_level"))

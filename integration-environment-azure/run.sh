@@ -46,7 +46,6 @@ export TEST_STORAGE_ACCOUNT_NAME=$(terraform output blob_storage_name)
 
 export DATABRICKS_AZURE_WORKSPACE_NAME=$(terraform output workspace_name)
 export DATABRICKS_AZURE_RESOURCE_GROUP=$(terraform output rg_name) 
-export DATABRICKS_AZURE_WORKSPACE_URL=$(terraform output workspace_url)
 export AZURE_REGION=$(terraform output location)
 export DATABRICKS_AZURE_MANAGED_RESOURCE_GROUP=$(terraform output workspace_managed_rg_name)
 

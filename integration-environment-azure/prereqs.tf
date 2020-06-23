@@ -77,10 +77,6 @@ output "workspace_name" {
   value = azurerm_databricks_workspace.example.name
 }
 
-output "workspace_url" {
-  value = azurerm_databricks_workspace.example.workspace_url
-}
-
 output "gen2_adal_name" {
   value = azurerm_storage_account.adlsaccount.name
 }

@@ -194,7 +194,6 @@ func getWorkspaceAccessToken(config *service.DBApiClientConfig, managementToken,
 // 3. Get Azure Databricks Platform OAuth Token using Databricks resource id
 // 4. Get Azure Databricks Workspace Personal Access Token for the SP (60 min duration)
 func (t *TokenPayload) initWorkspaceAndGetClient(config *service.DBApiClientConfig) error {
-
 	// Get management token
 	managementToken, err := t.getManagementToken()
 	if err != nil {

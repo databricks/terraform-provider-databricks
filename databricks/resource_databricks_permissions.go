@@ -33,6 +33,7 @@ func parsePermissionsFromData(d *schema.ResourceData,
 	if objectID == "" {
 		return nil, "", fmt.Errorf("At least one type of resource identifiers must be set")
 	}
+	changes := 0
 	if data, ok := d.GetOk("access_control"); ok {
 		for _, element := range data.([]interface{}) {
 			rawAccessControl := element.(map[string]interface{})
@@ -47,7 +48,11 @@ func parsePermissionsFromData(d *schema.ResourceData,
 			if v, ok := rawAccessControl["permission_level"].(string); ok {
 				change.PermissionLevel = v
 			}
+			changes++
 		}
+	}
+	if changes < 1 {
+		return nil, "", fmt.Errorf("At least one access_control is required")
 	}
 	return acl, objectID, nil
 }

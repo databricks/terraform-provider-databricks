@@ -1,5 +1,5 @@
 provider "azurerm" {
-  version = "~> 2.3"
+  version = "~> 2.14"
   features {}
 }
 
@@ -22,7 +22,7 @@ resource "azurerm_databricks_workspace" "example" {
   name                        = "workspace${random_string.naming.result}"
   resource_group_name         = azurerm_resource_group.example.name
   location                    = azurerm_resource_group.example.location
-  sku                         = "standard"
+  sku                         = "premium"
   managed_resource_group_name = "workspace${random_string.naming.result}"
 }
 

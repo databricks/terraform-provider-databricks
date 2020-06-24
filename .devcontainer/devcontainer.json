@@ -3,6 +3,14 @@
 {
 	"name": "databricks-terraform",
 	"dockerFile": "Dockerfile",
+	"mounts": [
+		// Mount go mod cache
+		"source=databricks-terraform-gomodcache,target=/go/pkg,type=volume",
+		// Keep command history 
+		"source=databricks-terraform-bashhistory,target=/commandhistory,type=volume",
+		// Mount docker socket for docker builds
+		"source=/var/run/docker.sock,target=/var/run/docker.sock,type=bind",
+	],
 	"runArgs": [
 		// Uncomment the next line to use a non-root user. On Linux, this will prevent
 		// new files getting created as root, but you may need to update the USER_UID
@@ -12,14 +20,8 @@
 		"--security-opt",
 		"seccomp=unconfined",
 		"--privileged",
-
-		"--name", "databricks-terraform-devcontainer",
-		// Mount go mod cache
-		"-v", "databricks-terraform-gomodcache:/go/pkg",
-		// Keep command history 
-		"-v", "databricks-terraform-bashhistory:/root/commandhistory",
-		// Mount docker socket for docker builds
-		"-v", "/var/run/docker.sock:/var/run/docker.sock",
+		"--name",
+		"databricks-terraform-devcontainer",
 		// Use host network
 		"--network=host",
 	],
@@ -51,8 +53,9 @@
 	// "postCreateCommand": "go version",
 	// Add the IDs of extensions you want installed when the container is created in the array below.
 	"extensions": [
-        "ms-vscode.go",
+		"golang.go",
 		"mauve.terraform",
+		"hashicorp.terraform",
 		"ms-vsliveshare.vsliveshare"
 	]
 }

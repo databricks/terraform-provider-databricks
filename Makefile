@@ -48,10 +48,13 @@ vendor:
 	@echo "==> Filling vendor folder with library code..."
 	@go mod vendor
 
+local-install: build
+	mv terraform-provider-databricks $(HOME)/.terraform.d/plugins/terraform-provider-databricks_v0.2.0
+
 # INTEGRATION TESTING WITH AZURE
 terraform-acc-azure: lint
 	@echo "==> Running Terraform Acceptance Tests for Azure..."
-	@CLOUD_ENV="azure" TF_ACC=1 gotestsum --format short-verbose --raw-command go test -v -json -tags=azure  -short -coverprofile=coverage.out ./...
+	@/bin/bash integration-environment-azure/run.sh
 
 # INTEGRATION TESTING WITH AWS
 terraform-acc-aws: lint

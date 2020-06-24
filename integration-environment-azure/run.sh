@@ -53,5 +53,5 @@ echo -e "----> Running Azure Acceptance Tests \n\n"
 
 # Run all Azure integration tests
 TF_ACC=1 gotestsum --format short-verbose --raw-command \
-    go test -v -json -short -coverprofile=coverage.out \
+    go test -v -json -coverprofile=coverage.out \
     -test.timeout 35m -run 'TestAccAzure' ./../...

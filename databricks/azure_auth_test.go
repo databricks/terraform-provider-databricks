@@ -57,7 +57,7 @@ func TestAzureAuthCreateApiToken(t *testing.T) {
 
 // getAndAssertEnv fetches the env for testing and also asserts that the env value is not Zero i.e ""
 func getAndAssertEnv(t *testing.T, key string) string {
-	value, present := os.LookupEnv("a")
+	value, present := os.LookupEnv(key)
 	assert.True(t, present, fmt.Sprintf("Env variable %s is not set", key))
 	return value
 }

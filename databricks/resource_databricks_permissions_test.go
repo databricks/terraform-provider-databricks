@@ -391,7 +391,6 @@ func TestAccDatabricksPermissionsResourceFullLifecycle(t *testing.T) {
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				// create a resource
 				Config: testClusterPolicyPermissions(randomName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("databricks_permissions.dummy_can_use",

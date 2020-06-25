@@ -8,11 +8,14 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"sort"
 	"strconv"
+	"strings"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/databrickslabs/databricks-terraform/client/service"
@@ -267,6 +270,12 @@ func testVerifyResourceIsMissing(t *testing.T, readFunc func() error) {
 	}
 }
 
+type errorSlice []error
+
+func (a errorSlice) Len() int           { return len(a) }
+func (a errorSlice) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
+func (a errorSlice) Less(i, j int) bool { return a[i].Error() < a[j].Error() }
+
 // HTTPFixture defines request structure for test
 type HTTPFixture struct {
 	Method          string
@@ -326,8 +335,36 @@ func ResourceTester(t *testing.T,
 	var client service.DBApiClient
 	client.SetConfig(&config)
 
-	resource := resouceFunc()
-	resourceData := schema.TestResourceDataRaw(t, resource.Schema, state)
+	res := resouceFunc()
+
+	if state != nil {
+		resourceConfig := terraform.NewResourceConfigRaw(state)
+		warns, errs := res.Validate(resourceConfig)
+		if len(warns) > 0 || len(errs) > 0 {
+			var issues string
+			if len(warns) > 0 {
+				sort.Strings(warns)
+				issues += ". " + strings.Join(warns, ". ")
+			}
+			if len(errs) > 0 {
+				sort.Sort(errorSlice(errs))
+				for _, err := range errs {
+					issues += ". " + err.Error()
+				}
+			}
+			// remove characters that need escaping, it's only tests...
+			issues = strings.ReplaceAll(issues, "\"", "")
+			return nil, fmt.Errorf("Invalid config supplied%s", issues)
+		}
+	}
+
+	resourceData := schema.TestResourceDataRaw(t, res.Schema, state)
+	err := res.InternalValidate(res.Schema, true)
+	if err != nil {
+		return nil, err
+	}
+
+	// warns, errs := schemaMap(r.Schema).Validate(c)
 	return resourceData, whatever(resourceData, &client)
 }
 

@@ -56,16 +56,81 @@ func TestPermissionsRead(t *testing.T) {
 				UserName: TestingAdminUser,
 			},
 		},
-	}, resourcePermissions, map[string]interface{}{},
-		func(d *schema.ResourceData, c interface{}) error {
-			d.SetId("/clusters/abc")
-			return resourcePermissionsRead(d, c)
-		})
+	}, resourcePermissions, nil, func(d *schema.ResourceData, c interface{}) error {
+		d.SetId("/clusters/abc")
+		return resourcePermissionsRead(d, c)
+	})
 	assert.NoError(t, err, err)
 	assert.Equal(t, "/clusters/abc", d.Id())
 	assert.Equal(t, TestingUser, d.Get("access_control.0.user_name"))
 	assert.Equal(t, "CAN_READ", d.Get("access_control.0.permission_level"))
 	assert.Equal(t, 1, d.Get("access_control.#"))
+}
+
+func TestPermissionsRead_some_error(t *testing.T) {
+	_, err := ResourceTester(t, []HTTPFixture{
+		{
+			Method:   http.MethodGet,
+			Resource: "/api/2.0/preview/permissions/clusters/abc?",
+			Response: service.APIErrorBody{
+				ErrorCode: "INVALID_REQUEST",
+				Message:   "Internal error happened",
+			},
+			Status: 400,
+		},
+	}, resourcePermissions, map[string]interface{}{},
+		func(d *schema.ResourceData, c interface{}) error {
+			d.SetId("/clusters/abc")
+			return resourcePermissionsRead(d, c)
+		})
+	assert.Error(t, err)
+}
+
+func TestPermissionsRead_ErrorOnScimMe(t *testing.T) {
+	_, err := ResourceTester(t, []HTTPFixture{
+		{
+			Method:   http.MethodGet,
+			Resource: "/api/2.0/preview/permissions/clusters/abc?",
+			Response: model.ObjectACL{
+				ObjectID:   "/clusters/abc",
+				ObjectType: "clusters",
+				AccessControlList: []*model.AccessControl{
+					{
+						UserName: &TestingUser,
+						AllPermissions: []*model.Permission{
+							{
+								PermissionLevel: "CAN_READ",
+								Inherited:       false,
+							},
+						},
+					},
+					{
+						UserName: &TestingAdminUser,
+						AllPermissions: []*model.Permission{
+							{
+								PermissionLevel: "CAN_MANAGE",
+								Inherited:       false,
+							},
+						},
+					},
+				},
+			},
+		},
+		{
+			Method:   http.MethodGet,
+			Resource: "/api/2.0/preview/scim/v2/Me?",
+			Response: service.APIErrorBody{
+				ErrorCode: "INVALID_REQUEST",
+				Message:   "Internal error happened",
+			},
+			Status: 400,
+		},
+	}, resourcePermissions, map[string]interface{}{},
+		func(d *schema.ResourceData, c interface{}) error {
+			d.SetId("/clusters/abc")
+			return resourcePermissionsRead(d, c)
+		})
+	assert.Error(t, err)
 }
 
 func TestPermissionsDelete(t *testing.T) {
@@ -75,18 +140,36 @@ func TestPermissionsDelete(t *testing.T) {
 			Resource:        "/api/2.0/preview/permissions/clusters/abc",
 			ExpectedRequest: model.ObjectACL{},
 		},
-	}, resourcePermissions, map[string]interface{}{},
-		func(d *schema.ResourceData, c interface{}) error {
-			d.SetId("/clusters/abc")
-			return resourcePermissionsDelete(d, c)
-		})
+	}, resourcePermissions, nil, func(d *schema.ResourceData, c interface{}) error {
+		d.SetId("/clusters/abc")
+		return resourcePermissionsDelete(d, c)
+	})
 	assert.NoError(t, err, err)
 	assert.Equal(t, "/clusters/abc", d.Id())
 }
 
+func TestPermissionsDelete_error(t *testing.T) {
+	_, err := ResourceTester(t, []HTTPFixture{
+		{
+			Method:          http.MethodPut,
+			Resource:        "/api/2.0/preview/permissions/clusters/abc",
+			ExpectedRequest: model.ObjectACL{},
+			Response: service.APIErrorBody{
+				ErrorCode: "INVALID_REQUEST",
+				Message:   "Internal error happened",
+			},
+			Status: 400,
+		},
+	}, resourcePermissions, nil, func(d *schema.ResourceData, c interface{}) error {
+		d.SetId("/clusters/abc")
+		return resourcePermissionsDelete(d, c)
+	})
+	assert.Error(t, err)
+}
+
 func TestPermissionsCreate_invalid(t *testing.T) {
-	_, err := ResourceTester(t, []HTTPFixture{}, resourcePermissions, map[string]interface{}{},
-		resourcePermissionsCreate)
+	_, err := ResourceTester(t, []HTTPFixture{}, resourcePermissions,
+		nil, resourcePermissionsCreate)
 	assert.EqualError(t, err, "At least one type of resource identifiers must be set")
 }
 
@@ -95,7 +178,22 @@ func TestPermissionsCreate_no_access_control(t *testing.T) {
 		map[string]interface{}{
 			"cluster_id": "abc",
 		}, resourcePermissionsCreate)
-	assert.EqualError(t, err, "At least one access_control is required")
+	assert.EqualError(t, err, "Invalid config supplied. access_control: required field is not set")
+}
+
+func TestPermissionsCreate_conflicting_fields(t *testing.T) {
+	_, err := ResourceTester(t, []HTTPFixture{}, resourcePermissions,
+		map[string]interface{}{
+			"cluster_id":    "abc",
+			"notebook_path": "/Init",
+			"access_control": []interface{}{
+				map[string]interface{}{
+					"user_name":        TestingUser,
+					"permission_level": "CAN_READ",
+				},
+			},
+		}, resourcePermissionsCreate)
+	assert.EqualError(t, err, "Invalid config supplied. cluster_id: conflicts with notebook_path. notebook_path: conflicts with cluster_id")
 }
 
 func TestPermissionsCreate(t *testing.T) {
@@ -107,7 +205,7 @@ func TestPermissionsCreate(t *testing.T) {
 				AccessControlList: []*model.AccessControlChange{
 					{
 						UserName:        &TestingUser,
-						PermissionLevel: "CAN_USE",
+						PermissionLevel: "CAN_READ",
 					},
 				},
 			},
@@ -152,7 +250,7 @@ func TestPermissionsCreate(t *testing.T) {
 		"access_control": []interface{}{
 			map[string]interface{}{
 				"user_name":        TestingUser,
-				"permission_level": "CAN_USE",
+				"permission_level": "CAN_READ",
 			},
 		},
 	}, resourcePermissionsCreate)
@@ -161,6 +259,130 @@ func TestPermissionsCreate(t *testing.T) {
 	assert.Equal(t, TestingUser, d.Get("access_control.0.user_name"))
 	assert.Equal(t, "CAN_READ", d.Get("access_control.0.permission_level"))
 	assert.Equal(t, 1, d.Get("access_control.#"))
+}
+
+func TestPermissionsCreate_NotebookPath_NotExists(t *testing.T) {
+	_, err := ResourceTester(t, []HTTPFixture{
+		{
+			Method:   http.MethodGet,
+			Resource: "/api/2.0/workspace/get-status?path=%2FDevelopment%2FInit",
+			Response: service.APIErrorBody{
+				ErrorCode: "INVALID_REQUEST",
+				Message:   "Internal error happened",
+			},
+			Status: 400,
+		},
+	}, resourcePermissions, map[string]interface{}{
+		"notebook_path": "/Development/Init",
+		"access_control": []interface{}{
+			map[string]interface{}{
+				"user_name":        TestingUser,
+				"permission_level": "CAN_USE",
+			},
+		},
+	}, resourcePermissionsCreate)
+
+	assert.Error(t, err)
+}
+
+func TestPermissionsCreate_NotebookPath(t *testing.T) {
+	d, err := ResourceTester(t, []HTTPFixture{
+		{
+			Method:   http.MethodGet,
+			Resource: "/api/2.0/workspace/get-status?path=%2FDevelopment%2FInit",
+			Response: model.WorkspaceObjectStatus{
+				ObjectID:   988765,
+				ObjectType: "NOTEBOOK",
+			},
+		},
+		{
+			Method:   http.MethodPatch,
+			Resource: "/api/2.0/preview/permissions/notebooks/988765",
+			ExpectedRequest: model.AccessControlChangeList{
+				AccessControlList: []*model.AccessControlChange{
+					{
+						UserName:        &TestingUser,
+						PermissionLevel: "CAN_USE",
+					},
+				},
+			},
+		},
+		{
+			Method:   http.MethodGet,
+			Resource: "/api/2.0/preview/permissions/notebooks/988765?",
+			Response: model.ObjectACL{
+				ObjectID:   "/notebooks/988765",
+				ObjectType: "notebooks",
+				AccessControlList: []*model.AccessControl{
+					{
+						UserName: &TestingUser,
+						AllPermissions: []*model.Permission{
+							{
+								PermissionLevel: "CAN_USE",
+								Inherited:       false,
+							},
+						},
+					},
+					{
+						UserName: &TestingAdminUser,
+						AllPermissions: []*model.Permission{
+							{
+								PermissionLevel: "CAN_MANAGE",
+								Inherited:       false,
+							},
+						},
+					},
+				},
+			},
+		},
+		{
+			Method:   http.MethodGet,
+			Resource: "/api/2.0/preview/scim/v2/Me?",
+			Response: model.User{
+				UserName: TestingAdminUser,
+			},
+		},
+	}, resourcePermissions, map[string]interface{}{
+		"notebook_path": "/Development/Init",
+		"access_control": []interface{}{
+			map[string]interface{}{
+				"user_name":        TestingUser,
+				"permission_level": "CAN_USE",
+			},
+		},
+	}, resourcePermissionsCreate)
+
+	assert.NoError(t, err, err)
+	assert.Equal(t, TestingUser, d.Get("access_control.0.user_name"))
+	assert.Equal(t, "CAN_USE", d.Get("access_control.0.permission_level"))
+	assert.Equal(t, 1, d.Get("access_control.#"))
+}
+
+func TestPermissionsCreate_error(t *testing.T) {
+	_, err := ResourceTester(t, []HTTPFixture{
+		{
+			Method:   http.MethodPatch,
+			Resource: "/api/2.0/preview/permissions/clusters/abc",
+			Response: service.APIErrorBody{
+				ErrorCode: "INVALID_REQUEST",
+				Message:   "Internal error happened",
+			},
+			Status: 400,
+		},
+	}, resourcePermissions, map[string]interface{}{
+		"cluster_id": "abc",
+		"access_control": []interface{}{
+			map[string]interface{}{
+				"user_name":        TestingUser,
+				"permission_level": "CAN_USE",
+			},
+		},
+	}, resourcePermissionsCreate)
+	if assert.Error(t, err) {
+		if e, ok := err.(service.APIError); ok {
+			assert.Equal(t, "INVALID_REQUEST", e.ErrorCode)
+		}
+	}
 }
 
 func TestAccDatabricksPermissionsResourceFullLifecycle(t *testing.T) {

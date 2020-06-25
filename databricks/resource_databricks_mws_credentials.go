@@ -5,7 +5,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
 	"log"
-	"strings"
 )
 
 func resourceMWSCredentials() *schema.Resource {
@@ -73,8 +72,8 @@ func resourceMWSCredentialsRead(d *schema.ResourceData, m interface{}) error {
 	}
 	credentials, err := client.MWSCredentials().Read(packagedMwsID.MwsAcctID, packagedMwsID.ResourceID)
 	if err != nil {
-		if isMWSCredentialsMissing(err.Error()) {
-			log.Printf("Missing e2 credentials with id: %s.", packagedMwsID.ResourceID)
+		if e, ok := err.(service.APIError); ok && e.IsMissing() {
+			log.Printf("missing resource due to error: %v\n", e)
 			d.SetId("")
 			return nil
 		}
@@ -112,8 +111,4 @@ func resourceMWSCredentialsDelete(d *schema.ResourceData, m interface{}) error {
 	}
 	err = client.MWSCredentials().Delete(packagedMwsID.MwsAcctID, packagedMwsID.ResourceID)
 	return err
-}
-
-func isMWSCredentialsMissing(errorMsg string) bool {
-	return strings.Contains(errorMsg, "RESOURCE_DOES_NOT_EXIST")
 }

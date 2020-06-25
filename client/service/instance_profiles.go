@@ -40,8 +40,13 @@ func (a InstanceProfilesAPI) Read(instanceProfileARN string) (string, error) {
 		}
 	}
 
-	return response, fmt.Errorf("Instance profile with name: %s not found in "+
-		"list of instance profiles in the workspace!", instanceProfileARN)
+	return response, APIError{
+		ErrorCode: "NOT_FOUND",
+		Message: fmt.Sprintf("Instance profile with name: %s not found in "+
+			"list of instance profiles in the workspace!", instanceProfileARN),
+		Resource:   "/api/2.0/instance-profiles/list",
+		StatusCode: http.StatusNotFound,
+	}
 }
 
 // List lists all the instance profiles in the workspace

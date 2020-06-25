@@ -1,4 +1,5 @@
 {
+    "go.testFlags": ["-v"],
     "go.delveConfig": {
     "dlvLoadConfig": {
         "followPointers": true,

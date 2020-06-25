@@ -13,7 +13,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestAccAWSGroupResource(t *testing.T) {
+func TestAccAwsGroupResource(t *testing.T) {
 	var Group model.Group
 	// generate a random name for each tokenInfo test run, to avoid
 	// collisions from multiple concurrent tests.
@@ -58,7 +58,7 @@ func TestAccAWSGroupResource(t *testing.T) {
 	})
 }
 
-func TestAccAWSGroupResource_verify_entitlements(t *testing.T) {
+func TestAccAwsGroupResource_verify_entitlements(t *testing.T) {
 	var Group model.Group
 	// generate a random name for each tokenInfo test run, to avoid
 	// collisions from multiple concurrent tests.

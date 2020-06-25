@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"net/url"
 	"reflect"
+	"regexp"
 	"strings"
 	"sync"
 	"time"
@@ -28,8 +29,7 @@ const (
 	Azure CloudServiceProvider = "Azure"
 )
 
-// DBApiErrorBody is a struct for a custom api error for all the services on databrickss.
-type DBApiErrorBody struct {
+type apiErrorBody struct {
 	ErrorCode string `json:"error_code,omitempty"`
 	Message   string `json:"message,omitempty"`
 	// The following two are for scim api only for RFC 7644 Section 3.7.3 https://tools.ietf.org/html/rfc7644#section-3.7.3
@@ -37,16 +37,38 @@ type DBApiErrorBody struct {
 	ScimStatus string `json:"status,omitempty"`
 }
 
-// DBApiError is a generic struct for an api error on databricks
-type DBApiError struct {
-	ErrorBody  *DBApiErrorBody
+// APIError is a generic struct for an api error on databricks
+type APIError struct {
+	ErrorCode  string
+	Message    string
+	Resource   string
 	StatusCode int
-	Err        error
 }
 
-// Error is a interface implementation of the error interface.
-func (r DBApiError) Error() string {
-	return fmt.Sprintf("status %d: err %v", r.StatusCode, r.Err)
+// Error returns error message string instead of
+func (apiError APIError) Error() string {
+	docs := apiError.DocumentationURL()
+	if docs == "" {
+		return fmt.Sprintf("%s\n(%d on %s)", apiError.Message, apiError.StatusCode, apiError.Resource)
+	}
+	return fmt.Sprintf("%s\nPlease consult API docs at %s for details.",
+		apiError.Message,
+		docs)
+}
+
+func (apiError APIError) IsMissing() bool {
+	return apiError.StatusCode == http.StatusNotFound
+}
+
+// DocumentationURL guesses doc link
+func (apiError APIError) DocumentationURL() string {
+	endpointRE := regexp.MustCompile(`/api/2.0/([^/]+)/([^/]+)$`)
+	endpointMatches := endpointRE.FindStringSubmatch(apiError.Resource)
+	if len(endpointMatches) < 3 {
+		return ""
+	}
+	return fmt.Sprintf("https://docs.databricks.com/dev-tools/api/latest/%s.html#%s",
+		endpointMatches[1], endpointMatches[2])
 }
 
 // AuthType is a custom type for a type of authentication allowed on Databricks
@@ -61,8 +83,12 @@ var clientAuthorizerMutex sync.Mutex
 
 // DBApiClientConfig is used to configure the DataBricks Client
 type DBApiClientConfig struct {
-	Host               string
-	Token              string
+	Host  string
+	Token string
+	// new token should be requested from
+	// the workspace before this time comes
+	// not yet used in the client but can be set
+	TokenExpiryTime    int64
 	AuthType           AuthType
 	UserAgent          string
 	DefaultHeaders     map[string]string
@@ -128,16 +154,47 @@ func checkHTTPRetry(ctx context.Context, resp *http.Response, err error) (bool, 
 		if err != nil {
 			return false, err
 		}
-		var errorBody DBApiErrorBody
+		var errorBody apiErrorBody
 		err = json.Unmarshal(body, &errorBody)
+		// this is most likely HTML... since un-marshalling JSON failed
 		if err != nil {
-			return false, fmt.Errorf("Response from server (%d) %s: %v", resp.StatusCode, string(body), err)
+			// Status parts first in case html message is not as expected
+			statusParts := strings.SplitN(resp.Status, " ", 2)
+			if len(statusParts) < 2 {
+				errorBody.ErrorCode = "UNKNOWN"
+			} else {
+				errorBody.ErrorCode = strings.ReplaceAll(strings.ToUpper(strings.Trim(statusParts[1], " .")), " ", "_")
+			}
+			stringBody := string(body)
+			messageRE := regexp.MustCompile(`<pre>(.*)</pre>`)
+			messageMatches := messageRE.FindStringSubmatch(stringBody)
+			// No messages with <pre> </pre> format found so return a default APIError
+			if len(messageMatches) < 2 {
+				return false, APIError{
+					Message:    fmt.Sprintf("Response from server (%d) %s: %v", resp.StatusCode, stringBody, err),
+					ErrorCode:  errorBody.ErrorCode,
+					StatusCode: resp.StatusCode,
+					Resource:   resp.Request.URL.Path,
+				}
+			}
+			errorBody.Message = strings.Trim(messageMatches[1], " .")
 		}
-		dbAPIError := DBApiError{
-			ErrorBody:  &errorBody,
+		dbAPIError := APIError{
+			Message:    errorBody.Message,
+			ErrorCode:  errorBody.ErrorCode,
 			StatusCode: resp.StatusCode,
-			Err:        fmt.Errorf("Response from server %s", string(body)),
+			Resource:   resp.Request.URL.Path,
 		}
+		// Handle scim error message details
+		if dbAPIError.Message == "" && errorBody.ScimDetail != "" {
+			if errorBody.ScimDetail == "null" {
+				dbAPIError.Message = "SCIM API Internal Error"
+			} else {
+				dbAPIError.Message = errorBody.ScimDetail
+			}
+			dbAPIError.ErrorCode = fmt.Sprintf("SCIM_%s", errorBody.ScimStatus)
+		}
+		// Handle transient errors for retries
 		for _, substring := range transientErrorStringMatches {
 			if strings.Contains(errorBody.Message, substring) {
 				log.Println("Failed request detected: Retryable type found. Attempting retry...")

@@ -1,11 +1,9 @@
 package databricks
 
 import (
-	"fmt"
 	"log"
 	"reflect"
 	"sort"
-	"strings"
 
 	"github.com/databrickslabs/databricks-terraform/client/model"
 	"github.com/databrickslabs/databricks-terraform/client/service"
@@ -131,8 +129,8 @@ func resourceScimUserRead(d *schema.ResourceData, m interface{}) error {
 	client := m.(*service.DBApiClient)
 	user, err := client.Users().Read(id)
 	if err != nil {
-		if isScimUserMissing(err.Error(), id) {
-			log.Printf("Missing scim user with id: %s.", id)
+		if e, ok := err.(service.APIError); ok && e.IsMissing() {
+			log.Printf("missing resource due to error: %v\n", e)
 			d.SetId("")
 			return nil
 		}
@@ -249,12 +247,6 @@ func resourceScimUserDelete(d *schema.ResourceData, m interface{}) error {
 	client := m.(*service.DBApiClient)
 	err := client.Users().Delete(id)
 	return err
-}
-
-func isScimUserMissing(errorMsg, resourceID string) bool {
-	return strings.Contains(errorMsg, "urn:ietf:params:scim:api:messages:2.0:Error") &&
-		strings.Contains(errorMsg, fmt.Sprintf("User with id %s not found.", resourceID)) &&
-		strings.Contains(errorMsg, "404")
 }
 
 func sliceContains(value string, list []string) bool {

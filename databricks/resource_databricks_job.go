@@ -534,7 +534,7 @@ func resourceJobRead(d *schema.ResourceData, m interface{}) error {
 
 	job, err := client.Jobs().Read(idInt)
 	if err != nil {
-		if isJobMissing(err.Error(), id) {
+		if isJobMissing(err, id) {
 			log.Printf("Missing job with id: %s.", id)
 			d.SetId("")
 			return nil
@@ -1192,7 +1192,9 @@ func parseSchemaToLibraries(d *schema.ResourceData) []model.Library {
 	return libraryList
 }
 
-func isJobMissing(errorMsg, resourceID string) bool {
-	return strings.Contains(errorMsg, "INVALID_PARAMETER_VALUE") &&
-		strings.Contains(errorMsg, fmt.Sprintf("Job %s does not exist.", resourceID))
+// Required as jobs do not return 404 not found
+func isJobMissing(err error, resourceID string) bool {
+	apiErr, ok := err.(service.APIError)
+	return (ok && apiErr.IsMissing()) ||
+		strings.Contains(err.Error(), fmt.Sprintf("Job %s does not exist.", resourceID))
 }

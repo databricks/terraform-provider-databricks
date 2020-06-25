@@ -60,8 +60,8 @@ func resourceGroupMemberRead(d *schema.ResourceData, m interface{}) error {
 
 	// First verify if the group exists
 	if err != nil {
-		if isScimGroupMissing(err.Error(), id) {
-			log.Printf("Missing group with id: %s.", id)
+		if e, ok := err.(service.APIError); ok && e.IsMissing() {
+			log.Printf("missing resource due to error: %v\n", e)
 			d.SetId("")
 			return nil
 		}

@@ -95,12 +95,12 @@ func Provider(version string) terraform.ResourceProvider {
 				Description: "Location of the Databricks CLI credentials file, that is created\n" +
 					"by `databricks configure --token` command. By default, it is located\n" +
 					"in ~/.databrickscfg. Check  https://docs.databricks.com/dev-tools/cli/index.html#set-up-authentication for docs. Config\n" +
-					"file credetials will only be used when host/token are not provided.",
+					"file credentials will only be used when host/token are not provided.",
 			},
 			"profile": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "DEFAULT",
+				Type:        schema.TypeString,
+				Optional:    true,
+				DefaultFunc: schema.EnvDefaultFunc("DATABRICKS_CONFIG_PROFILE", "DEFAULT"),
 				Description: "Connection profile specified within ~/.databrickscfg. Please check\n" +
 					"https://docs.databricks.com/dev-tools/cli/index.html#connection-profiles for documentation.",
 			},
@@ -271,20 +271,25 @@ func tryDatabricksCliConfigFile(d *schema.ResourceData, config *service.DBApiCli
 			"Please check https://docs.databricks.com/dev-tools/cli/index.html#set-up-authentication for details", configFile)
 	}
 	if profile, ok := d.GetOk("profile"); ok {
-		dbcliConfig := cfg.Section(profile.(string))
-		token := dbcliConfig.Key("token").String()
-		if "" == token {
-			return fmt.Errorf("config file %s is corrupt: cannot find token in %s profile",
-				configFile, profile)
-		}
-		config.Token = token
-
-		host := dbcliConfig.Key("host").String()
-		if "" == host {
+		dbcli := cfg.Section(profile.(string))
+		config.Host = dbcli.Key("host").String()
+		if config.Host == "" {
 			return fmt.Errorf("config file %s is corrupt: cannot find host in %s profile",
 				configFile, profile)
 		}
-		config.Host = host
+		if dbcli.HasKey("username") && dbcli.HasKey("password") {
+			username := dbcli.Key("username").String()
+			password := dbcli.Key("password").String()
+			tokenUnB64 := fmt.Sprintf("%s:%s", username, password)
+			config.Token = base64.StdEncoding.EncodeToString([]byte(tokenUnB64))
+			config.AuthType = service.BasicAuth
+		} else {
+			config.Token = dbcli.Key("token").String()
+		}
+		if config.Token == "" {
+			return fmt.Errorf("config file %s is corrupt: cannot find token in %s profile",
+				configFile, profile)
+		}
 	}
 
 	return nil

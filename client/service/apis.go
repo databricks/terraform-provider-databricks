@@ -21,6 +21,11 @@ func (c *DBApiClient) Clusters() ClustersAPI {
 	return ClustersAPI{Client: c}
 }
 
+// ClusterPolicies returns an instance of ClusterPoliciesAPI
+func (c *DBApiClient) ClusterPolicies() ClusterPoliciesAPI {
+	return ClusterPoliciesAPI{Client: c}
+}
+
 // Secrets returns an instance of SecretsAPI
 func (c *DBApiClient) Secrets() SecretsAPI {
 	return SecretsAPI{Client: c}
@@ -109,6 +114,11 @@ func (c *DBApiClient) MWSNetworks() MWSNetworksAPI {
 // MWSCustomerManagedKeys returns an instance of MWSCustomerManagedKeysAPI
 func (c *DBApiClient) MWSCustomerManagedKeys() MWSCustomerManagedKeysAPI {
 	return MWSCustomerManagedKeysAPI{Client: c}
+}
+
+// Permissions returns an instance of CommandsAPI
+func (c *DBApiClient) Permissions() PermissionsAPI {
+	return PermissionsAPI{Client: c}
 }
 
 func (c *DBApiClient) performQuery(method, path string, apiVersion string, headers map[string]string, data interface{}, secretsMask *SecretsMask) ([]byte, error) {

@@ -37,7 +37,7 @@ func resourceGroupMemberCreate(d *schema.ResourceData, m interface{}) error {
 	groupID := d.Get("group_id").(string)
 	memberID := d.Get("member_id").(string)
 
-	groupMemberID := &GroupMemberID{
+	groupMemberID := &groupMemberID{
 		GroupID:  groupID,
 		MemberID: memberID,
 	}
@@ -55,13 +55,13 @@ func resourceGroupMemberCreate(d *schema.ResourceData, m interface{}) error {
 func resourceGroupMemberRead(d *schema.ResourceData, m interface{}) error {
 	id := d.Id()
 	client := m.(*service.DBApiClient)
-	groupMemberID := parseGroupMemberID(id)
+	groupMemberID := parsegroupMemberID(id)
 	group, err := client.Groups().Read(groupMemberID.GroupID)
 
 	// First verify if the group exists
 	if err != nil {
-		if isScimGroupMissing(err.Error(), id) {
-			log.Printf("Missing group with id: %s.", id)
+		if e, ok := err.(service.APIError); ok && e.IsMissing() {
+			log.Printf("missing resource due to error: %v\n", e)
 			d.SetId("")
 			return nil
 		}
@@ -87,7 +87,7 @@ func resourceGroupMemberRead(d *schema.ResourceData, m interface{}) error {
 func resourceGroupMemberDelete(d *schema.ResourceData, m interface{}) error {
 	id := d.Id()
 	client := m.(*service.DBApiClient)
-	groupMemberID := parseGroupMemberID(id)
+	groupMemberID := parsegroupMemberID(id)
 
 	memberRemoveList := []string{groupMemberID.MemberID}
 	// Patch op to remove member from group
@@ -95,18 +95,18 @@ func resourceGroupMemberDelete(d *schema.ResourceData, m interface{}) error {
 	return err
 }
 
-type GroupMemberID struct {
+type groupMemberID struct {
 	GroupID  string
 	MemberID string
 }
 
-func (g GroupMemberID) String() string {
+func (g groupMemberID) String() string {
 	return fmt.Sprintf("%s|%s", g.GroupID, g.MemberID)
 }
 
-func parseGroupMemberID(id string) *GroupMemberID {
+func parsegroupMemberID(id string) *groupMemberID {
 	parts := strings.Split(id, "|")
-	return &GroupMemberID{
+	return &groupMemberID{
 		GroupID:  parts[0],
 		MemberID: parts[1],
 	}

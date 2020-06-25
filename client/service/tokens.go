@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/databrickslabs/databricks-terraform/client/model"
 )
@@ -14,15 +15,12 @@ type TokensAPI struct {
 }
 
 // Create creates a api token given a expiration duration and a comment
-func (a TokensAPI) Create(lifeTimeSeconds int32, comment string) (model.TokenResponse, error) {
+func (a TokensAPI) Create(tokenLifetime time.Duration, comment string) (model.TokenResponse, error) {
 	var tokenData model.TokenResponse
 
-	tokenCreateRequest := struct {
-		LifetimeSeconds int32  `json:"lifetime_seconds,omitempty"`
-		Comment         string `json:"comment,omitempty"`
-	}{
-		lifeTimeSeconds,
-		comment,
+	tokenCreateRequest := model.TokenRequest{
+		LifetimeSeconds: int32(tokenLifetime.Seconds()),
+		Comment:         comment,
 	}
 
 	tokenCreateResponse, err := a.Client.performQuery(http.MethodPost, "/token/create", "2.0", nil, tokenCreateRequest, nil)
@@ -59,7 +57,12 @@ func (a TokensAPI) Read(tokenID string) (model.TokenInfo, error) {
 			return tokenInfoRecord, nil
 		}
 	}
-	return tokenInfo, fmt.Errorf("Unable to locate token: %s", tokenID)
+	return tokenInfo, APIError{
+		ErrorCode:  "NOT_FOUND",
+		Message:    fmt.Sprintf("Unable to locate token: %s", tokenID),
+		Resource:   "/api/2.0/token/list",
+		StatusCode: http.StatusNotFound,
+	}
 }
 
 // Delete will delete the token given a token id

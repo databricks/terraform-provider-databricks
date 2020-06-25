@@ -2,7 +2,6 @@ package databricks
 
 import (
 	"log"
-	"strings"
 
 	"github.com/databrickslabs/databricks-terraform/client/service"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
@@ -69,8 +68,8 @@ func resourceMWSStorageConfigurationsRead(d *schema.ResourceData, m interface{})
 	}
 	storageConifiguration, err := client.MWSStorageConfigurations().Read(packagedMwsID.MwsAcctID, packagedMwsID.ResourceID)
 	if err != nil {
-		if isE2StorageConfigurationsMissing(err.Error()) {
-			log.Printf("Missing mws storage configurations with id: %s.", id)
+		if e, ok := err.(service.APIError); ok && e.IsMissing() {
+			log.Printf("missing resource due to error: %v\n", e)
 			d.SetId("")
 			return nil
 		}
@@ -109,8 +108,4 @@ func resourceMWSStorageConfigurationsDelete(d *schema.ResourceData, m interface{
 	}
 	err = client.MWSStorageConfigurations().Delete(packagedMwsID.MwsAcctID, packagedMwsID.ResourceID)
 	return err
-}
-
-func isE2StorageConfigurationsMissing(errorMsg string) bool {
-	return strings.Contains(errorMsg, "RESOURCE_DOES_NOT_EXIST")
 }

@@ -1,7 +1,6 @@
 package databricks
 
 import (
-	"fmt"
 	"log"
 	"strings"
 
@@ -70,8 +69,8 @@ func resourceSecretACLRead(d *schema.ResourceData, m interface{}) error {
 	client := m.(*service.DBApiClient)
 	secretACL, err := client.SecretAcls().Read(scope, principal)
 	if err != nil {
-		if isSecretACLMissing(err.Error(), scope, principal) {
-			log.Printf("Missing secret acl in scope with id: %s and principal: %s.", scope, principal)
+		if e, ok := err.(service.APIError); ok && e.IsMissing() {
+			log.Printf("missing resource due to error: %v\n", e)
 			d.SetId("")
 			return nil
 		}
@@ -98,9 +97,4 @@ func resourceSecretACLDelete(d *schema.ResourceData, m interface{}) error {
 	}
 	err = client.SecretAcls().Delete(scope, key)
 	return err
-}
-
-func isSecretACLMissing(errorMsg, scope string, principal string) bool {
-	return strings.Contains(errorMsg, "RESOURCE_DOES_NOT_EXIST") &&
-		strings.Contains(errorMsg, fmt.Sprintf("Failed to get secret acl for principal %s for scope %s.", principal, scope))
 }

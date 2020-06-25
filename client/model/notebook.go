@@ -32,8 +32,8 @@ const (
 	LibraryObject ObjectType = "LIBRARY"
 )
 
-// NotebookInfo contains information when doing a get request or list request on the workspace api
-type NotebookInfo struct {
+// WorkspaceObjectStatus contains information when doing a get request or list request on the workspace api
+type WorkspaceObjectStatus struct {
 	ObjectID   int64      `json:"object_id,omitempty"`
 	ObjectType ObjectType `json:"object_type,omitempty"`
 	Path       string     `json:"path,omitempty"`

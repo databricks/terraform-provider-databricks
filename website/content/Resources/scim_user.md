@@ -28,6 +28,7 @@ inherited roles or default roles.
 resource "databricks_scim_user" "my-user" {
   user_name = "testuser@databricks.com"
   display_name = "Test User"
+  default_roles = []
   entitlements = [
     "allow-cluster-create",
   ]

@@ -134,7 +134,7 @@ In addition to all arguments above, the following attributes are exported:
 
 #### - `network_error_messages`:
 > Array of error messages about the network configuration.
-> Contains the following objects: 
+> Contains the following objects:
 > error_type: The AWS resource associated with this error: credentials, VPC, subnet, security group, or network ACL.
 > error_message: Details of the error.
 

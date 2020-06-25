@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"testing"
+	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 
@@ -38,6 +39,18 @@ func init() {
 	testAccProviders = map[string]terraform.ResourceProvider{
 		"databricks": testAccProvider,
 	}
+}
+
+// getIntegrationDBAPIClient gets the client given CLOUD_ENV as those env variables get loaded
+func getIntegrationDBAPIClient(t *testing.T) *service.DBApiClient {
+	var config service.DBApiClientConfig
+	config.Token = getAndAssertEnv(t, "DATABRICKS_TOKEN")
+	config.Host = getAndAssertEnv(t, "DATABRICKS_HOST")
+	config.Setup()
+
+	var c service.DBApiClient
+	c.SetConfig(&config)
+	return &c
 }
 
 func getMWSClient() *service.DBApiClient {
@@ -73,6 +86,7 @@ func getTokenBasedClient() *service.DBApiClient {
 }
 
 func TestMain(m *testing.M) {
+	// This should not be asserted as it may not always be set for all tests
 	cloudEnv := os.Getenv("CLOUD_ENV")
 	envFileName := fmt.Sprintf("../.%s.env", cloudEnv)
 	err := godotenv.Load(envFileName)
@@ -199,6 +213,10 @@ func TestProvider_InvalidConfigFilePath(t *testing.T) {
 	assert.NotNil(t, err)
 }
 
+func TestProvider_DurationToSecondsString(t *testing.T) {
+	assert.Equal(t, durationToSecondsString(time.Hour), "3600")
+}
+
 func TestAccDatabricksCliConfigWorks(t *testing.T) {
 	resource.Test(t,
 		resource.TestCase{
@@ -211,4 +229,11 @@ func TestAccDatabricksCliConfigWorks(t *testing.T) {
 			},
 		},
 	)
+}
+
+// getAndAssertEnv fetches the env for testing and also asserts that the env value is not Zero i.e ""
+func getAndAssertEnv(t *testing.T, key string) string {
+	value, present := os.LookupEnv(key)
+	assert.True(t, present, fmt.Sprintf("Env variable %s is not set", key))
+	return value
 }

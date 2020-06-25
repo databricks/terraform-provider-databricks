@@ -6,7 +6,6 @@ import (
 	"bytes"
 	"encoding/base64"
 	"encoding/json"
-	"fmt"
 	"hash/crc32"
 	"io"
 	"log"
@@ -126,7 +125,7 @@ func resourceNotebookCreate(d *schema.ResourceData, m interface{}) error {
 
 	err := client.Notebooks().Create(path, content, model.Language(language), model.ExportFormat(format), overwrite)
 	if err != nil {
-		return errors.Wrap(err, "unable to create notebook")
+		return err
 	}
 	d.SetId(path)
 
@@ -151,16 +150,16 @@ func resourceNotebookRead(d *schema.ResourceData, m interface{}) error {
 	format := d.Get("format").(string)
 	notebookData, err := client.Notebooks().Export(id, model.ExportFormat(format))
 	if err != nil {
-		if isNotebookMissing(err.Error(), id) {
-			log.Printf("Missing notebook with id: %s.", id)
+		if e, ok := err.(service.APIError); ok && e.IsMissing() {
+			log.Printf("missing resource due to error: %v\n", e)
 			d.SetId("")
 			return nil
 		}
-		return errors.Wrapf(err, "unable to export the notebook with id: %s", id)
+		return err
 	}
 	notebookInfo, err := client.Notebooks().Read(id)
 	if err != nil {
-		return errors.Wrapf(err, "unable to read the notebook with id: %s", id)
+		return err
 	}
 	err = d.Set("path", id)
 	if err != nil {
@@ -321,9 +320,4 @@ func getDBCCheckSumForCommands(fileIO io.Reader) (int, error) {
 		commandsBuffer.WriteString(commandsMap[k])
 	}
 	return int(crc32.ChecksumIEEE(commandsBuffer.Bytes())), nil
-}
-
-func isNotebookMissing(errorMsg, resourceID string) bool {
-	return strings.Contains(errorMsg, "RESOURCE_DOES_NOT_EXIST") &&
-		strings.Contains(errorMsg, fmt.Sprintf("Path (%s) doesn't exist.", resourceID))
 }

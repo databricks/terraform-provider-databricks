@@ -6,16 +6,18 @@ cloud.google.com/go/internal/optional
 cloud.google.com/go/internal/trace
 cloud.google.com/go/internal/version
 cloud.google.com/go/storage
-# github.com/Azure/go-autorest/autorest v0.10.2 => github.com/tombuildsstuff/go-autorest/autorest v0.10.1-0.20200317095413-f2d2d0252c3c
+# github.com/Azure/go-autorest v14.2.0+incompatible
+github.com/Azure/go-autorest
+# github.com/Azure/go-autorest/autorest v0.11.0
 github.com/Azure/go-autorest/autorest
 github.com/Azure/go-autorest/autorest/azure
-# github.com/Azure/go-autorest/autorest/adal v0.8.3
+# github.com/Azure/go-autorest/autorest/adal v0.9.0
 github.com/Azure/go-autorest/autorest/adal
-# github.com/Azure/go-autorest/autorest/date v0.2.0
+# github.com/Azure/go-autorest/autorest/date v0.3.0
 github.com/Azure/go-autorest/autorest/date
-# github.com/Azure/go-autorest/logger v0.1.0
+# github.com/Azure/go-autorest/logger v0.2.0
 github.com/Azure/go-autorest/logger
-# github.com/Azure/go-autorest/tracing v0.5.0
+# github.com/Azure/go-autorest/tracing v0.6.0
 github.com/Azure/go-autorest/tracing
 # github.com/agext/levenshtein v1.2.2
 github.com/agext/levenshtein
@@ -25,7 +27,7 @@ github.com/apparentlymart/go-cidr/cidr
 github.com/apparentlymart/go-textseg/textseg
 # github.com/armon/go-radix v1.0.0
 github.com/armon/go-radix
-# github.com/aws/aws-sdk-go v1.32.2
+# github.com/aws/aws-sdk-go v1.32.9
 github.com/aws/aws-sdk-go/aws
 github.com/aws/aws-sdk-go/aws/arn
 github.com/aws/aws-sdk-go/aws/awserr
@@ -85,6 +87,7 @@ github.com/golang/protobuf/protoc-gen-go/descriptor
 github.com/golang/protobuf/ptypes
 github.com/golang/protobuf/ptypes/any
 github.com/golang/protobuf/ptypes/duration
+github.com/golang/protobuf/ptypes/empty
 github.com/golang/protobuf/ptypes/timestamp
 # github.com/google/go-cmp v0.3.1
 github.com/google/go-cmp/cmp
@@ -109,7 +112,7 @@ github.com/hashicorp/go-getter/helper/url
 github.com/hashicorp/go-hclog
 # github.com/hashicorp/go-multierror v1.0.0
 github.com/hashicorp/go-multierror
-# github.com/hashicorp/go-plugin v1.0.1
+# github.com/hashicorp/go-plugin v1.2.0
 github.com/hashicorp/go-plugin
 github.com/hashicorp/go-plugin/internal/plugin
 # github.com/hashicorp/go-retryablehttp v0.6.6
@@ -149,7 +152,7 @@ github.com/hashicorp/logutils
 github.com/hashicorp/terraform-config-inspect/tfconfig
 # github.com/hashicorp/terraform-json v0.4.0
 github.com/hashicorp/terraform-json
-# github.com/hashicorp/terraform-plugin-sdk v1.13.1
+# github.com/hashicorp/terraform-plugin-sdk v1.14.0
 github.com/hashicorp/terraform-plugin-sdk/acctest
 github.com/hashicorp/terraform-plugin-sdk/helper/acctest
 github.com/hashicorp/terraform-plugin-sdk/helper/hashcode
@@ -281,7 +284,7 @@ go.opencensus.io/trace
 go.opencensus.io/trace/internal
 go.opencensus.io/trace/propagation
 go.opencensus.io/trace/tracestate
-# golang.org/x/crypto v0.0.0-20200604202706-70a84ac30bf9
+# golang.org/x/crypto v0.0.0-20200622213623-75b288015ac9
 golang.org/x/crypto/bcrypt
 golang.org/x/crypto/blowfish
 golang.org/x/crypto/cast5
@@ -388,6 +391,8 @@ google.golang.org/grpc/keepalive
 google.golang.org/grpc/metadata
 google.golang.org/grpc/naming
 google.golang.org/grpc/peer
+google.golang.org/grpc/reflection
+google.golang.org/grpc/reflection/grpc_reflection_v1alpha
 google.golang.org/grpc/resolver
 google.golang.org/grpc/serviceconfig
 google.golang.org/grpc/stats

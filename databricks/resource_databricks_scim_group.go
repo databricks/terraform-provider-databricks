@@ -1,9 +1,7 @@
 package databricks
 
 import (
-	"fmt"
 	"log"
-	"strings"
 
 	"github.com/databrickslabs/databricks-terraform/client/model"
 	"github.com/databrickslabs/databricks-terraform/client/service"
@@ -125,8 +123,8 @@ func resourceScimGroupRead(d *schema.ResourceData, m interface{}) error {
 	client := m.(*service.DBApiClient)
 	group, err := client.Groups().Read(id)
 	if err != nil {
-		if isScimGroupMissing(err.Error(), id) {
-			log.Printf("Missing scim group with id: %s.", id)
+		if e, ok := err.(service.APIError); ok && e.IsMissing() {
+			log.Printf("missing resource due to error: %v\n", e)
 			d.SetId("")
 			return nil
 		}
@@ -247,10 +245,4 @@ func resourceScimGroupDelete(d *schema.ResourceData, m interface{}) error {
 	client := m.(*service.DBApiClient)
 	err := client.Groups().Delete(id)
 	return err
-}
-
-func isScimGroupMissing(errorMsg, resourceID string) bool {
-	return strings.Contains(errorMsg, "urn:ietf:params:scim:api:messages:2.0:Error") &&
-		strings.Contains(errorMsg, fmt.Sprintf("Group with id %s not found.", resourceID)) &&
-		strings.Contains(errorMsg, "404")
 }

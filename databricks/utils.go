@@ -71,11 +71,6 @@ func changeClusterIntoRunningState(clusterID string, client *service.DBApiClient
 	return fmt.Errorf("cluster is in a non recoverable state: %s", currentState)
 }
 
-func isClusterMissing(errorMsg, resourceID string) bool {
-	return strings.Contains(errorMsg, "INVALID_PARAMETER_VALUE") &&
-		strings.Contains(errorMsg, fmt.Sprintf("Cluster %s does not exist", resourceID))
-}
-
 // PackagedMWSIds is a struct that contains both the MWS acct id and the ResourceId (resources are networks, creds, etc.)
 type PackagedMWSIds struct {
 	MwsAcctID  string

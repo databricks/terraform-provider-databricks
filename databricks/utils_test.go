@@ -88,6 +88,10 @@ func testMissingWorkspaceResources(t *testing.T, cloud service.CloudServiceProvi
 
 	randIntId := 2000000 + acctest.RandIntRange(100000, 20000000)
 	randStringId := acctest.RandString(10)
+	// example 405E7E8E4A000024
+	randomClusterPolicyId := fmt.Sprintf("400E9E9E9A%d",
+		acctest.RandIntRange(100000, 999999),
+	)
 	// example 0101-120000-brick1-pool-ABCD1234
 	randomInstancePoolId := fmt.Sprintf(
 		"%v-%v-%s-pool-%s",
@@ -185,6 +189,14 @@ func testMissingWorkspaceResources(t *testing.T, cloud service.CloudServiceProvi
 			name: "CheckIfUsersAreMissing",
 			readFunc: func() error {
 				_, err := client.Users().Read(randStringId)
+				t.Log(err)
+				return err
+			},
+		},
+		{
+			name: "CheckIfClusterPoliciesAreMissing",
+			readFunc: func() error {
+				_, err := client.ClusterPolicies().Get(randomClusterPolicyId)
 				t.Log(err)
 				return err
 			},

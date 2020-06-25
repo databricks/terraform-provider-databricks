@@ -238,8 +238,10 @@ environment variable `DATABRICKS_AZURE_CLIENT_ID` or `ARM_CLIENT_ID`.
 * `tenant_id` - (required) This is the Azure Active Directory Tenant id in which the Enterprise Application (Service Principal) 
 resides in. Alternatively you can provide this value as an environment variable `DATABRICKS_AZURE_TENANT_ID` or `ARM_TENANT_ID`.
 
-* `pat_token_duration_seconds` - (required) This field allows you to control the duration of your PAT token that is generated 
-during the azure service principal authentication workflow. This value defaults to `3600` seconds.
+* `pat_token_duration_seconds` - The current implementation of the azure auth via sp requires the provider to create a temporary 
+personal access token within Databricks. The current AAD implementation does not cover all the APIs for Authentication. This 
+field determines the duration in which that temporary PAT token is alive for. It is measured in seconds and will default to 
+`3600` seconds. 
 
 Where there are multiple environment variable options, the `DATABRICKS_AZURE_*` environment variables takes precedence 
 and the `ARM_*` environment variables provide a way to share authentication configuration when using the `databricks-terraform` 

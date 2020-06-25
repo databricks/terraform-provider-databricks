@@ -75,6 +75,10 @@ func resourcePermissionsRead(d *schema.ResourceData, m interface{}) error {
 	id := d.Id()
 	client := m.(*service.DBApiClient)
 	objectACL, err := client.Permissions().Read(id)
+	if e, ok := err.(service.APIError); ok && e.IsMissing() {
+		d.SetId("")
+		return nil
+	}
 	if err != nil {
 		return err
 	}

@@ -96,7 +96,7 @@ func testMissingWorkspaceResources(t *testing.T, cloud service.CloudServiceProvi
 		acctest.RandString(6),
 		acctest.RandString(8),
 	)
-	client := getIntegrationDBAPIClient()
+	client := getIntegrationDBAPIClient(t)
 
 	type testTable struct {
 		name            string

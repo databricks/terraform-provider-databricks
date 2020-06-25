@@ -83,8 +83,12 @@ var clientAuthorizerMutex sync.Mutex
 
 // DBApiClientConfig is used to configure the DataBricks Client
 type DBApiClientConfig struct {
-	Host               string
-	Token              string
+	Host  string
+	Token string
+	// new token should be requested from
+	// the workspace before this time comes
+	// not yet used in the client but can be set
+	TokenExpiryTime    int64
 	AuthType           AuthType
 	UserAgent          string
 	DefaultHeaders     map[string]string

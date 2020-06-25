@@ -41,10 +41,10 @@ func init() {
 }
 
 // getIntegrationDBAPIClient gets the client given CLOUD_ENV as those env variables get loaded
-func getIntegrationDBAPIClient() *service.DBApiClient {
+func getIntegrationDBAPIClient(t *testing.T) *service.DBApiClient {
 	var config service.DBApiClientConfig
-	config.Token = os.Getenv("DATABRICKS_TOKEN")
-	config.Host = os.Getenv("DATABRICKS_HOST")
+	config.Token = getAndAssertEnv(t, "DATABRICKS_TOKEN")
+	config.Host = getAndAssertEnv(t, "DATABRICKS_HOST")
 	config.Setup()
 
 	var c service.DBApiClient
@@ -71,6 +71,7 @@ func getMWSClient() *service.DBApiClient {
 }
 
 func TestMain(m *testing.M) {
+	// This should not be asserted as it may not always be set for all tests
 	cloudEnv := os.Getenv("CLOUD_ENV")
 	envFileName := fmt.Sprintf("../.%s.env", cloudEnv)
 	err := godotenv.Load(envFileName)
@@ -209,4 +210,11 @@ func TestAccDatabricksCliConfigWorks(t *testing.T) {
 			},
 		},
 	)
+}
+
+// getAndAssertEnv fetches the env for testing and also asserts that the env value is not Zero i.e ""
+func getAndAssertEnv(t *testing.T, key string) string {
+	value, present := os.LookupEnv(key)
+	assert.True(t, present, fmt.Sprintf("Env variable %s is not set", key))
+	return value
 }

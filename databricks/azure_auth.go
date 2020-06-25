@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"time"
 	urlParse "net/url"
+	"time"
 
 	"github.com/Azure/go-autorest/autorest/adal"
 	"github.com/Azure/go-autorest/autorest/azure"
@@ -105,9 +105,9 @@ func (t *TokenPayload) getWorkspace(config *service.DBApiClientConfig, managemen
 	// Escape all the ids
 	url := fmt.Sprintf("https://management.azure.com/subscriptions/%s/resourceGroups/%s"+
 		"/providers/Microsoft.Databricks/workspaces/%s",
-		urlParse.PathEscape(t.TokenPayload.SubscriptionID),
-		urlParse.PathEscape(t.TokenPayload.ResourceGroup),
-		urlParse.PathEscape(t.TokenPayload.WorkspaceName))
+		urlParse.PathEscape(t.SubscriptionID),
+		urlParse.PathEscape(t.ResourceGroup),
+		urlParse.PathEscape(t.WorkspaceName))
 	headers := map[string]string{
 		"Content-Type":  "application/json",
 		"cache-control": "no-cache",
@@ -216,7 +216,10 @@ func (t *TokenPayload) initWorkspaceAndGetClient(config *service.DBApiClientConf
 	}
 
 	config.Host = adbWorkspaceUrl
-	config.Token = workspaceAccessToken
+	config.Token = workspaceAccessTokenResp.TokenValue
+	if workspaceAccessTokenResp.TokenInfo != nil {
+		config.TokenExpiryTime = workspaceAccessTokenResp.TokenInfo.ExpiryTime
+	}
 
 	return nil
 }

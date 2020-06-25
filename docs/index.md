@@ -38,6 +38,11 @@ resource "databricks_cluster" "shared_autoscaling" {
 !> **Warning** Please be aware that hard coding any credentials is not something that is recommended. It may be best if 
 you store the credentials environment variables, `~/.databrickscfg` file or use tfvars file.
 
+!> **Warning** Please note that the azure service principal authentication currently uses a generated Databricks PAT token 
+and not a AAD token for the authentication. This is due to the Databricks AAD feature not yet supporting AAD tokens for 
+secret scopes. This will be refactored in a transparent manner when that support is enabled. The only field to be impacted 
+is `pat_token_duration_seconds` which will be deprecated and after AAD support is fully supported. 
+
 There are currently three supported methods [to authenticate into](https://docs.databricks.com/dev-tools/api/latest/authentication.html) the Databricks platform to create resources:
 
 * [PAT Tokens](https://docs.databricks.com/dev-tools/api/latest/authentication.html)
@@ -122,7 +127,7 @@ resource "azurerm_databricks_workspace" "demo_test_workspace" {
 }
 
 provider "databricks" {
-  azure_auth {
+  azure_auth = {
     managed_resource_group  = azurerm_databricks_workspace.demo_test_workspace.managed_resource_group_name
     azure_region            = azurerm_databricks_workspace.demo_test_workspace.location
     workspace_name          = azurerm_databricks_workspace.demo_test_workspace.name
@@ -232,6 +237,9 @@ environment variable `DATABRICKS_AZURE_CLIENT_ID` or `ARM_CLIENT_ID`.
 
 * `tenant_id` - (required) This is the Azure Active Directory Tenant id in which the Enterprise Application (Service Principal) 
 resides in. Alternatively you can provide this value as an environment variable `DATABRICKS_AZURE_TENANT_ID` or `ARM_TENANT_ID`.
+
+* `pat_token_duration_seconds` - (required) This field allows you to control the duration of your PAT token that is generated 
+during the azure service principal authentication workflow. This value defaults to `3600` seconds.
 
 Where there are multiple environment variable options, the `DATABRICKS_AZURE_*` environment variables takes precedence 
 and the `ARM_*` environment variables provide a way to share authentication configuration when using the `databricks-terraform` 

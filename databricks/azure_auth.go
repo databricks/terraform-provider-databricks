@@ -29,7 +29,7 @@ type TokenPayload struct {
 	ClientSecret         string
 	ClientID             string
 	TenantID             string
-	PatTokenDuration     int32
+	PatTokenSeconds      int32
 }
 
 type Workspace struct {
@@ -158,7 +158,7 @@ func (t *TokenPayload) getADBPlatformToken() (string, error) {
 	return platformToken.OAuthToken(), nil
 }
 
-func getWorkspaceAccessToken(config *service.DBApiClientConfig, managementToken, adbWorkspaceUrl, adbWorkspaceResourceID, adbPlatformToken string) (*model.TokenResponse, error) {
+func (t *TokenPayload) getWorkspaceAccessToken(config *service.DBApiClientConfig, managementToken, adbWorkspaceUrl, adbWorkspaceResourceID, adbPlatformToken string) (*model.TokenResponse, error) {
 	log.Println("[DEBUG] Creating workspace token")
 	url := adbWorkspaceUrl + "/api/2.0/token/create"
 	headers := map[string]string{
@@ -169,10 +169,11 @@ func getWorkspaceAccessToken(config *service.DBApiClientConfig, managementToken,
 		"Authorization":                            "Bearer " + adbPlatformToken,
 	}
 
+	tokenLifetimeSeconds := (time.Duration(t.PatTokenSeconds) * time.Second).Seconds()
 	var tokenResponse model.TokenResponse
 	resp, err := service.PerformQuery(config, http.MethodPost, url, "2.0",
 		headers, true, true, model.TokenRequest{
-			LifetimeSeconds: int32(3600),
+			LifetimeSeconds: int32(tokenLifetimeSeconds),
 			Comment:         "Secret made via SP",
 		}, nil)
 	if err != nil {
@@ -211,14 +212,16 @@ func (t *TokenPayload) initWorkspaceAndGetClient(config *service.DBApiClientConf
 	}
 
 	// Get workspace personal access token
-	workspaceAccessTokenResp, err := getWorkspaceAccessToken(config, managementToken, adbWorkspaceUrl, adbWorkspace.ID, adbPlatformToken)
+	workspaceAccessTokenResp, err := t.getWorkspaceAccessToken(config, managementToken, adbWorkspaceUrl, adbWorkspace.ID, adbPlatformToken)
 	if err != nil {
 		return err
 	}
 
+	// Getting and creating this token happens in a mtx lock so this assignment should be safe
 	config.Host = adbWorkspaceUrl
 	config.Token = workspaceAccessTokenResp.TokenValue
 	if workspaceAccessTokenResp.TokenInfo != nil {
+		config.TokenCreateTime = workspaceAccessTokenResp.TokenInfo.CreationTime
 		config.TokenExpiryTime = workspaceAccessTokenResp.TokenInfo.ExpiryTime
 	}
 

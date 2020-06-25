@@ -2,7 +2,6 @@ package databricks
 
 import (
 	"log"
-	"strings"
 	"time"
 
 	"github.com/databrickslabs/databricks-terraform/client/service"
@@ -51,7 +50,8 @@ func resourceTokenCreate(d *schema.ResourceData, m interface{}) error {
 	client := m.(*service.DBApiClient)
 	lifeTimeSeconds := d.Get("lifetime_seconds").(int)
 	comment := d.Get("comment").(string)
-	tokenResp, err := client.Tokens().Create(time.Duration(lifeTimeSeconds)*time.Second, comment)
+	tokenDuration := time.Duration(lifeTimeSeconds) * time.Second
+	tokenResp, err := client.Tokens().Create(tokenDuration, comment)
 	if err != nil {
 		return err
 	}

@@ -15,11 +15,11 @@ type TokensAPI struct {
 }
 
 // Create creates a api token given a expiration duration and a comment
-func (a TokensAPI) Create(tokenLifeTime time.Duration, comment string) (model.TokenResponse, error) {
+func (a TokensAPI) Create(tokenLifetime time.Duration, comment string) (model.TokenResponse, error) {
 	var tokenData model.TokenResponse
 
 	tokenCreateRequest := model.TokenRequest{
-		LifetimeSeconds: lifeTimeSeconds,
+		LifetimeSeconds: int32(tokenLifetime.Seconds()),
 		Comment:         comment,
 	}
 

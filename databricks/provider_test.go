@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"testing"
+	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 
@@ -154,19 +155,6 @@ func TestProvider_BasicAuthTakePrecedence(t *testing.T) {
 	assert.Equal(t, expectedToken, client.Token)
 }
 
-func TestProvider_CustomPatTokenDurationAzureAuth(t *testing.T) {
-	var raw = make(map[string]interface{})
-	patTokenDuration := 800
-	raw["azure_auth"] = []interface{}{map[string]interface{}{"pat_token_duration_seconds": patTokenDuration}}
-	err := testAccProvider.Configure(terraform.NewResourceConfigRaw(raw))
-	assert.Nil(t, err)
-
-	client := testAccProvider.Meta().(*service.DBApiClient).Config
-	t.Log(client.Metadata)
-	assert.NotNil(t, client.Metadata)
-	assert.Equal(t, int32(patTokenDuration), client.Metadata.AzureAuthPatTokenExpiry)
-}
-
 func TestProvider_MissingEnvMakesConfigRead(t *testing.T) {
 	var raw = make(map[string]interface{})
 	raw["token"] = "configured"
@@ -209,6 +197,10 @@ func TestProvider_InvalidConfigFilePath(t *testing.T) {
 	err := testAccProvider.Configure(terraform.NewResourceConfigRaw(raw))
 	log.Println(err)
 	assert.NotNil(t, err)
+}
+
+func TestProvider_DurationToSecondsString(t *testing.T) {
+	assert.Equal(t, durationToSecondsString(time.Hour), "3600")
 }
 
 func TestAccDatabricksCliConfigWorks(t *testing.T) {

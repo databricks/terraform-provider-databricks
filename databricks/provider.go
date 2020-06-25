@@ -155,7 +155,7 @@ func Provider(version string) terraform.ResourceProvider {
 							Type:        schema.TypeString,
 							Required:    true,
 							Description: "Currently secret scopes are not accessible via AAD tokens so we will need to create a PAT token",
-							Default:     time.Hour.String(),
+							Default:     durationToSecondsString(time.Hour),
 						},
 					},
 				},
@@ -174,6 +174,10 @@ func Provider(version string) terraform.ResourceProvider {
 	}
 
 	return provider
+}
+
+func durationToSecondsString(duration time.Duration) string {
+	return strconv.Itoa(int(duration.Seconds()))
 }
 
 func providerConfigureAzureClient(d *schema.ResourceData, config *service.DBApiClientConfig) (interface{}, error) {
@@ -259,16 +263,11 @@ func providerConfigureAzureClient(d *schema.ResourceData, config *service.DBApiC
 	// no need to ok this value has a default
 	patTokenDurationSeconds, ok := azureAuthMap["pat_token_duration_seconds"].(string)
 	if ok {
-		patTokenDuration, err := strconv.ParseInt(patTokenDurationSeconds, 10, 32)
+		patTokenDuration, err := strconv.Atoi(patTokenDurationSeconds)
 		if err != nil {
 			return nil, fmt.Errorf("failed to parse pat_token_duration_seconds, %w", err)
 		}
-		tokenPayload.PatTokenDuration = int32(patTokenDuration)
-		// Token metadata for token expiry: mostly just for testing
-		if config.Metadata == nil {
-			config.Metadata = &service.DBApiClientMetadata{}
-		}
-		config.Metadata.AzureAuthPatTokenExpiry = tokenPayload.PatTokenDuration
+		tokenPayload.PatTokenSeconds = int32(patTokenDuration)
 	}
 
 	// Setup the CustomAuthorizer Function to be called at API invoke rather than client invoke

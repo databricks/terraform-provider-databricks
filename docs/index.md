@@ -6,19 +6,45 @@ description: |-
   Terraform provider databricks.
 ---
 
-# Authentication
+# Databricks Provider
+
+The Databricks provider is what is used to interact with the Databricks resources. This needs to be configured so that 
+terraform can provision resources in your Databricks workspace on your behalf. 
+
+
+## Example Usage
+
+```hcl
+provider "databricks" {
+  host = "https://abc-defg-024.cloud.databricks.com/"
+  token = "<your PAT token>"
+}
+
+resource "databricks_cluster" "shared_autoscaling" {
+  cluster_name            = "Shared Autoscaling"
+  spark_version           = "6.6.x-scala2.11"
+  node_type_id            = "i3.xlarge"
+  autotermination_minutes = 20
+
+  autoscale {
+    min_workers = 1
+    max_workers = 50
+  }
+}
+```
+
+## Authentication
 
 !> **Warning** Please be aware that hard coding any credentials is not something that is recommended. It may be best if 
 you store the credentials environment variables, `~/.databrickscfg` file or use tfvars file.
 
-The Databricks provider is what is used to interact with the Databricks resources. This needs to be configured so that 
-terraform can provision resources in your Databricks workspace on your behalf. There are currently three supported methods [to authenticate into](https://docs.databricks.com/dev-tools/api/latest/authentication.html) the Databricks platform to create resources:
+There are currently three supported methods [to authenticate into](https://docs.databricks.com/dev-tools/api/latest/authentication.html) the Databricks platform to create resources:
 
 * [PAT Tokens](https://docs.databricks.com/dev-tools/api/latest/authentication.html)
 * Username+Password pair
-* Azure Active Directory Tokens
+* Azure Active Directory Tokens via Azure Service Principal
 
-## Authenticating with Databricks CLI credentials
+### Authenticating with Databricks CLI credentials
 
 No configuration options given to your provider will look up configured credentials in `~/.databrickscfg` file. It is created by `databricks configure --token` command. Check  https://docs.databricks.com/dev-tools/cli/index.html#set-up-authentication for docs. Config file credetials will only be used when `host`/`token` or `azure_auth` options are not provided. This is recommended way to use Databricks Terraform provider, in case you're using the same approach with [AWS Shared Credentials File](https://www.terraform.io/docs/providers/aws/index.html#shared-credentials-file) or [Azure CLI authentication](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/guides/azure_cli).
 
@@ -43,7 +69,7 @@ provider "databricks" {
 }
 ```
 
-## Authenticating with hostname and token
+### Authenticating with hostname and token
 
 One can use `host` and `token` parameters to supply credentials to workspace. In case environment variables are preferred, `DATABRICKS_HOST` and `DATABRICKS_TOKEN` could be used instead. This is second most recommended way of configuring this provider.
 
@@ -54,7 +80,7 @@ provider "databricks" {
 }
 ```
 
-## Authenticating with hostname, username and password
+### Authenticating with hostname, username and password
 
 !> **Warning** This approach is currently recommended only for provisioning AWS workspaces and should be avoided for regular use.
 
@@ -70,7 +96,7 @@ provider "databricks" {
 }
 ```
 
-## Authenticating with Azure Service Principal
+### Authenticating with Azure Service Principal
 
 -> **Note** **Azure Service Principal Authentication** will only work on Azure Databricks where as the API Token authentication will work on both **Azure** and **AWS**. Internally `azure_auth` will generate a session-based PAT token.
 
@@ -109,7 +135,7 @@ resource "databricks_scim_user" "my-user" {
 }
 ```
 
-# Argument Reference
+## Argument Reference
 
 The following arguments are supported by the db provider block:
 
@@ -135,7 +161,7 @@ https://docs.databricks.com/dev-tools/cli/index.html#connection-profiles for doc
 * `azure_auth` - (optional) This is a azure_auth block ([documented below]((#azure_auth-configuration-block))) required to authenticate to the Databricks via an azure service 
 principal that has access to the workspace. This is optional as you can use the api token based auth. 
 
-## basic_auth Configuration Block
+### basic_auth Configuration Block
 
 Example:
 
@@ -155,7 +181,7 @@ Alternatively you can provide this value as an environment variable `DATABRICKS_
 Alternatively you can provide this value as an environment variable `DATABRICKS_PASSWORD`.
 
 
-## azure_auth Configuration Block
+### azure_auth Configuration Block
 
 Example:
 
@@ -206,7 +232,7 @@ Where there are multiple environment variable options, the `DATABRICKS_AZURE_*` 
 and the `ARM_*` environment variables provide a way to share authentication configuration when using the `databricks-terraform` 
 provider alongside the `azurerm` provider.
 
-# Environment variables
+## Environment variables
 
 The following variables can be passed via environment variables:
 

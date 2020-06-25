@@ -82,6 +82,10 @@ func TestAccAzureMissingWorkspaceResources(t *testing.T) {
 }
 
 func testMissingWorkspaceResources(t *testing.T, cloud service.CloudServiceProvider) {
+	if _, ok := os.LookupEnv("TF_ACC"); !ok {
+		t.Skip("Acceptance tests skipped unless env 'TF_ACC' set")
+	}
+
 	randIntId := 2000000 + acctest.RandIntRange(100000, 20000000)
 	randStringId := acctest.RandString(10)
 	// example 0101-120000-brick1-pool-ABCD1234

@@ -1,4 +1,7 @@
-package autorest
+/*
+Package go-autorest provides an HTTP request client for use with Autorest-generated API client packages.
+*/
+package go_autorest
 
 // Copyright 2017 Microsoft Corporation
 //
@@ -13,29 +16,3 @@ package autorest
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-
-import (
-	"fmt"
-	"runtime"
-)
-
-const number = "v14.2.0"
-
-var (
-	userAgent = fmt.Sprintf("Go/%s (%s-%s) go-autorest/%s",
-		runtime.Version(),
-		runtime.GOARCH,
-		runtime.GOOS,
-		number,
-	)
-)
-
-// UserAgent returns a string containing the Go version, system architecture and OS, and the go-autorest version.
-func UserAgent() string {
-	return userAgent
-}
-
-// Version returns the semantic version (see http://semver.org).
-func Version() string {
-	return number
-}

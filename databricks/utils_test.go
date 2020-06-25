@@ -1,16 +1,21 @@
 package databricks
 
 import (
+	"bytes"
+	"encoding/json"
 	"errors"
 	"fmt"
+	"net/http"
+	"net/http/httptest"
 	"os"
 	"strconv"
 	"testing"
 
-	"github.com/databrickslabs/databricks-terraform/client/service"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/databrickslabs/databricks-terraform/client/service"
 )
 
 func TestMissingMWSResources(t *testing.T) {
@@ -18,9 +23,9 @@ func TestMissingMWSResources(t *testing.T) {
 		t.Skip("skipping integration test in short mode.")
 	}
 
-	mwsAcctId := os.Getenv("DATABRICKS_MWS_ACCT_ID")
-	randStringId := acctest.RandString(10)
-	randIntId := 2000000 + acctest.RandIntRange(100000, 20000000)
+	mwsAcctID := os.Getenv("DATABRICKS_MWS_ACCT_ID")
+	randStringID := acctest.RandString(10)
+	randIntID := 2000000 + acctest.RandIntRange(100000, 20000000)
 
 	client := getMWSClient()
 	tests := []struct {
@@ -33,28 +38,28 @@ func TestMissingMWSResources(t *testing.T) {
 		{
 			name: "CheckIfMWSCredentialsAreMissing",
 			readFunc: func() error {
-				_, err := client.MWSCredentials().Read(mwsAcctId, randStringId)
+				_, err := client.MWSCredentials().Read(mwsAcctID, randStringID)
 				return err
 			},
 		},
 		{
 			name: "CheckIfMWSNetworksAreMissing",
 			readFunc: func() error {
-				_, err := client.MWSNetworks().Read(mwsAcctId, randStringId)
+				_, err := client.MWSNetworks().Read(mwsAcctID, randStringID)
 				return err
 			},
 		},
 		{
 			name: "CheckIfMWSStorageConfigurationsAreMissing",
 			readFunc: func() error {
-				_, err := client.MWSStorageConfigurations().Read(mwsAcctId, randStringId)
+				_, err := client.MWSStorageConfigurations().Read(mwsAcctID, randStringID)
 				return err
 			},
 		},
 		{
 			name: "CheckIfMWSWorkspacesAreMissing",
 			readFunc: func() error {
-				_, err := client.MWSWorkspaces().Read(mwsAcctId, int64(randIntId))
+				_, err := client.MWSWorkspaces().Read(mwsAcctID, int64(randIntID))
 				return err
 			},
 		},
@@ -86,14 +91,14 @@ func testMissingWorkspaceResources(t *testing.T, cloud service.CloudServiceProvi
 		t.Skip("Acceptance tests skipped unless env 'TF_ACC' set")
 	}
 
-	randIntId := 2000000 + acctest.RandIntRange(100000, 20000000)
-	randStringId := acctest.RandString(10)
+	randIntID := 2000000 + acctest.RandIntRange(100000, 20000000)
+	randStringID := acctest.RandString(10)
 	// example 405E7E8E4A000024
-	randomClusterPolicyId := fmt.Sprintf("400E9E9E9A%d",
+	randomClusterPolicyID := fmt.Sprintf("400E9E9E9A%d",
 		acctest.RandIntRange(100000, 999999),
 	)
 	// example 0101-120000-brick1-pool-ABCD1234
-	randomInstancePoolId := fmt.Sprintf(
+	randomInstancePoolID := fmt.Sprintf(
 		"%v-%v-%s-pool-%s",
 		acctest.RandIntRange(1000, 9999),
 		acctest.RandIntRange(100000, 999999),
@@ -113,35 +118,35 @@ func testMissingWorkspaceResources(t *testing.T, cloud service.CloudServiceProvi
 		{
 			name: "CheckIfTokensAreMissing",
 			readFunc: func() error {
-				_, err := client.Tokens().Read(randStringId)
+				_, err := client.Tokens().Read(randStringID)
 				return err
 			},
 		},
 		{
 			name: "CheckIfSecretScopesAreMissing",
 			readFunc: func() error {
-				_, err := client.SecretScopes().Read(randStringId)
+				_, err := client.SecretScopes().Read(randStringID)
 				return err
 			},
 		},
 		{
 			name: "CheckIfSecretsAreMissing",
 			readFunc: func() error {
-				_, err := client.Secrets().Read(randStringId, randStringId)
+				_, err := client.Secrets().Read(randStringID, randStringID)
 				return err
 			},
 		},
 		{
 			name: "CheckIfSecretsACLsAreMissing",
 			readFunc: func() error {
-				_, err := client.SecretAcls().Read(randStringId, randStringId)
+				_, err := client.SecretAcls().Read(randStringID, randStringID)
 				return err
 			},
 		},
 		{
 			name: "CheckIfSecretsACLsAreMissing",
 			readFunc: func() error {
-				_, err := client.SecretAcls().Read(randStringId, randStringId)
+				_, err := client.SecretAcls().Read(randStringID, randStringID)
 				return err
 			},
 		},
@@ -149,38 +154,38 @@ func testMissingWorkspaceResources(t *testing.T, cloud service.CloudServiceProvi
 			name: "CheckIfNotebooksAreMissing",
 			readFunc: func() error {
 				// ID must start with a /
-				_, err := client.Notebooks().Read("/" + randStringId)
+				_, err := client.Notebooks().Read("/" + randStringID)
 				return err
 			},
 		},
 		{
 			name: "CheckIfInstancePoolsAreMissing",
 			readFunc: func() error {
-				_, err := client.InstancePools().Read(randomInstancePoolId)
+				_, err := client.InstancePools().Read(randomInstancePoolID)
 				return err
 			},
 		},
 		{
 			name: "CheckIfClustersAreMissing",
 			readFunc: func() error {
-				_, err := client.Clusters().Get(randStringId)
+				_, err := client.Clusters().Get(randStringID)
 				return err
 			},
 			isCustomCheck:   true,
 			customCheckFunc: isClusterMissing,
-			resourceID:      randStringId,
+			resourceID:      randStringID,
 		},
 		{
 			name: "CheckIfDBFSFilesAreMissing",
 			readFunc: func() error {
-				_, err := client.DBFS().Read("/" + randStringId)
+				_, err := client.DBFS().Read("/" + randStringID)
 				return err
 			},
 		},
 		{
 			name: "CheckIfGroupsAreMissing",
 			readFunc: func() error {
-				_, err := client.Groups().Read(randStringId)
+				_, err := client.Groups().Read(randStringID)
 				t.Log(err)
 				return err
 			},
@@ -188,7 +193,7 @@ func testMissingWorkspaceResources(t *testing.T, cloud service.CloudServiceProvi
 		{
 			name: "CheckIfUsersAreMissing",
 			readFunc: func() error {
-				_, err := client.Users().Read(randStringId)
+				_, err := client.Users().Read(randStringID)
 				t.Log(err)
 				return err
 			},
@@ -196,7 +201,7 @@ func testMissingWorkspaceResources(t *testing.T, cloud service.CloudServiceProvi
 		{
 			name: "CheckIfClusterPoliciesAreMissing",
 			readFunc: func() error {
-				_, err := client.ClusterPolicies().Get(randomClusterPolicyId)
+				_, err := client.ClusterPolicies().Get(randomClusterPolicyID)
 				t.Log(err)
 				return err
 			},
@@ -204,12 +209,12 @@ func testMissingWorkspaceResources(t *testing.T, cloud service.CloudServiceProvi
 		{
 			name: "CheckIfJobsAreMissing",
 			readFunc: func() error {
-				_, err := client.Jobs().Read(int64(randIntId))
+				_, err := client.Jobs().Read(int64(randIntID))
 				return err
 			},
 			isCustomCheck:   true,
 			customCheckFunc: isJobMissing,
-			resourceID:      strconv.Itoa(randIntId),
+			resourceID:      strconv.Itoa(randIntID),
 		},
 	}
 	// Handle aws only tests where instance profiles only exist on aws
@@ -218,7 +223,7 @@ func testMissingWorkspaceResources(t *testing.T, cloud service.CloudServiceProvi
 			{
 				name: "CheckIfInstanceProfilesAreMissing",
 				readFunc: func() error {
-					_, err := client.InstanceProfiles().Read(randStringId)
+					_, err := client.InstanceProfiles().Read(randStringID)
 					return err
 				},
 			},
@@ -237,13 +242,13 @@ func testMissingWorkspaceResources(t *testing.T, cloud service.CloudServiceProvi
 	}
 }
 
-func testVerifyResourceIsMissingCustomVerification(t *testing.T, resourceId string, readFunc func() error,
+func testVerifyResourceIsMissingCustomVerification(t *testing.T, resourceID string, readFunc func() error,
 	customCheck func(err error, rId string) bool) {
 	err := readFunc()
 	assert.NotNil(t, err, "err should not be nil")
 	assert.IsType(t, err, service.APIError{}, fmt.Sprintf("error: %s is not type api error", err.Error()))
 	if apiError, ok := err.(service.APIError); ok {
-		assert.True(t, customCheck(err, resourceId), fmt.Sprintf("error: %v is not missing;"+
+		assert.True(t, customCheck(err, resourceID), fmt.Sprintf("error: %v is not missing;"+
 			"\nstatus code: %v;"+
 			"\nerror code: %s",
 			apiError, apiError.StatusCode, apiError.ErrorCode))
@@ -260,17 +265,7 @@ func testVerifyResourceIsMissing(t *testing.T, readFunc func() error) {
 			"\nerror code: %s",
 			apiError, apiError.StatusCode, apiError.ErrorCode))
 	}
-	"bytes"
-	"encoding/json"
-	"fmt"
-	"net/http"
-	"net/http/httptest"
-	"testing"
-
-	"github.com/databrickslabs/databricks-terraform/client/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/stretchr/testify/assert"
-)
+}
 
 // HTTPFixture defines request structure for test
 type HTTPFixture struct {

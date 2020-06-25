@@ -24,7 +24,7 @@ fmt:
 	@gofmt -s -w main.go
 	@go fmt ./...
 
-lint: fmt
+lint: 
 	@echo "==> Linting source code with golangci-lint make sure you run make fmt ..."
 	@golangci-lint run --skip-dirs-use-default --timeout 5m
 

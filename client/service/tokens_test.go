@@ -3,6 +3,7 @@ package service
 import (
 	"net/http"
 	"testing"
+	"time"
 
 	"github.com/databrickslabs/databricks-terraform/client/model"
 )
@@ -63,7 +64,7 @@ func TestTokensAPI_Create(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			var input args
 			AssertRequestWithMockServer(t, &tt.args, http.MethodPost, "/api/2.0/token/create", &input, tt.response, tt.responseStatus, tt.want, tt.wantErr, func(client DBApiClient) (interface{}, error) {
-				return client.Tokens().Create(tt.args.LifetimeSeconds, tt.args.Comment)
+				return client.Tokens().Create(time.Duration(tt.args.LifetimeSeconds)*time.Second, tt.args.Comment)
 			})
 		})
 	}

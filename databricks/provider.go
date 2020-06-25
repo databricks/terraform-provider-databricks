@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strconv"
+	"time"
 
 	"github.com/databrickslabs/databricks-terraform/client/service"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
@@ -150,6 +152,12 @@ func Provider(version string) terraform.ResourceProvider {
 							Required:    true,
 							DefaultFunc: schema.MultiEnvDefaultFunc([]string{"DATABRICKS_AZURE_TENANT_ID", "ARM_TENANT_ID"}, nil),
 						},
+						"pat_token_duration_seconds": {
+							Type:        schema.TypeString,
+							Required:    true,
+							Description: "Currently secret scopes are not accessible via AAD tokens so we will need to create a PAT token",
+							Default:     durationToSecondsString(time.Hour),
+						},
 					},
 				},
 			},
@@ -167,6 +175,10 @@ func Provider(version string) terraform.ResourceProvider {
 	}
 
 	return provider
+}
+
+func durationToSecondsString(duration time.Duration) string {
+	return strconv.Itoa(int(duration.Seconds()))
 }
 
 func providerConfigureAzureClient(d *schema.ResourceData, config *service.DBApiClientConfig) (interface{}, error) {
@@ -247,6 +259,16 @@ func providerConfigureAzureClient(d *schema.ResourceData, config *service.DBApiC
 		tokenPayload.TenantID = os.Getenv("DATABRICKS_AZURE_TENANT_ID")
 	case os.Getenv("ARM_TENANT_ID") != "":
 		tokenPayload.TenantID = os.Getenv("ARM_TENANT_ID")
+	}
+
+	// no need to ok this value has a default
+	patTokenDurationSeconds, ok := azureAuthMap["pat_token_duration_seconds"].(string)
+	if ok {
+		patTokenDuration, err := strconv.Atoi(patTokenDurationSeconds)
+		if err != nil {
+			return nil, fmt.Errorf("failed to parse pat_token_duration_seconds, %w", err)
+		}
+		tokenPayload.PatTokenSeconds = int32(patTokenDuration)
 	}
 
 	// Setup the CustomAuthorizer Function to be called at API invoke rather than client invoke

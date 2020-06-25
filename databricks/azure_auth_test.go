@@ -1,7 +1,9 @@
 package databricks
 
 import (
+	"os"
 	"testing"
+	"time"
 
 	"github.com/databrickslabs/databricks-terraform/client/model"
 	"github.com/databrickslabs/databricks-terraform/client/service"
@@ -14,11 +16,12 @@ func GetIntegrationDBClientOptions() *service.DBApiClientConfig {
 	return &config
 }
 
-func TestAzureAuthCreateApiToken(t *testing.T) {
-	if testing.Short() {
-		t.Skip("skipping integration test in short mode.")
+func TestAccAzureAuth_TestPatTokenDuration(t *testing.T) {
+	if _, ok := os.LookupEnv("TF_ACC"); !ok {
+		t.Skip("Acceptance tests skipped unless env 'TF_ACC' set")
 	}
 
+	patTokenSeconds := (time.Duration(1) * time.Hour).Seconds()
 	tokenPayload := TokenPayload{
 		ManagedResourceGroup: getAndAssertEnv(t, "DATABRICKS_AZURE_MANAGED_RESOURCE_GROUP"),
 		AzureRegion:          getAndAssertEnv(t, "AZURE_REGION"),
@@ -28,6 +31,32 @@ func TestAzureAuthCreateApiToken(t *testing.T) {
 		TenantID:             getAndAssertEnv(t, "DATABRICKS_AZURE_TENANT_ID"),
 		ClientID:             getAndAssertEnv(t, "DATABRICKS_AZURE_CLIENT_ID"),
 		ClientSecret:         getAndAssertEnv(t, "DATABRICKS_AZURE_CLIENT_SECRET"),
+		PatTokenSeconds:      int32(patTokenSeconds),
+	}
+	config := GetIntegrationDBClientOptions()
+	err := tokenPayload.initWorkspaceAndGetClient(config)
+	assert.NoError(t, err, err)
+	// Time in milliseconds
+	tokenActualDuration := config.TokenExpiryTime - config.TokenCreateTime
+	assert.Equal(t, patTokenSeconds, (time.Duration(tokenActualDuration) * time.Millisecond).Seconds(),
+		"duration should be the same")
+}
+
+func TestAzureAuthCreateApiToken(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping integration test in short mode.")
+	}
+	patTokenSeconds := (time.Duration(1) * time.Hour).Seconds()
+	tokenPayload := TokenPayload{
+		ManagedResourceGroup: getAndAssertEnv(t, "DATABRICKS_AZURE_MANAGED_RESOURCE_GROUP"),
+		AzureRegion:          getAndAssertEnv(t, "AZURE_REGION"),
+		WorkspaceName:        getAndAssertEnv(t, "DATABRICKS_AZURE_WORKSPACE_NAME"),
+		ResourceGroup:        getAndAssertEnv(t, "DATABRICKS_AZURE_RESOURCE_GROUP"),
+		SubscriptionID:       getAndAssertEnv(t, "DATABRICKS_AZURE_SUBSCRIPTION_ID"),
+		TenantID:             getAndAssertEnv(t, "DATABRICKS_AZURE_TENANT_ID"),
+		ClientID:             getAndAssertEnv(t, "DATABRICKS_AZURE_CLIENT_ID"),
+		ClientSecret:         getAndAssertEnv(t, "DATABRICKS_AZURE_CLIENT_SECRET"),
+		PatTokenSeconds:      int32(patTokenSeconds),
 	}
 
 	config := GetIntegrationDBClientOptions()

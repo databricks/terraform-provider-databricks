@@ -269,8 +269,8 @@ resides in. Alternatively you can provide this value as an environment variable 
 
 * `pat_token_duration_seconds` - The current implementation of the azure auth via sp requires the provider to create a temporary 
 personal access token within Databricks. The current AAD implementation does not cover all the APIs for Authentication. This 
-field determines the duration in which that temporary PAT token is alive for. It is measure in seconds and will default to 
-1 hour. 
+field determines the duration in which that temporary PAT token is alive for. It is measured in seconds and will default to 
+`3600` seconds. 
 
 
 Where there are multiple environment variable options, the `DATABRICKS_AZURE_*` environment variables takes precedence and the `ARM_*` environment variables provide a way to share authentication configuration when using the `databricks-terraform` provider alongside the `azurerm` provider.

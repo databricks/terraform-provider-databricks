@@ -459,7 +459,7 @@ func TestClustersAPI_WaitForClusterRunning(t *testing.T) {
 		requestMethod  []string
 		args           []interface{}
 		wantURI        []string
-		want           []model.NotebookInfo
+		want           []model.WorkspaceObjectStatus
 		wantErr        bool
 	}{
 		{
@@ -605,7 +605,7 @@ func TestClustersAPI_WaitForClusterTerminated(t *testing.T) {
 		requestMethod  []string
 		args           []interface{}
 		wantURI        []string
-		want           []model.NotebookInfo
+		want           []model.WorkspaceObjectStatus
 		wantErr        bool
 	}{
 		{

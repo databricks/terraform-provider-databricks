@@ -119,7 +119,7 @@ func TestNotebooksAPI_ListNonRecursive(t *testing.T) {
 		responseStatus int
 		args           args
 		wantURI        string
-		want           []model.NotebookInfo
+		want           []model.WorkspaceObjectStatus
 		wantErr        bool
 	}{
 		{
@@ -146,7 +146,7 @@ func TestNotebooksAPI_ListNonRecursive(t *testing.T) {
 				Recursive: false,
 			},
 			wantURI: "/api/2.0/workspace/list?path=%2Ftest%2Fpath",
-			want: []model.NotebookInfo{
+			want: []model.WorkspaceObjectStatus{
 				{
 					ObjectID:   123,
 					ObjectType: model.Directory,
@@ -183,7 +183,7 @@ func TestNotebooksAPI_ListRecursive(t *testing.T) {
 		responseStatus []int
 		args           []interface{}
 		wantURI        []string
-		want           []model.NotebookInfo
+		want           []model.WorkspaceObjectStatus
 		wantErr        bool
 	}{
 		{
@@ -222,7 +222,7 @@ func TestNotebooksAPI_ListRecursive(t *testing.T) {
 				},
 			},
 			wantURI: []string{"/api/2.0/workspace/list?path=%2Ftest%2Fpath", "/api/2.0/workspace/list?path=%2FUsers%2Fuser%40example.com%2Fproject"},
-			want: []model.NotebookInfo{
+			want: []model.WorkspaceObjectStatus{
 				{
 					ObjectID:   457,
 					ObjectType: model.Notebook,
@@ -288,7 +288,7 @@ func TestNotebooksAPI_Read(t *testing.T) {
 		args           args
 		responseStatus int
 		wantURI        string
-		want           model.NotebookInfo
+		want           model.WorkspaceObjectStatus
 		wantErr        bool
 	}{
 		{
@@ -303,7 +303,7 @@ func TestNotebooksAPI_Read(t *testing.T) {
 				Path: "/test/path",
 			},
 			responseStatus: http.StatusOK,
-			want: model.NotebookInfo{
+			want: model.WorkspaceObjectStatus{
 				ObjectID:   789,
 				ObjectType: model.Notebook,
 				Path:       "/Users/user@example.com/project/ScalaExampleNotebook",
@@ -320,7 +320,7 @@ func TestNotebooksAPI_Read(t *testing.T) {
 				Path: "/test/path",
 			},
 			responseStatus: http.StatusBadRequest,
-			want:           model.NotebookInfo{},
+			want:           model.WorkspaceObjectStatus{},
 			wantURI:        "/api/2.0/workspace/get-status?path=%2Ftest%2Fpath",
 			wantErr:        true,
 		},

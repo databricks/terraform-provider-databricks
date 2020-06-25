@@ -1,16 +1,24 @@
 package databricks
 
 import (
+	"bytes"
+	"encoding/json"
 	"errors"
 	"fmt"
+	"net/http"
+	"net/http/httptest"
 	"os"
+	"sort"
 	"strconv"
+	"strings"
 	"testing"
 
-	"github.com/databrickslabs/databricks-terraform/client/service"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/databrickslabs/databricks-terraform/client/service"
 )
 
 func TestMissingMWSResources(t *testing.T) {
@@ -18,9 +26,9 @@ func TestMissingMWSResources(t *testing.T) {
 		t.Skip("skipping integration test in short mode.")
 	}
 
-	mwsAcctId := os.Getenv("DATABRICKS_MWS_ACCT_ID")
-	randStringId := acctest.RandString(10)
-	randIntId := 2000000 + acctest.RandIntRange(100000, 20000000)
+	mwsAcctID := os.Getenv("DATABRICKS_MWS_ACCT_ID")
+	randStringID := acctest.RandString(10)
+	randIntID := 2000000 + acctest.RandIntRange(100000, 20000000)
 
 	client := getMWSClient()
 	tests := []struct {
@@ -33,28 +41,28 @@ func TestMissingMWSResources(t *testing.T) {
 		{
 			name: "CheckIfMWSCredentialsAreMissing",
 			readFunc: func() error {
-				_, err := client.MWSCredentials().Read(mwsAcctId, randStringId)
+				_, err := client.MWSCredentials().Read(mwsAcctID, randStringID)
 				return err
 			},
 		},
 		{
 			name: "CheckIfMWSNetworksAreMissing",
 			readFunc: func() error {
-				_, err := client.MWSNetworks().Read(mwsAcctId, randStringId)
+				_, err := client.MWSNetworks().Read(mwsAcctID, randStringID)
 				return err
 			},
 		},
 		{
 			name: "CheckIfMWSStorageConfigurationsAreMissing",
 			readFunc: func() error {
-				_, err := client.MWSStorageConfigurations().Read(mwsAcctId, randStringId)
+				_, err := client.MWSStorageConfigurations().Read(mwsAcctID, randStringID)
 				return err
 			},
 		},
 		{
 			name: "CheckIfMWSWorkspacesAreMissing",
 			readFunc: func() error {
-				_, err := client.MWSWorkspaces().Read(mwsAcctId, int64(randIntId))
+				_, err := client.MWSWorkspaces().Read(mwsAcctID, int64(randIntID))
 				return err
 			},
 		},
@@ -86,14 +94,14 @@ func testMissingWorkspaceResources(t *testing.T, cloud service.CloudServiceProvi
 		t.Skip("Acceptance tests skipped unless env 'TF_ACC' set")
 	}
 
-	randIntId := 2000000 + acctest.RandIntRange(100000, 20000000)
-	randStringId := acctest.RandString(10)
+	randIntID := 2000000 + acctest.RandIntRange(100000, 20000000)
+	randStringID := acctest.RandString(10)
 	// example 405E7E8E4A000024
-	randomClusterPolicyId := fmt.Sprintf("400E9E9E9A%d",
+	randomClusterPolicyID := fmt.Sprintf("400E9E9E9A%d",
 		acctest.RandIntRange(100000, 999999),
 	)
 	// example 0101-120000-brick1-pool-ABCD1234
-	randomInstancePoolId := fmt.Sprintf(
+	randomInstancePoolID := fmt.Sprintf(
 		"%v-%v-%s-pool-%s",
 		acctest.RandIntRange(1000, 9999),
 		acctest.RandIntRange(100000, 999999),
@@ -113,35 +121,35 @@ func testMissingWorkspaceResources(t *testing.T, cloud service.CloudServiceProvi
 		{
 			name: "CheckIfTokensAreMissing",
 			readFunc: func() error {
-				_, err := client.Tokens().Read(randStringId)
+				_, err := client.Tokens().Read(randStringID)
 				return err
 			},
 		},
 		{
 			name: "CheckIfSecretScopesAreMissing",
 			readFunc: func() error {
-				_, err := client.SecretScopes().Read(randStringId)
+				_, err := client.SecretScopes().Read(randStringID)
 				return err
 			},
 		},
 		{
 			name: "CheckIfSecretsAreMissing",
 			readFunc: func() error {
-				_, err := client.Secrets().Read(randStringId, randStringId)
+				_, err := client.Secrets().Read(randStringID, randStringID)
 				return err
 			},
 		},
 		{
 			name: "CheckIfSecretsACLsAreMissing",
 			readFunc: func() error {
-				_, err := client.SecretAcls().Read(randStringId, randStringId)
+				_, err := client.SecretAcls().Read(randStringID, randStringID)
 				return err
 			},
 		},
 		{
 			name: "CheckIfSecretsACLsAreMissing",
 			readFunc: func() error {
-				_, err := client.SecretAcls().Read(randStringId, randStringId)
+				_, err := client.SecretAcls().Read(randStringID, randStringID)
 				return err
 			},
 		},
@@ -149,38 +157,38 @@ func testMissingWorkspaceResources(t *testing.T, cloud service.CloudServiceProvi
 			name: "CheckIfNotebooksAreMissing",
 			readFunc: func() error {
 				// ID must start with a /
-				_, err := client.Notebooks().Read("/" + randStringId)
+				_, err := client.Notebooks().Read("/" + randStringID)
 				return err
 			},
 		},
 		{
 			name: "CheckIfInstancePoolsAreMissing",
 			readFunc: func() error {
-				_, err := client.InstancePools().Read(randomInstancePoolId)
+				_, err := client.InstancePools().Read(randomInstancePoolID)
 				return err
 			},
 		},
 		{
 			name: "CheckIfClustersAreMissing",
 			readFunc: func() error {
-				_, err := client.Clusters().Get(randStringId)
+				_, err := client.Clusters().Get(randStringID)
 				return err
 			},
 			isCustomCheck:   true,
 			customCheckFunc: isClusterMissing,
-			resourceID:      randStringId,
+			resourceID:      randStringID,
 		},
 		{
 			name: "CheckIfDBFSFilesAreMissing",
 			readFunc: func() error {
-				_, err := client.DBFS().Read("/" + randStringId)
+				_, err := client.DBFS().Read("/" + randStringID)
 				return err
 			},
 		},
 		{
 			name: "CheckIfGroupsAreMissing",
 			readFunc: func() error {
-				_, err := client.Groups().Read(randStringId)
+				_, err := client.Groups().Read(randStringID)
 				t.Log(err)
 				return err
 			},
@@ -188,7 +196,7 @@ func testMissingWorkspaceResources(t *testing.T, cloud service.CloudServiceProvi
 		{
 			name: "CheckIfUsersAreMissing",
 			readFunc: func() error {
-				_, err := client.Users().Read(randStringId)
+				_, err := client.Users().Read(randStringID)
 				t.Log(err)
 				return err
 			},
@@ -196,7 +204,7 @@ func testMissingWorkspaceResources(t *testing.T, cloud service.CloudServiceProvi
 		{
 			name: "CheckIfClusterPoliciesAreMissing",
 			readFunc: func() error {
-				_, err := client.ClusterPolicies().Get(randomClusterPolicyId)
+				_, err := client.ClusterPolicies().Get(randomClusterPolicyID)
 				t.Log(err)
 				return err
 			},
@@ -204,12 +212,12 @@ func testMissingWorkspaceResources(t *testing.T, cloud service.CloudServiceProvi
 		{
 			name: "CheckIfJobsAreMissing",
 			readFunc: func() error {
-				_, err := client.Jobs().Read(int64(randIntId))
+				_, err := client.Jobs().Read(int64(randIntID))
 				return err
 			},
 			isCustomCheck:   true,
 			customCheckFunc: isJobMissing,
-			resourceID:      strconv.Itoa(randIntId),
+			resourceID:      strconv.Itoa(randIntID),
 		},
 	}
 	// Handle aws only tests where instance profiles only exist on aws
@@ -218,7 +226,7 @@ func testMissingWorkspaceResources(t *testing.T, cloud service.CloudServiceProvi
 			{
 				name: "CheckIfInstanceProfilesAreMissing",
 				readFunc: func() error {
-					_, err := client.InstanceProfiles().Read(randStringId)
+					_, err := client.InstanceProfiles().Read(randStringID)
 					return err
 				},
 			},
@@ -237,13 +245,13 @@ func testMissingWorkspaceResources(t *testing.T, cloud service.CloudServiceProvi
 	}
 }
 
-func testVerifyResourceIsMissingCustomVerification(t *testing.T, resourceId string, readFunc func() error,
+func testVerifyResourceIsMissingCustomVerification(t *testing.T, resourceID string, readFunc func() error,
 	customCheck func(err error, rId string) bool) {
 	err := readFunc()
 	assert.NotNil(t, err, "err should not be nil")
 	assert.IsType(t, err, service.APIError{}, fmt.Sprintf("error: %s is not type api error", err.Error()))
 	if apiError, ok := err.(service.APIError); ok {
-		assert.True(t, customCheck(err, resourceId), fmt.Sprintf("error: %v is not missing;"+
+		assert.True(t, customCheck(err, resourceID), fmt.Sprintf("error: %v is not missing;"+
 			"\nstatus code: %v;"+
 			"\nerror code: %s",
 			apiError, apiError.StatusCode, apiError.ErrorCode))
@@ -260,6 +268,104 @@ func testVerifyResourceIsMissing(t *testing.T, readFunc func() error) {
 			"\nerror code: %s",
 			apiError, apiError.StatusCode, apiError.ErrorCode))
 	}
+}
+
+type errorSlice []error
+
+func (a errorSlice) Len() int           { return len(a) }
+func (a errorSlice) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
+func (a errorSlice) Less(i, j int) bool { return a[i].Error() < a[j].Error() }
+
+// HTTPFixture defines request structure for test
+type HTTPFixture struct {
+	Method          string
+	Resource        string
+	Response        interface{}
+	Status          int
+	ExpectedRequest interface{}
+}
+
+// ResourceTester helps testing HTTP resources with fixtures
+func ResourceTester(t *testing.T,
+	fixtures []HTTPFixture,
+	resouceFunc func() *schema.Resource,
+	state map[string]interface{},
+	whatever func(d *schema.ResourceData, c interface{}) error) (*schema.ResourceData, error) {
+	server := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
+		found := false
+		for _, fixture := range fixtures {
+			if req.Method == fixture.Method && req.RequestURI == fixture.Resource {
+				if fixture.Status == 0 {
+					rw.WriteHeader(200)
+				} else {
+					rw.WriteHeader(fixture.Status)
+				}
+				if fixture.ExpectedRequest != nil {
+					buf := new(bytes.Buffer)
+					_, err := buf.ReadFrom(req.Body)
+					assert.NoError(t, err, err)
+					jsonStr, err := json.Marshal(fixture.ExpectedRequest)
+					assert.NoError(t, err, err)
+					assert.JSONEq(t, string(jsonStr), buf.String())
+				}
+				if fixture.Response != nil {
+					responseBytes, err := json.Marshal(fixture.Response)
+					if err != nil {
+						assert.NoError(t, err, err)
+						t.FailNow()
+					}
+					_, err = rw.Write(responseBytes)
+					assert.NoError(t, err, err)
+				}
+				found = true
+				break
+			}
+		}
+		if !found {
+			assert.Fail(t, fmt.Sprintf("Received unexpected call: %s %s", req.Method, req.RequestURI))
+			t.FailNow()
+		}
+	}))
+
+	defer server.Close()
+	var config service.DBApiClientConfig
+	config.Host = server.URL
+	config.Setup()
+
+	var client service.DBApiClient
+	client.SetConfig(&config)
+
+	res := resouceFunc()
+
+	if state != nil {
+		resourceConfig := terraform.NewResourceConfigRaw(state)
+		warns, errs := res.Validate(resourceConfig)
+		if len(warns) > 0 || len(errs) > 0 {
+			var issues string
+			if len(warns) > 0 {
+				sort.Strings(warns)
+				issues += ". " + strings.Join(warns, ". ")
+			}
+			if len(errs) > 0 {
+				sort.Sort(errorSlice(errs))
+				for _, err := range errs {
+					issues += ". " + err.Error()
+				}
+			}
+			// remove characters that need escaping, it's only tests...
+			issues = strings.ReplaceAll(issues, "\"", "")
+			return nil, fmt.Errorf("Invalid config supplied%s", issues)
+		}
+	}
+
+	resourceData := schema.TestResourceDataRaw(t, res.Schema, state)
+	err := res.InternalValidate(res.Schema, true)
+	if err != nil {
+		return nil, err
+	}
+
+	// warns, errs := schemaMap(r.Schema).Validate(c)
+	return resourceData, whatever(resourceData, &client)
 }
 
 func TestIsClusterMissingTrueWhenClusterIdSpecifiedPresent(t *testing.T) {

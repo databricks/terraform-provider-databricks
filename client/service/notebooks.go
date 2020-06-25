@@ -32,8 +32,8 @@ func (a NotebooksAPI) Create(path string, content string, language model.Languag
 }
 
 // Read returns the notebook metadata and not the contents
-func (a NotebooksAPI) Read(path string) (model.NotebookInfo, error) {
-	var notebookInfo model.NotebookInfo
+func (a NotebooksAPI) Read(path string) (model.WorkspaceObjectStatus, error) {
+	var notebookInfo model.WorkspaceObjectStatus
 	notebookGetStatusRequest := struct {
 		Path string `json:"path,omitempty" url:"path,omitempty"`
 	}{}
@@ -79,9 +79,9 @@ func (a NotebooksAPI) Mkdirs(path string) error {
 
 // List will list all objects in a path on the workspace and with the recursive flag it will recursively list
 // all the objects
-func (a NotebooksAPI) List(path string, recursive bool) ([]model.NotebookInfo, error) {
+func (a NotebooksAPI) List(path string, recursive bool) ([]model.WorkspaceObjectStatus, error) {
 	if recursive {
-		var paths []model.NotebookInfo
+		var paths []model.WorkspaceObjectStatus
 		err := a.recursiveAddPaths(path, &paths)
 		if err != nil {
 			return nil, err
@@ -91,7 +91,7 @@ func (a NotebooksAPI) List(path string, recursive bool) ([]model.NotebookInfo, e
 	return a.list(path)
 }
 
-func (a NotebooksAPI) recursiveAddPaths(path string, pathList *[]model.NotebookInfo) error {
+func (a NotebooksAPI) recursiveAddPaths(path string, pathList *[]model.WorkspaceObjectStatus) error {
 	notebookInfoList, err := a.list(path)
 	if err != nil {
 		return err
@@ -109,9 +109,9 @@ func (a NotebooksAPI) recursiveAddPaths(path string, pathList *[]model.NotebookI
 	return err
 }
 
-func (a NotebooksAPI) list(path string) ([]model.NotebookInfo, error) {
+func (a NotebooksAPI) list(path string) ([]model.WorkspaceObjectStatus, error) {
 	var notebookList struct {
-		Objects []model.NotebookInfo `json:"objects,omitempty" url:"objects,omitempty"`
+		Objects []model.WorkspaceObjectStatus `json:"objects,omitempty" url:"objects,omitempty"`
 	}
 	listRequest := struct {
 		Path string `json:"path,omitempty" url:"path,omitempty"`

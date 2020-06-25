@@ -36,7 +36,7 @@ func resourceGroupInstanceProfileCreate(d *schema.ResourceData, m interface{}) e
 	client := m.(*service.DBApiClient)
 	groupID := d.Get("group_id").(string)
 	instanceProfileID := d.Get("instance_profile_id").(string)
-	groupInstanceProfileID := &GroupInstanceProfileID{
+	groupInstanceProfileID := &groupInstanceProfileID{
 		GroupID:           groupID,
 		InstanceProfileID: instanceProfileID,
 	}
@@ -54,7 +54,7 @@ func resourceGroupInstanceProfileCreate(d *schema.ResourceData, m interface{}) e
 func resourceGroupInstanceProfileRead(d *schema.ResourceData, m interface{}) error {
 	id := d.Id()
 	client := m.(*service.DBApiClient)
-	groupInstanceProfileID := parseGroupInstanceProfileID(id)
+	groupInstanceProfileID := parsegroupInstanceProfileID(id)
 	group, err := client.Groups().Read(groupInstanceProfileID.GroupID)
 
 	// First verify if the group exists
@@ -86,7 +86,7 @@ func resourceGroupInstanceProfileRead(d *schema.ResourceData, m interface{}) err
 func resourceGroupInstanceProfileDelete(d *schema.ResourceData, m interface{}) error {
 	id := d.Id()
 	client := m.(*service.DBApiClient)
-	groupInstanceProfileID := parseGroupInstanceProfileID(id)
+	groupInstanceProfileID := parsegroupInstanceProfileID(id)
 
 	roleRemoveList := []string{groupInstanceProfileID.InstanceProfileID}
 	// Patch op to remove role from group
@@ -94,18 +94,18 @@ func resourceGroupInstanceProfileDelete(d *schema.ResourceData, m interface{}) e
 	return err
 }
 
-type GroupInstanceProfileID struct {
+type groupInstanceProfileID struct {
 	GroupID           string
 	InstanceProfileID string
 }
 
-func (g GroupInstanceProfileID) String() string {
+func (g groupInstanceProfileID) String() string {
 	return fmt.Sprintf("%s|%s", g.GroupID, g.InstanceProfileID)
 }
 
-func parseGroupInstanceProfileID(id string) *GroupInstanceProfileID {
+func parsegroupInstanceProfileID(id string) *groupInstanceProfileID {
 	parts := strings.Split(id, "|")
-	return &GroupInstanceProfileID{
+	return &groupInstanceProfileID{
 		GroupID:           parts[0],
 		InstanceProfileID: parts[1],
 	}

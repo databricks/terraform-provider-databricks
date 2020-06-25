@@ -13,7 +13,7 @@ import (
 
 func parsePermissionsFromData(d *schema.ResourceData,
 	client *service.DBApiClient) (*model.AccessControlChangeList, string, error) {
-	var objectID string
+	var objectId string
 	acl := new(model.AccessControlChangeList)
 	for _, mapping := range permissionsResourceIDFields() {
 		v, ok := d.GetOk(mapping.field)
@@ -24,13 +24,15 @@ func parsePermissionsFromData(d *schema.ResourceData,
 		if err != nil {
 			return nil, "", err
 		}
-		objectID = fmt.Sprintf("/%s/%s", mapping.resourceType, id)
+		objectId = fmt.Sprintf(
+			"/%s/%s",
+				 mapping.resourceType, id)
 		err = d.Set("object_type", mapping.objectType)
 		if err != nil {
 			return nil, "", err
 		}
 	}
-	if objectID == "" {
+	if objectId == "" {
 		return nil, "", fmt.Errorf("At least one type of resource identifiers must be set")
 	}
 	changes := 0
@@ -52,9 +54,9 @@ func parsePermissionsFromData(d *schema.ResourceData,
 		}
 	}
 	if changes < 1 {
-		return nil, "", fmt.Errorf("At least one access_control is required")
+		return nil, "", fmt.Errorf("At least one access_control is required!")
 	}
-	return acl, objectID, nil
+	return acl, objectId, nil
 }
 
 func resourcePermissionsCreate(d *schema.ResourceData, m interface{}) error {

@@ -1,10 +1,8 @@
 package databricks
 
 import (
-	"fmt"
 	"log"
 	"path/filepath"
-	"strings"
 
 	"github.com/databrickslabs/databricks-terraform/client/service"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
@@ -93,8 +91,8 @@ func resourceDBFSFileRead(d *schema.ResourceData, m interface{}) error {
 
 	fileInfo, err := client.DBFS().Status(id)
 	if err != nil {
-		if isDBFSFileMissing(err.Error(), id) {
-			log.Printf("Missing dbfs file with id: %s.", id)
+		if e, ok := err.(service.APIError); ok && e.IsMissing() {
+			log.Printf("missing resource due to error: %v\n", e)
 			d.SetId("")
 			return nil
 		}
@@ -143,9 +141,4 @@ func resourceDBFSFileDelete(d *schema.ResourceData, m interface{}) error {
 	client := m.(*service.DBApiClient)
 	err := client.DBFS().Delete(id, false)
 	return err
-}
-
-func isDBFSFileMissing(errorMsg, resourceID string) bool {
-	return strings.Contains(errorMsg, "RESOURCE_DOES_NOT_EXIST") &&
-		strings.Contains(errorMsg, fmt.Sprintf("No file or directory exists on path %s.", resourceID))
 }

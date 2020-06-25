@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strconv"
+	"time"
 
 	"github.com/databrickslabs/databricks-terraform/client/service"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
@@ -30,6 +32,7 @@ func Provider(version string) terraform.ResourceProvider {
 			"databricks_secret_scope":  resourceSecretScope(),
 			"databricks_secret":        resourceSecret(),
 			"databricks_secret_acl":    resourceSecretACL(),
+			"databricks_permissions":   resourcePermissions(),
 			"databricks_instance_pool": resourceInstancePool(),
 			"databricks_scim_user":     resourceScimUser(),
 			"databricks_scim_group":    resourceScimGroup(),
@@ -95,12 +98,12 @@ func Provider(version string) terraform.ResourceProvider {
 				Description: "Location of the Databricks CLI credentials file, that is created\n" +
 					"by `databricks configure --token` command. By default, it is located\n" +
 					"in ~/.databrickscfg. Check  https://docs.databricks.com/dev-tools/cli/index.html#set-up-authentication for docs. Config\n" +
-					"file credetials will only be used when host/token are not provided.",
+					"file credentials will only be used when host/token are not provided.",
 			},
 			"profile": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "DEFAULT",
+				Type:        schema.TypeString,
+				Optional:    true,
+				DefaultFunc: schema.EnvDefaultFunc("DATABRICKS_CONFIG_PROFILE", "DEFAULT"),
 				Description: "Connection profile specified within ~/.databrickscfg. Please check\n" +
 					"https://docs.databricks.com/dev-tools/cli/index.html#connection-profiles for documentation.",
 			},
@@ -149,6 +152,12 @@ func Provider(version string) terraform.ResourceProvider {
 							Required:    true,
 							DefaultFunc: schema.MultiEnvDefaultFunc([]string{"DATABRICKS_AZURE_TENANT_ID", "ARM_TENANT_ID"}, nil),
 						},
+						"pat_token_duration_seconds": {
+							Type:        schema.TypeString,
+							Required:    true,
+							Description: "Currently secret scopes are not accessible via AAD tokens so we will need to create a PAT token",
+							Default:     durationToSecondsString(time.Hour),
+						},
 					},
 				},
 			},
@@ -166,6 +175,10 @@ func Provider(version string) terraform.ResourceProvider {
 	}
 
 	return provider
+}
+
+func durationToSecondsString(duration time.Duration) string {
+	return strconv.Itoa(int(duration.Seconds()))
 }
 
 func providerConfigureAzureClient(d *schema.ResourceData, config *service.DBApiClientConfig) (interface{}, error) {
@@ -248,6 +261,16 @@ func providerConfigureAzureClient(d *schema.ResourceData, config *service.DBApiC
 		tokenPayload.TenantID = os.Getenv("ARM_TENANT_ID")
 	}
 
+	// no need to ok this value has a default
+	patTokenDurationSeconds, ok := azureAuthMap["pat_token_duration_seconds"].(string)
+	if ok {
+		patTokenDuration, err := strconv.Atoi(patTokenDurationSeconds)
+		if err != nil {
+			return nil, fmt.Errorf("failed to parse pat_token_duration_seconds, %w", err)
+		}
+		tokenPayload.PatTokenSeconds = int32(patTokenDuration)
+	}
+
 	// Setup the CustomAuthorizer Function to be called at API invoke rather than client invoke
 	config.CustomAuthorizer = tokenPayload.initWorkspaceAndGetClient
 	var dbClient service.DBApiClient
@@ -271,20 +294,25 @@ func tryDatabricksCliConfigFile(d *schema.ResourceData, config *service.DBApiCli
 			"Please check https://docs.databricks.com/dev-tools/cli/index.html#set-up-authentication for details", configFile)
 	}
 	if profile, ok := d.GetOk("profile"); ok {
-		dbcliConfig := cfg.Section(profile.(string))
-		token := dbcliConfig.Key("token").String()
-		if "" == token {
-			return fmt.Errorf("config file %s is corrupt: cannot find token in %s profile",
-				configFile, profile)
-		}
-		config.Token = token
-
-		host := dbcliConfig.Key("host").String()
-		if "" == host {
+		dbcli := cfg.Section(profile.(string))
+		config.Host = dbcli.Key("host").String()
+		if config.Host == "" {
 			return fmt.Errorf("config file %s is corrupt: cannot find host in %s profile",
 				configFile, profile)
 		}
-		config.Host = host
+		if dbcli.HasKey("username") && dbcli.HasKey("password") {
+			username := dbcli.Key("username").String()
+			password := dbcli.Key("password").String()
+			tokenUnB64 := fmt.Sprintf("%s:%s", username, password)
+			config.Token = base64.StdEncoding.EncodeToString([]byte(tokenUnB64))
+			config.AuthType = service.BasicAuth
+		} else {
+			config.Token = dbcli.Key("token").String()
+		}
+		if config.Token == "" {
+			return fmt.Errorf("config file %s is corrupt: cannot find token in %s profile",
+				configFile, profile)
+		}
 	}
 
 	return nil
@@ -302,33 +330,29 @@ func providerConfigure(d *schema.ResourceData, providerVersion string) (interfac
 		// Abstracted logic to another function that returns a interface{}, error to inject directly
 		// for the providers during cloud integration testing
 		return providerConfigureAzureClient(d, &config)
-	} else {
-		if host, ok := d.GetOk("host"); ok {
-			config.Host = host.(string)
-		}
-		if token, ok := d.GetOk("token"); ok {
-			config.Token = token.(string)
-		}
-
-		// Basic authentication setup via username and password
-		if _, ok := d.GetOk("basic_auth"); ok {
-			username, userOk := d.GetOk("basic_auth.0.username")
-			password, passOk := d.GetOk("basic_auth.0.password")
-			if userOk && passOk {
-				tokenUnB64 := fmt.Sprintf("%s:%s", username.(string), password.(string))
-				config.Token = base64.StdEncoding.EncodeToString([]byte(tokenUnB64))
-				config.AuthType = service.BasicAuth
-			}
-		}
-
-		// Final catch all in case basic_auth/token + host is not setup
-		if config.Host == "" || config.Token == "" {
-			if err := tryDatabricksCliConfigFile(d, &config); err != nil {
-				return nil, fmt.Errorf("failed to get credentials from config file; error msg: %w", err)
-			}
+	}
+	if host, ok := d.GetOk("host"); ok {
+		config.Host = host.(string)
+	}
+	if token, ok := d.GetOk("token"); ok {
+		config.Token = token.(string)
+	}
+	// Basic authentication setup via username and password
+	if _, ok := d.GetOk("basic_auth"); ok {
+		username, userOk := d.GetOk("basic_auth.0.username")
+		password, passOk := d.GetOk("basic_auth.0.password")
+		if userOk && passOk {
+			tokenUnB64 := fmt.Sprintf("%s:%s", username.(string), password.(string))
+			config.Token = base64.StdEncoding.EncodeToString([]byte(tokenUnB64))
+			config.AuthType = service.BasicAuth
 		}
 	}
-
+	// Final catch all in case basic_auth/token + host is not setup
+	if config.Host == "" || config.Token == "" {
+		if err := tryDatabricksCliConfigFile(d, &config); err != nil {
+			return nil, fmt.Errorf("failed to get credentials from config file; error msg: %w", err)
+		}
+	}
 	var dbClient service.DBApiClient
 	dbClient.SetConfig(&config)
 	return &dbClient, nil

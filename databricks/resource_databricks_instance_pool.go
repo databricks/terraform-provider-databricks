@@ -1,9 +1,7 @@
 package databricks
 
 import (
-	"fmt"
 	"log"
-	"strings"
 	"time"
 
 	"github.com/databrickslabs/databricks-terraform/client/model"
@@ -239,8 +237,8 @@ func resourceInstancePoolRead(d *schema.ResourceData, m interface{}) error {
 	client := m.(*service.DBApiClient)
 	instancePoolInfo, err := client.InstancePools().Read(id)
 	if err != nil {
-		if isInstancePoolMissing(err.Error(), id) {
-			log.Printf("Missing instance pool with id: %s.", id)
+		if e, ok := err.(service.APIError); ok && e.IsMissing() {
+			log.Printf("missing resource due to error: %v\n", e)
 			d.SetId("")
 			return nil
 		}
@@ -355,9 +353,4 @@ func resourceInstancePoolDelete(d *schema.ResourceData, m interface{}) error {
 	id := d.Id()
 	err := client.InstancePools().Delete(id)
 	return err
-}
-
-func isInstancePoolMissing(errorMsg, resourceID string) bool {
-	return strings.Contains(errorMsg, "RESOURCE_DOES_NOT_EXIST") &&
-		strings.Contains(errorMsg, fmt.Sprintf("Can't find an instance pool with id: %s", resourceID))
 }

@@ -189,7 +189,7 @@ for mount in dbutils.fs.mounts():
 		storageAccount != m.StorageAccountName &&
 		m.Directory != directory {
 		return "", fmt.Errorf("does not match uri with storage account and container values"+
-			" %s@%s != %s!", m.ContainerName, m.StorageAccountName, resp.Results.Data.(string))
+			" %s@%s != %s", m.ContainerName, m.StorageAccountName, resp.Results.Data.(string))
 	}
 	return resp.Results.Data.(string), nil
 }
@@ -289,7 +289,7 @@ for mount in dbutils.fs.mounts():
 	if resp.Results.ResultType == "text" && storageResource != m.StorageResource &&
 		m.Directory != directory {
 		return "", fmt.Errorf("does not match uri with storage account and container values"+
-			" %s@%s != %s!", m.StorageResource, m.Directory, resp.Results.Data.(string))
+			" %s@%s != %s", m.StorageResource, m.Directory, resp.Results.Data.(string))
 	}
 	return resp.Results.Data.(string), nil
 }
@@ -395,7 +395,7 @@ for mount in dbutils.fs.mounts():
 	if resp.Results.ResultType == "text" && containerName != m.ContainerName &&
 		m.StorageAccountName != storageAccountName && m.Directory != directory {
 		return "", fmt.Errorf("does not match uri with storage account and container values"+
-			" %s@%s != %s!", m.ContainerName, m.StorageAccountName, resp.Results.Data.(string))
+			" %s@%s != %s", m.ContainerName, m.StorageAccountName, resp.Results.Data.(string))
 	}
 	return resp.Results.Data.(string), nil
 }

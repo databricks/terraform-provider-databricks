@@ -2,6 +2,7 @@ package service
 
 import (
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -13,7 +14,7 @@ func TestCreateToken(t *testing.T) {
 
 	client := GetIntegrationDBAPIClient()
 
-	lifeTimeSeconds := int32(30)
+	lifeTimeSeconds := time.Duration(30) * time.Second
 	comment := "Hello world"
 
 	token, err := client.Tokens().Create(lifeTimeSeconds, comment)

@@ -46,7 +46,7 @@ func TestAzureBlobMountReadRetrievesMountInformation(t *testing.T) {
 		},
 		{
 			Name:          "Mount found - but does not match configuration",
-			ExpectedError: fmt.Errorf("does not match uri with storage account and container values %s@%s != abfss://x@y.dfs.core.windows.net/z!", cn, sacc),
+			ExpectedError: fmt.Errorf("does not match uri with storage account and container values %s@%s != abfss://x@y.dfs.core.windows.net/z", cn, sacc),
 			CommandResult: &model.CommandResults{
 				ResultType: "text",
 				Data:       "abfss://x@y.dfs.core.windows.net/z",
@@ -109,7 +109,7 @@ func TestAzureADLSGen1MountReadRetrievesMountInformation(t *testing.T) {
 		},
 		{
 			Name:          "Mount found - but does not match configuration",
-			ExpectedError: fmt.Errorf("does not match uri with storage account and container values %s@%s != adl://x.azuredatalakestore.net/z!", sacc, dir),
+			ExpectedError: fmt.Errorf("does not match uri with storage account and container values %s@%s != adl://x.azuredatalakestore.net/z", sacc, dir),
 			CommandResult: &model.CommandResults{
 				ResultType: "text",
 				Data:       "adl://x.azuredatalakestore.net/z",
@@ -173,7 +173,7 @@ func TestAzureADLSGen2MountReadRetrievesMountInformation(t *testing.T) {
 		},
 		{
 			Name:          "Mount found - but does not match configuration",
-			ExpectedError: fmt.Errorf("does not match uri with storage account and container values %s@%s != abfss://x@y.dfs.core.windows.net/z!", cn, sacc),
+			ExpectedError: fmt.Errorf("does not match uri with storage account and container values %s@%s != abfss://x@y.dfs.core.windows.net/z", cn, sacc),
 			CommandResult: &model.CommandResults{
 				ResultType: "text",
 				Data:       "abfss://x@y.dfs.core.windows.net/z",

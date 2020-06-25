@@ -64,5 +64,10 @@ func (a SecretScopesAPI) Read(scopeName string) (model.SecretScope, error) {
 			return scope, nil
 		}
 	}
-	return secretScope, fmt.Errorf("no Secret Scope found with scope name %s", scopeName)
+	return secretScope, APIError{
+		ErrorCode:  "NOT_FOUND",
+		Message:    fmt.Sprintf("no Secret Scope found with scope name %s", scopeName),
+		Resource:   "/api/2.0/secrets/scopes/list",
+		StatusCode: http.StatusNotFound,
+	}
 }

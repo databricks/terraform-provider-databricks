@@ -74,5 +74,10 @@ func (a SecretsAPI) Read(scope string, key string) (model.SecretMetadata, error)
 			return secret, nil
 		}
 	}
-	return secretMeta, fmt.Errorf("no Secret Scope found with secret metadata scope name: %s and key: %s", scope, key)
+	return secretMeta, APIError{
+		ErrorCode:  "NOT_FOUND",
+		Message:    fmt.Sprintf("no secret Scope found with secret metadata scope name: %s and key: %s", scope, key),
+		Resource:   "/api/2.0/secrets/scopes/list",
+		StatusCode: http.StatusNotFound,
+	}
 }

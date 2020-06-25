@@ -140,7 +140,7 @@ func resourceAzureAdlsGen1Read(d *schema.ResourceData, m interface{}) error {
 	clientSecretKey := d.Get("client_secret_key").(string)
 	err := changeClusterIntoRunningState(clusterID, client)
 	if err != nil {
-		if isClusterMissing(err.Error(), clusterID) {
+		if isClusterMissing(err, clusterID) {
 			log.Printf("Unable to refresh mount '%s' as cluster '%s' is missing", mountName, clusterID)
 			d.SetId("")
 			return nil

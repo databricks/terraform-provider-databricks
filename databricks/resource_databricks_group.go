@@ -64,8 +64,8 @@ func resourceGroupRead(d *schema.ResourceData, m interface{}) error {
 	client := m.(*service.DBApiClient)
 	group, err := client.Groups().Read(id)
 	if err != nil {
-		if isScimGroupMissing(err.Error(), id) {
-			log.Printf("Missing scim group with id: %s.", id)
+		if e, ok := err.(service.APIError); ok && e.IsMissing() {
+			log.Printf("missing resource due to error: %v\n", e)
 			d.SetId("")
 			return nil
 		}

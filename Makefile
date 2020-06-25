@@ -26,14 +26,6 @@ coverage-int: int
 
 int-build: int build
 
-build: lint test
-	@echo "==> Building source code with go build..."
-	@go build -mod vendor -v -o terraform-provider-databricks
-
-lint:
-	@echo "==> Linting source code with golangci-lint make sure you run make fmt ..."
-	@golangci-lint run --skip-dirs-use-default --timeout 5m
-
 fmt:
 	@echo "==> Formatting source code with gofmt..."
 	@goimports -w client
@@ -43,6 +35,18 @@ fmt:
 	@gofmt -s -w databricks
 	@gofmt -s -w main.go
 	@go fmt ./...
+
+lint: fmt
+	@echo "==> Linting source code with golangci-lint make sure you run make fmt ..."
+	@golangci-lint run --skip-dirs-use-default --timeout 5m
+
+build: lint test
+	@echo "==> Building source code with go build..."
+	@go build -mod vendor -v -o terraform-provider-databricks
+
+install: build
+	@rm  ~/.terraform.d/plugins/terraform-provider-databricks*
+	@mv terraform-provider-databricks ~/.terraform.d/plugins
 
 vendor:
 	@echo "==> Filling vendor folder with library code..."

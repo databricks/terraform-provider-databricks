@@ -1,17 +1,5 @@
 default: build
 
-test: lint
-	@echo "==> Running tests..."
-	@gotestsum --format short-verbose --raw-command go test -v -json -short -coverprofile=coverage.txt ./...
-
-client-test:
-	@echo "==> Running tests..."
-	@gotestsum --format short-verbose --raw-command go test -v -json -short -coverprofile=client-coverage.txt ./client/...
-
-provider-test:
-	@echo "==> Running tests..."
-	@gotestsum --format short-verbose --raw-command go test -v -json -short -coverprofile=provider-coverage.txt ./databricks/...
-
 int:
 	@echo "==> Running tests..."
 	@gotestsum --raw-command go test -v -json -coverprofile=coverage.txt ./...
@@ -26,14 +14,6 @@ coverage-int: int
 
 int-build: int build
 
-build: lint test
-	@echo "==> Building source code with go build..."
-	@go build -mod vendor -v -o terraform-provider-databricks
-
-lint:
-	@echo "==> Linting source code with golangci-lint make sure you run make fmt ..."
-	@golangci-lint run --skip-dirs-use-default --timeout 5m
-
 fmt:
 	@echo "==> Formatting source code with gofmt..."
 	@goimports -w client
@@ -43,6 +23,31 @@ fmt:
 	@gofmt -s -w databricks
 	@gofmt -s -w main.go
 	@go fmt ./...
+
+lint: 
+	@echo "==> Linting source code with golangci-lint make sure you run make fmt ..."
+	@golangci-lint run --skip-dirs-use-default --timeout 5m
+
+client-test:
+	@echo "==> Running tests..."
+	@gotestsum --format short-verbose --raw-command go test -v -json -short -coverprofile=client-coverage.txt ./client/...
+
+provider-test:
+	@echo "==> Running tests..."
+	@gotestsum --format short-verbose --raw-command go test -v -json -short -coverprofile=provider-coverage.txt ./databricks/...
+
+test: lint client-test provider-test
+	@echo "==> Running tests..."
+	@gotestsum --format short-verbose --raw-command go test -v -json -short -coverprofile=coverage.txt ./...
+
+build: lint test
+	@echo "==> Building source code with go build..."
+	@go build -mod vendor -v -o terraform-provider-databricks
+
+install: build
+	@echo "==> Installing provider into ~/.terraform.d/plugins ..."
+	@rm  ~/.terraform.d/plugins/terraform-provider-databricks*
+	@mv terraform-provider-databricks ~/.terraform.d/plugins
 
 vendor:
 	@echo "==> Filling vendor folder with library code..."

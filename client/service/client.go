@@ -29,7 +29,8 @@ const (
 	Azure CloudServiceProvider = "Azure"
 )
 
-type apiErrorBody struct {
+// APIErrorBody maps "proper" databricks rest api errors to a struct
+type APIErrorBody struct {
 	ErrorCode string `json:"error_code,omitempty"`
 	Message   string `json:"message,omitempty"`
 	// The following two are for scim api only for RFC 7644 Section 3.7.3 https://tools.ietf.org/html/rfc7644#section-3.7.3
@@ -155,7 +156,7 @@ func checkHTTPRetry(ctx context.Context, resp *http.Response, err error) (bool, 
 		if err != nil {
 			return false, err
 		}
-		var errorBody apiErrorBody
+		var errorBody APIErrorBody
 		err = json.Unmarshal(body, &errorBody)
 		// this is most likely HTML... since un-marshalling JSON failed
 		if err != nil {

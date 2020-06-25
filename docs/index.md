@@ -46,7 +46,12 @@ There are currently three supported methods [to authenticate into](https://docs.
 
 ### Authenticating with Databricks CLI credentials
 
-No configuration options given to your provider will look up configured credentials in `~/.databrickscfg` file. It is created by `databricks configure --token` command. Check  https://docs.databricks.com/dev-tools/cli/index.html#set-up-authentication for docs. Config file credetials will only be used when `host`/`token` or `azure_auth` options are not provided. This is recommended way to use Databricks Terraform provider, in case you're using the same approach with [AWS Shared Credentials File](https://www.terraform.io/docs/providers/aws/index.html#shared-credentials-file) or [Azure CLI authentication](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/guides/azure_cli).
+No configuration options given to your provider will look up configured credentials in `~/.databrickscfg` file. 
+It is created by `databricks configure --token` command. Check https://docs.databricks.com/dev-tools/cli/index.html#set-up-authentication 
+for docs. Config file credentials will only be used when `host`/`token` or `azure_auth` options are not provided. 
+This is recommended way to use Databricks Terraform provider, in case you're using the same approach with 
+[AWS Shared Credentials File](https://www.terraform.io/docs/providers/aws/index.html#shared-credentials-file) 
+or [Azure CLI authentication](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/guides/azure_cli).
 
 ``` hcl
 provider "databricks" {
@@ -202,7 +207,7 @@ This is the authentication required to authenticate to the Databricks via an azu
 principal that has access to the workspace. This is optional as you can use the api token based auth. 
 The azure_auth block contains the following arguments:
 
-* `managed_resource_group` - (required) This is the managed workgroup id when the Databricks workspace is provisioned. 
+* `managed_resource_group` - (required) This is the managed resource group id when the Databricks workspace is provisioned. 
 Alternatively you can provide this value as an environment variable `DATABRICKS_AZURE_MANAGED_RESOURCE_GROUP`.
 
 * `azure_region` - (required) This is the azure region in which your workspace is deployed.

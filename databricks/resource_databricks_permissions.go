@@ -26,7 +26,7 @@ func parsePermissionsFromData(d *schema.ResourceData,
 		}
 		objectId = fmt.Sprintf(
 			"/%s/%s",
-				 mapping.resourceType, id)
+			mapping.resourceType, id)
 		err = d.Set("object_type", mapping.objectType)
 		if err != nil {
 			return nil, "", err

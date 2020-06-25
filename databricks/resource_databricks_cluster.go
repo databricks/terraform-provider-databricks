@@ -2,6 +2,7 @@ package databricks
 
 import (
 	"errors"
+	"fmt"
 	"log"
 	"strings"
 	"time"
@@ -542,7 +543,7 @@ func resourceClusterRead(d *schema.ResourceData, m interface{}) error {
 
 	clusterInfo, err := client.Clusters().Get(id)
 	if err != nil {
-		if isClusterMissing(err.Error(), id) {
+		if isClusterMissing(err, id) {
 			log.Printf("Missing cluster with id: %s.", id)
 			d.SetId("")
 			return nil
@@ -1451,4 +1452,10 @@ func getMapFromOneItemSet(input interface{}) map[string]interface{} {
 		return inputList[0].(map[string]interface{})
 	}
 	return nil
+}
+
+func isClusterMissing(err error, resourceID string) bool {
+	apiErr, ok := err.(service.APIError)
+	return (ok && apiErr.IsMissing()) ||
+		strings.Contains(err.Error(), fmt.Sprintf("Cluster %s does not exist", resourceID))
 }

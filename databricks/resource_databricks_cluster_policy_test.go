@@ -29,14 +29,11 @@ func TestAccClusterPolicyResourceFullLifecycle(t *testing.T) {
 								return err
 							}
 							policy = *resp
+							if policy.Definition == "" {
+								return fmt.Errorf("Empty policy definition found")
+							}
 							return nil
 						}),
-					func(s *terraform.State) error {
-						if policy.Definition == "" {
-							return fmt.Errorf("Empty policy definition found")
-						}
-						return nil
-					},
 					resource.TestCheckResourceAttr("databricks_cluster_policy.external_metastore",
 						"name", fmt.Sprintf("Terraform policy %s", randomName)),
 				),
@@ -55,6 +52,18 @@ func TestAccClusterPolicyResourceFullLifecycle(t *testing.T) {
 						resp, err := client.ClusterPolicies().Get(id)
 						if err == nil {
 							return fmt.Errorf("Resource must have been deleted but: %v", resp)
+						}
+						return nil
+					}),
+			},
+			{
+				// and create it again
+				Config: testExternalMetastore(randomName + ": UPDATED"),
+				Check: testAccIDCallback(t, "databricks_cluster_policy.external_metastore",
+					func(client *service.DBApiClient, id string) error {
+						_, err := client.ClusterPolicies().Get(id)
+						if err != nil {
+							return err
 						}
 						return nil
 					}),

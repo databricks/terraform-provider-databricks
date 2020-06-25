@@ -59,8 +59,8 @@ func resourceGroupInstanceProfileRead(d *schema.ResourceData, m interface{}) err
 
 	// First verify if the group exists
 	if err != nil {
-		if isScimGroupMissing(err.Error(), groupInstanceProfileID.GroupID) {
-			log.Printf("Missing  group with id: %s.", groupInstanceProfileID.GroupID)
+		if e, ok := err.(service.APIError); ok && e.IsMissing() {
+			log.Printf("missing resource due to error: %v\n", e)
 			d.SetId("")
 			return nil
 		}

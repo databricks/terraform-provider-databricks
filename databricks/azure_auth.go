@@ -31,7 +31,7 @@ type TokenPayload struct {
 	TenantID             string
 }
 
-type Workspace struct {
+type azureDatabricksWorkspace struct {
 	Name string `json:"name"`
 	ID   string `json:"id"`
 	Type string `json:"type"`
@@ -100,7 +100,7 @@ func (t *TokenPayload) getManagementToken() (string, error) {
 	return mgmtToken.OAuthToken(), nil
 }
 
-func (t *TokenPayload) getWorkspace(config *service.DBApiClientConfig, managementToken string) (*Workspace, error) {
+func (t *TokenPayload) getWorkspace(config *service.DBApiClientConfig, managementToken string) (*azureDatabricksWorkspace, error) {
 	log.Println("[DEBUG] Getting Workspace ID via management token.")
 	// Escape all the ids
 	url := fmt.Sprintf("https://management.azure.com/subscriptions/%s/resourceGroups/%s"+
@@ -124,7 +124,7 @@ func (t *TokenPayload) getWorkspace(config *service.DBApiClientConfig, managemen
 		return nil, err
 	}
 
-	var workspace Workspace
+	var workspace azureDatabricksWorkspace
 	err = json.Unmarshal(resp, &workspace)
 	if err != nil {
 		return nil, err
@@ -157,9 +157,9 @@ func (t *TokenPayload) getADBPlatformToken() (string, error) {
 	return platformToken.OAuthToken(), nil
 }
 
-func getWorkspaceAccessToken(config *service.DBApiClientConfig, managementToken, adbWorkspaceUrl, adbWorkspaceResourceID, adbPlatformToken string) (*model.TokenResponse, error) {
+func getWorkspaceAccessToken(config *service.DBApiClientConfig, managementToken, adbWorkspaceURL, adbWorkspaceResourceID, adbPlatformToken string) (*model.TokenResponse, error) {
 	log.Println("[DEBUG] Creating workspace token")
-	url := adbWorkspaceUrl + "/api/2.0/token/create"
+	url := adbWorkspaceURL + "/api/2.0/token/create"
 	headers := map[string]string{
 		"Content-Type": "application/x-www-form-urlencoded",
 		"X-Databricks-Azure-Workspace-Resource-Id": adbWorkspaceResourceID,
@@ -201,7 +201,7 @@ func (t *TokenPayload) initWorkspaceAndGetClient(config *service.DBApiClientConf
 	if err != nil {
 		return err
 	}
-	adbWorkspaceUrl := "https://" + adbWorkspace.Properties.WorkspaceURL
+	adbWorkspaceURL := "https://" + adbWorkspace.Properties.WorkspaceURL
 
 	// Get platform token
 	adbPlatformToken, err := t.getADBPlatformToken()
@@ -210,12 +210,12 @@ func (t *TokenPayload) initWorkspaceAndGetClient(config *service.DBApiClientConf
 	}
 
 	// Get workspace personal access token
-	workspaceAccessTokenResp, err := getWorkspaceAccessToken(config, managementToken, adbWorkspaceUrl, adbWorkspace.ID, adbPlatformToken)
+	workspaceAccessTokenResp, err := getWorkspaceAccessToken(config, managementToken, adbWorkspaceURL, adbWorkspace.ID, adbPlatformToken)
 	if err != nil {
 		return err
 	}
 
-	config.Host = adbWorkspaceUrl
+	config.Host = adbWorkspaceURL
 	config.Token = workspaceAccessTokenResp.TokenValue
 	if workspaceAccessTokenResp.TokenInfo != nil {
 		config.TokenExpiryTime = workspaceAccessTokenResp.TokenInfo.ExpiryTime

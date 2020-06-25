@@ -72,14 +72,21 @@ func (a UsersAPI) Read(userID string) (model.User, error) {
 }
 
 func (a UsersAPI) read(userID string) (model.User, error) {
-	var user model.User
 	userPath := fmt.Sprintf("/preview/scim/v2/Users/%v", userID)
+	return a.readByPath(userPath)
+}
 
+// Me gets user information about caller
+func (a UsersAPI) Me() (model.User, error) {
+	return a.readByPath("/preview/scim/v2/Me")
+}
+
+func (a UsersAPI) readByPath(userPath string) (model.User, error) {
+	var user model.User
 	resp, err := a.Client.performQuery(http.MethodGet, userPath, "2.0", scimHeaders, nil, nil)
 	if err != nil {
 		return user, err
 	}
-
 	err = json.Unmarshal(resp, &user)
 	return user, err
 }

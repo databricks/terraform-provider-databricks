@@ -95,7 +95,7 @@ func Provider(version string) terraform.ResourceProvider {
 				Description: "Location of the Databricks CLI credentials file, that is created\n" +
 					"by `databricks configure --token` command. By default, it is located\n" +
 					"in ~/.databrickscfg. Check  https://docs.databricks.com/dev-tools/cli/index.html#set-up-authentication for docs. Config\n" +
-					"file credetials will only be used when host/token are not provided.",
+					"file credentials will only be used when host/token are not provided.",
 			},
 			"profile": {
 				Type:        schema.TypeString,

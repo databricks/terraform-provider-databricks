@@ -3,7 +3,6 @@ package databricks
 import (
 	"log"
 	"reflect"
-	"strings"
 
 	"github.com/databrickslabs/databricks-terraform/client/model"
 	"github.com/databrickslabs/databricks-terraform/client/service"
@@ -116,8 +115,8 @@ func resourceMWSNetworkRead(d *schema.ResourceData, m interface{}) error {
 	}
 	network, err := client.MWSNetworks().Read(packagedMwsID.MwsAcctID, packagedMwsID.ResourceID)
 	if err != nil {
-		if isMWSNetworkMissing(err.Error()) {
-			log.Printf("Missing e2 network with id: %s.", id)
+		if e, ok := err.(service.APIError); ok && e.IsMissing() {
+			log.Printf("missing resource due to error: %v\n", e)
 			d.SetId("")
 			return nil
 		}
@@ -191,8 +190,4 @@ func convertErrorMessagesToListOfMaps(errorMsgs []model.NetworkHealth) []map[str
 		resp = append(resp, errorMap)
 	}
 	return resp
-}
-
-func isMWSNetworkMissing(errorMsg string) bool {
-	return strings.Contains(errorMsg, "RESOURCE_DOES_NOT_EXIST")
 }

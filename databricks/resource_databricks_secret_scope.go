@@ -1,9 +1,7 @@
 package databricks
 
 import (
-	"fmt"
 	"log"
-	"strings"
 
 	"github.com/databrickslabs/databricks-terraform/client/service"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
@@ -52,8 +50,8 @@ func resourceSecretScopeRead(d *schema.ResourceData, m interface{}) error {
 	id := d.Id()
 	scope, err := client.SecretScopes().Read(id)
 	if err != nil {
-		if isSecretScopeMissing(err.Error(), id) {
-			log.Printf("Missing secret scope with name: %s.", id)
+		if e, ok := err.(service.APIError); ok && e.IsMissing() {
+			log.Printf("missing resource due to error: %v\n", e)
 			d.SetId("")
 			return nil
 		}
@@ -73,8 +71,4 @@ func resourceSecretScopeDelete(d *schema.ResourceData, m interface{}) error {
 	id := d.Id()
 	err := client.SecretScopes().Delete(id)
 	return err
-}
-
-func isSecretScopeMissing(errorMsg, resourceID string) bool {
-	return strings.Contains(errorMsg, fmt.Sprintf("no Secret Scope found with scope name %s", resourceID))
 }

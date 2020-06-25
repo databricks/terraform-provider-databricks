@@ -30,3 +30,6 @@ after_success:
   - echo "travis go version='$TRAVIS_GO_VERSION'"
   - bash <(curl -s https://codecov.io/bash) -f client-coverage.txt -F client
   - bash <(curl -s https://codecov.io/bash) -f provider-coverage.txt -F provider
+
+notifications:
+  webhooks: https://www.travisbuddy.com/

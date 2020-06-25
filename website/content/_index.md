@@ -6,7 +6,7 @@ chapter = false
 pre = ""
 +++
 
-# Lets lay some bricks! 
+# Databricks Terraform Provider
 
 ## Quick install
 
@@ -25,3 +25,8 @@ You can `ls` the previous directory to verify.
 Please provide feedback in github issues. There is a template for this:
 
 {{% button href="https://github.com/databrickslabs/terraform-provider-databricks/issues/new?assignees=stikkireddy&labels=question&template=feedback.md&title=%5BFEEDBACK%2FQUESTION%5D+Short+Description+of+feedback" icon="fas fa-comment-dots" %}}Please provide feedback!{{% /button %}}
+
+## Project Support
+Please note that all projects in the /databrickslabs github account are provided for your exploration only, and are not formally supported by Databricks with Service Level Agreements (SLAs).  They are provided AS-IS and we do not make any guarantees of any kind.  Please do not submit a support ticket relating to any issues arising from the use of these projects.
+
+Any issues discovered through the use of this project should be filed as GitHub Issues on the Repo.  They will be reviewed as time permits, but there are no formal SLAs for support.

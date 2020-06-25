@@ -6,14 +6,12 @@ import (
 	"bytes"
 	"encoding/base64"
 	"encoding/json"
-	"fmt"
 	"hash/crc32"
 	"io"
 	"log"
 	"path/filepath"
 	"sort"
 	"strconv"
-	"strings"
 
 	"github.com/databrickslabs/databricks-terraform/client/model"
 	"github.com/databrickslabs/databricks-terraform/client/service"
@@ -141,8 +139,8 @@ func resourceNotebookRead(d *schema.ResourceData, m interface{}) error {
 	format := d.Get("format").(string)
 	notebookData, err := client.Notebooks().Export(id, model.ExportFormat(format))
 	if err != nil {
-		if isNotebookMissing(err.Error(), id) {
-			log.Printf("Missing notebook with id: %s.", id)
+		if e, ok := err.(service.APIError); ok && e.IsMissing() {
+			log.Printf("missing resource due to error: %v\n", e)
 			d.SetId("")
 			return nil
 		}
@@ -249,9 +247,4 @@ func getDBCCheckSumForCommands(fileIO io.Reader) (int, error) {
 		commandsBuffer.WriteString(commandsMap[k])
 	}
 	return int(crc32.ChecksumIEEE(commandsBuffer.Bytes())), nil
-}
-
-func isNotebookMissing(errorMsg, resourceID string) bool {
-	return strings.Contains(errorMsg, "RESOURCE_DOES_NOT_EXIST") &&
-		strings.Contains(errorMsg, fmt.Sprintf("Path (%s) doesn't exist.", resourceID))
 }

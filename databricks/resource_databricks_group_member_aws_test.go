@@ -12,7 +12,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestAccAWSGroupMemberResource(t *testing.T) {
+func TestAccAwsGroupMemberResource(t *testing.T) {
 	var group model.Group
 	// generate a random name for each tokenInfo test run, to avoid
 	// collisions from multiple concurrent tests.

@@ -4,7 +4,7 @@ go 1.13
 
 require (
 	github.com/Azure/go-autorest/autorest v0.10.2
-	github.com/Azure/go-autorest/autorest/adal v0.8.3
+	github.com/Azure/go-autorest/autorest/adal v0.9.0
 	github.com/aws/aws-sdk-go v1.32.6
 	github.com/fatih/color v1.9.0 // indirect
 	github.com/google/go-querystring v1.0.0
@@ -19,7 +19,6 @@ require (
 	github.com/sergi/go-diff v1.1.0 // indirect
 	github.com/smartystreets/goconvey v1.6.4 // indirect
 	github.com/stretchr/testify v1.6.1
-	golang.org/x/crypto v0.0.0-20200604202706-70a84ac30bf9 // indirect
 	golang.org/x/sys v0.0.0-20200602225109-6fdc65e7d980 // indirect
 	gopkg.in/ini.v1 v1.57.0
 )

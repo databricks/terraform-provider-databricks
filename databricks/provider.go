@@ -308,33 +308,29 @@ func providerConfigure(d *schema.ResourceData, providerVersion string) (interfac
 		// Abstracted logic to another function that returns a interface{}, error to inject directly
 		// for the providers during cloud integration testing
 		return providerConfigureAzureClient(d, &config)
-	} else {
-		if host, ok := d.GetOk("host"); ok {
-			config.Host = host.(string)
-		}
-		if token, ok := d.GetOk("token"); ok {
-			config.Token = token.(string)
-		}
-
-		// Basic authentication setup via username and password
-		if _, ok := d.GetOk("basic_auth"); ok {
-			username, userOk := d.GetOk("basic_auth.0.username")
-			password, passOk := d.GetOk("basic_auth.0.password")
-			if userOk && passOk {
-				tokenUnB64 := fmt.Sprintf("%s:%s", username.(string), password.(string))
-				config.Token = base64.StdEncoding.EncodeToString([]byte(tokenUnB64))
-				config.AuthType = service.BasicAuth
-			}
-		}
-
-		// Final catch all in case basic_auth/token + host is not setup
-		if config.Host == "" || config.Token == "" {
-			if err := tryDatabricksCliConfigFile(d, &config); err != nil {
-				return nil, fmt.Errorf("failed to get credentials from config file; error msg: %w", err)
-			}
+	}
+	if host, ok := d.GetOk("host"); ok {
+		config.Host = host.(string)
+	}
+	if token, ok := d.GetOk("token"); ok {
+		config.Token = token.(string)
+	}
+	// Basic authentication setup via username and password
+	if _, ok := d.GetOk("basic_auth"); ok {
+		username, userOk := d.GetOk("basic_auth.0.username")
+		password, passOk := d.GetOk("basic_auth.0.password")
+		if userOk && passOk {
+			tokenUnB64 := fmt.Sprintf("%s:%s", username.(string), password.(string))
+			config.Token = base64.StdEncoding.EncodeToString([]byte(tokenUnB64))
+			config.AuthType = service.BasicAuth
 		}
 	}
-
+	// Final catch all in case basic_auth/token + host is not setup
+	if config.Host == "" || config.Token == "" {
+		if err := tryDatabricksCliConfigFile(d, &config); err != nil {
+			return nil, fmt.Errorf("failed to get credentials from config file; error msg: %w", err)
+		}
+	}
 	var dbClient service.DBApiClient
 	dbClient.SetConfig(&config)
 	return &dbClient, nil

@@ -7,6 +7,7 @@ Contributing to Databricks Terraform Provider
 - [Developing with Visual Studio Code Devcontainers](#developing-with-visual-studio-code-devcontainers)
 - [Building and Installing with Docker](#building-and-installing-with-docker)
 - [Testing](#testing)
+- [Code conventions](#code-conventions)
 - [Linting](#linting)
 - [Unit testing resources](#unit-testing-resources)
 - [Integration Testing](#integration-testing)
@@ -123,6 +124,10 @@ $ docker run -it -v $(pwd):/workpace -w /workpace databricks-terraform apply
 
 * [ ] Integration tests should be run at a client level against both azure and aws to maintain sdk parity against both apis **(currently only on one cloud)**
 * [x] Terraform acceptance tests should be run against both aws and azure to maintain parity of provider between both cloud services **(currently only on one cloud)**
+
+## Code conventions
+
+* Import statements should all be first ordered by "GoLang internal", "Vendor packages" and then "current provider packages". Within those sections imports must follow alphabetical order.
 
 ## Linting
 

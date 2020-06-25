@@ -48,9 +48,6 @@ vendor:
 	@echo "==> Filling vendor folder with library code..."
 	@go mod vendor
 
-local-install: build
-	mv terraform-provider-databricks $(HOME)/.terraform.d/plugins/terraform-provider-databricks_v0.2.0
-
 # INTEGRATION TESTING WITH AZURE
 terraform-acc-azure: lint
 	@echo "==> Running Terraform Acceptance Tests for Azure..."
@@ -81,9 +78,5 @@ snapshot:
 hugo:
 	@echo "==> Making Docs..."
 	@cd website && hugo -d ../docs/
-
-internal-docs-sync:
-	@echo "==> Uploading Website..."
-	@azcopy login --service-principal --application-id $(AZCOPY_SPA_CLIENT_ID) --tenant-id=$(AZCOPY_SPA_TENANT_ID) && azcopy sync './website/public' '$(AZCOPY_STORAGE_ACCT)' --recursive
 
 .PHONY: build fmt python-setup docs vendor terraform-local build fmt coverage test lint

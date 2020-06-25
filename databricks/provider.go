@@ -172,8 +172,8 @@ func providerConfigureAzureClient(d *schema.ResourceData, config *service.DBApiC
 	log.Println("Creating db client via azure auth!")
 	azureAuth, _ := d.GetOk("azure_auth")
 	azureAuthMap := azureAuth.(map[string]interface{})
-	//azureAuth AzureAuth{}
 	tokenPayload := TokenPayload{}
+
 	// The if else is required for the reason that "azure_auth" schema object is not a block but a map
 	// Maps do not inherently auto populate defaults from environment variables unless we explicitly assign values
 	// This makes it very difficult to test
@@ -182,16 +182,19 @@ func providerConfigureAzureClient(d *schema.ResourceData, config *service.DBApiC
 	} else if os.Getenv("DATABRICKS_AZURE_MANAGED_RESOURCE_GROUP") != "" {
 		tokenPayload.ManagedResourceGroup = os.Getenv("DATABRICKS_AZURE_MANAGED_RESOURCE_GROUP")
 	}
+
 	if azureRegion, ok := azureAuthMap["azure_region"].(string); ok {
 		tokenPayload.AzureRegion = azureRegion
 	} else if os.Getenv("AZURE_REGION") != "" {
 		tokenPayload.AzureRegion = os.Getenv("AZURE_REGION")
 	}
+
 	if resourceGroup, ok := azureAuthMap["resource_group"].(string); ok {
 		tokenPayload.ResourceGroup = resourceGroup
 	} else if os.Getenv("DATABRICKS_AZURE_RESOURCE_GROUP") != "" {
 		tokenPayload.ResourceGroup = os.Getenv("DATABRICKS_AZURE_RESOURCE_GROUP")
 	}
+
 	if workspaceName, ok := azureAuthMap["workspace_name"].(string); ok {
 		tokenPayload.WorkspaceName = workspaceName
 	} else if os.Getenv("DATABRICKS_AZURE_WORKSPACE_NAME") != "" {
@@ -245,16 +248,8 @@ func providerConfigureAzureClient(d *schema.ResourceData, config *service.DBApiC
 		tokenPayload.TenantID = os.Getenv("ARM_TENANT_ID")
 	}
 
-	azureAuthSetup := AzureAuth{
-		TokenPayload:           &tokenPayload,
-		ManagementToken:        "",
-		AdbWorkspaceResourceID: "",
-		AdbAccessToken:         "",
-		AdbPlatformToken:       "",
-	}
-
 	// Setup the CustomAuthorizer Function to be called at API invoke rather than client invoke
-	config.CustomAuthorizer = azureAuthSetup.initWorkspaceAndGetClient
+	config.CustomAuthorizer = tokenPayload.initWorkspaceAndGetClient
 	var dbClient service.DBApiClient
 	dbClient.SetConfig(config)
 	return &dbClient, nil
@@ -308,7 +303,11 @@ func providerConfigure(d *schema.ResourceData, providerVersion string) (interfac
 	//version information from go-releaser using -ldflags to tell the golang linker to send semver info
 	config.UserAgent = fmt.Sprintf("databricks-tf-provider/%s", providerVersion)
 
-	if _, ok := d.GetOk("azure_auth"); !ok {
+	if _, ok := d.GetOk("azure_auth"); ok {
+		// Abstracted logic to another function that returns a interface{}, error to inject directly
+		// for the providers during cloud integration testing
+		return providerConfigureAzureClient(d, &config)
+	} else {
 		if host, ok := d.GetOk("host"); ok {
 			config.Host = host.(string)
 		}
@@ -333,10 +332,6 @@ func providerConfigure(d *schema.ResourceData, providerVersion string) (interfac
 				return nil, fmt.Errorf("failed to get credentials from config file; error msg: %w", err)
 			}
 		}
-	} else {
-		// Abstracted logic to another function that returns a interface{}, error to inject directly
-		// for the providers during cloud integration testing
-		return providerConfigureAzureClient(d, &config)
 	}
 
 	var dbClient service.DBApiClient

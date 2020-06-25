@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"time"
 	urlParse "net/url"
 
 	"github.com/Azure/go-autorest/autorest/adal"
@@ -18,18 +19,6 @@ const (
 	ADBResourceID string = "2ff814a6-3304-4ab8-85cb-cd0e6f879c1d"
 )
 
-// AzureAuth is a struct that contains information about the azure sp authentication
-type AzureAuth struct {
-	TokenPayload           *TokenPayload
-	ManagementToken        string
-	AdbWorkspaceResourceID string
-	AdbAccessToken         string
-	AdbPlatformToken       string
-	// new token should be requested from
-	// the workspace before this time comes
-	PatExpiryTime int64
-}
-
 // TokenPayload contains all the auth information for azure sp authentication
 type TokenPayload struct {
 	ManagedResourceGroup string
@@ -40,6 +29,39 @@ type TokenPayload struct {
 	ClientSecret         string
 	ClientID             string
 	TenantID             string
+}
+
+type Workspace struct {
+	Name string `json:"name"`
+	ID   string `json:"id"`
+	Type string `json:"type"`
+	Sku  struct {
+		Name string `json:"name"`
+	} `json:"sku"`
+	Location   string `json:"location"`
+	Properties struct {
+		ManagedResourceGroupID string      `json:"managedResourceGroupId"`
+		Parameters             interface{} `json:"parameters"`
+		ProvisioningState      string      `json:"provisioningState"`
+		UIDefinitionURI        string      `json:"uiDefinitionUri"`
+		Authorizations         []struct {
+			PrincipalID      string `json:"principalId"`
+			RoleDefinitionID string `json:"roleDefinitionId"`
+		} `json:"authorizations"`
+		CreatedBy struct {
+			Oid           string `json:"oid"`
+			Puid          string `json:"puid"`
+			ApplicationID string `json:"applicationId"`
+		} `json:"createdBy"`
+		UpdatedBy struct {
+			Oid           string `json:"oid"`
+			Puid          string `json:"puid"`
+			ApplicationID string `json:"applicationId"`
+		} `json:"updatedBy"`
+		CreatedDateTime time.Time `json:"createdDateTime"`
+		WorkspaceID     string    `json:"workspaceId"`
+		WorkspaceURL    string    `json:"workspaceUrl"`
+	} `json:"properties"`
 }
 
 // WsProps contains information about the workspace properties
@@ -54,42 +76,42 @@ type WorkspaceRequest struct {
 	Location   string   `json:"location"`
 }
 
-func (a *AzureAuth) getManagementToken() error {
+func (t *TokenPayload) getManagementToken() (string, error) {
 	log.Println("[DEBUG] Creating Azure Databricks management OAuth token.")
 	mgmtTokenOAuthCfg, err := adal.NewOAuthConfigWithAPIVersion(azure.PublicCloud.ActiveDirectoryEndpoint,
-		a.TokenPayload.TenantID,
+		t.TenantID,
 		nil)
 	if err != nil {
-		return err
+		return "", err
 	}
 	mgmtToken, err := adal.NewServicePrincipalToken(
 		*mgmtTokenOAuthCfg,
-		a.TokenPayload.ClientID,
-		a.TokenPayload.ClientSecret,
+		t.ClientID,
+		t.ClientSecret,
 		azure.PublicCloud.ServiceManagementEndpoint)
 	if err != nil {
-		return err
+		return "", err
 	}
 	err = mgmtToken.Refresh()
 	if err != nil {
-		return err
+		return "", err
 	}
-	a.ManagementToken = mgmtToken.OAuthToken()
-	return nil
+
+	return mgmtToken.OAuthToken(), nil
 }
 
-func (a *AzureAuth) getWorkspaceID(config *service.DBApiClientConfig) error {
+func (t *TokenPayload) getWorkspace(config *service.DBApiClientConfig, managementToken string) (*Workspace, error) {
 	log.Println("[DEBUG] Getting Workspace ID via management token.")
 	// Escape all the ids
 	url := fmt.Sprintf("https://management.azure.com/subscriptions/%s/resourceGroups/%s"+
 		"/providers/Microsoft.Databricks/workspaces/%s",
-		urlParse.PathEscape(a.TokenPayload.SubscriptionID),
-		urlParse.PathEscape(a.TokenPayload.ResourceGroup),
-		urlParse.PathEscape(a.TokenPayload.WorkspaceName))
+		urlParse.PathEscape(t.TokenPayload.SubscriptionID),
+		urlParse.PathEscape(t.TokenPayload.ResourceGroup),
+		urlParse.PathEscape(t.TokenPayload.WorkspaceName))
 	headers := map[string]string{
 		"Content-Type":  "application/json",
 		"cache-control": "no-cache",
-		"Authorization": "Bearer " + a.ManagementToken,
+		"Authorization": "Bearer " + managementToken,
 	}
 	type apiVersion struct {
 		APIVersion string `url:"api-version"`
@@ -97,108 +119,104 @@ func (a *AzureAuth) getWorkspaceID(config *service.DBApiClientConfig) error {
 	uriPayload := apiVersion{
 		APIVersion: "2018-04-01",
 	}
-	var responseMap map[string]interface{}
 	resp, err := service.PerformQuery(config, http.MethodGet, url, "2.0", headers, false, true, uriPayload, nil)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	err = json.Unmarshal(resp, &responseMap)
+
+	var workspace Workspace
+	err = json.Unmarshal(resp, &workspace)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	a.AdbWorkspaceResourceID = responseMap["id"].(string)
-	return err
+	return &workspace, err
 }
 
-func (a *AzureAuth) getADBPlatformToken() error {
+func (t *TokenPayload) getADBPlatformToken() (string, error) {
 	log.Println("[DEBUG] Creating Azure Databricks management OAuth token.")
 	platformTokenOAuthCfg, err := adal.NewOAuthConfigWithAPIVersion(azure.PublicCloud.ActiveDirectoryEndpoint,
-		a.TokenPayload.TenantID,
+		t.TenantID,
 		nil)
 	if err != nil {
-		return err
+		return "", err
 	}
 	platformToken, err := adal.NewServicePrincipalToken(
 		*platformTokenOAuthCfg,
-		a.TokenPayload.ClientID,
-		a.TokenPayload.ClientSecret,
+		t.ClientID,
+		t.ClientSecret,
 		ADBResourceID)
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	err = platformToken.Refresh()
 	if err != nil {
-		return err
+		return "", err
 	}
-	a.AdbPlatformToken = platformToken.OAuthToken()
-	return nil
+
+	return platformToken.OAuthToken(), nil
 }
 
-func (a *AzureAuth) getWorkspaceAccessToken(config *service.DBApiClientConfig) error {
+func getWorkspaceAccessToken(config *service.DBApiClientConfig, managementToken, adbWorkspaceUrl, adbWorkspaceResourceID, adbPlatformToken string) (*model.TokenResponse, error) {
 	log.Println("[DEBUG] Creating workspace token")
-	url := "https://" + a.TokenPayload.AzureRegion + ".azuredatabricks.net/api/2.0/token/create"
+	url := adbWorkspaceUrl + "/api/2.0/token/create"
 	headers := map[string]string{
 		"Content-Type": "application/x-www-form-urlencoded",
-		"X-Databricks-Azure-Workspace-Resource-Id": a.AdbWorkspaceResourceID,
-		"X-Databricks-Azure-SP-Management-Token":   a.ManagementToken,
+		"X-Databricks-Azure-Workspace-Resource-Id": adbWorkspaceResourceID,
+		"X-Databricks-Azure-SP-Management-Token":   managementToken,
 		"cache-control":                            "no-cache",
-		"Authorization":                            "Bearer " + a.AdbPlatformToken,
+		"Authorization":                            "Bearer " + adbPlatformToken,
 	}
 
 	var tokenResponse model.TokenResponse
 	resp, err := service.PerformQuery(config, http.MethodPost, url, "2.0",
 		headers, true, true, model.TokenRequest{
-			LifetimeSeconds: int32(600),
+			LifetimeSeconds: int32(3600),
 			Comment:         "Secret made via SP",
 		}, nil)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	err = json.Unmarshal(resp, &tokenResponse)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	a.AdbAccessToken = tokenResponse.TokenValue
-	a.PatExpiryTime = tokenResponse.TokenInfo.ExpiryTime
-	return nil
+	return &tokenResponse, nil
 }
 
 // Main function call that gets made and it follows 4 steps at the moment:
 // 1. Get Management OAuth Token using management endpoint
-// 2. Get Workspace ID
+// 2. Get Workspace ID and URL
 // 3. Get Azure Databricks Platform OAuth Token using Databricks resource id
 // 4. Get Azure Databricks Workspace Personal Access Token for the SP (60 min duration)
-func (a *AzureAuth) initWorkspaceAndGetClient(config *service.DBApiClientConfig) error {
-	//var dbClient service.DBApiClient
-
+func (t *TokenPayload) initWorkspaceAndGetClient(config *service.DBApiClientConfig) error {
 	// Get management token
-	err := a.getManagementToken()
+	managementToken, err := t.getManagementToken()
 	if err != nil {
 		return err
 	}
 
 	// Get workspace access token
-	err = a.getWorkspaceID(config)
+	adbWorkspace, err := t.getWorkspace(config, managementToken)
 	if err != nil {
 		return err
 	}
+	adbWorkspaceUrl := "https://" + adbWorkspace.Properties.WorkspaceURL
 
 	// Get platform token
-	err = a.getADBPlatformToken()
+	adbPlatformToken, err := t.getADBPlatformToken()
 	if err != nil {
 		return err
 	}
 
 	// Get workspace personal access token
-	err = a.getWorkspaceAccessToken(config)
+	workspaceAccessTokenResp, err := getWorkspaceAccessToken(config, managementToken, adbWorkspaceUrl, adbWorkspace.ID, adbPlatformToken)
 	if err != nil {
 		return err
 	}
 
-	//// TODO: Eventually change this to include new Databricks domain names. May have to add new vars and/or deprecate existing args.
-	config.Host = "https://" + a.TokenPayload.AzureRegion + ".azuredatabricks.net"
-	config.Token = a.AdbAccessToken
+	config.Host = adbWorkspaceUrl
+	config.Token = workspaceAccessToken
 
 	return nil
 }

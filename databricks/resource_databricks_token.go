@@ -2,6 +2,7 @@ package databricks
 
 import (
 	"log"
+	"time"
 
 	"github.com/databrickslabs/databricks-terraform/client/service"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
@@ -49,7 +50,8 @@ func resourceTokenCreate(d *schema.ResourceData, m interface{}) error {
 	client := m.(*service.DBApiClient)
 	lifeTimeSeconds := d.Get("lifetime_seconds").(int)
 	comment := d.Get("comment").(string)
-	tokenResp, err := client.Tokens().Create(int32(lifeTimeSeconds), comment)
+	tokenDuration := time.Duration(lifeTimeSeconds) * time.Second
+	tokenResp, err := client.Tokens().Create(tokenDuration, comment)
 	if err != nil {
 		return err
 	}

@@ -89,6 +89,7 @@ type DBApiClientConfig struct {
 	// new token should be requested from
 	// the workspace before this time comes
 	// not yet used in the client but can be set
+	TokenCreateTime    int64
 	TokenExpiryTime    int64
 	AuthType           AuthType
 	UserAgent          string

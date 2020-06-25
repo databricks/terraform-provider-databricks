@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/databrickslabs/databricks-terraform/client/model"
 )
@@ -14,11 +15,11 @@ type TokensAPI struct {
 }
 
 // Create creates a api token given a expiration duration and a comment
-func (a TokensAPI) Create(lifeTimeSeconds int32, comment string) (model.TokenResponse, error) {
+func (a TokensAPI) Create(tokenLifetime time.Duration, comment string) (model.TokenResponse, error) {
 	var tokenData model.TokenResponse
 
 	tokenCreateRequest := model.TokenRequest{
-		LifetimeSeconds: lifeTimeSeconds,
+		LifetimeSeconds: int32(tokenLifetime.Seconds()),
 		Comment:         comment,
 	}
 

@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"testing"
+	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 
@@ -196,6 +197,10 @@ func TestProvider_InvalidConfigFilePath(t *testing.T) {
 	err := testAccProvider.Configure(terraform.NewResourceConfigRaw(raw))
 	log.Println(err)
 	assert.NotNil(t, err)
+}
+
+func TestProvider_DurationToSecondsString(t *testing.T) {
+	assert.Equal(t, durationToSecondsString(time.Hour), "3600")
 }
 
 func TestAccDatabricksCliConfigWorks(t *testing.T) {

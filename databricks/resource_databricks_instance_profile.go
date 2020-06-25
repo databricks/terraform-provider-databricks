@@ -1,9 +1,7 @@
 package databricks
 
 import (
-	"fmt"
 	"log"
-	"strings"
 
 	"github.com/databrickslabs/databricks-terraform/client/service"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
@@ -52,8 +50,8 @@ func resourceInstanceProfileRead(d *schema.ResourceData, m interface{}) error {
 	client := m.(*service.DBApiClient)
 	profile, err := client.InstanceProfiles().Read(id)
 	if err != nil {
-		if isInstanceProfileMissing(err.Error(), id) {
-			log.Printf("Missing instance profile with id: %s.", id)
+		if e, ok := err.(service.APIError); ok && e.IsMissing() {
+			log.Printf("missing resource due to error: %v\n", e)
 			d.SetId("")
 			return nil
 		}
@@ -68,9 +66,4 @@ func resourceInstanceProfileDelete(d *schema.ResourceData, m interface{}) error 
 	client := m.(*service.DBApiClient)
 	err := client.InstanceProfiles().Delete(id)
 	return err
-}
-
-func isInstanceProfileMissing(errorMsg, resourceID string) bool {
-	return strings.Contains(errorMsg, fmt.Sprintf("Instance profile with name: %s not found in "+
-		"list of instance profiles in the workspace!", resourceID))
 }

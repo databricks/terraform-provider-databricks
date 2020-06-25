@@ -1,6 +1,8 @@
 package databricks
 
 import (
+	"log"
+
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 
@@ -37,7 +39,8 @@ func resourceClusterPolicyCreate(d *schema.ResourceData, m interface{}) error {
 func resourceClusterPolicyRead(d *schema.ResourceData, m interface{}) error {
 	client := m.(*service.DBApiClient)
 	clusterPolicy, err := client.ClusterPolicies().Get(d.Id())
-	if e, ok := err.(service.APIError); ok && e.StatusCode == 404 {
+	if e, ok := err.(service.APIError); ok && e.IsMissing() {
+		log.Printf("missing resource due to error: %v\n", e)
 		d.SetId("")
 		return nil
 	}

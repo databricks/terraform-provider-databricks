@@ -40,6 +40,18 @@ func init() {
 	}
 }
 
+// getIntegrationDBAPIClient gets the client given CLOUD_ENV as those env variables get loaded
+func getIntegrationDBAPIClient() *service.DBApiClient {
+	var config service.DBApiClientConfig
+	config.Token = os.Getenv("DATABRICKS_TOKEN")
+	config.Host = os.Getenv("DATABRICKS_HOST")
+	config.Setup()
+
+	var c service.DBApiClient
+	c.SetConfig(&config)
+	return &c
+}
+
 func getMWSClient() *service.DBApiClient {
 	// Configure MWS Provider
 	mwsHost := os.Getenv("DATABRICKS_MWS_HOST")

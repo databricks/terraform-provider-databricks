@@ -1,7 +1,6 @@
 package databricks
 
 import (
-	"fmt"
 	"log"
 	"strings"
 
@@ -74,7 +73,8 @@ func resourceSecretRead(d *schema.ResourceData, m interface{}) error {
 	}
 	secretMetaData, err := client.Secrets().Read(scope, key)
 	if err != nil {
-		if isErrorRecoverable(err, scope, key) {
+		if e, ok := err.(service.APIError); ok && e.IsMissing() {
+			log.Printf("missing resource due to error: %v\n", e)
 			d.SetId("")
 			return nil
 		}
@@ -107,25 +107,4 @@ func resourceSecretDelete(d *schema.ResourceData, m interface{}) error {
 	}
 	err = client.Secrets().Delete(scope, key)
 	return err
-}
-
-func isErrorRecoverable(err error, scope string, key string) bool {
-	if isSecretMissing(err.Error(), scope, key) {
-		log.Printf("Missing secret with id: %s in scope with id: %s.", scope, key)
-		return true
-	}
-	if isScopeMissing(err.Error(), scope) {
-		log.Printf("Missing scope with id: %s; secret %s cannot exist without scope", scope, key)
-		return true
-	}
-
-	return false
-}
-
-func isSecretMissing(errorMsg, scope string, key string) bool {
-	return strings.Contains(errorMsg, fmt.Sprintf("no Secret Scope found with secret metadata scope name: %s and key: %s", scope, key))
-}
-
-func isScopeMissing(errorMsg, scope string) bool {
-	return strings.Contains(errorMsg, fmt.Sprintf("Scope %s does not exist!", scope))
 }

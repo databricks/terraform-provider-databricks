@@ -51,7 +51,13 @@ func (apiError APIError) Error() string {
 	if docs == "" {
 		return fmt.Sprintf("%s\n(%d on %s)", apiError.Message, apiError.StatusCode, apiError.Resource)
 	}
-	return fmt.Sprintf("%s\nPlease consult API docs at %s for details.", apiError.Message, docs)
+	return fmt.Sprintf("%s\nPlease consult API docs at %s for details.",
+		apiError.Message,
+		docs)
+}
+
+func (apiError APIError) IsMissing() bool {
+	return apiError.StatusCode == http.StatusNotFound
 }
 
 // DocumentationURL guesses doc link
@@ -146,21 +152,28 @@ func checkHTTPRetry(ctx context.Context, resp *http.Response, err error) (bool, 
 		}
 		var errorBody apiErrorBody
 		err = json.Unmarshal(body, &errorBody)
+		// this is most likely HTML... since un-marshalling JSON failed
 		if err != nil {
-			// this is most likely HTML...
-			stringBody := string(body)
-			messageRE := regexp.MustCompile(`<pre>(.*)</pre>`)
-			messageMatches := messageRE.FindStringSubmatch(stringBody)
-			if len(messageMatches) < 2 {
-				return false, fmt.Errorf("Response from server (%d) %s: %v", resp.StatusCode, stringBody, err)
-			}
-			errorBody.Message = strings.Trim(messageMatches[1], " .")
+			// Status parts first in case html message is not as expected
 			statusParts := strings.SplitN(resp.Status, " ", 2)
 			if len(statusParts) < 2 {
 				errorBody.ErrorCode = "UNKNOWN"
 			} else {
 				errorBody.ErrorCode = strings.ReplaceAll(strings.ToUpper(strings.Trim(statusParts[1], " .")), " ", "_")
 			}
+			stringBody := string(body)
+			messageRE := regexp.MustCompile(`<pre>(.*)</pre>`)
+			messageMatches := messageRE.FindStringSubmatch(stringBody)
+			// No messages with <pre> </pre> format found so return a default APIError
+			if len(messageMatches) < 2 {
+				return false, APIError{
+					Message:    fmt.Sprintf("Response from server (%d) %s: %v", resp.StatusCode, stringBody, err),
+					ErrorCode:  errorBody.ErrorCode,
+					StatusCode: resp.StatusCode,
+					Resource:   resp.Request.URL.Path,
+				}
+			}
+			errorBody.Message = strings.Trim(messageMatches[1], " .")
 		}
 		dbAPIError := APIError{
 			Message:    errorBody.Message,
@@ -168,6 +181,7 @@ func checkHTTPRetry(ctx context.Context, resp *http.Response, err error) (bool, 
 			StatusCode: resp.StatusCode,
 			Resource:   resp.Request.URL.Path,
 		}
+		// Handle scim error message details
 		if dbAPIError.Message == "" && errorBody.ScimDetail != "" {
 			if errorBody.ScimDetail == "null" {
 				dbAPIError.Message = "SCIM API Internal Error"
@@ -176,6 +190,7 @@ func checkHTTPRetry(ctx context.Context, resp *http.Response, err error) (bool, 
 			}
 			dbAPIError.ErrorCode = fmt.Sprintf("SCIM_%s", errorBody.ScimStatus)
 		}
+		// Handle transient errors for retries
 		for _, substring := range transientErrorStringMatches {
 			if strings.Contains(errorBody.Message, substring) {
 				log.Println("Failed request detected: Retryable type found. Attempting retry...")

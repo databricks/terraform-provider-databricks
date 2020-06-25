@@ -14,7 +14,8 @@ func resourceDBFSFileSync() *schema.Resource {
 		Read:   resourceDBFSFileSyncRead,
 		Delete: resourceDBFSFileSyncDelete,
 		Update: resourceDBFSFileSyncUpdate,
-
+		DeprecationMessage: "this is not really a valid resource and can cause issues in maintenance as it is not " +
+			"valid resource supportable by databricks rest apis",
 		Schema: map[string]*schema.Schema{
 			"src_path": {
 				Type:     schema.TypeString,

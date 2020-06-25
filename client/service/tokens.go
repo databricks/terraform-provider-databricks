@@ -56,7 +56,12 @@ func (a TokensAPI) Read(tokenID string) (model.TokenInfo, error) {
 			return tokenInfoRecord, nil
 		}
 	}
-	return tokenInfo, fmt.Errorf("Unable to locate token: %s", tokenID)
+	return tokenInfo, APIError{
+		ErrorCode:  "NOT_FOUND",
+		Message:    fmt.Sprintf("Unable to locate token: %s", tokenID),
+		Resource:   "/api/2.0/token/list",
+		StatusCode: http.StatusNotFound,
+	}
 }
 
 // Delete will delete the token given a token id

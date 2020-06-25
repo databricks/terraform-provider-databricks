@@ -14,7 +14,6 @@ import (
 	"log"
 	"net"
 	"strconv"
-	"strings"
 	"time"
 )
 
@@ -203,8 +202,8 @@ func resourceMWSWorkspacesRead(d *schema.ResourceData, m interface{}) error {
 
 	workspace, err := client.MWSWorkspaces().Read(packagedMwsID.MwsAcctID, idInt64)
 	if err != nil {
-		if isMWSWorkspaceMissing(err.Error(), id) {
-			log.Printf("Missing e2 workspace with id: %s.", id)
+		if e, ok := err.(service.APIError); ok && e.IsMissing() {
+			log.Printf("missing resource due to error: %v\n", e)
 			d.SetId("")
 			return nil
 		}
@@ -342,9 +341,4 @@ func getNetworkErrors(networkRespList []model.NetworkHealth) string {
 		strBuffer.WriteString(fmt.Sprintf("error: %s;error_msg: %s;", networkHealth.ErrorType, networkHealth.ErrorMessage))
 	}
 	return strBuffer.String()
-}
-
-func isMWSWorkspaceMissing(errorMsg, resourceID string) bool {
-	return strings.Contains(errorMsg, "RESOURCE_DOES_NOT_EXIST") &&
-		strings.Contains(errorMsg, fmt.Sprintf("workspace %s does not exist", resourceID))
 }

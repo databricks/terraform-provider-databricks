@@ -140,7 +140,7 @@ func TestClustersAPI_Get(t *testing.T) {
 			},
 			wantURI: "/api/2.0/clusters/get?cluster_id=11203-my-cluster",
 			want: model.ClusterInfo{
-				AutoScale: &model.AutoScale{
+				Autoscale: &model.AutoScale{
 					MinWorkers: 2,
 					MaxWorkers: 8,
 				},
@@ -266,7 +266,7 @@ func TestClustersAPI_List(t *testing.T) {
 					ClusterName:  "autoscaling-cluster",
 					SparkVersion: "5.3.x-scala2.11",
 					NodeTypeID:   "i3.xlarge",
-					AutoScale: &model.AutoScale{
+					Autoscale: &model.AutoScale{
 						MinWorkers: 2,
 						MaxWorkers: 50,
 					},
@@ -275,7 +275,7 @@ func TestClustersAPI_List(t *testing.T) {
 					ClusterName:  "autoscaling-cluster2",
 					SparkVersion: "5.3.x-scala2.11",
 					NodeTypeID:   "i3.xlarge",
-					AutoScale: &model.AutoScale{
+					Autoscale: &model.AutoScale{
 						MinWorkers: 2,
 						MaxWorkers: 50,
 					},
@@ -586,7 +586,7 @@ func TestClustersAPI_WaitForClusterRunning(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			AssertMultipleRequestsWithMockServer(t, tt.args, tt.requestMethod, tt.wantURI, []interface{}{&args{}}, tt.response, tt.responseStatus, tt.want, tt.wantErr, func(client DBApiClient) (interface{}, error) {
-				return nil, client.Clusters().WaitForClusterRunning(tt.args[0].(*args).ClusterID, tt.args[0].(*args).SleepDurationSeconds, tt.args[0].(*args).TimeoutDurationMinutes)
+				return nil, client.Clusters().WaitForClusterRunning(tt.args[0].(*args).ClusterID)
 			})
 		})
 	}
@@ -732,7 +732,7 @@ func TestClustersAPI_WaitForClusterTerminated(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			AssertMultipleRequestsWithMockServer(t, tt.args, tt.requestMethod, tt.wantURI, []interface{}{&args{}}, tt.response, tt.responseStatus, tt.want, tt.wantErr, func(client DBApiClient) (interface{}, error) {
-				return nil, client.Clusters().WaitForClusterTerminated(tt.args[0].(*args).ClusterID, tt.args[0].(*args).SleepDurationSeconds, tt.args[0].(*args).TimeoutDurationMinutes)
+				return nil, client.Clusters().WaitForClusterTerminated(tt.args[0].(*args).ClusterID)
 			})
 		})
 	}
@@ -777,50 +777,6 @@ func TestClustersAPI_Edit(t *testing.T) {
 			var input args
 			AssertRequestWithMockServer(t, &tt.args, http.MethodPost, "/api/2.0/clusters/edit", &input, tt.response, tt.responseStatus, tt.want, tt.wantErr, func(client DBApiClient) (interface{}, error) {
 				return nil, client.Clusters().Edit(model.Cluster(tt.args))
-			})
-		})
-	}
-}
-
-func TestClustersAPI_Start(t *testing.T) {
-	type args struct {
-		ClusterID string `json:"cluster_id,omitempty"`
-	}
-
-	tests := []struct {
-		name           string
-		response       string
-		responseStatus int
-		args           args
-		want           interface{}
-		wantErr        bool
-	}{
-		{
-			name:           "Start test",
-			response:       ``,
-			responseStatus: http.StatusOK,
-			args: args{
-				ClusterID: "my-cluster-id",
-			},
-			want:    nil,
-			wantErr: false,
-		},
-		{
-			name:           "Start faulure test",
-			response:       "",
-			responseStatus: http.StatusBadRequest,
-			args: args{
-				ClusterID: "my-cluster-id",
-			},
-			want:    nil,
-			wantErr: true,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			var input args
-			AssertRequestWithMockServer(t, &tt.args, http.MethodPost, "/api/2.0/clusters/start", &input, tt.response, tt.responseStatus, tt.want, tt.wantErr, func(client DBApiClient) (interface{}, error) {
-				return nil, client.Clusters().Start(tt.args.ClusterID)
 			})
 		})
 	}

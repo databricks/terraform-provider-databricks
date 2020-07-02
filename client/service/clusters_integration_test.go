@@ -50,7 +50,7 @@ func TestListClustersIntegration(t *testing.T) {
 		err = client.Clusters().Delete(clusterReadInfo.ClusterID)
 		assert.NoError(t, err, err)
 
-		err = client.Clusters().WaitForClusterTerminated(clusterReadInfo.ClusterID, 10, 20)
+		err = client.Clusters().WaitForClusterTerminated(clusterReadInfo.ClusterID)
 		assert.NoError(t, err, err)
 
 		clusterReadInfo, err = client.Clusters().Get(clusterInfo.ClusterID)
@@ -67,7 +67,7 @@ func TestListClustersIntegration(t *testing.T) {
 	err = client.Clusters().Pin(clusterReadInfo.ClusterID)
 	assert.NoError(t, err, err)
 
-	err = client.Clusters().WaitForClusterRunning(clusterReadInfo.ClusterID, 10, 20)
+	err = client.Clusters().WaitForClusterRunning(clusterReadInfo.ClusterID)
 	assert.NoError(t, err, err)
 
 	clusterReadInfo, err = client.Clusters().Get(clusterInfo.ClusterID)

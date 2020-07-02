@@ -41,7 +41,7 @@ func TestContext(t *testing.T) {
 
 	clusterID := clusterInfo.ClusterID
 
-	err = client.Clusters().WaitForClusterRunning(clusterID, 10, 20)
+	err = client.Clusters().WaitForClusterRunning(clusterID)
 	assert.NoError(t, err, err)
 
 	context, err := client.Commands().createContext("python", clusterID)

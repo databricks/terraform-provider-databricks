@@ -300,22 +300,22 @@ func ResourceTester(t *testing.T,
 				} else {
 					rw.WriteHeader(fixture.Status)
 				}
-				if fixture.ExpectedRequest != nil {
+				if fixture.ExpectedRequest != nil && req.Method != http.MethodGet {
 					buf := new(bytes.Buffer)
 					_, err := buf.ReadFrom(req.Body)
-					assert.NoError(t, err, err)
+					assert.NoError(t, err, err, "Reading from request body")
 					jsonStr, err := json.Marshal(fixture.ExpectedRequest)
-					assert.NoError(t, err, err)
+					assert.NoError(t, err, err, "Marshalling to exceted request")
 					assert.JSONEq(t, string(jsonStr), buf.String())
 				}
 				if fixture.Response != nil {
 					responseBytes, err := json.Marshal(fixture.Response)
 					if err != nil {
-						assert.NoError(t, err, err)
+						assert.NoError(t, err, err, "Marshalling response")
 						t.FailNow()
 					}
 					_, err = rw.Write(responseBytes)
-					assert.NoError(t, err, err)
+					assert.NoError(t, err, err, "Writing response")
 				}
 				found = true
 				break

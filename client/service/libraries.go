@@ -27,6 +27,18 @@ func (a LibrariesAPI) Create(clusterID string, libraries []model.Library) error 
 	return err
 }
 
+// Install ...
+func (a LibrariesAPI) Install(req model.ClusterLibraryList) error {
+	_, err := a.Client.performQuery(http.MethodPost, "/libraries/install", "2.0", nil, req, nil)
+	return err
+}
+
+// Uninstall ...
+func (a LibrariesAPI) Uninstall(req model.ClusterLibraryList) error {
+	_, err := a.Client.performQuery(http.MethodPost, "/libraries/uninstall", "2.0", nil, req, nil)
+	return err
+}
+
 // Delete deletes the list of given libraries from the cluster given the cluster id
 func (a LibrariesAPI) Delete(clusterID string, libraries []model.Library) error {
 	var libraryInstallRequest = struct {
@@ -62,4 +74,17 @@ func (a LibrariesAPI) List(clusterID string) ([]model.LibraryStatus, error) {
 	err = json.Unmarshal(resp, &libraryStatusListResp)
 
 	return libraryStatusListResp.LibraryStatuses, err
+}
+
+// ClusterStatus returns library status in cluster
+func (a LibrariesAPI) ClusterStatus(clusterID string) (model.ClusterLibraryStatuses, error) {
+	var libraryStatusListResp model.ClusterLibraryStatuses
+	resp, err := a.Client.performQuery(http.MethodGet, "/libraries/cluster-status", "2.0", nil, model.ClusterIDRequest{
+		ClusterID: clusterID,
+	}, nil)
+	if err != nil {
+		return libraryStatusListResp, err
+	}
+	err = json.Unmarshal(resp, &libraryStatusListResp)
+	return libraryStatusListResp, err
 }

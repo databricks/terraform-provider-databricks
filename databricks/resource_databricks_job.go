@@ -973,22 +973,13 @@ func resourceJobDelete(d *schema.ResourceData, m interface{}) error {
 
 func parseSchemaToJobSettings(d *schema.ResourceData) model.JobSettings {
 	var jobSettings model.JobSettings
-
-	if existingClusterID, ok := d.GetOk("existing_cluster_id"); ok {
-		jobSettings.ExistingClusterID = existingClusterID.(string)
+	err := readStructFromData([]string{}, d, &jobSettings, resourceJob())
+	if err != nil {
+		panic(err)
 	}
-
-	if _, ok := d.GetOk("new_cluster.0"); ok {
-		cluster := parseSchemaToCluster(d, "new_cluster.0.")
-		jobSettings.NewCluster = &cluster
-	}
-
-	if name, ok := d.GetOk("name"); ok {
-		jobSettings.Name = name.(string)
-	}
-
-	libraries := parseSchemaToLibraries(d)
-	jobSettings.Libraries = libraries
+	// TODO handle errors from readStructFromData
+	cll := readClusterLibraryListFromData(d)
+	jobSettings.Libraries = cll.Libraries
 
 	nbTask := parseSchemaToNotebookTask(d)
 	jobSettings.NotebookTask = nbTask
@@ -1001,55 +992,6 @@ func parseSchemaToJobSettings(d *schema.ResourceData) model.JobSettings {
 
 	sparkSubmitTask := parseSchemaToSparkSubmitTask(d)
 	jobSettings.SparkSubmitTask = sparkSubmitTask
-
-	if emailNotificationsList, ok := d.GetOk("email_notifications"); ok {
-		var email model.JobEmailNotifications
-		emailNotificationsMap := getMapFromOneItemList(emailNotificationsList.(*schema.Set).List())
-		if emailOnStart, ok := emailNotificationsMap["on_start"]; ok {
-			email.OnStart = convertListInterfaceToString(emailOnStart.(*schema.Set).List())
-		}
-		if emailOnSuccess, ok := emailNotificationsMap["on_success"]; ok {
-			email.OnSuccess = convertListInterfaceToString(emailOnSuccess.(*schema.Set).List())
-		}
-		if emailOnFailure, ok := emailNotificationsMap["on_failure"]; ok {
-			email.OnFailure = convertListInterfaceToString(emailOnFailure.(*schema.Set).List())
-		}
-		if noAlertForSkippedRuns, ok := emailNotificationsMap["no_alert_for_skipped_runs"]; ok {
-			email.NoAlertForSkippedRuns = noAlertForSkippedRuns.(bool)
-		}
-		log.Println(email)
-		jobSettings.EmailNotifications = &email
-	}
-
-	if timeoutSeconds, ok := d.GetOk("timeout_seconds"); ok {
-		intVal, _ := timeoutSeconds.(int)
-		jobSettings.TimeoutSeconds = int32(intVal)
-	}
-
-	if maxRetries, ok := d.GetOk("max_retries"); ok {
-		intVal, _ := maxRetries.(int)
-		jobSettings.MaxRetries = int32(intVal)
-	}
-
-	if minRetryIntervalMillis, ok := d.GetOk("min_retry_interval_millis"); ok {
-		intVal, _ := minRetryIntervalMillis.(int)
-		jobSettings.MinRetryIntervalMillis = int32(intVal)
-	}
-
-	if retryOnTimeout, ok := d.GetOk("retry_on_timeout"); ok {
-		jobSettings.RetryOnTimeout = retryOnTimeout.(bool)
-	}
-	if schedule, ok := d.GetOk("schedule"); ok {
-		scheduleMap := getMapFromOneItemSet(schedule)
-		jobSettings.Schedule = &model.CronSchedule{
-			QuartzCronExpression: scheduleMap["quartz_cron_expression"].(string),
-			TimezoneID:           scheduleMap["timezone_id"].(string),
-		}
-	}
-	if maxConcurrentRuns, ok := d.GetOk("max_concurrent_runs"); ok {
-		intVal, _ := maxConcurrentRuns.(int)
-		jobSettings.MaxConcurrentRuns = int32(intVal)
-	}
 	return jobSettings
 }
 
@@ -1104,92 +1046,6 @@ func parseSchemaToSparkSubmitTask(d *schema.ResourceData) *model.SparkSubmitTask
 		return nil
 	}
 	return &sparkSubmitTask
-}
-
-func parseSchemaToLibraries(d *schema.ResourceData) []model.Library {
-	var libraryList []model.Library
-	if jars, ok := d.GetOk("library_jar"); ok {
-		libraries := jars.(*schema.Set).List()
-		for _, library := range libraries {
-			thisLibrary := model.Library{
-				Jar: library.(string),
-			}
-			libraryList = append(libraryList, thisLibrary)
-		}
-	}
-	if eggs, ok := d.GetOk("library_egg"); ok {
-		libraries := eggs.(*schema.Set).List()
-		for _, library := range libraries {
-			thisLibrary := model.Library{
-				Egg: library.(string),
-			}
-			libraryList = append(libraryList, thisLibrary)
-		}
-	}
-	if whls, ok := d.GetOk("library_whl"); ok {
-		libraries := whls.(*schema.Set).List()
-		for _, library := range libraries {
-			thisLibrary := model.Library{
-				Whl: library.(string),
-			}
-			libraryList = append(libraryList, thisLibrary)
-		}
-	}
-	if pypis, ok := d.GetOk("library_pypi"); ok {
-		libraries := pypis.(*schema.Set).List()
-		for _, library := range libraries {
-			libraryMap := library.(map[string]interface{})
-			var pypi model.PyPi
-			if pkg, ok := libraryMap["package"]; ok {
-				pypi.Package = pkg.(string)
-			}
-			if repo, ok := libraryMap["repo"]; ok {
-				pypi.Repo = repo.(string)
-			}
-			thisLibrary := model.Library{
-				Pypi: &pypi,
-			}
-			libraryList = append(libraryList, thisLibrary)
-		}
-	}
-	if mavens, ok := d.GetOk("library_maven"); ok {
-		libraries := mavens.(*schema.Set).List()
-		for _, library := range libraries {
-			libraryMap := library.(map[string]interface{})
-			var maven model.Maven
-			if coordinates, ok := libraryMap["coordinates"]; ok {
-				maven.Coordinates = coordinates.(string)
-			}
-			if repo, ok := libraryMap["repo"]; ok {
-				maven.Repo = repo.(string)
-			}
-			if exclusions, ok := libraryMap["exclusions"]; ok {
-				maven.Exclusions = convertListInterfaceToString(exclusions.([]interface{}))
-			}
-			thisLibrary := model.Library{
-				Maven: &maven,
-			}
-			libraryList = append(libraryList, thisLibrary)
-		}
-	}
-	if crans, ok := d.GetOk("library_cran"); ok {
-		libraries := crans.(*schema.Set).List()
-		for _, library := range libraries {
-			libraryMap := library.(map[string]interface{})
-			var cran model.Cran
-			if pkg, ok := libraryMap["package"]; ok {
-				cran.Package = pkg.(string)
-			}
-			if repo, ok := libraryMap["repo"]; ok {
-				cran.Repo = repo.(string)
-			}
-			thisLibrary := model.Library{
-				Cran: &cran,
-			}
-			libraryList = append(libraryList, thisLibrary)
-		}
-	}
-	return libraryList
 }
 
 // Required as jobs do not return 404 not found

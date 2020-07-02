@@ -43,45 +43,56 @@ const (
 type ClusterState string
 
 const (
-	// ClusterStatePending is for PENDING state
+	// ClusterStatePending Indicates that a cluster is in the process of being created.
 	ClusterStatePending = "PENDING"
-
-	// ClusterStateRunning is for RUNNING state
+	// ClusterStateRunning Indicates that a cluster has been started and is ready for use.
 	ClusterStateRunning = "RUNNING"
-
-	// ClusterStateRestarting is for RESTARTING state
+	// ClusterStateRestarting Indicates that a cluster is in the process of restarting.
 	ClusterStateRestarting = "RESTARTING"
-
-	// ClusterStateResizing is for RESIZING state
+	// ClusterStateResizing Indicates that a cluster is in the process of adding or removing nodes.
 	ClusterStateResizing = "RESIZING"
-
-	// ClusterStateTerminating is for TERMINATING state
+	// ClusterStateTerminating Indicates that a cluster is in the process of being destroyed.
 	ClusterStateTerminating = "TERMINATING"
-
-	// ClusterStateTerminated is for TERMINATED state
+	// ClusterStateTerminated Indicates that a cluster has been successfully destroyed.
 	ClusterStateTerminated = "TERMINATED"
-
-	// ClusterStateError is for ERROR state
+	// ClusterStateError This state is not used anymore. It was used to indicate a cluster
+	// that failed to be created. Terminating and Terminated are used instead.
 	ClusterStateError = "ERROR"
-
-	// ClusterStateUnknown is for UNKNOWN state
+	// ClusterStateUnknown Indicates that a cluster is in an unknown state. A cluster should never be in this state.
 	ClusterStateUnknown = "UNKNOWN"
 )
 
-// ClusterStateNonRunnable is a list of states in which the cluster cannot go back into running by itself
-// without user intervention
-var ClusterStateNonRunnable = []ClusterState{ClusterStateTerminating, ClusterStateTerminated, ClusterStateError, ClusterStateUnknown}
+var stateMachine = map[ClusterState][]ClusterState{
+	ClusterStatePending:     {ClusterStateRunning, ClusterStateTerminating},
+	ClusterStateRunning:     {ClusterStateResizing, ClusterStateRestarting, ClusterStateTerminating},
+	ClusterStateRestarting:  {ClusterStateRunning, ClusterStateTerminating},
+	ClusterStateResizing:    {ClusterStateRunning, ClusterStateTerminating},
+	ClusterStateTerminating: {ClusterStateTerminated},
+}
 
-// ClusterStateNonTerminating is a list of states in which the cluster cannot go back into terminated by itself
-//// without user intervention
-var ClusterStateNonTerminating = []ClusterState{ClusterStatePending, ClusterStateRunning, ClusterStateRestarting, ClusterStateResizing, ClusterStateUnknown}
-
-// ContainsClusterState given a set of cluster states and a search state it will return true if the state is in the
-// given set
-func ContainsClusterState(clusterStates []ClusterState, searchState ClusterState) bool {
-	for _, state := range clusterStates {
-		if state == searchState {
-			return true
+// CanReach returns true if cluster state can reach desired state
+func (state ClusterState) CanReach(desired ClusterState) bool {
+	if state == desired {
+		return true
+	}
+	visited := map[ClusterState]bool{}
+	queue := []ClusterState{state}
+	for len(queue) > 0 {
+		current := queue[0]
+		queue = queue[1:]
+		if _, ok := visited[current]; ok {
+			continue
+		}
+		adjacent, ok := stateMachine[current]
+		visited[current] = true
+		if !ok {
+			return false
+		}
+		for _, possible := range adjacent {
+			if possible == desired {
+				return true
+			}
+			queue = append(queue, possible)
 		}
 	}
 	return false
@@ -187,11 +198,11 @@ type DockerImage struct {
 
 // Cluster contains the information when trying to submit api calls or editing a cluster
 type Cluster struct {
-	ClusterID              string            `json:"cluster_id,omitempty"`
-	NumWorkers             int32             `json:"num_workers,omitempty"`
-	Autoscale              *AutoScale        `json:"autoscale,omitempty"`
+	ClusterID              string            `json:"cluster_id,omitempty" tf:"id"`
+	NumWorkers             int32             `json:"num_workers,omitempty" tf:"optional,conflictsWith:autoscale"`
+	Autoscale              *AutoScale        `json:"autoscale,omitempty" tf:"optional,conflictsWith:num_workers"`
 	ClusterName            string            `json:"cluster_name,omitempty"`
-	SparkVersion           string            `json:"spark_version,omitempty"`
+	SparkVersion           string            `json:"spark_version,omitempty" tf:"optional"`
 	SparkConf              map[string]string `json:"spark_conf,omitempty"`
 	AwsAttributes          *AwsAttributes    `json:"aws_attributes,omitempty"`
 	NodeTypeID             string            `json:"node_type_id,omitempty"`
@@ -212,7 +223,7 @@ type Cluster struct {
 // ClusterInfo contains the information when getting cluster info from the get request.
 type ClusterInfo struct {
 	NumWorkers             int32              `json:"num_workers,omitempty"`
-	AutoScale              *AutoScale         `json:"autoscale,omitempty"`
+	Autoscale              *AutoScale         `json:"autoscale,omitempty"`
 	ClusterID              string             `json:"cluster_id,omitempty"`
 	CreatorUserName        string             `json:"creator_user_name,omitempty"`
 	Driver                 *SparkNode         `json:"driver,omitempty"`
@@ -247,4 +258,9 @@ type ClusterInfo struct {
 	DefaultTags            map[string]string  `json:"default_tags,omitempty"`
 	ClusterLogStatus       *LogSyncStatus     `json:"cluster_log_status,omitempty"`
 	TerminationReason      *TerminationReason `json:"termination_reason,omitempty"`
+}
+
+// ClusterIDRequest contains cluster id as part of request
+type ClusterIDRequest struct {
+	ClusterID string `json:"cluster_id,omitempty" url:"cluster_id,omitempty"`
 }

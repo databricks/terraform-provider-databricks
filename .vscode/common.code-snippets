@@ -24,5 +24,13 @@
 			"\t\"$1\": $0,",
 			"},",
 		]
+	},
+	"Document attribute optional": {
+		"scope": "markdown",
+		"prefix": "ao",
+		"description": "Inserts optional attribute",
+		"body": [
+			"* `$1` - (Optional) $2"
+		]
 	}
 }

@@ -26,6 +26,12 @@ func resourceCluster() *schema.Resource {
 		Update: resourceClusterUpdate,
 		Delete: resourceClusterDelete,
 		Schema: clusterSchema,
+		// see usage at https://github.com/terraform-providers/terraform-provider-aws/blob/9900515b28b413505e5dd7c8d8ea258c59515f32/aws/resource_aws_vpc_peering_connection.go#L288
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(5 * time.Minute),
+			Update: schema.DefaultTimeout(5 * time.Minute),
+			Delete: schema.DefaultTimeout(5 * time.Minute),
+		},
 	}
 }
 

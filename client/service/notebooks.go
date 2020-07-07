@@ -21,13 +21,7 @@ var mkdirMtx = &sync.Mutex{}
 
 // Create creates a notebook given the content and path
 func (a NotebooksAPI) Create(path string, content string, language model.Language, format model.ExportFormat, overwrite bool) error {
-	notebookCreateRequest := struct {
-		Content   string             `json:"content,omitempty" mask:"true"`
-		Path      string             `json:"path,omitempty"`
-		Language  model.Language     `json:"language,omitempty"`
-		Overwrite bool               `json:"overwrite,omitempty"`
-		Format    model.ExportFormat `json:"format,omitempty"`
-	}{}
+	notebookCreateRequest := model.NotebookImportRequest{}
 	notebookCreateRequest.Content = content
 	notebookCreateRequest.Language = language
 	notebookCreateRequest.Path = path
@@ -56,7 +50,7 @@ func (a NotebooksAPI) Read(path string) (model.WorkspaceObjectStatus, error) {
 
 // Export returns the notebook content as a base64 string
 func (a NotebooksAPI) Export(path string, format model.ExportFormat) (string, error) {
-	var notebookContent map[string]string
+	var notebookContent model.NotebookContent
 	notebookExportRequest := struct {
 		Path   string             `json:"path,omitempty" url:"path,omitempty"`
 		Format model.ExportFormat `json:"format,omitempty" url:"format,omitempty"`
@@ -65,11 +59,11 @@ func (a NotebooksAPI) Export(path string, format model.ExportFormat) (string, er
 	notebookExportRequest.Format = format
 	resp, err := a.Client.performQuery(http.MethodGet, "/workspace/export", "2.0", nil, notebookExportRequest, nil)
 	if err != nil {
-		return notebookContent["content"], err
+		return notebookContent.Content, err
 	}
 
 	err = json.Unmarshal(resp, &notebookContent)
-	return notebookContent["content"], err
+	return notebookContent.Content, err
 }
 
 // Mkdirs will make folders in a workspace recursively given a path
@@ -141,10 +135,7 @@ func (a NotebooksAPI) list(path string) ([]model.WorkspaceObjectStatus, error) {
 
 // Delete will delete folders given a path and recursive flag
 func (a NotebooksAPI) Delete(path string, recursive bool) error {
-	notebookDelete := struct {
-		Path      string `json:"path,omitempty"`
-		Recursive bool   `json:"recursive,omitempty"`
-	}{}
+	notebookDelete := model.NotebookDeleteRequest{}
 	notebookDelete.Path = path
 	notebookDelete.Recursive = recursive
 	_, err := a.Client.performQuery(http.MethodPost, "/workspace/delete", "2.0", nil, notebookDelete, nil)

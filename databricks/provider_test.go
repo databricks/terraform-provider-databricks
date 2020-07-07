@@ -71,20 +71,6 @@ func getMWSClient() *service.DBApiClient {
 	}
 }
 
-func getTokenBasedClient() *service.DBApiClient {
-	// Configure MWS Provider
-	host := os.Getenv("DATABRICKS_HOST")
-	token := os.Getenv("DATABRICKS_TOKEN")
-
-	config := service.DBApiClientConfig{
-		Host:  host,
-		Token: token,
-	}
-	return &service.DBApiClient{
-		Config: &config,
-	}
-}
-
 func TestMain(m *testing.M) {
 	// This should not be asserted as it may not always be set for all tests
 	cloudEnv := os.Getenv("CLOUD_ENV")

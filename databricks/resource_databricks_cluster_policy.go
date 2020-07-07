@@ -23,7 +23,7 @@ func parsePolicyFromData(d *schema.ResourceData) (*model.ClusterPolicy, error) {
 }
 
 func resourceClusterPolicyCreate(d *schema.ResourceData, m interface{}) error {
-	client := m.(*service.DBApiClient)
+	client := m.(*service.DatabricksClient)
 	clusterPolicy, err := parsePolicyFromData(d)
 	if err != nil {
 		return err
@@ -37,7 +37,7 @@ func resourceClusterPolicyCreate(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceClusterPolicyRead(d *schema.ResourceData, m interface{}) error {
-	client := m.(*service.DBApiClient)
+	client := m.(*service.DatabricksClient)
 	clusterPolicy, err := client.ClusterPolicies().Get(d.Id())
 	if e, ok := err.(service.APIError); ok && e.IsMissing() {
 		log.Printf("missing resource due to error: %v\n", e)
@@ -59,7 +59,7 @@ func resourceClusterPolicyRead(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceClusterPolicyUpdate(d *schema.ResourceData, m interface{}) error {
-	client := m.(*service.DBApiClient)
+	client := m.(*service.DatabricksClient)
 	clusterPolicy, err := parsePolicyFromData(d)
 	if err != nil {
 		return err
@@ -73,7 +73,7 @@ func resourceClusterPolicyUpdate(d *schema.ResourceData, m interface{}) error {
 
 func resourceClusterPolicyDelete(d *schema.ResourceData, m interface{}) error {
 	id := d.Id()
-	client := m.(*service.DBApiClient)
+	client := m.(*service.DatabricksClient)
 	return client.ClusterPolicies().Delete(id)
 }
 

@@ -11,7 +11,7 @@ import (
 
 // MWSCustomerManagedKeysAPI exposes the mws customerManagedKeys API
 type MWSCustomerManagedKeysAPI struct {
-	Client *DBApiClient
+	Client *DatabricksClient
 }
 
 // Create creates a set of MWS CustomerManagedKeys for the BYOVPC

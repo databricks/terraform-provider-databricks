@@ -14,7 +14,7 @@ import (
 
 // MWSWorkspacesAPI exposes the mws workspaces API
 type MWSWorkspacesAPI struct {
-	Client *DBApiClient
+	Client *DatabricksClient
 }
 
 // Create creates the workspace creation process

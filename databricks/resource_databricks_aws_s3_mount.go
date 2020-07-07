@@ -32,7 +32,7 @@ func resourceAWSS3Mount() *schema.Resource {
 }
 
 func resourceAWSS3Create(d *schema.ResourceData, m interface{}) error {
-	client := m.(*service.DBApiClient)
+	client := m.(*service.DatabricksClient)
 	clusterID := d.Get("cluster_id").(string)
 	err := changeClusterIntoRunningState(clusterID, client)
 	if err != nil {
@@ -63,7 +63,7 @@ func resourceAWSS3Create(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceAWSS3Read(d *schema.ResourceData, m interface{}) error {
-	client := m.(*service.DBApiClient)
+	client := m.(*service.DatabricksClient)
 	clusterID := d.Get("cluster_id").(string)
 	err := changeClusterIntoRunningState(clusterID, client)
 	if err != nil {
@@ -84,7 +84,7 @@ func resourceAWSS3Read(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceAWSS3Delete(d *schema.ResourceData, m interface{}) error {
-	client := m.(*service.DBApiClient)
+	client := m.(*service.DatabricksClient)
 	clusterID := d.Get("cluster_id").(string)
 	err := changeClusterIntoRunningState(clusterID, client)
 	if err != nil {

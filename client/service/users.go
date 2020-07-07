@@ -15,7 +15,7 @@ import (
 
 // UsersAPI exposes the scim user API
 type UsersAPI struct {
-	Client *DBApiClient
+	Client *DatabricksClient
 }
 
 // Create given a username, displayname, entitlements, and roles will create a scim user via SCIM api

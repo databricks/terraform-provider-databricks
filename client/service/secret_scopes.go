@@ -10,7 +10,7 @@ import (
 
 // SecretScopesAPI exposes the Secret Scopes API
 type SecretScopesAPI struct {
-	Client *DBApiClient
+	Client *DatabricksClient
 }
 
 // Create creates a new secret scope

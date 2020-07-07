@@ -13,7 +13,7 @@ import (
 
 // CommandsAPI exposes the Context & Commands API
 type CommandsAPI struct {
-	Client *DBApiClient
+	Client *DatabricksClient
 }
 
 // CommandExecutor creates a spark context and executes a command and then closes context

@@ -48,7 +48,7 @@ func TestAccAwsGroupInstanceProfileResource(t *testing.T) {
 
 				// Test behavior to expect to attempt to create new role mapping because role is gone
 				PreConfig: func() {
-					client := testAccProvider.Meta().(*service.DBApiClient)
+					client := testAccProvider.Meta().(*service.DatabricksClient)
 					err := client.InstanceProfiles().Delete(role)
 					assert.NoError(t, err, err)
 				},
@@ -62,7 +62,7 @@ func TestAccAwsGroupInstanceProfileResource(t *testing.T) {
 
 				// Test behavior to expect to attempt to create new role mapping because role is gone
 				PreConfig: func() {
-					client := testAccProvider.Meta().(*service.DBApiClient)
+					client := testAccProvider.Meta().(*service.DatabricksClient)
 					err := client.Groups().Delete(group.ID)
 					assert.NoError(t, err, err)
 				},
@@ -75,7 +75,7 @@ func TestAccAwsGroupInstanceProfileResource(t *testing.T) {
 }
 
 func testAWSGroupInstanceProfileResourceDestroy(s *terraform.State) error {
-	client := testAccProvider.Meta().(*service.DBApiClient)
+	client := testAccProvider.Meta().(*service.DatabricksClient)
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "databricks_group" {
 			continue
@@ -107,7 +107,7 @@ func testAWSGroupInstanceProfileResourceExists(n string, group *model.Group, t *
 		}
 
 		// retrieve the configured client from the test setup
-		conn := testAccProvider.Meta().(*service.DBApiClient)
+		conn := testAccProvider.Meta().(*service.DatabricksClient)
 		resp, err := conn.Groups().Read(rs.Primary.ID)
 		if err != nil {
 			return err

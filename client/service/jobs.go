@@ -9,7 +9,7 @@ import (
 
 // JobsAPI exposes the Jobs API
 type JobsAPI struct {
-	Client *DBApiClient
+	Client *DatabricksClient
 }
 
 // Create creates a job on the workspace given the job settings

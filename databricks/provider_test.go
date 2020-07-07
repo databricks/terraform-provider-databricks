@@ -41,34 +41,32 @@ func init() {
 	}
 }
 
-// getIntegrationDBAPIClient gets the client given CLOUD_ENV as those env variables get loaded
-func getIntegrationDBAPIClient(t *testing.T) *service.DBApiClient {
-	var config service.DBApiClientConfig
-	config.Token = getAndAssertEnv(t, "DATABRICKS_TOKEN")
-	config.Host = getAndAssertEnv(t, "DATABRICKS_HOST")
-	config.Setup()
-
-	var c service.DBApiClient
-	c.SetConfig(&config)
-	return &c
+// getIntegrationDatabricksClient gets the client given CLOUD_ENV as those env variables get loaded
+func getIntegrationDatabricksClient(t *testing.T) *service.DatabricksClient {
+	client := service.DatabricksClient {
+		Host: getAndAssertEnv(t, "DATABRICKS_HOST"),
+		Token: getAndAssertEnv(t, "DATABRICKS_TOKEN"),
+	}
+	err := client.Configure("dev")
+	if err != nil {
+		panic(err)
+	}
+	return &client
 }
 
-func getMWSClient() *service.DBApiClient {
-	// Configure MWS Provider
-	mwsHost := os.Getenv("DATABRICKS_MWS_HOST")
-	mwsUser := os.Getenv("DATABRICKS_USERNAME")
-	mwsPass := os.Getenv("DATABRICKS_PASSWORD")
-
-	tokenUnB64 := fmt.Sprintf("%s:%s", mwsUser, mwsPass)
-	token := base64.StdEncoding.EncodeToString([]byte(tokenUnB64))
-	config := service.DBApiClientConfig{
-		Host:     mwsHost,
-		Token:    token,
-		AuthType: service.BasicAuth,
+func getMWSClient() *service.DatabricksClient {
+	client := service.DatabricksClient {
+		Host: os.Getenv("DATABRICKS_MWS_HOST"),
+		BasicAuth: struct{Username string; Password string}{
+			Username: os.Getenv("DATABRICKS_USERNAME"),
+			Password: os.Getenv("DATABRICKS_PASSWORD"),
+		},
 	}
-	return &service.DBApiClient{
-		Config: &config,
+	err := client.Configure("dev")
+	if err != nil {
+		panic(err)
 	}
+	return &client
 }
 
 func TestMain(m *testing.M) {
@@ -137,7 +135,7 @@ func TestProvider_HostTokensTakePrecedence(t *testing.T) {
 	err := testAccProvider.Configure(terraform.NewResourceConfigRaw(raw))
 	assert.Nil(t, err)
 
-	client := testAccProvider.Meta().(*service.DBApiClient).Config
+	client := testAccProvider.Meta().(*service.DatabricksClient).Config
 	assert.Equal(t, "configured", client.Token)
 }
 
@@ -151,7 +149,7 @@ func TestProvider_BasicAuthTakePrecedence(t *testing.T) {
 
 	// Basic auth convention
 	expectedToken := base64.StdEncoding.EncodeToString([]byte("user:pass"))
-	client := testAccProvider.Meta().(*service.DBApiClient).Config
+	client := testAccProvider.Meta().(*service.DatabricksClient).Config
 	assert.Equal(t, expectedToken, client.Token)
 }
 
@@ -162,7 +160,7 @@ func TestProvider_MissingEnvMakesConfigRead(t *testing.T) {
 	err := testAccProvider.Configure(terraform.NewResourceConfigRaw(raw))
 	assert.Nil(t, err)
 
-	client := testAccProvider.Meta().(*service.DBApiClient).Config
+	client := testAccProvider.Meta().(*service.DatabricksClient).Config
 	assert.Equal(t, "PT0+IC9kZXYvdXJhbmRvbSA8PT0KYFZ", client.Token)
 }
 

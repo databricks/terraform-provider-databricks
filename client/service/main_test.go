@@ -42,37 +42,37 @@ func compare(t *testing.T, a interface{}, b interface{}) {
 	assert.True(t, reflect.DeepEqual(a, b), string(jsonStr))
 }
 
-func GetIntegrationDBAPIClient() *DBApiClient {
+func GetIntegrationDBAPIClient() *DatabricksClient {
 	var config DBApiClientConfig
 	config.Token = os.Getenv("DATABRICKS_TOKEN")
 	config.Host = os.Getenv("DATABRICKS_HOST")
 	config.Setup()
 
-	var c DBApiClient
+	var c DatabricksClient
 	c.SetConfig(&config)
 	return &c
 }
 
-func GetIntegrationMWSAPIClient() *DBApiClient {
+func GetIntegrationMWSAPIClient() *DatabricksClient {
 	var config DBApiClientConfig
 	tokenUnB64 := fmt.Sprintf("%s:%s", os.Getenv("DATABRICKS_USERNAME"), os.Getenv("DATABRICKS_PASSWORD"))
 	config.AuthType = BasicAuth
 	config.Token = base64.StdEncoding.EncodeToString([]byte(tokenUnB64))
 	config.Host = os.Getenv("DATABRICKS_MWS_HOST")
 
-	var c DBApiClient
+	var c DatabricksClient
 	c.SetConfig(&config)
 	return &c
 }
 
-func GetCloudInstanceType(c *DBApiClient) string {
+func GetCloudInstanceType(c *DatabricksClient) string {
 	if strings.Contains(c.Config.Host, "azure") {
 		return "Standard_DS3_v2"
 	}
 	return "m4.large"
 }
 
-func AssertRequestWithMockServer(t *testing.T, rawPayloadArgs interface{}, requestMethod string, requestURI string, input interface{}, response string, responseStatus int, want interface{}, wantErr bool, apiCall func(client DBApiClient) (interface{}, error)) {
+func AssertRequestWithMockServer(t *testing.T, rawPayloadArgs interface{}, requestMethod string, requestURI string, input interface{}, response string, responseStatus int, want interface{}, wantErr bool, apiCall func(client DatabricksClient) (interface{}, error)) {
 	server := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
 		// Test request parameters
 		assert.Equal(t, requestMethod, req.Method)
@@ -93,7 +93,7 @@ func AssertRequestWithMockServer(t *testing.T, rawPayloadArgs interface{}, reque
 	config.Host = server.URL
 	config.Setup()
 
-	var dbClient DBApiClient
+	var dbClient DatabricksClient
 	dbClient.SetConfig(&config)
 
 	output, err := apiCall(dbClient)
@@ -110,7 +110,7 @@ func AssertRequestWithMockServer(t *testing.T, rawPayloadArgs interface{}, reque
 	}
 }
 
-func AssertMultipleRequestsWithMockServer(t *testing.T, rawPayloadArgs interface{}, requestMethod []string, requestURI []string, input interface{}, response []string, responseStatus []int, want interface{}, wantErr bool, apiCall func(client DBApiClient) (interface{}, error)) {
+func AssertMultipleRequestsWithMockServer(t *testing.T, rawPayloadArgs interface{}, requestMethod []string, requestURI []string, input interface{}, response []string, responseStatus []int, want interface{}, wantErr bool, apiCall func(client DatabricksClient) (interface{}, error)) {
 	counter := 0
 	server := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
 		// Test request parameters
@@ -133,7 +133,7 @@ func AssertMultipleRequestsWithMockServer(t *testing.T, rawPayloadArgs interface
 	config.Host = server.URL
 	config.Setup()
 
-	var dbClient DBApiClient
+	var dbClient DatabricksClient
 	dbClient.SetConfig(&config)
 
 	output, err := apiCall(dbClient)

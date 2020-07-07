@@ -108,7 +108,7 @@ func testMissingWorkspaceResources(t *testing.T, cloud service.CloudServiceProvi
 		acctest.RandString(6),
 		acctest.RandString(8),
 	)
-	client := getIntegrationDBAPIClient(t)
+	client := getIntegrationDatabricksClient(t)
 
 	type testTable struct {
 		name            string
@@ -328,12 +328,13 @@ func ResourceTester(t *testing.T,
 	}))
 
 	defer server.Close()
-	var config service.DBApiClientConfig
-	config.Host = server.URL
-	config.Setup()
-
-	var client service.DBApiClient
-	client.SetConfig(&config)
+	client := service.DatabricksClient {
+		Host: server.URL,
+	}
+	err := client.Configure("dev")
+	if err != nil {
+		return nil, err
+	}
 
 	res := resouceFunc()
 
@@ -359,7 +360,7 @@ func ResourceTester(t *testing.T,
 	}
 
 	resourceData := schema.TestResourceDataRaw(t, res.Schema, state)
-	err := res.InternalValidate(res.Schema, true)
+	err = res.InternalValidate(res.Schema, true)
 	if err != nil {
 		return nil, err
 	}

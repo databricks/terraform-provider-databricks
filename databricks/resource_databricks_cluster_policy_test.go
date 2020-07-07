@@ -23,7 +23,7 @@ func TestAccClusterPolicyResourceFullLifecycle(t *testing.T) {
 				Config: testExternalMetastore(randomName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccIDCallback(t, "databricks_cluster_policy.external_metastore",
-						func(client *service.DBApiClient, id string) error {
+						func(client *service.DatabricksClient, id string) error {
 							resp, err := client.ClusterPolicies().Get(id)
 							if err != nil {
 								return err
@@ -48,7 +48,7 @@ func TestAccClusterPolicyResourceFullLifecycle(t *testing.T) {
 				Config:  testExternalMetastore(randomName + ": UPDATED"),
 				Destroy: true,
 				Check: testAccIDCallback(t, "databricks_cluster_policy.external_metastore",
-					func(client *service.DBApiClient, id string) error {
+					func(client *service.DatabricksClient, id string) error {
 						resp, err := client.ClusterPolicies().Get(id)
 						if err == nil {
 							return fmt.Errorf("Resource must have been deleted but: %v", resp)
@@ -60,7 +60,7 @@ func TestAccClusterPolicyResourceFullLifecycle(t *testing.T) {
 				// and create it again
 				Config: testExternalMetastore(randomName + ": UPDATED"),
 				Check: testAccIDCallback(t, "databricks_cluster_policy.external_metastore",
-					func(client *service.DBApiClient, id string) error {
+					func(client *service.DatabricksClient, id string) error {
 						_, err := client.ClusterPolicies().Get(id)
 						if err != nil {
 							return err
@@ -72,13 +72,13 @@ func TestAccClusterPolicyResourceFullLifecycle(t *testing.T) {
 	})
 }
 
-func testAccIDCallback(t *testing.T, name string, cb func(client *service.DBApiClient, id string) error) resource.TestCheckFunc {
+func testAccIDCallback(t *testing.T, name string, cb func(client *service.DatabricksClient, id string) error) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
 			return fmt.Errorf("Not found: %s", name)
 		}
-		client := testAccProvider.Meta().(*service.DBApiClient)
+		client := testAccProvider.Meta().(*service.DatabricksClient)
 		err := cb(client, rs.Primary.ID)
 		return err
 	}

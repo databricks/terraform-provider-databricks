@@ -512,7 +512,7 @@ func resourceJob() *schema.Resource {
 }
 
 func resourceJobCreate(d *schema.ResourceData, m interface{}) error {
-	client := m.(*service.DBApiClient)
+	client := m.(*service.DatabricksClient)
 
 	jobSettings := parseSchemaToJobSettings(d)
 	job, err := client.Jobs().Create(jobSettings)
@@ -525,7 +525,7 @@ func resourceJobCreate(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceJobRead(d *schema.ResourceData, m interface{}) error {
-	client := m.(*service.DBApiClient)
+	client := m.(*service.DatabricksClient)
 	id := d.Id()
 	idInt, err := strconv.ParseInt(id, 10, 32)
 	if err != nil {
@@ -945,7 +945,7 @@ func resourceJobRead(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceJobUpdate(d *schema.ResourceData, m interface{}) error {
-	client := m.(*service.DBApiClient)
+	client := m.(*service.DatabricksClient)
 	id := d.Id()
 	idInt, err := strconv.ParseInt(id, 10, 32)
 	if err != nil {
@@ -961,7 +961,7 @@ func resourceJobUpdate(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceJobDelete(d *schema.ResourceData, m interface{}) error {
-	client := m.(*service.DBApiClient)
+	client := m.(*service.DatabricksClient)
 	id := d.Id()
 	idInt, err := strconv.ParseInt(id, 10, 32)
 	if err != nil {

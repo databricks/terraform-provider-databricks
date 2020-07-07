@@ -72,7 +72,7 @@ func resourceAzureAdlsGen1Mount() *schema.Resource {
 }
 
 func resourceAzureAdlsGen1Create(d *schema.ResourceData, m interface{}) error {
-	client := m.(*service.DBApiClient)
+	client := m.(*service.DatabricksClient)
 	clusterID := d.Get("cluster_id").(string)
 	err := changeClusterIntoRunningState(clusterID, client)
 	if err != nil {
@@ -128,7 +128,7 @@ func resourceAzureAdlsGen1Create(d *schema.ResourceData, m interface{}) error {
 	return resourceAzureAdlsGen1Read(d, m)
 }
 func resourceAzureAdlsGen1Read(d *schema.ResourceData, m interface{}) error {
-	client := m.(*service.DBApiClient)
+	client := m.(*service.DatabricksClient)
 	clusterID := d.Get("cluster_id").(string)
 	storageResourceName := d.Get("storage_resource_name").(string)
 	sparkConfPrefix := d.Get("spark_conf_prefix").(string)
@@ -174,7 +174,7 @@ func resourceAzureAdlsGen1Read(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceAzureAdlsGen1Delete(d *schema.ResourceData, m interface{}) error {
-	client := m.(*service.DBApiClient)
+	client := m.(*service.DatabricksClient)
 	clusterID := d.Get("cluster_id").(string)
 	err := changeClusterIntoRunningState(clusterID, client)
 	if err != nil {

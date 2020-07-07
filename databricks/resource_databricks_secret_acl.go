@@ -44,7 +44,7 @@ func getScopeAndKeyFromSecretACLID(secretACLIDString string) (string, string, er
 }
 
 func resourceSecretACLCreate(d *schema.ResourceData, m interface{}) error {
-	client := m.(*service.DBApiClient)
+	client := m.(*service.DatabricksClient)
 	scopeName := d.Get("scope").(string)
 	principal := d.Get("principal").(string)
 	permission := model.ACLPermission(d.Get("permission").(string))
@@ -66,7 +66,7 @@ func resourceSecretACLRead(d *schema.ResourceData, m interface{}) error {
 	if err != nil {
 		return err
 	}
-	client := m.(*service.DBApiClient)
+	client := m.(*service.DatabricksClient)
 	secretACL, err := client.SecretAcls().Read(scope, principal)
 	if err != nil {
 		if e, ok := err.(service.APIError); ok && e.IsMissing() {
@@ -89,7 +89,7 @@ func resourceSecretACLRead(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceSecretACLDelete(d *schema.ResourceData, m interface{}) error {
-	client := m.(*service.DBApiClient)
+	client := m.(*service.DatabricksClient)
 	id := d.Id()
 	scope, key, err := getScopeAndKeyFromSecretACLID(id)
 	if err != nil {

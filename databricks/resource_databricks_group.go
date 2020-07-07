@@ -37,7 +37,7 @@ func resourceGroup() *schema.Resource {
 }
 
 func resourceGroupCreate(d *schema.ResourceData, m interface{}) error {
-	client := m.(*service.DBApiClient)
+	client := m.(*service.DatabricksClient)
 	groupName := d.Get("display_name").(string)
 	allowClusterCreate := d.Get("allow_cluster_create").(bool)
 	allowInstancePoolCreate := d.Get("allow_instance_pool_create").(bool)
@@ -61,7 +61,7 @@ func resourceGroupCreate(d *schema.ResourceData, m interface{}) error {
 
 func resourceGroupRead(d *schema.ResourceData, m interface{}) error {
 	id := d.Id()
-	client := m.(*service.DBApiClient)
+	client := m.(*service.DatabricksClient)
 	group, err := client.Groups().Read(id)
 	if err != nil {
 		if e, ok := err.(service.APIError); ok && e.IsMissing() {
@@ -88,7 +88,7 @@ func resourceGroupRead(d *schema.ResourceData, m interface{}) error {
 
 func resourceGroupUpdate(d *schema.ResourceData, m interface{}) error {
 	id := d.Id()
-	client := m.(*service.DBApiClient)
+	client := m.(*service.DatabricksClient)
 
 	// Handle entitlements update
 	var entitlementsAddList []string
@@ -126,7 +126,7 @@ func resourceGroupUpdate(d *schema.ResourceData, m interface{}) error {
 
 func resourceGroupDelete(d *schema.ResourceData, m interface{}) error {
 	id := d.Id()
-	client := m.(*service.DBApiClient)
+	client := m.(*service.DatabricksClient)
 	err := client.Groups().Delete(id)
 	return err
 }

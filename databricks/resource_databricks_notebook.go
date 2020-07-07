@@ -93,7 +93,7 @@ func resourceNotebook() *schema.Resource {
 }
 
 func resourceNotebookCreate(d *schema.ResourceData, m interface{}) error {
-	client := m.(*service.DBApiClient)
+	client := m.(*service.DatabricksClient)
 	path := d.Get("path").(string)
 	content := d.Get("content").(string)
 	language := d.Get("language").(string)
@@ -135,7 +135,7 @@ func resourceNotebookCreate(d *schema.ResourceData, m interface{}) error {
 
 func resourceNotebookRead(d *schema.ResourceData, m interface{}) error {
 	id := d.Id()
-	client := m.(*service.DBApiClient)
+	client := m.(*service.DatabricksClient)
 	format := d.Get("format").(string)
 	notebookData, err := client.Notebooks().Export(id, model.ExportFormat(format))
 	if err != nil {
@@ -178,7 +178,7 @@ func resourceNotebookRead(d *schema.ResourceData, m interface{}) error {
 
 func resourceNotebookDelete(d *schema.ResourceData, m interface{}) error {
 	id := d.Id()
-	client := m.(*service.DBApiClient)
+	client := m.(*service.DatabricksClient)
 	err := client.Notebooks().Delete(id, true)
 	return err
 }

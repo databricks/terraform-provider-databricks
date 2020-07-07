@@ -12,7 +12,7 @@ import (
 // Creation and editing is available to admins only.
 // Listing can be performed by any user and is limited to policies accessible by that user.
 type ClusterPoliciesAPI struct {
-	Client *DBApiClient
+	Client *DatabricksClient
 }
 
 type policyIDWrapper struct {

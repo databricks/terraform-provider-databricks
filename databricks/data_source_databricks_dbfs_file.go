@@ -35,7 +35,7 @@ func dataSourceDBFSFile() *schema.Resource {
 func dataSourceDBFSFileRead(d *schema.ResourceData, m interface{}) error {
 	path := d.Get("path").(string)
 	limitFileSize := d.Get("limit_file_size").(bool)
-	client := m.(*service.DBApiClient)
+	client := m.(*service.DatabricksClient)
 
 	fileInfo, err := client.DBFS().Status(path)
 	if err != nil {

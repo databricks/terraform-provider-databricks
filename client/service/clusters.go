@@ -12,7 +12,7 @@ import (
 
 // ClustersAPI is a struct that contains the Databricks api client to perform queries
 type ClustersAPI struct {
-	Client *DBApiClient
+	Client *DatabricksClient
 }
 
 // Create creates a new Spark cluster

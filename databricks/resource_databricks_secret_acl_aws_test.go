@@ -45,7 +45,7 @@ func TestAccAwsSecretAclResource(t *testing.T) {
 			},
 			{
 				PreConfig: func() {
-					client := testAccProvider.Meta().(*service.DBApiClient)
+					client := testAccProvider.Meta().(*service.DatabricksClient)
 					err := client.SecretAcls().Delete(scope, principal)
 					assert.NoError(t, err, err)
 				},
@@ -68,7 +68,7 @@ func TestAccAwsSecretAclResource(t *testing.T) {
 }
 
 func testAwsSecretACLResourceDestroy(s *terraform.State) error {
-	client := testAccProvider.Meta().(*service.DBApiClient)
+	client := testAccProvider.Meta().(*service.DatabricksClient)
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "databricks_secret" && rs.Type != "databricks_secret_scope" {
 			continue
@@ -103,7 +103,7 @@ func testAwsSecretACLResourceExists(n string, aclItem *model.ACLItem, t *testing
 		}
 
 		// retrieve the configured client from the test setup
-		conn := testAccProvider.Meta().(*service.DBApiClient)
+		conn := testAccProvider.Meta().(*service.DatabricksClient)
 		resp, err := conn.SecretAcls().Read(rs.Primary.Attributes["scope"], rs.Primary.Attributes["principal"])
 		//t.Log(resp)
 		if err != nil {

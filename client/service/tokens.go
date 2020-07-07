@@ -11,7 +11,7 @@ import (
 
 // TokensAPI exposes the Secrets API
 type TokensAPI struct {
-	Client *DBApiClient
+	Client *DatabricksClient
 }
 
 // Create creates a api token given a expiration duration and a comment

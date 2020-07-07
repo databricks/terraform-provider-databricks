@@ -42,7 +42,7 @@ func TestAccAwsJobResource(t *testing.T) {
 }
 
 func testAwsJobResourceDestroy(s *terraform.State) error {
-	client := testAccProvider.Meta().(*service.DBApiClient)
+	client := testAccProvider.Meta().(*service.DatabricksClient)
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "databricks_job" {
 			continue
@@ -70,7 +70,7 @@ func testAwsJobResourceExists(n string, job *model.Job) resource.TestCheckFunc {
 		}
 
 		// retrieve the configured client from the test setup
-		conn := testAccProvider.Meta().(*service.DBApiClient)
+		conn := testAccProvider.Meta().(*service.DatabricksClient)
 		idInt, err := strconv.ParseInt(rs.Primary.ID, 10, 32)
 		if err != nil {
 			return err

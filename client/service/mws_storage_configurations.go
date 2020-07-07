@@ -11,7 +11,7 @@ import (
 
 // MWSStorageConfigurationsAPI exposes the mws storageConfiguration API
 type MWSStorageConfigurationsAPI struct {
-	Client *DBApiClient
+	Client *DatabricksClient
 }
 
 // Create creates a configuration for the root s3 bucket

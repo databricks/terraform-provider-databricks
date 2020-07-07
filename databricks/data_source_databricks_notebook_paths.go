@@ -48,7 +48,7 @@ func dataSourceNotebookPathsRead(d *schema.ResourceData, m interface{}) error {
 	path := d.Get("path").(string)
 	recursive := d.Get("recursive").(bool)
 
-	client := m.(*service.DBApiClient)
+	client := m.(*service.DatabricksClient)
 
 	notebookList, err := client.Notebooks().List(path, recursive)
 	if err != nil {

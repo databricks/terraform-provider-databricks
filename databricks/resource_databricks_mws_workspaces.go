@@ -141,7 +141,7 @@ func waitForWorkspaceURLResolution(workspace model.MWSWorkspace, timeoutDuration
 }
 
 func resourceMWSWorkspacesCreate(d *schema.ResourceData, m interface{}) error {
-	client := m.(*service.DBApiClient)
+	client := m.(*service.DatabricksClient)
 	mwsAcctID := d.Get("account_id").(string)
 	workspaceName := d.Get("workspace_name").(string)
 	deploymentName := d.Get("deployment_name").(string)
@@ -190,7 +190,7 @@ func resourceMWSWorkspacesCreate(d *schema.ResourceData, m interface{}) error {
 
 func resourceMWSWorkspacesRead(d *schema.ResourceData, m interface{}) error {
 	id := d.Id()
-	client := m.(*service.DBApiClient)
+	client := m.(*service.DatabricksClient)
 	packagedMwsID, err := unpackMWSAccountID(id)
 	if err != nil {
 		return err
@@ -293,7 +293,7 @@ func resourceMWSWorkspacesRead(d *schema.ResourceData, m interface{}) error {
 
 func resourceMWSWorkspacePatch(d *schema.ResourceData, m interface{}) error {
 	id := d.Id()
-	client := m.(*service.DBApiClient)
+	client := m.(*service.DatabricksClient)
 	packagedMwsID, err := unpackMWSAccountID(id)
 	if err != nil {
 		return err
@@ -322,7 +322,7 @@ func resourceMWSWorkspacePatch(d *schema.ResourceData, m interface{}) error {
 
 func resourceMWSWorkspacesDelete(d *schema.ResourceData, m interface{}) error {
 	id := d.Id()
-	client := m.(*service.DBApiClient)
+	client := m.(*service.DatabricksClient)
 	packagedMwsID, err := unpackMWSAccountID(id)
 	if err != nil {
 		return err

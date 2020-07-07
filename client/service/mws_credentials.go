@@ -10,7 +10,7 @@ import (
 
 // MWSCredentialsAPI exposes the mws credentials API
 type MWSCredentialsAPI struct {
-	Client *DBApiClient
+	Client *DatabricksClient
 }
 
 // Create creates a set of MWS Credentials for the cross account role

@@ -9,7 +9,7 @@ import (
 
 // NotebooksAPI exposes the Notebooks API
 type NotebooksAPI struct {
-	Client *DBApiClient
+	Client *DatabricksClient
 }
 
 // Create creates a notebook given the content and path

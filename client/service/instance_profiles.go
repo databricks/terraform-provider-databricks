@@ -10,7 +10,7 @@ import (
 
 // InstanceProfilesAPI exposes the instance profiles api on the AWS deployment of Databricks
 type InstanceProfilesAPI struct {
-	Client *DBApiClient
+	Client *DatabricksClient
 }
 
 // Create creates an instance profile record on Databricks

@@ -670,7 +670,7 @@ func TestCommandsAPI_Execute(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			AssertMultipleRequestsWithMockServer(t, tt.args, tt.requestMethod, tt.wantURI, tt.postStructExpect, tt.response, tt.responseStatus, tt.want, tt.wantErr, func(client DBApiClient) (interface{}, error) {
+			AssertMultipleRequestsWithMockServer(t, tt.args, tt.requestMethod, tt.wantURI, tt.postStructExpect, tt.response, tt.responseStatus, tt.want, tt.wantErr, func(client DatabricksClient) (interface{}, error) {
 				return client.Commands().Execute(tt.params.ClusterID, tt.params.Language, tt.params.CommandStr)
 			})
 		})

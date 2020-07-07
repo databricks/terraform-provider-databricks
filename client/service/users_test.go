@@ -62,7 +62,7 @@ func TestScimUserAPI_Create(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var input args
-			AssertRequestWithMockServer(t, &tt.args, http.MethodPost, "/api/2.0/preview/scim/v2/Users", &input, tt.response, tt.responseStatus, tt.want, tt.wantErr, func(client DBApiClient) (interface{}, error) {
+			AssertRequestWithMockServer(t, &tt.args, http.MethodPost, "/api/2.0/preview/scim/v2/Users", &input, tt.response, tt.responseStatus, tt.want, tt.wantErr, func(client DatabricksClient) (interface{}, error) {
 				return client.Users().Create(tt.args.UserName, tt.args.DisplayName, []string{string(tt.args.Entitlements[0].Value)}, []string{tt.args.Roles[0].Value})
 			})
 		})
@@ -129,7 +129,7 @@ func TestScimUserAPI_Update(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			AssertMultipleRequestsWithMockServer(t, tt.args, []string{http.MethodGet, http.MethodPut}, tt.wantURI, []interface{}{nil, &args{}}, tt.response, tt.responseStatus, nil, tt.wantErr, func(client DBApiClient) (interface{}, error) {
+			AssertMultipleRequestsWithMockServer(t, tt.args, []string{http.MethodGet, http.MethodPut}, tt.wantURI, []interface{}{nil, &args{}}, tt.response, tt.responseStatus, nil, tt.wantErr, func(client DatabricksClient) (interface{}, error) {
 				return nil, client.Users().Update("101030", tt.args[1].(*args).UserName, tt.args[1].(*args).DisplayName, []string{string(tt.args[1].(*args).Entitlements[0].Value)}, []string{tt.args[1].(*args).Roles[0].Value})
 			})
 		})
@@ -175,7 +175,7 @@ func TestScimUserAPI_Delete(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var input args
-			AssertRequestWithMockServer(t, &tt.args, http.MethodDelete, tt.requestURI, &input, tt.response, tt.responseStatus, tt.want, tt.wantErr, func(client DBApiClient) (interface{}, error) {
+			AssertRequestWithMockServer(t, &tt.args, http.MethodDelete, tt.requestURI, &input, tt.response, tt.responseStatus, tt.want, tt.wantErr, func(client DatabricksClient) (interface{}, error) {
 				return nil, client.Users().Delete(tt.args.UserID)
 			})
 		})
@@ -233,7 +233,7 @@ func TestScimUserAPI_SetUserAsAdmin(t *testing.T) {
 					},
 				},
 			}
-			AssertRequestWithMockServer(t, &expectedPatchRequest, http.MethodPatch, tt.requestURI, &input, tt.response, tt.responseStatus, tt.want, tt.wantErr, func(client DBApiClient) (interface{}, error) {
+			AssertRequestWithMockServer(t, &expectedPatchRequest, http.MethodPatch, tt.requestURI, &input, tt.response, tt.responseStatus, tt.want, tt.wantErr, func(client DatabricksClient) (interface{}, error) {
 				return nil, client.Users().SetUserAsAdmin(tt.args.UserID, tt.args.AdminGroupID)
 			})
 		})
@@ -345,7 +345,7 @@ func TestScimUserAPI_VerifyUserAsAdmin(t *testing.T) {
 					},
 				},
 			}
-			AssertRequestWithMockServer(t, &expectedPatchRequest, http.MethodGet, tt.requestURI, &input, tt.response, tt.responseStatus, tt.want, tt.wantErr, func(client DBApiClient) (interface{}, error) {
+			AssertRequestWithMockServer(t, &expectedPatchRequest, http.MethodGet, tt.requestURI, &input, tt.response, tt.responseStatus, tt.want, tt.wantErr, func(client DatabricksClient) (interface{}, error) {
 				return client.Users().VerifyUserAsAdmin(tt.args.UserID, tt.args.AdminGroupID)
 			})
 		})
@@ -403,7 +403,7 @@ func TestScimUserAPI_RemoveUserAsAdmin(t *testing.T) {
 					},
 				},
 			}
-			AssertRequestWithMockServer(t, &expectedPatchRequest, http.MethodPatch, tt.requestURI, &input, tt.response, tt.responseStatus, tt.want, tt.wantErr, func(client DBApiClient) (interface{}, error) {
+			AssertRequestWithMockServer(t, &expectedPatchRequest, http.MethodPatch, tt.requestURI, &input, tt.response, tt.responseStatus, tt.want, tt.wantErr, func(client DatabricksClient) (interface{}, error) {
 				return nil, client.Users().RemoveUserAsAdmin(tt.args.UserID, tt.args.AdminGroupID)
 			})
 		})
@@ -615,7 +615,7 @@ func TestScimUserAPI_Read(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var input args
-			AssertMultipleRequestsWithMockServer(t, tt.args, []string{http.MethodGet, http.MethodGet, http.MethodGet}, tt.wantURI, []args{input}, tt.response, tt.responseStatus, tt.want, tt.wantErr, func(client DBApiClient) (interface{}, error) {
+			AssertMultipleRequestsWithMockServer(t, tt.args, []string{http.MethodGet, http.MethodGet, http.MethodGet}, tt.wantURI, []args{input}, tt.response, tt.responseStatus, tt.want, tt.wantErr, func(client DatabricksClient) (interface{}, error) {
 				return client.Users().Read(tt.args[0].UserID)
 			})
 		})

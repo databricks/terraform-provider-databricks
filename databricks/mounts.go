@@ -12,9 +12,9 @@ import (
 
 // Mount interface describes the functionality of any mount which is create, read and delete
 type Mount interface {
-	Create(client *service.DBApiClient, clusterID string) error
-	Delete(client *service.DBApiClient, clusterID string) error
-	Read(client *service.DBApiClient, clusterID string) (string, error)
+	Create(client *service.DatabricksClient, clusterID string) error
+	Delete(client *service.DatabricksClient, clusterID string) error
+	Read(client *service.DatabricksClient, clusterID string) (string, error)
 }
 
 // AWSIamMount describes the object for a aws mount using iam role

@@ -87,7 +87,7 @@ func resourceMWSNetworks() *schema.Resource {
 }
 
 func resourceMWSNetworkCreate(d *schema.ResourceData, m interface{}) error {
-	client := m.(*service.DBApiClient)
+	client := m.(*service.DatabricksClient)
 	networkName := d.Get("network_name").(string)
 	mwsAcctID := d.Get("account_id").(string)
 	VPCID := d.Get("vpc_id").(string)
@@ -108,7 +108,7 @@ func resourceMWSNetworkCreate(d *schema.ResourceData, m interface{}) error {
 
 func resourceMWSNetworkRead(d *schema.ResourceData, m interface{}) error {
 	id := d.Id()
-	client := m.(*service.DBApiClient)
+	client := m.(*service.DatabricksClient)
 	packagedMwsID, err := unpackMWSAccountID(id)
 	if err != nil {
 		return err
@@ -172,7 +172,7 @@ func resourceMWSNetworkRead(d *schema.ResourceData, m interface{}) error {
 
 func resourceMWSNetworkDelete(d *schema.ResourceData, m interface{}) error {
 	id := d.Id()
-	client := m.(*service.DBApiClient)
+	client := m.(*service.DatabricksClient)
 	packagedMwsID, err := unpackMWSAccountID(id)
 	if err != nil {
 		return err

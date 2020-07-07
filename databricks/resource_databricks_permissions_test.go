@@ -396,7 +396,7 @@ func TestAccDatabricksPermissionsResourceFullLifecycle(t *testing.T) {
 					resource.TestCheckResourceAttr("databricks_permissions.dummy_can_use",
 						"object_type", "cluster-policy"),
 					testAccIDCallback(t, "databricks_permissions.dummy_can_use",
-						func(client *service.DBApiClient, id string) error {
+						func(client *service.DatabricksClient, id string) error {
 							resp, err := client.Permissions().Read(id)
 							if err != nil {
 								return err
@@ -410,7 +410,7 @@ func TestAccDatabricksPermissionsResourceFullLifecycle(t *testing.T) {
 			{
 				Config: testClusterPolicyPermissionsSecondGroupAdded(randomName),
 				Check: testAccIDCallback(t, "databricks_permissions.dummy_can_use",
-					func(client *service.DBApiClient, id string) error {
+					func(client *service.DatabricksClient, id string) error {
 						resp, err := client.Permissions().Read(id)
 						if err != nil {
 							return err

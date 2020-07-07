@@ -92,7 +92,7 @@ type DBApiClientConfig struct {
 	TokenCreateTime    int64
 	TokenExpiryTime    int64
 	AuthType           AuthType
-	UserAgent          string
+	UserAgent          string // should be private property
 	DefaultHeaders     map[string]string
 	InsecureSkipVerify bool
 	TimeoutSeconds     int
@@ -208,6 +208,103 @@ func checkHTTPRetry(ctx context.Context, resp *http.Response, err error) (bool, 
 	return false, nil
 }
 
+func (c *DatabricksClient) getOrCreateToken() error {
+	if c.customAuthorizer != nil {
+		// Lock incase terraform tries to getOrCreateToken from multiple go routines on the same client ptr.
+		clientAuthorizerMutex.Lock()
+		defer clientAuthorizerMutex.Unlock()
+		// todo: introduce a property?....
+		if reflect.ValueOf(c.Token).IsZero() {
+			log.Println("NOT AUTHORIZED SO ATTEMPTING TO AUTHORIZE")
+			return c.customAuthorizer()
+		}
+		log.Println("ALREADY AUTHORIZED")
+		return nil
+	}
+	return nil
+}
+
+func (c *DatabricksClient) performQuery(method string, path string, apiVersion string, headers map[string]string, data interface{}, secretsMask *SecretsMask) ([]byte, error) {
+	return c.genericQuery(method, path, apiVersion, headers, true, false, data, secretsMask)
+}
+
+func (c *DatabricksClient) performRawQuery(method, path string, apiVersion string, headers map[string]string, marshalJSON bool, data interface{}, secretsMask *SecretsMask) (body []byte, err error) {
+	return c.genericQuery(method, path, apiVersion, headers, marshalJSON, true, data, secretsMask)
+}
+
+func makeRequestBody(method, requestURL string, data interface{}, marshalJSON bool, secretsMask *SecretsMask) ([]byte, error) {
+	var requestBody []byte
+	if method == "GET" {
+		params, err := query.Values(data)
+		if err != nil {
+			return nil, err
+		}
+		requestURL += "?" + params.Encode()
+		auditGetPayload(requestURL, secretsMask)
+	} else {
+		if marshalJSON {
+			bodyBytes, err := json.Marshal(data)
+			if err != nil {
+				return nil, err
+			}
+			requestBody = bodyBytes
+		} else {
+			requestBody = []byte(data.(string))
+		}
+		auditNonGetPayload(method, requestURL, data, secretsMask)
+	}
+	return requestBody, nil
+}
+
+// PerformQuery is a generic function that accepts a config, method, path, apiversion, headers,
+// and some flags to perform query against the Databricks api
+func (c *DatabricksClient) genericQuery(method, path, apiVersion string, headers map[string]string, 
+	marshalJSON bool, useRawPath bool, data interface{}, secretsMask *SecretsMask) (body []byte, err error) {
+	if c.httpClient == nil {
+		return []byte(""), fmt.Errorf("DatabricksClient is not configured")
+	}
+	err = c.getOrCreateToken()
+	if err != nil {
+		return []byte(""), err
+	}
+	if apiVersion == "" {
+		apiVersion = "2.0"
+	}
+	requestURL := path
+	if !useRawPath {
+		requestURL = fmt.Sprintf("%s/%s%s", c.uriPrefix, apiVersion, path)
+	}
+	requestBody, err := makeRequestBody(method, requestURL, data, marshalJSON, secretsMask)
+	request, err := retryablehttp.NewRequest(method, requestURL, bytes.NewBuffer(requestBody))
+	if err != nil {
+		return nil, err
+	}
+	request.Header.Set("User-Agent", c.userAgent)
+	request.Header.Set("Content-Type", "application/json")
+	request.Header.Set("Authorization", fmt.Sprintf("%s %s", c.authType, c.Token))
+	if len(headers) > 0 {
+		for k, v := range headers {
+			request.Header.Set(k, v)
+		}
+	}
+	resp, err := c.httpClient.Do(request)
+	if err != nil {
+		return nil, err
+	}
+	defer func() {
+		if ferr := resp.Body.Close(); ferr != nil {
+			err = ferr
+		}
+	}()
+	body, err = ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+	// Don't need to check the status code here as the RetryCheck for
+	// retryablehttp.Client is doing that and returning an error
+	return body, nil
+}
+
 func (c *DBApiClientConfig) getOrCreateToken() error {
 	if c.CustomAuthorizer != nil {
 		// Lock incase terraform tries to getOrCreateToken from multiple go routines on the same client ptr.
@@ -317,6 +414,11 @@ func auditGetPayload(uri string, mask *SecretsMask) {
 	} else {
 		log.Println(onlyNBytes(string(jsonStr), 1e3))
 	}
+}
+
+// TODO: remove public method completely
+func performQuery(config *DBApiClientConfig, method, path string, apiVersion string, headers map[string]string, marshalJSON bool, useRawPath bool, data interface{}, secretsMask *SecretsMask) (body []byte, err error) {
+	return PerformQuery(config, method, path, apiVersion, headers, marshalJSON, useRawPath, data, secretsMask)
 }
 
 // PerformQuery is a generic function that accepts a config, method, path, apiversion, headers,

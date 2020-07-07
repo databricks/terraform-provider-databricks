@@ -12,7 +12,7 @@ import (
 )
 
 func parsePermissionsFromData(d *schema.ResourceData,
-	client *service.DBApiClient) (*model.AccessControlChangeList, string, error) {
+	client *service.DatabricksClient) (*model.AccessControlChangeList, string, error) {
 	var objectId string
 	acl := new(model.AccessControlChangeList)
 	for _, mapping := range permissionsResourceIDFields() {
@@ -60,7 +60,7 @@ func parsePermissionsFromData(d *schema.ResourceData,
 }
 
 func resourcePermissionsCreate(d *schema.ResourceData, m interface{}) error {
-	client := m.(*service.DBApiClient)
+	client := m.(*service.DatabricksClient)
 	acl, objectID, err := parsePermissionsFromData(d, client)
 	if err != nil {
 		return err
@@ -75,7 +75,7 @@ func resourcePermissionsCreate(d *schema.ResourceData, m interface{}) error {
 
 func resourcePermissionsRead(d *schema.ResourceData, m interface{}) error {
 	id := d.Id()
-	client := m.(*service.DBApiClient)
+	client := m.(*service.DatabricksClient)
 	objectACL, err := client.Permissions().Read(id)
 	if e, ok := err.(service.APIError); ok && e.IsMissing() {
 		d.SetId("")
@@ -112,7 +112,7 @@ func resourcePermissionsRead(d *schema.ResourceData, m interface{}) error {
 
 func resourcePermissionsDelete(d *schema.ResourceData, m interface{}) error {
 	id := d.Id()
-	client := m.(*service.DBApiClient)
+	client := m.(*service.DatabricksClient)
 	err := client.Permissions().SetOrDelete(id, new(model.AccessControlChangeList))
 	if err != nil {
 		return err
@@ -125,15 +125,15 @@ type permissionsIDFieldMapping struct {
 	field        string
 	objectType   string
 	resourceType string
-	idRetriever  func(client *service.DBApiClient, id string) (string, error)
+	idRetriever  func(client *service.DatabricksClient, id string) (string, error)
 }
 
 // PermissionsResourceIDFields shows mapping of id columns to resource types
 func permissionsResourceIDFields() []permissionsIDFieldMapping {
-	SIMPLE := func(client *service.DBApiClient, id string) (string, error) {
+	SIMPLE := func(client *service.DatabricksClient, id string) (string, error) {
 		return id, nil
 	}
-	PATH := func(client *service.DBApiClient, path string) (string, error) {
+	PATH := func(client *service.DatabricksClient, path string) (string, error) {
 		info, err := client.Notebooks().Read(path)
 		if err != nil {
 			return "", errors.Wrapf(err, "Cannot load path %s", path)

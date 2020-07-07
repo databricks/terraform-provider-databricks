@@ -51,7 +51,7 @@ func resourceDBFSFileSync() *schema.Resource {
 }
 
 func resourceDBFSFileSyncCreate(d *schema.ResourceData, m interface{}) error {
-	client := m.(*service.DBApiClient)
+	client := m.(*service.DatabricksClient)
 	srcPath := d.Get("src_path").(string)
 	tgtPath := d.Get("tgt_path").(string)
 	mkdirs := d.Get("mkdirs").(bool)
@@ -98,7 +98,7 @@ func resourceDBFSFileSyncUpdate(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceDBFSFileSyncRead(d *schema.ResourceData, m interface{}) error {
-	client := m.(*service.DBApiClient)
+	client := m.(*service.DatabricksClient)
 	srcPath := d.Get("src_path").(string)
 	tgtPath := d.Get("tgt_path").(string)
 
@@ -127,14 +127,14 @@ func resourceDBFSFileSyncRead(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceDBFSFileSyncDelete(d *schema.ResourceData, m interface{}) error {
-	client := m.(*service.DBApiClient)
+	client := m.(*service.DatabricksClient)
 	id := strings.Split(d.Id(), "|||")[1]
 
 	err := client.DBFS().Delete(id, false)
 	return err
 }
 
-func parseSchemaToDBAPIClient(d *schema.ResourceData, currentClient *service.DBApiClient) *service.DBApiClient {
+func parseSchemaToDBAPIClient(d *schema.ResourceData, currentClient *service.DatabricksClient) *service.DatabricksClient {
 	host, hostOk := d.GetOk("host")
 	token, tokenOk := d.GetOk("token")
 	var config service.DBApiClientConfig
@@ -142,7 +142,7 @@ func parseSchemaToDBAPIClient(d *schema.ResourceData, currentClient *service.DBA
 		config.Host = host.(string)
 		config.Token = token.(string)
 		config.UserAgent = currentClient.Config.UserAgent
-		var dbClient service.DBApiClient
+		var dbClient service.DatabricksClient
 		dbClient.SetConfig(&config)
 		return &dbClient
 	}

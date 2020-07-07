@@ -39,7 +39,7 @@ func TestAccAzureAdlsGen2Mount_cluster_deleted_correctly_mounts(t *testing.T) {
 			},
 			{
 				PreConfig: func() {
-					client := testAccProvider.Meta().(*service.DBApiClient)
+					client := testAccProvider.Meta().(*service.DatabricksClient)
 					err := client.Clusters().Delete(cluster.ClusterID)
 					assert.NoError(t, err, err)
 				},
@@ -173,7 +173,7 @@ func testClusterResourceExists(n string, cluster *model.ClusterInfo, t *testing.
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := testAccProvider.Meta().(*service.DBApiClient)
+		conn := testAccProvider.Meta().(*service.DatabricksClient)
 		resp, err := conn.Clusters().Get(rs.Primary.ID)
 		if err != nil {
 			return err

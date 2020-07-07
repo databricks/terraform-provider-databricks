@@ -11,7 +11,7 @@ import (
 
 // DBFSAPI exposes the DBFS API
 type DBFSAPI struct {
-	Client *DBApiClient
+	Client *DatabricksClient
 }
 
 // Create creates a file in DBFS given data string in base64
@@ -61,7 +61,7 @@ func (a DBFSAPI) Read(path string) (string, error) {
 }
 
 // Copy copies a file given a source location and a target location and a provided client for source location
-func (a DBFSAPI) Copy(src string, tgt string, client *DBApiClient, overwrite bool) error {
+func (a DBFSAPI) Copy(src string, tgt string, client *DatabricksClient, overwrite bool) error {
 	handle, err := a.createHandle(tgt, overwrite)
 	if err != nil {
 		return err

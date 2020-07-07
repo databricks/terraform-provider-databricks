@@ -83,7 +83,7 @@ func TestAccAzureScimUserResource(t *testing.T) {
 			},
 			{
 				PreConfig: func() {
-					err := testAccProvider.Meta().(*service.DBApiClient).Users().Delete(scimUser.ID)
+					err := testAccProvider.Meta().(*service.DatabricksClient).Users().Delete(scimUser.ID)
 					assert.NoError(t, err, err)
 				},
 				// use a dynamic configuration with the random name from above
@@ -104,7 +104,7 @@ func TestAccAzureScimUserResource(t *testing.T) {
 			{
 				//Create a new user
 				PreConfig: func() {
-					err := testAccProvider.Meta().(*service.DBApiClient).Users().Delete(scimUser.ID)
+					err := testAccProvider.Meta().(*service.DatabricksClient).Users().Delete(scimUser.ID)
 					assert.NoError(t, err, err)
 				},
 				// Create new admin user
@@ -162,7 +162,7 @@ func TestAccAzureScimUserResource(t *testing.T) {
 }
 
 func testAzureScimUserResourceDestroy(s *terraform.State) error {
-	client := testAccProvider.Meta().(*service.DBApiClient)
+	client := testAccProvider.Meta().(*service.DatabricksClient)
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "databricks_scim_user" {
 			continue
@@ -213,7 +213,7 @@ func testAzureScimUserResourceExists(n string, user *model.User, t *testing.T) r
 		}
 
 		// retrieve the configured client from the test setup
-		conn := testAccProvider.Meta().(*service.DBApiClient)
+		conn := testAccProvider.Meta().(*service.DatabricksClient)
 		resp, err := conn.Users().Read(rs.Primary.ID)
 		if err != nil {
 			return err

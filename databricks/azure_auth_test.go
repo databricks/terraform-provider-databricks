@@ -62,7 +62,7 @@ func TestAzureAuthCreateApiToken(t *testing.T) {
 	config := GetIntegrationDBClientOptions()
 	err := tokenPayload.initWorkspaceAndGetClient(config)
 	assert.NoError(t, err, err)
-	api := service.DBApiClient{}
+	api := service.DatabricksClient{}
 	api.SetConfig(config)
 	instancePoolInfo, instancePoolErr := api.InstancePools().Create(model.InstancePool{
 		InstancePoolName:                   "my_instance_pool",

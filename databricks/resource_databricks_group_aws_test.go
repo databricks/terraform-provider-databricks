@@ -101,7 +101,7 @@ func TestAccAwsGroupResource_verify_entitlements(t *testing.T) {
 }
 
 func testAWSGroupResourceDestroy(s *terraform.State) error {
-	client := testAccProvider.Meta().(*service.DBApiClient)
+	client := testAccProvider.Meta().(*service.DatabricksClient)
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "databricks_group" {
 			continue
@@ -132,7 +132,7 @@ func testAWSGroupResourceExists(n string, group *model.Group, t *testing.T) reso
 		}
 
 		// retrieve the configured client from the test setup
-		conn := testAccProvider.Meta().(*service.DBApiClient)
+		conn := testAccProvider.Meta().(*service.DatabricksClient)
 		resp, err := conn.Groups().Read(rs.Primary.ID)
 		if err != nil {
 			return err

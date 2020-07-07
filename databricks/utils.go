@@ -11,7 +11,7 @@ import (
 	"github.com/databrickslabs/databricks-terraform/client/service"
 )
 
-func changeClusterIntoRunningState(clusterID string, client *service.DBApiClient) error {
+func changeClusterIntoRunningState(clusterID string, client *service.DatabricksClient) error {
 	//return nil
 	clusterInfo, err := client.Clusters().Get(clusterID)
 	if err != nil {

@@ -42,7 +42,7 @@ func TestAccAwsInstanceProfileResource(t *testing.T) {
 			},
 			{
 				PreConfig: func() {
-					client := testAccProvider.Meta().(*service.DBApiClient)
+					client := testAccProvider.Meta().(*service.DatabricksClient)
 					err := client.InstanceProfiles().Delete(instanceProfile)
 					assert.NoError(t, err, err)
 				},
@@ -82,7 +82,7 @@ func TestAccAwsInstanceProfileResource(t *testing.T) {
 }
 
 func testAWSInstanceProfileResourceDestroy(s *terraform.State) error {
-	client := testAccProvider.Meta().(*service.DBApiClient)
+	client := testAccProvider.Meta().(*service.DatabricksClient)
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "databricks_instance_profile" {
 			continue
@@ -113,7 +113,7 @@ func testAWSInstanceProfileResourceExists(n string, instanceProfileInfo *model.I
 		}
 
 		// retrieve the configured client from the test setup
-		conn := testAccProvider.Meta().(*service.DBApiClient)
+		conn := testAccProvider.Meta().(*service.DatabricksClient)
 		resp, err := conn.InstanceProfiles().Read(rs.Primary.ID)
 		if err != nil {
 			return err

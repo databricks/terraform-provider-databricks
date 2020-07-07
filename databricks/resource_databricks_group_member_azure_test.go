@@ -22,7 +22,7 @@ func TestAccAzureGroupMemberResource(t *testing.T) {
 	groupName := "group test"
 	var manuallyCreatedGroup *model.Group
 	defer func() {
-		client := testAccProvider.Meta().(*service.DBApiClient)
+		client := testAccProvider.Meta().(*service.DatabricksClient)
 		if client != nil && manuallyCreatedGroup != nil {
 			err := client.Groups().Delete(manuallyCreatedGroup.ID)
 			assert.NoError(t, err, err)
@@ -52,7 +52,7 @@ func TestAccAzureGroupMemberResource(t *testing.T) {
 			{
 				PreConfig: func() {
 					//	manually create subgroup c
-					client := testAccProvider.Meta().(*service.DBApiClient)
+					client := testAccProvider.Meta().(*service.DatabricksClient)
 					subGroupC, _ := client.Groups().Create("manually-created-group", nil, nil, nil)
 					manuallyCreatedGroup = &subGroupC
 					//  Add new subgroup to current group
@@ -91,7 +91,7 @@ func TestAccAzureGroupMemberResource(t *testing.T) {
 
 				// Test behavior to expect to attempt to create new role mapping because role is gone
 				PreConfig: func() {
-					client := testAccProvider.Meta().(*service.DBApiClient)
+					client := testAccProvider.Meta().(*service.DatabricksClient)
 					err := client.Groups().Delete(group.ID)
 					assert.NoError(t, err, err)
 				},
@@ -105,7 +105,7 @@ func TestAccAzureGroupMemberResource(t *testing.T) {
 
 				// Lets delete the manually created group
 				PreConfig: func() {
-					client := testAccProvider.Meta().(*service.DBApiClient)
+					client := testAccProvider.Meta().(*service.DatabricksClient)
 					err := client.Groups().Delete(manuallyCreatedGroup.ID)
 					assert.NoError(t, err, err)
 					manuallyCreatedGroup = nil
@@ -126,7 +126,7 @@ func TestAccAzureGroupMemberResource(t *testing.T) {
 }
 
 func testAzureGroupMemberResourceDestroy(s *terraform.State) error {
-	client := testAccProvider.Meta().(*service.DBApiClient)
+	client := testAccProvider.Meta().(*service.DatabricksClient)
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "databricks_group" {
 			continue
@@ -158,7 +158,7 @@ func testAzureGroupMemberResourceExists(n string, group *model.Group, t *testing
 		}
 
 		// retrieve the configured client from the test setup
-		conn := testAccProvider.Meta().(*service.DBApiClient)
+		conn := testAccProvider.Meta().(*service.DatabricksClient)
 		resp, err := conn.Groups().Read(rs.Primary.ID)
 		if err != nil {
 			return err

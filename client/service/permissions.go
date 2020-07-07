@@ -9,7 +9,7 @@ import (
 
 // PermissionsAPI exposes general permission related methods
 type PermissionsAPI struct {
-	Client *DBApiClient
+	Client *DatabricksClient
 }
 
 // AddOrModify works with permissions change list

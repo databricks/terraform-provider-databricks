@@ -10,7 +10,7 @@ import (
 
 // MWSNetworksAPI exposes the mws networks API
 type MWSNetworksAPI struct {
-	Client *DBApiClient
+	Client *DatabricksClient
 }
 
 // Create creates a set of MWS Networks for the BYOVPC

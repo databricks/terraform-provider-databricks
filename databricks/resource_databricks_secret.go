@@ -48,7 +48,7 @@ func getScopeAndKeyFromSecretID(secretIDString string) (string, string, error) {
 }
 
 func resourceSecretCreate(d *schema.ResourceData, m interface{}) error {
-	client := m.(*service.DBApiClient)
+	client := m.(*service.DatabricksClient)
 	scopeName := d.Get("scope").(string)
 	key := d.Get("key").(string)
 	secretValue := d.Get("string_value").(string)
@@ -66,7 +66,7 @@ func resourceSecretCreate(d *schema.ResourceData, m interface{}) error {
 
 func resourceSecretRead(d *schema.ResourceData, m interface{}) error {
 	id := d.Id()
-	client := m.(*service.DBApiClient)
+	client := m.(*service.DatabricksClient)
 	scope, key, err := getScopeAndKeyFromSecretID(id)
 	if err != nil {
 		return err
@@ -99,7 +99,7 @@ func resourceSecretRead(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceSecretDelete(d *schema.ResourceData, m interface{}) error {
-	client := m.(*service.DBApiClient)
+	client := m.(*service.DatabricksClient)
 	id := d.Id()
 	scope, key, err := getScopeAndKeyFromSecretID(id)
 	if err != nil {

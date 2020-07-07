@@ -221,7 +221,7 @@ func resourceInstancePoolCreate(d *schema.ResourceData, m interface{}) error {
 	}
 
 	if sparkVersions, ok := d.GetOk("preloaded_spark_versions"); ok {
-		instancePool.PreloadedSparkVersions = sparkVersions.([]string)
+		instancePool.PreloadedSparkVersions = convertListInterfaceToString(sparkVersions.([]interface{}))
 	}
 
 	instancePoolInfo, err := client.InstancePools().Create(instancePool)
@@ -345,7 +345,7 @@ func resourceInstancePoolUpdate(d *schema.ResourceData, m interface{}) error {
 	if err != nil {
 		return err
 	}
-	return resourceInstancePoolUpdate(d, m)
+	return resourceInstancePoolRead(d, m)
 }
 
 func resourceInstancePoolDelete(d *schema.ResourceData, m interface{}) error {

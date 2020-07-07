@@ -1,33 +1,14 @@
-+++
-title = "notebook"
-date = 2020-04-20T23:34:03-04:00
-weight = 15
-chapter = false
-pre = ""
-+++
-
-## Resource: `databricks_notebook`
+# databricks_notebook Resource
 
 This resource allows you to manage the import, export, and delete notebooks. The maximum allowed size of a 
 request to resource is 10MB. 
 
-{{% notice note %}}
-Though the public workspace import api supports notebooks of type `JUPYTER` and `HTML` this resource does not support 
+-> **Note** Though the public workspace import api supports notebooks of type `DBC`, `JUPYTER` and `HTML` this resource does not support 
 those types as determining changes is quite challenging as the format includes additional information such as timestamps 
 execution counts thus a base64 diff causes issues.
-{{% /notice %}}
+
 
 ## Example Usage
-
-```hcl
-resource "databricks_notebook" "my_databricks_notebook" {
-  content = filebase64("${path.module}/demo-terraform.dbc")
-  path = "/workspace/terraform-test-folder/"
-  overwrite = false
-  mkdirs = true
-  format = "DBC"
-}
-```
 
 For deployment of an empty Python notebook, the following example might be useful:
 
@@ -69,10 +50,10 @@ returns an error RESOURCE_ALREADY_EXISTS. If this operation fails it may have su
 
 #### - `format`:
 > **(Required)** This specifies the format of the file to be imported. 
-By default, this is SOURCE. However it may be one of: SOURCE, or DBC. The value is case sensitive. 
+This resource currently only supports SOURCE. The value is case sensitive. 
 >SOURCE is suitable for .scala, .py, .r, .sql extension based files, HTML for .html files, JUPYTER for .ipynb files, 
->and DBC for .dbc files. Though the API supports HTML and JUPYTER currently we do not support them as identifying DIFF is 
->quite challenging.
+>and DBC for .dbc files. Though the API supports DBC, HTML, and JUPYTER currently we do not support them as effectively 
+>identifying DIFF is currently not feasible.
 
 ## Attribute Reference
 
@@ -89,6 +70,4 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-{{% notice note %}}
-Importing this resource is not currently supported.
-{{% /notice %}}
+-> **Note** Importing this resource is not currently supported.

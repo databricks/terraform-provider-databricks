@@ -46,7 +46,7 @@ build:
 
 install: build
 	@echo "==> Installing provider into ~/.terraform.d/plugins ..."
-	test -d $(HOME)/.terraform.d/plugins && rm $(HOME)/.terraform.d/plugins/terraform-provider-databricks* || mkdir -p $(HOME)/.terraform.d/plugins
+	@test -d $(HOME)/.terraform.d/plugins && rm $(HOME)/.terraform.d/plugins/terraform-provider-databricks* || mkdir -p $(HOME)/.terraform.d/plugins
 	@mv terraform-provider-databricks $(HOME)/.terraform.d/plugins
 
 vendor:

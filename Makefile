@@ -40,14 +40,14 @@ test: lint client-test provider-test
 	@echo "==> Running tests..."
 	@gotestsum --format short-verbose --raw-command go test -v -json -short -coverprofile=coverage.txt ./...
 
-build: lint test
+build:
 	@echo "==> Building source code with go build..."
 	@go build -mod vendor -v -o terraform-provider-databricks
 
 install: build
 	@echo "==> Installing provider into ~/.terraform.d/plugins ..."
-	@rm  ~/.terraform.d/plugins/terraform-provider-databricks*
-	@mv terraform-provider-databricks ~/.terraform.d/plugins
+	@test -d $(HOME)/.terraform.d/plugins && rm $(HOME)/.terraform.d/plugins/terraform-provider-databricks* || mkdir -p $(HOME)/.terraform.d/plugins
+	@mv terraform-provider-databricks $(HOME)/.terraform.d/plugins
 
 vendor:
 	@echo "==> Filling vendor folder with library code..."

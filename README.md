@@ -4,7 +4,7 @@
 
 [Documentation](https://databrickslabs.github.io/terraform-provider-databricks/provider/) | [Contributing and Development Guidelines](CONTRIBUTING.md)
 
-To quickly install the binary please execute the following curl command in your shell.
+To quickly install the binary please execute the following curl command in your shell or [install provider from source](CONTRIBUTING.md#installing-from-source).
 
 ```bash
 curl https://raw.githubusercontent.com/databrickslabs/databricks-terraform/master/godownloader-databricks-provider.sh | bash -s -- -b $HOME/.terraform.d/plugins

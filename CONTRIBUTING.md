@@ -2,8 +2,8 @@ Contributing to Databricks Terraform Provider
 ---
 
 - [Contributing to Databricks Terraform Provider](#contributing-to-databricks-terraform-provider)
-- [Install using go](#install-using-go)
-- [Downloading the source code and installing the artifact](#downloading-the-source-code-and-installing-the-artifact)
+- [Installing from source](#installing-from-source)
+- [Developing provider](#developing-provider)
 - [Developing with Visual Studio Code Devcontainers](#developing-with-visual-studio-code-devcontainers)
 - [Building and Installing with Docker](#building-and-installing-with-docker)
 - [Testing](#testing)
@@ -17,76 +17,41 @@ Contributing to Databricks Terraform Provider
 
 We happily welcome contributions to databricks-terraform. We use GitHub Issues to track community reported issues and GitHub Pull Requests for accepting changes.
 
-## Install using go 
+## Installing from source
 
-Please note that there is a Makefile which contains all the commands you would need to run this project.
+The following command (tested on Ubuntu 20.04) will install `make`, `golang`, `git` with all of the dependent packages as well as Databricks Terrafrom provider from sources. Required version of GoLang is at least 1.13. Required version of terraform is at least 0.12. 
 
-This code base to contribute to requires the following software (this is also all configured for the [Visual Studio Code Devcontainer](#developing-with-visual-studio-code-devcontainers)):
-
-* [golang 1.13.X](https://golang.org/dl/)
-* [terraform v0.12.x](https://www.terraform.io/downloads.html)
-* make command
-
-To make sure everything is installed correctly please run the following commands:
-
-Testing go installation:
 ```bash
-$ go version 
-go version go1.13.3 darwin/amd64
+sudo apt-get update
+sudo apt-get install make golang git -y
+git clone https://github.com/databrickslabs/terraform-provider-databricks.git
+cd terraform-provider-databricks
+make install
 ```
-
-Testing terraform installation:
-```bash
-$ terraform --version
-Terraform v0.12.19
-
-Your version of Terraform is out of date! The latest version
-is 0.12.24. You can update by downloading from https://www.terraform.io/downloads.html
-
-```
-
-Testing make installation:
-```bash
-$ make --version
-GNU Make 3.81
-Copyright (C) 2006  Free Software Foundation, Inc.
-This is free software; see the source for copying conditions.
-There is NO warranty; not even for MERCHANTABILITY or FITNESS FOR A
-PARTICULAR PURPOSE.
-
-This program built for i386-apple-darwin11.3.0
-```
-
-## Downloading the source code and installing the artifact
-
-* After installing `golang`, `terraform`, and `make` you will now build the artifact.
-
-```bash
-$ go get -v -u github.com/databrickslabs/databricks-terraform && cd $GOPATH/src/github.com/databrickslabs/databricks-terraform 
-```
-
-:warning: If you are fetching from a private repository please use the following command:
-
-```bash
-$ GOSUMDB=off GOPROXY=direct go get -v -u github.com/databrickslabs/databricks-terraform && cd $GOPATH/src/github.com/databrickslabs/databricks-terraform
-```
-
-* When you are in the root directory of the repository please run:
-
-```bash
-$ make build
-```
-
-* Locate your [terraform plugins directory](https://www.terraform.io/docs/extend/how-terraform-works.html#plugin-locations) 
-    or the root folder of your terraform code
-
-* Copy the `terraform-provider-databricks` artifact to that terraform plugins locations
-
-```bash
-$ mkdir -p ~/.terraform.d/plugins/ && cp terraform-provider-databricks ~/.terraform.d/plugins/terraform-provider-databricks
-``` 
 
 Now your plugin for the Databricks Terraform provider is installed correctly. You can actually use the provider. 
+
+## Developing provider
+
+After installing necessary software for building provider from sources, you should install `golangci-lint` and `gotestsum` in order to run `make test`.
+
+Make sure you have `$GOPATH/bin` in your `$PATH`:
+```
+echo "export PATH=\$PATH:$(go env GOPATH)/bin" >> ~/.bash_profile
+```
+
+Installing `golangci-lint`:
+```bash
+curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.27.0
+$(go env GOPATH)/bin/golangci-lint
+```
+
+Installing `gotestsum`:
+```bash
+go get gotest.tools/gotestsum
+```
+
+After this, you should be able to run `make test`.
 
 ## Developing with Visual Studio Code Devcontainers
 

@@ -15,7 +15,7 @@ type JobsAPI struct {
 // Create creates a job on the workspace given the job settings
 func (a JobsAPI) Create(jobSettings model.JobSettings) (model.Job, error) {
 	var job model.Job
-	resp, err := a.Client.performQuery(http.MethodPost, "/jobs/create", "2.0", nil, jobSettings, nil)
+	resp, err := a.Client.performQuery(http.MethodPost, "/jobs/create", "2.0", nil, jobSettings)
 	if err != nil {
 		return job, err
 	}
@@ -30,7 +30,7 @@ func (a JobsAPI) Update(jobID int64, jobSettings model.JobSettings) error {
 		JobID       int64              `json:"job_id,omitempty" url:"job_id,omitempty"`
 		NewSettings *model.JobSettings `json:"new_settings,omitempty" url:"new_settings,omitempty"`
 	}{JobID: jobID, NewSettings: &jobSettings}
-	_, err := a.Client.performQuery(http.MethodPost, "/jobs/reset", "2.0", nil, jobResetRequest, nil)
+	_, err := a.Client.performQuery(http.MethodPost, "/jobs/reset", "2.0", nil, jobResetRequest)
 	return err
 }
 
@@ -42,7 +42,7 @@ func (a JobsAPI) Read(jobID int64) (model.Job, error) {
 
 	var job model.Job
 
-	resp, err := a.Client.performQuery(http.MethodGet, "/jobs/get", "2.0", nil, jobGetRequest, nil)
+	resp, err := a.Client.performQuery(http.MethodGet, "/jobs/get", "2.0", nil, jobGetRequest)
 	if err != nil {
 		return job, err
 	}
@@ -58,7 +58,7 @@ func (a JobsAPI) Delete(jobID int64) error {
 		JobID int64 `json:"job_id,omitempty" url:"job_id,omitempty"`
 	}{JobID: jobID}
 
-	_, err := a.Client.performQuery(http.MethodPost, "/jobs/delete", "2.0", nil, jobDeleteRequest, nil)
+	_, err := a.Client.performQuery(http.MethodPost, "/jobs/delete", "2.0", nil, jobDeleteRequest)
 
 	return err
 }

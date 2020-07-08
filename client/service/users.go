@@ -40,7 +40,7 @@ func (a UsersAPI) Create(userName string, displayName string, entitlements []str
 		scimUserRequest.Roles = append(scimUserRequest.Roles, model.RoleListItem{Value: role})
 	}
 
-	resp, err := a.Client.performQuery(http.MethodPost, "/preview/scim/v2/Users", "2.0", scimHeaders, scimUserRequest, nil)
+	resp, err := a.Client.performQuery(http.MethodPost, "/preview/scim/v2/Users", "2.0", scimHeaders, scimUserRequest)
 	if err != nil {
 		return user, err
 	}
@@ -83,7 +83,7 @@ func (a UsersAPI) Me() (model.User, error) {
 
 func (a UsersAPI) readByPath(userPath string) (model.User, error) {
 	var user model.User
-	resp, err := a.Client.performQuery(http.MethodGet, userPath, "2.0", scimHeaders, nil, nil)
+	resp, err := a.Client.performQuery(http.MethodGet, userPath, "2.0", scimHeaders, nil)
 	if err != nil {
 		return user, err
 	}
@@ -119,7 +119,7 @@ func (a UsersAPI) Update(userID string, userName string, displayName string, ent
 		return err
 	}
 	scimUserUpdateRequest.Groups = user.Groups
-	_, err = a.Client.performQuery(http.MethodPut, userPath, "2.0", scimHeaders, scimUserUpdateRequest, nil)
+	_, err = a.Client.performQuery(http.MethodPut, userPath, "2.0", scimHeaders, scimUserUpdateRequest)
 	return err
 }
 
@@ -127,7 +127,7 @@ func (a UsersAPI) Update(userID string, userName string, displayName string, ent
 func (a UsersAPI) Delete(userID string) error {
 	userPath := fmt.Sprintf("/preview/scim/v2/Users/%v", userID)
 
-	_, err := a.Client.performQuery(http.MethodDelete, userPath, "2.0", scimHeaders, nil, nil)
+	_, err := a.Client.performQuery(http.MethodDelete, userPath, "2.0", scimHeaders, nil)
 	return err
 }
 
@@ -150,7 +150,7 @@ func (a UsersAPI) SetUserAsAdmin(userID string, adminGroupID string) error {
 	}
 	userPatchRequest.Operations = append(userPatchRequest.Operations, addOperations)
 
-	_, err := a.Client.performQuery(http.MethodPatch, userPath, "2.0", scimHeaders, userPatchRequest, nil)
+	_, err := a.Client.performQuery(http.MethodPatch, userPath, "2.0", scimHeaders, userPatchRequest)
 
 	return err
 }
@@ -188,7 +188,7 @@ func (a UsersAPI) RemoveUserAsAdmin(userID string, adminGroupID string) error {
 	}
 	userPatchRequest.Operations = append(userPatchRequest.Operations, removeOperations)
 
-	_, err := a.Client.performQuery(http.MethodPatch, userPath, "2.0", scimHeaders, userPatchRequest, nil)
+	_, err := a.Client.performQuery(http.MethodPatch, userPath, "2.0", scimHeaders, userPatchRequest)
 
 	return err
 }
@@ -199,7 +199,7 @@ func (a UsersAPI) GetOrCreateDefaultMetaUser(metaUserDisplayName string, metaUse
 
 	metaUserQuery := fmt.Sprintf("/preview/scim/v2/Users?filter=displayName+eq+%s", metaUserDisplayName)
 
-	resp, err := a.Client.performQuery(http.MethodGet, metaUserQuery, "2.0", scimHeaders, nil, nil)
+	resp, err := a.Client.performQuery(http.MethodGet, metaUserQuery, "2.0", scimHeaders, nil)
 	if err != nil {
 		return user, err
 	}

@@ -45,7 +45,7 @@ func (a GroupsAPI) Create(groupName string, members []string, roles []string, en
 		scimGroupRequest.Entitlements = append(scimGroupRequest.Entitlements, model.ValueListItem{Value: entitlement})
 	}
 
-	resp, err := a.Client.performQuery(http.MethodPost, "/preview/scim/v2/Groups", "2.0", scimHeaders, scimGroupRequest, nil)
+	resp, err := a.Client.performQuery(http.MethodPost, "/preview/scim/v2/Groups", "2.0", scimHeaders, scimGroupRequest)
 	if err != nil {
 		return group, err
 	}
@@ -59,7 +59,7 @@ func (a GroupsAPI) Read(groupID string) (model.Group, error) {
 	var group model.Group
 	groupPath := fmt.Sprintf("/preview/scim/v2/Groups/%v", groupID)
 
-	resp, err := a.Client.performQuery(http.MethodGet, groupPath, "2.0", scimHeaders, nil, nil)
+	resp, err := a.Client.performQuery(http.MethodGet, groupPath, "2.0", scimHeaders, nil)
 	if err != nil {
 		return group, err
 	}
@@ -92,7 +92,7 @@ func (a GroupsAPI) GetAdminGroup() (model.Group, error) {
 
 	adminsQuery := "/preview/scim/v2/Groups?filter=displayName+eq+admins"
 
-	resp, err := a.Client.performQuery(http.MethodGet, adminsQuery, "2.0", scimHeaders, nil, nil)
+	resp, err := a.Client.performQuery(http.MethodGet, adminsQuery, "2.0", scimHeaders, nil)
 	if err != nil {
 		return group, err
 	}
@@ -143,7 +143,7 @@ func (a GroupsAPI) Patch(groupID string, addList []string, removeList []string, 
 		groupPatchRequest.Operations = append(groupPatchRequest.Operations, removeOperations)
 	}
 
-	_, err := a.Client.performQuery(http.MethodPatch, groupPath, "2.0", scimHeaders, groupPatchRequest, nil)
+	_, err := a.Client.performQuery(http.MethodPatch, groupPath, "2.0", scimHeaders, groupPatchRequest)
 
 	return err
 }
@@ -151,7 +151,7 @@ func (a GroupsAPI) Patch(groupID string, addList []string, removeList []string, 
 // Delete deletes a group given a group id
 func (a GroupsAPI) Delete(groupID string) error {
 	groupPath := fmt.Sprintf("/preview/scim/v2/Groups/%v", groupID)
-	_, err := a.Client.performQuery(http.MethodDelete, groupPath, "2.0", scimHeaders, nil, nil)
+	_, err := a.Client.performQuery(http.MethodDelete, groupPath, "2.0", scimHeaders, nil)
 	return err
 }
 

@@ -8,7 +8,10 @@ import (
 
 func TestDatabricksClientConfigure_BasicAuth_NoHost(t *testing.T) {
 	dc := DatabricksClient{
-		BasicAuth: struct{Username string; Password string}{
+		BasicAuth: struct {
+			Username string
+			Password string
+		}{
 			Username: "foo",
 			Password: "bar",
 		},
@@ -22,7 +25,10 @@ func TestDatabricksClientConfigure_BasicAuth_NoHost(t *testing.T) {
 func TestDatabricksClientConfigure_BasicAuth(t *testing.T) {
 	dc := DatabricksClient{
 		Host: "https://localhost:443",
-		BasicAuth: struct{Username string; Password string}{
+		BasicAuth: struct {
+			Username string
+			Password string
+		}{
 			Username: "foo",
 			Password: "bar",
 		},
@@ -51,8 +57,8 @@ func TestDatabricksClientConfigure_NoOptionsResultsInError(t *testing.T) {
 
 func TestDatabricksClientConfigure_HostTokensTakePrecedence(t *testing.T) {
 	dc := DatabricksClient{
-		Host: "foo",
-		Token: "connfigured",
+		Host:       "foo",
+		Token:      "connfigured",
 		ConfigFile: "testdata/.databrickscfg",
 	}
 	err := dc.Configure("dev")
@@ -61,9 +67,12 @@ func TestDatabricksClientConfigure_HostTokensTakePrecedence(t *testing.T) {
 
 func TestDatabricksClientConfigure_BasicAuthTakePrecedence(t *testing.T) {
 	dc := DatabricksClient{
-		Host: "foo",
+		Host:  "foo",
 		Token: "connfigured",
-		BasicAuth: struct{Username string; Password string}{
+		BasicAuth: struct {
+			Username string
+			Password string
+		}{
 			Username: "foo",
 			Password: "bar",
 		},
@@ -85,9 +94,9 @@ func TestDatabricksClientConfigure_ConfigRead(t *testing.T) {
 
 func TestDatabricksClientConfigure_NoHostGivesError(t *testing.T) {
 	dc := DatabricksClient{
-		Token: "connfigured",
+		Token:      "connfigured",
 		ConfigFile: "testdata/.databrickscfg",
-		Profile: "nohost",
+		Profile:    "nohost",
 	}
 	err := dc.Configure("dev")
 	assert.NotNil(t, err)
@@ -95,9 +104,9 @@ func TestDatabricksClientConfigure_NoHostGivesError(t *testing.T) {
 
 func TestDatabricksClientConfigure_NoTokenGivesError(t *testing.T) {
 	dc := DatabricksClient{
-		Token: "connfigured",
+		Token:      "connfigured",
 		ConfigFile: "testdata/.databrickscfg",
-		Profile: "notoken",
+		Profile:    "notoken",
 	}
 	err := dc.Configure("dev")
 	assert.NotNil(t, err)
@@ -105,9 +114,9 @@ func TestDatabricksClientConfigure_NoTokenGivesError(t *testing.T) {
 
 func TestDatabricksClientConfigure_InvalidProfileGivesError(t *testing.T) {
 	dc := DatabricksClient{
-		Token: "connfigured",
+		Token:      "connfigured",
 		ConfigFile: "testdata/.databrickscfg",
-		Profile: "invalidhost",
+		Profile:    "invalidhost",
 	}
 	err := dc.Configure("dev")
 	assert.NotNil(t, err)
@@ -115,9 +124,9 @@ func TestDatabricksClientConfigure_InvalidProfileGivesError(t *testing.T) {
 
 func TestDatabricksClientConfigure_MissingFile(t *testing.T) {
 	dc := DatabricksClient{
-		Token: "connfigured",
+		Token:      "connfigured",
 		ConfigFile: "testdata/.invalid file",
-		Profile: "invalidhost",
+		Profile:    "invalidhost",
 	}
 	err := dc.Configure("dev")
 	assert.NotNil(t, err)
@@ -125,9 +134,9 @@ func TestDatabricksClientConfigure_MissingFile(t *testing.T) {
 
 func TestDatabricksClientConfigure_InvalidConfigFilePath(t *testing.T) {
 	dc := DatabricksClient{
-		Token: "connfigured",
+		Token:      "connfigured",
 		ConfigFile: "testdata/policy01.json",
-		Profile: "invalidhost",
+		Profile:    "invalidhost",
 	}
 	err := dc.Configure("dev")
 	assert.NotNil(t, err)

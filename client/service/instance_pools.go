@@ -16,7 +16,7 @@ type InstancePoolsAPI struct {
 func (a InstancePoolsAPI) Create(instancePool model.InstancePool) (model.InstancePoolInfo, error) {
 	var instancePoolInfo model.InstancePoolInfo
 
-	resp, err := a.Client.performQuery(http.MethodPost, "/instance-pools/create", "2.0", nil, instancePool, nil)
+	resp, err := a.Client.performQuery(http.MethodPost, "/instance-pools/create", "2.0", nil, instancePool)
 	if err != nil {
 		return instancePoolInfo, err
 	}
@@ -26,7 +26,7 @@ func (a InstancePoolsAPI) Create(instancePool model.InstancePool) (model.Instanc
 
 // Update edits the configuration of a instance pool to match the provided attributes and size
 func (a InstancePoolsAPI) Update(instancePoolInfo model.InstancePoolInfo) error {
-	_, err := a.Client.performQuery(http.MethodPost, "/instance-pools/edit", "2.0", nil, instancePoolInfo, nil)
+	_, err := a.Client.performQuery(http.MethodPost, "/instance-pools/edit", "2.0", nil, instancePoolInfo)
 	return err
 }
 
@@ -39,7 +39,7 @@ func (a InstancePoolsAPI) Read(instancePoolID string) (model.InstancePoolInfo, e
 	}{
 		instancePoolID,
 	}
-	resp, err := a.Client.performQuery(http.MethodGet, "/instance-pools/get", "2.0", nil, data, nil)
+	resp, err := a.Client.performQuery(http.MethodGet, "/instance-pools/get", "2.0", nil, data)
 	if err != nil {
 		return instancePoolInfo, err
 	}
@@ -55,6 +55,6 @@ func (a InstancePoolsAPI) Delete(instancePoolID string) error {
 	}{
 		instancePoolID,
 	}
-	_, err := a.Client.performQuery(http.MethodPost, "/instance-pools/delete", "2.0", nil, data, nil)
+	_, err := a.Client.performQuery(http.MethodPost, "/instance-pools/delete", "2.0", nil, data)
 	return err
 }

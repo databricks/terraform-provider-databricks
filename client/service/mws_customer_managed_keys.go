@@ -26,7 +26,7 @@ func (a MWSCustomerManagedKeysAPI) Create(mwsAcctId, keyArn, keyAlias, keyRegion
 			KeyRegion: keyRegion,
 		},
 	}
-	resp, err := a.Client.performQuery(http.MethodPost, customerManagedKeysAPIPath, "2.0", nil, mwsCustomerManagedKeysRequest, nil)
+	resp, err := a.Client.performQuery(http.MethodPost, customerManagedKeysAPIPath, "2.0", nil, mwsCustomerManagedKeysRequest)
 	if err != nil {
 		return mwsCustomerManagedKey, err
 	}
@@ -38,7 +38,7 @@ func (a MWSCustomerManagedKeysAPI) Create(mwsAcctId, keyArn, keyAlias, keyRegion
 func (a MWSCustomerManagedKeysAPI) Read(mwsAcctId, customerManagedKeysID string) (model.MWSCustomerManagedKey, error) {
 	var mwsCustomerManagedKey model.MWSCustomerManagedKey
 	customerManagedKeysAPIPath := fmt.Sprintf("/accounts/%s/customer-managed-keys/%s", mwsAcctId, customerManagedKeysID)
-	resp, err := a.Client.performQuery(http.MethodGet, customerManagedKeysAPIPath, "2.0", nil, nil, nil)
+	resp, err := a.Client.performQuery(http.MethodGet, customerManagedKeysAPIPath, "2.0", nil, nil)
 	if err != nil {
 		return mwsCustomerManagedKey, err
 	}
@@ -60,7 +60,7 @@ func (a MWSCustomerManagedKeysAPI) List(mwsAcctId string) ([]model.MWSCustomerMa
 
 	customerManagedKeysAPIPath := fmt.Sprintf("/accounts/%s/customer-managed-keys", mwsAcctId)
 
-	resp, err := a.Client.performQuery(http.MethodGet, customerManagedKeysAPIPath, "2.0", nil, nil, nil)
+	resp, err := a.Client.performQuery(http.MethodGet, customerManagedKeysAPIPath, "2.0", nil, nil)
 	if err != nil {
 		return mwsCustomerManagedKeyList, err
 	}

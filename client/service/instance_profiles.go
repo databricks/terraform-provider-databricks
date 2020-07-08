@@ -22,7 +22,7 @@ func (a InstanceProfilesAPI) Create(instanceProfileARN string, skipValidation bo
 		InstanceProfileArn: instanceProfileARN,
 		SkipValidation:     skipValidation,
 	}
-	_, err := a.Client.performQuery(http.MethodPost, "/instance-profiles/add", "2.0", nil, addInstanceProfileRequest, nil)
+	_, err := a.Client.performQuery(http.MethodPost, "/instance-profiles/add", "2.0", nil, addInstanceProfileRequest)
 	return err
 }
 
@@ -54,7 +54,7 @@ func (a InstanceProfilesAPI) List() ([]model.InstanceProfileInfo, error) {
 	var instanceProfilesArnList struct {
 		InstanceProfiles []model.InstanceProfileInfo `json:"instance_profiles,omitempty" url:"instance_profiles,omitempty"`
 	}
-	resp, err := a.Client.performQuery(http.MethodGet, "/instance-profiles/list", "2.0", nil, nil, nil)
+	resp, err := a.Client.performQuery(http.MethodGet, "/instance-profiles/list", "2.0", nil, nil)
 	if err != nil {
 		return instanceProfilesArnList.InstanceProfiles, err
 	}
@@ -70,6 +70,6 @@ func (a InstanceProfilesAPI) Delete(instanceProfileARN string) error {
 	}{
 		InstanceProfileArn: instanceProfileARN,
 	}
-	_, err := a.Client.performQuery(http.MethodPost, "/instance-profiles/remove", "2.0", nil, deleteInstanceProfileRequest, nil)
+	_, err := a.Client.performQuery(http.MethodPost, "/instance-profiles/remove", "2.0", nil, deleteInstanceProfileRequest)
 	return err
 }

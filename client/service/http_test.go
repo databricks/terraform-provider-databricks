@@ -16,14 +16,13 @@ func ForceErrorServer(t *testing.T, response string, responseStatus int, apiCall
 	}))
 	// Close the server when test finishes
 	defer server.Close()
-	var config DBApiClientConfig
-	config.Host = server.URL
-	config.Setup()
-
-	var dbClient DatabricksClient
-	dbClient.SetConfig(&config)
-
-	return apiCall(dbClient)
+	client := DatabricksClient{
+		Host:  server.URL,
+		Token: "...",
+	}
+	err := client.Configure("dev")
+	assert.NoError(t, err)
+	return apiCall(client)
 }
 
 func TestClient_HandleErrors(t *testing.T) {

@@ -23,19 +23,8 @@ var testAccProvider *schema.Provider
 var testMWSProvider *schema.Provider
 
 func init() {
-	testAccProvider = Provider("").(*schema.Provider)
-	testMWSProvider = Provider("").(*schema.Provider)
-	cloudEnv := os.Getenv("CLOUD_ENV")
-
-	// If Azure inject sp based auth, this should probably have a different environment variable
-	// But for now best practice on azure is to use SP based auth
-	if cloudEnv == "azure" {
-		var config service.DBApiClientConfig
-		testAccProvider.ConfigureFunc = func(data *schema.ResourceData) (i interface{}, e error) {
-			return providerConfigureAzureClient(data, &config)
-		}
-	}
-
+	testAccProvider = Provider("dev").(*schema.Provider)
+	testMWSProvider = Provider("dev").(*schema.Provider)
 	testAccProviders = map[string]terraform.ResourceProvider{
 		"databricks": testAccProvider,
 	}
@@ -43,11 +32,11 @@ func init() {
 
 // getIntegrationDatabricksClient gets the client given CLOUD_ENV as those env variables get loaded
 func getIntegrationDatabricksClient(t *testing.T) *service.DatabricksClient {
-	client := service.DatabricksClient {
-		Host: getAndAssertEnv(t, "DATABRICKS_HOST"),
+	client := service.DatabricksClient{
+		Host:  getAndAssertEnv(t, "DATABRICKS_HOST"),
 		Token: getAndAssertEnv(t, "DATABRICKS_TOKEN"),
 	}
-	err := client.Configure("dev")
+	err := client.Configure("dev-integration")
 	if err != nil {
 		panic(err)
 	}
@@ -55,14 +44,17 @@ func getIntegrationDatabricksClient(t *testing.T) *service.DatabricksClient {
 }
 
 func getMWSClient() *service.DatabricksClient {
-	client := service.DatabricksClient {
+	client := service.DatabricksClient{
 		Host: os.Getenv("DATABRICKS_MWS_HOST"),
-		BasicAuth: struct{Username string; Password string}{
+		BasicAuth: struct {
+			Username string
+			Password string
+		}{
 			Username: os.Getenv("DATABRICKS_USERNAME"),
 			Password: os.Getenv("DATABRICKS_PASSWORD"),
 		},
 	}
-	err := client.Configure("dev")
+	err := client.Configure("dev-mws")
 	if err != nil {
 		panic(err)
 	}
@@ -135,7 +127,7 @@ func TestProvider_HostTokensTakePrecedence(t *testing.T) {
 	err := testAccProvider.Configure(terraform.NewResourceConfigRaw(raw))
 	assert.Nil(t, err)
 
-	client := testAccProvider.Meta().(*service.DatabricksClient).Config
+	client := testAccProvider.Meta().(*service.DatabricksClient)
 	assert.Equal(t, "configured", client.Token)
 }
 
@@ -149,19 +141,8 @@ func TestProvider_BasicAuthTakePrecedence(t *testing.T) {
 
 	// Basic auth convention
 	expectedToken := base64.StdEncoding.EncodeToString([]byte("user:pass"))
-	client := testAccProvider.Meta().(*service.DatabricksClient).Config
+	client := testAccProvider.Meta().(*service.DatabricksClient)
 	assert.Equal(t, expectedToken, client.Token)
-}
-
-func TestProvider_MissingEnvMakesConfigRead(t *testing.T) {
-	var raw = make(map[string]interface{})
-	raw["token"] = "configured"
-	raw["config_file"] = "testdata/.databrickscfg"
-	err := testAccProvider.Configure(terraform.NewResourceConfigRaw(raw))
-	assert.Nil(t, err)
-
-	client := testAccProvider.Meta().(*service.DatabricksClient).Config
-	assert.Equal(t, "PT0+IC9kZXYvdXJhbmRvbSA8PT0KYFZ", client.Token)
 }
 
 func TestProvider_NoHostGivesError(t *testing.T) {

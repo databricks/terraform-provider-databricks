@@ -23,7 +23,7 @@ func (a SecretAclsAPI) Create(scope string, principal string, permission model.A
 		principal,
 		permission,
 	}
-	_, err := a.Client.performQuery(http.MethodPost, "/secrets/acls/put", "2.0", nil, data, nil)
+	_, err := a.Client.performQuery(http.MethodPost, "/secrets/acls/put", "2.0", nil, data)
 	return err
 }
 
@@ -36,7 +36,7 @@ func (a SecretAclsAPI) Delete(scope string, principal string) error {
 		scope,
 		principal,
 	}
-	_, err := a.Client.performQuery(http.MethodPost, "/secrets/acls/delete", "2.0", nil, data, nil)
+	_, err := a.Client.performQuery(http.MethodPost, "/secrets/acls/delete", "2.0", nil, data)
 	return err
 }
 
@@ -51,7 +51,7 @@ func (a SecretAclsAPI) Read(scope string, principal string) (model.ACLItem, erro
 		scope,
 		principal,
 	}
-	resp, err := a.Client.performQuery(http.MethodGet, "/secrets/acls/get", "2.0", nil, data, nil)
+	resp, err := a.Client.performQuery(http.MethodGet, "/secrets/acls/get", "2.0", nil, data)
 	if err != nil {
 		return aclItem, err
 	}
@@ -71,7 +71,7 @@ func (a SecretAclsAPI) List(scope string) ([]model.ACLItem, error) {
 	}{
 		scope,
 	}
-	resp, err := a.Client.performQuery(http.MethodGet, "/secrets/acls/list", "2.0", nil, data, nil)
+	resp, err := a.Client.performQuery(http.MethodGet, "/secrets/acls/list", "2.0", nil, data)
 	if err != nil {
 		return aclItem.Items, err
 	}

@@ -22,7 +22,7 @@ type policyIDWrapper struct {
 // Create creates new cluster policy and sets PolicyID
 func (a ClusterPoliciesAPI) Create(clusterPolicy *model.ClusterPolicy) error {
 	//clusterPolicyWrapper := &policyWrapper{clusterPolicy.Name, clusterPolicy.Definition}
-	resp, err := a.Client.performQuery(http.MethodPost, "/policies/clusters/create", "2.0", nil, clusterPolicy, nil)
+	resp, err := a.Client.performQuery(http.MethodPost, "/policies/clusters/create", "2.0", nil, clusterPolicy)
 	if err != nil {
 		return err
 	}
@@ -37,14 +37,14 @@ func (a ClusterPoliciesAPI) Create(clusterPolicy *model.ClusterPolicy) error {
 // For such clusters the next cluster edit must provide a confirming configuration,
 // but otherwise they can continue to run.
 func (a ClusterPoliciesAPI) Edit(clusterPolicy *model.ClusterPolicy) error {
-	_, err := a.Client.performQuery(http.MethodPost, "/policies/clusters/edit", "2.0", nil, clusterPolicy, nil)
+	_, err := a.Client.performQuery(http.MethodPost, "/policies/clusters/edit", "2.0", nil, clusterPolicy)
 	return err
 }
 
 // Get returns cluster policy
 func (a ClusterPoliciesAPI) Get(policyID string) (*model.ClusterPolicy, error) {
 	var clusterPolicy model.ClusterPolicy
-	resp, err := a.Client.performQuery(http.MethodGet, "/policies/clusters/get", "2.0", nil, policyIDWrapper{policyID}, nil)
+	resp, err := a.Client.performQuery(http.MethodGet, "/policies/clusters/get", "2.0", nil, policyIDWrapper{policyID})
 	if err != nil {
 		return nil, err
 	}
@@ -54,6 +54,6 @@ func (a ClusterPoliciesAPI) Get(policyID string) (*model.ClusterPolicy, error) {
 
 // Delete removes cluster policy
 func (a ClusterPoliciesAPI) Delete(policyID string) error {
-	_, err := a.Client.performQuery(http.MethodPost, "/policies/clusters/delete", "2.0", nil, policyIDWrapper{policyID}, nil)
+	_, err := a.Client.performQuery(http.MethodPost, "/policies/clusters/delete", "2.0", nil, policyIDWrapper{policyID})
 	return err
 }

@@ -3,18 +3,15 @@ package service
 import (
 	"bytes"
 	"context"
-	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
-	"net/url"
 	"reflect"
 	"regexp"
 	"strings"
 	"sync"
-	"time"
 
 	"github.com/google/go-querystring/query"
 	"github.com/hashicorp/go-retryablehttp"
@@ -57,6 +54,7 @@ func (apiError APIError) Error() string {
 		docs)
 }
 
+// IsMissing tells if it is missing resource
 func (apiError APIError) IsMissing() bool {
 	return apiError.StatusCode == http.StatusNotFound
 }
@@ -72,69 +70,12 @@ func (apiError APIError) DocumentationURL() string {
 		endpointMatches[1], endpointMatches[2])
 }
 
-// AuthType is a custom type for a type of authentication allowed on Databricks
-type AuthType string
-
-// List of AuthTypes supported by this go sdk.
-const (
-	BasicAuth AuthType = "BASIC"
-)
-
 var clientAuthorizerMutex sync.Mutex
-
-// DBApiClientConfig is used to configure the DataBricks Client
-type DBApiClientConfig struct {
-	Host  string
-	Token string
-	// new token should be requested from
-	// the workspace before this time comes
-	// not yet used in the client but can be set
-	TokenCreateTime    int64
-	TokenExpiryTime    int64
-	AuthType           AuthType
-	UserAgent          string // should be private property
-	DefaultHeaders     map[string]string
-	InsecureSkipVerify bool
-	TimeoutSeconds     int
-	CustomAuthorizer   func(*DBApiClientConfig) error
-	client             *retryablehttp.Client
-}
 
 var transientErrorStringMatches []string = []string{ // TODO: Should we make these regexes to match more of the message or is this sufficient?
 	"com.databricks.backend.manager.util.UnknownWorkerEnvironmentException",
 	"does not have any associated worker environments",
 	"There is no worker environment with id",
-}
-
-// Setup initializes the client
-func (c *DBApiClientConfig) Setup() {
-	if c.TimeoutSeconds == 0 {
-		c.TimeoutSeconds = 60
-	}
-	// Set up a retryable HTTP Client to handle cases where the service returns
-	// a transient error on initial creation
-	retryDelayDuration := 10 * time.Second
-	retryMaximumDuration := 5 * time.Minute
-	c.client = &retryablehttp.Client{
-		HTTPClient: &http.Client{
-			Timeout: time.Duration(c.TimeoutSeconds) * time.Second,
-			Transport: &http.Transport{
-				TLSClientConfig: &tls.Config{
-					InsecureSkipVerify: c.InsecureSkipVerify,
-				},
-			},
-		},
-		CheckRetry: checkHTTPRetry,
-		// Using a linear retry rather than the default exponential retry
-		// as the creation condition is normally passed after 30-40 seconds
-		// Setting the retry interval to 10 seconds. Setting RetryWaitMin and RetryWaitMax
-		// to the same value removes jitter (which would be useful in a high-volume traffic scenario
-		// but wouldn't add much here)
-		Backoff:      retryablehttp.LinearJitterBackoff,
-		RetryWaitMin: retryDelayDuration,
-		RetryWaitMax: retryDelayDuration,
-		RetryMax:     int(retryMaximumDuration / retryDelayDuration),
-	}
 }
 
 // checkHTTPRetry inspects HTTP errors from the Databricks API for known transient errors on Workspace creation
@@ -224,23 +165,23 @@ func (c *DatabricksClient) getOrCreateToken() error {
 	return nil
 }
 
-func (c *DatabricksClient) performQuery(method string, path string, apiVersion string, headers map[string]string, data interface{}, secretsMask *SecretsMask) ([]byte, error) {
-	return c.genericQuery(method, path, apiVersion, headers, true, false, data, secretsMask)
+func (c *DatabricksClient) performQuery(method string, path string, apiVersion string, headers map[string]string, data interface{}) ([]byte, error) {
+	return c.genericQuery(method, path, apiVersion, headers, true, false, data)
 }
 
-func (c *DatabricksClient) performRawQuery(method, path string, apiVersion string, headers map[string]string, marshalJSON bool, data interface{}, secretsMask *SecretsMask) (body []byte, err error) {
-	return c.genericQuery(method, path, apiVersion, headers, marshalJSON, true, data, secretsMask)
+func (c *DatabricksClient) performRawQuery(method, path string, apiVersion string, headers map[string]string, marshalJSON bool, data interface{}) (body []byte, err error) {
+	return c.genericQuery(method, path, apiVersion, headers, marshalJSON, true, data)
 }
 
-func makeRequestBody(method, requestURL string, data interface{}, marshalJSON bool, secretsMask *SecretsMask) ([]byte, error) {
+func makeRequestBody(method string, requestURL *string, data interface{}, marshalJSON bool) ([]byte, error) {
 	var requestBody []byte
 	if method == "GET" {
 		params, err := query.Values(data)
 		if err != nil {
 			return nil, err
 		}
-		requestURL += "?" + params.Encode()
-		auditGetPayload(requestURL, secretsMask)
+		*requestURL += "?" + params.Encode()
+		auditGetPayload(*requestURL)
 	} else {
 		if marshalJSON {
 			bodyBytes, err := json.Marshal(data)
@@ -251,15 +192,15 @@ func makeRequestBody(method, requestURL string, data interface{}, marshalJSON bo
 		} else {
 			requestBody = []byte(data.(string))
 		}
-		auditNonGetPayload(method, requestURL, data, secretsMask)
+		auditNonGetPayload(method, *requestURL, data)
 	}
 	return requestBody, nil
 }
 
 // PerformQuery is a generic function that accepts a config, method, path, apiversion, headers,
 // and some flags to perform query against the Databricks api
-func (c *DatabricksClient) genericQuery(method, path, apiVersion string, headers map[string]string, 
-	marshalJSON bool, useRawPath bool, data interface{}, secretsMask *SecretsMask) (body []byte, err error) {
+func (c *DatabricksClient) genericQuery(method, path, apiVersion string, headers map[string]string,
+	marshalJSON bool, useRawPath bool, data interface{}) (body []byte, err error) {
 	if c.httpClient == nil {
 		return []byte(""), fmt.Errorf("DatabricksClient is not configured")
 	}
@@ -274,7 +215,7 @@ func (c *DatabricksClient) genericQuery(method, path, apiVersion string, headers
 	if !useRawPath {
 		requestURL = fmt.Sprintf("%s/%s%s", c.uriPrefix, apiVersion, path)
 	}
-	requestBody, err := makeRequestBody(method, requestURL, data, marshalJSON, secretsMask)
+	requestBody, err := makeRequestBody(method, &requestURL, data, marshalJSON)
 	request, err := retryablehttp.NewRequest(method, requestURL, bytes.NewBuffer(requestBody))
 	if err != nil {
 		return nil, err
@@ -305,76 +246,6 @@ func (c *DatabricksClient) genericQuery(method, path, apiVersion string, headers
 	return body, nil
 }
 
-func (c *DBApiClientConfig) getOrCreateToken() error {
-	if c.CustomAuthorizer != nil {
-		// Lock incase terraform tries to getOrCreateToken from multiple go routines on the same client ptr.
-		clientAuthorizerMutex.Lock()
-		defer clientAuthorizerMutex.Unlock()
-		if reflect.ValueOf(c.Token).IsZero() {
-			log.Println("NOT AUTHORIZED SO ATTEMPTING TO AUTHORIZE")
-			return c.CustomAuthorizer(c)
-		}
-		log.Println("ALREADY AUTHORIZED")
-		return nil
-	}
-	return nil
-}
-
-func (c DBApiClientConfig) getAuthHeader() map[string]string {
-	auth := make(map[string]string)
-	if c.AuthType == BasicAuth {
-		auth["Authorization"] = "Basic " + c.Token
-	} else {
-		auth["Authorization"] = "Bearer " + c.Token
-	}
-	auth["Content-Type"] = "application/json"
-	return auth
-}
-
-func (c *DBApiClientConfig) getUserAgentHeader() map[string]string {
-	if reflect.ValueOf(c.UserAgent).IsZero() {
-		return map[string]string{
-			"User-Agent": "databricks-go-client-sdk",
-		}
-	}
-	return map[string]string{
-		"User-Agent": c.UserAgent,
-	}
-}
-
-func (c *DBApiClientConfig) getDefaultHeaders() map[string]string {
-	auth := c.getAuthHeader()
-	userAgent := c.getUserAgentHeader()
-
-	defaultHeaders := make(map[string]string)
-	for k, v := range auth {
-		defaultHeaders[k] = v
-	}
-	for k, v := range c.DefaultHeaders {
-		defaultHeaders[k] = v
-	}
-	for k, v := range userAgent {
-		defaultHeaders[k] = v
-	}
-	return defaultHeaders
-}
-
-func (c *DBApiClientConfig) getRequestURI(path string, apiVersion string) (string, error) {
-	var apiVersionString string
-	if apiVersion == "" {
-		apiVersionString = "2.0"
-	} else {
-		apiVersionString = apiVersion
-	}
-
-	parsedURI, err := url.Parse(c.Host)
-	if err != nil {
-		return "", err
-	}
-	requestURI := fmt.Sprintf("%s://%s/api/%s%s", parsedURI.Scheme, parsedURI.Host, apiVersionString, path)
-	return requestURI, nil
-}
-
 func onlyNBytes(j string, numBytes int64) string {
 	if len([]byte(j)) > int(numBytes) {
 		return string([]byte(j)[:numBytes])
@@ -382,7 +253,7 @@ func onlyNBytes(j string, numBytes int64) string {
 	return j
 }
 
-func auditNonGetPayload(method string, uri string, object interface{}, mask *SecretsMask) {
+func auditNonGetPayload(method string, uri string, object interface{}) {
 	logStmt := struct {
 		Method  string
 		URI     string
@@ -393,14 +264,10 @@ func auditNonGetPayload(method string, uri string, object interface{}, mask *Sec
 		Payload: object,
 	}
 	jsonStr, _ := json.Marshal(Mask(logStmt))
-	if mask != nil {
-		log.Println(onlyNBytes(mask.MaskString(string(jsonStr)), 1e3))
-	} else {
-		log.Println(onlyNBytes(string(jsonStr), 1e3))
-	}
+	log.Println(onlyNBytes(string(jsonStr), 1e3))
 }
 
-func auditGetPayload(uri string, mask *SecretsMask) {
+func auditGetPayload(uri string) {
 	logStmt := struct {
 		Method string
 		URI    string
@@ -409,89 +276,5 @@ func auditGetPayload(uri string, mask *SecretsMask) {
 		URI:    uri,
 	}
 	jsonStr, _ := json.Marshal(Mask(logStmt))
-	if mask != nil {
-		log.Println(onlyNBytes(mask.MaskString(string(jsonStr)), 1e3))
-	} else {
-		log.Println(onlyNBytes(string(jsonStr), 1e3))
-	}
-}
-
-// TODO: remove public method completely
-func performQuery(config *DBApiClientConfig, method, path string, apiVersion string, headers map[string]string, marshalJSON bool, useRawPath bool, data interface{}, secretsMask *SecretsMask) (body []byte, err error) {
-	return PerformQuery(config, method, path, apiVersion, headers, marshalJSON, useRawPath, data, secretsMask)
-}
-
-// PerformQuery is a generic function that accepts a config, method, path, apiversion, headers,
-// and some flags to perform query against the Databricks api
-func PerformQuery(config *DBApiClientConfig, method, path string, apiVersion string, headers map[string]string, marshalJSON bool, useRawPath bool, data interface{}, secretsMask *SecretsMask) (body []byte, err error) {
-	var requestURL string
-	if useRawPath {
-		requestURL = path
-	} else {
-		requestURL, err = config.getRequestURI(path, apiVersion)
-		if err != nil {
-			return nil, err
-		}
-	}
-	requestHeaders := config.getDefaultHeaders()
-	if config.client == nil {
-		config.Setup()
-	}
-
-	if len(headers) > 0 {
-		for k, v := range headers {
-			requestHeaders[k] = v
-		}
-	}
-
-	var requestBody []byte
-	if method == "GET" {
-		params, err := query.Values(data)
-
-		if err != nil {
-			return nil, err
-		}
-		requestURL += "?" + params.Encode()
-		auditGetPayload(requestURL, secretsMask)
-	} else {
-		if marshalJSON {
-			bodyBytes, err := json.Marshal(data)
-			if err != nil {
-				return nil, err
-			}
-
-			requestBody = bodyBytes
-		} else {
-			requestBody = []byte(data.(string))
-		}
-		auditNonGetPayload(method, requestURL, data, secretsMask)
-	}
-
-	request, err := retryablehttp.NewRequest(method, requestURL, bytes.NewBuffer(requestBody))
-	if err != nil {
-		return nil, err
-	}
-	for k, v := range requestHeaders {
-		request.Header.Set(k, v)
-	}
-
-	resp, err := config.client.Do(request)
-	if err != nil {
-		return nil, err
-	}
-
-	defer func() {
-		if ferr := resp.Body.Close(); ferr != nil {
-			err = ferr
-		}
-	}()
-
-	body, err = ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return nil, err
-	}
-	// Don't need to check the status code here as the RetryCheck for
-	// retryablehttp.Client is doing that and returning an error
-
-	return body, nil
+	log.Println(onlyNBytes(string(jsonStr), 1e3))
 }

@@ -63,7 +63,7 @@ func (a CommandsAPI) createCommand(contextID, clusterID, language, commandStr st
 		ContextID: contextID,
 		Command:   commandStr,
 	}
-	resp, err := a.Client.performQuery(http.MethodPost, "/commands/execute", "1.2", nil, commandRequest, nil)
+	resp, err := a.Client.performQuery(http.MethodPost, "/commands/execute", "1.2", nil, commandRequest)
 	if err != nil {
 		return command.ID, err
 	}
@@ -82,7 +82,7 @@ func (a CommandsAPI) getCommand(commandID, contextID, clusterID string) (model.C
 		ContextID: contextID,
 		ClusterID: clusterID,
 	}
-	resp, err := a.Client.performQuery(http.MethodGet, "/commands/status", "1.2", nil, contextGetRequest, nil)
+	resp, err := a.Client.performQuery(http.MethodGet, "/commands/status", "1.2", nil, contextGetRequest)
 	if err != nil {
 		return commandResp, err
 	}
@@ -141,7 +141,7 @@ func (a CommandsAPI) deleteContext(contextID, clusterID string) error {
 		ContextID: contextID,
 		ClusterID: clusterID,
 	}
-	_, err := a.Client.performQuery(http.MethodPost, "/contexts/destroy", "1.2", nil, contextDeleteRequest, nil)
+	_, err := a.Client.performQuery(http.MethodPost, "/contexts/destroy", "1.2", nil, contextDeleteRequest)
 	return err
 }
 
@@ -185,7 +185,7 @@ func (a CommandsAPI) getContext(contextID, clusterID string) (string, error) {
 		ContextID: contextID,
 		ClusterID: clusterID,
 	}
-	resp, err := a.Client.performQuery(http.MethodGet, "/contexts/status", "1.2", nil, contextGetRequest, nil)
+	resp, err := a.Client.performQuery(http.MethodGet, "/contexts/status", "1.2", nil, contextGetRequest)
 	if err != nil {
 		return contextStatus.Status, err
 	}
@@ -205,7 +205,7 @@ func (a CommandsAPI) createContext(language, clusterID string) (string, error) {
 		ClusterID: clusterID,
 	}
 
-	resp, err := a.Client.performQuery(http.MethodPost, "/contexts/create", "1.2", nil, contextRequest, nil)
+	resp, err := a.Client.performQuery(http.MethodPost, "/contexts/create", "1.2", nil, contextRequest)
 	if err != nil {
 		return context.ID, err
 	}

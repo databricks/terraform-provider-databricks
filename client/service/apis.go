@@ -20,8 +20,6 @@ var scimHeaders = map[string]string{
 
 // DatabricksClient is the client struct that contains clients for all the services available on Databricks
 type DatabricksClient struct {
-	Config *DBApiClientConfig // TODO: this goes private, must prevent modification outside the package!!!
-
 	Host       string
 	Token      string
 	Profile    string
@@ -30,28 +28,24 @@ type DatabricksClient struct {
 		Username string
 		Password string
 	}
-	AzureAuth AzureAuth
-	authConfigured bool
-
-	tokenCreateTime    int64
-	tokenExpiryTime    int64
-	authType          string
-	userAgent          string // should be private property
-	
+	AzureAuth          AzureAuth
 	InsecureSkipVerify bool
 	TimeoutSeconds     int
+	tokenCreateTime    int64
+	tokenExpiryTime    int64
+	authType           string
+	userAgent          string
 	customAuthorizer   func() error
-
-	httpClient             *retryablehttp.Client
-	uriPrefix	string
+	httpClient         *retryablehttp.Client
+	uriPrefix          string
 }
 
 // Configure validates and configures the client
 func (c *DatabricksClient) Configure(version string) error {
 	c.userAgent = fmt.Sprintf("databricks-tf-provider/%s", version)
 	var hasCredentials bool
-	for _, authProvider := range []func()(bool,error) {
-		c.configureAuthWithDirectParams, 
+	for _, authProvider := range []func() (bool, error){
+		c.configureAuthWithDirectParams,
 		c.configureAzureAuth,
 		c.configureFromDatabricksCfg} {
 		success, err := authProvider()
@@ -64,13 +58,13 @@ func (c *DatabricksClient) Configure(version string) error {
 		}
 	}
 	if !hasCredentials {
-		return fmt.Errorf("Authentication is not configured for provider. Please configure it\n"+
-				"through one of the following options:\n"+
-				"1. DATABRICKS_HOST + DATABRICKS_TOKEN environment variables.\n"+
-				"2. host + token provider arguments.\n"+
-				"3. azure_auth configuration block.\n" +
-				"4. Run `databricks configure --token` that will create ~/.databrickscfg file.\n\n"+
-				"Please check https://docs.databricks.com/dev-tools/cli/index.html#set-up-authentication for details")
+		return fmt.Errorf("Authentication is not configured for provider. Please configure it\n" +
+			"through one of the following options:\n" +
+			"1. DATABRICKS_HOST + DATABRICKS_TOKEN environment variables.\n" +
+			"2. host + token provider arguments.\n" +
+			"3. azure_auth configuration block.\n" +
+			"4. Run `databricks configure --token` that will create ~/.databrickscfg file.\n\n" +
+			"Please check https://docs.databricks.com/dev-tools/cli/index.html#set-up-authentication for details")
 	}
 	if c.authType == "" {
 		c.authType = "Bearer"
@@ -79,7 +73,7 @@ func (c *DatabricksClient) Configure(version string) error {
 }
 
 func (c *DatabricksClient) configureAuthWithDirectParams() (bool, error) {
-	var needsHostBecause string 
+	var needsHostBecause string
 	if c.BasicAuth.Username != "" && c.BasicAuth.Password != "" {
 		c.Token = c.encodeBasicAuth(c.BasicAuth.Username, c.BasicAuth.Password)
 		c.BasicAuth.Password = ""
@@ -106,10 +100,10 @@ func (c *DatabricksClient) encodeBasicAuth(username, password string) string {
 // configureFromDatabricksCfg sets Host and Token from ~/.databrickscfg file if it exists
 func (c *DatabricksClient) configureFromDatabricksCfg() (bool, error) {
 	_, err := os.Stat(c.ConfigFile)
-    if os.IsNotExist(err) {
+	if os.IsNotExist(err) {
 		// early return for non-configured machines
-        return false, nil
-    }
+		return false, nil
+	}
 	configFile, err := homedir.Expand(c.ConfigFile)
 	if err != nil {
 		return false, err
@@ -177,13 +171,6 @@ func (c *DatabricksClient) configureHTTPCLient() error {
 		RetryMax:     int(retryMaximumDuration / retryDelayDuration),
 	}
 	return nil
-}
-
-// SetConfig initializes the client - TODO: this is going away!
-func (c *DatabricksClient) SetConfig(clientConfig *DBApiClientConfig) DatabricksClient {
-	c.Config = clientConfig
-	clientConfig.Setup()
-	return *c
 }
 
 // Clusters returns an instance of ClustersAPI

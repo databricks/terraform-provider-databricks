@@ -16,7 +16,7 @@ type PermissionsAPI struct {
 func (a PermissionsAPI) AddOrModify(objectID string, objectACL *model.AccessControlChangeList) error {
 	_, err := a.Client.performQuery(http.MethodPatch,
 		"/preview/permissions"+objectID,
-		"2.0", nil, objectACL, nil)
+		"2.0", nil, objectACL)
 	if err != nil {
 		return err
 	}
@@ -28,7 +28,7 @@ func (a PermissionsAPI) AddOrModify(objectID string, objectACL *model.AccessCont
 func (a PermissionsAPI) SetOrDelete(objectID string, objectACL *model.AccessControlChangeList) error {
 	_, err := a.Client.performQuery(http.MethodPut,
 		"/preview/permissions"+objectID,
-		"2.0", nil, objectACL, nil)
+		"2.0", nil, objectACL)
 	if err != nil {
 		return err
 	}
@@ -40,7 +40,7 @@ func (a PermissionsAPI) SetOrDelete(objectID string, objectACL *model.AccessCont
 func (a PermissionsAPI) Read(objectID string) (*model.ObjectACL, error) {
 	resp, err := a.Client.performQuery(http.MethodGet,
 		"/preview/permissions"+objectID,
-		"2.0", nil, nil, nil)
+		"2.0", nil, nil)
 	if err != nil {
 		return nil, err
 	}

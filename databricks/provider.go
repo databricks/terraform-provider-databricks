@@ -1,19 +1,13 @@
 package databricks
 
 import (
-	"encoding/base64"
 	"fmt"
-	"log"
-	"os"
 	"strconv"
 	"time"
 
 	"github.com/databrickslabs/databricks-terraform/client/service"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
-
-	homedir "github.com/mitchellh/go-homedir"
-	ini "gopkg.in/ini.v1"
 )
 
 // Provider returns the entire terraform provider object
@@ -45,7 +39,6 @@ func Provider(version string) terraform.ResourceProvider {
 			"databricks_cluster_policy":         resourceClusterPolicy(),
 			"databricks_job":                    resourceJob(),
 			"databricks_dbfs_file":              resourceDBFSFile(),
-			"databricks_dbfs_file_sync":         resourceDBFSFileSync(),
 			"databricks_instance_profile":       resourceInstanceProfile(),
 			"databricks_aws_s3_mount":           resourceAWSS3Mount(),
 			"databricks_azure_blob_mount":       resourceAzureBlobMount(),
@@ -108,7 +101,8 @@ func Provider(version string) terraform.ResourceProvider {
 					"https://docs.databricks.com/dev-tools/cli/index.html#connection-profiles for documentation.",
 			},
 			"azure_auth": {
-				Type:     schema.TypeMap,
+				Type:     schema.TypeList,
+				MaxItems: 1,
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -154,7 +148,7 @@ func Provider(version string) terraform.ResourceProvider {
 						},
 						"pat_token_duration_seconds": {
 							Type:        schema.TypeString,
-							Required:    true,
+							Optional:    true,
 							Description: "Currently secret scopes are not accessible via AAD tokens so we will need to create a PAT token",
 							Default:     durationToSecondsString(time.Hour),
 						},
@@ -180,7 +174,7 @@ func Provider(version string) terraform.ResourceProvider {
 				pc.BasicAuth.Password = fmt.Sprintf("%s", password)
 			}
 		}
-		if aa, ok := d.GetOk("azure_auth"); ok {
+		if aa, ok := d.GetOk("azure_auth"); ok { // TODO: i think this is a list here...
 			// This provider takes DATABRICKS_AZURE_* for client ID etc
 			// The azurerm provider uses ARM_* for the same values
 			// To make it easier to use the two providers together we use the following sources in order:
@@ -220,7 +214,7 @@ func Provider(version string) terraform.ResourceProvider {
 		if err != nil {
 			return nil, err
 		}
-		return pc, nil
+		return &pc, nil
 	}
 
 	return provider

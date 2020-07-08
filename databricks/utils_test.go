@@ -328,8 +328,9 @@ func ResourceTester(t *testing.T,
 	}))
 
 	defer server.Close()
-	client := service.DatabricksClient {
-		Host: server.URL,
+	client := service.DatabricksClient{
+		Host:  server.URL,
+		Token: "...",
 	}
 	err := client.Configure("dev")
 	if err != nil {

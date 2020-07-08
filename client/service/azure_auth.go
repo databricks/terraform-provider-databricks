@@ -6,8 +6,8 @@ import (
 	"log"
 	"net/http"
 	urlParse "net/url"
-	"time"
 	"strconv"
+	"time"
 
 	"github.com/Azure/go-autorest/autorest/adal"
 	"github.com/Azure/go-autorest/autorest/azure"
@@ -37,17 +37,17 @@ func (c *DatabricksClient) configureAzureAuth() (bool, error) {
 
 // AzureAuth contains all the auth information for azure sp authentication
 type AzureAuth struct {
-	ManagedResourceGroup string
-	AzureRegion          string
-	WorkspaceName        string
-	ResourceGroup        string
-	SubscriptionID       string
-	ClientSecret         string
-	ClientID             string
-	TenantID             string
+	ManagedResourceGroup    string
+	AzureRegion             string
+	WorkspaceName           string
+	ResourceGroup           string
+	SubscriptionID          string
+	ClientSecret            string
+	ClientID                string
+	TenantID                string
 	PATTokenDurationSeconds string
-	PatTokenSeconds      int32
-	patTokenSeconds int32
+	PatTokenSeconds         int32
+	patTokenSeconds         int32
 
 	// private property to give resource access
 	databricksClient *DatabricksClient
@@ -141,7 +141,7 @@ func (t *AzureAuth) getWorkspace(managementToken string) (*azureDatabricksWorksp
 	uriPayload := apiVersion{
 		APIVersion: "2018-04-01",
 	}
-	resp, err := t.databricksClient.performRawQuery(http.MethodGet, url, "2.0", headers, false, uriPayload, nil)
+	resp, err := t.databricksClient.performRawQuery(http.MethodGet, url, "2.0", headers, false, uriPayload)
 	if err != nil {
 		return nil, err
 	}
@@ -196,7 +196,7 @@ func (t *AzureAuth) getWorkspaceAccessToken(managementToken, adbWorkspaceURL, ad
 		headers, model.TokenRequest{
 			LifetimeSeconds: int32(tokenLifetimeSeconds),
 			Comment:         "Secret made via SP",
-		}, nil)
+		})
 	if err != nil {
 		return nil, err
 	}

@@ -10,7 +10,7 @@ import (
 
 // MWSCredentialsAPI exposes the mws credentials API
 type MWSCredentialsAPI struct {
-	Client *DatabricksClient
+	client *DatabricksClient
 }
 
 // Create creates a set of MWS Credentials for the cross account role
@@ -28,7 +28,7 @@ func (a MWSCredentialsAPI) Create(mwsAcctId, credentialsName string, roleArn str
 		},
 	}
 
-	resp, err := a.Client.performQuery(http.MethodPost, credentialsAPIPath, "2.0", nil, mwsCredentialsRequest)
+	resp, err := a.client.performQuery(http.MethodPost, credentialsAPIPath, "2.0", nil, mwsCredentialsRequest)
 	if err != nil {
 		return mwsCreds, err
 	}
@@ -43,7 +43,7 @@ func (a MWSCredentialsAPI) Read(mwsAcctId, credentialsID string) (model.MWSCrede
 
 	credentialsAPIPath := fmt.Sprintf("/accounts/%s/credentials/%s", mwsAcctId, credentialsID)
 
-	resp, err := a.Client.performQuery(http.MethodGet, credentialsAPIPath, "2.0", nil, nil)
+	resp, err := a.client.performQuery(http.MethodGet, credentialsAPIPath, "2.0", nil, nil)
 	if err != nil {
 		return mwsCreds, err
 	}
@@ -56,7 +56,7 @@ func (a MWSCredentialsAPI) Read(mwsAcctId, credentialsID string) (model.MWSCrede
 func (a MWSCredentialsAPI) Delete(mwsAcctId, credentialsID string) error {
 	credentialsAPIPath := fmt.Sprintf("/accounts/%s/credentials/%s", mwsAcctId, credentialsID)
 
-	_, err := a.Client.performQuery(http.MethodDelete, credentialsAPIPath, "2.0", nil, nil)
+	_, err := a.client.performQuery(http.MethodDelete, credentialsAPIPath, "2.0", nil, nil)
 
 	return err
 }
@@ -67,7 +67,7 @@ func (a MWSCredentialsAPI) List(mwsAcctId string) ([]model.MWSCredentials, error
 
 	credentialsAPIPath := fmt.Sprintf("/accounts/%s/credentials", mwsAcctId)
 
-	resp, err := a.Client.performQuery(http.MethodGet, credentialsAPIPath, "2.0", nil, nil)
+	resp, err := a.client.performQuery(http.MethodGet, credentialsAPIPath, "2.0", nil, nil)
 	if err != nil {
 		return mwsCredsList, err
 	}

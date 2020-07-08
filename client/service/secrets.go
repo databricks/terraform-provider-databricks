@@ -10,7 +10,7 @@ import (
 
 // SecretsAPI exposes the Secrets API
 type SecretsAPI struct {
-	Client *DatabricksClient
+	client *DatabricksClient
 }
 
 // Create creates or modifies a string secret depends on the type of scope backend
@@ -24,7 +24,7 @@ func (a SecretsAPI) Create(stringValue, scope, key string) error {
 		scope,
 		key,
 	}
-	_, err := a.Client.performQuery(http.MethodPost, "/secrets/put", "2.0", nil, data)
+	_, err := a.client.performQuery(http.MethodPost, "/secrets/put", "2.0", nil, data)
 	return err
 }
 
@@ -37,7 +37,7 @@ func (a SecretsAPI) Delete(scope, key string) error {
 		scope,
 		key,
 	}
-	_, err := a.Client.performQuery(http.MethodPost, "/secrets/delete", "2.0", nil, data)
+	_, err := a.client.performQuery(http.MethodPost, "/secrets/delete", "2.0", nil, data)
 	return err
 }
 
@@ -53,7 +53,7 @@ func (a SecretsAPI) List(scope string) ([]model.SecretMetadata, error) {
 		scope,
 	}
 
-	resp, err := a.Client.performQuery(http.MethodGet, "/secrets/list", "2.0", nil, data)
+	resp, err := a.client.performQuery(http.MethodGet, "/secrets/list", "2.0", nil, data)
 	if err != nil {
 		return secretsList.Secrets, err
 	}

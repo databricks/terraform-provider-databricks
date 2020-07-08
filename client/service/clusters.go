@@ -12,14 +12,14 @@ import (
 
 // ClustersAPI is a struct that contains the Databricks api client to perform queries
 type ClustersAPI struct {
-	Client *DatabricksClient
+	client *DatabricksClient
 }
 
 // Create creates a new Spark cluster
 func (a ClustersAPI) Create(cluster model.Cluster) (model.ClusterInfo, error) {
 	var clusterInfo model.ClusterInfo
 
-	resp, err := a.Client.performQuery(http.MethodPost, "/clusters/create", "2.0", nil, cluster)
+	resp, err := a.client.performQuery(http.MethodPost, "/clusters/create", "2.0", nil, cluster)
 	if err != nil {
 		return clusterInfo, err
 	}
@@ -30,14 +30,14 @@ func (a ClustersAPI) Create(cluster model.Cluster) (model.ClusterInfo, error) {
 
 // Edit edits the configuration of a cluster to match the provided attributes and size
 func (a ClustersAPI) Edit(clusterInfo model.Cluster) error {
-	_, err := a.Client.performQuery(http.MethodPost, "/clusters/edit", "2.0", nil, clusterInfo)
+	_, err := a.client.performQuery(http.MethodPost, "/clusters/edit", "2.0", nil, clusterInfo)
 	return err
 }
 
 // ListZones returns the zones info sent by the cloud service provider
 func (a ClustersAPI) ListZones() (model.ZonesInfo, error) {
 	var zonesInfo model.ZonesInfo
-	resp, err := a.Client.performQuery(http.MethodGet, "/clusters/list-zones", "2.0", nil, nil)
+	resp, err := a.client.performQuery(http.MethodGet, "/clusters/list-zones", "2.0", nil, nil)
 	if err != nil {
 		return zonesInfo, err
 	}
@@ -52,7 +52,7 @@ func (a ClustersAPI) Start(clusterID string) error {
 	}{
 		clusterID,
 	}
-	_, err := a.Client.performQuery(http.MethodPost, "/clusters/start", "2.0", nil, data)
+	_, err := a.client.performQuery(http.MethodPost, "/clusters/start", "2.0", nil, data)
 	return err
 }
 
@@ -63,7 +63,7 @@ func (a ClustersAPI) Restart(clusterID string) error {
 	}{
 		clusterID,
 	}
-	_, err := a.Client.performQuery(http.MethodPost, "/clusters/restart", "2.0", nil, data)
+	_, err := a.client.performQuery(http.MethodPost, "/clusters/restart", "2.0", nil, data)
 	return err
 }
 
@@ -134,7 +134,7 @@ func (a ClustersAPI) Terminate(clusterID string) error {
 	}{
 		clusterID,
 	}
-	_, err := a.Client.performQuery(http.MethodPost, "/clusters/delete", "2.0", nil, data)
+	_, err := a.client.performQuery(http.MethodPost, "/clusters/delete", "2.0", nil, data)
 	return err
 }
 
@@ -150,7 +150,7 @@ func (a ClustersAPI) PermanentDelete(clusterID string) error {
 	}{
 		clusterID,
 	}
-	_, err := a.Client.performQuery(http.MethodPost, "/clusters/permanent-delete", "2.0", nil, data)
+	_, err := a.client.performQuery(http.MethodPost, "/clusters/permanent-delete", "2.0", nil, data)
 	return err
 }
 
@@ -163,7 +163,7 @@ func (a ClustersAPI) Get(clusterID string) (model.ClusterInfo, error) {
 	}{
 		clusterID,
 	}
-	resp, err := a.Client.performQuery(http.MethodGet, "/clusters/get", "2.0", nil, data)
+	resp, err := a.client.performQuery(http.MethodGet, "/clusters/get", "2.0", nil, data)
 	if err != nil {
 		return clusterInfo, err
 	}
@@ -179,7 +179,7 @@ func (a ClustersAPI) Pin(clusterID string) error {
 	}{
 		clusterID,
 	}
-	_, err := a.Client.performQuery(http.MethodPost, "/clusters/pin", "2.0", nil, data)
+	_, err := a.client.performQuery(http.MethodPost, "/clusters/pin", "2.0", nil, data)
 	return err
 }
 
@@ -190,7 +190,7 @@ func (a ClustersAPI) Unpin(clusterID string) error {
 	}{
 		clusterID,
 	}
-	_, err := a.Client.performQuery(http.MethodPost, "/clusters/unpin", "2.0", nil, data)
+	_, err := a.client.performQuery(http.MethodPost, "/clusters/unpin", "2.0", nil, data)
 	return err
 }
 
@@ -202,7 +202,7 @@ func (a ClustersAPI) List() ([]model.ClusterInfo, error) {
 		Clusters []model.ClusterInfo `json:"clusters,omitempty" url:"clusters,omitempty"`
 	}{}
 
-	resp, err := a.Client.performQuery(http.MethodGet, "/clusters/list", "2.0", nil, nil)
+	resp, err := a.client.performQuery(http.MethodGet, "/clusters/list", "2.0", nil, nil)
 	if err != nil {
 		return clusterList.Clusters, err
 	}
@@ -217,7 +217,7 @@ func (a ClustersAPI) ListNodeTypes() ([]model.NodeType, error) {
 		NodeTypes []model.NodeType `json:"node_types,omitempty" url:"node_types,omitempty"`
 	}{}
 
-	resp, err := a.Client.performQuery(http.MethodGet, "/clusters/list-node-types", "2.0", nil, nil)
+	resp, err := a.client.performQuery(http.MethodGet, "/clusters/list-node-types", "2.0", nil, nil)
 	if err != nil {
 		return nodeTypeList.NodeTypes, err
 	}

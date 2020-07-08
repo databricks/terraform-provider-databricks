@@ -11,7 +11,7 @@ import (
 
 // MWSStorageConfigurationsAPI exposes the mws storageConfiguration API
 type MWSStorageConfigurationsAPI struct {
-	Client *DatabricksClient
+	client *DatabricksClient
 }
 
 // Create creates a configuration for the root s3 bucket
@@ -27,7 +27,7 @@ func (a MWSStorageConfigurationsAPI) Create(mwsAcctId, storageConfigurationName 
 		},
 	}
 
-	resp, err := a.Client.performQuery(http.MethodPost, storageConfigurationAPIPath, "2.0", nil, mwsStorageConfigurationsRequest)
+	resp, err := a.client.performQuery(http.MethodPost, storageConfigurationAPIPath, "2.0", nil, mwsStorageConfigurationsRequest)
 	if err != nil {
 		return mwsStorageConfigurations, err
 	}
@@ -42,7 +42,7 @@ func (a MWSStorageConfigurationsAPI) Read(mwsAcctId, storageConfigurationID stri
 
 	storageConfigurationAPIPath := fmt.Sprintf("/accounts/%s/storage-configurations/%s", mwsAcctId, storageConfigurationID)
 
-	resp, err := a.Client.performQuery(http.MethodGet, storageConfigurationAPIPath, "2.0", nil, nil)
+	resp, err := a.client.performQuery(http.MethodGet, storageConfigurationAPIPath, "2.0", nil, nil)
 	if err != nil {
 		return mwsStorageConfigurations, err
 	}
@@ -55,7 +55,7 @@ func (a MWSStorageConfigurationsAPI) Read(mwsAcctId, storageConfigurationID stri
 func (a MWSStorageConfigurationsAPI) Delete(mwsAcctId, storageConfigurationID string) error {
 	storageConfigurationAPIPath := fmt.Sprintf("/accounts/%s/storage-configurations/%s", mwsAcctId, storageConfigurationID)
 
-	_, err := a.Client.performQuery(http.MethodDelete, storageConfigurationAPIPath, "2.0", nil, nil)
+	_, err := a.client.performQuery(http.MethodDelete, storageConfigurationAPIPath, "2.0", nil, nil)
 
 	return err
 }
@@ -66,7 +66,7 @@ func (a MWSStorageConfigurationsAPI) List(mwsAcctId string) ([]model.MWSStorageC
 
 	storageConfigurationAPIPath := fmt.Sprintf("/accounts/%s/storage-configurations", mwsAcctId)
 
-	resp, err := a.Client.performQuery(http.MethodGet, storageConfigurationAPIPath, "2.0", nil, nil)
+	resp, err := a.client.performQuery(http.MethodGet, storageConfigurationAPIPath, "2.0", nil, nil)
 	if err != nil {
 		return mwsStorageConfigurationsList, err
 	}

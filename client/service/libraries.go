@@ -9,7 +9,7 @@ import (
 
 // LibrariesAPI exposes the Library API
 type LibrariesAPI struct {
-	Client *DatabricksClient
+	client *DatabricksClient
 }
 
 // Create installs the list of libraries given a cluster id
@@ -22,7 +22,7 @@ func (a LibrariesAPI) Create(clusterID string, libraries []model.Library) error 
 		Libraries: libraries,
 	}
 
-	_, err := a.Client.performQuery(http.MethodPost, "/libraries/install", "2.0", nil, libraryInstallRequest)
+	_, err := a.client.performQuery(http.MethodPost, "/libraries/install", "2.0", nil, libraryInstallRequest)
 
 	return err
 }
@@ -37,7 +37,7 @@ func (a LibrariesAPI) Delete(clusterID string, libraries []model.Library) error 
 		Libraries: libraries,
 	}
 
-	_, err := a.Client.performQuery(http.MethodPost, "/libraries/uninstall", "2.0", nil, libraryInstallRequest)
+	_, err := a.client.performQuery(http.MethodPost, "/libraries/uninstall", "2.0", nil, libraryInstallRequest)
 
 	return err
 }
@@ -54,7 +54,7 @@ func (a LibrariesAPI) List(clusterID string) ([]model.LibraryStatus, error) {
 		ClusterID: clusterID,
 	}
 
-	resp, err := a.Client.performQuery(http.MethodGet, "/libraries/cluster-status", "2.0", nil, libraryInstallRequest)
+	resp, err := a.client.performQuery(http.MethodGet, "/libraries/cluster-status", "2.0", nil, libraryInstallRequest)
 	if err != nil {
 		return libraryStatusListResp.LibraryStatuses, err
 	}

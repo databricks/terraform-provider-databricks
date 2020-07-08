@@ -398,7 +398,7 @@ func testAccNotebookResourceMultipleFormats(t *testing.T) {
 }
 
 func testNotebookResourceDestroy(s *terraform.State) error {
-	client := testAccProvider.Meta().(*service.DBApiClient)
+	client := testAccProvider.Meta().(*service.DatabricksClient)
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "databricks_notebook" {
 			continue

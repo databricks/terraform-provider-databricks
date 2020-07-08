@@ -14,7 +14,7 @@ import (
 
 // MWSWorkspacesAPI exposes the mws workspaces API
 type MWSWorkspacesAPI struct {
-	Client *DatabricksClient
+	client *DatabricksClient
 }
 
 // Create creates the workspace creation process
@@ -40,7 +40,7 @@ func (a MWSWorkspacesAPI) Create(mwsAcctId, workspaceName, deploymentName, awsRe
 		mwsWorkspacesRequest.CustomerManagedKeyID = customerManagedKeyID
 	}
 
-	resp, err := a.Client.performQuery(http.MethodPost, workspacesAPIPath, "2.0", nil, mwsWorkspacesRequest)
+	resp, err := a.client.performQuery(http.MethodPost, workspacesAPIPath, "2.0", nil, mwsWorkspacesRequest)
 	if err != nil {
 		return mwsWorkspace, err
 	}
@@ -95,7 +95,7 @@ func (a MWSWorkspacesAPI) Patch(mwsAcctId string, workspaceID int64, awsRegion, 
 		mwsWorkspacesRequest.CustomerManagedKeyID = customerManagedKeyID
 	}
 
-	_, err := a.Client.performQuery(http.MethodPatch, workspacesAPIPath, "2.0", nil, mwsWorkspacesRequest)
+	_, err := a.client.performQuery(http.MethodPatch, workspacesAPIPath, "2.0", nil, mwsWorkspacesRequest)
 	return err
 }
 
@@ -105,7 +105,7 @@ func (a MWSWorkspacesAPI) Read(mwsAcctId string, workspaceID int64) (model.MWSWo
 
 	workspacesAPIPath := fmt.Sprintf("/accounts/%s/workspaces/%d", mwsAcctId, workspaceID)
 
-	resp, err := a.Client.performQuery(http.MethodGet, workspacesAPIPath, "2.0", nil, nil)
+	resp, err := a.client.performQuery(http.MethodGet, workspacesAPIPath, "2.0", nil, nil)
 	if err != nil {
 		return mwsWorkspace, err
 	}
@@ -119,7 +119,7 @@ func (a MWSWorkspacesAPI) Read(mwsAcctId string, workspaceID int64) (model.MWSWo
 func (a MWSWorkspacesAPI) Delete(mwsAcctId string, workspaceID int64) error {
 	workspacesAPIPath := fmt.Sprintf("/accounts/%s/workspaces/%d", mwsAcctId, workspaceID)
 
-	_, err := a.Client.performQuery(http.MethodDelete, workspacesAPIPath, "2.0", nil, nil)
+	_, err := a.client.performQuery(http.MethodDelete, workspacesAPIPath, "2.0", nil, nil)
 
 	return err
 }
@@ -130,7 +130,7 @@ func (a MWSWorkspacesAPI) List(mwsAcctId string) ([]model.MWSWorkspace, error) {
 
 	workspacesAPIPath := fmt.Sprintf("/accounts/%s/workspaces", mwsAcctId)
 
-	resp, err := a.Client.performQuery(http.MethodGet, workspacesAPIPath, "2.0", nil, nil)
+	resp, err := a.client.performQuery(http.MethodGet, workspacesAPIPath, "2.0", nil, nil)
 	if err != nil {
 		return mwsWorkspacesList, err
 	}

@@ -10,7 +10,7 @@ import (
 
 // MWSNetworksAPI exposes the mws networks API
 type MWSNetworksAPI struct {
-	Client *DatabricksClient
+	client *DatabricksClient
 }
 
 // Create creates a set of MWS Networks for the BYOVPC
@@ -23,7 +23,7 @@ func (a MWSNetworksAPI) Create(mwsAcctId, networkName string, vpcID string, subn
 		SubnetIds:        subnetIds,
 		SecurityGroupIds: securityGroupIds,
 	}
-	resp, err := a.Client.performQuery(http.MethodPost, networksAPIPath, "2.0", nil, mwsNetworksRequest)
+	resp, err := a.client.performQuery(http.MethodPost, networksAPIPath, "2.0", nil, mwsNetworksRequest)
 	if err != nil {
 		return mwsNetwork, err
 	}
@@ -35,7 +35,7 @@ func (a MWSNetworksAPI) Create(mwsAcctId, networkName string, vpcID string, subn
 func (a MWSNetworksAPI) Read(mwsAcctId, networksID string) (model.MWSNetwork, error) {
 	var mwsNetwork model.MWSNetwork
 	networksAPIPath := fmt.Sprintf("/accounts/%s/networks/%s", mwsAcctId, networksID)
-	resp, err := a.Client.performQuery(http.MethodGet, networksAPIPath, "2.0", nil, nil)
+	resp, err := a.client.performQuery(http.MethodGet, networksAPIPath, "2.0", nil, nil)
 	if err != nil {
 		return mwsNetwork, err
 	}
@@ -46,7 +46,7 @@ func (a MWSNetworksAPI) Read(mwsAcctId, networksID string) (model.MWSNetwork, er
 // Delete deletes the network object given a network id
 func (a MWSNetworksAPI) Delete(mwsAcctId, networksID string) error {
 	networksAPIPath := fmt.Sprintf("/accounts/%s/networks/%s", mwsAcctId, networksID)
-	_, err := a.Client.performQuery(http.MethodDelete, networksAPIPath, "2.0", nil, nil)
+	_, err := a.client.performQuery(http.MethodDelete, networksAPIPath, "2.0", nil, nil)
 	return err
 }
 
@@ -56,7 +56,7 @@ func (a MWSNetworksAPI) List(mwsAcctId string) ([]model.MWSNetwork, error) {
 
 	networksAPIPath := fmt.Sprintf("/accounts/%s/networks", mwsAcctId)
 
-	resp, err := a.Client.performQuery(http.MethodGet, networksAPIPath, "2.0", nil, nil)
+	resp, err := a.client.performQuery(http.MethodGet, networksAPIPath, "2.0", nil, nil)
 	if err != nil {
 		return mwsNetworkList, err
 	}

@@ -9,12 +9,12 @@ import (
 
 // PermissionsAPI exposes general permission related methods
 type PermissionsAPI struct {
-	Client *DatabricksClient
+	client *DatabricksClient
 }
 
 // AddOrModify works with permissions change list
 func (a PermissionsAPI) AddOrModify(objectID string, objectACL *model.AccessControlChangeList) error {
-	_, err := a.Client.performQuery(http.MethodPatch,
+	_, err := a.client.performQuery(http.MethodPatch,
 		"/preview/permissions"+objectID,
 		"2.0", nil, objectACL)
 	if err != nil {
@@ -26,7 +26,7 @@ func (a PermissionsAPI) AddOrModify(objectID string, objectACL *model.AccessCont
 
 // SetOrDelete updates object permissions
 func (a PermissionsAPI) SetOrDelete(objectID string, objectACL *model.AccessControlChangeList) error {
-	_, err := a.Client.performQuery(http.MethodPut,
+	_, err := a.client.performQuery(http.MethodPut,
 		"/preview/permissions"+objectID,
 		"2.0", nil, objectACL)
 	if err != nil {
@@ -38,7 +38,7 @@ func (a PermissionsAPI) SetOrDelete(objectID string, objectACL *model.AccessCont
 
 // Read gets all relevant permissions for the object, including inherited ones
 func (a PermissionsAPI) Read(objectID string) (*model.ObjectACL, error) {
-	resp, err := a.Client.performQuery(http.MethodGet,
+	resp, err := a.client.performQuery(http.MethodGet,
 		"/preview/permissions"+objectID,
 		"2.0", nil, nil)
 	if err != nil {

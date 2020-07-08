@@ -175,105 +175,105 @@ func (c *DatabricksClient) configureHTTPCLient() error {
 
 // Clusters returns an instance of ClustersAPI
 func (c *DatabricksClient) Clusters() ClustersAPI {
-	return ClustersAPI{Client: c}
+	return ClustersAPI{client: c}
 }
 
 // ClusterPolicies returns an instance of ClusterPoliciesAPI
 func (c *DatabricksClient) ClusterPolicies() ClusterPoliciesAPI {
-	return ClusterPoliciesAPI{Client: c}
+	return ClusterPoliciesAPI{client: c}
 }
 
 // Secrets returns an instance of SecretsAPI
 func (c *DatabricksClient) Secrets() SecretsAPI {
-	return SecretsAPI{Client: c}
+	return SecretsAPI{client: c}
 }
 
 // SecretScopes returns an instance of SecretScopesAPI
 func (c *DatabricksClient) SecretScopes() SecretScopesAPI {
-	return SecretScopesAPI{Client: c}
+	return SecretScopesAPI{client: c}
 }
 
 // SecretAcls returns an instance of SecretAclsAPI
 func (c *DatabricksClient) SecretAcls() SecretAclsAPI {
-	return SecretAclsAPI{Client: c}
+	return SecretAclsAPI{client: c}
 }
 
 // Tokens returns an instance of TokensAPI
 func (c *DatabricksClient) Tokens() TokensAPI {
-	return TokensAPI{Client: c}
+	return TokensAPI{client: c}
 }
 
 // Users returns an instance of UsersAPI
 func (c *DatabricksClient) Users() UsersAPI {
-	return UsersAPI{Client: c}
+	return UsersAPI{client: c}
 }
 
 // Groups returns an instance of GroupsAPI
 func (c *DatabricksClient) Groups() GroupsAPI {
-	return GroupsAPI{Client: c}
+	return GroupsAPI{client: c}
 }
 
 // Notebooks returns an instance of NotebooksAPI
 func (c *DatabricksClient) Notebooks() NotebooksAPI {
-	return NotebooksAPI{Client: c}
+	return NotebooksAPI{client: c}
 }
 
 // Jobs returns an instance of JobsAPI
 func (c *DatabricksClient) Jobs() JobsAPI {
-	return JobsAPI{Client: c}
+	return JobsAPI{client: c}
 }
 
 // DBFS returns an instance of DBFSAPI
 func (c *DatabricksClient) DBFS() DBFSAPI {
-	return DBFSAPI{Client: c}
+	return DBFSAPI{client: c}
 }
 
 // Libraries returns an instance of LibrariesAPI
 func (c *DatabricksClient) Libraries() LibrariesAPI {
-	return LibrariesAPI{Client: c}
+	return LibrariesAPI{client: c}
 }
 
 // InstancePools returns an instance of InstancePoolsAPI
 func (c *DatabricksClient) InstancePools() InstancePoolsAPI {
-	return InstancePoolsAPI{Client: c}
+	return InstancePoolsAPI{client: c}
 }
 
 // InstanceProfiles returns an instance of InstanceProfilesAPI
 func (c *DatabricksClient) InstanceProfiles() InstanceProfilesAPI {
-	return InstanceProfilesAPI{Client: c}
+	return InstanceProfilesAPI{client: c}
 }
 
 // Commands returns an instance of CommandsAPI
 func (c *DatabricksClient) Commands() CommandsAPI {
-	return CommandsAPI{Client: c}
+	return CommandsAPI{client: c}
 }
 
 // MWSCredentials returns an instance of MWSCredentialsAPI
 func (c *DatabricksClient) MWSCredentials() MWSCredentialsAPI {
-	return MWSCredentialsAPI{Client: c}
+	return MWSCredentialsAPI{client: c}
 }
 
 // MWSStorageConfigurations returns an instance of MWSStorageConfigurationsAPI
 func (c *DatabricksClient) MWSStorageConfigurations() MWSStorageConfigurationsAPI {
-	return MWSStorageConfigurationsAPI{Client: c}
+	return MWSStorageConfigurationsAPI{client: c}
 }
 
 // MWSWorkspaces returns an instance of MWSWorkspacesAPI
 func (c *DatabricksClient) MWSWorkspaces() MWSWorkspacesAPI {
-	return MWSWorkspacesAPI{Client: c}
+	return MWSWorkspacesAPI{client: c}
 }
 
 // MWSNetworks returns an instance of MWSNetworksAPI
 func (c *DatabricksClient) MWSNetworks() MWSNetworksAPI {
-	return MWSNetworksAPI{Client: c}
+	return MWSNetworksAPI{client: c}
 }
 
 // MWSCustomerManagedKeys returns an instance of MWSCustomerManagedKeysAPI
 func (c *DatabricksClient) MWSCustomerManagedKeys() MWSCustomerManagedKeysAPI {
-	return MWSCustomerManagedKeysAPI{Client: c}
+	return MWSCustomerManagedKeysAPI{client: c}
 }
 
 // Permissions returns an instance of CommandsAPI
 func (c *DatabricksClient) Permissions() PermissionsAPI {
-	return PermissionsAPI{Client: c}
+	return PermissionsAPI{client: c}
 }

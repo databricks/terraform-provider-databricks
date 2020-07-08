@@ -59,6 +59,10 @@ func (apiError APIError) IsMissing() bool {
 	return apiError.StatusCode == http.StatusNotFound
 }
 
+func (apiError APIError) IsTooManyRequests() bool {
+	return apiError.StatusCode == http.StatusTooManyRequests
+}
+
 // DocumentationURL guesses doc link
 func (apiError APIError) DocumentationURL() string {
 	endpointRE := regexp.MustCompile(`/api/2.0/([^/]+)/([^/]+)$`)

@@ -306,7 +306,7 @@ func ResourceTester(t *testing.T,
 					assert.NoError(t, err, err)
 					jsonStr, err := json.Marshal(fixture.ExpectedRequest)
 					assert.NoError(t, err, err)
-					assert.JSONEq(t, string(jsonStr), buf.String())
+					assert.JSONEq(t, string(jsonStr), buf.String(), "json strings do not match")
 				}
 				if fixture.Response != nil {
 					responseBytes, err := json.Marshal(fixture.Response)

@@ -39,3 +39,23 @@ type WorkspaceObjectStatus struct {
 	Path       string     `json:"path,omitempty"`
 	Language   Language   `json:"language,omitempty"`
 }
+
+// NotebookContent contains the base64 content of the notebook
+type NotebookContent struct {
+	Content string `json:"content,omitempty"`
+}
+
+// NotebookImportRequest contains the payload to import a notebook
+type NotebookImportRequest struct {
+	Content   string       `json:"content,omitempty" mask:"true"`
+	Path      string       `json:"path,omitempty"`
+	Language  Language     `json:"language,omitempty"`
+	Overwrite bool         `json:"overwrite,omitempty"`
+	Format    ExportFormat `json:"format,omitempty"`
+}
+
+// NotebookDeleteRequest contains the payload to delete a notebook
+type NotebookDeleteRequest struct {
+	Path      string `json:"path,omitempty"`
+	Recursive bool   `json:"recursive,omitempty"`
+}

@@ -3,6 +3,7 @@ package service
 import (
 	"encoding/json"
 	"net/http"
+	"sync"
 
 	"github.com/databrickslabs/databricks-terraform/client/model"
 )
@@ -12,15 +13,15 @@ type NotebooksAPI struct {
 	Client *DatabricksClient
 }
 
+// Mutex for synchronous deletes (api has poor limits in terms of allowed parallelism this increases stability of the deletes)
+// sometimes there will be two folders with the same name at the same level due to issues with creating directories in
+// parallel. This mutex just synchronizes everything to create folders one at a time. This mutex will be removed when mkdirs
+// is removed from the notebooks resource. Then we will switch to TF resource retry.
+var mkdirMtx = &sync.Mutex{}
+
 // Create creates a notebook given the content and path
 func (a NotebooksAPI) Create(path string, content string, language model.Language, format model.ExportFormat, overwrite bool) error {
-	notebookCreateRequest := struct {
-		Content   string             `json:"content,omitempty" mask:"true"`
-		Path      string             `json:"path,omitempty"`
-		Language  model.Language     `json:"language,omitempty"`
-		Overwrite bool               `json:"overwrite,omitempty"`
-		Format    model.ExportFormat `json:"format,omitempty"`
-	}{}
+	notebookCreateRequest := model.NotebookImportRequest{}
 	notebookCreateRequest.Content = content
 	notebookCreateRequest.Language = language
 	notebookCreateRequest.Path = path
@@ -49,7 +50,7 @@ func (a NotebooksAPI) Read(path string) (model.WorkspaceObjectStatus, error) {
 
 // Export returns the notebook content as a base64 string
 func (a NotebooksAPI) Export(path string, format model.ExportFormat) (string, error) {
-	var notebookContent map[string]string
+	var notebookContent model.NotebookContent
 	notebookExportRequest := struct {
 		Path   string             `json:"path,omitempty" url:"path,omitempty"`
 		Format model.ExportFormat `json:"format,omitempty" url:"format,omitempty"`
@@ -58,11 +59,11 @@ func (a NotebooksAPI) Export(path string, format model.ExportFormat) (string, er
 	notebookExportRequest.Format = format
 	resp, err := a.Client.performQuery(http.MethodGet, "/workspace/export", "2.0", nil, notebookExportRequest)
 	if err != nil {
-		return notebookContent["content"], err
+		return notebookContent.Content, err
 	}
 
 	err = json.Unmarshal(resp, &notebookContent)
-	return notebookContent["content"], err
+	return notebookContent.Content, err
 }
 
 // Mkdirs will make folders in a workspace recursively given a path
@@ -72,8 +73,13 @@ func (a NotebooksAPI) Mkdirs(path string) error {
 	}{}
 	mkDirsRequest.Path = path
 
-	_, err := a.Client.performQuery(http.MethodPost, "/workspace/mkdirs", "2.0", nil, mkDirsRequest)
+	// This mutex will be removed when mkdirs is removed from the notebooks resource.
+	// Then we will switch to TF resource retry.
+	mkdirMtx.Lock()
+	defer mkdirMtx.Unlock()
 
+	_, err := a.Client.performQuery(http.MethodPost, "/workspace/mkdirs", "2.0", nil, mkDirsRequest)
+	
 	return err
 }
 
@@ -129,10 +135,7 @@ func (a NotebooksAPI) list(path string) ([]model.WorkspaceObjectStatus, error) {
 
 // Delete will delete folders given a path and recursive flag
 func (a NotebooksAPI) Delete(path string, recursive bool) error {
-	notebookDelete := struct {
-		Path      string `json:"path,omitempty"`
-		Recursive bool   `json:"recursive,omitempty"`
-	}{}
+	notebookDelete := model.NotebookDeleteRequest{}
 	notebookDelete.Path = path
 	notebookDelete.Recursive = recursive
 	_, err := a.Client.performQuery(http.MethodPost, "/workspace/delete", "2.0", nil, notebookDelete)

@@ -228,7 +228,7 @@ func providerConfigureAzureClient(d *schema.ResourceData, config *service.DBApiC
 	case os.Getenv("DATABRICKS_AZURE_SUBSCRIPTION_ID") != "":
 		tokenPayload.SubscriptionID = os.Getenv("DATABRICKS_AZURE_SUBSCRIPTION_ID")
 	case os.Getenv("ARM_SUBSCRIPTION_ID") != "":
-		tokenPayload.SubscriptionID = os.Getenv("DATABRICKS_AZURE_SUBSCRIPTION_ID")
+		tokenPayload.SubscriptionID = os.Getenv("ARM_SUBSCRIPTION_ID")
 	}
 
 	clientSecret, ok := azureAuthMap["client_secret"].(string)

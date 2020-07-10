@@ -18,16 +18,16 @@ func resourceIPAccessList() *schema.Resource {
 		Schema: map[string]*schema.Schema{
 			"preview_ipacl_enabled": {
 				Type:     schema.TypeBool,
-				Optional: false,
+				Required: true,
 			},
-			"ip_acl": {
+			"ip_acls": {
 				Type:     schema.TypeList,
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"label": {
 							Type:     schema.TypeString,
-							Optional: false,
+							Required: true,
 						},
 						"type": {
 							Type: schema.TypeString,
@@ -38,7 +38,7 @@ func resourceIPAccessList() *schema.Resource {
 						},
 						"ip_addresses": {
 							Type:     schema.TypeList,
-							Optional: false,
+							Required: true,
 							Elem: &schema.Schema{
 								Type:         schema.TypeString,
 								ValidateFunc: validation.IsIPv4Address,

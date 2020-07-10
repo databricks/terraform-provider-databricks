@@ -43,3 +43,16 @@ resource "databricks_scim_user" "break-glass-user" {
   roles = []
   set_admin = "true"
 }
+
+resource "databricks_ipaccesslists" "my-home-net"{
+  preview_ipacl_enabled = "true"
+  ip_acls = [
+    {
+      label = "my_net"
+      type = "WHITELIST"
+      ip_addresses = [
+        "10.0.10.0/24",
+      ]
+    }
+  ]
+}

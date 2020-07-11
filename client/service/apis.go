@@ -36,6 +36,7 @@ type DatabricksClient struct {
 	authType           string
 	userAgent          string
 	customAuthorizer   func() error
+	requestInterceptor func(*http.Request) (*http.Request, error)
 	httpClient         *retryablehttp.Client
 	uriPrefix          string
 }
@@ -43,10 +44,15 @@ type DatabricksClient struct {
 // Configure validates and configures the client
 func (c *DatabricksClient) Configure(version string) error {
 	c.userAgent = fmt.Sprintf("databricks-tf-provider/%s", version)
+
+	c.configureHTTPCLient()
+	c.AzureAuth.databricksClient = c
+
 	var hasCredentials bool
 	for _, authProvider := range []func() (bool, error){
 		c.configureAuthWithDirectParams,
-		c.configureAzureAuth,
+		c.AzureAuth.configureWithClientSecret,
+		c.AzureAuth.configureWithAzureCLI,
 		c.configureFromDatabricksCfg} {
 		success, err := authProvider()
 		if success {
@@ -69,7 +75,12 @@ func (c *DatabricksClient) Configure(version string) error {
 	if c.authType == "" {
 		c.authType = "Bearer"
 	}
-	return c.configureHTTPCLient()
+	parsedURI, err := url.Parse(c.Host)
+	if err != nil {
+		return err
+	}
+	c.uriPrefix = fmt.Sprintf("%s://%s/api", parsedURI.Scheme, parsedURI.Host)
+	return nil
 }
 
 func (c *DatabricksClient) configureAuthWithDirectParams() (bool, error) {
@@ -136,13 +147,7 @@ func (c *DatabricksClient) configureFromDatabricksCfg() (bool, error) {
 	return true, nil
 }
 
-func (c *DatabricksClient) configureHTTPCLient() error {
-	parsedURI, err := url.Parse(c.Host)
-	if err != nil {
-		return err
-	}
-	c.uriPrefix = fmt.Sprintf("%s://%s/api", parsedURI.Scheme, parsedURI.Host)
-
+func (c *DatabricksClient) configureHTTPCLient() {
 	if c.TimeoutSeconds == 0 {
 		c.TimeoutSeconds = 60
 	}
@@ -168,9 +173,9 @@ func (c *DatabricksClient) configureHTTPCLient() error {
 		Backoff:      retryablehttp.LinearJitterBackoff,
 		RetryWaitMin: retryDelayDuration,
 		RetryWaitMax: retryDelayDuration,
-		RetryMax:     int(retryMaximumDuration / retryDelayDuration),
+		RetryMax:     int(retryMaximumDuration / retryDelayDuration), // + request & response log hooks
+		Logger: ,
 	}
-	return nil
 }
 
 // Clusters returns an instance of ClustersAPI

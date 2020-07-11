@@ -39,19 +39,9 @@ fi
 terraform init
 terraform apply -auto-approve
 
-export CLOUD_ENV="azure"
-export TEST_GEN2_ADAL_NAME=$(terraform output gen2_adal_name)
-export TEST_STORAGE_ACCOUNT_KEY=$(terraform output blob_storage_key)
-export TEST_STORAGE_ACCOUNT_NAME=$(terraform output blob_storage_name)
-
-export DATABRICKS_AZURE_WORKSPACE_NAME=$(terraform output workspace_name)
-export DATABRICKS_AZURE_RESOURCE_GROUP=$(terraform output rg_name) 
-export AZURE_REGION=$(terraform output location)
-export DATABRICKS_AZURE_MANAGED_RESOURCE_GROUP=$(terraform output workspace_managed_rg_name)
-
-echo -e "----> Running Azure Acceptance Tests \n\n"
+export $(terraform output --json | jq -r 'to_entries|map("\(.key|ascii_upcase)=\(.value.value|tostring)")|.[]')
 
 # Run all Azure integration tests
 TF_ACC=1 gotestsum --format short-verbose --raw-command \
     go test -v -json -coverprofile=coverage.out \
-    -test.timeout 35m -run 'TestAccAzure' ./../...
+    -test.timeout 35m -run 'TestAzureAcc' ./../...

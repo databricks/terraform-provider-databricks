@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"net/url"
 	"reflect"
 	"regexp"
 	"strings"
@@ -169,6 +170,67 @@ func (c *DatabricksClient) getOrCreateToken() error {
 	return nil
 }
 
+func (c *DatabricksClient) get(path string, request interface{}, response interface{}, 
+	interceptors ...func(*http.Request) (*http.Request, error)) error {
+	body, err := c.genericQuery2(http.MethodGet, c.formatURL("2.0", path), request, interceptors...)
+	if err != nil {
+		return err
+	}
+	return json.Unmarshal(body, &response)
+}
+
+func (c *DatabricksClient) formatURL(apiVersion, path string) string {
+	return fmt.Sprintf("%s/%s%s", c.uriPrefix, "2.0", path)
+}
+
+func (c *DatabricksClient) genericQuery2(method, requestURL string, data interface{}, 
+	interceptors ...func(*http.Request) (*http.Request, error)) (body []byte, err error) {
+	if c.httpClient == nil {
+		return nil, fmt.Errorf("DatabricksClient is not configured")
+	}
+	err = c.getOrCreateToken()
+	if err != nil {
+		return nil, err
+	}
+	requestBody, err := makeRequestBody(method, &requestURL, data, true)
+	if err != nil {
+		return nil, err
+	}
+	request, err := http.NewRequest(method, requestURL, bytes.NewBuffer(requestBody))
+	if err != nil {
+		return nil, err
+	}
+	request.Header.Set("User-Agent", c.userAgent)
+	request.Header.Set("Content-Type", "application/json")
+	request.Header.Set("Authorization", fmt.Sprintf("%s %s", c.authType, c.Token))
+	for _, in := range interceptors {
+		request, err = in(request)
+		if err != nil {
+			return nil, err
+		}
+	}
+	r, err := retryablehttp.FromRequest(request)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := c.httpClient.Do(r)
+	if err != nil {
+		return nil, err
+	}
+	defer func() {
+		if ferr := resp.Body.Close(); ferr != nil {
+			err = ferr
+		}
+	}()
+	body, err = ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+	// Don't need to check the status code here as the RetryCheck for
+	// retryablehttp.Client is doing that and returning an error
+	return body, nil
+}
+
 func (c *DatabricksClient) performQuery(method string, path string, apiVersion string, headers map[string]string, data interface{}) ([]byte, error) {
 	return c.genericQuery(method, path, apiVersion, headers, true, false, data)
 }
@@ -180,12 +242,21 @@ func (c *DatabricksClient) performRawQuery(method, path string, apiVersion strin
 func makeRequestBody(method string, requestURL *string, data interface{}, marshalJSON bool) ([]byte, error) {
 	var requestBody []byte
 	if method == "GET" {
-		params, err := query.Values(data)
-		if err != nil {
-			return nil, err
+		if m, ok := data.(map[string]string); ok {
+			s := []string{}
+			for k, v := range m {
+				s = append(s, fmt.Sprintf("%s=%s", url.QueryEscape(k), url.QueryEscape(v)))
+			}
+			*requestURL += "?" + strings.Join(s, "&")
+			auditGetPayload(*requestURL)
+		} else {
+			params, err := query.Values(data)
+			if err != nil {
+				return nil, err
+			}
+			*requestURL += "?" + params.Encode()
+			auditGetPayload(*requestURL)
 		}
-		*requestURL += "?" + params.Encode()
-		auditGetPayload(*requestURL)
 	} else {
 		if marshalJSON {
 			bodyBytes, err := json.Marshal(data)

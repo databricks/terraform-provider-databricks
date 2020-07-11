@@ -80,12 +80,13 @@ func TestMissingMWSResources(t *testing.T) {
 }
 
 // Capture this test for aws
-func TestAccAwsMissingWorkspaceResources(t *testing.T) {
+func TestAwsAccMissingWorkspaceResources(t *testing.T) {
 	testMissingWorkspaceResources(t, service.AWS)
 }
 
 // Capture this test for azure
-func TestAccAzureMissingWorkspaceResources(t *testing.T) {
+func TestAzureAccMissingWorkspaceResources(t *testing.T) {
+	// todo: rely on cloud CLOUD_ENV var
 	testMissingWorkspaceResources(t, service.Azure)
 }
 

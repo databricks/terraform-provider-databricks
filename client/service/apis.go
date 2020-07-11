@@ -174,7 +174,6 @@ func (c *DatabricksClient) configureHTTPCLient() {
 		RetryWaitMin: retryDelayDuration,
 		RetryWaitMax: retryDelayDuration,
 		RetryMax:     int(retryMaximumDuration / retryDelayDuration), // + request & response log hooks
-		Logger: ,
 	}
 }
 

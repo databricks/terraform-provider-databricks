@@ -213,7 +213,6 @@ func TestInstanceProfilesAPI_Read(t *testing.T) {
 	}
 }
 
-
 func TestAwsAccInstanceProfiles(t *testing.T) {
 	if _, ok := os.LookupEnv("CLOUD_ENV"); !ok {
 		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")

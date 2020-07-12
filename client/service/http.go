@@ -170,7 +170,7 @@ func (c *DatabricksClient) getOrCreateToken() error {
 	return nil
 }
 
-func (c *DatabricksClient) get(path string, request interface{}, response interface{}, 
+func (c *DatabricksClient) get(path string, request interface{}, response interface{},
 	interceptors ...func(*http.Request) (*http.Request, error)) error {
 	body, err := c.genericQuery2(http.MethodGet, c.formatURL("2.0", path), request, interceptors...)
 	if err != nil {
@@ -183,7 +183,7 @@ func (c *DatabricksClient) formatURL(apiVersion, path string) string {
 	return fmt.Sprintf("%s/%s%s", c.uriPrefix, "2.0", path)
 }
 
-func (c *DatabricksClient) genericQuery2(method, requestURL string, data interface{}, 
+func (c *DatabricksClient) genericQuery2(method, requestURL string, data interface{},
 	interceptors ...func(*http.Request) (*http.Request, error)) (body []byte, err error) {
 	if c.httpClient == nil {
 		return nil, fmt.Errorf("DatabricksClient is not configured")

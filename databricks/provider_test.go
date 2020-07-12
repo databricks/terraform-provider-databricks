@@ -33,7 +33,7 @@ func init() {
 // getIntegrationDatabricksClient gets the client given CLOUD_ENV as those env variables get loaded
 func getIntegrationDatabricksClient(t *testing.T) *service.DatabricksClient {
 	client := service.DatabricksClient{
-		Host: os.Getenv("DATABRICKS_HOST"),
+		Host:  os.Getenv("DATABRICKS_HOST"),
 		Token: os.Getenv("DATABRICKS_TOKEN"),
 		AzureAuth: service.AzureAuth{
 			ResourceID: os.Getenv("AZURE_DATABRICKS_WORKSPACE_RESOURCE_ID"),

@@ -3,6 +3,7 @@ package databricks
 import (
 	"errors"
 	"fmt"
+	"os"
 	"testing"
 
 	"github.com/databrickslabs/databricks-terraform/client/model"
@@ -12,7 +13,10 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestAccAzureGroupMemberResource(t *testing.T) {
+func TestAccGroupMemberResource(t *testing.T) {
+	if _, ok := os.LookupEnv("CLOUD_ENV"); !ok {
+		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
+	}
 	var group model.Group
 	// generate a random name for each tokenInfo test run, to avoid
 	// collisions from multiple concurrent tests.
@@ -31,19 +35,19 @@ func TestAccAzureGroupMemberResource(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		Providers:    testAccProviders,
-		CheckDestroy: testAzureGroupMemberResourceDestroy,
+		CheckDestroy: testGroupMemberResourceDestroy,
 		Steps: []resource.TestStep{
 			{
 				// use a dynamic configuration with the random name from above
 				// Creates 2 sub groups and adds as members to parent group
-				Config: testAzureGroupMemberResource(groupName),
+				Config: testGroupMemberResource(groupName),
 
 				// compose a basic test, checking both remote and local values
 				Check: resource.ComposeTestCheckFunc(
 					// query the API to retrieve the tokenInfo object
-					testAzureGroupMemberResourceExists("databricks_group.my_group", &group, t),
+					testGroupMemberResourceExists("databricks_group.my_group", &group, t),
 					// verify remote values
-					testAzureGroupMemberValues(t, &group, groupName, 2),
+					testGroupMemberValues(t, &group, groupName, 2),
 					// verify local values
 					resource.TestCheckResourceAttr("databricks_group.my_group", "display_name", groupName),
 				),
@@ -59,27 +63,27 @@ func TestAccAzureGroupMemberResource(t *testing.T) {
 					err := client.Groups().Patch(group.ID, []string{manuallyCreatedGroup.ID}, nil, model.GroupMembersPath)
 					assert.NoError(t, err, err)
 				},
-				Config: testAzureGroupMemberResource(groupName),
+				Config: testGroupMemberResource(groupName),
 				// compose a basic test, checking both remote and local values
 				Check: resource.ComposeTestCheckFunc(
 					// query the API to retrieve the tokenInfo object
-					testAzureGroupMemberResourceExists("databricks_group.my_group", &group, t),
+					testGroupMemberResourceExists("databricks_group.my_group", &group, t),
 					// verify remote values with manually added group
-					testAzureGroupMemberValues(t, &group, groupName, 3),
+					testGroupMemberValues(t, &group, groupName, 3),
 					// verify local values
 					resource.TestCheckResourceAttr("databricks_group.my_group", "display_name", groupName),
 				),
 			},
 			{
 				// use a dynamic configuration with the random name from above
-				Config: testAzureGroupMemberResourceCreateNoMembers(groupName),
+				Config: testGroupMemberResourceCreateNoMembers(groupName),
 
 				// compose a basic test, checking both remote and local values
 				Check: resource.ComposeTestCheckFunc(
 					// query the API to retrieve the tokenInfo object
-					testAzureGroupMemberResourceExists("databricks_group.my_group", &group, t),
+					testGroupMemberResourceExists("databricks_group.my_group", &group, t),
 					// verify remote values (we added a group manually in the prior test reflecting scim sync)
-					testAzureGroupMemberValues(t, &group, groupName, 1),
+					testGroupMemberValues(t, &group, groupName, 1),
 					// verify local values
 					resource.TestCheckResourceAttr("databricks_group.my_group", "display_name", groupName),
 				),
@@ -87,7 +91,7 @@ func TestAccAzureGroupMemberResource(t *testing.T) {
 			},
 			{
 				// use a dynamic configuration with the random name from above
-				Config: testAzureGroupMemberResourceCreateNoMembers(groupName),
+				Config: testGroupMemberResourceCreateNoMembers(groupName),
 
 				// Test behavior to expect to attempt to create new role mapping because role is gone
 				PreConfig: func() {
@@ -101,7 +105,7 @@ func TestAccAzureGroupMemberResource(t *testing.T) {
 			},
 			{
 				// use a dynamic configuration with the random name from above
-				Config: testAzureGroupMemberResource(groupName),
+				Config: testGroupMemberResource(groupName),
 
 				// Lets delete the manually created group
 				PreConfig: func() {
@@ -113,9 +117,9 @@ func TestAccAzureGroupMemberResource(t *testing.T) {
 				// compose a basic test, checking both remote and local values
 				Check: resource.ComposeTestCheckFunc(
 					// query the API to retrieve the tokenInfo object
-					testAzureGroupMemberResourceExists("databricks_group.my_group", &group, t),
+					testGroupMemberResourceExists("databricks_group.my_group", &group, t),
 					// verify remote values
-					testAzureGroupMemberValues(t, &group, groupName, 2),
+					testGroupMemberValues(t, &group, groupName, 2),
 					// verify local values
 					resource.TestCheckResourceAttr("databricks_group.my_group", "display_name", groupName),
 				),
@@ -125,7 +129,7 @@ func TestAccAzureGroupMemberResource(t *testing.T) {
 	})
 }
 
-func testAzureGroupMemberResourceDestroy(s *terraform.State) error {
+func testGroupMemberResourceDestroy(s *terraform.State) error {
 	client := testAccProvider.Meta().(*service.DatabricksClient)
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "databricks_group" {
@@ -140,7 +144,7 @@ func testAzureGroupMemberResourceDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAzureGroupMemberValues(t *testing.T, group *model.Group, displayName string, memberCount int) resource.TestCheckFunc {
+func testGroupMemberValues(t *testing.T, group *model.Group, displayName string, memberCount int) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		assert.True(t, group.DisplayName == displayName)
 		assert.Equal(t, memberCount, len(group.Members), "member count is not matching")
@@ -149,7 +153,7 @@ func testAzureGroupMemberValues(t *testing.T, group *model.Group, displayName st
 }
 
 // testAccCheckTokenResourceExists queries the API and retrieves the matching Widget.
-func testAzureGroupMemberResourceExists(n string, group *model.Group, t *testing.T) resource.TestCheckFunc {
+func testGroupMemberResourceExists(n string, group *model.Group, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		// find the corresponding state object
 		rs, ok := s.RootModule().Resources[n]
@@ -170,32 +174,32 @@ func testAzureGroupMemberResourceExists(n string, group *model.Group, t *testing
 	}
 }
 
-func testAzureGroupMemberResourceCreateNoMembers(groupName string) string {
+func testGroupMemberResourceCreateNoMembers(groupName string) string {
 	return fmt.Sprintf(`
-								resource "databricks_group" "my_group" {
-								  display_name = "%s"
-								}
-								`, groupName)
+		resource "databricks_group" "my_group" {
+			display_name = "%s"
+		}
+		`, groupName)
 }
 
-func testAzureGroupMemberResource(groupName string) string {
+func testGroupMemberResource(groupName string) string {
 	return fmt.Sprintf(`
-								resource "databricks_group" "my_group" {
-								  display_name = "%[1]s"
-								}
-								resource "databricks_group" "my_sub_group_a" {
-								  display_name = "sub_a_%[1]s"
-								}
-								resource "databricks_group" "my_sub_group_b" {
-								  display_name = "sub_b_%[1]s"
-								}
-								resource "databricks_group_member" "my_member_a" {
-								 group_id = databricks_group.my_group.id
-								 member_id = databricks_group.my_sub_group_a.id
-								}
-								resource "databricks_group_member" "my_member_b" {
-								 group_id = databricks_group.my_group.id
-								 member_id = databricks_group.my_sub_group_b.id
-								}
-								`, groupName)
+		resource "databricks_group" "my_group" {
+			display_name = "%[1]s"
+		}
+		resource "databricks_group" "my_sub_group_a" {
+			display_name = "sub_a_%[1]s"
+		}
+		resource "databricks_group" "my_sub_group_b" {
+			display_name = "sub_b_%[1]s"
+		}
+		resource "databricks_group_member" "my_member_a" {
+			group_id = databricks_group.my_group.id
+			member_id = databricks_group.my_sub_group_a.id
+		}
+		resource "databricks_group_member" "my_member_b" {
+			group_id = databricks_group.my_group.id
+			member_id = databricks_group.my_sub_group_b.id
+		}
+		`, groupName)
 }

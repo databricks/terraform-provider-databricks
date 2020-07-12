@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"os"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
@@ -268,23 +269,10 @@ func TestNotebooksDelete(t *testing.T) {
 	assert.Equal(t, testId, d.Id())
 }
 
-func TestAccAwsNotebookResource_multiple_formats(t *testing.T) {
-	testAccNotebookResourceMultipleFormats(t)
-}
-
-func TestAccAwsNotebookResource_scalability(t *testing.T) {
-	testAccNotebookResourceMultipleFormats(t)
-}
-
-func TestAccAzureNotebookResource_multiple_formats(t *testing.T) {
-	testAccNotebookResourceMultipleFormats(t)
-}
-
-func TestAccAzureNotebookResource_scalability(t *testing.T) {
-	testAccNotebookResourceScalability(t)
-}
-
-func testAccNotebookResourceScalability(t *testing.T) {
+func TestAccNotebookResourceScalability(t *testing.T) {
+	if _, ok := os.LookupEnv("CLOUD_ENV"); !ok {
+		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
+	}
 	pythonNotebookDataB64, err := notebookToB64("testdata/tf-test-python.py")
 	assert.NoError(t, err, err)
 
@@ -294,14 +282,17 @@ func testAccNotebookResourceScalability(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				// use a dynamic configuration with the random name from above
-				Config:  testAzureNotebookResourceMultipleNotebooks(pythonNotebookDataB64),
+				Config:  testNotebookResourceMultipleNotebooks(pythonNotebookDataB64),
 				Destroy: false,
 			},
 		},
 	})
 }
 
-func testAccNotebookResourceMultipleFormats(t *testing.T) {
+func TestAccNotebookResourceMultipleFormats(t *testing.T) {
+	if _, ok := os.LookupEnv("CLOUD_ENV"); !ok {
+		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
+	}
 	folderPrefix := acctest.RandString(10)
 	rNotebookDataB64, err := notebookToB64("testdata/tf-test-r.r")
 	assert.NoError(t, err, err)
@@ -415,54 +406,53 @@ func testNotebookResourceDestroy(s *terraform.State) error {
 // Only will test source format based content
 func testNotebookResourceAllNotebookTypes(pythonContent, sqlContent, scalaContent, rContent, dbcContent, jupyterContent, htmlContent, folderPrefix string) string {
 	return fmt.Sprintf(`
-								resource "databricks_notebook" "notebook_python" {
-								 content = "%[1]s"
-								 path = "/Shared/tf-test-notebooks/%[8]s/python"
-								 overwrite = "false"
-								 mkdirs = "true"
-								 format = "SOURCE"
-								 language = "PYTHON"
-								}
-								resource "databricks_notebook" "notebook_sql" {
-								 content = "%[2]s"
-								 path = "/Shared/tf-test-notebooks/%[8]s/sql"
-								 overwrite = "false"
-								 mkdirs = "true"
-								 format = "SOURCE"
-								 language = "SQL"
-								}
-								resource "databricks_notebook" "notebook_scala" {
-								 content = "%[3]s"
-								 path = "/Shared/tf-test-notebooks/%[8]s/scala"
-								 overwrite = "false"
-								 mkdirs = "true"
-								 format = "SOURCE"
-								 language = "SCALA"
-								}
-								resource "databricks_notebook" "notebook_r" {
-								 content = "%[4]s"
-								 path = "/Shared/tf-test-notebooks/%[8]s/r"
-								 overwrite = "false"
-								 mkdirs = "true"
-								 format = "SOURCE"
-								 language = "R"
-								}
+		resource "databricks_notebook" "notebook_python" {
+			content = "%[1]s"
+			path = "/Shared/tf-test-notebooks/%[8]s/python"
+			overwrite = "false"
+			mkdirs = "true"
+			format = "SOURCE"
+			language = "PYTHON"
+		}
+		resource "databricks_notebook" "notebook_sql" {
+			content = "%[2]s"
+			path = "/Shared/tf-test-notebooks/%[8]s/sql"
+			overwrite = "false"
+			mkdirs = "true"
+			format = "SOURCE"
+			language = "SQL"
+		}
+		resource "databricks_notebook" "notebook_scala" {
+			content = "%[3]s"
+			path = "/Shared/tf-test-notebooks/%[8]s/scala"
+			overwrite = "false"
+			mkdirs = "true"
+			format = "SOURCE"
+			language = "SCALA"
+		}
+		resource "databricks_notebook" "notebook_r" {
+			content = "%[4]s"
+			path = "/Shared/tf-test-notebooks/%[8]s/r"
+			overwrite = "false"
+			mkdirs = "true"
+			format = "SOURCE"
+			language = "R"
+		}
 		`, pythonContent, sqlContent, scalaContent, rContent, dbcContent, jupyterContent, htmlContent, folderPrefix)
 }
 
-func testAzureNotebookResourceMultipleNotebooks(content string) string {
+func testNotebookResourceMultipleNotebooks(content string) string {
 	var strBuffer bytes.Buffer
 	for i := 1; i <= 10; i++ {
 		strBuffer.WriteString(fmt.Sprintf(`
-								resource "databricks_notebook" "notebook_%[2]v" {
-								  content = "%[1]s"
-								  path = "/Shared/tf-test/book%[2]v"
-								  overwrite = "false"
-								  mkdirs = "true"
-								  format = "SOURCE"
-								  language = "PYTHON"
-								}
-		`, content, i))
+			resource "databricks_notebook" "notebook_%[2]v" {
+				content = "%[1]s"
+				path = "/Shared/tf-test/book%[2]v"
+				overwrite = "false"
+				mkdirs = "true"
+				format = "SOURCE"
+				language = "PYTHON"
+			}`, content, i))
 	}
 	return strBuffer.String()
 }

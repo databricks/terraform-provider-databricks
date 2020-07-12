@@ -3,6 +3,7 @@ package databricks
 import (
 	"errors"
 	"fmt"
+	"os"
 	"testing"
 
 	"github.com/databrickslabs/databricks-terraform/client/model"
@@ -12,7 +13,10 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestAccAwsScimGroupResource(t *testing.T) {
+func TestAccScimGroupResource(t *testing.T) {
+	if _, ok := os.LookupEnv("CLOUD_ENV"); !ok {
+		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
+	}
 	//var secretScope model.Secre
 	var ScimGroup model.Group
 	// generate a random name for each tokenInfo test run, to avoid
@@ -29,17 +33,17 @@ func TestAccAwsScimGroupResource(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		Providers:    testAccProviders,
-		CheckDestroy: testAwsScimGroupResourceDestroy,
+		CheckDestroy: testScimGroupResourceDestroy,
 		Steps: []resource.TestStep{
 			{
 				// use a dynamic configuration with the random name from above
-				Config: testAwsScimGroupResourceCreate(userName, displayName, groupName, role, entitlement),
+				Config: testScimGroupResourceCreate(userName, displayName, groupName, role, entitlement),
 				// compose a basic test, checking both remote and local values
 				Check: resource.ComposeTestCheckFunc(
 					// query the API to retrieve the tokenInfo object
-					testAwsScimGroupResourceExists("databricks_scim_group.my_scim_group", &ScimGroup, t),
+					testScimGroupResourceExists("databricks_scim_group.my_scim_group", &ScimGroup, t),
 					// verify remote values
-					testAwsScimGroupValues(t, &ScimGroup, displayName, expectEntitlements,
+					testScimGroupValues(t, &ScimGroup, displayName, expectEntitlements,
 						[]model.RoleListItem{{Value: role}}, true),
 					// verify local values
 					resource.TestCheckResourceAttr("databricks_scim_group.my_scim_group", "display_name", displayName),
@@ -51,14 +55,14 @@ func TestAccAwsScimGroupResource(t *testing.T) {
 			},
 			{
 				// use a dynamic configuration with the random name from above
-				Config: testAwsScimGroupResourceUpdate(groupName),
+				Config: testScimGroupResourceUpdate(groupName),
 
 				// compose a basic test, checking both remote and local values
 				Check: resource.ComposeTestCheckFunc(
 					// query the API to retrieve the tokenInfo object
-					testAwsScimGroupResourceExists("databricks_scim_group.my_scim_group", &ScimGroup, t),
+					testScimGroupResourceExists("databricks_scim_group.my_scim_group", &ScimGroup, t),
 					// verify remote values
-					testAwsScimGroupValues(t, &ScimGroup, displayName, nil, nil, false),
+					testScimGroupValues(t, &ScimGroup, displayName, nil, nil, false),
 					// verify local values
 					resource.TestCheckResourceAttr("databricks_scim_group.my_scim_group", "display_name", displayName),
 					resource.TestCheckResourceAttr("databricks_scim_group.my_scim_group", "entitlements.#", "0"),
@@ -69,13 +73,13 @@ func TestAccAwsScimGroupResource(t *testing.T) {
 			},
 			{
 				// Recreate the group with roles and entitlements again to see if the group gets updated
-				Config: testAwsScimGroupResourceCreate(userName, displayName, groupName, role, entitlement),
+				Config: testScimGroupResourceCreate(userName, displayName, groupName, role, entitlement),
 
 				Check: resource.ComposeTestCheckFunc(
 					// query the API to retrieve the tokenInfo object
-					testAwsScimGroupResourceExists("databricks_scim_group.my_scim_group", &ScimGroup, t),
+					testScimGroupResourceExists("databricks_scim_group.my_scim_group", &ScimGroup, t),
 					// verify remote values
-					testAwsScimGroupValues(t, &ScimGroup, displayName, expectEntitlements,
+					testScimGroupValues(t, &ScimGroup, displayName, expectEntitlements,
 						[]model.RoleListItem{{Value: role}}, true),
 					// verify local values
 					resource.TestCheckResourceAttr("databricks_scim_group.my_scim_group", "display_name", displayName),
@@ -91,13 +95,13 @@ func TestAccAwsScimGroupResource(t *testing.T) {
 					assert.NoError(t, err, err)
 				},
 				// use a dynamic configuration with the random name from above
-				Config: testAwsScimGroupResourceUpdate(displayName),
+				Config: testScimGroupResourceUpdate(displayName),
 				// compose a basic test, checking both remote and local values
 				Check: resource.ComposeTestCheckFunc(
 					// query the API to retrieve the tokenInfo object
-					testAwsScimGroupResourceExists("databricks_scim_group.my_scim_group", &ScimGroup, t),
+					testScimGroupResourceExists("databricks_scim_group.my_scim_group", &ScimGroup, t),
 					// verify remote values
-					testAwsScimGroupValues(t, &ScimGroup, displayName, nil, nil, false),
+					testScimGroupValues(t, &ScimGroup, displayName, nil, nil, false),
 					// verify local values
 					resource.TestCheckResourceAttr("databricks_scim_group.my_scim_group", "display_name", displayName),
 					resource.TestCheckResourceAttr("databricks_scim_group.my_scim_group", "entitlements.#", "0"),
@@ -108,13 +112,13 @@ func TestAccAwsScimGroupResource(t *testing.T) {
 			},
 			{
 				// Recreate the group with roles and entitlements again to see if the group gets updated
-				Config: testAwsScimGroupResourceInheritedRole(userName, displayName, groupName, role, entitlement),
+				Config: testScimGroupResourceInheritedRole(userName, displayName, groupName, role, entitlement),
 
 				Check: resource.ComposeTestCheckFunc(
 					// query the API to retrieve the tokenInfo object
-					testAwsScimGroupResourceExists("databricks_scim_group.my_scim_group", &ScimGroup, t),
+					testScimGroupResourceExists("databricks_scim_group.my_scim_group", &ScimGroup, t),
 					// verify remote values
-					testAwsScimGroupValues(t, &ScimGroup, displayName, expectEntitlements,
+					testScimGroupValues(t, &ScimGroup, displayName, expectEntitlements,
 						[]model.RoleListItem{{Value: role}}, true),
 					// verify local values
 					resource.TestCheckResourceAttr("databricks_scim_group.my_scim_group", "display_name", displayName),
@@ -128,7 +132,7 @@ func TestAccAwsScimGroupResource(t *testing.T) {
 	})
 }
 
-func testAwsScimGroupResourceDestroy(s *terraform.State) error {
+func testScimGroupResourceDestroy(s *terraform.State) error {
 	client := testAccProvider.Meta().(*service.DatabricksClient)
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "databricks_scim_group" {
@@ -143,7 +147,7 @@ func testAwsScimGroupResourceDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAwsScimGroupValues(t *testing.T, group *model.Group, displayName string, expectEntitlements []model.EntitlementsListItem, expectRoles []model.RoleListItem, verifyMembers bool) resource.TestCheckFunc {
+func testScimGroupValues(t *testing.T, group *model.Group, displayName string, expectEntitlements []model.EntitlementsListItem, expectRoles []model.RoleListItem, verifyMembers bool) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		assert.True(t, group.DisplayName == displayName)
 		assert.EqualValues(t, group.Entitlements, expectEntitlements)
@@ -154,7 +158,7 @@ func testAwsScimGroupValues(t *testing.T, group *model.Group, displayName string
 }
 
 // testAccCheckTokenResourceExists queries the API and retrieves the matching Widget.
-func testAwsScimGroupResourceExists(n string, group *model.Group, t *testing.T) resource.TestCheckFunc {
+func testScimGroupResourceExists(n string, group *model.Group, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		// find the corresponding state object
 		rs, ok := s.RootModule().Resources[n]
@@ -175,80 +179,80 @@ func testAwsScimGroupResourceExists(n string, group *model.Group, t *testing.T) 
 	}
 }
 
-func testAwsScimGroupResourceCreate(username, displayName, groupName, role, entitlement string) string {
+func testScimGroupResourceCreate(username, displayName, groupName, role, entitlement string) string {
 	return fmt.Sprintf(`
-								resource "databricks_instance_profile" "instance_profile" {
-								  instance_profile_arn = "%s"
-								  skip_validation = true
-								}
-								data "databricks_default_user_roles" "default_roles" {
-								  default_username = "terraform-all-user-roles@databricks.com"
-								}
-								resource "databricks_scim_user" "my_scim_user" {
-								  user_name = "%s"
-								  default_roles = data.databricks_default_user_roles.default_roles.roles
-								  display_name = "%s"
-								  entitlements = [
-									"allow-cluster-create",
-								  ]
-								  roles = [
-									databricks_instance_profile.instance_profile.id,
-								  ]
-								}
-								resource "databricks_scim_group" "my_scim_group" {
-								  display_name = "%s"
-								  members = [databricks_scim_user.my_scim_user.id]
-								  entitlements = [
-									"%s",
-								  ]
-								  roles = [
-									databricks_instance_profile.instance_profile.id
-								  ]
-								}
-								`, role, username, displayName, groupName, entitlement)
+		resource "databricks_instance_profile" "instance_profile" {
+			instance_profile_arn = "%s"
+			skip_validation = true
+		}
+		data "databricks_default_user_roles" "default_roles" {
+			default_username = "terraform-all-user-roles@databricks.com"
+		}
+		resource "databricks_scim_user" "my_scim_user" {
+			user_name = "%s"
+			default_roles = data.databricks_default_user_roles.default_roles.roles
+			display_name = "%s"
+			entitlements = [
+			"allow-cluster-create",
+			]
+			roles = [
+			databricks_instance_profile.instance_profile.id,
+			]
+		}
+		resource "databricks_scim_group" "my_scim_group" {
+			display_name = "%s"
+			members = [databricks_scim_user.my_scim_user.id]
+			entitlements = [
+			"%s",
+			]
+			roles = [
+			databricks_instance_profile.instance_profile.id
+			]
+		}
+		`, role, username, displayName, groupName, entitlement)
 }
 
-func testAwsScimGroupResourceUpdate(groupName string) string {
+func testScimGroupResourceUpdate(groupName string) string {
 	return fmt.Sprintf(`
-								resource "databricks_scim_group" "my_scim_group" {
-								  display_name = "%s"
-								}
-								`, groupName)
+		resource "databricks_scim_group" "my_scim_group" {
+			display_name = "%s"
+		}
+		`, groupName)
 }
 
-func testAwsScimGroupResourceInheritedRole(username, displayName, groupName, role, entitlement string) string {
+func testScimGroupResourceInheritedRole(username, displayName, groupName, role, entitlement string) string {
 	return fmt.Sprintf(`
-								resource "databricks_instance_profile" "instance_profile" {
-								  instance_profile_arn = "%s"
-								  skip_validation = true
-								}
-								data "databricks_default_user_roles" "default_roles" {
-								  default_username = "terraform-all-user-roles@databricks.com"
-								}
-								resource "databricks_scim_user" "my_scim_user" {
-								  user_name = "%s"
-								  default_roles = data.databricks_default_user_roles.default_roles.roles
-								  display_name = "%s"
-								  entitlements = [
-									"allow-cluster-create",
-								  ]
-								  roles = [
-									databricks_instance_profile.instance_profile.id,
-								  ]
-								}
-								resource "databricks_scim_group" "my_scim_group_parent" {
-								  display_name = "%s_parent"
-								  members = [databricks_scim_group.my_scim_group.id]
-								  roles = [
-									databricks_instance_profile.instance_profile.id
-								  ]
-								}
-								resource "databricks_scim_group" "my_scim_group" {
-								  display_name = "%s"
-								  members = [databricks_scim_user.my_scim_user.id]
-								  entitlements = [
-									"%s",
-								  ]
-								}
-								`, role, username, displayName, groupName, groupName, entitlement)
+		resource "databricks_instance_profile" "instance_profile" {
+			instance_profile_arn = "%s"
+			skip_validation = true
+		}
+		data "databricks_default_user_roles" "default_roles" {
+			default_username = "terraform-all-user-roles@databricks.com"
+		}
+		resource "databricks_scim_user" "my_scim_user" {
+			user_name = "%s"
+			default_roles = data.databricks_default_user_roles.default_roles.roles
+			display_name = "%s"
+			entitlements = [
+			"allow-cluster-create",
+			]
+			roles = [
+			databricks_instance_profile.instance_profile.id,
+			]
+		}
+		resource "databricks_scim_group" "my_scim_group_parent" {
+			display_name = "%s_parent"
+			members = [databricks_scim_group.my_scim_group.id]
+			roles = [
+			databricks_instance_profile.instance_profile.id
+			]
+		}
+		resource "databricks_scim_group" "my_scim_group" {
+			display_name = "%s"
+			members = [databricks_scim_user.my_scim_user.id]
+			entitlements = [
+			"%s",
+			]
+		}
+		`, role, username, displayName, groupName, groupName, entitlement)
 }

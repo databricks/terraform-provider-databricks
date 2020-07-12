@@ -2,10 +2,12 @@ package service
 
 import (
 	"net/http"
+	"os"
 	"testing"
 	"time"
 
 	"github.com/databrickslabs/databricks-terraform/client/model"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestTokensAPI_Create(t *testing.T) {
@@ -261,4 +263,31 @@ func TestTokensAPI_Read(t *testing.T) {
 			})
 		})
 	}
+}
+
+func TestAccCreateToken(t *testing.T) {
+	if _, ok := os.LookupEnv("CLOUD_ENV"); !ok {
+		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
+	}
+
+	client := GetIntegrationDBAPIClient()
+
+	lifeTimeSeconds := time.Duration(30) * time.Second
+	comment := "Hello world"
+
+	token, err := client.Tokens().Create(lifeTimeSeconds, comment)
+	assert.NoError(t, err, err)
+	assert.True(t, len(token.TokenValue) > 0, "Token value is empty")
+
+	defer func() {
+		err := client.Tokens().Delete(token.TokenInfo.TokenID)
+		assert.NoError(t, err, err)
+	}()
+
+	_, err = client.Tokens().Read(token.TokenInfo.TokenID)
+	assert.NoError(t, err, err)
+
+	tokenList, err := client.Tokens().List()
+	assert.NoError(t, err, err)
+	assert.True(t, len(tokenList) > 0, "Token list is empty")
 }

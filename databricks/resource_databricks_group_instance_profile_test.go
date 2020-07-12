@@ -3,6 +3,7 @@ package databricks
 import (
 	"errors"
 	"fmt"
+	"os"
 	"testing"
 
 	"github.com/databrickslabs/databricks-terraform/client/model"
@@ -12,7 +13,10 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestAccAwsGroupInstanceProfileResource(t *testing.T) {
+func TestAwsAccGroupInstanceProfileResource(t *testing.T) {
+	if _, ok := os.LookupEnv("CLOUD_ENV"); !ok {
+		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
+	}
 	var group model.Group
 	// generate a random name for each tokenInfo test run, to avoid
 	// collisions from multiple concurrent tests.
@@ -24,18 +28,18 @@ func TestAccAwsGroupInstanceProfileResource(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		Providers:    testAccProviders,
-		CheckDestroy: testAWSGroupInstanceProfileResourceDestroy,
+		CheckDestroy: testGroupInstanceProfileResourceDestroy,
 		Steps: []resource.TestStep{
 			{
 				// use a dynamic configuration with the random name from above
-				Config: testAWSGroupInstanceProfileResourceCreate(role, groupName),
+				Config: testGroupInstanceProfileResourceCreate(role, groupName),
 
 				// compose a basic test, checking both remote and local values
 				Check: resource.ComposeTestCheckFunc(
 					// query the API to retrieve the tokenInfo object
-					testAWSGroupInstanceProfileResourceExists("databricks_group.my_group", &group, t),
+					testGroupInstanceProfileResourceExists("databricks_group.my_group", &group, t),
 					// verify remote values
-					testAWSGroupInstanceProfileValues(t, &group, groupName, role),
+					testGroupInstanceProfileValues(t, &group, groupName, role),
 					// verify local values
 					resource.TestCheckResourceAttr("databricks_group.my_group", "display_name", groupName),
 					resource.TestCheckResourceAttr("databricks_group_instance_profile.my_group_instance_profile", "instance_profile_id", role),
@@ -44,7 +48,7 @@ func TestAccAwsGroupInstanceProfileResource(t *testing.T) {
 			},
 			{
 				// use a dynamic configuration with the random name from above
-				Config: testAWSGroupInstanceProfileResourceCreate(role, groupName),
+				Config: testGroupInstanceProfileResourceCreate(role, groupName),
 
 				// Test behavior to expect to attempt to create new role mapping because role is gone
 				PreConfig: func() {
@@ -58,7 +62,7 @@ func TestAccAwsGroupInstanceProfileResource(t *testing.T) {
 			},
 			{
 				// use a dynamic configuration with the random name from above
-				Config: testAWSGroupInstanceProfileResourceCreate(role, groupName),
+				Config: testGroupInstanceProfileResourceCreate(role, groupName),
 
 				// Test behavior to expect to attempt to create new role mapping because role is gone
 				PreConfig: func() {
@@ -74,7 +78,7 @@ func TestAccAwsGroupInstanceProfileResource(t *testing.T) {
 	})
 }
 
-func testAWSGroupInstanceProfileResourceDestroy(s *terraform.State) error {
+func testGroupInstanceProfileResourceDestroy(s *terraform.State) error {
 	client := testAccProvider.Meta().(*service.DatabricksClient)
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "databricks_group" {
@@ -89,7 +93,7 @@ func testAWSGroupInstanceProfileResourceDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAWSGroupInstanceProfileValues(t *testing.T, group *model.Group, displayName, role string) resource.TestCheckFunc {
+func testGroupInstanceProfileValues(t *testing.T, group *model.Group, displayName, role string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		assert.True(t, group.DisplayName == displayName)
 		assert.True(t, iInstanceProfileInGroup(role, group), "role is not in group")
@@ -98,7 +102,7 @@ func testAWSGroupInstanceProfileValues(t *testing.T, group *model.Group, display
 }
 
 // testAccCheckTokenResourceExists queries the API and retrieves the matching Widget.
-func testAWSGroupInstanceProfileResourceExists(n string, group *model.Group, t *testing.T) resource.TestCheckFunc {
+func testGroupInstanceProfileResourceExists(n string, group *model.Group, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		// find the corresponding state object
 		rs, ok := s.RootModule().Resources[n]
@@ -119,18 +123,18 @@ func testAWSGroupInstanceProfileResourceExists(n string, group *model.Group, t *
 	}
 }
 
-func testAWSGroupInstanceProfileResourceCreate(roleArn, groupName string) string {
+func testGroupInstanceProfileResourceCreate(roleArn, groupName string) string {
 	return fmt.Sprintf(`
-								resource "databricks_instance_profile" "instance_profile" {
-								  instance_profile_arn = "%s"
-								  skip_validation = true
-								}
-								resource "databricks_group" "my_group" {
-								  display_name = "%s"
-								}
-								resource "databricks_group_instance_profile" "my_group_instance_profile" {
-								 group_id = databricks_group.my_group.id
-								 instance_profile_id = databricks_instance_profile.instance_profile.id
-								}
-								`, roleArn, groupName)
+		resource "databricks_instance_profile" "instance_profile" {
+			instance_profile_arn = "%s"
+			skip_validation = true
+		}
+		resource "databricks_group" "my_group" {
+			display_name = "%s"
+		}
+		resource "databricks_group_instance_profile" "my_group_instance_profile" {
+			group_id = databricks_group.my_group.id
+			instance_profile_id = databricks_instance_profile.instance_profile.id
+		}
+		`, roleArn, groupName)
 }

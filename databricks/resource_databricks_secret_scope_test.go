@@ -3,6 +3,7 @@ package databricks
 import (
 	"errors"
 	"fmt"
+	"os"
 	"testing"
 
 	"github.com/databrickslabs/databricks-terraform/client/model"
@@ -12,7 +13,10 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestAccAwsSecretScopeResource(t *testing.T) {
+func TestAccSecretScopeResource(t *testing.T) {
+	if _, ok := os.LookupEnv("CLOUD_ENV"); !ok {
+		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
+	}
 	var secretScope model.SecretScope
 
 	// generate a random name for each tokenInfo test run, to avoid
@@ -24,17 +28,17 @@ func TestAccAwsSecretScopeResource(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		Providers:    testAccProviders,
-		CheckDestroy: testAwsSecretScopeResourceDestroy,
+		CheckDestroy: testSecretScopeResourceDestroy,
 		Steps: []resource.TestStep{
 			{
 				// use a dynamic configuration with the random name from above
-				Config: testAwsSecretScopeResource(scope),
+				Config: testSecretScopeResource(scope),
 				// compose a basic test, checking both remote and local values
 				Check: resource.ComposeTestCheckFunc(
 					// query the API to retrieve the tokenInfo object
-					testAwsSecretScopeResourceExists("databricks_secret_scope.my_scope", &secretScope, t),
+					testSecretScopeResourceExists("databricks_secret_scope.my_scope", &secretScope, t),
 					// verify remote values
-					testAwsSecretScopeValues(t, &secretScope, scope),
+					testSecretScopeValues(t, &secretScope, scope),
 					// verify local values
 					resource.TestCheckResourceAttr("databricks_secret_scope.my_scope", "name", scope),
 					resource.TestCheckResourceAttr("databricks_secret_scope.my_scope", "backend_type", string(model.ScopeBackendTypeDatabricks)),
@@ -47,13 +51,13 @@ func TestAccAwsSecretScopeResource(t *testing.T) {
 					assert.NoError(t, err, err)
 				},
 				// use a dynamic configuration with the random name from above
-				Config: testAwsSecretScopeResource(scope),
+				Config: testSecretScopeResource(scope),
 				// compose a basic test, checking both remote and local values
 				Check: resource.ComposeTestCheckFunc(
 					// query the API to retrieve the tokenInfo object
-					testAwsSecretScopeResourceExists("databricks_secret_scope.my_scope", &secretScope, t),
+					testSecretScopeResourceExists("databricks_secret_scope.my_scope", &secretScope, t),
 					// verify remote values
-					testAwsSecretScopeValues(t, &secretScope, scope),
+					testSecretScopeValues(t, &secretScope, scope),
 					// verify local values
 					resource.TestCheckResourceAttr("databricks_secret_scope.my_scope", "name", scope),
 					resource.TestCheckResourceAttr("databricks_secret_scope.my_scope", "backend_type", string(model.ScopeBackendTypeDatabricks)),
@@ -63,7 +67,7 @@ func TestAccAwsSecretScopeResource(t *testing.T) {
 	})
 }
 
-func testAwsSecretScopeResourceDestroy(s *terraform.State) error {
+func testSecretScopeResourceDestroy(s *terraform.State) error {
 	client := testAccProvider.Meta().(*service.DatabricksClient)
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "databricks_secret_scope" {
@@ -78,7 +82,7 @@ func testAwsSecretScopeResourceDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAwsSecretScopeValues(t *testing.T, secretScope *model.SecretScope, scope string) resource.TestCheckFunc {
+func testSecretScopeValues(t *testing.T, secretScope *model.SecretScope, scope string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		assert.True(t, secretScope.Name == scope)
 		assert.True(t, secretScope.BackendType == model.ScopeBackendTypeDatabricks)
@@ -87,7 +91,7 @@ func testAwsSecretScopeValues(t *testing.T, secretScope *model.SecretScope, scop
 }
 
 // testAccCheckTokenResourceExists queries the API and retrieves the matching Widget.
-func testAwsSecretScopeResourceExists(n string, secretScope *model.SecretScope, t *testing.T) resource.TestCheckFunc {
+func testSecretScopeResourceExists(n string, secretScope *model.SecretScope, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		// find the corresponding state object
 		rs, ok := s.RootModule().Resources[n]
@@ -111,10 +115,10 @@ func testAwsSecretScopeResourceExists(n string, secretScope *model.SecretScope, 
 }
 
 // testAccTokenResource returns an configuration for an Example Widget with the provided name
-func testAwsSecretScopeResource(scopeName string) string {
+func testSecretScopeResource(scopeName string) string {
 	return fmt.Sprintf(`
-								resource "databricks_secret_scope" "my_scope" {
-								  name = "%s"
-								}
-								`, scopeName)
+		resource "databricks_secret_scope" "my_scope" {
+			name = "%s"
+		}
+		`, scopeName)
 }

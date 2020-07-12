@@ -21,9 +21,9 @@ import (
 	"github.com/databrickslabs/databricks-terraform/client/service"
 )
 
-func TestMissingMWSResources(t *testing.T) {
-	if testing.Short() {
-		t.Skip("skipping integration test in short mode.")
+func TestAwsAccMissingMWSResources(t *testing.T) {
+	if cloudENV, ok := os.LookupEnv("CLOUD_ENV"); !ok || cloudENV != "AWS" {
+		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV=AWS' is set")
 	}
 
 	mwsAcctID := os.Getenv("DATABRICKS_MWS_ACCT_ID")
@@ -80,21 +80,11 @@ func TestMissingMWSResources(t *testing.T) {
 }
 
 // Capture this test for aws
-func TestAwsAccMissingWorkspaceResources(t *testing.T) {
-	testMissingWorkspaceResources(t, service.AWS)
-}
-
-// Capture this test for azure
-func TestAzureAccMissingWorkspaceResources(t *testing.T) {
-	// todo: rely on cloud CLOUD_ENV var
-	testMissingWorkspaceResources(t, service.Azure)
-}
-
-func testMissingWorkspaceResources(t *testing.T, cloud service.CloudServiceProvider) {
-	if _, ok := os.LookupEnv("TF_ACC"); !ok {
-		t.Skip("Acceptance tests skipped unless env 'TF_ACC' set")
+func TestAccMissingWorkspaceResources(t *testing.T) {
+	cloudENV, ok := os.LookupEnv("CLOUD_ENV")
+	if !ok {
+		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' set")
 	}
-
 	randIntID := 2000000 + acctest.RandIntRange(100000, 20000000)
 	randStringID := acctest.RandString(10)
 	// example 405E7E8E4A000024
@@ -221,8 +211,8 @@ func testMissingWorkspaceResources(t *testing.T, cloud service.CloudServiceProvi
 			resourceID:      strconv.Itoa(randIntID),
 		},
 	}
-	// Handle aws only tests where instance profiles only exist on aws
-	if cloud == service.AWS {
+	if cloudENV == "AWS" {
+		// Handle aws only tests where instance profiles only exist on aws
 		awsOnlyTests := []testTable{
 			{
 				name: "CheckIfInstanceProfilesAreMissing",

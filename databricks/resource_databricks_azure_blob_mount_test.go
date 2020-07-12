@@ -12,8 +12,11 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestAccAzureBlobMount_correctly_mounts(t *testing.T) {
-	terraformToApply := testAccAzureBlobMountCorrectlyMounts()
+func TestAzureAccBlobMount_correctly_mounts(t *testing.T) {
+	if _, ok := os.LookupEnv("CLOUD_ENV"); !ok {
+		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
+	}
+	terraformToApply := testBlobMountCorrectlyMounts()
 	var clusterInfo model.ClusterInfo
 	var azureBlobMount AzureBlobMount
 
@@ -23,27 +26,30 @@ func TestAccAzureBlobMount_correctly_mounts(t *testing.T) {
 			{
 				Config: terraformToApply,
 				Check: resource.ComposeTestCheckFunc(
-					testAccAzureBlobMountClusterExists("databricks_cluster.cluster", &clusterInfo),
-					testAccAzureBlobMountMountExists("databricks_azure_blob_mount.mount", &azureBlobMount, &clusterInfo),
+					testBlobMountClusterExists("databricks_cluster.cluster", &clusterInfo),
+					testBlobMountMountExists("databricks_azure_blob_mount.mount", &azureBlobMount, &clusterInfo),
 				),
 			},
 			{
 				PreConfig: func() {
 					client := testAccProvider.Meta().(*service.DatabricksClient)
 					err := azureBlobMount.Delete(client.Commands(), clusterInfo.ClusterID)
-					assert.NoError(t, err, "TestAccAzureBlobMount_correctly_mounts: Failed to remove the mount.")
+					assert.NoError(t, err, "TestBlobMount_correctly_mounts: Failed to remove the mount.")
 				},
 				Config: terraformToApply,
 				Check: resource.ComposeTestCheckFunc(
-					testAccAzureBlobMountMountExists("databricks_azure_blob_mount.mount", &azureBlobMount, &clusterInfo),
+					testBlobMountMountExists("databricks_azure_blob_mount.mount", &azureBlobMount, &clusterInfo),
 				),
 			},
 		},
 	})
 }
 
-func TestAccAzureBlobMount_cluster_deleted_correctly_mounts(t *testing.T) {
-	terraformToApply := testAccAzureBlobMountCorrectlyMounts()
+func TestAzureAccBlobMount_cluster_deleted_correctly_mounts(t *testing.T) {
+	if _, ok := os.LookupEnv("CLOUD_ENV"); !ok {
+		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
+	}
+	terraformToApply := testBlobMountCorrectlyMounts()
 	var clusterInfo model.ClusterInfo
 	var azureBlobMount AzureBlobMount
 
@@ -53,8 +59,8 @@ func TestAccAzureBlobMount_cluster_deleted_correctly_mounts(t *testing.T) {
 			{
 				Config: terraformToApply,
 				Check: resource.ComposeTestCheckFunc(
-					testAccAzureBlobMountClusterExists("databricks_cluster.cluster", &clusterInfo),
-					testAccAzureBlobMountMountExists("databricks_azure_blob_mount.mount", &azureBlobMount, &clusterInfo),
+					testBlobMountClusterExists("databricks_cluster.cluster", &clusterInfo),
+					testBlobMountMountExists("databricks_azure_blob_mount.mount", &azureBlobMount, &clusterInfo),
 				),
 			},
 			{
@@ -65,14 +71,14 @@ func TestAccAzureBlobMount_cluster_deleted_correctly_mounts(t *testing.T) {
 				},
 				Config: terraformToApply,
 				Check: resource.ComposeTestCheckFunc(
-					testAccAzureBlobMountMountExists("databricks_azure_blob_mount.mount", &azureBlobMount, &clusterInfo),
+					testBlobMountMountExists("databricks_azure_blob_mount.mount", &azureBlobMount, &clusterInfo),
 				),
 			},
 		},
 	})
 }
 
-func testAccAzureBlobMountClusterExists(n string, clusterInfo *model.ClusterInfo) resource.TestCheckFunc {
+func testBlobMountClusterExists(n string, clusterInfo *model.ClusterInfo) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		// find the corresponding state object
 		rs, ok := s.RootModule().Resources[n]
@@ -93,7 +99,7 @@ func testAccAzureBlobMountClusterExists(n string, clusterInfo *model.ClusterInfo
 	}
 }
 
-func testAccAzureBlobMountMountExists(n string, azureBlobMount *AzureBlobMount, clusterInfo *model.ClusterInfo) resource.TestCheckFunc {
+func testBlobMountMountExists(n string, azureBlobMount *AzureBlobMount, clusterInfo *model.ClusterInfo) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		// find the corresponding state object
 		rs, ok := s.RootModule().Resources[n]
@@ -126,7 +132,7 @@ func testAccAzureBlobMountMountExists(n string, azureBlobMount *AzureBlobMount, 
 	}
 }
 
-func testAccAzureBlobMountCorrectlyMounts() string {
+func testBlobMountCorrectlyMounts() string {
 	blobAccountKey := os.Getenv("TEST_STORAGE_ACCOUNT_KEY")
 	blobAccountName := os.Getenv("TEST_STORAGE_ACCOUNT_NAME")
 

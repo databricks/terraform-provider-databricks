@@ -2,10 +2,13 @@ package service
 
 import (
 	"fmt"
+	"log"
 	"net/http"
+	"os"
 	"testing"
 
 	"github.com/databrickslabs/databricks-terraform/client/model"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestScimUserAPI_Create(t *testing.T) {
@@ -257,27 +260,27 @@ func TestScimUserAPI_VerifyUserAsAdmin(t *testing.T) {
 		{
 			name: "VerifyUserAsAdmin true test",
 			response: `{
-								   "groups":[
-									  {
-										 "display":"admins",
-										 "value":"100002",
-										 "$ref":"https://test.databricks.com/api/2.0/scim/v2/Groups/100002"
-									  },
-									  {
-										 "display":"test-create-group",
-										 "value":"101355",
-										 "$ref":"https://test.databricks.com/api/2.0/scim/v2/Groups/101355"
-									  }
-								   ],
-								   "roles":[
-									  {
-										 "value":"arn:aws:iam::1231231123123:instance-profile/my-instance-profile"
-									  }
-								   ],
-								   "id":"101030",
-								   "userName":"test.user@databricks.com",
-								   "displayName":"test.user@databricks.com"
-								}`,
+					"groups":[
+						{
+							"display":"admins",
+							"value":"100002",
+							"$ref":"https://test.databricks.com/api/2.0/scim/v2/Groups/100002"
+						},
+						{
+							"display":"test-create-group",
+							"value":"101355",
+							"$ref":"https://test.databricks.com/api/2.0/scim/v2/Groups/101355"
+						}
+					],
+					"roles":[
+						{
+							"value":"arn:aws:iam::1231231123123:instance-profile/my-instance-profile"
+						}
+					],
+					"id":"101030",
+					"userName":"test.user@databricks.com",
+					"displayName":"test.user@databricks.com"
+				}`,
 			responseStatus: http.StatusOK,
 			args: args{
 				UserID:       "10030",
@@ -290,27 +293,27 @@ func TestScimUserAPI_VerifyUserAsAdmin(t *testing.T) {
 		{
 			name: "VerifyUserAsAdmin false test",
 			response: `{
-								   "groups":[
-									  {
-										 "display":"admins",
-										 "value":"100052",
-										 "$ref":"https://test.databricks.com/api/2.0/scim/v2/Groups/100002"
-									  },
-									  {
-										 "display":"test-create-group",
-										 "value":"101355",
-										 "$ref":"https://test.databricks.com/api/2.0/scim/v2/Groups/101355"
-									  }
-								   ],
-								   "roles":[
-									  {
-										 "value":"arn:aws:iam::1231231123123:instance-profile/my-instance-profile"
-									  }
-								   ],
-								   "id":"101030",
-								   "userName":"test.user@databricks.com",
-								   "displayName":"test.user@databricks.com"
-								}`,
+					"groups":[
+						{
+							"display":"admins",
+							"value":"100052",
+							"$ref":"https://test.databricks.com/api/2.0/scim/v2/Groups/100002"
+						},
+						{
+							"display":"test-create-group",
+							"value":"101355",
+							"$ref":"https://test.databricks.com/api/2.0/scim/v2/Groups/101355"
+						}
+					],
+					"roles":[
+						{
+							"value":"arn:aws:iam::1231231123123:instance-profile/my-instance-profile"
+						}
+					],
+					"id":"101030",
+					"userName":"test.user@databricks.com",
+					"displayName":"test.user@databricks.com"
+				}`,
 			responseStatus: http.StatusOK,
 			args: args{
 				UserID:       "10030",
@@ -426,67 +429,67 @@ func TestScimUserAPI_Read(t *testing.T) {
 		{
 			name: "Read test",
 			response: []string{`{
-								   "groups":[
-									  {
-										 "display":"admins",
-										 "value":"100002",
-										 "$ref":"https://test.databricks.com/api/2.0/scim/v2/Groups/100002"
-									  },
-									  {
-										 "display":"test-create-group",
-										 "value":"101355",
-										 "$ref":"https://test.databricks.com/api/2.0/scim/v2/Groups/101355"
-									  }
-								   ],
-								   "roles":[
-									  {
-										 "value":"arn:aws:iam::1231231123123:instance-profile/my-instance-profile"
-									  }
-								   ],
-								   "id":"101030",
-								   "userName":"test.user@databricks.com",
-								   "displayName":"test.user@databricks.com"
-								}`,
+					"groups":[
+						{
+							"display":"admins",
+							"value":"100002",
+							"$ref":"https://test.databricks.com/api/2.0/scim/v2/Groups/100002"
+						},
+						{
+							"display":"test-create-group",
+							"value":"101355",
+							"$ref":"https://test.databricks.com/api/2.0/scim/v2/Groups/101355"
+						}
+					],
+					"roles":[
+						{
+							"value":"arn:aws:iam::1231231123123:instance-profile/my-instance-profile"
+						}
+					],
+					"id":"101030",
+					"userName":"test.user@databricks.com",
+					"displayName":"test.user@databricks.com"
+				}`,
 				`{
-								   "schemas":[
-									  "urn:ietf:params:scim:schemas:core:2.0:Group"
-								   ],
-								   "id":"100002",
-								   "displayName":"admins",
-								   "members":[
-									  {
-										 "value":"100000"
-									  },
-									  {
-										 "value":"100001"
-									  }
-								   ],
-								   "roles":[
-									  {
-										 "value":"arn:aws:iam::1231231123123:instance-profile/my-inherited-profile1"
-									  }
-								   ]
-								}`,
+					"schemas":[
+						"urn:ietf:params:scim:schemas:core:2.0:Group"
+					],
+					"id":"100002",
+					"displayName":"admins",
+					"members":[
+						{
+							"value":"100000"
+						},
+						{
+							"value":"100001"
+						}
+					],
+					"roles":[
+						{
+							"value":"arn:aws:iam::1231231123123:instance-profile/my-inherited-profile1"
+						}
+					]
+				}`,
 				`{
-								   "schemas":[
-									  "urn:ietf:params:scim:schemas:core:2.0:Group"
-								   ],
-								   "id":"101355",
-								   "displayName":"test-create-group",
-								   "members":[
-									  {
-										 "value":"100000"
-									  },
-									  {
-										 "value":"100001"
-									  }
-								   ],
-								   "roles":[
-									  {
-										 "value":"arn:aws:iam::1231231123123:instance-profile/my-inherited-profile2"
-									  }
-								   ]
-								}`,
+					"schemas":[
+						"urn:ietf:params:scim:schemas:core:2.0:Group"
+					],
+					"id":"101355",
+					"displayName":"test-create-group",
+					"members":[
+						{
+							"value":"100000"
+						},
+						{
+							"value":"100001"
+						}
+					],
+					"roles":[
+						{
+							"value":"arn:aws:iam::1231231123123:instance-profile/my-inherited-profile2"
+						}
+					]
+				}`,
 			},
 			responseStatus: []int{http.StatusOK, http.StatusOK, http.StatusOK},
 			args: []args{
@@ -561,27 +564,27 @@ func TestScimUserAPI_Read(t *testing.T) {
 		{
 			name: "Read user first group failure no inherited and non inherited roles",
 			response: []string{`{
-								   "groups":[
-									  {
-										 "display":"admins",
-										 "value":"100002",
-										 "$ref":"https://test.databricks.com/api/2.0/scim/v2/Groups/100002"
-									  },
-									  {
-										 "display":"test-create-group",
-										 "value":"101355",
-										 "$ref":"https://test.databricks.com/api/2.0/scim/v2/Groups/101355"
-									  }
-								   ],
-								   "roles":[
-									  {
-										 "value":"arn:aws:iam::1231231123123:instance-profile/my-instance-profile"
-									  }
-								   ],
-								   "id":"101030",
-								   "userName":"test.user@databricks.com",
-								   "displayName":"test.user@databricks.com"
-								}`,
+					"groups":[
+						{
+							"display":"admins",
+							"value":"100002",
+							"$ref":"https://test.databricks.com/api/2.0/scim/v2/Groups/100002"
+						},
+						{
+							"display":"test-create-group",
+							"value":"101355",
+							"$ref":"https://test.databricks.com/api/2.0/scim/v2/Groups/101355"
+						}
+					],
+					"roles":[
+						{
+							"value":"arn:aws:iam::1231231123123:instance-profile/my-instance-profile"
+						}
+					],
+					"id":"101030",
+					"userName":"test.user@databricks.com",
+					"displayName":"test.user@databricks.com"
+				}`,
 				``,
 			},
 			responseStatus: []int{http.StatusOK, http.StatusBadRequest},
@@ -620,4 +623,93 @@ func TestScimUserAPI_Read(t *testing.T) {
 			})
 		})
 	}
+}
+
+func TestAccCreateUser(t *testing.T) {
+	if _, ok := os.LookupEnv("CLOUD_ENV"); !ok {
+		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
+	}
+
+	client := GetIntegrationDBAPIClient()
+
+	user, err := client.Users().Create("testuser@databricks.com", "Display Name", nil, nil)
+	assert.NoError(t, err, err)
+	assert.True(t, len(user.ID) > 0, "User id is empty")
+	idToDelete := user.ID
+	defer func() {
+		err := client.Users().Delete(idToDelete)
+		assert.NoError(t, err, err)
+	}()
+
+	user, err = client.Users().Read(user.ID)
+	t.Log(user)
+	assert.NoError(t, err, err)
+
+	err = client.Users().Update(user.ID, "newtestuser@databricks.com", "Test User", []string{string(model.AllowClusterCreateEntitlement)}, nil)
+	//t.Log(user)
+	assert.NoError(t, err, err)
+}
+
+func TestAccCreateAdminUser(t *testing.T) {
+	if _, ok := os.LookupEnv("CLOUD_ENV"); !ok {
+		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
+	}
+
+	client := GetIntegrationDBAPIClient()
+
+	user, err := client.Users().Create("testusersriterraform@databricks.com", "Display Name", nil, nil)
+	assert.NoError(t, err, err)
+	assert.True(t, len(user.ID) > 0, "User id is empty")
+	idToDelete := user.ID
+	//defer func() {
+	//	err := client.Users().Delete(idToDelete)
+	//	assert.NoError(t, err, err)
+	//}()
+	log.Println(idToDelete)
+
+	user, err = client.Users().Read(user.ID)
+	t.Log(user)
+	assert.NoError(t, err, err)
+
+	group, err := client.Groups().GetAdminGroup()
+	assert.NoError(t, err, err)
+
+	adminGroupID := group.ID
+
+	err = client.Users().SetUserAsAdmin(user.ID, adminGroupID)
+	assert.NoError(t, err, err)
+
+	userIsAdmin, err := client.Users().VerifyUserAsAdmin(user.ID, adminGroupID)
+	assert.NoError(t, err, err)
+	assert.True(t, userIsAdmin == true)
+	log.Println(userIsAdmin)
+
+	err = client.Users().RemoveUserAsAdmin(user.ID, adminGroupID)
+	assert.NoError(t, err, err)
+
+	userIsAdmin, err = client.Users().VerifyUserAsAdmin(user.ID, adminGroupID)
+	assert.NoError(t, err, err)
+	assert.True(t, userIsAdmin == false)
+	log.Println(userIsAdmin)
+}
+
+// user id 101354
+func TestAccRoleDifferences(t *testing.T) {
+	if _, ok := os.LookupEnv("CLOUD_ENV"); !ok {
+		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
+	}
+
+	client := GetIntegrationDBAPIClient()
+	//user, err := client.Users().Create("testusersriterraform@databricks.com", "Display Name", nil, nil)
+	//assert.NoError(t, err, err)
+	//assert.True(t, len(user.ID) > 0, "User id is empty")
+	//idToDelete := user.ID
+	//log.Println(idToDelete)
+
+	user, err := client.Users().Read("101354")
+	assert.NoError(t, err, err)
+	t.Log(user.Roles)
+	t.Log(user.Groups)
+	t.Log(user.InheritedRoles)
+	t.Log(user.UnInheritedRoles)
 }

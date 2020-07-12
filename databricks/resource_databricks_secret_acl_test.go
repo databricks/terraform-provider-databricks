@@ -3,6 +3,7 @@ package databricks
 import (
 	"errors"
 	"fmt"
+	"os"
 	"testing"
 
 	"github.com/databrickslabs/databricks-terraform/client/model"
@@ -12,7 +13,10 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestAccAzureSecretAclResource(t *testing.T) {
+func TestAccSecretAclResource(t *testing.T) {
+	if _, ok := os.LookupEnv("CLOUD_ENV"); !ok {
+		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
+	}
 	//var secretScope model.Secre
 	var secretACL model.ACLItem
 	// generate a random name for each tokenInfo test run, to avoid
@@ -26,17 +30,17 @@ func TestAccAzureSecretAclResource(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		Providers:    testAccProviders,
-		CheckDestroy: testAzureSecretACLResourceDestroy,
+		CheckDestroy: testSecretACLResourceDestroy,
 		Steps: []resource.TestStep{
 			{
 				// use a dynamic configuration with the random name from above
-				Config: testAzureSecretACLResource(scope, principal, permission),
+				Config: testSecretACLResource(scope, principal, permission),
 				// compose a basic test, checking both remote and local values
 				Check: resource.ComposeTestCheckFunc(
 					// query the API to retrieve the tokenInfo object
-					testAzureSecretACLResourceExists("databricks_secret_acl.my_secret_acl", &secretACL, t),
+					testSecretACLResourceExists("databricks_secret_acl.my_secret_acl", &secretACL, t),
 					// verify remote values
-					testAzureSecretACLValues(t, &secretACL, permission, principal),
+					testSecretACLValues(t, &secretACL, permission, principal),
 					// verify local values
 					resource.TestCheckResourceAttr("databricks_secret_acl.my_secret_acl", "scope", scope),
 					resource.TestCheckResourceAttr("databricks_secret_acl.my_secret_acl", "principal", principal),
@@ -50,13 +54,13 @@ func TestAccAzureSecretAclResource(t *testing.T) {
 					assert.NoError(t, err, err)
 				},
 				// use a dynamic configuration with the random name from above
-				Config: testAzureSecretACLResource(scope, principal, permission),
+				Config: testSecretACLResource(scope, principal, permission),
 				// compose a basic test, checking both remote and local values
 				Check: resource.ComposeTestCheckFunc(
 					// query the API to retrieve the tokenInfo object
-					testAzureSecretACLResourceExists("databricks_secret_acl.my_secret_acl", &secretACL, t),
+					testSecretACLResourceExists("databricks_secret_acl.my_secret_acl", &secretACL, t),
 					// verify remote values
-					testAzureSecretACLValues(t, &secretACL, permission, principal),
+					testSecretACLValues(t, &secretACL, permission, principal),
 					// verify local values
 					resource.TestCheckResourceAttr("databricks_secret_acl.my_secret_acl", "scope", scope),
 					resource.TestCheckResourceAttr("databricks_secret_acl.my_secret_acl", "principal", principal),
@@ -67,7 +71,7 @@ func TestAccAzureSecretAclResource(t *testing.T) {
 	})
 }
 
-func testAzureSecretACLResourceDestroy(s *terraform.State) error {
+func testSecretACLResourceDestroy(s *terraform.State) error {
 	client := testAccProvider.Meta().(*service.DatabricksClient)
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "databricks_secret" && rs.Type != "databricks_secret_scope" {
@@ -85,7 +89,7 @@ func testAzureSecretACLResourceDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAzureSecretACLValues(t *testing.T, acl *model.ACLItem, permission, principal string) resource.TestCheckFunc {
+func testSecretACLValues(t *testing.T, acl *model.ACLItem, permission, principal string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		assert.True(t, acl.Permission == model.ACLPermissionRead)
 		assert.True(t, acl.Principal == principal)
@@ -94,7 +98,7 @@ func testAzureSecretACLValues(t *testing.T, acl *model.ACLItem, permission, prin
 }
 
 // testAccCheckTokenResourceExists queries the API and retrieves the matching Widget.
-func testAzureSecretACLResourceExists(n string, aclItem *model.ACLItem, t *testing.T) resource.TestCheckFunc {
+func testSecretACLResourceExists(n string, aclItem *model.ACLItem, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		// find the corresponding state object
 		rs, ok := s.RootModule().Resources[n]
@@ -118,15 +122,15 @@ func testAzureSecretACLResourceExists(n string, aclItem *model.ACLItem, t *testi
 }
 
 // testAccTokenResource returns an configuration for an Example Widget with the provided name
-func testAzureSecretACLResource(scopeName, principal, permission string) string {
+func testSecretACLResource(scopeName, principal, permission string) string {
 	return fmt.Sprintf(`
-								resource "databricks_secret_scope" "my_scope" {
-								  name = "%s"
-								}
-								resource "databricks_secret_acl" "my_secret_acl" {
-								  principal = "%s"
-								  permission = "%s"
-								  scope = databricks_secret_scope.my_scope.name
-								}
-								`, scopeName, principal, permission)
+		resource "databricks_secret_scope" "my_scope" {
+			name = "%s"
+		}
+		resource "databricks_secret_acl" "my_secret_acl" {
+			principal = "%s"
+			permission = "%s"
+			scope = databricks_secret_scope.my_scope.name
+		}
+		`, scopeName, principal, permission)
 }

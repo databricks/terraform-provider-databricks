@@ -3,6 +3,7 @@ package databricks
 import (
 	"errors"
 	"fmt"
+	"os"
 	"strconv"
 	"testing"
 
@@ -13,7 +14,10 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestAccAwsJobResource(t *testing.T) {
+func TestAccJobResource(t *testing.T) {
+	if _, ok := os.LookupEnv("CLOUD_ENV"); !ok {
+		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
+	}
 	//var secretScope model.Secre
 	var job model.Job
 	// generate a random name for each tokenInfo test run, to avoid
@@ -23,17 +27,17 @@ func TestAccAwsJobResource(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		Providers:    testAccProviders,
-		CheckDestroy: testAwsJobResourceDestroy,
+		CheckDestroy: testJobResourceDestroy,
 		Steps: []resource.TestStep{
 			{
 				// use a dynamic configuration with the random name from above
-				Config: testAwsJobResourceNewCluster(),
+				Config: testJobResourceNewCluster(),
 				// compose a basic test, checking both remote and local values
 				Check: resource.ComposeTestCheckFunc(
 					// query the API to retrieve the tokenInfo object
-					testAwsJobResourceExists("databricks_job.my_job", &job),
+					testJobResourceExists("databricks_job.my_job", &job),
 					// verify remote values
-					testAwsJobValuesNewCluster(t, &job),
+					testJobValuesNewCluster(t, &job),
 				),
 				Destroy: false,
 			},
@@ -41,7 +45,7 @@ func TestAccAwsJobResource(t *testing.T) {
 	})
 }
 
-func testAwsJobResourceDestroy(s *terraform.State) error {
+func testJobResourceDestroy(s *terraform.State) error {
 	client := testAccProvider.Meta().(*service.DatabricksClient)
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "databricks_job" {
@@ -61,7 +65,7 @@ func testAwsJobResourceDestroy(s *terraform.State) error {
 }
 
 // testAccCheckTokenResourceExists queries the API and retrieves the matching Widget.
-func testAwsJobResourceExists(n string, job *model.Job) resource.TestCheckFunc {
+func testJobResourceExists(n string, job *model.Job) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		// find the corresponding state object
 		rs, ok := s.RootModule().Resources[n]
@@ -86,8 +90,8 @@ func testAwsJobResourceExists(n string, job *model.Job) resource.TestCheckFunc {
 	}
 }
 
-// Assertions are based off of the resource definition defined in function: testAwsJobResourceNewCluster
-func testAwsJobValuesNewCluster(t *testing.T, job *model.Job) resource.TestCheckFunc {
+// Assertions are based off of the resource definition defined in function: testJobResourceNewCluster
+func testJobValuesNewCluster(t *testing.T, job *model.Job) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		assert.NotNil(t, job.Settings)
 		assert.NotNil(t, job.Settings.NewCluster)
@@ -114,7 +118,7 @@ func testAwsJobValuesNewCluster(t *testing.T, job *model.Job) resource.TestCheck
 	}
 }
 
-func testAwsJobResourceNewCluster() string {
+func testJobResourceNewCluster() string {
 	return `
 	resource "databricks_job" "my_job" {
 	  new_cluster  {

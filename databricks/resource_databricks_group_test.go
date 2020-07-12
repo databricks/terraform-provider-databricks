@@ -3,6 +3,7 @@ package databricks
 import (
 	"errors"
 	"fmt"
+	"os"
 	"testing"
 
 	"github.com/databrickslabs/databricks-terraform/client/model"
@@ -13,7 +14,10 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestAccAzureGroupResource(t *testing.T) {
+func TestAccGroupResource(t *testing.T) {
+	if _, ok := os.LookupEnv("CLOUD_ENV"); !ok {
+		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
+	}
 	var Group model.Group
 	// generate a random name for each tokenInfo test run, to avoid
 	// collisions from multiple concurrent tests.
@@ -25,17 +29,17 @@ func TestAccAzureGroupResource(t *testing.T) {
 	newDisplayName := fmt.Sprintf("new tf group test %s", randomStr)
 	resource.Test(t, resource.TestCase{
 		Providers:    testAccProviders,
-		CheckDestroy: testAzureGroupResourceDestroy,
+		CheckDestroy: testGroupResourceDestroy,
 		Steps: []resource.TestStep{
 			{
 				// use a dynamic configuration with the random name from above
-				Config: testAzureDatabricksGroup(displayName),
+				Config: testDatabricksGroup(displayName),
 				// compose a basic test, checking both remote and local values
 				Check: resource.ComposeTestCheckFunc(
 					// query the API to retrieve the tokenInfo object
-					testAzureGroupResourceExists("databricks_group.my_group", &Group, t),
+					testGroupResourceExists("databricks_group.my_group", &Group, t),
 					// verify remote values
-					testAzureGroupValues(t, &Group, displayName),
+					testGroupValues(t, &Group, displayName),
 					// verify local values
 					resource.TestCheckResourceAttr("databricks_group.my_group", "display_name", displayName),
 				),
@@ -43,18 +47,22 @@ func TestAccAzureGroupResource(t *testing.T) {
 			},
 			{
 				// use a dynamic configuration with the random name from above
-				Config: testAzureDatabricksGroup(newDisplayName),
+				Config: testDatabricksGroup(newDisplayName),
 				// test to see if new resource is attempted to be planned
 				PlanOnly:           true,
 				ExpectNonEmptyPlan: true,
 				Destroy:            false,
 			},
+			{
+				ResourceName:      "databricks_group.my_group",
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
 
-func TestAccAzureGroupResource_verify_entitlements(t *testing.T) {
-	//var secretScope model.Secre
+func TestAccGroupResource_verify_entitlements(t *testing.T) {
 	var Group model.Group
 	// generate a random name for each tokenInfo test run, to avoid
 	// collisions from multiple concurrent tests.
@@ -66,17 +74,17 @@ func TestAccAzureGroupResource_verify_entitlements(t *testing.T) {
 	newDisplayName := fmt.Sprintf("new tf group test %s", randomStr)
 	resource.Test(t, resource.TestCase{
 		Providers:    testAccProviders,
-		CheckDestroy: testAzureGroupResourceDestroy,
+		CheckDestroy: testGroupResourceDestroy,
 		Steps: []resource.TestStep{
 			{
 				// use a dynamic configuration with the random name from above
-				Config: testAzureDatabricksGroupEntitlements(displayName, "true", "true"),
+				Config: testDatabricksGroupEntitlements(displayName, "true", "true"),
 				// compose a basic test, checking both remote and local values
 				Check: resource.ComposeTestCheckFunc(
 					// query the API to retrieve the tokenInfo object
-					testAzureGroupResourceExists("databricks_group.my_group", &Group, t),
+					testGroupResourceExists("databricks_group.my_group", &Group, t),
 					// verify remote values
-					testAzureGroupValues(t, &Group, displayName),
+					testGroupValues(t, &Group, displayName),
 					// verify local values
 					resource.TestCheckResourceAttr("databricks_group.my_group", "allow_cluster_create", "true"),
 					resource.TestCheckResourceAttr("databricks_group.my_group", "allow_instance_pool_create", "true"),
@@ -86,7 +94,7 @@ func TestAccAzureGroupResource_verify_entitlements(t *testing.T) {
 			// Remove entitlements and expect a non empty plan
 			{
 				// use a dynamic configuration with the random name from above
-				Config: testAzureDatabricksGroup(newDisplayName),
+				Config: testDatabricksGroup(newDisplayName),
 				// test to see if new resource is attempted to be planned
 				PlanOnly:           true,
 				ExpectNonEmptyPlan: true,
@@ -96,7 +104,7 @@ func TestAccAzureGroupResource_verify_entitlements(t *testing.T) {
 	})
 }
 
-func testAzureGroupResourceDestroy(s *terraform.State) error {
+func testGroupResourceDestroy(s *terraform.State) error {
 	client := testAccProvider.Meta().(*service.DatabricksClient)
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "databricks_group" {
@@ -111,7 +119,7 @@ func testAzureGroupResourceDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAzureGroupValues(t *testing.T, group *model.Group, displayName string) resource.TestCheckFunc {
+func testGroupValues(t *testing.T, group *model.Group, displayName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		assert.True(t, group.DisplayName == displayName)
 		return nil
@@ -119,7 +127,7 @@ func testAzureGroupValues(t *testing.T, group *model.Group, displayName string) 
 }
 
 // testAccCheckTokenResourceExists queries the API and retrieves the matching Widget.
-func testAzureGroupResourceExists(n string, group *model.Group, t *testing.T) resource.TestCheckFunc {
+func testGroupResourceExists(n string, group *model.Group, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		// find the corresponding state object
 		rs, ok := s.RootModule().Resources[n]
@@ -140,20 +148,20 @@ func testAzureGroupResourceExists(n string, group *model.Group, t *testing.T) re
 	}
 }
 
-func testAzureDatabricksGroup(groupName string) string {
+func testDatabricksGroup(groupName string) string {
 	return fmt.Sprintf(`
-								resource "databricks_group" "my_group" {
-								  display_name = "%s"
-								}
-								`, groupName)
+		resource "databricks_group" "my_group" {
+			display_name = "%s"
+		}
+		`, groupName)
 }
 
-func testAzureDatabricksGroupEntitlements(groupName, allowClusterCreate, allowPoolCreate string) string {
+func testDatabricksGroupEntitlements(groupName, allowClusterCreate, allowPoolCreate string) string {
 	return fmt.Sprintf(`
-								resource "databricks_group" "my_group" {
-								  display_name = "%s"
-								  allow_cluster_create = %s
-								  allow_instance_pool_create = %s
-								}
-								`, groupName, allowClusterCreate, allowPoolCreate)
+		resource "databricks_group" "my_group" {
+			display_name = "%s"
+			allow_cluster_create = %s
+			allow_instance_pool_create = %s
+		}
+		`, groupName, allowClusterCreate, allowPoolCreate)
 }

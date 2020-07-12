@@ -1,6 +1,7 @@
 package service
 
 import (
+	"os"
 	"testing"
 
 	"github.com/databrickslabs/databricks-terraform/client/model"
@@ -8,8 +9,8 @@ import (
 )
 
 func TestSecretsScopesAclsIntegration(t *testing.T) {
-	if testing.Short() {
-		t.Skip("skipping integration test in short mode.")
+	if _, ok := os.LookupEnv("CLOUD_ENV"); !ok {
+		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
 	}
 	client := GetIntegrationDBAPIClient()
 

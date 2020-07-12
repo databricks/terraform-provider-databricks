@@ -64,6 +64,9 @@ func (aa *AzureAuth) resourceID() string {
 	if aa.ResourceID != "" {
 		return aa.ResourceID
 	}
+	if aa.SubscriptionID == "" || aa.ResourceGroup == "" || aa.WorkspaceName == "" {
+		return ""
+	}
 	return fmt.Sprintf("/subscriptions/%s/resourceGroups/%s/providers/Microsoft.Databricks/workspaces/%s",
 		aa.SubscriptionID, aa.ResourceGroup, aa.WorkspaceName)
 }
@@ -77,6 +80,9 @@ func (aa *AzureAuth) isClientSecretSet() bool {
 }
 
 func (aa *AzureAuth) configureWithClientSecret() (bool, error) {
+	if aa.resourceID() == "" {
+		return false, nil
+	}
 	if !aa.isClientSecretSet() {
 		return false, nil
 	}
@@ -106,6 +112,9 @@ func (aa *AzureAuth) configureWithClientSecret() (bool, error) {
 }
 
 func (aa *AzureAuth) configureWithAzureCLI() (bool, error) {
+	if aa.resourceID() == "" {
+		return false, nil
+	}
 	if aa.isClientSecretSet() {
 		return false, nil
 	}
@@ -123,6 +132,9 @@ func (aa *AzureAuth) configureWithAzureCLI() (bool, error) {
 		managementAuthorizer, platformAuthorizer, func(r *http.Request) (*http.Request, error) {
 			return r, nil
 		})
+	if err != nil {
+		return false, err
+	}
 	aa.databricksClient.Token = tokenResponse.TokenValue
 	if tokenResponse.TokenInfo != nil {
 		aa.databricksClient.tokenCreateTime = tokenResponse.TokenInfo.CreationTime
@@ -152,7 +164,7 @@ func (aa *AzureAuth) stuff(managementAuthorizer, platformAuthorizer autorest.Aut
 	json.Unmarshal(resp, &workspace)
 	aa.databricksClient.Host = fmt.Sprintf("https://%s/", workspace.Properties.WorkspaceURL)
 	log.Println("[DEBUG] Creating workspace token")
-	url := fmt.Sprintf("%s2.0/token/create", aa.databricksClient.Host)
+	url := fmt.Sprintf("%sapi/2.0/token/create", aa.databricksClient.Host)
 	tokenLifetimeSeconds := (time.Duration(aa.patTokenSeconds) * time.Second).Seconds()
 	var tokenResponse model.TokenResponse
 	resp, err = aa.databricksClient.genericQuery2(http.MethodPost, url, model.TokenRequest{
@@ -172,7 +184,12 @@ func (aa *AzureAuth) stuff(managementAuthorizer, platformAuthorizer autorest.Aut
 	}
 	err = json.Unmarshal(resp, &tokenResponse)
 	if err != nil {
-		return nil, err
+		return nil, APIError{
+			ErrorCode:  "UNKNOWN",
+			StatusCode: 200,
+			Resource:   "/api/2.0/token/create",
+			Message:    fmt.Sprintf("Invalid JSON received: %v", string(resp)),
+		}
 	}
 	return &tokenResponse, nil
 }

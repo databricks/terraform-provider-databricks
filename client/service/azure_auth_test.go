@@ -17,7 +17,7 @@ func getAndAssertEnv(t *testing.T, key string) string {
 	return value
 }
 
-func TestAccAzureAuth_TestPatTokenDuration(t *testing.T) {
+func TestAzureAccAuth_TestPatTokenDuration(t *testing.T) {
 	if _, ok := os.LookupEnv("TF_ACC"); !ok {
 		t.Skip("Acceptance tests skipped unless env 'TF_ACC' set")
 	}
@@ -39,15 +39,13 @@ func TestAccAzureAuth_TestPatTokenDuration(t *testing.T) {
 	err := client.Configure("dev-integration")
 	assert.NoError(t, err, err)
 
-	err = client.AzureAuth.initWorkspaceAndGetClient()
-	assert.NoError(t, err, err)
 	// Time in milliseconds
 	tokenActualDuration := client.tokenExpiryTime - client.tokenCreateTime
 	assert.Equal(t, patTokenSeconds, (time.Duration(tokenActualDuration) * time.Millisecond).Seconds(),
 		"duration should be the same")
 }
 
-func TestAzureAuthCreateApiToken(t *testing.T) {
+func TestAzureAccAuthCreateApiToken(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping integration test in short mode.")
 	}

@@ -2,9 +2,11 @@ package service
 
 import (
 	"net/http"
+	"os"
 	"testing"
 
 	"github.com/databrickslabs/databricks-terraform/client/model"
+	"github.com/stretchr/testify/assert"
 )
 
 // Test interface compliance
@@ -675,4 +677,69 @@ func TestCommandsAPI_Execute(t *testing.T) {
 			})
 		})
 	}
+}
+
+func TestAwsAccContext(t *testing.T) {
+	if _, ok := os.LookupEnv("CLOUD_ENV"); !ok {
+		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
+	}
+
+	client := GetIntegrationDBAPIClient()
+
+	cluster := model.Cluster{
+		NumWorkers:  1,
+		ClusterName: "my-cluster",
+		SparkEnvVars: map[string]string{
+			"PYSPARK_PYTHON": "/databricks/python3/bin/python3",
+		},
+		AwsAttributes: &model.AwsAttributes{
+			EbsVolumeType:  model.EbsVolumeTypeGeneralPurposeSsd,
+			EbsVolumeCount: 1,
+			EbsVolumeSize:  32,
+		},
+		SparkVersion:           "6.2.x-scala2.11",
+		NodeTypeID:             GetCloudInstanceType(client),
+		DriverNodeTypeID:       GetCloudInstanceType(client),
+		IdempotencyToken:       "my-cluster",
+		AutoterminationMinutes: 20,
+	}
+
+	clusterInfo, err := client.Clusters().Create(cluster)
+	assert.NoError(t, err, err)
+	defer func() {
+		err := client.Clusters().PermanentDelete(clusterInfo.ClusterID)
+		assert.NoError(t, err, err)
+	}()
+
+	clusterID := clusterInfo.ClusterID
+
+	err = client.Clusters().WaitForClusterRunning(clusterID, 10, 20)
+	assert.NoError(t, err, err)
+
+	context, err := client.Commands().createContext("python", clusterID)
+	assert.NoError(t, err, err)
+	t.Log(context)
+
+	err = client.Commands().waitForContextReady(context, clusterID, 1, 1)
+	assert.NoError(t, err, err)
+
+	status, err := client.Commands().getContext(context, clusterID)
+	assert.NoError(t, err, err)
+	assert.True(t, status == "Running")
+	t.Log(status)
+
+	commandID, err := client.Commands().createCommand(context, clusterID, "python", "print('hello world')")
+	assert.NoError(t, err, err)
+
+	err = client.Commands().waitForCommandFinished(commandID, context, clusterID, 5, 20)
+	assert.NoError(t, err, err)
+
+	resp, err := client.Commands().getCommand(commandID, context, clusterID)
+	assert.NoError(t, err, err)
+	assert.NotNil(t, resp.Results.Data)
+
+	// Testing the public api Execute
+	command, err := client.Commands().Execute(clusterID, "python", "print('hello world')")
+	assert.NoError(t, err, err)
+	assert.NotNil(t, command.Results.Data)
 }

@@ -3,6 +3,7 @@ package databricks
 import (
 	"errors"
 	"fmt"
+	"os"
 	"testing"
 
 	"github.com/databrickslabs/databricks-terraform/client/model"
@@ -13,7 +14,10 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestAccAwsTokenResource(t *testing.T) {
+func TestAccTokenResource(t *testing.T) {
+	if _, ok := os.LookupEnv("CLOUD_ENV"); !ok {
+		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
+	}
 	var tokenInfo model.TokenInfo
 
 	// generate a random name for each tokenInfo test run, to avoid
@@ -24,17 +28,17 @@ func TestAccAwsTokenResource(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		Providers:    testAccProviders,
-		CheckDestroy: testAccAwsCheckTokenResourceDestroy,
+		CheckDestroy: testCheckTokenResourceDestroy,
 		Steps: []resource.TestStep{
 			{
 				// use a dynamic configuration with the random name from above
-				Config: testAccAwsTokenResource(rComment),
+				Config: testTokenResource(rComment),
 				// compose a basic test, checking both remote and local values
 				Check: resource.ComposeTestCheckFunc(
 					// query the API to retrieve the tokenInfo object
-					testAccAwsCheckTokenResourceExists("databricks_token.my-token", &tokenInfo, t),
+					testCheckTokenResourceExists("databricks_token.my-token", &tokenInfo, t),
 					// verify remote values
-					testAccAwsCheckTokenValues(&tokenInfo, rComment),
+					testCheckTokenValues(&tokenInfo, rComment),
 					// verify local values
 					resource.TestCheckResourceAttr("databricks_token.my-token", "lifetime_seconds", "6000"),
 					resource.TestCheckResourceAttr("databricks_token.my-token", "comment", rComment),
@@ -48,13 +52,13 @@ func TestAccAwsTokenResource(t *testing.T) {
 					assert.NoError(t, err, err)
 				},
 				// use a dynamic configuration with the random name from above
-				Config: testAccAwsTokenResource(rComment),
+				Config: testTokenResource(rComment),
 				// compose a basic test, checking both remote and local values
 				Check: resource.ComposeTestCheckFunc(
 					// query the API to retrieve the tokenInfo object
-					testAccAwsCheckTokenResourceExists("databricks_token.my-token", &tokenInfo, t),
+					testCheckTokenResourceExists("databricks_token.my-token", &tokenInfo, t),
 					// verify remote values
-					testAccAwsCheckTokenValues(&tokenInfo, rComment),
+					testCheckTokenValues(&tokenInfo, rComment),
 					// verify local values
 					resource.TestCheckResourceAttr("databricks_token.my-token", "lifetime_seconds", "6000"),
 					resource.TestCheckResourceAttr("databricks_token.my-token", "comment", rComment),
@@ -64,7 +68,7 @@ func TestAccAwsTokenResource(t *testing.T) {
 	})
 }
 
-func testAccAwsCheckTokenResourceDestroy(s *terraform.State) error {
+func testCheckTokenResourceDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*service.DatabricksClient)
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "databricks_token" {
@@ -79,7 +83,7 @@ func testAccAwsCheckTokenResourceDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccAwsCheckTokenValues(tokenInfo *model.TokenInfo, comment string) resource.TestCheckFunc {
+func testCheckTokenValues(tokenInfo *model.TokenInfo, comment string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if tokenInfo.Comment != comment {
 			return errors.New("the comment for the token created does not equal the value passed in")
@@ -88,8 +92,8 @@ func testAccAwsCheckTokenValues(tokenInfo *model.TokenInfo, comment string) reso
 	}
 }
 
-// testAccAwsCheckTokenResourceExists queries the API and retrieves the matching Widget.
-func testAccAwsCheckTokenResourceExists(n string, tokenInfo *model.TokenInfo, t *testing.T) resource.TestCheckFunc {
+// testCheckTokenResourceExists queries the API and retrieves the matching Widget.
+func testCheckTokenResourceExists(n string, tokenInfo *model.TokenInfo, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		// find the corresponding state object
 		rs, ok := s.RootModule().Resources[n]
@@ -111,12 +115,12 @@ func testAccAwsCheckTokenResourceExists(n string, tokenInfo *model.TokenInfo, t 
 	}
 }
 
-// testAccAwsTokenResource returns an configuration for an Example Widget with the provided name
-func testAccAwsTokenResource(comment string) string {
+// testTokenResource returns an configuration for an Example Widget with the provided name
+func testTokenResource(comment string) string {
 	return fmt.Sprintf(`
-								resource "databricks_token" "my-token" {
-								  lifetime_seconds = 6000
-								  comment = "%v"
-								}
-								`, comment)
+		resource "databricks_token" "my-token" {
+			lifetime_seconds = 6000
+			comment = "%v"
+		}
+		`, comment)
 }

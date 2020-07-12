@@ -13,8 +13,11 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestAccAzureAdlsGen2Mount_correctly_mounts(t *testing.T) {
-	terraformToApply := testAccAzureAdlsGen2MountCorrectlyMounts()
+func TestAzureAccAdlsGen2Mount_correctly_mounts(t *testing.T) {
+	if _, ok := os.LookupEnv("CLOUD_ENV"); !ok {
+		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
+	}
+	terraformToApply := testAdlsGen2MountCorrectlyMounts()
 
 	resource.Test(t, resource.TestCase{
 		Providers: testAccProviders,
@@ -26,8 +29,11 @@ func TestAccAzureAdlsGen2Mount_correctly_mounts(t *testing.T) {
 	})
 }
 
-func TestAccAzureAdlsGen2Mount_cluster_deleted_correctly_mounts(t *testing.T) {
-	terraformToApply := testAccAzureAdlsGen2MountCorrectlyMounts()
+func TestAzureAccAdlsGen2Mount_cluster_deleted_correctly_mounts(t *testing.T) {
+	if _, ok := os.LookupEnv("CLOUD_ENV"); !ok {
+		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
+	}
+	terraformToApply := testAdlsGen2MountCorrectlyMounts()
 	var cluster model.ClusterInfo
 
 	resource.Test(t, resource.TestCase{
@@ -49,8 +55,11 @@ func TestAccAzureAdlsGen2Mount_cluster_deleted_correctly_mounts(t *testing.T) {
 	})
 }
 
-func TestAccAzureAdlsGen2Mount_capture_error(t *testing.T) {
-	terraformToApply := testAccAzureAdlsGen2MountCaptureError()
+func TestAzureAccAdlsGen2Mount_capture_error(t *testing.T) {
+	if _, ok := os.LookupEnv("CLOUD_ENV"); !ok {
+		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
+	}
+	terraformToApply := testAdlsGen2MountCaptureError()
 
 	resource.Test(t, resource.TestCase{
 		Providers: testAccProviders,
@@ -65,7 +74,7 @@ func TestAccAzureAdlsGen2Mount_capture_error(t *testing.T) {
 	})
 }
 
-func testAccAzureAdlsGen2MountCorrectlyMounts() string {
+func testAdlsGen2MountCorrectlyMounts() string {
 	clientID := os.Getenv("ARM_CLIENT_ID")
 	clientSecret := os.Getenv("ARM_CLIENT_SECRET")
 	tenantID := os.Getenv("ARM_TENANT_ID")
@@ -113,7 +122,7 @@ func testAccAzureAdlsGen2MountCorrectlyMounts() string {
 	return definition
 }
 
-func testAccAzureAdlsGen2MountCaptureError() string {
+func testAdlsGen2MountCaptureError() string {
 	clientID := os.Getenv("ARM_CLIENT_ID")
 	clientSecret := os.Getenv("ARM_CLIENT_SECRET")
 	tenantID := os.Getenv("ARM_TENANT_ID")

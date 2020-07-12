@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"strconv"
 	"time"
 
 	"github.com/Azure/go-autorest/autorest"
@@ -20,20 +19,20 @@ const (
 	AzureDatabricksResourceID string = "2ff814a6-3304-4ab8-85cb-cd0e6f879c1d"
 )
 
-func (c *DatabricksClient) configureAzureAuth() (bool, error) {
-	if c.AzureAuth.WorkspaceName == "" {
-		return false, nil
-	}
-	c.AzureAuth.databricksClient = c
-	patTokenDuration, err := strconv.Atoi(c.AzureAuth.PATTokenDurationSeconds)
-	if err != nil {
-		return false, fmt.Errorf("failed to parse pat_token_duration_seconds[%v], %w", patTokenDuration, err)
-	}
-	c.AzureAuth.patTokenSeconds = int32(patTokenDuration)
-	//c.customAuthorizer = c.AzureAuth.initWorkspaceAndGetClient
+// func (c *DatabricksClient) configureAzureAuth() (bool, error) {
+// 	if c.AzureAuth.WorkspaceName == "" {
+// 		return false, nil
+// 	}
+// 	c.AzureAuth.databricksClient = c
+// 	patTokenDuration, err := strconv.Atoi(c.AzureAuth.PATTokenDurationSeconds)
+// 	if err != nil {
+// 		return false, fmt.Errorf("failed to parse pat_token_duration_seconds[%v], %w", patTokenDuration, err)
+// 	}
+// 	c.AzureAuth.patTokenSeconds = int32(patTokenDuration)
+// 	//c.customAuthorizer = c.AzureAuth.initWorkspaceAndGetClient
 
-	return true, nil
-}
+// 	return true, nil
+// }
 
 // AzureAuth contains all the auth information for azure sp authentication
 type AzureAuth struct {
@@ -103,6 +102,9 @@ func (aa *AzureAuth) configureWithClientSecret() (bool, error) {
 			// r.Header.Set("X-Databricks-Azure-SP-Management-Token", managementToken)
 			return r, nil
 		})
+	if err != nil {
+		return false, err
+	}
 	aa.databricksClient.Token = tokenResponse.TokenValue
 	if tokenResponse.TokenInfo != nil {
 		aa.databricksClient.tokenCreateTime = tokenResponse.TokenInfo.CreationTime
@@ -161,7 +163,10 @@ func (aa *AzureAuth) stuff(managementAuthorizer, platformAuthorizer autorest.Aut
 	if err != nil {
 		return nil, err
 	}
-	json.Unmarshal(resp, &workspace)
+	err = json.Unmarshal(resp, &workspace)
+	if err != nil {
+		return nil, err
+	}
 	aa.databricksClient.Host = fmt.Sprintf("https://%s/", workspace.Properties.WorkspaceURL)
 	log.Println("[DEBUG] Creating workspace token")
 	url := fmt.Sprintf("%sapi/2.0/token/create", aa.databricksClient.Host)

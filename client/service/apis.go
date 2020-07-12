@@ -36,7 +36,6 @@ type DatabricksClient struct {
 	authType           string
 	userAgent          string
 	customAuthorizer   func() error
-	requestInterceptor func(*http.Request) (*http.Request, error)
 	httpClient         *retryablehttp.Client
 	uriPrefix          string
 }

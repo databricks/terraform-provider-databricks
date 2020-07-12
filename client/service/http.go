@@ -170,18 +170,14 @@ func (c *DatabricksClient) getOrCreateToken() error {
 	return nil
 }
 
-func (c *DatabricksClient) get(path string, request interface{}, response interface{},
-	interceptors ...func(*http.Request) (*http.Request, error)) error {
-	body, err := c.genericQuery2(http.MethodGet, c.formatURL("2.0", path), request, interceptors...)
-	if err != nil {
-		return err
-	}
-	return json.Unmarshal(body, &response)
-}
-
-func (c *DatabricksClient) formatURL(apiVersion, path string) string {
-	return fmt.Sprintf("%s/%s%s", c.uriPrefix, "2.0", path)
-}
+// func (c *DatabricksClient) get(path string, request interface{}, response interface{},
+// 	interceptors ...func(*http.Request) (*http.Request, error)) error {
+// 	body, err := c.genericQuery2(http.MethodGet, c.formatURL("2.0", path), request, interceptors...)
+// 	if err != nil {
+// 		return err
+// 	}
+// 	return json.Unmarshal(body, &response)
+// }
 
 func (c *DatabricksClient) genericQuery2(method, requestURL string, data interface{},
 	interceptors ...func(*http.Request) (*http.Request, error)) (body []byte, err error) {
@@ -233,10 +229,6 @@ func (c *DatabricksClient) genericQuery2(method, requestURL string, data interfa
 
 func (c *DatabricksClient) performQuery(method string, path string, apiVersion string, headers map[string]string, data interface{}) ([]byte, error) {
 	return c.genericQuery(method, path, apiVersion, headers, true, false, data)
-}
-
-func (c *DatabricksClient) performRawQuery(method, path string, apiVersion string, headers map[string]string, marshalJSON bool, data interface{}) (body []byte, err error) {
-	return c.genericQuery(method, path, apiVersion, headers, marshalJSON, true, data)
 }
 
 func makeRequestBody(method string, requestURL *string, data interface{}, marshalJSON bool) ([]byte, error) {

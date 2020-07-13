@@ -549,7 +549,7 @@ func TestDBFSAPI_Status(t *testing.T) {
 			args: args{
 				Path: "mypath",
 			},
-			want: model.FileInfo{
+			want: model.DBFSFileInfo{
 				Path:     "/a.cpp",
 				IsDir:    false,
 				FileSize: 261,
@@ -564,7 +564,7 @@ func TestDBFSAPI_Status(t *testing.T) {
 			args: args{
 				Path: "mypath",
 			},
-			want:    model.FileInfo{},
+			want:    model.DBFSFileInfo{},
 			wantErr: true,
 		},
 	}
@@ -589,7 +589,7 @@ func TestDBFSAPI_ListNonRecursive(t *testing.T) {
 		responseStatus int
 		args           args
 		wantURI        string
-		want           []model.FileInfo
+		want           []model.DBFSFileInfo
 		wantErr        bool
 	}{
 		{
@@ -615,7 +615,7 @@ func TestDBFSAPI_ListNonRecursive(t *testing.T) {
 				Recursive: false,
 			},
 			wantURI: "/api/2.0/dbfs/list?path=%2F",
-			want: []model.FileInfo{
+			want: []model.DBFSFileInfo{
 				{
 					Path:     "/a.cpp",
 					IsDir:    false,
@@ -664,7 +664,7 @@ func TestDBFSAPI_ListRecursive(t *testing.T) {
 		responseStatus []int
 		args           []interface{}
 		wantURI        []string
-		want           []model.FileInfo
+		want           []model.DBFSFileInfo
 		wantErr        bool
 	}{
 		{
@@ -701,7 +701,7 @@ func TestDBFSAPI_ListRecursive(t *testing.T) {
 				},
 			},
 			wantURI: []string{"/api/2.0/dbfs/list?path=%2F", "/api/2.0/dbfs/list?path=%2Ffoldera"},
-			want: []model.FileInfo{
+			want: []model.DBFSFileInfo{
 				{
 					Path:     "/a.cpp",
 					IsDir:    false,

@@ -1,12 +1,4 @@
-+++
-title = "dbfs_file"
-date = 2020-04-20T23:34:03-04:00
-weight = 15
-chapter = false
-pre = ""
-+++
-
-## Resource: `databricks_dbfs_file`
+# databricks_dbfs_file Resource`
 
 This is a resource that lets you create, get and delete files in DBFS (Databricks File System).
 
@@ -38,6 +30,7 @@ resource "databricks_dbfs_file" "my_dbfs_file" {
 }
 ```
 
+    
 ## Argument Reference
 
 The following arguments are supported:

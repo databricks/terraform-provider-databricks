@@ -75,28 +75,9 @@ func resourceDBFSFileCreate(d *schema.ResourceData, m interface{}) error {
 	mkdirs := d.Get("mkdirs").(bool)
 
 	if mkdirs {
-		parentDir, err := GetParentDirPath(path)
-		switch err {
-		// Notebook path is root directory so no need to make directory and there is no parent
-		case DirPathRootDirError:
-			break
-		// Notebook path is empty thus a valid error
-		case PathEmptyError:
+		err := handleDBFSParentDirs(client, path)
+		if err != nil {
 			return err
-		//	Notebook path is valid and has a parent directory
-		case nil:
-			dbfsObj, err := client.DBFS().Status(parentDir)
-			// Notebook parent path is not a directory and it could be a notebook
-			if err == nil && !dbfsObj.IsDir {
-				return fmt.Errorf("parent path: %s caused error: %w", parentDir, ParentPathIsFileError)
-			}
-			// Parent path is missing thus needs to be created as a directory
-			if e, ok := err.(service.APIError); ok && e.IsMissing() {
-				err := client.DBFS().Mkdirs(parentDir)
-				if err != nil {
-					return errors.Wrapf(err, "failed to create directory %s", parentDir)
-				}
-			}
 		}
 	}
 
@@ -217,6 +198,34 @@ func resourceDBFSFileDelete(d *schema.ResourceData, m interface{}) error {
 	client := m.(*service.DBApiClient)
 	err := client.DBFS().Delete(id, false)
 	return err
+}
+
+// handleDBFSParentDirs handles the different branch paths to create dbfs parent directories
+func handleDBFSParentDirs(client *service.DBApiClient, path string) error {
+	parentDir, err := GetParentDirPath(path)
+	switch err {
+	// Notebook path is root directory so no need to make directory and there is no parent
+	case DirPathRootDirError:
+		return nil
+	// Notebook path is empty thus a valid error
+	case PathEmptyError:
+		return err
+	//	Notebook path is valid and has a parent directory
+	case nil:
+		dbfsObj, err := client.DBFS().Status(parentDir)
+		// Notebook parent path is not a directory and it could be a notebook
+		if err == nil && !dbfsObj.IsDir {
+			return fmt.Errorf("parent path: %s caused error: %w", parentDir, ParentPathIsFileError)
+		}
+		// Parent path is missing thus needs to be created as a directory
+		if e, ok := err.(service.APIError); ok && e.IsMissing() {
+			err := client.DBFS().Mkdirs(parentDir)
+			if err != nil {
+				return errors.Wrapf(err, "failed to create directory %s", parentDir)
+			}
+		}
+	}
+	return nil
 }
 
 var ParentPathIsFileError = errors.New("parent path should be a directory and not a file")

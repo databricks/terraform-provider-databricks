@@ -49,7 +49,7 @@ The following arguments are supported:
 > **(Optional)** The full absolute path to the file. Please use [pathexpand](https://www.terraform.io/docs/configuration/functions/pathexpand.html).
 
 #### - `content_b64_md5`:
-> **(Optional)** The checksum for the content please use the [md5](https://www.terraform.io/docs/configuration/functions/md5.html) and [filebase64](https://www.terraform.io/docs/configuration/functions/filebase64.html) functions in terraform to retrieve the checksum.
+> **(Required)** The checksum for the content please use the [md5](https://www.terraform.io/docs/configuration/functions/md5.html) and [filebase64](https://www.terraform.io/docs/configuration/functions/filebase64.html) functions in terraform to retrieve the checksum.
 
 #### - `path`:
 > **(Required)** The path of the file in which you wish to save.

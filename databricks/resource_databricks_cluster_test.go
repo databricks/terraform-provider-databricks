@@ -3,12 +3,13 @@ package databricks
 import (
 	"bytes"
 	"fmt"
+	"reflect"
+	"testing"
+
 	"github.com/databrickslabs/databricks-terraform/client/model"
 	"github.com/databrickslabs/databricks-terraform/client/service"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
-	"reflect"
-	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 )

@@ -126,7 +126,7 @@ func TestAccAwsClusterResource_CreateClusterViaInstancePool(t *testing.T) {
 
 	resourceEmptyAttrConfig := testDefaultZones() +
 		testAWSDatabricksInstanceProfile(instanceProfile) +
-		testDefaultAwsInstancePoolResource("aws_attributes {}", randomInstancePoolName) +
+		testDefaultAwsInstancePoolResource(testGetAwsAttributes(awsAttrInstancePool), randomInstancePoolName) +
 		testDefaultClusterResource(instancePoolLine, "aws_attributes {}")
 
 	resource.Test(t, resource.TestCase{

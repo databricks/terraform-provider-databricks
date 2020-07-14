@@ -12,22 +12,44 @@ This is a resource that lets you create, get and delete files in DBFS (Databrick
 
 ## Example Usage
 
+Using content field:
+
 ```hcl
 resource "databricks_dbfs_file" "my_dbfs_file" {
   content = filebase64("README.md")
+  content_b64_md5 = md5(filebase64("README.md"))
   path = "/sri/terraformdbfs/example/README.md"
   overwrite = true
   mkdirs = true
   validate_remote_file = true
 }
 ```
-    
+
+Using Source field:
+
+```hcl
+resource "databricks_dbfs_file" "my_dbfs_file" {
+  source = pathexpand("README.md")
+  content_b64_md5 = md5(filebase64(pathexpand("README.md")))
+  path = "/sri/terraformdbfs/example/README.md"
+  overwrite = true
+  mkdirs = true
+  validate_remote_file = true
+}
+```
+
 ## Argument Reference
 
 The following arguments are supported:
 
 #### - `content`:
-> **(Required)** The content of the file as a base64 encoded string.
+> **(Optional)** The content of the file as a base64 encoded string.
+
+#### - `source`:
+> **(Optional)** The full absolute path to the file. Please use [pathexpand](https://www.terraform.io/docs/configuration/functions/pathexpand.html).
+
+#### - `content_b64_md5`:
+> **(Required)** The checksum for the content please use the [md5](https://www.terraform.io/docs/configuration/functions/md5.html) and [filebase64](https://www.terraform.io/docs/configuration/functions/filebase64.html) functions in terraform to retrieve the checksum.
 
 #### - `path`:
 > **(Required)** The path of the file in which you wish to save.

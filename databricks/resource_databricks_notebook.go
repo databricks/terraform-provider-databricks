@@ -202,7 +202,7 @@ func resourceNotebookDelete(d *schema.ResourceData, m interface{}) error {
 		if err == nil {
 			return nil
 		}
-		var e *service.APIError
+		var e service.APIError
 		if errors.As(err, &e) && e.IsTooManyRequests() {
 			// Wait for requests to clear up
 			baseDuration := 250 * time.Millisecond

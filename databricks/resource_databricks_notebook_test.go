@@ -268,6 +268,28 @@ func TestNotebooksDelete(t *testing.T) {
 	assert.Equal(t, testId, d.Id())
 }
 
+func TestNotebooksDelete_TooManyRequests(t *testing.T) {
+	testId := "/test/path.py"
+	d, err := ResourceTester(t, []HTTPFixture{
+		{
+			Method:   http.MethodPost,
+			Resource: "/api/2.0/workspace/delete",
+			Status:   http.StatusTooManyRequests,
+		},
+		{
+			Method:          http.MethodPost,
+			Resource:        "/api/2.0/workspace/delete",
+			Status:          http.StatusOK,
+			ExpectedRequest: model.NotebookDeleteRequest{Path: testId, Recursive: true},
+		},
+	}, resourceNotebook, nil, func(d *schema.ResourceData, c interface{}) error {
+		d.SetId(testId)
+		return resourceNotebookDelete(d, c)
+	})
+	assert.NoError(t, err, err)
+	assert.Equal(t, testId, d.Id())
+}
+
 func TestAccAwsNotebookResource_multiple_formats(t *testing.T) {
 	testAccNotebookResourceMultipleFormats(t)
 }

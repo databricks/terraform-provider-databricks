@@ -119,10 +119,19 @@ func (c *DBApiClientConfig) Setup() {
 	// a transient error on initial creation
 	retryDelayDuration := 10 * time.Second
 	retryMaximumDuration := 5 * time.Minute
+	// Default transport will inherit from env variables and system settings such as HTTP_PROXY and NO_PROXY
+	defaultTransport := http.DefaultTransport.(*http.Transport)
 	c.client = &retryablehttp.Client{
 		HTTPClient: &http.Client{
 			Timeout: time.Duration(c.TimeoutSeconds) * time.Second,
 			Transport: &http.Transport{
+				Proxy:                 defaultTransport.Proxy,
+				DialContext:           defaultTransport.DialContext,
+				MaxIdleConns:          defaultTransport.MaxIdleConns,
+				IdleConnTimeout:       defaultTransport.IdleConnTimeout,
+				TLSHandshakeTimeout:   defaultTransport.TLSHandshakeTimeout,
+				ExpectContinueTimeout: defaultTransport.ExpectContinueTimeout,
+				// TODO: This probably should be a configuration at the provider level and optional and not a fixed val
 				TLSClientConfig: &tls.Config{
 					InsecureSkipVerify: c.InsecureSkipVerify,
 				},

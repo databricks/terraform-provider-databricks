@@ -270,6 +270,42 @@ func testVerifyResourceIsMissing(t *testing.T, readFunc func() error) {
 	}
 }
 
+func TestGetParentDirPath(t *testing.T) {
+	tests := []struct {
+		name            string
+		path            string
+		expectedDirPath string
+		expectedError   error
+	}{
+		{
+			name:            "basic_path",
+			path:            "/test/abc/file.py",
+			expectedDirPath: "/test/abc",
+			expectedError:   nil,
+		},
+		{
+			name:            "root_path",
+			path:            "/file.py",
+			expectedDirPath: "",
+			expectedError:   DirPathRootDirError,
+		},
+		{
+			name:            "empty_path",
+			path:            "",
+			expectedDirPath: "",
+			expectedError:   PathEmptyError,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			dirPath, err := GetParentDirPath(tt.path)
+			assert.Equal(t, tt.expectedDirPath, dirPath, "dirPath values should match")
+			assert.Equal(t, tt.expectedError, err, "err values should match")
+		})
+	}
+}
+
 type errorSlice []error
 
 func (a errorSlice) Len() int           { return len(a) }
@@ -283,6 +319,13 @@ type HTTPFixture struct {
 	Response        interface{}
 	Status          int
 	ExpectedRequest interface{}
+}
+
+func UnionFixturesLists(fixturesLists ...[]HTTPFixture) (fixtureList []HTTPFixture) {
+	for _, v := range fixturesLists {
+		fixtureList = append(fixtureList, v...)
+	}
+	return
 }
 
 // ResourceTester helps testing HTTP resources with fixtures

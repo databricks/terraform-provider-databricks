@@ -319,6 +319,7 @@ type HTTPFixture struct {
 	Response        interface{}
 	Status          int
 	ExpectedRequest interface{}
+	ReuseRequest    bool
 }
 
 func UnionFixturesLists(fixturesLists ...[]HTTPFixture) (fixtureList []HTTPFixture) {
@@ -331,12 +332,12 @@ func UnionFixturesLists(fixturesLists ...[]HTTPFixture) (fixtureList []HTTPFixtu
 // ResourceTester helps testing HTTP resources with fixtures
 func ResourceTester(t *testing.T,
 	fixtures []HTTPFixture,
-	resouceFunc func() *schema.Resource,
+	resourceFunc func() *schema.Resource,
 	state map[string]interface{},
 	whatever func(d *schema.ResourceData, c interface{}) error) (*schema.ResourceData, error) {
 	server := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
 		found := false
-		for _, fixture := range fixtures {
+		for i, fixture := range fixtures {
 			if req.Method == fixture.Method && req.RequestURI == fixture.Resource {
 				if fixture.Status == 0 {
 					rw.WriteHeader(200)
@@ -361,6 +362,10 @@ func ResourceTester(t *testing.T,
 					assert.NoError(t, err, err)
 				}
 				found = true
+				// Reset the request if it is already used
+				if !fixture.ReuseRequest {
+					fixtures[i] = HTTPFixture{}
+				}
 				break
 			}
 		}
@@ -378,7 +383,7 @@ func ResourceTester(t *testing.T,
 	var client service.DBApiClient
 	client.SetConfig(&config)
 
-	res := resouceFunc()
+	res := resourceFunc()
 
 	if state != nil {
 		resourceConfig := terraform.NewResourceConfigRaw(state)

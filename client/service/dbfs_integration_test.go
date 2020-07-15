@@ -78,32 +78,3 @@ func TestCreateFile(t *testing.T) {
 	assert.NoError(t, err, err)
 	assert.True(t, len(items) == 4)
 }
-
-////15500000
-////15500000
-//func TestReadFile(t *testing.T) {
-//	if testing.Short() {
-//		t.Skip("skipping integration test in short mode.")
-//	}
-//
-//	path := "/sri/randomfile"
-//	client := GetIntegrationDBAPIClient()
-//
-//	data, err := client.DBFS().Status(path)
-//	assert.NoError(t, err, err)
-//	t.Log(data)
-//
-//}
-//
-//func TestListRecursive(t *testing.T) {
-//	if testing.Short() {
-//		t.Skip("skipping integration test in short mode.")
-//	}
-//
-//	path := "/andre_mesarovic/mlflow"
-//	client := GetIntegrationDBAPIClient()
-//	data, err := client.DBFS().List(path, true)
-//	assert.NoError(t, err, err)
-//
-//	t.Log(data)
-//}

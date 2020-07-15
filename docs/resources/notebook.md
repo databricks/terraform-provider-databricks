@@ -27,46 +27,36 @@ resource "databricks_notebook" "notebook" {
 
 The following arguments are supported:
 
-#### - `content`:
-> **(Required)** The base64-encoded content. If the limit (10MB) is exceeded, 
+* `content` - (Required) The base64-encoded content. If the limit (10MB) is exceeded, 
 exception with error code MAX_NOTEBOOK_SIZE_EXCEEDED will be thrown.
 
-#### - `path`:
-> **(Required)** The absolute path of the notebook or directory, beginning with "/", e.g. "/mynotebook"
+* `path` -  (Required) The absolute path of the notebook or directory, beginning with "/", e.g. "/mynotebook"
 Exporting a directory is supported only for DBC. This field is **required**.
 
-#### - `language`:
-> **(Required)** The language. If format is set to SOURCE, 
+* `language` -  (Required) The language. If format is set to SOURCE, 
 this field is required; otherwise, it will be ignored. Possible choices are SCALA, PYTHON, SQL, R.
 
-#### - `overwrite`:
-> **(Required)** The flag that specifies whether to overwrite existing object. 
+* `overwrite` - (Required) The flag that specifies whether to overwrite existing object. 
 It is false by default. For DBC format, overwrite is not supported since it may contain a directory.
 
-#### - `mkdirs`:
-> **(Deprecated)** **(Required)** Create the given directory and necessary parent directories 
+* `mkdirs` - (Required) Create the given directory and necessary parent directories 
 if they do not exists. If there exists an object (not a directory) at any prefix of the input path, this call 
 returns an error RESOURCE_ALREADY_EXISTS. If this operation fails it may have succeeded in creating some of the necessary parent directories.
 
-#### - `format`:
-> **(Required)** This specifies the format of the file to be imported. 
-This resource currently only supports SOURCE. The value is case sensitive. 
->SOURCE is suitable for .scala, .py, .r, .sql extension based files, HTML for .html files, JUPYTER for .ipynb files, 
->and DBC for .dbc files. Though the API supports DBC, HTML, and JUPYTER currently we do not support them as effectively 
->identifying DIFF is currently not feasible.
+* `format` -  (Required) This specifies the format of the file to be imported. 
+This resource currently only supports SOURCE. The value is case sensitive. SOURCE is suitable for .scala, .py, .r, .sql extension based files, HTML for .html files, JUPYTER for .ipynb files, 
+and DBC for .dbc files. Though the API supports DBC, HTML, and JUPYTER currently we do not support them as effectively 
+identifying DIFF is currently not feasible.
 
 ## Attribute Reference
 
 In addition to all arguments above, the following attributes are exported:
 
-#### - `id`:
-> The id for the notebook object.
+* `id` -  The id for the notebook object.
 
-#### - `object_id`:
-> Unique identifier for a NOTEBOOK or DIRECTORY.
+* `object_id` -  Unique identifier for a NOTEBOOK or DIRECTORY.
 
-#### - `object_type`:
-> The type of the object. It could be NOTEBOOK, DIRECTORY or LIBRARY.
+* `object_type` -  The type of the object. It could be NOTEBOOK, DIRECTORY or LIBRARY.
 
 ## Import
 

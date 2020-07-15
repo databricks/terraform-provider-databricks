@@ -1,4 +1,4 @@
-# databricks_dbfs_file Resource`
+# databricks_dbfs_file Resource
 
 This is a resource that lets you create, get and delete files in DBFS (Databricks File System).
 
@@ -62,6 +62,4 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-{{% notice note %}}
-Importing this resource is not currently supported.
-{{% /notice %}}
+-> **Note** Importing this resource is not currently supported.

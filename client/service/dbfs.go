@@ -114,10 +114,7 @@ func (a DBFSAPI) Move(src string, tgt string) error {
 
 // Delete deletes a file in DBFS via API
 func (a DBFSAPI) Delete(path string, recursive bool) error {
-	deleteRequest := struct {
-		Path      string `json:"path,omitempty" url:"path,omitempty"`
-		Recursive bool   `json:"recursive,omitempty" url:"recursive,omitempty"`
-	}{
+	deleteRequest := model.DBFSDeleteRequest{
 		Path:      path,
 		Recursive: recursive,
 	}
@@ -128,10 +125,7 @@ func (a DBFSAPI) Delete(path string, recursive bool) error {
 
 // ReadString reads a "block" of data in DBFS given a offset and length as a base64 encoded string
 func (a DBFSAPI) ReadString(path string, offset, length int64) (int64, string, error) {
-	var readBytes struct {
-		BytesRead int64  `json:"bytes_read,omitempty" url:"bytes_read,omitempty"`
-		Data      string `json:"data,omitempty" url:"data,omitempty"`
-	}
+	var readBytes model.DBFSReadResponse
 	readRequest := struct {
 		Path   string `json:"path,omitempty" url:"path,omitempty"`
 		Offset int64  `json:"offset,omitempty" url:"offset,omitempty"`
@@ -160,8 +154,8 @@ func (a DBFSAPI) read(path string, offset, length int64) (int64, []byte, error) 
 }
 
 // Status returns the status of a file in DBFS
-func (a DBFSAPI) Status(path string) (model.FileInfo, error) {
-	var fileInfo model.FileInfo
+func (a DBFSAPI) Status(path string) (model.DBFSFileInfo, error) {
+	var fileInfo model.DBFSFileInfo
 	statusRequest := struct {
 		Path string `json:"path,omitempty" url:"path,omitempty"`
 	}{
@@ -176,9 +170,9 @@ func (a DBFSAPI) Status(path string) (model.FileInfo, error) {
 }
 
 // List returns a list of files in DBFS and the recursive flag lets you recursively list files
-func (a DBFSAPI) List(path string, recursive bool) ([]model.FileInfo, error) {
+func (a DBFSAPI) List(path string, recursive bool) ([]model.DBFSFileInfo, error) {
 	if recursive {
-		var paths []model.FileInfo
+		var paths []model.DBFSFileInfo
 		err := a.recursiveAddPaths(path, &paths)
 		if err != nil {
 			return nil, err
@@ -188,7 +182,7 @@ func (a DBFSAPI) List(path string, recursive bool) ([]model.FileInfo, error) {
 	return a.list(path)
 }
 
-func (a DBFSAPI) recursiveAddPaths(path string, pathList *[]model.FileInfo) error {
+func (a DBFSAPI) recursiveAddPaths(path string, pathList *[]model.DBFSFileInfo) error {
 	fileInfoList, err := a.list(path)
 	if err != nil {
 		return err
@@ -206,9 +200,9 @@ func (a DBFSAPI) recursiveAddPaths(path string, pathList *[]model.FileInfo) erro
 	return nil
 }
 
-func (a DBFSAPI) list(path string) ([]model.FileInfo, error) {
+func (a DBFSAPI) list(path string) ([]model.DBFSFileInfo, error) {
 	var dbfsList struct {
-		Files []model.FileInfo `json:"files,omitempty" url:"files,omitempty"`
+		Files []model.DBFSFileInfo `json:"files,omitempty" url:"files,omitempty"`
 	}
 	listRequest := struct {
 		Path string `json:"path,omitempty" url:"path,omitempty"`
@@ -226,10 +220,9 @@ func (a DBFSAPI) list(path string) ([]model.FileInfo, error) {
 
 // Mkdirs makes the directories in DBFS include the parent paths
 func (a DBFSAPI) Mkdirs(path string) error {
-	mkDirsRequest := struct {
-		Path string `json:"path,omitempty" url:"path,omitempty"`
-	}{}
-	mkDirsRequest.Path = path
+	mkDirsRequest := model.DBFSMkdirRequest{
+		Path: path,
+	}
 
 	_, err := a.Client.performQuery(http.MethodPost, "/dbfs/mkdirs", "2.0", nil, mkDirsRequest, nil)
 
@@ -237,13 +230,8 @@ func (a DBFSAPI) Mkdirs(path string) error {
 }
 
 func (a DBFSAPI) createHandle(path string, overwrite bool) (int64, error) {
-	var handle struct {
-		Handle int64 `json:"handle,omitempty" url:"handle,omitempty"`
-	}
-	createDBFSHandleRequest := struct {
-		Path      string `json:"path,omitempty" url:"path,omitempty"`
-		Overwrite bool   `json:"overwrite,omitempty" url:"overwrite,omitempty"`
-	}{
+	var handle model.DBFSHandleResponse
+	createDBFSHandleRequest := model.DBFSHandleRequest{
 		Path:      path,
 		Overwrite: overwrite,
 	}
@@ -258,10 +246,7 @@ func (a DBFSAPI) createHandle(path string, overwrite bool) (int64, error) {
 }
 
 func (a DBFSAPI) addBlock(data string, handle int64) error {
-	var addDBFSBlockRequest = struct {
-		Data   string `json:"data,omitempty" url:"data,omitempty"`
-		Handle int64  `json:"handle,omitempty" url:"handle,omitempty"`
-	}{
+	var addDBFSBlockRequest = model.DBFSBlockRequest{
 		Data:   data,
 		Handle: handle,
 	}
@@ -270,9 +255,7 @@ func (a DBFSAPI) addBlock(data string, handle int64) error {
 }
 
 func (a DBFSAPI) closeHandle(handle int64) error {
-	closeHandleRequest := struct {
-		Handle int64 `json:"handle,omitempty" url:"handle,omitempty"`
-	}{
+	closeHandleRequest := model.DBFSCloseRequest{
 		Handle: handle,
 	}
 

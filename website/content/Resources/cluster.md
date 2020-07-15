@@ -96,7 +96,7 @@ resource "databricks_cluster" "my-cluster" {
 }
 ```
 
-* `zone_id` - **(Required)** Identifier for the availability zone/datacenter in which the cluster resides. 
+* `zone_id` - **(Optional)** Identifier for the availability zone/datacenter in which the cluster resides. 
 This string will be of a form like “us-west-2a”. The provided availability zone must be in the same region as the 
 Databricks deployment. For example, “us-west-2a” is not a valid zone ID if the Databricks deployment resides in the 
 “us-east-1” region. 

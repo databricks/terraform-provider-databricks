@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"reflect"
 	"strings"
 	"time"
 
@@ -66,16 +67,17 @@ func resourceCluster() *schema.Resource {
 						"availability": {
 							Type:     schema.TypeString,
 							Optional: true,
-							Default:  "SPOT_WITH_FALLBACK",
+							Computed: true,
 						},
 						"zone_id": {
 							Type:     schema.TypeString,
-							Required: true,
+							Optional: true,
+							Computed: true,
 						},
 						"spot_bid_price_percent": {
 							Type:     schema.TypeInt,
 							Optional: true,
-							Default:  "100",
+							Computed: true,
 						},
 						"instance_profile_arn": {
 							Type:     schema.TypeString,
@@ -83,18 +85,22 @@ func resourceCluster() *schema.Resource {
 						},
 						"first_on_demand": {
 							Type:     schema.TypeInt,
+							Computed: true,
 							Optional: true,
 						},
 						"ebs_volume_type": {
 							Type:     schema.TypeString,
+							Computed: true,
 							Optional: true,
 						},
 						"ebs_volume_count": {
 							Type:     schema.TypeInt,
+							Computed: true,
 							Optional: true,
 						},
 						"ebs_volume_size": {
 							Type:     schema.TypeInt,
+							Computed: true,
 							Optional: true,
 						},
 					},
@@ -109,6 +115,7 @@ func resourceCluster() *schema.Resource {
 			"node_type_id": {
 				Type:          schema.TypeString,
 				Optional:      true,
+				Computed:      true,
 				ConflictsWith: []string{"instance_pool_id"},
 				AtLeastOneOf:  []string{"instance_pool_id"},
 			},
@@ -126,7 +133,6 @@ func resourceCluster() *schema.Resource {
 				Type:     schema.TypeList,
 				Optional: true,
 				MaxItems: 1,
-				//ConfigMode: schema.SchemaConfigModeAttr,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"dbfs": {
@@ -291,7 +297,6 @@ func resourceCluster() *schema.Resource {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Default:  60,
-				//Computed: true,
 			},
 			"enable_elastic_disk": {
 				Type:     schema.TypeBool,
@@ -299,10 +304,20 @@ func resourceCluster() *schema.Resource {
 				Computed: true,
 			},
 			"instance_pool_id": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ConflictsWith: []string{"node_type_id", "driver_node_type_id", "aws_attributes"},
-				AtLeastOneOf:  []string{"node_type_id"},
+				Type:     schema.TypeString,
+				Optional: true,
+				ConflictsWith: []string{
+					"node_type_id",
+					"driver_node_type_id",
+					"aws_attributes.0.availability",
+					"aws_attributes.0.zone_id",
+					"aws_attributes.0.spot_bid_price_percent",
+					"aws_attributes.0.first_on_demand",
+					"aws_attributes.0.ebs_volume_type",
+					"aws_attributes.0.ebs_volume_count",
+					"aws_attributes.0.ebs_volume_size",
+				},
+				AtLeastOneOf: []string{"node_type_id"},
 			},
 			"idempotency_token": {
 				Type:     schema.TypeInt,
@@ -506,6 +521,7 @@ func resourceClusterCreate(d *schema.ResourceData, m interface{}) error {
 	client := m.(*service.DBApiClient)
 
 	cluster := parseSchemaToCluster(d, "")
+	handleInstancePoolClusterRequest(&cluster)
 	libraries := parseSchemaToClusterLibraries(d)
 
 	clusterInfo, err := client.Clusters().Create(cluster)
@@ -690,8 +706,11 @@ func resourceClusterRead(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 
-	_, ok := d.GetOk("aws_attributes")
-	if ok && clusterInfo.AwsAttributes != nil {
+	// attempt to identify diff if instance_profile_arn is set
+	isInstanceProfileArnFound := !reflect.ValueOf(clusterInfo.AwsAttributes.InstanceProfileArn).IsZero()
+	//Separating computed fields and instance_profile_arn which is not computed (thus remote state should be tracked)
+	_, awsAttributesDefined := d.GetOk("aws_attributes")
+	if (awsAttributesDefined || isInstanceProfileArnFound) && clusterInfo.AwsAttributes != nil {
 		awsAtts := map[string]interface{}{}
 		awsAtts["availability"] = string(clusterInfo.AwsAttributes.Availability)
 		awsAtts["zone_id"] = clusterInfo.AwsAttributes.ZoneID
@@ -703,11 +722,6 @@ func resourceClusterRead(d *schema.ResourceData, m interface{}) error {
 		awsAtts["ebs_volume_size"] = int(clusterInfo.AwsAttributes.EbsVolumeSize)
 		awsAttsSet := []map[string]interface{}{awsAtts}
 		err = d.Set("aws_attributes", awsAttsSet)
-		if err != nil {
-			return err
-		}
-	} else {
-		err = d.Set("aws_attributes", nil)
 		if err != nil {
 			return err
 		}
@@ -1060,9 +1074,12 @@ func resourceClusterUpdate(d *schema.ResourceData, m interface{}) error {
 
 	clusterState := clusterInfo.State
 
+	cluster := parseSchemaToCluster(d, "")
+	// Remove all fields that conflict with instancePools
+	handleInstancePoolClusterRequest(&cluster)
+
 	switch {
 	case model.ContainsClusterState([]model.ClusterState{model.ClusterState(model.ClusterStateTerminated)}, clusterState):
-		cluster := parseSchemaToCluster(d, "")
 		cluster.ClusterID = id
 		err := client.Clusters().Edit(cluster)
 		if err != nil {
@@ -1099,7 +1116,6 @@ func resourceClusterUpdate(d *schema.ResourceData, m interface{}) error {
 		}
 		return resourceClusterRead(d, m)
 	case model.ContainsClusterState([]model.ClusterState{model.ClusterState(model.ClusterStateRunning)}, clusterState):
-		cluster := parseSchemaToCluster(d, "")
 		cluster.ClusterID = id
 
 		if len(installs) > 0 {
@@ -1132,7 +1148,6 @@ func resourceClusterUpdate(d *schema.ResourceData, m interface{}) error {
 		if err != nil {
 			return err
 		}
-		cluster := parseSchemaToCluster(d, "")
 		cluster.ClusterID = id
 
 		if len(installs) > 0 {
@@ -1172,6 +1187,23 @@ func resourceClusterDelete(d *schema.ResourceData, m interface{}) error {
 		return err
 	}
 	return err
+}
+
+// This function helps remove all requests that should not be submitted when instance pool is selected.
+func handleInstancePoolClusterRequest(clusterModel *model.Cluster) {
+	if reflect.ValueOf(clusterModel.InstancePoolID).IsZero() {
+		return
+	}
+	if clusterModel.AwsAttributes != nil {
+		// Reset AwsAttributes
+		awsAttributes := model.AwsAttributes{
+			InstanceProfileArn: clusterModel.AwsAttributes.InstanceProfileArn,
+		}
+		clusterModel.AwsAttributes = &awsAttributes
+	}
+	clusterModel.EnableElasticDisk = false
+	clusterModel.NodeTypeID = ""
+	clusterModel.DriverNodeTypeID = ""
 }
 
 func parseSchemaToCluster(d *schema.ResourceData, schemaAttPrefix string) model.Cluster {
@@ -1441,7 +1473,11 @@ func parseSchemaToCluster(d *schema.ResourceData, schemaAttPrefix string) model.
 func getMapFromOneItemList(input interface{}) map[string]interface{} {
 	inputList := input.([]interface{})
 	if len(inputList) >= 1 {
-		return inputList[0].(map[string]interface{})
+		resp, ok := inputList[0].(map[string]interface{})
+		if !ok {
+			return make(map[string]interface{})
+		}
+		return resp
 	}
 	return nil
 }

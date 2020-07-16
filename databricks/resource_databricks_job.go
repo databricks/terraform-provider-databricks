@@ -1129,13 +1129,10 @@ func parseSchemaToLibraries(d *schema.ResourceData) []model.Library {
 	if whls, ok := d.GetOk("library_whl"); ok {
 		libraries := whls.(*schema.Set).List()
 		for _, library := range libraries {
-			libraryMap := library.(map[string]interface{})
-			if whl, ok := libraryMap["whl"]; ok {
-				thisLibrary := model.Library{
-					Whl: whl.(string),
-				}
-				libraryList = append(libraryList, thisLibrary)
+			thisLibrary := model.Library{
+				Whl: library.(string),
 			}
+			libraryList = append(libraryList, thisLibrary)
 		}
 	}
 	if pypis, ok := d.GetOk("library_pypi"); ok {

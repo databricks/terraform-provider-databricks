@@ -1,6 +1,7 @@
 package databricks
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -114,4 +115,28 @@ func ValidateInstanceProfileARN(val interface{}, key string) (warns []string, er
 			key, instanceProfileArn.Resource, v)}
 	}
 	return nil, nil
+}
+
+var PathEmptyError error = errors.New("provided path is empty")
+
+// we would never want to handle root directories in regards to creating them
+var DirPathRootDirError error = errors.New("dir path is root directory")
+
+// Os libraries behave bizarely on windows as they will replace slashes with other values.
+// This causes issues & errors when submitting the request
+func GetParentDirPath(filePath string) (string, error) {
+	if filePath == "" {
+		return "", PathEmptyError
+	}
+
+	pathParts := strings.Split(filePath, "/")
+
+	// if length of pathParts is just two items then the parent should be the root directory
+	if len(pathParts) == 2 {
+		return "", DirPathRootDirError
+	}
+
+	dirPath := strings.Join(pathParts[0:len(pathParts)-1], "/")
+
+	return dirPath, nil
 }

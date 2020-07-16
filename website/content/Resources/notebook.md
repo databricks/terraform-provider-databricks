@@ -63,7 +63,7 @@ this field is required; otherwise, it will be ignored. Possible choices are SCAL
 It is false by default. For DBC format, overwrite is not supported since it may contain a directory.
 
 #### - `mkdirs`:
-> **(Deprecated)** **(Required)** Create the given directory and necessary parent directories 
+> **(Required)** Create the given directory and necessary parent directories 
 if they do not exists. If there exists an object (not a directory) at any prefix of the input path, this call 
 returns an error RESOURCE_ALREADY_EXISTS. If this operation fails it may have succeeded in creating some of the necessary parent directories.
 

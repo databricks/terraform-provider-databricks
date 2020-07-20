@@ -20,42 +20,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestDatabricksNotebook_GetDirPath(t *testing.T) {
-	tests := []struct {
-		name            string
-		path            string
-		expectedDirPath string
-		expectedError   error
-	}{
-		{
-			name:            "basic_path",
-			path:            "/test/abc/file.py",
-			expectedDirPath: "/test/abc",
-			expectedError:   nil,
-		},
-		{
-			name:            "root_path",
-			path:            "/file.py",
-			expectedDirPath: "",
-			expectedError:   notebookDirPathRootDirError,
-		},
-		{
-			name:            "empty_path",
-			path:            "",
-			expectedDirPath: "",
-			expectedError:   notebookPathEmptyError,
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			dirPath, err := getNotebookParentDirPath(tt.path)
-			assert.Equal(t, tt.expectedDirPath, dirPath, "dirPath values should match")
-			assert.Equal(t, tt.expectedError, err, "err values should match")
-		})
-	}
-}
-
 func TestValidateNotebookPath(t *testing.T) {
 	testCases := []struct {
 		name         string
@@ -268,6 +232,28 @@ func TestNotebooksDelete(t *testing.T) {
 	assert.Equal(t, testId, d.Id())
 }
 
+func TestNotebooksDelete_TooManyRequests(t *testing.T) {
+	testId := "/test/path.py"
+	d, err := ResourceTester(t, []HTTPFixture{
+		{
+			Method:   http.MethodPost,
+			Resource: "/api/2.0/workspace/delete",
+			Status:   http.StatusTooManyRequests,
+		},
+		{
+			Method:          http.MethodPost,
+			Resource:        "/api/2.0/workspace/delete",
+			Status:          http.StatusOK,
+			ExpectedRequest: model.NotebookDeleteRequest{Path: testId, Recursive: true},
+		},
+	}, resourceNotebook, nil, func(d *schema.ResourceData, c interface{}) error {
+		d.SetId(testId)
+		return resourceNotebookDelete(d, c)
+	})
+	assert.NoError(t, err, err)
+	assert.Equal(t, testId, d.Id())
+}
+
 func TestAccAwsNotebookResource_multiple_formats(t *testing.T) {
 	testAccNotebookResourceMultipleFormats(t)
 }
@@ -407,7 +393,7 @@ func testNotebookResourceDestroy(s *terraform.State) error {
 		if err != nil {
 			return nil
 		}
-		return errors.New("resource Scim Group is not cleaned up")
+		return errors.New("resource notebook is not cleaned up")
 	}
 	return nil
 }

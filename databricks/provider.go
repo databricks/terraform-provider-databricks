@@ -57,7 +57,8 @@ func Provider(version string) terraform.ResourceProvider {
 			"databricks_mws_networks":               resourceMWSNetworks(),
 			"databricks_mws_workspaces":             resourceMWSWorkspaces(),
 			// Preview features
-			"databricks_ipaccesslists": resourceIPAccessList(),
+			"databricks_workspace_conf": resourceWorkspaceConf(),
+			"databricks_ip_access_list": resourceIPAccessList(),
 		},
 		Schema: map[string]*schema.Schema{
 			"host": {

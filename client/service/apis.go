@@ -121,6 +121,16 @@ func (c *DBApiClient) Permissions() PermissionsAPI {
 	return PermissionsAPI{Client: c}
 }
 
+// WorkspaceConfigurations returns an instance of WorkspaceConfAPI
+func (c *DBApiClient) WorkspaceConfigurations() WorkspaceConfAPI {
+	return WorkspaceConfAPI{Client: c}
+}
+
+// IPAccessLists returns an instance of IPAccessListsAPI
+func (c *DBApiClient) IPAccessLists() IPAccessListsAPI {
+	return IPAccessListsAPI{Client: c}
+}
+
 func (c *DBApiClient) performQuery(method, path string, apiVersion string, headers map[string]string, data interface{}, secretsMask *SecretsMask) ([]byte, error) {
 	err := c.Config.getOrCreateToken()
 	if err != nil {

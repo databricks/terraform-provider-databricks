@@ -330,3 +330,4 @@ website/public/**
 .vscode/private.env
 tf.log
 *.env
+examples/enterprise-azure-deployment/enterprise-workspace-deploy/tflogs.log

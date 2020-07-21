@@ -65,15 +65,16 @@ func TestAzureAuth_configureWithClientSecret(t *testing.T) {
 	server := httptest.NewUnstartedServer(http.HandlerFunc(
 		func(rw http.ResponseWriter, req *http.Request) {
 			if req.RequestURI == "/a/b/c?api-version=2018-04-01" {
-				rw.Write([]byte(fmt.Sprintf(`{"properties": {"workspaceUrl": "%s"}}`,
+				_, err := rw.Write([]byte(fmt.Sprintf(`{"properties": {"workspaceUrl": "%s"}}`,
 					strings.ReplaceAll(serverURL, "https://", ""))))
+				assert.NoError(t, err)
 				return
 			}
 			if req.RequestURI == "/api/2.0/token/create" {
 				assert.Equal(t, token.AccessToken, req.Header.Get("X-Databricks-Azure-SP-Management-Token"))
 				assert.Equal(t, "Bearer "+token.AccessToken, req.Header.Get("Authorization"))
 				assert.Equal(t, aa.ResourceID, req.Header.Get("X-Databricks-Azure-Workspace-Resource-Id"))
-				rw.Write([]byte(fmt.Sprintf(`{
+				_, err := rw.Write([]byte(fmt.Sprintf(`{
 					"token_value": "%s", 
 					"token_info": {
 						"token_id": "qwertyu",
@@ -81,11 +82,13 @@ func TestAzureAuth_configureWithClientSecret(t *testing.T) {
 						"expiry_time": 1234568
 					}
 				}`, dummyPAT)))
+				assert.NoError(t, err)
 				return
 			}
 			if req.RequestURI == "/api/2.0/clusters/list-zones?" {
 				assert.Equal(t, "Bearer "+dummyPAT, req.Header.Get("Authorization"))
-				rw.Write([]byte(`{"zones": ["a", "b", "c"]}`))
+				_, err := rw.Write([]byte(`{"zones": ["a", "b", "c"]}`))
+				assert.NoError(t, err)
 				return
 			}
 			assert.Fail(t, fmt.Sprintf("Received unexpected call: %s %s",

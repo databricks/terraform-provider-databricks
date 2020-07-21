@@ -42,7 +42,7 @@ func (a NotebooksAPI) Export(path string, format model.ExportFormat) (string, er
 	var notebookContent model.NotebookContent
 	err := a.client.get("/workspace/export", map[string]string{
 		"path":   path,
-		"format": format,
+		"format": string(format),
 	}, &notebookContent)
 	return notebookContent.Content, err
 }
@@ -102,5 +102,8 @@ func (a NotebooksAPI) list(path string) ([]model.WorkspaceObjectStatus, error) {
 
 // Delete will delete folders given a path and recursive flag
 func (a NotebooksAPI) Delete(path string, recursive bool) error {
-	return a.client.post("/workspace/delete", model.NotebookDeleteRequest{path, recursive}, nil)
+	return a.client.post("/workspace/delete", model.NotebookDeleteRequest{
+		Path:      path,
+		Recursive: recursive,
+	}, nil)
 }

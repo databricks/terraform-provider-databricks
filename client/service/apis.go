@@ -32,7 +32,6 @@ type DatabricksClient struct {
 	tokenExpiryTime    int64
 	authType           string
 	userAgent          string
-	customAuthorizer   func() error
 	httpClient         *retryablehttp.Client
 	uriPrefix          string
 	auth               func(r *http.Request) (*http.Request, error)

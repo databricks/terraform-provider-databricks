@@ -33,12 +33,12 @@ func (a ClustersAPI) ListZones() (model.ZonesInfo, error) {
 
 // Start starts a terminated Spark cluster given its ID
 func (a ClustersAPI) Start(clusterID string) error {
-	return a.client.post("/clusters/start", model.ClusterID{clusterID}, nil)
+	return a.client.post("/clusters/start", model.ClusterID{ClusterID: clusterID}, nil)
 }
 
 // Restart restart a Spark cluster given its ID. If the cluster is not in a RUNNING state, nothing will happen.
 func (a ClustersAPI) Restart(clusterID string) error {
-	return a.client.post("/clusters/restart", model.ClusterID{clusterID}, nil)
+	return a.client.post("/clusters/restart", model.ClusterID{ClusterID: clusterID}, nil)
 }
 
 // WaitForClusterRunning will block main thread and wait till cluster is in a RUNNING state
@@ -103,7 +103,7 @@ func (a ClustersAPI) WaitForClusterTerminated(clusterID string, sleepDurationSec
 
 // Terminate terminates a Spark cluster given its ID
 func (a ClustersAPI) Terminate(clusterID string) error {
-	return a.client.post("/clusters/delete", model.ClusterID{clusterID}, nil)
+	return a.client.post("/clusters/delete", model.ClusterID{ClusterID: clusterID}, nil)
 }
 
 // Delete is an alias of Terminate
@@ -113,24 +113,24 @@ func (a ClustersAPI) Delete(clusterID string) error {
 
 // PermanentDelete permanently delete a cluster
 func (a ClustersAPI) PermanentDelete(clusterID string) error {
-	return a.client.post("/clusters/permanent-delete", model.ClusterID{clusterID}, nil)
+	return a.client.post("/clusters/permanent-delete", model.ClusterID{ClusterID: clusterID}, nil)
 }
 
 // Get retrieves the information for a cluster given its identifier
 func (a ClustersAPI) Get(clusterID string) (model.ClusterInfo, error) {
 	var clusterInfo model.ClusterInfo
-	err := a.client.get("/clusters/get", model.ClusterID{clusterID}, clusterInfo)
+	err := a.client.get("/clusters/get", model.ClusterID{ClusterID: clusterID}, clusterInfo)
 	return clusterInfo, err
 }
 
 // Pin ensure that an interactive cluster configuration is retained even after a cluster has been terminated for more than 30 days
 func (a ClustersAPI) Pin(clusterID string) error {
-	return a.client.post("/clusters/pin", model.ClusterID{clusterID}, nil)
+	return a.client.post("/clusters/pin", model.ClusterID{ClusterID: clusterID}, nil)
 }
 
 // Unpin allows the cluster to eventually be removed from the list returned by the List API
 func (a ClustersAPI) Unpin(clusterID string) error {
-	return a.client.post("/clusters/unpin", model.ClusterID{clusterID}, nil)
+	return a.client.post("/clusters/unpin", model.ClusterID{ClusterID: clusterID}, nil)
 }
 
 // List return information about all pinned clusters, currently active clusters,

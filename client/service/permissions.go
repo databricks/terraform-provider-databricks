@@ -20,8 +20,7 @@ func (a PermissionsAPI) SetOrDelete(objectID string, objectACL *model.AccessCont
 }
 
 // Read gets all relevant permissions for the object, including inherited ones
-func (a PermissionsAPI) Read(objectID string) (*model.ObjectACL, error) {
-	var objectACL model.ObjectACL
-	err := a.client.get("/preview/permissions"+objectID, nil, &objectACL)
-	return objectACL, err
+func (a PermissionsAPI) Read(objectID string) (objectACL *model.ObjectACL, err error) {
+	err = a.client.get("/preview/permissions"+objectID, nil, &objectACL)
+	return
 }

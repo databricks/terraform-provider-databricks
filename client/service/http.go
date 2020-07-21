@@ -229,7 +229,7 @@ func (c *DatabricksClient) api2(r *http.Request) (*http.Request, error) {
 	return r, nil
 }
 
-func (c *DatabricksClient) performScim(method, path string, request, response interface{}) {
+func (c *DatabricksClient) performScim(method, path string, request interface{}, response interface{}) error {
 	body, err := c.genericQuery2(method, path, request, c.auth,
 		c.api2, func(r *http.Request) (*http.Request, error) {
 			r.Header.Set("Content-Type", "application/scim+json")

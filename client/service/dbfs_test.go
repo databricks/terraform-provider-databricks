@@ -698,7 +698,6 @@ func TestAccCreateFile(t *testing.T) {
 	path := "/client-test/randomfile"
 	path2 := "/client-test/dir2/randomfile"
 	path3 := "/client-test/dir2/randomfile2"
-	copyPath := "/client-test/dir2/randomfilecopy2"
 
 	randomStr := GenString(500)
 	t.Log(len(randomStr))
@@ -738,13 +737,6 @@ func TestAccCreateFile(t *testing.T) {
 	items, err = client.DBFS().List(dir, true)
 	assert.NoError(t, err, err)
 	assert.True(t, len(items) == 3)
-
-	err = client.DBFS().Copy(path, copyPath, client, true)
-	assert.NoError(t, err, err)
-
-	base64Resp, err = client.DBFS().Read(copyPath)
-	assert.NoError(t, err, err)
-	assert.True(t, inputData == base64Resp)
 
 	items, err = client.DBFS().List(dir, true)
 	assert.NoError(t, err, err)

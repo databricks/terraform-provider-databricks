@@ -13,24 +13,24 @@ type MWSCustomerManagedKeysAPI struct {
 }
 
 // Create creates a set of MWS CustomerManagedKeys for the BYOVPC
-func (a MWSCustomerManagedKeysAPI) Create(mwsAcctId, keyArn, keyAlias, keyRegion string) (model.MWSCustomerManagedKey, error) {
-	var mwsCustomerManagedKey model.MWSCustomerManagedKey
-	customerManagedKeysAPIPath := fmt.Sprintf("/accounts/%s/customer-managed-keys", mwsAcctId)
-	err := a.client.post(customerManagedKeysAPIPath, model.MWSCustomerManagedKey{
+func (a MWSCustomerManagedKeysAPI) Create(mwsAcctID, keyArn, keyAlias, keyRegion string) (k model.MWSCustomerManagedKey, err error) {
+	customerManagedKeysAPIPath := fmt.Sprintf("/accounts/%s/customer-managed-keys", mwsAcctID)
+	err = a.client.post(customerManagedKeysAPIPath, model.MWSCustomerManagedKey{
 		AwsKeyInfo: &model.AwsKeyInfo{
 			KeyArn:    keyArn,
 			KeyAlias:  keyAlias,
 			KeyRegion: keyRegion,
 		},
-	}, &mwsCustomerManagedKey)
-	return mwsCustomerManagedKey, err
+	}, &k)
+	return
 }
 
 // Read returns the customer managed key object along with metadata
-func (a MWSCustomerManagedKeysAPI) Read(mwsAcctId, customerManagedKeysID string) (model.MWSCustomerManagedKey, error) {
-	var mwsCustomerManagedKey model.MWSCustomerManagedKey
-	err := a.client.get(customerManagedKeysAPIPath, nil, &mwsCustomerManagedKey)
-	return mwsCustomerManagedKey, err
+func (a MWSCustomerManagedKeysAPI) Read(
+	mwsAcctID, customerManagedKeysID string) (k model.MWSCustomerManagedKey, err error) {
+	err = a.client.get(fmt.Sprintf("/accounts/%s/customer-managed-keys/%s",
+		mwsAcctID, customerManagedKeysID), nil, &k)
+	return
 }
 
 // Delete deletes the customer managed key object given a network id
@@ -42,8 +42,7 @@ func (a MWSCustomerManagedKeysAPI) Delete(customerManagedKeysID string) error {
 }
 
 // List lists all the available customer managed key objects in the mws account
-func (a MWSCustomerManagedKeysAPI) List(mwsAcctId string) ([]model.MWSCustomerManagedKey, error) {
-	var mwsCustomerManagedKeyList []model.MWSCustomerManagedKey
-	err := a.client.get(customerManagedKeysAPIPath, nil, &mwsCustomerManagedKeyList)
-	return mwsCustomerManagedKeyList, err
+func (a MWSCustomerManagedKeysAPI) List(mwsAcctID string) (kl []model.MWSCustomerManagedKey, err error) {
+	err = a.client.get(fmt.Sprintf("/accounts/%s/customer-managed-keys", mwsAcctID), nil, &kl)
+	return
 }

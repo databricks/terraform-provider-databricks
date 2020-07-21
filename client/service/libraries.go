@@ -22,7 +22,7 @@ func (a LibrariesAPI) Uninstall(req model.ClusterLibraryList) error {
 // ClusterStatus returns library status in cluster
 func (a LibrariesAPI) ClusterStatus(clusterID string) (model.ClusterLibraryStatuses, error) {
 	var clusterLibraryStatuses model.ClusterLibraryStatuses
-	err := a.client.get("/libraries/cluster-status", model.ClusterID{clusterID}, &clusterLibraryStatuses)
+	err := a.client.get("/libraries/cluster-status", model.ClusterID{ClusterID: clusterID}, &clusterLibraryStatuses)
 	return clusterLibraryStatuses, err
 }
 

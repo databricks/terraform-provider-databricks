@@ -26,11 +26,11 @@ func (a JobsAPI) Update(jobID int64, jobSettings model.JobSettings) error {
 }
 
 // Read returns the job object with all the attributes
-func (a JobsAPI) Read(jobID int64) (model.Job, error) {
-	err := a.client.get("/jobs/get", map[string]int64{
+func (a JobsAPI) Read(jobID int64) (job model.Job, err error) {
+	err = a.client.get("/jobs/get", map[string]int64{
 		"job_id": jobID,
 	}, &job)
-	return job, err
+	return
 }
 
 // Delete deletes the job given a job id

@@ -46,7 +46,7 @@ func (a GroupsAPI) Create(groupName string, members []string, roles []string, en
 
 // Read reads and returns a Group object via SCIM api
 func (a GroupsAPI) Read(groupID string) (group model.Group, err error) {
-	err = a.scimClient.client.get(fmt.Sprintf("/preview/scim/v2/Groups/%v", groupID), nil, &group)
+	err = a.client.performScim(http.MethodGet, fmt.Sprintf("/preview/scim/v2/Groups/%v", groupID), nil, &group)
 	if err != nil {
 		return
 	}
@@ -118,13 +118,14 @@ func (a GroupsAPI) Patch(groupID string, addList []string, removeList []string, 
 		}
 		groupPatchRequest.Operations = append(groupPatchRequest.Operations, removeOperations)
 	}
-	return a.client.performScim(http.MethodPatch, groupPath, groupPatchRequest)
+	return a.client.performScim(http.MethodPatch, groupPath, groupPatchRequest, nil)
 }
 
 // Delete deletes a group given a group id
 func (a GroupsAPI) Delete(groupID string) error {
 	return a.client.performScim(http.MethodDelete,
-		fmt.Sprintf("/preview/scim/v2/Groups/%v", groupID), nil)
+		fmt.Sprintf("/preview/scim/v2/Groups/%v", groupID),
+		nil, nil)
 }
 
 func (a GroupsAPI) getInheritedAndNonInheritedRoles(

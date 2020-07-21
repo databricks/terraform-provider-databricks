@@ -248,3 +248,8 @@ type ClusterInfo struct {
 	ClusterLogStatus       *LogSyncStatus     `json:"cluster_log_status,omitempty"`
 	TerminationReason      *TerminationReason `json:"termination_reason,omitempty"`
 }
+
+// ClusterID holds cluster ID
+type ClusterID struct {
+	ClusterID string `json:"cluster_id,omitempty" url:"cluster_id,omitempty"`
+}

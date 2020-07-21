@@ -1,11 +1,11 @@
 package service
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 	"log"
 	"net/http"
+	"net/url"
 	"time"
 
 	"github.com/databrickslabs/databricks-terraform/client/model"
@@ -48,46 +48,99 @@ func (a CommandsAPI) Execute(clusterID, language, commandStr string) (model.Comm
 	return command, err
 }
 
+type genericCommandRequest struct {
+	CommandID string `json:"commandId,omitempty" url:"commandId,omitempty"`
+	Language  string `json:"language,omitempty"`
+	ClusterID string `json:"clusterId,omitempty"`
+	ContextID string `json:"contextId,omitempty"`
+	Command   string `json:"command,omitempty"`
+}
+
 func (a CommandsAPI) createCommand(contextID, clusterID, language, commandStr string) (string, error) {
-	var command struct {
-		ID string `json:"id,omitempty"`
-	}
-	commandRequest := struct {
-		Language  string `json:"language,omitempty"`
-		ClusterID string `json:"clusterId,omitempty"`
-		ContextID string `json:"contextId,omitempty"`
-		Command   string `json:"command,omitempty"`
-	}{
+	var command model.Command
+	err := a.post("/commands/execute", genericCommandRequest{
 		Language:  language,
 		ClusterID: clusterID,
 		ContextID: contextID,
 		Command:   commandStr,
-	}
-	resp, err := a.client.performQuery(http.MethodPost, "/commands/execute", "1.2", nil, commandRequest)
-	if err != nil {
-		return command.ID, err
-	}
-	err = json.Unmarshal(resp, &command)
+	}, &command)
 	return command.ID, err
 }
 
 func (a CommandsAPI) getCommand(commandID, contextID, clusterID string) (model.Command, error) {
 	var commandResp model.Command
-	contextGetRequest := struct {
-		CommandID string `json:"commandId,omitempty" url:"commandId,omitempty"`
-		ContextID string `json:"contextId,omitempty" url:"contextId,omitempty"`
-		ClusterID string `json:"clusterId,omitempty" url:"clusterId,omitempty"`
-	}{
+	err := a.get("/commands/status", genericCommandRequest{
 		CommandID: commandID,
 		ContextID: contextID,
 		ClusterID: clusterID,
-	}
-	resp, err := a.client.performQuery(http.MethodGet, "/commands/status", "1.2", nil, contextGetRequest)
-	if err != nil {
-		return commandResp, err
-	}
-	err = json.Unmarshal(resp, &commandResp)
+	}, &commandResp)
 	return commandResp, err
+}
+
+func (a CommandsAPI) deleteContext(contextID, clusterID string) error {
+	return a.post("/contexts/destroy", genericCommandRequest{
+		ContextID: contextID,
+		ClusterID: clusterID,
+	}, nil)
+}
+
+func (a CommandsAPI) getContext(contextID, clusterID string) (string, error) {
+	var contextStatus model.Command // internal hack, yes
+	err := a.get("/contexts/status", genericCommandRequest{
+		ContextID: contextID,
+		ClusterID: clusterID,
+	}, &contextStatus)
+	return contextStatus.Status, err
+}
+
+func (a CommandsAPI) createContext(language, clusterID string) (string, error) {
+	var context model.Command // internal hack, yes
+	err := a.post("/contexts/create", genericCommandRequest{
+		Language:  language,
+		ClusterID: clusterID,
+	}, &context)
+	return context.ID, err
+}
+
+func (a CommandsAPI) post(path string, request interface{}, response interface{}) error {
+	if a.client.auth == nil {
+		return fmt.Errorf("Authentication not initialized")
+	}
+	body, err := a.client.genericQuery2(http.MethodPost, path, request,
+		a.client.auth, a.api12)
+	if err != nil {
+		return err
+	}
+	return a.client.unmarshall(path, body, &response)
+}
+
+func (a CommandsAPI) get(path string, request interface{}, response interface{}) error {
+	if a.client.auth == nil {
+		return fmt.Errorf("Authentication not initialized")
+	}
+	body, err := a.client.genericQuery2(http.MethodGet, path, request,
+		a.client.auth, a.api12)
+	if err != nil {
+		return err
+	}
+	return a.client.unmarshall(path, body, &response)
+}
+
+func (a CommandsAPI) api12(r *http.Request) (*http.Request, error) {
+	if r.URL == nil {
+		return nil, fmt.Errorf("No URL found in request")
+	}
+	r.URL.Path = fmt.Sprintf("/api/1.2%s", r.URL.Path)
+	r.Header.Set("Content-Type", "application/json")
+
+	url, err := url.Parse(a.client.Host)
+	if err != nil {
+		return nil, err
+	}
+	r.URL.Host = url.Host
+	r.URL.Scheme = url.Scheme
+
+	return r, nil
 }
 
 func (a CommandsAPI) waitForCommandFinished(commandID, contextID, clusterID string, sleepDurationSeconds time.Duration, timeoutDurationMinutes time.Duration) error {
@@ -133,18 +186,6 @@ func (a CommandsAPI) waitForCommandFinished(commandID, contextID, clusterID stri
 //	return err
 //}
 
-func (a CommandsAPI) deleteContext(contextID, clusterID string) error {
-	contextDeleteRequest := struct {
-		ContextID string `json:"contextId,omitempty" url:"contextId,omitempty"`
-		ClusterID string `json:"clusterId,omitempty" url:"clusterId,omitempty"`
-	}{
-		ContextID: contextID,
-		ClusterID: clusterID,
-	}
-	_, err := a.client.performQuery(http.MethodPost, "/contexts/destroy", "1.2", nil, contextDeleteRequest)
-	return err
-}
-
 func (a CommandsAPI) waitForContextReady(contextID, clusterID string, sleepDurationSeconds time.Duration, timeoutDurationMinutes time.Duration) error {
 	errChan := make(chan error, 1)
 	go func() {
@@ -171,44 +212,4 @@ func (a CommandsAPI) waitForContextReady(contextID, clusterID string, sleepDurat
 	case <-time.After(timeoutDurationMinutes * time.Minute):
 		return errors.New("Timed out context has not reached running state")
 	}
-}
-
-func (a CommandsAPI) getContext(contextID, clusterID string) (string, error) {
-	var contextStatus struct {
-		ID     string `json:"id,omitempty"`
-		Status string `json:"status,omitempty"`
-	}
-	contextGetRequest := struct {
-		ContextID string `json:"contextId,omitempty" url:"contextId,omitempty"`
-		ClusterID string `json:"clusterId,omitempty" url:"clusterId,omitempty"`
-	}{
-		ContextID: contextID,
-		ClusterID: clusterID,
-	}
-	resp, err := a.client.performQuery(http.MethodGet, "/contexts/status", "1.2", nil, contextGetRequest)
-	if err != nil {
-		return contextStatus.Status, err
-	}
-	err = json.Unmarshal(resp, &contextStatus)
-	return contextStatus.Status, err
-}
-
-func (a CommandsAPI) createContext(language, clusterID string) (string, error) {
-	var context struct {
-		ID string `json:"id,omitempty"`
-	}
-	contextRequest := struct {
-		Language  string `json:"language,omitempty"`
-		ClusterID string `json:"clusterId,omitempty"`
-	}{
-		Language:  language,
-		ClusterID: clusterID,
-	}
-
-	resp, err := a.client.performQuery(http.MethodPost, "/contexts/create", "1.2", nil, contextRequest)
-	if err != nil {
-		return context.ID, err
-	}
-	err = json.Unmarshal(resp, &context)
-	return context.ID, err
 }

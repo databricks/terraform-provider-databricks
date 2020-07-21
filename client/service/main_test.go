@@ -45,6 +45,9 @@ func GetIntegrationDBAPIClient() *DatabricksClient {
 	client := DatabricksClient{
 		Host:  os.Getenv("DATABRICKS_HOST"),
 		Token: os.Getenv("DATABRICKS_TOKEN"),
+		AzureAuth: AzureAuth{
+			ResourceID: os.Getenv("AZURE_DATABRICKS_WORKSPACE_RESOURCE_ID"),
+		},
 	}
 	err := client.Configure("dev")
 	if err != nil {

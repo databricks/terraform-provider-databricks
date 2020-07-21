@@ -243,6 +243,8 @@ func TestAccInstancePools(t *testing.T) {
 		MinIdleInstances: 0,
 		MaxCapacity:      10,
 		DiskSpec: &model.InstancePoolDiskSpec{
+			// TODO: make them behave good for both Azure & AWS
+
 			DiskType: &model.InstancePoolDiskType{
 				EbsVolumeType: model.EbsVolumeTypeGeneralPurposeSsd,
 			},

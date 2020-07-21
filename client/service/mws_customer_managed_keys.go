@@ -1,10 +1,8 @@
 package service
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
-	"net/http"
 
 	"github.com/databrickslabs/databricks-terraform/client/model"
 )
@@ -17,32 +15,21 @@ type MWSCustomerManagedKeysAPI struct {
 // Create creates a set of MWS CustomerManagedKeys for the BYOVPC
 func (a MWSCustomerManagedKeysAPI) Create(mwsAcctId, keyArn, keyAlias, keyRegion string) (model.MWSCustomerManagedKey, error) {
 	var mwsCustomerManagedKey model.MWSCustomerManagedKey
-
 	customerManagedKeysAPIPath := fmt.Sprintf("/accounts/%s/customer-managed-keys", mwsAcctId)
-	mwsCustomerManagedKeysRequest := model.MWSCustomerManagedKey{
+	err := a.client.post(customerManagedKeysAPIPath, model.MWSCustomerManagedKey{
 		AwsKeyInfo: &model.AwsKeyInfo{
 			KeyArn:    keyArn,
 			KeyAlias:  keyAlias,
 			KeyRegion: keyRegion,
 		},
-	}
-	resp, err := a.client.performQuery(http.MethodPost, customerManagedKeysAPIPath, "2.0", nil, mwsCustomerManagedKeysRequest)
-	if err != nil {
-		return mwsCustomerManagedKey, err
-	}
-	err = json.Unmarshal(resp, &mwsCustomerManagedKey)
+	}, &mwsCustomerManagedKey)
 	return mwsCustomerManagedKey, err
 }
 
 // Read returns the customer managed key object along with metadata
 func (a MWSCustomerManagedKeysAPI) Read(mwsAcctId, customerManagedKeysID string) (model.MWSCustomerManagedKey, error) {
 	var mwsCustomerManagedKey model.MWSCustomerManagedKey
-	customerManagedKeysAPIPath := fmt.Sprintf("/accounts/%s/customer-managed-keys/%s", mwsAcctId, customerManagedKeysID)
-	resp, err := a.client.performQuery(http.MethodGet, customerManagedKeysAPIPath, "2.0", nil, nil)
-	if err != nil {
-		return mwsCustomerManagedKey, err
-	}
-	err = json.Unmarshal(resp, &mwsCustomerManagedKey)
+	err := a.client.get(customerManagedKeysAPIPath, nil, &mwsCustomerManagedKey)
 	return mwsCustomerManagedKey, err
 }
 
@@ -57,14 +44,6 @@ func (a MWSCustomerManagedKeysAPI) Delete(customerManagedKeysID string) error {
 // List lists all the available customer managed key objects in the mws account
 func (a MWSCustomerManagedKeysAPI) List(mwsAcctId string) ([]model.MWSCustomerManagedKey, error) {
 	var mwsCustomerManagedKeyList []model.MWSCustomerManagedKey
-
-	customerManagedKeysAPIPath := fmt.Sprintf("/accounts/%s/customer-managed-keys", mwsAcctId)
-
-	resp, err := a.client.performQuery(http.MethodGet, customerManagedKeysAPIPath, "2.0", nil, nil)
-	if err != nil {
-		return mwsCustomerManagedKeyList, err
-	}
-
-	err = json.Unmarshal(resp, &mwsCustomerManagedKeyList)
+	err := a.client.get(customerManagedKeysAPIPath, nil, &mwsCustomerManagedKeyList)
 	return mwsCustomerManagedKeyList, err
 }

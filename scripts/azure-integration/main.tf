@@ -91,6 +91,27 @@ output "cloud_env" {
   value = "azure"
 }
 
+output "test_node_type" {
+  // or i3.xlarge for AWS
+  value = "Standard_D3_v2"
+}
+
+output "arm_client_id" {
+  value = data.azurerm_client_config.current.client_id
+}
+
+output "arm_subscription_id" {
+  value = data.azurerm_client_config.current.subscription_id
+}
+
+output "arm_tenant_id" {
+  value = data.azurerm_client_config.current.tenant_id
+}
+
+output "test_resource_group" {
+  value = azurerm_resource_group.example.name
+}
+
 output "test_gen2_adal_name" {
   value = azurerm_storage_account.adlsaccount.name
 }
@@ -108,13 +129,13 @@ output "azure_region" {
   value = azurerm_storage_account.adlsaccount.location
 }
 
-// todo: agree with Sri on the name
-output "azure_databricks_workspace_resource_id" {
+output "databricks_azure_workspace_resource_id" {
   // The ID of the Databricks Workspace in the Azure management plane.
   value = azurerm_databricks_workspace.example.id
 }
 
-output "databricks_host" {
+output "workspace_url" {
   // The workspace URL which is of the format 'adb-{workspaceId}.{random}.azuredatabricks.net'
+  // this is not named as DATABRICKS_HOST, because it affect authentication
   value = "https://${azurerm_databricks_workspace.example.workspace_url}/"
 }

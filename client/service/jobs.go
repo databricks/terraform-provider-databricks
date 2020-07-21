@@ -1,9 +1,6 @@
 package service
 
 import (
-	"encoding/json"
-	"net/http"
-
 	"github.com/databrickslabs/databricks-terraform/client/model"
 )
 
@@ -15,12 +12,7 @@ type JobsAPI struct {
 // Create creates a job on the workspace given the job settings
 func (a JobsAPI) Create(jobSettings model.JobSettings) (model.Job, error) {
 	var job model.Job
-	resp, err := a.client.performQuery(http.MethodPost, "/jobs/create", "2.0", nil, jobSettings)
-	if err != nil {
-		return job, err
-	}
-
-	err = json.Unmarshal(resp, &job)
+	err := a.client.post("/jobs/create", jobSettings, &job)
 	return job, err
 }
 
@@ -30,35 +22,20 @@ func (a JobsAPI) Update(jobID int64, jobSettings model.JobSettings) error {
 		JobID       int64              `json:"job_id,omitempty" url:"job_id,omitempty"`
 		NewSettings *model.JobSettings `json:"new_settings,omitempty" url:"new_settings,omitempty"`
 	}{JobID: jobID, NewSettings: &jobSettings}
-	_, err := a.client.performQuery(http.MethodPost, "/jobs/reset", "2.0", nil, jobResetRequest)
-	return err
+	return a.client.post("/jobs/reset", jobResetRequest, nil)
 }
 
 // Read returns the job object with all the attributes
 func (a JobsAPI) Read(jobID int64) (model.Job, error) {
-	jobGetRequest := struct {
-		JobID int64 `json:"job_id,omitempty" url:"job_id,omitempty"`
-	}{JobID: jobID}
-
-	var job model.Job
-
-	resp, err := a.client.performQuery(http.MethodGet, "/jobs/get", "2.0", nil, jobGetRequest)
-	if err != nil {
-		return job, err
-	}
-
-	err = json.Unmarshal(resp, &job)
-
+	err := a.client.get("/jobs/get", map[string]int64{
+		"job_id": jobID,
+	}, &job)
 	return job, err
 }
 
 // Delete deletes the job given a job id
 func (a JobsAPI) Delete(jobID int64) error {
-	jobDeleteRequest := struct {
-		JobID int64 `json:"job_id,omitempty" url:"job_id,omitempty"`
-	}{JobID: jobID}
-
-	_, err := a.client.performQuery(http.MethodPost, "/jobs/delete", "2.0", nil, jobDeleteRequest)
-
-	return err
+	return a.client.post("/jobs/delete", map[string]int64{
+		"job_id": jobID,
+	}, nil)
 }

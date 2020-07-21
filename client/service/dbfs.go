@@ -2,9 +2,6 @@ package service
 
 import (
 	"encoding/base64"
-	"encoding/json"
-	"log"
-	"net/http"
 
 	"github.com/databrickslabs/databricks-terraform/client/model"
 )
@@ -60,96 +57,6 @@ func (a DBFSAPI) Read(path string) (string, error) {
 	return resp, nil
 }
 
-// Copy copies a file given a source location and a target location and a provided client for source location
-func (a DBFSAPI) Copy(src string, tgt string, client *DatabricksClient, overwrite bool) error {
-	handle, err := a.createHandle(tgt, overwrite)
-	if err != nil {
-		return err
-	}
-	defer func() {
-		err = a.closeHandle(handle)
-	}()
-	fetchLoop := true
-	offSet := int64(0)
-	length := int64(1e6)
-	for fetchLoop {
-		var api DBFSAPI
-		if client == nil {
-			api = a
-		} else {
-			api = client.DBFS()
-		}
-		bytesRead, b64String, err := api.ReadString(src, offSet, length)
-		if err != nil {
-			return err
-		}
-		log.Println(bytesRead)
-		if bytesRead == 0 || bytesRead < length {
-			fetchLoop = false
-		}
-
-		err = a.addBlock(b64String, handle)
-		if err != nil {
-			return err
-		}
-
-		offSet += length
-	}
-
-	return err
-}
-
-// Move moves the file between DBFS locations via DBFS api
-func (a DBFSAPI) Move(src string, tgt string) error {
-	moveRequest := struct {
-		SourcePath      string `json:"source_path,omitempty" url:"source_path,omitempty"`
-		DestinationPath string `json:"destination_path,omitempty" url:"destination_path,omitempty"`
-	}{
-		SourcePath:      src,
-		DestinationPath: tgt,
-	}
-	_, err := a.client.performQuery(http.MethodPost, "/dbfs/move", "2.0", nil, moveRequest)
-	return err
-}
-
-// Delete deletes a file in DBFS via API
-func (a DBFSAPI) Delete(path string, recursive bool) error {
-	deleteRequest := struct {
-		Path      string `json:"path,omitempty" url:"path,omitempty"`
-		Recursive bool   `json:"recursive,omitempty" url:"recursive,omitempty"`
-	}{
-		Path:      path,
-		Recursive: recursive,
-	}
-	_, err := a.client.performQuery(http.MethodPost, "/dbfs/delete", "2.0", nil, deleteRequest)
-
-	return err
-}
-
-// ReadString reads a "block" of data in DBFS given a offset and length as a base64 encoded string
-func (a DBFSAPI) ReadString(path string, offset, length int64) (int64, string, error) {
-	var readBytes struct {
-		BytesRead int64  `json:"bytes_read,omitempty" url:"bytes_read,omitempty"`
-		Data      string `json:"data,omitempty" url:"data,omitempty"`
-	}
-	readRequest := struct {
-		Path   string `json:"path,omitempty" url:"path,omitempty"`
-		Offset int64  `json:"offset,omitempty" url:"offset,omitempty"`
-		Length int64  `json:"length,omitempty" url:"length,omitempty"`
-	}{
-		Path:   path,
-		Offset: offset,
-		Length: length,
-	}
-	resp, err := a.client.performQuery(http.MethodGet, "/dbfs/read", "2.0", nil, readRequest)
-	if err != nil {
-		return readBytes.BytesRead, readBytes.Data, err
-	}
-	err = json.Unmarshal(resp, &readBytes)
-
-	return readBytes.BytesRead, readBytes.Data, err
-}
-
 func (a DBFSAPI) read(path string, offset, length int64) (int64, []byte, error) {
 	bytesRead, data, err := a.ReadString(path, offset, length)
 	if err != nil {
@@ -157,22 +64,6 @@ func (a DBFSAPI) read(path string, offset, length int64) (int64, []byte, error) 
 	}
 	dataBytes, err := base64.StdEncoding.DecodeString(data)
 	return bytesRead, dataBytes, err
-}
-
-// Status returns the status of a file in DBFS
-func (a DBFSAPI) Status(path string) (model.FileInfo, error) {
-	var fileInfo model.FileInfo
-	statusRequest := struct {
-		Path string `json:"path,omitempty" url:"path,omitempty"`
-	}{
-		Path: path,
-	}
-	resp, err := a.client.performQuery(http.MethodGet, "/dbfs/get-status", "2.0", nil, statusRequest)
-	if err != nil {
-		return fileInfo, err
-	}
-	err = json.Unmarshal(resp, &fileInfo)
-	return fileInfo, err
 }
 
 // List returns a list of files in DBFS and the recursive flag lets you recursively list files
@@ -206,78 +97,84 @@ func (a DBFSAPI) recursiveAddPaths(path string, pathList *[]model.FileInfo) erro
 	return nil
 }
 
+// Move moves the file between DBFS locations via DBFS api
+func (a DBFSAPI) Move(src string, tgt string) error {
+	return a.client.post("/dbfs/move", map[string]string{
+		"source_path":      src,
+		"destination_path": tgt,
+	}, nil)
+}
+
+// Delete deletes a file in DBFS via API
+func (a DBFSAPI) Delete(path string, recursive bool) error {
+	return a.client.post("/dbfs/delete", map[string]interface{}{
+		"path":      path,
+		"recursive": recursive,
+	}, nil)
+}
+
+// ReadString reads a "block" of data in DBFS given a offset and length as a base64 encoded string
+func (a DBFSAPI) ReadString(path string, offset, length int64) (int64, string, error) {
+	var readBytes struct {
+		BytesRead int64  `json:"bytes_read,omitempty" url:"bytes_read,omitempty"`
+		Data      string `json:"data,omitempty" url:"data,omitempty"`
+	}
+	err := a.client.get("/dbfs/read", map[string]interface{}{
+		"path":   path,
+		"offset": offset,
+		"length": length,
+	}, &readBytes)
+	return readBytes.BytesRead, readBytes.Data, err
+}
+
+// Status returns the status of a file in DBFS
+func (a DBFSAPI) Status(path string) (model.FileInfo, error) {
+	var fileInfo model.FileInfo
+	err := a.client.get("/dbfs/get-status", map[string]interface{}{
+		"path": path,
+	}, &fileInfo)
+	return fileInfo, err
+}
+
 func (a DBFSAPI) list(path string) ([]model.FileInfo, error) {
 	var dbfsList struct {
 		Files []model.FileInfo `json:"files,omitempty" url:"files,omitempty"`
 	}
-	listRequest := struct {
-		Path string `json:"path,omitempty" url:"path,omitempty"`
-	}{}
-	listRequest.Path = path
-
-	resp, err := a.client.performQuery(http.MethodGet, "/dbfs/list", "2.0", nil, listRequest)
-	if err != nil {
-		return dbfsList.Files, err
-	}
-
-	err = json.Unmarshal(resp, &dbfsList)
+	err := a.client.get("/dbfs/list", map[string]interface{}{
+		"path": path,
+	}, &dbfsList)
 	return dbfsList.Files, err
 }
 
 // Mkdirs makes the directories in DBFS include the parent paths
 func (a DBFSAPI) Mkdirs(path string) error {
-	mkDirsRequest := struct {
-		Path string `json:"path,omitempty" url:"path,omitempty"`
-	}{}
-	mkDirsRequest.Path = path
-
-	_, err := a.client.performQuery(http.MethodPost, "/dbfs/mkdirs", "2.0", nil, mkDirsRequest)
-
-	return err
+	return a.client.post("/dbfs/mkdirs", map[string]interface{}{
+		"path": path,
+	}, nil)
 }
 
 func (a DBFSAPI) createHandle(path string, overwrite bool) (int64, error) {
 	var handle struct {
 		Handle int64 `json:"handle,omitempty" url:"handle,omitempty"`
 	}
-	createDBFSHandleRequest := struct {
-		Path      string `json:"path,omitempty" url:"path,omitempty"`
-		Overwrite bool   `json:"overwrite,omitempty" url:"overwrite,omitempty"`
-	}{
-		Path:      path,
-		Overwrite: overwrite,
-	}
-
-	resp, err := a.client.performQuery(http.MethodPost, "/dbfs/create", "2.0", nil, createDBFSHandleRequest)
-	if err != nil {
-		return handle.Handle, err
-	}
-
-	err = json.Unmarshal(resp, &handle)
+	err := a.client.post("/dbfs/create", map[string]interface{}{
+		"path":      path,
+		"overwrite": overwrite,
+	}, &handle)
 	return handle.Handle, err
 }
 
 func (a DBFSAPI) addBlock(data string, handle int64) error {
-	var addDBFSBlockRequest = struct {
-		Data   string `json:"data,omitempty" url:"data,omitempty"`
-		Handle int64  `json:"handle,omitempty" url:"handle,omitempty"`
-	}{
-		Data:   data,
-		Handle: handle,
-	}
-	_, err := a.client.performQuery(http.MethodPost, "/dbfs/add-block", "2.0", nil, addDBFSBlockRequest)
-	return err
+	return a.client.post("/dbfs/add-block", map[string]interface{}{
+		"data":   data,
+		"handle": handle,
+	}, nil)
 }
 
 func (a DBFSAPI) closeHandle(handle int64) error {
-	closeHandleRequest := struct {
-		Handle int64 `json:"handle,omitempty" url:"handle,omitempty"`
-	}{
-		Handle: handle,
-	}
-
-	_, err := a.client.performQuery(http.MethodPost, "/dbfs/close", "2.0", nil, closeHandleRequest)
-	return err
+	return a.client.post("/dbfs/close", map[string]interface{}{
+		"handle": handle,
+	}, nil)
 }
 
 func split(buf []byte, lim int) [][]byte {

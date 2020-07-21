@@ -1,10 +1,8 @@
 package service
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
-	"log"
 	"net/http"
 	"sort"
 
@@ -17,9 +15,7 @@ type GroupsAPI struct {
 }
 
 // Create creates a scim group in the Databricks workspace
-func (a GroupsAPI) Create(groupName string, members []string, roles []string, entitlements []string) (model.Group, error) {
-	var group model.Group
-
+func (a GroupsAPI) Create(groupName string, members []string, roles []string, entitlements []string) (group model.Group, err error) {
 	scimGroupRequest := struct {
 		Schemas      []model.URN           `json:"schemas,omitempty"`
 		DisplayName  string                `json:"displayName,omitempty"`
@@ -44,31 +40,16 @@ func (a GroupsAPI) Create(groupName string, members []string, roles []string, en
 	for _, entitlement := range entitlements {
 		scimGroupRequest.Entitlements = append(scimGroupRequest.Entitlements, model.ValueListItem{Value: entitlement})
 	}
-
-	resp, err := a.client.performQuery(http.MethodPost, "/preview/scim/v2/Groups", "2.0", scimHeaders, scimGroupRequest)
-	if err != nil {
-		return group, err
-	}
-
-	err = json.Unmarshal(resp, &group)
-	return group, err
+	err = a.client.performScim(http.MethodPost, "/preview/scim/v2/Groups", scimGroupRequest, &group)
+	return
 }
 
 // Read reads and returns a Group object via SCIM api
-func (a GroupsAPI) Read(groupID string) (model.Group, error) {
-	var group model.Group
-	groupPath := fmt.Sprintf("/preview/scim/v2/Groups/%v", groupID)
-
-	resp, err := a.client.performQuery(http.MethodGet, groupPath, "2.0", scimHeaders, nil)
+func (a GroupsAPI) Read(groupID string) (group model.Group, err error) {
+	err = a.scimClient.client.get(fmt.Sprintf("/preview/scim/v2/Groups/%v", groupID), nil, &group)
 	if err != nil {
-		return group, err
+		return
 	}
-
-	err = json.Unmarshal(resp, &group)
-	if err != nil {
-		return group, err
-	}
-	log.Println(group)
 	//get inherited groups
 	var groups []model.Group
 	for _, inheritedGroup := range group.Groups {
@@ -81,28 +62,23 @@ func (a GroupsAPI) Read(groupID string) (model.Group, error) {
 	inherited, unInherited := a.getInheritedAndNonInheritedRoles(group, groups)
 	group.InheritedRoles = inherited
 	group.UnInheritedRoles = unInherited
-
-	return group, err
+	return
 }
 
 // GetAdminGroup returns the admin group in a given workspace by fetching with query "displayName+eq+admins"
 func (a GroupsAPI) GetAdminGroup() (model.Group, error) {
 	var group model.Group
 	var groups model.GroupList
-
-	adminsQuery := "/preview/scim/v2/Groups?filter=displayName+eq+admins"
-
-	resp, err := a.client.performQuery(http.MethodGet, adminsQuery, "2.0", scimHeaders, nil)
+	err := a.client.performScim(http.MethodGet, "/preview/scim/v2/Groups", map[string]string{
+		"filter": "displayName+eq+admins",
+	}, &groups)
 	if err != nil {
 		return group, err
 	}
-	err = json.Unmarshal(resp, &groups)
-
 	resources := groups.Resources
 	if len(resources) == 1 {
 		return resources[0], err
 	}
-
 	return group, errors.New("Unable to identify the admin group! ")
 }
 
@@ -142,20 +118,18 @@ func (a GroupsAPI) Patch(groupID string, addList []string, removeList []string, 
 		}
 		groupPatchRequest.Operations = append(groupPatchRequest.Operations, removeOperations)
 	}
-
-	_, err := a.client.performQuery(http.MethodPatch, groupPath, "2.0", scimHeaders, groupPatchRequest)
-
-	return err
+	return a.client.performScim(http.MethodPatch, groupPath, groupPatchRequest)
 }
 
 // Delete deletes a group given a group id
 func (a GroupsAPI) Delete(groupID string) error {
-	groupPath := fmt.Sprintf("/preview/scim/v2/Groups/%v", groupID)
-	_, err := a.client.performQuery(http.MethodDelete, groupPath, "2.0", scimHeaders, nil)
-	return err
+	return a.client.performScim(http.MethodDelete,
+		fmt.Sprintf("/preview/scim/v2/Groups/%v", groupID), nil)
 }
 
-func (a GroupsAPI) getInheritedAndNonInheritedRoles(group model.Group, groups []model.Group) (inherited []model.RoleListItem, unInherited []model.RoleListItem) {
+func (a GroupsAPI) getInheritedAndNonInheritedRoles(
+	group model.Group, groups []model.Group) (inherited []model.RoleListItem,
+	unInherited []model.RoleListItem) {
 	allRoles := group.Roles
 	var inheritedRoles []model.RoleListItem
 	inheritedRolesKeys := []string{}

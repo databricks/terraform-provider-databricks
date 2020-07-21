@@ -1,7 +1,6 @@
 package service
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/http"
 
@@ -13,32 +12,27 @@ type SecretsAPI struct {
 	client *DatabricksClient
 }
 
+type secretsRequest struct {
+	StringValue string `json:"string_value,omitempty" mask:"true"`
+	Scope       string `json:"scope,omitempty"`
+	Key         string `json:"key,omitempty"`
+}
+
 // Create creates or modifies a string secret depends on the type of scope backend
 func (a SecretsAPI) Create(stringValue, scope, key string) error {
-	data := struct {
-		StringValue string `json:"string_value,omitempty" mask:"true"`
-		Scope       string `json:"scope,omitempty"`
-		Key         string `json:"key,omitempty"`
-	}{
-		stringValue,
-		scope,
-		key,
-	}
-	_, err := a.client.performQuery(http.MethodPost, "/secrets/put", "2.0", nil, data)
-	return err
+	return a.client.post("/secrets/put", secretsRequest{
+		StringValue: stringValue,
+		Scope:       scope,
+		Key:         key,
+	}, nil)
 }
 
 // Delete deletes a secret depends on the type of scope backend
 func (a SecretsAPI) Delete(scope, key string) error {
-	data := struct {
-		Scope string `json:"scope,omitempty"`
-		Key   string `json:"key,omitempty"`
-	}{
-		scope,
-		key,
-	}
-	_, err := a.client.performQuery(http.MethodPost, "/secrets/delete", "2.0", nil, data)
-	return err
+	return a.client.post("/secrets/delete", secretsRequest{
+		Scope: scope,
+		Key:   key,
+	}, nil)
 }
 
 // List lists the secret keys that are stored at this scope
@@ -46,19 +40,9 @@ func (a SecretsAPI) List(scope string) ([]model.SecretMetadata, error) {
 	var secretsList struct {
 		Secrets []model.SecretMetadata `json:"secrets,omitempty"`
 	}
-
-	data := struct {
-		Scope string `json:"scope,omitempty" url:"scope,omitempty"`
-	}{
-		scope,
-	}
-
-	resp, err := a.client.performQuery(http.MethodGet, "/secrets/list", "2.0", nil, data)
-	if err != nil {
-		return secretsList.Secrets, err
-	}
-
-	err = json.Unmarshal(resp, &secretsList)
+	err := a.client.get("/secrets/list", map[string]string{
+		"scope": scope,
+	}, &secretsList)
 	return secretsList.Secrets, err
 }
 

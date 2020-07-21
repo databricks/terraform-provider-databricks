@@ -1,9 +1,6 @@
 package service
 
 import (
-	"encoding/json"
-	"net/http"
-
 	"github.com/databrickslabs/databricks-terraform/client/model"
 )
 
@@ -15,46 +12,27 @@ type InstancePoolsAPI struct {
 // Create creates the instance pool to given the instance pool configuration
 func (a InstancePoolsAPI) Create(instancePool model.InstancePool) (model.InstancePoolInfo, error) {
 	var instancePoolInfo model.InstancePoolInfo
-
-	resp, err := a.client.performQuery(http.MethodPost, "/instance-pools/create", "2.0", nil, instancePool)
-	if err != nil {
-		return instancePoolInfo, err
-	}
-	err = json.Unmarshal(resp, &instancePoolInfo)
+	err := a.client.post("/instance-pools/create", instancePool, &instancePoolInfo)
 	return instancePoolInfo, err
 }
 
 // Update edits the configuration of a instance pool to match the provided attributes and size
 func (a InstancePoolsAPI) Update(instancePoolInfo model.InstancePoolInfo) error {
-	_, err := a.client.performQuery(http.MethodPost, "/instance-pools/edit", "2.0", nil, instancePoolInfo)
-	return err
+	return a.client.post("/instance-pools/edit", instancePoolInfo, nil)
 }
 
 // Read retrieves the information for a instance pool given its identifier
 func (a InstancePoolsAPI) Read(instancePoolID string) (model.InstancePoolInfo, error) {
 	var instancePoolInfo model.InstancePoolInfo
-
-	data := struct {
-		InstancePoolID string `json:"instance_pool_id,omitempty" url:"instance_pool_id,omitempty"`
-	}{
-		instancePoolID,
-	}
-	resp, err := a.client.performQuery(http.MethodGet, "/instance-pools/get", "2.0", nil, data)
-	if err != nil {
-		return instancePoolInfo, err
-	}
-
-	err = json.Unmarshal(resp, &instancePoolInfo)
+	err := a.client.get("/instance-pools/get", map[string]string{
+		"instance_pool_id": instancePoolID,
+	}, &instancePoolInfo)
 	return instancePoolInfo, err
 }
 
 // Delete terminates a instance pool given its ID
 func (a InstancePoolsAPI) Delete(instancePoolID string) error {
-	data := struct {
-		InstancePoolID string `json:"instance_pool_id,omitempty" url:"instance_pool_id,omitempty"`
-	}{
-		instancePoolID,
-	}
-	_, err := a.client.performQuery(http.MethodPost, "/instance-pools/delete", "2.0", nil, data)
-	return err
+	return a.client.post("/instance-pools/delete", map[string]string{
+		"instance_pool_id": instancePoolID,
+	}, nil)
 }

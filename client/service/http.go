@@ -9,22 +9,11 @@ import (
 	"log"
 	"net/http"
 	"net/url"
-	"reflect"
 	"regexp"
 	"strings"
-	"sync"
 
 	"github.com/google/go-querystring/query"
 	"github.com/hashicorp/go-retryablehttp"
-)
-
-// CloudServiceProvider is a custom type for different types of cloud service providers
-type CloudServiceProvider string
-
-// List of CloudServiceProviders Databricks is available on
-const (
-	AWS   CloudServiceProvider = "AmazonWebServices"
-	Azure CloudServiceProvider = "Azure"
 )
 
 // APIErrorBody maps "proper" databricks rest api errors to a struct
@@ -60,6 +49,7 @@ func (apiError APIError) IsMissing() bool {
 	return apiError.StatusCode == http.StatusNotFound
 }
 
+// IsTooManyRequests ...
 func (apiError APIError) IsTooManyRequests() bool {
 	return apiError.StatusCode == http.StatusTooManyRequests
 }
@@ -74,8 +64,6 @@ func (apiError APIError) DocumentationURL() string {
 	return fmt.Sprintf("https://docs.databricks.com/dev-tools/api/latest/%s.html#%s",
 		endpointMatches[1], endpointMatches[2])
 }
-
-var clientAuthorizerMutex sync.Mutex
 
 var transientErrorStringMatches []string = []string{ // TODO: Should we make these regexes to match more of the message or is this sufficient?
 	"com.databricks.backend.manager.util.UnknownWorkerEnvironmentException",
@@ -154,39 +142,110 @@ func checkHTTPRetry(ctx context.Context, resp *http.Response, err error) (bool, 
 	return false, nil
 }
 
-func (c *DatabricksClient) getOrCreateToken() error {
-	if c.customAuthorizer != nil {
-		// Lock incase terraform tries to getOrCreateToken from multiple go routines on the same client ptr.
-		clientAuthorizerMutex.Lock()
-		defer clientAuthorizerMutex.Unlock()
-		// todo: introduce a property?....
-		if reflect.ValueOf(c.Token).IsZero() {
-			log.Println("NOT AUTHORIZED SO ATTEMPTING TO AUTHORIZE")
-			return c.customAuthorizer()
-		}
-		log.Println("ALREADY AUTHORIZED")
-		return nil
+func (c *DatabricksClient) get(path string, request interface{}, response interface{}) error {
+	if c.auth == nil {
+		return fmt.Errorf("Authentication not initialized")
 	}
-	return nil
+	body, err := c.genericQuery2(http.MethodGet, path, request,
+		c.auth, c.api2)
+	if err != nil {
+		return err
+	}
+	return c.unmarshall(path, body, &response)
 }
 
-// func (c *DatabricksClient) get(path string, request interface{}, response interface{},
-// 	interceptors ...func(*http.Request) (*http.Request, error)) error {
-// 	body, err := c.genericQuery2(http.MethodGet, c.formatURL("2.0", path), request, interceptors...)
-// 	if err != nil {
-// 		return err
-// 	}
-// 	return json.Unmarshal(body, &response)
-// }
+func (c *DatabricksClient) post(path string, request interface{}, response interface{}) error {
+	if c.auth == nil {
+		return fmt.Errorf("Authentication not initialized")
+	}
+	body, err := c.genericQuery2(http.MethodPost, path, request,
+		c.auth, c.api2)
+	if err != nil {
+		return err
+	}
+	return c.unmarshall(path, body, &response)
+}
 
+func (c *DatabricksClient) delete(path string, request interface{}) error {
+	if c.auth == nil {
+		return fmt.Errorf("Authentication not initialized")
+	}
+	_, err := c.genericQuery2(http.MethodDelete, path, request,
+		c.auth, c.api2)
+	return err
+}
+
+func (c *DatabricksClient) patch(path string, request interface{}) error {
+	if c.auth == nil {
+		return fmt.Errorf("Authentication not initialized")
+	}
+	_, err := c.genericQuery2(http.MethodPatch, path, request,
+		c.auth, c.api2)
+	return err
+}
+
+func (c *DatabricksClient) put(path string, request interface{}) error {
+	if c.auth == nil {
+		return fmt.Errorf("Authentication not initialized")
+	}
+	_, err := c.genericQuery2(http.MethodPut, path, request,
+		c.auth, c.api2)
+	return err
+}
+
+// TODO: rename to internal or something...
+func (c *DatabricksClient) unmarshall(path string, body []byte, response interface{}) error {
+	if response == nil {
+		return nil
+	}
+	err := json.Unmarshal(body, &response)
+	if err == nil {
+		return nil
+	}
+	return APIError{
+		ErrorCode:  "UNKNOWN",
+		StatusCode: 200,
+		Resource:   "..." + path,
+		Message: fmt.Sprintf("Invalid JSON received (%d bytes): %v",
+			len(body), string(body)),
+	}
+}
+
+// TODO: rename to internal or something...
+func (c *DatabricksClient) api2(r *http.Request) (*http.Request, error) {
+	if r.URL == nil {
+		return nil, fmt.Errorf("No URL found in request")
+	}
+	r.URL.Path = fmt.Sprintf("/api/2.0%s", r.URL.Path)
+	r.Header.Set("Content-Type", "application/json")
+
+	url, err := url.Parse(c.Host)
+	if err != nil {
+		return nil, err
+	}
+	r.URL.Host = url.Host
+	r.URL.Scheme = url.Scheme
+
+	return r, nil
+}
+
+func (c *DatabricksClient) performScim(method, path string, request, response interface{}) {
+	body, err := c.genericQuery2(method, path, request, c.auth,
+		c.api2, func(r *http.Request) (*http.Request, error) {
+			r.Header.Set("Content-Type", "application/scim+json")
+			return r, nil
+		})
+	if err != nil {
+		return err
+	}
+	return c.unmarshall(path, body, &response)
+}
+
+// todo: do is better name
 func (c *DatabricksClient) genericQuery2(method, requestURL string, data interface{},
 	interceptors ...func(*http.Request) (*http.Request, error)) (body []byte, err error) {
 	if c.httpClient == nil {
 		return nil, fmt.Errorf("DatabricksClient is not configured")
-	}
-	err = c.getOrCreateToken()
-	if err != nil {
-		return nil, err
 	}
 	requestBody, err := makeRequestBody(method, &requestURL, data, true)
 	if err != nil {
@@ -197,8 +256,6 @@ func (c *DatabricksClient) genericQuery2(method, requestURL string, data interfa
 		return nil, err
 	}
 	request.Header.Set("User-Agent", c.userAgent)
-	request.Header.Set("Content-Type", "application/json")
-	request.Header.Set("Authorization", fmt.Sprintf("%s %s", c.authType, c.Token))
 	for _, in := range interceptors {
 		request, err = in(request)
 		if err != nil {
@@ -227,16 +284,15 @@ func (c *DatabricksClient) genericQuery2(method, requestURL string, data interfa
 	return body, nil
 }
 
-func (c *DatabricksClient) performQuery(method string, path string, apiVersion string, headers map[string]string, data interface{}) ([]byte, error) {
-	return c.genericQuery(method, path, apiVersion, headers, true, false, data)
-}
-
 func makeRequestBody(method string, requestURL *string, data interface{}, marshalJSON bool) ([]byte, error) {
 	var requestBody []byte
 	if method == "GET" {
 		if m, ok := data.(map[string]string); ok {
 			s := []string{}
 			for k, v := range m {
+				if v == "" {
+					continue
+				}
 				s = append(s, fmt.Sprintf("%s=%s", url.QueryEscape(k), url.QueryEscape(v)))
 			}
 			*requestURL += "?" + strings.Join(s, "&")
@@ -262,55 +318,6 @@ func makeRequestBody(method string, requestURL *string, data interface{}, marsha
 		auditNonGetPayload(method, *requestURL, data)
 	}
 	return requestBody, nil
-}
-
-// PerformQuery is a generic function that accepts a config, method, path, apiversion, headers,
-// and some flags to perform query against the Databricks api
-func (c *DatabricksClient) genericQuery(method, path, apiVersion string, headers map[string]string,
-	marshalJSON bool, useRawPath bool, data interface{}) (body []byte, err error) {
-	if c.httpClient == nil {
-		return []byte(""), fmt.Errorf("DatabricksClient is not configured")
-	}
-	err = c.getOrCreateToken()
-	if err != nil {
-		return []byte(""), err
-	}
-	if apiVersion == "" {
-		apiVersion = "2.0"
-	}
-	requestURL := path
-	if !useRawPath {
-		requestURL = fmt.Sprintf("%s/%s%s", c.uriPrefix, apiVersion, path)
-	}
-	requestBody, err := makeRequestBody(method, &requestURL, data, marshalJSON)
-	request, err := retryablehttp.NewRequest(method, requestURL, bytes.NewBuffer(requestBody))
-	if err != nil {
-		return nil, err
-	}
-	request.Header.Set("User-Agent", c.userAgent)
-	request.Header.Set("Content-Type", "application/json")
-	request.Header.Set("Authorization", fmt.Sprintf("%s %s", c.authType, c.Token))
-	if len(headers) > 0 {
-		for k, v := range headers {
-			request.Header.Set(k, v)
-		}
-	}
-	resp, err := c.httpClient.Do(request)
-	if err != nil {
-		return nil, err
-	}
-	defer func() {
-		if ferr := resp.Body.Close(); ferr != nil {
-			err = ferr
-		}
-	}()
-	body, err = ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return nil, err
-	}
-	// Don't need to check the status code here as the RetryCheck for
-	// retryablehttp.Client is doing that and returning an error
-	return body, nil
 }
 
 func onlyNBytes(j string, numBytes int64) string {

@@ -34,6 +34,7 @@ func TestAccGroupMemberResource(t *testing.T) {
 	}()
 
 	resource.Test(t, resource.TestCase{
+		IsUnitTest:   true,
 		Providers:    testAccProviders,
 		CheckDestroy: testGroupMemberResourceDestroy,
 		Steps: []resource.TestStep{

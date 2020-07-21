@@ -1,8 +1,6 @@
 package service
 
 import (
-	"encoding/json"
-	"net/http"
 	"sync"
 
 	"github.com/databrickslabs/databricks-terraform/client/model"
@@ -27,60 +25,37 @@ func (a NotebooksAPI) Create(path string, content string, language model.Languag
 	notebookCreateRequest.Path = path
 	notebookCreateRequest.Format = format
 	notebookCreateRequest.Overwrite = overwrite
-
-	_, err := a.client.performQuery(http.MethodPost, "/workspace/import", "2.0", nil, notebookCreateRequest)
-	return err
+	return a.client.post("/workspace/import", notebookCreateRequest, nil)
 }
 
 // Read returns the notebook metadata and not the contents
 func (a NotebooksAPI) Read(path string) (model.WorkspaceObjectStatus, error) {
 	var notebookInfo model.WorkspaceObjectStatus
-	notebookGetStatusRequest := struct {
-		Path string `json:"path,omitempty" url:"path,omitempty"`
-	}{}
-	notebookGetStatusRequest.Path = path
-	resp, err := a.client.performQuery(http.MethodGet, "/workspace/get-status", "2.0", nil, notebookGetStatusRequest)
-	if err != nil {
-		return notebookInfo, err
-	}
-
-	err = json.Unmarshal(resp, &notebookInfo)
+	err := a.client.get("/workspace/get-status", map[string]string{
+		"path": path,
+	}, &notebookInfo)
 	return notebookInfo, err
 }
 
 // Export returns the notebook content as a base64 string
 func (a NotebooksAPI) Export(path string, format model.ExportFormat) (string, error) {
 	var notebookContent model.NotebookContent
-	notebookExportRequest := struct {
-		Path   string             `json:"path,omitempty" url:"path,omitempty"`
-		Format model.ExportFormat `json:"format,omitempty" url:"format,omitempty"`
-	}{}
-	notebookExportRequest.Path = path
-	notebookExportRequest.Format = format
-	resp, err := a.client.performQuery(http.MethodGet, "/workspace/export", "2.0", nil, notebookExportRequest)
-	if err != nil {
-		return notebookContent.Content, err
-	}
-
-	err = json.Unmarshal(resp, &notebookContent)
+	err := a.client.get("/workspace/export", map[string]string{
+		"path":   path,
+		"format": format,
+	}, &notebookContent)
 	return notebookContent.Content, err
 }
 
 // Mkdirs will make folders in a workspace recursively given a path
 func (a NotebooksAPI) Mkdirs(path string) error {
-	mkDirsRequest := struct {
-		Path string `json:"path,omitempty" url:"path,omitempty"`
-	}{}
-	mkDirsRequest.Path = path
-
 	// This mutex will be removed when mkdirs is removed from the notebooks resource.
 	// Then we will switch to TF resource retry.
-	mkdirMtx.Lock()
+	mkdirMtx.Lock() // this mutex might also be needed for /workspace/import
 	defer mkdirMtx.Unlock()
-
-	_, err := a.client.performQuery(http.MethodPost, "/workspace/mkdirs", "2.0", nil, mkDirsRequest)
-
-	return err
+	return a.client.post("/workspace/mkdirs", map[string]string{
+		"path": path,
+	}, nil)
 }
 
 // List will list all objects in a path on the workspace and with the recursive flag it will recursively list
@@ -119,25 +94,13 @@ func (a NotebooksAPI) list(path string) ([]model.WorkspaceObjectStatus, error) {
 	var notebookList struct {
 		Objects []model.WorkspaceObjectStatus `json:"objects,omitempty" url:"objects,omitempty"`
 	}
-	listRequest := struct {
-		Path string `json:"path,omitempty" url:"path,omitempty"`
-	}{}
-	listRequest.Path = path
-
-	resp, err := a.client.performQuery(http.MethodGet, "/workspace/list", "2.0", nil, listRequest)
-	if err != nil {
-		return notebookList.Objects, err
-	}
-
-	err = json.Unmarshal(resp, &notebookList)
+	err := a.client.get("/workspace/list", map[string]string{
+		"path": path,
+	}, &notebookList)
 	return notebookList.Objects, err
 }
 
 // Delete will delete folders given a path and recursive flag
 func (a NotebooksAPI) Delete(path string, recursive bool) error {
-	notebookDelete := model.NotebookDeleteRequest{}
-	notebookDelete.Path = path
-	notebookDelete.Recursive = recursive
-	_, err := a.client.performQuery(http.MethodPost, "/workspace/delete", "2.0", nil, notebookDelete)
-	return err
+	return a.client.post("/workspace/delete", model.NotebookDeleteRequest{path, recursive}, nil)
 }

@@ -36,3 +36,18 @@ type LibraryStatus struct {
 	IsLibraryInstalledOnAllClusters bool     `json:"is_library_for_all_clusters,omitempty"`
 	Messages                        []string `json:"messages,omitempty"`
 }
+
+// ClusterLibraryList is request body for install and uninstall
+type ClusterLibraryList struct {
+	ClusterID string    `json:"cluster_id,omitempty" url:"cluster_id,omitempty"`
+	Libraries []Library `json:"libraries,omitempty" url:"libraries,omitempty"`
+}
+
+// ClusterLibraryStatuses  A status will be available for all libraries installed on the cluster via the API or
+// the libraries UI as well as libraries set to be installed on all clusters via the libraries UI. If a library
+// has been set to be installed on all clusters, is_library_for_all_clusters will be true, even if the library
+// was also installed on the cluster.
+type ClusterLibraryStatuses struct {
+	ClusterID       string          `json:"cluster_id,omitempty" url:"cluster_id,omitempty"`
+	LibraryStatuses []LibraryStatus `json:"library_statuses,omitempty" url:"libraries,omitempty"`
+}

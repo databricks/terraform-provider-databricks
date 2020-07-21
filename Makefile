@@ -53,6 +53,9 @@ vendor:
 	@echo "==> Filling vendor folder with library code..."
 	@go mod vendor
 
+test-azure:
+	cd scripts/azure-integration && /bin/bash run.sh
+
 # INTEGRATION TESTING WITH AZURE
 terraform-acc-azure: lint
 	@echo "==> Running Terraform Acceptance Tests for Azure..."

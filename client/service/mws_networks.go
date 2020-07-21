@@ -1,9 +1,7 @@
 package service
 
 import (
-	"encoding/json"
 	"fmt"
-	"net/http"
 
 	"github.com/databrickslabs/databricks-terraform/client/model"
 )
@@ -17,17 +15,12 @@ type MWSNetworksAPI struct {
 func (a MWSNetworksAPI) Create(mwsAcctId, networkName string, vpcID string, subnetIds []string, securityGroupIds []string) (model.MWSNetwork, error) {
 	var mwsNetwork model.MWSNetwork
 	networksAPIPath := fmt.Sprintf("/accounts/%s/networks", mwsAcctId)
-	mwsNetworksRequest := model.MWSNetwork{
+	err := a.client.post(networksAPIPath, model.MWSNetwork{
 		NetworkName:      networkName,
 		VPCID:            vpcID,
 		SubnetIds:        subnetIds,
 		SecurityGroupIds: securityGroupIds,
-	}
-	resp, err := a.client.performQuery(http.MethodPost, networksAPIPath, "2.0", nil, mwsNetworksRequest)
-	if err != nil {
-		return mwsNetwork, err
-	}
-	err = json.Unmarshal(resp, &mwsNetwork)
+	}, &mwsNetwork)
 	return mwsNetwork, err
 }
 
@@ -35,32 +28,20 @@ func (a MWSNetworksAPI) Create(mwsAcctId, networkName string, vpcID string, subn
 func (a MWSNetworksAPI) Read(mwsAcctId, networksID string) (model.MWSNetwork, error) {
 	var mwsNetwork model.MWSNetwork
 	networksAPIPath := fmt.Sprintf("/accounts/%s/networks/%s", mwsAcctId, networksID)
-	resp, err := a.client.performQuery(http.MethodGet, networksAPIPath, "2.0", nil, nil)
-	if err != nil {
-		return mwsNetwork, err
-	}
-	err = json.Unmarshal(resp, &mwsNetwork)
+	err := a.client.get(networksAPIPath, nil, &mwsNetwork)
 	return mwsNetwork, err
 }
 
 // Delete deletes the network object given a network id
 func (a MWSNetworksAPI) Delete(mwsAcctId, networksID string) error {
 	networksAPIPath := fmt.Sprintf("/accounts/%s/networks/%s", mwsAcctId, networksID)
-	_, err := a.client.performQuery(http.MethodDelete, networksAPIPath, "2.0", nil, nil)
-	return err
+	return a.client.delete(networksAPIPath, nil)
 }
 
 // List lists all the available network objects in the mws account
 func (a MWSNetworksAPI) List(mwsAcctId string) ([]model.MWSNetwork, error) {
 	var mwsNetworkList []model.MWSNetwork
-
 	networksAPIPath := fmt.Sprintf("/accounts/%s/networks", mwsAcctId)
-
-	resp, err := a.client.performQuery(http.MethodGet, networksAPIPath, "2.0", nil, nil)
-	if err != nil {
-		return mwsNetworkList, err
-	}
-
-	err = json.Unmarshal(resp, &mwsNetworkList)
+	err := a.client.get(networksAPIPath, nil, &mwsNetworkList)
 	return mwsNetworkList, err
 }

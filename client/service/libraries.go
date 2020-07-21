@@ -1,9 +1,6 @@
 package service
 
 import (
-	"encoding/json"
-	"net/http"
-
 	"github.com/databrickslabs/databricks-terraform/client/model"
 )
 
@@ -12,54 +9,41 @@ type LibrariesAPI struct {
 	client *DatabricksClient
 }
 
-// Create installs the list of libraries given a cluster id
+// Install library list on cluster
+func (a LibrariesAPI) Install(req model.ClusterLibraryList) error {
+	return a.client.post("/libraries/install", req, nil)
+}
+
+// Uninstall library list form cluster
+func (a LibrariesAPI) Uninstall(req model.ClusterLibraryList) error {
+	return a.client.post("/libraries/uninstall", req, nil)
+}
+
+// ClusterStatus returns library status in cluster
+func (a LibrariesAPI) ClusterStatus(clusterID string) (model.ClusterLibraryStatuses, error) {
+	var clusterLibraryStatuses model.ClusterLibraryStatuses
+	err := a.client.get("/libraries/cluster-status", model.ClusterID{clusterID}, &clusterLibraryStatuses)
+	return clusterLibraryStatuses, err
+}
+
+// Create [DEPRECATED] installs the list of libraries given a cluster id
 func (a LibrariesAPI) Create(clusterID string, libraries []model.Library) error {
-	var libraryInstallRequest = struct {
-		ClusterID string          `json:"cluster_id,omitempty" url:"cluster_id,omitempty"`
-		Libraries []model.Library `json:"libraries,omitempty" url:"libraries,omitempty"`
-	}{
+	return a.Install(model.ClusterLibraryList{
 		ClusterID: clusterID,
 		Libraries: libraries,
-	}
-
-	_, err := a.client.performQuery(http.MethodPost, "/libraries/install", "2.0", nil, libraryInstallRequest)
-
-	return err
+	})
 }
 
-// Delete deletes the list of given libraries from the cluster given the cluster id
+// Delete [DEPRECATED] deletes the list of given libraries from the cluster given the cluster id
 func (a LibrariesAPI) Delete(clusterID string, libraries []model.Library) error {
-	var libraryInstallRequest = struct {
-		ClusterID string          `json:"cluster_id,omitempty" url:"cluster_id,omitempty"`
-		Libraries []model.Library `json:"libraries,omitempty" url:"libraries,omitempty"`
-	}{
+	return a.Uninstall(model.ClusterLibraryList{
 		ClusterID: clusterID,
 		Libraries: libraries,
-	}
-
-	_, err := a.client.performQuery(http.MethodPost, "/libraries/uninstall", "2.0", nil, libraryInstallRequest)
-
-	return err
+	})
 }
 
-// List lists all the libraries given a cluster id
+// List [DEPRECATED] lists all the libraries given a cluster id
 func (a LibrariesAPI) List(clusterID string) ([]model.LibraryStatus, error) {
-	var libraryStatusListResp struct {
-		ClusterID       string                `json:"cluster_id,omitempty" url:"cluster_id,omitempty"`
-		LibraryStatuses []model.LibraryStatus `json:"library_statuses,omitempty" url:"libraries,omitempty"`
-	}
-	var libraryInstallRequest = struct {
-		ClusterID string `json:"cluster_id,omitempty" url:"cluster_id,omitempty"`
-	}{
-		ClusterID: clusterID,
-	}
-
-	resp, err := a.client.performQuery(http.MethodGet, "/libraries/cluster-status", "2.0", nil, libraryInstallRequest)
-	if err != nil {
-		return libraryStatusListResp.LibraryStatuses, err
-	}
-
-	err = json.Unmarshal(resp, &libraryStatusListResp)
-
-	return libraryStatusListResp.LibraryStatuses, err
+	cll, err := a.ClusterStatus(clusterID)
+	return cll.LibraryStatuses, err // check error scenario...
 }

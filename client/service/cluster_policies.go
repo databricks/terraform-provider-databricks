@@ -1,9 +1,6 @@
 package service
 
 import (
-	"encoding/json"
-	"net/http"
-
 	"github.com/databrickslabs/databricks-terraform/client/model"
 )
 
@@ -21,15 +18,13 @@ type policyIDWrapper struct {
 
 // Create creates new cluster policy and sets PolicyID
 func (a ClusterPoliciesAPI) Create(clusterPolicy *model.ClusterPolicy) error {
-	//clusterPolicyWrapper := &policyWrapper{clusterPolicy.Name, clusterPolicy.Definition}
-	resp, err := a.client.performQuery(http.MethodPost, "/policies/clusters/create", "2.0", nil, clusterPolicy)
+	var policyIDResponse = policyIDWrapper{}
+	err := a.client.post("/policies/clusters/create", clusterPolicy, &policyIDResponse)
 	if err != nil {
 		return err
 	}
-	var policyIDResponse = new(policyIDWrapper)
-	err = json.Unmarshal(resp, &policyIDResponse)
 	clusterPolicy.PolicyID = policyIDResponse.PolicyID
-	return err
+	return nil
 }
 
 // Edit will update an existing policy.
@@ -37,23 +32,16 @@ func (a ClusterPoliciesAPI) Create(clusterPolicy *model.ClusterPolicy) error {
 // For such clusters the next cluster edit must provide a confirming configuration,
 // but otherwise they can continue to run.
 func (a ClusterPoliciesAPI) Edit(clusterPolicy *model.ClusterPolicy) error {
-	_, err := a.client.performQuery(http.MethodPost, "/policies/clusters/edit", "2.0", nil, clusterPolicy)
-	return err
+	return a.client.post("/policies/clusters/edit", clusterPolicy, nil)
 }
 
 // Get returns cluster policy
-func (a ClusterPoliciesAPI) Get(policyID string) (*model.ClusterPolicy, error) {
-	var clusterPolicy model.ClusterPolicy
-	resp, err := a.client.performQuery(http.MethodGet, "/policies/clusters/get", "2.0", nil, policyIDWrapper{policyID})
-	if err != nil {
-		return nil, err
-	}
-	err = json.Unmarshal(resp, &clusterPolicy)
-	return &clusterPolicy, err
+func (a ClusterPoliciesAPI) Get(policyID string) (policy *model.ClusterPolicy, err error) {
+	err = a.client.get("/policies/clusters/get", policyIDWrapper{policyID}, policy)
+	return
 }
 
 // Delete removes cluster policy
 func (a ClusterPoliciesAPI) Delete(policyID string) error {
-	_, err := a.client.performQuery(http.MethodPost, "/policies/clusters/delete", "2.0", nil, policyIDWrapper{policyID})
-	return err
+	return a.client.post("/policies/clusters/delete", policyIDWrapper{policyID}, nil)
 }

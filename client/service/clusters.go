@@ -1,10 +1,8 @@
 package service
 
 import (
-	"encoding/json"
 	"errors"
 	"log"
-	"net/http"
 	"time"
 
 	"github.com/databrickslabs/databricks-terraform/client/model"
@@ -16,55 +14,31 @@ type ClustersAPI struct {
 }
 
 // Create creates a new Spark cluster
-func (a ClustersAPI) Create(cluster model.Cluster) (model.ClusterInfo, error) {
-	var clusterInfo model.ClusterInfo
-
-	resp, err := a.client.performQuery(http.MethodPost, "/clusters/create", "2.0", nil, cluster)
-	if err != nil {
-		return clusterInfo, err
-	}
-
-	err = json.Unmarshal(resp, &clusterInfo)
-	return clusterInfo, err
+func (a ClustersAPI) Create(cluster model.Cluster) (ci model.ClusterInfo, err error) {
+	err = a.client.post("/clusters/create", cluster, &ci)
+	return
 }
 
 // Edit edits the configuration of a cluster to match the provided attributes and size
 func (a ClustersAPI) Edit(clusterInfo model.Cluster) error {
-	_, err := a.client.performQuery(http.MethodPost, "/clusters/edit", "2.0", nil, clusterInfo)
-	return err
+	return a.client.post("/clusters/edit", clusterInfo, nil)
 }
 
 // ListZones returns the zones info sent by the cloud service provider
 func (a ClustersAPI) ListZones() (model.ZonesInfo, error) {
 	var zonesInfo model.ZonesInfo
-	resp, err := a.client.performQuery(http.MethodGet, "/clusters/list-zones", "2.0", nil, nil)
-	if err != nil {
-		return zonesInfo, err
-	}
-	err = json.Unmarshal(resp, &zonesInfo)
+	err := a.client.get("/clusters/list-zones", nil, &zonesInfo)
 	return zonesInfo, err
 }
 
 // Start starts a terminated Spark cluster given its ID
 func (a ClustersAPI) Start(clusterID string) error {
-	data := struct {
-		ClusterID string `json:"cluster_id,omitempty" url:"cluster_id,omitempty"`
-	}{
-		clusterID,
-	}
-	_, err := a.client.performQuery(http.MethodPost, "/clusters/start", "2.0", nil, data)
-	return err
+	return a.client.post("/clusters/start", model.ClusterID{clusterID}, nil)
 }
 
 // Restart restart a Spark cluster given its ID. If the cluster is not in a RUNNING state, nothing will happen.
 func (a ClustersAPI) Restart(clusterID string) error {
-	data := struct {
-		ClusterID string `json:"cluster_id,omitempty" url:"cluster_id,omitempty"`
-	}{
-		clusterID,
-	}
-	_, err := a.client.performQuery(http.MethodPost, "/clusters/restart", "2.0", nil, data)
-	return err
+	return a.client.post("/clusters/restart", model.ClusterID{clusterID}, nil)
 }
 
 // WaitForClusterRunning will block main thread and wait till cluster is in a RUNNING state
@@ -129,13 +103,7 @@ func (a ClustersAPI) WaitForClusterTerminated(clusterID string, sleepDurationSec
 
 // Terminate terminates a Spark cluster given its ID
 func (a ClustersAPI) Terminate(clusterID string) error {
-	data := struct {
-		ClusterID string `json:"cluster_id,omitempty" url:"cluster_id,omitempty"`
-	}{
-		clusterID,
-	}
-	_, err := a.client.performQuery(http.MethodPost, "/clusters/delete", "2.0", nil, data)
-	return err
+	return a.client.post("/clusters/delete", model.ClusterID{clusterID}, nil)
 }
 
 // Delete is an alias of Terminate
@@ -145,53 +113,24 @@ func (a ClustersAPI) Delete(clusterID string) error {
 
 // PermanentDelete permanently delete a cluster
 func (a ClustersAPI) PermanentDelete(clusterID string) error {
-	data := struct {
-		ClusterID string `json:"cluster_id,omitempty" url:"cluster_id,omitempty"`
-	}{
-		clusterID,
-	}
-	_, err := a.client.performQuery(http.MethodPost, "/clusters/permanent-delete", "2.0", nil, data)
-	return err
+	return a.client.post("/clusters/permanent-delete", model.ClusterID{clusterID}, nil)
 }
 
 // Get retrieves the information for a cluster given its identifier
 func (a ClustersAPI) Get(clusterID string) (model.ClusterInfo, error) {
 	var clusterInfo model.ClusterInfo
-
-	data := struct {
-		ClusterID string `json:"cluster_id,omitempty" url:"cluster_id,omitempty"`
-	}{
-		clusterID,
-	}
-	resp, err := a.client.performQuery(http.MethodGet, "/clusters/get", "2.0", nil, data)
-	if err != nil {
-		return clusterInfo, err
-	}
-
-	err = json.Unmarshal(resp, &clusterInfo)
+	err := a.client.get("/clusters/get", model.ClusterID{clusterID}, clusterInfo)
 	return clusterInfo, err
 }
 
 // Pin ensure that an interactive cluster configuration is retained even after a cluster has been terminated for more than 30 days
 func (a ClustersAPI) Pin(clusterID string) error {
-	data := struct {
-		ClusterID string `json:"cluster_id,omitempty" url:"cluster_id,omitempty"`
-	}{
-		clusterID,
-	}
-	_, err := a.client.performQuery(http.MethodPost, "/clusters/pin", "2.0", nil, data)
-	return err
+	return a.client.post("/clusters/pin", model.ClusterID{clusterID}, nil)
 }
 
 // Unpin allows the cluster to eventually be removed from the list returned by the List API
 func (a ClustersAPI) Unpin(clusterID string) error {
-	data := struct {
-		ClusterID string `json:"cluster_id,omitempty" url:"cluster_id,omitempty"`
-	}{
-		clusterID,
-	}
-	_, err := a.client.performQuery(http.MethodPost, "/clusters/unpin", "2.0", nil, data)
-	return err
+	return a.client.post("/clusters/unpin", model.ClusterID{clusterID}, nil)
 }
 
 // List return information about all pinned clusters, currently active clusters,
@@ -202,12 +141,7 @@ func (a ClustersAPI) List() ([]model.ClusterInfo, error) {
 		Clusters []model.ClusterInfo `json:"clusters,omitempty" url:"clusters,omitempty"`
 	}{}
 
-	resp, err := a.client.performQuery(http.MethodGet, "/clusters/list", "2.0", nil, nil)
-	if err != nil {
-		return clusterList.Clusters, err
-	}
-
-	err = json.Unmarshal(resp, &clusterList)
+	err := a.client.get("/clusters/list", nil, &clusterList)
 	return clusterList.Clusters, err
 }
 
@@ -216,12 +150,6 @@ func (a ClustersAPI) ListNodeTypes() ([]model.NodeType, error) {
 	var nodeTypeList = struct {
 		NodeTypes []model.NodeType `json:"node_types,omitempty" url:"node_types,omitempty"`
 	}{}
-
-	resp, err := a.client.performQuery(http.MethodGet, "/clusters/list-node-types", "2.0", nil, nil)
-	if err != nil {
-		return nodeTypeList.NodeTypes, err
-	}
-
-	err = json.Unmarshal(resp, &nodeTypeList)
+	err := a.client.get("/clusters/list-node-types", nil, &nodeTypeList)
 	return nodeTypeList.NodeTypes, err
 }

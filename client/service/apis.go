@@ -4,6 +4,7 @@ import (
 	"crypto/tls"
 	"encoding/base64"
 	"fmt"
+	"log"
 	"net/http"
 	"net/url"
 	"os"
@@ -13,10 +14,6 @@ import (
 	"github.com/mitchellh/go-homedir"
 	"gopkg.in/ini.v1"
 )
-
-var scimHeaders = map[string]string{
-	"Content-Type": "application/scim+json",
-}
 
 // DatabricksClient is the client struct that contains clients for all the services available on Databricks
 type DatabricksClient struct {
@@ -38,10 +35,11 @@ type DatabricksClient struct {
 	customAuthorizer   func() error
 	httpClient         *retryablehttp.Client
 	uriPrefix          string
+	auth               func(r *http.Request) (*http.Request, error)
 }
 
 // Configure validates and configures the client
-func (c *DatabricksClient) Configure(version string) error {
+func (c *DatabricksClient) ConfigureOld(version string) error {
 	c.userAgent = fmt.Sprintf("databricks-tf-provider/%s", version)
 
 	c.configureHTTPCLient()
@@ -80,6 +78,124 @@ func (c *DatabricksClient) Configure(version string) error {
 	}
 	c.uriPrefix = fmt.Sprintf("%s://%s/api", parsedURI.Scheme, parsedURI.Host)
 	return nil
+}
+
+// Configure ...
+func (c *DatabricksClient) Configure(version string) error {
+	c.configureHTTPCLient()
+	c.AzureAuth.databricksClient = c
+	c.userAgent = fmt.Sprintf("databricks-tf-provider/%s", version)
+	err := c.findAndApplyAuthorizer()
+	if err != nil {
+		return err
+	}
+	// parsedURI, err := url.Parse(c.Host)
+	// if err != nil {
+	// 	return err
+	// }
+	// c.uriPrefix = fmt.Sprintf("%s://%s/api", parsedURI.Scheme, parsedURI.Host)
+	return nil
+}
+
+func (c *DatabricksClient) findAndApplyAuthorizer() error {
+	for _, authProvider := range []func() (func(r *http.Request) (*http.Request, error), error){
+		c.configureAuthWithDirectParams2,
+		c.AzureAuth.configureWithClientSecret2,
+		c.configureFromDatabricksCfg2,
+		// c.AzureAuth.configureWithAzureCLI,
+	} {
+		authorizer, err := authProvider()
+		if err != nil {
+			return err
+		}
+		if authorizer == nil {
+			continue
+		}
+		c.auth = authorizer
+		return nil
+	}
+	return fmt.Errorf("Authentication is not configured for provider. Please configure it\n" +
+		"through one of the following options:\n" +
+		"1. DATABRICKS_HOST + DATABRICKS_TOKEN environment variables.\n" +
+		"2. host + token provider arguments.\n" +
+		"3. azure_databricks_workspace_id + AZ CLI authentication.\n" +
+		"4. azure_databricks_workspace_id + azure_client_id + azure_client_secret + azure_tenant_id " +
+		"for Azure Service Principal authentication.\n" +
+		"5. Run `databricks configure --token` that will create ~/.databrickscfg file.\n\n" +
+		"Please check https://docs.databricks.com/dev-tools/cli/index.html#set-up-authentication for details")
+}
+
+func (c *DatabricksClient) configureAuthWithDirectParams2() (func(r *http.Request) (*http.Request, error), error) {
+	authType := "Bearer"
+	var needsHostBecause string
+	username := c.BasicAuth.Username
+	if username != "" && c.BasicAuth.Password != "" {
+		authType = "Basic"
+		c.BasicAuth.Password = ""
+		needsHostBecause = "basic_auth"
+		c.Token = c.encodeBasicAuth(username, c.BasicAuth.Password)
+		log.Printf("[INFO] Using basic auth for user '%s'", username)
+	} else if c.Token != "" {
+		needsHostBecause = "token"
+	}
+	if needsHostBecause != "" && c.Host == "" {
+		return nil, fmt.Errorf("Host is empty, but is required by %s", needsHostBecause)
+	}
+	if c.Token == "" || c.Host == "" {
+		log.Printf("[INFO] No direct authentication params configured")
+		return nil, nil
+	}
+	log.Printf("[INFO] Successfully configured Bearer authentication")
+	return c.authorizer(authType, c.Token), nil
+}
+
+func (c *DatabricksClient) configureFromDatabricksCfg2() (func(r *http.Request) (*http.Request, error), error) {
+	_, err := os.Stat(c.ConfigFile)
+	if os.IsNotExist(err) {
+		log.Printf("[INFO] ~/.databrickscfg not found on current host")
+		// early return for non-configured machines
+		return nil, nil
+	}
+	configFile, err := homedir.Expand(c.ConfigFile)
+	if err != nil {
+		return nil, err
+	}
+	cfg, err := ini.Load(configFile)
+	if err != nil {
+		return nil, err
+	}
+	if c.Profile == "" {
+		log.Printf("[INFO] Using DEFAULT profile from ~/.databrickscfg")
+		c.Profile = "DEFAULT"
+	}
+	dbcli := cfg.Section(c.Profile)
+	c.Host = dbcli.Key("host").String()
+	if c.Host == "" {
+		return nil, fmt.Errorf("config file %s is corrupt: cannot find host in %s profile",
+			configFile, c.Profile)
+	}
+	authType := "Bearer"
+	if dbcli.HasKey("username") && dbcli.HasKey("password") {
+		username := dbcli.Key("username").String()
+		password := dbcli.Key("password").String()
+		c.Token = c.encodeBasicAuth(username, password)
+		authType = "Basic"
+	} else {
+		c.Token = dbcli.Key("token").String()
+	}
+	if c.Token == "" {
+		return nil, fmt.Errorf("config file %s is corrupt: cannot find token in %s profile",
+			configFile, c.Profile)
+	}
+	log.Printf("[INFO] Successfully configured %s authentication from ~/.databrickscfg", authType)
+	return c.authorizer(authType, c.Token), nil
+}
+
+func (c *DatabricksClient) authorizer(authType, token string) func(r *http.Request) (*http.Request, error) {
+	return func(r *http.Request) (*http.Request, error) {
+		r.Header.Set("Authorization", fmt.Sprintf("%s %s", authType, token))
+		return r, nil
+	}
 }
 
 func (c *DatabricksClient) configureAuthWithDirectParams() (bool, error) {
@@ -154,10 +270,18 @@ func (c *DatabricksClient) configureHTTPCLient() {
 	// a transient error on initial creation
 	retryDelayDuration := 10 * time.Second
 	retryMaximumDuration := 5 * time.Minute
+	defaultTransport := http.DefaultTransport.(*http.Transport)
 	c.httpClient = &retryablehttp.Client{
 		HTTPClient: &http.Client{
 			Timeout: time.Duration(c.TimeoutSeconds) * time.Second,
 			Transport: &http.Transport{
+				Proxy:                 defaultTransport.Proxy,
+				DialContext:           defaultTransport.DialContext,
+				MaxIdleConns:          defaultTransport.MaxIdleConns,
+				IdleConnTimeout:       defaultTransport.IdleConnTimeout,
+				TLSHandshakeTimeout:   defaultTransport.TLSHandshakeTimeout,
+				ExpectContinueTimeout: defaultTransport.ExpectContinueTimeout,
+				// TODO: This probably should be a configuration at the provider level and optional and not a fixed val
 				TLSClientConfig: &tls.Config{
 					InsecureSkipVerify: c.InsecureSkipVerify,
 				},

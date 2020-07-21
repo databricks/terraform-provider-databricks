@@ -1,7 +1,6 @@
 package service
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/http"
 
@@ -15,26 +14,17 @@ type SecretScopesAPI struct {
 
 // Create creates a new secret scope
 func (a SecretScopesAPI) Create(scope string, initialManagePrincipal string) error {
-	data := struct {
-		Scope                  string `json:"scope,omitempty"`
-		InitialManagePrincipal string `json:"initial_manage_principal,omitempty"`
-	}{
-		scope,
-		initialManagePrincipal,
-	}
-	_, err := a.client.performQuery(http.MethodPost, "/secrets/scopes/create", "2.0", nil, data)
-	return err
+	return a.client.post("/secrets/scopes/create", map[string]string{
+		"scope":                    scope, // TODO: check if omitempty is replicated in maps
+		"initial_manage_principal": initialManagePrincipal,
+	}, nil)
 }
 
 // Delete deletes a secret scope
 func (a SecretScopesAPI) Delete(scope string) error {
-	data := struct {
-		Scope string `json:"scope,omitempty" `
-	}{
-		scope,
-	}
-	_, err := a.client.performQuery(http.MethodPost, "/secrets/scopes/delete", "2.0", nil, data)
-	return err
+	return a.client.post("/secrets/scopes/create", map[string]string{
+		"scope": scope,
+	}, nil)
 }
 
 // List lists all secret scopes available in the workspace
@@ -42,13 +32,7 @@ func (a SecretScopesAPI) List() ([]model.SecretScope, error) {
 	var listSecretScopesResponse struct {
 		Scopes []model.SecretScope `json:"scopes,omitempty"`
 	}
-
-	resp, err := a.client.performQuery(http.MethodGet, "/secrets/scopes/list", "2.0", nil, nil)
-	if err != nil {
-		return listSecretScopesResponse.Scopes, err
-	}
-
-	err = json.Unmarshal(resp, &listSecretScopesResponse)
+	err := a.client.get("/secrets/scopes/list", nil, &listSecretScopesResponse)
 	return listSecretScopesResponse.Scopes, err
 }
 

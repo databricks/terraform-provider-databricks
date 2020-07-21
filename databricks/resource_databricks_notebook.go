@@ -101,13 +101,13 @@ func resourceNotebookCreate(d *schema.ResourceData, m interface{}) error {
 	mkdirs := d.Get("mkdirs").(bool)
 
 	if mkdirs {
-		parentDir, err := getNotebookParentDirPath(path)
+		parentDir, err := GetParentDirPath(path)
 		switch err {
 		// Notebook path is root directory so no need to make directory and there is no parent
-		case notebookDirPathRootDirError:
+		case DirPathRootDirError:
 			break
 		// Notebook path is empty thus a valid error
-		case notebookPathEmptyError:
+		case PathEmptyError:
 			return err
 		//	Notebook path is valid and has a parent directory
 		case nil:
@@ -202,7 +202,7 @@ func resourceNotebookDelete(d *schema.ResourceData, m interface{}) error {
 		if err == nil {
 			return nil
 		}
-		var e *service.APIError
+		var e service.APIError
 		if errors.As(err, &e) && e.IsTooManyRequests() {
 			// Wait for requests to clear up
 			baseDuration := 250 * time.Millisecond
@@ -283,28 +283,4 @@ func ValidateNotebookPath(val interface{}, key string) (warns []string, errs []e
 	}
 
 	return nil, errs
-}
-
-var notebookPathEmptyError error = errors.New("notebook path is empty")
-
-// we would never want to handle root directories in regards to creating them
-var notebookDirPathRootDirError error = errors.New("dir path is root directory")
-
-// Os libraries behave bizarely on windows as they will replace slashes with other values.
-// This causes issues & errors when submitting the request
-func getNotebookParentDirPath(filePath string) (string, error) {
-	if filePath == "" {
-		return "", notebookPathEmptyError
-	}
-
-	pathParts := strings.Split(filePath, "/")
-
-	// if length of pathParts is just two items then the parent should be the root directory
-	if len(pathParts) == 2 {
-		return "", notebookDirPathRootDirError
-	}
-
-	dirPath := strings.Join(pathParts[0:len(pathParts)-1], "/")
-
-	return dirPath, nil
 }

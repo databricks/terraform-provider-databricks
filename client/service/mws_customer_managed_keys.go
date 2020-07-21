@@ -35,9 +35,6 @@ func (a MWSCustomerManagedKeysAPI) Read(
 
 // Delete deletes the customer managed key object given a network id
 func (a MWSCustomerManagedKeysAPI) Delete(customerManagedKeysID string) error {
-	//customerManagedKeysAPIPath := fmt.Sprintf("/accounts/%s/customer-managed-keys/%s", a.Client.Config.E2AcctID, customerManagedKeysID)
-	//_, err := a.Client.performQuery(http.MethodDelete, customerManagedKeysAPIPath, "2.0", nil, nil, nil)
-	//return err
 	return errors.New("delete is not yet supported")
 }
 

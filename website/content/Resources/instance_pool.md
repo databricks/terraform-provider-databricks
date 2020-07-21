@@ -38,14 +38,14 @@ resource "databricks_instance_pool" "my-pool" {
     spot_bid_price_percent = "100"
   }
   idle_instance_autotermination_minutes = 10
-  disk_spec = {
+  disk_spec {
     ebs_volume_type = "GENERAL_PURPOSE_SSD"
     disk_size = 80
     disk_count = 1
   }
   custom_tags = {
-    "creator": "Sriharsha Tikkireddy"
-    "testChange": "Sri Tikkireddy"
+    "creator" = "Sriharsha Tikkireddy"
+    "testChange" = "Sri Tikkireddy"
   }
 }
 ```
@@ -58,14 +58,14 @@ resource "databricks_instance_pool" "my-pool" {
   max_capacity = 5
   node_type_id = "Standard_DS3_v2"
   idle_instance_autotermination_minutes = 10
-  disk_spec = {
+  disk_spec {
     azure_disk_volume_type = "PREMIUM_LRS"
     disk_size = 80
     disk_count = 1
   }
   custom_tags = {
-    "creator": "demo user"
-    "testChange": "demo user"
+    "creator" = "demo user"
+    "testChange" = "demo user"
   }
 }
 ```

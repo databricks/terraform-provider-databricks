@@ -67,9 +67,9 @@ func (a DBFSAPI) read(path string, offset, length int64) (int64, []byte, error) 
 }
 
 // List returns a list of files in DBFS and the recursive flag lets you recursively list files
-func (a DBFSAPI) List(path string, recursive bool) ([]model.FileInfo, error) {
+func (a DBFSAPI) List(path string, recursive bool) ([]model.DBFSFileInfo, error) {
 	if recursive {
-		var paths []model.FileInfo
+		var paths []model.DBFSFileInfo
 		err := a.recursiveAddPaths(path, &paths)
 		if err != nil {
 			return nil, err
@@ -79,7 +79,7 @@ func (a DBFSAPI) List(path string, recursive bool) ([]model.FileInfo, error) {
 	return a.list(path)
 }
 
-func (a DBFSAPI) recursiveAddPaths(path string, pathList *[]model.FileInfo) error {
+func (a DBFSAPI) recursiveAddPaths(path string, pathList *[]model.DBFSFileInfo) error {
 	fileInfoList, err := a.list(path)
 	if err != nil {
 		return err
@@ -128,17 +128,16 @@ func (a DBFSAPI) ReadString(path string, offset, length int64) (int64, string, e
 }
 
 // Status returns the status of a file in DBFS
-func (a DBFSAPI) Status(path string) (model.FileInfo, error) {
-	var fileInfo model.FileInfo
-	err := a.client.get("/dbfs/get-status", map[string]interface{}{
+func (a DBFSAPI) Status(path string) (f model.DBFSFileInfo, err error) {
+	err = a.client.get("/dbfs/get-status", map[string]interface{}{
 		"path": path,
-	}, &fileInfo)
-	return fileInfo, err
+	}, &f)
+	return
 }
 
-func (a DBFSAPI) list(path string) ([]model.FileInfo, error) {
+func (a DBFSAPI) list(path string) ([]model.DBFSFileInfo, error) {
 	var dbfsList struct {
-		Files []model.FileInfo `json:"files,omitempty" url:"files,omitempty"`
+		Files []model.DBFSFileInfo `json:"files,omitempty" url:"files,omitempty"`
 	}
 	err := a.client.get("/dbfs/list", map[string]interface{}{
 		"path": path,

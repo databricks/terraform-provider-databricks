@@ -117,10 +117,9 @@ func (a ClustersAPI) PermanentDelete(clusterID string) error {
 }
 
 // Get retrieves the information for a cluster given its identifier
-func (a ClustersAPI) Get(clusterID string) (model.ClusterInfo, error) {
-	var clusterInfo model.ClusterInfo
-	err := a.client.get("/clusters/get", model.ClusterID{ClusterID: clusterID}, clusterInfo)
-	return clusterInfo, err
+func (a ClustersAPI) Get(clusterID string) (ci model.ClusterInfo, err error) {
+	err = a.client.get("/clusters/get", model.ClusterID{ClusterID: clusterID}, &ci)
+	return
 }
 
 // Pin ensure that an interactive cluster configuration is retained even after a cluster has been terminated for more than 30 days

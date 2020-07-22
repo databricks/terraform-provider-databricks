@@ -18,6 +18,7 @@ import (
 
 func TestMain(m *testing.M) {
 	err := godotenv.Load("../../.env")
+	log.SetFlags(log.Lshortfile | log.Ltime)
 	if err != nil {
 		log.Println("Failed to load environment")
 	}
@@ -122,6 +123,10 @@ func AssertMultipleRequestsWithMockServer(t *testing.T, rawPayloadArgs interface
 	counter := 0
 	server := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
 		// Test request parameters
+		if counter == len(requestMethod) {
+			t.Fatalf("Received more requests than expected")
+			return
+		}
 		assert.Equal(t, requestMethod[counter], req.Method)
 		assert.Equal(t, requestURI[counter], req.RequestURI)
 		if requestMethod[counter] == http.MethodPost || requestMethod[counter] == http.MethodPatch || requestMethod[counter] == http.MethodPut {

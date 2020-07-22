@@ -139,8 +139,8 @@ func TestDBFSAPI_Create(t *testing.T) {
 					"handle": 1000
 				}`, ``, ``,
 			},
-			responseStatus: []int{http.StatusOK, http.StatusBadRequest},
-			requestMethod:  []string{http.MethodPost, http.MethodPost},
+			responseStatus: []int{http.StatusOK, http.StatusBadRequest, http.StatusOK},
+			requestMethod:  []string{http.MethodPost, http.MethodPost, http.MethodPost},
 			args: []interface{}{
 				&handle{
 					Path:      "my-path",
@@ -150,12 +150,16 @@ func TestDBFSAPI_Create(t *testing.T) {
 					Data:   base64String,
 					Handle: 1000,
 				},
+				&close{
+					Handle: 1000,
+				},
 			},
 			postStructExpect: []interface{}{
 				&handle{},
 				&block{},
+				&close{},
 			},
-			wantURI: []string{"/api/2.0/dbfs/create", "/api/2.0/dbfs/add-block"},
+			wantURI: []string{"/api/2.0/dbfs/create", "/api/2.0/dbfs/add-block", "/api/2.0/dbfs/close"},
 			want:    nil,
 			wantErr: true,
 		},
@@ -198,9 +202,11 @@ func TestDBFSAPI_Create(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			AssertMultipleRequestsWithMockServer(t, tt.args, tt.requestMethod, tt.wantURI, tt.postStructExpect, tt.response, tt.responseStatus, nil, tt.wantErr, func(client DatabricksClient) (interface{}, error) {
-				return nil, client.DBFS().Create(tt.params.Path, tt.params.Overwrite, tt.params.Data)
-			})
+			AssertMultipleRequestsWithMockServer(t, tt.args, tt.requestMethod, tt.wantURI,
+				tt.postStructExpect, tt.response, tt.responseStatus, nil, tt.wantErr,
+				func(client DatabricksClient) (interface{}, error) {
+					return nil, client.DBFS().Create(tt.params.Path, tt.params.Overwrite, tt.params.Data)
+				})
 		})
 	}
 }

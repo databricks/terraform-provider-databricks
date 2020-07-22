@@ -15,24 +15,27 @@ type DBFSAPI struct {
 func (a DBFSAPI) Create(path string, overwrite bool, data string) (err error) {
 	byteArr, err := base64.StdEncoding.DecodeString(data)
 	if err != nil {
-		return err
+		return
 	}
 	byteChunks := split(byteArr, 1e6)
 	handle, err := a.createHandle(path, overwrite)
 	if err != nil {
-		return err
+		return
 	}
 	defer func() {
-		err = a.closeHandle(handle)
+		cerr := a.closeHandle(handle)
+		if cerr != nil {
+			err = cerr
+		}
 	}()
 	for _, byteChunk := range byteChunks {
 		b64Data := base64.StdEncoding.EncodeToString(byteChunk)
-		err := a.addBlock(b64Data, handle)
+		err = a.addBlock(b64Data, handle)
 		if err != nil {
-			return err
+			return
 		}
 	}
-	return err
+	return
 }
 
 // Read returns the contents of a file in DBFS as a base64 encoded string
@@ -107,10 +110,17 @@ func (a DBFSAPI) Move(src string, tgt string) error {
 
 // Delete deletes a file in DBFS via API
 func (a DBFSAPI) Delete(path string, recursive bool) error {
-	return a.client.post("/dbfs/delete", map[string]interface{}{
-		"path":      path,
-		"recursive": recursive,
+	return a.client.post("/dbfs/delete", dbfsRequest{
+		Path:      path,
+		Recursive: recursive,
 	}, nil)
+}
+
+type dbfsRequest struct {
+	Path      string `json:"path,omitempty" url:"path,omitempty"`
+	Offset    int64  `json:"offset,omitempty" url:"offset,omitempty"`
+	Length    int64  `json:"length,omitempty" url:"length,omitempty"`
+	Recursive bool   `json:"recursive,omitempty" url:"recursive,omitempty"`
 }
 
 // ReadString reads a "block" of data in DBFS given a offset and length as a base64 encoded string
@@ -119,10 +129,10 @@ func (a DBFSAPI) ReadString(path string, offset, length int64) (int64, string, e
 		BytesRead int64  `json:"bytes_read,omitempty" url:"bytes_read,omitempty"`
 		Data      string `json:"data,omitempty" url:"data,omitempty"`
 	}
-	err := a.client.get("/dbfs/read", map[string]interface{}{
-		"path":   path,
-		"offset": offset,
-		"length": length,
+	err := a.client.get("/dbfs/read", dbfsRequest{
+		Path:   path,
+		Offset: offset,
+		Length: length,
 	}, &readBytes)
 	return readBytes.BytesRead, readBytes.Data, err
 }

@@ -196,8 +196,7 @@ func getMD5(text string) (string, error) {
 func resourceDBFSFileDelete(d *schema.ResourceData, m interface{}) error {
 	id := d.Id()
 	client := m.(*service.DatabricksClient)
-	err := client.DBFS().Delete(id, false)
-	return err
+	return client.DBFS().Delete(id, false)
 }
 
 // handleDBFSParentDirs handles the different branch paths to create dbfs parent directories

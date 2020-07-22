@@ -58,12 +58,13 @@ type AzureAuth struct {
 
 	// private property to give resource access
 	databricksClient *DatabricksClient
-	authorizerMutex  *sync.Mutex
 
 	azureManagementEndpoint string
 	authorizer              autorest.Authorizer
 	temporaryPat            *model.TokenResponse
 }
+
+var authorizerMutex sync.Mutex
 
 func (aa *AzureAuth) resourceID() string {
 	if aa.ResourceID != "" {
@@ -122,8 +123,8 @@ func (aa *AzureAuth) acquirePAT(managementAuthorizer, platformAuthorizer autores
 		// todo: add IsExpired
 		return aa.temporaryPat, nil
 	}
-	aa.authorizerMutex.Lock()
-	defer aa.authorizerMutex.Unlock()
+	authorizerMutex.Lock()
+	defer authorizerMutex.Unlock()
 	tokenResponse, err := aa.stuff(
 		managementAuthorizer, platformAuthorizer, func(r *http.Request) (*http.Request, error) {
 			log.Printf("[DEBUG] Setting 'X-Databricks-Azure-SP-Management-Token' header")

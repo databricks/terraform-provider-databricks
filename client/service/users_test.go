@@ -132,9 +132,15 @@ func TestScimUserAPI_Update(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			AssertMultipleRequestsWithMockServer(t, tt.args, []string{http.MethodGet, http.MethodPut}, tt.wantURI, []interface{}{nil, &args{}}, tt.response, tt.responseStatus, nil, tt.wantErr, func(client DatabricksClient) (interface{}, error) {
-				return nil, client.Users().Update("101030", tt.args[1].(*args).UserName, tt.args[1].(*args).DisplayName, []string{string(tt.args[1].(*args).Entitlements[0].Value)}, []string{tt.args[1].(*args).Roles[0].Value})
-			})
+			AssertMultipleRequestsWithMockServer(t, tt.args,
+				[]string{http.MethodGet, http.MethodPut}, tt.wantURI,
+				[]interface{}{nil, &args{}}, tt.response, tt.responseStatus,
+				nil, tt.wantErr, func(client DatabricksClient) (interface{}, error) {
+					return nil, client.Users().Update("101030", tt.args[1].(*args).UserName,
+						tt.args[1].(*args).DisplayName,
+						[]string{string(tt.args[1].(*args).Entitlements[0].Value)},
+						[]string{tt.args[1].(*args).Roles[0].Value})
+				})
 		})
 	}
 }
@@ -548,8 +554,8 @@ func TestScimUserAPI_Read(t *testing.T) {
 		},
 		{
 			name: "Read user unmarshal failure",
-			response: []string{``,
-				`{`,
+			response: []string{
+				`{`, //``,
 			},
 			responseStatus: []int{http.StatusOK},
 			args: []args{

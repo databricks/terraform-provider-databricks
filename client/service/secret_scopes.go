@@ -22,7 +22,7 @@ func (a SecretScopesAPI) Create(scope string, initialManagePrincipal string) err
 
 // Delete deletes a secret scope
 func (a SecretScopesAPI) Delete(scope string) error {
-	return a.client.post("/secrets/scopes/create", map[string]string{
+	return a.client.post("/secrets/scopes/delete", map[string]string{
 		"scope": scope,
 	}, nil)
 }

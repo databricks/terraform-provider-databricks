@@ -50,10 +50,10 @@ func (a CommandsAPI) Execute(clusterID, language, commandStr string) (model.Comm
 
 type genericCommandRequest struct {
 	CommandID string `json:"commandId,omitempty" url:"commandId,omitempty"`
-	Language  string `json:"language,omitempty"`
-	ClusterID string `json:"clusterId,omitempty"`
-	ContextID string `json:"contextId,omitempty"`
-	Command   string `json:"command,omitempty"`
+	Language  string `json:"language,omitempty" url:"language,omitempty"`
+	ClusterID string `json:"clusterId,omitempty" url:"clusterId,omitempty"`
+	ContextID string `json:"contextId,omitempty" url:"contextId,omitempty"`
+	Command   string `json:"command,omitempty" url:"command,omitempty"`
 }
 
 func (a CommandsAPI) createCommand(contextID, clusterID, language, commandStr string) (string, error) {

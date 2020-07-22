@@ -37,12 +37,17 @@ func (a NotebooksAPI) Read(path string) (model.WorkspaceObjectStatus, error) {
 	return notebookInfo, err
 }
 
+type workspacePathRequest struct {
+	Format model.ExportFormat `url:"format,omitempty"`
+	Path   string             `url:"path,omitempty"`
+}
+
 // Export returns the notebook content as a base64 string
 func (a NotebooksAPI) Export(path string, format model.ExportFormat) (string, error) {
 	var notebookContent model.NotebookContent
-	err := a.client.get("/workspace/export", map[string]string{
-		"path":   path,
-		"format": string(format),
+	err := a.client.get("/workspace/export", workspacePathRequest{
+		Format: format,
+		Path:   path,
 	}, &notebookContent)
 	return notebookContent.Content, err
 }

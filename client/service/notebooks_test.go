@@ -233,7 +233,7 @@ func TestNotebooksAPI_ListRecursive(t *testing.T) {
 					Recursive: true,
 				},
 			},
-			wantURI: []string{"/api/2.0/workspace/list?path=%2Ftest%2Fpath", "/api/2.0/workspace/list?path=%2FUsers%2Fuser%40example.com%2Fproject"},
+			wantURI: []string{"/api/2.0/workspace/list?path=%2Ftest%2Fpath", "/api/2.0/workspace/list?path=%2FUsers%2Fuser@example.com%2Fproject"},
 			want: []model.WorkspaceObjectStatus{
 				{
 					ObjectID:   457,
@@ -276,7 +276,7 @@ func TestNotebooksAPI_ListRecursive(t *testing.T) {
 					Recursive: true,
 				},
 			},
-			wantURI: []string{"/api/2.0/workspace/list?path=%2Ftest%2Fpath", "/api/2.0/workspace/list?path=%2FUsers%2Fuser%40example.com%2Fproject"},
+			wantURI: []string{"/api/2.0/workspace/list?path=%2Ftest%2Fpath", "/api/2.0/workspace/list?path=%2FUsers%2Fuser@example.com%2Fproject"},
 			want:    nil,
 			wantErr: true,
 		},

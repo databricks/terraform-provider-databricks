@@ -54,7 +54,7 @@ func (a TokensAPI) Read(tokenID string) (model.TokenInfo, error) {
 
 // Delete will delete the token given a token id
 func (a TokensAPI) Delete(tokenID string) error {
-	return a.client.delete("/token/delete", map[string]string{
+	return a.client.post("/token/delete", map[string]string{
 		"token_id": tokenID,
-	})
+	}, nil)
 }

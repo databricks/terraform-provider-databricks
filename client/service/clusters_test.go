@@ -614,14 +614,14 @@ func TestClustersAPI_WaitForClusterTerminated(t *testing.T) {
 		{
 			name: "WaitForClusterTerminated test",
 			response: []string{`{
-									"state": "TERMINATING"				
-								}`,
+					"state": "TERMINATING"				
+				}`,
 				`{
-									"state": "TERMINATING"				
-								}`,
+					"state": "TERMINATING"				
+				}`,
 				`{
-									"state": "TERMINATED"				
-								}`,
+					"state": "TERMINATED"				
+				}`,
 			},
 			responseStatus: []int{http.StatusOK,
 				http.StatusOK,
@@ -644,14 +644,14 @@ func TestClustersAPI_WaitForClusterTerminated(t *testing.T) {
 		{
 			name: "WaitForClusterTerminated failed to get cluster info test",
 			response: []string{`{
-									"state": "TERMINATING"				
-								}`,
+					"state": "TERMINATING"				
+				}`,
 				`{
-									"state": "TERMINATING"				
-								}`,
+					"state": "TERMINATING"				
+				}`,
 				`{
-									"state": "TERMINATED"				
-								}`,
+					"state": "TERMINATED"				
+				}`,
 			},
 			responseStatus: []int{http.StatusOK,
 				http.StatusOK,
@@ -674,14 +674,14 @@ func TestClustersAPI_WaitForClusterTerminated(t *testing.T) {
 		{
 			name: "WaitForClusterTerminated failed cluster invalid state test",
 			response: []string{`{
-									"state": "TERMINATING"				
-								}`,
+					"state": "TERMINATING"				
+				}`,
 				`{
-									"state": "TERMINATING"				
-								}`,
+					"state": "TERMINATING"				
+				}`,
 				`{
-									"state": "UNKNOWN"				
-								}`,
+					"state": "UNKNOWN"				
+				}`,
 			},
 			responseStatus: []int{http.StatusOK,
 				http.StatusOK,
@@ -704,14 +704,14 @@ func TestClustersAPI_WaitForClusterTerminated(t *testing.T) {
 		{
 			name: "WaitForClusterTerminated failed due to timeout test",
 			response: []string{`{
-									"state": "TERMINATING"				
-								}`,
+					"state": "TERMINATING"				
+				}`,
 				`{
-									"state": "TERMINATING"				
-								}`,
+					"state": "TERMINATING"				
+				}`,
 				`{
-									"state": "TERMINATED"				
-								}`,
+					"state": "TERMINATED"				
+				}`,
 			},
 			responseStatus: []int{http.StatusOK,
 				http.StatusOK,
@@ -733,10 +733,16 @@ func TestClustersAPI_WaitForClusterTerminated(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		if tt.name != "WaitForClusterTerminated test" {
+			continue
+		}
 		t.Run(tt.name, func(t *testing.T) {
-			AssertMultipleRequestsWithMockServer(t, tt.args, tt.requestMethod, tt.wantURI, []interface{}{&args{}}, tt.response, tt.responseStatus, tt.want, tt.wantErr, func(client DatabricksClient) (interface{}, error) {
-				return nil, client.Clusters().WaitForClusterTerminated(tt.args[0].(*args).ClusterID, tt.args[0].(*args).SleepDurationSeconds, tt.args[0].(*args).TimeoutDurationMinutes)
-			})
+			AssertMultipleRequestsWithMockServer(t, tt.args, tt.requestMethod, tt.wantURI,
+				[]interface{}{&args{}}, tt.response, tt.responseStatus, tt.want, tt.wantErr,
+				func(client DatabricksClient) (interface{}, error) {
+					return nil, client.Clusters().WaitForClusterTerminated(tt.args[0].(*args).ClusterID,
+						tt.args[0].(*args).SleepDurationSeconds, tt.args[0].(*args).TimeoutDurationMinutes)
+				})
 		})
 	}
 }

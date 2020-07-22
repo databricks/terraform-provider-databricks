@@ -130,9 +130,9 @@ func (c *DatabricksClient) configureAuthWithDirectParams2() (func(r *http.Reques
 	username := c.BasicAuth.Username
 	if username != "" && c.BasicAuth.Password != "" {
 		authType = "Basic"
-		c.BasicAuth.Password = ""
 		needsHostBecause = "basic_auth"
 		c.Token = c.encodeBasicAuth(username, c.BasicAuth.Password)
+		c.BasicAuth.Password = ""
 		log.Printf("[INFO] Using basic auth for user '%s'", username)
 	} else if c.Token != "" {
 		needsHostBecause = "token"

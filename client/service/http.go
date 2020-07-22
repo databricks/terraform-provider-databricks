@@ -198,6 +198,9 @@ func (c *DatabricksClient) unmarshall(path string, body []byte, response interfa
 	if response == nil {
 		return nil
 	}
+	if len(body) == 0 {
+		return nil
+	}
 	err := json.Unmarshal(body, &response)
 	if err == nil {
 		return nil
@@ -255,6 +258,8 @@ func (c *DatabricksClient) genericQuery2(method, requestURL string, data interfa
 	if err != nil {
 		return nil, err
 	}
+	// TODO: add masking **REDACTED**
+	log.Printf("%s %s %v", method, requestURL, string(requestBody))
 	request.Header.Set("User-Agent", c.userAgent)
 	for _, in := range interceptors {
 		request, err = in(request)
@@ -287,27 +292,44 @@ func (c *DatabricksClient) genericQuery2(method, requestURL string, data interfa
 func makeRequestBody(method string, requestURL *string, data interface{}, marshalJSON bool) ([]byte, error) {
 	var requestBody []byte
 	if method == "GET" {
-		if m, ok := data.(map[string]string); ok {
+		if m, ok := data.(map[string]interface{}); ok {
 			s := []string{}
 			for k, v := range m {
 				if v == "" {
 					continue
 				}
-				s = append(s, fmt.Sprintf("%s=%s", url.QueryEscape(k), url.QueryEscape(v)))
+				s = append(s, fmt.Sprintf("%s=%s", k, url.PathEscape(fmt.Sprintf("%v", v))))
 			}
 			*requestURL += "?" + strings.Join(s, "&")
-			auditGetPayload(*requestURL)
+		} else if m, ok := data.(map[string]int64); ok {
+			s := []string{}
+			for k, v := range m {
+				if v == 0 {
+					continue
+				}
+				s = append(s, fmt.Sprintf("%s=%s", k, url.PathEscape(fmt.Sprintf("%v", v))))
+			}
+			*requestURL += "?" + strings.Join(s, "&")
+		} else if m, ok := data.(map[string]string); ok {
+			s := []string{}
+			for k, v := range m {
+				if v == "" {
+					continue
+				}
+				s = append(s, fmt.Sprintf("%s=%s", k, url.PathEscape(v)))
+			}
+			*requestURL += "?" + strings.Join(s, "&")
 		} else {
 			params, err := query.Values(data)
 			if err != nil {
 				return nil, err
 			}
 			*requestURL += "?" + params.Encode()
-			auditGetPayload(*requestURL)
 		}
+		// auditGetPayload(*requestURL)
 	} else {
 		if marshalJSON {
-			bodyBytes, err := json.Marshal(data)
+			bodyBytes, err := json.MarshalIndent(data, "", "  ")
 			if err != nil {
 				return nil, err
 			}
@@ -315,40 +337,40 @@ func makeRequestBody(method string, requestURL *string, data interface{}, marsha
 		} else {
 			requestBody = []byte(data.(string))
 		}
-		auditNonGetPayload(method, *requestURL, data)
+		// auditNonGetPayload(method, *requestURL, data)
 	}
 	return requestBody, nil
 }
 
-func onlyNBytes(j string, numBytes int64) string {
-	if len([]byte(j)) > int(numBytes) {
-		return string([]byte(j)[:numBytes])
-	}
-	return j
-}
+// func onlyNBytes(j string, numBytes int64) string {
+// 	if len([]byte(j)) > int(numBytes) {
+// 		return string([]byte(j)[:numBytes])
+// 	}
+// 	return j
+// }
 
-func auditNonGetPayload(method string, uri string, object interface{}) {
-	logStmt := struct {
-		Method  string
-		URI     string
-		Payload interface{}
-	}{
-		Method:  method,
-		URI:     uri,
-		Payload: object,
-	}
-	jsonStr, _ := json.Marshal(Mask(logStmt))
-	log.Println(onlyNBytes(string(jsonStr), 1e3))
-}
+// func auditNonGetPayload(method string, uri string, object interface{}) {
+// 	logStmt := struct {
+// 		Method  string
+// 		URI     string
+// 		Payload interface{}
+// 	}{
+// 		Method:  method,
+// 		URI:     uri,
+// 		Payload: object,
+// 	}
+// 	jsonStr, _ := json.Marshal(Mask(logStmt))
+// 	log.Println(onlyNBytes(string(jsonStr), 1e3))
+// }
 
-func auditGetPayload(uri string) {
-	logStmt := struct {
-		Method string
-		URI    string
-	}{
-		Method: "GET",
-		URI:    uri,
-	}
-	jsonStr, _ := json.Marshal(Mask(logStmt))
-	log.Println(onlyNBytes(string(jsonStr), 1e3))
-}
+// func auditGetPayload(uri string) {
+// 	logStmt := struct {
+// 		Method string
+// 		URI    string
+// 	}{
+// 		Method: "GET",
+// 		URI:    uri,
+// 	}
+// 	jsonStr, _ := json.Marshal(Mask(logStmt))
+// 	log.Println(onlyNBytes(string(jsonStr), 1e3))
+// }

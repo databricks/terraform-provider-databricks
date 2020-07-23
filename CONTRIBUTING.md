@@ -10,6 +10,7 @@ Contributing to Databricks Terraform Provider
 - [Code conventions](#code-conventions)
 - [Linting](#linting)
 - [Unit testing resources](#unit-testing-resources)
+- [Random naming anywhere](#random-naming-anywhere)
 - [Cloud Specific testing](#cloud-specific-testing)
 - [Integration Testing](#integration-testing)
 - [Project Components](#project-components)
@@ -161,6 +162,10 @@ func TestPermissionsCreate(t *testing.T) {
 
 Each resource should have both unit and integration tests. 
 
+## Random naming anywhere
+
+Terraform SDK provides `randomName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)` for convenient random names generation.
+
 ## Cloud Specific testing
 
 Basic cloud-integration test should have prefix `TestAcc` if it is supposed to run on both clouds. Client must be created with `NewClientFromEnvironment()` as described in the following snippet:
@@ -173,16 +178,14 @@ func TestAccListClustersIntegration(t *testing.T) {
 	}
 	client := NewClientFromEnvironment()
 
+	randomName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
 	cluster := model.Cluster{
 		NumWorkers:  1,
-		ClusterName: "my-cluster",
-		SparkEnvVars: map[string]string{
-			"PYSPARK_PYTHON": "/databricks/python3/bin/python3",
-		},
+		ClusterName: "my-cluster-" + randomName,
 		SparkVersion:           "6.2.x-scala2.11",
 		NodeTypeID:             GetCloudInstanceType(client),
 		DriverNodeTypeID:       GetCloudInstanceType(client),
-		IdempotencyToken:       "my-cluster",
+		IdempotencyToken:       "cluster-" + randomName,
 		AutoterminationMinutes: 15,
 	}
 

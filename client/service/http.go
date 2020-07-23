@@ -253,8 +253,8 @@ func (c *DatabricksClient) genericQuery2(method, requestURL string, data interfa
 	if err != nil {
 		return nil, err
 	}
-	// TODO: add masking **REDACTED** + subscription + mws acc id
-	log.Printf("%s %s %v", method, requestURL, string(requestBody))
+	// TODO: add masking **REDACTED** + subscription + mws acc id -> perhaps re-parse json and truncate only some fields?...
+	log.Printf("%s %s %v", method, requestURL, onlyNBytes(string(requestBody), 128))
 	request.Header.Set("User-Agent", c.userAgent)
 	for _, requestVisitor := range visitors {
 		err = requestVisitor(request)
@@ -337,15 +337,15 @@ func makeRequestBody(method string, requestURL *string, data interface{}, marsha
 	return requestBody, nil
 }
 
+
+func onlyNBytes(j string, numBytes int64) string {
+	if len([]byte(j)) > int(numBytes) {
+		return string([]byte(j)[:numBytes])
+	}
+	return j
+}
+
 // TODO: port to new way of request logging
-
-// func onlyNBytes(j string, numBytes int64) string {
-// 	if len([]byte(j)) > int(numBytes) {
-// 		return string([]byte(j)[:numBytes])
-// 	}
-// 	return j
-// }
-
 // func auditNonGetPayload(method string, uri string, object interface{}) {
 // 	logStmt := struct {
 // 		Method  string

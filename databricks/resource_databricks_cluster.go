@@ -706,24 +706,26 @@ func resourceClusterRead(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 
-	// attempt to identify diff if instance_profile_arn is set
-	isInstanceProfileArnFound := !reflect.ValueOf(clusterInfo.AwsAttributes.InstanceProfileArn).IsZero()
-	//Separating computed fields and instance_profile_arn which is not computed (thus remote state should be tracked)
-	_, awsAttributesDefined := d.GetOk("aws_attributes")
-	if (awsAttributesDefined || isInstanceProfileArnFound) && clusterInfo.AwsAttributes != nil {
-		awsAtts := map[string]interface{}{}
-		awsAtts["availability"] = string(clusterInfo.AwsAttributes.Availability)
-		awsAtts["zone_id"] = clusterInfo.AwsAttributes.ZoneID
-		awsAtts["spot_bid_price_percent"] = int(clusterInfo.AwsAttributes.SpotBidPricePercent)
-		awsAtts["instance_profile_arn"] = clusterInfo.AwsAttributes.InstanceProfileArn
-		awsAtts["first_on_demand"] = int(clusterInfo.AwsAttributes.FirstOnDemand)
-		awsAtts["ebs_volume_type"] = string(clusterInfo.AwsAttributes.EbsVolumeType)
-		awsAtts["ebs_volume_count"] = int(clusterInfo.AwsAttributes.EbsVolumeCount)
-		awsAtts["ebs_volume_size"] = int(clusterInfo.AwsAttributes.EbsVolumeSize)
-		awsAttsSet := []map[string]interface{}{awsAtts}
-		err = d.Set("aws_attributes", awsAttsSet)
-		if err != nil {
-			return err
+	if clusterInfo.AwsAttributes != nil {
+		// attempt to identify diff if instance_profile_arn is set
+		isInstanceProfileArnFound := !reflect.ValueOf(clusterInfo.AwsAttributes.InstanceProfileArn).IsZero()
+		//Separating computed fields and instance_profile_arn which is not computed (thus remote state should be tracked)
+		_, awsAttributesDefined := d.GetOk("aws_attributes")
+		if (awsAttributesDefined || isInstanceProfileArnFound) && clusterInfo.AwsAttributes != nil {
+			awsAtts := map[string]interface{}{}
+			awsAtts["availability"] = string(clusterInfo.AwsAttributes.Availability)
+			awsAtts["zone_id"] = clusterInfo.AwsAttributes.ZoneID
+			awsAtts["spot_bid_price_percent"] = int(clusterInfo.AwsAttributes.SpotBidPricePercent)
+			awsAtts["instance_profile_arn"] = clusterInfo.AwsAttributes.InstanceProfileArn
+			awsAtts["first_on_demand"] = int(clusterInfo.AwsAttributes.FirstOnDemand)
+			awsAtts["ebs_volume_type"] = string(clusterInfo.AwsAttributes.EbsVolumeType)
+			awsAtts["ebs_volume_count"] = int(clusterInfo.AwsAttributes.EbsVolumeCount)
+			awsAtts["ebs_volume_size"] = int(clusterInfo.AwsAttributes.EbsVolumeSize)
+			awsAttsSet := []map[string]interface{}{awsAtts}
+			err = d.Set("aws_attributes", awsAttsSet)
+			if err != nil {
+				return err
+			}
 		}
 	}
 

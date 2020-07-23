@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/databrickslabs/databricks-terraform/client/model"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -685,17 +686,17 @@ func TestAccContext(t *testing.T) {
 		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
 	}
 	client := NewClientFromEnvironment()
-
+	randomName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
 	cluster := model.Cluster{
 		NumWorkers:  1,
-		ClusterName: "Terraform Integration Test",
+		ClusterName: "Terraform Integration Test " + randomName,
 		SparkEnvVars: map[string]string{
 			"PYSPARK_PYTHON": "/databricks/python3/bin/python3",
 		},
 		SparkVersion:           "6.2.x-scala2.11",
 		NodeTypeID:             GetCloudInstanceType(client),
 		DriverNodeTypeID:       GetCloudInstanceType(client),
-		IdempotencyToken:       "tf-commands-test-2",
+		IdempotencyToken:       "commands-" + randomName,
 		AutoterminationMinutes: 20,
 	}
 

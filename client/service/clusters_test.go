@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/databrickslabs/databricks-terraform/client/model"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -1062,17 +1063,15 @@ func TestAccListClustersIntegration(t *testing.T) {
 	}
 
 	client := NewClientFromEnvironment()
+	randomName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
 
 	cluster := model.Cluster{
-		NumWorkers:  1,
-		ClusterName: "Terraform Integration Test",
-		SparkEnvVars: map[string]string{
-			"PYSPARK_PYTHON": "/databricks/python3/bin/python3",
-		},
+		NumWorkers:             1,
+		ClusterName:            "Terraform Integration Test " + randomName,
 		SparkVersion:           "6.2.x-scala2.11",
 		NodeTypeID:             GetCloudInstanceType(client),
 		DriverNodeTypeID:       GetCloudInstanceType(client),
-		IdempotencyToken:       "my-cluster",
+		IdempotencyToken:       "acc-list-" + randomName,
 		AutoterminationMinutes: 15,
 	}
 

@@ -165,6 +165,7 @@ func TestProvider_DurationToSecondsString(t *testing.T) {
 }
 
 func TestAccDatabricksCliConfigWorks(t *testing.T) {
+	t.Skip("Skipping this test till the better times")
 	resource.Test(t,
 		resource.TestCase{
 			Providers: testAccProviders,

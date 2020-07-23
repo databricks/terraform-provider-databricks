@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/databrickslabs/databricks-terraform/client/model"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -699,11 +700,12 @@ func TestAccCreateFile(t *testing.T) {
 		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
 	}
 
-	dir := "/client-test/"
-	dir2 := "/client-test/dir2/"
-	path := "/client-test/randomfile"
-	path2 := "/client-test/dir2/randomfile"
-	path3 := "/client-test/dir2/randomfile2"
+	randomName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
+	dir := "/client-test/" + randomName
+	dir2 := dir + "/dir2/"
+	path := dir + "/randomfile"
+	path2 := dir + "/dir2/randomfile"
+	path3 := dir + "/dir2/randomfile2"
 
 	randomStr := GenString(500)
 	t.Log(len(randomStr))
@@ -738,13 +740,9 @@ func TestAccCreateFile(t *testing.T) {
 
 	items, err := client.DBFS().List(dir, false)
 	assert.NoError(t, err, err)
-	assert.True(t, len(items) == 2)
+	assert.Len(t, items, 2)
 
 	items, err = client.DBFS().List(dir, true)
 	assert.NoError(t, err, err)
-	assert.True(t, len(items) == 3)
-
-	items, err = client.DBFS().List(dir, true)
-	assert.NoError(t, err, err)
-	assert.True(t, len(items) == 4)
+	assert.Len(t, items, 3)
 }

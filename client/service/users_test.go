@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/databrickslabs/databricks-terraform/client/model"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -663,14 +664,17 @@ func TestAccCreateAdminUser(t *testing.T) {
 
 	client := NewClientFromEnvironment()
 
-	user, err := client.Users().Create("testusersriterraform@databricks.com", "Display Name", nil, nil)
+	randomName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
+	user, err := client.Users().Create(
+		fmt.Sprintf("terraform+%s@databricks.com", randomName), 
+		"Terra " + randomName, nil, nil)
 	assert.NoError(t, err, err)
 	assert.True(t, len(user.ID) > 0, "User id is empty")
 	idToDelete := user.ID
-	//defer func() {
-	//	err := client.Users().Delete(idToDelete)
-	//	assert.NoError(t, err, err)
-	//}()
+	defer func() {
+		err := client.Users().Delete(idToDelete)
+		assert.NoError(t, err, err)
+	}()
 	log.Println(idToDelete)
 
 	user, err = client.Users().Read(user.ID)
@@ -699,23 +703,26 @@ func TestAccCreateAdminUser(t *testing.T) {
 	log.Println(userIsAdmin)
 }
 
-// user id 101354
 func TestAccRoleDifferences(t *testing.T) {
 	if _, ok := os.LookupEnv("CLOUD_ENV"); !ok {
 		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
 	}
-
 	client := NewClientFromEnvironment()
-	//user, err := client.Users().Create("testusersriterraform@databricks.com", "Display Name", nil, nil)
-	//assert.NoError(t, err, err)
-	//assert.True(t, len(user.ID) > 0, "User id is empty")
-	//idToDelete := user.ID
-	//log.Println(idToDelete)
 
-	user, err := client.Users().Read("101354")
+	randomName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
+	user, err := client.Users().Create(
+		fmt.Sprintf("terraform+%s@databricks.com", randomName), 
+		"Terra " + randomName, nil, nil)
+	assert.NoError(t, err, err)
+	assert.True(t, len(user.ID) > 0, "User id is empty")
+	idToDelete := user.ID
+	
+	user, err = client.Users().Read(idToDelete)
 	assert.NoError(t, err, err)
 	t.Log(user.Roles)
 	t.Log(user.Groups)
 	t.Log(user.InheritedRoles)
 	t.Log(user.UnInheritedRoles)
+
+	client.Users().Delete(idToDelete)
 }

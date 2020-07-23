@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/databrickslabs/databricks-terraform/client/model"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -230,13 +231,14 @@ func TestAccLibraryCreate(t *testing.T) {
 	client := NewClientFromEnvironment()
 
 	// TODO: pre-create an interactive cluster just for libs/commands/mount tests
+	randomName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
 	cluster := model.Cluster{
 		NumWorkers:             1,
-		ClusterName:            "Terraform Integration Test",
+		ClusterName:            "Terraform Integration Test " + randomName,
 		SparkVersion:           "6.2.x-scala2.11",
 		NodeTypeID:             GetCloudInstanceType(client),
 		DriverNodeTypeID:       GetCloudInstanceType(client),
-		IdempotencyToken:       "my-cluster-libs",
+		IdempotencyToken:       "libs-" + randomName,
 		AutoterminationMinutes: 20,
 	}
 	if cloud == "AWS" {

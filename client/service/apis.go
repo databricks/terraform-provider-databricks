@@ -40,7 +40,7 @@ func (c *DatabricksClient) Configure(version string) error {
 	if err != nil {
 		return err
 	}
-	if c.Host != "" && !strings.HasPrefix(c.Host, "https://") {
+	if c.Host != "" && !(strings.HasPrefix(c.Host, "https://") || strings.HasPrefix(c.Host, "http://")) {
 		// azurerm_databricks_workspace.*.workspace_url is giving URL without scheme
 		// so that is why this line is here
 		c.Host = "https://" + c.Host

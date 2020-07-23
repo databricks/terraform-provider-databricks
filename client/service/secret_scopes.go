@@ -15,7 +15,7 @@ type SecretScopesAPI struct {
 // Create creates a new secret scope
 func (a SecretScopesAPI) Create(scope string, initialManagePrincipal string) error {
 	return a.client.post("/secrets/scopes/create", map[string]string{
-		"scope":                    scope, // TODO: check if omitempty is replicated in maps
+		"scope":                    scope,
 		"initial_manage_principal": initialManagePrincipal,
 	}, nil)
 }

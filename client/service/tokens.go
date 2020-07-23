@@ -14,13 +14,12 @@ type TokensAPI struct {
 }
 
 // Create creates a api token given a expiration duration and a comment
-func (a TokensAPI) Create(tokenLifetime time.Duration, comment string) (model.TokenResponse, error) {
-	var tokenData model.TokenResponse
-	err := a.client.post("/token/create", model.TokenRequest{
+func (a TokensAPI) Create(tokenLifetime time.Duration, comment string) (r model.TokenResponse, err error) {
+	err = a.client.post("/token/create", model.TokenRequest{
 		LifetimeSeconds: int32(tokenLifetime.Seconds()),
 		Comment:         comment,
-	}, &tokenData)
-	return tokenData, err
+	}, &r)
+	return
 }
 
 // List will list all the token metadata and not the content of the tokens in the workspace

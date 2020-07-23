@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"net/url"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/hashicorp/go-retryablehttp"
@@ -17,66 +17,18 @@ import (
 
 // DatabricksClient is the client struct that contains clients for all the services available on Databricks
 type DatabricksClient struct {
-	Host       string
-	Token      string
-	Profile    string
-	ConfigFile string
-	BasicAuth  struct {
-		Username string
-		Password string
-	}
+	Host               string
+	Token              string
+	Username           string
+	Password           string
+	Profile            string
+	ConfigFile         string
 	AzureAuth          AzureAuth
 	InsecureSkipVerify bool
 	TimeoutSeconds     int
-	tokenCreateTime    int64
-	tokenExpiryTime    int64
-	authType           string
 	userAgent          string
 	httpClient         *retryablehttp.Client
-	uriPrefix          string
-	auth               func(r *http.Request) (*http.Request, error)
-}
-
-// Configure validates and configures the client
-func (c *DatabricksClient) ConfigureOld(version string) error {
-	c.userAgent = fmt.Sprintf("databricks-tf-provider/%s", version)
-
-	c.configureHTTPCLient()
-	c.AzureAuth.databricksClient = c
-
-	var hasCredentials bool
-	for _, authProvider := range []func() (bool, error){
-		c.configureAuthWithDirectParams,
-		c.AzureAuth.configureWithClientSecret,
-		c.AzureAuth.configureWithAzureCLI,
-		c.configureFromDatabricksCfg} {
-		success, err := authProvider()
-		if success {
-			hasCredentials = true
-			break
-		}
-		if err != nil {
-			return err
-		}
-	}
-	if !hasCredentials {
-		return fmt.Errorf("Authentication is not configured for provider. Please configure it\n" +
-			"through one of the following options:\n" +
-			"1. DATABRICKS_HOST + DATABRICKS_TOKEN environment variables.\n" +
-			"2. host + token provider arguments.\n" +
-			"3. azure_auth configuration block.\n" +
-			"4. Run `databricks configure --token` that will create ~/.databrickscfg file.\n\n" +
-			"Please check https://docs.databricks.com/dev-tools/cli/index.html#set-up-authentication for details")
-	}
-	if c.authType == "" {
-		c.authType = "Bearer"
-	}
-	parsedURI, err := url.Parse(c.Host)
-	if err != nil {
-		return err
-	}
-	c.uriPrefix = fmt.Sprintf("%s://%s/api", parsedURI.Scheme, parsedURI.Host)
-	return nil
+	authVisitor        func(r *http.Request) error
 }
 
 // Configure ...
@@ -88,20 +40,20 @@ func (c *DatabricksClient) Configure(version string) error {
 	if err != nil {
 		return err
 	}
-	// parsedURI, err := url.Parse(c.Host)
-	// if err != nil {
-	// 	return err
-	// }
-	// c.uriPrefix = fmt.Sprintf("%s://%s/api", parsedURI.Scheme, parsedURI.Host)
+	if c.Host != "" && !strings.HasPrefix(c.Host, "https://") {
+		// azurerm_databricks_workspace.*.workspace_url is giving URL without scheme
+		// so that is why this line is here
+		c.Host = "https://" + c.Host
+	}
 	return nil
 }
 
 func (c *DatabricksClient) findAndApplyAuthorizer() error {
-	for _, authProvider := range []func() (func(r *http.Request) (*http.Request, error), error){
-		c.configureAuthWithDirectParams2,
-		c.AzureAuth.configureWithClientSecret2,
-		c.configureFromDatabricksCfg2,
-		// c.AzureAuth.configureWithAzureCLI,
+	for _, authProvider := range []func() (func(r *http.Request) error, error){
+		c.configureAuthWithDirectParams,
+		c.AzureAuth.configureWithClientSecret,
+		c.AzureAuth.configureWithAzureCLI,
+		c.configureFromDatabricksCfg,
 	} {
 		authorizer, err := authProvider()
 		if err != nil {
@@ -110,7 +62,7 @@ func (c *DatabricksClient) findAndApplyAuthorizer() error {
 		if authorizer == nil {
 			continue
 		}
-		c.auth = authorizer
+		c.authVisitor = authorizer
 		return nil
 	}
 	return fmt.Errorf("Authentication is not configured for provider. Please configure it\n" +
@@ -124,16 +76,15 @@ func (c *DatabricksClient) findAndApplyAuthorizer() error {
 		"Please check https://docs.databricks.com/dev-tools/cli/index.html#set-up-authentication for details")
 }
 
-func (c *DatabricksClient) configureAuthWithDirectParams2() (func(r *http.Request) (*http.Request, error), error) {
+func (c *DatabricksClient) configureAuthWithDirectParams() (func(r *http.Request) error, error) {
 	authType := "Bearer"
 	var needsHostBecause string
-	username := c.BasicAuth.Username
-	if username != "" && c.BasicAuth.Password != "" {
+	if c.Username != "" && c.Password != "" {
 		authType = "Basic"
 		needsHostBecause = "basic_auth"
-		c.Token = c.encodeBasicAuth(username, c.BasicAuth.Password)
-		c.BasicAuth.Password = ""
-		log.Printf("[INFO] Using basic auth for user '%s'", username)
+		c.Token = c.encodeBasicAuth(c.Username, c.Password)
+		c.Password = ""
+		log.Printf("[INFO] Using basic auth for user '%s'", c.Username)
 	} else if c.Token != "" {
 		needsHostBecause = "token"
 	}
@@ -148,7 +99,7 @@ func (c *DatabricksClient) configureAuthWithDirectParams2() (func(r *http.Reques
 	return c.authorizer(authType, c.Token), nil
 }
 
-func (c *DatabricksClient) configureFromDatabricksCfg2() (func(r *http.Request) (*http.Request, error), error) {
+func (c *DatabricksClient) configureFromDatabricksCfg() (func(r *http.Request) error, error) {
 	_, err := os.Stat(c.ConfigFile)
 	if os.IsNotExist(err) {
 		log.Printf("[INFO] ~/.databrickscfg not found on current host")
@@ -190,75 +141,16 @@ func (c *DatabricksClient) configureFromDatabricksCfg2() (func(r *http.Request) 
 	return c.authorizer(authType, c.Token), nil
 }
 
-func (c *DatabricksClient) authorizer(authType, token string) func(r *http.Request) (*http.Request, error) {
-	return func(r *http.Request) (*http.Request, error) {
+func (c *DatabricksClient) authorizer(authType, token string) func(r *http.Request) error {
+	return func(r *http.Request) error {
 		r.Header.Set("Authorization", fmt.Sprintf("%s %s", authType, token))
-		return r, nil
+		return nil
 	}
-}
-
-func (c *DatabricksClient) configureAuthWithDirectParams() (bool, error) {
-	var needsHostBecause string
-	if c.BasicAuth.Username != "" && c.BasicAuth.Password != "" {
-		c.Token = c.encodeBasicAuth(c.BasicAuth.Username, c.BasicAuth.Password)
-		c.BasicAuth.Password = ""
-		needsHostBecause = "basic_auth"
-		c.authType = "Basic"
-	} else if c.Token != "" {
-		needsHostBecause = "token"
-	}
-	if needsHostBecause != "" && c.Host == "" {
-		return false, fmt.Errorf("Host is empty, but is required by %s", needsHostBecause)
-	}
-	if c.Token == "" || c.Host == "" {
-		// direct params are not configured
-		return false, nil
-	}
-	return true, nil
 }
 
 func (c *DatabricksClient) encodeBasicAuth(username, password string) string {
 	tokenUnB64 := fmt.Sprintf("%s:%s", username, password)
 	return base64.StdEncoding.EncodeToString([]byte(tokenUnB64))
-}
-
-// configureFromDatabricksCfg sets Host and Token from ~/.databrickscfg file if it exists
-func (c *DatabricksClient) configureFromDatabricksCfg() (bool, error) {
-	_, err := os.Stat(c.ConfigFile)
-	if os.IsNotExist(err) {
-		// early return for non-configured machines
-		return false, nil
-	}
-	configFile, err := homedir.Expand(c.ConfigFile)
-	if err != nil {
-		return false, err
-	}
-	cfg, err := ini.Load(configFile)
-	if err != nil {
-		return false, err
-	}
-	if c.Profile == "" {
-		c.Profile = "DEFAULT"
-	}
-	dbcli := cfg.Section(c.Profile)
-	c.Host = dbcli.Key("host").String()
-	if c.Host == "" {
-		return false, fmt.Errorf("config file %s is corrupt: cannot find host in %s profile",
-			configFile, c.Profile)
-	}
-	if dbcli.HasKey("username") && dbcli.HasKey("password") {
-		username := dbcli.Key("username").String()
-		password := dbcli.Key("password").String()
-		c.Token = c.encodeBasicAuth(username, password)
-		c.authType = "Basic"
-	} else {
-		c.Token = dbcli.Key("token").String()
-	}
-	if c.Token == "" {
-		return false, fmt.Errorf("config file %s is corrupt: cannot find token in %s profile",
-			configFile, c.Profile)
-	}
-	return true, nil
 }
 
 func (c *DatabricksClient) configureHTTPCLient() {
@@ -280,7 +172,6 @@ func (c *DatabricksClient) configureHTTPCLient() {
 				IdleConnTimeout:       defaultTransport.IdleConnTimeout,
 				TLSHandshakeTimeout:   defaultTransport.TLSHandshakeTimeout,
 				ExpectContinueTimeout: defaultTransport.ExpectContinueTimeout,
-				// TODO: This probably should be a configuration at the provider level and optional and not a fixed val
 				TLSClientConfig: &tls.Config{
 					InsecureSkipVerify: c.InsecureSkipVerify,
 				},
@@ -297,6 +188,37 @@ func (c *DatabricksClient) configureHTTPCLient() {
 		RetryWaitMax: retryDelayDuration,
 		RetryMax:     int(retryMaximumDuration / retryDelayDuration), // + request & response log hooks
 	}
+}
+
+// NewClientFromEnvironment makes very good client for testing purposes
+func NewClientFromEnvironment() *DatabricksClient {
+	client := DatabricksClient{
+		Host:       os.Getenv("DATABRICKS_HOST"),
+		Token:      os.Getenv("DATABRICKS_TOKEN"),
+		Username:   os.Getenv("DATABRICKS_USERNAME"),
+		Password:   os.Getenv("DATABRICKS_PASSWORD"),
+		ConfigFile: os.Getenv("DATABRICKS_CONFIG_FILE"),
+		Profile:    os.Getenv("DATABRICKS_CONFIG_PROFILE"),
+		AzureAuth: AzureAuth{
+			ResourceID:     os.Getenv("DATABRICKS_AZURE_WORKSPACE_RESOURCE_ID"),
+			WorkspaceName:  os.Getenv("DATABRICKS_AZURE_WORKSPACE_NAME"),
+			ResourceGroup:  os.Getenv("DATABRICKS_AZURE_RESOURCE_GROUP"),
+			SubscriptionID: os.Getenv("DATABRICKS_AZURE_SUBSCRIPTION_ID"),
+			ClientID:       os.Getenv("DATABRICKS_AZURE_CLIENT_ID"),
+			ClientSecret:   os.Getenv("DATABRICKS_AZURE_CLIENT_SECRET"),
+			TenantID:       os.Getenv("DATABRICKS_AZURE_TENANT_ID"),
+		},
+	}
+	err := client.Configure("dev")
+	if err != nil {
+		panic(err)
+	}
+	return &client
+}
+
+// IsAzure returns true if Azure is configured
+func (c *DatabricksClient) IsAzure() bool {
+	return c.AzureAuth.resourceID() != ""
 }
 
 // Clusters returns an instance of ClustersAPI

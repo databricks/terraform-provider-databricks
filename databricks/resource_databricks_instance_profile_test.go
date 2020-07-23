@@ -13,7 +13,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestAccAwsInstanceProfileResource(t *testing.T) {
+func TestAwsAccInstanceProfileResource(t *testing.T) {
 	var InstanceProfile model.InstanceProfileInfo
 	// generate a random name for each tokenInfo test run, to avoid
 	// collisions from multiple concurrent tests.

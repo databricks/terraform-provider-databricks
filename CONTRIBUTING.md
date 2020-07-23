@@ -10,6 +10,7 @@ Contributing to Databricks Terraform Provider
 - [Code conventions](#code-conventions)
 - [Linting](#linting)
 - [Unit testing resources](#unit-testing-resources)
+- [Cloud Specific testing](#cloud-specific-testing)
 - [Integration Testing](#integration-testing)
 - [Project Components](#project-components)
 	- [Databricks Terraform Provider Resources State](#databricks-terraform-provider-resources-state)
@@ -159,6 +160,43 @@ func TestPermissionsCreate(t *testing.T) {
 ```
 
 Each resource should have both unit and integration tests. 
+
+## Cloud Specific testing
+
+Basic cloud-integration test should have prefix `TestAcc` if it is supposed to run on both clouds. Client must be created with `NewClientFromEnvironment()` as described in the following snippet:
+
+```go
+func TestAccListClustersIntegration(t *testing.T) {
+	cloud := os.Getenv("CLOUD_ENV")
+	if cloud == "" {
+		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
+	}
+	client := NewClientFromEnvironment()
+
+	cluster := model.Cluster{
+		NumWorkers:  1,
+		ClusterName: "my-cluster",
+		SparkEnvVars: map[string]string{
+			"PYSPARK_PYTHON": "/databricks/python3/bin/python3",
+		},
+		SparkVersion:           "6.2.x-scala2.11",
+		NodeTypeID:             GetCloudInstanceType(client),
+		DriverNodeTypeID:       GetCloudInstanceType(client),
+		IdempotencyToken:       "my-cluster",
+		AutoterminationMinutes: 15,
+	}
+
+	if cloud == "AWS" {
+		cluster.AwsAttributes = &model.AwsAttributes{
+			EbsVolumeType:  model.EbsVolumeTypeGeneralPurposeSsd,
+			EbsVolumeCount: 1,
+			EbsVolumeSize:  32,
+		}
+	}
+
+	// ...
+}
+```
 
 ## Integration Testing
 

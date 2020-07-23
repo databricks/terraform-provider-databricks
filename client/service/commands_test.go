@@ -679,29 +679,32 @@ func TestCommandsAPI_Execute(t *testing.T) {
 	}
 }
 
-func TestAwsAccContext(t *testing.T) {
-	if _, ok := os.LookupEnv("CLOUD_ENV"); !ok {
+func TestAccContext(t *testing.T) {
+	cloud := os.Getenv("CLOUD_ENV")
+	if cloud == "" {
 		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
 	}
-
-	client := GetIntegrationDBAPIClient()
+	client := NewClientFromEnvironment()
 
 	cluster := model.Cluster{
 		NumWorkers:  1,
-		ClusterName: "my-cluster",
+		ClusterName: "Terraform Integration Test",
 		SparkEnvVars: map[string]string{
 			"PYSPARK_PYTHON": "/databricks/python3/bin/python3",
-		},
-		AwsAttributes: &model.AwsAttributes{
-			EbsVolumeType:  model.EbsVolumeTypeGeneralPurposeSsd,
-			EbsVolumeCount: 1,
-			EbsVolumeSize:  32,
 		},
 		SparkVersion:           "6.2.x-scala2.11",
 		NodeTypeID:             GetCloudInstanceType(client),
 		DriverNodeTypeID:       GetCloudInstanceType(client),
-		IdempotencyToken:       "my-cluster",
+		IdempotencyToken:       "tf-commands-test-2",
 		AutoterminationMinutes: 20,
+	}
+
+	if cloud == "AWS" {
+		cluster.AwsAttributes = &model.AwsAttributes{
+			EbsVolumeType:  model.EbsVolumeTypeGeneralPurposeSsd,
+			EbsVolumeCount: 1,
+			EbsVolumeSize:  32,
+		}
 	}
 
 	clusterInfo, err := client.Clusters().Create(cluster)
@@ -713,6 +716,7 @@ func TestAwsAccContext(t *testing.T) {
 
 	clusterID := clusterInfo.ClusterID
 
+	// TODO: Cluster is in a non runnable state will not be able to transition to running, needs to be started again. Current state: TERMINATED
 	err = client.Clusters().WaitForClusterRunning(clusterID, 10, 20)
 	assert.NoError(t, err, err)
 

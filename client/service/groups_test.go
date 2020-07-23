@@ -255,7 +255,7 @@ func TestAccGroup(t *testing.T) {
 	if _, ok := os.LookupEnv("CLOUD_ENV"); !ok {
 		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
 	}
-	client := GetIntegrationDBAPIClient()
+	client := NewClientFromEnvironment()
 
 	user, err := client.Users().Create("test-acc@databricks.com", "test account", nil, nil)
 	assert.NoError(t, err, err)
@@ -295,18 +295,19 @@ func TestAccGetAdminGroup(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping integration test in short mode.")
 	}
-	client := GetIntegrationDBAPIClient()
+	client := NewClientFromEnvironment()
 	grp, err := client.Groups().GetAdminGroup()
 	assert.NoError(t, err, err)
 	assert.NotNil(t, grp)
 	assert.True(t, len(grp.ID) > 0)
 }
 
-func TestAccReadInheritedRolesFromGroup(t *testing.T) {
+func TestAwsAccReadInheritedRolesFromGroup(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping integration test in short mode.")
 	}
-	client := GetIntegrationDBAPIClient()
+	client := NewClientFromEnvironment()
+	// TODO: pass IAM role with ENV variable
 	myTestRole := "arn:aws:iam::123456789012:instance-profile/go-sdk-integeration-testing"
 	err := client.InstanceProfiles().Create(myTestRole, true)
 	assert.NoError(t, err, err)

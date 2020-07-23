@@ -23,21 +23,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func GetIntegrationDBAPIClient() *service.DatabricksClient {
-	client := service.DatabricksClient{
-		Host:  os.Getenv("DATABRICKS_HOST"),
-		Token: os.Getenv("DATABRICKS_TOKEN"),
-		AzureAuth: service.AzureAuth{
-			ResourceID: os.Getenv("AZURE_DATABRICKS_WORKSPACE_RESOURCE_ID"),
-		},
-	}
-	err := client.Configure("dev-integration")
-	if err != nil {
-		panic(err)
-	}
-	return &client
-}
-
 func getTestDBFSFileData() (string, error) {
 	return notebookToB64("testdata/tf-test-python.py")
 }
@@ -600,7 +585,7 @@ func TestDatabricksFile_Base64(t *testing.T) {
 		t.Skip("skipping integration test in short mode.")
 	}
 
-	client := GetIntegrationDBAPIClient()
+	client := service.NewClientFromEnvironment()
 	pythonNotebookDataB64, err := getLocalFileB64("testdata/tf-test-python.py")
 	assert.NoError(t, err, err)
 	expected, err := getMD5(pythonNotebookDataB64)

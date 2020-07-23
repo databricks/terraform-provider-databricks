@@ -8,7 +8,6 @@ import (
 	"net/http/httptest"
 	"os"
 	"reflect"
-	"strings"
 	"testing"
 
 	"github.com/joho/godotenv"
@@ -42,31 +41,11 @@ func compare(t *testing.T, a interface{}, b interface{}) {
 	assert.True(t, reflect.DeepEqual(a, b), string(jsonStr))
 }
 
-func GetIntegrationDBAPIClient() *DatabricksClient {
-	client := DatabricksClient{
-		Host:  os.Getenv("DATABRICKS_HOST"),
-		Token: os.Getenv("DATABRICKS_TOKEN"),
-		AzureAuth: AzureAuth{
-			ResourceID: os.Getenv("AZURE_DATABRICKS_WORKSPACE_RESOURCE_ID"),
-		},
-	}
-	err := client.Configure("dev")
-	if err != nil {
-		panic(err)
-	}
-	return &client
-}
-
 func GetIntegrationMWSAPIClient() *DatabricksClient {
 	client := DatabricksClient{
-		Host: os.Getenv("DATABRICKS_MWS_HOST"),
-		BasicAuth: struct {
-			Username string
-			Password string
-		}{
-			Username: os.Getenv("DATABRICKS_USERNAME"),
-			Password: os.Getenv("DATABRICKS_PASSWORD"),
-		},
+		Host:     os.Getenv("DATABRICKS_MWS_HOST"),
+		Username: os.Getenv("DATABRICKS_USERNAME"),
+		Password: os.Getenv("DATABRICKS_PASSWORD"),
 	}
 	err := client.Configure("dev")
 	if err != nil {
@@ -76,9 +55,11 @@ func GetIntegrationMWSAPIClient() *DatabricksClient {
 }
 
 func GetCloudInstanceType(c *DatabricksClient) string {
-	if strings.Contains(c.Host, "azure") {
+	if c.IsAzure() {
 		return "Standard_DS3_v2"
 	}
+	// TODO: create a method on ClustersAPI to give
+	// cloud specific delta-cache enabled instance by default.
 	return "m4.large"
 }
 

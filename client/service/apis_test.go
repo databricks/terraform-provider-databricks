@@ -8,13 +8,8 @@ import (
 
 func TestDatabricksClientConfigure_BasicAuth_NoHost(t *testing.T) {
 	dc := DatabricksClient{
-		BasicAuth: struct {
-			Username string
-			Password string
-		}{
-			Username: "foo",
-			Password: "bar",
-		},
+		Username: "foo",
+		Password: "bar",
 	}
 	err := dc.Configure("dev")
 
@@ -24,18 +19,25 @@ func TestDatabricksClientConfigure_BasicAuth_NoHost(t *testing.T) {
 
 func TestDatabricksClientConfigure_BasicAuth(t *testing.T) {
 	dc := DatabricksClient{
-		Host: "https://localhost:443",
-		BasicAuth: struct {
-			Username string
-			Password string
-		}{
-			Username: "foo",
-			Password: "bar",
-		},
+		Host:     "https://localhost:443",
+		Username: "foo",
+		Password: "bar",
 	}
 	err := dc.Configure("dev")
 
 	assert.Equal(t, "Zm9vOmJhcg==", dc.Token)
+	assert.NoError(t, err)
+}
+
+func TestDatabricksClientConfigure_HostWithoutScheme(t *testing.T) {
+	dc := DatabricksClient{
+		Host:  "localhost:443",
+		Token: "...",
+	}
+	err := dc.Configure("dev")
+
+	assert.Equal(t, "...", dc.Token)
+	assert.Equal(t, "https://localhost:443", dc.Host)
 	assert.NoError(t, err)
 }
 
@@ -67,15 +69,10 @@ func TestDatabricksClientConfigure_HostTokensTakePrecedence(t *testing.T) {
 
 func TestDatabricksClientConfigure_BasicAuthTakePrecedence(t *testing.T) {
 	dc := DatabricksClient{
-		Host:  "foo",
-		Token: "connfigured",
-		BasicAuth: struct {
-			Username string
-			Password string
-		}{
-			Username: "foo",
-			Password: "bar",
-		},
+		Host:       "foo",
+		Token:      "connfigured",
+		Username:   "foo",
+		Password:   "bar",
 		ConfigFile: "testdata/.databrickscfg",
 	}
 	err := dc.Configure("dev")

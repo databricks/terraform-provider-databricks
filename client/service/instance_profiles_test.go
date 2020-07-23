@@ -218,7 +218,7 @@ func TestAwsAccInstanceProfiles(t *testing.T) {
 		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
 	}
 	arn := "arn:aws:iam::123121231231:instance-profile/helloworldsritestingterraform"
-	client := GetIntegrationDBAPIClient()
+	client := NewClientFromEnvironment()
 
 	defer func() {
 		err := client.InstanceProfiles().Delete(arn)

@@ -262,6 +262,12 @@ func Provider(version string) terraform.ResourceProvider {
 					},
 				},
 			},
+			"skip_verify": {
+				Type:        schema.TypeBool,
+				Description: "Skip SSL certificate verification for HTTP calls. Use at your own risk.",
+				Optional:    true,
+				Default:     false,
+			},
 		},
 	}
 
@@ -274,17 +280,17 @@ func Provider(version string) terraform.ResourceProvider {
 			pc.Token = token.(string)
 		}
 		if v, ok := d.GetOk("username"); ok {
-			pc.BasicAuth.Username = v.(string)
+			pc.Username = v.(string)
 		}
 		if v, ok := d.GetOk("password"); ok {
-			pc.BasicAuth.Password = v.(string)
+			pc.Password = v.(string)
 		}
 		if _, ok := d.GetOk("basic_auth"); ok {
 			username, userOk := d.GetOk("basic_auth.0.username")
 			password, passOk := d.GetOk("basic_auth.0.password")
 			if userOk && passOk {
-				pc.BasicAuth.Username = fmt.Sprintf("%s", username)
-				pc.BasicAuth.Password = fmt.Sprintf("%s", password)
+				pc.Username = fmt.Sprintf("%s", username)
+				pc.Password = fmt.Sprintf("%s", password)
 			}
 		}
 		if v, ok := d.GetOk("azure_workspace_resource_id"); ok {
@@ -311,14 +317,17 @@ func Provider(version string) terraform.ResourceProvider {
 		if v, ok := d.GetOk("azure_pat_token_duration_seconds"); ok {
 			pc.AzureAuth.PATTokenDurationSeconds = v.(string)
 		}
-		if aa, ok := d.GetOk("azure_auth"); ok { // TODO: i think this is a list here...
+		if v, ok := d.GetOk("skip_verify"); ok {
+			pc.InsecureSkipVerify = v.(bool)
+		}
+		if aa, ok := d.GetOk("azure_auth"); ok {
 			// This provider takes DATABRICKS_AZURE_* for client ID etc
 			// The azurerm provider uses ARM_* for the same values
 			// To make it easier to use the two providers together we use the following sources in order:
 			//  - provider config
 			//  - DATABRICKS_AZURE_* environment variables
 			//  - ARM_* environment variables
-			azureAuth := aa.([]interface{})[0].(map[string]interface{})
+			azureAuth := aa.(map[string]interface{})
 			if v, ok := azureAuth["managed_resource_group"]; ok {
 				pc.AzureAuth.ManagedResourceGroup = v.(string)
 			}

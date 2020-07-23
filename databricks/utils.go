@@ -79,7 +79,7 @@ type PackagedMWSIds struct {
 }
 
 // Helps package up MWSAccountId with another id such as credentials id or network id
-// uses format mwsAcctId/otherId
+// uses format mwsAcctID/otherId
 func packMWSAccountID(idsToPackage PackagedMWSIds) string {
 	return fmt.Sprintf("%s/%s", idsToPackage.MwsAcctID, idsToPackage.ResourceID)
 }

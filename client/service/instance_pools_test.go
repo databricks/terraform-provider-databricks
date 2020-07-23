@@ -233,24 +233,16 @@ func TestInstancePoolsAPI_Read(t *testing.T) {
 }
 
 func TestAccInstancePools(t *testing.T) {
-	if _, ok := os.LookupEnv("CLOUD_ENV"); !ok {
+	cloud := os.Getenv("CLOUD_ENV")
+	if cloud == "" {
 		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
 	}
-	client := GetIntegrationDBAPIClient()
+	client := NewClientFromEnvironment()
 
 	pool := model.InstancePool{
-		InstancePoolName: "my_instance_pool",
-		MinIdleInstances: 0,
-		MaxCapacity:      10,
-		DiskSpec: &model.InstancePoolDiskSpec{
-			// TODO: make them behave good for both Azure & AWS
-
-			DiskType: &model.InstancePoolDiskType{
-				EbsVolumeType: model.EbsVolumeTypeGeneralPurposeSsd,
-			},
-			DiskCount: 1,
-			DiskSize:  32,
-		},
+		InstancePoolName:                   "Terraform Integration Test",
+		MinIdleInstances:                   0,
+		MaxCapacity:                        10,
 		NodeTypeID:                         GetCloudInstanceType(client),
 		IdleInstanceAutoTerminationMinutes: 20,
 		PreloadedSparkVersions: []string{
@@ -275,17 +267,10 @@ func TestAccInstancePools(t *testing.T) {
 	assert.Equal(t, pool.IdleInstanceAutoTerminationMinutes, poolReadInfo.IdleInstanceAutoTerminationMinutes)
 
 	err = client.InstancePools().Update(model.InstancePoolInfo{
-		InstancePoolID:   poolReadInfo.InstancePoolID,
-		InstancePoolName: "my_instance_pool",
-		MinIdleInstances: 0,
-		MaxCapacity:      20,
-		DiskSpec: &model.InstancePoolDiskSpec{
-			DiskType: &model.InstancePoolDiskType{
-				EbsVolumeType: model.EbsVolumeTypeGeneralPurposeSsd,
-			},
-			DiskCount: 1,
-			DiskSize:  32,
-		},
+		InstancePoolID:                     poolReadInfo.InstancePoolID,
+		InstancePoolName:                   "Terraform Integration Test Updated",
+		MinIdleInstances:                   0,
+		MaxCapacity:                        20,
 		NodeTypeID:                         GetCloudInstanceType(client),
 		IdleInstanceAutoTerminationMinutes: 20,
 		PreloadedSparkVersions: []string{

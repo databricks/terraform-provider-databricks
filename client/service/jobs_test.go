@@ -272,7 +272,7 @@ func TestAwsAccJobsCreate(t *testing.T) {
 		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
 	}
 
-	client := GetIntegrationDBAPIClient()
+	client := NewClientFromEnvironment()
 
 	jobSettings := model.JobSettings{
 		NewCluster: &model.Cluster{

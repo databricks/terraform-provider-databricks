@@ -636,7 +636,7 @@ func TestAccCreateUser(t *testing.T) {
 		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
 	}
 
-	client := GetIntegrationDBAPIClient()
+	client := NewClientFromEnvironment()
 
 	user, err := client.Users().Create("testuser@databricks.com", "Display Name", nil, nil)
 	assert.NoError(t, err, err)
@@ -661,7 +661,7 @@ func TestAccCreateAdminUser(t *testing.T) {
 		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
 	}
 
-	client := GetIntegrationDBAPIClient()
+	client := NewClientFromEnvironment()
 
 	user, err := client.Users().Create("testusersriterraform@databricks.com", "Display Name", nil, nil)
 	assert.NoError(t, err, err)
@@ -705,7 +705,7 @@ func TestAccRoleDifferences(t *testing.T) {
 		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
 	}
 
-	client := GetIntegrationDBAPIClient()
+	client := NewClientFromEnvironment()
 	//user, err := client.Users().Create("testusersriterraform@databricks.com", "Display Name", nil, nil)
 	//assert.NoError(t, err, err)
 	//assert.True(t, len(user.ID) > 0, "User id is empty")

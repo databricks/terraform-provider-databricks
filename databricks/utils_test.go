@@ -99,7 +99,7 @@ func TestAccMissingWorkspaceResources(t *testing.T) {
 		acctest.RandString(6),
 		acctest.RandString(8),
 	)
-	client := getIntegrationDatabricksClient(t)
+	client := service.NewClientFromEnvironment()
 
 	type testTable struct {
 		name            string

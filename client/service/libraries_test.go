@@ -223,28 +223,28 @@ func TestLibrariesAPI_List(t *testing.T) {
 }
 
 func TestAccLibraryCreate(t *testing.T) {
-	if _, ok := os.LookupEnv("CLOUD_ENV"); !ok {
+	cloud := os.Getenv("CLOUD_ENV")
+	if cloud == "" {
 		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
 	}
+	client := NewClientFromEnvironment()
 
-	client := GetIntegrationDBAPIClient()
-
+	// TODO: pre-create an interactive cluster just for libs/commands/mount tests
 	cluster := model.Cluster{
-		NumWorkers:  1,
-		ClusterName: "my-cluster",
-		SparkEnvVars: map[string]string{
-			"PYSPARK_PYTHON": "/databricks/python3/bin/python3",
-		},
-		AwsAttributes: &model.AwsAttributes{
-			EbsVolumeType:  model.EbsVolumeTypeGeneralPurposeSsd,
-			EbsVolumeCount: 1,
-			EbsVolumeSize:  32,
-		},
+		NumWorkers:             1,
+		ClusterName:            "Terraform Integration Test",
 		SparkVersion:           "6.2.x-scala2.11",
 		NodeTypeID:             GetCloudInstanceType(client),
 		DriverNodeTypeID:       GetCloudInstanceType(client),
-		IdempotencyToken:       "my-cluster",
+		IdempotencyToken:       "my-cluster-libs",
 		AutoterminationMinutes: 20,
+	}
+	if cloud == "AWS" {
+		cluster.AwsAttributes = &model.AwsAttributes{
+			EbsVolumeType:  model.EbsVolumeTypeGeneralPurposeSsd,
+			EbsVolumeCount: 1,
+			EbsVolumeSize:  32,
+		}
 	}
 
 	clusterInfo, err := client.Clusters().Create(cluster)

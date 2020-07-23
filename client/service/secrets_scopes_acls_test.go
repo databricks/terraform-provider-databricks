@@ -9,10 +9,11 @@ import (
 )
 
 func TestSecretsScopesAclsIntegration(t *testing.T) {
-	if _, ok := os.LookupEnv("CLOUD_ENV"); !ok {
+	cloud := os.Getenv("CLOUD_ENV")
+	if cloud == "" {
 		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
 	}
-	client := GetIntegrationDBAPIClient()
+	client := NewClientFromEnvironment()
 
 	testScope := "my-test-scope"
 	testKey := "my-test-key"

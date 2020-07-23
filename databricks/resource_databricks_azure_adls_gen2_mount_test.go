@@ -14,6 +14,7 @@ import (
 )
 
 func TestAzureAccAdlsGen2Mount_correctly_mounts(t *testing.T) {
+	// TODO: fails on AZ CLI
 	if _, ok := os.LookupEnv("CLOUD_ENV"); !ok {
 		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
 	}

@@ -77,7 +77,7 @@ func testDefaultClusterResource(instancePool, awsAttributes string) string {
 								}`, instancePool, awsAttributes)
 }
 
-func TestAccAwsClusterResource_ValidatePlan(t *testing.T) {
+func TestAwsAccClusterResource_ValidatePlan(t *testing.T) {
 	awsAttrNoZoneId := map[string]string{}
 	awsAttrInstanceProfile := map[string]string{
 		"instance_profile_arn": "my_instance_profile_arn",
@@ -100,7 +100,7 @@ func TestAccAwsClusterResource_ValidatePlan(t *testing.T) {
 	})
 }
 
-func TestAccAwsClusterResource_CreateClusterViaInstancePool(t *testing.T) {
+func TestAwsAccClusterResource_CreateClusterViaInstancePool(t *testing.T) {
 	awsAttrInstancePool := map[string]string{
 		"zone_id":      "${data.databricks_zones.default_zones.default_zone}",
 		"availability": "SPOT",
@@ -169,7 +169,7 @@ resource "databricks_instance_pool" "my_pool" {
 `, name, awsAttributes)
 }
 
-func TestAccAzureClusterResource_CreateClusterViaInstancePool(t *testing.T) {
+func TestAzureAccClusterResource_CreateClusterViaInstancePool(t *testing.T) {
 	randomInstancePoolName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
 	randomStr := acctest.RandStringFromCharSet(5, acctest.CharSetAlphaNum)
 	instanceProfile := fmt.Sprintf("arn:aws:iam::999999999999:instance-profile/%s", randomStr)

@@ -409,7 +409,7 @@ func TestAccNotebookCreate(t *testing.T) {
 	format := model.DBC
 	language := model.Python
 
-	client := GetIntegrationDBAPIClient()
+	client := NewClientFromEnvironment()
 	err := client.Notebooks().Create(path, fileContent, language, format, false)
 	assert.NoError(t, err, err)
 
@@ -438,7 +438,7 @@ func TestAccNotebookUnzip(t *testing.T) {
 	path := "/demo-notebook-rbc"
 	format := model.DBC
 
-	client := GetIntegrationDBAPIClient()
+	client := NewClientFromEnvironment()
 
 	err := client.Notebooks().Create(path, fileContent, model.Python, format, false)
 	assert.NoError(t, err, err)

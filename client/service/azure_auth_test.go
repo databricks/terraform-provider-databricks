@@ -42,14 +42,58 @@ func TestAzureAuth_isClientSecretSet(t *testing.T) {
 	assert.True(t, aa.isClientSecretSet())
 }
 
+func TestAzureAuth_ensureWorkspaceURL(t *testing.T) {
+	aa := AzureAuth{}
+
+	cnt := []int{0}
+	var serverURL string
+	server := httptest.NewUnstartedServer(http.HandlerFunc(
+		func(rw http.ResponseWriter, req *http.Request) {
+			if req.RequestURI == "/a/b/c?api-version=2018-04-01" {
+				_, err := rw.Write([]byte(fmt.Sprintf(`{"properties": {"workspaceUrl": "%s"}}`,
+					strings.ReplaceAll(serverURL, "https://", ""))))
+				assert.NoError(t, err)
+				cnt[0]++
+				return
+			}
+			assert.Fail(t, fmt.Sprintf("Received unexpected call: %s %s",
+				req.Method, req.RequestURI))
+		}))
+	server.StartTLS()
+	serverURL = server.URL
+	defer server.Close()
+
+	aa.ResourceID = "/a/b/c"
+	aa.azureManagementEndpoint = server.URL
+
+	client := DatabricksClient{InsecureSkipVerify: true}
+	client.configureHTTPCLient()
+	aa.databricksClient = &client
+	client.AzureAuth = aa
+
+	token := &adal.Token{
+		AccessToken: "TestToken",
+		Resource:    "https://azure.microsoft.com/",
+		Type:        "Bearer",
+	}
+	authorizer := autorest.NewBearerAuthorizer(token)
+	err := aa.ensureWorkspaceURL(authorizer)
+	assert.NoError(t, err)
+
+	err = aa.ensureWorkspaceURL(authorizer)
+	assert.NoError(t, err)
+	assert.Equal(t, 1, cnt[0],
+		"Calls to Azure Management API must be done only once")
+}
+
 func TestAzureAuth_configureWithClientSecret(t *testing.T) {
 	aa := AzureAuth{}
-	auth, err := aa.configureWithClientSecret2()
+	auth, err := aa.configureWithClientSecret()
 	assert.Nil(t, auth)
 	assert.NoError(t, err)
 
 	aa.ResourceID = "/a/b/c"
-	auth, err = aa.configureWithClientSecret2()
+	auth, err = aa.configureWithClientSecret()
 	assert.Nil(t, auth)
 	assert.NoError(t, err)
 
@@ -102,7 +146,7 @@ func TestAzureAuth_configureWithClientSecret(t *testing.T) {
 	aa.ClientSecret = "b"
 	aa.TenantID = "c"
 	aa.azureManagementEndpoint = server.URL
-	auth, err = aa.configureWithClientSecret2()
+	auth, err = aa.configureWithClientSecret()
 	assert.NotNil(t, auth)
 	assert.NoError(t, err)
 
@@ -127,46 +171,13 @@ func getAndAssertEnv(t *testing.T, key string) string {
 	return value
 }
 
-// func TestAzureAccAuth_TestPatTokenDuration(t *testing.T) {
-// 	if _, ok := os.LookupEnv("TF_ACC"); !ok {
-// 		t.Skip("Acceptance tests skipped unless env 'TF_ACC' set")
-// 	}
-
-// 	client := DatabricksClient{
-// 		AzureAuth: AzureAuth{
-// 			ManagedResourceGroup: getAndAssertEnv(t, "DATABRICKS_AZURE_MANAGED_RESOURCE_GROUP"),
-// 			AzureRegion:          getAndAssertEnv(t, "AZURE_REGION"),
-// 			WorkspaceName:        getAndAssertEnv(t, "DATABRICKS_AZURE_WORKSPACE_NAME"),
-// 			ResourceGroup:        getAndAssertEnv(t, "DATABRICKS_AZURE_RESOURCE_GROUP"),
-// 			SubscriptionID:       getAndAssertEnv(t, "DATABRICKS_AZURE_SUBSCRIPTION_ID"),
-// 			TenantID:             getAndAssertEnv(t, "DATABRICKS_AZURE_TENANT_ID"),
-// 			ClientID:             getAndAssertEnv(t, "DATABRICKS_AZURE_CLIENT_ID"),
-// 			ClientSecret:         getAndAssertEnv(t, "DATABRICKS_AZURE_CLIENT_SECRET"),
-// 		},
-// 	}
-// 	err := client.Configure("dev-integration")
-// 	assert.NoError(t, err, err)
-
-// 	// Time in milliseconds
-// 	tokenActualDuration := client.tokenExpiryTime - client.tokenCreateTime
-// 	assert.Equal(t, patTokenSeconds, (time.Duration(tokenActualDuration) * time.Millisecond).Seconds(),
-// 		"duration should be the same")
-// }
-
 func TestAzureAccAuthCreateApiToken(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping integration test in short mode.")
 	}
 	client := DatabricksClient{
 		AzureAuth: AzureAuth{
-			ManagedResourceGroup: getAndAssertEnv(t, "DATABRICKS_AZURE_MANAGED_RESOURCE_GROUP"),
-			AzureRegion:          getAndAssertEnv(t, "AZURE_REGION"),
-			WorkspaceName:        getAndAssertEnv(t, "DATABRICKS_AZURE_WORKSPACE_NAME"),
-			ResourceGroup:        getAndAssertEnv(t, "DATABRICKS_AZURE_RESOURCE_GROUP"),
-			SubscriptionID:       getAndAssertEnv(t, "DATABRICKS_AZURE_SUBSCRIPTION_ID"),
-			TenantID:             getAndAssertEnv(t, "DATABRICKS_AZURE_TENANT_ID"),
-			ClientID:             getAndAssertEnv(t, "DATABRICKS_AZURE_CLIENT_ID"),
-			ClientSecret:         getAndAssertEnv(t, "DATABRICKS_AZURE_CLIENT_SECRET"),
+			ResourceID: getAndAssertEnv(t, "DATABRICKS_AZURE_WORKSPACE_RESOURCE_ID"),
 		},
 	}
 	err := client.Configure("dev-integration")

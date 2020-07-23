@@ -709,7 +709,7 @@ func TestAccCreateFile(t *testing.T) {
 	t.Log(len(randomStr))
 	t.Log(len(base64.StdEncoding.EncodeToString(randomStr)))
 
-	client := GetIntegrationDBAPIClient()
+	client := NewClientFromEnvironment()
 
 	err := client.DBFS().Mkdirs(dir)
 	assert.NoError(t, err, err)

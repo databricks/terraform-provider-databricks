@@ -65,7 +65,7 @@ func (apiError APIError) DocumentationURL() string {
 		endpointMatches[1], endpointMatches[2])
 }
 
-var transientErrorStringMatches []string = []string{ // TODO: Should we make these regexes to match more of the message or is this sufficient?
+var transientErrorStringMatches []string = []string{
 	"com.databricks.backend.manager.util.UnknownWorkerEnvironmentException",
 	"does not have any associated worker environments",
 	"There is no worker environment with id",
@@ -143,11 +143,10 @@ func checkHTTPRetry(ctx context.Context, resp *http.Response, err error) (bool, 
 }
 
 func (c *DatabricksClient) get(path string, request interface{}, response interface{}) error {
-	if c.auth == nil {
+	if c.authVisitor == nil {
 		return fmt.Errorf("Authentication not initialized")
 	}
-	body, err := c.genericQuery2(http.MethodGet, path, request,
-		c.auth, c.api2)
+	body, err := c.genericQuery2(http.MethodGet, path, request, c.authVisitor, c.api2)
 	if err != nil {
 		return err
 	}
@@ -155,11 +154,10 @@ func (c *DatabricksClient) get(path string, request interface{}, response interf
 }
 
 func (c *DatabricksClient) post(path string, request interface{}, response interface{}) error {
-	if c.auth == nil {
+	if c.authVisitor == nil {
 		return fmt.Errorf("Authentication not initialized")
 	}
-	body, err := c.genericQuery2(http.MethodPost, path, request,
-		c.auth, c.api2)
+	body, err := c.genericQuery2(http.MethodPost, path, request, c.authVisitor, c.api2)
 	if err != nil {
 		return err
 	}
@@ -167,29 +165,26 @@ func (c *DatabricksClient) post(path string, request interface{}, response inter
 }
 
 func (c *DatabricksClient) delete(path string, request interface{}) error {
-	if c.auth == nil {
+	if c.authVisitor == nil {
 		return fmt.Errorf("Authentication not initialized")
 	}
-	_, err := c.genericQuery2(http.MethodDelete, path, request,
-		c.auth, c.api2)
+	_, err := c.genericQuery2(http.MethodDelete, path, request, c.authVisitor, c.api2)
 	return err
 }
 
 func (c *DatabricksClient) patch(path string, request interface{}) error {
-	if c.auth == nil {
+	if c.authVisitor == nil {
 		return fmt.Errorf("Authentication not initialized")
 	}
-	_, err := c.genericQuery2(http.MethodPatch, path, request,
-		c.auth, c.api2)
+	_, err := c.genericQuery2(http.MethodPatch, path, request, c.authVisitor, c.api2)
 	return err
 }
 
 func (c *DatabricksClient) put(path string, request interface{}) error {
-	if c.auth == nil {
+	if c.authVisitor == nil {
 		return fmt.Errorf("Authentication not initialized")
 	}
-	_, err := c.genericQuery2(http.MethodPut, path, request,
-		c.auth, c.api2)
+	_, err := c.genericQuery2(http.MethodPut, path, request, c.authVisitor, c.api2)
 	return err
 }
 
@@ -215,28 +210,28 @@ func (c *DatabricksClient) unmarshall(path string, body []byte, response interfa
 }
 
 // TODO: rename to internal or something...
-func (c *DatabricksClient) api2(r *http.Request) (*http.Request, error) {
+func (c *DatabricksClient) api2(r *http.Request) error {
 	if r.URL == nil {
-		return nil, fmt.Errorf("No URL found in request")
+		return fmt.Errorf("No URL found in request")
 	}
 	r.URL.Path = fmt.Sprintf("/api/2.0%s", r.URL.Path)
 	r.Header.Set("Content-Type", "application/json")
 
 	url, err := url.Parse(c.Host)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	r.URL.Host = url.Host
 	r.URL.Scheme = url.Scheme
 
-	return r, nil
+	return nil
 }
 
 func (c *DatabricksClient) performScim(method, path string, request interface{}, response interface{}) error {
-	body, err := c.genericQuery2(method, path, request, c.auth,
-		c.api2, func(r *http.Request) (*http.Request, error) {
+	body, err := c.genericQuery2(method, path, request, c.authVisitor,
+		c.api2, func(r *http.Request) error {
 			r.Header.Set("Content-Type", "application/scim+json")
-			return r, nil
+			return nil
 		})
 	if err != nil {
 		return err
@@ -246,7 +241,7 @@ func (c *DatabricksClient) performScim(method, path string, request interface{},
 
 // todo: do is better name
 func (c *DatabricksClient) genericQuery2(method, requestURL string, data interface{},
-	interceptors ...func(*http.Request) (*http.Request, error)) (body []byte, err error) {
+	visitors ...func(*http.Request) error) (body []byte, err error) {
 	if c.httpClient == nil {
 		return nil, fmt.Errorf("DatabricksClient is not configured")
 	}
@@ -258,11 +253,11 @@ func (c *DatabricksClient) genericQuery2(method, requestURL string, data interfa
 	if err != nil {
 		return nil, err
 	}
-	// TODO: add masking **REDACTED**
+	// TODO: add masking **REDACTED** + subscription + mws acc id
 	log.Printf("%s %s %v", method, requestURL, string(requestBody))
 	request.Header.Set("User-Agent", c.userAgent)
-	for _, in := range interceptors {
-		request, err = in(request)
+	for _, requestVisitor := range visitors {
+		err = requestVisitor(request)
 		if err != nil {
 			return nil, err
 		}
@@ -341,6 +336,8 @@ func makeRequestBody(method string, requestURL *string, data interface{}, marsha
 	}
 	return requestBody, nil
 }
+
+// TODO: port to new way of request logging
 
 // func onlyNBytes(j string, numBytes int64) string {
 // 	if len([]byte(j)) > int(numBytes) {

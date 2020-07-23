@@ -30,32 +30,11 @@ func init() {
 	}
 }
 
-// getIntegrationDatabricksClient gets the client given CLOUD_ENV as those env variables get loaded
-func getIntegrationDatabricksClient(t *testing.T) *service.DatabricksClient {
-	client := service.DatabricksClient{
-		Host:  os.Getenv("DATABRICKS_HOST"),
-		Token: os.Getenv("DATABRICKS_TOKEN"),
-		AzureAuth: service.AzureAuth{
-			ResourceID: os.Getenv("AZURE_DATABRICKS_WORKSPACE_RESOURCE_ID"),
-		},
-	}
-	err := client.Configure("dev-integration")
-	if err != nil {
-		panic(err)
-	}
-	return &client
-}
-
 func getMWSClient() *service.DatabricksClient {
 	client := service.DatabricksClient{
-		Host: os.Getenv("DATABRICKS_MWS_HOST"),
-		BasicAuth: struct {
-			Username string
-			Password string
-		}{
-			Username: os.Getenv("DATABRICKS_USERNAME"),
-			Password: os.Getenv("DATABRICKS_PASSWORD"),
-		},
+		Host:     os.Getenv("DATABRICKS_MWS_HOST"),
+		Username: os.Getenv("DATABRICKS_USERNAME"),
+		Password: os.Getenv("DATABRICKS_PASSWORD"),
 	}
 	err := client.Configure("dev-mws")
 	if err != nil {

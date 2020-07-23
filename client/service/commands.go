@@ -103,11 +103,11 @@ func (a CommandsAPI) createContext(language, clusterID string) (string, error) {
 }
 
 func (a CommandsAPI) post(path string, request interface{}, response interface{}) error {
-	if a.client.auth == nil {
+	if a.client.authVisitor == nil {
 		return fmt.Errorf("Authentication not initialized")
 	}
 	body, err := a.client.genericQuery2(http.MethodPost, path, request,
-		a.client.auth, a.api12)
+		a.client.authVisitor, a.api12)
 	if err != nil {
 		return err
 	}
@@ -115,32 +115,32 @@ func (a CommandsAPI) post(path string, request interface{}, response interface{}
 }
 
 func (a CommandsAPI) get(path string, request interface{}, response interface{}) error {
-	if a.client.auth == nil {
+	if a.client.authVisitor == nil {
 		return fmt.Errorf("Authentication not initialized")
 	}
 	body, err := a.client.genericQuery2(http.MethodGet, path, request,
-		a.client.auth, a.api12)
+		a.client.authVisitor, a.api12)
 	if err != nil {
 		return err
 	}
 	return a.client.unmarshall(path, body, &response)
 }
 
-func (a CommandsAPI) api12(r *http.Request) (*http.Request, error) {
+func (a CommandsAPI) api12(r *http.Request) error {
 	if r.URL == nil {
-		return nil, fmt.Errorf("No URL found in request")
+		return fmt.Errorf("No URL found in request")
 	}
 	r.URL.Path = fmt.Sprintf("/api/1.2%s", r.URL.Path)
 	r.Header.Set("Content-Type", "application/json")
 
 	url, err := url.Parse(a.client.Host)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	r.URL.Host = url.Host
 	r.URL.Scheme = url.Scheme
 
-	return r, nil
+	return nil
 }
 
 func (a CommandsAPI) waitForCommandFinished(commandID, contextID, clusterID string, sleepDurationSeconds time.Duration, timeoutDurationMinutes time.Duration) error {

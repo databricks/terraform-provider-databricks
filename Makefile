@@ -54,7 +54,7 @@ vendor:
 	@go mod vendor
 
 test-azure:
-	cd scripts/azure-integration && /bin/bash run.sh
+	cd scripts/azure-integration && SKIP_CLEANUP=1 /bin/bash run.sh
 
 # INTEGRATION TESTING WITH AZURE
 terraform-acc-azure: lint

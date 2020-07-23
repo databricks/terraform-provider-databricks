@@ -98,13 +98,16 @@ func resourceIPACLRead(d *schema.ResourceData, m interface{}) error {
 func resourceIPACLUpdate(d *schema.ResourceData, m interface{}) error {
 	client := m.(*service.DBApiClient)
 	ipAddresses := convertListInterfaceToString(d.Get("ip_addresses").([]interface{}))
-	client.IPAccessLists().Update(
+	_, err := client.IPAccessLists().Update(
 		d.Id(),
 		d.Get("label").(string),
 		model.IPAccessListType(d.Get("list_type").(string)),
 		ipAddresses,
 		d.Get("enabled").(bool),
 	)
+	if err != nil {
+		return err
+	}
 	return resourceIPACLRead(d, m)
 }
 
@@ -126,7 +129,7 @@ func updateFromStatus(d *schema.ResourceData, status model.IPAccessListStatus) e
 	if err != nil {
 		return err
 	}
-	err = d.Set("enabled", bool(status.Enabled))
+	err = d.Set("enabled", status.Enabled)
 
 	return err
 }

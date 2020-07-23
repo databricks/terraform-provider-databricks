@@ -32,9 +32,9 @@ func testGetClusterInstancePoolConfig(instancePoolId string) string {
 }
 
 func testDefaultZones() string {
-	return fmt.Sprintf(`
+	return `
 data "databricks_zones" "default_zones" {}
-`)
+`
 }
 
 func testDefaultAwsInstancePoolResource(awsAttributes, name string) string {

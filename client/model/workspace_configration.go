@@ -19,7 +19,7 @@ type WorkspaceConfRequestMapBuilder struct {
 
 // WorkspaceConfResponse is the response from a get request provided the keys: AllWorkspaceConfKeys
 type WorkspaceConfResponse struct {
-	SidebarLogoActive      string `json:*"sidebarLogoActive,omitempty"`
+	SidebarLogoActive      string `json:"sidebarLogoActive,omitempty"`
 	HomePageWelcomeMessage string `json:"homePageWelcomeMessage,omitempty"`
 	SidebarLogoText        string `json:"sidebarLogoText,omitempty"`
 	SidebarLogoInactive    string `json:"sidebarLogoInactive,omitempty"`

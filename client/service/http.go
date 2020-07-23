@@ -337,7 +337,6 @@ func makeRequestBody(method string, requestURL *string, data interface{}, marsha
 	return requestBody, nil
 }
 
-
 func onlyNBytes(j string, numBytes int64) string {
 	if len([]byte(j)) > int(numBytes) {
 		return string([]byte(j)[:numBytes])

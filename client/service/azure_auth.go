@@ -111,35 +111,35 @@ func (aa *AzureAuth) configureWithAzureCLI() (func(r *http.Request) error, error
 	}, nil
 }
 
-func (aa *AzureAuth) simpleAADRequestVisitor(authorizerFactory func(resource string) (autorest.Authorizer, error),
-	interceptor ...func(ma autorest.Authorizer) error) (func(r *http.Request) error, error) {
-	managementAuthorizer, err := authorizerFactory(azure.PublicCloud.ServiceManagementEndpoint)
-	if err != nil {
-		return nil, err
-	}
-	err = aa.ensureWorkspaceURL(managementAuthorizer)
-	if err != nil {
-		return nil, err
-	}
-	platformAuthorizer, err := authorizerFactory(AzureDatabricksResourceID)
-	if err != nil {
-		return nil, err
-	}
-	return func(r *http.Request) error {
-		if len(interceptor) > 0 {
-			err = interceptor[0](managementAuthorizer)
-			if err != nil {
-				return err
-			}
-		}
-		r.Header.Set("X-Databricks-Azure-Workspace-Resource-Id", aa.resourceID())
-		_, err = autorest.Prepare(r, platformAuthorizer.WithAuthorization())
-		if err != nil {
-			return err
-		}
-		return nil
-	}, nil
-}
+// func (aa *AzureAuth) simpleAADRequestVisitor(authorizerFactory func(resource string) (autorest.Authorizer, error),
+// 	interceptor ...func(ma autorest.Authorizer) error) (func(r *http.Request) error, error) {
+// 	managementAuthorizer, err := authorizerFactory(azure.PublicCloud.ServiceManagementEndpoint)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+// 	err = aa.ensureWorkspaceURL(managementAuthorizer)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+// 	platformAuthorizer, err := authorizerFactory(AzureDatabricksResourceID)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+// 	return func(r *http.Request) error {
+// 		if len(interceptor) > 0 {
+// 			err = interceptor[0](managementAuthorizer)
+// 			if err != nil {
+// 				return err
+// 			}
+// 		}
+// 		r.Header.Set("X-Databricks-Azure-Workspace-Resource-Id", aa.resourceID())
+// 		_, err = autorest.Prepare(r, platformAuthorizer.WithAuthorization())
+// 		if err != nil {
+// 			return err
+// 		}
+// 		return nil
+// 	}, nil
+// }
 
 func (aa *AzureAuth) acquirePAT(
 	factory func(resource string) (autorest.Authorizer, error),

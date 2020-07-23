@@ -45,6 +45,7 @@ func getMWSClient() *service.DatabricksClient {
 
 func TestMain(m *testing.M) {
 	// This should not be asserted as it may not always be set for all tests
+	// TODO: add common instance pool & cluster for libs & stuff
 	cloudEnv := os.Getenv("CLOUD_ENV")
 	envFileName := fmt.Sprintf("../.%s.env", cloudEnv)
 	err := godotenv.Load(envFileName)

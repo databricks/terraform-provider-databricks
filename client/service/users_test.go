@@ -666,8 +666,8 @@ func TestAccCreateAdminUser(t *testing.T) {
 
 	randomName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
 	user, err := client.Users().Create(
-		fmt.Sprintf("terraform+%s@databricks.com", randomName), 
-		"Terra " + randomName, nil, nil)
+		fmt.Sprintf("terraform+%s@databricks.com", randomName),
+		"Terra "+randomName, nil, nil)
 	assert.NoError(t, err, err)
 	assert.True(t, len(user.ID) > 0, "User id is empty")
 	idToDelete := user.ID
@@ -711,12 +711,12 @@ func TestAccRoleDifferences(t *testing.T) {
 
 	randomName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
 	user, err := client.Users().Create(
-		fmt.Sprintf("terraform+%s@databricks.com", randomName), 
-		"Terra " + randomName, nil, nil)
+		fmt.Sprintf("terraform+%s@databricks.com", randomName),
+		"Terra "+randomName, nil, nil)
 	assert.NoError(t, err, err)
 	assert.True(t, len(user.ID) > 0, "User id is empty")
 	idToDelete := user.ID
-	
+
 	user, err = client.Users().Read(idToDelete)
 	assert.NoError(t, err, err)
 	t.Log(user.Roles)
@@ -724,5 +724,6 @@ func TestAccRoleDifferences(t *testing.T) {
 	t.Log(user.InheritedRoles)
 	t.Log(user.UnInheritedRoles)
 
-	client.Users().Delete(idToDelete)
+	err = client.Users().Delete(idToDelete)
+	assert.NoError(t, err, err)
 }

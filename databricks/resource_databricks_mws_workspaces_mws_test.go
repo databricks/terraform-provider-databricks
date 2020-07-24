@@ -13,6 +13,7 @@ import (
 )
 
 func TestAccMWSWorkspaces(t *testing.T) {
+	// TODO: refactor for common instance pool & AZ CLI
 	//var MWSWorkspaces model.MWSWorkspace
 	// generate a random name for each tokenInfo test run, to avoid
 	// collisions from multiple concurrent tests.

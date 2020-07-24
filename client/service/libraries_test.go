@@ -6,7 +6,6 @@ import (
 	"testing"
 
 	"github.com/databrickslabs/databricks-terraform/client/model"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -228,28 +227,8 @@ func TestAccLibraryCreate(t *testing.T) {
 	if cloud == "" {
 		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
 	}
-	client := NewClientFromEnvironment()
-
-	// TODO: pre-create an interactive cluster just for libs/commands/mount tests
-	randomName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
-	cluster := model.Cluster{
-		NumWorkers:             1,
-		ClusterName:            "Terraform Integration Test " + randomName,
-		SparkVersion:           "6.2.x-scala2.11",
-		NodeTypeID:             GetCloudInstanceType(client),
-		DriverNodeTypeID:       GetCloudInstanceType(client),
-		IdempotencyToken:       "libs-" + randomName,
-		AutoterminationMinutes: 20,
-	}
-	if cloud == "AWS" {
-		cluster.AwsAttributes = &model.AwsAttributes{
-			EbsVolumeType:  model.EbsVolumeTypeGeneralPurposeSsd,
-			EbsVolumeCount: 1,
-			EbsVolumeSize:  32,
-		}
-	}
-
-	clusterInfo, err := client.Clusters().Create(cluster)
+	client := CommonEnvironmentClient()
+	clusterInfo, err := NewTinyClusterInCommonPool()
 	assert.NoError(t, err, err)
 	defer func() {
 		err := client.Clusters().PermanentDelete(clusterInfo.ClusterID)

@@ -18,6 +18,7 @@ func TestAccGroupResource(t *testing.T) {
 	if _, ok := os.LookupEnv("CLOUD_ENV"); !ok {
 		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
 	}
+	// TODO: refactor for common instance pool & AZ CLI
 	var Group model.Group
 	// generate a random name for each tokenInfo test run, to avoid
 	// collisions from multiple concurrent tests.

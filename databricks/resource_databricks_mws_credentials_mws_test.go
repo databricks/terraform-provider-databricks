@@ -11,7 +11,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
-func TestAccMWSCredentials(t *testing.T) {
+func TestMwsAccCredentials(t *testing.T) {
+	cloudEnv := os.Getenv("CLOUD_ENV")
+	if cloudEnv != "MWS" {
+		t.Skip("Cannot run test on non-MWS environment")
+	}
 	var MWSCredentials model.MWSCredentials
 	// generate a random name for each tokenInfo test run, to avoid
 	// collisions from multiple concurrent tests.

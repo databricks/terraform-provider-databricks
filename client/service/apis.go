@@ -92,10 +92,9 @@ func (c *DatabricksClient) configureAuthWithDirectParams() (func(r *http.Request
 		return nil, fmt.Errorf("Host is empty, but is required by %s", needsHostBecause)
 	}
 	if c.Token == "" || c.Host == "" {
-		log.Printf("[INFO] No direct authentication params configured")
 		return nil, nil
 	}
-	log.Printf("[INFO] Successfully configured Bearer authentication")
+	log.Printf("[INFO] Using directly configured host+%s authentication", needsHostBecause)
 	return c.authorizer(authType, c.Token), nil
 }
 
@@ -137,7 +136,7 @@ func (c *DatabricksClient) configureFromDatabricksCfg() (func(r *http.Request) e
 		return nil, fmt.Errorf("config file %s is corrupt: cannot find token in %s profile",
 			configFile, c.Profile)
 	}
-	log.Printf("[INFO] Successfully configured %s authentication from ~/.databrickscfg", authType)
+	log.Printf("[INFO] Using %s authentication from ~/.databrickscfg", authType)
 	return c.authorizer(authType, c.Token), nil
 }
 
@@ -188,32 +187,6 @@ func (c *DatabricksClient) configureHTTPCLient() {
 		RetryWaitMax: retryDelayDuration,
 		RetryMax:     int(retryMaximumDuration / retryDelayDuration), // + request & response log hooks
 	}
-}
-
-// NewClientFromEnvironment makes very good client for testing purposes
-func NewClientFromEnvironment() *DatabricksClient {
-	client := DatabricksClient{
-		Host:       os.Getenv("DATABRICKS_HOST"),
-		Token:      os.Getenv("DATABRICKS_TOKEN"),
-		Username:   os.Getenv("DATABRICKS_USERNAME"),
-		Password:   os.Getenv("DATABRICKS_PASSWORD"),
-		ConfigFile: os.Getenv("DATABRICKS_CONFIG_FILE"),
-		Profile:    os.Getenv("DATABRICKS_CONFIG_PROFILE"),
-		AzureAuth: AzureAuth{
-			ResourceID:     os.Getenv("DATABRICKS_AZURE_WORKSPACE_RESOURCE_ID"),
-			WorkspaceName:  os.Getenv("DATABRICKS_AZURE_WORKSPACE_NAME"),
-			ResourceGroup:  os.Getenv("DATABRICKS_AZURE_RESOURCE_GROUP"),
-			SubscriptionID: os.Getenv("DATABRICKS_AZURE_SUBSCRIPTION_ID"),
-			ClientID:       os.Getenv("DATABRICKS_AZURE_CLIENT_ID"),
-			ClientSecret:   os.Getenv("DATABRICKS_AZURE_CLIENT_SECRET"),
-			TenantID:       os.Getenv("DATABRICKS_AZURE_TENANT_ID"),
-		},
-	}
-	err := client.Configure("dev")
-	if err != nil {
-		panic(err)
-	}
-	return &client
 }
 
 // IsAzure returns true if Azure is configured

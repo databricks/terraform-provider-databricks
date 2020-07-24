@@ -14,6 +14,7 @@ import (
 )
 
 func TestAwsAccInstanceProfileResource(t *testing.T) {
+	// TODO: refactor for common instance pool & AZ CLI
 	var InstanceProfile model.InstanceProfileInfo
 	// generate a random name for each tokenInfo test run, to avoid
 	// collisions from multiple concurrent tests.

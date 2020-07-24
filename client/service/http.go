@@ -254,7 +254,7 @@ func (c *DatabricksClient) genericQuery2(method, requestURL string, data interfa
 		return nil, err
 	}
 	// TODO: add masking **REDACTED** + subscription + mws acc id -> perhaps re-parse json and truncate only some fields?...
-	log.Printf("%s %s %v", method, requestURL, onlyNBytes(string(requestBody), 128))
+	log.Printf("[INFO] %s %s %v", method, requestURL, onlyNBytes(string(requestBody), 512))
 	request.Header.Set("User-Agent", c.userAgent)
 	for _, requestVisitor := range visitors {
 		err = requestVisitor(request)

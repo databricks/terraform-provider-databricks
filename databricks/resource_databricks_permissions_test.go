@@ -385,17 +385,19 @@ func TestPermissionsCreate_error(t *testing.T) {
 }
 
 func TestAccDatabricksPermissionsResourceFullLifecycle(t *testing.T) {
+	// TODO: fails on big run
 	var permissions model.ObjectACL
 	randomName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
 	resource.Test(t, resource.TestCase{
 		Providers: testAccProviders,
+		IsUnitTest: true,
 		Steps: []resource.TestStep{
 			{
 				Config: testClusterPolicyPermissions(randomName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("databricks_permissions.dummy_can_use",
 						"object_type", "cluster-policy"),
-					testAccIDCallback(t, "databricks_permissions.dummy_can_use",
+					epoch.ResourceCheck("databricks_permissions.dummy_can_use",
 						func(client *service.DatabricksClient, id string) error {
 							resp, err := client.Permissions().Read(id)
 							if err != nil {
@@ -409,7 +411,7 @@ func TestAccDatabricksPermissionsResourceFullLifecycle(t *testing.T) {
 			},
 			{
 				Config: testClusterPolicyPermissionsSecondGroupAdded(randomName),
-				Check: testAccIDCallback(t, "databricks_permissions.dummy_can_use",
+				Check: epoch.ResourceCheck("databricks_permissions.dummy_can_use",
 					func(client *service.DatabricksClient, id string) error {
 						resp, err := client.Permissions().Read(id)
 						if err != nil {
@@ -481,9 +483,11 @@ func testClusterPolicyPermissionsSecondGroupAdded(name string) string {
 }
 
 func TestAccNotebookPermissions(t *testing.T) {
+	// TODO: fails with big run...
 	randomName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
 	resource.Test(t, resource.TestCase{
 		Providers: testAccProviders,
+		IsUnitTest: true,
 		Steps: []resource.TestStep{
 			{
 				// create a resource

@@ -333,7 +333,7 @@ func resourceInstancePoolUpdate(d *schema.ResourceData, m interface{}) error {
 	id := d.Id()
 	client := m.(*service.DatabricksClient)
 
-	var instancePoolInfo model.InstancePoolInfo
+	var instancePoolInfo model.InstancePoolAndStats
 	instancePoolInfo.InstancePoolName = d.Get("instance_pool_name").(string)
 	instancePoolInfo.MinIdleInstances = int32(d.Get("min_idle_instances").(int))
 	instancePoolInfo.MaxCapacity = int32(d.Get("max_capacity").(int))

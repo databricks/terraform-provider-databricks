@@ -90,7 +90,8 @@ $ docker run -it -v $(pwd):/workpace -w /workpace databricks-terraform apply
 ## Testing
 
 * [ ] Integration tests should be run at a client level against both azure and aws to maintain sdk parity against both apis **(currently only on one cloud)**
-* [x] Terraform acceptance tests should be run against both aws and azure to maintain parity of provider between both cloud services **(currently only on one cloud)**
+* [x] Terraform acceptance tests should be run against both aws and azure to maintain parity of provider between both cloud services
+* [ ] Consider test functions as scenarios, that you are debugging from IDE when specific issues arise. Test tables are discouraged. Single-use functions in tests are discouraged, unless resource definitions they make are longer than 80 lines.
 
 ## Code conventions
 
@@ -168,7 +169,7 @@ Terraform SDK provides `randomName := acctest.RandStringFromCharSet(10, acctest.
 
 ## Cloud Specific testing
 
-Basic cloud-integration test should have prefix `TestAcc` if it is supposed to run on both clouds. Client must be created with `NewClientFromEnvironment()` as described in the following snippet:
+Basic cloud-integration test should have prefix `TestAcc` if it is supposed to run on both clouds. One must aim to write integration tests that will run on all clouds without causing panic under any circumstance. Client must be created with `NewClientFromEnvironment()` as described in the following snippet:
 
 ```go
 func TestAccListClustersIntegration(t *testing.T) {

@@ -8,6 +8,7 @@ import (
 
 	"github.com/databrickslabs/databricks-terraform/client/model"
 	"github.com/databrickslabs/databricks-terraform/client/service"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 	"github.com/stretchr/testify/assert"
@@ -18,12 +19,8 @@ func TestAccGroupMemberResource(t *testing.T) {
 		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
 	}
 	var group model.Group
-	// generate a random name for each tokenInfo test run, to avoid
-	// collisions from multiple concurrent tests.
-	// the acctest package includes many helpers such as RandStringFromCharSet
-	// See https://godoc.org/github.com/hashicorp/terraform-plugin-sdk/helper/acctest
-
-	groupName := "group test"
+	randomName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
+	groupName := "Terraform Integration " + randomName
 	var manuallyCreatedGroup *model.Group
 	defer func() {
 		client := testAccProvider.Meta().(*service.DatabricksClient)
@@ -58,7 +55,7 @@ func TestAccGroupMemberResource(t *testing.T) {
 				PreConfig: func() {
 					//	manually create subgroup c
 					client := testAccProvider.Meta().(*service.DatabricksClient)
-					subGroupC, _ := client.Groups().Create("manually-created-group", nil, nil, nil)
+					subGroupC, _ := client.Groups().Create("manually-created-group-" + randomName, nil, nil, nil)
 					manuallyCreatedGroup = &subGroupC
 					//  Add new subgroup to current group
 					err := client.Groups().Patch(group.ID, []string{manuallyCreatedGroup.ID}, nil, model.GroupMembersPath)

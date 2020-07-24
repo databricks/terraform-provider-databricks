@@ -42,8 +42,8 @@ type InstancePoolStats struct {
 	PendingIdleCount int32 `json:"pending_idle_count,omitempty"`
 }
 
-// InstancePoolInfo encapsulates a get response from the GET api for instance pools on Databricks
-type InstancePoolInfo struct {
+// InstancePoolAndStats encapsulates a get response from the GET api for instance pools on Databricks
+type InstancePoolAndStats struct {
 	InstancePoolID                     string                     `json:"instance_pool_id,omitempty"`
 	InstancePoolName                   string                     `json:"instance_pool_name,omitempty"`
 	MinIdleInstances                   int32                      `json:"min_idle_instances,omitempty"`
@@ -58,4 +58,9 @@ type InstancePoolInfo struct {
 	PreloadedSparkVersions             []string                   `json:"preloaded_spark_versions,omitempty"`
 	State                              string                     `json:"state,omitempty"`
 	Stats                              *InstancePoolStats         `json:"stats,omitempty"`
+}
+
+// InstancePoolList shows list of instance pools
+type InstancePoolList struct {
+	InstancePools []InstancePoolAndStats `json:"instance_pools"`
 }

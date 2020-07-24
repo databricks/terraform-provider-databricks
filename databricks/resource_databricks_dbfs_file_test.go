@@ -392,6 +392,7 @@ func TestAccDatabricksDBFSFile_CreateViaContent(t *testing.T) {
 	content := acctest.RandString(10000)
 	base64Str := base64.StdEncoding.EncodeToString([]byte(content))
 	path := "/tmp/tf-test/file-content1"
+	// TODO: add random names
 
 	resource.Test(t, resource.TestCase{
 		Providers:    testAccProviders,

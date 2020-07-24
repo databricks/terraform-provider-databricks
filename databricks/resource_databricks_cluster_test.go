@@ -24,11 +24,11 @@ func testGetAwsAttributes(attributesMap map[string]string) string {
 	return awsAttr.String()
 }
 
-func testGetClusterInstancePoolConfig(instancePoolId string) string {
-	if reflect.ValueOf(instancePoolId).IsZero() {
+func testGetClusterInstancePoolConfig(instancePoolID string) string {
+	if reflect.ValueOf(instancePoolID).IsZero() {
 		return ""
 	}
-	return fmt.Sprintf("instance_pool_id = \"%s\"\n", instancePoolId)
+	return fmt.Sprintf("instance_pool_id = \"%s\"\n", instancePoolID)
 }
 
 func testDefaultZones() string {
@@ -55,30 +55,31 @@ resource "databricks_instance_pool" "my_pool" {
 
 func testDefaultClusterResource(instancePool, awsAttributes string) string {
 	return fmt.Sprintf(`
-								resource "databricks_cluster" "test_cluster" {
-								  cluster_name = "test-cluster-browser"
-								  %s
-								  spark_version = "6.6.x-scala2.11"
-								  autoscale {
-									min_workers = 1
-									max_workers = 2
-								  }
-								  %s
-								  autotermination_minutes = 10
-								  spark_conf = {
-									"spark.databricks.cluster.profile" = "serverless"
-									"spark.databricks.repl.allowedLanguages" = "sql,python,r"
-									"spark.hadoop.fs.s3a.canned.acl" = "BucketOwnerFullControl"
-									"spark.hadoop.fs.s3a.acl.default" = "BucketOwnerFullControl"
-								  }
-								  custom_tags = {
-									"ResourceClass" = "Serverless"
-								  }
-								}`, instancePool, awsAttributes)
+	resource "databricks_cluster" "test_cluster" {
+		cluster_name = "test-cluster-browser"
+		%s
+		spark_version = "6.6.x-scala2.11"
+		autoscale {
+		min_workers = 1
+		max_workers = 2
+		}
+		%s
+		autotermination_minutes = 10
+		spark_conf = {
+		"spark.databricks.cluster.profile" = "serverless"
+		"spark.databricks.repl.allowedLanguages" = "sql,python,r"
+		"spark.hadoop.fs.s3a.canned.acl" = "BucketOwnerFullControl"
+		"spark.hadoop.fs.s3a.acl.default" = "BucketOwnerFullControl"
+		}
+		custom_tags = {
+		"ResourceClass" = "Serverless"
+		}
+	}`, instancePool, awsAttributes)
 }
 
 func TestAwsAccClusterResource_ValidatePlan(t *testing.T) {
-	awsAttrNoZoneId := map[string]string{}
+	// TODO: refactor for common instance pool & AZ CLI
+	awsAttrNoZoneID := map[string]string{}
 	awsAttrInstanceProfile := map[string]string{
 		"instance_profile_arn": "my_instance_profile_arn",
 	}
@@ -87,7 +88,7 @@ func TestAwsAccClusterResource_ValidatePlan(t *testing.T) {
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config:             testDefaultClusterResource(instancePoolLine, testGetAwsAttributes(awsAttrNoZoneId)),
+				Config:             testDefaultClusterResource(instancePoolLine, testGetAwsAttributes(awsAttrNoZoneID)),
 				PlanOnly:           true,
 				ExpectNonEmptyPlan: true,
 			},
@@ -171,17 +172,15 @@ resource "databricks_instance_pool" "my_pool" {
 
 func TestAzureAccClusterResource_CreateClusterViaInstancePool(t *testing.T) {
 	randomInstancePoolName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
-	randomStr := acctest.RandStringFromCharSet(5, acctest.CharSetAlphaNum)
-	instanceProfile := fmt.Sprintf("arn:aws:iam::999999999999:instance-profile/%s", randomStr)
 	var clusterInfo model.ClusterInfo
 
 	instancePoolLine := testGetClusterInstancePoolConfig("${databricks_instance_pool.my_pool.id}")
-	resourceConfig := testAWSDatabricksInstanceProfile(instanceProfile) +
-		testDefaultAzureInstancePoolResource("", randomInstancePoolName) +
+	resourceConfig := testDefaultAzureInstancePoolResource("", randomInstancePoolName) +
 		testDefaultClusterResource(instancePoolLine, "")
 
 	resource.Test(t, resource.TestCase{
 		Providers: testAccProviders,
+		IsUnitTest: true,
 		Steps: []resource.TestStep{
 			{
 				Config: resourceConfig,

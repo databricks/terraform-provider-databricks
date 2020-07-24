@@ -13,14 +13,16 @@ import (
 )
 
 func TestAzureAccBlobMount_correctly_mounts(t *testing.T) {
+	// TODO: refactor for common instance pool & AZ CLI
 	if _, ok := os.LookupEnv("CLOUD_ENV"); !ok {
 		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
 	}
-	terraformToApply := testBlobMountCorrectlyMounts()
+	terraformToApply := testBlobMountCorrectlyMounts(t)
 	var clusterInfo model.ClusterInfo
 	var azureBlobMount AzureBlobMount
 
 	resource.Test(t, resource.TestCase{
+		IsUnitTest: true,
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -46,10 +48,11 @@ func TestAzureAccBlobMount_correctly_mounts(t *testing.T) {
 }
 
 func TestAzureAccBlobMount_cluster_deleted_correctly_mounts(t *testing.T) {
+	// TODO: refactor for common instance pool & AZ CLI
 	if _, ok := os.LookupEnv("CLOUD_ENV"); !ok {
 		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
 	}
-	terraformToApply := testBlobMountCorrectlyMounts()
+	terraformToApply := testBlobMountCorrectlyMounts(t)
 	var clusterInfo model.ClusterInfo
 	var azureBlobMount AzureBlobMount
 
@@ -132,16 +135,19 @@ func testBlobMountMountExists(n string, azureBlobMount *AzureBlobMount, clusterI
 	}
 }
 
-func testBlobMountCorrectlyMounts() string {
+func testBlobMountCorrectlyMounts(t *testing.T) string {
 	blobAccountKey := os.Getenv("TEST_STORAGE_ACCOUNT_KEY")
 	blobAccountName := os.Getenv("TEST_STORAGE_ACCOUNT_NAME")
+	if blobAccountKey == "" || blobAccountName == "" {
+		t.Skipf("Missing keys in environment")
+	}
 
 	definition := fmt.Sprintf(`
 	resource "databricks_cluster" "cluster" {
 		num_workers = 1
-		spark_version = "6.4.x-scala2.11"
-		node_type_id = "Standard_D3_v2"
-		# Don't spend too much, turn off cluster after 15mins
+		cluster_name = "%[5]s"
+		spark_version = "%[3]s"
+		instance_pool_id = "%[4]s"
 		autotermination_minutes = 15
 		spark_conf = {
 			"spark.databricks.delta.preview.enabled": "false"
@@ -171,6 +177,7 @@ func testBlobMountCorrectlyMounts() string {
 		token_secret_key     = databricks_secret.storage_key.key
 	}
 
-`, blobAccountKey, blobAccountName)
+`, blobAccountKey, blobAccountName, service.CommonRuntimeVersion(), 
+service.CommonInstancePoolID(), t.Name())
 	return definition
 }

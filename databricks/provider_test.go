@@ -5,9 +5,11 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"sync"
 	"testing"
 	"time"
 
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
@@ -15,6 +17,7 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/stretchr/testify/assert"
 
+	"github.com/databrickslabs/databricks-terraform/client/model"
 	"github.com/databrickslabs/databricks-terraform/client/service"
 )
 
@@ -43,16 +46,53 @@ func getMWSClient() *service.DatabricksClient {
 	return &client
 }
 
+var (
+	once  sync.Once
+	epoch testEpoch
+)
+
+type testEpoch struct {
+	instancePool *model.InstancePoolAndStats
+	client       *service.DatabricksClient
+}
+
+func (e *testEpoch) RandomShortName() string {
+	return acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
+}
+
+func (e *testEpoch) RandomLongName() string {
+	return "Terraform Integration Test " + e.RandomShortName()
+}
+
+func (e *testEpoch) ResourceCheck(name string, 
+	cb func(client *service.DatabricksClient, id string) error) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[name]
+		if !ok {
+			return fmt.Errorf("Not found: %s", name)
+		}
+		client := testAccProvider.Meta().(*service.DatabricksClient)
+		return cb(client, rs.Primary.ID)
+	}
+}
+
 func TestMain(m *testing.M) {
 	// This should not be asserted as it may not always be set for all tests
 	// TODO: add common instance pool & cluster for libs & stuff
 	cloudEnv := os.Getenv("CLOUD_ENV")
 	envFileName := fmt.Sprintf("../.%s.env", cloudEnv)
 	err := godotenv.Load(envFileName)
-	if err != nil {
-		log.Println("Failed to load environment")
+	if !os.IsNotExist(err) {
+		log.Printf("[WARN] Failed to load environment: %s", err)
 	}
+	once.Do(func() { // atomic
+		log.Printf("[INFO] Initializing test epoch")
+		epoch = testEpoch{} // thread safe
+	})
 	code := m.Run()
+
+	// TODO: make a teardown
+	// epoch.tearDown()
 	os.Exit(code)
 }
 

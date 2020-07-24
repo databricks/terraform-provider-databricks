@@ -6,29 +6,25 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/stretchr/testify/assert"
 
-	"github.com/databrickslabs/databricks-terraform/client/model"
 	"github.com/databrickslabs/databricks-terraform/client/service"
 )
 
 func TestAccClusterPolicyResourceFullLifecycle(t *testing.T) {
-	var policy model.ClusterPolicy
 	randomName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
 	resource.Test(t, resource.TestCase{
+		IsUnitTest: true,
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
 				// create a resource
 				Config: testExternalMetastore(randomName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccIDCallback(t, "databricks_cluster_policy.external_metastore",
+					epoch.ResourceCheck("databricks_cluster_policy.external_metastore",
 						func(client *service.DatabricksClient, id string) error {
-							resp, err := client.ClusterPolicies().Get(id)
-							if err != nil {
-								return err
-							}
-							policy = *resp
+							policy, err := client.ClusterPolicies().Get(id)
+							assert.NoError(t, err)
 							if policy.Definition == "" {
 								return fmt.Errorf("Empty policy definition found")
 							}
@@ -47,7 +43,7 @@ func TestAccClusterPolicyResourceFullLifecycle(t *testing.T) {
 			{
 				Config:  testExternalMetastore(randomName + ": UPDATED"),
 				Destroy: true,
-				Check: testAccIDCallback(t, "databricks_cluster_policy.external_metastore",
+				Check: epoch.ResourceCheck("databricks_cluster_policy.external_metastore",
 					func(client *service.DatabricksClient, id string) error {
 						resp, err := client.ClusterPolicies().Get(id)
 						if err == nil {
@@ -59,7 +55,7 @@ func TestAccClusterPolicyResourceFullLifecycle(t *testing.T) {
 			{
 				// and create it again
 				Config: testExternalMetastore(randomName + ": UPDATED"),
-				Check: testAccIDCallback(t, "databricks_cluster_policy.external_metastore",
+				Check: epoch.ResourceCheck("databricks_cluster_policy.external_metastore",
 					func(client *service.DatabricksClient, id string) error {
 						_, err := client.ClusterPolicies().Get(id)
 						if err != nil {
@@ -70,18 +66,6 @@ func TestAccClusterPolicyResourceFullLifecycle(t *testing.T) {
 			},
 		},
 	})
-}
-
-func testAccIDCallback(t *testing.T, name string, cb func(client *service.DatabricksClient, id string) error) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
-		if !ok {
-			return fmt.Errorf("Not found: %s", name)
-		}
-		client := testAccProvider.Meta().(*service.DatabricksClient)
-		err := cb(client, rs.Primary.ID)
-		return err
-	}
 }
 
 func testExternalMetastore(name string) string {

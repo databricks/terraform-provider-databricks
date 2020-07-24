@@ -6,7 +6,6 @@ import (
 	"testing"
 
 	"github.com/databrickslabs/databricks-terraform/client/model"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -685,30 +684,8 @@ func TestAccContext(t *testing.T) {
 	if cloud == "" {
 		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
 	}
-	client := NewClientFromEnvironment()
-	randomName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
-	cluster := model.Cluster{
-		NumWorkers:  1,
-		ClusterName: "Terraform Integration Test " + randomName,
-		SparkEnvVars: map[string]string{
-			"PYSPARK_PYTHON": "/databricks/python3/bin/python3",
-		},
-		SparkVersion:           "6.2.x-scala2.11",
-		NodeTypeID:             GetCloudInstanceType(client),
-		DriverNodeTypeID:       GetCloudInstanceType(client),
-		IdempotencyToken:       "commands-" + randomName,
-		AutoterminationMinutes: 20,
-	}
-
-	if cloud == "AWS" {
-		cluster.AwsAttributes = &model.AwsAttributes{
-			EbsVolumeType:  model.EbsVolumeTypeGeneralPurposeSsd,
-			EbsVolumeCount: 1,
-			EbsVolumeSize:  32,
-		}
-	}
-
-	clusterInfo, err := client.Clusters().Create(cluster)
+	client := CommonEnvironmentClient()
+	clusterInfo, err := NewTinyClusterInCommonPool()
 	assert.NoError(t, err, err)
 	defer func() {
 		err := client.Clusters().PermanentDelete(clusterInfo.ClusterID)
@@ -716,32 +693,32 @@ func TestAccContext(t *testing.T) {
 	}()
 
 	clusterID := clusterInfo.ClusterID
-
-	// TODO: Cluster is in a non runnable state will not be able to transition to running, needs to be started again. Current state: TERMINATED
 	err = client.Clusters().WaitForClusterRunning(clusterID, 10, 20)
 	assert.NoError(t, err, err)
 
 	context, err := client.Commands().createContext("python", clusterID)
-	assert.NoError(t, err, err)
-	t.Log(context)
 
-	err = client.Commands().waitForContextReady(context, clusterID, 1, 1)
-	assert.NoError(t, err, err)
-
-	status, err := client.Commands().getContext(context, clusterID)
-	assert.NoError(t, err, err)
-	assert.True(t, status == "Running")
-	t.Log(status)
-
-	commandID, err := client.Commands().createCommand(context, clusterID, "python", "print('hello world')")
-	assert.NoError(t, err, err)
-
-	err = client.Commands().waitForCommandFinished(commandID, context, clusterID, 5, 20)
-	assert.NoError(t, err, err)
-
-	resp, err := client.Commands().getCommand(commandID, context, clusterID)
-	assert.NoError(t, err, err)
-	assert.NotNil(t, resp.Results.Data)
+	if assert.NoError(t, err, err) {
+		t.Log(context)
+	
+		err = client.Commands().waitForContextReady(context, clusterID, 1, 1)
+		assert.NoError(t, err, err)
+	
+		status, err := client.Commands().getContext(context, clusterID)
+		assert.NoError(t, err, err)
+		assert.True(t, status == "Running")
+		t.Log(status)
+	
+		commandID, err := client.Commands().createCommand(context, clusterID, "python", "print('hello world')")
+		assert.NoError(t, err, err)
+	
+		err = client.Commands().waitForCommandFinished(commandID, context, clusterID, 5, 20)
+		assert.NoError(t, err, err)
+	
+		resp, err := client.Commands().getCommand(commandID, context, clusterID)
+		assert.NoError(t, err, err)
+		assert.NotNil(t, resp.Results.Data)
+	}
 
 	// Testing the public api Execute
 	command, err := client.Commands().Execute(clusterID, "python", "print('hello world')")

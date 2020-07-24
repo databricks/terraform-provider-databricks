@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/databrickslabs/databricks-terraform/client/model"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -1062,15 +1061,14 @@ func TestAccListClustersIntegration(t *testing.T) {
 		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
 	}
 
-	client := NewClientFromEnvironment()
-	randomName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
+	client := CommonEnvironmentClient()
+	randomName := randomName()
 
 	cluster := model.Cluster{
 		NumWorkers:             1,
 		ClusterName:            "Terraform Integration Test " + randomName,
-		SparkVersion:           "6.2.x-scala2.11",
-		NodeTypeID:             GetCloudInstanceType(client),
-		DriverNodeTypeID:       GetCloudInstanceType(client),
+		SparkVersion:           CommonRuntimeVersion(),
+		InstancePoolID:         CommonInstancePoolID(),
 		IdempotencyToken:       "acc-list-" + randomName,
 		AutoterminationMinutes: 15,
 	}
@@ -1092,8 +1090,6 @@ func TestAccListClustersIntegration(t *testing.T) {
 	assert.True(t, clusterReadInfo.ClusterName == cluster.ClusterName)
 	assert.True(t, reflect.DeepEqual(clusterReadInfo.SparkEnvVars, cluster.SparkEnvVars))
 	assert.True(t, clusterReadInfo.SparkVersion == cluster.SparkVersion)
-	assert.True(t, clusterReadInfo.NodeTypeID == cluster.NodeTypeID)
-	assert.True(t, clusterReadInfo.DriverNodeTypeID == cluster.DriverNodeTypeID)
 	assert.True(t, clusterReadInfo.AutoterminationMinutes == cluster.AutoterminationMinutes)
 
 	defer func() {

@@ -36,8 +36,8 @@ func (a ClusterPoliciesAPI) Edit(clusterPolicy *model.ClusterPolicy) error {
 }
 
 // Get returns cluster policy
-func (a ClusterPoliciesAPI) Get(policyID string) (policy *model.ClusterPolicy, err error) {
-	err = a.client.get("/policies/clusters/get", policyIDWrapper{policyID}, policy)
+func (a ClusterPoliciesAPI) Get(policyID string) (policy model.ClusterPolicy, err error) {
+	err = a.client.get("/policies/clusters/get", policyIDWrapper{policyID}, &policy)
 	return
 }
 

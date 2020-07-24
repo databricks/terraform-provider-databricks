@@ -16,7 +16,7 @@ import (
 )
 
 func TestMain(m *testing.M) {
-	err := godotenv.Load("../../.env")
+	err := godotenv.Load("../../.env") // TODO: make teardowns work here as well
 	// TODO: add common instance pool & cluster for libs & stuff
 	log.SetFlags(log.Lshortfile | log.Ltime)
 	if err != nil {

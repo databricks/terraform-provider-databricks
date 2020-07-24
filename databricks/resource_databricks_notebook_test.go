@@ -256,6 +256,7 @@ func TestNotebooksDelete_TooManyRequests(t *testing.T) {
 }
 
 func TestAccNotebookResourceScalability(t *testing.T) {
+	// TODO: refactor for common instance pool & AZ CLI
 	if _, ok := os.LookupEnv("CLOUD_ENV"); !ok {
 		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
 	}

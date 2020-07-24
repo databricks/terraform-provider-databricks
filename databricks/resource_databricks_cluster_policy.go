@@ -40,7 +40,7 @@ func resourceClusterPolicyRead(d *schema.ResourceData, m interface{}) error {
 	client := m.(*service.DatabricksClient)
 	clusterPolicy, err := client.ClusterPolicies().Get(d.Id())
 	if e, ok := err.(service.APIError); ok && e.IsMissing() {
-		log.Printf("missing resource due to error: %v\n", e)
+		log.Printf("[ERROR] missing resource due to error: %v\n", e)
 		d.SetId("")
 		return nil
 	}

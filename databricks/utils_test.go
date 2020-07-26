@@ -387,6 +387,7 @@ func ResourceTester(t *testing.T,
 					expectedRequest += fmt.Sprintf("					%s: %#v,\n", camel, value)
 				}
 				expectedRequest += "				},\n"
+				expectedRequest += fmt.Sprintf("				// ExpectedRequest: %#v,\n", receivedRequest)
 			}
 			stub := fmt.Sprintf(`{
 				Method:   "%s",

@@ -182,3 +182,155 @@ func testBlobMountCorrectlyMounts(t *testing.T) string {
 		service.CommonInstancePoolID(), t.Name())
 	return definition
 }
+
+func TestResourceAzureBlobMountCreate(t *testing.T) {
+	t.Skip("Skipping test until retry timeouts are re-enabled again")
+	d, err := ResourceTester(t, []HTTPFixture{
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/clusters/get?cluster_id=b",
+			Response: model.ClusterInfo{
+				State: "RUNNING",
+			},
+		},
+		{
+			Method:   "POST",
+			Resource: "/api/1.2/contexts/create",
+			ExpectedRequest: map[string]interface{}{
+				"clusterId": "b",
+				"language":  "python",
+			},
+			Response: map[string]interface{}{
+				"id": "789",
+			},
+		},
+		{
+			Method:   "GET",
+			Resource: "/api/1.2/contexts/status?clusterId=b&contextId=789",
+			Response: model.Command{
+				Status: "Running",
+			},
+		},
+		{
+			Method:   "POST",
+			Resource: "/api/1.2/commands/execute",
+			ExpectedRequest: map[string]interface{}{
+				"clusterId": "b",
+				// TODO: eventually make generic ident-whitespace ignoring function
+				"command": "\nfor mount in dbutils.fs.mounts():\n  if mount.mountPoint == \"/mnt/e\" and mount.source==\"wasbs://c@f.blob.core.windows.net/d\":\n" +
+					"    print (\"Mount already exists\")\n    dbutils.notebook.exit(\"success\")\n\ntry:\n  dbutils.fs.mount(\n" +
+					"    source = \"wasbs://c@f.blob.core.windows.net/d\",\n    mount_point = \"/mnt/e\",\n    " +
+					"extra_configs = {\"fs.azure.account.key.f.blob.core.windows.net\":dbutils.secrets.get(scope = \"h\", key = \"g\")})\n" +
+					"except Exception as e:\n  dbutils.fs.unmount(\"/mnt/e\")\n  raise e\ndbutils.notebook.exit(\"success\")\n",
+				"contextId": "789",
+				"language":  "python"},
+			Response: map[string]interface{}{
+				"id": "876",
+			},
+		},
+		{
+			Method:   "GET",
+			Resource: "/api/1.2/commands/status?clusterId=b&commandId=876&contextId=789",
+			Response: model.Command{
+				Status: "Finished",
+			},
+		},
+		{
+			Method:   "GET",
+			Resource: "/api/1.2/commands/status?clusterId=b&commandId=876&contextId=789",
+			Response: model.Command{
+				Status: "Finished",
+				Results: &model.CommandResults{
+					ResultType: "success",
+				},
+			},
+		},
+		{
+			Method:   "POST",
+			Resource: "/api/1.2/contexts/destroy",
+			ExpectedRequest: map[string]interface{}{
+				"clusterId": "b",
+				"contextId": "789",
+			},
+		},
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/clusters/get?cluster_id=b",
+			Response: model.ClusterInfo{
+				State: "RUNNING",
+			},
+		},
+		{
+			Method:   "POST",
+			Resource: "/api/1.2/contexts/create",
+			ExpectedRequest: map[string]interface{}{
+				"clusterId": "b",
+				"language":  "python",
+			},
+			Response: map[string]interface{}{
+				"id": "987",
+			},
+		},
+		{
+			Method:   "GET",
+			Resource: "/api/1.2/contexts/status?clusterId=b&contextId=987",
+			Response: model.Command{
+				Status: "Running",
+			},
+		},
+		{
+			Method:   "POST",
+			Resource: "/api/1.2/commands/execute",
+			ExpectedRequest: map[string]interface{}{
+				"clusterId": "b",
+				"command":   "\nfor mount in dbutils.fs.mounts():\n  if mount.mountPoint == \"/mnt/e\":\n    dbutils.notebook.exit(mount.source)\n",
+				"contextId": "987",
+				"language":  "python",
+			},
+			Response: map[string]interface{}{
+				"id": "678",
+			},
+		},
+		{
+			Method:   "GET",
+			Resource: "/api/1.2/commands/status?clusterId=b&commandId=678&contextId=987",
+			Response: model.Command{
+				Status: "Finished",
+				Results: &model.CommandResults{
+					ResultType: "success",
+				},
+			},
+		},
+		{
+			Method:   "GET",
+			Resource: "/api/1.2/commands/status?clusterId=b&commandId=678&contextId=987",
+			Response: model.Command{
+				Status: "Finished",
+				Results: &model.CommandResults{
+					ResultType: "success",
+					Data:       "wa.wb.wc",
+				},
+			},
+		},
+		{
+			Method:   "POST",
+			Resource: "/api/1.2/contexts/destroy",
+			ExpectedRequest: map[string]interface{}{
+				"clusterId": "b",
+				"contextId": "987",
+			},
+		},
+	}, resourceAzureBlobMount, map[string]interface{}{
+		"auth_type":            "ACCESS_KEY",
+		"cluster_id":           "b",
+		"container_name":       "c",
+		"directory":            "/d",
+		"mount_name":           "e",
+		"storage_account_name": "f",
+		"token_secret_key":     "g",
+		"token_secret_scope":   "h",
+	}, resourceAzureBlobMountCreate)
+	assert.NoError(t, err, err)
+	assert.Equal(t, "e", d.Id())
+	assert.Equal(t, "wa.wb.wc", d.Get("directory"))
+}

@@ -47,7 +47,7 @@ func TestValidateNotebookPath(t *testing.T) {
 	}
 }
 
-func TestNotebooksCreate_DirDoesNotExists(t *testing.T) {
+func TestResourceNotebookCreate_DirDoesNotExists(t *testing.T) {
 	pythonNotebookDataB64, err := notebookToB64("testdata/tf-test-python.py")
 	assert.NoError(t, err, err)
 	checkSum, err := convertBase64ToCheckSum(pythonNotebookDataB64)
@@ -121,7 +121,7 @@ func TestNotebooksCreate_DirDoesNotExists(t *testing.T) {
 	assert.Equal(t, objectId, d.Get("object_id"))
 }
 
-func TestNotebooksCreate_NoMkdirs(t *testing.T) {
+func TestResourceNotebookCreate_NoMkdirs(t *testing.T) {
 	pythonNotebookDataB64, err := notebookToB64("testdata/tf-test-python.py")
 	assert.NoError(t, err, err)
 	checkSum, err := convertBase64ToCheckSum(pythonNotebookDataB64)
@@ -175,7 +175,7 @@ func TestNotebooksCreate_NoMkdirs(t *testing.T) {
 	assert.Equal(t, objectId, d.Get("object_id"))
 }
 
-func TestNotebooksRead(t *testing.T) {
+func TestResourceNotebookRead(t *testing.T) {
 	pythonNotebookDataB64, err := notebookToB64("testdata/tf-test-python.py")
 	assert.NoError(t, err, err)
 	checkSum, err := convertBase64ToCheckSum(pythonNotebookDataB64)
@@ -216,7 +216,7 @@ func TestNotebooksRead(t *testing.T) {
 	assert.Equal(t, objectId, d.Get("object_id"))
 }
 
-func TestNotebooksDelete(t *testing.T) {
+func TestResourceNotebookDelete(t *testing.T) {
 	testId := "/test/path.py"
 	d, err := ResourceTester(t, []HTTPFixture{
 		{
@@ -233,7 +233,7 @@ func TestNotebooksDelete(t *testing.T) {
 	assert.Equal(t, testId, d.Id())
 }
 
-func TestNotebooksDelete_TooManyRequests(t *testing.T) {
+func TestResourceNotebookDelete_TooManyRequests(t *testing.T) {
 	testId := "/test/path.py"
 	d, err := ResourceTester(t, []HTTPFixture{
 		{
@@ -253,6 +253,117 @@ func TestNotebooksDelete_TooManyRequests(t *testing.T) {
 	})
 	assert.NoError(t, err, err)
 	assert.Equal(t, testId, d.Id())
+}
+
+func TestResourceNotebookRead_NotFound(t *testing.T) {
+	d, err := ResourceTester(t, []HTTPFixture{
+		{ // read log output for correct url...
+			Method:   "GET",
+			Resource: "/api/2.0/workspace/export?format=SOURCE&path=%2Ftest%2Fpath.py",
+			Response: service.APIErrorBody{
+				ErrorCode: "NOT_FOUND",
+				Message:   "Item not found",
+			},
+			Status: 404,
+		},
+	}, resourceNotebook, nil, actionWithID("/test/path.py", resourceNotebookRead))
+	assert.NoError(t, err, err)
+	assert.Equal(t, "", d.Id(), "Id should be empty for missing resources")
+}
+
+func TestResourceNotebookRead_Error(t *testing.T) {
+	d, err := ResourceTester(t, []HTTPFixture{
+		{ // read log output for correct url...
+			Method:   "GET",
+			Resource: "/api/2.0/workspace/export?format=SOURCE&path=%2Ftest%2Fpath.py",
+			Response: service.APIErrorBody{
+				ErrorCode: "INVALID_REQUEST",
+				Message:   "Internal error happened",
+			},
+			Status: 400,
+		},
+	}, resourceNotebook, nil, actionWithID("/test/path.py", resourceNotebookRead))
+	assert.Errorf(t, err, "Internal error happened")
+	assert.Equal(t, "/test/path.py", d.Id(), "Id should not be empty for error reads")
+}
+
+func TestResourceNotebookCreate(t *testing.T) {
+	d, err := ResourceTester(t, []HTTPFixture{
+		{
+			Method:   http.MethodPost,
+			Resource: "/api/2.0/workspace/import",
+			Response: model.NotebookImportRequest{
+				Content:   "YWJjCg==",
+				Path:      "/path.py",
+				Language:  model.Python,
+				Overwrite: true,
+				Format:    model.Source,
+			},
+		},
+		{
+			Method:   http.MethodGet,
+			Resource: "/api/2.0/workspace/export?format=SOURCE&path=%2Fpath.py",
+			Response: model.NotebookContent{
+				Content: "YWJjCg==",
+			},
+		},
+		{
+			Method:   http.MethodGet,
+			Resource: "/api/2.0/workspace/get-status?path=%2Fpath.py",
+			Response: model.WorkspaceObjectStatus{
+				ObjectID:   4567,
+				ObjectType: "NOTEBOOK",
+				Path:       "/path.py",
+				Language:   model.Python,
+			},
+		},
+	}, resourceNotebook, map[string]interface{}{
+		"content":   "YWJjCg==",
+		"format":    "SOURCE",
+		"language":  "PYTHON",
+		"overwrite": true,
+		"path":      "/path.py",
+	}, resourceNotebookCreate)
+	assert.NoError(t, err, err)
+	assert.Equal(t, "/path.py", d.Id())
+}
+
+func TestResourceNotebookCreate_Error(t *testing.T) {
+	d, err := ResourceTester(t, []HTTPFixture{
+		{
+			Method:   http.MethodPost,
+			Resource: "/api/2.0/workspace/import",
+			Response: service.APIErrorBody{
+				ErrorCode: "INVALID_REQUEST",
+				Message:   "Internal error happened",
+			},
+			Status: 400,
+		},
+	}, resourceNotebook, map[string]interface{}{
+		"content":   "YWJjCg==",
+		"format":    "SOURCE",
+		"language":  "PYTHON",
+		"overwrite": true,
+		"path":      "/path.py",
+	}, resourceNotebookCreate)
+	assert.Errorf(t, err, "Internal error happened")
+	assert.Equal(t, "", d.Id(), "Id should be empty for error creates")
+}
+
+func TestResourceNotebookDelete_Error(t *testing.T) {
+	d, err := ResourceTester(t, []HTTPFixture{
+		{
+			Method:   "POST",
+			Resource: "/api/2.0/workspace/delete",
+			Response: service.APIErrorBody{
+				ErrorCode: "INVALID_REQUEST",
+				Message:   "Internal error happened",
+			},
+			Status: 400,
+		},
+	}, resourceNotebook, nil, actionWithID("abc", resourceNotebookDelete))
+	assert.Errorf(t, err, "Internal error happened")
+	assert.Equal(t, "abc", d.Id())
 }
 
 func TestAccNotebookResourceScalability(t *testing.T) {

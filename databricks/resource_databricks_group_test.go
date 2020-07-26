@@ -166,3 +166,188 @@ func testDatabricksGroupEntitlements(groupName, allowClusterCreate, allowPoolCre
 		}
 		`, groupName, allowClusterCreate, allowPoolCreate)
 }
+
+func TestResourceGroupCreate(t *testing.T) {
+	d, err := ResourceTester(t, []HTTPFixture{
+		{
+			Method:   "POST",
+			Resource: "/api/2.0/preview/scim/v2/Groups",
+			ExpectedRequest: model.Group{
+				Schemas:     []model.URN{"urn:ietf:params:scim:schemas:core:2.0:Group"},
+				DisplayName: "Data Scientists",
+			},
+			Response: model.Group{
+				ID: "abc",
+			},
+		},
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/preview/scim/v2/Groups/abc?",
+			Response: model.Group{
+				Schemas:     []model.URN{"urn:ietf:params:scim:schemas:core:2.0:Group"},
+				DisplayName: "Data Scientists",
+				ID:          "abc",
+			},
+		},
+	}, resourceGroup, map[string]interface{}{
+		"display_name": "Data Scientists",
+	}, resourceGroupCreate)
+	assert.NoError(t, err, err)
+	assert.Equal(t, "abc", d.Id())
+}
+
+func TestResourceGroupCreate_Error(t *testing.T) {
+	d, err := ResourceTester(t, []HTTPFixture{
+		{
+			Method:   "POST",
+			Resource: "/api/2.0/preview/scim/v2/Groups",
+			Response: service.APIErrorBody{
+				ErrorCode: "INVALID_REQUEST",
+				Message:   "Internal error happened",
+			},
+			Status: 400,
+		},
+	}, resourceGroup, map[string]interface{}{
+		"display_name": "Data Scientists",
+	}, resourceGroupCreate)
+	assert.Errorf(t, err, "Internal error happened")
+	assert.Equal(t, "", d.Id(), "Id should be empty for error creates")
+}
+
+func TestResourceGroupRead(t *testing.T) {
+	d, err := ResourceTester(t, []HTTPFixture{
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/preview/scim/v2/Groups/abc?",
+			Response: model.Group{
+				Schemas:     []model.URN{"urn:ietf:params:scim:schemas:core:2.0:Group"},
+				DisplayName: "Data Scientists",
+				ID:          "abc",
+			},
+		},
+	}, resourceGroup, nil, actionWithID("abc", resourceGroupRead))
+	assert.NoError(t, err, err)
+	assert.Equal(t, "abc", d.Id(), "Id should not be empty")
+	assert.Equal(t, false, d.Get("allow_cluster_create"))
+	assert.Equal(t, false, d.Get("allow_instance_pool_create"))
+	assert.Equal(t, "Data Scientists", d.Get("display_name"))
+}
+
+func TestResourceGroupRead_NotFound(t *testing.T) {
+	d, err := ResourceTester(t, []HTTPFixture{
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/preview/scim/v2/Groups/abc?",
+			Response: service.APIErrorBody{
+				ErrorCode: "NOT_FOUND",
+				Message:   "Item not found",
+			},
+			Status: 404,
+		},
+	}, resourceGroup, nil, actionWithID("abc", resourceGroupRead))
+	assert.NoError(t, err, err)
+	assert.Equal(t, "", d.Id(), "Id should be empty for missing resources")
+}
+
+func TestResourceGroupRead_Error(t *testing.T) {
+	d, err := ResourceTester(t, []HTTPFixture{
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/preview/scim/v2/Groups/abc?",
+			Response: service.APIErrorBody{
+				ErrorCode: "INVALID_REQUEST",
+				Message:   "Internal error happened",
+			},
+			Status: 400,
+		},
+	}, resourceGroup, nil, actionWithID("abc", resourceGroupRead))
+	assert.Errorf(t, err, "Internal error happened")
+	assert.Equal(t, "abc", d.Id(), "Id should not be empty for error reads")
+}
+
+func TestResourceGroupUpdate(t *testing.T) {
+	d, err := ResourceTester(t, []HTTPFixture{
+		{
+			Method:   "PATCH",
+			Resource: "/api/2.0/preview/scim/v2/Groups/abc",
+			Response: model.GroupPatchRequest{
+				Schemas: []model.URN{"urn:ietf:params:scim:api:messages:2.0:PatchOp"},
+				Operations: []model.GroupPatchOperations{
+					{
+						Op:   "add",
+						Path: "entitlements",
+						Value: []model.ValueListItem{
+							{
+								Value: "allow-cluster-create",
+							},
+						},
+					},
+					{
+						Op:   "remove",
+						Path: "entitlements[value eq \"allow-cluster-create\"]",
+					},
+				},
+			},
+		},
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/preview/scim/v2/Groups/abc?",
+			Response: model.Group{
+				Schemas:     []model.URN{"urn:ietf:params:scim:schemas:core:2.0:Group"},
+				DisplayName: "Data Ninjas",
+				ID:          "abc",
+			},
+		},
+	}, resourceGroup, map[string]interface{}{
+		"display_name":               "Data Ninjas",
+		"allow_instance_pool_create": true,
+	}, actionWithID("abc", resourceGroupUpdate))
+	assert.NoError(t, err, err)
+	assert.Equal(t, "abc", d.Id(), "Id should be the same as in reading")
+}
+
+func TestResourceGroupUpdate_Error(t *testing.T) {
+	d, err := ResourceTester(t, []HTTPFixture{
+		{
+			Method:   "PATCH",
+			Resource: "/api/2.0/preview/scim/v2/Groups/abc",
+			Response: service.APIErrorBody{
+				ErrorCode: "INVALID_REQUEST",
+				Message:   "Internal error happened",
+			},
+			Status: 400,
+		},
+	}, resourceGroup, map[string]interface{}{
+		"display_name":               "Data Ninjas",
+		"allow_instance_pool_create": true,
+	}, actionWithID("abc", resourceGroupUpdate))
+	assert.Errorf(t, err, "Internal error happened")
+	assert.Equal(t, "abc", d.Id())
+}
+
+func TestResourceGroupDelete(t *testing.T) {
+	d, err := ResourceTester(t, []HTTPFixture{
+		{
+			Method:   "DELETE",
+			Resource: "/api/2.0/preview/scim/v2/Groups/abc",
+		},
+	}, resourceGroup, nil, actionWithID("abc", resourceGroupDelete))
+	assert.NoError(t, err, err)
+	assert.Equal(t, "abc", d.Id())
+}
+
+func TestResourceGroupDelete_Error(t *testing.T) {
+	d, err := ResourceTester(t, []HTTPFixture{
+		{
+			Method:   "DELETE",
+			Resource: "/api/2.0/preview/scim/v2/Groups/abc",
+			Response: service.APIErrorBody{
+				ErrorCode: "INVALID_REQUEST",
+				Message:   "Internal error happened",
+			},
+			Status: 400,
+		},
+	}, resourceGroup, nil, actionWithID("abc", resourceGroupDelete))
+	assert.Errorf(t, err, "Internal error happened")
+	assert.Equal(t, "abc", d.Id())
+}

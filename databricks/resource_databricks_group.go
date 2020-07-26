@@ -114,6 +114,7 @@ func resourceGroupUpdate(d *schema.ResourceData, m interface{}) error {
 		entitlementsRemoveList = append(entitlementsRemoveList, string(model.AllowClusterCreateEntitlement))
 	}
 
+	// TODO: not currently possible to update group display name
 	if entitlementsAddList != nil || entitlementsRemoveList != nil {
 		err := client.Groups().Patch(id, entitlementsAddList, entitlementsRemoveList, model.GroupEntitlementsPath)
 		if err != nil {

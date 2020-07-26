@@ -10,6 +10,7 @@ import (
 	"github.com/databrickslabs/databricks-terraform/client/service"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/stretchr/testify/assert"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 )
@@ -217,4 +218,283 @@ func testClusterExistsAndTerminateForFutureTests(n string, cluster *model.Cluste
 		}
 		return nil
 	}
+}
+
+func TestResourceClusterCreate(t *testing.T) {
+	d, err := ResourceTester(t, []HTTPFixture{
+		{
+			Method:   "POST",
+			Resource: "/api/2.0/clusters/create",
+			ExpectedRequest: model.Cluster{
+				NumWorkers:             100,
+				ClusterName:            "Shared Autoscaling",
+				SparkVersion:           "7.1-scala12",
+				NodeTypeID:             "i3.xlarge",
+				AutoterminationMinutes: 15,
+			},
+			Response: model.ClusterID{
+				ClusterID: "abc",
+			},
+		},
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/clusters/get?cluster_id=abc",
+			Response: model.ClusterInfo{
+				ClusterID:              "abc",
+				NumWorkers:             100,
+				ClusterName:            "Shared Autoscaling",
+				SparkVersion:           "7.1-scala12",
+				NodeTypeID:             "i3.xlarge",
+				AutoterminationMinutes: 15,
+				State:                  model.ClusterStateRunning,
+			},
+		},
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/clusters/get?cluster_id=abc",
+			Response: model.ClusterInfo{
+				State: model.ClusterStateRunning,
+			},
+		},
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/clusters/get?cluster_id=abc",
+			Response: model.ClusterInfo{
+				State: model.ClusterStateRunning,
+			},
+		},
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/libraries/cluster-status?cluster_id=abc",
+			Response: model.ClusterLibraryStatuses{
+				LibraryStatuses: []model.LibraryStatus{},
+			},
+		},
+	}, resourceCluster, map[string]interface{}{
+		"autotermination_minutes": 15,
+		"cluster_name":            "Shared Autoscaling",
+		"spark_version":           "7.1-scala12",
+		"node_type_id":            "i3.xlarge",
+		"num_workers":             100,
+	}, resourceClusterCreate)
+	assert.NoError(t, err, err)
+	assert.Equal(t, "abc", d.Id())
+}
+
+func TestResourceClusterCreate_Error(t *testing.T) {
+	d, err := ResourceTester(t, []HTTPFixture{
+		{
+			Method:   "POST",
+			Resource: "/api/2.0/clusters/create",
+			Response: service.APIErrorBody{
+				ErrorCode: "INVALID_REQUEST",
+				Message:   "Internal error happened",
+			},
+			Status: 400,
+		},
+	}, resourceCluster, map[string]interface{}{
+		"autotermination_minutes": 15,
+		"cluster_name":            "Shared Autoscaling",
+		"spark_version":           "7.1-scala12",
+		"node_type_id":            "i3.xlarge",
+		"num_workers":             100,
+	}, resourceClusterCreate)
+	assert.Errorf(t, err, "Internal error happened")
+	assert.Equal(t, "", d.Id(), "Id should be empty for error creates")
+}
+
+func TestResourceClusterRead(t *testing.T) {
+	d, err := ResourceTester(t, []HTTPFixture{
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/clusters/get?cluster_id=abc",
+			Response: model.ClusterInfo{
+				ClusterID:              "abc",
+				NumWorkers:             100,
+				ClusterName:            "Shared Autoscaling",
+				SparkVersion:           "7.1-scala12",
+				NodeTypeID:             "i3.xlarge",
+				AutoterminationMinutes: 15,
+				State:                  model.ClusterStateRunning,
+			},
+		},
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/libraries/cluster-status?cluster_id=abc",
+			Response: model.ClusterLibraryStatuses{
+				LibraryStatuses: []model.LibraryStatus{},
+			},
+		},
+	}, resourceCluster, nil, actionWithID("abc", resourceClusterRead))
+	assert.NoError(t, err, err)
+	assert.Equal(t, "abc", d.Id(), "Id should not be empty")
+	assert.Equal(t, 15, d.Get("autotermination_minutes"))
+	assert.Equal(t, "abc", d.Get("cluster_id"))
+	assert.Equal(t, "Shared Autoscaling", d.Get("cluster_name"))
+	assert.Equal(t, "i3.xlarge", d.Get("node_type_id"))
+	// TODO: holistic fix in other PR
+	//assert.Equal(t, 100, d.Get("num_workers"))
+	assert.Equal(t, "RUNNING", d.Get("state"))
+}
+
+func TestResourceClusterRead_NotFound(t *testing.T) {
+	d, err := ResourceTester(t, []HTTPFixture{
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/clusters/get?cluster_id=abc",
+			Response: service.APIErrorBody{
+				ErrorCode: "NOT_FOUND",
+				Message:   "Item not found",
+			},
+			Status: 404,
+		},
+	}, resourceCluster, nil, actionWithID("abc", resourceClusterRead))
+	assert.NoError(t, err, err)
+	assert.Equal(t, "", d.Id(), "Id should be empty for missing resources")
+}
+
+func TestResourceClusterRead_Error(t *testing.T) {
+	d, err := ResourceTester(t, []HTTPFixture{
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/clusters/get?cluster_id=abc",
+			Response: service.APIErrorBody{
+				ErrorCode: "INVALID_REQUEST",
+				Message:   "Internal error happened",
+			},
+			Status: 400,
+		},
+	}, resourceCluster, nil, actionWithID("abc", resourceClusterRead))
+	assert.Errorf(t, err, "Internal error happened")
+	assert.Equal(t, "abc", d.Id(), "Id should not be empty for error reads")
+}
+
+func TestResourceClusterUpdate(t *testing.T) {
+	d, err := ResourceTester(t, []HTTPFixture{
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/clusters/get?cluster_id=abc",
+			Response: model.ClusterInfo{
+				ClusterID:              "abc",
+				NumWorkers:             100,
+				ClusterName:            "Shared Autoscaling",
+				SparkVersion:           "7.1-scala12",
+				NodeTypeID:             "i3.xlarge",
+				AutoterminationMinutes: 15,
+				State:                  model.ClusterStateRunning,
+			},
+		},
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/libraries/cluster-status?cluster_id=abc",
+			Response: model.ClusterLibraryStatuses{
+				LibraryStatuses: []model.LibraryStatus{},
+			},
+		},
+		{
+			Method:   "POST",
+			Resource: "/api/2.0/clusters/edit",
+			ExpectedRequest: model.Cluster{
+				AutoterminationMinutes: 15,
+				ClusterID:              "abc",
+				NumWorkers:             100,
+				ClusterName:            "Shared Autoscaling",
+				SparkVersion:           "7.1-scala12",
+				NodeTypeID:             "i3.xlarge",
+			},
+		},
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/clusters/get?cluster_id=abc",
+			Response: model.ClusterInfo{
+				ClusterID:              "abc",
+				NumWorkers:             100,
+				ClusterName:            "Shared Autoscaling",
+				SparkVersion:           "7.1-scala12",
+				NodeTypeID:             "i3.xlarge",
+				AutoterminationMinutes: 15,
+				State:                  model.ClusterStateRunning,
+			},
+		},
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/clusters/get?cluster_id=abc",
+			Response: model.ClusterInfo{
+				ClusterID:              "abc",
+				NumWorkers:             100,
+				ClusterName:            "Shared Autoscaling",
+				SparkVersion:           "7.1-scala12",
+				NodeTypeID:             "i3.xlarge",
+				AutoterminationMinutes: 15,
+				State:                  model.ClusterStateRunning,
+			},
+		},
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/libraries/cluster-status?cluster_id=abc",
+			Response: model.ClusterLibraryStatuses{
+				LibraryStatuses: []model.LibraryStatus{},
+			},
+		},
+	}, resourceCluster, map[string]interface{}{
+		"autotermination_minutes": 15,
+		"cluster_name":            "Shared Autoscaling",
+		"spark_version":           "7.1-scala12",
+		"node_type_id":            "i3.xlarge",
+		"num_workers":             100,
+	}, actionWithID("abc", resourceClusterUpdate))
+	assert.NoError(t, err, err)
+	assert.Equal(t, "abc", d.Id(), "Id should be the same as in reading")
+}
+
+func TestResourceClusterUpdate_Error(t *testing.T) {
+	d, err := ResourceTester(t, []HTTPFixture{
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/clusters/get?cluster_id=abc",
+			Response: service.APIErrorBody{
+				ErrorCode: "INVALID_REQUEST",
+				Message:   "Internal error happened",
+			},
+			Status: 400,
+		},
+	}, resourceCluster, map[string]interface{}{
+		"autotermination_minutes": 15,
+		"cluster_name":            "Shared Autoscaling",
+		"spark_version":           "7.1-scala12",
+		"node_type_id":            "i3.xlarge",
+		"num_workers":             100,
+	}, actionWithID("abc", resourceClusterUpdate))
+	assert.Errorf(t, err, "Internal error happened")
+	assert.Equal(t, "abc", d.Id())
+}
+
+func TestResourceClusterDelete(t *testing.T) {
+	d, err := ResourceTester(t, []HTTPFixture{
+		{
+			Method:   "POST",
+			Resource: "/api/2.0/clusters/permanent-delete",
+			ExpectedRequest: map[string]string{
+				"cluster_id": "abc",
+			},
+		},
+	}, resourceCluster, nil, actionWithID("abc", resourceClusterDelete))
+	assert.NoError(t, err, err)
+	assert.Equal(t, "abc", d.Id())
+}
+
+func TestResourceClusterDelete_Error(t *testing.T) {
+	d, err := ResourceTester(t, []HTTPFixture{
+		{
+			Method:   "POST",
+			Resource: "/api/2.0/clusters/permanent-delete",
+			Response: service.APIErrorBody{
+				ErrorCode: "INVALID_REQUEST",
+				Message:   "Internal error happened",
+			},
+			Status: 400,
+		},
+	}, resourceCluster, nil, actionWithID("abc", resourceClusterDelete))
+	assert.Errorf(t, err, "Internal error happened")
+	assert.Equal(t, "abc", d.Id())
 }

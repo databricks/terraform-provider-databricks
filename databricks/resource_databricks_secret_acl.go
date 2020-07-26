@@ -2,7 +2,6 @@ package databricks
 
 import (
 	"log"
-	"strings"
 
 	"github.com/databrickslabs/databricks-terraform/client/model"
 	"github.com/databrickslabs/databricks-terraform/client/service"
@@ -40,7 +39,7 @@ func getSecretACLID(scope string, key string) (string, error) {
 }
 
 func getScopeAndKeyFromSecretACLID(secretACLIDString string) (string, string, error) {
-	return strings.Split(secretACLIDString, "|||")[0], strings.Split(secretACLIDString, "|||")[1], nil
+	return getScopeAndKeyFromSecretID(secretACLIDString)
 }
 
 func resourceSecretACLCreate(d *schema.ResourceData, m interface{}) error {

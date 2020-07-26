@@ -135,3 +135,130 @@ func testSecretACLResource(scopeName, principal, permission string) string {
 		}
 		`, scopeName, principal, permission)
 }
+
+func TestResourceSecretACLRead(t *testing.T) {
+	d, err := ResourceTester(t, []HTTPFixture{
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/secrets/acls/get?principal=something&scope=global",
+			Response: model.ACLItem{
+				Permission: "CAN_MANAGE",
+			},
+		},
+	}, resourceSecretACL, nil, actionWithID("global|||something", resourceSecretACLRead))
+	assert.NoError(t, err, err)
+	assert.Equal(t, "global|||something", d.Id(), "Id should not be empty")
+	assert.Equal(t, "CAN_MANAGE", d.Get("permission"))
+	assert.Equal(t, "something", d.Get("principal"))
+	assert.Equal(t, "global", d.Get("scope"))
+}
+
+func TestResourceSecretACLRead_NotFound(t *testing.T) {
+	d, err := ResourceTester(t, []HTTPFixture{
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/secrets/acls/get?principal=something&scope=global",
+			Response: service.APIErrorBody{
+				ErrorCode: "NOT_FOUND",
+				Message:   "Item not found",
+			},
+			Status: 404,
+		},
+	}, resourceSecretACL, nil, actionWithID("global|||something", resourceSecretACLRead))
+	assert.NoError(t, err, err)
+	assert.Equal(t, "", d.Id(), "Id should be empty for missing resources")
+}
+
+func TestResourceSecretACLRead_Error(t *testing.T) {
+	d, err := ResourceTester(t, []HTTPFixture{
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/secrets/acls/get?principal=something&scope=global",
+			Response: service.APIErrorBody{
+				ErrorCode: "INVALID_REQUEST",
+				Message:   "Internal error happened",
+			},
+			Status: 400,
+		},
+	}, resourceSecretACL, nil, actionWithID("global|||something", resourceSecretACLRead))
+	assert.Errorf(t, err, "Internal error happened")
+	assert.Equal(t, "global|||something", d.Id(), "Id should not be empty for error reads")
+}
+
+func TestResourceSecretACLCreate(t *testing.T) {
+	d, err := ResourceTester(t, []HTTPFixture{
+		{
+			Method:   "POST",
+			Resource: "/api/2.0/secrets/acls/put",
+			ExpectedRequest: model.SecretACLRequest{
+				Principal:  "something",
+				Permission: "CAN_MANAGE",
+				Scope:      "global",
+			},
+		},
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/secrets/acls/get?principal=something&scope=global",
+			Response: model.ACLItem{
+				Permission: "CAN_MANAGE",
+			},
+		},
+	}, resourceSecretACL, map[string]interface{}{
+		"permission": "CAN_MANAGE",
+		"principal":  "something",
+		"scope":      "global",
+	}, resourceSecretACLCreate)
+	assert.NoError(t, err, err)
+	assert.Equal(t, "global|||something", d.Id())
+}
+
+func TestResourceSecretACLCreate_Error(t *testing.T) {
+	d, err := ResourceTester(t, []HTTPFixture{
+		{ // read log output for better stub url...
+			Method:   "POST",
+			Resource: "/api/2.0/secrets/acls/put",
+			Response: service.APIErrorBody{
+				ErrorCode: "INVALID_REQUEST",
+				Message:   "Internal error happened",
+			},
+			Status: 400,
+		},
+	}, resourceSecretACL, map[string]interface{}{
+		"permission": "CAN_MANAGE",
+		"principal":  "something",
+		"scope":      "global",
+	}, resourceSecretACLCreate)
+	assert.Errorf(t, err, "Internal error happened")
+	assert.Equal(t, "", d.Id(), "Id should be empty for error creates")
+}
+
+func TestResourceSecretACLDelete(t *testing.T) {
+	d, err := ResourceTester(t, []HTTPFixture{
+		{
+			Method:   "POST",
+			Resource: "/api/2.0/secrets/acls/delete",
+			ExpectedRequest: map[string]string{
+				"scope":     "global",
+				"principal": "something",
+			},
+		},
+	}, resourceSecretACL, nil, actionWithID("global|||something", resourceSecretACLDelete))
+	assert.NoError(t, err, err)
+	assert.Equal(t, "global|||something", d.Id())
+}
+
+func TestResourceSecretACLDelete_Error(t *testing.T) {
+	d, err := ResourceTester(t, []HTTPFixture{
+		{
+			Method:   "POST",
+			Resource: "/api/2.0/secrets/acls/delete",
+			Response: service.APIErrorBody{
+				ErrorCode: "INVALID_REQUEST",
+				Message:   "Internal error happened",
+			},
+			Status: 400,
+		},
+	}, resourceSecretACL, nil, actionWithID("global|||something", resourceSecretACLDelete))
+	assert.Errorf(t, err, "Internal error happened")
+	assert.Equal(t, "global|||something", d.Id())
+}

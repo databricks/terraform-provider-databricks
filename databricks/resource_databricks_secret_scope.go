@@ -26,6 +26,8 @@ func resourceSecretScope() *schema.Resource {
 				Default:  "users",
 			},
 			"backend_type": {
+				// TODO: add default DATABRICKS as backend type.
+				// TODO: add integration tests for AKV backend
 				Type:     schema.TypeString,
 				Computed: true,
 			},

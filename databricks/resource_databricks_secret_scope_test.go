@@ -174,3 +174,99 @@ func TestResourceSecretScopeRead_NotFound(t *testing.T) {
 	assert.NoError(t, err, err)
 	assert.Equal(t, "", d.Id())
 }
+
+func TestResourceSecretScopeRead_Error(t *testing.T) {
+	d, err := ResourceTester(t, []HTTPFixture{
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/secrets/scopes/list?",
+			Response: service.APIErrorBody{
+				ErrorCode: "INVALID_REQUEST",
+				Message:   "Internal error happened",
+			},
+			Status: 400,
+		},
+	}, resourceSecretScope, nil, actionWithID("abc", resourceSecretScopeRead))
+	assert.Errorf(t, err, "Internal error happened")
+	assert.Equal(t, "abc", d.Id(), "Id should not be empty for error reads")
+}
+
+func TestResourceSecretScopeCreate(t *testing.T) {
+	d, err := ResourceTester(t, []HTTPFixture{
+		{
+			Method:   "POST",
+			Resource: "/api/2.0/secrets/scopes/create",
+			ExpectedRequest: map[string]string{
+				"scope":                    "Boom",
+				"initial_manage_principal": "groups",
+			},
+		},
+		{
+			Method:   http.MethodGet,
+			Resource: "/api/2.0/secrets/scopes/list?",
+			Response: model.SecretScopeList{
+				Scopes: []model.SecretScope{
+					{
+						Name:        "Boom",
+						BackendType: "DATABRICKS",
+					},
+				},
+			},
+			Status: 200,
+		},
+	}, resourceSecretScope, map[string]interface{}{
+		"initial_manage_principal": "groups",
+		"name":                     "Boom",
+	}, resourceSecretScopeCreate)
+	assert.NoError(t, err, err)
+	assert.Equal(t, "Boom", d.Id())
+}
+
+func TestResourceSecretScopeCreate_Error(t *testing.T) {
+	d, err := ResourceTester(t, []HTTPFixture{
+		{
+			Method:   "POST",
+			Resource: "/api/2.0/secrets/scopes/create",
+			Response: service.APIErrorBody{
+				ErrorCode: "INVALID_REQUEST",
+				Message:   "Internal error happened",
+			},
+			Status: 400,
+		},
+	}, resourceSecretScope, map[string]interface{}{
+		"initial_manage_principal": "groups",
+		"name":                     "Boom",
+	}, resourceSecretScopeCreate)
+	assert.Errorf(t, err, "Internal error happened")
+	assert.Equal(t, "", d.Id(), "Id should be empty for error creates")
+}
+
+func TestResourceSecretScopeDelete(t *testing.T) {
+	d, err := ResourceTester(t, []HTTPFixture{
+		{ // read log output for better stub url...
+			Method:   "POST",
+			Resource: "/api/2.0/secrets/scopes/delete",
+			ExpectedRequest: map[string]string{
+				"scope": "abc",
+			},
+		},
+	}, resourceSecretScope, nil, actionWithID("abc", resourceSecretScopeDelete))
+	assert.NoError(t, err, err)
+	assert.Equal(t, "abc", d.Id())
+}
+
+func TestResourceSecretScopeDelete_Error(t *testing.T) {
+	d, err := ResourceTester(t, []HTTPFixture{
+		{
+			Method:   "POST",
+			Resource: "/api/2.0/secrets/scopes/delete",
+			Response: service.APIErrorBody{
+				ErrorCode: "INVALID_REQUEST",
+				Message:   "Internal error happened",
+			},
+			Status: 400,
+		},
+	}, resourceSecretScope, nil, actionWithID("abc", resourceSecretScopeDelete))
+	assert.Errorf(t, err, "Internal error happened")
+	assert.Equal(t, "abc", d.Id())
+}

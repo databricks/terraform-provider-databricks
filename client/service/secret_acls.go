@@ -9,15 +9,9 @@ type SecretAclsAPI struct {
 	client *DatabricksClient
 }
 
-type secretACLRequest struct {
-	Scope      string              `json:"scope,omitempty" url:"scope,omitempty"`
-	Principal  string              `json:"principal,omitempty" url:"principal,omitempty"`
-	Permission model.ACLPermission `json:"permission,omitempty" url:"permission,omitempty"`
-}
-
 // Create creates or overwrites the ACL associated with the given principal (user or group) on the specified scope point
 func (a SecretAclsAPI) Create(scope string, principal string, permission model.ACLPermission) error {
-	return a.client.post("/secrets/acls/put", secretACLRequest{
+	return a.client.post("/secrets/acls/put", model.SecretACLRequest{
 		Scope:      scope,
 		Principal:  principal,
 		Permission: permission,
@@ -26,7 +20,7 @@ func (a SecretAclsAPI) Create(scope string, principal string, permission model.A
 
 // Delete deletes the given ACL on the given scope
 func (a SecretAclsAPI) Delete(scope string, principal string) error {
-	return a.client.post("/secrets/acls/delete", secretACLRequest{
+	return a.client.post("/secrets/acls/delete", model.SecretACLRequest{
 		Scope:     scope,
 		Principal: principal,
 	}, nil)
@@ -35,7 +29,7 @@ func (a SecretAclsAPI) Delete(scope string, principal string) error {
 // Read describe the details about the given ACL, such as the group and permission
 func (a SecretAclsAPI) Read(scope string, principal string) (model.ACLItem, error) {
 	var aclItem model.ACLItem
-	err := a.client.get("/secrets/acls/get", secretACLRequest{
+	err := a.client.get("/secrets/acls/get", model.SecretACLRequest{
 		Scope:     scope,
 		Principal: principal,
 	}, &aclItem)

@@ -45,3 +45,10 @@ type ACLItem struct {
 	Principal  string        `json:"principal,omitempty"`
 	Permission ACLPermission `json:"permission,omitempty"`
 }
+
+// SecretACLRequest generic request for secret acls
+type SecretACLRequest struct {
+	Scope      string        `json:"scope,omitempty" url:"scope,omitempty"`
+	Principal  string        `json:"principal,omitempty" url:"principal,omitempty"`
+	Permission ACLPermission `json:"permission,omitempty" url:"permission,omitempty"`
+}

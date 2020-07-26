@@ -390,11 +390,6 @@ func ResourceTester(t *testing.T,
 				Response: model.XXX {
 					// fill in specific fields...
 				},
-				//Response: service.APIErrorBody{
-				//	ErrorCode: "INVALID_REQUEST",
-				//	Message:   "Internal error happened",
-				//},
-				//Status: 400,
 			},`, req.Method, req.RequestURI, expectedRequest)
 			assert.Fail(t, fmt.Sprintf("Missing stub, please add: %s", stub))
 			t.FailNow()

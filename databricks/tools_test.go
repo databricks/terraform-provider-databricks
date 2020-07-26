@@ -43,7 +43,7 @@ func (stub *resourceTestStub) Reads(t *testing.T) {
 			// read log output of test util for further stubs...
 		}, resource{{.Name}}, nil, actionWithID("abc", resource{{.Name}}Read))
 		assert.NoError(t, err, err)
-		assert.Equal(t, "...", d.Id(), "Id should not be empty")
+		assert.Equal(t, "abc", d.Id(), "Id should not be empty")
 		{{range $index, $element := .Resource.Schema}}assert.Equal(t, "...{{$index}}", d.Get("{{$index}}"))
 		{{end}}
 	}`)
@@ -185,7 +185,7 @@ func (stub *resourceTestStub) Deletes(t *testing.T) {
 func TestGenerateTestCodeStubs(t *testing.T) {
 	funcs := getExistingUnitTests()
 	for name, resource := range testAccProvider.ResourcesMap {
-		if name != "databricks_token" {
+		if name != "databricks_secret" {
 			continue
 		}
 		stub := resourceTestStub{Resource: resource, others: &funcs}
@@ -194,7 +194,11 @@ func TestGenerateTestCodeStubs(t *testing.T) {
 				// databricks_*
 				continue
 			}
-			stub.Name += strings.Title(part)
+			if len(part) < 4 {
+				stub.Name += strings.ToUpper(part)
+			} else {
+				stub.Name += strings.Title(part)
+			}
 		}
 		stub.Reads(t)
 		stub.Creates(t)

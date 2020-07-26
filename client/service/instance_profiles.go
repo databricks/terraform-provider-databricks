@@ -44,9 +44,7 @@ func (a InstanceProfilesAPI) Read(instanceProfileARN string) (string, error) {
 
 // List lists all the instance profiles in the workspace
 func (a InstanceProfilesAPI) List() ([]model.InstanceProfileInfo, error) {
-	var instanceProfilesArnList struct {
-		InstanceProfiles []model.InstanceProfileInfo `json:"instance_profiles,omitempty" url:"instance_profiles,omitempty"`
-	}
+	var instanceProfilesArnList model.InstanceProfileList
 	err := a.client.get("/instance-profiles/list", nil, &instanceProfilesArnList)
 	return instanceProfilesArnList.InstanceProfiles, err
 }

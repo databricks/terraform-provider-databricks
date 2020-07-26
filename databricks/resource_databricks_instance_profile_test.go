@@ -134,3 +134,131 @@ func testAWSDatabricksInstanceProfile(instanceProfile string) string {
 								}
 								`, instanceProfile)
 }
+
+func TestResourceInstanceProfileCreate(t *testing.T) {
+	d, err := ResourceTester(t, []HTTPFixture{
+		{
+			Method:   "POST",
+			Resource: "/api/2.0/instance-profiles/add",
+			ExpectedRequest: map[string]interface{}{
+				"instance_profile_arn": "abc",
+				"skip_validation":      true,
+			},
+		},
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/instance-profiles/list?",
+			Response: model.InstanceProfileList{
+				InstanceProfiles: []model.InstanceProfileInfo{
+					{
+						InstanceProfileArn: "abc",
+					},
+				},
+			},
+		},
+	}, resourceInstanceProfile, map[string]interface{}{
+		"instance_profile_arn": "abc",
+		"skip_validation":      true,
+	}, resourceInstanceProfileCreate)
+	assert.NoError(t, err, err)
+	assert.Equal(t, "abc", d.Id())
+}
+
+func TestResourceInstanceProfileCreate_Error(t *testing.T) {
+	d, err := ResourceTester(t, []HTTPFixture{
+		{
+			Method:   "POST",
+			Resource: "/api/2.0/instance-profiles/add",
+			Response: service.APIErrorBody{
+				ErrorCode: "INVALID_REQUEST",
+				Message:   "Internal error happened",
+			},
+			Status: 400,
+		},
+	}, resourceInstanceProfile, map[string]interface{}{
+		"instance_profile_arn": "abc",
+		"skip_validation":      true,
+	}, resourceInstanceProfileCreate)
+	assert.Errorf(t, err, "Internal error happened")
+	assert.Equal(t, "", d.Id(), "Id should be empty for error creates")
+}
+
+func TestResourceInstanceProfileRead(t *testing.T) {
+	d, err := ResourceTester(t, []HTTPFixture{
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/instance-profiles/list?",
+			Response: model.InstanceProfileList{
+				InstanceProfiles: []model.InstanceProfileInfo{
+					{
+						InstanceProfileArn: "abc",
+					},
+				},
+			},
+		},
+	}, resourceInstanceProfile, nil, actionWithID("abc", resourceInstanceProfileRead))
+	assert.NoError(t, err, err)
+	assert.Equal(t, "abc", d.Id(), "Id should not be empty")
+	assert.Equal(t, "abc", d.Get("instance_profile_arn"))
+	assert.Equal(t, false, d.Get("skip_validation"))
+}
+
+func TestResourceInstanceProfileRead_NotFound(t *testing.T) {
+	d, err := ResourceTester(t, []HTTPFixture{
+		{ // read log output for correct url...
+			Method:   "GET",
+			Resource: "/api/2.0/instance-profiles/list?",
+			Response: model.InstanceProfileList{
+				InstanceProfiles: []model.InstanceProfileInfo{},
+			},
+		},
+	}, resourceInstanceProfile, nil, actionWithID("abc", resourceInstanceProfileRead))
+	assert.NoError(t, err, err)
+	assert.Equal(t, "", d.Id(), "Id should be empty for missing resources")
+}
+
+func TestResourceInstanceProfileRead_Error(t *testing.T) {
+	d, err := ResourceTester(t, []HTTPFixture{
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/instance-profiles/list?",
+			Response: service.APIErrorBody{
+				ErrorCode: "INVALID_REQUEST",
+				Message:   "Internal error happened",
+			},
+			Status: 400,
+		},
+	}, resourceInstanceProfile, nil, actionWithID("abc", resourceInstanceProfileRead))
+	assert.Errorf(t, err, "Internal error happened")
+	assert.Equal(t, "abc", d.Id(), "Id should not be empty for error reads")
+}
+
+func TestResourceInstanceProfileDelete(t *testing.T) {
+	d, err := ResourceTester(t, []HTTPFixture{
+		{
+			Method:   "POST",
+			Resource: "/api/2.0/instance-profiles/remove",
+			ExpectedRequest: model.InstanceProfileInfo{
+				InstanceProfileArn: "abc",
+			},
+		},
+	}, resourceInstanceProfile, nil, actionWithID("abc", resourceInstanceProfileDelete))
+	assert.NoError(t, err, err)
+	assert.Equal(t, "abc", d.Id())
+}
+
+func TestResourceInstanceProfileDelete_Error(t *testing.T) {
+	d, err := ResourceTester(t, []HTTPFixture{
+		{
+			Method:   "POST",
+			Resource: "/api/2.0/instance-profiles/remove",
+			Response: service.APIErrorBody{
+				ErrorCode: "INVALID_REQUEST",
+				Message:   "Internal error happened",
+			},
+			Status: 400,
+		},
+	}, resourceInstanceProfile, nil, actionWithID("abc", resourceInstanceProfileDelete))
+	assert.Errorf(t, err, "Internal error happened")
+	assert.Equal(t, "abc", d.Id())
+}

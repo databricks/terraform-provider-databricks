@@ -206,3 +206,102 @@ func TestResourceSecretRead_NotFound(t *testing.T) {
 	assert.NoError(t, err, err)
 	assert.Equal(t, "", d.Id())
 }
+
+func TestResourceSecretRead_Error(t *testing.T) {
+	d, err := ResourceTester(t, []HTTPFixture{
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/secrets/list?scope=foo",
+			Response: service.APIErrorBody{
+				ErrorCode: "INVALID_REQUEST",
+				Message:   "Internal error happened",
+			},
+			Status: 400,
+		},
+	}, resourceSecret, nil, actionWithID("foo|||bar", resourceSecretRead))
+	assert.Errorf(t, err, "Internal error happened")
+	assert.Equal(t, "foo|||bar", d.Id(), "Id should not be empty for error reads")
+}
+
+func TestResourceSecretCreate(t *testing.T) {
+	d, err := ResourceTester(t, []HTTPFixture{
+		{
+			Method:   "POST",
+			Resource: "/api/2.0/secrets/put",
+			ExpectedRequest: model.SecretsRequest{
+				StringValue: "SparkIsTh3Be$t",
+				Scope:       "foo",
+				Key:         "bar",
+			},
+		},
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/secrets/list?scope=foo",
+			Response: model.SecretsList{
+				Secrets: []model.SecretMetadata{
+					{
+						Key:                  "bar",
+						LastUpdatedTimestamp: 12345678,
+					},
+				},
+			},
+		},
+	}, resourceSecret, map[string]interface{}{
+		"scope":        "foo",
+		"key":          "bar",
+		"string_value": "SparkIsTh3Be$t",
+	}, resourceSecretCreate)
+	assert.NoError(t, err, err)
+	assert.Equal(t, "foo|||bar", d.Id())
+}
+
+func TestResourceSecretCreate_Error(t *testing.T) {
+	d, err := ResourceTester(t, []HTTPFixture{
+		{
+			Method:   "POST",
+			Resource: "/api/2.0/secrets/put",
+			Response: service.APIErrorBody{
+				ErrorCode: "INVALID_REQUEST",
+				Message:   "Internal error happened",
+			},
+			Status: 400,
+		},
+	}, resourceSecret, map[string]interface{}{
+		"key":          "...",
+		"scope":        "...",
+		"string_value": "...",
+	}, resourceSecretCreate)
+	assert.Errorf(t, err, "Internal error happened")
+	assert.Equal(t, "", d.Id(), "Id should be empty for error creates")
+}
+
+func TestResourceSecretDelete(t *testing.T) {
+	d, err := ResourceTester(t, []HTTPFixture{
+		{ // read log output for better stub url...
+			Method:   "POST",
+			Resource: "/api/2.0/secrets/delete",
+			ExpectedRequest: map[string]string{
+				"scope": "foo",
+				"key":   "bar",
+			},
+		},
+	}, resourceSecret, nil, actionWithID("foo|||bar", resourceSecretDelete))
+	assert.NoError(t, err, err)
+	assert.Equal(t, "foo|||bar", d.Id())
+}
+
+func TestResourceSecretDelete_Error(t *testing.T) {
+	d, err := ResourceTester(t, []HTTPFixture{
+		{
+			Method:   "POST",
+			Resource: "/api/2.0/secrets/delete",
+			Response: service.APIErrorBody{
+				ErrorCode: "INVALID_REQUEST",
+				Message:   "Internal error happened",
+			},
+			Status: 400,
+		},
+	}, resourceSecret, nil, actionWithID("foo|||bar", resourceSecretDelete))
+	assert.Errorf(t, err, "Internal error happened")
+	assert.Equal(t, "foo|||bar", d.Id())
+}

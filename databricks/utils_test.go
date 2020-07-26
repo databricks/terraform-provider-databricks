@@ -381,7 +381,7 @@ func ResourceTester(t *testing.T,
 					// best effort prediction of what struct should look like...
 					expectedRequest += fmt.Sprintf("					%s: %#v,\n", camel, value)
 				}
-				expectedRequest += "					},\n"
+				expectedRequest += "				},\n"
 			}
 			stub := fmt.Sprintf(`{
 				Method:   "%s",

@@ -12,15 +12,9 @@ type SecretsAPI struct {
 	client *DatabricksClient
 }
 
-type secretsRequest struct {
-	StringValue string `json:"string_value,omitempty" mask:"true"`
-	Scope       string `json:"scope,omitempty"`
-	Key         string `json:"key,omitempty"`
-}
-
 // Create creates or modifies a string secret depends on the type of scope backend
 func (a SecretsAPI) Create(stringValue, scope, key string) error {
-	return a.client.post("/secrets/put", secretsRequest{
+	return a.client.post("/secrets/put", model.SecretsRequest{
 		StringValue: stringValue,
 		Scope:       scope,
 		Key:         key,
@@ -29,7 +23,7 @@ func (a SecretsAPI) Create(stringValue, scope, key string) error {
 
 // Delete deletes a secret depends on the type of scope backend
 func (a SecretsAPI) Delete(scope, key string) error {
-	return a.client.post("/secrets/delete", secretsRequest{
+	return a.client.post("/secrets/delete", model.SecretsRequest{
 		Scope: scope,
 		Key:   key,
 	}, nil)

@@ -19,6 +19,13 @@ type SecretScope struct {
 	BackendType ScopeBackendType `json:"backend_type,omitempty"`
 }
 
+// SecretsRequest ...
+type SecretsRequest struct {
+	StringValue string `json:"string_value,omitempty" mask:"true"`
+	Scope       string `json:"scope,omitempty"`
+	Key         string `json:"key,omitempty"`
+}
+
 // SecretsList ...
 type SecretsList struct {
 	Secrets []SecretMetadata `json:"secrets,omitempty"`

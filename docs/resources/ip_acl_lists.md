@@ -1,42 +1,30 @@
-# databricks_group Resource
+# databricks_ip_access_lists Resource
 
-This resource allows you to create groups in Databricks. You can also associate Databricks users to the following groups. 
-This is an alternative to `databricks_scim_group` and useful if you are using an application to sync users & groups with SCIM 
-api.
+This resource allows you to create IP Access Lists in Databricks to control access to your workspace by IP. All IPs and CIDR ranges from each enabled list is put together applying type "BLACKLIST" first, then if still allowed type "WHITELIST" is checked.  Please see [IP Access List|https://docs.databricks.com/security/network/ip-access-list.html] for full feature documentation.
 
--> **Note** You must be a Databricks administrator API token to make SCIM api calls. 
+-> **Note** The total number of IP addresses and CIDR scopes provided across all ACL Lists in a workspace can not exceed 1000.  Refer to the docs above for specifics.
 
 ## Example Usage
 
 ```hcl
-resource "databricks_group" "my_group" {
-  display_name = "group_name"
-  allow_cluster_create = "true"
-  allow_instance_pool_create = "true"
+resource "databricks_ip_access_list" "allowed-list" {
+  label = "allow_in"
+  list_type = "WHITELIST"
+  ip_addresses = [
+    "1.2.3.0/24",
+    "1.2.5.0/24"
+  ]
+  depends_on = [<Replace with terraform workspace id syntax>]
 }
 ```
 ## Argument Reference
 
 The following arguments are supported:
 
-* `display_name` -  **(Required)** This is the display name for the given group.
+* `enable_ip_access_lists` -  **(Optional)** This is the display name for the given IP ACL List.
 
-* `allow_cluster_create` -  **(Optional)** This is a field to allow the group to have cluster create priviliges.
+* `list_type` -  **(Required)** Can only be "WHITELIST" or "BLACKLIST"
 
-* `allow_instance_pool_create` -  **(Optional)** This is a field to allow the group to have instance pool create priviliges.
+* `ip_addresses` -  **(Required)** This is a field to allow the group to have instance pool create priviliges.
 
-## Attribute Reference
-
-In addition to all arguments above, the following attributes are exported:
-
-* `id` -  The id for the group object.
-
-## Import
-
-You can import a `databricks_group` resource with the name `my_group` like the following:
-
-```bash
-$ terraform import databricks_group.my_group <group_id>
-```
-
-You can use the SCIM api to fetch the `group_id`.
+* `enabled` - **(Optional)** Boolean `true` or `false` indicating whether this list should be active.  Defaults to `true`

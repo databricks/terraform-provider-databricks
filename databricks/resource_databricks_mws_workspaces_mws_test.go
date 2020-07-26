@@ -7,9 +7,12 @@ import (
 	"strconv"
 	"testing"
 
+	"github.com/databrickslabs/databricks-terraform/client/model"
+	"github.com/databrickslabs/databricks-terraform/client/service"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestAccMWSWorkspaces(t *testing.T) {
@@ -120,4 +123,297 @@ func testMWSWorkspacesCreate(mwsAcctID, mwsHost, credentialsName, roleArn, stora
 								}
 								`, mwsHost, mwsAcctID, credentialsName, roleArn, storageConfigName, bucketName,
 		workspaceName, deploymentName, awsRegion, networkName, vpcID, subnet1, subnet2, sg)
+}
+
+func TestResourceMWSWorkspacesCreate(t *testing.T) {
+	d, err := ResourceTester(t, []HTTPFixture{
+		{
+			Method:   "POST",
+			Resource: "/api/2.0/accounts/abc/workspaces",
+			ExpectedRequest: model.MWSWorkspace{
+				IsNoPublicIpEnabled:    true,
+				WorkspaceName:          "labdata",
+				DeploymentName:         "900150983cd24fb0",
+				AwsRegion:              "us-east-1",
+				CredentialsID:          "bcd",
+				StorageConfigurationID: "ghi",
+				NetworkID:              "fgh",
+				CustomerManagedKeyID:   "def",
+			},
+			Response: model.MWSWorkspace{
+				WorkspaceID:    1234,
+				DeploymentName: "900150983cd24fb0",
+			},
+		},
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/accounts/abc/workspaces/1234?",
+			Response: model.MWSWorkspace{
+				WorkspaceStatus: model.WorkspaceStatusRunning,
+			},
+		},
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/accounts/abc/workspaces/1234?",
+			Response: model.MWSWorkspace{
+				WorkspaceStatus: model.WorkspaceStatusRunning,
+			},
+		},
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/accounts/abc/workspaces/1234?",
+			Response: model.MWSWorkspace{
+				WorkspaceStatus: model.WorkspaceStatusRunning,
+			},
+		},
+	}, resourceMWSWorkspaces, map[string]interface{}{
+		"account_id":                "abc",
+		"aws_region":                "us-east-1",
+		"credentials_id":            "bcd",
+		"customer_managed_key_id":   "def",
+		"deployment_name":           "900150983cd24fb0",
+		"workspace_name":            "labdata",
+		"is_no_public_ip_enabled":   true,
+		"network_id":                "fgh",
+		"storage_configuration_id":  "ghi",
+		"verify_workspace_runnning": false,
+	}, resourceMWSWorkspacesCreate)
+	assert.NoError(t, err, err)
+	assert.Equal(t, "abc/1234", d.Id())
+}
+
+func TestResourceMWSWorkspacesCreate_Error(t *testing.T) {
+	t.Skipf("Making this test skip until we can configure sleep timings for test purposes")
+	d, err := ResourceTester(t, []HTTPFixture{
+		{
+			Method:   "POST",
+			Resource: "/api/2.0/accounts/abc/workspaces",
+			Response: service.APIErrorBody{
+				ErrorCode: "INVALID_REQUEST",
+				Message:   "Internal error happened",
+			},
+			Status: 400,
+		},
+		{
+			Method:   "POST",
+			Resource: "/api/2.0/accounts/abc/workspaces",
+			Response: service.APIErrorBody{
+				ErrorCode: "INVALID_REQUEST",
+				Message:   "Internal error happened",
+			},
+			Status: 400,
+		},
+	}, resourceMWSWorkspaces, map[string]interface{}{
+		"account_id":                "abc",
+		"aws_region":                "us-east-1",
+		"credentials_id":            "bcd",
+		"customer_managed_key_id":   "def",
+		"deployment_name":           "900150983cd24fb0",
+		"workspace_name":            "labdata",
+		"is_no_public_ip_enabled":   true,
+		"network_id":                "fgh",
+		"storage_configuration_id":  "ghi",
+		"verify_workspace_runnning": false,
+	}, resourceMWSWorkspacesCreate)
+	assert.Errorf(t, err, "Internal error happened")
+	assert.Equal(t, "", d.Id(), "Id should be empty for error creates")
+}
+
+func TestResourceMWSWorkspacesRead(t *testing.T) {
+	d, err := ResourceTester(t, []HTTPFixture{
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/accounts/abc/workspaces/1234?",
+			Response: model.MWSWorkspace{
+				WorkspaceStatus:        model.WorkspaceStatusRunning,
+				IsNoPublicIpEnabled:    true,
+				WorkspaceName:          "labdata",
+				DeploymentName:         "900150983cd24fb0",
+				AwsRegion:              "us-east-1",
+				CredentialsID:          "bcd",
+				StorageConfigurationID: "ghi",
+				NetworkID:              "fgh",
+				CustomerManagedKeyID:   "def",
+				WorkspaceID:            1234,
+			},
+		},
+	}, resourceMWSWorkspaces, nil, actionWithID("abc/1234", resourceMWSWorkspacesRead))
+	assert.NoError(t, err, err)
+	assert.Equal(t, "abc/1234", d.Id(), "Id should not be empty")
+	assert.Equal(t, "us-east-1", d.Get("aws_region"))
+	assert.Equal(t, "bcd", d.Get("credentials_id"))
+	assert.Equal(t, "def", d.Get("customer_managed_key_id"))
+	assert.Equal(t, "900150983cd24fb0", d.Get("deployment_name"))
+	assert.Equal(t, false, d.Get("is_no_public_ip_enabled"))
+	assert.Equal(t, "fgh", d.Get("network_id"))
+	assert.Equal(t, "ghi", d.Get("storage_configuration_id"))
+	assert.Equal(t, false, d.Get("verify_workspace_runnning"))
+	assert.Equal(t, 1234, d.Get("workspace_id"))
+	assert.Equal(t, "labdata", d.Get("workspace_name"))
+	assert.Equal(t, "RUNNING", d.Get("workspace_status"))
+	assert.Equal(t, "https://900150983cd24fb0.cloud.databricks.com", d.Get("workspace_url"))
+}
+
+func TestResourceMWSWorkspacesRead_NotFound(t *testing.T) {
+	d, err := ResourceTester(t, []HTTPFixture{
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/accounts/abc/workspaces/1234?",
+			Response: service.APIErrorBody{
+				ErrorCode: "NOT_FOUND",
+				Message:   "Item not found",
+			},
+			Status: 404,
+		},
+	}, resourceMWSWorkspaces, nil, actionWithID("abc/1234", resourceMWSWorkspacesRead))
+	assert.NoError(t, err, err)
+	assert.Equal(t, "", d.Id(), "Id should be empty for missing resources")
+}
+
+func TestResourceMWSWorkspacesRead_Error(t *testing.T) {
+	d, err := ResourceTester(t, []HTTPFixture{
+		{ // read log output for correct url...
+			Method:   "GET",
+			Resource: "/api/2.0/accounts/abc/workspaces/1234?",
+			Response: service.APIErrorBody{
+				ErrorCode: "INVALID_REQUEST",
+				Message:   "Internal error happened",
+			},
+			Status: 400,
+		},
+	}, resourceMWSWorkspaces, nil, actionWithID("abc/1234", resourceMWSWorkspacesRead))
+	assert.Errorf(t, err, "Internal error happened")
+	assert.Equal(t, "abc/1234", d.Id(), "Id should not be empty for error reads")
+}
+
+func TestResourceMWSWorkspacesUpdate(t *testing.T) {
+	d, err := ResourceTester(t, []HTTPFixture{
+		{
+			Method:   "PATCH",
+			Resource: "/api/2.0/accounts/abc/workspaces/1234",
+			ExpectedRequest: model.MWSWorkspace{
+				StorageConfigurationID: "ghi",
+				NetworkID:              "fgh",
+				CustomerManagedKeyID:   "def",
+				IsNoPublicIpEnabled:    true,
+				AwsRegion:              "us-east-1",
+				CredentialsID:          "bcd",
+			},
+		},
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/accounts/abc/workspaces/1234?",
+			Response: model.MWSWorkspace{
+				WorkspaceStatus:        model.WorkspaceStatusRunning,
+				IsNoPublicIpEnabled:    true,
+				WorkspaceName:          "labdata",
+				DeploymentName:         "900150983cd24fb0",
+				AwsRegion:              "us-east-1",
+				CredentialsID:          "bcd",
+				StorageConfigurationID: "ghi",
+				NetworkID:              "fgh",
+				CustomerManagedKeyID:   "def",
+				WorkspaceID:            1234,
+			},
+		},
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/accounts/abc/workspaces/1234?",
+			Response: model.MWSWorkspace{
+				WorkspaceStatus:        model.WorkspaceStatusRunning,
+				IsNoPublicIpEnabled:    true,
+				WorkspaceName:          "labdata",
+				DeploymentName:         "900150983cd24fb0",
+				AwsRegion:              "us-east-1",
+				CredentialsID:          "bcd",
+				StorageConfigurationID: "ghi",
+				NetworkID:              "fgh",
+				CustomerManagedKeyID:   "def",
+				WorkspaceID:            1234,
+			},
+		},
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/accounts/abc/workspaces/1234?",
+			Response: model.MWSWorkspace{
+				WorkspaceStatus:        model.WorkspaceStatusRunning,
+				IsNoPublicIpEnabled:    true,
+				WorkspaceName:          "labdata",
+				DeploymentName:         "900150983cd24fb0",
+				AwsRegion:              "us-east-1",
+				CredentialsID:          "bcd",
+				StorageConfigurationID: "ghi",
+				NetworkID:              "fgh",
+				CustomerManagedKeyID:   "def",
+				WorkspaceID:            1234,
+			},
+		},
+	}, resourceMWSWorkspaces, map[string]interface{}{
+		"account_id":                "abc",
+		"aws_region":                "us-east-1",
+		"credentials_id":            "bcd",
+		"customer_managed_key_id":   "def",
+		"deployment_name":           "900150983cd24fb0",
+		"workspace_name":            "labdata",
+		"is_no_public_ip_enabled":   true,
+		"network_id":                "fgh",
+		"storage_configuration_id":  "ghi",
+		"verify_workspace_runnning": false,
+	}, actionWithID("abc/1234", resourceMWSWorkspacesUpdate))
+	assert.NoError(t, err, err)
+	assert.Equal(t, "abc/1234", d.Id(), "Id should be the same as in reading")
+}
+
+func TestResourceMWSWorkspacesUpdate_Error(t *testing.T) {
+	d, err := ResourceTester(t, []HTTPFixture{
+		{
+			Method:   "PATCH",
+			Resource: "/api/2.0/accounts/abc/workspaces/1234",
+			Response: service.APIErrorBody{
+				ErrorCode: "INVALID_REQUEST",
+				Message:   "Internal error happened",
+			},
+			Status: 400,
+		},
+	}, resourceMWSWorkspaces, map[string]interface{}{
+		"account_id":                "abc",
+		"aws_region":                "us-east-1",
+		"credentials_id":            "bcd",
+		"customer_managed_key_id":   "def",
+		"deployment_name":           "900150983cd24fb0",
+		"workspace_name":            "labdata",
+		"is_no_public_ip_enabled":   true,
+		"network_id":                "fgh",
+		"storage_configuration_id":  "ghi",
+		"verify_workspace_runnning": false,
+	}, actionWithID("abc/1234", resourceMWSWorkspacesUpdate))
+	assert.Errorf(t, err, "Internal error happened")
+	assert.Equal(t, "abc/1234", d.Id())
+}
+
+func TestResourceMWSWorkspacesDelete(t *testing.T) {
+	d, err := ResourceTester(t, []HTTPFixture{
+		{
+			Method:   "DELETE",
+			Resource: "/api/2.0/accounts/abc/workspaces/1234",
+		},
+	}, resourceMWSWorkspaces, nil, actionWithID("abc/1234", resourceMWSWorkspacesDelete))
+	assert.NoError(t, err, err)
+	assert.Equal(t, "abc/1234", d.Id())
+}
+
+func TestResourceMWSWorkspacesDelete_Error(t *testing.T) {
+	d, err := ResourceTester(t, []HTTPFixture{
+		{
+			Method:   "DELETE",
+			Resource: "/api/2.0/accounts/abc/workspaces/1234",
+			Response: service.APIErrorBody{
+				ErrorCode: "INVALID_REQUEST",
+				Message:   "Internal error happened",
+			},
+			Status: 400,
+		},
+	}, resourceMWSWorkspaces, nil, actionWithID("abc/1234", resourceMWSWorkspacesDelete))
+	assert.Errorf(t, err, "Internal error happened")
+	assert.Equal(t, "abc/1234", d.Id())
 }

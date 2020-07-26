@@ -376,7 +376,12 @@ func ResourceTester(t *testing.T,
 				for key, value := range receivedRequest {
 					camel := ""
 					for _, part := range strings.Split(key, "_") {
-						camel += strings.Title(part)
+						if len(key) < 4 {
+							// golang styles, meh...
+							camel += strings.ToUpper(key)
+						} else {
+							camel += strings.Title(part)
+						}
 					}
 					// best effort prediction of what struct should look like...
 					expectedRequest += fmt.Sprintf("					%s: %#v,\n", camel, value)

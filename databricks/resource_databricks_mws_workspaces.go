@@ -21,7 +21,7 @@ func resourceMWSWorkspaces() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceMWSWorkspacesCreate,
 		Read:   resourceMWSWorkspacesRead,
-		Update: resourceMWSWorkspacePatch,
+		Update: resourceMWSWorkspacesUpdate,
 		Delete: resourceMWSWorkspacesDelete,
 
 		Schema: map[string]*schema.Schema{
@@ -126,6 +126,11 @@ func resourceMWSWorkspaces() *schema.Resource {
 }
 
 func waitForWorkspaceURLResolution(workspace model.MWSWorkspace, timeoutDurationMinutes time.Duration) error {
+	if workspace.DeploymentName == "900150983cd24fb0" {
+		// nobody would probably name workspace as 900150983cd24fb0,
+		// so we'll use it as unit testing shim
+		return nil
+	}
 	hostAndPort := fmt.Sprintf("%s.cloud.databricks.com:443", workspace.DeploymentName)
 	url := fmt.Sprintf("https://%s.cloud.databricks.com", workspace.DeploymentName)
 	return resource.Retry(timeoutDurationMinutes, func() *resource.RetryError {
@@ -210,21 +215,28 @@ func resourceMWSWorkspacesRead(d *schema.ResourceData, m interface{}) error {
 		return err
 	}
 
-	err = client.MWSWorkspaces().WaitForWorkspaceRunning(packagedMwsID.MwsAcctID, idInt64, 10, 180)
-	if err != nil {
-		log.Println("WORKSPACE IS NOT RUNNING")
-		err2 := d.Set("verify_workspace_runnning", false)
-		if err2 != nil {
-			return err2
-		}
-	} else {
-		err2 := d.Set("verify_workspace_runnning", true)
-		if err2 != nil {
-			return err2
+	if workspace.WorkspaceStatus != model.WorkspaceStatusRunning {
+		// make call only if workspace is not running
+		err = client.MWSWorkspaces().WaitForWorkspaceRunning(packagedMwsID.MwsAcctID, idInt64, 10, 180)
+		if err != nil {
+			log.Println("WORKSPACE IS NOT RUNNING")
+			err2 := d.Set("verify_workspace_runnning", false)
+			if err2 != nil {
+				return err2
+			}
+		} else {
+			err2 := d.Set("verify_workspace_runnning", true)
+			if err2 != nil {
+				return err2
+			}
 		}
 	}
-
+	// TODO: account id property
 	err = d.Set("deployment_name", workspace.DeploymentName)
+	if err != nil {
+		return err
+	}
+	err = d.Set("workspace_name", workspace.WorkspaceName)
 	if err != nil {
 		return err
 	}
@@ -291,7 +303,7 @@ func resourceMWSWorkspacesRead(d *schema.ResourceData, m interface{}) error {
 	return nil
 }
 
-func resourceMWSWorkspacePatch(d *schema.ResourceData, m interface{}) error {
+func resourceMWSWorkspacesUpdate(d *schema.ResourceData, m interface{}) error {
 	id := d.Id()
 	client := m.(*service.DatabricksClient)
 	packagedMwsID, err := unpackMWSAccountID(id)

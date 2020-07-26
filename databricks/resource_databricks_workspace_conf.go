@@ -42,6 +42,7 @@ func resourceWorkspaceConfCreateOrUpdate(d *schema.ResourceData, m interface{}) 
 		tfNameToJsonName["enable_ip_access_lists"]: strconv.FormatBool(d.Get("enable_ip_access_lists").(bool)),
 	}
 	err := client.WorkspaceConfigurations().Update(wsConfMap)
+	// 404 check not needed as this only return 400, 401, and 500 on error
 	if err != nil {
 		return err
 	}
@@ -54,6 +55,7 @@ func resourceWorkspaceConfCreateOrUpdate(d *schema.ResourceData, m interface{}) 
 func resourceWorkspaceConfRead(d *schema.ResourceData, m interface{}) error {
 	client := m.(*service.DBApiClient)
 	resp, err := client.WorkspaceConfigurations().Read(tfNameToJsonName["enable_ip_access_lists"])
+	// 404 check not required as the service only return 400 errors
 	if err != nil {
 		return err
 	}

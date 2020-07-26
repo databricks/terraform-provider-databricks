@@ -24,7 +24,7 @@ func TestWorkspaceConfCreateOrUpdate(t *testing.T) {
 			Method:   http.MethodPatch,
 			Resource: "/api/2.0/preview/workspace-conf",
 			ExpectedRequest: map[string]string{
-				"enabledIpAccessLists": "true",
+				"enableIpAccessLists": "true",
 			},
 		},
 	},
@@ -119,7 +119,7 @@ func TestWorkspaceConfDelete(t *testing.T) {
 			Method:   http.MethodPatch,
 			Resource: "/api/2.0/preview/workspace-conf",
 			ExpectedRequest: map[string]string{
-				"enabledIpAccessLists": "false",
+				"enableIpAccessLists": "false",
 			},
 		},
 	},

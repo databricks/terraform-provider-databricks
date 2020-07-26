@@ -19,7 +19,7 @@ resource "azurerm_databricks_workspace" "enterprise-demo-1" {
     virtual_network_id = var.vnet_id
   }
   tags = {
-    Owner = "jason.robey@databricks.com"
+    Owner = "thestuff@nonexistent.net"
   }
 }
 

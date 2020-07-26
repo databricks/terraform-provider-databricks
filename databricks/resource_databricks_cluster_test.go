@@ -179,8 +179,8 @@ func TestAzureAccClusterResource_CreateClusterViaInstancePool(t *testing.T) {
 		testDefaultClusterResource(instancePoolLine, "")
 
 	resource.Test(t, resource.TestCase{
-		Providers: testAccProviders,
-		IsUnitTest: true,
+		Providers:  testAccProviders,
+		IsUnitTest: debugIfCloudEnvSet(),
 		Steps: []resource.TestStep{
 			{
 				Config: resourceConfig,

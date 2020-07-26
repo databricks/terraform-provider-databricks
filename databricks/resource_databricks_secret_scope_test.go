@@ -3,12 +3,14 @@ package databricks
 import (
 	"errors"
 	"fmt"
+	"net/http"
 	"os"
 	"testing"
 
 	"github.com/databrickslabs/databricks-terraform/client/model"
 	"github.com/databrickslabs/databricks-terraform/client/service"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 	"github.com/stretchr/testify/assert"
 )
@@ -122,4 +124,53 @@ func testSecretScopeResource(scopeName string) string {
 			name = "%s"
 		}
 		`, scopeName)
+}
+
+func TestResourceSecretScopeRead(t *testing.T) {
+	d, err := ResourceTester(t, []HTTPFixture{
+		{
+			Method:   http.MethodGet,
+			Resource: "/api/2.0/secrets/scopes/list?",
+			Response: model.SecretScopeList{
+				Scopes: []model.SecretScope{
+					{
+						Name:        "abc",
+						BackendType: "DATABRICKS",
+					},
+				},
+			},
+			Status: 200,
+		},
+	}, resourceSecretScope, nil, func(d *schema.ResourceData, c interface{}) error {
+		d.SetId("abc")
+		return resourceSecretScopeRead(d, c)
+	})
+	assert.NoError(t, err, err)
+	assert.Equal(t, "abc", d.Id())
+	assert.Equal(t, "DATABRICKS", d.Get("backend_type"))
+	assert.Equal(t, "users", d.Get("initial_manage_principal"))
+	assert.Equal(t, "abc", d.Get("name"))
+}
+
+func TestResourceSecretScopeRead_NotFound(t *testing.T) {
+	d, err := ResourceTester(t, []HTTPFixture{
+		{
+			Method:   http.MethodGet,
+			Resource: "/api/2.0/secrets/scopes/list?",
+			Response: model.SecretScopeList{
+				Scopes: []model.SecretScope{
+					{
+						Name:        "bcd",
+						BackendType: "DATABRICKS",
+					},
+				},
+			},
+			Status: 200,
+		},
+	}, resourceSecretScope, nil, func(d *schema.ResourceData, c interface{}) error {
+		d.SetId("abc")
+		return resourceSecretScopeRead(d, c)
+	})
+	assert.NoError(t, err, err)
+	assert.Equal(t, "", d.Id())
 }

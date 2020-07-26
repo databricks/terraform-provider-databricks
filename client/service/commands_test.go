@@ -700,21 +700,21 @@ func TestAccContext(t *testing.T) {
 
 	if assert.NoError(t, err, err) {
 		t.Log(context)
-	
+
 		err = client.Commands().waitForContextReady(context, clusterID, 1, 1)
 		assert.NoError(t, err, err)
-	
+
 		status, err := client.Commands().getContext(context, clusterID)
 		assert.NoError(t, err, err)
 		assert.True(t, status == "Running")
 		t.Log(status)
-	
+
 		commandID, err := client.Commands().createCommand(context, clusterID, "python", "print('hello world')")
 		assert.NoError(t, err, err)
-	
+
 		err = client.Commands().waitForCommandFinished(commandID, context, clusterID, 5, 20)
 		assert.NoError(t, err, err)
-	
+
 		resp, err := client.Commands().getCommand(commandID, context, clusterID)
 		assert.NoError(t, err, err)
 		assert.NotNil(t, resp.Results.Data)

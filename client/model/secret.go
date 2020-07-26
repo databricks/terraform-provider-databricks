@@ -8,10 +8,20 @@ const (
 	ScopeBackendTypeDatabricks ScopeBackendType = "DATABRICKS"
 )
 
+// SecretScopeList holds list of secret scopes
+type SecretScopeList struct {
+	Scopes []SecretScope `json:"scopes,omitempty"`
+}
+
 // SecretScope is a struct that encapsulates the secret scope
 type SecretScope struct {
 	Name        string           `json:"name,omitempty"`
 	BackendType ScopeBackendType `json:"backend_type,omitempty"`
+}
+
+// SecretsList ...
+type SecretsList struct {
+	Secrets []SecretMetadata `json:"secrets,omitempty"`
 }
 
 // SecretMetadata is a struct that encapsulates the metadata for a secret object in a scope

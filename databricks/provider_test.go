@@ -17,7 +17,6 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/databrickslabs/databricks-terraform/client/model"
 	"github.com/databrickslabs/databricks-terraform/client/service"
 )
 
@@ -52,8 +51,6 @@ var (
 )
 
 type testEpoch struct {
-	instancePool *model.InstancePoolAndStats
-	client       *service.DatabricksClient
 }
 
 func (e *testEpoch) RandomShortName() string {
@@ -64,7 +61,7 @@ func (e *testEpoch) RandomLongName() string {
 	return "Terraform Integration Test " + e.RandomShortName()
 }
 
-func (e *testEpoch) ResourceCheck(name string, 
+func (e *testEpoch) ResourceCheck(name string,
 	cb func(client *service.DatabricksClient, id string) error) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]

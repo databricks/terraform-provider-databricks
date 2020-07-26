@@ -17,7 +17,7 @@ func TestAccJobResource(t *testing.T) {
 		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
 	}
 	resource.Test(t, resource.TestCase{
-		IsUnitTest: true,
+		IsUnitTest: debugIfCloudEnvSet(),
 		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{

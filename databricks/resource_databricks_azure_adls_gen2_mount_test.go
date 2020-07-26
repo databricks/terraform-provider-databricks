@@ -21,8 +21,8 @@ func TestAzureAccAdlsGen2Mount_correctly_mounts(t *testing.T) {
 	terraformToApply := testAdlsGen2MountCorrectlyMounts(t)
 
 	resource.Test(t, resource.TestCase{
-		Providers: testAccProviders,
-		IsUnitTest: true,
+		Providers:  testAccProviders,
+		IsUnitTest: debugIfCloudEnvSet(),
 		Steps: []resource.TestStep{
 			{
 				Config: terraformToApply,
@@ -40,8 +40,8 @@ func TestAzureAccAdlsGen2Mount_cluster_deleted_correctly_mounts(t *testing.T) {
 	var cluster model.ClusterInfo
 
 	resource.Test(t, resource.TestCase{
-		Providers: testAccProviders,
-		IsUnitTest: true,
+		Providers:  testAccProviders,
+		IsUnitTest: debugIfCloudEnvSet(),
 		Steps: []resource.TestStep{
 			{
 				Config: terraformToApply,
@@ -64,9 +64,9 @@ func TestAzureAccAdlsGen2Mount_capture_error(t *testing.T) {
 		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
 	}
 
-	clientID := os.Getenv("ARM_CLIENT_ID") // make dual-env-var
-	clientSecret := os.Getenv("ARM_CLIENT_SECRET") // make dual-env-var
-	tenantID := os.Getenv("ARM_TENANT_ID") // make dual-env-var
+	clientID := os.Getenv("ARM_CLIENT_ID")             // make dual-env-var
+	clientSecret := os.Getenv("ARM_CLIENT_SECRET")     // make dual-env-var
+	tenantID := os.Getenv("ARM_TENANT_ID")             // make dual-env-var
 	subscriptionID := os.Getenv("ARM_SUBSCRIPTION_ID") // make dual-env-var
 	workspaceName := os.Getenv("TEST_WORKSPACE_NAME")
 	resourceGroupName := os.Getenv("TEST_RESOURCE_GROUP")
@@ -81,8 +81,8 @@ func TestAzureAccAdlsGen2Mount_capture_error(t *testing.T) {
 	}
 
 	resource.Test(t, resource.TestCase{
-		IsUnitTest: true,
-		Providers: testAccProviders,
+		IsUnitTest: debugIfCloudEnvSet(),
+		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config: fmt.Sprintf(`
@@ -182,8 +182,8 @@ func testAdlsGen2MountCorrectlyMounts(t *testing.T) string {
 	  client_secret_key      = databricks_secret.client_secret.key
 	  initialize_file_system = true
 	}
-`, clientID, clientSecret, tenantID, gen2AdalName, service.CommonRuntimeVersion(), 
-service.CommonInstancePoolID(), t.Name())
+`, clientID, clientSecret, tenantID, gen2AdalName, service.CommonRuntimeVersion(),
+		service.CommonInstancePoolID(), t.Name())
 	return definition
 }
 

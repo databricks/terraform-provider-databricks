@@ -1,6 +1,7 @@
 package databricks
 
 import (
+	"fmt"
 	"log"
 	"strings"
 
@@ -44,6 +45,10 @@ func getSecretID(scope string, key string) (string, error) {
 }
 
 func getScopeAndKeyFromSecretID(secretIDString string) (string, string, error) {
+	split := strings.Split(secretIDString, "|||")
+	if len(split) != 2 {
+		return "", "", fmt.Errorf("Malformed secret id: %s", secretIDString)
+	}
 	return strings.Split(secretIDString, "|||")[0], strings.Split(secretIDString, "|||")[1], nil
 }
 

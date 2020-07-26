@@ -37,9 +37,7 @@ func (a SecretsAPI) Delete(scope, key string) error {
 
 // List lists the secret keys that are stored at this scope
 func (a SecretsAPI) List(scope string) ([]model.SecretMetadata, error) {
-	var secretsList struct {
-		Secrets []model.SecretMetadata `json:"secrets,omitempty"`
-	}
+	var secretsList model.SecretsList
 	err := a.client.get("/secrets/list", map[string]string{
 		"scope": scope,
 	}, &secretsList)

@@ -55,6 +55,10 @@ func resourceClusterPolicyRead(d *schema.ResourceData, m interface{}) error {
 	if err != nil {
 		return err
 	}
+	err = d.Set("policy_id", clusterPolicy.PolicyID)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 

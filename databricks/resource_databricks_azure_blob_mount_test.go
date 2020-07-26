@@ -22,8 +22,8 @@ func TestAzureAccBlobMount_correctly_mounts(t *testing.T) {
 	var azureBlobMount AzureBlobMount
 
 	resource.Test(t, resource.TestCase{
-		IsUnitTest: true,
-		Providers: testAccProviders,
+		IsUnitTest: debugIfCloudEnvSet(),
+		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config: terraformToApply,
@@ -42,6 +42,7 @@ func TestAzureAccBlobMount_correctly_mounts(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testBlobMountMountExists("databricks_azure_blob_mount.mount", &azureBlobMount, &clusterInfo),
 				),
+				Destroy: true,
 			},
 		},
 	})
@@ -177,7 +178,7 @@ func testBlobMountCorrectlyMounts(t *testing.T) string {
 		token_secret_key     = databricks_secret.storage_key.key
 	}
 
-`, blobAccountKey, blobAccountName, service.CommonRuntimeVersion(), 
-service.CommonInstancePoolID(), t.Name())
+`, blobAccountKey, blobAccountName, service.CommonRuntimeVersion(),
+		service.CommonInstancePoolID(), t.Name())
 	return definition
 }

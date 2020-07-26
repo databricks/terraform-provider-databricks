@@ -55,7 +55,7 @@ func TestAccGroupMemberResource(t *testing.T) {
 				PreConfig: func() {
 					//	manually create subgroup c
 					client := testAccProvider.Meta().(*service.DatabricksClient)
-					subGroupC, _ := client.Groups().Create("manually-created-group-" + randomName, nil, nil, nil)
+					subGroupC, _ := client.Groups().Create("manually-created-group-"+randomName, nil, nil, nil)
 					manuallyCreatedGroup = &subGroupC
 					//  Add new subgroup to current group
 					err := client.Groups().Patch(group.ID, []string{manuallyCreatedGroup.ID}, nil, model.GroupMembersPath)

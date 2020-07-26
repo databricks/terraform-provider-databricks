@@ -361,7 +361,42 @@ func ResourceTester(t *testing.T,
 			}
 		}
 		if !found {
-			assert.Fail(t, fmt.Sprintf("Received unexpected call: %s %s", req.Method, req.RequestURI))
+			receivedRequest := map[string]interface{}{}
+			buf := new(bytes.Buffer)
+			_, err := buf.ReadFrom(req.Body)
+			assert.NoError(t, err, err)
+			err = json.Unmarshal(buf.Bytes(), &receivedRequest)
+			assert.NoError(t, err, err)
+
+			expectedRequest := ""
+			if len(receivedRequest) > 0 {
+				// guessing model name would require going over AST,
+				// which is not something i'm willing to write on my weekend
+				expectedRequest += "ExpectedRequest: model.XXX {\n"
+				for key, value := range receivedRequest {
+					camel := ""
+					for _, part := range strings.Split(key, "_") {
+						camel += strings.Title(part)
+					}
+					// best effort prediction of what struct should look like...
+					expectedRequest += fmt.Sprintf("					%s: %#v,\n", camel, value)
+				}
+				expectedRequest += "					},\n"
+			}
+			stub := fmt.Sprintf(`{
+				Method:   "%s",
+				Resource: "%s",
+				%s
+				Response: model.XXX {
+					// fill in specific fields...
+				},
+				//Response: service.APIErrorBody{
+				//	ErrorCode: "INVALID_REQUEST",
+				//	Message:   "Internal error happened",
+				//},
+				//Status: 400,
+			},`, req.Method, req.RequestURI, expectedRequest)
+			assert.Fail(t, fmt.Sprintf("Missing stub, please add: %s", stub))
 			t.FailNow()
 		}
 	}))
@@ -407,6 +442,17 @@ func ResourceTester(t *testing.T,
 
 	// warns, errs := schemaMap(r.Schema).Validate(c)
 	return resourceData, whatever(resourceData, &client)
+}
+
+func actionWithID(id string, w schema.CreateFunc) schema.CreateFunc {
+	return func(d *schema.ResourceData, c interface{}) error {
+		d.SetId(id)
+		return w(d, c)
+	}
+}
+
+func debugIfCloudEnvSet() bool {
+	return os.Getenv("CLOUD_ENV") != ""
 }
 
 func TestIsClusterMissingTrueWhenClusterIdSpecifiedPresent(t *testing.T) {

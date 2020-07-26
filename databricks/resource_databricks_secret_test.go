@@ -9,6 +9,7 @@ import (
 	"github.com/databrickslabs/databricks-terraform/client/model"
 	"github.com/databrickslabs/databricks-terraform/client/service"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 	"github.com/stretchr/testify/assert"
 )
@@ -156,4 +157,52 @@ func testSecretResource(scopeName, key, value string) string {
 			scope = databricks_secret_scope.my_scope.name
 		}
 		`, scopeName, key, value)
+}
+
+func TestResourceSecretRead(t *testing.T) {
+	d, err := ResourceTester(t, []HTTPFixture{
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/secrets/list?scope=foo",
+			Response: model.SecretsList{
+				Secrets: []model.SecretMetadata{
+					{
+						Key:                  "bar",
+						LastUpdatedTimestamp: 12345678,
+					},
+				},
+			},
+		},
+	}, resourceSecret, nil, func(d *schema.ResourceData, c interface{}) error {
+		d.SetId("foo|||bar")
+		return resourceSecretRead(d, c)
+	})
+	assert.NoError(t, err, err)
+	assert.Equal(t, "foo|||bar", d.Id())
+	assert.Equal(t, "bar", d.Get("key"))
+	assert.Equal(t, 12345678, d.Get("last_updated_timestamp"))
+	assert.Equal(t, "foo", d.Get("scope"))
+	assert.Equal(t, "", d.Get("string_value"))
+}
+
+func TestResourceSecretRead_NotFound(t *testing.T) {
+	d, err := ResourceTester(t, []HTTPFixture{
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/secrets/list?scope=foo",
+			Response: model.SecretsList{
+				Secrets: []model.SecretMetadata{
+					{
+						Key:                  "bar",
+						LastUpdatedTimestamp: 12345678,
+					},
+				},
+			},
+		},
+	}, resourceSecret, nil, func(d *schema.ResourceData, c interface{}) error {
+		d.SetId("foo|||missing")
+		return resourceSecretRead(d, c)
+	})
+	assert.NoError(t, err, err)
+	assert.Equal(t, "", d.Id())
 }

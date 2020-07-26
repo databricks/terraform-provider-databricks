@@ -101,7 +101,7 @@ func CommonInstancePoolID() string {
 			NodeTypeID:                         CommonInstanceType(),
 			InstancePoolName:                   currentUserPool,
 			IdleInstanceAutoTerminationMinutes: 15,
-			MinIdleInstances: 					2,
+			MinIdleInstances:                   2,
 			MaxCapacity:                        10,
 		})
 		if err != nil {

@@ -29,9 +29,7 @@ func (a SecretScopesAPI) Delete(scope string) error {
 
 // List lists all secret scopes available in the workspace
 func (a SecretScopesAPI) List() ([]model.SecretScope, error) {
-	var listSecretScopesResponse struct {
-		Scopes []model.SecretScope `json:"scopes,omitempty"`
-	}
+	var listSecretScopesResponse model.SecretScopeList
 	err := a.client.get("/secrets/scopes/list", nil, &listSecretScopesResponse)
 	return listSecretScopesResponse.Scopes, err
 }

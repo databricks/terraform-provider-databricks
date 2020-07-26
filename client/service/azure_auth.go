@@ -144,29 +144,6 @@ func (aa *AzureAuth) configureWithAzureCLI() (func(r *http.Request) error, error
 // 	}, nil
 // }
 
-func (aa *AzureAuth) getADBPlatformToken() (string, error) {
-	log.Println("[DEBUG] Creating Azure Databricks management OAuth token.")
-	platformTokenOAuthCfg, err := adal.NewOAuthConfigWithAPIVersion(azure.PublicCloud.ActiveDirectoryEndpoint,
-		aa.TenantID,
-		nil)
-	if err != nil {
-		return "", err
-	}
-	platformToken, err := adal.NewServicePrincipalToken(
-		*platformTokenOAuthCfg,
-		aa.ClientID,
-		aa.ClientSecret,
-		AzureDatabricksResourceID)
-	if err != nil {
-		return "", err
-	}
-	err = platformToken.Refresh()
-	if err != nil {
-		return "", err
-	}
-	return platformToken.OAuthToken(), nil
-}
-
 func (aa *AzureAuth) acquirePAT(
 	factory func(resource string) (autorest.Authorizer, error),
 	visitors ...func(r *http.Request, ma autorest.Authorizer) error) (*model.TokenResponse, error) {
@@ -288,10 +265,10 @@ func (aa *AzureAuth) getClientSecretAuthorizer(resource string) (autorest.Author
 	if resource != AzureDatabricksResourceID {
 		es := auth.EnvironmentSettings{
 			Values: map[string]string{
-				auth.ClientID: aa.ClientID,
+				auth.ClientID:     aa.ClientID,
 				auth.ClientSecret: aa.ClientSecret,
-				auth.TenantID: aa.TenantID,
-				auth.Resource: resource,
+				auth.TenantID:     aa.TenantID,
+				auth.Resource:     resource,
 			},
 			Environment: azure.PublicCloud,
 		}

@@ -21,7 +21,7 @@ resource "databricks_ip_access_list" "allowed-list" {
 
 The following arguments are supported:
 
-* `enable_ip_access_lists` -  **(Optional)** This is the display name for the given IP ACL List.
+* `label` -  **(Optional)** This is the display name for the given IP ACL List.
 
 * `list_type` -  **(Required)** Can only be "WHITELIST" or "BLACKLIST"
 

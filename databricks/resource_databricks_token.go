@@ -60,6 +60,7 @@ func resourceTokenCreate(d *schema.ResourceData, m interface{}) error {
 	if err != nil {
 		return err
 	}
+	// TODO: (loprio) check if we can omit read
 	return resourceTokenRead(d, m)
 }
 
@@ -76,6 +77,10 @@ func resourceTokenRead(d *schema.ResourceData, m interface{}) error {
 		return err
 	}
 	err = d.Set("creation_time", token.CreationTime)
+	if err != nil {
+		return err
+	}
+	err = d.Set("comment", token.Comment)
 	if err != nil {
 		return err
 	}

@@ -24,9 +24,7 @@ func (a TokensAPI) Create(tokenLifetime time.Duration, comment string) (r model.
 
 // List will list all the token metadata and not the content of the tokens in the workspace
 func (a TokensAPI) List() ([]model.TokenInfo, error) {
-	var tokenListResult struct {
-		TokenInfos []model.TokenInfo `json:"token_infos,omitempty"`
-	}
+	var tokenListResult model.TokenList
 	err := a.client.get("/token/list", nil, &tokenListResult)
 	return tokenListResult.TokenInfos, err
 }

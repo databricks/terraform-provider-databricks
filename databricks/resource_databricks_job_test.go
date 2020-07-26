@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"testing"
 
+	"github.com/databrickslabs/databricks-terraform/client/model"
 	"github.com/databrickslabs/databricks-terraform/client/service"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/stretchr/testify/assert"
@@ -75,4 +76,261 @@ func TestAccJobResource(t *testing.T) {
 				return errors.New("resource job is not cleaned up")
 			}),
 	})
+}
+
+func TestResourceJobCreate(t *testing.T) {
+	d, err := ResourceTester(t, []HTTPFixture{
+		{
+			Method:   "POST",
+			Resource: "/api/2.0/jobs/create",
+			ExpectedRequest: model.JobSettings{
+				ExistingClusterID: "abc",
+				NotebookTask:      &model.NotebookTask{},
+				SparkJarTask: &model.SparkJarTask{
+					JarURI:        "dbfs://a/b/c.jar",
+					MainClassName: "com.labs.BarMain",
+				},
+				Name:                   "Featurizer",
+				MaxRetries:             3,
+				MinRetryIntervalMillis: 5000,
+				RetryOnTimeout:         true,
+				MaxConcurrentRuns:      1,
+			},
+			Response: model.Job{
+				JobID: 789,
+			},
+		},
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/jobs/get?job_id=789",
+			Response: model.Job{
+				JobID: 789,
+				Settings: &model.JobSettings{
+					ExistingClusterID: "abc",
+					NotebookTask:      &model.NotebookTask{},
+					SparkJarTask: &model.SparkJarTask{
+						JarURI:        "dbfs://a/b/c.jar",
+						MainClassName: "com.labs.BarMain",
+					},
+					Name:                   "Featurizer",
+					MaxRetries:             3,
+					MinRetryIntervalMillis: 5000,
+					RetryOnTimeout:         true,
+					MaxConcurrentRuns:      1,
+				},
+			},
+		},
+	}, resourceJob, map[string]interface{}{
+		"existing_cluster_id":       "abc",
+		"jar_main_class_name":       "com.labs.BarMain",
+		"jar_uri":                   "dbfs://a/b/c.jar",
+		"max_concurrent_runs":       1,
+		"max_retries":               3,
+		"min_retry_interval_millis": 5000,
+		"name":                      "Featurizer",
+		"retry_on_timeout":          true,
+	}, resourceJobCreate)
+	assert.NoError(t, err, err)
+	assert.Equal(t, "789", d.Id())
+}
+
+func TestResourceJobCreate_Error(t *testing.T) {
+	d, err := ResourceTester(t, []HTTPFixture{
+		{
+			Method:   "POST",
+			Resource: "/api/2.0/jobs/create",
+			Response: service.APIErrorBody{
+				ErrorCode: "INVALID_REQUEST",
+				Message:   "Internal error happened",
+			},
+			Status: 400,
+		},
+	}, resourceJob, map[string]interface{}{
+		"existing_cluster_id":       "abc",
+		"jar_main_class_name":       "com.labs.BarMain",
+		"jar_uri":                   "dbfs://a/b/c.jar",
+		"max_concurrent_runs":       1,
+		"max_retries":               3,
+		"min_retry_interval_millis": 5000,
+		"name":                      "Featurizer",
+		"retry_on_timeout":          true,
+	}, resourceJobCreate)
+	assert.Errorf(t, err, "Internal error happened")
+	assert.Equal(t, "", d.Id(), "Id should be empty for error creates")
+}
+
+func TestResourceJobRead(t *testing.T) {
+	d, err := ResourceTester(t, []HTTPFixture{
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/jobs/get?job_id=789",
+			Response: model.Job{
+				JobID: 789,
+				Settings: &model.JobSettings{
+					ExistingClusterID: "abc",
+					NotebookTask:      &model.NotebookTask{},
+					SparkJarTask: &model.SparkJarTask{
+						JarURI:        "dbfs://a/b/c.jar",
+						MainClassName: "com.labs.BarMain",
+					},
+					Name:                   "Featurizer",
+					MaxRetries:             3,
+					MinRetryIntervalMillis: 5000,
+					RetryOnTimeout:         true,
+					MaxConcurrentRuns:      1,
+				},
+			},
+		},
+	}, resourceJob, nil, actionWithID("789", resourceJobRead))
+	assert.NoError(t, err, err)
+	assert.Equal(t, "789", d.Id(), "Id should not be empty")
+	assert.Equal(t, "com.labs.BarMain", d.Get("jar_main_class_name"))
+	assert.Equal(t, "dbfs://a/b/c.jar", d.Get("jar_uri"))
+	assert.Equal(t, 789, d.Get("job_id"))
+	assert.Equal(t, 1, d.Get("max_concurrent_runs"))
+	assert.Equal(t, 3, d.Get("max_retries"))
+	assert.Equal(t, 5000, d.Get("min_retry_interval_millis"))
+}
+
+func TestResourceJobRead_NotFound(t *testing.T) {
+	d, err := ResourceTester(t, []HTTPFixture{
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/jobs/get?job_id=789",
+			Response: service.APIErrorBody{
+				ErrorCode: "NOT_FOUND",
+				Message:   "Item not found",
+			},
+			Status: 404,
+		},
+	}, resourceJob, nil, actionWithID("789", resourceJobRead))
+	assert.NoError(t, err, err)
+	assert.Equal(t, "", d.Id(), "Id should be empty for missing resources")
+}
+
+func TestResourceJobRead_Error(t *testing.T) {
+	d, err := ResourceTester(t, []HTTPFixture{
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/jobs/get?job_id=789",
+			Response: service.APIErrorBody{
+				ErrorCode: "INVALID_REQUEST",
+				Message:   "Internal error happened",
+			},
+			Status: 400,
+		},
+	}, resourceJob, nil, actionWithID("789", resourceJobRead))
+	assert.Errorf(t, err, "Internal error happened")
+	assert.Equal(t, "789", d.Id(), "Id should not be empty for error reads")
+}
+
+func TestResourceJobUpdate(t *testing.T) {
+	d, err := ResourceTester(t, []HTTPFixture{
+		{
+			Method:   "POST",
+			Resource: "/api/2.0/jobs/reset",
+			ExpectedRequest: model.UpdateJobRequest{
+				JobID: 789,
+				NewSettings: &model.JobSettings{
+					ExistingClusterID: "abc",
+					NotebookTask:      &model.NotebookTask{},
+					SparkJarTask: &model.SparkJarTask{
+						JarURI:        "dbfs://a/b/c.jar",
+						MainClassName: "com.labs.Progress",
+					},
+					Name:                   "Featurizer New",
+					MaxRetries:             3,
+					MinRetryIntervalMillis: 5000,
+					RetryOnTimeout:         true,
+					MaxConcurrentRuns:      1,
+				},
+			},
+		},
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/jobs/get?job_id=789",
+			Response: model.Job{
+				JobID: 789,
+				Settings: &model.JobSettings{
+					ExistingClusterID: "abc",
+					NotebookTask:      &model.NotebookTask{},
+					SparkJarTask: &model.SparkJarTask{
+						JarURI:        "dbfs://a/b/c.jar",
+						MainClassName: "com.labs.Progress",
+					},
+					Name:                   "Featurizer New",
+					MaxRetries:             3,
+					MinRetryIntervalMillis: 5000,
+					RetryOnTimeout:         true,
+					MaxConcurrentRuns:      1,
+				},
+			},
+		},
+	}, resourceJob, map[string]interface{}{
+		"existing_cluster_id":       "abc",
+		"jar_main_class_name":       "com.labs.Progress",
+		"jar_uri":                   "dbfs://a/b/c.jar",
+		"max_concurrent_runs":       1,
+		"max_retries":               3,
+		"min_retry_interval_millis": 5000,
+		"name":                      "Featurizer New",
+		"retry_on_timeout":          true,
+	}, actionWithID("789", resourceJobUpdate))
+	assert.NoError(t, err, err)
+	assert.Equal(t, "789", d.Id(), "Id should be the same as in reading")
+}
+
+func TestResourceJobUpdate_Error(t *testing.T) {
+	d, err := ResourceTester(t, []HTTPFixture{
+		{
+			Method:   "POST",
+			Resource: "/api/2.0/jobs/reset",
+			Response: service.APIErrorBody{
+				ErrorCode: "INVALID_REQUEST",
+				Message:   "Internal error happened",
+			},
+			Status: 400,
+		},
+	}, resourceJob, map[string]interface{}{
+		"existing_cluster_id":       "abc",
+		"jar_main_class_name":       "com.labs.Progress",
+		"jar_uri":                   "dbfs://a/b/c.jar",
+		"max_concurrent_runs":       1,
+		"max_retries":               3,
+		"min_retry_interval_millis": 5000,
+		"name":                      "Featurizer New",
+		"retry_on_timeout":          true,
+	}, actionWithID("789", resourceJobUpdate))
+	assert.Errorf(t, err, "Internal error happened")
+	assert.Equal(t, "789", d.Id())
+}
+
+func TestResourceJobDelete(t *testing.T) {
+	d, err := ResourceTester(t, []HTTPFixture{
+		{
+			Method:   "POST",
+			Resource: "/api/2.0/jobs/delete",
+			ExpectedRequest: map[string]int{
+				"job_id": 789,
+			},
+		},
+	}, resourceJob, nil, actionWithID("789", resourceJobDelete))
+	assert.NoError(t, err, err)
+	assert.Equal(t, "789", d.Id())
+}
+
+func TestResourceJobDelete_Error(t *testing.T) {
+	d, err := ResourceTester(t, []HTTPFixture{
+		{
+			Method:   "POST",
+			Resource: "/api/2.0/jobs/delete",
+			Response: service.APIErrorBody{
+				ErrorCode: "INVALID_REQUEST",
+				Message:   "Internal error happened",
+			},
+			Status: 400,
+		},
+	}, resourceJob, nil, actionWithID("789", resourceJobDelete))
+	assert.Errorf(t, err, "Internal error happened")
+	assert.Equal(t, "789", d.Id())
 }

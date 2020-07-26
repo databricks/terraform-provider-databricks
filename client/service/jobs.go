@@ -18,11 +18,10 @@ func (a JobsAPI) Create(jobSettings model.JobSettings) (model.Job, error) {
 
 // Update updates a job given the id and a new set of job settings
 func (a JobsAPI) Update(jobID int64, jobSettings model.JobSettings) error {
-	jobResetRequest := struct {
-		JobID       int64              `json:"job_id,omitempty" url:"job_id,omitempty"`
-		NewSettings *model.JobSettings `json:"new_settings,omitempty" url:"new_settings,omitempty"`
-	}{JobID: jobID, NewSettings: &jobSettings}
-	return a.client.post("/jobs/reset", jobResetRequest, nil)
+	return a.client.post("/jobs/reset", model.UpdateJobRequest{
+		JobID:       jobID,
+		NewSettings: &jobSettings,
+	}, nil)
 }
 
 // Read returns the job object with all the attributes

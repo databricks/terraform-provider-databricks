@@ -185,7 +185,7 @@ func (stub *resourceTestStub) Deletes(t *testing.T) {
 func TestGenerateTestCodeStubs(t *testing.T) {
 	funcs := getExistingUnitTests()
 	for name, resource := range testAccProvider.ResourcesMap {
-		if name != "databricks_mws_workspaces" {
+		if name != "databricks_job" {
 			continue
 		}
 		stub := resourceTestStub{Resource: resource, others: &funcs}
@@ -194,7 +194,7 @@ func TestGenerateTestCodeStubs(t *testing.T) {
 				// databricks_*
 				continue
 			}
-			if len(part) < 4 {
+			if part == "acl" {
 				stub.Name += strings.ToUpper(part)
 			} else {
 				stub.Name += strings.Title(part)

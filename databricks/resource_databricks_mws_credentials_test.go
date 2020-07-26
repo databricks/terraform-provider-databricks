@@ -7,8 +7,10 @@ import (
 	"testing"
 
 	"github.com/databrickslabs/databricks-terraform/client/model"
+	"github.com/databrickslabs/databricks-terraform/client/service"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestMwsAccCredentials(t *testing.T) {
@@ -139,4 +141,147 @@ func testMWSCredentialsCreate(mwsAcctID, mwsHost, awsAcctID, roleName, credentia
 								  role_arn         = "arn:aws:iam::%s:role/%s"
 								}
 								`, mwsHost, mwsAcctID, credentialsName, awsAcctID, roleName)
+}
+
+func TestResourceMWSCredentialsCreate(t *testing.T) {
+	d, err := ResourceTester(t, []HTTPFixture{
+		{
+			Method:   "POST",
+			Resource: "/api/2.0/accounts/abc/credentials",
+			ExpectedRequest: model.MWSCredentials{
+				CredentialsName: "Cross-account ARN",
+				AwsCredentials: &model.AwsCredentials{
+					StsRole: &model.StsRole{
+						RoleArn: "arn:aws:iam::098765:role/cross-account",
+					},
+				},
+			},
+			Response: model.MWSCredentials{
+				CredentialsID: "cid",
+			},
+		},
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/accounts/abc/credentials/cid?",
+			Response: model.MWSCredentials{
+				CredentialsID:   "cid",
+				CredentialsName: "Cross-account ARN",
+				AwsCredentials: &model.AwsCredentials{
+					StsRole: &model.StsRole{
+						RoleArn: "arn:aws:iam::098765:role/cross-account",
+					},
+				},
+			},
+		},
+	}, resourceMWSCredentials, map[string]interface{}{
+		"account_id":       "abc",
+		"credentials_name": "Cross-account ARN",
+		"role_arn":         "arn:aws:iam::098765:role/cross-account",
+	}, resourceMWSCredentialsCreate)
+	assert.NoError(t, err, err)
+	assert.Equal(t, "abc/cid", d.Id())
+}
+
+func TestResourceMWSCredentialsCreate_Error(t *testing.T) {
+	d, err := ResourceTester(t, []HTTPFixture{
+		{
+			Method:   "POST",
+			Resource: "/api/2.0/accounts/abc/credentials",
+			Response: service.APIErrorBody{
+				ErrorCode: "INVALID_REQUEST",
+				Message:   "Internal error happened",
+			},
+			Status: 400,
+		},
+	}, resourceMWSCredentials, map[string]interface{}{
+		"account_id":       "abc",
+		"credentials_name": "Cross-account ARN",
+		"role_arn":         "arn:aws:iam::098765:role/cross-account",
+	}, resourceMWSCredentialsCreate)
+	assert.Errorf(t, err, "Internal error happened")
+	assert.Equal(t, "", d.Id(), "Id should be empty for error creates")
+}
+
+func TestResourceMWSCredentialsRead(t *testing.T) {
+	d, err := ResourceTester(t, []HTTPFixture{
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/accounts/abc/credentials/cid?",
+			Response: model.MWSCredentials{
+				CredentialsID:   "cid",
+				CredentialsName: "Cross-account ARN",
+				AwsCredentials: &model.AwsCredentials{
+					StsRole: &model.StsRole{
+						RoleArn: "arn:aws:iam::098765:role/cross-account",
+					},
+				},
+			},
+		},
+	}, resourceMWSCredentials, nil, actionWithID("abc/cid", resourceMWSCredentialsRead))
+	assert.NoError(t, err, err)
+	assert.Equal(t, "abc/cid", d.Id(), "Id should not be empty")
+	assert.Equal(t, 0, d.Get("creation_time"))
+	assert.Equal(t, "cid", d.Get("credentials_id"))
+	assert.Equal(t, "Cross-account ARN", d.Get("credentials_name"))
+	assert.Equal(t, "", d.Get("external_id"))
+	assert.Equal(t, "arn:aws:iam::098765:role/cross-account", d.Get("role_arn"))
+}
+
+func TestResourceMWSCredentialsRead_NotFound(t *testing.T) {
+	d, err := ResourceTester(t, []HTTPFixture{
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/accounts/abc/credentials/cid?",
+			Response: service.APIErrorBody{
+				ErrorCode: "NOT_FOUND",
+				Message:   "Item not found",
+			},
+			Status: 404,
+		},
+	}, resourceMWSCredentials, nil, actionWithID("abc/cid", resourceMWSCredentialsRead))
+	assert.NoError(t, err, err)
+	assert.Equal(t, "", d.Id(), "Id should be empty for missing resources")
+}
+
+func TestResourceMWSCredentialsRead_Error(t *testing.T) {
+	d, err := ResourceTester(t, []HTTPFixture{
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/accounts/abc/credentials/cid?",
+			Response: service.APIErrorBody{
+				ErrorCode: "INVALID_REQUEST",
+				Message:   "Internal error happened",
+			},
+			Status: 400,
+		},
+	}, resourceMWSCredentials, nil, actionWithID("abc/cid", resourceMWSCredentialsRead))
+	assert.Errorf(t, err, "Internal error happened")
+	assert.Equal(t, "abc/cid", d.Id(), "Id should not be empty for error reads")
+}
+
+func TestResourceMWSCredentialsDelete(t *testing.T) {
+	d, err := ResourceTester(t, []HTTPFixture{
+		{
+			Method:   "DELETE",
+			Resource: "/api/2.0/accounts/abc/credentials/cid",
+		},
+	}, resourceMWSCredentials, nil, actionWithID("abc/cid", resourceMWSCredentialsDelete))
+	assert.NoError(t, err, err)
+	assert.Equal(t, "abc/cid", d.Id())
+}
+
+func TestResourceMWSCredentialsDelete_Error(t *testing.T) {
+	d, err := ResourceTester(t, []HTTPFixture{
+		{
+			Method:   "DELETE",
+			Resource: "/api/2.0/accounts/abc/credentials/cid",
+			Response: service.APIErrorBody{
+				ErrorCode: "INVALID_REQUEST",
+				Message:   "Internal error happened",
+			},
+			Status: 400,
+		},
+	}, resourceMWSCredentials, nil, actionWithID("abc", resourceMWSCredentialsDelete))
+	assert.Errorf(t, err, "Internal error happened")
+	assert.Equal(t, "abc", d.Id())
 }

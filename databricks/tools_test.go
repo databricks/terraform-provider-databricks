@@ -185,7 +185,7 @@ func (stub *resourceTestStub) Deletes(t *testing.T) {
 func TestGenerateTestCodeStubs(t *testing.T) {
 	funcs := getExistingUnitTests()
 	for name, resource := range testAccProvider.ResourcesMap {
-		if name != "databricks_mws_networks" {
+		if name != "databricks_mws_credentials" {
 			continue
 		}
 		stub := resourceTestStub{Resource: resource, others: &funcs}

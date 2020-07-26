@@ -84,8 +84,7 @@ resource "databricks_ip_access_list" "nice-list" {
   label = "gifts"
   list_type = "WHITELIST"
   ip_addresses = [
-    "10.0.100.0/24",
-    "74.36.5.42"
+    "10.0.100.0/24"
   ]
   depends_on = [azurerm_databricks_workspace.enterprise-demo-1]
 }

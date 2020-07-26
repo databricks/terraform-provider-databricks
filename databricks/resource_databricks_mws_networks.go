@@ -12,9 +12,9 @@ import (
 
 func resourceMWSNetworks() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceMWSNetworkCreate,
-		Read:   resourceMWSNetworkRead,
-		Delete: resourceMWSNetworkDelete,
+		Create: resourceMWSNetworksCreate,
+		Read:   resourceMWSNetworksRead,
+		Delete: resourceMWSNetworksDelete,
 
 		Schema: map[string]*schema.Schema{
 			"account_id": {
@@ -86,7 +86,7 @@ func resourceMWSNetworks() *schema.Resource {
 	}
 }
 
-func resourceMWSNetworkCreate(d *schema.ResourceData, m interface{}) error {
+func resourceMWSNetworksCreate(d *schema.ResourceData, m interface{}) error {
 	client := m.(*service.DatabricksClient)
 	networkName := d.Get("network_name").(string)
 	mwsAcctID := d.Get("account_id").(string)
@@ -103,10 +103,10 @@ func resourceMWSNetworkCreate(d *schema.ResourceData, m interface{}) error {
 		ResourceID: network.NetworkID,
 	}
 	d.SetId(packMWSAccountID(networksResourceID))
-	return resourceMWSNetworkRead(d, m)
+	return resourceMWSNetworksRead(d, m)
 }
 
-func resourceMWSNetworkRead(d *schema.ResourceData, m interface{}) error {
+func resourceMWSNetworksRead(d *schema.ResourceData, m interface{}) error {
 	id := d.Id()
 	client := m.(*service.DatabricksClient)
 	packagedMwsID, err := unpackMWSAccountID(id)
@@ -170,7 +170,7 @@ func resourceMWSNetworkRead(d *schema.ResourceData, m interface{}) error {
 	return nil
 }
 
-func resourceMWSNetworkDelete(d *schema.ResourceData, m interface{}) error {
+func resourceMWSNetworksDelete(d *schema.ResourceData, m interface{}) error {
 	id := d.Id()
 	client := m.(*service.DatabricksClient)
 	packagedMwsID, err := unpackMWSAccountID(id)

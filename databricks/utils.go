@@ -89,6 +89,7 @@ func unpackMWSAccountID(combined string) (PackagedMWSIds, error) {
 	var packagedMWSIds PackagedMWSIds
 	parts := strings.Split(combined, "/")
 	if len(parts) != 2 {
+		// TODO: set id to "" if invalid format
 		return packagedMWSIds, fmt.Errorf("unpacked account has more than or less than two parts, combined id: %s", combined)
 	}
 	packagedMWSIds.MwsAcctID = parts[0]

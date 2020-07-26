@@ -67,13 +67,6 @@ func resourceIPACLCreate(d *schema.ResourceData, m interface{}) error {
 		return err
 	}
 
-	log.Println("IPACLLists:  Updating interface")
-	err = updateFromStatus(d, status)
-	log.Printf("IPACLLists:  Updated interface %v\n", d)
-	if err != nil {
-		log.Printf("IPACLLists:  Error updating interface %v\n", err)
-		return err
-	}
 	d.SetId(status.ListID)
 
 	return resourceIPACLRead(d, m)

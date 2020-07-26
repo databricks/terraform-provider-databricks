@@ -3,8 +3,6 @@ package service
 import (
 	"encoding/json"
 	"net/http"
-
-	"github.com/databrickslabs/databricks-terraform/client/model"
 )
 
 // WorkspaceConfAPI exposes the workspace configurations API
@@ -20,8 +18,8 @@ func (a WorkspaceConfAPI) Update(workspaceConfMap map[string]string) error {
 }
 
 // Read just returns back a map of keys and values which keys are the configuration items and values are the settings
-func (a WorkspaceConfAPI) Read(keys string) (model.WorkspaceConfResponse, error) {
-	var wsConfResp model.WorkspaceConfResponse
+func (a WorkspaceConfAPI) Read(keys string) (map[string]string, error) {
+	var wsConfResp map[string]string
 	wsConfQuery := struct {
 		Keys string `json:"keys,omitempty" url:"keys,omitempty"`
 	}{

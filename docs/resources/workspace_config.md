@@ -13,4 +13,4 @@ resource "databricks_workspace_conf" "features" {
 
 The following arguments are supported:
 
-* `enable_ip_access_lists` -  **(Optional)** Boolean true or false to enable the [IP ACL Lists|https://docs.databricks.com/security/network/ip-access-list.html] feature.  If this is enabled and there are no IP ACL Lists defined, all IPs are allowed.
+* `enable_ip_access_lists` -  **(Optional)** Boolean true or false to enable the [IP ACL Lists](https://docs.databricks.com/security/network/ip-access-list).html] feature.  If this is enabled and there are no IP ACL Lists defined, all IPs are allowed.

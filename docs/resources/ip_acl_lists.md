@@ -1,6 +1,6 @@
 # databricks_ip_access_lists Resource
 
-This resource allows you to create IP Access Lists in Databricks to control access to your workspace by IP. All IPs and CIDR ranges from each enabled list is put together applying type "BLACKLIST" first, then if still allowed type "WHITELIST" is checked.  Please see [IP Access List|https://docs.databricks.com/security/network/ip-access-list.html] for full feature documentation.
+This resource allows you to create IP Access Lists in Databricks to control access to your workspace by IP. All IPs and CIDR ranges from each enabled list is put together applying type "BLACKLIST" first, then if still allowed type "WHITELIST" is checked.  Please see [IP Access List](https://docs.databricks.com/security/network/ip-access-list.html) for full feature documentation.
 
 -> **Note** The total number of IP addresses and CIDR scopes provided across all ACL Lists in a workspace can not exceed 1000.  Refer to the docs above for specifics.
 

@@ -128,8 +128,8 @@ func (c *DBApiClientConfig) Setup() {
 				Proxy:                 defaultTransport.Proxy,
 				DialContext:           defaultTransport.DialContext,
 				MaxIdleConns:          defaultTransport.MaxIdleConns,
-				IdleConnTimeout:       defaultTransport.IdleConnTimeout,
-				TLSHandshakeTimeout:   defaultTransport.TLSHandshakeTimeout,
+				IdleConnTimeout:       defaultTransport.IdleConnTimeout * 3,
+				TLSHandshakeTimeout:   defaultTransport.TLSHandshakeTimeout * 3,
 				ExpectContinueTimeout: defaultTransport.ExpectContinueTimeout,
 				// TODO: This probably should be a configuration at the provider level and optional and not a fixed val
 				TLSClientConfig: &tls.Config{

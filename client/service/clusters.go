@@ -4,6 +4,7 @@ import (
 	"errors"
 	"log"
 	"time"
+	"fmt"
 
 	"github.com/databrickslabs/databricks-terraform/client/model"
 )
@@ -43,6 +44,7 @@ func (a ClustersAPI) Restart(clusterID string) error {
 
 // WaitForClusterRunning will block main thread and wait till cluster is in a RUNNING state
 func (a ClustersAPI) WaitForClusterRunning(clusterID string, sleepDurationSeconds time.Duration, timeoutDurationMinutes time.Duration) error {
+	// todo: maybe it should start it as well?...
 	errChan := make(chan error, 1)
 	go func() {
 		for {
@@ -51,7 +53,7 @@ func (a ClustersAPI) WaitForClusterRunning(clusterID string, sleepDurationSecond
 				errChan <- err
 				return
 			}
-			if clusterInfo.State == model.ClusterStateRunning {
+			if clusterInfo.IsRunning() {
 				errChan <- nil
 				return
 			} else if model.ContainsClusterState(model.ClusterStateNonRunnable, clusterInfo.State) {
@@ -151,4 +153,55 @@ func (a ClustersAPI) ListNodeTypes() ([]model.NodeType, error) {
 	}{}
 	err := a.client.get("/clusters/list-node-types", nil, &nodeTypeList)
 	return nodeTypeList.NodeTypes, err
+}
+
+// GetOrCreateRunningCluster creates an autoterminating cluster if it doesn't exist
+func (a ClustersAPI) GetOrCreateRunningCluster(name string, custom ...model.Cluster) (c model.ClusterInfo, err error) {
+	if len(custom) > 1 {
+		err = fmt.Errorf("You can only specify 1 custom cluster conf, not %d", len(custom))
+		return
+	}
+	clusters, err := a.List()
+	if err != nil {
+		return
+	}
+	for _, cl := range clusters {
+		if cl.ClusterName == name {
+			if !cl.IsRunning() {
+				err = a.Start(cl.ClusterID)
+				if err != nil {
+					return
+				}
+				err = a.WaitForClusterRunning(cl.ClusterID, 10, 5)
+				if err != nil {
+					return
+				}
+			}
+			return cl, nil
+		}
+	}
+	instanceType := "m4.large"
+	if a.client.IsAzure() {
+		instanceType = "Standard_DS3_v2"
+	}
+	r := model.Cluster{
+		NumWorkers:             1,
+		ClusterName:            name,
+		SparkVersion:           CommonRuntimeVersion(),
+		NodeTypeID:				instanceType,
+		IdempotencyToken:       name,
+		AutoterminationMinutes: 10,
+	}
+	if len(custom) == 1 {
+		r = custom[0]
+	}
+	c, err = a.Create(r)
+	if err != nil {
+		return
+	}
+	err = a.WaitForClusterRunning(c.ClusterID, 30, 5)
+	if err != nil {
+		return
+	}
+	return
 }

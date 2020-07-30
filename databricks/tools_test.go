@@ -76,7 +76,7 @@ func (stub *resourceTestStub) Reads(t *testing.T) {
 				Status: 400,
 			},
 		}, resource{{.Name}}, nil, actionWithID("abc", resource{{.Name}}Read))
-		assert.Errorf(t, err, "Internal error happened")
+		assert.EqualError(t, err, "Internal error happened")
 		assert.Equal(t, "abc", d.Id(), "Id should not be empty for error reads")
 	}`)
 }
@@ -110,7 +110,7 @@ func (stub *resourceTestStub) Creates(t *testing.T) {
 			{{range $key, $element := .Resource.Schema}}"{{$key}}": "...",
 			{{end}}
 		}, resource{{.Name}}Create)
-		assert.Errorf(t, err, "Internal error happened")
+		assert.EqualError(t, err, "Internal error happened")
 		assert.Equal(t, "", d.Id(), "Id should be empty for error creates")
 	}`)
 }
@@ -144,7 +144,7 @@ func (stub *resourceTestStub) Updates(t *testing.T) {
 			{{range $key, $element := .Resource.Schema}}"{{$key}}": "...",
 			{{end}}
 		}, actionWithID("abc", resource{{.Name}}Update))
-		assert.Errorf(t, err, "Internal error happened")
+		assert.EqualError(t, err, "Internal error happened")
 		assert.Equal(t, "abc", d.Id())
 	}`)
 }
@@ -177,7 +177,7 @@ func (stub *resourceTestStub) Deletes(t *testing.T) {
 				Status: 400,
 			},
 		}, resource{{.Name}}, nil, actionWithID("abc", resource{{.Name}}Delete))
-		assert.Errorf(t, err, "Internal error happened")
+		assert.EqualError(t, err, "Internal error happened")
 		assert.Equal(t, "abc", d.Id())
 	}`)
 }

@@ -129,6 +129,25 @@ func NewTinyClusterInCommonPool() (c model.ClusterInfo, err error) {
 	return
 }
 
+// NewTinyClusterInCommonPoolPossiblyReused is recommended to be used for testing only
+func NewTinyClusterInCommonPoolPossiblyReused() (c model.ClusterInfo) {
+	randomName := randomName()
+	client := CommonEnvironmentClient()
+	currentCluster := fmt.Sprintf("Terraform Integration Test by %s", os.Getenv("USER"))
+	c, err := client.Clusters().GetOrCreateRunningCluster(currentCluster, model.Cluster{
+		NumWorkers:             1,
+		ClusterName:            currentCluster,
+		SparkVersion:           CommonRuntimeVersion(),
+		InstancePoolID:         CommonInstancePoolID(),
+		IdempotencyToken:       "tf-" + randomName,
+		AutoterminationMinutes: 20,
+	})
+	if err != nil {
+		panic(err)
+	}
+	return
+}
+
 func randomName() string {
 	randLen := 12
 	b := make([]byte, randLen)

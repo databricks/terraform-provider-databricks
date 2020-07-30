@@ -80,7 +80,7 @@ func TestAwsAccMissingMWSResources(t *testing.T) {
 }
 
 // Capture this test for aws
-func TestAccMissingWorkspaceResources(t *testing.T) {
+func TestAccMissingResourcesInWorkspace(t *testing.T) {
 	cloudENV, ok := os.LookupEnv("CLOUD_ENV")
 	if !ok {
 		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' set")

@@ -3,9 +3,12 @@ package service
 import (
 	"errors"
 	"fmt"
+	"html"
 	"log"
 	"net/http"
 	"net/url"
+	"regexp"
+	"strings"
 	"time"
 
 	"github.com/databrickslabs/databricks-terraform/client/model"
@@ -18,34 +21,113 @@ type CommandsAPI struct {
 
 // CommandExecutor creates a spark context and executes a command and then closes context
 type CommandExecutor interface {
-	Execute(clusterID, language, commandStr string) (model.Command, error)
+	Execute(clusterID, language, commandStr string) (string, error)
+}
+
+var (
+	outRE          = regexp.MustCompile(`Out\[[\d\s]+\]:\s`)
+	tagRE          = regexp.MustCompile(`<[^>]*>`)
+	exceptionRE    = regexp.MustCompile(`.*Exception: (.*)`)
+	errorMessageRE = regexp.MustCompile(`ErrorMessage=(.*)\n`)
+)
+
+// TrimLeadingWhitespace removes leading whitespace
+func TrimLeadingWhitespace(commandStr string) (newCommand string) {
+	lines := strings.Split(commandStr, "\n")
+	leadingWhitespace := 1<<31 - 1
+	for _, line := range lines {
+		for pos, char := range line {
+			if char == ' ' || char == '\t' {
+				continue
+			}
+			// first non-whitespace character
+			if pos < leadingWhitespace {
+				leadingWhitespace = pos
+			}
+			// is not needed further
+			break
+		}
+	}
+	for i := 0; i < len(lines); i++ {
+		if lines[i] == "" {
+			continue
+		}
+		if len(lines[i]) < leadingWhitespace {
+			newCommand += lines[i] + "\n" // or not..
+		} else {
+			newCommand += lines[i][leadingWhitespace:] + "\n"
+		}
+	}
+	return
 }
 
 // Execute creates a spark context and executes a command and then closes context
-func (a CommandsAPI) Execute(clusterID, language, commandStr string) (model.Command, error) {
-	var resp model.Command
+// Any leading whitespace is trimmed
+func (a CommandsAPI) Execute(clusterID, language, commandStr string) (result string, err error) {
+	cluster, err := a.client.Clusters().Get(clusterID)
+	if err != nil {
+		return
+	}
+	if !cluster.IsRunning() {
+		err = fmt.Errorf("Cluster %s has to be running, but is %s", clusterID, cluster.State)
+		return
+	}
+	commandStr = TrimLeadingWhitespace(commandStr)
+	log.Printf("[INFO] Executing %s command on %s:\n%s", language, clusterID, commandStr)
 	context, err := a.createContext(language, clusterID)
 	if err != nil {
-		return resp, err
+		return
 	}
 	err = a.waitForContextReady(context, clusterID, 1, 10)
 	if err != nil {
-		return resp, err
+		return
 	}
 	commandID, err := a.createCommand(context, clusterID, language, commandStr)
 	if err != nil {
-		return resp, err
+		return
 	}
 	err = a.waitForCommandFinished(commandID, context, clusterID, 5, 10)
 	if err != nil {
-		return resp, err
+		return
 	}
 	command, err := a.getCommand(commandID, context, clusterID)
 	if err != nil {
-		return resp, err
+		return
 	}
 	err = a.deleteContext(context, clusterID)
-	return command, err
+	if err != nil {
+		return
+	}
+	return a.parseCommandResults(command)
+}
+
+func (a CommandsAPI) parseCommandResults(command model.Command) (result string, err error){
+	switch command.Results.ResultType {
+	case "text":
+		result = outRE.ReplaceAllLiteralString(command.Results.Data.(string), "")
+		return
+	case "error":
+		//log.Println(fmt.Sprintf("[ERROR] on %s caused by python command: %s", clusterID, r.Cause))
+		// remove HTML
+		summary := tagRE.ReplaceAllLiteralString(command.Results.Summary, "")
+		summary = html.UnescapeString(summary)
+		exceptionMatches := exceptionRE.FindStringSubmatch(summary)
+		if len(exceptionMatches) == 2 {
+			summary = strings.ReplaceAll(exceptionMatches[1], "; nested exception is:", "")
+			summary = strings.TrimRight(summary, " ")
+			err = errors.New(summary)
+			return
+		}
+		errorMessageMatches := errorMessageRE.FindStringSubmatch(command.Results.Cause)
+		if len(errorMessageMatches) == 2 {
+			err = errors.New(errorMessageMatches[1])
+			return
+		}
+		err = errors.New(summary)
+		return
+	}
+	err = fmt.Errorf("Unknown result type %s: %v", command.Results.ResultType, command.Results.Data)
+	return
 }
 
 type genericCommandRequest struct {

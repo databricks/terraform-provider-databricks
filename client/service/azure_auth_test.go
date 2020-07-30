@@ -32,14 +32,14 @@ func TestAzureAuth_resourceID(t *testing.T) {
 
 func TestAzureAuth_isClientSecretSet(t *testing.T) {
 	aa := AzureAuth{}
-	assert.False(t, aa.isClientSecretSet())
+	assert.False(t, aa.IsClientSecretSet())
 
 	aa.ClientID = "a"
-	assert.False(t, aa.isClientSecretSet())
+	assert.False(t, aa.IsClientSecretSet())
 	aa.ClientSecret = "b"
-	assert.False(t, aa.isClientSecretSet())
+	assert.False(t, aa.IsClientSecretSet())
 	aa.TenantID = "c"
-	assert.True(t, aa.isClientSecretSet())
+	assert.True(t, aa.IsClientSecretSet())
 }
 
 func TestAzureAuth_ensureWorkspaceURL(t *testing.T) {

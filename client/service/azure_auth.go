@@ -47,8 +47,7 @@ type AzureAuth struct {
 
 	azureManagementEndpoint string
 	authorizer              autorest.Authorizer
-
-	temporaryPat *model.TokenResponse
+	temporaryPat            *model.TokenResponse
 }
 
 var authorizerMutex sync.Mutex
@@ -64,7 +63,8 @@ func (aa *AzureAuth) resourceID() string {
 		aa.SubscriptionID, aa.ResourceGroup, aa.WorkspaceName)
 }
 
-func (aa *AzureAuth) isClientSecretSet() bool {
+// IsClientSecretSet returns true if client id/secret and tenand id are supplied
+func (aa *AzureAuth) IsClientSecretSet() bool {
 	return aa.ClientID != "" && aa.ClientSecret != "" && aa.TenantID != ""
 }
 
@@ -72,7 +72,7 @@ func (aa *AzureAuth) configureWithClientSecret() (func(r *http.Request) error, e
 	if aa.resourceID() == "" {
 		return nil, nil
 	}
-	if !aa.isClientSecretSet() {
+	if !aa.IsClientSecretSet() {
 		return nil, nil
 	}
 	log.Printf("[INFO] Using Azure Service Principal client secret authentication")
@@ -100,7 +100,7 @@ func (aa *AzureAuth) configureWithAzureCLI() (func(r *http.Request) error, error
 	if aa.resourceID() == "" {
 		return nil, nil
 	}
-	if aa.isClientSecretSet() {
+	if aa.IsClientSecretSet() {
 		return nil, nil
 	}
 	log.Printf("[INFO] Using Azure CLI authentication")

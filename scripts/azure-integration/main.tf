@@ -45,6 +45,13 @@ resource "azurerm_databricks_workspace" "example" {
   tags                        = local.tags
 }
 
+// ADLSv1 resource
+resource "azurerm_data_lake_store" "gen1" {
+  name                = "${local.prefix}gen1"
+  resource_group_name = azurerm_resource_group.example.name
+  location            = azurerm_resource_group.example.location
+}
+
 # Create container in storage acc and container for use by adls gen2 mount tests
 resource "azurerm_storage_account" "adlsaccount" {
   name                     = "${local.prefix}datalake"
@@ -68,12 +75,12 @@ resource "azurerm_storage_account" "blobaccount" {
   tags                     = local.tags
 }
 
-//resource "azurerm_role_assignment" "datalake" {
-//  scope = azurerm_storage_account.adlsaccount.id
-//  #https://docs.microsoft.com/en-us/azure/role-based-access-control/built-in-roles#storage-blob-data-contributor
-//  role_definition_name = "Storage Blob Data Contributor"
-//  principal_id         = data.azurerm_client_config.current.object_id
-//}
+resource "azurerm_role_assignment" "datalake" {
+  scope = azurerm_storage_account.adlsaccount.id
+  #https://docs.microsoft.com/en-us/azure/role-based-access-control/built-in-roles#storage-blob-data-contributor
+  role_definition_name = "Storage Blob Data Contributor"
+  principal_id         = data.azurerm_client_config.current.object_id
+}
 
 resource "azurerm_storage_container" "adlsexample" {
   name                  = "dev"
@@ -114,6 +121,10 @@ output "test_resource_group" {
 
 output "test_gen2_adal_name" {
   value = azurerm_storage_account.adlsaccount.name
+}
+
+output "test_gen1_name" {
+  value = azurerm_data_lake_store.example.name
 }
 
 output "test_storage_account_key" {

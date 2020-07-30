@@ -249,6 +249,11 @@ type ClusterInfo struct {
 	TerminationReason      *TerminationReason `json:"termination_reason,omitempty"`
 }
 
+// IsRunning returns true if cluster is running
+func (ci *ClusterInfo) IsRunning() bool {
+	return ci.State == ClusterStateRunning
+}
+
 // ClusterID holds cluster ID
 type ClusterID struct {
 	ClusterID string `json:"cluster_id,omitempty" url:"cluster_id,omitempty"`

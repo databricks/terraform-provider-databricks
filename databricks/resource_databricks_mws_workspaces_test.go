@@ -215,7 +215,7 @@ func TestResourceMWSWorkspacesCreate_Error(t *testing.T) {
 		"storage_configuration_id":  "ghi",
 		"verify_workspace_runnning": false,
 	}, resourceMWSWorkspacesCreate)
-	assert.Errorf(t, err, "Internal error happened")
+	assert.EqualError(t, err, "Internal error happened")
 	assert.Equal(t, "", d.Id(), "Id should be empty for error creates")
 }
 
@@ -282,7 +282,7 @@ func TestResourceMWSWorkspacesRead_Error(t *testing.T) {
 			Status: 400,
 		},
 	}, resourceMWSWorkspaces, nil, actionWithID("abc/1234", resourceMWSWorkspacesRead))
-	assert.Errorf(t, err, "Internal error happened")
+	assert.EqualError(t, err, "Internal error happened")
 	assert.Equal(t, "abc/1234", d.Id(), "Id should not be empty for error reads")
 }
 
@@ -387,7 +387,7 @@ func TestResourceMWSWorkspacesUpdate_Error(t *testing.T) {
 		"storage_configuration_id":  "ghi",
 		"verify_workspace_runnning": false,
 	}, actionWithID("abc/1234", resourceMWSWorkspacesUpdate))
-	assert.Errorf(t, err, "Internal error happened")
+	assert.EqualError(t, err, "Internal error happened")
 	assert.Equal(t, "abc/1234", d.Id())
 }
 
@@ -414,6 +414,6 @@ func TestResourceMWSWorkspacesDelete_Error(t *testing.T) {
 			Status: 400,
 		},
 	}, resourceMWSWorkspaces, nil, actionWithID("abc/1234", resourceMWSWorkspacesDelete))
-	assert.Errorf(t, err, "Internal error happened")
+	assert.EqualError(t, err, "Internal error happened")
 	assert.Equal(t, "abc/1234", d.Id())
 }

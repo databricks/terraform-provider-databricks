@@ -179,7 +179,7 @@ func TestResourceInstanceProfileCreate_Error(t *testing.T) {
 		"instance_profile_arn": "abc",
 		"skip_validation":      true,
 	}, resourceInstanceProfileCreate)
-	assert.Errorf(t, err, "Internal error happened")
+	assert.EqualError(t, err, "Internal error happened")
 	assert.Equal(t, "", d.Id(), "Id should be empty for error creates")
 }
 
@@ -229,7 +229,7 @@ func TestResourceInstanceProfileRead_Error(t *testing.T) {
 			Status: 400,
 		},
 	}, resourceInstanceProfile, nil, actionWithID("abc", resourceInstanceProfileRead))
-	assert.Errorf(t, err, "Internal error happened")
+	assert.EqualError(t, err, "Internal error happened")
 	assert.Equal(t, "abc", d.Id(), "Id should not be empty for error reads")
 }
 
@@ -259,6 +259,6 @@ func TestResourceInstanceProfileDelete_Error(t *testing.T) {
 			Status: 400,
 		},
 	}, resourceInstanceProfile, nil, actionWithID("abc", resourceInstanceProfileDelete))
-	assert.Errorf(t, err, "Internal error happened")
+	assert.EqualError(t, err, "Internal error happened")
 	assert.Equal(t, "abc", d.Id())
 }

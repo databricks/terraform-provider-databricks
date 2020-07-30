@@ -198,7 +198,7 @@ func TestResourceMWSCredentialsCreate_Error(t *testing.T) {
 		"credentials_name": "Cross-account ARN",
 		"role_arn":         "arn:aws:iam::098765:role/cross-account",
 	}, resourceMWSCredentialsCreate)
-	assert.Errorf(t, err, "Internal error happened")
+	assert.EqualError(t, err, "Internal error happened")
 	assert.Equal(t, "", d.Id(), "Id should be empty for error creates")
 }
 
@@ -255,7 +255,7 @@ func TestResourceMWSCredentialsRead_Error(t *testing.T) {
 			Status: 400,
 		},
 	}, resourceMWSCredentials, nil, actionWithID("abc/cid", resourceMWSCredentialsRead))
-	assert.Errorf(t, err, "Internal error happened")
+	assert.EqualError(t, err, "Internal error happened")
 	assert.Equal(t, "abc/cid", d.Id(), "Id should not be empty for error reads")
 }
 
@@ -282,6 +282,6 @@ func TestResourceMWSCredentialsDelete_Error(t *testing.T) {
 			Status: 400,
 		},
 	}, resourceMWSCredentials, nil, actionWithID("abc", resourceMWSCredentialsDelete))
-	assert.Errorf(t, err, "Internal error happened")
+	assert.EqualError(t, err, "Internal error happened")
 	assert.Equal(t, "abc", d.Id())
 }

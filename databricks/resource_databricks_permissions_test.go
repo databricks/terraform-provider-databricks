@@ -385,7 +385,6 @@ func TestResourcePermissionsCreate_error(t *testing.T) {
 }
 
 func TestAccDatabricksPermissionsResourceFullLifecycle(t *testing.T) {
-	// TODO: fails on big run
 	randomName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
 	resource.Test(t, resource.TestCase{
 		Providers:  testAccProviders,
@@ -406,6 +405,7 @@ func TestAccDatabricksPermissionsResourceFullLifecycle(t *testing.T) {
 							return nil
 						}),
 				),
+				ExpectNonEmptyPlan: true,
 			},
 			{
 				Config: testClusterPolicyPermissionsSecondGroupAdded(randomName),
@@ -418,6 +418,7 @@ func TestAccDatabricksPermissionsResourceFullLifecycle(t *testing.T) {
 						assert.Len(t, permissions.AccessControlList, 3)
 						return nil
 					}),
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
@@ -487,27 +488,42 @@ func TestAccNotebookPermissions(t *testing.T) {
 		IsUnitTest: debugIfCloudEnvSet(),
 		Steps: []resource.TestStep{
 			{
-				// create a resource
 				Config: fmt.Sprintf(`
-				resource "databricks_notebook" "dummy" {
+				resource "databricks_notebook" "this" {
 					content = base64encode("# Databricks notebook source\nprint(1)")
-					path = "/Beginning/Init"
+					path = "/Beginning/%[1]s/Init"
 					overwrite = true
 					mkdirs = true
 					language = "PYTHON"
 					format = "SOURCE"
 				}
-				resource "databricks_scim_group" "dummy_group" {
+				resource "databricks_scim_group" "group" {
 					display_name = "Terraform Group %[1]s"
 				}
-				resource "databricks_permissions" "dummy_can_use" {
-					directory_path = "/Beginning"
+				resource "databricks_permissions" "manage" {
+					directory_path = "/Beginning/%[1]s"
 					access_control {
-						group_name = databricks_scim_group.dummy_group.display_name
+						group_name = databricks_scim_group.group.display_name
 						permission_level = "CAN_MANAGE"
 					}
 				}
 				`, randomName),
+				ExpectNonEmptyPlan: true,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("databricks_permissions.manage",
+						"object_type", "directory"),
+					resource.TestCheckResourceAttr("databricks_permissions.manage",
+						"access_control.0.group_name", "Terraform Group "+randomName),
+					epoch.ResourceCheck("databricks_permissions.manage",
+						func(client *service.DatabricksClient, id string) error {
+							permissions, err := client.Permissions().Read(id)
+							if err != nil {
+								return err
+							}
+							assert.Len(t, permissions.AccessControlList, 2)
+							return nil
+						}),
+				),
 			},
 		},
 	})

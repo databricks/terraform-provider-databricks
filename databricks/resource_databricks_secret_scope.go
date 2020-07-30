@@ -23,7 +23,8 @@ func resourceSecretScope() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
-				Default:  "users",
+				// or creator...
+				Default: "users",
 			},
 			"backend_type": {
 				// TODO: add default DATABRICKS as backend type.

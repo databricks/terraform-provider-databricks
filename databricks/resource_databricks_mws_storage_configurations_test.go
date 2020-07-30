@@ -199,7 +199,7 @@ func TestResourceMWSStorageConfigurationsCreate_Error(t *testing.T) {
 		"bucket_name":                "bucket",
 		"storage_configuration_name": "Main Storage",
 	}, resourceMWSStorageConfigurationsCreate)
-	assert.Errorf(t, err, "Internal error happened")
+	assert.EqualError(t, err, "Internal error happened")
 	assert.Equal(t, "", d.Id(), "Id should be empty for error creates")
 }
 
@@ -253,7 +253,7 @@ func TestResourceMWSStorageConfigurationsRead_Error(t *testing.T) {
 			Status: 400,
 		},
 	}, resourceMWSStorageConfigurations, nil, actionWithID("abc/scid", resourceMWSStorageConfigurationsRead))
-	assert.Errorf(t, err, "Internal error happened")
+	assert.EqualError(t, err, "Internal error happened")
 	assert.Equal(t, "abc/scid", d.Id(), "Id should not be empty for error reads")
 }
 
@@ -280,6 +280,6 @@ func TestResourceMWSStorageConfigurationsDelete_Error(t *testing.T) {
 			Status: 400,
 		},
 	}, resourceMWSStorageConfigurations, nil, actionWithID("abc/scid", resourceMWSStorageConfigurationsDelete))
-	assert.Errorf(t, err, "Internal error happened")
+	assert.EqualError(t, err, "Internal error happened")
 	assert.Equal(t, "abc/scid", d.Id())
 }

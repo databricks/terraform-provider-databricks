@@ -171,29 +171,6 @@ resource "databricks_instance_pool" "my_pool" {
 `, name, awsAttributes)
 }
 
-func TestAzureAccClusterResource_CreateClusterViaInstancePool(t *testing.T) {
-	randomInstancePoolName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
-	var clusterInfo model.ClusterInfo
-
-	instancePoolLine := testGetClusterInstancePoolConfig("${databricks_instance_pool.my_pool.id}")
-	resourceConfig := testDefaultAzureInstancePoolResource("", randomInstancePoolName) +
-		testDefaultClusterResource(instancePoolLine, "")
-
-	resource.Test(t, resource.TestCase{
-		Providers:  testAccProviders,
-		IsUnitTest: debugIfCloudEnvSet(),
-		Steps: []resource.TestStep{
-			{
-				Config: resourceConfig,
-				Check: resource.ComposeTestCheckFunc(
-					// query the API to retrieve the tokenInfo object
-					testClusterExistsAndTerminateForFutureTests("databricks_cluster.test_cluster", &clusterInfo, t),
-				),
-			},
-		},
-	})
-}
-
 func testClusterExistsAndTerminateForFutureTests(n string, cluster *model.ClusterInfo, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		// find the corresponding state object
@@ -299,7 +276,7 @@ func TestResourceClusterCreate_Error(t *testing.T) {
 		"node_type_id":            "i3.xlarge",
 		"num_workers":             100,
 	}, resourceClusterCreate)
-	assert.Errorf(t, err, "Internal error happened")
+	assert.EqualError(t, err, "Internal error happened")
 	assert.Equal(t, "", d.Id(), "Id should be empty for error creates")
 }
 
@@ -365,7 +342,7 @@ func TestResourceClusterRead_Error(t *testing.T) {
 			Status: 400,
 		},
 	}, resourceCluster, nil, actionWithID("abc", resourceClusterRead))
-	assert.Errorf(t, err, "Internal error happened")
+	assert.EqualError(t, err, "Internal error happened")
 	assert.Equal(t, "abc", d.Id(), "Id should not be empty for error reads")
 }
 
@@ -465,7 +442,7 @@ func TestResourceClusterUpdate_Error(t *testing.T) {
 		"node_type_id":            "i3.xlarge",
 		"num_workers":             100,
 	}, actionWithID("abc", resourceClusterUpdate))
-	assert.Errorf(t, err, "Internal error happened")
+	assert.EqualError(t, err, "Internal error happened")
 	assert.Equal(t, "abc", d.Id())
 }
 
@@ -495,6 +472,6 @@ func TestResourceClusterDelete_Error(t *testing.T) {
 			Status: 400,
 		},
 	}, resourceCluster, nil, actionWithID("abc", resourceClusterDelete))
-	assert.Errorf(t, err, "Internal error happened")
+	assert.EqualError(t, err, "Internal error happened")
 	assert.Equal(t, "abc", d.Id())
 }

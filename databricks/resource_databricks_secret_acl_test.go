@@ -181,7 +181,7 @@ func TestResourceSecretACLRead_Error(t *testing.T) {
 			Status: 400,
 		},
 	}, resourceSecretACL, nil, actionWithID("global|||something", resourceSecretACLRead))
-	assert.Errorf(t, err, "Internal error happened")
+	assert.EqualError(t, err, "Internal error happened")
 	assert.Equal(t, "global|||something", d.Id(), "Id should not be empty for error reads")
 }
 
@@ -228,7 +228,7 @@ func TestResourceSecretACLCreate_Error(t *testing.T) {
 		"principal":  "something",
 		"scope":      "global",
 	}, resourceSecretACLCreate)
-	assert.Errorf(t, err, "Internal error happened")
+	assert.EqualError(t, err, "Internal error happened")
 	assert.Equal(t, "", d.Id(), "Id should be empty for error creates")
 }
 
@@ -259,6 +259,6 @@ func TestResourceSecretACLDelete_Error(t *testing.T) {
 			Status: 400,
 		},
 	}, resourceSecretACL, nil, actionWithID("global|||something", resourceSecretACLDelete))
-	assert.Errorf(t, err, "Internal error happened")
+	assert.EqualError(t, err, "Internal error happened")
 	assert.Equal(t, "global|||something", d.Id())
 }

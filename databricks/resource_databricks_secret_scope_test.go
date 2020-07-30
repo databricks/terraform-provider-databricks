@@ -187,7 +187,7 @@ func TestResourceSecretScopeRead_Error(t *testing.T) {
 			Status: 400,
 		},
 	}, resourceSecretScope, nil, actionWithID("abc", resourceSecretScopeRead))
-	assert.Errorf(t, err, "Internal error happened")
+	assert.EqualError(t, err, "Internal error happened")
 	assert.Equal(t, "abc", d.Id(), "Id should not be empty for error reads")
 }
 
@@ -237,7 +237,7 @@ func TestResourceSecretScopeCreate_Error(t *testing.T) {
 		"initial_manage_principal": "groups",
 		"name":                     "Boom",
 	}, resourceSecretScopeCreate)
-	assert.Errorf(t, err, "Internal error happened")
+	assert.EqualError(t, err, "Internal error happened")
 	assert.Equal(t, "", d.Id(), "Id should be empty for error creates")
 }
 
@@ -267,6 +267,6 @@ func TestResourceSecretScopeDelete_Error(t *testing.T) {
 			Status: 400,
 		},
 	}, resourceSecretScope, nil, actionWithID("abc", resourceSecretScopeDelete))
-	assert.Errorf(t, err, "Internal error happened")
+	assert.EqualError(t, err, "Internal error happened")
 	assert.Equal(t, "abc", d.Id())
 }

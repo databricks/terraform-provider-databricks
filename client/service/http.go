@@ -9,6 +9,7 @@ import (
 	"log"
 	"net/http"
 	"net/url"
+	"reflect"
 	"regexp"
 	"strings"
 
@@ -239,12 +240,50 @@ func (c *DatabricksClient) performScim(method, path string, request interface{},
 	return c.unmarshall(path, body, &response)
 }
 
+func (c *DatabricksClient) recursiveMask(requestMap map[string]interface{}) interface{} {
+	for k, v := range requestMap {
+		if k == "string_value" {
+			requestMap[k] = "**REDACTED**"
+			continue
+		}
+		if k == "token_value" {
+			requestMap[k] = "**REDACTED**"
+			continue
+		}
+		if m, ok := v.(map[string]interface{}); ok {
+			requestMap[k] = c.recursiveMask(m)
+			continue
+		}
+		// todo: dapi...
+		// TODO: just redact any dapiXXX & "secret": "...."...
+		if s, ok := v.(string); ok {
+			requestMap[k] = onlyNBytes(s, c.debugTruncateBytes)
+		}
+	}
+	return requestMap
+}
+
+func (c *DatabricksClient) redactedDump(body []byte) (res string) {
+	if len(body) == 0 {
+		return
+	}
+	var requestMap map[string]interface{}
+	json.Unmarshal(body, &requestMap)
+	rePacked, err := json.MarshalIndent(c.recursiveMask(requestMap), "", "  ")
+	if err != nil {
+		// error in this case is not much relevant
+		return
+	}
+	return onlyNBytes(string(rePacked), 2048)
+}
+
 // todo: do is better name
 func (c *DatabricksClient) genericQuery2(method, requestURL string, data interface{},
 	visitors ...func(*http.Request) error) (body []byte, err error) {
 	if c.httpClient == nil {
 		return nil, fmt.Errorf("DatabricksClient is not configured")
 	}
+	// TODO: get all sensitive pieces from data here, so later they are redacted...
 	requestBody, err := makeRequestBody(method, &requestURL, data, true)
 	if err != nil {
 		return nil, err
@@ -253,8 +292,9 @@ func (c *DatabricksClient) genericQuery2(method, requestURL string, data interfa
 	if err != nil {
 		return nil, err
 	}
+
 	// TODO: add masking **REDACTED** + subscription + mws acc id -> perhaps re-parse json and truncate only some fields?...
-	log.Printf("[INFO] %s %s %v", method, requestURL, onlyNBytes(string(requestBody), 512))
+	log.Printf("[INFO] %s %s %v", method, requestURL, c.redactedDump(requestBody))
 	request.Header.Set("User-Agent", c.userAgent)
 	for _, requestVisitor := range visitors {
 		err = requestVisitor(request)
@@ -279,6 +319,7 @@ func (c *DatabricksClient) genericQuery2(method, requestURL string, data interfa
 	if err != nil {
 		return nil, err
 	}
+	log.Printf("[INFO] %s %v", resp.Status, c.redactedDump(body))
 	// Don't need to check the status code here as the RetryCheck for
 	// retryablehttp.Client is doing that and returning an error
 	return body, nil
@@ -287,41 +328,33 @@ func (c *DatabricksClient) genericQuery2(method, requestURL string, data interfa
 func makeRequestBody(method string, requestURL *string, data interface{}, marshalJSON bool) ([]byte, error) {
 	var requestBody []byte
 	if method == "GET" {
-		if m, ok := data.(map[string]interface{}); ok {
+		if data == nil {
+			*requestURL += "?" // TODO: get rid of trailing ? in all requests :D
+			return requestBody, nil
+		}
+		inputVal := reflect.ValueOf(data)
+		inputType := reflect.TypeOf(data)
+		switch inputType.Kind() {
+		case reflect.Map:
 			s := []string{}
-			for k, v := range m {
-				if v == "" {
+			for _, k := range inputVal.MapKeys() {
+				v := inputVal.MapIndex(k)
+				if v.IsZero() {
 					continue
 				}
-				s = append(s, fmt.Sprintf("%s=%s", k, url.PathEscape(fmt.Sprintf("%v", v))))
+				s = append(s, fmt.Sprintf("%v=%s", k.Interface(),
+					url.PathEscape(fmt.Sprintf("%v", v.Interface()))))
 			}
 			*requestURL += "?" + strings.Join(s, "&")
-		} else if m, ok := data.(map[string]int64); ok {
-			s := []string{}
-			for k, v := range m {
-				if v == 0 {
-					continue
-				}
-				s = append(s, fmt.Sprintf("%s=%s", k, url.PathEscape(fmt.Sprintf("%v", v))))
-			}
-			*requestURL += "?" + strings.Join(s, "&")
-		} else if m, ok := data.(map[string]string); ok {
-			s := []string{}
-			for k, v := range m {
-				if v == "" {
-					continue
-				}
-				s = append(s, fmt.Sprintf("%s=%s", k, url.PathEscape(v)))
-			}
-			*requestURL += "?" + strings.Join(s, "&")
-		} else {
+		case reflect.Struct:
 			params, err := query.Values(data)
 			if err != nil {
 				return nil, err
 			}
 			*requestURL += "?" + params.Encode()
+		default:
+			return requestBody, fmt.Errorf("Unsupported request data: %#v", data)
 		}
-		// auditGetPayload(*requestURL)
 	} else {
 		if marshalJSON {
 			bodyBytes, err := json.MarshalIndent(data, "", "  ")
@@ -332,41 +365,14 @@ func makeRequestBody(method string, requestURL *string, data interface{}, marsha
 		} else {
 			requestBody = []byte(data.(string))
 		}
-		// auditNonGetPayload(method, *requestURL, data)
 	}
 	return requestBody, nil
 }
 
-func onlyNBytes(j string, numBytes int64) string {
-	if len([]byte(j)) > int(numBytes) {
-		return string([]byte(j)[:numBytes])
+func onlyNBytes(j string, numBytes int) string {
+	diff := len([]byte(j)) - int(numBytes)
+	if diff > 0 {
+		return fmt.Sprintf("%s... (%d more bytes)", j[:numBytes], diff)
 	}
 	return j
 }
-
-// TODO: port to new way of request logging
-// func auditNonGetPayload(method string, uri string, object interface{}) {
-// 	logStmt := struct {
-// 		Method  string
-// 		URI     string
-// 		Payload interface{}
-// 	}{
-// 		Method:  method,
-// 		URI:     uri,
-// 		Payload: object,
-// 	}
-// 	jsonStr, _ := json.Marshal(Mask(logStmt))
-// 	log.Println(onlyNBytes(string(jsonStr), 1e3))
-// }
-
-// func auditGetPayload(uri string) {
-// 	logStmt := struct {
-// 		Method string
-// 		URI    string
-// 	}{
-// 		Method: "GET",
-// 		URI:    uri,
-// 	}
-// 	jsonStr, _ := json.Marshal(Mask(logStmt))
-// 	log.Println(onlyNBytes(string(jsonStr), 1e3))
-// }

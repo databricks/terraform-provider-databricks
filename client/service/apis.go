@@ -29,6 +29,7 @@ type DatabricksClient struct {
 	userAgent          string
 	httpClient         *retryablehttp.Client
 	authVisitor        func(r *http.Request) error
+	debugTruncateBytes int
 }
 
 // Configure ...
@@ -156,6 +157,7 @@ func (c *DatabricksClient) configureHTTPCLient() {
 	if c.TimeoutSeconds == 0 {
 		c.TimeoutSeconds = 60
 	}
+	c.debugTruncateBytes = 96
 	// Set up a retryable HTTP Client to handle cases where the service returns
 	// a transient error on initial creation
 	retryDelayDuration := 10 * time.Second

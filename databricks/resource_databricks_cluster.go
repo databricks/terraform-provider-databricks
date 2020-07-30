@@ -319,6 +319,10 @@ func resourceCluster() *schema.Resource {
 				},
 				AtLeastOneOf: []string{"node_type_id"},
 			},
+			"policy_id": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 			"idempotency_token": {
 				Type:     schema.TypeInt,
 				Optional: true,
@@ -690,6 +694,11 @@ func resourceClusterRead(d *schema.ResourceData, m interface{}) error {
 	}
 
 	err = d.Set("cluster_name", clusterInfo.ClusterName)
+	if err != nil {
+		return err
+	}
+
+	err = d.Set("policy_id", clusterInfo.PolicyID)
 	if err != nil {
 		return err
 	}
@@ -1458,6 +1467,10 @@ func parseSchemaToCluster(d *schema.ResourceData, schemaAttPrefix string) model.
 	//Deal with instance pool id
 	if instancePoolID, ok := d.GetOk(schemaAttPrefix + "instance_pool_id"); ok {
 		cluster.InstancePoolID = instancePoolID.(string)
+	}
+
+	if id, ok := d.GetOk(schemaAttPrefix + "policy_id"); ok {
+		cluster.PolicyID = id.(string)
 	}
 
 	//Deal with single user name

@@ -307,6 +307,10 @@ func resourceJob() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
+						"policy_id": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
 					},
 				},
 			},
@@ -675,6 +679,7 @@ func resourceJobRead(d *schema.ResourceData, m interface{}) error {
 		newClusterSettings["enable_elastic_disk"] = job.Settings.NewCluster.EnableElasticDisk
 
 		newClusterSettings["instance_pool_id"] = job.Settings.NewCluster.InstancePoolID
+		newClusterSettings["policy_id"] = job.Settings.NewCluster.PolicyID
 	}
 
 	libraries := job.Settings.Libraries

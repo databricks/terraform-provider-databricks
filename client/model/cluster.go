@@ -205,6 +205,7 @@ type Cluster struct {
 	AutoterminationMinutes int32             `json:"autotermination_minutes,omitempty"`
 	EnableElasticDisk      bool              `json:"enable_elastic_disk,omitempty"`
 	InstancePoolID         string            `json:"instance_pool_id,omitempty"`
+	PolicyID			   string			 `json:"policy_id,omitempty"`
 	SingleUserName         string            `json:"single_user_name,omitempty"`
 	IdempotencyToken       string            `json:"idempotency_token,omitempty"`
 }
@@ -233,6 +234,7 @@ type ClusterInfo struct {
 	AutoterminationMinutes int32              `json:"autotermination_minutes,omitempty"`
 	EnableElasticDisk      bool               `json:"enable_elastic_disk,omitempty"`
 	InstancePoolID         string             `json:"instance_pool_id,omitempty"`
+	PolicyID			   string			 `json:"policy_id,omitempty"`
 	SingleUserName         string             `json:"single_user_name,omitempty"`
 	ClusterSource          AwsAvailability    `json:"cluster_source,omitempty"`
 	DockerImage            *DockerImage       `json:"docker_image,omitempty"`

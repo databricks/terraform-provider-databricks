@@ -10,8 +10,14 @@ type WorkspaceConfAPI struct {
 	Client *DBApiClient
 }
 
-// Update will handle creation of new values as well as deletes. Deleting just implies that a value of "" is sent with
-// the appropriate key
+// Update will handle creation of new values as well as deletes. Deleting just implies that a value of "" or
+// the appropriate disable string like "false" is sent with the appropriate key
+// TODO: map[string]string is the only thing accepted by the API currently.  If you send in another type, you get the response
+// {
+//    "error_code": "BAD_REQUEST",
+//    "message": "Values must be strings"
+//}
+// This is the case for any key tested.  It would be worth finding any internal documentation detailing workspace-conf
 func (a WorkspaceConfAPI) Update(workspaceConfMap map[string]string) error {
 	_, err := a.Client.performQuery(http.MethodPatch, "/preview/workspace-conf", "2.0", nil, workspaceConfMap, nil)
 	return err

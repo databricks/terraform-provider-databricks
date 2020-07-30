@@ -1,3 +1,11 @@
++++
+title = "ip_access_lists"
+date = 2020-07-31T23:34:03-04:00
+weight = 15
+chapter = false
+pre = ""
++++
+
 # databricks_ip_access_lists Resource
 
 This resource allows you to create IP Access Lists in Databricks to control access to your workspace by IP. All IPs and CIDR ranges from each enabled list is put together applying type "BLACKLIST" first, then if still allowed type "WHITELIST" is checked.  Please see [IP Access List](https://docs.databricks.com/security/network/ip-access-list.html) for full feature documentation.
@@ -21,20 +29,27 @@ resource "databricks_ip_access_list" "allowed-list" {
 
 The following arguments are supported:
 
-* `label` -  **(Optional)** This is the display name for the given IP ACL List.
+#### - `name`:
+> **(Required)**  This is the display name for the given IP ACL List.
 
-* `list_type` -  **(Required)** Can only be "WHITELIST" or "BLACKLIST"
+#### - `list_type`:
+> **(Required)** Can only be "WHITELIST" or "BLACKLIST"
 
-* `ip_addresses` -  **(Required)** This is a field to allow the group to have instance pool create priviliges.
+#### - `ip_addresses`:
+> **(Required)** This is a field to allow the group to have instance pool create priviliges.
 
-* `enabled` - **(Optional)** Boolean `true` or `false` indicating whether this list should be active.  Defaults to `true`
+#### - `enabled`:
+> **(Optional)** Boolean `true` or `false` indicating whether this list should be active.  Defaults to `true`
 
 ## Attribute Reference
 
 In addition to all arguments above, the following attributes are exported:
 
-* `list_id` - Canonical unique identifier for the IP Access List.
+#### - `list_id`:
+> Canonical unique identifier for the IP Access List.
 
 ## Import
 
--> **Note** Importing this resource is not currently supported.
+{{% notice note %}}
+Importing this resource is not currently supported.
+{{% /notice %}}

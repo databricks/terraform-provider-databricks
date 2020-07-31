@@ -1,10 +1,15 @@
 package service
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 )
+
+func assertErrorStartsWith(t *testing.T, err error, message string) bool {
+	return assert.True(t, strings.HasPrefix(err.Error(), message), err.Error())
+}
 
 func TestDatabricksClientConfigure_BasicAuth_NoHost(t *testing.T) {
 	dc := DatabricksClient{
@@ -13,7 +18,7 @@ func TestDatabricksClientConfigure_BasicAuth_NoHost(t *testing.T) {
 	}
 	err := dc.Configure("dev")
 
-	assert.EqualError(t, err, "Host is empty, but is required by basic_auth")
+	assertErrorStartsWith(t, err, "Host is empty, but is required by basic_auth")
 	assert.Equal(t, "Zm9vOmJhcg==", dc.Token)
 }
 
@@ -47,7 +52,7 @@ func TestDatabricksClientConfigure_Token_NoHost(t *testing.T) {
 	}
 	err := dc.Configure("dev")
 
-	assert.EqualError(t, err, "Host is empty, but is required by token")
+	assertErrorStartsWith(t, err, "Host is empty, but is required by token")
 	assert.Equal(t, "dapi345678", dc.Token)
 }
 

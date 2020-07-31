@@ -184,7 +184,7 @@ func TestResourceTokenRead_Error(t *testing.T) {
 			Status: 400,
 		},
 	}, resourceToken, nil, actionWithID("abc", resourceTokenRead))
-	assert.EqualError(t, err, "Internal error happened")
+	assertErrorStartsWith(t, err, "Internal error happened")
 	assert.Equal(t, "abc", d.Id(), "Id should not be empty for error reads")
 }
 
@@ -243,7 +243,7 @@ func TestResourceTokenCreate_Error(t *testing.T) {
 		"comment":          "Hello world!",
 		"lifetime_seconds": 300,
 	}, resourceTokenCreate)
-	assert.EqualError(t, err, "Internal error happened")
+	assertErrorStartsWith(t, err, "Internal error happened")
 	assert.Equal(t, "", d.Id(), "Id should be empty for error creates")
 }
 
@@ -273,6 +273,6 @@ func TestResourceTokenDelete_Error(t *testing.T) {
 			Status: 400,
 		},
 	}, resourceToken, nil, actionWithID("abc", resourceTokenDelete))
-	assert.EqualError(t, err, "Internal error happened")
+	assertErrorStartsWith(t, err, "Internal error happened")
 	assert.Equal(t, "abc", d.Id())
 }

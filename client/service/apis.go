@@ -30,6 +30,7 @@ type DatabricksClient struct {
 	httpClient         *retryablehttp.Client
 	authVisitor        func(r *http.Request) error
 	debugTruncateBytes int
+	commandExecutor    CommandExecutor
 }
 
 // Configure ...
@@ -46,6 +47,7 @@ func (c *DatabricksClient) Configure(version string) error {
 		// so that is why this line is here
 		c.Host = "https://" + c.Host
 	}
+	c.commandExecutor = c.Commands()
 	return nil
 }
 
@@ -269,6 +271,18 @@ func (c *DatabricksClient) InstanceProfiles() InstanceProfilesAPI {
 // Commands returns an instance of CommandsAPI
 func (c *DatabricksClient) Commands() CommandsAPI {
 	return CommandsAPI{client: c}
+}
+
+// WithCommandMock mocks all command executions for this client
+func (c *DatabricksClient) WithCommandMock(mock CommandMock) {
+	c.commandExecutor = commandExecutorMock{
+		mock: mock,
+	}
+}
+
+// CommandExecutor service
+func (c *DatabricksClient) CommandExecutor() CommandExecutor {
+	return c.commandExecutor
 }
 
 // MWSCredentials returns an instance of MWSCredentialsAPI

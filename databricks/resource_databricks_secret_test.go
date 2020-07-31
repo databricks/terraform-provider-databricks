@@ -219,7 +219,7 @@ func TestResourceSecretRead_Error(t *testing.T) {
 			Status: 400,
 		},
 	}, resourceSecret, nil, actionWithID("foo|||bar", resourceSecretRead))
-	assert.EqualError(t, err, "Internal error happened")
+	assertErrorStartsWith(t, err, "Internal error happened")
 	assert.Equal(t, "foo|||bar", d.Id(), "Id should not be empty for error reads")
 }
 
@@ -271,7 +271,7 @@ func TestResourceSecretCreate_Error(t *testing.T) {
 		"scope":        "...",
 		"string_value": "...",
 	}, resourceSecretCreate)
-	assert.EqualError(t, err, "Internal error happened")
+	assertErrorStartsWith(t, err, "Internal error happened")
 	assert.Equal(t, "", d.Id(), "Id should be empty for error creates")
 }
 
@@ -302,6 +302,6 @@ func TestResourceSecretDelete_Error(t *testing.T) {
 			Status: 400,
 		},
 	}, resourceSecret, nil, actionWithID("foo|||bar", resourceSecretDelete))
-	assert.EqualError(t, err, "Internal error happened")
+	assertErrorStartsWith(t, err, "Internal error happened")
 	assert.Equal(t, "foo|||bar", d.Id())
 }

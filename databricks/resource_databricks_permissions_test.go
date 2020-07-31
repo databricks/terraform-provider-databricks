@@ -170,7 +170,7 @@ func TestResourcePermissionsDelete_error(t *testing.T) {
 func TestResourcePermissionsCreate_invalid(t *testing.T) {
 	_, err := ResourceTester(t, []HTTPFixture{}, resourcePermissions,
 		nil, resourcePermissionsCreate)
-	assert.EqualError(t, err, "At least one type of resource identifiers must be set")
+	assertErrorStartsWith(t, err, "At least one type of resource identifiers must be set")
 }
 
 func TestResourcePermissionsCreate_no_access_control(t *testing.T) {
@@ -178,7 +178,7 @@ func TestResourcePermissionsCreate_no_access_control(t *testing.T) {
 		map[string]interface{}{
 			"cluster_id": "abc",
 		}, resourcePermissionsCreate)
-	assert.EqualError(t, err, "Invalid config supplied. access_control: required field is not set")
+	assertErrorStartsWith(t, err, "Invalid config supplied. access_control: required field is not set")
 }
 
 func TestResourcePermissionsCreate_conflicting_fields(t *testing.T) {
@@ -193,7 +193,7 @@ func TestResourcePermissionsCreate_conflicting_fields(t *testing.T) {
 				},
 			},
 		}, resourcePermissionsCreate)
-	assert.EqualError(t, err, "Invalid config supplied. cluster_id: conflicts with notebook_path. notebook_path: conflicts with cluster_id")
+	assertErrorStartsWith(t, err, "Invalid config supplied. cluster_id: conflicts with notebook_path. notebook_path: conflicts with cluster_id")
 }
 
 func TestResourcePermissionsCreate(t *testing.T) {

@@ -67,7 +67,7 @@ func TestResourceInstancePoolCreate_Error(t *testing.T) {
 		"min_idle_instances":                    10,
 		"node_type_id":                          "i3.xlarge",
 	}, resourceInstancePoolCreate)
-	assert.EqualError(t, err, "Internal error happened")
+	assertErrorStartsWith(t, err, "Internal error happened")
 	assert.Equal(t, "", d.Id(), "Id should be empty for error creates")
 }
 
@@ -124,7 +124,7 @@ func TestResourceInstancePoolRead_Error(t *testing.T) {
 			Status: 400,
 		},
 	}, resourceInstancePool, nil, actionWithID("abc", resourceInstancePoolRead))
-	assert.EqualError(t, err, "Internal error happened")
+	assertErrorStartsWith(t, err, "Internal error happened")
 	assert.Equal(t, "abc", d.Id(), "Id should not be empty for error reads")
 }
 
@@ -182,7 +182,7 @@ func TestResourceInstancePoolUpdate_Error(t *testing.T) {
 		"min_idle_instances":                    5,
 		"node_type_id":                          "i3.xlarge",
 	}, actionWithID("abc", resourceInstancePoolUpdate))
-	assert.EqualError(t, err, "Internal error happened")
+	assertErrorStartsWith(t, err, "Internal error happened")
 	assert.Equal(t, "abc", d.Id())
 }
 
@@ -212,6 +212,6 @@ func TestResourceInstancePoolDelete_Error(t *testing.T) {
 			Status: 400,
 		},
 	}, resourceInstancePool, nil, actionWithID("abc", resourceInstancePoolDelete))
-	assert.EqualError(t, err, "Internal error happened")
+	assertErrorStartsWith(t, err, "Internal error happened")
 	assert.Equal(t, "abc", d.Id())
 }

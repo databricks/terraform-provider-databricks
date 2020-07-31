@@ -214,7 +214,7 @@ func TestResourceMWSNetworksCreate_Error(t *testing.T) {
 		"subnet_ids":         []interface{}{"three", "four"},
 		"vpc_id":             "five",
 	}, resourceMWSNetworksCreate)
-	assert.EqualError(t, err, "Internal error happened")
+	assertErrorStartsWith(t, err, "Internal error happened")
 	assert.Equal(t, "", d.Id(), "Id should be empty for error creates")
 }
 
@@ -270,7 +270,7 @@ func TestResourceMWSNetworksRead_Error(t *testing.T) {
 			Status: 400,
 		},
 	}, resourceMWSNetworks, nil, actionWithID("abc/nid", resourceMWSNetworksRead))
-	assert.EqualError(t, err, "Internal error happened")
+	assertErrorStartsWith(t, err, "Internal error happened")
 	assert.Equal(t, "abc/nid", d.Id(), "Id should not be empty for error reads")
 }
 
@@ -297,6 +297,6 @@ func TestResourceMWSNetworksDelete_Error(t *testing.T) {
 			Status: 400,
 		},
 	}, resourceMWSNetworks, nil, actionWithID("abc/nid", resourceMWSNetworksDelete))
-	assert.EqualError(t, err, "Internal error happened")
+	assertErrorStartsWith(t, err, "Internal error happened")
 	assert.Equal(t, "abc/nid", d.Id())
 }

@@ -36,73 +36,64 @@ func (m AzureADLSGen2Mount) Config() map[string]string {
 	}
 }
 
-func resourceAzureAdlsGen2MountEntity() Mount {
-	return new(AzureADLSGen2Mount)
-}
-
 func resourceAzureAdlsGen2Mount() *schema.Resource {
-	resource := &schema.Resource{
-		Schema: map[string]*schema.Schema{
-			"cluster_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"source": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"mount_name": {
-				// TODO: have it by default as storage_resource_name
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"container_name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"storage_account_name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"directory": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ForceNew:     true,
-				ValidateFunc: ValidateMountDirectory,
-			},
-			"tenant_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"client_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"client_secret_scope": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"client_secret_key": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"initialize_file_system": {
-				Type:     schema.TypeBool,
-				Required: true,
-				ForceNew: true,
-			},
+	return commonMountResource(AzureADLSGen2Mount{}, map[string]*schema.Schema{
+		"cluster_id": {
+			Type:     schema.TypeString,
+			Optional: true,
+			ForceNew: true,
 		},
-	}
-	resource.Create = mountCreate(resourceAzureAdlsGen2MountEntity, resource)
-	resource.Read = mountRead(resourceAzureAdlsGen2MountEntity, resource)
-	resource.Delete = mountDelete(resourceAzureAdlsGen2MountEntity, resource)
-	return resource
+		"source": {
+			Type:     schema.TypeString,
+			Computed: true,
+		},
+		"mount_name": {
+			// TODO: have it by default as storage_resource_name
+			Type:     schema.TypeString,
+			Required: true,
+			ForceNew: true,
+		},
+		"container_name": {
+			Type:     schema.TypeString,
+			Required: true,
+			ForceNew: true,
+		},
+		"storage_account_name": {
+			Type:     schema.TypeString,
+			Required: true,
+			ForceNew: true,
+		},
+		"directory": {
+			Type:         schema.TypeString,
+			Optional:     true,
+			Computed:     true,
+			ForceNew:     true,
+			ValidateFunc: ValidateMountDirectory,
+		},
+		"tenant_id": {
+			Type:     schema.TypeString,
+			Required: true,
+			ForceNew: true,
+		},
+		"client_id": {
+			Type:     schema.TypeString,
+			Required: true,
+			ForceNew: true,
+		},
+		"client_secret_scope": {
+			Type:     schema.TypeString,
+			Required: true,
+			ForceNew: true,
+		},
+		"client_secret_key": {
+			Type:     schema.TypeString,
+			Required: true,
+			ForceNew: true,
+		},
+		"initialize_file_system": {
+			Type:     schema.TypeBool,
+			Required: true,
+			ForceNew: true,
+		},
+	})
 }

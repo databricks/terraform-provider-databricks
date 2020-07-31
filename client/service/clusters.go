@@ -2,9 +2,9 @@ package service
 
 import (
 	"errors"
+	"fmt"
 	"log"
 	"time"
-	"fmt"
 
 	"github.com/databrickslabs/databricks-terraform/client/model"
 )
@@ -188,7 +188,7 @@ func (a ClustersAPI) GetOrCreateRunningCluster(name string, custom ...model.Clus
 		NumWorkers:             1,
 		ClusterName:            name,
 		SparkVersion:           CommonRuntimeVersion(),
-		NodeTypeID:				instanceType,
+		NodeTypeID:             instanceType,
 		IdempotencyToken:       name,
 		AutoterminationMinutes: 10,
 	}
@@ -203,5 +203,5 @@ func (a ClustersAPI) GetOrCreateRunningCluster(name string, custom ...model.Clus
 	if err != nil {
 		return
 	}
-	return
+	return c, nil
 }

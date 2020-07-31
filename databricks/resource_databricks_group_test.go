@@ -210,7 +210,7 @@ func TestResourceGroupCreate_Error(t *testing.T) {
 	}, resourceGroup, map[string]interface{}{
 		"display_name": "Data Scientists",
 	}, resourceGroupCreate)
-	assert.EqualError(t, err, "Internal error happened")
+	assertErrorStartsWith(t, err, "Internal error happened")
 	assert.Equal(t, "", d.Id(), "Id should be empty for error creates")
 }
 
@@ -261,7 +261,7 @@ func TestResourceGroupRead_Error(t *testing.T) {
 			Status: 400,
 		},
 	}, resourceGroup, nil, actionWithID("abc", resourceGroupRead))
-	assert.EqualError(t, err, "Internal error happened")
+	assertErrorStartsWith(t, err, "Internal error happened")
 	assert.Equal(t, "abc", d.Id(), "Id should not be empty for error reads")
 }
 
@@ -321,7 +321,7 @@ func TestResourceGroupUpdate_Error(t *testing.T) {
 		"display_name":               "Data Ninjas",
 		"allow_instance_pool_create": true,
 	}, actionWithID("abc", resourceGroupUpdate))
-	assert.EqualError(t, err, "Internal error happened")
+	assertErrorStartsWith(t, err, "Internal error happened")
 	assert.Equal(t, "abc", d.Id())
 }
 
@@ -348,6 +348,6 @@ func TestResourceGroupDelete_Error(t *testing.T) {
 			Status: 400,
 		},
 	}, resourceGroup, nil, actionWithID("abc", resourceGroupDelete))
-	assert.EqualError(t, err, "Internal error happened")
+	assertErrorStartsWith(t, err, "Internal error happened")
 	assert.Equal(t, "abc", d.Id())
 }

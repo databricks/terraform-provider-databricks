@@ -133,7 +133,7 @@ func NewTinyClusterInCommonPool() (c model.ClusterInfo, err error) {
 func NewTinyClusterInCommonPoolPossiblyReused() (c model.ClusterInfo) {
 	randomName := randomName()
 	client := CommonEnvironmentClient()
-	currentCluster := fmt.Sprintf("Terraform Integration Test by %s", os.Getenv("USER"))
+	currentCluster := "TerraformIntegrationTest"
 	c, err := client.Clusters().GetOrCreateRunningCluster(currentCluster, model.Cluster{
 		NumWorkers:             1,
 		ClusterName:            currentCluster,

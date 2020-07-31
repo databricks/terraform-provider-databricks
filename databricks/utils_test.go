@@ -21,6 +21,10 @@ import (
 	"github.com/databrickslabs/databricks-terraform/client/service"
 )
 
+func assertErrorStartsWith(t *testing.T, err error, message string) bool {
+	return assert.True(t, strings.HasPrefix(err.Error(), message), err.Error())
+}
+
 func TestAwsAccMissingMWSResources(t *testing.T) {
 	if cloudENV, ok := os.LookupEnv("CLOUD_ENV"); !ok || cloudENV != "AWS" {
 		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV=AWS' is set")
@@ -313,6 +317,53 @@ type HTTPFixture struct {
 	ReuseRequest    bool
 }
 
+type ResourceFixture struct {
+	Fixtures    []HTTPFixture
+	Resource    *schema.Resource
+	State       map[string]interface{}
+	CommandMock service.CommandMock
+	Create      bool
+	Read        bool
+	Update      bool
+	Delete      bool
+	ID          string
+}
+
+func (f ResourceFixture) Apply(t *testing.T) (*schema.ResourceData, error) {
+	client, server, err := httpFixtureClient(t, f.Fixtures)
+	defer server.Close()
+	if err != nil {
+		return nil, err
+	}
+	if f.CommandMock != nil {
+		client.WithCommandMock(f.CommandMock)
+	}
+	var whatever func(d *schema.ResourceData, c interface{}) error
+	switch {
+	case f.Create:
+		whatever = f.Resource.Create
+		if f.ID != "" {
+			return nil, errors.New("ID is not available for Create")
+		}
+	case f.Read:
+		whatever = f.Resource.Read
+		if f.ID == "" {
+			return nil, errors.New("ID must be set for Read")
+		}
+	case f.Update:
+		whatever = f.Resource.Update
+		if f.ID == "" {
+			return nil, errors.New("ID must be set for Update")
+		}
+	case f.Delete:
+		whatever = f.Resource.Delete
+		if f.ID == "" {
+			return nil, errors.New("ID must be set for Delete")
+		}
+	}
+	return resourceTesterScaffolding(t, f.Resource, f.State, client, whatever)
+}
+
 func UnionFixturesLists(fixturesLists ...[]HTTPFixture) (fixtureList []HTTPFixture) {
 	for _, v := range fixturesLists {
 		fixtureList = append(fixtureList, v...)
@@ -326,7 +377,16 @@ func ResourceTester(t *testing.T,
 	resourceFunc func() *schema.Resource,
 	state map[string]interface{},
 	whatever func(d *schema.ResourceData, c interface{}) error) (*schema.ResourceData, error) {
-	server := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
+	client, server, err := httpFixtureClient(t, fixtures)
+	defer server.Close()
+	if err != nil {
+		return nil, err
+	}
+	return resourceTesterScaffolding(t, resourceFunc(), state, client, whatever)
+}
+
+func httpFixtureClient(t *testing.T, fixtures []HTTPFixture) (client *service.DatabricksClient, server *httptest.Server, err error) {
+	server = httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
 		found := false
 		for i, fixture := range fixtures {
 			if req.Method == fixture.Method && req.RequestURI == fixture.Resource {
@@ -401,19 +461,17 @@ func ResourceTester(t *testing.T,
 			t.FailNow()
 		}
 	}))
-
-	defer server.Close()
-	client := service.DatabricksClient{
+	client = &service.DatabricksClient{
 		Host:  server.URL,
 		Token: "...",
 	}
-	err := client.Configure("dev")
-	if err != nil {
-		return nil, err
-	}
+	err = client.Configure("dev")
+	return client, server, err
+}
 
-	res := resourceFunc()
-
+func resourceTesterScaffolding(t *testing.T, res *schema.Resource,
+	state map[string]interface{}, client *service.DatabricksClient,
+	whatever func(d *schema.ResourceData, c interface{}) error) (*schema.ResourceData, error) {
 	if state != nil {
 		resourceConfig := terraform.NewResourceConfigRaw(state)
 		warns, errs := res.Validate(resourceConfig)
@@ -436,13 +494,13 @@ func ResourceTester(t *testing.T,
 	}
 
 	resourceData := schema.TestResourceDataRaw(t, res.Schema, state)
-	err = res.InternalValidate(res.Schema, true)
+	err := res.InternalValidate(res.Schema, true)
 	if err != nil {
 		return nil, err
 	}
 
 	// warns, errs := schemaMap(r.Schema).Validate(c)
-	return resourceData, whatever(resourceData, &client)
+	return resourceData, whatever(resourceData, client)
 }
 
 func actionWithID(id string, w schema.CreateFunc) schema.CreateFunc {

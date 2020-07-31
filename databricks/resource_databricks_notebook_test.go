@@ -283,7 +283,7 @@ func TestResourceNotebookRead_Error(t *testing.T) {
 			Status: 400,
 		},
 	}, resourceNotebook, nil, actionWithID("/test/path.py", resourceNotebookRead))
-	assert.EqualError(t, err, "Internal error happened")
+	assertErrorStartsWith(t, err, "Internal error happened")
 	assert.Equal(t, "/test/path.py", d.Id(), "Id should not be empty for error reads")
 }
 
@@ -346,7 +346,7 @@ func TestResourceNotebookCreate_Error(t *testing.T) {
 		"overwrite": true,
 		"path":      "/path.py",
 	}, resourceNotebookCreate)
-	assert.EqualError(t, err, "Internal error happened")
+	assertErrorStartsWith(t, err, "Internal error happened")
 	assert.Equal(t, "", d.Id(), "Id should be empty for error creates")
 }
 
@@ -362,7 +362,7 @@ func TestResourceNotebookDelete_Error(t *testing.T) {
 			Status: 400,
 		},
 	}, resourceNotebook, nil, actionWithID("abc", resourceNotebookDelete))
-	assert.EqualError(t, err, "Internal error happened")
+	assertErrorStartsWith(t, err, "Internal error happened")
 	assert.Equal(t, "abc", d.Id())
 }
 

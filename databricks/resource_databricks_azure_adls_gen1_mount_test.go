@@ -20,12 +20,11 @@ func TestAzureAccADLSv1Mount(t *testing.T) {
 	if !client.AzureAuth.IsClientSecretSet() {
 		t.Skip("Test is meant only for client-secret conf Azure")
 	}
-	gen1Name := os.Getenv("TEST_GEN1_NAME") TEST_GEN1_NAME
+	gen1Name := os.Getenv("TEST_GEN1_NAME")
 	if gen1Name == "" {
 		t.Skip("No ADLS account given")
 	}
-	clusterInfo, err := client.Clusters().GetOrCreateRunningCluster("TerraformIntegrationTest")
-	assert.NoError(t, err)
+	clusterInfo := service.NewTinyClusterInCommonPoolPossiblyReused()
 
 	randomName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
 	mp := MountPoint{
@@ -33,12 +32,12 @@ func TestAzureAccADLSv1Mount(t *testing.T) {
 		clusterID: clusterInfo.ClusterID,
 		name:      randomName,
 	}
-	err = mp.Delete()
-	assert.EqualError(t, err, "Directory not mounted: /mnt/"+randomName)
+	err := mp.Delete()
+	assertErrorStartsWith(t, err, "Directory not mounted: /mnt/"+randomName)
 
 	source, err := mp.Source()
 	assert.Equal(t, "", source)
-	assert.EqualError(t, err, "Mount not found")
+	assertErrorStartsWith(t, err, "Mount not found")
 
 	source, err = mp.Mount(AzureADLSGen1Mount{
 		ClientID:        client.AzureAuth.ClientID,
@@ -50,7 +49,7 @@ func TestAzureAccADLSv1Mount(t *testing.T) {
 		SecretScope:     "y",
 	})
 	assert.Equal(t, "", source)
-	assert.EqualError(t, err, "Secret does not exist with scope: y and key: key")
+	assertErrorStartsWith(t, err, "Secret does not exist with scope: y and key: key")
 
 	randomScope := "test" + randomName
 	err = client.SecretScopes().Create(randomScope, "users")
@@ -58,7 +57,10 @@ func TestAzureAccADLSv1Mount(t *testing.T) {
 
 	err = client.Secrets().Create(client.AzureAuth.ClientSecret, randomScope, "key")
 	assert.NoError(t, err)
-	defer client.SecretScopes().Delete(randomScope)
+	defer func() {
+		err = client.SecretScopes().Delete(randomScope)
+		assert.NoError(t, err)
+	}()
 
 	m := AzureADLSGen1Mount{
 		ClientID:        client.AzureAuth.ClientID,
@@ -73,7 +75,10 @@ func TestAzureAccADLSv1Mount(t *testing.T) {
 	source, err = mp.Mount(m)
 	assert.Equal(t, m.Source(), source)
 	assert.NoError(t, err)
-	defer mp.Delete()
+	defer func() {
+		err = mp.Delete()
+		assert.NoError(t, err)
+	}()
 
 	source, err = mp.Source()
 	assert.Equal(t, m.Source(), source)

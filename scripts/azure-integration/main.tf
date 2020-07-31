@@ -32,7 +32,7 @@ locals {
 
 resource "azurerm_resource_group" "example" {
   name     = "${local.prefix}-rg"
-  location = "eastus"
+  location = "westeurope"
   tags     = local.tags
 }
 
@@ -124,7 +124,7 @@ output "test_gen2_adal_name" {
 }
 
 output "test_gen1_name" {
-  value = azurerm_data_lake_store.example.name
+  value = azurerm_data_lake_store.gen1.name
 }
 
 output "test_storage_account_key" {

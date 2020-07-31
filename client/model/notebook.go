@@ -47,7 +47,7 @@ type NotebookContent struct {
 
 // NotebookImportRequest contains the payload to import a notebook
 type NotebookImportRequest struct {
-	Content   string       `json:"content,omitempty" mask:"true"`
+	Content   string       `json:"content,omitempty"`
 	Path      string       `json:"path,omitempty"`
 	Language  Language     `json:"language,omitempty"`
 	Overwrite bool         `json:"overwrite,omitempty"`

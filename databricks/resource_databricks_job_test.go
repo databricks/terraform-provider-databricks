@@ -155,7 +155,7 @@ func TestResourceJobCreate_Error(t *testing.T) {
 		"name":                      "Featurizer",
 		"retry_on_timeout":          true,
 	}, resourceJobCreate)
-	assert.EqualError(t, err, "Internal error happened")
+	assertErrorStartsWith(t, err, "Internal error happened")
 	assert.Equal(t, "", d.Id(), "Id should be empty for error creates")
 }
 
@@ -220,7 +220,7 @@ func TestResourceJobRead_Error(t *testing.T) {
 			Status: 400,
 		},
 	}, resourceJob, nil, actionWithID("789", resourceJobRead))
-	assert.EqualError(t, err, "Internal error happened")
+	assertErrorStartsWith(t, err, "Internal error happened")
 	assert.Equal(t, "789", d.Id(), "Id should not be empty for error reads")
 }
 
@@ -301,7 +301,7 @@ func TestResourceJobUpdate_Error(t *testing.T) {
 		"name":                      "Featurizer New",
 		"retry_on_timeout":          true,
 	}, actionWithID("789", resourceJobUpdate))
-	assert.EqualError(t, err, "Internal error happened")
+	assertErrorStartsWith(t, err, "Internal error happened")
 	assert.Equal(t, "789", d.Id())
 }
 
@@ -331,6 +331,6 @@ func TestResourceJobDelete_Error(t *testing.T) {
 			Status: 400,
 		},
 	}, resourceJob, nil, actionWithID("789", resourceJobDelete))
-	assert.EqualError(t, err, "Internal error happened")
+	assertErrorStartsWith(t, err, "Internal error happened")
 	assert.Equal(t, "789", d.Id())
 }

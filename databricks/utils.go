@@ -3,7 +3,6 @@ package databricks
 import (
 	"errors"
 	"fmt"
-	"log"
 	"reflect"
 	"strconv"
 	"strings"
@@ -25,7 +24,6 @@ func changeClusterIntoRunningState(clusterID string, client *service.DatabricksC
 	currentState := clusterInfo.State
 
 	if model.ContainsClusterState([]model.ClusterState{model.ClusterStateRunning}, currentState) {
-		time.Sleep(5 * time.Second)
 		return nil
 	}
 
@@ -146,14 +144,39 @@ func GetParentDirPath(filePath string) (string, error) {
 	return dirPath, nil
 }
 
-func iterFields(v interface{}, path []string, r *schema.Resource,
+func reflectKind(k reflect.Kind) string {
+	switch k {
+	case reflect.Array:
+		return "Array"
+	case reflect.Chan:
+		return "Chan"
+	case reflect.Func:
+		return "Func"
+	case reflect.Interface:
+		return "Interface"
+	case reflect.Ptr:
+		return "Ptr"
+	case reflect.Slice:
+		return "Slice"
+	case reflect.String:
+		return "String"
+	case reflect.Struct:
+		return "Struct"
+	case reflect.UnsafePointer:
+		return "UnsafePointer"
+	default:
+		return "other"
+	}
+}
+
+func iterFields(rv reflect.Value, path []string, r *schema.Resource,
 	cb func(fieldSchema *schema.Schema, path []string, valueField *reflect.Value) error) error {
-	rv := reflect.ValueOf(v)
-	if rv.Kind() == reflect.Ptr {
-		rv = rv.Elem()
+	rk := rv.Kind()
+	if rk != reflect.Struct {
+		return fmt.Errorf("Value of Struct is expected, but got %s: %#v", reflectKind(rk), rv)
 	}
 	if !rv.IsValid() {
-		return nil
+		return fmt.Errorf("Got invalid reflect value %#v", rv)
 	}
 	for i := 0; i < rv.NumField(); i++ {
 		typeField := rv.Type().Field(i)
@@ -175,107 +198,112 @@ func iterFields(v interface{}, path []string, r *schema.Resource,
 	return nil
 }
 
-func collectionToMaps(v interface{}, s *schema.Schema) ([]interface{}, error) {
-	r, ok := s.Elem.(*schema.Resource)
-	if !ok {
-		return nil, fmt.Errorf("not resource")
-	}
-	var allItems []interface{}
-	if s.MaxItems == 1 {
-		allItems = append(allItems, v)
-	} else {
-		vs := reflect.ValueOf(v)
-		for i := 0; i < vs.Len(); i++ {
-			allItems = append(allItems, vs.Index(i).Interface())
-		}
-	}
-	resultList := []interface{}{}
-	for _, v := range allItems {
-		data := map[string]interface{}{}
-		err := iterFields(v, []string{}, r, func(fieldSchema *schema.Schema,
-			path []string, valueField *reflect.Value) error {
-			fieldName := path[len(path)-1]
-			fieldValue := valueField.Interface()
-			switch fieldSchema.Type {
-			case schema.TypeList, schema.TypeSet:
-				nv, err := collectionToMaps(fieldValue, fieldSchema)
-				if err != nil {
-					return err
-				}
-				data[fieldName] = nv
-			default:
-				if s, ok := fieldValue.(string); ok && s == "" {
-					return nil
-				}
-				data[fieldName] = fieldValue
-			}
-			return nil
-		})
-		if err != nil {
-			return nil, err
-		}
-		if len(data) == 0 {
-			continue
-		}
-		resultList = append(resultList, data)
-	}
-	return resultList, nil
-}
+// func collectionToMaps(v interface{}, s *schema.Schema) ([]interface{}, error) {
+// 	r, ok := s.Elem.(*schema.Resource)
+// 	if !ok {
+// 		return nil, fmt.Errorf("not resource")
+// 	}
+// 	var allItems []reflect.Value
+// 	if s.MaxItems == 1 {
+// 		allItems = append(allItems, reflect.ValueOf(v))
+// 	} else {
+// 		vs := reflect.ValueOf(v)
+// 		for i := 0; i < vs.Len(); i++ {
+// 			allItems = append(allItems, vs.Index(i))
+// 		}
+// 	}
+// 	resultList := []interface{}{}
+// 	for _, v := range allItems {
+// 		data := map[string]interface{}{}
+// 		err := iterFields(v, []string{}, r, func(fieldSchema *schema.Schema,
+// 			path []string, valueField *reflect.Value) error {
+// 			fieldName := path[len(path)-1]
+// 			fieldValue := valueField.Interface()
+// 			switch fieldSchema.Type {
+// 			case schema.TypeList, schema.TypeSet:
+// 				nv, err := collectionToMaps(fieldValue, fieldSchema)
+// 				if err != nil {
+// 					return err
+// 				}
+// 				data[fieldName] = nv
+// 			default:
+// 				if s, ok := fieldValue.(string); ok && s == "" {
+// 					return nil
+// 				}
+// 				data[fieldName] = fieldValue
+// 			}
+// 			return nil
+// 		})
+// 		if err != nil {
+// 			return nil, err
+// 		}
+// 		if len(data) == 0 {
+// 			continue
+// 		}
+// 		resultList = append(resultList, data)
+// 	}
+// 	return resultList, nil
+// }
 
-func readResourceFromStruct(v interface{}, d *schema.ResourceData,
-	path []string, r *schema.Resource) error {
-	return iterFields(v, path, r, func(fieldSchema *schema.Schema,
-		path []string, valueField *reflect.Value) error {
-		fieldValue := valueField.Interface()
-		if fieldValue == nil {
-			return nil
-		}
-		fieldPath := strings.Join(path, ".")
-		_, configured := d.GetOk(fieldPath)
-		if !fieldSchema.Computed && !configured {
-			log.Printf("[DEBUG] removing default fields sent back by server: %s", fieldPath)
-			return nil
-		}
-		switch fieldSchema.Type {
-		case schema.TypeList, schema.TypeSet:
-			es, ok := fieldSchema.Elem.(*schema.Schema)
-			if ok {
-				switch es.Type {
-				case schema.TypeString:
-					v, ok := fieldValue.([]string)
-					if !ok {
-						return fmt.Errorf("%s[%v] is not a string",
-							fieldPath, fieldValue)
-					}
-					return d.Set(fieldPath, v)
-				case schema.TypeInt:
-					v, ok := fieldValue.([]int)
-					if !ok {
-						return fmt.Errorf("%s[%v] is not a string",
-							fieldPath, fieldValue)
-					}
-					return d.Set(fieldPath, v)
-				}
-				return fmt.Errorf("%s[%v] supported schema detected",
-					fieldPath, fieldValue)
-			}
-			nv, err := collectionToMaps(fieldValue, fieldSchema)
-			if err != nil {
-				return err
-			}
-			if len(nv) == 0 {
-				return nil
-			}
-			return d.Set(fieldPath, nv)
-		default:
-			return d.Set(fieldPath, fieldValue)
-		}
-	})
-}
+// func readResourceFromStruct(v interface{}, d *schema.ResourceData,
+// 	path []string, r *schema.Resource) error {
+// 	return iterFields(reflect.Value(v), path, r, func(fieldSchema *schema.Schema,
+// 		path []string, valueField *reflect.Value) error {
+// 		fieldValue := valueField.Interface()
+// 		if fieldValue == nil {
+// 			return nil
+// 		}
+// 		fieldPath := strings.Join(path, ".")
+// 		_, configured := d.GetOk(fieldPath)
+// 		if !fieldSchema.Computed && !configured {
+// 			log.Printf("[DEBUG] removing default fields sent back by server: %s", fieldPath)
+// 			return nil
+// 		}
+// 		switch fieldSchema.Type {
+// 		case schema.TypeList, schema.TypeSet:
+// 			es, ok := fieldSchema.Elem.(*schema.Schema)
+// 			if ok {
+// 				switch es.Type {
+// 				case schema.TypeString:
+// 					v, ok := fieldValue.([]string)
+// 					if !ok {
+// 						return fmt.Errorf("%s[%v] is not a string",
+// 							fieldPath, fieldValue)
+// 					}
+// 					return d.Set(fieldPath, v)
+// 				case schema.TypeInt:
+// 					v, ok := fieldValue.([]int)
+// 					if !ok {
+// 						return fmt.Errorf("%s[%v] is not a string",
+// 							fieldPath, fieldValue)
+// 					}
+// 					return d.Set(fieldPath, v)
+// 				}
+// 				return fmt.Errorf("%s[%v] supported schema detected",
+// 					fieldPath, fieldValue)
+// 			}
+// 			nv, err := collectionToMaps(fieldValue, fieldSchema)
+// 			if err != nil {
+// 				return err
+// 			}
+// 			if len(nv) == 0 {
+// 				return nil
+// 			}
+// 			return d.Set(fieldPath, nv)
+// 		default:
+// 			return d.Set(fieldPath, fieldValue)
+// 		}
+// 	})
+// }
 
 func readStructFromData(path []string, d *schema.ResourceData,
 	result interface{}, r *schema.Resource) error {
-	return iterFields(result, path, r, func(fieldSchema *schema.Schema,
+	return readReflectValueFromData(path, d, reflect.ValueOf(result), r)
+}
+
+func readReflectValueFromData(path []string, d *schema.ResourceData,
+	rv reflect.Value, r *schema.Resource) error {
+	return iterFields(rv, path, r, func(fieldSchema *schema.Schema,
 		path []string, valueField *reflect.Value) error {
 		fieldPath := strings.Join(path, ".")
 		raw, ok := d.GetOk(fieldPath)

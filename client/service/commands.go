@@ -14,22 +14,35 @@ import (
 	"github.com/databrickslabs/databricks-terraform/client/model"
 )
 
-// CommandsAPI exposes the Context & Commands API
-type CommandsAPI struct {
-	client *DatabricksClient
-}
-
-// CommandExecutor creates a spark context and executes a command and then closes context
-type CommandExecutor interface {
-	Execute(clusterID, language, commandStr string) (string, error)
-}
-
 var (
 	outRE          = regexp.MustCompile(`Out\[[\d\s]+\]:\s`)
 	tagRE          = regexp.MustCompile(`<[^>]*>`)
 	exceptionRE    = regexp.MustCompile(`.*Exception: (.*)`)
 	errorMessageRE = regexp.MustCompile(`ErrorMessage=(.*)\n`)
 )
+
+// CommandsAPI exposes the Context & Commands API
+type CommandsAPI struct {
+	client *DatabricksClient
+}
+
+// CommandMock mocks the execution of command
+type CommandMock func(commandStr string) (string, error)
+
+// CommandExecutorMock simplifies command testing
+type commandExecutorMock struct {
+	mock CommandMock
+}
+
+// Execute mock command with given mock function
+func (c commandExecutorMock) Execute(clusterID, language, commandStr string) (string, error) {
+	return c.mock(commandStr)
+}
+
+// CommandExecutor creates a spark context and executes a command and then closes context
+type CommandExecutor interface {
+	Execute(clusterID, language, commandStr string) (string, error)
+}
 
 // TrimLeadingWhitespace removes leading whitespace
 func TrimLeadingWhitespace(commandStr string) (newCommand string) {
@@ -101,7 +114,7 @@ func (a CommandsAPI) Execute(clusterID, language, commandStr string) (result str
 	return a.parseCommandResults(command)
 }
 
-func (a CommandsAPI) parseCommandResults(command model.Command) (result string, err error){
+func (a CommandsAPI) parseCommandResults(command model.Command) (result string, err error) {
 	switch command.Results.ResultType {
 	case "text":
 		result = outRE.ReplaceAllLiteralString(command.Results.Data.(string), "")
@@ -241,7 +254,7 @@ func (a CommandsAPI) waitForCommandFinished(commandID, contextID, clusterID stri
 				errChan <- fmt.Errorf("context is in a failure state: %s", commandInfo.Status)
 				return
 			}
-			log.Println(fmt.Sprintf("Waiting for command to finish, current state is: %s.", commandInfo.Status))
+			log.Println(fmt.Sprintf("[DEBUG] Waiting for command to finish, current state is: %s.", commandInfo.Status))
 			time.Sleep(sleepDurationSeconds * time.Second)
 		}
 	}()
@@ -269,7 +282,7 @@ func (a CommandsAPI) waitForContextReady(contextID, clusterID string, sleepDurat
 				errChan <- errors.New("context is in a errored state")
 				return
 			}
-			log.Println("Waiting for context to go to running, current state is pending.")
+			log.Println("[DEBUG] Waiting for context to go to running, current state is pending.")
 			time.Sleep(sleepDurationSeconds * time.Second)
 		}
 	}()

@@ -223,8 +223,7 @@ func TestAzureAccADLSv2Mount(t *testing.T) {
 	if gen2AdalName == "" {
 		t.Skip("No ADLS account given")
 	}
-	clusterInfo, err := client.Clusters().GetOrCreateRunningCluster("TerraformIntegrationTest")
-	assert.NoError(t, err)
+	clusterInfo := service.NewTinyClusterInCommonPoolPossiblyReused()
 
 	randomName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
 	mp := MountPoint{
@@ -232,12 +231,12 @@ func TestAzureAccADLSv2Mount(t *testing.T) {
 		clusterID: clusterInfo.ClusterID,
 		name:      randomName,
 	}
-	err = mp.Delete()
-	assert.EqualError(t, err, "Directory not mounted: /mnt/"+randomName)
+	err := mp.Delete()
+	assertErrorStartsWith(t, err, "Directory not mounted: /mnt/"+randomName)
 
 	source, err := mp.Source()
 	assert.Equal(t, "", source)
-	assert.EqualError(t, err, "Mount not found")
+	assertErrorStartsWith(t, err, "Mount not found")
 
 	source, err = mp.Mount(AzureADLSGen2Mount{
 		ClientID:             client.AzureAuth.ClientID,
@@ -250,12 +249,15 @@ func TestAzureAccADLSv2Mount(t *testing.T) {
 		StorageAccountName:   gen2AdalName,
 	})
 	assert.Equal(t, "", source)
-	assert.EqualError(t, err, "Secret does not exist with scope: f and key: e")
+	assertErrorStartsWith(t, err, "Secret does not exist with scope: f and key: e")
 
 	randomScope := "test" + randomName
 	err = client.SecretScopes().Create(randomScope, "users")
 	assert.NoError(t, err)
-	defer client.SecretScopes().Delete(randomScope)
+	defer func() {
+		err = client.SecretScopes().Delete(randomScope)
+		assert.NoError(t, err)
+	}()
 
 	err = client.Secrets().Create(client.AzureAuth.ClientSecret, randomScope, "key")
 	assert.NoError(t, err)
@@ -274,7 +276,10 @@ func TestAzureAccADLSv2Mount(t *testing.T) {
 	source, err = mp.Mount(m)
 	assert.Equal(t, m.Source(), source)
 	assert.NoError(t, err)
-	defer mp.Delete()
+	defer func() {
+		err = mp.Delete()
+		assert.NoError(t, err)
+	}()
 
 	source, err = mp.Source()
 	assert.Equal(t, m.Source(), source)

@@ -31,73 +31,61 @@ func (m AzureBlobMount) Config() map[string]string {
 	} else {
 		confKey = fmt.Sprintf("fs.azure.account.key.%s.blob.core.windows.net", m.StorageAccountName)
 	}
-	return map[string]string {
+	return map[string]string{
 		confKey: fmt.Sprintf("{secrets/%s/%s}", m.SecretScope, m.SecretKey),
 	}
 }
 
-func resourceAzureBlobMountEntity() Mount {
-	 return new(AzureBlobMount)
-}
-
 func resourceAzureBlobMount() *schema.Resource {
-	resource := &schema.Resource{
-		Schema: map[string]*schema.Schema{
-			"cluster_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"source": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"mount_name": {
-				// TODO: have it by default as storage_resource_name
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-
-			"container_name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"storage_account_name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"directory": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				Default:      "/",
-				ForceNew:     true,
-				ValidateFunc: ValidateMountDirectory,
-			},
-			"auth_type": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringInSlice([]string{"SAS", "ACCESS_KEY"}, false),
-			},
-			"token_secret_scope": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"token_secret_key": {
-				Type:      schema.TypeString,
-				Required:  true,
-				ForceNew:  true,
-				Sensitive: true,
-				// TODO: sensitive
-			},
+	return commonMountResource(AzureBlobMount{}, map[string]*schema.Schema{
+		"cluster_id": {
+			Type:     schema.TypeString,
+			Optional: true,
+			ForceNew: true,
 		},
-	}
-	resource.Create = mountCreate(resourceAzureBlobMountEntity, resource)
-	resource.Read = mountRead(resourceAzureBlobMountEntity, resource)
-	resource.Delete = mountDelete(resourceAzureBlobMountEntity, resource)
-	return resource
+		"source": {
+			Type:     schema.TypeString,
+			Computed: true,
+		},
+		"mount_name": {
+			// TODO: have it by default as storage_resource_name
+			Type:     schema.TypeString,
+			Required: true,
+			ForceNew: true,
+		},
+		"container_name": {
+			Type:     schema.TypeString,
+			Required: true,
+			ForceNew: true,
+		},
+		"storage_account_name": {
+			Type:     schema.TypeString,
+			Required: true,
+			ForceNew: true,
+		},
+		"directory": {
+			Type:         schema.TypeString,
+			Optional:     true,
+			Default:      "/",
+			ValidateFunc: ValidateMountDirectory,
+			ForceNew:     true,
+		},
+		"auth_type": {
+			Type:         schema.TypeString,
+			Required:     true,
+			ValidateFunc: validation.StringInSlice([]string{"SAS", "ACCESS_KEY"}, false),
+			ForceNew:     true,
+		},
+		"token_secret_scope": {
+			Type:     schema.TypeString,
+			Required: true,
+			ForceNew: true,
+		},
+		"token_secret_key": {
+			Type:      schema.TypeString,
+			Required:  true,
+			Sensitive: true,
+			ForceNew:  true,
+		},
+	})
 }

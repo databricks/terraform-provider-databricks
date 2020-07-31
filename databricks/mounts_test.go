@@ -6,14 +6,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-var executeMock func(clusterID, language, commandStr string) (string, error)
-
-type commandExecutorMock struct{}
-
-func (a commandExecutorMock) Execute(clusterID, language, commandStr string) (string, error) {
-	return executeMock(clusterID, language, commandStr)
-}
-
 func TestValidateMountDirectory(t *testing.T) {
 	testCases := []struct {
 		directory  string

@@ -250,6 +250,10 @@ func (c *DatabricksClient) recursiveMask(requestMap map[string]interface{}) inte
 			requestMap[k] = "**REDACTED**"
 			continue
 		}
+		if k == "content" {
+			requestMap[k] = "**REDACTED**"
+			continue
+		}
 		if m, ok := v.(map[string]interface{}); ok {
 			requestMap[k] = c.recursiveMask(m)
 			continue
@@ -268,7 +272,11 @@ func (c *DatabricksClient) redactedDump(body []byte) (res string) {
 		return
 	}
 	var requestMap map[string]interface{}
-	json.Unmarshal(body, &requestMap)
+	err := json.Unmarshal(body, &requestMap)
+	if err != nil {
+		// error in this case is not much relevant
+		return
+	}
 	rePacked, err := json.MarshalIndent(c.recursiveMask(requestMap), "", "  ")
 	if err != nil {
 		// error in this case is not much relevant
@@ -370,7 +378,7 @@ func makeRequestBody(method string, requestURL *string, data interface{}, marsha
 }
 
 func onlyNBytes(j string, numBytes int) string {
-	diff := len([]byte(j)) - int(numBytes)
+	diff := len([]byte(j)) - numBytes
 	if diff > 0 {
 		return fmt.Sprintf("%s... (%d more bytes)", j[:numBytes], diff)
 	}

@@ -146,7 +146,7 @@ func TestResourceClusterPolicyRead_Error(t *testing.T) {
 			Status: 400,
 		},
 	}, resourceClusterPolicy, nil, actionWithID("abc", resourceClusterPolicyRead))
-	assert.EqualError(t, err, "Internal error happened")
+	assertErrorStartsWith(t, err, "Internal error happened")
 	assert.Equal(t, "abc", d.Id(), "Id should not be empty for error reads")
 }
 
@@ -197,7 +197,7 @@ func TestResourceClusterPolicyCreate_Error(t *testing.T) {
 		"definition": `{"spark_conf.foo": {"type": "fixed", "value": "bar"}}`,
 		"name":       "Dummy",
 	}, resourceClusterPolicyCreate)
-	assert.EqualError(t, err, "Internal error happened")
+	assertErrorStartsWith(t, err, "Internal error happened")
 	assert.Equal(t, "", d.Id())
 }
 
@@ -246,7 +246,7 @@ func TestResourceClusterPolicyUpdate_Error(t *testing.T) {
 		"definition": `{"spark_conf.foo": {"type": "fixed", "value": "bar"}}`,
 		"name":       "Dummy Updated",
 	}, actionWithID("abc", resourceClusterPolicyUpdate))
-	assert.EqualError(t, err, "Internal error happened")
+	assertErrorStartsWith(t, err, "Internal error happened")
 	assert.Equal(t, "abc", d.Id())
 }
 
@@ -276,6 +276,6 @@ func TestResourceClusterPolicyDelete_Error(t *testing.T) {
 			Status: 400,
 		},
 	}, resourceClusterPolicy, nil, actionWithID("abc", resourceClusterPolicyDelete))
-	assert.EqualError(t, err, "Internal error happened")
+	assertErrorStartsWith(t, err, "Internal error happened")
 	assert.Equal(t, "abc", d.Id())
 }

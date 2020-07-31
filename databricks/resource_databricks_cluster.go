@@ -1506,6 +1506,9 @@ func getMapFromOneItemSet(input interface{}) map[string]interface{} {
 }
 
 func isClusterMissing(err error, resourceID string) bool {
+	if err == nil {
+		return false
+	}
 	apiErr, ok := err.(service.APIError)
 	return (ok && apiErr.IsMissing()) ||
 		strings.Contains(err.Error(), fmt.Sprintf("Cluster %s does not exist", resourceID))

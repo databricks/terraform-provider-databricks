@@ -162,7 +162,7 @@ func TestResourceMWSCredentialsCreate(t *testing.T) {
 		},
 		{
 			Method:   "GET",
-			Resource: "/api/2.0/accounts/abc/credentials/cid?",
+			Resource: "/api/2.0/accounts/abc/credentials/cid",
 			Response: model.MWSCredentials{
 				CredentialsID:   "cid",
 				CredentialsName: "Cross-account ARN",
@@ -206,7 +206,7 @@ func TestResourceMWSCredentialsRead(t *testing.T) {
 	d, err := ResourceTester(t, []HTTPFixture{
 		{
 			Method:   "GET",
-			Resource: "/api/2.0/accounts/abc/credentials/cid?",
+			Resource: "/api/2.0/accounts/abc/credentials/cid",
 			Response: model.MWSCredentials{
 				CredentialsID:   "cid",
 				CredentialsName: "Cross-account ARN",
@@ -231,7 +231,7 @@ func TestResourceMWSCredentialsRead_NotFound(t *testing.T) {
 	d, err := ResourceTester(t, []HTTPFixture{
 		{
 			Method:   "GET",
-			Resource: "/api/2.0/accounts/abc/credentials/cid?",
+			Resource: "/api/2.0/accounts/abc/credentials/cid",
 			Response: service.APIErrorBody{
 				ErrorCode: "NOT_FOUND",
 				Message:   "Item not found",
@@ -247,7 +247,7 @@ func TestResourceMWSCredentialsRead_Error(t *testing.T) {
 	d, err := ResourceTester(t, []HTTPFixture{
 		{
 			Method:   "GET",
-			Resource: "/api/2.0/accounts/abc/credentials/cid?",
+			Resource: "/api/2.0/accounts/abc/credentials/cid",
 			Response: service.APIErrorBody{
 				ErrorCode: "INVALID_REQUEST",
 				Message:   "Internal error happened",

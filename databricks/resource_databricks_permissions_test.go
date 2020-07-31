@@ -23,7 +23,7 @@ func TestResourcePermissionsRead(t *testing.T) {
 	d, err := ResourceTester(t, []HTTPFixture{
 		{
 			Method:   http.MethodGet,
-			Resource: "/api/2.0/preview/permissions/clusters/abc?",
+			Resource: "/api/2.0/preview/permissions/clusters/abc",
 			Response: model.ObjectACL{
 				ObjectID:   "/clusters/abc",
 				ObjectType: "clusters",
@@ -51,7 +51,7 @@ func TestResourcePermissionsRead(t *testing.T) {
 		},
 		{
 			Method:   http.MethodGet,
-			Resource: "/api/2.0/preview/scim/v2/Me?",
+			Resource: "/api/2.0/preview/scim/v2/Me",
 			Response: model.User{
 				UserName: TestingAdminUser,
 			},
@@ -71,7 +71,7 @@ func TestResourcePermissionsRead_some_error(t *testing.T) {
 	_, err := ResourceTester(t, []HTTPFixture{
 		{
 			Method:   http.MethodGet,
-			Resource: "/api/2.0/preview/permissions/clusters/abc?",
+			Resource: "/api/2.0/preview/permissions/clusters/abc",
 			Response: service.APIErrorBody{
 				ErrorCode: "INVALID_REQUEST",
 				Message:   "Internal error happened",
@@ -90,7 +90,7 @@ func TestResourcePermissionsRead_ErrorOnScimMe(t *testing.T) {
 	_, err := ResourceTester(t, []HTTPFixture{
 		{
 			Method:   http.MethodGet,
-			Resource: "/api/2.0/preview/permissions/clusters/abc?",
+			Resource: "/api/2.0/preview/permissions/clusters/abc",
 			Response: model.ObjectACL{
 				ObjectID:   "/clusters/abc",
 				ObjectType: "clusters",
@@ -118,7 +118,7 @@ func TestResourcePermissionsRead_ErrorOnScimMe(t *testing.T) {
 		},
 		{
 			Method:   http.MethodGet,
-			Resource: "/api/2.0/preview/scim/v2/Me?",
+			Resource: "/api/2.0/preview/scim/v2/Me",
 			Response: service.APIErrorBody{
 				ErrorCode: "INVALID_REQUEST",
 				Message:   "Internal error happened",
@@ -212,7 +212,7 @@ func TestResourcePermissionsCreate(t *testing.T) {
 		},
 		{
 			Method:   http.MethodGet,
-			Resource: "/api/2.0/preview/permissions/clusters/abc?",
+			Resource: "/api/2.0/preview/permissions/clusters/abc",
 			Response: model.ObjectACL{
 				ObjectID:   "/clusters/abc",
 				ObjectType: "clusters",
@@ -240,7 +240,7 @@ func TestResourcePermissionsCreate(t *testing.T) {
 		},
 		{
 			Method:   http.MethodGet,
-			Resource: "/api/2.0/preview/scim/v2/Me?",
+			Resource: "/api/2.0/preview/scim/v2/Me",
 			Response: model.User{
 				UserName: TestingAdminUser,
 			},
@@ -308,7 +308,7 @@ func TestResourcePermissionsCreate_NotebookPath(t *testing.T) {
 		},
 		{
 			Method:   http.MethodGet,
-			Resource: "/api/2.0/preview/permissions/notebooks/988765?",
+			Resource: "/api/2.0/preview/permissions/notebooks/988765",
 			Response: model.ObjectACL{
 				ObjectID:   "/notebooks/988765",
 				ObjectType: "notebooks",
@@ -336,7 +336,7 @@ func TestResourcePermissionsCreate_NotebookPath(t *testing.T) {
 		},
 		{
 			Method:   http.MethodGet,
-			Resource: "/api/2.0/preview/scim/v2/Me?",
+			Resource: "/api/2.0/preview/scim/v2/Me",
 			Response: model.User{
 				UserName: TestingAdminUser,
 			},

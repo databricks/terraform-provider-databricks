@@ -263,7 +263,7 @@ func TestClustersAPI_List(t *testing.T) {
 						   ]
 						}`,
 			responseStatus: http.StatusOK,
-			wantURI:        "/api/2.0/clusters/list?",
+			wantURI:        "/api/2.0/clusters/list",
 			want: []model.ClusterInfo{
 				{
 					ClusterName:  "autoscaling-cluster",
@@ -290,7 +290,7 @@ func TestClustersAPI_List(t *testing.T) {
 			name:           "List failure test",
 			response:       ``,
 			responseStatus: http.StatusBadRequest,
-			wantURI:        "/api/2.0/clusters/list?",
+			wantURI:        "/api/2.0/clusters/list",
 			want:           []model.ClusterInfo{},
 			wantErr:        true,
 		},
@@ -324,7 +324,7 @@ func TestClustersAPI_ListZones(t *testing.T) {
 							"default_zone": "us-west-2b"
 						}`,
 			responseStatus: http.StatusOK,
-			wantURI:        "/api/2.0/clusters/list-zones?",
+			wantURI:        "/api/2.0/clusters/list-zones",
 			want: model.ZonesInfo{
 
 				Zones: []string{"us-west-2b",
@@ -338,7 +338,7 @@ func TestClustersAPI_ListZones(t *testing.T) {
 			name:           "ListZones failure test",
 			response:       ``,
 			responseStatus: http.StatusBadRequest,
-			wantURI:        "/api/2.0/clusters/list-zones?",
+			wantURI:        "/api/2.0/clusters/list-zones",
 			want:           model.ZonesInfo{},
 			wantErr:        true,
 		},
@@ -410,7 +410,7 @@ func TestClustersAPI_ListNodeTypes(t *testing.T) {
 							]
 						}`,
 			responseStatus: http.StatusOK,
-			wantURI:        "/api/2.0/clusters/list-node-types?",
+			wantURI:        "/api/2.0/clusters/list-node-types",
 			want: []model.NodeType{
 				{
 					NodeTypeID:     "r3.xlarge",
@@ -435,7 +435,7 @@ func TestClustersAPI_ListNodeTypes(t *testing.T) {
 			name:           "ListNodeTypes failure test",
 			response:       ``,
 			responseStatus: http.StatusBadRequest,
-			wantURI:        "/api/2.0/clusters/list-node-types?",
+			wantURI:        "/api/2.0/clusters/list-node-types",
 			want:           []model.NodeType{},
 			wantErr:        true,
 		},

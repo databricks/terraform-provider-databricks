@@ -176,7 +176,7 @@ func TestResourceMWSNetworksCreate(t *testing.T) {
 		},
 		{
 			Method:   "GET",
-			Resource: "/api/2.0/accounts/abc/networks/nid?",
+			Resource: "/api/2.0/accounts/abc/networks/nid",
 			Response: model.MWSNetwork{
 				NetworkID:        "nid",
 				SecurityGroupIds: []string{"one", "two"},
@@ -222,7 +222,7 @@ func TestResourceMWSNetworksRead(t *testing.T) {
 	d, err := ResourceTester(t, []HTTPFixture{
 		{
 			Method:   "GET",
-			Resource: "/api/2.0/accounts/abc/networks/nid?",
+			Resource: "/api/2.0/accounts/abc/networks/nid",
 			Response: model.MWSNetwork{
 				NetworkID:        "nid",
 				SecurityGroupIds: []string{"one", "two"},
@@ -246,7 +246,7 @@ func TestResourceMWSNetworksRead_NotFound(t *testing.T) {
 	d, err := ResourceTester(t, []HTTPFixture{
 		{
 			Method:   "GET",
-			Resource: "/api/2.0/accounts/abc/networks/nid?",
+			Resource: "/api/2.0/accounts/abc/networks/nid",
 			Response: service.APIErrorBody{
 				ErrorCode: "NOT_FOUND",
 				Message:   "Item not found",
@@ -262,7 +262,7 @@ func TestResourceMWSNetworksRead_Error(t *testing.T) {
 	d, err := ResourceTester(t, []HTTPFixture{
 		{
 			Method:   "GET",
-			Resource: "/api/2.0/accounts/abc/networks/nid?",
+			Resource: "/api/2.0/accounts/abc/networks/nid",
 			Response: service.APIErrorBody{
 				ErrorCode: "INVALID_REQUEST",
 				Message:   "Internal error happened",

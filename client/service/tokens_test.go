@@ -136,7 +136,7 @@ func TestTokensAPI_List(t *testing.T) {
 						}`,
 			responseStatus: http.StatusOK,
 			args:           nil,
-			wantURI:        "/api/2.0/token/list?",
+			wantURI:        "/api/2.0/token/list",
 			want: []model.TokenInfo{
 				{
 					TokenID:      "5715498424f15ee0213be729257b53fc35a47d5953e3bdfd8ed22a0b93b339f4",
@@ -158,7 +158,7 @@ func TestTokensAPI_List(t *testing.T) {
 			response:       ``,
 			responseStatus: http.StatusBadRequest,
 			args:           nil,
-			wantURI:        "/api/2.0/token/list?",
+			wantURI:        "/api/2.0/token/list",
 			want:           nil,
 			wantErr:        true,
 		},
@@ -214,7 +214,7 @@ func TestTokensAPI_Read(t *testing.T) {
 				ExpiryTime:   1513120616294,
 				Comment:      "this is an example token",
 			},
-			wantURI: "/api/2.0/token/list?",
+			wantURI: "/api/2.0/token/list",
 			wantErr: false,
 		},
 		{
@@ -225,7 +225,7 @@ func TestTokensAPI_Read(t *testing.T) {
 			},
 			responseStatus: http.StatusBadRequest,
 			want:           model.TokenInfo{},
-			wantURI:        "/api/2.0/token/list?",
+			wantURI:        "/api/2.0/token/list",
 			wantErr:        true,
 		},
 		{
@@ -251,7 +251,7 @@ func TestTokensAPI_Read(t *testing.T) {
 			},
 			responseStatus: http.StatusOK,
 			want:           model.TokenInfo{},
-			wantURI:        "/api/2.0/token/list?",
+			wantURI:        "/api/2.0/token/list",
 			wantErr:        true,
 		},
 	}

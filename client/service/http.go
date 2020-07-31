@@ -50,7 +50,7 @@ func (apiError APIError) IsMissing() bool {
 	return apiError.StatusCode == http.StatusNotFound
 }
 
-// IsTooManyRequests ...
+// IsTooManyRequests shows rate exceeded limits
 func (apiError APIError) IsTooManyRequests() bool {
 	return apiError.StatusCode == http.StatusTooManyRequests
 }
@@ -189,7 +189,6 @@ func (c *DatabricksClient) put(path string, request interface{}) error {
 	return err
 }
 
-// TODO: rename to internal or something...
 func (c *DatabricksClient) unmarshall(path string, body []byte, response interface{}) error {
 	if response == nil {
 		return nil
@@ -210,7 +209,6 @@ func (c *DatabricksClient) unmarshall(path string, body []byte, response interfa
 	}
 }
 
-// TODO: rename to internal or something...
 func (c *DatabricksClient) api2(r *http.Request) error {
 	if r.URL == nil {
 		return fmt.Errorf("No URL found in request")
@@ -291,7 +289,6 @@ func (c *DatabricksClient) genericQuery(method, requestURL string, data interfac
 	if c.httpClient == nil {
 		return nil, fmt.Errorf("DatabricksClient is not configured")
 	}
-	// TODO: get all sensitive pieces from data here, so later they are redacted...
 	requestBody, err := makeRequestBody(method, &requestURL, data, true)
 	if err != nil {
 		return nil, err
@@ -300,8 +297,6 @@ func (c *DatabricksClient) genericQuery(method, requestURL string, data interfac
 	if err != nil {
 		return nil, err
 	}
-
-	// TODO: add masking **REDACTED** + subscription + mws acc id -> perhaps re-parse json and truncate only some fields?...
 	log.Printf("[INFO] %s %s %v", method, requestURL, c.redactedDump(requestBody))
 	request.Header.Set("User-Agent", c.userAgent)
 	for _, requestVisitor := range visitors {
@@ -328,8 +323,6 @@ func (c *DatabricksClient) genericQuery(method, requestURL string, data interfac
 		return nil, err
 	}
 	log.Printf("[INFO] %s %v", resp.Status, c.redactedDump(body))
-	// Don't need to check the status code here as the RetryCheck for
-	// retryablehttp.Client is doing that and returning an error
 	return body, nil
 }
 
@@ -337,7 +330,6 @@ func makeRequestBody(method string, requestURL *string, data interface{}, marsha
 	var requestBody []byte
 	if method == "GET" {
 		if data == nil {
-			*requestURL += "?" // TODO: get rid of trailing ? in all requests :D
 			return requestBody, nil
 		}
 		inputVal := reflect.ValueOf(data)

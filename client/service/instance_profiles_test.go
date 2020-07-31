@@ -114,7 +114,7 @@ func TestInstanceProfilesAPI_List(t *testing.T) {
 						}`,
 			responseStatus: http.StatusOK,
 			args:           args{},
-			wantURI:        "/api/2.0/instance-profiles/list?",
+			wantURI:        "/api/2.0/instance-profiles/list",
 			want: []model.InstanceProfileInfo{
 				{
 					InstanceProfileArn: "arn:aws:iam::123456789:instance-profile/datascience-role1",
@@ -133,7 +133,7 @@ func TestInstanceProfilesAPI_List(t *testing.T) {
 			response:       ``,
 			responseStatus: http.StatusBadRequest,
 			args:           args{},
-			wantURI:        "/api/2.0/instance-profiles/list?",
+			wantURI:        "/api/2.0/instance-profiles/list",
 			want:           nil,
 			wantErr:        true,
 		},
@@ -172,7 +172,7 @@ func TestInstanceProfilesAPI_Read(t *testing.T) {
 			args: args{
 				InstanceProfileArn: "arn:aws:iam::123456789:instance-profile/datascience-role1",
 			},
-			wantURI: "/api/2.0/instance-profiles/list?",
+			wantURI: "/api/2.0/instance-profiles/list",
 			want:    "arn:aws:iam::123456789:instance-profile/datascience-role1",
 			wantErr: false,
 		},
@@ -187,7 +187,7 @@ func TestInstanceProfilesAPI_Read(t *testing.T) {
 			args: args{
 				InstanceProfileArn: "arn:aws:iam::123456789:instance-profile/datascience-role4",
 			},
-			wantURI: "/api/2.0/instance-profiles/list?",
+			wantURI: "/api/2.0/instance-profiles/list",
 			want:    "",
 			wantErr: true,
 		},
@@ -198,7 +198,7 @@ func TestInstanceProfilesAPI_Read(t *testing.T) {
 			args: args{
 				InstanceProfileArn: "arn:aws:iam::123456789:instance-profile/datascience-role1",
 			},
-			wantURI: "/api/2.0/instance-profiles/list?",
+			wantURI: "/api/2.0/instance-profiles/list",
 			want:    "",
 			wantErr: true,
 		},

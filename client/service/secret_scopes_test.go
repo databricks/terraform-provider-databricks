@@ -104,7 +104,7 @@ func TestSecretScopesAPI_Read(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var input args
-			AssertRequestWithMockServer(t, &tt.args, http.MethodGet, "/api/2.0/secrets/scopes/list?", &input, tt.response, http.StatusOK, tt.want, tt.wantErr, func(client DatabricksClient) (interface{}, error) {
+			AssertRequestWithMockServer(t, &tt.args, http.MethodGet, "/api/2.0/secrets/scopes/list", &input, tt.response, http.StatusOK, tt.want, tt.wantErr, func(client DatabricksClient) (interface{}, error) {
 				return client.SecretScopes().Read(tt.args.ScopeName)
 			})
 		})
@@ -144,7 +144,7 @@ func TestSecretScopesAPI_List(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			AssertRequestWithMockServer(t, nil, http.MethodGet, "/api/2.0/secrets/scopes/list?", nil, tt.response, http.StatusOK, tt.want, tt.wantErr, func(client DatabricksClient) (interface{}, error) {
+			AssertRequestWithMockServer(t, nil, http.MethodGet, "/api/2.0/secrets/scopes/list", nil, tt.response, http.StatusOK, tt.want, tt.wantErr, func(client DatabricksClient) (interface{}, error) {
 				return client.SecretScopes().List()
 			})
 		})

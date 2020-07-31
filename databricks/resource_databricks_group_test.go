@@ -182,7 +182,7 @@ func TestResourceGroupCreate(t *testing.T) {
 		},
 		{
 			Method:   "GET",
-			Resource: "/api/2.0/preview/scim/v2/Groups/abc?",
+			Resource: "/api/2.0/preview/scim/v2/Groups/abc",
 			Response: model.Group{
 				Schemas:     []model.URN{"urn:ietf:params:scim:schemas:core:2.0:Group"},
 				DisplayName: "Data Scientists",
@@ -218,7 +218,7 @@ func TestResourceGroupRead(t *testing.T) {
 	d, err := ResourceTester(t, []HTTPFixture{
 		{
 			Method:   "GET",
-			Resource: "/api/2.0/preview/scim/v2/Groups/abc?",
+			Resource: "/api/2.0/preview/scim/v2/Groups/abc",
 			Response: model.Group{
 				Schemas:     []model.URN{"urn:ietf:params:scim:schemas:core:2.0:Group"},
 				DisplayName: "Data Scientists",
@@ -237,7 +237,7 @@ func TestResourceGroupRead_NotFound(t *testing.T) {
 	d, err := ResourceTester(t, []HTTPFixture{
 		{
 			Method:   "GET",
-			Resource: "/api/2.0/preview/scim/v2/Groups/abc?",
+			Resource: "/api/2.0/preview/scim/v2/Groups/abc",
 			Response: service.APIErrorBody{
 				ErrorCode: "NOT_FOUND",
 				Message:   "Item not found",
@@ -253,7 +253,7 @@ func TestResourceGroupRead_Error(t *testing.T) {
 	d, err := ResourceTester(t, []HTTPFixture{
 		{
 			Method:   "GET",
-			Resource: "/api/2.0/preview/scim/v2/Groups/abc?",
+			Resource: "/api/2.0/preview/scim/v2/Groups/abc",
 			Response: service.APIErrorBody{
 				ErrorCode: "INVALID_REQUEST",
 				Message:   "Internal error happened",
@@ -291,7 +291,7 @@ func TestResourceGroupUpdate(t *testing.T) {
 		},
 		{
 			Method:   "GET",
-			Resource: "/api/2.0/preview/scim/v2/Groups/abc?",
+			Resource: "/api/2.0/preview/scim/v2/Groups/abc",
 			Response: model.Group{
 				Schemas:     []model.URN{"urn:ietf:params:scim:schemas:core:2.0:Group"},
 				DisplayName: "Data Ninjas",

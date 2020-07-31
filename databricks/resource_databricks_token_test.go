@@ -130,7 +130,7 @@ func TestResourceTokenRead(t *testing.T) {
 	d, err := ResourceTester(t, []HTTPFixture{
 		{
 			Method:   "GET",
-			Resource: "/api/2.0/token/list?",
+			Resource: "/api/2.0/token/list",
 			Response: model.TokenList{
 				TokenInfos: []model.TokenInfo{
 					{
@@ -155,7 +155,7 @@ func TestResourceTokenRead_NotFound(t *testing.T) {
 	d, err := ResourceTester(t, []HTTPFixture{
 		{
 			Method:   "GET",
-			Resource: "/api/2.0/token/list?",
+			Resource: "/api/2.0/token/list",
 			Response: model.TokenList{
 				TokenInfos: []model.TokenInfo{
 					{
@@ -176,7 +176,7 @@ func TestResourceTokenRead_Error(t *testing.T) {
 	d, err := ResourceTester(t, []HTTPFixture{
 		{
 			Method:   "GET",
-			Resource: "/api/2.0/token/list?",
+			Resource: "/api/2.0/token/list",
 			Response: service.APIErrorBody{
 				ErrorCode: "INVALID_REQUEST",
 				Message:   "Internal error happened",
@@ -207,7 +207,7 @@ func TestResourceTokenCreate(t *testing.T) {
 		},
 		{
 			Method:   "GET",
-			Resource: "/api/2.0/token/list?",
+			Resource: "/api/2.0/token/list",
 			Response: model.TokenList{
 				TokenInfos: []model.TokenInfo{
 					{

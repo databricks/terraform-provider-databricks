@@ -165,7 +165,7 @@ func TestResourceMWSStorageConfigurationsCreate(t *testing.T) {
 		},
 		{
 			Method:   "GET",
-			Resource: "/api/2.0/accounts/abc/storage-configurations/scid?",
+			Resource: "/api/2.0/accounts/abc/storage-configurations/scid",
 			Response: model.MWSStorageConfigurations{
 				StorageConfigurationID:   "scid",
 				StorageConfigurationName: "Main Storage",
@@ -207,7 +207,7 @@ func TestResourceMWSStorageConfigurationsRead(t *testing.T) {
 	d, err := ResourceTester(t, []HTTPFixture{
 		{
 			Method:   "GET",
-			Resource: "/api/2.0/accounts/abc/storage-configurations/scid?",
+			Resource: "/api/2.0/accounts/abc/storage-configurations/scid",
 			Response: model.MWSStorageConfigurations{
 				StorageConfigurationID:   "scid",
 				StorageConfigurationName: "Main Storage",
@@ -229,7 +229,7 @@ func TestResourceMWSStorageConfigurationsRead_NotFound(t *testing.T) {
 	d, err := ResourceTester(t, []HTTPFixture{
 		{
 			Method:   "GET",
-			Resource: "/api/2.0/accounts/abc/storage-configurations/scid?",
+			Resource: "/api/2.0/accounts/abc/storage-configurations/scid",
 			Response: service.APIErrorBody{
 				ErrorCode: "NOT_FOUND",
 				Message:   "Item not found",
@@ -245,7 +245,7 @@ func TestResourceMWSStorageConfigurationsRead_Error(t *testing.T) {
 	d, err := ResourceTester(t, []HTTPFixture{
 		{ // read log output for correct url...
 			Method:   "GET",
-			Resource: "/api/2.0/accounts/abc/storage-configurations/scid?",
+			Resource: "/api/2.0/accounts/abc/storage-configurations/scid",
 			Response: service.APIErrorBody{
 				ErrorCode: "INVALID_REQUEST",
 				Message:   "Internal error happened",

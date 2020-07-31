@@ -147,21 +147,21 @@ func TestResourceMWSWorkspacesCreate(t *testing.T) {
 		},
 		{
 			Method:   "GET",
-			Resource: "/api/2.0/accounts/abc/workspaces/1234?",
+			Resource: "/api/2.0/accounts/abc/workspaces/1234",
 			Response: model.MWSWorkspace{
 				WorkspaceStatus: model.WorkspaceStatusRunning,
 			},
 		},
 		{
 			Method:   "GET",
-			Resource: "/api/2.0/accounts/abc/workspaces/1234?",
+			Resource: "/api/2.0/accounts/abc/workspaces/1234",
 			Response: model.MWSWorkspace{
 				WorkspaceStatus: model.WorkspaceStatusRunning,
 			},
 		},
 		{
 			Method:   "GET",
-			Resource: "/api/2.0/accounts/abc/workspaces/1234?",
+			Resource: "/api/2.0/accounts/abc/workspaces/1234",
 			Response: model.MWSWorkspace{
 				WorkspaceStatus: model.WorkspaceStatusRunning,
 			},
@@ -223,7 +223,7 @@ func TestResourceMWSWorkspacesRead(t *testing.T) {
 	d, err := ResourceTester(t, []HTTPFixture{
 		{
 			Method:   "GET",
-			Resource: "/api/2.0/accounts/abc/workspaces/1234?",
+			Resource: "/api/2.0/accounts/abc/workspaces/1234",
 			Response: model.MWSWorkspace{
 				WorkspaceStatus:        model.WorkspaceStatusRunning,
 				IsNoPublicIpEnabled:    true,
@@ -258,7 +258,7 @@ func TestResourceMWSWorkspacesRead_NotFound(t *testing.T) {
 	d, err := ResourceTester(t, []HTTPFixture{
 		{
 			Method:   "GET",
-			Resource: "/api/2.0/accounts/abc/workspaces/1234?",
+			Resource: "/api/2.0/accounts/abc/workspaces/1234",
 			Response: service.APIErrorBody{
 				ErrorCode: "NOT_FOUND",
 				Message:   "Item not found",
@@ -274,7 +274,7 @@ func TestResourceMWSWorkspacesRead_Error(t *testing.T) {
 	d, err := ResourceTester(t, []HTTPFixture{
 		{ // read log output for correct url...
 			Method:   "GET",
-			Resource: "/api/2.0/accounts/abc/workspaces/1234?",
+			Resource: "/api/2.0/accounts/abc/workspaces/1234",
 			Response: service.APIErrorBody{
 				ErrorCode: "INVALID_REQUEST",
 				Message:   "Internal error happened",
@@ -302,7 +302,7 @@ func TestResourceMWSWorkspacesUpdate(t *testing.T) {
 		},
 		{
 			Method:   "GET",
-			Resource: "/api/2.0/accounts/abc/workspaces/1234?",
+			Resource: "/api/2.0/accounts/abc/workspaces/1234",
 			Response: model.MWSWorkspace{
 				WorkspaceStatus:        model.WorkspaceStatusRunning,
 				IsNoPublicIpEnabled:    true,
@@ -318,7 +318,7 @@ func TestResourceMWSWorkspacesUpdate(t *testing.T) {
 		},
 		{
 			Method:   "GET",
-			Resource: "/api/2.0/accounts/abc/workspaces/1234?",
+			Resource: "/api/2.0/accounts/abc/workspaces/1234",
 			Response: model.MWSWorkspace{
 				WorkspaceStatus:        model.WorkspaceStatusRunning,
 				IsNoPublicIpEnabled:    true,
@@ -334,7 +334,7 @@ func TestResourceMWSWorkspacesUpdate(t *testing.T) {
 		},
 		{
 			Method:   "GET",
-			Resource: "/api/2.0/accounts/abc/workspaces/1234?",
+			Resource: "/api/2.0/accounts/abc/workspaces/1234",
 			Response: model.MWSWorkspace{
 				WorkspaceStatus:        model.WorkspaceStatusRunning,
 				IsNoPublicIpEnabled:    true,

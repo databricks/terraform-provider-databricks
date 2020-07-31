@@ -130,7 +130,7 @@ func TestResourceSecretScopeRead(t *testing.T) {
 	d, err := ResourceTester(t, []HTTPFixture{
 		{
 			Method:   http.MethodGet,
-			Resource: "/api/2.0/secrets/scopes/list?",
+			Resource: "/api/2.0/secrets/scopes/list",
 			Response: model.SecretScopeList{
 				Scopes: []model.SecretScope{
 					{
@@ -156,7 +156,7 @@ func TestResourceSecretScopeRead_NotFound(t *testing.T) {
 	d, err := ResourceTester(t, []HTTPFixture{
 		{
 			Method:   http.MethodGet,
-			Resource: "/api/2.0/secrets/scopes/list?",
+			Resource: "/api/2.0/secrets/scopes/list",
 			Response: model.SecretScopeList{
 				Scopes: []model.SecretScope{
 					{
@@ -179,7 +179,7 @@ func TestResourceSecretScopeRead_Error(t *testing.T) {
 	d, err := ResourceTester(t, []HTTPFixture{
 		{
 			Method:   "GET",
-			Resource: "/api/2.0/secrets/scopes/list?",
+			Resource: "/api/2.0/secrets/scopes/list",
 			Response: service.APIErrorBody{
 				ErrorCode: "INVALID_REQUEST",
 				Message:   "Internal error happened",
@@ -203,7 +203,7 @@ func TestResourceSecretScopeCreate(t *testing.T) {
 		},
 		{
 			Method:   http.MethodGet,
-			Resource: "/api/2.0/secrets/scopes/list?",
+			Resource: "/api/2.0/secrets/scopes/list",
 			Response: model.SecretScopeList{
 				Scopes: []model.SecretScope{
 					{

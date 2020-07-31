@@ -129,7 +129,7 @@ func TestAzureAuth_configureWithClientSecret(t *testing.T) {
 				assert.NoError(t, err)
 				return
 			}
-			if req.RequestURI == "/api/2.0/clusters/list-zones?" {
+			if req.RequestURI == "/api/2.0/clusters/list-zones" {
 				assert.Equal(t, "Bearer "+dummyPAT, req.Header.Get("Authorization"))
 				_, err := rw.Write([]byte(`{"zones": ["a", "b", "c"]}`))
 				assert.NoError(t, err)

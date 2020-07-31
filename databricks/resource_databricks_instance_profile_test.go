@@ -147,7 +147,7 @@ func TestResourceInstanceProfileCreate(t *testing.T) {
 		},
 		{
 			Method:   "GET",
-			Resource: "/api/2.0/instance-profiles/list?",
+			Resource: "/api/2.0/instance-profiles/list",
 			Response: model.InstanceProfileList{
 				InstanceProfiles: []model.InstanceProfileInfo{
 					{
@@ -187,7 +187,7 @@ func TestResourceInstanceProfileRead(t *testing.T) {
 	d, err := ResourceTester(t, []HTTPFixture{
 		{
 			Method:   "GET",
-			Resource: "/api/2.0/instance-profiles/list?",
+			Resource: "/api/2.0/instance-profiles/list",
 			Response: model.InstanceProfileList{
 				InstanceProfiles: []model.InstanceProfileInfo{
 					{
@@ -207,7 +207,7 @@ func TestResourceInstanceProfileRead_NotFound(t *testing.T) {
 	d, err := ResourceTester(t, []HTTPFixture{
 		{ // read log output for correct url...
 			Method:   "GET",
-			Resource: "/api/2.0/instance-profiles/list?",
+			Resource: "/api/2.0/instance-profiles/list",
 			Response: model.InstanceProfileList{
 				InstanceProfiles: []model.InstanceProfileInfo{},
 			},
@@ -221,7 +221,7 @@ func TestResourceInstanceProfileRead_Error(t *testing.T) {
 	d, err := ResourceTester(t, []HTTPFixture{
 		{
 			Method:   "GET",
-			Resource: "/api/2.0/instance-profiles/list?",
+			Resource: "/api/2.0/instance-profiles/list",
 			Response: service.APIErrorBody{
 				ErrorCode: "INVALID_REQUEST",
 				Message:   "Internal error happened",

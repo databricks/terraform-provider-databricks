@@ -125,7 +125,7 @@ func TestPermissionsCreate(t *testing.T) {
 		},
 		{
 			Method:   http.MethodGet,
-			Resource: "/api/2.0/preview/permissions/clusters/abc?",
+			Resource: "/api/2.0/preview/permissions/clusters/abc",
 			Response: model.AccessControlChangeList{
 				AccessControlList: []*model.AccessControlChange{
 					{
@@ -137,7 +137,7 @@ func TestPermissionsCreate(t *testing.T) {
 		},
 		{
 			Method:   http.MethodGet,
-			Resource: "/api/2.0/preview/scim/v2/Me?",
+			Resource: "/api/2.0/preview/scim/v2/Me",
 			Response: model.User{
 				UserName: "chuck.norris",
 			},

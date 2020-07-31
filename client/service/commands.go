@@ -201,7 +201,7 @@ func (a CommandsAPI) post(path string, request interface{}, response interface{}
 	if a.client.authVisitor == nil {
 		return fmt.Errorf("Authentication not initialized")
 	}
-	body, err := a.client.genericQuery2(http.MethodPost, path, request,
+	body, err := a.client.genericQuery(http.MethodPost, path, request,
 		a.client.authVisitor, a.api12)
 	if err != nil {
 		return err
@@ -213,7 +213,7 @@ func (a CommandsAPI) get(path string, request interface{}, response interface{})
 	if a.client.authVisitor == nil {
 		return fmt.Errorf("Authentication not initialized")
 	}
-	body, err := a.client.genericQuery2(http.MethodGet, path, request,
+	body, err := a.client.genericQuery(http.MethodGet, path, request,
 		a.client.authVisitor, a.api12)
 	if err != nil {
 		return err

@@ -147,7 +147,7 @@ func (c *DatabricksClient) get(path string, request interface{}, response interf
 	if c.authVisitor == nil {
 		return fmt.Errorf("Authentication not initialized")
 	}
-	body, err := c.genericQuery2(http.MethodGet, path, request, c.authVisitor, c.api2)
+	body, err := c.genericQuery(http.MethodGet, path, request, c.authVisitor, c.api2)
 	if err != nil {
 		return err
 	}
@@ -158,7 +158,7 @@ func (c *DatabricksClient) post(path string, request interface{}, response inter
 	if c.authVisitor == nil {
 		return fmt.Errorf("Authentication not initialized")
 	}
-	body, err := c.genericQuery2(http.MethodPost, path, request, c.authVisitor, c.api2)
+	body, err := c.genericQuery(http.MethodPost, path, request, c.authVisitor, c.api2)
 	if err != nil {
 		return err
 	}
@@ -169,7 +169,7 @@ func (c *DatabricksClient) delete(path string, request interface{}) error {
 	if c.authVisitor == nil {
 		return fmt.Errorf("Authentication not initialized")
 	}
-	_, err := c.genericQuery2(http.MethodDelete, path, request, c.authVisitor, c.api2)
+	_, err := c.genericQuery(http.MethodDelete, path, request, c.authVisitor, c.api2)
 	return err
 }
 
@@ -177,7 +177,7 @@ func (c *DatabricksClient) patch(path string, request interface{}) error {
 	if c.authVisitor == nil {
 		return fmt.Errorf("Authentication not initialized")
 	}
-	_, err := c.genericQuery2(http.MethodPatch, path, request, c.authVisitor, c.api2)
+	_, err := c.genericQuery(http.MethodPatch, path, request, c.authVisitor, c.api2)
 	return err
 }
 
@@ -185,7 +185,7 @@ func (c *DatabricksClient) put(path string, request interface{}) error {
 	if c.authVisitor == nil {
 		return fmt.Errorf("Authentication not initialized")
 	}
-	_, err := c.genericQuery2(http.MethodPut, path, request, c.authVisitor, c.api2)
+	_, err := c.genericQuery(http.MethodPut, path, request, c.authVisitor, c.api2)
 	return err
 }
 
@@ -229,7 +229,7 @@ func (c *DatabricksClient) api2(r *http.Request) error {
 }
 
 func (c *DatabricksClient) performScim(method, path string, request interface{}, response interface{}) error {
-	body, err := c.genericQuery2(method, path, request, c.authVisitor,
+	body, err := c.genericQuery(method, path, request, c.authVisitor,
 		c.api2, func(r *http.Request) error {
 			r.Header.Set("Content-Type", "application/scim+json")
 			return nil
@@ -286,7 +286,7 @@ func (c *DatabricksClient) redactedDump(body []byte) (res string) {
 }
 
 // todo: do is better name
-func (c *DatabricksClient) genericQuery2(method, requestURL string, data interface{},
+func (c *DatabricksClient) genericQuery(method, requestURL string, data interface{},
 	visitors ...func(*http.Request) error) (body []byte, err error) {
 	if c.httpClient == nil {
 		return nil, fmt.Errorf("DatabricksClient is not configured")

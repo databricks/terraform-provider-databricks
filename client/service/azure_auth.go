@@ -223,7 +223,7 @@ func (aa *AzureAuth) ensureWorkspaceURL(managementAuthorizer autorest.Authorizer
 		endpoint = aa.azureManagementEndpoint
 	}
 	var workspace azureDatabricksWorkspace
-	resp, err := aa.databricksClient.genericQuery2(http.MethodGet,
+	resp, err := aa.databricksClient.genericQuery(http.MethodGet,
 		endpoint+resourceID,
 		map[string]string{
 			"api-version": "2018-04-01",
@@ -248,7 +248,7 @@ func (aa *AzureAuth) ensureWorkspaceURL(managementAuthorizer autorest.Authorizer
 func (aa *AzureAuth) createPAT(interceptor func(r *http.Request) error) (tr model.TokenResponse, err error) {
 	log.Println("[DEBUG] Creating workspace token")
 	url := fmt.Sprintf("%sapi/2.0/token/create", aa.databricksClient.Host)
-	body, err := aa.databricksClient.genericQuery2(
+	body, err := aa.databricksClient.genericQuery(
 		http.MethodPost, url, aa.patRequest(), interceptor)
 	if err != nil {
 		return

@@ -1,7 +1,6 @@
 package service
 
 import (
-	"fmt"
 	"net/http"
 	"os"
 	"testing"
@@ -244,11 +243,6 @@ func TestScimGroupAPI_Delete(t *testing.T) {
 			})
 		})
 	}
-}
-
-func TestFmt(t *testing.T) {
-	str := fmt.Sprintf("members[value eq \"%s\"]", "1000")
-	t.Log(str)
 }
 
 func TestAccGroup(t *testing.T) {

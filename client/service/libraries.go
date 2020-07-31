@@ -14,7 +14,7 @@ func (a LibrariesAPI) Install(req model.ClusterLibraryList) error {
 	return a.client.post("/libraries/install", req, nil)
 }
 
-// Uninstall library list form cluster
+// Uninstall library list from cluster
 func (a LibrariesAPI) Uninstall(req model.ClusterLibraryList) error {
 	return a.client.post("/libraries/uninstall", req, nil)
 }

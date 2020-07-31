@@ -898,7 +898,7 @@ func resourceJobRead(d *schema.ResourceData, m interface{}) error {
 		return err
 	}
 
-	err = d.Set("min_retry_interval_millis", job.Settings.MinRetryIntervalMillis)
+	err = d.Set("min_retry_interval_millis", job.Settings.MaxRetryIntervalMillis)
 	if err != nil {
 		return err
 	}
@@ -1038,7 +1038,7 @@ func parseSchemaToJobSettings(d *schema.ResourceData) model.JobSettings {
 
 	if minRetryIntervalMillis, ok := d.GetOk("min_retry_interval_millis"); ok {
 		intVal, _ := minRetryIntervalMillis.(int)
-		jobSettings.MinRetryIntervalMillis = int32(intVal)
+		jobSettings.MaxRetryIntervalMillis = int32(intVal)
 	}
 
 	if retryOnTimeout, ok := d.GetOk("retry_on_timeout"); ok {

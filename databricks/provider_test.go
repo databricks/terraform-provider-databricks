@@ -33,6 +33,7 @@ func init() {
 }
 
 func getMWSClient() *service.DatabricksClient {
+	// TODO: check if DATABRICKS_MWS_HOST is set
 	client := service.DatabricksClient{
 		Host:     os.Getenv("DATABRICKS_MWS_HOST"),
 		Username: os.Getenv("DATABRICKS_USERNAME"),

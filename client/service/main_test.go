@@ -44,6 +44,7 @@ func compare(t *testing.T, a interface{}, b interface{}) {
 
 func GetIntegrationMWSAPIClient() *DatabricksClient {
 	client := DatabricksClient{
+		// TODO: add env assert
 		Host:     os.Getenv("DATABRICKS_MWS_HOST"),
 		Username: os.Getenv("DATABRICKS_USERNAME"),
 		Password: os.Getenv("DATABRICKS_PASSWORD"),

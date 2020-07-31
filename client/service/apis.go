@@ -33,7 +33,7 @@ type DatabricksClient struct {
 	commandExecutor    CommandExecutor
 }
 
-// Configure ...
+// Configure client to work
 func (c *DatabricksClient) Configure(version string) error {
 	c.configureHTTPCLient()
 	c.AzureAuth.databricksClient = c
@@ -52,12 +52,13 @@ func (c *DatabricksClient) Configure(version string) error {
 }
 
 func (c *DatabricksClient) findAndApplyAuthorizer() error {
-	for _, authProvider := range []func() (func(r *http.Request) error, error){
+	authorizers := []func() (func(r *http.Request) error, error){
 		c.configureAuthWithDirectParams,
 		c.AzureAuth.configureWithClientSecret,
 		c.AzureAuth.configureWithAzureCLI,
 		c.configureFromDatabricksCfg,
-	} {
+	}
+	for _, authProvider := range authorizers {
 		authorizer, err := authProvider()
 		if err != nil {
 			return err

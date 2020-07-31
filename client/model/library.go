@@ -48,6 +48,6 @@ type ClusterLibraryList struct {
 // has been set to be installed on all clusters, is_library_for_all_clusters will be true, even if the library
 // was also installed on the cluster.
 type ClusterLibraryStatuses struct {
-	ClusterID       string          `json:"cluster_id,omitempty" url:"cluster_id,omitempty"`
-	LibraryStatuses []LibraryStatus `json:"library_statuses,omitempty" url:"libraries,omitempty"`
+	ClusterID       string          `json:"cluster_id,omitempty"`
+	LibraryStatuses []LibraryStatus `json:"library_statuses,omitempty"`
 }

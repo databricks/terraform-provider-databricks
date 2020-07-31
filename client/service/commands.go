@@ -15,9 +15,13 @@ import (
 )
 
 var (
-	outRE          = regexp.MustCompile(`Out\[[\d\s]+\]:\s`)
-	tagRE          = regexp.MustCompile(`<[^>]*>`)
-	exceptionRE    = regexp.MustCompile(`.*Exception: (.*)`)
+	// IPython's output prefixes
+	outRE = regexp.MustCompile(`Out\[[\d\s]+\]:\s`)
+	// HTML tags
+	tagRE = regexp.MustCompile(`<[^>]*>`)
+	// just exception content without exception name
+	exceptionRE = regexp.MustCompile(`.*Exception: (.*)`)
+	// usual error message explanation is hidden in this key
 	errorMessageRE = regexp.MustCompile(`ErrorMessage=(.*)\n`)
 )
 
@@ -120,8 +124,7 @@ func (a CommandsAPI) parseCommandResults(command model.Command) (result string, 
 		result = outRE.ReplaceAllLiteralString(command.Results.Data.(string), "")
 		return
 	case "error":
-		//log.Println(fmt.Sprintf("[ERROR] on %s caused by python command: %s", clusterID, r.Cause))
-		// remove HTML
+		log.Println(fmt.Sprintf("[DEBUG] on %s caused by python command: %s", clusterID, r.Cause))
 		summary := tagRE.ReplaceAllLiteralString(command.Results.Summary, "")
 		summary = html.UnescapeString(summary)
 		exceptionMatches := exceptionRE.FindStringSubmatch(summary)

@@ -449,153 +449,153 @@ func TestClustersAPI_ListNodeTypes(t *testing.T) {
 	}
 }
 
-func TestClustersAPI_WaitForClusterRunning(t *testing.T) {
-	type args struct {
-		ClusterID              string        `json:"cluster_id"`
-		SleepDurationSeconds   time.Duration `json:"sleep_duration_seconds"`
-		TimeoutDurationMinutes time.Duration `json:"timeout_duration_minutes"`
-	}
-	tests := []struct {
-		name           string
-		response       []string
-		responseStatus []int
-		requestMethod  []string
-		args           []interface{}
-		wantURI        []string
-		want           []model.WorkspaceObjectStatus
-		wantErr        bool
-	}{
-		{
-			name: "WaitForClusterRunning test",
-			response: []string{`{
-									"state": "PENDING"				
-								}`,
-				`{
-									"state": "PENDING"				
-								}`,
-				`{
-									"state": "RUNNING"				
-								}`,
-			},
-			responseStatus: []int{http.StatusOK,
-				http.StatusOK,
-				http.StatusOK,
-			},
-			requestMethod: []string{http.MethodGet, http.MethodGet, http.MethodGet},
-			args: []interface{}{
-				&args{
-					ClusterID:              "11203-my-cluster",
-					SleepDurationSeconds:   0,
-					TimeoutDurationMinutes: 1,
-				},
-			},
-			wantURI: []string{"/api/2.0/clusters/get?cluster_id=11203-my-cluster",
-				"/api/2.0/clusters/get?cluster_id=11203-my-cluster",
-				"/api/2.0/clusters/get?cluster_id=11203-my-cluster"},
-			want:    nil,
-			wantErr: false,
-		},
-		{
-			name: "WaitForClusterRunning failed to get cluster info test",
-			response: []string{`{
-									"state": "PENDING"				
-								}`,
-				`{
-									"state": "PENDING"				
-								}`,
-				`{
-									"state": "RUNNING"				
-								}`,
-			},
-			responseStatus: []int{http.StatusOK,
-				http.StatusOK,
-				http.StatusBadRequest,
-			},
-			requestMethod: []string{http.MethodGet, http.MethodGet, http.MethodGet},
-			args: []interface{}{
-				&args{
-					ClusterID:              "11203-my-cluster",
-					SleepDurationSeconds:   0,
-					TimeoutDurationMinutes: 1,
-				},
-			},
-			wantURI: []string{"/api/2.0/clusters/get?cluster_id=11203-my-cluster",
-				"/api/2.0/clusters/get?cluster_id=11203-my-cluster",
-				"/api/2.0/clusters/get?cluster_id=11203-my-cluster"},
-			want:    nil,
-			wantErr: true,
-		},
-		{
-			name: "WaitForClusterRunning failed cluster invalid state test",
-			response: []string{`{
-									"state": "PENDING"				
-								}`,
-				`{
-									"state": "PENDING"				
-								}`,
-				`{
-									"state": "TERMINATING"				
-								}`,
-			},
-			responseStatus: []int{http.StatusOK,
-				http.StatusOK,
-				http.StatusOK,
-			},
-			requestMethod: []string{http.MethodGet, http.MethodGet, http.MethodGet},
-			args: []interface{}{
-				&args{
-					ClusterID:              "11203-my-cluster",
-					SleepDurationSeconds:   0,
-					TimeoutDurationMinutes: 1,
-				},
-			},
-			wantURI: []string{"/api/2.0/clusters/get?cluster_id=11203-my-cluster",
-				"/api/2.0/clusters/get?cluster_id=11203-my-cluster",
-				"/api/2.0/clusters/get?cluster_id=11203-my-cluster"},
-			want:    nil,
-			wantErr: true,
-		},
-		{
-			name: "WaitForClusterRunning failed due to timeout test",
-			response: []string{`{
-									"state": "PENDING"				
-								}`,
-				`{
-									"state": "PENDING"				
-								}`,
-				`{
-									"state": "RUNNING"				
-								}`,
-			},
-			responseStatus: []int{http.StatusOK,
-				http.StatusOK,
-				http.StatusBadRequest,
-			},
-			requestMethod: []string{http.MethodGet, http.MethodGet, http.MethodGet},
-			args: []interface{}{
-				&args{
-					ClusterID:              "11203-my-cluster",
-					SleepDurationSeconds:   1,
-					TimeoutDurationMinutes: 0,
-				},
-			},
-			wantURI: []string{"/api/2.0/clusters/get?cluster_id=11203-my-cluster",
-				"/api/2.0/clusters/get?cluster_id=11203-my-cluster",
-				"/api/2.0/clusters/get?cluster_id=11203-my-cluster"},
-			want:    nil,
-			wantErr: true,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			AssertMultipleRequestsWithMockServer(t, tt.args, tt.requestMethod, tt.wantURI, []interface{}{&args{}}, tt.response, tt.responseStatus, tt.want, tt.wantErr, func(client DatabricksClient) (interface{}, error) {
-				return nil, client.Clusters().WaitForClusterRunning(tt.args[0].(*args).ClusterID, tt.args[0].(*args).SleepDurationSeconds, tt.args[0].(*args).TimeoutDurationMinutes)
-			})
-		})
-	}
-}
+// func TestClustersAPI_WaitForClusterRunning(t *testing.T) {
+// 	type args struct {
+// 		ClusterID              string        `json:"cluster_id"`
+// 		SleepDurationSeconds   time.Duration `json:"sleep_duration_seconds"`
+// 		TimeoutDurationMinutes time.Duration `json:"timeout_duration_minutes"`
+// 	}
+// 	tests := []struct {
+// 		name           string
+// 		response       []string
+// 		responseStatus []int
+// 		requestMethod  []string
+// 		args           []interface{}
+// 		wantURI        []string
+// 		want           []model.WorkspaceObjectStatus
+// 		wantErr        bool
+// 	}{
+// 		{
+// 			name: "WaitForClusterRunning test",
+// 			response: []string{`{
+// 									"state": "PENDING"
+// 								}`,
+// 				`{
+// 									"state": "PENDING"
+// 								}`,
+// 				`{
+// 									"state": "RUNNING"
+// 								}`,
+// 			},
+// 			responseStatus: []int{http.StatusOK,
+// 				http.StatusOK,
+// 				http.StatusOK,
+// 			},
+// 			requestMethod: []string{http.MethodGet, http.MethodGet, http.MethodGet},
+// 			args: []interface{}{
+// 				&args{
+// 					ClusterID:              "11203-my-cluster",
+// 					SleepDurationSeconds:   0,
+// 					TimeoutDurationMinutes: 1,
+// 				},
+// 			},
+// 			wantURI: []string{"/api/2.0/clusters/get?cluster_id=11203-my-cluster",
+// 				"/api/2.0/clusters/get?cluster_id=11203-my-cluster",
+// 				"/api/2.0/clusters/get?cluster_id=11203-my-cluster"},
+// 			want:    nil,
+// 			wantErr: false,
+// 		},
+// 		{
+// 			name: "WaitForClusterRunning failed to get cluster info test",
+// 			response: []string{`{
+// 									"state": "PENDING"
+// 								}`,
+// 				`{
+// 									"state": "PENDING"
+// 								}`,
+// 				`{
+// 									"state": "RUNNING"
+// 								}`,
+// 			},
+// 			responseStatus: []int{http.StatusOK,
+// 				http.StatusOK,
+// 				http.StatusBadRequest,
+// 			},
+// 			requestMethod: []string{http.MethodGet, http.MethodGet, http.MethodGet},
+// 			args: []interface{}{
+// 				&args{
+// 					ClusterID:              "11203-my-cluster",
+// 					SleepDurationSeconds:   0,
+// 					TimeoutDurationMinutes: 1,
+// 				},
+// 			},
+// 			wantURI: []string{"/api/2.0/clusters/get?cluster_id=11203-my-cluster",
+// 				"/api/2.0/clusters/get?cluster_id=11203-my-cluster",
+// 				"/api/2.0/clusters/get?cluster_id=11203-my-cluster"},
+// 			want:    nil,
+// 			wantErr: true,
+// 		},
+// 		{
+// 			name: "WaitForClusterRunning failed cluster invalid state test",
+// 			response: []string{`{
+// 									"state": "PENDING"
+// 								}`,
+// 				`{
+// 									"state": "PENDING"
+// 								}`,
+// 				`{
+// 									"state": "TERMINATING"
+// 								}`,
+// 			},
+// 			responseStatus: []int{http.StatusOK,
+// 				http.StatusOK,
+// 				http.StatusOK,
+// 			},
+// 			requestMethod: []string{http.MethodGet, http.MethodGet, http.MethodGet},
+// 			args: []interface{}{
+// 				&args{
+// 					ClusterID:              "11203-my-cluster",
+// 					SleepDurationSeconds:   0,
+// 					TimeoutDurationMinutes: 1,
+// 				},
+// 			},
+// 			wantURI: []string{"/api/2.0/clusters/get?cluster_id=11203-my-cluster",
+// 				"/api/2.0/clusters/get?cluster_id=11203-my-cluster",
+// 				"/api/2.0/clusters/get?cluster_id=11203-my-cluster"},
+// 			want:    nil,
+// 			wantErr: true,
+// 		},
+// 		{
+// 			name: "WaitForClusterRunning failed due to timeout test",
+// 			response: []string{`{
+// 									"state": "PENDING"
+// 								}`,
+// 				`{
+// 									"state": "PENDING"
+// 								}`,
+// 				`{
+// 									"state": "RUNNING"
+// 								}`,
+// 			},
+// 			responseStatus: []int{http.StatusOK,
+// 				http.StatusOK,
+// 				http.StatusBadRequest,
+// 			},
+// 			requestMethod: []string{http.MethodGet, http.MethodGet, http.MethodGet},
+// 			args: []interface{}{
+// 				&args{
+// 					ClusterID:              "11203-my-cluster",
+// 					SleepDurationSeconds:   1,
+// 					TimeoutDurationMinutes: 0,
+// 				},
+// 			},
+// 			wantURI: []string{"/api/2.0/clusters/get?cluster_id=11203-my-cluster",
+// 				"/api/2.0/clusters/get?cluster_id=11203-my-cluster",
+// 				"/api/2.0/clusters/get?cluster_id=11203-my-cluster"},
+// 			want:    nil,
+// 			wantErr: true,
+// 		},
+// 	}
+// 	for _, tt := range tests {
+// 		t.Run(tt.name, func(t *testing.T) {
+// 			AssertMultipleRequestsWithMockServer(t, tt.args, tt.requestMethod, tt.wantURI, []interface{}{&args{}}, tt.response, tt.responseStatus, tt.want, tt.wantErr, func(client DatabricksClient) (interface{}, error) {
+// 				return nil, client.Clusters().WaitForClusterRunning(tt.args[0].(*args).ClusterID)
+// 			})
+// 		})
+// 	}
+// }
 
-func TestClustersAPI_WaitForClusterTerminated(t *testing.T) {
+func TestClustersAPI_Delete2(t *testing.T) {
 	type args struct {
 		ClusterID              string        `json:"cluster_id"`
 		SleepDurationSeconds   time.Duration `json:"sleep_duration_seconds"`
@@ -612,7 +612,7 @@ func TestClustersAPI_WaitForClusterTerminated(t *testing.T) {
 		wantErr        bool
 	}{
 		{
-			name: "WaitForClusterTerminated test",
+			name: "TestClustersAPI_Delete test",
 			response: []string{`{
 					"state": "TERMINATING"				
 				}`,
@@ -642,7 +642,7 @@ func TestClustersAPI_WaitForClusterTerminated(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name: "WaitForClusterTerminated failed to get cluster info test",
+			name: "TestClustersAPI_Delete failed to get cluster info test",
 			response: []string{`{
 					"state": "TERMINATING"				
 				}`,
@@ -672,7 +672,7 @@ func TestClustersAPI_WaitForClusterTerminated(t *testing.T) {
 			wantErr: true,
 		},
 		{
-			name: "WaitForClusterTerminated failed cluster invalid state test",
+			name: "TestClustersAPI_Delete failed cluster invalid state test",
 			response: []string{`{
 					"state": "TERMINATING"				
 				}`,
@@ -702,7 +702,7 @@ func TestClustersAPI_WaitForClusterTerminated(t *testing.T) {
 			wantErr: true,
 		},
 		{
-			name: "WaitForClusterTerminated failed due to timeout test",
+			name: "TestClustersAPI_Delete failed due to timeout test",
 			response: []string{`{
 					"state": "TERMINATING"				
 				}`,
@@ -733,15 +733,11 @@ func TestClustersAPI_WaitForClusterTerminated(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
-		if tt.name != "WaitForClusterTerminated test" {
-			continue
-		}
 		t.Run(tt.name, func(t *testing.T) {
 			AssertMultipleRequestsWithMockServer(t, tt.args, tt.requestMethod, tt.wantURI,
 				[]interface{}{&args{}}, tt.response, tt.responseStatus, tt.want, tt.wantErr,
 				func(client DatabricksClient) (interface{}, error) {
-					return nil, client.Clusters().WaitForClusterTerminated(tt.args[0].(*args).ClusterID,
-						tt.args[0].(*args).SleepDurationSeconds, tt.args[0].(*args).TimeoutDurationMinutes)
+					return nil, client.Clusters().Terminate(tt.args[0].(*args).ClusterID)
 				})
 		})
 	}
@@ -784,53 +780,10 @@ func TestClustersAPI_Edit(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var input args
-			AssertRequestWithMockServer(t, &tt.args, http.MethodPost, "/api/2.0/clusters/edit", &input, tt.response, tt.responseStatus, tt.want, tt.wantErr, func(client DatabricksClient) (interface{}, error) {
-				return nil, client.Clusters().Edit(model.Cluster(tt.args))
-			})
-		})
-	}
-}
-
-func TestClustersAPI_Start(t *testing.T) {
-	type args struct {
-		ClusterID string `json:"cluster_id,omitempty"`
-	}
-
-	tests := []struct {
-		name           string
-		response       string
-		responseStatus int
-		args           args
-		want           interface{}
-		wantErr        bool
-	}{
-		{
-			name:           "Start test",
-			response:       ``,
-			responseStatus: http.StatusOK,
-			args: args{
-				ClusterID: "my-cluster-id",
-			},
-			want:    nil,
-			wantErr: false,
-		},
-		{
-			name:           "Start faulure test",
-			response:       "",
-			responseStatus: http.StatusBadRequest,
-			args: args{
-				ClusterID: "my-cluster-id",
-			},
-			want:    nil,
-			wantErr: true,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			var input args
-			AssertRequestWithMockServer(t, &tt.args, http.MethodPost, "/api/2.0/clusters/start", &input, tt.response, tt.responseStatus, tt.want, tt.wantErr, func(client DatabricksClient) (interface{}, error) {
-				return nil, client.Clusters().Start(tt.args.ClusterID)
-			})
+			AssertRequestWithMockServer(t, &tt.args, http.MethodPost, "/api/2.0/clusters/edit", &input,
+				tt.response, tt.responseStatus, tt.want, tt.wantErr, func(client DatabricksClient) (interface{}, error) {
+					return client.Clusters().Edit(model.Cluster(tt.args))
+				})
 		})
 	}
 }
@@ -967,50 +920,6 @@ func TestClustersAPI_Unpin(t *testing.T) {
 	}
 }
 
-func TestClustersAPI_Delete(t *testing.T) {
-	type args struct {
-		ClusterID string `json:"cluster_id,omitempty"`
-	}
-
-	tests := []struct {
-		name           string
-		response       string
-		responseStatus int
-		args           args
-		want           interface{}
-		wantErr        bool
-	}{
-		{
-			name:           "Delete test",
-			response:       ``,
-			responseStatus: http.StatusOK,
-			args: args{
-				ClusterID: "my-cluster-id",
-			},
-			want:    nil,
-			wantErr: false,
-		},
-		{
-			name:           "Delete faulure test",
-			response:       "",
-			responseStatus: http.StatusBadRequest,
-			args: args{
-				ClusterID: "my-cluster-id",
-			},
-			want:    nil,
-			wantErr: true,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			var input args
-			AssertRequestWithMockServer(t, &tt.args, http.MethodPost, "/api/2.0/clusters/delete", &input, tt.response, tt.responseStatus, tt.want, tt.wantErr, func(client DatabricksClient) (interface{}, error) {
-				return nil, client.Clusters().Delete(tt.args.ClusterID)
-			})
-		})
-	}
-}
-
 func TestClustersAPI_PermanentDelete(t *testing.T) {
 	type args struct {
 		ClusterID string `json:"cluster_id,omitempty"`
@@ -1081,25 +990,20 @@ func TestAccListClustersIntegration(t *testing.T) {
 		}
 	}
 
-	clusterInfo, err := client.Clusters().Create(cluster)
-	assert.NoError(t, err, err)
-
-	clusterReadInfo, err := client.Clusters().Get(clusterInfo.ClusterID)
+	clusterReadInfo, err := client.Clusters().Create(cluster)
 	assert.NoError(t, err, err)
 	assert.True(t, clusterReadInfo.NumWorkers == cluster.NumWorkers)
 	assert.True(t, clusterReadInfo.ClusterName == cluster.ClusterName)
 	assert.True(t, reflect.DeepEqual(clusterReadInfo.SparkEnvVars, cluster.SparkEnvVars))
 	assert.True(t, clusterReadInfo.SparkVersion == cluster.SparkVersion)
 	assert.True(t, clusterReadInfo.AutoterminationMinutes == cluster.AutoterminationMinutes)
+	assert.True(t, clusterReadInfo.State == model.ClusterStateRunning)
 
 	defer func() {
-		err = client.Clusters().Delete(clusterReadInfo.ClusterID)
+		err = client.Clusters().Terminate(clusterReadInfo.ClusterID)
 		assert.NoError(t, err, err)
 
-		err = client.Clusters().WaitForClusterTerminated(clusterReadInfo.ClusterID, 10, 20)
-		assert.NoError(t, err, err)
-
-		clusterReadInfo, err = client.Clusters().Get(clusterInfo.ClusterID)
+		clusterReadInfo, err = client.Clusters().Get(clusterReadInfo.ClusterID)
 		assert.NoError(t, err, err)
 		assert.True(t, clusterReadInfo.State == model.ClusterStateTerminated)
 
@@ -1113,10 +1017,7 @@ func TestAccListClustersIntegration(t *testing.T) {
 	err = client.Clusters().Pin(clusterReadInfo.ClusterID)
 	assert.NoError(t, err, err)
 
-	err = client.Clusters().WaitForClusterRunning(clusterReadInfo.ClusterID, 10, 20)
-	assert.NoError(t, err, err)
-
-	clusterReadInfo, err = client.Clusters().Get(clusterInfo.ClusterID)
+	clusterReadInfo, err = client.Clusters().Get(clusterReadInfo.ClusterID)
 	assert.NoError(t, err, err)
 	assert.True(t, clusterReadInfo.State == model.ClusterStateRunning)
 }

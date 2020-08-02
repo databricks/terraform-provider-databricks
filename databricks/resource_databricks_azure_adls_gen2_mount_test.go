@@ -51,7 +51,7 @@ func TestAzureAccAdlsGen2Mount_cluster_deleted_correctly_mounts(t *testing.T) {
 			{
 				PreConfig: func() {
 					client := testAccProvider.Meta().(*service.DatabricksClient)
-					err := client.Clusters().Delete(cluster.ClusterID)
+					err := client.Clusters().PermanentDelete(cluster.ClusterID)
 					assert.NoError(t, err, err)
 				},
 				Config: terraformToApply,

@@ -1,28 +1,74 @@
 package service
 
 import (
-	"errors"
 	"fmt"
 	"log"
+	"strings"
 	"time"
 
 	"github.com/databrickslabs/databricks-terraform/client/model"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 )
+
+func (a ClustersAPI) defaultTimeout() time.Duration {
+	return 5 * time.Minute
+}
 
 // ClustersAPI is a struct that contains the Databricks api client to perform queries
 type ClustersAPI struct {
 	client *DatabricksClient
 }
 
-// Create creates a new Spark cluster
-func (a ClustersAPI) Create(cluster model.Cluster) (ci model.ClusterInfo, err error) {
+// Create creates a new Spark cluster and waits till it's running
+func (a ClustersAPI) Create(cluster model.Cluster) (info model.ClusterInfo, err error) {
+	var ci model.ClusterID
 	err = a.client.post("/clusters/create", cluster, &ci)
+	if err != nil {
+		return
+	}
+	info, err = a.waitForClusterStatus(ci.ClusterID, model.ClusterStateRunning)
 	return
 }
 
 // Edit edits the configuration of a cluster to match the provided attributes and size
-func (a ClustersAPI) Edit(clusterInfo model.Cluster) error {
-	return a.client.post("/clusters/edit", clusterInfo, nil)
+func (a ClustersAPI) Edit(cluster model.Cluster) (info model.ClusterInfo, err error) {
+	info, err = a.Get(cluster.ClusterID)
+	if err != nil {
+		return info, err
+	}
+	switch info.State {
+	case model.ClusterStateRunning:
+		// it's already running
+		break
+	case model.ClusterStatePending, model.ClusterStateResizing, model.ClusterStateRestarting:
+		// let's wait tiny bit
+		info, err = a.waitForClusterStatus(info.ClusterID, model.ClusterStateRunning)
+		if err != nil {
+			return info, err
+		}
+	case model.ClusterStateTerminating, model.ClusterStateTerminated:
+		// let it finish terminating, so that we can start it
+		info, err = a.waitForClusterStatus(info.ClusterID, model.ClusterStateTerminated)
+		if err != nil {
+			return info, err
+		}
+	case model.ClusterStateError, model.ClusterStateUnknown:
+		// we don't know what to do, so return error
+		return info, fmt.Errorf("Unexpected state: %#v", info.StateMessage)
+	}
+	err = a.client.post("/clusters/edit", cluster, nil)
+	if err != nil {
+		return info, err
+	}
+	if info.IsRunning() {
+		// so if cluster was running, we'll start and wait again
+		err = a.Start(info.ClusterID)
+		if err != nil {
+			return info, err
+		}
+	}
+	// in case of running cluster, it would have State: RUNNING, other is outdated
+	return info, err
 }
 
 // ListZones returns the zones info sent by the cloud service provider
@@ -32,9 +78,16 @@ func (a ClustersAPI) ListZones() (model.ZonesInfo, error) {
 	return zonesInfo, err
 }
 
-// Start starts a terminated Spark cluster given its ID
+// Start a terminated Spark cluster given its ID and wait till it's running
 func (a ClustersAPI) Start(clusterID string) error {
-	return a.client.post("/clusters/start", model.ClusterID{ClusterID: clusterID}, nil)
+	err := a.client.post("/clusters/start", model.ClusterID{ClusterID: clusterID}, nil)
+	if err != nil {
+		if !strings.Contains(err.Error(), fmt.Sprintf("Cluster %s is in unexpected state Pending.", clusterID)) {
+			return err
+		}
+	}
+	_, err = a.waitForClusterStatus(clusterID, model.ClusterStateRunning)
+	return err
 }
 
 // Restart restart a Spark cluster given its ID. If the cluster is not in a RUNNING state, nothing will happen.
@@ -42,85 +95,91 @@ func (a ClustersAPI) Restart(clusterID string) error {
 	return a.client.post("/clusters/restart", model.ClusterID{ClusterID: clusterID}, nil)
 }
 
-// WaitForClusterRunning will block main thread and wait till cluster is in a RUNNING state
-func (a ClustersAPI) WaitForClusterRunning(clusterID string, sleepDurationSeconds time.Duration, timeoutDurationMinutes time.Duration) error {
-	// todo: maybe it should start it as well?...
-	errChan := make(chan error, 1)
-	go func() {
-		for {
-			clusterInfo, err := a.Get(clusterID)
-			if err != nil {
-				errChan <- err
-				return
-			}
-			if clusterInfo.IsRunning() {
-				errChan <- nil
-				return
-			} else if model.ContainsClusterState(model.ClusterStateNonRunnable, clusterInfo.State) {
-				errChan <- errors.New("Cluster is in a non runnable state will not be able to transition to running, needs " +
-					"to be started again. Current state: " + string(clusterInfo.State))
-				return
-			}
-			log.Println("Waiting for cluster to go to running, current state is: " + string(clusterInfo.State))
-			time.Sleep(sleepDurationSeconds * time.Second)
-		}
-	}()
-	select {
-	case err := <-errChan:
-		return err
-	case <-time.After(timeoutDurationMinutes * time.Minute):
-		return errors.New("Timed out cluster has not reached running state")
+func wrapMissingClusterError(err error, id string) error {
+	if err == nil {
+		return nil
 	}
+	apiErr, ok := err.(APIError)
+	if !ok {
+		return err
+	}
+	if apiErr.IsMissing() {
+		return err
+	}
+	// fix non-compliant error code
+	if strings.Contains(apiErr.Message,
+		fmt.Sprintf("Cluster %s does not exist", id)) {
+		apiErr.StatusCode = 404
+		return err
+	}
+	return err
 }
 
-// WaitForClusterTerminated will block main thread and wait till cluster is in a TERMINATED state
-func (a ClustersAPI) WaitForClusterTerminated(clusterID string, sleepDurationSeconds time.Duration, timeoutDurationMinutes time.Duration) error {
-	errChan := make(chan error, 1)
-	go func() {
-		for {
-			clusterInfo, err := a.Get(clusterID)
-			if err != nil {
-				errChan <- err
-				return
-			}
-			if clusterInfo.State == model.ClusterStateTerminated {
-				errChan <- nil
-				return
-			} else if model.ContainsClusterState(model.ClusterStateNonTerminating, clusterInfo.State) {
-				errChan <- errors.New("Cluster is in a non runnable state will not be able to transition to terminated, needs " +
-					"to be terminated again. Current state: " + string(clusterInfo.State))
-				return
-			}
-			log.Println("Waiting for cluster to go to terminate, current state is: " + string(clusterInfo.State))
-			time.Sleep(sleepDurationSeconds * time.Second)
+func (a ClustersAPI) waitForClusterStatus(clusterID string, desired model.ClusterState) (result model.ClusterInfo, err error) {
+	// this tangles client with terraform more, which is inevitable
+	return result, resource.Retry(a.defaultTimeout(), func() *resource.RetryError {
+		clusterInfo, err := a.Get(clusterID)
+		if ae, ok := err.(APIError); ok && ae.IsMissing() {
+			log.Printf("[INFO] Cluster %s not found. Retrying", clusterID)
+			return resource.RetryableError(err)
 		}
-	}()
-	select {
-	case err := <-errChan:
-		return err
-	case <-time.After(timeoutDurationMinutes * time.Minute):
-		return errors.New("Timed out cluster has not reached terminated state")
-	}
+		if err != nil {
+			return resource.NonRetryableError(err)
+		}
+		result = clusterInfo
+		log.Printf("[DEBUG] Cluster %s is %s: %s", clusterID, clusterInfo.State, clusterInfo.StateMessage)
+		if clusterInfo.State == desired {
+			return nil
+		}
+		if !clusterInfo.State.CanReach(desired) {
+			docLink := "https://docs.databricks.com/dev-tools/api/latest/clusters.html#clusterclusterstate"
+			return resource.NonRetryableError(fmt.Errorf(
+				"%s is not able to transition from %s to %s: %s. Please see %s for more details",
+				clusterID, clusterInfo.State, desired, clusterInfo.StateMessage, docLink))
+		}
+		return resource.RetryableError(
+			fmt.Errorf("%s is %s, but has to be %s",
+				clusterID, clusterInfo.State, desired))
+	})
 }
 
 // Terminate terminates a Spark cluster given its ID
 func (a ClustersAPI) Terminate(clusterID string) error {
-	return a.client.post("/clusters/delete", model.ClusterID{ClusterID: clusterID}, nil)
-}
-
-// Delete is an alias of Terminate
-func (a ClustersAPI) Delete(clusterID string) error {
-	return a.Terminate(clusterID)
+	err := a.client.post("/clusters/delete", model.ClusterID{ClusterID: clusterID}, nil)
+	if err != nil {
+		return err
+	}
+	_, err = a.waitForClusterStatus(clusterID, model.ClusterStateTerminated)
+	return err
 }
 
 // PermanentDelete permanently delete a cluster
 func (a ClustersAPI) PermanentDelete(clusterID string) error {
-	return a.client.post("/clusters/permanent-delete", model.ClusterID{ClusterID: clusterID}, nil)
+	err := a.Terminate(clusterID)
+	if err != nil {
+		return err
+	}
+	r := model.ClusterID{ClusterID: clusterID}
+	err = a.client.post("/clusters/permanent-delete", r, nil)
+	if err == nil {
+		return nil
+	}
+	if !strings.Contains(err.Error(), "unpin the cluster first") {
+		return err
+	}
+	// unpin cluster if it's pinned
+	err = a.Unpin(clusterID)
+	if err != nil {
+		return err
+	}
+	// and try removing it again
+	return a.client.post("/clusters/permanent-delete", r, nil)
 }
 
 // Get retrieves the information for a cluster given its identifier
 func (a ClustersAPI) Get(clusterID string) (ci model.ClusterInfo, err error) {
-	err = a.client.get("/clusters/get", model.ClusterID{ClusterID: clusterID}, &ci)
+	err = wrapMissingClusterError(a.client.get("/clusters/get",
+		model.ClusterID{ClusterID: clusterID}, &ci), clusterID)
 	return
 }
 
@@ -141,7 +200,6 @@ func (a ClustersAPI) List() ([]model.ClusterInfo, error) {
 	var clusterList = struct {
 		Clusters []model.ClusterInfo `json:"clusters,omitempty" url:"clusters,omitempty"`
 	}{}
-
 	err := a.client.get("/clusters/list", nil, &clusterList)
 	return clusterList.Clusters, err
 }
@@ -167,12 +225,9 @@ func (a ClustersAPI) GetOrCreateRunningCluster(name string, custom ...model.Clus
 	}
 	for _, cl := range clusters {
 		if cl.ClusterName == name {
+			log.Printf("[INFO] Found reusable cluster '%s'", name)
 			if !cl.IsRunning() {
 				err = a.Start(cl.ClusterID)
-				if err != nil {
-					return
-				}
-				err = a.WaitForClusterRunning(cl.ClusterID, 10, 5)
 				if err != nil {
 					return
 				}
@@ -195,13 +250,5 @@ func (a ClustersAPI) GetOrCreateRunningCluster(name string, custom ...model.Clus
 	if len(custom) == 1 {
 		r = custom[0]
 	}
-	c, err = a.Create(r)
-	if err != nil {
-		return
-	}
-	err = a.WaitForClusterRunning(c.ClusterID, 30, 5)
-	if err != nil {
-		return
-	}
-	return c, nil
+	return a.Create(r)
 }

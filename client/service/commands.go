@@ -124,7 +124,7 @@ func (a CommandsAPI) parseCommandResults(command model.Command) (result string, 
 		result = outRE.ReplaceAllLiteralString(command.Results.Data.(string), "")
 		return
 	case "error":
-		log.Println(fmt.Sprintf("[DEBUG] on %s caused by python command: %s", clusterID, r.Cause))
+		log.Printf("[DEBUG] error caused by command: %s", command.Results.Cause)
 		summary := tagRE.ReplaceAllLiteralString(command.Results.Summary, "")
 		summary = html.UnescapeString(summary)
 		exceptionMatches := exceptionRE.FindStringSubmatch(summary)

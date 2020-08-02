@@ -280,7 +280,7 @@ func (c *DatabricksClient) redactedDump(body []byte) (res string) {
 		// error in this case is not much relevant
 		return
 	}
-	return onlyNBytes(string(rePacked), 2048)
+	return onlyNBytes(string(rePacked), 4096)
 }
 
 // todo: do is better name

@@ -55,7 +55,10 @@ func TestLibrariesAPI_Create(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			var input args
 			AssertRequestWithMockServer(t, &tt.args, http.MethodPost, "/api/2.0/libraries/install", &input, tt.response, tt.responseStatus, nil, tt.wantErr, func(client DatabricksClient) (interface{}, error) {
-				return nil, client.Libraries().Create(tt.args.ClusterID, tt.args.Libraries)
+				return nil, client.Libraries().Install(model.ClusterLibraryList{
+					ClusterID: tt.args.ClusterID,
+					Libraries: tt.args.Libraries,
+				})
 			})
 		})
 	}
@@ -107,7 +110,10 @@ func TestLibrariesAPI_Delete(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			var input args
 			AssertRequestWithMockServer(t, &tt.args, http.MethodPost, "/api/2.0/libraries/uninstall", &input, tt.response, tt.responseStatus, nil, tt.wantErr, func(client DatabricksClient) (interface{}, error) {
-				return nil, client.Libraries().Delete(tt.args.ClusterID, tt.args.Libraries)
+				return nil, client.Libraries().Uninstall(model.ClusterLibraryList{
+					ClusterID: tt.args.ClusterID,
+					Libraries: tt.args.Libraries,
+				})
 			})
 		})
 	}
@@ -216,7 +222,7 @@ func TestLibrariesAPI_List(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			var input args
 			AssertRequestWithMockServer(t, tt.args, http.MethodGet, tt.wantURI, &input, tt.response, tt.responseStatus, tt.want, tt.wantErr, func(client DatabricksClient) (interface{}, error) {
-				return client.Libraries().List(tt.args.ClusterID)
+				return client.Libraries().ClusterStatus(tt.args.ClusterID)
 			})
 		})
 	}
@@ -236,10 +242,6 @@ func TestAccLibraryCreate(t *testing.T) {
 	}()
 
 	clusterID := clusterInfo.ClusterID
-
-	err = client.Clusters().WaitForClusterRunning(clusterID, 10, 20)
-	assert.NoError(t, err, err)
-
 	libraries := []model.Library{
 		{
 			Pypi: &model.PyPi{
@@ -253,15 +255,21 @@ func TestAccLibraryCreate(t *testing.T) {
 		},
 	}
 
-	err = client.Libraries().Create(clusterID, libraries)
+	err = client.Libraries().Install(model.ClusterLibraryList{
+		ClusterID: clusterID,
+		Libraries: libraries,
+	})
 	assert.NoError(t, err, err)
 
 	defer func() {
-		err = client.Libraries().Delete(clusterID, libraries)
+		err = client.Libraries().Uninstall(model.ClusterLibraryList{
+			ClusterID: clusterID,
+			Libraries: libraries,
+		})
 		assert.NoError(t, err, err)
 	}()
 
-	libraryStatusList, err := client.Libraries().List(clusterID)
+	libraryStatusList, err := client.Libraries().ClusterStatus(clusterID)
 	assert.NoError(t, err, err)
-	assert.Equal(t, len(libraryStatusList), len(libraries))
+	assert.Equal(t, len(libraryStatusList.LibraryStatuses), len(libraries))
 }

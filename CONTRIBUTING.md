@@ -10,6 +10,7 @@ Contributing to Databricks Terraform Provider
 - [Code conventions](#code-conventions)
 - [Linting](#linting)
 - [Unit testing resources](#unit-testing-resources)
+- [Generating asserts for the first time in test](#generating-asserts-for-the-first-time-in-test)
 - [Random naming anywhere](#random-naming-anywhere)
 - [Cloud Specific testing](#cloud-specific-testing)
 - [Integration Testing](#integration-testing)
@@ -162,6 +163,14 @@ func TestPermissionsCreate(t *testing.T) {
 ```
 
 Each resource should have both unit and integration tests. 
+
+## Generating asserts for the first time in test
+
+```go
+for k, v := range d.State().Attributes {
+	fmt.Printf("assert.Equal(t, %#v, d.Get(%#v))\n", v, k)
+}
+```
 
 ## Random naming anywhere
 

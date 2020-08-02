@@ -13,6 +13,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/hashicorp/hcl"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
@@ -169,9 +170,7 @@ func TestAccMissingResourcesInWorkspace(t *testing.T) {
 				_, err := client.Clusters().Get(randStringID)
 				return err
 			},
-			isCustomCheck:   true,
-			customCheckFunc: isClusterMissing,
-			resourceID:      randStringID,
+			resourceID: randStringID,
 		},
 		{
 			name: "CheckIfDBFSFilesAreMissing",
@@ -207,12 +206,10 @@ func TestAccMissingResourcesInWorkspace(t *testing.T) {
 		{
 			name: "CheckIfJobsAreMissing",
 			readFunc: func() error {
-				_, err := client.Jobs().Read(int64(randIntID))
+				_, err := client.Jobs().Read(strconv.Itoa(randIntID))
 				return err
 			},
-			isCustomCheck:   true,
-			customCheckFunc: isJobMissing,
-			resourceID:      strconv.Itoa(randIntID),
+			resourceID: strconv.Itoa(randIntID),
 		},
 	}
 	if cloudENV == "AWS" {
@@ -318,15 +315,19 @@ type HTTPFixture struct {
 }
 
 type ResourceFixture struct {
-	Fixtures    []HTTPFixture
-	Resource    *schema.Resource
-	State       map[string]interface{}
+	Fixtures []HTTPFixture
+	Resource *schema.Resource
+	State    map[string]interface{}
+	// HCL might be useful to test nested blocks
+	HCL         string
 	CommandMock service.CommandMock
 	Create      bool
 	Read        bool
 	Update      bool
 	Delete      bool
 	ID          string
+	// new resource
+	New bool
 }
 
 func (f ResourceFixture) Apply(t *testing.T) (*schema.ResourceData, error) {
@@ -338,6 +339,14 @@ func (f ResourceFixture) Apply(t *testing.T) (*schema.ResourceData, error) {
 	if f.CommandMock != nil {
 		client.WithCommandMock(f.CommandMock)
 	}
+	if len(f.HCL) > 0 {
+		var out interface{}
+		err = hcl.Decode(&out, f.HCL)
+		if err != nil {
+			return nil, err
+		}
+		f.State = fixHCL(out).(map[string]interface{})
+	}
 	var whatever func(d *schema.ResourceData, c interface{}) error
 	switch {
 	case f.Create:
@@ -346,19 +355,31 @@ func (f ResourceFixture) Apply(t *testing.T) (*schema.ResourceData, error) {
 			return nil, errors.New("ID is not available for Create")
 		}
 	case f.Read:
-		whatever = f.Resource.Read
 		if f.ID == "" {
 			return nil, errors.New("ID must be set for Read")
 		}
+		whatever = func(d *schema.ResourceData, m interface{}) error {
+			d.SetId(f.ID)
+			if f.New {
+				d.MarkNewResource()
+			}
+			return f.Resource.Read(d, m)
+		}
 	case f.Update:
-		whatever = f.Resource.Update
 		if f.ID == "" {
 			return nil, errors.New("ID must be set for Update")
 		}
+		whatever = func(d *schema.ResourceData, m interface{}) error {
+			d.SetId(f.ID)
+			return f.Resource.Update(d, m)
+		}
 	case f.Delete:
-		whatever = f.Resource.Delete
 		if f.ID == "" {
 			return nil, errors.New("ID must be set for Delete")
+		}
+		whatever = func(d *schema.ResourceData, m interface{}) error {
+			d.SetId(f.ID)
+			return f.Resource.Delete(d, m)
 		}
 	}
 	return resourceTesterScaffolding(t, f.Resource, f.State, client, whatever)
@@ -469,9 +490,31 @@ func httpFixtureClient(t *testing.T, fixtures []HTTPFixture) (client *service.Da
 	return client, server, err
 }
 
+func fixHCL(v interface{}) interface{} {
+	switch a := v.(type) {
+	case []map[string]interface{}:
+		vals := []interface{}{}
+		for _, vv := range a {
+			vals = append(vals, fixHCL(vv))
+		}
+		return vals
+	case map[string]interface{}:
+		vals := map[string]interface{}{}
+		for k, ev := range a {
+			vals[k] = fixHCL(ev)
+		}
+		return vals
+	default:
+		return v
+	}
+}
+
 func resourceTesterScaffolding(t *testing.T, res *schema.Resource,
 	state map[string]interface{}, client *service.DatabricksClient,
 	whatever func(d *schema.ResourceData, c interface{}) error) (*schema.ResourceData, error) {
+	if res == nil {
+		return nil, errors.New("Resource is not set")
+	}
 	if state != nil {
 		resourceConfig := terraform.NewResourceConfigRaw(state)
 		warns, errs := res.Validate(resourceConfig)
@@ -492,7 +535,6 @@ func resourceTesterScaffolding(t *testing.T, res *schema.Resource,
 			return nil, fmt.Errorf("Invalid config supplied%s", issues)
 		}
 	}
-
 	resourceData := schema.TestResourceDataRaw(t, res.Schema, state)
 	err := res.InternalValidate(res.Schema, true)
 	if err != nil {
@@ -512,30 +554,6 @@ func actionWithID(id string, w schema.CreateFunc) schema.CreateFunc {
 
 func debugIfCloudEnvSet() bool {
 	return os.Getenv("CLOUD_ENV") != ""
-}
-
-func TestIsClusterMissingTrueWhenClusterIdSpecifiedPresent(t *testing.T) {
-	err := errors.New("{\"error_code\":\"INVALID_PARAMETER_VALUE\",\"message\":\"Cluster 123 does not exist\"}")
-
-	result := isClusterMissing(err, "123")
-
-	assert.True(t, result)
-}
-
-func TestIsClusterMissingFalseWhenClusterIdSpecifiedNotPresent(t *testing.T) {
-	err := errors.New("{\"error_code\":\"INVALID_PARAMETER_VALUE\",\"message\":\"Cluster 123 does not exist\"}")
-
-	result := isClusterMissing(err, "xyz")
-
-	assert.False(t, result)
-}
-
-func TestIsClusterMissingFalseWhenErrorNotInCorrectFormat(t *testing.T) {
-	err := errors.New("{\"error_code\":\"INVALID_PARAMETER_VALUE\",\"message\":\"Something random went bang xyz\"}")
-
-	result := isClusterMissing(err, "xyz")
-
-	assert.False(t, result)
 }
 
 func TestValidateInstanceProfileARN(t *testing.T) {

@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/databrickslabs/databricks-terraform/client/service"
+	"github.com/databrickslabs/databricks-terraform/databricks/util"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
@@ -81,7 +82,7 @@ func (mp MountPoint) Mount(mo Mount) (source string, err error) {
 }
 
 func commonMountResource(tpl Mount, s map[string]*schema.Schema) *schema.Resource {
-	resource := &schema.Resource{Schema: s}
+	resource := &schema.Resource{Schema: s, SchemaVersion: 2}
 	resource.Create = mountCreate(tpl, resource)
 	resource.Read = mountRead(tpl, resource)
 	resource.Delete = mountDelete(tpl, resource)
@@ -105,15 +106,17 @@ func getMountingClusterID(client *service.DatabricksClient, clusterID string) (s
 		}
 		return cluster.ClusterID, nil
 	}
-	err := changeClusterIntoRunningState(clusterID, client)
-	if isClusterMissing(err, clusterID) {
-		log.Printf("[WANR] Unable to get %s cluster into running state", clusterID)
-		return "", err
-	}
+	clusterInfo, err := client.Clusters().Get(clusterID)
 	if err != nil {
 		return "", err
 	}
-	return clusterID, err
+	if !clusterInfo.IsRunning() {
+		err = client.Clusters().Start(clusterInfo.ClusterID)
+		if err != nil {
+			return "", err
+		}
+	}
+	return clusterID, nil
 }
 
 func mountCluster(tpl interface{}, d *schema.ResourceData, m interface{},
@@ -133,7 +136,7 @@ func mountCluster(tpl interface{}, d *schema.ResourceData, m interface{},
 	mountType := reflect.TypeOf(tpl)
 	mountTypePointer := reflect.New(mountType)
 	mountReflectValue := mountTypePointer.Elem()
-	err = readReflectValueFromData([]string{}, d, mountReflectValue, r)
+	err = util.DataToReflectValue(d, r, mountReflectValue)
 	if err != nil {
 		return mountConfig, mountPoint, err
 	}

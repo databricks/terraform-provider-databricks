@@ -71,6 +71,11 @@ terraform-acc-mws: lint
 	@echo "✓ Running Terraform Acceptance Tests for Multiple Workspace APIs on AWS..."
 	@/bin/bash integration-environment-mws/run.sh
 
+# Launch VSCode with Azure integration test ENV variables
+code-azure:
+	export $(terraform output -state=scripts/azure-integration/terraform.tfstate --json | jq -r 'to_entries|map("\(.key|ascii_upcase)=\(.value.value|tostring)")|.[]')
+	code .
+
 terraform-setup: build
 	@echo "✓ Initializing Terraform..."
 	@terraform init

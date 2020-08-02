@@ -57,7 +57,7 @@ func TestJobsAPI_Create(t *testing.T) {
 
 func TestJobsAPI_Update(t *testing.T) {
 	type args struct {
-		JobID       int64             `json:"job_id,omitempty" url:"job_id,omitempty"`
+		JobID       string            `json:"job_id,omitempty" url:"job_id,omitempty"`
 		NewSettings model.JobSettings `json:"new_settings,omitempty" url:"new_settings,omitempty"`
 	}
 
@@ -76,7 +76,7 @@ func TestJobsAPI_Update(t *testing.T) {
 						}`,
 			responseStatus: http.StatusOK,
 			args: args{
-				JobID:       1,
+				JobID:       "1",
 				NewSettings: model.JobSettings{},
 			},
 			want:    nil,
@@ -87,7 +87,7 @@ func TestJobsAPI_Update(t *testing.T) {
 			response:       "",
 			responseStatus: http.StatusBadRequest,
 			args: args{
-				JobID:       0,
+				JobID:       "0",
 				NewSettings: model.JobSettings{},
 			},
 			want:    nil,
@@ -106,7 +106,7 @@ func TestJobsAPI_Update(t *testing.T) {
 
 func TestJobsAPI_Delete(t *testing.T) {
 	type args struct {
-		JobID int64 `json:"job_id,omitempty" url:"job_id,omitempty"`
+		JobID string `json:"job_id,omitempty" url:"job_id,omitempty"`
 	}
 
 	tests := []struct {
@@ -121,7 +121,7 @@ func TestJobsAPI_Delete(t *testing.T) {
 			response:       "",
 			responseStatus: http.StatusOK,
 			args: args{
-				JobID: 0,
+				JobID: "0",
 			},
 			wantErr: false,
 		},
@@ -130,7 +130,7 @@ func TestJobsAPI_Delete(t *testing.T) {
 			response:       "",
 			responseStatus: http.StatusBadRequest,
 			args: args{
-				JobID: 0,
+				JobID: "0",
 			},
 			wantErr: true,
 		},
@@ -147,7 +147,7 @@ func TestJobsAPI_Delete(t *testing.T) {
 
 func TestJobsAPI_Read(t *testing.T) {
 	type args struct {
-		JobID int64 `json:"job_id,omitempty" url:"job_id,omitempty"`
+		JobID string `json:"job_id,omitempty" url:"job_id,omitempty"`
 	}
 	tests := []struct {
 		name           string
@@ -201,7 +201,7 @@ func TestJobsAPI_Read(t *testing.T) {
 						}`,
 			responseStatus: http.StatusOK,
 			args: args{
-				JobID: 1,
+				JobID: "1",
 			},
 			wantURI: "/api/2.0/jobs/get?job_id=1",
 			want: model.Job{
@@ -250,7 +250,7 @@ func TestJobsAPI_Read(t *testing.T) {
 			response:       ``,
 			responseStatus: http.StatusBadRequest,
 			args: args{
-				JobID: 1,
+				JobID: "1",
 			},
 			wantURI: "/api/2.0/jobs/get?job_id=1",
 			want:    model.Job{},
@@ -311,7 +311,7 @@ func TestAwsAccJobsCreate(t *testing.T) {
 
 	job, err := client.Jobs().Create(jobSettings)
 	assert.NoError(t, err, err)
-	id := job.JobID
+	id := job.ID()
 	defer func() {
 		err := client.Jobs().Delete(id)
 		assert.NoError(t, err, err)

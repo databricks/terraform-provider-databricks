@@ -152,53 +152,13 @@ type LibraryStatus struct {
 	Messages                        []string `json:"messages,omitempty"`
 }
 
-func (lib LibraryStatus) toMap() map[string]interface{} {
-	// TODO: make map[string]string, as messages should not be in the state
-	m := map[string]interface{}{}
-	//m["messages"] = lib.Messages
-	m["status"] = lib.Status
-	switch {
-	case len(lib.Library.Jar) > 0:
-		m["path"] = lib.Library.Jar
-		return m
-	case len(lib.Library.Egg) > 0:
-		m["path"] = lib.Library.Egg
-		return m
-	case len(lib.Library.Whl) > 0:
-		m["path"] = lib.Library.Whl
-		return m
-	case lib.Library.Maven != nil && len(lib.Library.Maven.Coordinates) > 0:
-		m["coordinates"] = lib.Library.Maven.Coordinates
-		if len(lib.Library.Maven.Repo) > 0 {
-			m["repo"] = lib.Library.Maven.Repo
-		}
-		// if len(lib.Library.Maven.Exclusions) > 0 {
-		// 	m["exclusions"] = lib.Library.Maven.Exclusions
-		// }
-		return m
-	case lib.Library.Pypi != nil && len(lib.Library.Pypi.Package) > 0:
-		m["package"] = lib.Library.Pypi.Package
-		if len(lib.Library.Pypi.Repo) > 0 {
-			m["repo"] = lib.Library.Pypi.Repo
-		}
-		return m
-	case lib.Library.Cran != nil && len(lib.Library.Cran.Package) > 0:
-		m["package"] = lib.Library.Cran.Package
-		if len(lib.Library.Cran.Repo) > 0 {
-			m["repo"] = lib.Library.Cran.Repo
-		}
-		return m
-	}
-	return m
-}
-
 // ClusterLibraryStatuses  A status will be available for all libraries installed on the cluster via the API or
 // the libraries UI as well as libraries set to be installed on all clusters via the libraries UI. If a library
 // has been set to be installed on all clusters, is_library_for_all_clusters will be true, even if the library
 // was also installed on the cluster.
 type ClusterLibraryStatuses struct {
-	ClusterID       string          `json:"cluster_id,omitempty" url:"cluster_id,omitempty"`
-	LibraryStatuses []LibraryStatus `json:"library_statuses,omitempty" url:"libraries,omitempty"`
+	ClusterID       string          `json:"cluster_id,omitempty"`
+	LibraryStatuses []LibraryStatus `json:"library_statuses,omitempty"`
 }
 
 // ToLibraryList convert to envity for convenient comparison
@@ -208,36 +168,6 @@ func (cls ClusterLibraryStatuses) ToLibraryList() ClusterLibraryList {
 		cll.Libraries = append(cll.Libraries, *lib.Library)
 	}
 	return cll
-}
-
-// Apply calls a function with type of library list and library list
-func (cls ClusterLibraryStatuses) Apply(
-	cb func(key string, value interface{}) error) error {
-	x := make(map[string][]map[string]interface{})
-	errors := []string{}
-	for _, lib := range cls.LibraryStatuses {
-		libraryType, key := lib.Library.TypeAndKey()
-		if lib.Status == "FAILED" {
-			errors = append(errors, fmt.Sprintf("%s[%s] failed: %s", libraryType, key, strings.Join(lib.Messages, ", ")))
-			continue
-		}
-		if len(libraryType) < 1 {
-			continue
-		}
-		m := lib.toMap()
-		// Some step in installation failed. More information can be found in the messages field.
-		x[libraryType] = append(x[libraryType], m)
-	}
-	if len(errors) > 0 {
-		return fmt.Errorf("%s", strings.Join(errors, "\n"))
-	}
-	for key, value := range x {
-		err := cb(key, value)
-		if err != nil {
-			return err
-		}
-	}
-	return nil
 }
 
 // IsRetryNeeded returns first bool if there needs to be retry.

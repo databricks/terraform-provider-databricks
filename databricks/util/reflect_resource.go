@@ -203,8 +203,9 @@ func iterFields(rv reflect.Value, path []string, s map[string]*schema.Schema,
 		if omitEmpty && !fieldSchema.Optional {
 			return fmt.Errorf("Inconsistency: %s has omitempty, but is not optional", jsonFieldName)
 		}
-		if fieldSchema.Optional && !omitEmpty {
-			return fmt.Errorf("Inconsistency: %s is optional, but has no omitempty", jsonFieldName)
+		defaultEmpty := reflect.ValueOf(fieldSchema.Default).Kind() == reflect.Invalid
+		if fieldSchema.Optional && defaultEmpty && !omitEmpty {
+			return fmt.Errorf("Inconsistency: %s is optional, default is empty, but has no omitempty", jsonFieldName)
 		}
 		valueField := rv.Field(i)
 		err := cb(fieldSchema, append(path, jsonFieldName), &valueField)

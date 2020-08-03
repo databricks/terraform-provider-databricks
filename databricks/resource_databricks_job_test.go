@@ -227,21 +227,20 @@ func TestResourceJobRead(t *testing.T) {
 	assert.NoError(t, err, err)
 
 	assert.Equal(t, "Featurizer", d.Get("name"))
-	assert.Equal(t, "2", d.Get("libraries.#"))
+	assert.Equal(t, 2, d.Get("libraries.#"))
 	assert.Equal(t, "dbfs://ff/gg/hh.jar", d.Get("libraries.1850263921.jar"))
 	assert.Equal(t, "dbfs://aa/bb/cc.jar", d.Get("libraries.587400796.jar"))
 
-	assert.Equal(t, "2", d.Get("spark_jar_task.0.parameters.#"))
+	assert.Equal(t, 2, d.Get("spark_jar_task.0.parameters.#"))
 	assert.Equal(t, "com.labs.BarMain", d.Get("spark_jar_task.0.main_class_name"))
 	assert.Equal(t, "--cleanup", d.Get("spark_jar_task.0.parameters.0"))
 	assert.Equal(t, "full", d.Get("spark_jar_task.0.parameters.1"))
 
-	assert.Equal(t, "5000", d.Get("min_retry_interval_millis"))
-	assert.Equal(t, "3", d.Get("max_retries"))
-	assert.Equal(t, "1", d.Get("max_concurrent_runs"))
-	assert.Equal(t, "789", d.Get("id"))
-	assert.Equal(t, "1", d.Get("spark_jar_task.#"))
-	assert.Equal(t, "true", d.Get("retry_on_timeout"))
+	assert.Equal(t, 5000, d.Get("min_retry_interval_millis"))
+	assert.Equal(t, 3, d.Get("max_retries"))
+	assert.Equal(t, 1, d.Get("max_concurrent_runs"))
+	assert.Equal(t, 1, d.Get("spark_jar_task.#"))
+	assert.Equal(t, true, d.Get("retry_on_timeout"))
 	assert.Equal(t, "abc", d.Get("existing_cluster_id"))
 }
 

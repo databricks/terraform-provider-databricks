@@ -69,9 +69,10 @@ func librarySchema(dims ...string) *schema.Schema {
 func resourceClusterSchema() map[string]*schema.Schema {
 	return util.StructToSchema(model.Cluster{}, func(s map[string]*schema.Schema) map[string]*schema.Schema {
 		// adds `libraries` configuration block
-		s["libraries"] = util.StructToSchema(model.ClusterLibraryList{}, func(ss map[string]*schema.Schema) map[string]*schema.Schema {
-			return ss
-		})["libraries"]
+		s["libraries"] = util.StructToSchema(model.ClusterLibraryList{},
+			func(ss map[string]*schema.Schema) map[string]*schema.Schema {
+				return ss
+			})["libraries"]
 
 		p, err := util.SchemaPath(s, "docker_image", "basic_auth", "password")
 		if err == nil {
@@ -82,6 +83,7 @@ func resourceClusterSchema() map[string]*schema.Schema {
 		s["idempotency_token"].ForceNew = true
 		s["cluster_id"] = &schema.Schema{
 			Type:     schema.TypeString,
+			Optional: true,
 			Computed: true,
 		}
 		s["state"] = &schema.Schema{

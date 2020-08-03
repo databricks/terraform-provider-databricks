@@ -35,6 +35,7 @@ func DeserializeJSON(req *http.Request, m interface{}) error {
 }
 
 func compare(t *testing.T, a interface{}, b interface{}) {
+	// TODO: remove diff package because of license
 	difference, err := diff.Diff(a, b)
 	assert.NoError(t, err, err)
 	jsonStr, err := json.Marshal(difference)
@@ -66,10 +67,11 @@ func GetCloudInstanceType(c *DatabricksClient) string {
 }
 
 func AssertRequestWithMockServer(t *testing.T, rawPayloadArgs interface{}, requestMethod string, requestURI string, input interface{}, response string, responseStatus int, want interface{}, wantErr bool, apiCall func(client DatabricksClient) (interface{}, error)) {
+	t.Log("[DEPRECATED] Please rewrite the code to use ResourceFixture")
 	server := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
 		// Test request parameters
-		assert.Equal(t, requestMethod, req.Method)
-		assert.Equal(t, requestURI, req.RequestURI)
+		assert.Equal(t, requestMethod, req.Method, "HTTP method doesn't match")
+		assert.Equal(t, requestURI, req.RequestURI, "URL doesn't match")
 		if requestMethod == http.MethodPost || requestMethod == http.MethodPatch || requestMethod == http.MethodPut {
 			err := DeserializeJSON(req, &input)
 			assert.NoError(t, err, err)
@@ -103,6 +105,7 @@ func AssertRequestWithMockServer(t *testing.T, rawPayloadArgs interface{}, reque
 }
 
 func AssertMultipleRequestsWithMockServer(t *testing.T, rawPayloadArgs interface{}, requestMethod []string, requestURI []string, input interface{}, response []string, responseStatus []int, want interface{}, wantErr bool, apiCall func(client DatabricksClient) (interface{}, error)) {
+	t.Log("[DEPRECATED] Please rewrite the code to use ResourceFixture")
 	counter := 0
 	server := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
 		// Test request parameters

@@ -199,8 +199,7 @@ type DockerImage struct {
 
 // Cluster contains the information when trying to submit api calls or editing a cluster
 type Cluster struct {
-	ClusterID string `json:"cluster_id,omitempty"`
-
+	ClusterID   string `json:"cluster_id,omitempty"`
 	ClusterName string `json:"cluster_name,omitempty"`
 
 	SparkVersion      string     `json:"spark_version"` // TODO: perhaps make a default
@@ -239,7 +238,7 @@ type ClusterInfo struct {
 	SparkContextID         int64              `json:"spark_context_id,omitempty"`
 	JdbcPort               int32              `json:"jdbc_port,omitempty"`
 	ClusterName            string             `json:"cluster_name,omitempty"`
-	SparkVersion           string             `json:"spark_version,omitempty"`
+	SparkVersion           string             `json:"spark_version"`
 	SparkConf              map[string]string  `json:"spark_conf,omitempty"`
 	AwsAttributes          *AwsAttributes     `json:"aws_attributes,omitempty"`
 	NodeTypeID             string             `json:"node_type_id,omitempty"`
@@ -256,7 +255,7 @@ type ClusterInfo struct {
 	SingleUserName         string             `json:"single_user_name,omitempty"`
 	ClusterSource          AwsAvailability    `json:"cluster_source,omitempty"`
 	DockerImage            *DockerImage       `json:"docker_image,omitempty"`
-	State                  ClusterState       `json:"state,omitempty"`
+	State                  ClusterState       `json:"state"`
 	StateMessage           string             `json:"state_message,omitempty"`
 	StartTime              int64              `json:"start_time,omitempty"`
 	TerminateTime          int64              `json:"terminate_time,omitempty"`
@@ -264,7 +263,7 @@ type ClusterInfo struct {
 	LastActivityTime       int64              `json:"last_activity_time,omitempty"`
 	ClusterMemoryMb        int64              `json:"cluster_memory_mb,omitempty"`
 	ClusterCores           float32            `json:"cluster_cores,omitempty"`
-	DefaultTags            map[string]string  `json:"default_tags,omitempty"`
+	DefaultTags            map[string]string  `json:"default_tags"`
 	ClusterLogStatus       *LogSyncStatus     `json:"cluster_log_status,omitempty"`
 	TerminationReason      *TerminationReason `json:"termination_reason,omitempty"`
 }

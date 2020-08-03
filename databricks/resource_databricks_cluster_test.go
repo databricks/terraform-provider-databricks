@@ -209,8 +209,9 @@ func TestResourceClusterCreate(t *testing.T) {
 				},
 			},
 			{
-				Method:   "GET",
-				Resource: "/api/2.0/clusters/get?cluster_id=abc",
+				Method:       "GET",
+				ReuseRequest: true,
+				Resource:     "/api/2.0/clusters/get?cluster_id=abc",
 				Response: model.ClusterInfo{
 					ClusterID:              "abc",
 					NumWorkers:             100,
@@ -371,8 +372,9 @@ func TestResourceClusterUpdate(t *testing.T) {
 	d, err := ResourceFixture{
 		Fixtures: []HTTPFixture{
 			{
-				Method:   "GET",
-				Resource: "/api/2.0/clusters/get?cluster_id=abc",
+				Method:       "GET",
+				Resource:     "/api/2.0/clusters/get?cluster_id=abc",
+				ReuseRequest: true,
 				Response: model.ClusterInfo{
 					ClusterID:              "abc",
 					NumWorkers:             100,
@@ -381,6 +383,13 @@ func TestResourceClusterUpdate(t *testing.T) {
 					NodeTypeID:             "i3.xlarge",
 					AutoterminationMinutes: 15,
 					State:                  model.ClusterStateRunning,
+				},
+			},
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/clusters/start",
+				ExpectedRequest: model.ClusterID{
+					ClusterID: "abc",
 				},
 			},
 			{
@@ -400,32 +409,6 @@ func TestResourceClusterUpdate(t *testing.T) {
 					ClusterName:            "Shared Autoscaling",
 					SparkVersion:           "7.1-scala12",
 					NodeTypeID:             "i3.xlarge",
-				},
-			},
-			{
-				Method:   "GET",
-				Resource: "/api/2.0/clusters/get?cluster_id=abc",
-				Response: model.ClusterInfo{
-					ClusterID:              "abc",
-					NumWorkers:             100,
-					ClusterName:            "Shared Autoscaling",
-					SparkVersion:           "7.1-scala12",
-					NodeTypeID:             "i3.xlarge",
-					AutoterminationMinutes: 15,
-					State:                  model.ClusterStateRunning,
-				},
-			},
-			{
-				Method:   "GET",
-				Resource: "/api/2.0/clusters/get?cluster_id=abc",
-				Response: model.ClusterInfo{
-					ClusterID:              "abc",
-					NumWorkers:             100,
-					ClusterName:            "Shared Autoscaling",
-					SparkVersion:           "7.1-scala12",
-					NodeTypeID:             "i3.xlarge",
-					AutoterminationMinutes: 15,
-					State:                  model.ClusterStateRunning,
 				},
 			},
 			{
@@ -484,6 +467,20 @@ func TestResourceClusterDelete(t *testing.T) {
 		Fixtures: []HTTPFixture{
 			{
 				Method:   "POST",
+				Resource: "/api/2.0/clusters/delete",
+				ExpectedRequest: map[string]string{
+					"cluster_id": "abc",
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/clusters/get?cluster_id=abc",
+				Response: model.ClusterInfo{
+					State: model.ClusterStateTerminated,
+				},
+			},
+			{
+				Method:   "POST",
 				Resource: "/api/2.0/clusters/permanent-delete",
 				ExpectedRequest: map[string]string{
 					"cluster_id": "abc",
@@ -503,7 +500,7 @@ func TestResourceClusterDelete_Error(t *testing.T) {
 		Fixtures: []HTTPFixture{
 			{
 				Method:   "POST",
-				Resource: "/api/2.0/clusters/permanent-delete",
+				Resource: "/api/2.0/clusters/delete",
 				Response: service.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",

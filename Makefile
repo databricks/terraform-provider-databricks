@@ -4,10 +4,6 @@ int:
 	@echo "✓ Running tests..."
 	@gotestsum --raw-command go test -v -json -coverprofile=coverage.txt ./...
 
-coverage: test
-	@echo "✓ Opening coverage for unit tests..."
-	@go tool cover -html=coverage.txt
-
 coverage-int: int
 	@echo "✓ Opening coverage for unit tests..."
 	@go tool cover -html=coverage.txt
@@ -28,17 +24,13 @@ lint:
 	@echo "✓ Linting source code with golangci-lint make sure you run make fmt ..."
 	@golangci-lint run --skip-dirs-use-default --timeout 5m
 
-client-test:
-	@echo "✓ Running tests..."
-	@gotestsum --format short-verbose --raw-command go test -v -json -short -coverprofile=client-coverage.txt ./client/...
-
-provider-test:
-	@echo "✓ Running tests..."
-	@gotestsum --format short-verbose --raw-command go test -v -json -short -coverprofile=provider-coverage.txt ./databricks/...
-
 test: lint
 	@echo "✓ Running tests..."
 	@gotestsum --format pkgname-and-test-fails --no-summary=skipped --raw-command go test -v -json -short -coverprofile=coverage.txt ./...
+
+coverage: test
+	@echo "✓ Opening coverage for unit tests..."
+	@go tool cover -html=coverage.txt
 
 build:
 	@echo "✓ Building source code with go build..."

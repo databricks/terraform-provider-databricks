@@ -18,14 +18,13 @@ type WorkspaceConfAPI struct {
 //    "message": "Values must be strings"
 //}
 // This is the case for any key tested.  It would be worth finding any internal documentation detailing workspace-conf
-func (a WorkspaceConfAPI) Update(workspaceConfMap map[string]string) error {
-	_, err := a.Client.performQuery(http.MethodPatch, "/preview/workspace-conf", "2.0", nil, workspaceConfMap, nil)
-	return err
+func (a WorkspaceConfAPI) Update(workspaceConfMap map[string]string) (err error) {
+	_, err = a.Client.performQuery(http.MethodPatch, "/preview/workspace-conf", "2.0", nil, workspaceConfMap, nil)
+	return
 }
 
 // Read just returns back a map of keys and values which keys are the configuration items and values are the settings
-func (a WorkspaceConfAPI) Read(keys string) (map[string]string, error) {
-	var wsConfResp map[string]string
+func (a WorkspaceConfAPI) Read(keys string) (wsConfResp map[string]string, err error) {
 	wsConfQuery := struct {
 		Keys string `json:"keys,omitempty" url:"keys,omitempty"`
 	}{
@@ -36,5 +35,5 @@ func (a WorkspaceConfAPI) Read(keys string) (map[string]string, error) {
 		return wsConfResp, err
 	}
 	err = json.Unmarshal(resp, &wsConfResp)
-	return wsConfResp, err
+	return
 }

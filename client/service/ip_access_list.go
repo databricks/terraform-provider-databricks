@@ -13,7 +13,7 @@ type IPAccessListsAPI struct {
 }
 
 // Create creates the IP Access List to given the instance pool configuration
-func (a IPAccessListsAPI) Create(ipAddresses []string, label string, listType model.IPAccessListType) (model.IPAccessListStatus, error) {
+func (a IPAccessListsAPI) Create(ipAddresses []string, label string, listType model.IPAccessListType) (status model.IPAccessListStatus, err error) {
 	cr := model.CreateIPAccessListRequest{}
 	cr.IPAddresses = ipAddresses
 	cr.Label = label
@@ -31,17 +31,18 @@ func (a IPAccessListsAPI) Create(ipAddresses []string, label string, listType mo
 	}
 
 	err = json.Unmarshal(resp, &wrapper)
-	return wrapper.IPAccessList, err
+	status = wrapper.IPAccessList
+	return
 }
 
-func (a IPAccessListsAPI) Update(objectID string, label string, listType model.IPAccessListType, ipAddresses []string, enabled bool) (model.IPAccessListStatus, error) {
+func (a IPAccessListsAPI) Update(objectID string, label string, listType model.IPAccessListType, ipAddresses []string, enabled bool) (status model.IPAccessListStatus, err error) {
 	ur := model.IPAccessListUpdateRequest{}
 	ur.Enabled = enabled
 	ur.IPAddresses = ipAddresses
 	ur.Label = label
 	ur.ListType = listType
 
-	status := model.IPAccessListStatus{}
+	status = model.IPAccessListStatus{}
 
 	resp, err := a.Client.performQuery(
 		http.MethodPut,
@@ -53,19 +54,19 @@ func (a IPAccessListsAPI) Update(objectID string, label string, listType model.I
 		return status, err
 	}
 	err = json.Unmarshal(resp, &status)
-	return status, err
+	return
 }
 
-func (a IPAccessListsAPI) Delete(objectID string) error {
-	_, err := a.Client.performQuery(
+func (a IPAccessListsAPI) Delete(objectID string) (err error) {
+	_, err = a.Client.performQuery(
 		http.MethodDelete,
 		"/preview/ip-access-lists/"+objectID,
 		"2.0",
 		nil, nil, nil)
-	return err
+	return
 }
 
-func (a IPAccessListsAPI) Read(objectID string) (model.IPAccessListStatus, error) {
+func (a IPAccessListsAPI) Read(objectID string) (status model.IPAccessListStatus, err error) {
 	resp, err := a.Client.performQuery(http.MethodGet,
 		"/preview/ip-access-lists/"+objectID,
 		"2.0", nil, nil, nil)
@@ -75,18 +76,19 @@ func (a IPAccessListsAPI) Read(objectID string) (model.IPAccessListStatus, error
 		return wrapper.IPAccessList, err
 	}
 	err = json.Unmarshal(resp, &wrapper)
-	return wrapper.IPAccessList, err
+	status = wrapper.IPAccessList
+	return
 }
 
-func (a IPAccessListsAPI) List() (model.ListIPAccessListsResponse, error) {
+func (a IPAccessListsAPI) List() (listResponse model.ListIPAccessListsResponse, err error) {
 	resp, err := a.Client.performQuery(http.MethodGet,
 		"/preview/ip-access-lists",
 		"2.0", nil, nil, nil)
-	listResponse := model.ListIPAccessListsResponse{}
+	listResponse = model.ListIPAccessListsResponse{}
 	if err != nil {
-		return listResponse, err
+		return
 	}
 
 	err = json.Unmarshal(resp, &listResponse)
-	return listResponse, err
+	return
 }

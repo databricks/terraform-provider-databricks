@@ -12,7 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 )
 
-func resourceIPAccessList() *schema.Resource {
+func resourceIPAccessList() (_ *schema.Resource) {
 	return &schema.Resource{
 		Create: resourceIPACLCreate,
 		Read:   resourceIPACLRead,
@@ -50,7 +50,7 @@ func resourceIPAccessList() *schema.Resource {
 	}
 }
 
-func resourceIPACLCreate(d *schema.ResourceData, m interface{}) error {
+func resourceIPACLCreate(d *schema.ResourceData, m interface{}) (err error) {
 	client := m.(*service.DBApiClient)
 	label := d.Get("label").(string)
 	ipAddresses := d.Get("ip_addresses").([]interface{})
@@ -64,7 +64,7 @@ func resourceIPACLCreate(d *schema.ResourceData, m interface{}) error {
 	log.Printf("IPACLLists: Created as  %v\n", status)
 	if err != nil {
 		log.Printf("IPACLLists:  Creation error %v\n", err)
-		return err
+		return
 	}
 
 	d.SetId(status.ListID)
@@ -72,7 +72,7 @@ func resourceIPACLCreate(d *schema.ResourceData, m interface{}) error {
 	return resourceIPACLRead(d, m)
 }
 
-func resourceIPACLRead(d *schema.ResourceData, m interface{}) error {
+func resourceIPACLRead(d *schema.ResourceData, m interface{}) (err error) {
 	client := m.(*service.DBApiClient)
 	status, err := client.IPAccessLists().Read(d.Id())
 	if err != nil {
@@ -82,16 +82,16 @@ func resourceIPACLRead(d *schema.ResourceData, m interface{}) error {
 			d.SetId("")
 			return nil
 		}
-		return err
+		return
 	}
 
 	return updateFromStatus(d, status)
 }
 
-func resourceIPACLUpdate(d *schema.ResourceData, m interface{}) error {
+func resourceIPACLUpdate(d *schema.ResourceData, m interface{}) (err error) {
 	client := m.(*service.DBApiClient)
 	ipAddresses := convertListInterfaceToString(d.Get("ip_addresses").([]interface{}))
-	_, err := client.IPAccessLists().Update(
+	_, err = client.IPAccessLists().Update(
 		d.Id(),
 		d.Get("label").(string),
 		model.IPAccessListType(d.Get("list_type").(string)),
@@ -99,30 +99,30 @@ func resourceIPACLUpdate(d *schema.ResourceData, m interface{}) error {
 		d.Get("enabled").(bool),
 	)
 	if err != nil {
-		return err
+		return
 	}
 	return resourceIPACLRead(d, m)
 }
 
-func resourceIPACLDelete(d *schema.ResourceData, m interface{}) error {
+func resourceIPACLDelete(d *schema.ResourceData, m interface{}) (err error) {
 	client := m.(*service.DBApiClient)
 	return client.IPAccessLists().Delete(d.Id())
 }
 
-func updateFromStatus(d *schema.ResourceData, status model.IPAccessListStatus) error {
-	err := d.Set("label", status.Label)
+func updateFromStatus(d *schema.ResourceData, status model.IPAccessListStatus) (err error) {
+	err = d.Set("label", status.Label)
 	if err != nil {
-		return err
+		return
 	}
 	err = d.Set("list_type", string(status.ListType))
 	if err != nil {
-		return err
+		return
 	}
 	err = d.Set("ip_addresses", status.IPAddresses)
 	if err != nil {
-		return err
+		return
 	}
 	err = d.Set("enabled", status.Enabled)
 
-	return err
+	return
 }

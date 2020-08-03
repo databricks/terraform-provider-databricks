@@ -52,12 +52,12 @@ func resourceWorkspaceConfCreateOrUpdate(d *schema.ResourceData, m interface{}) 
 	return resourceWorkspaceConfRead(d, m)
 }
 
-func resourceWorkspaceConfRead(d *schema.ResourceData, m interface{}) error {
+func resourceWorkspaceConfRead(d *schema.ResourceData, m interface{}) (err error) {
 	client := m.(*service.DBApiClient)
 	resp, err := client.WorkspaceConfigurations().Read(tfNameToJsonName["enable_ip_access_lists"])
 	// 404 check not required as the service only return 400 errors
 	if err != nil {
-		return err
+		return
 	}
 
 	val, e2 := strconv.ParseBool(resp[tfNameToJsonName["enable_ip_access_lists"]])
@@ -66,13 +66,13 @@ func resourceWorkspaceConfRead(d *schema.ResourceData, m interface{}) error {
 	}
 	err = d.Set("enable_ip_access_lists", val)
 	if err != nil {
-		return err
+		return
 	}
 
-	return err
+	return
 }
 
-func resourceWorkspaceConfDelete(d *schema.ResourceData, m interface{}) error {
+func resourceWorkspaceConfDelete(d *schema.ResourceData, m interface{}) (_ error) {
 	client := m.(*service.DBApiClient)
 
 	// For IP Access Lists, you can't set to null or "" once it is set.  Only true/false allowed

@@ -173,8 +173,8 @@ func (c *DatabricksClient) configureHTTPCLient() {
 				Proxy:                 defaultTransport.Proxy,
 				DialContext:           defaultTransport.DialContext,
 				MaxIdleConns:          defaultTransport.MaxIdleConns,
-				IdleConnTimeout:       defaultTransport.IdleConnTimeout,
-				TLSHandshakeTimeout:   defaultTransport.TLSHandshakeTimeout,
+				IdleConnTimeout:       defaultTransport.IdleConnTimeout * 3,
+				TLSHandshakeTimeout:   defaultTransport.TLSHandshakeTimeout * 3,
 				ExpectContinueTimeout: defaultTransport.ExpectContinueTimeout,
 				TLSClientConfig: &tls.Config{
 					InsecureSkipVerify: c.InsecureSkipVerify,

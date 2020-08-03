@@ -47,7 +47,13 @@ fi
 
 
 
-# cd $TARGET
+cd $TARGET
+
+function cleanup()
+{
+    echo "... CLEANUP"
+}
+trap cleanup EXIT
 
 # terraform init
 # terraform apply
@@ -60,4 +66,4 @@ TF_ACC=1 gotestsum \
     --raw-command go test -v \
     -json -coverprofile=coverage.out \
     -test.timeout 35m \
-    -run $2 ...
+    -run $2 ../../...

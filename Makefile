@@ -46,7 +46,12 @@ vendor:
 	@go mod vendor
 
 test-azure:
-	cd scripts/azure-integration && SKIP_CLEANUP=1 /bin/bash run.sh
+	@echo "✓ Running Terraform Acceptance Tests for Azure..."
+	@/bin/bash scripts/run.sh mws '^(TestAcc|TestAzureAcc)'
+
+test-mws:
+	@echo "✓ Running acceptance Tests for Multiple Workspace APIs on AWS..."
+	@/bin/bash scripts/run.sh mws TestAccMWSWorkspaces
 
 # INTEGRATION TESTING WITH AZURE
 terraform-acc-azure: lint

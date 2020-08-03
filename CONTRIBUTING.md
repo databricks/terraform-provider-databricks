@@ -90,6 +90,10 @@ $ docker run -it -v $(pwd):/workpace -w /workpace databricks-terraform apply
 
 ## Testing
 
+* `make test-azure` will test Azure CLI aspects + all provider resources
+* `make test-mws` will test AWS Multiworkspace API and `databricks_mws_*` resources
+* `make test-aws` will test AWS resources
+
 * [ ] Integration tests should be run at a client level against both azure and aws to maintain sdk parity against both apis **(currently only on one cloud)**
 * [x] Terraform acceptance tests should be run against both aws and azure to maintain parity of provider between both cloud services
 * [ ] Consider test functions as scenarios, that you are debugging from IDE when specific issues arise. Test tables are discouraged. Single-use functions in tests are discouraged, unless resource definitions they make are longer than 80 lines.

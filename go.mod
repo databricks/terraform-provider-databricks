@@ -5,7 +5,7 @@ go 1.13
 require (
 	github.com/Azure/go-autorest/autorest v0.11.2
 	github.com/Azure/go-autorest/autorest/adal v0.9.0
-	github.com/aws/aws-sdk-go v1.32.9
+	github.com/aws/aws-sdk-go v1.33.17
 	github.com/fatih/color v1.9.0 // indirect
 	github.com/google/go-querystring v1.0.0
 	github.com/hashicorp/go-retryablehttp v0.6.6

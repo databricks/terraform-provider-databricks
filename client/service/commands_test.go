@@ -52,6 +52,6 @@ func TestAccContext(t *testing.T) {
 	assert.Equal(t, "success", result)
 
 	result, err = c.Execute(clusterID, "python", `dbutils.fs.ls("/mnt/qwertyui")`)
-	assert.True(t, strings.HasSuffix(err.Error(), "/mnt/qwertyui does not exist"), err.Error())
+	assert.True(t, strings.Contains(err.Error(), "/mnt/qwertyui does not exist"), err.Error())
 	assert.Equal(t, "", result)
 }

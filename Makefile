@@ -65,7 +65,11 @@ terraform-acc-mws: lint
 
 # Launch VSCode with Azure integration test ENV variables
 code-azure:
-	export $(terraform output -state=scripts/azure-integration/terraform.tfstate --json | jq -r 'to_entries|map("\(.key|ascii_upcase)=\(.value.value|tostring)")|.[]')
+	export $(scripts/run.sh azure --export)
+	code .
+
+code-aws:
+	export $(scripts/run.sh aws --export)
 	code .
 
 terraform-setup: build

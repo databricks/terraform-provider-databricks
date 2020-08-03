@@ -131,7 +131,7 @@ func TestResourceMWSWorkspacesCreate(t *testing.T) {
 			Method:   "POST",
 			Resource: "/api/2.0/accounts/abc/workspaces",
 			ExpectedRequest: model.MWSWorkspace{
-				IsNoPublicIpEnabled:    true,
+				IsNoPublicIPEnabled:    true,
 				WorkspaceName:          "labdata",
 				DeploymentName:         "900150983cd24fb0",
 				AwsRegion:              "us-east-1",
@@ -226,7 +226,7 @@ func TestResourceMWSWorkspacesRead(t *testing.T) {
 			Resource: "/api/2.0/accounts/abc/workspaces/1234",
 			Response: model.MWSWorkspace{
 				WorkspaceStatus:        model.WorkspaceStatusRunning,
-				IsNoPublicIpEnabled:    true,
+				IsNoPublicIPEnabled:    true,
 				WorkspaceName:          "labdata",
 				DeploymentName:         "900150983cd24fb0",
 				AwsRegion:              "us-east-1",
@@ -295,7 +295,7 @@ func TestResourceMWSWorkspacesUpdate(t *testing.T) {
 				StorageConfigurationID: "ghi",
 				NetworkID:              "fgh",
 				CustomerManagedKeyID:   "def",
-				IsNoPublicIpEnabled:    true,
+				IsNoPublicIPEnabled:    true,
 				AwsRegion:              "us-east-1",
 				CredentialsID:          "bcd",
 			},
@@ -305,7 +305,7 @@ func TestResourceMWSWorkspacesUpdate(t *testing.T) {
 			Resource: "/api/2.0/accounts/abc/workspaces/1234",
 			Response: model.MWSWorkspace{
 				WorkspaceStatus:        model.WorkspaceStatusRunning,
-				IsNoPublicIpEnabled:    true,
+				IsNoPublicIPEnabled:    true,
 				WorkspaceName:          "labdata",
 				DeploymentName:         "900150983cd24fb0",
 				AwsRegion:              "us-east-1",
@@ -321,7 +321,7 @@ func TestResourceMWSWorkspacesUpdate(t *testing.T) {
 			Resource: "/api/2.0/accounts/abc/workspaces/1234",
 			Response: model.MWSWorkspace{
 				WorkspaceStatus:        model.WorkspaceStatusRunning,
-				IsNoPublicIpEnabled:    true,
+				IsNoPublicIPEnabled:    true,
 				WorkspaceName:          "labdata",
 				DeploymentName:         "900150983cd24fb0",
 				AwsRegion:              "us-east-1",
@@ -337,7 +337,7 @@ func TestResourceMWSWorkspacesUpdate(t *testing.T) {
 			Resource: "/api/2.0/accounts/abc/workspaces/1234",
 			Response: model.MWSWorkspace{
 				WorkspaceStatus:        model.WorkspaceStatusRunning,
-				IsNoPublicIpEnabled:    true,
+				IsNoPublicIPEnabled:    true,
 				WorkspaceName:          "labdata",
 				DeploymentName:         "900150983cd24fb0",
 				AwsRegion:              "us-east-1",

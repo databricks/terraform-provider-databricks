@@ -25,7 +25,7 @@ func (a MWSWorkspacesAPI) Create(mwsAcctID, workspaceName, deploymentName, awsRe
 		AwsRegion:              awsRegion,
 		CredentialsID:          credentialsID,
 		StorageConfigurationID: storageConfigurationID,
-		IsNoPublicIpEnabled:    isNoPublicIPEnabled,
+		IsNoPublicIPEnabled:    isNoPublicIPEnabled,
 	}
 	if !reflect.ValueOf(networkID).IsZero() {
 		mwsWorkspacesRequest.NetworkID = networkID
@@ -72,7 +72,7 @@ func (a MWSWorkspacesAPI) Patch(mwsAcctID string, workspaceID int64, awsRegion, 
 		AwsRegion:              awsRegion,
 		CredentialsID:          credentialsID,
 		StorageConfigurationID: storageConfigurationID,
-		IsNoPublicIpEnabled:    isNoPublicIPEnabled,
+		IsNoPublicIPEnabled:    isNoPublicIPEnabled,
 	}
 	if !reflect.ValueOf(networkID).IsZero() {
 		mwsWorkspacesRequest.NetworkID = networkID

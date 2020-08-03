@@ -212,19 +212,14 @@ func legacyReadLibraryListFromData(d *schema.ResourceData) (cll model.ClusterLib
 
 func resourceClusterUpdate(d *schema.ResourceData, m interface{}) error {
 	client := m.(*service.DatabricksClient)
-	clusterID := d.Id()
 	clusters := client.Clusters()
-	libraries := client.Libraries()
-	clusterInfo, err := clusters.Get(clusterID)
+	clusterID := d.Id()
+	cluster := model.Cluster{ClusterID: clusterID}
+	err := util.DataToStructPointer(d, clusterSchema, &cluster)
 	if err != nil {
 		return err
 	}
-	cluster := model.Cluster{ClusterID: d.Id()}
-	err = util.DataToStructPointer(d, clusterSchema, &cluster)
-	if err != nil {
-		return err
-	}
-	clusterInfo, err = clusters.Edit(cluster)
+	clusterInfo, err := clusters.Edit(cluster)
 	if err != nil {
 		return err
 	}
@@ -237,10 +232,12 @@ func resourceClusterUpdate(d *schema.ResourceData, m interface{}) error {
 		// LEGACY support
 		libraryList = legacyReadLibraryListFromData(d)
 	}
+	libraries := client.Libraries()
 	libsClusterStatus, err := libraries.ClusterStatus(clusterID)
 	if err != nil {
 		return err
 	}
+	libraryList.ClusterID = clusterID
 	libsToInstall, libsToUninstall := libraryList.Diff(libsClusterStatus)
 	if err != nil {
 		return err
@@ -273,22 +270,15 @@ func updateLibraries(libraries service.LibrariesAPI, libsToInstall, libsToUninst
 		if err != nil {
 			return err
 		}
-		_, err = waitForLibrariesInstalled(libraries, libsToInstall.ClusterID)
-		if err != nil {
-			return err
-		}
 	}
 	if len(libsToInstall.Libraries) > 0 {
 		err := libraries.Install(libsToInstall)
 		if err != nil {
 			return err
 		}
-		_, err = waitForLibrariesInstalled(libraries, libsToUninstall.ClusterID)
-		if err != nil {
-			return err
-		}
 	}
-	return nil
+	_, err := waitForLibrariesInstalled(libraries, libsToUninstall.ClusterID)
+	return err
 }
 
 func resourceClusterDelete(d *schema.ResourceData, m interface{}) error {

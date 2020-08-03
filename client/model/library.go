@@ -26,8 +26,9 @@ type Cran struct {
 
 // Library is a construct that contains information of the location of the library and how to download it
 type Library struct { // TODO: discuss if we can make a dedicated entity just for terraform...
-	Jar   string `json:"jar,omitempty" tf:"group:lib"`
-	Egg   string `json:"egg,omitempty" tf:"group:lib"`
+	Jar string `json:"jar,omitempty" tf:"group:lib"`
+	Egg string `json:"egg,omitempty" tf:"group:lib"`
+	// TODO: add name validation for wheel libraries.
 	Whl   string `json:"whl,omitempty" tf:"group:lib"`
 	Pypi  *PyPi  `json:"pypi,omitempty" tf:"group:lib"`
 	Maven *Maven `json:"maven,omitempty" tf:"group:lib"`

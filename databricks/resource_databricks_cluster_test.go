@@ -244,6 +244,188 @@ func TestResourceClusterCreate(t *testing.T) {
 	assert.Equal(t, "abc", d.Id())
 }
 
+func TestResourceClusterCreate_WithLibraries(t *testing.T) {
+	d, err := ResourceFixture{
+		Fixtures: []HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/clusters/create",
+				ExpectedRequest: model.Cluster{
+					NumWorkers:             100,
+					SparkVersion:           "7.1-scala12",
+					NodeTypeID:             "i3.xlarge",
+					AutoterminationMinutes: 60,
+				},
+				Response: model.ClusterInfo{
+					ClusterID: "abc",
+					State:     model.ClusterStateRunning,
+				},
+			},
+			{
+				Method:       "GET",
+				ReuseRequest: true,
+				Resource:     "/api/2.0/clusters/get?cluster_id=abc",
+				Response: model.ClusterInfo{
+					ClusterID:              "abc",
+					NumWorkers:             100,
+					ClusterName:            "Shared Autoscaling",
+					SparkVersion:           "7.1-scala12",
+					NodeTypeID:             "i3.xlarge",
+					AutoterminationMinutes: 15,
+					State:                  model.ClusterStateRunning,
+				},
+			},
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/libraries/install",
+				ExpectedRequest: model.ClusterLibraryList{
+					ClusterID: "abc",
+					Libraries: []model.Library{
+						{
+							Pypi: &model.PyPi{
+								Package: "seaborn==1.2.4",
+							},
+						},
+						{
+							Whl: "dbfs://baz.whl",
+						},
+						{
+							Maven: &model.Maven{
+								Coordinates: "foo:bar:baz:0.1.0",
+								Exclusions:  []string{"org.apache:flink:base"},
+								Repo:        "s3://maven-repo-in-s3/release",
+							},
+						},
+						{
+							Egg: "dbfs://bar.egg",
+						},
+						{
+							Jar: "dbfs://foo.jar",
+						},
+						{
+							Cran: &model.Cran{
+								Package: "rkeops",
+								Repo:    "internal",
+							},
+						},
+					},
+				},
+			},
+			{
+				Method: "GET",
+				// 1 of 3 requests
+				Resource: "/api/2.0/libraries/cluster-status?cluster_id=abc",
+				Response: model.ClusterLibraryStatuses{
+					LibraryStatuses: []model.LibraryStatus{
+						{
+							Library: &model.Library{
+								Pypi: &model.PyPi{
+									Package: "seaborn==1.2.4",
+								},
+							},
+							Status: "PENDING",
+						},
+						{
+							Library: &model.Library{
+								Whl: "dbfs://baz.whl",
+							},
+							Status: "INSTALLED",
+						},
+					},
+				},
+			},
+			{
+				Method: "GET",
+				// 2 of 3 requests
+				Resource: "/api/2.0/libraries/cluster-status?cluster_id=abc",
+				Response: model.ClusterLibraryStatuses{
+					LibraryStatuses: []model.LibraryStatus{
+						{
+							Library: &model.Library{
+								Pypi: &model.PyPi{
+									Package: "seaborn==1.2.4",
+								},
+							},
+							Status: "INSTALLED",
+						},
+						{
+							Library: &model.Library{
+								Whl: "dbfs://baz.whl",
+							},
+							Status: "INSTALLED",
+						},
+					},
+				},
+			},
+			{
+				Method: "GET",
+				// 3 of 3 requests
+				Resource: "/api/2.0/libraries/cluster-status?cluster_id=abc",
+				Response: model.ClusterLibraryStatuses{
+					LibraryStatuses: []model.LibraryStatus{
+						{
+							Library: &model.Library{
+								Pypi: &model.PyPi{
+									Package: "seaborn==1.2.4",
+								},
+							},
+							Status: "INSTALLED",
+						},
+						{
+							Library: &model.Library{
+								Whl: "dbfs://baz.whl",
+							},
+							Status: "INSTALLED",
+						},
+					},
+				},
+			},
+		},
+		Create:   true,
+		Resource: resourceCluster(),
+		HCL: `num_workers = 100
+		spark_version = "7.1-scala12"
+		node_type_id = "i3.xlarge"
+
+		libraries {
+			jar = "dbfs://foo.jar"
+		}
+
+		libraries {
+			egg = "dbfs://bar.egg"
+		}
+
+		libraries {
+			whl = "dbfs://baz.whl"
+		}
+
+		libraries {
+			pypi {
+				package = "seaborn==1.2.4"
+			}
+		}
+
+		libraries {
+			maven {
+				coordinates = "foo:bar:baz:0.1.0"
+				repo = "s3://maven-repo-in-s3/release"
+				exclusions = [
+					"org.apache:flink:base"
+				]
+			}
+		}
+
+		libraries {
+			cran {
+				package = "rkeops"
+				repo = "internal"
+			}
+		}`,
+	}.Apply(t)
+	assert.NoError(t, err, err)
+	assert.Equal(t, "abc", d.Id())
+}
+
 func TestResourceClusterCreate_Error(t *testing.T) {
 	d, err := ResourceFixture{
 		Fixtures: []HTTPFixture{
@@ -429,6 +611,153 @@ func TestResourceClusterUpdate(t *testing.T) {
 			"node_type_id":            "i3.xlarge",
 			"num_workers":             100,
 		},
+	}.Apply(t)
+	assert.NoError(t, err, err)
+	assert.Equal(t, "abc", d.Id(), "Id should be the same as in reading")
+}
+
+func TestResourceClusterUpdate_LibrariesChangeOnTerminatedCluster(t *testing.T) {
+	terminated := HTTPFixture{
+		Method:   "GET",
+		Resource: "/api/2.0/clusters/get?cluster_id=abc",
+		Response: model.ClusterInfo{
+			ClusterID:    "abc",
+			NumWorkers:   100,
+			SparkVersion: "7.1-scala12",
+			NodeTypeID:   "i3.xlarge",
+			State:        model.ClusterStateTerminated,
+			StateMessage: "Terminated for test reasons",
+		},
+	}
+	newLibs := HTTPFixture{
+		Method:   "GET",
+		Resource: "/api/2.0/libraries/cluster-status?cluster_id=abc",
+		Response: model.ClusterLibraryStatuses{
+			ClusterID: "abc",
+			LibraryStatuses: []model.LibraryStatus{
+				{
+					Library: &model.Library{
+						Jar: "dbfs://foo.jar",
+					},
+					Status: "INSTALLED",
+				},
+				{
+					Library: &model.Library{
+						Egg: "dbfs://bar.egg",
+					},
+					Status: "INSTALLED",
+				},
+			},
+		},
+	}
+	d, err := ResourceFixture{
+		Fixtures: []HTTPFixture{
+			terminated, // 1 of ...
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/clusters/edit",
+				ExpectedRequest: model.Cluster{
+					AutoterminationMinutes: 60,
+					ClusterID:              "abc",
+					NumWorkers:             100,
+					SparkVersion:           "7.1-scala12",
+					NodeTypeID:             "i3.xlarge",
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/libraries/cluster-status?cluster_id=abc",
+				Response: model.ClusterLibraryStatuses{
+					ClusterID: "abc",
+					LibraryStatuses: []model.LibraryStatus{
+						{
+							Library: &model.Library{
+								Egg: "dbfs://bar.egg",
+							},
+							Status: "INSTALLED",
+						},
+						{
+							Library: &model.Library{
+								Pypi: &model.PyPi{
+									Package: "requests",
+								},
+							},
+							Status: "INSTALLED",
+						},
+					},
+				},
+			},
+			{ // start cluster before libs install
+				Method:   "POST",
+				Resource: "/api/2.0/clusters/start",
+				ExpectedRequest: model.ClusterID{
+					ClusterID: "abc",
+				},
+			},
+			{ // 2 of ...
+				Method:   "GET",
+				Resource: "/api/2.0/clusters/get?cluster_id=abc",
+				Response: model.ClusterInfo{
+					ClusterID:    "abc",
+					NumWorkers:   100,
+					SparkVersion: "7.1-scala12",
+					NodeTypeID:   "i3.xlarge",
+					State:        model.ClusterStateRunning,
+				},
+			},
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/libraries/uninstall",
+				ExpectedRequest: model.ClusterLibraryList{
+					ClusterID: "abc",
+					Libraries: []model.Library{
+						{
+							Pypi: &model.PyPi{
+								Package: "requests",
+							},
+						},
+					},
+				},
+			},
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/libraries/install",
+				ExpectedRequest: model.ClusterLibraryList{
+					ClusterID: "abc",
+					Libraries: []model.Library{
+						{
+							Jar: "dbfs://foo.jar",
+						},
+					},
+				},
+			},
+			newLibs,
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/clusters/delete",
+				ExpectedRequest: model.ClusterID{
+					ClusterID: "abc",
+				},
+			},
+			terminated, // 3 of 4
+			// read
+			terminated, // 4 of 4
+			newLibs,
+		},
+		ID:       "abc",
+		Update:   true,
+		Resource: resourceCluster(),
+		HCL: `num_workers = 100
+		spark_version = "7.1-scala12"
+		node_type_id = "i3.xlarge"
+
+		libraries {
+			jar = "dbfs://foo.jar"
+		}
+
+		libraries {
+			egg = "dbfs://bar.egg"
+		}`,
 	}.Apply(t)
 	assert.NoError(t, err, err)
 	assert.Equal(t, "abc", d.Id(), "Id should be the same as in reading")

@@ -37,17 +37,18 @@ func (a ClustersAPI) Edit(cluster model.Cluster) (info model.ClusterInfo, err er
 		return info, err
 	}
 	switch info.State {
-	case model.ClusterStateRunning:
-		// it's already running
+	case model.ClusterStateRunning, model.ClusterStateTerminated:
+		// it's already running or terminated, so we're safe to edit
 		break
 	case model.ClusterStatePending, model.ClusterStateResizing, model.ClusterStateRestarting:
-		// let's wait tiny bit
+		// let's wait tiny bit, so we return RUNNING cluster info
 		info, err = a.waitForClusterStatus(info.ClusterID, model.ClusterStateRunning)
 		if err != nil {
 			return info, err
 		}
-	case model.ClusterStateTerminating, model.ClusterStateTerminated:
-		// let it finish terminating, so that we can start it
+	case model.ClusterStateTerminating:
+		// let it finish terminating, so it's safe to edit.
+		// TERMINATED cluster info will be returned this way
 		info, err = a.waitForClusterStatus(info.ClusterID, model.ClusterStateTerminated)
 		if err != nil {
 			return info, err
@@ -67,7 +68,7 @@ func (a ClustersAPI) Edit(cluster model.Cluster) (info model.ClusterInfo, err er
 			return info, err
 		}
 	}
-	// in case of running cluster, it would have State: RUNNING, other is outdated
+	// only State / ClusterID properties will be valid in this return
 	return info, err
 }
 

@@ -87,7 +87,9 @@ func resourceClusterPolicy() *schema.Resource {
 		Read:   resourceClusterPolicyRead,
 		Update: resourceClusterPolicyUpdate,
 		Delete: resourceClusterPolicyDelete,
-
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 		Schema: map[string]*schema.Schema{
 			"policy_id": {
 				Type:     schema.TypeString,

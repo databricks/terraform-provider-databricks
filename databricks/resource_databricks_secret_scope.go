@@ -12,7 +12,9 @@ func resourceSecretScope() *schema.Resource {
 		Create: resourceSecretScopeCreate,
 		Read:   resourceSecretScopeRead,
 		Delete: resourceSecretScopeDelete,
-
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 		Schema: map[string]*schema.Schema{
 			"name": {
 				Type:     schema.TypeString,

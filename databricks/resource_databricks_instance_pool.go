@@ -16,11 +16,9 @@ func resourceInstancePool() *schema.Resource {
 		Read:   resourceInstancePoolRead,
 		Update: resourceInstancePoolUpdate,
 		Delete: resourceInstancePoolDelete,
-
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
-
 		Schema: map[string]*schema.Schema{
 			"instance_pool_name": {
 				Type:     schema.TypeString,
@@ -143,7 +141,7 @@ func resourceInstancePool() *schema.Resource {
 			},
 		},
 		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(1 * time.Minute),
+			Create: schema.DefaultTimeout(30 * time.Minute),
 		},
 	}
 }

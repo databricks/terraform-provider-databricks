@@ -12,7 +12,9 @@ func resourceInstanceProfile() *schema.Resource {
 		Create: resourceInstanceProfileCreate,
 		Read:   resourceInstanceProfileRead,
 		Delete: resourceInstanceProfileDelete,
-
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 		Schema: map[string]*schema.Schema{
 			"instance_profile_arn": {
 				Type:     schema.TypeString,
@@ -24,9 +26,6 @@ func resourceInstanceProfile() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-		},
-		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
 		},
 	}
 }

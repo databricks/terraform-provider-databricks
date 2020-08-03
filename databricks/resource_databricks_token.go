@@ -13,7 +13,9 @@ func resourceToken() *schema.Resource {
 		Create: resourceTokenCreate,
 		Read:   resourceTokenRead,
 		Delete: resourceTokenDelete,
-
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 		Schema: map[string]*schema.Schema{
 			"lifetime_seconds": {
 				Type:     schema.TypeInt,

@@ -43,7 +43,7 @@ func resourceMWSStorageConfigurations() *schema.Resource {
 }
 
 func resourceMWSStorageConfigurationsCreate(d *schema.ResourceData, m interface{}) error {
-	client := m.(*service.DBApiClient)
+	client := m.(*service.DatabricksClient)
 	storageConfigurationName := d.Get("storage_configuration_name").(string)
 	bucketName := d.Get("bucket_name").(string)
 	mwsAcctID := d.Get("account_id").(string)
@@ -61,7 +61,7 @@ func resourceMWSStorageConfigurationsCreate(d *schema.ResourceData, m interface{
 
 func resourceMWSStorageConfigurationsRead(d *schema.ResourceData, m interface{}) error {
 	id := d.Id()
-	client := m.(*service.DBApiClient)
+	client := m.(*service.DatabricksClient)
 	packagedMwsID, err := unpackMWSAccountID(id)
 	if err != nil {
 		return err
@@ -101,7 +101,7 @@ func resourceMWSStorageConfigurationsRead(d *schema.ResourceData, m interface{})
 
 func resourceMWSStorageConfigurationsDelete(d *schema.ResourceData, m interface{}) error {
 	id := d.Id()
-	client := m.(*service.DBApiClient)
+	client := m.(*service.DatabricksClient)
 	packagedMwsID, err := unpackMWSAccountID(id)
 	if err != nil {
 		return err

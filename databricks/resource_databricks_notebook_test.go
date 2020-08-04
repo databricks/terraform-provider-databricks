@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"os"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
@@ -46,7 +47,7 @@ func TestValidateNotebookPath(t *testing.T) {
 	}
 }
 
-func TestNotebooksCreate_DirDoesNotExists(t *testing.T) {
+func TestResourceNotebookCreate_DirDoesNotExists(t *testing.T) {
 	pythonNotebookDataB64, err := notebookToB64("testdata/tf-test-python.py")
 	assert.NoError(t, err, err)
 	checkSum, err := convertBase64ToCheckSum(pythonNotebookDataB64)
@@ -120,7 +121,7 @@ func TestNotebooksCreate_DirDoesNotExists(t *testing.T) {
 	assert.Equal(t, objectId, d.Get("object_id"))
 }
 
-func TestNotebooksCreate_NoMkdirs(t *testing.T) {
+func TestResourceNotebookCreate_NoMkdirs(t *testing.T) {
 	pythonNotebookDataB64, err := notebookToB64("testdata/tf-test-python.py")
 	assert.NoError(t, err, err)
 	checkSum, err := convertBase64ToCheckSum(pythonNotebookDataB64)
@@ -174,7 +175,7 @@ func TestNotebooksCreate_NoMkdirs(t *testing.T) {
 	assert.Equal(t, objectId, d.Get("object_id"))
 }
 
-func TestNotebooksRead(t *testing.T) {
+func TestResourceNotebookRead(t *testing.T) {
 	pythonNotebookDataB64, err := notebookToB64("testdata/tf-test-python.py")
 	assert.NoError(t, err, err)
 	checkSum, err := convertBase64ToCheckSum(pythonNotebookDataB64)
@@ -215,7 +216,7 @@ func TestNotebooksRead(t *testing.T) {
 	assert.Equal(t, objectId, d.Get("object_id"))
 }
 
-func TestNotebooksDelete(t *testing.T) {
+func TestResourceNotebookDelete(t *testing.T) {
 	testId := "/test/path.py"
 	d, err := ResourceTester(t, []HTTPFixture{
 		{
@@ -232,7 +233,7 @@ func TestNotebooksDelete(t *testing.T) {
 	assert.Equal(t, testId, d.Id())
 }
 
-func TestNotebooksDelete_TooManyRequests(t *testing.T) {
+func TestResourceNotebookDelete_TooManyRequests(t *testing.T) {
 	testId := "/test/path.py"
 	d, err := ResourceTester(t, []HTTPFixture{
 		{
@@ -254,23 +255,122 @@ func TestNotebooksDelete_TooManyRequests(t *testing.T) {
 	assert.Equal(t, testId, d.Id())
 }
 
-func TestAccAwsNotebookResource_multiple_formats(t *testing.T) {
-	testAccNotebookResourceMultipleFormats(t)
+func TestResourceNotebookRead_NotFound(t *testing.T) {
+	d, err := ResourceTester(t, []HTTPFixture{
+		{ // read log output for correct url...
+			Method:   "GET",
+			Resource: "/api/2.0/workspace/export?format=SOURCE&path=%2Ftest%2Fpath.py",
+			Response: service.APIErrorBody{
+				ErrorCode: "NOT_FOUND",
+				Message:   "Item not found",
+			},
+			Status: 404,
+		},
+	}, resourceNotebook, nil, actionWithID("/test/path.py", resourceNotebookRead))
+	assert.NoError(t, err, err)
+	assert.Equal(t, "", d.Id(), "Id should be empty for missing resources")
 }
 
-func TestAccAwsNotebookResource_scalability(t *testing.T) {
-	testAccNotebookResourceMultipleFormats(t)
+func TestResourceNotebookRead_Error(t *testing.T) {
+	d, err := ResourceTester(t, []HTTPFixture{
+		{ // read log output for correct url...
+			Method:   "GET",
+			Resource: "/api/2.0/workspace/export?format=SOURCE&path=%2Ftest%2Fpath.py",
+			Response: service.APIErrorBody{
+				ErrorCode: "INVALID_REQUEST",
+				Message:   "Internal error happened",
+			},
+			Status: 400,
+		},
+	}, resourceNotebook, nil, actionWithID("/test/path.py", resourceNotebookRead))
+	assertErrorStartsWith(t, err, "Internal error happened")
+	assert.Equal(t, "/test/path.py", d.Id(), "Id should not be empty for error reads")
 }
 
-func TestAccAzureNotebookResource_multiple_formats(t *testing.T) {
-	testAccNotebookResourceMultipleFormats(t)
+func TestResourceNotebookCreate(t *testing.T) {
+	d, err := ResourceTester(t, []HTTPFixture{
+		{
+			Method:   http.MethodPost,
+			Resource: "/api/2.0/workspace/import",
+			Response: model.NotebookImportRequest{
+				Content:   "YWJjCg==",
+				Path:      "/path.py",
+				Language:  model.Python,
+				Overwrite: true,
+				Format:    model.Source,
+			},
+		},
+		{
+			Method:   http.MethodGet,
+			Resource: "/api/2.0/workspace/export?format=SOURCE&path=%2Fpath.py",
+			Response: model.NotebookContent{
+				Content: "YWJjCg==",
+			},
+		},
+		{
+			Method:   http.MethodGet,
+			Resource: "/api/2.0/workspace/get-status?path=%2Fpath.py",
+			Response: model.WorkspaceObjectStatus{
+				ObjectID:   4567,
+				ObjectType: "NOTEBOOK",
+				Path:       "/path.py",
+				Language:   model.Python,
+			},
+		},
+	}, resourceNotebook, map[string]interface{}{
+		"content":   "YWJjCg==",
+		"format":    "SOURCE",
+		"language":  "PYTHON",
+		"overwrite": true,
+		"path":      "/path.py",
+	}, resourceNotebookCreate)
+	assert.NoError(t, err, err)
+	assert.Equal(t, "/path.py", d.Id())
 }
 
-func TestAccAzureNotebookResource_scalability(t *testing.T) {
-	testAccNotebookResourceScalability(t)
+func TestResourceNotebookCreate_Error(t *testing.T) {
+	d, err := ResourceTester(t, []HTTPFixture{
+		{
+			Method:   http.MethodPost,
+			Resource: "/api/2.0/workspace/import",
+			Response: service.APIErrorBody{
+				ErrorCode: "INVALID_REQUEST",
+				Message:   "Internal error happened",
+			},
+			Status: 400,
+		},
+	}, resourceNotebook, map[string]interface{}{
+		"content":   "YWJjCg==",
+		"format":    "SOURCE",
+		"language":  "PYTHON",
+		"overwrite": true,
+		"path":      "/path.py",
+	}, resourceNotebookCreate)
+	assertErrorStartsWith(t, err, "Internal error happened")
+	assert.Equal(t, "", d.Id(), "Id should be empty for error creates")
 }
 
-func testAccNotebookResourceScalability(t *testing.T) {
+func TestResourceNotebookDelete_Error(t *testing.T) {
+	d, err := ResourceTester(t, []HTTPFixture{
+		{
+			Method:   "POST",
+			Resource: "/api/2.0/workspace/delete",
+			Response: service.APIErrorBody{
+				ErrorCode: "INVALID_REQUEST",
+				Message:   "Internal error happened",
+			},
+			Status: 400,
+		},
+	}, resourceNotebook, nil, actionWithID("abc", resourceNotebookDelete))
+	assertErrorStartsWith(t, err, "Internal error happened")
+	assert.Equal(t, "abc", d.Id())
+}
+
+func TestAccNotebookResourceScalability(t *testing.T) {
+	// TODO: refactor for common instance pool & AZ CLI
+	if _, ok := os.LookupEnv("CLOUD_ENV"); !ok {
+		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
+	}
 	pythonNotebookDataB64, err := notebookToB64("testdata/tf-test-python.py")
 	assert.NoError(t, err, err)
 
@@ -280,14 +380,17 @@ func testAccNotebookResourceScalability(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				// use a dynamic configuration with the random name from above
-				Config:  testAzureNotebookResourceMultipleNotebooks(pythonNotebookDataB64),
+				Config:  testNotebookResourceMultipleNotebooks(pythonNotebookDataB64),
 				Destroy: false,
 			},
 		},
 	})
 }
 
-func testAccNotebookResourceMultipleFormats(t *testing.T) {
+func TestAccNotebookResourceMultipleFormats(t *testing.T) {
+	if _, ok := os.LookupEnv("CLOUD_ENV"); !ok {
+		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
+	}
 	folderPrefix := acctest.RandString(10)
 	rNotebookDataB64, err := notebookToB64("testdata/tf-test-r.r")
 	assert.NoError(t, err, err)
@@ -384,7 +487,7 @@ func testAccNotebookResourceMultipleFormats(t *testing.T) {
 }
 
 func testNotebookResourceDestroy(s *terraform.State) error {
-	client := testAccProvider.Meta().(*service.DBApiClient)
+	client := testAccProvider.Meta().(*service.DatabricksClient)
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "databricks_notebook" {
 			continue
@@ -401,54 +504,53 @@ func testNotebookResourceDestroy(s *terraform.State) error {
 // Only will test source format based content
 func testNotebookResourceAllNotebookTypes(pythonContent, sqlContent, scalaContent, rContent, dbcContent, jupyterContent, htmlContent, folderPrefix string) string {
 	return fmt.Sprintf(`
-								resource "databricks_notebook" "notebook_python" {
-								 content = "%[1]s"
-								 path = "/Shared/tf-test-notebooks/%[8]s/python"
-								 overwrite = "false"
-								 mkdirs = "true"
-								 format = "SOURCE"
-								 language = "PYTHON"
-								}
-								resource "databricks_notebook" "notebook_sql" {
-								 content = "%[2]s"
-								 path = "/Shared/tf-test-notebooks/%[8]s/sql"
-								 overwrite = "false"
-								 mkdirs = "true"
-								 format = "SOURCE"
-								 language = "SQL"
-								}
-								resource "databricks_notebook" "notebook_scala" {
-								 content = "%[3]s"
-								 path = "/Shared/tf-test-notebooks/%[8]s/scala"
-								 overwrite = "false"
-								 mkdirs = "true"
-								 format = "SOURCE"
-								 language = "SCALA"
-								}
-								resource "databricks_notebook" "notebook_r" {
-								 content = "%[4]s"
-								 path = "/Shared/tf-test-notebooks/%[8]s/r"
-								 overwrite = "false"
-								 mkdirs = "true"
-								 format = "SOURCE"
-								 language = "R"
-								}
+		resource "databricks_notebook" "notebook_python" {
+			content = "%[1]s"
+			path = "/Shared/tf-test-notebooks/%[8]s/python"
+			overwrite = "false"
+			mkdirs = "true"
+			format = "SOURCE"
+			language = "PYTHON"
+		}
+		resource "databricks_notebook" "notebook_sql" {
+			content = "%[2]s"
+			path = "/Shared/tf-test-notebooks/%[8]s/sql"
+			overwrite = "false"
+			mkdirs = "true"
+			format = "SOURCE"
+			language = "SQL"
+		}
+		resource "databricks_notebook" "notebook_scala" {
+			content = "%[3]s"
+			path = "/Shared/tf-test-notebooks/%[8]s/scala"
+			overwrite = "false"
+			mkdirs = "true"
+			format = "SOURCE"
+			language = "SCALA"
+		}
+		resource "databricks_notebook" "notebook_r" {
+			content = "%[4]s"
+			path = "/Shared/tf-test-notebooks/%[8]s/r"
+			overwrite = "false"
+			mkdirs = "true"
+			format = "SOURCE"
+			language = "R"
+		}
 		`, pythonContent, sqlContent, scalaContent, rContent, dbcContent, jupyterContent, htmlContent, folderPrefix)
 }
 
-func testAzureNotebookResourceMultipleNotebooks(content string) string {
+func testNotebookResourceMultipleNotebooks(content string) string {
 	var strBuffer bytes.Buffer
 	for i := 1; i <= 10; i++ {
 		strBuffer.WriteString(fmt.Sprintf(`
-								resource "databricks_notebook" "notebook_%[2]v" {
-								  content = "%[1]s"
-								  path = "/Shared/tf-test/book%[2]v"
-								  overwrite = "false"
-								  mkdirs = "true"
-								  format = "SOURCE"
-								  language = "PYTHON"
-								}
-		`, content, i))
+			resource "databricks_notebook" "notebook_%[2]v" {
+				content = "%[1]s"
+				path = "/Shared/tf-test/book%[2]v"
+				overwrite = "false"
+				mkdirs = "true"
+				format = "SOURCE"
+				language = "PYTHON"
+			}`, content, i))
 	}
 	return strBuffer.String()
 }

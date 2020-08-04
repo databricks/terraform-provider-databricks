@@ -8,7 +8,7 @@ import (
 func dataSourceClusterZones() *schema.Resource {
 	return &schema.Resource{
 		Read: func(d *schema.ResourceData, m interface{}) error {
-			client := m.(*service.DBApiClient)
+			client := m.(*service.DatabricksClient)
 
 			zonesInfo, err := client.Clusters().ListZones()
 			if err != nil {

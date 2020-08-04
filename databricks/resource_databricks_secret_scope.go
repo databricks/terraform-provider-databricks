@@ -12,7 +12,9 @@ func resourceSecretScope() *schema.Resource {
 		Create: resourceSecretScopeCreate,
 		Read:   resourceSecretScopeRead,
 		Delete: resourceSecretScopeDelete,
-
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 		Schema: map[string]*schema.Schema{
 			"name": {
 				Type:     schema.TypeString,
@@ -23,7 +25,8 @@ func resourceSecretScope() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
-				Default:  "users",
+				// or creator...
+				Default: "users",
 			},
 			"backend_type": {
 				Type:     schema.TypeString,
@@ -34,7 +37,7 @@ func resourceSecretScope() *schema.Resource {
 }
 
 func resourceSecretScopeCreate(d *schema.ResourceData, m interface{}) error {
-	client := m.(*service.DBApiClient)
+	client := m.(*service.DatabricksClient)
 	scopeName := d.Get("name").(string)
 	initialManagePrincipal := d.Get("initial_manage_principal").(string)
 	err := client.SecretScopes().Create(scopeName, initialManagePrincipal)
@@ -46,12 +49,12 @@ func resourceSecretScopeCreate(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceSecretScopeRead(d *schema.ResourceData, m interface{}) error {
-	client := m.(*service.DBApiClient)
+	client := m.(*service.DatabricksClient)
 	id := d.Id()
 	scope, err := client.SecretScopes().Read(id)
 	if err != nil {
 		if e, ok := err.(service.APIError); ok && e.IsMissing() {
-			log.Printf("missing resource due to error: %v\n", e)
+			log.Printf("[INFO] missing resource due to error: %v\n", e)
 			d.SetId("")
 			return nil
 		}
@@ -67,7 +70,7 @@ func resourceSecretScopeRead(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceSecretScopeDelete(d *schema.ResourceData, m interface{}) error {
-	client := m.(*service.DBApiClient)
+	client := m.(*service.DatabricksClient)
 	id := d.Id()
 	err := client.SecretScopes().Delete(id)
 	return err

@@ -23,17 +23,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func GetIntegrationDBAPIClient() *service.DBApiClient {
-	var config service.DBApiClientConfig
-	config.Token = os.Getenv("DATABRICKS_TOKEN")
-	config.Host = os.Getenv("DATABRICKS_HOST")
-	config.Setup()
-
-	var c service.DBApiClient
-	c.SetConfig(&config)
-	return &c
-}
-
 func getTestDBFSFileData() (string, error) {
 	return notebookToB64("testdata/tf-test-python.py")
 }
@@ -403,6 +392,7 @@ func TestAccDatabricksDBFSFile_CreateViaContent(t *testing.T) {
 	content := acctest.RandString(10000)
 	base64Str := base64.StdEncoding.EncodeToString([]byte(content))
 	path := "/tmp/tf-test/file-content1"
+	// TODO: add random names
 
 	resource.Test(t, resource.TestCase{
 		Providers:    testAccProviders,
@@ -415,7 +405,7 @@ func TestAccDatabricksDBFSFile_CreateViaContent(t *testing.T) {
 			{
 				//Deleting and recreating the token
 				PreConfig: func() {
-					client := testAccProvider.Meta().(*service.DBApiClient)
+					client := testAccProvider.Meta().(*service.DatabricksClient)
 					err := client.DBFS().Delete(path, false)
 					assert.NoError(t, err, err)
 				},
@@ -508,7 +498,7 @@ func testCheckDBFSFileResourceExists(n string, b64 string, t *testing.T) resourc
 		}
 
 		// retrieve the configured client from the test setup
-		conn := testAccProvider.Meta().(*service.DBApiClient)
+		conn := testAccProvider.Meta().(*service.DatabricksClient)
 		resp, err := conn.DBFS().Read(rs.Primary.ID)
 		if err != nil {
 			return err
@@ -527,7 +517,7 @@ func testCheckDBFSFileResourceExists(n string, b64 string, t *testing.T) resourc
 }
 
 func testDBFSFileResourceDestroy(s *terraform.State) error {
-	client := testAccProvider.Meta().(*service.DBApiClient)
+	client := testAccProvider.Meta().(*service.DatabricksClient)
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "databricks_dbfs_file" {
 			continue
@@ -596,7 +586,7 @@ func TestDatabricksFile_Base64(t *testing.T) {
 		t.Skip("skipping integration test in short mode.")
 	}
 
-	client := GetIntegrationDBAPIClient()
+	client := service.NewClientFromEnvironment()
 	pythonNotebookDataB64, err := getLocalFileB64("testdata/tf-test-python.py")
 	assert.NoError(t, err, err)
 	expected, err := getMD5(pythonNotebookDataB64)

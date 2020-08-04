@@ -68,7 +68,7 @@ func resourceDBFSFile() *schema.Resource {
 }
 
 func resourceDBFSFileCreate(d *schema.ResourceData, m interface{}) error {
-	client := m.(*service.DBApiClient)
+	client := m.(*service.DatabricksClient)
 	path := d.Get("path").(string)
 	overwrite := d.Get("overwrite").(bool)
 	//checksum := d.Get("content_b64_md5").(string)
@@ -107,7 +107,7 @@ func resourceDBFSFileCreate(d *schema.ResourceData, m interface{}) error {
 
 func resourceDBFSFileRead(d *schema.ResourceData, m interface{}) error {
 	id := d.Id()
-	client := m.(*service.DBApiClient)
+	client := m.(*service.DatabricksClient)
 
 	fileInfo, err := client.DBFS().Status(id)
 	if err != nil {
@@ -195,13 +195,12 @@ func getMD5(text string) (string, error) {
 
 func resourceDBFSFileDelete(d *schema.ResourceData, m interface{}) error {
 	id := d.Id()
-	client := m.(*service.DBApiClient)
-	err := client.DBFS().Delete(id, false)
-	return err
+	client := m.(*service.DatabricksClient)
+	return client.DBFS().Delete(id, false)
 }
 
 // handleDBFSParentDirs handles the different branch paths to create dbfs parent directories
-func handleDBFSParentDirs(client *service.DBApiClient, path string) error {
+func handleDBFSParentDirs(client *service.DatabricksClient, path string) error {
 	parentDir, err := GetParentDirPath(path)
 	switch err {
 	// Notebook path is root directory so no need to make directory and there is no parent

@@ -102,7 +102,7 @@ type MWSWorkspace struct {
 	StorageConfigurationID string `json:"storage_configuration_id,omitempty"`
 	NetworkID              string `json:"network_id,omitempty"`
 	CustomerManagedKeyID   string `json:"customer_managed_key_id,omitempty"`
-	IsNoPublicIpEnabled    bool   `json:"is_no_public_ip_enabled,omitempty"`
+	IsNoPublicIPEnabled    bool   `json:"is_no_public_ip_enabled,omitempty"`
 	AccountID              string `json:"account_id,omitempty"`
 	WorkspaceStatus        string `json:"workspace_status,omitempty"`
 	WorkspaceStatusMessage string `json:"workspace_status_message,omitempty"`

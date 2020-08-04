@@ -1,6 +1,7 @@
 package databricks
 
 import (
+	"fmt"
 	"log"
 	"strings"
 
@@ -44,11 +45,15 @@ func getSecretID(scope string, key string) (string, error) {
 }
 
 func getScopeAndKeyFromSecretID(secretIDString string) (string, string, error) {
+	split := strings.Split(secretIDString, "|||")
+	if len(split) != 2 {
+		return "", "", fmt.Errorf("Malformed secret id: %s", secretIDString)
+	}
 	return strings.Split(secretIDString, "|||")[0], strings.Split(secretIDString, "|||")[1], nil
 }
 
 func resourceSecretCreate(d *schema.ResourceData, m interface{}) error {
-	client := m.(*service.DBApiClient)
+	client := m.(*service.DatabricksClient)
 	scopeName := d.Get("scope").(string)
 	key := d.Get("key").(string)
 	secretValue := d.Get("string_value").(string)
@@ -66,7 +71,7 @@ func resourceSecretCreate(d *schema.ResourceData, m interface{}) error {
 
 func resourceSecretRead(d *schema.ResourceData, m interface{}) error {
 	id := d.Id()
-	client := m.(*service.DBApiClient)
+	client := m.(*service.DatabricksClient)
 	scope, key, err := getScopeAndKeyFromSecretID(id)
 	if err != nil {
 		return err
@@ -99,7 +104,7 @@ func resourceSecretRead(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceSecretDelete(d *schema.ResourceData, m interface{}) error {
-	client := m.(*service.DBApiClient)
+	client := m.(*service.DatabricksClient)
 	id := d.Id()
 	scope, key, err := getScopeAndKeyFromSecretID(id)
 	if err != nil {

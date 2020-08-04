@@ -47,7 +47,7 @@ func resourceMWSCredentials() *schema.Resource {
 }
 
 func resourceMWSCredentialsCreate(d *schema.ResourceData, m interface{}) error {
-	client := m.(*service.DBApiClient)
+	client := m.(*service.DatabricksClient)
 	credentialsName := d.Get("credentials_name").(string)
 	roleArn := d.Get("role_arn").(string)
 	mwsAcctID := d.Get("account_id").(string)
@@ -65,7 +65,7 @@ func resourceMWSCredentialsCreate(d *schema.ResourceData, m interface{}) error {
 
 func resourceMWSCredentialsRead(d *schema.ResourceData, m interface{}) error {
 	id := d.Id()
-	client := m.(*service.DBApiClient)
+	client := m.(*service.DatabricksClient)
 	packagedMwsID, err := unpackMWSAccountID(id)
 	if err != nil {
 		return err
@@ -104,7 +104,7 @@ func resourceMWSCredentialsRead(d *schema.ResourceData, m interface{}) error {
 
 func resourceMWSCredentialsDelete(d *schema.ResourceData, m interface{}) error {
 	id := d.Id()
-	client := m.(*service.DBApiClient)
+	client := m.(*service.DatabricksClient)
 	packagedMwsID, err := unpackMWSAccountID(id)
 	if err != nil {
 		return err

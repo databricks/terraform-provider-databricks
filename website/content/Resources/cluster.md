@@ -327,6 +327,9 @@ feature requires specific AWS permissions to function correctly - refer to Autos
 > **(Optional - required if node_type_id is not given)** The optional ID of the instance pool to which the 
 cluster belongs. Refer to Instance Pools API for details.
 
+#### - `policy_id`:
+> **(Optional)** Idendifier of Custer Policy to validate cluster and preset certail defaults. Cluster policy has bigger use when allowing users to create clusters, rather than automatically created one. Essentially, you can put all cluster configuration options into it.
+
 #### - `single_user_name`:
 > **(Optional)** The optional user name of the user to assign to an interactive cluster. This is required when using standard AAD Passthrough for Azure Datalake Storage (ADLS) with a single-user cluster (i.e. not high-concurrency clusters).
 

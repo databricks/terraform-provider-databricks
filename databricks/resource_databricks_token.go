@@ -13,7 +13,9 @@ func resourceToken() *schema.Resource {
 		Create: resourceTokenCreate,
 		Read:   resourceTokenRead,
 		Delete: resourceTokenDelete,
-
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 		Schema: map[string]*schema.Schema{
 			"lifetime_seconds": {
 				Type:     schema.TypeInt,
@@ -47,7 +49,7 @@ func resourceToken() *schema.Resource {
 }
 
 func resourceTokenCreate(d *schema.ResourceData, m interface{}) error {
-	client := m.(*service.DBApiClient)
+	client := m.(*service.DatabricksClient)
 	lifeTimeSeconds := d.Get("lifetime_seconds").(int)
 	comment := d.Get("comment").(string)
 	tokenDuration := time.Duration(lifeTimeSeconds) * time.Second
@@ -60,12 +62,13 @@ func resourceTokenCreate(d *schema.ResourceData, m interface{}) error {
 	if err != nil {
 		return err
 	}
+	// TODO: (loprio) check if we can omit read
 	return resourceTokenRead(d, m)
 }
 
 func resourceTokenRead(d *schema.ResourceData, m interface{}) error {
 	id := d.Id()
-	client := m.(*service.DBApiClient)
+	client := m.(*service.DatabricksClient)
 	token, err := client.Tokens().Read(id)
 	if err != nil {
 		if e, ok := err.(service.APIError); ok && e.IsMissing() {
@@ -79,13 +82,17 @@ func resourceTokenRead(d *schema.ResourceData, m interface{}) error {
 	if err != nil {
 		return err
 	}
+	err = d.Set("comment", token.Comment)
+	if err != nil {
+		return err
+	}
 	err = d.Set("expiry_time", token.ExpiryTime)
 	return err
 }
 
 func resourceTokenDelete(d *schema.ResourceData, m interface{}) error {
 	tokenID := d.Id()
-	client := m.(*service.DBApiClient)
+	client := m.(*service.DatabricksClient)
 	err := client.Tokens().Delete(tokenID)
 	return err
 }

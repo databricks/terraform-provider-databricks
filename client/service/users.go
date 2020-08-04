@@ -1,7 +1,6 @@
 package service
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 	"log"
@@ -15,7 +14,7 @@ import (
 
 // UsersAPI exposes the scim user API
 type UsersAPI struct {
-	Client *DBApiClient
+	client *DatabricksClient
 }
 
 // Create given a username, displayname, entitlements, and roles will create a scim user via SCIM api
@@ -39,13 +38,7 @@ func (a UsersAPI) Create(userName string, displayName string, entitlements []str
 	for _, role := range roles {
 		scimUserRequest.Roles = append(scimUserRequest.Roles, model.RoleListItem{Value: role})
 	}
-
-	resp, err := a.Client.performQuery(http.MethodPost, "/preview/scim/v2/Users", "2.0", scimHeaders, scimUserRequest, nil)
-	if err != nil {
-		return user, err
-	}
-
-	err = json.Unmarshal(resp, &user)
+	err := a.client.performScim(http.MethodPost, "/preview/scim/v2/Users", scimUserRequest, &user)
 	return user, err
 }
 
@@ -59,7 +52,7 @@ func (a UsersAPI) Read(userID string) (model.User, error) {
 	//get groups
 	var groups []model.Group
 	for _, group := range user.Groups {
-		group, err := a.Client.Groups().Read(group.Value)
+		group, err := a.client.Groups().Read(group.Value)
 		if err != nil {
 			return user, err
 		}
@@ -83,11 +76,7 @@ func (a UsersAPI) Me() (model.User, error) {
 
 func (a UsersAPI) readByPath(userPath string) (model.User, error) {
 	var user model.User
-	resp, err := a.Client.performQuery(http.MethodGet, userPath, "2.0", scimHeaders, nil, nil)
-	if err != nil {
-		return user, err
-	}
-	err = json.Unmarshal(resp, &user)
+	err := a.client.performScim(http.MethodGet, userPath, nil, &user)
 	return user, err
 }
 
@@ -119,29 +108,23 @@ func (a UsersAPI) Update(userID string, userName string, displayName string, ent
 		return err
 	}
 	scimUserUpdateRequest.Groups = user.Groups
-	_, err = a.Client.performQuery(http.MethodPut, userPath, "2.0", scimHeaders, scimUserUpdateRequest, nil)
-	return err
+	return a.client.performScim(http.MethodPut, userPath, scimUserUpdateRequest, nil)
 }
 
 // Delete will delete the user given the user id
 func (a UsersAPI) Delete(userID string) error {
 	userPath := fmt.Sprintf("/preview/scim/v2/Users/%v", userID)
-
-	_, err := a.Client.performQuery(http.MethodDelete, userPath, "2.0", scimHeaders, nil, nil)
-	return err
+	return a.client.performScim(http.MethodDelete, userPath, nil, nil)
 }
 
 // SetUserAsAdmin will add the user to a admin group given the admin group id and user id
 func (a UsersAPI) SetUserAsAdmin(userID string, adminGroupID string) error {
 	userPath := fmt.Sprintf("/preview/scim/v2/Users/%v", userID)
-
 	var addOperations model.UserPatchOperations
-
 	userPatchRequest := model.UserPatchRequest{
 		Schemas:    []model.URN{model.PatchOp},
 		Operations: []model.UserPatchOperations{},
 	}
-
 	addOperations = model.UserPatchOperations{
 		Op: "add",
 		Value: &model.GroupsValue{
@@ -149,10 +132,7 @@ func (a UsersAPI) SetUserAsAdmin(userID string, adminGroupID string) error {
 		},
 	}
 	userPatchRequest.Operations = append(userPatchRequest.Operations, addOperations)
-
-	_, err := a.Client.performQuery(http.MethodPatch, userPath, "2.0", scimHeaders, userPatchRequest, nil)
-
-	return err
+	return a.client.performScim(http.MethodPatch, userPath, userPatchRequest, nil)
 }
 
 // VerifyUserAsAdmin will verify the user belongs to the admin group given the admin group id and user id
@@ -166,48 +146,35 @@ func (a UsersAPI) VerifyUserAsAdmin(userID string, adminGroupID string) (bool, e
 			return true, nil
 		}
 	}
-
 	return false, nil
 }
 
 // RemoveUserAsAdmin will remove the user from the admin group given the admin group id and user id
 func (a UsersAPI) RemoveUserAsAdmin(userID string, adminGroupID string) error {
 	userPath := fmt.Sprintf("/preview/scim/v2/Users/%v", userID)
-
 	var removeOperations model.UserPatchOperations
-
 	userPatchRequest := model.UserPatchRequest{
 		Schemas:    []model.URN{model.PatchOp},
 		Operations: []model.UserPatchOperations{},
 	}
-
 	path := fmt.Sprintf("groups[value eq \"%s\"]", adminGroupID)
 	removeOperations = model.UserPatchOperations{
 		Op:   "remove",
 		Path: path,
 	}
 	userPatchRequest.Operations = append(userPatchRequest.Operations, removeOperations)
-
-	_, err := a.Client.performQuery(http.MethodPatch, userPath, "2.0", scimHeaders, userPatchRequest, nil)
-
-	return err
+	return a.client.performScim(http.MethodPatch, userPath, userPatchRequest, nil)
 }
 
+// GetOrCreateDefaultMetaUser ...
 func (a UsersAPI) GetOrCreateDefaultMetaUser(metaUserDisplayName string, metaUserName string, deleteAfterCreate bool) (user model.User, err error) {
-	//var user model.User
 	var users model.UserList
-
-	metaUserQuery := fmt.Sprintf("/preview/scim/v2/Users?filter=displayName+eq+%s", metaUserDisplayName)
-
-	resp, err := a.Client.performQuery(http.MethodGet, metaUserQuery, "2.0", scimHeaders, nil, nil)
+	err = a.client.performScim(http.MethodGet, "/preview/scim/v2/Users", map[string]string{
+		"filter": "displayName+eq+" + metaUserDisplayName,
+	}, &users)
 	if err != nil {
 		return user, err
 	}
-	err = json.Unmarshal(resp, &users)
-	if err != nil {
-		return user, err
-	}
-
 	resources := users.Resources
 	if len(resources) == 1 {
 		return resources[0], err
@@ -232,8 +199,6 @@ func (a UsersAPI) GetOrCreateDefaultMetaUser(metaUserDisplayName string, metaUse
 		}()
 	}
 	return newCreatedUser, err
-	//newCreatedUserFullInfo, err := a.Read(newCreatedUser.ID)
-	//return newCreatedUserFullInfo, err
 }
 
 func (a UsersAPI) getInheritedAndNonInheritedRoles(user model.User, groups []model.Group) (inherited []model.RoleListItem, unInherited []model.RoleListItem) {

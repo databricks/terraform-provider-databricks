@@ -2,9 +2,11 @@ package service
 
 import (
 	"net/http"
+	"os"
 	"testing"
 
 	"github.com/databrickslabs/databricks-terraform/client/model"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestScimGroupAPI_Create(t *testing.T) {
@@ -59,7 +61,7 @@ func TestScimGroupAPI_Create(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var input args
-			AssertRequestWithMockServer(t, &tt.args, http.MethodPost, "/api/2.0/preview/scim/v2/Groups", &input, tt.response, tt.responseStatus, tt.want, tt.wantErr, func(client DBApiClient) (interface{}, error) {
+			AssertRequestWithMockServer(t, &tt.args, http.MethodPost, "/api/2.0/preview/scim/v2/Groups", &input, tt.response, tt.responseStatus, tt.want, tt.wantErr, func(client DatabricksClient) (interface{}, error) {
 				return client.Groups().Create(tt.args.DisplayName, []string{tt.args.Members[0].Value}, []string{tt.args.Roles[0].Value}, []string{tt.args.Entitlements[0].Value})
 			})
 		})
@@ -106,7 +108,7 @@ func TestScimGroupAPI_GetAdminGroup(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			AssertRequestWithMockServer(t, nil, http.MethodGet, "/api/2.0/preview/scim/v2/Groups?filter=displayName+eq+admins?", nil, tt.response, tt.responseStatus, tt.want, tt.wantErr, func(client DBApiClient) (interface{}, error) {
+			AssertRequestWithMockServer(t, nil, http.MethodGet, "/api/2.0/preview/scim/v2/Groups?filter=displayName+eq+admins", nil, tt.response, tt.responseStatus, tt.want, tt.wantErr, func(client DatabricksClient) (interface{}, error) {
 				return client.Groups().GetAdminGroup()
 			})
 		})
@@ -190,7 +192,7 @@ func TestScimGroupAPI_Patch(t *testing.T) {
 	for _, tt := range tests {
 		var input args
 		t.Run(tt.name, func(t *testing.T) {
-			AssertRequestWithMockServer(t, &tt.args, http.MethodPatch, tt.requestURI, &input, tt.response, tt.responseStatus, tt.want, tt.wantErr, func(client DBApiClient) (interface{}, error) {
+			AssertRequestWithMockServer(t, &tt.args, http.MethodPatch, tt.requestURI, &input, tt.response, tt.responseStatus, tt.want, tt.wantErr, func(client DatabricksClient) (interface{}, error) {
 				return nil, client.Groups().Patch(tt.params.groupID, tt.params.addList, tt.params.removeList, tt.params.path)
 			})
 		})
@@ -236,9 +238,110 @@ func TestScimGroupAPI_Delete(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var input args
-			AssertRequestWithMockServer(t, &tt.args, http.MethodDelete, tt.requestURI, &input, tt.response, tt.responseStatus, tt.want, tt.wantErr, func(client DBApiClient) (interface{}, error) {
+			AssertRequestWithMockServer(t, &tt.args, http.MethodDelete, tt.requestURI, &input, tt.response, tt.responseStatus, tt.want, tt.wantErr, func(client DatabricksClient) (interface{}, error) {
 				return nil, client.Groups().Delete(tt.args.GroupID)
 			})
 		})
 	}
+}
+
+func TestAccGroup(t *testing.T) {
+	if _, ok := os.LookupEnv("CLOUD_ENV"); !ok {
+		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
+	}
+	client := NewClientFromEnvironment()
+
+	user, err := client.Users().Create("test-acc@databricks.com", "test account", nil, nil)
+	assert.NoError(t, err, err)
+
+	user2, err := client.Users().Create("test-acc2@databricks.com", "test account", nil, nil)
+	assert.NoError(t, err, err)
+
+	//Create empty group
+	group, err := client.Groups().Create("my-test-group", nil, nil, nil)
+	assert.NoError(t, err, err)
+
+	defer func() {
+		err := client.Groups().Delete(group.ID)
+		assert.NoError(t, err, err)
+		err = client.Users().Delete(user.ID)
+		assert.NoError(t, err, err)
+		err = client.Users().Delete(user2.ID)
+		assert.NoError(t, err, err)
+	}()
+
+	group, err = client.Groups().Read(group.ID)
+	assert.NoError(t, err, err)
+
+	err = client.Groups().Patch(group.ID, []string{user.ID, user2.ID}, nil, model.GroupMembersPath)
+	assert.NoError(t, err, err)
+
+	err = client.Groups().Patch(group.ID, nil, []string{user.ID}, model.GroupMembersPath)
+	assert.NoError(t, err, err)
+
+	group, err = client.Groups().Read(group.ID)
+	assert.NoError(t, err, err)
+	assert.True(t, len(group.Members) == 1)
+	assert.True(t, group.Members[0].Value == user2.ID)
+}
+
+func TestAccGetAdminGroup(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping integration test in short mode.")
+	}
+	client := NewClientFromEnvironment()
+	grp, err := client.Groups().GetAdminGroup()
+	assert.NoError(t, err, err)
+	assert.NotNil(t, grp)
+	assert.True(t, len(grp.ID) > 0)
+}
+
+func TestAwsAccReadInheritedRolesFromGroup(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping integration test in short mode.")
+	}
+	client := NewClientFromEnvironment()
+	// TODO: pass IAM role with ENV variable
+	myTestRole := "arn:aws:iam::123456789012:instance-profile/go-sdk-integeration-testing"
+	err := client.InstanceProfiles().Create(myTestRole, true)
+	assert.NoError(t, err, err)
+	defer func() {
+		err := client.InstanceProfiles().Delete(myTestRole)
+		assert.NoError(t, err, err)
+	}()
+
+	myTestGroup, err := client.Groups().Create("my-test-group", nil, nil, nil)
+	assert.NoError(t, err, err)
+
+	defer func() {
+		err := client.Groups().Delete(myTestGroup.ID)
+		assert.NoError(t, err, err)
+	}()
+
+	myTestSubGroup, err := client.Groups().Create("my-test-sub-group", nil, nil, nil)
+	assert.NoError(t, err, err)
+
+	defer func() {
+		err := client.Groups().Delete(myTestSubGroup.ID)
+		assert.NoError(t, err, err)
+	}()
+
+	err = client.Groups().Patch(myTestGroup.ID, []string{myTestRole}, nil, model.GroupRolesPath)
+	assert.NoError(t, err, err)
+
+	err = client.Groups().Patch(myTestGroup.ID, []string{myTestSubGroup.ID}, nil, model.GroupMembersPath)
+	assert.NoError(t, err, err)
+
+	myTestGroupInfo, err := client.Groups().Read(myTestSubGroup.ID)
+	assert.NoError(t, err, err)
+
+	assert.True(t, len(myTestGroupInfo.InheritedRoles) > 0)
+	assert.True(t, func(roles []model.RoleListItem, testRole string) bool {
+		for _, role := range roles {
+			if role.Value == testRole {
+				return true
+			}
+		}
+		return false
+	}(myTestGroupInfo.InheritedRoles, myTestRole))
 }

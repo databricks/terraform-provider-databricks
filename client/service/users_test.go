@@ -2,10 +2,14 @@ package service
 
 import (
 	"fmt"
+	"log"
 	"net/http"
+	"os"
 	"testing"
 
 	"github.com/databrickslabs/databricks-terraform/client/model"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestScimUserAPI_Create(t *testing.T) {
@@ -62,7 +66,7 @@ func TestScimUserAPI_Create(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var input args
-			AssertRequestWithMockServer(t, &tt.args, http.MethodPost, "/api/2.0/preview/scim/v2/Users", &input, tt.response, tt.responseStatus, tt.want, tt.wantErr, func(client DBApiClient) (interface{}, error) {
+			AssertRequestWithMockServer(t, &tt.args, http.MethodPost, "/api/2.0/preview/scim/v2/Users", &input, tt.response, tt.responseStatus, tt.want, tt.wantErr, func(client DatabricksClient) (interface{}, error) {
 				return client.Users().Create(tt.args.UserName, tt.args.DisplayName, []string{string(tt.args.Entitlements[0].Value)}, []string{tt.args.Roles[0].Value})
 			})
 		})
@@ -94,7 +98,7 @@ func TestScimUserAPI_Update(t *testing.T) {
 				"",
 			},
 			responseStatus: []int{http.StatusOK, http.StatusOK},
-			wantURI:        []string{"/api/2.0/preview/scim/v2/Users/101030?", "/api/2.0/preview/scim/v2/Users/101030"},
+			wantURI:        []string{"/api/2.0/preview/scim/v2/Users/101030", "/api/2.0/preview/scim/v2/Users/101030"},
 			args: []interface{}{
 				nil,
 				&args{
@@ -113,7 +117,7 @@ func TestScimUserAPI_Update(t *testing.T) {
 				"",
 			},
 			responseStatus: []int{http.StatusBadRequest, http.StatusOK},
-			wantURI:        []string{"/api/2.0/preview/scim/v2/Users/101030?", "/api/2.0/preview/scim/v2/Users/101030"},
+			wantURI:        []string{"/api/2.0/preview/scim/v2/Users/101030", "/api/2.0/preview/scim/v2/Users/101030"},
 			args: []interface{}{
 				nil,
 				&args{
@@ -129,9 +133,15 @@ func TestScimUserAPI_Update(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			AssertMultipleRequestsWithMockServer(t, tt.args, []string{http.MethodGet, http.MethodPut}, tt.wantURI, []interface{}{nil, &args{}}, tt.response, tt.responseStatus, nil, tt.wantErr, func(client DBApiClient) (interface{}, error) {
-				return nil, client.Users().Update("101030", tt.args[1].(*args).UserName, tt.args[1].(*args).DisplayName, []string{string(tt.args[1].(*args).Entitlements[0].Value)}, []string{tt.args[1].(*args).Roles[0].Value})
-			})
+			AssertMultipleRequestsWithMockServer(t, tt.args,
+				[]string{http.MethodGet, http.MethodPut}, tt.wantURI,
+				[]interface{}{nil, &args{}}, tt.response, tt.responseStatus,
+				nil, tt.wantErr, func(client DatabricksClient) (interface{}, error) {
+					return nil, client.Users().Update("101030", tt.args[1].(*args).UserName,
+						tt.args[1].(*args).DisplayName,
+						[]string{string(tt.args[1].(*args).Entitlements[0].Value)},
+						[]string{tt.args[1].(*args).Roles[0].Value})
+				})
 		})
 	}
 }
@@ -175,7 +185,7 @@ func TestScimUserAPI_Delete(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var input args
-			AssertRequestWithMockServer(t, &tt.args, http.MethodDelete, tt.requestURI, &input, tt.response, tt.responseStatus, tt.want, tt.wantErr, func(client DBApiClient) (interface{}, error) {
+			AssertRequestWithMockServer(t, &tt.args, http.MethodDelete, tt.requestURI, &input, tt.response, tt.responseStatus, tt.want, tt.wantErr, func(client DatabricksClient) (interface{}, error) {
 				return nil, client.Users().Delete(tt.args.UserID)
 			})
 		})
@@ -233,7 +243,7 @@ func TestScimUserAPI_SetUserAsAdmin(t *testing.T) {
 					},
 				},
 			}
-			AssertRequestWithMockServer(t, &expectedPatchRequest, http.MethodPatch, tt.requestURI, &input, tt.response, tt.responseStatus, tt.want, tt.wantErr, func(client DBApiClient) (interface{}, error) {
+			AssertRequestWithMockServer(t, &expectedPatchRequest, http.MethodPatch, tt.requestURI, &input, tt.response, tt.responseStatus, tt.want, tt.wantErr, func(client DatabricksClient) (interface{}, error) {
 				return nil, client.Users().SetUserAsAdmin(tt.args.UserID, tt.args.AdminGroupID)
 			})
 		})
@@ -257,66 +267,66 @@ func TestScimUserAPI_VerifyUserAsAdmin(t *testing.T) {
 		{
 			name: "VerifyUserAsAdmin true test",
 			response: `{
-								   "groups":[
-									  {
-										 "display":"admins",
-										 "value":"100002",
-										 "$ref":"https://test.databricks.com/api/2.0/scim/v2/Groups/100002"
-									  },
-									  {
-										 "display":"test-create-group",
-										 "value":"101355",
-										 "$ref":"https://test.databricks.com/api/2.0/scim/v2/Groups/101355"
-									  }
-								   ],
-								   "roles":[
-									  {
-										 "value":"arn:aws:iam::1231231123123:instance-profile/my-instance-profile"
-									  }
-								   ],
-								   "id":"101030",
-								   "userName":"test.user@databricks.com",
-								   "displayName":"test.user@databricks.com"
-								}`,
+					"groups":[
+						{
+							"display":"admins",
+							"value":"100002",
+							"$ref":"https://test.databricks.com/api/2.0/scim/v2/Groups/100002"
+						},
+						{
+							"display":"test-create-group",
+							"value":"101355",
+							"$ref":"https://test.databricks.com/api/2.0/scim/v2/Groups/101355"
+						}
+					],
+					"roles":[
+						{
+							"value":"arn:aws:iam::1231231123123:instance-profile/my-instance-profile"
+						}
+					],
+					"id":"101030",
+					"userName":"test.user@databricks.com",
+					"displayName":"test.user@databricks.com"
+				}`,
 			responseStatus: http.StatusOK,
 			args: args{
 				UserID:       "10030",
 				AdminGroupID: "100002",
 			},
-			requestURI: "/api/2.0/preview/scim/v2/Users/10030?",
+			requestURI: "/api/2.0/preview/scim/v2/Users/10030",
 			want:       true,
 			wantErr:    false,
 		},
 		{
 			name: "VerifyUserAsAdmin false test",
 			response: `{
-								   "groups":[
-									  {
-										 "display":"admins",
-										 "value":"100052",
-										 "$ref":"https://test.databricks.com/api/2.0/scim/v2/Groups/100002"
-									  },
-									  {
-										 "display":"test-create-group",
-										 "value":"101355",
-										 "$ref":"https://test.databricks.com/api/2.0/scim/v2/Groups/101355"
-									  }
-								   ],
-								   "roles":[
-									  {
-										 "value":"arn:aws:iam::1231231123123:instance-profile/my-instance-profile"
-									  }
-								   ],
-								   "id":"101030",
-								   "userName":"test.user@databricks.com",
-								   "displayName":"test.user@databricks.com"
-								}`,
+					"groups":[
+						{
+							"display":"admins",
+							"value":"100052",
+							"$ref":"https://test.databricks.com/api/2.0/scim/v2/Groups/100002"
+						},
+						{
+							"display":"test-create-group",
+							"value":"101355",
+							"$ref":"https://test.databricks.com/api/2.0/scim/v2/Groups/101355"
+						}
+					],
+					"roles":[
+						{
+							"value":"arn:aws:iam::1231231123123:instance-profile/my-instance-profile"
+						}
+					],
+					"id":"101030",
+					"userName":"test.user@databricks.com",
+					"displayName":"test.user@databricks.com"
+				}`,
 			responseStatus: http.StatusOK,
 			args: args{
 				UserID:       "10030",
 				AdminGroupID: "10000",
 			},
-			requestURI: "/api/2.0/preview/scim/v2/Users/10030?",
+			requestURI: "/api/2.0/preview/scim/v2/Users/10030",
 			want:       false,
 			wantErr:    false,
 		},
@@ -328,7 +338,7 @@ func TestScimUserAPI_VerifyUserAsAdmin(t *testing.T) {
 				UserID:       "10030",
 				AdminGroupID: "10000",
 			},
-			requestURI: "/api/2.0/preview/scim/v2/Users/10030?",
+			requestURI: "/api/2.0/preview/scim/v2/Users/10030",
 			want:       false,
 			wantErr:    true,
 		},
@@ -345,7 +355,7 @@ func TestScimUserAPI_VerifyUserAsAdmin(t *testing.T) {
 					},
 				},
 			}
-			AssertRequestWithMockServer(t, &expectedPatchRequest, http.MethodGet, tt.requestURI, &input, tt.response, tt.responseStatus, tt.want, tt.wantErr, func(client DBApiClient) (interface{}, error) {
+			AssertRequestWithMockServer(t, &expectedPatchRequest, http.MethodGet, tt.requestURI, &input, tt.response, tt.responseStatus, tt.want, tt.wantErr, func(client DatabricksClient) (interface{}, error) {
 				return client.Users().VerifyUserAsAdmin(tt.args.UserID, tt.args.AdminGroupID)
 			})
 		})
@@ -403,7 +413,7 @@ func TestScimUserAPI_RemoveUserAsAdmin(t *testing.T) {
 					},
 				},
 			}
-			AssertRequestWithMockServer(t, &expectedPatchRequest, http.MethodPatch, tt.requestURI, &input, tt.response, tt.responseStatus, tt.want, tt.wantErr, func(client DBApiClient) (interface{}, error) {
+			AssertRequestWithMockServer(t, &expectedPatchRequest, http.MethodPatch, tt.requestURI, &input, tt.response, tt.responseStatus, tt.want, tt.wantErr, func(client DatabricksClient) (interface{}, error) {
 				return nil, client.Users().RemoveUserAsAdmin(tt.args.UserID, tt.args.AdminGroupID)
 			})
 		})
@@ -426,67 +436,67 @@ func TestScimUserAPI_Read(t *testing.T) {
 		{
 			name: "Read test",
 			response: []string{`{
-								   "groups":[
-									  {
-										 "display":"admins",
-										 "value":"100002",
-										 "$ref":"https://test.databricks.com/api/2.0/scim/v2/Groups/100002"
-									  },
-									  {
-										 "display":"test-create-group",
-										 "value":"101355",
-										 "$ref":"https://test.databricks.com/api/2.0/scim/v2/Groups/101355"
-									  }
-								   ],
-								   "roles":[
-									  {
-										 "value":"arn:aws:iam::1231231123123:instance-profile/my-instance-profile"
-									  }
-								   ],
-								   "id":"101030",
-								   "userName":"test.user@databricks.com",
-								   "displayName":"test.user@databricks.com"
-								}`,
+					"groups":[
+						{
+							"display":"admins",
+							"value":"100002",
+							"$ref":"https://test.databricks.com/api/2.0/scim/v2/Groups/100002"
+						},
+						{
+							"display":"test-create-group",
+							"value":"101355",
+							"$ref":"https://test.databricks.com/api/2.0/scim/v2/Groups/101355"
+						}
+					],
+					"roles":[
+						{
+							"value":"arn:aws:iam::1231231123123:instance-profile/my-instance-profile"
+						}
+					],
+					"id":"101030",
+					"userName":"test.user@databricks.com",
+					"displayName":"test.user@databricks.com"
+				}`,
 				`{
-								   "schemas":[
-									  "urn:ietf:params:scim:schemas:core:2.0:Group"
-								   ],
-								   "id":"100002",
-								   "displayName":"admins",
-								   "members":[
-									  {
-										 "value":"100000"
-									  },
-									  {
-										 "value":"100001"
-									  }
-								   ],
-								   "roles":[
-									  {
-										 "value":"arn:aws:iam::1231231123123:instance-profile/my-inherited-profile1"
-									  }
-								   ]
-								}`,
+					"schemas":[
+						"urn:ietf:params:scim:schemas:core:2.0:Group"
+					],
+					"id":"100002",
+					"displayName":"admins",
+					"members":[
+						{
+							"value":"100000"
+						},
+						{
+							"value":"100001"
+						}
+					],
+					"roles":[
+						{
+							"value":"arn:aws:iam::1231231123123:instance-profile/my-inherited-profile1"
+						}
+					]
+				}`,
 				`{
-								   "schemas":[
-									  "urn:ietf:params:scim:schemas:core:2.0:Group"
-								   ],
-								   "id":"101355",
-								   "displayName":"test-create-group",
-								   "members":[
-									  {
-										 "value":"100000"
-									  },
-									  {
-										 "value":"100001"
-									  }
-								   ],
-								   "roles":[
-									  {
-										 "value":"arn:aws:iam::1231231123123:instance-profile/my-inherited-profile2"
-									  }
-								   ]
-								}`,
+					"schemas":[
+						"urn:ietf:params:scim:schemas:core:2.0:Group"
+					],
+					"id":"101355",
+					"displayName":"test-create-group",
+					"members":[
+						{
+							"value":"100000"
+						},
+						{
+							"value":"100001"
+						}
+					],
+					"roles":[
+						{
+							"value":"arn:aws:iam::1231231123123:instance-profile/my-inherited-profile2"
+						}
+					]
+				}`,
 			},
 			responseStatus: []int{http.StatusOK, http.StatusOK, http.StatusOK},
 			args: []args{
@@ -494,7 +504,7 @@ func TestScimUserAPI_Read(t *testing.T) {
 					UserID: "101030",
 				},
 			},
-			wantURI: []string{"/api/2.0/preview/scim/v2/Users/101030?", "/api/2.0/preview/scim/v2/Groups/100002?", "/api/2.0/preview/scim/v2/Groups/101355?"},
+			wantURI: []string{"/api/2.0/preview/scim/v2/Users/101030", "/api/2.0/preview/scim/v2/Groups/100002", "/api/2.0/preview/scim/v2/Groups/101355"},
 			want: model.User{
 				ID:          "101030",
 				DisplayName: "test.user@databricks.com",
@@ -539,14 +549,14 @@ func TestScimUserAPI_Read(t *testing.T) {
 					UserID: "101030",
 				},
 			},
-			wantURI: []string{"/api/2.0/preview/scim/v2/Users/101030?"},
+			wantURI: []string{"/api/2.0/preview/scim/v2/Users/101030"},
 			want:    model.User{},
 			wantErr: true,
 		},
 		{
 			name: "Read user unmarshal failure",
-			response: []string{``,
-				`{`,
+			response: []string{
+				`{`, //``,
 			},
 			responseStatus: []int{http.StatusOK},
 			args: []args{
@@ -554,34 +564,34 @@ func TestScimUserAPI_Read(t *testing.T) {
 					UserID: "101030",
 				},
 			},
-			wantURI: []string{"/api/2.0/preview/scim/v2/Users/101030?"},
+			wantURI: []string{"/api/2.0/preview/scim/v2/Users/101030"},
 			want:    model.User{},
 			wantErr: true,
 		},
 		{
 			name: "Read user first group failure no inherited and non inherited roles",
 			response: []string{`{
-								   "groups":[
-									  {
-										 "display":"admins",
-										 "value":"100002",
-										 "$ref":"https://test.databricks.com/api/2.0/scim/v2/Groups/100002"
-									  },
-									  {
-										 "display":"test-create-group",
-										 "value":"101355",
-										 "$ref":"https://test.databricks.com/api/2.0/scim/v2/Groups/101355"
-									  }
-								   ],
-								   "roles":[
-									  {
-										 "value":"arn:aws:iam::1231231123123:instance-profile/my-instance-profile"
-									  }
-								   ],
-								   "id":"101030",
-								   "userName":"test.user@databricks.com",
-								   "displayName":"test.user@databricks.com"
-								}`,
+					"groups":[
+						{
+							"display":"admins",
+							"value":"100002",
+							"$ref":"https://test.databricks.com/api/2.0/scim/v2/Groups/100002"
+						},
+						{
+							"display":"test-create-group",
+							"value":"101355",
+							"$ref":"https://test.databricks.com/api/2.0/scim/v2/Groups/101355"
+						}
+					],
+					"roles":[
+						{
+							"value":"arn:aws:iam::1231231123123:instance-profile/my-instance-profile"
+						}
+					],
+					"id":"101030",
+					"userName":"test.user@databricks.com",
+					"displayName":"test.user@databricks.com"
+				}`,
 				``,
 			},
 			responseStatus: []int{http.StatusOK, http.StatusBadRequest},
@@ -590,7 +600,7 @@ func TestScimUserAPI_Read(t *testing.T) {
 					UserID: "101030",
 				},
 			},
-			wantURI: []string{"/api/2.0/preview/scim/v2/Users/101030?", "/api/2.0/preview/scim/v2/Groups/100002?"},
+			wantURI: []string{"/api/2.0/preview/scim/v2/Users/101030", "/api/2.0/preview/scim/v2/Groups/100002"},
 			want: model.User{
 				ID:          "101030",
 				DisplayName: "test.user@databricks.com",
@@ -615,9 +625,105 @@ func TestScimUserAPI_Read(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var input args
-			AssertMultipleRequestsWithMockServer(t, tt.args, []string{http.MethodGet, http.MethodGet, http.MethodGet}, tt.wantURI, []args{input}, tt.response, tt.responseStatus, tt.want, tt.wantErr, func(client DBApiClient) (interface{}, error) {
+			AssertMultipleRequestsWithMockServer(t, tt.args, []string{http.MethodGet, http.MethodGet, http.MethodGet}, tt.wantURI, []args{input}, tt.response, tt.responseStatus, tt.want, tt.wantErr, func(client DatabricksClient) (interface{}, error) {
 				return client.Users().Read(tt.args[0].UserID)
 			})
 		})
 	}
+}
+
+func TestAccCreateUser(t *testing.T) {
+	if _, ok := os.LookupEnv("CLOUD_ENV"); !ok {
+		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
+	}
+
+	client := NewClientFromEnvironment()
+
+	user, err := client.Users().Create("testuser@databricks.com", "Display Name", nil, nil)
+	assert.NoError(t, err, err)
+	assert.True(t, len(user.ID) > 0, "User id is empty")
+	idToDelete := user.ID
+	defer func() {
+		err := client.Users().Delete(idToDelete)
+		assert.NoError(t, err, err)
+	}()
+
+	user, err = client.Users().Read(user.ID)
+	t.Log(user)
+	assert.NoError(t, err, err)
+
+	err = client.Users().Update(user.ID, "newtestuser@databricks.com", "Test User", []string{string(model.AllowClusterCreateEntitlement)}, nil)
+	//t.Log(user)
+	assert.NoError(t, err, err)
+}
+
+func TestAccCreateAdminUser(t *testing.T) {
+	if _, ok := os.LookupEnv("CLOUD_ENV"); !ok {
+		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
+	}
+
+	client := NewClientFromEnvironment()
+
+	randomName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
+	user, err := client.Users().Create(
+		fmt.Sprintf("terraform+%s@databricks.com", randomName),
+		"Terra "+randomName, nil, nil)
+	assert.NoError(t, err, err)
+	assert.True(t, len(user.ID) > 0, "User id is empty")
+	idToDelete := user.ID
+	defer func() {
+		err := client.Users().Delete(idToDelete)
+		assert.NoError(t, err, err)
+	}()
+	log.Println(idToDelete)
+
+	user, err = client.Users().Read(user.ID)
+	t.Log(user)
+	assert.NoError(t, err, err)
+
+	group, err := client.Groups().GetAdminGroup()
+	assert.NoError(t, err, err)
+
+	adminGroupID := group.ID
+
+	err = client.Users().SetUserAsAdmin(user.ID, adminGroupID)
+	assert.NoError(t, err, err)
+
+	userIsAdmin, err := client.Users().VerifyUserAsAdmin(user.ID, adminGroupID)
+	assert.NoError(t, err, err)
+	assert.True(t, userIsAdmin == true)
+	log.Println(userIsAdmin)
+
+	err = client.Users().RemoveUserAsAdmin(user.ID, adminGroupID)
+	assert.NoError(t, err, err)
+
+	userIsAdmin, err = client.Users().VerifyUserAsAdmin(user.ID, adminGroupID)
+	assert.NoError(t, err, err)
+	assert.True(t, userIsAdmin == false)
+	log.Println(userIsAdmin)
+}
+
+func TestAccRoleDifferences(t *testing.T) {
+	if _, ok := os.LookupEnv("CLOUD_ENV"); !ok {
+		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
+	}
+	client := NewClientFromEnvironment()
+
+	randomName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
+	user, err := client.Users().Create(
+		fmt.Sprintf("terraform+%s@databricks.com", randomName),
+		"Terra "+randomName, nil, nil)
+	assert.NoError(t, err, err)
+	assert.True(t, len(user.ID) > 0, "User id is empty")
+	idToDelete := user.ID
+
+	user, err = client.Users().Read(idToDelete)
+	assert.NoError(t, err, err)
+	t.Log(user.Roles)
+	t.Log(user.Groups)
+	t.Log(user.InheritedRoles)
+	t.Log(user.UnInheritedRoles)
+
+	err = client.Users().Delete(idToDelete)
+	assert.NoError(t, err, err)
 }

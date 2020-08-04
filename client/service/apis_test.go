@@ -56,12 +56,6 @@ func TestDatabricksClientConfigure_Token_NoHost(t *testing.T) {
 	assert.Equal(t, "dapi345678", dc.Token)
 }
 
-func TestDatabricksClientConfigure_NoOptionsResultsInError(t *testing.T) {
-	dc := DatabricksClient{}
-	err := dc.Configure("dev")
-	assert.Error(t, err)
-}
-
 func TestDatabricksClientConfigure_HostTokensTakePrecedence(t *testing.T) {
 	dc := DatabricksClient{
 		Host:       "foo",

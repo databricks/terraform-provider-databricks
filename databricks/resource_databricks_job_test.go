@@ -21,8 +21,7 @@ func TestAccJobResource(t *testing.T) {
 		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				// use a dynamic configuration with the random name from above
-				Config: fmt.Sprintf(`resource "databricks_job" "my_job" {
+				Config: fmt.Sprintf(`resource "databricks_job" "this" {
 					new_cluster  {
 					  autoscale  {
 						min_workers = 2
@@ -31,7 +30,12 @@ func TestAccJobResource(t *testing.T) {
 					  instance_pool_id = "%s"
 					  spark_version = "%s"
 					}
-					notebook_path = "/Users/jane.doe@databricks.com/my-demo-notebook"
+					notebook_task {
+						notebook_path = "/Production/MakeFeatures"
+					}
+					email_notifications {
+						no_alert_for_skipped_runs = true
+					}
 					name = "%s"
 					timeout_seconds = 3600
 					max_retries = 1
@@ -41,7 +45,7 @@ func TestAccJobResource(t *testing.T) {
 				// compose a basic test, checking both remote and local values
 				Check: resource.ComposeTestCheckFunc(
 					// query the API to retrieve the tokenInfo object
-					epoch.ResourceCheck("databricks_job.my_job",
+					epoch.ResourceCheck("databricks_job.this",
 						func(client *service.DatabricksClient, id string) error {
 							job, err := client.Jobs().Read(id)
 							assert.NoError(t, err)
@@ -52,17 +56,16 @@ func TestAccJobResource(t *testing.T) {
 							assert.Equal(t, 2, int(job.Settings.NewCluster.Autoscale.MinWorkers))
 							assert.Equal(t, 3, int(job.Settings.NewCluster.Autoscale.MaxWorkers))
 							assert.Equal(t, service.CommonRuntimeVersion(), job.Settings.NewCluster.SparkVersion)
-							assert.Equal(t, "/Users/jane.doe@databricks.com/my-demo-notebook", job.Settings.NotebookTask.NotebookPath)
+							assert.Equal(t, "/Production/MakeFeatures", job.Settings.NotebookTask.NotebookPath)
 							assert.Equal(t, 3600, int(job.Settings.TimeoutSeconds))
 							assert.Equal(t, 1, int(job.Settings.MaxRetries))
 							assert.Equal(t, 1, int(job.Settings.MaxConcurrentRuns))
 							return nil
 						}),
 				),
-				Destroy: false,
 			},
 		},
-		CheckDestroy: epoch.ResourceCheck("databricks_job.my_job",
+		CheckDestroy: epoch.ResourceCheck("databricks_job.this",
 			func(client *service.DatabricksClient, id string) error {
 				_, err := client.Jobs().Read(id)
 				if err != nil {

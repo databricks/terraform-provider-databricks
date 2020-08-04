@@ -1,12 +1,12 @@
 #!/bin/bash
 
 if ! type jq &> /dev/null; then
-    >&2 echo "Please install jq (https://stedolan.github.io/jq/) to run this command."
+    >&2 echo "[-] Please install jq (https://stedolan.github.io/jq/) to run this command."
     exit 1
 fi
 
 if ! type terraform &> /dev/null; then
-    >&2 echo "Please install Terraform (https://www.terraform.io/downloads.html) to run this command."
+    >&2 echo "[-] Please install Terraform (https://www.terraform.io/downloads.html) to run this command."
     exit 1
 fi
 
@@ -28,14 +28,14 @@ STATE="${DIR}/$1-integration/terraform.tfstate"
 JQ='to_entries|map("\(.key|ascii_upcase)=\(.value.value|tostring)")|.[]'
 
 if ! [ -d "$TARGET" ]; then
-    >&2 echo "Cannot find $1 integration tests."
+    >&2 echo "[-] Cannot find $1 integration tests."
     exit 1
 fi
 
 # ./run.sh mws --export to print exportable env
 if [ "--export" == "$2" ]; then 
     if ! [ -f "$STATE" ]; then
-        >&2 echo "$1 didn't provision environment yet."
+        >&2 echo "[-] $1 didn't provision environment yet."
         exit 1
     fi
     terraform output -state=$STATE --json | jq -r $JQ
@@ -47,44 +47,44 @@ if [ -f "$TARGET/require_env" ]; then
     M=0
     for var in $(cat $TARGET/require_env); do
         if [ "" == "${!var}" ]; then
-            >&2 echo -e "Missing $var variable."
+            >&2 echo -e "[-] Missing $var variable."
             ((M++))
         fi
     done
     if [[ "$M" -gt 0 ]]; then
-        >&2 echo "Please set $M env variables and restart."
+        >&2 echo "[-] Please set $M env variables and restart."
         exit 1
     fi
 fi
 
-# if [[ $@ == *"--quick"* ]]; then
-#     echo "QUICK"
-# else
-#     echo "NO QUICK"
-# fi
-
 cd $TARGET
 
 if [[ $@ == *"--destroy"* ]]; then
-    function cleanup()
-    {
-        echo "[*] Cleanup with destroy"
-        # terraform destroy -auto-approve
-        # rm -f *.tfstate*
-        # rm -f .terraform
-    }
-    trap cleanup EXIT
+    if [ -f "$STATE" ]; then
+        function cleanup()
+        {
+            echo "[*] Cleanup with destroy"
+            terraform destroy -auto-approve
+            rm -f *.tfstate*
+            rm -f .terraform
+        }
+        trap cleanup EXIT
+    fi
 fi
 
-terraform init  >/dev/null 2>&1
-terraform apply -auto-approve
+if [ -f "main.tf" ]; then
+    terraform init  >/dev/null 2>&1
+    terraform apply -auto-approve
+    export $(terraform output --json | jq -r $JQ) >/dev/null 2>&1
+else
+    echo "[*] $1 has no specific Terraform environment."
+fi
 
-export $(terraform output --json | jq -r $JQ) >/dev/null 2>&1
 
 if [[ $@ == *"--debug"* ]]; then
     export TF_LOG="DEBUG"
     export TF_LOG_PATH=$PWD/tf.log
-    echo "To see debug logs: tail -f $PWD/tf.log"
+    echo "[*] To see debug logs: tail -f $PWD/tf.log"
 fi
 
 TF_ACC=1 gotestsum \

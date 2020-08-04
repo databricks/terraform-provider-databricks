@@ -121,20 +121,6 @@ func testMWSCredentialsResourceExists(n string, mwsCreds *model.MWSCredentials, 
 	}
 }
 
-func testMWSCredentialsCreate(mwsAcctID, mwsHost, awsAcctID, roleName, credentialsName string) string {
-	return fmt.Sprintf(`
-								provider "databricks" {
-								  host = "%s"
-								  basic_auth {}
-								}
-								resource "databricks_mws_credentials" "my_e2_credentials" {
- 								  account_id       = "%s"
-								  credentials_name = "%s"
-								  role_arn         = "arn:aws:iam::%s:role/%s"
-								}
-								`, mwsHost, mwsAcctID, credentialsName, awsAcctID, roleName)
-}
-
 func TestResourceMWSCredentialsCreate(t *testing.T) {
 	d, err := ResourceTester(t, []HTTPFixture{
 		{

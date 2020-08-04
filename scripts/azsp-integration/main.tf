@@ -1,6 +1,53 @@
-# TODO: this file is in progress - azsp will test for azure service principal and azcli will test just for cli (reduced set)
+provider "azurerm" {
+  version = "~> 2.14"
+  features {}
+}
+
+// get any env var to tf
+data "external" "env" {
+  program = ["python", "-c", "import sys,os,json;json.dump(dict(os.environ), sys.stdout)"]
+}
+
 module "this" {
-    source = "../azure-integration"
+    source = "../azcli-integration"
+    owner  = data.external.env.result.OWNER
+}
+
+data "azurerm_client_config" "current" {
+}
+
+locals {
+  prefix = module.this.test_prefix
+  tags = {
+    Environment = "Testing"
+    Owner       = data.external.env.result.OWNER
+    Epoch       = module.this.test_prefix
+  }
+}
+
+# Create container in storage acc and container for use by adls gen2 mount tests
+resource "azurerm_storage_account" "adlsaccount" {
+  name                     = "${local.prefix}datalake"
+  resource_group_name      = module.this.test_resource_group
+  location                 = module.this.azure_region
+  account_tier             = "Standard"
+  account_replication_type = "GRS"
+  account_kind             = "StorageV2"
+  is_hns_enabled           = true
+  tags                     = local.tags
+}
+
+# SP has to have Microsoft.Authorization/roleAssignments/write
+# resource "azurerm_role_assignment" "datalake" {
+#   scope = azurerm_storage_account.adlsaccount.id
+#   role_definition_name = "Storage Blob Data Contributor"
+#   principal_id         = data.azurerm_client_config.current.object_id
+# }
+
+resource "azurerm_storage_container" "adlsexample" {
+  name                  = "dev"
+  storage_account_name  = azurerm_storage_account.adlsaccount.name
+  container_access_type = "private"
 }
 
 output "cloud_env" {
@@ -8,45 +55,33 @@ output "cloud_env" {
 }
 
 output "test_node_type" {
-  // or i3.xlarge for AWS
   value = "Standard_D3_v2"
 }
 
-output "arm_client_id" {
-  value = data.azurerm_client_config.current.client_id
-}
-
-output "arm_subscription_id" {
-  value = data.azurerm_client_config.current.subscription_id
-}
-
-output "arm_tenant_id" {
-  value = data.azurerm_client_config.current.tenant_id
-}
-
 output "test_resource_group" {
-  value = azurerm_resource_group.example.name
+  value = module.this.test_resource_group
 }
+
+output "azure_region" {
+  value = module.this.azure_region
+}
+
 
 output "test_gen2_adal_name" {
   value = azurerm_storage_account.adlsaccount.name
 }
 
 output "test_gen1_name" {
-  value = azurerm_data_lake_store.gen1.name
+  value = module.this.test_gen1_name
 }
 
 output "test_storage_account_key" {
-  value     = azurerm_storage_account.blobaccount.primary_access_key
+  value = module.this.test_storage_account_key
   sensitive = true
 }
 
 output "test_storage_account_name" {
-  value = azurerm_storage_account.blobaccount.name
-}
-
-output "azure_region" {
-  value = azurerm_storage_account.adlsaccount.location
+  value = module.this.test_storage_account_name
 }
 
 output "databricks_azure_workspace_resource_id" {

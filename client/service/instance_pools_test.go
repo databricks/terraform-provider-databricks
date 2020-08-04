@@ -249,6 +249,18 @@ func TestAccInstancePools(t *testing.T) {
 			"6.3.x-scala2.11",
 		},
 	}
+	if !client.IsAzure() {
+		pool.DiskSpec = &model.InstancePoolDiskSpec{
+			DiskType: &model.InstancePoolDiskType{
+				EbsVolumeType: model.EbsVolumeTypeGeneralPurposeSsd,
+			},
+			DiskCount: 1,
+			DiskSize:  32,
+		}
+		pool.AwsAttributes = &model.InstancePoolAwsAttributes{
+			Availability: model.AwsAvailabilitySpot,
+		}
+	}
 	poolInfo, err := client.InstancePools().Create(pool)
 	assert.NoError(t, err, err)
 
@@ -266,7 +278,7 @@ func TestAccInstancePools(t *testing.T) {
 	assert.Equal(t, pool.NodeTypeID, poolReadInfo.NodeTypeID)
 	assert.Equal(t, pool.IdleInstanceAutoTerminationMinutes, poolReadInfo.IdleInstanceAutoTerminationMinutes)
 
-	err = client.InstancePools().Update(model.InstancePoolAndStats{
+	u := model.InstancePoolAndStats{
 		InstancePoolID:                     poolReadInfo.InstancePoolID,
 		InstancePoolName:                   "Terraform Integration Test Updated",
 		MinIdleInstances:                   0,
@@ -276,7 +288,20 @@ func TestAccInstancePools(t *testing.T) {
 		PreloadedSparkVersions: []string{
 			"6.3.x-scala2.11",
 		},
-	})
+	}
+	if !client.IsAzure() {
+		u.DiskSpec = &model.InstancePoolDiskSpec{
+			DiskType: &model.InstancePoolDiskType{
+				EbsVolumeType: model.EbsVolumeTypeGeneralPurposeSsd,
+			},
+			DiskCount: 1,
+			DiskSize:  32,
+		}
+		u.AwsAttributes = &model.InstancePoolAwsAttributes{
+			Availability: model.AwsAvailabilitySpot,
+		}
+	}
+	err = client.InstancePools().Update(u)
 	assert.NoError(t, err, err)
 
 	poolReadInfo, err = client.InstancePools().Read(poolInfo.InstancePoolID)

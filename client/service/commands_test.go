@@ -2,7 +2,6 @@ package service
 
 import (
 	"os"
-	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -50,8 +49,4 @@ func TestAccContext(t *testing.T) {
 		dbutils.notebook.exit("success")`)
 	assert.NoError(t, err)
 	assert.Equal(t, "success", result)
-
-	result, err = c.Execute(clusterID, "python", `dbutils.fs.ls("/mnt/qwertyui")`)
-	assert.True(t, strings.Contains(err.Error(), "/mnt/qwertyui does not exist"), err.Error())
-	assert.Equal(t, "", result)
 }

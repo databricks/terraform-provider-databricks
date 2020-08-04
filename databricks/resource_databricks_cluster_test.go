@@ -132,7 +132,8 @@ func TestAwsAccClusterResource_CreateClusterViaInstancePool(t *testing.T) {
 		testDefaultClusterResource(instancePoolLine, "aws_attributes {}")
 
 	resource.Test(t, resource.TestCase{
-		Providers: testAccProviders,
+		IsUnitTest: debugIfCloudEnvSet(),
+		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config: resourceConfig,
@@ -154,23 +155,15 @@ func TestAwsAccClusterResource_CreateClusterViaInstancePool(t *testing.T) {
 					// query the API to retrieve the tokenInfo object
 					testClusterExistsAndTerminateForFutureTests("databricks_cluster.test_cluster", &clusterInfo, t),
 				),
+				ExpectNonEmptyPlan: true,
+				Destroy:            true,
+			},
+			{
+				Config: "",
 			},
 		},
 	})
 }
-
-// func testDefaultAzureInstancePoolResource(awsAttributes, name string) string {
-// 	return fmt.Sprintf(`
-// resource "databricks_instance_pool" "my_pool" {
-//   instance_pool_name = "%s"
-//   min_idle_instances = 0
-//   max_capacity = 5
-//   node_type_id = "Standard_DS3_v2"
-//   %s
-//   idle_instance_autotermination_minutes = 10
-// }
-// `, name, awsAttributes)
-// }
 
 func testClusterExistsAndTerminateForFutureTests(n string, cluster *model.ClusterInfo, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {

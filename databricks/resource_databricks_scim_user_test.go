@@ -8,6 +8,7 @@ import (
 
 	"github.com/databrickslabs/databricks-terraform/client/model"
 	"github.com/databrickslabs/databricks-terraform/client/service"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 	"github.com/stretchr/testify/assert"
@@ -20,13 +21,9 @@ func TestAccScimUserResource(t *testing.T) {
 	}
 	//var secretScope model.Secre
 	var scimUser model.User
-	// generate a random name for each tokenInfo test run, to avoid
-	// collisions from multiple concurrent tests.
-	// the acctest package includes many helpers such as RandStringFromCharSet
-	// See https://godoc.org/github.com/hashicorp/terraform-plugin-sdk/helper/acctest
-	//scope := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
-	userName := "terraform-testuser@databricks.com"
-	displayName := "terraform testuser"
+	randomName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
+	userName := fmt.Sprintf("terraform.test+%s@example.com", randomName)
+	displayName := fmt.Sprintf("Terra %s", randomName)
 	expectEntitlements := []model.EntitlementsListItem{{Value: model.AllowClusterCreateEntitlement}}
 
 	resource.Test(t, resource.TestCase{

@@ -19,46 +19,39 @@ func TestAzureAccBlobMount_correctly_mounts(t *testing.T) {
 	if _, ok := os.LookupEnv("CLOUD_ENV"); !ok {
 		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
 	}
-	blobAccountKey := os.Getenv("TEST_STORAGE_ACCOUNT_KEY")
-	blobAccountName := os.Getenv("TEST_STORAGE_ACCOUNT_NAME")
-	if blobAccountKey == "" || blobAccountName == "" {
-		t.Skipf("Missing keys in environment")
+	config := EnvironmentTemplate(t, `
+	resource "databricks_secret_scope" "terraform" {
+		name                     = "terraform-{var.RANDOM}"
+		initial_manage_principal = "users"
 	}
-	// assert.NoError(t, os.Setenv("TF_LOG", "TRACE"))
-	// assert.NoError(t, os.Setenv("TF_LOG_PATH", "/tmp/tf-integration.log"))
-
+	resource "databricks_secret" "storage_key" {
+		key          = "blob_storage_key"
+		string_value = "{env.TEST_STORAGE_ACCOUNT_KEY}"
+		scope        = databricks_secret_scope.terraform.name
+	}
+	resource "databricks_azure_blob_mount" "mount" {
+		container_name       = "dev"
+		storage_account_name = "{env.TEST_STORAGE_ACCOUNT_NAME}"
+		mount_name           = "{var.RANDOM}"
+		auth_type            = "ACCESS_KEY"
+		token_secret_scope   = databricks_secret_scope.terraform.name
+		token_secret_key     = databricks_secret.storage_key.key
+	}`)
 	randomName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
 	resource.Test(t, resource.TestCase{
 		IsUnitTest: debugIfCloudEnvSet(),
 		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: fmt.Sprintf(`
-					resource "databricks_secret_scope" "terraform" {
-						name                     = "terraform%[3]s"
-						initial_manage_principal = "users"
-					}
-					resource "databricks_secret" "storage_key" {
-						key          = "blob_storage_key"
-						string_value = "%[1]s"
-						scope        = databricks_secret_scope.terraform.name
-					}
-					resource "databricks_azure_blob_mount" "mount" {
-						container_name       = "dev" # Created by prereqs.tf
-						storage_account_name = "%[2]s"
-						mount_name           = "%[3]s"
-						auth_type            = "ACCESS_KEY"
-						token_secret_scope   = databricks_secret_scope.terraform.name
-						token_secret_key     = databricks_secret.storage_key.key
-					}
-				`, blobAccountKey, blobAccountName, randomName),
+				Config: config,
 				Check: epoch.ResourceCheck("databricks_azure_blob_mount.mount", func(client *service.DatabricksClient, id string) error {
 					clusterInfo, err := client.Clusters().GetOrCreateRunningCluster("TerraformIntegrationTest")
 					assert.NoError(t, err)
 					mp := NewMountPoint(client, id, clusterInfo.ClusterID)
 					source, err := mp.Source()
 					assert.NoError(t, err)
-					assert.Equal(t, fmt.Sprintf("wasbs://%s@%s.blob.core.windows.net/", "dev", blobAccountName), source)
+					assert.Equal(t, fmt.Sprintf("wasbs://%s@%s.blob.core.windows.net/", "dev",
+						FirstKeyValue(t, config, "storage_account_name")), source)
 					return nil
 				}),
 			},
@@ -73,25 +66,7 @@ func TestAzureAccBlobMount_correctly_mounts(t *testing.T) {
 					err := mp.Delete()
 					assert.NoError(t, err)
 				},
-				Config: fmt.Sprintf(`
-					resource "databricks_secret_scope" "terraform" {
-						name                     = "terraform%[3]s"
-						initial_manage_principal = "users"
-					}
-					resource "databricks_secret" "storage_key" {
-						key          = "blob_storage_key"
-						string_value = "%[1]s"
-						scope        = databricks_secret_scope.terraform.name
-					}
-					resource "databricks_azure_blob_mount" "mount" {
-						container_name       = "dev" # Created by prereqs.tf
-						storage_account_name = "%[2]s"
-						mount_name           = "%[3]s"
-						auth_type            = "ACCESS_KEY"
-						token_secret_scope   = databricks_secret_scope.terraform.name
-						token_secret_key     = databricks_secret.storage_key.key
-					}
-				`, blobAccountKey, blobAccountName, randomName),
+				Config: config,
 				// Destroy: true,
 			},
 		},

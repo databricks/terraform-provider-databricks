@@ -509,8 +509,8 @@ func TestClustersAPI_Unpin(t *testing.T) {
 }
 
 func TestAccListClustersIntegration(t *testing.T) {
-	cloud := os.Getenv("CLOUD_ENV")
-	if cloud == "" {
+	cloudEnv := os.Getenv("CLOUD_ENV")
+	if cloudEnv == "" {
 		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
 	}
 
@@ -525,15 +525,6 @@ func TestAccListClustersIntegration(t *testing.T) {
 		IdempotencyToken:       "acc-list-" + randomName,
 		AutoterminationMinutes: 15,
 	}
-
-	if cloud == "AWS" {
-		cluster.AwsAttributes = &model.AwsAttributes{
-			EbsVolumeType:  model.EbsVolumeTypeGeneralPurposeSsd,
-			EbsVolumeCount: 1,
-			EbsVolumeSize:  32,
-		}
-	}
-
 	clusterReadInfo, err := client.Clusters().Create(cluster)
 	assert.NoError(t, err, err)
 	assert.True(t, clusterReadInfo.NumWorkers == cluster.NumWorkers)

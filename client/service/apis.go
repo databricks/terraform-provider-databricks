@@ -103,15 +103,19 @@ func (c *DatabricksClient) configureAuthWithDirectParams() (func(r *http.Request
 }
 
 func (c *DatabricksClient) configureFromDatabricksCfg() (func(r *http.Request) error, error) {
-	_, err := os.Stat(c.ConfigFile)
+	configFile := c.ConfigFile
+	if configFile == "" {
+		configFile = "~/.databrickscfg"
+	}
+	configFile, err := homedir.Expand(configFile)
+	if err != nil {
+		return nil, err
+	}
+	_, err = os.Stat(configFile)
 	if os.IsNotExist(err) {
 		log.Printf("[INFO] ~/.databrickscfg not found on current host")
 		// early return for non-configured machines
 		return nil, nil
-	}
-	configFile, err := homedir.Expand(c.ConfigFile)
-	if err != nil {
-		return nil, err
 	}
 	cfg, err := ini.Load(configFile)
 	if err != nil {

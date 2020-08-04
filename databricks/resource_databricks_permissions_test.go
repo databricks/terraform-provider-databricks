@@ -418,7 +418,6 @@ func TestAccDatabricksPermissionsResourceFullLifecycle(t *testing.T) {
 						assert.Len(t, permissions.AccessControlList, 3)
 						return nil
 					}),
-				ExpectNonEmptyPlan: true,
 			},
 		},
 	})

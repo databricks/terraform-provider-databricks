@@ -70,7 +70,7 @@ func wrapMissingJobError(err error, id string) error {
 	if strings.Contains(apiErr.Message,
 		fmt.Sprintf("Job %s does not exist.", id)) {
 		apiErr.StatusCode = 404
-		return err
+		return apiErr
 	}
 	return err
 }

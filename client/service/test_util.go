@@ -33,10 +33,10 @@ func NewClientFromEnvironment() *DatabricksClient {
 			ResourceID:     os.Getenv("DATABRICKS_AZURE_WORKSPACE_RESOURCE_ID"),
 			WorkspaceName:  os.Getenv("DATABRICKS_AZURE_WORKSPACE_NAME"),
 			ResourceGroup:  os.Getenv("DATABRICKS_AZURE_RESOURCE_GROUP"),
-			SubscriptionID: os.Getenv("DATABRICKS_AZURE_SUBSCRIPTION_ID"),
-			ClientID:       os.Getenv("DATABRICKS_AZURE_CLIENT_ID"),
-			ClientSecret:   os.Getenv("DATABRICKS_AZURE_CLIENT_SECRET"),
-			TenantID:       os.Getenv("DATABRICKS_AZURE_TENANT_ID"),
+			SubscriptionID: os.Getenv("ARM_SUBSCRIPTION_ID"),
+			ClientID:       os.Getenv("ARM_CLIENT_ID"),
+			ClientSecret:   os.Getenv("ARM_CLIENT_SECRET"),
+			TenantID:       os.Getenv("ARM_TENANT_ID"),
 		},
 	}
 	err := client.Configure("dev")
@@ -80,7 +80,8 @@ func CommonInstancePoolID() string {
 	}
 	oncePool.Do(func() { // atomic
 		log.Printf("[INFO] Initializing common instance pool")
-		instancePools := CommonEnvironmentClient().InstancePools()
+		client := CommonEnvironmentClient()
+		instancePools := client.InstancePools()
 		currentUserPool := fmt.Sprintf("Terraform Integration Test by %s", os.Getenv("USER"))
 		pools, err := instancePools.List()
 		if err != nil {
@@ -96,14 +97,26 @@ func CommonInstancePoolID() string {
 				return
 			}
 		}
-		newPool, err := instancePools.Create(model.InstancePool{
+		instancePool := model.InstancePool{
 			PreloadedSparkVersions:             []string{CommonRuntimeVersion()},
 			NodeTypeID:                         CommonInstanceType(),
 			InstancePoolName:                   currentUserPool,
-			IdleInstanceAutoTerminationMinutes: 15,
-			MinIdleInstances:                   2,
 			MaxCapacity:                        10,
-		})
+			IdleInstanceAutoTerminationMinutes: 15,
+		}
+		if !client.IsAzure() {
+			instancePool.DiskSpec = &model.InstancePoolDiskSpec{
+				DiskType: &model.InstancePoolDiskType{
+					EbsVolumeType: model.EbsVolumeTypeGeneralPurposeSsd,
+				},
+				DiskCount: 1,
+				DiskSize:  32,
+			}
+			instancePool.AwsAttributes = &model.InstancePoolAwsAttributes{
+				Availability: model.AwsAvailabilitySpot,
+			}
+		}
+		newPool, err := instancePools.Create(instancePool)
 		if err != nil {
 			log.Printf("[ERROR] Cannot create instance pool: %v", err)
 			panic(err)

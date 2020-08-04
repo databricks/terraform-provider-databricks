@@ -23,7 +23,7 @@ import (
 	"github.com/databrickslabs/databricks-terraform/client/service"
 )
 
-// EnvironmentTemplate asserts existance and fills in {env.VAR} & {var.RANDOM} placeholders in template
+// EnvironmentTemplate asserts existence and fills in {env.VAR} & {var.RANDOM} placeholders in template
 func EnvironmentTemplate(t *testing.T, template string) string {
 	vars := map[string]string{
 		"RANDOM": acctest.RandStringFromCharSet(5, acctest.CharSetAlphaNum),
@@ -69,7 +69,6 @@ func TestEnvironmentTemplate(t *testing.T) {
 		name  = "{env.USER}"
 		email = "{env.USER}+{var.RANDOM}@example.com"
 	}`)
-	assert.True(t, strings.Contains(res, fmt.Sprintf(`name = "%s"`, os.Getenv("USER"))), res)
 	assert.Equal(t, os.Getenv("USER"), FirstKeyValue(t, res, "name"))
 }
 
@@ -78,17 +77,14 @@ func assertErrorStartsWith(t *testing.T, err error, message string) bool {
 }
 
 type MissingResourceCheck struct {
-	name          string
-	readFunc      func() error
-	isCustomCheck bool
-	resourceID    string
+	name     string
+	readFunc func() error
 }
 
 func TestMwsAccMissingResources(t *testing.T) {
 	if cloudEnv, ok := os.LookupEnv("CLOUD_ENV"); !ok || cloudEnv != "MWS" {
 		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV=MWS' is set.")
 	}
-
 	mwsAcctID := os.Getenv("DATABRICKS_ACCOUNT_ID")
 	if mwsAcctID == "" {
 		t.Skip("Must have DATABRICKS_ACCOUNT_ID environment variable set.")
@@ -127,188 +123,131 @@ func TestMwsAccMissingResources(t *testing.T) {
 			},
 		},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			testVerifyResourceIsMissing(t, tt.readFunc)
-		})
-	}
+	MissingResourceChecks(tests).Verify(t)
 }
 
-// Capture this test for aws
 func TestAccMissingResourcesInWorkspace(t *testing.T) {
-	cloudENV, ok := os.LookupEnv("CLOUD_ENV")
+	cloudEnv, ok := os.LookupEnv("CLOUD_ENV")
 	if !ok {
 		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' set")
 	}
-	randIntID := 2000000 + acctest.RandIntRange(100000, 20000000)
 	randStringID := acctest.RandString(10)
-	// example 405E7E8E4A000024
-	randomClusterPolicyID := fmt.Sprintf("400E9E9E9A%d",
-		acctest.RandIntRange(100000, 999999),
-	)
-	// example 0101-120000-brick1-pool-ABCD1234
-	randomInstancePoolID := fmt.Sprintf(
-		"%v-%v-%s-pool-%s",
-		acctest.RandIntRange(1000, 9999),
-		acctest.RandIntRange(100000, 999999),
-		acctest.RandString(6),
-		acctest.RandString(8),
-	)
-	client := service.NewClientFromEnvironment()
-
-	type testTable struct {
-		name            string
-		readFunc        func() error
-		isCustomCheck   bool
-		resourceID      string
-		customCheckFunc func(err error, rId string) bool
-	}
-	tests := []testTable{
+	randIntID := 2000000 + acctest.RandIntRange(100000, 20000000)
+	randomClusterPolicyID := fmt.Sprintf("400E9E9E9A%d", acctest.RandIntRange(100000, 999999))
+	randomInstancePoolID := fmt.Sprintf("%v-%v-%s-pool-%s", acctest.RandIntRange(1000, 9999),
+		acctest.RandIntRange(100000, 999999), acctest.RandString(6), acctest.RandString(8))
+	client := service.CommonEnvironmentClient()
+	tests := []MissingResourceCheck{
 		{
-			name: "CheckIfTokensAreMissing",
+			name: "Tokens",
 			readFunc: func() error {
 				_, err := client.Tokens().Read(randStringID)
 				return err
 			},
 		},
 		{
-			name: "CheckIfSecretScopesAreMissing",
+			name: "Secret Scopes",
 			readFunc: func() error {
 				_, err := client.SecretScopes().Read(randStringID)
 				return err
 			},
 		},
 		{
-			name: "CheckIfSecretsAreMissing",
+			name: "Secrets",
 			readFunc: func() error {
 				_, err := client.Secrets().Read(randStringID, randStringID)
 				return err
 			},
 		},
 		{
-			name: "CheckIfSecretsACLsAreMissing",
+			name: "Secret ACLs",
 			readFunc: func() error {
 				_, err := client.SecretAcls().Read(randStringID, randStringID)
 				return err
 			},
 		},
 		{
-			name: "CheckIfSecretsACLsAreMissing",
+			name: "Notebooks",
 			readFunc: func() error {
-				_, err := client.SecretAcls().Read(randStringID, randStringID)
-				return err
-			},
-		},
-		{
-			name: "CheckIfNotebooksAreMissing",
-			readFunc: func() error {
-				// ID must start with a /
 				_, err := client.Notebooks().Read("/" + randStringID)
 				return err
 			},
 		},
 		{
-			name: "CheckIfInstancePoolsAreMissing",
+			name: "Instance Pools",
 			readFunc: func() error {
 				_, err := client.InstancePools().Read(randomInstancePoolID)
 				return err
 			},
 		},
 		{
-			name: "CheckIfClustersAreMissing",
+			name: "Clusters",
 			readFunc: func() error {
 				_, err := client.Clusters().Get(randStringID)
 				return err
 			},
-			resourceID: randStringID,
 		},
 		{
-			name: "CheckIfDBFSFilesAreMissing",
+			name: "DBFS Files",
 			readFunc: func() error {
 				_, err := client.DBFS().Read("/" + randStringID)
 				return err
 			},
 		},
 		{
-			name: "CheckIfGroupsAreMissing",
+			name: "Groups",
 			readFunc: func() error {
 				_, err := client.Groups().Read(randStringID)
-				t.Log(err)
 				return err
 			},
 		},
 		{
-			name: "CheckIfUsersAreMissing",
+			name: "Users",
 			readFunc: func() error {
 				_, err := client.Users().Read(randStringID)
-				t.Log(err)
 				return err
 			},
 		},
 		{
-			name: "CheckIfClusterPoliciesAreMissing",
+			name: "Cluster Policies",
 			readFunc: func() error {
 				_, err := client.ClusterPolicies().Get(randomClusterPolicyID)
-				t.Log(err)
 				return err
 			},
 		},
 		{
-			name: "CheckIfJobsAreMissing",
+			name: "Jobs",
 			readFunc: func() error {
 				_, err := client.Jobs().Read(strconv.Itoa(randIntID))
 				return err
 			},
-			resourceID: strconv.Itoa(randIntID),
 		},
 	}
-	if cloudENV == "AWS" {
-		// Handle aws only tests where instance profiles only exist on aws
-		awsOnlyTests := []testTable{
-			{
-				name: "CheckIfInstanceProfilesAreMissing",
-				readFunc: func() error {
-					_, err := client.InstanceProfiles().Read(randStringID)
-					return err
-				},
+	if cloudEnv == "AWS" {
+		tests = append(tests, MissingResourceCheck{
+			name: "Instance Profiles",
+			readFunc: func() error {
+				_, err := client.InstanceProfiles().Read(randStringID)
+				return err
 			},
-		}
-		tests = append(tests, awsOnlyTests...)
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if tt.isCustomCheck {
-				// Test custom check because api call does not return 404 not found if the resource does not exist
-				testVerifyResourceIsMissingCustomVerification(t, tt.resourceID, tt.readFunc, tt.customCheckFunc)
-			} else {
-				testVerifyResourceIsMissing(t, tt.readFunc)
-			}
 		})
 	}
+	MissingResourceChecks(tests).Verify(t)
 }
 
-func testVerifyResourceIsMissingCustomVerification(t *testing.T, resourceID string, readFunc func() error,
-	customCheck func(err error, rId string) bool) {
-	err := readFunc()
-	assert.NotNil(t, err, "err should not be nil")
-	assert.IsType(t, err, service.APIError{}, fmt.Sprintf("error: %s is not type api error", err.Error()))
-	if apiError, ok := err.(service.APIError); ok {
-		assert.True(t, customCheck(err, resourceID), fmt.Sprintf("error: %v is not missing;"+
-			"\nstatus code: %v;"+
-			"\nerror code: %s",
-			apiError, apiError.StatusCode, apiError.ErrorCode))
-	}
-}
+type MissingResourceChecks []MissingResourceCheck
 
-func testVerifyResourceIsMissing(t *testing.T, readFunc func() error) {
-	err := readFunc()
-	assert.NotNil(t, err, "err should not be nil")
-	assert.IsType(t, err, service.APIError{}, fmt.Sprintf("error: %s is not type api error", err.Error()))
-	if apiError, ok := err.(service.APIError); ok {
-		assert.True(t, apiError.IsMissing(), fmt.Sprintf("error: %v is not missing;"+
-			"\nstatus code: %v;"+
-			"\nerror code: %s",
-			apiError, apiError.StatusCode, apiError.ErrorCode))
+func (tests MissingResourceChecks) Verify(t *testing.T) {
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := tt.readFunc()
+			assert.NotNil(t, err, "err should not be nil")
+			assert.IsType(t, service.APIError{}, err, fmt.Sprintf("error: %s is not type api error", err.Error()))
+			if apiError, ok := err.(service.APIError); ok {
+				assert.True(t, apiError.IsMissing(), fmt.Sprintf("error: %v is not missing;\nstatus code: %v; error code: %s",
+					apiError, apiError.StatusCode, apiError.ErrorCode))
+			}
+		})
 	}
 }
 

@@ -111,7 +111,7 @@ func wrapMissingClusterError(err error, id string) error {
 	if strings.Contains(apiErr.Message,
 		fmt.Sprintf("Cluster %s does not exist", id)) {
 		apiErr.StatusCode = 404
-		return err
+		return apiErr
 	}
 	return err
 }

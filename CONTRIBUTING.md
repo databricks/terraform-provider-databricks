@@ -12,8 +12,8 @@ Contributing to Databricks Terraform Provider
 - [Unit testing resources](#unit-testing-resources)
 - [Generating asserts for the first time in test](#generating-asserts-for-the-first-time-in-test)
 - [Random naming anywhere](#random-naming-anywhere)
-- [Cloud Specific testing](#cloud-specific-testing)
 - [Integration Testing](#integration-testing)
+- [Pre-release procedure](#pre-release-procedure)
 - [Project Components](#project-components)
 	- [Databricks Terraform Provider Resources State](#databricks-terraform-provider-resources-state)
 	- [Databricks Terraform Data Sources State](#databricks-terraform-data-sources-state)
@@ -90,11 +90,7 @@ $ docker run -it -v $(pwd):/workpace -w /workpace databricks-terraform apply
 
 ## Testing
 
-* `make test-azure` will test Azure CLI aspects + all provider resources
-* `make test-mws` will test AWS Multiworkspace API and `databricks_mws_*` resources
-* `make test-aws` will test AWS resources
-
-* [ ] Integration tests should be run at a client level against both azure and aws to maintain sdk parity against both apis **(currently only on one cloud)**
+* [ ] [Integration tests](scripts/README.md) should be run at a client level against both azure and aws to maintain sdk parity against both apis.
 * [x] Terraform acceptance tests should be run against both aws and azure to maintain parity of provider between both cloud services
 * [ ] Consider test functions as scenarios, that you are debugging from IDE when specific issues arise. Test tables are discouraged. Single-use functions in tests are discouraged, unless resource definitions they make are longer than 80 lines.
 
@@ -181,74 +177,17 @@ for k, v := range d.State().Attributes {
 
 Terraform SDK provides `randomName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)` for convenient random names generation.
 
-## Cloud Specific testing
-
-Basic cloud-integration test should have prefix `TestAcc` if it is supposed to run on both clouds. One must aim to write integration tests that will run on all clouds without causing panic under any circumstance. Client must be created with `NewClientFromEnvironment()` as described in the following snippet:
-
-```go
-func TestAccListClustersIntegration(t *testing.T) {
-	cloud := os.Getenv("CLOUD_ENV")
-	if cloud == "" {
-		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
-	}
-	client := NewClientFromEnvironment()
-
-	randomName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
-	cluster := model.Cluster{
-		NumWorkers:  1,
-		ClusterName: "my-cluster-" + randomName,
-		SparkVersion:           "6.2.x-scala2.11",
-		NodeTypeID:             GetCloudInstanceType(client),
-		DriverNodeTypeID:       GetCloudInstanceType(client),
-		IdempotencyToken:       "cluster-" + randomName,
-		AutoterminationMinutes: 15,
-	}
-
-	if cloud == "AWS" {
-		cluster.AwsAttributes = &model.AwsAttributes{
-			EbsVolumeType:  model.EbsVolumeTypeGeneralPurposeSsd,
-			EbsVolumeCount: 1,
-			EbsVolumeSize:  32,
-		}
-	}
-
-	// ...
-}
-```
-
 ## Integration Testing
 
 Currently Databricks supports two cloud providers `azure` and `aws` thus integration testing with the correct cloud service provider is 
-crucial for making sure that the provider behaves as expected on all supported clouds. This type of testing separation is being managed via build tags 
-to allow for duplicate method names and environment variables to configure clients. 
+crucial for making sure that the provider behaves as expected on all supported clouds. Please read [dedicated instructions](scripts/README.md) for details.
 
-The current integration test implementation uses `CLOUD_ENV` environment variable and can use the value of `azure` or `aws`. 
-You can execute the acceptance with the following make commands `make terraform-acc-azure`, and `make terraform-acc-aws` for 
-azure and aws respectively. 
+## Pre-release procedure
 
-This involves bootstrapping the provider via a .env configuration file. Without these files in the root directory the tests 
-will fail as the provider will not have a authorized token and host.
-
-The configuration file for `aws` should be like the following and be named `.aws.env`:
-```.env
-DATABRICKS_HOST=<host>
-DATABRICKS_TOKEN=<token>
-```
-
-The configuration file for `azure` should be like the following and be named `.azure.env`:
-```.env
-DATABRICKS_AZURE_CLIENT_ID=<enterprise app client id>
-DATABRICKS_AZURE_CLIENT_SECRET=<enterprise app client secret>
-DATABRICKS_AZURE_TENANT_ID=<azure ad tenant id>
-DATABRICKS_AZURE_SUBSCRIPTION_ID=<azure subscription id>
-DATABRICKS_AZURE_RESOURCE_GROUP=<resource group where the workspace is>
-AZURE_REGION=<region where the workspace is>
-DATABRICKS_AZURE_MANAGED_RESOURCE_GROUP=<azure databricks managed resource group for workspace>
-DATABRICKS_AZURE_WORKSPACE_NAME=<azure databricks workspace name>
-```
-
-Note that azure integration tests will use service principal based auth. Even though it is using a service principal, 
-it will still be generating a personal access token to perform creation of resources. 
+1. `make test-azure` 
+2. `make test-mws` if MWS related code changed given release.
+3. Create release notes.
+4. Perfrom backwards-compatibility checks and make proper notes. 
 
 ## Project Components
 

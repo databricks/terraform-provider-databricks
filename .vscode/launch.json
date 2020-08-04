@@ -24,9 +24,6 @@
            },
            "env": {
                "TF_ACC": "1",
-               //"DATABRICKS_CONFIG_PROFILE": "sandbox"
-               // "TEST_RESOURCE_GROUP" : "${env:TEST_RESOURCE_GROUP}"
-               "AZURE_DATABRICKS_WORKSPACE_RESOURCE_ID" : "${env:AZURE_DATABRICKS_WORKSPACE_RESOURCE_ID}"
            },
            "showLog": true
        }

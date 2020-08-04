@@ -285,6 +285,9 @@ func Provider(version string) terraform.ResourceProvider {
 		if v, ok := d.GetOk("password"); ok {
 			pc.Password = v.(string)
 		}
+		if v, ok := d.GetOk("profile"); ok {
+			pc.Profile = v.(string)
+		}
 		if _, ok := d.GetOk("basic_auth"); ok {
 			username, userOk := d.GetOk("basic_auth.0.username")
 			password, passOk := d.GetOk("basic_auth.0.password")

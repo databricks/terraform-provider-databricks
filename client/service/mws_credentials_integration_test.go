@@ -7,12 +7,12 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestMWSCreds(t *testing.T) {
+func TestMwsAccCreds(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping integration test in short mode.")
 	}
-	acctID := os.Getenv("DATABRICKS_MWS_ACCT_ID")
-	client := GetIntegrationMWSAPIClient()
+	acctID := os.Getenv("DATABRICKS_ACCOUNT_ID")
+	client := CommonEnvironmentClient()
 	credsList, err := client.MWSCredentials().List(acctID)
 	assert.NoError(t, err, err)
 	t.Log(credsList)

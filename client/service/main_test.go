@@ -43,20 +43,6 @@ func compare(t *testing.T, a interface{}, b interface{}) {
 	assert.True(t, reflect.DeepEqual(a, b), string(jsonStr))
 }
 
-func GetIntegrationMWSAPIClient() *DatabricksClient {
-	client := DatabricksClient{
-		// TODO: add env assert
-		Host:     os.Getenv("DATABRICKS_MWS_HOST"),
-		Username: os.Getenv("DATABRICKS_USERNAME"),
-		Password: os.Getenv("DATABRICKS_PASSWORD"),
-	}
-	err := client.Configure("dev")
-	if err != nil {
-		panic(err)
-	}
-	return &client
-}
-
 func GetCloudInstanceType(c *DatabricksClient) string {
 	if c.IsAzure() {
 		return "Standard_DS3_v2"

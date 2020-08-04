@@ -74,6 +74,15 @@ var transientErrorStringMatches []string = []string{
 
 // checkHTTPRetry inspects HTTP errors from the Databricks API for known transient errors on Workspace creation
 func (c *DatabricksClient) checkHTTPRetry(ctx context.Context, resp *http.Response, err error) (bool, error) {
+	if ue, ok := err.(*url.Error); ok {
+		if strings.Contains(ue.Error(), "connection refused") {
+			log.Printf("[INFO] Attempting retry because of connection refused")
+			return true, APIError{
+				Message:   ue.Error(),
+				ErrorCode: "CONNECTION_REFUSED",
+			}
+		}
+	}
 	if resp == nil {
 		// If response is nil we can't make retry choices.
 		// In this case don't retry and return the original error from httpclient

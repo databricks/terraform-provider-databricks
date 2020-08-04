@@ -251,10 +251,10 @@ func TestResourceMWSNetworksDelete(t *testing.T) {
 			Method:   "GET",
 			Resource: "/api/2.0/accounts/abc/networks/nid",
 			Response: model.MWSNetwork{
-				NetworkID:        "nid",
-				NetworkName:      "Open Workers",
-				VPCID:            "five",
-				VPCStatus:        "SOMETHING",
+				NetworkID:   "nid",
+				NetworkName: "Open Workers",
+				VPCID:       "five",
+				VPCStatus:   "SOMETHING",
 			},
 		},
 		{

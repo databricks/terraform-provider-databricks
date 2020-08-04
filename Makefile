@@ -39,7 +39,7 @@ test-azcli:
 	@echo "✓ Running Terraform Acceptance Tests for Azure..."
 	@/bin/bash scripts/run.sh azcli '^(TestAcc|TestAzureAcc)' --debug
 
-test-azcli:
+test-azsp:
 	@echo "✓ Running Terraform Acceptance Tests for Azure..."
 	@/bin/bash scripts/run.sh azsp '^(TestAcc|TestAzureAcc)' --debug
 

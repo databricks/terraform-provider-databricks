@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"regexp"
 	"sort"
 	"strconv"
 	"strings"
@@ -22,50 +23,104 @@ import (
 	"github.com/databrickslabs/databricks-terraform/client/service"
 )
 
+// EnvironmentTemplate asserts existance and fills in {env.VAR} & {var.RANDOM} placeholders in template
+func EnvironmentTemplate(t *testing.T, template string) string {
+	vars := map[string]string{
+		"RANDOM": acctest.RandStringFromCharSet(5, acctest.CharSetAlphaNum),
+	}
+	missing := 0
+	var varType, varName, value string
+	r := regexp.MustCompile(`{(env|var).([^{}]*)}`)
+	for _, variableMatch := range r.FindAllStringSubmatch(template, -1) {
+		value = ""
+		varType = variableMatch[1]
+		varName = variableMatch[2]
+		switch varType {
+		case "env":
+			value = os.Getenv(varName)
+		case "var":
+			value = vars[varName]
+		}
+		if value == "" {
+			t.Logf("Missing %s %s variable.", varType, varName)
+			missing++
+			continue
+		}
+		template = strings.ReplaceAll(template, `{`+varType+`.`+varName+`}`, value)
+	}
+	if missing > 0 {
+		t.Fatalf("Please set %d variables and restart.", missing)
+	}
+	return service.TrimLeadingWhitespace(template)
+}
+
+func FirstKeyValue(t *testing.T, str, key string) string {
+	r := regexp.MustCompile(key + `\s+=\s+"([^"]*)"`)
+	match := r.FindStringSubmatch(str)
+	if len(match) != 2 {
+		t.Fatalf("Cannot find %s in given string", key)
+	}
+	return match[1]
+}
+
+func TestEnvironmentTemplate(t *testing.T) {
+	res := EnvironmentTemplate(t, `
+	resource "user" "me" {
+		name  = "{env.USER}"
+		email = "{env.USER}+{var.RANDOM}@example.com"
+	}`)
+	assert.True(t, strings.Contains(res, fmt.Sprintf(`name = "%s"`, os.Getenv("USER"))), res)
+	assert.Equal(t, os.Getenv("USER"), FirstKeyValue(t, res, "name"))
+}
+
 func assertErrorStartsWith(t *testing.T, err error, message string) bool {
 	return assert.True(t, strings.HasPrefix(err.Error(), message), err.Error())
 }
 
-func TestAwsAccMissingMWSResources(t *testing.T) {
-	if cloudENV, ok := os.LookupEnv("CLOUD_ENV"); !ok || cloudENV != "AWS" {
-		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV=AWS' is set")
+type MissingResourceCheck struct {
+	name          string
+	readFunc      func() error
+	isCustomCheck bool
+	resourceID    string
+}
+
+func TestMwsAccMissingResources(t *testing.T) {
+	if cloudEnv, ok := os.LookupEnv("CLOUD_ENV"); !ok || cloudEnv != "MWS" {
+		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV=MWS' is set.")
 	}
 
-	mwsAcctID := os.Getenv("DATABRICKS_MWS_ACCT_ID")
+	mwsAcctID := os.Getenv("DATABRICKS_ACCOUNT_ID")
+	if mwsAcctID == "" {
+		t.Skip("Must have DATABRICKS_ACCOUNT_ID environment variable set.")
+	}
 	randStringID := acctest.RandString(10)
 	randIntID := 2000000 + acctest.RandIntRange(100000, 20000000)
 
-	client := getMWSClient()
-	tests := []struct {
-		name            string
-		readFunc        func() error
-		isCustomCheck   bool
-		resourceID      string
-		customCheckFunc func(err error, rId string) bool
-	}{
+	client := service.CommonEnvironmentClient()
+	tests := []MissingResourceCheck{
 		{
-			name: "CheckIfMWSCredentialsAreMissing",
+			name: "Credential",
 			readFunc: func() error {
 				_, err := client.MWSCredentials().Read(mwsAcctID, randStringID)
 				return err
 			},
 		},
 		{
-			name: "CheckIfMWSNetworksAreMissing",
+			name: "Network",
 			readFunc: func() error {
 				_, err := client.MWSNetworks().Read(mwsAcctID, randStringID)
 				return err
 			},
 		},
 		{
-			name: "CheckIfMWSStorageConfigurationsAreMissing",
+			name: "Storage",
 			readFunc: func() error {
 				_, err := client.MWSStorageConfigurations().Read(mwsAcctID, randStringID)
 				return err
 			},
 		},
 		{
-			name: "CheckIfMWSWorkspacesAreMissing",
+			name: "Workspace",
 			readFunc: func() error {
 				_, err := client.MWSWorkspaces().Read(mwsAcctID, int64(randIntID))
 				return err
@@ -74,12 +129,7 @@ func TestAwsAccMissingMWSResources(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if tt.isCustomCheck {
-				// Test custom check because api call does not return 404 not found if the resource does not exist
-				testVerifyResourceIsMissingCustomVerification(t, tt.resourceID, tt.readFunc, tt.customCheckFunc)
-			} else {
-				testVerifyResourceIsMissing(t, tt.readFunc)
-			}
+			testVerifyResourceIsMissing(t, tt.readFunc)
 		})
 	}
 }

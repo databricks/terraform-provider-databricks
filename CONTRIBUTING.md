@@ -100,7 +100,7 @@ $ docker run -it -v $(pwd):/workpace -w /workpace databricks-terraform apply
 
 ## Code conventions
 
-* `fmt.Sprintf` with more than 4 patterns is considered too complex to maintain. Should be avoided at all cost, even in tests.
+* `fmt.Sprintf` with more than 4 placeholders is considered too complex to maintain. Should be avoided at all cost. Use `EnvironmentTemplate(t, "This is {env.DATABRICKS_HOST} with {var.RANDOM} name.")` instead
 * Import statements should all be first ordered by "GoLang internal", "Vendor packages" and then "current provider packages". Within those sections imports must follow alphabetical order.
 
 ## Linting

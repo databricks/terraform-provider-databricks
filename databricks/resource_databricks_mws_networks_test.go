@@ -18,70 +18,61 @@ func TestMwsAccNetworks(t *testing.T) {
 	if cloudEnv != "MWS" {
 		t.Skip("Cannot run test on non-MWS environment")
 	}
-	var MWSNetwork model.MWSNetwork
-	// generate a random name for each tokenInfo test run, to avoid
-	// collisions from multiple concurrent tests.
-	// the acctest package includes many helpers such as RandStringFromCharSet
-	// See https://godoc.org/github.com/hashicorp/terraform-plugin-sdk/helper/acctest
-	//scope := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
-	mwsAcctID := os.Getenv("DATABRICKS_MWS_ACCT_ID")
-	mwsHost := os.Getenv("DATABRICKS_MWS_HOST")
-	networkName := "test-mws-network-tf"
+	var network model.MWSNetwork
 
-	vpc := "vpc-11111111"
-	subnet1 := "subnet-11111111"
-	subnet2 := "subnet-99999999"
-	sg1 := "sg-11111111"
-	sg2 := "sg-99999999"
-
+	// cannot use subnets between network registrations...
+	networkResourceConfig := EnvironmentTemplate(t, `
+	provider "databricks" {
+		host     = "{env.DATABRICKS_HOST}"
+		username = "{env.DATABRICKS_USERNAME}"
+		password = "{env.DATABRICKS_PASSWORD}"
+	}
+	resource "databricks_mws_networks" "my_network" {
+		account_id   = "{env.DATABRICKS_ACCOUNT_ID}"
+		network_name = "network-test-{var.RANDOM}"
+		vpc_id       = "vpc-11111111"
+		subnet_ids   = [
+			"subnet-11111111",
+			"subnet-99999999"
+		]
+		security_group_ids = [
+			"sg-99999999"
+		]
+	}`)
+	name := FirstKeyValue(t, networkResourceConfig, "network_name")
 	resource.Test(t, resource.TestCase{
 		Providers:    testAccProviders,
 		CheckDestroy: testMWSNetworkResourceDestroy,
 		Steps: []resource.TestStep{
 			{
-				// use a dynamic configuration with the random name from above
-				Config: testMWSNetworkCreate(mwsAcctID, mwsHost, networkName, vpc, subnet1, subnet2, sg1, sg2),
-				// compose a basic test, checking both remote and local values
+				Config: networkResourceConfig,
 				Check: resource.ComposeTestCheckFunc(
-					// query the API to retrieve the tokenInfo object
-					testMWSNetworkResourceExists("databricks_mws_networks.my_network", &MWSNetwork, t),
-					// verify local values
-					resource.TestCheckResourceAttr("databricks_mws_networks.my_network", "account_id", mwsAcctID),
-					resource.TestCheckResourceAttr("databricks_mws_networks.my_network", "network_name", networkName),
+					testMWSNetworkResourceExists("databricks_mws_networks.my_network", &network, t),
+					resource.TestCheckResourceAttr("databricks_mws_networks.my_network", "network_name", name),
 				),
 				Destroy: false,
 			},
 			{
-				// use a dynamic configuration with the random name from above
-				Config: testMWSNetworkCreate(mwsAcctID, mwsHost, networkName, vpc, subnet1, subnet2, sg1, sg2),
-				// compose a basic test, checking both remote and local values
+				Config: networkResourceConfig,
 				Check: resource.ComposeTestCheckFunc(
-					// query the API to retrieve the tokenInfo object
-					testMWSNetworkResourceExists("databricks_mws_networks.my_network", &MWSNetwork, t),
-					// verify local values
-					resource.TestCheckResourceAttr("databricks_mws_networks.my_network", "account_id", mwsAcctID),
-					resource.TestCheckResourceAttr("databricks_mws_networks.my_network", "network_name", networkName),
+					testMWSNetworkResourceExists("databricks_mws_networks.my_network", &network, t),
+					resource.TestCheckResourceAttr("databricks_mws_networks.my_network", "network_name", name),
 				),
 				ExpectNonEmptyPlan: false,
 				Destroy:            false,
 			},
 			{
 				PreConfig: func() {
-					conn := getMWSClient()
-					err := conn.MWSNetworks().Delete(MWSNetwork.AccountID, MWSNetwork.NetworkID)
+					conn := service.CommonEnvironmentClient()
+					err := conn.MWSNetworks().Delete(network.AccountID, network.NetworkID)
 					if err != nil {
 						panic(err)
 					}
 				},
-				// use a dynamic configuration with the random name from above
-				Config: testMWSNetworkCreate(mwsAcctID, mwsHost, networkName, vpc, subnet1, subnet2, sg1, sg2),
-				// compose a basic test, checking both remote and local values
+				Config: networkResourceConfig,
 				Check: resource.ComposeTestCheckFunc(
-					// query the API to retrieve the tokenInfo object
-					testMWSNetworkResourceExists("databricks_mws_networks.my_network", &MWSNetwork, t),
-					// verify local values
-					resource.TestCheckResourceAttr("databricks_mws_networks.my_network", "account_id", mwsAcctID),
-					resource.TestCheckResourceAttr("databricks_mws_networks.my_network", "network_name", networkName),
+					testMWSNetworkResourceExists("databricks_mws_networks.my_network", &network, t),
+					resource.TestCheckResourceAttr("databricks_mws_networks.my_network", "network_name", name),
 				),
 				ExpectNonEmptyPlan: false,
 				Destroy:            false,
@@ -91,8 +82,7 @@ func TestMwsAccNetworks(t *testing.T) {
 }
 
 func testMWSNetworkResourceDestroy(s *terraform.State) error {
-	client := getMWSClient()
-
+	client := service.CommonEnvironmentClient()
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "databricks_mws_storage_configurations" {
 			continue
@@ -105,13 +95,13 @@ func testMWSNetworkResourceDestroy(s *terraform.State) error {
 		if err != nil {
 			return nil
 		}
-		return errors.New("resource Scim Group is not cleaned up")
+		return errors.New("resource is not cleaned up")
 	}
 	return nil
 }
 
 // testAccCheckTokenResourceExists queries the API and retrieves the matching Widget.
-func testMWSNetworkResourceExists(n string, mwsCreds *model.MWSNetwork, t *testing.T) resource.TestCheckFunc {
+func testMWSNetworkResourceExists(n string, network *model.MWSNetwork, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		// find the corresponding state object
 		rs, ok := s.RootModule().Resources[n]
@@ -120,7 +110,7 @@ func testMWSNetworkResourceExists(n string, mwsCreds *model.MWSNetwork, t *testi
 		}
 
 		// retrieve the configured client from the test setup
-		conn := getMWSClient()
+		conn := service.CommonEnvironmentClient()
 		packagedMWSIds, err := unpackMWSAccountID(rs.Primary.ID)
 		if err != nil {
 			return err
@@ -131,32 +121,9 @@ func testMWSNetworkResourceExists(n string, mwsCreds *model.MWSNetwork, t *testi
 		}
 
 		// If no error, assign the response Widget attribute to the widget pointer
-		*mwsCreds = resp
+		*network = resp
 		return nil
 	}
-}
-
-func testMWSNetworkCreate(mwsAcctID, mwsHost, networkName, vpcID, subnetID1, subnetID2, sgID1, sgID2 string) string {
-	return fmt.Sprintf(`
-								provider "databricks" {
-								  host = "%s"
-								  basic_auth {}
-								}
-								resource "databricks_mws_networks" "my_network" {
-								  account_id = "%s"
-								  network_name = "%s"
-								  vpc_id = "%s"
-								  subnet_ids = [
-									"%s",
-									"%s",
-								  ]
-								  security_group_ids = [
-									"%s",
-									"%s",
-								  ]
-								}
-
-								`, mwsHost, mwsAcctID, networkName, vpcID, subnetID1, subnetID2, sgID1, sgID2)
 }
 
 func TestResourceMWSNetworksCreate(t *testing.T) {
@@ -279,6 +246,25 @@ func TestResourceMWSNetworksDelete(t *testing.T) {
 		{
 			Method:   "DELETE",
 			Resource: "/api/2.0/accounts/abc/networks/nid",
+		},
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/accounts/abc/networks/nid",
+			Response: model.MWSNetwork{
+				NetworkID:        "nid",
+				NetworkName:      "Open Workers",
+				VPCID:            "five",
+				VPCStatus:        "SOMETHING",
+			},
+		},
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/accounts/abc/networks/nid",
+			Response: service.APIErrorBody{
+				ErrorCode: "NOT_FOUND",
+				Message:   "Yes, it's not found",
+			},
+			Status: 404,
 		},
 	}, resourceMWSNetworks, nil, actionWithID("abc/nid", resourceMWSNetworksDelete))
 	assert.NoError(t, err, err)

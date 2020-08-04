@@ -73,24 +73,23 @@ var transientErrorStringMatches []string = []string{
 }
 
 // checkHTTPRetry inspects HTTP errors from the Databricks API for known transient errors on Workspace creation
-func checkHTTPRetry(ctx context.Context, resp *http.Response, err error) (bool, error) {
+func (c *DatabricksClient) checkHTTPRetry(ctx context.Context, resp *http.Response, err error) (bool, error) {
 	if resp == nil {
 		// If response is nil we can't make retry choices.
 		// In this case don't retry and return the original error from httpclient
 		return false, err
 	}
 	if resp.StatusCode >= 400 {
-		log.Printf("Failed request detected. Status Code: %v\n", resp.StatusCode)
 		// reading the body means that the caller cannot read it themselves
 		// But that's ok because we've hit an error case
 		// Our job now is to
 		//  - capture the error and return it
 		//  - determine if the error is retryable
-
 		body, err := ioutil.ReadAll(resp.Body)
 		if err != nil {
 			return false, err
 		}
+		log.Printf("[INFO] %s %v", resp.Status, c.redactedDump(body))
 		var errorBody APIErrorBody
 		err = json.Unmarshal(body, &errorBody)
 		// this is most likely HTML... since un-marshalling JSON failed
@@ -134,7 +133,7 @@ func checkHTTPRetry(ctx context.Context, resp *http.Response, err error) (bool, 
 		// Handle transient errors for retries
 		for _, substring := range transientErrorStringMatches {
 			if strings.Contains(errorBody.Message, substring) {
-				log.Println("Failed request detected: Retryable type found. Attempting retry...")
+				log.Printf("[INFO] Attempting retry because of %#v", substring)
 				return true, dbAPIError
 			}
 		}
@@ -280,7 +279,7 @@ func (c *DatabricksClient) redactedDump(body []byte) (res string) {
 		// error in this case is not much relevant
 		return
 	}
-	return onlyNBytes(string(rePacked), 4096)
+	return onlyNBytes(string(rePacked), 1024)
 }
 
 // todo: do is better name
@@ -322,7 +321,7 @@ func (c *DatabricksClient) genericQuery(method, requestURL string, data interfac
 	if err != nil {
 		return nil, err
 	}
-	log.Printf("[INFO] %s %v", resp.Status, c.redactedDump(body))
+	log.Printf("[INFO] %s %v <- %s %s", resp.Status, c.redactedDump(body), method, requestURL)
 	return body, nil
 }
 

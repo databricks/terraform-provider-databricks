@@ -47,35 +47,16 @@ vendor:
 
 test-azure:
 	@echo "✓ Running Terraform Acceptance Tests for Azure..."
-	@/bin/bash scripts/run.sh mws '^(TestAcc|TestAzureAcc)'
+	@/bin/bash scripts/run.sh azure '^(TestAcc|TestAzureAcc)' --debug
 
 test-mws:
 	@echo "✓ Running acceptance Tests for Multiple Workspace APIs on AWS..."
-	@/bin/bash scripts/run.sh mws TestAccMWSWorkspaces
-
-# INTEGRATION TESTING WITH AZURE
-terraform-acc-azure: lint
-	@echo "✓ Running Terraform Acceptance Tests for Azure..."
-	@/bin/bash integration-environment-azure/run.sh
+	@/bin/bash scripts/run.sh mws '^TestMwsAcc' --debug
 
 # INTEGRATION TESTING WITH AWS
 terraform-acc-aws: lint
 	@echo "✓ Running Terraform Acceptance Tests for AWS..."
 	@CLOUD_ENV="aws" TF_ACC=1 gotestsum --format short-verbose --raw-command go test -v -json -short -coverprofile=coverage.out -run 'TestAccAws' ./...
-
-# INTEGRATION TESTING WITH AWS
-terraform-acc-mws: lint
-	@echo "✓ Running Terraform Acceptance Tests for Multiple Workspace APIs on AWS..."
-	@/bin/bash integration-environment-mws/run.sh
-
-# Launch VSCode with Azure integration test ENV variables
-code-azure:
-	export $(scripts/run.sh azure --export)
-	code .
-
-code-aws:
-	export $(scripts/run.sh aws --export)
-	code .
 
 terraform-setup: build
 	@echo "✓ Initializing Terraform..."

@@ -199,4 +199,5 @@ output "test_region" {
 
 output "databricks_account_id" {
   value = data.external.env.result.DATABRICKS_ACCOUNT_ID
+  sensitive = true
 }

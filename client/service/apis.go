@@ -181,7 +181,7 @@ func (c *DatabricksClient) configureHTTPCLient() {
 				},
 			},
 		},
-		CheckRetry: checkHTTPRetry,
+		CheckRetry: c.checkHTTPRetry,
 		// Using a linear retry rather than the default exponential retry
 		// as the creation condition is normally passed after 30-40 seconds
 		// Setting the retry interval to 10 seconds. Setting RetryWaitMin and RetryWaitMax

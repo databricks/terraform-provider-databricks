@@ -40,6 +40,7 @@ func packMWSAccountID(idsToPackage PackagedMWSIds) string {
 
 // Helps unpackage MWSAccountId from another id such as credentials id or network id
 func unpackMWSAccountID(combined string) (PackagedMWSIds, error) {
+	// TODO: harmonize with other combined ID functions - e.g. secret scopes/keys/acls
 	var packagedMWSIds PackagedMWSIds
 	parts := strings.Split(combined, "/")
 	if len(parts) != 2 {

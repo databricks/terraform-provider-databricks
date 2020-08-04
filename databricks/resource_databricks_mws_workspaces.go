@@ -172,6 +172,7 @@ func resourceMWSWorkspacesCreate(d *schema.ResourceData, m interface{}) error {
 		ResourceID: strconv.Itoa(int(workspace.WorkspaceID)),
 	}
 	d.SetId(packMWSAccountID(workspaceResourceID))
+	// TODO: replace with waitForWorkspaceState
 	err = client.MWSWorkspaces().WaitForWorkspaceRunning(mwsAcctID, workspace.WorkspaceID, 10, 180)
 	if err != nil {
 		if !reflect.ValueOf(networkID).IsZero() {
@@ -216,7 +217,7 @@ func resourceMWSWorkspacesRead(d *schema.ResourceData, m interface{}) error {
 	}
 
 	if workspace.WorkspaceStatus != model.WorkspaceStatusRunning {
-		// make call only if workspace is not running
+		// TODO: replace with waitForWorkspaceState
 		err = client.MWSWorkspaces().WaitForWorkspaceRunning(packagedMwsID.MwsAcctID, idInt64, 10, 180)
 		if err != nil {
 			log.Println("WORKSPACE IS NOT RUNNING")
@@ -325,6 +326,7 @@ func resourceMWSWorkspacesUpdate(d *schema.ResourceData, m interface{}) error {
 	if err != nil {
 		return err
 	}
+	// TODO: replace with waitForWorkspaceState, potentially with state machine checks
 	err = client.MWSWorkspaces().WaitForWorkspaceRunning(packagedMwsID.MwsAcctID, idInt64, 10, 180)
 	if err != nil {
 		return err
@@ -344,7 +346,23 @@ func resourceMWSWorkspacesDelete(d *schema.ResourceData, m interface{}) error {
 		return err
 	}
 	err = client.MWSWorkspaces().Delete(packagedMwsID.MwsAcctID, idInt64)
-	return err
+	if err != nil {
+		return err
+	}
+	return resource.Retry(15*time.Minute, func() *resource.RetryError {
+		workspace, err := client.MWSWorkspaces().Read(packagedMwsID.MwsAcctID, idInt64)
+		if e, ok := err.(service.APIError); ok && e.IsMissing() {
+			log.Printf("[INFO] Workspace %s is removed.", packagedMwsID.ResourceID)
+			return nil
+		}
+		if err != nil {
+			return resource.NonRetryableError(err)
+		}
+		msg := fmt.Errorf("Workspace %s is not removed yet. Workspace status: %s %s",
+			workspace.WorkspaceName, workspace.WorkspaceStatus, workspace.WorkspaceStatusMessage)
+		log.Printf("[INFO] %s", msg)
+		return resource.RetryableError(msg)
+	})
 }
 
 func getNetworkErrors(networkRespList []model.NetworkHealth) string {

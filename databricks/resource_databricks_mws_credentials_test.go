@@ -18,64 +18,56 @@ func TestMwsAccCredentials(t *testing.T) {
 	if cloudEnv != "MWS" {
 		t.Skip("Cannot run test on non-MWS environment")
 	}
-	var MWSCredentials model.MWSCredentials
-	// generate a random name for each tokenInfo test run, to avoid
-	// collisions from multiple concurrent tests.
-	// the acctest package includes many helpers such as RandStringFromCharSet
-	// See https://godoc.org/github.com/hashicorp/terraform-plugin-sdk/helper/acctest
-	//scope := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
-	mwsAcctID := os.Getenv("DATABRICKS_MWS_ACCT_ID")
-	mwsHost := os.Getenv("DATABRICKS_MWS_HOST")
-	awsAcctID := "999999999999"
-	credentialsName := "test-mws-credentials-tf"
-	roleName := "terraform-creds-role"
-
+	var creds model.MWSCredentials
+	config := EnvironmentTemplate(t, `
+	provider "databricks" {
+		host     = "{env.DATABRICKS_HOST}"
+		username = "{env.DATABRICKS_USERNAME}"
+		password = "{env.DATABRICKS_PASSWORD}"
+	}
+	resource "databricks_mws_credentials" "my_e2_credentials" {
+		account_id       = "{env.DATABRICKS_ACCOUNT_ID}"
+		credentials_name = "creds-test-{var.RANDOM}"
+		role_arn         = "arn:aws:iam::999999999999:role/tf-test-{var.RANDOM}"
+	}`)
+	name := FirstKeyValue(t, config, "credentials_name")
+	arn := FirstKeyValue(t, config, "role_arn")
 	resource.Test(t, resource.TestCase{
 		Providers:    testAccProviders,
 		CheckDestroy: testMWSCredentialsResourceDestroy,
 		Steps: []resource.TestStep{
 			{
-				// use a dynamic configuration with the random name from above
-				Config: testMWSCredentialsCreate(mwsAcctID, mwsHost, awsAcctID, roleName, credentialsName),
-				// compose a basic test, checking both remote and local values
+				Config: config,
 				Check: resource.ComposeTestCheckFunc(
-					// query the API to retrieve the tokenInfo object
-					testMWSCredentialsResourceExists("databricks_mws_credentials.my_e2_credentials", &MWSCredentials, t),
-					// verify local values
-					resource.TestCheckResourceAttr("databricks_mws_credentials.my_e2_credentials", "account_id", mwsAcctID),
-					resource.TestCheckResourceAttr("databricks_mws_credentials.my_e2_credentials", "credentials_name", credentialsName),
+					testMWSCredentialsResourceExists("databricks_mws_credentials.my_e2_credentials", &creds, t),
+					resource.TestCheckResourceAttr("databricks_mws_credentials.my_e2_credentials", "credentials_name", name),
+					resource.TestCheckResourceAttr("databricks_mws_credentials.my_e2_credentials", "role_arn", arn),
 				),
 				Destroy: false,
 			},
 			{
-				// use a dynamic configuration with the random name from above
-				Config: testMWSCredentialsCreate(mwsAcctID, mwsHost, awsAcctID, roleName, credentialsName),
-				// compose a basic test, checking both remote and local values
+				Config: config,
 				Check: resource.ComposeTestCheckFunc(
-					// query the API to retrieve the tokenInfo object
-					testMWSCredentialsResourceExists("databricks_mws_credentials.my_e2_credentials", &MWSCredentials, t),
-					// verify local values
-					resource.TestCheckResourceAttr("databricks_mws_credentials.my_e2_credentials", "account_id", mwsAcctID),
-					resource.TestCheckResourceAttr("databricks_mws_credentials.my_e2_credentials", "credentials_name", credentialsName),
+					testMWSCredentialsResourceExists("databricks_mws_credentials.my_e2_credentials", &creds, t),
+					resource.TestCheckResourceAttr("databricks_mws_credentials.my_e2_credentials", "credentials_name", name),
+					resource.TestCheckResourceAttr("databricks_mws_credentials.my_e2_credentials", "role_arn", arn),
 				),
 				ExpectNonEmptyPlan: false,
 				Destroy:            false,
 			},
 			{
 				PreConfig: func() {
-					conn := getMWSClient()
-					err := conn.MWSCredentials().Delete(MWSCredentials.AccountID, MWSCredentials.CredentialsID)
+					conn := service.CommonEnvironmentClient()
+					err := conn.MWSCredentials().Delete(creds.AccountID, creds.CredentialsID)
 					if err != nil {
 						panic(err)
 					}
 				},
-				// use a dynamic configuration with the random name from above
-				Config: testMWSCredentialsCreate(mwsAcctID, mwsHost, awsAcctID, roleName, credentialsName),
-				// compose a basic test, checking both remote and local values
+				Config: config,
 				Check: resource.ComposeTestCheckFunc(
-					// verify local values
-					resource.TestCheckResourceAttr("databricks_mws_credentials.my_e2_credentials", "account_id", mwsAcctID),
-					resource.TestCheckResourceAttr("databricks_mws_credentials.my_e2_credentials", "credentials_name", credentialsName),
+					testMWSCredentialsResourceExists("databricks_mws_credentials.my_e2_credentials", &creds, t),
+					resource.TestCheckResourceAttr("databricks_mws_credentials.my_e2_credentials", "credentials_name", name),
+					resource.TestCheckResourceAttr("databricks_mws_credentials.my_e2_credentials", "role_arn", arn),
 				),
 				Destroy: false,
 			},
@@ -84,7 +76,7 @@ func TestMwsAccCredentials(t *testing.T) {
 }
 
 func testMWSCredentialsResourceDestroy(s *terraform.State) error {
-	client := getMWSClient()
+	client := service.CommonEnvironmentClient()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "databricks_mws_credentials" {
@@ -113,7 +105,7 @@ func testMWSCredentialsResourceExists(n string, mwsCreds *model.MWSCredentials, 
 		}
 
 		// retrieve the configured client from the test setup
-		conn := getMWSClient()
+		conn := service.CommonEnvironmentClient()
 		packagedMWSIds, err := unpackMWSAccountID(rs.Primary.ID)
 		if err != nil {
 			return err

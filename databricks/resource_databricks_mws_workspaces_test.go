@@ -4,96 +4,72 @@ import (
 	"errors"
 	"os"
 	"strconv"
-	"strings"
 	"testing"
 
 	"github.com/databrickslabs/databricks-terraform/client/model"
 	"github.com/databrickslabs/databricks-terraform/client/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 	"github.com/stretchr/testify/assert"
 )
 
-func TestAccMWSWorkspaces(t *testing.T) {
-	cloud := os.Getenv("CLOUD_ENV")
-	if cloud == "MWS" {
+func TestMwsAccWorkspaces(t *testing.T) {
+	cloudEnv := os.Getenv("CLOUD_ENV")
+	if cloudEnv != "MWS" {
 		t.Skip("Acceptance tests skipped unless CLOUD_ENV=MWS is set")
 	}
-	vars := map[string]string{
-		"DATABRICKS_HOST":       os.Getenv("DATABRICKS_HOST"),
-		"DATABRICKS_ACCOUNT_ID": os.Getenv("DATABRICKS_ACCOUNT_ID"),
-		"TEST_REGION":           os.Getenv("TEST_REGION"),
-		"TEST_ROOT_BUCKET":      os.Getenv("TEST_ROOT_BUCKET"),
-		"TEST_CROSSACCOUNT_ARN": os.Getenv("TEST_CROSSACCOUNT_ARN"),
-		"TEST_VPC_ID":           os.Getenv("TEST_VPC_ID"),
-		"TEST_SUBNET_PUBLIC":    os.Getenv("TEST_SUBNET_PUBLIC"),
-		"TEST_SUBNET_PRIVATE":   os.Getenv("TEST_SUBNET_PRIVATE"),
-		"TEST_SECURITY_GROUP":   os.Getenv("TEST_SECURITY_GROUP"),
-		"RANDOM_NAME":           acctest.RandStringFromCharSet(5, acctest.CharSetAlphaNum),
-	}
-	config := `provider "databricks" {
-		host = "{{DATABRICKS_HOST}}"
+	config := EnvironmentTemplate(t, `
+	provider "databricks" {
+		host     = "{env.DATABRICKS_HOST}"
+		username = "{env.DATABRICKS_USERNAME}"
+		password = "{env.DATABRICKS_PASSWORD}"
 	}
 	resource "databricks_mws_credentials" "this" {
-		account_id       = "{{DATABRICKS_ACCOUNT_ID}}"
-		credentials_name = "credentials-{{RANDOM_NAME}}"
-		role_arn         = "{{TEST_CROSSACCOUNT_ARN}}"
+		account_id       = "{env.DATABRICKS_ACCOUNT_ID}"
+		credentials_name = "credentials-ws-{var.RANDOM}"
+		role_arn         = "{env.TEST_CROSSACCOUNT_ARN}"
 	}
 	resource "databricks_mws_storage_configurations" "this" {
-		account_id                 = "{{DATABRICKS_ACCOUNT_ID}}"
-		storage_configuration_name = "storage-{{RANDOM_NAME}}"
-		bucket_name                = "{{TEST_ROOT_BUCKET}}"
+		account_id                 = "{env.DATABRICKS_ACCOUNT_ID}"
+		storage_configuration_name = "storage-ws-{var.RANDOM}"
+		bucket_name                = "{env.TEST_ROOT_BUCKET}"
 	}
 	resource "databricks_mws_networks" "this" {
-		account_id   = "{{DATABRICKS_ACCOUNT_ID}}"
-		network_name = "networkd-{{RANDOM_NAME}}"
-		vpc_id       = "{{TEST_VPC_ID}}"
+		account_id   = "{env.DATABRICKS_ACCOUNT_ID}"
+		network_name = "network-ws-{var.RANDOM}"
+		vpc_id       = "{env.TEST_VPC_ID}"
 		subnet_ids   = [
-			"{{TEST_SUBNET_PUBLIC}}",
-			"{{TEST_SUBNET_PRIVATE}}",
+			"{env.TEST_SUBNET_PUBLIC}",
+			"{env.TEST_SUBNET_PRIVATE}",
 		]
 		security_group_ids = [
-			"{{TEST_SECURITY_GROUP}}",
+			"{env.TEST_SECURITY_GROUP}",
 		]
 	}
-	resource "databricks_mws_workspaces" "my_mws_workspace" {
-		account_id      = "{{DATABRICKS_ACCOUNT_ID}}"
-		workspace_name  = "terra-{{RANDOM_NAME}}"
-		deployment_name = "terra-{{RANDOM_NAME}}"
-		aws_region      = "{{TEST_REGION}}"
+	resource "databricks_mws_workspaces" "this" {
+		account_id      = "{env.DATABRICKS_ACCOUNT_ID}"
+		workspace_name  = "terra-{var.RANDOM}"
+		deployment_name = "terra-{var.RANDOM}"
+		aws_region      = "{env.TEST_REGION}"
 
 		credentials_id = databricks_mws_credentials.this.credentials_id
 		storage_configuration_id = databricks_mws_storage_configurations.this.storage_configuration_id
 		network_id = databricks_mws_networks.this.network_id
 		verify_workspace_runnning = true
-	}`
-	missing := false
-	for envVar, value := range vars {
-		if value == "" {
-			missing = true
-			t.Logf("%s environment variable is empty, cannot proceed with test", envVar)
-		}
-		config = strings.ReplaceAll(config, `{{`+envVar+`}}`, value)
-	}
-	if missing {
-		t.FailNow()
-	}
+	}`)
 	resource.Test(t, resource.TestCase{
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config: config,
-				//// compose a basic test, checking both remote and local values
 				Check: resource.ComposeTestCheckFunc(
-					// verify that after creation the workspace_status is in a running state.
-					resource.TestCheckResourceAttr("databricks_mws_workspaces.my_mws_workspace", "workspace_status", "RUNNING"),
+					resource.TestCheckResourceAttr("databricks_mws_workspaces.this", "workspace_status", "RUNNING"),
 				),
 				Destroy: false,
 			},
 		},
 		CheckDestroy: func(s *terraform.State) error {
-			client := getMWSClient()
+			client := service.CommonEnvironmentClient()
 			for _, rs := range s.RootModule().Resources {
 				if rs.Type != "databricks_mws_workspaces" {
 					continue
@@ -388,6 +364,24 @@ func TestResourceMWSWorkspacesDelete(t *testing.T) {
 		{
 			Method:   "DELETE",
 			Resource: "/api/2.0/accounts/abc/workspaces/1234",
+		},
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/accounts/abc/workspaces/1234",
+			Response: model.MWSWorkspace{
+				WorkspaceName:          "labdata",
+				WorkspaceStatus:        model.WorkspaceStatusCanceled,
+				WorkspaceStatusMessage: "Things are being removed",
+			},
+		},
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/accounts/abc/workspaces/1234",
+			Response: service.APIErrorBody{
+				ErrorCode: "NOT_FOUND",
+				Message:   "Cannot find anything",
+			},
+			Status: 404,
 		},
 	}, resourceMWSWorkspaces, nil, actionWithID("abc/1234", resourceMWSWorkspacesDelete))
 	assert.NoError(t, err, err)

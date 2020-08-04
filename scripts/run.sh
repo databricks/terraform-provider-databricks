@@ -10,10 +10,22 @@ if ! type terraform &> /dev/null; then
     exit 1
 fi
 
+if [ "" == "$1" ]; then 
+    echo "Just exporting environment variables:"
+    echo "$0 <env-name> --export"
+    echo ""
+    echo "Running cloud-specific tests:"
+    echo "$0 <env-name> '^(TestAcc|TestAzureAcc)' [--destroy] [--quick] [--debug]"
+    echo "--destroy is optional flag to destroy environment after tests are done"
+    echo "--debug is optional flag to log DEBUG lines into env-integration/tf.log"
+    exit
+fi
+
 OLDPWD="$PWD"
 DIR=$(dirname "$0")
 TARGET="${DIR}/$1-integration"
 STATE="${DIR}/$1-integration/terraform.tfstate"
+JQ='to_entries|map("\(.key|ascii_upcase)=\(.value.value|tostring)")|.[]'
 
 if ! [ -d "$TARGET" ]; then
     >&2 echo "Cannot find $1 integration tests."
@@ -26,7 +38,7 @@ if [ "--export" == "$2" ]; then
         >&2 echo "$1 didn't provision environment yet."
         exit 1
     fi
-    terraform output -state=$STATE --json | jq -r 'to_entries|map("\(.key|ascii_upcase)=\(.value.value|tostring)")|.[]'
+    terraform output -state=$STATE --json | jq -r $JQ
     exit
 fi
 
@@ -45,21 +57,35 @@ if [ -f "$TARGET/require_env" ]; then
     fi
 fi
 
-
+# if [[ $@ == *"--quick"* ]]; then
+#     echo "QUICK"
+# else
+#     echo "NO QUICK"
+# fi
 
 cd $TARGET
 
-function cleanup()
-{
-    echo "... CLEANUP"
-}
-trap cleanup EXIT
+if [[ $@ == *"--destroy"* ]]; then
+    function cleanup()
+    {
+        echo "[*] Cleanup with destroy"
+        # terraform destroy -auto-approve
+        # rm -f *.tfstate*
+        # rm -f .terraform
+    }
+    trap cleanup EXIT
+fi
 
-# terraform init
-# terraform apply
-# TestAccMWSWorkspaces
+terraform init  >/dev/null 2>&1
+terraform apply -auto-approve
 
-# $2 = -run '^(TestAcc|TestAzureAcc)' ../../...
+export $(terraform output --json | jq -r $JQ) >/dev/null 2>&1
+
+if [[ $@ == *"--debug"* ]]; then
+    export TF_LOG="DEBUG"
+    export TF_LOG_PATH=$PWD/tf.log
+    echo "To see debug logs: tail -f $PWD/tf.log"
+fi
 
 TF_ACC=1 gotestsum \
     --format short-verbose \

@@ -18,68 +18,58 @@ func TestMwsAccStorageConfigurations(t *testing.T) {
 	if cloudEnv != "MWS" {
 		t.Skip("Cannot run test on non-MWS environment")
 	}
-	var MWSStorageConfigurations model.MWSStorageConfigurations
-	// generate a random name for each tokenInfo test run, to avoid
-	// collisions from multiple concurrent tests.
-	// the acctest package includes many helpers such as RandStringFromCharSet
-	// See https://godoc.org/github.com/hashicorp/terraform-plugin-sdk/helper/acctest
-	//scope := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
-	mwsAcctID := os.Getenv("DATABRICKS_MWS_ACCT_ID")
-	mwsHost := os.Getenv("DATABRICKS_MWS_HOST")
-	storageConfigName := "test-mws-storage-configurations-tf"
-	bucketName := "terraform-test-bucket"
+	var bucket model.MWSStorageConfigurations
+	config := EnvironmentTemplate(t, `
+	provider "databricks" {
+		host     = "{env.DATABRICKS_HOST}"
+		username = "{env.DATABRICKS_USERNAME}"
+		password = "{env.DATABRICKS_PASSWORD}"
+	}
+	resource "databricks_mws_storage_configurations" "this" {
+		account_id                 = "{env.DATABRICKS_ACCOUNT_ID}"
+		storage_configuration_name = "terraform-{var.RANDOM}"
+		bucket_name                = "terraform-{var.RANDOM}"
+	  }
+	`)
+	bucketName := FirstKeyValue(t, config, "bucket_name")
+	configName := FirstKeyValue(t, config, "storage_configuration_name")
 
 	resource.Test(t, resource.TestCase{
 		Providers:    testAccProviders,
 		CheckDestroy: testMWSStorageConfigurationsResourceDestroy,
 		Steps: []resource.TestStep{
 			{
-				// use a dynamic configuration with the random name from above
-				Config: testMWSStorageConfigurationsCreate(mwsAcctID, mwsHost, storageConfigName, bucketName),
-				// compose a basic test, checking both remote and local values
+				Config: config,
 				Check: resource.ComposeTestCheckFunc(
-					// query the API to retrieve the tokenInfo object
-					testMWSStorageConfigurationsResourceExists("databricks_mws_storage_configurations.my_mws_storage_configurations", &MWSStorageConfigurations, t),
-					// verify local values
-					resource.TestCheckResourceAttr("databricks_mws_storage_configurations.my_mws_storage_configurations", "account_id", mwsAcctID),
-					resource.TestCheckResourceAttr("databricks_mws_storage_configurations.my_mws_storage_configurations", "storage_configuration_name", storageConfigName),
-					resource.TestCheckResourceAttr("databricks_mws_storage_configurations.my_mws_storage_configurations", "bucket_name", bucketName),
+					testMWSStorageConfigurationsResourceExists("databricks_mws_storage_configurations.this", &bucket, t),
+					resource.TestCheckResourceAttr("databricks_mws_storage_configurations.this", "storage_configuration_name", configName),
+					resource.TestCheckResourceAttr("databricks_mws_storage_configurations.this", "bucket_name", bucketName),
 				),
 				Destroy: false,
 			},
 			{
-				// use a dynamic configuration with the random name from above
-				Config: testMWSStorageConfigurationsCreate(mwsAcctID, mwsHost, storageConfigName, bucketName),
-				// compose a basic test, checking both remote and local values
+				Config: config,
 				Check: resource.ComposeTestCheckFunc(
-					// query the API to retrieve the tokenInfo object
-					testMWSStorageConfigurationsResourceExists("databricks_mws_storage_configurations.my_mws_storage_configurations", &MWSStorageConfigurations, t),
-					// verify local values
-					resource.TestCheckResourceAttr("databricks_mws_storage_configurations.my_mws_storage_configurations", "account_id", mwsAcctID),
-					resource.TestCheckResourceAttr("databricks_mws_storage_configurations.my_mws_storage_configurations", "storage_configuration_name", storageConfigName),
-					resource.TestCheckResourceAttr("databricks_mws_storage_configurations.my_mws_storage_configurations", "bucket_name", bucketName),
+					testMWSStorageConfigurationsResourceExists("databricks_mws_storage_configurations.this", &bucket, t),
+					resource.TestCheckResourceAttr("databricks_mws_storage_configurations.this", "storage_configuration_name", configName),
+					resource.TestCheckResourceAttr("databricks_mws_storage_configurations.this", "bucket_name", bucketName),
 				),
 				ExpectNonEmptyPlan: false,
 				Destroy:            false,
 			},
 			{
 				PreConfig: func() {
-					conn := getMWSClient()
-					err := conn.MWSStorageConfigurations().Delete(MWSStorageConfigurations.AccountID, MWSStorageConfigurations.StorageConfigurationID)
+					conn := service.CommonEnvironmentClient()
+					err := conn.MWSStorageConfigurations().Delete(bucket.AccountID, bucket.StorageConfigurationID)
 					if err != nil {
 						panic(err)
 					}
 				},
-				// use a dynamic configuration with the random name from above
-				Config: testMWSStorageConfigurationsCreate(mwsAcctID, mwsHost, storageConfigName, bucketName),
-				// compose a basic test, checking both remote and local values
+				Config: config,
 				Check: resource.ComposeTestCheckFunc(
-					// query the API to retrieve the tokenInfo object
-					testMWSStorageConfigurationsResourceExists("databricks_mws_storage_configurations.my_mws_storage_configurations", &MWSStorageConfigurations, t),
-					// verify local values
-					resource.TestCheckResourceAttr("databricks_mws_storage_configurations.my_mws_storage_configurations", "account_id", mwsAcctID),
-					resource.TestCheckResourceAttr("databricks_mws_storage_configurations.my_mws_storage_configurations", "storage_configuration_name", storageConfigName),
-					resource.TestCheckResourceAttr("databricks_mws_storage_configurations.my_mws_storage_configurations", "bucket_name", bucketName),
+					testMWSStorageConfigurationsResourceExists("databricks_mws_storage_configurations.this", &bucket, t),
+					resource.TestCheckResourceAttr("databricks_mws_storage_configurations.this", "storage_configuration_name", configName),
+					resource.TestCheckResourceAttr("databricks_mws_storage_configurations.this", "bucket_name", bucketName),
 				),
 				ExpectNonEmptyPlan: false,
 				Destroy:            false,
@@ -89,8 +79,7 @@ func TestMwsAccStorageConfigurations(t *testing.T) {
 }
 
 func testMWSStorageConfigurationsResourceDestroy(s *terraform.State) error {
-	client := getMWSClient()
-
+	client := service.CommonEnvironmentClient()
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "databricks_mws_storage_configurations" {
 			continue
@@ -103,7 +92,7 @@ func testMWSStorageConfigurationsResourceDestroy(s *terraform.State) error {
 		if err != nil {
 			return nil
 		}
-		return errors.New("resource Scim Group is not cleaned up")
+		return errors.New("resource is not cleaned up")
 	}
 	return nil
 }
@@ -118,7 +107,7 @@ func testMWSStorageConfigurationsResourceExists(n string, mwsCreds *model.MWSSto
 		}
 
 		// retrieve the configured client from the test setup
-		conn := getMWSClient()
+		conn := service.CommonEnvironmentClient()
 		packagedMWSIds, err := unpackMWSAccountID(rs.Primary.ID)
 		if err != nil {
 			return err
@@ -132,20 +121,6 @@ func testMWSStorageConfigurationsResourceExists(n string, mwsCreds *model.MWSSto
 		*mwsCreds = resp
 		return nil
 	}
-}
-
-func testMWSStorageConfigurationsCreate(mwsAcctID, mwsHost, storageConfigName, bucketName string) string {
-	return fmt.Sprintf(`
-								provider "databricks" {
-								  host = "%s"
-								  basic_auth {}
-								}
-								resource "databricks_mws_storage_configurations" "my_mws_storage_configurations" {
-								  account_id = "%s"
-								  storage_configuration_name = "%s"
-								  bucket_name         = "%s"
-								}
-								`, mwsHost, mwsAcctID, storageConfigName, bucketName)
 }
 
 func TestResourceMWSStorageConfigurationsCreate(t *testing.T) {

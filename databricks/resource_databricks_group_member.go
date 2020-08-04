@@ -33,7 +33,7 @@ func resourceGroupMember() *schema.Resource {
 }
 
 func resourceGroupMemberCreate(d *schema.ResourceData, m interface{}) error {
-	client := m.(*service.DBApiClient)
+	client := m.(*service.DatabricksClient)
 	groupID := d.Get("group_id").(string)
 	memberID := d.Get("member_id").(string)
 
@@ -54,7 +54,7 @@ func resourceGroupMemberCreate(d *schema.ResourceData, m interface{}) error {
 
 func resourceGroupMemberRead(d *schema.ResourceData, m interface{}) error {
 	id := d.Id()
-	client := m.(*service.DBApiClient)
+	client := m.(*service.DatabricksClient)
 	groupMemberID := parsegroupMemberID(id)
 	group, err := client.Groups().Read(groupMemberID.GroupID)
 
@@ -86,7 +86,7 @@ func resourceGroupMemberRead(d *schema.ResourceData, m interface{}) error {
 
 func resourceGroupMemberDelete(d *schema.ResourceData, m interface{}) error {
 	id := d.Id()
-	client := m.(*service.DBApiClient)
+	client := m.(*service.DatabricksClient)
 	groupMemberID := parsegroupMemberID(id)
 
 	memberRemoveList := []string{groupMemberID.MemberID}

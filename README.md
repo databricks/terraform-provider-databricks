@@ -1,6 +1,6 @@
 # Databricks Terraform Provider
 
-[![Build Status](https://travis-ci.org/databrickslabs/terraform-provider-databricks.svg?branch=master)](https://travis-ci.org/databrickslabs/terraform-provider-databricks)
+[![Build Status](https://travis-ci.org/databrickslabs/terraform-provider-databricks.svg?branch=master)](https://travis-ci.org/databrickslabs/terraform-provider-databricks) [![codecov](https://codecov.io/gh/databrickslabs/terraform-provider-databricks/branch/master/graph/badge.svg)](https://codecov.io/gh/databrickslabs/terraform-provider-databricks)
 
 [Documentation](https://databrickslabs.github.io/terraform-provider-databricks/provider/) | [Contributing and Development Guidelines](CONTRIBUTING.md)
 

@@ -2,10 +2,12 @@ package service
 
 import (
 	"net/http"
+	"os"
 	"testing"
 	"time"
 
 	"github.com/databrickslabs/databricks-terraform/client/model"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestTokensAPI_Create(t *testing.T) {
@@ -63,7 +65,7 @@ func TestTokensAPI_Create(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var input args
-			AssertRequestWithMockServer(t, &tt.args, http.MethodPost, "/api/2.0/token/create", &input, tt.response, tt.responseStatus, tt.want, tt.wantErr, func(client DBApiClient) (interface{}, error) {
+			AssertRequestWithMockServer(t, &tt.args, http.MethodPost, "/api/2.0/token/create", &input, tt.response, tt.responseStatus, tt.want, tt.wantErr, func(client DatabricksClient) (interface{}, error) {
 				return client.Tokens().Create(time.Duration(tt.args.LifetimeSeconds)*time.Second, tt.args.Comment)
 			})
 		})
@@ -96,7 +98,7 @@ func TestTokensAPI_Delete(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var input args
-			AssertRequestWithMockServer(t, &tt.args, http.MethodPost, "/api/2.0/token/delete", &input, tt.response, tt.responseStatus, tt.want, tt.wantErr, func(client DBApiClient) (interface{}, error) {
+			AssertRequestWithMockServer(t, &tt.args, http.MethodPost, "/api/2.0/token/delete", &input, tt.response, tt.responseStatus, tt.want, tt.wantErr, func(client DatabricksClient) (interface{}, error) {
 				return nil, client.Tokens().Delete(tt.args.TokenID)
 			})
 		})
@@ -134,7 +136,7 @@ func TestTokensAPI_List(t *testing.T) {
 						}`,
 			responseStatus: http.StatusOK,
 			args:           nil,
-			wantURI:        "/api/2.0/token/list?",
+			wantURI:        "/api/2.0/token/list",
 			want: []model.TokenInfo{
 				{
 					TokenID:      "5715498424f15ee0213be729257b53fc35a47d5953e3bdfd8ed22a0b93b339f4",
@@ -156,7 +158,7 @@ func TestTokensAPI_List(t *testing.T) {
 			response:       ``,
 			responseStatus: http.StatusBadRequest,
 			args:           nil,
-			wantURI:        "/api/2.0/token/list?",
+			wantURI:        "/api/2.0/token/list",
 			want:           nil,
 			wantErr:        true,
 		},
@@ -164,7 +166,7 @@ func TestTokensAPI_List(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var input args
-			AssertRequestWithMockServer(t, tt.args, http.MethodGet, tt.wantURI, &input, tt.response, tt.responseStatus, tt.want, tt.wantErr, func(client DBApiClient) (interface{}, error) {
+			AssertRequestWithMockServer(t, tt.args, http.MethodGet, tt.wantURI, &input, tt.response, tt.responseStatus, tt.want, tt.wantErr, func(client DatabricksClient) (interface{}, error) {
 				return client.Tokens().List()
 			})
 		})
@@ -212,7 +214,7 @@ func TestTokensAPI_Read(t *testing.T) {
 				ExpiryTime:   1513120616294,
 				Comment:      "this is an example token",
 			},
-			wantURI: "/api/2.0/token/list?",
+			wantURI: "/api/2.0/token/list",
 			wantErr: false,
 		},
 		{
@@ -223,7 +225,7 @@ func TestTokensAPI_Read(t *testing.T) {
 			},
 			responseStatus: http.StatusBadRequest,
 			want:           model.TokenInfo{},
-			wantURI:        "/api/2.0/token/list?",
+			wantURI:        "/api/2.0/token/list",
 			wantErr:        true,
 		},
 		{
@@ -249,16 +251,43 @@ func TestTokensAPI_Read(t *testing.T) {
 			},
 			responseStatus: http.StatusOK,
 			want:           model.TokenInfo{},
-			wantURI:        "/api/2.0/token/list?",
+			wantURI:        "/api/2.0/token/list",
 			wantErr:        true,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var input args
-			AssertRequestWithMockServer(t, &tt.args, http.MethodGet, tt.wantURI, &input, tt.response, tt.responseStatus, tt.want, tt.wantErr, func(client DBApiClient) (interface{}, error) {
+			AssertRequestWithMockServer(t, &tt.args, http.MethodGet, tt.wantURI, &input, tt.response, tt.responseStatus, tt.want, tt.wantErr, func(client DatabricksClient) (interface{}, error) {
 				return client.Tokens().Read(tt.args.TokenID)
 			})
 		})
 	}
+}
+
+func TestAccCreateToken(t *testing.T) {
+	if _, ok := os.LookupEnv("CLOUD_ENV"); !ok {
+		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
+	}
+
+	client := NewClientFromEnvironment()
+
+	lifeTimeSeconds := time.Duration(30) * time.Second
+	comment := "Hello world"
+
+	token, err := client.Tokens().Create(lifeTimeSeconds, comment)
+	assert.NoError(t, err, err)
+	assert.True(t, len(token.TokenValue) > 0, "Token value is empty")
+
+	defer func() {
+		err := client.Tokens().Delete(token.TokenInfo.TokenID)
+		assert.NoError(t, err, err)
+	}()
+
+	_, err = client.Tokens().Read(token.TokenInfo.TokenID)
+	assert.NoError(t, err, err)
+
+	tokenList, err := client.Tokens().List()
+	assert.NoError(t, err, err)
+	assert.True(t, len(tokenList) > 0, "Token list is empty")
 }

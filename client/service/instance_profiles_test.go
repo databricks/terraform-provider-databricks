@@ -2,9 +2,11 @@ package service
 
 import (
 	"net/http"
+	"os"
 	"testing"
 
 	"github.com/databrickslabs/databricks-terraform/client/model"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestInstanceProfilesAPI_Create(t *testing.T) {
@@ -44,7 +46,7 @@ func TestInstanceProfilesAPI_Create(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var input args
-			AssertRequestWithMockServer(t, &tt.args, http.MethodPost, "/api/2.0/instance-profiles/add", &input, tt.response, tt.responseStatus, nil, tt.wantErr, func(client DBApiClient) (interface{}, error) {
+			AssertRequestWithMockServer(t, &tt.args, http.MethodPost, "/api/2.0/instance-profiles/add", &input, tt.response, tt.responseStatus, nil, tt.wantErr, func(client DatabricksClient) (interface{}, error) {
 				return nil, client.InstanceProfiles().Create(tt.args.InstanceProfileArn, tt.args.SkipValidation)
 			})
 		})
@@ -85,7 +87,7 @@ func TestInstanceProfilesAPI_Delete(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var input args
-			AssertRequestWithMockServer(t, &tt.args, http.MethodPost, "/api/2.0/instance-profiles/remove", &input, tt.response, tt.responseStatus, nil, tt.wantErr, func(client DBApiClient) (interface{}, error) {
+			AssertRequestWithMockServer(t, &tt.args, http.MethodPost, "/api/2.0/instance-profiles/remove", &input, tt.response, tt.responseStatus, nil, tt.wantErr, func(client DatabricksClient) (interface{}, error) {
 				return nil, client.InstanceProfiles().Delete(tt.args.InstanceProfileArn)
 			})
 		})
@@ -112,7 +114,7 @@ func TestInstanceProfilesAPI_List(t *testing.T) {
 						}`,
 			responseStatus: http.StatusOK,
 			args:           args{},
-			wantURI:        "/api/2.0/instance-profiles/list?",
+			wantURI:        "/api/2.0/instance-profiles/list",
 			want: []model.InstanceProfileInfo{
 				{
 					InstanceProfileArn: "arn:aws:iam::123456789:instance-profile/datascience-role1",
@@ -131,7 +133,7 @@ func TestInstanceProfilesAPI_List(t *testing.T) {
 			response:       ``,
 			responseStatus: http.StatusBadRequest,
 			args:           args{},
-			wantURI:        "/api/2.0/instance-profiles/list?",
+			wantURI:        "/api/2.0/instance-profiles/list",
 			want:           nil,
 			wantErr:        true,
 		},
@@ -139,7 +141,7 @@ func TestInstanceProfilesAPI_List(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var input args
-			AssertRequestWithMockServer(t, tt.args, http.MethodGet, tt.wantURI, &input, tt.response, tt.responseStatus, tt.want, tt.wantErr, func(client DBApiClient) (interface{}, error) {
+			AssertRequestWithMockServer(t, tt.args, http.MethodGet, tt.wantURI, &input, tt.response, tt.responseStatus, tt.want, tt.wantErr, func(client DatabricksClient) (interface{}, error) {
 				return client.InstanceProfiles().List()
 			})
 		})
@@ -170,7 +172,7 @@ func TestInstanceProfilesAPI_Read(t *testing.T) {
 			args: args{
 				InstanceProfileArn: "arn:aws:iam::123456789:instance-profile/datascience-role1",
 			},
-			wantURI: "/api/2.0/instance-profiles/list?",
+			wantURI: "/api/2.0/instance-profiles/list",
 			want:    "arn:aws:iam::123456789:instance-profile/datascience-role1",
 			wantErr: false,
 		},
@@ -185,7 +187,7 @@ func TestInstanceProfilesAPI_Read(t *testing.T) {
 			args: args{
 				InstanceProfileArn: "arn:aws:iam::123456789:instance-profile/datascience-role4",
 			},
-			wantURI: "/api/2.0/instance-profiles/list?",
+			wantURI: "/api/2.0/instance-profiles/list",
 			want:    "",
 			wantErr: true,
 		},
@@ -196,7 +198,7 @@ func TestInstanceProfilesAPI_Read(t *testing.T) {
 			args: args{
 				InstanceProfileArn: "arn:aws:iam::123456789:instance-profile/datascience-role1",
 			},
-			wantURI: "/api/2.0/instance-profiles/list?",
+			wantURI: "/api/2.0/instance-profiles/list",
 			want:    "",
 			wantErr: true,
 		},
@@ -204,9 +206,28 @@ func TestInstanceProfilesAPI_Read(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var input args
-			AssertRequestWithMockServer(t, tt.args, http.MethodGet, tt.wantURI, &input, tt.response, tt.responseStatus, tt.want, tt.wantErr, func(client DBApiClient) (interface{}, error) {
+			AssertRequestWithMockServer(t, tt.args, http.MethodGet, tt.wantURI, &input, tt.response, tt.responseStatus, tt.want, tt.wantErr, func(client DatabricksClient) (interface{}, error) {
 				return client.InstanceProfiles().Read(tt.args.InstanceProfileArn)
 			})
 		})
 	}
+}
+
+func TestAwsAccInstanceProfiles(t *testing.T) {
+	if _, ok := os.LookupEnv("CLOUD_ENV"); !ok {
+		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
+	}
+	arn := "arn:aws:iam::123121231231:instance-profile/helloworldsritestingterraform"
+	client := NewClientFromEnvironment()
+
+	defer func() {
+		err := client.InstanceProfiles().Delete(arn)
+		assert.NoError(t, err, err)
+	}()
+	err := client.InstanceProfiles().Create(arn, true)
+	assert.NoError(t, err, err)
+
+	arnSearch, err := client.InstanceProfiles().Read(arn)
+	assert.NoError(t, err, err)
+	assert.True(t, len(arnSearch) > 0)
 }

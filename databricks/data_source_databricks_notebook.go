@@ -50,7 +50,7 @@ func dataSourceNotebook() *schema.Resource {
 func dataSourceNotebookRead(d *schema.ResourceData, m interface{}) error {
 	path := d.Get("path").(string)
 	format := d.Get("format").(string)
-	client := m.(*service.DBApiClient)
+	client := m.(*service.DatabricksClient)
 
 	notebookInfo, err := client.Notebooks().Read(path)
 	if err != nil {

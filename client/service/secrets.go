@@ -1,7 +1,6 @@
 package service
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/http"
 
@@ -10,55 +9,32 @@ import (
 
 // SecretsAPI exposes the Secrets API
 type SecretsAPI struct {
-	Client *DBApiClient
+	client *DatabricksClient
 }
 
 // Create creates or modifies a string secret depends on the type of scope backend
 func (a SecretsAPI) Create(stringValue, scope, key string) error {
-	data := struct {
-		StringValue string `json:"string_value,omitempty" mask:"true"`
-		Scope       string `json:"scope,omitempty"`
-		Key         string `json:"key,omitempty"`
-	}{
-		stringValue,
-		scope,
-		key,
-	}
-	_, err := a.Client.performQuery(http.MethodPost, "/secrets/put", "2.0", nil, data, nil)
-	return err
+	return a.client.post("/secrets/put", model.SecretsRequest{
+		StringValue: stringValue,
+		Scope:       scope,
+		Key:         key,
+	}, nil)
 }
 
 // Delete deletes a secret depends on the type of scope backend
 func (a SecretsAPI) Delete(scope, key string) error {
-	data := struct {
-		Scope string `json:"scope,omitempty"`
-		Key   string `json:"key,omitempty"`
-	}{
-		scope,
-		key,
-	}
-	_, err := a.Client.performQuery(http.MethodPost, "/secrets/delete", "2.0", nil, data, nil)
-	return err
+	return a.client.post("/secrets/delete", model.SecretsRequest{
+		Scope: scope,
+		Key:   key,
+	}, nil)
 }
 
 // List lists the secret keys that are stored at this scope
 func (a SecretsAPI) List(scope string) ([]model.SecretMetadata, error) {
-	var secretsList struct {
-		Secrets []model.SecretMetadata `json:"secrets,omitempty"`
-	}
-
-	data := struct {
-		Scope string `json:"scope,omitempty" url:"scope,omitempty"`
-	}{
-		scope,
-	}
-
-	resp, err := a.Client.performQuery(http.MethodGet, "/secrets/list", "2.0", nil, data, nil)
-	if err != nil {
-		return secretsList.Secrets, err
-	}
-
-	err = json.Unmarshal(resp, &secretsList)
+	var secretsList model.SecretsList
+	err := a.client.get("/secrets/list", map[string]string{
+		"scope": scope,
+	}, &secretsList)
 	return secretsList.Secrets, err
 }
 

@@ -8,7 +8,7 @@ import (
 func dataSourceDefaultUserRoles() *schema.Resource {
 	return &schema.Resource{
 		Read: func(d *schema.ResourceData, m interface{}) error {
-			client := m.(*service.DBApiClient)
+			client := m.(*service.DatabricksClient)
 
 			defaultRolesUserName := d.Get("default_username").(string)
 			metaUser, err := client.Users().GetOrCreateDefaultMetaUser(defaultRolesUserName, defaultRolesUserName, true)

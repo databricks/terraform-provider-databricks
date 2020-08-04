@@ -73,7 +73,7 @@ func resourceScimGroup() *schema.Resource {
 //}
 
 func resourceScimGroupCreate(d *schema.ResourceData, m interface{}) error {
-	client := m.(*service.DBApiClient)
+	client := m.(*service.DatabricksClient)
 	groupName := d.Get("display_name").(string)
 	var members []string
 
@@ -120,7 +120,7 @@ func getListOfEntitlements(entitlementList []model.EntitlementsListItem) []strin
 
 func resourceScimGroupRead(d *schema.ResourceData, m interface{}) error {
 	id := d.Id()
-	client := m.(*service.DBApiClient)
+	client := m.(*service.DatabricksClient)
 	group, err := client.Groups().Read(id)
 	if err != nil {
 		if e, ok := err.(service.APIError); ok && e.IsMissing() {
@@ -176,7 +176,7 @@ func diff(sliceA []string, sliceB []string) []string {
 
 func resourceScimGroupUpdate(d *schema.ResourceData, m interface{}) error {
 	id := d.Id()
-	client := m.(*service.DBApiClient)
+	client := m.(*service.DatabricksClient)
 
 	group, err := client.Groups().Read(id)
 	if err != nil {
@@ -242,7 +242,7 @@ func resourceScimGroupUpdate(d *schema.ResourceData, m interface{}) error {
 
 func resourceScimGroupDelete(d *schema.ResourceData, m interface{}) error {
 	id := d.Id()
-	client := m.(*service.DBApiClient)
+	client := m.(*service.DatabricksClient)
 	err := client.Groups().Delete(id)
 	return err
 }

@@ -1,20 +1,23 @@
 package databricks
 
 import (
+	"fmt"
 	"log"
 	"reflect"
+	"time"
 
 	"github.com/databrickslabs/databricks-terraform/client/model"
 	"github.com/databrickslabs/databricks-terraform/client/service"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 )
 
 func resourceMWSNetworks() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceMWSNetworkCreate,
-		Read:   resourceMWSNetworkRead,
-		Delete: resourceMWSNetworkDelete,
+		Create: resourceMWSNetworksCreate,
+		Read:   resourceMWSNetworksRead,
+		Delete: resourceMWSNetworksDelete,
 
 		Schema: map[string]*schema.Schema{
 			"account_id": {
@@ -86,8 +89,8 @@ func resourceMWSNetworks() *schema.Resource {
 	}
 }
 
-func resourceMWSNetworkCreate(d *schema.ResourceData, m interface{}) error {
-	client := m.(*service.DBApiClient)
+func resourceMWSNetworksCreate(d *schema.ResourceData, m interface{}) error {
+	client := m.(*service.DatabricksClient)
 	networkName := d.Get("network_name").(string)
 	mwsAcctID := d.Get("account_id").(string)
 	VPCID := d.Get("vpc_id").(string)
@@ -103,12 +106,12 @@ func resourceMWSNetworkCreate(d *schema.ResourceData, m interface{}) error {
 		ResourceID: network.NetworkID,
 	}
 	d.SetId(packMWSAccountID(networksResourceID))
-	return resourceMWSNetworkRead(d, m)
+	return resourceMWSNetworksRead(d, m)
 }
 
-func resourceMWSNetworkRead(d *schema.ResourceData, m interface{}) error {
+func resourceMWSNetworksRead(d *schema.ResourceData, m interface{}) error {
 	id := d.Id()
-	client := m.(*service.DBApiClient)
+	client := m.(*service.DatabricksClient)
 	packagedMwsID, err := unpackMWSAccountID(id)
 	if err != nil {
 		return err
@@ -144,6 +147,7 @@ func resourceMWSNetworkRead(d *schema.ResourceData, m interface{}) error {
 	}
 
 	if !reflect.ValueOf(network.ErrorMessages).IsZero() {
+		// TODO: should this really be a state or rather error return?
 		err = d.Set("error_messages", convertErrorMessagesToListOfMaps(network.ErrorMessages))
 		if err != nil {
 			return err
@@ -170,15 +174,30 @@ func resourceMWSNetworkRead(d *schema.ResourceData, m interface{}) error {
 	return nil
 }
 
-func resourceMWSNetworkDelete(d *schema.ResourceData, m interface{}) error {
+func resourceMWSNetworksDelete(d *schema.ResourceData, m interface{}) error {
 	id := d.Id()
-	client := m.(*service.DBApiClient)
+	client := m.(*service.DatabricksClient)
 	packagedMwsID, err := unpackMWSAccountID(id)
 	if err != nil {
 		return err
 	}
 	err = client.MWSNetworks().Delete(packagedMwsID.MwsAcctID, packagedMwsID.ResourceID)
-	return err
+	if err != nil {
+		return err
+	}
+	return resource.Retry(60*time.Second, func() *resource.RetryError {
+		network, err := client.MWSNetworks().Read(packagedMwsID.MwsAcctID, packagedMwsID.ResourceID)
+		if e, ok := err.(service.APIError); ok && e.IsMissing() {
+			log.Printf("[INFO] Network %s is removed.", packagedMwsID.ResourceID)
+			return nil
+		}
+		if err != nil {
+			return resource.NonRetryableError(err)
+		}
+		msg := fmt.Errorf("Network %s is not removed yet. VPC Status: %s", network.NetworkName, network.VPCStatus)
+		log.Printf("[INFO] %s", msg)
+		return resource.RetryableError(msg)
+	})
 }
 
 func convertErrorMessagesToListOfMaps(errorMsgs []model.NetworkHealth) []map[string]string {

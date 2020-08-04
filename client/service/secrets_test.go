@@ -35,7 +35,7 @@ func TestSecretsAPI_Create(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var input args
-			AssertRequestWithMockServer(t, &tt.args, http.MethodPost, "/api/2.0/secrets/put", &input, tt.response, http.StatusOK, nil, tt.wantErr, func(client DBApiClient) (interface{}, error) {
+			AssertRequestWithMockServer(t, &tt.args, http.MethodPost, "/api/2.0/secrets/put", &input, tt.response, http.StatusOK, nil, tt.wantErr, func(client DatabricksClient) (interface{}, error) {
 				return nil, client.Secrets().Create(tt.args.StringValue, tt.args.Scope, tt.args.Key)
 			})
 		})
@@ -66,7 +66,7 @@ func TestSecretsAPI_Delete(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var input args
-			AssertRequestWithMockServer(t, &tt.args, http.MethodPost, "/api/2.0/secrets/delete", &input, tt.response, http.StatusOK, nil, tt.wantErr, func(client DBApiClient) (interface{}, error) {
+			AssertRequestWithMockServer(t, &tt.args, http.MethodPost, "/api/2.0/secrets/delete", &input, tt.response, http.StatusOK, nil, tt.wantErr, func(client DatabricksClient) (interface{}, error) {
 				return nil, client.Secrets().Delete(tt.args.Scope, tt.args.Key)
 			})
 		})
@@ -117,7 +117,7 @@ func TestSecretsAPI_ListSecrets(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var input args
-			AssertRequestWithMockServer(t, tt.args, http.MethodGet, "/api/2.0/secrets/list?scope=my-scope", &input, tt.response, http.StatusOK, tt.want, tt.wantErr, func(client DBApiClient) (interface{}, error) {
+			AssertRequestWithMockServer(t, tt.args, http.MethodGet, "/api/2.0/secrets/list?scope=my-scope", &input, tt.response, http.StatusOK, tt.want, tt.wantErr, func(client DatabricksClient) (interface{}, error) {
 				return client.Secrets().List(tt.args.Scope)
 			})
 		})
@@ -164,7 +164,7 @@ func TestSecretsAPI_Read(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var input args
-			AssertRequestWithMockServer(t, tt.args, http.MethodGet, "/api/2.0/secrets/list?scope=my-scope", &input, tt.response, http.StatusOK, tt.want, tt.wantErr, func(client DBApiClient) (interface{}, error) {
+			AssertRequestWithMockServer(t, tt.args, http.MethodGet, "/api/2.0/secrets/list?scope=my-scope", &input, tt.response, http.StatusOK, tt.want, tt.wantErr, func(client DatabricksClient) (interface{}, error) {
 				return client.Secrets().Read(tt.args.Scope, tt.args.Key)
 			})
 		})

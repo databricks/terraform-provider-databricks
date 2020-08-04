@@ -43,45 +43,56 @@ const (
 type ClusterState string
 
 const (
-	// ClusterStatePending is for PENDING state
+	// ClusterStatePending Indicates that a cluster is in the process of being created.
 	ClusterStatePending = "PENDING"
-
-	// ClusterStateRunning is for RUNNING state
+	// ClusterStateRunning Indicates that a cluster has been started and is ready for use.
 	ClusterStateRunning = "RUNNING"
-
-	// ClusterStateRestarting is for RESTARTING state
+	// ClusterStateRestarting Indicates that a cluster is in the process of restarting.
 	ClusterStateRestarting = "RESTARTING"
-
-	// ClusterStateResizing is for RESIZING state
+	// ClusterStateResizing Indicates that a cluster is in the process of adding or removing nodes.
 	ClusterStateResizing = "RESIZING"
-
-	// ClusterStateTerminating is for TERMINATING state
+	// ClusterStateTerminating Indicates that a cluster is in the process of being destroyed.
 	ClusterStateTerminating = "TERMINATING"
-
-	// ClusterStateTerminated is for TERMINATED state
+	// ClusterStateTerminated Indicates that a cluster has been successfully destroyed.
 	ClusterStateTerminated = "TERMINATED"
-
-	// ClusterStateError is for ERROR state
+	// ClusterStateError This state is not used anymore. It was used to indicate a cluster
+	// that failed to be created. Terminating and Terminated are used instead.
 	ClusterStateError = "ERROR"
-
-	// ClusterStateUnknown is for UNKNOWN state
+	// ClusterStateUnknown Indicates that a cluster is in an unknown state. A cluster should never be in this state.
 	ClusterStateUnknown = "UNKNOWN"
 )
 
-// ClusterStateNonRunnable is a list of states in which the cluster cannot go back into running by itself
-// without user intervention
-var ClusterStateNonRunnable = []ClusterState{ClusterStateTerminating, ClusterStateTerminated, ClusterStateError, ClusterStateUnknown}
+var stateMachine = map[ClusterState][]ClusterState{
+	ClusterStatePending:     {ClusterStateRunning, ClusterStateTerminating},
+	ClusterStateRunning:     {ClusterStateResizing, ClusterStateRestarting, ClusterStateTerminating},
+	ClusterStateRestarting:  {ClusterStateRunning, ClusterStateTerminating},
+	ClusterStateResizing:    {ClusterStateRunning, ClusterStateTerminating},
+	ClusterStateTerminating: {ClusterStateTerminated},
+}
 
-// ClusterStateNonTerminating is a list of states in which the cluster cannot go back into terminated by itself
-//// without user intervention
-var ClusterStateNonTerminating = []ClusterState{ClusterStatePending, ClusterStateRunning, ClusterStateRestarting, ClusterStateResizing, ClusterStateUnknown}
-
-// ContainsClusterState given a set of cluster states and a search state it will return true if the state is in the
-// given set
-func ContainsClusterState(clusterStates []ClusterState, searchState ClusterState) bool {
-	for _, state := range clusterStates {
-		if state == searchState {
-			return true
+// CanReach returns true if cluster state can reach desired state
+func (state ClusterState) CanReach(desired ClusterState) bool {
+	if state == desired {
+		return true
+	}
+	visited := map[ClusterState]bool{}
+	queue := []ClusterState{state}
+	for len(queue) > 0 {
+		current := queue[0]
+		queue = queue[1:]
+		if _, ok := visited[current]; ok {
+			continue
+		}
+		adjacent, ok := stateMachine[current]
+		visited[current] = true
+		if !ok {
+			return false
+		}
+		for _, possible := range adjacent {
+			if possible == desired {
+				return true
+			}
+			queue = append(queue, possible)
 		}
 	}
 	return false
@@ -107,14 +118,15 @@ type AwsAttributes struct {
 
 // DbfsStorageInfo contains the destination string for DBFS
 type DbfsStorageInfo struct {
-	Destination string `json:"destination,omitempty"`
+	Destination string `json:"destination"`
 }
 
 // S3StorageInfo contains the struct for when storing files in S3
 type S3StorageInfo struct {
-	Destination      string `json:"destination,omitempty"`
-	Region           string `json:"region,omitempty"`
-	Endpoint         string `json:"endpoint,omitempty"`
+	// TODO: add instance profile validation check + prefix validation
+	Destination      string `json:"destination"`
+	Region           string `json:"region,omitempty" tf:"group:location"`
+	Endpoint         string `json:"endpoint,omitempty" tf:"group:location"`
 	EnableEncryption bool   `json:"enable_encryption,omitempty"`
 	EncryptionType   string `json:"encryption_type,omitempty"`
 	KmsKey           string `json:"kms_key,omitempty"`
@@ -123,8 +135,8 @@ type S3StorageInfo struct {
 
 // StorageInfo contains the struct for either DBFS or S3 storage depending on which one is relevant.
 type StorageInfo struct {
-	Dbfs *DbfsStorageInfo `json:"dbfs,omitempty"`
-	S3   *S3StorageInfo   `json:"s3,omitempty"`
+	Dbfs *DbfsStorageInfo `json:"dbfs,omitempty" tf:"group:storage"`
+	S3   *S3StorageInfo   `json:"s3,omitempty" tf:"group:storage"`
 }
 
 // SparkNodeAwsAttributes is the struct that determines if the node is a spot instance or not
@@ -175,38 +187,44 @@ type NodeType struct {
 
 // DockerBasicAuth contains the auth information when fetching containers
 type DockerBasicAuth struct {
-	Username string `json:"username,omitempty"`
-	Password string `json:"password,omitempty"`
+	Username string `json:"username"`
+	Password string `json:"password"`
 }
 
 // DockerImage contains the image url and the auth for DCS
 type DockerImage struct {
-	URL       string           `json:"url,omitempty"`
+	URL       string           `json:"url"`
 	BasicAuth *DockerBasicAuth `json:"basic_auth,omitempty"`
 }
 
 // Cluster contains the information when trying to submit api calls or editing a cluster
 type Cluster struct {
-	ClusterID              string            `json:"cluster_id,omitempty"`
-	NumWorkers             int32             `json:"num_workers,omitempty"`
-	Autoscale              *AutoScale        `json:"autoscale,omitempty"`
-	ClusterName            string            `json:"cluster_name,omitempty"`
-	SparkVersion           string            `json:"spark_version,omitempty"`
-	SparkConf              map[string]string `json:"spark_conf,omitempty"`
-	AwsAttributes          *AwsAttributes    `json:"aws_attributes,omitempty"`
-	NodeTypeID             string            `json:"node_type_id,omitempty"`
-	DriverNodeTypeID       string            `json:"driver_node_type_id,omitempty"`
-	SSHPublicKeys          []string          `json:"ssh_public_keys,omitempty"`
-	CustomTags             map[string]string `json:"custom_tags,omitempty"`
-	ClusterLogConf         *StorageInfo      `json:"cluster_log_conf,omitempty"`
-	InitScripts            []StorageInfo     `json:"init_scripts,omitempty"`
-	DockerImage            *DockerImage      `json:"docker_image,omitempty"`
-	SparkEnvVars           map[string]string `json:"spark_env_vars,omitempty"`
-	AutoterminationMinutes int32             `json:"autotermination_minutes,omitempty"`
-	EnableElasticDisk      bool              `json:"enable_elastic_disk,omitempty"`
-	InstancePoolID         string            `json:"instance_pool_id,omitempty"`
-	SingleUserName         string            `json:"single_user_name,omitempty"`
-	IdempotencyToken       string            `json:"idempotency_token,omitempty"`
+	ClusterID   string `json:"cluster_id,omitempty"`
+	ClusterName string `json:"cluster_name,omitempty"`
+
+	SparkVersion      string     `json:"spark_version"` // TODO: perhaps make a default
+	NumWorkers        int32      `json:"num_workers,omitempty" tf:"group:size"`
+	Autoscale         *AutoScale `json:"autoscale,omitempty" tf:"group:size"`
+	EnableElasticDisk bool       `json:"enable_elastic_disk,omitempty"`
+
+	NodeTypeID             string         `json:"node_type_id,omitempty" tf:"group:node_type"`
+	DriverNodeTypeID       string         `json:"driver_node_type_id,omitempty" tf:"conflicts:instance_pool_id"`
+	InstancePoolID         string         `json:"instance_pool_id,omitempty" tf:"group:node_type"`
+	PolicyID               string         `json:"policy_id,omitempty"`
+	AwsAttributes          *AwsAttributes `json:"aws_attributes,omitempty" tf:"conflicts:instance_pool_id"`
+	AutoterminationMinutes int32          `json:"autotermination_minutes,omitempty"`
+
+	SparkConf    map[string]string `json:"spark_conf,omitempty"`
+	SparkEnvVars map[string]string `json:"spark_env_vars,omitempty"`
+	CustomTags   map[string]string `json:"custom_tags,omitempty" tf:"max_items:10"`
+
+	SSHPublicKeys  []string      `json:"ssh_public_keys,omitempty" tf:"max_items:10"`
+	InitScripts    []StorageInfo `json:"init_scripts,omitempty" tf:"max_items:10"` // TODO: tf:alias
+	ClusterLogConf *StorageInfo  `json:"cluster_log_conf,omitempty"`
+	DockerImage    *DockerImage  `json:"docker_image,omitempty"`
+
+	SingleUserName   string `json:"single_user_name,omitempty"`
+	IdempotencyToken string `json:"idempotency_token,omitempty"`
 }
 
 // ClusterInfo contains the information when getting cluster info from the get request.
@@ -220,7 +238,7 @@ type ClusterInfo struct {
 	SparkContextID         int64              `json:"spark_context_id,omitempty"`
 	JdbcPort               int32              `json:"jdbc_port,omitempty"`
 	ClusterName            string             `json:"cluster_name,omitempty"`
-	SparkVersion           string             `json:"spark_version,omitempty"`
+	SparkVersion           string             `json:"spark_version"`
 	SparkConf              map[string]string  `json:"spark_conf,omitempty"`
 	AwsAttributes          *AwsAttributes     `json:"aws_attributes,omitempty"`
 	NodeTypeID             string             `json:"node_type_id,omitempty"`
@@ -233,10 +251,11 @@ type ClusterInfo struct {
 	AutoterminationMinutes int32              `json:"autotermination_minutes,omitempty"`
 	EnableElasticDisk      bool               `json:"enable_elastic_disk,omitempty"`
 	InstancePoolID         string             `json:"instance_pool_id,omitempty"`
+	PolicyID               string             `json:"policy_id,omitempty"`
 	SingleUserName         string             `json:"single_user_name,omitempty"`
 	ClusterSource          AwsAvailability    `json:"cluster_source,omitempty"`
 	DockerImage            *DockerImage       `json:"docker_image,omitempty"`
-	State                  ClusterState       `json:"state,omitempty"`
+	State                  ClusterState       `json:"state"`
 	StateMessage           string             `json:"state_message,omitempty"`
 	StartTime              int64              `json:"start_time,omitempty"`
 	TerminateTime          int64              `json:"terminate_time,omitempty"`
@@ -244,7 +263,17 @@ type ClusterInfo struct {
 	LastActivityTime       int64              `json:"last_activity_time,omitempty"`
 	ClusterMemoryMb        int64              `json:"cluster_memory_mb,omitempty"`
 	ClusterCores           float32            `json:"cluster_cores,omitempty"`
-	DefaultTags            map[string]string  `json:"default_tags,omitempty"`
+	DefaultTags            map[string]string  `json:"default_tags"`
 	ClusterLogStatus       *LogSyncStatus     `json:"cluster_log_status,omitempty"`
 	TerminationReason      *TerminationReason `json:"termination_reason,omitempty"`
+}
+
+// IsRunning returns true if cluster is running
+func (ci *ClusterInfo) IsRunning() bool {
+	return ci.State == ClusterStateRunning
+}
+
+// ClusterID holds cluster ID
+type ClusterID struct {
+	ClusterID string `json:"cluster_id,omitempty" url:"cluster_id,omitempty"`
 }

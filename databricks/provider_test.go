@@ -84,14 +84,6 @@ func TestProvider(t *testing.T) {
 	}
 }
 
-func TestProvider_NoOptionsResultsInError(t *testing.T) {
-	var provider = Provider("")
-	var raw = make(map[string]interface{})
-	raw["config_file"] = "testdata/.databrickscfg_non_existent"
-	err := provider.Configure(terraform.NewResourceConfigRaw(raw))
-	assert.NoError(t, err)
-}
-
 func TestProvider_HostTokensTakePrecedence(t *testing.T) {
 	var raw = make(map[string]interface{})
 	raw["host"] = "foo"

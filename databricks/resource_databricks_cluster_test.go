@@ -73,6 +73,7 @@ func testDefaultClusterResource(instancePool, awsAttributes string) string {
 		"spark.hadoop.fs.s3a.canned.acl" = "BucketOwnerFullControl"
 		"spark.hadoop.fs.s3a.acl.default" = "BucketOwnerFullControl"
 		}
+		enable_elastic_disk = true
 		custom_tags = {
 		"ResourceClass" = "Serverless"
 		}

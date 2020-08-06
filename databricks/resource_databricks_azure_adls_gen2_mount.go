@@ -8,14 +8,14 @@ import (
 
 // AzureADLSGen2Mount describes the object for a azure datalake gen 2 storage mount
 type AzureADLSGen2Mount struct {
-	ContainerName        string
-	StorageAccountName   string
-	Directory            string
-	ClientID             string
-	TenantID             string
-	SecretScope          string
-	SecretKey            string
-	InitializeFileSystem bool
+	ContainerName        string `json:"container_name"`
+	StorageAccountName   string `json:"storage_account_name"`
+	Directory            string `json:"directory"`
+	ClientID             string `json:"client_id"`
+	TenantID             string `json:"tenant_id"`
+	SecretScope          string `json:"client_secret_scope"`
+	SecretKey            string `json:"client_secret_key"`
+	InitializeFileSystem bool   `json:"initialize_file_system"`
 }
 
 // Source ...

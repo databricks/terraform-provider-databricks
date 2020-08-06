@@ -3,6 +3,7 @@ package service
 import (
 	"fmt"
 	"log"
+	"sort"
 	"strings"
 	"time"
 
@@ -242,14 +243,32 @@ func (a ClustersAPI) GetOrCreateRunningCluster(name string, custom ...model.Clus
 		return
 	}
 
-	instanceType := nodeTypes[0].NodeTypeID
-	log.Printf("[INFO] Creating an autoterminating cluster with node type %s", instanceType)
+	nodeTypesSorted := nodeTypes[:]
+	// pick the cheapest node type
+	sort.Slice(nodeTypesSorted, func(i, j int) bool {
+		if nodeTypesSorted[i].IsDeprecated != nodeTypesSorted[j].IsDeprecated {
+			return !nodeTypesSorted[i].IsDeprecated
+		}
+
+		if nodeTypesSorted[i].MemoryMb != nodeTypesSorted[j].MemoryMb {
+			return nodeTypesSorted[i].MemoryMb < nodeTypesSorted[j].MemoryMb
+		}
+
+		if nodeTypesSorted[i].NumCores != nodeTypesSorted[j].NumCores {
+			return nodeTypesSorted[i].NumCores < nodeTypesSorted[j].NumCores
+		}
+
+		return nodeTypesSorted[i].InstanceTypeID < nodeTypesSorted[j].InstanceTypeID
+	})
+	nodeType := nodeTypesSorted[0].NodeTypeID
+
+	log.Printf("[INFO] Creating an autoterminating cluster with node type %s", nodeType)
 
 	r := model.Cluster{
 		NumWorkers:             1,
 		ClusterName:            name,
 		SparkVersion:           CommonRuntimeVersion(),
-		NodeTypeID:             instanceType,
+		NodeTypeID:             nodeType,
 		IdempotencyToken:       name,
 		AutoterminationMinutes: 10,
 	}

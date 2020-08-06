@@ -21,7 +21,7 @@ require (
 	github.com/sergi/go-diff v1.1.0 // indirect
 	github.com/smartystreets/goconvey v1.6.4 // indirect
 	github.com/stretchr/testify v1.6.1
-	github.com/zclconf/go-cty v1.2.1
+	github.com/zclconf/go-cty v1.5.1
 	golang.org/x/sys v0.0.0-20200722175500-76b94024e4b6 // indirect
 	gopkg.in/ini.v1 v1.57.0
 )

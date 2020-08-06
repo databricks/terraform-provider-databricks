@@ -200,7 +200,7 @@ func (c *DatabricksClient) configureHTTPCLient() {
 
 // IsAzure returns true if Azure is configured
 func (c *DatabricksClient) IsAzure() bool {
-	return c.AzureAuth.resourceID() != ""
+	return strings.Contains(strings.ToLower(c.Host), "azure")
 }
 
 // Clusters returns an instance of ClustersAPI

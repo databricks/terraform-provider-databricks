@@ -10,7 +10,7 @@ import (
 type AzureADLSGen2Mount struct {
 	ContainerName        string `json:"container_name"`
 	StorageAccountName   string `json:"storage_account_name"`
-	Directory            string `json:"directory"`
+	Directory            string `json:"directory,omitempty"`
 	ClientID             string `json:"client_id"`
 	TenantID             string `json:"tenant_id"`
 	SecretScope          string `json:"client_secret_scope"`

@@ -268,9 +268,9 @@ type ClusterInfo struct {
 	TerminationReason      *TerminationReason `json:"termination_reason,omitempty"`
 }
 
-// IsRunning returns true if cluster is running
-func (ci *ClusterInfo) IsRunning() bool {
-	return ci.State == ClusterStateRunning
+// IsRunningOrResizing returns true if cluster is running or resizing
+func (ci *ClusterInfo) IsRunningOrResizing() bool {
+	return ci.State == ClusterStateRunning || ci.State == ClusterStateResizing
 }
 
 // ClusterID holds cluster ID

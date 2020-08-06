@@ -1,0 +1,22 @@
+{
+    "spark_conf.spark.hadoop.javax.jdo.option.ConnectionURL": {
+        "type": "fixed",
+        "value": "jdbc:sqlserver://<jdbc-url>"
+    },
+    "spark_conf.spark.hadoop.javax.jdo.option.ConnectionDriverName": {
+        "type": "fixed",
+        "value": "com.microsoft.sqlserver.jdbc.SQLServerDriver"
+    },
+    "spark_conf.spark.databricks.delta.preview.enabled": {
+        "type": "fixed",
+        "value": true
+    },
+    "spark_conf.spark.hadoop.javax.jdo.option.ConnectionUserName": {
+        "type": "fixed",
+        "value": "<metastore-user>"
+    },
+    "spark_conf.spark.hadoop.javax.jdo.option.ConnectionPassword": {
+        "type": "fixed",
+        "value": "<metastore-password>"
+    }
+}

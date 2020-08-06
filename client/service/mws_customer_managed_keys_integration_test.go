@@ -7,13 +7,13 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestMWSCustomerManagedKeys(t *testing.T) {
+func TestMwsAccCustomerManagedKeys(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping integration test in short mode.")
 	}
-	acctId := os.Getenv("DATABRICKS_MWS_ACCT_ID")
-	client := GetIntegrationMWSAPIClient()
-	networksList, err := client.MWSCustomerManagedKeys().List(acctId)
+	acctID := os.Getenv("DATABRICKS_ACCOUNT_ID")
+	client := CommonEnvironmentClient()
+	networksList, err := client.MWSCustomerManagedKeys().List(acctID)
 	assert.NoError(t, err, err)
 	t.Log(networksList)
 }

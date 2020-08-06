@@ -19,11 +19,11 @@ var (
 	TestingAdminUser = "admin"
 )
 
-func TestPermissionsRead(t *testing.T) {
+func TestResourcePermissionsRead(t *testing.T) {
 	d, err := ResourceTester(t, []HTTPFixture{
 		{
 			Method:   http.MethodGet,
-			Resource: "/api/2.0/preview/permissions/clusters/abc?",
+			Resource: "/api/2.0/preview/permissions/clusters/abc",
 			Response: model.ObjectACL{
 				ObjectID:   "/clusters/abc",
 				ObjectType: "clusters",
@@ -51,7 +51,7 @@ func TestPermissionsRead(t *testing.T) {
 		},
 		{
 			Method:   http.MethodGet,
-			Resource: "/api/2.0/preview/scim/v2/Me?",
+			Resource: "/api/2.0/preview/scim/v2/Me",
 			Response: model.User{
 				UserName: TestingAdminUser,
 			},
@@ -67,11 +67,11 @@ func TestPermissionsRead(t *testing.T) {
 	assert.Equal(t, 1, d.Get("access_control.#"))
 }
 
-func TestPermissionsRead_some_error(t *testing.T) {
+func TestResourcePermissionsRead_some_error(t *testing.T) {
 	_, err := ResourceTester(t, []HTTPFixture{
 		{
 			Method:   http.MethodGet,
-			Resource: "/api/2.0/preview/permissions/clusters/abc?",
+			Resource: "/api/2.0/preview/permissions/clusters/abc",
 			Response: service.APIErrorBody{
 				ErrorCode: "INVALID_REQUEST",
 				Message:   "Internal error happened",
@@ -86,11 +86,11 @@ func TestPermissionsRead_some_error(t *testing.T) {
 	assert.Error(t, err)
 }
 
-func TestPermissionsRead_ErrorOnScimMe(t *testing.T) {
+func TestResourcePermissionsRead_ErrorOnScimMe(t *testing.T) {
 	_, err := ResourceTester(t, []HTTPFixture{
 		{
 			Method:   http.MethodGet,
-			Resource: "/api/2.0/preview/permissions/clusters/abc?",
+			Resource: "/api/2.0/preview/permissions/clusters/abc",
 			Response: model.ObjectACL{
 				ObjectID:   "/clusters/abc",
 				ObjectType: "clusters",
@@ -118,7 +118,7 @@ func TestPermissionsRead_ErrorOnScimMe(t *testing.T) {
 		},
 		{
 			Method:   http.MethodGet,
-			Resource: "/api/2.0/preview/scim/v2/Me?",
+			Resource: "/api/2.0/preview/scim/v2/Me",
 			Response: service.APIErrorBody{
 				ErrorCode: "INVALID_REQUEST",
 				Message:   "Internal error happened",
@@ -133,7 +133,7 @@ func TestPermissionsRead_ErrorOnScimMe(t *testing.T) {
 	assert.Error(t, err)
 }
 
-func TestPermissionsDelete(t *testing.T) {
+func TestResourcePermissionsDelete(t *testing.T) {
 	d, err := ResourceTester(t, []HTTPFixture{
 		{
 			Method:          http.MethodPut,
@@ -148,7 +148,7 @@ func TestPermissionsDelete(t *testing.T) {
 	assert.Equal(t, "/clusters/abc", d.Id())
 }
 
-func TestPermissionsDelete_error(t *testing.T) {
+func TestResourcePermissionsDelete_error(t *testing.T) {
 	_, err := ResourceTester(t, []HTTPFixture{
 		{
 			Method:          http.MethodPut,
@@ -167,21 +167,21 @@ func TestPermissionsDelete_error(t *testing.T) {
 	assert.Error(t, err)
 }
 
-func TestPermissionsCreate_invalid(t *testing.T) {
+func TestResourcePermissionsCreate_invalid(t *testing.T) {
 	_, err := ResourceTester(t, []HTTPFixture{}, resourcePermissions,
 		nil, resourcePermissionsCreate)
-	assert.EqualError(t, err, "At least one type of resource identifiers must be set")
+	assertErrorStartsWith(t, err, "At least one type of resource identifiers must be set")
 }
 
-func TestPermissionsCreate_no_access_control(t *testing.T) {
+func TestResourcePermissionsCreate_no_access_control(t *testing.T) {
 	_, err := ResourceTester(t, []HTTPFixture{}, resourcePermissions,
 		map[string]interface{}{
 			"cluster_id": "abc",
 		}, resourcePermissionsCreate)
-	assert.EqualError(t, err, "Invalid config supplied. access_control: required field is not set")
+	assertErrorStartsWith(t, err, "Invalid config supplied. access_control: required field is not set")
 }
 
-func TestPermissionsCreate_conflicting_fields(t *testing.T) {
+func TestResourcePermissionsCreate_conflicting_fields(t *testing.T) {
 	_, err := ResourceTester(t, []HTTPFixture{}, resourcePermissions,
 		map[string]interface{}{
 			"cluster_id":    "abc",
@@ -193,10 +193,10 @@ func TestPermissionsCreate_conflicting_fields(t *testing.T) {
 				},
 			},
 		}, resourcePermissionsCreate)
-	assert.EqualError(t, err, "Invalid config supplied. cluster_id: conflicts with notebook_path. notebook_path: conflicts with cluster_id")
+	assertErrorStartsWith(t, err, "Invalid config supplied. cluster_id: conflicts with notebook_path. notebook_path: conflicts with cluster_id")
 }
 
-func TestPermissionsCreate(t *testing.T) {
+func TestResourcePermissionsCreate(t *testing.T) {
 	d, err := ResourceTester(t, []HTTPFixture{
 		{
 			Method:   http.MethodPatch,
@@ -212,7 +212,7 @@ func TestPermissionsCreate(t *testing.T) {
 		},
 		{
 			Method:   http.MethodGet,
-			Resource: "/api/2.0/preview/permissions/clusters/abc?",
+			Resource: "/api/2.0/preview/permissions/clusters/abc",
 			Response: model.ObjectACL{
 				ObjectID:   "/clusters/abc",
 				ObjectType: "clusters",
@@ -240,7 +240,7 @@ func TestPermissionsCreate(t *testing.T) {
 		},
 		{
 			Method:   http.MethodGet,
-			Resource: "/api/2.0/preview/scim/v2/Me?",
+			Resource: "/api/2.0/preview/scim/v2/Me",
 			Response: model.User{
 				UserName: TestingAdminUser,
 			},
@@ -260,7 +260,7 @@ func TestPermissionsCreate(t *testing.T) {
 	assert.Equal(t, 1, d.Get("access_control.#"))
 }
 
-func TestPermissionsCreate_NotebookPath_NotExists(t *testing.T) {
+func TestResourcePermissionsCreate_NotebookPath_NotExists(t *testing.T) {
 	_, err := ResourceTester(t, []HTTPFixture{
 		{
 			Method:   http.MethodGet,
@@ -284,7 +284,7 @@ func TestPermissionsCreate_NotebookPath_NotExists(t *testing.T) {
 	assert.Error(t, err)
 }
 
-func TestPermissionsCreate_NotebookPath(t *testing.T) {
+func TestResourcePermissionsCreate_NotebookPath(t *testing.T) {
 	d, err := ResourceTester(t, []HTTPFixture{
 		{
 			Method:   http.MethodGet,
@@ -308,7 +308,7 @@ func TestPermissionsCreate_NotebookPath(t *testing.T) {
 		},
 		{
 			Method:   http.MethodGet,
-			Resource: "/api/2.0/preview/permissions/notebooks/988765?",
+			Resource: "/api/2.0/preview/permissions/notebooks/988765",
 			Response: model.ObjectACL{
 				ObjectID:   "/notebooks/988765",
 				ObjectType: "notebooks",
@@ -336,7 +336,7 @@ func TestPermissionsCreate_NotebookPath(t *testing.T) {
 		},
 		{
 			Method:   http.MethodGet,
-			Resource: "/api/2.0/preview/scim/v2/Me?",
+			Resource: "/api/2.0/preview/scim/v2/Me",
 			Response: model.User{
 				UserName: TestingAdminUser,
 			},
@@ -357,7 +357,7 @@ func TestPermissionsCreate_NotebookPath(t *testing.T) {
 	assert.Equal(t, 1, d.Get("access_control.#"))
 }
 
-func TestPermissionsCreate_error(t *testing.T) {
+func TestResourcePermissionsCreate_error(t *testing.T) {
 	_, err := ResourceTester(t, []HTTPFixture{
 		{
 			Method:   http.MethodPatch,
@@ -385,37 +385,36 @@ func TestPermissionsCreate_error(t *testing.T) {
 }
 
 func TestAccDatabricksPermissionsResourceFullLifecycle(t *testing.T) {
-	var permissions model.ObjectACL
 	randomName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
 	resource.Test(t, resource.TestCase{
-		Providers: testAccProviders,
+		Providers:  testAccProviders,
+		IsUnitTest: debugIfCloudEnvSet(),
 		Steps: []resource.TestStep{
 			{
 				Config: testClusterPolicyPermissions(randomName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("databricks_permissions.dummy_can_use",
 						"object_type", "cluster-policy"),
-					testAccIDCallback(t, "databricks_permissions.dummy_can_use",
-						func(client *service.DBApiClient, id string) error {
-							resp, err := client.Permissions().Read(id)
+					epoch.ResourceCheck("databricks_permissions.dummy_can_use",
+						func(client *service.DatabricksClient, id string) error {
+							permissions, err := client.Permissions().Read(id)
 							if err != nil {
 								return err
 							}
-							permissions = *resp
 							assert.Len(t, permissions.AccessControlList, 3)
 							return nil
 						}),
 				),
+				ExpectNonEmptyPlan: true,
 			},
 			{
 				Config: testClusterPolicyPermissionsSecondGroupAdded(randomName),
-				Check: testAccIDCallback(t, "databricks_permissions.dummy_can_use",
-					func(client *service.DBApiClient, id string) error {
-						resp, err := client.Permissions().Read(id)
+				Check: epoch.ResourceCheck("databricks_permissions.dummy_can_use",
+					func(client *service.DatabricksClient, id string) error {
+						permissions, err := client.Permissions().Read(id)
 						if err != nil {
 							return err
 						}
-						permissions = *resp
 						assert.Len(t, permissions.AccessControlList, 3)
 						return nil
 					}),
@@ -481,32 +480,49 @@ func testClusterPolicyPermissionsSecondGroupAdded(name string) string {
 }
 
 func TestAccNotebookPermissions(t *testing.T) {
+	// TODO: fails with big run...
 	randomName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
 	resource.Test(t, resource.TestCase{
-		Providers: testAccProviders,
+		Providers:  testAccProviders,
+		IsUnitTest: debugIfCloudEnvSet(),
 		Steps: []resource.TestStep{
 			{
-				// create a resource
 				Config: fmt.Sprintf(`
-				resource "databricks_notebook" "dummy" {
+				resource "databricks_notebook" "this" {
 					content = base64encode("# Databricks notebook source\nprint(1)")
-					path = "/Beginning/Init"
+					path = "/Beginning/%[1]s/Init"
 					overwrite = true
 					mkdirs = true
 					language = "PYTHON"
 					format = "SOURCE"
 				}
-				resource "databricks_scim_group" "dummy_group" {
+				resource "databricks_scim_group" "group" {
 					display_name = "Terraform Group %[1]s"
 				}
-				resource "databricks_permissions" "dummy_can_use" {
-					directory_path = "/Beginning"
+				resource "databricks_permissions" "manage" {
+					directory_path = "/Beginning/%[1]s"
 					access_control {
-						group_name = databricks_scim_group.dummy_group.display_name
+						group_name = databricks_scim_group.group.display_name
 						permission_level = "CAN_MANAGE"
 					}
 				}
 				`, randomName),
+				ExpectNonEmptyPlan: true,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("databricks_permissions.manage",
+						"object_type", "directory"),
+					resource.TestCheckResourceAttr("databricks_permissions.manage",
+						"access_control.0.group_name", "Terraform Group "+randomName),
+					epoch.ResourceCheck("databricks_permissions.manage",
+						func(client *service.DatabricksClient, id string) error {
+							permissions, err := client.Permissions().Read(id)
+							if err != nil {
+								return err
+							}
+							assert.Len(t, permissions.AccessControlList, 2)
+							return nil
+						}),
+				),
 			},
 		},
 	})

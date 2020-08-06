@@ -1,7 +1,6 @@
 package service
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"time"
@@ -11,37 +10,22 @@ import (
 
 // TokensAPI exposes the Secrets API
 type TokensAPI struct {
-	Client *DBApiClient
+	client *DatabricksClient
 }
 
 // Create creates a api token given a expiration duration and a comment
-func (a TokensAPI) Create(tokenLifetime time.Duration, comment string) (model.TokenResponse, error) {
-	var tokenData model.TokenResponse
-
-	tokenCreateRequest := model.TokenRequest{
+func (a TokensAPI) Create(tokenLifetime time.Duration, comment string) (r model.TokenResponse, err error) {
+	err = a.client.post("/token/create", model.TokenRequest{
 		LifetimeSeconds: int32(tokenLifetime.Seconds()),
 		Comment:         comment,
-	}
-
-	tokenCreateResponse, err := a.Client.performQuery(http.MethodPost, "/token/create", "2.0", nil, tokenCreateRequest, nil)
-	if err != nil {
-		return tokenData, err
-	}
-
-	err = json.Unmarshal(tokenCreateResponse, &tokenData)
-	return tokenData, err
+	}, &r)
+	return
 }
 
 // List will list all the token metadata and not the content of the tokens in the workspace
 func (a TokensAPI) List() ([]model.TokenInfo, error) {
-	var tokenListResult struct {
-		TokenInfos []model.TokenInfo `json:"token_infos,omitempty"`
-	}
-	tokenListResponse, err := a.Client.performQuery(http.MethodGet, "/token/list", "2.0", nil, tokenListResult, nil)
-	if err != nil {
-		return tokenListResult.TokenInfos, err
-	}
-	err = json.Unmarshal(tokenListResponse, &tokenListResult)
+	var tokenListResult model.TokenList
+	err := a.client.get("/token/list", nil, &tokenListResult)
 	return tokenListResult.TokenInfos, err
 }
 
@@ -67,11 +51,7 @@ func (a TokensAPI) Read(tokenID string) (model.TokenInfo, error) {
 
 // Delete will delete the token given a token id
 func (a TokensAPI) Delete(tokenID string) error {
-	tokenDeleteRequest := struct {
-		TokenID string `json:"token_id,omitempty"`
-	}{
-		tokenID,
-	}
-	_, err := a.Client.performQuery(http.MethodPost, "/token/delete", "2.0", nil, tokenDeleteRequest, nil)
-	return err
+	return a.client.post("/token/delete", map[string]string{
+		"token_id": tokenID,
+	}, nil)
 }

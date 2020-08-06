@@ -19,3 +19,8 @@ type TokenInfo struct {
 	ExpiryTime   int64  `json:"expiry_time,omitempty"`
 	Comment      string `json:"comment,omitempty"`
 }
+
+// TokenList ...
+type TokenList struct {
+	TokenInfos []TokenInfo `json:"token_infos,omitempty"`
+}

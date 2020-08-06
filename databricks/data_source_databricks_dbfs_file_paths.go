@@ -43,7 +43,7 @@ func dataSourceDBFSFilePaths() *schema.Resource {
 func dataSourceDBFSFilePathsRead(d *schema.ResourceData, m interface{}) error {
 	path := d.Get("path").(string)
 	recursive := d.Get("recursive").(bool)
-	client := m.(*service.DBApiClient)
+	client := m.(*service.DatabricksClient)
 
 	paths, err := client.DBFS().List(path, recursive)
 	if err != nil {

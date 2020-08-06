@@ -12,7 +12,9 @@ func resourceInstanceProfile() *schema.Resource {
 		Create: resourceInstanceProfileCreate,
 		Read:   resourceInstanceProfileRead,
 		Delete: resourceInstanceProfileDelete,
-
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 		Schema: map[string]*schema.Schema{
 			"instance_profile_arn": {
 				Type:     schema.TypeString,
@@ -29,7 +31,7 @@ func resourceInstanceProfile() *schema.Resource {
 }
 
 func resourceInstanceProfileCreate(d *schema.ResourceData, m interface{}) error {
-	client := m.(*service.DBApiClient)
+	client := m.(*service.DatabricksClient)
 	instanceProfileArn := d.Get("instance_profile_arn").(string)
 	skipValidation := d.Get("skip_validation").(bool)
 	err := client.InstanceProfiles().Create(instanceProfileArn, skipValidation)
@@ -47,7 +49,7 @@ func resourceInstanceProfileCreate(d *schema.ResourceData, m interface{}) error 
 
 func resourceInstanceProfileRead(d *schema.ResourceData, m interface{}) error {
 	id := d.Id()
-	client := m.(*service.DBApiClient)
+	client := m.(*service.DatabricksClient)
 	profile, err := client.InstanceProfiles().Read(id)
 	if err != nil {
 		if e, ok := err.(service.APIError); ok && e.IsMissing() {
@@ -63,7 +65,7 @@ func resourceInstanceProfileRead(d *schema.ResourceData, m interface{}) error {
 
 func resourceInstanceProfileDelete(d *schema.ResourceData, m interface{}) error {
 	id := d.Id()
-	client := m.(*service.DBApiClient)
+	client := m.(*service.DatabricksClient)
 	err := client.InstanceProfiles().Delete(id)
 	return err
 }

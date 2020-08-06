@@ -1,12 +1,16 @@
 package service
 
 import (
+	"bytes"
 	"encoding/base64"
 	"fmt"
 	"net/http"
+	"os"
 	"testing"
 
 	"github.com/databrickslabs/databricks-terraform/client/model"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/stretchr/testify/assert"
 )
 
 var base64String = base64.StdEncoding.EncodeToString([]byte("helloworld"))
@@ -136,8 +140,8 @@ func TestDBFSAPI_Create(t *testing.T) {
 					"handle": 1000
 				}`, ``, ``,
 			},
-			responseStatus: []int{http.StatusOK, http.StatusBadRequest},
-			requestMethod:  []string{http.MethodPost, http.MethodPost},
+			responseStatus: []int{http.StatusOK, http.StatusBadRequest, http.StatusOK},
+			requestMethod:  []string{http.MethodPost, http.MethodPost, http.MethodPost},
 			args: []interface{}{
 				&handle{
 					Path:      "my-path",
@@ -147,12 +151,16 @@ func TestDBFSAPI_Create(t *testing.T) {
 					Data:   base64String,
 					Handle: 1000,
 				},
+				&close{
+					Handle: 1000,
+				},
 			},
 			postStructExpect: []interface{}{
 				&handle{},
 				&block{},
+				&close{},
 			},
-			wantURI: []string{"/api/2.0/dbfs/create", "/api/2.0/dbfs/add-block"},
+			wantURI: []string{"/api/2.0/dbfs/create", "/api/2.0/dbfs/add-block", "/api/2.0/dbfs/close"},
 			want:    nil,
 			wantErr: true,
 		},
@@ -195,99 +203,11 @@ func TestDBFSAPI_Create(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			AssertMultipleRequestsWithMockServer(t, tt.args, tt.requestMethod, tt.wantURI, tt.postStructExpect, tt.response, tt.responseStatus, nil, tt.wantErr, func(client DBApiClient) (interface{}, error) {
-				return nil, client.DBFS().Create(tt.params.Path, tt.params.Overwrite, tt.params.Data)
-			})
-		})
-	}
-}
-
-func TestDBFSAPI_Copy(t *testing.T) {
-	type handle struct {
-		Path      string `json:"path,omitempty" url:"path,omitempty"`
-		Overwrite bool   `json:"overwrite,omitempty" url:"overwrite,omitempty"`
-	}
-	type addBlock struct {
-		Data   string `json:"data,omitempty" url:"data,omitempty"`
-		Handle int64  `json:"handle,omitempty" url:"handle,omitempty"`
-	}
-	type closeHandle struct {
-		Handle int64 `json:"handle,omitempty" url:"handle,omitempty"`
-	}
-	type read struct {
-		Path   string `json:"path,omitempty" url:"path,omitempty"`
-		Offset int64  `json:"offset,omitempty" url:"offset,omitempty"`
-		Length int64  `json:"length,omitempty" url:"length,omitempty"`
-	}
-	type params struct {
-		Src       string `json:"src,omitempty" url:"src,omitempty"`
-		Tgt       string `json:"tgt,omitempty" url:"tgt,omitempty"`
-		Overwrite bool   `json:"overwrite,omitempty" url:"overwrite,omitempty"`
-	}
-
-	tests := []struct {
-		params           params
-		name             string
-		response         []string
-		responseStatus   []int
-		requestMethod    []string
-		postStructExpect []interface{}
-		args             []interface{}
-		wantURI          []string
-		want             interface{}
-		wantErr          bool
-	}{
-		{
-			name: "Copy test",
-			params: params{
-				Src:       "my-path",
-				Tgt:       "my-path-tgt",
-				Overwrite: true,
-			},
-			response: []string{
-				`{
-					"handle": 1000
-				}`, fmt.Sprintf(`{
-					"bytes_read": 10000,
-					"data": "%s"
-				}`, base64String), ``, ``,
-			},
-			responseStatus: []int{http.StatusOK, http.StatusOK, http.StatusOK, http.StatusOK},
-			requestMethod:  []string{http.MethodPost, http.MethodGet, http.MethodPost, http.MethodPost},
-			args: []interface{}{
-				&handle{
-					Path:      "my-path-tgt",
-					Overwrite: true,
-				},
-				&read{
-					Path:   "my-path",
-					Offset: 0,
-					Length: 1e6,
-				},
-				&addBlock{
-					Data:   base64String,
-					Handle: 1000,
-				},
-				&closeHandle{
-					Handle: 1000,
-				},
-			},
-			postStructExpect: []interface{}{
-				&handle{},
-				nil,
-				&addBlock{},
-				&closeHandle{},
-			},
-			wantURI: []string{"/api/2.0/dbfs/create", "/api/2.0/dbfs/read?length=1000000&path=my-path", "/api/2.0/dbfs/add-block", "/api/2.0/dbfs/close"},
-			want:    nil,
-			wantErr: false,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			AssertMultipleRequestsWithMockServer(t, tt.args, tt.requestMethod, tt.wantURI, tt.postStructExpect, tt.response, tt.responseStatus, nil, tt.wantErr, func(client DBApiClient) (interface{}, error) {
-				return nil, client.DBFS().Copy(tt.params.Src, tt.params.Tgt, &client, tt.params.Overwrite)
-			})
+			AssertMultipleRequestsWithMockServer(t, tt.args, tt.requestMethod, tt.wantURI,
+				tt.postStructExpect, tt.response, tt.responseStatus, nil, tt.wantErr,
+				func(client DatabricksClient) (interface{}, error) {
+					return nil, client.DBFS().Create(tt.params.Path, tt.params.Overwrite, tt.params.Data)
+				})
 		})
 	}
 }
@@ -391,7 +311,7 @@ func TestDBFSAPI_Read(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			AssertMultipleRequestsWithMockServer(t, tt.args, tt.requestMethod, tt.wantURI, tt.postStructExpect, tt.response, tt.responseStatus, tt.want, tt.wantErr, func(client DBApiClient) (interface{}, error) {
+			AssertMultipleRequestsWithMockServer(t, tt.args, tt.requestMethod, tt.wantURI, tt.postStructExpect, tt.response, tt.responseStatus, tt.want, tt.wantErr, func(client DatabricksClient) (interface{}, error) {
 				return client.DBFS().Read(tt.params.Path)
 			})
 		})
@@ -434,7 +354,7 @@ func TestDBFSAPI_Delete(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var input args
-			AssertRequestWithMockServer(t, &tt.args, http.MethodPost, "/api/2.0/dbfs/delete", &input, tt.response, tt.responseStatus, nil, tt.wantErr, func(client DBApiClient) (interface{}, error) {
+			AssertRequestWithMockServer(t, &tt.args, http.MethodPost, "/api/2.0/dbfs/delete", &input, tt.response, tt.responseStatus, nil, tt.wantErr, func(client DatabricksClient) (interface{}, error) {
 				return nil, client.DBFS().Delete(tt.args.Path, tt.args.Recursive)
 			})
 		})
@@ -477,7 +397,7 @@ func TestDBFSAPI_Move(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var input args
-			AssertRequestWithMockServer(t, &tt.args, http.MethodPost, "/api/2.0/dbfs/move", &input, tt.response, tt.responseStatus, nil, tt.wantErr, func(client DBApiClient) (interface{}, error) {
+			AssertRequestWithMockServer(t, &tt.args, http.MethodPost, "/api/2.0/dbfs/move", &input, tt.response, tt.responseStatus, nil, tt.wantErr, func(client DatabricksClient) (interface{}, error) {
 				return nil, client.DBFS().Move(tt.args.SourcePath, tt.args.DestinationPath)
 			})
 		})
@@ -517,7 +437,7 @@ func TestDBFSAPI_Mkdirs(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var input args
-			AssertRequestWithMockServer(t, &tt.args, http.MethodPost, "/api/2.0/dbfs/mkdirs", &input, tt.response, tt.responseStatus, nil, tt.wantErr, func(client DBApiClient) (interface{}, error) {
+			AssertRequestWithMockServer(t, &tt.args, http.MethodPost, "/api/2.0/dbfs/mkdirs", &input, tt.response, tt.responseStatus, nil, tt.wantErr, func(client DatabricksClient) (interface{}, error) {
 				return nil, client.DBFS().Mkdirs(tt.args.Path)
 			})
 		})
@@ -571,7 +491,7 @@ func TestDBFSAPI_Status(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var input args
-			AssertRequestWithMockServer(t, &tt.args, http.MethodGet, tt.requestURI, &input, tt.response, tt.responseStatus, tt.want, tt.wantErr, func(client DBApiClient) (interface{}, error) {
+			AssertRequestWithMockServer(t, &tt.args, http.MethodGet, tt.requestURI, &input, tt.response, tt.responseStatus, tt.want, tt.wantErr, func(client DatabricksClient) (interface{}, error) {
 				return client.DBFS().Status(tt.args.Path)
 			})
 		})
@@ -646,7 +566,7 @@ func TestDBFSAPI_ListNonRecursive(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var input args
-			AssertRequestWithMockServer(t, tt.args, http.MethodGet, tt.wantURI, &input, tt.response, tt.responseStatus, tt.want, tt.wantErr, func(client DBApiClient) (interface{}, error) {
+			AssertRequestWithMockServer(t, tt.args, http.MethodGet, tt.wantURI, &input, tt.response, tt.responseStatus, tt.want, tt.wantErr, func(client DatabricksClient) (interface{}, error) {
 				return client.DBFS().List(tt.args.Path, tt.args.Recursive)
 			})
 		})
@@ -760,9 +680,69 @@ func TestDBFSAPI_ListRecursive(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			AssertMultipleRequestsWithMockServer(t, tt.args, []string{http.MethodGet, http.MethodGet}, tt.wantURI, []interface{}{&args{}}, tt.response, tt.responseStatus, tt.want, tt.wantErr, func(client DBApiClient) (interface{}, error) {
+			AssertMultipleRequestsWithMockServer(t, tt.args, []string{http.MethodGet, http.MethodGet}, tt.wantURI, []interface{}{&args{}}, tt.response, tt.responseStatus, tt.want, tt.wantErr, func(client DatabricksClient) (interface{}, error) {
 				return client.DBFS().List(tt.args[0].(*args).Path, tt.args[0].(*args).Recursive)
 			})
 		})
 	}
+}
+
+func GenString(times int) []byte {
+	var buf bytes.Buffer
+	for i := 0; i < times; i++ {
+		buf.WriteString("Hello world how are you doing?\n")
+	}
+	return buf.Bytes()
+}
+
+func TestAccCreateFile(t *testing.T) {
+	if _, ok := os.LookupEnv("CLOUD_ENV"); !ok {
+		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
+	}
+
+	randomName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
+	dir := "/client-test/" + randomName
+	dir2 := dir + "/dir2/"
+	path := dir + "/randomfile"
+	path2 := dir + "/dir2/randomfile"
+	path3 := dir + "/dir2/randomfile2"
+
+	randomStr := GenString(500)
+	t.Log(len(randomStr))
+	t.Log(len(base64.StdEncoding.EncodeToString(randomStr)))
+
+	client := NewClientFromEnvironment()
+
+	err := client.DBFS().Mkdirs(dir)
+	assert.NoError(t, err, err)
+
+	err = client.DBFS().Mkdirs(dir2)
+	assert.NoError(t, err, err)
+
+	inputData := base64.StdEncoding.EncodeToString(randomStr)
+	err = client.DBFS().Create(path, true, inputData)
+	assert.NoError(t, err, err)
+
+	err = client.DBFS().Create(path2, true, inputData)
+	assert.NoError(t, err, err)
+
+	err = client.DBFS().Create(path3, true, inputData)
+	assert.NoError(t, err, err)
+
+	defer func() {
+		err := client.DBFS().Delete(dir, true)
+		assert.NoError(t, err, err)
+	}()
+
+	base64Resp, err := client.DBFS().Read(path)
+	assert.NoError(t, err, err)
+	assert.True(t, inputData == base64Resp)
+
+	items, err := client.DBFS().List(dir, false)
+	assert.NoError(t, err, err)
+	assert.Len(t, items, 2)
+
+	items, err = client.DBFS().List(dir, true)
+	assert.NoError(t, err, err)
+	assert.Len(t, items, 3)
 }

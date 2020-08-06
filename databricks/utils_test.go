@@ -8,11 +8,13 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"regexp"
 	"sort"
 	"strconv"
 	"strings"
 	"testing"
 
+	"github.com/hashicorp/hcl"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
@@ -21,252 +23,231 @@ import (
 	"github.com/databrickslabs/databricks-terraform/client/service"
 )
 
-func TestMissingMWSResources(t *testing.T) {
-	if testing.Short() {
-		t.Skip("skipping integration test in short mode.")
+// EnvironmentTemplate asserts existence and fills in {env.VAR} & {var.RANDOM} placeholders in template
+func EnvironmentTemplate(t *testing.T, template string) string {
+	vars := map[string]string{
+		"RANDOM": acctest.RandStringFromCharSet(5, acctest.CharSetAlphaNum),
 	}
+	missing := 0
+	var varType, varName, value string
+	r := regexp.MustCompile(`{(env|var).([^{}]*)}`)
+	for _, variableMatch := range r.FindAllStringSubmatch(template, -1) {
+		value = ""
+		varType = variableMatch[1]
+		varName = variableMatch[2]
+		switch varType {
+		case "env":
+			value = os.Getenv(varName)
+		case "var":
+			value = vars[varName]
+		}
+		if value == "" {
+			t.Logf("Missing %s %s variable.", varType, varName)
+			missing++
+			continue
+		}
+		template = strings.ReplaceAll(template, `{`+varType+`.`+varName+`}`, value)
+	}
+	if missing > 0 {
+		t.Fatalf("Please set %d variables and restart.", missing)
+	}
+	return service.TrimLeadingWhitespace(template)
+}
 
-	mwsAcctID := os.Getenv("DATABRICKS_MWS_ACCT_ID")
+func FirstKeyValue(t *testing.T, str, key string) string {
+	r := regexp.MustCompile(key + `\s+=\s+"([^"]*)"`)
+	match := r.FindStringSubmatch(str)
+	if len(match) != 2 {
+		t.Fatalf("Cannot find %s in given string", key)
+	}
+	return match[1]
+}
+
+func TestEnvironmentTemplate(t *testing.T) {
+	res := EnvironmentTemplate(t, `
+	resource "user" "me" {
+		name  = "{env.USER}"
+		email = "{env.USER}+{var.RANDOM}@example.com"
+	}`)
+	assert.Equal(t, os.Getenv("USER"), FirstKeyValue(t, res, "name"))
+}
+
+func assertErrorStartsWith(t *testing.T, err error, message string) bool {
+	return assert.True(t, strings.HasPrefix(err.Error(), message), err.Error())
+}
+
+type MissingResourceCheck struct {
+	name     string
+	readFunc func() error
+}
+
+func TestMwsAccMissingResources(t *testing.T) {
+	if cloudEnv, ok := os.LookupEnv("CLOUD_ENV"); !ok || cloudEnv != "MWS" {
+		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV=MWS' is set.")
+	}
+	mwsAcctID := os.Getenv("DATABRICKS_ACCOUNT_ID")
+	if mwsAcctID == "" {
+		t.Skip("Must have DATABRICKS_ACCOUNT_ID environment variable set.")
+	}
 	randStringID := acctest.RandString(10)
 	randIntID := 2000000 + acctest.RandIntRange(100000, 20000000)
 
-	client := getMWSClient()
-	tests := []struct {
-		name            string
-		readFunc        func() error
-		isCustomCheck   bool
-		resourceID      string
-		customCheckFunc func(err error, rId string) bool
-	}{
+	client := service.CommonEnvironmentClient()
+	tests := []MissingResourceCheck{
 		{
-			name: "CheckIfMWSCredentialsAreMissing",
+			name: "Credential",
 			readFunc: func() error {
 				_, err := client.MWSCredentials().Read(mwsAcctID, randStringID)
 				return err
 			},
 		},
 		{
-			name: "CheckIfMWSNetworksAreMissing",
+			name: "Network",
 			readFunc: func() error {
 				_, err := client.MWSNetworks().Read(mwsAcctID, randStringID)
 				return err
 			},
 		},
 		{
-			name: "CheckIfMWSStorageConfigurationsAreMissing",
+			name: "Storage",
 			readFunc: func() error {
 				_, err := client.MWSStorageConfigurations().Read(mwsAcctID, randStringID)
 				return err
 			},
 		},
 		{
-			name: "CheckIfMWSWorkspacesAreMissing",
+			name: "Workspace",
 			readFunc: func() error {
 				_, err := client.MWSWorkspaces().Read(mwsAcctID, int64(randIntID))
 				return err
 			},
 		},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if tt.isCustomCheck {
-				// Test custom check because api call does not return 404 not found if the resource does not exist
-				testVerifyResourceIsMissingCustomVerification(t, tt.resourceID, tt.readFunc, tt.customCheckFunc)
-			} else {
-				testVerifyResourceIsMissing(t, tt.readFunc)
-			}
-		})
+	MissingResourceChecks(tests).Verify(t)
+}
+
+func TestAccMissingResourcesInWorkspace(t *testing.T) {
+	cloudEnv, ok := os.LookupEnv("CLOUD_ENV")
+	if !ok {
+		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' set")
 	}
-}
-
-// Capture this test for aws
-func TestAccAwsMissingWorkspaceResources(t *testing.T) {
-	testMissingWorkspaceResources(t, service.AWS)
-}
-
-// Capture this test for azure
-func TestAccAzureMissingWorkspaceResources(t *testing.T) {
-	testMissingWorkspaceResources(t, service.Azure)
-}
-
-func testMissingWorkspaceResources(t *testing.T, cloud service.CloudServiceProvider) {
-	if _, ok := os.LookupEnv("TF_ACC"); !ok {
-		t.Skip("Acceptance tests skipped unless env 'TF_ACC' set")
-	}
-
-	randIntID := 2000000 + acctest.RandIntRange(100000, 20000000)
 	randStringID := acctest.RandString(10)
-	// example 405E7E8E4A000024
-	randomClusterPolicyID := fmt.Sprintf("400E9E9E9A%d",
-		acctest.RandIntRange(100000, 999999),
-	)
-	// example 0101-120000-brick1-pool-ABCD1234
-	randomInstancePoolID := fmt.Sprintf(
-		"%v-%v-%s-pool-%s",
-		acctest.RandIntRange(1000, 9999),
-		acctest.RandIntRange(100000, 999999),
-		acctest.RandString(6),
-		acctest.RandString(8),
-	)
-	client := getIntegrationDBAPIClient(t)
-
-	type testTable struct {
-		name            string
-		readFunc        func() error
-		isCustomCheck   bool
-		resourceID      string
-		customCheckFunc func(err error, rId string) bool
-	}
-	tests := []testTable{
+	randIntID := 2000000 + acctest.RandIntRange(100000, 20000000)
+	randomClusterPolicyID := fmt.Sprintf("400E9E9E9A%d", acctest.RandIntRange(100000, 999999))
+	randomInstancePoolID := fmt.Sprintf("%v-%v-%s-pool-%s", acctest.RandIntRange(1000, 9999),
+		acctest.RandIntRange(100000, 999999), acctest.RandString(6), acctest.RandString(8))
+	client := service.CommonEnvironmentClient()
+	tests := []MissingResourceCheck{
 		{
-			name: "CheckIfTokensAreMissing",
+			name: "Tokens",
 			readFunc: func() error {
 				_, err := client.Tokens().Read(randStringID)
 				return err
 			},
 		},
 		{
-			name: "CheckIfSecretScopesAreMissing",
+			name: "Secret Scopes",
 			readFunc: func() error {
 				_, err := client.SecretScopes().Read(randStringID)
 				return err
 			},
 		},
 		{
-			name: "CheckIfSecretsAreMissing",
+			name: "Secrets",
 			readFunc: func() error {
 				_, err := client.Secrets().Read(randStringID, randStringID)
 				return err
 			},
 		},
 		{
-			name: "CheckIfSecretsACLsAreMissing",
+			name: "Secret ACLs",
 			readFunc: func() error {
 				_, err := client.SecretAcls().Read(randStringID, randStringID)
 				return err
 			},
 		},
 		{
-			name: "CheckIfSecretsACLsAreMissing",
+			name: "Notebooks",
 			readFunc: func() error {
-				_, err := client.SecretAcls().Read(randStringID, randStringID)
-				return err
-			},
-		},
-		{
-			name: "CheckIfNotebooksAreMissing",
-			readFunc: func() error {
-				// ID must start with a /
 				_, err := client.Notebooks().Read("/" + randStringID)
 				return err
 			},
 		},
 		{
-			name: "CheckIfInstancePoolsAreMissing",
+			name: "Instance Pools",
 			readFunc: func() error {
 				_, err := client.InstancePools().Read(randomInstancePoolID)
 				return err
 			},
 		},
 		{
-			name: "CheckIfClustersAreMissing",
+			name: "Clusters",
 			readFunc: func() error {
 				_, err := client.Clusters().Get(randStringID)
 				return err
 			},
-			isCustomCheck:   true,
-			customCheckFunc: isClusterMissing,
-			resourceID:      randStringID,
 		},
 		{
-			name: "CheckIfDBFSFilesAreMissing",
+			name: "DBFS Files",
 			readFunc: func() error {
 				_, err := client.DBFS().Read("/" + randStringID)
 				return err
 			},
 		},
 		{
-			name: "CheckIfGroupsAreMissing",
+			name: "Groups",
 			readFunc: func() error {
 				_, err := client.Groups().Read(randStringID)
-				t.Log(err)
 				return err
 			},
 		},
 		{
-			name: "CheckIfUsersAreMissing",
+			name: "Users",
 			readFunc: func() error {
 				_, err := client.Users().Read(randStringID)
-				t.Log(err)
 				return err
 			},
 		},
 		{
-			name: "CheckIfClusterPoliciesAreMissing",
+			name: "Cluster Policies",
 			readFunc: func() error {
 				_, err := client.ClusterPolicies().Get(randomClusterPolicyID)
-				t.Log(err)
 				return err
 			},
 		},
 		{
-			name: "CheckIfJobsAreMissing",
+			name: "Jobs",
 			readFunc: func() error {
-				_, err := client.Jobs().Read(int64(randIntID))
+				_, err := client.Jobs().Read(strconv.Itoa(randIntID))
 				return err
 			},
-			isCustomCheck:   true,
-			customCheckFunc: isJobMissing,
-			resourceID:      strconv.Itoa(randIntID),
 		},
 	}
-	// Handle aws only tests where instance profiles only exist on aws
-	if cloud == service.AWS {
-		awsOnlyTests := []testTable{
-			{
-				name: "CheckIfInstanceProfilesAreMissing",
-				readFunc: func() error {
-					_, err := client.InstanceProfiles().Read(randStringID)
-					return err
-				},
+	if cloudEnv == "AWS" {
+		tests = append(tests, MissingResourceCheck{
+			name: "Instance Profiles",
+			readFunc: func() error {
+				_, err := client.InstanceProfiles().Read(randStringID)
+				return err
 			},
-		}
-		tests = append(tests, awsOnlyTests...)
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if tt.isCustomCheck {
-				// Test custom check because api call does not return 404 not found if the resource does not exist
-				testVerifyResourceIsMissingCustomVerification(t, tt.resourceID, tt.readFunc, tt.customCheckFunc)
-			} else {
-				testVerifyResourceIsMissing(t, tt.readFunc)
-			}
 		})
 	}
+	MissingResourceChecks(tests).Verify(t)
 }
 
-func testVerifyResourceIsMissingCustomVerification(t *testing.T, resourceID string, readFunc func() error,
-	customCheck func(err error, rId string) bool) {
-	err := readFunc()
-	assert.NotNil(t, err, "err should not be nil")
-	assert.IsType(t, err, service.APIError{}, fmt.Sprintf("error: %s is not type api error", err.Error()))
-	if apiError, ok := err.(service.APIError); ok {
-		assert.True(t, customCheck(err, resourceID), fmt.Sprintf("error: %v is not missing;"+
-			"\nstatus code: %v;"+
-			"\nerror code: %s",
-			apiError, apiError.StatusCode, apiError.ErrorCode))
-	}
-}
+type MissingResourceChecks []MissingResourceCheck
 
-func testVerifyResourceIsMissing(t *testing.T, readFunc func() error) {
-	err := readFunc()
-	assert.NotNil(t, err, "err should not be nil")
-	assert.IsType(t, err, service.APIError{}, fmt.Sprintf("error: %s is not type api error", err.Error()))
-	if apiError, ok := err.(service.APIError); ok {
-		assert.True(t, apiError.IsMissing(), fmt.Sprintf("error: %v is not missing;"+
-			"\nstatus code: %v;"+
-			"\nerror code: %s",
-			apiError, apiError.StatusCode, apiError.ErrorCode))
+func (tests MissingResourceChecks) Verify(t *testing.T) {
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := tt.readFunc()
+			assert.NotNil(t, err, "err should not be nil")
+			assert.IsType(t, service.APIError{}, err, fmt.Sprintf("error: %s is not type api error", err.Error()))
+			if apiError, ok := err.(service.APIError); ok {
+				assert.True(t, apiError.IsMissing(), fmt.Sprintf("error: %v is not missing;\nstatus code: %v; error code: %s",
+					apiError, apiError.StatusCode, apiError.ErrorCode))
+			}
+		})
 	}
 }
 
@@ -322,6 +303,77 @@ type HTTPFixture struct {
 	ReuseRequest    bool
 }
 
+type ResourceFixture struct {
+	Fixtures []HTTPFixture
+	Resource *schema.Resource
+	State    map[string]interface{}
+	// HCL might be useful to test nested blocks
+	HCL         string
+	CommandMock service.CommandMock
+	Create      bool
+	Read        bool
+	Update      bool
+	Delete      bool
+	ID          string
+	// new resource
+	New bool
+}
+
+func (f ResourceFixture) Apply(t *testing.T) (*schema.ResourceData, error) {
+	client, server, err := httpFixtureClient(t, f.Fixtures)
+	defer server.Close()
+	if err != nil {
+		return nil, err
+	}
+	if f.CommandMock != nil {
+		client.WithCommandMock(f.CommandMock)
+	}
+	if len(f.HCL) > 0 {
+		var out interface{}
+		err = hcl.Decode(&out, f.HCL)
+		if err != nil {
+			return nil, err
+		}
+		f.State = fixHCL(out).(map[string]interface{})
+	}
+	var whatever func(d *schema.ResourceData, c interface{}) error
+	switch {
+	case f.Create:
+		whatever = f.Resource.Create
+		if f.ID != "" {
+			return nil, errors.New("ID is not available for Create")
+		}
+	case f.Read:
+		if f.ID == "" {
+			return nil, errors.New("ID must be set for Read")
+		}
+		whatever = func(d *schema.ResourceData, m interface{}) error {
+			d.SetId(f.ID)
+			if f.New {
+				d.MarkNewResource()
+			}
+			return f.Resource.Read(d, m)
+		}
+	case f.Update:
+		if f.ID == "" {
+			return nil, errors.New("ID must be set for Update")
+		}
+		whatever = func(d *schema.ResourceData, m interface{}) error {
+			d.SetId(f.ID)
+			return f.Resource.Update(d, m)
+		}
+	case f.Delete:
+		if f.ID == "" {
+			return nil, errors.New("ID must be set for Delete")
+		}
+		whatever = func(d *schema.ResourceData, m interface{}) error {
+			d.SetId(f.ID)
+			return f.Resource.Delete(d, m)
+		}
+	}
+	return resourceTesterScaffolding(t, f.Resource, f.State, client, whatever)
+}
+
 func UnionFixturesLists(fixturesLists ...[]HTTPFixture) (fixtureList []HTTPFixture) {
 	for _, v := range fixturesLists {
 		fixtureList = append(fixtureList, v...)
@@ -335,7 +387,16 @@ func ResourceTester(t *testing.T,
 	resourceFunc func() *schema.Resource,
 	state map[string]interface{},
 	whatever func(d *schema.ResourceData, c interface{}) error) (*schema.ResourceData, error) {
-	server := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
+	client, server, err := httpFixtureClient(t, fixtures)
+	defer server.Close()
+	if err != nil {
+		return nil, err
+	}
+	return resourceTesterScaffolding(t, resourceFunc(), state, client, whatever)
+}
+
+func httpFixtureClient(t *testing.T, fixtures []HTTPFixture) (client *service.DatabricksClient, server *httptest.Server, err error) {
+	server = httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
 		found := false
 		for i, fixture := range fixtures {
 			if req.Method == fixture.Method && req.RequestURI == fixture.Resource {
@@ -370,21 +431,79 @@ func ResourceTester(t *testing.T,
 			}
 		}
 		if !found {
-			assert.Fail(t, fmt.Sprintf("Received unexpected call: %s %s", req.Method, req.RequestURI))
+			receivedRequest := map[string]interface{}{}
+			buf := new(bytes.Buffer)
+			_, err := buf.ReadFrom(req.Body)
+			assert.NoError(t, err, err)
+			err = json.Unmarshal(buf.Bytes(), &receivedRequest)
+			assert.NoError(t, err, err)
+
+			expectedRequest := ""
+			if len(receivedRequest) > 0 {
+				// guessing model name would require going over AST,
+				// which is not something i'm willing to write on my weekend
+				expectedRequest += "ExpectedRequest: model.XXX {\n"
+				for key, value := range receivedRequest {
+					camel := ""
+					for _, part := range strings.Split(key, "_") {
+						if len(key) < 4 {
+							// golang styles, meh...
+							camel += strings.ToUpper(key)
+						} else {
+							camel += strings.Title(part)
+						}
+					}
+					// best effort prediction of what struct should look like...
+					expectedRequest += fmt.Sprintf("					%s: %#v,\n", camel, value)
+				}
+				expectedRequest += "				},\n"
+				expectedRequest += fmt.Sprintf("				// ExpectedRequest: %#v,\n", receivedRequest)
+			}
+			stub := fmt.Sprintf(`{
+				Method:   "%s",
+				Resource: "%s",
+				%s
+				Response: model.XXX {
+					// fill in specific fields...
+				},
+			},`, req.Method, req.RequestURI, expectedRequest)
+			assert.Fail(t, fmt.Sprintf("Missing stub, please add: %s", stub))
 			t.FailNow()
 		}
 	}))
+	client = &service.DatabricksClient{
+		Host:  server.URL,
+		Token: "...",
+	}
+	err = client.Configure("dev")
+	return client, server, err
+}
 
-	defer server.Close()
-	var config service.DBApiClientConfig
-	config.Host = server.URL
-	config.Setup()
+func fixHCL(v interface{}) interface{} {
+	switch a := v.(type) {
+	case []map[string]interface{}:
+		vals := []interface{}{}
+		for _, vv := range a {
+			vals = append(vals, fixHCL(vv))
+		}
+		return vals
+	case map[string]interface{}:
+		vals := map[string]interface{}{}
+		for k, ev := range a {
+			vals[k] = fixHCL(ev)
+		}
+		return vals
+	default:
+		return v
+	}
+}
 
-	var client service.DBApiClient
-	client.SetConfig(&config)
-
-	res := resourceFunc()
-
+func resourceTesterScaffolding(t *testing.T, res *schema.Resource,
+	state map[string]interface{}, client *service.DatabricksClient,
+	whatever func(d *schema.ResourceData, c interface{}) error) (*schema.ResourceData, error) {
+	if res == nil {
+		return nil, errors.New("Resource is not set")
+	}
 	if state != nil {
 		resourceConfig := terraform.NewResourceConfigRaw(state)
 		warns, errs := res.Validate(resourceConfig)
@@ -405,7 +524,6 @@ func ResourceTester(t *testing.T,
 			return nil, fmt.Errorf("Invalid config supplied%s", issues)
 		}
 	}
-
 	resourceData := schema.TestResourceDataRaw(t, res.Schema, state)
 	err := res.InternalValidate(res.Schema, true)
 	if err != nil {
@@ -413,31 +531,18 @@ func ResourceTester(t *testing.T,
 	}
 
 	// warns, errs := schemaMap(r.Schema).Validate(c)
-	return resourceData, whatever(resourceData, &client)
+	return resourceData, whatever(resourceData, client)
 }
 
-func TestIsClusterMissingTrueWhenClusterIdSpecifiedPresent(t *testing.T) {
-	err := errors.New("{\"error_code\":\"INVALID_PARAMETER_VALUE\",\"message\":\"Cluster 123 does not exist\"}")
-
-	result := isClusterMissing(err, "123")
-
-	assert.True(t, result)
+func actionWithID(id string, w schema.CreateFunc) schema.CreateFunc {
+	return func(d *schema.ResourceData, c interface{}) error {
+		d.SetId(id)
+		return w(d, c)
+	}
 }
 
-func TestIsClusterMissingFalseWhenClusterIdSpecifiedNotPresent(t *testing.T) {
-	err := errors.New("{\"error_code\":\"INVALID_PARAMETER_VALUE\",\"message\":\"Cluster 123 does not exist\"}")
-
-	result := isClusterMissing(err, "xyz")
-
-	assert.False(t, result)
-}
-
-func TestIsClusterMissingFalseWhenErrorNotInCorrectFormat(t *testing.T) {
-	err := errors.New("{\"error_code\":\"INVALID_PARAMETER_VALUE\",\"message\":\"Something random went bang xyz\"}")
-
-	result := isClusterMissing(err, "xyz")
-
-	assert.False(t, result)
+func debugIfCloudEnvSet() bool {
+	return os.Getenv("CLOUD_ENV") != ""
 }
 
 func TestValidateInstanceProfileARN(t *testing.T) {

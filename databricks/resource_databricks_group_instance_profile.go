@@ -33,7 +33,7 @@ func resourceGroupInstanceProfile() *schema.Resource {
 }
 
 func resourceGroupInstanceProfileCreate(d *schema.ResourceData, m interface{}) error {
-	client := m.(*service.DBApiClient)
+	client := m.(*service.DatabricksClient)
 	groupID := d.Get("group_id").(string)
 	instanceProfileID := d.Get("instance_profile_id").(string)
 	groupInstanceProfileID := &groupInstanceProfileID{
@@ -53,7 +53,7 @@ func resourceGroupInstanceProfileCreate(d *schema.ResourceData, m interface{}) e
 
 func resourceGroupInstanceProfileRead(d *schema.ResourceData, m interface{}) error {
 	id := d.Id()
-	client := m.(*service.DBApiClient)
+	client := m.(*service.DatabricksClient)
 	groupInstanceProfileID := parsegroupInstanceProfileID(id)
 	group, err := client.Groups().Read(groupInstanceProfileID.GroupID)
 
@@ -85,7 +85,7 @@ func resourceGroupInstanceProfileRead(d *schema.ResourceData, m interface{}) err
 
 func resourceGroupInstanceProfileDelete(d *schema.ResourceData, m interface{}) error {
 	id := d.Id()
-	client := m.(*service.DBApiClient)
+	client := m.(*service.DatabricksClient)
 	groupInstanceProfileID := parsegroupInstanceProfileID(id)
 
 	roleRemoveList := []string{groupInstanceProfileID.InstanceProfileID}

@@ -14,7 +14,9 @@ func resourceGroup() *schema.Resource {
 		Update: resourceGroupUpdate,
 		Read:   resourceGroupRead,
 		Delete: resourceGroupDelete,
-
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 		Schema: map[string]*schema.Schema{
 			"display_name": {
 				Type:     schema.TypeString,
@@ -30,14 +32,11 @@ func resourceGroup() *schema.Resource {
 				Optional: true,
 			},
 		},
-		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
-		},
 	}
 }
 
 func resourceGroupCreate(d *schema.ResourceData, m interface{}) error {
-	client := m.(*service.DBApiClient)
+	client := m.(*service.DatabricksClient)
 	groupName := d.Get("display_name").(string)
 	allowClusterCreate := d.Get("allow_cluster_create").(bool)
 	allowInstancePoolCreate := d.Get("allow_instance_pool_create").(bool)
@@ -61,7 +60,7 @@ func resourceGroupCreate(d *schema.ResourceData, m interface{}) error {
 
 func resourceGroupRead(d *schema.ResourceData, m interface{}) error {
 	id := d.Id()
-	client := m.(*service.DBApiClient)
+	client := m.(*service.DatabricksClient)
 	group, err := client.Groups().Read(id)
 	if err != nil {
 		if e, ok := err.(service.APIError); ok && e.IsMissing() {
@@ -88,7 +87,7 @@ func resourceGroupRead(d *schema.ResourceData, m interface{}) error {
 
 func resourceGroupUpdate(d *schema.ResourceData, m interface{}) error {
 	id := d.Id()
-	client := m.(*service.DBApiClient)
+	client := m.(*service.DatabricksClient)
 
 	// Handle entitlements update
 	var entitlementsAddList []string
@@ -114,6 +113,7 @@ func resourceGroupUpdate(d *schema.ResourceData, m interface{}) error {
 		entitlementsRemoveList = append(entitlementsRemoveList, string(model.AllowClusterCreateEntitlement))
 	}
 
+	// TODO: not currently possible to update group display name
 	if entitlementsAddList != nil || entitlementsRemoveList != nil {
 		err := client.Groups().Patch(id, entitlementsAddList, entitlementsRemoveList, model.GroupEntitlementsPath)
 		if err != nil {
@@ -126,7 +126,7 @@ func resourceGroupUpdate(d *schema.ResourceData, m interface{}) error {
 
 func resourceGroupDelete(d *schema.ResourceData, m interface{}) error {
 	id := d.Id()
-	client := m.(*service.DBApiClient)
+	client := m.(*service.DatabricksClient)
 	err := client.Groups().Delete(id)
 	return err
 }

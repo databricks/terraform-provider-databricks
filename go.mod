@@ -11,7 +11,7 @@ require (
 	github.com/google/go-querystring v1.0.0
 	github.com/hashicorp/go-retryablehttp v0.6.6
 	github.com/hashicorp/hcl v1.0.0
-	github.com/hashicorp/hcl/v2 v2.0.0
+	github.com/hashicorp/hcl/v2 v2.6.0
 	github.com/hashicorp/terraform-plugin-sdk v1.15.0
 	github.com/joho/godotenv v1.3.0
 	github.com/mattn/go-colorable v0.1.7 // indirect

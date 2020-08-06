@@ -15,6 +15,19 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 )
 
+func TestDummy(t *testing.T) {
+	MissingResourceChecks([]MissingResourceCheck{
+		{
+			Name: "Dummy",
+			ReadFunc: func() error {
+				return common.APIError{
+					StatusCode: 404,
+				}
+			},
+		},
+	}).Verify(t)
+}
+
 func TestAccMissingResourcesInWorkspace(t *testing.T) {
 	cloudEnv, ok := os.LookupEnv("CLOUD_ENV")
 	if !ok {

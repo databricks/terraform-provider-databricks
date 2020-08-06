@@ -6,11 +6,10 @@
 package require
 
 import (
+	assert "github.com/stretchr/testify/assert"
 	http "net/http"
 	url "net/url"
 	time "time"
-
-	assert "github.com/stretchr/testify/assert"
 )
 
 // Condition uses a Comparison to assert a complex condition.
@@ -170,7 +169,7 @@ func Equal(t TestingT, expected interface{}, actual interface{}, msgAndArgs ...i
 // and that it is equal to the provided error.
 //
 //   actualObj, err := SomeFunction()
-//   assertErrorStartsWith(t, err,  expectedErrorString)
+//   assert.EqualError(t, err,  expectedErrorString)
 func EqualError(t TestingT, theError error, errString string, msgAndArgs ...interface{}) {
 	if h, ok := t.(tHelper); ok {
 		h.Helper()

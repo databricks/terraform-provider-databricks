@@ -20,6 +20,7 @@ locals {
 provider "databricks" {
   alias = "mws"
   host  = "https://accounts.cloud.databricks.com"
+  basic_auth {}
 }
 
 // register cross-account ARN

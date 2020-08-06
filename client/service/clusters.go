@@ -236,10 +236,15 @@ func (a ClustersAPI) GetOrCreateRunningCluster(name string, custom ...model.Clus
 			return cl, nil
 		}
 	}
-	instanceType := "m4.large"
-	if a.client.IsAzure() {
-		instanceType = "Standard_DS3_v2"
+
+	nodeTypes, err := a.ListNodeTypes()
+	if err != nil {
+		return
 	}
+
+	instanceType := nodeTypes[0].NodeTypeID
+	log.Printf("[INFO] Creating an autoterminating cluster with node type %s", instanceType)
+
 	r := model.Cluster{
 		NumWorkers:             1,
 		ClusterName:            name,

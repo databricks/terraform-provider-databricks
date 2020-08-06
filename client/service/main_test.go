@@ -44,7 +44,7 @@ func compare(t *testing.T, a interface{}, b interface{}) {
 }
 
 func GetCloudInstanceType(c *DatabricksClient) string {
-	if c.IsAzure() {
+	if c.UsingAzureAuth() {
 		return "Standard_DS3_v2"
 	}
 	// TODO: create a method on ClustersAPI to give

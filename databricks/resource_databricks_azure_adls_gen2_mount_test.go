@@ -50,7 +50,7 @@ func TestAzureAccAdlsGen2Mount_capture_error(t *testing.T) {
 		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
 	}
 	client := service.CommonEnvironmentClient()
-	if !client.IsAzure() {
+	if !client.UsingAzureAuth() {
 		t.Skip("Test is meant only for Azure")
 	}
 	resource.Test(t, resource.TestCase{
@@ -91,7 +91,7 @@ func TestAzureAccADLSv2Mount(t *testing.T) {
 		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
 	}
 	client := service.CommonEnvironmentClient()
-	if !client.IsAzure() {
+	if !client.UsingAzureAuth() {
 		t.Skip("Test is meant only for Azure")
 	}
 	if !client.AzureAuth.IsClientSecretSet() {

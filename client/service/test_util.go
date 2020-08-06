@@ -104,7 +104,7 @@ func CommonInstancePoolID() string {
 			MaxCapacity:                        10,
 			IdleInstanceAutoTerminationMinutes: 15,
 		}
-		if !client.IsAzure() {
+		if !client.UsingAzureAuth() {
 			instancePool.DiskSpec = &model.InstancePoolDiskSpec{
 				DiskType: &model.InstancePoolDiskType{
 					EbsVolumeType: model.EbsVolumeTypeGeneralPurposeSsd,

@@ -221,6 +221,7 @@ func (a ClustersAPI) GetOrCreateRunningCluster(name string, custom ...model.Clus
 		err = fmt.Errorf("You can only specify 1 custom cluster conf, not %d", len(custom))
 		return
 	}
+
 	clusters, err := a.List()
 	if err != nil {
 		return
@@ -228,13 +229,18 @@ func (a ClustersAPI) GetOrCreateRunningCluster(name string, custom ...model.Clus
 	for _, cl := range clusters {
 		if cl.ClusterName == name {
 			log.Printf("[INFO] Found reusable cluster '%s'", name)
+
+			clusterAvailable := true
 			if !cl.IsRunningOrResizing() {
 				err = a.Start(cl.ClusterID)
 				if err != nil {
-					return
+					clusterAvailable = false
+					log.Printf("[INFO] Cluster %s cannot be started, creating an autoterminating cluster", name)
 				}
 			}
-			return cl, nil
+			if clusterAvailable {
+				return cl, nil
+			}
 		}
 	}
 
@@ -243,31 +249,15 @@ func (a ClustersAPI) GetOrCreateRunningCluster(name string, custom ...model.Clus
 		return
 	}
 
-	// pick the cheapest node type
-	sort.Slice(nodeTypes, func(i, j int) bool {
-		if nodeTypes[i].IsDeprecated != nodeTypes[j].IsDeprecated {
-			return !nodeTypes[i].IsDeprecated
-		}
+	nodeType := GetSmallestNodeType(nodeTypes)
 
-		if nodeTypes[i].MemoryMb != nodeTypes[j].MemoryMb {
-			return nodeTypes[i].MemoryMb < nodeTypes[j].MemoryMb
-		}
-
-		if nodeTypes[i].NumCores != nodeTypes[j].NumCores {
-			return nodeTypes[i].NumCores < nodeTypes[j].NumCores
-		}
-
-		return nodeTypes[i].InstanceTypeID < nodeTypes[j].InstanceTypeID
-	})
-	nodeType := nodeTypes[0].NodeTypeID
-
-	log.Printf("[INFO] Creating an autoterminating cluster with node type %s", nodeType)
+	log.Printf("[INFO] Creating an autoterminating cluster with node type %s", nodeType.NodeTypeID)
 
 	r := model.Cluster{
 		NumWorkers:             1,
 		ClusterName:            name,
 		SparkVersion:           CommonRuntimeVersion(),
-		NodeTypeID:             nodeType,
+		NodeTypeID:             nodeType.NodeTypeID,
 		IdempotencyToken:       name,
 		AutoterminationMinutes: 10,
 	}
@@ -275,4 +265,50 @@ func (a ClustersAPI) GetOrCreateRunningCluster(name string, custom ...model.Clus
 		r = custom[0]
 	}
 	return a.Create(r)
+}
+
+// GetSmallestNodeType returns the smallest node type in a list of node types
+func GetSmallestNodeType(nodeTypes []model.NodeType) model.NodeType {
+	sortedNodeTypes := nodeTypes
+
+	sort.Slice(sortedNodeTypes, func(i, j int) bool {
+		if sortedNodeTypes[i].IsDeprecated != sortedNodeTypes[j].IsDeprecated {
+			return !sortedNodeTypes[i].IsDeprecated
+		}
+
+		if sortedNodeTypes[i].MemoryMB != sortedNodeTypes[j].MemoryMB {
+			return sortedNodeTypes[i].MemoryMB < sortedNodeTypes[j].MemoryMB
+		}
+
+		if sortedNodeTypes[i].NumCores != sortedNodeTypes[j].NumCores {
+			return sortedNodeTypes[i].NumCores < sortedNodeTypes[j].NumCores
+		}
+
+		if sortedNodeTypes[i].NumGPUs != sortedNodeTypes[j].NumGPUs {
+			return sortedNodeTypes[i].NumGPUs < sortedNodeTypes[j].NumGPUs
+		}
+
+		if sortedNodeTypes[i].NodeInstanceType != nil && sortedNodeTypes[j].NodeInstanceType != nil {
+			if sortedNodeTypes[i].NodeInstanceType.LocalNVMeDisks != sortedNodeTypes[j].NodeInstanceType.LocalNVMeDisks {
+				return sortedNodeTypes[i].NodeInstanceType.LocalNVMeDisks < sortedNodeTypes[j].NodeInstanceType.LocalNVMeDisks
+			}
+
+			if sortedNodeTypes[i].NodeInstanceType.LocalDisks != sortedNodeTypes[j].NodeInstanceType.LocalDisks {
+				return sortedNodeTypes[i].NodeInstanceType.LocalDisks < sortedNodeTypes[j].NodeInstanceType.LocalDisks
+			}
+
+			if sortedNodeTypes[i].NodeInstanceType.LocalDiskSizeGB != sortedNodeTypes[j].NodeInstanceType.LocalDiskSizeGB {
+				return sortedNodeTypes[i].NodeInstanceType.LocalDiskSizeGB < sortedNodeTypes[j].NodeInstanceType.LocalDiskSizeGB
+			}
+		}
+
+		if sortedNodeTypes[i].NodeTypeID != sortedNodeTypes[j].NodeTypeID {
+			return sortedNodeTypes[i].NodeTypeID < sortedNodeTypes[j].NodeTypeID
+		}
+
+		return sortedNodeTypes[i].InstanceTypeID < sortedNodeTypes[j].InstanceTypeID
+	})
+
+	nodeType := sortedNodeTypes[0]
+	return nodeType
 }

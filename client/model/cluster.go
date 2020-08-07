@@ -174,15 +174,33 @@ type ClusterCloudProviderNodeInfo struct {
 	TotalCoreQuota     float32  `json:"total_core_quota,omitempty"`
 }
 
-// NodeType encapsulates information about a give node when using the list-node-types api
+// NodeInstanceType encapsulates information about a specific node type
+type NodeInstanceType struct {
+	InstanceTypeID      string `json:"instance_type_id,omitempty"`
+	LocalDisks          int32  `json:"local_disks,omitempty"`
+	LocalDiskSizeGB     int32  `json:"local_disk_size_gb,omitempty"`
+	LocalNVMeDisks      int32  `json:"local_nvme_disks,omitempty"`
+	LocalNVMeDiskSizeGB int32  `json:"local_nvme_disk_size_gb,omitempty"`
+}
+
+// NodeType encapsulates information about a given node when using the list-node-types api
 type NodeType struct {
-	NodeTypeID     string                        `json:"node_type_id,omitempty"`
-	MemoryMb       int32                         `json:"memory_mb,omitempty"`
-	NumCores       float32                       `json:"num_cores,omitempty"`
-	Description    string                        `json:"description,omitempty"`
-	InstanceTypeID string                        `json:"instance_type_id,omitempty"`
-	IsDeprecated   bool                          `json:"is_deprecated,omitempty"`
-	NodeInfo       *ClusterCloudProviderNodeInfo `json:"node_info,omitempty"`
+	NodeTypeID            string                        `json:"node_type_id,omitempty"`
+	MemoryMB              int32                         `json:"memory_mb,omitempty"`
+	NumCores              float32                       `json:"num_cores,omitempty"`
+	NumGPUs               int32                         `json:"num_gpus,omitempty"`
+	SupportEBSVolumes     bool                          `json:"support_ebs_volumes,omitempty"`
+	IsIOCacheEnabled      bool                          `json:"is_io_cache_enabled,omitempty"`
+	SupportPortForwarding bool                          `json:"support_port_forwarding,omitempty"`
+	Description           string                        `json:"description,omitempty"`
+	Category              string                        `json:"category,omitempty"`
+	InstanceTypeID        string                        `json:"instance_type_id,omitempty"`
+	IsDeprecated          bool                          `json:"is_deprecated,omitempty"`
+	IsHidden              bool                          `json:"is_hidden,omitempty"`
+	SupportClusterTags    bool                          `json:"support_cluster_tags,omitempty"`
+	DisplayOrder          int32                         `json:"display_order,omitempty"`
+	NodeInfo              *ClusterCloudProviderNodeInfo `json:"node_info,omitempty"`
+	NodeInstanceType      *NodeInstanceType             `json:"node_instance_type,omitempty"`
 }
 
 // DockerBasicAuth contains the auth information when fetching containers

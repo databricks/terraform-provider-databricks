@@ -194,20 +194,46 @@ func TestClustersAPI_ListNodeTypes(t *testing.T) {
 			wantURI:        "/api/2.0/clusters/list-node-types",
 			want: []model.NodeType{
 				{
-					NodeTypeID:     "r3.xlarge",
-					MemoryMb:       31232,
-					NumCores:       4.0,
-					Description:    "r3.xlarge (deprecated)",
-					InstanceTypeID: "r3.xlarge",
-					IsDeprecated:   false,
+					NodeTypeID:         "r3.xlarge",
+					MemoryMB:           31232,
+					NumCores:           4.0,
+					Description:        "r3.xlarge (deprecated)",
+					InstanceTypeID:     "r3.xlarge",
+					IsDeprecated:       false,
+					Category:           "Memory Optimized",
+					SupportEBSVolumes:  true,
+					SupportClusterTags: true,
+					NumGPUs:            0,
+					NodeInstanceType: &model.NodeInstanceType{
+						InstanceTypeID:  "r3.xlarge",
+						LocalDisks:      1,
+						LocalDiskSizeGB: 80,
+					},
+					IsHidden:              false,
+					SupportPortForwarding: true,
+					DisplayOrder:          1,
+					IsIOCacheEnabled:      false,
 				},
 				{
-					NodeTypeID:     "r3.2xlarge",
-					MemoryMb:       62464,
-					NumCores:       8.0,
-					Description:    "r3.2xlarge (deprecated)",
-					InstanceTypeID: "r3.2xlarge",
-					IsDeprecated:   false,
+					NodeTypeID:         "r3.2xlarge",
+					MemoryMB:           62464,
+					NumCores:           8.0,
+					Description:        "r3.2xlarge (deprecated)",
+					InstanceTypeID:     "r3.2xlarge",
+					IsDeprecated:       false,
+					Category:           "Memory Optimized",
+					SupportEBSVolumes:  true,
+					SupportClusterTags: true,
+					NumGPUs:            0,
+					NodeInstanceType: &model.NodeInstanceType{
+						InstanceTypeID:  "r3.2xlarge",
+						LocalDisks:      1,
+						LocalDiskSizeGB: 160,
+					},
+					IsHidden:              false,
+					SupportPortForwarding: true,
+					DisplayOrder:          1,
+					IsIOCacheEnabled:      false,
 				},
 			},
 			wantErr: false,
@@ -228,6 +254,163 @@ func TestClustersAPI_ListNodeTypes(t *testing.T) {
 			})
 		})
 	}
+}
+
+func TestClusters_SortNodeTypes_Deprecated(t *testing.T) {
+	nodeTypes := []model.NodeType{
+		{
+			IsDeprecated: true,
+			NodeTypeID:   "deprecated1",
+		},
+		{
+			IsDeprecated: false,
+			NodeTypeID:   "not deprecated",
+		},
+		{
+			IsDeprecated: true,
+			NodeTypeID:   "deprecated2",
+		},
+	}
+
+	smallestNodeType := GetSmallestNodeType(nodeTypes)
+	assert.Equal(t, "not deprecated", smallestNodeType.NodeTypeID)
+}
+
+func TestClusters_SortNodeTypes_Memory(t *testing.T) {
+	nodeTypes := []model.NodeType{
+		{
+			MemoryMB:   3,
+			NodeTypeID: "3",
+		},
+		{
+			MemoryMB:   1,
+			NodeTypeID: "1",
+		},
+		{
+			MemoryMB:   2,
+			NodeTypeID: "2",
+		},
+		{
+			MemoryMB:   2,
+			NodeTypeID: "another 2",
+		},
+	}
+
+	smallestNodeType := GetSmallestNodeType(nodeTypes)
+	assert.Equal(t, "1", smallestNodeType.NodeTypeID)
+}
+
+func TestClusters_SortNodeTypes_CPU(t *testing.T) {
+	nodeTypes := []model.NodeType{
+		{
+			NumCores:   3,
+			NodeTypeID: "3",
+		},
+		{
+			NumCores:   1,
+			NodeTypeID: "1",
+		},
+		{
+			NumCores:   2,
+			NodeTypeID: "2",
+		},
+		{
+			NumCores:   1,
+			NodeTypeID: "another 1",
+		},
+	}
+
+	smallestNodeType := GetSmallestNodeType(nodeTypes)
+	assert.Equal(t, "1", smallestNodeType.NodeTypeID)
+}
+
+func TestClusters_SortNodeTypes_GPU(t *testing.T) {
+	nodeTypes := []model.NodeType{
+		{
+			NumGPUs:    3,
+			NodeTypeID: "3",
+		},
+		{
+			NumGPUs:    1,
+			NodeTypeID: "1",
+		},
+		{
+			NumGPUs:    2,
+			NodeTypeID: "2",
+		},
+		{
+			NumGPUs:    1,
+			NodeTypeID: "another 1",
+		},
+	}
+
+	smallestNodeType := GetSmallestNodeType(nodeTypes)
+	assert.Equal(t, "1", smallestNodeType.NodeTypeID)
+}
+
+func TestClusters_SortNodeTypes_CPU_Deprecated(t *testing.T) {
+	nodeTypes := []model.NodeType{
+		{
+			NumCores:     3,
+			IsDeprecated: false,
+			NodeTypeID:   "3 not deprecated",
+		},
+		{
+			NumCores:     1,
+			IsDeprecated: true,
+			NodeTypeID:   "1 deprecated",
+		},
+		{
+			NumCores:     2,
+			IsDeprecated: false,
+			NodeTypeID:   "2 not deprecated",
+		},
+		{
+			NumCores:     1,
+			IsDeprecated: false,
+			NodeTypeID:   "1 not deprecated",
+		},
+		{
+			NumCores:     2,
+			IsDeprecated: true,
+			NodeTypeID:   "2 deprecated",
+		},
+	}
+
+	smallestNodeType := GetSmallestNodeType(nodeTypes)
+	assert.Equal(t, "1 not deprecated", smallestNodeType.NodeTypeID)
+}
+
+func TestClusters_SortNodeTypes_LocalDisks(t *testing.T) {
+	nodeTypes := []model.NodeType{
+		{
+			NodeInstanceType: &model.NodeInstanceType{
+				LocalDisks: 3,
+			},
+			NodeTypeID: "3",
+		},
+		{
+			NodeInstanceType: &model.NodeInstanceType{
+				LocalDisks: 1,
+			},
+			NodeTypeID: "1",
+		},
+		{
+			NodeInstanceType: &model.NodeInstanceType{
+				LocalDisks: 2,
+			},
+			NodeTypeID: "2",
+		},
+		{
+			NodeInstanceType: &model.NodeInstanceType{
+				LocalDisks: 3,
+			},
+			NodeTypeID: "another 3",
+		},
+	}
+
+	smallestNodeType := GetSmallestNodeType(nodeTypes)
+	assert.Equal(t, "1", smallestNodeType.NodeTypeID)
 }
 
 // func TestClustersAPI_WaitForClusterRunning(t *testing.T) {

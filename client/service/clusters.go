@@ -243,24 +243,23 @@ func (a ClustersAPI) GetOrCreateRunningCluster(name string, custom ...model.Clus
 		return
 	}
 
-	nodeTypesSorted := nodeTypes[:]
 	// pick the cheapest node type
-	sort.Slice(nodeTypesSorted, func(i, j int) bool {
-		if nodeTypesSorted[i].IsDeprecated != nodeTypesSorted[j].IsDeprecated {
-			return !nodeTypesSorted[i].IsDeprecated
+	sort.Slice(nodeTypes, func(i, j int) bool {
+		if nodeTypes[i].IsDeprecated != nodeTypes[j].IsDeprecated {
+			return !nodeTypes[i].IsDeprecated
 		}
 
-		if nodeTypesSorted[i].MemoryMb != nodeTypesSorted[j].MemoryMb {
-			return nodeTypesSorted[i].MemoryMb < nodeTypesSorted[j].MemoryMb
+		if nodeTypes[i].MemoryMb != nodeTypes[j].MemoryMb {
+			return nodeTypes[i].MemoryMb < nodeTypes[j].MemoryMb
 		}
 
-		if nodeTypesSorted[i].NumCores != nodeTypesSorted[j].NumCores {
-			return nodeTypesSorted[i].NumCores < nodeTypesSorted[j].NumCores
+		if nodeTypes[i].NumCores != nodeTypes[j].NumCores {
+			return nodeTypes[i].NumCores < nodeTypes[j].NumCores
 		}
 
-		return nodeTypesSorted[i].InstanceTypeID < nodeTypesSorted[j].InstanceTypeID
+		return nodeTypes[i].InstanceTypeID < nodeTypes[j].InstanceTypeID
 	})
-	nodeType := nodeTypesSorted[0].NodeTypeID
+	nodeType := nodeTypes[0].NodeTypeID
 
 	log.Printf("[INFO] Creating an autoterminating cluster with node type %s", nodeType)
 

@@ -60,9 +60,9 @@ func (a MWSNetworksAPI) List(mwsAcctID string) ([]MWSNetwork, error) {
 
 func ResourceNetwork() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceMWSNetworksCreate,
-		Read:   resourceMWSNetworksRead,
-		Delete: resourceMWSNetworksDelete,
+		Create: wrapClientCheck(resourceMWSNetworksCreate),
+		Read:   wrapClientCheck(resourceMWSNetworksRead),
+		Delete: wrapClientCheck(resourceMWSNetworksDelete),
 
 		Schema: map[string]*schema.Schema{
 			"account_id": {

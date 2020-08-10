@@ -60,9 +60,9 @@ func (a MWSCredentialsAPI) List(mwsAcctID string) ([]MWSCredentials, error) {
 
 func ResourceCredentials() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceMWSCredentialsCreate,
-		Read:   resourceMWSCredentialsRead,
-		Delete: resourceMWSCredentialsDelete,
+		Create: wrapClientCheck(resourceMWSCredentialsCreate),
+		Read:   wrapClientCheck(resourceMWSCredentialsRead),
+		Delete: wrapClientCheck(resourceMWSCredentialsDelete),
 
 		Schema: map[string]*schema.Schema{
 			"account_id": {
@@ -98,11 +98,10 @@ func ResourceCredentials() *schema.Resource {
 }
 
 func resourceMWSCredentialsCreate(d *schema.ResourceData, m interface{}) error {
-	client := m.(*common.DatabricksClient)
 	credentialsName := d.Get("credentials_name").(string)
 	roleArn := d.Get("role_arn").(string)
 	mwsAcctID := d.Get("account_id").(string)
-	credentials, err := NewMWSCredentialsAPI(client).Create(mwsAcctID, credentialsName, roleArn)
+	credentials, err := NewMWSCredentialsAPI(m).Create(mwsAcctID, credentialsName, roleArn)
 	if err != nil {
 		return err
 	}
@@ -116,12 +115,11 @@ func resourceMWSCredentialsCreate(d *schema.ResourceData, m interface{}) error {
 
 func resourceMWSCredentialsRead(d *schema.ResourceData, m interface{}) error {
 	id := d.Id()
-	client := m.(*common.DatabricksClient)
 	packagedMwsID, err := UnpackMWSAccountID(id)
 	if err != nil {
 		return err
 	}
-	credentials, err := NewMWSCredentialsAPI(client).Read(packagedMwsID.MwsAcctID, packagedMwsID.ResourceID)
+	credentials, err := NewMWSCredentialsAPI(m).Read(packagedMwsID.MwsAcctID, packagedMwsID.ResourceID)
 	if err != nil {
 		if e, ok := err.(common.APIError); ok && e.IsMissing() {
 			log.Printf("missing resource due to error: %v\n", e)
@@ -155,11 +153,10 @@ func resourceMWSCredentialsRead(d *schema.ResourceData, m interface{}) error {
 
 func resourceMWSCredentialsDelete(d *schema.ResourceData, m interface{}) error {
 	id := d.Id()
-	client := m.(*common.DatabricksClient)
 	packagedMwsID, err := UnpackMWSAccountID(id)
 	if err != nil {
 		return err
 	}
-	err = NewMWSCredentialsAPI(client).Delete(packagedMwsID.MwsAcctID, packagedMwsID.ResourceID)
+	err = NewMWSCredentialsAPI(m).Delete(packagedMwsID.MwsAcctID, packagedMwsID.ResourceID)
 	return err
 }

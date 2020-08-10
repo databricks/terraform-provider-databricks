@@ -3,6 +3,9 @@ package mws
 import (
 	"fmt"
 	"strings"
+
+	"github.com/databrickslabs/databricks-terraform/common"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 // StsRole is the object that contains cross account role arn and external app id
@@ -126,7 +129,7 @@ func packMWSAccountID(idsToPackage PackagedMWSIds) string {
 	return fmt.Sprintf("%s/%s", idsToPackage.MwsAcctID, idsToPackage.ResourceID)
 }
 
-// Helps unpackage MWSAccountId from another id such as credentials id or network id
+// UnpackMWSAccountID Helps unpackage MWSAccountId from another id such as credentials id or network id
 func UnpackMWSAccountID(combined string) (PackagedMWSIds, error) {
 	// TODO: harmonize with other combined ID functions - e.g. secret scopes/keys/acls
 	var packagedMWSIds PackagedMWSIds
@@ -138,4 +141,21 @@ func UnpackMWSAccountID(combined string) (PackagedMWSIds, error) {
 	packagedMWSIds.MwsAcctID = parts[0]
 	packagedMWSIds.ResourceID = parts[1]
 	return packagedMWSIds, nil
+}
+
+func wrapClientCheck(f func(*schema.ResourceData, interface{}) error) func(*schema.ResourceData, interface{}) error {
+	return func(d *schema.ResourceData, m interface{}) error {
+		c := m.(*common.DatabricksClient)
+		isTesting := strings.Contains(c.Host, "localhost") || strings.Contains(c.Host, "127.0.0.1")
+		accountsHost := "https://accounts.cloud.databricks.com"
+		e2example := "https://github.com/databrickslabs/terraform-provider-databricks/blob/master/scripts/awsmt-integration/main.tf"
+		if !isTesting && c.Host != accountsHost {
+			return fmt.Errorf("Multiworkspace API requires you to set %s as DATABRICKS_HOST, but you have "+
+				"specified %s instead. This error may happen if you're using provider in both "+
+				"normal and multiworkspace mode. Please refactor your code into different modules. "+
+				"Runnable example that we use for integration testing can be found in this "+
+				"repository at %s", accountsHost, c.Host, e2example)
+		}
+		return f(d, m)
+	}
 }

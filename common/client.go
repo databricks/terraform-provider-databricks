@@ -35,7 +35,7 @@ type DatabricksClient struct {
 }
 
 // Configure client to work
-func (c *DatabricksClient) Configure(version string) error {
+func (c *DatabricksClient) Configure() error {
 	c.configureHTTPCLient()
 	c.AzureAuth.databricksClient = c
 	c.userAgent = UserAgent()

@@ -31,7 +31,7 @@ func TestMain(m *testing.M) {
 }
 
 func TestProvider(t *testing.T) {
-	if err := DatabricksProvider("dev").(*schema.Provider).InternalValidate(); err != nil {
+	if err := DatabricksProvider().(*schema.Provider).InternalValidate(); err != nil {
 		t.Fatalf("err: %s", err)
 	}
 }
@@ -41,7 +41,7 @@ func TestProvider_HostTokensTakePrecedence(t *testing.T) {
 	raw["host"] = "foo"
 	raw["token"] = "configured"
 	raw["config_file"] = "testdata/.databrickscfg"
-	p := DatabricksProvider("dev").(*schema.Provider)
+	p := DatabricksProvider().(*schema.Provider)
 	err := p.Configure(terraform.NewResourceConfigRaw(raw))
 	assert.Nil(t, err)
 	client := p.Meta().(*common.DatabricksClient)
@@ -53,7 +53,7 @@ func TestProvider_BasicAuthTakePrecedence(t *testing.T) {
 	raw["host"] = "foo"
 	raw["basic_auth"] = []interface{}{map[string]interface{}{"username": "user", "password": "pass"}}
 	raw["config_file"] = "testdata/.databrickscfg"
-	p := DatabricksProvider("dev").(*schema.Provider)
+	p := DatabricksProvider().(*schema.Provider)
 	err := p.Configure(terraform.NewResourceConfigRaw(raw))
 	assert.Nil(t, err)
 	client := p.Meta().(*common.DatabricksClient)
@@ -65,7 +65,7 @@ func TestProvider_NoHostGivesError(t *testing.T) {
 	var raw = make(map[string]interface{})
 	raw["config_file"] = "testdata/.databrickscfg"
 	raw["profile"] = "nohost"
-	p := DatabricksProvider("dev").(*schema.Provider)
+	p := DatabricksProvider().(*schema.Provider)
 	err := p.Configure(terraform.NewResourceConfigRaw(raw))
 	assert.NotNil(t, err)
 }
@@ -74,7 +74,7 @@ func TestProvider_NoTokenGivesError(t *testing.T) {
 	var raw = make(map[string]interface{})
 	raw["config_file"] = "testdata/.databrickscfg"
 	raw["profile"] = "notoken"
-	p := DatabricksProvider("dev").(*schema.Provider)
+	p := DatabricksProvider().(*schema.Provider)
 	err := p.Configure(terraform.NewResourceConfigRaw(raw))
 	assert.NotNil(t, err)
 }
@@ -83,7 +83,7 @@ func TestProvider_InvalidProfileGivesError(t *testing.T) {
 	var raw = make(map[string]interface{})
 	raw["config_file"] = "testdata/.databrickscfg"
 	raw["profile"] = "invalidhost"
-	p := DatabricksProvider("dev").(*schema.Provider)
+	p := DatabricksProvider().(*schema.Provider)
 	err := p.Configure(terraform.NewResourceConfigRaw(raw))
 	assert.NotNil(t, err)
 }
@@ -92,7 +92,7 @@ func TestProvider_InvalidConfigFilePath(t *testing.T) {
 	var raw = make(map[string]interface{})
 	raw["config_file"] = "testdata/.invalid file"
 	raw["profile"] = "invalidhost"
-	p := DatabricksProvider("dev").(*schema.Provider)
+	p := DatabricksProvider().(*schema.Provider)
 	err := p.Configure(terraform.NewResourceConfigRaw(raw))
 	assert.NotNil(t, err)
 }
@@ -106,7 +106,7 @@ func TestAccDatabricksCliConfigWorks(t *testing.T) {
 	resource.Test(t,
 		resource.TestCase{
 			Providers: map[string]terraform.ResourceProvider{
-				"databricks": DatabricksProvider("dev"),
+				"databricks": DatabricksProvider(),
 			},
 			Steps: []resource.TestStep{
 				{

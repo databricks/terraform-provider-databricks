@@ -194,7 +194,7 @@ func (stub *resourceTestStub) Deletes(t *testing.T) {
 func TestGenerateTestCodeStubs(t *testing.T) {
 	t.Skip()
 	funcs := getExistingUnitTests()
-	p := DatabricksProvider("dev").(*schema.Provider)
+	p := DatabricksProvider().(*schema.Provider)
 	for name, resource := range p.ResourcesMap {
 		if name != "databricks_group" {
 			continue

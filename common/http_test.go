@@ -78,9 +78,9 @@ func TestClient_HandleErrors(t *testing.T) {
 				Host:  server.URL,
 				Token: "...",
 			}
-			err := client.Configure("dev")
+			err := client.Configure()
 			assert.NoError(t, err)
-			
+
 			err = tt.apiCall(client)
 			t.Log(err)
 			assert.IsType(t, APIError{}, err)

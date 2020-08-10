@@ -6,7 +6,7 @@ import (
 )
 
 var (
-	onceClient     sync.Once
+	onceClient   sync.Once
 	commonClient *DatabricksClient
 )
 
@@ -29,7 +29,7 @@ func NewClientFromEnvironment() *DatabricksClient {
 			TenantID:       os.Getenv("ARM_TENANT_ID"),
 		},
 	}
-	err := client.Configure("dev")
+	err := client.Configure()
 	if err != nil {
 		panic(err)
 	}

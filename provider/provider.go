@@ -18,7 +18,7 @@ import (
 )
 
 // DatabricksProvider returns the entire terraform provider object
-func DatabricksProvider(version string) terraform.ResourceProvider {
+func DatabricksProvider() terraform.ResourceProvider {
 	return &schema.Provider{
 		DataSourcesMap: map[string]*schema.Resource{
 			"databricks_zones":              compute.DataSourceClusterZones(),
@@ -29,20 +29,20 @@ func DatabricksProvider(version string) terraform.ResourceProvider {
 			"databricks_notebook_paths":     workspace.DataSourceNotebookPaths(),
 		},
 		ResourcesMap: map[string]*schema.Resource{
-			"databricks_secret":           access.ResourceSecret(),
-			"databricks_secret_scope":     access.ResourceSecretScope(),
-			"databricks_secret_acl":       access.ResourceSecretACL(),
-			"databricks_permissions":      access.ResourcePermissions(),
-			
+			"databricks_secret":       access.ResourceSecret(),
+			"databricks_secret_scope": access.ResourceSecretScope(),
+			"databricks_secret_acl":   access.ResourceSecretACL(),
+			"databricks_permissions":  access.ResourcePermissions(),
+
 			"databricks_cluster":        compute.ResourceCluster(),
 			"databricks_cluster_policy": compute.ResourceClusterPolicy(),
 			"databricks_instance_pool":  compute.ResourceInstancePool(),
 			"databricks_job":            compute.ResourceJob(),
-			
+
 			"databricks_group":                  identity.ResourceGroup(),
 			"databricks_scim_group":             identity.ResourceScimGroup(),
 			"databricks_group_instance_profile": identity.ResourceGroupInstanceProfile(),
-			"databricks_instance_profile": identity.ResourceInstanceProfile(),
+			"databricks_instance_profile":       identity.ResourceInstanceProfile(),
 			"databricks_group_member":           identity.ResourceGroupMember(),
 			"databricks_scim_user":              identity.ResourceScimUser(),
 			"databricks_token":                  identity.ResourceToken(),
@@ -367,7 +367,7 @@ func DatabricksProvider(version string) terraform.ResourceProvider {
 					pc.AzureAuth.PATTokenDurationSeconds = v.(string)
 				}
 			}
-			err := pc.Configure(version)
+			err := pc.Configure()
 			if err != nil {
 				return nil, err
 			}

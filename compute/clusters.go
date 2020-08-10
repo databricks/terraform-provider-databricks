@@ -66,7 +66,7 @@ func (a ClustersAPI) Edit(cluster Cluster) (info ClusterInfo, err error) {
 	if err != nil {
 		return info, err
 	}
-	if info.IsRunning() {
+	if info.IsRunningOrResizing() {
 		// so if cluster was running, we'll start and wait again
 		err = a.Start(info.ClusterID)
 		if err != nil {
@@ -232,7 +232,7 @@ func (a ClustersAPI) GetOrCreateRunningCluster(name string, custom ...Cluster) (
 	for _, cl := range clusters {
 		if cl.ClusterName == name {
 			log.Printf("[INFO] Found reusable cluster '%s'", name)
-			if !cl.IsRunning() {
+			if !cl.IsRunningOrResizing() {
 				err = a.Start(cl.ClusterID)
 				if err != nil {
 					return

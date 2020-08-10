@@ -41,8 +41,8 @@ func (a CommandsAPI) Execute(clusterID, language, commandStr string) (result str
 	if err != nil {
 		return
 	}
-	if !cluster.IsRunning() {
-		err = fmt.Errorf("Cluster %s has to be running, but is %s", clusterID, cluster.State)
+	if !cluster.IsRunningOrResizing() {
+		err = fmt.Errorf("Cluster %s has to be running or resizing, but is %s", clusterID, cluster.State)
 		return
 	}
 	commandStr = internal.TrimLeadingWhitespace(commandStr)

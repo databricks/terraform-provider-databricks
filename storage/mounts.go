@@ -112,7 +112,7 @@ func getMountingClusterID(client *common.DatabricksClient, clusterID string) (st
 	if err != nil {
 		return "", err
 	}
-	if !clusterInfo.IsRunning() {
+	if !clusterInfo.IsRunningOrResizing() {
 		err = compute.NewClustersAPI(client).Start(clusterInfo.ClusterID)
 		if err != nil {
 			return "", err

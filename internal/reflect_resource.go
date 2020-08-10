@@ -110,12 +110,26 @@ func typeToSchema(v reflect.Value, t reflect.Type) map[string]*schema.Schema {
 		if jsonFieldName == "-" {
 			continue
 		}
-		// TODO: conflicts with - tf:"group:a"
-		// TODO: tf:"default:name"
-		// TODO: tf:"conflicts:instance_pool_id"
-		// TODO:  tf:"max_items:10"
-		// TODO: tf:"alias:library"
 		scm[jsonFieldName] = &schema.Schema{}
+		for _, token := range strings.Split(tfTag, ",") {
+			colonSplit := strings.Split(token, ":")
+			if len(colonSplit) == 2 {
+				tfKey := colonSplit[0]
+				tfValue := colonSplit[1]
+				switch tfKey {
+				case "default":
+					scm[jsonFieldName].Default = tfValue
+				case "max_items":
+					maxItems, err := strconv.Atoi(tfValue)
+					if err != nil {
+						continue
+					}
+					scm[jsonFieldName].MaxItems = maxItems
+				}
+			}
+		}
+		// TODO: tf:"alias:library"
+
 		if strings.Contains(jsonTag, "omitempty") {
 			scm[jsonFieldName].Optional = true
 		} else {
@@ -140,16 +154,6 @@ func typeToSchema(v reflect.Value, t reflect.Type) map[string]*schema.Schema {
 			scm[jsonFieldName].Elem = &schema.Resource{
 				Schema: typeToSchema(sv, elem),
 			}
-		// case reflect.Struct:
-		// 	// this is required and pointer is no required :P
-		// 	scm[jsonFieldName].MaxItems = 1
-		// 	scm[jsonFieldName].Type = schema.TypeList
-		// 	elem := typeField.Type.Elem()
-		// 	sv := reflect.New(elem).Elem()
-		// 	ns := typeToSchema(sv, elem)
-		// 	scm[jsonFieldName].Elem = schema.Resource{
-		// 		Schema: ns,
-		// 	}
 		case reflect.Slice:
 			ft := schema.TypeList
 			if strings.Contains(tfTag, "slice_set") {
@@ -360,15 +364,58 @@ func DataToReflectValue(d *schema.ResourceData, r *schema.Resource, rv reflect.V
 	return readReflectValueFromData([]string{}, d, rv, r.Schema)
 }
 
+func makeValidationGroups(rv reflect.Value, s map[string]*schema.Schema) (vg map[string][]string) {
+	rk := rv.Kind()
+	if rk != reflect.Struct {
+		return
+	}
+	if !rv.IsValid() {
+		return
+	}
+	vg = map[string][]string{}
+	for i := 0; i < rv.NumField(); i++ {
+		typeField := rv.Type().Field(i)
+		jsonTag := typeField.Tag.Get("json")
+		jsonFieldName := strings.Split(jsonTag, ",")[0]
+		if jsonFieldName == "-" {
+			continue
+		}
+		_, ok := s[jsonFieldName]
+		if !ok {
+			continue
+		}
+		tfTag := typeField.Tag.Get("tf")
+		for _, token := range strings.Split(tfTag, ",") {
+			colonSplit := strings.Split(token, ":")
+			if len(colonSplit) == 2 {
+				tfKey := colonSplit[0]
+				tfValue := colonSplit[1]
+				switch tfKey {
+				case "group":
+					vg[tfValue] = append(vg[tfValue], jsonFieldName)
+				case "conflicts":
+					vg[tfValue] = append(strings.Split(tfValue, " "), jsonFieldName)
+				}
+			}
+		}
+	}
+	return
+}
+
 func readReflectValueFromData(path []string, d *schema.ResourceData,
 	rv reflect.Value, s map[string]*schema.Schema) error {
-	return iterFields(rv, path, s, func(fieldSchema *schema.Schema,
+	validationGroups := makeValidationGroups(rv, s)
+	fieldsSet := map[string]bool{}
+	err := iterFields(rv, path, s, func(fieldSchema *schema.Schema,
 		path []string, valueField *reflect.Value) error {
+		jsonFieldName := path[len(path)-1]
+
 		fieldPath := strings.Join(path, ".")
 		raw, ok := d.GetOk(fieldPath)
 		if !ok {
 			return nil
 		}
+		fieldsSet[jsonFieldName] = true
 		switch fieldSchema.Type {
 		case schema.TypeInt:
 			v, ok := raw.(int)
@@ -457,6 +504,27 @@ func readReflectValueFromData(path []string, d *schema.ResourceData,
 		}
 		return nil
 	})
+	if err != nil {
+		return err
+	}
+	validationErrors := []string{}
+	for _, fields := range validationGroups {
+		for _, field := range fields {
+			for _, other := range fields {
+				if field == other {
+					continue
+				}
+				if fieldsSet[field] && fieldsSet[other] {
+					validationErrors = append(validationErrors,
+						fmt.Sprintf("%s and %s", field, other))
+				}
+			}
+		}
+	}
+	if len(validationErrors) > 0 {
+		return fmt.Errorf("validation conflicts: %s", strings.Join(validationErrors, ","))
+	}
+	return nil
 }
 
 func readListFromData(path []string, d *schema.ResourceData,

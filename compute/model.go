@@ -218,7 +218,7 @@ type Cluster struct {
 
 	SparkConf    map[string]string `json:"spark_conf,omitempty"`
 	SparkEnvVars map[string]string `json:"spark_env_vars,omitempty"`
-	CustomTags   map[string]string `json:"custom_tags,omitempty" tf:"max_items:10"`
+	CustomTags   map[string]string `json:"custom_tags,omitempty"`
 
 	SSHPublicKeys  []string      `json:"ssh_public_keys,omitempty" tf:"max_items:10"`
 	InitScripts    []StorageInfo `json:"init_scripts,omitempty" tf:"max_items:10"` // TODO: tf:alias

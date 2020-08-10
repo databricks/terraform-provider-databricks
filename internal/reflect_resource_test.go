@@ -8,19 +8,21 @@ import (
 )
 
 type Address struct {
-	Line      string `json:"line"`
+	Line      string `json:"line" tf:"group:v"`
+	Lijn      string `json:"lijn" tf:"group:v"`
 	IsPrimary bool   `json:"primary"`
 }
 
 type Dummy struct {
-	Enabled     bool              `json:"enabled"`
+	Enabled     bool              `json:"enabled" tf:"conflicts:workers"`
 	Workers     int               `json:"workers,omitempty"`
 	Description string            `json:"description,omitempty"`
 	Addresses   []Address         `json:"addresses,omitempty" tf:"max_items:10"`
 	Unique      []Address         `json:"unique,omitempty" tf:"slice_set"`
 	Things      []string          `json:"things,omitempty" tf:"slice_set"`
-	Tags        map[string]string `json:"tags,omitempty"`
-	Home        *Address          `json:"home,omitempty"`
+	Tags        map[string]string `json:"tags,omitempty" tf:"max_items:5"`
+	Home        *Address          `json:"home,omitempty" tf:"group:v"`
+	House       *Address          `json:"house,omitempty" tf:"group:v"`
 }
 
 func TestStructToData(t *testing.T) {
@@ -28,6 +30,8 @@ func TestStructToData(t *testing.T) {
 		return s
 	})
 	assert.NotNil(t, s)
+	assert.Equal(t, 5, s["tags"].MaxItems)
+	assert.Equal(t, 10, s["addresses"].MaxItems)
 
 	sp, err := SchemaPath(s, "addresses", "line")
 	assert.NoError(t, err)
@@ -73,10 +77,21 @@ func TestStructToData(t *testing.T) {
 	assert.Equal(t, 2, d.Get("addresses.#"))
 
 	var dummyCopy Dummy
-	DataToStructPointer(d, s, &dummyCopy)
+	err = DataToStructPointer(d, s, &dummyCopy)
+	assert.NoError(t, err)
 
 	assert.Equal(t, len(dummyCopy.Addresses), len(dummy.Addresses))
 	assert.Len(t, dummyCopy.Things, 2)
 	assert.Len(t, dummy.Things, 3)
 
+	err = d.Set("addresses", []interface{}{
+		map[string]string{
+			"line": "ABC",
+			"lijn": "CBA",
+		},
+	})
+	assert.NoError(t, err)
+
+	err = DataToStructPointer(d, s, &dummyCopy)
+	assert.EqualError(t, err, "addresses: validation conflicts: line and lijn,lijn and line")
 }

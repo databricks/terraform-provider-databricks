@@ -15,6 +15,7 @@ import (
 	"gopkg.in/ini.v1"
 )
 
+
 // DatabricksClient is the client struct that contains clients for all the services available on Databricks
 type DatabricksClient struct {
 	Host               string
@@ -37,7 +38,7 @@ type DatabricksClient struct {
 func (c *DatabricksClient) Configure(version string) error {
 	c.configureHTTPCLient()
 	c.AzureAuth.databricksClient = c
-	c.userAgent = fmt.Sprintf("databricks-tf-provider/%s", version)
+	c.userAgent = UserAgent()
 	err := c.findAndApplyAuthorizer()
 	if err != nil {
 		return err

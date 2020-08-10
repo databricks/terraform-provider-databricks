@@ -3,14 +3,14 @@ package main
 import (
 	"log"
 
+	"github.com/databrickslabs/databricks-terraform/common"
 	"github.com/databrickslabs/databricks-terraform/provider"
 	"github.com/hashicorp/terraform-plugin-sdk/plugin"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 var (
-	// todo: put version into separate package, so that it could be used for UserAgent
-	version = "dev"
+	version = common.Version()
 	commit  = ""
 	date    = "unknown"
 )

@@ -24,7 +24,7 @@ coverage: test
 
 build:
 	@echo "✓ Building source code with go build..."
-	@go build -mod vendor -v -o terraform-provider-databricks
+	@go build -mod vendor -v -ldflags="-X 'common.version=$(git describe --long --always | sed 's/v//')'" -o terraform-provider-databricks
 
 install: build
 	@echo "✓ Installing provider into ~/.terraform.d/plugins ..."

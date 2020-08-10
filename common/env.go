@@ -1,11 +1,14 @@
 package common
 
 import (
+	"log"
 	"os"
+	"strings"
 	"sync"
 )
 
 var (
+	envMutex     sync.Mutex
 	onceClient   sync.Once
 	commonClient *DatabricksClient
 )
@@ -36,6 +39,12 @@ func NewClientFromEnvironment() *DatabricksClient {
 	return &client
 }
 
+// ResetCommonEnvironmentClient resets test dummy
+func ResetCommonEnvironmentClient() {
+	commonClient = nil
+	onceClient = sync.Once{}
+}
+
 // CommonEnvironmentClient configured once per run of application
 func CommonEnvironmentClient() *DatabricksClient {
 	if commonClient != nil {
@@ -45,4 +54,31 @@ func CommonEnvironmentClient() *DatabricksClient {
 		commonClient = NewClientFromEnvironment()
 	})
 	return commonClient
+}
+
+// CleanupEnvironment backs up environment - use as `defer CleanupEnvironment()()`
+// clears it and restores it in the end
+func CleanupEnvironment() func() {
+	// make a backed-up pristince environment
+	envMutex.Lock()
+	prevEnv := os.Environ()
+	oldPath := os.Getenv("PATH")
+	os.Clearenv()
+	err := os.Setenv("OLD_PATH", oldPath)
+	if err != nil {
+		log.Printf("[WARN] Cannot set OLD_PATH: %v", err)
+	}
+	// version is technically made out of git + $PATH, if empty
+	// and this is why we are backing it up
+	prevVersion := version
+	version = "dev"
+	// and return restore function
+	return func() {
+		version = prevVersion
+		for _, kv := range prevEnv {
+			kvs := strings.SplitN(kv, "=", 2)
+			os.Setenv(kvs[0], kvs[1])
+		}
+		envMutex.Unlock()
+	}
 }

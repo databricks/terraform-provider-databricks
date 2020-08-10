@@ -402,10 +402,9 @@ func TestDBFSFileRead_IsMissingResource(t *testing.T) {
 }
 
 func TestDatabricksFile_Base64(t *testing.T) {
-	if testing.Short() {
-		t.Skip("skipping integration test in short mode.")
+	if _, ok := os.LookupEnv("CLOUD_ENV"); !ok {
+		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
 	}
-
 	client := common.NewClientFromEnvironment()
 	pythonNotebookDataB64, err := GetLocalFileB64("testdata/tf-test-python.py")
 	assert.NoError(t, err, err)

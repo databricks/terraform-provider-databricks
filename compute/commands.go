@@ -75,6 +75,10 @@ func (a CommandsAPI) Execute(clusterID, language, commandStr string) (result str
 }
 
 func (a CommandsAPI) parseCommandResults(command Command) (result string, err error) {
+	if command.Results == nil {
+		err = fmt.Errorf("Command has no results: %#v", command)
+		return
+	}
 	switch command.Results.ResultType {
 	case "text":
 		result = outRE.ReplaceAllLiteralString(command.Results.Data.(string), "")
@@ -184,7 +188,8 @@ func (a CommandsAPI) waitForCommandFinished(commandID, contextID, clusterID stri
 	}
 }
 
-func (a CommandsAPI) waitForContextReady(contextID, clusterID string, sleepDurationSeconds time.Duration, timeoutDurationMinutes time.Duration) error {
+func (a CommandsAPI) waitForContextReady(contextID, clusterID string,
+	sleepDurationSeconds time.Duration, timeoutDurationMinutes time.Duration) error {
 	errChan := make(chan error, 1)
 	go func() {
 		for {
@@ -200,7 +205,8 @@ func (a CommandsAPI) waitForContextReady(contextID, clusterID string, sleepDurat
 				errChan <- errors.New("context is in a errored state")
 				return
 			}
-			log.Println("[DEBUG] Waiting for context to go to running, current state is pending.")
+
+			log.Printf("[DEBUG] Waiting for context to go to running, current state is %s", status)
 			time.Sleep(sleepDurationSeconds * time.Second)
 		}
 	}()

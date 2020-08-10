@@ -74,13 +74,14 @@ type ResourceFixture struct {
 	Update      bool
 	Delete      bool
 	ID          string
+	NonWritable bool
 	// new resource
 	New bool
 }
 
 // Apply runs tests from fixture
 func (f ResourceFixture) Apply(t *testing.T) (*schema.ResourceData, error) {
-	client, server, err := httpFixtureClient(t, f.Fixtures)
+	client, server, err := HttpFixtureClient(t, f.Fixtures)
 	defer server.Close()
 	if err != nil {
 		return nil, err
@@ -139,7 +140,34 @@ func (f ResourceFixture) Apply(t *testing.T) (*schema.ResourceData, error) {
 			return f.Resource.Delete(d, m)
 		}
 	}
-	return resourceTesterScaffolding(t, f.Resource, f.State, client, whatever)
+	if f.State != nil {
+		resourceConfig := terraform.NewResourceConfigRaw(f.State)
+		warns, errs := f.Resource.Validate(resourceConfig)
+		if len(warns) > 0 || len(errs) > 0 {
+			var issues string
+			if len(warns) > 0 {
+				sort.Strings(warns)
+				issues += ". " + strings.Join(warns, ". ")
+			}
+			if len(errs) > 0 {
+				sort.Sort(errorSlice(errs))
+				for _, err := range errs {
+					issues += ". " + err.Error()
+				}
+			}
+			// remove characters that need escaping, it's only tests...
+			issues = strings.ReplaceAll(issues, "\"", "")
+			return nil, fmt.Errorf("Invalid config supplied%s", issues)
+		}
+	}
+	resourceData := schema.TestResourceDataRaw(t, f.Resource.Schema, f.State)
+	err = f.Resource.InternalValidate(f.Resource.Schema, !f.NonWritable)
+	if err != nil {
+		return nil, err
+	}
+
+	// warns, errs := schemaMap(r.Schema).Validate(c)
+	return resourceData, whatever(resourceData, client)
 }
 
 // UnionFixturesLists merges two HTTP fixture lists together
@@ -150,7 +178,8 @@ func UnionFixturesLists(fixturesLists ...[]HTTPFixture) (fixtureList []HTTPFixtu
 	return
 }
 
-func httpFixtureClient(t *testing.T, fixtures []HTTPFixture) (client *common.DatabricksClient, server *httptest.Server, err error) {
+// HttpFixtureClient creates client for emulated HTTP server
+func HttpFixtureClient(t *testing.T, fixtures []HTTPFixture) (client *common.DatabricksClient, server *httptest.Server, err error) {
 	server = httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
 		found := false
 		for i, fixture := range fixtures {
@@ -251,42 +280,6 @@ func fixHCL(v interface{}) interface{} {
 	default:
 		return v
 	}
-}
-
-func resourceTesterScaffolding(t *testing.T, res *schema.Resource,
-	state map[string]interface{}, client *common.DatabricksClient,
-	whatever func(d *schema.ResourceData, c interface{}) error) (*schema.ResourceData, error) {
-	if res == nil {
-		return nil, errors.New("Resource is not set")
-	}
-	if state != nil {
-		resourceConfig := terraform.NewResourceConfigRaw(state)
-		warns, errs := res.Validate(resourceConfig)
-		if len(warns) > 0 || len(errs) > 0 {
-			var issues string
-			if len(warns) > 0 {
-				sort.Strings(warns)
-				issues += ". " + strings.Join(warns, ". ")
-			}
-			if len(errs) > 0 {
-				sort.Sort(errorSlice(errs))
-				for _, err := range errs {
-					issues += ". " + err.Error()
-				}
-			}
-			// remove characters that need escaping, it's only tests...
-			issues = strings.ReplaceAll(issues, "\"", "")
-			return nil, fmt.Errorf("Invalid config supplied%s", issues)
-		}
-	}
-	resourceData := schema.TestResourceDataRaw(t, res.Schema, state)
-	err := res.InternalValidate(res.Schema, true)
-	if err != nil {
-		return nil, err
-	}
-
-	// warns, errs := schemaMap(r.Schema).Validate(c)
-	return resourceData, whatever(resourceData, client)
 }
 
 // EnvironmentTemplate asserts existence and fills in {env.VAR} & {var.RANDOM} placeholders in template

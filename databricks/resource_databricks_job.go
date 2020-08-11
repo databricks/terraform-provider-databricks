@@ -167,7 +167,7 @@ func resourceJobDelete(d *schema.ResourceData, m interface{}) error {
 }
 
 func parseSchemaToJobSettings(d *schema.ResourceData) (job model.JobSettings, err error) {
-	err = util.DataToStructPointer(d, jobSchema, &job)
+	err = util.DataToStructPointer(d, jobSchema, &job, nil)
 	if err != nil {
 		return
 	}

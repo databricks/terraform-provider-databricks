@@ -1,6 +1,7 @@
 package databricks
 
 import (
+	"fmt"
 	"log"
 	"reflect"
 	"time"
@@ -110,11 +111,10 @@ func resourceClusterCreate(d *schema.ResourceData, m interface{}) error {
 	client := m.(*service.DatabricksClient)
 	clusters := client.Clusters()
 	var cluster model.Cluster
-	err := util.DataToStructPointer(d, clusterSchema, &cluster)
+	err := util.DataToStructPointer(d, clusterSchema, &cluster, handleInstancePoolClusterRequest)
 	if err != nil {
 		return err
 	}
-	handleInstancePoolClusterRequest(&cluster)
 	clusterInfo, err := clusters.Create(cluster)
 	if err != nil {
 		return err
@@ -125,7 +125,7 @@ func resourceClusterCreate(d *schema.ResourceData, m interface{}) error {
 		return err
 	}
 	var libraryList model.ClusterLibraryList
-	err = util.DataToStructPointer(d, clusterSchema, &libraryList)
+	err = util.DataToStructPointer(d, clusterSchema, &libraryList, nil)
 	if err != nil {
 		return err
 	}
@@ -216,17 +216,16 @@ func resourceClusterUpdate(d *schema.ResourceData, m interface{}) error {
 	clusters := client.Clusters()
 	clusterID := d.Id()
 	cluster := model.Cluster{ClusterID: clusterID}
-	err := util.DataToStructPointer(d, clusterSchema, &cluster)
+	err := util.DataToStructPointer(d, clusterSchema, &cluster, handleInstancePoolClusterRequest)
 	if err != nil {
 		return err
 	}
-	handleInstancePoolClusterRequest(&cluster)
 	clusterInfo, err := clusters.Edit(cluster)
 	if err != nil {
 		return err
 	}
 	var libraryList model.ClusterLibraryList
-	err = util.DataToStructPointer(d, clusterSchema, &libraryList)
+	err = util.DataToStructPointer(d, clusterSchema, &libraryList, nil)
 	if err != nil {
 		return err
 	}
@@ -263,10 +262,15 @@ func resourceClusterUpdate(d *schema.ResourceData, m interface{}) error {
 	return resourceClusterRead(d, m)
 }
 
-// This function helps remove all requests that should not be submitted when instance pool is selected.
-func handleInstancePoolClusterRequest(clusterModel *model.Cluster) {
+// handleInstancePoolClusterRequest helps remove all requests that should not be submitted when instance pool is selected.
+func handleInstancePoolClusterRequest(cluster interface{}) error {
+	clusterModel, ok := cluster.(*model.Cluster)
+	if !ok {
+		return fmt.Errorf("expected ptr to cluster but instead recieved %v", reflect.TypeOf(cluster))
+	}
+	// Instance profile id does not exist
 	if reflect.ValueOf(clusterModel.InstancePoolID).IsZero() {
-		return
+		return nil
 	}
 	if clusterModel.AwsAttributes != nil {
 		// Reset AwsAttributes
@@ -278,6 +282,7 @@ func handleInstancePoolClusterRequest(clusterModel *model.Cluster) {
 	clusterModel.EnableElasticDisk = false
 	clusterModel.NodeTypeID = ""
 	clusterModel.DriverNodeTypeID = ""
+	return nil
 }
 
 func updateLibraries(libraries service.LibrariesAPI, libsToInstall, libsToUninstall model.ClusterLibraryList) error {

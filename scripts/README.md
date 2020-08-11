@@ -17,7 +17,7 @@ Bu default, we don't encourage creation/destruction of infrastructure multiple t
 * most of the tests should aim to be cloud-agnostic. Though, in case of specific branching needed, you can check `CLOUD_ENV` value (possible values are `Azure`, `AWS` & `MWS`).
 * all environment variables are used by *DatabricksClient*, *provider integration tests* and *terraform configuration*.
 * **each `output` becomes an environment variable** with case changed to upper. This gives an easy way to manage complexity of testing environment. This is what gives those variables for `export $(scripts/run.sh azcli --export)` under the hood.
-* `EnvironmentTemplate` must be used to make readable templates with environment variable presence validation.
+* `qa.EnvironmentTemplate` must be used to make readable templates with environment variable presence validation.
 * `OWNER` is variable name, that holds your email address. It's propagated down to all resourced on the cloud.
 * One must aim to write integration tests that will run on all clouds without causing panic under any circumstance.
 
@@ -53,8 +53,8 @@ func TestMwsAccStorageConfigurations(t *testing.T) {
 	if cloudEnv != "MWS" {
 		t.Skip("Cannot run test on non-MWS environment")
 	}
-	var bucket model.MWSStorageConfigurations
-	config := EnvironmentTemplate(t, `
+	var bucket MWSStorageConfigurations
+	config := qa.EnvironmentTemplate(t, `
 	provider "databricks" {
 		host     = "{env.DATABRICKS_HOST}"
 		username = "{env.DATABRICKS_USERNAME}"
@@ -66,8 +66,8 @@ func TestMwsAccStorageConfigurations(t *testing.T) {
 		bucket_name                = "terraform-{var.RANDOM}"
 	  }
 	`)
-	bucketName := FirstKeyValue(t, config, "bucket_name")
-    configName := FirstKeyValue(t, config, "storage_configuration_name")
+	bucketName := qa.FirstKeyValue(t, config, "bucket_name")
+    configName := qa.FirstKeyValue(t, config, "storage_configuration_name")
     ...
 ```
 
@@ -81,22 +81,22 @@ func TestAccListClustersIntegration(t *testing.T) {
 	if cloud == "" {
 		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
 	}
-	client := NewClientFromEnvironment()
+	client := common.NewClientFromEnvironment()
 
 	randomName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
-	cluster := model.Cluster{
+	cluster := Cluster{
 		NumWorkers:  1,
 		ClusterName: "my-cluster-" + randomName,
 		SparkVersion:           "6.2.x-scala2.11",
-		NodeTypeID:             GetCloudInstanceType(client),
-		DriverNodeTypeID:       GetCloudInstanceType(client),
+		NodeTypeID:             qa.GetCloudInstanceType(client),
+		DriverNodeTypeID:       qa.GetCloudInstanceType(client),
 		IdempotencyToken:       "cluster-" + randomName,
 		AutoterminationMinutes: 15,
 	}
 
 	if cloud == "AWS" {
-		cluster.AwsAttributes = &model.AwsAttributes{
-			EbsVolumeType:  model.EbsVolumeTypeGeneralPurposeSsd,
+		cluster.AwsAttributes = &AwsAttributes{
+			EbsVolumeType:  EbsVolumeTypeGeneralPurposeSsd,
 			EbsVolumeCount: 1,
 			EbsVolumeSize:  32,
 		}

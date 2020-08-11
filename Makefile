@@ -14,7 +14,7 @@ lint:
 	@echo "✓ Linting source code with golangci-lint make sure you run make fmt ..."
 	@golangci-lint run --skip-dirs-use-default --timeout 5m
 
-test: lint
+test: 
 	@echo "✓ Running tests..."
 	@gotestsum --format pkgname-and-test-fails --no-summary=skipped --raw-command go test -v -json -short -coverprofile=coverage.txt ./...
 
@@ -24,7 +24,7 @@ coverage: test
 
 build:
 	@echo "✓ Building source code with go build..."
-	@go build -mod vendor -v -o terraform-provider-databricks
+	@go build -mod vendor -v -ldflags="-X 'common.version=$(git describe --long --always | sed 's/v//')'" -o terraform-provider-databricks
 
 install: build
 	@echo "✓ Installing provider into ~/.terraform.d/plugins ..."

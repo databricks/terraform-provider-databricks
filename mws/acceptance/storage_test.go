@@ -20,7 +20,7 @@ func TestMwsAccStorageConfigurations(t *testing.T) {
 	if cloudEnv != "MWS" {
 		t.Skip("Cannot run test on non-MWS environment")
 	}
-	var bucket MWSStorageConfigurations
+	var bucket StorageConfiguration
 	config := qa.EnvironmentTemplate(t, `
 	provider "databricks" {
 		host     = "{env.DATABRICKS_HOST}"
@@ -61,7 +61,7 @@ func TestMwsAccStorageConfigurations(t *testing.T) {
 			{
 				PreConfig: func() {
 					conn := common.CommonEnvironmentClient()
-					err := NewMWSStorageConfigurationsAPI(conn).Delete(bucket.AccountID, bucket.StorageConfigurationID)
+					err := NewStorageConfigurationsAPI(conn).Delete(bucket.AccountID, bucket.StorageConfigurationID)
 					if err != nil {
 						panic(err)
 					}
@@ -89,7 +89,7 @@ func testMWSStorageConfigurationsResourceDestroy(s *terraform.State) error {
 		if err != nil {
 			return err
 		}
-		_, err = NewMWSStorageConfigurationsAPI(client).Read(packagedMWSIds.MwsAcctID, packagedMWSIds.ResourceID)
+		_, err = NewStorageConfigurationsAPI(client).Read(packagedMWSIds.MwsAcctID, packagedMWSIds.ResourceID)
 		if err != nil {
 			return nil
 		}
@@ -99,7 +99,7 @@ func testMWSStorageConfigurationsResourceDestroy(s *terraform.State) error {
 }
 
 // testAccCheckTokenResourceExists queries the API and retrieves the matching Widget.
-func testMWSStorageConfigurationsResourceExists(n string, mwsCreds *MWSStorageConfigurations, t *testing.T) resource.TestCheckFunc {
+func testMWSStorageConfigurationsResourceExists(n string, mwsCreds *StorageConfiguration, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		// find the corresponding state object
 		rs, ok := s.RootModule().Resources[n]
@@ -113,7 +113,7 @@ func testMWSStorageConfigurationsResourceExists(n string, mwsCreds *MWSStorageCo
 		if err != nil {
 			return err
 		}
-		resp, err := NewMWSStorageConfigurationsAPI(conn).Read(packagedMWSIds.MwsAcctID, packagedMWSIds.ResourceID)
+		resp, err := NewStorageConfigurationsAPI(conn).Read(packagedMWSIds.MwsAcctID, packagedMWSIds.ResourceID)
 		if err != nil {
 			return err
 		}

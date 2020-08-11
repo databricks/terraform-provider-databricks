@@ -26,28 +26,28 @@ func TestMwsAccMissingResources(t *testing.T) {
 		{
 			Name: "Credential",
 			ReadFunc: func() error {
-				_, err := NewMWSCredentialsAPI(client).Read(mwsAcctID, randStringID)
+				_, err := NewCredentialsAPI(client).Read(mwsAcctID, randStringID)
 				return err
 			},
 		},
 		{
 			Name: "Network",
 			ReadFunc: func() error {
-				_, err := NewMWSNetworksAPI(client).Read(mwsAcctID, randStringID)
+				_, err := NewNetworksAPI(client).Read(mwsAcctID, randStringID)
 				return err
 			},
 		},
 		{
 			Name: "Storage",
 			ReadFunc: func() error {
-				_, err := NewMWSStorageConfigurationsAPI(client).Read(mwsAcctID, randStringID)
+				_, err := NewStorageConfigurationsAPI(client).Read(mwsAcctID, randStringID)
 				return err
 			},
 		},
 		{
 			Name: "Workspace",
 			ReadFunc: func() error {
-				_, err := NewMWSWorkspacesAPI(client).Read(mwsAcctID, int64(randIntID))
+				_, err := NewWorkspacesAPI(client).Read(mwsAcctID, int64(randIntID))
 				return err
 			},
 		},

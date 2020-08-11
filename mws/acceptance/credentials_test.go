@@ -20,7 +20,7 @@ func TestMwsAccCredentials(t *testing.T) {
 	if cloudEnv != "MWS" {
 		t.Skip("Cannot run test on non-MWS environment")
 	}
-	var creds MWSCredentials
+	var creds Credentials
 	config := qa.EnvironmentTemplate(t, `
 	provider "databricks" {
 		host     = "{env.DATABRICKS_HOST}"
@@ -59,7 +59,7 @@ func TestMwsAccCredentials(t *testing.T) {
 			{
 				PreConfig: func() {
 					conn := common.CommonEnvironmentClient()
-					err := NewMWSCredentialsAPI(conn).Delete(creds.AccountID, creds.CredentialsID)
+					err := NewCredentialsAPI(conn).Delete(creds.AccountID, creds.CredentialsID)
 					if err != nil {
 						panic(err)
 					}
@@ -87,7 +87,7 @@ func testMWSCredentialsResourceDestroy(s *terraform.State) error {
 		if err != nil {
 			return err
 		}
-		_, err = NewMWSCredentialsAPI(client).Read(packagedMWSIds.MwsAcctID, packagedMWSIds.ResourceID)
+		_, err = NewCredentialsAPI(client).Read(packagedMWSIds.MwsAcctID, packagedMWSIds.ResourceID)
 		if err != nil {
 			return nil
 		}
@@ -97,7 +97,7 @@ func testMWSCredentialsResourceDestroy(s *terraform.State) error {
 }
 
 // testAccCheckTokenResourceExists queries the API and retrieves the matching Widget.
-func testMWSCredentialsResourceExists(n string, mwsCreds *MWSCredentials, t *testing.T) resource.TestCheckFunc {
+func testMWSCredentialsResourceExists(n string, mwsCreds *Credentials, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		// find the corresponding state object
 		rs, ok := s.RootModule().Resources[n]
@@ -111,7 +111,7 @@ func testMWSCredentialsResourceExists(n string, mwsCreds *MWSCredentials, t *tes
 		if err != nil {
 			return err
 		}
-		resp, err := NewMWSCredentialsAPI(conn).Read(packagedMWSIds.MwsAcctID, packagedMWSIds.ResourceID)
+		resp, err := NewCredentialsAPI(conn).Read(packagedMWSIds.MwsAcctID, packagedMWSIds.ResourceID)
 		if err != nil {
 			return err
 		}

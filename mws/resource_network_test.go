@@ -16,19 +16,19 @@ func TestMWSNetworks(t *testing.T) {
 	}
 	acctID := os.Getenv("DATABRICKS_ACCOUNT_ID")
 	client := common.CommonEnvironmentClient()
-	networksList, err := NewMWSNetworksAPI(client).List(acctID)
+	networksList, err := NewNetworksAPI(client).List(acctID)
 	assert.NoError(t, err, err)
 	t.Log(networksList)
 
-	myNetwork, err := NewMWSNetworksAPI(client).Create(acctID, "sri-mws-terraform-automation-network",
+	myNetwork, err := NewNetworksAPI(client).Create(acctID, "sri-mws-terraform-automation-network",
 		"vpc-0abcdef1234567890", []string{"subnet-0123456789abcdef0", "subnet-0fedcba9876543210"}, []string{"sg-0a1b2c3d4e5f6a7b8"})
 	assert.NoError(t, err, err)
 	defer func() {
-		err = NewMWSNetworksAPI(client).Delete(acctID, myNetwork.NetworkID)
+		err = NewNetworksAPI(client).Delete(acctID, myNetwork.NetworkID)
 		assert.NoError(t, err, err)
 	}()
 
-	myNetworkFull, err := NewMWSNetworksAPI(client).Read(acctID, myNetwork.NetworkID)
+	myNetworkFull, err := NewNetworksAPI(client).Read(acctID, myNetwork.NetworkID)
 	assert.NoError(t, err, err)
 	t.Log(myNetworkFull)
 }
@@ -39,20 +39,20 @@ func TestResourceNetworkCreate(t *testing.T) {
 		{
 			Method:   "POST",
 			Resource: "/api/2.0/accounts/abc/networks",
-			ExpectedRequest: MWSNetwork{
+			ExpectedRequest: Network{
 				SecurityGroupIds: []string{"one", "two"},
 				NetworkName:      "Open Workers",
 				VPCID:            "five",
 				SubnetIds:        []string{"four", "three"},
 			},
-			Response: MWSNetwork{
+			Response: Network{
 				NetworkID: "nid",
 			},
 		},
 		{
 			Method:   "GET",
 			Resource: "/api/2.0/accounts/abc/networks/nid",
-			Response: MWSNetwork{
+			Response: Network{
 				NetworkID:        "nid",
 				SecurityGroupIds: []string{"one", "two"},
 				NetworkName:      "Open Workers",
@@ -108,7 +108,7 @@ func TestResourceNetworkRead(t *testing.T) {
 		{
 			Method:   "GET",
 			Resource: "/api/2.0/accounts/abc/networks/nid",
-			Response: MWSNetwork{
+			Response: Network{
 				NetworkID:        "nid",
 				SecurityGroupIds: []string{"one", "two"},
 				NetworkName:      "Open Workers",
@@ -183,7 +183,7 @@ func TestResourceNetworkDelete(t *testing.T) {
 		{
 			Method:   "GET",
 			Resource: "/api/2.0/accounts/abc/networks/nid",
-			Response: MWSNetwork{
+			Response: Network{
 				NetworkID:   "nid",
 				NetworkName: "Open Workers",
 				VPCID:       "five",

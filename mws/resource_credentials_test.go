@@ -17,19 +17,19 @@ func TestMwsAccCreds(t *testing.T) {
 	}
 	acctID := os.Getenv("DATABRICKS_ACCOUNT_ID")
 	client := common.CommonEnvironmentClient()
-	credsList, err := NewMWSCredentialsAPI(client).List(acctID)
+	credsList, err := NewCredentialsAPI(client).List(acctID)
 	assert.NoError(t, err, err)
 	t.Log(credsList)
 
-	myCreds, err := NewMWSCredentialsAPI(client).Create(acctID, "sri-mws-terraform-automation-role", "arn:aws:iam::997819999999:role/sri-e2-terraform-automation-role")
+	myCreds, err := NewCredentialsAPI(client).Create(acctID, "sri-mws-terraform-automation-role", "arn:aws:iam::997819999999:role/sri-e2-terraform-automation-role")
 	assert.NoError(t, err, err)
 
-	myCredsFull, err := NewMWSCredentialsAPI(client).Read(acctID, myCreds.CredentialsID)
+	myCredsFull, err := NewCredentialsAPI(client).Read(acctID, myCreds.CredentialsID)
 	assert.NoError(t, err, err)
 	t.Log(myCredsFull.AwsCredentials.StsRole.ExternalID)
 
 	defer func() {
-		err = NewMWSCredentialsAPI(client).Delete(acctID, myCreds.CredentialsID)
+		err = NewCredentialsAPI(client).Delete(acctID, myCreds.CredentialsID)
 		assert.NoError(t, err, err)
 	}()
 }
@@ -40,7 +40,7 @@ func TestResourceCredentialsCreate(t *testing.T) {
 			{
 				Method:   "POST",
 				Resource: "/api/2.0/accounts/abc/credentials",
-				ExpectedRequest: MWSCredentials{
+				ExpectedRequest: Credentials{
 					CredentialsName: "Cross-account ARN",
 					AwsCredentials: &AwsCredentials{
 						StsRole: &StsRole{
@@ -48,14 +48,14 @@ func TestResourceCredentialsCreate(t *testing.T) {
 						},
 					},
 				},
-				Response: MWSCredentials{
+				Response: Credentials{
 					CredentialsID: "cid",
 				},
 			},
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/accounts/abc/credentials/cid",
-				Response: MWSCredentials{
+				Response: Credentials{
 					CredentialsID:   "cid",
 					CredentialsName: "Cross-account ARN",
 					AwsCredentials: &AwsCredentials{
@@ -109,7 +109,7 @@ func TestResourceCredentialsRead(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/accounts/abc/credentials/cid",
-				Response: MWSCredentials{
+				Response: Credentials{
 					CredentialsID:   "cid",
 					CredentialsName: "Cross-account ARN",
 					AwsCredentials: &AwsCredentials{

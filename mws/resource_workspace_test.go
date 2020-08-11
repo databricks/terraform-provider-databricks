@@ -15,7 +15,7 @@ func TestMwsAccWorkspace(t *testing.T) {
 	}
 	acctID := os.Getenv("DATABRICKS_ACCOUNT_ID")
 	client := common.CommonEnvironmentClient()
-	workspaceList, err := NewMWSWorkspacesAPI(client).List(acctID)
+	workspaceList, err := NewWorkspacesAPI(client).List(acctID)
 	assert.NoError(t, err, err)
 	t.Log(workspaceList)
 }
@@ -26,7 +26,7 @@ func TestResourceWorkspaceCreate(t *testing.T) {
 			{
 				Method:   "POST",
 				Resource: "/api/2.0/accounts/abc/workspaces",
-				ExpectedRequest: MWSWorkspace{
+				ExpectedRequest: Workspace{
 					IsNoPublicIPEnabled:    true,
 					WorkspaceName:          "labdata",
 					DeploymentName:         "900150983cd24fb0",
@@ -36,7 +36,7 @@ func TestResourceWorkspaceCreate(t *testing.T) {
 					NetworkID:              "fgh",
 					CustomerManagedKeyID:   "def",
 				},
-				Response: MWSWorkspace{
+				Response: Workspace{
 					WorkspaceID:    1234,
 					DeploymentName: "900150983cd24fb0",
 				},
@@ -44,21 +44,21 @@ func TestResourceWorkspaceCreate(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/accounts/abc/workspaces/1234",
-				Response: MWSWorkspace{
+				Response: Workspace{
 					WorkspaceStatus: WorkspaceStatusRunning,
 				},
 			},
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/accounts/abc/workspaces/1234",
-				Response: MWSWorkspace{
+				Response: Workspace{
 					WorkspaceStatus: WorkspaceStatusRunning,
 				},
 			},
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/accounts/abc/workspaces/1234",
-				Response: MWSWorkspace{
+				Response: Workspace{
 					WorkspaceStatus: WorkspaceStatusRunning,
 				},
 			},
@@ -130,7 +130,7 @@ func TestResourceWorkspaceRead(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/accounts/abc/workspaces/1234",
-				Response: MWSWorkspace{
+				Response: Workspace{
 					WorkspaceStatus:        WorkspaceStatusRunning,
 					IsNoPublicIPEnabled:    true,
 					WorkspaceName:          "labdata",
@@ -212,7 +212,7 @@ func TestResourceWorkspaceUpdate(t *testing.T) {
 			{
 				Method:   "PATCH",
 				Resource: "/api/2.0/accounts/abc/workspaces/1234",
-				ExpectedRequest: MWSWorkspace{
+				ExpectedRequest: Workspace{
 					StorageConfigurationID: "ghi",
 					NetworkID:              "fgh",
 					CustomerManagedKeyID:   "def",
@@ -224,7 +224,7 @@ func TestResourceWorkspaceUpdate(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/accounts/abc/workspaces/1234",
-				Response: MWSWorkspace{
+				Response: Workspace{
 					WorkspaceStatus:        WorkspaceStatusRunning,
 					IsNoPublicIPEnabled:    true,
 					WorkspaceName:          "labdata",
@@ -240,7 +240,7 @@ func TestResourceWorkspaceUpdate(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/accounts/abc/workspaces/1234",
-				Response: MWSWorkspace{
+				Response: Workspace{
 					WorkspaceStatus:        WorkspaceStatusRunning,
 					IsNoPublicIPEnabled:    true,
 					WorkspaceName:          "labdata",
@@ -256,7 +256,7 @@ func TestResourceWorkspaceUpdate(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/accounts/abc/workspaces/1234",
-				Response: MWSWorkspace{
+				Response: Workspace{
 					WorkspaceStatus:        WorkspaceStatusRunning,
 					IsNoPublicIPEnabled:    true,
 					WorkspaceName:          "labdata",
@@ -333,7 +333,7 @@ func TestResourceWorkspaceDelete(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/accounts/abc/workspaces/1234",
-				Response: MWSWorkspace{
+				Response: Workspace{
 					WorkspaceName:          "labdata",
 					WorkspaceStatus:        WorkspaceStatusCanceled,
 					WorkspaceStatusMessage: "Things are being removed",

@@ -19,7 +19,7 @@ func TestMwsAccNetworks(t *testing.T) {
 	if cloudEnv != "MWS" {
 		t.Skip("Cannot run test on non-MWS environment")
 	}
-	var network MWSNetwork
+	var network Network
 
 	// cannot use subnets between network registrations...
 	networkResourceConfig := qa.EnvironmentTemplate(t, `
@@ -64,7 +64,7 @@ func TestMwsAccNetworks(t *testing.T) {
 			{
 				PreConfig: func() {
 					conn := common.CommonEnvironmentClient()
-					err := NewMWSNetworksAPI(conn).Delete(network.AccountID, network.NetworkID)
+					err := NewNetworksAPI(conn).Delete(network.AccountID, network.NetworkID)
 					if err != nil {
 						panic(err)
 					}
@@ -91,7 +91,7 @@ func testMWSNetworkResourceDestroy(s *terraform.State) error {
 		if err != nil {
 			return err
 		}
-		_, err = NewMWSNetworksAPI(client).Read(packagedMWSIds.MwsAcctID, packagedMWSIds.ResourceID)
+		_, err = NewNetworksAPI(client).Read(packagedMWSIds.MwsAcctID, packagedMWSIds.ResourceID)
 		if err != nil {
 			return nil
 		}
@@ -101,7 +101,7 @@ func testMWSNetworkResourceDestroy(s *terraform.State) error {
 }
 
 // testAccCheckTokenResourceExists queries the API and retrieves the matching Widget.
-func testMWSNetworkResourceExists(n string, network *MWSNetwork, t *testing.T) resource.TestCheckFunc {
+func testMWSNetworkResourceExists(n string, network *Network, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		// find the corresponding state object
 		rs, ok := s.RootModule().Resources[n]
@@ -115,7 +115,7 @@ func testMWSNetworkResourceExists(n string, network *MWSNetwork, t *testing.T) r
 		if err != nil {
 			return err
 		}
-		resp, err := NewMWSNetworksAPI(conn).Read(packagedMWSIds.MwsAcctID, packagedMWSIds.ResourceID)
+		resp, err := NewNetworksAPI(conn).Read(packagedMWSIds.MwsAcctID, packagedMWSIds.ResourceID)
 		if err != nil {
 			return err
 		}

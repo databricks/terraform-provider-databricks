@@ -13,21 +13,21 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 )
 
-// NewMWSNetworksAPI creates MWSNetworksAPI instance from provider meta
-func NewMWSNetworksAPI(m interface{}) MWSNetworksAPI {
-	return MWSNetworksAPI{client: m.(*common.DatabricksClient)}
+// NewNetworksAPI creates MWSNetworksAPI instance from provider meta
+func NewNetworksAPI(m interface{}) NetworksAPI {
+	return NetworksAPI{client: m.(*common.DatabricksClient)}
 }
 
-// MWSNetworksAPI exposes the mws networks API
-type MWSNetworksAPI struct {
+// NetworksAPI exposes the mws networks API
+type NetworksAPI struct {
 	client *common.DatabricksClient
 }
 
 // Create creates a set of MWS Networks for the BYOVPC
-func (a MWSNetworksAPI) Create(mwsAcctID, networkName string, vpcID string, subnetIds []string, securityGroupIds []string) (MWSNetwork, error) {
-	var mwsNetwork MWSNetwork
+func (a NetworksAPI) Create(mwsAcctID, networkName string, vpcID string, subnetIds []string, securityGroupIds []string) (Network, error) {
+	var mwsNetwork Network
 	networksAPIPath := fmt.Sprintf("/accounts/%s/networks", mwsAcctID)
-	err := a.client.Post(networksAPIPath, MWSNetwork{
+	err := a.client.Post(networksAPIPath, Network{
 		NetworkName:      networkName,
 		VPCID:            vpcID,
 		SubnetIds:        subnetIds,
@@ -37,22 +37,22 @@ func (a MWSNetworksAPI) Create(mwsAcctID, networkName string, vpcID string, subn
 }
 
 // Read returns the network object along with metadata and any additional errors when attaching to workspace
-func (a MWSNetworksAPI) Read(mwsAcctID, networksID string) (MWSNetwork, error) {
-	var mwsNetwork MWSNetwork
+func (a NetworksAPI) Read(mwsAcctID, networksID string) (Network, error) {
+	var mwsNetwork Network
 	networksAPIPath := fmt.Sprintf("/accounts/%s/networks/%s", mwsAcctID, networksID)
 	err := a.client.Get(networksAPIPath, nil, &mwsNetwork)
 	return mwsNetwork, err
 }
 
 // Delete deletes the network object given a network id
-func (a MWSNetworksAPI) Delete(mwsAcctID, networksID string) error {
+func (a NetworksAPI) Delete(mwsAcctID, networksID string) error {
 	networksAPIPath := fmt.Sprintf("/accounts/%s/networks/%s", mwsAcctID, networksID)
 	return a.client.Delete(networksAPIPath, nil)
 }
 
 // List lists all the available network objects in the mws account
-func (a MWSNetworksAPI) List(mwsAcctID string) ([]MWSNetwork, error) {
-	var mwsNetworkList []MWSNetwork
+func (a NetworksAPI) List(mwsAcctID string) ([]Network, error) {
+	var mwsNetworkList []Network
 	networksAPIPath := fmt.Sprintf("/accounts/%s/networks", mwsAcctID)
 	err := a.client.Get(networksAPIPath, nil, &mwsNetworkList)
 	return mwsNetworkList, err
@@ -142,7 +142,7 @@ func resourceMWSNetworksCreate(d *schema.ResourceData, m interface{}) error {
 	subnetIds := internal.ConvertListInterfaceToString(d.Get("subnet_ids").(*schema.Set).List())
 	securityGroupIds := internal.ConvertListInterfaceToString(d.Get("security_group_ids").(*schema.Set).List())
 
-	network, err := NewMWSNetworksAPI(client).Create(mwsAcctID, networkName, VPCID, subnetIds, securityGroupIds)
+	network, err := NewNetworksAPI(client).Create(mwsAcctID, networkName, VPCID, subnetIds, securityGroupIds)
 	if err != nil {
 		return err
 	}
@@ -161,7 +161,7 @@ func resourceMWSNetworksRead(d *schema.ResourceData, m interface{}) error {
 	if err != nil {
 		return err
 	}
-	network, err := NewMWSNetworksAPI(client).Read(packagedMwsID.MwsAcctID, packagedMwsID.ResourceID)
+	network, err := NewNetworksAPI(client).Read(packagedMwsID.MwsAcctID, packagedMwsID.ResourceID)
 	if err != nil {
 		if e, ok := err.(common.APIError); ok && e.IsMissing() {
 			log.Printf("missing resource due to error: %v\n", e)
@@ -226,12 +226,12 @@ func resourceMWSNetworksDelete(d *schema.ResourceData, m interface{}) error {
 	if err != nil {
 		return err
 	}
-	err = NewMWSNetworksAPI(client).Delete(packagedMwsID.MwsAcctID, packagedMwsID.ResourceID)
+	err = NewNetworksAPI(client).Delete(packagedMwsID.MwsAcctID, packagedMwsID.ResourceID)
 	if err != nil {
 		return err
 	}
 	return resource.Retry(60*time.Second, func() *resource.RetryError {
-		network, err := NewMWSNetworksAPI(client).Read(packagedMwsID.MwsAcctID, packagedMwsID.ResourceID)
+		network, err := NewNetworksAPI(client).Read(packagedMwsID.MwsAcctID, packagedMwsID.ResourceID)
 		if e, ok := err.(common.APIError); ok && e.IsMissing() {
 			log.Printf("[INFO] Network %s is removed.", packagedMwsID.ResourceID)
 			return nil

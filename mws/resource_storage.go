@@ -8,21 +8,21 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
-// NewMWSStorageConfigurationsAPI creates MWSStorageConfigurationsAPI instance from provider meta
-func NewMWSStorageConfigurationsAPI(m interface{}) MWSStorageConfigurationsAPI {
-	return MWSStorageConfigurationsAPI{client: m.(*common.DatabricksClient)}
+// NewStorageConfigurationsAPI creates MWSStorageConfigurationsAPI instance from provider meta
+func NewStorageConfigurationsAPI(m interface{}) StorageConfigurationsAPI {
+	return StorageConfigurationsAPI{client: m.(*common.DatabricksClient)}
 }
 
-// MWSStorageConfigurationsAPI exposes the mws storageConfiguration API
-type MWSStorageConfigurationsAPI struct {
+// StorageConfigurationsAPI exposes the mws storageConfiguration API
+type StorageConfigurationsAPI struct {
 	client *common.DatabricksClient
 }
 
 // Create creates a configuration for the root s3 bucket
-func (a MWSStorageConfigurationsAPI) Create(mwsAcctID, storageConfigurationName string, bucketName string) (MWSStorageConfigurations, error) {
-	var mwsStorageConfigurations MWSStorageConfigurations
+func (a StorageConfigurationsAPI) Create(mwsAcctID, storageConfigurationName string, bucketName string) (StorageConfiguration, error) {
+	var mwsStorageConfigurations StorageConfiguration
 	storageConfigurationAPIPath := fmt.Sprintf("/accounts/%s/storage-configurations", mwsAcctID)
-	err := a.client.Post(storageConfigurationAPIPath, MWSStorageConfigurations{
+	err := a.client.Post(storageConfigurationAPIPath, StorageConfiguration{
 		StorageConfigurationName: storageConfigurationName,
 		RootBucketInfo: &RootBucketInfo{
 			BucketName: bucketName,
@@ -32,22 +32,22 @@ func (a MWSStorageConfigurationsAPI) Create(mwsAcctID, storageConfigurationName 
 }
 
 // Read returns the configuration for the root s3 bucket and metadata for the storage configuration
-func (a MWSStorageConfigurationsAPI) Read(mwsAcctID, storageConfigurationID string) (MWSStorageConfigurations, error) {
-	var mwsStorageConfigurations MWSStorageConfigurations
+func (a StorageConfigurationsAPI) Read(mwsAcctID, storageConfigurationID string) (StorageConfiguration, error) {
+	var mwsStorageConfigurations StorageConfiguration
 	storageConfigurationAPIPath := fmt.Sprintf("/accounts/%s/storage-configurations/%s", mwsAcctID, storageConfigurationID)
 	err := a.client.Get(storageConfigurationAPIPath, nil, &mwsStorageConfigurations)
 	return mwsStorageConfigurations, err
 }
 
 // Delete deletes the configuration for the root s3 bucket
-func (a MWSStorageConfigurationsAPI) Delete(mwsAcctID, storageConfigurationID string) error {
+func (a StorageConfigurationsAPI) Delete(mwsAcctID, storageConfigurationID string) error {
 	storageConfigurationAPIPath := fmt.Sprintf("/accounts/%s/storage-configurations/%s", mwsAcctID, storageConfigurationID)
 	return a.client.Delete(storageConfigurationAPIPath, nil)
 }
 
 // List lists all the storage configurations for the root s3 buckets in the E2 account ID provided to the client config
-func (a MWSStorageConfigurationsAPI) List(mwsAcctID string) ([]MWSStorageConfigurations, error) {
-	var mwsStorageConfigurationsList []MWSStorageConfigurations
+func (a StorageConfigurationsAPI) List(mwsAcctID string) ([]StorageConfiguration, error) {
+	var mwsStorageConfigurationsList []StorageConfiguration
 	storageConfigurationAPIPath := fmt.Sprintf("/accounts/%s/storage-configurations", mwsAcctID)
 	err := a.client.Get(storageConfigurationAPIPath, nil, &mwsStorageConfigurationsList)
 	return mwsStorageConfigurationsList, err
@@ -93,7 +93,7 @@ func resourceMWSStorageConfigurationsCreate(d *schema.ResourceData, m interface{
 	storageConfigurationName := d.Get("storage_configuration_name").(string)
 	bucketName := d.Get("bucket_name").(string)
 	mwsAcctID := d.Get("account_id").(string)
-	storageConfiguration, err := NewMWSStorageConfigurationsAPI(client).Create(mwsAcctID, storageConfigurationName, bucketName)
+	storageConfiguration, err := NewStorageConfigurationsAPI(client).Create(mwsAcctID, storageConfigurationName, bucketName)
 	if err != nil {
 		return err
 	}
@@ -112,7 +112,7 @@ func resourceMWSStorageConfigurationsRead(d *schema.ResourceData, m interface{})
 	if err != nil {
 		return err
 	}
-	storageConifiguration, err := NewMWSStorageConfigurationsAPI(client).Read(packagedMwsID.MwsAcctID, packagedMwsID.ResourceID)
+	storageConifiguration, err := NewStorageConfigurationsAPI(client).Read(packagedMwsID.MwsAcctID, packagedMwsID.ResourceID)
 	if err != nil {
 		if e, ok := err.(common.APIError); ok && e.IsMissing() {
 			log.Printf("missing resource due to error: %v\n", e)
@@ -152,6 +152,6 @@ func resourceMWSStorageConfigurationsDelete(d *schema.ResourceData, m interface{
 	if err != nil {
 		return err
 	}
-	err = NewMWSStorageConfigurationsAPI(client).Delete(packagedMwsID.MwsAcctID, packagedMwsID.ResourceID)
+	err = NewStorageConfigurationsAPI(client).Delete(packagedMwsID.MwsAcctID, packagedMwsID.ResourceID)
 	return err
 }

@@ -16,21 +16,21 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 )
 
-// NewMWSWorkspacesAPI creates MWSWorkspacesAPI instance from provider meta
-func NewMWSWorkspacesAPI(m interface{}) MWSWorkspacesAPI {
-	return MWSWorkspacesAPI{client: m.(*common.DatabricksClient)}
+// NewWorkspacesAPI creates MWSWorkspacesAPI instance from provider meta
+func NewWorkspacesAPI(m interface{}) WorkspacesAPI {
+	return WorkspacesAPI{client: m.(*common.DatabricksClient)}
 }
 
-// MWSWorkspacesAPI exposes the mws workspaces API
-type MWSWorkspacesAPI struct {
+// WorkspacesAPI exposes the mws workspaces API
+type WorkspacesAPI struct {
 	client *common.DatabricksClient
 }
 
 // Create creates the workspace creation process
-func (a MWSWorkspacesAPI) Create(mwsAcctID, workspaceName, deploymentName, awsRegion, credentialsID, storageConfigurationID, networkID, customerManagedKeyID string, isNoPublicIPEnabled bool) (MWSWorkspace, error) {
-	var mwsWorkspace MWSWorkspace
+func (a WorkspacesAPI) Create(mwsAcctID, workspaceName, deploymentName, awsRegion, credentialsID, storageConfigurationID, networkID, customerManagedKeyID string, isNoPublicIPEnabled bool) (Workspace, error) {
+	var mwsWorkspace Workspace
 	workspacesAPIPath := fmt.Sprintf("/accounts/%s/workspaces", mwsAcctID)
-	mwsWorkspacesRequest := MWSWorkspace{
+	mwsWorkspacesRequest := Workspace{
 		WorkspaceName:          workspaceName,
 		DeploymentName:         deploymentName,
 		AwsRegion:              awsRegion,
@@ -49,7 +49,7 @@ func (a MWSWorkspacesAPI) Create(mwsAcctID, workspaceName, deploymentName, awsRe
 }
 
 // WaitForWorkspaceRunning will hold the main thread till the workspace is in a running state
-func (a MWSWorkspacesAPI) WaitForWorkspaceRunning(mwsAcctID string, workspaceID int64, sleepDurationSeconds time.Duration, timeoutDurationMinutes time.Duration) error {
+func (a WorkspacesAPI) WaitForWorkspaceRunning(mwsAcctID string, workspaceID int64, sleepDurationSeconds time.Duration, timeoutDurationMinutes time.Duration) error {
 	// TODO: move all resource awaiters from client to TF resource level, for sepration of concerns sake
 	errChan := make(chan error, 1)
 	go func() {
@@ -77,9 +77,9 @@ func (a MWSWorkspacesAPI) WaitForWorkspaceRunning(mwsAcctID string, workspaceID 
 }
 
 // Patch will relaunch the mws workspace deployment TODO: may need to include customer managed key
-func (a MWSWorkspacesAPI) Patch(mwsAcctID string, workspaceID int64, awsRegion, credentialsID, storageConfigurationID, networkID, customerManagedKeyID string, isNoPublicIPEnabled bool) error {
+func (a WorkspacesAPI) Patch(mwsAcctID string, workspaceID int64, awsRegion, credentialsID, storageConfigurationID, networkID, customerManagedKeyID string, isNoPublicIPEnabled bool) error {
 	workspacesAPIPath := fmt.Sprintf("/accounts/%s/workspaces/%d", mwsAcctID, workspaceID)
-	mwsWorkspacesRequest := MWSWorkspace{
+	mwsWorkspacesRequest := Workspace{
 		AwsRegion:              awsRegion,
 		CredentialsID:          credentialsID,
 		StorageConfigurationID: storageConfigurationID,
@@ -95,8 +95,8 @@ func (a MWSWorkspacesAPI) Patch(mwsAcctID string, workspaceID int64, awsRegion, 
 }
 
 // Read will return the mws workspace metadata and status of the workspace deployment
-func (a MWSWorkspacesAPI) Read(mwsAcctID string, workspaceID int64) (MWSWorkspace, error) {
-	var mwsWorkspace MWSWorkspace
+func (a WorkspacesAPI) Read(mwsAcctID string, workspaceID int64) (Workspace, error) {
+	var mwsWorkspace Workspace
 	workspacesAPIPath := fmt.Sprintf("/accounts/%s/workspaces/%d", mwsAcctID, workspaceID)
 	err := a.client.Get(workspacesAPIPath, nil, &mwsWorkspace)
 	return mwsWorkspace, err
@@ -104,14 +104,14 @@ func (a MWSWorkspacesAPI) Read(mwsAcctID string, workspaceID int64) (MWSWorkspac
 
 // Delete will delete the configuration for the workspace given a workspace id and will not block. A follow up email
 // will be sent when the workspace is fully deleted.
-func (a MWSWorkspacesAPI) Delete(mwsAcctID string, workspaceID int64) error {
+func (a WorkspacesAPI) Delete(mwsAcctID string, workspaceID int64) error {
 	workspacesAPIPath := fmt.Sprintf("/accounts/%s/workspaces/%d", mwsAcctID, workspaceID)
 	return a.client.Delete(workspacesAPIPath, nil)
 }
 
 // List will list all workspaces in a given mws account
-func (a MWSWorkspacesAPI) List(mwsAcctID string) ([]MWSWorkspace, error) {
-	var mwsWorkspacesList []MWSWorkspace
+func (a WorkspacesAPI) List(mwsAcctID string) ([]Workspace, error) {
+	var mwsWorkspacesList []Workspace
 	workspacesAPIPath := fmt.Sprintf("/accounts/%s/workspaces", mwsAcctID)
 	err := a.client.Get(workspacesAPIPath, nil, &mwsWorkspacesList)
 	return mwsWorkspacesList, err
@@ -225,7 +225,7 @@ func ResourceWorkspace() *schema.Resource {
 	}
 }
 
-func waitForWorkspaceURLResolution(workspace MWSWorkspace, timeoutDurationMinutes time.Duration) error {
+func waitForWorkspaceURLResolution(workspace Workspace, timeoutDurationMinutes time.Duration) error {
 	if workspace.DeploymentName == "900150983cd24fb0" {
 		// nobody would probably name workspace as 900150983cd24fb0,
 		// so we'll use it as unit testing shim
@@ -256,13 +256,13 @@ func resourceMWSWorkspacesCreate(d *schema.ResourceData, m interface{}) error {
 	networkID := d.Get("network_id").(string)
 	customerManagedKeyID := d.Get("customer_managed_key_id").(string)
 	isNoPublicIPEnabled := d.Get("is_no_public_ip_enabled").(bool)
-	var workspace MWSWorkspace
+	var workspace Workspace
 	var err error
-	workspace, err = NewMWSWorkspacesAPI(client).Create(mwsAcctID, workspaceName, deploymentName, awsRegion, credentialsID, storageConfigurationID, networkID, customerManagedKeyID, isNoPublicIPEnabled)
+	workspace, err = NewWorkspacesAPI(client).Create(mwsAcctID, workspaceName, deploymentName, awsRegion, credentialsID, storageConfigurationID, networkID, customerManagedKeyID, isNoPublicIPEnabled)
 	// Sometimes workspaces api is buggy
 	if err != nil {
 		time.Sleep(15 * time.Second)
-		workspace, err = NewMWSWorkspacesAPI(client).Create(mwsAcctID, workspaceName, deploymentName, awsRegion, credentialsID, storageConfigurationID, networkID, customerManagedKeyID, isNoPublicIPEnabled)
+		workspace, err = NewWorkspacesAPI(client).Create(mwsAcctID, workspaceName, deploymentName, awsRegion, credentialsID, storageConfigurationID, networkID, customerManagedKeyID, isNoPublicIPEnabled)
 		if err != nil {
 			return err
 		}
@@ -273,10 +273,10 @@ func resourceMWSWorkspacesCreate(d *schema.ResourceData, m interface{}) error {
 	}
 	d.SetId(packMWSAccountID(workspaceResourceID))
 	// TODO: replace with waitForWorkspaceState
-	err = NewMWSWorkspacesAPI(client).WaitForWorkspaceRunning(mwsAcctID, workspace.WorkspaceID, 10, 180)
+	err = NewWorkspacesAPI(client).WaitForWorkspaceRunning(mwsAcctID, workspace.WorkspaceID, 10, 180)
 	if err != nil {
 		if !reflect.ValueOf(networkID).IsZero() {
-			network, networkReadErr := NewMWSNetworksAPI(client).Read(mwsAcctID, networkID)
+			network, networkReadErr := NewNetworksAPI(client).Read(mwsAcctID, networkID)
 			if networkReadErr != nil {
 				return fmt.Errorf("Workspace failed to create: %v, network read failure error: %v", err, networkReadErr)
 			}
@@ -306,7 +306,7 @@ func resourceMWSWorkspacesRead(d *schema.ResourceData, m interface{}) error {
 		return err
 	}
 
-	workspace, err := NewMWSWorkspacesAPI(client).Read(packagedMwsID.MwsAcctID, idInt64)
+	workspace, err := NewWorkspacesAPI(client).Read(packagedMwsID.MwsAcctID, idInt64)
 	if err != nil {
 		if e, ok := err.(common.APIError); ok && e.IsMissing() {
 			log.Printf("missing resource due to error: %v\n", e)
@@ -318,7 +318,7 @@ func resourceMWSWorkspacesRead(d *schema.ResourceData, m interface{}) error {
 
 	if workspace.WorkspaceStatus != WorkspaceStatusRunning {
 		// TODO: replace with waitForWorkspaceState
-		err = NewMWSWorkspacesAPI(client).WaitForWorkspaceRunning(packagedMwsID.MwsAcctID, idInt64, 10, 180)
+		err = NewWorkspacesAPI(client).WaitForWorkspaceRunning(packagedMwsID.MwsAcctID, idInt64, 10, 180)
 		if err != nil {
 			log.Println("WORKSPACE IS NOT RUNNING")
 			err2 := d.Set("verify_workspace_runnning", false)
@@ -371,7 +371,7 @@ func resourceMWSWorkspacesRead(d *schema.ResourceData, m interface{}) error {
 	}
 
 	if workspace.WorkspaceStatus != WorkspaceStatusRunning {
-		network, err := NewMWSNetworksAPI(client).Read(workspace.AccountID, workspace.NetworkID)
+		network, err := NewNetworksAPI(client).Read(workspace.AccountID, workspace.NetworkID)
 		if err == nil && !reflect.ValueOf(network.ErrorMessages).IsZero() {
 			err = d.Set("network_error_messages", convertErrorMessagesToListOfMaps(network.ErrorMessages))
 			if err != nil {
@@ -422,12 +422,12 @@ func resourceMWSWorkspacesUpdate(d *schema.ResourceData, m interface{}) error {
 	customerManagedKeyID := d.Get("customer_managed_key_id").(string)
 	isNoPublicIPEnabled := d.Get("is_no_public_ip_enabled").(bool)
 
-	err = NewMWSWorkspacesAPI(client).Patch(packagedMwsID.MwsAcctID, idInt64, awsRegion, credentialsID, storageConfigurationID, networkID, customerManagedKeyID, isNoPublicIPEnabled)
+	err = NewWorkspacesAPI(client).Patch(packagedMwsID.MwsAcctID, idInt64, awsRegion, credentialsID, storageConfigurationID, networkID, customerManagedKeyID, isNoPublicIPEnabled)
 	if err != nil {
 		return err
 	}
 	// TODO: replace with waitForWorkspaceState, potentially with state machine checks
-	err = NewMWSWorkspacesAPI(client).WaitForWorkspaceRunning(packagedMwsID.MwsAcctID, idInt64, 10, 180)
+	err = NewWorkspacesAPI(client).WaitForWorkspaceRunning(packagedMwsID.MwsAcctID, idInt64, 10, 180)
 	if err != nil {
 		return err
 	}
@@ -445,12 +445,12 @@ func resourceMWSWorkspacesDelete(d *schema.ResourceData, m interface{}) error {
 	if err != nil {
 		return err
 	}
-	err = NewMWSWorkspacesAPI(client).Delete(packagedMwsID.MwsAcctID, idInt64)
+	err = NewWorkspacesAPI(client).Delete(packagedMwsID.MwsAcctID, idInt64)
 	if err != nil {
 		return err
 	}
 	return resource.Retry(15*time.Minute, func() *resource.RetryError {
-		workspace, err := NewMWSWorkspacesAPI(client).Read(packagedMwsID.MwsAcctID, idInt64)
+		workspace, err := NewWorkspacesAPI(client).Read(packagedMwsID.MwsAcctID, idInt64)
 		if e, ok := err.(common.APIError); ok && e.IsMissing() {
 			log.Printf("[INFO] Workspace %s is removed.", packagedMwsID.ResourceID)
 			return nil

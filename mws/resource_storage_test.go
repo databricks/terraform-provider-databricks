@@ -15,19 +15,19 @@ func TestMwsAccStorageConfigurations(t *testing.T) {
 	}
 	acctID := os.Getenv("DATABRICKS_ACCOUNT_ID")
 	client := common.CommonEnvironmentClient()
-	storageConfigsList, err := NewMWSStorageConfigurationsAPI(client).List(acctID)
+	storageConfigsList, err := NewStorageConfigurationsAPI(client).List(acctID)
 	assert.NoError(t, err, err)
 	t.Log(storageConfigsList)
 
-	storageConfig, err := NewMWSStorageConfigurationsAPI(client).Create(acctID, "sri-mws-terraform-storage-root-bucket", "sri-root-s3-bucket")
+	storageConfig, err := NewStorageConfigurationsAPI(client).Create(acctID, "sri-mws-terraform-storage-root-bucket", "sri-root-s3-bucket")
 	assert.NoError(t, err, err)
 
-	myStorageConfig, err := NewMWSStorageConfigurationsAPI(client).Read(acctID, storageConfig.StorageConfigurationID)
+	myStorageConfig, err := NewStorageConfigurationsAPI(client).Read(acctID, storageConfig.StorageConfigurationID)
 	assert.NoError(t, err, err)
 	t.Log(myStorageConfig.RootBucketInfo.BucketName)
 
 	defer func() {
-		err = NewMWSStorageConfigurationsAPI(client).Delete(acctID, storageConfig.StorageConfigurationID)
+		err = NewStorageConfigurationsAPI(client).Delete(acctID, storageConfig.StorageConfigurationID)
 		assert.NoError(t, err, err)
 	}()
 }
@@ -38,20 +38,20 @@ func TestResourceStorageConfigurationCreate(t *testing.T) {
 			{
 				Method:   "POST",
 				Resource: "/api/2.0/accounts/abc/storage-configurations",
-				ExpectedRequest: MWSStorageConfigurations{
+				ExpectedRequest: StorageConfiguration{
 					StorageConfigurationName: "Main Storage",
 					RootBucketInfo: &RootBucketInfo{
 						BucketName: "bucket",
 					},
 				},
-				Response: MWSStorageConfigurations{
+				Response: StorageConfiguration{
 					StorageConfigurationID: "scid",
 				},
 			},
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/accounts/abc/storage-configurations/scid",
-				Response: MWSStorageConfigurations{
+				Response: StorageConfiguration{
 					StorageConfigurationID:   "scid",
 					StorageConfigurationName: "Main Storage",
 					RootBucketInfo: &RootBucketInfo{
@@ -103,7 +103,7 @@ func TestResourceStorageConfigurationRead(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/accounts/abc/storage-configurations/scid",
-				Response: MWSStorageConfigurations{
+				Response: StorageConfiguration{
 					StorageConfigurationID:   "scid",
 					StorageConfigurationName: "Main Storage",
 					RootBucketInfo: &RootBucketInfo{

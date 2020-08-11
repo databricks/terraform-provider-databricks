@@ -82,7 +82,7 @@ func TestMwsAccWorkspaces(t *testing.T) {
 				if err != nil {
 					return err
 				}
-				_, err = NewMWSWorkspacesAPI(client).Read(packagedMWSIds.MwsAcctID, idInt64)
+				_, err = NewWorkspacesAPI(client).Read(packagedMWSIds.MwsAcctID, idInt64)
 				if err != nil {
 					return nil
 				}

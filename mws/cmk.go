@@ -17,9 +17,9 @@ type MWSCustomerManagedKeysAPI struct {
 }
 
 // Create creates a set of MWS CustomerManagedKeys for the BYOVPC
-func (a MWSCustomerManagedKeysAPI) Create(mwsAcctID, keyArn, keyAlias, keyRegion string) (k MWSCustomerManagedKey, err error) {
+func (a MWSCustomerManagedKeysAPI) Create(mwsAcctID, keyArn, keyAlias, keyRegion string) (k CustomerManagedKey, err error) {
 	customerManagedKeysAPIPath := fmt.Sprintf("/accounts/%s/customer-managed-keys", mwsAcctID)
-	err = a.client.Post(customerManagedKeysAPIPath, MWSCustomerManagedKey{
+	err = a.client.Post(customerManagedKeysAPIPath, CustomerManagedKey{
 		AwsKeyInfo: &AwsKeyInfo{
 			KeyArn:    keyArn,
 			KeyAlias:  keyAlias,
@@ -31,7 +31,7 @@ func (a MWSCustomerManagedKeysAPI) Create(mwsAcctID, keyArn, keyAlias, keyRegion
 
 // Read returns the customer managed key object along with metadata
 func (a MWSCustomerManagedKeysAPI) Read(
-	mwsAcctID, customerManagedKeysID string) (k MWSCustomerManagedKey, err error) {
+	mwsAcctID, customerManagedKeysID string) (k CustomerManagedKey, err error) {
 	err = a.client.Get(fmt.Sprintf("/accounts/%s/customer-managed-keys/%s",
 		mwsAcctID, customerManagedKeysID), nil, &k)
 	return
@@ -43,7 +43,7 @@ func (a MWSCustomerManagedKeysAPI) Delete(customerManagedKeysID string) error {
 }
 
 // List lists all the available customer managed key objects in the mws account
-func (a MWSCustomerManagedKeysAPI) List(mwsAcctID string) (kl []MWSCustomerManagedKey, err error) {
+func (a MWSCustomerManagedKeysAPI) List(mwsAcctID string) (kl []CustomerManagedKey, err error) {
 	err = a.client.Get(fmt.Sprintf("/accounts/%s/customer-managed-keys", mwsAcctID), nil, &kl)
 	return
 }

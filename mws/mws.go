@@ -16,8 +16,8 @@ type AwsCredentials struct {
 	StsRole *StsRole `json:"sts_role,omitempty"`
 }
 
-// MWSCredentials is the object that contains all the information for the credentials to create a workspace
-type MWSCredentials struct {
+// Credentials is the object that contains all the information for the credentials to create a workspace
+type Credentials struct {
 	CredentialsID   string          `json:"credentials_id,omitempty"`
 	CredentialsName string          `json:"credentials_name,omitempty"`
 	AwsCredentials  *AwsCredentials `json:"aws_credentials,omitempty"`
@@ -30,8 +30,8 @@ type RootBucketInfo struct {
 	BucketName string `json:"bucket_name,omitempty"`
 }
 
-// MWSStorageConfigurations is the object that contains all the information for the root storage bucket
-type MWSStorageConfigurations struct {
+// StorageConfiguration is the object that contains all the information for the root storage bucket
+type StorageConfiguration struct {
 	StorageConfigurationID   string          `json:"storage_configuration_id,omitempty"`
 	StorageConfigurationName string          `json:"storage_configuration_name,omitempty"`
 	RootBucketInfo           *RootBucketInfo `json:"root_bucket_info,omitempty"`
@@ -45,8 +45,8 @@ type NetworkHealth struct {
 	ErrorMessage string `json:"error_message,omitempty"`
 }
 
-// MWSNetwork is the object that contains all the information for BYOVPC
-type MWSNetwork struct {
+// Network is the object that contains all the information for BYOVPC
+type Network struct {
 	NetworkID        string          `json:"network_id,omitempty"`
 	NetworkName      string          `json:"network_name,omitempty"`
 	VPCID            string          `json:"vpc_id,omitempty"`
@@ -66,8 +66,8 @@ type AwsKeyInfo struct {
 	KeyRegion string `json:"key_region,omitempty"`
 }
 
-// MWSCustomerManagedKey contains key information and metadata for BYOK for E2
-type MWSCustomerManagedKey struct {
+// CustomerManagedKey contains key information and metadata for BYOK for E2
+type CustomerManagedKey struct {
 	CustomerManagedKeyID string      `json:"customer_managed_key_id,omitempty"`
 	AwsKeyInfo           *AwsKeyInfo `json:"aws_key_info,omitempty"`
 	AccountID            string      `json:"account_id,omitempty"`
@@ -97,8 +97,8 @@ func ContainsWorkspaceState(workspaceStates []string, searchState string) bool {
 	return false
 }
 
-// MWSWorkspace is the object that contains all the information for deploying a E2 workspace
-type MWSWorkspace struct {
+// Workspace is the object that contains all the information for deploying a E2 workspace
+type Workspace struct {
 	WorkspaceID            int64  `json:"workspace_id,omitempty"`
 	WorkspaceName          string `json:"workspace_name,omitempty"`
 	DeploymentName         string `json:"deployment_name,omitempty"`

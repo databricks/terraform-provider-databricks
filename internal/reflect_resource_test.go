@@ -93,5 +93,5 @@ func TestStructToData(t *testing.T) {
 	assert.NoError(t, err)
 
 	err = DataToStructPointer(d, s, &dummyCopy)
-	assert.EqualError(t, err, "addresses: validation conflicts: line and lijn,lijn and line")
+	assert.NoError(t, err)
 }

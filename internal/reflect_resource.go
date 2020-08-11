@@ -364,58 +364,15 @@ func DataToReflectValue(d *schema.ResourceData, r *schema.Resource, rv reflect.V
 	return readReflectValueFromData([]string{}, d, rv, r.Schema)
 }
 
-func makeValidationGroups(rv reflect.Value, s map[string]*schema.Schema) (vg map[string][]string) {
-	rk := rv.Kind()
-	if rk != reflect.Struct {
-		return
-	}
-	if !rv.IsValid() {
-		return
-	}
-	vg = map[string][]string{}
-	for i := 0; i < rv.NumField(); i++ {
-		typeField := rv.Type().Field(i)
-		jsonTag := typeField.Tag.Get("json")
-		jsonFieldName := strings.Split(jsonTag, ",")[0]
-		if jsonFieldName == "-" {
-			continue
-		}
-		_, ok := s[jsonFieldName]
-		if !ok {
-			continue
-		}
-		tfTag := typeField.Tag.Get("tf")
-		for _, token := range strings.Split(tfTag, ",") {
-			colonSplit := strings.Split(token, ":")
-			if len(colonSplit) == 2 {
-				tfKey := colonSplit[0]
-				tfValue := colonSplit[1]
-				switch tfKey {
-				case "group":
-					vg[tfValue] = append(vg[tfValue], jsonFieldName)
-				case "conflicts":
-					vg[tfValue] = append(strings.Split(tfValue, " "), jsonFieldName)
-				}
-			}
-		}
-	}
-	return
-}
-
 func readReflectValueFromData(path []string, d *schema.ResourceData,
 	rv reflect.Value, s map[string]*schema.Schema) error {
-	validationGroups := makeValidationGroups(rv, s)
-	fieldsSet := map[string]bool{}
-	err := iterFields(rv, path, s, func(fieldSchema *schema.Schema,
+	return iterFields(rv, path, s, func(fieldSchema *schema.Schema,
 		path []string, valueField *reflect.Value) error {
-		jsonFieldName := path[len(path)-1]
-
 		fieldPath := strings.Join(path, ".")
 		raw, ok := d.GetOk(fieldPath)
 		if !ok {
 			return nil
 		}
-		fieldsSet[jsonFieldName] = true
 		switch fieldSchema.Type {
 		case schema.TypeInt:
 			v, ok := raw.(int)
@@ -504,27 +461,6 @@ func readReflectValueFromData(path []string, d *schema.ResourceData,
 		}
 		return nil
 	})
-	if err != nil {
-		return err
-	}
-	validationErrors := []string{}
-	for _, fields := range validationGroups {
-		for _, field := range fields {
-			for _, other := range fields {
-				if field == other {
-					continue
-				}
-				if fieldsSet[field] && fieldsSet[other] {
-					validationErrors = append(validationErrors,
-						fmt.Sprintf("%s and %s", field, other))
-				}
-			}
-		}
-	}
-	if len(validationErrors) > 0 {
-		return fmt.Errorf("validation conflicts: %s", strings.Join(validationErrors, ","))
-	}
-	return nil
 }
 
 func readListFromData(path []string, d *schema.ResourceData,

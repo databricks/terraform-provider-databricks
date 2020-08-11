@@ -242,7 +242,7 @@ func resourceClusterUpdate(d *schema.ResourceData, m interface{}) error {
 	libraryList.ClusterID = clusterID
 	libsToInstall, libsToUninstall := libraryList.Diff(libsClusterStatus)
 	if len(libsToUninstall.Libraries) > 0 || len(libsToInstall.Libraries) > 0 {
-		if !clusterInfo.IsRunning() {
+		if !clusterInfo.IsRunningOrResizing() {
 			err = clusters.Start(clusterID)
 			if err != nil {
 				return err

@@ -119,10 +119,10 @@ func (a MWSWorkspacesAPI) List(mwsAcctID string) ([]MWSWorkspace, error) {
 
 func ResourceWorkspace() *schema.Resource {
 	return &schema.Resource{
-		Create: wrapClientCheck(resourceMWSWorkspacesCreate),
-		Read:   wrapClientCheck(resourceMWSWorkspacesRead),
-		Update: wrapClientCheck(resourceMWSWorkspacesUpdate),
-		Delete: wrapClientCheck(resourceMWSWorkspacesDelete),
+		Create: resourceMWSWorkspacesCreate,
+		Read:   resourceMWSWorkspacesRead,
+		Update: resourceMWSWorkspacesUpdate,
+		Delete: resourceMWSWorkspacesDelete,
 
 		Schema: map[string]*schema.Schema{
 			"account_id": {

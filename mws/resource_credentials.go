@@ -60,9 +60,9 @@ func (a MWSCredentialsAPI) List(mwsAcctID string) ([]MWSCredentials, error) {
 
 func ResourceCredentials() *schema.Resource {
 	return &schema.Resource{
-		Create: wrapClientCheck(resourceMWSCredentialsCreate),
-		Read:   wrapClientCheck(resourceMWSCredentialsRead),
-		Delete: wrapClientCheck(resourceMWSCredentialsDelete),
+		Create: resourceMWSCredentialsCreate,
+		Read:   resourceMWSCredentialsRead,
+		Delete: resourceMWSCredentialsDelete,
 
 		Schema: map[string]*schema.Schema{
 			"account_id": {

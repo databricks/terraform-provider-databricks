@@ -17,6 +17,16 @@ import (
 	"github.com/hashicorp/go-retryablehttp"
 )
 
+var (
+	e2example                   = "https://github.com/databrickslabs/terraform-provider-databricks/blob/master/scripts/awsmt-integration/main.tf"
+	accountsHost                = "accounts.cloud.databricks.com"
+	transientErrorStringMatches = []string{
+		"com.databricks.backend.manager.util.UnknownWorkerEnvironmentException",
+		"does not have any associated worker environments",
+		"There is no worker environment with id",
+	}
+)
+
 // APIErrorBody maps "proper" databricks rest api errors to a struct
 type APIErrorBody struct {
 	ErrorCode string `json:"error_code,omitempty"`
@@ -67,10 +77,112 @@ func (apiError APIError) DocumentationURL() string {
 		endpointMatches[1], endpointMatches[2])
 }
 
-var transientErrorStringMatches []string = []string{
-	"com.databricks.backend.manager.util.UnknownWorkerEnvironmentException",
-	"does not have any associated worker environments",
-	"There is no worker environment with id",
+// IsRetriable returns true if error is retriable
+func (apiError APIError) IsRetriable() bool {
+	// Handle transient errors for retries
+	for _, substring := range transientErrorStringMatches {
+		if strings.Contains(apiError.Message, substring) {
+			log.Printf("[INFO] Attempting retry because of %#v", substring)
+			return true
+		}
+	}
+	// some API's recommend retries on HTTP 500, but we'll add that later
+	return false
+}
+
+func (c *DatabricksClient) parseUnknownError(
+	status string, body []byte, err error) (errorBody APIErrorBody) {
+	// this is most likely HTML... since un-marshalling JSON failed
+	// Status parts first in case html message is not as expected
+	statusParts := strings.SplitN(status, " ", 2)
+	if len(statusParts) < 2 {
+		errorBody.ErrorCode = "UNKNOWN"
+	} else {
+		errorBody.ErrorCode = strings.ReplaceAll(
+			strings.ToUpper(strings.Trim(statusParts[1], " .")),
+			" ", "_")
+	}
+	stringBody := string(body)
+	messageRE := regexp.MustCompile(`<pre>(.*)</pre>`)
+	messageMatches := messageRE.FindStringSubmatch(stringBody)
+	// No messages with <pre> </pre> format found so return a APIError
+	if len(messageMatches) < 2 {
+		errorBody.Message = fmt.Sprintf("Response from server (%s) %s: %v",
+			status, stringBody, err)
+		return
+	}
+	errorBody.Message = strings.Trim(messageMatches[1], " .")
+	return
+}
+
+func (c *DatabricksClient) commonErrorClarity(resp *http.Response) *APIError {
+	isMultiworkspaceAPI := strings.HasPrefix(resp.Request.URL.Path, "/api/2.0/accounts")
+	isMultiworkspaceHost := resp.Request.URL.Host != accountsHost
+	isTesting := strings.HasPrefix(resp.Request.URL.Host, "127.0.0.1")
+	if !isTesting && isMultiworkspaceHost && !isMultiworkspaceAPI {
+		return &APIError{
+			Message: "INCORRECT_CONFIGURATION",
+			ErrorCode: fmt.Sprintf("Databricks API (%s) requires you to set `host` property "+
+				"(or DATABRICKS_HOST env variable) to result of `databricks_mws_workspaces.this.workspace_url`. "+
+				"This error may happen if you're using provider in both normal and multiworkspace mode. Please "+
+				"refactor your code into different modules. Runnable example that we use for integration testing "+
+				"can be found in this repository at %s", resp.Request.URL.Path, e2example),
+			StatusCode: resp.StatusCode,
+			Resource:   resp.Request.URL.Path,
+		}
+	}
+	// common confusion with this provider: calling workspace apis on accounts host
+	if !isTesting && isMultiworkspaceAPI && !isMultiworkspaceHost {
+		return &APIError{
+			Message: "INCORRECT_CONFIGURATION",
+			ErrorCode: fmt.Sprintf("Multiworkspace API (%s) requires you to set %s as DATABRICKS_HOST, but you have "+
+				"specified %s instead. This error may happen if you're using provider in both "+
+				"normal and multiworkspace mode. Please refactor your code into different modules. "+
+				"Runnable example that we use for integration testing can be found in this "+
+				"repository at %s", resp.Request.URL.Path, accountsHost, resp.Request.URL.Host, e2example),
+			StatusCode: resp.StatusCode,
+			Resource:   resp.Request.URL.Path,
+		}
+	}
+	return nil
+}
+
+func (c *DatabricksClient) parseError(resp *http.Response) APIError {
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return APIError{
+			Message:    "IO_READ",
+			ErrorCode:  err.Error(),
+			StatusCode: resp.StatusCode,
+			Resource:   resp.Request.URL.Path,
+		}
+	}
+	log.Printf("[INFO] %s %v", resp.Status, c.redactedDump(body))
+	mwsError := c.commonErrorClarity(resp)
+	if mwsError != nil {
+		return *mwsError
+	}
+	// try to read in nicely formatted API error response
+	var errorBody APIErrorBody
+	err = json.Unmarshal(body, &errorBody)
+	if err != nil {
+		errorBody = c.parseUnknownError(resp.Status, body, err)
+	}
+	// Handle SCIM error message details
+	if errorBody.Message == "" && errorBody.ScimDetail != "" {
+		if errorBody.ScimDetail == "null" {
+			errorBody.Message = "SCIM API Internal Error"
+		} else {
+			errorBody.Message = errorBody.ScimDetail
+		}
+		errorBody.ErrorCode = fmt.Sprintf("SCIM_%s", errorBody.ScimStatus)
+	}
+	return APIError{
+		Message:    errorBody.Message,
+		ErrorCode:  errorBody.ErrorCode,
+		StatusCode: resp.StatusCode,
+		Resource:   resp.Request.URL.Path,
+	}
 }
 
 // checkHTTPRetry inspects HTTP errors from the Databricks API for known transient errors on Workspace creation
@@ -90,64 +202,8 @@ func (c *DatabricksClient) checkHTTPRetry(ctx context.Context, resp *http.Respon
 		return false, err
 	}
 	if resp.StatusCode >= 400 {
-		// reading the body means that the caller cannot read it themselves
-		// But that's ok because we've hit an error case
-		// Our job now is to
-		//  - capture the error and return it
-		//  - determine if the error is retryable
-		body, err := ioutil.ReadAll(resp.Body)
-		if err != nil {
-			return false, err
-		}
-		log.Printf("[INFO] %s %v", resp.Status, c.redactedDump(body))
-		var errorBody APIErrorBody
-		err = json.Unmarshal(body, &errorBody)
-		// this is most likely HTML... since un-marshalling JSON failed
-		if err != nil {
-			// Status parts first in case html message is not as expected
-			statusParts := strings.SplitN(resp.Status, " ", 2)
-			if len(statusParts) < 2 {
-				errorBody.ErrorCode = "UNKNOWN"
-			} else {
-				errorBody.ErrorCode = strings.ReplaceAll(strings.ToUpper(strings.Trim(statusParts[1], " .")), " ", "_")
-			}
-			stringBody := string(body)
-			messageRE := regexp.MustCompile(`<pre>(.*)</pre>`)
-			messageMatches := messageRE.FindStringSubmatch(stringBody)
-			// No messages with <pre> </pre> format found so return a APIError
-			if len(messageMatches) < 2 {
-				return false, APIError{
-					Message:    fmt.Sprintf("Response from server (%d) %s: %v", resp.StatusCode, stringBody, err),
-					ErrorCode:  errorBody.ErrorCode,
-					StatusCode: resp.StatusCode,
-					Resource:   resp.Request.URL.Path,
-				}
-			}
-			errorBody.Message = strings.Trim(messageMatches[1], " .")
-		}
-		apiError := APIError{
-			Message:    errorBody.Message,
-			ErrorCode:  errorBody.ErrorCode,
-			StatusCode: resp.StatusCode,
-			Resource:   resp.Request.URL.Path,
-		}
-		// Handle scim error message details
-		if apiError.Message == "" && errorBody.ScimDetail != "" {
-			if errorBody.ScimDetail == "null" {
-				apiError.Message = "SCIM API Internal Error"
-			} else {
-				apiError.Message = errorBody.ScimDetail
-			}
-			apiError.ErrorCode = fmt.Sprintf("SCIM_%s", errorBody.ScimStatus)
-		}
-		// Handle transient errors for retries
-		for _, substring := range transientErrorStringMatches {
-			if strings.Contains(errorBody.Message, substring) {
-				log.Printf("[INFO] Attempting retry because of %#v", substring)
-				return true, apiError
-			}
-		}
-		return false, apiError
+		apiError := c.parseError(resp)
+		return apiError.IsRetriable(), apiError
 	}
 	return false, nil
 }

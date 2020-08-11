@@ -55,9 +55,9 @@ func (a MWSStorageConfigurationsAPI) List(mwsAcctID string) ([]MWSStorageConfigu
 
 func ResourceStorageConfiguration() *schema.Resource {
 	return &schema.Resource{
-		Create: wrapClientCheck(resourceMWSStorageConfigurationsCreate),
-		Read:   wrapClientCheck(resourceMWSStorageConfigurationsRead),
-		Delete: wrapClientCheck(resourceMWSStorageConfigurationsDelete),
+		Create: resourceMWSStorageConfigurationsCreate,
+		Read:   resourceMWSStorageConfigurationsRead,
+		Delete: resourceMWSStorageConfigurationsDelete,
 
 		Schema: map[string]*schema.Schema{
 			"account_id": {

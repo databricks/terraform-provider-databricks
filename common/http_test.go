@@ -55,7 +55,7 @@ func TestClient_HandleErrors(t *testing.T) {
 			response:           `<html> Hello world </html>`,
 			responseStatus:     http.StatusNotFound,
 			expectedErrorCode:  "NOT_FOUND",
-			expectedMessage:    "Response from server (404) <html> Hello world </html>: invalid character '<' looking for beginning of value",
+			expectedMessage:    "Response from server (404 Not Found) <html> Hello world </html>: invalid character '<' looking for beginning of value",
 			expectedResource:   "/api/2.0/token/create",
 			expectedStatusCode: 404,
 			apiCall: func(client DatabricksClient) error {

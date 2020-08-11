@@ -2,6 +2,7 @@ package databricks
 
 import (
 	"log"
+	"reflect"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
@@ -79,7 +80,6 @@ func resourceClusterSchema() map[string]*schema.Schema {
 			p.Sensitive = true
 		}
 		s["autotermination_minutes"].Default = 60
-		s["enable_elastic_disk"].Computed = true
 		s["idempotency_token"].ForceNew = true
 		s["cluster_id"] = &schema.Schema{
 			Type:     schema.TypeString,
@@ -114,6 +114,7 @@ func resourceClusterCreate(d *schema.ResourceData, m interface{}) error {
 	if err != nil {
 		return err
 	}
+	handleInstancePoolClusterRequest(&cluster)
 	clusterInfo, err := clusters.Create(cluster)
 	if err != nil {
 		return err
@@ -219,6 +220,7 @@ func resourceClusterUpdate(d *schema.ResourceData, m interface{}) error {
 	if err != nil {
 		return err
 	}
+	handleInstancePoolClusterRequest(&cluster)
 	clusterInfo, err := clusters.Edit(cluster)
 	if err != nil {
 		return err
@@ -239,9 +241,6 @@ func resourceClusterUpdate(d *schema.ResourceData, m interface{}) error {
 	}
 	libraryList.ClusterID = clusterID
 	libsToInstall, libsToUninstall := libraryList.Diff(libsClusterStatus)
-	if err != nil {
-		return err
-	}
 	if len(libsToUninstall.Libraries) > 0 || len(libsToInstall.Libraries) > 0 {
 		if !clusterInfo.IsRunning() {
 			err = clusters.Start(clusterID)
@@ -262,6 +261,23 @@ func resourceClusterUpdate(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 	return resourceClusterRead(d, m)
+}
+
+// This function helps remove all requests that should not be submitted when instance pool is selected.
+func handleInstancePoolClusterRequest(clusterModel *model.Cluster) {
+	if reflect.ValueOf(clusterModel.InstancePoolID).IsZero() {
+		return
+	}
+	if clusterModel.AwsAttributes != nil {
+		// Reset AwsAttributes
+		awsAttributes := model.AwsAttributes{
+			InstanceProfileArn: clusterModel.AwsAttributes.InstanceProfileArn,
+		}
+		clusterModel.AwsAttributes = &awsAttributes
+	}
+	clusterModel.EnableElasticDisk = false
+	clusterModel.NodeTypeID = ""
+	clusterModel.DriverNodeTypeID = ""
 }
 
 func updateLibraries(libraries service.LibrariesAPI, libsToInstall, libsToUninstall model.ClusterLibraryList) error {

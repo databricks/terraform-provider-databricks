@@ -106,14 +106,14 @@ type ZonesInfo struct {
 
 // AwsAttributes encapsulates the aws attributes for aws based clusters
 type AwsAttributes struct {
-	FirstOnDemand       int32           `json:"first_on_demand,omitempty"`
-	Availability        AwsAvailability `json:"availability,omitempty"`
-	ZoneID              string          `json:"zone_id,omitempty"`
+	FirstOnDemand       int32           `json:"first_on_demand,omitempty" tf:"computed"`
+	Availability        AwsAvailability `json:"availability,omitempty" tf:"computed"`
+	ZoneID              string          `json:"zone_id,omitempty" tf:"computed"`
 	InstanceProfileArn  string          `json:"instance_profile_arn,omitempty"`
-	SpotBidPricePercent int32           `json:"spot_bid_price_percent,omitempty"`
-	EbsVolumeType       EbsVolumeType   `json:"ebs_volume_type,omitempty"`
-	EbsVolumeCount      int32           `json:"ebs_volume_count,omitempty"`
-	EbsVolumeSize       int32           `json:"ebs_volume_size,omitempty"`
+	SpotBidPricePercent int32           `json:"spot_bid_price_percent,omitempty" tf:"computed"`
+	EbsVolumeType       EbsVolumeType   `json:"ebs_volume_type,omitempty" tf:"computed"`
+	EbsVolumeCount      int32           `json:"ebs_volume_count,omitempty" tf:"computed"`
+	EbsVolumeSize       int32           `json:"ebs_volume_size,omitempty" tf:"computed"`
 }
 
 // DbfsStorageInfo contains the destination string for DBFS
@@ -205,10 +205,10 @@ type Cluster struct {
 	SparkVersion      string     `json:"spark_version"` // TODO: perhaps make a default
 	NumWorkers        int32      `json:"num_workers,omitempty" tf:"group:size"`
 	Autoscale         *AutoScale `json:"autoscale,omitempty" tf:"group:size"`
-	EnableElasticDisk bool       `json:"enable_elastic_disk,omitempty"`
+	EnableElasticDisk bool       `json:"enable_elastic_disk,omitempty" tf:"computed"`
 
-	NodeTypeID             string         `json:"node_type_id,omitempty" tf:"group:node_type"`
-	DriverNodeTypeID       string         `json:"driver_node_type_id,omitempty" tf:"conflicts:instance_pool_id"`
+	NodeTypeID             string         `json:"node_type_id,omitempty" tf:"group:node_type,computed"`
+	DriverNodeTypeID       string         `json:"driver_node_type_id,omitempty" tf:"conflicts:instance_pool_id,computed"`
 	InstancePoolID         string         `json:"instance_pool_id,omitempty" tf:"group:node_type"`
 	PolicyID               string         `json:"policy_id,omitempty"`
 	AwsAttributes          *AwsAttributes `json:"aws_attributes,omitempty" tf:"conflicts:instance_pool_id"`

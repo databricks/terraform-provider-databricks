@@ -91,8 +91,25 @@ func SchemaPath(s map[string]*schema.Schema, path ...string) (*schema.Schema, er
 func StructToSchema(v interface{}, customize func(map[string]*schema.Schema) map[string]*schema.Schema) map[string]*schema.Schema {
 	rv := reflect.ValueOf(v)
 	scm := typeToSchema(rv, rv.Type())
-	scm = customize(scm)
+	if customize != nil {
+		scm = customize(scm)
+	}
 	return scm
+}
+
+func handleOptional(typeField reflect.StructField, schema *schema.Schema) {
+	if strings.Contains(typeField.Tag.Get("json"), "omitempty") {
+		schema.Optional = true
+	} else {
+		schema.Required = true
+	}
+}
+
+func handleComputed(typeField reflect.StructField, schema *schema.Schema) {
+	if strings.Contains(typeField.Tag.Get("tf"), "computed") {
+		log.Printf("[DEBUG] setting %s to computed", typeField.Name)
+		schema.Computed = true
+	}
 }
 
 func typeToSchema(v reflect.Value, t reflect.Type) map[string]*schema.Schema {
@@ -116,11 +133,8 @@ func typeToSchema(v reflect.Value, t reflect.Type) map[string]*schema.Schema {
 		// TODO:  tf:"max_items:10"
 		// TODO: tf:"alias:library"
 		scm[jsonFieldName] = &schema.Schema{}
-		if strings.Contains(jsonTag, "omitempty") {
-			scm[jsonFieldName].Optional = true
-		} else {
-			scm[jsonFieldName].Required = true
-		}
+		handleOptional(typeField, scm[jsonFieldName])
+		handleComputed(typeField, scm[jsonFieldName])
 		switch typeField.Type.Kind() {
 		case reflect.Int, reflect.Int32, reflect.Int64:
 			scm[jsonFieldName].Type = schema.TypeInt
@@ -276,6 +290,22 @@ func collectionToMaps(v interface{}, s *schema.Schema) ([]interface{}, error) {
 	return resultList, nil
 }
 
+func isValueNilOrEmpty(valueField *reflect.Value, fieldPath string) bool {
+	switch valueField.Kind() {
+	case reflect.Ptr:
+		if valueField.IsNil() {
+			log.Printf("[DEBUG] skipping empty %s %#v", fieldPath, valueField)
+			return true
+		}
+	case reflect.Array, reflect.Map, reflect.String, reflect.Slice:
+		if valueField.Len() == 0 {
+			log.Printf("[DEBUG] skipping empty %s %#v", fieldPath, valueField)
+			return true
+		}
+	}
+	return false
+}
+
 // StructToData reads result using schema onto resource data
 func StructToData(result interface{}, s map[string]*schema.Schema, d *schema.ResourceData) error {
 	return iterFields(reflect.ValueOf(result), []string{}, s, func(
@@ -285,19 +315,8 @@ func StructToData(result interface{}, s map[string]*schema.Schema, d *schema.Res
 			return nil
 		}
 		fieldPath := strings.Join(path, ".")
-		if fieldSchema.Optional {
-			switch valueField.Kind() {
-			case reflect.Ptr:
-				if valueField.IsNil() {
-					log.Printf("[DEBUG] skipping empty %s %#v", fieldPath, valueField)
-					return nil
-				}
-			case reflect.Array, reflect.Map, reflect.String, reflect.Slice:
-				if valueField.Len() == 0 {
-					log.Printf("[DEBUG] skipping empty %s %#v", fieldPath, valueField)
-					return nil
-				}
-			}
+		if fieldSchema.Optional && isValueNilOrEmpty(valueField, fieldPath) {
+			return nil
 		}
 		_, configured := d.GetOk(fieldPath)
 		if !d.IsNewResource() && !fieldSchema.Computed && !configured {

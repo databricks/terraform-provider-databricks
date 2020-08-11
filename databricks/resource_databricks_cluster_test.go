@@ -3,7 +3,9 @@ package databricks
 import (
 	"bytes"
 	"fmt"
+	"os"
 	"reflect"
+	"strings"
 	"testing"
 
 	"github.com/databrickslabs/databricks-terraform/client/model"
@@ -34,31 +36,41 @@ func testGetClusterInstancePoolConfig(instancePoolID string) string {
 }
 
 func testDefaultZones() string {
-	return `data "databricks_zones" "default_zones" {}`
+	return "data \"databricks_zones\" \"default_zones\" {}\n"
 }
 
-func testDefaultAwsInstancePoolResource(awsAttributes, name string) string {
+func testDefaultInstancePoolResource(awsAttributes, name string) string {
+	var nodeTypeIdStatement string
+	var diskSpecTypeStatement string
+	nodeTypeIdStatement = "node_type_id = \"m4.large\""
+	diskSpecTypeStatement = "ebs_volume_type = \"GENERAL_PURPOSE_SSD\"\n"
+	if strings.ToLower(os.Getenv("CLOUD_ENV")) == "azure" {
+		nodeTypeIdStatement = "node_type_id = \"Standard_DS3_v2\""
+		diskSpecTypeStatement = "azure_disk_volume_type = \"PREMIUM_LRS\"\n"
+	}
+
 	return fmt.Sprintf(`
 resource "databricks_instance_pool" "my_pool" {
-  instance_pool_name = "%s"
-  min_idle_instances = 0
-  max_capacity = 5
-  node_type_id = "i3.xlarge"
-  %s
-  idle_instance_autotermination_minutes = 10
-  disk_spec {
-    ebs_volume_type = "GENERAL_PURPOSE_SSD"
-    disk_size = 80
-    disk_count = 1
-  }
+	instance_pool_name = "%s"
+	min_idle_instances = 0
+	max_capacity = 5
+	%s
+	enable_elastic_disk = true
+	%s
+	idle_instance_autotermination_minutes = 10
+	disk_spec {
+		%s
+		disk_size = 80
+		disk_count = 1
+	}
 }
-`, name, awsAttributes)
+`, name, nodeTypeIdStatement, awsAttributes, diskSpecTypeStatement)
 }
 
 func testDefaultClusterResource(instancePool, awsAttributes string) string {
 	return fmt.Sprintf(`
 	resource "databricks_cluster" "test_cluster" {
-		cluster_name = "test-cluster-browser"
+		cluster_name = "test-cluster-instance-pool-test"
 		%s
 		spark_version = "6.6.x-scala2.11"
 		autoscale {
@@ -73,7 +85,6 @@ func testDefaultClusterResource(instancePool, awsAttributes string) string {
 		"spark.hadoop.fs.s3a.canned.acl" = "BucketOwnerFullControl"
 		"spark.hadoop.fs.s3a.acl.default" = "BucketOwnerFullControl"
 		}
-		enable_elastic_disk = true
 		custom_tags = {
 		"ResourceClass" = "Serverless"
 		}
@@ -119,17 +130,17 @@ func TestAwsAccClusterResource_CreateClusterViaInstancePool(t *testing.T) {
 	instancePoolLine := testGetClusterInstancePoolConfig("${databricks_instance_pool.my_pool.id}")
 	resourceConfig := testDefaultZones() +
 		testAWSDatabricksInstanceProfile(instanceProfile) +
-		testDefaultAwsInstancePoolResource(testGetAwsAttributes(awsAttrInstancePool), randomInstancePoolName) +
-		testDefaultClusterResource(instancePoolLine, "")
+		testDefaultInstancePoolResource(testGetAwsAttributes(awsAttrInstancePool), randomInstancePoolName) +
+		testDefaultClusterResource(instancePoolLine, "aws_attributes {}")
 
 	resourceInstanceProfileConfig := testDefaultZones() +
 		testAWSDatabricksInstanceProfile(instanceProfile) +
-		testDefaultAwsInstancePoolResource(testGetAwsAttributes(awsAttrInstancePool), randomInstancePoolName) +
+		testDefaultInstancePoolResource(testGetAwsAttributes(awsAttrInstancePool), randomInstancePoolName) +
 		testDefaultClusterResource(instancePoolLine, testGetAwsAttributes(awsAttrCluster))
 
 	resourceEmptyAttrConfig := testDefaultZones() +
 		testAWSDatabricksInstanceProfile(instanceProfile) +
-		testDefaultAwsInstancePoolResource(testGetAwsAttributes(awsAttrInstancePool), randomInstancePoolName) +
+		testDefaultInstancePoolResource(testGetAwsAttributes(awsAttrInstancePool), randomInstancePoolName) +
 		testDefaultClusterResource(instancePoolLine, "aws_attributes {}")
 
 	resource.Test(t, resource.TestCase{
@@ -156,11 +167,39 @@ func TestAwsAccClusterResource_CreateClusterViaInstancePool(t *testing.T) {
 					// query the API to retrieve the tokenInfo object
 					testClusterExistsAndTerminateForFutureTests("databricks_cluster.test_cluster", &clusterInfo, t),
 				),
+				PlanOnly:           true,
 				ExpectNonEmptyPlan: true,
-				Destroy:            true,
 			},
 			{
-				Config: "",
+				Config: resourceEmptyAttrConfig,
+				Check: resource.ComposeTestCheckFunc(
+					// query the API to retrieve the tokenInfo object
+					testClusterExistsAndTerminateForFutureTests("databricks_cluster.test_cluster", &clusterInfo, t),
+				),
+			},
+		},
+	})
+}
+
+func TestAzureAccClusterResource_CreateClusterViaInstancePool(t *testing.T) {
+	randomInstancePoolName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
+
+	var clusterInfo model.ClusterInfo
+	instancePoolLine := testGetClusterInstancePoolConfig("${databricks_instance_pool.my_pool.id}")
+	resourceConfig :=
+		testDefaultInstancePoolResource("", randomInstancePoolName) +
+			testDefaultClusterResource(instancePoolLine, "")
+
+	resource.Test(t, resource.TestCase{
+		IsUnitTest: debugIfCloudEnvSet(),
+		Providers:  testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: resourceConfig,
+				Check: resource.ComposeTestCheckFunc(
+					// query the API to retrieve the tokenInfo object
+					testClusterExistsAndTerminateForFutureTests("databricks_cluster.test_cluster", &clusterInfo, t),
+				),
 			},
 		},
 	})

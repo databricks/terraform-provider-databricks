@@ -11,7 +11,7 @@ require (
 	github.com/google/go-querystring v1.0.0
 	github.com/hashicorp/go-retryablehttp v0.6.6
 	github.com/hashicorp/hcl v1.0.0
-	github.com/hashicorp/hcl/v2 v2.0.0
+	github.com/hashicorp/hcl/v2 v2.0.0 // indirect
 	github.com/hashicorp/terraform-plugin-sdk v1.15.0
 	github.com/joho/godotenv v1.3.0
 	github.com/mattn/go-colorable v0.1.7 // indirect
@@ -19,9 +19,11 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/r3labs/diff v1.1.0
 	github.com/sergi/go-diff v1.1.0 // indirect
+	github.com/smartystreets/assertions v0.0.0-20180927180507-b2de0cb4f26d // indirect
 	github.com/smartystreets/goconvey v1.6.4 // indirect
 	github.com/stretchr/testify v1.6.1
-	github.com/zclconf/go-cty v1.2.1
+	github.com/zclconf/go-cty v1.2.1 // indirect
 	golang.org/x/sys v0.0.0-20200722175500-76b94024e4b6 // indirect
 	gopkg.in/ini.v1 v1.57.0
+	gotest.tools/gotestsum v0.5.2 // indirect
 )

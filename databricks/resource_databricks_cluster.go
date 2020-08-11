@@ -266,7 +266,7 @@ func resourceClusterUpdate(d *schema.ResourceData, m interface{}) error {
 func handleInstancePoolClusterRequest(cluster interface{}) error {
 	clusterModel, ok := cluster.(*model.Cluster)
 	if !ok {
-		return fmt.Errorf("expected ptr to cluster but instead recieved %v", reflect.TypeOf(cluster))
+		return fmt.Errorf("expected ptr to cluster but instead received %v", reflect.TypeOf(cluster))
 	}
 	// Instance profile id does not exist
 	if reflect.ValueOf(clusterModel.InstancePoolID).IsZero() {

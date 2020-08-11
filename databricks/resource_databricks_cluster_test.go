@@ -150,21 +150,18 @@ func TestAwsAccClusterResource_CreateClusterViaInstancePool(t *testing.T) {
 			{
 				Config: resourceConfig,
 				Check: resource.ComposeTestCheckFunc(
-					// query the API to retrieve the tokenInfo object
 					testClusterExistsAndTerminateForFutureTests("databricks_cluster.test_cluster", &clusterInfo, t),
 				),
 			},
 			{
 				Config: resourceInstanceProfileConfig,
 				Check: resource.ComposeTestCheckFunc(
-					// query the API to retrieve the tokenInfo object
 					testClusterExistsAndTerminateForFutureTests("databricks_cluster.test_cluster", &clusterInfo, t),
 				),
 			},
 			{
 				Config: resourceEmptyAttrConfig,
 				Check: resource.ComposeTestCheckFunc(
-					// query the API to retrieve the tokenInfo object
 					testClusterExistsAndTerminateForFutureTests("databricks_cluster.test_cluster", &clusterInfo, t),
 				),
 				PlanOnly:           true,
@@ -173,7 +170,6 @@ func TestAwsAccClusterResource_CreateClusterViaInstancePool(t *testing.T) {
 			{
 				Config: resourceEmptyAttrConfig,
 				Check: resource.ComposeTestCheckFunc(
-					// query the API to retrieve the tokenInfo object
 					testClusterExistsAndTerminateForFutureTests("databricks_cluster.test_cluster", &clusterInfo, t),
 				),
 			},
@@ -197,7 +193,6 @@ func TestAzureAccClusterResource_CreateClusterViaInstancePool(t *testing.T) {
 			{
 				Config: resourceConfig,
 				Check: resource.ComposeTestCheckFunc(
-					// query the API to retrieve the tokenInfo object
 					testClusterExistsAndTerminateForFutureTests("databricks_cluster.test_cluster", &clusterInfo, t),
 				),
 			},

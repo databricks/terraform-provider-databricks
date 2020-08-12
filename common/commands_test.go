@@ -1,7 +1,6 @@
 package common
 
 import (
-	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -9,12 +8,11 @@ import (
 
 func TestCommandMock(t *testing.T) {
 	defer CleanupEnvironment()()
-	err := os.Setenv("DATABRICKS_TOKEN", ".")
-	assert.NoError(t, err)
-	err = os.Setenv("DATABRICKS_HOST", ".")
-	assert.NoError(t, err)
-	c := DatabricksClient{}
-	err = c.Configure()
+	c := DatabricksClient{
+		Host:  ".",
+		Token: ".",
+	}
+	err := c.Configure()
 	assert.NoError(t, err)
 
 	called := false

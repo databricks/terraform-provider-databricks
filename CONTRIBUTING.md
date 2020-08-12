@@ -96,7 +96,10 @@ $ docker run -it -v $(pwd):/workpace -w /workpace databricks-terraform apply
 
 ## Code conventions
 
-* `fmt.Sprintf` with more than 4 placeholders is considered too complex to maintain. Should be avoided at all cost. Use `EnvironmentTemplate(t, "This is {env.DATABRICKS_HOST} with {var.RANDOM} name.")` instead
+* Files should not be larger than 600 lines
+* Single function should fit to be seen on 13" screen: no more than 40 lines of code. Only exception to this rule is `*_test.go` files. 
+* There should be no unnecessary package exports: no structs & types with leading capital letter, unless they are of value outside of the package.
+* `fmt.Sprintf` with more than 4 placeholders is considered too complex to maintain. Should be avoided at all cost. Use `qa.EnvironmentTemplate(t, "This is {env.DATABRICKS_HOST} with {var.RANDOM} name.")` instead
 * Import statements should all be first ordered by "GoLang internal", "Vendor packages" and then "current provider packages". Within those sections imports must follow alphabetical order.
 
 ## Linting
@@ -110,14 +113,14 @@ In order to unit test a resource, which runs fast and could be included in code 
 
 ```go
 func TestPermissionsCreate(t *testing.T) {
-	_, err := ResourceTester(t, []HTTPFixture{
+	_, err := internal.ResourceTester(t, []qa.HTTPFixture{
 		{
             Method:   http.MethodPatch,
             // requires full URI
             Resource: "/api/2.0/preview/permissions/clusters/abc",
             // works with entities, not JSON. Diff is displayed in case of missmatch 
-			ExpectedRequest: model.AccessControlChangeList{
-				AccessControlList: []*model.AccessControlChange{
+			ExpectedRequest: AccessControlChangeList{
+				AccessControlList: []*AccessControlChange{
 					{
 						UserName:        &TestingUser,
 						PermissionLevel: "CAN_USE",
@@ -128,8 +131,8 @@ func TestPermissionsCreate(t *testing.T) {
 		{
 			Method:   http.MethodGet,
 			Resource: "/api/2.0/preview/permissions/clusters/abc",
-			Response: model.AccessControlChangeList{
-				AccessControlList: []*model.AccessControlChange{
+			Response: AccessControlChangeList{
+				AccessControlList: []*AccessControlChange{
 					{
 						UserName:        &TestingUser,
 						PermissionLevel: "CAN_MANAGE",
@@ -140,7 +143,7 @@ func TestPermissionsCreate(t *testing.T) {
 		{
 			Method:   http.MethodGet,
 			Resource: "/api/2.0/preview/scim/v2/Me",
-			Response: model.User{
+			Response: User{
 				UserName: "chuck.norris",
 			},
 		},

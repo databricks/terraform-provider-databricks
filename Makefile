@@ -2,19 +2,15 @@ default: build
 
 fmt:
 	@echo "✓ Formatting source code with gofmt..."
-	@goimports -w client
-	@goimports -w databricks
-	@goimports -w main.go
-	@gofmt -s -w client
-	@gofmt -s -w databricks
-	@gofmt -s -w main.go
+	@goimports -w $(shell find . -type f -name '*.go' -not -path "./vendor/*")
+	@gofmt -w $(shell find . -type f -name '*.go' -not -path "./vendor/*")
 	@go fmt ./...
 
 lint: 
 	@echo "✓ Linting source code with golangci-lint make sure you run make fmt ..."
 	@golangci-lint run --skip-dirs-use-default --timeout 5m
 
-test: 
+test:
 	@echo "✓ Running tests..."
 	@gotestsum --format pkgname-and-test-fails --no-summary=skipped --raw-command go test -v -json -short -coverprofile=coverage.txt ./...
 

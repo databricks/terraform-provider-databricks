@@ -367,23 +367,14 @@ func StructToData(result interface{}, s map[string]*schema.Schema, d *schema.Res
 }
 
 // DataToStructPointer reads resource data with given schema onto result pointer
-func DataToStructPointer(d *schema.ResourceData, scm map[string]*schema.Schema, result interface{},
-	customize func(interface{}) error) error {
+func DataToStructPointer(d *schema.ResourceData, scm map[string]*schema.Schema, result interface{}) error {
 	rv := reflect.ValueOf(result)
 	rk := rv.Kind()
 	if rk != reflect.Ptr {
 		return fmt.Errorf("Pointer is expected, but got %s: %#v", reflectKind(rk), result)
 	}
 	rv = rv.Elem()
-	err := readReflectValueFromData([]string{}, d, rv, scm)
-	if err != nil {
-		return err
-	}
-	if customize == nil {
-		return nil
-	}
-	err = customize(result)
-	return err
+	return readReflectValueFromData([]string{}, d, rv, scm)
 }
 
 // DataToReflectValue reads reflect value from data

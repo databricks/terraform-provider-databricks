@@ -1,7 +1,6 @@
 package compute
 
 import (
-	"fmt"
 	"log"
 	"reflect"
 	"time"
@@ -114,6 +113,7 @@ func resourceClusterCreate(d *schema.ResourceData, m interface{}) error {
 	if err != nil {
 		return err
 	}
+	wrapClusterRequest(&cluster)
 	clusterInfo, err := clusters.Create(cluster)
 	if err != nil {
 		return err
@@ -219,6 +219,7 @@ func resourceClusterUpdate(d *schema.ResourceData, m interface{}) error {
 	if err != nil {
 		return err
 	}
+	wrapClusterRequest(&cluster)
 	clusterInfo, err := clusters.Edit(cluster)
 	if err != nil {
 		return err
@@ -261,19 +262,15 @@ func resourceClusterUpdate(d *schema.ResourceData, m interface{}) error {
 	return resourceClusterRead(d, m)
 }
 
-// handleInstancePoolClusterRequest helps remove all requests that should not be submitted when instance pool is selected.
-func handleInstancePoolClusterRequest(cluster interface{}) error {
-	clusterModel, ok := cluster.(*model.Cluster)
-	if !ok {
-		return fmt.Errorf("expected ptr to cluster but instead received %v", reflect.TypeOf(cluster))
-	}
+// wrapClusterRequest helps remove all requests that should not be submitted when instance pool is selected.
+func wrapClusterRequest(clusterModel *Cluster) {
 	// Instance profile id does not exist
 	if reflect.ValueOf(clusterModel.InstancePoolID).IsZero() {
-		return nil
+		return
 	}
 	if clusterModel.AwsAttributes != nil {
 		// Reset AwsAttributes
-		awsAttributes := model.AwsAttributes{
+		awsAttributes := AwsAttributes{
 			InstanceProfileArn: clusterModel.AwsAttributes.InstanceProfileArn,
 		}
 		clusterModel.AwsAttributes = &awsAttributes
@@ -281,7 +278,6 @@ func handleInstancePoolClusterRequest(cluster interface{}) error {
 	clusterModel.EnableElasticDisk = false
 	clusterModel.NodeTypeID = ""
 	clusterModel.DriverNodeTypeID = ""
-	return nil
 }
 
 func updateLibraries(libraries LibrariesAPI, libsToInstall, libsToUninstall ClusterLibraryList) error {

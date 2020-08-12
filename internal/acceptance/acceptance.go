@@ -2,8 +2,11 @@ package acceptance
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"testing"
+
+	"github.com/joho/godotenv"
 
 	"github.com/databrickslabs/databricks-terraform/common"
 	"github.com/databrickslabs/databricks-terraform/provider"
@@ -12,13 +15,28 @@ import (
 )
 
 func AccTest(t *testing.T, tc resource.TestCase) {
+	loadFromDotEnvFile()
+
 	// each test - create new instance of provider.
 	tc.Providers = map[string]terraform.ResourceProvider{
 		"databricks": provider.DatabricksProvider(),
 	}
+
 	// this allows to debug from VSCode if it's launched with CLOUD_ENV var
 	tc.IsUnitTest = os.Getenv("CLOUD_ENV") != ""
+
 	resource.Test(t, tc)
+}
+
+func loadFromDotEnvFile() {
+	cloudEnv := os.Getenv("CLOUD_ENV")
+	envFileName := fmt.Sprintf("../../.%s.env", cloudEnv)
+	err := godotenv.Load(envFileName)
+	if !os.IsNotExist(err) {
+		log.Printf("[WARN] Failed to load environment: %s", err)
+	}
+	log.Println("HOST HERE")
+	log.Println(os.Getenv("DATABRICKS_HOST"))
 }
 
 // ResourceCheck calls back a function with client and resource id

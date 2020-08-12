@@ -1,18 +1,18 @@
 package acceptance
 
-
 import (
 	"bytes"
 	"fmt"
+	"os"
 	"reflect"
+	"strings"
 	"testing"
 
-	. "github.com/databrickslabs/databricks-terraform/compute"
 	"github.com/databrickslabs/databricks-terraform/common"
+	. "github.com/databrickslabs/databricks-terraform/compute"
 	"github.com/databrickslabs/databricks-terraform/internal/acceptance"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
-	
+
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 )
 
@@ -34,31 +34,41 @@ func testGetClusterInstancePoolConfig(instancePoolID string) string {
 }
 
 func testDefaultZones() string {
-	return `data "databricks_zones" "default_zones" {}`
+	return "data \"databricks_zones\" \"default_zones\" {}\n"
 }
 
-func testDefaultAwsInstancePoolResource(awsAttributes, name string) string {
+func testDefaultInstancePoolResource(awsAttributes, name string) string {
+	var nodeTypeIdStatement string
+	var diskSpecTypeStatement string
+	nodeTypeIdStatement = "node_type_id = \"m4.large\""
+	diskSpecTypeStatement = "ebs_volume_type = \"GENERAL_PURPOSE_SSD\"\n"
+	if strings.ToLower(os.Getenv("CLOUD_ENV")) == "azure" {
+		nodeTypeIdStatement = "node_type_id = \"Standard_DS3_v2\""
+		diskSpecTypeStatement = "azure_disk_volume_type = \"PREMIUM_LRS\"\n"
+	}
+
 	return fmt.Sprintf(`
 resource "databricks_instance_pool" "my_pool" {
-  instance_pool_name = "%s"
-  min_idle_instances = 0
-  max_capacity = 5
-  node_type_id = "i3.xlarge"
-  %s
-  idle_instance_autotermination_minutes = 10
-  disk_spec {
-    ebs_volume_type = "GENERAL_PURPOSE_SSD"
-    disk_size = 80
-    disk_count = 1
-  }
+	instance_pool_name = "%s"
+	min_idle_instances = 0
+	max_capacity = 5
+	%s
+	enable_elastic_disk = true
+	%s
+	idle_instance_autotermination_minutes = 10
+	disk_spec {
+		%s
+		disk_size = 80
+		disk_count = 1
+	}
 }
-`, name, awsAttributes)
+`, name, nodeTypeIdStatement, awsAttributes, diskSpecTypeStatement)
 }
 
 func testDefaultClusterResource(instancePool, awsAttributes string) string {
 	return fmt.Sprintf(`
 	resource "databricks_cluster" "test_cluster" {
-		cluster_name = "test-cluster-browser"
+		cluster_name = "test-cluster-instance-pool-test"
 		%s
 		spark_version = "6.6.x-scala2.11"
 		autoscale {
@@ -86,7 +96,7 @@ func TestAwsAccClusterResource_ValidatePlan(t *testing.T) {
 		"instance_profile_arn": "my_instance_profile_arn",
 	}
 	instancePoolLine := testGetClusterInstancePoolConfig("demo_instance_pool_id")
-	acceptance.AccTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		Steps: []resource.TestStep{
 			{
 				Config:             testDefaultClusterResource(instancePoolLine, testGetAwsAttributes(awsAttrNoZoneID)),
@@ -100,15 +110,6 @@ func TestAwsAccClusterResource_ValidatePlan(t *testing.T) {
 			},
 		},
 	})
-}
-
-func testAWSDatabricksInstanceProfile(instanceProfile string) string {
-	return fmt.Sprintf(`
-		resource "databricks_instance_profile" "my_instance_profile" {
-			instance_profile_arn = "%s"
-			skip_validation = true
-		}
-		`, instanceProfile)
 }
 
 func TestAwsAccClusterResource_CreateClusterViaInstancePool(t *testing.T) {
@@ -126,65 +127,88 @@ func TestAwsAccClusterResource_CreateClusterViaInstancePool(t *testing.T) {
 	instancePoolLine := testGetClusterInstancePoolConfig("${databricks_instance_pool.my_pool.id}")
 	resourceConfig := testDefaultZones() +
 		testAWSDatabricksInstanceProfile(instanceProfile) +
-		testDefaultAwsInstancePoolResource(testGetAwsAttributes(awsAttrInstancePool), randomInstancePoolName) +
-		testDefaultClusterResource(instancePoolLine, "")
+		testDefaultInstancePoolResource(testGetAwsAttributes(awsAttrInstancePool), randomInstancePoolName) +
+		testDefaultClusterResource(instancePoolLine, "aws_attributes {}")
 
 	resourceInstanceProfileConfig := testDefaultZones() +
 		testAWSDatabricksInstanceProfile(instanceProfile) +
-		testDefaultAwsInstancePoolResource(testGetAwsAttributes(awsAttrInstancePool), randomInstancePoolName) +
+		testDefaultInstancePoolResource(testGetAwsAttributes(awsAttrInstancePool), randomInstancePoolName) +
 		testDefaultClusterResource(instancePoolLine, testGetAwsAttributes(awsAttrCluster))
 
 	resourceEmptyAttrConfig := testDefaultZones() +
 		testAWSDatabricksInstanceProfile(instanceProfile) +
-		testDefaultAwsInstancePoolResource(testGetAwsAttributes(awsAttrInstancePool), randomInstancePoolName) +
+		testDefaultInstancePoolResource(testGetAwsAttributes(awsAttrInstancePool), randomInstancePoolName) +
 		testDefaultClusterResource(instancePoolLine, "aws_attributes {}")
 
-	resource.Test(t, resource.TestCase{
+	acceptance.AccTest(t, resource.TestCase{
 		Steps: []resource.TestStep{
 			{
 				Config: resourceConfig,
 				Check: resource.ComposeTestCheckFunc(
-					// query the API to retrieve the tokenInfo object
 					testClusterExistsAndTerminateForFutureTests("databricks_cluster.test_cluster", &clusterInfo, t),
 				),
 			},
 			{
 				Config: resourceInstanceProfileConfig,
 				Check: resource.ComposeTestCheckFunc(
-					// query the API to retrieve the tokenInfo object
 					testClusterExistsAndTerminateForFutureTests("databricks_cluster.test_cluster", &clusterInfo, t),
 				),
 			},
 			{
 				Config: resourceEmptyAttrConfig,
 				Check: resource.ComposeTestCheckFunc(
-					// query the API to retrieve the tokenInfo object
 					testClusterExistsAndTerminateForFutureTests("databricks_cluster.test_cluster", &clusterInfo, t),
 				),
+				PlanOnly:           true,
 				ExpectNonEmptyPlan: true,
-				Destroy:            true,
 			},
 			{
-				Config: "",
+				Config: resourceEmptyAttrConfig,
+				Check: resource.ComposeTestCheckFunc(
+					testClusterExistsAndTerminateForFutureTests("databricks_cluster.test_cluster", &clusterInfo, t),
+				),
+			},
+		},
+	})
+}
+
+func TestAzureAccClusterResource_CreateClusterViaInstancePool(t *testing.T) {
+	randomInstancePoolName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
+
+	var clusterInfo ClusterInfo
+	instancePoolLine := testGetClusterInstancePoolConfig("${databricks_instance_pool.my_pool.id}")
+	resourceConfig :=
+		testDefaultInstancePoolResource("", randomInstancePoolName) +
+			testDefaultClusterResource(instancePoolLine, "")
+
+	acceptance.AccTest(t, resource.TestCase{
+		Steps: []resource.TestStep{
+			{
+				Config: resourceConfig,
+				Check: resource.ComposeTestCheckFunc(
+					testClusterExistsAndTerminateForFutureTests("databricks_cluster.test_cluster", &clusterInfo, t),
+				),
 			},
 		},
 	})
 }
 
 func testClusterExistsAndTerminateForFutureTests(n string, cluster *ClusterInfo, t *testing.T) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		// find the corresponding state object
-		rs, ok := s.RootModule().Resources[n]
-		if !ok {
-			return fmt.Errorf("Not found: %s", n)
-		}
-
-		// retrieve the configured client from the test setup
-		conn := common.CommonEnvironmentClient()
-		resp, err := NewClustersAPI(conn).Get(rs.Primary.ID)
+	return acceptance.ResourceCheck(n, func(client *common.DatabricksClient, id string) error {
+		clusters := NewClustersAPI(client)
+		_, err := clusters.Get(id)
 		if err != nil {
 			return err
 		}
-		return NewClustersAPI(conn).Terminate(resp.ClusterID)
-	}
+		return clusters.Terminate(id)
+	})
+}
+
+func testAWSDatabricksInstanceProfile(instanceProfile string) string {
+	return fmt.Sprintf(`
+		resource "databricks_instance_profile" "my_instance_profile" {
+			instance_profile_arn = "%s"
+			skip_validation = true
+		}
+		`, instanceProfile)
 }

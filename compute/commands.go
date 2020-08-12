@@ -37,6 +37,7 @@ type CommandsAPI struct {
 // Execute creates a spark context and executes a command and then closes context
 // Any leading whitespace is trimmed
 func (a CommandsAPI) Execute(clusterID, language, commandStr string) (result string, err error) {
+	//nolint Linter recommends to change a to ClustersAPI rather than CommandsAPI for gosimple
 	cluster, err := ClustersAPI{a.client}.Get(clusterID)
 	if err != nil {
 		return

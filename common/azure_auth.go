@@ -66,7 +66,6 @@ type TokenInfo struct {
 	Comment      string `json:"comment,omitempty"`
 }
 
-
 var authorizerMutex sync.Mutex
 
 func (aa *AzureAuth) resourceID() string {

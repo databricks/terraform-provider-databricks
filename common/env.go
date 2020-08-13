@@ -5,6 +5,8 @@ import (
 	"os"
 	"strings"
 	"sync"
+
+	"github.com/mitchellh/go-homedir"
 )
 
 var (
@@ -63,11 +65,17 @@ func CleanupEnvironment() func() {
 	envMutex.Lock()
 	prevEnv := os.Environ()
 	oldPath := os.Getenv("PATH")
+	pwd := os.Getenv("PWD")
 	os.Clearenv()
-	err := os.Setenv("OLD_PATH", oldPath)
+	err := os.Setenv("PATH", oldPath)
 	if err != nil {
-		log.Printf("[WARN] Cannot set OLD_PATH: %v", err)
+		log.Printf("[WARN] Cannot bring back PATH: %v", err)
 	}
+	err = os.Setenv("HOME", pwd)
+	if err != nil {
+		log.Printf("[WARN] Cannot set HOME to old PWD: %v", err)
+	}
+	homedir.DisableCache = true
 	// version is technically made out of git + $PATH, if empty
 	// and this is why we are backing it up
 	prevVersion := version

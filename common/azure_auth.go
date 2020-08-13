@@ -13,6 +13,7 @@ import (
 	"github.com/Azure/go-autorest/autorest/adal"
 	"github.com/Azure/go-autorest/autorest/azure"
 	"github.com/Azure/go-autorest/autorest/azure/auth"
+	"github.com/Azure/go-autorest/autorest/azure/cli"
 )
 
 // List of management information
@@ -65,7 +66,6 @@ type TokenInfo struct {
 	ExpiryTime   int64  `json:"expiry_time,omitempty"`
 	Comment      string `json:"comment,omitempty"`
 }
-
 
 var authorizerMutex sync.Mutex
 
@@ -120,6 +120,12 @@ func (aa *AzureAuth) configureWithAzureCLI() (func(r *http.Request) error, error
 	if aa.IsClientSecretSet() {
 		return nil, nil
 	}
+	// verify that Azure CLI is authenticated
+	_, err := cli.GetTokenFromCLI(AzureDatabricksResourceID)
+	if err != nil {
+		return nil, err
+	}
+	auth.NewAuthorizerFromCLIWithResource(AzureDatabricksResourceID)
 	log.Printf("[INFO] Using Azure CLI authentication")
 	return func(r *http.Request) error {
 		pat, err := aa.acquirePAT(auth.NewAuthorizerFromCLIWithResource)
@@ -307,11 +313,6 @@ func (aa *AzureAuth) getClientSecretAuthorizer(resource string) (autorest.Author
 		return nil, err
 	}
 	return autorest.NewBearerAuthorizer(spt), nil
-}
-
-// IsZero tells if there are any values inside
-func (aa *AzureAuth) IsZero() bool {
-	return *aa == AzureAuth{}
 }
 
 type azureDatabricksWorkspace struct {

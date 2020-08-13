@@ -196,7 +196,7 @@ func TestGenerateTestCodeStubs(t *testing.T) {
 	funcs := getExistingUnitTests()
 	p := DatabricksProvider().(*schema.Provider)
 	for name, resource := range p.ResourcesMap {
-		if name != "databricks_group" {
+		if name != "databricks_scim_user" {
 			continue
 		}
 		stub := resourceTestStub{Resource: resource, others: &funcs}

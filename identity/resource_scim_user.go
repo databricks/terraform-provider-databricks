@@ -10,55 +10,29 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
+type scimUser struct {
+	UserName       string   `json:"user_name"`
+	DisplayName    string   `json:"display_name,omitempty"`
+	Roles          []string `json:"roles,omitempty" tf:"slice_set"`
+	Entitlements   []string `json:"entitlements,omitempty" tf:"slice_set"`
+	DefaultRoles   []string `json:"default_roles" tf:"slice_set"`
+	InheritedRoles []string `json:"inherited_roles" tf:"slice_set,computed"`
+	SetAdmin       bool     `json:"set_admin,omitempty"`
+}
+
+// ResourceScimUser ..
 func ResourceScimUser() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceScimUserCreate,
 		Update: resourceScimUserUpdate,
 		Read:   resourceScimUserRead,
 		Delete: resourceScimUserDelete,
-
-		Schema: map[string]*schema.Schema{
-			"user_name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"display_name": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"roles": {
-				Type:       schema.TypeSet,
-				Optional:   true,
-				ConfigMode: schema.SchemaConfigModeAttr,
-				Elem:       &schema.Schema{Type: schema.TypeString},
-				Set:        schema.HashString,
-			},
-			"entitlements": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Set:      schema.HashString,
-			},
-			"inherited_roles": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Set:      schema.HashString,
-			},
-			"default_roles": {
-				Type:     schema.TypeSet,
-				Required: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Set:      schema.HashString,
-			},
-			"set_admin": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-				Set:      schema.HashString,
-			},
-		},
+		Schema: internal.StructToSchema(scimUser{}, func(
+			s map[string]*schema.Schema) map[string]*schema.Schema {
+			s["user_name"].ForceNew = true
+			s["set_admin"].Default = false
+			return s
+		}),
 	}
 }
 

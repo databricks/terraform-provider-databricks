@@ -40,9 +40,13 @@ func (stub *resourceTestStub) Reads(t *testing.T) {
 	stub.stoobyDo(t, "Read", `
 	func TestResource{{.Name}}Read(t *testing.T) {
 		d, err := qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			// read log output of test util for further stubs...
-		}, resource{{.Name}}, nil, internal.ActionWithID("abc", resource{{.Name}}Read))
+			Fixtures: []qa.HTTPFixture{
+				// read log output of test util for further stubs...
+			},
+			Resource: Resource{{.Name}}(),
+			Read: true,
+			ID: "abc",
+		}.Apply(t)
 		assert.NoError(t, err, err)
 		assert.Equal(t, "abc", d.Id(), "Id should not be empty")
 		{{range $index, $element := .Resource.Schema}}assert.Equal(t, "...{{$index}}", d.Get("{{$index}}"))
@@ -51,34 +55,42 @@ func (stub *resourceTestStub) Reads(t *testing.T) {
 	stub.stoobyDo(t, "Read_NotFound", `
 	func TestResource{{.Name}}Read_NotFound(t *testing.T) {
 		d, err := qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{   // read log output for correct url...
-				Method:   "GET",
-				Resource: "/api/2.0/...", 
-				Response: common.APIErrorBody{
-					ErrorCode: "NOT_FOUND",
-					Message:   "Item not found",
+			Fixtures: []qa.HTTPFixture{
+				{   // read log output for correct url...
+					Method:   "GET",
+					Resource: "/api/2.0/...", 
+					Response: common.APIErrorBody{
+						ErrorCode: "NOT_FOUND",
+						Message:   "Item not found",
+					},
+					Status: 404,
 				},
-				Status: 404,
 			},
-		}, resource{{.Name}}, nil, internal.ActionWithID("abc", resource{{.Name}}Read))
+			Resource: Resource{{.Name}}(),
+			Read: true,
+			ID: "abc",
+		}.Apply(t)
 		assert.NoError(t, err, err)
 		assert.Equal(t, "", d.Id(), "Id should be empty for missing resources")
 	}`)
 	stub.stoobyDo(t, "Read_Error", `
 	func TestResource{{.Name}}Read_Error(t *testing.T) {
 		d, err := qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{   // read log output for correct url...
-				Method:   "GET",
-				Resource: "/api/2.0/...", 
-				Response: common.APIErrorBody{
-					ErrorCode: "INVALID_REQUEST",
-					Message:   "Internal error happened",
+			Fixtures: []qa.HTTPFixture{
+				{   // read log output for correct url...
+					Method:   "GET",
+					Resource: "/api/2.0/...", 
+					Response: common.APIErrorBody{
+						ErrorCode: "INVALID_REQUEST",
+						Message:   "Internal error happened",
+					},
+					Status: 400,
 				},
-				Status: 400,
 			},
-		}, resource{{.Name}}, nil, internal.ActionWithID("abc", resource{{.Name}}Read))
+			Resource: Resource{{.Name}}(),
+			Read: true,
+			ID: "abc",
+		}.Apply(t)
 		qa.AssertErrorStartsWith(t, err, "Internal error happened")
 		assert.Equal(t, "abc", d.Id(), "Id should not be empty for error reads")
 	}`)
@@ -88,33 +100,41 @@ func (stub *resourceTestStub) Creates(t *testing.T) {
 	stub.stoobyDo(t, "Create", `
 	func TestResource{{.Name}}Create(t *testing.T) {
 		d, err := qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			// request #1 - most likely POST
-			// request #2 - same as in TestResource{{.Name}}Read
-		}, resource{{.Name}}, map[string]interface{}{
-			{{range $key, $element := .Resource.Schema}}"{{$key}}": "...",
+			Fixtures: []qa.HTTPFixture{
+				// request #1 - most likely POST
+				// request #2 - same as in TestResource{{.Name}}Read
+			},
+			Resource: Resource{{.Name}}(),
+			Create: true,
+			HCL: `+"`"+`
+			{{range $key, $element := .Resource.Schema}}{{$key}} = "..."
 			{{end}}
-		}, resource{{.Name}}Create)
+			`+"`"+`,
+		}.Apply(t)
 		assert.NoError(t, err, err)
 		assert.Equal(t, "...", d.Id())
 	}`)
 	stub.stoobyDo(t, "Create_Error", `
 	func TestResource{{.Name}}Create_Error(t *testing.T) {
 		d, err := qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{   // read log output for better stub url...
-				Method:   "POST",
-				Resource: "/api/2.0/...", 
-				Response: common.APIErrorBody{
-					ErrorCode: "INVALID_REQUEST",
-					Message:   "Internal error happened",
+			Fixtures: []qa.HTTPFixture{
+				{   // read log output for better stub url...
+					Method:   "POST",
+					Resource: "/api/2.0/...", 
+					Response: common.APIErrorBody{
+						ErrorCode: "INVALID_REQUEST",
+						Message:   "Internal error happened",
+					},
+					Status: 400,
 				},
-				Status: 400,
 			},
-		}, resource{{.Name}}, map[string]interface{}{
-			{{range $key, $element := .Resource.Schema}}"{{$key}}": "...",
+			Resource: Resource{{.Name}}(),
+			Create: true,
+			HCL: `+"`"+`
+			{{range $key, $element := .Resource.Schema}}{{$key}} = "..."
 			{{end}}
-		}, resource{{.Name}}Create)
+			`+"`"+`,
+		}.Apply(t)
 		qa.AssertErrorStartsWith(t, err, "Internal error happened")
 		assert.Equal(t, "", d.Id(), "Id should be empty for error creates")
 	}`)
@@ -124,33 +144,43 @@ func (stub *resourceTestStub) Updates(t *testing.T) {
 	stub.stoobyDo(t, "Update", `
 	func TestResource{{.Name}}Update(t *testing.T) {
 		d, err := qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			// request #1 - most likely POST
-			// request #2 - same as in TestResource{{.Name}}Read
-		}, resource{{.Name}}, map[string]interface{}{
-			{{range $key, $element := .Resource.Schema}}"{{$key}}": "...",
+			Fixtures: []qa.HTTPFixture{
+				// request #1 - most likely POST
+				// request #2 - same as in TestResource{{.Name}}Read
+			},
+			Resource: Resource{{.Name}}(),
+			Update: true,
+			ID: "abc",
+			HCL: `+"`"+`
+			{{range $key, $element := .Resource.Schema}}{{$key}} = "..."
 			{{end}}
-		}, internal.ActionWithID("abc", resource{{.Name}}Update))
+			`+"`"+`,
+		}.Apply(t)
 		assert.NoError(t, err, err)
 		assert.Equal(t, "abc", d.Id(), "Id should be the same as in reading")
 	}`)
 	stub.stoobyDo(t, "Update_Error", `
 	func TestResource{{.Name}}Update_Error(t *testing.T) {
 		d, err := qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{   // read log output for better stub url...
-				Method:   "POST",
-				Resource: "/api/2.0/.../edit",
-				Response: common.APIErrorBody{
-					ErrorCode: "INVALID_REQUEST",
-					Message:   "Internal error happened",
+			Fixtures: []qa.HTTPFixture{
+				{   // read log output for better stub url...
+					Method:   "POST",
+					Resource: "/api/2.0/.../edit",
+					Response: common.APIErrorBody{
+						ErrorCode: "INVALID_REQUEST",
+						Message:   "Internal error happened",
+					},
+					Status: 400,
 				},
-				Status: 400,
-			},
-		}, resource{{.Name}}, map[string]interface{}{
-			{{range $key, $element := .Resource.Schema}}"{{$key}}": "...",
+			}, 
+			Resource: Resource{{.Name}}(),
+			Update: true,
+			ID: "abc",
+			HCL: `+"`"+`
+			{{range $key, $element := .Resource.Schema}}{{$key}} = "..."
 			{{end}}
-		}, internal.ActionWithID("abc", resource{{.Name}}Update))
+			`+"`"+`,
+		}.Apply(t)
 		qa.AssertErrorStartsWith(t, err, "Internal error happened")
 		assert.Equal(t, "abc", d.Id())
 	}`)
@@ -160,32 +190,40 @@ func (stub *resourceTestStub) Deletes(t *testing.T) {
 	stub.stoobyDo(t, "Delete", `
 	func TestResource{{.Name}}Delete(t *testing.T) {
 		d, err := qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{   // read log output for better stub url...
-				Method:   "POST",
-				Resource: "/api/2.0/.../delete",
-				ExpectedRequest: map[string]string{
-					"...id": "abc",
+			Fixtures: []qa.HTTPFixture{
+				{   // read log output for better stub url...
+					Method:   "POST",
+					Resource: "/api/2.0/.../delete",
+					ExpectedRequest: map[string]string{
+						"...id": "abc",
+					},
 				},
 			},
-		}, resource{{.Name}}, nil, internal.ActionWithID("abc", resource{{.Name}}Delete))
+			Resource: Resource{{.Name}}(),
+			Delete: true,
+			ID: "abc",
+		}.Apply(t)
 		assert.NoError(t, err, err)
 		assert.Equal(t, "abc", d.Id())
 	}`)
 	stub.stoobyDo(t, "Delete_Error", `
 	func TestResource{{.Name}}Delete_Error(t *testing.T) {
 		d, err := qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   "POST",
-				Resource: "/api/2.0/.../delete",
-				Response: common.APIErrorBody{
-					ErrorCode: "INVALID_REQUEST",
-					Message:   "Internal error happened",
+			Fixtures: []qa.HTTPFixture{
+				{
+					Method:   "POST",
+					Resource: "/api/2.0/.../delete",
+					Response: common.APIErrorBody{
+						ErrorCode: "INVALID_REQUEST",
+						Message:   "Internal error happened",
+					},
+					Status: 400,
 				},
-				Status: 400,
 			},
-		}, resource{{.Name}}, nil, internal.ActionWithID("abc", resource{{.Name}}Delete))
+			Resource: Resource{{.Name}}(),
+			Delete: true,
+			ID: "abc",
+		}.Apply(t)
 		qa.AssertErrorStartsWith(t, err, "Internal error happened")
 		assert.Equal(t, "abc", d.Id())
 	}`)

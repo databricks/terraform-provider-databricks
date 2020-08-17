@@ -121,7 +121,7 @@ func TestResourceCredentialsRead(t *testing.T) {
 			},
 		},
 		Resource: ResourceCredentials(),
-		Read:   true,
+		Read:     true,
 		ID:       "abc/cid",
 	}.Apply(t)
 	assert.NoError(t, err, err)
@@ -147,7 +147,7 @@ func TestResourceCredentialsRead_NotFound(t *testing.T) {
 			},
 		},
 		Resource: ResourceCredentials(),
-		Read:   true,
+		Read:     true,
 		ID:       "abc/cid",
 	}.Apply(t)
 	assert.NoError(t, err, err)
@@ -168,7 +168,7 @@ func TestResourceCredentialsRead_Error(t *testing.T) {
 			},
 		},
 		Resource: ResourceCredentials(),
-		Read:   true,
+		Read:     true,
 		ID:       "abc/cid",
 	}.Apply(t)
 	qa.AssertErrorStartsWith(t, err, "Internal error happened")

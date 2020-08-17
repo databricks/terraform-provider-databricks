@@ -11,7 +11,7 @@ import (
 )
 
 func (a ClustersAPI) defaultTimeout() time.Duration {
-	return 5 * time.Minute
+	return 30 * time.Minute
 }
 
 // NewClustersAPI creates ClustersAPI instance from provider meta
@@ -86,7 +86,16 @@ func (a ClustersAPI) ListZones() (ZonesInfo, error) {
 
 // Start a terminated Spark cluster given its ID and wait till it's running
 func (a ClustersAPI) Start(clusterID string) error {
-	err := a.client.Post("/clusters/start", ClusterID{ClusterID: clusterID}, nil)
+	info, err := a.Get(clusterID)
+	if err != nil {
+		return err
+	}
+	if info.State == ClusterStateRestarting {
+		// if cluster is restarting we dont need to start, we just need to wait
+		_, err := a.waitForClusterStatus(info.ClusterID, ClusterStateRunning)
+		return err
+	}
+	err = a.client.Post("/clusters/start", ClusterID{ClusterID: clusterID}, nil)
 	if err != nil {
 		if !strings.Contains(err.Error(), fmt.Sprintf("Cluster %s is in unexpected state Pending.", clusterID)) {
 			return err

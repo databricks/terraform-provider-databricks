@@ -40,27 +40,22 @@ resource "databricks_scim_user" "my-user" {
 The following arguments are supported:
 
 #### - `user_name`:
-> **(Required)** This is the username of the given user and will be their form of access 
-and identity.
+> **(Required)** 
 
 #### - `display_name`:
-> **(Optional)** This is an alias for the username can be the full name of the user.
+> **(Optional)** 
 
 #### - `roles`:
-> **(Optional)** This is a list of roles assigned to the user, specific to the AWS environment for 
-user to assume roles on clusters.
+> **(Optional)** 
 
 #### - `entitlements`:
-> **(Optional)** Entitlements for the user to be able to have the ability to create 
-clusters and pools. Current options are: `"allow-cluster-create", "allow-instance-pool-create"`.
+> **(Optional)** 
 
 #### - `default_roles`:
-> **(Required)** Set of roles that are assigned to the `all_users` group in Databricks. You can use 
->the default_user_roles data source to fetch the values for this.
+> **(Required)** Set of roles that are assigned to the `all_users` group in Databricks. You can use the default_user_roles data source to fetch the values for this.
 
 #### - `set_admin`:
-> **(Required)** Setting this to true will patch this user to include the admin group id as a group item and if false,
->it will patch remove this user from the admin group.
+> **(Required)** 
 
 
 ## Attribute Reference

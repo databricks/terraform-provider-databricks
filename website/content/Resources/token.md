@@ -28,8 +28,7 @@ resource "databricks_token" "my-token" {
 The following arguments are supported:
 
 #### - `lifetime_seconds`:
-> **(Optional) (Numeric)** The lifetime of the token, in seconds. 
-If no lifetime is specified, the token remains valid indefinitely.
+> **(Optional) (Numeric)** The lifetime of the token, in seconds. If no lifetime is specified, the token remains valid indefinitely.
 
 #### - `comment`:
 > **(Optional)** Optional description to attach to the token.

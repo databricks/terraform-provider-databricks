@@ -1,5 +1,7 @@
 # databricks_mws_workspaces Resource
 
+**This resource has evolving API, which may change in future versions of provider.**
+
 This resource to configure new workspaces within AWS.
 
 It is important to understand that this will require you to configure your provider separately for the multiple workspaces resources. This will point to https://accounts.cloud.databricks.com for the HOST and it will use basic auth as that is the only authentication method available for multiple workspaces api. 

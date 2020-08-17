@@ -66,21 +66,21 @@ func TestSomeCommands(t *testing.T) {
 			},
 		},
 		{
-			Method:   "GET",
+			Method:       "GET",
 			ReuseRequest: true,
-			Resource: "/api/1.2/commands/status?clusterId=abc&commandId=234&contextId=123",
+			Resource:     "/api/1.2/commands/status?clusterId=abc&commandId=234&contextId=123",
 			Response: Command{
 				Status: "Finished",
 				Results: &CommandResults{
 					ResultType: "text",
-					Data: "done",
+					Data:       "done",
 				},
 			},
 		},
 		{
 			Method:   "POST",
 			Resource: "/api/1.2/contexts/destroy",
-			ExpectedRequest: genericCommandRequest {
+			ExpectedRequest: genericCommandRequest{
 				ClusterID: "abc",
 				ContextID: "123",
 			},

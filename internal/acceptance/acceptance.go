@@ -16,8 +16,10 @@ func AccTest(t *testing.T, tc resource.TestCase) {
 	tc.Providers = map[string]terraform.ResourceProvider{
 		"databricks": provider.DatabricksProvider(),
 	}
+
 	// this allows to debug from VSCode if it's launched with CLOUD_ENV var
 	tc.IsUnitTest = os.Getenv("CLOUD_ENV") != ""
+
 	resource.Test(t, tc)
 }
 

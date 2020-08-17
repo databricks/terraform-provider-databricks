@@ -33,6 +33,21 @@ func ResourceCluster() *schema.Resource {
 	}
 }
 
+func addMavenExclusions(scm *schema.Schema) {
+	resource, ok := scm.Elem.(*schema.Resource)
+	if !ok {
+		log.Printf("[DEBUG] invalid elem not a resource, unable to wrap maven exclusions to resource")
+		return
+	}
+	resource.Schema["exclusions"] = &schema.Schema{
+		Type:     schema.TypeList,
+		Optional: true,
+		Elem: &schema.Schema{
+			Type: schema.TypeString,
+		},
+	}
+}
+
 func librarySchema(dims ...string) *schema.Schema {
 	fields := map[string]*schema.Schema{
 		"messages": {
@@ -78,7 +93,6 @@ func resourceClusterSchema() map[string]*schema.Schema {
 			p.Sensitive = true
 		}
 		s["autotermination_minutes"].Default = 60
-		s["enable_elastic_disk"].Computed = true
 		s["idempotency_token"].ForceNew = true
 		s["cluster_id"] = &schema.Schema{
 			Type:     schema.TypeString,
@@ -99,8 +113,8 @@ func resourceClusterSchema() map[string]*schema.Schema {
 		s["library_whl"] = librarySchema("path")
 		s["library_pypi"] = librarySchema("package", "repo")
 		s["library_cran"] = librarySchema("package", "repo")
-		// TODO: mvn exclusions available in `libraries endpoint`
 		s["library_maven"] = librarySchema("coordinates", "repo")
+		addMavenExclusions(s["library_maven"])
 		return s
 	})
 }
@@ -113,6 +127,7 @@ func resourceClusterCreate(d *schema.ResourceData, m interface{}) error {
 	if err != nil {
 		return err
 	}
+	modifyClusterRequest(&cluster)
 	clusterInfo, err := clusters.Create(cluster)
 	if err != nil {
 		return err
@@ -218,6 +233,7 @@ func resourceClusterUpdate(d *schema.ResourceData, m interface{}) error {
 	if err != nil {
 		return err
 	}
+	modifyClusterRequest(&cluster)
 	clusterInfo, err := clusters.Edit(cluster)
 	if err != nil {
 		return err
@@ -238,9 +254,6 @@ func resourceClusterUpdate(d *schema.ResourceData, m interface{}) error {
 	}
 	libraryList.ClusterID = clusterID
 	libsToInstall, libsToUninstall := libraryList.Diff(libsClusterStatus)
-	if err != nil {
-		return err
-	}
 	if len(libsToUninstall.Libraries) > 0 || len(libsToInstall.Libraries) > 0 {
 		if !clusterInfo.IsRunningOrResizing() {
 			err = clusters.Start(clusterID)
@@ -261,6 +274,24 @@ func resourceClusterUpdate(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 	return resourceClusterRead(d, m)
+}
+
+// modifyClusterRequest helps remove all request fields that should not be submitted when instance pool is selected.
+func modifyClusterRequest(clusterModel *Cluster) {
+	// Instance profile id does not exist or not set
+	if clusterModel.InstancePoolID == "" {
+		return
+	}
+	if clusterModel.AwsAttributes != nil {
+		// Reset AwsAttributes
+		awsAttributes := AwsAttributes{
+			InstanceProfileArn: clusterModel.AwsAttributes.InstanceProfileArn,
+		}
+		clusterModel.AwsAttributes = &awsAttributes
+	}
+	clusterModel.EnableElasticDisk = false
+	clusterModel.NodeTypeID = ""
+	clusterModel.DriverNodeTypeID = ""
 }
 
 func updateLibraries(libraries LibrariesAPI, libsToInstall, libsToUninstall ClusterLibraryList) error {

@@ -115,11 +115,9 @@ func (f ResourceFixture) Apply(t *testing.T) (*schema.ResourceData, error) {
 			if f.New {
 				d.MarkNewResource()
 			}
-			if preRead != nil {
-				for k, v := range preRead {
-					err = d.Set(k, v)
-					assert.NoError(t, err)
-				}
+			for k, v := range preRead {
+				err = d.Set(k, v)
+				assert.NoError(t, err)
 			}
 			return f.Resource.Read(d, m)
 		}

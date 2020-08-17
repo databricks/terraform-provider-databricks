@@ -68,13 +68,15 @@ func TestNewTinyClusterInCommonPoolPossiblyReused(t *testing.T) {
 	defer server.Close()
 	require.NoError(t, err)
 	// trick common env client
-	os.Setenv("DATABRICKS_HOST", client.Host)
-	os.Setenv("DATABRICKS_TOKEN", client.Token)
-	os.Setenv("USER", "test")
+	err = os.Setenv("DATABRICKS_HOST", client.Host)
+	assert.NoError(t, err)
+	err = os.Setenv("DATABRICKS_TOKEN", client.Token)
+	assert.NoError(t, err)
+	err = os.Setenv("USER", "test")
+	assert.NoError(t, err)
 
 	c := NewTinyClusterInCommonPoolPossiblyReused()
 	assert.NotNil(t, c)
-
 }
 
 func TestNewTinyClusterInCommonPool(t *testing.T) {

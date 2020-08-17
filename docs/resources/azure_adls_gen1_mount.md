@@ -20,19 +20,19 @@ resource "databricks_secret_scope" "this" {
 }
 
 resource "databricks_secret" "service_principal_key" {
-    key          = "sp_key"
+    key          = "service_principal_key"
     string_value = "{env.TEST_STORAGE_ACCOUNT_KEY}"
     scope        = databricks_secret_scope.terraform.name
 }
 
-	resource "databricks_azure_adls_gen1_mount" "mount" {
-		container_name       = "dev"
-		storage_account_name = "{env.TEST_STORAGE_ACCOUNT_NAME}"
-		mount_name           = "{var.RANDOM}"
-		auth_type            = "ACCESS_KEY"
-		token_secret_scope   = databricks_secret_scope.terraform.name
-		token_secret_key     = databricks_secret.storage_key.key
-	}
+resource "databricks_azure_adls_gen1_mount" "mount" {
+    container_name       = "dev"
+    storage_account_name = "{env.TEST_STORAGE_ACCOUNT_NAME}"
+    mount_name           = "{var.RANDOM}"
+    auth_type            = "ACCESS_KEY"
+    token_secret_scope   = databricks_secret_scope.terraform.name
+    token_secret_key     = databricks_secret.service_principal_key.key
+}
 
 ```
 

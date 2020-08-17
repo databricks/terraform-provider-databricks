@@ -21,6 +21,6 @@ require (
 	github.com/sergi/go-diff v1.1.0 // indirect
 	github.com/stretchr/testify v1.6.1
 	golang.org/x/sys v0.0.0-20200722175500-76b94024e4b6 // indirect
-	gopkg.in/ini.v1 v1.57.0
+	gopkg.in/ini.v1 v1.60.0
 	gotest.tools v2.2.0+incompatible
 )

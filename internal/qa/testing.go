@@ -283,10 +283,20 @@ func fixHCL(v interface{}) interface{} {
 }
 
 // EnvironmentTemplate asserts existence and fills in {env.VAR} & {var.RANDOM} placeholders in template
-func EnvironmentTemplate(t *testing.T, template string) string {
+func EnvironmentTemplate(t *testing.T, template string, otherVars ...map[string]string) string {
 	vars := map[string]string{
 		"RANDOM": acctest.RandStringFromCharSet(5, acctest.CharSetAlphaNum),
 	}
+	if len(otherVars) > 1 {
+		t.Fatalf("Cannot have more than one customer variable map!")
+		return ""
+	}
+	if len(otherVars) == 1 {
+		for k,v := range otherVars[0] {
+			vars[k] = v
+		}
+	}
+	// pullAll otherVars
 	missing := 0
 	var varType, varName, value string
 	r := regexp.MustCompile(`{(env|var).([^{}]*)}`)

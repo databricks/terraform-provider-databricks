@@ -70,8 +70,21 @@ func (a GroupsAPI) Read(groupID string) (group Group, err error) {
 	return
 }
 
+func (a GroupsAPI) Filter(filter string) (GroupList, error) {
+	var groups GroupList
+	err := a.client.Scim(http.MethodGet, "/preview/scim/v2/Groups", map[string]string{
+		"filter": filter,
+	}, &groups)
+	return groups, err
+}
+
 // GetAdminGroup returns the admin group in a given workspace by fetching with query "displayName+eq+admins"
 func (a GroupsAPI) GetAdminGroup() (Group, error) {
+	l, e := a.Filter("displayName eq admins")
+	
+
+
+
 	var group Group
 	var groups GroupList
 	err := a.client.Scim(http.MethodGet, "/preview/scim/v2/Groups", map[string]string{

@@ -22,7 +22,10 @@ func ResourceGroupMember() *schema.Resource {
 				ForceNew: true,
 				Required: true,
 			},
+			// TODO: add group_name
+			// TODO: add user_name
 			"member_id": {
+				// is a user or a group - we do not know
 				Type:     schema.TypeString,
 				ForceNew: true,
 				Required: true,

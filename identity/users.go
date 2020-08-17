@@ -17,9 +17,75 @@ func NewUsersAPI(m interface{}) UsersAPI {
 	return UsersAPI{C: m.(*common.DatabricksClient)}
 }
 
+// UserManagement abstracts user management
+type UserManagement interface {
+	Create(userName string, displayName string, entitlements []string, roles []string) (User, error)
+	Read(userID string) (User, error)
+	Update(userID string, userName string, displayName string, entitlements []string, roles []string) error
+	Delete(userID string) error
+	Me() (User, error)
+}
+
+// CommandMock mocks the execution of command
+type CommandMock func(commandStr string) (string, error)
+
+// CommandExecutorMock simplifies command testing
+type commandExecutorMock struct {
+	mock CommandMock
+}
+
+// Execute mock command with given mock function
+func (c commandExecutorMock) Execute(clusterID, language, commandStr string) (string, error) {
+	return c.mock(commandStr)
+}
+
 // UsersAPI exposes the scim user API
 type UsersAPI struct {
 	C *common.DatabricksClient
+}
+
+// ResourceUser entity from which resource schema is made
+type ResourceUser struct {
+	UserName       string   `json:"user_name"`
+	DisplayName    string   `json:"display_name,omitempty"`
+	Roles          []string `json:"roles,omitempty" tf:"slice_set"`
+	Entitlements   []string `json:"entitlements,omitempty" tf:"slice_set"`
+	DefaultRoles   []string `json:"default_roles" tf:"slice_set"`
+	InheritedRoles []string `json:"inherited_roles,omitempty" tf:"slice_set,computed"`
+	SetAdmin       bool     `json:"set_admin,omitempty"`
+}
+
+type scimUserRequest struct {
+	Schemas      []URN                  `json:"schemas,omitempty"`
+	UserName     string                 `json:"userName,omitempty"`
+	Entitlements []EntitlementsListItem `json:"entitlements,omitempty"`
+	DisplayName  string                 `json:"displayName,omitempty"`
+	Roles        []RoleListItem         `json:"roles,omitempty"`
+	Groups       []GroupsListItem       `json:"groups,omitempty"`
+}
+
+func (u ResourceUser) toRequest() scimUserRequest {
+	entitlements := []EntitlementsListItem{}
+	for _, entitlement := range u.Entitlements {
+		entitlements = append(entitlements, EntitlementsListItem{Value: Entitlement(entitlement)})
+	}
+	roles := []RoleListItem{}
+	for _, role := range u.Roles {
+		roles = append(roles, RoleListItem{Value: role})
+	}
+	return scimUserRequest{
+		Schemas:      []URN{UserSchema},
+		UserName:     u.UserName,
+		DisplayName:  u.DisplayName,
+		Entitlements: entitlements,
+		Roles:        roles,
+	}
+}
+
+// CreateR ..
+func (a UsersAPI) CreateR(ru ResourceUser) (user User, err error) {
+	err = a.C.Scim(http.MethodPost, "/preview/scim/v2/Users", ru.toRequest(), &user)
+	return user, err
 }
 
 // Create given a username, displayname, entitlements, and roles will create a scim user via SCIM api
@@ -82,7 +148,21 @@ func (a UsersAPI) Me() (User, error) {
 func (a UsersAPI) readByPath(userPath string) (User, error) {
 	var user User
 	err := a.C.Scim(http.MethodGet, userPath, nil, &user)
+	// TODO: add fetching of nested groups
 	return user, err
+}
+
+// UpdateR ...
+func (a UsersAPI) UpdateR(userID string, ru ResourceUser) error {
+	userPath := fmt.Sprintf("/preview/scim/v2/Users/%v", userID)
+	scimUserUpdateRequest := ru.toRequest()
+	//Get any existing groups that the user is part of
+	user, err := a.read(userID)
+	if err != nil {
+		return err
+	}
+	scimUserUpdateRequest.Groups = user.Groups
+	return a.C.Scim(http.MethodPut, userPath, scimUserUpdateRequest, nil)
 }
 
 // Update will update the user given the user id, username, display name, entitlements and roles
@@ -125,18 +205,8 @@ func (a UsersAPI) Delete(userID string) error {
 // SetUserAsAdmin will add the user to a admin group given the admin group id and user id
 func (a UsersAPI) SetUserAsAdmin(userID string, adminGroupID string) error {
 	userPath := fmt.Sprintf("/preview/scim/v2/Users/%v", userID)
-	var addOperations UserPatchOperations
-	userPatchRequest := UserPatchRequest{
-		Schemas:    []URN{PatchOp},
-		Operations: []UserPatchOperations{},
-	}
-	addOperations = UserPatchOperations{
-		Op: "add",
-		Value: &GroupsValue{
-			Groups: []ValueListItem{{Value: adminGroupID}},
-		},
-	}
-	userPatchRequest.Operations = append(userPatchRequest.Operations, addOperations)
+	userPatchRequest := UserPatchRequest{}
+	userPatchRequest.GroupOperation("add", adminGroupID)
 	return a.C.Scim(http.MethodPatch, userPath, userPatchRequest, nil)
 }
 
@@ -157,17 +227,8 @@ func (a UsersAPI) VerifyUserAsAdmin(userID string, adminGroupID string) (bool, e
 // RemoveUserAsAdmin will remove the user from the admin group given the admin group id and user id
 func (a UsersAPI) RemoveUserAsAdmin(userID string, adminGroupID string) error {
 	userPath := fmt.Sprintf("/preview/scim/v2/Users/%v", userID)
-	var removeOperations UserPatchOperations
-	userPatchRequest := UserPatchRequest{
-		Schemas:    []URN{PatchOp},
-		Operations: []UserPatchOperations{},
-	}
-	path := fmt.Sprintf("groups[value eq \"%s\"]", adminGroupID)
-	removeOperations = UserPatchOperations{
-		Op:   "remove",
-		Path: path,
-	}
-	userPatchRequest.Operations = append(userPatchRequest.Operations, removeOperations)
+	userPatchRequest := UserPatchRequest{}
+	userPatchRequest.GroupOperation("remove", adminGroupID)
 	return a.C.Scim(http.MethodPatch, userPath, userPatchRequest, nil)
 }
 

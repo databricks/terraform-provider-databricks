@@ -10,15 +10,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
-type scimUser struct {
-	UserName       string   `json:"user_name"`
-	DisplayName    string   `json:"display_name,omitempty"`
-	Roles          []string `json:"roles,omitempty" tf:"slice_set"`
-	Entitlements   []string `json:"entitlements,omitempty" tf:"slice_set"`
-	DefaultRoles   []string `json:"default_roles" tf:"slice_set"`
-	InheritedRoles []string `json:"inherited_roles" tf:"slice_set,computed"`
-	SetAdmin       bool     `json:"set_admin,omitempty"`
-}
+var scimUserSchema = internal.StructToSchema(ResourceUser{}, func(
+	s map[string]*schema.Schema) map[string]*schema.Schema {
+	s["user_name"].ForceNew = true
+	s["set_admin"].Default = false
+	s["inherited_roles"].Computed = true
+	return s
+})
 
 // ResourceScimUser ..
 func ResourceScimUser() *schema.Resource {
@@ -27,12 +25,7 @@ func ResourceScimUser() *schema.Resource {
 		Update: resourceScimUserUpdate,
 		Read:   resourceScimUserRead,
 		Delete: resourceScimUserDelete,
-		Schema: internal.StructToSchema(scimUser{}, func(
-			s map[string]*schema.Schema) map[string]*schema.Schema {
-			s["user_name"].ForceNew = true
-			s["set_admin"].Default = false
-			return s
-		}),
+		Schema: scimUserSchema,
 	}
 }
 
@@ -46,37 +39,27 @@ func convertInterfaceSliceToStringSlice(input []interface{}) []string {
 }
 
 func resourceScimUserCreate(d *schema.ResourceData, m interface{}) error {
-	client := m.(*common.DatabricksClient)
-	userName := d.Get("user_name").(string)
-	setAdmin := d.Get("set_admin").(bool)
-	var displayName string
-	var roles []string
-	var entitlements []string
-	if rDisplayName, ok := d.GetOk("display_name"); ok {
-		displayName = rDisplayName.(string)
+	var ru ResourceUser
+	err := internal.DataToStructPointer(d, scimUserSchema, &ru)
+	if err != nil {
+		return err
 	}
-	if rRoles, ok := d.GetOk("roles"); ok {
-		roles = convertInterfaceSliceToStringSlice(rRoles.(*schema.Set).List())
-		log.Println(roles)
-	}
-	if rEntitlements, ok := d.GetOk("entitlements"); ok {
-		entitlements = convertInterfaceSliceToStringSlice(rEntitlements.(*schema.Set).List())
-		log.Println(entitlements)
-	}
-	user, err := NewUsersAPI(client).Create(userName, displayName, entitlements, roles)
+	// TODO: remove workspace part, where user home is located in... so that it's clean...
+
+	user, err := NewUsersAPI(m).CreateR(ru)
 	if err != nil {
 		return err
 	}
 
 	// Hack to fix user, for some reason if entitlements is empty it will auto create user with
 	// allow-cluster-create permissions so we will apply a put operation to overwrite the user
-	err = NewUsersAPI(client).Update(user.ID, userName, displayName, entitlements, roles)
+	err = NewUsersAPI(m).UpdateR(user.ID, ru)
 	if err != nil {
 		return err
 	}
 
-	if setAdmin {
-		adminGroup, err := NewGroupsAPI(client).GetAdminGroup()
+	if ru.SetAdmin {
+		adminGroup, err := NewGroupsAPI(m).GetAdminGroup()
 		if err != nil {
 			return err
 		}

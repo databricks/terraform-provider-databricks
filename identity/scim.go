@@ -1,5 +1,7 @@
 package identity
 
+import "fmt"
+
 // URN is a custom type for the SCIM spec for the schema
 type URN string
 
@@ -147,6 +149,13 @@ type User struct {
 	InheritedRoles   []RoleListItem         `json:"inherited_roles,omitempty"`
 }
 
+func (u User) HasGroupWithName(n string) bool {
+	// TODO: nested
+	
+
+	return false
+} 
+
 // UserList contains a list of Users fetched from a list api call from SCIM api
 type UserList struct {
 	TotalResults int32  `json:"totalResults,omitempty"`
@@ -160,4 +169,15 @@ type UserList struct {
 type UserPatchRequest struct {
 	Schemas    []URN                 `json:"schemas,omitempty"`
 	Operations []UserPatchOperations `json:"Operations,omitempty"`
+}
+
+func (r UserPatchRequest) GroupOperation(op, groupID string) {
+	if len(r.Schemas) == 0 {
+		r.Schemas = []URN{PatchOp}
+	}
+	path := fmt.Sprintf("groups[value eq \"%s\"]", groupID)
+	r.Operations = append(r.Operations, UserPatchOperations{
+		Op:   op,
+		Path: path,
+	})
 }

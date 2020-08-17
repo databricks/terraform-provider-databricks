@@ -7,6 +7,7 @@ import (
 
 func DataSourceDefaultUserRoles() *schema.Resource {
 	return &schema.Resource{
+		DeprecationMessage: "This resource will be removed in the following version 0.3, because ",
 		Read: func(d *schema.ResourceData, m interface{}) error {
 			client := m.(*common.DatabricksClient)
 

@@ -176,7 +176,7 @@ var jobSchema = internal.StructToSchema(JobSettings{},
 		s["library_pypi"] = librarySchema("package", "repo")
 		s["library_cran"] = librarySchema("package", "repo")
 		s["library_maven"] = librarySchema("coordinates", "repo")
-		wrapMavenExclusions(s["library_maven"])
+		addMavenExclusions(s["library_maven"])
 		return s
 	})
 

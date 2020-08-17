@@ -33,7 +33,7 @@ func ResourceCluster() *schema.Resource {
 	}
 }
 
-func wrapMavenExclusions(scm *schema.Schema) {
+func addMavenExclusions(scm *schema.Schema) {
 	resource, ok := scm.Elem.(*schema.Resource)
 	if !ok {
 		log.Printf("[DEBUG] invalid elem not a resource, unable to wrap maven exclusions to resource")
@@ -114,7 +114,7 @@ func resourceClusterSchema() map[string]*schema.Schema {
 		s["library_pypi"] = librarySchema("package", "repo")
 		s["library_cran"] = librarySchema("package", "repo")
 		s["library_maven"] = librarySchema("coordinates", "repo")
-		wrapMavenExclusions(s["library_maven"])
+		addMavenExclusions(s["library_maven"])
 		return s
 	})
 }
@@ -127,7 +127,7 @@ func resourceClusterCreate(d *schema.ResourceData, m interface{}) error {
 	if err != nil {
 		return err
 	}
-	wrapClusterRequest(&cluster)
+	modifyClusterRequest(&cluster)
 	clusterInfo, err := clusters.Create(cluster)
 	if err != nil {
 		return err
@@ -233,7 +233,7 @@ func resourceClusterUpdate(d *schema.ResourceData, m interface{}) error {
 	if err != nil {
 		return err
 	}
-	wrapClusterRequest(&cluster)
+	modifyClusterRequest(&cluster)
 	clusterInfo, err := clusters.Edit(cluster)
 	if err != nil {
 		return err
@@ -276,8 +276,8 @@ func resourceClusterUpdate(d *schema.ResourceData, m interface{}) error {
 	return resourceClusterRead(d, m)
 }
 
-// wrapClusterRequest helps remove all requests that should not be submitted when instance pool is selected.
-func wrapClusterRequest(clusterModel *Cluster) {
+// modifyClusterRequest helps remove all request fields that should not be submitted when instance pool is selected.
+func modifyClusterRequest(clusterModel *Cluster) {
 	// Instance profile id does not exist or not set
 	if clusterModel.InstancePoolID == "" {
 		return

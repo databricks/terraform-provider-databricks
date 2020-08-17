@@ -7,7 +7,6 @@ import (
 )
 
 func TestCommandMock(t *testing.T) {
-	defer CleanupEnvironment()()
 	c := DatabricksClient{
 		Host:  ".",
 		Token: ".",

@@ -3,8 +3,9 @@ package sanity
 import (
 	"fmt"
 	"testing"
-	"github.com/stretchr/testify/assert"
+
 	"github.com/databrickslabs/databricks-terraform/common"
+	"github.com/stretchr/testify/assert"
 )
 
 type MissingResourceCheck struct {

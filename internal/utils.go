@@ -1,8 +1,8 @@
 package internal
 
 import (
-	"strings"
 	"errors"
+	"strings"
 )
 
 // TrimLeadingWhitespace removes leading whitespace
@@ -47,12 +47,12 @@ func ConvertListInterfaceToString(m []interface{}) []string {
 
 var (
 	// ...
-	PathEmptyError      = errors.New("provided path is empty")
+	PathEmptyError = errors.New("provided path is empty")
 	//...
 	DirPathRootDirError = errors.New("dir path is root directory")
 )
 
-// GetParentDirPath Os libraries behave bizarely on windows as 
+// GetParentDirPath Os libraries behave bizarely on windows as
 // they will replace slashes with other values.
 // This causes issues & errors when submitting the request
 func GetParentDirPath(filePath string) (string, error) {

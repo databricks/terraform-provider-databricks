@@ -15,7 +15,6 @@ import (
 	"gopkg.in/ini.v1"
 )
 
-
 // DatabricksClient is the client struct that contains clients for all the services available on Databricks
 type DatabricksClient struct {
 	Host               string

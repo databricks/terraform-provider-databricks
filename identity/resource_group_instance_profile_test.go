@@ -3,11 +3,8 @@ package identity
 import (
 	"testing"
 
-	
 	"github.com/stretchr/testify/assert"
 )
-
-
 
 func TestValidateInstanceProfileARN(t *testing.T) {
 	testCases := []struct {

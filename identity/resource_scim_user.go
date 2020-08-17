@@ -16,7 +16,7 @@ type scimUser struct {
 	Roles          []string `json:"roles,omitempty" tf:"slice_set"`
 	Entitlements   []string `json:"entitlements,omitempty" tf:"slice_set"`
 	DefaultRoles   []string `json:"default_roles" tf:"slice_set"`
-	InheritedRoles []string `json:"inherited_roles" tf:"slice_set,computed"`
+	InheritedRoles []string `json:"inherited_roles,omitempty" tf:"slice_set,computed"`
 	SetAdmin       bool     `json:"set_admin,omitempty"`
 }
 

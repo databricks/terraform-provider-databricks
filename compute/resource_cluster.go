@@ -2,7 +2,6 @@ package compute
 
 import (
 	"log"
-	"reflect"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
@@ -30,6 +29,21 @@ func ResourceCluster() *schema.Resource {
 		},
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
+		},
+	}
+}
+
+func wrapMavenExclusions(scm *schema.Schema) {
+	resource, ok := scm.Elem.(*schema.Resource)
+	if !ok {
+		log.Printf("[DEBUG] invalid elem not a resource, unable to wrap maven exclusions to resource")
+		return
+	}
+	resource.Schema["exclusions"] = &schema.Schema{
+		Type:     schema.TypeList,
+		Optional: true,
+		Elem: &schema.Schema{
+			Type: schema.TypeString,
 		},
 	}
 }
@@ -99,8 +113,8 @@ func resourceClusterSchema() map[string]*schema.Schema {
 		s["library_whl"] = librarySchema("path")
 		s["library_pypi"] = librarySchema("package", "repo")
 		s["library_cran"] = librarySchema("package", "repo")
-		// TODO: mvn exclusions available in `libraries endpoint`
 		s["library_maven"] = librarySchema("coordinates", "repo")
+		wrapMavenExclusions(s["library_maven"])
 		return s
 	})
 }
@@ -264,8 +278,8 @@ func resourceClusterUpdate(d *schema.ResourceData, m interface{}) error {
 
 // wrapClusterRequest helps remove all requests that should not be submitted when instance pool is selected.
 func wrapClusterRequest(clusterModel *Cluster) {
-	// Instance profile id does not exist
-	if reflect.ValueOf(clusterModel.InstancePoolID).IsZero() {
+	// Instance profile id does not exist or not set
+	if clusterModel.InstancePoolID == "" {
 		return
 	}
 	if clusterModel.AwsAttributes != nil {

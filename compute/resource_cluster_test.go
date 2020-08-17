@@ -507,6 +507,17 @@ func TestResourceClusterUpdate_LibrariesChangeOnTerminatedCluster(t *testing.T) 
 					},
 				},
 			},
+			{ // check to see if cluster is restarting (if so wait)
+				Method:   "GET",
+				Resource: "/api/2.0/clusters/get?cluster_id=abc",
+				Response: ClusterInfo{
+					ClusterID:    "abc",
+					NumWorkers:   100,
+					SparkVersion: "7.1-scala12",
+					NodeTypeID:   "i3.xlarge",
+					State:        ClusterStateTerminated,
+				},
+			},
 			{ // start cluster before libs install
 				Method:   "POST",
 				Resource: "/api/2.0/clusters/start",

@@ -6,7 +6,7 @@ import (
 
 	"github.com/databrickslabs/databricks-terraform/common"
 	"github.com/databrickslabs/databricks-terraform/internal/qa"
-	
+
 	"github.com/stretchr/testify/assert"
 )
 
@@ -36,40 +36,40 @@ func TestMWSNetworks(t *testing.T) {
 func TestResourceNetworkCreate(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
-		{
-			Method:   "POST",
-			Resource: "/api/2.0/accounts/abc/networks",
-			ExpectedRequest: Network{
-				SecurityGroupIds: []string{"one", "two"},
-				NetworkName:      "Open Workers",
-				VPCID:            "five",
-				SubnetIds:        []string{"four", "three"},
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/accounts/abc/networks",
+				ExpectedRequest: Network{
+					SecurityGroupIds: []string{"one", "two"},
+					NetworkName:      "Open Workers",
+					VPCID:            "five",
+					SubnetIds:        []string{"four", "three"},
+				},
+				Response: Network{
+					NetworkID: "nid",
+				},
 			},
-			Response: Network{
-				NetworkID: "nid",
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/accounts/abc/networks/nid",
+				Response: Network{
+					NetworkID:        "nid",
+					SecurityGroupIds: []string{"one", "two"},
+					NetworkName:      "Open Workers",
+					VPCID:            "five",
+					SubnetIds:        []string{"four", "three"},
+				},
 			},
 		},
-		{
-			Method:   "GET",
-			Resource: "/api/2.0/accounts/abc/networks/nid",
-			Response: Network{
-				NetworkID:        "nid",
-				SecurityGroupIds: []string{"one", "two"},
-				NetworkName:      "Open Workers",
-				VPCID:            "five",
-				SubnetIds:        []string{"four", "three"},
-			},
+		Resource: ResourceNetwork(),
+		State: map[string]interface{}{
+			"account_id":         "abc",
+			"network_name":       "Open Workers",
+			"security_group_ids": []interface{}{"one", "two"},
+			"subnet_ids":         []interface{}{"three", "four"},
+			"vpc_id":             "five",
 		},
-	},
-	Resource: ResourceNetwork(),
-	State: map[string]interface{}{
-		"account_id":         "abc",
-		"network_name":       "Open Workers",
-		"security_group_ids": []interface{}{"one", "two"},
-		"subnet_ids":         []interface{}{"three", "four"},
-		"vpc_id":             "five",
-	},
-	Create: true,
+		Create: true,
 	}.Apply(t)
 	assert.NoError(t, err, err)
 	assert.Equal(t, "abc/nid", d.Id())
@@ -78,25 +78,25 @@ func TestResourceNetworkCreate(t *testing.T) {
 func TestResourceNetworkCreate_Error(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
-		{
-			Method:   "POST",
-			Resource: "/api/2.0/accounts/abc/networks",
-			Response: common.APIErrorBody{
-				ErrorCode: "INVALID_REQUEST",
-				Message:   "Internal error happened",
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/accounts/abc/networks",
+				Response: common.APIErrorBody{
+					ErrorCode: "INVALID_REQUEST",
+					Message:   "Internal error happened",
+				},
+				Status: 400,
 			},
-			Status: 400,
 		},
-	},
-	Resource: ResourceNetwork(),
-	State: map[string]interface{}{
-		"account_id":         "abc",
-		"network_name":       "Open Workers",
-		"security_group_ids": []interface{}{"one", "two"},
-		"subnet_ids":         []interface{}{"three", "four"},
-		"vpc_id":             "five",
-	},
-	Create: true,
+		Resource: ResourceNetwork(),
+		State: map[string]interface{}{
+			"account_id":         "abc",
+			"network_name":       "Open Workers",
+			"security_group_ids": []interface{}{"one", "two"},
+			"subnet_ids":         []interface{}{"three", "four"},
+			"vpc_id":             "five",
+		},
+		Create: true,
 	}.Apply(t)
 	qa.AssertErrorStartsWith(t, err, "Internal error happened")
 	assert.Equal(t, "", d.Id(), "Id should be empty for error creates")
@@ -105,22 +105,22 @@ func TestResourceNetworkCreate_Error(t *testing.T) {
 func TestResourceNetworkRead(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
-		{
-			Method:   "GET",
-			Resource: "/api/2.0/accounts/abc/networks/nid",
-			Response: Network{
-				NetworkID:        "nid",
-				SecurityGroupIds: []string{"one", "two"},
-				NetworkName:      "Open Workers",
-				VPCID:            "five",
-				SubnetIds:        []string{"four", "three"},
-				WorkspaceID:      789,
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/accounts/abc/networks/nid",
+				Response: Network{
+					NetworkID:        "nid",
+					SecurityGroupIds: []string{"one", "two"},
+					NetworkName:      "Open Workers",
+					VPCID:            "five",
+					SubnetIds:        []string{"four", "three"},
+					WorkspaceID:      789,
+				},
 			},
 		},
-	},
-	Resource: ResourceNetwork(),
-	Read: true,
-	ID: "abc/nid",
+		Resource: ResourceNetwork(),
+		Read:     true,
+		ID:       "abc/nid",
 	}.Apply(t)
 	assert.NoError(t, err, err)
 	assert.Equal(t, "abc/nid", d.Id(), "Id should not be empty")
@@ -134,19 +134,19 @@ func TestResourceNetworkRead(t *testing.T) {
 func TestResourceNetworkRead_NotFound(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
-		{
-			Method:   "GET",
-			Resource: "/api/2.0/accounts/abc/networks/nid",
-			Response: common.APIErrorBody{
-				ErrorCode: "NOT_FOUND",
-				Message:   "Item not found",
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/accounts/abc/networks/nid",
+				Response: common.APIErrorBody{
+					ErrorCode: "NOT_FOUND",
+					Message:   "Item not found",
+				},
+				Status: 404,
 			},
-			Status: 404,
 		},
-	},
-	Resource: ResourceNetwork(),
-	Read: true,
-	ID: "abc/nid",
+		Resource: ResourceNetwork(),
+		Read:     true,
+		ID:       "abc/nid",
 	}.Apply(t)
 	assert.NoError(t, err, err)
 	assert.Equal(t, "", d.Id(), "Id should be empty for missing resources")
@@ -155,19 +155,19 @@ func TestResourceNetworkRead_NotFound(t *testing.T) {
 func TestResourceNetworkRead_Error(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
-		{
-			Method:   "GET",
-			Resource: "/api/2.0/accounts/abc/networks/nid",
-			Response: common.APIErrorBody{
-				ErrorCode: "INVALID_REQUEST",
-				Message:   "Internal error happened",
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/accounts/abc/networks/nid",
+				Response: common.APIErrorBody{
+					ErrorCode: "INVALID_REQUEST",
+					Message:   "Internal error happened",
+				},
+				Status: 400,
 			},
-			Status: 400,
 		},
-	},
-	Resource: ResourceNetwork(),
-	Read: true,
-	ID: "abc/nid",
+		Resource: ResourceNetwork(),
+		Read:     true,
+		ID:       "abc/nid",
 	}.Apply(t)
 	qa.AssertErrorStartsWith(t, err, "Internal error happened")
 	assert.Equal(t, "abc/nid", d.Id(), "Id should not be empty for error reads")
@@ -176,33 +176,33 @@ func TestResourceNetworkRead_Error(t *testing.T) {
 func TestResourceNetworkDelete(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
-		{
-			Method:   "DELETE",
-			Resource: "/api/2.0/accounts/abc/networks/nid",
-		},
-		{
-			Method:   "GET",
-			Resource: "/api/2.0/accounts/abc/networks/nid",
-			Response: Network{
-				NetworkID:   "nid",
-				NetworkName: "Open Workers",
-				VPCID:       "five",
-				VPCStatus:   "SOMETHING",
+			{
+				Method:   "DELETE",
+				Resource: "/api/2.0/accounts/abc/networks/nid",
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/accounts/abc/networks/nid",
+				Response: Network{
+					NetworkID:   "nid",
+					NetworkName: "Open Workers",
+					VPCID:       "five",
+					VPCStatus:   "SOMETHING",
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/accounts/abc/networks/nid",
+				Response: common.APIErrorBody{
+					ErrorCode: "NOT_FOUND",
+					Message:   "Yes, it's not found",
+				},
+				Status: 404,
 			},
 		},
-		{
-			Method:   "GET",
-			Resource: "/api/2.0/accounts/abc/networks/nid",
-			Response: common.APIErrorBody{
-				ErrorCode: "NOT_FOUND",
-				Message:   "Yes, it's not found",
-			},
-			Status: 404,
-		},
-	}, 
-	Resource: ResourceNetwork(),
-	Delete: true,
-	ID: "abc/nid",
+		Resource: ResourceNetwork(),
+		Delete:   true,
+		ID:       "abc/nid",
 	}.Apply(t)
 	assert.NoError(t, err, err)
 	assert.Equal(t, "abc/nid", d.Id())
@@ -211,19 +211,19 @@ func TestResourceNetworkDelete(t *testing.T) {
 func TestResourceNetworkDelete_Error(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
-		{
-			Method:   "DELETE",
-			Resource: "/api/2.0/accounts/abc/networks/nid",
-			Response: common.APIErrorBody{
-				ErrorCode: "INVALID_REQUEST",
-				Message:   "Internal error happened",
+			{
+				Method:   "DELETE",
+				Resource: "/api/2.0/accounts/abc/networks/nid",
+				Response: common.APIErrorBody{
+					ErrorCode: "INVALID_REQUEST",
+					Message:   "Internal error happened",
+				},
+				Status: 400,
 			},
-			Status: 400,
 		},
-	},
-	Resource: ResourceNetwork(),
-	Delete: true,
-	ID: "abc/nid",
+		Resource: ResourceNetwork(),
+		Delete:   true,
+		ID:       "abc/nid",
 	}.Apply(t)
 	qa.AssertErrorStartsWith(t, err, "Internal error happened")
 	assert.Equal(t, "abc/nid", d.Id())

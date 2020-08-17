@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
-	"os"
 	"strings"
 	"testing"
 
@@ -151,7 +150,8 @@ func TestAzureAuth_configureWithClientSecret(t *testing.T) {
 
 	client := DatabricksClient{InsecureSkipVerify: true}
 	client.authVisitor = auth
-	client.Configure()
+	err = client.Configure()
+	assert.NoError(t, err)
 	aa.databricksClient = &client
 	client.AzureAuth = aa
 
@@ -164,11 +164,4 @@ func TestAzureAuth_configureWithClientSecret(t *testing.T) {
 	assert.NotNil(t, zi)
 	assert.NoError(t, err)
 	assert.Len(t, zi.Zones, 3)
-}
-
-// getAndAssertEnv fetches the env for testing and also asserts that the env value is not Zero i.e ""
-func getAndAssertEnv(t *testing.T, key string) string {
-	value, present := os.LookupEnv(key)
-	assert.True(t, present, fmt.Sprintf("Env variable %s is not set", key))
-	return value
 }

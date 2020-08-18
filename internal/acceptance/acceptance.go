@@ -26,7 +26,7 @@ func AccTest(t *testing.T, tc resource.TestCase) {
 		// let's be more chatty in integration test logs
 		for i, s := range tc.Steps {
 			if s.Config != "" {
-				t.Logf("Test %s (%s) step %d config is:\n%s", 
+				t.Logf("Test %s (%s) step %d config is:\n%s",
 					t.Name(), cloudEnv, i,
 					internal.TrimLeadingWhitespace(s.Config))
 			}

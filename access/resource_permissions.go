@@ -29,11 +29,12 @@ type AccessControl struct {
 
 func (ac AccessControl) String() string {
 	s := ""
-	if ac.GroupName != nil {
+	switch {
+	case ac.GroupName != nil:
 		s += *ac.GroupName
-	} else if ac.UserName != nil {
+	case ac.UserName != nil:
 		s += *ac.UserName
-	} else {
+	default:
 		s += "something"
 	}
 	s += " "

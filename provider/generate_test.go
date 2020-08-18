@@ -192,8 +192,10 @@ func (stub *resourceTestStub) Deletes(t *testing.T) {
 }
 
 func TestGenerateTestCodeStubs(t *testing.T) {
-	t.Skip()
 	funcs := getExistingUnitTests()
+	t.Logf("Got %d unit tests in total. %v",
+		len(funcs), resourceTestStub{})
+	t.Skip()
 	p := DatabricksProvider().(*schema.Provider)
 	for name, resource := range p.ResourcesMap {
 		if name != "databricks_group" {

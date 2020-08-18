@@ -80,16 +80,24 @@ else
     echo "[*] $1 has no specific Terraform environment."
 fi
 
-
 if [[ $@ == *"--debug"* ]]; then
     export TF_LOG="DEBUG"
     export TF_LOG_PATH=$PWD/tf.log
     echo "[*] To see debug logs: tail -f $PWD/tf.log"
 fi
 
-TF_ACC=1 gotestsum \
+function go_test {
+    TF_ACC=1 gotestsum \
     --format short-verbose \
     --raw-command go test -v \
     -json -coverprofile=coverage.out \
     -test.timeout 35m \
-    -run $2 ../../...
+    -run $1 ../../...
+}
+
+if [[ $@ == *"--tee"* ]]; then
+    go_test $2 2>&1 | tee out.log
+    echo "✓ To output of existing tests: less $PWD/out.log"
+else 
+    go_test $2
+fi

@@ -222,10 +222,8 @@ func (a ClustersAPI) List() ([]ClusterInfo, error) {
 
 // ListNodeTypes returns a list of supported Spark node types
 func (a ClustersAPI) ListNodeTypes() ([]NodeType, error) {
-	var nodeTypeList = struct {
-		NodeTypes []NodeType `json:"node_types,omitempty" url:"node_types,omitempty"`
-	}{}
-	err := a.client.Get("/clusters/list-node-types", nil, &nodeTypeList)
+	var nodeTypeList = &NodeTypeList{}
+	err := a.client.Get("/clusters/list-node-types", nil, nodeTypeList)
 	return nodeTypeList.NodeTypes, err
 }
 

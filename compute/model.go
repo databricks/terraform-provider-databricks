@@ -395,6 +395,11 @@ type InstancePoolList struct {
 	InstancePools []InstancePoolAndStats `json:"instance_pools"`
 }
 
+// NodeTypeList contains a list of node types
+type NodeTypeList struct {
+	NodeTypes []NodeType `json:"node_types,omitempty"`
+}
+
 // NotebookTask contains the information for notebook jobs
 type NotebookTask struct {
 	NotebookPath   string            `json:"notebook_path"`

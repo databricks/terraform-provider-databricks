@@ -251,7 +251,7 @@ func TestResourceNotebookDelete(t *testing.T) {
 			},
 		},
 		Resource: ResourceNotebook(),
-		Delete:     true,
+		Delete:   true,
 		ID:       testId,
 	}.Apply(t)
 	assert.NoError(t, err, err)
@@ -857,6 +857,7 @@ func TestAccNotebookUnzip(t *testing.T) {
 	assert.Equal(t, expectedCRC, exportCRC)
 }
 
+// nolint this should be refactored to support dbc files
 func convertZipBytesToCRC(b64 []byte) (string, error) {
 	r, err := zip.NewReader(bytes.NewReader(b64), int64(len(b64)))
 	if err != nil {
@@ -879,6 +880,7 @@ func convertZipBytesToCRC(b64 []byte) (string, error) {
 	return strconv.Itoa(int(totalSum)), nil
 }
 
+// nolint this should be refactored to support dbc files
 func getDBCCheckSumForCommands(fileIO io.Reader) (int, error) {
 	var stringBuff bytes.Buffer
 	scanner := bufio.NewScanner(fileIO)

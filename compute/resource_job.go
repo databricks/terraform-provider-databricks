@@ -175,8 +175,8 @@ var jobSchema = internal.StructToSchema(JobSettings{},
 		s["library_whl"] = librarySchema("path")
 		s["library_pypi"] = librarySchema("package", "repo")
 		s["library_cran"] = librarySchema("package", "repo")
-		// TODO: mvn exclusions available in `libraries endpoint`
 		s["library_maven"] = librarySchema("coordinates", "repo")
+		addMavenExclusions(s["library_maven"])
 		return s
 	})
 

@@ -113,7 +113,7 @@ func TestResourceStorageConfigurationRead(t *testing.T) {
 			},
 		},
 		Resource: ResourceStorageConfiguration(),
-		Read:   true,
+		Read:     true,
 		ID:       "abc/scid",
 	}.Apply(t)
 	assert.NoError(t, err, err)
@@ -138,7 +138,7 @@ func TestResourceStorageConfigurationRead_NotFound(t *testing.T) {
 			},
 		},
 		Resource: ResourceStorageConfiguration(),
-		Read:   true,
+		Read:     true,
 		ID:       "abc/scid",
 	}.Apply(t)
 	assert.NoError(t, err, err)
@@ -159,7 +159,7 @@ func TestResourceStorageConfigurationRead_Error(t *testing.T) {
 			},
 		},
 		Resource: ResourceStorageConfiguration(),
-		Read:   true,
+		Read:     true,
 		ID:       "abc/scid",
 	}.Apply(t)
 	qa.AssertErrorStartsWith(t, err, "Internal error happened")

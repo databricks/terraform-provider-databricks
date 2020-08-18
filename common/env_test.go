@@ -4,7 +4,7 @@ import (
 	"os"
 	"testing"
 
-	"gotest.tools/assert"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestCommonEnvironmentClient(t *testing.T) {

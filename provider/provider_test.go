@@ -2,9 +2,6 @@ package provider
 
 import (
 	"encoding/base64"
-	"fmt"
-	"log"
-	"os"
 	"testing"
 	"time"
 
@@ -12,23 +9,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
-	"github.com/joho/godotenv"
 	"github.com/stretchr/testify/assert"
 )
-
-func TestMain(m *testing.M) {
-	// This should not be asserted as it may not always be set for all tests
-	// TODO: add common instance pool & cluster for libs & stuff
-	cloudEnv := os.Getenv("CLOUD_ENV")
-	envFileName := fmt.Sprintf("../.%s.env", cloudEnv)
-	err := godotenv.Load(envFileName)
-	if !os.IsNotExist(err) {
-		log.Printf("[WARN] Failed to load environment: %s", err)
-	}
-	code := m.Run()
-	// epoch.tearDown()
-	os.Exit(code)
-}
 
 func TestProvider(t *testing.T) {
 	if err := DatabricksProvider().(*schema.Provider).InternalValidate(); err != nil {

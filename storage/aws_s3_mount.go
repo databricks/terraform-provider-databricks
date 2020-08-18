@@ -17,8 +17,8 @@ func (m AWSIamMount) Source() string {
 }
 
 // Config ...
-func (m AWSIamMount) Config() (c map[string]string) {
-	return //no extra config for S3 mounts here...
+func (m AWSIamMount) Config() map[string]string {
+	return make(map[string]string) // return empty map so nil map does not marshal to null
 }
 
 func ResourceAWSS3Mount() *schema.Resource {

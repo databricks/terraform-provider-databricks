@@ -280,8 +280,8 @@ func fixHCL(v interface{}) interface{} {
 	}
 }
 
-// EnvironmentTemplate asserts existence and fills in {env.VAR} & {var.RANDOM} placeholders in template
-func EnvironmentTemplate(t *testing.T, template string) string {
+// For writing a unit test to intercept the errors (t.Fatalf literally ends the test in failure)
+func environmentTemplate(t *testing.T, template string) (string, error) {
 	vars := map[string]string{
 		"RANDOM": acctest.RandStringFromCharSet(5, acctest.CharSetAlphaNum),
 	}
@@ -306,9 +306,18 @@ func EnvironmentTemplate(t *testing.T, template string) string {
 		template = strings.ReplaceAll(template, `{`+varType+`.`+varName+`}`, value)
 	}
 	if missing > 0 {
-		t.Fatalf("Please set %d variables and restart.", missing)
+		return "", fmt.Errorf("please set %d variables and restart.", missing)
 	}
-	return internal.TrimLeadingWhitespace(template)
+	return internal.TrimLeadingWhitespace(template), nil
+}
+
+// EnvironmentTemplate asserts existence and fills in {env.VAR} & {var.RANDOM} placeholders in template
+func EnvironmentTemplate(t *testing.T, template string) string {
+	resp, err := environmentTemplate(t, template)
+	if err != nil {
+		t.Fatal(err.Error())
+	}
+	return resp
 }
 
 // FirstKeyValue gets it from HCL string
@@ -319,15 +328,6 @@ func FirstKeyValue(t *testing.T, str, key string) string {
 		t.Fatalf("Cannot find %s in given string", key)
 	}
 	return match[1]
-}
-
-func TestEnvironmentTemplate(t *testing.T) {
-	res := EnvironmentTemplate(t, `
-	resource "user" "me" {
-		name  = "{env.USER}"
-		email = "{env.USER}+{var.RANDOM}@example.com"
-	}`)
-	assert.Equal(t, os.Getenv("USER"), FirstKeyValue(t, res, "name"))
 }
 
 func AssertErrorStartsWith(t *testing.T, err error, message string) bool {

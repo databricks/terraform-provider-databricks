@@ -243,11 +243,10 @@ func TestAccInstancePools(t *testing.T) {
 	pool := InstancePool{
 		InstancePoolName:                   "Terraform Integration Test",
 		MinIdleInstances:                   0,
-		MaxCapacity:                        10,
 		NodeTypeID:                         qa.GetCloudInstanceType(client),
 		IdleInstanceAutoTerminationMinutes: 20,
 		PreloadedSparkVersions: []string{
-			"6.3.x-scala2.11",
+			"7.1.x-scala2.12",
 		},
 	}
 	if !client.IsAzure() {
@@ -287,7 +286,7 @@ func TestAccInstancePools(t *testing.T) {
 		NodeTypeID:                         qa.GetCloudInstanceType(client),
 		IdleInstanceAutoTerminationMinutes: 20,
 		PreloadedSparkVersions: []string{
-			"6.3.x-scala2.11",
+			"7.1.x-scala2.12",
 		},
 	}
 	if !client.IsAzure() {

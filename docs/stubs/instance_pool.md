@@ -20,7 +20,7 @@ The following arguments are required:
 
 * `custom_tags` - (Optional) (Map) 
 
-* `max_capacity` - (Required) (Integer) 
+* `max_capacity` - (Optional) (Integer) 
 
 * `idle_instance_autotermination_minutes` - (Required) (Integer) 
 

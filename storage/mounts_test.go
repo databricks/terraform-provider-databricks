@@ -2,8 +2,9 @@ package storage
 
 import (
 	"fmt"
-	"github.com/databrickslabs/databricks-terraform/internal"
 	"testing"
+
+	"github.com/databrickslabs/databricks-terraform/internal"
 
 	"github.com/databrickslabs/databricks-terraform/common"
 	"github.com/stretchr/testify/assert"

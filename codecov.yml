@@ -1,6 +1,4 @@
 ignore:
-  - "client/**/*test.go"
-  - "databricks/*test.go"
   - "vendor/**/*"
   - "website/**/*"
   - "dist/**/*"
@@ -8,15 +6,9 @@ ignore:
 
 coverage:
   status:
-    project:
-      client:
-        target: auto
-        flags:
-          - client
-      provider:
-        target: auto
-        flags:
-          - provider
+    project: yes
+    patch: yes
+    changes: yes
 comment:
   layout: "reach, diff, flags, files"
   behavior: default
@@ -24,12 +16,3 @@ comment:
   require_base: yes       # [yes :: must have a base report to post]
   require_head: yes       # [yes :: must have a head report to post]
   branches: null          # branch names that can post comment
-flags:
-  client:
-    paths:
-      - "client/**/*.go"
-    carryforward: false
-  provider:
-    paths:
-      - "databricks/*.go"
-    carryforward: true

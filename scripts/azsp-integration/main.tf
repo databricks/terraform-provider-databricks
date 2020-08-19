@@ -9,8 +9,8 @@ data "external" "env" {
 }
 
 module "this" {
-    source = "../azcli-integration"
-    owner  = data.external.env.result.OWNER
+  source = "../az-common"
+  owner  = data.external.env.result.OWNER
 }
 
 data "azurerm_client_config" "current" {

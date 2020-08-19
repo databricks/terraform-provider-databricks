@@ -250,7 +250,8 @@ func (a ClustersAPI) GetOrCreateRunningCluster(name string, custom ...Cluster) (
 			return cl, nil
 		}
 	}
-	instanceType := "m4.large"
+	// Non nvme based instance types require ebs configurations
+	instanceType := "i3.xlarge"
 	if a.client.IsAzure() {
 		instanceType = "Standard_DS3_v2"
 	}

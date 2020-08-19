@@ -41,13 +41,9 @@ func TestSomeCommands(t *testing.T) {
 			},
 		},
 		{
-			Method:       "POST",
-			Resource:     "/api/1.2/contexts/status",
+			Method:       "GET",
+			Resource:     "/api/1.2/contexts/status?clusterId=abc&contextId=123",
 			ReuseRequest: true,
-			ExpectedRequest: map[string]interface{}{
-				"clusterId": "abc",
-				"contextId": "123",
-			},
 			Response: Command{
 				Status: "Running",
 			},

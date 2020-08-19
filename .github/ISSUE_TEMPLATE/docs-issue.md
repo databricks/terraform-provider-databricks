@@ -2,9 +2,7 @@
 name: Docs Issue
 about: Use this to suggest enhancements or point out bugs for the documentation website.
 title: "[DOC] Issue Short Description"
-labels: ''
-assignees: stikkireddy
-
+labels: documentation
 ---
 
 Hi there,
@@ -30,4 +28,4 @@ Any links to external documentation that may prove your case, i.e Databricks pub
 
 ### References
 Are there any other GitHub issues (open or closed) or Pull Requests that should be linked here? For example:
-- GH-1234
+- #158

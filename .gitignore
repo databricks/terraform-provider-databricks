@@ -2,6 +2,8 @@
 # Created by https://www.gitignore.io/api/go,python,terraform,virtualenv,pycharm+iml,intellij+all,visualstudiocode
 # Edit at https://www.gitignore.io/?templates=go,python,terraform,virtualenv,pycharm+iml,intellij+all,visualstudiocode
 
+common/testdata/.azure
+
 ### Go ###
 # Binaries for programs and plugins
 *.exe

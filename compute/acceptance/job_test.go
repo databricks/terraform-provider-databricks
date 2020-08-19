@@ -79,7 +79,7 @@ func TestAccJobResource(t *testing.T) {
 }
 
 func TestAwsAccJobResource_NoInstancePool(t *testing.T) {
-	if cloudEnv, ok := os.LookupEnv("CLOUD_ENV"); !ok || cloudEnv != "AWS" {
+	if _, ok := os.LookupEnv("CLOUD_ENV"); !ok {
 		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
 	}
 	randomStr := acctest.RandStringFromCharSet(5, acctest.CharSetAlphaNum)

@@ -52,7 +52,6 @@ resource "databricks_cluster_policy" "external_metastore" {
 The following arguments are required:
 
 * `name` - (Required) Cluster policy name. This must be unique. Length must be between 1 and 100 characters.
-
 * `definition` - (Required) Policy definition JSON document expressed in [Databricks Policy Definition Language](https://docs.databricks.com/administration-guide/clusters/policies.html#cluster-policy-definition).
 
 ## Attribute Reference
@@ -60,9 +59,12 @@ The following arguments are required:
 In addition to all arguments above, the following attributes are exported:
 
 * `id` - Canonical unique identifier for the cluster policy. This equal to policy_id.
-
 * `policy_id` - Canonical unique identifier for the cluster policy.
 
 ## Import
 
--> **Note** Importing this resource is not currently supported.
+The resource cluster policy can be imported using the policy id:
+
+```bash
+$ terraform import databricks_cluster_policy.this <cluster-policy-id>
+```

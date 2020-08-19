@@ -60,7 +60,7 @@ func (mp MountPoint) Mount(mo Mount) (source string, err error) {
 	}
 	b := regexp.MustCompile(`"\{secrets/([^/]+)/([^\}]+)\}"`)
 	extraConfigs = b.ReplaceAll(extraConfigs, []byte(`dbutils.secrets.get("$1", "$2")`))
-	source, err = mp.exec.Execute(mp.clusterID, "python", fmt.Sprintf(`
+	command := fmt.Sprintf(`
 		def safe_mount(mount_point, mount_source, configs):
 			for mount in dbutils.fs.mounts():
 				if mount.mountPoint == mount_point and mount.source == mount_source:
@@ -78,7 +78,8 @@ func (mp MountPoint) Mount(mo Mount) (source string, err error) {
 				raise e
 		mount_source = safe_mount("/mnt/%s", "%v", %s)
 		dbutils.notebook.exit(mount_source)
-	`, mp.name, mo.Source(), extraConfigs))
+	`, mp.name, mo.Source(), extraConfigs)
+	source, err = mp.exec.Execute(mp.clusterID, "python", command)
 	return
 }
 
@@ -92,9 +93,14 @@ func commonMountResource(tpl Mount, s map[string]*schema.Schema) *schema.Resourc
 
 // NewMountPoint returns new mount point config
 func NewMountPoint(client *common.DatabricksClient, name, clusterID string) MountPoint {
+	// TODO: the executor is mutable probably needs to be refactored
+	executor := client.CommandExecutor()
+	if executor == nil {
+		executor = compute.NewCommandsAPI(client)
+	}
 	return MountPoint{
 		// todo: fix
-		exec:      client.CommandExecutor(),
+		exec:      executor,
 		clusterID: clusterID,
 		name:      name,
 	}

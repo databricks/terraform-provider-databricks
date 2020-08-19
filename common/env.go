@@ -59,7 +59,8 @@ func CommonEnvironmentClient() *DatabricksClient {
 }
 
 // CleanupEnvironment backs up environment - use as `defer CleanupEnvironment()()`
-// clears it and restores it in the end
+// clears it and restores it in the end. It's meant strictly for "unit" tests
+// as last resort, because it slows down parallel execution with mutex.
 func CleanupEnvironment() func() {
 	// make a backed-up pristince environment
 	envMutex.Lock()

@@ -2,6 +2,7 @@ package storage
 
 import (
 	"fmt"
+	"github.com/databrickslabs/databricks-terraform/internal"
 	"testing"
 
 	"github.com/databrickslabs/databricks-terraform/common"
@@ -39,7 +40,7 @@ func testMountFuncHelper(t *testing.T, mountFunc func(mp MountPoint, mount Mount
 
 	c.WithCommandMock(func(commandStr string) (s string, e error) {
 		called = true
-		assert.Equal(t, expectedCommand, commandStr)
+		assert.Equal(t, internal.TrimLeadingWhitespace(expectedCommand), internal.TrimLeadingWhitespace(commandStr))
 		return expectedCommandResp, nil
 	})
 

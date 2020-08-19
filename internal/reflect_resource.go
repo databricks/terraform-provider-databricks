@@ -107,7 +107,6 @@ func handleOptional(typeField reflect.StructField, schema *schema.Schema) {
 
 func handleComputed(typeField reflect.StructField, schema *schema.Schema) {
 	if strings.Contains(typeField.Tag.Get("tf"), "computed") {
-		log.Printf("[DEBUG] setting %s to computed", typeField.Name)
 		schema.Computed = true
 	}
 }

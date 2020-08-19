@@ -1,5 +1,7 @@
 # databricks_group_instance_profile Resource
 
+**This resource has evolving API, which may change in future versions of provider.**
+
 This resource allows you to attach instance profiles to groups created by the `databricks_group` resource.
 
 -> **Note** Please only use this resource in conjunction with the `databricks_group` resource and **not** the `databricks_scim_group` resource.

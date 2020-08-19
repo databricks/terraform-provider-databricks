@@ -19,7 +19,7 @@ func (a IPAccessListsAPI) Create(ipAddresses []string, label string, listType IP
 	cr.ListType = listType
 
 	wrapper := IPAccessListStatusWrapper{}
-	err = a.Client.Post("/preview/ip-access-lists", cr, wrapper)
+	err = a.Client.Post("/preview/ip-access-lists", cr, &wrapper)
 
 	status = wrapper.IPAccessList
 	return
@@ -44,14 +44,14 @@ func (a IPAccessListsAPI) Delete(objectID string) (err error) {
 
 func (a IPAccessListsAPI) Read(objectID string) (status IPAccessListStatus, err error) {
 	wrapper := IPAccessListStatusWrapper{}
-	err = a.Client.Get("/preview/ip-access-lists/"+objectID, wrapper, nil)
+	err = a.Client.Get("/preview/ip-access-lists/"+objectID, nil, &wrapper)
 	status = wrapper.IPAccessList
 	return
 }
 
 func (a IPAccessListsAPI) List() (listResponse ListIPAccessListsResponse, err error) {
 	listResponse = ListIPAccessListsResponse{}
-	err = a.Client.Get("/preview/ip-access-lists", listResponse, nil)
+	err = a.Client.Get("/preview/ip-access-lists", &listResponse, nil)
 
 	return
 }

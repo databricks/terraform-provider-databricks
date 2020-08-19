@@ -31,7 +31,8 @@ func (a WorkspaceConfAPI) Read(keys string) (wsConfResp map[string]string, err e
 	}{
 		Keys: keys,
 	}
-	err = a.Client.Get("/preview/workspace-conf", wsConfQuery, wsConfResp)
+	wsConfResp = map[string]string{}
+	err = a.Client.Get("/preview/workspace-conf", wsConfQuery, &wsConfResp)
 
 	return
 }

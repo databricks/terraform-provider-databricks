@@ -4,6 +4,7 @@ package mws
 // REST API: https://docs.databricks.com/dev-tools/api/latest/ip-access-list.html#operation/create-list
 
 import (
+	"log"
 	"strconv"
 
 	"github.com/databrickslabs/databricks-terraform/common"
@@ -57,6 +58,12 @@ func resourceWorkspaceConfRead(d *schema.ResourceData, m interface{}) (err error
 	resp, err := NewWorkspaceConfAPI(client).Read(tfNameToJsonName["enable_ip_access_lists"])
 	// 404 check not required as the service only return 400 errors
 	if err != nil {
+		// check 404 (missing) and set id to empty string for tf
+		if e, ok := err.(common.APIError); ok && e.IsMissing() {
+			log.Printf("[IPACLLists:  missing resource due to error: %v\n", e)
+			d.SetId("")
+			return nil
+		}
 		return
 	}
 

@@ -29,11 +29,11 @@ func DatabricksProvider() terraform.ResourceProvider {
 			"databricks_notebook_paths":     workspace.DataSourceNotebookPaths(),
 		},
 		ResourcesMap: map[string]*schema.Resource{
-			"databricks_secret":       access.ResourceSecret(),
-			"databricks_secret_scope": access.ResourceSecretScope(),
-			"databricks_secret_acl":   access.ResourceSecretACL(),
-			"databricks_permissions":  access.ResourcePermissions(),
-			"databricks_ip_acls":      access.ResourceIPAccessList(),
+			"databricks_secret":         access.ResourceSecret(),
+			"databricks_secret_scope":   access.ResourceSecretScope(),
+			"databricks_secret_acl":     access.ResourceSecretACL(),
+			"databricks_permissions":    access.ResourcePermissions(),
+			"databricks_ip_access_list": access.ResourceIPAccessList(),
 
 			"databricks_cluster":        compute.ResourceCluster(),
 			"databricks_cluster_policy": compute.ResourceClusterPolicy(),
@@ -52,7 +52,7 @@ func DatabricksProvider() terraform.ResourceProvider {
 			"databricks_mws_storage_configurations": mws.ResourceStorageConfiguration(),
 			"databricks_mws_networks":               mws.ResourceNetwork(),
 			"databricks_mws_workspaces":             mws.ResourceWorkspace(),
-			"databricks_mws_workspace_conf":         mws.ResourceWorkspaceConf(),
+			"databricks_workspace_conf":             mws.ResourceWorkspaceConf(),
 
 			"databricks_aws_s3_mount":          storage.ResourceAWSS3Mount(),
 			"databricks_azure_adls_gen1_mount": storage.ResourceAzureAdlsGen1Mount(),

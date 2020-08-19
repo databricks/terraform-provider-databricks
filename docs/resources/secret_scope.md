@@ -1,12 +1,13 @@
 # databricks_secret_scope Resource
 
-This resource creates a Databricks-backed secret scope in which secrets are stored in Databricks-managed storage and 
-encrypted with a cloud-based specific encryption key. 
+This resource creates a Databricks-backed secret scope in which secrets are stored in Databricks-managed storage and encrypted with a cloud-based specific encryption key. 
 
 The scope name:
 
 * Must be unique within a workspace.
 * Must consist of alphanumeric characters, dashes, underscores, and periods, and may not exceed 128 characters.
+
+Please consult [Secrets User Guide](https://docs.databricks.com/security/secrets/index.html#secrets-user-guide) for more details.
 
 ## Example Usage
 
@@ -22,9 +23,7 @@ resource "databricks_secret_scope" "my-scope" {
 The following arguments are supported:
 
 * `name` - (Required) Scope name requested by the user. Scope names are unique. This field is required.
-
-* `initial_manage_principal` - (Optional) The principal that is initially granted 
-MANAGE permission to the created scope.
+* `initial_manage_principal` - (Optional) The principal that is initially granted MANAGE permission to the created scope.
 
 ## Attribute Reference
 
@@ -34,4 +33,8 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
--> **Note** Importing this resource is not currently supported.
+The resource secret scope can be imported using the scope name:
+
+```bash
+$ terraform import databricks_secret_scope.object <scopeName>
+```

@@ -112,6 +112,25 @@ func handleComputed(typeField reflect.StructField, schema *schema.Schema) {
 	}
 }
 
+func getAlias(typeField reflect.StructField) string {
+	tfTags := strings.Split(typeField.Tag.Get("tf"), ",")
+	for _, tag := range tfTags {
+		if strings.HasPrefix(tag, "alias:") {
+			return strings.TrimPrefix(tag, "alias:")
+		}
+	}
+	return ""
+}
+
+func chooseFieldName(typeField reflect.StructField) string {
+	alias := getAlias(typeField)
+	if alias != "" {
+		return alias
+	}
+	jsonTag := typeField.Tag.Get("json")
+	return strings.Split(jsonTag, ",")[0]
+}
+
 func typeToSchema(v reflect.Value, t reflect.Type) map[string]*schema.Schema {
 	scm := map[string]*schema.Schema{}
 	rk := v.Kind()
@@ -121,13 +140,13 @@ func typeToSchema(v reflect.Value, t reflect.Type) map[string]*schema.Schema {
 	for i := 0; i < v.NumField(); i++ {
 		typeField := t.Field(i)
 
-		jsonTag := typeField.Tag.Get("json")
 		tfTag := typeField.Tag.Get("tf")
-		jsonFieldName := strings.Split(jsonTag, ",")[0]
-		if jsonFieldName == "-" {
+
+		fieldName := chooseFieldName(typeField)
+		if fieldName == "-" {
 			continue
 		}
-		scm[jsonFieldName] = &schema.Schema{}
+		scm[fieldName] = &schema.Schema{}
 		for _, token := range strings.Split(tfTag, ",") {
 			colonSplit := strings.Split(token, ":")
 			if len(colonSplit) == 2 {
@@ -135,36 +154,35 @@ func typeToSchema(v reflect.Value, t reflect.Type) map[string]*schema.Schema {
 				tfValue := colonSplit[1]
 				switch tfKey {
 				case "default":
-					scm[jsonFieldName].Default = tfValue
+					scm[fieldName].Default = tfValue
 				case "max_items":
 					maxItems, err := strconv.Atoi(tfValue)
 					if err != nil {
 						continue
 					}
-					scm[jsonFieldName].MaxItems = maxItems
+					scm[fieldName].MaxItems = maxItems
 				}
 			}
 		}
-		// TODO: tf:"alias:library"
-		handleOptional(typeField, scm[jsonFieldName])
-		handleComputed(typeField, scm[jsonFieldName])
+		handleOptional(typeField, scm[fieldName])
+		handleComputed(typeField, scm[fieldName])
 		switch typeField.Type.Kind() {
 		case reflect.Int, reflect.Int32, reflect.Int64:
-			scm[jsonFieldName].Type = schema.TypeInt
+			scm[fieldName].Type = schema.TypeInt
 		case reflect.Float64:
-			scm[jsonFieldName].Type = schema.TypeFloat
+			scm[fieldName].Type = schema.TypeFloat
 		case reflect.Bool:
-			scm[jsonFieldName].Type = schema.TypeBool
+			scm[fieldName].Type = schema.TypeBool
 		case reflect.String:
-			scm[jsonFieldName].Type = schema.TypeString
+			scm[fieldName].Type = schema.TypeString
 		case reflect.Map:
-			scm[jsonFieldName].Type = schema.TypeMap
+			scm[fieldName].Type = schema.TypeMap
 		case reflect.Ptr:
-			scm[jsonFieldName].MaxItems = 1
-			scm[jsonFieldName].Type = schema.TypeList
+			scm[fieldName].MaxItems = 1
+			scm[fieldName].Type = schema.TypeList
 			elem := typeField.Type.Elem()
 			sv := reflect.New(elem).Elem()
-			scm[jsonFieldName].Elem = &schema.Resource{
+			scm[fieldName].Elem = &schema.Resource{
 				Schema: typeToSchema(sv, elem),
 			}
 		case reflect.Slice:
@@ -172,25 +190,25 @@ func typeToSchema(v reflect.Value, t reflect.Type) map[string]*schema.Schema {
 			if strings.Contains(tfTag, "slice_set") {
 				ft = schema.TypeSet
 			}
-			scm[jsonFieldName].Type = ft
+			scm[fieldName].Type = ft
 			elem := typeField.Type.Elem()
 			switch elem.Kind() {
 			case reflect.Int:
-				scm[jsonFieldName].Elem = &schema.Schema{Type: schema.TypeInt}
+				scm[fieldName].Elem = &schema.Schema{Type: schema.TypeInt}
 			case reflect.Float64:
-				scm[jsonFieldName].Elem = &schema.Schema{Type: schema.TypeFloat}
+				scm[fieldName].Elem = &schema.Schema{Type: schema.TypeFloat}
 			case reflect.Bool:
-				scm[jsonFieldName].Elem = &schema.Schema{Type: schema.TypeBool}
+				scm[fieldName].Elem = &schema.Schema{Type: schema.TypeBool}
 			case reflect.String:
-				scm[jsonFieldName].Elem = &schema.Schema{Type: schema.TypeString}
+				scm[fieldName].Elem = &schema.Schema{Type: schema.TypeString}
 			case reflect.Struct:
 				sv := reflect.New(elem).Elem()
-				scm[jsonFieldName].Elem = &schema.Resource{
+				scm[fieldName].Elem = &schema.Resource{
 					Schema: typeToSchema(sv, elem),
 				}
 			}
 		default:
-			panic(fmt.Errorf("Unknown type for %s: %s", jsonFieldName, reflectKind(typeField.Type.Kind())))
+			panic(fmt.Errorf("Unknown type for %s: %s", fieldName, reflectKind(typeField.Type.Kind())))
 		}
 	}
 	return scm
@@ -208,26 +226,26 @@ func iterFields(rv reflect.Value, path []string, s map[string]*schema.Schema,
 	for i := 0; i < rv.NumField(); i++ {
 		typeField := rv.Type().Field(i)
 		jsonTag := typeField.Tag.Get("json")
-		jsonFieldName := strings.Split(jsonTag, ",")[0]
-		if jsonFieldName == "-" {
+		fieldName := chooseFieldName(typeField)
+		if fieldName == "-" {
 			continue
 		}
-		fieldSchema, ok := s[jsonFieldName]
+		fieldSchema, ok := s[fieldName]
 		if !ok {
 			continue
 		}
 		omitEmpty := strings.Contains(jsonTag, "omitempty")
 		if omitEmpty && !fieldSchema.Optional {
-			return fmt.Errorf("Inconsistency: %s has omitempty, but is not optional", jsonFieldName)
+			return fmt.Errorf("Inconsistency: %s has omitempty, but is not optional", fieldName)
 		}
 		defaultEmpty := reflect.ValueOf(fieldSchema.Default).Kind() == reflect.Invalid
 		if fieldSchema.Optional && defaultEmpty && !omitEmpty {
-			return fmt.Errorf("Inconsistency: %s is optional, default is empty, but has no omitempty", jsonFieldName)
+			return fmt.Errorf("Inconsistency: %s is optional, default is empty, but has no omitempty", fieldName)
 		}
 		valueField := rv.Field(i)
-		err := cb(fieldSchema, append(path, jsonFieldName), &valueField)
+		err := cb(fieldSchema, append(path, fieldName), &valueField)
 		if err != nil {
-			return fmt.Errorf("%s: %s", jsonFieldName, err)
+			return fmt.Errorf("%s: %s", fieldName, err)
 		}
 	}
 	return nil

@@ -83,7 +83,7 @@ func TestAccScimUserResource(t *testing.T) {
 			},
 			{
 				PreConfig: func() {
-					err := UsersAPI{common.CommonEnvironmentClient()}.Delete(scimUser.ID)
+					err := UsersAPI{C: common.CommonEnvironmentClient()}.Delete(scimUser.ID)
 					assert.NoError(t, err, err)
 				},
 				// use a dynamic configuration with the random name from above
@@ -104,7 +104,7 @@ func TestAccScimUserResource(t *testing.T) {
 			{
 				//Create a new user
 				PreConfig: func() {
-					err := UsersAPI{common.CommonEnvironmentClient()}.Delete(scimUser.ID)
+					err := UsersAPI{C: common.CommonEnvironmentClient()}.Delete(scimUser.ID)
 					assert.NoError(t, err, err)
 				},
 				// Create new admin user

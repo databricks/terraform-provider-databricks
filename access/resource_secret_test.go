@@ -239,7 +239,7 @@ func TestResourceSecretRead_Error(t *testing.T) {
 			},
 		},
 		Resource: ResourceSecret(),
-		Read:   true,
+		Read:     true,
 		ID:       "foo|||bar",
 	}.Apply(t)
 	qa.AssertErrorStartsWith(t, err, "Internal error happened")

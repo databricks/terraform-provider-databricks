@@ -145,7 +145,7 @@ func TestResourceWorkspaceRead(t *testing.T) {
 			},
 		},
 		Resource: ResourceWorkspace(),
-		Read:   true,
+		Read:     true,
 		ID:       "abc/1234",
 	}.Apply(t)
 	assert.NoError(t, err, err)
@@ -178,7 +178,7 @@ func TestResourceWorkspaceRead_NotFound(t *testing.T) {
 			},
 		},
 		Resource: ResourceWorkspace(),
-		Read:   true,
+		Read:     true,
 		ID:       "abc/1234",
 	}.Apply(t)
 	assert.NoError(t, err, err)
@@ -199,7 +199,7 @@ func TestResourceWorkspaceRead_Error(t *testing.T) {
 			},
 		},
 		Resource: ResourceWorkspace(),
-		Read:   true,
+		Read:     true,
 		ID:       "abc/1234",
 	}.Apply(t)
 	qa.AssertErrorStartsWith(t, err, "Internal error happened")

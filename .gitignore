@@ -2,6 +2,8 @@
 # Created by https://www.gitignore.io/api/go,python,terraform,virtualenv,pycharm+iml,intellij+all,visualstudiocode
 # Edit at https://www.gitignore.io/?templates=go,python,terraform,virtualenv,pycharm+iml,intellij+all,visualstudiocode
 
+common/testdata/.azure
+
 ### Go ###
 # Binaries for programs and plugins
 *.exe
@@ -270,8 +272,8 @@ dmypy.json
 *.tfstate
 *.tfstate.*
 
-# Crash log files
-crash.log
+# Log files
+*.log
 
 # Ignore any .tfvars files that are generated automatically for each Terraform run. Most
 # .tfvars files are managed as part of configuration and so should be included in

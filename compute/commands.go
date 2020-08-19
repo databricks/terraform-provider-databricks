@@ -144,7 +144,7 @@ func (a CommandsAPI) deleteContext(contextID, clusterID string) error {
 
 func (a CommandsAPI) getContext(contextID, clusterID string) (string, error) {
 	var contextStatus Command // internal hack, yes
-	err := a.client.OldAPI("POST", "/contexts/status", genericCommandRequest{
+	err := a.client.OldAPI("GET", "/contexts/status", genericCommandRequest{
 		ContextID: contextID,
 		ClusterID: clusterID,
 	}, &contextStatus)

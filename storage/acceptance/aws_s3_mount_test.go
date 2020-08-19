@@ -15,29 +15,19 @@ import (
 	"github.com/databrickslabs/databricks-terraform/internal/qa"
 )
 
-func getAwsS3MountConfig(t *testing.T, mountName string) string {
-	if os.Getenv("TEST_AWS_MOUNT_CLUSTER_ID") != "" {
-		return qa.EnvironmentTemplate(t, fmt.Sprintf(`
-	resource "databricks_aws_s3_mount" "mount" {
-		cluster_id			 = "{env.TEST_AWS_MOUNT_CLUSTER_ID}"
-		mount_name           = %q
-		s3_bucket_name       = "{env.TEST_S3_BUCKET_NAME}"
-	}`, mountName))
-	}
-	return qa.EnvironmentTemplate(t, fmt.Sprintf(`
-	resource "databricks_aws_s3_mount" "mount" {
-		mount_name           = %q
-		s3_bucket_name       = "{env.TEST_S3_BUCKET_NAME}"
-	}`, mountName))
-}
-
 func TestAWSS3IamMount_correctly_mounts(t *testing.T) {
 	if _, ok := os.LookupEnv("CLOUD_ENV"); !ok {
 		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
 	}
 	randomMountName := fmt.Sprintf("tf-mount-test-%s", qa.RandomName())
 	expectedS3Bucket := os.Getenv("TEST_S3_BUCKET_NAME")
-	config := getAwsS3MountConfig(t, randomMountName)
+
+	config := qa.EnvironmentTemplate(t, `
+	resource "databricks_aws_s3_mount" "mount" {
+		cluster_id			 = "{env.TEST_AWS_MOUNT_CLUSTER_ID}"
+		mount_name           = "{var.RANDOM_MOUNT_NAME}"
+		s3_bucket_name       = "{env.TEST_S3_BUCKET_NAME}"
+	}`, map[string]string{"RANDOM_MOUNT_NAME": randomMountName})
 
 	acceptance.AccTest(t, resource.TestCase{
 		Steps: []resource.TestStep{

@@ -281,10 +281,19 @@ func fixHCL(v interface{}) interface{} {
 }
 
 // For writing a unit test to intercept the errors (t.Fatalf literally ends the test in failure)
-func environmentTemplate(t *testing.T, template string) (string, error) {
+func environmentTemplate(t *testing.T, template string, otherVars ...map[string]string) (string, error) {
 	vars := map[string]string{
 		"RANDOM": acctest.RandStringFromCharSet(5, acctest.CharSetAlphaNum),
 	}
+	if len(otherVars) > 1 {
+		return "", errors.New("Cannot have more than one customer variable map!")
+	}
+	if len(otherVars) == 1 {
+		for k, v := range otherVars[0] {
+			vars[k] = v
+		}
+	}
+	// pullAll otherVars
 	missing := 0
 	var varType, varName, value string
 	r := regexp.MustCompile(`{(env|var).([^{}]*)}`)
@@ -312,8 +321,8 @@ func environmentTemplate(t *testing.T, template string) (string, error) {
 }
 
 // EnvironmentTemplate asserts existence and fills in {env.VAR} & {var.RANDOM} placeholders in template
-func EnvironmentTemplate(t *testing.T, template string) string {
-	resp, err := environmentTemplate(t, template)
+func EnvironmentTemplate(t *testing.T, template string, otherVars ...map[string]string) string {
+	resp, err := environmentTemplate(t, template, otherVars...)
 	if err != nil {
 		t.Fatal(err.Error())
 	}

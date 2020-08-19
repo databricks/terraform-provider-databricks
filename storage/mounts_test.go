@@ -5,8 +5,6 @@ import (
 	"testing"
 
 	"github.com/databrickslabs/databricks-terraform/common"
-	"github.com/databrickslabs/databricks-terraform/internal/qa"
-
 	"github.com/stretchr/testify/assert"
 )
 
@@ -26,10 +24,10 @@ func TestValidateMountDirectory(t *testing.T) {
 	}
 }
 
-var expectedCommandResp = "done"
+const expectedCommandResp = "done"
 
-func testMountFuncHelper(t *testing.T, mountName, expectedCommand string, mount Mount,
-	mountFunc func(mp MountPoint, mount Mount) (string, error)) {
+func testMountFuncHelper(t *testing.T, mountFunc func(mp MountPoint, mount Mount) (string, error), mount Mount,
+	mountName, expectedCommand string) {
 	c := common.DatabricksClient{
 		Host:  ".",
 		Token: ".",
@@ -57,8 +55,16 @@ func testMountFuncHelper(t *testing.T, mountName, expectedCommand string, mount 
 	assert.Equal(t, expectedCommandResp, resp)
 }
 
-func testMountPointCreateHelper(t *testing.T, mount Mount, expectedMountSource, expectedMountConfig string) {
-	randomMountName := qa.RandomName()
+type mockMount struct{}
+
+func (t mockMount) Source() string            { return "fake-mount" }
+func (t mockMount) Config() map[string]string { return map[string]string{"fake-key": "fake-value"} }
+
+func TestMountPoint_Mount(t *testing.T) {
+	mount := mockMount{}
+	expectedMountSource := "fake-mount"
+	expectedMountConfig := `{"fake-key":"fake-value"}`
+	mountName := "this_mount"
 	expectedCommand := fmt.Sprintf(`
 		def safe_mount(mount_point, mount_source, configs):
 			for mount in dbutils.fs.mounts():
@@ -77,29 +83,28 @@ func testMountPointCreateHelper(t *testing.T, mount Mount, expectedMountSource, 
 				raise e
 		mount_source = safe_mount("/mnt/%s", %q, %s)
 		dbutils.notebook.exit(mount_source)
-	`, randomMountName, expectedMountSource, expectedMountConfig)
-	testMountFuncHelper(t, randomMountName, expectedCommand, mount, func(mp MountPoint, mount Mount) (s string, e error) {
+	`, mountName, expectedMountSource, expectedMountConfig)
+	testMountFuncHelper(t, func(mp MountPoint, mount Mount) (s string, e error) {
 		return mp.Mount(mount)
-	})
+	}, mount, mountName, expectedCommand)
 }
 
 func TestMountPoint_Source(t *testing.T) {
-	randomMountName := qa.RandomName()
+	mountName := "this_mount"
 	expectedCommand := fmt.Sprintf(`
 		dbutils.fs.refreshMounts()
 		for mount in dbutils.fs.mounts():
 			if mount.mountPoint == "/mnt/%s":
 				dbutils.notebook.exit(mount.source)
 		raise Exception("Mount not found")
-	`, randomMountName)
-	testMountFuncHelper(t, randomMountName, expectedCommand, nil,
-		func(mp MountPoint, mount Mount) (s string, e error) {
-			return mp.Source()
-		})
+	`, mountName)
+	testMountFuncHelper(t, func(mp MountPoint, mount Mount) (s string, e error) {
+		return mp.Source()
+	}, nil, mountName, expectedCommand)
 }
 
 func TestMountPoint_Delete(t *testing.T) {
-	randomMountName := qa.RandomName()
+	mountName := "this_mount"
 	expectedCommand := fmt.Sprintf(`
 		mount_point = "/mnt/%s"
 		dbutils.fs.unmount(mount_point)
@@ -108,9 +113,8 @@ func TestMountPoint_Delete(t *testing.T) {
 			if mount.mountPoint == mount_point:
 				raise Exception("Failed to unmount")
 		dbutils.notebook.exit("success")
-	`, randomMountName)
-	testMountFuncHelper(t, randomMountName, expectedCommand, nil,
-		func(mp MountPoint, mount Mount) (s string, e error) {
-			return expectedCommandResp, mp.Delete()
-		})
+	`, mountName)
+	testMountFuncHelper(t, func(mp MountPoint, mount Mount) (s string, e error) {
+		return expectedCommandResp, mp.Delete()
+	}, nil, mountName, expectedCommand)
 }

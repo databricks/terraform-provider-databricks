@@ -22,6 +22,15 @@ func TestEnvironmentTemplate(t *testing.T) {
 	assert.Equal(t, os.Getenv("USER"), FirstKeyValue(t, res, "name"))
 }
 
+func TestEnvironmentTemplate_other_vars(t *testing.T) {
+	otherVar := map[string]string{"TEST": "value"}
+	res := EnvironmentTemplate(t, `
+	resource "user" "me" {
+		name  = "{var.TEST}"
+	}`, otherVar)
+	assert.Equal(t, otherVar["TEST"], FirstKeyValue(t, res, "name"))
+}
+
 func TestEnvironmentTemplate_unset_env(t *testing.T) {
 	res, err := environmentTemplate(t, `
 	resource "user" "me" {

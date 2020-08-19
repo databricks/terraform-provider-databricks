@@ -52,7 +52,6 @@ func DatabricksProvider() terraform.ResourceProvider {
 			"databricks_mws_storage_configurations": mws.ResourceStorageConfiguration(),
 			"databricks_mws_networks":               mws.ResourceNetwork(),
 			"databricks_mws_workspaces":             mws.ResourceWorkspace(),
-			"databricks_workspace_conf":             mws.ResourceWorkspaceConf(),
 
 			"databricks_aws_s3_mount":          storage.ResourceAWSS3Mount(),
 			"databricks_azure_adls_gen1_mount": storage.ResourceAzureAdlsGen1Mount(),
@@ -60,7 +59,8 @@ func DatabricksProvider() terraform.ResourceProvider {
 			"databricks_azure_blob_mount":      storage.ResourceAzureBlobMount(),
 			"databricks_dbfs_file":             storage.ResourceDBFSFile(),
 
-			"databricks_notebook": workspace.ResourceNotebook(),
+			"databricks_notebook":       workspace.ResourceNotebook(),
+			"databricks_workspace_conf": workspace.ResourceWorkspaceConf(),
 		},
 		Schema: map[string]*schema.Schema{
 			"host": {

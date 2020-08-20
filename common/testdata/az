@@ -1,0 +1,15 @@
+#!/bin/sh
+
+if [ "yes" == "$FAIL" ]; then 
+    >&2 echo "This is just a failing script."
+    exit 1
+fi
+
+
+echo '{
+  "accessToken": "...",
+  "expiresOn": "2020-08-20 11:02:42.634058",
+  "subscription": "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee",
+  "tenant": "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee",
+  "tokenType": "Bearer"
+}'

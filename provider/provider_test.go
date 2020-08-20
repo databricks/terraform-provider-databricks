@@ -16,24 +16,23 @@ import (
 )
 
 type providerConfigTest struct {
-	host                         string
-	token                        string
-	username                     string
-	password                     string
-	configFile                   string
-	profile                      string
-	azureClientID                string
-	azureClientSecret            string
-	azureTenantID                string
-	azureResourceGroup           string
-	azureWorkspaceName           string
-	azureSubscriptionID          string
-	azureWorkspaceResourceID     string
-	azurePATTokenDurationSeconds string
-	env                          map[string]string
-	errPrefix                    string
-	hasToken                     string
-	hasHost                      string
+	host                     string
+	token                    string
+	username                 string
+	password                 string
+	configFile               string
+	profile                  string
+	azureClientID            string
+	azureClientSecret        string
+	azureTenantID            string
+	azureResourceGroup       string
+	azureWorkspaceName       string
+	azureSubscriptionID      string
+	azureWorkspaceResourceID string
+	env                      map[string]string
+	errPrefix                string
+	hasToken                 string
+	hasHost                  string
 }
 
 func (tt providerConfigTest) rawConfig() map[string]interface{} {
@@ -205,17 +204,40 @@ func TestProviderConfigurationOptions(t *testing.T) {
 			errPrefix: "More than one authorization method configured: config profile and password",
 		},
 		{
-			// `az` looks for JWT token in  ~/.azure/accessTokens.json cache
 			azureWorkspaceResourceID: "/a/b/c",
 			env: map[string]string{
+				// // these may fail on windows. use docker container for testing.
+				"PATH": "../common/testdata:/bin",
 				"HOME": "../common/testdata",
 			},
-			errPrefix: "Invoking Azure CLI failed with the following error: ERROR: Please run 'az login' to setup account.",
+			hasHost:  "",
+			hasToken: "",
+		},
+		{
+			azureWorkspaceResourceID: "/a/b/c",
+			env: map[string]string{
+				// these may fail on windows. use docker container for testing.
+				"PATH": "../common/testdata:/bin",
+				"FAIL": "yes",
+				"HOME": "../common/testdata",
+			},
+			errPrefix: "Invoking Azure CLI failed with the following error: This is just a failing script.",
+		},
+		{
+			// `az` not installed, which is expected for deployers on other clouds...
+			azureWorkspaceResourceID: "/a/b/c",
+			env: map[string]string{
+				"PATH": "/bin",
+				"HOME": "../common/testdata",
+			},
+			errPrefix: "Most likely Azure CLI is not installed.",
 		},
 		{
 			azureWorkspaceResourceID: "/a/b/c",
 			token:                    "x",
 			env: map[string]string{
+				// these may fail on windows. use docker container for testing.
+				"PATH": "../common/testdata:/bin",
 				"HOME": "../common/testdata",
 			},
 			errPrefix: "More than one authorization method configured: azure and token",
@@ -223,6 +245,8 @@ func TestProviderConfigurationOptions(t *testing.T) {
 		{
 			azureWorkspaceResourceID: "/a/b/c",
 			env: map[string]string{
+				// these may fail on windows. use docker container for testing.
+				"PATH":                "../common/testdata:/bin",
 				"HOME":                "../common/testdata",
 				"DATABRICKS_USERNAME": "x",
 			},

@@ -123,9 +123,12 @@ func (aa *AzureAuth) configureWithAzureCLI() (func(r *http.Request) error, error
 	// verify that Azure CLI is authenticated
 	_, err := cli.GetTokenFromCLI(AzureDatabricksResourceID)
 	if err != nil {
+		if err.Error() == "Invoking Azure CLI failed with the following error: " {
+			return nil, fmt.Errorf("Most likely Azure CLI is not installed. " +
+				"See https://docs.microsoft.com/en-us/cli/azure/?view=azure-cli-latest for details.")
+		}
 		return nil, err
 	}
-	auth.NewAuthorizerFromCLIWithResource(AzureDatabricksResourceID)
 	log.Printf("[INFO] Using Azure CLI authentication")
 	return func(r *http.Request) error {
 		pat, err := aa.acquirePAT(auth.NewAuthorizerFromCLIWithResource)

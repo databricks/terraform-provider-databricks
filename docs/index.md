@@ -33,19 +33,14 @@ resource "databricks_cluster" "shared_autoscaling" {
 
 ## Authentication
 
-!> **Warning** Please be aware that hard coding any credentials is not something that is recommended. It may be best if 
-you store the credentials environment variables, `~/.databrickscfg` file or use tfvars file.
+!> **Warning** Please be aware that hard coding any credentials in plain text is not something that is recommended. We strongly recommend using Terraform backend that supports encryption. Please use [environment variables](#environment-variables), `~/.databrickscfg` file, encrypted `.tfvars` files or secret store of your choice (Hashicorp [Vault](https://www.vaultproject.io/), AWS [Secrets Manager](https://aws.amazon.com/secrets-manager/), AWS [Param Store](https://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-parameter-store.html), Azure [Key Vault](https://azure.microsoft.com/en-us/services/key-vault/))
 
-!> **Warning** Please note that the azure service principal authentication currently uses a generated Databricks PAT token 
-and not a AAD token for the authentication. This is due to the Databricks AAD feature not yet supporting AAD tokens for 
-secret scopes. This will be refactored in a transparent manner when that support is enabled. The only field to be impacted 
-is `pat_token_duration_seconds` which will be deprecated and after AAD support is fully supported. 
 
 There are currently three supported methods [to authenticate into](https://docs.databricks.com/dev-tools/api/latest/authentication.html) the Databricks platform to create resources:
 
 * [PAT Tokens](https://docs.databricks.com/dev-tools/api/latest/authentication.html)
 * Username and password pair
-* Azure Active Directory Tokens via Azure Service Principal or Azure CLI
+* Azure Active Directory Tokens via [Azure CLI](#authenticating-with-azure-cli) or [Service Principals](#authenticating-with-azure-service-principal)
 
 ### Authenticating with Databricks CLI credentials
 
@@ -97,12 +92,30 @@ One can use `basic_auth` parameter to supply username and password credentials t
 ``` hcl
 provider "databricks" {
   host = "http://abc-cdef-ghi.cloud.databricks.com"
-  basic_auth {
-    username = var.user
-    password = var.password
-  }
+  username = var.user
+  password = var.password
 }
 ```
+
+## Argument Reference
+
+The following arguments are supported by the db provider block:
+
+* `host` - (optional) This is the host of the Databricks workspace. This is will be a url that you use to login to your workspace. 
+Alternatively you can provide this value as an environment variable `DATABRICKS_HOST`.
+* `token` - (optional) This is the api token to authenticate into the workspace. Alternatively you can provide this value as an 
+environment variable `DATABRICKS_TOKEN`. 
+* `username` - (optional) This is the username of the user that can log into the workspace. Alternatively you can provide this value as an environment variable `DATABRICKS_USERNAME`. Recommended only for [creating workspaces in AWS](resources/mws_workspaces.md).
+* `password` - (optional) This is the password of the user that can log into the workspace. Alternatively you can provide this value as an environment variable `DATABRICKS_PASSWORD`. Recommended only for [creating workspaces in AWS](resources/mws_workspaces.md).
+* `config_file` - (optional) Location of the Databricks CLI credentials file, that is created, by `databricks configure --token` command. By default, it is located in ~/.databrickscfg. Check [databricks cli documentation](https://docs.databricks.com/dev-tools/cli/index.html#set-up-authentication) for more details. Config file credentials will only be used when host/token/basic_auth/azure_auth are not provided. Alternatively you can provide this value as an environment variable `DATABRICKS_CONFIG_FILE`. This field defaults to `~/.databrickscfg`. 
+* `profile` - (optional) Connection profile specified within ~/.databrickscfg. Please check [connection profiles section](https://docs.databricks.com/dev-tools/cli/index.html#connection-profiles) for more details. This field defaults to 
+`DEFAULT`.
+
+## Special configurations for Azure
+
+!> **Warning** Please note that the azure service principal authentication currently uses a generated Databricks PAT token and not a AAD token for the authentication. This is due to the Databricks AAD feature not yet supporting AAD tokens for secret scopes. This will be refactored in a transparent manner when that support is enabled. The only field to be impacted is `pat_token_duration_seconds` which will be deprecated and after AAD support is fully supported. 
+
+In order to work with Azure Databricks workspace, provider has to know it's `id` (or construct it from `azure_subscription_id`, `azure_workspace_name` and `azure_workspace_name`). Provider works with [Azure CLI authentication](https://docs.microsoft.com/en-us/cli/azure/authenticate-azure-cli?view=azure-cli-latest) to facilitate local development workflows, though for automated scenarios a service principal auth is necessary (and specification of `azure_client_id`, `azure_client_secret` and `azure_tenant_id` parameters).
 
 ### Authenticating with Azure Service Principal
 
@@ -162,32 +175,10 @@ resource "databricks_scim_user" "my-user" {
 }
 ```
 
-## Argument Reference
-
-The following arguments are supported by the db provider block:
-
-* `host` - (optional) This is the host of the Databricks workspace. This is will be a url that you use to login to your workspace. 
-Alternatively you can provide this value as an environment variable `DATABRICKS_HOST`.
-* `token` - (optional) This is the api token to authenticate into the workspace. Alternatively you can provide this value as an 
-environment variable `DATABRICKS_TOKEN`. 
-* `username` - (optional) This is the username of the user that can log into the workspace. Alternatively you can provide this value as an environment variable `DATABRICKS_USERNAME`. Recommended only for [creating workspaced in AWS](resources/mws_workspaces.md).
-* `password` - (optional) This is the password of the user that can log into the workspace. Alternatively you can provide this value as an environment variable `DATABRICKS_PASSWORD`. Recommended only for [creating workspaced in AWS](resources/mws_workspaces.md).
-* `config_file` - (optional) Location of the Databricks CLI credentials file, that is created, by `databricks configure --token` command. By default, it is located in ~/.databrickscfg. Check [databricks cli documentation](https://docs.databricks.com/dev-tools/cli/index.html#set-up-authentication) for more details. Config file credentials will only be used when host/token/basic_auth/azure_auth are not provided. Alternatively you can provide this value as an environment variable `DATABRICKS_CONFIG_FILE`. This field defaults to `~/.databrickscfg`. 
-* `profile` - (optional) Connection profile specified within ~/.databrickscfg. Please check [connection profiles section](https://docs.databricks.com/dev-tools/cli/index.html#connection-profiles) for more details. This field defaults to 
-`DEFAULT`.
-
-## Special configurations for Azure
-
-In order to work with Azure Databricks workspace, provider has to know it's `id`. Or construct it from `azure_subscription_id`, `azure_workspace_name` and `azure_workspace_name`. 
-
 * `azure_workspace_resource_id` - (optional) `id` attribute of [azurerm_databricks_workspace](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/databricks_workspace) resource. Combination of subscription id, resource group name and workspace name. 
 * `azure_workspace_name` - (optional) This is the name of your Azure Databricks Workspace. Alternatively you can provide this value as an environment variable `DATABRICKS_AZURE_WORKSPACE_NAME`. Not needed with `azure_workspace_resource_id` is set.
 * `azure_resource_group` - (optional) This is the resource group in which your Azure Databricks Workspace resides in. Alternatively you can provide this value as an environment variable `DATABRICKS_AZURE_RESOURCE_GROUP`. Not needed with `azure_workspace_resource_id` is set.
 * `azure_subscription_id` - (optional) This is the Azure Subscription id in which your Azure Databricks Workspace resides in. Alternatively you can provide this value as an environment variable `DATABRICKS_AZURE_SUBSCRIPTION_ID` or `ARM_SUBSCRIPTION_ID`. Not needed with `azure_workspace_resource_id` is set.
-
-
-Provider works with [Azure CLI authentication](https://docs.microsoft.com/en-us/cli/azure/authenticate-azure-cli?view=azure-cli-latest) to facilitate local development workflows, though for automated scenarios a service principal auth is necessary:
-
 * `azure_client_secret` - (optional) This is the Azure Enterprise Application (Service principal) client secret. This service principal requires contributor access to your Azure Databricks deployment. Alternatively you can provide this value as an environment variable `DATABRICKS_AZURE_CLIENT_SECRET` or `ARM_CLIENT_SECRET`.
 * `azure_client_id` - (optional) This is the Azure Enterprise Application (Service principal) client id. This service principal requires contributor access to your Azure Databricks deployment. Alternatively you can provide this value as an environment variable `DATABRICKS_AZURE_CLIENT_ID` or `ARM_CLIENT_ID`.
 * `azure_tenant_id` - (optional) This is the Azure Active Directory Tenant id in which the Enterprise Application (Service Principal) 

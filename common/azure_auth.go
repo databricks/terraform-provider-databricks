@@ -13,6 +13,7 @@ import (
 	"github.com/Azure/go-autorest/autorest/adal"
 	"github.com/Azure/go-autorest/autorest/azure"
 	"github.com/Azure/go-autorest/autorest/azure/auth"
+	"github.com/Azure/go-autorest/autorest/azure/cli"
 )
 
 // List of management information
@@ -118,6 +119,15 @@ func (aa *AzureAuth) configureWithAzureCLI() (func(r *http.Request) error, error
 	}
 	if aa.IsClientSecretSet() {
 		return nil, nil
+	}
+	// verify that Azure CLI is authenticated
+	_, err := cli.GetTokenFromCLI(AzureDatabricksResourceID)
+	if err != nil {
+		if err.Error() == "Invoking Azure CLI failed with the following error: " {
+			return nil, fmt.Errorf("Most likely Azure CLI is not installed. " +
+				"See https://docs.microsoft.com/en-us/cli/azure/?view=azure-cli-latest for details.")
+		}
+		return nil, err
 	}
 	log.Printf("[INFO] Using Azure CLI authentication")
 	return func(r *http.Request) error {
@@ -306,11 +316,6 @@ func (aa *AzureAuth) getClientSecretAuthorizer(resource string) (autorest.Author
 		return nil, err
 	}
 	return autorest.NewBearerAuthorizer(spt), nil
-}
-
-// IsZero tells if there are any values inside
-func (aa *AzureAuth) IsZero() bool {
-	return *aa == AzureAuth{}
 }
 
 type azureDatabricksWorkspace struct {

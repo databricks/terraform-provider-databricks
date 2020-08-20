@@ -111,12 +111,12 @@ func getCommonLibraries() string {
 		package = "faker"
 		repo = "https://pypi.org"
 	}
-	libraries {
+	library {
 		pypi {
 			package = "networkx"
 		}
 	}
-	libraries {
+	library {
 		maven {
 			coordinates = "com.microsoft.azure:azure-eventhubs-spark_2.11:2.3.7"
 		}

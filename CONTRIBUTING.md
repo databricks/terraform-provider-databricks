@@ -106,6 +106,16 @@ So please run `make lint` instead.
 
 ## Unit testing resources
 
+Eventually, all of resources would be automatically checked for a unit test presence. `TestGenerateTestCodeStubs` is going to fail, when resource has certain test cases missing. Until all existing resources have tests, you can generate stub code, which will be logged to stdout by changing these lines of `generate_test.go` with name of resource you're creating:
+
+```go
+for name, resource := range p.ResourcesMap {
+	if name != "databricks_scim_user" {
+		continue
+	}
+	//...
+```
+
 In order to unit test a resource, which runs fast and could be included in code coverage, one should use `ResourceTester`, that launches embedded HTTP server with `HTTPFixture`'s containing all calls that should have been made in given scenario. Some may argue that this is not a pure unit test, because it creates a side effect in form of embedded server, though it's always on different random port, making it possible to execute these tests in parallel. Therefore comments about non-pure unit tests will be ignored, if they use `ResourceTester` helper.
 
 ```go

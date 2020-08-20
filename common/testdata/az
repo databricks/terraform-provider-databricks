@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 if [ "yes" == "$FAIL" ]; then 
     >&2 echo "This is just a failing script."

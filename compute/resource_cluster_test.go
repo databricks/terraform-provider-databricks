@@ -207,25 +207,25 @@ func TestResourceClusterCreate_WithLibraries(t *testing.T) {
 		spark_version = "7.1-scala12"
 		node_type_id = "i3.xlarge"
 
-		libraries {
+		library {
 			jar = "dbfs://foo.jar"
 		}
 
-		libraries {
+		library {
 			egg = "dbfs://bar.egg"
 		}
 
-		libraries {
+		library {
 			whl = "dbfs://baz.whl"
 		}
 
-		libraries {
+		library {
 			pypi {
 				package = "seaborn==1.2.4"
 			}
 		}
 
-		libraries {
+		library {
 			maven {
 				coordinates = "foo:bar:baz:0.1.0"
 				repo = "s3://maven-repo-in-s3/release"
@@ -235,7 +235,7 @@ func TestResourceClusterCreate_WithLibraries(t *testing.T) {
 			}
 		}
 
-		libraries {
+		library {
 			cran {
 				package = "rkeops"
 				repo = "internal"
@@ -320,7 +320,7 @@ func TestResourceClusterRead(t *testing.T) {
 	assert.Equal(t, "Shared Autoscaling", d.Get("cluster_name"))
 	assert.Equal(t, "i3.xlarge", d.Get("node_type_id"))
 	assert.Equal(t, 4, d.Get("autoscale.0.max_workers"))
-	assert.Equal(t, "requests", d.Get("libraries.754562683.pypi.0.package"))
+	assert.Equal(t, "requests", d.Get("library.754562683.pypi.0.package"))
 	assert.Equal(t, "RUNNING", d.Get("state"))
 
 	for k, v := range d.State().Attributes {
@@ -582,11 +582,11 @@ func TestResourceClusterUpdate_LibrariesChangeOnTerminatedCluster(t *testing.T) 
 		spark_version = "7.1-scala12"
 		node_type_id = "i3.xlarge"
 
-		libraries {
+		library {
 			jar = "dbfs://foo.jar"
 		}
 
-		libraries {
+		library {
 			egg = "dbfs://bar.egg"
 		}`,
 	}.Apply(t)

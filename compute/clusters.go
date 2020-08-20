@@ -90,10 +90,27 @@ func (a ClustersAPI) Start(clusterID string) error {
 	if err != nil {
 		return err
 	}
-	if info.State == ClusterStateRestarting {
-		// if cluster is restarting we dont need to start, we just need to wait
-		_, err := a.waitForClusterStatus(info.ClusterID, ClusterStateRunning)
-		return err
+	switch info.State {
+	case ClusterStateRunning:
+		// it's already running, so we're good to return
+		break
+	case ClusterStatePending, ClusterStateResizing, ClusterStateRestarting:
+		// let's wait tiny bit, so we return RUNNING cluster info
+		info, err = a.waitForClusterStatus(info.ClusterID, ClusterStateRunning)
+		if err != nil {
+			return err
+		}
+		return nil
+	case ClusterStateTerminating:
+		// let it finish terminating, so it's safe to start again.
+		// TERMINATED cluster info will be returned this way
+		info, err = a.waitForClusterStatus(info.ClusterID, ClusterStateTerminated)
+		if err != nil {
+			return err
+		}
+	case ClusterStateError, ClusterStateUnknown:
+		// most likely we can start error'ed cluster again...
+		log.Printf("[ERROR] Cluster %s: %s", info.State, info.StateMessage)
 	}
 	err = a.client.Post("/clusters/start", ClusterID{ClusterID: clusterID}, nil)
 	if err != nil {

@@ -87,10 +87,17 @@ func CommonInstancePoolID() string {
 	return commonInstancePool.InstancePoolID
 }
 
+func getClientWithRealCommandExecutor() *common.DatabricksClient {
+	client := common.CommonEnvironmentClient()
+	client.WithCommandExecutor(NewCommandsAPI(client))
+	return client
+}
+
 // NewTinyClusterInCommonPool creates new cluster for short-lived purposes
 func NewTinyClusterInCommonPool() (c ClusterInfo, err error) {
 	randomName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
-	c, err = ClustersAPI{common.CommonEnvironmentClient()}.Create(Cluster{
+	clusters := NewClustersAPI(getClientWithRealCommandExecutor())
+	c, err = clusters.Create(Cluster{
 		NumWorkers:             1,
 		ClusterName:            "Terraform " + randomName,
 		SparkVersion:           CommonRuntimeVersion(),
@@ -104,9 +111,9 @@ func NewTinyClusterInCommonPool() (c ClusterInfo, err error) {
 // NewTinyClusterInCommonPoolPossiblyReused is recommended to be used for testing only
 func NewTinyClusterInCommonPoolPossiblyReused() (c ClusterInfo) {
 	randomName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
-	client := common.CommonEnvironmentClient()
 	currentCluster := "TerraformIntegrationTest"
-	c, err := NewClustersAPI(client).GetOrCreateRunningCluster(currentCluster, Cluster{
+	clusters := NewClustersAPI(getClientWithRealCommandExecutor())
+	c, err := clusters.GetOrCreateRunningCluster(currentCluster, Cluster{
 		NumWorkers:             1,
 		ClusterName:            currentCluster,
 		SparkVersion:           CommonRuntimeVersion(),

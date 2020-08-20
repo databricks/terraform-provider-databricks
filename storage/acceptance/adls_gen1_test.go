@@ -27,14 +27,12 @@ func TestAzureAccAdlsGen1Mount_correctly_mounts(t *testing.T) {
 					scope        = databricks_secret_scope.terraform.name
 				}
 				resource "databricks_azure_adls_gen1_mount" "mount" {
-					container_name         = "dev"
-					storage_account_name   = "{env.TEST_GEN2_ADAL_NAME}"
+					storage_resource_name   = "{env.TEST_GEN2_ADAL_NAME}"
 					mount_name             = "localdir{var.RANDOM}"
 					tenant_id              = "{env.ARM_TENANT_ID}"
 					client_id              = "{env.ARM_CLIENT_ID}"
 					client_secret_scope    = databricks_secret_scope.terraform.name
 					client_secret_key      = databricks_secret.client_secret.key
-					initialize_file_system = true
 				}`),
 			},
 		},

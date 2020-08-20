@@ -38,7 +38,7 @@ func TestAzureAccBlobMount_correctly_mounts(t *testing.T) {
 		token_secret_key     = databricks_secret.storage_key.key
 	}`)
 	randomName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
-	resource.Test(t, resource.TestCase{
+	acceptance.AccTest(t, resource.TestCase{
 		Steps: []resource.TestStep{
 			{
 				Config: config,

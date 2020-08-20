@@ -51,7 +51,7 @@ func TestAzureAccAdlsGen2Mount_capture_error(t *testing.T) {
 	if !client.IsAzure() {
 		t.Skip("Test is meant only for Azure")
 	}
-	resource.Test(t, resource.TestCase{
+	acceptance.AccTest(t, resource.TestCase{
 		Steps: []resource.TestStep{
 			{
 				Config: qa.EnvironmentTemplate(t, `
@@ -75,7 +75,7 @@ func TestAzureAccAdlsGen2Mount_capture_error(t *testing.T) {
 					initialize_file_system = true
 				}`),
 				ExpectNonEmptyPlan: true,
-				ExpectError:        regexp.MustCompile("java.lang.IllegalArgumentException: Secret does not exist with scope"),
+				ExpectError:        regexp.MustCompile("Secret does not exist with scope"),
 				Destroy:            false,
 			},
 		},

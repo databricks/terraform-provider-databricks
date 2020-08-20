@@ -10,9 +10,11 @@ import (
 	"github.com/databrickslabs/databricks-terraform/common"
 	"github.com/databrickslabs/databricks-terraform/compute"
 	"github.com/databrickslabs/databricks-terraform/identity"
+	"github.com/databrickslabs/databricks-terraform/mws"
 	"github.com/databrickslabs/databricks-terraform/storage"
 	"github.com/databrickslabs/databricks-terraform/workspace"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestDummy(t *testing.T) {
@@ -26,6 +28,23 @@ func TestDummy(t *testing.T) {
 			},
 		},
 	}).Verify(t)
+}
+
+func TestAccMutiworkspaceUsedFromNormalMode(t *testing.T) {
+	if cloudEnv, ok := os.LookupEnv("CLOUD_ENV"); !ok || cloudEnv == "MWS" {
+		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' set")
+	}
+	client := common.CommonEnvironmentClient()
+	checkCheck := func(_ interface{}, err error) {
+		assert.Error(t, err)
+		a, ok := err.(common.APIError)
+		assert.True(t, ok)
+		assert.Equal(t, "INCORRECT_CONFIGURATION", a.ErrorCode)
+	}
+	checkCheck(mws.NewCredentialsAPI(client).List("_"))
+	checkCheck(mws.NewNetworksAPI(client).List("_"))
+	checkCheck(mws.NewStorageConfigurationsAPI(client).List("_"))
+	checkCheck(mws.NewWorkspacesAPI(client).List("_"))
 }
 
 func TestAccMissingResourcesInWorkspace(t *testing.T) {

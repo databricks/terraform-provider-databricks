@@ -407,6 +407,7 @@ func DatabricksProvider() terraform.ResourceProvider {
 			if err != nil {
 				return nil, err
 			}
+			pc.WithCommandExecutor(compute.NewCommandsAPI(&pc))
 			return &pc, nil
 		},
 	}

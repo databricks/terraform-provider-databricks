@@ -65,34 +65,34 @@ When you [create a Databricks cluster](https://docs.databricks.com/clusters/conf
 * `min_workers` - (Optional) The minimum number of workers to which the cluster can scale down when underutilized. It is also the initial number of workers the cluster will have after creation.
 * `max_workers` - (Optional) The maximum number of workers to which the cluster can scale up when overloaded. max_workers must be strictly greater than min_workers.
 
-### libraries Configuration Block
+### library Configuration Block
 
 In order to install libraries, one must specify each library in own configuration block. Each different type of library has slightly different syntax. It's possible to specify only one type of library within one config block, otherwise plan will fail with error.
 
 Installing JAR artifacts on a cluster. Location can be anyling, that is DBFS or mounted object store (s3, adls, ...)
 ```hcl
-libraries {
+library {
   jar = "dbfs://FileStore/app-0.0.1.jar"
 }
 ```
 
 Installing Python EGG artifacts. Location can be anyling, that is DBFS or mounted object store (s3, adls, ...)
 ```hcl
-libraries {
+library {
   egg = "dbfs://FileStore/foo.egg"
 }
 ```
 
 Installing Python Wheel artifacts. Location can be anyling, that is DBFS or mounted object store (s3, adls, ...)
 ```hcl
-libraries {
+library {
   whl = "dbfs://FileStore/baz.whl"
 }
 ```
 
 Installing Python PyPI artifacts. You can also optionally also specify `repo` parameter for custom PyPI mirror, that should be accessible without any authentication for the network, that cluster runs in.
 ```hcl
-libraries {
+library {
   pypi {
     package = "fbprophet==0.6"
     // repo can also be specified here
@@ -102,7 +102,7 @@ libraries {
 
 Installing artifacts from Maven repository. You can also optionally also specify `repo` parameter for custom Maven-style repository, that should be accessible without any authentication for the network, that cluster runs in. It can even be properly configured [maven s3 wagon](https://github.com/seahen/maven-s3-wagon), [AWS CodeArtifact](https://aws.amazon.com/codeartifact/) or [Azure Artifacts](https://azure.microsoft.com/en-us/services/devops/artifacts/).
 ```hcl
-libraries {
+library {
   maven {
     coordinates = "com.amazon.deequ:deequ:1.0.4"
     // exlusions block is optional
@@ -113,7 +113,7 @@ libraries {
 
 Installing artifacts from CRan. You can also optionally also specify `repo` parameter for custom cran mirror.
 ```hcl
-libraries {
+library {
   cran {
     package = "rkeops"
   }

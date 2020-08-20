@@ -105,6 +105,11 @@ func TestAwsAccJobResource_NoInstancePool(t *testing.T) {
 					notebook_task {
 						notebook_path = "/Production/MakeFeatures"
 					}
+					library {
+						pypi {
+							package = "networkx"
+						}
+					}
 					email_notifications {
 						no_alert_for_skipped_runs = true
 					}

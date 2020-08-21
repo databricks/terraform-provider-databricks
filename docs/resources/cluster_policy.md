@@ -17,33 +17,75 @@ Cluster policy permissions limit which policies a user can select in the Policy 
 
 ## Example Usage
 
-The following example defines [external metastore](https://docs.databricks.com/administration-guide/clusters/policies.html#external-metastore-policy) policy:
+Let us take a look at an example of how you can manage two teams: Marketing and Data Engineering. In the following scenario we want the marketing team to have a really good query experience, so we enabled delta cache for them. On the other hand we want the data engineering team to be able to utilize bigger clusters so we increased the dbus per hour that they can spend. This strategy allows your marketing users and data engineering users to use Databricks in a self service manner but have a different experience in regards to security and performance. And down the line if you need to add more global settings you can propagate them through the “base cluster policy” .
+
+`modules/base-cluster-policy/main.tf` could look like:
 
 ```hcl
-resource "databricks_cluster_policy" "external_metastore" {
-    name = "Use Enterprise Metastore"
-    definition = jsonencode({
-        "spark_conf.spark.hadoop.javax.jdo.option.ConnectionURL": {
-            "type": "fixed",
-            "value": "jdbc:sqlserver://<jdbc-url>"
+variable "team" {
+    description = "Team that performs the work"
+}
+
+variable "policy_overrides" {
+    description = "Cluster policy overrides"
+}
+
+locals {
+    default_policy = {
+        "dbus_per_hour" : {
+            "type" : "range",
+            "maxValue" : 10
         },
-        "spark_conf.spark.hadoop.javax.jdo.option.ConnectionDriverName": {
+        "autotermination_minutes": {
             "type": "fixed",
-            "value": "com.microsoft.sqlserver.jdbc.SQLServerDriver"
+            "value": 20,
+            "hidden": true
         },
-        "spark_conf.spark.databricks.delta.preview.enabled": {
-            "type": "fixed",
-            "value": true
-        },
-        "spark_conf.spark.hadoop.javax.jdo.option.ConnectionUserName": {
-            "type": "fixed",
-            "value": "<metastore-user>"
-        },
-        "spark_conf.spark.hadoop.javax.jdo.option.ConnectionPassword": {
-            "type": "fixed",
-            "value": "<metastore-password>"
+        "custom_tags.Team" : {
+            "type" : "fixed",
+            "value" : var.team
         }
-        })
+    }
+}
+
+resource "databricks_cluster_policy" "fair_use" {
+    name = "${var.team} cluster policy"
+    definition = jsonencode(merge(local.default_policy, var.policy_overrides))
+}
+
+resource "databricks_permissions" "can_use_cluster_policyinstance_profile" {
+    cluster_policy_id = databricks_cluster_policy.fair_use.id
+    access_control {
+        group_name       = var.team
+        permission_level = "CAN_USE"
+    }
+}
+```
+
+And custom instances of that base policy module for our marketing and data engineering teams woud look like:
+
+```hcl
+module "marketing_compute_policy" {
+    source = "../modules/databricks-cluster-policy"
+    team = "marketing"
+    policy_overrides = {
+        // only marketing guys will benefit from delta cache this way
+        "spark_conf.spark.databricks.io.cache.enabled": {
+            "value": "true"
+        },
+    }
+}
+
+module "engineering_compute_policy" {
+    source = "../modules/databricks-cluster-policy"
+    team = "engineering"
+    policy_overrides = {
+        "dbus_per_hour" : {
+            "type" : "range",
+            // only engineering guys can spin up big clusters
+            "maxValue" : 50
+        },
+    }
 }
 ```
 

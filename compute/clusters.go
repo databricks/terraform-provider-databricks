@@ -3,6 +3,7 @@ package compute
 import (
 	"fmt"
 	"log"
+	"sort"
 	"strings"
 	"time"
 
@@ -221,10 +222,8 @@ func (a ClustersAPI) List() ([]ClusterInfo, error) {
 
 // ListNodeTypes returns a list of supported Spark node types
 func (a ClustersAPI) ListNodeTypes() ([]NodeType, error) {
-	var nodeTypeList = struct {
-		NodeTypes []NodeType `json:"node_types,omitempty" url:"node_types,omitempty"`
-	}{}
-	err := a.client.Get("/clusters/list-node-types", nil, &nodeTypeList)
+	var nodeTypeList = &NodeTypeList{}
+	err := a.client.Get("/clusters/list-node-types", nil, nodeTypeList)
 	return nodeTypeList.NodeTypes, err
 }
 
@@ -234,6 +233,7 @@ func (a ClustersAPI) GetOrCreateRunningCluster(name string, custom ...Cluster) (
 		err = fmt.Errorf("You can only specify 1 custom cluster conf, not %d", len(custom))
 		return
 	}
+
 	clusters, err := a.List()
 	if err != nil {
 		return
@@ -241,25 +241,35 @@ func (a ClustersAPI) GetOrCreateRunningCluster(name string, custom ...Cluster) (
 	for _, cl := range clusters {
 		if cl.ClusterName == name {
 			log.Printf("[INFO] Found reusable cluster '%s'", name)
+
+			clusterAvailable := true
 			if !cl.IsRunningOrResizing() {
 				err = a.Start(cl.ClusterID)
 				if err != nil {
-					return
+					clusterAvailable = false
+					log.Printf("[INFO] Cluster %s cannot be started, creating an autoterminating cluster", name)
 				}
 			}
-			return cl, nil
+			if clusterAvailable {
+				return cl, nil
+			}
 		}
 	}
-	// Non nvme based instance types require ebs configurations
-	instanceType := "i3.xlarge"
-	if a.client.IsAzure() {
-		instanceType = "Standard_DS3_v2"
+
+	nodeTypes, err := a.ListNodeTypes()
+	if err != nil {
+		return
 	}
+
+	nodeType := GetSmallestNodeType(nodeTypes)
+
+	log.Printf("[INFO] Creating an autoterminating cluster with node type %s", nodeType.NodeTypeID)
+
 	r := Cluster{
 		NumWorkers:             1,
 		ClusterName:            name,
 		SparkVersion:           CommonRuntimeVersion(),
-		NodeTypeID:             instanceType,
+		NodeTypeID:             nodeType.NodeTypeID,
 		IdempotencyToken:       name,
 		AutoterminationMinutes: 10,
 	}
@@ -267,4 +277,50 @@ func (a ClustersAPI) GetOrCreateRunningCluster(name string, custom ...Cluster) (
 		r = custom[0]
 	}
 	return a.Create(r)
+}
+
+// GetSmallestNodeType returns the smallest node type in a list of node types
+func GetSmallestNodeType(nodeTypes []NodeType) NodeType {
+	sortedNodeTypes := nodeTypes
+
+	sort.Slice(sortedNodeTypes, func(i, j int) bool {
+		if sortedNodeTypes[i].IsDeprecated != sortedNodeTypes[j].IsDeprecated {
+			return !sortedNodeTypes[i].IsDeprecated
+		}
+
+		if sortedNodeTypes[i].MemoryMB != sortedNodeTypes[j].MemoryMB {
+			return sortedNodeTypes[i].MemoryMB < sortedNodeTypes[j].MemoryMB
+		}
+
+		if sortedNodeTypes[i].NumCores != sortedNodeTypes[j].NumCores {
+			return sortedNodeTypes[i].NumCores < sortedNodeTypes[j].NumCores
+		}
+
+		if sortedNodeTypes[i].NumGPUs != sortedNodeTypes[j].NumGPUs {
+			return sortedNodeTypes[i].NumGPUs < sortedNodeTypes[j].NumGPUs
+		}
+
+		if sortedNodeTypes[i].NodeInstanceType != nil && sortedNodeTypes[j].NodeInstanceType != nil {
+			if sortedNodeTypes[i].NodeInstanceType.LocalNVMeDisks != sortedNodeTypes[j].NodeInstanceType.LocalNVMeDisks {
+				return sortedNodeTypes[i].NodeInstanceType.LocalNVMeDisks < sortedNodeTypes[j].NodeInstanceType.LocalNVMeDisks
+			}
+
+			if sortedNodeTypes[i].NodeInstanceType.LocalDisks != sortedNodeTypes[j].NodeInstanceType.LocalDisks {
+				return sortedNodeTypes[i].NodeInstanceType.LocalDisks < sortedNodeTypes[j].NodeInstanceType.LocalDisks
+			}
+
+			if sortedNodeTypes[i].NodeInstanceType.LocalDiskSizeGB != sortedNodeTypes[j].NodeInstanceType.LocalDiskSizeGB {
+				return sortedNodeTypes[i].NodeInstanceType.LocalDiskSizeGB < sortedNodeTypes[j].NodeInstanceType.LocalDiskSizeGB
+			}
+		}
+
+		if sortedNodeTypes[i].NodeTypeID != sortedNodeTypes[j].NodeTypeID {
+			return sortedNodeTypes[i].NodeTypeID < sortedNodeTypes[j].NodeTypeID
+		}
+
+		return sortedNodeTypes[i].InstanceTypeID < sortedNodeTypes[j].InstanceTypeID
+	})
+
+	nodeType := sortedNodeTypes[0]
+	return nodeType
 }

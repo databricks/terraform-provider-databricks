@@ -249,7 +249,7 @@ func TestAccInstancePools(t *testing.T) {
 			"7.1.x-scala2.12",
 		},
 	}
-	if !client.IsAzure() {
+	if !client.IsUsingAzureAuth() {
 		pool.DiskSpec = &InstancePoolDiskSpec{
 			DiskType: &InstancePoolDiskType{
 				EbsVolumeType: EbsVolumeTypeGeneralPurposeSsd,
@@ -289,7 +289,7 @@ func TestAccInstancePools(t *testing.T) {
 			"7.1.x-scala2.12",
 		},
 	}
-	if !client.IsAzure() {
+	if !client.IsUsingAzureAuth() {
 		u.DiskSpec = &InstancePoolDiskSpec{
 			DiskType: &InstancePoolDiskType{
 				EbsVolumeType: EbsVolumeTypeGeneralPurposeSsd,

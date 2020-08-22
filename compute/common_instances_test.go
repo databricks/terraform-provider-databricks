@@ -51,6 +51,21 @@ func TestNewTinyClusterInCommonPoolPossiblyReused(t *testing.T) {
 			Response: map[string]interface{}{},
 		},
 		{
+			Method:   "GET",
+			Resource: "/api/2.0/clusters/list-node-types",
+			Response: NodeTypeList{
+				[]NodeType{
+					{
+						NodeTypeID:     "r3.xlarge",
+						InstanceTypeID: "r3.xlarge",
+						NodeInstanceType: &NodeInstanceType{
+							InstanceTypeID: "r3.xlarge",
+						},
+					},
+				},
+			},
+		},
+		{
 			Method:   "POST",
 			Resource: "/api/2.0/clusters/create",
 			Response: ClusterID{

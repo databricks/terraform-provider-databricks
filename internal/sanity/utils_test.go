@@ -52,9 +52,8 @@ func TestAccMissingResourcesInWorkspace(t *testing.T) {
 	if !ok {
 		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' set")
 	}
-	randStringID := acctest.RandString(10)
+	randStringID := acctest.RandStringFromCharSet(16, "0123456789abcdef")
 	randIntID := 2000000 + acctest.RandIntRange(100000, 20000000)
-	randomClusterPolicyID := fmt.Sprintf("400E9E9E9A%d", acctest.RandIntRange(100000, 999999))
 	randomInstancePoolID := fmt.Sprintf("%v-%v-%s-pool-%s", acctest.RandIntRange(1000, 9999),
 		acctest.RandIntRange(100000, 999999), acctest.RandString(6), acctest.RandString(8))
 	client := common.CommonEnvironmentClient()
@@ -132,7 +131,7 @@ func TestAccMissingResourcesInWorkspace(t *testing.T) {
 		{
 			Name: "Cluster Policies",
 			ReadFunc: func() error {
-				_, err := compute.NewClusterPoliciesAPI(client).Get(randomClusterPolicyID)
+				_, err := compute.NewClusterPoliciesAPI(client).Get(randStringID)
 				return err
 			},
 		},

@@ -626,7 +626,9 @@ func TestScimUserAPI_Read(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var input args
-			qa.AssertMultipleRequestsWithMockServer(t, tt.args, []string{http.MethodGet, http.MethodGet, http.MethodGet}, tt.wantURI, []args{input}, tt.response, tt.responseStatus, tt.want, tt.wantErr, func(client common.DatabricksClient) (interface{}, error) {
+			qa.AssertMultipleRequestsWithMockServer(t, tt.args, []string{http.MethodGet, 
+				http.MethodGet, http.MethodGet}, tt.wantURI, []args{input}, tt.response, 
+				tt.responseStatus, tt.want, tt.wantErr, func(client common.DatabricksClient) (interface{}, error) {
 				return NewUsersAPI(&client).Read(tt.args[0].UserID)
 			})
 		})
@@ -639,8 +641,9 @@ func TestAccCreateUser(t *testing.T) {
 	}
 
 	client := common.NewClientFromEnvironment()
-
-	user, err := NewUsersAPI(client).Create("testuser@databricks.com", "Display Name", nil, nil)
+	randomName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
+	user, err := NewUsersAPI(client).Create(
+		fmt.Sprintf("test+%s@example.com", randomName), "Display Name", nil, nil)
 	assert.NoError(t, err, err)
 	assert.True(t, len(user.ID) > 0, "User id is empty")
 	idToDelete := user.ID
@@ -653,7 +656,8 @@ func TestAccCreateUser(t *testing.T) {
 	t.Log(user)
 	assert.NoError(t, err, err)
 
-	err = NewUsersAPI(client).Update(user.ID, "newtestuser@databricks.com", "Test User", []string{string(AllowClusterCreateEntitlement)}, nil)
+	err = NewUsersAPI(client).Update(user.ID, fmt.Sprintf("updated+%s@example.com", randomName),
+		"Test User", []string{string(AllowClusterCreateEntitlement)}, nil)
 	//t.Log(user)
 	assert.NoError(t, err, err)
 }
@@ -667,7 +671,7 @@ func TestAccCreateAdminUser(t *testing.T) {
 
 	randomName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
 	user, err := NewUsersAPI(client).Create(
-		fmt.Sprintf("terraform+%s@databricks.com", randomName),
+		fmt.Sprintf("terraform+%s@example.com", randomName),
 		"Terra "+randomName, nil, nil)
 	assert.NoError(t, err, err)
 	assert.True(t, len(user.ID) > 0, "User id is empty")
@@ -712,7 +716,7 @@ func TestAccRoleDifferences(t *testing.T) {
 
 	randomName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
 	user, err := NewUsersAPI(client).Create(
-		fmt.Sprintf("terraform+%s@databricks.com", randomName),
+		fmt.Sprintf("terraform+%s@example.com", randomName),
 		"Terra "+randomName, nil, nil)
 	assert.NoError(t, err, err)
 	assert.True(t, len(user.ID) > 0, "User id is empty")

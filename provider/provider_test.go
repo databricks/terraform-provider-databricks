@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/databrickslabs/databricks-terraform/common"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 	"github.com/stretchr/testify/assert"
@@ -204,13 +203,15 @@ func TestProviderConfigurationOptions(t *testing.T) {
 			errPrefix: "More than one authorization method configured: config profile and password",
 		},
 		{
+			// this test will skip ensureWorkspaceUrl
+			host:                     "x",
 			azureWorkspaceResourceID: "/a/b/c",
 			env: map[string]string{
 				// // these may fail on windows. use docker container for testing.
 				"PATH": "../common/testdata:/bin",
 				"HOME": "../common/testdata",
 			},
-			hasHost:  "",
+			hasHost:  "https://x",
 			hasToken: "",
 		},
 		{
@@ -243,6 +244,18 @@ func TestProviderConfigurationOptions(t *testing.T) {
 			errPrefix: "More than one authorization method configured: azure and token",
 		},
 		{
+			// omit request to management endpoint to get workspace properties
+			azureWorkspaceResourceID: "/a/b/c",
+			host:                     "x",
+			env: map[string]string{
+				// these may fail on windows. use docker container for testing.
+				"PATH": "../common/testdata:/bin",
+				"HOME": "../common/testdata",
+			},
+			hasHost: "https://x",
+		},
+		{
+			host:                     "x",
 			azureWorkspaceResourceID: "/a/b/c",
 			env: map[string]string{
 				// these may fail on windows. use docker container for testing.
@@ -324,21 +337,4 @@ func TestProvider_InvalidProfileGivesError(t *testing.T) {
 
 func TestProvider_DurationToSecondsString(t *testing.T) {
 	assert.Equal(t, durationToSecondsString(time.Hour), "3600")
-}
-
-func TestAccDatabricksCliConfigWorks(t *testing.T) {
-	t.Skip("Skipping this test till the better times")
-	resource.Test(t,
-		resource.TestCase{
-			Providers: map[string]terraform.ResourceProvider{
-				"databricks": DatabricksProvider(),
-			},
-			Steps: []resource.TestStep{
-				{
-					Config:             `provider "databricks" {}`,
-					ExpectNonEmptyPlan: true,
-				},
-			},
-		},
-	)
 }

@@ -91,6 +91,15 @@
           <div id="chapter">
         {{ end }}
         <div id="body-inner">
+          
+          <div class="notices warning">
+            <p style="font-size: 1.2em;font-weight: bold;">
+              Documentaiton has migrated to <a href="https://registry.terraform.io/providers/databrickslabs/databricks/latest/docs">
+                Terraform Registry</a> page. This website is no longer maintained and holding any up-to-date information and will
+                 be deleted before October 2020. Please update any bookmarks to new location.
+            </p>
+          </div>
+          
           {{if and (not .IsHome) (not .Params.chapter) }}
             <h1>
               {{ if eq .Kind "taxonomy" }}
@@ -109,3 +118,5 @@
             {{.value|safeHTML}}
           {{end}}
         {{end}}
+
+

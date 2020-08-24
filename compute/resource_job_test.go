@@ -143,10 +143,10 @@ func TestResourceJobCreate(t *testing.T) {
 		spark_jar_task {
 			main_class_name = "com.labs.BarMain"
 		}
-		libraries {
+		library {
 			jar = "dbfs://aa/bb/cc.jar"
 		}
-		libraries {
+		library {
 			jar = "dbfs://ff/gg/hh.jar"
 		}`,
 	}.Apply(t)
@@ -178,10 +178,10 @@ func TestResourceJobCreate_Error(t *testing.T) {
 		spark_jar_task {
 			main_class_name = "com.labs.BarMain"
 		}
-		libraries {
+		library {
 			jar = "dbfs://aa/bb/cc.jar"
 		}
-		libraries {
+		library {
 			jar = "dbfs://ff/gg/hh.jar"
 		}`,
 		Create: true,
@@ -229,9 +229,9 @@ func TestResourceJobRead(t *testing.T) {
 	assert.NoError(t, err, err)
 
 	assert.Equal(t, "Featurizer", d.Get("name"))
-	assert.Equal(t, 2, d.Get("libraries.#"))
-	assert.Equal(t, "dbfs://ff/gg/hh.jar", d.Get("libraries.1850263921.jar"))
-	assert.Equal(t, "dbfs://aa/bb/cc.jar", d.Get("libraries.587400796.jar"))
+	assert.Equal(t, 2, d.Get("library.#"))
+	assert.Equal(t, "dbfs://ff/gg/hh.jar", d.Get("library.1850263921.jar"))
+	assert.Equal(t, "dbfs://aa/bb/cc.jar", d.Get("library.587400796.jar"))
 
 	assert.Equal(t, 2, d.Get("spark_jar_task.0.parameters.#"))
 	assert.Equal(t, "com.labs.BarMain", d.Get("spark_jar_task.0.main_class_name"))
@@ -362,10 +362,10 @@ func TestResourceJobUpdate(t *testing.T) {
 			main_class_name = "com.labs.BarMain"
 			parameters = ["--cleanup", "full"]
 		}
-		libraries {
+		library {
 			jar = "dbfs://aa/bb/cc.jar"
 		}
-		libraries {
+		library {
 			jar = "dbfs://ff/gg/hh.jar"
 		}`,
 	}.Apply(t)
@@ -401,10 +401,10 @@ func TestResourceJobUpdate_Error(t *testing.T) {
 			main_class_name = "com.labs.BarMain"
 			parameters = ["--cleanup", "full"]
 		}
-		libraries {
+		library {
 			jar = "dbfs://aa/bb/cc.jar"
 		}
-		libraries {
+		library {
 			jar = "dbfs://ff/gg/hh.jar"
 		}`,
 	}.Apply(t)

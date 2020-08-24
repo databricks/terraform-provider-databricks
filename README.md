@@ -2,7 +2,32 @@
 
 [![Build Status](https://travis-ci.org/databrickslabs/terraform-provider-databricks.svg?branch=master)](https://travis-ci.org/databrickslabs/terraform-provider-databricks) [![codecov](https://codecov.io/gh/databrickslabs/terraform-provider-databricks/branch/master/graph/badge.svg)](https://codecov.io/gh/databrickslabs/terraform-provider-databricks)
 
-[Documentation](https://databrickslabs.github.io/terraform-provider-databricks/provider/) | [Contributing and Development Guidelines](CONTRIBUTING.md)
+[Authentication](docs/index.md)
+| [databricks_aws_s3_mount](docs/resources/aws_s3_mount.md)
+| [databricks_azure_adls_gen1_mount](docs/resources/azure_adls_gen1_mount.md)
+| [databricks_azure_adls_gen2_mount](docs/resources/azure_adls_gen2_mount.md)
+| [databricks_azure_blob_mount](docs/resources/azure_blob_mount.md)
+| [databricks_cluster](docs/resources/cluster.md)
+| [databricks_cluster_policy](docs/resources/cluster_policy.md)
+| [databricks_dbfs_file](docs/resources/dbfs_file.md)
+| [databricks_group](docs/resources/group.md)
+| [databricks_group_instance_profile](docs/resources/group_instance_profile.md)
+| [databricks_group_member](docs/resources/group_member.md)
+| [databricks_instance_pool](docs/resources/instance_pool.md)
+| [databricks_instance_profile](docs/resources/instance_profile.md)
+| [databricks_job](docs/resources/job.md)
+| [databricks_mws_credentials](docs/resources/mws_credentials.md)
+| [databricks_mws_networks](docs/resources/mws_networks.md)
+| [databricks_mws_storage_configurations](docs/resources/mws_storage_configurations.md)
+| [databricks_mws_workspaces](docs/resources/mws_workspaces.md)
+| [databricks_notebook](docs/resources/notebook.md)
+| [databricks_permissions](docs/resources/permissions.md)
+| [databricks_scim_user](docs/resources/scim_user.md)
+| [databricks_secret](docs/resources/secret.md)
+| [databricks_secret_acl](docs/resources/secret_acl.md)
+| [databricks_secret_scope](docs/resources/secret_scope.md)
+| [databricks_token](docs/resources/token.md)
+| [Contributing and Development Guidelines](CONTRIBUTING.md)
 
 To quickly install the binary please execute the following curl command in your shell or [install provider from source](CONTRIBUTING.md#installing-from-source).
 
@@ -31,7 +56,7 @@ resource "databricks_cluster" "shared_autoscaling" {
 }
 ```
 
-Then run `terraform init` then `terraform apply` to apply the hcl code to your Databricks workspace. Please refer to the [end-user documentation](https://databrickslabs.github.io/terraform-provider-databricks/provider/) for detailed use of the provider. Also refer to these [examples](examples/) for more scenarios. 
+Then run `terraform init` then `terraform apply` to apply the hcl code to your Databricks workspace. 
 
 ## Project Support
 Please note that all projects in the /databrickslabs github account are provided for your exploration only, and are not formally supported by Databricks with Service Level Agreements (SLAs).  They are provided AS-IS and we do not make any guarantees of any kind.  Please do not submit a support ticket relating to any issues arising from the use of these projects.

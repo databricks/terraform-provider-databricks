@@ -1,5 +1,7 @@
 .terraform
 website
-vendor
 dist
 examples
+scripts/*-integration/.terraform
+scripts/*-integration/*.log
+scripts/*-integration/*.out

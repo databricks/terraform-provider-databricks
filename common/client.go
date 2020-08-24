@@ -81,7 +81,7 @@ func (c *DatabricksClient) findAndApplyAuthorizer() error {
 		"4. azure_databricks_workspace_id + azure_client_id + azure_client_secret + azure_tenant_id " +
 		"for Azure Service Principal authentication.\n" +
 		"5. Run `databricks configure --token` that will create ~/.databrickscfg file.\n\n" +
-		"Please check https://docs.databricks.com/dev-tools/cli/index.html#set-up-authentication for details")
+		"Please check https://github.com/databrickslabs/terraform-provider-databricks/blob/master/docs/index.md#authentication for details")
 }
 
 func (c *DatabricksClient) configureAuthWithDirectParams() (func(r *http.Request) error, error) {
@@ -202,7 +202,7 @@ func (c *DatabricksClient) configureHTTPCLient() {
 	}
 }
 
-// IsAzure returns true if Azure is configured
-func (c *DatabricksClient) IsAzure() bool {
+// IsUsingAzureAuth returns true if Azure authentication is configured, this is not a valid check to determine if we are running on Azure
+func (c *DatabricksClient) IsUsingAzureAuth() bool {
 	return c.AzureAuth.resourceID() != ""
 }

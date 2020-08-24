@@ -2,7 +2,9 @@ package provider
 
 import (
 	"fmt"
+	"sort"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
@@ -79,9 +81,11 @@ func DatabricksProvider() terraform.ResourceProvider {
 				Sensitive:   true,
 				DefaultFunc: schema.EnvDefaultFunc("DATABRICKS_TOKEN", nil),
 				ConflictsWith: []string{
+					"username",
+					"password",
 					"config_file",
-					"profile",
 					"basic_auth",
+					"profile",
 					"azure_auth",
 				},
 			},
@@ -117,12 +121,18 @@ func DatabricksProvider() terraform.ResourceProvider {
 				Type:        schema.TypeString,
 				Optional:    true,
 				DefaultFunc: schema.EnvDefaultFunc("DATABRICKS_USERNAME", nil),
+				ConflictsWith: []string{
+					"token",
+				},
 			},
 			"password": {
 				Type:        schema.TypeString,
 				Sensitive:   true,
 				Optional:    true,
 				DefaultFunc: schema.EnvDefaultFunc("DATABRICKS_PASSWORD", nil),
+				ConflictsWith: []string{
+					"token",
+				},
 			},
 			"config_file": {
 				Type:        schema.TypeString,
@@ -284,22 +294,29 @@ func DatabricksProvider() terraform.ResourceProvider {
 		},
 		ConfigureFunc: func(d *schema.ResourceData) (interface{}, error) {
 			pc := common.DatabricksClient{}
+
+			authsUsed := map[string]bool{}
 			if host, ok := d.GetOk("host"); ok {
 				pc.Host = host.(string)
 			}
 			if token, ok := d.GetOk("token"); ok {
+				authsUsed["token"] = true
 				pc.Token = token.(string)
 			}
 			if v, ok := d.GetOk("username"); ok {
+				authsUsed["password"] = true
 				pc.Username = v.(string)
 			}
 			if v, ok := d.GetOk("password"); ok {
+				authsUsed["password"] = true
 				pc.Password = v.(string)
 			}
 			if v, ok := d.GetOk("profile"); ok {
+				authsUsed["config profile"] = true
 				pc.Profile = v.(string)
 			}
 			if _, ok := d.GetOk("basic_auth"); ok {
+				authsUsed["password"] = true
 				username, userOk := d.GetOk("basic_auth.0.username")
 				password, passOk := d.GetOk("basic_auth.0.password")
 				if userOk && passOk {
@@ -308,24 +325,31 @@ func DatabricksProvider() terraform.ResourceProvider {
 				}
 			}
 			if v, ok := d.GetOk("azure_workspace_resource_id"); ok {
+				authsUsed["azure"] = true
 				pc.AzureAuth.ResourceID = v.(string)
 			}
 			if v, ok := d.GetOk("azure_workspace_name"); ok {
+				authsUsed["azure"] = true
 				pc.AzureAuth.WorkspaceName = v.(string)
 			}
 			if v, ok := d.GetOk("azure_resource_group"); ok {
+				authsUsed["azure"] = true
 				pc.AzureAuth.ResourceGroup = v.(string)
 			}
 			if v, ok := d.GetOk("azure_subscription_id"); ok {
+				authsUsed["azure"] = true
 				pc.AzureAuth.SubscriptionID = v.(string)
 			}
 			if v, ok := d.GetOk("azure_client_secret"); ok {
+				authsUsed["azure"] = true
 				pc.AzureAuth.ClientSecret = v.(string)
 			}
 			if v, ok := d.GetOk("azure_client_id"); ok {
+				authsUsed["azure"] = true
 				pc.AzureAuth.ClientID = v.(string)
 			}
 			if v, ok := d.GetOk("azure_tenant_id"); ok {
+				authsUsed["azure"] = true
 				pc.AzureAuth.TenantID = v.(string)
 			}
 			if v, ok := d.GetOk("azure_pat_token_duration_seconds"); ok {
@@ -369,6 +393,18 @@ func DatabricksProvider() terraform.ResourceProvider {
 				if v, ok := azureAuth["pat_token_duration_seconds"]; ok {
 					pc.AzureAuth.PATTokenDurationSeconds = v.(string)
 				}
+			}
+
+			authorizationMethodsUsed := []string{}
+			for name, used := range authsUsed {
+				if used {
+					authorizationMethodsUsed = append(authorizationMethodsUsed, name)
+				}
+			}
+			if len(authorizationMethodsUsed) > 1 {
+				sort.Strings(authorizationMethodsUsed)
+				return nil, fmt.Errorf("More than one authorization method configured: %s",
+					strings.Join(authorizationMethodsUsed, " and "))
 			}
 			err := pc.Configure()
 			if err != nil {

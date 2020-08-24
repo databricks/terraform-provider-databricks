@@ -74,7 +74,7 @@ func ResourceInstancePool() *schema.Resource {
 			},
 			"max_capacity": {
 				Type:     schema.TypeInt,
-				Required: true,
+				Optional: true,
 			},
 			"idle_instance_autotermination_minutes": {
 				Type:     schema.TypeInt,
@@ -217,8 +217,11 @@ func resourceInstancePoolCreate(d *schema.ResourceData, m interface{}) error {
 	var instancePoolDiskSpecDiskType InstancePoolDiskType
 	instancePool.InstancePoolName = d.Get("instance_pool_name").(string)
 	instancePool.MinIdleInstances = int32(d.Get("min_idle_instances").(int))
-	instancePool.MaxCapacity = int32(d.Get("max_capacity").(int))
 	instancePool.IdleInstanceAutoTerminationMinutes = int32(d.Get("idle_instance_autotermination_minutes").(int))
+
+	if maxCapacity, ok := d.GetOk("max_capacity"); ok {
+		instancePool.MaxCapacity = int32(maxCapacity.(int))
+	}
 
 	if awsAttributesSchema, ok := d.GetOk("aws_attributes"); ok {
 		awsAttributesMap := getMapFromOneItemList(awsAttributesSchema)
@@ -303,10 +306,12 @@ func resourceInstancePoolRead(d *schema.ResourceData, m interface{}) error {
 	if err != nil {
 		return err
 	}
+
 	err = d.Set("max_capacity", int(instancePoolInfo.MaxCapacity))
 	if err != nil {
 		return err
 	}
+
 	err = d.Set("idle_instance_autotermination_minutes", int(instancePoolInfo.IdleInstanceAutoTerminationMinutes))
 	if err != nil {
 		return err
@@ -386,10 +391,13 @@ func resourceInstancePoolUpdate(d *schema.ResourceData, m interface{}) error {
 	var instancePoolInfo InstancePoolAndStats
 	instancePoolInfo.InstancePoolName = d.Get("instance_pool_name").(string)
 	instancePoolInfo.MinIdleInstances = int32(d.Get("min_idle_instances").(int))
-	instancePoolInfo.MaxCapacity = int32(d.Get("max_capacity").(int))
 	instancePoolInfo.IdleInstanceAutoTerminationMinutes = int32(d.Get("idle_instance_autotermination_minutes").(int))
 	instancePoolInfo.InstancePoolID = id
 	instancePoolInfo.NodeTypeID = d.Get("node_type_id").(string)
+
+	if maxCapacity, ok := d.GetOk("max_capacity"); ok {
+		instancePoolInfo.MaxCapacity = int32(maxCapacity.(int))
+	}
 
 	err := NewInstancePoolsAPI(client).Update(instancePoolInfo)
 	if err != nil {

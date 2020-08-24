@@ -244,7 +244,7 @@ func TestAzureAccBlobMount(t *testing.T) {
 		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
 	}
 	client := common.CommonEnvironmentClient()
-	if !client.IsAzure() {
+	if !client.IsUsingAzureAuth() {
 		t.Skip("Test is meant only for Azure")
 	}
 	if !client.AzureAuth.IsClientSecretSet() {

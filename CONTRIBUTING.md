@@ -14,9 +14,6 @@ Contributing to Databricks Terraform Provider
 - [Random naming anywhere](#random-naming-anywhere)
 - [Integration Testing](#integration-testing)
 - [Pre-release procedure](#pre-release-procedure)
-- [Project Components](#project-components)
-	- [Databricks Terraform Provider Resources State](#databricks-terraform-provider-resources-state)
-	- [Databricks Terraform Data Sources State](#databricks-terraform-data-sources-state)
 
 We happily welcome contributions to databricks-terraform. We use GitHub Issues to track community reported issues and GitHub Pull Requests for accepting changes.
 
@@ -109,6 +106,16 @@ So please run `make lint` instead.
 
 ## Unit testing resources
 
+Eventually, all of resources would be automatically checked for a unit test presence. `TestGenerateTestCodeStubs` is going to fail, when resource has certain test cases missing. Until all existing resources have tests, you can generate stub code, which will be logged to stdout by changing these lines of `generate_test.go` with name of resource you're creating:
+
+```go
+for name, resource := range p.ResourcesMap {
+	if name != "databricks_scim_user" {
+		continue
+	}
+	//...
+```
+
 In order to unit test a resource, which runs fast and could be included in code coverage, one should use `ResourceTester`, that launches embedded HTTP server with `HTTPFixture`'s containing all calls that should have been made in given scenario. Some may argue that this is not a pure unit test, because it creates a side effect in form of embedded server, though it's always on different random port, making it possible to execute these tests in parallel. Therefore comments about non-pure unit tests will be ignored, if they use `ResourceTester` helper.
 
 ```go
@@ -191,47 +198,4 @@ crucial for making sure that the provider behaves as expected on all supported c
 2. `make test-mws` if MWS related code changed given release.
 3. Create release notes.
 4. Perfrom backwards-compatibility checks and make proper notes. 
-
-## Project Components
-
-### Databricks Terraform Provider Resources State
-
-| Resource                         | Implemented        | Import Support       | Acceptance Tests     | Documentation        | Reviewed             | Finalize Schema      |
-|----------------------------------|--------------------|----------------------|----------------------|----------------------|----------------------|----------------------|
-| databricks_token                 | :white_check_mark: | :white_large_square: | :white_check_mark:   | :white_check_mark:   | :white_large_square: | :white_large_square: |
-| databricks_secret_scope          | :white_check_mark: | :white_large_square: | :white_check_mark:   | :white_check_mark:   | :white_large_square: | :white_large_square: |
-| databricks_secret                | :white_check_mark: | :white_large_square: | :white_check_mark:   | :white_check_mark:   | :white_large_square: | :white_large_square: |
-| databricks_secret_acl            | :white_check_mark: | :white_large_square: | :white_check_mark:   | :white_check_mark:   | :white_large_square: | :white_large_square: |
-| databricks_instance_pool         | :white_check_mark: | :white_large_square: | :white_large_square: | :white_check_mark:   | :white_large_square: | :white_large_square: |
-| databricks_scim_user             | :white_check_mark: | :white_large_square: | :white_check_mark:   | :white_check_mark:   | :white_large_square: | :white_large_square: |
-| databricks_scim_group            | :white_check_mark: | :white_large_square: | :white_large_square: | :white_check_mark:   | :white_large_square: | :white_large_square: |
-| databricks_notebook              | :white_check_mark: | :white_large_square: | :white_large_square: | :white_check_mark:   | :white_large_square: | :white_large_square: |
-| databricks_cluster               | :white_check_mark: | :white_large_square: | :white_large_square: | :white_check_mark:   | :white_large_square: | :white_large_square: |
-| databricks_job                   | :white_check_mark: | :white_large_square: | :white_large_square: | :white_check_mark:   | :white_large_square: | :white_large_square: |
-| databricks_dbfs_file             | :white_check_mark: | :white_large_square: | :white_large_square: | :white_check_mark:   | :white_large_square: | :white_large_square: |
-| databricks_dbfs_file_sync        | :white_check_mark: | :white_large_square: | :white_large_square: | :white_check_mark:   | :white_large_square: | :white_large_square: |
-| databricks_instance_profile      | :white_check_mark: | :white_large_square: | :white_large_square: | :white_check_mark:   | :white_large_square: | :white_large_square: |
-| databricks_aws_s3_mount          | :white_check_mark: | :white_large_square: | :white_large_square: | :white_check_mark:   | :white_large_square: | :white_large_square: |
-| databricks_azure_blob_mount      | :white_check_mark: | :white_large_square: | :white_large_square: | :white_check_mark:   | :white_large_square: | :white_large_square: |
-| databricks_azure_adls_gen1_mount | :white_check_mark: | :white_large_square: | :white_large_square: | :white_check_mark:   | :white_large_square: | :white_large_square: |
-| databricks_azure_adls_gen2_mount | :white_check_mark: | :white_large_square: | :white_large_square: | :white_check_mark:   | :white_large_square: | :white_large_square: |
-
-### Databricks Terraform Data Sources State
-
-| Data Source                 | Implemented          | Acceptance Tests     | Documentation        | Reviewed             |
-|-----------------------------|----------------------|----------------------|----------------------|----------------------|
-| databricks_notebook         | :white_check_mark:   | :white_large_square: | :white_large_square: | :white_large_square: |
-| databricks_notebook_paths   | :white_check_mark:   | :white_large_square: | :white_large_square: | :white_large_square: |
-| databricks_dbfs_file        | :white_check_mark:   | :white_large_square: | :white_large_square: | :white_large_square: |
-| databricks_dbfs_file_paths  | :white_check_mark:   | :white_large_square: | :white_large_square: | :white_large_square: |
-| databricks_zones            | :white_large_square: | :white_large_square: | :white_large_square: | :white_large_square: |
-| databricks_runtimes         | :white_large_square: | :white_large_square: | :white_large_square: | :white_large_square: |
-| databricks_instance_pool    | :white_large_square: | :white_large_square: | :white_large_square: | :white_large_square: |
-| databricks_scim_user        | :white_large_square: | :white_large_square: | :white_large_square: | :white_large_square: |
-| databricks_scim_group       | :white_large_square: | :white_large_square: | :white_large_square: | :white_large_square: |
-| databricks_cluster          | :white_large_square: | :white_large_square: | :white_large_square: | :white_large_square: |
-| databricks_job              | :white_large_square: | :white_large_square: | :white_large_square: | :white_large_square: |
-| databricks_mount            | :white_large_square: | :white_large_square: | :white_large_square: | :white_large_square: |
-| databricks_instance_profile | :white_large_square: | :white_large_square: | :white_large_square: | :white_large_square: |
-| databricks_database         | :white_large_square: | :white_large_square: | :white_large_square: | :white_large_square: |
-| databricks_table            | :white_large_square: | :white_large_square: | :white_large_square: | :white_large_square: |
+5. 

@@ -83,10 +83,10 @@ func librarySchema(dims ...string) *schema.Schema {
 func resourceClusterSchema() map[string]*schema.Schema {
 	return internal.StructToSchema(Cluster{}, func(s map[string]*schema.Schema) map[string]*schema.Schema {
 		// adds `libraries` configuration block
-		s["libraries"] = internal.StructToSchema(ClusterLibraryList{},
+		s["library"] = internal.StructToSchema(ClusterLibraryList{},
 			func(ss map[string]*schema.Schema) map[string]*schema.Schema {
 				return ss
-			})["libraries"]
+			})["library"]
 
 		p, err := internal.SchemaPath(s, "docker_image", "basic_auth", "password")
 		if err == nil {

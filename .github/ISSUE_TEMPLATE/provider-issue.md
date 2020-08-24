@@ -2,9 +2,7 @@
 name: Provider Issue
 about: Use this to identify a issue or a bug with the provider.
 title: "[ISSUE] Issue Short Description"
-labels: ''
-assignees: stikkireddy
-
+labels: bug
 ---
 
 Hi there,
@@ -45,8 +43,4 @@ Please list the steps required to reproduce the issue, for example:
 1. `terraform apply`
 
 ### Important Factoids
-Are there anything atypical about your accounts that we should know? For example: Running in EC2 Classic? Custom version of OpenStack? Tight ACLs?
-
-### References
-Are there any other GitHub issues (open or closed) or Pull Requests that should be linked here? For example:
-- GH-1234
+Are there anything atypical about your accounts that we should know? 

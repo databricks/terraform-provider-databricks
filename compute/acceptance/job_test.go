@@ -78,7 +78,7 @@ func TestAccJobResource(t *testing.T) {
 	})
 }
 
-func TestAccJobResource_NoInstancePool(t *testing.T) {
+func TestAwsAccJobResource_NoInstancePool(t *testing.T) {
 	if _, ok := os.LookupEnv("CLOUD_ENV"); !ok {
 		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
 	}
@@ -104,6 +104,11 @@ func TestAccJobResource_NoInstancePool(t *testing.T) {
 					}
 					notebook_task {
 						notebook_path = "/Production/MakeFeatures"
+					}
+					library {
+						pypi {
+							package = "networkx"
+						}
 					}
 					email_notifications {
 						no_alert_for_skipped_runs = true

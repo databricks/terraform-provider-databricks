@@ -65,6 +65,118 @@ When you [create a Databricks cluster](https://docs.databricks.com/clusters/conf
 * `min_workers` - (Optional) The minimum number of workers to which the cluster can scale down when underutilized. It is also the initial number of workers the cluster will have after creation.
 * `max_workers` - (Optional) The maximum number of workers to which the cluster can scale up when overloaded. max_workers must be strictly greater than min_workers.
 
+### library Configuration Block
+
+In order to install libraries, one must specify each library in own configuration block. Each different type of library has slightly different syntax. It's possible to specify only one type of library within one config block, otherwise plan will fail with error.
+
+Installing JAR artifacts on a cluster. Location can be anyling, that is DBFS or mounted object store (s3, adls, ...)
+```hcl
+library {
+  jar = "dbfs://FileStore/app-0.0.1.jar"
+}
+```
+
+Installing Python EGG artifacts. Location can be anyling, that is DBFS or mounted object store (s3, adls, ...)
+```hcl
+library {
+  egg = "dbfs://FileStore/foo.egg"
+}
+```
+
+Installing Python Wheel artifacts. Location can be anyling, that is DBFS or mounted object store (s3, adls, ...)
+```hcl
+library {
+  whl = "dbfs://FileStore/baz.whl"
+}
+```
+
+Installing Python PyPI artifacts. You can also optionally also specify `repo` parameter for custom PyPI mirror, that should be accessible without any authentication for the network, that cluster runs in.
+```hcl
+library {
+  pypi {
+    package = "fbprophet==0.6"
+    // repo can also be specified here
+  }
+}
+```
+
+Installing artifacts from Maven repository. You can also optionally also specify `repo` parameter for custom Maven-style repository, that should be accessible without any authentication for the network, that cluster runs in. It can even be properly configured [maven s3 wagon](https://github.com/seahen/maven-s3-wagon), [AWS CodeArtifact](https://aws.amazon.com/codeartifact/) or [Azure Artifacts](https://azure.microsoft.com/en-us/services/devops/artifacts/).
+```hcl
+library {
+  maven {
+    coordinates = "com.amazon.deequ:deequ:1.0.4"
+    // exlusions block is optional
+    exclusions = ["org.apache.avro:avro"]
+  }
+}
+```
+
+Installing artifacts from CRan. You can also optionally also specify `repo` parameter for custom cran mirror.
+```hcl
+library {
+  cran {
+    package = "rkeops"
+  }
+}
+```
+
+## cluster_log_conf
+
+Example of pushing all cluster logs to DBFS:
+```hcl
+cluster_log_conf {
+  dbfs {
+    destination = "dbfs://cluster-logs"
+  }
+}
+```
+
+Example of pushing all cluster logs to S3:
+```hcl
+cluster_log_conf {
+  s3 {
+    destination = "s3a://acmecorp-main/cluster-logs"
+    region = "us-east-1"
+  }
+}
+```
+
+There are few more advanced attributes for S3 log delivery:
+
+* `destination` - S3 destination, e.g. `s3://my-bucket/some-prefix` You must configure the cluster with an instance profile and the instance profile must have write access to the destination. You cannot use AWS keys.  
+* `region` - (Optional) S3 region, e.g. `us-west-2`. Either region or endpoint must be set. If both are set, endpoint is used.
+* `endpoint` - (Optional) S3 endpoint, e.g. https://s3-us-west-2.amazonaws.com. Either region or endpoint needs to be set. If both are set, endpoint is used.
+* `enable_encryption` - (Optional) Enable server side encryption, false by default.
+* `encryption_type` - (Optional) The encryption type, it could be sse-s3 or sse-kms. It is used only when encryption is enabled and the default type is sse-s3.
+* `kms_key` - (Optional) KMS key used if encryption is enabled and encryption type is set to sse-kms.
+* `canned_acl` - (Optional) Set canned access control list, e.g. bucket-owner-full-control. If canned_cal is set, the cluster instance profile must have s3:PutObjectAcl permission on the destination bucket and prefix. The full list of possible canned ACL can be found [here](https://docs.aws.amazon.com/AmazonS3/latest/dev/acl-overview.html#canned-acl). By default only the object owner gets full control. If you are using cross account role for writing data, you may 
+  want to set bucket-owner-full-control to make bucket owner able to read the logs.
+
+## init_scripts
+
+You can specify up to 10 different init scripts for cluster.
+
+Example of taking init script from DBFS:
+```hcl
+init_scripts {
+  dbfs {
+    destination = "dbfs://init-scripts/install-elk.sh"
+  }
+}
+```
+
+Example of taking init script from S3:
+```hcl
+init_scripts {
+  s3 {
+    destination = "s3a://acmecorp-main/init-scripts/install-elk.sh"
+    region = "us-east-1"
+  }
+}
+```
+
+Attributes are the same as for `cluster_log_conf` configuration block.
+
 ## aws_attributes
 
 `aws_attributes` optional configuration block contains attributes related to [clusters running on Amazon Web Services](https://docs.databricks.com/clusters/configure.html#aws-configurations). If not specified at cluster creation, a set of default values will be used. It is advised to keep all common configurations in [Cluster Policies](cluster_policy.md) to maintain control of the environments launched.
@@ -105,12 +217,15 @@ The following options are available:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `id` - The id for the cluster object.
-* `cluster_id` - Canonical identifier for the cluster.
-* `default_tags` - Tags that are added by Databricks by default, regardless of any custom_tags that may have been added. These include: Vendor: Databricks, Creator: <username_of_creator>, ClusterName: <name_of_cluster>, ClusterId: <id_of_cluster>, Name: <Databricks internal use>
-* `state` - State of the cluster.
-* `state_message` - A message associated with the most recent state transition (e.g., the reason why the cluster entered a TERMINATED state). This field is unstructured, and its exact format is subject to change.
+* `id` - Canonical unique identifier for the cluster.
+* `default_tags` - (map) Tags that are added by Databricks by default, regardless of any custom_tags that may have been added. These include: Vendor: Databricks, Creator: <username_of_creator>, ClusterName: <name_of_cluster>, ClusterId: <id_of_cluster>, Name: <Databricks internal use>
+* `state` - (string) State of the cluster.
+
 
 ## Import
 
-Importing this resource is not currently supported.
+The resource cluster can be imported using cluster id
+
+```bash
+$ terraform import databricks_cluster.this <cluster-id>
+```

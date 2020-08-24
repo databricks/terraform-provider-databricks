@@ -28,7 +28,7 @@ func TestAccScimUserResource(t *testing.T) {
 	displayName := fmt.Sprintf("Terra %s", randomName)
 	expectEntitlements := []EntitlementsListItem{{Value: AllowClusterCreateEntitlement}}
 	userNameAndDisplay := map[string]string{
-		"USER_NAME": userName,
+		"USER_NAME":    userName,
 		"DISPLAY_NAME": displayName,
 	}
 
@@ -165,10 +165,10 @@ func TestAccScimUserResource(t *testing.T) {
 					display_name = "{var.DISPLAY_NAME}"
 					default_roles = data.databricks_default_user_roles.default_roles.roles
 					set_admin = {var.ADMIN}
-				}`, map[string]string {
-					"USER_NAME": userName,
+				}`, map[string]string{
+					"USER_NAME":    userName,
 					"DISPLAY_NAME": displayName,
-					"ADMIN": "true",
+					"ADMIN":        "true",
 				}),
 				// compose a basic test, checking both remote and local values
 				Check: resource.ComposeTestCheckFunc(
@@ -195,10 +195,10 @@ func TestAccScimUserResource(t *testing.T) {
 					display_name = "{var.DISPLAY_NAME}"
 					default_roles = data.databricks_default_user_roles.default_roles.roles
 					set_admin = {var.ADMIN}
-				}`, map[string]string {
-					"USER_NAME": userName,
+				}`, map[string]string{
+					"USER_NAME":    userName,
 					"DISPLAY_NAME": displayName,
-					"ADMIN": "false",
+					"ADMIN":        "false",
 				}),
 				// compose a basic test, checking both remote and local values
 				Check: resource.ComposeTestCheckFunc(
@@ -225,10 +225,10 @@ func TestAccScimUserResource(t *testing.T) {
 					display_name = "{var.DISPLAY_NAME}"
 					default_roles = data.databricks_default_user_roles.default_roles.roles
 					set_admin = {var.ADMIN}
-				}`, map[string]string {
-					"USER_NAME": userName,
+				}`, map[string]string{
+					"USER_NAME":    userName,
 					"DISPLAY_NAME": displayName,
-					"ADMIN": "true",
+					"ADMIN":        "true",
 				}),
 				// compose a basic test, checking both remote and local values
 				Check: resource.ComposeTestCheckFunc(

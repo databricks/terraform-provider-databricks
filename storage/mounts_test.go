@@ -30,11 +30,11 @@ func mountPointThroughReusedCluster(t *testing.T) (*common.DatabricksClient, Mou
 	}
 }
 
-func testWithNewSecretScope(t *testing.T, callback func(string,string), 
+func testWithNewSecretScope(t *testing.T, callback func(string, string),
 	client *common.DatabricksClient, suffix, secret string) {
 	randomScope := "test" + suffix
 	randomKey := "key" + suffix
-	
+
 	secretScopes := access.NewSecretScopesAPI(client)
 	err := secretScopes.Create(randomScope, "users")
 	require.NoError(t, err)

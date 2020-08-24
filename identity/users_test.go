@@ -626,11 +626,11 @@ func TestScimUserAPI_Read(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var input args
-			qa.AssertMultipleRequestsWithMockServer(t, tt.args, []string{http.MethodGet, 
-				http.MethodGet, http.MethodGet}, tt.wantURI, []args{input}, tt.response, 
+			qa.AssertMultipleRequestsWithMockServer(t, tt.args, []string{http.MethodGet,
+				http.MethodGet, http.MethodGet}, tt.wantURI, []args{input}, tt.response,
 				tt.responseStatus, tt.want, tt.wantErr, func(client common.DatabricksClient) (interface{}, error) {
-				return NewUsersAPI(&client).Read(tt.args[0].UserID)
-			})
+					return NewUsersAPI(&client).Read(tt.args[0].UserID)
+				})
 		})
 	}
 }

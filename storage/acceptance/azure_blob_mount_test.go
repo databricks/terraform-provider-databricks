@@ -40,19 +40,19 @@ func TestAzureAccBlobMount_correctly_mounts(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: config,
-				Check: acceptance.ResourceCheck("databricks_azure_blob_mount.mount", 
+				Check: acceptance.ResourceCheck("databricks_azure_blob_mount.mount",
 					func(client *common.DatabricksClient, id string) error {
-					client.WithCommandExecutor(compute.NewCommandsAPI(client))
-					clusterInfo := compute.NewTinyClusterInCommonPoolPossiblyReused()
-					mp := NewMountPoint(client, id, clusterInfo.ClusterID)
-					source, err := mp.Source()
-					assert.NoError(t, err)
-					assert.Equal(t, fmt.Sprintf(
-						"wasbs://%s@%s.blob.core.windows.net/",
-						qa.FirstKeyValue(t, config, "container_name"),
-						qa.FirstKeyValue(t, config, "storage_account_name")), source)
-					return nil
-				}),
+						client.WithCommandExecutor(compute.NewCommandsAPI(client))
+						clusterInfo := compute.NewTinyClusterInCommonPoolPossiblyReused()
+						mp := NewMountPoint(client, id, clusterInfo.ClusterID)
+						source, err := mp.Source()
+						assert.NoError(t, err)
+						assert.Equal(t, fmt.Sprintf(
+							"wasbs://%s@%s.blob.core.windows.net/",
+							qa.FirstKeyValue(t, config, "container_name"),
+							qa.FirstKeyValue(t, config, "storage_account_name")), source)
+						return nil
+					}),
 			},
 			{
 				PreConfig: func() {

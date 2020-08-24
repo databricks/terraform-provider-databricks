@@ -153,7 +153,7 @@ func testNotebookResourceDestroy(s *terraform.State) error {
 }
 
 // Only will test source format based content
-func testNotebookResourceAllNotebookTypes(pythonContent, sqlContent, scalaContent, 
+func testNotebookResourceAllNotebookTypes(pythonContent, sqlContent, scalaContent,
 	rContent, dbcContent, jupyterContent, htmlContent, folderPrefix string) string {
 	return fmt.Sprintf(`
 		resource "databricks_notebook" "notebook_python" {

@@ -124,7 +124,7 @@ func TestResourceFixture_Apply_Fail(t *testing.T) {
 			Update: schema.Noop,
 			Delete: schema.Noop,
 		},
-		Create:   true,
+		Create: true,
 		State: map[string]interface{}{
 			"check": false,
 		},

@@ -23,12 +23,15 @@ import (
 func DatabricksProvider() terraform.ResourceProvider {
 	return &schema.Provider{
 		DataSourcesMap: map[string]*schema.Resource{
-			"databricks_zones":              compute.DataSourceClusterZones(),
-			"databricks_default_user_roles": identity.DataSourceDefaultUserRoles(),
-			"databricks_dbfs_file":          storage.DataSourceDBFSFile(),
-			"databricks_dbfs_file_paths":    storage.DataSourceDBFSFilePaths(),
-			"databricks_notebook":           workspace.DataSourceNotebook(),
-			"databricks_notebook_paths":     workspace.DataSourceNotebookPaths(),
+			"databricks_aws_crossaccount_policy": access.DataAwsCrossAccountRolicy(),
+			"databricks_aws_assume_role_policy":  access.DataAwsAssumeRolePolicy(),
+			"databricks_aws_bucket_policy":       access.DataAwsBucketPolicy(),
+			"databricks_dbfs_file":               storage.DataSourceDBFSFile(),
+			"databricks_dbfs_file_paths":         storage.DataSourceDBFSFilePaths(),
+			"databricks_default_user_roles":      identity.DataSourceDefaultUserRoles(),
+			"databricks_notebook":                workspace.DataSourceNotebook(),
+			"databricks_notebook_paths":          workspace.DataSourceNotebookPaths(),
+			"databricks_zones":                   compute.DataSourceClusterZones(),
 		},
 		ResourcesMap: map[string]*schema.Resource{
 			"databricks_secret":       access.ResourceSecret(),

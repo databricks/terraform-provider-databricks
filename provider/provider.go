@@ -294,6 +294,11 @@ func DatabricksProvider() terraform.ResourceProvider {
 				Optional:    true,
 				Default:     false,
 			},
+			"debug_truncate_bytes": {
+				Type:        schema.TypeInt,
+				Optional:    true,
+				DefaultFunc: schema.EnvDefaultFunc("DATABRICKS_DEBUG_TRUNCATE_BYTES", 96),
+			},
 		},
 		ConfigureFunc: func(d *schema.ResourceData) (interface{}, error) {
 			pc := common.DatabricksClient{}
@@ -360,6 +365,9 @@ func DatabricksProvider() terraform.ResourceProvider {
 			}
 			if v, ok := d.GetOk("skip_verify"); ok {
 				pc.InsecureSkipVerify = v.(bool)
+			}
+			if v, ok := d.GetOk("debug_truncate_bytes"); ok {
+				pc.DebugTruncateBytes = v.(int)
 			}
 			if v, ok := d.GetOk("azure_use_pat_for_cli"); ok {
 				pc.AzureAuth.UsePATForCLI = v.(bool)

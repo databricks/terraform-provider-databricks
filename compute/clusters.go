@@ -272,23 +272,19 @@ func (a ClustersAPI) GetOrCreateRunningCluster(name string, custom ...Cluster) (
 			}
 		}
 	}
-
-	nodeTypes, err := a.ListNodeTypes()
-	if err != nil {
-		return
-	}
-
-	nodeType := GetSmallestNodeType(nodeTypes)
-
-	log.Printf("[INFO] Creating an autoterminating cluster with node type %s", nodeType.NodeTypeID)
-
+	smallestNodeType := a.GetSmallestNodeTypeWithStorage()
+	log.Printf("[INFO] Creating an autoterminating cluster with node type %s", smallestNodeType)
 	r := Cluster{
 		NumWorkers:             1,
 		ClusterName:            name,
 		SparkVersion:           CommonRuntimeVersion(),
-		NodeTypeID:             nodeType.NodeTypeID,
-		IdempotencyToken:       name,
+		NodeTypeID:             smallestNodeType,
 		AutoterminationMinutes: 10,
+	}
+	if !a.client.IsUsingAzureAuth() {
+		r.AwsAttributes = &AwsAttributes{
+			Availability: "SPOT",
+		}
 	}
 	if len(custom) == 1 {
 		r = custom[0]
@@ -296,27 +292,44 @@ func (a ClustersAPI) GetOrCreateRunningCluster(name string, custom ...Cluster) (
 	return a.Create(r)
 }
 
-// GetSmallestNodeType returns the smallest node type in a list of node types
-func GetSmallestNodeType(nodeTypes []NodeType) NodeType {
-	sortedNodeTypes := nodeTypes
+// GetSmallestNodeTypeWithStorage returns smallest runtime node type
+func (a ClustersAPI) GetSmallestNodeTypeWithStorage() string {
+	nodeTypes, err := a.ListNodeTypes()
+	if err != nil {
+		if a.client.IsUsingAzureAuth() {
+			return "Standard_D3_v2"
+		}
+		return "i3.xlarge"
+	}
+	nodesWithLocalDisk := []NodeType{}
+	for _, nt := range nodeTypes {
+		if nt.IsDeprecated {
+			continue
+		}
+		if nt.NodeInstanceType.LocalDisks > 0 {
+			nodesWithLocalDisk = append(nodesWithLocalDisk, nt)
+		}
+	}
+	nodeType := getSmallestNodeType(nodesWithLocalDisk)
+	return nodeType.NodeTypeID
+}
 
+// getSmallestNodeType returns the smallest node type in a list of node types
+func getSmallestNodeType(nodeTypes []NodeType) NodeType {
+	sortedNodeTypes := nodeTypes
 	sort.Slice(sortedNodeTypes, func(i, j int) bool {
 		if sortedNodeTypes[i].IsDeprecated != sortedNodeTypes[j].IsDeprecated {
 			return !sortedNodeTypes[i].IsDeprecated
 		}
-
 		if sortedNodeTypes[i].MemoryMB != sortedNodeTypes[j].MemoryMB {
 			return sortedNodeTypes[i].MemoryMB < sortedNodeTypes[j].MemoryMB
 		}
-
 		if sortedNodeTypes[i].NumCores != sortedNodeTypes[j].NumCores {
 			return sortedNodeTypes[i].NumCores < sortedNodeTypes[j].NumCores
 		}
-
 		if sortedNodeTypes[i].NumGPUs != sortedNodeTypes[j].NumGPUs {
 			return sortedNodeTypes[i].NumGPUs < sortedNodeTypes[j].NumGPUs
 		}
-
 		if sortedNodeTypes[i].NodeInstanceType != nil && sortedNodeTypes[j].NodeInstanceType != nil {
 			if sortedNodeTypes[i].NodeInstanceType.LocalNVMeDisks != sortedNodeTypes[j].NodeInstanceType.LocalNVMeDisks {
 				return sortedNodeTypes[i].NodeInstanceType.LocalNVMeDisks < sortedNodeTypes[j].NodeInstanceType.LocalNVMeDisks
@@ -330,14 +343,8 @@ func GetSmallestNodeType(nodeTypes []NodeType) NodeType {
 				return sortedNodeTypes[i].NodeInstanceType.LocalDiskSizeGB < sortedNodeTypes[j].NodeInstanceType.LocalDiskSizeGB
 			}
 		}
-
-		if sortedNodeTypes[i].NodeTypeID != sortedNodeTypes[j].NodeTypeID {
-			return sortedNodeTypes[i].NodeTypeID < sortedNodeTypes[j].NodeTypeID
-		}
-
 		return sortedNodeTypes[i].InstanceTypeID < sortedNodeTypes[j].InstanceTypeID
 	})
-
 	nodeType := sortedNodeTypes[0]
 	return nodeType
 }

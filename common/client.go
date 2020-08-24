@@ -26,10 +26,10 @@ type DatabricksClient struct {
 	AzureAuth          AzureAuth
 	InsecureSkipVerify bool
 	TimeoutSeconds     int
+	DebugTruncateBytes int
 	userAgent          string
 	httpClient         *retryablehttp.Client
 	authVisitor        func(r *http.Request) error
-	debugTruncateBytes int
 	commandExecutor    CommandExecutor
 }
 
@@ -47,8 +47,6 @@ func (c *DatabricksClient) Configure() error {
 		// so that is why this line is here
 		c.Host = "https://" + c.Host
 	}
-	// TODO: fix it once bigger boom is done
-	//c.commandExecutor = c.Commands()
 	return nil
 }
 
@@ -168,7 +166,6 @@ func (c *DatabricksClient) configureHTTPCLient() {
 	if c.TimeoutSeconds == 0 {
 		c.TimeoutSeconds = 60
 	}
-	c.debugTruncateBytes = 96
 	// Set up a retryable HTTP Client to handle cases where the service returns
 	// a transient error on initial creation
 	retryDelayDuration := 10 * time.Second

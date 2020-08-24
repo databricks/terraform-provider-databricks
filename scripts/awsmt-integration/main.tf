@@ -105,7 +105,7 @@ output "cloud_env" {
 }
 
 // export bucket name to test mounting
-output "test_bucket" {
+output "test_s3_bucket" {
   value = aws_s3_bucket.this.bucket
 }
 

@@ -362,7 +362,7 @@ func (c *DatabricksClient) recursiveMask(requestMap map[string]interface{}) inte
 		// todo: dapi...
 		// TODO: just redact any dapiXXX & "secret": "...."...
 		if s, ok := v.(string); ok {
-			requestMap[k] = onlyNBytes(s, c.debugTruncateBytes)
+			requestMap[k] = onlyNBytes(s, c.DebugTruncateBytes)
 		}
 	}
 	return requestMap

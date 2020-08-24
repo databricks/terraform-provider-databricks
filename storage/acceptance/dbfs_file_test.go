@@ -21,12 +21,12 @@ import (
 func TestAccDatabricksDBFSFile_CreateViaContent(t *testing.T) {
 	config := qa.EnvironmentTemplate(t, `
 	resource "databricks_dbfs_file" "file" {
-		content = "{var.RANDOM}"
-		content_b64_md5 = md5("{var.RANDOM}")
+		content = base64encode("{var.RANDOM}")
+		content_b64_md5 = md5(base64encode("{var.RANDOM}"))
 		path = "/tmp/tf-test/file-content-{var.RANDOM}"
-		overwrite = "false"
-		mkdirs = "true"
-		validate_remote_file = "true"
+		overwrite = false
+		mkdirs = true
+		validate_remote_file = true
 	}`)
 	acceptance.AccTest(t, resource.TestCase{
 		CheckDestroy: testDBFSFileResourceDestroy,

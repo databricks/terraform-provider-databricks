@@ -375,7 +375,7 @@ func compare(t *testing.T, a interface{}, b interface{}) {
 
 // GetCloudInstanceType gives common minimal instance type, depending on a cloud
 func GetCloudInstanceType(c *common.DatabricksClient) string {
-	if c.IsAzure() {
+	if c.IsUsingAzureAuth() {
 		return "Standard_DS3_v2"
 	}
 	// TODO: create a method on ClustersAPI to give

@@ -210,3 +210,11 @@ func TestResourceAwsS3MountDelete(t *testing.T) {
 	assert.Equal(t, "this_mount", d.Id())
 	assert.Equal(t, "", d.Get("source"))
 }
+
+func TestAwsAccBlobMount(t *testing.T) {
+	_, mp := mountPointThroughReusedCluster(t)
+	bucket := qa.GetEnvOrSkipTest(t, "TEST_S3_BUCKET")
+	testMounting(t, mp, AWSIamMount{
+		S3BucketName: bucket,
+	})
+}

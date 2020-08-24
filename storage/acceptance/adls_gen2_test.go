@@ -15,6 +15,9 @@ func TestAzureAccAdlsGen2Mount_correctly_mounts(t *testing.T) {
 	if _, ok := os.LookupEnv("CLOUD_ENV"); !ok {
 		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
 	}
+	if !common.CommonEnvironmentClient().AzureAuth.IsClientSecretSet() {
+		t.Skip("Test is meant only for client-secret conf Azure")
+	}
 	acceptance.AccTest(t, resource.TestCase{
 		Steps: []resource.TestStep{
 			{
@@ -29,8 +32,8 @@ func TestAzureAccAdlsGen2Mount_correctly_mounts(t *testing.T) {
 					scope        = databricks_secret_scope.terraform.name
 				}
 				resource "databricks_azure_adls_gen2_mount" "mount" {
-					container_name         = "dev"
-					storage_account_name   = "{env.TEST_GEN2_ADAL_NAME}"
+					storage_account_name   = "{env.TEST_STORAGE_V2_ACCOUNT}"
+					container_name         = "{env.TEST_STORAGE_V2_ABFSS}"
 					mount_name             = "localdir{var.RANDOM}"
 					tenant_id              = "{env.ARM_TENANT_ID}"
 					client_id              = "{env.ARM_CLIENT_ID}"
@@ -48,8 +51,8 @@ func TestAzureAccAdlsGen2Mount_capture_error(t *testing.T) {
 		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
 	}
 	client := common.CommonEnvironmentClient()
-	if !client.IsAzure() {
-		t.Skip("Test is meant only for Azure")
+	if !client.AzureAuth.IsClientSecretSet() {
+		t.Skip("Test is meant only for SP Azure")
 	}
 	acceptance.AccTest(t, resource.TestCase{
 		Steps: []resource.TestStep{
@@ -65,8 +68,8 @@ func TestAzureAccAdlsGen2Mount_capture_error(t *testing.T) {
 					scope        = databricks_secret_scope.terraform.name
 				}
 				resource "databricks_azure_adls_gen2_mount" "mount" {
-					container_name         = "dev"
-					storage_account_name   = "{env.TEST_GEN2_ADAL_NAME}"
+					storage_account_name   = "{env.TEST_STORAGE_V2_ACCOUNT}"
+					container_name         = "{env.TEST_STORAGE_V2_ABFSS}"
 					mount_name             = "localdir{var.RANDOM}"
 					tenant_id              = "{env.ARM_TENANT_ID}"
 					client_id              = "{env.ARM_CLIENT_ID}"

@@ -15,11 +15,11 @@ resource "azurerm_storage_container" "blobexample" {
   container_access_type = "private"
 }
 
-output "test_storage_account_name" {
+output "test_storage_v2_account_name" {
   value = azurerm_storage_account.blobaccount.name
 }
 
-output "test_storage_account_key" {
+output "test_storage_v2_account_key" {
   value     = azurerm_storage_account.blobaccount.primary_access_key
   sensitive = true
 }

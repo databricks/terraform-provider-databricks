@@ -87,9 +87,11 @@ $ docker run -it -v $(pwd):/workpace -w /workpace databricks-terraform apply
 
 ## Testing
 
-* [ ] [Integration tests](scripts/README.md) should be run at a client level against both azure and aws to maintain sdk parity against both apis.
-* [x] Terraform acceptance tests should be run against both aws and azure to maintain parity of provider between both cloud services
-* [ ] Consider test functions as scenarios, that you are debugging from IDE when specific issues arise. Test tables are discouraged. Single-use functions in tests are discouraged, unless resource definitions they make are longer than 80 lines.
+* [Integration tests](scripts/README.md) should be run at a client level against both azure and aws to maintain sdk parity against both apis.
+* Terraform acceptance tests should be run against both aws and azure to maintain parity of provider between both cloud services
+* Consider test functions as scenarios, that you are debugging from IDE when specific issues arise. Test tables are discouraged. Single-use functions in tests are discouraged, unless resource definitions they make are longer than 80 lines.
+* All tests should be capable of repeatedly running on "dirty" environment, which means not requiring a new clean environment every time the test runs.
+* All tests should re-use compute resources whenever possible.
 
 ## Code conventions
 

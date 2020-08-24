@@ -2,13 +2,93 @@ package storage
 
 import (
 	"fmt"
+	"os"
 	"testing"
 
+	"github.com/databrickslabs/databricks-terraform/access"
+	"github.com/databrickslabs/databricks-terraform/compute"
 	"github.com/databrickslabs/databricks-terraform/internal"
+	"github.com/databrickslabs/databricks-terraform/internal/qa"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 
 	"github.com/databrickslabs/databricks-terraform/common"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
+
+func mountPointThroughReusedCluster(t *testing.T) (*common.DatabricksClient, MountPoint) {
+	if _, ok := os.LookupEnv("CLOUD_ENV"); !ok {
+		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
+	}
+	client := common.CommonEnvironmentClient()
+	clusterInfo := compute.NewTinyClusterInCommonPoolPossiblyReused()
+	randomName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
+	return client, MountPoint{
+		exec:      client.CommandExecutor(),
+		clusterID: clusterInfo.ClusterID,
+		name:      randomName,
+	}
+}
+
+func testWithNewSecretScope(t *testing.T, callback func(string,string), 
+	client *common.DatabricksClient, suffix, secret string) {
+	randomScope := "test" + suffix
+	randomKey := "key" + suffix
+	
+	secretScopes := access.NewSecretScopesAPI(client)
+	err := secretScopes.Create(randomScope, "users")
+	require.NoError(t, err)
+	defer func() {
+		err = secretScopes.Delete(randomScope)
+		assert.NoError(t, err)
+	}()
+
+	secrets := access.NewSecretsAPI(client)
+	err = secrets.Create(secret, randomScope, randomKey)
+	require.NoError(t, err)
+
+	callback(randomScope, randomKey)
+}
+
+func testMounting(t *testing.T, mp MountPoint, m Mount) {
+	source, err := mp.Mount(m)
+	assert.Equal(t, m.Source(), source)
+	assert.NoError(t, err)
+	defer func() {
+		err = mp.Delete()
+		assert.NoError(t, err)
+	}()
+	source, err = mp.Source()
+	require.Equalf(t, m.Source(), source, "Error: %v", err)
+}
+
+func TestAccDeleteInvalidMountFails(t *testing.T) {
+	_, mp := mountPointThroughReusedCluster(t)
+	err := mp.Delete()
+	qa.AssertErrorStartsWith(t, err, "Directory not mounted: /mnt/"+mp.name)
+}
+
+func TestAccSourceOnInvalidMountFails(t *testing.T) {
+	_, mp := mountPointThroughReusedCluster(t)
+	source, err := mp.Source()
+	assert.Equal(t, "", source)
+	qa.AssertErrorStartsWith(t, err, "Mount not found")
+}
+
+func TestAccInvalidSecretScopeFails(t *testing.T) {
+	_, mp := mountPointThroughReusedCluster(t)
+	source, err := mp.Mount(AzureADLSGen1Mount{
+		ClientID:        "abc",
+		TenantID:        "bcd",
+		PrefixType:      "dfs.adls",
+		StorageResource: "def",
+		Directory:       "/",
+		SecretKey:       "key",
+		SecretScope:     "y",
+	})
+	assert.Equal(t, "", source)
+	qa.AssertErrorStartsWith(t, err, "Secret does not exist with scope: y and key: key")
+}
 
 func TestValidateMountDirectory(t *testing.T) {
 	testCases := []struct {

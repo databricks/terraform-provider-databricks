@@ -42,7 +42,7 @@ func TestAccScimUserResource(t *testing.T) {
 					default_username = "terraform-all-user-roles+{var.RANDOM}@example.com"
 				}
 				resource "databricks_instance_profile" "instance_profile" {
-					instance_profile_arn = "arn:aws:iam::999999999999:instance-profile/terraform-scim-user-test"
+					instance_profile_arn = "arn:aws:iam::999999999999:instance-profile/terraform-scim-user-{var.RANDOM}"
 					skip_validation = true
 				}
 				resource "databricks_scim_user" "my_scim_user" {
@@ -97,7 +97,7 @@ func TestAccScimUserResource(t *testing.T) {
 					default_username = "terraform-all-user-roles+{var.RANDOM}@example.com"
 				}
 				resource "databricks_instance_profile" "instance_profile" {
-					instance_profile_arn = "arn:aws:iam::999999999999:instance-profile/terraform-scim-user-test"
+					instance_profile_arn = "arn:aws:iam::999999999999:instance-profile/terraform-scim-user-{var.RANDOM}"
 					skip_validation = true
 				}
 				resource "databricks_scim_user" "my_scim_user" {

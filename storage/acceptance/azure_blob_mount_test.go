@@ -10,7 +10,6 @@ import (
 	"github.com/databrickslabs/databricks-terraform/internal/acceptance"
 	"github.com/databrickslabs/databricks-terraform/internal/qa"
 	. "github.com/databrickslabs/databricks-terraform/storage"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/stretchr/testify/assert"
 )
@@ -26,41 +25,42 @@ func TestAzureAccBlobMount_correctly_mounts(t *testing.T) {
 	}
 	resource "databricks_secret" "storage_key" {
 		key          = "blob_storage_key"
-		string_value = "{env.TEST_STORAGE_ACCOUNT_KEY}"
+		string_value = "{env.TEST_STORAGE_V2_KEY}"
 		scope        = databricks_secret_scope.terraform.name
 	}
 	resource "databricks_azure_blob_mount" "mount" {
-		container_name       = "dev"
-		storage_account_name = "{env.TEST_STORAGE_ACCOUNT_NAME}"
+		storage_account_name = "{env.TEST_STORAGE_V2_ACCOUNT}"
+		container_name       = "{env.TEST_STORAGE_V2_WASBS}"
 		mount_name           = "{var.RANDOM}"
 		auth_type            = "ACCESS_KEY"
 		token_secret_scope   = databricks_secret_scope.terraform.name
 		token_secret_key     = databricks_secret.storage_key.key
 	}`)
-	randomName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
 	acceptance.AccTest(t, resource.TestCase{
 		Steps: []resource.TestStep{
 			{
 				Config: config,
-				Check: acceptance.ResourceCheck("databricks_azure_blob_mount.mount", func(client *common.DatabricksClient, id string) error {
-					clusterInfo, err := compute.NewClustersAPI(client).GetOrCreateRunningCluster("TerraformIntegrationTest")
-					assert.NoError(t, err)
+				Check: acceptance.ResourceCheck("databricks_azure_blob_mount.mount", 
+					func(client *common.DatabricksClient, id string) error {
+					client.WithCommandExecutor(compute.NewCommandsAPI(client))
+					clusterInfo := compute.NewTinyClusterInCommonPoolPossiblyReused()
 					mp := NewMountPoint(client, id, clusterInfo.ClusterID)
 					source, err := mp.Source()
 					assert.NoError(t, err)
-					assert.Equal(t, fmt.Sprintf("wasbs://%s@%s.blob.core.windows.net/", "dev",
+					assert.Equal(t, fmt.Sprintf(
+						"wasbs://%s@%s.blob.core.windows.net/",
+						qa.FirstKeyValue(t, config, "container_name"),
 						qa.FirstKeyValue(t, config, "storage_account_name")), source)
 					return nil
 				}),
 			},
 			{
 				PreConfig: func() {
-					client := common.CommonEnvironmentClient()
+					client := compute.CommonEnvironmentClientWithRealCommandExecutor()
 					clusterInfo := compute.NewTinyClusterInCommonPoolPossiblyReused()
-					mp := NewMountPoint(client, randomName, clusterInfo.ClusterID)
-					// TODO: check correctness of remounting with different thing...
-
-					// remove mount out of tf resource and see what happens
+					mp := NewMountPoint(client,
+						qa.FirstKeyValue(t, config, "mount_name"),
+						clusterInfo.ClusterID)
 					err := mp.Delete()
 					assert.NoError(t, err)
 				},

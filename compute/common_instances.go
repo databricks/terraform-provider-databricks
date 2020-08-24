@@ -87,7 +87,8 @@ func CommonInstancePoolID() string {
 	return commonInstancePool.InstancePoolID
 }
 
-func getClientWithRealCommandExecutor() *common.DatabricksClient {
+// CommonEnvironmentClientWithRealCommandExecutor is good for internal tests
+func CommonEnvironmentClientWithRealCommandExecutor() *common.DatabricksClient {
 	client := common.CommonEnvironmentClient()
 	client.WithCommandExecutor(NewCommandsAPI(client))
 	return client
@@ -96,7 +97,7 @@ func getClientWithRealCommandExecutor() *common.DatabricksClient {
 // NewTinyClusterInCommonPool creates new cluster for short-lived purposes
 func NewTinyClusterInCommonPool() (c ClusterInfo, err error) {
 	randomName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
-	clusters := NewClustersAPI(getClientWithRealCommandExecutor())
+	clusters := NewClustersAPI(CommonEnvironmentClientWithRealCommandExecutor())
 	c, err = clusters.Create(Cluster{
 		NumWorkers:             1,
 		ClusterName:            "Terraform " + randomName,
@@ -112,7 +113,7 @@ func NewTinyClusterInCommonPool() (c ClusterInfo, err error) {
 func NewTinyClusterInCommonPoolPossiblyReused() (c ClusterInfo) {
 	randomName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
 	currentCluster := "TerraformIntegrationTest"
-	clusters := NewClustersAPI(getClientWithRealCommandExecutor())
+	clusters := NewClustersAPI(CommonEnvironmentClientWithRealCommandExecutor())
 	c, err := clusters.GetOrCreateRunningCluster(currentCluster, Cluster{
 		NumWorkers:             1,
 		ClusterName:            currentCluster,

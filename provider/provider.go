@@ -211,6 +211,12 @@ func DatabricksProvider() terraform.ResourceProvider {
 				Description: "Currently secret scopes are not accessible via AAD tokens so we will need to create a PAT token",
 				Default:     durationToSecondsString(time.Hour),
 			},
+			"azure_use_pat_for_cli": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     true,
+				Description: "Create ephemeral PAT tokens also for AZ CLI authenticated requests",
+			},
 			"azure_auth": {
 				Type:     schema.TypeMap,
 				Optional: true,
@@ -355,6 +361,9 @@ func DatabricksProvider() terraform.ResourceProvider {
 			if v, ok := d.GetOk("skip_verify"); ok {
 				pc.InsecureSkipVerify = v.(bool)
 			}
+			if v, ok := d.GetOk("azure_use_pat_for_cli"); ok {
+				pc.AzureAuth.UsePATForCLI = v.(bool)
+			}
 			if aa, ok := d.GetOk("azure_auth"); ok {
 				// This provider takes DATABRICKS_AZURE_* for client ID etc
 				// The azurerm provider uses ARM_* for the same values
@@ -363,12 +372,6 @@ func DatabricksProvider() terraform.ResourceProvider {
 				//  - DATABRICKS_AZURE_* environment variables
 				//  - ARM_* environment variables
 				azureAuth := aa.(map[string]interface{})
-				if v, ok := azureAuth["managed_resource_group"]; ok {
-					pc.AzureAuth.ManagedResourceGroup = v.(string)
-				}
-				if v, ok := azureAuth["azure_region"]; ok {
-					pc.AzureAuth.AzureRegion = v.(string)
-				}
 				if v, ok := azureAuth["workspace_name"]; ok {
 					pc.AzureAuth.WorkspaceName = v.(string)
 				}

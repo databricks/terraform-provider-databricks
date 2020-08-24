@@ -20,7 +20,7 @@ func TestAWSS3IamMount_correctly_mounts(t *testing.T) {
 		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
 	}
 	randomMountName := fmt.Sprintf("tf-mount-test-%s", qa.RandomName())
-	expectedS3Bucket := os.Getenv("TEST_S3_BUCKET_NAME")
+	expectedS3Bucket := qa.GetEnvOrSkipTest(t, "TEST_S3_BUCKET_NAME")
 
 	config := qa.EnvironmentTemplate(t, `
 	resource "databricks_aws_s3_mount" "mount" {

@@ -210,8 +210,9 @@ func (c *DatabricksClient) checkHTTPRetry(ctx context.Context, resp *http.Respon
 
 // Get on path
 func (c *DatabricksClient) Get(path string, request interface{}, response interface{}) error {
-	if c.authVisitor == nil {
-		return fmt.Errorf("Authentication not initialized")
+	err := c.ensureAuthenticationIsSetup()
+	if err != nil {
+		return err
 	}
 	body, err := c.genericQuery(http.MethodGet, path, request, c.authVisitor, c.api2)
 	if err != nil {
@@ -222,8 +223,9 @@ func (c *DatabricksClient) Get(path string, request interface{}, response interf
 
 // Post on path
 func (c *DatabricksClient) Post(path string, request interface{}, response interface{}) error {
-	if c.authVisitor == nil {
-		return fmt.Errorf("Authentication not initialized")
+	err := c.ensureAuthenticationIsSetup()
+	if err != nil {
+		return err
 	}
 	body, err := c.genericQuery(http.MethodPost, path, request, c.authVisitor, c.api2)
 	if err != nil {
@@ -234,28 +236,31 @@ func (c *DatabricksClient) Post(path string, request interface{}, response inter
 
 // Delete on path
 func (c *DatabricksClient) Delete(path string, request interface{}) error {
-	if c.authVisitor == nil {
-		return fmt.Errorf("Authentication not initialized")
+	err := c.ensureAuthenticationIsSetup()
+	if err != nil {
+		return err
 	}
-	_, err := c.genericQuery(http.MethodDelete, path, request, c.authVisitor, c.api2)
+	_, err = c.genericQuery(http.MethodDelete, path, request, c.authVisitor, c.api2)
 	return err
 }
 
 // Patch on path
 func (c *DatabricksClient) Patch(path string, request interface{}) error {
-	if c.authVisitor == nil {
-		return fmt.Errorf("Authentication not initialized")
+	err := c.ensureAuthenticationIsSetup()
+	if err != nil {
+		return err
 	}
-	_, err := c.genericQuery(http.MethodPatch, path, request, c.authVisitor, c.api2)
+	_, err = c.genericQuery(http.MethodPatch, path, request, c.authVisitor, c.api2)
 	return err
 }
 
 // Put on path
 func (c *DatabricksClient) Put(path string, request interface{}) error {
-	if c.authVisitor == nil {
-		return fmt.Errorf("Authentication not initialized")
+	err := c.ensureAuthenticationIsSetup()
+	if err != nil {
+		return err
 	}
-	_, err := c.genericQuery(http.MethodPut, path, request, c.authVisitor, c.api2)
+	_, err = c.genericQuery(http.MethodPut, path, request, c.authVisitor, c.api2)
 	return err
 }
 
@@ -328,6 +333,10 @@ func (c *DatabricksClient) Scim(method, path string, request interface{}, respon
 
 // OldAPI performs call on context api
 func (c *DatabricksClient) OldAPI(method, path string, request interface{}, response interface{}) error {
+	err := c.ensureAuthenticationIsSetup()
+	if err != nil {
+		return err
+	}
 	body, err := c.genericQuery(method, path, request, c.authVisitor, c.api12)
 	if err != nil {
 		return err

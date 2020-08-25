@@ -34,7 +34,7 @@ func NewClientFromEnvironment() *DatabricksClient {
 			TenantID:       os.Getenv("ARM_TENANT_ID"),
 		},
 	}
-	err := client.Configure()
+	err := client.ConfigureWithAuthentication()
 	if err != nil {
 		panic(err)
 	}

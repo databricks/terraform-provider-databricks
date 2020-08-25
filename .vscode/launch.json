@@ -26,6 +26,14 @@
                "TF_ACC": "1",
            },
            "showLog": true
+       },
+       {
+
+            "name": "Attach to Process",
+            "type": "go",
+            "request": "attach",
+            "mode": "local",
+            "processId": 89935
        }
    ]
 }

@@ -44,7 +44,7 @@ func (c *DatabricksClient) Configure() error {
 }
 
 // ConfigureWithAuthentication configures the client to work
-// and validates if an authenticaton mechanism is present
+// and validates if an authentication mechanism is present
 func (c *DatabricksClient) ConfigureWithAuthentication() error {
 	err := c.Configure()
 	if err != nil {

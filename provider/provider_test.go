@@ -266,7 +266,7 @@ func TestProviderConfigurationOptions(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(fmt.Sprintf("config:%v env:%v", tt.rawConfig(), tt.env), func(t *testing.T) {
-			c, err := configureProviderAndReturnClient(t, tt)
+			c, err := configureProviderWithAuthenticationAndReturnClient(t, tt)
 			if tt.errPrefix != "" {
 				require.NotNilf(t, err, "Expected to have %s error", tt.errPrefix)
 				require.True(t, strings.HasPrefix(err.Error(), tt.errPrefix), err)
@@ -282,7 +282,7 @@ func TestProviderConfigurationOptions(t *testing.T) {
 	}
 }
 
-func configureProviderAndReturnClient(t *testing.T, tt providerConfigTest) (*common.DatabricksClient, error) {
+func configureProviderWithAuthenticationAndReturnClient(t *testing.T, tt providerConfigTest) (*common.DatabricksClient, error) {
 	defer common.CleanupEnvironment()()
 	for k, v := range tt.env {
 		os.Setenv(k, v)
@@ -292,7 +292,12 @@ func configureProviderAndReturnClient(t *testing.T, tt providerConfigTest) (*com
 	if err != nil {
 		return nil, err
 	}
-	return p.Meta().(*common.DatabricksClient), nil
+	client := p.Meta().(*common.DatabricksClient)
+	err = client.ConfigureWithAuthentication()
+	if err != nil {
+		return nil, err
+	}
+	return client, nil
 }
 
 func TestProvider_NoHostGivesError(t *testing.T) {

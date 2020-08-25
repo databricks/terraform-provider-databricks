@@ -87,7 +87,7 @@ func (c *DatabricksClient) ensureAuthenticationIsSetup() error {
 		return nil
 	}
 	err := c.findAndApplyAuthorizer()
-	if err != nil && c.Host != "" && !(strings.HasPrefix(c.Host, "https://") || strings.HasPrefix(c.Host, "http://")) {
+	if err == nil && c.Host != "" && !(strings.HasPrefix(c.Host, "https://") || strings.HasPrefix(c.Host, "http://")) {
 		// azurerm_databricks_workspace.*.workspace_url is giving URL without scheme
 		// so that is why this line is here
 		c.Host = "https://" + c.Host

@@ -224,3 +224,38 @@ provider "databricks" {}
 7. Will check for `~/.databrickscfg` file in the home directory, will fail otherwise.
 8. Will check for `profile` presence and try picking from that file, will fail otherwise.
 9. Will check for `host` and `token` or `username`+`password` combination, will fail if nothing of these exist.
+
+## Difference between apply and plan phases
+
+Some arguments for the provider configuration might not yet be available when you run `terraform plan` because they depend on other resources that won't be available until the `terraform apply` phase.
+That is why the provider doesn't use the provided arguments until you either refresh an existing resource (can be implicitly with `terraform plan`) or let the provider execute a CRUD operation.
+
+Let's take a look at the example below:
+
+```hcl
+provider "azurerm" {
+  features {}
+}
+
+resource "azurerm_databricks_workspace" "demo_test_workspace" {
+  location                      = "centralus"
+  name                          = "my-workspace-name"
+  resource_group_name           = var.resource_group
+  sku                           = "premium"
+}
+
+provider "databricks" {
+  azure_workspace_resource_id = azurerm_databricks_workspace.demo_test_workspace.id
+}
+
+resource "databricks_scim_user" "my-user" {
+  user_name     = "test-user@databricks.com"
+  display_name  = "Test User"
+}
+```
+
+Assume that we don't have any state yet, so the Databricks workspace still has to be created during our first call to `terraform apply`.
+Therefore, Terraform doesn't know the actual value of the Databricks workspace resource ID. The example might use Azure CLI authentication or Azure Service Principal authentication.
+The provider won't validate that you're authenticated in either way until the workspace is created and Terraform wants to create the `databricks_scim_user` resource.
+
+Next time, when you run `terraform plan` and the provider has to refresh the `databricks_scim_user`, Terraform will already know the workspace ID and your authentication is validated during the implicit refresh of `terraform plan`.

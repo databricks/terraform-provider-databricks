@@ -79,8 +79,8 @@ func TestClustersAPI_List(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			qa.AssertRequestWithMockServer(t, nil, http.MethodGet, tt.wantURI, nil, tt.response, tt.responseStatus, tt.want, tt.wantErr, func(client common.DatabricksClient) (interface{}, error) {
-				return NewClustersAPI(&client).List()
+			qa.AssertRequestWithMockServer(t, nil, http.MethodGet, tt.wantURI, nil, tt.response, tt.responseStatus, tt.want, tt.wantErr, func(client *common.DatabricksClient) (interface{}, error) {
+				return NewClustersAPI(client).List()
 			})
 		})
 	}
@@ -127,8 +127,8 @@ func TestClustersAPI_ListZones(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			qa.AssertRequestWithMockServer(t, nil, http.MethodGet, tt.wantURI, nil, tt.response, tt.responseStatus, tt.want, tt.wantErr, func(client common.DatabricksClient) (interface{}, error) {
-				return NewClustersAPI(&client).ListZones()
+			qa.AssertRequestWithMockServer(t, nil, http.MethodGet, tt.wantURI, nil, tt.response, tt.responseStatus, tt.want, tt.wantErr, func(client *common.DatabricksClient) (interface{}, error) {
+				return NewClustersAPI(client).ListZones()
 			})
 		})
 	}
@@ -250,8 +250,8 @@ func TestClustersAPI_ListNodeTypes(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			qa.AssertRequestWithMockServer(t, nil, http.MethodGet, tt.wantURI, nil, tt.response, tt.responseStatus, tt.want, tt.wantErr, func(client common.DatabricksClient) (interface{}, error) {
-				return NewClustersAPI(&client).ListNodeTypes()
+			qa.AssertRequestWithMockServer(t, nil, http.MethodGet, tt.wantURI, nil, tt.response, tt.responseStatus, tt.want, tt.wantErr, func(client *common.DatabricksClient) (interface{}, error) {
+				return NewClustersAPI(client).ListNodeTypes()
 			})
 		})
 	}
@@ -294,8 +294,8 @@ func TestClustersAPI_Restart(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var input args
-			qa.AssertRequestWithMockServer(t, &tt.args, http.MethodPost, "/api/2.0/clusters/restart", &input, tt.response, tt.responseStatus, tt.want, tt.wantErr, func(client common.DatabricksClient) (interface{}, error) {
-				return nil, NewClustersAPI(&client).Restart(tt.args.ClusterID)
+			qa.AssertRequestWithMockServer(t, &tt.args, http.MethodPost, "/api/2.0/clusters/restart", &input, tt.response, tt.responseStatus, tt.want, tt.wantErr, func(client *common.DatabricksClient) (interface{}, error) {
+				return nil, NewClustersAPI(client).Restart(tt.args.ClusterID)
 			})
 		})
 	}
@@ -338,8 +338,8 @@ func TestClustersAPI_Pin(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var input args
-			qa.AssertRequestWithMockServer(t, &tt.args, http.MethodPost, "/api/2.0/clusters/pin", &input, tt.response, tt.responseStatus, tt.want, tt.wantErr, func(client common.DatabricksClient) (interface{}, error) {
-				return nil, NewClustersAPI(&client).Pin(tt.args.ClusterID)
+			qa.AssertRequestWithMockServer(t, &tt.args, http.MethodPost, "/api/2.0/clusters/pin", &input, tt.response, tt.responseStatus, tt.want, tt.wantErr, func(client *common.DatabricksClient) (interface{}, error) {
+				return nil, NewClustersAPI(client).Pin(tt.args.ClusterID)
 			})
 		})
 	}
@@ -382,8 +382,8 @@ func TestClustersAPI_Unpin(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var input args
-			qa.AssertRequestWithMockServer(t, &tt.args, http.MethodPost, "/api/2.0/clusters/unpin", &input, tt.response, tt.responseStatus, tt.want, tt.wantErr, func(client common.DatabricksClient) (interface{}, error) {
-				return nil, NewClustersAPI(&client).Unpin(tt.args.ClusterID)
+			qa.AssertRequestWithMockServer(t, &tt.args, http.MethodPost, "/api/2.0/clusters/unpin", &input, tt.response, tt.responseStatus, tt.want, tt.wantErr, func(client *common.DatabricksClient) (interface{}, error) {
+				return nil, NewClustersAPI(client).Unpin(tt.args.ClusterID)
 			})
 		})
 	}

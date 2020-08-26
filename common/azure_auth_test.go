@@ -149,11 +149,11 @@ func TestAzureAuth_configureWithClientSecret(t *testing.T) {
 	assert.NoError(t, err)
 
 	client := DatabricksClient{InsecureSkipVerify: true}
-	client.authVisitor = auth
-	err = client.ConfigureWithAuthentication()
-	assert.NoError(t, err)
 	aa.databricksClient = &client
 	client.AzureAuth = aa
+
+	err = client.Configure()
+	assert.NoError(t, err)
 
 	type ZonesInfo struct {
 		Zones       []string `json:"zones,omitempty"`

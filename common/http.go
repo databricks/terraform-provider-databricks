@@ -370,7 +370,8 @@ func (c *DatabricksClient) authenticatedQuery(method string, requestURL string, 
 		return nil, err
 	}
 
-	return c.genericQuery(method, requestURL, data, append(visitors, c.authVisitor)...)
+	// visitor order is important, auth visitor comes first
+	return c.genericQuery(method, requestURL, data, append([]func(r *http.Request) error{c.authVisitor}, visitors...)...)
 }
 
 // todo: do is better name

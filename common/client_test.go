@@ -16,7 +16,10 @@ func TestDatabricksClientConfigure_BasicAuth_NoHost(t *testing.T) {
 		Username: "foo",
 		Password: "bar",
 	}
-	err := dc.ConfigureWithAuthentication()
+	err := dc.Configure()
+	assert.NoError(t, err)
+
+	err = dc.Get("/dummy", nil, nil)
 
 	AssertErrorStartsWith(t, err, "Host is empty, but is required by basic_auth")
 	assert.Equal(t, "Zm9vOmJhcg==", dc.Token)

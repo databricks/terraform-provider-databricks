@@ -17,7 +17,7 @@ func TestClient_HandleErrors(t *testing.T) {
 		expectedMessage    string
 		expectedResource   string
 		expectedStatusCode int
-		apiCall            func(client DatabricksClient) error
+		apiCall            func(client *DatabricksClient) error
 	}{
 		{
 			name: "Status 404",
@@ -30,7 +30,7 @@ func TestClient_HandleErrors(t *testing.T) {
 			expectedMessage:    "Token ... does not exist!",
 			expectedResource:   "/api/2.0/token/create",
 			expectedStatusCode: 404,
-			apiCall: func(client DatabricksClient) error {
+			apiCall: func(client *DatabricksClient) error {
 				return client.Post("/token/create", map[string]string{
 					"foo": "bar",
 				}, nil)
@@ -44,7 +44,7 @@ func TestClient_HandleErrors(t *testing.T) {
 			expectedMessage:    "Hello world",
 			expectedResource:   "/api/2.0/token/create",
 			expectedStatusCode: 404,
-			apiCall: func(client DatabricksClient) error {
+			apiCall: func(client *DatabricksClient) error {
 				return client.Post("/token/create", map[string]string{
 					"foo": "bar",
 				}, nil)
@@ -58,7 +58,7 @@ func TestClient_HandleErrors(t *testing.T) {
 			expectedMessage:    "Response from server (404 Not Found) <html> Hello world </html>: invalid character '<' looking for beginning of value",
 			expectedResource:   "/api/2.0/token/create",
 			expectedStatusCode: 404,
-			apiCall: func(client DatabricksClient) error {
+			apiCall: func(client *DatabricksClient) error {
 				return client.Post("/token/create", map[string]string{
 					"foo": "bar",
 				}, nil)
@@ -78,10 +78,10 @@ func TestClient_HandleErrors(t *testing.T) {
 				Host:  server.URL,
 				Token: "...",
 			}
-			err := client.ConfigureWithAuthentication()
+			err := client.Configure()
 			assert.NoError(t, err)
 
-			err = tt.apiCall(client)
+			err = tt.apiCall(&client)
 			t.Log(err)
 			assert.IsType(t, APIError{}, err)
 			assert.Equal(t, tt.expectedErrorCode, err.(APIError).ErrorCode, "error code is not the same")

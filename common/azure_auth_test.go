@@ -150,7 +150,7 @@ func TestAzureAuth_configureWithClientSecret(t *testing.T) {
 
 	client := DatabricksClient{InsecureSkipVerify: true}
 	client.authVisitor = auth
-	err = client.ConfigureWithAuthentication()
+	err = client.Configure()
 	assert.NoError(t, err)
 	aa.databricksClient = &client
 	client.AzureAuth = aa

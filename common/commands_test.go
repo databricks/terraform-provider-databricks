@@ -11,7 +11,7 @@ func TestCommandMock(t *testing.T) {
 		Host:  ".",
 		Token: ".",
 	}
-	err := c.ConfigureWithAuthentication()
+	err := c.Configure()
 	assert.NoError(t, err)
 
 	called := false

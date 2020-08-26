@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/hashicorp/go-retryablehttp"
@@ -28,6 +29,7 @@ type DatabricksClient struct {
 	TimeoutSeconds     int
 	userAgent          string
 	httpClient         *retryablehttp.Client
+	authMutex          sync.Mutex
 	authVisitor        func(r *http.Request) error
 	debugTruncateBytes int
 	commandExecutor    CommandExecutor
@@ -38,22 +40,19 @@ func (c *DatabricksClient) Configure() error {
 	c.configureHTTPCLient()
 	c.AzureAuth.databricksClient = c
 	c.userAgent = UserAgent()
-	// TODO: fix it once bigger boom is done
-	//c.commandExecutor = c.Commands()
 	return nil
 }
 
-// ConfigureWithAuthentication configures the client to work
-// and validates if an authentication mechanism is present
-func (c *DatabricksClient) ConfigureWithAuthentication() error {
-	err := c.Configure()
-	if err != nil {
-		return err
+// Authenticate authenticates across providers or returns error
+func (c *DatabricksClient) Authenticate() error {
+	if c.authVisitor != nil {
+		return nil
 	}
-	return c.ensureAuthenticationIsSetup()
-}
-
-func (c *DatabricksClient) findAndApplyAuthorizer() error {
+	c.authMutex.Lock()
+	defer c.authMutex.Unlock()
+	if c.authVisitor != nil {
+		return nil
+	}
 	authorizers := []func() (func(r *http.Request) error, error){
 		c.configureAuthWithDirectParams,
 		c.AzureAuth.configureWithClientSecret,
@@ -69,6 +68,7 @@ func (c *DatabricksClient) findAndApplyAuthorizer() error {
 			continue
 		}
 		c.authVisitor = authorizer
+		c.fixHost()
 		return nil
 	}
 	return fmt.Errorf("Authentication is not configured for provider. Please configure it\n" +
@@ -82,17 +82,12 @@ func (c *DatabricksClient) findAndApplyAuthorizer() error {
 		"Please check https://github.com/databrickslabs/terraform-provider-databricks/blob/master/docs/index.md#authentication for details")
 }
 
-func (c *DatabricksClient) ensureAuthenticationIsSetup() error {
-	if c.authVisitor != nil {
-		return nil
-	}
-	err := c.findAndApplyAuthorizer()
-	if err == nil && c.Host != "" && !(strings.HasPrefix(c.Host, "https://") || strings.HasPrefix(c.Host, "http://")) {
+func (c *DatabricksClient) fixHost() {
+	if c.Host != "" && !(strings.HasPrefix(c.Host, "https://") || strings.HasPrefix(c.Host, "http://")) {
 		// azurerm_databricks_workspace.*.workspace_url is giving URL without scheme
 		// so that is why this line is here
 		c.Host = "https://" + c.Host
 	}
-	return err
 }
 
 func (c *DatabricksClient) configureAuthWithDirectParams() (func(r *http.Request) error, error) {

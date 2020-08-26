@@ -257,7 +257,7 @@ func HttpFixtureClient(t *testing.T, fixtures []HTTPFixture) (client *common.Dat
 		Host:  server.URL,
 		Token: "...",
 	}
-	err = client.ConfigureWithAuthentication()
+	err = client.Configure()
 	return client, server, err
 }
 
@@ -405,7 +405,7 @@ func AssertRequestWithMockServer(t *testing.T, rawPayloadArgs interface{}, reque
 		Host:  server.URL,
 		Token: "...",
 	}
-	err := client.ConfigureWithAuthentication()
+	err := client.Configure()
 	assert.NoError(t, err, fmt.Sprintf("Expected no error but got: %v", err))
 	output, err := apiCall(&client)
 
@@ -449,7 +449,7 @@ func AssertMultipleRequestsWithMockServer(t *testing.T, rawPayloadArgs interface
 		Host:  server.URL,
 		Token: "...",
 	}
-	err := client.ConfigureWithAuthentication()
+	err := client.Configure()
 	assert.NoError(t, err, fmt.Sprintf("Expected no error but got: %v", err))
 	output, err := apiCall(&client)
 

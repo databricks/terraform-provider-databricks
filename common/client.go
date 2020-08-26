@@ -45,17 +45,6 @@ func (c *DatabricksClient) Configure() error {
 	return nil
 }
 
-// ConfigureWithAuthentication configures the client to work
-// and validates if an authentication mechanism is present
-// TODO: remove me
-func (c *DatabricksClient) ConfigureWithAuthentication() error {
-	err := c.Configure()
-	if err != nil {
-		return err
-	}
-	return c.ensureAuthenticationIsSetup()
-}
-
 func (c *DatabricksClient) findAndApplyAuthorizer() error {
 	authorizers := []func() (func(r *http.Request) error, error){
 		c.configureAuthWithDirectParams,

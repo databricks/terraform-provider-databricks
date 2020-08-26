@@ -13,7 +13,10 @@ func TestMwsAccStorageConfigurations(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping integration test in short mode.")
 	}
-	acctID := os.Getenv("DATABRICKS_ACCOUNT_ID")
+	acctID, acctIDset := os.LookupEnv("DATABRICKS_ACCOUNT_ID")
+	if !acctIDset {
+		t.Skip("MWS tests skipped unless env 'DATABRICKS_ACCOUNT_ID' is set")
+	}
 	client := common.CommonEnvironmentClient()
 	storageConfigsList, err := NewStorageConfigurationsAPI(client).List(acctID)
 	assert.NoError(t, err, err)

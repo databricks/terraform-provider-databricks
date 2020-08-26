@@ -34,7 +34,7 @@ func testMountFuncHelper(t *testing.T, mountFunc func(mp MountPoint, mount Mount
 		Host:  ".",
 		Token: ".",
 	}
-	err := c.ConfigureWithAuthentication()
+	err := c.Configure()
 	assert.NoError(t, err)
 
 	var called bool

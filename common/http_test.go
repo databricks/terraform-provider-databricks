@@ -78,7 +78,7 @@ func TestClient_HandleErrors(t *testing.T) {
 				Host:  server.URL,
 				Token: "...",
 			}
-			err := client.ConfigureWithAuthentication()
+			err := client.Configure()
 			assert.NoError(t, err)
 
 			err = tt.apiCall(&client)

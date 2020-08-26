@@ -290,6 +290,10 @@ func TestAccGetAdminGroup(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping integration test in short mode.")
 	}
+	if _, ok := os.LookupEnv("CLOUD_ENV"); !ok {
+		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
+	}
+
 	client := common.NewClientFromEnvironment()
 	grp, err := NewGroupsAPI(client).GetAdminGroup()
 	assert.NoError(t, err, err)
@@ -301,6 +305,10 @@ func TestAwsAccReadInheritedRolesFromGroup(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping integration test in short mode.")
 	}
+	if _, ok := os.LookupEnv("CLOUD_ENV"); !ok {
+		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
+	}
+
 	client := common.NewClientFromEnvironment()
 	// TODO: pass IAM role with ENV variable
 	myTestRole := "arn:aws:iam::123456789012:instance-profile/go-sdk-integeration-testing"

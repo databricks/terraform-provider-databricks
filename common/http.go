@@ -301,9 +301,9 @@ func (c *DatabricksClient) api12(r *http.Request) error {
 // Scim sets SCIM headers
 func (c *DatabricksClient) Scim(method, path string, request interface{}, response interface{}) error {
 	body, err := c.authenticatedQuery(method, path, request, c.api2, func(r *http.Request) error {
-			r.Header.Set("Content-Type", "application/scim+json")
-			return nil
-		})
+		r.Header.Set("Content-Type", "application/scim+json")
+		return nil
+	})
 	if err != nil {
 		return err
 	}

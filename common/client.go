@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/hashicorp/go-retryablehttp"
@@ -28,6 +29,7 @@ type DatabricksClient struct {
 	TimeoutSeconds     int
 	userAgent          string
 	httpClient         *retryablehttp.Client
+	authMutex          sync.Mutex
 	authVisitor        func(r *http.Request) error
 	debugTruncateBytes int
 	commandExecutor    CommandExecutor
@@ -38,21 +40,16 @@ func (c *DatabricksClient) Configure() error {
 	c.configureHTTPCLient()
 	c.AzureAuth.databricksClient = c
 	c.userAgent = UserAgent()
-	err := c.findAndApplyAuthorizer()
-	if err != nil {
-		return err
-	}
-	if c.Host != "" && !(strings.HasPrefix(c.Host, "https://") || strings.HasPrefix(c.Host, "http://")) {
-		// azurerm_databricks_workspace.*.workspace_url is giving URL without scheme
-		// so that is why this line is here
-		c.Host = "https://" + c.Host
-	}
-	// TODO: fix it once bigger boom is done
-	//c.commandExecutor = c.Commands()
 	return nil
 }
 
-func (c *DatabricksClient) findAndApplyAuthorizer() error {
+// Authenticate authenticates across providers or returns error
+func (c *DatabricksClient) Authenticate() error {
+	if c.authVisitor != nil {
+		return nil
+	}
+	c.authMutex.Lock()
+	defer c.authMutex.Unlock()
 	if c.authVisitor != nil {
 		return nil
 	}
@@ -71,6 +68,7 @@ func (c *DatabricksClient) findAndApplyAuthorizer() error {
 			continue
 		}
 		c.authVisitor = authorizer
+		c.fixHost()
 		return nil
 	}
 	return fmt.Errorf("Authentication is not configured for provider. Please configure it\n" +
@@ -82,6 +80,14 @@ func (c *DatabricksClient) findAndApplyAuthorizer() error {
 		"for Azure Service Principal authentication.\n" +
 		"5. Run `databricks configure --token` that will create ~/.databrickscfg file.\n\n" +
 		"Please check https://github.com/databrickslabs/terraform-provider-databricks/blob/master/docs/index.md#authentication for details")
+}
+
+func (c *DatabricksClient) fixHost() {
+	if c.Host != "" && !(strings.HasPrefix(c.Host, "https://") || strings.HasPrefix(c.Host, "http://")) {
+		// azurerm_databricks_workspace.*.workspace_url is giving URL without scheme
+		// so that is why this line is here
+		c.Host = "https://" + c.Host
+	}
 }
 
 func (c *DatabricksClient) configureAuthWithDirectParams() (func(r *http.Request) error, error) {

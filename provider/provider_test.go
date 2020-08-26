@@ -292,7 +292,12 @@ func configureProviderAndReturnClient(t *testing.T, tt providerConfigTest) (*com
 	if err != nil {
 		return nil, err
 	}
-	return p.Meta().(*common.DatabricksClient), nil
+	client := p.Meta().(*common.DatabricksClient)
+	err = client.Authenticate()
+	if err != nil {
+		return nil, err
+	}
+	return client, nil
 }
 
 func TestProvider_NoHostGivesError(t *testing.T) {

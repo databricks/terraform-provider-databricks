@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/hashicorp/go-retryablehttp"
@@ -31,6 +32,7 @@ type DatabricksClient struct {
 	authVisitor        func(r *http.Request) error
 	debugTruncateBytes int
 	commandExecutor    CommandExecutor
+	authMutex          sync.Mutex
 }
 
 // Configure client to work
@@ -83,15 +85,27 @@ func (c *DatabricksClient) findAndApplyAuthorizer() error {
 }
 
 func (c *DatabricksClient) ensureAuthenticationIsSetup() error {
+	// we can return without the mutex if authVisitor is not null
 	if c.authVisitor != nil {
 		return nil
 	}
+
+	c.authMutex.Lock()
+	// when we reach this point, the state of authVisitor can have changed, so check again
+	if c.authVisitor != nil {
+		defer c.authMutex.Unlock()
+		return nil
+	}
+
+	// no authentication has been setup, so try to apply one
 	err := c.findAndApplyAuthorizer()
 	if err == nil && c.Host != "" && !(strings.HasPrefix(c.Host, "https://") || strings.HasPrefix(c.Host, "http://")) {
 		// azurerm_databricks_workspace.*.workspace_url is giving URL without scheme
 		// so that is why this line is here
 		c.Host = "https://" + c.Host
 	}
+
+	defer c.authMutex.Unlock()
 	return err
 }
 

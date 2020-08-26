@@ -2,6 +2,7 @@ package storage
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/databrickslabs/databricks-terraform/compute"
@@ -28,9 +29,10 @@ func ResourceAWSS3Mount() *schema.Resource {
 	r := &schema.Resource{
 		Schema: map[string]*schema.Schema{
 			"cluster_id": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ForceNew:      true,
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+				Computed: true,
 			},
 			"source": {
 				Type:     schema.TypeString,
@@ -48,9 +50,9 @@ func ResourceAWSS3Mount() *schema.Resource {
 				ForceNew: true,
 			},
 			"instance_profile": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ForceNew:      true,
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
 			},
 		},
 		SchemaVersion: 2,
@@ -58,7 +60,7 @@ func ResourceAWSS3Mount() *schema.Resource {
 	r.Create = func(d *schema.ResourceData, m interface{}) error {
 		err := preprocessS3Mount(d, m)
 		if err != nil {
-			return nil
+			return err
 		}
 		return mountCreate(tpl, r)(d, m)
 	}
@@ -66,14 +68,14 @@ func ResourceAWSS3Mount() *schema.Resource {
 	r.Read = func(d *schema.ResourceData, m interface{}) error {
 		err := preprocessS3Mount(d, m)
 		if err != nil {
-			return nil
+			return err
 		}
 		return mountRead(tpl, r)(d, m)
 	}
 	r.Delete = func(d *schema.ResourceData, m interface{}) error {
 		err := preprocessS3Mount(d, m)
 		if err != nil {
-			return nil
+			return err
 		}
 		return mountDelete(tpl, r)(d, m)
 	}
@@ -81,9 +83,13 @@ func ResourceAWSS3Mount() *schema.Resource {
 }
 
 func preprocessS3Mount(d *schema.ResourceData, m interface{}) error {
+	clusterID := d.Get("cluster_id").(string)
+	instanceProfile := d.Get("instance_profile").(string)
+	if clusterID == "" && instanceProfile == "" {
+		return fmt.Errorf("Either cluster_id or instance_profile must be specified")
+	}
 	clustersAPI := compute.NewClustersAPI(m)
-	// TODO: make validation here
-	if clusterID, ok := d.Get("cluster_id").(string); ok && clusterID != "" {
+	if clusterID != "" {
 		clusterInfo, err := clustersAPI.Get(clusterID)
 		if err != nil {
 			return err
@@ -95,27 +101,35 @@ func preprocessS3Mount(d *schema.ResourceData, m interface{}) error {
 			return fmt.Errorf("Cluster %s must have EC2 instance profile attached", clusterID)
 		}
 	}
-	if instanceProfile, ok := d.Get("instance_profile").(string); ok && instanceProfile != "" {
-		ia, err := arn.Parse(instanceProfile)
-		if err != nil {
-			return err
-		}
-		clusterName := fmt.Sprintf("terraform-mount-%s", ia.Resource)
-		cluster, err := clustersAPI.GetOrCreateRunningCluster(clusterName, compute.Cluster{
-			NumWorkers:             1,
-			ClusterName:            clusterName,
-			SparkVersion:           compute.CommonRuntimeVersion(),
-			NodeTypeID:             clustersAPI.GetSmallestNodeTypeWithStorage(),
-			AutoterminationMinutes: 10,
-			AwsAttributes: &compute.AwsAttributes{
-				InstanceProfileArn: instanceProfile,
-				Availability:       "SPOT",
-			},
-		})
+	if instanceProfile != "" {
+		cluster, err := getOrCreateMountingClusterWithInstanceProfile(clustersAPI, instanceProfile)
 		if err != nil {
 			return err
 		}
 		d.Set("cluster_id", cluster.ClusterID)
 	}
 	return nil
+}
+
+func getOrCreateMountingClusterWithInstanceProfile(clustersAPI compute.ClustersAPI, instanceProfile string) (i compute.ClusterInfo, err error) {
+	ia, err := arn.Parse(instanceProfile)
+	if err != nil {
+		return i, err
+	}
+	instanceProfileParts := strings.Split(ia.Resource, "/")
+	if len(instanceProfileParts) != 2 {
+		return i, fmt.Errorf("Should have gotten two parts: %v", instanceProfileParts)
+	}
+	clusterName := fmt.Sprintf("terraform-mount-%s", instanceProfileParts[1])
+	return clustersAPI.GetOrCreateRunningCluster(clusterName, compute.Cluster{
+		NumWorkers:             1,
+		ClusterName:            clusterName,
+		SparkVersion:           compute.CommonRuntimeVersion(),
+		NodeTypeID:             clustersAPI.GetSmallestNodeTypeWithStorage(),
+		AutoterminationMinutes: 10,
+		AwsAttributes: &compute.AwsAttributes{
+			InstanceProfileArn: instanceProfile,
+			Availability:       "SPOT",
+		},
+	})
 }

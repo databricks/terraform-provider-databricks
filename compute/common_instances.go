@@ -41,6 +41,7 @@ func CommonInstancePoolID() string {
 	oncePool.Do(func() { // atomic
 		log.Printf("[INFO] Initializing common instance pool")
 		instancePools := NewInstancePoolsAPI(client)
+		clusters := NewClustersAPI(client)
 		currentUserPool := fmt.Sprintf("Terraform Integration Test by %s", os.Getenv("USER"))
 		pools, err := instancePools.List()
 		if err != nil {
@@ -58,19 +59,12 @@ func CommonInstancePoolID() string {
 		}
 		instancePool := InstancePool{
 			PreloadedSparkVersions:             []string{CommonRuntimeVersion()},
-			NodeTypeID:                         CommonInstanceType(),
+			NodeTypeID:                         clusters.GetSmallestNodeTypeWithStorage(),
 			InstancePoolName:                   currentUserPool,
 			MaxCapacity:                        10,
 			IdleInstanceAutoTerminationMinutes: 15,
 		}
 		if !client.IsUsingAzureAuth() {
-			instancePool.DiskSpec = &InstancePoolDiskSpec{
-				DiskType: &InstancePoolDiskType{
-					EbsVolumeType: EbsVolumeTypeGeneralPurposeSsd,
-				},
-				DiskCount: 1,
-				DiskSize:  32,
-			}
 			instancePool.AwsAttributes = &InstancePoolAwsAttributes{
 				Availability: AwsAvailabilitySpot,
 			}

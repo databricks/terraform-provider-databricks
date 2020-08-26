@@ -295,7 +295,7 @@ func (a ClustersAPI) GetOrCreateRunningCluster(name string, custom ...Cluster) (
 // GetSmallestNodeTypeWithStorage returns smallest runtime node type
 func (a ClustersAPI) GetSmallestNodeTypeWithStorage() string {
 	nodeTypes, err := a.ListNodeTypes()
-	if err != nil {
+	if err != nil || len(nodeTypes) == 0 {
 		if a.client.IsUsingAzureAuth() {
 			return "Standard_D3_v2"
 		}

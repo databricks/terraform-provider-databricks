@@ -40,6 +40,9 @@ func (c *DatabricksClient) Configure() error {
 	c.configureHTTPCLient()
 	c.AzureAuth.databricksClient = c
 	c.userAgent = UserAgent()
+	if c.DebugTruncateBytes == 0 {
+		c.DebugTruncateBytes = 96
+	}
 	return nil
 }
 

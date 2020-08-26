@@ -16,7 +16,7 @@ func TestDataAwsCrossAccountRolicy(t *testing.T) {
 	}.Apply(t)
 	assert.NoError(t, err)
 	j := d.Get("json")
-	assert.Lenf(t, j, 2374, "Strange length for policy: %s", j)
+	assert.Lenf(t, j, 2401, "Strange length for policy: %s", j)
 }
 
 func TestDataAwsCrossAccountRolicy_WithPassRoles(t *testing.T) {
@@ -29,7 +29,7 @@ func TestDataAwsCrossAccountRolicy_WithPassRoles(t *testing.T) {
 	}.Apply(t)
 	assert.NoError(t, err)
 	j := d.Get("json")
-	assert.Lenf(t, j, 2510, "Strange length for policy: %s", j)
+	assert.Lenf(t, j, 2537, "Strange length for policy: %s", j)
 }
 
 func TestDataAwsAssumeRolePolicy(t *testing.T) {
@@ -42,7 +42,7 @@ func TestDataAwsAssumeRolePolicy(t *testing.T) {
 	}.Apply(t)
 	assert.NoError(t, err)
 	j := d.Get("json")
-	assert.Lenf(t, j, 272, "Strange length for policy: %s", j)
+	assert.Lenf(t, j, 299, "Strange length for policy: %s", j)
 }
 
 func TestDataAwsBucketPolicy(t *testing.T) {
@@ -57,7 +57,7 @@ func TestDataAwsBucketPolicy(t *testing.T) {
 	}.Apply(t)
 	assert.NoError(t, err)
 	j := d.Get("json")
-	assert.Lenf(t, j, 413, "Strange length for policy: %s", j)
+	assert.Lenf(t, j, 440, "Strange length for policy: %s", j)
 }
 
 func TestDataAwsBucketPolicy_FullAccessRole(t *testing.T) {
@@ -73,5 +73,5 @@ func TestDataAwsBucketPolicy_FullAccessRole(t *testing.T) {
 	}.Apply(t)
 	assert.NoError(t, err)
 	j := d.Get("json")
-	assert.Lenf(t, j, 386, "Strange length for policy: %s", j)
+	assert.Lenf(t, j, 413, "Strange length for policy: %s", j)
 }

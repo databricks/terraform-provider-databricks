@@ -89,7 +89,7 @@ func TestAccDatabricksPermissionsResourceFullLifecycle(t *testing.T) {
 						return nil
 					}),
 				// Somehow the plan is not empty on AWS, but is on Azure
-				ExpectNonEmptyPlan: os.Getenv("CLOUD_ENV") == "AWS", 
+				ExpectNonEmptyPlan: os.Getenv("CLOUD_ENV") == "AWS",
 			},
 		},
 	})

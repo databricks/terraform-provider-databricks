@@ -450,7 +450,7 @@ func TestNotebooksAPI_Create(t *testing.T) {
 			var input args
 			qa.AssertRequestWithMockServer(t, &tt.args, http.MethodPost, "/api/2.0/workspace/import", &input, tt.response, http.StatusOK, nil,
 				tt.wantErr, func(client *common.DatabricksClient) (interface{}, error) {
-					return nil, NewNotebooksAPI(&client).Create(tt.args.Path, tt.args.Content, tt.args.Language, tt.args.Format, tt.args.Overwrite)
+					return nil, NewNotebooksAPI(client).Create(tt.args.Path, tt.args.Content, tt.args.Language, tt.args.Format, tt.args.Overwrite)
 				})
 		})
 	}
@@ -480,7 +480,7 @@ func TestNotebooksAPI_MkDirs(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			var input args
 			qa.AssertRequestWithMockServer(t, &tt.args, http.MethodPost, "/api/2.0/workspace/mkdirs", &input, tt.response, http.StatusOK, nil, tt.wantErr, func(client *common.DatabricksClient) (interface{}, error) {
-				return nil, NewNotebooksAPI(&client).Mkdirs(tt.args.Path)
+				return nil, NewNotebooksAPI(client).Mkdirs(tt.args.Path)
 			})
 		})
 	}
@@ -513,7 +513,7 @@ func TestNotebooksAPI_Delete(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			var input args
 			qa.AssertRequestWithMockServer(t, &tt.args, http.MethodPost, "/api/2.0/workspace/delete", &input, tt.response, tt.responseStatus, nil, tt.wantErr, func(client *common.DatabricksClient) (interface{}, error) {
-				return nil, NewNotebooksAPI(&client).Delete(tt.args.Path, tt.args.Recursive)
+				return nil, NewNotebooksAPI(client).Delete(tt.args.Path, tt.args.Recursive)
 			})
 		})
 	}
@@ -577,7 +577,7 @@ func TestNotebooksAPI_ListNonRecursive(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			var input args
 			qa.AssertRequestWithMockServer(t, tt.args, http.MethodGet, tt.wantURI, &input, tt.response, tt.responseStatus, tt.want, tt.wantErr, func(client *common.DatabricksClient) (interface{}, error) {
-				return NewNotebooksAPI(&client).List(tt.args.Path, tt.args.Recursive)
+				return NewNotebooksAPI(client).List(tt.args.Path, tt.args.Recursive)
 			})
 		})
 	}
@@ -683,7 +683,7 @@ func TestNotebooksAPI_ListRecursive(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			qa.AssertMultipleRequestsWithMockServer(t, tt.args, []string{http.MethodGet, http.MethodGet}, tt.wantURI, []interface{}{&args{}}, tt.response, tt.responseStatus, tt.want, tt.wantErr, func(client *common.DatabricksClient) (interface{}, error) {
-				return NewNotebooksAPI(&client).List(tt.args[0].(*args).Path, tt.args[0].(*args).Recursive)
+				return NewNotebooksAPI(client).List(tt.args[0].(*args).Path, tt.args[0].(*args).Recursive)
 			})
 		})
 	}
@@ -740,7 +740,7 @@ func TestNotebooksAPI_Read(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			var input args
 			qa.AssertRequestWithMockServer(t, &tt.args, http.MethodGet, tt.wantURI, &input, tt.response, tt.responseStatus, tt.want, tt.wantErr, func(client *common.DatabricksClient) (interface{}, error) {
-				return NewNotebooksAPI(&client).Read(tt.args.Path)
+				return NewNotebooksAPI(client).Read(tt.args.Path)
 			})
 		})
 	}
@@ -791,7 +791,7 @@ func TestNotebooksAPI_Export(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			var input args
 			qa.AssertRequestWithMockServer(t, &tt.args, http.MethodGet, tt.wantURI, &input, tt.response, tt.responseStatus, tt.want, tt.wantErr, func(client *common.DatabricksClient) (interface{}, error) {
-				return NewNotebooksAPI(&client).Export(tt.args.Path, tt.args.Format)
+				return NewNotebooksAPI(client).Export(tt.args.Path, tt.args.Format)
 			})
 		})
 	}

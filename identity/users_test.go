@@ -68,7 +68,7 @@ func TestScimUserAPI_Create(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			var input args
 			qa.AssertRequestWithMockServer(t, &tt.args, http.MethodPost, "/api/2.0/preview/scim/v2/Users", &input, tt.response, tt.responseStatus, tt.want, tt.wantErr, func(client *common.DatabricksClient) (interface{}, error) {
-				return NewUsersAPI(&client).Create(tt.args.UserName, tt.args.DisplayName, []string{string(tt.args.Entitlements[0].Value)}, []string{tt.args.Roles[0].Value})
+				return NewUsersAPI(client).Create(tt.args.UserName, tt.args.DisplayName, []string{string(tt.args.Entitlements[0].Value)}, []string{tt.args.Roles[0].Value})
 			})
 		})
 	}
@@ -138,7 +138,7 @@ func TestScimUserAPI_Update(t *testing.T) {
 				[]string{http.MethodGet, http.MethodPut}, tt.wantURI,
 				[]interface{}{nil, &args{}}, tt.response, tt.responseStatus,
 				nil, tt.wantErr, func(client *common.DatabricksClient) (interface{}, error) {
-					return nil, NewUsersAPI(&client).Update("101030", tt.args[1].(*args).UserName,
+					return nil, NewUsersAPI(client).Update("101030", tt.args[1].(*args).UserName,
 						tt.args[1].(*args).DisplayName,
 						[]string{string(tt.args[1].(*args).Entitlements[0].Value)},
 						[]string{tt.args[1].(*args).Roles[0].Value})
@@ -187,7 +187,7 @@ func TestScimUserAPI_Delete(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			var input args
 			qa.AssertRequestWithMockServer(t, &tt.args, http.MethodDelete, tt.requestURI, &input, tt.response, tt.responseStatus, tt.want, tt.wantErr, func(client *common.DatabricksClient) (interface{}, error) {
-				return nil, NewUsersAPI(&client).Delete(tt.args.UserID)
+				return nil, NewUsersAPI(client).Delete(tt.args.UserID)
 			})
 		})
 	}
@@ -245,7 +245,7 @@ func TestScimUserAPI_SetUserAsAdmin(t *testing.T) {
 				},
 			}
 			qa.AssertRequestWithMockServer(t, &expectedPatchRequest, http.MethodPatch, tt.requestURI, &input, tt.response, tt.responseStatus, tt.want, tt.wantErr, func(client *common.DatabricksClient) (interface{}, error) {
-				return nil, NewUsersAPI(&client).SetUserAsAdmin(tt.args.UserID, tt.args.AdminGroupID)
+				return nil, NewUsersAPI(client).SetUserAsAdmin(tt.args.UserID, tt.args.AdminGroupID)
 			})
 		})
 	}
@@ -357,7 +357,7 @@ func TestScimUserAPI_VerifyUserAsAdmin(t *testing.T) {
 				},
 			}
 			qa.AssertRequestWithMockServer(t, &expectedPatchRequest, http.MethodGet, tt.requestURI, &input, tt.response, tt.responseStatus, tt.want, tt.wantErr, func(client *common.DatabricksClient) (interface{}, error) {
-				return NewUsersAPI(&client).VerifyUserAsAdmin(tt.args.UserID, tt.args.AdminGroupID)
+				return NewUsersAPI(client).VerifyUserAsAdmin(tt.args.UserID, tt.args.AdminGroupID)
 			})
 		})
 	}
@@ -415,7 +415,7 @@ func TestScimUserAPI_RemoveUserAsAdmin(t *testing.T) {
 				},
 			}
 			qa.AssertRequestWithMockServer(t, &expectedPatchRequest, http.MethodPatch, tt.requestURI, &input, tt.response, tt.responseStatus, tt.want, tt.wantErr, func(client *common.DatabricksClient) (interface{}, error) {
-				return nil, NewUsersAPI(&client).RemoveUserAsAdmin(tt.args.UserID, tt.args.AdminGroupID)
+				return nil, NewUsersAPI(client).RemoveUserAsAdmin(tt.args.UserID, tt.args.AdminGroupID)
 			})
 		})
 	}
@@ -627,7 +627,7 @@ func TestScimUserAPI_Read(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			var input args
 			qa.AssertMultipleRequestsWithMockServer(t, tt.args, []string{http.MethodGet, http.MethodGet, http.MethodGet}, tt.wantURI, []args{input}, tt.response, tt.responseStatus, tt.want, tt.wantErr, func(client *common.DatabricksClient) (interface{}, error) {
-				return NewUsersAPI(&client).Read(tt.args[0].UserID)
+				return NewUsersAPI(client).Read(tt.args[0].UserID)
 			})
 		})
 	}

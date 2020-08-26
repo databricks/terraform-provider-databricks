@@ -210,7 +210,7 @@ func TestSecretScopesAPI_Create(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			var input args
 			qa.AssertRequestWithMockServer(t, &tt.args, http.MethodPost, "/api/2.0/secrets/scopes/create", &input, tt.response, http.StatusOK, nil, tt.wantErr, func(client *common.DatabricksClient) (interface{}, error) {
-				return nil, NewSecretScopesAPI(&client).Create(tt.args.Scope, tt.args.InitialManagePrincipal)
+				return nil, NewSecretScopesAPI(client).Create(tt.args.Scope, tt.args.InitialManagePrincipal)
 			})
 		})
 	}
@@ -239,7 +239,7 @@ func TestSecretScopesAPI_Delete(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			var input args
 			qa.AssertRequestWithMockServer(t, &tt.args, http.MethodPost, "/api/2.0/secrets/scopes/delete", &input, tt.response, http.StatusOK, nil, tt.wantErr, func(client *common.DatabricksClient) (interface{}, error) {
-				return nil, NewSecretScopesAPI(&client).Delete(tt.args.Scope)
+				return nil, NewSecretScopesAPI(client).Delete(tt.args.Scope)
 			})
 		})
 	}
@@ -281,7 +281,7 @@ func TestSecretScopesAPI_Read(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			var input args
 			qa.AssertRequestWithMockServer(t, &tt.args, http.MethodGet, "/api/2.0/secrets/scopes/list", &input, tt.response, http.StatusOK, tt.want, tt.wantErr, func(client *common.DatabricksClient) (interface{}, error) {
-				return NewSecretScopesAPI(&client).Read(tt.args.ScopeName)
+				return NewSecretScopesAPI(client).Read(tt.args.ScopeName)
 			})
 		})
 	}
@@ -321,7 +321,7 @@ func TestSecretScopesAPI_List(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			qa.AssertRequestWithMockServer(t, nil, http.MethodGet, "/api/2.0/secrets/scopes/list", nil, tt.response, http.StatusOK, tt.want, tt.wantErr, func(client *common.DatabricksClient) (interface{}, error) {
-				return NewSecretScopesAPI(&client).List()
+				return NewSecretScopesAPI(client).List()
 			})
 		})
 	}

@@ -63,7 +63,7 @@ func TestScimGroupAPI_Create(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			var input args
 			qa.AssertRequestWithMockServer(t, &tt.args, http.MethodPost, "/api/2.0/preview/scim/v2/Groups", &input, tt.response, tt.responseStatus, tt.want, tt.wantErr, func(client *common.DatabricksClient) (interface{}, error) {
-				return NewGroupsAPI(&client).Create(tt.args.DisplayName, []string{tt.args.Members[0].Value}, []string{tt.args.Roles[0].Value}, []string{tt.args.Entitlements[0].Value})
+				return NewGroupsAPI(client).Create(tt.args.DisplayName, []string{tt.args.Members[0].Value}, []string{tt.args.Roles[0].Value}, []string{tt.args.Entitlements[0].Value})
 			})
 		})
 	}
@@ -110,7 +110,7 @@ func TestScimGroupAPI_GetAdminGroup(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			qa.AssertRequestWithMockServer(t, nil, http.MethodGet, "/api/2.0/preview/scim/v2/Groups?filter=displayName+eq+admins", nil, tt.response, tt.responseStatus, tt.want, tt.wantErr, func(client *common.DatabricksClient) (interface{}, error) {
-				return NewGroupsAPI(&client).GetAdminGroup()
+				return NewGroupsAPI(client).GetAdminGroup()
 			})
 		})
 	}
@@ -194,7 +194,7 @@ func TestScimGroupAPI_Patch(t *testing.T) {
 		var input args
 		t.Run(tt.name, func(t *testing.T) {
 			qa.AssertRequestWithMockServer(t, &tt.args, http.MethodPatch, tt.requestURI, &input, tt.response, tt.responseStatus, tt.want, tt.wantErr, func(client *common.DatabricksClient) (interface{}, error) {
-				return nil, NewGroupsAPI(&client).Patch(tt.params.groupID, tt.params.addList, tt.params.removeList, tt.params.path)
+				return nil, NewGroupsAPI(client).Patch(tt.params.groupID, tt.params.addList, tt.params.removeList, tt.params.path)
 			})
 		})
 	}
@@ -240,7 +240,7 @@ func TestScimGroupAPI_Delete(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			var input args
 			qa.AssertRequestWithMockServer(t, &tt.args, http.MethodDelete, tt.requestURI, &input, tt.response, tt.responseStatus, tt.want, tt.wantErr, func(client *common.DatabricksClient) (interface{}, error) {
-				return nil, NewGroupsAPI(&client).Delete(tt.args.GroupID)
+				return nil, NewGroupsAPI(client).Delete(tt.args.GroupID)
 			})
 		})
 	}

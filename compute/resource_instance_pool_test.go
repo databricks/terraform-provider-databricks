@@ -55,7 +55,7 @@ func TestInstancePoolsAPI_Create(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			var input InstancePool
 			qa.AssertRequestWithMockServer(t, tt.args.InstancePool, http.MethodPost, "/api/2.0/instance-pools/create", &input, tt.response, http.StatusOK, tt.want, tt.wantErr, func(client *common.DatabricksClient) (interface{}, error) {
-				return NewInstancePoolsAPI(&client).Create(*tt.args.InstancePool)
+				return NewInstancePoolsAPI(client).Create(*tt.args.InstancePool)
 			})
 		})
 	}
@@ -84,7 +84,7 @@ func TestInstancePoolsAPI_Delete(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			var input args
 			qa.AssertRequestWithMockServer(t, &tt.args, http.MethodPost, "/api/2.0/instance-pools/delete", &input, tt.response, http.StatusOK, nil, tt.wantErr, func(client *common.DatabricksClient) (interface{}, error) {
-				return nil, NewInstancePoolsAPI(&client).Delete(tt.args.InstancePoolID)
+				return nil, NewInstancePoolsAPI(client).Delete(tt.args.InstancePoolID)
 			})
 		})
 	}
@@ -127,7 +127,7 @@ func TestInstancePoolsAPI_Update(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			var input InstancePoolAndStats
 			qa.AssertRequestWithMockServer(t, tt.args.InstancePoolInfo, http.MethodPost, "/api/2.0/instance-pools/edit", &input, tt.response, http.StatusOK, nil, tt.wantErr, func(client *common.DatabricksClient) (interface{}, error) {
-				return nil, NewInstancePoolsAPI(&client).Update(*tt.args.InstancePoolInfo)
+				return nil, NewInstancePoolsAPI(client).Update(*tt.args.InstancePoolInfo)
 			})
 		})
 	}
@@ -227,7 +227,7 @@ func TestInstancePoolsAPI_Read(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			var input InstancePoolAndStats
 			qa.AssertRequestWithMockServer(t, &tt.args, http.MethodGet, "/api/2.0/instance-pools/get?instance_pool_id=101-120000-brick1-pool-ABCD1234", &input, tt.response, http.StatusOK, tt.want, tt.wantErr, func(client *common.DatabricksClient) (interface{}, error) {
-				return NewInstancePoolsAPI(&client).Read(tt.args.InstancePoolID)
+				return NewInstancePoolsAPI(client).Read(tt.args.InstancePoolID)
 			})
 		})
 	}

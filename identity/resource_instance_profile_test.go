@@ -211,7 +211,7 @@ func TestInstanceProfilesAPI_Create(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			var input args
 			qa.AssertRequestWithMockServer(t, &tt.args, http.MethodPost, "/api/2.0/instance-profiles/add", &input, tt.response, tt.responseStatus, nil, tt.wantErr, func(client *common.DatabricksClient) (interface{}, error) {
-				return nil, NewInstanceProfilesAPI(&client).Create(tt.args.InstanceProfileArn, tt.args.SkipValidation)
+				return nil, NewInstanceProfilesAPI(client).Create(tt.args.InstanceProfileArn, tt.args.SkipValidation)
 			})
 		})
 	}
@@ -252,7 +252,7 @@ func TestInstanceProfilesAPI_Delete(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			var input args
 			qa.AssertRequestWithMockServer(t, &tt.args, http.MethodPost, "/api/2.0/instance-profiles/remove", &input, tt.response, tt.responseStatus, nil, tt.wantErr, func(client *common.DatabricksClient) (interface{}, error) {
-				return nil, NewInstanceProfilesAPI(&client).Delete(tt.args.InstanceProfileArn)
+				return nil, NewInstanceProfilesAPI(client).Delete(tt.args.InstanceProfileArn)
 			})
 		})
 	}
@@ -306,7 +306,7 @@ func TestInstanceProfilesAPI_List(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			var input args
 			qa.AssertRequestWithMockServer(t, tt.args, http.MethodGet, tt.wantURI, &input, tt.response, tt.responseStatus, tt.want, tt.wantErr, func(client *common.DatabricksClient) (interface{}, error) {
-				return NewInstanceProfilesAPI(&client).List()
+				return NewInstanceProfilesAPI(client).List()
 			})
 		})
 	}
@@ -371,7 +371,7 @@ func TestInstanceProfilesAPI_Read(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			var input args
 			qa.AssertRequestWithMockServer(t, tt.args, http.MethodGet, tt.wantURI, &input, tt.response, tt.responseStatus, tt.want, tt.wantErr, func(client *common.DatabricksClient) (interface{}, error) {
-				return NewInstanceProfilesAPI(&client).Read(tt.args.InstanceProfileArn)
+				return NewInstanceProfilesAPI(client).Read(tt.args.InstanceProfileArn)
 			})
 		})
 	}

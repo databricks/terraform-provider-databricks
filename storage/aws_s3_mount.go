@@ -31,7 +31,6 @@ func ResourceAWSS3Mount() *schema.Resource {
 				Type:          schema.TypeString,
 				Optional:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"instance_profile_arn"},
 			},
 			"source": {
 				Type:     schema.TypeString,
@@ -52,7 +51,6 @@ func ResourceAWSS3Mount() *schema.Resource {
 				Type:          schema.TypeString,
 				Optional:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"cluster_id"},
 			},
 		},
 		SchemaVersion: 2,
@@ -84,6 +82,7 @@ func ResourceAWSS3Mount() *schema.Resource {
 
 func preprocessS3Mount(d *schema.ResourceData, m interface{}) error {
 	clustersAPI := compute.NewClustersAPI(m)
+	// TODO: make validation here
 	if clusterID, ok := d.Get("cluster_id").(string); ok && clusterID != "" {
 		clusterInfo, err := clustersAPI.Get(clusterID)
 		if err != nil {

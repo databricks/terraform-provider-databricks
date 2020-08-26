@@ -6,10 +6,10 @@ resource "azurerm_databricks_workspace" "this" {
   managed_resource_group_name = "${local.prefix}-workspace-rg"
 
   custom_parameters {
-    no_public_ip = false
-    virtual_network_id          = azurerm_virtual_network.example.id
-    public_subnet_name          = azurerm_subnet.public.name
-    private_subnet_name         = azurerm_subnet.private.name
+    no_public_ip        = false
+    virtual_network_id  = azurerm_virtual_network.example.id
+    public_subnet_name  = azurerm_subnet.public.name
+    private_subnet_name = azurerm_subnet.private.name
   }
 
   tags = local.tags

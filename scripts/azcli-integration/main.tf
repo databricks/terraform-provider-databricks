@@ -12,7 +12,7 @@ data "external" "me" {
 
 module "this" {
   source = "../az-common"
-  owner = lookup(data.external.me.result, "name")
+  owner  = lookup(data.external.me.result, "name")
 }
 
 output "arm_client_id" {

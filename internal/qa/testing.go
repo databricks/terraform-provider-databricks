@@ -383,7 +383,7 @@ func GetCloudInstanceType(c *common.DatabricksClient) string {
 	return "m4.large"
 }
 
-func AssertRequestWithMockServer(t *testing.T, rawPayloadArgs interface{}, requestMethod string, requestURI string, input interface{}, response string, responseStatus int, want interface{}, wantErr bool, apiCall func(client common.DatabricksClient) (interface{}, error)) {
+func AssertRequestWithMockServer(t *testing.T, rawPayloadArgs interface{}, requestMethod string, requestURI string, input interface{}, response string, responseStatus int, want interface{}, wantErr bool, apiCall func(client *common.DatabricksClient) (interface{}, error)) {
 	t.Log("[DEPRECATED] Please rewrite the code to use ResourceFixture")
 	server := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
 		// Test request parameters
@@ -407,7 +407,7 @@ func AssertRequestWithMockServer(t *testing.T, rawPayloadArgs interface{}, reque
 	}
 	err := client.Configure()
 	assert.NoError(t, err, fmt.Sprintf("Expected no error but got: %v", err))
-	output, err := apiCall(client)
+	output, err := apiCall(&client)
 
 	assert.Equal(t, reflect.TypeOf(want), reflect.TypeOf(output), "Types are not equal between output of api call and expectiation!")
 	if output != nil && !reflect.ValueOf(output).IsZero() {
@@ -421,7 +421,7 @@ func AssertRequestWithMockServer(t *testing.T, rawPayloadArgs interface{}, reque
 	}
 }
 
-func AssertMultipleRequestsWithMockServer(t *testing.T, rawPayloadArgs interface{}, requestMethod []string, requestURI []string, input interface{}, response []string, responseStatus []int, want interface{}, wantErr bool, apiCall func(client common.DatabricksClient) (interface{}, error)) {
+func AssertMultipleRequestsWithMockServer(t *testing.T, rawPayloadArgs interface{}, requestMethod []string, requestURI []string, input interface{}, response []string, responseStatus []int, want interface{}, wantErr bool, apiCall func(client *common.DatabricksClient) (interface{}, error)) {
 	t.Log("[DEPRECATED] Please rewrite the code to use ResourceFixture")
 	counter := 0
 	server := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
@@ -451,7 +451,7 @@ func AssertMultipleRequestsWithMockServer(t *testing.T, rawPayloadArgs interface
 	}
 	err := client.Configure()
 	assert.NoError(t, err, fmt.Sprintf("Expected no error but got: %v", err))
-	output, err := apiCall(client)
+	output, err := apiCall(&client)
 
 	if output != nil {
 		compare(t, want, output)

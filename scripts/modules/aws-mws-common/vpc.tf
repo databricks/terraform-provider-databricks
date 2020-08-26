@@ -1,6 +1,20 @@
 variable "cidr_block" {}
 variable "region" {}
 
+locals {
+  // see https://docs.databricks.com/administration-guide/cloud-configurations/aws/customer-managed-vpc.html
+  allows = {
+    "us-east-1": [
+      "52.27.216.188/32",
+      "54.156.226.103/32",
+    ],
+    "us-east-2": [
+      "52.27.216.188/32",
+      "18.221.200.169/32",
+    ]
+  }
+}
+
 resource "aws_vpc" "main" {
   cidr_block           = var.cidr_block
   enable_dns_hostnames = true
@@ -63,11 +77,35 @@ resource "aws_security_group" "test_sg" {
   vpc_id      = aws_vpc.main.id
 
   ingress {
-    description = "All"
+    description = "All Internal TCP"
+    protocol    = "tcp"
     from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
+    to_port     = 65535
+    self = true
+  }
+
+  ingress {
+    description = "All Internal UDP"
+    protocol    = "udp"
+    from_port   = 0
+    to_port     = 65535
+    self = true
+  }
+
+  ingress {
+    cidr_blocks = local.allows[var.region]
+    description = "ssh"
+    from_port = 22
+    to_port = 22
+    protocol = "tcp"
+  }
+
+  ingress {
+    cidr_blocks = local.allows[var.region]
+    description = "proxy"
+    from_port = 5557
+    to_port = 5557
+    protocol = "tcp"
   }
 
   egress {

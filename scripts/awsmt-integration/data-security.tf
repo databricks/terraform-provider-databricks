@@ -30,14 +30,14 @@ resource "aws_iam_role" "data_role" {
 }
 
 resource "aws_iam_instance_profile" "this" {
-  name = "${local.prefix}-first-ip"
+  name = "${local.prefix}-first-profile"
   role = aws_iam_role.data_role.name
 }
 
 data "databricks_aws_bucket_policy" "ds" {
-  provider          = databricks.mws
-  full_access_role  = aws_iam_role.data_role.arn
-  bucket            = aws_s3_bucket.ds.bucket
+  provider         = databricks.mws
+  full_access_role = aws_iam_role.data_role.arn
+  bucket           = aws_s3_bucket.ds.bucket
 }
 
 // allow databricks to access this bucket

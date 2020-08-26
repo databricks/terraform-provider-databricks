@@ -30,6 +30,7 @@ func DataAwsCrossAccountRolicy() *schema.Resource {
 	return &schema.Resource{
 		Read: func(d *schema.ResourceData, m interface{}) error {
 			policy := awsIamPolicy{
+				Version: "2008-10-17",
 				Statements: []*awsIamPolicyStatement{
 					{
 						Effect: "Allow",
@@ -142,6 +143,7 @@ func DataAwsAssumeRolePolicy() *schema.Resource {
 		Read: func(d *schema.ResourceData, m interface{}) error {
 			externalID := d.Get("external_id").(string)
 			policyJSON, err := json.MarshalIndent(awsIamPolicy{
+				Version: "2008-10-17",
 				Statements: []*awsIamPolicyStatement{
 					{
 						Effect:  "Allow",
@@ -187,6 +189,7 @@ func DataAwsBucketPolicy() *schema.Resource {
 		Read: func(d *schema.ResourceData, m interface{}) error {
 			bucket := d.Get("bucket").(string)
 			policy := awsIamPolicy{
+				Version: "2008-10-17",
 				Statements: []*awsIamPolicyStatement{
 					{
 						Effect: "Allow",

@@ -56,7 +56,7 @@ func TestLibrariesAPI_Create(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			var input args
 			qa.AssertRequestWithMockServer(t, &tt.args, http.MethodPost, "/api/2.0/libraries/install",
-				&input, tt.response, tt.responseStatus, nil, tt.wantErr, func(client common.DatabricksClient) (interface{}, error) {
+				&input, tt.response, tt.responseStatus, nil, tt.wantErr, func(client *common.DatabricksClient) (interface{}, error) {
 					return nil, NewLibrariesAPI(&client).Install(ClusterLibraryList{
 						ClusterID: tt.args.ClusterID,
 						Libraries: tt.args.Libraries,
@@ -112,7 +112,7 @@ func TestLibrariesAPI_Delete(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			var input args
 			qa.AssertRequestWithMockServer(t, &tt.args, http.MethodPost, "/api/2.0/libraries/uninstall",
-				&input, tt.response, tt.responseStatus, nil, tt.wantErr, func(client common.DatabricksClient) (interface{}, error) {
+				&input, tt.response, tt.responseStatus, nil, tt.wantErr, func(client *common.DatabricksClient) (interface{}, error) {
 					return nil, NewLibrariesAPI(&client).Uninstall(ClusterLibraryList{
 						ClusterID: tt.args.ClusterID,
 						Libraries: tt.args.Libraries,

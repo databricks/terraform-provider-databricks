@@ -206,7 +206,7 @@ func TestDBFSAPI_Create(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			qa.AssertMultipleRequestsWithMockServer(t, tt.args, tt.requestMethod, tt.wantURI,
 				tt.postStructExpect, tt.response, tt.responseStatus, nil, tt.wantErr,
-				func(client common.DatabricksClient) (interface{}, error) {
+				func(client *common.DatabricksClient) (interface{}, error) {
 					return nil, NewDBFSAPI(&client).Create(tt.params.Path, tt.params.Overwrite, tt.params.Data)
 				})
 		})
@@ -312,7 +312,7 @@ func TestDBFSAPI_Read(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			qa.AssertMultipleRequestsWithMockServer(t, tt.args, tt.requestMethod, tt.wantURI, tt.postStructExpect, tt.response, tt.responseStatus, tt.want, tt.wantErr, func(client common.DatabricksClient) (interface{}, error) {
+			qa.AssertMultipleRequestsWithMockServer(t, tt.args, tt.requestMethod, tt.wantURI, tt.postStructExpect, tt.response, tt.responseStatus, tt.want, tt.wantErr, func(client *common.DatabricksClient) (interface{}, error) {
 				return NewDBFSAPI(&client).Read(tt.params.Path)
 			})
 		})
@@ -355,7 +355,7 @@ func TestDBFSAPI_Delete(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var input args
-			qa.AssertRequestWithMockServer(t, &tt.args, http.MethodPost, "/api/2.0/dbfs/delete", &input, tt.response, tt.responseStatus, nil, tt.wantErr, func(client common.DatabricksClient) (interface{}, error) {
+			qa.AssertRequestWithMockServer(t, &tt.args, http.MethodPost, "/api/2.0/dbfs/delete", &input, tt.response, tt.responseStatus, nil, tt.wantErr, func(client *common.DatabricksClient) (interface{}, error) {
 				return nil, NewDBFSAPI(&client).Delete(tt.args.Path, tt.args.Recursive)
 			})
 		})
@@ -398,7 +398,7 @@ func TestDBFSAPI_Move(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var input args
-			qa.AssertRequestWithMockServer(t, &tt.args, http.MethodPost, "/api/2.0/dbfs/move", &input, tt.response, tt.responseStatus, nil, tt.wantErr, func(client common.DatabricksClient) (interface{}, error) {
+			qa.AssertRequestWithMockServer(t, &tt.args, http.MethodPost, "/api/2.0/dbfs/move", &input, tt.response, tt.responseStatus, nil, tt.wantErr, func(client *common.DatabricksClient) (interface{}, error) {
 				return nil, NewDBFSAPI(&client).Move(tt.args.SourcePath, tt.args.DestinationPath)
 			})
 		})
@@ -438,7 +438,7 @@ func TestDBFSAPI_Mkdirs(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var input args
-			qa.AssertRequestWithMockServer(t, &tt.args, http.MethodPost, "/api/2.0/dbfs/mkdirs", &input, tt.response, tt.responseStatus, nil, tt.wantErr, func(client common.DatabricksClient) (interface{}, error) {
+			qa.AssertRequestWithMockServer(t, &tt.args, http.MethodPost, "/api/2.0/dbfs/mkdirs", &input, tt.response, tt.responseStatus, nil, tt.wantErr, func(client *common.DatabricksClient) (interface{}, error) {
 				return nil, NewDBFSAPI(&client).Mkdirs(tt.args.Path)
 			})
 		})
@@ -492,7 +492,7 @@ func TestDBFSAPI_Status(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var input args
-			qa.AssertRequestWithMockServer(t, &tt.args, http.MethodGet, tt.requestURI, &input, tt.response, tt.responseStatus, tt.want, tt.wantErr, func(client common.DatabricksClient) (interface{}, error) {
+			qa.AssertRequestWithMockServer(t, &tt.args, http.MethodGet, tt.requestURI, &input, tt.response, tt.responseStatus, tt.want, tt.wantErr, func(client *common.DatabricksClient) (interface{}, error) {
 				return NewDBFSAPI(&client).Status(tt.args.Path)
 			})
 		})
@@ -567,7 +567,7 @@ func TestDBFSAPI_ListNonRecursive(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var input args
-			qa.AssertRequestWithMockServer(t, tt.args, http.MethodGet, tt.wantURI, &input, tt.response, tt.responseStatus, tt.want, tt.wantErr, func(client common.DatabricksClient) (interface{}, error) {
+			qa.AssertRequestWithMockServer(t, tt.args, http.MethodGet, tt.wantURI, &input, tt.response, tt.responseStatus, tt.want, tt.wantErr, func(client *common.DatabricksClient) (interface{}, error) {
 				return NewDBFSAPI(&client).List(tt.args.Path, tt.args.Recursive)
 			})
 		})
@@ -681,7 +681,7 @@ func TestDBFSAPI_ListRecursive(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			qa.AssertMultipleRequestsWithMockServer(t, tt.args, []string{http.MethodGet, http.MethodGet}, tt.wantURI, []interface{}{&args{}}, tt.response, tt.responseStatus, tt.want, tt.wantErr, func(client common.DatabricksClient) (interface{}, error) {
+			qa.AssertMultipleRequestsWithMockServer(t, tt.args, []string{http.MethodGet, http.MethodGet}, tt.wantURI, []interface{}{&args{}}, tt.response, tt.responseStatus, tt.want, tt.wantErr, func(client *common.DatabricksClient) (interface{}, error) {
 				return NewDBFSAPI(&client).List(tt.args[0].(*args).Path, tt.args[0].(*args).Recursive)
 			})
 		})

@@ -37,7 +37,7 @@ func TestSecretsAPI_Create(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var input args
-			qa.AssertRequestWithMockServer(t, &tt.args, http.MethodPost, "/api/2.0/secrets/put", &input, tt.response, http.StatusOK, nil, tt.wantErr, func(client common.DatabricksClient) (interface{}, error) {
+			qa.AssertRequestWithMockServer(t, &tt.args, http.MethodPost, "/api/2.0/secrets/put", &input, tt.response, http.StatusOK, nil, tt.wantErr, func(client *common.DatabricksClient) (interface{}, error) {
 				return nil, NewSecretsAPI(&client).Create(tt.args.StringValue, tt.args.Scope, tt.args.Key)
 			})
 		})
@@ -68,7 +68,7 @@ func TestSecretsAPI_Delete(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var input args
-			qa.AssertRequestWithMockServer(t, &tt.args, http.MethodPost, "/api/2.0/secrets/delete", &input, tt.response, http.StatusOK, nil, tt.wantErr, func(client common.DatabricksClient) (interface{}, error) {
+			qa.AssertRequestWithMockServer(t, &tt.args, http.MethodPost, "/api/2.0/secrets/delete", &input, tt.response, http.StatusOK, nil, tt.wantErr, func(client *common.DatabricksClient) (interface{}, error) {
 				return nil, NewSecretsAPI(&client).Delete(tt.args.Scope, tt.args.Key)
 			})
 		})
@@ -119,7 +119,7 @@ func TestSecretsAPI_ListSecrets(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var input args
-			qa.AssertRequestWithMockServer(t, tt.args, http.MethodGet, "/api/2.0/secrets/list?scope=my-scope", &input, tt.response, http.StatusOK, tt.want, tt.wantErr, func(client common.DatabricksClient) (interface{}, error) {
+			qa.AssertRequestWithMockServer(t, tt.args, http.MethodGet, "/api/2.0/secrets/list?scope=my-scope", &input, tt.response, http.StatusOK, tt.want, tt.wantErr, func(client *common.DatabricksClient) (interface{}, error) {
 				return NewSecretsAPI(&client).List(tt.args.Scope)
 			})
 		})
@@ -166,7 +166,7 @@ func TestSecretsAPI_Read(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var input args
-			qa.AssertRequestWithMockServer(t, tt.args, http.MethodGet, "/api/2.0/secrets/list?scope=my-scope", &input, tt.response, http.StatusOK, tt.want, tt.wantErr, func(client common.DatabricksClient) (interface{}, error) {
+			qa.AssertRequestWithMockServer(t, tt.args, http.MethodGet, "/api/2.0/secrets/list?scope=my-scope", &input, tt.response, http.StatusOK, tt.want, tt.wantErr, func(client *common.DatabricksClient) (interface{}, error) {
 				return NewSecretsAPI(&client).Read(tt.args.Scope, tt.args.Key)
 			})
 		})

@@ -12,7 +12,7 @@ data "external" "me" {
 
 module "this" {
   source = "../az-common"
-  owner  = lookup(data.external.me.result, "name")
+  owner = lookup(data.external.me.result, "name")
 }
 
 output "arm_client_id" {
@@ -48,7 +48,7 @@ output "test_gen1_name" {
 }
 
 output "test_storage_account_key" {
-  value     = module.this.test_storage_account_key
+  value = module.this.test_storage_account_key
   sensitive = true
 }
 

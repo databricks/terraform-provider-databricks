@@ -1,5 +1,5 @@
 variable "owner" {
-  type    = string
+  type = string 
   default = ""
 }
 

@@ -11,7 +11,7 @@ resource "azurerm_network_security_group" "example" {
   name                = "${local.prefix}-nsg"
   location            = azurerm_resource_group.example.location
   resource_group_name = azurerm_resource_group.example.name
-  tags                = local.tags
+  tags = local.tags
 }
 
 resource "azurerm_subnet" "public" {
@@ -23,7 +23,7 @@ resource "azurerm_subnet" "public" {
   delegation {
     name = "databricks"
     service_delegation {
-      name    = "Microsoft.Databricks/workspaces"
+      name = "Microsoft.Databricks/workspaces"
       actions = ["Microsoft.Network/networkinterfaces/*"]
     }
   }
@@ -38,7 +38,7 @@ resource "azurerm_subnet" "private" {
   name                 = "${local.prefix}-private"
   resource_group_name  = azurerm_resource_group.example.name
   virtual_network_name = azurerm_virtual_network.example.name
-  address_prefixes     = [cidrsubnet(local.cidr, 3, 1)]
+  address_prefixes = [cidrsubnet(local.cidr, 3, 1)]
 
   delegation {
     name = "databricks"
@@ -46,7 +46,7 @@ resource "azurerm_subnet" "private" {
       name = "Microsoft.Databricks/workspaces"
       actions = [
         "Microsoft.Network/virtualNetworks/subnets/*",
-      "Microsoft.Network/networkinterfaces/*"]
+        "Microsoft.Network/networkinterfaces/*"]
     }
   }
 }

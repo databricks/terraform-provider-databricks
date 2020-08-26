@@ -24,9 +24,9 @@ variable "cidr" {}
 
 locals {
   // dltp - databricks labs terraform provider
-  prefix   = "dltp${random_string.naming.result}"
+  prefix = "dltp${random_string.naming.result}"
   location = "eastus"
-  cidr     = var.cidr
+  cidr   = var.cidr
   // tags that are propagated down to all resources
   tags = {
     Environment = "Testing"

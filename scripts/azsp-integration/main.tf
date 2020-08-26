@@ -76,7 +76,7 @@ output "test_gen1_name" {
 }
 
 output "test_storage_account_key" {
-  value = module.this.test_storage_account_key
+  value     = module.this.test_storage_account_key
   sensitive = true
 }
 

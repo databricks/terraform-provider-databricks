@@ -87,9 +87,9 @@ func TestResourceAwsS3MountCreate_Error(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
-				Method:   "GET",
+				Method:       "GET",
 				ReuseRequest: true,
-				Resource: "/api/2.0/clusters/get?cluster_id=this_cluster",
+				Resource:     "/api/2.0/clusters/get?cluster_id=this_cluster",
 				Response: compute.ClusterInfo{
 					State: compute.ClusterStateRunning,
 					AwsAttributes: &compute.AwsAttributes{
@@ -118,9 +118,9 @@ func TestResourceAwsS3MountRead(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
-				Method:   "GET",
+				Method:       "GET",
 				ReuseRequest: true,
-				Resource: "/api/2.0/clusters/get?cluster_id=this_cluster",
+				Resource:     "/api/2.0/clusters/get?cluster_id=this_cluster",
 				Response: compute.ClusterInfo{
 					State: compute.ClusterStateRunning,
 					AwsAttributes: &compute.AwsAttributes{
@@ -154,9 +154,9 @@ func TestResourceAwsS3MountRead_NotFound(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
-				Method:   "GET",
+				Method:       "GET",
 				ReuseRequest: true,
-				Resource: "/api/2.0/clusters/get?cluster_id=this_cluster",
+				Resource:     "/api/2.0/clusters/get?cluster_id=this_cluster",
 				Response: compute.ClusterInfo{
 					State: compute.ClusterStateRunning,
 					AwsAttributes: &compute.AwsAttributes{
@@ -188,9 +188,9 @@ func TestResourceAwsS3MountRead_Error(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
-				Method:   "GET",
+				Method:       "GET",
 				ReuseRequest: true,
-				Resource: "/api/2.0/clusters/get?cluster_id=this_cluster",
+				Resource:     "/api/2.0/clusters/get?cluster_id=this_cluster",
 				Response: compute.ClusterInfo{
 					State: compute.ClusterStateRunning,
 					AwsAttributes: &compute.AwsAttributes{
@@ -222,9 +222,9 @@ func TestResourceAwsS3MountDelete(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
-				Method:   "GET",
+				Method:       "GET",
 				ReuseRequest: true,
-				Resource: "/api/2.0/clusters/get?cluster_id=this_cluster",
+				Resource:     "/api/2.0/clusters/get?cluster_id=this_cluster",
 				Response: compute.ClusterInfo{
 					State: compute.ClusterStateRunning,
 					AwsAttributes: &compute.AwsAttributes{

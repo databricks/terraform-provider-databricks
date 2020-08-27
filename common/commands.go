@@ -7,6 +7,11 @@ func (c *DatabricksClient) WithCommandMock(mock CommandMock) {
 	}
 }
 
+// WithCommandExecutor sets command executor implementation to use
+func (c *DatabricksClient) WithCommandExecutor(ce CommandExecutor) {
+	c.commandExecutor = ce
+}
+
 // CommandExecutor service
 func (c *DatabricksClient) CommandExecutor() CommandExecutor {
 	return c.commandExecutor

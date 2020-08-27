@@ -10,7 +10,7 @@ import (
 // AzureADLSGen1Mount describes the object for a azure datalake gen 1 storage mount
 type AzureADLSGen1Mount struct {
 	StorageResource string `json:"storage_resource_name"`
-	Directory       string `json:"directory"`
+	Directory       string `json:"directory,omitempty"`
 	PrefixType      string `json:"spark_conf_prefix"`
 	ClientID        string `json:"client_id"`
 	TenantID        string `json:"tenant_id"`

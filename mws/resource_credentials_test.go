@@ -1,7 +1,6 @@
 package mws
 
 import (
-	"os"
 	"testing"
 
 	"github.com/databrickslabs/databricks-terraform/common"
@@ -15,7 +14,7 @@ func TestMwsAccCreds(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping integration test in short mode.")
 	}
-	acctID := os.Getenv("DATABRICKS_ACCOUNT_ID")
+	acctID := qa.GetEnvOrSkipTest(t, "DATABRICKS_ACCOUNT_ID")
 	client := common.CommonEnvironmentClient()
 	credsList, err := NewCredentialsAPI(client).List(acctID)
 	assert.NoError(t, err, err)

@@ -22,11 +22,6 @@ func TestAccSecretScopeResource(t *testing.T) {
 	}
 	var secretScope SecretScope
 
-	// generate a random name for each tokenInfo test run, to avoid
-	// collisions from multiple concurrent tests.
-	// the acctest package includes many helpers such as RandStringFromCharSet
-	// See https://godoc.org/github.com/hashicorp/terraform-plugin-sdk/helper/acctest
-	//scope := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
 	scope := "terraform_acc_test_scope"
 
 	acceptance.AccTest(t, resource.TestCase{

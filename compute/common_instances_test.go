@@ -30,16 +30,9 @@ func TestNewTinyClusterInCommonPoolPossiblyReused(t *testing.T) {
 				},
 				NodeTypeID:                         "m4.large",
 				IdleInstanceAutoTerminationMinutes: 15,
-				DiskSpec: &InstancePoolDiskSpec{
-					DiskCount: 1,
-					DiskSize:  32,
-					DiskType: &InstancePoolDiskType{
-						EbsVolumeType: "GENERAL_PURPOSE_SSD",
-					},
-				},
-				PreloadedSparkVersions: []string{"6.6.x-scala2.11"},
-				InstancePoolName:       "Terraform Integration Test by test",
-				MaxCapacity:            10,
+				PreloadedSparkVersions:             []string{"6.6.x-scala2.11"},
+				InstancePoolName:                   "Terraform Integration Test by test",
+				MaxCapacity:                        10,
 			},
 			Response: InstancePoolAndStats{
 				InstancePoolID: "abc",
@@ -51,15 +44,17 @@ func TestNewTinyClusterInCommonPoolPossiblyReused(t *testing.T) {
 			Response: map[string]interface{}{},
 		},
 		{
-			Method:   "GET",
-			Resource: "/api/2.0/clusters/list-node-types",
+			Method:       "GET",
+			ReuseRequest: true,
+			Resource:     "/api/2.0/clusters/list-node-types",
 			Response: NodeTypeList{
 				[]NodeType{
 					{
-						NodeTypeID:     "r3.xlarge",
-						InstanceTypeID: "r3.xlarge",
+						NodeTypeID:     "m4.large",
+						InstanceTypeID: "m4.large",
 						NodeInstanceType: &NodeInstanceType{
-							InstanceTypeID: "r3.xlarge",
+							LocalDisks:     1,
+							InstanceTypeID: "m4.large",
 						},
 					},
 				},

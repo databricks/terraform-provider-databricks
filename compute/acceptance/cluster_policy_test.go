@@ -15,7 +15,7 @@ import (
 
 func TestAccClusterPolicyResourceFullLifecycle(t *testing.T) {
 	randomName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
-	resource.Test(t, resource.TestCase{
+	acceptance.AccTest(t, resource.TestCase{
 		Steps: []resource.TestStep{
 			{
 				// create a resource

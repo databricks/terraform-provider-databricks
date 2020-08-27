@@ -2,17 +2,12 @@ package storage
 
 import (
 	"errors"
-	"os"
 	"strings"
 	"testing"
 
-	"github.com/databrickslabs/databricks-terraform/access"
-
-	"github.com/databrickslabs/databricks-terraform/common"
 	"github.com/databrickslabs/databricks-terraform/compute"
 	"github.com/databrickslabs/databricks-terraform/internal"
 	"github.com/databrickslabs/databricks-terraform/internal/qa"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -240,76 +235,17 @@ func TestResourceAzureBlobMountDelete(t *testing.T) {
 }
 
 func TestAzureAccBlobMount(t *testing.T) {
-	if _, ok := os.LookupEnv("CLOUD_ENV"); !ok {
-		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
-	}
-	client := common.CommonEnvironmentClient()
-	if !client.IsUsingAzureAuth() {
-		t.Skip("Test is meant only for Azure")
-	}
-	if !client.AzureAuth.IsClientSecretSet() {
-		t.Skip("Test is meant only for client-secret conf Azure")
-	}
-	blobAccountName := os.Getenv("TEST_STORAGE_ACCOUNT_NAME")
-	if blobAccountName == "" {
-		t.Skip("No TEST_STORAGE_ACCOUNT_NAME given")
-	}
-	blobAccountKey := os.Getenv("TEST_STORAGE_ACCOUNT_KEY")
-	if blobAccountKey == "" {
-		t.Skip("No TEST_STORAGE_ACCOUNT_KEY given")
-	}
-	clusterInfo := compute.NewTinyClusterInCommonPoolPossiblyReused()
-
-	randomName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
-	mp := MountPoint{
-		exec:      client.CommandExecutor(),
-		clusterID: clusterInfo.ClusterID,
-		name:      randomName,
-	}
-	err := mp.Delete()
-	qa.AssertErrorStartsWith(t, err, "Directory not mounted: /mnt/"+randomName)
-
-	source, err := mp.Source()
-	assert.Equal(t, "", source)
-	qa.AssertErrorStartsWith(t, err, "Mount not found")
-	source, err = mp.Mount(AzureBlobMount{
-		StorageAccountName: blobAccountName,
-		ContainerName:      "dev",
-		Directory:          "/",
-		SecretKey:          "e",
-		SecretScope:        "f",
-	})
-	assert.Equal(t, "", source)
-	qa.AssertErrorStartsWith(t, err, "Secret does not exist with scope: f and key: e")
-
-	randomScope := "test" + randomName
-	err = access.NewSecretScopesAPI(client).Create(randomScope, "users")
-	assert.NoError(t, err)
-	defer func() {
-		err = access.NewSecretScopesAPI(client).Delete(randomScope)
-		assert.NoError(t, err)
-	}()
-
-	err = access.NewSecretsAPI(client).Create(blobAccountKey, randomScope, "key")
-	assert.NoError(t, err)
-
-	m := AzureBlobMount{
-		StorageAccountName: blobAccountName,
-		ContainerName:      "dev",
-		Directory:          "/",
-		SecretKey:          "key",
-		SecretScope:        randomScope,
-	}
-
-	source, err = mp.Mount(m)
-	assert.Equal(t, m.Source(), source)
-	assert.NoError(t, err)
-	defer func() {
-		err = mp.Delete()
-		assert.NoError(t, err)
-	}()
-
-	source, err = mp.Source()
-	assert.Equal(t, m.Source(), source)
-	assert.NoError(t, err)
+	client, mp := mountPointThroughReusedCluster(t)
+	storageAccountName := qa.GetEnvOrSkipTest(t, "TEST_STORAGE_V2_ACCOUNT")
+	accountKey := qa.GetEnvOrSkipTest(t, "TEST_STORAGE_V2_KEY")
+	container := qa.GetEnvOrSkipTest(t, "TEST_STORAGE_V2_WASBS")
+	testWithNewSecretScope(t, func(scope, key string) {
+		testMounting(t, mp, AzureBlobMount{
+			StorageAccountName: storageAccountName,
+			ContainerName:      container,
+			SecretScope:        scope,
+			SecretKey:          key,
+			Directory:          "/",
+		})
+	}, client, mp.name, accountKey)
 }

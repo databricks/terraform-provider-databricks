@@ -1,12 +1,9 @@
 package acceptance
 
 import (
-	"bytes"
-	"encoding/base64"
 	"errors"
 	"fmt"
 	"os"
-	"regexp"
 	"testing"
 
 	"github.com/databrickslabs/databricks-terraform/common"
@@ -22,54 +19,35 @@ import (
 )
 
 func TestAccDatabricksDBFSFile_CreateViaContent(t *testing.T) {
-	content := acctest.RandString(10000)
-	base64Str := base64.StdEncoding.EncodeToString([]byte(content))
-	path := "/tmp/tf-test/file-content1"
-	// TODO: add random names
-
+	config := qa.EnvironmentTemplate(t, `
+	resource "databricks_dbfs_file" "file" {
+		content = base64encode("{var.RANDOM}")
+		content_b64_md5 = md5(base64encode("{var.RANDOM}"))
+		path = "/tmp/tf-test/file-content-{var.RANDOM}"
+		overwrite = false
+		mkdirs = true
+		validate_remote_file = true
+	}`)
 	acceptance.AccTest(t, resource.TestCase{
 		CheckDestroy: testDBFSFileResourceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config:  testDBFSFileContentResource(base64Str, 1),
+				Config:  config,
 				Destroy: false,
 			},
 			{
 				//Deleting and recreating the token
 				PreConfig: func() {
 					client := common.CommonEnvironmentClient()
-					err := NewDBFSAPI(client).Delete(path, false)
+					err := NewDBFSAPI(client).Delete(qa.FirstKeyValue(t, config, "path"), false)
 					assert.NoError(t, err, err)
 				},
-				Config:             testDBFSFileContentResource(base64Str, 1),
+				Config:             config,
 				PlanOnly:           true,
 				ExpectNonEmptyPlan: true,
 			},
 			{
-				Config:  testDBFSFileContentResource(base64Str, 1),
-				Destroy: false,
-			},
-		},
-	})
-}
-
-func TestAccDatabricksDBFSFile_CreateVeryBigFiles(t *testing.T) {
-	// Creating via content this will fail, needs to be uploaded via source
-	content := acctest.RandString(5000000)
-	base64Str := base64.StdEncoding.EncodeToString([]byte(content))
-	source := qa.TestCreateTempFile(t, content)
-	defer os.Remove(source)
-
-	acceptance.AccTest(t, resource.TestCase{
-		CheckDestroy: testDBFSFileResourceDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config:      testDBFSFileContentResource(base64Str, 1),
-				Destroy:     false,
-				ExpectError: regexp.MustCompile(`.*rpc error.*`),
-			},
-			{
-				Config:  testDBFSFileSourceResource(source, 1),
+				Config:  config,
 				Destroy: false,
 			},
 		},
@@ -97,7 +75,17 @@ func TestAccDatabricksDBFSFile_CreateViaSource(t *testing.T) {
 		CheckDestroy: testDBFSFileResourceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testDBFSFileSourceResource(source, 1),
+				Config: qa.EnvironmentTemplate(t, `
+				resource "databricks_dbfs_file" "file_1" {
+					source = "{var.SOURCE}"
+					content_b64_md5 = md5(filebase64("{var.SOURCE}"))
+					path = "/tmp/tf-test/file-source-{var.RANDOM}"
+					overwrite = "false"
+					mkdirs = "true"
+					validate_remote_file = "true"
+				}`, map[string]string{
+					"SOURCE": source,
+				}),
 				Check: resource.ComposeTestCheckFunc(
 					// query the API to retrieve the tokenInfo object
 					testCheckDBFSFileResourceExists("databricks_dbfs_file.file_1", b64, t),
@@ -106,7 +94,17 @@ func TestAccDatabricksDBFSFile_CreateViaSource(t *testing.T) {
 				Destroy: false,
 			},
 			{
-				Config: testDBFSFileSourceResource(source2, 1),
+				Config: qa.EnvironmentTemplate(t, `
+				resource "databricks_dbfs_file" "file_1" {
+					source = "{var.SOURCE}"
+					content_b64_md5 = md5(filebase64("{var.SOURCE}"))
+					path = "/tmp/tf-test/file-source-{var.RANDOM}"
+					overwrite = "false"
+					mkdirs = "true"
+					validate_remote_file = "true"
+				}`, map[string]string{
+					"SOURCE": source2,
+				}),
 				Check: resource.ComposeTestCheckFunc(
 					// query the API to retrieve the tokenInfo object
 					testCheckDBFSFileResourceExists("databricks_dbfs_file.file_1", source2B64, t),
@@ -159,38 +157,4 @@ func testDBFSFileResourceDestroy(s *terraform.State) error {
 		return errors.New("resource dbfs file is not cleaned up")
 	}
 	return nil
-}
-
-func testDBFSFileContentResource(content string, count int) string {
-	var strBuffer bytes.Buffer
-	for i := 1; i <= count; i++ {
-		strBuffer.WriteString(fmt.Sprintf(`
-								resource "databricks_dbfs_file" "file_%[2]v" {
-								  content = "%[1]s"
-								  content_b64_md5 = md5("%[1]s")
-								  path = "/tmp/tf-test/file-content%[2]v"
-								  overwrite = "false"
-								  mkdirs = "true"
-								  validate_remote_file = "true"
-								}
-		`, content, i))
-	}
-	return strBuffer.String()
-}
-
-func testDBFSFileSourceResource(source string, count int) string {
-	var strBuffer bytes.Buffer
-	for i := 1; i <= count; i++ {
-		strBuffer.WriteString(fmt.Sprintf(`
-								resource "databricks_dbfs_file" "file_%[2]v" {
-								  source = "%[1]s"
-								  content_b64_md5 = md5(filebase64("%[1]s"))
-								  path = "/tmp/tf-test/file-source%[2]v"
-								  overwrite = "false"
-								  mkdirs = "true"
-								  validate_remote_file = "true"
-								}
-		`, source, i))
-	}
-	return strBuffer.String()
 }

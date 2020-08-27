@@ -93,11 +93,7 @@ func commonMountResource(tpl Mount, s map[string]*schema.Schema) *schema.Resourc
 
 // NewMountPoint returns new mount point config
 func NewMountPoint(client *common.DatabricksClient, name, clusterID string) MountPoint {
-	// TODO: the executor is mutable probably needs to be refactored
 	executor := client.CommandExecutor()
-	if executor == nil {
-		executor = compute.NewCommandsAPI(client)
-	}
 	return MountPoint{
 		// todo: fix
 		exec:      executor,

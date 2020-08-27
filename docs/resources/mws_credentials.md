@@ -19,7 +19,7 @@ resource "aws_iam_role" "cross_account_role" {
 
 resource "aws_iam_policy" "cross_account_role_policy" {
   name = "${var.prefix}-policy"
-  description = "E2 Workspace Cross account role policy policy"
+  description = "Workspace Cross account role policy policy"
   policy = data.template_file.cross_account_role_policy.rendered
 }
 

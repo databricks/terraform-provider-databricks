@@ -7,7 +7,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 )
 
-// AzureBlobMount describes the object for a azure blob storage mount
+// AzureBlobMount describes the object for a azure blob storage mount - a.k.a. NativeAzureFileSystem
 type AzureBlobMount struct {
 	ContainerName      string `json:"container_name"`
 	StorageAccountName string `json:"storage_account_name"`

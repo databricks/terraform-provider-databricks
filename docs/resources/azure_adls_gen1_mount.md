@@ -23,7 +23,7 @@ resource "databricks_secret_scope" "this" {
 
 resource "databricks_secret" "service_principal_key" {
     key          = "service_principal_key"
-    string_value = "{env.TEST_STORAGE_ACCOUNT_KEY}"
+    string_value = "{env.TEST_STORAGE_V2_ACCOUNT_KEY}"
     scope        = databricks_secret_scope.terraform.name
 }
 

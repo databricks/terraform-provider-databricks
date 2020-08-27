@@ -153,7 +153,8 @@ func testNotebookResourceDestroy(s *terraform.State) error {
 }
 
 // Only will test source format based content
-func testNotebookResourceAllNotebookTypes(pythonContent, sqlContent, scalaContent, rContent, dbcContent, jupyterContent, htmlContent, folderPrefix string) string {
+func testNotebookResourceAllNotebookTypes(pythonContent, sqlContent, scalaContent,
+	rContent, dbcContent, jupyterContent, htmlContent, folderPrefix string) string {
 	return fmt.Sprintf(`
 		resource "databricks_notebook" "notebook_python" {
 			content = "%[1]s"
@@ -192,16 +193,17 @@ func testNotebookResourceAllNotebookTypes(pythonContent, sqlContent, scalaConten
 
 func testNotebookResourceMultipleNotebooks(content string) string {
 	var strBuffer bytes.Buffer
+	randomName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
 	for i := 1; i <= 10; i++ {
 		strBuffer.WriteString(fmt.Sprintf(`
 			resource "databricks_notebook" "notebook_%[2]v" {
 				content = "%[1]s"
-				path = "/Shared/tf-test/book%[2]v"
+				path = "/Shared/tf-test-%[3]s/book%[2]v"
 				overwrite = "false"
 				mkdirs = "true"
 				format = "SOURCE"
 				language = "PYTHON"
-			}`, content, i))
+			}`, content, i, randomName))
 	}
 	return strBuffer.String()
 }

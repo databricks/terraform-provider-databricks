@@ -10,6 +10,7 @@ import (
 
 	"github.com/databrickslabs/databricks-terraform/common"
 	"github.com/databrickslabs/databricks-terraform/internal/acceptance"
+	"github.com/databrickslabs/databricks-terraform/internal/qa"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
@@ -26,13 +27,31 @@ func TestAccScimUserResource(t *testing.T) {
 	userName := fmt.Sprintf("terraform.test+%s@example.com", randomName)
 	displayName := fmt.Sprintf("Terra %s", randomName)
 	expectEntitlements := []EntitlementsListItem{{Value: AllowClusterCreateEntitlement}}
+	userNameAndDisplay := map[string]string{
+		"USER_NAME":    userName,
+		"DISPLAY_NAME": displayName,
+	}
 
 	acceptance.AccTest(t, resource.TestCase{
 		CheckDestroy: testScimUserResourceDestroy,
 		Steps: []resource.TestStep{
 			{
 				// use a dynamic configuration with the random name from above
-				Config: testScimUserResourceCreate(userName, displayName),
+				Config: qa.EnvironmentTemplate(t, `
+				data "databricks_default_user_roles" "default_roles" {
+					default_username = "terraform-all-user-roles+{var.RANDOM}@example.com"
+				}
+				resource "databricks_instance_profile" "instance_profile" {
+					instance_profile_arn = "arn:aws:iam::999999999999:instance-profile/terraform-scim-user-{var.RANDOM}"
+					skip_validation = true
+				}
+				resource "databricks_scim_user" "my_scim_user" {
+					user_name = "{var.USER_NAME}"
+					display_name = "{var.DISPLAY_NAME}"
+					default_roles = data.databricks_default_user_roles.default_roles.roles
+					entitlements = ["allow-cluster-create"]
+					roles = [databricks_instance_profile.instance_profile.id]
+				}`, userNameAndDisplay),
 				// compose a basic test, checking both remote and local values
 				Check: resource.ComposeTestCheckFunc(
 					// query the API to retrieve the tokenInfo object
@@ -49,8 +68,15 @@ func TestAccScimUserResource(t *testing.T) {
 			},
 			{
 				// use a dynamic configuration with the random name from above
-				Config: testScimUserResourceUpdate(userName, displayName),
-
+				Config: qa.EnvironmentTemplate(t, `
+				data "databricks_default_user_roles" "default_roles" {
+					default_username = "terraform-all-user-roles+{var.RANDOM}@example.com"
+				}
+				resource "databricks_scim_user" "my_scim_user" {
+					user_name = "{var.USER_NAME}"
+					display_name = "{var.DISPLAY_NAME}"
+					default_roles = data.databricks_default_user_roles.default_roles.roles
+				}`, userNameAndDisplay),
 				// compose a basic test, checking both remote and local values
 				Check: resource.ComposeTestCheckFunc(
 					// query the API to retrieve the tokenInfo object
@@ -66,7 +92,21 @@ func TestAccScimUserResource(t *testing.T) {
 			},
 			{
 				// Recreate the user with roles and entitlements again to see if the user gets updated
-				Config: testScimUserResourceCreate(userName, displayName),
+				Config: qa.EnvironmentTemplate(t, `
+				data "databricks_default_user_roles" "default_roles" {
+					default_username = "terraform-all-user-roles+{var.RANDOM}@example.com"
+				}
+				resource "databricks_instance_profile" "instance_profile" {
+					instance_profile_arn = "arn:aws:iam::999999999999:instance-profile/terraform-scim-user-{var.RANDOM}"
+					skip_validation = true
+				}
+				resource "databricks_scim_user" "my_scim_user" {
+					user_name = "{var.USER_NAME}"
+					display_name = "{var.DISPLAY_NAME}"
+					default_roles = data.databricks_default_user_roles.default_roles.roles
+					entitlements = ["allow-cluster-create"]
+					roles = [databricks_instance_profile.instance_profile.id]
+				}`, userNameAndDisplay),
 
 				Check: resource.ComposeTestCheckFunc(
 					// query the API to retrieve the tokenInfo object
@@ -87,7 +127,15 @@ func TestAccScimUserResource(t *testing.T) {
 					assert.NoError(t, err, err)
 				},
 				// use a dynamic configuration with the random name from above
-				Config: testScimUserResourceUpdate(userName, displayName),
+				Config: qa.EnvironmentTemplate(t, `
+				data "databricks_default_user_roles" "default_roles" {
+					default_username = "terraform-all-user-roles+{var.RANDOM}@example.com"
+				}
+				resource "databricks_scim_user" "my_scim_user" {
+					user_name = "{var.USER_NAME}"
+					display_name = "{var.DISPLAY_NAME}"
+					default_roles = data.databricks_default_user_roles.default_roles.roles
+				}`, userNameAndDisplay),
 				// compose a basic test, checking both remote and local values
 				Check: resource.ComposeTestCheckFunc(
 					// query the API to retrieve the tokenInfo object
@@ -108,7 +156,20 @@ func TestAccScimUserResource(t *testing.T) {
 					assert.NoError(t, err, err)
 				},
 				// Create new admin user
-				Config: testScimUserResourceSetAdmin(userName, displayName, true),
+				Config: qa.EnvironmentTemplate(t, `
+				data "databricks_default_user_roles" "default_roles" {
+					default_username = "terraform-all-user-roles+{var.RANDOM}@example.com"
+				}
+				resource "databricks_scim_user" "my_scim_user" {
+					user_name = "{var.USER_NAME}"
+					display_name = "{var.DISPLAY_NAME}"
+					default_roles = data.databricks_default_user_roles.default_roles.roles
+					set_admin = {var.ADMIN}
+				}`, map[string]string{
+					"USER_NAME":    userName,
+					"DISPLAY_NAME": displayName,
+					"ADMIN":        "true",
+				}),
 				// compose a basic test, checking both remote and local values
 				Check: resource.ComposeTestCheckFunc(
 					// query the API to retrieve the tokenInfo object
@@ -125,7 +186,20 @@ func TestAccScimUserResource(t *testing.T) {
 			},
 			{
 				// Update admin to false
-				Config: testScimUserResourceSetAdmin(userName, displayName, false),
+				Config: qa.EnvironmentTemplate(t, `
+				data "databricks_default_user_roles" "default_roles" {
+					default_username = "terraform-all-user-roles+{var.RANDOM}@example.com"
+				}
+				resource "databricks_scim_user" "my_scim_user" {
+					user_name = "{var.USER_NAME}"
+					display_name = "{var.DISPLAY_NAME}"
+					default_roles = data.databricks_default_user_roles.default_roles.roles
+					set_admin = {var.ADMIN}
+				}`, map[string]string{
+					"USER_NAME":    userName,
+					"DISPLAY_NAME": displayName,
+					"ADMIN":        "false",
+				}),
 				// compose a basic test, checking both remote and local values
 				Check: resource.ComposeTestCheckFunc(
 					// query the API to retrieve the tokenInfo object
@@ -142,7 +216,20 @@ func TestAccScimUserResource(t *testing.T) {
 			},
 			{
 				// Update admin back to true
-				Config: testScimUserResourceSetAdmin(userName, displayName, true),
+				Config: qa.EnvironmentTemplate(t, `
+				data "databricks_default_user_roles" "default_roles" {
+					default_username = "terraform-all-user-roles+{var.RANDOM}@example.com"
+				}
+				resource "databricks_scim_user" "my_scim_user" {
+					user_name = "{var.USER_NAME}"
+					display_name = "{var.DISPLAY_NAME}"
+					default_roles = data.databricks_default_user_roles.default_roles.roles
+					set_admin = {var.ADMIN}
+				}`, map[string]string{
+					"USER_NAME":    userName,
+					"DISPLAY_NAME": displayName,
+					"ADMIN":        "true",
+				}),
 				// compose a basic test, checking both remote and local values
 				Check: resource.ComposeTestCheckFunc(
 					// query the API to retrieve the tokenInfo object
@@ -205,54 +292,4 @@ func testScimUserResourceExists(n string, user *User, t *testing.T) resource.Tes
 		*user = resp
 		return nil
 	}
-}
-
-func testScimUserResourceCreate(username, displayName string) string {
-	return fmt.Sprintf(`
-		data "databricks_default_user_roles" "default_roles" {
-			default_username = "terraform-all-user-roles@databricks.com"
-		}
-		resource "databricks_instance_profile" "instance_profile" {
-			instance_profile_arn = "arn:aws:iam::999999999999:instance-profile/terraform-scim-user-test"
-			skip_validation = true
-		}
-		resource "databricks_scim_user" "my_scim_user" {
-			user_name = "%s"
-			display_name = "%s"
-			default_roles = data.databricks_default_user_roles.default_roles.roles
-			entitlements = [
-			"allow-cluster-create",
-			]
-			roles = [
-			databricks_instance_profile.instance_profile.id,
-			]
-		}
-		`, username, displayName)
-}
-
-func testScimUserResourceUpdate(username, displayName string) string {
-	return fmt.Sprintf(`
-		data "databricks_default_user_roles" "default_roles" {
-			default_username = "terraform-all-user-roles@databricks.com"
-		}
-		resource "databricks_scim_user" "my_scim_user" {
-			user_name = "%s"
-			default_roles = data.databricks_default_user_roles.default_roles.roles
-			display_name = "%s"
-		}
-		`, username, displayName)
-}
-
-func testScimUserResourceSetAdmin(username, displayName string, setAdmin bool) string {
-	return fmt.Sprintf(`
-		data "databricks_default_user_roles" "default_roles" {
-			default_username = "terraform-all-user-roles@databricks.com"
-		}
-		resource "databricks_scim_user" "my_scim_user" {
-			user_name = "%s"
-			default_roles = data.databricks_default_user_roles.default_roles.roles
-			display_name = "%s"
-			set_admin = %v
-		}
-		`, username, displayName, setAdmin)
 }

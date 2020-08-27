@@ -43,17 +43,22 @@ output "azure_region" {
   value = module.this.azure_region
 }
 
-output "test_gen1_name" {
-  value = module.this.test_gen1_name
+output "test_data_lake_store_name" {
+  value = module.this.test_data_lake_store_name
 }
 
-output "test_storage_account_key" {
-  value     = module.this.test_storage_account_key
+output "test_storage_v2_account" {
+  value = module.this.test_storage_v2_account
+}
+
+output "test_storage_v2_key" {
+  value = module.this.test_storage_v2_key
   sensitive = true
 }
 
-output "test_storage_account_name" {
-  value = module.this.test_storage_account_name
+output "test_storage_v2_wasbs" {
+  value = module.this.test_storage_v2_wasbs
+  sensitive = true
 }
 
 output "databricks_azure_workspace_resource_id" {
@@ -61,5 +66,7 @@ output "databricks_azure_workspace_resource_id" {
 }
 
 output "workspace_url" {
-  value = module.this.workspace_url
+  // explicitly having this as different variable name,
+  // so we test ensureWorkspaceInfo
+  value = module.this.databricks_host
 }

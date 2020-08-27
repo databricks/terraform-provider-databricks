@@ -24,6 +24,7 @@ var (
 		"com.databricks.backend.manager.util.UnknownWorkerEnvironmentException",
 		"does not have any associated worker environments",
 		"There is no worker environment with id",
+		"ClusterNotReadyException",
 	}
 )
 
@@ -35,6 +36,7 @@ type APIErrorBody struct {
 	// for RFC 7644 Section 3.7.3 https://tools.ietf.org/html/rfc7644#section-3.7.3
 	ScimDetail string `json:"detail,omitempty"`
 	ScimStatus string `json:"status,omitempty"`
+	API12Error string `json:"error,omitempty"`
 }
 
 // APIError is a generic struct for an api error on databricks
@@ -117,12 +119,12 @@ func (c *DatabricksClient) parseUnknownError(
 
 func (c *DatabricksClient) commonErrorClarity(resp *http.Response) *APIError {
 	isMultiworkspaceAPI := strings.HasPrefix(resp.Request.URL.Path, "/api/2.0/accounts")
-	isMultiworkspaceHost := resp.Request.URL.Host != accountsHost
+	isMultiworkspaceHost := resp.Request.URL.Host == accountsHost
 	isTesting := strings.HasPrefix(resp.Request.URL.Host, "127.0.0.1")
 	if !isTesting && isMultiworkspaceHost && !isMultiworkspaceAPI {
 		return &APIError{
-			Message: "INCORRECT_CONFIGURATION",
-			ErrorCode: fmt.Sprintf("Databricks API (%s) requires you to set `host` property "+
+			ErrorCode: "INCORRECT_CONFIGURATION",
+			Message: fmt.Sprintf("Databricks API (%s) requires you to set `host` property "+
 				"(or DATABRICKS_HOST env variable) to result of `databricks_mws_workspaces.this.workspace_url`. "+
 				"This error may happen if you're using provider in both normal and multiworkspace mode. Please "+
 				"refactor your code into different modules. Runnable example that we use for integration testing "+
@@ -134,8 +136,8 @@ func (c *DatabricksClient) commonErrorClarity(resp *http.Response) *APIError {
 	// common confusion with this provider: calling workspace apis on accounts host
 	if !isTesting && isMultiworkspaceAPI && !isMultiworkspaceHost {
 		return &APIError{
-			Message: "INCORRECT_CONFIGURATION",
-			ErrorCode: fmt.Sprintf("Multiworkspace API (%s) requires you to set %s as DATABRICKS_HOST, but you have "+
+			ErrorCode: "INCORRECT_CONFIGURATION",
+			Message: fmt.Sprintf("Multiworkspace API (%s) requires you to set %s as DATABRICKS_HOST, but you have "+
 				"specified %s instead. This error may happen if you're using provider in both "+
 				"normal and multiworkspace mode. Please refactor your code into different modules. "+
 				"Runnable example that we use for integration testing can be found in this "+
@@ -168,6 +170,10 @@ func (c *DatabricksClient) parseError(resp *http.Response) APIError {
 	if err != nil {
 		errorBody = c.parseUnknownError(resp.Status, body, err)
 	}
+	if errorBody.API12Error != "" {
+		// API 1.2 has different response format, let's adapt
+		errorBody.Message = errorBody.API12Error
+	}
 	// Handle SCIM error message details
 	if errorBody.Message == "" && errorBody.ScimDetail != "" {
 		if errorBody.ScimDetail == "null" {
@@ -188,11 +194,11 @@ func (c *DatabricksClient) parseError(resp *http.Response) APIError {
 // checkHTTPRetry inspects HTTP errors from the Databricks API for known transient errors on Workspace creation
 func (c *DatabricksClient) checkHTTPRetry(ctx context.Context, resp *http.Response, err error) (bool, error) {
 	if ue, ok := err.(*url.Error); ok {
-		if strings.Contains(ue.Error(), "connection refused") {
-			log.Printf("[INFO] Attempting retry because of connection refused")
+		if strings.Contains(ue.Error(), "connection refused") || strings.Contains(ue.Error(), "i/o timeout") {
+			log.Printf("[INFO] Attempting retry because of IO error: %s", ue.Error())
 			return true, APIError{
 				Message:   ue.Error(),
-				ErrorCode: "CONNECTION_REFUSED",
+				ErrorCode: "IO_ERROR",
 			}
 		}
 	}
@@ -350,7 +356,7 @@ func (c *DatabricksClient) recursiveMask(requestMap map[string]interface{}) inte
 		// todo: dapi...
 		// TODO: just redact any dapiXXX & "secret": "...."...
 		if s, ok := v.(string); ok {
-			requestMap[k] = onlyNBytes(s, c.debugTruncateBytes)
+			requestMap[k] = onlyNBytes(s, c.DebugTruncateBytes)
 		}
 	}
 	return requestMap

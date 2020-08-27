@@ -43,6 +43,12 @@ resource "databricks_mws_credentials" "this" {
 }
 ```
 
+## Argument Reference
+
+* `external_id` (Required) (String) External ID that can be found at http://accounts.cloud.databricks.com/#aws
+
 ## Attribute Reference
 
-This data source takes `external_id` argument, which is your master account id, which you can find as External ID on https://accounts.cloud.databricks.com/#aws. AWS IAM Policy JSON documents are available in `json` property that is exported from this data source.
+In addition to all arguments above, the following attributes are exported:
+
+* `json` - AWS IAM Policy JSON document

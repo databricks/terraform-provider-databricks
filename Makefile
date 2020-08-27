@@ -45,7 +45,11 @@ test-mws:
 
 test-awsst:
 	@echo "✓ Running Terraform Acceptance Tests for AWS ST..."
-	@/bin/bash scripts/run.sh awsst '^(TestAcc|TestAwsAcc)' --debug
+	@/bin/bash scripts/run.sh awsst '^(TestAcc|TestAwsAcc)' --debug --tee
+
+test-awsmt:
+	@echo "✓ Running Terraform Acceptance Tests for AWS MT..."
+	@/bin/bash scripts/run.sh awsmt '^(TestAcc|TestAwsAcc)' --debug --tee
 
 terraform-setup: build
 	@echo "✓ Initializing Terraform..."

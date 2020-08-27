@@ -97,7 +97,7 @@ func ContainsWorkspaceState(workspaceStates []string, searchState string) bool {
 	return false
 }
 
-// Workspace is the object that contains all the information for deploying a E2 workspace
+// Workspace is the object that contains all the information for deploying a workspace
 type Workspace struct {
 	WorkspaceID            int64  `json:"workspace_id,omitempty"`
 	WorkspaceName          string `json:"workspace_name,omitempty"`

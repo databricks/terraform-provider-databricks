@@ -7,6 +7,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 
 	"github.com/databrickslabs/databricks-terraform/common"
+	"github.com/databrickslabs/databricks-terraform/internal/qa"
 	"github.com/databrickslabs/databricks-terraform/internal/sanity"
 )
 
@@ -14,7 +15,7 @@ func TestMwsAccMissingResources(t *testing.T) {
 	if cloudEnv, ok := os.LookupEnv("CLOUD_ENV"); !ok || cloudEnv != "MWS" {
 		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV=MWS' is set.")
 	}
-	mwsAcctID := os.Getenv("DATABRICKS_ACCOUNT_ID")
+	mwsAcctID := qa.GetEnvOrSkipTest(t, "DATABRICKS_ACCOUNT_ID")
 	if mwsAcctID == "" {
 		t.Skip("Must have DATABRICKS_ACCOUNT_ID environment variable set.")
 	}

@@ -3,8 +3,10 @@ package access
 import (
 	"encoding/json"
 	"fmt"
+	"regexp"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 )
 
 type awsIamPolicy struct {
@@ -28,6 +30,7 @@ func DataAwsCrossAccountRolicy() *schema.Resource {
 	return &schema.Resource{
 		Read: func(d *schema.ResourceData, m interface{}) error {
 			policy := awsIamPolicy{
+				Version: "2008-10-17",
 				Statements: []*awsIamPolicyStatement{
 					{
 						Effect: "Allow",
@@ -104,7 +107,7 @@ func DataAwsCrossAccountRolicy() *schema.Resource {
 					},
 				},
 			}
-			if passRoleARNs, ok := d.GetOk("pass_role_arns"); ok {
+			if passRoleARNs, ok := d.GetOk("pass_roles"); ok {
 				policy.Statements = append(policy.Statements, &awsIamPolicyStatement{
 					Effect:    "Allow",
 					Actions:   "iam:PassRole",
@@ -115,17 +118,21 @@ func DataAwsCrossAccountRolicy() *schema.Resource {
 			if err != nil {
 				return err
 			}
+			d.SetId("cross-account")
 			return d.Set("json", string(policyJSON))
 		},
 		Schema: map[string]*schema.Schema{
-			"pass_role_arns": {
-				Type:     schema.TypeList,
-				Elem:     schema.TypeString,
+			"pass_roles": {
+				Type: schema.TypeList,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
 				Optional: true,
 			},
 			"json": {
 				Type:     schema.TypeString,
 				Computed: true,
+				ForceNew: true,
 			},
 		},
 	}
@@ -134,14 +141,16 @@ func DataAwsCrossAccountRolicy() *schema.Resource {
 func DataAwsAssumeRolePolicy() *schema.Resource {
 	return &schema.Resource{
 		Read: func(d *schema.ResourceData, m interface{}) error {
+			externalID := d.Get("external_id").(string)
 			policyJSON, err := json.MarshalIndent(awsIamPolicy{
+				Version: "2008-10-17",
 				Statements: []*awsIamPolicyStatement{
 					{
 						Effect:  "Allow",
 						Actions: "sts:AssumeRole",
 						Condition: map[string]map[string]string{
 							"StringEquals": {
-								"sts:ExternalId": d.Get("external_id").(string),
+								"sts:ExternalId": externalID,
 							},
 						},
 						Principal: map[string]string{
@@ -153,6 +162,7 @@ func DataAwsAssumeRolePolicy() *schema.Resource {
 			if err != nil {
 				return err
 			}
+			d.SetId(externalID)
 			return d.Set("json", string(policyJSON))
 		},
 		Schema: map[string]*schema.Schema{
@@ -168,6 +178,7 @@ func DataAwsAssumeRolePolicy() *schema.Resource {
 			"json": {
 				Type:     schema.TypeString,
 				Computed: true,
+				ForceNew: true,
 			},
 		},
 	}
@@ -176,7 +187,9 @@ func DataAwsAssumeRolePolicy() *schema.Resource {
 func DataAwsBucketPolicy() *schema.Resource {
 	return &schema.Resource{
 		Read: func(d *schema.ResourceData, m interface{}) error {
-			policyJSON, err := json.MarshalIndent(awsIamPolicy{
+			bucket := d.Get("bucket").(string)
+			policy := awsIamPolicy{
+				Version: "2008-10-17",
 				Statements: []*awsIamPolicyStatement{
 					{
 						Effect: "Allow",
@@ -189,18 +202,23 @@ func DataAwsBucketPolicy() *schema.Resource {
 							"s3:GetBucketLocation",
 						},
 						Resources: []string{
-							fmt.Sprintf("arn:aws:s3:::%s/*", d.Get("bucket_name").(string)),
-							fmt.Sprintf("arn:aws:s3:::%s", d.Get("bucket_name").(string)),
+							fmt.Sprintf("arn:aws:s3:::%s/*", bucket),
+							fmt.Sprintf("arn:aws:s3:::%s", bucket),
 						},
 						Principal: map[string]string{
 							"AWS": fmt.Sprintf("arn:aws:iam::%s:root", d.Get("databricks_account_id").(string)),
 						},
 					},
 				},
-			}, "", "  ")
+			}
+			if v, ok := d.GetOk("full_access_role"); ok {
+				policy.Statements[0].Principal["AWS"] = v.(string)
+			}
+			policyJSON, err := json.MarshalIndent(policy, "", "  ")
 			if err != nil {
 				return err
 			}
+			d.SetId(bucket)
 			return d.Set("json", string(policyJSON))
 		},
 		Schema: map[string]*schema.Schema{
@@ -209,13 +227,21 @@ func DataAwsBucketPolicy() *schema.Resource {
 				Default:  "414351767826",
 				Optional: true,
 			},
-			"bucket_name": {
+			"full_access_role": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"bucket": {
 				Type:     schema.TypeString,
 				Required: true,
+				ValidateFunc: validation.StringMatch(
+					regexp.MustCompile(`^[0-9a-zA-Z_-]+$`),
+					"must contain only alphanumeric, underscore, and hyphen characters"),
 			},
 			"json": {
 				Type:     schema.TypeString,
 				Computed: true,
+				ForceNew: true,
 			},
 		},
 	}

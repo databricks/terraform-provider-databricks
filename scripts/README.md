@@ -13,7 +13,7 @@ Bu default, we don't encourage creation/destruction of infrastructure multiple t
 
 * `mws` - AWS with Databricks Multiworkspace API. Runnable test name prefix is `TestMws`. Please [check if you're able to use it](https://docs.databricks.com/administration-guide/multiworkspace/new-workspace-aws.html). Required variables are `DATABRICKS_ACCOUNT_ID`, `DATABRICKS_USERNAME`, `DATABRICKS_PASSWORD` (something you use for https://accounts.cloud.databricks.com/), `TEST_REGION`, `TEST_CIDR`, `OWNER`. Only multiworkspace resources are tested.
 * `awsst` - `DATABRICKS_CONFIG_PROFILE` (section within Databricks CLI `~/.databrickscfg` file) & `CLOUD_ENV=AWS`. In case you want to test provider on existing development single-tenant shard. Runnable test name prefixes are `TestAcc` and `TestAwsAcc`.
-* `awsmt` - AWS with Databricks E2 Multitenant Workspace. Currently work in progress and test environment cannot be fully started.
+* `awsmt` - AWS with Databricks Multitenant Workspace. Currently work in progress and test environment cannot be fully started.
 * most of the tests should aim to be cloud-agnostic. Though, in case of specific branching needed, you can check `CLOUD_ENV` value (possible values are `Azure`, `AWS` & `MWS`).
 * all environment variables are used by *DatabricksClient*, *provider integration tests* and *terraform configuration*.
 * **each `output` becomes an environment variable** with case changed to upper. This gives an easy way to manage complexity of testing environment. This is what gives those variables for `export $(scripts/run.sh azcli --export)` under the hood.

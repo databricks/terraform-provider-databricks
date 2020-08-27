@@ -454,7 +454,7 @@ func TestClusters_SortNodeTypes_Deprecated(t *testing.T) {
 		},
 	}
 
-	smallestNodeType := GetSmallestNodeType(nodeTypes)
+	smallestNodeType := getSmallestNodeType(nodeTypes)
 	assert.Equal(t, "not deprecated", smallestNodeType.NodeTypeID)
 }
 
@@ -478,7 +478,7 @@ func TestClusters_SortNodeTypes_Memory(t *testing.T) {
 		},
 	}
 
-	smallestNodeType := GetSmallestNodeType(nodeTypes)
+	smallestNodeType := getSmallestNodeType(nodeTypes)
 	assert.Equal(t, "1", smallestNodeType.NodeTypeID)
 }
 
@@ -502,7 +502,7 @@ func TestClusters_SortNodeTypes_CPU(t *testing.T) {
 		},
 	}
 
-	smallestNodeType := GetSmallestNodeType(nodeTypes)
+	smallestNodeType := getSmallestNodeType(nodeTypes)
 	assert.Equal(t, "1", smallestNodeType.NodeTypeID)
 }
 
@@ -526,7 +526,7 @@ func TestClusters_SortNodeTypes_GPU(t *testing.T) {
 		},
 	}
 
-	smallestNodeType := GetSmallestNodeType(nodeTypes)
+	smallestNodeType := getSmallestNodeType(nodeTypes)
 	assert.Equal(t, "1", smallestNodeType.NodeTypeID)
 }
 
@@ -559,7 +559,7 @@ func TestClusters_SortNodeTypes_CPU_Deprecated(t *testing.T) {
 		},
 	}
 
-	smallestNodeType := GetSmallestNodeType(nodeTypes)
+	smallestNodeType := getSmallestNodeType(nodeTypes)
 	assert.Equal(t, "1 not deprecated", smallestNodeType.NodeTypeID)
 }
 
@@ -591,6 +591,17 @@ func TestClusters_SortNodeTypes_LocalDisks(t *testing.T) {
 		},
 	}
 
-	smallestNodeType := GetSmallestNodeType(nodeTypes)
+	smallestNodeType := getSmallestNodeType(nodeTypes)
 	assert.Equal(t, "1", smallestNodeType.NodeTypeID)
+}
+
+func TestAwsAccSmallestNodeType(t *testing.T) {
+	cloudEnv := os.Getenv("CLOUD_ENV")
+	if cloudEnv == "" {
+		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
+	}
+
+	client := common.CommonEnvironmentClient()
+	nodeType := NewClustersAPI(client).GetSmallestNodeTypeWithStorage()
+	assert.Equal(t, "m5d.large", nodeType)
 }

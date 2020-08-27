@@ -86,6 +86,9 @@ resource "databricks_instance_pool" "%[1]s" {
 }
 
 func getAwsAttributes(attributesMap map[string]string) string {
+	if os.Getenv("CLOUD_ENV") != "AWS" {
+		return ""
+	}
 	var awsAttr bytes.Buffer
 	awsAttr.WriteString("aws_attributes {\n")
 	for attr, value := range attributesMap {

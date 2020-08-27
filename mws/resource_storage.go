@@ -45,7 +45,7 @@ func (a StorageConfigurationsAPI) Delete(mwsAcctID, storageConfigurationID strin
 	return a.client.Delete(storageConfigurationAPIPath, nil)
 }
 
-// List lists all the storage configurations for the root s3 buckets in the E2 account ID provided to the client config
+// List lists all the storage configurations for the root s3 buckets in the account ID provided to the client config
 func (a StorageConfigurationsAPI) List(mwsAcctID string) ([]StorageConfiguration, error) {
 	var mwsStorageConfigurationsList []StorageConfiguration
 	storageConfigurationAPIPath := fmt.Sprintf("/accounts/%s/storage-configurations", mwsAcctID)

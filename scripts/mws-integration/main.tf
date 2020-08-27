@@ -20,7 +20,6 @@ locals {
   // dltp - databricks labs terraform provider
   prefix = "dltp${random_string.naming.result}"
   tags = {
-    E2          = "yes"
     Environment = "Testing"
     Owner       = data.external.env.result.OWNER
     Epoch       = random_string.naming.result

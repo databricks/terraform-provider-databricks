@@ -2,7 +2,6 @@ package acceptance
 
 import (
 	"fmt"
-	"os"
 	"testing"
 
 	. "github.com/databrickslabs/databricks-terraform/access"
@@ -88,8 +87,6 @@ func TestAccDatabricksPermissionsResourceFullLifecycle(t *testing.T) {
 						assert.Len(t, permissions.AccessControlList, 3)
 						return nil
 					}),
-				// Somehow the plan is not empty on AWS, but is on Azure
-				ExpectNonEmptyPlan: os.Getenv("CLOUD_ENV") == "AWS",
 			},
 		},
 	})

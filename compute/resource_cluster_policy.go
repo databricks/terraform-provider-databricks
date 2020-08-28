@@ -133,7 +133,7 @@ func ResourceClusterPolicy() *schema.Resource {
 		Update: resourceClusterPolicyUpdate,
 		Delete: resourceClusterPolicyDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"policy_id": {

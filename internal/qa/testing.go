@@ -47,12 +47,6 @@ func RandomName() string {
 	return string(b)
 }
 
-type errorSlice []error
-
-func (a errorSlice) Len() int           { return len(a) }
-func (a errorSlice) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
-func (a errorSlice) Less(i, j int) bool { return a[i].Error() < a[j].Error() }
-
 // HTTPFixture defines request structure for test
 type HTTPFixture struct {
 	Method          string
@@ -102,6 +96,7 @@ func (f ResourceFixture) Apply(t *testing.T) (*schema.ResourceData, error) {
 	var whatever func(d *schema.ResourceData, c interface{}) error
 	switch {
 	case f.Create:
+		// nolint should be a bigger context-aware refactor
 		whatever = f.Resource.Create
 		if f.ID != "" {
 			return nil, errors.New("ID is not available for Create")

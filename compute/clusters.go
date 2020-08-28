@@ -150,6 +150,7 @@ func wrapMissingClusterError(err error, id string) error {
 
 func (a ClustersAPI) waitForClusterStatus(clusterID string, desired ClusterState) (result ClusterInfo, err error) {
 	// this tangles client with terraform more, which is inevitable
+	// nolint should be a bigger context-aware refactor
 	return result, resource.Retry(a.defaultTimeout(), func() *resource.RetryError {
 		clusterInfo, err := a.Get(clusterID)
 		if ae, ok := err.(common.APIError); ok && ae.IsMissing() {

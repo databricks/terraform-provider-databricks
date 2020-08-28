@@ -189,7 +189,7 @@ func ResourceJob() *schema.Resource {
 		Delete:        resourceJobDelete,
 		Schema:        jobSchema,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 	}
 }

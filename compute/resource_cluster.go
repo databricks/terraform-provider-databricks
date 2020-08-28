@@ -28,7 +28,7 @@ func ResourceCluster() *schema.Resource {
 			Delete: schema.DefaultTimeout(30 * time.Minute),
 		},
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 	}
 }
@@ -186,6 +186,7 @@ func resourceClusterRead(d *schema.ResourceData, m interface{}) error {
 
 func waitForLibrariesInstalled(
 	libraries LibrariesAPI, clusterID string) (result *ClusterLibraryStatuses, err error) {
+	// nolint should be a bigger context-aware refactor
 	err = resource.Retry(5*time.Minute, func() *resource.RetryError {
 		libsClusterStatus, err := libraries.ClusterStatus(clusterID)
 		if ae, ok := err.(common.APIError); ok && ae.IsMissing() {

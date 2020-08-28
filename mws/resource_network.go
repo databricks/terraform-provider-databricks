@@ -230,6 +230,7 @@ func resourceMWSNetworksDelete(d *schema.ResourceData, m interface{}) error {
 	if err != nil {
 		return err
 	}
+	// nolint should be a bigger context-aware refactor
 	return resource.Retry(60*time.Second, func() *resource.RetryError {
 		network, err := NewNetworksAPI(client).Read(packagedMwsID.MwsAcctID, packagedMwsID.ResourceID)
 		if e, ok := err.(common.APIError); ok && e.IsMissing() {

@@ -14,11 +14,11 @@ import (
 )
 
 func AccTest(t *testing.T, tc resource.TestCase) {
-	// each test - create new instance of provider.
-	tc.Providers = map[string]*schema.Provider{
-		"databricks": provider.DatabricksProvider(),
+	tc.ProviderFactories = map[string]func() (*schema.Provider, error){
+		"databricks": func() (*schema.Provider, error) {
+			return provider.DatabricksProvider(), nil
+		},
 	}
-
 	// this allows to debug from VSCode if it's launched with CLOUD_ENV var
 	cloudEnv := os.Getenv("CLOUD_ENV")
 	tc.IsUnitTest = cloudEnv != ""

@@ -82,8 +82,12 @@ func dataSourceNotebookPathsRead(d *schema.ResourceData, m interface{}) error {
 func NotebookPathListHash(v interface{}) int {
 	h := fnv.New32a()
 	m := v.(map[string]interface{})
+	var err error
 	if v, ok := m["path"]; ok {
-		h.Write([]byte(v.(string)))
+		_, err = h.Write([]byte(v.(string)))
+		if err != nil {
+			return 0
+		}
 	}
 	c := int(h.Sum32())
 	if -c >= 0 {

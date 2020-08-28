@@ -14,7 +14,7 @@ func ResourceGroup() *schema.Resource {
 		Read:   resourceGroupRead,
 		Delete: resourceGroupDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"display_name": {

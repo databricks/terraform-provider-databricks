@@ -233,6 +233,7 @@ func waitForWorkspaceURLResolution(workspace Workspace, timeoutDurationMinutes t
 	}
 	hostAndPort := fmt.Sprintf("%s.cloud.databricks.com:443", workspace.DeploymentName)
 	url := fmt.Sprintf("https://%s.cloud.databricks.com", workspace.DeploymentName)
+	// nolint should be a bigger context-aware refactor
 	return resource.Retry(timeoutDurationMinutes, func() *resource.RetryError {
 		conn, err := net.DialTimeout("tcp", hostAndPort, 1*time.Minute)
 		if err != nil {
@@ -449,6 +450,7 @@ func resourceMWSWorkspacesDelete(d *schema.ResourceData, m interface{}) error {
 	if err != nil {
 		return err
 	}
+	// nolint should be a bigger context-aware refactor
 	return resource.Retry(15*time.Minute, func() *resource.RetryError {
 		workspace, err := NewWorkspacesAPI(client).Read(packagedMwsID.MwsAcctID, idInt64)
 		if e, ok := err.(common.APIError); ok && e.IsMissing() {

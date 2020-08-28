@@ -67,7 +67,7 @@ func ResourceSecretScope() *schema.Resource {
 		Read:   resourceSecretScopeRead,
 		Delete: resourceSecretScopeDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {

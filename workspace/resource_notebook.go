@@ -370,6 +370,7 @@ func resourceNotebookDelete(d *schema.ResourceData, m interface{}) error {
 	id := d.Id()
 	client := m.(*common.DatabricksClient)
 
+	// nolint should be a bigger context-aware refactor
 	return resource.Retry(5*time.Minute, func() *resource.RetryError {
 		err := NewNotebooksAPI(client).Delete(id, true)
 		if err == nil {

@@ -61,7 +61,7 @@ func ResourceInstancePool() *schema.Resource {
 		Update: resourceInstancePoolUpdate,
 		Delete: resourceInstancePoolDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"instance_pool_name": {

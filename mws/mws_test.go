@@ -4,7 +4,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 
 	"github.com/databrickslabs/databricks-terraform/common"
 	"github.com/databrickslabs/databricks-terraform/internal/qa"

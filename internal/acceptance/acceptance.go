@@ -8,13 +8,14 @@ import (
 	"github.com/databrickslabs/databricks-terraform/common"
 	"github.com/databrickslabs/databricks-terraform/internal"
 	"github.com/databrickslabs/databricks-terraform/provider"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func AccTest(t *testing.T, tc resource.TestCase) {
 	// each test - create new instance of provider.
-	tc.Providers = map[string]terraform.ResourceProvider{
+	tc.Providers = map[string]*schema.Provider{
 		"databricks": provider.DatabricksProvider(),
 	}
 

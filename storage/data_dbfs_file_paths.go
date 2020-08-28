@@ -3,7 +3,7 @@ package storage
 import (
 	"github.com/databrickslabs/databricks-terraform/common"
 	"github.com/databrickslabs/databricks-terraform/workspace"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func DataSourceDBFSFilePaths() *schema.Resource {

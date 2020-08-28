@@ -13,7 +13,7 @@ import (
 	"github.com/databrickslabs/databricks-terraform/mws"
 	"github.com/databrickslabs/databricks-terraform/storage"
 	"github.com/databrickslabs/databricks-terraform/workspace"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/stretchr/testify/assert"
 )
 

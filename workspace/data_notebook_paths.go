@@ -1,11 +1,10 @@
 package workspace
 
 import (
-	"bytes"
+	"hash/fnv"
 
 	"github.com/databrickslabs/databricks-terraform/common"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func DataSourceNotebookPaths() *schema.Resource {
@@ -81,10 +80,14 @@ func dataSourceNotebookPathsRead(d *schema.ResourceData, m interface{}) error {
 
 // NotebookPathListHash a hash
 func NotebookPathListHash(v interface{}) int {
-	var buf bytes.Buffer
+	h := fnv.New32a()
 	m := v.(map[string]interface{})
 	if v, ok := m["path"]; ok {
-		buf.WriteString(v.(string))
+		h.Write([]byte(v.(string)))
 	}
-	return hashcode.String(buf.String())
+	c := int(h.Sum32())
+	if -c >= 0 {
+		return -c
+	}
+	return c
 }

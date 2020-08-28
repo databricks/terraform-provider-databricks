@@ -4,8 +4,8 @@ import (
 	"log"
 
 	"github.com/databrickslabs/databricks-terraform/common"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 // ClusterPoliciesAPI  allows you to create, list, and edit cluster policies.

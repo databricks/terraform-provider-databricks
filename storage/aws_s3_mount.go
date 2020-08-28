@@ -6,7 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/databrickslabs/databricks-terraform/compute"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 // AWSIamMount describes the object for a aws mount using iam role

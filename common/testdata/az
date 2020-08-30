@@ -5,11 +5,10 @@ if [ "yes" == "$FAIL" ]; then
     exit 1
 fi
 
-
-echo '{
-  "accessToken": "...",
-  "expiresOn": "2020-08-20 11:02:42.634058",
-  "subscription": "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee",
-  "tenant": "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee",
-  "tokenType": "Bearer"
-}'
+echo "{
+  \"accessToken\": \"...\",
+  \"expiresOn\": \"$(date -v+${EXPIRE:=10S} +'%F %T')\",
+  \"subscription\": \"aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee\",
+  \"tenant\": \"aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee\",
+  \"tokenType\": \"Bearer\"
+}"

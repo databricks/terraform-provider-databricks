@@ -13,7 +13,6 @@ import (
 	"github.com/Azure/go-autorest/autorest/adal"
 	"github.com/Azure/go-autorest/autorest/azure"
 	"github.com/Azure/go-autorest/autorest/azure/auth"
-	"github.com/Azure/go-autorest/autorest/azure/cli"
 )
 
 // List of management information
@@ -126,37 +125,6 @@ func (aa *AzureAuth) addSpManagementTokenVisitor(r *http.Request, management aut
 	}
 	r.Header.Set("X-Databricks-Azure-SP-Management-Token", accessToken)
 	return nil
-}
-
-func (aa *AzureAuth) configureWithAzureCLI() (func(r *http.Request) error, error) {
-	if aa.resourceID() == "" {
-		return nil, nil
-	}
-	if aa.IsClientSecretSet() {
-		return nil, nil
-	}
-	// verify that Azure CLI is authenticated
-	_, err := cli.GetTokenFromCLI(AzureDatabricksResourceID)
-	if err != nil {
-		if err.Error() == "Invoking Azure CLI failed with the following error: " {
-			return nil, fmt.Errorf("Most likely Azure CLI is not installed. " +
-				"See https://docs.microsoft.com/en-us/cli/azure/?view=azure-cli-latest for details.")
-		}
-		return nil, err
-	}
-	if aa.UsePATForCLI {
-		log.Printf("[INFO] Using Azure CLI authentication with session-generated PAT")
-		return func(r *http.Request) error {
-			pat, err := aa.acquirePAT(auth.NewAuthorizerFromCLIWithResource)
-			if err != nil {
-				return err
-			}
-			r.Header.Set("Authorization", fmt.Sprintf("Bearer %s", pat.TokenValue))
-			return nil
-		}, nil
-	}
-	log.Printf("[INFO] Using Azure CLI authentication with AAD tokens")
-	return aa.simpleAADRequestVisitor(auth.NewAuthorizerFromCLIWithResource)
 }
 
 // go nolint

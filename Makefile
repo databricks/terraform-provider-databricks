@@ -33,15 +33,15 @@ vendor:
 
 test-azcli:
 	@echo "✓ Running Terraform Acceptance Tests for Azure..."
-	@/bin/bash scripts/run.sh azcli '^(TestAcc|TestAzureAcc)' --debug
+	@/bin/bash scripts/run.sh azcli '^(TestAcc|TestAzureAcc)' --debug --tee
 
 test-azsp:
 	@echo "✓ Running Terraform Acceptance Tests for Azure..."
-	@/bin/bash scripts/run.sh azsp '^(TestAcc|TestAzureAcc)' --debug
+	@/bin/bash scripts/run.sh azsp '^(TestAcc|TestAzureAcc)' --debug --tee
 
 test-mws:
 	@echo "✓ Running acceptance Tests for Multiple Workspace APIs on AWS..."
-	@/bin/bash scripts/run.sh mws '^TestMwsAcc' --debug
+	@/bin/bash scripts/run.sh mws '^TestMwsAcc' --debug --tee
 
 test-awsst:
 	@echo "✓ Running Terraform Acceptance Tests for AWS ST..."

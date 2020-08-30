@@ -29,7 +29,18 @@ cd terraform-provider-databricks
 make install
 ```
 
-Now your plugin for the Databricks Terraform provider is installed correctly. You can actually use the provider. 
+Now your plugin for the Databricks Terraform provider is installed correctly. If you have Terraform 0.13, you'd need to paste configuration that might look like the following one into your `main.tf`:
+
+```hcl
+terraform {
+  required_providers {
+    databricks = {
+      source = "databrickslabs/databricks"
+      version = "0.2.3-22-gd91b475"
+    }
+  }
+}
+```
 
 ## Developing provider
 

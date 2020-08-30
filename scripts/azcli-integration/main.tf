@@ -11,7 +11,7 @@ data "external" "me" {
 }
 
 module "this" {
-  source = "../az-common"
+  source = "../modules/az-common"
   owner  = lookup(data.external.me.result, "name")
 }
 

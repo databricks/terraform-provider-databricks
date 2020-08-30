@@ -31,8 +31,23 @@
 
 To quickly install the binary please execute the following curl command in your shell or [install provider from source](CONTRIBUTING.md#installing-from-source).
 
+If you use Terraform 0.12, please execute the following curl command in your shell:
+
 ```bash
 curl https://raw.githubusercontent.com/databrickslabs/databricks-terraform/master/godownloader-databricks-provider.sh | bash -s -- -b $HOME/.terraform.d/plugins
+```
+
+If you use Terraform 0.13, please refer to instructions specified at [registry page](https://registry.terraform.io/providers/databrickslabs/databricks/latest):
+
+```hcl
+terraform {
+  required_providers {
+    databricks = {
+      source = "databrickslabs/databricks"
+      version = ... # replace dots with latest version
+    }
+  }
+}
 ```
 
 Then create a small sample file, named `main.tf` with approximately following contents. Replace `<your PAT token>` with newly created [PAT Token](https://docs.databricks.com/dev-tools/api/latest/authentication.html). It will create [a simple cluster](https://databrickslabs.github.io/terraform-provider-databricks/resources/cluster/).

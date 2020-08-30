@@ -77,7 +77,6 @@ resource "databricks_token" "pat" {
 The following arguments are required:
 
 * `network_id` - (Optional) (String) `network_id` from [networks](mws_networks.md)
-* `is_no_public_ip_enabled` - (Optional) (Bool) disable Public IP addresses for nodes within cluster
 * `account_id` - (Required) (String) master account id (also used for `sts:ExternaId` of `sts:AssumeRole`)
 * `credentials_id` - (Required) (String) `credentials_id` from [credentials](mws_credentials.md)
 * `deployment_name` - (Required) (String) part of URL: `https://<deployment-name>.cloud.databricks.com`

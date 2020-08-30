@@ -20,7 +20,9 @@ data "external" "me" {
   program = ["az", "account", "show", "--query", "user"]
 }
 
-variable "cidr" {}
+variable "cidr" {
+  default = "10.4.0.0/16"
+}
 
 locals {
   // dltp - databricks labs terraform provider
@@ -39,22 +41,6 @@ resource "azurerm_resource_group" "example" {
   name     = "${local.prefix}-rg"
   location = local.location
   tags     = local.tags
-}
-
-output "arm_client_id" {
-  value = data.azurerm_client_config.current.client_id
-}
-
-output "arm_subscription_id" {
-  value = data.azurerm_client_config.current.subscription_id
-}
-
-output "arm_tenant_id" {
-  value = data.azurerm_client_config.current.tenant_id
-}
-
-output "azure_region" {
-  value = local.location
 }
 
 output "test_resource_group" {

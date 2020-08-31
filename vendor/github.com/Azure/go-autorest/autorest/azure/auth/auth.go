@@ -16,8 +16,6 @@ package auth
 
 import (
 	"bytes"
-	"crypto/rsa"
-	"crypto/x509"
 	"encoding/binary"
 	"encoding/json"
 	"errors"
@@ -33,7 +31,6 @@ import (
 	"github.com/Azure/go-autorest/autorest/azure"
 	"github.com/Azure/go-autorest/autorest/azure/cli"
 	"github.com/dimchansky/utfbom"
-	"golang.org/x/crypto/pkcs12"
 )
 
 // The possible keys in the Values map.
@@ -613,7 +610,7 @@ func (ccc ClientCertificateConfig) ServicePrincipalToken() (*adal.ServicePrincip
 	if err != nil {
 		return nil, fmt.Errorf("failed to read the certificate file (%s): %v", ccc.CertificatePath, err)
 	}
-	certificate, rsaPrivateKey, err := decodePkcs12(certData, ccc.CertificatePassword)
+	certificate, rsaPrivateKey, err := adal.DecodePfxCertificateData(certData, ccc.CertificatePassword)
 	if err != nil {
 		return nil, fmt.Errorf("failed to decode pkcs12 certificate while creating spt: %v", err)
 	}
@@ -663,20 +660,6 @@ func (dfc DeviceFlowConfig) ServicePrincipalToken() (*adal.ServicePrincipalToken
 		return nil, fmt.Errorf("failed to finish device auth flow: %s", err)
 	}
 	return adal.NewServicePrincipalTokenFromManualToken(*oauthConfig, dfc.ClientID, dfc.Resource, *token)
-}
-
-func decodePkcs12(pkcs []byte, password string) (*x509.Certificate, *rsa.PrivateKey, error) {
-	privateKey, certificate, err := pkcs12.Decode(pkcs, password)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	rsaPrivateKey, isRsaKey := privateKey.(*rsa.PrivateKey)
-	if !isRsaKey {
-		return nil, nil, fmt.Errorf("PKCS#12 certificate must contain an RSA private key")
-	}
-
-	return certificate, rsaPrivateKey, nil
 }
 
 // UsernamePasswordConfig provides the options to get a bearer authorizer from a username and a password.

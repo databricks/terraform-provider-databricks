@@ -329,7 +329,7 @@ func TestAccClusterResource_CreateClusterWithLibraries(t *testing.T) {
 	if os.Getenv("CLOUD_ENV") == "" {
 		return
 	}
-	randomName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
+	randomName := fmt.Sprintf("cluster-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
 	randomClusterID := fmt.Sprintf("databricks_cluster.%s", randomName)
 	var clusterInfo ClusterInfo
 

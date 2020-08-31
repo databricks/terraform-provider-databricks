@@ -243,7 +243,6 @@ func TestAwsAccClusterResource_CreateClusterViaInstancePool(t *testing.T) {
 	randomStr := acctest.RandStringFromCharSet(5, acctest.CharSetAlphaNum)
 	instanceProfileRName := "my-tf-test-instance-profile"
 	instanceProfile := fmt.Sprintf("arn:aws:iam::999999999999:instance-profile/tf-test-%s", randomStr)
-	var clusterInfo ClusterInfo
 	awsAttrCluster := map[string]string{
 		"instance_profile_arn": fmt.Sprintf("${databricks_instance_profile.%s.id}", instanceProfileRName),
 	}
@@ -273,19 +272,19 @@ func TestAwsAccClusterResource_CreateClusterViaInstancePool(t *testing.T) {
 			{
 				Config: clusterNoInstanceProfileConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testClusterCheckAndTerminateForFutureTests(randomClusterId, &clusterInfo, t),
+					testClusterCheckAndTerminateForFutureTests(randomClusterId, t),
 				),
 			},
 			{
 				Config: clusterWithInstanceProfileConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testClusterCheckAndTerminateForFutureTests(randomClusterId, &clusterInfo, t),
+					testClusterCheckAndTerminateForFutureTests(randomClusterId, t),
 				),
 			},
 			{
 				Config: clusterNoInstanceProfileConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testClusterCheckAndTerminateForFutureTests(randomClusterId, &clusterInfo, t),
+					testClusterCheckAndTerminateForFutureTests(randomClusterId, t),
 				),
 				PlanOnly:           true,
 				ExpectNonEmptyPlan: true,
@@ -293,7 +292,7 @@ func TestAwsAccClusterResource_CreateClusterViaInstancePool(t *testing.T) {
 			{
 				Config: clusterNoInstanceProfileConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testClusterCheckAndTerminateForFutureTests(randomClusterId, &clusterInfo, t),
+					testClusterCheckAndTerminateForFutureTests(randomClusterId, t),
 				),
 			},
 		},
@@ -301,7 +300,6 @@ func TestAwsAccClusterResource_CreateClusterViaInstancePool(t *testing.T) {
 }
 
 func TestAzureAccClusterResource_CreateClusterViaInstancePool(t *testing.T) {
-	var clusterInfo ClusterInfo
 	randomInstancePoolName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
 	randomInstancePoolInterpolation := fmt.Sprintf("databricks_instance_pool.%s.id", randomInstancePoolName)
 	randomClusterSuffix := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
@@ -320,7 +318,7 @@ func TestAzureAccClusterResource_CreateClusterViaInstancePool(t *testing.T) {
 			{
 				Config: defaultAzureInstancePoolClusterTest,
 				Check: resource.ComposeTestCheckFunc(
-					testClusterCheckAndTerminateForFutureTests(randomClusterId, &clusterInfo, t),
+					testClusterCheckAndTerminateForFutureTests(randomClusterId, t),
 				),
 			},
 		},
@@ -365,19 +363,15 @@ func TestAccClusterResource_CreateClusterWithLibraries(t *testing.T) {
 func testClusterCheckExists(n string, cluster *ClusterInfo, t *testing.T) resource.TestCheckFunc {
 	return acceptance.ResourceCheck(n, func(client *common.DatabricksClient, id string) error {
 		clusters := NewClustersAPI(client)
-		_, err := clusters.Get(id)
+		c, err := clusters.Get(id)
+		*cluster = c
 		return err
 	})
 }
 
-func testClusterCheckAndTerminateForFutureTests(n string, cluster *ClusterInfo, t *testing.T) resource.TestCheckFunc {
+func testClusterCheckAndTerminateForFutureTests(n string, t *testing.T) resource.TestCheckFunc {
 	return acceptance.ResourceCheck(n, func(client *common.DatabricksClient, id string) error {
-		clusters := NewClustersAPI(client)
-		_, err := clusters.Get(id)
-		if err != nil {
-			return err
-		}
-		return clusters.Terminate(id)
+		return NewClustersAPI(client).Terminate(id)
 	})
 }
 

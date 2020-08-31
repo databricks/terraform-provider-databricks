@@ -9,8 +9,8 @@ resource "azurerm_storage_account" "blobaccount" {
   tags                     = local.tags
 }
 
-resource "azurerm_storage_container" "blobexample" {
-  name                  = "dev"
+resource "azurerm_storage_container" "sample" {
+  name                  = "sample"
   storage_account_name  = azurerm_storage_account.blobaccount.name
   container_access_type = "private"
 }

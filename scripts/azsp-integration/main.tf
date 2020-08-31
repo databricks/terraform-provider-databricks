@@ -9,7 +9,7 @@ data "external" "env" {
 }
 
 module "this" {
-  source = "../az-common"
+  source = "../modules/az-common"
   owner  = data.external.env.result.OWNER
 }
 

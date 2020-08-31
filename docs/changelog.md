@@ -14,6 +14,14 @@
 * [Migrated all documentation](https://github.com/databrickslabs/terraform-provider-databricks/pull/250) to Terraform Registry format, therefore having a single always-accurate place for end-user guides.
 * Internally, codebase [has been split](https://github.com/databrickslabs/terraform-provider-databricks/pull/224) into multiple packages, which should make further contributions simpler.
 
+Updated dependency versions:
+
+* github.com/Azure/go-autorest/autorest v0.11.4
+* github.com/Azure/go-autorest/autorest/adal v0.9.2
+* github.com/Azure/go-autorest/autorest/azure/auth v0.5.1
+* github.com/aws/aws-sdk-go v1.34.13
+* gopkg.in/ini.v1 v1.60.2
+
 **Deprecations**
 * `library_*` is no longer receiving fixes and will be removed in `0.3`, please rewrite cluster & job resources to use [`library` configuration block](https://github.com/databrickslabs/terraform-provider-databricks/blob/master/docs/resources/cluster.md#library-configuration-block).
 * `basic_auth` provider block is no longer receiving fixesand will be removed in `0.3`, please use `username` and `password` options

@@ -11,6 +11,7 @@ import (
 	. "github.com/databrickslabs/databricks-terraform/compute"
 	"github.com/databrickslabs/databricks-terraform/internal/acceptance"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/stretchr/testify/assert"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 )
@@ -155,12 +156,6 @@ func (c *clusterHCLBuilder) withInstancePool(instancePoolID string) *clusterHCLB
 
 func (c *clusterHCLBuilder) withDefaultLibraries() *clusterHCLBuilder {
 	c.libraries = getCommonLibraries()
-	return c
-}
-
-func (c *clusterHCLBuilder) withCloudNodeType() *clusterHCLBuilder {
-	cloudHCLStatements := getCloudSpecificHCLStatements()
-	c.nodeTypeId = cloudHCLStatements.nodeTypeId
 	return c
 }
 
@@ -333,24 +328,35 @@ func TestAzureAccClusterResource_CreateClusterViaInstancePool(t *testing.T) {
 }
 
 func TestAccClusterResource_CreateClusterWithLibraries(t *testing.T) {
-	randomClusterSuffix := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
-	randomClusterName := fmt.Sprintf("cluster-%s", randomClusterSuffix)
-	randomClusterId := fmt.Sprintf("databricks_cluster.%s", randomClusterName)
+	if os.Getenv("CLOUD_ENV") == "" {
+		return
+	}
+	randomName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
+	randomClusterID := fmt.Sprintf("databricks_cluster.%s", randomName)
 	var clusterInfo ClusterInfo
-	resourceConfig :=
-		newClusterHCLBuilder(randomClusterName).
-			withAwsAttributes(nil).
-			withCloudNodeType().
-			withDefaultLibraries().
-			build()
 
 	acceptance.AccTest(t, resource.TestCase{
 		Steps: []resource.TestStep{
 			{
-				Config: resourceConfig,
+				Config: newClusterHCLBuilder(randomName).
+					withInstancePool(fmt.Sprintf("%#v", CommonInstancePoolID())).
+					withAwsAttributes(nil).
+					build(),
 				Check: resource.ComposeTestCheckFunc(
-					testClusterCheckExists(randomClusterId, &clusterInfo, t),
+					testClusterCheckExists(randomClusterID, &clusterInfo, t),
 				),
+			},
+			{
+				PreConfig: func() {
+					client := common.CommonEnvironmentClient()
+					err := NewClustersAPI(client).Terminate(clusterInfo.ClusterID)
+					assert.NoError(t, err)
+				},
+				Config: newClusterHCLBuilder(randomName).
+					withInstancePool(fmt.Sprintf("%#v", CommonInstancePoolID())).
+					withAwsAttributes(nil).
+					withDefaultLibraries().
+					build(),
 			},
 		},
 	})

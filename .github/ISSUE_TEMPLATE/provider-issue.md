@@ -1,7 +1,7 @@
 ---
 name: Provider Issue
 about: Use this to identify a issue or a bug with the provider.
-title: "[ISSUE] Issue Short Description"
+title: "[ISSUE] Provider bug"
 labels: bug
 ---
 
@@ -31,7 +31,7 @@ To get relevant environment variable _names_ please copypaste the output of the 
 ```
 
 ### Debug Output
-Please provider a link to a GitHub Gist containing the complete debug output: https://www.terraform.io/docs/internals/debugging.html. Please do NOT paste the debug output in the issue; just paste a link to the Gist.
+Please add turn on logging, e.g. `TF_LOG=DEBUG terraform apply` and run command again, paste it to gist & provide the link to gist. If you're still willing to paste in log output, make sure you provide only relevant log lines with requests.
 
 ### Panic Output
 If Terraform produced a panic, please provide a link to a GitHub Gist containing the output of the `crash.log`.

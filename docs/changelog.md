@@ -15,7 +15,7 @@
 * Internally, codebase [has been split](https://github.com/databrickslabs/terraform-provider-databricks/pull/224) into multiple packages, which should make further contributions simpler.
 
 **Deprecations**
-* `library_*` is no longer receiving fixes and will be removed in `0.3`, please rewrite cluster & job resources to use `libraries` config block.
+* `library_*` is no longer receiving fixes and will be removed in `0.3`, please rewrite cluster & job resources to use [`library` configuration block](https://github.com/databrickslabs/terraform-provider-databricks/blob/master/docs/resources/cluster.md#library-configuration-block).
 * `basic_auth` provider block is no longer receiving fixesand will be removed in `0.3`, please use `username` and `password` options
 * `azure_auth` provider block is no longer receiving fixesand will be removed in `0.3`, please use `azure_*` options 
 

@@ -314,12 +314,12 @@ func isValueNilOrEmpty(valueField *reflect.Value, fieldPath string) bool {
 	switch valueField.Kind() {
 	case reflect.Ptr:
 		if valueField.IsNil() {
-			log.Printf("[DEBUG] skipping empty %s %#v", fieldPath, valueField)
+			log.Printf("[TRACE] skipping empty %s %#v", fieldPath, valueField)
 			return true
 		}
 	case reflect.Array, reflect.Map, reflect.String, reflect.Slice:
 		if valueField.Len() == 0 {
-			log.Printf("[DEBUG] skipping empty %s %#v", fieldPath, valueField)
+			log.Printf("[TRACE] skipping empty %s %#v", fieldPath, valueField)
 			return true
 		}
 	}
@@ -340,7 +340,7 @@ func StructToData(result interface{}, s map[string]*schema.Schema, d *schema.Res
 		}
 		_, configured := d.GetOk(fieldPath)
 		if !d.IsNewResource() && !fieldSchema.Computed && !configured {
-			log.Printf("[DEBUG] Removing default fields sent back by server: %s - %#v",
+			log.Printf("[TRACE] Removing default fields sent back by server: %s - %#v",
 				fieldPath, fieldValue)
 			return nil
 		}
@@ -374,10 +374,10 @@ func StructToData(result interface{}, s map[string]*schema.Schema, d *schema.Res
 			if len(nv) == 0 {
 				return nil
 			}
-			log.Printf("[DEBUG] set %s %#v", fieldPath, nv)
+			log.Printf("[TRACE] set %s %#v", fieldPath, nv)
 			return d.Set(fieldPath, nv)
 		default:
-			log.Printf("[DEBUG] set %s %#v", fieldPath, fieldValue)
+			log.Printf("[TRACE] set %s %#v", fieldPath, fieldValue)
 			return d.Set(fieldPath, fieldValue)
 		}
 	})

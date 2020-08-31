@@ -217,7 +217,7 @@ func DatabricksProvider() terraform.ResourceProvider {
 			"azure_use_pat_for_cli": {
 				Type:        schema.TypeBool,
 				Optional:    true,
-				Default:     true,
+				Default:     false,
 				Description: "Create ephemeral PAT tokens also for AZ CLI authenticated requests",
 			},
 			"azure_auth": {

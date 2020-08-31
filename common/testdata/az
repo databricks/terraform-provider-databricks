@@ -5,11 +5,19 @@ if [ "yes" == "$FAIL" ]; then
     exit 1
 fi
 
+# Macos
+EXP="$(date -v+${EXPIRE:=10S} +'%F %T' 2>/dev/null)"
+if [ "" = "${EXP}" ]; then
+  # Linux
+  EXPIRE=$(echo $EXPIRE | sed 's/S/seconds/')
+  EXPIRE=$(echo $EXPIRE | sed 's/M/minutes/')
+  EXP=$(date --date=+${EXPIRE:=10seconds} +'%F %T')
+fi
 
-echo '{
-  "accessToken": "...",
-  "expiresOn": "2020-08-20 11:02:42.634058",
-  "subscription": "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee",
-  "tenant": "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee",
-  "tokenType": "Bearer"
-}'
+echo "{
+  \"accessToken\": \"...\",
+  \"expiresOn\": \"${EXP}\",
+  \"subscription\": \"aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee\",
+  \"tenant\": \"aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee\",
+  \"tokenType\": \"Bearer\"
+}"

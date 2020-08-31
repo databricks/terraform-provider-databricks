@@ -113,13 +113,11 @@ environment variable `DATABRICKS_TOKEN`.
 
 ## Special configurations for Azure
 
-!> **Warning** Please note that the azure service principal authentication currently uses a generated Databricks PAT token and not a AAD token for the authentication. This is due to the Databricks AAD feature not yet supporting AAD tokens for secret scopes. This will be refactored in a transparent manner when that support is enabled. The only field to be impacted is `pat_token_duration_seconds` which will be deprecated and after AAD support is fully supported. 
-
 In order to work with Azure Databricks workspace, provider has to know it's `id` (or construct it from `azure_subscription_id`, `azure_workspace_name` and `azure_workspace_name`). Provider works with [Azure CLI authentication](https://docs.microsoft.com/en-us/cli/azure/authenticate-azure-cli?view=azure-cli-latest) to facilitate local development workflows, though for automated scenarios a service principal auth is necessary (and specification of `azure_client_id`, `azure_client_secret` and `azure_tenant_id` parameters).
 
 ### Authenticating with Azure Service Principal
 
--> **Note** **Azure Service Principal Authentication** will only work on Azure Databricks where as the API Token authentication will work on both **Azure** and **AWS**. Internally `azure_auth` will generate a session-based PAT token.
+!> **Warning** Please note that the azure service principal authentication currently uses a generated Databricks PAT token and not a AAD token for the authentication. This is due to the Databricks AAD feature not yet supporting AAD tokens for [secret scopes](https://docs.microsoft.com/en-us/azure/databricks/dev-tools/api/latest/secrets#--create-secret-scope). This will be refactored in a transparent manner when that support is available. The only field to be impacted is `pat_token_duration_seconds` which will be deprecated and after AAD support is fully supported. 
 
 ```hcl
 provider "azurerm" {
@@ -129,7 +127,7 @@ provider "azurerm" {
   subscription_id   = var.subscription_id
 }
 
-resource "azurerm_databricks_workspace" "demo_test_workspace" {
+resource "azurerm_databricks_workspace" "this" {
   location                      = "centralus"
   name                          = "my-workspace-name"
   resource_group_name           = var.resource_group
@@ -137,7 +135,7 @@ resource "azurerm_databricks_workspace" "demo_test_workspace" {
 }
 
 provider "databricks" {
-  azure_workspace_resource_id = azurerm_databricks_workspace.demo_test_workspace.id
+  azure_workspace_resource_id = azurerm_databricks_workspace.this.id
   azure_client_id             = var.client_id
   azure_client_secret         = var.client_secret
   azure_tenant_id             = var.tenant_id
@@ -151,14 +149,14 @@ resource "databricks_scim_user" "my-user" {
 
 ### Authenticating with Azure CLI
 
--> **Note** **Azure Service Principal Authentication** will only work on Azure Databricks where as the API Token authentication will work on both **Azure** and **AWS**. Internally `azure_auth` will generate a session-based PAT token.
+It's possible to use _experimental_ [Azure CLI](https://docs.microsoft.com/cli/azure/) authentication, where provider would rely on access token cached by `az login` command, so that local development scenarios are possible. Technically, provider will call `az account get-access-token` each time before an access token is about to expire. It is [verified to work](https://github.com/databrickslabs/terraform-provider-databricks/pull/282) with all API and is enabled by default. It could be turned off by setting `azure_use_pat_for_cli` to `true` on provider configuration.
 
 ```hcl
 provider "azurerm" {
   features {}
 }
 
-resource "azurerm_databricks_workspace" "demo_test_workspace" {
+resource "azurerm_databricks_workspace" "this" {
   location                      = "centralus"
   name                          = "my-workspace-name"
   resource_group_name           = var.resource_group
@@ -166,7 +164,7 @@ resource "azurerm_databricks_workspace" "demo_test_workspace" {
 }
 
 provider "databricks" {
-  azure_workspace_resource_id = azurerm_databricks_workspace.demo_test_workspace.id
+  azure_workspace_resource_id = azurerm_databricks_workspace.this.id
 }
 
 resource "databricks_scim_user" "my-user" {

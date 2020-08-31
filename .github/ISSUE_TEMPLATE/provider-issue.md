@@ -19,7 +19,11 @@ Please list the resources as a list, for example:
 
 If this issue appears to affect multiple resources, it may be an issue with Terraform's core, so please mention this.
 
-### Terraform Configuration Files & Environment Variable Names
+### Environment variable names
+To get relevant environment variable _names_ please copypaste the output of the following command:
+`$ env | sort | grep -E 'DATABRICKS|AWS|AZURE|ARM|TEST' | awk -F= '{print $1}'`
+
+### Terraform Configuration Files
 ```hcl
 # Copy-paste your Terraform configurations here - for large Terraform configs,
 # please use a service like Dropbox and share a link to the ZIP file. For

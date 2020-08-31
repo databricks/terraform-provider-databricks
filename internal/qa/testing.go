@@ -324,7 +324,7 @@ func environmentTemplate(t *testing.T, template string, otherVars ...map[string]
 func EnvironmentTemplate(t *testing.T, template string, otherVars ...map[string]string) string {
 	resp, err := environmentTemplate(t, template, otherVars...)
 	if err != nil {
-		t.Fatal(err.Error())
+		t.Skipf(err.Error())
 	}
 	return resp
 }

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -413,6 +414,11 @@ func (c *DatabricksClient) genericQuery(method, requestURL string, data interfac
 		return nil, err
 	}
 	resp, err := c.httpClient.Do(r)
+	// retryablehttp library now returns only wrapped errors
+	var ae APIError
+	if errors.As(err, &ae) {
+		return nil, ae
+	}
 	if err != nil {
 		return nil, err
 	}

@@ -1,6 +1,6 @@
 # databricks_mws_workspaces Resource
 
-**This resource has evolving API, which may change in future versions of provider.**
+-> **Note** This resource has evolving API, which may change in future versions of provider.
 
 This resource to configure new workspaces within AWS.
 

@@ -14,7 +14,9 @@ func ResourceScimGroup() *schema.Resource {
 		Update: resourceScimGroupUpdate,
 		Read:   resourceScimGroupRead,
 		Delete: resourceScimGroupDelete,
-
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 		Schema: map[string]*schema.Schema{
 			"display_name": {
 				Type:     schema.TypeString,

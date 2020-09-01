@@ -1,6 +1,6 @@
 # databricks_mws_storage_configurations Resource
 
-**This resource has evolving API, which may change in future versions of provider.**
+-> **Note** This resource has evolving API, which may change in future versions of provider.
 
 This resource to configure root bucket new workspaces within AWS.
 

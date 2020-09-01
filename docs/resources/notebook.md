@@ -1,14 +1,11 @@
 # databricks_notebook Resource
 
-**This resource has evolving API, which may change in future versions of provider.**
+-> **Note** This resource has evolving API, which may change in future versions of provider.
 
 This resource allows you to manage the import, export, and delete notebooks. The maximum allowed size of a 
 request to resource is 10MB. 
 
--> **Note** Though the public workspace import api supports notebooks of type `DBC`, `JUPYTER` and `HTML` this resource does not support 
-those types as determining changes is quite challenging as the format includes additional information such as timestamps 
-execution counts thus a base64 diff causes issues.
-
+-> **Note** Though the public workspace import api supports notebooks of type `DBC`, `JUPYTER` and `HTML` this resource does not support those types as determining changes is quite challenging as the format includes additional information such as timestamps execution counts thus a base64 diff causes issues.
 
 ## Example Usage
 

@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	"github.com/databrickslabs/databricks-terraform/common"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 // ScopeBackendType is a custom type for the backend type for secret scopes

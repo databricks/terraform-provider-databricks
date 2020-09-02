@@ -8,9 +8,9 @@ import (
 
 	"github.com/databrickslabs/databricks-terraform/common"
 	"github.com/databrickslabs/databricks-terraform/internal"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 // NewNetworksAPI creates MWSNetworksAPI instance from provider meta
@@ -230,6 +230,7 @@ func resourceMWSNetworksDelete(d *schema.ResourceData, m interface{}) error {
 	if err != nil {
 		return err
 	}
+	// nolint should be a bigger context-aware refactor
 	return resource.Retry(60*time.Second, func() *resource.RetryError {
 		network, err := NewNetworksAPI(client).Read(packagedMwsID.MwsAcctID, packagedMwsID.ResourceID)
 		if e, ok := err.(common.APIError); ok && e.IsMissing() {

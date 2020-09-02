@@ -7,7 +7,7 @@ import (
 	"github.com/databrickslabs/databricks-terraform/common"
 	"github.com/databrickslabs/databricks-terraform/internal/acceptance"
 	"github.com/databrickslabs/databricks-terraform/internal/qa"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
 func TestAzureAccAdlsGen1Mount_correctly_mounts(t *testing.T) {

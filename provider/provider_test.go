@@ -1,6 +1,7 @@
 package provider
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"strings"
@@ -8,8 +9,7 @@ import (
 	"time"
 
 	"github.com/databrickslabs/databricks-terraform/common"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -300,13 +300,17 @@ func configureProviderAndReturnClient(t *testing.T, tt providerConfigTest) (*com
 	for k, v := range tt.env {
 		os.Setenv(k, v)
 	}
-	p := DatabricksProvider().(*schema.Provider)
-	err := p.Configure(terraform.NewResourceConfigRaw(tt.rawConfig()))
-	if err != nil {
-		return nil, err
+	p := DatabricksProvider()
+	diags := p.Configure(context.Background(), terraform.NewResourceConfigRaw(tt.rawConfig()))
+	if len(diags) > 0 {
+		issues := []string{}
+		for _, d := range diags {
+			issues = append(issues, d.Summary)
+		}
+		return nil, fmt.Errorf(strings.Join(issues, ", "))
 	}
 	client := p.Meta().(*common.DatabricksClient)
-	err = client.Authenticate()
+	err := client.Authenticate()
 	if err != nil {
 		return nil, err
 	}
@@ -317,8 +321,8 @@ func TestProvider_NoHostGivesError(t *testing.T) {
 	var raw = make(map[string]interface{})
 	raw["config_file"] = "testdata/.databrickscfg"
 	raw["profile"] = "nohost"
-	p := DatabricksProvider().(*schema.Provider)
-	err := p.Configure(terraform.NewResourceConfigRaw(raw))
+	p := DatabricksProvider()
+	err := p.Configure(context.Background(), terraform.NewResourceConfigRaw(raw))
 	assert.NotNil(t, err)
 }
 
@@ -326,8 +330,8 @@ func TestProvider_NoTokenGivesError(t *testing.T) {
 	var raw = make(map[string]interface{})
 	raw["config_file"] = "testdata/.databrickscfg"
 	raw["profile"] = "notoken"
-	p := DatabricksProvider().(*schema.Provider)
-	err := p.Configure(terraform.NewResourceConfigRaw(raw))
+	p := DatabricksProvider()
+	err := p.Configure(context.Background(), terraform.NewResourceConfigRaw(raw))
 	assert.NotNil(t, err)
 }
 
@@ -335,8 +339,8 @@ func TestProvider_InvalidProfileGivesError(t *testing.T) {
 	var raw = make(map[string]interface{})
 	raw["config_file"] = "testdata/.databrickscfg"
 	raw["profile"] = "invalidhost"
-	p := DatabricksProvider().(*schema.Provider)
-	err := p.Configure(terraform.NewResourceConfigRaw(raw))
+	p := DatabricksProvider()
+	err := p.Configure(context.Background(), terraform.NewResourceConfigRaw(raw))
 	assert.NotNil(t, err)
 }
 

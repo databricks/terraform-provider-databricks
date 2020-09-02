@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -207,6 +208,12 @@ func (c *DatabricksClient) checkHTTPRetry(ctx context.Context, resp *http.Respon
 		// In this case don't retry and return the original error from httpclient
 		return false, err
 	}
+	if resp.StatusCode == 429 {
+		return true, APIError{
+			ErrorCode: "TOO_MANY_REQUESTS",
+			Message:   "Current request has to be retried",
+		}
+	}
 	if resp.StatusCode >= 400 {
 		apiError := c.parseError(resp)
 		return apiError.IsRetriable(), apiError
@@ -407,6 +414,11 @@ func (c *DatabricksClient) genericQuery(method, requestURL string, data interfac
 		return nil, err
 	}
 	resp, err := c.httpClient.Do(r)
+	// retryablehttp library now returns only wrapped errors
+	var ae APIError
+	if errors.As(err, &ae) {
+		return nil, ae
+	}
 	if err != nil {
 		return nil, err
 	}

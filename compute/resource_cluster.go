@@ -21,7 +21,6 @@ func ResourceCluster() *schema.Resource {
 		Update:        resourceClusterUpdate,
 		Delete:        resourceClusterDelete,
 		Schema:        clusterSchema,
-		// see usage at https://github.com/terraform-providers/terraform-provider-aws/blob/9900515b28b413505e5dd7c8d8ea258c59515f32/aws/resource_aws_vpc_peering_connection.go#L288
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(30 * time.Minute),
 			Update: schema.DefaultTimeout(30 * time.Minute),
@@ -120,8 +119,7 @@ func resourceClusterSchema() map[string]*schema.Schema {
 }
 
 func resourceClusterCreate(d *schema.ResourceData, m interface{}) error {
-	client := m.(*common.DatabricksClient)
-	clusters := NewClustersAPI(client)
+	clusters := NewClustersAPI(m)
 	var cluster Cluster
 	err := internal.DataToStructPointer(d, clusterSchema, &cluster)
 	if err != nil {
@@ -147,13 +145,12 @@ func resourceClusterCreate(d *schema.ResourceData, m interface{}) error {
 		libraryList = legacyReadLibraryListFromData(d)
 	}
 	if len(libraryList.Libraries) > 0 {
-		err = NewLibrariesAPI(client).Install(libraryList)
+		err = NewLibrariesAPI(m).Install(libraryList)
 		if err != nil {
 			return err
 		}
-		_, err := waitForLibrariesInstalled(NewLibrariesAPI(client), d.Id())
+		_, err := waitForLibrariesInstalled(NewLibrariesAPI(m), clusterInfo)
 		if err != nil {
-			// do we consider failed installation as missing cluster?...
 			return err
 		}
 	}
@@ -175,9 +172,8 @@ func resourceClusterRead(d *schema.ResourceData, m interface{}) error {
 	if err != nil {
 		return err
 	}
-	libsClusterStatus, err := waitForLibrariesInstalled(NewLibrariesAPI(client), d.Id())
+	libsClusterStatus, err := waitForLibrariesInstalled(NewLibrariesAPI(client), clusterInfo)
 	if err != nil {
-		// do we consider failed installation as missing cluster?...
 		return err
 	}
 	libList := libsClusterStatus.ToLibraryList()
@@ -185,16 +181,21 @@ func resourceClusterRead(d *schema.ResourceData, m interface{}) error {
 }
 
 func waitForLibrariesInstalled(
-	libraries LibrariesAPI, clusterID string) (result *ClusterLibraryStatuses, err error) {
-	// nolint should be a bigger context-aware refactor
+	libraries LibrariesAPI, clusterInfo ClusterInfo) (result *ClusterLibraryStatuses, err error) {
 	err = resource.Retry(5*time.Minute, func() *resource.RetryError {
-		libsClusterStatus, err := libraries.ClusterStatus(clusterID)
+		libsClusterStatus, err := libraries.ClusterStatus(clusterInfo.ClusterID)
 		if ae, ok := err.(common.APIError); ok && ae.IsMissing() {
 			// eventual consistency error
 			return resource.RetryableError(err)
 		}
 		if err != nil {
 			return resource.NonRetryableError(err)
+		}
+		if clusterInfo.State == ClusterStateTerminated {
+			log.Printf("[INFO] Cluster %#v (%s) is currently terminated, so just returning list of %d libraries",
+				clusterInfo.ClusterName, clusterInfo.ClusterID, len(libsClusterStatus.LibraryStatuses))
+			result = &libsClusterStatus
+			return nil
 		}
 		retry, err := libsClusterStatus.IsRetryNeeded()
 		if retry {
@@ -203,7 +204,6 @@ func waitForLibrariesInstalled(
 		if err != nil {
 			return resource.NonRetryableError(err)
 		}
-		// TODO: let this be reviewed by someone. looks okay, though... KTEST!
 		result = &libsClusterStatus
 		return nil
 	})
@@ -256,13 +256,14 @@ func resourceClusterUpdate(d *schema.ResourceData, m interface{}) error {
 	libraryList.ClusterID = clusterID
 	libsToInstall, libsToUninstall := libraryList.Diff(libsClusterStatus)
 	if len(libsToUninstall.Libraries) > 0 || len(libsToInstall.Libraries) > 0 {
+		tmpClusterInfo := clusterInfo
 		if !clusterInfo.IsRunningOrResizing() {
-			err = clusters.Start(clusterID)
+			tmpClusterInfo, err = clusters.StartAndGetInfo(clusterID)
 			if err != nil {
 				return err
 			}
 		}
-		err := updateLibraries(libraries, libsToInstall, libsToUninstall)
+		err := updateLibraries(libraries, tmpClusterInfo, libsToInstall, libsToUninstall)
 		if err != nil {
 			return err
 		}
@@ -295,7 +296,8 @@ func modifyClusterRequest(clusterModel *Cluster) {
 	clusterModel.DriverNodeTypeID = ""
 }
 
-func updateLibraries(libraries LibrariesAPI, libsToInstall, libsToUninstall ClusterLibraryList) error {
+func updateLibraries(libraries LibrariesAPI, clusterInfo ClusterInfo,
+	libsToInstall, libsToUninstall ClusterLibraryList) error {
 	if len(libsToUninstall.Libraries) > 0 {
 		err := libraries.Uninstall(libsToUninstall)
 		if err != nil {
@@ -308,10 +310,10 @@ func updateLibraries(libraries LibrariesAPI, libsToInstall, libsToUninstall Clus
 			return err
 		}
 	}
-	_, err := waitForLibrariesInstalled(libraries, libsToUninstall.ClusterID)
+	_, err := waitForLibrariesInstalled(libraries, clusterInfo)
 	return err
 }
 
 func resourceClusterDelete(d *schema.ResourceData, m interface{}) error {
-	return ClustersAPI{m.(*common.DatabricksClient)}.PermanentDelete(d.Id())
+	return NewClustersAPI(m).PermanentDelete(d.Id())
 }

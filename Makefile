@@ -25,23 +25,35 @@ build:
 install: build
 	@echo "✓ Installing provider into ~/.terraform.d/plugins ..."
 	@test -d $(HOME)/.terraform.d/plugins && rm $(HOME)/.terraform.d/plugins/terraform-provider-databricks* || mkdir -p $(HOME)/.terraform.d/plugins
-	@mv terraform-provider-databricks $(HOME)/.terraform.d/plugins
-
+	@cp terraform-provider-databricks $(HOME)/.terraform.d/plugins
+	@mkdir -p '$(HOME)/.terraform.d/plugins/registry.terraform.io/databrickslabs/databricks/$(shell git describe --long --always | sed 's/v//')/$(shell go version | awk '{print $$4}' | sed 's#/#_#')'
+	@cp terraform-provider-databricks '$(HOME)/.terraform.d/plugins/registry.terraform.io/databrickslabs/databricks/$(shell git describe --long --always | sed 's/v//')/$(shell go version | awk '{print $$4}' | sed 's#/#_#')'
+	@echo "✓ Use the following configuration to enable the version you've built"
+	@echo 
+	@echo "terraform {"
+	@echo "  required_providers {"
+	@echo "    databricks = {"
+	@echo '      source = "databrickslabs/databricks"'
+	@echo '      version = "$(shell git describe --long --always | sed 's/v//')"'
+	@echo "    }"
+	@echo "  }"
+	@echo "}"
+	
 vendor:
 	@echo "✓ Filling vendor folder with library code..."
 	@go mod vendor
 
 test-azcli:
 	@echo "✓ Running Terraform Acceptance Tests for Azure..."
-	@/bin/bash scripts/run.sh azcli '^(TestAcc|TestAzureAcc)' --debug
+	@/bin/bash scripts/run.sh azcli '^(TestAcc|TestAzureAcc)' --debug --tee
 
 test-azsp:
 	@echo "✓ Running Terraform Acceptance Tests for Azure..."
-	@/bin/bash scripts/run.sh azsp '^(TestAcc|TestAzureAcc)' --debug
+	@/bin/bash scripts/run.sh azsp '^(TestAcc|TestAzureAcc)' --debug --tee
 
 test-mws:
 	@echo "✓ Running acceptance Tests for Multiple Workspace APIs on AWS..."
-	@/bin/bash scripts/run.sh mws '^TestMwsAcc' --debug
+	@/bin/bash scripts/run.sh mws '^TestMwsAcc' --debug --tee
 
 test-awsst:
 	@echo "✓ Running Terraform Acceptance Tests for AWS ST..."

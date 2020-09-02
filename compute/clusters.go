@@ -69,10 +69,7 @@ func (a ClustersAPI) Edit(cluster Cluster) (info ClusterInfo, err error) {
 	}
 	if info.IsRunningOrResizing() {
 		// so if cluster was running, we'll start and wait again
-		err = a.Start(info.ClusterID)
-		if err != nil {
-			return info, err
-		}
+		return a.StartAndGetInfo(info.ClusterID)
 	}
 	// only State / ClusterID properties will be valid in this return
 	return info, err
@@ -87,27 +84,29 @@ func (a ClustersAPI) ListZones() (ZonesInfo, error) {
 
 // Start a terminated Spark cluster given its ID and wait till it's running
 func (a ClustersAPI) Start(clusterID string) error {
+	_, err := a.StartAndGetInfo(clusterID)
+	return err
+}
+
+// StartAndGetInfo starts cluster and returns info
+func (a ClustersAPI) StartAndGetInfo(clusterID string) (ClusterInfo, error) {
 	info, err := a.Get(clusterID)
 	if err != nil {
-		return err
+		return info, err
 	}
 	switch info.State {
 	case ClusterStateRunning:
 		// it's already running, so we're good to return
-		break
+		return info, nil
 	case ClusterStatePending, ClusterStateResizing, ClusterStateRestarting:
 		// let's wait tiny bit, so we return RUNNING cluster info
-		info, err = a.waitForClusterStatus(info.ClusterID, ClusterStateRunning)
-		if err != nil {
-			return err
-		}
-		return nil
+		return a.waitForClusterStatus(info.ClusterID, ClusterStateRunning)
 	case ClusterStateTerminating:
 		// let it finish terminating, so it's safe to start again.
 		// TERMINATED cluster info will be returned this way
 		info, err = a.waitForClusterStatus(info.ClusterID, ClusterStateTerminated)
 		if err != nil {
-			return err
+			return info, err
 		}
 	case ClusterStateError, ClusterStateUnknown:
 		// most likely we can start error'ed cluster again...
@@ -115,12 +114,12 @@ func (a ClustersAPI) Start(clusterID string) error {
 	}
 	err = a.client.Post("/clusters/start", ClusterID{ClusterID: clusterID}, nil)
 	if err != nil {
-		if !strings.Contains(err.Error(), fmt.Sprintf("Cluster %s is in unexpected state Pending.", clusterID)) {
-			return err
+		if !strings.Contains(err.Error(),
+			fmt.Sprintf("Cluster %s is in unexpected state Pending.", clusterID)) {
+			return info, err
 		}
 	}
-	_, err = a.waitForClusterStatus(clusterID, ClusterStateRunning)
-	return err
+	return a.waitForClusterStatus(clusterID, ClusterStateRunning)
 }
 
 // Restart restart a Spark cluster given its ID. If the cluster is not in a RUNNING state, nothing will happen.

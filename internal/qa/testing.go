@@ -20,13 +20,15 @@ import (
 	"github.com/databrickslabs/databricks-terraform/internal"
 
 	"github.com/hashicorp/hcl"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 
 	"github.com/r3labs/diff"
 	"github.com/stretchr/testify/assert"
 )
+
+// TODO: remove r3labs/diff
 
 const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 
@@ -44,12 +46,6 @@ func RandomName() string {
 	}
 	return string(b)
 }
-
-type errorSlice []error
-
-func (a errorSlice) Len() int           { return len(a) }
-func (a errorSlice) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
-func (a errorSlice) Less(i, j int) bool { return a[i].Error() < a[j].Error() }
 
 // HTTPFixture defines request structure for test
 type HTTPFixture struct {
@@ -100,6 +96,7 @@ func (f ResourceFixture) Apply(t *testing.T) (*schema.ResourceData, error) {
 	var whatever func(d *schema.ResourceData, c interface{}) error
 	switch {
 	case f.Create:
+		// nolint should be a bigger context-aware refactor
 		whatever = f.Resource.Create
 		if f.ID != "" {
 			return nil, errors.New("ID is not available for Create")
@@ -140,22 +137,21 @@ func (f ResourceFixture) Apply(t *testing.T) (*schema.ResourceData, error) {
 	}
 	if f.State != nil {
 		resourceConfig := terraform.NewResourceConfigRaw(f.State)
-		warns, errs := f.Resource.Validate(resourceConfig)
-		if len(warns) > 0 || len(errs) > 0 {
-			var issues string
-			if len(warns) > 0 {
-				sort.Strings(warns)
-				issues += ". " + strings.Join(warns, ". ")
-			}
-			if len(errs) > 0 {
-				sort.Sort(errorSlice(errs))
-				for _, err := range errs {
-					issues += ". " + err.Error()
+		diags := f.Resource.Validate(resourceConfig)
+		if len(diags) > 0 {
+			sort.Slice(diags, func(i, j int) bool {
+				return diags[i].Detail < diags[j].Detail
+			})
+			issues := []string{}
+			for _, diag := range diags {
+				if diag.Summary == "ConflictsWith" {
+					issues = append(issues, diag.Detail)
+				} else {
+					issues = append(issues, diag.Summary)
 				}
 			}
-			// remove characters that need escaping, it's only tests...
-			issues = strings.ReplaceAll(issues, "\"", "")
-			return nil, fmt.Errorf("Invalid config supplied%s", issues)
+			return nil, fmt.Errorf("Invalid config supplied. %s",
+				strings.ReplaceAll(strings.Join(issues, ". "), "\"", ""))
 		}
 	}
 	resourceData := schema.TestResourceDataRaw(t, f.Resource.Schema, f.State)

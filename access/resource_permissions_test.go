@@ -190,7 +190,7 @@ func TestResourcePermissionsCreate_no_access_control(t *testing.T) {
 			"cluster_id": "abc",
 		},
 	}.Apply(t)
-	qa.AssertErrorStartsWith(t, err, "Invalid config supplied. access_control: required field is not set")
+	qa.AssertErrorStartsWith(t, err, "Invalid config supplied. Required attribute is not set")
 }
 
 func TestResourcePermissionsCreate_conflicting_fields(t *testing.T) {

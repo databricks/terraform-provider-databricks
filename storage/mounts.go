@@ -11,7 +11,7 @@ import (
 	"github.com/databrickslabs/databricks-terraform/common"
 	"github.com/databrickslabs/databricks-terraform/compute"
 	"github.com/databrickslabs/databricks-terraform/internal"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 // Mount exposes generic url & extra config map options
@@ -85,6 +85,7 @@ func (mp MountPoint) Mount(mo Mount) (source string, err error) {
 
 func commonMountResource(tpl Mount, s map[string]*schema.Schema) *schema.Resource {
 	resource := &schema.Resource{Schema: s, SchemaVersion: 2}
+	// nolint should be a bigger context-aware refactor
 	resource.Create = mountCreate(tpl, resource)
 	resource.Read = mountRead(tpl, resource)
 	resource.Delete = mountDelete(tpl, resource)
@@ -154,7 +155,7 @@ func mountCluster(tpl interface{}, d *schema.ResourceData, m interface{},
 }
 
 // returns resource create mount for object store on workspace
-func mountCreate(tpl interface{}, r *schema.Resource) schema.CreateFunc {
+func mountCreate(tpl interface{}, r *schema.Resource) func(*schema.ResourceData, interface{}) error {
 	return func(d *schema.ResourceData, m interface{}) (err error) {
 		mountConfig, mountPoint, err := mountCluster(tpl, d, m, r)
 		if err != nil {

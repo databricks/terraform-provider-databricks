@@ -2,7 +2,7 @@ package identity
 
 import (
 	"github.com/databrickslabs/databricks-terraform/common"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func DataSourceDefaultUserRoles() *schema.Resource {

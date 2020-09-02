@@ -3,7 +3,7 @@ package storage
 import (
 	"fmt"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 // AzureADLSGen2Mount describes the object for a azure datalake gen 2 storage mount

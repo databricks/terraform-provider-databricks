@@ -8,16 +8,17 @@ import (
 	"github.com/databrickslabs/databricks-terraform/common"
 	"github.com/databrickslabs/databricks-terraform/internal"
 	"github.com/databrickslabs/databricks-terraform/provider"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func AccTest(t *testing.T, tc resource.TestCase) {
-	// each test - create new instance of provider.
-	tc.Providers = map[string]terraform.ResourceProvider{
-		"databricks": provider.DatabricksProvider(),
+	tc.ProviderFactories = map[string]func() (*schema.Provider, error){
+		"databricks": func() (*schema.Provider, error) {
+			return provider.DatabricksProvider(), nil
+		},
 	}
-
 	// this allows to debug from VSCode if it's launched with CLOUD_ENV var
 	cloudEnv := os.Getenv("CLOUD_ENV")
 	tc.IsUnitTest = cloudEnv != ""

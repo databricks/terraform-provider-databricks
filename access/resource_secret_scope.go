@@ -6,7 +6,7 @@ import (
 	"net/http"
 
 	"github.com/databrickslabs/databricks-terraform/common"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 // NewSecretScopesAPI creates SecretScopesAPI instance from provider meta
@@ -67,7 +67,7 @@ func ResourceSecretScope() *schema.Resource {
 		Read:   resourceSecretScopeRead,
 		Delete: resourceSecretScopeDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {

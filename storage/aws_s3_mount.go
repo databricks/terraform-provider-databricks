@@ -6,7 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/databrickslabs/databricks-terraform/compute"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 // AWSIamMount describes the object for a aws mount using iam role
@@ -57,6 +57,7 @@ func ResourceAWSS3Mount() *schema.Resource {
 		},
 		SchemaVersion: 2,
 	}
+	// nolint should be a bigger context-aware refactor
 	r.Create = func(d *schema.ResourceData, m interface{}) error {
 		err := preprocessS3Mount(d, m)
 		if err != nil {
@@ -106,7 +107,7 @@ func preprocessS3Mount(d *schema.ResourceData, m interface{}) error {
 		if err != nil {
 			return err
 		}
-		d.Set("cluster_id", cluster.ClusterID)
+		return d.Set("cluster_id", cluster.ClusterID)
 	}
 	return nil
 }

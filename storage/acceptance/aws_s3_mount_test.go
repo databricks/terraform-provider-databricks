@@ -9,7 +9,7 @@ import (
 	"github.com/databrickslabs/databricks-terraform/compute"
 	"github.com/databrickslabs/databricks-terraform/internal/acceptance"
 	. "github.com/databrickslabs/databricks-terraform/storage"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/databrickslabs/databricks-terraform/internal/qa"

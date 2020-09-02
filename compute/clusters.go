@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/databrickslabs/databricks-terraform/common"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
 func (a ClustersAPI) defaultTimeout() time.Duration {
@@ -149,6 +149,7 @@ func wrapMissingClusterError(err error, id string) error {
 
 func (a ClustersAPI) waitForClusterStatus(clusterID string, desired ClusterState) (result ClusterInfo, err error) {
 	// this tangles client with terraform more, which is inevitable
+	// nolint should be a bigger context-aware refactor
 	return result, resource.Retry(a.defaultTimeout(), func() *resource.RetryError {
 		clusterInfo, err := a.Get(clusterID)
 		if ae, ok := err.(common.APIError); ok && ae.IsMissing() {

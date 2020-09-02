@@ -6,7 +6,7 @@ import (
 	"net/http"
 
 	"github.com/databrickslabs/databricks-terraform/common"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 // InstanceProfileInfo contains the ARN for aws instance profiles
@@ -79,7 +79,7 @@ func ResourceInstanceProfile() *schema.Resource {
 		Read:   resourceInstanceProfileRead,
 		Delete: resourceInstanceProfileDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"instance_profile_arn": {

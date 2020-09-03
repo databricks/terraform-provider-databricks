@@ -222,3 +222,7 @@ provider "databricks" {}
 7. Will check for `~/.databrickscfg` file in the home directory, will fail otherwise.
 8. Will check for `profile` presence and try picking from that file, will fail otherwise.
 9. Will check for `host` and `token` or `username`+`password` combination, will fail if nothing of these exist.
+
+## Project Support
+
+**Important:** Projects in the `databrickslabs` GitHub account, including the Databricks Terraform Provider, are not formally supported by Databricks. They are maintained by Databricks Field teams and provided as-is. There is no service level agreement (SLA). Databricks makes no guarantees of any kind. If you discover an issue with the provider, please file a GitHub Issue on the repo, and it will be reviewed by project maintainers as time permits.

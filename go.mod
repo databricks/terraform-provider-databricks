@@ -21,6 +21,5 @@ require (
 	github.com/smartystreets/goconvey v1.6.4 // indirect
 	github.com/stretchr/testify v1.6.1
 	golang.org/x/sys v0.0.0-20200828194041-157a740278f4 // indirect
-	gopkg.in/check.v1 v1.0.0-20190902080502-41f04d3bba15 // indirect
-	gopkg.in/ini.v1 v1.60.2
+	gopkg.in/ini.v1 v1.61.0
 )

@@ -1,23 +1,23 @@
 # databricks_cluster_policy Resource
 
-This resource creates a cluster policy, which limits the ability to create clusters based on a set of rules. The policy rules limit the attributes or attribute values available for cluster creation. Cluster policies have ACLs that limit their use to specific users and groups. Only admin users can create, edit, and delete policies. Admin users also have access to all policies.
+This resource creates a [cluster](cluster.md) policy, which limits the ability to create clusters based on a set of rules. The policy rules limit the attributes or attribute values available for [cluster](cluster.md) creation. [cluster](cluster.md) policies have ACLs that limit their use to specific users and groups. Only admin users can create, edit, and delete policies. Admin users also have access to all policies.
 
 Cluster policies let you:
 
 * Limit users to create clusters with prescribed settings.
 * Simplify the user interface and enable more users to create their own clusters (by fixing and hiding some values).
-* Control cost by limiting per cluster maximum cost (by setting limits on attributes whose values contribute to hourly price).
+* Control cost by limiting per [cluster](cluster.md) maximum cost (by setting limits on attributes whose values contribute to hourly price).
 
 Cluster policy permissions limit which policies a user can select in the Policy drop-down when the user creates a cluster:
 
 * If no policies have been created in the workspace, the Policy drop-down does not display.
-* A user who has cluster create permission can select the Free form policy and create fully-configurable clusters.
-* A user who has both cluster create permission and access to cluster policies can select the Free form policy and policies they have access to.
-* A user that has access to only cluster policies, can select the policies they have access to.
+* A user who has [cluster](cluster.md) create permission can select the `Free form` policy and create fully-configurable clusters.
+* A user who has both [cluster](cluster.md) create permission and access to [cluster](cluster.md) policies can select the Free form policy and policies they have access to.
+* A user that has access to only [cluster](cluster.md) policies, can select the policies they have access to.
 
 ## Example Usage
 
-Let us take a look at an example of how you can manage two teams: Marketing and Data Engineering. In the following scenario we want the marketing team to have a really good query experience, so we enabled delta cache for them. On the other hand we want the data engineering team to be able to utilize bigger clusters so we increased the dbus per hour that they can spend. This strategy allows your marketing users and data engineering users to use Databricks in a self service manner but have a different experience in regards to security and performance. And down the line if you need to add more global settings you can propagate them through the “base cluster policy”.
+Let us take a look at an example of how you can manage two teams: Marketing and Data Engineering. In the following scenario we want the marketing team to have a really good query experience, so we enabled delta cache for them. On the other hand we want the data engineering team to be able to utilize bigger clusters so we increased the dbus per hour that they can spend. This strategy allows your marketing users and data engineering users to use Databricks in a self service manner but have a different experience in regards to security and performance. And down the line if you need to add more global settings you can propagate them through the “base [cluster](cluster.md) policy”.
 
 `modules/base-cluster-policy/main.tf` could look like:
 

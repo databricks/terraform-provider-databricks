@@ -8,7 +8,7 @@ Please follow this [complete runnable example](https://github.com/databrickslabs
 
 ## Example Usage
 
-**This resource has evolving API, which may change in future versions of provider.**
+-> **Note** This resource has evolving API, which may change in future versions of provider.
 
 ```hcl
 resource "aws_iam_role" "cross_account_role" {

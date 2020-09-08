@@ -27,6 +27,9 @@ func ResourceScimUser() *schema.Resource {
 		Update: resourceScimUserUpdate,
 		Read:   resourceScimUserRead,
 		Delete: resourceScimUserDelete,
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
 		Schema: internal.StructToSchema(scimUser{}, func(
 			s map[string]*schema.Schema) map[string]*schema.Schema {
 			s["user_name"].ForceNew = true

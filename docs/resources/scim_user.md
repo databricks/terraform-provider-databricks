@@ -1,6 +1,6 @@
 # databricks_scim_user Resource
 
-**This resource has evolving API, which may change in future versions of provider.**
+-> **Note** This resource has evolving API, which may change in future versions of provider.
 
 Directly creates user within databricks workspace. We're not recommending extensive use of this resource, because it's way more manageable to create few [databricks_group](group.md) instances with all related permissions to them and let Identity provider use SCIM provisioning to populate users into those groups:
 

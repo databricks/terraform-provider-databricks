@@ -1,8 +1,6 @@
 # databricks_permissions Resource
 
-**This resource has evolving API, which may change in future versions of provider.**
-
-**This feature is not available to all customers. Please contact [sales@databricks.com](mailto:sales@databricks.com) in order to enable this feature.**
+-> **Note** This feature is not available to all customers. Please contact [sales@databricks.com](mailto:sales@databricks.com) in order to enable this feature. This resource has evolving API, which may change in future versions of provider.
 
 This resource allows you to generically manage permissions for other resources in Databricks workspace. 
 

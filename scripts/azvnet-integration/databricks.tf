@@ -92,18 +92,17 @@ resource "databricks_cluster" "shared_autoscaling" {
     "spark.databricks.io.cache.maxMetaDataCache" : "1g"
   }
 
-#TODO: bug installing libs
-  # library {
-  #   pypi {
-  #     package = "fbprophet==0.6"
-  #   }
-  # }
+  library {
+    pypi {
+      package = "fbprophet==0.6"
+    }
+  }
 
-  # library {
-  #   maven {
-  #     coordinates = "com.amazon.deequ:deequ:1.0.4"
-  #   }
-  # }
+  library {
+    maven {
+      coordinates = "com.amazon.deequ:deequ:1.0.4"
+    }
+  }
 
   cluster_log_conf {
     dbfs {

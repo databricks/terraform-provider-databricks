@@ -1,8 +1,8 @@
 # databricks_azure_adls_gen1_mount Resource
 
-**This resource has evolving API, which may change in future versions of provider.**
+-> **Note** This resource has evolving API, which may change in future versions of provider.
 
-This resource will mount your ADLS v1 bucket on `dbfs:/mnt/yourname`. It is important to understand that this will start up the cluster if the cluster is terminated. The read and refresh terraform command will require a cluster and make take some time to validate mount. If cluster_id is not specified, it will create the smallest possible cluster called `terraform-mount` for shortest possible amount of time. 
+This resource will mount your ADLS v1 bucket on `dbfs:/mnt/yourname`. It is important to understand that this will start up the [cluster](cluster.md) if the cluster is terminated. The read and refresh terraform command will require a cluster and make take some time to validate mount. If cluster_id is not specified, it will create the smallest possible cluster called `terraform-mount` for shortest possible amount of time. 
 
 
 ## Example Usage

@@ -1,10 +1,8 @@
 # databricks_group_member Resource
 
-This resource allows you to attach members to groups created by the `databricks_group` resource.
+This resource allows you to attach members to groups created by the [group](group.md) resource.
 
--> **Note** Please only use this resource in conjunction with the `databricks_group` resource and **not** the `databricks_scim_group` resource.
- 
--> **Note** You must be a Databricks administrator API token to make SCIM api calls. 
+-> **Note** Please only use this resource in conjunction with the [group](group.md) resource and **not** the `databricks_scim_group` resource.
 
 ## Example Usage
 
@@ -31,9 +29,8 @@ resource "databricks_group_member" "my_member_b" {
 
 The following arguments are supported:
 
-* `group_id` - **(Required)** This is the id of the `databricks_group` resource.
-
-* `member_id` - **(Required)** This is the id of the `databricks_group` or `databricks_scim_user` resource. 
+* `group_id` - (Required) This is the id of the [group](group.md) resource.
+* `member_id` - (Required) This is the id of the [group](group.md) or `databricks_scim_user` resource. 
 >Members can be groups or users created by the scim api.
 
 ## Attribute Reference

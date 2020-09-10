@@ -1,7 +1,6 @@
 package access
 
 import (
-	"log"
 	"testing"
 
 	"github.com/databrickslabs/databricks-terraform/internal/qa"
@@ -30,7 +29,6 @@ func TestDataAwsCrossAccountRolicy_WithPassRoles(t *testing.T) {
 	}.Apply(t)
 	assert.NoError(t, err)
 	j := d.Get("json")
-	log.Println(len(j.(string)))
 	assert.Lenf(t, j, 2895, "Strange length for policy: %s", j)
 }
 

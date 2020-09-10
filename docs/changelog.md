@@ -1,5 +1,15 @@
 # Version changelog
 
+## 0.2.5
+
+* Added support for [local disk encryption](https://github.com/databrickslabs/terraform-provider-databricks/pull/313)
+* Added more reliable [indication about Azure environment](https://github.com/databrickslabs/terraform-provider-databricks/pull/312) and fixed azure auth issue for Terraform 0.13
+* Updated [databricks_aws_crossaccount_policy](https://github.com/databrickslabs/terraform-provider-databricks/pull/311) to latest rules
+* Fixed missing importers for [databricks_scim_*](https://github.com/databrickslabs/terraform-provider-databricks/pull/290) resources
+* Updated [Terraform Plugin SDK](https://github.com/databrickslabs/terraform-provider-databricks/pull/279) to latest version along with transitive dependencies.
+* Added support disclaimers
+* Increased code coverage to 65%
+
 ## 0.2.4
 
 * Added [Azure CLI authentication](https://github.com/databrickslabs/terraform-provider-databricks/blob/master/docs/index.md#authenticating-with-azure-cli) to bridge the gap of local development workflows and let more people use the provider.

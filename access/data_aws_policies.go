@@ -99,6 +99,7 @@ func DataAwsCrossAccountRolicy() *schema.Resource {
 							"ec2:DescribeNatGateways",
 							"ec2:DisassociateRouteTable",
 							"ec2:ReleaseAddress",
+							"ec2:DetachVolume",
 						},
 						Resources: "*",
 					},

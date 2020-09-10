@@ -64,7 +64,7 @@ func CommonInstancePoolID() string {
 			MaxCapacity:                        10,
 			IdleInstanceAutoTerminationMinutes: 15,
 		}
-		if !client.IsUsingAzureAuth() {
+		if !client.IsAzure() {
 			instancePool.AwsAttributes = &InstancePoolAwsAttributes{
 				Availability: AwsAvailabilitySpot,
 			}

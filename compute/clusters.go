@@ -230,9 +230,7 @@ func (a ClustersAPI) Unpin(clusterID string) error {
 // up to 70 of the most recently terminated interactive clusters in the past 30 days,
 // and up to 30 of the most recently terminated job clusters in the past 30 days
 func (a ClustersAPI) List() ([]ClusterInfo, error) {
-	var clusterList = struct {
-		Clusters []ClusterInfo `json:"clusters,omitempty" url:"clusters,omitempty"`
-	}{}
+	var clusterList ClusterList
 	err := a.client.Get("/clusters/list", nil, &clusterList)
 	return clusterList.Clusters, err
 }
@@ -281,7 +279,7 @@ func (a ClustersAPI) GetOrCreateRunningCluster(name string, custom ...Cluster) (
 		NodeTypeID:             smallestNodeType,
 		AutoterminationMinutes: 10,
 	}
-	if !a.client.IsUsingAzureAuth() {
+	if !a.client.IsAzure() {
 		r.AwsAttributes = &AwsAttributes{
 			Availability: "SPOT",
 		}
@@ -296,7 +294,7 @@ func (a ClustersAPI) GetOrCreateRunningCluster(name string, custom ...Cluster) (
 func (a ClustersAPI) GetSmallestNodeTypeWithStorage() string {
 	nodeTypes, err := a.ListNodeTypes()
 	if err != nil || len(nodeTypes) == 0 {
-		if a.client.IsUsingAzureAuth() {
+		if a.client.IsAzure() {
 			return "Standard_D3_v2"
 		}
 		return "i3.xlarge"

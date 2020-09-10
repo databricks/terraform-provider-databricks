@@ -247,6 +247,11 @@ type Cluster struct {
 	IdempotencyToken string `json:"idempotency_token,omitempty"`
 }
 
+// ClusterList shows existing clusters
+type ClusterList struct {
+	Clusters []ClusterInfo `json:"clusters,omitempty"`
+}
+
 // ClusterInfo contains the information when getting cluster info from the get request.
 type ClusterInfo struct {
 	NumWorkers             int32              `json:"num_workers,omitempty"`

@@ -29,9 +29,10 @@ type providerConfigTest struct {
 	azureSubscriptionID      string
 	azureWorkspaceResourceID string
 	env                      map[string]string
-	errPrefix                string
-	hasToken                 string
-	hasHost                  string
+	assertError              string
+	assertToken              string
+	assertHost               string
+	assertAzure              bool
 }
 
 func (tt providerConfigTest) rawConfig() map[string]interface{} {
@@ -81,44 +82,44 @@ func (tt providerConfigTest) rawConfig() map[string]interface{} {
 func TestProviderConfigurationOptions(t *testing.T) {
 	tests := []providerConfigTest{
 		{
-			errPrefix: "Authentication is not configured for provider",
+			assertError: "Authentication is not configured for provider",
 		},
 		{
 			env: map[string]string{
 				"DATABRICKS_HOST": "x",
 			},
-			errPrefix: "Authentication is not configured for provider",
+			assertError: "Authentication is not configured for provider",
 		},
 		{
 			env: map[string]string{
 				"DATABRICKS_TOKEN": "x",
 			},
-			errPrefix: "Host is empty, but is required by token",
+			assertError: "Host is empty, but is required by token",
 		},
 		{
 			env: map[string]string{
 				"DATABRICKS_HOST":  "x",
 				"DATABRICKS_TOKEN": "x",
 			},
-			hasToken: "x",
-			hasHost:  "https://x",
+			assertToken: "x",
+			assertHost:  "https://x",
 		},
 		{
 			host: "https://x",
 			env: map[string]string{
 				"DATABRICKS_TOKEN": "x",
 			},
-			hasToken: "x",
-			hasHost:  "https://x",
+			assertToken: "x",
+			assertHost:  "https://x",
 		},
 		{
 			env: map[string]string{
 				"DATABRICKS_USERNAME": "x",
 				"DATABRICKS_PASSWORD": "x",
 			},
-			errPrefix: "Host is empty, but is required by basic_auth",
-			hasToken:  "x",
-			hasHost:   "https://x",
+			assertError: "Host is empty, but is required by basic_auth",
+			assertToken: "x",
+			assertHost:  "https://x",
 		},
 		{
 			env: map[string]string{
@@ -126,8 +127,8 @@ func TestProviderConfigurationOptions(t *testing.T) {
 				"DATABRICKS_USERNAME": "x",
 				"DATABRICKS_PASSWORD": "x",
 			},
-			hasToken: "eDp4",
-			hasHost:  "https://x",
+			assertToken: "eDp4",
+			assertHost:  "https://x",
 		},
 		{
 			host: "y",
@@ -136,8 +137,8 @@ func TestProviderConfigurationOptions(t *testing.T) {
 				"DATABRICKS_USERNAME": "x",
 				"DATABRICKS_PASSWORD": "x",
 			},
-			hasToken: "eDp4",
-			hasHost:  "https://y",
+			assertToken: "eDp4",
+			assertHost:  "https://y",
 		},
 		{
 			host:     "y",
@@ -145,15 +146,23 @@ func TestProviderConfigurationOptions(t *testing.T) {
 			env: map[string]string{
 				"DATABRICKS_PASSWORD": "x",
 			},
-			hasToken: "eDp4",
-			hasHost:  "https://y",
+			assertToken: "eDp4",
+			assertHost:  "https://y",
 		},
 		{
-			host:     "y",
-			username: "x",
-			password: "x",
-			hasToken: "eDp4",
-			hasHost:  "https://y",
+			host:        "y",
+			username:    "x",
+			password:    "x",
+			assertToken: "eDp4",
+			assertHost:  "https://y",
+		},
+		{
+			// Azure hostnames can support host+token auth, as usual
+			host:        "https://adb-xxx.y.azuredatabricks.net/",
+			token:       "y",
+			assertAzure: true,
+			assertHost:  "https://adb-xxx.y.azuredatabricks.net/",
+			assertToken: "y",
 		},
 		{
 			env: map[string]string{
@@ -162,21 +171,21 @@ func TestProviderConfigurationOptions(t *testing.T) {
 				"DATABRICKS_USERNAME": "x",
 				"DATABRICKS_PASSWORD": "x",
 			},
-			errPrefix: "More than one authorization method configured: password and token",
+			assertError: "More than one authorization method configured: password and token",
 		},
 		{
 			env: map[string]string{
 				"CONFIG_FILE": "x",
 			},
-			errPrefix: "Authentication is not configured for provider",
+			assertError: "Authentication is not configured for provider",
 		},
 		{
 			// loading with DEFAULT profile in databrickscfs
 			env: map[string]string{
 				"HOME": "../common/testdata",
 			},
-			hasHost:  "https://dbc-XXXXXXXX-YYYY.cloud.databricks.com/",
-			hasToken: "PT0+IC9kZXYvdXJhbmRvbSA8PT0KYFZ",
+			assertHost:  "https://dbc-XXXXXXXX-YYYY.cloud.databricks.com/",
+			assertToken: "PT0+IC9kZXYvdXJhbmRvbSA8PT0KYFZ",
 		},
 		{
 			// loading with nohost profile in databrickscfs
@@ -184,7 +193,7 @@ func TestProviderConfigurationOptions(t *testing.T) {
 				"HOME":                      "../common/testdata",
 				"DATABRICKS_CONFIG_PROFILE": "nohost",
 			},
-			errPrefix: "config file ../common/testdata/.databrickscfg is corrupt: cannot find host in nohost profile",
+			assertError: "config file ../common/testdata/.databrickscfg is corrupt: cannot find host in nohost profile",
 		},
 		{
 			env: map[string]string{
@@ -192,7 +201,7 @@ func TestProviderConfigurationOptions(t *testing.T) {
 				"DATABRICKS_CONFIG_PROFILE": "nohost",
 				"HOME":                      "../common/testdata",
 			},
-			errPrefix: "More than one authorization method configured: config profile and token",
+			assertError: "More than one authorization method configured: config profile and token",
 		},
 		{
 			env: map[string]string{
@@ -200,7 +209,7 @@ func TestProviderConfigurationOptions(t *testing.T) {
 				"DATABRICKS_CONFIG_PROFILE": "nohost",
 				"HOME":                      "../common/testdata",
 			},
-			errPrefix: "More than one authorization method configured: config profile and password",
+			assertError: "More than one authorization method configured: config profile and password",
 		},
 		{
 			// this test will skip ensureWorkspaceUrl
@@ -211,8 +220,9 @@ func TestProviderConfigurationOptions(t *testing.T) {
 				"PATH": "../common/testdata:/bin",
 				"HOME": "../common/testdata",
 			},
-			hasHost:  "https://x",
-			hasToken: "",
+			assertAzure: true,
+			assertHost:  "https://x",
+			assertToken: "",
 		},
 		{
 			azureWorkspaceResourceID: "/a/b/c",
@@ -222,7 +232,7 @@ func TestProviderConfigurationOptions(t *testing.T) {
 				"FAIL": "yes",
 				"HOME": "../common/testdata",
 			},
-			errPrefix: "Invoking Azure CLI failed with the following error: This is just a failing script.",
+			assertError: "Invoking Azure CLI failed with the following error: This is just a failing script.",
 		},
 		{
 			// `az` not installed, which is expected for deployers on other clouds...
@@ -231,7 +241,7 @@ func TestProviderConfigurationOptions(t *testing.T) {
 				"PATH": "/bin",
 				"HOME": "../common/testdata",
 			},
-			errPrefix: "Most likely Azure CLI is not installed.",
+			assertError: "Most likely Azure CLI is not installed.",
 		},
 		{
 			azureWorkspaceResourceID: "/a/b/c",
@@ -241,7 +251,7 @@ func TestProviderConfigurationOptions(t *testing.T) {
 				"PATH": "../common/testdata:/bin",
 				"HOME": "../common/testdata",
 			},
-			errPrefix: "More than one authorization method configured: azure and token",
+			assertError: "More than one authorization method configured: azure and token",
 		},
 		{
 			// omit request to management endpoint to get workspace properties
@@ -252,7 +262,8 @@ func TestProviderConfigurationOptions(t *testing.T) {
 				"PATH": "../common/testdata:/bin",
 				"HOME": "../common/testdata",
 			},
-			hasHost: "https://x",
+			assertAzure: true,
+			assertHost:  "https://x",
 		},
 		{
 			host:                     "x",
@@ -263,7 +274,7 @@ func TestProviderConfigurationOptions(t *testing.T) {
 				"HOME":                "../common/testdata",
 				"DATABRICKS_USERNAME": "x",
 			},
-			errPrefix: "More than one authorization method configured: azure and password",
+			assertError: "More than one authorization method configured: azure and password",
 		},
 		{
 			azureWorkspaceResourceID: "/a/b/c",
@@ -273,24 +284,41 @@ func TestProviderConfigurationOptions(t *testing.T) {
 			env: map[string]string{
 				"HOME": "../common/testdata",
 			},
-			hasHost:  "",
-			hasToken: "",
+			assertAzure: true,
+			assertHost:  "",
+			assertToken: "",
+		},
+		{
+			// https://github.com/databrickslabs/terraform-provider-databricks/issues/294
+			azureResourceGroup: "b",
+			azureWorkspaceName: "c",
+			env: map[string]string{
+				"ARM_CLIENT_ID":       "x",
+				"ARM_CLIENT_SECRET":   "y",
+				"ARM_SUBSCRIPTION_ID": "q",
+				"ARM_TENANT_ID":       "z",
+				"HOME":                "../common/testdata",
+			},
+			assertAzure: true,
+			assertHost:  "",
+			assertToken: "",
 		},
 	}
 	for _, tt := range tests {
 		t.Run(fmt.Sprintf("config:%v env:%v", tt.rawConfig(), tt.env), func(t *testing.T) {
 			c, err := configureProviderAndReturnClient(t, tt)
-			if tt.errPrefix != "" {
-				require.NotNilf(t, err, "Expected to have %s error", tt.errPrefix)
-				require.True(t, strings.HasPrefix(err.Error(), tt.errPrefix), err)
+			if tt.assertError != "" {
+				require.NotNilf(t, err, "Expected to have %s error", tt.assertError)
+				require.True(t, strings.HasPrefix(err.Error(), tt.assertError), err)
 				return
 			}
 			if err != nil {
 				require.NoError(t, err)
 				return
 			}
-			assert.Equal(t, tt.hasToken, c.Token)
-			assert.Equal(t, tt.hasHost, c.Host)
+			assert.Equal(t, tt.assertAzure, c.IsAzure())
+			assert.Equal(t, tt.assertToken, c.Token)
+			assert.Equal(t, tt.assertHost, c.Host)
 		})
 	}
 }

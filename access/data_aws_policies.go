@@ -89,6 +89,16 @@ func DataAwsCrossAccountRolicy() *schema.Resource {
 							"ec2:CreatePlacementGroup",
 							"ec2:DeletePlacementGroup",
 							"ec2:DescribePlacementGroups",
+							"ec2:DeleteVpcEndpoints,"
+							"ec2:DeleteNatGateway,"
+							"ec2:AllocateAddress,"
+							"ec2:CreateNatGateway,"
+							"ec2:ReleaseAddress,"
+							"ec2:CreateVpcEndpoint,"
+							"ec2:CreateRouteTable,"
+							"ec2:DeleteDhcpOptions,"
+							"ec2:DisassociateRouteTable,"
+							"ec2:DescribeNatGateways,"
 						},
 						Resources: "*",
 					},

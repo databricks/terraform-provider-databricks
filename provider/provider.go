@@ -220,7 +220,9 @@ func DatabricksProvider() *schema.Provider {
 				Description: "Create ephemeral PAT tokens also for AZ CLI authenticated requests",
 			},
 			"azure_auth": {
-				Type:     schema.TypeMap,
+				// TODO: tf13 - azure_auth: TypeMap with Elem *Resource not supported,use TypeList/TypeSet
+				Type:     schema.TypeList,
+				MaxItems: 1,
 				Optional: true,
 				Deprecated: "azure_auth {} block is deprecated in favor of azure_* properties with more previctable behavior. " +
 					"This configuration attribute will be removed in 0.3.",

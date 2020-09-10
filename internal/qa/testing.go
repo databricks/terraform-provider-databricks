@@ -192,13 +192,18 @@ func HttpFixtureClient(t *testing.T, fixtures []HTTPFixture) (client *common.Dat
 					assert.JSONEq(t, string(jsonStr), buf.String(), "json strings do not match")
 				}
 				if fixture.Response != nil {
-					responseBytes, err := json.Marshal(fixture.Response)
-					if err != nil {
+					if alreadyJSON, ok := fixture.Response.(string); ok {
+						_, err = rw.Write([]byte(alreadyJSON))
 						assert.NoError(t, err, err)
-						t.FailNow()
+					} else {
+						responseBytes, err := json.Marshal(fixture.Response)
+						if err != nil {
+							assert.NoError(t, err, err)
+							t.FailNow()
+						}
+						_, err = rw.Write(responseBytes)
+						assert.NoError(t, err, err)
 					}
-					_, err = rw.Write(responseBytes)
-					assert.NoError(t, err, err)
 				}
 				found = true
 				// Reset the request if it is already used
@@ -371,7 +376,7 @@ func compare(t *testing.T, a interface{}, b interface{}) {
 
 // GetCloudInstanceType gives common minimal instance type, depending on a cloud
 func GetCloudInstanceType(c *common.DatabricksClient) string {
-	if c.IsUsingAzureAuth() {
+	if c.IsAzure() {
 		return "Standard_DS3_v2"
 	}
 	// TODO: create a method on ClustersAPI to give

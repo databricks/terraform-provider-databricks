@@ -210,7 +210,7 @@ func (c *DatabricksClient) configureHTTPCLient() {
 	}
 }
 
-// IsUsingAzureAuth returns true if Azure authentication is configured, this is not a valid check to determine if we are running on Azure
-func (c *DatabricksClient) IsUsingAzureAuth() bool {
-	return c.AzureAuth.resourceID() != ""
+// IsAzure returns true if client is configured for Azure Databricks - either by using AAD auth or with host+token combination
+func (c *DatabricksClient) IsAzure() bool {
+	return c.AzureAuth.resourceID() != "" || strings.Contains(c.Host, "azuredatabricks.net")
 }

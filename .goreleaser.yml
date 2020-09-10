@@ -10,7 +10,7 @@ builds:
   binary: terraform-provider-databricks_{{ .Tag }}
   ldflags:
     # sets client version, not the default main.version
-    - '-X "common.version={{ replace .Version "v" "" }}"'
+    - '-X github.com/databrickslabs/databricks-terraform/common.version={{ replace .Version "v" "" }}'
   goos:
     - windows
     - linux

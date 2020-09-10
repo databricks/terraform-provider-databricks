@@ -40,30 +40,6 @@ func TestAccClusterPolicyResourceFullLifecycle(t *testing.T) {
 				Check: resource.TestCheckResourceAttr("databricks_cluster_policy.external_metastore",
 					"name", fmt.Sprintf("Terraform policy %s", randomName+": UPDATED")),
 			},
-			{
-				Config:  testExternalMetastore(randomName + ": UPDATED"),
-				Destroy: true,
-				Check: acceptance.ResourceCheck("databricks_cluster_policy.external_metastore",
-					func(client *common.DatabricksClient, id string) error {
-						resp, err := NewClusterPoliciesAPI(client).Get(id)
-						if err == nil {
-							return fmt.Errorf("Resource must have been deleted but: %v", resp)
-						}
-						return nil
-					}),
-			},
-			{
-				// and create it again
-				Config: testExternalMetastore(randomName + ": UPDATED"),
-				Check: acceptance.ResourceCheck("databricks_cluster_policy.external_metastore",
-					func(client *common.DatabricksClient, id string) error {
-						_, err := NewClusterPoliciesAPI(client).Get(id)
-						if err != nil {
-							return err
-						}
-						return nil
-					}),
-			},
 		},
 	})
 }

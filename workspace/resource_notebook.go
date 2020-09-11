@@ -13,11 +13,11 @@ import (
 
 	"github.com/databrickslabs/databricks-terraform/common"
 	"github.com/databrickslabs/databricks-terraform/internal"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/pkg/errors"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 // Language is a custom type for language types in Databricks notebooks
@@ -370,6 +370,7 @@ func resourceNotebookDelete(d *schema.ResourceData, m interface{}) error {
 	id := d.Id()
 	client := m.(*common.DatabricksClient)
 
+	// nolint should be a bigger context-aware refactor
 	return resource.Retry(5*time.Minute, func() *resource.RetryError {
 		err := NewNotebooksAPI(client).Delete(id, true)
 		if err == nil {

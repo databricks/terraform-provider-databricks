@@ -3,11 +3,11 @@ package storage
 import (
 	"fmt"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
-// AzureBlobMount describes the object for a azure blob storage mount
+// AzureBlobMount describes the object for a azure blob storage mount - a.k.a. NativeAzureFileSystem
 type AzureBlobMount struct {
 	ContainerName      string `json:"container_name"`
 	StorageAccountName string `json:"storage_account_name"`

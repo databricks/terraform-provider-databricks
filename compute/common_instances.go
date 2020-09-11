@@ -8,7 +8,7 @@ import (
 	"sync"
 
 	"github.com/databrickslabs/databricks-terraform/common"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 )
 
 var (
@@ -41,6 +41,7 @@ func CommonInstancePoolID() string {
 	oncePool.Do(func() { // atomic
 		log.Printf("[INFO] Initializing common instance pool")
 		instancePools := NewInstancePoolsAPI(client)
+		clusters := NewClustersAPI(client)
 		currentUserPool := fmt.Sprintf("Terraform Integration Test by %s", os.Getenv("USER"))
 		pools, err := instancePools.List()
 		if err != nil {
@@ -58,19 +59,12 @@ func CommonInstancePoolID() string {
 		}
 		instancePool := InstancePool{
 			PreloadedSparkVersions:             []string{CommonRuntimeVersion()},
-			NodeTypeID:                         CommonInstanceType(),
+			NodeTypeID:                         clusters.GetSmallestNodeTypeWithStorage(),
 			InstancePoolName:                   currentUserPool,
 			MaxCapacity:                        10,
 			IdleInstanceAutoTerminationMinutes: 15,
 		}
 		if !client.IsAzure() {
-			instancePool.DiskSpec = &InstancePoolDiskSpec{
-				DiskType: &InstancePoolDiskType{
-					EbsVolumeType: EbsVolumeTypeGeneralPurposeSsd,
-				},
-				DiskCount: 1,
-				DiskSize:  32,
-			}
 			instancePool.AwsAttributes = &InstancePoolAwsAttributes{
 				Availability: AwsAvailabilitySpot,
 			}
@@ -87,10 +81,18 @@ func CommonInstancePoolID() string {
 	return commonInstancePool.InstancePoolID
 }
 
+// CommonEnvironmentClientWithRealCommandExecutor is good for internal tests
+func CommonEnvironmentClientWithRealCommandExecutor() *common.DatabricksClient {
+	client := common.CommonEnvironmentClient()
+	client.WithCommandExecutor(NewCommandsAPI(client))
+	return client
+}
+
 // NewTinyClusterInCommonPool creates new cluster for short-lived purposes
 func NewTinyClusterInCommonPool() (c ClusterInfo, err error) {
 	randomName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
-	c, err = ClustersAPI{common.CommonEnvironmentClient()}.Create(Cluster{
+	clusters := NewClustersAPI(CommonEnvironmentClientWithRealCommandExecutor())
+	c, err = clusters.Create(Cluster{
 		NumWorkers:             1,
 		ClusterName:            "Terraform " + randomName,
 		SparkVersion:           CommonRuntimeVersion(),
@@ -104,9 +106,9 @@ func NewTinyClusterInCommonPool() (c ClusterInfo, err error) {
 // NewTinyClusterInCommonPoolPossiblyReused is recommended to be used for testing only
 func NewTinyClusterInCommonPoolPossiblyReused() (c ClusterInfo) {
 	randomName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
-	client := common.CommonEnvironmentClient()
 	currentCluster := "TerraformIntegrationTest"
-	c, err := NewClustersAPI(client).GetOrCreateRunningCluster(currentCluster, Cluster{
+	clusters := NewClustersAPI(CommonEnvironmentClientWithRealCommandExecutor())
+	c, err := clusters.GetOrCreateRunningCluster(currentCluster, Cluster{
 		NumWorkers:             1,
 		ClusterName:            currentCluster,
 		SparkVersion:           CommonRuntimeVersion(),

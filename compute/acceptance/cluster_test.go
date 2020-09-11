@@ -10,9 +10,9 @@ import (
 	"github.com/databrickslabs/databricks-terraform/common"
 	. "github.com/databrickslabs/databricks-terraform/compute"
 	"github.com/databrickslabs/databricks-terraform/internal/acceptance"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/stretchr/testify/assert"
 )
 
 type cloudSpecificHCLStatements struct {
@@ -86,6 +86,9 @@ resource "databricks_instance_pool" "%[1]s" {
 }
 
 func getAwsAttributes(attributesMap map[string]string) string {
+	if os.Getenv("CLOUD_ENV") != "AWS" {
+		return ""
+	}
 	var awsAttr bytes.Buffer
 	awsAttr.WriteString("aws_attributes {\n")
 	for attr, value := range attributesMap {
@@ -111,12 +114,12 @@ func getCommonLibraries() string {
 		package = "faker"
 		repo = "https://pypi.org"
 	}
-	libraries {
+	library {
 		pypi {
 			package = "networkx"
 		}
 	}
-	libraries {
+	library {
 		maven {
 			coordinates = "com.microsoft.azure:azure-eventhubs-spark_2.11:2.3.7"
 		}
@@ -152,12 +155,6 @@ func (c *clusterHCLBuilder) withInstancePool(instancePoolID string) *clusterHCLB
 
 func (c *clusterHCLBuilder) withDefaultLibraries() *clusterHCLBuilder {
 	c.libraries = getCommonLibraries()
-	return c
-}
-
-func (c *clusterHCLBuilder) withCloudNodeType() *clusterHCLBuilder {
-	cloudHCLStatements := getCloudSpecificHCLStatements()
-	c.nodeTypeId = cloudHCLStatements.nodeTypeId
 	return c
 }
 
@@ -245,7 +242,6 @@ func TestAwsAccClusterResource_CreateClusterViaInstancePool(t *testing.T) {
 	randomStr := acctest.RandStringFromCharSet(5, acctest.CharSetAlphaNum)
 	instanceProfileRName := "my-tf-test-instance-profile"
 	instanceProfile := fmt.Sprintf("arn:aws:iam::999999999999:instance-profile/tf-test-%s", randomStr)
-	var clusterInfo ClusterInfo
 	awsAttrCluster := map[string]string{
 		"instance_profile_arn": fmt.Sprintf("${databricks_instance_profile.%s.id}", instanceProfileRName),
 	}
@@ -275,19 +271,19 @@ func TestAwsAccClusterResource_CreateClusterViaInstancePool(t *testing.T) {
 			{
 				Config: clusterNoInstanceProfileConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testClusterCheckAndTerminateForFutureTests(randomClusterId, &clusterInfo, t),
+					testClusterCheckAndTerminateForFutureTests(randomClusterId, t),
 				),
 			},
 			{
 				Config: clusterWithInstanceProfileConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testClusterCheckAndTerminateForFutureTests(randomClusterId, &clusterInfo, t),
+					testClusterCheckAndTerminateForFutureTests(randomClusterId, t),
 				),
 			},
 			{
 				Config: clusterNoInstanceProfileConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testClusterCheckAndTerminateForFutureTests(randomClusterId, &clusterInfo, t),
+					testClusterCheckAndTerminateForFutureTests(randomClusterId, t),
 				),
 				PlanOnly:           true,
 				ExpectNonEmptyPlan: true,
@@ -295,7 +291,7 @@ func TestAwsAccClusterResource_CreateClusterViaInstancePool(t *testing.T) {
 			{
 				Config: clusterNoInstanceProfileConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testClusterCheckAndTerminateForFutureTests(randomClusterId, &clusterInfo, t),
+					testClusterCheckAndTerminateForFutureTests(randomClusterId, t),
 				),
 			},
 		},
@@ -303,26 +299,18 @@ func TestAwsAccClusterResource_CreateClusterViaInstancePool(t *testing.T) {
 }
 
 func TestAzureAccClusterResource_CreateClusterViaInstancePool(t *testing.T) {
-	var clusterInfo ClusterInfo
-	randomInstancePoolName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
-	randomInstancePoolInterpolation := fmt.Sprintf("databricks_instance_pool.%s.id", randomInstancePoolName)
-	randomClusterSuffix := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
-	randomClusterName := fmt.Sprintf("cluster-%s", randomClusterSuffix)
-	randomClusterId := fmt.Sprintf("databricks_cluster.%s", randomClusterName)
-	defaultAzureInstancePoolClusterTest :=
-		newInstancePoolHCLBuilder(randomInstancePoolName).
-			withCloudEnv().
-			build() +
-			newClusterHCLBuilder(randomClusterName).
-				withInstancePool(randomInstancePoolInterpolation).
-				build()
-
+	randomInstancePoolName := fmt.Sprintf("pool_%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+	randomClusterName := fmt.Sprintf("cluster_%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+	defaultAzureInstancePoolClusterTest := newInstancePoolHCLBuilder(randomInstancePoolName).withCloudEnv().build() +
+		newClusterHCLBuilder(randomClusterName).withInstancePool(
+			fmt.Sprintf("databricks_instance_pool.%s.id", randomInstancePoolName)).build()
 	acceptance.AccTest(t, resource.TestCase{
 		Steps: []resource.TestStep{
 			{
 				Config: defaultAzureInstancePoolClusterTest,
 				Check: resource.ComposeTestCheckFunc(
-					testClusterCheckAndTerminateForFutureTests(randomClusterId, &clusterInfo, t),
+					testClusterCheckAndTerminateForFutureTests(
+						fmt.Sprintf("databricks_cluster.%s", randomClusterName), t),
 				),
 			},
 		},
@@ -330,24 +318,35 @@ func TestAzureAccClusterResource_CreateClusterViaInstancePool(t *testing.T) {
 }
 
 func TestAccClusterResource_CreateClusterWithLibraries(t *testing.T) {
-	randomClusterSuffix := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
-	randomClusterName := fmt.Sprintf("cluster-%s", randomClusterSuffix)
-	randomClusterId := fmt.Sprintf("databricks_cluster.%s", randomClusterName)
+	if os.Getenv("CLOUD_ENV") == "" {
+		return
+	}
+	randomName := fmt.Sprintf("cluster-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+	randomClusterID := fmt.Sprintf("databricks_cluster.%s", randomName)
 	var clusterInfo ClusterInfo
-	resourceConfig :=
-		newClusterHCLBuilder(randomClusterName).
-			withAwsAttributes(nil).
-			withCloudNodeType().
-			withDefaultLibraries().
-			build()
 
 	acceptance.AccTest(t, resource.TestCase{
 		Steps: []resource.TestStep{
 			{
-				Config: resourceConfig,
+				Config: newClusterHCLBuilder(randomName).
+					withInstancePool(fmt.Sprintf("%#v", CommonInstancePoolID())).
+					withAwsAttributes(nil).
+					build(),
 				Check: resource.ComposeTestCheckFunc(
-					testClusterCheckExists(randomClusterId, &clusterInfo, t),
+					testClusterCheckExists(randomClusterID, &clusterInfo, t),
 				),
+			},
+			{
+				PreConfig: func() {
+					client := common.CommonEnvironmentClient()
+					err := NewClustersAPI(client).Terminate(clusterInfo.ClusterID)
+					assert.NoError(t, err)
+				},
+				Config: newClusterHCLBuilder(randomName).
+					withInstancePool(fmt.Sprintf("%#v", CommonInstancePoolID())).
+					withAwsAttributes(nil).
+					withDefaultLibraries().
+					build(),
 			},
 		},
 	})
@@ -356,19 +355,15 @@ func TestAccClusterResource_CreateClusterWithLibraries(t *testing.T) {
 func testClusterCheckExists(n string, cluster *ClusterInfo, t *testing.T) resource.TestCheckFunc {
 	return acceptance.ResourceCheck(n, func(client *common.DatabricksClient, id string) error {
 		clusters := NewClustersAPI(client)
-		_, err := clusters.Get(id)
+		c, err := clusters.Get(id)
+		*cluster = c
 		return err
 	})
 }
 
-func testClusterCheckAndTerminateForFutureTests(n string, cluster *ClusterInfo, t *testing.T) resource.TestCheckFunc {
+func testClusterCheckAndTerminateForFutureTests(n string, t *testing.T) resource.TestCheckFunc {
 	return acceptance.ResourceCheck(n, func(client *common.DatabricksClient, id string) error {
-		clusters := NewClustersAPI(client)
-		_, err := clusters.Get(id)
-		if err != nil {
-			return err
-		}
-		return clusters.Terminate(id)
+		return NewClustersAPI(client).Terminate(id)
 	})
 }
 

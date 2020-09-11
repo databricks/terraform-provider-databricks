@@ -5,7 +5,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
 	"github.com/databrickslabs/databricks-terraform/common"
 	"github.com/databrickslabs/databricks-terraform/internal"
@@ -93,7 +93,7 @@ var jobSchema = internal.StructToSchema(JobSettings{},
 		s["new_cluster"].Description = "Same set of parameters as for " +
 			"[databricks_cluster](cluster.md) resource."
 		s["name"].Description = "An optional name for the job. The default value is Untitled."
-		s["libraries"].Description = "An optional list of libraries to be installed on " +
+		s["library"].Description = "An optional list of libraries to be installed on " +
 			"the cluster that will execute the job. The default value is an empty list."
 		s["email_notifications"].Description = "An optional set of email addresses " +
 			"notified when runs of this job begin and complete and when this job is " +
@@ -189,7 +189,7 @@ func ResourceJob() *schema.Resource {
 		Delete:        resourceJobDelete,
 		Schema:        jobSchema,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 	}
 }

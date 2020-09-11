@@ -11,7 +11,7 @@ import (
 	"testing"
 	"text/template"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -230,9 +230,11 @@ func (stub *resourceTestStub) Deletes(t *testing.T) {
 }
 
 func TestGenerateTestCodeStubs(t *testing.T) {
-	t.Skip()
 	funcs := getExistingUnitTests()
-	p := DatabricksProvider().(*schema.Provider)
+	t.Logf("Got %d unit tests in total. %v",
+		len(funcs), resourceTestStub{})
+	t.Skip()
+	p := DatabricksProvider()
 	for name, resource := range p.ResourcesMap {
 		if name != "databricks_scim_user" {
 			continue

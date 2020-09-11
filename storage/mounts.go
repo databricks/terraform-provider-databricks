@@ -11,7 +11,7 @@ import (
 	"github.com/databrickslabs/databricks-terraform/common"
 	"github.com/databrickslabs/databricks-terraform/compute"
 	"github.com/databrickslabs/databricks-terraform/internal"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 // Mount exposes generic url & extra config map options
@@ -60,7 +60,7 @@ func (mp MountPoint) Mount(mo Mount) (source string, err error) {
 	}
 	b := regexp.MustCompile(`"\{secrets/([^/]+)/([^\}]+)\}"`)
 	extraConfigs = b.ReplaceAll(extraConfigs, []byte(`dbutils.secrets.get("$1", "$2")`))
-	source, err = mp.exec.Execute(mp.clusterID, "python", fmt.Sprintf(`
+	command := fmt.Sprintf(`
 		def safe_mount(mount_point, mount_source, configs):
 			for mount in dbutils.fs.mounts():
 				if mount.mountPoint == mount_point and mount.source == mount_source:
@@ -78,12 +78,14 @@ func (mp MountPoint) Mount(mo Mount) (source string, err error) {
 				raise e
 		mount_source = safe_mount("/mnt/%s", "%v", %s)
 		dbutils.notebook.exit(mount_source)
-	`, mp.name, mo.Source(), extraConfigs))
+	`, mp.name, mo.Source(), extraConfigs)
+	source, err = mp.exec.Execute(mp.clusterID, "python", command)
 	return
 }
 
 func commonMountResource(tpl Mount, s map[string]*schema.Schema) *schema.Resource {
 	resource := &schema.Resource{Schema: s, SchemaVersion: 2}
+	// nolint should be a bigger context-aware refactor
 	resource.Create = mountCreate(tpl, resource)
 	resource.Read = mountRead(tpl, resource)
 	resource.Delete = mountDelete(tpl, resource)
@@ -92,9 +94,10 @@ func commonMountResource(tpl Mount, s map[string]*schema.Schema) *schema.Resourc
 
 // NewMountPoint returns new mount point config
 func NewMountPoint(client *common.DatabricksClient, name, clusterID string) MountPoint {
+	executor := client.CommandExecutor()
 	return MountPoint{
 		// todo: fix
-		exec:      client.CommandExecutor(),
+		exec:      executor,
 		clusterID: clusterID,
 		name:      name,
 	}
@@ -152,20 +155,20 @@ func mountCluster(tpl interface{}, d *schema.ResourceData, m interface{},
 }
 
 // returns resource create mount for object store on workspace
-func mountCreate(tpl interface{}, r *schema.Resource) schema.CreateFunc {
-	return func(d *schema.ResourceData, m interface{}) (err error) {
+func mountCreate(tpl interface{}, r *schema.Resource) func(*schema.ResourceData, interface{}) error {
+	return func(d *schema.ResourceData, m interface{}) error {
 		mountConfig, mountPoint, err := mountCluster(tpl, d, m, r)
 		if err != nil {
-			return
+			return err
 		}
 		log.Printf("[INFO] Mounting %s at /mnt/%s", mountConfig.Source(), d.Id())
 		source, err := mountPoint.Mount(mountConfig)
 		if err != nil {
-			return
+			return err
 		}
 		err = d.Set("source", source)
 		if err != nil {
-			return
+			return err
 		}
 		return readMountSource(mountPoint, d)
 	}

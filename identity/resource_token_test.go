@@ -252,8 +252,8 @@ func TestTokensAPI_Create(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var input args
-			qa.AssertRequestWithMockServer(t, &tt.args, http.MethodPost, "/api/2.0/token/create", &input, tt.response, tt.responseStatus, tt.want, tt.wantErr, func(client common.DatabricksClient) (interface{}, error) {
-				return NewTokensAPI(&client).Create(time.Duration(tt.args.LifetimeSeconds)*time.Second, tt.args.Comment)
+			qa.AssertRequestWithMockServer(t, &tt.args, http.MethodPost, "/api/2.0/token/create", &input, tt.response, tt.responseStatus, tt.want, tt.wantErr, func(client *common.DatabricksClient) (interface{}, error) {
+				return NewTokensAPI(client).Create(time.Duration(tt.args.LifetimeSeconds)*time.Second, tt.args.Comment)
 			})
 		})
 	}
@@ -285,8 +285,8 @@ func TestTokensAPI_Delete(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var input args
-			qa.AssertRequestWithMockServer(t, &tt.args, http.MethodPost, "/api/2.0/token/delete", &input, tt.response, tt.responseStatus, tt.want, tt.wantErr, func(client common.DatabricksClient) (interface{}, error) {
-				return nil, NewTokensAPI(&client).Delete(tt.args.TokenID)
+			qa.AssertRequestWithMockServer(t, &tt.args, http.MethodPost, "/api/2.0/token/delete", &input, tt.response, tt.responseStatus, tt.want, tt.wantErr, func(client *common.DatabricksClient) (interface{}, error) {
+				return nil, NewTokensAPI(client).Delete(tt.args.TokenID)
 			})
 		})
 	}
@@ -353,8 +353,8 @@ func TestTokensAPI_List(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var input args
-			qa.AssertRequestWithMockServer(t, tt.args, http.MethodGet, tt.wantURI, &input, tt.response, tt.responseStatus, tt.want, tt.wantErr, func(client common.DatabricksClient) (interface{}, error) {
-				return NewTokensAPI(&client).List()
+			qa.AssertRequestWithMockServer(t, tt.args, http.MethodGet, tt.wantURI, &input, tt.response, tt.responseStatus, tt.want, tt.wantErr, func(client *common.DatabricksClient) (interface{}, error) {
+				return NewTokensAPI(client).List()
 			})
 		})
 	}
@@ -445,8 +445,8 @@ func TestTokensAPI_Read(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var input args
-			qa.AssertRequestWithMockServer(t, &tt.args, http.MethodGet, tt.wantURI, &input, tt.response, tt.responseStatus, tt.want, tt.wantErr, func(client common.DatabricksClient) (interface{}, error) {
-				return NewTokensAPI(&client).Read(tt.args.TokenID)
+			qa.AssertRequestWithMockServer(t, &tt.args, http.MethodGet, tt.wantURI, &input, tt.response, tt.responseStatus, tt.want, tt.wantErr, func(client *common.DatabricksClient) (interface{}, error) {
+				return NewTokensAPI(client).Read(tt.args.TokenID)
 			})
 		})
 	}

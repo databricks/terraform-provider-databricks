@@ -3,12 +3,13 @@ package access
 import (
 	"fmt"
 	"path"
+	"sort"
 	"strconv"
 
 	"github.com/databrickslabs/databricks-terraform/common"
 	"github.com/databrickslabs/databricks-terraform/identity"
 	"github.com/databrickslabs/databricks-terraform/workspace"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/pkg/errors"
 )
 
@@ -26,11 +27,38 @@ type AccessControl struct {
 	AllPermissions []*Permission `json:"all_permissions,omitempty"`
 }
 
+func (ac AccessControl) String() string {
+	s := ""
+	switch {
+	case ac.GroupName != nil:
+		s += *ac.GroupName
+	case ac.UserName != nil:
+		s += *ac.UserName
+	default:
+		s += "something"
+	}
+	s += " "
+	for _, ap := range ac.AllPermissions {
+		if ap == nil {
+			continue
+		}
+		s += ap.String()
+	}
+	return s
+}
+
 // Permission is a structure to describe permission level
 type Permission struct {
 	PermissionLevel     string   `json:"permission_level"`
 	Inherited           bool     `json:"inherited,omitempty"`
 	InheritedFromObject []string `json:"inherited_from_object,omitempty"`
+}
+
+func (p Permission) String() string {
+	if len(p.InheritedFromObject) > 0 {
+		return fmt.Sprintf("%s (from %s)", p.PermissionLevel, p.InheritedFromObject)
+	}
+	return p.PermissionLevel
 }
 
 // AccessControlChangeList is wrapper around ACL changes for REST API
@@ -44,6 +72,12 @@ type AccessControlChange struct {
 	GroupName            *string `json:"group_name,omitempty"`
 	ServicePrincipalName *string `json:"service_principal_name,omitempty"`
 	PermissionLevel      string  `json:"permission_level"`
+}
+
+func (acc AccessControlChange) String() string {
+	return fmt.Sprintf("%v%v%v %s",
+		acc.UserName, acc.GroupName, acc.ServicePrincipalName,
+		acc.PermissionLevel)
 }
 
 // ToAccessControlChangeList converts data formats
@@ -64,7 +98,15 @@ func (oa *ObjectACL) ToAccessControlChangeList() *AccessControlChangeList {
 			}
 		}
 	}
+	acl.Sort()
 	return acl
+}
+
+// Sort AccessControlList for consistent results
+func (acl *AccessControlChangeList) Sort() {
+	sort.Slice(acl.AccessControlList, func(i, j int) bool {
+		return acl.AccessControlList[i].String() > acl.AccessControlList[j].String()
+	})
 }
 
 // AccessControl exports data for TF
@@ -157,6 +199,7 @@ func parsePermissionsFromData(d *schema.ResourceData,
 	if changes < 1 {
 		return nil, "", fmt.Errorf("at least one access_control is required")
 	}
+	acl.Sort()
 	return acl, objectId, nil
 }
 
@@ -185,8 +228,17 @@ func resourcePermissionsRead(d *schema.ResourceData, m interface{}) error {
 		return err
 	}
 	for _, mapping := range permissionsResourceIDFields() {
-		if mapping.objectType != d.Get("object_type").(string) {
+		if mapping.objectType != objectACL.ObjectType {
 			continue
+		}
+		err = d.Set("object_type", mapping.objectType)
+		if err != nil {
+			return fmt.Errorf("Cannot set object type: %v", mapping.objectType)
+		}
+		pathVariant := d.Get(mapping.objectType + "_path")
+		if pathVariant != "" {
+			// we're not importing and it's a path... it's set, so let's not re-set it
+			break
 		}
 		identifier := path.Base(id)
 		err := d.Set(mapping.field, identifier)
@@ -277,13 +329,11 @@ func ResourcePermissions() *schema.Resource {
 						ForceNew: true,
 						Type:     schema.TypeString,
 						Optional: true,
-						//ConflictsWith: []string{"group_name"},
 					},
 					"group_name": {
 						ForceNew: true,
 						Type:     schema.TypeString,
 						Optional: true,
-						//ConflictsWith: []string{"user_name"},
 					},
 					"permission_level": {
 						ForceNew: true,

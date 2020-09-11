@@ -3,7 +3,7 @@ package storage
 import (
 	"fmt"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 // AzureADLSGen2Mount describes the object for a azure datalake gen 2 storage mount
@@ -18,13 +18,13 @@ type AzureADLSGen2Mount struct {
 	InitializeFileSystem bool   `json:"initialize_file_system"`
 }
 
-// Source ...
+// Source returns ABFSS URI backing the mount
 func (m AzureADLSGen2Mount) Source() string {
 	return fmt.Sprintf("abfss://%s@%s.dfs.core.windows.net%s",
 		m.ContainerName, m.StorageAccountName, m.Directory)
 }
 
-// Config ...
+// Config returns mount configurations
 func (m AzureADLSGen2Mount) Config() map[string]string {
 	return map[string]string{
 		"fs.azure.account.auth.type":                          "OAuth",

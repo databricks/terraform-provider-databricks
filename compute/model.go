@@ -176,15 +176,33 @@ type ClusterCloudProviderNodeInfo struct {
 	TotalCoreQuota     float32  `json:"total_core_quota,omitempty"`
 }
 
-// NodeType encapsulates information about a give node when using the list-node-types api
+// NodeInstanceType encapsulates information about a specific node type
+type NodeInstanceType struct {
+	InstanceTypeID      string `json:"instance_type_id,omitempty"`
+	LocalDisks          int32  `json:"local_disks,omitempty"`
+	LocalDiskSizeGB     int32  `json:"local_disk_size_gb,omitempty"`
+	LocalNVMeDisks      int32  `json:"local_nvme_disks,omitempty"`
+	LocalNVMeDiskSizeGB int32  `json:"local_nvme_disk_size_gb,omitempty"`
+}
+
+// NodeType encapsulates information about a given node when using the list-node-types api
 type NodeType struct {
-	NodeTypeID     string                        `json:"node_type_id,omitempty"`
-	MemoryMb       int32                         `json:"memory_mb,omitempty"`
-	NumCores       float32                       `json:"num_cores,omitempty"`
-	Description    string                        `json:"description,omitempty"`
-	InstanceTypeID string                        `json:"instance_type_id,omitempty"`
-	IsDeprecated   bool                          `json:"is_deprecated,omitempty"`
-	NodeInfo       *ClusterCloudProviderNodeInfo `json:"node_info,omitempty"`
+	NodeTypeID            string                        `json:"node_type_id,omitempty"`
+	MemoryMB              int32                         `json:"memory_mb,omitempty"`
+	NumCores              float32                       `json:"num_cores,omitempty"`
+	NumGPUs               int32                         `json:"num_gpus,omitempty"`
+	SupportEBSVolumes     bool                          `json:"support_ebs_volumes,omitempty"`
+	IsIOCacheEnabled      bool                          `json:"is_io_cache_enabled,omitempty"`
+	SupportPortForwarding bool                          `json:"support_port_forwarding,omitempty"`
+	Description           string                        `json:"description,omitempty"`
+	Category              string                        `json:"category,omitempty"`
+	InstanceTypeID        string                        `json:"instance_type_id,omitempty"`
+	IsDeprecated          bool                          `json:"is_deprecated,omitempty"`
+	IsHidden              bool                          `json:"is_hidden,omitempty"`
+	SupportClusterTags    bool                          `json:"support_cluster_tags,omitempty"`
+	DisplayOrder          int32                         `json:"display_order,omitempty"`
+	NodeInfo              *ClusterCloudProviderNodeInfo `json:"node_info,omitempty"`
+	NodeInstanceType      *NodeInstanceType             `json:"node_instance_type,omitempty"`
 }
 
 // DockerBasicAuth contains the auth information when fetching containers
@@ -204,10 +222,11 @@ type Cluster struct {
 	ClusterID   string `json:"cluster_id,omitempty"`
 	ClusterName string `json:"cluster_name,omitempty"`
 
-	SparkVersion      string     `json:"spark_version"` // TODO: perhaps make a default
-	NumWorkers        int32      `json:"num_workers,omitempty" tf:"group:size"`
-	Autoscale         *AutoScale `json:"autoscale,omitempty" tf:"group:size"`
-	EnableElasticDisk bool       `json:"enable_elastic_disk,omitempty" tf:"computed"`
+	SparkVersion              string     `json:"spark_version"` // TODO: perhaps make a default
+	NumWorkers                int32      `json:"num_workers,omitempty" tf:"group:size"`
+	Autoscale                 *AutoScale `json:"autoscale,omitempty" tf:"group:size"`
+	EnableElasticDisk         bool       `json:"enable_elastic_disk,omitempty" tf:"computed"`
+	EnableLocalDiskEncryption bool       `json:"enable_local_disk_encryption,omitempty"`
 
 	NodeTypeID             string         `json:"node_type_id,omitempty" tf:"group:node_type,computed"`
 	DriverNodeTypeID       string         `json:"driver_node_type_id,omitempty" tf:"conflicts:instance_pool_id,computed"`
@@ -229,45 +248,51 @@ type Cluster struct {
 	IdempotencyToken string `json:"idempotency_token,omitempty"`
 }
 
+// ClusterList shows existing clusters
+type ClusterList struct {
+	Clusters []ClusterInfo `json:"clusters,omitempty"`
+}
+
 // ClusterInfo contains the information when getting cluster info from the get request.
 type ClusterInfo struct {
-	NumWorkers             int32              `json:"num_workers,omitempty"`
-	AutoScale              *AutoScale         `json:"autoscale,omitempty"`
-	ClusterID              string             `json:"cluster_id,omitempty"`
-	CreatorUserName        string             `json:"creator_user_name,omitempty"`
-	Driver                 *SparkNode         `json:"driver,omitempty"`
-	Executors              []SparkNode        `json:"executors,omitempty"`
-	SparkContextID         int64              `json:"spark_context_id,omitempty"`
-	JdbcPort               int32              `json:"jdbc_port,omitempty"`
-	ClusterName            string             `json:"cluster_name,omitempty"`
-	SparkVersion           string             `json:"spark_version"`
-	SparkConf              map[string]string  `json:"spark_conf,omitempty"`
-	AwsAttributes          *AwsAttributes     `json:"aws_attributes,omitempty"`
-	NodeTypeID             string             `json:"node_type_id,omitempty"`
-	DriverNodeTypeID       string             `json:"driver_node_type_id,omitempty"`
-	SSHPublicKeys          []string           `json:"ssh_public_keys,omitempty"`
-	CustomTags             map[string]string  `json:"custom_tags,omitempty"`
-	ClusterLogConf         *StorageInfo       `json:"cluster_log_conf,omitempty"`
-	InitScripts            []StorageInfo      `json:"init_scripts,omitempty"`
-	SparkEnvVars           map[string]string  `json:"spark_env_vars,omitempty"`
-	AutoterminationMinutes int32              `json:"autotermination_minutes,omitempty"`
-	EnableElasticDisk      bool               `json:"enable_elastic_disk,omitempty"`
-	InstancePoolID         string             `json:"instance_pool_id,omitempty"`
-	PolicyID               string             `json:"policy_id,omitempty"`
-	SingleUserName         string             `json:"single_user_name,omitempty"`
-	ClusterSource          AwsAvailability    `json:"cluster_source,omitempty"`
-	DockerImage            *DockerImage       `json:"docker_image,omitempty"`
-	State                  ClusterState       `json:"state"`
-	StateMessage           string             `json:"state_message,omitempty"`
-	StartTime              int64              `json:"start_time,omitempty"`
-	TerminateTime          int64              `json:"terminate_time,omitempty"`
-	LastStateLossTime      int64              `json:"last_state_loss_time,omitempty"`
-	LastActivityTime       int64              `json:"last_activity_time,omitempty"`
-	ClusterMemoryMb        int64              `json:"cluster_memory_mb,omitempty"`
-	ClusterCores           float32            `json:"cluster_cores,omitempty"`
-	DefaultTags            map[string]string  `json:"default_tags"`
-	ClusterLogStatus       *LogSyncStatus     `json:"cluster_log_status,omitempty"`
-	TerminationReason      *TerminationReason `json:"termination_reason,omitempty"`
+	NumWorkers                int32              `json:"num_workers,omitempty"`
+	AutoScale                 *AutoScale         `json:"autoscale,omitempty"`
+	ClusterID                 string             `json:"cluster_id,omitempty"`
+	CreatorUserName           string             `json:"creator_user_name,omitempty"`
+	Driver                    *SparkNode         `json:"driver,omitempty"`
+	Executors                 []SparkNode        `json:"executors,omitempty"`
+	SparkContextID            int64              `json:"spark_context_id,omitempty"`
+	JdbcPort                  int32              `json:"jdbc_port,omitempty"`
+	ClusterName               string             `json:"cluster_name,omitempty"`
+	SparkVersion              string             `json:"spark_version"`
+	SparkConf                 map[string]string  `json:"spark_conf,omitempty"`
+	AwsAttributes             *AwsAttributes     `json:"aws_attributes,omitempty"`
+	NodeTypeID                string             `json:"node_type_id,omitempty"`
+	DriverNodeTypeID          string             `json:"driver_node_type_id,omitempty"`
+	SSHPublicKeys             []string           `json:"ssh_public_keys,omitempty"`
+	CustomTags                map[string]string  `json:"custom_tags,omitempty"`
+	ClusterLogConf            *StorageInfo       `json:"cluster_log_conf,omitempty"`
+	InitScripts               []StorageInfo      `json:"init_scripts,omitempty"`
+	SparkEnvVars              map[string]string  `json:"spark_env_vars,omitempty"`
+	AutoterminationMinutes    int32              `json:"autotermination_minutes,omitempty"`
+	EnableElasticDisk         bool               `json:"enable_elastic_disk,omitempty"`
+	EnableLocalDiskEncryption bool               `json:"enable_local_disk_encryption,omitempty"`
+	InstancePoolID            string             `json:"instance_pool_id,omitempty"`
+	PolicyID                  string             `json:"policy_id,omitempty"`
+	SingleUserName            string             `json:"single_user_name,omitempty"`
+	ClusterSource             AwsAvailability    `json:"cluster_source,omitempty"`
+	DockerImage               *DockerImage       `json:"docker_image,omitempty"`
+	State                     ClusterState       `json:"state"`
+	StateMessage              string             `json:"state_message,omitempty"`
+	StartTime                 int64              `json:"start_time,omitempty"`
+	TerminateTime             int64              `json:"terminate_time,omitempty"`
+	LastStateLossTime         int64              `json:"last_state_loss_time,omitempty"`
+	LastActivityTime          int64              `json:"last_activity_time,omitempty"`
+	ClusterMemoryMb           int64              `json:"cluster_memory_mb,omitempty"`
+	ClusterCores              float32            `json:"cluster_cores,omitempty"`
+	DefaultTags               map[string]string  `json:"default_tags"`
+	ClusterLogStatus          *LogSyncStatus     `json:"cluster_log_status,omitempty"`
+	TerminationReason         *TerminationReason `json:"termination_reason,omitempty"`
 }
 
 // IsRunningOrResizing returns true if cluster is running or resizing
@@ -375,6 +400,11 @@ type InstancePoolAndStats struct {
 // InstancePoolList shows list of instance pools
 type InstancePoolList struct {
 	InstancePools []InstancePoolAndStats `json:"instance_pools"`
+}
+
+// NodeTypeList contains a list of node types
+type NodeTypeList struct {
+	NodeTypes []NodeType `json:"node_types,omitempty"`
 }
 
 // NotebookTask contains the information for notebook jobs

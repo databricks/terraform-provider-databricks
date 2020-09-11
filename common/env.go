@@ -5,6 +5,8 @@ import (
 	"os"
 	"strings"
 	"sync"
+
+	"github.com/mitchellh/go-homedir"
 )
 
 var (
@@ -57,17 +59,24 @@ func CommonEnvironmentClient() *DatabricksClient {
 }
 
 // CleanupEnvironment backs up environment - use as `defer CleanupEnvironment()()`
-// clears it and restores it in the end
+// clears it and restores it in the end. It's meant strictly for "unit" tests
+// as last resort, because it slows down parallel execution with mutex.
 func CleanupEnvironment() func() {
 	// make a backed-up pristince environment
 	envMutex.Lock()
 	prevEnv := os.Environ()
 	oldPath := os.Getenv("PATH")
+	pwd := os.Getenv("PWD")
 	os.Clearenv()
-	err := os.Setenv("OLD_PATH", oldPath)
+	err := os.Setenv("PATH", oldPath)
 	if err != nil {
-		log.Printf("[WARN] Cannot set OLD_PATH: %v", err)
+		log.Printf("[WARN] Cannot bring back PATH: %v", err)
 	}
+	err = os.Setenv("HOME", pwd)
+	if err != nil {
+		log.Printf("[WARN] Cannot set HOME to old PWD: %v", err)
+	}
+	homedir.DisableCache = true
 	// version is technically made out of git + $PATH, if empty
 	// and this is why we are backing it up
 	prevVersion := version

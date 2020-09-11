@@ -16,12 +16,6 @@ resource "random_string" "naming" {
   length  = 6
 }
 
-variable "databricks_aws_acct_id" {
-  // public info - https://docs.databricks.com/administration-guide/account-settings/aws-accounts.html
-  default = "414351767826"
-  type    = string
-}
-
 locals {
   // dltp - databricks labs terraform provider
   prefix = "dltp${random_string.naming.result}"
@@ -32,132 +26,33 @@ locals {
   }
 }
 
-data "template_file" "cross_account_role_policy" {
-  template = file("${path.module}/templates/cross_account_role_policy.tpl")
-}
+provider "databricks" {}
 
-data "template_file" "cross_account_role_assume_policy" {
-  template = file("${path.module}/templates/cross_account_role_assume_policy.tpl")
-  vars = {
-    databricks_app_external_id = data.external.env.result.DATABRICKS_ACCOUNT_ID
-    databricks_aws_account_id = var.databricks_aws_acct_id
-  }
+data "databricks_aws_assume_role_policy" "this" {
+  external_id = data.external.env.result.DATABRICKS_ACCOUNT_ID
 }
 
 resource "aws_iam_role" "cross_account_role" {
-  name = "${local.prefix}-crossaccount"
-  assume_role_policy = data.template_file.cross_account_role_assume_policy.rendered
+  name               = "${local.prefix}-crossaccount"
+  assume_role_policy = data.databricks_aws_assume_role_policy.this.json
   tags               = local.tags
 }
 
-resource "aws_iam_policy" "cross_account_role_policy" {
-  name = "${local.prefix}-policy"
-  description = "E2 Workspace Cross account role policy policy"
-  policy = data.template_file.cross_account_role_policy.rendered
+data "databricks_aws_crossaccount_policy" "this" {
 }
 
-resource "aws_iam_role_policy_attachment" "cross_account_role_policy_attach" {
-  role       = aws_iam_role.cross_account_role.name
-  policy_arn = aws_iam_policy.cross_account_role_policy.arn
+resource "aws_iam_role_policy" "test_policy" {
+  name   = "test_policy"
+  role   = aws_iam_role.cross_account_role.id
+  policy = data.databricks_aws_crossaccount_policy.this.json
 }
 
-data "template_file" "storage_bucket_policy" {
-  template = file("${path.module}/templates/storage_bucket_policy.tpl")
-  vars = {
-    bucket_name = aws_s3_bucket.root_storage_bucket.bucket
-    databricks_aws_account_id = var.databricks_aws_acct_id
-  }
-}
-
-resource "aws_s3_bucket" "root_storage_bucket" {
-  bucket = "${local.prefix}-rootbucket"
-  acl    = "private"
-  versioning {
-    enabled = false
-  }
-  force_destroy = true
-  tags = merge(local.tags, {
-    Name = "${local.prefix}-rootbucket"
-  })
-}
-
-resource "aws_s3_bucket_public_access_block" "root_storage_bucket" {
-  bucket              = aws_s3_bucket.root_storage_bucket.id
-  ignore_public_acls  = true
-}
-
-resource "aws_s3_bucket_policy" "root_bucket_policy" {
-  bucket = aws_s3_bucket.root_storage_bucket.id
-  policy = data.template_file.storage_bucket_policy.rendered
-}
-
-resource "aws_vpc" "main" {
-  cidr_block           = data.external.env.result.TEST_CIDR
-  enable_dns_hostnames = true
-
-  tags = merge(local.tags, {
-    Name = "${local.prefix}-vpc"
-  })
-}
-
-resource "aws_subnet" "public" {
-  vpc_id            = aws_vpc.main.id
-  cidr_block        = cidrsubnet(aws_vpc.main.cidr_block, 3, 0)
-  availability_zone = "${data.external.env.result.TEST_REGION}b"
-
-  tags = merge(local.tags, {
-    Name = "${local.prefix}-public-sn"
-  })
-}
-
-resource "aws_subnet" "private" {
-  vpc_id            = aws_vpc.main.id
-  cidr_block        = cidrsubnet(aws_vpc.main.cidr_block, 3, 1)
-  availability_zone = "${data.external.env.result.TEST_REGION}a"
-
-  tags = merge(local.tags, {
-    Name = "${local.prefix}-private-sn"
-  })
-}
-
-resource "aws_internet_gateway" "gw" {
-  vpc_id = aws_vpc.main.id
-  tags = merge(local.tags, {
-    Name = "${local.prefix}-igw"
-  })
-}
-
-resource "aws_route" "r" {
-  route_table_id            = aws_vpc.main.default_route_table_id
-  destination_cidr_block    = "0.0.0.0/0"
-  gateway_id = aws_internet_gateway.gw.id
-
-  depends_on = [aws_internet_gateway.gw, aws_vpc.main]
-}
-
-resource "aws_security_group" "test_sg" {
-  name        = "all all"
-  description = "Allow inbound traffic"
-  vpc_id      = aws_vpc.main.id
-
-  ingress {
-    description = "All"
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  tags = merge(local.tags, {
-    Name = "${local.prefix}-sg"
-  })
+module "aws_common" {
+  source = "../modules/aws-mws-common"
+  cidr_block = data.external.env.result.TEST_CIDR
+  region = data.external.env.result.TEST_REGION
+  prefix = local.prefix
+  tags = local.tags
 }
 
 output "cloud_env" {
@@ -166,7 +61,7 @@ output "cloud_env" {
 }
 
 output "test_root_bucket" {
-  value = aws_s3_bucket.root_storage_bucket.bucket
+  value = module.aws_common.root_bucket
 }
 
 output "test_crossaccount_arn" {
@@ -174,19 +69,19 @@ output "test_crossaccount_arn" {
 }
 
 output "test_vpc_id" {
-  value = aws_vpc.main.id
+  value = module.aws_common.vpc_id
 }
 
 output "test_subnet_public" {
-  value = aws_subnet.public.id
+  value = module.aws_common.subnet_public
 }
 
 output "test_subnet_private" {
-  value = aws_subnet.private.id
+  value = module.aws_common.subnet_private
 }
 
 output "test_security_group" {
-  value = aws_security_group.test_sg.id
+  value = module.aws_common.security_group
 }
 
 output "test_prefix" {

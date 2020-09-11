@@ -2,11 +2,12 @@ package provider
 
 import (
 	"fmt"
+	"sort"
 	"strconv"
+	"strings"
 	"time"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
 	"github.com/databrickslabs/databricks-terraform/access"
 	"github.com/databrickslabs/databricks-terraform/common"
@@ -18,15 +19,18 @@ import (
 )
 
 // DatabricksProvider returns the entire terraform provider object
-func DatabricksProvider() terraform.ResourceProvider {
+func DatabricksProvider() *schema.Provider {
 	return &schema.Provider{
 		DataSourcesMap: map[string]*schema.Resource{
-			"databricks_zones":              compute.DataSourceClusterZones(),
-			"databricks_default_user_roles": identity.DataSourceDefaultUserRoles(),
-			"databricks_dbfs_file":          storage.DataSourceDBFSFile(),
-			"databricks_dbfs_file_paths":    storage.DataSourceDBFSFilePaths(),
-			"databricks_notebook":           workspace.DataSourceNotebook(),
-			"databricks_notebook_paths":     workspace.DataSourceNotebookPaths(),
+			"databricks_aws_crossaccount_policy": access.DataAwsCrossAccountRolicy(),
+			"databricks_aws_assume_role_policy":  access.DataAwsAssumeRolePolicy(),
+			"databricks_aws_bucket_policy":       access.DataAwsBucketPolicy(),
+			"databricks_dbfs_file":               storage.DataSourceDBFSFile(),
+			"databricks_dbfs_file_paths":         storage.DataSourceDBFSFilePaths(),
+			"databricks_default_user_roles":      identity.DataSourceDefaultUserRoles(),
+			"databricks_notebook":                workspace.DataSourceNotebook(),
+			"databricks_notebook_paths":          workspace.DataSourceNotebookPaths(),
+			"databricks_zones":                   compute.DataSourceClusterZones(),
 		},
 		ResourcesMap: map[string]*schema.Resource{
 			"databricks_secret":         access.ResourceSecret(),
@@ -78,9 +82,11 @@ func DatabricksProvider() terraform.ResourceProvider {
 				Sensitive:   true,
 				DefaultFunc: schema.EnvDefaultFunc("DATABRICKS_TOKEN", nil),
 				ConflictsWith: []string{
+					"username",
+					"password",
 					"config_file",
-					"profile",
 					"basic_auth",
+					"profile",
 					"azure_auth",
 				},
 			},
@@ -116,12 +122,18 @@ func DatabricksProvider() terraform.ResourceProvider {
 				Type:        schema.TypeString,
 				Optional:    true,
 				DefaultFunc: schema.EnvDefaultFunc("DATABRICKS_USERNAME", nil),
+				ConflictsWith: []string{
+					"token",
+				},
 			},
 			"password": {
 				Type:        schema.TypeString,
 				Sensitive:   true,
 				Optional:    true,
 				DefaultFunc: schema.EnvDefaultFunc("DATABRICKS_PASSWORD", nil),
+				ConflictsWith: []string{
+					"token",
+				},
 			},
 			"config_file": {
 				Type:        schema.TypeString,
@@ -203,8 +215,16 @@ func DatabricksProvider() terraform.ResourceProvider {
 				Description: "Currently secret scopes are not accessible via AAD tokens so we will need to create a PAT token",
 				Default:     durationToSecondsString(time.Hour),
 			},
+			"azure_use_pat_for_cli": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     false,
+				Description: "Create ephemeral PAT tokens also for AZ CLI authenticated requests",
+			},
 			"azure_auth": {
-				Type:     schema.TypeMap,
+				// TODO: tf13 - azure_auth: TypeMap with Elem *Resource not supported,use TypeList/TypeSet
+				Type:     schema.TypeList,
+				MaxItems: 1,
 				Optional: true,
 				Deprecated: "azure_auth {} block is deprecated in favor of azure_* properties with more previctable behavior. " +
 					"This configuration attribute will be removed in 0.3.",
@@ -280,25 +300,37 @@ func DatabricksProvider() terraform.ResourceProvider {
 				Optional:    true,
 				Default:     false,
 			},
+			"debug_truncate_bytes": {
+				Type:        schema.TypeInt,
+				Optional:    true,
+				DefaultFunc: schema.EnvDefaultFunc("DATABRICKS_DEBUG_TRUNCATE_BYTES", 96),
+			},
 		},
 		ConfigureFunc: func(d *schema.ResourceData) (interface{}, error) {
 			pc := common.DatabricksClient{}
+
+			authsUsed := map[string]bool{}
 			if host, ok := d.GetOk("host"); ok {
 				pc.Host = host.(string)
 			}
 			if token, ok := d.GetOk("token"); ok {
+				authsUsed["token"] = true
 				pc.Token = token.(string)
 			}
 			if v, ok := d.GetOk("username"); ok {
+				authsUsed["password"] = true
 				pc.Username = v.(string)
 			}
 			if v, ok := d.GetOk("password"); ok {
+				authsUsed["password"] = true
 				pc.Password = v.(string)
 			}
 			if v, ok := d.GetOk("profile"); ok {
+				authsUsed["config profile"] = true
 				pc.Profile = v.(string)
 			}
 			if _, ok := d.GetOk("basic_auth"); ok {
+				authsUsed["password"] = true
 				username, userOk := d.GetOk("basic_auth.0.username")
 				password, passOk := d.GetOk("basic_auth.0.password")
 				if userOk && passOk {
@@ -307,24 +339,31 @@ func DatabricksProvider() terraform.ResourceProvider {
 				}
 			}
 			if v, ok := d.GetOk("azure_workspace_resource_id"); ok {
+				authsUsed["azure"] = true
 				pc.AzureAuth.ResourceID = v.(string)
 			}
 			if v, ok := d.GetOk("azure_workspace_name"); ok {
+				authsUsed["azure"] = true
 				pc.AzureAuth.WorkspaceName = v.(string)
 			}
 			if v, ok := d.GetOk("azure_resource_group"); ok {
+				authsUsed["azure"] = true
 				pc.AzureAuth.ResourceGroup = v.(string)
 			}
 			if v, ok := d.GetOk("azure_subscription_id"); ok {
+				authsUsed["azure"] = true
 				pc.AzureAuth.SubscriptionID = v.(string)
 			}
 			if v, ok := d.GetOk("azure_client_secret"); ok {
+				authsUsed["azure"] = true
 				pc.AzureAuth.ClientSecret = v.(string)
 			}
 			if v, ok := d.GetOk("azure_client_id"); ok {
+				authsUsed["azure"] = true
 				pc.AzureAuth.ClientID = v.(string)
 			}
 			if v, ok := d.GetOk("azure_tenant_id"); ok {
+				authsUsed["azure"] = true
 				pc.AzureAuth.TenantID = v.(string)
 			}
 			if v, ok := d.GetOk("azure_pat_token_duration_seconds"); ok {
@@ -332,6 +371,12 @@ func DatabricksProvider() terraform.ResourceProvider {
 			}
 			if v, ok := d.GetOk("skip_verify"); ok {
 				pc.InsecureSkipVerify = v.(bool)
+			}
+			if v, ok := d.GetOk("debug_truncate_bytes"); ok {
+				pc.DebugTruncateBytes = v.(int)
+			}
+			if v, ok := d.GetOk("azure_use_pat_for_cli"); ok {
+				pc.AzureAuth.UsePATForCLI = v.(bool)
 			}
 			if aa, ok := d.GetOk("azure_auth"); ok {
 				// This provider takes DATABRICKS_AZURE_* for client ID etc
@@ -341,12 +386,6 @@ func DatabricksProvider() terraform.ResourceProvider {
 				//  - DATABRICKS_AZURE_* environment variables
 				//  - ARM_* environment variables
 				azureAuth := aa.(map[string]interface{})
-				if v, ok := azureAuth["managed_resource_group"]; ok {
-					pc.AzureAuth.ManagedResourceGroup = v.(string)
-				}
-				if v, ok := azureAuth["azure_region"]; ok {
-					pc.AzureAuth.AzureRegion = v.(string)
-				}
 				if v, ok := azureAuth["workspace_name"]; ok {
 					pc.AzureAuth.WorkspaceName = v.(string)
 				}
@@ -369,10 +408,23 @@ func DatabricksProvider() terraform.ResourceProvider {
 					pc.AzureAuth.PATTokenDurationSeconds = v.(string)
 				}
 			}
+
+			authorizationMethodsUsed := []string{}
+			for name, used := range authsUsed {
+				if used {
+					authorizationMethodsUsed = append(authorizationMethodsUsed, name)
+				}
+			}
+			if len(authorizationMethodsUsed) > 1 {
+				sort.Strings(authorizationMethodsUsed)
+				return nil, fmt.Errorf("More than one authorization method configured: %s",
+					strings.Join(authorizationMethodsUsed, " and "))
+			}
 			err := pc.Configure()
 			if err != nil {
 				return nil, err
 			}
+			pc.WithCommandExecutor(compute.NewCommandsAPI(&pc))
 			return &pc, nil
 		},
 	}

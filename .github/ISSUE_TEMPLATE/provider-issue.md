@@ -1,10 +1,8 @@
 ---
 name: Provider Issue
 about: Use this to identify a issue or a bug with the provider.
-title: "[ISSUE] Issue Short Description"
-labels: ''
-assignees: stikkireddy
-
+title: "[ISSUE] Provider bug"
+labels: bug
 ---
 
 Hi there,
@@ -21,6 +19,10 @@ Please list the resources as a list, for example:
 
 If this issue appears to affect multiple resources, it may be an issue with Terraform's core, so please mention this.
 
+### Environment variable names
+To get relevant environment variable _names_ please copypaste the output of the following command:
+`$ env | sort | grep -E 'DATABRICKS|AWS|AZURE|ARM|TEST' | awk -F= '{print $1}'`
+
 ### Terraform Configuration Files
 ```hcl
 # Copy-paste your Terraform configurations here - for large Terraform configs,
@@ -29,7 +31,7 @@ If this issue appears to affect multiple resources, it may be an issue with Terr
 ```
 
 ### Debug Output
-Please provider a link to a GitHub Gist containing the complete debug output: https://www.terraform.io/docs/internals/debugging.html. Please do NOT paste the debug output in the issue; just paste a link to the Gist.
+Please add turn on logging, e.g. `TF_LOG=DEBUG terraform apply` and run command again, paste it to gist & provide the link to gist. If you're still willing to paste in log output, make sure you provide only relevant log lines with requests.
 
 ### Panic Output
 If Terraform produced a panic, please provide a link to a GitHub Gist containing the output of the `crash.log`.
@@ -45,8 +47,4 @@ Please list the steps required to reproduce the issue, for example:
 1. `terraform apply`
 
 ### Important Factoids
-Are there anything atypical about your accounts that we should know? For example: Running in EC2 Classic? Custom version of OpenStack? Tight ACLs?
-
-### References
-Are there any other GitHub issues (open or closed) or Pull Requests that should be linked here? For example:
-- GH-1234
+Are there anything atypical about your accounts that we should know? 

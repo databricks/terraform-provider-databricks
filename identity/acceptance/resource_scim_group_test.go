@@ -10,8 +10,9 @@ import (
 
 	"github.com/databrickslabs/databricks-terraform/common"
 	"github.com/databrickslabs/databricks-terraform/internal/acceptance"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -22,14 +23,10 @@ func TestAccScimGroupResource(t *testing.T) {
 	}
 	//var secretScope Secre
 	var ScimGroup Group
-	// generate a random name for each tokenInfo test run, to avoid
-	// collisions from multiple concurrent tests.
-	// the acctest package includes many helpers such as RandStringFromCharSet
-	// See https://godoc.org/github.com/hashicorp/terraform-plugin-sdk/helper/acctest
-	//scope := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
-	userName := "scimgroup-test@databricks.com"
-	displayName := "scimgroup test"
-	groupName := "scimgroup test"
+	randomName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
+	userName := fmt.Sprintf("scimgroup-test-%s@example.com", randomName)
+	displayName := fmt.Sprintf("scimgroup %s", randomName)
+	groupName := fmt.Sprintf("scimgroup %s", randomName)
 	role := "arn:aws:iam::999999999999:instance-profile/terraform-scim-group-test"
 	entitlement := "allow-cluster-create"
 	expectEntitlements := []EntitlementsListItem{{Value: AllowClusterCreateEntitlement}}

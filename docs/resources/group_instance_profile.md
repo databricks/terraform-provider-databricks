@@ -1,10 +1,10 @@
 # databricks_group_instance_profile Resource
 
-This resource allows you to attach instance profiles to groups created by the `databricks_group` resource.
+-> **Note** This resource has evolving API, which may change in future versions of provider.
 
--> **Note** Please only use this resource in conjunction with the `databricks_group` resource and **not** the `databricks_scim_group` resource.
+This resource allows you to attach instance profiles to groups created by the [group](group.md) resource.
 
--> **Note** You must be a Databricks administrator API token to make SCIM api calls. 
+-> **Note** Please only use this resource in conjunction with the [group](group.md) resource and **not** the `databricks_scim_group` resource.
 
 ## Example Usage
 
@@ -25,15 +25,14 @@ resource "databricks_group_instance_profile" "my_group_instance_profile" {
 
 The following arguments are supported:
 
-* `group_id` - **(Required)** This is the id of the `databricks_group` resource.
-
-* `instance_profile_id` -  **(Required)** This is the id of the `databricks_instance_profile` resource.
+* `group_id` - (Required) This is the id of the [group](group.md) resource.
+* `instance_profile_id` -  (Required) This is the id of the [instance profile](instance_profile.md) resource.
 
 ## Attribute Reference
 
 In addition to all arguments above, the following attributes are exported:
 
-*  `id` - The id for the `databricks_group_instance_profile` object which is in the format `<group_id>|<instance_profile_id>`.
+*  `id` - The id for the [instance profile](instance_profile.md) object which is in the format `<group_id>|<instance_profile_id>`.
 
 ## Import
 

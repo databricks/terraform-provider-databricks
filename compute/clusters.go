@@ -3,11 +3,12 @@ package compute
 import (
 	"fmt"
 	"log"
+	"sort"
 	"strings"
 	"time"
 
 	"github.com/databrickslabs/databricks-terraform/common"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
 func (a ClustersAPI) defaultTimeout() time.Duration {
@@ -68,10 +69,7 @@ func (a ClustersAPI) Edit(cluster Cluster) (info ClusterInfo, err error) {
 	}
 	if info.IsRunningOrResizing() {
 		// so if cluster was running, we'll start and wait again
-		err = a.Start(info.ClusterID)
-		if err != nil {
-			return info, err
-		}
+		return a.StartAndGetInfo(info.ClusterID)
 	}
 	// only State / ClusterID properties will be valid in this return
 	return info, err
@@ -86,23 +84,42 @@ func (a ClustersAPI) ListZones() (ZonesInfo, error) {
 
 // Start a terminated Spark cluster given its ID and wait till it's running
 func (a ClustersAPI) Start(clusterID string) error {
+	_, err := a.StartAndGetInfo(clusterID)
+	return err
+}
+
+// StartAndGetInfo starts cluster and returns info
+func (a ClustersAPI) StartAndGetInfo(clusterID string) (ClusterInfo, error) {
 	info, err := a.Get(clusterID)
 	if err != nil {
-		return err
+		return info, err
 	}
-	if info.State == ClusterStateRestarting {
-		// if cluster is restarting we dont need to start, we just need to wait
-		_, err := a.waitForClusterStatus(info.ClusterID, ClusterStateRunning)
-		return err
+	switch info.State {
+	case ClusterStateRunning:
+		// it's already running, so we're good to return
+		return info, nil
+	case ClusterStatePending, ClusterStateResizing, ClusterStateRestarting:
+		// let's wait tiny bit, so we return RUNNING cluster info
+		return a.waitForClusterStatus(info.ClusterID, ClusterStateRunning)
+	case ClusterStateTerminating:
+		// let it finish terminating, so it's safe to start again.
+		// TERMINATED cluster info will be returned this way
+		info, err = a.waitForClusterStatus(info.ClusterID, ClusterStateTerminated)
+		if err != nil {
+			return info, err
+		}
+	case ClusterStateError, ClusterStateUnknown:
+		// most likely we can start error'ed cluster again...
+		log.Printf("[ERROR] Cluster %s: %s", info.State, info.StateMessage)
 	}
 	err = a.client.Post("/clusters/start", ClusterID{ClusterID: clusterID}, nil)
 	if err != nil {
-		if !strings.Contains(err.Error(), fmt.Sprintf("Cluster %s is in unexpected state Pending.", clusterID)) {
-			return err
+		if !strings.Contains(err.Error(),
+			fmt.Sprintf("Cluster %s is in unexpected state Pending.", clusterID)) {
+			return info, err
 		}
 	}
-	_, err = a.waitForClusterStatus(clusterID, ClusterStateRunning)
-	return err
+	return a.waitForClusterStatus(clusterID, ClusterStateRunning)
 }
 
 // Restart restart a Spark cluster given its ID. If the cluster is not in a RUNNING state, nothing will happen.
@@ -132,6 +149,7 @@ func wrapMissingClusterError(err error, id string) error {
 
 func (a ClustersAPI) waitForClusterStatus(clusterID string, desired ClusterState) (result ClusterInfo, err error) {
 	// this tangles client with terraform more, which is inevitable
+	// nolint should be a bigger context-aware refactor
 	return result, resource.Retry(a.defaultTimeout(), func() *resource.RetryError {
 		clusterInfo, err := a.Get(clusterID)
 		if ae, ok := err.(common.APIError); ok && ae.IsMissing() {
@@ -212,19 +230,15 @@ func (a ClustersAPI) Unpin(clusterID string) error {
 // up to 70 of the most recently terminated interactive clusters in the past 30 days,
 // and up to 30 of the most recently terminated job clusters in the past 30 days
 func (a ClustersAPI) List() ([]ClusterInfo, error) {
-	var clusterList = struct {
-		Clusters []ClusterInfo `json:"clusters,omitempty" url:"clusters,omitempty"`
-	}{}
+	var clusterList ClusterList
 	err := a.client.Get("/clusters/list", nil, &clusterList)
 	return clusterList.Clusters, err
 }
 
 // ListNodeTypes returns a list of supported Spark node types
 func (a ClustersAPI) ListNodeTypes() ([]NodeType, error) {
-	var nodeTypeList = struct {
-		NodeTypes []NodeType `json:"node_types,omitempty" url:"node_types,omitempty"`
-	}{}
-	err := a.client.Get("/clusters/list-node-types", nil, &nodeTypeList)
+	var nodeTypeList = &NodeTypeList{}
+	err := a.client.Get("/clusters/list-node-types", nil, nodeTypeList)
 	return nodeTypeList.NodeTypes, err
 }
 
@@ -234,6 +248,7 @@ func (a ClustersAPI) GetOrCreateRunningCluster(name string, custom ...Cluster) (
 		err = fmt.Errorf("You can only specify 1 custom cluster conf, not %d", len(custom))
 		return
 	}
+
 	clusters, err := a.List()
 	if err != nil {
 		return
@@ -241,29 +256,93 @@ func (a ClustersAPI) GetOrCreateRunningCluster(name string, custom ...Cluster) (
 	for _, cl := range clusters {
 		if cl.ClusterName == name {
 			log.Printf("[INFO] Found reusable cluster '%s'", name)
+
+			clusterAvailable := true
 			if !cl.IsRunningOrResizing() {
 				err = a.Start(cl.ClusterID)
 				if err != nil {
-					return
+					clusterAvailable = false
+					log.Printf("[INFO] Cluster %s cannot be started, creating an autoterminating cluster", name)
 				}
 			}
-			return cl, nil
+			if clusterAvailable {
+				return cl, nil
+			}
 		}
 	}
-	instanceType := "m4.large"
-	if a.client.IsAzure() {
-		instanceType = "Standard_DS3_v2"
-	}
+	smallestNodeType := a.GetSmallestNodeTypeWithStorage()
+	log.Printf("[INFO] Creating an autoterminating cluster with node type %s", smallestNodeType)
 	r := Cluster{
 		NumWorkers:             1,
 		ClusterName:            name,
 		SparkVersion:           CommonRuntimeVersion(),
-		NodeTypeID:             instanceType,
-		IdempotencyToken:       name,
+		NodeTypeID:             smallestNodeType,
 		AutoterminationMinutes: 10,
+	}
+	if !a.client.IsAzure() {
+		r.AwsAttributes = &AwsAttributes{
+			Availability: "SPOT",
+		}
 	}
 	if len(custom) == 1 {
 		r = custom[0]
 	}
 	return a.Create(r)
+}
+
+// GetSmallestNodeTypeWithStorage returns smallest runtime node type
+func (a ClustersAPI) GetSmallestNodeTypeWithStorage() string {
+	nodeTypes, err := a.ListNodeTypes()
+	if err != nil || len(nodeTypes) == 0 {
+		if a.client.IsAzure() {
+			return "Standard_D3_v2"
+		}
+		return "i3.xlarge"
+	}
+	nodesWithLocalDisk := []NodeType{}
+	for _, nt := range nodeTypes {
+		if nt.IsDeprecated {
+			continue
+		}
+		if nt.NodeInstanceType.LocalDisks > 0 {
+			nodesWithLocalDisk = append(nodesWithLocalDisk, nt)
+		}
+	}
+	nodeType := getSmallestNodeType(nodesWithLocalDisk)
+	return nodeType.NodeTypeID
+}
+
+// getSmallestNodeType returns the smallest node type in a list of node types
+func getSmallestNodeType(nodeTypes []NodeType) NodeType {
+	sortedNodeTypes := nodeTypes
+	sort.Slice(sortedNodeTypes, func(i, j int) bool {
+		if sortedNodeTypes[i].IsDeprecated != sortedNodeTypes[j].IsDeprecated {
+			return !sortedNodeTypes[i].IsDeprecated
+		}
+		if sortedNodeTypes[i].MemoryMB != sortedNodeTypes[j].MemoryMB {
+			return sortedNodeTypes[i].MemoryMB < sortedNodeTypes[j].MemoryMB
+		}
+		if sortedNodeTypes[i].NumCores != sortedNodeTypes[j].NumCores {
+			return sortedNodeTypes[i].NumCores < sortedNodeTypes[j].NumCores
+		}
+		if sortedNodeTypes[i].NumGPUs != sortedNodeTypes[j].NumGPUs {
+			return sortedNodeTypes[i].NumGPUs < sortedNodeTypes[j].NumGPUs
+		}
+		if sortedNodeTypes[i].NodeInstanceType != nil && sortedNodeTypes[j].NodeInstanceType != nil {
+			if sortedNodeTypes[i].NodeInstanceType.LocalNVMeDisks != sortedNodeTypes[j].NodeInstanceType.LocalNVMeDisks {
+				return sortedNodeTypes[i].NodeInstanceType.LocalNVMeDisks < sortedNodeTypes[j].NodeInstanceType.LocalNVMeDisks
+			}
+
+			if sortedNodeTypes[i].NodeInstanceType.LocalDisks != sortedNodeTypes[j].NodeInstanceType.LocalDisks {
+				return sortedNodeTypes[i].NodeInstanceType.LocalDisks < sortedNodeTypes[j].NodeInstanceType.LocalDisks
+			}
+
+			if sortedNodeTypes[i].NodeInstanceType.LocalDiskSizeGB != sortedNodeTypes[j].NodeInstanceType.LocalDiskSizeGB {
+				return sortedNodeTypes[i].NodeInstanceType.LocalDiskSizeGB < sortedNodeTypes[j].NodeInstanceType.LocalDiskSizeGB
+			}
+		}
+		return sortedNodeTypes[i].InstanceTypeID < sortedNodeTypes[j].InstanceTypeID
+	})
+	nodeType := sortedNodeTypes[0]
+	return nodeType
 }

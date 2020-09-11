@@ -10,25 +10,20 @@ import (
 
 	"github.com/databrickslabs/databricks-terraform/common"
 	"github.com/databrickslabs/databricks-terraform/internal/acceptance"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestAccSecretResource(t *testing.T) {
-	// TODO: refactor for common instance pool & AZ CLI
 	if _, ok := os.LookupEnv("CLOUD_ENV"); !ok {
 		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
 	}
-	//var secretScope Secre
 	var secret SecretMetadata
-	// generate a random name for each tokenInfo test run, to avoid
-	// collisions from multiple concurrent tests.
-	// the acctest package includes many helpers such as RandStringFromCharSet
-	// See https://godoc.org/github.com/hashicorp/terraform-plugin-sdk/helper/acctest
-	//scope := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
-	scope := "terraform_acc_test_secret"
-	key := "my_cool_key"
+	randomName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
+	scope := fmt.Sprintf("tf-scope-%s", randomName)
+	key := fmt.Sprintf("tf-key-%s", randomName)
 	stringValue := "my super secret key"
 
 	acceptance.AccTest(t, resource.TestCase{

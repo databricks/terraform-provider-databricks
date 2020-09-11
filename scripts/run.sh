@@ -57,6 +57,32 @@ if [ -f "$TARGET/require_env" ]; then
     fi
 fi
 
+if [[ $@ == *"--docker"* ]]; then
+    if ! [ -f "$TARGET/require_env" ]; then
+        >&2 echo "[-] Docker cannot run without require env."
+        exit 1
+    fi
+    ENV_ARGS=""
+    for var in $(cat $TARGET/require_env); do
+        ENV_ARGS="${ENV_ARGS} -e ${var}=${!var}"
+    done
+
+    TF_12_VERSION="0.12.29"
+    TF_13_VERSION="0.13.0"
+
+    docker build -t databricks-terrafrom/test:$TF_12_VERSION -f scripts/Dockerfile . \
+        --build-arg TERRAFORM_VERSION=$TF_12_VERSION
+    echo "[*] Running with $TF_12_VERSION"
+    docker run $ENV_ARGS -t databricks-terrafrom/test:$TF_12_VERSION $1 $2 --debug
+    
+    docker build -t databricks-terrafrom/test:$TF_13_VERSION -f scripts/Dockerfile . \
+        --build-arg TERRAFORM_VERSION=$TF_13_VERSION
+    echo "[*] Running with $TF_13_VERSION"
+    docker run $ENV_ARGS -t databricks-terrafrom/test:$TF_13_VERSION $1 $2 --debug
+    echo "[+] Done checking cross-terraform versions"
+    exit
+fi
+
 cd $TARGET
 
 if [[ $@ == *"--destroy"* ]]; then
@@ -80,16 +106,34 @@ else
     echo "[*] $1 has no specific Terraform environment."
 fi
 
-
 if [[ $@ == *"--debug"* ]]; then
     export TF_LOG="DEBUG"
     export TF_LOG_PATH=$PWD/tf.log
     echo "[*] To see debug logs: tail -f $PWD/tf.log"
 fi
 
-TF_ACC=1 gotestsum \
+function go_test {
+    TF_ACC=1 gotestsum \
     --format short-verbose \
     --raw-command go test -v \
     -json -coverprofile=coverage.out \
     -test.timeout 35m \
-    -run $2 ../../...
+    -run $1 ../../...
+}
+
+if [[ $@ == *"--tee"* ]]; then
+    go_test $2 2>&1 | tee out.log
+    echo "✓ To output of existing tests: less $PWD/out.log"
+
+    FAILURES=$(grep "\-\-\- FAIL" out.log | sed 's/--- FAIL: /\* \[ \]/g' | sort)
+    PASSES=$(grep PASS out.log | grep Test | sort | sed 's/PASS/ \* \[x\]/')
+
+cat <<-EOF > test-report.log
+$1
+---
+${FAILURES}
+${PASSES}
+EOF
+else 
+    go_test $2
+fi

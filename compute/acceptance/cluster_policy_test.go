@@ -8,14 +8,14 @@ import (
 
 	"github.com/databrickslabs/databricks-terraform/common"
 	"github.com/databrickslabs/databricks-terraform/internal/acceptance"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestAccClusterPolicyResourceFullLifecycle(t *testing.T) {
 	randomName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
-	resource.Test(t, resource.TestCase{
+	acceptance.AccTest(t, resource.TestCase{
 		Steps: []resource.TestStep{
 			{
 				// create a resource
@@ -39,30 +39,6 @@ func TestAccClusterPolicyResourceFullLifecycle(t *testing.T) {
 				Config: testExternalMetastore(randomName + ": UPDATED"),
 				Check: resource.TestCheckResourceAttr("databricks_cluster_policy.external_metastore",
 					"name", fmt.Sprintf("Terraform policy %s", randomName+": UPDATED")),
-			},
-			{
-				Config:  testExternalMetastore(randomName + ": UPDATED"),
-				Destroy: true,
-				Check: acceptance.ResourceCheck("databricks_cluster_policy.external_metastore",
-					func(client *common.DatabricksClient, id string) error {
-						resp, err := NewClusterPoliciesAPI(client).Get(id)
-						if err == nil {
-							return fmt.Errorf("Resource must have been deleted but: %v", resp)
-						}
-						return nil
-					}),
-			},
-			{
-				// and create it again
-				Config: testExternalMetastore(randomName + ": UPDATED"),
-				Check: acceptance.ResourceCheck("databricks_cluster_policy.external_metastore",
-					func(client *common.DatabricksClient, id string) error {
-						_, err := NewClusterPoliciesAPI(client).Get(id)
-						if err != nil {
-							return err
-						}
-						return nil
-					}),
 			},
 		},
 	})

@@ -20,13 +20,15 @@ import (
 	"github.com/databrickslabs/databricks-terraform/internal"
 
 	"github.com/hashicorp/hcl"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 
 	"github.com/r3labs/diff"
 	"github.com/stretchr/testify/assert"
 )
+
+// TODO: remove r3labs/diff
 
 const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 
@@ -44,12 +46,6 @@ func RandomName() string {
 	}
 	return string(b)
 }
-
-type errorSlice []error
-
-func (a errorSlice) Len() int           { return len(a) }
-func (a errorSlice) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
-func (a errorSlice) Less(i, j int) bool { return a[i].Error() < a[j].Error() }
 
 // HTTPFixture defines request structure for test
 type HTTPFixture struct {
@@ -100,6 +96,7 @@ func (f ResourceFixture) Apply(t *testing.T) (*schema.ResourceData, error) {
 	var whatever func(d *schema.ResourceData, c interface{}) error
 	switch {
 	case f.Create:
+		// nolint should be a bigger context-aware refactor
 		whatever = f.Resource.Create
 		if f.ID != "" {
 			return nil, errors.New("ID is not available for Create")
@@ -140,22 +137,21 @@ func (f ResourceFixture) Apply(t *testing.T) (*schema.ResourceData, error) {
 	}
 	if f.State != nil {
 		resourceConfig := terraform.NewResourceConfigRaw(f.State)
-		warns, errs := f.Resource.Validate(resourceConfig)
-		if len(warns) > 0 || len(errs) > 0 {
-			var issues string
-			if len(warns) > 0 {
-				sort.Strings(warns)
-				issues += ". " + strings.Join(warns, ". ")
-			}
-			if len(errs) > 0 {
-				sort.Sort(errorSlice(errs))
-				for _, err := range errs {
-					issues += ". " + err.Error()
+		diags := f.Resource.Validate(resourceConfig)
+		if len(diags) > 0 {
+			sort.Slice(diags, func(i, j int) bool {
+				return diags[i].Detail < diags[j].Detail
+			})
+			issues := []string{}
+			for _, diag := range diags {
+				if diag.Summary == "ConflictsWith" {
+					issues = append(issues, diag.Detail)
+				} else {
+					issues = append(issues, diag.Summary)
 				}
 			}
-			// remove characters that need escaping, it's only tests...
-			issues = strings.ReplaceAll(issues, "\"", "")
-			return nil, fmt.Errorf("Invalid config supplied%s", issues)
+			return nil, fmt.Errorf("Invalid config supplied. %s",
+				strings.ReplaceAll(strings.Join(issues, ". "), "\"", ""))
 		}
 	}
 	resourceData := schema.TestResourceDataRaw(t, f.Resource.Schema, f.State)
@@ -196,13 +192,18 @@ func HttpFixtureClient(t *testing.T, fixtures []HTTPFixture) (client *common.Dat
 					assert.JSONEq(t, string(jsonStr), buf.String(), "json strings do not match")
 				}
 				if fixture.Response != nil {
-					responseBytes, err := json.Marshal(fixture.Response)
-					if err != nil {
+					if alreadyJSON, ok := fixture.Response.(string); ok {
+						_, err = rw.Write([]byte(alreadyJSON))
 						assert.NoError(t, err, err)
-						t.FailNow()
+					} else {
+						responseBytes, err := json.Marshal(fixture.Response)
+						if err != nil {
+							assert.NoError(t, err, err)
+							t.FailNow()
+						}
+						_, err = rw.Write(responseBytes)
+						assert.NoError(t, err, err)
 					}
-					_, err = rw.Write(responseBytes)
-					assert.NoError(t, err, err)
 				}
 				found = true
 				// Reset the request if it is already used
@@ -280,11 +281,20 @@ func fixHCL(v interface{}) interface{} {
 	}
 }
 
-// EnvironmentTemplate asserts existence and fills in {env.VAR} & {var.RANDOM} placeholders in template
-func EnvironmentTemplate(t *testing.T, template string) string {
+// For writing a unit test to intercept the errors (t.Fatalf literally ends the test in failure)
+func environmentTemplate(t *testing.T, template string, otherVars ...map[string]string) (string, error) {
 	vars := map[string]string{
 		"RANDOM": acctest.RandStringFromCharSet(5, acctest.CharSetAlphaNum),
 	}
+	if len(otherVars) > 1 {
+		return "", errors.New("Cannot have more than one customer variable map!")
+	}
+	if len(otherVars) == 1 {
+		for k, v := range otherVars[0] {
+			vars[k] = v
+		}
+	}
+	// pullAll otherVars
 	missing := 0
 	var varType, varName, value string
 	r := regexp.MustCompile(`{(env|var).([^{}]*)}`)
@@ -306,9 +316,18 @@ func EnvironmentTemplate(t *testing.T, template string) string {
 		template = strings.ReplaceAll(template, `{`+varType+`.`+varName+`}`, value)
 	}
 	if missing > 0 {
-		t.Fatalf("Please set %d variables and restart.", missing)
+		return "", fmt.Errorf("please set %d variables and restart.", missing)
 	}
-	return internal.TrimLeadingWhitespace(template)
+	return internal.TrimLeadingWhitespace(template), nil
+}
+
+// EnvironmentTemplate asserts existence and fills in {env.VAR} & {var.RANDOM} placeholders in template
+func EnvironmentTemplate(t *testing.T, template string, otherVars ...map[string]string) string {
+	resp, err := environmentTemplate(t, template, otherVars...)
+	if err != nil {
+		t.Skipf(err.Error())
+	}
+	return resp
 }
 
 // FirstKeyValue gets it from HCL string
@@ -319,15 +338,6 @@ func FirstKeyValue(t *testing.T, str, key string) string {
 		t.Fatalf("Cannot find %s in given string", key)
 	}
 	return match[1]
-}
-
-func TestEnvironmentTemplate(t *testing.T) {
-	res := EnvironmentTemplate(t, `
-	resource "user" "me" {
-		name  = "{env.USER}"
-		email = "{env.USER}+{var.RANDOM}@example.com"
-	}`)
-	assert.Equal(t, os.Getenv("USER"), FirstKeyValue(t, res, "name"))
 }
 
 func AssertErrorStartsWith(t *testing.T, err error, message string) bool {
@@ -374,7 +384,7 @@ func GetCloudInstanceType(c *common.DatabricksClient) string {
 	return "m4.large"
 }
 
-func AssertRequestWithMockServer(t *testing.T, rawPayloadArgs interface{}, requestMethod string, requestURI string, input interface{}, response string, responseStatus int, want interface{}, wantErr bool, apiCall func(client common.DatabricksClient) (interface{}, error)) {
+func AssertRequestWithMockServer(t *testing.T, rawPayloadArgs interface{}, requestMethod string, requestURI string, input interface{}, response string, responseStatus int, want interface{}, wantErr bool, apiCall func(client *common.DatabricksClient) (interface{}, error)) {
 	t.Log("[DEPRECATED] Please rewrite the code to use ResourceFixture")
 	server := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
 		// Test request parameters
@@ -398,7 +408,7 @@ func AssertRequestWithMockServer(t *testing.T, rawPayloadArgs interface{}, reque
 	}
 	err := client.Configure()
 	assert.NoError(t, err, fmt.Sprintf("Expected no error but got: %v", err))
-	output, err := apiCall(client)
+	output, err := apiCall(&client)
 
 	assert.Equal(t, reflect.TypeOf(want), reflect.TypeOf(output), "Types are not equal between output of api call and expectiation!")
 	if output != nil && !reflect.ValueOf(output).IsZero() {
@@ -412,7 +422,7 @@ func AssertRequestWithMockServer(t *testing.T, rawPayloadArgs interface{}, reque
 	}
 }
 
-func AssertMultipleRequestsWithMockServer(t *testing.T, rawPayloadArgs interface{}, requestMethod []string, requestURI []string, input interface{}, response []string, responseStatus []int, want interface{}, wantErr bool, apiCall func(client common.DatabricksClient) (interface{}, error)) {
+func AssertMultipleRequestsWithMockServer(t *testing.T, rawPayloadArgs interface{}, requestMethod []string, requestURI []string, input interface{}, response []string, responseStatus []int, want interface{}, wantErr bool, apiCall func(client *common.DatabricksClient) (interface{}, error)) {
 	t.Log("[DEPRECATED] Please rewrite the code to use ResourceFixture")
 	counter := 0
 	server := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
@@ -442,7 +452,7 @@ func AssertMultipleRequestsWithMockServer(t *testing.T, rawPayloadArgs interface
 	}
 	err := client.Configure()
 	assert.NoError(t, err, fmt.Sprintf("Expected no error but got: %v", err))
-	output, err := apiCall(client)
+	output, err := apiCall(&client)
 
 	if output != nil {
 		compare(t, want, output)
@@ -470,4 +480,13 @@ func TestCreateTempFile(t *testing.T, data string) string {
 	}
 
 	return filename
+}
+
+// GetEnvOrSkipTest proceeds with test only with that env variable
+func GetEnvOrSkipTest(t *testing.T, name string) string {
+	value := os.Getenv(name)
+	if value == "" {
+		t.Skipf("Environment variable %s is missing", name)
+	}
+	return value
 }

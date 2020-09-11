@@ -156,19 +156,19 @@ func mountCluster(tpl interface{}, d *schema.ResourceData, m interface{},
 
 // returns resource create mount for object store on workspace
 func mountCreate(tpl interface{}, r *schema.Resource) func(*schema.ResourceData, interface{}) error {
-	return func(d *schema.ResourceData, m interface{}) (err error) {
+	return func(d *schema.ResourceData, m interface{}) error {
 		mountConfig, mountPoint, err := mountCluster(tpl, d, m, r)
 		if err != nil {
-			return
+			return err
 		}
 		log.Printf("[INFO] Mounting %s at /mnt/%s", mountConfig.Source(), d.Id())
 		source, err := mountPoint.Mount(mountConfig)
 		if err != nil {
-			return
+			return err
 		}
 		err = d.Set("source", source)
 		if err != nil {
-			return
+			return err
 		}
 		return readMountSource(mountPoint, d)
 	}

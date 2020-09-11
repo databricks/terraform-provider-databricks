@@ -1,6 +1,8 @@
 # databricks_aws_crossaccount_policy Data Source
 
-This data source constructs necessary AWS cross-account policy for you, which is based on [official documentation](https://docs.databricks.com/administration-guide/account-settings/aws-accounts.html).
+-> **Note** This resource has evolving API, which may change in future versions of provider. Please always consult [latest documentation](https://docs.databricks.com/administration-guide/account-api/iam-role.html#language-Your%C2%A0VPC,%C2%A0default) in case of any questions.
+
+This data source constructs necessary AWS cross-account policy for you, which is based on [official documentation](https://docs.databricks.com/administration-guide/account-api/iam-role.html#language-Your%C2%A0VPC,%C2%A0default).
 
 ## Example Usage
 

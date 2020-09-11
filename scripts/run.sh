@@ -124,6 +124,16 @@ function go_test {
 if [[ $@ == *"--tee"* ]]; then
     go_test $2 2>&1 | tee out.log
     echo "✓ To output of existing tests: less $PWD/out.log"
+
+    FAILURES=$(grep "\-\-\- FAIL" out.log | sed 's/--- FAIL: /\* \[ \]/g' | sort)
+    PASSES=$(grep PASS out.log | grep Test | sort | sed 's/PASS/ \* \[x\]/')
+
+cat <<-EOF > test-report.log
+$1
+---
+${FAILURES}
+${PASSES}
+EOF
 else 
     go_test $2
 fi

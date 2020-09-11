@@ -299,25 +299,18 @@ func TestAwsAccClusterResource_CreateClusterViaInstancePool(t *testing.T) {
 }
 
 func TestAzureAccClusterResource_CreateClusterViaInstancePool(t *testing.T) {
-	randomInstancePoolName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
-	randomInstancePoolInterpolation := fmt.Sprintf("databricks_instance_pool.%s.id", randomInstancePoolName)
-	randomClusterSuffix := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
-	randomClusterName := fmt.Sprintf("cluster-%s", randomClusterSuffix)
-	randomClusterId := fmt.Sprintf("databricks_cluster.%s", randomClusterName)
-	defaultAzureInstancePoolClusterTest :=
-		newInstancePoolHCLBuilder(randomInstancePoolName).
-			withCloudEnv().
-			build() +
-			newClusterHCLBuilder(randomClusterName).
-				withInstancePool(randomInstancePoolInterpolation).
-				build()
-
+	randomInstancePoolName := fmt.Sprintf("pool_%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+	randomClusterName := fmt.Sprintf("cluster_%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+	defaultAzureInstancePoolClusterTest := newInstancePoolHCLBuilder(randomInstancePoolName).withCloudEnv().build() +
+		newClusterHCLBuilder(randomClusterName).withInstancePool(
+			fmt.Sprintf("databricks_instance_pool.%s.id", randomInstancePoolName)).build()
 	acceptance.AccTest(t, resource.TestCase{
 		Steps: []resource.TestStep{
 			{
 				Config: defaultAzureInstancePoolClusterTest,
 				Check: resource.ComposeTestCheckFunc(
-					testClusterCheckAndTerminateForFutureTests(randomClusterId, t),
+					testClusterCheckAndTerminateForFutureTests(
+						fmt.Sprintf("databricks_cluster.%s", randomClusterName), t),
 				),
 			},
 		},

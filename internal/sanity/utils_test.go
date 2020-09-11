@@ -136,6 +136,12 @@ func TestAccMissingResourcesInWorkspace(t *testing.T) {
 			},
 		},
 		{
+			Name: "Cluster Policies Delete",
+			ReadFunc: func() error {
+				return compute.NewClusterPoliciesAPI(client).Delete(randStringID)
+			},
+		},
+		{
 			Name: "Jobs",
 			ReadFunc: func() error {
 				_, err := compute.NewJobsAPI(client).Read(strconv.Itoa(randIntID))

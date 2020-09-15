@@ -286,6 +286,17 @@ func TestAccGroup(t *testing.T) {
 	assert.True(t, group.Members[0].Value == user2.ID)
 }
 
+func TestAccFilterGroup(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping integration test in short mode.")
+	}
+	client := common.NewClientFromEnvironment()
+	groupList, err := NewGroupsAPI(client).Filter("displayName eq admins")
+	assert.NoError(t, err, err)
+	assert.NotNil(t, groupList)
+	assert.Len(t, groupList.Resources, 1)
+}
+
 func TestAccGetAdminGroup(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping integration test in short mode.")

@@ -35,7 +35,7 @@ func TestResourceSecretScopeRead(t *testing.T) {
 	assert.NoError(t, err, err)
 	assert.Equal(t, "abc", d.Id())
 	assert.Equal(t, "DATABRICKS", d.Get("backend_type"))
-	assert.Equal(t, "users", d.Get("initial_manage_principal"))
+	assert.Equal(t, "", d.Get("initial_manage_principal"))
 	assert.Equal(t, "abc", d.Get("name"))
 }
 

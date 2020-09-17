@@ -151,7 +151,7 @@ func ResourceWorkspace() *schema.Resource {
 					"us-east-2",
 					"ca-central-1",
 					"eu-west-1",
-					"eu-central-1",					
+					"eu-central-1",
 				}, false),
 			},
 			"credentials_id": {

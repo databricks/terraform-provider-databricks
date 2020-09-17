@@ -50,7 +50,7 @@ resource "databricks_azure_adls_gen2_mount" "marketing" {
     tenant_id              = data.azurerm_client_config.current.tenant_id
     client_id              = data.azurerm_client_config.current.client_id
     client_secret_scope    = databricks_secret_scope.terraform.name
-    client_secret_key      = databricks_secret.client_secret.key
+    client_secret_key      = databricks_secret.service_principal_key.key
     initialize_file_system = true
 }
 ```

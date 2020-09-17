@@ -44,7 +44,7 @@ resource "azurerm_storage_container" "this" {
 }
 
 resource "databricks_azure_adls_gen2_mount" "marketing" {
-    container_name         = azurerm_storage_container.adlsexample.name
+    container_name         = azurerm_storage_container.this.name
     storage_account_name   = azurerm_storage_account.this.name
     mount_name             = "marketing"
     tenant_id              = data.azurerm_client_config.current.tenant_id

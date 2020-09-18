@@ -130,7 +130,7 @@ func resourceGroupDelete(d *schema.ResourceData, m interface{}) error {
 	return err
 }
 
-func isGroupClusterCreateEntitled(group *Group) bool {
+func isGroupClusterCreateEntitled(group *ScimGroup) bool {
 	for _, entitlement := range group.Entitlements {
 		if entitlement.Value == AllowClusterCreateEntitlement {
 			return true
@@ -139,7 +139,7 @@ func isGroupClusterCreateEntitled(group *Group) bool {
 	return false
 }
 
-func isGroupInstancePoolCreateEntitled(group *Group) bool {
+func isGroupInstancePoolCreateEntitled(group *ScimGroup) bool {
 	for _, entitlement := range group.Entitlements {
 		if entitlement.Value == AllowClusterCreateEntitlement {
 			return true

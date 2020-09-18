@@ -23,7 +23,7 @@ func TestAwsAccGroupInstanceProfileResource(t *testing.T) {
 	if _, ok := os.LookupEnv("CLOUD_ENV"); !ok {
 		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
 	}
-	var group Group
+	var group ScimGroup
 	// generate a random name for each tokenInfo test run, to avoid
 	// collisions from multiple concurrent tests.
 	// the acctest package includes many helpers such as RandStringFromCharSet
@@ -98,7 +98,7 @@ func testGroupInstanceProfileResourceDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testGroupInstanceProfileValues(t *testing.T, group *Group, displayName, role string) resource.TestCheckFunc {
+func testGroupInstanceProfileValues(t *testing.T, group *ScimGroup, displayName, role string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		assert.True(t, group.DisplayName == displayName)
 		assert.True(t, InstanceProfileInGroup(role, group), "role is not in group")
@@ -107,7 +107,7 @@ func testGroupInstanceProfileValues(t *testing.T, group *Group, displayName, rol
 }
 
 // testAccCheckTokenResourceExists queries the API and retrieves the matching Widget.
-func testGroupInstanceProfileResourceExists(n string, group *Group, t *testing.T) resource.TestCheckFunc {
+func testGroupInstanceProfileResourceExists(n string, group *ScimGroup, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		// find the corresponding state object
 		rs, ok := s.RootModule().Resources[n]

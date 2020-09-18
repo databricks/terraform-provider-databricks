@@ -23,7 +23,7 @@ func TestScimGroupAPI_Create(t *testing.T) {
 		response       string
 		args           args
 		responseStatus int
-		want           Group
+		want           ScimGroup
 		wantErr        bool
 	}{
 		{
@@ -32,7 +32,7 @@ func TestScimGroupAPI_Create(t *testing.T) {
 							"id": "101030"
 						}`,
 			responseStatus: http.StatusOK,
-			want: Group{
+			want: ScimGroup{
 				ID: "101030",
 			},
 			args: args{
@@ -47,7 +47,7 @@ func TestScimGroupAPI_Create(t *testing.T) {
 		{
 			name:           "Create Test Failure",
 			response:       ``,
-			want:           Group{},
+			want:           ScimGroup{},
 			responseStatus: http.StatusBadRequest,
 			args: args{
 				Schemas:      []URN{GroupSchema},
@@ -74,7 +74,7 @@ func TestScimGroupAPI_GetAdminGroup(t *testing.T) {
 		name           string
 		response       string
 		responseStatus int
-		want           Group
+		want           ScimGroup
 		wantErr        bool
 	}{
 		{
@@ -83,7 +83,7 @@ func TestScimGroupAPI_GetAdminGroup(t *testing.T) {
 							"resources": [{"id": "101030"}]
 						}`,
 			responseStatus: http.StatusOK,
-			want: Group{
+			want: ScimGroup{
 				ID: "101030",
 			},
 			wantErr: false,
@@ -94,7 +94,7 @@ func TestScimGroupAPI_GetAdminGroup(t *testing.T) {
 							"resources": []
 						}`,
 			responseStatus: http.StatusOK,
-			want: Group{
+			want: ScimGroup{
 				ID: "101030",
 			},
 			wantErr: true,
@@ -102,7 +102,7 @@ func TestScimGroupAPI_GetAdminGroup(t *testing.T) {
 		{
 			name:           "GetAdminGroup Test Failure",
 			response:       ``,
-			want:           Group{},
+			want:           ScimGroup{},
 			responseStatus: http.StatusBadRequest,
 			wantErr:        true,
 		},

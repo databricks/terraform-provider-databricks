@@ -14,18 +14,18 @@ func TestResourceGroupCreate(t *testing.T) {
 			{
 				Method:   "POST",
 				Resource: "/api/2.0/preview/scim/v2/Groups",
-				ExpectedRequest: Group{
+				ExpectedRequest: ScimGroup{
 					Schemas:     []URN{"urn:ietf:params:scim:schemas:core:2.0:Group"},
 					DisplayName: "Data Scientists",
 				},
-				Response: Group{
+				Response: ScimGroup{
 					ID: "abc",
 				},
 			},
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/preview/scim/v2/Groups/abc",
-				Response: Group{
+				Response: ScimGroup{
 					Schemas:     []URN{"urn:ietf:params:scim:schemas:core:2.0:Group"},
 					DisplayName: "Data Scientists",
 					ID:          "abc",
@@ -71,7 +71,7 @@ func TestResourceGroupRead(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/preview/scim/v2/Groups/abc",
-				Response: Group{
+				Response: ScimGroup{
 					Schemas:     []URN{"urn:ietf:params:scim:schemas:core:2.0:Group"},
 					DisplayName: "Data Scientists",
 					ID:          "abc",
@@ -159,7 +159,7 @@ func TestResourceGroupUpdate(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/preview/scim/v2/Groups/abc",
-				Response: Group{
+				Response: ScimGroup{
 					Schemas:     []URN{"urn:ietf:params:scim:schemas:core:2.0:Group"},
 					DisplayName: "Data Ninjas",
 					ID:          "abc",

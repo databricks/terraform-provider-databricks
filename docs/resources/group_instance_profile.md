@@ -13,9 +13,11 @@ resource "databricks_instance_profile" "instance_profile" {
   instance_profile_arn = "my_instance_profile_arn"
   skip_validation = true
 }
+
 resource "databricks_group" "my_group" {
   display_name = "my_group_name"
 }
+
 resource "databricks_group_instance_profile" "my_group_instance_profile" {
  group_id = databricks_group.my_group.id
  instance_profile_id = databricks_instance_profile.instance_profile.id

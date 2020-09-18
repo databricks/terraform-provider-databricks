@@ -72,26 +72,28 @@ const (
 	GroupEntitlementsPath GroupPathType = "entitlements"
 )
 
-// Group contains information about the SCIM group
-type Group struct {
-	ID               string                 `json:"id,omitempty"`
-	Schemas          []URN                  `json:"schemas,omitempty"`
-	DisplayName      string                 `json:"displayName,omitempty"`
-	Members          []GroupMember          `json:"members,omitempty"`
-	Groups           []GroupMember          `json:"groups,omitempty"`
-	Roles            []RoleListItem         `json:"roles,omitempty"`
-	Entitlements     []EntitlementsListItem `json:"entitlements,omitempty"`
-	UnInheritedRoles []RoleListItem         `json:"uninherited_roles,omitempty"`
-	InheritedRoles   []RoleListItem         `json:"inherited_roles,omitempty"`
+// ScimGroup contains information about the SCIM group
+type ScimGroup struct {
+	ID           string                 `json:"id,omitempty"`
+	Schemas      []URN                  `json:"schemas,omitempty"`
+	DisplayName  string                 `json:"displayName,omitempty"`
+	Members      []GroupMember          `json:"members,omitempty"`
+	Groups       []GroupMember          `json:"groups,omitempty"`
+	Roles        []RoleListItem         `json:"roles,omitempty"`
+	Entitlements []EntitlementsListItem `json:"entitlements,omitempty"`
+
+	// TODO: remove UnInheritedRoles & InheritedRoles in 0.3, it is not part of SCIM spec
+	UnInheritedRoles []RoleListItem `json:"uninherited_roles,omitempty"`
+	InheritedRoles   []RoleListItem `json:"inherited_roles,omitempty"`
 }
 
 // GroupList contains a list of groups fetched from a list api call from SCIM api
 type GroupList struct {
-	TotalResults int32   `json:"totalResults,omitempty"`
-	StartIndex   int32   `json:"startIndex,omitempty"`
-	ItemsPerPage int32   `json:"itemsPerPage,omitempty"`
-	Schemas      []URN   `json:"schemas,omitempty"`
-	Resources    []Group `json:"resources,omitempty"`
+	TotalResults int32       `json:"totalResults,omitempty"`
+	StartIndex   int32       `json:"startIndex,omitempty"`
+	ItemsPerPage int32       `json:"itemsPerPage,omitempty"`
+	Schemas      []URN       `json:"schemas,omitempty"`
+	Resources    []ScimGroup `json:"resources,omitempty"`
 }
 
 // GroupPatchRequest contains a request structure to make a patch op against SCIM api

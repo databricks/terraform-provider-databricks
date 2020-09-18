@@ -28,6 +28,7 @@ func DatabricksProvider() *schema.Provider {
 			"databricks_dbfs_file":               storage.DataSourceDBFSFile(),
 			"databricks_dbfs_file_paths":         storage.DataSourceDBFSFilePaths(),
 			"databricks_default_user_roles":      identity.DataSourceDefaultUserRoles(),
+			"databricks_group":                   identity.DataSourceGroup(),
 			"databricks_notebook":                workspace.DataSourceNotebook(),
 			"databricks_notebook_paths":          workspace.DataSourceNotebookPaths(),
 			"databricks_zones":                   compute.DataSourceClusterZones(),

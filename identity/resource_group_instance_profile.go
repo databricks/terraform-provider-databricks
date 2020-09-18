@@ -132,7 +132,7 @@ func parsegroupInstanceProfileID(id string) *groupInstanceProfileID {
 	}
 }
 
-func InstanceProfileInGroup(role string, group *Group) bool {
+func InstanceProfileInGroup(role string, group *ScimGroup) bool {
 	for _, groupRole := range group.Roles {
 		if groupRole.Value == role {
 			return true

@@ -111,7 +111,7 @@ func parsegroupMemberID(id string) *groupMemberID {
 	}
 }
 
-func iMemberInGroup(member string, group *Group) bool {
+func iMemberInGroup(member string, group *ScimGroup) bool {
 	for _, groupMember := range group.Members {
 		if groupMember.Value == member {
 			return true

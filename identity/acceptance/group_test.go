@@ -10,6 +10,7 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/databrickslabs/databricks-terraform/internal/acceptance"
+	"github.com/databrickslabs/databricks-terraform/internal/qa"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -18,17 +19,55 @@ import (
 	"testing"
 )
 
+func TestAccUserMemberships(t *testing.T) {
+	if _, ok := os.LookupEnv("CLOUD_ENV"); !ok {
+		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
+	}
+	config := qa.EnvironmentTemplate(t, `
+	data "databricks_group" "admins" {
+		display_name = "admins"
+	}
+	
+	resource "databricks_user" "me" {
+		user_name    = "me+{var.RANDOM}@example.com"
+	}
+	
+	resource "databricks_group_member" "my_member_a" {
+		group_id = data.databricks_group.admins.id
+		member_id = databricks_user.me.id
+	}`)
+	acceptance.AccTest(t, resource.TestCase{
+		Steps: []resource.TestStep{
+			{
+				Config:             config,
+				Destroy:            false,
+				ExpectNonEmptyPlan: true,
+				// Check: resource.ComposeTestCheckFunc(
+				// 	resource.TestCheckResourceAttr("databricks_user.first", "allow_cluster_create", "false"),
+				// 	resource.TestCheckResourceAttr("databricks_user.first", "allow_instance_pool_create", "false"),
+				// 	resource.TestCheckResourceAttr("databricks_user.second", "allow_cluster_create", "true"),
+				// 	resource.TestCheckResourceAttr("databricks_user.second", "allow_instance_pool_create", "false"),
+				// 	resource.TestCheckResourceAttr("databricks_user.third", "allow_cluster_create", "false"),
+				// 	resource.TestCheckResourceAttr("databricks_user.third", "allow_instance_pool_create", "true"),
+				// 	func(s *terraform.State) error {
+				// 		r := s.RootModule().Resources
+				// 		client := common.CommonEnvironmentClient()
+				// 		return NewGroupsAPI(client).Patch(r["databricks_group.first"].Primary.ID, []string{
+				// 			r["databricks_user.first"].Primary.ID,
+				// 			r["databricks_user.second"].Primary.ID,
+				// 		}, nil, GroupMembersPath)
+				// 	},
+				// ),
+			},
+		},
+	})
+}
+
 func TestAccGroupResource(t *testing.T) {
 	if _, ok := os.LookupEnv("CLOUD_ENV"); !ok {
 		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
 	}
-	// TODO: refactor for common instance pool & AZ CLI
-	var Group Group
-	// generate a random name for each tokenInfo test run, to avoid
-	// collisions from multiple concurrent tests.
-	// the acctest package includes many helpers such as RandStringFromCharSet
-	// See https://godoc.org/github.com/hashicorp/terraform-plugin-sdk/helper/acctest
-	//scope := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
+	var Group ScimGroup
 	randomStr := acctest.RandStringFromCharSet(5, acctest.CharSetAlphaNum)
 	displayName := fmt.Sprintf("tf group test %s", randomStr)
 	newDisplayName := fmt.Sprintf("new tf group test %s", randomStr)
@@ -67,7 +106,7 @@ func TestAccGroupResource(t *testing.T) {
 }
 
 func TestAccGroupResource_verify_entitlements(t *testing.T) {
-	var Group Group
+	var Group ScimGroup
 	// generate a random name for each tokenInfo test run, to avoid
 	// collisions from multiple concurrent tests.
 	// the acctest package includes many helpers such as RandStringFromCharSet
@@ -122,7 +161,7 @@ func testGroupResourceDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testGroupValues(t *testing.T, group *Group, displayName string) resource.TestCheckFunc {
+func testGroupValues(t *testing.T, group *ScimGroup, displayName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		assert.True(t, group.DisplayName == displayName)
 		return nil
@@ -130,7 +169,7 @@ func testGroupValues(t *testing.T, group *Group, displayName string) resource.Te
 }
 
 // testAccCheckTokenResourceExists queries the API and retrieves the matching Widget.
-func testGroupResourceExists(n string, group *Group, t *testing.T) resource.TestCheckFunc {
+func testGroupResourceExists(n string, group *ScimGroup, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		// find the corresponding state object
 		rs, ok := s.RootModule().Resources[n]

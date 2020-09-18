@@ -102,7 +102,7 @@ func (a UsersAPI) Read(userID string) (ScimUser, error) {
 	}
 
 	//get groups
-	var groups []Group
+	var groups []ScimGroup
 	for _, group := range user.Groups {
 		group, err := GroupsAPI{a.C}.Read(group.Value)
 		if err != nil {
@@ -265,7 +265,7 @@ func (a UsersAPI) GetOrCreateDefaultMetaUser(metaUserDisplayName string, metaUse
 	return newCreatedUser, err
 }
 
-func (a UsersAPI) getInheritedAndNonInheritedRoles(user ScimUser, groups []Group) (inherited []RoleListItem, unInherited []RoleListItem) {
+func (a UsersAPI) getInheritedAndNonInheritedRoles(user ScimUser, groups []ScimGroup) (inherited []RoleListItem, unInherited []RoleListItem) {
 	allRoles := user.Roles
 	var inheritedRoles []RoleListItem
 	inheritedRolesKeys := []string{}

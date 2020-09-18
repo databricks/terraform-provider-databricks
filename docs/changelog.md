@@ -3,6 +3,7 @@
 ## 0.2.6
 
 * Added `databricks_user` resource.
+* Added `databricks_group` data source.
 
 **Deprecations**
 * `databricks_scim_user` is no longer receiving fixes and will be removed in `0.3`, please rewrite using `databricks_user` resource, which has more consistent semantics with `databricks_group` and works better with identity provider SCIM sync.

@@ -50,6 +50,7 @@ func DatabricksProvider() *schema.Provider {
 			"databricks_group_member":           identity.ResourceGroupMember(),
 			"databricks_scim_user":              identity.ResourceScimUser(),
 			"databricks_token":                  identity.ResourceToken(),
+			"databricks_user":                   identity.ResourceUser(),
 
 			"databricks_mws_credentials":            mws.ResourceCredentials(),
 			"databricks_mws_storage_configurations": mws.ResourceStorageConfiguration(),

@@ -2,6 +2,7 @@ package qa
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -20,6 +21,7 @@ import (
 	"github.com/databrickslabs/databricks-terraform/internal"
 
 	"github.com/hashicorp/hcl"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -94,10 +96,26 @@ func (f ResourceFixture) Apply(t *testing.T) (*schema.ResourceData, error) {
 		f.State = fixHCL(out).(map[string]interface{})
 	}
 	var whatever func(d *schema.ResourceData, c interface{}) error
+	pick := func(
+		a func(*schema.ResourceData, interface{}) error,
+		b func(context.Context, *schema.ResourceData, interface{}) diag.Diagnostics,
+		d *schema.ResourceData, m interface{}) error {
+		if b != nil {
+			ctx := context.Background()
+			diags := b(ctx, d, m)
+			if diags != nil {
+				return fmt.Errorf(diagsToString(diags))
+			}
+			return nil
+		}
+		return a(d, m)
+	}
 	switch {
 	case f.Create:
 		// nolint should be a bigger context-aware refactor
-		whatever = f.Resource.Create
+		whatever = func(d *schema.ResourceData, m interface{}) error {
+			return pick(f.Resource.Create, f.Resource.CreateContext, d, m)
+		}
 		if f.ID != "" {
 			return nil, errors.New("ID is not available for Create")
 		}
@@ -116,7 +134,7 @@ func (f ResourceFixture) Apply(t *testing.T) (*schema.ResourceData, error) {
 				err = d.Set(k, v)
 				assert.NoError(t, err)
 			}
-			return f.Resource.Read(d, m)
+			return pick(f.Resource.Read, f.Resource.ReadContext, d, m)
 		}
 	case f.Update:
 		if f.ID == "" {
@@ -124,7 +142,7 @@ func (f ResourceFixture) Apply(t *testing.T) (*schema.ResourceData, error) {
 		}
 		whatever = func(d *schema.ResourceData, m interface{}) error {
 			d.SetId(f.ID)
-			return f.Resource.Update(d, m)
+			return pick(f.Resource.Update, f.Resource.UpdateContext, d, m)
 		}
 	case f.Delete:
 		if f.ID == "" {
@@ -132,26 +150,15 @@ func (f ResourceFixture) Apply(t *testing.T) (*schema.ResourceData, error) {
 		}
 		whatever = func(d *schema.ResourceData, m interface{}) error {
 			d.SetId(f.ID)
-			return f.Resource.Delete(d, m)
+			return pick(f.Resource.Delete, f.Resource.DeleteContext, d, m)
 		}
 	}
 	if f.State != nil {
 		resourceConfig := terraform.NewResourceConfigRaw(f.State)
 		diags := f.Resource.Validate(resourceConfig)
 		if len(diags) > 0 {
-			sort.Slice(diags, func(i, j int) bool {
-				return diags[i].Detail < diags[j].Detail
-			})
-			issues := []string{}
-			for _, diag := range diags {
-				if diag.Summary == "ConflictsWith" {
-					issues = append(issues, diag.Detail)
-				} else {
-					issues = append(issues, diag.Summary)
-				}
-			}
 			return nil, fmt.Errorf("Invalid config supplied. %s",
-				strings.ReplaceAll(strings.Join(issues, ". "), "\"", ""))
+				strings.ReplaceAll(diagsToString(diags), "\"", ""))
 		}
 	}
 	resourceData := schema.TestResourceDataRaw(t, f.Resource.Schema, f.State)
@@ -159,9 +166,25 @@ func (f ResourceFixture) Apply(t *testing.T) (*schema.ResourceData, error) {
 	if err != nil {
 		return nil, err
 	}
-
-	// warns, errs := schemaMap(r.Schema).Validate(c)
 	return resourceData, whatever(resourceData, client)
+}
+
+func diagsToString(diags diag.Diagnostics) string {
+	if len(diags) > 0 {
+		sort.Slice(diags, func(i, j int) bool {
+			return diags[i].Detail < diags[j].Detail
+		})
+		issues := []string{}
+		for _, diag := range diags {
+			if diag.Summary == "ConflictsWith" {
+				issues = append(issues, diag.Detail)
+			} else {
+				issues = append(issues, diag.Summary)
+			}
+		}
+		return strings.Join(issues, ". ")
+	}
+	return ""
 }
 
 // UnionFixturesLists merges two HTTP fixture lists together

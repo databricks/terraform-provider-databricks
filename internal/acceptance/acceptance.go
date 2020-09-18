@@ -22,6 +22,7 @@ func AccTest(t *testing.T, tc resource.TestCase) {
 	// this allows to debug from VSCode if it's launched with CLOUD_ENV var
 	cloudEnv := os.Getenv("CLOUD_ENV")
 	tc.IsUnitTest = cloudEnv != ""
+	// TODO: add TF_ACC_LOG_PATH
 
 	if cloudEnv != "" {
 		// let's be more chatty in integration test logs

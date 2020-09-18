@@ -2,6 +2,12 @@
 
 This resource allows you to create groups in Databricks. You can also associate Databricks users to the following groups. This is an alternative to `databricks_scim_group` and useful if you are using an application to sync users & groups with SCIM API.
 
+Recommended to use along with Identity Provider SCIM provisioning to populate users into those groups:
+
+* [Azure Active Directory](https://docs.microsoft.com/en-us/azure/databricks/administration-guide/users-groups/scim/aad)
+* [Okta](https://docs.databricks.com/administration-guide/users-groups/scim/okta.html)
+* [OneLogin](https://docs.databricks.com/administration-guide/users-groups/scim/onelogin.html)
+
 ## Example Usage
 
 ```hcl

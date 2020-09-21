@@ -61,17 +61,17 @@ type Network struct {
 
 // AwsKeyInfo has information about the KMS key for BYOK
 type AwsKeyInfo struct {
-	KeyArn    string `json:"key_arn,omitempty"`
-	KeyAlias  string `json:"key_alias,omitempty"`
-	KeyRegion string `json:"key_region,omitempty"`
+	KeyArn    string `json:"key_arn"`
+	KeyAlias  string `json:"key_alias"`
+	KeyRegion string `json:"key_region,omitempty" tf:"computed"`
 }
 
 // CustomerManagedKey contains key information and metadata for BYOK for E2
 type CustomerManagedKey struct {
-	CustomerManagedKeyID string      `json:"customer_managed_key_id,omitempty"`
-	AwsKeyInfo           *AwsKeyInfo `json:"aws_key_info,omitempty"`
-	AccountID            string      `json:"account_id,omitempty"`
-	CreationTime         int64       `json:"creation_time,omitempty"`
+	CustomerManagedKeyID string      `json:"customer_managed_key_id,omitempty" tf:"computed"`
+	AwsKeyInfo           *AwsKeyInfo `json:"aws_key_info"`
+	AccountID            string      `json:"account_id,omitempty" tf:"computed"`
+	CreationTime         int64       `json:"creation_time,omitempty" tf:"computed"`
 }
 
 // List of workspace statuses for provisioning the workspace

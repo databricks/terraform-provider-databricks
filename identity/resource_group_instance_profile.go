@@ -1,33 +1,115 @@
 package identity
 
 import (
+	"context"
 	"fmt"
-	"log"
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/databrickslabs/databricks-terraform/common"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-func ResourceGroupInstanceProfile() *schema.Resource {
-	return &schema.Resource{
-		Create: resourceGroupInstanceProfileCreate,
-		Read:   resourceGroupInstanceProfileRead,
-		Delete: resourceGroupInstanceProfileDelete,
+// Pair defines an ID pair
+type Pair struct {
+	Left, Right string
+}
 
-		Schema: map[string]*schema.Schema{
-			"group_id": {
-				Type:     schema.TypeString,
-				ForceNew: true,
-				Required: true,
-			},
-			"instance_profile_id": {
-				Type:         schema.TypeString,
-				ForceNew:     true,
-				Required:     true,
-				ValidateFunc: ValidateInstanceProfileARN,
-			},
+// NewPairID creates new ID pair
+func NewPairID(left, right string) *Pair {
+	return &Pair{left, right}
+}
+
+// Schema of paired fields
+func (p *Pair) Schema() map[string]*schema.Schema {
+	s := map[string]*schema.Schema{}
+	s[p.Left] = &schema.Schema{Type: schema.TypeString, ForceNew: true, Required: true}
+	s[p.Right] = &schema.Schema{Type: schema.TypeString, ForceNew: true, Required: true}
+	return s
+}
+
+// Unpack ID into two strings and set data
+func (p *Pair) Unpack(d *schema.ResourceData) (string, string, error) {
+	parts := strings.SplitN(d.Id(), "|", 2)
+	if parts[0] == "" {
+		return "", "", fmt.Errorf("%s cannot be empty", p.Left)
+	}
+	if parts[1] == "" {
+		return "", "", fmt.Errorf("%s cannot be empty", p.Right)
+	}
+	err := d.Set(p.Left, parts[0])
+	if err != nil {
+		return "", "", err
+	}
+	err = d.Set(p.Right, parts[1])
+	if err != nil {
+		return "", "", err
+	}
+	return parts[0], parts[1], nil
+}
+
+// ReadContext helper function
+func (p *Pair) ReadContext(d *schema.ResourceData, do func(left, right string) error) diag.Diagnostics {
+	left, right, err := p.Unpack(d)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	err = do(left, right)
+	if e, ok := err.(common.APIError); ok && e.IsMissing() {
+		d.SetId("")
+		return nil
+	}
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	return nil
+}
+
+// Pack data attributes to ID
+func (p *Pair) Pack(d *schema.ResourceData) {
+	d.SetId(fmt.Sprintf("%s|%s", d.Get(p.Left), d.Get(p.Right)))
+}
+
+// ResourceGroupInstanceProfile defines group role resource
+func ResourceGroupInstanceProfile() *schema.Resource {
+	p := NewPairID("group_id", "instance_profile_id")
+	s := p.Schema()
+	// nolint temporary disable
+	s["instance_profile_id"].ValidateFunc = ValidateInstanceProfileARN
+	readContext := func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+		return p.ReadContext(d, func(groupID, roleARN string) error {
+			group, err := NewGroupsAPI(m).Read(groupID)
+			if err == nil && !group.HasRole(roleARN) {
+				return common.APIError{ErrorCode: "NOT_FOUND", StatusCode: 404}
+			}
+			return err
+		})
+	}
+	return &schema.Resource{
+		Schema:      s,
+		ReadContext: readContext,
+		CreateContext: func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+			groupID := d.Get("group_id").(string)
+			roleARN := d.Get("instance_profile_id").(string)
+			err := NewGroupsAPI(m).PatchR(groupID, scimPatchRequest("add", "roles", roleARN))
+			if err != nil {
+				return diag.FromErr(err)
+			}
+			p.Pack(d)
+			return readContext(ctx, d, m)
+		},
+		DeleteContext: func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+			groupID, roleARN, err := p.Unpack(d)
+			if err != nil {
+				return diag.FromErr(err)
+			}
+			err = NewGroupsAPI(m).PatchR(groupID, scimPatchRequest(
+				"remove", fmt.Sprintf(`roles[value eq "%s"]`, roleARN), ""))
+			if err != nil {
+				return diag.FromErr(err)
+			}
+			return nil
 		},
 	}
 }
@@ -51,92 +133,4 @@ func ValidateInstanceProfileARN(val interface{}, key string) (warns []string, er
 			key, instanceProfileArn.Resource, v)}
 	}
 	return nil, nil
-}
-
-func resourceGroupInstanceProfileCreate(d *schema.ResourceData, m interface{}) error {
-	client := m.(*common.DatabricksClient)
-	groupID := d.Get("group_id").(string)
-	instanceProfileID := d.Get("instance_profile_id").(string)
-	groupInstanceProfileID := &groupInstanceProfileID{
-		GroupID:           groupID,
-		InstanceProfileID: instanceProfileID,
-	}
-
-	roleAddList := []string{groupInstanceProfileID.InstanceProfileID}
-	err := NewGroupsAPI(client).Patch(groupInstanceProfileID.GroupID, roleAddList, nil, GroupRolesPath)
-	if err != nil {
-		return err
-	}
-
-	d.SetId(groupInstanceProfileID.String())
-	return resourceGroupInstanceProfileRead(d, m)
-}
-
-func resourceGroupInstanceProfileRead(d *schema.ResourceData, m interface{}) error {
-	id := d.Id()
-	client := m.(*common.DatabricksClient)
-	groupInstanceProfileID := parsegroupInstanceProfileID(id)
-	group, err := NewGroupsAPI(client).Read(groupInstanceProfileID.GroupID)
-
-	// First verify if the group exists
-	if err != nil {
-		if e, ok := err.(common.APIError); ok && e.IsMissing() {
-			log.Printf("missing resource due to error: %v\n", e)
-			d.SetId("")
-			return nil
-		}
-		return err
-	}
-
-	// Set Id to null if instance profile is not in group
-	if !InstanceProfileInGroup(groupInstanceProfileID.InstanceProfileID, &group) {
-		log.Printf("Missing role %s in group with id: %s.", groupInstanceProfileID.InstanceProfileID, groupInstanceProfileID.GroupID)
-		d.SetId("")
-		return nil
-	}
-
-	err = d.Set("group_id", groupInstanceProfileID.GroupID)
-	if err != nil {
-		return err
-	}
-
-	err = d.Set("instance_profile_id", groupInstanceProfileID.InstanceProfileID)
-	return err
-}
-
-func resourceGroupInstanceProfileDelete(d *schema.ResourceData, m interface{}) error {
-	id := d.Id()
-	client := m.(*common.DatabricksClient)
-	groupInstanceProfileID := parsegroupInstanceProfileID(id)
-
-	roleRemoveList := []string{groupInstanceProfileID.InstanceProfileID}
-	// Patch op to remove role from group
-	err := NewGroupsAPI(client).Patch(groupInstanceProfileID.GroupID, nil, roleRemoveList, GroupRolesPath)
-	return err
-}
-
-type groupInstanceProfileID struct {
-	GroupID           string
-	InstanceProfileID string
-}
-
-func (g groupInstanceProfileID) String() string {
-	return fmt.Sprintf("%s|%s", g.GroupID, g.InstanceProfileID)
-}
-
-func parsegroupInstanceProfileID(id string) *groupInstanceProfileID {
-	parts := strings.Split(id, "|")
-	return &groupInstanceProfileID{
-		GroupID:           parts[0],
-		InstanceProfileID: parts[1],
-	}
-}
-
-func InstanceProfileInGroup(role string, group *ScimGroup) bool {
-	for _, groupRole := range group.Roles {
-		if groupRole.Value == role {
-			return true
-		}
-	}
-	return false
 }

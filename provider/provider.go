@@ -47,6 +47,7 @@ func DatabricksProvider() *schema.Provider {
 			"databricks_group":                  identity.ResourceGroup(),
 			"databricks_scim_group":             identity.ResourceScimGroup(),
 			"databricks_group_instance_profile": identity.ResourceGroupInstanceProfile(),
+			"databricks_user_instance_profile":  identity.ResourceUserInstanceProfile(),
 			"databricks_instance_profile":       identity.ResourceInstanceProfile(),
 			"databricks_group_member":           identity.ResourceGroupMember(),
 			"databricks_scim_user":              identity.ResourceScimUser(),

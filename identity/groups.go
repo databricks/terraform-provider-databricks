@@ -96,6 +96,10 @@ func (a GroupsAPI) GetAdminGroup() (ScimGroup, error) {
 	return group, errors.New("Unable to identify the admin group! ")
 }
 
+func (a GroupsAPI) PatchR(groupID string, r patchRequest) error {
+	return a.client.Scim(http.MethodPatch, fmt.Sprintf("/preview/scim/v2/Groups/%v", groupID), r, nil)
+}
+
 // Patch applys a patch request for a group given a path attribute
 func (a GroupsAPI) Patch(groupID string, addList []string, removeList []string, path GroupPathType) error {
 	groupPath := fmt.Sprintf("/preview/scim/v2/Groups/%v", groupID)

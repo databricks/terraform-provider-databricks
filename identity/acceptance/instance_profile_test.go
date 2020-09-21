@@ -101,7 +101,7 @@ func testGroupInstanceProfileResourceDestroy(s *terraform.State) error {
 func testGroupInstanceProfileValues(t *testing.T, group *ScimGroup, displayName, role string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		assert.True(t, group.DisplayName == displayName)
-		assert.True(t, InstanceProfileInGroup(role, group), "role is not in group")
+		assert.True(t, group.HasRole(role), "role is not in group")
 		return nil
 	}
 }

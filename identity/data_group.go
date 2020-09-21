@@ -24,6 +24,7 @@ func DataSourceGroup() *schema.Resource {
 
 	s := internal.StructToSchema(entity{}, func(
 		s map[string]*schema.Schema) map[string]*schema.Schema {
+		// nolint once SDKv2 has Diagnostics-returning validators, change
 		s["display_name"].ValidateFunc = validation.StringIsNotEmpty
 		s["recursive"].Default = true
 		return s

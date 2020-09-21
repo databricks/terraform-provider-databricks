@@ -87,6 +87,16 @@ type ScimGroup struct {
 	InheritedRoles   []RoleListItem `json:"inherited_roles,omitempty"`
 }
 
+// HasRole returns true if group has a role
+func (g ScimGroup) HasRole(role string) bool {
+	for _, groupRole := range g.Roles {
+		if groupRole.Value == role {
+			return true
+		}
+	}
+	return false
+}
+
 // GroupList contains a list of groups fetched from a list api call from SCIM api
 type GroupList struct {
 	TotalResults int32       `json:"totalResults,omitempty"`
@@ -152,6 +162,16 @@ type ScimUser struct {
 	InheritedRoles   []RoleListItem `json:"inherited_roles,omitempty"`
 }
 
+// HasRole returns true if group has a role
+func (u ScimUser) HasRole(role string) bool {
+	for _, r := range u.Roles {
+		if r.Value == role {
+			return true
+		}
+	}
+	return false
+}
+
 // UserList contains a list of Users fetched from a list api call from SCIM api
 type UserList struct {
 	TotalResults int32      `json:"totalResults,omitempty"`
@@ -175,12 +195,19 @@ type PatchOperation struct {
 
 type patchRequest struct {
 	Schemas    []URN            `json:"schemas,omitempty"`
-	Operations []PatchOperation `json:"operations,omitempty"`
+	Operations []PatchOperation `json:"Operations,omitempty"`
 }
 
-func newScimPatch(ops ...PatchOperation) patchRequest {
+func scimPatchRequest(op, path, value string) patchRequest {
+	o := PatchOperation{
+		Op:   op,
+		Path: path,
+	}
+	if value != "" {
+		o.Value = []ValueListItem{{value}}
+	}
 	return patchRequest{
 		Schemas:    []URN{PatchOp},
-		Operations: ops,
+		Operations: []PatchOperation{o},
 	}
 }

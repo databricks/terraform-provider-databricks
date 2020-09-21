@@ -92,6 +92,7 @@ func TestResourceUserCreate(t *testing.T) {
 				Resource: "/api/2.0/preview/scim/v2/Users",
 				ExpectedRequest: ScimUser{
 					DisplayName: "Example user",
+					Active:      true,
 					Entitlements: []EntitlementsListItem{
 						{
 							Value: "allow-cluster-create",
@@ -170,6 +171,7 @@ func TestResourceUserUpdate(t *testing.T) {
 		Schemas:     []URN{UserSchema},
 		DisplayName: "Changed Name",
 		UserName:    "me@example.com",
+		Active:      true,
 		Entitlements: []EntitlementsListItem{
 			{
 				Value: AllowInstancePoolCreateEntitlement,

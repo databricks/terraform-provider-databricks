@@ -26,7 +26,7 @@ type UsersAPI struct {
 type UserEntity struct {
 	UserName                string `json:"user_name"`
 	DisplayName             string `json:"display_name,omitempty"`
-	Active					bool   `json:"active,omitempty"`
+	Active                  bool   `json:"active,omitempty"`
 	AllowClusterCreate      bool   `json:"allow_cluster_create,omitempty"`
 	AllowInstancePoolCreate bool   `json:"allow_instance_pool_create,omitempty"`
 }
@@ -46,7 +46,7 @@ func (u UserEntity) toRequest() ScimUser {
 	return ScimUser{
 		Schemas:      []URN{UserSchema},
 		UserName:     u.UserName,
-		Active:		  u.Active,
+		Active:       u.Active,
 		DisplayName:  u.DisplayName,
 		Entitlements: entitlements,
 	}
@@ -145,6 +145,10 @@ func (a UsersAPI) UpdateR(userID string, ru UserEntity) error {
 	return a.C.Scim(http.MethodPut,
 		fmt.Sprintf("/preview/scim/v2/Users/%v", userID),
 		updateRequest, nil)
+}
+
+func (a UsersAPI) PatchR(userID string, r patchRequest) error {
+	return a.C.Scim(http.MethodPatch, fmt.Sprintf("/preview/scim/v2/Users/%v", userID), r, nil)
 }
 
 // Update will update the user given the user id, username, display name, entitlements and roles

@@ -3,6 +3,7 @@
 ## 0.2.6
 
 * Added `databricks_user` resource.
+* Added `databricks_user_instance_profile` resource.
 * Added `databricks_group` data source.
 
 **Deprecations**

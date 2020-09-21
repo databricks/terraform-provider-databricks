@@ -9,6 +9,7 @@
 **Deprecations**
 * `databricks_scim_user` is no longer receiving fixes and will be removed in `0.3`, please rewrite using `databricks_user` resource, which has more consistent semantics with `databricks_group` and works better with identity provider SCIM sync.
 * `databricks_scim_group` is no longer receiving fixes and will be removed in `0.3`, please rewrite using `databricks_group` resource.
+* `databricks_default_user_roles` is no longer receiving fixes and will be removed in `0.3`, please rewrite using `databricks_user` & `databricks_group` resources.
 
 ## 0.2.5
 

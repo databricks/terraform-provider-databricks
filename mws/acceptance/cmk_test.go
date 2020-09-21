@@ -59,20 +59,10 @@ func TestMwsAccCustomerManagedKeys(t *testing.T) {
 				Destroy:            false,
 			},
 			{
-				PreConfig: func() {
-					conn := common.CommonEnvironmentClient()
-					err := NewCustomerManagedKeysAPI(conn).Delete(customerManagedKey.AccountID,
-						customerManagedKey.CustomerManagedKeyID)
-					if err != nil {
-						panic(err)
-					}
-				},
 				Config: cmkConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testMWSCustomerManagedKeyResourceExists("databricks_mws_customer_managed_keys.my_cmk", &customerManagedKey, t),
 				),
-				ExpectNonEmptyPlan: false,
-				Destroy:            false,
 			},
 		},
 	})

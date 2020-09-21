@@ -20,12 +20,12 @@ type CustomerManagedKeysAPI struct {
 }
 
 // Create creates a set of MWS CustomerManagedKeys for the BYOVPC
-func (a CustomerManagedKeysAPI) Create(mwsAcctID, keyArn, keyAlias string) (k CustomerManagedKey, err error) {
-	customerManagedKeysAPIPath := fmt.Sprintf("/accounts/%s/customer-managed-keys", mwsAcctID)
+func (a CustomerManagedKeysAPI) Create(cmk CustomerManagedKey) (k CustomerManagedKey, err error) {
+	customerManagedKeysAPIPath := fmt.Sprintf("/accounts/%s/customer-managed-keys", cmk.AccountID)
 	err = a.client.Post(customerManagedKeysAPIPath, CustomerManagedKey{
 		AwsKeyInfo: &AwsKeyInfo{
-			KeyArn:   keyArn,
-			KeyAlias: keyAlias,
+			KeyArn:   cmk.AwsKeyInfo.KeyArn,
+			KeyAlias: cmk.AwsKeyInfo.KeyAlias,
 		},
 	}, &k)
 	return
@@ -55,17 +55,17 @@ var customerManagedKeySchema = resourceMWSCustomerManagedKeysSchema()
 
 func ResourceCustomerManagedKey() *schema.Resource {
 	return &schema.Resource{
-		SchemaVersion: 2,
-		Create:        resourceCustomerManagedKeyCreate,
-		Read:          resourceCustomerManagedKeyRead,
-		Delete:        resourceCustomerManagedKeyDelete,
-		Schema:        customerManagedKeySchema,
+		Create: resourceCustomerManagedKeyCreate,
+		Read:   resourceCustomerManagedKeyRead,
+		Delete: resourceCustomerManagedKeyDelete,
+		Schema: customerManagedKeySchema,
 	}
 }
 
 func resourceMWSCustomerManagedKeysSchema() map[string]*schema.Schema {
 	return internal.StructToSchema(CustomerManagedKey{}, func(s map[string]*schema.Schema) map[string]*schema.Schema {
 		s["aws_key_info"].ForceNew = true
+		s["account_id"].ForceNew = true
 		return s
 	})
 }
@@ -77,9 +77,7 @@ func resourceCustomerManagedKeyCreate(d *schema.ResourceData, m interface{}) err
 	if err != nil {
 		return err
 	}
-	customerManagedKeyData, err := customerMangedKeyApi.Create(customerMangedKey.AccountID,
-		customerMangedKey.AwsKeyInfo.KeyArn,
-		customerMangedKey.AwsKeyInfo.KeyAlias)
+	customerManagedKeyData, err := customerMangedKeyApi.Create(customerMangedKey)
 	if err != nil {
 		return err
 	}

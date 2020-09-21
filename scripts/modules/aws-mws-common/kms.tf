@@ -1,11 +1,12 @@
+variable "databricks_aws_account_id" {}
+
 resource "aws_kms_key" "customer_managed_key" {
 }
 
 resource "aws_kms_grant" "databricks-grant" {
   name = "databricks-grant"
   key_id  = aws_kms_key.customer_managed_key.key_id
-  // TODO: maybe this should be an env variable
-  grantee_principal = "arn:aws:iam::414351767826:root"
+  grantee_principal = "arn:aws:iam::${var.databricks_aws_account_id}:root"
 
   operations = ["Encrypt", "Decrypt"]
 }

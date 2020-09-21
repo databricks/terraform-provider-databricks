@@ -70,7 +70,7 @@ type AwsKeyInfo struct {
 type CustomerManagedKey struct {
 	CustomerManagedKeyID string      `json:"customer_managed_key_id,omitempty" tf:"computed"`
 	AwsKeyInfo           *AwsKeyInfo `json:"aws_key_info"`
-	AccountID            string      `json:"account_id,omitempty" tf:"computed"`
+	AccountID            string      `json:"account_id"`
 	CreationTime         int64       `json:"creation_time,omitempty" tf:"computed"`
 }
 

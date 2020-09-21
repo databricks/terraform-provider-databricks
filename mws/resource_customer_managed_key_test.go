@@ -21,8 +21,13 @@ func TestMwsAccCustomerManagedKeys(t *testing.T) {
 	assert.NoError(t, err, err)
 	t.Log(cmkList)
 
-	keyInfo, err := cmkApi.Create(acctID, kmsKeyArn,
-		kmsKeyAlias)
+	keyInfo, err := cmkApi.Create(CustomerManagedKey{
+		AwsKeyInfo: &AwsKeyInfo{
+			KeyArn:   kmsKeyArn,
+			KeyAlias: kmsKeyAlias,
+		},
+		AccountID: acctID,
+	})
 	assert.NoError(t, err, err)
 
 	keyID := keyInfo.CustomerManagedKeyID

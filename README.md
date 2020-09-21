@@ -19,6 +19,7 @@
 | [databricks_mws_credentials](docs/resources/mws_credentials.md)
 | [databricks_mws_networks](docs/resources/mws_networks.md)
 | [databricks_mws_storage_configurations](docs/resources/mws_storage_configurations.md)
+| [databricks_mws_customer_managed_keys](docs/resources/mws_customer_managed_keys.md)
 | [databricks_mws_workspaces](docs/resources/mws_workspaces.md)
 | [databricks_notebook](docs/resources/notebook.md)
 | [databricks_permissions](docs/resources/permissions.md)

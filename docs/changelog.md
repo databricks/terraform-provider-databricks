@@ -1,5 +1,9 @@
 # Version changelog
 
+## 0.2.6
+
+* Added support for [customer managed keys](https://github.com/databrickslabs/terraform-provider-databricks/pull/332) for mws.
+
 ## 0.2.5
 
 * Added support for [local disk encryption](https://github.com/databrickslabs/terraform-provider-databricks/pull/313)

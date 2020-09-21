@@ -35,7 +35,6 @@ func TestMwsAccCustomerManagedKeys(t *testing.T) {
 	getKeyInfo, err := cmkApi.Read(acctID, keyID)
 	assert.NoError(t, err, err)
 	assert.NotNil(t, getKeyInfo, "key info should not be nil")
-
 }
 
 func TestResourceCustomerManagedKeyCreate(t *testing.T) {

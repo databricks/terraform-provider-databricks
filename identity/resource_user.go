@@ -34,6 +34,7 @@ func ResourceUser() *schema.Resource {
 	userSchema := internal.StructToSchema(UserEntity{}, func(
 		s map[string]*schema.Schema) map[string]*schema.Schema {
 		s["user_name"].ForceNew = true
+		s["active"].Default = true
 		return s
 	})
 	readContext := func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {

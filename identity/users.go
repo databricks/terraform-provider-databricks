@@ -26,6 +26,7 @@ type UsersAPI struct {
 type UserEntity struct {
 	UserName                string `json:"user_name"`
 	DisplayName             string `json:"display_name,omitempty"`
+	Active					bool   `json:"active,omitempty"`
 	AllowClusterCreate      bool   `json:"allow_cluster_create,omitempty"`
 	AllowInstancePoolCreate bool   `json:"allow_instance_pool_create,omitempty"`
 }
@@ -45,6 +46,7 @@ func (u UserEntity) toRequest() ScimUser {
 	return ScimUser{
 		Schemas:      []URN{UserSchema},
 		UserName:     u.UserName,
+		Active:		  u.Active,
 		DisplayName:  u.DisplayName,
 		Entitlements: entitlements,
 	}
@@ -83,6 +85,7 @@ func (a UsersAPI) ReadR(userID string) (ru UserEntity, err error) {
 	}
 	ru.UserName = user.UserName
 	ru.DisplayName = user.DisplayName
+	ru.Active = user.Active
 	for _, ent := range user.Entitlements {
 		switch ent.Value {
 		case AllowClusterCreateEntitlement:

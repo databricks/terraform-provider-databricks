@@ -4,9 +4,14 @@ import (
 	"testing"
 
 	"github.com/databrickslabs/databricks-terraform/internal/qa"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
+
+func assertContains(t *testing.T, s interface{}, e string) bool {
+	return assert.True(t, s.(*schema.Set).Contains(e), "%#v doesn't contain %s", s, e)
+}
 
 func TestDataAwsCrossAccountRolicy(t *testing.T) {
 	d, err := qa.ResourceFixture{
@@ -77,11 +82,11 @@ func TestDataAwsCrossAccountRolicy(t *testing.T) {
 	}.Apply(t)
 	require.NoError(t, err)
 	assert.Equal(t, "eerste", d.Id())
-	assert.Contains(t, d.Get("instance_profiles"), "a")
-	assert.Contains(t, d.Get("instance_profiles"), "b")
-	assert.Contains(t, d.Get("members"), "1112")
-	assert.Contains(t, d.Get("members"), "1113")
-	assert.Contains(t, d.Get("groups"), "abc")
+	assertContains(t, d.Get("instance_profiles"), "a")
+	assertContains(t, d.Get("instance_profiles"), "b")
+	assertContains(t, d.Get("members"), "1112")
+	assertContains(t, d.Get("members"), "1113")
+	assertContains(t, d.Get("groups"), "abc")
 	assert.Equal(t, true, d.Get("allow_instance_pool_create"))
 	assert.Equal(t, true, d.Get("allow_cluster_create"))
 }

@@ -3,7 +3,6 @@ package identity
 import (
 	"context"
 	"fmt"
-	"sort"
 
 	"github.com/databrickslabs/databricks-terraform/internal"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -11,14 +10,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
-// DataGroup returns information about group specified by display name
+// DataSourceGroup returns information about group specified by display name
 func DataSourceGroup() *schema.Resource {
 	type entity struct {
 		DisplayName             string   `json:"display_name"`
 		Recursive               bool     `json:"recursive,omitempty"`
-		Members                 []string `json:"members,omitempty" tf:"computed"`
-		Groups                  []string `json:"groups,omitempty" tf:"computed"`
-		InstanceProfiles        []string `json:"instance_profiles,omitempty" tf:"computed"`
+		Members                 []string `json:"members,omitempty" tf:"slice_set,computed"`
+		Groups                  []string `json:"groups,omitempty" tf:"slice_set,computed"`
+		InstanceProfiles        []string `json:"instance_profiles,omitempty" tf:"slice_set,computed"`
 		AllowClusterCreate      bool     `json:"allow_cluster_create,omitempty" tf:"computed"`
 		AllowInstancePoolCreate bool     `json:"allow_instance_pool_create,omitempty" tf:"computed"`
 	}
@@ -76,9 +75,6 @@ func DataSourceGroup() *schema.Resource {
 					}
 				}
 			}
-			sort.Strings(this.Groups)
-			sort.Strings(this.Members)
-			sort.Strings(this.InstanceProfiles)
 			err = internal.StructToData(this, s, d)
 			if err != nil {
 				return diag.FromErr(err)

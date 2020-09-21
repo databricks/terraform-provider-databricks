@@ -12,6 +12,23 @@ resource "databricks_user" "me" {
 }
 ```
 
+Creating user with administrative permissions - referencing special `admins` [databricks_group](../data-sources/group.md) in [databricks_group_member](group_member.md) resource:
+
+```hcl
+data "databricks_group" "admins" {
+    display_name = "admins"
+}
+
+resource "databricks_user" "me" {
+  user_name    = "me@example.com"
+}
+
+resource "databricks_group_member" "i-am-admin" {
+  group_id = data.databricks_group.admins.id
+  member_id = databricks_user.me.id
+}
+```
+
 Creating user with cluster create permissions:
 
 ```hcl
@@ -30,6 +47,7 @@ The following arguments are available:
 * `display_name` - (Optional) This is an alias for the username can be the full name of the user.
 * `allow_cluster_create` -  (Optional) Allow the user to have [cluster](cluster.md) create priviliges. Defaults to false.
 * `allow_instance_pool_create` -  (Optional) Allow the user to have [instance pool](instance_pool.md) create priviliges. Defaults to false.
+* `active` - (Optional) Either user is active or not. True by default, but can be set to false in case of user deactivation with preserving user assets.
 
 ## Attribute Reference
 

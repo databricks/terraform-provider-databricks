@@ -22,12 +22,7 @@ type CustomerManagedKeysAPI struct {
 // Create creates a set of MWS CustomerManagedKeys for the BYOVPC
 func (a CustomerManagedKeysAPI) Create(cmk CustomerManagedKey) (k CustomerManagedKey, err error) {
 	customerManagedKeysAPIPath := fmt.Sprintf("/accounts/%s/customer-managed-keys", cmk.AccountID)
-	err = a.client.Post(customerManagedKeysAPIPath, CustomerManagedKey{
-		AwsKeyInfo: &AwsKeyInfo{
-			KeyArn:   cmk.AwsKeyInfo.KeyArn,
-			KeyAlias: cmk.AwsKeyInfo.KeyAlias,
-		},
-	}, &k)
+	err = a.client.Post(customerManagedKeysAPIPath, cmk, &k)
 	return
 }
 

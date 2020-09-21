@@ -49,7 +49,7 @@ resource "aws_iam_role_policy" "test_policy" {
 
 module "aws_common" {
   source = "../modules/aws-mws-common"
-  databricks_aws_account_id = data.external.env.result.DATABRICKS_ACCOUNT_ID
+  databricks_aws_account_id = data.external.env.result.DATABRICKS_AWS_ACCOUNT_ID
   cidr_block = data.external.env.result.TEST_CIDR
   region = data.external.env.result.TEST_REGION
   prefix = local.prefix

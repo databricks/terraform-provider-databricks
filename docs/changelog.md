@@ -1,5 +1,11 @@
 # Version changelog
 
+## 0.2.6
+
+Behavioral changes
+
+* Issue #323 - State changes to legacy `spark.databricks.delta.preview.enabled` config option are now ignored by `databricks_job` & `databricks_cluster`
+
 ## 0.2.5
 
 * Added support for [local disk encryption](https://github.com/databrickslabs/terraform-provider-databricks/pull/313)

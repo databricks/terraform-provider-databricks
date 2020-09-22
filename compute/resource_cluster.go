@@ -81,6 +81,15 @@ func librarySchema(dims ...string) *schema.Schema {
 
 func resourceClusterSchema() map[string]*schema.Schema {
 	return internal.StructToSchema(Cluster{}, func(s map[string]*schema.Schema) map[string]*schema.Schema {
+		s["spark_conf"].DiffSuppressFunc = func(k, old, new string, d *schema.ResourceData) bool {
+			isPossiblyLegacyConfig := "spark_conf.%" == k && "1" == old && "0" == new
+			isLegacyConfig := "spark_conf.spark.databricks.delta.preview.enabled" == k
+			if isPossiblyLegacyConfig || isLegacyConfig {
+				log.Printf("[DEBUG] Suppressing diff for k=%#v old=%#v new=%#v", k, old, new)
+				return true
+			}
+			return false
+		}
 		// adds `libraries` configuration block
 		s["library"] = internal.StructToSchema(ClusterLibraryList{},
 			func(ss map[string]*schema.Schema) map[string]*schema.Schema {

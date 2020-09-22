@@ -12,6 +12,21 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
+// AwsKeyInfo has information about the KMS key for BYOK
+type AwsKeyInfo struct {
+	KeyArn    string `json:"key_arn"`
+	KeyAlias  string `json:"key_alias"`
+	KeyRegion string `json:"key_region,omitempty" tf:"computed"`
+}
+
+// CustomerManagedKey contains key information and metadata for BYOK for E2
+type CustomerManagedKey struct {
+	CustomerManagedKeyID string      `json:"customer_managed_key_id,omitempty" tf:"computed"`
+	AwsKeyInfo           *AwsKeyInfo `json:"aws_key_info"`
+	AccountID            string      `json:"account_id"`
+	CreationTime         int64       `json:"creation_time,omitempty" tf:"computed"`
+}
+
 // NewCustomerManagedKeysAPI creates CustomerManagedKeysAPI instance from provider meta
 func NewCustomerManagedKeysAPI(m interface{}) CustomerManagedKeysAPI {
 	return CustomerManagedKeysAPI{client: m.(*common.DatabricksClient)}

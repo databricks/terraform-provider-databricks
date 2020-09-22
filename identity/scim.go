@@ -87,6 +87,16 @@ type ScimGroup struct {
 	InheritedRoles   []RoleListItem `json:"inherited_roles,omitempty"`
 }
 
+// HasMember returns true if group has given user or another group id as member
+func (g ScimGroup) HasMember(memberID string) bool {
+	for _, member := range g.Members {
+		if member.Value == memberID {
+			return true
+		}
+	}
+	return false
+}
+
 // HasRole returns true if group has a role
 func (g ScimGroup) HasRole(role string) bool {
 	for _, groupRole := range g.Roles {

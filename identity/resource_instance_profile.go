@@ -99,7 +99,11 @@ func ResourceInstanceProfile() *schema.Resource {
 func resourceInstanceProfileCreate(d *schema.ResourceData, m interface{}) error {
 	instanceProfileArn := d.Get("instance_profile_arn").(string)
 	skipValidation := d.Get("skip_validation").(bool)
-	err := NewInstanceProfilesAPI(m).Create(instanceProfileArn, skipValidation)
+	err := validateInstanceProfileARN(instanceProfileArn)
+	if err != nil {
+		return err
+	}
+	err = NewInstanceProfilesAPI(m).Create(instanceProfileArn, skipValidation)
 	if err != nil {
 		return err
 	}
@@ -108,7 +112,6 @@ func resourceInstanceProfileCreate(d *schema.ResourceData, m interface{}) error 
 	if err != nil {
 		return err
 	}
-
 	return resourceInstanceProfileRead(d, m)
 }
 

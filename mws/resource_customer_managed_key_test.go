@@ -49,6 +49,7 @@ func TestResourceCustomerManagedKeyCreate(t *testing.T) {
 				Method:   "POST",
 				Resource: "/api/2.0/accounts/abc/customer-managed-keys",
 				ExpectedRequest: CustomerManagedKey{
+					AccountID: "abc",
 					AwsKeyInfo: &AwsKeyInfo{
 						KeyArn:   "key-arn",
 						KeyAlias: "key-alias",
@@ -97,6 +98,7 @@ func TestResourceCustomerManagedKeyCreate_Error(t *testing.T) {
 				Method:   "POST",
 				Resource: "/api/2.0/accounts/abc/customer-managed-keys",
 				ExpectedRequest: CustomerManagedKey{
+					AccountID: "abc",
 					AwsKeyInfo: &AwsKeyInfo{
 						KeyArn:   "key-arn",
 						KeyAlias: "key-alias",

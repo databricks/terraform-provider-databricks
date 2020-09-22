@@ -1,8 +1,11 @@
 package mws
 
 import (
+	"context"
 	"fmt"
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 
 	"github.com/databrickslabs/databricks-terraform/common"
 	"github.com/databrickslabs/databricks-terraform/internal"
@@ -50,10 +53,10 @@ var customerManagedKeySchema = resourceMWSCustomerManagedKeysSchema()
 
 func ResourceCustomerManagedKey() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceCustomerManagedKeyCreate,
-		Read:   resourceCustomerManagedKeyRead,
-		Delete: resourceCustomerManagedKeyDelete,
-		Schema: customerManagedKeySchema,
+		CreateContext: resourceCustomerManagedKeyCreate,
+		ReadContext:   resourceCustomerManagedKeyRead,
+		DeleteContext: resourceCustomerManagedKeyDelete,
+		Schema:        customerManagedKeySchema,
 	}
 }
 
@@ -65,30 +68,30 @@ func resourceMWSCustomerManagedKeysSchema() map[string]*schema.Schema {
 	})
 }
 
-func resourceCustomerManagedKeyCreate(d *schema.ResourceData, m interface{}) error {
+func resourceCustomerManagedKeyCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	customerMangedKeyApi := NewCustomerManagedKeysAPI(m)
 	var customerMangedKey CustomerManagedKey
 	err := internal.DataToStructPointer(d, customerManagedKeySchema, &customerMangedKey)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	customerManagedKeyData, err := customerMangedKeyApi.Create(customerMangedKey)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	d.SetId(packMWSAccountID(PackagedMWSIds{
 		MwsAcctID:  customerMangedKey.AccountID,
 		ResourceID: customerManagedKeyData.CustomerManagedKeyID,
 	}))
-	return resourceCustomerManagedKeyRead(d, m)
+	return resourceCustomerManagedKeyRead(ctx, d, m)
 }
 
-func resourceCustomerManagedKeyRead(d *schema.ResourceData, m interface{}) error {
+func resourceCustomerManagedKeyRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	customerMangedKeyApi := NewCustomerManagedKeysAPI(m)
 	id := d.Id()
 	packagedId, err := UnpackMWSAccountID(id)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	customerManagedKey, err := customerMangedKeyApi.Read(packagedId.MwsAcctID, packagedId.ResourceID)
 	if ae, ok := err.(common.APIError); ok && ae.IsMissing() {
@@ -97,16 +100,22 @@ func resourceCustomerManagedKeyRead(d *schema.ResourceData, m interface{}) error
 		return nil
 	}
 	err = internal.StructToData(customerManagedKey, customerManagedKeySchema, d)
-	return err
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	return nil
 }
 
-func resourceCustomerManagedKeyDelete(d *schema.ResourceData, m interface{}) error {
+func resourceCustomerManagedKeyDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	customerMangedKeyApi := NewCustomerManagedKeysAPI(m)
 	id := d.Id()
 	packagedId, err := UnpackMWSAccountID(id)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	err = customerMangedKeyApi.Delete(packagedId.MwsAcctID, packagedId.ResourceID)
-	return err
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	return nil
 }

@@ -78,6 +78,7 @@ func (a UsersAPI) Create(userName string, displayName string, entitlements []str
 	return user, err
 }
 
+// ReadR reads resource-friendly entity
 func (a UsersAPI) ReadR(userID string) (ru UserEntity, err error) {
 	user, err := a.read(userID)
 	if err != nil {
@@ -134,6 +135,7 @@ func (a UsersAPI) readByPath(userPath string) (user ScimUser, err error) {
 	return
 }
 
+// UpdateR replaces resource-friendly-entity
 func (a UsersAPI) UpdateR(userID string, ru UserEntity) error {
 	user, err := a.read(userID)
 	if err != nil {
@@ -147,6 +149,7 @@ func (a UsersAPI) UpdateR(userID string, ru UserEntity) error {
 		updateRequest, nil)
 }
 
+// PatchR updates resource-friendly entity
 func (a UsersAPI) PatchR(userID string, r patchRequest) error {
 	return a.C.Scim(http.MethodPatch, fmt.Sprintf("/preview/scim/v2/Users/%v", userID), r, nil)
 }
@@ -188,7 +191,7 @@ func (a UsersAPI) Delete(userID string) error {
 	return a.C.Scim(http.MethodDelete, userPath, nil, nil)
 }
 
-// Deprecated SetUserAsAdmin will add the user to a admin group given the admin group id and user id
+// SetUserAsAdmin will add the user to a admin group given the admin group id and user id
 func (a UsersAPI) SetUserAsAdmin(userID string, adminGroupID string) error {
 	userPath := fmt.Sprintf("/preview/scim/v2/Users/%v", userID)
 	var addOperations UserPatchOperations

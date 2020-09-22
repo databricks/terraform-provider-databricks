@@ -10,25 +10,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-// Bind entity to data
-func Bind(entity interface{}, err error) func(d *schema.ResourceData, s map[string]*schema.Schema) diag.Diagnostics {
-	return func(d *schema.ResourceData, s map[string]*schema.Schema) diag.Diagnostics {
-		if e, ok := err.(common.APIError); ok && e.IsMissing() {
-			log.Printf("missing resource due to error: %v\n", e)
-			d.SetId("")
-			return nil
-		}
-		if err != nil {
-			return diag.FromErr(err)
-		}
-		err = internal.StructToData(entity, s, d)
-		if err != nil {
-			return diag.FromErr(err)
-		}
-		return nil
-	}
-}
-
 // ResourceUser manages users within workspace
 func ResourceUser() *schema.Resource {
 	userSchema := internal.StructToSchema(UserEntity{}, func(
@@ -38,7 +19,20 @@ func ResourceUser() *schema.Resource {
 		return s
 	})
 	readContext := func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-		return Bind(NewUsersAPI(m).ReadR(d.Id()))(d, userSchema)
+		user, err := NewUsersAPI(m).ReadR(d.Id())
+		if e, ok := err.(common.APIError); ok && e.IsMissing() {
+			log.Printf("missing resource due to error: %v\n", e)
+			d.SetId("")
+			return nil
+		}
+		if err != nil {
+			return diag.FromErr(err)
+		}
+		err = internal.StructToData(user, userSchema, d)
+		if err != nil {
+			return diag.FromErr(err)
+		}
+		return nil
 	}
 	return &schema.Resource{
 		Schema:      userSchema,

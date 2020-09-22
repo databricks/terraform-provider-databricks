@@ -73,6 +73,7 @@ func (a InstanceProfilesAPI) Delete(instanceProfileARN string) error {
 	}, nil)
 }
 
+// ResourceInstanceProfile managest Instance Profile ARN binding
 func ResourceInstanceProfile() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceInstanceProfileCreate,

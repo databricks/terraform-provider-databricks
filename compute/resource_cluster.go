@@ -192,10 +192,7 @@ func waitForLibrariesInstalled(
 		if err != nil {
 			return resource.NonRetryableError(err)
 		}
-		if clusterInfo.State == ClusterStateTerminated ||
-			clusterInfo.State == ClusterStateTerminating ||
-			clusterInfo.State == ClusterStateUnknown ||
-			clusterInfo.State == ClusterStateError {
+		if !clusterInfo.IsRunningOrResizing() {
 			log.Printf("[INFO] Cluster %#v (%s) is currently not running, so just returning list of %d libraries",
 				clusterInfo.ClusterName, clusterInfo.ClusterID, len(libsClusterStatus.LibraryStatuses))
 			result = &libsClusterStatus

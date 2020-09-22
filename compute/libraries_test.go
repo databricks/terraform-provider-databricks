@@ -15,7 +15,7 @@ func TestClusterLibraryStatuses_NoNeedAllClusters(t *testing.T) {
 	need, err := ClusterLibraryStatuses{
 		ClusterID: "abc",
 		LibraryStatuses: []LibraryStatus{
-			LibraryStatus{
+			{
 				IsLibraryInstalledOnAllClusters: true,
 				Status:                          "INSTALLING",
 			},
@@ -29,16 +29,16 @@ func TestClusterLibraryStatuses_RetryingCodes(t *testing.T) {
 	need, err := ClusterLibraryStatuses{
 		ClusterID: "abc",
 		LibraryStatuses: []LibraryStatus{
-			LibraryStatus{
+			{
 				Status: "PENDING",
 			},
-			LibraryStatus{
+			{
 				Status: "RESOLVING",
 			},
-			LibraryStatus{
+			{
 				Status: "INSTALLING",
 			},
-			LibraryStatus{
+			{
 				Status: "INSTALLING",
 			},
 		},
@@ -52,13 +52,13 @@ func TestClusterLibraryStatuses_ReadyStatuses(t *testing.T) {
 	need, err := ClusterLibraryStatuses{
 		ClusterID: "abc",
 		LibraryStatuses: []LibraryStatus{
-			LibraryStatus{
+			{
 				Status: "INSTALLED",
 			},
-			LibraryStatus{
+			{
 				Status: "SKIPPED",
 			},
-			LibraryStatus{
+			{
 				Status: "UNINSTALL_ON_RESTART",
 			},
 		},
@@ -71,14 +71,14 @@ func TestClusterLibraryStatuses_Errors(t *testing.T) {
 	need, err := ClusterLibraryStatuses{
 		ClusterID: "abc",
 		LibraryStatuses: []LibraryStatus{
-			LibraryStatus{
+			{
 				Status: "FAILED",
 				Library: &Library{
 					Whl: "a",
 				},
 				Messages: []string{"b"},
 			},
-			LibraryStatus{
+			{
 				Status: "FAILED",
 				Library: &Library{
 					Maven: &Maven{
@@ -87,7 +87,7 @@ func TestClusterLibraryStatuses_Errors(t *testing.T) {
 				},
 				Messages: []string{"b"},
 			},
-			LibraryStatus{
+			{
 				Status: "FAILED",
 				Library: &Library{
 					Cran: &Cran{

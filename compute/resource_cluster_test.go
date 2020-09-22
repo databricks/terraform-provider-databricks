@@ -99,12 +99,12 @@ func TestResourceClusterCreate_LegacyLibs(t *testing.T) {
 			{
 				Method:   "POST",
 				Resource: "/api/2.0/libraries/install",
-				ExpectedRequest: ClusterLibraryList {
+				ExpectedRequest: ClusterLibraryList{
 					ClusterID: "abc",
 					Libraries: []Library{
-						{Jar:"a"},
-						{Egg:"a"},
-						{Whl:"a"},
+						{Jar: "a"},
+						{Egg: "a"},
+						{Whl: "a"},
 						{Pypi: &PyPi{Package: "a", Repo: "b"}},
 						{Maven: &Maven{Coordinates: "a", Repo: "b"}},
 						{Cran: &Cran{Package: "a", Repo: "b"}},
@@ -112,9 +112,9 @@ func TestResourceClusterCreate_LegacyLibs(t *testing.T) {
 				},
 			},
 			{
-				Method:   "GET",
+				Method:       "GET",
 				ReuseRequest: true,
-				Resource: "/api/2.0/libraries/cluster-status?cluster_id=abc",
+				Resource:     "/api/2.0/libraries/cluster-status?cluster_id=abc",
 				Response: ClusterLibraryStatuses{
 					ClusterID: "abc",
 					LibraryStatuses: []LibraryStatus{
@@ -126,24 +126,24 @@ func TestResourceClusterCreate_LegacyLibs(t *testing.T) {
 							Status: "PENDING",
 						},
 						{
-							Library: &Library{Jar:"a"},
-							Status: "INSTALLED",
+							Library: &Library{Jar: "a"},
+							Status:  "INSTALLED",
 						},
 						{
-							Library: &Library{Egg:"a"},
-							Status: "INSTALLED",
+							Library: &Library{Egg: "a"},
+							Status:  "INSTALLED",
 						},
 						{
 							Library: &Library{Pypi: &PyPi{Package: "a", Repo: "b"}},
-							Status: "INSTALLED",
+							Status:  "INSTALLED",
 						},
 						{
 							Library: &Library{Maven: &Maven{Coordinates: "a", Repo: "b"}},
-							Status: "INSTALLED",
+							Status:  "INSTALLED",
 						},
 						{
 							Library: &Library{Cran: &Cran{Package: "a", Repo: "b"}},
-							Status: "INSTALLED",
+							Status:  "INSTALLED",
 						},
 					},
 				},

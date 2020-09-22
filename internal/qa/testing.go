@@ -138,7 +138,7 @@ func (f ResourceFixture) Apply(t *testing.T) (*schema.ResourceData, error) {
 	if f.State != nil {
 		resourceConfig := terraform.NewResourceConfigRaw(f.State)
 		diags := f.Resource.Validate(resourceConfig)
-		if diags.HasError()  {
+		if diags.HasError() {
 			sort.Slice(diags, func(i, j int) bool {
 				return diags[i].Detail < diags[j].Detail
 			})

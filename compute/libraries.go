@@ -101,18 +101,9 @@ func (cll *ClusterLibraryList) Diff(cls ClusterLibraryStatuses) (ClusterLibraryL
 	return toInstall, toUninstall
 }
 
-// Apply runs a function cb when number of libraries is non-zero
-func (cll *ClusterLibraryList) Apply(cb func(this ClusterLibraryList) error) error {
-	if len(cll.Libraries) == 0 {
-		return nil
-	}
-	return cb(*cll)
-}
-
 // AddLibraryFromMap is convenience method
 func (cll *ClusterLibraryList) AddLibraryFromMap(libraryType string, m map[string]interface{}) {
 	lib := Library{}
-	cll.Libraries = append(cll.Libraries, lib)
 	switch libraryType {
 	case "library_whl":
 		if v, ok := m["path"].(string); ok {
@@ -132,7 +123,7 @@ func (cll *ClusterLibraryList) AddLibraryFromMap(libraryType string, m map[strin
 			lib.Pypi.Package = v
 		}
 		if v, ok := m["repo"].(string); ok {
-			lib.Pypi.Package = v
+			lib.Pypi.Repo = v
 		}
 	case "library_maven":
 		lib.Maven = &Maven{}
@@ -149,9 +140,10 @@ func (cll *ClusterLibraryList) AddLibraryFromMap(libraryType string, m map[strin
 			lib.Cran.Package = v
 		}
 		if v, ok := m["repo"].(string); ok {
-			lib.Cran.Package = v
+			lib.Cran.Repo = v
 		}
 	}
+	cll.Libraries = append(cll.Libraries, lib)
 }
 
 // LibraryStatus is the status on a given cluster when using the libraries status api
@@ -188,6 +180,9 @@ func (cls ClusterLibraryStatuses) IsRetryNeeded() (bool, error) {
 	ready := 0
 	errors := []string{}
 	for _, lib := range cls.LibraryStatuses {
+		if lib.IsLibraryInstalledOnAllClusters {
+			continue
+		}
 		switch lib.Status {
 		// No action has yet been taken to install the library. This state should be very short lived.
 		case "PENDING":

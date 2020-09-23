@@ -2,6 +2,8 @@
 
 ## 0.2.6
 
+* Added support for [customer managed keys](https://github.com/databrickslabs/terraform-provider-databricks/pull/332) for mws.
+
 **Behavior changes**
 
 * Libraries, which are installed on all clusters and are not part of cluster resource definition, won't be waited for INSTALLED status

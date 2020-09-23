@@ -1,7 +1,7 @@
 default: build
 
 fmt:
-	@echo "✓ Formatting source code with gofmt..."
+	@echo "✓ Formatting source code with gofmt & goimports..."
 	@goimports -w $(shell find . -type f -name '*.go' -not -path "./vendor/*")
 	@gofmt -w $(shell find . -type f -name '*.go' -not -path "./vendor/*")
 	@go fmt ./...

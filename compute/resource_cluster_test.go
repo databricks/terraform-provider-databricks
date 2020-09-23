@@ -64,6 +64,131 @@ func TestResourceClusterCreate(t *testing.T) {
 	assert.Equal(t, "abc", d.Id())
 }
 
+func TestResourceClusterCreate_LegacyLibs(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/clusters/create",
+				ExpectedRequest: Cluster{
+					NumWorkers:             100,
+					ClusterName:            "Shared Autoscaling",
+					SparkVersion:           "7.1-scala12",
+					NodeTypeID:             "i3.xlarge",
+					AutoterminationMinutes: 15,
+				},
+				Response: ClusterInfo{
+					ClusterID: "abc",
+					State:     ClusterStateRunning,
+				},
+			},
+			{
+				Method:       "GET",
+				ReuseRequest: true,
+				Resource:     "/api/2.0/clusters/get?cluster_id=abc",
+				Response: ClusterInfo{
+					ClusterID:              "abc",
+					NumWorkers:             100,
+					ClusterName:            "Shared Autoscaling",
+					SparkVersion:           "7.1-scala12",
+					NodeTypeID:             "i3.xlarge",
+					AutoterminationMinutes: 15,
+					State:                  ClusterStateRunning,
+				},
+			},
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/libraries/install",
+				ExpectedRequest: ClusterLibraryList{
+					ClusterID: "abc",
+					Libraries: []Library{
+						{Jar: "a"},
+						{Egg: "a"},
+						{Whl: "a"},
+						{Pypi: &PyPi{Package: "a", Repo: "b"}},
+						{Maven: &Maven{Coordinates: "a", Repo: "b"}},
+						{Cran: &Cran{Package: "a", Repo: "b"}},
+					},
+				},
+			},
+			{
+				Method:       "GET",
+				ReuseRequest: true,
+				Resource:     "/api/2.0/libraries/cluster-status?cluster_id=abc",
+				Response: ClusterLibraryStatuses{
+					ClusterID: "abc",
+					LibraryStatuses: []LibraryStatus{
+						{
+							IsLibraryInstalledOnAllClusters: true,
+							Library: &Library{
+								Jar: "agent.jar",
+							},
+							Status: "PENDING",
+						},
+						{
+							Library: &Library{Jar: "a"},
+							Status:  "INSTALLED",
+						},
+						{
+							Library: &Library{Egg: "a"},
+							Status:  "INSTALLED",
+						},
+						{
+							Library: &Library{Pypi: &PyPi{Package: "a", Repo: "b"}},
+							Status:  "INSTALLED",
+						},
+						{
+							Library: &Library{Maven: &Maven{Coordinates: "a", Repo: "b"}},
+							Status:  "INSTALLED",
+						},
+						{
+							Library: &Library{Cran: &Cran{Package: "a", Repo: "b"}},
+							Status:  "INSTALLED",
+						},
+					},
+				},
+			},
+		},
+		Create:   true,
+		Resource: ResourceCluster(),
+		HCL: `
+		autotermination_minutes = 15
+		cluster_name = "Shared Autoscaling"
+		spark_version = "7.1-scala12"
+		node_type_id = "i3.xlarge"
+		num_workers = 100
+
+		library_jar {
+			path = "a"
+		}
+
+		library_egg {
+			path = "a"
+		}
+
+		library_whl {
+			path = "a"
+		}
+
+		library_pypi {
+			package = "a"
+			repo = "b"
+		}
+
+		library_maven {
+			coordinates = "a"
+			repo = "b"
+		}
+
+		library_cran {
+			package = "a"
+			repo = "b"
+		}`,
+	}.Apply(t)
+	assert.NoError(t, err, err)
+	assert.Equal(t, "abc", d.Id())
+}
+
 func TestResourceClusterCreate_WithLibraries(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{

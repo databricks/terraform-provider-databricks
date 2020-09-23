@@ -8,7 +8,100 @@ import (
 	"github.com/databrickslabs/databricks-terraform/common"
 	"github.com/databrickslabs/databricks-terraform/internal/qa"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
+
+func TestClusterLibraryStatuses_NoNeedAllClusters(t *testing.T) {
+	need, err := ClusterLibraryStatuses{
+		ClusterID: "abc",
+		LibraryStatuses: []LibraryStatus{
+			{
+				IsLibraryInstalledOnAllClusters: true,
+				Status:                          "INSTALLING",
+			},
+		},
+	}.IsRetryNeeded()
+	require.NoError(t, err)
+	assert.False(t, need)
+}
+
+func TestClusterLibraryStatuses_RetryingCodes(t *testing.T) {
+	need, err := ClusterLibraryStatuses{
+		ClusterID: "abc",
+		LibraryStatuses: []LibraryStatus{
+			{
+				Status: "PENDING",
+			},
+			{
+				Status: "RESOLVING",
+			},
+			{
+				Status: "INSTALLING",
+			},
+			{
+				Status: "INSTALLING",
+			},
+		},
+	}.IsRetryNeeded()
+	require.Error(t, err)
+	assert.Equal(t, "0 libraries are ready, but there are still 4 pending", err.Error())
+	assert.True(t, need)
+}
+
+func TestClusterLibraryStatuses_ReadyStatuses(t *testing.T) {
+	need, err := ClusterLibraryStatuses{
+		ClusterID: "abc",
+		LibraryStatuses: []LibraryStatus{
+			{
+				Status: "INSTALLED",
+			},
+			{
+				Status: "SKIPPED",
+			},
+			{
+				Status: "UNINSTALL_ON_RESTART",
+			},
+		},
+	}.IsRetryNeeded()
+	require.NoError(t, err)
+	assert.False(t, need)
+}
+
+func TestClusterLibraryStatuses_Errors(t *testing.T) {
+	need, err := ClusterLibraryStatuses{
+		ClusterID: "abc",
+		LibraryStatuses: []LibraryStatus{
+			{
+				Status: "FAILED",
+				Library: &Library{
+					Whl: "a",
+				},
+				Messages: []string{"b"},
+			},
+			{
+				Status: "FAILED",
+				Library: &Library{
+					Maven: &Maven{
+						Coordinates: "a.b.c",
+					},
+				},
+				Messages: []string{"b"},
+			},
+			{
+				Status: "FAILED",
+				Library: &Library{
+					Cran: &Cran{
+						Package: "a",
+					},
+				},
+				Messages: []string{"b"},
+			},
+		},
+	}.IsRetryNeeded()
+	require.Error(t, err)
+	assert.Equal(t, "library_whl[a] failed: b\nlibrary_maven[a.b.c] failed: b\nlibrary_cran[a] failed: b", err.Error())
+	assert.False(t, need)
+}
 
 func TestLibrariesAPI_Create(t *testing.T) {
 	type args struct {

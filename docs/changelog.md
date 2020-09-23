@@ -11,6 +11,9 @@
 * `databricks_scim_group` is no longer receiving fixes and will be removed in `0.3`, please rewrite using `databricks_group` resource.
 * `databricks_default_user_roles` is no longer receiving fixes and will be removed in `0.3`, please rewrite using `databricks_user` & `databricks_group` resources.
 
+**Behavior changes**
+* Libraries, which are installed on all clusters and are not part of cluster resource definition, won't be waited for INSTALLED status
+
 ## 0.2.5
 
 * Added support for [local disk encryption](https://github.com/databrickslabs/terraform-provider-databricks/pull/313)

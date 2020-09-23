@@ -192,7 +192,7 @@ func resourceClusterRead(d *schema.ResourceData, m interface{}) error {
 func waitForLibrariesInstalled(
 	libraries LibrariesAPI, clusterInfo ClusterInfo) (result *ClusterLibraryStatuses, err error) {
 	// nolint should be a bigger refactor
-	err = resource.Retry(5*time.Minute, func() *resource.RetryError {
+	err = resource.Retry(30*time.Minute, func() *resource.RetryError {
 		libsClusterStatus, err := libraries.ClusterStatus(clusterInfo.ClusterID)
 		if ae, ok := err.(common.APIError); ok && ae.IsMissing() {
 			// eventual consistency error
@@ -201,8 +201,8 @@ func waitForLibrariesInstalled(
 		if err != nil {
 			return resource.NonRetryableError(err)
 		}
-		if clusterInfo.State == ClusterStateTerminated {
-			log.Printf("[INFO] Cluster %#v (%s) is currently terminated, so just returning list of %d libraries",
+		if !clusterInfo.IsRunningOrResizing() {
+			log.Printf("[INFO] Cluster %#v (%s) is currently not running, so just returning list of %d libraries",
 				clusterInfo.ClusterName, clusterInfo.ClusterID, len(libsClusterStatus.LibraryStatuses))
 			result = &libsClusterStatus
 			return nil
@@ -232,6 +232,7 @@ func legacyReadLibraryListFromData(d *schema.ResourceData) (cll ClusterLibraryLi
 			cll.AddLibraryFromMap(n, l.(map[string]interface{}))
 		}
 	}
+	cll.ClusterID = d.Id()
 	return
 }
 

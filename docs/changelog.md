@@ -2,9 +2,9 @@
 
 ## 0.2.6
 
-Behavioral changes
-
-* Issue #323 - State changes to legacy `spark.databricks.delta.preview.enabled` config option are now ignored by `databricks_job` & `databricks_cluster`
+**Behavior changes**
+* State changes to legacy `spark.databricks.delta.preview.enabled` config option are [now ignored](https://github.com/databrickslabs/terraform-provider-databricks/pull/334) by `databricks_job` & `databricks_cluster`
+* Libraries, which are installed on all clusters and are not part of cluster resource definition, won't be waited for INSTALLED status
 
 ## 0.2.5
 

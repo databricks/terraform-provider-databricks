@@ -1,5 +1,11 @@
 # Version changelog
 
+## 0.2.6
+
+**Behavior changes**
+
+* Libraries, which are installed on all clusters and are not part of cluster resource definition, won't be waited for INSTALLED status
+
 ## 0.2.5
 
 * Added support for [local disk encryption](https://github.com/databrickslabs/terraform-provider-databricks/pull/313)

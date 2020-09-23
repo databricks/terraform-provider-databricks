@@ -1,4 +1,6 @@
-variable "databricks_aws_account_id" {}
+variable "databricks_aws_account_id" {
+  default = "414351767826"
+}
 
 resource "aws_kms_key" "customer_managed_key" {
 }

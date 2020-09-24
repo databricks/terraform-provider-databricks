@@ -84,6 +84,14 @@ output "test_security_group" {
   value = module.aws_common.security_group
 }
 
+output "test_kms_key_arn" {
+  value = module.aws_common.kms_key_arn
+}
+
+output "test_kms_key_alias" {
+  value = module.aws_common.kms_key_alias
+}
+
 output "test_prefix" {
   value = local.prefix
 }

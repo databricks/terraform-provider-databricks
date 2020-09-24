@@ -84,7 +84,7 @@ func TestMwsAccNetworks(t *testing.T) {
 func testMWSNetworkResourceDestroy(s *terraform.State) error {
 	client := common.CommonEnvironmentClient()
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "databricks_mws_storage_configurations" {
+		if rs.Type != "databricks_mws_networks" {
 			continue
 		}
 		packagedMWSIds, err := UnpackMWSAccountID(rs.Primary.ID)

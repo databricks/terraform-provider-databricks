@@ -79,6 +79,7 @@ The following arguments are required:
 * `network_id` - (Optional) (String) `network_id` from [networks](mws_networks.md)
 * `account_id` - (Required) (String) master account id (also used for `sts:ExternaId` of `sts:AssumeRole`)
 * `credentials_id` - (Required) (String) `credentials_id` from [credentials](mws_credentials.md)
+* `customer_managed_key_id` - (Optional) (String) `customer_managed_key_id` from [customer managed keys](mws_customer_managed_keys.md)
 * `deployment_name` - (Required) (String) part of URL: `https://<deployment-name>.cloud.databricks.com`
 * `workspace_name` - (Required) (String) name of the workspace, will appear on UI
 * `aws_region` - (Required) (String) AWS region of VPC

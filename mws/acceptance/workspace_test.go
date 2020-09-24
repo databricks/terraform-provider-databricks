@@ -30,6 +30,13 @@ func TestMwsAccWorkspaces(t *testing.T) {
 		credentials_name = "credentials-ws-{var.RANDOM}"
 		role_arn         = "{env.TEST_CROSSACCOUNT_ARN}"
 	}
+	resource "databricks_mws_customer_managed_keys" "this" {
+		account_id   = "{env.DATABRICKS_ACCOUNT_ID}"
+		aws_key_info {
+			key_arn   = "{env.TEST_KMS_KEY_ARN}"
+			key_alias = "{env.TEST_KMS_KEY_ALIAS}"
+		}
+	}
 	resource "databricks_mws_storage_configurations" "this" {
 		account_id                 = "{env.DATABRICKS_ACCOUNT_ID}"
 		storage_configuration_name = "storage-ws-{var.RANDOM}"
@@ -55,6 +62,7 @@ func TestMwsAccWorkspaces(t *testing.T) {
 
 		credentials_id = databricks_mws_credentials.this.credentials_id
 		storage_configuration_id = databricks_mws_storage_configurations.this.storage_configuration_id
+		customer_managed_key_id = databricks_mws_customer_managed_keys.this.customer_managed_key_id
 		network_id = databricks_mws_networks.this.network_id
 		verify_workspace_runnning = true
 	}`)

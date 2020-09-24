@@ -2,6 +2,7 @@ package compute
 
 import (
 	"fmt"
+	"log"
 	"strconv"
 	"strings"
 
@@ -92,6 +93,17 @@ var jobSchema = internal.StructToSchema(JobSettings{},
 			"`new_cluster` for greater reliability."
 		s["new_cluster"].Description = "Same set of parameters as for " +
 			"[databricks_cluster](cluster.md) resource."
+		if v, err := internal.SchemaPath(s, "new_cluster", "spark_conf"); err == nil {
+			v.DiffSuppressFunc = func(k, old, new string, d *schema.ResourceData) bool {
+				isPossiblyLegacyConfig := "new_cluster.0.spark_conf.%" == k && "1" == old && "0" == new
+				isLegacyConfig := "new_cluster.0.spark_conf.spark.databricks.delta.preview.enabled" == k
+				if isPossiblyLegacyConfig || isLegacyConfig {
+					log.Printf("[DEBUG] Suppressing diff for k=%#v old=%#v new=%#v", k, old, new)
+					return true
+				}
+				return false
+			}
+		}
 		s["name"].Description = "An optional name for the job. The default value is Untitled."
 		s["library"].Description = "An optional list of libraries to be installed on " +
 			"the cluster that will execute the job. The default value is an empty list."

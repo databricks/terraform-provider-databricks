@@ -82,8 +82,11 @@ func TestResourceFixture_Hint(t *testing.T) {
 
 func TestResourceFixture_Apply(t *testing.T) {
 	d, err := ResourceFixture{
-		CommandMock: func(commandStr string) (string, error) {
-			return "yes", nil
+		CommandMock: func(commandStr string) common.CommandResults {
+			return common.CommandResults{
+				ResultType: "text",
+				Data: "yes",
+			}
 		},
 		Resource: &schema.Resource{
 			Schema: map[string]*schema.Schema{
@@ -109,8 +112,11 @@ func TestResourceFixture_Apply(t *testing.T) {
 
 func TestResourceFixture_Apply_Fail(t *testing.T) {
 	_, err := ResourceFixture{
-		CommandMock: func(commandStr string) (string, error) {
-			return "yes", nil
+		CommandMock: func(commandStr string) common.CommandResults {
+			return common.CommandResults{
+				ResultType: "text",
+				Data: "yes",
+			}
 		},
 		Resource: &schema.Resource{
 			Schema: map[string]*schema.Schema{

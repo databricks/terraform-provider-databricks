@@ -3,25 +3,11 @@ package compute
 import (
 	"errors"
 	"fmt"
-	"html"
 	"log"
-	"regexp"
-	"strings"
 	"time"
 
 	"github.com/databrickslabs/databricks-terraform/common"
 	"github.com/databrickslabs/databricks-terraform/internal"
-)
-
-var (
-	// IPython's output prefixes
-	outRE = regexp.MustCompile(`Out\[[\d\s]+\]:\s`)
-	// HTML tags
-	tagRE = regexp.MustCompile(`<[^>]*>`)
-	// just exception content without exception name
-	exceptionRE = regexp.MustCompile(`.*Exception: (.*)`)
-	// usual error message explanation is hidden in this key
-	errorMessageRE = regexp.MustCompile(`ErrorMessage=(.*)\n`)
 )
 
 // NewCommandsAPI creates CommandsAPI instance from provider meta
@@ -36,74 +22,71 @@ type CommandsAPI struct {
 
 // Execute creates a spark context and executes a command and then closes context
 // Any leading whitespace is trimmed
-func (a CommandsAPI) Execute(clusterID, language, commandStr string) (result string, err error) {
+func (a CommandsAPI) Execute(clusterID, language, commandStr string) common.CommandResults {
 	cluster, err := NewClustersAPI(a.client).Get(clusterID)
 	if err != nil {
-		return
+		return common.CommandResults{
+			ResultType: "error",
+			Summary: err.Error(),
+		}
 	}
 	if !cluster.IsRunningOrResizing() {
-		err = fmt.Errorf("Cluster %s has to be running or resizing, but is %s", clusterID, cluster.State)
-		return
+		return common.CommandResults{
+			ResultType: "error",
+			Summary: fmt.Sprintf("Cluster %s has to be running or resizing, but is %s", clusterID, cluster.State),
+		}
 	}
 	commandStr = internal.TrimLeadingWhitespace(commandStr)
 	log.Printf("[INFO] Executing %s command on %s:\n%s", language, clusterID, commandStr)
 	context, err := a.createContext(language, clusterID)
 	if err != nil {
-		return
+		return common.CommandResults{
+			ResultType: "error",
+			Summary: err.Error(),
+		}
 	}
 	err = a.waitForContextReady(context, clusterID, 1, 10)
 	if err != nil {
-		return
+		return common.CommandResults{
+			ResultType: "error",
+			Summary: err.Error(),
+		}
 	}
 	commandID, err := a.createCommand(context, clusterID, language, commandStr)
 	if err != nil {
-		return
+		return common.CommandResults{
+			ResultType: "error",
+			Summary: err.Error(),
+		}
 	}
 	err = a.waitForCommandFinished(commandID, context, clusterID, 5, 10)
 	if err != nil {
-		return
+		return common.CommandResults{
+			ResultType: "error",
+			Summary: err.Error(),
+		}
 	}
 	command, err := a.getCommand(commandID, context, clusterID)
 	if err != nil {
-		return
+		return common.CommandResults{
+			ResultType: "error",
+			Summary: err.Error(),
+		}
 	}
 	err = a.deleteContext(context, clusterID)
 	if err != nil {
-		return
+		return common.CommandResults{
+			ResultType: "error",
+			Summary: err.Error(),
+		}
 	}
-	return a.parseCommandResults(command)
-}
-
-func (a CommandsAPI) parseCommandResults(command Command) (result string, err error) {
 	if command.Results == nil {
-		err = fmt.Errorf("Command has no results: %#v", command)
-		return
-	}
-	switch command.Results.ResultType {
-	case "text":
-		result = outRE.ReplaceAllLiteralString(command.Results.Data.(string), "")
-		return
-	case "error":
-		log.Printf("[DEBUG] error caused by command: %s", command.Results.Cause)
-		summary := tagRE.ReplaceAllLiteralString(command.Results.Summary, "")
-		summary = html.UnescapeString(summary)
-		exceptionMatches := exceptionRE.FindStringSubmatch(summary)
-		if len(exceptionMatches) == 2 {
-			summary = strings.ReplaceAll(exceptionMatches[1], "; nested exception is:", "")
-			summary = strings.TrimRight(summary, " ")
-			err = errors.New(summary)
-			return
+		return common.CommandResults{
+			ResultType: "error",
+			Summary: fmt.Sprintf("Command has no results: %#v", command),
 		}
-		errorMessageMatches := errorMessageRE.FindStringSubmatch(command.Results.Cause)
-		if len(errorMessageMatches) == 2 {
-			err = errors.New(errorMessageMatches[1])
-			return
-		}
-		err = errors.New(summary)
-		return
 	}
-	err = fmt.Errorf("Unknown result type %s: %v", command.Results.ResultType, command.Results.Data)
-	return
+	return *command.Results
 }
 
 type genericCommandRequest struct {

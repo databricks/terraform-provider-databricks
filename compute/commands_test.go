@@ -67,7 +67,7 @@ func TestSomeCommands(t *testing.T) {
 			Resource:     "/api/1.2/commands/status?clusterId=abc&commandId=234&contextId=123",
 			Response: Command{
 				Status: "Finished",
-				Results: &CommandResults{
+				Results: &common.CommandResults{
 					ResultType: "text",
 					Data:       "done",
 				},
@@ -86,9 +86,9 @@ func TestSomeCommands(t *testing.T) {
 	require.NoError(t, err)
 	commands := NewCommandsAPI(client)
 
-	result, err := commands.Execute("abc", "python", `print("done")`)
-	require.NoError(t, err)
-	assert.Equal(t, "done", result)
+	result := commands.Execute("abc", "python", `print("done")`)
+	assert.Equal(t, false, result.Failed())
+	assert.Equal(t, "done", result.Text())
 }
 
 func TestAccContext(t *testing.T) {
@@ -101,32 +101,26 @@ func TestAccContext(t *testing.T) {
 	clusterID := clusterInfo.ClusterID
 	c := NewCommandsAPI(client)
 
-	result, err := c.Execute(clusterID, "python", `print('hello world')`)
-	require.NoError(t, err)
-	assert.Equal(t, "hello world", result)
+	result := c.Execute(clusterID, "python", `print('hello world')`)
+	assert.Equal(t, "hello world", result.Text())
 
 	// exceptions are regexed away for readability
-	result, err = c.Execute(clusterID, "python", `raise Exception("Not Found")`)
-	qa.AssertErrorStartsWith(t, err, "Not Found")
-	assert.Equal(t, "", result)
+	result = c.Execute(clusterID, "python", `raise Exception("Not Found")`)
+	qa.AssertErrorStartsWith(t, result.Err(), "Not Found")
 
 	// but errors are not
-	result, err = c.Execute(clusterID, "python", `raise KeyError("foo")`)
-	qa.AssertErrorStartsWith(t, err, "KeyError: 'foo'")
-	assert.Equal(t, "", result)
+	result = c.Execute(clusterID, "python", `raise KeyError("foo")`)
+	qa.AssertErrorStartsWith(t, result.Err(), "KeyError: 'foo'")
 
 	// so it is more clear to read and debug
-	result, err = c.Execute(clusterID, "python", `return 'hello world'`)
-	qa.AssertErrorStartsWith(t, err, "SyntaxError: 'return' outside function")
-	assert.Equal(t, "", result)
+	result = c.Execute(clusterID, "python", `return 'hello world'`)
+	qa.AssertErrorStartsWith(t, result.Err(), "SyntaxError: 'return' outside function")
 
-	result, err = c.Execute(clusterID, "python", `"Hello World!"`)
-	assert.NoError(t, err)
-	assert.Equal(t, "'Hello World!'", result)
+	result = c.Execute(clusterID, "python", `"Hello World!"`)
+	assert.Equal(t, "'Hello World!'", result.Text())
 
-	result, err = c.Execute(clusterID, "python", `
+	result = c.Execute(clusterID, "python", `
 		print("Hello World!")
 		dbutils.notebook.exit("success")`)
-	assert.NoError(t, err)
-	assert.Equal(t, "success", result)
+	assert.Equal(t, "success", result.Text())
 }

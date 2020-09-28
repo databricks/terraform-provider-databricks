@@ -64,6 +64,18 @@ func (apiError APIError) IsMissing() bool {
 	return apiError.StatusCode == http.StatusNotFound
 }
 
+// IsMissing returns true if error is 404
+func IsMissing(err error) bool {
+	if err == nil {
+		return false
+	}
+	ae, ok := err.(APIError)
+	if !ok {
+		return false
+	}
+	return ae.IsMissing()
+}
+
 // IsTooManyRequests shows rate exceeded limits
 func (apiError APIError) IsTooManyRequests() bool {
 	return apiError.StatusCode == http.StatusTooManyRequests

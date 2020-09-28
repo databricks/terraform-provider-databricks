@@ -5,6 +5,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/databrickslabs/databricks-terraform/common"
 	"github.com/databrickslabs/databricks-terraform/compute"
 	"github.com/databrickslabs/databricks-terraform/internal"
 	"github.com/databrickslabs/databricks-terraform/internal/qa"
@@ -31,7 +32,7 @@ func TestResourceAzureBlobMountCreate(t *testing.T) {
 			},
 		},
 		Resource: ResourceAzureBlobMount(),
-		CommandMock: func(commandStr string) (string, error) {
+		CommandMock: func(commandStr string) common.CommandResults {
 			trunc := internal.TrimLeadingWhitespace(commandStr)
 			t.Logf("Received command:\n%s", trunc)
 
@@ -40,7 +41,10 @@ func TestResourceAzureBlobMountCreate(t *testing.T) {
 				assert.Contains(t, trunc, `"fs.azure.account.key.f.blob.core.windows.net":dbutils.secrets.get("h", "g")`)
 			}
 			assert.Contains(t, trunc, "/mnt/e")
-			return "wasbs://c@f.blob.core.windows.net/d", nil
+			return common.CommandResults{
+				ResultType: "text",
+				Data: "wasbs://c@f.blob.core.windows.net/d",
+			}
 		},
 		State: map[string]interface{}{
 			"auth_type":            "ACCESS_KEY",
@@ -54,7 +58,7 @@ func TestResourceAzureBlobMountCreate(t *testing.T) {
 		},
 		Create: true,
 	}.Apply(t)
-	require.NoError(t, err, err) // TODO: global search-replace for NoError
+	require.NoError(t, err, err)
 	assert.Equal(t, "e", d.Id())
 	assert.Equal(t, "wasbs://c@f.blob.core.windows.net/d", d.Get("source"))
 }
@@ -71,8 +75,11 @@ func TestResourceAzureBlobMountCreate_Error(t *testing.T) {
 			},
 		},
 		Resource: ResourceAzureBlobMount(),
-		CommandMock: func(commandStr string) (string, error) {
-			return "", errors.New("Some error")
+		CommandMock: func(commandStr string) common.CommandResults {
+			return common.CommandResults{
+				ResultType: "error",
+				Summary: "Some error",
+			}
 		},
 		State: map[string]interface{}{
 			"auth_type":            "ACCESS_KEY",
@@ -103,12 +110,15 @@ func TestResourceAzureBlobMountRead(t *testing.T) {
 			},
 		},
 		Resource: ResourceAzureBlobMount(),
-		CommandMock: func(commandStr string) (string, error) {
+		CommandMock: func(commandStr string) common.CommandResults {
 			trunc := internal.TrimLeadingWhitespace(commandStr)
 			t.Logf("Received command:\n%s", trunc)
 			assert.Contains(t, trunc, "dbutils.fs.mounts()")
 			assert.Contains(t, trunc, `mount.mountPoint == "/mnt/e"`)
-			return "wasbs://c@f.blob.core.windows.net/d", nil
+			return common.CommandResults{
+				ResultType: "text",
+				Data: "wasbs://c@f.blob.core.windows.net/d",
+			}
 		},
 		State: map[string]interface{}{
 			"auth_type":            "ACCESS_KEY",
@@ -140,10 +150,13 @@ func TestResourceAzureBlobMountRead_NotFound(t *testing.T) {
 			},
 		},
 		Resource: ResourceAzureBlobMount(),
-		CommandMock: func(commandStr string) (string, error) {
+		CommandMock: func(commandStr string) common.CommandResults {
 			trunc := internal.TrimLeadingWhitespace(commandStr)
 			t.Logf("Received command:\n%s", trunc)
-			return "", errors.New("Mount not found")
+			return common.CommandResults{
+				Summary: "Mount not found",
+				ResultType: "error",
+			}
 		},
 		State: map[string]interface{}{
 			"auth_type":            "ACCESS_KEY",
@@ -175,10 +188,13 @@ func TestResourceAzureBlobMountRead_Error(t *testing.T) {
 			},
 		},
 		Resource: ResourceAzureBlobMount(),
-		CommandMock: func(commandStr string) (string, error) {
+		CommandMock: func(commandStr string) common.CommandResults {
 			trunc := internal.TrimLeadingWhitespace(commandStr)
 			t.Logf("Received command:\n%s", trunc)
-			return "", errors.New("Some error")
+			return common.CommandResults{
+				Summary: "Some error",
+				ResultType: "error",
+			}
 		},
 		State: map[string]interface{}{
 			"auth_type":            "ACCESS_KEY",
@@ -210,11 +226,13 @@ func TestResourceAzureBlobMountDelete(t *testing.T) {
 			},
 		},
 		Resource: ResourceAzureBlobMount(),
-		CommandMock: func(commandStr string) (string, error) {
+		CommandMock: func(commandStr string) common.CommandResults {
 			trunc := internal.TrimLeadingWhitespace(commandStr)
 			t.Logf("Received command:\n%s", trunc)
 			assert.Contains(t, trunc, "dbutils.fs.unmount(mount_point)")
-			return "", nil
+			return common.CommandResults{
+				ResultType: "text",
+			}
 		},
 		State: map[string]interface{}{
 			"auth_type":            "ACCESS_KEY",

@@ -22,7 +22,7 @@ func TestAccScimGroupResource(t *testing.T) {
 		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
 	}
 	//var secretScope Secre
-	var ScimGroup Group
+	var g ScimGroup
 	randomName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
 	userName := fmt.Sprintf("scimgroup-test-%s@example.com", randomName)
 	displayName := fmt.Sprintf("scimgroup %s", randomName)
@@ -40,9 +40,9 @@ func TestAccScimGroupResource(t *testing.T) {
 				// compose a basic test, checking both remote and local values
 				Check: resource.ComposeTestCheckFunc(
 					// query the API to retrieve the tokenInfo object
-					testScimGroupResourceExists("databricks_scim_group.my_scim_group", &ScimGroup, t),
+					testScimGroupResourceExists("databricks_scim_group.my_scim_group", &g, t),
 					// verify remote values
-					testScimGroupValues(t, &ScimGroup, displayName, expectEntitlements,
+					testScimGroupValues(t, &g, displayName, expectEntitlements,
 						[]RoleListItem{{Value: role}}, true),
 					// verify local values
 					resource.TestCheckResourceAttr("databricks_scim_group.my_scim_group", "display_name", displayName),
@@ -59,9 +59,9 @@ func TestAccScimGroupResource(t *testing.T) {
 				// compose a basic test, checking both remote and local values
 				Check: resource.ComposeTestCheckFunc(
 					// query the API to retrieve the tokenInfo object
-					testScimGroupResourceExists("databricks_scim_group.my_scim_group", &ScimGroup, t),
+					testScimGroupResourceExists("databricks_scim_group.my_scim_group", &g, t),
 					// verify remote values
-					testScimGroupValues(t, &ScimGroup, displayName, nil, nil, false),
+					testScimGroupValues(t, &g, displayName, nil, nil, false),
 					// verify local values
 					resource.TestCheckResourceAttr("databricks_scim_group.my_scim_group", "display_name", displayName),
 					resource.TestCheckResourceAttr("databricks_scim_group.my_scim_group", "entitlements.#", "0"),
@@ -76,9 +76,9 @@ func TestAccScimGroupResource(t *testing.T) {
 
 				Check: resource.ComposeTestCheckFunc(
 					// query the API to retrieve the tokenInfo object
-					testScimGroupResourceExists("databricks_scim_group.my_scim_group", &ScimGroup, t),
+					testScimGroupResourceExists("databricks_scim_group.my_scim_group", &g, t),
 					// verify remote values
-					testScimGroupValues(t, &ScimGroup, displayName, expectEntitlements,
+					testScimGroupValues(t, &g, displayName, expectEntitlements,
 						[]RoleListItem{{Value: role}}, true),
 					// verify local values
 					resource.TestCheckResourceAttr("databricks_scim_group.my_scim_group", "display_name", displayName),
@@ -90,7 +90,7 @@ func TestAccScimGroupResource(t *testing.T) {
 			},
 			{
 				PreConfig: func() {
-					err := NewGroupsAPI(common.CommonEnvironmentClient()).Delete(ScimGroup.ID)
+					err := NewGroupsAPI(common.CommonEnvironmentClient()).Delete(g.ID)
 					assert.NoError(t, err, err)
 				},
 				// use a dynamic configuration with the random name from above
@@ -98,9 +98,9 @@ func TestAccScimGroupResource(t *testing.T) {
 				// compose a basic test, checking both remote and local values
 				Check: resource.ComposeTestCheckFunc(
 					// query the API to retrieve the tokenInfo object
-					testScimGroupResourceExists("databricks_scim_group.my_scim_group", &ScimGroup, t),
+					testScimGroupResourceExists("databricks_scim_group.my_scim_group", &g, t),
 					// verify remote values
-					testScimGroupValues(t, &ScimGroup, displayName, nil, nil, false),
+					testScimGroupValues(t, &g, displayName, nil, nil, false),
 					// verify local values
 					resource.TestCheckResourceAttr("databricks_scim_group.my_scim_group", "display_name", displayName),
 					resource.TestCheckResourceAttr("databricks_scim_group.my_scim_group", "entitlements.#", "0"),
@@ -115,9 +115,9 @@ func TestAccScimGroupResource(t *testing.T) {
 
 				Check: resource.ComposeTestCheckFunc(
 					// query the API to retrieve the tokenInfo object
-					testScimGroupResourceExists("databricks_scim_group.my_scim_group", &ScimGroup, t),
+					testScimGroupResourceExists("databricks_scim_group.my_scim_group", &g, t),
 					// verify remote values
-					testScimGroupValues(t, &ScimGroup, displayName, expectEntitlements,
+					testScimGroupValues(t, &g, displayName, expectEntitlements,
 						[]RoleListItem{{Value: role}}, true),
 					// verify local values
 					resource.TestCheckResourceAttr("databricks_scim_group.my_scim_group", "display_name", displayName),
@@ -146,7 +146,7 @@ func testScimGroupResourceDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testScimGroupValues(t *testing.T, group *Group, displayName string, expectEntitlements []EntitlementsListItem, expectRoles []RoleListItem, verifyMembers bool) resource.TestCheckFunc {
+func testScimGroupValues(t *testing.T, group *ScimGroup, displayName string, expectEntitlements []EntitlementsListItem, expectRoles []RoleListItem, verifyMembers bool) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		assert.True(t, group.DisplayName == displayName)
 		assert.EqualValues(t, group.Entitlements, expectEntitlements)
@@ -157,7 +157,7 @@ func testScimGroupValues(t *testing.T, group *Group, displayName string, expectE
 }
 
 // testAccCheckTokenResourceExists queries the API and retrieves the matching Widget.
-func testScimGroupResourceExists(n string, group *Group, t *testing.T) resource.TestCheckFunc {
+func testScimGroupResourceExists(n string, group *ScimGroup, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		// find the corresponding state object
 		rs, ok := s.RootModule().Resources[n]

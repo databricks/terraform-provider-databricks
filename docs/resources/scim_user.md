@@ -1,6 +1,6 @@
 # databricks_scim_user Resource
 
--> **Note** This resource has evolving API, which may change in future versions of provider.
+!> **Warning** This resource is deprecated and going to be removed in 0.3. Please update all the code to [databricks_user](user.md) resource.
 
 Directly creates user within databricks workspace. We're not recommending extensive use of this resource, because it's way more manageable to create few [databricks_group](group.md) instances with all related permissions to them and let Identity provider use SCIM provisioning to populate users into those groups:
 
@@ -27,8 +27,8 @@ The following arguments are required:
 
 * `user_name` - (Required) This is the username of the given user and will be their form of access and identity.
 * `display_name` - (Optional) This is an alias for the username can be the full name of the user.
-* `roles` - (Optional) (Set) This is a list of roles assigned to the user, specific to the AWS environment for user to assume roles on clusters.
-* `entitlements` - (Optional) (Set) Entitlements for the user to be able to have the ability to create clusters and pools. Current options are: `"allow-cluster-create", "allow-instance-pool-create"`.
+* `roles` - (Optional) List of registered [instance profile](instance_profile.md) ARNs, that represent AWS IAM roles for user to assume roles on AWS clusters. Has no effect on Azure.
+* `entitlements` - (Optional) Entitlements for the user to be able to have the ability to create clusters and pools. Current options are: `"allow-cluster-create", "allow-instance-pool-create"`.
 * `default_roles` - (Required) (Set) Set of roles that are assigned to the `all_users` group in Databricks. You can use the default_user_roles data source to fetch the values for this.
 * `set_admin` - (Optional) (Bool) Setting this to true will patch this user to include the admin group id as a group item and if false, it will patch remove this user from the admin group.
 

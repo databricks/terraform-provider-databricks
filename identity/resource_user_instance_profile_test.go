@@ -8,25 +8,25 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestResourceGroupInstanceProfileCreate(t *testing.T) {
+func TestResourceUserInstanceProfileCreate(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "PATCH",
-				Resource: "/api/2.0/preview/scim/v2/Groups/abc",
+				Resource: "/api/2.0/preview/scim/v2/Users/abc",
 				ExpectedRequest: scimPatchRequest(
 					"add",
 					"roles",
 					"arn:aws:iam::999999999999:instance-profile/my-fake-instance-profile"),
-				Response: ScimGroup{
+				Response: ScimUser{
 					ID: "abc",
 				},
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/Groups/abc",
-				Response: ScimGroup{
-					Schemas:     []URN{"urn:ietf:params:scim:schemas:core:2.0:Group"},
+				Resource: "/api/2.0/preview/scim/v2/Users/abc",
+				Response: ScimUser{
+					Schemas:     []URN{"urn:ietf:params:scim:schemas:core:2.0:User"},
 					DisplayName: "Data Scientists",
 					Roles: []RoleListItem{
 						{"arn:aws:iam::999999999999:instance-profile/my-fake-instance-profile"},
@@ -35,9 +35,9 @@ func TestResourceGroupInstanceProfileCreate(t *testing.T) {
 				},
 			},
 		},
-		Resource: ResourceGroupInstanceProfile(),
+		Resource: ResourceUserInstanceProfile(),
 		State: map[string]interface{}{
-			"group_id":            "abc",
+			"user_id":             "abc",
 			"instance_profile_id": "arn:aws:iam::999999999999:instance-profile/my-fake-instance-profile",
 		},
 		Create: true,
@@ -46,12 +46,25 @@ func TestResourceGroupInstanceProfileCreate(t *testing.T) {
 	assert.Equal(t, "abc|arn:aws:iam::999999999999:instance-profile/my-fake-instance-profile", d.Id())
 }
 
-func TestResourceGroupInstanceProfileCreate_Error(t *testing.T) {
+func TestResourceUserInstanceProfileCreate_Error_BadARN(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		Resource: ResourceUserInstanceProfile(),
+		State: map[string]interface{}{
+			"user_id":             "abc",
+			"instance_profile_id": "fake",
+		},
+		Create: true,
+	}.Apply(t)
+	qa.AssertErrorStartsWith(t, err, "Illegal instance profile fake: arn: invalid prefix")
+	assert.Equal(t, "", d.Id(), "Id should be empty for error creates")
+}
+
+func TestResourceUserInstanceProfileCreate_Error(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "PATCH",
-				Resource: "/api/2.0/preview/scim/v2/Groups/abc",
+				Resource: "/api/2.0/preview/scim/v2/Users/abc",
 				Response: common.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
@@ -59,9 +72,9 @@ func TestResourceGroupInstanceProfileCreate_Error(t *testing.T) {
 				Status: 400,
 			},
 		},
-		Resource: ResourceGroupInstanceProfile(),
+		Resource: ResourceUserInstanceProfile(),
 		State: map[string]interface{}{
-			"group_id":            "abc",
+			"user_id":             "abc",
 			"instance_profile_id": "arn:aws:iam::999999999999:instance-profile/my-fake-instance-profile",
 		},
 		Create: true,
@@ -70,62 +83,14 @@ func TestResourceGroupInstanceProfileCreate_Error(t *testing.T) {
 	assert.Equal(t, "", d.Id(), "Id should be empty for error creates")
 }
 
-func TestResourceGroupInstanceProfileCreate_Error_InvalidARN(t *testing.T) {
-	d, err := qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   "PATCH",
-				Resource: "/api/2.0/preview/scim/v2/Groups/abc",
-				Response: common.APIErrorBody{
-					ErrorCode: "INVALID_REQUEST",
-					Message:   "Internal error happened",
-				},
-				Status: 400,
-			},
-		},
-		Resource: ResourceGroupInstanceProfile(),
-		State: map[string]interface{}{
-			"group_id":            "abc",
-			"instance_profile_id": "my-fake-instance-profile",
-		},
-		Create: true,
-	}.Apply(t)
-	qa.AssertErrorStartsWith(t, err, "Illegal instance profile my-fake-instance-profile: arn: invalid prefix")
-	assert.Equal(t, "", d.Id(), "Id should be empty for error creates")
-}
-
-func TestResourceGroupInstanceProfileCreate_Error_OtherARN(t *testing.T) {
-	d, err := qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   "PATCH",
-				Resource: "/api/2.0/preview/scim/v2/Groups/abc",
-				Response: common.APIErrorBody{
-					ErrorCode: "INVALID_REQUEST",
-					Message:   "Internal error happened",
-				},
-				Status: 400,
-			},
-		},
-		Resource: ResourceGroupInstanceProfile(),
-		State: map[string]interface{}{
-			"group_id":            "abc",
-			"instance_profile_id": "arn:aws:glue::999999999999:glue/my-fake-instance-profile",
-		},
-		Create: true,
-	}.Apply(t)
-	qa.AssertErrorStartsWith(t, err, "Not an instance profile ARN: arn:aws:glue::999999999999:glue/my-fake-instance-profile")
-	assert.Equal(t, "", d.Id(), "Id should be empty for error creates")
-}
-
-func TestResourceGroupInstanceProfileRead(t *testing.T) {
+func TestResourceUserInstanceProfileRead(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/Groups/abc",
-				Response: ScimGroup{
-					Schemas:     []URN{"urn:ietf:params:scim:schemas:core:2.0:Group"},
+				Resource: "/api/2.0/preview/scim/v2/Users/abc",
+				Response: ScimUser{
+					Schemas:     []URN{"urn:ietf:params:scim:schemas:core:2.0:User"},
 					DisplayName: "Data Scientists",
 					Roles: []RoleListItem{
 						{"arn:aws:iam::999999999999:instance-profile/my-fake-instance-profile"},
@@ -134,7 +99,7 @@ func TestResourceGroupInstanceProfileRead(t *testing.T) {
 				},
 			},
 		},
-		Resource: ResourceGroupInstanceProfile(),
+		Resource: ResourceUserInstanceProfile(),
 		Read:     true,
 		ID:       "abc|arn:aws:iam::999999999999:instance-profile/my-fake-instance-profile",
 	}.Apply(t)
@@ -142,12 +107,33 @@ func TestResourceGroupInstanceProfileRead(t *testing.T) {
 	assert.Equal(t, "abc|arn:aws:iam::999999999999:instance-profile/my-fake-instance-profile", d.Id(), "Id should not be empty")
 }
 
-func TestResourceGroupInstanceProfileRead_NotFound(t *testing.T) {
+func TestResourceUserInstanceProfileRead_NoRole(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/Groups/abc",
+				Resource: "/api/2.0/preview/scim/v2/Users/abc",
+				Response: ScimUser{
+					Schemas:     []URN{"urn:ietf:params:scim:schemas:core:2.0:User"},
+					DisplayName: "Data Scientists",
+					ID:          "abc",
+				},
+			},
+		},
+		Resource: ResourceUserInstanceProfile(),
+		Read:     true,
+		ID:       "abc|arn:aws:iam::999999999999:instance-profile/my-fake-instance-profile",
+	}.Apply(t)
+	assert.NoError(t, err, err)
+	assert.Equal(t, "", d.Id(), "Id should be empty for missing resources")
+}
+
+func TestResourceUserInstanceProfileRead_NotFound(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/preview/scim/v2/Users/abc",
 				Response: common.APIErrorBody{
 					ErrorCode: "NOT_FOUND",
 					Message:   "Item not found",
@@ -155,7 +141,7 @@ func TestResourceGroupInstanceProfileRead_NotFound(t *testing.T) {
 				Status: 404,
 			},
 		},
-		Resource: ResourceGroupInstanceProfile(),
+		Resource: ResourceUserInstanceProfile(),
 		Read:     true,
 		ID:       "abc|arn:aws:iam::999999999999:instance-profile/my-fake-instance-profile",
 	}.Apply(t)
@@ -163,33 +149,12 @@ func TestResourceGroupInstanceProfileRead_NotFound(t *testing.T) {
 	assert.Equal(t, "", d.Id(), "Id should be empty for missing resources")
 }
 
-func TestResourceGroupInstanceProfileRead_NotFound_Role(t *testing.T) {
+func TestResourceUserInstanceProfileRead_Error(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/Groups/abc",
-				Response: ScimGroup{
-					Schemas:     []URN{"urn:ietf:params:scim:schemas:core:2.0:Group"},
-					DisplayName: "Data Scientists",
-					ID:          "abc",
-				},
-			},
-		},
-		Resource: ResourceGroupInstanceProfile(),
-		Read:     true,
-		ID:       "abc|arn:aws:iam::999999999999:instance-profile/my-fake-instance-profile",
-	}.Apply(t)
-	assert.NoError(t, err, err)
-	assert.Equal(t, "", d.Id(), "Id should be empty for missing resources")
-}
-
-func TestResourceGroupInstanceProfileRead_Error(t *testing.T) {
-	d, err := qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/Groups/abc",
+				Resource: "/api/2.0/preview/scim/v2/Users/abc",
 				Response: common.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
@@ -197,7 +162,7 @@ func TestResourceGroupInstanceProfileRead_Error(t *testing.T) {
 				Status: 400,
 			},
 		},
-		Resource: ResourceGroupInstanceProfile(),
+		Resource: ResourceUserInstanceProfile(),
 		Read:     true,
 		ID:       "abc|arn:aws:iam::999999999999:instance-profile/my-fake-instance-profile",
 	}.Apply(t)
@@ -205,19 +170,19 @@ func TestResourceGroupInstanceProfileRead_Error(t *testing.T) {
 	assert.Equal(t, "abc|arn:aws:iam::999999999999:instance-profile/my-fake-instance-profile", d.Id(), "Id should not be empty for error reads")
 }
 
-func TestResourceGroupInstanceProfileDelete(t *testing.T) {
+func TestResourceUserInstanceProfileDelete(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "PATCH",
-				Resource: "/api/2.0/preview/scim/v2/Groups/abc",
+				Resource: "/api/2.0/preview/scim/v2/Users/abc",
 				ExpectedRequest: scimPatchRequest(
 					"remove",
 					`roles[value eq "arn:aws:iam::999999999999:instance-profile/my-fake-instance-profile"]`,
 					""),
 			},
 		},
-		Resource: ResourceGroupInstanceProfile(),
+		Resource: ResourceUserInstanceProfile(),
 		Delete:   true,
 		ID:       "abc|arn:aws:iam::999999999999:instance-profile/my-fake-instance-profile",
 	}.Apply(t)
@@ -225,12 +190,12 @@ func TestResourceGroupInstanceProfileDelete(t *testing.T) {
 	assert.Equal(t, "abc|arn:aws:iam::999999999999:instance-profile/my-fake-instance-profile", d.Id())
 }
 
-func TestResourceGroupInstanceProfileDelete_Error(t *testing.T) {
+func TestResourceUserInstanceProfileDelete_Error(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "PATCH",
-				Resource: "/api/2.0/preview/scim/v2/Groups/abc",
+				Resource: "/api/2.0/preview/scim/v2/Users/abc",
 				Response: common.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
@@ -238,7 +203,7 @@ func TestResourceGroupInstanceProfileDelete_Error(t *testing.T) {
 				Status: 400,
 			},
 		},
-		Resource: ResourceGroupInstanceProfile(),
+		Resource: ResourceUserInstanceProfile(),
 		Delete:   true,
 		ID:       "abc|arn:aws:iam::999999999999:instance-profile/my-fake-instance-profile",
 	}.Apply(t)

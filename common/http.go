@@ -93,6 +93,15 @@ func (apiError APIError) IsRetriable() bool {
 	return false
 }
 
+// NotFound returns properly formatted Not Found error
+func NotFound(message string) APIError {
+	return APIError{
+		ErrorCode:  "NOT_FOUND",
+		StatusCode: 404,
+		Message:    message,
+	}
+}
+
 func (c *DatabricksClient) parseUnknownError(
 	status string, body []byte, err error) (errorBody APIErrorBody) {
 	// this is most likely HTML... since un-marshalling JSON failed

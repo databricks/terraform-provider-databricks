@@ -26,7 +26,7 @@ func TestScimUserAPI_Create(t *testing.T) {
 		response       string
 		args           args
 		responseStatus int
-		want           User
+		want           ScimUser
 		wantErr        bool
 	}{
 		{
@@ -36,7 +36,7 @@ func TestScimUserAPI_Create(t *testing.T) {
 							"userName": "test.user@databricks.com"
 						}`,
 			responseStatus: http.StatusOK,
-			want: User{
+			want: ScimUser{
 				ID:       "101030",
 				UserName: "test.user@databricks.com",
 			},
@@ -52,7 +52,7 @@ func TestScimUserAPI_Create(t *testing.T) {
 		{
 			name:           "Create Test Failure",
 			response:       ``,
-			want:           User{},
+			want:           ScimUser{},
 			responseStatus: http.StatusBadRequest,
 			args: args{
 				Schemas:      []URN{UserSchema},
@@ -431,114 +431,9 @@ func TestScimUserAPI_Read(t *testing.T) {
 		responseStatus []int
 		args           []args
 		wantURI        []string
-		want           User
+		want           ScimUser
 		wantErr        bool
 	}{
-		{
-			name: "Read test",
-			response: []string{`{
-					"groups":[
-						{
-							"display":"admins",
-							"value":"100002",
-							"$ref":"https://test.databricks.com/api/2.0/scim/v2/Groups/100002"
-						},
-						{
-							"display":"test-create-group",
-							"value":"101355",
-							"$ref":"https://test.databricks.com/api/2.0/scim/v2/Groups/101355"
-						}
-					],
-					"roles":[
-						{
-							"value":"arn:aws:iam::1231231123123:instance-profile/my-instance-profile"
-						}
-					],
-					"id":"101030",
-					"userName":"test.user@databricks.com",
-					"displayName":"test.user@databricks.com"
-				}`,
-				`{
-					"schemas":[
-						"urn:ietf:params:scim:schemas:core:2.0:Group"
-					],
-					"id":"100002",
-					"displayName":"admins",
-					"members":[
-						{
-							"value":"100000"
-						},
-						{
-							"value":"100001"
-						}
-					],
-					"roles":[
-						{
-							"value":"arn:aws:iam::1231231123123:instance-profile/my-inherited-profile1"
-						}
-					]
-				}`,
-				`{
-					"schemas":[
-						"urn:ietf:params:scim:schemas:core:2.0:Group"
-					],
-					"id":"101355",
-					"displayName":"test-create-group",
-					"members":[
-						{
-							"value":"100000"
-						},
-						{
-							"value":"100001"
-						}
-					],
-					"roles":[
-						{
-							"value":"arn:aws:iam::1231231123123:instance-profile/my-inherited-profile2"
-						}
-					]
-				}`,
-			},
-			responseStatus: []int{http.StatusOK, http.StatusOK, http.StatusOK},
-			args: []args{
-				{
-					UserID: "101030",
-				},
-			},
-			wantURI: []string{"/api/2.0/preview/scim/v2/Users/101030", "/api/2.0/preview/scim/v2/Groups/100002", "/api/2.0/preview/scim/v2/Groups/101355"},
-			want: User{
-				ID:          "101030",
-				DisplayName: "test.user@databricks.com",
-				UserName:    "test.user@databricks.com",
-				Groups: []GroupsListItem{
-					{
-						Value: "100002",
-					},
-					{
-						Value: "101355",
-					},
-				},
-				Roles: []RoleListItem{
-					{
-						Value: "arn:aws:iam::1231231123123:instance-profile/my-instance-profile",
-					},
-				},
-				UnInheritedRoles: []RoleListItem{
-					{
-						Value: "arn:aws:iam::1231231123123:instance-profile/my-instance-profile",
-					},
-				},
-				InheritedRoles: []RoleListItem{
-					{
-						Value: "arn:aws:iam::1231231123123:instance-profile/my-inherited-profile1",
-					},
-					{
-						Value: "arn:aws:iam::1231231123123:instance-profile/my-inherited-profile2",
-					},
-				},
-			},
-			wantErr: false,
-		},
 		{
 			name: "Read user failure",
 			response: []string{``,
@@ -551,7 +446,7 @@ func TestScimUserAPI_Read(t *testing.T) {
 				},
 			},
 			wantURI: []string{"/api/2.0/preview/scim/v2/Users/101030"},
-			want:    User{},
+			want:    ScimUser{},
 			wantErr: true,
 		},
 		{
@@ -566,60 +461,7 @@ func TestScimUserAPI_Read(t *testing.T) {
 				},
 			},
 			wantURI: []string{"/api/2.0/preview/scim/v2/Users/101030"},
-			want:    User{},
-			wantErr: true,
-		},
-		{
-			name: "Read user first group failure no inherited and non inherited roles",
-			response: []string{`{
-					"groups":[
-						{
-							"display":"admins",
-							"value":"100002",
-							"$ref":"https://test.databricks.com/api/2.0/scim/v2/Groups/100002"
-						},
-						{
-							"display":"test-create-group",
-							"value":"101355",
-							"$ref":"https://test.databricks.com/api/2.0/scim/v2/Groups/101355"
-						}
-					],
-					"roles":[
-						{
-							"value":"arn:aws:iam::1231231123123:instance-profile/my-instance-profile"
-						}
-					],
-					"id":"101030",
-					"userName":"test.user@databricks.com",
-					"displayName":"test.user@databricks.com"
-				}`,
-				``,
-			},
-			responseStatus: []int{http.StatusOK, http.StatusBadRequest},
-			args: []args{
-				{
-					UserID: "101030",
-				},
-			},
-			wantURI: []string{"/api/2.0/preview/scim/v2/Users/101030", "/api/2.0/preview/scim/v2/Groups/100002"},
-			want: User{
-				ID:          "101030",
-				DisplayName: "test.user@databricks.com",
-				UserName:    "test.user@databricks.com",
-				Groups: []GroupsListItem{
-					{
-						Value: "100002",
-					},
-					{
-						Value: "101355",
-					},
-				},
-				Roles: []RoleListItem{
-					{
-						Value: "arn:aws:iam::1231231123123:instance-profile/my-instance-profile",
-					},
-				},
-			},
+			want:    ScimUser{},
 			wantErr: true,
 		},
 	}
@@ -631,6 +473,44 @@ func TestScimUserAPI_Read(t *testing.T) {
 			})
 		})
 	}
+}
+
+func TestAccReadUser(t *testing.T) {
+	if _, ok := os.LookupEnv("CLOUD_ENV"); !ok {
+		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
+	}
+
+	client := common.NewClientFromEnvironment()
+	me, err := NewUsersAPI(client).Me()
+	assert.NoError(t, err, err)
+
+	ru, err := NewUsersAPI(client).ReadR(me.ID)
+	assert.NoError(t, err, err)
+	assert.NotNil(t, ru)
+}
+
+func TestAccCreateRUserNonAdmin(t *testing.T) {
+	if _, ok := os.LookupEnv("CLOUD_ENV"); !ok {
+		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
+	}
+
+	client := common.NewClientFromEnvironment()
+	randomName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
+	given := UserEntity{
+		DisplayName:        "Mr " + randomName,
+		UserName:           fmt.Sprintf("test+%s@example.com", randomName),
+		AllowClusterCreate: true,
+	}
+	meh, err := NewUsersAPI(client).CreateR(given)
+	assert.NoError(t, err, err)
+
+	ru, err := NewUsersAPI(client).ReadR(meh.ID)
+	assert.NoError(t, err, err)
+	assert.NotNil(t, ru)
+
+	assert.Equal(t, given.UserName, ru.UserName)
+	assert.Equal(t, given.DisplayName, ru.DisplayName)
+	assert.True(t, ru.AllowClusterCreate)
 }
 
 func TestAccCreateUser(t *testing.T) {

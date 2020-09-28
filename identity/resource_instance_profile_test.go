@@ -17,7 +17,7 @@ func TestResourceInstanceProfileCreate(t *testing.T) {
 				Method:   "POST",
 				Resource: "/api/2.0/instance-profiles/add",
 				ExpectedRequest: map[string]interface{}{
-					"instance_profile_arn": "abc",
+					"instance_profile_arn": "arn:aws:iam::999999999999:instance-profile/my-fake-instance-profile",
 					"skip_validation":      true,
 				},
 			},
@@ -27,7 +27,7 @@ func TestResourceInstanceProfileCreate(t *testing.T) {
 				Response: InstanceProfileList{
 					InstanceProfiles: []InstanceProfileInfo{
 						{
-							InstanceProfileArn: "abc",
+							InstanceProfileArn: "arn:aws:iam::999999999999:instance-profile/my-fake-instance-profile",
 						},
 					},
 				},
@@ -35,13 +35,13 @@ func TestResourceInstanceProfileCreate(t *testing.T) {
 		},
 		Resource: ResourceInstanceProfile(),
 		State: map[string]interface{}{
-			"instance_profile_arn": "abc",
+			"instance_profile_arn": "arn:aws:iam::999999999999:instance-profile/my-fake-instance-profile",
 			"skip_validation":      true,
 		},
 		Create: true,
 	}.Apply(t)
 	assert.NoError(t, err, err)
-	assert.Equal(t, "abc", d.Id())
+	assert.Equal(t, "arn:aws:iam::999999999999:instance-profile/my-fake-instance-profile", d.Id())
 }
 
 func TestResourceInstanceProfileCreate_Error(t *testing.T) {
@@ -59,12 +59,25 @@ func TestResourceInstanceProfileCreate_Error(t *testing.T) {
 		},
 		Resource: ResourceInstanceProfile(),
 		State: map[string]interface{}{
-			"instance_profile_arn": "abc",
+			"instance_profile_arn": "arn:aws:iam::999999999999:instance-profile/my-fake-instance-profile",
 			"skip_validation":      true,
 		},
 		Create: true,
 	}.Apply(t)
 	qa.AssertErrorStartsWith(t, err, "Internal error happened")
+	assert.Equal(t, "", d.Id(), "Id should be empty for error creates")
+}
+
+func TestResourceInstanceProfileCreate_Error_InvalidARN(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		Resource: ResourceInstanceProfile(),
+		State: map[string]interface{}{
+			"instance_profile_arn": "abc",
+			"skip_validation":      true,
+		},
+		Create: true,
+	}.Apply(t)
+	qa.AssertErrorStartsWith(t, err, "Illegal instance profile abc: arn: invalid prefix")
 	assert.Equal(t, "", d.Id(), "Id should be empty for error creates")
 }
 
@@ -77,7 +90,7 @@ func TestResourceInstanceProfileRead(t *testing.T) {
 				Response: InstanceProfileList{
 					InstanceProfiles: []InstanceProfileInfo{
 						{
-							InstanceProfileArn: "abc",
+							InstanceProfileArn: "arn:aws:iam::999999999999:instance-profile/my-fake-instance-profile",
 						},
 					},
 				},
@@ -85,11 +98,11 @@ func TestResourceInstanceProfileRead(t *testing.T) {
 		},
 		Resource: ResourceInstanceProfile(),
 		Read:     true,
-		ID:       "abc",
+		ID:       "arn:aws:iam::999999999999:instance-profile/my-fake-instance-profile",
 	}.Apply(t)
 	assert.NoError(t, err, err)
-	assert.Equal(t, "abc", d.Id(), "Id should not be empty")
-	assert.Equal(t, "abc", d.Get("instance_profile_arn"))
+	assert.Equal(t, "arn:aws:iam::999999999999:instance-profile/my-fake-instance-profile", d.Id(), "Id should not be empty")
+	assert.Equal(t, "arn:aws:iam::999999999999:instance-profile/my-fake-instance-profile", d.Get("instance_profile_arn"))
 	assert.Equal(t, false, d.Get("skip_validation"))
 }
 
@@ -106,7 +119,7 @@ func TestResourceInstanceProfileRead_NotFound(t *testing.T) {
 		},
 		Resource: ResourceInstanceProfile(),
 		Read:     true,
-		ID:       "abc",
+		ID:       "arn:aws:iam::999999999999:instance-profile/my-fake-instance-profile",
 	}.Apply(t)
 	assert.NoError(t, err, err)
 	assert.Equal(t, "", d.Id(), "Id should be empty for missing resources")
@@ -127,10 +140,10 @@ func TestResourceInstanceProfileRead_Error(t *testing.T) {
 		},
 		Resource: ResourceInstanceProfile(),
 		Read:     true,
-		ID:       "abc",
+		ID:       "arn:aws:iam::999999999999:instance-profile/my-fake-instance-profile",
 	}.Apply(t)
 	qa.AssertErrorStartsWith(t, err, "Internal error happened")
-	assert.Equal(t, "abc", d.Id(), "Id should not be empty for error reads")
+	assert.Equal(t, "arn:aws:iam::999999999999:instance-profile/my-fake-instance-profile", d.Id(), "Id should not be empty for error reads")
 }
 
 func TestResourceInstanceProfileDelete(t *testing.T) {
@@ -140,16 +153,16 @@ func TestResourceInstanceProfileDelete(t *testing.T) {
 				Method:   "POST",
 				Resource: "/api/2.0/instance-profiles/remove",
 				ExpectedRequest: InstanceProfileInfo{
-					InstanceProfileArn: "abc",
+					InstanceProfileArn: "arn:aws:iam::999999999999:instance-profile/my-fake-instance-profile",
 				},
 			},
 		},
 		Resource: ResourceInstanceProfile(),
 		Delete:   true,
-		ID:       "abc",
+		ID:       "arn:aws:iam::999999999999:instance-profile/my-fake-instance-profile",
 	}.Apply(t)
 	assert.NoError(t, err, err)
-	assert.Equal(t, "abc", d.Id())
+	assert.Equal(t, "arn:aws:iam::999999999999:instance-profile/my-fake-instance-profile", d.Id())
 }
 
 func TestResourceInstanceProfileDelete_Error(t *testing.T) {
@@ -167,10 +180,10 @@ func TestResourceInstanceProfileDelete_Error(t *testing.T) {
 		},
 		Resource: ResourceInstanceProfile(),
 		Delete:   true,
-		ID:       "abc",
+		ID:       "arn:aws:iam::999999999999:instance-profile/my-fake-instance-profile",
 	}.Apply(t)
 	qa.AssertErrorStartsWith(t, err, "Internal error happened")
-	assert.Equal(t, "abc", d.Id())
+	assert.Equal(t, "arn:aws:iam::999999999999:instance-profile/my-fake-instance-profile", d.Id())
 }
 
 func TestInstanceProfilesAPI_Create(t *testing.T) {

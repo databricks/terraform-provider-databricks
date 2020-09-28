@@ -8,19 +8,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/plugin"
 )
 
-var (
-	commit = "unknown"
-	date   = "unknown"
-)
-
 func main() {
 	log.SetFlags(0)
 	log.Printf(`Databricks Terraform Provider (experimental)
 
-Version %s (built on %s from %s)
+Version %s
 
 https://registry.terraform.io/providers/databrickslabs/databricks/latest/docs
 
-`, common.Version(), commit, date)
+`, common.Version())
 	plugin.Serve(&plugin.ServeOpts{ProviderFunc: provider.DatabricksProvider})
 }

@@ -1,8 +1,8 @@
-# databricks_group_instance_profile Resource
+# databricks_user_instance_profile Resource
 
 -> **Note** This resource has evolving API, which may change in future versions of provider.
 
-This resource allows you to attach instance profiles to groups created by the [group](group.md) resource.
+This resource allows you to attach instance profiles to users.
 
 ## Example Usage
 
@@ -12,12 +12,12 @@ resource "databricks_instance_profile" "instance_profile" {
     skip_validation = true
 }
 
-resource "databricks_group" "my_group" {
-    display_name = "my_group_name"
+resource "databricks_user" "my_user" {
+    user_name = "me@example.com"
 }
 
-resource "databricks_group_instance_profile" "my_group_instance_profile" {
-    group_id = databricks_group.my_group.id
+resource "databricks_user_instance_profile" "my_user_instance_profile" {
+    user_id = databricks_user.my_user.id
     instance_profile_id = databricks_instance_profile.instance_profile.id
 }
 ```
@@ -25,14 +25,14 @@ resource "databricks_group_instance_profile" "my_group_instance_profile" {
 
 The following arguments are supported:
 
-* `group_id` - (Required) This is the id of the [group](group.md) resource.
+* `user_id` - (Required) This is the id of the [user](user.md) resource.
 * `instance_profile_id` -  (Required) This is the id of the [instance profile](instance_profile.md) resource.
 
 ## Attribute Reference
 
 In addition to all arguments above, the following attributes are exported:
 
-*  `id` - The id in the format `<group_id>|<instance_profile_id>`.
+*  `id` - The id in the format `<user_id>|<instance_profile_id>`.
 
 ## Import
 

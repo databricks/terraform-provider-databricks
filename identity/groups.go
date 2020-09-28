@@ -20,7 +20,7 @@ type GroupsAPI struct {
 }
 
 // Create creates a scim group in the Databricks workspace
-func (a GroupsAPI) Create(groupName string, members []string, roles []string, entitlements []string) (group Group, err error) {
+func (a GroupsAPI) Create(groupName string, members []string, roles []string, entitlements []string) (group ScimGroup, err error) {
 	scimGroupRequest := struct {
 		Schemas      []URN           `json:"schemas,omitempty"`
 		DisplayName  string          `json:"displayName,omitempty"`
@@ -50,13 +50,13 @@ func (a GroupsAPI) Create(groupName string, members []string, roles []string, en
 }
 
 // Read reads and returns a Group object via SCIM api
-func (a GroupsAPI) Read(groupID string) (group Group, err error) {
+func (a GroupsAPI) Read(groupID string) (group ScimGroup, err error) {
 	err = a.client.Scim(http.MethodGet, fmt.Sprintf("/preview/scim/v2/Groups/%v", groupID), nil, &group)
 	if err != nil {
 		return
 	}
 	//get inherited groups
-	var groups []Group
+	var groups []ScimGroup
 	for _, inheritedGroup := range group.Groups {
 		inheritedGroupFull, err := a.Read(inheritedGroup.Value)
 		if err != nil {
@@ -70,9 +70,18 @@ func (a GroupsAPI) Read(groupID string) (group Group, err error) {
 	return
 }
 
+// Filter returns groups matching the filter
+func (a GroupsAPI) Filter(filter string) (GroupList, error) {
+	var groups GroupList
+	err := a.client.Scim(http.MethodGet, "/preview/scim/v2/Groups", map[string]string{
+		"filter": filter,
+	}, &groups)
+	return groups, err
+}
+
 // GetAdminGroup returns the admin group in a given workspace by fetching with query "displayName+eq+admins"
-func (a GroupsAPI) GetAdminGroup() (Group, error) {
-	var group Group
+func (a GroupsAPI) GetAdminGroup() (ScimGroup, error) {
+	var group ScimGroup
 	var groups GroupList
 	err := a.client.Scim(http.MethodGet, "/preview/scim/v2/Groups", map[string]string{
 		"filter": "displayName+eq+admins",
@@ -85,6 +94,10 @@ func (a GroupsAPI) GetAdminGroup() (Group, error) {
 		return resources[0], err
 	}
 	return group, errors.New("Unable to identify the admin group! ")
+}
+
+func (a GroupsAPI) PatchR(groupID string, r patchRequest) error {
+	return a.client.Scim(http.MethodPatch, fmt.Sprintf("/preview/scim/v2/Groups/%v", groupID), r, nil)
 }
 
 // Patch applys a patch request for a group given a path attribute
@@ -134,7 +147,7 @@ func (a GroupsAPI) Delete(groupID string) error {
 }
 
 func (a GroupsAPI) getInheritedAndNonInheritedRoles(
-	group Group, groups []Group) (inherited []RoleListItem,
+	group ScimGroup, groups []ScimGroup) (inherited []RoleListItem,
 	unInherited []RoleListItem) {
 	allRoles := group.Roles
 	var inheritedRoles []RoleListItem

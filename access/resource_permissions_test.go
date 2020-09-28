@@ -50,7 +50,7 @@ func TestResourcePermissionsRead(t *testing.T) {
 			{
 				Method:   http.MethodGet,
 				Resource: "/api/2.0/preview/scim/v2/Me",
-				Response: identity.User{
+				Response: identity.ScimUser{
 					UserName: TestingAdminUser,
 				},
 			},
@@ -258,7 +258,7 @@ func TestResourcePermissionsCreate(t *testing.T) {
 			{
 				Method:   http.MethodGet,
 				Resource: "/api/2.0/preview/scim/v2/Me",
-				Response: identity.User{
+				Response: identity.ScimUser{
 					UserName: TestingAdminUser,
 				},
 			},
@@ -364,7 +364,7 @@ func TestResourcePermissionsCreate_NotebookPath(t *testing.T) {
 			{
 				Method:   http.MethodGet,
 				Resource: "/api/2.0/preview/scim/v2/Me",
-				Response: identity.User{
+				Response: identity.ScimUser{
 					UserName: TestingAdminUser,
 				},
 			},

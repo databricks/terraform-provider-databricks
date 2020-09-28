@@ -47,6 +47,7 @@ Exactly one of the following attribues is required:
 * `notebook_path` - path of notebook
 * `cluster_policy_id` - [cluster policy](cluster_policy.md) id
 * `instance_pool_id` - [instance pool](instance_pool.md) id
+* `authorization` - either [`tokens`](https://docs.databricks.com/administration-guide/access-control/tokens.html) or [`passwords`](https://docs.databricks.com/administration-guide/users-groups/single-sign-on/index.html#configure-password-permission).
 
 One or more `access_control` blocks are required to actually set the permission levels:
 

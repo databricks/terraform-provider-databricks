@@ -296,6 +296,7 @@ func permissionsResourceIDFields() []permissionsIDFieldMapping {
 		{"notebook_path", "notebook", "notebooks", PATH},
 		{"directory_id", "directory", "directories", SIMPLE},
 		{"directory_path", "directory", "directories", PATH},
+		{"authorization", "authorization", "authorization", SIMPLE},
 	}
 }
 

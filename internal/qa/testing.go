@@ -157,17 +157,6 @@ func (f ResourceFixture) Apply(t *testing.T) (*schema.ResourceData, error) {
 		resourceConfig := terraform.NewResourceConfigRaw(f.State)
 		diags := f.Resource.Validate(resourceConfig)
 		if diags.HasError() {
-			sort.Slice(diags, func(i, j int) bool {
-				return diags[i].Detail < diags[j].Detail
-			})
-			issues := []string{}
-			for _, diag := range diags {
-				if diag.Summary == "ConflictsWith" {
-					issues = append(issues, diag.Detail)
-				} else {
-					issues = append(issues, diag.Summary)
-				}
-			}
 			return nil, fmt.Errorf("Invalid config supplied. %s",
 				strings.ReplaceAll(diagsToString(diags), "\"", ""))
 		}
@@ -181,7 +170,7 @@ func (f ResourceFixture) Apply(t *testing.T) (*schema.ResourceData, error) {
 }
 
 func diagsToString(diags diag.Diagnostics) string {
-	if len(diags) > 0 {
+	if diags.HasError() {
 		sort.Slice(diags, func(i, j int) bool {
 			return diags[i].Detail < diags[j].Detail
 		})

@@ -9,6 +9,7 @@ import (
 	"github.com/databrickslabs/databricks-terraform/compute"
 
 	"github.com/databrickslabs/databricks-terraform/internal/acceptance"
+	"github.com/databrickslabs/databricks-terraform/internal/qa"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/stretchr/testify/assert"
@@ -95,6 +96,8 @@ func TestAccDatabricksPermissionsResourceFullLifecycle(t *testing.T) {
 
 func TestAccDatabricksJobPermissionsResourceFullLifecycle(t *testing.T) {
 	randomName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
+	client := new(common.DatabricksClient)
+	nodeType := qa.GetCloudInstanceType(client)
 	acceptance.AccTest(t, resource.TestCase{
 		Steps: []resource.TestStep{
 			{
@@ -108,7 +111,7 @@ func TestAccDatabricksJobPermissionsResourceFullLifecycle(t *testing.T) {
 					new_cluster  {
 						num_workers   = 1
 						spark_version = "6.6.x-scala2.11"
-						node_type_id  = "Standard_DS3_v2"
+						node_type_id  = "%[2]s"
 					}
 				}
 
@@ -122,7 +125,7 @@ func TestAccDatabricksJobPermissionsResourceFullLifecycle(t *testing.T) {
 						group_name = databricks_group.first.display_name
 						permission_level = "CAN_MANAGE"
 					}
-				}`, randomName),
+				}`, randomName, nodeType),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("databricks_permissions.dummy",
 						"object_type", "job"),
@@ -130,9 +133,8 @@ func TestAccDatabricksJobPermissionsResourceFullLifecycle(t *testing.T) {
 						func(client *common.DatabricksClient, id string) error {
 							job, err := compute.NewJobsAPI(client).Read(id)
 
-							if err != nil {
-								return err
-							}
+							assert.NoError(t, err)
+
 							userName := job.CreatorUserName
 
 							userACL := AccessControlChange{
@@ -147,18 +149,15 @@ func TestAccDatabricksJobPermissionsResourceFullLifecycle(t *testing.T) {
 							}
 
 							param := &jobACL
-							NewPermissionsAPI(client).SetOrDelete(fmt.Sprintf("/jobs/%s/", id), param)
+							permissionsAPIUpdateErr := NewPermissionsAPI(client).SetOrDelete(fmt.Sprintf("/jobs/%s/", id), param)
 
-							permissions, err := NewPermissionsAPI(client).Read(id)
-							if err != nil {
-								return err
-							}
-							for _, acl := range permissions.AccessControlList {
-								for _, permission := range acl.AllPermissions {
-									println(permission.PermissionLevel)
-								}
+							assert.NoError(t, permissionsAPIUpdateErr)
 
-							}
+							permissions, permissionsAPIReadErr := NewPermissionsAPI(client).Read(id)
+
+							assert.NoError(t, permissionsAPIReadErr)
+
+							fmt.Printf("%s", permissions)
 							assert.Len(t, permissions.AccessControlList, 2)
 							return nil
 						}),

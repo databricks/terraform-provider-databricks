@@ -175,6 +175,44 @@ func TestResourcePermissionsDelete_error(t *testing.T) {
 	assert.Error(t, err)
 }
 
+func TestResourcePermissionsDelete_Job(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:          http.MethodPut,
+				Resource:        "/api/2.0/preview/permissions/jobs/101",
+				ExpectedRequest: ObjectACL{},
+			},
+		},
+		Resource: ResourcePermissions(),
+		Delete:   true,
+		ID:       "/jobs/101",
+	}.Apply(t)
+	assert.NoError(t, err, err)
+	assert.Equal(t, "/jobs/101", d.Id())
+}
+
+func TestJobResourcePermissionsDelete_Job_error(t *testing.T) {
+	_, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:          http.MethodPut,
+				Resource:        "/api/2.0/preview/permissions/jobs/101",
+				ExpectedRequest: ObjectACL{},
+				Response: common.APIErrorBody{
+					ErrorCode: "INVALID_REQUEST",
+					Message:   "Internal error happened",
+				},
+				Status: 400,
+			},
+		},
+		Resource: ResourcePermissions(),
+		Delete:   true,
+		ID:       "/jobs/101",
+	}.Apply(t)
+	assert.Error(t, err)
+}
+
 func TestResourcePermissionsCreate_invalid(t *testing.T) {
 	_, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{},
@@ -442,20 +480,25 @@ func TestAccAddOrModifyDeleteJobPermissions(t *testing.T) {
 		},
 		Name: "Job " + randomName,
 	}
-	jobCreate, _ := compute.NewJobsAPI(client).Create(jobSettings)
+	jobCreate, err := compute.NewJobsAPI(client).Create(jobSettings)
 
-	job, _ := compute.NewJobsAPI(client).Read(fmt.Sprint(jobCreate.JobID))
+	assert.NoError(t, err)
 
-	jobID := fmt.Sprint(job.JobID)
+	//job, err := compute.NewJobsAPI(client).Read(fmt.Sprint(jobCreate.ID()))
 
-	//groupName := "Group" + randomName
-	groupName := "admins"
-	identity.NewGroupsAPI(client).Create(groupName, nil, nil, nil)
+	jobID := fmt.Sprint(jobCreate.ID())
+
+	groupName := "Group" + randomName
+	_, groupsAPIErr := identity.NewGroupsAPI(client).Create(groupName, nil, nil, nil)
+
+	assert.NoError(t, groupsAPIErr)
 
 	userName := randomName + "@" + randomName + ".com"
-	identity.NewUsersAPI(client).Create(userName, randomName, nil, nil)
+	_, usersAPIErr := identity.NewUsersAPI(client).Create(userName, randomName, nil, nil)
 
-	ownerName := job.CreatorUserName
+	assert.NoError(t, usersAPIErr)
+
+	ownerName := jobCreate.CreatorUserName
 
 	groupACL := AccessControlChange{
 		GroupName:       &groupName,
@@ -479,19 +522,27 @@ func TestAccAddOrModifyDeleteJobPermissions(t *testing.T) {
 	}
 
 	param := &jobACL
-	NewPermissionsAPI(client).AddOrModify(fmt.Sprintf("/jobs/%s/", jobID), param)
-	/*
-		ownerNewACL := AccessControlChange{
-			UserName:        &ownerName,
-			PermissionLevel: "IS_OWNER",
-		}
 
-		ownerAccessControlChange := []*AccessControlChange{&ownerNewACL}
+	permissionsAPIErr := NewPermissionsAPI(client).AddOrModify(fmt.Sprintf("/jobs/%s/", jobID), param)
 
-		newAcl := AccessControlChangeList{
-			ownerAccessControlChange,
-		}
-		NewPermissionsAPI(client).SetOrDelete(fmt.Sprintf("/jobs/%s/", jobID), &newAcl)
+	assert.NoError(t, permissionsAPIErr)
 
-		compute.NewJobsAPI(client).Delete(fmt.Sprint(jobCreate.JobID))*/
+	ownerNewACL := AccessControlChange{
+		UserName:        &ownerName,
+		PermissionLevel: "IS_OWNER",
+	}
+
+	ownerAccessControlChange := []*AccessControlChange{&ownerNewACL}
+
+	newAcl := AccessControlChangeList{
+		ownerAccessControlChange,
+	}
+	permissionsAPIUpdateErr := NewPermissionsAPI(client).SetOrDelete(fmt.Sprintf("/jobs/%s/", jobID), &newAcl)
+
+	assert.NoError(t, permissionsAPIUpdateErr)
+
+	jobsAPIErr := compute.NewJobsAPI(client).Delete(fmt.Sprint(jobCreate.JobID))
+
+	assert.NoError(t, jobsAPIErr)
+
 }

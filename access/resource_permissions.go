@@ -288,7 +288,6 @@ func resourcePermissionsDelete(d *schema.ResourceData, m interface{}) error {
 		return NewPermissionsAPI(m).SetOrDelete(id, &resourceACL)
 	}
 	return NewPermissionsAPI(m).SetOrDelete(id, new(AccessControlChangeList))
-
 }
 
 // permissionsIDFieldMapping holds mapping

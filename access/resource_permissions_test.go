@@ -544,5 +544,4 @@ func TestAccAddOrModifyDeleteJobPermissions(t *testing.T) {
 	jobsAPIErr := compute.NewJobsAPI(client).Delete(fmt.Sprint(jobCreate.JobID))
 
 	assert.NoError(t, jobsAPIErr)
-
 }

@@ -1,10 +1,13 @@
 package access
 
 import (
+	"fmt"
 	"net/http"
+	"os"
 	"testing"
 
 	"github.com/databrickslabs/databricks-terraform/common"
+	"github.com/databrickslabs/databricks-terraform/compute"
 	"github.com/databrickslabs/databricks-terraform/identity"
 	"github.com/databrickslabs/databricks-terraform/internal/qa"
 	"github.com/databrickslabs/databricks-terraform/workspace"
@@ -418,4 +421,77 @@ func TestResourcePermissionsCreate_error(t *testing.T) {
 			assert.Equal(t, "INVALID_REQUEST", e.ErrorCode)
 		}
 	}
+}
+
+func TestAccAddOrModifyDeleteJobPermissions(t *testing.T) {
+	cloudEnv := os.Getenv("CLOUD_ENV")
+	randomName := qa.RandomName()
+
+	if cloudEnv == "" {
+		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
+	}
+
+	client := common.CommonEnvironmentClient()
+
+	jobSettings := compute.JobSettings{
+		NewCluster: &compute.Cluster{
+			NumWorkers:   2,
+			SparkVersion: "6.4.x-scala2.11",
+			SparkConf:    nil,
+			NodeTypeID:   "Standard_DS3_v2",
+		},
+		Name: "1-sri-test-job",
+	}
+	jobCreate, _ := compute.NewJobsAPI(client).Create(jobSettings)
+
+	job, _ := compute.NewJobsAPI(client).Read(fmt.Sprint(jobCreate.JobID))
+
+	jobID := fmt.Sprint(job.JobID)
+
+	//groupName := "Group" + randomName
+	groupName := "admins"
+	identity.NewGroupsAPI(client).Create(groupName, nil, nil, nil)
+
+	userName := randomName + "@" + randomName + ".com"
+	identity.NewUsersAPI(client).Create(userName, randomName, nil, nil)
+
+	ownerName := job.CreatorUserName
+
+	groupACL := AccessControlChange{
+		GroupName:       &groupName,
+		PermissionLevel: "CAN_MANAGE",
+	}
+
+	ownerACL := AccessControlChange{
+		UserName:        &ownerName,
+		PermissionLevel: "CAN_MANAGE",
+	}
+
+	userACL := AccessControlChange{
+		UserName:        &userName,
+		PermissionLevel: "IS_OWNER",
+	}
+
+	accessControlChange := []*AccessControlChange{&groupACL, &userACL, &ownerACL}
+
+	jobACL := AccessControlChangeList{
+		accessControlChange,
+	}
+
+	param := &jobACL
+	NewPermissionsAPI(client).AddOrModify(fmt.Sprintf("/jobs/%s/", jobID), param)
+
+	ownerNewACL := AccessControlChange{
+		UserName:        &ownerName,
+		PermissionLevel: "IS_OWNER",
+	}
+
+	ownerAccessControlChange := []*AccessControlChange{&ownerNewACL}
+
+	newAcl := AccessControlChangeList{
+		ownerAccessControlChange,
+	}
+	NewPermissionsAPI(client).SetOrDelete(fmt.Sprintf("/jobs/%s/", jobID), &newAcl)
+
+	compute.NewJobsAPI(client).Delete(fmt.Sprint(jobCreate.JobID))
 }

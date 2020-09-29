@@ -7,6 +7,7 @@ import (
 	"strconv"
 
 	"github.com/databrickslabs/databricks-terraform/common"
+	"github.com/databrickslabs/databricks-terraform/compute"
 	"github.com/databrickslabs/databricks-terraform/identity"
 	"github.com/databrickslabs/databricks-terraform/workspace"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -264,7 +265,30 @@ func resourcePermissionsRead(d *schema.ResourceData, m interface{}) error {
 
 func resourcePermissionsDelete(d *schema.ResourceData, m interface{}) error {
 	id := d.Id()
+	objectType := d.Get("object_type").(string)
+
+	if objectType == "job" {
+		job, err := compute.NewJobsAPI(m).Read(id)
+
+		if err != nil {
+			return err
+		}
+		userName := job.CreatorUserName
+
+		userACL := AccessControlChange{
+			UserName:        &userName,
+			PermissionLevel: "IS_OWNER",
+		}
+
+		accessControlChange := []*AccessControlChange{&userACL}
+
+		resourceACL := AccessControlChangeList{
+			accessControlChange,
+		}
+		return NewPermissionsAPI(m).SetOrDelete(id, &resourceACL)
+	}
 	return NewPermissionsAPI(m).SetOrDelete(id, new(AccessControlChangeList))
+
 }
 
 // permissionsIDFieldMapping holds mapping

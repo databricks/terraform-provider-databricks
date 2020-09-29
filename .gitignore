@@ -332,3 +332,5 @@ website/public/**
 .vscode/private.env
 tf.log
 *.env
+go.sum
+go.mod

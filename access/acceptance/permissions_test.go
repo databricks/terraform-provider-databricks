@@ -4,10 +4,9 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/databrickslabs/databricks-terraform/compute"
-
 	. "github.com/databrickslabs/databricks-terraform/access"
 	"github.com/databrickslabs/databricks-terraform/common"
+	"github.com/databrickslabs/databricks-terraform/compute"
 
 	"github.com/databrickslabs/databricks-terraform/internal/acceptance"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
@@ -15,7 +14,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-/*
 func TestAccDatabricksPermissionsResourceFullLifecycle(t *testing.T) {
 	randomName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
 	acceptance.AccTest(t, resource.TestCase{
@@ -95,7 +93,6 @@ func TestAccDatabricksPermissionsResourceFullLifecycle(t *testing.T) {
 	})
 }
 
-*/
 func TestAccDatabricksJobPermissionsResourceFullLifecycle(t *testing.T) {
 	randomName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
 	acceptance.AccTest(t, resource.TestCase{

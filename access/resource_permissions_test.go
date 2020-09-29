@@ -440,7 +440,7 @@ func TestAccAddOrModifyDeleteJobPermissions(t *testing.T) {
 			SparkConf:    nil,
 			NodeTypeID:   "Standard_DS3_v2",
 		},
-		Name: "1-sri-test-job",
+		Name: "Job " + randomName,
 	}
 	jobCreate, _ := compute.NewJobsAPI(client).Create(jobSettings)
 
@@ -480,18 +480,18 @@ func TestAccAddOrModifyDeleteJobPermissions(t *testing.T) {
 
 	param := &jobACL
 	NewPermissionsAPI(client).AddOrModify(fmt.Sprintf("/jobs/%s/", jobID), param)
+	/*
+		ownerNewACL := AccessControlChange{
+			UserName:        &ownerName,
+			PermissionLevel: "IS_OWNER",
+		}
 
-	ownerNewACL := AccessControlChange{
-		UserName:        &ownerName,
-		PermissionLevel: "IS_OWNER",
-	}
+		ownerAccessControlChange := []*AccessControlChange{&ownerNewACL}
 
-	ownerAccessControlChange := []*AccessControlChange{&ownerNewACL}
+		newAcl := AccessControlChangeList{
+			ownerAccessControlChange,
+		}
+		NewPermissionsAPI(client).SetOrDelete(fmt.Sprintf("/jobs/%s/", jobID), &newAcl)
 
-	newAcl := AccessControlChangeList{
-		ownerAccessControlChange,
-	}
-	NewPermissionsAPI(client).SetOrDelete(fmt.Sprintf("/jobs/%s/", jobID), &newAcl)
-
-	compute.NewJobsAPI(client).Delete(fmt.Sprint(jobCreate.JobID))
+		compute.NewJobsAPI(client).Delete(fmt.Sprint(jobCreate.JobID))*/
 }

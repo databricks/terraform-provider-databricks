@@ -484,8 +484,6 @@ func TestAccAddOrModifyDeleteJobPermissions(t *testing.T) {
 
 	assert.NoError(t, err)
 
-	//job, err := compute.NewJobsAPI(client).Read(fmt.Sprint(jobCreate.ID()))
-
 	jobID := fmt.Sprint(jobCreate.ID())
 
 	groupName := "Group" + randomName
@@ -518,7 +516,7 @@ func TestAccAddOrModifyDeleteJobPermissions(t *testing.T) {
 	accessControlChange := []*AccessControlChange{&groupACL, &userACL, &ownerACL}
 
 	jobACL := AccessControlChangeList{
-		accessControlChange,
+		AccessControlList: accessControlChange,
 	}
 
 	param := &jobACL
@@ -534,10 +532,10 @@ func TestAccAddOrModifyDeleteJobPermissions(t *testing.T) {
 
 	ownerAccessControlChange := []*AccessControlChange{&ownerNewACL}
 
-	newAcl := AccessControlChangeList{
-		ownerAccessControlChange,
+	newACL := AccessControlChangeList{
+		AccessControlList: ownerAccessControlChange,
 	}
-	permissionsAPIUpdateErr := NewPermissionsAPI(client).SetOrDelete(fmt.Sprintf("/jobs/%s/", jobID), &newAcl)
+	permissionsAPIUpdateErr := NewPermissionsAPI(client).SetOrDelete(fmt.Sprintf("/jobs/%s/", jobID), &newACL)
 
 	assert.NoError(t, permissionsAPIUpdateErr)
 

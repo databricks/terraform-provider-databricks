@@ -145,7 +145,7 @@ func TestAccDatabricksJobPermissionsResourceFullLifecycle(t *testing.T) {
 							accessControlChange := []*AccessControlChange{&userACL}
 
 							jobACL := AccessControlChangeList{
-								accessControlChange,
+								AccessControlList: accessControlChange,
 							}
 
 							param := &jobACL

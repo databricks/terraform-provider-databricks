@@ -265,7 +265,7 @@ func ResourcePermissions() *schema.Resource {
 			return diag.FromErr(err)
 		}
 		if len(entity.AccessControlList) == 0 {
-			// empty "modifiable" access control list is the same as resource absense
+			// empty "modifiable" access control list is the same as resource absence
 			d.SetId("")
 			return nil
 		}

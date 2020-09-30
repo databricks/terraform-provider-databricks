@@ -12,6 +12,7 @@ import (
 	"github.com/databrickslabs/databricks-terraform/internal/qa"
 	"github.com/databrickslabs/databricks-terraform/workspace"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -67,9 +68,11 @@ func TestResourcePermissionsRead(t *testing.T) {
 	}.Apply(t)
 	assert.NoError(t, err, err)
 	assert.Equal(t, "/clusters/abc", d.Id())
-	assert.Equal(t, TestingUser, d.Get("access_control.0.user_name"))
-	assert.Equal(t, "CAN_READ", d.Get("access_control.0.permission_level"))
-	assert.Equal(t, 1, d.Get("access_control.#"))
+	ac := d.Get("access_control").(*schema.Set)
+	require.Equal(t, 1, len(ac.List()))
+	firstElem := ac.List()[0].(map[string]interface{})
+	assert.Equal(t, TestingUser, firstElem["user_name"])
+	assert.Equal(t, "CAN_READ", firstElem["permission_level"])
 }
 
 func TestResourcePermissionsRead_some_error(t *testing.T) {
@@ -338,9 +341,11 @@ func TestResourcePermissionsCreate(t *testing.T) {
 		Create: true,
 	}.Apply(t)
 	assert.NoError(t, err, err)
-	assert.Equal(t, TestingUser, d.Get("access_control.0.user_name"))
-	assert.Equal(t, "CAN_READ", d.Get("access_control.0.permission_level"))
-	assert.Equal(t, 1, d.Get("access_control.#"))
+	ac := d.Get("access_control").(*schema.Set)
+	require.Equal(t, 1, len(ac.List()))
+	firstElem := ac.List()[0].(map[string]interface{})
+	assert.Equal(t, TestingUser, firstElem["user_name"])
+	assert.Equal(t, "CAN_READ", firstElem["permission_level"])
 }
 
 func TestResourcePermissionsCreate_NotebookPath_NotExists(t *testing.T) {
@@ -445,9 +450,11 @@ func TestResourcePermissionsCreate_NotebookPath(t *testing.T) {
 	}.Apply(t)
 
 	assert.NoError(t, err, err)
-	assert.Equal(t, TestingUser, d.Get("access_control.0.user_name"))
-	assert.Equal(t, "CAN_USE", d.Get("access_control.0.permission_level"))
-	assert.Equal(t, 1, d.Get("access_control.#"))
+	ac := d.Get("access_control").(*schema.Set)
+	require.Equal(t, 1, len(ac.List()))
+	firstElem := ac.List()[0].(map[string]interface{})
+	assert.Equal(t, TestingUser, firstElem["user_name"])
+	assert.Equal(t, "CAN_USE", firstElem["permission_level"])
 }
 
 func TestResourcePermissionsCreate_error(t *testing.T) {
@@ -480,6 +487,83 @@ func TestResourcePermissionsCreate_error(t *testing.T) {
 			assert.Equal(t, "INVALID_REQUEST", e.ErrorCode)
 		}
 	}
+}
+
+func TestResourcePermissionsUpdate(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   http.MethodGet,
+				Resource: "/api/2.0/preview/permissions/jobs/9",
+				Response: ObjectACL{
+					ObjectID:   "/jobs/9",
+					ObjectType: "job",
+					AccessControlList: []AccessControl{
+						{
+							UserName: TestingUser,
+							AllPermissions: []Permission{
+								{
+									PermissionLevel: "CAN_RUN",
+									Inherited:       false,
+								},
+							},
+						},
+						{
+							UserName: TestingAdminUser,
+							AllPermissions: []Permission{
+								{
+									PermissionLevel: "CAN_MANAGE",
+									Inherited:       false,
+								},
+							},
+						},
+					},
+				},
+			},
+			{
+				Method:       http.MethodGet,
+				ReuseRequest: true,
+				Resource:     "/api/2.0/preview/scim/v2/Me",
+				Response: identity.ScimUser{
+					UserName: TestingAdminUser,
+				},
+			},
+			{
+				Method:   http.MethodPut,
+				Resource: "/api/2.0/preview/permissions/jobs/9",
+				ExpectedRequest: AccessControlChangeList{
+					AccessControlList: []AccessControlChange{
+						{
+							UserName:        TestingUser,
+							PermissionLevel: "CAN_RUN",
+						},
+						{
+							UserName:        TestingAdminUser,
+							PermissionLevel: "IS_OWNER",
+						},
+					},
+				},
+			},
+		},
+		HCL: `
+		job_id = 9
+
+		access_control {
+			user_name = "ben"
+			permission_level = "CAN_RUN"
+		}
+		`,
+		Resource: ResourcePermissions(),
+		Update:   true,
+		ID:       "/jobs/9",
+	}.Apply(t)
+	assert.NoError(t, err, err)
+	assert.Equal(t, "/jobs/9", d.Id())
+	ac := d.Get("access_control").(*schema.Set)
+	require.Equal(t, 1, len(ac.List()))
+	firstElem := ac.List()[0].(map[string]interface{})
+	assert.Equal(t, TestingUser, firstElem["user_name"])
+	assert.Equal(t, "CAN_RUN", firstElem["permission_level"])
 }
 
 func permissionsTestHelper(t *testing.T,

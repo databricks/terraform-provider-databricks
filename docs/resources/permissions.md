@@ -105,9 +105,10 @@ resource "databricks_group" "eng" {
 
 resource "databricks_instance_pool" "this" {
     instance_pool_name = "Reserved Instances"
+    idle_instance_autotermination_minutes = 60
+    node_type_id = "i3.xlarge"
     min_idle_instances = 0
-    max_capacity       = 10
-    node_type_id       = "i3.xlarge"
+    max_capacity = 10
 }
 
 resource "databricks_permissions" "pool_usage" {
@@ -130,7 +131,7 @@ resource "databricks_permissions" "pool_usage" {
 There are four assignable [permission levels](https://docs.databricks.com/security/access-control/jobs-acl.html#job-permissions) for [databricks_job](job.md): `CAN_VIEW`, `CAN_MANAGE_RUN`, `IS_OWNER`, and `CAN_MANAGE`. Admins are granted the `CAN_MANAGE` permission by default, and they can assign that permission to non-admin users.
 
 * The creator of a job has `IS_OWNER` permission. Destroying `databricks_permissions` resource for a job would revert ownership to creator.
-* A job cannot have more than one owner.
+* A job must have exactly one owner. If resource is changed and no owner is specified, currently authenticated principal would become new owner of the job. Nothing would change, per se, if the job was created through Terraform.
 * A job cannot have a group as an owner.
 * Jobs triggered through *Run Now* assume the permissions of the job owner and not the user who issued Run Now. 
 * Read [main documentation](https://docs.databricks.com/security/access-control/jobs-acl.html) for additional detail.
@@ -146,11 +147,13 @@ resource "databricks_group" "eng" {
 
 resource "databricks_job" "this" {
     name = "Featurization"
+    max_concurrent_runs = 1
+    email_notifications {}
 
     new_cluster  {
         num_workers   = 300
-        spark_version = "6.6.x-scala2.11
-        node_type_id  = "i3.xlarge"
+        spark_version = "6.6.x-scala2.11"
+        node_type_id  = "Standard_DS3_v2"
     }
     
     notebook_task {
@@ -205,7 +208,7 @@ resource "databricks_permissions" "notebook_usage" {
 
     access_control {
         group_name = "users"
-        permission_level = "CAN_VIEW"
+        permission_level = "CAN_READ"
     }
 
     access_control {
@@ -253,7 +256,7 @@ resource "databricks_permissions" "folder_usage" {
 
     access_control {
         group_name = "users"
-        permission_level = "CAN_VIEW"
+        permission_level = "CAN_READ"
     }
 
     access_control {

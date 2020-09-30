@@ -25,7 +25,7 @@ type UsersAPI struct {
 // UserEntity entity from which resource schema is made
 type UserEntity struct {
 	UserName                string `json:"user_name"`
-	DisplayName             string `json:"display_name,omitempty"`
+	DisplayName             string `json:"display_name,omitempty" tf:"computed"`
 	Active                  bool   `json:"active,omitempty"`
 	AllowClusterCreate      bool   `json:"allow_cluster_create,omitempty"`
 	AllowInstancePoolCreate bool   `json:"allow_instance_pool_create,omitempty"`

@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"path"
-	"sort"
 	"strconv"
 	"strings"
 
@@ -94,12 +93,31 @@ type PermissionsAPI struct {
 
 // Update updates object permissions. Technically, it's using method named SetOrDelete, but here we do more
 func (a PermissionsAPI) Update(objectID string, objectACL AccessControlChangeList) error {
-	if strings.HasPrefix(objectID, "/authorization") {
+	if "/authorization/tokens" == objectID {
 		// Cannot remove admins's CAN_MANAGE permission on tokens
 		objectACL.AccessControlList = append(objectACL.AccessControlList, AccessControlChange{
 			GroupName:       "admins",
 			PermissionLevel: "CAN_MANAGE",
 		})
+	}
+	if strings.HasPrefix(objectID, "/jobs") {
+		owners := 0
+		for _, acl := range objectACL.AccessControlList {
+			if acl.PermissionLevel == "IS_OWNER" {
+				owners++
+			}
+		}
+		if owners == 0 {
+			me, err := identity.NewUsersAPI(a.client).Me()
+			if err != nil {
+				return err
+			}
+			// add owner if it's missing, otherwise automated planning might be difficult
+			objectACL.AccessControlList = append(objectACL.AccessControlList, AccessControlChange{
+				UserName:        me.UserName,
+				PermissionLevel: "IS_OWNER",
+			})
+		}
 	}
 	return a.client.Put("/preview/permissions"+objectID, objectACL)
 }
@@ -112,7 +130,7 @@ func (a PermissionsAPI) Delete(objectID string) error {
 	}
 	accl := AccessControlChangeList{}
 	for _, acl := range objectACL.AccessControlList {
-		if acl.GroupName == "admins" {
+		if acl.GroupName == "admins" && objectID != "/authorization/passwords" {
 			if change, direct := acl.toAccessControlChange(); direct {
 				// keep everything direct for admin group
 				accl.AccessControlList = append(accl.AccessControlList, change)
@@ -174,14 +192,14 @@ func permissionsResourceIDFields() []permissionsIDFieldMapping {
 // PermissionsEntity is the one used for resource metadata
 type PermissionsEntity struct {
 	ObjectType        string                `json:"object_type,omitempty" tf:"computed"`
-	AccessControlList []AccessControlChange `json:"access_control"`
+	AccessControlList []AccessControlChange `json:"access_control" tf:"slice_set"`
 }
 
 // ToPermissionsEntity ..
 func (oa *ObjectACL) ToPermissionsEntity(d *schema.ResourceData, me string) (PermissionsEntity, error) {
 	entity := PermissionsEntity{}
 	for _, accessControl := range oa.AccessControlList {
-		if accessControl.GroupName == "admins" {
+		if accessControl.GroupName == "admins" && d.Id() != "/authorization/passwords" {
 			// not possible to lower admins permissions anywhere from CAN_MANAGE
 			continue
 		}
@@ -193,9 +211,6 @@ func (oa *ObjectACL) ToPermissionsEntity(d *schema.ResourceData, me string) (Per
 			entity.AccessControlList = append(entity.AccessControlList, change)
 		}
 	}
-	sort.Slice(entity.AccessControlList, func(i, j int) bool {
-		return entity.AccessControlList[i].String() > entity.AccessControlList[j].String()
-	})
 	for _, mapping := range permissionsResourceIDFields() {
 		if mapping.objectType != oa.ObjectType {
 			continue
@@ -287,6 +302,20 @@ func ResourcePermissions() *schema.Resource {
 				}
 			}
 			return diag.Errorf("At least one type of resource identifiers must be set")
+		},
+		UpdateContext: func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+			var entity PermissionsEntity
+			err := internal.DataToStructPointer(d, s, &entity)
+			if err != nil {
+				return diag.FromErr(err)
+			}
+			err = NewPermissionsAPI(m).Update(d.Id(), AccessControlChangeList{
+				AccessControlList: entity.AccessControlList,
+			})
+			if err != nil {
+				return diag.FromErr(err)
+			}
+			return readContext(ctx, d, m)
 		},
 		DeleteContext: func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 			err := NewPermissionsAPI(m).Delete(d.Id())

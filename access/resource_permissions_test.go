@@ -144,6 +144,34 @@ func TestResourcePermissionsDelete(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
+				Method:   http.MethodGet,
+				Resource: "/api/2.0/preview/permissions/clusters/abc",
+				Response: ObjectACL{
+					ObjectID:   "/clusters/abc",
+					ObjectType: "clusters",
+					AccessControlList: []AccessControl{
+						{
+							UserName: TestingUser,
+							AllPermissions: []Permission{
+								{
+									PermissionLevel: "CAN_READ",
+									Inherited:       false,
+								},
+							},
+						},
+						{
+							UserName: TestingAdminUser,
+							AllPermissions: []Permission{
+								{
+									PermissionLevel: "CAN_MANAGE",
+									Inherited:       false,
+								},
+							},
+						},
+					},
+				},
+			},
+			{
 				Method:          http.MethodPut,
 				Resource:        "/api/2.0/preview/permissions/clusters/abc",
 				ExpectedRequest: ObjectACL{},
@@ -160,6 +188,34 @@ func TestResourcePermissionsDelete(t *testing.T) {
 func TestResourcePermissionsDelete_error(t *testing.T) {
 	_, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   http.MethodGet,
+				Resource: "/api/2.0/preview/permissions/clusters/abc",
+				Response: ObjectACL{
+					ObjectID:   "/clusters/abc",
+					ObjectType: "clusters",
+					AccessControlList: []AccessControl{
+						{
+							UserName: TestingUser,
+							AllPermissions: []Permission{
+								{
+									PermissionLevel: "CAN_READ",
+									Inherited:       false,
+								},
+							},
+						},
+						{
+							UserName: TestingAdminUser,
+							AllPermissions: []Permission{
+								{
+									PermissionLevel: "CAN_MANAGE",
+									Inherited:       false,
+								},
+							},
+						},
+					},
+				},
+			},
 			{
 				Method:          http.MethodPut,
 				Resource:        "/api/2.0/preview/permissions/clusters/abc",
@@ -222,7 +278,7 @@ func TestResourcePermissionsCreate(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
-				Method:   http.MethodPatch,
+				Method:   http.MethodPut,
 				Resource: "/api/2.0/preview/permissions/clusters/abc",
 				ExpectedRequest: AccessControlChangeList{
 					AccessControlList: []AccessControlChange{
@@ -328,7 +384,7 @@ func TestResourcePermissionsCreate_NotebookPath(t *testing.T) {
 				},
 			},
 			{
-				Method:   http.MethodPatch,
+				Method:   http.MethodPut,
 				Resource: "/api/2.0/preview/permissions/notebooks/988765",
 				ExpectedRequest: AccessControlChangeList{
 					AccessControlList: []AccessControlChange{
@@ -398,7 +454,7 @@ func TestResourcePermissionsCreate_error(t *testing.T) {
 	_, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
-				Method:   http.MethodPatch,
+				Method:   http.MethodPut,
 				Resource: "/api/2.0/preview/permissions/clusters/abc",
 				Response: common.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",

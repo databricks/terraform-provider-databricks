@@ -1,50 +1,53 @@
 package access
 
 import (
+	"context"
 	"fmt"
 	"path"
 	"sort"
 	"strconv"
+	"strings"
 
 	"github.com/databrickslabs/databricks-terraform/common"
+	"github.com/databrickslabs/databricks-terraform/compute"
 	"github.com/databrickslabs/databricks-terraform/identity"
+	"github.com/databrickslabs/databricks-terraform/internal"
 	"github.com/databrickslabs/databricks-terraform/workspace"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/pkg/errors"
 )
 
 // ObjectACL is a structure to generically describe access control
 type ObjectACL struct {
-	ObjectID          string           `json:"object_id,omitempty"`
-	ObjectType        string           `json:"object_type,omitempty"`
-	AccessControlList []*AccessControl `json:"access_control_list"`
+	ObjectID          string          `json:"object_id,omitempty"`
+	ObjectType        string          `json:"object_type,omitempty"`
+	AccessControlList []AccessControl `json:"access_control_list"`
 }
 
 // AccessControl is a structure to describe user/group permissions
 type AccessControl struct {
-	UserName       *string       `json:"user_name,omitempty"`
-	GroupName      *string       `json:"group_name,omitempty"`
-	AllPermissions []*Permission `json:"all_permissions,omitempty"`
+	UserName       string       `json:"user_name,omitempty"`
+	GroupName      string       `json:"group_name,omitempty"`
+	AllPermissions []Permission `json:"all_permissions,omitempty"`
+}
+
+func (ac AccessControl) toAccessControlChange() (AccessControlChange, bool) {
+	for _, permission := range ac.AllPermissions {
+		if permission.Inherited {
+			continue
+		}
+		return AccessControlChange{
+			PermissionLevel: permission.PermissionLevel,
+			UserName:        ac.UserName,
+			GroupName:       ac.GroupName,
+		}, true
+	}
+	return AccessControlChange{}, false
 }
 
 func (ac AccessControl) String() string {
-	s := ""
-	switch {
-	case ac.GroupName != nil:
-		s += *ac.GroupName
-	case ac.UserName != nil:
-		s += *ac.UserName
-	default:
-		s += "something"
-	}
-	s += " "
-	for _, ap := range ac.AllPermissions {
-		if ap == nil {
-			continue
-		}
-		s += ap.String()
-	}
-	return s
+	return fmt.Sprintf("%s%s%v", ac.GroupName, ac.UserName, ac.AllPermissions)
 }
 
 // Permission is a structure to describe permission level
@@ -63,69 +66,20 @@ func (p Permission) String() string {
 
 // AccessControlChangeList is wrapper around ACL changes for REST API
 type AccessControlChangeList struct {
-	AccessControlList []*AccessControlChange `json:"access_control_list"`
+	AccessControlList []AccessControlChange `json:"access_control_list"`
 }
 
 // AccessControlChange is API wrapper for changing permissions
 type AccessControlChange struct {
-	UserName             *string `json:"user_name,omitempty"`
-	GroupName            *string `json:"group_name,omitempty"`
-	ServicePrincipalName *string `json:"service_principal_name,omitempty"`
-	PermissionLevel      string  `json:"permission_level"`
+	UserName             string `json:"user_name,omitempty"`
+	GroupName            string `json:"group_name,omitempty"`
+	ServicePrincipalName string `json:"service_principal_name,omitempty"`
+	PermissionLevel      string `json:"permission_level"`
 }
 
 func (acc AccessControlChange) String() string {
-	return fmt.Sprintf("%v%v%v %s",
-		acc.UserName, acc.GroupName, acc.ServicePrincipalName,
+	return fmt.Sprintf("%v%v%v %s", acc.UserName, acc.GroupName, acc.ServicePrincipalName,
 		acc.PermissionLevel)
-}
-
-// ToAccessControlChangeList converts data formats
-func (oa *ObjectACL) ToAccessControlChangeList() *AccessControlChangeList {
-	acl := new(AccessControlChangeList)
-	for _, accessControl := range oa.AccessControlList {
-		for _, permission := range accessControl.AllPermissions {
-			if permission.Inherited {
-				continue
-			}
-			item := new(AccessControlChange)
-			acl.AccessControlList = append(acl.AccessControlList, item)
-			item.PermissionLevel = permission.PermissionLevel
-			if accessControl.UserName != nil {
-				item.UserName = accessControl.UserName
-			} else if accessControl.GroupName != nil {
-				item.GroupName = accessControl.GroupName
-			}
-		}
-	}
-	acl.Sort()
-	return acl
-}
-
-// Sort AccessControlList for consistent results
-func (acl *AccessControlChangeList) Sort() {
-	sort.Slice(acl.AccessControlList, func(i, j int) bool {
-		return acl.AccessControlList[i].String() > acl.AccessControlList[j].String()
-	})
-}
-
-// AccessControl exports data for TF
-func (acl *AccessControlChangeList) AccessControl(me string) []map[string]string {
-	result := []map[string]string{}
-	for _, control := range acl.AccessControlList {
-		item := map[string]string{}
-		if control.UserName != nil && *control.UserName != "" {
-			if me == *control.UserName {
-				continue
-			}
-			item["user_name"] = *control.UserName
-		} else if control.GroupName != nil && *control.GroupName != "" {
-			item["group_name"] = *control.GroupName
-		}
-		item["permission_level"] = control.PermissionLevel
-		result = append(result, item)
-	}
-	return result
 }
 
 // NewPermissionsAPI creates PermissionsAPI instance from provider meta
@@ -138,14 +92,44 @@ type PermissionsAPI struct {
 	client *common.DatabricksClient
 }
 
-// AddOrModify works with permissions change list
-func (a PermissionsAPI) AddOrModify(objectID string, objectACL *AccessControlChangeList) error {
-	return a.client.Patch("/preview/permissions"+objectID, objectACL)
+// Update updates object permissions. Technically, it's using method named SetOrDelete, but here we do more
+func (a PermissionsAPI) Update(objectID string, objectACL AccessControlChangeList) error {
+	if strings.HasPrefix(objectID, "/authorization") {
+		// Cannot remove admins's CAN_MANAGE permission on tokens
+		objectACL.AccessControlList = append(objectACL.AccessControlList, AccessControlChange{
+			GroupName:       "admins",
+			PermissionLevel: "CAN_MANAGE",
+		})
+	}
+	return a.client.Put("/preview/permissions"+objectID, objectACL)
 }
 
-// SetOrDelete updates object permissions
-func (a PermissionsAPI) SetOrDelete(objectID string, objectACL *AccessControlChangeList) error {
-	return a.client.Put("/preview/permissions"+objectID, objectACL)
+// Delete gracefully removes permissions. Technically, it's using method named SetOrDelete, but here we do more
+func (a PermissionsAPI) Delete(objectID string) error {
+	objectACL, err := a.Read(objectID)
+	if err != nil {
+		return err
+	}
+	accl := AccessControlChangeList{}
+	for _, acl := range objectACL.AccessControlList {
+		if acl.GroupName == "admins" {
+			if change, direct := acl.toAccessControlChange(); direct {
+				// keep everything direct for admin group
+				accl.AccessControlList = append(accl.AccessControlList, change)
+			}
+		}
+	}
+	if strings.HasPrefix(objectID, "/jobs") {
+		job, err := compute.NewJobsAPI(a.client).Read(strings.ReplaceAll(objectID, "/jobs/", ""))
+		if err != nil {
+			return err
+		}
+		accl.AccessControlList = append(accl.AccessControlList, AccessControlChange{
+			UserName:        job.CreatorUserName,
+			PermissionLevel: "IS_OWNER",
+		})
+	}
+	return a.client.Put("/preview/permissions"+objectID, accl)
 }
 
 // Read gets all relevant permissions for the object, including inherited ones
@@ -154,125 +138,11 @@ func (a PermissionsAPI) Read(objectID string) (objectACL ObjectACL, err error) {
 	return
 }
 
-func parsePermissionsFromData(d *schema.ResourceData,
-	client *common.DatabricksClient) (*AccessControlChangeList, string, error) {
-	var objectId string
-	acl := new(AccessControlChangeList)
-	for _, mapping := range permissionsResourceIDFields() {
-		v, ok := d.GetOk(mapping.field)
-		if !ok {
-			continue
-		}
-		id, err := mapping.idRetriever(client, v.(string))
-		if err != nil {
-			return nil, "", err
-		}
-		objectId = fmt.Sprintf(
-			"/%s/%s",
-			mapping.resourceType, id)
-		err = d.Set("object_type", mapping.objectType)
-		if err != nil {
-			return nil, "", err
-		}
-	}
-	if objectId == "" {
-		return nil, "", fmt.Errorf("At least one type of resource identifiers must be set")
-	}
-	changes := 0
-	if data, ok := d.GetOk("access_control"); ok {
-		for _, element := range data.([]interface{}) {
-			rawAccessControl := element.(map[string]interface{})
-			change := new(AccessControlChange)
-			acl.AccessControlList = append(acl.AccessControlList, change)
-			if v, ok := rawAccessControl["group_name"].(string); ok && v != "" {
-				change.GroupName = &v
-			}
-			if v, ok := rawAccessControl["user_name"].(string); ok && v != "" {
-				change.UserName = &v
-			}
-			if v, ok := rawAccessControl["permission_level"].(string); ok {
-				change.PermissionLevel = v
-			}
-			changes++
-		}
-	}
-	if changes < 1 {
-		return nil, "", fmt.Errorf("at least one access_control is required")
-	}
-	acl.Sort()
-	return acl, objectId, nil
-}
-
-func resourcePermissionsCreate(d *schema.ResourceData, m interface{}) error {
-	client := m.(*common.DatabricksClient)
-	acl, objectID, err := parsePermissionsFromData(d, client)
-	if err != nil {
-		return err
-	}
-	err = NewPermissionsAPI(m).AddOrModify(objectID, acl)
-	if err != nil {
-		return err
-	}
-	d.SetId(objectID)
-	return resourcePermissionsRead(d, m)
-}
-
-func resourcePermissionsRead(d *schema.ResourceData, m interface{}) error {
-	id := d.Id()
-	objectACL, err := NewPermissionsAPI(m).Read(id)
-	if e, ok := err.(common.APIError); ok && e.IsMissing() {
-		d.SetId("")
-		return nil
-	}
-	if err != nil {
-		return err
-	}
-	for _, mapping := range permissionsResourceIDFields() {
-		if mapping.objectType != objectACL.ObjectType {
-			continue
-		}
-		err = d.Set("object_type", mapping.objectType)
-		if err != nil {
-			return fmt.Errorf("Cannot set object type: %v", mapping.objectType)
-		}
-		pathVariant := d.Get(mapping.objectType + "_path")
-		if pathVariant != "" {
-			// we're not importing and it's a path... it's set, so let's not re-set it
-			break
-		}
-		identifier := path.Base(id)
-		err := d.Set(mapping.field, identifier)
-		if err != nil {
-			return errors.Wrapf(err,
-				"Cannot set mapping field %s to %s",
-				mapping.field, id)
-		}
-		break
-	}
-	acl := objectACL.ToAccessControlChangeList()
-	me, err := identity.NewUsersAPI(m).Me()
-	if err != nil {
-		return errors.Wrapf(err, "Cannot self-identify")
-	}
-	accessControl := acl.AccessControl(me.UserName)
-	err = d.Set("access_control", accessControl)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func resourcePermissionsDelete(d *schema.ResourceData, m interface{}) error {
-	id := d.Id()
-	return NewPermissionsAPI(m).SetOrDelete(id, new(AccessControlChangeList))
-}
-
 // permissionsIDFieldMapping holds mapping
 type permissionsIDFieldMapping struct {
-	field        string
-	objectType   string
-	resourceType string
-	idRetriever  func(client *common.DatabricksClient, id string) (string, error)
+	field, objectType, resourceType string
+
+	idRetriever func(client *common.DatabricksClient, id string) (string, error)
 }
 
 // PermissionsResourceIDFields shows mapping of id columns to resource types
@@ -296,67 +166,137 @@ func permissionsResourceIDFields() []permissionsIDFieldMapping {
 		{"notebook_path", "notebook", "notebooks", PATH},
 		{"directory_id", "directory", "directories", SIMPLE},
 		{"directory_path", "directory", "directories", PATH},
-		{"authorization", "authorization", "authorization", SIMPLE},
+		{"authorization", "tokens", "authorization", SIMPLE},
+		{"authorization", "passwords", "authorization", SIMPLE},
 	}
 }
 
-func conflictingFields(field string) []string {
-	conflicting := []string{}
-	for _, mapping := range permissionsResourceIDFields() {
-		if mapping.field == field {
+// PermissionsEntity is the one used for resource metadata
+type PermissionsEntity struct {
+	ObjectType        string                `json:"object_type,omitempty" tf:"computed"`
+	AccessControlList []AccessControlChange `json:"access_control"`
+}
+
+// ToPermissionsEntity ..
+func (oa *ObjectACL) ToPermissionsEntity(d *schema.ResourceData, me string) (PermissionsEntity, error) {
+	entity := PermissionsEntity{}
+	for _, accessControl := range oa.AccessControlList {
+		if accessControl.GroupName == "admins" {
+			// not possible to lower admins permissions anywhere from CAN_MANAGE
 			continue
 		}
-		conflicting = append(conflicting, mapping.field)
+		if me == accessControl.UserName {
+			// not possible to lower one's permissions anywhere from CAN_MANAGE
+			continue
+		}
+		if change, direct := accessControl.toAccessControlChange(); direct {
+			entity.AccessControlList = append(entity.AccessControlList, change)
+		}
 	}
-	return conflicting
+	sort.Slice(entity.AccessControlList, func(i, j int) bool {
+		return entity.AccessControlList[i].String() > entity.AccessControlList[j].String()
+	})
+	for _, mapping := range permissionsResourceIDFields() {
+		if mapping.objectType != oa.ObjectType {
+			continue
+		}
+		entity.ObjectType = mapping.objectType
+		pathVariant := d.Get(mapping.objectType + "_path")
+		if pathVariant != nil && pathVariant.(string) != "" {
+			// we're not importing and it's a path... it's set, so let's not re-set it
+			return entity, nil
+		}
+		identifier := path.Base(oa.ObjectID)
+		err := d.Set(mapping.field, identifier)
+		if err != nil {
+			return entity, err
+		}
+		return entity, nil
+	}
+	return entity, fmt.Errorf("Unknown object type %s", oa.ObjectType)
 }
 
 // ResourcePermissions definition
 func ResourcePermissions() *schema.Resource {
-	fields := map[string]*schema.Schema{
-		"object_type": {
-			Type:     schema.TypeString,
-			Computed: true,
-		},
-		"access_control": {
-			ForceNew:   true,
-			Type:       schema.TypeList,
-			MinItems:   1,
-			Required:   true,
-			ConfigMode: schema.SchemaConfigModeAttr,
-			Elem: &schema.Resource{
-				Schema: map[string]*schema.Schema{
-					"user_name": {
-						ForceNew: true,
-						Type:     schema.TypeString,
-						Optional: true,
-					},
-					"group_name": {
-						ForceNew: true,
-						Type:     schema.TypeString,
-						Optional: true,
-					},
-					"permission_level": {
-						ForceNew: true,
-						Type:     schema.TypeString,
-						Required: true,
-					},
-				},
-			},
-		},
-	}
-	for _, mapping := range permissionsResourceIDFields() {
-		fields[mapping.field] = &schema.Schema{
-			ForceNew:      true,
-			Type:          schema.TypeString,
-			Optional:      true,
-			ConflictsWith: conflictingFields(mapping.field),
+	s := internal.StructToSchema(PermissionsEntity{}, func(s map[string]*schema.Schema) map[string]*schema.Schema {
+		for _, mapping := range permissionsResourceIDFields() {
+			s[mapping.field] = &schema.Schema{
+				ForceNew: true,
+				Type:     schema.TypeString,
+				Optional: true,
+			}
+			for _, m := range permissionsResourceIDFields() {
+				if m.field == mapping.field {
+					continue
+				}
+				s[mapping.field].ConflictsWith = append(s[mapping.field].ConflictsWith, m.field)
+			}
 		}
+		s["access_control"].MinItems = 1
+		return s
+	})
+	readContext := func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+		id := d.Id()
+		objectACL, err := NewPermissionsAPI(m).Read(id)
+		if err != nil {
+			return diag.FromErr(err)
+		}
+		me, err := identity.NewUsersAPI(m).Me()
+		if err != nil {
+			return diag.FromErr(err)
+		}
+		entity, err := objectACL.ToPermissionsEntity(d, me.UserName)
+		if err != nil {
+			return diag.FromErr(err)
+		}
+		if len(entity.AccessControlList) == 0 {
+			// empty "modifiable" access control list is the same as resource absense
+			d.SetId("")
+			return nil
+		}
+		err = internal.StructToData(entity, s, d)
+		if err != nil {
+			return diag.FromErr(err)
+		}
+		return nil
 	}
 	return &schema.Resource{
-		Create: resourcePermissionsCreate,
-		Read:   resourcePermissionsRead,
-		Delete: resourcePermissionsDelete,
-		Schema: fields,
+		Schema:      s,
+		ReadContext: readContext,
+		CreateContext: func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+			var entity PermissionsEntity
+			err := internal.DataToStructPointer(d, s, &entity)
+			if err != nil {
+				return diag.FromErr(err)
+			}
+			for _, mapping := range permissionsResourceIDFields() {
+				if v, ok := d.GetOk(mapping.field); ok {
+					id, err := mapping.idRetriever(m.(*common.DatabricksClient), v.(string))
+					if err != nil {
+						return diag.FromErr(err)
+					}
+					objectID := fmt.Sprintf("/%s/%s", mapping.resourceType, id)
+					err = NewPermissionsAPI(m).Update(objectID, AccessControlChangeList{
+						AccessControlList: entity.AccessControlList,
+					})
+					if err != nil {
+						return diag.FromErr(err)
+					}
+					d.SetId(objectID)
+					return readContext(ctx, d, m)
+				}
+			}
+			return diag.Errorf("At least one type of resource identifiers must be set")
+		},
+		DeleteContext: func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+			err := NewPermissionsAPI(m).Delete(d.Id())
+			if err != nil {
+				return diag.FromErr(err)
+			}
+			return nil
+		},
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
 	}
 }

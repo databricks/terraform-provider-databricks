@@ -23,7 +23,7 @@ resource "databricks_secret_scope" "my-scope" {
 The following arguments are supported:
 
 * `name` - (Required) Scope name requested by the user. Scope names are unique. This field is required.
-* `initial_manage_principal` - (Optional) The principal that is initially granted MANAGE permission to the created scope.
+* `initial_manage_principal` - (Optional) The principal that is initially granted `MANAGE` permission to the created scope. Defaults to `users`. Additional principals can be added with [databricks_secret_acl](secret_acl.md)
 
 ## Attribute Reference
 

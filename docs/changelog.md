@@ -15,6 +15,7 @@
 **Behavior changes**
 * State changes to legacy `spark.databricks.delta.preview.enabled` config option are [now ignored](https://github.com/databrickslabs/terraform-provider-databricks/pull/334) by `databricks_job` & `databricks_cluster`
 * Libraries, which are installed on all clusters and are not part of cluster resource definition, won't be waited for INSTALLED status
+* Fixed "[Secret scope ACL is MANAGE for all users by default](https://github.com/databrickslabs/terraform-provider-databricks/pull/326)" ([issue 322](https://github.com/databrickslabs/terraform-provider-databricks/issues/322)).  If you were relying on setting `MANAGE` permission to all users by default, you need to add `initial_manage_principal = "users"` to your `resource "databricks_secret_scope"` declaration. 
 
 ## 0.2.5
 

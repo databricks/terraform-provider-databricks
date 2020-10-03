@@ -21,14 +21,10 @@ type SecretScopesAPI struct {
 
 // Create creates a new secret scope
 func (a SecretScopesAPI) Create(scope string, initialManagePrincipal string) error {
-	paramsMap := map[string]string{
-		"scope": scope,
-	}
-	if len(initialManagePrincipal) > 0 {
-		paramsMap["initial_manage_principal"] = initialManagePrincipal
-	}
-
-	return a.C.Post("/secrets/scopes/create", paramsMap, nil)
+	return a.C.Post("/secrets/scopes/create", map[string]string{
+		"scope":                    scope,
+		"initial_manage_principal": initialManagePrincipal,
+	}, nil)
 }
 
 // Delete deletes a secret scope

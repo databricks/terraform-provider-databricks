@@ -2,7 +2,8 @@
 
 [![Build Status](https://travis-ci.org/databrickslabs/terraform-provider-databricks.svg?branch=master)](https://travis-ci.org/databrickslabs/terraform-provider-databricks) [![codecov](https://codecov.io/gh/databrickslabs/terraform-provider-databricks/branch/master/graph/badge.svg)](https://codecov.io/gh/databrickslabs/terraform-provider-databricks)
 
-[Authentication](docs/index.md)
+End-to-end workspace creation on [AWS](scripts/awsmt-integration) or [Azure](scripts/azvnet-integration/databricks.tf)
+| [Authentication](docs/index.md)
 | [databricks_aws_s3_mount](docs/resources/aws_s3_mount.md)
 | [databricks_aws_assume_role_policy](docs/data-sources/aws_assume_role_policy.md) data
 | [databricks_aws_bucket_policy](docs/data-sources/aws_bucket_policy.md) data
@@ -39,7 +40,6 @@
 | [databricks_user_instance_profile](docs/resources/user_instance_profile.md)
 | [Contributing and Development Guidelines](CONTRIBUTING.md)
 | [Changelog](CHANGELOG.md)
-| End-to-end workspace creation on [AWS](scripts/awsmt-integration) or [Azure](scripts/azvnet-integration/databricks.tf)
 
 To quickly install the binary please execute the following curl command in your shell or [install provider from source](CONTRIBUTING.md#installing-from-source).
 

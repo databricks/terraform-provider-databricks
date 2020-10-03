@@ -4,7 +4,7 @@ Create or overwrite the ACL associated with the given principal (user or group) 
 
 ## Example Usage
 
-This way data scientists can read Publishing API key that is synchronized from example Azure Key Vault.
+This way, data scientists can read the Publishing API key that is synchronized from example, Azure Key Vault.
 
 ```hcl
 resource "databricks_group" "ds" {
@@ -12,7 +12,7 @@ resource "databricks_group" "ds" {
 }
 
 resource "databricks_secret_scope" "app" {
-    name = "Application Secret Scope"
+    name = "app-secret-scope"
 }
 
 resource "databricks_secret_acl" "my_secret_acl" {

@@ -28,7 +28,7 @@ func TestAccInitialManagePrincipals(t *testing.T) {
 	scope := fmt.Sprintf("tf-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
 	err := scopesAPI.Create(scope, "")
 	require.NoError(t, err)
-	defer func(){
+	defer func() {
 		assert.NoError(t, scopesAPI.Delete(scope))
 	}()
 
@@ -53,7 +53,7 @@ func TestAccInitialManagePrincipalsGroup(t *testing.T) {
 	scope := fmt.Sprintf("tf-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
 	err := scopesAPI.Create(scope, "users")
 	require.NoError(t, err)
-	defer func(){
+	defer func() {
 		assert.NoError(t, scopesAPI.Delete(scope))
 	}()
 
@@ -88,18 +88,18 @@ func TestAccSecretScopeResource(t *testing.T) {
 					resource.TestCheckResourceAttr("databricks_secret_scope.my_scope", "name", scope),
 					resource.TestCheckResourceAttr("databricks_secret_scope.my_scope", "backend_type", string(ScopeBackendTypeDatabricks)),
 					acceptance.ResourceCheck("databricks_secret_scope.my_scope",
-					func(client *common.DatabricksClient, id string) error {
-						secretACLAPI := NewSecretAclsAPI(client)
-						acls, err := secretACLAPI.List(id)
-						require.NoError(t, err)
+						func(client *common.DatabricksClient, id string) error {
+							secretACLAPI := NewSecretAclsAPI(client)
+							acls, err := secretACLAPI.List(id)
+							require.NoError(t, err)
 
-						usersAPI := identity.NewUsersAPI(client)
-						me, err := usersAPI.Me()
-						require.NoError(t, err)
-						assert.Equal(t, 1, len(acls))
-						assert.Equal(t, me.UserName, acls[0].Principal)
-						return nil
-					}),
+							usersAPI := identity.NewUsersAPI(client)
+							me, err := usersAPI.Me()
+							require.NoError(t, err)
+							assert.Equal(t, 1, len(acls))
+							assert.Equal(t, me.UserName, acls[0].Principal)
+							return nil
+						}),
 				),
 			},
 			{

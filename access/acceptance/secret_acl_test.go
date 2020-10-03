@@ -37,11 +37,11 @@ func TestAccSecretAclResource(t *testing.T) {
 					}`),
 				Check: func(s *terraform.State) error {
 					client := common.CommonEnvironmentClient()
-					
+
 					usersAPI := identity.NewUsersAPI(client)
 					me, err := usersAPI.Me()
 					require.NoError(t, err)
-					
+
 					secretACLAPI := NewSecretAclsAPI(client)
 					scope := s.RootModule().Resources["databricks_secret_scope.app"].Primary.ID
 					acls, err := secretACLAPI.List(scope)
@@ -63,7 +63,6 @@ func TestAccSecretAclResource(t *testing.T) {
 	})
 }
 
-
 func TestAccSecretAclResourceDefaultPrincipal(t *testing.T) {
 	acceptance.AccTest(t, resource.TestCase{
 		Steps: []resource.TestStep{
@@ -80,14 +79,14 @@ func TestAccSecretAclResourceDefaultPrincipal(t *testing.T) {
 					}`),
 				Check: acceptance.ResourceCheck("databricks_secret_scope.app",
 					func(client *common.DatabricksClient, id string) error {
-					secretACLAPI := NewSecretAclsAPI(client)
-					acls, err := secretACLAPI.List(id)
-					require.NoError(t, err)
-					assert.Equal(t, 1, len(acls))
-					assert.Equal(t, "users", acls[0].Principal)
-					assert.Equal(t, "READ", string(acls[0].Permission))
-					return nil
-				}),
+						secretACLAPI := NewSecretAclsAPI(client)
+						acls, err := secretACLAPI.List(id)
+						require.NoError(t, err)
+						assert.Equal(t, 1, len(acls))
+						assert.Equal(t, "users", acls[0].Principal)
+						assert.Equal(t, "READ", string(acls[0].Permission))
+						return nil
+					}),
 			},
 		},
 	})

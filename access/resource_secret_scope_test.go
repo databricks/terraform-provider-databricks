@@ -92,7 +92,7 @@ func TestResourceSecretScopeCreate(t *testing.T) {
 				Method:   "POST",
 				Resource: "/api/2.0/secrets/scopes/create",
 				ExpectedRequest: map[string]string{
-					"scope":                    "Boom",
+					"scope": "Boom",
 				},
 			},
 			{

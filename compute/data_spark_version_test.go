@@ -73,7 +73,5 @@ func TestAccListSparkVersions(t *testing.T) {
 		if strings.Contains(version.Key, "scala2.12") {
 			fmt.Printf(version.Key)
 		}
-
 	}
-
 }

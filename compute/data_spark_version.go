@@ -52,12 +52,10 @@ func DataSourceClusterSparkVersions() *schema.Resource {
 
 // DataSourceClusterSparkVersionsRead performs the Databricks runtime lookup.
 func DataSourceClusterSparkVersionsRead(d *schema.ResourceData, m interface{}) error {
-
 	sparkVersions, err := NewClustersAPI(m).ListSparkVersions()
 	if err != nil {
 		return err
 	}
-	fmt.Printf("Received %d", len(sparkVersions.SparkVerions))
 	latest := d.Get("latest").(bool)
 	lts := d.Get("long_term_support").(bool)
 	ml := d.Get("ml").(bool)

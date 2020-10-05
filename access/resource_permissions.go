@@ -205,7 +205,7 @@ func (oa *ObjectACL) ToPermissionsEntity(d *schema.ResourceData, me string) (Per
 			// not possible to lower admins permissions anywhere from CAN_MANAGE
 			continue
 		}
-		if me == accessControl.UserName {
+		if me == accessControl.UserName || me == accessControl.ServicePrincipalName {
 			// not possible to lower one's permissions anywhere from CAN_MANAGE
 			continue
 		}

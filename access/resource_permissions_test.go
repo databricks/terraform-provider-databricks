@@ -775,8 +775,7 @@ func TestAccPermissionsJobs(t *testing.T) {
 
 		require.NoError(t, permissionsAPI.Delete(objectID))
 		entity = ef(objectID)
-		// for jobs, the owner remains
-		assert.Len(t, entity.AccessControlList, 1)
+		assert.Len(t, entity.AccessControlList, 0)
 	})
 }
 

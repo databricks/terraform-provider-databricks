@@ -128,54 +128,54 @@ var jobSchema = internal.StructToSchema(JobSettings{},
 		s["max_concurrent_runs"].Description = "An optional maximum allowed number of " +
 			"concurrent runs of the job."
 		s["notebook_path"] = &schema.Schema{
-			Deprecated:    "Please migrate to `notebook_task`, as it will be removed in version 0.3",
+			Deprecated:    "Please migrate `notebook_path` to `notebook_task`, as it will be removed in version 0.3",
 			Description:   "Deprecated. Please use `notebook_task`.",
 			Type:          schema.TypeString,
 			Optional:      true,
 			ConflictsWith: []string{"jar_main_class_name", "spark_submit_parameters", "python_file"},
 		}
 		s["notebook_base_parameters"] = &schema.Schema{
-			Deprecated:  "Please migrate to `notebook_task`, as it will be removed in version 0.3",
+			Deprecated:  "Please migrate `notebook_base_parameters` to `notebook_task`, as it will be removed in version 0.3",
 			Description: "Deprecated. Please use `notebook_task`.",
 			Type:        schema.TypeMap,
 			Optional:    true,
 			Elem:        &schema.Schema{Type: schema.TypeString},
 		}
 		s["jar_uri"] = &schema.Schema{
-			Deprecated: "Deprecated since 04/2016 and will be removed in version 0.3",
+			Deprecated: "`jar_uri` is deprecated since 04/2016 and will be removed in version 0.3",
 			Type:       schema.TypeString,
 			Optional:   true,
 		}
 		s["jar_main_class_name"] = &schema.Schema{
-			Deprecated:    "Please migrate to `spark_jar_task`, as it will be removed in version 0.3",
+			Deprecated:    "Please migrate `jar_main_class_name` to `spark_jar_task`, as it will be removed in version 0.3",
 			Description:   "Deprecated. Please use `spark_jar_task`.",
 			Type:          schema.TypeString,
 			Optional:      true,
 			ConflictsWith: []string{"python_file", "notebook_path", "spark_submit_parameters"},
 		}
 		s["jar_parameters"] = &schema.Schema{
-			Deprecated:  "Please migrate to `spark_jar_task`, as it will be removed in version 0.3",
+			Deprecated:  "Please migrate `jar_parameters` to `spark_jar_task`, as it will be removed in version 0.3",
 			Description: "Deprecated. Please use `spark_jar_task`.",
 			Type:        schema.TypeList,
 			Optional:    true,
 			Elem:        &schema.Schema{Type: schema.TypeString},
 		}
 		s["python_file"] = &schema.Schema{
-			Deprecated:    "Please migrate to `spark_python_task`, as it will be removed in version 0.3",
+			Deprecated:    "Please migrate `python_file` to `spark_python_task`, as it will be removed in version 0.3",
 			Description:   "Deprecated. Please use `spark_python_task`.",
 			Type:          schema.TypeString,
 			Optional:      true,
 			ConflictsWith: []string{"jar_main_class_name", "notebook_path", "spark_submit_parameters"},
 		}
 		s["python_parameters"] = &schema.Schema{
-			Deprecated:  "Please migrate to `spark_python_task`, as it will be removed in version 0.3",
+			Deprecated:  "Please migrate `python_parameters` to `spark_python_task`, as it will be removed in version 0.3",
 			Description: "Deprecated. Please use `spark_python_task`.",
 			Type:        schema.TypeList,
 			Optional:    true,
 			Elem:        &schema.Schema{Type: schema.TypeString},
 		}
 		s["spark_submit_parameters"] = &schema.Schema{
-			Deprecated:    "Please migrate to `spark_submit_task`, as it will be removed in version 0.3",
+			Deprecated:    "Please migrate `spark_submit_parameters` to `spark_submit_task`, as it will be removed in version 0.3",
 			Type:          schema.TypeList,
 			Optional:      true,
 			Elem:          &schema.Schema{Type: schema.TypeString},

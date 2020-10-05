@@ -23,7 +23,7 @@ type scimUser struct {
 // ResourceScimUser ..
 func ResourceScimUser() *schema.Resource {
 	return &schema.Resource{
-		DeprecationMessage: "This resource is no longer supported and would be removed in version 0.3",
+		DeprecationMessage: "Resource `databricks_scim_user` is no longer supported and would be removed in version 0.3",
 		Create:             resourceScimUserCreate,
 		Update:             resourceScimUserUpdate,
 		Read:               resourceScimUserRead,

@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/databrickslabs/databricks-terraform/common"
@@ -484,9 +485,12 @@ func TestAccReadUser(t *testing.T) {
 	me, err := NewUsersAPI(client).Me()
 	assert.NoError(t, err, err)
 
-	ru, err := NewUsersAPI(client).ReadR(me.ID)
-	assert.NoError(t, err, err)
-	assert.NotNil(t, ru)
+	if strings.Contains(me.UserName, "@") {
+		// let's assume that service principals do not look like emails
+		ru, err := NewUsersAPI(client).ReadR(me.ID)
+		assert.NoError(t, err, err)
+		assert.NotNil(t, ru)
+	}
 }
 
 func TestAccCreateRUserNonAdmin(t *testing.T) {

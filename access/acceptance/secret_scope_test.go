@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	. "github.com/databrickslabs/databricks-terraform/access"
+	"github.com/databrickslabs/databricks-terraform/identity"
 
 	"github.com/databrickslabs/databricks-terraform/common"
 	"github.com/databrickslabs/databricks-terraform/internal/acceptance"
@@ -14,10 +15,56 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
+func TestAccInitialManagePrincipals(t *testing.T) {
+	if _, ok := os.LookupEnv("CLOUD_ENV"); !ok {
+		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
+	}
+	client := common.CommonEnvironmentClient()
+	scopesAPI := NewSecretScopesAPI(client)
+
+	scope := fmt.Sprintf("tf-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+	err := scopesAPI.Create(scope, "")
+	require.NoError(t, err)
+	defer func() {
+		assert.NoError(t, scopesAPI.Delete(scope))
+	}()
+
+	secretACLAPI := NewSecretAclsAPI(client)
+	acls, err := secretACLAPI.List(scope)
+	require.NoError(t, err)
+
+	usersAPI := identity.NewUsersAPI(client)
+	me, err := usersAPI.Me()
+	require.NoError(t, err)
+	assert.Equal(t, 1, len(acls))
+	assert.Equal(t, me.UserName, acls[0].Principal)
+}
+
+func TestAccInitialManagePrincipalsGroup(t *testing.T) {
+	if _, ok := os.LookupEnv("CLOUD_ENV"); !ok {
+		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
+	}
+	client := common.CommonEnvironmentClient()
+	scopesAPI := NewSecretScopesAPI(client)
+
+	scope := fmt.Sprintf("tf-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+	err := scopesAPI.Create(scope, "users")
+	require.NoError(t, err)
+	defer func() {
+		assert.NoError(t, scopesAPI.Delete(scope))
+	}()
+
+	secretACLAPI := NewSecretAclsAPI(client)
+	acls, err := secretACLAPI.List(scope)
+	require.NoError(t, err)
+	assert.Equal(t, 1, len(acls))
+	assert.Equal(t, "users", acls[0].Principal)
+}
+
 func TestAccSecretScopeResource(t *testing.T) {
-	// TODO: refactor for common instance pool & AZ CLI
 	if _, ok := os.LookupEnv("CLOUD_ENV"); !ok {
 		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
 	}
@@ -40,6 +87,19 @@ func TestAccSecretScopeResource(t *testing.T) {
 					// verify local values
 					resource.TestCheckResourceAttr("databricks_secret_scope.my_scope", "name", scope),
 					resource.TestCheckResourceAttr("databricks_secret_scope.my_scope", "backend_type", string(ScopeBackendTypeDatabricks)),
+					acceptance.ResourceCheck("databricks_secret_scope.my_scope",
+						func(client *common.DatabricksClient, id string) error {
+							secretACLAPI := NewSecretAclsAPI(client)
+							acls, err := secretACLAPI.List(id)
+							require.NoError(t, err)
+
+							usersAPI := identity.NewUsersAPI(client)
+							me, err := usersAPI.Me()
+							require.NoError(t, err)
+							assert.Equal(t, 1, len(acls))
+							assert.Equal(t, me.UserName, acls[0].Principal)
+							return nil
+						}),
 				),
 			},
 			{

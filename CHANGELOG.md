@@ -7,9 +7,17 @@
 * Added `databricks_user_instance_profile` resource.
 * Added `databricks_group` data source.
 
+Updated dependency versions:
+
+* github.com/Azure/go-autorest/autorest v0.11.6
+* github.com/Azure/go-autorest/autorest/adal v0.9.4
+* github.com/Azure/go-autorest/autorest/azure/auth v0.5.2
+* github.com/Azure/go-autorest/autorest/azure/cli v0.4.1
+* gopkg.in/ini.v1 v1.61.0
+
 **Deprecations**
-* `databricks_scim_user` is no longer receiving fixes and will be removed in `0.3`, please rewrite using `databricks_user` resource, which has more consistent semantics with `databricks_group` and works better with identity provider SCIM sync.
-* `databricks_scim_group` is no longer receiving fixes and will be removed in `0.3`, please rewrite using `databricks_group` resource.
+* `databricks_scim_user` is no longer receiving fixes and will be removed in `0.3`, please rewrite using the `databricks_user` resource, which has more consistent semantics with `databricks_group` and works better with identity provider SCIM sync.
+* `databricks_scim_group` is no longer receiving fixes and will be removed in `0.3`. Please rewrite using the `databricks_group` resource.
 * `databricks_default_user_roles` is no longer receiving fixes and will be removed in `0.3`, please rewrite using `databricks_user` & `databricks_group` resources.
 
 **Behavior changes**

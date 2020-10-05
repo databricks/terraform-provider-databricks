@@ -26,9 +26,10 @@ type ObjectACL struct {
 
 // AccessControl is a structure to describe user/group permissions
 type AccessControl struct {
-	UserName       string       `json:"user_name,omitempty"`
-	GroupName      string       `json:"group_name,omitempty"`
-	AllPermissions []Permission `json:"all_permissions,omitempty"`
+	UserName             string       `json:"user_name,omitempty"`
+	GroupName            string       `json:"group_name,omitempty"`
+	ServicePrincipalName string       `json:"service_principal_name,omitempty"`
+	AllPermissions       []Permission `json:"all_permissions,omitempty"`
 }
 
 func (ac AccessControl) toAccessControlChange() (AccessControlChange, bool) {
@@ -37,16 +38,17 @@ func (ac AccessControl) toAccessControlChange() (AccessControlChange, bool) {
 			continue
 		}
 		return AccessControlChange{
-			PermissionLevel: permission.PermissionLevel,
-			UserName:        ac.UserName,
-			GroupName:       ac.GroupName,
+			PermissionLevel:      permission.PermissionLevel,
+			UserName:             ac.UserName,
+			GroupName:            ac.GroupName,
+			ServicePrincipalName: ac.ServicePrincipalName,
 		}, true
 	}
 	return AccessControlChange{}, false
 }
 
 func (ac AccessControl) String() string {
-	return fmt.Sprintf("%s%s%v", ac.GroupName, ac.UserName, ac.AllPermissions)
+	return fmt.Sprintf("%s%s%s%v", ac.GroupName, ac.UserName, ac.ServicePrincipalName, ac.AllPermissions)
 }
 
 // Permission is a structure to describe permission level
@@ -203,7 +205,7 @@ func (oa *ObjectACL) ToPermissionsEntity(d *schema.ResourceData, me string) (Per
 			// not possible to lower admins permissions anywhere from CAN_MANAGE
 			continue
 		}
-		if me == accessControl.UserName {
+		if me == accessControl.UserName || me == accessControl.ServicePrincipalName {
 			// not possible to lower one's permissions anywhere from CAN_MANAGE
 			continue
 		}
@@ -253,6 +255,10 @@ func ResourcePermissions() *schema.Resource {
 	readContext := func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 		id := d.Id()
 		objectACL, err := NewPermissionsAPI(m).Read(id)
+		if aerr, ok := err.(common.APIError); ok && aerr.IsMissing() {
+			d.SetId("")
+			return nil
+		}
 		if err != nil {
 			return diag.FromErr(err)
 		}

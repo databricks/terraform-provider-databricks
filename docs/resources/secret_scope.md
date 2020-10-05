@@ -14,7 +14,6 @@ Please consult [Secrets User Guide](https://docs.databricks.com/security/secrets
 ```hcl
 resource "databricks_secret_scope" "my-scope" {
   name = "terraform-demo-scope"
-  initial_manage_principal = "users"
 }
 ```
 
@@ -23,7 +22,7 @@ resource "databricks_secret_scope" "my-scope" {
 The following arguments are supported:
 
 * `name` - (Required) Scope name requested by the user. Scope names are unique. This field is required.
-* `initial_manage_principal` - (Optional) The principal that is initially granted `MANAGE` permission to the created scope.  If it's omitted, then the initial ACL with `MANAGE` permission applied to the scope is assigned to the API request issuer's user identity (see [documentation](https://docs.databricks.com/dev-tools/api/latest/secrets.html#create-secret-scope)).
+* `initial_manage_principal` - (Optional) The principal with the only possible value `users` that is initially granted `MANAGE` permission to the created scope.  If it's omitted, then the [databricks_secret_acl](secret_acl.md) with `MANAGE` permission applied to the scope is assigned to the API request issuer's user identity (see [documentation](https://docs.databricks.com/dev-tools/api/latest/secrets.html#create-secret-scope)). 
 
 ## Attribute Reference
 
@@ -33,7 +32,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-The resource secret scope can be imported using the scope name:
+The secret resource scope can be imported using the scope name:
 
 ```bash
 $ terraform import databricks_secret_scope.object <scopeName>

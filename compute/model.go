@@ -106,6 +106,17 @@ type ZonesInfo struct {
 	DefaultZone string   `json:"default_zone,omitempty"`
 }
 
+// SparkVersionsInfo encapsulates the spark versions information from the spark-versions api call
+type SparkVersionsInfo struct {
+	SparkVerions []SparkVersion `json:"versions,omitempty"`
+}
+
+// SparkVersion is a structure to describe spark version objects
+type SparkVersion struct {
+	Key  string `json:"key,omitempty"`
+	Name string `json:"name,omitempty"`
+}
+
 // AwsAttributes encapsulates the aws attributes for aws based clusters
 type AwsAttributes struct {
 	FirstOnDemand       int32           `json:"first_on_demand,omitempty" tf:"computed"`

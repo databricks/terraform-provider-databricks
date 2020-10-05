@@ -82,6 +82,13 @@ func (a ClustersAPI) ListZones() (ZonesInfo, error) {
 	return zonesInfo, err
 }
 
+// ListSparkVersions returns the list of available runtime version info
+func (a ClustersAPI) ListSparkVersions() (SparkVersionsInfo, error) {
+	var sparkVersionsInfo SparkVersionsInfo
+	err := a.client.Get("/clusters/spark-versions", nil, &sparkVersionsInfo)
+	return sparkVersionsInfo, err
+}
+
 // Start a terminated Spark cluster given its ID and wait till it's running
 func (a ClustersAPI) Start(clusterID string) error {
 	_, err := a.StartAndGetInfo(clusterID)

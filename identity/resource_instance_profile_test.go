@@ -2,7 +2,6 @@ package identity
 
 import (
 	"net/http"
-	"os"
 	"testing"
 
 	"github.com/databrickslabs/databricks-terraform/common"
@@ -391,20 +390,17 @@ func TestInstanceProfilesAPI_Read(t *testing.T) {
 }
 
 func TestAwsAccInstanceProfiles(t *testing.T) {
-	if _, ok := os.LookupEnv("CLOUD_ENV"); !ok {
-		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
-	}
-	arn := "arn:aws:iam::123121231231:instance-profile/helloworldsritestingterraform"
+	arn := qa.GetEnvOrSkipTest(t, "TEST_EC2_INSTANCE_PROFILE")
 	client := common.NewClientFromEnvironment()
-
+	instanceProfilesAPI := NewInstanceProfilesAPI(client)
 	defer func() {
-		err := NewInstanceProfilesAPI(client).Delete(arn)
+		err := instanceProfilesAPI.Delete(arn)
 		assert.NoError(t, err, err)
 	}()
-	err := NewInstanceProfilesAPI(client).Create(arn, true)
+	err := instanceProfilesAPI.Create(arn, true)
 	assert.NoError(t, err, err)
 
-	arnSearch, err := NewInstanceProfilesAPI(client).Read(arn)
+	arnSearch, err := instanceProfilesAPI.Read(arn)
 	assert.NoError(t, err, err)
 	assert.True(t, len(arnSearch) > 0)
 }

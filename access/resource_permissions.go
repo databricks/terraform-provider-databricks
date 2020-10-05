@@ -26,9 +26,10 @@ type ObjectACL struct {
 
 // AccessControl is a structure to describe user/group permissions
 type AccessControl struct {
-	UserName       string       `json:"user_name,omitempty"`
-	GroupName      string       `json:"group_name,omitempty"`
-	AllPermissions []Permission `json:"all_permissions,omitempty"`
+	UserName             string       `json:"user_name,omitempty"`
+	GroupName            string       `json:"group_name,omitempty"`
+	ServicePrincipalName string       `json:"service_principal_name,omitempty"`
+	AllPermissions       []Permission `json:"all_permissions,omitempty"`
 }
 
 func (ac AccessControl) toAccessControlChange() (AccessControlChange, bool) {
@@ -37,16 +38,17 @@ func (ac AccessControl) toAccessControlChange() (AccessControlChange, bool) {
 			continue
 		}
 		return AccessControlChange{
-			PermissionLevel: permission.PermissionLevel,
-			UserName:        ac.UserName,
-			GroupName:       ac.GroupName,
+			PermissionLevel:      permission.PermissionLevel,
+			UserName:             ac.UserName,
+			GroupName:            ac.GroupName,
+			ServicePrincipalName: ac.ServicePrincipalName,
 		}, true
 	}
 	return AccessControlChange{}, false
 }
 
 func (ac AccessControl) String() string {
-	return fmt.Sprintf("%s%s%v", ac.GroupName, ac.UserName, ac.AllPermissions)
+	return fmt.Sprintf("%s%s%s%v", ac.GroupName, ac.UserName, ac.ServicePrincipalName, ac.AllPermissions)
 }
 
 // Permission is a structure to describe permission level

@@ -7,7 +7,7 @@ require (
 	github.com/Azure/go-autorest/autorest/adal v0.9.2
 	github.com/Azure/go-autorest/autorest/azure/auth v0.5.1
 	github.com/Azure/go-autorest/autorest/azure/cli v0.4.0
-	github.com/aws/aws-sdk-go v1.34.13
+	github.com/aws/aws-sdk-go v1.35.2
 	github.com/fatih/color v1.9.0 // indirect
 	github.com/google/go-querystring v1.0.0
 	github.com/hashicorp/go-retryablehttp v0.6.7

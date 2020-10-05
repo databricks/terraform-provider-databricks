@@ -1,5 +1,9 @@
 # Version changelog
 
+## 0.2.7
+
+Small fixes
+
 ## 0.2.6
 
 * Added support for [customer managed keys](https://github.com/databrickslabs/terraform-provider-databricks/pull/332) for Accounts API.

@@ -93,7 +93,6 @@ func TestResourceSecretScopeCreate(t *testing.T) {
 				Resource: "/api/2.0/secrets/scopes/create",
 				ExpectedRequest: map[string]string{
 					"scope":                    "Boom",
-					"initial_manage_principal": "",
 				},
 			},
 			{

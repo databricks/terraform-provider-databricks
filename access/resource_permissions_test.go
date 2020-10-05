@@ -75,6 +75,28 @@ func TestResourcePermissionsRead(t *testing.T) {
 	assert.Equal(t, "CAN_READ", firstElem["permission_level"])
 }
 
+func TestResourcePermissionsRead_NotFound(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   http.MethodGet,
+				Resource: "/api/2.0/preview/permissions/clusters/abc",
+				Response: common.APIErrorBody{
+					ErrorCode: "NOT_FOUND",
+					Message: "Cluster does not exist",
+				},
+				Status: 404,
+			},
+		},
+		Resource: ResourcePermissions(),
+		Read:     true,
+		New:      true,
+		ID:       "/clusters/abc",
+	}.Apply(t)
+	assert.NoError(t, err, err)
+	assert.Equal(t, "", d.Id())
+}
+
 func TestResourcePermissionsRead_some_error(t *testing.T) {
 	_, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{

@@ -255,6 +255,10 @@ func ResourcePermissions() *schema.Resource {
 	readContext := func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 		id := d.Id()
 		objectACL, err := NewPermissionsAPI(m).Read(id)
+		if aerr, ok := err.(common.APIError); ok && aerr.IsMissing() {
+			d.SetId("")
+			return nil
+		}
 		if err != nil {
 			return diag.FromErr(err)
 		}

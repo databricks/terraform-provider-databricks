@@ -211,4 +211,3 @@ crucial for making sure that the provider behaves as expected on all supported c
 2. `make test-mws` if MWS related code changed given release.
 3. Create release notes.
 4. Perfrom backwards-compatibility checks and make proper notes. 
-5. 

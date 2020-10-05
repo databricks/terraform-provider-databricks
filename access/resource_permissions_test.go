@@ -83,7 +83,7 @@ func TestResourcePermissionsRead_NotFound(t *testing.T) {
 				Resource: "/api/2.0/preview/permissions/clusters/abc",
 				Response: common.APIErrorBody{
 					ErrorCode: "NOT_FOUND",
-					Message: "Cluster does not exist",
+					Message:   "Cluster does not exist",
 				},
 				Status: 404,
 			},

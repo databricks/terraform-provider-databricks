@@ -1,7 +1,6 @@
 package access
 
 import (
-	"net/http"
 	"testing"
 
 	"github.com/databrickslabs/databricks-terraform/common"

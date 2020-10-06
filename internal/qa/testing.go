@@ -11,7 +11,6 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
-	"reflect"
 	"regexp"
 	"sort"
 	"strings"
@@ -20,14 +19,13 @@ import (
 	"github.com/databrickslabs/databricks-terraform/common"
 	"github.com/databrickslabs/databricks-terraform/internal"
 
-	"github.com/hashicorp/hcl"
 	"github.com/hashicorp/go-cty/cty"
+	"github.com/hashicorp/hcl"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 
-	"github.com/r3labs/diff"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -403,15 +401,6 @@ func DeserializeJSON(req *http.Request, m interface{}) error {
 
 	err := dec.Decode(&m)
 	return err
-}
-
-func compare(t *testing.T, a interface{}, b interface{}) {
-	// TODO: remove diff package because of license
-	difference, err := diff.Diff(a, b)
-	assert.NoError(t, err, err)
-	jsonStr, err := json.Marshal(difference)
-	assert.NoError(t, err, err)
-	assert.True(t, reflect.DeepEqual(a, b), string(jsonStr))
 }
 
 // GetCloudInstanceType gives common minimal instance type, depending on a cloud

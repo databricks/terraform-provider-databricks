@@ -29,14 +29,14 @@ func TestDataSourceFilePaths(t *testing.T) {
 				Response: FileList{
 					[]FileInfo{
 						{
-							Path:  "/a/b/c/d/e",
+							Path:     "/a/b/c/d/e",
 							FileSize: 1024,
-							IsDir: false,
+							IsDir:    false,
 						},
 						{
-							Path:  "/a/b/c/d/f",
+							Path:     "/a/b/c/d/f",
 							FileSize: 1025,
-							IsDir: false,
+							IsDir:    false,
 						},
 					},
 				},

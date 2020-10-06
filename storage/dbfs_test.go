@@ -11,8 +11,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-var base64String = base64.StdEncoding.EncodeToString([]byte("helloworld"))
-
 func GenString(times int) []byte {
 	var buf bytes.Buffer
 	for i := 0; i < times; i++ {

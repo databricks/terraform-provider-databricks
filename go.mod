@@ -15,7 +15,6 @@ require (
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.0.2-0.20200828083434-d39628234432
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/pkg/errors v0.9.1
-	github.com/r3labs/diff v1.1.0
 	github.com/smartystreets/goconvey v1.6.4 // indirect
 	github.com/stretchr/testify v1.6.1
 	golang.org/x/sys v0.0.0-20200828194041-157a740278f4 // indirect

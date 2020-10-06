@@ -9,6 +9,7 @@ require (
 	github.com/Azure/go-autorest/autorest/azure/cli v0.4.1
 	github.com/aws/aws-sdk-go v1.35.0
 	github.com/google/go-querystring v1.0.0
+	github.com/hashicorp/go-cty v1.4.1-0.20200414143053-d3edf31b6320
 	github.com/hashicorp/go-retryablehttp v0.6.7
 	github.com/hashicorp/hcl v1.0.0
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.0.2-0.20200828083434-d39628234432

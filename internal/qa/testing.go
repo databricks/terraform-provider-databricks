@@ -21,6 +21,7 @@ import (
 	"github.com/databrickslabs/databricks-terraform/internal"
 
 	"github.com/hashicorp/hcl"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -176,10 +177,26 @@ func diagsToString(diags diag.Diagnostics) string {
 		})
 		issues := []string{}
 		for _, diag := range diags {
+			attributePath := ""
+			if len(diag.AttributePath) > 0 {
+				attributePath += "["
+				for i, rs := range diag.AttributePath {
+					if i > 0 {
+						attributePath += "."
+					}
+					switch step := rs.(type) {
+					case cty.GetAttrStep:
+						attributePath += step.Name
+					default:
+						attributePath += "#"
+					}
+				}
+				attributePath += "] "
+			}
 			if diag.Summary == "ConflictsWith" {
 				issues = append(issues, diag.Detail)
 			} else {
-				issues = append(issues, diag.Summary)
+				issues = append(issues, fmt.Sprintf("%s%s", attributePath, diag.Summary))
 			}
 		}
 		return strings.Join(issues, ". ")

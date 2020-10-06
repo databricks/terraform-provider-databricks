@@ -9,53 +9,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestSecretsAPI_Read(t *testing.T) {
-	type args struct {
-		Scope string `json:"scope"`
-		Key   string `json:"key"`
-	}
-	tests := []struct {
-		name     string
-		args     args
-		response string
-		want     SecretMetadata
-		wantErr  bool
-	}{
-		{
-			name: "Basic test",
-			args: args{
-				Scope: "my-scope",
-				Key:   "my-string-key",
-			},
-			response: `{
-						  "secrets": [
-							{
-							  "key": "my-string-key",
-							  "last_updated_timestamp": 1520467595000
-							},
-							{
-							  "key": "my-byte-key",
-							  "last_updated_timestamp": 1520467595000
-							}
-						  ]
-						}`,
-			want: SecretMetadata{
-				Key:                  "my-string-key",
-				LastUpdatedTimestamp: 1520467595000,
-			},
-			wantErr: false,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			var input args
-			qa.AssertRequestWithMockServer(t, tt.args, http.MethodGet, "/api/2.0/secrets/list?scope=my-scope", &input, tt.response, http.StatusOK, tt.want, tt.wantErr, func(client *common.DatabricksClient) (interface{}, error) {
-				return NewSecretsAPI(client).Read(tt.args.Scope, tt.args.Key)
-			})
-		})
-	}
-}
-
 func TestResourceSecretRead(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{

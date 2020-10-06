@@ -17,20 +17,15 @@ type LogDelivery struct {
 	LogDeliveryConfiguration LogDeliveryConfiguration `json:"log_delivery_configuration"`
 }
 
-// LogDeliveryList lists log delivery configurations
-type LogDeliveryList struct {
-	LogDeliveryConfigurations []LogDeliveryConfiguration `json:"log_delivery_configurations"`
-}
-
 // LogDeliveryConfiguration describes log delivery
 type LogDeliveryConfiguration struct {
 	AccountID              string   `json:"account_id"`
 	ConfigID               string   `json:"config_id,omitempty" tf:"computed"`
 	CredentialsID          string   `json:"credentials_id"`
 	StorageConfigurationID string   `json:"storage_configuration_id"`
-	WorkspaceIdsFilter     []string `jsong:"workspace_ids_filter,omitempty"`
+	WorkspaceIdsFilter     []string `json:"workspace_ids_filter,omitempty"`
 	ConfigName             string   `json:"config_name,omitempty"`
-	Status                 string   `json:"status,omitempty"`
+	Status                 string   `json:"status,omitempty" tf:"computed"`
 	LogType                string   `json:"log_type"`
 	OutputFormat           string   `json:"output_format"`
 	DeliveryPathPrefix     string   `json:"delivery_path_prefix,omitempty"`
@@ -76,9 +71,15 @@ func ResourceLogDelivery() *schema.Resource {
 	p := util.NewPairID("account_id", "config_id")
 	s := internal.StructToSchema(LogDeliveryConfiguration{},
 		func(s map[string]*schema.Schema) map[string]*schema.Schema {
-			s["account_id"].ForceNew = true
 			// nolint
 			s["config_name"].ValidateFunc = validation.StringLenBetween(0, 255)
+
+			for k, v := range s {
+				if v.Computed {
+					continue
+				}
+				s[k].ForceNew = true
+			}
 			return s
 		})
 	readContext := func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
@@ -90,6 +91,10 @@ func ResourceLogDelivery() *schema.Resource {
 		if err != nil {
 			return diag.FromErr(err)
 		}
+		if ldc.Status == "DISABLED" {
+			d.SetId("")
+			return nil
+		}
 		err = internal.StructToData(ldc, s, d)
 		if err != nil {
 			return diag.FromErr(err)
@@ -99,6 +104,9 @@ func ResourceLogDelivery() *schema.Resource {
 	return &schema.Resource{
 		Schema:      s,
 		ReadContext: readContext,
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
 		CreateContext: func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 			var ldc LogDeliveryConfiguration
 			err := internal.DataToStructPointer(d, s, &ldc)

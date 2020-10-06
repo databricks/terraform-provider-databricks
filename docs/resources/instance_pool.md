@@ -72,6 +72,10 @@ In addition to all arguments above, the following attributes are exported:
 * `id` - Canonical unique identifier for the instance pool.
 * `default_tags` - default tag map.
 
+## Access Control
+
+* [databricks_group](group.md#allow_instance_pool_create) and [databricks_user](user.md#allow_instance_pool_create) can control which groups or individual users can create instance pools.
+* [databricks_permissions](permissions.md#Instance-Pool-usage) can control which groups or individual users can *Manage* or *Attach to* individual instance pools.
 
 ## Import
 

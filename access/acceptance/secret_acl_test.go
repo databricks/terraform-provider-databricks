@@ -1,134 +1,93 @@
 package acceptance
 
 import (
-	"errors"
-	"fmt"
 	"os"
 	"testing"
 
 	. "github.com/databrickslabs/databricks-terraform/access"
+	"github.com/databrickslabs/databricks-terraform/identity"
 
 	"github.com/databrickslabs/databricks-terraform/common"
 	"github.com/databrickslabs/databricks-terraform/internal/acceptance"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/databrickslabs/databricks-terraform/internal/qa"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestAccSecretAclResource(t *testing.T) {
-	// TODO: refactor for common instance pool & AZ CLI
 	if _, ok := os.LookupEnv("CLOUD_ENV"); !ok {
 		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
 	}
-	//var secretScope Secre
-	var secretACL ACLItem
-	scope := fmt.Sprintf("tf-scope-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
-	principal := "users"
-	permission := "READ"
-
 	acceptance.AccTest(t, resource.TestCase{
-		CheckDestroy: testSecretACLResourceDestroy,
 		Steps: []resource.TestStep{
 			{
-				// use a dynamic configuration with the random name from above
-				Config: testSecretACLResource(scope, principal, permission),
-				// compose a basic test, checking both remote and local values
-				Check: resource.ComposeTestCheckFunc(
-					// query the API to retrieve the tokenInfo object
-					testSecretACLResourceExists("databricks_secret_acl.my_secret_acl", &secretACL, t),
-					// verify remote values
-					testSecretACLValues(t, &secretACL, permission, principal),
-					// verify local values
-					resource.TestCheckResourceAttr("databricks_secret_acl.my_secret_acl", "scope", scope),
-					resource.TestCheckResourceAttr("databricks_secret_acl.my_secret_acl", "principal", principal),
-					resource.TestCheckResourceAttr("databricks_secret_acl.my_secret_acl", "permission", permission),
-				),
-			},
-			{
-				PreConfig: func() {
+				Config: qa.EnvironmentTemplate(t, `
+					resource "databricks_group" "ds" {
+						display_name = "data-scientists-{var.RANDOM}"
+					}
+					resource "databricks_secret_scope" "app" {
+						name = "app-{var.RANDOM}"
+					}
+					resource "databricks_secret_acl" "ds_can_read_app" {
+						principal = databricks_group.ds.display_name
+						permission = "READ"
+						scope = databricks_secret_scope.app.name
+					}`),
+				Check: func(s *terraform.State) error {
 					client := common.CommonEnvironmentClient()
-					err := NewSecretAclsAPI(client).Delete(scope, principal)
-					assert.NoError(t, err, err)
+
+					usersAPI := identity.NewUsersAPI(client)
+					me, err := usersAPI.Me()
+					require.NoError(t, err)
+
+					secretACLAPI := NewSecretAclsAPI(client)
+					scope := s.RootModule().Resources["databricks_secret_scope.app"].Primary.ID
+					acls, err := secretACLAPI.List(scope)
+					require.NoError(t, err)
+					assert.Equal(t, 2, len(acls))
+					m := map[string]string{}
+					for _, acl := range acls {
+						m[acl.Principal] = string(acl.Permission)
+					}
+
+					group := s.RootModule().Resources["databricks_group.ds"].Primary.Attributes["display_name"]
+					require.Contains(t, m, group)
+					assert.Equal(t, "READ", m[group])
+					assert.Equal(t, "MANAGE", m[me.UserName])
+					return nil
 				},
-				// use a dynamic configuration with the random name from above
-				Config: testSecretACLResource(scope, principal, permission),
-				// compose a basic test, checking both remote and local values
-				Check: resource.ComposeTestCheckFunc(
-					// query the API to retrieve the tokenInfo object
-					testSecretACLResourceExists("databricks_secret_acl.my_secret_acl", &secretACL, t),
-					// verify remote values
-					testSecretACLValues(t, &secretACL, permission, principal),
-					// verify local values
-					resource.TestCheckResourceAttr("databricks_secret_acl.my_secret_acl", "scope", scope),
-					resource.TestCheckResourceAttr("databricks_secret_acl.my_secret_acl", "principal", principal),
-					resource.TestCheckResourceAttr("databricks_secret_acl.my_secret_acl", "permission", permission),
-				),
 			},
 		},
 	})
 }
 
-func testSecretACLResourceDestroy(s *terraform.State) error {
-	client := common.CommonEnvironmentClient()
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "databricks_secret" && rs.Type != "databricks_secret_scope" {
-			continue
-		}
-		_, err := NewSecretAclsAPI(client).Read(rs.Primary.Attributes["scope"], rs.Primary.Attributes["principal"])
-		if err == nil {
-			return errors.New("resource secret acl is not cleaned up")
-		}
-		_, err = NewSecretScopesAPI(client).Read(rs.Primary.Attributes["scope"])
-		if err == nil {
-			return errors.New("resource secret is not cleaned up")
-		}
-	}
-	return nil
-}
-
-func testSecretACLValues(t *testing.T, acl *ACLItem, permission, principal string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		assert.True(t, acl.Permission == ACLPermissionRead)
-		assert.True(t, acl.Principal == principal)
-		return nil
-	}
-}
-
-// testAccCheckTokenResourceExists queries the API and retrieves the matching Widget.
-func testSecretACLResourceExists(n string, aclItem *ACLItem, t *testing.T) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		// find the corresponding state object
-		rs, ok := s.RootModule().Resources[n]
-		if !ok {
-			return fmt.Errorf("Not found: %s", n)
-		}
-
-		// retrieve the configured client from the test setup
-		conn := common.CommonEnvironmentClient()
-		resp, err := NewSecretAclsAPI(conn).Read(rs.Primary.Attributes["scope"], rs.Primary.Attributes["principal"])
-		//t.Log(resp)
-		if err != nil {
-			return err
-		}
-
-		// If no error, assign the response Widget attribute to the widget pointer
-		*aclItem = resp
-		return nil
-		//return fmt.Errorf("Token (%s) not found", rs.Primary.ID)
-	}
-}
-
-// testAccTokenResource returns an configuration for an Example Widget with the provided name
-func testSecretACLResource(scopeName, principal, permission string) string {
-	return fmt.Sprintf(`
-		resource "databricks_secret_scope" "my_scope" {
-			name = "%s"
-		}
-		resource "databricks_secret_acl" "my_secret_acl" {
-			principal = "%s"
-			permission = "%s"
-			scope = databricks_secret_scope.my_scope.name
-		}
-		`, scopeName, principal, permission)
+func TestAccSecretAclResourceDefaultPrincipal(t *testing.T) {
+	acceptance.AccTest(t, resource.TestCase{
+		Steps: []resource.TestStep{
+			{
+				Config: qa.EnvironmentTemplate(t, `
+					resource "databricks_secret_scope" "app" {
+						name = "app-{var.RANDOM}"
+						initial_manage_principal = "users"
+					}
+					resource "databricks_secret_acl" "ds_can_read_app" {
+						principal = "users"
+						permission = "READ"
+						scope = databricks_secret_scope.app.name
+					}`),
+				Check: acceptance.ResourceCheck("databricks_secret_scope.app",
+					func(client *common.DatabricksClient, id string) error {
+						secretACLAPI := NewSecretAclsAPI(client)
+						acls, err := secretACLAPI.List(id)
+						require.NoError(t, err)
+						assert.Equal(t, 1, len(acls))
+						assert.Equal(t, "users", acls[0].Principal)
+						assert.Equal(t, "READ", string(acls[0].Permission))
+						return nil
+					}),
+			},
+		},
+	})
 }

@@ -13,7 +13,7 @@ func assertContains(t *testing.T, s interface{}, e string) bool {
 	return assert.True(t, s.(*schema.Set).Contains(e), "%#v doesn't contain %s", s, e)
 }
 
-func TestDataAwsCrossAccountRolicy(t *testing.T) {
+func TestDataSourceGroup(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{

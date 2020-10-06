@@ -174,10 +174,12 @@ func (a NotebooksAPI) recursiveAddPaths(path string, pathList *[]WorkspaceObject
 	return err
 }
 
+type objectList struct {
+	Objects []WorkspaceObjectStatus `json:"objects,omitempty" url:"objects,omitempty"`
+}
+
 func (a NotebooksAPI) list(path string) ([]WorkspaceObjectStatus, error) {
-	var notebookList struct {
-		Objects []WorkspaceObjectStatus `json:"objects,omitempty" url:"objects,omitempty"`
-	}
+	var notebookList objectList
 	err := a.C.Get("/workspace/list", map[string]string{
 		"path": path,
 	}, &notebookList)

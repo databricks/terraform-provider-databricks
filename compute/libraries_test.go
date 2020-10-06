@@ -1,12 +1,10 @@
 package compute
 
 import (
-	"net/http"
 	"os"
 	"testing"
 
 	"github.com/databrickslabs/databricks-terraform/common"
-	"github.com/databrickslabs/databricks-terraform/internal/qa"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -101,118 +99,6 @@ func TestClusterLibraryStatuses_Errors(t *testing.T) {
 	require.Error(t, err)
 	assert.Equal(t, "library_whl[a] failed: b\nlibrary_maven[a.b.c] failed: b\nlibrary_cran[a] failed: b", err.Error())
 	assert.False(t, need)
-}
-
-func TestLibrariesAPI_Create(t *testing.T) {
-	type args struct {
-		ClusterID string    `json:"cluster_id,omitempty"`
-		Libraries []Library `json:"libraries,omitempty"`
-	}
-
-	tests := []struct {
-		name           string
-		response       string
-		responseStatus int
-		args           args
-		wantErr        bool
-	}{
-		{
-			name:           "Create test",
-			response:       "",
-			responseStatus: http.StatusOK,
-			args: args{
-				ClusterID: "my-cluster-id",
-				Libraries: []Library{
-					{
-						Whl: "dbfs:/my/dbfs/wheel.whl",
-					},
-				},
-			},
-			wantErr: false,
-		},
-		{
-			name:           "Create faulure test",
-			response:       "",
-			responseStatus: http.StatusBadRequest,
-			args: args{
-				ClusterID: "my-cluster-id",
-				Libraries: []Library{
-					{
-						Whl: "dbfs:/my/dbfs/wheel.whl",
-					},
-				},
-			},
-			wantErr: true,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			var input args
-			qa.AssertRequestWithMockServer(t, &tt.args, http.MethodPost, "/api/2.0/libraries/install",
-				&input, tt.response, tt.responseStatus, nil, tt.wantErr, func(client *common.DatabricksClient) (interface{}, error) {
-					return nil, NewLibrariesAPI(client).Install(ClusterLibraryList{
-						ClusterID: tt.args.ClusterID,
-						Libraries: tt.args.Libraries,
-					})
-				})
-		})
-	}
-}
-
-func TestLibrariesAPI_Delete(t *testing.T) {
-	type args struct {
-		ClusterID string    `json:"cluster_id,omitempty"`
-		Libraries []Library `json:"libraries,omitempty"`
-	}
-
-	tests := []struct {
-		name           string
-		response       string
-		responseStatus int
-		args           args
-		wantErr        bool
-	}{
-		{
-			name:           "Delete Test",
-			response:       "",
-			responseStatus: http.StatusOK,
-			args: args{
-				ClusterID: "my-cluster-id",
-				Libraries: []Library{
-					{
-						Whl: "dbfs:/my/dbfs/wheel.whl",
-					},
-				},
-			},
-			wantErr: false,
-		},
-		{
-			name:           "Delete failure Test",
-			response:       "",
-			responseStatus: http.StatusBadRequest,
-			args: args{
-				ClusterID: "my-cluster-id",
-				Libraries: []Library{
-					{
-						Whl: "dbfs:/my/dbfs/wheel.whl",
-					},
-				},
-			},
-			wantErr: true,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			var input args
-			qa.AssertRequestWithMockServer(t, &tt.args, http.MethodPost, "/api/2.0/libraries/uninstall",
-				&input, tt.response, tt.responseStatus, nil, tt.wantErr, func(client *common.DatabricksClient) (interface{}, error) {
-					return nil, NewLibrariesAPI(client).Uninstall(ClusterLibraryList{
-						ClusterID: tt.args.ClusterID,
-						Libraries: tt.args.Libraries,
-					})
-				})
-		})
-	}
 }
 
 func TestAccLibraryCreate(t *testing.T) {

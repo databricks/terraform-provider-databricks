@@ -21,8 +21,7 @@ func TestAccScimUserResource(t *testing.T) {
 	if _, ok := os.LookupEnv("CLOUD_ENV"); !ok {
 		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
 	}
-	//var secretScope Secre
-	var scimUser User
+	var scimUser ScimUser
 	randomName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
 	userName := fmt.Sprintf("terraform.test+%s@example.com", randomName)
 	displayName := fmt.Sprintf("Terra %s", randomName)
@@ -263,7 +262,7 @@ func testScimUserResourceDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testScimUserValues(t *testing.T, user *User, userName, displayName string, expectEntitlements []EntitlementsListItem) resource.TestCheckFunc {
+func testScimUserValues(t *testing.T, user *ScimUser, userName, displayName string, expectEntitlements []EntitlementsListItem) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		assert.True(t, user.UserName == userName)
 		assert.True(t, user.DisplayName == displayName)
@@ -273,7 +272,7 @@ func testScimUserValues(t *testing.T, user *User, userName, displayName string, 
 }
 
 // testAccCheckTokenResourceExists queries the API and retrieves the matching Widget.
-func testScimUserResourceExists(n string, user *User, t *testing.T) resource.TestCheckFunc {
+func testScimUserResourceExists(n string, user *ScimUser, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		// find the corresponding state object
 		rs, ok := s.RootModule().Resources[n]

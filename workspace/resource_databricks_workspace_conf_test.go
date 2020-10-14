@@ -17,14 +17,14 @@ func TestWorkspaceConfCreate(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   http.MethodGet,
-				Resource: "/api/2.0/preview/workspace-conf?keys=enableIpAccessLists",
+				Resource: "/api/2.0/workspace-conf?keys=enableIpAccessLists",
 				Response: map[string]string{
 					"enableIpAccessLists": "true",
 				},
 			},
 			{
 				Method:   http.MethodPatch,
-				Resource: "/api/2.0/preview/workspace-conf",
+				Resource: "/api/2.0/workspace-conf",
 				ExpectedRequest: map[string]string{
 					"enableIpAccessLists": "true",
 				},
@@ -46,14 +46,14 @@ func TestWorkspaceConfCreate_Error(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   http.MethodGet,
-				Resource: "/api/2.0/preview/workspace-conf?keys=enableIpAccessLists",
+				Resource: "/api/2.0/workspace-conf?keys=enableIpAccessLists",
 				Response: map[string]string{
 					"enableIpAccessLists": "true",
 				},
 			},
 			{
 				Method:   http.MethodPatch,
-				Resource: "/api/2.0/preview/workspace-conf",
+				Resource: "/api/2.0/workspace-conf",
 				ExpectedRequest: map[string]string{
 					"enableIpAccessLists": "true",
 				},
@@ -79,14 +79,14 @@ func TestWorkspaceConfUpdate(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   http.MethodGet,
-				Resource: "/api/2.0/preview/workspace-conf?keys=enableIpAccessLists",
+				Resource: "/api/2.0/workspace-conf?keys=enableIpAccessLists",
 				Response: map[string]string{
 					"enableIpAccessLists": "true",
 				},
 			},
 			{
 				Method:   http.MethodPatch,
-				Resource: "/api/2.0/preview/workspace-conf",
+				Resource: "/api/2.0/workspace-conf",
 				ExpectedRequest: map[string]string{
 					"enableIpAccessLists": "true",
 				},
@@ -109,14 +109,14 @@ func TestWorkspaceConfUpdate_Error(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   http.MethodGet,
-				Resource: "/api/2.0/preview/workspace-conf?keys=enableIpAccessLists",
+				Resource: "/api/2.0/workspace-conf?keys=enableIpAccessLists",
 				Response: map[string]string{
 					"enableIpAccessLists": "true",
 				},
 			},
 			{
 				Method:   http.MethodPatch,
-				Resource: "/api/2.0/preview/workspace-conf",
+				Resource: "/api/2.0/workspace-conf",
 				ExpectedRequest: map[string]string{
 					"enableIpAccessLists": "true",
 				},
@@ -142,7 +142,7 @@ func TestWorkspaceConfRead(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   http.MethodGet,
-				Resource: "/api/2.0/preview/workspace-conf?keys=enableIpAccessLists",
+				Resource: "/api/2.0/workspace-conf?keys=enableIpAccessLists",
 				Response: map[string]string{
 					"enableIpAccessLists": "true",
 				},
@@ -161,7 +161,7 @@ func TestWorkspaceConfRead_NotFound(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   http.MethodGet,
-				Resource: "/api/2.0/preview/workspace-conf?keys=enableIpAccessLists",
+				Resource: "/api/2.0/workspace-conf?keys=enableIpAccessLists",
 				Response: common.APIErrorBody{
 					ErrorCode: "NOT_FOUND",
 					Message:   "Item not found",
@@ -182,7 +182,7 @@ func TestWorkspaceConfRead_Error(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   http.MethodGet,
-				Resource: "/api/2.0/preview/workspace-conf?keys=enableIpAccessLists",
+				Resource: "/api/2.0/workspace-conf?keys=enableIpAccessLists",
 				Response: common.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
@@ -204,7 +204,7 @@ func TestWorkspaceConfDelete(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   http.MethodPatch,
-				Resource: "/api/2.0/preview/workspace-conf",
+				Resource: "/api/2.0/workspace-conf",
 				ExpectedRequest: map[string]string{
 					"enableIpAccessLists": "false",
 				},
@@ -224,7 +224,7 @@ func TestWorkspaceConfDelete_Error(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   http.MethodPatch,
-				Resource: "/api/2.0/preview/workspace-conf",
+				Resource: "/api/2.0/workspace-conf",
 				Response: common.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",

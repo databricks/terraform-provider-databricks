@@ -2,6 +2,7 @@ package qa
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -10,7 +11,6 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
-	"reflect"
 	"regexp"
 	"sort"
 	"strings"
@@ -19,12 +19,13 @@ import (
 	"github.com/databrickslabs/databricks-terraform/common"
 	"github.com/databrickslabs/databricks-terraform/internal"
 
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/hcl"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 
-	"github.com/r3labs/diff"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -94,10 +95,26 @@ func (f ResourceFixture) Apply(t *testing.T) (*schema.ResourceData, error) {
 		f.State = fixHCL(out).(map[string]interface{})
 	}
 	var whatever func(d *schema.ResourceData, c interface{}) error
+	pick := func(
+		a func(*schema.ResourceData, interface{}) error,
+		b func(context.Context, *schema.ResourceData, interface{}) diag.Diagnostics,
+		d *schema.ResourceData, m interface{}) error {
+		if b != nil {
+			ctx := context.Background()
+			diags := b(ctx, d, m)
+			if diags != nil {
+				return fmt.Errorf(diagsToString(diags))
+			}
+			return nil
+		}
+		return a(d, m)
+	}
 	switch {
 	case f.Create:
 		// nolint should be a bigger context-aware refactor
-		whatever = f.Resource.Create
+		whatever = func(d *schema.ResourceData, m interface{}) error {
+			return pick(f.Resource.Create, f.Resource.CreateContext, d, m)
+		}
 		if f.ID != "" {
 			return nil, errors.New("ID is not available for Create")
 		}
@@ -116,7 +133,7 @@ func (f ResourceFixture) Apply(t *testing.T) (*schema.ResourceData, error) {
 				err = d.Set(k, v)
 				assert.NoError(t, err)
 			}
-			return f.Resource.Read(d, m)
+			return pick(f.Resource.Read, f.Resource.ReadContext, d, m)
 		}
 	case f.Update:
 		if f.ID == "" {
@@ -124,7 +141,7 @@ func (f ResourceFixture) Apply(t *testing.T) (*schema.ResourceData, error) {
 		}
 		whatever = func(d *schema.ResourceData, m interface{}) error {
 			d.SetId(f.ID)
-			return f.Resource.Update(d, m)
+			return pick(f.Resource.Update, f.Resource.UpdateContext, d, m)
 		}
 	case f.Delete:
 		if f.ID == "" {
@@ -132,26 +149,15 @@ func (f ResourceFixture) Apply(t *testing.T) (*schema.ResourceData, error) {
 		}
 		whatever = func(d *schema.ResourceData, m interface{}) error {
 			d.SetId(f.ID)
-			return f.Resource.Delete(d, m)
+			return pick(f.Resource.Delete, f.Resource.DeleteContext, d, m)
 		}
 	}
 	if f.State != nil {
 		resourceConfig := terraform.NewResourceConfigRaw(f.State)
 		diags := f.Resource.Validate(resourceConfig)
-		if len(diags) > 0 {
-			sort.Slice(diags, func(i, j int) bool {
-				return diags[i].Detail < diags[j].Detail
-			})
-			issues := []string{}
-			for _, diag := range diags {
-				if diag.Summary == "ConflictsWith" {
-					issues = append(issues, diag.Detail)
-				} else {
-					issues = append(issues, diag.Summary)
-				}
-			}
+		if diags.HasError() {
 			return nil, fmt.Errorf("Invalid config supplied. %s",
-				strings.ReplaceAll(strings.Join(issues, ". "), "\"", ""))
+				strings.ReplaceAll(diagsToString(diags), "\"", ""))
 		}
 	}
 	resourceData := schema.TestResourceDataRaw(t, f.Resource.Schema, f.State)
@@ -159,9 +165,41 @@ func (f ResourceFixture) Apply(t *testing.T) (*schema.ResourceData, error) {
 	if err != nil {
 		return nil, err
 	}
-
-	// warns, errs := schemaMap(r.Schema).Validate(c)
 	return resourceData, whatever(resourceData, client)
+}
+
+func diagsToString(diags diag.Diagnostics) string {
+	if diags.HasError() {
+		sort.Slice(diags, func(i, j int) bool {
+			return diags[i].Detail < diags[j].Detail
+		})
+		issues := []string{}
+		for _, diag := range diags {
+			attributePath := ""
+			if len(diag.AttributePath) > 0 {
+				attributePath += "["
+				for i, rs := range diag.AttributePath {
+					if i > 0 {
+						attributePath += "."
+					}
+					switch step := rs.(type) {
+					case cty.GetAttrStep:
+						attributePath += step.Name
+					default:
+						attributePath += "#"
+					}
+				}
+				attributePath += "] "
+			}
+			if diag.Summary == "ConflictsWith" {
+				issues = append(issues, diag.Detail)
+			} else {
+				issues = append(issues, fmt.Sprintf("%s%s", attributePath, diag.Summary))
+			}
+		}
+		return strings.Join(issues, ". ")
+	}
+	return ""
 }
 
 // UnionFixturesLists merges two HTTP fixture lists together
@@ -365,15 +403,6 @@ func DeserializeJSON(req *http.Request, m interface{}) error {
 	return err
 }
 
-func compare(t *testing.T, a interface{}, b interface{}) {
-	// TODO: remove diff package because of license
-	difference, err := diff.Diff(a, b)
-	assert.NoError(t, err, err)
-	jsonStr, err := json.Marshal(difference)
-	assert.NoError(t, err, err)
-	assert.True(t, reflect.DeepEqual(a, b), string(jsonStr))
-}
-
 // GetCloudInstanceType gives common minimal instance type, depending on a cloud
 func GetCloudInstanceType(c *common.DatabricksClient) string {
 	if c.IsAzure() {
@@ -382,87 +411,6 @@ func GetCloudInstanceType(c *common.DatabricksClient) string {
 	// TODO: create a method on ClustersAPI to give
 	// cloud specific delta-cache enabled instance by default.
 	return "m4.large"
-}
-
-func AssertRequestWithMockServer(t *testing.T, rawPayloadArgs interface{}, requestMethod string, requestURI string, input interface{}, response string, responseStatus int, want interface{}, wantErr bool, apiCall func(client *common.DatabricksClient) (interface{}, error)) {
-	t.Log("[DEPRECATED] Please rewrite the code to use ResourceFixture")
-	server := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
-		// Test request parameters
-		assert.Equal(t, requestMethod, req.Method, "HTTP method doesn't match")
-		assert.Equal(t, requestURI, req.RequestURI, "URL doesn't match")
-		if requestMethod == http.MethodPost || requestMethod == http.MethodPatch || requestMethod == http.MethodPut {
-			err := DeserializeJSON(req, &input)
-			assert.NoError(t, err, err)
-			compare(t, rawPayloadArgs, input)
-		}
-
-		rw.WriteHeader(responseStatus)
-		_, err := rw.Write([]byte(response))
-		assert.NoError(t, err, err)
-	}))
-	// Close the server when test finishes
-	defer server.Close()
-	client := common.DatabricksClient{
-		Host:  server.URL,
-		Token: "...",
-	}
-	err := client.Configure()
-	assert.NoError(t, err, fmt.Sprintf("Expected no error but got: %v", err))
-	output, err := apiCall(&client)
-
-	assert.Equal(t, reflect.TypeOf(want), reflect.TypeOf(output), "Types are not equal between output of api call and expectiation!")
-	if output != nil && !reflect.ValueOf(output).IsZero() {
-		compare(t, want, output)
-	}
-
-	if wantErr {
-		assert.Error(t, err, err)
-	} else {
-		assert.NoError(t, err, fmt.Sprintf("Expected no error but got: %v", err))
-	}
-}
-
-func AssertMultipleRequestsWithMockServer(t *testing.T, rawPayloadArgs interface{}, requestMethod []string, requestURI []string, input interface{}, response []string, responseStatus []int, want interface{}, wantErr bool, apiCall func(client *common.DatabricksClient) (interface{}, error)) {
-	t.Log("[DEPRECATED] Please rewrite the code to use ResourceFixture")
-	counter := 0
-	server := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
-		// Test request parameters
-		if counter == len(requestMethod) {
-			t.Fatalf("Received more requests than expected")
-			return
-		}
-		assert.Equal(t, requestMethod[counter], req.Method)
-		assert.Equal(t, requestURI[counter], req.RequestURI)
-		if requestMethod[counter] == http.MethodPost || requestMethod[counter] == http.MethodPatch || requestMethod[counter] == http.MethodPut {
-			err := DeserializeJSON(req, &(input.([]interface{})[counter]))
-			assert.NoError(t, err, err)
-			compare(t, rawPayloadArgs.([]interface{})[counter], input.([]interface{})[counter])
-		}
-
-		rw.WriteHeader(responseStatus[counter])
-		_, err := rw.Write([]byte(response[counter]))
-		assert.NoError(t, err, err)
-		counter++
-	}))
-	// Close the server when test finishes
-	defer server.Close()
-	client := common.DatabricksClient{
-		Host:  server.URL,
-		Token: "...",
-	}
-	err := client.Configure()
-	assert.NoError(t, err, fmt.Sprintf("Expected no error but got: %v", err))
-	output, err := apiCall(&client)
-
-	if output != nil {
-		compare(t, want, output)
-	}
-
-	if wantErr {
-		assert.Error(t, err, err)
-	} else {
-		assert.NoError(t, err, err)
-	}
 }
 
 // TestCreateTempFile  ...

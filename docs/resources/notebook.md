@@ -41,6 +41,10 @@ In addition to all arguments above, the following attributes are exported:
 * `object_id` -  Unique identifier for a NOTEBOOK or DIRECTORY.
 * `object_type` -  The type of the object. It could be NOTEBOOK, DIRECTORY or LIBRARY.
 
+## Access Control
+
+* [databricks_permissions](permissions.md#Notebook-usage) can control which groups or individual users can access notebooks or folders.
+
 ## Import
 
 The resource notebook can be imported using notebook id

@@ -72,26 +72,48 @@ const (
 	GroupEntitlementsPath GroupPathType = "entitlements"
 )
 
-// Group contains information about the SCIM group
-type Group struct {
-	ID               string                 `json:"id,omitempty"`
-	Schemas          []URN                  `json:"schemas,omitempty"`
-	DisplayName      string                 `json:"displayName,omitempty"`
-	Members          []GroupMember          `json:"members,omitempty"`
-	Groups           []GroupMember          `json:"groups,omitempty"`
-	Roles            []RoleListItem         `json:"roles,omitempty"`
-	Entitlements     []EntitlementsListItem `json:"entitlements,omitempty"`
-	UnInheritedRoles []RoleListItem         `json:"uninherited_roles,omitempty"`
-	InheritedRoles   []RoleListItem         `json:"inherited_roles,omitempty"`
+// ScimGroup contains information about the SCIM group
+type ScimGroup struct {
+	ID           string                 `json:"id,omitempty"`
+	Schemas      []URN                  `json:"schemas,omitempty"`
+	DisplayName  string                 `json:"displayName,omitempty"`
+	Members      []GroupMember          `json:"members,omitempty"`
+	Groups       []GroupMember          `json:"groups,omitempty"`
+	Roles        []RoleListItem         `json:"roles,omitempty"`
+	Entitlements []EntitlementsListItem `json:"entitlements,omitempty"`
+
+	// TODO: remove UnInheritedRoles & InheritedRoles in 0.3, it is not part of SCIM spec
+	UnInheritedRoles []RoleListItem `json:"uninherited_roles,omitempty"`
+	InheritedRoles   []RoleListItem `json:"inherited_roles,omitempty"`
+}
+
+// HasMember returns true if group has given user or another group id as member
+func (g ScimGroup) HasMember(memberID string) bool {
+	for _, member := range g.Members {
+		if member.Value == memberID {
+			return true
+		}
+	}
+	return false
+}
+
+// HasRole returns true if group has a role
+func (g ScimGroup) HasRole(role string) bool {
+	for _, groupRole := range g.Roles {
+		if groupRole.Value == role {
+			return true
+		}
+	}
+	return false
 }
 
 // GroupList contains a list of groups fetched from a list api call from SCIM api
 type GroupList struct {
-	TotalResults int32   `json:"totalResults,omitempty"`
-	StartIndex   int32   `json:"startIndex,omitempty"`
-	ItemsPerPage int32   `json:"itemsPerPage,omitempty"`
-	Schemas      []URN   `json:"schemas,omitempty"`
-	Resources    []Group `json:"resources,omitempty"`
+	TotalResults int32       `json:"totalResults,omitempty"`
+	StartIndex   int32       `json:"startIndex,omitempty"`
+	ItemsPerPage int32       `json:"itemsPerPage,omitempty"`
+	Schemas      []URN       `json:"schemas,omitempty"`
+	Resources    []ScimGroup `json:"resources,omitempty"`
 }
 
 // GroupPatchRequest contains a request structure to make a patch op against SCIM api
@@ -111,7 +133,8 @@ const (
 
 // GroupsListItem is a struct that contains a value of group id
 type GroupsListItem struct {
-	Value string `json:"value,omitempty"`
+	Display string `json:"display,omitempty"`
+	Value   string `json:"value,omitempty"`
 }
 
 // EntitlementsListItem is a struct that contains a value of entitlement
@@ -131,33 +154,70 @@ type Email struct {
 	Primary interface{} `json:"primary,omitempty"`
 }
 
-// User is a struct that contains all the information about a SCIM user
-type User struct {
-	ID               string                 `json:"id,omitempty"`
-	Emails           []Email                `json:"emails,omitempty"`
-	DisplayName      string                 `json:"displayName,omitempty"`
-	Active           bool                   `json:"active,omitempty"`
-	Schemas          []URN                  `json:"schemas,omitempty"`
-	UserName         string                 `json:"userName,omitempty"`
-	Groups           []GroupsListItem       `json:"groups,omitempty"`
-	Name             map[string]string      `json:"name,omitempty"`
-	Roles            []RoleListItem         `json:"roles,omitempty"`
-	Entitlements     []EntitlementsListItem `json:"entitlements,omitempty"`
-	UnInheritedRoles []RoleListItem         `json:"uninherited_roles,omitempty"`
-	InheritedRoles   []RoleListItem         `json:"inherited_roles,omitempty"`
+// ScimUser is a struct that contains all the information about a SCIM user
+type ScimUser struct {
+	ID           string                 `json:"id,omitempty"`
+	Emails       []Email                `json:"emails,omitempty"`
+	DisplayName  string                 `json:"displayName,omitempty"`
+	Active       bool                   `json:"active,omitempty"`
+	Schemas      []URN                  `json:"schemas,omitempty"`
+	UserName     string                 `json:"userName,omitempty"`
+	Groups       []GroupsListItem       `json:"groups,omitempty"`
+	Name         map[string]string      `json:"name,omitempty"`
+	Roles        []RoleListItem         `json:"roles,omitempty"`
+	Entitlements []EntitlementsListItem `json:"entitlements,omitempty"`
+
+	// TODO: remove InheritedRoles & UnInheritedRoles in 0.3, it is not part of SCIM spec
+	UnInheritedRoles []RoleListItem `json:"uninherited_roles,omitempty"`
+	InheritedRoles   []RoleListItem `json:"inherited_roles,omitempty"`
+}
+
+// HasRole returns true if group has a role
+func (u ScimUser) HasRole(role string) bool {
+	for _, r := range u.Roles {
+		if r.Value == role {
+			return true
+		}
+	}
+	return false
 }
 
 // UserList contains a list of Users fetched from a list api call from SCIM api
 type UserList struct {
-	TotalResults int32  `json:"totalResults,omitempty"`
-	StartIndex   int32  `json:"startIndex,omitempty"`
-	ItemsPerPage int32  `json:"itemsPerPage,omitempty"`
-	Schemas      []URN  `json:"schemas,omitempty"`
-	Resources    []User `json:"resources,omitempty"`
+	TotalResults int32      `json:"totalResults,omitempty"`
+	StartIndex   int32      `json:"startIndex,omitempty"`
+	ItemsPerPage int32      `json:"itemsPerPage,omitempty"`
+	Schemas      []URN      `json:"schemas,omitempty"`
+	Resources    []ScimUser `json:"resources,omitempty"`
 }
 
 // UserPatchRequest is a struct that contains all the information for a PATCH request to the SCIM users api
 type UserPatchRequest struct {
 	Schemas    []URN                 `json:"schemas,omitempty"`
 	Operations []UserPatchOperations `json:"Operations,omitempty"`
+}
+
+type PatchOperation struct {
+	Op    string      `json:"op,omitempty"`
+	Path  string      `json:"path,omitempty"`
+	Value interface{} `json:"value,omitempty"`
+}
+
+type patchRequest struct {
+	Schemas    []URN            `json:"schemas,omitempty"`
+	Operations []PatchOperation `json:"Operations,omitempty"`
+}
+
+func scimPatchRequest(op, path, value string) patchRequest {
+	o := PatchOperation{
+		Op:   op,
+		Path: path,
+	}
+	if value != "" {
+		o.Value = []ValueListItem{{value}}
+	}
+	return patchRequest{
+		Schemas:    []URN{PatchOp},
+		Operations: []PatchOperation{o},
+	}
 }

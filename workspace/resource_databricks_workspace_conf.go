@@ -4,7 +4,6 @@ package workspace
 // REST API: https://docs.databricks.com/dev-tools/api/latest/ip-access-list.html#operation/create-list
 
 import (
-	"log"
 	"strconv"
 
 	"github.com/databrickslabs/databricks-terraform/common"
@@ -37,33 +36,29 @@ var (
 )
 
 func resourceWorkspaceConfCreateOrUpdate(d *schema.ResourceData, m interface{}) error {
-	client := m.(*common.DatabricksClient)
-
 	wsConfMap := map[string]string{
-		tfNameToJsonName["enable_ip_access_lists"]: strconv.FormatBool(d.Get("enable_ip_access_lists").(bool)),
+		tfNameToJsonName["enable_ip_access_lists"]: strconv.FormatBool(d.Get("enable_ip_access_lists").(bool)), // fmt.sprintf TODO
 	}
-	err := NewWorkspaceConfAPI(client).Update(wsConfMap)
+	err := NewWorkspaceConfAPI(m).Update(wsConfMap)
 	// 404 check not needed as this only return 400, 401, and 500 on error
 	if err != nil {
 		return err
 	}
 
-	d.SetId("workspace_configs")
+	d.SetId("workspace_configs") // Setting to a single id--expected only one config object
 
 	return resourceWorkspaceConfRead(d, m)
 }
 
 func resourceWorkspaceConfRead(d *schema.ResourceData, m interface{}) (err error) {
-	client := m.(*common.DatabricksClient)
-	resp, err := NewWorkspaceConfAPI(client).Read(tfNameToJsonName["enable_ip_access_lists"])
+	resp, err := NewWorkspaceConfAPI(m).Read(tfNameToJsonName["enable_ip_access_lists"])
 	// 404 check not required as the service only return 400 errors
+	if e, ok := err.(common.APIError); ok && e.IsMissing() {
+		d.SetId("")
+		return nil
+	}
 	if err != nil {
 		// check 404 (missing) and set id to empty string for tf
-		if e, ok := err.(common.APIError); ok && e.IsMissing() {
-			log.Printf("[IPACLLists:  missing resource due to error: %v\n", e)
-			d.SetId("")
-			return nil
-		}
 		return
 	}
 
@@ -80,11 +75,9 @@ func resourceWorkspaceConfRead(d *schema.ResourceData, m interface{}) (err error
 }
 
 func resourceWorkspaceConfDelete(d *schema.ResourceData, m interface{}) (_ error) {
-	client := m.(*common.DatabricksClient)
-
 	// For IP Access Lists, you can't set to null or "" once it is set.  Only true/false allowed
 	wsConfMap := map[string]string{
 		tfNameToJsonName["enable_ip_access_lists"]: "false",
 	}
-	return NewWorkspaceConfAPI(client).Update(wsConfMap)
+	return NewWorkspaceConfAPI(m).Update(wsConfMap)
 }

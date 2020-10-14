@@ -2,7 +2,6 @@
 name: Provider Issue
 about: Use this to identify a issue or a bug with the provider.
 title: "[ISSUE] Provider bug"
-labels: bug
 ---
 
 Hi there,

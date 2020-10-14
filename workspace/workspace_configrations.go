@@ -20,7 +20,7 @@ func NewWorkspaceConfAPI(m interface{}) WorkspaceConfAPI {
 //}
 // This is the case for any key tested.  It would be worth finding any internal documentation detailing workspace-conf
 func (a WorkspaceConfAPI) Update(workspaceConfMap map[string]string) (err error) {
-	err = a.Client.Patch("/preview/workspace-conf", workspaceConfMap)
+	err = a.Client.Patch("/workspace-conf", workspaceConfMap)
 	return
 }
 
@@ -32,7 +32,7 @@ func (a WorkspaceConfAPI) Read(keys string) (wsConfResp map[string]string, err e
 		Keys: keys,
 	}
 	wsConfResp = map[string]string{}
-	err = a.Client.Get("/preview/workspace-conf", wsConfQuery, &wsConfResp)
+	err = a.Client.Get("/workspace-conf", wsConfQuery, &wsConfResp)
 
 	return
 }

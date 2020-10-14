@@ -22,13 +22,7 @@ func TestAccGroupResource(t *testing.T) {
 	if _, ok := os.LookupEnv("CLOUD_ENV"); !ok {
 		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
 	}
-	// TODO: refactor for common instance pool & AZ CLI
-	var Group Group
-	// generate a random name for each tokenInfo test run, to avoid
-	// collisions from multiple concurrent tests.
-	// the acctest package includes many helpers such as RandStringFromCharSet
-	// See https://godoc.org/github.com/hashicorp/terraform-plugin-sdk/helper/acctest
-	//scope := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
+	var group ScimGroup
 	randomStr := acctest.RandStringFromCharSet(5, acctest.CharSetAlphaNum)
 	displayName := fmt.Sprintf("tf group test %s", randomStr)
 	newDisplayName := fmt.Sprintf("new tf group test %s", randomStr)
@@ -41,9 +35,9 @@ func TestAccGroupResource(t *testing.T) {
 				// compose a basic test, checking both remote and local values
 				Check: resource.ComposeTestCheckFunc(
 					// query the API to retrieve the tokenInfo object
-					testGroupResourceExists("databricks_group.my_group", &Group, t),
+					testGroupResourceExists("databricks_group.my_group", &group, t),
 					// verify remote values
-					testGroupValues(t, &Group, displayName),
+					testGroupValues(t, &group, displayName),
 					// verify local values
 					resource.TestCheckResourceAttr("databricks_group.my_group", "display_name", displayName),
 				),
@@ -67,7 +61,7 @@ func TestAccGroupResource(t *testing.T) {
 }
 
 func TestAccGroupResource_verify_entitlements(t *testing.T) {
-	var Group Group
+	var group ScimGroup
 	// generate a random name for each tokenInfo test run, to avoid
 	// collisions from multiple concurrent tests.
 	// the acctest package includes many helpers such as RandStringFromCharSet
@@ -85,9 +79,9 @@ func TestAccGroupResource_verify_entitlements(t *testing.T) {
 				// compose a basic test, checking both remote and local values
 				Check: resource.ComposeTestCheckFunc(
 					// query the API to retrieve the tokenInfo object
-					testGroupResourceExists("databricks_group.my_group", &Group, t),
+					testGroupResourceExists("databricks_group.my_group", &group, t),
 					// verify remote values
-					testGroupValues(t, &Group, displayName),
+					testGroupValues(t, &group, displayName),
 					// verify local values
 					resource.TestCheckResourceAttr("databricks_group.my_group", "allow_cluster_create", "true"),
 					resource.TestCheckResourceAttr("databricks_group.my_group", "allow_instance_pool_create", "true"),
@@ -122,7 +116,7 @@ func testGroupResourceDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testGroupValues(t *testing.T, group *Group, displayName string) resource.TestCheckFunc {
+func testGroupValues(t *testing.T, group *ScimGroup, displayName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		assert.True(t, group.DisplayName == displayName)
 		return nil
@@ -130,7 +124,7 @@ func testGroupValues(t *testing.T, group *Group, displayName string) resource.Te
 }
 
 // testAccCheckTokenResourceExists queries the API and retrieves the matching Widget.
-func testGroupResourceExists(n string, group *Group, t *testing.T) resource.TestCheckFunc {
+func testGroupResourceExists(n string, group *ScimGroup, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		// find the corresponding state object
 		rs, ok := s.RootModule().Resources[n]

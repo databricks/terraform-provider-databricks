@@ -10,10 +10,11 @@ import (
 
 func ResourceScimGroup() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceScimGroupCreate,
-		Update: resourceScimGroupUpdate,
-		Read:   resourceScimGroupRead,
-		Delete: resourceScimGroupDelete,
+		DeprecationMessage: "Resource `databricks_scim_group` is no longer supported and would be removed in version 0.3",
+		Create:             resourceScimGroupCreate,
+		Update:             resourceScimGroupUpdate,
+		Read:               resourceScimGroupRead,
+		Delete:             resourceScimGroupDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -65,14 +66,6 @@ func ResourceScimGroup() *schema.Resource {
 		},
 	}
 }
-
-//func convertInterfaceSliceToStringSlice(input []interface{}) []string {
-//	resp := []string{}
-//	for _, item := range input {
-//		resp = append(resp, item.(string))
-//	}
-//	return resp
-//}
 
 func resourceScimGroupCreate(d *schema.ResourceData, m interface{}) error {
 	client := m.(*common.DatabricksClient)

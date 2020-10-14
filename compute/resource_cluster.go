@@ -81,6 +81,15 @@ func librarySchema(dims ...string) *schema.Schema {
 
 func resourceClusterSchema() map[string]*schema.Schema {
 	return internal.StructToSchema(Cluster{}, func(s map[string]*schema.Schema) map[string]*schema.Schema {
+		s["spark_conf"].DiffSuppressFunc = func(k, old, new string, d *schema.ResourceData) bool {
+			isPossiblyLegacyConfig := "spark_conf.%" == k && "1" == old && "0" == new
+			isLegacyConfig := "spark_conf.spark.databricks.delta.preview.enabled" == k
+			if isPossiblyLegacyConfig || isLegacyConfig {
+				log.Printf("[DEBUG] Suppressing diff for k=%#v old=%#v new=%#v", k, old, new)
+				return true
+			}
+			return false
+		}
 		// adds `libraries` configuration block
 		s["library"] = internal.StructToSchema(ClusterLibraryList{},
 			func(ss map[string]*schema.Schema) map[string]*schema.Schema {
@@ -183,7 +192,7 @@ func resourceClusterRead(d *schema.ResourceData, m interface{}) error {
 func waitForLibrariesInstalled(
 	libraries LibrariesAPI, clusterInfo ClusterInfo) (result *ClusterLibraryStatuses, err error) {
 	// nolint should be a bigger refactor
-	err = resource.Retry(5*time.Minute, func() *resource.RetryError {
+	err = resource.Retry(30*time.Minute, func() *resource.RetryError {
 		libsClusterStatus, err := libraries.ClusterStatus(clusterInfo.ClusterID)
 		if ae, ok := err.(common.APIError); ok && ae.IsMissing() {
 			// eventual consistency error
@@ -192,8 +201,8 @@ func waitForLibrariesInstalled(
 		if err != nil {
 			return resource.NonRetryableError(err)
 		}
-		if clusterInfo.State == ClusterStateTerminated {
-			log.Printf("[INFO] Cluster %#v (%s) is currently terminated, so just returning list of %d libraries",
+		if !clusterInfo.IsRunningOrResizing() {
+			log.Printf("[INFO] Cluster %#v (%s) is currently not running, so just returning list of %d libraries",
 				clusterInfo.ClusterName, clusterInfo.ClusterID, len(libsClusterStatus.LibraryStatuses))
 			result = &libsClusterStatus
 			return nil
@@ -223,6 +232,7 @@ func legacyReadLibraryListFromData(d *schema.ResourceData) (cll ClusterLibraryLi
 			cll.AddLibraryFromMap(n, l.(map[string]interface{}))
 		}
 	}
+	cll.ClusterID = d.Id()
 	return
 }
 

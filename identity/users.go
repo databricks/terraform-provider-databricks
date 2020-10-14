@@ -22,40 +22,91 @@ type UsersAPI struct {
 	C *common.DatabricksClient
 }
 
-// Create given a username, displayname, entitlements, and roles will create a scim user via SCIM api
-func (a UsersAPI) Create(userName string, displayName string, entitlements []string, roles []string) (User, error) {
-	var user User
-	scimUserRequest := struct {
-		Schemas      []URN                  `json:"schemas,omitempty"`
-		UserName     string                 `json:"userName,omitempty"`
-		Entitlements []EntitlementsListItem `json:"entitlements,omitempty"`
-		DisplayName  string                 `json:"displayName,omitempty"`
-		Roles        []RoleListItem         `json:"roles,omitempty"`
-	}{}
-	scimUserRequest.Schemas = []URN{UserSchema}
-	scimUserRequest.UserName = userName
-	scimUserRequest.DisplayName = displayName
-	scimUserRequest.Entitlements = []EntitlementsListItem{}
-	for _, entitlement := range entitlements {
-		scimUserRequest.Entitlements = append(scimUserRequest.Entitlements, EntitlementsListItem{Value: Entitlement(entitlement)})
+// UserEntity entity from which resource schema is made
+type UserEntity struct {
+	UserName                string `json:"user_name"`
+	DisplayName             string `json:"display_name,omitempty" tf:"computed"`
+	Active                  bool   `json:"active,omitempty"`
+	AllowClusterCreate      bool   `json:"allow_cluster_create,omitempty"`
+	AllowInstancePoolCreate bool   `json:"allow_instance_pool_create,omitempty"`
+}
+
+func (u UserEntity) toRequest() ScimUser {
+	entitlements := []EntitlementsListItem{}
+	if u.AllowClusterCreate {
+		entitlements = append(entitlements, EntitlementsListItem{
+			Value: Entitlement("allow-cluster-create"),
+		})
 	}
-	scimUserRequest.Roles = []RoleListItem{}
-	for _, role := range roles {
-		scimUserRequest.Roles = append(scimUserRequest.Roles, RoleListItem{Value: role})
+	if u.AllowInstancePoolCreate {
+		entitlements = append(entitlements, EntitlementsListItem{
+			Value: Entitlement("allow-instance-pool-create"),
+		})
 	}
-	err := a.C.Scim(http.MethodPost, "/preview/scim/v2/Users", scimUserRequest, &user)
+	return ScimUser{
+		Schemas:      []URN{UserSchema},
+		UserName:     u.UserName,
+		Active:       u.Active,
+		DisplayName:  u.DisplayName,
+		Entitlements: entitlements,
+	}
+}
+
+// CreateR ..
+func (a UsersAPI) CreateR(ru UserEntity) (user ScimUser, err error) {
+	err = a.C.Scim(http.MethodPost, "/preview/scim/v2/Users", ru.toRequest(), &user)
 	return user, err
 }
 
+// Create given a username, displayname, entitlements, and roles will create a scim user via SCIM api
+func (a UsersAPI) Create(userName string, displayName string, entitlements []string, roles []string) (ScimUser, error) {
+	var user ScimUser
+	createRequest := ScimUser{
+		Schemas:      []URN{UserSchema},
+		UserName:     userName,
+		DisplayName:  displayName,
+		Entitlements: []EntitlementsListItem{},
+		Roles:        []RoleListItem{},
+	}
+	for _, entitlement := range entitlements {
+		createRequest.Entitlements = append(createRequest.Entitlements, EntitlementsListItem{Value: Entitlement(entitlement)})
+	}
+	for _, role := range roles {
+		createRequest.Roles = append(createRequest.Roles, RoleListItem{Value: role})
+	}
+	err := a.C.Scim(http.MethodPost, "/preview/scim/v2/Users", createRequest, &user)
+	return user, err
+}
+
+// ReadR reads resource-friendly entity
+func (a UsersAPI) ReadR(userID string) (ru UserEntity, err error) {
+	user, err := a.read(userID)
+	if err != nil {
+		return
+	}
+	ru.UserName = user.UserName
+	ru.DisplayName = user.DisplayName
+	ru.Active = user.Active
+	for _, ent := range user.Entitlements {
+		switch ent.Value {
+		case AllowClusterCreateEntitlement:
+			ru.AllowClusterCreate = true
+		case AllowInstancePoolCreateEntitlement:
+			ru.AllowInstancePoolCreate = true
+		}
+	}
+	return
+}
+
 // Read returns the user object and all the attributes of a scim user
-func (a UsersAPI) Read(userID string) (User, error) {
+func (a UsersAPI) Read(userID string) (ScimUser, error) {
 	user, err := a.read(userID)
 	if err != nil {
 		return user, err
 	}
 
 	//get groups
-	var groups []Group
+	var groups []ScimGroup
 	for _, group := range user.Groups {
 		group, err := GroupsAPI{a.C}.Read(group.Value)
 		if err != nil {
@@ -69,20 +120,38 @@ func (a UsersAPI) Read(userID string) (User, error) {
 	return user, err
 }
 
-func (a UsersAPI) read(userID string) (User, error) {
+func (a UsersAPI) read(userID string) (ScimUser, error) {
 	userPath := fmt.Sprintf("/preview/scim/v2/Users/%v", userID)
 	return a.readByPath(userPath)
 }
 
 // Me gets user information about caller
-func (a UsersAPI) Me() (User, error) {
+func (a UsersAPI) Me() (ScimUser, error) {
 	return a.readByPath("/preview/scim/v2/Me")
 }
 
-func (a UsersAPI) readByPath(userPath string) (User, error) {
-	var user User
-	err := a.C.Scim(http.MethodGet, userPath, nil, &user)
-	return user, err
+func (a UsersAPI) readByPath(userPath string) (user ScimUser, err error) {
+	err = a.C.Scim(http.MethodGet, userPath, nil, &user)
+	return
+}
+
+// UpdateR replaces resource-friendly-entity
+func (a UsersAPI) UpdateR(userID string, ru UserEntity) error {
+	user, err := a.read(userID)
+	if err != nil {
+		return err
+	}
+	updateRequest := ru.toRequest()
+	updateRequest.Groups = user.Groups
+	updateRequest.Roles = user.Roles
+	return a.C.Scim(http.MethodPut,
+		fmt.Sprintf("/preview/scim/v2/Users/%v", userID),
+		updateRequest, nil)
+}
+
+// PatchR updates resource-friendly entity
+func (a UsersAPI) PatchR(userID string, r patchRequest) error {
+	return a.C.Scim(http.MethodPatch, fmt.Sprintf("/preview/scim/v2/Users/%v", userID), r, nil)
 }
 
 // Update will update the user given the user id, username, display name, entitlements and roles
@@ -172,7 +241,7 @@ func (a UsersAPI) RemoveUserAsAdmin(userID string, adminGroupID string) error {
 }
 
 // GetOrCreateDefaultMetaUser ...
-func (a UsersAPI) GetOrCreateDefaultMetaUser(metaUserDisplayName string, metaUserName string, deleteAfterCreate bool) (user User, err error) {
+func (a UsersAPI) GetOrCreateDefaultMetaUser(metaUserDisplayName string, metaUserName string, deleteAfterCreate bool) (user ScimUser, err error) {
 	var users UserList
 	err = a.C.Scim(http.MethodGet, "/preview/scim/v2/Users", map[string]string{
 		"filter": "displayName+eq+" + metaUserDisplayName,
@@ -184,7 +253,7 @@ func (a UsersAPI) GetOrCreateDefaultMetaUser(metaUserDisplayName string, metaUse
 	if len(resources) == 1 {
 		return resources[0], err
 	} else if len(resources) > 1 {
-		return User{}, errors.New("more than one meta user")
+		return ScimUser{}, errors.New("more than one meta user")
 	}
 
 	log.Printf("Meta User not found will create a new meta user with name: %s\n", metaUserDisplayName)
@@ -206,7 +275,7 @@ func (a UsersAPI) GetOrCreateDefaultMetaUser(metaUserDisplayName string, metaUse
 	return newCreatedUser, err
 }
 
-func (a UsersAPI) getInheritedAndNonInheritedRoles(user User, groups []Group) (inherited []RoleListItem, unInherited []RoleListItem) {
+func (a UsersAPI) getInheritedAndNonInheritedRoles(user ScimUser, groups []ScimGroup) (inherited []RoleListItem, unInherited []RoleListItem) {
 	allRoles := user.Roles
 	var inheritedRoles []RoleListItem
 	inheritedRolesKeys := []string{}

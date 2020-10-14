@@ -20,10 +20,10 @@ func TestAccGroupMemberResource(t *testing.T) {
 	if _, ok := os.LookupEnv("CLOUD_ENV"); !ok {
 		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
 	}
-	var group Group
+	var group ScimGroup
 	randomName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
 	groupName := "Terraform Integration " + randomName
-	var manuallyCreatedGroup *Group
+	var manuallyCreatedGroup *ScimGroup
 	defer func() {
 		client := common.CommonEnvironmentClient()
 		if client != nil && manuallyCreatedGroup != nil {
@@ -142,7 +142,7 @@ func testGroupMemberResourceDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testGroupMemberValues(t *testing.T, group *Group, displayName string, memberCount int) resource.TestCheckFunc {
+func testGroupMemberValues(t *testing.T, group *ScimGroup, displayName string, memberCount int) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		assert.True(t, group.DisplayName == displayName)
 		assert.Equal(t, memberCount, len(group.Members), "member count is not matching")
@@ -151,7 +151,7 @@ func testGroupMemberValues(t *testing.T, group *Group, displayName string, membe
 }
 
 // testAccCheckTokenResourceExists queries the API and retrieves the matching Widget.
-func testGroupMemberResourceExists(n string, group *Group, t *testing.T) resource.TestCheckFunc {
+func testGroupMemberResourceExists(n string, group *ScimGroup, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		// find the corresponding state object
 		rs, ok := s.RootModule().Resources[n]

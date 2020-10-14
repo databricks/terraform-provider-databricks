@@ -221,6 +221,13 @@ In addition to all arguments above, the following attributes are exported:
 * `default_tags` - (map) Tags that are added by Databricks by default, regardless of any custom_tags that may have been added. These include: Vendor: Databricks, Creator: <username_of_creator>, ClusterName: <name_of_cluster>, ClusterId: <id_of_cluster>, Name: <Databricks internal use>
 * `state` - (string) State of the cluster.
 
+## Access Control
+
+* [databricks_group](group.md#allow_cluster_create) and [databricks_user](user.md#allow_cluster_create) can control which groups or individual users can create clusters.
+* [databricks_cluster_policy](cluster_policy.md) can control which kinds of clusters users can create.
+* Users, who have access to Cluster Policy, but do not have `allow_cluster_create` argument set would still be able to create clusters, but within the boundary of the policy.
+* [databricks_permissions](permissions.md#Cluster-usage) can control which groups or individual users can *Manage*, *Restart* or *Attach to* individual clusters.
+* `instance_profile_arn` can control which data given cluster can access through cloud-native controls.
 
 ## Import
 

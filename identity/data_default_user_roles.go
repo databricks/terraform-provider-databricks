@@ -7,6 +7,7 @@ import (
 
 func DataSourceDefaultUserRoles() *schema.Resource {
 	return &schema.Resource{
+		DeprecationMessage: "Data source `databricks_default_user_roles` is no longer supported and would be removed in version 0.3",
 		Read: func(d *schema.ResourceData, m interface{}) error {
 			client := m.(*common.DatabricksClient)
 

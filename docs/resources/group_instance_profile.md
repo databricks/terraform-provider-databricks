@@ -4,21 +4,21 @@
 
 This resource allows you to attach instance profiles to groups created by the [group](group.md) resource.
 
--> **Note** Please only use this resource in conjunction with the [group](group.md) resource and **not** the `databricks_scim_group` resource.
-
 ## Example Usage
 
 ```hcl
 resource "databricks_instance_profile" "instance_profile" {
-  instance_profile_arn = "my_instance_profile_arn"
-  skip_validation = true
+    instance_profile_arn = "my_instance_profile_arn"
+    skip_validation = true
 }
+
 resource "databricks_group" "my_group" {
-  display_name = "my_group_name"
+    display_name = "my_group_name"
 }
+
 resource "databricks_group_instance_profile" "my_group_instance_profile" {
- group_id = databricks_group.my_group.id
- instance_profile_id = databricks_instance_profile.instance_profile.id
+    group_id = databricks_group.my_group.id
+    instance_profile_id = databricks_instance_profile.instance_profile.id
 }
 ```
 ## Argument Reference
@@ -32,7 +32,7 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attributes are exported:
 
-*  `id` - The id for the [instance profile](instance_profile.md) object which is in the format `<group_id>|<instance_profile_id>`.
+*  `id` - The id in the format `<group_id>|<instance_profile_id>`.
 
 ## Import
 

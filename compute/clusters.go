@@ -226,6 +226,33 @@ func (a ClustersAPI) Unpin(clusterID string) error {
 	return a.client.Post("/clusters/unpin", ClusterID{ClusterID: clusterID}, nil)
 }
 
+// Cluster Events API - only using Cluster ID string to get all events
+// https://docs.databricks.com/dev-tools/api/latest/clusters.html#events
+func (a ClustersAPI) Events(eventsRequest EventsRequest) ([]ClusterEvent, error) {
+	var eventsResponse EventsResponse
+	err := a.client.Post("/clusters/events", eventsRequest, &eventsResponse)
+	if err != nil {
+		return nil, err
+	}
+
+	totalCount := int(eventsResponse.TotalCount)
+	events := make([]ClusterEvent, totalCount)
+	startPos := 0
+	curPos := len(eventsResponse.Events)
+	copy(events[startPos:curPos], eventsResponse.Events)
+	for curPos < totalCount && eventsResponse.NextPage != nil {
+		err := a.client.Post("/clusters/events", eventsResponse.NextPage, &eventsResponse)
+		if err != nil {
+			return nil, err
+		}
+		startPos = curPos
+		curPos += len(eventsResponse.Events)
+		copy(events[startPos:curPos], eventsResponse.Events)
+	}
+
+	return events, err
+}
+
 // List return information about all pinned clusters, currently active clusters,
 // up to 70 of the most recently terminated interactive clusters in the past 30 days,
 // and up to 30 of the most recently terminated job clusters in the past 30 days

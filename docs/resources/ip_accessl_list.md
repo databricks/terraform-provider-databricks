@@ -9,7 +9,7 @@ This resource allows you to create IP Access Lists in Databricks to control acce
 ```hcl
 resource "databricks_ip_access_list" "allowed-list" {
   label = "allow_in"
-  list_type = "WHITELIST"
+  list_type = "ALLOW"
   ip_addresses = [
     "1.2.3.0/24",
     "1.2.5.0/24"
@@ -23,7 +23,7 @@ The following arguments are supported:
 
 * `label` -  **(Optional)** This is the display name for the given IP ACL List.
 
-* `list_type` -  **(Required)** Can only be "WHITELIST" or "BLACKLIST"
+* `list_type` -  **(Required)** Can only be "ALLOW" or "BLOCK"
 
 * `ip_addresses` -  **(Required)** This is a field to allow the group to have instance pool create priviliges.
 

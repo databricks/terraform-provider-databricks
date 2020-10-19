@@ -38,7 +38,7 @@ func (a IPAccessListsAPI) Update(objectID string, label string, listType IPAcces
 }
 
 func (a IPAccessListsAPI) Delete(objectID string) (err error) {
-	err = a.Client.Delete("/ip-access-lists/"+objectID, "{}")
+	err = a.Client.Delete("/ip-access-lists/"+objectID, nil)
 	return
 }
 

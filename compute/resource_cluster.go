@@ -112,6 +112,17 @@ func resourceClusterSchema() map[string]*schema.Schema {
 			Optional: true,
 			Computed: true,
 		}
+		s["is_pinned"] = &schema.Schema{
+			Type:     schema.TypeBool,
+			Optional: true,
+			Default:  false,
+			DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+				if old == "" && new == "false" {
+					return true
+				}
+				return old == new
+			},
+		}
 		s["state"] = &schema.Schema{
 			Type:     schema.TypeString,
 			Computed: true,
@@ -149,6 +160,13 @@ func resourceClusterCreate(d *schema.ResourceData, m interface{}) error {
 	if err != nil {
 		return err
 	}
+	isPinned, ok := d.GetOk("is_pinned")
+	if ok && isPinned.(bool) {
+		err = clusters.Pin(clusterInfo.ClusterID)
+		if err != nil {
+			return err
+		}
+	}
 	var libraryList ClusterLibraryList
 	err = internal.DataToStructPointer(d, clusterSchema, &libraryList)
 	if err != nil {
@@ -171,9 +189,27 @@ func resourceClusterCreate(d *schema.ResourceData, m interface{}) error {
 	return resourceClusterRead(d, m)
 }
 
+func setPinnedStatus(d *schema.ResourceData, clusterAPI ClustersAPI) error {
+	events, err := clusterAPI.Events(EventsRequest{
+		ClusterID:  d.Id(),
+		Limit:      1,
+		Order:      SortDescending,
+		EventTypes: []ClusterEventType{EvTypePinned, EvTypeUnpinned},
+	})
+	if err != nil {
+		return err
+	}
+	pinnedEvent := EvTypeUnpinned
+	if len(events) > 0 {
+		pinnedEvent = events[0].Type
+	}
+	return d.Set("is_pinned", pinnedEvent == EvTypePinned)
+}
+
 func resourceClusterRead(d *schema.ResourceData, m interface{}) error {
 	client := m.(*common.DatabricksClient)
-	clusterInfo, err := NewClustersAPI(client).Get(d.Id())
+	clusterAPI := NewClustersAPI(client)
+	clusterInfo, err := clusterAPI.Get(d.Id())
 	if ae, ok := err.(common.APIError); ok && ae.IsMissing() {
 		log.Printf("Missing cluster with id: %s.", d.Id())
 		d.SetId("")
@@ -183,6 +219,10 @@ func resourceClusterRead(d *schema.ResourceData, m interface{}) error {
 		return err
 	}
 	err = internal.StructToData(clusterInfo, clusterSchema, d)
+	if err != nil {
+		return err
+	}
+	err = setPinnedStatus(d, clusterAPI)
 	if err != nil {
 		return err
 	}
@@ -255,6 +295,19 @@ func resourceClusterUpdate(d *schema.ResourceData, m interface{}) error {
 	if err != nil {
 		return err
 	}
+	oldPinned, newPinned := d.GetChange("is_pinned")
+	if oldPinned.(bool) != newPinned.(bool) {
+		log.Printf("[DEBUG] Update: is_pinned. Old: %v, New: %v", oldPinned, newPinned)
+		if newPinned.(bool) {
+			err = clusters.Pin(clusterInfo.ClusterID)
+		} else {
+			err = clusters.Unpin(clusterInfo.ClusterID)
+		}
+		if err != nil {
+			return err
+		}
+	}
+
 	var libraryList ClusterLibraryList
 	err = internal.DataToStructPointer(d, clusterSchema, &libraryList)
 	if err != nil {

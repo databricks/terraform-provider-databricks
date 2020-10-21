@@ -123,10 +123,12 @@ func getOrCreateMountingClusterWithInstanceProfile(clustersAPI compute.ClustersA
 	}
 	clusterName := fmt.Sprintf("terraform-mount-%s", instanceProfileParts[1])
 	return clustersAPI.GetOrCreateRunningCluster(clusterName, compute.Cluster{
-		NumWorkers:             1,
-		ClusterName:            clusterName,
-		SparkVersion:           compute.CommonRuntimeVersion(),
-		NodeTypeID:             clustersAPI.GetSmallestNodeTypeWithStorage(),
+		NumWorkers:   1,
+		ClusterName:  clusterName,
+		SparkVersion: compute.CommonRuntimeVersion(),
+		NodeTypeID: clustersAPI.GetSmallestNodeType(compute.NodeTypeRequest{
+			LocalDisk: true,
+		}),
 		AutoterminationMinutes: 10,
 		AwsAttributes: &compute.AwsAttributes{
 			InstanceProfileArn: instanceProfile,

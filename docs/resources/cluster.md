@@ -3,10 +3,14 @@
 This resource allows you to create, update, and delete clusters.
 
 ```hcl
+data "databricks_node_type" "smallest" {
+  local_disk = true
+}
+
 resource "databricks_cluster" "shared_autoscaling" {
   cluster_name            = "Shared Autoscaling"
   spark_version           = "6.6.x-scala2.11"
-  node_type_id            = "i3.xlarge"
+  node_type_id            = databricks_node_type.smallest.id
   autotermination_minutes = 20
   autoscale {
     min_workers = 1
@@ -20,7 +24,7 @@ resource "databricks_cluster" "shared_autoscaling" {
 * `cluster_name` - (Optional) Cluster name. This doesn’t have to be unique. If not specified at creation, the cluster name will be an empty string.
 * `spark_version` - (Required) [Runtime version](https://docs.databricks.com/runtime/index.html) of the cluster. A [list of available Spark versions](https://docs.databricks.com/release-notes/runtime/releases.html) can be retrieved by using the Runtime Versions API call or `databricks clusters spark-versions` CLI command. It is advised to use [Cluster Policies](cluster_policy.md) to restrict list of versions for simplicity, while maintaining enough of control.
 * `driver_node_type_id` - (Optional) The node type of the Spark driver. This field is optional; if unset, the driver node type will be set as the same value as node_type_id defined above.
-* `node_type_id` - (Required - optional if `instance_pool_id` is given) This field encodes, through a single value, the resources available to each of the Spark nodes in this cluster. For example, the Spark nodes can be provisioned and optimized for memory or compute intensive workloads A list of available node types can be retrieved by using the List Node Types API call. If `instance_pool_id` is specified, this field is not needed.
+* `node_type_id` - (Required - optional if `instance_pool_id` is given) Any supported [databricks_node_type](../data-sources/node_type.md) id. If `instance_pool_id` is specified, this field is not needed. 
 * `instance_pool_id` (Optional - required if `node_type_id` is not given) - To reduce cluster start time, you can attach a cluster to a [predefined pool of idle instances](instance_pool.md). When attached to a pool, a cluster allocates its driver and worker nodes from the pool. If the pool does not have sufficient idle resources to accommodate the cluster’s request, the pool expands by allocating new instances from the instance provider. When an attached cluster is terminated, the instances it used are returned to the pool and can be reused by a different cluster.
 * `policy_id` - (Optional) Idendifier of [Custer Policy](cluster_policy.md) to validate cluster and preset certail defaults. Cluster policy has bigger use when allowing users to create clusters, rather than automatically created one. Essentially, you can put all cluster configuration options into it.
 * `autotermination_minutes` - (Optional) Automatically terminates the cluster after it is inactive for this time in minutes. If not set, this cluster will not be automatically terminated. If specified, the threshold must be between 10 and 10000 minutes. You can also set this value to 0 to explicitly 
@@ -38,19 +42,23 @@ disable automatic termination. _It is highly recommended to have this setting pr
 The following example demonstrates how to create an autoscaling cluster with [Delta Cache](https://docs.databricks.com/delta/optimizations/delta-cache.html) enabled:
 
 ```hcl
+data "databricks_node_type" "smallest" {
+  local_disk = true
+}
+
 resource "databricks_cluster" "shared_autoscaling" {
   cluster_name            = "Shared Autoscaling"
   spark_version           = "6.6.x-scala2.11"
-  node_type_id            = "i3.xlarge"
+  node_type_id            = databricks_node_type.smallest.id
   autotermination_minutes = 20
   autoscale {
-      min_workers = 1
-      max_workers = 50
+    min_workers = 1
+    max_workers = 50
   }
   spark_conf {
-      "spark.databricks.io.cache.enabled": true,
-      "spark.databricks.io.cache.maxDiskUsage": "50g",
-      "spark.databricks.io.cache.maxMetaDataCache": "1g"
+    "spark.databricks.io.cache.enabled": true,
+    "spark.databricks.io.cache.maxDiskUsage": "50g",
+    "spark.databricks.io.cache.maxMetaDataCache": "1g"
   }
 }
 ```

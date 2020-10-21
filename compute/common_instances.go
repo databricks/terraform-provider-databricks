@@ -58,10 +58,13 @@ func CommonInstancePoolID() string {
 			}
 		}
 		instancePool := InstancePool{
-			PreloadedSparkVersions:             []string{CommonRuntimeVersion()},
-			NodeTypeID:                         clusters.GetSmallestNodeTypeWithStorage(),
-			InstancePoolName:                   currentUserPool,
-			MaxCapacity:                        10,
+			PreloadedSparkVersions: []string{CommonRuntimeVersion()},
+			NodeTypeID: clusters.GetSmallestNodeType(NodeTypeRequest{
+				LocalDisk: true,
+			}),
+			InstancePoolName: currentUserPool,
+			MaxCapacity:      10,
+
 			IdleInstanceAutoTerminationMinutes: 15,
 		}
 		if !client.IsAzure() {

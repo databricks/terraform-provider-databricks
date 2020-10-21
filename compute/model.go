@@ -1,6 +1,9 @@
 package compute
 
-import "fmt"
+import (
+	"fmt"
+	"sort"
+)
 
 // AutoScale is a struct the describes auto scaling for clusters
 type AutoScale struct {
@@ -407,6 +410,38 @@ type InstancePoolList struct {
 // NodeTypeList contains a list of node types
 type NodeTypeList struct {
 	NodeTypes []NodeType `json:"node_types,omitempty"`
+}
+
+// Sort NodeTypes within this struct
+func (l *NodeTypeList) Sort() {
+	sort.Slice(l.NodeTypes, func(i, j int) bool {
+		if l.NodeTypes[i].IsDeprecated != l.NodeTypes[j].IsDeprecated {
+			return !l.NodeTypes[i].IsDeprecated
+		}
+		if l.NodeTypes[i].NodeInstanceType != nil &&
+			l.NodeTypes[j].NodeInstanceType != nil {
+			if l.NodeTypes[i].NodeInstanceType.LocalDisks !=
+				l.NodeTypes[j].NodeInstanceType.LocalDisks {
+				return l.NodeTypes[i].NodeInstanceType.LocalDisks <
+					l.NodeTypes[j].NodeInstanceType.LocalDisks
+			}
+			if l.NodeTypes[i].NodeInstanceType.LocalDiskSizeGB !=
+				l.NodeTypes[j].NodeInstanceType.LocalDiskSizeGB {
+				return l.NodeTypes[i].NodeInstanceType.LocalDiskSizeGB <
+					l.NodeTypes[j].NodeInstanceType.LocalDiskSizeGB
+			}
+		}
+		if l.NodeTypes[i].MemoryMB != l.NodeTypes[j].MemoryMB {
+			return l.NodeTypes[i].MemoryMB < l.NodeTypes[j].MemoryMB
+		}
+		if l.NodeTypes[i].NumCores != l.NodeTypes[j].NumCores {
+			return l.NodeTypes[i].NumCores < l.NodeTypes[j].NumCores
+		}
+		if l.NodeTypes[i].NumGPUs != l.NodeTypes[j].NumGPUs {
+			return l.NodeTypes[i].NumGPUs < l.NodeTypes[j].NumGPUs
+		}
+		return l.NodeTypes[i].InstanceTypeID < l.NodeTypes[j].InstanceTypeID
+	})
 }
 
 // NotebookTask contains the information for notebook jobs

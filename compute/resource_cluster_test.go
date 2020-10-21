@@ -502,6 +502,7 @@ func TestResourceClusterCreate_WithoutNumWorkers(t *testing.T) {
 				Method:   "POST",
 				Resource: "/api/2.0/clusters/create",
 				ExpectedRequest: Cluster{
+					NumWorkers:             0,
 					ClusterName:            "Single Node Cluster",
 					SparkVersion:           "7.1-scala12",
 					NodeTypeID:             "dev-tier-node",
@@ -510,6 +511,20 @@ func TestResourceClusterCreate_WithoutNumWorkers(t *testing.T) {
 				Response: ClusterInfo{
 					ClusterID: "abc",
 					State:     ClusterStateRunning,
+				},
+			},
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/clusters/events",
+				ExpectedRequest: EventsRequest{
+					ClusterID:  "abc",
+					Limit:      1,
+					Order:      SortDescending,
+					EventTypes: []ClusterEventType{EvTypePinned, EvTypeUnpinned},
+				},
+				Response: EventsResponse{
+					Events:     []ClusterEvent{},
+					TotalCount: 0,
 				},
 			},
 			{
@@ -540,6 +555,7 @@ func TestResourceClusterCreate_WithoutNumWorkers(t *testing.T) {
 			"cluster_name":            "Single Node Cluster",
 			"spark_version":           "7.1-scala12",
 			"node_type_id":            "dev-tier-node",
+			"is_pinned":               false,
 		},
 	}.Apply(t)
 	assert.NoError(t, err, err)

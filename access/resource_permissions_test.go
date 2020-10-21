@@ -277,7 +277,7 @@ func TestResourcePermissionsCreate_no_access_control(t *testing.T) {
 			"cluster_id": "abc",
 		},
 	}.Apply(t)
-	qa.AssertErrorStartsWith(t, err, "Invalid config supplied. Required attribute is not set")
+	qa.AssertErrorStartsWith(t, err, "Invalid config supplied. [access_control] Required attribute is not set")
 }
 
 func TestResourcePermissionsCreate_conflicting_fields(t *testing.T) {
@@ -669,7 +669,11 @@ func TestAccPermissionsInstancePool(t *testing.T) {
 		poolsAPI := compute.NewInstancePoolsAPI(permissionsAPI.client)
 		ips, err := poolsAPI.Create(compute.InstancePool{
 			InstancePoolName: group,
-			NodeTypeID:       compute.NewClustersAPI(permissionsAPI.client).GetSmallestNodeTypeWithStorage(),
+			NodeTypeID: compute.NewClustersAPI(
+				permissionsAPI.client).GetSmallestNodeType(
+				compute.NodeTypeRequest{
+					LocalDisk: true,
+				}),
 		})
 		require.NoError(t, err)
 		defer func() {
@@ -766,7 +770,11 @@ func TestAccPermissionsJobs(t *testing.T) {
 			NewCluster: &compute.Cluster{
 				NumWorkers:   2,
 				SparkVersion: "6.4.x-scala2.11",
-				NodeTypeID:   compute.NewClustersAPI(permissionsAPI.client).GetSmallestNodeTypeWithStorage(),
+				NodeTypeID: compute.NewClustersAPI(
+					permissionsAPI.client).GetSmallestNodeType(
+					compute.NodeTypeRequest{
+						LocalDisk: true,
+					}),
 			},
 			NotebookTask: &compute.NotebookTask{
 				NotebookPath: "/Production/Featurize",

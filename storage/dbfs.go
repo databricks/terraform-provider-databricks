@@ -6,8 +6,8 @@ import (
 	"github.com/databrickslabs/databricks-terraform/common"
 )
 
-// DBFSFileInfo contains information when listing files or fetching files from DBFS api
-type DBFSFileInfo struct {
+// FileInfo contains information when listing files or fetching files from DBFS api
+type FileInfo struct {
 	Path     string `json:"path,omitempty"`
 	IsDir    bool   `json:"is_dir,omitempty"`
 	FileSize int64  `json:"file_size,omitempty"`
@@ -121,9 +121,9 @@ func (a DBFSAPI) read(path string, offset, length int64) (int64, []byte, error) 
 }
 
 // List returns a list of files in DBFS and the recursive flag lets you recursively list files
-func (a DBFSAPI) List(path string, recursive bool) ([]DBFSFileInfo, error) {
+func (a DBFSAPI) List(path string, recursive bool) ([]FileInfo, error) {
 	if recursive {
-		var paths []DBFSFileInfo
+		var paths []FileInfo
 		err := a.recursiveAddPaths(path, &paths)
 		if err != nil {
 			return nil, err
@@ -133,7 +133,7 @@ func (a DBFSAPI) List(path string, recursive bool) ([]DBFSFileInfo, error) {
 	return a.list(path)
 }
 
-func (a DBFSAPI) recursiveAddPaths(path string, pathList *[]DBFSFileInfo) error {
+func (a DBFSAPI) recursiveAddPaths(path string, pathList *[]FileInfo) error {
 	fileInfoList, err := a.list(path)
 	if err != nil {
 		return err
@@ -177,8 +177,8 @@ type dbfsRequest struct {
 // ReadString reads a "block" of data in DBFS given a offset and length as a base64 encoded string
 func (a DBFSAPI) ReadString(path string, offset, length int64) (int64, string, error) {
 	var readBytes struct {
-		BytesRead int64  `json:"bytes_read,omitempty" url:"bytes_read,omitempty"`
-		Data      string `json:"data,omitempty" url:"data,omitempty"`
+		BytesRead int64  `json:"bytes_read,omitempty"`
+		Data      string `json:"data,omitempty"`
 	}
 	err := a.client.Get("/dbfs/read", dbfsRequest{
 		Path:   path,
@@ -189,17 +189,19 @@ func (a DBFSAPI) ReadString(path string, offset, length int64) (int64, string, e
 }
 
 // Status returns the status of a file in DBFS
-func (a DBFSAPI) Status(path string) (f DBFSFileInfo, err error) {
+func (a DBFSAPI) Status(path string) (f FileInfo, err error) {
 	err = a.client.Get("/dbfs/get-status", map[string]interface{}{
 		"path": path,
 	}, &f)
 	return
 }
 
-func (a DBFSAPI) list(path string) ([]DBFSFileInfo, error) {
-	var dbfsList struct {
-		Files []DBFSFileInfo `json:"files,omitempty" url:"files,omitempty"`
-	}
+type FileList struct {
+	Files []FileInfo `json:"files,omitempty" url:"files,omitempty"`
+}
+
+func (a DBFSAPI) list(path string) ([]FileInfo, error) {
+	var dbfsList FileList
 	err := a.client.Get("/dbfs/list", map[string]interface{}{
 		"path": path,
 	}, &dbfsList)

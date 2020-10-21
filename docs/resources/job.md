@@ -5,6 +5,10 @@ The databricks_job resource allows you to create, edit, and delete jobs, which r
 ## Example Usage
 
 ```hcl
+data "databricks_node_type" "smallest" {
+    local_disk = true
+}
+
 resource "databricks_job" "this" {
     name = "Featurization"
     timeout_seconds = 3600
@@ -14,7 +18,7 @@ resource "databricks_job" "this" {
     new_cluster  {
         num_workers   = 300
         spark_version = "6.6.x-scala2.11"
-        node_type_id  = "i3.xlarge"
+        node_type_id  = databricks_node_type.smallest.id
     }
     
     notebook_task {

@@ -1,8 +1,12 @@
 # Version changelog
 
+## 0.2.8
+
+* Added Azure Key Vault support for Azure CLI authenticated users
+
 ## 0.2.7
 
-Small fixes
+* Small fixes
 
 ## 0.2.6
 

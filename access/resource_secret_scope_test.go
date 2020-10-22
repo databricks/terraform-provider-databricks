@@ -7,9 +7,8 @@ import (
 	"github.com/databrickslabs/databricks-terraform/common"
 	"github.com/databrickslabs/databricks-terraform/internal/qa"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
-
-//go:generate easytags $GOFILE
 
 func TestResourceSecretScopeRead(t *testing.T) {
 	d, err := qa.ResourceFixture{
@@ -30,6 +29,7 @@ func TestResourceSecretScopeRead(t *testing.T) {
 		},
 		Resource: ResourceSecretScope(),
 		Read:     true,
+		New: true,
 		ID:       "abc",
 	}.Apply(t)
 	assert.NoError(t, err, err)
@@ -37,6 +37,40 @@ func TestResourceSecretScopeRead(t *testing.T) {
 	assert.Equal(t, "DATABRICKS", d.Get("backend_type"))
 	assert.Equal(t, "", d.Get("initial_manage_principal"))
 	assert.Equal(t, "abc", d.Get("name"))
+}
+
+func TestResourceSecretScopeRead_KeyVault(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   http.MethodGet,
+				Resource: "/api/2.0/secrets/scopes/list",
+				Response: SecretScopeList{
+					Scopes: []SecretScope{
+						{
+							Name:        "abc",
+							BackendType: "AZURE_KEYVAULT",
+							KeyvaultMetadata: &KeyvaultMetadata{
+								ResourceID: "bcd",
+								DNSName: "def",
+							},
+						},
+					},
+				},
+				Status: 200,
+			},
+		},
+		Resource: ResourceSecretScope(),
+		New: true,
+		Read:     true,
+		ID:       "abc",
+	}.Apply(t)
+	assert.NoError(t, err, err)
+	assert.Equal(t, "abc", d.Id())
+	assert.Equal(t, "AZURE_KEYVAULT", d.Get("backend_type"))
+	assert.Equal(t, "", d.Get("initial_manage_principal"))
+	assert.Equal(t, "abc", d.Get("name"))
+	assert.Len(t, d.Get("keyvault_metadata"), 1)
 }
 
 func TestResourceSecretScopeRead_NotFound(t *testing.T) {
@@ -93,6 +127,7 @@ func TestResourceSecretScopeCreate(t *testing.T) {
 				Resource: "/api/2.0/secrets/scopes/create",
 				ExpectedRequest: map[string]string{
 					"scope": "Boom",
+					"scope_backend_type": "DATABRICKS",
 				},
 			},
 			{
@@ -119,6 +154,53 @@ func TestResourceSecretScopeCreate(t *testing.T) {
 	assert.Equal(t, "Boom", d.Id())
 }
 
+func TestResourceSecretScopeCreate_KeyVault(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/secrets/scopes/create",
+				ExpectedRequest: secretScopeRequest{
+					Scope: "Boom",
+					BackendType: "AZURE_KEYVAULT",
+					BackendAzureKeyvault: &KeyvaultMetadata{
+						ResourceID: "bcd",
+						DNSName: "def",
+					},
+				},
+			},
+			{
+				Method:   http.MethodGet,
+				Resource: "/api/2.0/secrets/scopes/list",
+				Response: SecretScopeList{
+					Scopes: []SecretScope{
+						{
+							Name:        "Boom",
+							BackendType: "AZURE_KEYVAULT",
+							KeyvaultMetadata: &KeyvaultMetadata{
+								ResourceID: "bcd",
+								DNSName: "def",
+							},
+						},
+					},
+				},
+				Status: 200,
+			},
+		},
+		Resource: ResourceSecretScope(),
+		HCL: `
+		name = "Boom"
+		keyvault_metadata {
+			resource_id = "bcd"
+			dns_name = "def"
+		}`,
+		Azure: true,
+		Create: true,
+	}.Apply(t)
+	require.NoError(t, err, err)
+	assert.Equal(t, "Boom", d.Id())
+}
+
 func TestResourceSecretScopeCreate_Users(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
@@ -128,6 +210,7 @@ func TestResourceSecretScopeCreate_Users(t *testing.T) {
 				ExpectedRequest: map[string]string{
 					"scope":                    "Boom",
 					"initial_manage_principal": "users",
+					"scope_backend_type":"DATABRICKS",
 				},
 			},
 			{

@@ -11,12 +11,50 @@ import (
 
 	"github.com/databrickslabs/databricks-terraform/common"
 	"github.com/databrickslabs/databricks-terraform/internal/acceptance"
+	"github.com/databrickslabs/databricks-terraform/internal/qa"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
+
+// func TestAccRemoveScopes(t *testing.T) {
+// 	client := common.CommonEnvironmentClient()
+// 	scopesAPI := NewSecretScopesAPI(client)
+// 	scopeList, err := scopesAPI.List()
+// 	require.NoError(t, err)
+// 	for _, scope := range scopeList {
+// 		assert.NoError(t, scopesAPI.Delete(scope.Name))
+// 	}
+// }
+
+func TestAzureAccKeyVaultSimple(t *testing.T) {
+	resourceID := qa.GetEnvOrSkipTest(t, "TEST_KEY_VAULT_RESOURCE_ID")
+	DNSName := qa.GetEnvOrSkipTest(t, "TEST_KEY_VAULT_DNS_NAME")
+
+	client := common.CommonEnvironmentClient()
+	scopesAPI := NewSecretScopesAPI(client)
+	name := qa.RandomName("tf-scope-")
+
+	err := scopesAPI.Create(SecretScope{
+		Name: name,
+		KeyvaultMetadata: &KeyvaultMetadata{
+			ResourceID: resourceID,
+			DNSName: DNSName,
+		},
+	})
+	require.NoError(t, err)
+	defer func(){
+		assert.NoError(t, scopesAPI.Delete(name))
+	}()
+
+	scope, err := scopesAPI.Read(name)
+	require.NoError(t, err)
+	require.Equal(t, "AZURE_KEYVAULT", scope.BackendType)
+	assert.Equal(t, resourceID, scope.KeyvaultMetadata.ResourceID)
+	assert.Equal(t, DNSName, scope.KeyvaultMetadata.DNSName)
+}
 
 func TestAccInitialManagePrincipals(t *testing.T) {
 	if _, ok := os.LookupEnv("CLOUD_ENV"); !ok {
@@ -26,7 +64,7 @@ func TestAccInitialManagePrincipals(t *testing.T) {
 	scopesAPI := NewSecretScopesAPI(client)
 
 	scope := fmt.Sprintf("tf-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
-	err := scopesAPI.Create(scope, "")
+	err := scopesAPI.Create(SecretScope{Name: scope})
 	require.NoError(t, err)
 	defer func() {
 		assert.NoError(t, scopesAPI.Delete(scope))
@@ -51,7 +89,10 @@ func TestAccInitialManagePrincipalsGroup(t *testing.T) {
 	scopesAPI := NewSecretScopesAPI(client)
 
 	scope := fmt.Sprintf("tf-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
-	err := scopesAPI.Create(scope, "users")
+	err := scopesAPI.Create(SecretScope{
+		Name: scope, 
+		InitialManagePrincipal: "users",
+	})
 	require.NoError(t, err)
 	defer func() {
 		assert.NoError(t, scopesAPI.Delete(scope))
@@ -86,7 +127,7 @@ func TestAccSecretScopeResource(t *testing.T) {
 					testSecretScopeValues(t, &secretScope, scope),
 					// verify local values
 					resource.TestCheckResourceAttr("databricks_secret_scope.my_scope", "name", scope),
-					resource.TestCheckResourceAttr("databricks_secret_scope.my_scope", "backend_type", string(ScopeBackendTypeDatabricks)),
+					resource.TestCheckResourceAttr("databricks_secret_scope.my_scope", "backend_type", "DATABRICKS"),
 					acceptance.ResourceCheck("databricks_secret_scope.my_scope",
 						func(client *common.DatabricksClient, id string) error {
 							secretACLAPI := NewSecretAclsAPI(client)
@@ -118,7 +159,7 @@ func TestAccSecretScopeResource(t *testing.T) {
 					testSecretScopeValues(t, &secretScope, scope),
 					// verify local values
 					resource.TestCheckResourceAttr("databricks_secret_scope.my_scope", "name", scope),
-					resource.TestCheckResourceAttr("databricks_secret_scope.my_scope", "backend_type", string(ScopeBackendTypeDatabricks)),
+					resource.TestCheckResourceAttr("databricks_secret_scope.my_scope", "backend_type", "DATABRICKS"),
 				),
 			},
 		},
@@ -143,7 +184,7 @@ func testSecretScopeResourceDestroy(s *terraform.State) error {
 func testSecretScopeValues(t *testing.T, secretScope *SecretScope, scope string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		assert.True(t, secretScope.Name == scope)
-		assert.True(t, secretScope.BackendType == ScopeBackendTypeDatabricks)
+		assert.True(t, secretScope.BackendType == "DATABRICKS")
 		return nil
 	}
 }

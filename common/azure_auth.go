@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 
@@ -68,13 +69,23 @@ var authorizerMutex sync.Mutex
 
 func (aa *AzureAuth) resourceID() string {
 	if aa.ResourceID != "" {
+		if aa.SubscriptionID == "" || aa.ResourceGroup == "" || aa.WorkspaceName == "" {
+			split := strings.Split(aa.ResourceID, "/")
+			if len(split) != 9 {
+				log.Printf("[WARN] Resource ID doesn't have exactly 9 elements: %s", aa.ResourceID)
+				return ""
+			}
+			aa.SubscriptionID, aa.ResourceGroup, aa.WorkspaceName = split[2], split[4], split[8]
+		}
 		return aa.ResourceID
 	}
 	if aa.SubscriptionID == "" || aa.ResourceGroup == "" || aa.WorkspaceName == "" {
 		return ""
 	}
-	return fmt.Sprintf("/subscriptions/%s/resourceGroups/%s/providers/Microsoft.Databricks/workspaces/%s",
+	aa.ResourceID = fmt.Sprintf(
+		"/subscriptions/%s/resourceGroups/%s/providers/Microsoft.Databricks/workspaces/%s",
 		aa.SubscriptionID, aa.ResourceGroup, aa.WorkspaceName)
+	return aa.ResourceID
 }
 
 // IsClientSecretSet returns true if client id/secret and tenand id are supplied
@@ -90,6 +101,7 @@ func (aa *AzureAuth) configureWithClientSecret() (func(r *http.Request) error, e
 		return nil, nil
 	}
 	log.Printf("[INFO] Using Azure Service Principal client secret authentication")
+	// return aa.simpleAADRequestVisitor(aa.getClientSecretAuthorizer, aa.addSpManagementTokenVisitor)
 	return func(r *http.Request) error {
 		pat, err := aa.acquirePAT(aa.getClientSecretAuthorizer, aa.addSpManagementTokenVisitor)
 		if err != nil {

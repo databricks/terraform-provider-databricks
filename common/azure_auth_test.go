@@ -16,10 +16,13 @@ func TestAzureAuth_resourceID(t *testing.T) {
 	aa := AzureAuth{}
 	assert.Equal(t, "", aa.resourceID())
 
-	aa.ResourceID = "/foo/bar"
-	assert.Equal(t, "/foo/bar", aa.resourceID())
-	aa.ResourceID = ""
+	aa.ResourceID = "/subscriptions/a/resourceGroups/b/providers/Microsoft.Databricks/workspaces/c"
+	assert.Equal(t, "/subscriptions/a/resourceGroups/b/providers/Microsoft.Databricks/workspaces/c", aa.resourceID())
+	assert.Equal(t, "a", aa.SubscriptionID)
+	assert.Equal(t, "b", aa.ResourceGroup)
+	assert.Equal(t, "c", aa.WorkspaceName)
 
+	aa = AzureAuth{}
 	aa.SubscriptionID = "a"
 	assert.Equal(t, "", aa.resourceID())
 	aa.ResourceGroup = "b"
@@ -47,7 +50,8 @@ func TestAzureAuth_ensureWorkspaceURL(t *testing.T) {
 	var serverURL string
 	server := httptest.NewUnstartedServer(http.HandlerFunc(
 		func(rw http.ResponseWriter, req *http.Request) {
-			if req.RequestURI == "/a/b/c?api-version=2018-04-01" {
+			if req.RequestURI == 
+				"/subscriptions/a/resourceGroups/b/providers/Microsoft.Databricks/workspaces/c?api-version=2018-04-01" {
 				_, err := rw.Write([]byte(fmt.Sprintf(`{"properties": {"workspaceUrl": "%s"}}`,
 					strings.ReplaceAll(serverURL, "https://", ""))))
 				assert.NoError(t, err)
@@ -61,7 +65,7 @@ func TestAzureAuth_ensureWorkspaceURL(t *testing.T) {
 	serverURL = server.URL
 	defer server.Close()
 
-	aa.ResourceID = "/a/b/c"
+	aa.ResourceID = "/subscriptions/a/resourceGroups/b/providers/Microsoft.Databricks/workspaces/c"
 	aa.azureManagementEndpoint = server.URL
 
 	client := DatabricksClient{InsecureSkipVerify: true}
@@ -90,7 +94,7 @@ func TestAzureAuth_configureWithClientSecret(t *testing.T) {
 	assert.Nil(t, auth)
 	assert.NoError(t, err)
 
-	aa.ResourceID = "/a/b/c"
+	aa.ResourceID = "/subscriptions/a/resourceGroups/b/providers/Microsoft.Databricks/workspaces/c"
 	auth, err = aa.configureWithClientSecret()
 	assert.Nil(t, auth)
 	assert.NoError(t, err)
@@ -106,7 +110,8 @@ func TestAzureAuth_configureWithClientSecret(t *testing.T) {
 	dummyPAT := "dapi234567"
 	server := httptest.NewUnstartedServer(http.HandlerFunc(
 		func(rw http.ResponseWriter, req *http.Request) {
-			if req.RequestURI == "/a/b/c?api-version=2018-04-01" {
+			if req.RequestURI == 
+				"/subscriptions/a/resourceGroups/b/providers/Microsoft.Databricks/workspaces/c?api-version=2018-04-01" {
 				_, err := rw.Write([]byte(fmt.Sprintf(`{"properties": {"workspaceUrl": "%s"}}`,
 					strings.ReplaceAll(serverURL, "https://", ""))))
 				assert.NoError(t, err)

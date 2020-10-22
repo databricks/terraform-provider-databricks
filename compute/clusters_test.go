@@ -76,7 +76,7 @@ func TestGetOrCreateRunningCluster_AzureAuth(t *testing.T) {
 	defer server.Close()
 	require.NoError(t, err)
 
-	client.AzureAuth.ResourceID = "/a/b/c"
+	client.AzureAuth.ResourceID = "/subscriptions/a/resourceGroups/b/providers/Microsoft.Databricks/workspaces/c"
 
 	clusterInfo, err := NewClustersAPI(client).GetOrCreateRunningCluster("mount")
 	require.NoError(t, err)

@@ -7,11 +7,14 @@ This resource allows you to manage instance pools on Databricks. An instance poo
 ## Example Usage
 
 ```hcl
-resource "databricks_instance_pool" "my-pool" {
-  instance_pool_name = "reserved-i3.xlarge-pool"
+data "databricks_node_type" "smallest" {
+}
+
+resource "databricks_instance_pool" "smallest_nodes" {
+  instance_pool_name = "Smallest Nodes"
   min_idle_instances = 0
   max_capacity       = 300
-  node_type_id       = "i3.xlarge"
+  node_type_id       = databricks_node_type.smallest.id
   aws_attributes {
     availability = "ON_DEMAND"
     zone_id = "us-east-1a"

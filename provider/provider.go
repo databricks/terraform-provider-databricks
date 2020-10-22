@@ -35,10 +35,11 @@ func DatabricksProvider() *schema.Provider {
 			"databricks_zones":                   compute.DataSourceClusterZones(),
 		},
 		ResourcesMap: map[string]*schema.Resource{
-			"databricks_secret":       access.ResourceSecret(),
-			"databricks_secret_scope": access.ResourceSecretScope(),
-			"databricks_secret_acl":   access.ResourceSecretACL(),
-			"databricks_permissions":  access.ResourcePermissions(),
+			"databricks_secret":         access.ResourceSecret(),
+			"databricks_secret_scope":   access.ResourceSecretScope(),
+			"databricks_secret_acl":     access.ResourceSecretACL(),
+			"databricks_permissions":    access.ResourcePermissions(),
+			"databricks_ip_access_list": access.ResourceIPAccessList(),
 
 			"databricks_cluster":        compute.ResourceCluster(),
 			"databricks_cluster_policy": compute.ResourceClusterPolicy(),
@@ -67,7 +68,8 @@ func DatabricksProvider() *schema.Provider {
 			"databricks_azure_blob_mount":      storage.ResourceAzureBlobMount(),
 			"databricks_dbfs_file":             storage.ResourceDBFSFile(),
 
-			"databricks_notebook": workspace.ResourceNotebook(),
+			"databricks_notebook":       workspace.ResourceNotebook(),
+			"databricks_workspace_conf": workspace.ResourceWorkspaceConf(),
 		},
 		Schema: map[string]*schema.Schema{
 			"host": {

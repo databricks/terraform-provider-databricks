@@ -50,7 +50,7 @@ func TestAzureAuth_ensureWorkspaceURL(t *testing.T) {
 	var serverURL string
 	server := httptest.NewUnstartedServer(http.HandlerFunc(
 		func(rw http.ResponseWriter, req *http.Request) {
-			if req.RequestURI == 
+			if req.RequestURI ==
 				"/subscriptions/a/resourceGroups/b/providers/Microsoft.Databricks/workspaces/c?api-version=2018-04-01" {
 				_, err := rw.Write([]byte(fmt.Sprintf(`{"properties": {"workspaceUrl": "%s"}}`,
 					strings.ReplaceAll(serverURL, "https://", ""))))
@@ -110,7 +110,7 @@ func TestAzureAuth_configureWithClientSecret(t *testing.T) {
 	dummyPAT := "dapi234567"
 	server := httptest.NewUnstartedServer(http.HandlerFunc(
 		func(rw http.ResponseWriter, req *http.Request) {
-			if req.RequestURI == 
+			if req.RequestURI ==
 				"/subscriptions/a/resourceGroups/b/providers/Microsoft.Databricks/workspaces/c?api-version=2018-04-01" {
 				_, err := rw.Write([]byte(fmt.Sprintf(`{"properties": {"workspaceUrl": "%s"}}`,
 					strings.ReplaceAll(serverURL, "https://", ""))))

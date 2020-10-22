@@ -41,11 +41,11 @@ func TestAzureAccKeyVaultSimple(t *testing.T) {
 		Name: name,
 		KeyvaultMetadata: &KeyvaultMetadata{
 			ResourceID: resourceID,
-			DNSName: DNSName,
+			DNSName:    DNSName,
 		},
 	})
 	require.NoError(t, err)
-	defer func(){
+	defer func() {
 		assert.NoError(t, scopesAPI.Delete(name))
 	}()
 
@@ -90,7 +90,7 @@ func TestAccInitialManagePrincipalsGroup(t *testing.T) {
 
 	scope := fmt.Sprintf("tf-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
 	err := scopesAPI.Create(SecretScope{
-		Name: scope, 
+		Name:                   scope,
 		InitialManagePrincipal: "users",
 	})
 	require.NoError(t, err)

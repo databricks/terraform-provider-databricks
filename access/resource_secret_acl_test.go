@@ -26,7 +26,7 @@ func TestSecretsScopesAclsIntegration(t *testing.T) {
 	testPrincipal := "users"
 
 	err := NewSecretScopesAPI(client).Create(SecretScope{
-		Name: testScope,
+		Name:                   testScope,
 		InitialManagePrincipal: initialManagePrincipal,
 	})
 	assert.NoError(t, err, err)

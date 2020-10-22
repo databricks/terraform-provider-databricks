@@ -29,7 +29,7 @@ func TestResourceSecretScopeRead(t *testing.T) {
 		},
 		Resource: ResourceSecretScope(),
 		Read:     true,
-		New: true,
+		New:      true,
 		ID:       "abc",
 	}.Apply(t)
 	assert.NoError(t, err, err)
@@ -52,7 +52,7 @@ func TestResourceSecretScopeRead_KeyVault(t *testing.T) {
 							BackendType: "AZURE_KEYVAULT",
 							KeyvaultMetadata: &KeyvaultMetadata{
 								ResourceID: "bcd",
-								DNSName: "def",
+								DNSName:    "def",
 							},
 						},
 					},
@@ -61,7 +61,7 @@ func TestResourceSecretScopeRead_KeyVault(t *testing.T) {
 			},
 		},
 		Resource: ResourceSecretScope(),
-		New: true,
+		New:      true,
 		Read:     true,
 		ID:       "abc",
 	}.Apply(t)
@@ -126,7 +126,7 @@ func TestResourceSecretScopeCreate(t *testing.T) {
 				Method:   "POST",
 				Resource: "/api/2.0/secrets/scopes/create",
 				ExpectedRequest: map[string]string{
-					"scope": "Boom",
+					"scope":              "Boom",
 					"scope_backend_type": "DATABRICKS",
 				},
 			},
@@ -161,11 +161,11 @@ func TestResourceSecretScopeCreate_KeyVault(t *testing.T) {
 				Method:   "POST",
 				Resource: "/api/2.0/secrets/scopes/create",
 				ExpectedRequest: secretScopeRequest{
-					Scope: "Boom",
+					Scope:       "Boom",
 					BackendType: "AZURE_KEYVAULT",
 					BackendAzureKeyvault: &KeyvaultMetadata{
 						ResourceID: "bcd",
-						DNSName: "def",
+						DNSName:    "def",
 					},
 				},
 			},
@@ -179,7 +179,7 @@ func TestResourceSecretScopeCreate_KeyVault(t *testing.T) {
 							BackendType: "AZURE_KEYVAULT",
 							KeyvaultMetadata: &KeyvaultMetadata{
 								ResourceID: "bcd",
-								DNSName: "def",
+								DNSName:    "def",
 							},
 						},
 					},
@@ -194,7 +194,7 @@ func TestResourceSecretScopeCreate_KeyVault(t *testing.T) {
 			resource_id = "bcd"
 			dns_name = "def"
 		}`,
-		Azure: true,
+		Azure:  true,
 		Create: true,
 	}.Apply(t)
 	require.NoError(t, err, err)
@@ -210,7 +210,7 @@ func TestResourceSecretScopeCreate_Users(t *testing.T) {
 				ExpectedRequest: map[string]string{
 					"scope":                    "Boom",
 					"initial_manage_principal": "users",
-					"scope_backend_type":"DATABRICKS",
+					"scope_backend_type":       "DATABRICKS",
 				},
 			},
 			{

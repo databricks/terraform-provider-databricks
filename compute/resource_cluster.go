@@ -190,6 +190,7 @@ func setPinnedStatus(d *schema.ResourceData, clusterAPI ClustersAPI) error {
 		Limit:      1,
 		Order:      SortDescending,
 		EventTypes: []ClusterEventType{EvTypePinned, EvTypeUnpinned},
+		MaxItems:   1,
 	})
 	if err != nil {
 		return err

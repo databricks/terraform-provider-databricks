@@ -4,6 +4,7 @@
 
 * Added support for pinning clusters (issue #113)
 * Internal: API for retrieval of the cluster events
+* Fixed [single node clusters](https://docs.databricks.com/clusters/single-node.html) support by allowing [`num_workers` to be `0`](https://github.com/databrickslabs/terraform-provider-databricks/pull/375)
 
 ## 0.2.7
 

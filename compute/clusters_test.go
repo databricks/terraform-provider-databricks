@@ -710,3 +710,200 @@ func TestEventsTwoPages(t *testing.T) {
 	assert.Equal(t, clusterEvents[1].Details.CurrentNumWorkers, int32(2))
 	assert.Equal(t, clusterEvents[1].Details.TargetNumWorkers, int32(2))
 }
+
+func TestEventsTwoPagesMaxItems(t *testing.T) {
+	client, server, err := qa.HttpFixtureClient(t, []qa.HTTPFixture{
+		{
+			Method:   "POST",
+			Resource: "/api/2.0/clusters/events",
+			ExpectedRequest: EventsRequest{
+				ClusterID: "abc",
+				Limit:     1,
+			},
+			Response: EventsResponse{
+				Events: []ClusterEvent{
+					{
+						ClusterID: "abc",
+						Timestamp: int64(123),
+						Type:      EvTypeRunning,
+						Details: EventDetails{
+							CurrentNumWorkers: int32(2),
+							TargetNumWorkers:  int32(2),
+						},
+					},
+				},
+				TotalCount: 2,
+				NextPage: &EventsRequest{
+					ClusterID: "abc",
+					Offset:    1,
+				},
+			},
+		},
+	})
+	defer server.Close()
+	require.NoError(t, err)
+
+	clusterEvents, err := NewClustersAPI(client).Events(EventsRequest{ClusterID: "abc", MaxItems: 1, Limit: 1})
+	require.NoError(t, err)
+	assert.Equal(t, len(clusterEvents), 1)
+	assert.Equal(t, clusterEvents[0].ClusterID, "abc")
+	assert.Equal(t, clusterEvents[0].Timestamp, int64(123))
+	assert.Equal(t, clusterEvents[0].Type, EvTypeRunning)
+	assert.Equal(t, clusterEvents[0].Details.CurrentNumWorkers, int32(2))
+	assert.Equal(t, clusterEvents[0].Details.TargetNumWorkers, int32(2))
+}
+
+func TestEventsTwoPagesMaxThreeItems(t *testing.T) {
+	client, server, err := qa.HttpFixtureClient(t, []qa.HTTPFixture{
+		{
+			Method:   "POST",
+			Resource: "/api/2.0/clusters/events",
+			ExpectedRequest: EventsRequest{
+				ClusterID: "abc",
+				Limit:     2,
+			},
+			Response: EventsResponse{
+				Events: []ClusterEvent{
+					{
+						ClusterID: "abc",
+						Timestamp: int64(123),
+						Type:      EvTypeRunning,
+						Details: EventDetails{
+							CurrentNumWorkers: int32(2),
+							TargetNumWorkers:  int32(2),
+						},
+					},
+					{
+						ClusterID: "abc",
+						Timestamp: int64(124),
+						Type:      EvTypeRunning,
+						Details: EventDetails{
+							CurrentNumWorkers: int32(2),
+							TargetNumWorkers:  int32(2),
+						},
+					},
+				},
+				TotalCount: 4,
+				NextPage: &EventsRequest{
+					ClusterID: "abc",
+					Offset:    2,
+				},
+			},
+		},
+		{
+			Method:   "POST",
+			Resource: "/api/2.0/clusters/events",
+			ExpectedRequest: EventsRequest{
+				ClusterID: "abc",
+				Offset:    2,
+			},
+			Response: EventsResponse{
+				Events: []ClusterEvent{
+					{
+						ClusterID: "abc",
+						Timestamp: int64(125),
+						Type:      EvTypeTerminating,
+						Details: EventDetails{
+							CurrentNumWorkers: int32(2),
+							TargetNumWorkers:  int32(2),
+						},
+					},
+					{
+						ClusterID: "abc",
+						Timestamp: int64(126),
+						Type:      EvTypeRunning,
+						Details: EventDetails{
+							CurrentNumWorkers: int32(2),
+							TargetNumWorkers:  int32(2),
+						},
+					},
+				},
+				TotalCount: 4,
+			},
+		},
+	})
+	defer server.Close()
+	require.NoError(t, err)
+
+	clusterEvents, err := NewClustersAPI(client).Events(EventsRequest{ClusterID: "abc", MaxItems: 3, Limit: 2})
+	require.NoError(t, err)
+	assert.Equal(t, len(clusterEvents), 3)
+	assert.Equal(t, clusterEvents[0].ClusterID, "abc")
+	assert.Equal(t, clusterEvents[0].Timestamp, int64(123))
+	assert.Equal(t, clusterEvents[0].Type, EvTypeRunning)
+	assert.Equal(t, clusterEvents[0].Details.CurrentNumWorkers, int32(2))
+	assert.Equal(t, clusterEvents[0].Details.TargetNumWorkers, int32(2))
+	assert.Equal(t, clusterEvents[1].Timestamp, int64(124))
+	assert.Equal(t, clusterEvents[2].Timestamp, int64(125))
+}
+
+func TestEventsTwoPagesNoNextPage(t *testing.T) {
+	client, server, err := qa.HttpFixtureClient(t, []qa.HTTPFixture{
+		{
+			Method:   "POST",
+			Resource: "/api/2.0/clusters/events",
+			ExpectedRequest: EventsRequest{
+				ClusterID: "abc",
+				Limit:     2,
+			},
+			Response: EventsResponse{
+				Events: []ClusterEvent{
+					{
+						ClusterID: "abc",
+						Timestamp: int64(123),
+						Type:      EvTypeRunning,
+						Details: EventDetails{
+							CurrentNumWorkers: int32(2),
+							TargetNumWorkers:  int32(2),
+						},
+					},
+					{
+						ClusterID: "abc",
+						Timestamp: int64(124),
+						Type:      EvTypeRunning,
+						Details: EventDetails{
+							CurrentNumWorkers: int32(2),
+							TargetNumWorkers:  int32(2),
+						},
+					},
+				},
+				TotalCount: 4,
+			},
+		},
+	})
+	defer server.Close()
+	require.NoError(t, err)
+
+	clusterEvents, err := NewClustersAPI(client).Events(EventsRequest{ClusterID: "abc", MaxItems: 3, Limit: 2})
+	require.NoError(t, err)
+	assert.Equal(t, len(clusterEvents), 2)
+	assert.Equal(t, clusterEvents[0].ClusterID, "abc")
+	assert.Equal(t, clusterEvents[0].Timestamp, int64(123))
+	assert.Equal(t, clusterEvents[0].Type, EvTypeRunning)
+	assert.Equal(t, clusterEvents[0].Details.CurrentNumWorkers, int32(2))
+	assert.Equal(t, clusterEvents[0].Details.TargetNumWorkers, int32(2))
+	assert.Equal(t, clusterEvents[1].Timestamp, int64(124))
+}
+
+func TestEventsEmptyResult(t *testing.T) {
+	client, server, err := qa.HttpFixtureClient(t, []qa.HTTPFixture{
+		{
+			Method:   "POST",
+			Resource: "/api/2.0/clusters/events",
+			ExpectedRequest: EventsRequest{
+				ClusterID: "abc",
+				Limit:     2,
+			},
+			Response: EventsResponse{
+				Events:     []ClusterEvent{},
+				TotalCount: 0,
+			},
+		},
+	})
+	defer server.Close()
+	require.NoError(t, err)
+
+	clusterEvents, err := NewClustersAPI(client).Events(EventsRequest{ClusterID: "abc", MaxItems: 3, Limit: 2})
+	require.NoError(t, err)
+	assert.Equal(t, len(clusterEvents), 0)
+}

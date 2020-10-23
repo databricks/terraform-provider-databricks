@@ -594,6 +594,7 @@ type EventsRequest struct {
 	EventTypes []ClusterEventType `json:"event_types,omitempty"`
 	Offset     int64              `json:"offset,omitempty"`
 	Limit      int64              `json:"limit,omitempty"`
+	MaxItems   uint               `json:"-"`
 }
 
 // ClusterSize is structure to keep

@@ -55,6 +55,7 @@ func DatabricksProvider() *schema.Provider {
 			"databricks_scim_user":              identity.ResourceScimUser(),
 			"databricks_token":                  identity.ResourceToken(),
 			"databricks_user":                   identity.ResourceUser(),
+			"databricks_service_principal":      identity.ResourceServicePrincipal(),
 
 			"databricks_mws_customer_managed_keys":  mws.ResourceCustomerManagedKey(),
 			"databricks_mws_credentials":            mws.ResourceCredentials(),

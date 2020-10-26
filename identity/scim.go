@@ -5,10 +5,11 @@ type URN string
 
 // Possible schema URNs for the Databricks SCIM api
 const (
-	UserSchema          URN = "urn:ietf:params:scim:schemas:core:2.0:User"
-	WorkspaceUserSchema URN = "urn:ietf:params:scim:schemas:extension:workspace:2.0:User"
-	PatchOp             URN = "urn:ietf:params:scim:api:messages:2.0:PatchOp"
-	GroupSchema         URN = "urn:ietf:params:scim:schemas:core:2.0:Group"
+	UserSchema             URN = "urn:ietf:params:scim:schemas:core:2.0:User"
+	ServicePrincipalSchema URN = "urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal"
+	WorkspaceUserSchema    URN = "urn:ietf:params:scim:schemas:extension:workspace:2.0:User"
+	PatchOp                URN = "urn:ietf:params:scim:api:messages:2.0:PatchOp"
+	GroupSchema            URN = "urn:ietf:params:scim:schemas:core:2.0:Group"
 )
 
 // MembersValue is a list of value items for the members path
@@ -40,6 +41,13 @@ type GroupPatchOperations struct {
 
 // UserPatchOperations is a list of path operations for add or removing user attributes
 type UserPatchOperations struct {
+	Op    string       `json:"op,omitempty"`
+	Path  string       `json:"path,omitempty"`
+	Value *GroupsValue `json:"value,omitempty"`
+}
+
+// ServicePrincipalPatchOperations is a list of path operations for add or removing service principal attributes
+type ServicePrincipalPatchOperations struct {
 	Op    string       `json:"op,omitempty"`
 	Path  string       `json:"path,omitempty"`
 	Value *GroupsValue `json:"value,omitempty"`
@@ -182,6 +190,34 @@ func (u ScimUser) HasRole(role string) bool {
 	return false
 }
 
+// ScimServicePrincipal is a struct that contains all the information about a SCIM service principal
+type ScimServicePrincipal struct {
+	ID            string            `json:"id,omitempty"`
+	ApplicationId string            `json:"applicationId,omitempty"`
+	DisplayName   string            `json:"displayName,omitempty"`
+	Active        bool              `json:"active,omitempty"`
+	Schemas       []URN             `json:"schemas,omitempty"`
+	Groups        []GroupsListItem  `json:"groups,omitempty"`
+	Name          map[string]string `json:"name,omitempty"`
+	// TODO: Roles seems just a aws concept
+	Roles        []RoleListItem         `json:"roles,omitempty"`
+	Entitlements []EntitlementsListItem `json:"entitlements,omitempty"`
+
+	// TODO: remove InheritedRoles & UnInheritedRoles in 0.3, it is not part of SCIM spec
+	UnInheritedRoles []RoleListItem `json:"uninherited_roles,omitempty"`
+	InheritedRoles   []RoleListItem `json:"inherited_roles,omitempty"`
+}
+
+// HasRole returns true if group has a role
+func (u ScimServicePrincipal) HasRole(role string) bool {
+	for _, r := range u.Roles {
+		if r.Value == role {
+			return true
+		}
+	}
+	return false
+}
+
 // UserList contains a list of Users fetched from a list api call from SCIM api
 type UserList struct {
 	TotalResults int32      `json:"totalResults,omitempty"`
@@ -191,10 +227,25 @@ type UserList struct {
 	Resources    []ScimUser `json:"resources,omitempty"`
 }
 
+// ServicePrincipalList contains a list of ServicePrincipals fetched from a list api call from SCIM api
+type ServicePrincipalList struct {
+	TotalResults int32                  `json:"totalResults,omitempty"`
+	StartIndex   int32                  `json:"startIndex,omitempty"`
+	ItemsPerPage int32                  `json:"itemsPerPage,omitempty"`
+	Schemas      []URN                  `json:"schemas,omitempty"`
+	Resources    []ScimServicePrincipal `json:"resources,omitempty"`
+}
+
 // UserPatchRequest is a struct that contains all the information for a PATCH request to the SCIM users api
 type UserPatchRequest struct {
 	Schemas    []URN                 `json:"schemas,omitempty"`
 	Operations []UserPatchOperations `json:"Operations,omitempty"`
+}
+
+// ServicePrincipalPatchRequest is a struct that contains all the information for a PATCH request to the SCIM service principal api
+type ServicePrincipalPatchRequest struct {
+	Schemas    []URN                             `json:"schemas,omitempty"`
+	Operations []ServicePrincipalPatchOperations `json:"Operations,omitempty"`
 }
 
 type PatchOperation struct {

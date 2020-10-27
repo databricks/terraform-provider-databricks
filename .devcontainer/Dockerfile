@@ -1,10 +1,10 @@
 FROM golang:1.13.10-stretch
 
-ARG TERRAFORM_VERSION=0.12.19
+ARG TERRAFORM_VERSION=0.13.3
 
 # Configure apt, install packages and tools
 RUN apt-get update \
-    && apt-get -y install --no-install-recommends apt-utils bash-completion icu-devtools \
+    && apt-get -y install --no-install-recommends apt-utils bash-completion icu-devtools jq \
     #
     # Verify git, process tools, lsb-release (common in install instructions for CLIs) installed
     && apt-get -y install git iproute2 procps lsb-release unzip\

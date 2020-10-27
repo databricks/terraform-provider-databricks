@@ -1,8 +1,13 @@
 # Version changelog
 
+## 0.2.8
+
+* Added support for pinning clusters (issue #113)
+* Internal: API for retrieval of the cluster events
+
 ## 0.2.7
 
-Small fixes
+* Small fixes
 
 ## 0.2.6
 

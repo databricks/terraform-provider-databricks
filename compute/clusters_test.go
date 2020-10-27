@@ -574,163 +574,6 @@ func TestAccListClustersIntegration(t *testing.T) {
 	assert.True(t, clusterReadInfo.State == ClusterStateRunning)
 }
 
-func TestClusters_SortNodeTypes_Deprecated(t *testing.T) {
-	nodeTypes := []NodeType{
-		{
-			IsDeprecated: true,
-			NodeTypeID:   "deprecated1",
-		},
-		{
-			IsDeprecated: false,
-			NodeTypeID:   "not deprecated",
-		},
-		{
-			IsDeprecated: true,
-			NodeTypeID:   "deprecated2",
-		},
-	}
-
-	smallestNodeType := getSmallestNodeType(nodeTypes)
-	assert.Equal(t, "not deprecated", smallestNodeType.NodeTypeID)
-}
-
-func TestClusters_SortNodeTypes_Memory(t *testing.T) {
-	nodeTypes := []NodeType{
-		{
-			MemoryMB:   3,
-			NodeTypeID: "3",
-		},
-		{
-			MemoryMB:   1,
-			NodeTypeID: "1",
-		},
-		{
-			MemoryMB:   2,
-			NodeTypeID: "2",
-		},
-		{
-			MemoryMB:   2,
-			NodeTypeID: "another 2",
-		},
-	}
-
-	smallestNodeType := getSmallestNodeType(nodeTypes)
-	assert.Equal(t, "1", smallestNodeType.NodeTypeID)
-}
-
-func TestClusters_SortNodeTypes_CPU(t *testing.T) {
-	nodeTypes := []NodeType{
-		{
-			NumCores:   3,
-			NodeTypeID: "3",
-		},
-		{
-			NumCores:   1,
-			NodeTypeID: "1",
-		},
-		{
-			NumCores:   2,
-			NodeTypeID: "2",
-		},
-		{
-			NumCores:   1,
-			NodeTypeID: "another 1",
-		},
-	}
-
-	smallestNodeType := getSmallestNodeType(nodeTypes)
-	assert.Equal(t, "1", smallestNodeType.NodeTypeID)
-}
-
-func TestClusters_SortNodeTypes_GPU(t *testing.T) {
-	nodeTypes := []NodeType{
-		{
-			NumGPUs:    3,
-			NodeTypeID: "3",
-		},
-		{
-			NumGPUs:    1,
-			NodeTypeID: "1",
-		},
-		{
-			NumGPUs:    2,
-			NodeTypeID: "2",
-		},
-		{
-			NumGPUs:    1,
-			NodeTypeID: "another 1",
-		},
-	}
-
-	smallestNodeType := getSmallestNodeType(nodeTypes)
-	assert.Equal(t, "1", smallestNodeType.NodeTypeID)
-}
-
-func TestClusters_SortNodeTypes_CPU_Deprecated(t *testing.T) {
-	nodeTypes := []NodeType{
-		{
-			NumCores:     3,
-			IsDeprecated: false,
-			NodeTypeID:   "3 not deprecated",
-		},
-		{
-			NumCores:     1,
-			IsDeprecated: true,
-			NodeTypeID:   "1 deprecated",
-		},
-		{
-			NumCores:     2,
-			IsDeprecated: false,
-			NodeTypeID:   "2 not deprecated",
-		},
-		{
-			NumCores:     1,
-			IsDeprecated: false,
-			NodeTypeID:   "1 not deprecated",
-		},
-		{
-			NumCores:     2,
-			IsDeprecated: true,
-			NodeTypeID:   "2 deprecated",
-		},
-	}
-
-	smallestNodeType := getSmallestNodeType(nodeTypes)
-	assert.Equal(t, "1 not deprecated", smallestNodeType.NodeTypeID)
-}
-
-func TestClusters_SortNodeTypes_LocalDisks(t *testing.T) {
-	nodeTypes := []NodeType{
-		{
-			NodeInstanceType: &NodeInstanceType{
-				LocalDisks: 3,
-			},
-			NodeTypeID: "3",
-		},
-		{
-			NodeInstanceType: &NodeInstanceType{
-				LocalDisks: 1,
-			},
-			NodeTypeID: "1",
-		},
-		{
-			NodeInstanceType: &NodeInstanceType{
-				LocalDisks: 2,
-			},
-			NodeTypeID: "2",
-		},
-		{
-			NodeInstanceType: &NodeInstanceType{
-				LocalDisks: 3,
-			},
-			NodeTypeID: "another 3",
-		},
-	}
-
-	smallestNodeType := getSmallestNodeType(nodeTypes)
-	assert.Equal(t, "1", smallestNodeType.NodeTypeID)
-}
-
 func TestAwsAccSmallestNodeType(t *testing.T) {
 	cloudEnv := os.Getenv("CLOUD_ENV")
 	if cloudEnv == "" {
@@ -738,6 +581,329 @@ func TestAwsAccSmallestNodeType(t *testing.T) {
 	}
 
 	client := common.CommonEnvironmentClient()
-	nodeType := NewClustersAPI(client).GetSmallestNodeTypeWithStorage()
+	nodeType := NewClustersAPI(client).GetSmallestNodeType(NodeTypeRequest{
+		LocalDisk: true,
+	})
 	assert.Equal(t, "m5d.large", nodeType)
+}
+
+func TestAzureAccNodeTypes(t *testing.T) {
+	cloudEnv := os.Getenv("CLOUD_ENV")
+	if cloudEnv == "" {
+		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
+	}
+
+	clustersAPI := NewClustersAPI(common.CommonEnvironmentClient())
+	m := map[string]NodeTypeRequest{
+		"Standard_F4s":     {},
+		"Standard_L8s_v2":  {LocalDisk: true},
+		"Standard_NC6s_v3": {MinGPUs: 1},
+		"Standard_L32s_v2": {MinCores: 32, GBPerCore: 8},
+	}
+
+	for k, v := range m {
+		assert.Equal(t, k, clustersAPI.GetSmallestNodeType(v))
+	}
+}
+
+func TestEventsSinglePage(t *testing.T) {
+	client, server, err := qa.HttpFixtureClient(t, []qa.HTTPFixture{
+		{
+			Method:   "POST",
+			Resource: "/api/2.0/clusters/events",
+			ExpectedRequest: EventsRequest{
+				ClusterID: "abc",
+			},
+			Response: EventsResponse{
+				Events: []ClusterEvent{
+					{
+						ClusterID: "abc",
+						Timestamp: int64(123),
+						Type:      EvTypeRunning,
+						Details: EventDetails{
+							CurrentNumWorkers: int32(2),
+							TargetNumWorkers:  int32(2),
+						},
+					},
+				},
+				TotalCount: 1,
+			},
+		},
+	})
+	defer server.Close()
+	require.NoError(t, err)
+
+	clusterEvents, err := NewClustersAPI(client).Events(EventsRequest{ClusterID: "abc"})
+	require.NoError(t, err)
+	assert.Equal(t, len(clusterEvents), 1)
+	assert.Equal(t, clusterEvents[0].ClusterID, "abc")
+	assert.Equal(t, clusterEvents[0].Timestamp, int64(123))
+	assert.Equal(t, clusterEvents[0].Type, EvTypeRunning)
+	assert.Equal(t, clusterEvents[0].Details.CurrentNumWorkers, int32(2))
+	assert.Equal(t, clusterEvents[0].Details.TargetNumWorkers, int32(2))
+}
+
+func TestEventsTwoPages(t *testing.T) {
+	client, server, err := qa.HttpFixtureClient(t, []qa.HTTPFixture{
+		{
+			Method:   "POST",
+			Resource: "/api/2.0/clusters/events",
+			ExpectedRequest: EventsRequest{
+				ClusterID: "abc",
+			},
+			Response: EventsResponse{
+				Events: []ClusterEvent{
+					{
+						ClusterID: "abc",
+						Timestamp: int64(123),
+						Type:      EvTypeRunning,
+						Details: EventDetails{
+							CurrentNumWorkers: int32(2),
+							TargetNumWorkers:  int32(2),
+						},
+					},
+				},
+				TotalCount: 2,
+				NextPage: &EventsRequest{
+					ClusterID: "abc",
+					Offset:    1,
+				},
+			},
+		},
+		{
+			Method:   "POST",
+			Resource: "/api/2.0/clusters/events",
+			ExpectedRequest: EventsRequest{
+				ClusterID: "abc",
+				Offset:    1,
+			},
+			Response: EventsResponse{
+				Events: []ClusterEvent{
+					{
+						ClusterID: "abc",
+						Timestamp: int64(124),
+						Type:      EvTypeTerminating,
+						Details: EventDetails{
+							CurrentNumWorkers: int32(2),
+							TargetNumWorkers:  int32(2),
+						},
+					},
+				},
+				TotalCount: 2,
+			},
+		},
+	})
+	defer server.Close()
+	require.NoError(t, err)
+
+	clusterEvents, err := NewClustersAPI(client).Events(EventsRequest{ClusterID: "abc"})
+	require.NoError(t, err)
+	assert.Equal(t, len(clusterEvents), 2)
+	assert.Equal(t, clusterEvents[0].ClusterID, "abc")
+	assert.Equal(t, clusterEvents[0].Timestamp, int64(123))
+	assert.Equal(t, clusterEvents[0].Type, EvTypeRunning)
+	assert.Equal(t, clusterEvents[0].Details.CurrentNumWorkers, int32(2))
+	assert.Equal(t, clusterEvents[0].Details.TargetNumWorkers, int32(2))
+	assert.Equal(t, clusterEvents[1].ClusterID, "abc")
+	assert.Equal(t, clusterEvents[1].Timestamp, int64(124))
+	assert.Equal(t, clusterEvents[1].Type, EvTypeTerminating)
+	assert.Equal(t, clusterEvents[1].Details.CurrentNumWorkers, int32(2))
+	assert.Equal(t, clusterEvents[1].Details.TargetNumWorkers, int32(2))
+}
+
+func TestEventsTwoPagesMaxItems(t *testing.T) {
+	client, server, err := qa.HttpFixtureClient(t, []qa.HTTPFixture{
+		{
+			Method:   "POST",
+			Resource: "/api/2.0/clusters/events",
+			ExpectedRequest: EventsRequest{
+				ClusterID: "abc",
+				Limit:     1,
+			},
+			Response: EventsResponse{
+				Events: []ClusterEvent{
+					{
+						ClusterID: "abc",
+						Timestamp: int64(123),
+						Type:      EvTypeRunning,
+						Details: EventDetails{
+							CurrentNumWorkers: int32(2),
+							TargetNumWorkers:  int32(2),
+						},
+					},
+				},
+				TotalCount: 2,
+				NextPage: &EventsRequest{
+					ClusterID: "abc",
+					Offset:    1,
+				},
+			},
+		},
+	})
+	defer server.Close()
+	require.NoError(t, err)
+
+	clusterEvents, err := NewClustersAPI(client).Events(EventsRequest{ClusterID: "abc", MaxItems: 1, Limit: 1})
+	require.NoError(t, err)
+	assert.Equal(t, len(clusterEvents), 1)
+	assert.Equal(t, clusterEvents[0].ClusterID, "abc")
+	assert.Equal(t, clusterEvents[0].Timestamp, int64(123))
+	assert.Equal(t, clusterEvents[0].Type, EvTypeRunning)
+	assert.Equal(t, clusterEvents[0].Details.CurrentNumWorkers, int32(2))
+	assert.Equal(t, clusterEvents[0].Details.TargetNumWorkers, int32(2))
+}
+
+func TestEventsTwoPagesMaxThreeItems(t *testing.T) {
+	client, server, err := qa.HttpFixtureClient(t, []qa.HTTPFixture{
+		{
+			Method:   "POST",
+			Resource: "/api/2.0/clusters/events",
+			ExpectedRequest: EventsRequest{
+				ClusterID: "abc",
+				Limit:     2,
+			},
+			Response: EventsResponse{
+				Events: []ClusterEvent{
+					{
+						ClusterID: "abc",
+						Timestamp: int64(123),
+						Type:      EvTypeRunning,
+						Details: EventDetails{
+							CurrentNumWorkers: int32(2),
+							TargetNumWorkers:  int32(2),
+						},
+					},
+					{
+						ClusterID: "abc",
+						Timestamp: int64(124),
+						Type:      EvTypeRunning,
+						Details: EventDetails{
+							CurrentNumWorkers: int32(2),
+							TargetNumWorkers:  int32(2),
+						},
+					},
+				},
+				TotalCount: 4,
+				NextPage: &EventsRequest{
+					ClusterID: "abc",
+					Offset:    2,
+				},
+			},
+		},
+		{
+			Method:   "POST",
+			Resource: "/api/2.0/clusters/events",
+			ExpectedRequest: EventsRequest{
+				ClusterID: "abc",
+				Offset:    2,
+			},
+			Response: EventsResponse{
+				Events: []ClusterEvent{
+					{
+						ClusterID: "abc",
+						Timestamp: int64(125),
+						Type:      EvTypeTerminating,
+						Details: EventDetails{
+							CurrentNumWorkers: int32(2),
+							TargetNumWorkers:  int32(2),
+						},
+					},
+					{
+						ClusterID: "abc",
+						Timestamp: int64(126),
+						Type:      EvTypeRunning,
+						Details: EventDetails{
+							CurrentNumWorkers: int32(2),
+							TargetNumWorkers:  int32(2),
+						},
+					},
+				},
+				TotalCount: 4,
+			},
+		},
+	})
+	defer server.Close()
+	require.NoError(t, err)
+
+	clusterEvents, err := NewClustersAPI(client).Events(EventsRequest{ClusterID: "abc", MaxItems: 3, Limit: 2})
+	require.NoError(t, err)
+	assert.Equal(t, len(clusterEvents), 3)
+	assert.Equal(t, clusterEvents[0].ClusterID, "abc")
+	assert.Equal(t, clusterEvents[0].Timestamp, int64(123))
+	assert.Equal(t, clusterEvents[0].Type, EvTypeRunning)
+	assert.Equal(t, clusterEvents[0].Details.CurrentNumWorkers, int32(2))
+	assert.Equal(t, clusterEvents[0].Details.TargetNumWorkers, int32(2))
+	assert.Equal(t, clusterEvents[1].Timestamp, int64(124))
+	assert.Equal(t, clusterEvents[2].Timestamp, int64(125))
+}
+
+func TestEventsTwoPagesNoNextPage(t *testing.T) {
+	client, server, err := qa.HttpFixtureClient(t, []qa.HTTPFixture{
+		{
+			Method:   "POST",
+			Resource: "/api/2.0/clusters/events",
+			ExpectedRequest: EventsRequest{
+				ClusterID: "abc",
+				Limit:     2,
+			},
+			Response: EventsResponse{
+				Events: []ClusterEvent{
+					{
+						ClusterID: "abc",
+						Timestamp: int64(123),
+						Type:      EvTypeRunning,
+						Details: EventDetails{
+							CurrentNumWorkers: int32(2),
+							TargetNumWorkers:  int32(2),
+						},
+					},
+					{
+						ClusterID: "abc",
+						Timestamp: int64(124),
+						Type:      EvTypeRunning,
+						Details: EventDetails{
+							CurrentNumWorkers: int32(2),
+							TargetNumWorkers:  int32(2),
+						},
+					},
+				},
+				TotalCount: 4,
+			},
+		},
+	})
+	defer server.Close()
+	require.NoError(t, err)
+
+	clusterEvents, err := NewClustersAPI(client).Events(EventsRequest{ClusterID: "abc", MaxItems: 3, Limit: 2})
+	require.NoError(t, err)
+	assert.Equal(t, len(clusterEvents), 2)
+	assert.Equal(t, clusterEvents[0].ClusterID, "abc")
+	assert.Equal(t, clusterEvents[0].Timestamp, int64(123))
+	assert.Equal(t, clusterEvents[0].Type, EvTypeRunning)
+	assert.Equal(t, clusterEvents[0].Details.CurrentNumWorkers, int32(2))
+	assert.Equal(t, clusterEvents[0].Details.TargetNumWorkers, int32(2))
+	assert.Equal(t, clusterEvents[1].Timestamp, int64(124))
+}
+
+func TestEventsEmptyResult(t *testing.T) {
+	client, server, err := qa.HttpFixtureClient(t, []qa.HTTPFixture{
+		{
+			Method:   "POST",
+			Resource: "/api/2.0/clusters/events",
+			ExpectedRequest: EventsRequest{
+				ClusterID: "abc",
+				Limit:     2,
+			},
+			Response: EventsResponse{
+				Events:     []ClusterEvent{},
+				TotalCount: 0,
+			},
+		},
+	})
+	defer server.Close()
+	require.NoError(t, err)
+
+	clusterEvents, err := NewClustersAPI(client).Events(EventsRequest{ClusterID: "abc", MaxItems: 3, Limit: 2})
+	require.NoError(t, err)
+	assert.Equal(t, len(clusterEvents), 0)
 }

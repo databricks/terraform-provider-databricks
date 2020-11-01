@@ -4,9 +4,9 @@ go 1.13
 
 require (
 	github.com/Azure/go-autorest/autorest v0.11.6
-	github.com/Azure/go-autorest/autorest/adal v0.9.4
+	github.com/Azure/go-autorest/autorest/adal v0.9.5
 	github.com/Azure/go-autorest/autorest/azure/auth v0.5.2
-	github.com/Azure/go-autorest/autorest/azure/cli v0.4.1
+	github.com/Azure/go-autorest/autorest/azure/cli v0.4.2
 	github.com/aws/aws-sdk-go v1.35.0
 	github.com/google/go-querystring v1.0.0
 	github.com/hashicorp/go-cty v1.4.1-0.20200414143053-d3edf31b6320

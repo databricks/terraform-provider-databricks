@@ -43,12 +43,8 @@ type KeyvaultMetadata struct {
 }
 
 type secretScopeRequest struct {
-	Scope string `json:"scope,omitempty"`
-	// validate
-	// BackendType string `json:"backend_type,omitempty"`
-	BackendType string `json:"scope_backend_type,omitempty"`
-
-	// todo: validate conflicting
+	Scope                  string            `json:"scope,omitempty"`
+	BackendType            string            `json:"scope_backend_type,omitempty"`
 	InitialManagePrincipal string            `json:"initial_manage_principal,omitempty"`
 	BackendAzureKeyvault   *KeyvaultMetadata `json:"backend_azure_keyvault,omitempty"`
 }

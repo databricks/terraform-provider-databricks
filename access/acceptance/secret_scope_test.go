@@ -19,21 +19,27 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// func TestAccRemoveScopes(t *testing.T) {
-// 	client := common.CommonEnvironmentClient()
-// 	scopesAPI := NewSecretScopesAPI(client)
-// 	scopeList, err := scopesAPI.List()
-// 	require.NoError(t, err)
-// 	for _, scope := range scopeList {
-// 		assert.NoError(t, scopesAPI.Delete(scope.Name))
-// 	}
-// }
+func TestAccRemoveScopes(t *testing.T) {
+	if _, ok := os.LookupEnv("VSCODE_PID"); !ok {
+		t.Skip("Cleaning up tests only from IDE")
+	}
+	client := common.CommonEnvironmentClient()
+	scopesAPI := NewSecretScopesAPI(client)
+	scopeList, err := scopesAPI.List()
+	require.NoError(t, err)
+	for _, scope := range scopeList {
+		assert.NoError(t, scopesAPI.Delete(scope.Name))
+	}
+}
 
 func TestAzureAccKeyVaultSimple(t *testing.T) {
 	resourceID := qa.GetEnvOrSkipTest(t, "TEST_KEY_VAULT_RESOURCE_ID")
 	DNSName := qa.GetEnvOrSkipTest(t, "TEST_KEY_VAULT_DNS_NAME")
 
 	client := common.CommonEnvironmentClient()
+	if client.AzureAuth.IsClientSecretSet() {
+		t.Skip("AKV scopes don't work for SP auth yet")
+	}
 	scopesAPI := NewSecretScopesAPI(client)
 	name := qa.RandomName("tf-scope-")
 
@@ -110,9 +116,7 @@ func TestAccSecretScopeResource(t *testing.T) {
 		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
 	}
 	var secretScope SecretScope
-
-	scope := fmt.Sprintf("tf-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
-
+	scope := qa.RandomName("tf-")
 	acceptance.AccTest(t, resource.TestCase{
 		CheckDestroy: testSecretScopeResourceDestroy,
 		Steps: []resource.TestStep{
@@ -209,7 +213,6 @@ func testSecretScopeResourceExists(n string, secretScope *SecretScope, t *testin
 		// If no error, assign the response Widget attribute to the widget pointer
 		*secretScope = resp
 		return nil
-		//return fmt.Errorf("Token (%s) not found", rs.Primary.ID)
 	}
 }
 

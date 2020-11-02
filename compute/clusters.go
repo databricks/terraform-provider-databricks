@@ -235,7 +235,13 @@ func (a ClustersAPI) Events(eventsRequest EventsRequest) ([]ClusterEvent, error)
 	}
 
 	totalCount := int(eventsResponse.TotalCount)
+	if (eventsRequest.MaxItems) > 0 && (eventsRequest.MaxItems < uint(totalCount)) {
+		totalCount = int(eventsRequest.MaxItems)
+	}
 	events := make([]ClusterEvent, totalCount)
+	if totalCount == 0 {
+		return events, nil
+	}
 	startPos := 0
 	curPos := len(eventsResponse.Events)
 	copy(events[startPos:curPos], eventsResponse.Events)
@@ -245,11 +251,16 @@ func (a ClustersAPI) Events(eventsRequest EventsRequest) ([]ClusterEvent, error)
 			return nil, err
 		}
 		startPos = curPos
-		curPos += len(eventsResponse.Events)
-		copy(events[startPos:curPos], eventsResponse.Events)
+		curLen := len(eventsResponse.Events)
+		restItems := totalCount - startPos
+		if restItems < curLen {
+			curLen = restItems
+		}
+		curPos += curLen
+		copy(events[startPos:curPos], eventsResponse.Events[0:curLen])
 	}
 
-	return events, err
+	return events[0:curPos], err
 }
 
 // List return information about all pinned clusters, currently active clusters,

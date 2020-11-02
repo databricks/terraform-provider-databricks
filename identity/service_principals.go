@@ -61,13 +61,9 @@ func (a ServicePrincipalsAPI) Create(applicationId string, displayName string, e
 		ApplicationId: applicationId,
 		DisplayName:   displayName,
 		Entitlements:  []EntitlementsListItem{},
-		Roles:         []RoleListItem{},
 	}
 	for _, entitlement := range entitlements {
 		createRequest.Entitlements = append(createRequest.Entitlements, EntitlementsListItem{Value: Entitlement(entitlement)})
-	}
-	for _, role := range roles {
-		createRequest.Roles = append(createRequest.Roles, RoleListItem{Value: role})
 	}
 	err := a.C.Scim(http.MethodPost, "/preview/scim/v2/ServicePrincipals", createRequest, &servicePrincipal)
 	return servicePrincipal, err
@@ -135,7 +131,6 @@ func (a ServicePrincipalsAPI) UpdateR(servicePrincipalID string, rsp ServicePrin
 	}
 	updateRequest := rsp.toRequest()
 	updateRequest.Groups = servicePrincipal.Groups
-	updateRequest.Roles = servicePrincipal.Roles
 	return a.C.Scim(http.MethodPut,
 		fmt.Sprintf("/preview/scim/v2/ServicePrincipals/%v", servicePrincipalID),
 		updateRequest, nil)
@@ -154,7 +149,6 @@ func (a ServicePrincipalsAPI) Update(servicePrincipalID string, applicationId st
 		ApplicationId string                 `json:"applicationId,omitempty"`
 		Entitlements  []EntitlementsListItem `json:"entitlements,omitempty"`
 		DisplayName   string                 `json:"displayName,omitempty"`
-		Roles         []RoleListItem         `json:"roles,omitempty"`
 		Groups        []GroupsListItem       `json:"groups,omitempty"`
 	}{}
 	scimServicePrincipalUpdateRequest.Schemas = []URN{ServicePrincipalSchema}
@@ -163,10 +157,6 @@ func (a ServicePrincipalsAPI) Update(servicePrincipalID string, applicationId st
 	scimServicePrincipalUpdateRequest.Entitlements = []EntitlementsListItem{}
 	for _, entitlement := range entitlements {
 		scimServicePrincipalUpdateRequest.Entitlements = append(scimServicePrincipalUpdateRequest.Entitlements, EntitlementsListItem{Value: Entitlement(entitlement)})
-	}
-	scimServicePrincipalUpdateRequest.Roles = []RoleListItem{}
-	for _, role := range roles {
-		scimServicePrincipalUpdateRequest.Roles = append(scimServicePrincipalUpdateRequest.Roles, RoleListItem{Value: role})
 	}
 	//Get any existing groups that the servicePrincipal is part of
 	servicePrincipal, err := a.read(servicePrincipalID)

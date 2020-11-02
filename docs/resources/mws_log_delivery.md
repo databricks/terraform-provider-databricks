@@ -27,8 +27,8 @@ resource "databricks_mws_log_delivery" "audit_logs" {
     credentials_id = databricks_mws_credentials.log_writer.credentials_id
     storage_configuration_id = databricks_mws_storage_configurations.log_bucket.storage_configuration_id
     config_name = "Audit Logs"
-    log_type = "AUDIT"
-    output_format = "CSV"
+    log_type = "AUDIT_LOGS"
+    output_format = "JSON"
 }
 ```
 

@@ -195,10 +195,6 @@ type ScimServicePrincipal struct {
 	// TODO: Roles seems just a aws concept
 	Roles        []RoleListItem         `json:"roles,omitempty"`
 	Entitlements []EntitlementsListItem `json:"entitlements,omitempty"`
-
-	// TODO: remove InheritedRoles & UnInheritedRoles in 0.3, it is not part of SCIM spec
-	UnInheritedRoles []RoleListItem `json:"uninherited_roles,omitempty"`
-	InheritedRoles   []RoleListItem `json:"inherited_roles,omitempty"`
 }
 
 // HasRole returns true if group has a role

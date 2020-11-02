@@ -1,13 +1,8 @@
 package identity
 
 import (
-	"errors"
 	"fmt"
-	"log"
 	"net/http"
-	"sort"
-	"strings"
-	"time"
 
 	"github.com/databrickslabs/databricks-terraform/common"
 )
@@ -114,9 +109,6 @@ func (a ServicePrincipalsAPI) Read(servicePrincipalID string) (ScimServicePrinci
 		}
 		groups = append(groups, group)
 	}
-	inherited, unInherited := a.getInheritedAndNonInheritedRoles(servicePrincipal, groups)
-	servicePrincipal.InheritedRoles = inherited
-	servicePrincipal.UnInheritedRoles = unInherited
 	return servicePrincipal, err
 }
 
@@ -189,112 +181,4 @@ func (a ServicePrincipalsAPI) Update(servicePrincipalID string, applicationId st
 func (a ServicePrincipalsAPI) Delete(servicePrincipalID string) error {
 	servicePrincipalPath := fmt.Sprintf("/preview/scim/v2/ServicePrincipals/%v", servicePrincipalID)
 	return a.C.Scim(http.MethodDelete, servicePrincipalPath, nil, nil)
-}
-
-// SetServicePrincipalAsAdmin will add the servicePrincipal to a admin group given the admin group id and servicePrincipal id
-func (a ServicePrincipalsAPI) SetServicePrincipalAsAdmin(servicePrincipalID string, adminGroupID string) error {
-	servicePrincipalPath := fmt.Sprintf("/preview/scim/v2/ServicePrincipals/%v", servicePrincipalID)
-	var addOperations UserPatchOperations
-	servicePrincipalPatchRequest := UserPatchRequest{
-		Schemas:    []URN{PatchOp},
-		Operations: []UserPatchOperations{},
-	}
-	addOperations = UserPatchOperations{
-		Op: "add",
-		Value: &GroupsValue{
-			Groups: []ValueListItem{{Value: adminGroupID}},
-		},
-	}
-	servicePrincipalPatchRequest.Operations = append(servicePrincipalPatchRequest.Operations, addOperations)
-	return a.C.Scim(http.MethodPatch, servicePrincipalPath, servicePrincipalPatchRequest, nil)
-}
-
-// VerifyServicePrincipalAsAdmin will verify the servicePrincipal belongs to the admin group given the admin group id and servicePrincipal id
-func (a ServicePrincipalsAPI) VerifyServicePrincipalAsAdmin(servicePrincipalID string, adminGroupID string) (bool, error) {
-	servicePrincipal, err := a.read(servicePrincipalID)
-	if err != nil {
-		return false, err
-	}
-	for _, group := range servicePrincipal.Groups {
-		if group.Value == adminGroupID {
-			return true, nil
-		}
-	}
-	return false, nil
-}
-
-// RemoveServicePrincipalAsAdmin will remove the servicePrincipal from the admin group given the admin group id and servicePrincipal id
-func (a ServicePrincipalsAPI) RemoveServicePrincipalAsAdmin(servicePrincipalID string, adminGroupID string) error {
-	servicePrincipalPath := fmt.Sprintf("/preview/scim/v2/ServicePrincipals/%v", servicePrincipalID)
-	var removeOperations UserPatchOperations
-	servicePrincipalPatchRequest := UserPatchRequest{
-		Schemas:    []URN{PatchOp},
-		Operations: []UserPatchOperations{},
-	}
-	path := fmt.Sprintf("groups[value eq \"%s\"]", adminGroupID)
-	removeOperations = UserPatchOperations{
-		Op:   "remove",
-		Path: path,
-	}
-	servicePrincipalPatchRequest.Operations = append(servicePrincipalPatchRequest.Operations, removeOperations)
-	return a.C.Scim(http.MethodPatch, servicePrincipalPath, servicePrincipalPatchRequest, nil)
-}
-
-// GetOrCreateDefaultMetaServicePrincipal ...
-func (a ServicePrincipalsAPI) GetOrCreateDefaultMetaServicePrincipal(metaServicePrincipalDisplayName string, metaServicePrincipalName string, deleteAfterCreate bool) (servicePrincipal ScimServicePrincipal, err error) {
-	var servicePrincipals ServicePrincipalList
-	err = a.C.Scim(http.MethodGet, "/preview/scim/v2/ServicePrincipals", map[string]string{
-		"filter": "displayName+eq+" + metaServicePrincipalDisplayName,
-	}, &servicePrincipals)
-	if err != nil {
-		return servicePrincipal, err
-	}
-	resources := servicePrincipals.Resources
-	if len(resources) == 1 {
-		return resources[0], err
-	} else if len(resources) > 1 {
-		return ScimServicePrincipal{}, errors.New("more than one meta servicePrincipal")
-	}
-
-	log.Printf("Meta ServicePrincipal not found will create a new meta servicePrincipal with name: %s\n", metaServicePrincipalDisplayName)
-
-	newCreatedServicePrincipal, err := a.Create(metaServicePrincipalName, metaServicePrincipalDisplayName, nil, nil)
-	if err != nil {
-		if strings.Contains(err.Error(), "already exists") {
-			time.Sleep(time.Second * 1)
-			return a.GetOrCreateDefaultMetaServicePrincipal(metaServicePrincipalDisplayName, metaServicePrincipalName, deleteAfterCreate)
-		}
-		return servicePrincipal, err
-	}
-	if deleteAfterCreate {
-		defer func() {
-			deferErr := a.Delete(newCreatedServicePrincipal.ID)
-			err = deferErr
-		}()
-	}
-	return newCreatedServicePrincipal, err
-}
-
-func (a ServicePrincipalsAPI) getInheritedAndNonInheritedRoles(servicePrincipal ScimServicePrincipal, groups []ScimGroup) (inherited []RoleListItem, unInherited []RoleListItem) {
-	allRoles := servicePrincipal.Roles
-	var inheritedRoles []RoleListItem
-	inheritedRolesKeys := []string{}
-	inheritedRolesMap := map[string]RoleListItem{}
-	for _, group := range groups {
-		inheritedRoles = append(inheritedRoles, group.Roles...)
-	}
-	for _, role := range inheritedRoles {
-		inheritedRolesKeys = append(inheritedRolesKeys, role.Value)
-		inheritedRolesMap[role.Value] = role
-	}
-	sort.Strings(inheritedRolesKeys)
-	for _, roleKey := range inheritedRolesKeys {
-		inherited = append(inherited, inheritedRolesMap[roleKey])
-	}
-	for _, role := range allRoles {
-		if _, ok := inheritedRolesMap[role.Value]; !ok {
-			unInherited = append(unInherited, role)
-		}
-	}
-	return inherited, unInherited
 }

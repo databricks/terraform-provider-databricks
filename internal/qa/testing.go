@@ -38,12 +38,15 @@ func RandomLongName() string {
 	return "Terraform Integration Test " + acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
 }
 
-// RandomName is what it is
-func RandomName() string {
+// RandomName gives random name with optional prefix. e.g. qa.RandomName("tf-")
+func RandomName(prefix ...string) string {
 	randLen := 12
 	b := make([]byte, randLen)
 	for i := range b {
 		b[i] = charset[rand.Intn(randLen)]
+	}
+	if len(prefix) > 0 {
+		return fmt.Sprintf("%s%s", strings.Join(prefix, ""), b)
 	}
 	return string(b)
 }
@@ -72,6 +75,7 @@ type ResourceFixture struct {
 	Delete      bool
 	ID          string
 	NonWritable bool
+	Azure       bool
 	// new resource
 	New bool
 }
@@ -85,6 +89,9 @@ func (f ResourceFixture) Apply(t *testing.T) (*schema.ResourceData, error) {
 	}
 	if f.CommandMock != nil {
 		client.WithCommandMock(f.CommandMock)
+	}
+	if f.Azure {
+		client.AzureAuth.ResourceID = "/subscriptions/a/resourceGroups/b/providers/Microsoft.Databricks/workspaces/c"
 	}
 	if len(f.HCL) > 0 {
 		var out interface{}

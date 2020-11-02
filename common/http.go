@@ -410,7 +410,6 @@ func (c *DatabricksClient) genericQuery(method, requestURL string, data interfac
 	if err != nil {
 		return nil, err
 	}
-	log.Printf("[INFO] %s %s %v", method, requestURL, c.redactedDump(requestBody))
 	request.Header.Set("User-Agent", c.userAgent)
 	for _, requestVisitor := range visitors {
 		err = requestVisitor(request)
@@ -418,6 +417,17 @@ func (c *DatabricksClient) genericQuery(method, requestURL string, data interfac
 			return nil, err
 		}
 	}
+	headers := ""
+	if c.DebugHeaders {
+		for k, v := range request.Header {
+			headers += fmt.Sprintf("\n * %s: %s", k, onlyNBytes(strings.Join(v, ""), 16))
+		}
+		if len(headers) > 0 {
+			headers += "\n"
+		}
+	}
+	log.Printf("[INFO] %s %s %s%v", method, requestURL, headers, c.redactedDump(requestBody))
+
 	r, err := retryablehttp.FromRequest(request)
 	if err != nil {
 		return nil, err

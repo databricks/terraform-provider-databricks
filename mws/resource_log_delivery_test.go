@@ -1,7 +1,6 @@
 package mws
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/databrickslabs/databricks-terraform/common"
@@ -13,25 +12,22 @@ import (
 
 func TestMwsAccLogDelivery(t *testing.T) {
 	acctID := qa.GetEnvOrSkipTest(t, "DATABRICKS_ACCOUNT_ID")
+	roleARN := qa.GetEnvOrSkipTest(t, "TEST_LOGDELIVERY_ARN")
+	bucket := qa.GetEnvOrSkipTest(t, "TEST_LOGDELIVERY_BUCKET")
 	client := common.CommonEnvironmentClient()
-	randomName := fmt.Sprintf("tf-test-logdelivery-%s", qa.RandomName())
+	randomName := qa.RandomName("tf-logdelivery-")
 
 	logDeliveryAPI := NewLogDeliveryAPI(client)
-	_, err := logDeliveryAPI.Read(acctID, randomName)
-	assert.Error(t, err)
-
 	credentialsAPI := NewCredentialsAPI(client)
-	// TODO: this is cross-account that workspace is provisioned with. i wonder if it'll work
-	creds, err := credentialsAPI.Create(acctID,
-		randomName, qa.GetEnvOrSkipTest(t, "TEST_CROSSACCOUNT_ARN"))
+	storageConfigurationsAPI := NewStorageConfigurationsAPI(client)
+
+	creds, err := credentialsAPI.Create(acctID, randomName, roleARN)
 	require.NoError(t, err)
 	defer func() {
 		assert.NoError(t, credentialsAPI.Delete(acctID, creds.CredentialsID))
 	}()
 
-	storageConfigurationsAPI := NewStorageConfigurationsAPI(client)
-	storageConfig, err := storageConfigurationsAPI.Create(
-		acctID, randomName, qa.GetEnvOrSkipTest(t, "TEST_ROOT_BUCKET"))
+	storageConfig, err := storageConfigurationsAPI.Create(acctID, randomName, bucket)
 	require.NoError(t, err)
 	defer func() {
 		assert.NoError(t, storageConfigurationsAPI.Delete(acctID, storageConfig.StorageConfigurationID))
@@ -51,8 +47,8 @@ func TestMwsAccLogDelivery(t *testing.T) {
 		assert.NoError(t, logDeliveryAPI.Disable(acctID, configID))
 	}()
 
-	ldc, err := logDeliveryAPI.Read(acctID, randomName)
-	require.Error(t, err)
+	ldc, err := logDeliveryAPI.Read(acctID, configID)
+	require.NoError(t, err)
 	assert.Equal(t, "ENABLED", ldc.Status)
 }
 

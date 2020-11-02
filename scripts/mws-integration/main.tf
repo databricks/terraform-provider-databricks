@@ -55,6 +55,53 @@ module "aws_common" {
   tags = local.tags
 }
 
+resource "aws_s3_bucket" "logdelivery" {
+  bucket = "${local.prefix}-logdelivery"
+  acl    = "private"
+  versioning {
+    enabled = false
+  }
+  force_destroy = true
+  tags = merge(local.tags, {
+    Name = "${local.prefix}-logdelivery"
+  })
+}
+
+output "test_logdelivery_bucket" {
+  value = aws_s3_bucket.logdelivery.bucket
+}
+
+resource "aws_s3_bucket_public_access_block" "logdelivery" {
+  bucket             = aws_s3_bucket.logdelivery.id
+  ignore_public_acls = true
+}
+
+data "databricks_aws_assume_role_policy" "logdelivery" {
+  external_id = data.external.env.result.DATABRICKS_ACCOUNT_ID
+  for_log_delivery = true
+}
+
+resource "aws_iam_role" "logdelivery" {
+  name               = "${local.prefix}-logdelivery"
+  description        = "(${local.prefix}) UsageDelivery role"
+  assume_role_policy = data.databricks_aws_assume_role_policy.logdelivery.json
+  tags               = local.tags
+}
+
+output "test_logdelivery_arn" {
+  value = aws_iam_role.logdelivery.arn
+}
+
+data "databricks_aws_bucket_policy" "logdelivery" {
+  full_access_role = aws_iam_role.logdelivery.arn
+  bucket           = aws_s3_bucket.logdelivery.bucket
+}
+
+resource "aws_s3_bucket_policy" "logdelivery" {
+  bucket = aws_s3_bucket.logdelivery.id
+  policy = data.databricks_aws_bucket_policy.logdelivery.json
+}
+
 output "cloud_env" {
   // needed to distinguish between azure, aws & mws tests
   value = "MWS"

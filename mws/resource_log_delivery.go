@@ -3,6 +3,7 @@ package mws
 import (
 	"context"
 	"fmt"
+	"log"
 
 	"github.com/databrickslabs/databricks-terraform/common"
 	"github.com/databrickslabs/databricks-terraform/internal"
@@ -29,7 +30,7 @@ type LogDeliveryConfiguration struct {
 	LogType                string   `json:"log_type"`
 	OutputFormat           string   `json:"output_format"`
 	DeliveryPathPrefix     string   `json:"delivery_path_prefix,omitempty"`
-	DeliveryStartTime      string   `json:"delivery_start_time,omitempty"`
+	DeliveryStartTime      string   `json:"delivery_start_time,omitempty" tf:"computed"`
 }
 
 // LogDeliveryAPI ...
@@ -73,12 +74,15 @@ func ResourceLogDelivery() *schema.Resource {
 		func(s map[string]*schema.Schema) map[string]*schema.Schema {
 			// nolint
 			s["config_name"].ValidateFunc = validation.StringLenBetween(0, 255)
-
 			for k, v := range s {
 				if v.Computed {
 					continue
 				}
 				s[k].ForceNew = true
+			}
+			s["delivery_start_time"].DiffSuppressFunc = func(
+				k, old, new string, d *schema.ResourceData) bool {
+				return false
 			}
 			return s
 		})
@@ -88,10 +92,16 @@ func ResourceLogDelivery() *schema.Resource {
 			return diag.FromErr(err)
 		}
 		ldc, err := NewLogDeliveryAPI(m).Read(accountID, configID)
+		if e, ok := err.(common.APIError); ok && e.IsMissing() {
+			log.Printf("[DEBUG] Log delivery configuration %s was not found. Removing from state.", configID)
+			d.SetId("")
+			return nil
+		}
 		if err != nil {
 			return diag.FromErr(err)
 		}
 		if ldc.Status == "DISABLED" {
+			log.Printf("[DEBUG] Log delivery configuration %s was disabled. Removing from state.", configID)
 			d.SetId("")
 			return nil
 		}

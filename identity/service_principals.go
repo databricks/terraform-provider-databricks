@@ -194,12 +194,12 @@ func (a ServicePrincipalsAPI) Delete(servicePrincipalID string) error {
 // SetServicePrincipalAsAdmin will add the servicePrincipal to a admin group given the admin group id and servicePrincipal id
 func (a ServicePrincipalsAPI) SetServicePrincipalAsAdmin(servicePrincipalID string, adminGroupID string) error {
 	servicePrincipalPath := fmt.Sprintf("/preview/scim/v2/ServicePrincipals/%v", servicePrincipalID)
-	var addOperations ServicePrincipalPatchOperations
-	servicePrincipalPatchRequest := ServicePrincipalPatchRequest{
+	var addOperations UserPatchOperations
+	servicePrincipalPatchRequest := UserPatchRequest{
 		Schemas:    []URN{PatchOp},
-		Operations: []ServicePrincipalPatchOperations{},
+		Operations: []UserPatchOperations{},
 	}
-	addOperations = ServicePrincipalPatchOperations{
+	addOperations = UserPatchOperations{
 		Op: "add",
 		Value: &GroupsValue{
 			Groups: []ValueListItem{{Value: adminGroupID}},
@@ -226,13 +226,13 @@ func (a ServicePrincipalsAPI) VerifyServicePrincipalAsAdmin(servicePrincipalID s
 // RemoveServicePrincipalAsAdmin will remove the servicePrincipal from the admin group given the admin group id and servicePrincipal id
 func (a ServicePrincipalsAPI) RemoveServicePrincipalAsAdmin(servicePrincipalID string, adminGroupID string) error {
 	servicePrincipalPath := fmt.Sprintf("/preview/scim/v2/ServicePrincipals/%v", servicePrincipalID)
-	var removeOperations ServicePrincipalPatchOperations
-	servicePrincipalPatchRequest := ServicePrincipalPatchRequest{
+	var removeOperations UserPatchOperations
+	servicePrincipalPatchRequest := UserPatchRequest{
 		Schemas:    []URN{PatchOp},
-		Operations: []ServicePrincipalPatchOperations{},
+		Operations: []UserPatchOperations{},
 	}
 	path := fmt.Sprintf("groups[value eq \"%s\"]", adminGroupID)
-	removeOperations = ServicePrincipalPatchOperations{
+	removeOperations = UserPatchOperations{
 		Op:   "remove",
 		Path: path,
 	}

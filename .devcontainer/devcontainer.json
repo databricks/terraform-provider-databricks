@@ -10,6 +10,8 @@
 		"source=databricks-terraform-bashhistory,target=/commandhistory,type=volume",
 		// Mount docker socket for docker builds
 		"source=/var/run/docker.sock,target=/var/run/docker.sock,type=bind",
+		// Mount home directory conveniently
+		"source=${localEnv:HOME},target=/home/me,type=bind,consistency=cached"
 	],
 	"runArgs": [
 		// Uncomment the next line to use a non-root user. On Linux, this will prevent
@@ -45,7 +47,7 @@
 			"watchFileChanges": true, // watch file changes outside of the editor
 			"deepCompletion": true, // enable deep completion
 		},
-		"files.eol": "\n", // formatting only supports LF line endings		
+		"files.eol": "\n", // formatting only supports LF line endings	
 	},
 	// Uncomment the next line if you want to publish any ports.
 	// "appPort": [],

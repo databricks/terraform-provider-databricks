@@ -3,7 +3,6 @@ package compute
 import (
 	"fmt"
 	"log"
-	"sort"
 	"strings"
 	"time"
 
@@ -226,6 +225,44 @@ func (a ClustersAPI) Unpin(clusterID string) error {
 	return a.client.Post("/clusters/unpin", ClusterID{ClusterID: clusterID}, nil)
 }
 
+// Cluster Events API - only using Cluster ID string to get all events
+// https://docs.databricks.com/dev-tools/api/latest/clusters.html#events
+func (a ClustersAPI) Events(eventsRequest EventsRequest) ([]ClusterEvent, error) {
+	var eventsResponse EventsResponse
+	err := a.client.Post("/clusters/events", eventsRequest, &eventsResponse)
+	if err != nil {
+		return nil, err
+	}
+
+	totalCount := int(eventsResponse.TotalCount)
+	if (eventsRequest.MaxItems) > 0 && (eventsRequest.MaxItems < uint(totalCount)) {
+		totalCount = int(eventsRequest.MaxItems)
+	}
+	events := make([]ClusterEvent, totalCount)
+	if totalCount == 0 {
+		return events, nil
+	}
+	startPos := 0
+	curPos := len(eventsResponse.Events)
+	copy(events[startPos:curPos], eventsResponse.Events)
+	for curPos < totalCount && eventsResponse.NextPage != nil {
+		err := a.client.Post("/clusters/events", eventsResponse.NextPage, &eventsResponse)
+		if err != nil {
+			return nil, err
+		}
+		startPos = curPos
+		curLen := len(eventsResponse.Events)
+		restItems := totalCount - startPos
+		if restItems < curLen {
+			curLen = restItems
+		}
+		curPos += curLen
+		copy(events[startPos:curPos], eventsResponse.Events[0:curLen])
+	}
+
+	return events[0:curPos], err
+}
+
 // List return information about all pinned clusters, currently active clusters,
 // up to 70 of the most recently terminated interactive clusters in the past 30 days,
 // and up to 30 of the most recently terminated job clusters in the past 30 days
@@ -235,11 +272,10 @@ func (a ClustersAPI) List() ([]ClusterInfo, error) {
 	return clusterList.Clusters, err
 }
 
-// ListNodeTypes returns a list of supported Spark node types
-func (a ClustersAPI) ListNodeTypes() ([]NodeType, error) {
-	var nodeTypeList = &NodeTypeList{}
-	err := a.client.Get("/clusters/list-node-types", nil, nodeTypeList)
-	return nodeTypeList.NodeTypes, err
+// ListNodeTypes returns a sorted list of supported Spark node types
+func (a ClustersAPI) ListNodeTypes() (l NodeTypeList, err error) {
+	err = a.client.Get("/clusters/list-node-types", nil, &l)
+	return
 }
 
 // GetOrCreateRunningCluster creates an autoterminating cluster if it doesn't exist
@@ -270,7 +306,9 @@ func (a ClustersAPI) GetOrCreateRunningCluster(name string, custom ...Cluster) (
 			}
 		}
 	}
-	smallestNodeType := a.GetSmallestNodeTypeWithStorage()
+	smallestNodeType := a.GetSmallestNodeType(NodeTypeRequest{
+		LocalDisk: true,
+	})
 	log.Printf("[INFO] Creating an autoterminating cluster with node type %s", smallestNodeType)
 	r := Cluster{
 		NumWorkers:             1,
@@ -290,59 +328,54 @@ func (a ClustersAPI) GetOrCreateRunningCluster(name string, custom ...Cluster) (
 	return a.Create(r)
 }
 
-// GetSmallestNodeTypeWithStorage returns smallest runtime node type
-func (a ClustersAPI) GetSmallestNodeTypeWithStorage() string {
-	nodeTypes, err := a.ListNodeTypes()
-	if err != nil || len(nodeTypes) == 0 {
+// NodeTypeRequest is a wrapper for local filtering of node types
+type NodeTypeRequest struct {
+	MinMemoryGB int32  `json:"min_memory_gb,omitempty"`
+	GBPerCore   int32  `json:"gb_per_core,omitempty"`
+	MinCores    int32  `json:"min_cores,omitempty"`
+	MinGPUs     int32  `json:"min_gpus,omitempty"`
+	LocalDisk   bool   `json:"local_disk,omitempty"`
+	Category    string `json:"category,omitempty"`
+}
+
+// GetSmallestNodeType returns smallest (or default) node type id given the criteria
+func (a ClustersAPI) GetSmallestNodeType(r NodeTypeRequest) string {
+	list, _ := a.ListNodeTypes()
+	// error is explicitly ingored here, because Azure returns
+	// apparently too big of a JSON for Go to parse
+	if len(list.NodeTypes) == 0 {
 		if a.client.IsAzure() {
 			return "Standard_D3_v2"
 		}
 		return "i3.xlarge"
 	}
-	nodesWithLocalDisk := []NodeType{}
-	for _, nt := range nodeTypes {
-		if nt.IsDeprecated {
+	list.Sort()
+	for _, nt := range list.NodeTypes {
+		gbs := (nt.MemoryMB / 1024)
+		if r.MinMemoryGB > 0 && gbs < r.MinMemoryGB {
 			continue
 		}
-		if nt.NodeInstanceType.LocalDisks > 0 {
-			nodesWithLocalDisk = append(nodesWithLocalDisk, nt)
+		if r.GBPerCore > 0 && (gbs/int32(nt.NumCores)) < r.GBPerCore {
+			continue
 		}
+		if r.MinCores > 0 && int32(nt.NumCores) < r.MinCores {
+			continue
+		}
+		if r.MinGPUs > 0 && nt.NumGPUs < r.MinGPUs {
+			continue
+		}
+		if r.LocalDisk && nt.NodeInstanceType != nil &&
+			(nt.NodeInstanceType.LocalDisks < 1 &&
+				nt.NodeInstanceType.LocalNVMeDisks < 1) {
+			continue
+		}
+		if r.Category != "" && nt.Category != r.Category {
+			continue
+		}
+		return nt.NodeTypeID
 	}
-	nodeType := getSmallestNodeType(nodesWithLocalDisk)
-	return nodeType.NodeTypeID
-}
-
-// getSmallestNodeType returns the smallest node type in a list of node types
-func getSmallestNodeType(nodeTypes []NodeType) NodeType {
-	sortedNodeTypes := nodeTypes
-	sort.Slice(sortedNodeTypes, func(i, j int) bool {
-		if sortedNodeTypes[i].IsDeprecated != sortedNodeTypes[j].IsDeprecated {
-			return !sortedNodeTypes[i].IsDeprecated
-		}
-		if sortedNodeTypes[i].MemoryMB != sortedNodeTypes[j].MemoryMB {
-			return sortedNodeTypes[i].MemoryMB < sortedNodeTypes[j].MemoryMB
-		}
-		if sortedNodeTypes[i].NumCores != sortedNodeTypes[j].NumCores {
-			return sortedNodeTypes[i].NumCores < sortedNodeTypes[j].NumCores
-		}
-		if sortedNodeTypes[i].NumGPUs != sortedNodeTypes[j].NumGPUs {
-			return sortedNodeTypes[i].NumGPUs < sortedNodeTypes[j].NumGPUs
-		}
-		if sortedNodeTypes[i].NodeInstanceType != nil && sortedNodeTypes[j].NodeInstanceType != nil {
-			if sortedNodeTypes[i].NodeInstanceType.LocalNVMeDisks != sortedNodeTypes[j].NodeInstanceType.LocalNVMeDisks {
-				return sortedNodeTypes[i].NodeInstanceType.LocalNVMeDisks < sortedNodeTypes[j].NodeInstanceType.LocalNVMeDisks
-			}
-
-			if sortedNodeTypes[i].NodeInstanceType.LocalDisks != sortedNodeTypes[j].NodeInstanceType.LocalDisks {
-				return sortedNodeTypes[i].NodeInstanceType.LocalDisks < sortedNodeTypes[j].NodeInstanceType.LocalDisks
-			}
-
-			if sortedNodeTypes[i].NodeInstanceType.LocalDiskSizeGB != sortedNodeTypes[j].NodeInstanceType.LocalDiskSizeGB {
-				return sortedNodeTypes[i].NodeInstanceType.LocalDiskSizeGB < sortedNodeTypes[j].NodeInstanceType.LocalDiskSizeGB
-			}
-		}
-		return sortedNodeTypes[i].InstanceTypeID < sortedNodeTypes[j].InstanceTypeID
-	})
-	nodeType := sortedNodeTypes[0]
-	return nodeType
+	if a.client.IsAzure() {
+		return "Standard_D3_v2"
+	}
+	return "i3.xlarge"
 }

@@ -25,7 +25,10 @@ func TestSecretsScopesAclsIntegration(t *testing.T) {
 	// TODO: on random group
 	testPrincipal := "users"
 
-	err := NewSecretScopesAPI(client).Create(testScope, initialManagePrincipal)
+	err := NewSecretScopesAPI(client).Create(SecretScope{
+		Name:                   testScope,
+		InitialManagePrincipal: initialManagePrincipal,
+	})
 	assert.NoError(t, err, err)
 
 	defer func() {

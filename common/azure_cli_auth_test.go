@@ -34,7 +34,7 @@ func TestAzureCliAuth(t *testing.T) {
 	client := DatabricksClient{
 		Host: server.URL,
 		AzureAuth: AzureAuth{
-			ResourceID: "/a/b/c",
+			ResourceID: "/subscriptions/a/resourceGroups/b/providers/Microsoft.Databricks/workspaces/c",
 		},
 		InsecureSkipVerify: true,
 	}

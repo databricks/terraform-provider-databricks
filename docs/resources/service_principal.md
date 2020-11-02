@@ -7,7 +7,7 @@ Directly creates service principal, that could be added to [databricks_group](gr
 Creating regular service principal:
 
 ```hcl
-resource "databricks_service_principal" "me" {
+resource "databricks_service_principal" "sp" {
   application_id = "00000000-0000-0000-0000-000000000000"
 }
 ```
@@ -19,20 +19,20 @@ data "databricks_group" "admins" {
     display_name = "admins"
 }
 
-resource "databricks_service_principal" "me" {
+resource "databricks_service_principal" "sp" {
   application_id    = "00000000-0000-0000-0000-000000000000"
 }
 
 resource "databricks_group_member" "i-am-admin" {
   group_id = data.databricks_group.admins.id
-  member_id = databricks_service_principal.me.id
+  member_id = databricks_service_principal.sp.id
 }
 ```
 
 Creating service principal with cluster create permissions:
 
 ```hcl
-resource "databricks_service_principal" "me" {
+resource "databricks_service_principal" "sp" {
   application_id    = "00000000-0000-0000-0000-000000000000"
   display_name = "Example service principal"
   allow_cluster_create = true

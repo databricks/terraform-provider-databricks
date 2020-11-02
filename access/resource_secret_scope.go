@@ -1,36 +1,77 @@
 package access
 
 import (
+	"context"
 	"fmt"
-	"log"
 	"net/http"
 
 	"github.com/databrickslabs/databricks-terraform/common"
+	"github.com/databrickslabs/databricks-terraform/internal"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 // NewSecretScopesAPI creates SecretScopesAPI instance from provider meta
 func NewSecretScopesAPI(m interface{}) SecretScopesAPI {
-	return SecretScopesAPI{C: m.(*common.DatabricksClient)}
+	return SecretScopesAPI{client: m.(*common.DatabricksClient)}
 }
 
 // SecretScopesAPI exposes the Secret Scopes API
 type SecretScopesAPI struct {
-	C *common.DatabricksClient
+	client *common.DatabricksClient
+}
+
+// SecretScopeList holds list of secret scopes
+type SecretScopeList struct {
+	Scopes []SecretScope `json:"scopes,omitempty"`
+}
+
+// SecretScope is a struct that encapsulates the secret scope
+type SecretScope struct {
+	Name                   string            `json:"name"`
+	BackendType            string            `json:"backend_type,omitempty" tf:"computed"`
+	InitialManagePrincipal string            `json:"initial_manage_principal,omitempty"`
+	KeyvaultMetadata       *KeyvaultMetadata `json:"keyvault_metadata,omitempty"`
+}
+
+// KeyvaultMetadata Azure Key Vault metadata wrapper
+type KeyvaultMetadata struct {
+	// /subscriptions/.../resourceGroups/.../providers/Microsoft.KeyVault/vaults/my-azure-kv
+	ResourceID string `json:"resource_id"`
+	// https://my-azure-kv.vault.azure.net/
+	DNSName string `json:"dns_name"`
+}
+
+type secretScopeRequest struct {
+	Scope                  string            `json:"scope,omitempty"`
+	BackendType            string            `json:"scope_backend_type,omitempty"`
+	InitialManagePrincipal string            `json:"initial_manage_principal,omitempty"`
+	BackendAzureKeyvault   *KeyvaultMetadata `json:"backend_azure_keyvault,omitempty"`
 }
 
 // Create creates a new secret scope
-func (a SecretScopesAPI) Create(scope string, initialManagePrincipal string) error {
-	req := map[string]string{"scope": scope}
-	if initialManagePrincipal != "" {
-		req["initial_manage_principal"] = initialManagePrincipal
+func (a SecretScopesAPI) Create(s SecretScope) error {
+	req := secretScopeRequest{
+		Scope:                  s.Name,
+		InitialManagePrincipal: s.InitialManagePrincipal,
+		BackendType:            "DATABRICKS",
 	}
-	return a.C.Post("/secrets/scopes/create", req, nil)
+	if s.KeyvaultMetadata != nil {
+		if !a.client.IsAzure() {
+			return fmt.Errorf("Azure KeyVault is not available")
+		}
+		if a.client.AzureAuth.IsClientSecretSet() {
+			return fmt.Errorf("Azure KeyVault cannot yet be configured for Service Principal authorization")
+		}
+		req.BackendType = "AZURE_KEYVAULT"
+		req.BackendAzureKeyvault = s.KeyvaultMetadata
+	}
+	return a.client.Post("/secrets/scopes/create", req, nil)
 }
 
 // Delete deletes a secret scope
 func (a SecretScopesAPI) Delete(scope string) error {
-	return a.C.Post("/secrets/scopes/delete", map[string]string{
+	return a.client.Post("/secrets/scopes/delete", map[string]string{
 		"scope": scope,
 	}, nil)
 }
@@ -38,7 +79,7 @@ func (a SecretScopesAPI) Delete(scope string) error {
 // List lists all secret scopes available in the workspace
 func (a SecretScopesAPI) List() ([]SecretScope, error) {
 	var listSecretScopesResponse SecretScopeList
-	err := a.C.Get("/secrets/scopes/list", nil, &listSecretScopesResponse)
+	err := a.client.Get("/secrets/scopes/list", nil, &listSecretScopesResponse)
 	return listSecretScopesResponse.Scopes, err
 }
 
@@ -62,69 +103,56 @@ func (a SecretScopesAPI) Read(scopeName string) (SecretScope, error) {
 	}
 }
 
+// ResourceSecretScope manages secret scopes
 func ResourceSecretScope() *schema.Resource {
-	return &schema.Resource{
-		Create: resourceSecretScopeCreate,
-		Read:   resourceSecretScopeRead,
-		Delete: resourceSecretScopeDelete,
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
-		Schema: map[string]*schema.Schema{
-			"name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"initial_manage_principal": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-			},
-			"backend_type": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-		},
-	}
-}
-
-func resourceSecretScopeCreate(d *schema.ResourceData, m interface{}) error {
-	client := m.(*common.DatabricksClient)
-	scopeName := d.Get("name").(string)
-	initialManagePrincipal := d.Get("initial_manage_principal").(string)
-	err := NewSecretScopesAPI(client).Create(scopeName, initialManagePrincipal)
-	if err != nil {
-		return err
-	}
-	d.SetId(scopeName)
-	return resourceSecretScopeRead(d, m)
-}
-
-func resourceSecretScopeRead(d *schema.ResourceData, m interface{}) error {
-	client := m.(*common.DatabricksClient)
-	id := d.Id()
-	scope, err := NewSecretScopesAPI(client).Read(id)
-	if err != nil {
+	s := internal.StructToSchema(SecretScope{}, func(s map[string]*schema.Schema) map[string]*schema.Schema {
+		// TODO: CustomDiffFunc for initial_manage_principal & importing
+		s["name"].ForceNew = true
+		s["initial_manage_principal"].ForceNew = true
+		s["keyvault_metadata"].ForceNew = true
+		return s
+	})
+	readContext := func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+		scope, err := NewSecretScopesAPI(m).Read(d.Id())
 		if e, ok := err.(common.APIError); ok && e.IsMissing() {
-			log.Printf("[INFO] missing resource due to error: %v\n", e)
 			d.SetId("")
 			return nil
 		}
-		return err
+		if err != nil {
+			return diag.FromErr(err)
+		}
+		err = internal.StructToData(scope, s, d)
+		if err != nil {
+			return diag.FromErr(err)
+		}
+		return nil
 	}
-	d.SetId(scope.Name)
-	err = d.Set("name", scope.Name)
-	if err != nil {
-		return err
+	return &schema.Resource{
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
+		CreateContext: func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+			var scope SecretScope
+			err := internal.DataToStructPointer(d, s, &scope)
+			if err != nil {
+				return diag.FromErr(err)
+			}
+			err = NewSecretScopesAPI(m).Create(scope)
+			if err != nil {
+				return diag.FromErr(err)
+			}
+			d.SetId(scope.Name)
+			return readContext(ctx, d, m)
+		},
+		DeleteContext: func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+			err := NewSecretScopesAPI(m).Delete(d.Id())
+			if err != nil {
+				return diag.FromErr(err)
+			}
+			return nil
+		},
+		ReadContext:   readContext,
+		SchemaVersion: 2,
+		Schema:        s,
 	}
-	err = d.Set("backend_type", scope.BackendType)
-	return err
-}
-
-func resourceSecretScopeDelete(d *schema.ResourceData, m interface{}) error {
-	client := m.(*common.DatabricksClient)
-	id := d.Id()
-	err := NewSecretScopesAPI(client).Delete(id)
-	return err
 }

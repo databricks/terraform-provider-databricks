@@ -306,9 +306,16 @@ func DatabricksProvider() *schema.Provider {
 				Default:     false,
 			},
 			"debug_truncate_bytes": {
-				Type:        schema.TypeInt,
 				Optional:    true,
+				Type:        schema.TypeInt,
+				Description: "Truncate JSON fields in JSON above this limit. Default is 96. Visible only when TF_LOG=DEBUG is set",
 				DefaultFunc: schema.EnvDefaultFunc("DATABRICKS_DEBUG_TRUNCATE_BYTES", 96),
+			},
+			"debug_headers": {
+				Optional:    true,
+				Type:        schema.TypeBool,
+				Description: "Debug HTTP headers of requests made by the provider. Default is false. Visible only when TF_LOG=DEBUG is set",
+				DefaultFunc: schema.EnvDefaultFunc("DATABRICKS_DEBUG_HEADERS", false),
 			},
 		},
 		ConfigureFunc: func(d *schema.ResourceData) (interface{}, error) {
@@ -379,6 +386,9 @@ func DatabricksProvider() *schema.Provider {
 			}
 			if v, ok := d.GetOk("debug_truncate_bytes"); ok {
 				pc.DebugTruncateBytes = v.(int)
+			}
+			if v, ok := d.GetOk("debug_headers"); ok {
+				pc.DebugHeaders = v.(bool)
 			}
 			if v, ok := d.GetOk("azure_use_pat_for_cli"); ok {
 				pc.AzureAuth.UsePATForCLI = v.(bool)

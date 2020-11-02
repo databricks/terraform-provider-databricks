@@ -187,14 +187,6 @@ func TestResourceServicePrincipalUpdate(t *testing.T) {
 				Value:   "9877",
 			},
 		},
-		Roles: []RoleListItem{
-			{
-				Value: "a",
-			},
-			{
-				Value: "b",
-			},
-		},
 	}
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
@@ -219,14 +211,6 @@ func TestResourceServicePrincipalUpdate(t *testing.T) {
 						{
 							Display: "ds",
 							Value:   "9877",
-						},
-					},
-					Roles: []RoleListItem{
-						{
-							Value: "a",
-						},
-						{
-							Value: "b",
 						},
 					},
 				},
@@ -306,14 +290,6 @@ func TestResourceServicePrincipalUpdate_ErrorPut(t *testing.T) {
 						{
 							Display: "ds",
 							Value:   "9877",
-						},
-					},
-					Roles: []RoleListItem{
-						{
-							Value: "a",
-						},
-						{
-							Value: "b",
 						},
 					},
 				},

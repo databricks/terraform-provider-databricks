@@ -185,26 +185,14 @@ func (u ScimUser) HasRole(role string) bool {
 
 // ScimServicePrincipal is a struct that contains all the information about a SCIM service principal
 type ScimServicePrincipal struct {
-	ID            string            `json:"id,omitempty"`
-	ApplicationId string            `json:"applicationId,omitempty"`
-	DisplayName   string            `json:"displayName,omitempty"`
-	Active        bool              `json:"active,omitempty"`
-	Schemas       []URN             `json:"schemas,omitempty"`
-	Groups        []GroupsListItem  `json:"groups,omitempty"`
-	Name          map[string]string `json:"name,omitempty"`
-	// TODO: Roles seems just a aws concept
-	Roles        []RoleListItem         `json:"roles,omitempty"`
-	Entitlements []EntitlementsListItem `json:"entitlements,omitempty"`
-}
-
-// HasRole returns true if group has a role
-func (u ScimServicePrincipal) HasRole(role string) bool {
-	for _, r := range u.Roles {
-		if r.Value == role {
-			return true
-		}
-	}
-	return false
+	ID            string                 `json:"id,omitempty"`
+	ApplicationId string                 `json:"applicationId,omitempty"`
+	DisplayName   string                 `json:"displayName,omitempty"`
+	Active        bool                   `json:"active,omitempty"`
+	Schemas       []URN                  `json:"schemas,omitempty"`
+	Groups        []GroupsListItem       `json:"groups,omitempty"`
+	Name          map[string]string      `json:"name,omitempty"`
+	Entitlements  []EntitlementsListItem `json:"entitlements,omitempty"`
 }
 
 // UserList contains a list of Users fetched from a list api call from SCIM api

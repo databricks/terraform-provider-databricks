@@ -28,6 +28,7 @@ type DatabricksClient struct {
 	InsecureSkipVerify bool
 	TimeoutSeconds     int
 	DebugTruncateBytes int
+	DebugHeaders       bool
 	userAgent          string
 	httpClient         *retryablehttp.Client
 	authMutex          sync.Mutex

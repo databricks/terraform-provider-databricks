@@ -31,30 +31,30 @@ type ServicePrincipalEntity struct {
 	AllowInstancePoolCreate bool   `json:"allow_instance_pool_create,omitempty"`
 }
 
-func (u ServicePrincipalEntity) toRequest() ScimServicePrincipal {
+func (sp ServicePrincipalEntity) toRequest() ScimServicePrincipal {
 	entitlements := []EntitlementsListItem{}
-	if u.AllowClusterCreate {
+	if sp.AllowClusterCreate {
 		entitlements = append(entitlements, EntitlementsListItem{
 			Value: Entitlement("allow-cluster-create"),
 		})
 	}
-	if u.AllowInstancePoolCreate {
+	if sp.AllowInstancePoolCreate {
 		entitlements = append(entitlements, EntitlementsListItem{
 			Value: Entitlement("allow-instance-pool-create"),
 		})
 	}
 	return ScimServicePrincipal{
 		Schemas:       []URN{ServicePrincipalSchema},
-		ApplicationId: u.ApplicationId,
-		Active:        u.Active,
-		DisplayName:   u.DisplayName,
+		ApplicationId: sp.ApplicationId,
+		Active:        sp.Active,
+		DisplayName:   sp.DisplayName,
 		Entitlements:  entitlements,
 	}
 }
 
 // CreateR ..
-func (a ServicePrincipalsAPI) CreateR(ru ServicePrincipalEntity) (servicePrincipal ScimServicePrincipal, err error) {
-	err = a.C.Scim(http.MethodPost, "/preview/scim/v2/ServicePrincipals", ru.toRequest(), &servicePrincipal)
+func (a ServicePrincipalsAPI) CreateR(rsp ServicePrincipalEntity) (servicePrincipal ScimServicePrincipal, err error) {
+	err = a.C.Scim(http.MethodPost, "/preview/scim/v2/ServicePrincipals", rsp.toRequest(), &servicePrincipal)
 	return servicePrincipal, err
 }
 
@@ -79,20 +79,20 @@ func (a ServicePrincipalsAPI) Create(applicationId string, displayName string, e
 }
 
 // ReadR reads resource-friendly entity
-func (a ServicePrincipalsAPI) ReadR(servicePrincipalID string) (ru ServicePrincipalEntity, err error) {
+func (a ServicePrincipalsAPI) ReadR(servicePrincipalID string) (rsp ServicePrincipalEntity, err error) {
 	servicePrincipal, err := a.read(servicePrincipalID)
 	if err != nil {
 		return
 	}
-	ru.ApplicationId = servicePrincipal.ApplicationId
-	ru.DisplayName = servicePrincipal.DisplayName
-	ru.Active = servicePrincipal.Active
+	rsp.ApplicationId = servicePrincipal.ApplicationId
+	rsp.DisplayName = servicePrincipal.DisplayName
+	rsp.Active = servicePrincipal.Active
 	for _, ent := range servicePrincipal.Entitlements {
 		switch ent.Value {
 		case AllowClusterCreateEntitlement:
-			ru.AllowClusterCreate = true
+			rsp.AllowClusterCreate = true
 		case AllowInstancePoolCreateEntitlement:
-			ru.AllowInstancePoolCreate = true
+			rsp.AllowInstancePoolCreate = true
 		}
 	}
 	return
@@ -136,12 +136,12 @@ func (a ServicePrincipalsAPI) readByPath(servicePrincipalPath string) (servicePr
 }
 
 // UpdateR replaces resource-friendly-entity
-func (a ServicePrincipalsAPI) UpdateR(servicePrincipalID string, ru ServicePrincipalEntity) error {
+func (a ServicePrincipalsAPI) UpdateR(servicePrincipalID string, rsp ServicePrincipalEntity) error {
 	servicePrincipal, err := a.read(servicePrincipalID)
 	if err != nil {
 		return err
 	}
-	updateRequest := ru.toRequest()
+	updateRequest := rsp.toRequest()
 	updateRequest.Groups = servicePrincipal.Groups
 	updateRequest.Roles = servicePrincipal.Roles
 	return a.C.Scim(http.MethodPut,

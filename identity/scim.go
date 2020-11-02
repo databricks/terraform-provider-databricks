@@ -46,13 +46,6 @@ type UserPatchOperations struct {
 	Value *GroupsValue `json:"value,omitempty"`
 }
 
-// ServicePrincipalPatchOperations is a list of path operations for add or removing service principal attributes
-type ServicePrincipalPatchOperations struct {
-	Op    string       `json:"op,omitempty"`
-	Path  string       `json:"path,omitempty"`
-	Value *GroupsValue `json:"value,omitempty"`
-}
-
 // GroupMember contains information of a member in a scim group
 type GroupMember struct {
 	Display string `json:"display,omitempty"`
@@ -240,12 +233,6 @@ type ServicePrincipalList struct {
 type UserPatchRequest struct {
 	Schemas    []URN                 `json:"schemas,omitempty"`
 	Operations []UserPatchOperations `json:"Operations,omitempty"`
-}
-
-// ServicePrincipalPatchRequest is a struct that contains all the information for a PATCH request to the SCIM service principal api
-type ServicePrincipalPatchRequest struct {
-	Schemas    []URN                             `json:"schemas,omitempty"`
-	Operations []ServicePrincipalPatchOperations `json:"Operations,omitempty"`
 }
 
 type PatchOperation struct {

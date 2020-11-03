@@ -2,6 +2,7 @@
 
 ## 0.2.8
 
+* Added [databricks_workspace_conf](https://github.com/databrickslabs/terraform-provider-databricks/pull/398) resource
 * Added [Azure Key Vault support](https://github.com/databrickslabs/terraform-provider-databricks/pull/381) for databricks_secret_scope for Azure CLI authenticated users
 * Added support for pinning clusters (issue #113)
 * Internal: API for retrieval of the cluster events

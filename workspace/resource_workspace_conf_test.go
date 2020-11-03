@@ -1,8 +1,5 @@
 package workspace
 
-// Preview feature: https://docs.databricks.com/security/network/ip-access-list.html
-// REST API: https://docs.databricks.com/dev-tools/api/latest/ip-access-list.html#operation/create-list
-
 import (
 	"net/http"
 	"testing"
@@ -11,6 +8,23 @@ import (
 	"github.com/databrickslabs/databricks-terraform/internal/qa"
 	"github.com/stretchr/testify/assert"
 )
+
+// func TestAccWorkspaceConfiguration(t *testing.T) {
+// 	if testing.Short() {
+// 		t.Skip("skipping integration test in short mode.")
+// 	}
+
+// 	client := common.NewClientFromEnvironment()
+
+// 	wsConfMap := map[string]string{
+// 		"enableIpAccessLists": "true",
+// 	}
+// 	err := NewWorkspaceConfAPI(client).Update(wsConfMap)
+// 	assert.NoError(t, err, err)
+// 	resp, err := NewWorkspaceConfAPI(client).Read("enableIpAccessLists")
+// 	t.Log(resp["enableIpAccessLists"])
+// 	assert.NoError(t, err, err)
+// }
 
 func TestWorkspaceConfCreate(t *testing.T) {
 	d, err := qa.ResourceFixture{

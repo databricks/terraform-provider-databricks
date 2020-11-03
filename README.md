@@ -22,6 +22,7 @@ End-to-end workspace creation on [AWS](scripts/awsmt-integration) or [Azure](scr
 | [databricks_group_member](docs/resources/group_member.md)
 | [databricks_instance_pool](docs/resources/instance_pool.md)
 | [databricks_instance_profile](docs/resources/instance_profile.md)
+| [databricks_ip_access_list](docs/resources/ip_access_list.md)
 | [databricks_job](docs/resources/job.md)
 | [databricks_mws_credentials](docs/resources/mws_credentials.md)
 | [databricks_mws_customer_managed_keys](docs/resources/mws_customer_managed_keys.md)
@@ -38,6 +39,7 @@ End-to-end workspace creation on [AWS](scripts/awsmt-integration) or [Azure](scr
 | [databricks_token](docs/resources/token.md)
 | [databricks_user](docs/resources/user.md)
 | [databricks_user_instance_profile](docs/resources/user_instance_profile.md)
+| [databricks_workspace_conf](docs/resources/workspace_conf.md)
 | [Contributing and Development Guidelines](CONTRIBUTING.md)
 | [Changelog](CHANGELOG.md)
 

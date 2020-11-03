@@ -92,19 +92,6 @@ func (a ServicePrincipalsAPI) ReadR(servicePrincipalID string) (rsp ServicePrinc
 // Read returns the servicePrincipal object and all the attributes of a scim servicePrincipal
 func (a ServicePrincipalsAPI) Read(servicePrincipalID string) (ScimServicePrincipal, error) {
 	servicePrincipal, err := a.read(servicePrincipalID)
-	if err != nil {
-		return servicePrincipal, err
-	}
-
-	//get groups
-	var groups []ScimGroup
-	for _, group := range servicePrincipal.Groups {
-		group, err := GroupsAPI{a.C}.Read(group.Value)
-		if err != nil {
-			return servicePrincipal, err
-		}
-		groups = append(groups, group)
-	}
 	return servicePrincipal, err
 }
 

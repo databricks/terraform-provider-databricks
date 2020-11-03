@@ -25,9 +25,11 @@ End-to-end workspace creation on [AWS](scripts/awsmt-integration) or [Azure](scr
 | [databricks_job](docs/resources/job.md)
 | [databricks_mws_credentials](docs/resources/mws_credentials.md)
 | [databricks_mws_customer_managed_keys](docs/resources/mws_customer_managed_keys.md)
+| [databricks_mws_log_delivery](docs/resources/mws_log_delivery.md)
 | [databricks_mws_networks](docs/resources/mws_networks.md)
 | [databricks_mws_storage_configurations](docs/resources/mws_storage_configurations.md)
 | [databricks_mws_workspaces](docs/resources/mws_workspaces.md)
+| [databricks_node_type](docs/data-sources/node_type.md) data
 | [databricks_notebook](docs/resources/notebook.md)
 | [databricks_notebook](docs/data-sources/notebook.md) data
 | [databricks_notebook_paths](docs/data-sources/notebook_paths.md) data

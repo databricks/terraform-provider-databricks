@@ -2,9 +2,19 @@
 
 ## 0.2.8
 
-* Added [Azure Key Vault support](https://github.com/databrickslabs/terraform-provider-databricks/pull/381) for databricks_secret_scope for Azure CLI authenticated users
-* Added support for pinning clusters (issue #113)
-* Internal: API for retrieval of the cluster events
+* Added [databricks_mws_log_delivery](https://github.com/databrickslabs/terraform-provider-databricks/pull/343) resource for billable usage & audit logs consumption.
+* Added [databricks_node_type](https://github.com/databrickslabs/terraform-provider-databricks/pull/376) data source for simpler selection of node types across AWS & Azure.
+* Added [Azure Key Vault support](https://github.com/databrickslabs/terraform-provider-databricks/pull/381) for databricks_secret_scope for Azure CLI authenticated users.
+* Added [is_pinned](https://github.com/databrickslabs/terraform-provider-databricks/pull/348) support for `databricks_cluster` resource.
+* Internal: API for retrieval of the cluster events.
+
+Updated dependency versions:
+
+* github.com/Azure/go-autorest/autorest v0.11.9
+* github.com/Azure/go-autorest/autorest/adal v0.9.5
+* github.com/Azure/go-autorest/autorest/azure/auth v0.5.3
+* github.com/Azure/go-autorest/autorest/azure/cli v0.4.2
+* gopkg.in/ini.v1 1.62.0
 
 ## 0.2.7
 

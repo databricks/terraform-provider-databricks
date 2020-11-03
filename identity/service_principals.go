@@ -100,11 +100,6 @@ func (a ServicePrincipalsAPI) read(servicePrincipalID string) (ScimServicePrinci
 	return a.readByPath(servicePrincipalPath)
 }
 
-// Me gets servicePrincipal information about caller
-func (a ServicePrincipalsAPI) Me() (ScimServicePrincipal, error) {
-	return a.readByPath("/preview/scim/v2/Me")
-}
-
 func (a ServicePrincipalsAPI) readByPath(servicePrincipalPath string) (servicePrincipal ScimServicePrincipal, err error) {
 	err = a.C.Scim(http.MethodGet, servicePrincipalPath, nil, &servicePrincipal)
 	return

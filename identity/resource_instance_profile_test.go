@@ -185,6 +185,7 @@ func TestResourceInstanceProfileDelete_Error(t *testing.T) {
 }
 
 func TestAwsAccInstanceProfiles(t *testing.T) {
+	defer qa.LockInstanceProfileRegistration()()
 	arn := qa.GetEnvOrSkipTest(t, "TEST_EC2_INSTANCE_PROFILE")
 	client := common.NewClientFromEnvironment()
 	instanceProfilesAPI := NewInstanceProfilesAPI(client)

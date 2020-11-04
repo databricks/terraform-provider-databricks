@@ -18,6 +18,7 @@ import (
 func getRunningClusterWithInstanceProfile(t *testing.T, client *common.DatabricksClient) (compute.ClusterInfo, error) {
 	clusterName := "TerraformIntegrationTestIAM"
 	clustersAPI := compute.NewClustersAPI(client)
+	defer qa.LockInstanceProfileRegistration()()
 	instanceProfile := qa.GetEnvOrSkipTest(t, "TEST_EC2_INSTANCE_PROFILE")
 	return clustersAPI.GetOrCreateRunningCluster(clusterName, compute.Cluster{
 		NumWorkers:             1,
@@ -35,6 +36,7 @@ func TestAwsAccS3IamMount_WithCluster(t *testing.T) {
 	if _, ok := os.LookupEnv("CLOUD_ENV"); !ok {
 		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
 	}
+	defer qa.LockInstanceProfileRegistration()()
 	config := qa.EnvironmentTemplate(t, `
 	resource "databricks_instance_profile" "this" {
 		instance_profile_arn = "{env.TEST_EC2_INSTANCE_PROFILE}"
@@ -79,6 +81,7 @@ func TestAwsAccS3IamMount_NoClusterGiven(t *testing.T) {
 	if _, ok := os.LookupEnv("CLOUD_ENV"); !ok {
 		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
 	}
+	defer qa.LockInstanceProfileRegistration()()
 	config := qa.EnvironmentTemplate(t, `
 	resource "databricks_instance_profile" "this" {
 		instance_profile_arn = "{env.TEST_EC2_INSTANCE_PROFILE}"

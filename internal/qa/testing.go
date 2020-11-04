@@ -14,6 +14,7 @@ import (
 	"regexp"
 	"sort"
 	"strings"
+	"sync"
 	"testing"
 
 	"github.com/databrickslabs/databricks-terraform/common"
@@ -30,6 +31,16 @@ import (
 )
 
 // TODO: remove r3labs/diff
+
+var instanceProfileRegistrationMutex sync.Mutex
+
+// LockInstanceProfileRegistration ensures that IAM role would be reistered only once
+func LockInstanceProfileRegistration() func() {
+	instanceProfileRegistrationMutex.Lock()
+	return func() {
+		instanceProfileRegistrationMutex.Unlock()
+	}
+}
 
 const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 
@@ -346,7 +357,7 @@ func environmentTemplate(t *testing.T, template string, otherVars ...map[string]
 		"RANDOM": acctest.RandStringFromCharSet(5, acctest.CharSetAlphaNum),
 	}
 	if len(otherVars) > 1 {
-		return "", errors.New("Cannot have more than one customer variable map!")
+		return "", errors.New("Cannot have more than one customer variable map")
 	}
 	if len(otherVars) == 1 {
 		for k, v := range otherVars[0] {
@@ -375,7 +386,7 @@ func environmentTemplate(t *testing.T, template string, otherVars ...map[string]
 		template = strings.ReplaceAll(template, `{`+varType+`.`+varName+`}`, value)
 	}
 	if missing > 0 {
-		return "", fmt.Errorf("please set %d variables and restart.", missing)
+		return "", fmt.Errorf("please set %d variables and restart", missing)
 	}
 	return internal.TrimLeadingWhitespace(template), nil
 }

@@ -255,6 +255,7 @@ func TestResourceAwsS3MountDelete(t *testing.T) {
 }
 
 func TestAwsAccS3Mount(t *testing.T) {
+	defer qa.LockInstanceProfileRegistration()()
 	bucket := qa.GetEnvOrSkipTest(t, "TEST_S3_BUCKET")
 	instanceProfile := qa.GetEnvOrSkipTest(t, "TEST_EC2_INSTANCE_PROFILE")
 

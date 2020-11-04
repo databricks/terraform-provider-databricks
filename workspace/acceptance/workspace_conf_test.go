@@ -10,29 +10,29 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestWorkspaceConfFullLifecycle(t *testing.T) {
+func TestAccWorkspaceConfFullLifecycle(t *testing.T) {
 	acceptance.AccTest(t, resource.TestCase{
-
 		Steps: []resource.TestStep{
 			{
 				Config: `
-				resource "databricks_workspace_conf" "features" {
-					enable_ip_access_lists = "true"
-				}
-				`,
+				resource "databricks_workspace_conf" "this" {
+					custom_config = {
+						"enableIpAccessLists": true
+					}
+				}`,
 				Check: resource.ComposeTestCheckFunc(
-					acceptance.ResourceCheck("databricks_workspace_conf.features",
+					acceptance.ResourceCheck("databricks_workspace_conf.this",
 						func(client *common.DatabricksClient, id string) error {
-							workspaceConf, err := workspace.NewWorkspaceConfAPI(client).Read("enableIpAccessLists")
-							if err != nil {
-								return err
+							conf := map[string]interface{}{
+								"enableIpAccessLists": nil,
 							}
-							assert.Len(t, workspaceConf, 1)
-							assert.Equal(t, workspaceConf["enableIpAccessLists"], "true")
+							err := workspace.NewWorkspaceConfAPI(client).Read(&conf)
+							assert.NoError(t, err)
+							assert.Len(t, conf, 1)
+							assert.Equal(t, conf["enableIpAccessLists"], "true")
 							return nil
 						}),
 				),
-				ExpectNonEmptyPlan: true,
 			},
 		},
 	})

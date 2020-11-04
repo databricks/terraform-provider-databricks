@@ -25,18 +25,12 @@ func NewWorkspaceConfAPI(m interface{}) WorkspaceConfAPI {
 
 // Update will handle creation of new values as well as deletes. Deleting just implies that a value of "" or
 // the appropriate disable string like "false" is sent with the appropriate key
-// TODO: map[string]string is the only thing accepted by the API currently.  If you send in another type, you get the response
-// {
-//    "error_code": "BAD_REQUEST",
-//    "message": "Values must be strings"
-//}
-// This is the case for any key tested.  It would be worth finding any internal documentation detailing workspace-conf
 func (a WorkspaceConfAPI) Update(workspaceConfMap map[string]interface{}) error {
 	return a.client.Patch("/workspace-conf", workspaceConfMap)
 }
 
-// ReadR just returns back a map of keys and values which keys are the configuration items and values are the settings
-func (a WorkspaceConfAPI) ReadR(conf *map[string]interface{}) error {
+// Read just returns back a map of keys and values which keys are the configuration items and values are the settings
+func (a WorkspaceConfAPI) Read(conf *map[string]interface{}) error {
 	keys := []string{}
 	for k := range *conf {
 		keys = append(keys, k)
@@ -46,17 +40,18 @@ func (a WorkspaceConfAPI) ReadR(conf *map[string]interface{}) error {
 	}, &conf)
 }
 
-// ResourceWorkspaceConf ...
+// ResourceWorkspaceConf maintains workspace configuration for specified keys
 func ResourceWorkspaceConf() *schema.Resource {
 	readContext := func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 		wsConfAPI := NewWorkspaceConfAPI(m)
 		config := d.Get("custom_config").(map[string]interface{})
 		log.Printf("[DEBUG] Config available in state: %v", config)
-		err := wsConfAPI.ReadR(&config)
+		err := wsConfAPI.Read(&config)
 		if err != nil {
 			return diag.FromErr(err)
 		}
 		log.Printf("[DEBUG] Setting new config to state: %v", config)
+		// nolint
 		d.Set("custom_config", config)
 		return nil
 	}

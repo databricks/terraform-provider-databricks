@@ -9,33 +9,9 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-// func TestAccWorkspaceConfiguration(t *testing.T) {
-// 	if testing.Short() {
-// 		t.Skip("skipping integration test in short mode.")
-// 	}
-
-// 	client := common.NewClientFromEnvironment()
-
-// 	wsConfMap := map[string]string{
-// 		"enableIpAccessLists": "true",
-// 	}
-// 	err := NewWorkspaceConfAPI(client).Update(wsConfMap)
-// 	assert.NoError(t, err, err)
-// 	resp, err := NewWorkspaceConfAPI(client).Read("enableIpAccessLists")
-// 	t.Log(resp["enableIpAccessLists"])
-// 	assert.NoError(t, err, err)
-// }
-
 func TestWorkspaceConfCreate(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   http.MethodGet,
-				Resource: "/api/2.0/workspace-conf?keys=enableIpAccessLists",
-				Response: map[string]string{
-					"enableIpAccessLists": "true",
-				},
-			},
 			{
 				Method:   http.MethodPatch,
 				Resource: "/api/2.0/workspace-conf",
@@ -43,28 +19,28 @@ func TestWorkspaceConfCreate(t *testing.T) {
 					"enableIpAccessLists": "true",
 				},
 			},
+			{
+				Method:   http.MethodGet,
+				Resource: "/api/2.0/workspace-conf?keys=enableIpAccessLists",
+				Response: map[string]interface{}{
+					"enableIpAccessLists": "true",
+				},
+			},
 		},
 		Resource: ResourceWorkspaceConf(),
-		State: map[string]interface{}{
-			"enable_ip_access_lists": "true",
-		},
+		HCL: `custom_config {
+			enableIpAccessLists = "true"
+		}`,
 		Create: true,
 	}.Apply(t)
 	assert.NoError(t, err, err)
-	assert.Equal(t, "workspace_configs", d.Id())
-	assert.Equal(t, true, d.Get("enable_ip_access_lists"))
+	assert.Equal(t, "_", d.Id())
+	assert.Equal(t, "true", d.Get("custom_config.enableIpAccessLists"))
 }
 
 func TestWorkspaceConfCreate_Error(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   http.MethodGet,
-				Resource: "/api/2.0/workspace-conf?keys=enableIpAccessLists",
-				Response: map[string]string{
-					"enableIpAccessLists": "true",
-				},
-			},
 			{
 				Method:   http.MethodPatch,
 				Resource: "/api/2.0/workspace-conf",
@@ -79,9 +55,9 @@ func TestWorkspaceConfCreate_Error(t *testing.T) {
 			},
 		},
 		Resource: ResourceWorkspaceConf(),
-		State: map[string]interface{}{
-			"enable_ip_access_lists": "true",
-		},
+		HCL: `custom_config {
+			enableIpAccessLists = "true"
+		}`,
 		Create: true,
 	}.Apply(t)
 	qa.AssertErrorStartsWith(t, err, "Internal error happened")
@@ -92,42 +68,41 @@ func TestWorkspaceConfUpdate(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
-				Method:   http.MethodGet,
-				Resource: "/api/2.0/workspace-conf?keys=enableIpAccessLists",
-				Response: map[string]string{
-					"enableIpAccessLists": "true",
-				},
-			},
-			{
 				Method:   http.MethodPatch,
 				Resource: "/api/2.0/workspace-conf",
 				ExpectedRequest: map[string]string{
+					"enableIpAccessLists": "true",
+					"enableSomething":     "false",
+					"someProperty":        "",
+				},
+			},
+			{
+				Method:   http.MethodGet,
+				Resource: "/api/2.0/workspace-conf?keys=enableIpAccessLists",
+				Response: map[string]string{
 					"enableIpAccessLists": "true",
 				},
 			},
 		},
 		Resource: ResourceWorkspaceConf(),
-		State: map[string]interface{}{
-			"enable_ip_access_lists": "true",
+		InstanceState: map[string]string{
+			"custom_config.enableSomething": "true",
+			"custom_config.someProperty":    "thing",
 		},
+		HCL: `custom_config {
+			enableIpAccessLists = "true"
+		}`,
 		Update: true,
-		ID:     "workspace_configs",
+		ID:     "_",
 	}.Apply(t)
 	assert.NoError(t, err, err)
-	assert.Equal(t, "workspace_configs", d.Id())
-	assert.Equal(t, true, d.Get("enable_ip_access_lists"))
+	assert.Equal(t, "_", d.Id())
+	assert.Equal(t, "true", d.Get("custom_config.enableIpAccessLists"))
 }
 
 func TestWorkspaceConfUpdate_Error(t *testing.T) {
 	_, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   http.MethodGet,
-				Resource: "/api/2.0/workspace-conf?keys=enableIpAccessLists",
-				Response: map[string]string{
-					"enableIpAccessLists": "true",
-				},
-			},
 			{
 				Method:   http.MethodPatch,
 				Resource: "/api/2.0/workspace-conf",
@@ -142,53 +117,29 @@ func TestWorkspaceConfUpdate_Error(t *testing.T) {
 			},
 		},
 		Resource: ResourceWorkspaceConf(),
-		State: map[string]interface{}{
-			"enable_ip_access_lists": "true",
-		},
+		HCL: `custom_config {
+			enableIpAccessLists = "true"
+		}`,
 		Update: true,
-		ID:     "workspace_configs",
+		ID:     "_",
 	}.Apply(t)
 	qa.AssertErrorStartsWith(t, err, "Internal error happened")
 }
 
 func TestWorkspaceConfRead(t *testing.T) {
-	d, err := qa.ResourceFixture{
+	_, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   http.MethodGet,
-				Resource: "/api/2.0/workspace-conf?keys=enableIpAccessLists",
-				Response: map[string]string{
-					"enableIpAccessLists": "true",
-				},
+				Resource: "/api/2.0/workspace-conf?",
+				Response: map[string]string{},
 			},
 		},
 		Resource: ResourceWorkspaceConf(),
 		Read:     true,
-		ID:       "workspace_configs",
+		ID:       "_",
 	}.Apply(t)
 	assert.NoError(t, err, err)
-	assert.Equal(t, true, d.Get("enable_ip_access_lists"))
-}
-
-func TestWorkspaceConfRead_NotFound(t *testing.T) {
-	d, err := qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   http.MethodGet,
-				Resource: "/api/2.0/workspace-conf?keys=enableIpAccessLists",
-				Response: common.APIErrorBody{
-					ErrorCode: "NOT_FOUND",
-					Message:   "Item not found",
-				},
-				Status: 404,
-			},
-		},
-		Resource: ResourceWorkspaceConf(),
-		Read:     true,
-		ID:       "workspace_configs",
-	}.Apply(t)
-	assert.NoError(t, err, err)
-	assert.Equal(t, "", d.Id(), "Id should be empty for missing resources")
 }
 
 func TestWorkspaceConfRead_Error(t *testing.T) {
@@ -196,7 +147,7 @@ func TestWorkspaceConfRead_Error(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   http.MethodGet,
-				Resource: "/api/2.0/workspace-conf?keys=enableIpAccessLists",
+				Resource: "/api/2.0/workspace-conf?",
 				Response: common.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
@@ -206,34 +157,41 @@ func TestWorkspaceConfRead_Error(t *testing.T) {
 		},
 		Resource: ResourceWorkspaceConf(),
 		Read:     true,
-		ID:       "workspace_configs",
+		ID:       "_",
 	}.Apply(t)
 	qa.AssertErrorStartsWith(t, err, "Internal error happened")
-	assert.Equal(t, "workspace_configs", d.Id(), "Id should not be empty for error reads")
+	assert.Equal(t, "_", d.Id(), "Id should not be empty for error reads")
 }
 
 func TestWorkspaceConfDelete(t *testing.T) {
-	// interrestingly enough, once you set ip access lists, you cant reset to null--only true/false are valid
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   http.MethodPatch,
 				Resource: "/api/2.0/workspace-conf",
 				ExpectedRequest: map[string]string{
-					"enableIpAccessLists": "false",
+					"enableFancyThing":     "false",
+					"enableSomething":      "false",
+					"enforceSomethingElse": "false",
+					"someProperty":         "",
 				},
 			},
 		},
+		HCL: `custom_config {
+			enableSomething = "true"
+			enforceSomethingElse = "true"
+			enableFancyThing = "false"
+			someProperty = "thing"
+		}`,
 		Resource: ResourceWorkspaceConf(),
 		Delete:   true,
-		ID:       "workspace_configs",
+		ID:       "_",
 	}.Apply(t)
 	assert.NoError(t, err, err)
-	assert.Equal(t, "workspace_configs", d.Id())
+	assert.Equal(t, "_", d.Id())
 }
 
 func TestWorkspaceConfDelete_Error(t *testing.T) {
-	// interrestingly enough, once you set ip access lists, you cant reset to null--only true/false are valid
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
@@ -248,8 +206,8 @@ func TestWorkspaceConfDelete_Error(t *testing.T) {
 		},
 		Resource: ResourceWorkspaceConf(),
 		Delete:   true,
-		ID:       "workspace_configs",
+		ID:       "_",
 	}.Apply(t)
 	qa.AssertErrorStartsWith(t, err, "Internal error happened")
-	assert.Equal(t, "workspace_configs", d.Id())
+	assert.Equal(t, "_", d.Id())
 }

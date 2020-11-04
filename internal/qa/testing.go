@@ -63,10 +63,10 @@ type HTTPFixture struct {
 
 // ResourceFixture helps testing resources and commands
 type ResourceFixture struct {
-	Fixtures []HTTPFixture
-	Resource *schema.Resource
+	Fixtures      []HTTPFixture
+	Resource      *schema.Resource
 	InstanceState map[string]string
-	State    map[string]interface{}
+	State         map[string]interface{}
 	// HCL might be useful to test nested blocks
 	HCL         string
 	CommandMock common.CommandMock

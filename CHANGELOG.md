@@ -2,6 +2,7 @@
 
 ## 0.2.8
 
+* Added [databricks_workspace_conf](https://github.com/databrickslabs/terraform-provider-databricks/pull/398) resource
 * Added [databricks_mws_log_delivery](https://github.com/databrickslabs/terraform-provider-databricks/pull/343) resource for billable usage & audit logs consumption.
 * Added [databricks_node_type](https://github.com/databrickslabs/terraform-provider-databricks/pull/376) data source for simpler selection of node types across AWS & Azure.
 * Added [Azure Key Vault support](https://github.com/databrickslabs/terraform-provider-databricks/pull/381) for databricks_secret_scope for Azure CLI authenticated users.

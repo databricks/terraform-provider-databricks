@@ -67,10 +67,6 @@ resource "databricks_cluster" "shared_autoscaling" {
 
 When you [create a Databricks cluster](https://docs.databricks.com/clusters/configure.html#cluster-size-and-autoscaling), you can either provide a `num_workers` for the fixed size cluster or provide `min_workers` and/or `max_workers` for the cluster withing `autoscale` group. When you provide a fixed size cluster, Databricks ensures that your cluster has the specified number of workers. When you provide a range for the number of workers, Databricks chooses the appropriate number of workers required to run your job. This is referred to as autoscaling. With autoscaling, Databricks dynamically reallocates workers to account for the characteristics of your job. Certain parts of your pipeline may be more computationally demanding than others, and Databricks automatically adds additional workers during these phases of your job (and removes them when they’re no longer needed). It is advised to keep all common configurations in [Cluster Policies](cluster_policy.md) to maintain control of the environments launched.
 
-When using a [Single Node cluster](https://docs.databricks.com/clusters/single-node.html), `num_workers` needs to be `0`. In this case you can choose to explicitly add the argument or not, as it defaults to `0`.
-
-* `num_workers` - (Optional) Number of worker nodes that this cluster should have. A cluster has one Spark Driver and num_workers Executors for a total of num_workers + 1 Spark node. Set to `0` when not provided.
-
 `autoscale` optional configuration block supports the following:
 
 * `min_workers` - (Optional) The minimum number of workers to which the cluster can scale down when underutilized. It is also the initial number of workers the cluster will have after creation.

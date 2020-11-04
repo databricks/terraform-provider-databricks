@@ -101,11 +101,6 @@ func resourceClusterSchema() map[string]*schema.Schema {
 			p.Sensitive = true
 		}
 		s["autotermination_minutes"].Default = 60
-		s["num_workers"] = &schema.Schema{
-			Type:     schema.TypeInt,
-			Optional: true,
-			Default:  0,
-		}
 		s["idempotency_token"].ForceNew = true
 		s["cluster_id"] = &schema.Schema{
 			Type:     schema.TypeString,

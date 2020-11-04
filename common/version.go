@@ -2,35 +2,14 @@ package common
 
 import (
 	"fmt"
-	"os/exec"
-	"strings"
-	"sync"
 )
 
 var (
-	version    = ""
-	onceGitVer sync.Once
+	version = "0.2.8"
 )
-
-func versionFromGit() string {
-	out, err := exec.Command("git", "describe",
-		"--always", "--long").Output()
-	ee, ok := err.(*exec.ExitError)
-	if ok && !ee.Success() || err != nil {
-		return "dev"
-	}
-	return strings.TrimSpace(strings.ReplaceAll(string(out), "v", ""))
-}
 
 // Version returns version of provider
 func Version() string {
-	if version == "" {
-		onceGitVer.Do(func() {
-			// calling git once per process to know
-			// the version that integration tests are running
-			version = versionFromGit()
-		})
-	}
 	return version
 }
 

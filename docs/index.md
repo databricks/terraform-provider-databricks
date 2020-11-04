@@ -10,6 +10,8 @@ description: |-
 
 Use the Databricks Terraform provider to interact with almost all of [Databricks](http://databricks.com/) resources. 
 
+![Resources](resources.png)
+
 ## Example Usage
 
 ```hcl

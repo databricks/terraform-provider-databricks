@@ -1,6 +1,6 @@
 # Databricks Terraform Provider
 
-[![Build Status](https://travis-ci.org/databrickslabs/terraform-provider-databricks.svg?branch=master)](https://travis-ci.org/databrickslabs/terraform-provider-databricks) [![codecov](https://codecov.io/gh/databrickslabs/terraform-provider-databricks/branch/master/graph/badge.svg)](https://codecov.io/gh/databrickslabs/terraform-provider-databricks)
+![Resources](docs/resources.png)
 
 End-to-end workspace creation on [AWS](scripts/awsmt-integration) or [Azure](scripts/azvnet-integration/databricks.tf)
 | [Authentication](docs/index.md)
@@ -44,6 +44,8 @@ End-to-end workspace creation on [AWS](scripts/awsmt-integration) or [Azure](scr
 | [databricks_workspace_conf](docs/resources/workspace_conf.md)
 | [Contributing and Development Guidelines](CONTRIBUTING.md)
 | [Changelog](CHANGELOG.md)
+
+[![Build Status](https://travis-ci.org/databrickslabs/terraform-provider-databricks.svg?branch=master)](https://travis-ci.org/databrickslabs/terraform-provider-databricks) [![codecov](https://codecov.io/gh/databrickslabs/terraform-provider-databricks/branch/master/graph/badge.svg)](https://codecov.io/gh/databrickslabs/terraform-provider-databricks)
 
 If you use Terraform 0.13, please refer to instructions specified at [registry page](https://registry.terraform.io/providers/databrickslabs/databricks/latest):
 

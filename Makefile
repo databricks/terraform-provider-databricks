@@ -10,7 +10,7 @@ lint:
 	@echo "✓ Linting source code with golangci-lint make sure you run make fmt ..."
 	@golangci-lint run --skip-dirs-use-default --timeout 5m
 
-test:
+test: lint
 	@echo "✓ Running tests..."
 	@gotestsum --format pkgname-and-test-fails --no-summary=skipped --raw-command go test -v -json -short -coverprofile=coverage.txt ./...
 
@@ -65,20 +65,8 @@ test-awsmt:
 	@echo "✓ Running Terraform Acceptance Tests for AWS MT..."
 	@/bin/bash scripts/run.sh awsmt '^(TestAcc|TestAwsAcc)' --debug --tee
 
-terraform-setup: build
-	@echo "✓ Initializing Terraform..."
-	@terraform init
-
-terraform-apply: terraform-setup
-	@echo "✓ Initializing Terraform plan..."
-	@TF_LOG_PATH=log.out TF_LOG=debug terraform apply
-
 snapshot:
 	@echo "✓ Making Snapshot..."
 	@goreleaser release --rm-dist --snapshot
 
-hugo:
-	@echo "✓ Making Docs..."
-	@cd website && hugo -d ../docs/
-
-.PHONY: build fmt python-setup docs vendor terraform-local build fmt coverage test lint
+.PHONY: build fmt python-setup docs vendor build fmt coverage test lint

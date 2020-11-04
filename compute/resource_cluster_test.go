@@ -495,6 +495,73 @@ func TestResourceClusterCreate_WithLibraries(t *testing.T) {
 	assert.Equal(t, "abc", d.Id())
 }
 
+func TestResourceClusterCreate_WithoutNumWorkers(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/clusters/create",
+				ExpectedRequest: Cluster{
+					NumWorkers:             0,
+					ClusterName:            "Single Node Cluster",
+					SparkVersion:           "7.1-scala12",
+					NodeTypeID:             "dev-tier-node",
+					AutoterminationMinutes: 120,
+				},
+				Response: ClusterInfo{
+					ClusterID: "abc",
+					State:     ClusterStateRunning,
+				},
+			},
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/clusters/events",
+				ExpectedRequest: EventsRequest{
+					ClusterID:  "abc",
+					Limit:      1,
+					Order:      SortDescending,
+					EventTypes: []ClusterEventType{EvTypePinned, EvTypeUnpinned},
+				},
+				Response: EventsResponse{
+					Events:     []ClusterEvent{},
+					TotalCount: 0,
+				},
+			},
+			{
+				Method:       "GET",
+				ReuseRequest: true,
+				Resource:     "/api/2.0/clusters/get?cluster_id=abc",
+				Response: ClusterInfo{
+					ClusterID:              "abc",
+					ClusterName:            "Single Node Cluster",
+					SparkVersion:           "7.1-scala12",
+					NodeTypeID:             "dev-tier-node",
+					AutoterminationMinutes: 120,
+					State:                  ClusterStateRunning,
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/libraries/cluster-status?cluster_id=abc",
+				Response: ClusterLibraryStatuses{
+					LibraryStatuses: []LibraryStatus{},
+				},
+			},
+		},
+		Create:   true,
+		Resource: ResourceCluster(),
+		State: map[string]interface{}{
+			"autotermination_minutes": 120,
+			"cluster_name":            "Single Node Cluster",
+			"spark_version":           "7.1-scala12",
+			"node_type_id":            "dev-tier-node",
+			"is_pinned":               false,
+		},
+	}.Apply(t)
+	assert.NoError(t, err, err)
+	assert.Equal(t, 0, d.Get("num_workers"))
+}
+
 func TestResourceClusterCreate_Error(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{

@@ -1,17 +1,6 @@
 language: go
 jobs:
   include:
-    - go: 1.13.x
-      cache:
-        directories:
-          - $HOME/.cache/go-build
-          - $HOME/gopath/pkg/mod
-      script:
-          - curl -sSL "https://github.com/gotestyourself/gotestsum/releases/download/v0.4.2/gotestsum_0.4.2_linux_amd64.tar.gz" | sudo tar -xz -C /usr/local/bin gotestsum
-          - curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.25.0
-          - time make lint
-          - time make test
-          - time make build
     - go: 1.14.x
       gemfile: gemfiles/Gemfile.rails-3.0.x
       cache:
@@ -21,7 +10,6 @@ jobs:
       script:
         - curl -sSL "https://github.com/gotestyourself/gotestsum/releases/download/v0.4.2/gotestsum_0.4.2_linux_amd64.tar.gz" | sudo tar -xz -C /usr/local/bin gotestsum
         - curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.25.0
-        - time make lint
         - time make test
         - time make build
 

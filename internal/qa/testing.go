@@ -65,6 +65,7 @@ type HTTPFixture struct {
 type ResourceFixture struct {
 	Fixtures []HTTPFixture
 	Resource *schema.Resource
+	InstanceState map[string]string
 	State    map[string]interface{}
 	// HCL might be useful to test nested blocks
 	HCL         string
@@ -167,7 +168,20 @@ func (f ResourceFixture) Apply(t *testing.T) (*schema.ResourceData, error) {
 				strings.ReplaceAll(diagsToString(diags), "\"", ""))
 		}
 	}
-	resourceData := schema.TestResourceDataRaw(t, f.Resource.Schema, f.State)
+	c := terraform.NewResourceConfigRaw(f.State)
+	sm := schema.InternalMap(f.Resource.Schema)
+	is := &terraform.InstanceState{
+		Attributes: f.InstanceState,
+	}
+	diff, err := sm.Diff(context.Background(), is, c, nil, nil, true)
+	if err != nil {
+		return nil, err
+	}
+	resourceData, err := sm.Data(is, diff)
+	if err != nil {
+		return nil, err
+	}
+	//resourceData := schema.TestResourceDataRaw(t, f.Resource.Schema, f.State)
 	err = f.Resource.InternalValidate(f.Resource.Schema, !f.NonWritable)
 	if err != nil {
 		return nil, err

@@ -827,18 +827,6 @@ func TestResourceClusterUpdateWithPinned(t *testing.T) {
 				},
 			},
 			{
-				Method:   "POST",
-				Resource: "/api/2.0/clusters/edit",
-				ExpectedRequest: Cluster{
-					AutoterminationMinutes: 15,
-					ClusterID:              "abc",
-					NumWorkers:             100,
-					ClusterName:            "Shared Autoscaling",
-					SparkVersion:           "7.1-scala12",
-					NodeTypeID:             "i3.xlarge",
-				},
-			},
-			{
 				Method:          "POST",
 				Resource:        "/api/2.0/clusters/pin",
 				ExpectedRequest: ClusterID{ClusterID: "abc"},
@@ -854,6 +842,13 @@ func TestResourceClusterUpdateWithPinned(t *testing.T) {
 		ID:       "abc",
 		Update:   true,
 		Resource: ResourceCluster(),
+		InstanceState: map[string]string{
+			"autotermination_minutes": "15",
+			"cluster_name":            "Shared Autoscaling",
+			"spark_version":           "7.1-scala12",
+			"node_type_id":            "i3.xlarge",
+			"num_workers":             "100",
+		},
 		State: map[string]interface{}{
 			"autotermination_minutes": 15,
 			"cluster_name":            "Shared Autoscaling",

@@ -83,7 +83,9 @@ resource "databricks_mws_log_delivery" "audit_logs" {
 
 ## Billable Usage
 
-CSV files with [static schema](https://docs.databricks.com/administration-guide/account-settings/usage.html) are delivered to `<delivery_path_prefix>/billable-usage/csv/`. Files are named `workspaceId=<workspace-id>-usageMonth=<month>.csv`, which are delivered daily by overwriting the month's CSV file for each workspace. 
+CSV files are delivered to `<delivery_path_prefix>/billable-usage/csv/` and are named `workspaceId=<workspace-id>-usageMonth=<month>.csv`, which are delivered daily by overwriting the month's CSV file for each workspace. Format of CSV file, as well as some usage examples, can be found [here](https://docs.databricks.com/administration-guide/account-settings/usage.html#download-usage-as-a-csv-file). 
+
+Common processing scenario is to apply [cost allocation tags](https://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/cost-alloc-tags.html), that could be enforced by setting [custom_tags](cluster.md#custom_tags) on a cluster or through [cluster policy](cluster_policy.md). Report contains `clusterId` field, that could be joined with data from AWS [cost and usage reports](https://docs.aws.amazon.com/cur/latest/userguide/cur-create.html), that can be joined with `user:ClusterId` tag from AWS usage report.
 
 ```hcl
 resource "databricks_mws_log_delivery" "usage_logs" {

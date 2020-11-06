@@ -14,7 +14,6 @@ import (
 	"regexp"
 	"sort"
 	"strings"
-	"sync"
 	"testing"
 
 	"github.com/databrickslabs/databricks-terraform/common"
@@ -31,16 +30,6 @@ import (
 )
 
 // TODO: remove r3labs/diff
-
-var instanceProfileRegistrationMutex sync.Mutex
-
-// LockInstanceProfileRegistration ensures that IAM role would be reistered only once
-func LockInstanceProfileRegistration() func() {
-	instanceProfileRegistrationMutex.Lock()
-	return func() {
-		instanceProfileRegistrationMutex.Unlock()
-	}
-}
 
 const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 

@@ -66,6 +66,9 @@ resource "aws_route_table_association" "public" {
 resource "aws_eip" "nat" {
   vpc = true
   depends_on = [aws_internet_gateway.gw]
+  tags = merge(var.tags, {
+    Name = "${var.prefix}-eip"
+  })
 }
 
 resource "aws_nat_gateway" "gw" {

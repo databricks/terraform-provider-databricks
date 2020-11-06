@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/databrickslabs/databricks-terraform/common"
+	"github.com/databrickslabs/databricks-terraform/internal/instprof"
 	"github.com/databrickslabs/databricks-terraform/internal/qa"
 	"github.com/stretchr/testify/assert"
 )
@@ -185,18 +186,18 @@ func TestResourceInstanceProfileDelete_Error(t *testing.T) {
 }
 
 func TestAwsAccInstanceProfiles(t *testing.T) {
-	defer qa.LockInstanceProfileRegistration()()
-	arn := qa.GetEnvOrSkipTest(t, "TEST_EC2_INSTANCE_PROFILE")
-	client := common.NewClientFromEnvironment()
-	instanceProfilesAPI := NewInstanceProfilesAPI(client)
-	defer func() {
-		err := instanceProfilesAPI.Delete(arn)
+	instprof.Synchronized(t, func(arn string) {
+		client := common.NewClientFromEnvironment()
+		instanceProfilesAPI := NewInstanceProfilesAPI(client)
+		err := instanceProfilesAPI.Create(arn, true)
 		assert.NoError(t, err, err)
-	}()
-	err := instanceProfilesAPI.Create(arn, true)
-	assert.NoError(t, err, err)
+		defer func() {
+			err := instanceProfilesAPI.Delete(arn)
+			assert.NoError(t, err, err)
+		}()
 
-	arnSearch, err := instanceProfilesAPI.Read(arn)
-	assert.NoError(t, err, err)
-	assert.True(t, len(arnSearch) > 0)
+		arnSearch, err := instanceProfilesAPI.Read(arn)
+		assert.NoError(t, err, err)
+		assert.True(t, len(arnSearch) > 0)
+	})
 }

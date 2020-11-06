@@ -2,6 +2,7 @@ package mws
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"log"
 	"net"
@@ -26,7 +27,7 @@ type WorkspacesAPI struct {
 }
 
 // Create creates the workspace creation process
-func (a WorkspacesAPI) Create(mwsAcctID, workspaceName, deploymentName, awsRegion, credentialsID, 
+func (a WorkspacesAPI) Create(mwsAcctID, workspaceName, deploymentName, awsRegion, credentialsID,
 	storageConfigurationID, networkID, customerManagedKeyID string, isNoPublicIPEnabled bool) (Workspace, error) {
 	var mwsWorkspace Workspace
 	workspacesAPIPath := fmt.Sprintf("/accounts/%s/workspaces", mwsAcctID)
@@ -50,7 +51,7 @@ func (a WorkspacesAPI) Create(mwsAcctID, workspaceName, deploymentName, awsRegio
 
 // WaitForWorkspaceRunning will hold the main thread till the workspace is in a running state
 func (a WorkspacesAPI) WaitForWorkspaceRunning(mwsAcctID string, workspaceID int64, timeout time.Duration) error {
-	return resource.Retry(timeout, func() *resource.RetryError {
+	return resource.RetryContext(context.Background(), timeout, func() *resource.RetryError {
 		workspace, err := a.Read(mwsAcctID, workspaceID)
 		if err != nil {
 			return resource.NonRetryableError(err)
@@ -63,7 +64,7 @@ func (a WorkspacesAPI) WaitForWorkspaceRunning(mwsAcctID string, workspaceID int
 			log.Printf("[ERROR] Cannot start workspace: %s", workspace.WorkspaceStatusMessage)
 			return resource.NonRetryableError(fmt.Errorf(workspace.WorkspaceStatusMessage))
 		default:
-			log.Printf("[INFO] Workspace %s is %s: %s", workspace.DeploymentName, 
+			log.Printf("[INFO] Workspace %s is %s: %s", workspace.DeploymentName,
 				workspace.WorkspaceStatus, workspace.WorkspaceStatusMessage)
 			return resource.RetryableError(fmt.Errorf(workspace.WorkspaceStatusMessage))
 		}
@@ -71,7 +72,7 @@ func (a WorkspacesAPI) WaitForWorkspaceRunning(mwsAcctID string, workspaceID int
 }
 
 // Patch will relaunch the mws workspace deployment TODO: may need to include customer managed key
-func (a WorkspacesAPI) Patch(mwsAcctID string, workspaceID int64, awsRegion, credentialsID, 
+func (a WorkspacesAPI) Patch(mwsAcctID string, workspaceID int64, awsRegion, credentialsID,
 	storageConfigurationID, networkID, customerManagedKeyID string, isNoPublicIPEnabled bool) error {
 	workspacesAPIPath := fmt.Sprintf("/accounts/%s/workspaces/%d", mwsAcctID, workspaceID)
 	mwsWorkspacesRequest := Workspace{
@@ -198,7 +199,7 @@ func ResourceWorkspace() *schema.Resource {
 			},
 			"network_error_messages": {
 				Deprecated: "`network_error_messages` are deprecated and are going to be removed in 0.3",
-				Type: schema.TypeList,
+				Type:       schema.TypeList,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"error_type": {
@@ -251,12 +252,12 @@ func resourceMWSWorkspacesCreate(d *schema.ResourceData, m interface{}) error {
 	isNoPublicIPEnabled := d.Get("is_no_public_ip_enabled").(bool)
 	var workspace Workspace
 	var err error
-	workspace, err = NewWorkspacesAPI(client).Create(mwsAcctID, workspaceName, deploymentName, 
+	workspace, err = NewWorkspacesAPI(client).Create(mwsAcctID, workspaceName, deploymentName,
 		awsRegion, credentialsID, storageConfigurationID, networkID, customerManagedKeyID, isNoPublicIPEnabled)
 	// Sometimes workspaces api is buggy
 	if err != nil {
 		time.Sleep(15 * time.Second)
-		workspace, err = NewWorkspacesAPI(client).Create(mwsAcctID, workspaceName, deploymentName, 
+		workspace, err = NewWorkspacesAPI(client).Create(mwsAcctID, workspaceName, deploymentName,
 			awsRegion, credentialsID, storageConfigurationID, networkID, customerManagedKeyID, isNoPublicIPEnabled)
 		if err != nil {
 			return err

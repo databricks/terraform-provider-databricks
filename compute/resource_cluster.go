@@ -13,6 +13,7 @@ import (
 
 var clusterSchema = resourceClusterSchema()
 
+// ResourceCluster - returns Cluster resource description
 func ResourceCluster() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 2,
@@ -277,6 +278,19 @@ func legacyReadLibraryListFromData(d *schema.ResourceData) (cll ClusterLibraryLi
 	return
 }
 
+func hasClusterConfigChanged(d *schema.ResourceData) bool {
+	for k := range clusterSchema {
+		// TODO: create a map if we'll add more non-cluster config parameters in the future
+		if k == "library" || k == "is_pinned" {
+			continue
+		}
+		if d.HasChange(k) {
+			return true
+		}
+	}
+	return false
+}
+
 func resourceClusterUpdate(d *schema.ResourceData, m interface{}) error {
 	client := m.(*common.DatabricksClient)
 	clusters := NewClustersAPI(client)
@@ -286,18 +300,27 @@ func resourceClusterUpdate(d *schema.ResourceData, m interface{}) error {
 	if err != nil {
 		return err
 	}
-	modifyClusterRequest(&cluster)
-	clusterInfo, err := clusters.Edit(cluster)
-	if err != nil {
-		return err
+	var clusterInfo ClusterInfo
+	if hasClusterConfigChanged(d) {
+		log.Printf("[DEBUG] Cluster state has changed!")
+		modifyClusterRequest(&cluster)
+		clusterInfo, err = clusters.Edit(cluster)
+		if err != nil {
+			return err
+		}
+	} else {
+		clusterInfo, err = clusters.Get(clusterID)
+		if err != nil {
+			return err
+		}
 	}
 	oldPinned, newPinned := d.GetChange("is_pinned")
 	if oldPinned.(bool) != newPinned.(bool) {
 		log.Printf("[DEBUG] Update: is_pinned. Old: %v, New: %v", oldPinned, newPinned)
 		if newPinned.(bool) {
-			err = clusters.Pin(clusterInfo.ClusterID)
+			err = clusters.Pin(clusterID)
 		} else {
-			err = clusters.Unpin(clusterInfo.ClusterID)
+			err = clusters.Unpin(clusterID)
 		}
 		if err != nil {
 			return err

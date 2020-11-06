@@ -1,5 +1,9 @@
 # Version changelog
 
+## 0.2.9
+
+* Fixed restarting cluster on changes in cluster configuration aren't related to the cluster configuration ([issue #379](https://github.com/databrickslabs/terraform-provider-databricks/issues/379))
+
 ## 0.2.8
 
 * Added [databricks_workspace_conf](https://github.com/databrickslabs/terraform-provider-databricks/pull/398) resource.

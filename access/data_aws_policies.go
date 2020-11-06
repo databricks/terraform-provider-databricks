@@ -153,7 +153,7 @@ func DataAwsAssumeRolePolicy() *schema.Resource {
 	return &schema.Resource{
 		Read: func(d *schema.ResourceData, m interface{}) error {
 			externalID := d.Get("external_id").(string)
-			policyJSON, err := json.MarshalIndent(awsIamPolicy{
+			policy := awsIamPolicy{
 				Version: "2008-10-17",
 				Statements: []*awsIamPolicyStatement{
 					{
@@ -169,7 +169,15 @@ func DataAwsAssumeRolePolicy() *schema.Resource {
 						},
 					},
 				},
-			}, "", "  ")
+			}
+			if v, ok := d.GetOk("for_log_delivery"); ok {
+				if v.(bool) {
+					// this is production UsageDelivery IAM role, that is considered a constant
+					logDeliveryARN := "arn:aws:iam::414351767826:role/SaasUsageDeliveryRole-prod-IAMRole-3PLHICCRR1TK"
+					policy.Statements[0].Principal["AWS"] = logDeliveryARN
+				}
+			}
+			policyJSON, err := json.MarshalIndent(policy, "", "  ")
 			if err != nil {
 				return err
 			}
@@ -181,6 +189,12 @@ func DataAwsAssumeRolePolicy() *schema.Resource {
 				Type:     schema.TypeString,
 				Default:  "414351767826",
 				Optional: true,
+			},
+			"for_log_delivery": {
+				Type:        schema.TypeBool,
+				Description: "Grant AssumeRole to Databricks SaasUsageDeliveryRole instead of root account",
+				Optional:    true,
+				Default:     false,
 			},
 			"external_id": {
 				Type:     schema.TypeString,

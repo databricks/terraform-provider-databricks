@@ -1,6 +1,6 @@
 # Databricks Terraform Provider
 
-[![Build Status](https://travis-ci.org/databrickslabs/terraform-provider-databricks.svg?branch=master)](https://travis-ci.org/databrickslabs/terraform-provider-databricks) [![codecov](https://codecov.io/gh/databrickslabs/terraform-provider-databricks/branch/master/graph/badge.svg)](https://codecov.io/gh/databrickslabs/terraform-provider-databricks)
+![Resources](docs/resources.png)
 
 End-to-end workspace creation on [AWS](scripts/awsmt-integration) or [Azure](scripts/azvnet-integration/databricks.tf)
 | [Authentication](docs/index.md)
@@ -22,12 +22,15 @@ End-to-end workspace creation on [AWS](scripts/awsmt-integration) or [Azure](scr
 | [databricks_group_member](docs/resources/group_member.md)
 | [databricks_instance_pool](docs/resources/instance_pool.md)
 | [databricks_instance_profile](docs/resources/instance_profile.md)
+| [databricks_ip_access_list](docs/resources/ip_access_list.md)
 | [databricks_job](docs/resources/job.md)
 | [databricks_mws_credentials](docs/resources/mws_credentials.md)
 | [databricks_mws_customer_managed_keys](docs/resources/mws_customer_managed_keys.md)
+| [databricks_mws_log_delivery](docs/resources/mws_log_delivery.md)
 | [databricks_mws_networks](docs/resources/mws_networks.md)
 | [databricks_mws_storage_configurations](docs/resources/mws_storage_configurations.md)
 | [databricks_mws_workspaces](docs/resources/mws_workspaces.md)
+| [databricks_node_type](docs/data-sources/node_type.md) data
 | [databricks_notebook](docs/resources/notebook.md)
 | [databricks_notebook](docs/data-sources/notebook.md) data
 | [databricks_notebook_paths](docs/data-sources/notebook_paths.md) data
@@ -38,8 +41,11 @@ End-to-end workspace creation on [AWS](scripts/awsmt-integration) or [Azure](scr
 | [databricks_token](docs/resources/token.md)
 | [databricks_user](docs/resources/user.md)
 | [databricks_user_instance_profile](docs/resources/user_instance_profile.md)
+| [databricks_workspace_conf](docs/resources/workspace_conf.md)
 | [Contributing and Development Guidelines](CONTRIBUTING.md)
 | [Changelog](CHANGELOG.md)
+
+[![Build Status](https://travis-ci.org/databrickslabs/terraform-provider-databricks.svg?branch=master)](https://travis-ci.org/databrickslabs/terraform-provider-databricks) [![codecov](https://codecov.io/gh/databrickslabs/terraform-provider-databricks/branch/master/graph/badge.svg)](https://codecov.io/gh/databrickslabs/terraform-provider-databricks)
 
 If you use Terraform 0.13, please refer to instructions specified at [registry page](https://registry.terraform.io/providers/databrickslabs/databricks/latest):
 

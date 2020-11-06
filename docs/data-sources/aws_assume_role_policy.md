@@ -46,6 +46,7 @@ resource "databricks_mws_credentials" "this" {
 ## Argument Reference
 
 * `external_id` (Required) (String) External ID that can be found at http://accounts.cloud.databricks.com/#aws
+* `for_log_delivery` (Optional) Either or not this assume role policy should be created for usage log delivery. Defaults to false.
 
 ## Attribute Reference
 

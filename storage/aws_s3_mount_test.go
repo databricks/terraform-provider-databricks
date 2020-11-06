@@ -5,13 +5,14 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/databrickslabs/databricks-terraform/common"
 	"github.com/databrickslabs/databricks-terraform/compute"
+	"github.com/databrickslabs/databricks-terraform/identity"
 	"github.com/databrickslabs/databricks-terraform/internal"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/databrickslabs/databricks-terraform/internal/instprof"
 	"github.com/databrickslabs/databricks-terraform/internal/qa"
 )
 
@@ -256,7 +257,9 @@ func TestResourceAwsS3MountDelete(t *testing.T) {
 }
 
 func TestAwsAccS3Mount(t *testing.T) {
-	instprof.Synchronized(t, func(instanceProfile string) {
+	client := common.NewClientFromEnvironment()
+	instanceProfile := qa.GetEnvOrSkipTest(t, "TEST_EC2_INSTANCE_PROFILE")
+	identity.NewInstanceProfilesAPI(client).Synchronized(instanceProfile, func() {
 		bucket := qa.GetEnvOrSkipTest(t, "TEST_S3_BUCKET")
 		client := compute.CommonEnvironmentClientWithRealCommandExecutor()
 		clustersAPI := compute.NewClustersAPI(client)

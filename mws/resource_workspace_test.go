@@ -41,9 +41,9 @@ func TestResourceWorkspaceCreate(t *testing.T) {
 				},
 			},
 			{
-				Method: "GET",
+				Method:       "GET",
 				ReuseRequest: true,
-				Resource: "/api/2.0/accounts/abc/workspaces/1234",
+				Resource:     "/api/2.0/accounts/abc/workspaces/1234",
 				Response: Workspace{
 					WorkspaceStatus: WorkspaceStatusRunning,
 				},
@@ -157,7 +157,7 @@ func TestResourceWorkspaceRead_Issue382(t *testing.T) {
 				Method:   "GET",
 				Resource: "/api/2.0/accounts/abc/workspaces/1234",
 				Response: Workspace{
-					AccountID: "abc",
+					AccountID:              "abc",
 					WorkspaceStatus:        WorkspaceStatusRunning,
 					IsNoPublicIPEnabled:    true,
 					WorkspaceName:          "labdata",
@@ -263,9 +263,9 @@ func TestResourceWorkspaceUpdate(t *testing.T) {
 				},
 			},
 			{
-				Method:   "GET",
+				Method:       "GET",
 				ReuseRequest: true,
-				Resource: "/api/2.0/accounts/abc/workspaces/1234",
+				Resource:     "/api/2.0/accounts/abc/workspaces/1234",
 				Response: Workspace{
 					WorkspaceStatus:        WorkspaceStatusRunning,
 					IsNoPublicIPEnabled:    true,

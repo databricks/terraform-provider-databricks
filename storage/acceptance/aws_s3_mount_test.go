@@ -6,8 +6,8 @@ import (
 
 	"github.com/databrickslabs/databricks-terraform/common"
 	"github.com/databrickslabs/databricks-terraform/compute"
+	"github.com/databrickslabs/databricks-terraform/identity"
 	"github.com/databrickslabs/databricks-terraform/internal/acceptance"
-	"github.com/databrickslabs/databricks-terraform/internal/instprof"
 	. "github.com/databrickslabs/databricks-terraform/storage"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/stretchr/testify/assert"
@@ -32,7 +32,9 @@ func getRunningClusterWithInstanceProfile(t *testing.T, client *common.Databrick
 }
 
 func TestAwsAccS3IamMount_WithCluster(t *testing.T) {
-	instprof.Synchronized(t, func(_ string) {
+	client := common.NewClientFromEnvironment()
+	arn := qa.GetEnvOrSkipTest(t, "TEST_EC2_INSTANCE_PROFILE")
+	identity.NewInstanceProfilesAPI(client).Synchronized(arn, func() {
 		config := qa.EnvironmentTemplate(t, `
 		resource "databricks_instance_profile" "this" {
 			instance_profile_arn = "{env.TEST_EC2_INSTANCE_PROFILE}"
@@ -75,7 +77,9 @@ func TestAwsAccS3IamMount_WithCluster(t *testing.T) {
 }
 
 func TestAwsAccS3IamMount_NoClusterGiven(t *testing.T) {
-	instprof.Synchronized(t, func(_ string) {
+	client := common.NewClientFromEnvironment()
+	arn := qa.GetEnvOrSkipTest(t, "TEST_EC2_INSTANCE_PROFILE")
+	identity.NewInstanceProfilesAPI(client).Synchronized(arn, func() {
 		config := qa.EnvironmentTemplate(t, `
 		resource "databricks_instance_profile" "this" {
 			instance_profile_arn = "{env.TEST_EC2_INSTANCE_PROFILE}"

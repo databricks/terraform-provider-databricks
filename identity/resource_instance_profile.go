@@ -1,11 +1,14 @@
 package identity
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"net/http"
+	"time"
 
 	"github.com/databrickslabs/databricks-terraform/common"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -71,6 +74,27 @@ func (a InstanceProfilesAPI) Delete(instanceProfileARN string) error {
 	return a.C.Post("/instance-profiles/remove", map[string]interface{}{
 		"instance_profile_arn": instanceProfileARN,
 	}, nil)
+}
+
+// Synchronized test helper for working with only single instance profile
+func (a InstanceProfilesAPI) Synchronized(arn string, cb func()) {
+	err := resource.RetryContext(context.Background(), 10*time.Minute, func() *resource.RetryError {
+		list, err := a.List()
+		if err != nil {
+			return resource.NonRetryableError(err)
+		}
+		for _, ip := range list {
+			if ip.InstanceProfileArn == arn {
+				return resource.RetryableError(fmt.Errorf(
+					"%s is registered, waiting to release", arn))
+			}
+		}
+		cb()
+		return nil
+	})
+	if err != nil {
+		panic(err)
+	}
 }
 
 // ResourceInstanceProfile managest Instance Profile ARN binding

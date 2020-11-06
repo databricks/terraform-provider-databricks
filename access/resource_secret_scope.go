@@ -106,7 +106,7 @@ func (a SecretScopesAPI) Read(scopeName string) (SecretScope, error) {
 // ResourceSecretScope manages secret scopes
 func ResourceSecretScope() *schema.Resource {
 	s := internal.StructToSchema(SecretScope{}, func(s map[string]*schema.Schema) map[string]*schema.Schema {
-		// TODO: CustomDiffFunc for initial_manage_principal & importing
+		// TODO: DiffSuppressFunc for initial_manage_principal & importing
 		s["name"].ForceNew = true
 		s["initial_manage_principal"].ForceNew = true
 		s["keyvault_metadata"].ForceNew = true

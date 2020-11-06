@@ -1,18 +1,17 @@
 # Version changelog
 
-## 0.2.9
-
-* Fixed restarting cluster on changes in cluster configuration aren't related to the cluster configuration ([issue #379](https://github.com/databrickslabs/terraform-provider-databricks/issues/379))
-
 ## 0.2.8
 
-* Added [databricks_workspace_conf](https://github.com/databrickslabs/terraform-provider-databricks/pull/398) resource
+* Added [databricks_workspace_conf](https://github.com/databrickslabs/terraform-provider-databricks/pull/398) resource.
 * Added [databricks_mws_log_delivery](https://github.com/databrickslabs/terraform-provider-databricks/pull/343) resource for billable usage & audit logs consumption.
 * Added [databricks_node_type](https://github.com/databrickslabs/terraform-provider-databricks/pull/376) data source for simpler selection of node types across AWS & Azure.
-* Added [Azure Key Vault support](https://github.com/databrickslabs/terraform-provider-databricks/pull/381) for databricks_secret_scope for Azure CLI authenticated users.
+* Added [Azure Key Vault support](https://github.com/databrickslabs/terraform-provider-databricks/pull/381) for `databricks_secret_scope` for Azure CLI authenticated users.
 * Added [is_pinned](https://github.com/databrickslabs/terraform-provider-databricks/pull/348) support for `databricks_cluster` resource.
-* Fixed [single node clusters](https://docs.databricks.com/clusters/single-node.html) support by allowing [`num_workers` to be `0`](https://github.com/databrickslabs/terraform-provider-databricks/pull/375).
+* Fixed restarting cluster on changes in cluster configuration aren't related to the cluster configuration ([issue #379](https://github.com/databrickslabs/terraform-provider-databricks/issues/379))
+* Fixed issue [#383](https://github.com/databrickslabs/terraform-provider-databricks/issues/383) by cleaning up clusters that fail to start.
+* Fixed issue [#382](https://github.com/databrickslabs/terraform-provider-databricks/issues/382) by ignoring any incoming changes to deployment name of `databricks_mws_workspaces`, as well as propagating the right error messages.
 * Internal: API for retrieval of the cluster events.
+* Increased code coverage to 71%.
 
 Updated dependency versions:
 
@@ -21,6 +20,9 @@ Updated dependency versions:
 * github.com/Azure/go-autorest/autorest/azure/auth v0.5.3
 * github.com/Azure/go-autorest/autorest/azure/cli v0.4.2
 * gopkg.in/ini.v1 1.62.0
+
+**Deprecations**
+* `network_error_messages` from `databricks_mws_workspaces` is deprecated and going to be removed in 0.3
 
 ## 0.2.7
 

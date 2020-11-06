@@ -188,14 +188,16 @@ func TestAwsAccInstanceProfiles(t *testing.T) {
 	arn := qa.GetEnvOrSkipTest(t, "TEST_EC2_INSTANCE_PROFILE")
 	client := common.NewClientFromEnvironment()
 	instanceProfilesAPI := NewInstanceProfilesAPI(client)
-	defer func() {
-		err := instanceProfilesAPI.Delete(arn)
+	instanceProfilesAPI.Synchronized(arn, func() {
+		err := instanceProfilesAPI.Create(arn, true)
 		assert.NoError(t, err, err)
-	}()
-	err := instanceProfilesAPI.Create(arn, true)
-	assert.NoError(t, err, err)
+		defer func() {
+			err := instanceProfilesAPI.Delete(arn)
+			assert.NoError(t, err, err)
+		}()
 
-	arnSearch, err := instanceProfilesAPI.Read(arn)
-	assert.NoError(t, err, err)
-	assert.True(t, len(arnSearch) > 0)
+		arnSearch, err := instanceProfilesAPI.Read(arn)
+		assert.NoError(t, err, err)
+		assert.True(t, len(arnSearch) > 0)
+	})
 }

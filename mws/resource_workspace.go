@@ -8,12 +8,12 @@ import (
 	"net"
 	"reflect"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/databrickslabs/databricks-terraform/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 // NewWorkspacesAPI creates MWSWorkspacesAPI instance from provider meta
@@ -140,19 +140,19 @@ func ResourceWorkspace() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					if old == "" && new != "" {
+						return false
+					}
+					// Most of E2 accounts require a prefix and API returns it.
+					// This is certainly a hack to get things working for Terraform operating model.
+					// https://github.com/databrickslabs/terraform-provider-databricks/issues/382
+					return !strings.HasSuffix(new, old)
+				},
 			},
 			"aws_region": {
 				Type:     schema.TypeString,
 				Required: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					"us-west-1",
-					"us-west-2",
-					"us-east-1",
-					"us-east-2",
-					"ca-central-1",
-					"eu-west-1",
-					"eu-central-1",
-				}, false),
 			},
 			"credentials_id": {
 				Type:     schema.TypeString,

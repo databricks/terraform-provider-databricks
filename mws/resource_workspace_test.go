@@ -41,21 +41,8 @@ func TestResourceWorkspaceCreate(t *testing.T) {
 				},
 			},
 			{
-				Method:   "GET",
-				Resource: "/api/2.0/accounts/abc/workspaces/1234",
-				Response: Workspace{
-					WorkspaceStatus: WorkspaceStatusRunning,
-				},
-			},
-			{
-				Method:   "GET",
-				Resource: "/api/2.0/accounts/abc/workspaces/1234",
-				Response: Workspace{
-					WorkspaceStatus: WorkspaceStatusRunning,
-				},
-			},
-			{
-				Method:   "GET",
+				Method: "GET",
+				ReuseRequest: true,
 				Resource: "/api/2.0/accounts/abc/workspaces/1234",
 				Response: Workspace{
 					WorkspaceStatus: WorkspaceStatusRunning,
@@ -163,6 +150,61 @@ func TestResourceWorkspaceRead(t *testing.T) {
 	assert.Equal(t, "https://900150983cd24fb0.cloud.databricks.com", d.Get("workspace_url"))
 }
 
+func TestResourceWorkspaceRead_Issue382(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/accounts/abc/workspaces/1234",
+				Response: Workspace{
+					AccountID: "abc",
+					WorkspaceStatus:        WorkspaceStatusRunning,
+					IsNoPublicIPEnabled:    true,
+					WorkspaceName:          "labdata",
+					DeploymentName:         "prefix-900150983cd24fb0",
+					AwsRegion:              "us-east-1",
+					CredentialsID:          "bcd",
+					StorageConfigurationID: "ghi",
+					NetworkID:              "fgh",
+					CustomerManagedKeyID:   "def",
+					WorkspaceID:            1234,
+				},
+			},
+		},
+		InstanceState: map[string]string{
+			"account_id":                "abc",
+			"aws_region":                "us-east-1",
+			"credentials_id":            "bcd",
+			"customer_managed_key_id":   "def",
+			"deployment_name":           "900150983cd24fb0",
+			"workspace_name":            "labdata",
+			"is_no_public_ip_enabled":   "true",
+			"network_id":                "fgh",
+			"storage_configuration_id":  "ghi",
+			"verify_workspace_runnning": "false",
+		},
+		State: map[string]interface{}{
+			"account_id":                "abc",
+			"aws_region":                "us-east-1",
+			"credentials_id":            "bcd",
+			"customer_managed_key_id":   "def",
+			"deployment_name":           "900150983cd24fb0",
+			"workspace_name":            "labdata",
+			"is_no_public_ip_enabled":   true,
+			"network_id":                "fgh",
+			"storage_configuration_id":  "ghi",
+			"verify_workspace_runnning": false,
+		},
+		Resource: ResourceWorkspace(),
+		Read:     true,
+		ID:       "abc/1234",
+	}.Apply(t)
+	assert.NoError(t, err, err)
+	assert.Equal(t, "abc/1234", d.Id(), "Id should not be empty")
+	assert.Equal(t, "prefix-900150983cd24fb0", d.Get("deployment_name"))
+	assert.Equal(t, "https://prefix-900150983cd24fb0.cloud.databricks.com", d.Get("workspace_url"))
+}
+
 func TestResourceWorkspaceRead_NotFound(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
@@ -222,38 +264,7 @@ func TestResourceWorkspaceUpdate(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/accounts/abc/workspaces/1234",
-				Response: Workspace{
-					WorkspaceStatus:        WorkspaceStatusRunning,
-					IsNoPublicIPEnabled:    true,
-					WorkspaceName:          "labdata",
-					DeploymentName:         "900150983cd24fb0",
-					AwsRegion:              "us-east-1",
-					CredentialsID:          "bcd",
-					StorageConfigurationID: "ghi",
-					NetworkID:              "fgh",
-					CustomerManagedKeyID:   "def",
-					WorkspaceID:            1234,
-				},
-			},
-			{
-				Method:   "GET",
-				Resource: "/api/2.0/accounts/abc/workspaces/1234",
-				Response: Workspace{
-					WorkspaceStatus:        WorkspaceStatusRunning,
-					IsNoPublicIPEnabled:    true,
-					WorkspaceName:          "labdata",
-					DeploymentName:         "900150983cd24fb0",
-					AwsRegion:              "us-east-1",
-					CredentialsID:          "bcd",
-					StorageConfigurationID: "ghi",
-					NetworkID:              "fgh",
-					CustomerManagedKeyID:   "def",
-					WorkspaceID:            1234,
-				},
-			},
-			{
-				Method:   "GET",
+				ReuseRequest: true,
 				Resource: "/api/2.0/accounts/abc/workspaces/1234",
 				Response: Workspace{
 					WorkspaceStatus:        WorkspaceStatusRunning,
@@ -288,6 +299,71 @@ func TestResourceWorkspaceUpdate(t *testing.T) {
 	assert.NoError(t, err, err)
 	assert.Equal(t, "abc/1234", d.Id(), "Id should be the same as in reading")
 }
+
+// func TestResourceWorkspaceUpdate_Issue382(t *testing.T) {
+// 	d, err := qa.ResourceFixture{
+// 		Fixtures: []qa.HTTPFixture{
+// 			{
+// 				Method:   "PATCH",
+// 				Resource: "/api/2.0/accounts/abc/workspaces/1234",
+// 				ExpectedRequest: Workspace{
+// 					StorageConfigurationID: "ghi",
+// 					NetworkID:              "fgh",
+// 					CustomerManagedKeyID:   "def",
+// 					IsNoPublicIPEnabled:    true,
+// 					AwsRegion:              "us-east-1",
+// 					CredentialsID:          "bcd",
+// 				},
+// 			},
+// 			{
+// 				Method:   "GET",
+// 				ReuseRequest: true,
+// 				Resource: "/api/2.0/accounts/abc/workspaces/1234",
+// 				Response: Workspace{
+// 					WorkspaceStatus:        WorkspaceStatusRunning,
+// 					IsNoPublicIPEnabled:    true,
+// 					WorkspaceName:          "labdata",
+// 					DeploymentName:         "test-900150983cd24fb0",
+// 					AwsRegion:              "us-east-1",
+// 					CredentialsID:          "bcd",
+// 					StorageConfigurationID: "ghi",
+// 					NetworkID:              "fgh",
+// 					CustomerManagedKeyID:   "def",
+// 					WorkspaceID:            1234,
+// 				},
+// 			},
+// 		},
+// 		Resource: ResourceWorkspace(),
+// 		InstanceState: map[string]string{
+// 			"account_id":                "abc",
+// 			"aws_region":                "us-east-1",
+// 			"credentials_id":            "bcd",
+// 			"customer_managed_key_id":   "def",
+// 			"deployment_name":           "900150983cd24fb0",
+// 			"workspace_name":            "labdata",
+// 			"is_no_public_ip_enabled":   "true",
+// 			"network_id":                "fgh",
+// 			"storage_configuration_id":  "ghi",
+// 			"verify_workspace_runnning": "false",
+// 		},
+// 		State: map[string]interface{}{
+// 			"account_id":                "abc",
+// 			"aws_region":                "us-east-1",
+// 			"credentials_id":            "bcd",
+// 			"customer_managed_key_id":   "def",
+// 			"deployment_name":           "900150983cd24fb0",
+// 			"workspace_name":            "labdata",
+// 			"is_no_public_ip_enabled":   true,
+// 			"network_id":                "fgh",
+// 			"storage_configuration_id":  "ghi",
+// 			"verify_workspace_runnning": false,
+// 		},
+// 		Update: true,
+// 		ID:     "abc/1234",
+// 	}.Apply(t)
+// 	assert.NoError(t, err, err)
+// 	assert.Equal(t, "abc/1234", d.Id(), "Id should be the same as in reading")
+// }
 
 func TestResourceWorkspaceUpdate_Error(t *testing.T) {
 	d, err := qa.ResourceFixture{

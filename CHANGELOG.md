@@ -7,6 +7,7 @@
 * Added [databricks_node_type](https://github.com/databrickslabs/terraform-provider-databricks/pull/376) data source for simpler selection of node types across AWS & Azure.
 * Added [Azure Key Vault support](https://github.com/databrickslabs/terraform-provider-databricks/pull/381) for databricks_secret_scope for Azure CLI authenticated users.
 * Added [is_pinned](https://github.com/databrickslabs/terraform-provider-databricks/pull/348) support for `databricks_cluster` resource.
+* Fix issue [#383] by cleaning up clusters that fail to start.
 * Internal: API for retrieval of the cluster events.
 * Increased code coverage to 71%.
 

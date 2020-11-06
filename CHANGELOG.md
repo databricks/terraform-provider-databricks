@@ -8,7 +8,8 @@
 * Added [Azure Key Vault support](https://github.com/databrickslabs/terraform-provider-databricks/pull/381) for `databricks_secret_scope` for Azure CLI authenticated users.
 * Added [is_pinned](https://github.com/databrickslabs/terraform-provider-databricks/pull/348) support for `databricks_cluster` resource.
 * Fixed restarting cluster on changes in cluster configuration aren't related to the cluster configuration ([issue #379](https://github.com/databrickslabs/terraform-provider-databricks/issues/379))
-* Fix issue [#383] by cleaning up clusters that fail to start.
+* Fixed issue [#383](https://github.com/databrickslabs/terraform-provider-databricks/issues/383) by cleaning up clusters that fail to start.
+* Fixed issue [#382](https://github.com/databrickslabs/terraform-provider-databricks/issues/382) by ignoring any incoming changes to deployment name of `databricks_mws_workspaces`, as well as propagating the right error messages.
 * Internal: API for retrieval of the cluster events.
 * Increased code coverage to 71%.
 
@@ -19,6 +20,9 @@ Updated dependency versions:
 * github.com/Azure/go-autorest/autorest/azure/auth v0.5.3
 * github.com/Azure/go-autorest/autorest/azure/cli v0.4.2
 * gopkg.in/ini.v1 1.62.0
+
+**Deprecations**
+* `network_error_messages` from `databricks_mws_workspaces` is deprecated and going to be removed in 0.3
 
 ## 0.2.7
 

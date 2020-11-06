@@ -2,7 +2,6 @@ package mws
 
 import (
 	"bytes"
-	"errors"
 	"fmt"
 	"log"
 	"net"
@@ -27,7 +26,8 @@ type WorkspacesAPI struct {
 }
 
 // Create creates the workspace creation process
-func (a WorkspacesAPI) Create(mwsAcctID, workspaceName, deploymentName, awsRegion, credentialsID, storageConfigurationID, networkID, customerManagedKeyID string, isNoPublicIPEnabled bool) (Workspace, error) {
+func (a WorkspacesAPI) Create(mwsAcctID, workspaceName, deploymentName, awsRegion, credentialsID, 
+	storageConfigurationID, networkID, customerManagedKeyID string, isNoPublicIPEnabled bool) (Workspace, error) {
 	var mwsWorkspace Workspace
 	workspacesAPIPath := fmt.Sprintf("/accounts/%s/workspaces", mwsAcctID)
 	mwsWorkspacesRequest := Workspace{
@@ -49,35 +49,30 @@ func (a WorkspacesAPI) Create(mwsAcctID, workspaceName, deploymentName, awsRegio
 }
 
 // WaitForWorkspaceRunning will hold the main thread till the workspace is in a running state
-func (a WorkspacesAPI) WaitForWorkspaceRunning(mwsAcctID string, workspaceID int64, sleepDurationSeconds time.Duration, timeoutDurationMinutes time.Duration) error {
-	// TODO: move all resource awaiters from client to TF resource level, for sepration of concerns sake
-	errChan := make(chan error, 1)
-	go func() {
-		for {
-			workspace, err := a.Read(mwsAcctID, workspaceID)
-			if err != nil {
-				errChan <- err
-			}
-			if workspace.WorkspaceStatus == WorkspaceStatusRunning {
-				errChan <- nil
-			} else if ContainsWorkspaceState(WorkspaceStatusesNonRunnable, workspace.WorkspaceStatus) {
-				errChan <- errors.New("Workspace is in a non runnable state will not be able to transition to running, needs " +
-					"to be created again. Current state: " + workspace.WorkspaceStatus)
-			}
-			log.Println("Waiting for workspace to go to running, current state is: " + workspace.WorkspaceStatus)
-			time.Sleep(sleepDurationSeconds * time.Second)
+func (a WorkspacesAPI) WaitForWorkspaceRunning(mwsAcctID string, workspaceID int64, timeout time.Duration) error {
+	return resource.Retry(timeout, func() *resource.RetryError {
+		workspace, err := a.Read(mwsAcctID, workspaceID)
+		if err != nil {
+			return resource.NonRetryableError(err)
 		}
-	}()
-	select {
-	case err := <-errChan:
-		return err
-	case <-time.After(timeoutDurationMinutes * time.Minute):
-		return errors.New("Timed out workspace has not reached running state")
-	}
+		switch workspace.WorkspaceStatus {
+		case WorkspaceStatusRunning:
+			log.Printf("[INFO] Workspace is now running")
+			return nil
+		case WorkspaceStatusCanceled, WorkspaceStatusFailed:
+			log.Printf("[ERROR] Cannot start workspace: %s", workspace.WorkspaceStatusMessage)
+			return resource.NonRetryableError(fmt.Errorf(workspace.WorkspaceStatusMessage))
+		default:
+			log.Printf("[INFO] Workspace %s is %s: %s", workspace.DeploymentName, 
+				workspace.WorkspaceStatus, workspace.WorkspaceStatusMessage)
+			return resource.RetryableError(fmt.Errorf(workspace.WorkspaceStatusMessage))
+		}
+	})
 }
 
 // Patch will relaunch the mws workspace deployment TODO: may need to include customer managed key
-func (a WorkspacesAPI) Patch(mwsAcctID string, workspaceID int64, awsRegion, credentialsID, storageConfigurationID, networkID, customerManagedKeyID string, isNoPublicIPEnabled bool) error {
+func (a WorkspacesAPI) Patch(mwsAcctID string, workspaceID int64, awsRegion, credentialsID, 
+	storageConfigurationID, networkID, customerManagedKeyID string, isNoPublicIPEnabled bool) error {
 	workspacesAPIPath := fmt.Sprintf("/accounts/%s/workspaces/%d", mwsAcctID, workspaceID)
 	mwsWorkspacesRequest := Workspace{
 		AwsRegion:              awsRegion,
@@ -117,6 +112,7 @@ func (a WorkspacesAPI) List(mwsAcctID string) ([]Workspace, error) {
 	return mwsWorkspacesList, err
 }
 
+// ResourceWorkspace manages E2 workspaces
 func ResourceWorkspace() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceMWSWorkspacesCreate,
@@ -201,6 +197,7 @@ func ResourceWorkspace() *schema.Resource {
 				Computed: true,
 			},
 			"network_error_messages": {
+				Deprecated: "`network_error_messages` are deprecated and are going to be removed in 0.3",
 				Type: schema.TypeList,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -254,11 +251,13 @@ func resourceMWSWorkspacesCreate(d *schema.ResourceData, m interface{}) error {
 	isNoPublicIPEnabled := d.Get("is_no_public_ip_enabled").(bool)
 	var workspace Workspace
 	var err error
-	workspace, err = NewWorkspacesAPI(client).Create(mwsAcctID, workspaceName, deploymentName, awsRegion, credentialsID, storageConfigurationID, networkID, customerManagedKeyID, isNoPublicIPEnabled)
+	workspace, err = NewWorkspacesAPI(client).Create(mwsAcctID, workspaceName, deploymentName, 
+		awsRegion, credentialsID, storageConfigurationID, networkID, customerManagedKeyID, isNoPublicIPEnabled)
 	// Sometimes workspaces api is buggy
 	if err != nil {
 		time.Sleep(15 * time.Second)
-		workspace, err = NewWorkspacesAPI(client).Create(mwsAcctID, workspaceName, deploymentName, awsRegion, credentialsID, storageConfigurationID, networkID, customerManagedKeyID, isNoPublicIPEnabled)
+		workspace, err = NewWorkspacesAPI(client).Create(mwsAcctID, workspaceName, deploymentName, 
+			awsRegion, credentialsID, storageConfigurationID, networkID, customerManagedKeyID, isNoPublicIPEnabled)
 		if err != nil {
 			return err
 		}
@@ -268,8 +267,7 @@ func resourceMWSWorkspacesCreate(d *schema.ResourceData, m interface{}) error {
 		ResourceID: strconv.Itoa(int(workspace.WorkspaceID)),
 	}
 	d.SetId(packMWSAccountID(workspaceResourceID))
-	// TODO: replace with waitForWorkspaceState
-	err = NewWorkspacesAPI(client).WaitForWorkspaceRunning(mwsAcctID, workspace.WorkspaceID, 10, 180)
+	err = NewWorkspacesAPI(client).WaitForWorkspaceRunning(mwsAcctID, workspace.WorkspaceID, 10*time.Minute)
 	if err != nil {
 		if !reflect.ValueOf(networkID).IsZero() {
 			network, networkReadErr := NewNetworksAPI(client).Read(mwsAcctID, networkID)
@@ -313,8 +311,7 @@ func resourceMWSWorkspacesRead(d *schema.ResourceData, m interface{}) error {
 	}
 
 	if workspace.WorkspaceStatus != WorkspaceStatusRunning {
-		// TODO: replace with waitForWorkspaceState
-		err = NewWorkspacesAPI(client).WaitForWorkspaceRunning(packagedMwsID.MwsAcctID, idInt64, 10, 180)
+		err = NewWorkspacesAPI(client).WaitForWorkspaceRunning(packagedMwsID.MwsAcctID, idInt64, 10*time.Minute)
 		if err != nil {
 			log.Println("WORKSPACE IS NOT RUNNING")
 			err2 := d.Set("verify_workspace_runnning", false)
@@ -418,12 +415,12 @@ func resourceMWSWorkspacesUpdate(d *schema.ResourceData, m interface{}) error {
 	customerManagedKeyID := d.Get("customer_managed_key_id").(string)
 	isNoPublicIPEnabled := d.Get("is_no_public_ip_enabled").(bool)
 
-	err = NewWorkspacesAPI(client).Patch(packagedMwsID.MwsAcctID, idInt64, awsRegion, credentialsID, storageConfigurationID, networkID, customerManagedKeyID, isNoPublicIPEnabled)
+	err = NewWorkspacesAPI(client).Patch(packagedMwsID.MwsAcctID, idInt64, awsRegion, credentialsID,
+		storageConfigurationID, networkID, customerManagedKeyID, isNoPublicIPEnabled)
 	if err != nil {
 		return err
 	}
-	// TODO: replace with waitForWorkspaceState, potentially with state machine checks
-	err = NewWorkspacesAPI(client).WaitForWorkspaceRunning(packagedMwsID.MwsAcctID, idInt64, 10, 180)
+	err = NewWorkspacesAPI(client).WaitForWorkspaceRunning(packagedMwsID.MwsAcctID, idInt64, 10*time.Minute)
 	if err != nil {
 		return err
 	}

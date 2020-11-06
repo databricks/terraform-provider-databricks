@@ -199,7 +199,6 @@ func TestResourceNotebookRead(t *testing.T) {
 	assert.NoError(t, err, err)
 	checkSum, err := convertBase64ToCheckSum(pythonNotebookDataB64)
 	assert.NoError(t, err, err)
-	exportFormat := Source
 	testId := "/test/path.py"
 	objectId := 12345
 	assert.NoError(t, err, err)
@@ -227,7 +226,7 @@ func TestResourceNotebookRead(t *testing.T) {
 		Read:     true,
 		ID:       testId,
 		State: map[string]interface{}{
-			"format": exportFormat,
+			"format": "SOURCE",
 		},
 	}.Apply(t)
 	assert.NoError(t, err, err)

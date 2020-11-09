@@ -3,9 +3,7 @@ package provider
 import (
 	"fmt"
 	"sort"
-	"strconv"
 	"strings"
-	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
@@ -27,7 +25,6 @@ func DatabricksProvider() *schema.Provider {
 			"databricks_aws_bucket_policy":       access.DataAwsBucketPolicy(),
 			"databricks_dbfs_file":               storage.DataSourceDBFSFile(),
 			"databricks_dbfs_file_paths":         storage.DataSourceDBFSFilePaths(),
-			"databricks_default_user_roles":      identity.DataSourceDefaultUserRoles(),
 			"databricks_group":                   identity.DataSourceGroup(),
 			"databricks_node_type":               compute.DataSourceNodeType(),
 			"databricks_notebook":                workspace.DataSourceNotebook(),
@@ -47,12 +44,10 @@ func DatabricksProvider() *schema.Provider {
 			"databricks_job":            compute.ResourceJob(),
 
 			"databricks_group":                  identity.ResourceGroup(),
-			"databricks_scim_group":             identity.ResourceScimGroup(),
 			"databricks_group_instance_profile": identity.ResourceGroupInstanceProfile(),
 			"databricks_user_instance_profile":  identity.ResourceUserInstanceProfile(),
 			"databricks_instance_profile":       identity.ResourceInstanceProfile(),
 			"databricks_group_member":           identity.ResourceGroupMember(),
-			"databricks_scim_user":              identity.ResourceScimUser(),
 			"databricks_token":                  identity.ResourceToken(),
 			"databricks_user":                   identity.ResourceUser(),
 
@@ -94,34 +89,6 @@ func DatabricksProvider() *schema.Provider {
 					"basic_auth",
 					"profile",
 					"azure_auth",
-				},
-			},
-			"basic_auth": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				ConflictsWith: []string{
-					"config_file",
-					"profile",
-					"azure_auth",
-					"token",
-				},
-				Deprecated: "basic_auth {} block is deprecated in favor of username & password properties " +
-					"with more previctable behavior. This configuration attribute will be removed in 0.3.",
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"username": {
-							Type:        schema.TypeString,
-							Required:    true,
-							DefaultFunc: schema.EnvDefaultFunc("DATABRICKS_USERNAME", nil),
-						},
-						"password": {
-							Type:        schema.TypeString,
-							Sensitive:   true,
-							Required:    true,
-							DefaultFunc: schema.EnvDefaultFunc("DATABRICKS_PASSWORD", nil),
-						},
-					},
 				},
 			},
 			"username": {
@@ -168,18 +135,16 @@ func DatabricksProvider() *schema.Provider {
 				},
 			},
 			"azure_workspace_resource_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-				// TODO: fix the naming...
+				Type:        schema.TypeString,
+				Optional:    true,
 				DefaultFunc: schema.MultiEnvDefaultFunc([]string{"DATABRICKS_AZURE_WORKSPACE_RESOURCE_ID", "AZURE_DATABRICKS_WORKSPACE_RESOURCE_ID"}, nil),
 				ConflictsWith: []string{
 					"azure_workspace_name",
 				},
 			},
 			"azure_workspace_name": {
-				Type:     schema.TypeString,
-				Optional: true,
-				// TODO: think about MWS as well
+				Type:          schema.TypeString,
+				Optional:      true,
 				DefaultFunc:   schema.EnvDefaultFunc("DATABRICKS_AZURE_WORKSPACE_NAME", nil),
 				ConflictsWith: []string{"azure_workspace_resource_id"},
 			},
@@ -187,14 +152,12 @@ func DatabricksProvider() *schema.Provider {
 				Type:        schema.TypeString,
 				Optional:    true,
 				DefaultFunc: schema.EnvDefaultFunc("DATABRICKS_AZURE_RESOURCE_GROUP", nil),
-				// ConflictsWith: []string{"azure_workspace_resource_id"},
 			},
 			"azure_subscription_id": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Sensitive:   true,
 				DefaultFunc: schema.MultiEnvDefaultFunc([]string{"DATABRICKS_AZURE_SUBSCRIPTION_ID", "ARM_SUBSCRIPTION_ID"}, nil),
-				// ConflictsWith: []string{"azure_workspace_resource_id"},
 			},
 			"azure_client_id": {
 				Type:        schema.TypeString,
@@ -217,86 +180,13 @@ func DatabricksProvider() *schema.Provider {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Description: "Currently secret scopes are not accessible via AAD tokens so we will need to create a PAT token",
-				Default:     durationToSecondsString(time.Hour),
+				Default:     "3600",
 			},
 			"azure_use_pat_for_cli": {
 				Type:        schema.TypeBool,
 				Optional:    true,
 				Default:     false,
 				Description: "Create ephemeral PAT tokens also for AZ CLI authenticated requests",
-			},
-			"azure_auth": {
-				// TODO: tf13 - azure_auth: TypeMap with Elem *Resource not supported,use TypeList/TypeSet
-				Type:     schema.TypeList,
-				MaxItems: 1,
-				Optional: true,
-				Deprecated: "azure_auth {} block is deprecated in favor of azure_* properties with more previctable behavior. " +
-					"This configuration attribute will be removed in 0.3.",
-				ConflictsWith: []string{
-					"config_file",
-					"basic_auth",
-					"token",
-				},
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						// ADD workspace_url
-						"managed_resource_group": {
-							Optional:    true,
-							Type:        schema.TypeString,
-							Deprecated:  "`managed_resource_group` is not used internally and will be removed in version 0.3",
-							DefaultFunc: schema.EnvDefaultFunc("DATABRICKS_AZURE_MANAGED_RESOURCE_GROUP", nil),
-						},
-						"azure_region": {
-							Optional:    true,
-							Type:        schema.TypeString,
-							Deprecated:  "`azure_region` is not used internally and will be removed in version 0.3",
-							DefaultFunc: schema.EnvDefaultFunc("AZURE_REGION", nil),
-						},
-						"workspace_name": {
-							Type:        schema.TypeString,
-							Optional:    true,
-							Deprecated:  "`workspace_name` is deprecated and will be removed in version 0.3. Please use `azure_workspace_name`",
-							DefaultFunc: schema.EnvDefaultFunc("DATABRICKS_AZURE_WORKSPACE_NAME", nil),
-						},
-						"resource_group": {
-							Type:        schema.TypeString,
-							Optional:    true,
-							Deprecated:  "`resource_group` is deprecated and will be removed in version 0.3. Please use `azure_resource_group`",
-							DefaultFunc: schema.EnvDefaultFunc("DATABRICKS_AZURE_RESOURCE_GROUP", nil),
-						},
-						"subscription_id": {
-							Type:        schema.TypeString,
-							Optional:    true,
-							Deprecated:  "`subscription_id` is deprecated and will be removed in version 0.3. Please use `azure_subscription_id`",
-							DefaultFunc: schema.MultiEnvDefaultFunc([]string{"DATABRICKS_AZURE_SUBSCRIPTION_ID", "ARM_SUBSCRIPTION_ID"}, nil),
-						},
-						"client_secret": {
-							Type:        schema.TypeString,
-							Optional:    true,
-							Deprecated:  "`client_secret` is deprecated and will be removed in version 0.3. Please use `azure_client_secret`",
-							DefaultFunc: schema.MultiEnvDefaultFunc([]string{"DATABRICKS_AZURE_CLIENT_SECRET", "ARM_CLIENT_SECRET"}, nil),
-						},
-						"client_id": {
-							Type:        schema.TypeString,
-							Optional:    true,
-							Deprecated:  "`client_id` is deprecated and will be removed in version 0.3. Please use `azure_client_id`",
-							DefaultFunc: schema.MultiEnvDefaultFunc([]string{"DATABRICKS_AZURE_CLIENT_ID", "ARM_CLIENT_ID"}, nil),
-						},
-						"tenant_id": {
-							Type:        schema.TypeString,
-							Optional:    true,
-							Deprecated:  "`tenant_id` is deprecated and will be removed in version 0.3. Please use `azure_tenant_id`",
-							DefaultFunc: schema.MultiEnvDefaultFunc([]string{"DATABRICKS_AZURE_TENANT_ID", "ARM_TENANT_ID"}, nil),
-						},
-						"pat_token_duration_seconds": {
-							Type:        schema.TypeString,
-							Optional:    true,
-							Deprecated:  "`pat_token_duration_seconds` is deprecated and will be removed in version 0.3. Please use `azure_pat_token_duration_seconds`",
-							Description: "Currently secret scopes are not accessible via AAD tokens so we will need to create a PAT token",
-							Default:     durationToSecondsString(time.Hour),
-						},
-					},
-				},
 			},
 			"skip_verify": {
 				Type:        schema.TypeBool,
@@ -396,37 +286,6 @@ func DatabricksProvider() *schema.Provider {
 			if v, ok := d.GetOk("azure_use_pat_for_cli"); ok {
 				pc.AzureAuth.UsePATForCLI = v.(bool)
 			}
-			if aa, ok := d.GetOk("azure_auth"); ok {
-				// This provider takes DATABRICKS_AZURE_* for client ID etc
-				// The azurerm provider uses ARM_* for the same values
-				// To make it easier to use the two providers together we use the following sources in order:
-				//  - provider config
-				//  - DATABRICKS_AZURE_* environment variables
-				//  - ARM_* environment variables
-				azureAuth := aa.(map[string]interface{})
-				if v, ok := azureAuth["workspace_name"]; ok {
-					pc.AzureAuth.WorkspaceName = v.(string)
-				}
-				if v, ok := azureAuth["resource_group"]; ok {
-					pc.AzureAuth.ResourceGroup = v.(string)
-				}
-				if v, ok := azureAuth["subscription_id"]; ok {
-					pc.AzureAuth.SubscriptionID = v.(string)
-				}
-				if v, ok := azureAuth["client_secret"]; ok {
-					pc.AzureAuth.ClientSecret = v.(string)
-				}
-				if v, ok := azureAuth["client_id"]; ok {
-					pc.AzureAuth.ClientID = v.(string)
-				}
-				if v, ok := azureAuth["tenant_id"]; ok {
-					pc.AzureAuth.TenantID = v.(string)
-				}
-				if v, ok := azureAuth["pat_token_duration_seconds"]; ok {
-					pc.AzureAuth.PATTokenDurationSeconds = v.(string)
-				}
-			}
-
 			authorizationMethodsUsed := []string{}
 			for name, used := range authsUsed {
 				if used {
@@ -446,8 +305,4 @@ func DatabricksProvider() *schema.Provider {
 			return &pc, nil
 		},
 	}
-}
-
-func durationToSecondsString(duration time.Duration) string {
-	return strconv.Itoa(int(duration.Seconds()))
 }

@@ -81,7 +81,7 @@ data "databricks_node_type" "smallest" {
 resource "databricks_cluster" "shared_autoscaling" {
   cluster_name            = "Shared Autoscaling"
   spark_version           = "6.6.x-scala2.11"
-  node_type_id            = databricks_node_type.smallest.id
+  node_type_id            = data.databricks_node_type.smallest.id
   autotermination_minutes = 20
 
   autoscale {

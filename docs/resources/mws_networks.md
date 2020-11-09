@@ -131,16 +131,10 @@ resource "databricks_mws_networks" "this" {
   account_id   = var.account_id
   network_name = "${var.prefix}-network"
   vpc_id       = aws_vpc.main.id
+
+  # TODO: make it two private ones
   subnet_ids   = [aws_subnet.public.id, aws_subnet.private.id]
   security_group_ids = [aws_security_group.test_sg.id]
-
-  lifecycle {
-    # you may need this workaround until issue #382 is fixed:
-    # https://github.com/databrickslabs/terraform-provider-databricks/issues/382
-    ignore_changes = [
-      deployment_name
-    ]
-  }
 }
 ```
 
@@ -148,17 +142,17 @@ resource "databricks_mws_networks" "this" {
 
 The following arguments are required:
 
-* `account_id` - (Required) (String) master account id (also used for `sts:ExternaId` of `sts:AssumeRole`)
-* `network_name` - (Required) (String) name under which this network is regisstered
-* `vpc_id` - (Required) (String) AWS VPC id
-* `subnet_ids` - (Required) (Set) ids of AWS VPC subnets
-* `security_group_ids` - (Required) (Set) ids of AWS Security Groups
+* `account_id` - master account id (also used for `sts:ExternaId` of `sts:AssumeRole`)
+* `network_name` - name under which this network is regisstered
+* `vpc_id` - [aws_vpc](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/vpc) id
+* `subnet_ids` - ids of [aws_subnet](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/subnet)
+* `security_group_ids` - ids of [aws_security_group](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/security_group)
 
 ## Attribute Reference
 
 In addition to all arguments above, the following attributes are exported:
 
 * `id` - Canonical unique identifier for the mws networks.
-* `network_id` - (String) id of network to be used for `databricks_mws_workspace` resource.
+* `network_id` - (String) id of network to be used for [databricks_mws_workspace](mws_workspaces.md) resource.
 * `vpc_status` - (String) VPC attachment status
 * `workspace_id` - (Integer) id of associated workspace

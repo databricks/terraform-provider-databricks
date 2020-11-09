@@ -10,7 +10,7 @@ description: |-
 
 Use the Databricks Terraform provider to interact with almost all of [Databricks](http://databricks.com/) resources. 
 
-![Resources](resources.png)
+![Resources](https://github.com/databrickslabs/terraform-provider-databricks/raw/master/docs/resources.png)
 
 ## Example Usage
 
@@ -27,7 +27,7 @@ data "databricks_node_type" "smallest" {
 resource "databricks_cluster" "shared_autoscaling" {
   cluster_name            = "Shared Autoscaling"
   spark_version           = "6.6.x-scala2.11"
-  node_type_id            = databricks_node_type.smallest.id
+  node_type_id            = data.databricks_node_type.smallest.id
   autotermination_minutes = 20
 
   autoscale {
@@ -186,6 +186,8 @@ resource "databricks_scim_user" "my-user" {
 * `azure_tenant_id` - (optional) This is the Azure Active Directory Tenant id in which the Enterprise Application (Service Principal) 
 resides. Alternatively, you can provide this value as an environment variable `DATABRICKS_AZURE_TENANT_ID` or `ARM_TENANT_ID`.
 * `pat_token_duration_seconds` - The current implementation of the azure auth via sp requires the provider to create a temporary personal access token within Databricks. The current AAD implementation does not cover all the APIs for Authentication. This field determines the duration in which that temporary PAT token is alive. It is measured in seconds and will default to `3600` seconds. 
+* `debug_truncate_bytes` - Applicable only when `TF_LOG=DEBUG` is set. Truncate JSON fields in HTTP requests and responses above this limit. Default is *96*.
+* `debug_headers` - Applicable only when `TF_LOG=DEBUG` is set. Debug HTTP headers of requests made by the provider. Default is *false*.
 
 There are multiple environment variable options, the `DATABRICKS_AZURE_*` environment variables take precedence, and the `ARM_*` environment variables provide a way to share authentication configuration using the `databricks` provider alongside the `azurerm` provider.
 
@@ -208,6 +210,8 @@ The following configuration attributes can be passed via environment variables:
 | `azure_client_secret` | `DATABRICKS_AZURE_CLIENT_SECRET` or `ARM_CLIENT_SECRET` |
 | `azure_client_id` | `DATABRICKS_AZURE_CLIENT_ID` or `ARM_CLIENT_ID` |
 | `azure_tenant_id` | `DATABRICKS_AZURE_TENANT_ID` or `ARM_TENANT_ID` |
+| `debug_truncate_bytes` | `DATABRICKS_DEBUG_TRUNCATE_BYTES` |
+| `debug_headers` | `DATABRICKS_DEBUG_HEADERS` |
 
 ## Empty provider block
 

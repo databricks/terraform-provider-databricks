@@ -77,7 +77,7 @@ resource "databricks_token" "pat" {
   // 1 day token
   lifetime_seconds = 86400
 }
-`“
+```
 
 ## Workspace with Databricks-Managed VPC
 
@@ -91,7 +91,7 @@ resource "random_string" "naming" {
 }
 
 locals {
-    prefix = "dltp${random_string.naming.result}"
+  prefix = "dltp${random_string.naming.result}"
 }
 
 data "databricks_aws_assume_role_policy" "this" {
@@ -101,7 +101,7 @@ data "databricks_aws_assume_role_policy" "this" {
 resource "aws_iam_role" "cross_account_role" {
   name               = "${local.prefix}-crossaccount"
   assume_role_policy = data.databricks_aws_assume_role_policy.this.json
-  tags = var.tags
+  tags               = var.tags
 }
 
 data "databricks_aws_crossaccount_policy" "this" {
@@ -126,12 +126,12 @@ resource "aws_s3_bucket" "root_storage_bucket" {
     enabled = false
   }
   force_destroy = true
-  tags = var.tags
+  tags          = var.tags
 }
 
 resource "aws_s3_bucket_public_access_block" "root_storage_bucket" {
-  bucket              = aws_s3_bucket.root_storage_bucket.id
-  ignore_public_acls  = true
+  bucket             = aws_s3_bucket.root_storage_bucket.id
+  ignore_public_acls = true
 }
 
 data "databricks_aws_bucket_policy" "this" {
@@ -159,7 +159,7 @@ resource "databricks_mws_workspaces" "this" {
   storage_configuration_id  = databricks_mws_storage_configurations.this.storage_configuration_id
   verify_workspace_runnning = true
 }
-`“
+```
 
 ## Argument Reference
 

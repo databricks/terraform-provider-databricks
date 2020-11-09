@@ -18,7 +18,7 @@ resource "databricks_job" "this" {
     new_cluster  {
         num_workers   = 300
         spark_version = "6.6.x-scala2.11"
-        node_type_id  = databricks_node_type.smallest.id
+        node_type_id  = data.databricks_node_type.smallest.id
     }
     
     notebook_task {

@@ -33,53 +33,6 @@ func ResourceCluster() *schema.Resource {
 	}
 }
 
-func addMavenExclusions(scm *schema.Schema) {
-	resource, ok := scm.Elem.(*schema.Resource)
-	if !ok {
-		log.Printf("[DEBUG] invalid elem not a resource, unable to wrap maven exclusions to resource")
-		return
-	}
-	resource.Schema["exclusions"] = &schema.Schema{
-		Type:     schema.TypeList,
-		Optional: true,
-		Elem: &schema.Schema{
-			Type: schema.TypeString,
-		},
-	}
-}
-
-func librarySchema(dims ...string) *schema.Schema {
-	fields := map[string]*schema.Schema{
-		"messages": {
-			// consider removing it...
-			Type: schema.TypeList,
-			Elem: &schema.Schema{
-				Type: schema.TypeString,
-			},
-			Computed: true,
-		},
-		"status": {
-			Type:     schema.TypeString,
-			Computed: true,
-		},
-	}
-	for _, dim := range dims {
-		fields[dim] = &schema.Schema{
-			Type:     schema.TypeString,
-			Optional: true,
-		}
-	}
-	return &schema.Schema{
-		Deprecated: "`library_*` blocks are deprecated and will be removed in v0.3. Please use more generic `library` block",
-		Type:       schema.TypeSet,
-		Optional:   true,
-		ConfigMode: schema.SchemaConfigModeAttr,
-		Elem: &schema.Resource{
-			Schema: fields,
-		},
-	}
-}
-
 func resourceClusterSchema() map[string]*schema.Schema {
 	return internal.StructToSchema(Cluster{}, func(s map[string]*schema.Schema) map[string]*schema.Schema {
 		s["spark_conf"].DiffSuppressFunc = func(k, old, new string, d *schema.ResourceData) bool {
@@ -127,14 +80,6 @@ func resourceClusterSchema() map[string]*schema.Schema {
 			Type:     schema.TypeMap,
 			Computed: true,
 		}
-		// legacy library configuration blocks
-		s["library_jar"] = librarySchema("path")
-		s["library_egg"] = librarySchema("path")
-		s["library_whl"] = librarySchema("path")
-		s["library_pypi"] = librarySchema("package", "repo")
-		s["library_cran"] = librarySchema("package", "repo")
-		s["library_maven"] = librarySchema("coordinates", "repo")
-		addMavenExclusions(s["library_maven"])
 		return s
 	})
 }
@@ -167,10 +112,6 @@ func resourceClusterCreate(d *schema.ResourceData, m interface{}) error {
 	err = internal.DataToStructPointer(d, clusterSchema, &libraryList)
 	if err != nil {
 		return err
-	}
-	if len(libraryList.Libraries) == 0 {
-		// LEGACY support
-		libraryList = legacyReadLibraryListFromData(d)
 	}
 	if len(libraryList.Libraries) > 0 {
 		err = NewLibrariesAPI(m).Install(libraryList)
@@ -262,22 +203,6 @@ func waitForLibrariesInstalled(
 	return
 }
 
-func legacyReadLibraryListFromData(d *schema.ResourceData) (cll ClusterLibraryList) {
-	for _, n := range []string{"library_jar", "library_egg",
-		"library_whl", "library_pypi", "library_maven",
-		"library_cran"} {
-		libs, ok := d.GetOk(n)
-		if !ok {
-			continue
-		}
-		for _, l := range libs.(*schema.Set).List() {
-			cll.AddLibraryFromMap(n, l.(map[string]interface{}))
-		}
-	}
-	cll.ClusterID = d.Id()
-	return
-}
-
 func hasClusterConfigChanged(d *schema.ResourceData) bool {
 	for k := range clusterSchema {
 		// TODO: create a map if we'll add more non-cluster config parameters in the future
@@ -331,10 +256,6 @@ func resourceClusterUpdate(d *schema.ResourceData, m interface{}) error {
 	err = internal.DataToStructPointer(d, clusterSchema, &libraryList)
 	if err != nil {
 		return err
-	}
-	if len(libraryList.Libraries) == 0 {
-		// LEGACY support
-		libraryList = legacyReadLibraryListFromData(d)
 	}
 	libraries := NewLibrariesAPI(client)
 	libsClusterStatus, err := libraries.ClusterStatus(clusterID)

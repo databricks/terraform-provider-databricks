@@ -14,7 +14,7 @@ resource "databricks_instance_pool" "smallest_nodes" {
   instance_pool_name = "Smallest Nodes"
   min_idle_instances = 0
   max_capacity       = 300
-  node_type_id       = databricks_node_type.smallest.id
+  node_type_id       = data.databricks_node_type.smallest.id
   aws_attributes {
     availability = "ON_DEMAND"
     zone_id = "us-east-1a"

@@ -8,7 +8,7 @@ Manages workspace configuration for expert usage. Currently, more than one insta
 
 Allows specification of custom configuration properties for expert usage:
 
- * `enableIpAccessLists` - enables the use of [databricks_ip_access_list](ip_accessl_list.md) resources
+ * `enableIpAccessLists` - enables the use of [databricks_ip_access_list](ip_access_list.md) resources
 
 ```hcl
 resource "databricks_workspace_conf" "this" {

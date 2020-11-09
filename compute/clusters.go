@@ -32,6 +32,15 @@ func (a ClustersAPI) Create(cluster Cluster) (info ClusterInfo, err error) {
 		return
 	}
 	info, err = a.waitForClusterStatus(ci.ClusterID, ClusterStateRunning)
+	if err != nil {
+		// https://github.com/databrickslabs/terraform-provider-databricks/issues/383
+		log.Printf("[ERROR] Cleaning up created cluster, that failed to start: %s", err.Error())
+		deleteErr := a.PermanentDelete(ci.ClusterID)
+		if deleteErr != nil {
+			log.Printf("[ERROR] Failed : %s", deleteErr.Error())
+			err = deleteErr
+		}
+	}
 	return
 }
 

@@ -1,14 +1,21 @@
-# databricks_mws_workspaces Resource
+# databricks_mws_workspaces resource
 
--> **Note** This resource has evolving API, which may change in future versions of provider.
+-> **Note** This resource has an evolving API, which may change in future versions of the provider.
 
-This resource to configure new workspaces within AWS.
+This resource allows you to set up [workspaces in E2 architecture on AWS](https://docs.databricks.com/getting-started/overview.html#e2-architecture-1). 
 
-It is important to understand that this will require you to configure your provider separately for the multiple workspaces resources. This will point to https://accounts.cloud.databricks.com for the HOST and it will use basic auth as that is the only authentication method available for multiple workspaces api. 
-
-Please follow this [complete runnable example](https://github.com/databrickslabs/terraform-provider-databricks/blob/master/scripts/awsmt-integration/main.tf) with new VPC and new workspace setup. Please pay special attention to the fact that there you have two different instances of a databricks provider - one for deploying workspaces (with host=https://accounts.cloud.databricks.com/) and another for the workspace you've created with databricks_mws_workspaces resource. If you want both creation of workspaces & clusters within workspace within the same terraform module (essentially same directory), you should use the provider aliasing feature of Terraform. We strongly recommend having one terraform module for creation of workspace + PAT token and the rest in different modules.
+-> **Note** Please follow this [complete runnable example](https://github.com/databrickslabs/terraform-provider-databricks/blob/master/scripts/awsmt-integration/main.tf) with new VPC and new workspace setup. Please pay special attention to the fact that there you have two different instances of a databricks provider - one for deploying workspaces (with host=https://accounts.cloud.databricks.com/) and another for the workspace you’ve created with `databricks_mws_workspaces` resource. If you want both creations of workspaces & clusters within the same Terraform module (essentially the same directory), you should use the provider aliasing feature of Terraform. We strongly recommend having one terraform module to create workspace + PAT token and the rest in different modules.
 
 ## Example Usage
+
+![VPCs](https://docs.databricks.com/_images/customer-managed-vpc.png)
+
+To get workspace running, you have to configure a couple of things:
+
+ * [databricks_mws_credentials](mws_credentials.md) - You can share a credentials (cross-account IAM role) configuration ID with multiple workspaces. It is not required to create a new one for each workspace. 
+ * [databricks_mws_storage_configurations](mws_storage_configurations.md) - You can share a root S3 bucket with multiple workspaces in a single account. You do not have to create new ones for each workspace. If you share a root S3 bucket for multiple workspaces in an account, data on the root S3 bucket is partitioned into separate directories by workspace. 
+ * [databricks_mws_networks](mws_networks.md) - (optional, but recommended) You can share one [customer-managed VPC](https://docs.databricks.com/administration-guide/cloud-configurations/aws/customer-managed-vpc.html) with multiple workspaces in a single account. You do not have to create a new VPC for each workspace. However, you cannot reuse subnets or security groups with other resources, including other workspaces or non-Databricks resources. If you plan to share one VPC with multiple workspaces, be sure to size your VPC and subnets accordingly. Because a Databricks [databricks_mws_networks](mws_networks.md) encapsulates this information, you cannot reuse it across workspaces.
+ * [databricks_mws_customer_managed_keys](mws_customer_managed_keys.md) - You can share a customer-managed key across workspaces.  
 
 ```hcl
 provider "databricks" {
@@ -70,7 +77,89 @@ resource "databricks_token" "pat" {
   // 1 day token
   lifetime_seconds = 86400
 }
-```
+`“
+
+## Workspace with Databricks-Managed VPC
+
+By default, Databricks creates a VPC in your AWS account for each workspace. Databricks uses it for running clusters in the workspace. Optionally, you can use your VPC for the workspace, using the feature customer-managed VPC. Databricks recommends that you provide your VPC with [databricks_mws_networks](notebook.md) so that you can configure it according to your organization’s enterprise cloud standards while still conforming to Databricks requirements. You cannot migrate an existing workspace to your VPC. Please see the difference described through IAM policy actions [on this page](https://docs.databricks.com/administration-guide/account-api/iam-role.html).
+
+```hcl
+resource "random_string" "naming" {
+  special = false
+  upper   = false
+  length  = 6
+}
+
+locals {
+    prefix = "dltp${random_string.naming.result}"
+}
+
+data "databricks_aws_assume_role_policy" "this" {
+  external_id = var.account_id
+}
+
+resource "aws_iam_role" "cross_account_role" {
+  name               = "${local.prefix}-crossaccount"
+  assume_role_policy = data.databricks_aws_assume_role_policy.this.json
+  tags = var.tags
+}
+
+data "databricks_aws_crossaccount_policy" "this" {
+}
+
+resource "aws_iam_role_policy" "this" {
+  name   = "${local.prefix}-policy"
+  role   = aws_iam_role.cross_account_role.id
+  policy = data.databricks_aws_crossaccount_policy.this.json
+}
+
+resource "databricks_mws_credentials" "this" {
+  account_id       = var.account_id
+  credentials_name = "${local.prefix}-creds"
+  role_arn         = aws_iam_role.cross_account_role.arn
+}
+
+resource "aws_s3_bucket" "root_storage_bucket" {
+  bucket = "${local.prefix}-rootbucket"
+  acl    = "private"
+  versioning {
+    enabled = false
+  }
+  force_destroy = true
+  tags = var.tags
+}
+
+resource "aws_s3_bucket_public_access_block" "root_storage_bucket" {
+  bucket              = aws_s3_bucket.root_storage_bucket.id
+  ignore_public_acls  = true
+}
+
+data "databricks_aws_bucket_policy" "this" {
+  bucket = aws_s3_bucket.root_storage_bucket.bucket
+}
+
+resource "aws_s3_bucket_policy" "root_bucket_policy" {
+  bucket = aws_s3_bucket.root_storage_bucket.id
+  policy = data.databricks_aws_bucket_policy.this.json
+}
+
+resource "databricks_mws_storage_configurations" "this" {
+  account_id                 = var.account_id
+  storage_configuration_name = "${local.prefix}-storage"
+  bucket_name                = aws_s3_bucket.root_storage_bucket.bucket
+}
+
+resource "databricks_mws_workspaces" "this" {
+  account_id      = var.account_id
+  workspace_name  = local.prefix
+  deployment_name = local.prefix
+  aws_region      = "us-east-1"
+
+  credentials_id            = databricks_mws_credentials.this.credentials_id
+  storage_configuration_id  = databricks_mws_storage_configurations.this.storage_configuration_id
+  verify_workspace_runnning = true
+}
+`“
 
 ## Argument Reference
 

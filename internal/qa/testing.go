@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"math/rand"
 	"net/http"
 	"net/http/httptest"
@@ -65,6 +66,7 @@ type HTTPFixture struct {
 type ResourceFixture struct {
 	Fixtures      []HTTPFixture
 	Resource      *schema.Resource
+	RequiresNew   bool
 	InstanceState map[string]string
 	State         map[string]interface{}
 	// HCL might be useful to test nested blocks
@@ -117,6 +119,7 @@ func (f ResourceFixture) Apply(t *testing.T) (*schema.ResourceData, error) {
 		}
 		return a(d, m)
 	}
+	resourceConfig := terraform.NewResourceConfigRaw(f.State)
 	switch {
 	case f.Create:
 		// nolint should be a bigger context-aware refactor
@@ -160,33 +163,56 @@ func (f ResourceFixture) Apply(t *testing.T) (*schema.ResourceData, error) {
 			return pick(f.Resource.Delete, f.Resource.DeleteContext, d, m)
 		}
 	}
+
 	if f.State != nil {
-		resourceConfig := terraform.NewResourceConfigRaw(f.State)
 		diags := f.Resource.Validate(resourceConfig)
 		if diags.HasError() {
 			return nil, fmt.Errorf("Invalid config supplied. %s",
 				strings.ReplaceAll(diagsToString(diags), "\"", ""))
 		}
 	}
-	c := terraform.NewResourceConfigRaw(f.State)
-	sm := schema.InternalMap(f.Resource.Schema)
+	schemaMap := schema.InternalMap(f.Resource.Schema)
 	is := &terraform.InstanceState{
 		Attributes: f.InstanceState,
 	}
-	diff, err := sm.Diff(context.Background(), is, c, nil, nil, true)
+	ctx := context.Background()
+	diff, err := f.Resource.Diff(ctx, is, resourceConfig, client)
+
+	f.Resource.Data(is)
 	if err != nil {
 		return nil, err
 	}
-	resourceData, err := sm.Data(is, diff)
+	resourceData, err := schemaMap.Data(is, diff)
 	if err != nil {
 		return nil, err
 	}
-	//resourceData := schema.TestResourceDataRaw(t, f.Resource.Schema, f.State)
 	err = f.Resource.InternalValidate(f.Resource.Schema, !f.NonWritable)
 	if err != nil {
 		return nil, err
 	}
-	return resourceData, whatever(resourceData, client)
+	err = whatever(resourceData, client)
+	if err != nil {
+		return resourceData, err
+	}
+	diff, err = schemaMap.Diff(ctx, resourceData.State(), resourceConfig,
+		nil, client, true)
+	if err != nil {
+		return nil, err
+	}
+	if diff == nil || f.InstanceState == nil {
+		return resourceData, err
+	}
+	requireNew := []string{}
+	for k, v := range diff.Attributes {
+		if v.RequiresNew {
+			log.Printf("[WARN] %s requires new: %#v %#v", k, v.Old, v.New)
+			requireNew = append(requireNew, k)
+		}
+	}
+	if len(requireNew) > 0 && !f.RequiresNew {
+		err = fmt.Errorf("Changes from backend require new: %s", strings.Join(requireNew, ", "))
+	}
+	return resourceData, err
 }
 
 func diagsToString(diags diag.Diagnostics) string {
@@ -346,7 +372,7 @@ func environmentTemplate(t *testing.T, template string, otherVars ...map[string]
 		"RANDOM": acctest.RandStringFromCharSet(5, acctest.CharSetAlphaNum),
 	}
 	if len(otherVars) > 1 {
-		return "", errors.New("Cannot have more than one customer variable map!")
+		return "", errors.New("Cannot have more than one customer variable map")
 	}
 	if len(otherVars) == 1 {
 		for k, v := range otherVars[0] {
@@ -375,7 +401,7 @@ func environmentTemplate(t *testing.T, template string, otherVars ...map[string]
 		template = strings.ReplaceAll(template, `{`+varType+`.`+varName+`}`, value)
 	}
 	if missing > 0 {
-		return "", fmt.Errorf("please set %d variables and restart.", missing)
+		return "", fmt.Errorf("please set %d variables and restart", missing)
 	}
 	return internal.TrimLeadingWhitespace(template), nil
 }

@@ -128,10 +128,10 @@ func (c *DatabricksClient) parseUnknownError(
 }
 
 func (c *DatabricksClient) commonErrorClarity(resp *http.Response) *APIError {
-	isMultiworkspaceAPI := strings.HasPrefix(resp.Request.URL.Path, "/api/2.0/accounts")
-	isMultiworkspaceHost := resp.Request.URL.Host == accountsHost
+	isAccountsAPI := strings.HasPrefix(resp.Request.URL.Path, "/api/2.0/accounts")
+	isAccountsClient := strings.Contains(c.Host, accountsHost)
 	isTesting := strings.HasPrefix(resp.Request.URL.Host, "127.0.0.1")
-	if !isTesting && isMultiworkspaceHost && !isMultiworkspaceAPI {
+	if !isTesting && isAccountsClient && !isAccountsAPI {
 		return &APIError{
 			ErrorCode: "INCORRECT_CONFIGURATION",
 			Message: fmt.Sprintf("Databricks API (%s) requires you to set `host` property "+
@@ -144,14 +144,14 @@ func (c *DatabricksClient) commonErrorClarity(resp *http.Response) *APIError {
 		}
 	}
 	// common confusion with this provider: calling workspace apis on accounts host
-	if !isTesting && isMultiworkspaceAPI && !isMultiworkspaceHost {
+	if !isTesting && isAccountsAPI && !isAccountsClient {
 		return &APIError{
 			ErrorCode: "INCORRECT_CONFIGURATION",
-			Message: fmt.Sprintf("Multiworkspace API (%s) requires you to set %s as DATABRICKS_HOST, but you have "+
+			Message: fmt.Sprintf("Accounts API (%s) requires you to set %s as DATABRICKS_HOST, but you have "+
 				"specified %s instead. This error may happen if you're using provider in both "+
 				"normal and multiworkspace mode. Please refactor your code into different modules. "+
 				"Runnable example that we use for integration testing can be found in this "+
-				"repository at %s", resp.Request.URL.Path, accountsHost, resp.Request.URL.Host, e2example),
+				"repository at %s", resp.Request.URL.Path, accountsHost, c.Host, e2example),
 			StatusCode: resp.StatusCode,
 			Resource:   resp.Request.URL.Path,
 		}
@@ -163,8 +163,8 @@ func (c *DatabricksClient) parseError(resp *http.Response) APIError {
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return APIError{
-			Message:    "IO_READ",
-			ErrorCode:  err.Error(),
+			Message:    err.Error(),
+			ErrorCode:  "IO_READ",
 			StatusCode: resp.StatusCode,
 			Resource:   resp.Request.URL.Path,
 		}
@@ -219,8 +219,9 @@ func (c *DatabricksClient) checkHTTPRetry(ctx context.Context, resp *http.Respon
 	}
 	if resp.StatusCode == 429 {
 		return true, APIError{
-			ErrorCode: "TOO_MANY_REQUESTS",
-			Message:   "Current request has to be retried",
+			ErrorCode:  "TOO_MANY_REQUESTS",
+			Message:    "Current request has to be retried",
+			StatusCode: 429,
 		}
 	}
 	if resp.StatusCode >= 400 {

@@ -1,11 +1,11 @@
 default: build
 
 fmt:
-	@echo "✓ Formatting source code with gofmt & goimports..."
+	@echo "✓ Formatting source code with goimports..."
 	@goimports -w $(shell find . -type f -name '*.go' -not -path "./vendor/*")
+	@echo "✓ Formatting source code with gofmt..."
 	@gofmt -w $(shell find . -type f -name '*.go' -not -path "./vendor/*")
-	@go fmt ./...
-
+	
 lint: 
 	@echo "✓ Linting source code with golangci-lint make sure you run make fmt ..."
 	@golangci-lint run --skip-dirs-use-default --timeout 5m

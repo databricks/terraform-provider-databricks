@@ -24,9 +24,6 @@ type refreshableCliToken struct {
 
 // OAuthToken implements adal.OAuthTokenProvider
 func (rct *refreshableCliToken) OAuthToken() string {
-	if rct == nil {
-		return ""
-	}
 	if rct.token == nil {
 		return ""
 	}
@@ -36,12 +33,12 @@ func (rct *refreshableCliToken) OAuthToken() string {
 // EnsureFreshWithContext implements adal.RefresherWithContext
 func (rct *refreshableCliToken) EnsureFreshWithContext(ctx context.Context) error {
 	refreshInterval := time.Duration(rct.refreshMinutes) * time.Minute
-	if !rct.token.WillExpireIn(refreshInterval) {
+	if rct.token != nil && !rct.token.WillExpireIn(refreshInterval) {
 		return nil
 	}
 	rct.lock.Lock()
 	defer rct.lock.Unlock()
-	if !rct.token.WillExpireIn(refreshInterval) {
+	if rct.token != nil && !rct.token.WillExpireIn(refreshInterval) {
 		return nil
 	}
 	return rct.refreshInternal(rct.resource)

@@ -4,16 +4,22 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"strings"
+	"sync"
 	"testing"
 
 	"github.com/Azure/go-autorest/autorest"
 	"github.com/Azure/go-autorest/autorest/adal"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestAzureAuth_resourceID(t *testing.T) {
 	aa := AzureAuth{}
+	assert.Equal(t, "", aa.resourceID())
+
+	aa.ResourceID = "/subscriptions/a/resourceGroups/b"
 	assert.Equal(t, "", aa.resourceID())
 
 	aa.ResourceID = "/subscriptions/a/resourceGroups/b/providers/Microsoft.Databricks/workspaces/c"
@@ -29,6 +35,99 @@ func TestAzureAuth_resourceID(t *testing.T) {
 	assert.Equal(t, "", aa.resourceID())
 	aa.WorkspaceName = "c"
 	assert.Equal(t, "/subscriptions/a/resourceGroups/b/providers/Microsoft.Databricks/workspaces/c", aa.resourceID())
+}
+
+func TestAddSpManagementTokenVisitor(t *testing.T) {
+	aa := AzureAuth{}
+	r := httptest.NewRequest("GET", "/a/b/c", http.NoBody)
+	err := aa.addSpManagementTokenVisitor(r, &autorest.BearerAuthorizer{})
+	assert.EqualError(t, err, "Token provider is nil")
+}
+
+func TestAddSpManagementTokenVisitor_Refreshed(t *testing.T) {
+	defer CleanupEnvironment()()
+	os.Setenv("PATH", "testdata:/bin")
+
+	aa := AzureAuth{}
+	r := httptest.NewRequest("GET", "/a/b/c", http.NoBody)
+	rct := refreshableCliToken{
+		lock:           &sync.RWMutex{},
+		resource:       "x",
+		refreshMinutes: 6,
+	}
+	err := aa.addSpManagementTokenVisitor(r, autorest.NewBearerAuthorizer(&rct))
+	require.NoError(t, err)
+	assert.Equal(t, "...", r.Header[http.CanonicalHeaderKey("X-Databricks-Azure-SP-Management-Token")][0])
+}
+
+func TestAddSpManagementTokenVisitor_RefreshedError(t *testing.T) {
+	defer CleanupEnvironment()()
+	os.Setenv("PATH", "testdata:/bin")
+	os.Setenv("FAIL", "yes")
+
+	aa := AzureAuth{}
+	r := httptest.NewRequest("GET", "/a/b/c", http.NoBody)
+	rct := refreshableCliToken{
+		lock:           &sync.RWMutex{},
+		resource:       "x",
+		refreshMinutes: 6,
+	}
+	err := aa.addSpManagementTokenVisitor(r, autorest.NewBearerAuthorizer(&rct))
+	require.EqualError(t, err, "Cannot get access token: This is just a failing script.\n")
+
+	err = aa.addSpManagementTokenVisitor(r, autorest.NewBasicAuthorizer("a", "b"))
+	require.Error(t, err)
+}
+
+func TestGetClientSecretAuthorizer(t *testing.T) {
+	aa := AzureAuth{}
+	auth, err := aa.getClientSecretAuthorizer("x")
+	require.NotNil(t, auth)
+	require.NoError(t, err)
+
+	auth, err = aa.getClientSecretAuthorizer(AzureDatabricksResourceID)
+	require.Nil(t, auth)
+	require.EqualError(t, err, "parameter 'clientID' cannot be empty")
+
+	aa.TenantID = "a"
+	aa.ClientID = "b"
+	aa.ClientSecret = "c"
+	auth, err = aa.getClientSecretAuthorizer(AzureDatabricksResourceID)
+	require.NotNil(t, auth)
+	require.NoError(t, err)
+}
+
+func TestEnsureWorkspaceURL_CornerCases(t *testing.T) {
+	aa := AzureAuth{}
+	err := aa.ensureWorkspaceURL(nil)
+	assert.EqualError(t, err, "DatabricksClient is not configured")
+
+	aa.databricksClient = &DatabricksClient{}
+	err = aa.ensureWorkspaceURL(nil)
+	assert.EqualError(t, err, "Somehow resource id is not set")
+}
+
+func TestAcquirePAT_CornerCases(t *testing.T) {
+	aa := AzureAuth{}
+	_, err := aa.acquirePAT(func(resource string) (autorest.Authorizer, error) {
+		return &autorest.BearerAuthorizer{}, fmt.Errorf("test")
+	})
+	assert.EqualError(t, err, "test")
+
+	_, err = aa.acquirePAT(func(resource string) (autorest.Authorizer, error) {
+		return &autorest.BearerAuthorizer{}, nil
+	})
+	assert.EqualError(t, err, "DatabricksClient is not configured")
+
+	aa.databricksClient = &DatabricksClient{}
+	aa.temporaryPat = &TokenResponse{
+		TokenValue: "...",
+	}
+	auth, rre := aa.acquirePAT(func(resource string) (autorest.Authorizer, error) {
+		return &autorest.BearerAuthorizer{}, nil
+	})
+	assert.NoError(t, rre)
+	assert.Equal(t, "...", auth.TokenValue)
 }
 
 func TestAzureAuth_isClientSecretSet(t *testing.T) {

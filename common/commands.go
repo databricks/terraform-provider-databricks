@@ -2,9 +2,9 @@ package common
 
 // WithCommandMock mocks all command executions for this client
 func (c *DatabricksClient) WithCommandMock(mock CommandMock) {
-	c.commandExecutor = commandExecutorMock{
+	c.WithCommandExecutor(commandExecutorMock{
 		mock: mock,
-	}
+	})
 }
 
 // WithCommandExecutor sets command executor implementation to use

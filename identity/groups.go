@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"sort"
 
 	"github.com/databrickslabs/databricks-terraform/common"
 )
@@ -55,18 +54,6 @@ func (a GroupsAPI) Read(groupID string) (group ScimGroup, err error) {
 	if err != nil {
 		return
 	}
-	//get inherited groups
-	var groups []ScimGroup
-	for _, inheritedGroup := range group.Groups {
-		inheritedGroupFull, err := a.Read(inheritedGroup.Value)
-		if err != nil {
-			return group, err
-		}
-		groups = append(groups, inheritedGroupFull)
-	}
-	inherited, unInherited := a.getInheritedAndNonInheritedRoles(group, groups)
-	group.InheritedRoles = inherited
-	group.UnInheritedRoles = unInherited
 	return
 }
 
@@ -79,23 +66,6 @@ func (a GroupsAPI) Filter(filter string) (GroupList, error) {
 	}
 	err := a.client.Scim(http.MethodGet, "/preview/scim/v2/Groups", req, &groups)
 	return groups, err
-}
-
-// GetAdminGroup returns the admin group in a given workspace by fetching with query "displayName+eq+admins"
-func (a GroupsAPI) GetAdminGroup() (ScimGroup, error) {
-	var group ScimGroup
-	var groups GroupList
-	err := a.client.Scim(http.MethodGet, "/preview/scim/v2/Groups", map[string]string{
-		"filter": "displayName+eq+admins",
-	}, &groups)
-	if err != nil {
-		return group, err
-	}
-	resources := groups.Resources
-	if len(resources) == 1 {
-		return resources[0], err
-	}
-	return group, errors.New("Unable to identify the admin group! ")
 }
 
 func (a GroupsAPI) PatchR(groupID string, r patchRequest) error {
@@ -146,30 +116,4 @@ func (a GroupsAPI) Delete(groupID string) error {
 	return a.client.Scim(http.MethodDelete,
 		fmt.Sprintf("/preview/scim/v2/Groups/%v", groupID),
 		nil, nil)
-}
-
-func (a GroupsAPI) getInheritedAndNonInheritedRoles(
-	group ScimGroup, groups []ScimGroup) (inherited []RoleListItem,
-	unInherited []RoleListItem) {
-	allRoles := group.Roles
-	var inheritedRoles []RoleListItem
-	inheritedRolesKeys := []string{}
-	inheritedRolesMap := map[string]RoleListItem{}
-	for _, group := range groups {
-		inheritedRoles = append(inheritedRoles, group.Roles...)
-	}
-	for _, role := range inheritedRoles {
-		inheritedRolesKeys = append(inheritedRolesKeys, role.Value)
-		inheritedRolesMap[role.Value] = role
-	}
-	sort.Strings(inheritedRolesKeys)
-	for _, roleKey := range inheritedRolesKeys {
-		inherited = append(inherited, inheritedRolesMap[roleKey])
-	}
-	for _, role := range allRoles {
-		if _, ok := inheritedRolesMap[role.Value]; !ok {
-			unInherited = append(unInherited, role)
-		}
-	}
-	return inherited, unInherited
 }

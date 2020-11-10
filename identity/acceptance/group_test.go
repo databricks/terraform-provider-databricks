@@ -107,7 +107,7 @@ func testGroupResourceDestroy(s *terraform.State) error {
 		if rs.Type != "databricks_group" {
 			continue
 		}
-		_, err := NewUsersAPI(client).Read(rs.Primary.ID)
+		_, err := NewUsersAPI(client).ReadR(rs.Primary.ID)
 		if err != nil {
 			return nil
 		}

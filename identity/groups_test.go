@@ -16,10 +16,10 @@ func TestAccGroup(t *testing.T) {
 	}
 	client := common.NewClientFromEnvironment()
 
-	user, err := NewUsersAPI(client).Create("test-acc@databricks.com", "test account", nil, nil)
+	user, err := NewUsersAPI(client).CreateR(UserEntity{UserName: "test-acc2@databricks.com"})
 	assert.NoError(t, err, err)
 
-	user2, err := NewUsersAPI(client).Create("test-acc2@databricks.com", "test account", nil, nil)
+	user2, err := NewUsersAPI(client).CreateR(UserEntity{UserName: "test-acc3@databricks.com"})
 	assert.NoError(t, err, err)
 
 	//Create empty group
@@ -61,17 +61,6 @@ func TestAccFilterGroup(t *testing.T) {
 	assert.Len(t, groupList.Resources, 1)
 }
 
-func TestAccGetAdminGroup(t *testing.T) {
-	if testing.Short() {
-		t.Skip("skipping integration test in short mode.")
-	}
-	client := common.NewClientFromEnvironment()
-	grp, err := NewGroupsAPI(client).GetAdminGroup()
-	assert.NoError(t, err, err)
-	assert.NotNil(t, grp)
-	assert.True(t, len(grp.ID) > 0)
-}
-
 func TestAwsAccReadInheritedRolesFromGroup(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping integration test in short mode.")
@@ -107,19 +96,6 @@ func TestAwsAccReadInheritedRolesFromGroup(t *testing.T) {
 
 	err = NewGroupsAPI(client).Patch(myTestGroup.ID, []string{myTestSubGroup.ID}, nil, GroupMembersPath)
 	assert.NoError(t, err, err)
-
-	myTestGroupInfo, err := NewGroupsAPI(client).Read(myTestSubGroup.ID)
-	assert.NoError(t, err, err)
-
-	assert.True(t, len(myTestGroupInfo.InheritedRoles) > 0)
-	assert.True(t, func(roles []RoleListItem, testRole string) bool {
-		for _, role := range roles {
-			if role.Value == testRole {
-				return true
-			}
-		}
-		return false
-	}(myTestGroupInfo.InheritedRoles, myTestRole))
 }
 
 func TestGroupsFilter(t *testing.T) {

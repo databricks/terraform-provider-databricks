@@ -1,0 +1,19 @@
+{
+	// https://snippet-generator.app/
+	"Test case": {
+		"prefix": "te",
+		"body": [
+			"func Test$1(t *testing.T) {",
+			"    $2",
+			"}"
+		],
+		"description": "Test case"
+	},
+	"Assert len": {
+		"prefix": "al",
+		"body": [
+		  "assert.Len(t, $1, $2)"
+		],
+		"description": "Assert len"
+	  }
+}

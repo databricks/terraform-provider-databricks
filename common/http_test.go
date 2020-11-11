@@ -225,10 +225,11 @@ func singleRequestServer(t *testing.T, method, url, response string) (*Databrick
 }
 
 func TestGet_Error(t *testing.T) {
+	defer CleanupEnvironment()()
 	ws := DatabricksClient{}
 	err := ws.Get("/imaginary/endpoint", nil, nil)
 	require.Error(t, err)
-	assert.True(t, strings.HasPrefix(err.Error(), "DatabricksClient is not configured"),
+	assert.True(t, strings.HasPrefix(err.Error(), "Authentication is not configured"),
 		"Actual message: %s", err.Error())
 }
 

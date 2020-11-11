@@ -10,61 +10,40 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
+var kindMap = map[reflect.Kind]string{
+	reflect.Bool:          "Bool",
+	reflect.Int:           "Int",
+	reflect.Int8:          "Int8",
+	reflect.Int16:         "Int16",
+	reflect.Int32:         "Int32",
+	reflect.Int64:         "Int64",
+	reflect.Uint:          "Uint",
+	reflect.Uint8:         "Uint8",
+	reflect.Uint16:        "Uint16",
+	reflect.Uint32:        "Uint32",
+	reflect.Uint64:        "Uint64",
+	reflect.Uintptr:       "Uintptr",
+	reflect.Float32:       "Float32",
+	reflect.Float64:       "Float64",
+	reflect.Complex64:     "Complex64",
+	reflect.Complex128:    "Complex128",
+	reflect.Array:         "Array",
+	reflect.Chan:          "Chan",
+	reflect.Func:          "Func",
+	reflect.Interface:     "Interface",
+	reflect.Ptr:           "Ptr",
+	reflect.Slice:         "Slice",
+	reflect.String:        "String",
+	reflect.Struct:        "Struct",
+	reflect.UnsafePointer: "UnsafePointer",
+}
+
 func reflectKind(k reflect.Kind) string {
-	switch k {
-	case reflect.Bool:
-		return "Bool"
-	case reflect.Int:
-		return "Int"
-	case reflect.Int8:
-		return "Int8"
-	case reflect.Int16:
-		return "Int16"
-	case reflect.Int32:
-		return "Int32"
-	case reflect.Int64:
-		return "Int64"
-	case reflect.Uint:
-		return "Uint"
-	case reflect.Uint8:
-		return "Uint8"
-	case reflect.Uint16:
-		return "Uint16"
-	case reflect.Uint32:
-		return "Uint32"
-	case reflect.Uint64:
-		return "Uint64"
-	case reflect.Uintptr:
-		return "Uintptr"
-	case reflect.Float32:
-		return "Float32"
-	case reflect.Float64:
-		return "Float64"
-	case reflect.Complex64:
-		return "Complex64"
-	case reflect.Complex128:
-		return "Complex128"
-	case reflect.Array:
-		return "Array"
-	case reflect.Chan:
-		return "Chan"
-	case reflect.Func:
-		return "Func"
-	case reflect.Interface:
-		return "Interface"
-	case reflect.Ptr:
-		return "Ptr"
-	case reflect.Slice:
-		return "Slice"
-	case reflect.String:
-		return "String"
-	case reflect.Struct:
-		return "Struct"
-	case reflect.UnsafePointer:
-		return "UnsafePointer"
-	default:
+	n, ok := kindMap[k]
+	if !ok {
 		return "other"
 	}
+	return n
 }
 
 // SchemaPath helps to navigate
@@ -349,23 +328,12 @@ func StructToData(result interface{}, s map[string]*schema.Schema, d *schema.Res
 			es, ok := fieldSchema.Elem.(*schema.Schema)
 			if ok {
 				switch es.Type {
-				case schema.TypeString:
-					v, ok := fieldValue.([]string)
-					if !ok {
-						return fmt.Errorf("%s[%v] is not a string",
-							fieldPath, fieldValue)
-					}
-					return d.Set(fieldPath, v)
-				case schema.TypeInt:
-					v, ok := fieldValue.([]int)
-					if !ok {
-						return fmt.Errorf("%s[%v] is not a string",
-							fieldPath, fieldValue)
-					}
-					return d.Set(fieldPath, v)
+				case schema.TypeString, schema.TypeInt, schema.TypeFloat, schema.TypeBool:
+					return d.Set(fieldPath, fieldValue)
+				default:
+					return fmt.Errorf("%s[%v] unsupported schema detected",
+						fieldPath, fieldValue)
 				}
-				return fmt.Errorf("%s[%v] supported schema detected",
-					fieldPath, fieldValue)
 			}
 			nv, err := collectionToMaps(fieldValue, fieldSchema)
 			if err != nil {
@@ -410,70 +378,30 @@ func readReflectValueFromData(path []string, d *schema.ResourceData,
 		}
 		switch fieldSchema.Type {
 		case schema.TypeInt:
-			v, ok := raw.(int)
-			if !ok {
-				return fmt.Errorf("%s is not int", fieldPath)
+			if v, ok := raw.(int); ok {
+				valueField.SetInt(int64(v))
 			}
-			valueField.SetInt(int64(v))
 		case schema.TypeString:
-			v, ok := raw.(string)
-			if !ok {
-				return fmt.Errorf("%s is not string", fieldPath)
+			if v, ok := raw.(string); ok {
+				valueField.SetString(v)
 			}
-			valueField.SetString(v)
 		case schema.TypeBool:
-			v, ok := raw.(bool)
-			if !ok {
-				return fmt.Errorf("%s is not bool", fieldPath)
+			if v, ok := raw.(bool); ok {
+				valueField.SetBool(v)
 			}
-			valueField.SetBool(v)
 		case schema.TypeFloat:
-			v, ok := raw.(float64)
-			if !ok {
-				return fmt.Errorf("%s is not float", fieldPath)
+			if v, ok := raw.(float64); ok {
+				valueField.SetFloat(v)
 			}
-			valueField.SetFloat(v)
 		case schema.TypeMap:
 			mapValueKind := valueField.Type().Elem().Kind()
 			valueField.Set(reflect.MakeMap(valueField.Type()))
 			for key, ivalue := range raw.(map[string]interface{}) {
-				kv := reflect.ValueOf(key)
-				switch mapValueKind {
-				case reflect.String:
-					valueField.SetMapIndex(
-						kv, reflect.ValueOf(fmt.Sprintf("%v", ivalue)))
-				case reflect.Float32:
-					v, ok := ivalue.(float32)
-					if !ok {
-						return fmt.Errorf("%s[%s] '%v' is not float32",
-							fieldPath, key, ivalue)
-					}
-					valueField.SetMapIndex(kv, reflect.ValueOf(v))
-				case reflect.Float64:
-					v, ok := ivalue.(float64)
-					if !ok {
-						return fmt.Errorf("%s[%s] '%v' is not float64",
-							fieldPath, key, ivalue)
-					}
-					valueField.SetMapIndex(kv, reflect.ValueOf(v))
-				case reflect.Int:
-					v, ok := ivalue.(int)
-					if !ok {
-						return fmt.Errorf("%s[%s] '%v' is not int",
-							fieldPath, key, ivalue)
-					}
-					valueField.SetMapIndex(kv, reflect.ValueOf(v))
-				case reflect.Bool:
-					v, ok := ivalue.(bool)
-					if !ok {
-						return fmt.Errorf("%s[%s] '%v' is not bool",
-							fieldPath, key, ivalue)
-					}
-					valueField.SetMapIndex(kv, reflect.ValueOf(v))
-				default:
-					return fmt.Errorf("%s[%s] '%v' is not valid primitive",
-						fieldPath, key, ivalue)
+				vrv, err := primitiveReflectValueFromInterface(mapValueKind, ivalue, fieldPath, key)
+				if err != nil {
+					return err
 				}
+				valueField.SetMapIndex(reflect.ValueOf(key), vrv)
 			}
 		case schema.TypeSet:
 			rawSet, ok := raw.(*schema.Set)
@@ -496,6 +424,50 @@ func readReflectValueFromData(path []string, d *schema.ResourceData,
 		}
 		return nil
 	})
+}
+
+func primitiveReflectValueFromInterface(rk reflect.Kind,
+	ivalue interface{}, fieldPath, key string) (rv reflect.Value, err error) {
+	switch rk {
+	case reflect.String:
+		return reflect.ValueOf(fmt.Sprintf("%v", ivalue)), nil
+	case reflect.Float32:
+		v, ok := ivalue.(float32)
+		if !ok {
+			err = fmt.Errorf("%s[%s] '%v' is not %s",
+				fieldPath, key, ivalue, reflectKind(rk))
+			return
+		}
+		rv = reflect.ValueOf(v)
+	case reflect.Float64:
+		v, ok := ivalue.(float64)
+		if !ok {
+			err = fmt.Errorf("%s[%s] '%v' is not %s",
+				fieldPath, key, ivalue, reflectKind(rk))
+			return
+		}
+		rv = reflect.ValueOf(v)
+	case reflect.Int:
+		v, ok := ivalue.(int)
+		if !ok {
+			err = fmt.Errorf("%s[%s] '%v' is not %s",
+				fieldPath, key, ivalue, reflectKind(rk))
+			return
+		}
+		rv = reflect.ValueOf(v)
+	case reflect.Bool:
+		v, ok := ivalue.(bool)
+		if !ok {
+			err = fmt.Errorf("%s[%s] '%v' is not %s",
+				fieldPath, key, ivalue, reflectKind(rk))
+			return
+		}
+		rv = reflect.ValueOf(v)
+	default:
+		err = fmt.Errorf("%s[%s] '%v' is not valid primitive",
+			fieldPath, key, ivalue)
+	}
+	return rv, err
 }
 
 func readListFromData(path []string, d *schema.ResourceData,
@@ -521,13 +493,8 @@ func readListFromData(path []string, d *schema.ResourceData,
 		newSlice := reflect.MakeSlice(valueField.Type(), len(rawList), len(rawList))
 		valueField.Set(newSlice)
 		for i, elem := range rawList {
+			item := newSlice.Index(i)
 			switch k {
-			case reflect.String:
-				v, ok := elem.(string)
-				if !ok {
-					return fmt.Errorf("%s[%v] is not a string", fieldPath, elem)
-				}
-				newSlice.Index(i).SetString(v)
 			case reflect.Struct:
 				nestedResource, ok := fieldSchema.Elem.(*schema.Resource)
 				if !ok {
@@ -540,13 +507,49 @@ func readListFromData(path []string, d *schema.ResourceData,
 				if err != nil {
 					return err
 				}
-				newSlice.Index(i).Set(ve)
+				item.Set(ve)
 			default:
-				return fmt.Errorf("%s[%v] is not valid slice elem", fieldPath, elem)
+				err := setPrimitiveValueOfKind(fieldPath, k, item, elem)
+				if err != nil {
+					return err
+				}
 			}
 		}
 	default:
 		return fmt.Errorf("%s[%v] unknown collection field", fieldPath, rawList)
+	}
+	return nil
+}
+
+func setPrimitiveValueOfKind(
+	fieldPath string, k reflect.Kind, item reflect.Value, elem interface{}) error {
+	switch k {
+	case reflect.String:
+		v, ok := elem.(string)
+		if !ok {
+			return fmt.Errorf("%s[%v] is not a string", fieldPath, elem)
+		}
+		item.SetString(v)
+	case reflect.Int:
+		v, ok := elem.(int)
+		if !ok {
+			return fmt.Errorf("%s[%v] is not an int", fieldPath, elem)
+		}
+		item.SetInt(int64(v))
+	case reflect.Float64:
+		v, ok := elem.(float64)
+		if !ok {
+			return fmt.Errorf("%s[%v] is not a float64", fieldPath, elem)
+		}
+		item.SetFloat(v)
+	case reflect.Bool:
+		v, ok := elem.(bool)
+		if !ok {
+			return fmt.Errorf("%s[%v] is not a bool", fieldPath, elem)
+		}
+		item.SetBool(v)
+	default:
+		return fmt.Errorf("%s[%v] is not a valid primitive", fieldPath, elem)
 	}
 	return nil
 }

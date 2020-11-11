@@ -35,6 +35,7 @@ func TrimLeadingWhitespace(commandStr string) (newCommand string) {
 	return
 }
 
+// ConvertListInterfaceToString ...
 func ConvertListInterfaceToString(m []interface{}) []string {
 	response := []string{}
 	for _, v := range m {

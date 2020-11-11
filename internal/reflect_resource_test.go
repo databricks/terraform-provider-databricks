@@ -1,6 +1,7 @@
 package internal
 
 import (
+	"fmt"
 	"reflect"
 	"testing"
 
@@ -8,8 +9,32 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func TestReflectKind(t *testing.T) {
+	assert.Equal(t, "Bool", reflectKind(1))
+}
+
+func TestSchemaPath(t *testing.T) {
+	_, err := SchemaPath(map[string]*schema.Schema{}, "x", "y", "z")
+	assert.EqualError(t, err, "Missing key x")
+
+	_, err = SchemaPath(map[string]*schema.Schema{})
+	assert.EqualError(t, err, "[] does not compute")
+
+	_, err = SchemaPath(map[string]*schema.Schema{
+		"foo": {},
+	}, "foo", "x")
+	assert.EqualError(t, err, "foo is not nested resource")
+}
+
+func TestChooseFieldName(t *testing.T) {
+	assert.Equal(t, "foo", chooseFieldName(reflect.StructField{
+		Tag: `tf:"alias:foo"`,
+	}))
+}
+
 type testSliceItem struct {
-	SliceItem string `json:"slice_item,omitempty"`
+	SliceItem string   `json:"slice_item,omitempty"`
+	Nested    *testPtr `json:"nested,omitempty"`
 }
 
 type testPtr struct {
@@ -17,7 +42,7 @@ type testPtr struct {
 }
 
 type testStruct struct {
-	Integer        int               `json:"integer,omitempty"`
+	Integer        int               `json:"integer,omitempty" tf:"default:10,max_items:invalid"`
 	Float          float64           `json:"float,omitempty"`
 	Bool           bool              `json:"bool,omitempty"`
 	NonOptional    string            `json:"non_optional"`
@@ -31,6 +56,7 @@ type testStruct struct {
 	IntSlice       []int             `json:"int_slice,omitempty"`
 	FloatSlice     []float64         `json:"float_slice,omitempty"`
 	BoolSlice      []bool            `json:"bool_slice,omitempty"`
+	Hidden         string            `json:"-"`
 }
 
 var scm = StructToSchema(testStruct{}, nil)
@@ -155,6 +181,125 @@ type Dummy struct {
 	Tags        map[string]string `json:"tags,omitempty" tf:"max_items:5"`
 	Home        *Address          `json:"home,omitempty" tf:"group:v"`
 	House       *Address          `json:"house,omitempty" tf:"group:v"`
+}
+
+func TestStructToDataAndBack(t *testing.T) {
+	d := schema.TestResourceDataRaw(t, scm, map[string]interface{}{})
+	d.MarkNewResource()
+	err := StructToData(testStruct{
+		ComputedField: "x",
+		BoolSlice:     []bool{true, false},
+		FloatSlice:    []float64{.87, .98},
+		IntSlice:      []int{435, 23, 6},
+		MapField: map[string]string{
+			"x": "y",
+		},
+		StringSlice: []string{"a", "b"},
+		PtrItem: &testPtr{
+			PtrItem: "x",
+		},
+		Hidden:         "x",
+		SliceSetString: []string{"a", "b"},
+		SliceSetStruct: []testSliceItem{
+			{
+				SliceItem: "x",
+				Nested: &testPtr{
+					PtrItem: "y",
+				},
+			},
+		},
+	}, scm, d)
+	assert.NoError(t, err)
+
+	var r testStruct
+	err = DataToStructPointer(d, scm, &r)
+	assert.NoError(t, err)
+}
+
+func TestSetPrimitiveOfKind(t *testing.T) {
+	err := setPrimitiveValueOfKind("a.b.c", reflect.String, reflect.Value{}, []string{"_"})
+	assert.EqualError(t, err, "a.b.c[[_]] is not a string")
+	err = setPrimitiveValueOfKind("a.b.c", reflect.Int, reflect.Value{}, []string{"_"})
+	assert.EqualError(t, err, "a.b.c[[_]] is not an int")
+	err = setPrimitiveValueOfKind("a.b.c", reflect.Float64, reflect.Value{}, []string{"_"})
+	assert.EqualError(t, err, "a.b.c[[_]] is not a float64")
+	err = setPrimitiveValueOfKind("a.b.c", reflect.Bool, reflect.Value{}, []string{"_"})
+	assert.EqualError(t, err, "a.b.c[[_]] is not a bool")
+	err = setPrimitiveValueOfKind("a.b.c", reflect.Slice, reflect.Value{}, []string{"_"})
+	assert.EqualError(t, err, "a.b.c[[_]] is not a valid primitive")
+}
+
+func TestPrimitiveReflectValueFromInterface(t *testing.T) {
+	_, err := primitiveReflectValueFromInterface(reflect.String, []string{"_"}, "a", "b")
+	assert.NoError(t, err)
+
+	_, err = primitiveReflectValueFromInterface(reflect.Int, []string{"_"}, "a", "b")
+	assert.EqualError(t, err, "a[b] '[_]' is not Int")
+	_, err = primitiveReflectValueFromInterface(reflect.Int, 452345, "a", "b")
+	assert.NoError(t, err)
+
+	_, err = primitiveReflectValueFromInterface(reflect.Float32, []string{"_"}, "a", "b")
+	assert.EqualError(t, err, "a[b] '[_]' is not Float32")
+	_, err = primitiveReflectValueFromInterface(reflect.Float32, float32(1.3), "a", "b")
+	assert.NoError(t, err)
+
+	_, err = primitiveReflectValueFromInterface(reflect.Float64, []string{"_"}, "a", "b")
+	assert.EqualError(t, err, "a[b] '[_]' is not Float64")
+	_, err = primitiveReflectValueFromInterface(reflect.Float64, float64(1.3), "a", "b")
+	assert.NoError(t, err)
+
+	_, err = primitiveReflectValueFromInterface(reflect.Bool, []string{"_"}, "a", "b")
+	assert.EqualError(t, err, "a[b] '[_]' is not Bool")
+	_, err = primitiveReflectValueFromInterface(reflect.Bool, true, "a", "b")
+	assert.NoError(t, err)
+
+	_, err = primitiveReflectValueFromInterface(reflect.Slice, []string{"_"}, "a", "b")
+	assert.EqualError(t, err, "a[b] '[_]' is not valid primitive")
+}
+
+func TestIterFields(t *testing.T) {
+	v := reflect.ValueOf("x")
+	err := iterFields(v, []string{"x"}, scm, nil)
+	assert.EqualError(t, err, "Value of Struct is expected, but got String: \"x\"")
+
+	v = reflect.ValueOf(testStruct{})
+	err = iterFields(v, []string{}, map[string]*schema.Schema{
+		"integer": {
+			Type: schema.TypeInt,
+		},
+	}, nil)
+	assert.EqualError(t, err, "Inconsistency: integer has omitempty, but is not optional")
+
+	err = iterFields(v, []string{}, map[string]*schema.Schema{
+		"non_optional": {
+			Type:     schema.TypeString,
+			Default:  nil,
+			Optional: true,
+		},
+	}, nil)
+	assert.EqualError(t, err, "Inconsistency: non_optional is optional, default is empty, but has no omitempty")
+
+	err = iterFields(v, []string{}, map[string]*schema.Schema{
+		"non_optional": {
+			Type:     schema.TypeString,
+			Default:  "_",
+			Optional: true,
+		},
+	}, func(fieldSchema *schema.Schema, path []string, valueField *reflect.Value) error {
+		return fmt.Errorf("test error")
+	})
+	assert.EqualError(t, err, "non_optional: test error")
+}
+
+func TestCollectionToMaps(t *testing.T) {
+	v, err := collectionToMaps([]string{"a", "b"}, nil)
+	assert.NoError(t, err)
+	assert.Equal(t, []interface{}{"a", "b"}, v)
+
+	_, err = collectionToMaps([]int{1, 2}, &schema.Schema{
+		Elem: schema.TypeBool,
+	})
+	assert.EqualError(t, err, "not resource")
 }
 
 func TestStructToData(t *testing.T) {

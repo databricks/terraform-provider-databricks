@@ -12,8 +12,8 @@
 	"Assert len": {
 		"prefix": "al",
 		"body": [
-		  "assert.Len(t, $1, $2)"
+			"assert.Len(t, $1, $2)"
 		],
 		"description": "Assert len"
-	  }
+	}
 }

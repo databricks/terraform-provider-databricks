@@ -194,12 +194,15 @@ func (a NotebooksAPI) Delete(path string, recursive bool) error {
 	}, nil)
 }
 
+// ResourceNotebook manages notebooks
 func ResourceNotebook() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceNotebookCreate,
 		Read:   resourceNotebookRead,
 		Delete: resourceNotebookDelete,
-
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
 		Schema: map[string]*schema.Schema{
 			"content": {
 				Type:     schema.TypeString,

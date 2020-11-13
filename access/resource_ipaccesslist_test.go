@@ -15,7 +15,7 @@ var (
 	TestingID               = "234567"
 	TestingLabel            = "Naughty"
 	TestingListTypeString   = "BLOCK"
-	TestingListType         = IPAccessListType(TestingListTypeString)
+	TestingListType         = ipAccessListType(TestingListTypeString)
 	TestingEnabled          = true
 	TestingIPAddresses      = []string{"1.2.3.4", "1.2.4.0/24"}
 	TestingIPAddressesState = []interface{}{"1.2.3.4", "1.2.4.0/24"}
@@ -27,13 +27,13 @@ func TestIPACLCreate(t *testing.T) {
 			{
 				Method:   http.MethodPost,
 				Resource: "/api/2.0/ip-access-lists",
-				ExpectedRequest: CreateIPAccessListRequest{
+				ExpectedRequest: createIPAccessListRequest{
 					Label:       TestingLabel,
 					ListType:    TestingListType,
 					IPAddresses: TestingIPAddresses,
 				},
-				Response: IPAccessListStatusWrapper{
-					IPAccessList: IPAccessListStatus{
+				Response: ipAccessListStatusWrapper{
+					IPAccessList: ipAccessListStatus{
 						ListID:        TestingID,
 						Label:         TestingLabel,
 						ListType:      TestingListType,
@@ -50,8 +50,8 @@ func TestIPACLCreate(t *testing.T) {
 			{
 				Method:   http.MethodGet,
 				Resource: "/api/2.0/ip-access-lists/" + TestingID,
-				Response: IPAccessListStatusWrapper{
-					IPAccessList: IPAccessListStatus{
+				Response: ipAccessListStatusWrapper{
+					IPAccessList: ipAccessListStatus{
 						ListID:        TestingID,
 						Label:         TestingLabel,
 						ListType:      TestingListType,
@@ -114,8 +114,8 @@ func TestIPACLUpdate(t *testing.T) {
 			{
 				Method:   http.MethodGet,
 				Resource: "/api/2.0/ip-access-lists/" + TestingID,
-				Response: IPAccessListStatusWrapper{
-					IPAccessList: IPAccessListStatus{
+				Response: ipAccessListStatusWrapper{
+					IPAccessList: ipAccessListStatus{
 						ListID:        TestingID,
 						Label:         TestingLabel,
 						ListType:      TestingListType,
@@ -132,8 +132,8 @@ func TestIPACLUpdate(t *testing.T) {
 			{
 				Method:   http.MethodPut,
 				Resource: "/api/2.0/ip-access-lists/" + TestingID,
-				Response: IPAccessListStatusWrapper{
-					IPAccessList: IPAccessListStatus{
+				Response: ipAccessListStatusWrapper{
+					IPAccessList: ipAccessListStatus{
 						ListID:        TestingID,
 						Label:         TestingLabel,
 						ListType:      TestingListType,
@@ -191,8 +191,8 @@ func TestIPACLRead(t *testing.T) {
 			{
 				Method:   http.MethodGet,
 				Resource: "/api/2.0/ip-access-lists/" + TestingID,
-				Response: IPAccessListStatusWrapper{
-					IPAccessList: IPAccessListStatus{
+				Response: ipAccessListStatusWrapper{
+					IPAccessList: ipAccessListStatus{
 						ListID:        TestingID,
 						Label:         TestingLabel,
 						ListType:      TestingListType,

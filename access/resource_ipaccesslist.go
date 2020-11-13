@@ -12,37 +12,33 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
-// List: Get all IP access lists
-// Norequest needed--just a get
-type ListIPAccessListsResponse struct {
-	ListIPAccessListsResponse []IPAccessListStatus `json:"ip_access_lists,omitempty"`
+type listIPAccessListsResponse struct {
+	ListIPAccessListsResponse []ipAccessListStatus `json:"ip_access_lists,omitempty"`
 }
 
-// Update an IP access list
-type IPAccessListUpdateRequest struct {
+type ipAccessListUpdateRequest struct {
 	Label       string           `json:"label,omitempty"`
-	ListType    IPAccessListType `json:"list_type,omitempty"`
+	ListType    ipAccessListType `json:"list_type,omitempty"`
 	IPAddresses []string         `json:"ip_addresses,omitempty"`
 	Enabled     bool             `json:"enabled,omitempty"`
 }
-type IPAccessListType string
+type ipAccessListType string
 
 const (
-	BlockList IPAccessListType = "BLOCK"
-	AllowList IPAccessListType = "ALLOW"
+	blockList ipAccessListType = "BLOCK"
+	allowList ipAccessListType = "ALLOW"
 )
 
-// Add an IP access list
-type CreateIPAccessListRequest struct {
+type createIPAccessListRequest struct {
 	Label       string           `json:"label,omitempty"`
-	ListType    IPAccessListType `json:"list_type,omitempty"`
+	ListType    ipAccessListType `json:"list_type,omitempty"`
 	IPAddresses []string         `json:"ip_addresses,omitempty"`
 }
 
-type IPAccessListStatus struct {
+type ipAccessListStatus struct {
 	ListID        string           `json:"list_id,omitempty"`
 	Label         string           `json:"label,omitempty"`
-	ListType      IPAccessListType `json:"list_type,omitempty"`
+	ListType      ipAccessListType `json:"list_type,omitempty"`
 	IPAddresses   []string         `json:"ip_addresses,omitempty"`
 	AddressCount  int              `json:"address_count,omitempty"`
 	CreatedAt     int64            `json:"created_at,omitempty"`
@@ -52,16 +48,20 @@ type IPAccessListStatus struct {
 	Enabled       bool             `json:"enabled,omitempty"`
 }
 
-type IPAccessListStatusWrapper struct {
-	IPAccessList IPAccessListStatus `json:"ip_access_list,omitempty"`
+type ipAccessListStatusWrapper struct {
+	IPAccessList ipAccessListStatus `json:"ip_access_list,omitempty"`
 }
 
-func ResourceIPAccessList() (_ *schema.Resource) {
+// ResourceIPAccessList manages IP access lists
+func ResourceIPAccessList() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceIPACLCreate,
 		Read:   resourceIPACLRead,
 		Update: resourceIPACLUpdate,
 		Delete: resourceIPACLDelete,
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
 
 		Schema: map[string]*schema.Schema{
 			"label": {
@@ -73,8 +73,8 @@ func ResourceIPAccessList() (_ *schema.Resource) {
 				Required: true,
 				ValidateFunc: validation.StringInSlice(
 					[]string{
-						string(AllowList),
-						string(BlockList),
+						string(allowList),
+						string(blockList),
 					}, false),
 			},
 			"ip_addresses": {
@@ -104,7 +104,7 @@ func resourceIPACLCreate(d *schema.ResourceData, m interface{}) (err error) {
 	status, err := NewIPAccessListsAPI(client).Create(
 		internal.ConvertListInterfaceToString(ipAddresses),
 		label,
-		IPAccessListType(listType))
+		ipAccessListType(listType))
 	log.Printf("IPACLLists: Created as  %v\n", status)
 	if err != nil {
 		log.Printf("IPACLLists:  Creation error %v\n", err)
@@ -138,7 +138,7 @@ func resourceIPACLUpdate(d *schema.ResourceData, m interface{}) (err error) {
 	err = NewIPAccessListsAPI(client).Update(
 		d.Id(),
 		d.Get("label").(string),
-		IPAccessListType(d.Get("list_type").(string)),
+		ipAccessListType(d.Get("list_type").(string)),
 		ipAddresses,
 		d.Get("enabled").(bool),
 	)
@@ -153,7 +153,7 @@ func resourceIPACLDelete(d *schema.ResourceData, m interface{}) (err error) {
 	return NewIPAccessListsAPI(client).Delete(d.Id())
 }
 
-func updateFromStatus(d *schema.ResourceData, status IPAccessListStatus) (err error) {
+func updateFromStatus(d *schema.ResourceData, status ipAccessListStatus) (err error) {
 	err = d.Set("label", status.Label)
 	if err != nil {
 		return

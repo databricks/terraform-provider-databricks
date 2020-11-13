@@ -40,4 +40,8 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Importing this resource is not currently supported.
+The databricks_ip_access_list can be imported using id:
+
+```bash
+$ terraform import databricks_ip_access_list.this <list-id>
+```

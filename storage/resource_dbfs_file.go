@@ -17,12 +17,16 @@ import (
 	"github.com/pkg/errors"
 )
 
+// ResourceDBFSFile manages files on DBFS
 func ResourceDBFSFile() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceDBFSFileCreate,
 		Read:   resourceDBFSFileRead,
 		Delete: resourceDBFSFileDelete,
 		Update: resourceDBFSFileUpdate,
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
 
 		Schema: map[string]*schema.Schema{
 			"content": {

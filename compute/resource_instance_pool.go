@@ -70,7 +70,7 @@ func ResourceInstancePool() *schema.Resource {
 			},
 			"min_idle_instances": {
 				Type:     schema.TypeInt,
-				Required: true,
+				Optional: true,
 			},
 			"max_capacity": {
 				Type:     schema.TypeInt,

@@ -116,9 +116,12 @@ func (aa *AzureAuth) addSpManagementTokenVisitor(r *http.Request, management aut
 	log.Printf("[DEBUG] Setting 'X-Databricks-Azure-SP-Management-Token' header")
 	ba, ok := management.(*autorest.BearerAuthorizer)
 	if !ok {
-		return fmt.Errorf("Supposed to get BearerAuthorizer, but got %v", management)
+		return fmt.Errorf("Supposed to get BearerAuthorizer, but got %#v", management)
 	}
 	tokenProvider := ba.TokenProvider()
+	if tokenProvider == nil {
+		return fmt.Errorf("Token provider is nil")
+	}
 	accessToken := tokenProvider.OAuthToken()
 	if accessToken == "" {
 		// DATABRICKS_HOST was provided, so request to Management API is not made,

@@ -6,6 +6,10 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func TestConvertListInterfaceToString(t *testing.T) {
+	assert.Equal(t, []string{"a", "b"}, ConvertListInterfaceToString([]interface{}{"a", "b"}))
+}
+
 func TestGetParentDirPath(t *testing.T) {
 	tests := []struct {
 		name            string

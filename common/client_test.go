@@ -1,6 +1,7 @@
 package common
 
 import (
+	"os"
 	"strings"
 	"testing"
 
@@ -17,6 +18,14 @@ func configureAndAuthenticate(dc *DatabricksClient) (*DatabricksClient, error) {
 		return dc, err
 	}
 	return dc, dc.Authenticate()
+}
+
+func TestDatabricksClientConfigure_Nothing(t *testing.T) {
+	defer CleanupEnvironment()()
+	os.Setenv("PATH", "testdata:/bin")
+
+	_, err := configureAndAuthenticate(&DatabricksClient{})
+	AssertErrorStartsWith(t, err, "Authentication is not configured for provider")
 }
 
 func TestDatabricksClientConfigure_BasicAuth_NoHost(t *testing.T) {
@@ -133,3 +142,12 @@ func TestDatabricksClientConfigure_InvalidConfigFilePath(t *testing.T) {
 	})
 	assert.Error(t, err)
 }
+
+// func TestDatabricksClientConfigure_InvalidHome(t *testing.T) {
+// 	defer CleanupEnvironment()()
+// 	os.Setenv("HOME", "whatever")
+// 	_, err := configureAndAuthenticate(&DatabricksClient{
+// 		Profile: "invalidhost",
+// 	})
+// 	assert.EqualError(t, err, ".")
+// }

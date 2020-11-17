@@ -8,6 +8,7 @@ import (
 )
 
 func TestCommonEnvironmentClient(t *testing.T) {
+	ResetCommonEnvironmentClient()
 	defer CleanupEnvironment()()
 	os.Setenv("DATABRICKS_TOKEN", ".")
 	os.Setenv("DATABRICKS_HOST", ".")

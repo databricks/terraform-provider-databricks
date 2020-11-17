@@ -30,8 +30,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-// TODO: remove r3labs/diff
-
 const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 
 // RandomLongName ...
@@ -177,8 +175,7 @@ func (f ResourceFixture) Apply(t *testing.T) (*schema.ResourceData, error) {
 	}
 	ctx := context.Background()
 	diff, err := f.Resource.Diff(ctx, is, resourceConfig, client)
-
-	f.Resource.Data(is)
+	// TODO: f.Resource.Data(is) - check why it doesn't work
 	if err != nil {
 		return nil, err
 	}
@@ -194,8 +191,8 @@ func (f ResourceFixture) Apply(t *testing.T) (*schema.ResourceData, error) {
 	if err != nil {
 		return resourceData, err
 	}
-	diff, err = schemaMap.Diff(ctx, resourceData.State(), resourceConfig,
-		nil, client, true)
+	newState := resourceData.State()
+	diff, err = schemaMap.Diff(ctx, newState, resourceConfig, nil, client, true)
 	if err != nil {
 		return nil, err
 	}
@@ -425,29 +422,9 @@ func FirstKeyValue(t *testing.T, str, key string) string {
 	return match[1]
 }
 
+// AssertErrorStartsWith ..
 func AssertErrorStartsWith(t *testing.T, err error, message string) bool {
 	return assert.True(t, strings.HasPrefix(err.Error(), message), err.Error())
-}
-
-// func TestMain(m *testing.M) {
-// 	//TODO: is this needed at all?...
-// 	err := godotenv.Load("../../.env") // TODO: make teardowns work here as well
-// 	// TODO: add common instance pool & cluster for libs & stuff
-// 	log.SetFlags(log.Lshortfile | log.Ltime)
-// 	if err != nil {
-// 		log.Println("Failed to load environment")
-// 	}
-// 	code := m.Run()
-// 	os.Exit(code)
-// }
-
-func DeserializeJSON(req *http.Request, m interface{}) error {
-	// TODO: remove it!!!
-	dec := json.NewDecoder(req.Body)
-	dec.DisallowUnknownFields()
-
-	err := dec.Decode(&m)
-	return err
 }
 
 // GetCloudInstanceType gives common minimal instance type, depending on a cloud

@@ -2,8 +2,6 @@ name: build
 
 on:
   push:
-    branches-ignore:
-      - master
     tags-ignore:
       - '*'
     paths-ignore:
@@ -23,7 +21,8 @@ jobs:
         uses: actions/setup-go@v1
         with:
           go-version: 1.14.x
-      - uses: actions/cache@v2
+      - name: Cache packages
+        uses: actions/cache@v2
         with:
           path: |
             ~/go/pkg/mod
@@ -39,4 +38,5 @@ jobs:
           go get github.com/golangci/golangci-lint/cmd/golangci-lint@v1.25.0
       - name: Run tests
         run: make test
-      - uses: codecov/codecov-action@v1
+      - name: Publish test coverage
+        uses: codecov/codecov-action@v1

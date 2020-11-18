@@ -1,4 +1,4 @@
-name: every push
+name: build
 
 on:
   push:

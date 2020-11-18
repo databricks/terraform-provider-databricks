@@ -78,6 +78,21 @@ func (a UsersAPI) Create(userName string, displayName string, entitlements []str
 	return user, err
 }
 
+// Filter retrieves users by filter
+func (a UsersAPI) Filter(filter string) (u []ScimUser, err error) {
+	var users UserList
+	req := map[string]string{}
+	if filter != "" {
+		req["filter"] = filter
+	}
+	err = a.C.Scim(http.MethodGet, "/preview/scim/v2/Users", req, &users)
+	if err != nil {
+		return
+	}
+	u = users.Resources
+	return
+}
+
 // ReadR reads resource-friendly entity
 func (a UsersAPI) ReadR(userID string) (ru UserEntity, err error) {
 	user, err := a.read(userID)

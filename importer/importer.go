@@ -32,6 +32,27 @@ import (
 	"github.com/zclconf/go-cty/cty"
 )
 
+/** High level overview of importer design:
+
+                                    +----------+      +--------------------+
+                                    | resource +------> stateApproximation |
+                                    +--^-------+      +----|-------------|-+
+                                       |                   |             |
+  +------------------------+           |                   |             |
+  | "normal provider flow" |    +------^-----+       +-----V-----+   +---V---+
+  +------------^-----------+    | importable +-------> reference |   | scope |
+               |                +------^-----+       +--------|--+   +---V---+
++--------------+--------------+        |                      |          |
+|terraform-provider-databricks|        |                      |          |
++--------------+--------------+        |                      |          |
+               |                       |                   +--V----------V---+
+    +----------v---------+        +----^------------+      |                 |
+    |                    |        |                 |      |    Generated    |
+    |  importer command  +-------->  importContext  |      |      Files      |
+    |                    |        |                 |      |                 |
+    +--------------------+        +-----------------+      +-----------------+
+*/
+
 type regexFix struct {
 	Regex       *regexp.Regexp
 	Replacement string
@@ -69,6 +90,10 @@ type importContext struct {
 	hclFixes    []regexFix
 	allUsers    []identity.ScimUser
 	allGroups   []identity.ScimGroup
+
+	debug          bool
+	services       string
+	lastActiveDays int64
 }
 
 func (ic *importContext) Find(r *resource, pick string) hcl.Traversal {
@@ -385,8 +410,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			if err != nil {
 				return err
 			}
-			lastActiveDays := int64(7)
-			lastActiveMs := lastActiveDays * 24 * 60 * 60 * 1000
+			lastActiveMs := ic.lastActiveDays * 24 * 60 * 60 * 1000
 			for offset, c := range clusters {
 				if c.ClusterSource == "JOB" {
 					log.Printf("[INFO] Skipping job cluster %s", c.ClusterID)
@@ -492,6 +516,18 @@ var resourcesMap map[string]importable = map[string]importable{
 		Name: func(d *schema.ResourceData) string {
 			return d.Get("display_name").(string)
 		},
+		List: func(ic *importContext) error {
+			if err := ic.cacheGroups(); err != nil {
+				return err
+			}
+			for _, g := range ic.allGroups {
+				ic.Emit(&resource{
+					Resource: "databricks_group",
+					ID:       g.ID,
+				})
+			}
+			return nil
+		},
 		Search: func(ic *importContext, r *resource) error {
 			if err := ic.cacheGroups(); err != nil {
 				return err
@@ -559,47 +595,46 @@ var resourcesMap map[string]importable = map[string]importable{
 			return nil
 		},
 	},
-	// "databricks_group_member": {
-	// 	Service: "identity",
-	// 	Depends: []reference{
-	// 		{Path: "group_id", Resource: "databricks_group"},
-	// 		{Path: "member_id", Resource: "databricks_user"},
-	// 		{Path: "member_id", Resource: "databricks_group"},
-	// 	},
-	// },
-	// "databricks_user": {
-	// 	// TODO: make it possible to turn user import off
-	// 	Service: "identity",
-	// 	Name: func(d *schema.ResourceData) string {
-	// 		s := strings.Split(d.Get("user_name").(string), "@")
-	// 		return s[0]
-	// 	},
-	// 	Search: func(ic *importContext, r *resource) error {
-	// 		u, err := ic.findUserByName(r.Value)
-	// 		if err != nil {
-	// 			return err
-	// 		}
-	// 		r.ID = u.ID
-	// 		return nil
-	// 	},
-	// 	Import: func(ic *importContext, d *schema.ResourceData) error {
-	// 		u, err := ic.findUserByName(d.Get("user_name").(string))
-	// 		if err != nil {
-	// 			return err
-	// 		}
-	// 		for _, g := range u.Groups {
-	// 			ic.Emit(&resource{
-	// 				Resource: "databricks_group",
-	// 				ID: g.Value,
-	// 			})
-	// 			ic.Emit(&resource{
-	// 				Resource: "databricks_group_member",
-	// 				ID: fmt.Sprintf("%s|%s", g.Value, u.ID),
-	// 			})
-	// 		}
-	// 		return nil
-	// 	},
-	// },
+	"databricks_group_member": {
+		Service: "identity",
+		Depends: []reference{
+			{Path: "group_id", Resource: "databricks_group"},
+			{Path: "member_id", Resource: "databricks_user"},
+			{Path: "member_id", Resource: "databricks_group"},
+		},
+	},
+	"databricks_user": {
+		Service: "identity",
+		Name: func(d *schema.ResourceData) string {
+			s := strings.Split(d.Get("user_name").(string), "@")
+			return s[0]
+		},
+		Search: func(ic *importContext, r *resource) error {
+			u, err := ic.findUserByName(r.Value)
+			if err != nil {
+				return err
+			}
+			r.ID = u.ID
+			return nil
+		},
+		Import: func(ic *importContext, d *schema.ResourceData) error {
+			u, err := ic.findUserByName(d.Get("user_name").(string))
+			if err != nil {
+				return err
+			}
+			for _, g := range u.Groups {
+				ic.Emit(&resource{
+					Resource: "databricks_group",
+					ID:       g.Value,
+				})
+				ic.Emit(&resource{
+					Resource: "databricks_group_member",
+					ID:       fmt.Sprintf("%s|%s", g.Value, u.ID),
+				})
+			}
+			return nil
+		},
+	},
 	"databricks_permissions": {
 		Service: "access",
 		Name: func(d *schema.ResourceData) string {
@@ -747,7 +782,7 @@ func (ic *importContext) cacheUsers() error {
 
 func (ic *importContext) findUserByName(name string) (u identity.ScimUser, err error) {
 	a := identity.NewUsersAPI(ic.Client)
-	users, err := a.Filter(fmt.Sprintf("userName eq %s", name))
+	users, err := a.Filter(fmt.Sprintf("userName eq '%s'", name))
 	if err != nil {
 		return
 	}
@@ -819,6 +854,11 @@ func (ic *importContext) Emit(r *resource) {
 		log.Printf("[ERROR] %s is not available for import", r)
 		return
 	}
+	if !strings.Contains(ic.services, ir.Service) {
+		log.Printf("[DEBUG] %s (%s service) is not part of the import",
+			r.Resource, ir.Service)
+		return
+	}
 	if r.ID == "" {
 		if ir.Search == nil {
 			log.Printf("[ERROR] Searching %s is not available", r)
@@ -863,6 +903,13 @@ func (ic *importContext) Emit(r *resource) {
 	}
 	state := d.State()
 	if state == nil {
+		s := strings.Split(r.ID, "|")
+		if len(s) == 2 {
+			g, _ := identity.NewGroupsAPI(ic.Client).Read(s[0])
+			u, _ := identity.NewUsersAPI(ic.Client).Read(s[1])
+			log.Printf("[INFO] %v ====> %v and %v", r, g, u)
+		}
+
 		log.Printf("[ERROR] state is nil for %s", r)
 		return
 	}
@@ -899,16 +946,27 @@ func newImportContext(c *common.DatabricksClient) *importContext {
 }
 
 func (ic *importContext) Run() error {
-	for _, im := range ic.Importables {
-		if im.List == nil {
+	if len(ic.services) == 0 {
+		return fmt.Errorf("No services to import")
+	}
+	log.Printf("[INFO] Importing %s module into %s directory Databricks resources of %s services",
+		ic.Module, ic.Directory, ic.services)
+	for resourceName, ir := range ic.Importables {
+		if ir.List == nil {
 			continue
 		}
-		// TODO: filter for resources
-		if err := im.List(ic); err != nil {
+		if !strings.Contains(ic.services, ir.Service) {
+			log.Printf("[DEBUG] %s (%s service) is not part of the import",
+				resourceName, ir.Service)
+			continue
+		}
+		if err := ir.List(ic); err != nil {
 			return err
 		}
 	}
-
+	if len(ic.Scope) == 0 {
+		return fmt.Errorf("No resources to import")
+	}
 	sh, err := os.Create(fmt.Sprintf("%s/import.sh", ic.Directory))
 	if err != nil {
 		return err
@@ -944,7 +1002,7 @@ func (ic *importContext) Run() error {
 		}
 
 		// nolint
-		sh.WriteString(r.ImportCommand(ic) + "\n")
+		//sh.WriteString(r.ImportCommand(ic) + "\n")
 	}
 	for service, f := range ic.Files {
 		formatted := hclwrite.Format(f.Bytes())

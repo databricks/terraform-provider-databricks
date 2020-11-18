@@ -94,7 +94,6 @@ resource "databricks_instance_profile" "this" {
 
 data "databricks_group" "users" {
   display_name = "users"
-  #depends_on = [ databricks_instance_profile.this ]
 }
 
 resource "databricks_group_instance_profile" "all" {

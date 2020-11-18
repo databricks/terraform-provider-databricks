@@ -2,8 +2,6 @@ package importer
 
 import (
 	"log"
-	"os"
-	"strings"
 	"testing"
 
 	"github.com/databrickslabs/databricks-terraform/common"
@@ -11,22 +9,17 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-type levelWriter []string
 
-func (lw *levelWriter) Write(p []byte) (n int, err error) {
-	a := string(p)
-	for _, l := range *lw {
-		if strings.Contains(a, l) {
-			return os.Stdout.Write(p)
-		}
-	}
-	return
-}
-
-func TestImporter(t *testing.T) {
+func TestAccImporter(t *testing.T) {
 	log.SetOutput(&levelWriter{"[INFO]", "[ERROR]", "[WARN]"})
 	c := common.NewClientFromEnvironment()
 	err := newImportContext(c).Run()
+	assert.NoError(t, err)
+}
+
+func TestAccImportIdentity(t *testing.T) {
+	err := Run("-directory", "/tmp/data-group", 
+		"-services", "identity", "-debug")
 	assert.NoError(t, err)
 }
 

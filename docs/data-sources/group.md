@@ -2,6 +2,8 @@
 
 Retrieves information about [databricks_group](../resources/group.md) members, entitlements and instance profiles.
 
+!> [Do not use](https://www.terraform.io/docs/configuration/data-sources.html#data-resource-dependencies) `depends_on` meta-argument within data sources, unless you explicitly want to have dependent resources updated each apply.
+
 ## Example Usage
 
 Adding user to administrative group

@@ -132,7 +132,7 @@ func resourceDBFSFileRead(d *schema.ResourceData, m interface{}) error {
 	if validateRemoteFile, ok := d.GetOk("validate_remote_file"); ok {
 		validateFile := validateRemoteFile.(bool)
 		if validateFile {
-			log.Println("Validating remote file!")
+			log.Println("[DEBUG] Validating remote file!")
 			data, err := NewDBFSAPI(client).Read(id)
 			if err != nil {
 				return err

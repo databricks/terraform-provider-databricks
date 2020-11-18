@@ -5,11 +5,11 @@ on:
     branches-ignore:
       - master
     tags-ignore:
-      - *
+      - '*'
     paths-ignore:
-      - docs/*
-      - scripts/*
-      - *.md
+      - 'docs/*'
+      - 'scripts/*'
+      - '*.md'
 
 jobs:
   tests:

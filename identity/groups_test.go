@@ -5,7 +5,9 @@ import (
 	"testing"
 
 	"github.com/databrickslabs/databricks-terraform/common"
+	"github.com/databrickslabs/databricks-terraform/internal/qa"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestAccGroup(t *testing.T) {
@@ -118,4 +120,33 @@ func TestAwsAccReadInheritedRolesFromGroup(t *testing.T) {
 		}
 		return false
 	}(myTestGroupInfo.InheritedRoles, myTestRole))
+}
+
+func TestGroupsFilter(t *testing.T) {
+	client, server, err := qa.HttpFixtureClient(t, []qa.HTTPFixture{
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/preview/scim/v2/Groups?",
+
+			Response: GroupList{
+				Resources: []ScimGroup{
+					{DisplayName: "admins"},
+				},
+			},
+		},
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/preview/scim/v2/Groups?filter=displayName%20eq%20somebody",
+			Response: GroupList{},
+		},
+	})
+	require.NoError(t, err)
+	defer server.Close()
+	groups, err := NewGroupsAPI(client).Filter("")
+	require.NoError(t, err)
+	assert.Len(t, groups.Resources, 1)
+
+	groups, err = NewGroupsAPI(client).Filter("displayName eq somebody")
+	require.NoError(t, err)
+	assert.Len(t, groups.Resources, 0)
 }

@@ -8,8 +8,10 @@ import (
 	"testing"
 
 	"github.com/databrickslabs/databricks-terraform/common"
+	"github.com/databrickslabs/databricks-terraform/internal/qa"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestAccReadUser(t *testing.T) {
@@ -149,4 +151,33 @@ func TestAccRoleDifferences(t *testing.T) {
 
 	err = NewUsersAPI(client).Delete(idToDelete)
 	assert.NoError(t, err, err)
+}
+
+func TestUsersFilter(t *testing.T) {
+	client, server, err := qa.HttpFixtureClient(t, []qa.HTTPFixture{
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/preview/scim/v2/Users?",
+
+			Response: UserList{
+				Resources: []ScimUser{
+					{UserName: "me"},
+				},
+			},
+		},
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/preview/scim/v2/Users?filter=userName%20eq%20somebody",
+			Response: UserList{},
+		},
+	})
+	require.NoError(t, err)
+	defer server.Close()
+	users, err := NewUsersAPI(client).Filter("")
+	require.NoError(t, err)
+	assert.Len(t, users, 1)
+
+	users, err = NewUsersAPI(client).Filter("userName eq somebody")
+	require.NoError(t, err)
+	assert.Len(t, users, 0)
 }

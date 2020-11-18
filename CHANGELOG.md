@@ -4,6 +4,7 @@
 
 * Fixed documentation issues.
 * Added missing resource importers and test to cover it.
+* Migrated build from TravisCI to GitHub Actions.
 
 **Behavior changes**
 * `min_idle_instances` for `databricks_instance_pool` is now optional.

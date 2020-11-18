@@ -2,6 +2,8 @@ name: build
 
 on:
   push:
+    branches: 
+      - '*'
     tags-ignore:
       - '*'
     paths-ignore:
@@ -43,6 +45,6 @@ jobs:
 
       - name: Run tests
         run: make test
-        
+
       - name: Publish test coverage
         uses: codecov/codecov-action@v1

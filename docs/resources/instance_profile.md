@@ -65,6 +65,8 @@ resource "databricks_cluster" "this" {
 }
 ```
 
+## Usage with Cluster Policies
+
 It is advised to keep all common configurations in [Cluster Policies](cluster_policy.md) to maintain control of the environments launched, so `databricks_cluster` above could be replaced with `databricks_cluster_policy`:
 
 ```hcl
@@ -77,6 +79,27 @@ resource "databricks_cluster_policy" "this" {
        "value": databricks_instance_profile.shared.arn
     }
   })
+}
+```
+
+## Granting access to all users
+
+You can make instance profile available to all users by [associating it](group_instance_profile.md) with special group called `users` through [databricks_group](../data-sources/group.md) data source.
+
+```hcl
+resource "databricks_instance_profile" "this" {
+  instance_profile_arn = aws_iam_instance_profile.shared.arn
+  skip_validation      = false
+}
+
+data "databricks_group" "users" {
+  display_name = "users"
+  #depends_on = [ databricks_instance_profile.this ]
+}
+
+resource "databricks_group_instance_profile" "all" {
+  group_id            = data.databricks_group.users.id
+  instance_profile_id = databricks_instance_profile.this.id
 }
 ```
 

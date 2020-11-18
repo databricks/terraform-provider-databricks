@@ -28,7 +28,7 @@ jobs:
           echo "GOPATH=$(go env GOPATH)" >> $GITHUB_ENV
           echo "$(go env GOPATH)/bin" >> $GITHUB_PATH
           go get gotest.tools/gotestsum
-          go get github.com/golangci/golangci-lint/cmd/golangci-lint@v1.32.2
+          go get github.com/golangci/golangci-lint/cmd/golangci-lint@v1.25.0
       - name: Run tests
         run: make test
       - uses: codecov/codecov-action@v1

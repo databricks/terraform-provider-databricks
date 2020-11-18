@@ -132,7 +132,6 @@ resource "databricks_mws_networks" "this" {
   network_name = "${var.prefix}-network"
   vpc_id       = aws_vpc.main.id
 
-  # TODO: make it two private ones
   subnet_ids   = [aws_subnet.public.id, aws_subnet.private.id]
   security_group_ids = [aws_security_group.test_sg.id]
 }

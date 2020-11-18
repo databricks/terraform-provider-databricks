@@ -3,6 +3,7 @@
 ## 0.2.9
 
 * Fixed documentation issues.
+* Added missing resource importers and test to cover it.
 
 **Behavior changes**
 * `min_idle_instances` for `databricks_instance_pool` is now optional.

@@ -24,7 +24,7 @@ type JobsAPI struct {
 
 // List all jobs
 func (a JobsAPI) List() (l JobList, err error) {
-	a.client.Get("/jobs/list", nil, &l)
+	err = a.client.Get("/jobs/list", nil, &l)
 	return
 }
 

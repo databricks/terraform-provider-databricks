@@ -111,8 +111,8 @@ var resourcesMap map[string]importable = map[string]importable{
 			return d.Id()
 		},
 		Depends: []reference{
-			{Path:     "group_id",Resource: "databricks_group"},
-			{Path:     "instance_profile_id",Resource: "databricks_instance_profile",},
+			{Path: "group_id", Resource: "databricks_group"},
+			{Path: "instance_profile_id", Resource: "databricks_instance_profile"},
 		},
 	},
 	"databricks_cluster": {
@@ -125,12 +125,12 @@ var resourcesMap map[string]importable = map[string]importable{
 			return name
 		},
 		Depends: []reference{
-			{Path:     "aws_attributes.instance_profile_arn",Resource: "databricks_instance_profile"},
-			{Path:     "instance_pool_id",Resource: "databricks_instance_pool"},
-			{Path:     "init_scripts.dbfs.destination",Resource: "databricks_dbfs_file"},
-			{Path:     "library.jar",Resource: "databricks_dbfs_file",},
-			{Path:     "library.whl",Resource: "databricks_dbfs_file",},
-			{Path:     "library.egg",Resource: "databricks_dbfs_file"},
+			{Path: "aws_attributes.instance_profile_arn", Resource: "databricks_instance_profile"},
+			{Path: "instance_pool_id", Resource: "databricks_instance_pool"},
+			{Path: "init_scripts.dbfs.destination", Resource: "databricks_dbfs_file"},
+			{Path: "library.jar", Resource: "databricks_dbfs_file"},
+			{Path: "library.whl", Resource: "databricks_dbfs_file"},
+			{Path: "library.egg", Resource: "databricks_dbfs_file"},
 		},
 		List: func(ic *importContext) error {
 			clusters, err := compute.NewClustersAPI(ic.Client).List()
@@ -440,7 +440,7 @@ var resourcesMap map[string]importable = map[string]importable{
 						Resource: "databricks_secret_scope",
 						ID:       scope.Name,
 					})
-					log.Printf("[INFO] Imported %d of %d secret scopes", 
+					log.Printf("[INFO] Imported %d of %d secret scopes",
 						i, len(scopes))
 				}
 			}

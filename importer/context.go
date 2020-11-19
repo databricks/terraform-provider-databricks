@@ -265,7 +265,6 @@ func (ic *importContext) Add(r *resource, attrs map[string]string) {
 	})
 	// in single-threaded scenario scope is toposorted
 	ic.Scope = append(ic.Scope, r)
-	return
 }
 
 func (ic *importContext) regexFix(s string, fixes []regexFix) string {

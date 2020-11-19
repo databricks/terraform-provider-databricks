@@ -87,20 +87,20 @@ func (ic *importContext) cacheGroups() error {
 	return nil
 }
 
-func (ic *importContext) cacheUsers() error {
-	if len(ic.allUsers) == 0 {
-		// workspace has at least one user, always.
-		log.Printf("[INFO] Fetching users into in-memory cache")
-		usersAPI := identity.NewUsersAPI(ic.Client)
-		users, err := usersAPI.Filter("active eq true")
-		if err != nil {
-			return err
-		}
-		ic.allUsers = users
-		log.Printf("[INFO] Cached %d users", len(users))
-	}
-	return nil
-}
+// func (ic *importContext) cacheUsers() error {
+// 	if len(ic.allUsers) == 0 {
+// 		// workspace has at least one user, always.
+// 		log.Printf("[INFO] Fetching users into in-memory cache")
+// 		usersAPI := identity.NewUsersAPI(ic.Client)
+// 		users, err := usersAPI.Filter("active eq true")
+// 		if err != nil {
+// 			return err
+// 		}
+// 		ic.allUsers = users
+// 		log.Printf("[INFO] Cached %d users", len(users))
+// 	}
+// 	return nil
+// }
 
 func (ic *importContext) findUserByName(name string) (u identity.ScimUser, err error) {
 	a := identity.NewUsersAPI(ic.Client)

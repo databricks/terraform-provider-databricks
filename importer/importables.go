@@ -100,7 +100,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			state := ic.InstanceState(r)
 			ipa := "instance_profile_arn"
 			b := body.AppendNewBlock("resource", []string{r.Resource, r.Name}).Body()
-			ic.reference(ir, []string{ipa}, ipa, state.Attributes[ipa], b)
+			b.SetAttributeRaw(ipa, ic.reference(ir, []string{ipa}, state.Attributes[ipa]))
 			b.SetAttributeValue("skip_validation", cty.BoolVal(false))
 			return nil
 		},
@@ -143,12 +143,12 @@ var resourcesMap map[string]importable = map[string]importable{
 					log.Printf("[INFO] Skipping job cluster %s", c.ClusterID)
 					continue
 				}
-				if c.ClusterID != "0328-184258-tempi2" {
+				if !ic.MatchesName(c.ClusterName) {
 					continue
 				}
 				if c.LastActivityTime < time.Now().Unix()-lastActiveMs {
 					log.Printf("[INFO] Older inactive cluster %s", c.ClusterID)
-					//continue
+					continue
 				}
 				ic.Emit(&resource{
 					Resource: "databricks_cluster",
@@ -180,6 +180,21 @@ var resourcesMap map[string]importable = map[string]importable{
 		Name: func(d *schema.ResourceData) string {
 			return d.Get("name").(string)
 		},
+		Depends: []reference{
+			{Path: "email_notifications.on_failure", Resource: "databricks_user", Match: "user_name"},
+			{Path: "email_notifications.on_success", Resource: "databricks_user", Match: "user_name"},
+			{Path: "email_notifications.on_start", Resource: "databricks_user", Match: "user_name"},
+			{Path: "new_cluster.aws_attributes.instance_profile_arn", Resource: "databricks_instance_profile"},
+			{Path: "new_cluster.init_scripts.dbfs.destination", Resource: "databricks_dbfs_file"},
+			{Path: "new_cluster.instance_pool_id", Resource: "databricks_instance_pool"},
+			{Path: "existing_cluster_id", Resource: "databricks_cluster"},
+			{Path: "library.jar", Resource: "databricks_dbfs_file"},
+			{Path: "library.whl", Resource: "databricks_dbfs_file"},
+			{Path: "library.egg", Resource: "databricks_dbfs_file"},
+			{Path: "spark_python_task.python_file", Resource: "databricks_dbfs_file"},
+			{Path: "spark_python_task.parameters", Resource: "databricks_dbfs_file"},
+			{Path: "spark_jar_task.jar_uri", Resource: "databricks_dbfs_file"},
+		},
 		Import: func(ic *importContext, d *schema.ResourceData) error {
 			var job compute.JobSettings
 			s := ic.Resources["databricks_job"].Schema
@@ -190,20 +205,82 @@ var resourcesMap map[string]importable = map[string]importable{
 				return err
 			}
 			ic.Emit(&resource{
+				Resource: "databricks_cluster",
+				ID:       job.ExistingClusterID,
+			})
+			ic.Emit(&resource{
 				Resource: "databricks_permissions",
 				ID:       fmt.Sprintf("/jobs/%s", d.Id()),
 				Name:     d.Get("name").(string),
 			})
+			if job.SparkPythonTask != nil {
+				ic.emitIfDbfsFile(job.SparkPythonTask.PythonFile)
+				for _, p := range job.SparkPythonTask.Parameters {
+					ic.emitIfDbfsFile(p)
+				}
+			}
+			if job.SparkJarTask != nil {
+				jarURI := job.SparkJarTask.JarURI
+				if jarURI != "" {
+					if libs, ok := d.Get("library").(*schema.Set); ok {
+						// remove legacy jar uri support
+						d.Set("spark_jar_task", []interface{}{
+							map[string]interface{}{
+								"main_class_name": job.SparkJarTask.MainClassName,
+								"parameters":      job.SparkJarTask.Parameters,
+							},
+						})
+						// if variable doesn't contain a sad face, it's a job jar
+						if !strings.Contains(jarURI, ":/") {
+							jarURI = fmt.Sprintf("dbfs:/FileStore/job-jars/%s", jarURI)
+						}
+						ic.emitIfDbfsFile(jarURI)
+						libs.Add(map[string]interface{}{
+							"jar": jarURI,
+						})
+						d.Set("library", libs)
+					}
+				}
+			}
 			return ic.importLibraries(d, s)
 		},
 		List: func(ic *importContext) error {
-			if l, err := compute.NewJobsAPI(ic.Client).List(); err == nil {
-				for i, job := range l.Jobs {
+			a := compute.NewJobsAPI(ic.Client)
+			nowSeconds := time.Now().Unix()
+			starterAfter := (nowSeconds - (ic.lastActiveDays * 24 * 60 * 60)) * 1000
+			if l, err := a.List(); err == nil {
+				i := 0
+				for _, job := range l.Jobs {
+					if !ic.MatchesName(job.Settings.Name) {
+						continue
+					}
+					if ic.lastActiveDays != 3650 {
+						rl, err := a.RunsList(compute.JobRunsListRequest{
+							JobID:         job.JobID,
+							CompletedOnly: true,
+							Limit:         1,
+						})
+						if err != nil {
+							log.Printf("[WARN] Failed to get runs: %s", err)
+							continue
+						}
+						if len(rl.Runs) == 0 {
+							log.Printf("[INFO] Job %#v (%d) did never run. Skipping", job.Settings.Name, job.JobID)
+							continue
+						}
+						if rl.Runs[0].StartTime < starterAfter {
+							log.Printf("[INFO] Job %#v (%d) didn't run for %d days. Skipping",
+								job.Settings.Name, job.JobID,
+								(nowSeconds*1000-rl.Runs[0].StartTime)/24*60*60/1000)
+							continue
+						}
+					}
 					ic.Emit(&resource{
 						Resource: "databricks_job",
 						ID:       job.ID(),
 					})
-					log.Printf("[INFO] Imported %d of %d jobs", i, len(l.Jobs))
+					i++
+					log.Printf("[INFO] Imported %d of total %d jobs", i, len(l.Jobs))
 				}
 			}
 			return nil
@@ -259,6 +336,9 @@ var resourcesMap map[string]importable = map[string]importable{
 				return err
 			}
 			for _, g := range ic.allGroups {
+				if !ic.MatchesName(g.DisplayName) {
+					continue
+				}
 				ic.Emit(&resource{
 					Resource: "databricks_group",
 					ID:       g.ID,
@@ -399,11 +479,12 @@ var resourcesMap map[string]importable = map[string]importable{
 			return s[len(s)-1]
 		},
 		Depends: []reference{
-			{Path: "access_control.group_name", Resource: "databricks_group", Match: "display_name"},
-			{Path: "access_control.user_name", Resource: "databricks_user", Match: "user_name"},
+			{Path: "job_id", Resource: "databricks_job"},
 			{Path: "cluster_id", Resource: "databricks_cluster"},
-			{Path: "cluster_policy_id", Resource: "databricks_cluster_policy"},
 			{Path: "instance_pool_id", Resource: "databricks_instance_pool"},
+			{Path: "cluster_policy_id", Resource: "databricks_cluster_policy"},
+			{Path: "access_control.user_name", Resource: "databricks_user", Match: "user_name"},
+			{Path: "access_control.group_name", Resource: "databricks_group", Match: "display_name"},
 		},
 		Import: func(ic *importContext, d *schema.ResourceData) error {
 			var permissions access.PermissionsEntity
@@ -436,6 +517,9 @@ var resourcesMap map[string]importable = map[string]importable{
 			ssAPI := access.NewSecretScopesAPI(ic.Client)
 			if scopes, err := ssAPI.List(); err == nil {
 				for i, scope := range scopes {
+					if !ic.MatchesName(scope.Name) {
+						continue
+					}
 					ic.Emit(&resource{
 						Resource: "databricks_secret_scope",
 						ID:       scope.Name,
@@ -470,6 +554,10 @@ var resourcesMap map[string]importable = map[string]importable{
 		Service: "secrets",
 		Depends: []reference{
 			{Path: "scope", Resource: "databricks_secret_scope"},
+			{Path: "string_value", Resource: "vault_generic_secret", Match: "data"},
+			{Path: "string_value", Resource: "aws_kms_secrets", Match: "plaintext"},
+			{Path: "string_value", Resource: "azurerm_key_vault_secret", Match: "value"},
+			{Path: "string_value", Resource: "aws_secretsmanager_secret_version", Match: "secret_string"},
 		},
 	},
 	"databricks_secret_acl": {

@@ -45,6 +45,7 @@ func Run(args ...string) error {
 		"Items with older than activity specified won't be imported.")
 	flags.BoolVar(&ic.debug, "debug", false, "Print extra debug information")
 
+	listing := ""
 	services := ""
 	for _, ir := range ic.Importables {
 		if strings.Contains(services, ir.Service) {
@@ -54,9 +55,22 @@ func Run(args ...string) error {
 			services += ","
 		}
 		services += ir.Service
+		if ir.List != nil {
+			if len(listing) > 0 {
+				listing += ","
+			}
+			listing += ir.Service
+		}
 	}
 	flags.StringVar(&ic.services, "services", services,
 		"Coma-separated list of services to import. By default all services are imported.")
+	flags.StringVar(&ic.listing, "listing", listing,
+		"Coma-separated list of services to be listed and further passed on for importing. "+
+			"`-services` parameter controls which transitive dependencies will be processed. "+
+			"We recommend limiting services with `-listing` more often, than `-services`.")
+	flags.StringVar(&ic.match, "match", "", "Match resource names during listing operation. "+
+		"This filter applies to all resources that are getting listed, so if you want to import "+
+		"all dependencies of just one cluster, specify -listing=compute")
 	err = flags.Parse(args)
 	if err != nil {
 		return err

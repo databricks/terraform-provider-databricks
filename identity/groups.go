@@ -57,7 +57,7 @@ func (a GroupsAPI) Read(groupID string) (group ScimGroup, err error) {
 	}
 	//get inherited groups
 	var groups []ScimGroup
-	for _, inheritedGroup := range group.Groups {
+	for _, inheritedGroup := range group.Parents {
 		inheritedGroupFull, err := a.Read(inheritedGroup.Value)
 		if err != nil {
 			return group, err

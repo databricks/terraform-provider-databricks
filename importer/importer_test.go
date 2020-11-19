@@ -9,7 +9,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-
 func TestAccImporter(t *testing.T) {
 	log.SetOutput(&levelWriter{"[INFO]", "[ERROR]", "[WARN]"})
 	c := common.NewClientFromEnvironment()
@@ -18,8 +17,17 @@ func TestAccImporter(t *testing.T) {
 }
 
 func TestAccImportIdentity(t *testing.T) {
-	err := Run("-directory", "/tmp/data-group", 
-		"-services", "identity", "-debug")
+	err := Run("-directory", "/tmp/data-group", "-services", "groups,users")
+	assert.NoError(t, err)
+}
+
+func TestAccImportSecrets(t *testing.T) {
+	err := Run("-directory", "/tmp/data-group", "-services", "secrets,users,groups")
+	assert.NoError(t, err)
+}
+
+func TestAccImportJobs(t *testing.T) {
+	err := Run("-directory", "/tmp/data-group", "-services", "jobs")
 	assert.NoError(t, err)
 }
 

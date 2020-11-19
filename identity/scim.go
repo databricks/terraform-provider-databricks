@@ -50,6 +50,9 @@ type GroupMember struct {
 	Display string `json:"display,omitempty"`
 	Value   string `json:"value,omitempty"`
 	Ref     string `json:"$ref,omitempty"`
+
+	// https://tools.ietf.org/html/rfc7643#page-64
+	Type string `json:"type,omitempty"`
 }
 
 // ValueListItem is a struct that contains a field Value.
@@ -74,11 +77,13 @@ const (
 
 // ScimGroup contains information about the SCIM group
 type ScimGroup struct {
-	ID           string                 `json:"id,omitempty"`
-	Schemas      []URN                  `json:"schemas,omitempty"`
-	DisplayName  string                 `json:"displayName,omitempty"`
-	Members      []GroupMember          `json:"members,omitempty"`
-	Groups       []GroupMember          `json:"groups,omitempty"`
+	ID          string        `json:"id,omitempty"`
+	Schemas     []URN         `json:"schemas,omitempty"`
+	DisplayName string        `json:"displayName,omitempty"`
+	Members     []GroupMember `json:"members,omitempty"`
+
+	// MemberOfGroup?..
+	Parents      []GroupMember          `json:"groups,omitempty"`
 	Roles        []RoleListItem         `json:"roles,omitempty"`
 	Entitlements []EntitlementsListItem `json:"entitlements,omitempty"`
 
@@ -162,7 +167,7 @@ type ScimUser struct {
 	Active       bool                   `json:"active,omitempty"`
 	Schemas      []URN                  `json:"schemas,omitempty"`
 	UserName     string                 `json:"userName,omitempty"`
-	Groups       []GroupsListItem       `json:"groups,omitempty"`
+	Groups       []GroupMember          `json:"groups,omitempty"`
 	Name         map[string]string      `json:"name,omitempty"`
 	Roles        []RoleListItem         `json:"roles,omitempty"`
 	Entitlements []EntitlementsListItem `json:"entitlements,omitempty"`

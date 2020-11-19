@@ -39,7 +39,7 @@ func TestDataSourceGroup(t *testing.T) {
 									Value: "1112",
 								},
 							},
-							Groups: []GroupMember{
+							Parents: []GroupMember{
 								{
 									Value: "abc",
 								},

@@ -191,12 +191,13 @@ func (a UsersAPI) Update(userID string, userName string, displayName string, ent
 	for _, role := range roles {
 		scimUserUpdateRequest.Roles = append(scimUserUpdateRequest.Roles, RoleListItem{Value: role})
 	}
+	// TODO: this method is getting removed in https://github.com/databrickslabs/terraform-provider-databricks/pull/406
 	//Get any existing groups that the user is part of
-	user, err := a.read(userID)
-	if err != nil {
-		return err
-	}
-	scimUserUpdateRequest.Groups = user.Groups
+	// user, err := a.read(userID)
+	// if err != nil {
+	// 	return err
+	// }
+	//scimUserUpdateRequest.Groups = user.Groups
 	return a.C.Scim(http.MethodPut, userPath, scimUserUpdateRequest, nil)
 }
 

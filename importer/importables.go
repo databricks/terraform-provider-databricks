@@ -223,7 +223,7 @@ var resourcesMap map[string]importable = map[string]importable{
 				jarURI := job.SparkJarTask.JarURI
 				if jarURI != "" {
 					if libs, ok := d.Get("library").(*schema.Set); ok {
-						// remove legacy jar uri support
+						// nolint remove legacy jar uri support
 						d.Set("spark_jar_task", []interface{}{
 							map[string]interface{}{
 								"main_class_name": job.SparkJarTask.MainClassName,
@@ -238,6 +238,7 @@ var resourcesMap map[string]importable = map[string]importable{
 						libs.Add(map[string]interface{}{
 							"jar": jarURI,
 						})
+						// nolint
 						d.Set("library", libs)
 					}
 				}

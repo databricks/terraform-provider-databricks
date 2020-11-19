@@ -422,7 +422,7 @@ func (ic *importContext) dataToHcl(i importable, path []string,
 		ss = append(ss, fieldTuple{a, as})
 	}
 	sort.Slice(ss, func(i, j int) bool {
-		// it just happens that reverse field order 
+		// it just happens that reverse field order
 		// makes the most beautiful configs
 		return ss[i].Field > ss[j].Field
 	})
@@ -519,15 +519,11 @@ func (ic *importContext) readListFromData(i importable, path []string, d *schema
 			}
 			switch x := raw.(type) {
 			case string:
-				for _, t := range ic.reference(i, path, x) {
-					toks = append(toks, t)
-				}
+				toks = append(toks, ic.reference(i, path, x)...)
 			case int:
-				// probably we don't even use integer lists?... 
-				for _, t := range hclwrite.TokensForValue(
-					cty.NumberIntVal(int64(x))) {
-					toks = append(toks, t)
-				}
+				// probably we don't even use integer lists?...
+				toks = append(toks, hclwrite.TokensForValue(
+					cty.NumberIntVal(int64(x)))...)
 			default:
 				return fmt.Errorf("Unsupported primitive list: %#v", path)
 			}

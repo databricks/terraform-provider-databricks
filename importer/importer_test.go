@@ -5,9 +5,14 @@ import (
 	"os"
 	"testing"
 
+	"github.com/databrickslabs/databricks-terraform/access"
 	"github.com/databrickslabs/databricks-terraform/common"
+	"github.com/databrickslabs/databricks-terraform/compute"
+	"github.com/databrickslabs/databricks-terraform/identity"
+	"github.com/databrickslabs/databricks-terraform/internal/qa"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestAccImporter(t *testing.T) {
@@ -46,6 +51,40 @@ func TestAccImportJobs(t *testing.T) {
 		"-listing=jobs",
 		"-last-active-days=30")
 	assert.NoError(t, err)
+}
+
+func TestImporting(t *testing.T) {
+	defer common.CleanupEnvironment()()
+	_, server, err := qa.HttpFixtureClient(t, []qa.HTTPFixture{
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/preview/scim/v2/Groups?",
+			Response: identity.GroupList{},
+		},
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/jobs/list",
+			Response: compute.JobList{},
+		},
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/clusters/list",
+			Response: compute.ClusterList{},
+		},
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/secrets/scopes/list",
+			Response: access.SecretScopeList{},
+		},
+	})
+	require.NoError(t, err)
+	defer server.Close()
+
+	os.Setenv("DATABRICKS_HOST", server.URL)
+	os.Setenv("DATABRICKS_TOKEN", "..")
+
+	err = Run()
+	assert.EqualError(t, err, "No resources to import")
 }
 
 func TestResourceName(t *testing.T) {

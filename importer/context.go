@@ -17,6 +17,7 @@ import (
 	"github.com/databrickslabs/databricks-terraform/provider"
 
 	"github.com/hashicorp/hcl/v2"
+	"github.com/hashicorp/hcl/v2/hclsyntax"
 	"github.com/hashicorp/hcl/v2/hclwrite"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -61,34 +62,34 @@ type importContext struct {
 
 	debug          bool
 	services       string
+	listing        string
+	match          string
 	lastActiveDays int64
 }
 
 func newImportContext(c *common.DatabricksClient) *importContext {
 	p := provider.DatabricksProvider()
 	return &importContext{
-		Module:      "",
 		Client:      c,
 		State:       stateApproximation{},
 		Importables: resourcesMap,
 		Resources:   p.ResourcesMap,
 		Files:       map[string]*hclwrite.File{},
 		Scope:       []*resource{},
-		Directory:   "/tmp/importer",
 		importing:   map[string]bool{},
 		nameFixes: []regexFix{
 			{regexp.MustCompile(`[0-9a-f]{8}[_-][0-9a-f]{4}[_-][0-9a-f]{4}` +
 				`[_-][0-9a-f]{4}[_-][0-9a-f]{12}[_-]`), ""},
-			{regexp.MustCompile(`[_-][0-9]+[\._-][0-9]+[\._-].*\.(whl|jar|egg)`), "_$1"},
+			{regexp.MustCompile(`[_-][0-9]+[\._-][0-9]+[\._-].*\.([a-z0-9]{1,4})`), "_$1"},
 			{regexp.MustCompile(`@.*$`), ""},
 			{regexp.MustCompile(`[-\s\.\|]`), "_"},
 			{regexp.MustCompile(`\W+`), ""},
 			{regexp.MustCompile(`[_]{2,}`), "_"},
 		},
 		hclFixes: []regexFix{
-			{regexp.MustCompile(`\{ "`), "{\n\t\t\""},
-			{regexp.MustCompile(`", "`), "\",\n\t\t\""},
-			{regexp.MustCompile(`" \}`), "\"\t\n}"},
+			{regexp.MustCompile(`\{ `), "{\n\t\t"},
+			{regexp.MustCompile(`, `), ",\n\t\t"},
+			//{regexp.MustCompile(` \}`), "\t}"},
 		},
 		allUsers: []identity.ScimUser{},
 	}
@@ -104,8 +105,8 @@ func (ic *importContext) Run() error {
 		if ir.List == nil {
 			continue
 		}
-		if !strings.Contains(ic.services, ir.Service) {
-			log.Printf("[DEBUG] %s (%s service) is not part of the import",
+		if !strings.Contains(ic.listing, ir.Service) {
+			log.Printf("[DEBUG] %s (%s service) is not part of listing",
 				resourceName, ir.Service)
 			continue
 		}
@@ -171,6 +172,13 @@ func (ic *importContext) Run() error {
 		return err
 	}
 	return nil
+}
+
+func (ic *importContext) MatchesName(n string) bool {
+	if ic.match == "" {
+		return true
+	}
+	return strings.Contains(strings.ToLower(n), strings.ToLower(ic.match))
 }
 
 func (ic *importContext) Find(r *resource, pick string) hcl.Traversal {
@@ -346,6 +354,7 @@ func (ic *importContext) Emit(r *resource) {
 	if pr.Read != nil {
 		err := pr.Read(d, ic.Client)
 		if err != nil {
+			log.Printf("[ERROR] Error reading %s#%s: %v", r.Resource, r.ID, err)
 			return
 		}
 	} else {
@@ -374,8 +383,8 @@ func (ic *importContext) Emit(r *resource) {
 // TODO: move to IC
 var dependsRe = regexp.MustCompile(`(\.[\d]+)`)
 
-func (ic *importContext) reference(i importable, path []string, key, value string, body *hclwrite.Body) {
-	match := dependsRe.ReplaceAllString(strings.Join(append(path, key), "."), "")
+func (ic *importContext) reference(i importable, path []string, value string) hclwrite.Tokens {
+	match := dependsRe.ReplaceAllString(strings.Join(path, "."), "")
 	for _, d := range i.Depends {
 		if d.Path != match {
 			continue
@@ -392,17 +401,33 @@ func (ic *importContext) reference(i importable, path []string, key, value strin
 			Attribute: attr,
 			Value:     value,
 		}, d.Pick)
-		if traversal != nil {
-			body.SetAttributeTraversal(key, traversal)
-			return
+
+		if traversal == nil {
+			break
 		}
+		return hclwrite.TokensForTraversal(traversal)
 	}
-	body.SetAttributeValue(key, cty.StringVal(value))
+	return hclwrite.TokensForValue(cty.StringVal(value))
+}
+
+type fieldTuple struct {
+	Field  string
+	Schema *schema.Schema
 }
 
 func (ic *importContext) dataToHcl(i importable, path []string,
 	pr *schema.Resource, d *schema.ResourceData, body *hclwrite.Body) error {
+	ss := []fieldTuple{}
 	for a, as := range pr.Schema {
+		ss = append(ss, fieldTuple{a, as})
+	}
+	sort.Slice(ss, func(i, j int) bool {
+		// it just happens that reverse field order 
+		// makes the most beautiful configs
+		return ss[i].Field > ss[j].Field
+	})
+	for _, tuple := range ss {
+		a, as := tuple.Field, tuple.Schema
 		if as.Computed {
 			continue
 		}
@@ -412,7 +437,7 @@ func (ic *importContext) dataToHcl(i importable, path []string,
 		}
 		switch as.Type {
 		case schema.TypeString:
-			ic.reference(i, path, a, raw.(string), body)
+			body.SetAttributeRaw(a, ic.reference(i, append(path, a), raw.(string)))
 		case schema.TypeBool:
 			body.SetAttributeValue(a, cty.BoolVal(raw.(bool)))
 		case schema.TypeInt:
@@ -427,12 +452,10 @@ func (ic *importContext) dataToHcl(i importable, path []string,
 		case schema.TypeFloat:
 			body.SetAttributeValue(a, cty.NumberFloatVal(raw.(float64)))
 		case schema.TypeMap:
-			// mapBlock := body.AppendNewBlock(a, []string{}).Body()
 			ov := map[string]cty.Value{}
 			for key, iv := range raw.(map[string]interface{}) {
 				v := cty.StringVal(fmt.Sprintf("%v", iv))
 				ov[key] = v
-				// mapBlock.SetAttributeValue(key, v)
 			}
 			body.SetAttributeValue(a, cty.ObjectVal(ov))
 		case schema.TypeSet:
@@ -482,18 +505,38 @@ func (ic *importContext) readListFromData(i importable, path []string, d *schema
 			}
 		}
 	case *schema.Schema:
-		primitiveValues := []cty.Value{}
+		toks := hclwrite.Tokens{}
+		toks = append(toks, &hclwrite.Token{
+			Type:  hclsyntax.TokenOBrack,
+			Bytes: []byte{'['},
+		})
 		for _, raw := range rawList {
+			if len(toks) != 1 {
+				toks = append(toks, &hclwrite.Token{
+					Type:  hclsyntax.TokenComma,
+					Bytes: []byte{','},
+				})
+			}
 			switch x := raw.(type) {
 			case string:
-				primitiveValues = append(primitiveValues, cty.StringVal(x))
+				for _, t := range ic.reference(i, path, x) {
+					toks = append(toks, t)
+				}
 			case int:
-				primitiveValues = append(primitiveValues, cty.NumberIntVal(int64(x)))
+				// probably we don't even use integer lists?... 
+				for _, t := range hclwrite.TokensForValue(
+					cty.NumberIntVal(int64(x))) {
+					toks = append(toks, t)
+				}
 			default:
 				return fmt.Errorf("Unsupported primitive list: %#v", path)
 			}
 		}
-		body.SetAttributeValue(name, cty.ListVal(primitiveValues))
+		toks = append(toks, &hclwrite.Token{
+			Type:  hclsyntax.TokenCBrack,
+			Bytes: []byte{']'},
+		})
+		body.SetAttributeRaw(name, toks)
 	}
 	return nil
 }

@@ -2,6 +2,7 @@ package importer
 
 import (
 	"log"
+	"os"
 	"testing"
 
 	"github.com/databrickslabs/databricks-terraform/common"
@@ -10,6 +11,9 @@ import (
 )
 
 func TestAccImporter(t *testing.T) {
+	if _, ok := os.LookupEnv("VSCODE_PID"); !ok {
+		t.Skip("Running this test is only meant for IDE")
+	}
 	log.SetOutput(&levelWriter{"[INFO]", "[ERROR]", "[WARN]"})
 	c := common.NewClientFromEnvironment()
 	err := newImportContext(c).Run()
@@ -17,17 +21,30 @@ func TestAccImporter(t *testing.T) {
 }
 
 func TestAccImportIdentity(t *testing.T) {
+	if _, ok := os.LookupEnv("VSCODE_PID"); !ok {
+		t.Skip("Running this test is only meant for IDE")
+	}
 	err := Run("-directory", "/tmp/data-group", "-services", "groups,users")
 	assert.NoError(t, err)
 }
 
 func TestAccImportSecrets(t *testing.T) {
+	if _, ok := os.LookupEnv("VSCODE_PID"); !ok {
+		t.Skip("Running this test is only meant for IDE")
+	}
 	err := Run("-directory", "/tmp/data-group", "-services", "secrets,users,groups")
 	assert.NoError(t, err)
 }
 
 func TestAccImportJobs(t *testing.T) {
-	err := Run("-directory", "/tmp/data-group", "-services", "jobs")
+	if _, ok := os.LookupEnv("VSCODE_PID"); !ok {
+		t.Skip("Running this test is only meant for IDE")
+	}
+	err := Run(
+		"-directory=/tmp/data-group",
+		"-match=dbxtest7-sample",
+		"-listing=jobs",
+		"-last-active-days=30")
 	assert.NoError(t, err)
 }
 

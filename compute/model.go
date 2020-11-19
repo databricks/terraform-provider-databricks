@@ -524,6 +524,50 @@ func (j Job) ID() string {
 	return fmt.Sprintf("%d", j.JobID)
 }
 
+// RunParameters ...
+type RunParameters struct {
+	// TODO: if we add job_id, it can be also a request to RunNow
+	NotebookParams    map[string]string `json:"notebook_params,omitempty"`
+	JarParams         []string          `json:"jar_params,omitempty"`
+	PythonParams      []string          `json:"python_params,omitempty"`
+	SparkSubmitParams []string          `json:"spark_submit_params,omitempty"`
+}
+
+// RunState ...
+type RunState struct {
+	ResultState    string `json:"result_state,omitempty"`
+	LifeCycleState string `json:"life_cycle_state,omitempty"`
+	StateMessage   string `json:"state_message,omitempty"`
+}
+
+// JobRun is a simplified representation of corresponding entity
+type JobRun struct {
+	JobID       int64    `json:"job_id"`
+	RunID       int64    `json:"run_id"`
+	NumberInJob int64    `json:"number_in_job"`
+	StartTime   int64    `json:"start_time,omitempty"`
+	State       RunState `json:"state"`
+	Trigger     string   `json:"trigger,omitempty"`
+	RuntType    string   `json:"run_type,omitempty"`
+
+	OverridingParameters RunParameters `json:"overriding_parameters,omitempty"`
+}
+
+// JobRunsListRequest ...
+type JobRunsListRequest struct {
+	JobID         int64 `url:"job_id,omitempty"`
+	ActiveOnly    bool  `url:"active_only,omitempty"`
+	CompletedOnly bool  `url:"completed_only,omitempty"`
+	Offset        int32 `url:"offset,omitempty"`
+	Limit         int32 `url:"limit,omitempty"`
+}
+
+// JobRunsList ..
+type JobRunsList struct {
+	Runs    []JobRun `json:"runs"`
+	HasMore bool     `json:"has_more"`
+}
+
 // UpdateJobRequest ...
 type UpdateJobRequest struct {
 	JobID       int64        `json:"job_id,omitempty" url:"job_id,omitempty"`

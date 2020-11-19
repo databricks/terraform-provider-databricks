@@ -127,6 +127,15 @@ func (ic *importContext) findUserByName(name string) (u identity.ScimUser, err e
 	// return
 }
 
+func (ic *importContext) emitIfDbfsFile(path string) {
+	if strings.HasPrefix(path, "dbfs:") {
+		ic.Emit(&resource{
+			Resource: "databricks_dbfs_file",
+			ID:       path,
+		})
+	}
+}
+
 func instancePoolName(d *schema.ResourceData) string {
 	raw, ok := d.GetOk("instance_pool_name")
 	if !ok {

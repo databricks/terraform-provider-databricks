@@ -506,6 +506,11 @@ type JobSettings struct {
 	EmailNotifications *JobEmailNotifications `json:"email_notifications,omitempty"`
 }
 
+// JobList ...
+type JobList struct {
+	Jobs []Job `json:"jobs"`
+}
+
 // Job contains the information when using a GET request from the Databricks Jobs api
 type Job struct {
 	JobID           int64        `json:"job_id,omitempty"`

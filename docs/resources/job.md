@@ -55,7 +55,7 @@ The following arguments are required:
 
 ### schedule Configuration Block
 
-* `quartz_cron_expression` - (Required) (String) A Cron expression using Quartz syntax that describes the schedule for a job. This field is required.
+* `quartz_cron_expression` - (Required) (String) A [Cron expression using Quartz syntax](http://www.quartz-scheduler.org/documentation/quartz-2.3.0/tutorials/crontrigger.html) that describes the schedule for a job. This field is required.
 * `timezone_id` - (Required) (String) A Java timezone ID. The schedule for a job will be resolved with respect to this timezone. See Java TimeZone for details. This field is required.
 
 ### spark_jar_task Configuration Block

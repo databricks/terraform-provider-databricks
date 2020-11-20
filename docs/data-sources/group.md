@@ -27,7 +27,7 @@ resource "databricks_group_member" "my_member_a" {
 
 Data source allows you to pick groups by the following attributes
 
-* `display_name` - (Required) Display name of the group. Group must exist before this resource can be planned.
+* `display_name` - (Required) Display name of the group. The group must exist before this resource can be planned.
 * `recursive` - (Optional) Collect information for all nested groups. *Defaults to true.*
 
 ## Attribute Reference

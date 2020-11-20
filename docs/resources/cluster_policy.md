@@ -62,7 +62,7 @@ resource "databricks_permissions" "can_use_cluster_policyinstance_profile" {
 }
 ```
 
-And custom instances of that base policy module for our marketing and data engineering teams woud look like:
+And custom instances of that base policy module for our marketing and data engineering teams would look like:
 
 ```hcl
 module "marketing_compute_policy" {
@@ -100,7 +100,7 @@ The following arguments are required:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `id` - Canonical unique identifier for the cluster policy. This equal to policy_id.
+* `id` - Canonical unique identifier for the cluster policy. This is equal to policy_id.
 * `policy_id` - Canonical unique identifier for the cluster policy.
 
 ## Import

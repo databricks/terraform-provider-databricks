@@ -101,6 +101,17 @@ func (ic *importContext) Run() error {
 	}
 	log.Printf("[INFO] Importing %s module into %s directory Databricks resources of %s services",
 		ic.Module, ic.Directory, ic.services)
+
+	info, err := os.Stat(ic.Directory)
+	if os.IsNotExist(err) {
+		err = os.MkdirAll(ic.Directory, 0755)
+		if err != nil {
+			return fmt.Errorf("Can't create directory %s", ic.Directory)
+		}
+	} else if !info.IsDir() {
+		return fmt.Errorf("The path %s is not a directory!", ic.Directory)
+	}
+
 	for resourceName, ir := range ic.Importables {
 		if ir.List == nil {
 			continue

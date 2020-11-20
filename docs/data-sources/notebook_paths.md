@@ -14,7 +14,7 @@ data "databricks_notebook_paths" "prod" {
 ## Argument Reference
 
 * `path` - (Required) Path to workspace directory
-* `recursive` - (Required) Either or resursively walk given path
+* `recursive` - (Required) Either or recursively walk given path
 
 ## Attribute Reference
 

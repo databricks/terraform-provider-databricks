@@ -130,10 +130,10 @@ resource "databricks_permissions" "pool_usage" {
 
 There are four assignable [permission levels](https://docs.databricks.com/security/access-control/jobs-acl.html#job-permissions) for [databricks_job](job.md): `CAN_VIEW`, `CAN_MANAGE_RUN`, `IS_OWNER`, and `CAN_MANAGE`. Admins are granted the `CAN_MANAGE` permission by default, and they can assign that permission to non-admin users.
 
-* The creator of a job has `IS_OWNER` permission. Destroying `databricks_permissions` resource for a job would revert ownership to creator.
+* The creator of a job has `IS_OWNER` permission. Destroying `databricks_permissions` resource for a job would revert ownership to the creator.
 * A job must have exactly one owner. If resource is changed and no owner is specified, currently authenticated principal would become new owner of the job. Nothing would change, per se, if the job was created through Terraform.
 * A job cannot have a group as an owner.
-* Jobs triggered through *Run Now* assume the permissions of the job owner and not the user who issued Run Now. 
+* Jobs triggered through *Run Now* assume the permissions of the job owner and not the user who issued Run Now.
 * Read [main documentation](https://docs.databricks.com/security/access-control/jobs-acl.html) for additional detail.
 
 ```hcl
@@ -225,7 +225,7 @@ resource "databricks_permissions" "notebook_usage" {
 
 ## Folder usage
 
-Valid [permission levels](https://docs.databricks.com/security/access-control/workspace-acl.html#folder-permissions) for folders of [databricks_notebook](notebook.md) are: `CAN_READ`, `CAN_RUN`, `CAN_EDIT`, and `CAN_MANAGE`. Notebooks and experiments in a folder inherit all permissions settings of that folder. For example, a user that has `CAN_RUN` permission on a folder has `CAN_RUN` permission on the notebooks in that folder. 
+Valid [permission levels](https://docs.databricks.com/security/access-control/workspace-acl.html#folder-permissions) for folders of [databricks_notebook](notebook.md) are: `CAN_READ`, `CAN_RUN`, `CAN_EDIT`, and `CAN_MANAGE`. Notebooks and experiments in a folder inherit all permissions settings of that folder. For example, a user that has `CAN_RUN` permission on a folder has `CAN_RUN` permission on the notebooks in that folder.
 
 * All users can list items in the folder without any permissions.
 * All users have `CAN_MANAGE` permission for items in the Workspace > Shared Icon Shared folder. You can grant `CAN_MANAGE` permission to notebooks and folders by moving them to the Shared Icon Shared folder.
@@ -293,7 +293,7 @@ resource "databricks_permissions" "password_usage" {
 
 ## Token usage
 
-Only [possible permission](https://docs.databricks.com/administration-guide/access-control/tokens.html) to assign to non-admin group is `CAN_USE`, where *admins* `CAN_MANAGE` all tokens: 
+Only [possible permission](https://docs.databricks.com/administration-guide/access-control/tokens.html) to assign to non-admin group is `CAN_USE`, where *admins* `CAN_MANAGE` all tokens:
 
 ```hcl
 resource "databricks_group" "auto" {
@@ -333,7 +333,7 @@ General Permissions API does not apply to access control for tables and permissi
 
 ## Argument Reference
 
-Exactly one of the following attribues is required:
+Exactly one of the following attributes is required:
 
 * `cluster_id` - [cluster](cluster.md) id
 * `job_id` - [job](job.md) id
@@ -358,7 +358,7 @@ Attributes are:
 
 * `permission_level` - (Required) permission level according to specific resource. See examples above for the reference.
 * `user_name` - (Optional) name of the [user](user.md), which should be used if group name is not used
-* `group_name` - (Optional) name of the [group](group.md), which should be used if user name is not used. We recommend setting permissions on groups.
+* `group_name` - (Optional) name of the [group](group.md), which should be used if the user name is not used. We recommend setting permissions on groups.
 
 ## Attribute Reference
 

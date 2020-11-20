@@ -48,14 +48,13 @@ func Run(args ...string) error {
 	listing := ""
 	services := ""
 	for _, ir := range ic.Importables {
-		if strings.Contains(services, ir.Service) {
-			continue
+		if !strings.Contains(services, ir.Service) {
+			if len(services) > 0 {
+				services += ","
+			}
+			services += ir.Service
 		}
-		if len(services) > 0 {
-			services += ","
-		}
-		services += ir.Service
-		if ir.List != nil {
+		if ir.List != nil && !strings.Contains(listing, ir.Service) {
 			if len(listing) > 0 {
 				listing += ","
 			}

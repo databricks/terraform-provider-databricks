@@ -154,7 +154,7 @@ var resourcesMap map[string]importable = map[string]importable{
 					Resource: "databricks_cluster",
 					ID:       c.ClusterID,
 				})
-				log.Printf("[INFO] Scanned %d of %d clusters", offset, len(clusters))
+				log.Printf("[INFO] Scanned %d of %d clusters", offset+1, len(clusters))
 			}
 			return nil
 		},

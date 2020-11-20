@@ -1,6 +1,6 @@
 # databricks_mws_log_delivery Resource
 
--> **Note** This resource has an evolving API, which may change in future versions of the provider. 
+-> **Note** This resource has an evolving API, which may change in future versions of the provider.
 
 This resource configures the delivery of the two supported log types from Databricks workspaces: [billable usage logs](https://docs.databricks.com/administration-guide/account-settings/billable-usage-delivery.html) and [audit logs](https://docs.databricks.com/administration-guide/account-settings/audit-logs.html). You cannot delete a log delivery configuration, but you can disable it when you no longer need it. This fact is important because there is a limit to the number of enabled log delivery configurations that you can create for an account. You can create a maximum of two enabled using the account level *(without workspace filter)* and two that use the workspace filter. There is an additional uniqueness constraint that two enabled configurations cannot share all their fields (not including the `config_name`). Re-enabling may fail when there's a violation of limit or uniqueness constraints.
 
@@ -124,7 +124,7 @@ resource "databricks_mws_log_delivery" "audit_logs" {
 * `credentials_id` - The ID for a Databricks [credential configuration](mws_credentials.md) that represents the AWS IAM role [with policy](../data-sources/aws_assume_role_policy.md) and [trust relationship](../data-sources/aws_assume_role_policy.md) as described in the main billable usage documentation page.
 * `storage_configuration_id` - The ID for a Databricks [storage configuration](mws_storage_configurations.md) that represents the S3 bucket with [bucket policy](../data-sources/aws_bucket_policy.md) as described in the main billable usage documentation page.
 * `workspace_ids_filter` - (Optional) By default, this log configuration applies to all workspaces associated with your account ID. If your account is on the E2 version of the platform or on a select custom plan that allows multiple workspaces per account, you may have multiple workspaces associated with your account ID. You can optionally set the field as mentioned earlier to an array of workspace IDs. If you plan to use different log delivery configurations for several workspaces, set this explicitly rather than leaving it blank. If you leave this blank and your account ID gets additional workspaces in the future, this configuration will also apply to the new workspaces.
-* `delivery_path_prefix` - (Optional) Defaults to empty, which means that logs delivered to the root of the bucket. The value must be a valid S3 object key. It must not start or end with a slash character.
+* `delivery_path_prefix` - (Optional) Defaults to empty, which means that logs are delivered to the root of the bucket. The value must be a valid S3 object key. It must not start or end with a slash character.
 * `delivery_start_time` - (Optional) The optional start month and year for delivery, specified in YYYY-MM format. Defaults to current year and month. Usage is not available before 2019-03.
 
 ## Attribute reference

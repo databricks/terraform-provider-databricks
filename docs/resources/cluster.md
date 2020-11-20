@@ -24,18 +24,18 @@ resource "databricks_cluster" "shared_autoscaling" {
 * `cluster_name` - (Optional) Cluster name, which doesn’t have to be unique. If not specified at creation, the cluster name will be an empty string.
 * `spark_version` - (Required) [Runtime version](https://docs.databricks.com/runtime/index.html) of the cluster. You can retrieve [list of available Spark versions](https://docs.databricks.com/release-notes/runtime/releases.html) by using the Runtime Versions API call or `databricks clusters spark-versions` CLI command. We advise using [Cluster Policies](cluster_policy.md) to restrict the list of versions for simplicity while maintaining enough control.
 * `driver_node_type_id` - (Optional) The node type of the Spark driver. This field is optional; if unset, API will set the driver node type to the same value as `node_type_id` defined above.
-* `node_type_id` - (Required - optional if `instance_pool_id` is given) Any supported [databricks_node_type](../data-sources/node_type.md) id. If `instance_pool_id` is specified, this field is not needed. 
-* `instance_pool_id` (Optional - required if `node_type_id` is not given) - To reduce cluster start time, you can attach a cluster to a [predefined pool of idle instances](instance_pool.md). When attached to a pool, a cluster allocates its driver and worker nodes from the pool. If the pool does not have sufficient idle resources to accommodate the cluster’s request, it expands by allocating new instances from the instance provider. When an attached cluster changes it's state to `TERMINATED`, the instances it used are returned to the pool and reused by a different cluster.
-* `policy_id` - (Optional) Identifier of [Custer Policy](cluster_policy.md) to validate cluster and preset certain defaults. *The primary use for cluster policies is to allow users to create policy-scoped clusters via UI rather than sharing configuration for API-created clusters.* For example, when you specify `policy_id` of [external metastore](https://docs.databricks.com/administration-guide/clusters/policies.html#external-metastore-policy) policy, you still have to fill in relevant keys for `spark_conf`. 
+* `node_type_id` - (Required - optional if `instance_pool_id` is given) Any supported [databricks_node_type](../data-sources/node_type.md) id. If `instance_pool_id` is specified, this field is not needed.
+* `instance_pool_id` (Optional - required if `node_type_id` is not given) - To reduce cluster start time, you can attach a cluster to a [predefined pool of idle instances](instance_pool.md). When attached to a pool, a cluster allocates its driver and worker nodes from the pool. If the pool does not have sufficient idle resources to accommodate the cluster’s request, it expands by allocating new instances from the instance provider. When an attached cluster changes its state to `TERMINATED`, the instances it used are returned to the pool and reused by a different cluster.
+* `policy_id` - (Optional) Identifier of [Custer Policy](cluster_policy.md) to validate cluster and preset certain defaults. *The primary use for cluster policies is to allow users to create policy-scoped clusters via UI rather than sharing configuration for API-created clusters.* For example, when you specify `policy_id` of [external metastore](https://docs.databricks.com/administration-guide/clusters/policies.html#external-metastore-policy) policy, you still have to fill in relevant keys for `spark_conf`.
 * `autotermination_minutes` - (Optional) Automatically terminate the cluster after being inactive for this time in minutes. If not set, Databricks won't automatically terminate an inactive cluster. If specified, the threshold must be between 10 and 10000 minutes. You can also set this value to 0 to explicitly disable automatic termination. _We highly recommend having this setting present for Interactive/BI clusters._
 * `enable_elastic_disk` - (Optional) If you don’t want to allocate a fixed number of EBS volumes at cluster creation time, use autoscaling local storage. With autoscaling local storage, Databricks monitors the amount of free disk space available on your cluster’s Spark workers. If a worker begins to run too low on disk, Databricks automatically attaches a new EBS volume to the worker before it runs out of disk space. EBS volumes are attached up to a limit of 5 TB of total disk space per instance (including the instance’s local storage). To scale down EBS usage, make sure you have `autotermination_minutes` and `autoscale` attributes set. More documentation available at [cluster configuration page](https://docs.databricks.com/clusters/configure.html#autoscaling-local-storage-1).
 * `enable_local_disk_encryption` - (Optional) Some instance types you use to run clusters may have locally attached disks. Databricks may store shuffle data or temporary data on these locally attached disks. To ensure that all data at rest is encrypted for all storage types, including shuffle data stored temporarily on your cluster’s local disks, you can enable local disk encryption. When local disk encryption is enabled, Databricks generates an encryption key locally unique to each cluster node and encrypting all data stored on local disks. The scope of the key is local to each cluster node and is destroyed along with the cluster node itself. During its lifetime, the key resides in memory for encryption and decryption and is stored encrypted on the disk. _Your workloads may run more slowly because of the performance impact of reading and writing encrypted data to and from local volumes. This feature is not available for all Azure Databricks subscriptions. Contact your Microsoft or Databricks account representative to request access._
 * `single_user_name` - (Optional) The optional user name of the user to assign to an interactive cluster. This field is required when using standard AAD Passthrough for Azure Data Lake Storage (ADLS) with a single-user cluster (i.e., not high-concurrency clusters).
 * `idempotency_token` - (Optional) An optional token to guarantee the idempotency of cluster creation requests. If an active cluster with the provided token already exists, the request will not create a new cluster, but it will return the existing running cluster's ID instead. If you specify the idempotency token, upon failure, you can retry until the request succeeds. Databricks platform guarantees to launch exactly one cluster with that idempotency token. This token should have at most 64 characters.
 * `ssh_public_keys` - (Optional) SSH public key contents that will be added to each Spark node in this cluster. The corresponding private keys can be used to login with the user name ubuntu on port 2200. You can specify up to 10 keys.
-* `spark_env_vars` - (Optional) Map with environment variable key-value pairs to fine-tune Spark clusters. Key-value pairs of the form (X,Y) are exported (i.e., X='Y') while launching the driver and workers. 
+* `spark_env_vars` - (Optional) Map with environment variable key-value pairs to fine-tune Spark clusters. Key-value pairs of the form (X,Y) are exported (i.e., X='Y') while launching the driver and workers.
 * `custom_tags` - (Optional) Additional tags for cluster resources. Databricks will tag all cluster resources (e.g., AWS EC2 instances and EBS volumes) with these tags in addition to `default_tags`.
-* `spark_conf` - (Optional) Map with key-value pairs to fine-tune Spark clusters, where you can provide custom [Spark configuration properties](https://spark.apache.org/docs/latest/configuration.html) in a cluster configuration. 
+* `spark_conf` - (Optional) Map with key-value pairs to fine-tune Spark clusters, where you can provide custom [Spark configuration properties](https://spark.apache.org/docs/latest/configuration.html) in a cluster configuration.
 * `is_pinned` - (Optional) boolean value specifying if cluster is pinned (not pinned by default). You must be a Databricks administrator to use this.  The pinned clusters' maximum number is [limited to 20](https://docs.databricks.com/clusters/clusters-manage.html#pin-a-cluster), so `apply` may fail if you have more than that.
 
 The following example demonstrates how to create an autoscaling cluster with [Delta Cache](https://docs.databricks.com/delta/optimizations/delta-cache.html) enabled:
@@ -64,7 +64,7 @@ resource "databricks_cluster" "shared_autoscaling" {
 
 ## Fixed size or autoscaling cluster
 
-When you [create a Databricks cluster](https://docs.databricks.com/clusters/configure.html#cluster-size-and-autoscaling), you can either provide a `num_workers` for the fixed-size cluster or provide `min_workers` and/or `max_workers` for the cluster withing the `autoscale` group. When you give a fixed-sized cluster, Databricks ensures that your cluster has a specified number of workers. When you provide a range for the number of workers, Databricks chooses the appropriate number of workers required to run your job - also known as "autoscaling." With autoscaling, Databricks dynamically reallocates workers to account for the characteristics of your job. Certain parts of your pipeline may be more computationally demanding than others, and Databricks automatically adds additional workers during these phases of your job (and removes them when they’re no longer needed). 
+When you [create a Databricks cluster](https://docs.databricks.com/clusters/configure.html#cluster-size-and-autoscaling), you can either provide a `num_workers` for the fixed-size cluster or provide `min_workers` and/or `max_workers` for the cluster within the `autoscale` group. When you give a fixed-sized cluster, Databricks ensures that your cluster has a specified number of workers. When you provide a range for the number of workers, Databricks chooses the appropriate number of workers required to run your job - also known as "autoscaling." With autoscaling, Databricks dynamically reallocates workers to account for the characteristics of your job. Certain parts of your pipeline may be more computationally demanding than others, and Databricks automatically adds additional workers during these phases of your job (and removes them when they’re no longer needed).
 
 `autoscale` optional configuration block supports the following:
 
@@ -82,21 +82,21 @@ library {
 }
 ```
 
-Installing Python EGG artifacts. Location can be anyling, that is DBFS or mounted object store (s3, adls, ...)
+Installing Python EGG artifacts. Location can be anything, that is DBFS or mounted object store (s3, adls, ...)
 ```hcl
 library {
   egg = "dbfs://FileStore/foo.egg"
 }
 ```
 
-Installing Python Wheel artifacts. Location can be anyling, that is DBFS or mounted object store (s3, adls, ...)
+Installing Python Wheel artifacts. Location can be anything, that is DBFS or mounted object store (s3, adls, ...)
 ```hcl
 library {
   whl = "dbfs://FileStore/baz.whl"
 }
 ```
 
-Installing Python PyPI artifacts. You can optionally also specify the `repo` parameter for custom PyPI mirror, which should be accessible without any authentication for the network, that cluster runs in.
+Installing Python PyPI artifacts. You can optionally also specify the `repo` parameter for custom PyPI mirror, which should be accessible without any authentication for the network that cluster runs in.
 ```hcl
 library {
   pypi {
@@ -106,7 +106,7 @@ library {
 }
 ```
 
-Installing artifacts from Maven repository. You can also optionally also specify `repo` parameter for custom Maven-style repository, that should be accessible without any authentication for the network, that cluster runs in. It can even be properly configured [maven s3 wagon](https://github.com/seahen/maven-s3-wagon), [AWS CodeArtifact](https://aws.amazon.com/codeartifact/) or [Azure Artifacts](https://azure.microsoft.com/en-us/services/devops/artifacts/).
+Installing artifacts from Maven repository. You can also optionally specify a `repo` parameter for custom Maven-style repository, that should be accessible without any authentication for the network that cluster runs in. It can even be properly configured [maven s3 wagon](https://github.com/seahen/maven-s3-wagon), [AWS CodeArtifact](https://aws.amazon.com/codeartifact/) or [Azure Artifacts](https://azure.microsoft.com/en-us/services/devops/artifacts/).
 ```hcl
 library {
   maven {
@@ -117,7 +117,7 @@ library {
 }
 ```
 
-Installing artifacts from CRan. You can also optionally also specify `repo` parameter for custom cran mirror.
+Installing artifacts from CRan. You can also optionally specify a `repo` parameter for a custom cran mirror.
 ```hcl
 library {
   cran {
@@ -155,7 +155,7 @@ There are a few more advanced attributes for S3 log delivery:
 * `enable_encryption` - (Optional) Enable server-side encryption, false by default.
 * `encryption_type` - (Optional) The encryption type, it could be `sse-s3` or `sse-kms`. It is used only when encryption is enabled, and the default type is `sse-s3`.
 * `kms_key` - (Optional) KMS key used if encryption is enabled and encryption type is set to `sse-kms`.
-* `canned_acl` - (Optional) Set canned access control list, e.g. `bucket-owner-full-control`. If `canned_cal` is set, the cluster instance profile must have `s3:PutObjectAcl` permission on the destination bucket and prefix. The full list of possible canned ACLs can be found [here](https://docs.aws.amazon.com/AmazonS3/latest/dev/acl-overview.html#canned-acl). By default, only the object owner gets full control. If you are using cross-account role for writing data, you may want to set `bucket-owner-full-control` to make bucket owners able to read the logs.
+* `canned_acl` - (Optional) Set canned access control list, e.g. `bucket-owner-full-control`. If `canned_cal` is set, the cluster instance profile must have `s3:PutObjectAcl` permission on the destination bucket and prefix. The full list of possible canned ACLs can be found [here](https://docs.aws.amazon.com/AmazonS3/latest/dev/acl-overview.html#canned-acl). By default, only the object owner gets full control. If you are using a cross-account role for writing data, you may want to set `bucket-owner-full-control` to make bucket owners able to read the logs.
 
 ## init_scripts
 
@@ -184,7 +184,7 @@ Attributes are the same as for the `cluster_log_conf` configuration block.
 
 ## aws_attributes
 
-`aws_attributes` optional configuration block contains attributes related to [clusters running on Amazon Web Services](https://docs.databricks.com/clusters/configure.html#aws-configurations). If not specified at cluster creation, a set of default values will be used. 
+`aws_attributes` optional configuration block contains attributes related to [clusters running on Amazon Web Services](https://docs.databricks.com/clusters/configure.html#aws-configurations). If not specified at cluster creation, a set of default values will be used.
 
 Here is the example of shared autoscaling cluster with some of AWS options set:
 
@@ -209,8 +209,8 @@ resource "databricks_cluster" "this" {
 
 The following options are available:
 
-* `zone_id` - (Required) Identifier for the availability zone/datacenter in which the cluster resides. This string will be of a form like “us-west-2a”. The provided availability zone must be in the same region as the Databricks deployment. For example, “us-west-2a” is not a valid zone ID if the Databricks deployment resides in the “us-east-1” region. 
-* `availability` - (Optional) Availability type used for all subsequent nodes past the `first_on_demand` ones. Valid values are `SPOT` and `ON_DEMAND`. Note: If `first_on_demand` is zero, this availability type will be used for the entire cluster. 
+* `zone_id` - (Required) Identifier for the availability zone/datacenter in which the cluster resides. This string will be of a form like “us-west-2a”. The provided availability zone must be in the same region as the Databricks deployment. For example, “us-west-2a” is not a valid zone ID if the Databricks deployment resides in the “us-east-1” region.
+* `availability` - (Optional) Availability type used for all subsequent nodes past the `first_on_demand` ones. Valid values are `SPOT` and `ON_DEMAND`. Note: If `first_on_demand` is zero, this availability type will be used for the entire cluster.
 * `first_on_demand` - (Optional) The first `first_on_demand` nodes of the cluster will be placed on on-demand instances. If this value is greater than 0, the cluster driver node will be placed on an on-demand instance. If this value is greater than or equal to the current cluster size, all nodes will be placed on on-demand instances. If this value is less than the current cluster size, `first_on_demand` nodes will be placed on on-demand instances, and the remainder will be placed on availability instances. This value does not affect cluster size and cannot be mutated over the lifetime of a cluster.
 * `spot_bid_price_percent` - (Optional) The max price for AWS spot instances, as a percentage of the corresponding instance type’s on-demand price. For example, if this field is set to 50, and the cluster needs a new `i3.xlarge` spot instance, then the max price is half of the price of on-demand `i3.xlarge` instances. Similarly, if this field is set to 200, the max price is twice the price of on-demand `i3.xlarge` instances. If not specified, the default value is `100`. When spot instances are requested for this cluster, only spot instances whose max price percentage matches this field will be considered. For safety, we enforce this field to be no more than `10000`.
 * `instance_profile_arn` - (Optional) Nodes for this cluster will only be placed on AWS instances with this instance profile. Please see [databricks_instance_profile](instance_profile.md) resource documentation for extended examples on adding a valid instance profile using Terraform.
@@ -230,9 +230,9 @@ In addition to all arguments above, the following attributes are exported:
 
 * [databricks_group](group.md#allow_cluster_create) and [databricks_user](user.md#allow_cluster_create) can control which groups or individual users can create clusters.
 * [databricks_cluster_policy](cluster_policy.md) can control which kinds of clusters users can create.
-* Users, who have access to Cluster Policy, but do not have `allow_cluster_create` argument set would still be able to create clusters, but within the boundary of the policy.
+* Users, who have access to Cluster Policy, but do not have an `allow_cluster_create` argument set would still be able to create clusters, but within the boundary of the policy.
 * [databricks_permissions](permissions.md#Cluster-usage) can control which groups or individual users can *Manage*, *Restart* or *Attach to* individual clusters.
-* `instance_profile_arn` can control which data given cluster can access through cloud-native controls.
+* `instance_profile_arn` can control which data a given cluster can access through cloud-native controls.
 
 ## Import
 

@@ -1,6 +1,6 @@
 # databricks_instance_profile Resource
 
-This resource allows you to register or unregisters EC2 instance profiles that users can launch [databricks_cluster](cluster.md) and access data, like [databricks_aws_s3_mount](aws_s3_mount.md). The following example demonstrates how to create an instance profile and create cluster with it.
+This resource allows you to register or unregister EC2 instance profiles that users can launch [databricks_cluster](cluster.md) and access data, like [databricks_aws_s3_mount](aws_s3_mount.md). The following example demonstrates how to create an instance profile and create a cluster with it.
 
 ```hcl
 variable "crossaccount_role_name" {
@@ -84,7 +84,7 @@ resource "databricks_cluster_policy" "this" {
 
 ## Granting access to all users
 
-You can make instance profile available to all users by [associating it](group_instance_profile.md) with special group called `users` through [databricks_group](../data-sources/group.md) data source.
+You can make instance profile available to all users by [associating it](group_instance_profile.md) with the special group called `users` through [databricks_group](../data-sources/group.md) data source.
 
 ```hcl
 resource "databricks_instance_profile" "this" {

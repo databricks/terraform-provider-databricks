@@ -19,7 +19,7 @@ The following arguments are supported:
 
 ## keyvault_metadata
 
-On Azure it's possible to create manage secrets in Azure Key Vault and have use Azure Databricks secret redaction & access control functionality for reading them. There has to be a single Key Vault per single secret scope.
+On Azure it's possible to create and manage secrets in Azure Key Vault and have use Azure Databricks secret redaction & access control functionality for reading them. There has to be a single Key Vault per single secret scope.
 
 -> **Note** Currently, it's only possible to create Azure Key Vault scopes with Azure CLI authentication and not with Service Principal. That means, `az login --service-principal --username $ARM_CLIENT_ID --password $ARM_CLIENT_SECRET --tenant $ARM_TENANT_ID` won't work as well. This is the limitation from underlying cloud resources.
 
@@ -65,7 +65,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-The secret resource scope can be imported using the scope name. `initial_manage_principal` state won't be imported, because underlying API doesn't include it in the response.
+The secret resource scope can be imported using the scope name. `initial_manage_principal` state won't be imported, because the underlying API doesn't include it in the response.
 
 ```bash
 $ terraform import databricks_secret_scope.object <scopeName>

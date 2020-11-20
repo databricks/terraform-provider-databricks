@@ -1,6 +1,6 @@
 # databricks_group_instance_profile Resource
 
--> **Note** This resource has evolving API, which may change in future versions of provider.
+-> **Note** This resource has an evolving API, which may change in future versions of the provider.
 
 This resource allows you to attach instance profiles to groups created by the [group](group.md) resource.
 

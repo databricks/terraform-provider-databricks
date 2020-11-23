@@ -43,7 +43,8 @@ func Run(args ...string) error {
 		"Directory to generate sources in. Defaults to current directory.")
 	flags.Int64Var(&ic.lastActiveDays, "last-active-days", 3650,
 		"Items with older than activity specified won't be imported.")
-	flags.BoolVar(&ic.debug, "debug", false, "Print extra debug information")
+	flags.BoolVar(&ic.debug, "debug", false, "Print extra debug information.")
+	flags.BoolVar(&ic.mounts, "mounts", false, "List DBFS mount points.")
 
 	listing := ""
 	services := ""

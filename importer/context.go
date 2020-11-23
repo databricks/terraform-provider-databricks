@@ -59,9 +59,11 @@ type importContext struct {
 	hclFixes    []regexFix
 	allUsers    []identity.ScimUser
 	allGroups   []identity.ScimGroup
+	mountMap    map[string]string
 	variables   map[string]string
 
 	debug          bool
+	mounts         bool
 	services       string
 	listing        string
 	match          string

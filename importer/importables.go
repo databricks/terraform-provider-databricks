@@ -603,4 +603,38 @@ var resourcesMap map[string]importable = map[string]importable{
 			{Path: "principal", Resource: "databricks_user", Match: "user_name"},
 		},
 	},
+	"databricks_s3_mount": {
+		Service: "mounts",
+		List: func(ic *importContext) error {
+			if !ic.mounts {
+				return nil
+			}
+			if err := ic.refreshMounts(); err != nil {
+				return err
+			}
+			for mountName, source := range ic.mountMap {
+				if !strings.HasPrefix(source, "s3a://") {
+					continue
+				}
+				if !ic.MatchesName(mountName) {
+					continue
+				}
+				ic.Emit(&resource{
+					Resource: "databricks_s3_mount",
+					ID:       mountName,
+				})
+			}
+			return nil
+		},
+		Import: func(ic *importContext, r *resource) error {
+			// TODO: add instance_profile
+			bucket := strings.ReplaceAll(ic.mountMap[r.ID], "s3a://", "")
+			return r.Data.Set("s3_bucket_name", bucket)
+		},
+		Depends: []reference{
+			{Path: "s3_bucket_name", Resource: "aws_s3_bucket", Match: "bucket"},
+			{Path: "instance_profile", Resource: "databricks_instance_profile"},
+			{Path: "cluster_id", Resource: "databricks_cluster"},
+		},
+	},
 }

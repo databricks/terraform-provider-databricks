@@ -1,6 +1,7 @@
 package importer
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
 	"strings"
@@ -134,4 +135,25 @@ func (ic *importContext) emitIfDbfsFile(path string) {
 			ID:       path,
 		})
 	}
+}
+
+func (ic *importContext) refreshMounts() error {
+	if ic.mountMap != nil {
+		return nil
+	}
+	clustersAPI := compute.NewClustersAPI(ic.Client)
+	commandAPI := ic.Client.CommandExecutor()
+	cluster, err := clustersAPI.GetOrCreateRunningCluster("terraform-mount")
+	if err != nil {
+		return err
+	}
+	// TODO: edit instance profile of a cluster in a loop
+	j, err := commandAPI.Execute(cluster.ClusterID, "python", `
+	import json
+	json.dumps({mp.replace('/mnt/', ''):source for mp, source, _ in dbutils.fs.mounts()})`)
+	if err != nil {
+		return err
+	}
+	ic.mountMap = map[string]string{}
+	return json.Unmarshal([]byte(j), &ic.mountMap)
 }

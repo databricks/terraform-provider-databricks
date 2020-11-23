@@ -135,15 +135,3 @@ func (ic *importContext) emitIfDbfsFile(path string) {
 		})
 	}
 }
-
-func instancePoolName(d *schema.ResourceData) string {
-	raw, ok := d.GetOk("instance_pool_name")
-	if !ok {
-		return strings.Split(d.Id(), "-")[2]
-	}
-	name := raw.(string)
-	if name == "" {
-		return strings.Split(d.Id(), "-")[2]
-	}
-	return name
-}

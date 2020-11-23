@@ -59,6 +59,7 @@ type importContext struct {
 	hclFixes    []regexFix
 	allUsers    []identity.ScimUser
 	allGroups   []identity.ScimGroup
+	variables   map[string]string
 
 	debug          bool
 	services       string
@@ -89,9 +90,9 @@ func newImportContext(c *common.DatabricksClient) *importContext {
 		hclFixes: []regexFix{
 			{regexp.MustCompile(`\{ `), "{\n\t\t"},
 			{regexp.MustCompile(`, `), ",\n\t\t"},
-			//{regexp.MustCompile(` \}`), "\t}"},
 		},
-		allUsers: []identity.ScimUser{},
+		allUsers:  []identity.ScimUser{},
+		variables: map[string]string{},
 	}
 }
 
@@ -109,7 +110,7 @@ func (ic *importContext) Run() error {
 			return fmt.Errorf("Can't create directory %s", ic.Directory)
 		}
 	} else if !info.IsDir() {
-		return fmt.Errorf("The path %s is not a directory!", ic.Directory)
+		return fmt.Errorf("The path %s is not a directory", ic.Directory)
 	}
 
 	for resourceName, ir := range ic.Importables {
@@ -149,16 +150,17 @@ func (ic *importContext) Run() error {
 				return err
 			}
 		} else {
-			pr := ic.Resources[r.Resource]
 			resourceBlock := body.AppendNewBlock("resource", []string{r.Resource, r.Name})
-			err := ic.dataToHcl(ir, []string{}, pr, pr.Data(ic.InstanceState(r)), resourceBlock.Body())
+			err := ic.dataToHcl(ir, []string{}, ic.Resources[r.Resource],
+				r.Data, resourceBlock.Body())
 			if err != nil {
 				return err
 			}
 		}
-
-		// nolint
-		sh.WriteString(r.ImportCommand(ic) + "\n")
+		if r.Mode != "data" {
+			// nolint
+			sh.WriteString(r.ImportCommand(ic) + "\n")
+		}
 	}
 	for service, f := range ic.Files {
 		formatted := hclwrite.Format(f.Bytes())
@@ -166,15 +168,28 @@ func (ic *importContext) Run() error {
 		// of HCL AST writer code
 		formatted = []byte(ic.regexFix(string(formatted), ic.hclFixes))
 		log.Printf("[INFO] %s", formatted)
-		tf, err := os.Create(fmt.Sprintf("%s/%s.tf", ic.Directory, service))
+		if tf, err := os.Create(fmt.Sprintf("%s/%s.tf", ic.Directory, service)); err == nil {
+			defer tf.Close()
+			if _, err = tf.Write(formatted); err != nil {
+				return err
+			}
+		}
+	}
+	if len(ic.variables) > 0 {
+		vf, err := os.Create(fmt.Sprintf("%s/vars.tf", ic.Directory))
 		if err != nil {
 			return err
 		}
-		defer tf.Close()
-		_, err = tf.Write(formatted)
-		if err != nil {
-			return err
+		defer vf.Close()
+		f := hclwrite.NewEmptyFile()
+		body := f.Body()
+		for k, v := range ic.variables {
+			b := body.AppendNewBlock("variable", []string{k}).Body()
+			b.SetAttributeValue("description", cty.StringVal(v))
 		}
+		// nolint
+		vf.Write(f.Bytes())
+		log.Printf("[INFO] Written %d variables", len(ic.variables))
 	}
 	cmd := exec.CommandContext(context.Background(), "terraform", "fmt")
 	cmd.Dir = ic.Directory
@@ -229,9 +244,6 @@ func (ic *importContext) Has(r *resource) bool {
 		}
 		for _, i := range sr.Instances {
 			if i.Attributes[k].(string) == v {
-				if "data" == sr.Mode && ic.Module != sr.Module {
-					return false
-				}
 				return true
 			}
 		}
@@ -239,44 +251,27 @@ func (ic *importContext) Has(r *resource) bool {
 	return false
 }
 
-func (ic *importContext) InstanceState(r *resource) *terraform.InstanceState {
-	k, v := r.MatchPair()
-	for _, sr := range ic.State.Resources {
-		if sr.Type != r.Resource {
-			continue
-		}
-		for _, i := range sr.Instances {
-			if i.Attributes[k].(string) == v {
-				attrs := map[string]string{}
-				for k, v := range i.Attributes {
-					if k == "id" {
-						continue
-					}
-					attrs[k] = v.(string)
-				}
-				return &terraform.InstanceState{
-					ID:         r.ID,
-					Attributes: attrs,
-				}
-			}
-		}
-	}
-	return nil
-}
-
-func (ic *importContext) Add(r *resource, attrs map[string]string) {
+func (ic *importContext) Add(r *resource) {
 	if ic.Has(r) {
+		return
+	}
+	state := r.Data.State()
+	if state == nil {
+		log.Printf("[ERROR] state is nil for %s", r)
 		return
 	}
 	inst := instanceApproximation{
 		Attributes: map[string]interface{}{},
 	}
-	for k, v := range attrs {
+	for k, v := range state.Attributes {
 		inst.Attributes[k] = v
+	}
+	if r.Mode == "" {
+		r.Mode = "managed"
 	}
 	inst.Attributes["id"] = r.ID
 	ic.State.Resources = append(ic.State.Resources, resourceApproximation{
-		Mode:      "managed",
+		Mode:      r.Mode,
 		Module:    ic.Module,
 		Type:      r.Resource,
 		Name:      r.Name,
@@ -293,20 +288,20 @@ func (ic *importContext) regexFix(s string, fixes []regexFix) string {
 	return s
 }
 
-func (ic *importContext) ResourceName(r *resource, d *schema.ResourceData) string {
+func (ic *importContext) ResourceName(r *resource) string {
 	name := r.Name
 	if name == "" && ic.Importables[r.Resource].Name != nil {
-		name = ic.Importables[r.Resource].Name(d)
+		name = ic.Importables[r.Resource].Name(r.Data)
 	}
 	if name == "" {
-		name = d.Id()
+		name = r.ID
 	}
 	name = strings.ToLower(name)
 	name = ic.regexFix(name, ic.nameFixes)
 	// this is either numeric id or all-non-ascii
 	if regexp.MustCompile(`^\d`).MatchString(name) || "" == name {
 		if "" == name {
-			name = d.Id()
+			name = r.ID
 		}
 		name = fmt.Sprintf("r%x", md5.Sum([]byte(name)))[0:12]
 	}
@@ -345,8 +340,7 @@ func (ic *importContext) Emit(r *resource) {
 			log.Printf("[ERROR] Searching %s is not available", r)
 			return
 		}
-		err := ir.Search(ic, r)
-		if err != nil {
+		if err := ir.Search(ic, r); err != nil {
 			log.Printf("[ERROR] Cannot search for a resource %s: %v", err, r)
 			return
 		}
@@ -356,39 +350,31 @@ func (ic *importContext) Emit(r *resource) {
 		}
 	}
 	// empty data with resource schema
-	d := pr.Data(&terraform.InstanceState{
+	r.Data = pr.Data(&terraform.InstanceState{
 		Attributes: map[string]string{},
 		ID:         r.ID,
 	})
-	d.MarkNewResource()
+	r.Data.MarkNewResource()
 
 	if pr.Read != nil {
-		err := pr.Read(d, ic.Client)
-		if err != nil {
+		if err := pr.Read(r.Data, ic.Client); err != nil {
 			log.Printf("[ERROR] Error reading %s#%s: %v", r.Resource, r.ID, err)
 			return
 		}
 	} else {
-		dia := pr.ReadContext(context.Background(), d, ic.Client)
-		if dia != nil {
+		if dia := pr.ReadContext(context.Background(), r.Data, ic.Client); dia != nil {
 			log.Printf("[ERROR] Error reading %s#%s: %v", r.Resource, r.ID, dia)
 			return
 		}
 	}
-	r.Name = ic.ResourceName(r, d)
+	r.Name = ic.ResourceName(r)
 	if ir.Import != nil {
-		err := ir.Import(ic, d)
-		if err != nil {
+		if err := ir.Import(ic, r); err != nil {
 			log.Printf("[ERROR] Failed custom import of %s: %s", r, err)
 			return
 		}
 	}
-	state := d.State()
-	if state == nil {
-		log.Printf("[ERROR] state is nil for %s", r)
-		return
-	}
-	ic.Add(r, state.Attributes)
+	ic.Add(r)
 }
 
 // TODO: move to IC
@@ -404,14 +390,11 @@ func (ic *importContext) reference(i importable, path []string, value string) hc
 		if d.Match != "" {
 			attr = d.Match
 		}
-		if d.Pick == "" {
-			d.Pick = "id"
-		}
 		traversal := ic.Find(&resource{
 			Resource:  d.Resource,
 			Attribute: attr,
 			Value:     value,
-		}, d.Pick)
+		}, attr)
 
 		if traversal == nil {
 			break
@@ -419,6 +402,14 @@ func (ic *importContext) reference(i importable, path []string, value string) hc
 		return hclwrite.TokensForTraversal(traversal)
 	}
 	return hclwrite.TokensForValue(cty.StringVal(value))
+}
+
+func (ic *importContext) variable(name, desc string) hclwrite.Tokens {
+	ic.variables[name] = desc
+	return hclwrite.TokensForTraversal(hcl.Traversal{
+		hcl.TraverseRoot{Name: "var"},
+		hcl.TraverseAttr{Name: name},
+	})
 }
 
 type fieldTuple struct {

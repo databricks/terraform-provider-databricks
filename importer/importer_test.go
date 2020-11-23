@@ -1,6 +1,7 @@
 package importer
 
 import (
+	"fmt"
 	"log"
 	"os"
 	"testing"
@@ -10,7 +11,6 @@ import (
 	"github.com/databrickslabs/databricks-terraform/compute"
 	"github.com/databrickslabs/databricks-terraform/identity"
 	"github.com/databrickslabs/databricks-terraform/internal/qa"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -59,7 +59,28 @@ func TestImporting(t *testing.T) {
 		{
 			Method:   "GET",
 			Resource: "/api/2.0/preview/scim/v2/Groups?",
-			Response: identity.GroupList{},
+			Response: identity.GroupList{
+				Resources: []identity.ScimGroup{
+					{ID: "a", DisplayName: "admins"},
+					{ID: "b", DisplayName: "users"},
+					{ID: "c", DisplayName: "test"},
+				},
+			},
+		},
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/preview/scim/v2/Groups/a",
+			Response: identity.ScimGroup{ID: "a", DisplayName: "admins"},
+		},
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/preview/scim/v2/Groups/b",
+			Response: identity.ScimGroup{ID: "b", DisplayName: "users"},
+		},
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/preview/scim/v2/Groups/c",
+			Response: identity.ScimGroup{ID: "c", DisplayName: "test"},
 		},
 		{
 			Method:   "GET",
@@ -72,9 +93,54 @@ func TestImporting(t *testing.T) {
 			Response: compute.ClusterList{},
 		},
 		{
+			Method:       "GET",
+			Resource:     "/api/2.0/secrets/scopes/list",
+			ReuseRequest: true,
+			Response: access.SecretScopeList{
+				Scopes: []access.SecretScope{
+					{Name: "a"},
+				},
+			},
+		},
+		{
+			Method:       "GET",
+			Resource:     "/api/2.0/secrets/list?scope=a",
+			ReuseRequest: true,
+			Response: access.SecretsList{
+				Secrets: []access.SecretMetadata{
+					{Key: "b"},
+				},
+			},
+		},
+		{
 			Method:   "GET",
-			Resource: "/api/2.0/secrets/scopes/list",
-			Response: access.SecretScopeList{},
+			Resource: "/api/2.0/secrets/acls/list?scope=a",
+			Response: access.SecretScopeACL{
+				Items: []access.ACLItem{
+					{Permission: "MANAGE", Principal: "test"},
+					{Permission: "READ", Principal: "users"},
+				},
+			},
+		},
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/secrets/acls/list?scope=a",
+			Response: access.SecretScopeACL{
+				Items: []access.ACLItem{
+					{Permission: "MANAGE", Principal: "test"},
+					{Permission: "READ", Principal: "users"},
+				},
+			},
+		},
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/secrets/acls/get?principal=test&scope=a",
+			Response: access.ACLItem{Permission: "MANAGE", Principal: "test"},
+		},
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/secrets/acls/get?principal=users&scope=a",
+			Response: access.ACLItem{Permission: "READ", Principal: "users"},
 		},
 	})
 	require.NoError(t, err)
@@ -83,24 +149,27 @@ func TestImporting(t *testing.T) {
 	os.Setenv("DATABRICKS_HOST", server.URL)
 	os.Setenv("DATABRICKS_TOKEN", "..")
 
-	err = Run()
-	assert.EqualError(t, err, "No resources to import")
+	tmpDir := fmt.Sprintf("/tmp/tf-%s", qa.RandomName())
+	defer os.RemoveAll(tmpDir)
+
+	err = Run("-directory", tmpDir)
+	assert.NoError(t, err)
 }
 
 func TestResourceName(t *testing.T) {
 	ic := newImportContext(&common.DatabricksClient{})
 	norm := ic.ResourceName(&resource{
 		Name: "9721431b_bcd3_4526_b90f_f5de2befec8c-dbutils_extensions_2_11_0_0_1-18dc8.jar",
-	}, &schema.ResourceData{})
+	})
 	assert.Equal(t, "dbutils_extensions_jar", norm)
 
 	norm = ic.ResourceName(&resource{
 		Name: "9721431b_bcd3_4526_b90f_f5de2befec8c|8737798193",
-	}, &schema.ResourceData{})
+	})
 	assert.Equal(t, "r7322b058678", norm)
 
 	norm = ic.ResourceName(&resource{
 		Name: "General Policy - All Users",
-	}, &schema.ResourceData{})
+	})
 	assert.Equal(t, "general_policy_all_users", norm)
 }

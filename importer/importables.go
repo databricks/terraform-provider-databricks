@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/hcl/v2/hclsyntax"
 	"github.com/hashicorp/hcl/v2/hclwrite"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/zclconf/go-cty/cty"
 )
 
@@ -78,12 +79,22 @@ var resourcesMap map[string]importable = map[string]importable{
 	},
 	"databricks_instance_pool": {
 		Service: "compute",
-		Name:    instancePoolName,
-		Import: func(ic *importContext, d *schema.ResourceData) error {
+		Name: func(d *schema.ResourceData) string {
+			raw, ok := d.GetOk("instance_pool_name")
+			if !ok {
+				return strings.Split(d.Id(), "-")[2]
+			}
+			name := raw.(string)
+			if name == "" {
+				return strings.Split(d.Id(), "-")[2]
+			}
+			return name
+		},
+		Import: func(ic *importContext, r *resource) error {
 			ic.Emit(&resource{
 				Resource: "databricks_permissions",
-				ID:       fmt.Sprintf("/instance-pools/%s", d.Id()),
-				Name:     instancePoolName(d),
+				ID:       fmt.Sprintf("/instance-pools/%s", r.ID),
+				Name:     ic.Importables["databricks_instance_pool"].Name(r.Data),
 			})
 			return nil
 		},
@@ -96,20 +107,16 @@ var resourcesMap map[string]importable = map[string]importable{
 			return splits[len(splits)-1]
 		},
 		Body: func(ic *importContext, body *hclwrite.Body, r *resource) error {
-			ir := ic.Importables[r.Resource]
-			state := ic.InstanceState(r)
 			ipa := "instance_profile_arn"
 			b := body.AppendNewBlock("resource", []string{r.Resource, r.Name}).Body()
-			b.SetAttributeRaw(ipa, ic.reference(ir, []string{ipa}, state.Attributes[ipa]))
+			b.SetAttributeRaw(ipa, ic.reference(ic.Importables[r.Resource],
+				[]string{ipa}, r.Data.Get(ipa).(string)))
 			b.SetAttributeValue("skip_validation", cty.BoolVal(false))
 			return nil
 		},
 	},
 	"databricks_group_instance_profile": {
 		Service: "access",
-		Name: func(d *schema.ResourceData) string {
-			return d.Id()
-		},
 		Depends: []reference{
 			{Path: "group_id", Resource: "databricks_group"},
 			{Path: "instance_profile_id", Resource: "databricks_instance_profile"},
@@ -158,10 +165,10 @@ var resourcesMap map[string]importable = map[string]importable{
 			}
 			return nil
 		},
-		Import: func(ic *importContext, d *schema.ResourceData) error {
+		Import: func(ic *importContext, r *resource) error {
 			var c compute.Cluster
 			s := ic.Resources["databricks_cluster"].Schema
-			if err := internal.DataToStructPointer(d, s, &c); err != nil {
+			if err := internal.DataToStructPointer(r.Data, s, &c); err != nil {
 				return err
 			}
 			if err := ic.importCluster(&c); err != nil {
@@ -169,10 +176,10 @@ var resourcesMap map[string]importable = map[string]importable{
 			}
 			ic.Emit(&resource{
 				Resource: "databricks_permissions",
-				ID:       fmt.Sprintf("/clusters/%s", d.Id()),
-				Name:     d.Get("cluster_name").(string),
+				ID:       fmt.Sprintf("/clusters/%s", r.ID),
+				Name:     r.Data.Get("cluster_name").(string),
 			})
-			return ic.importLibraries(d, s)
+			return ic.importLibraries(r.Data, s)
 		},
 	},
 	"databricks_job": {
@@ -195,10 +202,10 @@ var resourcesMap map[string]importable = map[string]importable{
 			{Path: "spark_python_task.parameters", Resource: "databricks_dbfs_file"},
 			{Path: "spark_jar_task.jar_uri", Resource: "databricks_dbfs_file"},
 		},
-		Import: func(ic *importContext, d *schema.ResourceData) error {
+		Import: func(ic *importContext, r *resource) error {
 			var job compute.JobSettings
 			s := ic.Resources["databricks_job"].Schema
-			if err := internal.DataToStructPointer(d, s, &job); err != nil {
+			if err := internal.DataToStructPointer(r.Data, s, &job); err != nil {
 				return err
 			}
 			if err := ic.importCluster(job.NewCluster); err != nil {
@@ -210,8 +217,8 @@ var resourcesMap map[string]importable = map[string]importable{
 			})
 			ic.Emit(&resource{
 				Resource: "databricks_permissions",
-				ID:       fmt.Sprintf("/jobs/%s", d.Id()),
-				Name:     d.Get("name").(string),
+				ID:       fmt.Sprintf("/jobs/%s", r.ID),
+				Name:     r.Data.Get("name").(string),
 			})
 			if job.SparkPythonTask != nil {
 				ic.emitIfDbfsFile(job.SparkPythonTask.PythonFile)
@@ -222,9 +229,9 @@ var resourcesMap map[string]importable = map[string]importable{
 			if job.SparkJarTask != nil {
 				jarURI := job.SparkJarTask.JarURI
 				if jarURI != "" {
-					if libs, ok := d.Get("library").(*schema.Set); ok {
+					if libs, ok := r.Data.Get("library").(*schema.Set); ok {
 						// nolint remove legacy jar uri support
-						d.Set("spark_jar_task", []interface{}{
+						r.Data.Set("spark_jar_task", []interface{}{
 							map[string]interface{}{
 								"main_class_name": job.SparkJarTask.MainClassName,
 								"parameters":      job.SparkJarTask.Parameters,
@@ -239,11 +246,11 @@ var resourcesMap map[string]importable = map[string]importable{
 							"jar": jarURI,
 						})
 						// nolint
-						d.Set("library", libs)
+						r.Data.Set("library", libs)
 					}
 				}
 			}
-			return ic.importLibraries(d, s)
+			return ic.importLibraries(r.Data, s)
 		},
 		List: func(ic *importContext) error {
 			a := compute.NewJobsAPI(ic.Client)
@@ -292,14 +299,14 @@ var resourcesMap map[string]importable = map[string]importable{
 		Name: func(d *schema.ResourceData) string {
 			return d.Get("name").(string)
 		},
-		Import: func(ic *importContext, d *schema.ResourceData) error {
+		Import: func(ic *importContext, r *resource) error {
 			ic.Emit(&resource{
 				Resource: "databricks_permissions",
-				ID:       fmt.Sprintf("/cluster-policies/%s", d.Id()),
-				Name:     d.Get("name").(string),
+				ID:       fmt.Sprintf("/cluster-policies/%s", r.ID),
+				Name:     r.Data.Get("name").(string),
 			})
 			var definition map[string]map[string]interface{}
-			err := json.Unmarshal([]byte(d.Get("definition").(string)), &definition)
+			err := json.Unmarshal([]byte(r.Data.Get("definition").(string)), &definition)
 			if err != nil {
 				return err
 			}
@@ -352,10 +359,6 @@ var resourcesMap map[string]importable = map[string]importable{
 				return err
 			}
 			for _, g := range ic.allGroups {
-				// TODO: special handling for "users" and "admins"
-				// if g.DisplayName == "users" {
-				// 	continue
-				// }
 				if g.DisplayName == r.Value && r.Attribute == "display_name" {
 					r.ID = g.ID
 					return nil
@@ -363,12 +366,22 @@ var resourcesMap map[string]importable = map[string]importable{
 			}
 			return nil
 		},
-		Import: func(ic *importContext, d *schema.ResourceData) error {
+		Import: func(ic *importContext, r *resource) error {
+			if r.Name == "admins" || r.Name == "users" {
+				// admins & users are to be imported through "data block"
+				r.Mode = "data"
+				r.Data.State().Set(&terraform.InstanceState{
+					ID: r.ID,
+					Attributes: map[string]string{
+						"display_name": r.Name,
+					},
+				})
+			}
 			if err := ic.cacheGroups(); err != nil {
 				return err
 			}
 			for _, g := range ic.allGroups {
-				if d.Id() != g.ID {
+				if r.ID != g.ID {
 					continue
 				}
 				for _, instanceProfile := range g.Roles {
@@ -409,17 +422,18 @@ var resourcesMap map[string]importable = map[string]importable{
 							Resource: "databricks_user",
 							ID:       x.Value,
 						})
-					} else {
+					}
+					if strings.Contains(x.Ref, "Groups/") {
 						ic.Emit(&resource{
 							Resource: "databricks_group",
 							ID:       x.Value,
 						})
+						ic.Emit(&resource{
+							Resource: "databricks_group_member",
+							ID:       fmt.Sprintf("%s|%s", g.ID, x.Value),
+							Name:     fmt.Sprintf("%s_%s", g.DisplayName, x.Display),
+						})
 					}
-					ic.Emit(&resource{
-						Resource: "databricks_group_member",
-						ID:       fmt.Sprintf("%s|%s", g.ID, x.Value),
-						Name:     fmt.Sprintf("%s_%s", g.DisplayName, x.Display),
-					})
 					if len(g.Members) > 10 {
 						log.Printf("[INFO] Imported %d of %d members of %s",
 							i, len(g.Members), g.DisplayName)
@@ -427,6 +441,15 @@ var resourcesMap map[string]importable = map[string]importable{
 				}
 			}
 			return nil
+		},
+		Body: func(ic *importContext, body *hclwrite.Body, r *resource) error {
+			blockType := "resource"
+			if r.Mode == "data" {
+				blockType = r.Mode
+			}
+			resourceBlock := body.AppendNewBlock(blockType, []string{r.Resource, r.Name})
+			return ic.dataToHcl(ic.Importables[r.Resource],
+				[]string{}, ic.Resources[r.Resource], r.Data, resourceBlock.Body())
 		},
 	},
 	"databricks_group_member": {
@@ -451,8 +474,8 @@ var resourcesMap map[string]importable = map[string]importable{
 			r.ID = u.ID
 			return nil
 		},
-		Import: func(ic *importContext, d *schema.ResourceData) error {
-			u, err := ic.findUserByName(d.Get("user_name").(string))
+		Import: func(ic *importContext, r *resource) error {
+			u, err := ic.findUserByName(r.Data.Get("user_name").(string))
 			if err != nil {
 				return err
 			}
@@ -487,10 +510,10 @@ var resourcesMap map[string]importable = map[string]importable{
 			{Path: "access_control.user_name", Resource: "databricks_user", Match: "user_name"},
 			{Path: "access_control.group_name", Resource: "databricks_group", Match: "display_name"},
 		},
-		Import: func(ic *importContext, d *schema.ResourceData) error {
+		Import: func(ic *importContext, r *resource) error {
 			var permissions access.PermissionsEntity
 			s := ic.Resources["databricks_permissions"].Schema
-			err := internal.DataToStructPointer(d, s, &permissions)
+			err := internal.DataToStructPointer(r.Data, s, &permissions)
 			if err != nil {
 				return err
 			}
@@ -531,20 +554,20 @@ var resourcesMap map[string]importable = map[string]importable{
 			}
 			return nil
 		},
-		Import: func(ic *importContext, d *schema.ResourceData) error {
-			if l, err := access.NewSecretsAPI(ic.Client).List(d.Id()); err == nil {
+		Import: func(ic *importContext, r *resource) error {
+			if l, err := access.NewSecretsAPI(ic.Client).List(r.ID); err == nil {
 				for _, secret := range l {
 					ic.Emit(&resource{
 						Resource: "databricks_secret",
-						ID:       fmt.Sprintf("%s|||%s", d.Id(), secret.Key),
+						ID:       fmt.Sprintf("%s|||%s", r.ID, secret.Key),
 					})
 				}
 			}
-			if l, err := access.NewSecretAclsAPI(ic.Client).List(d.Id()); err == nil {
+			if l, err := access.NewSecretAclsAPI(ic.Client).List(r.ID); err == nil {
 				for _, acl := range l {
 					ic.Emit(&resource{
 						Resource: "databricks_secret_acl",
-						ID:       fmt.Sprintf("%s|||%s", d.Id(), acl.Principal),
+						ID:       fmt.Sprintf("%s|||%s", r.ID, acl.Principal),
 					})
 				}
 			}
@@ -559,6 +582,17 @@ var resourcesMap map[string]importable = map[string]importable{
 			{Path: "string_value", Resource: "aws_kms_secrets", Match: "plaintext"},
 			{Path: "string_value", Resource: "azurerm_key_vault_secret", Match: "value"},
 			{Path: "string_value", Resource: "aws_secretsmanager_secret_version", Match: "secret_string"},
+		},
+		Body: func(ic *importContext, body *hclwrite.Body, r *resource) error {
+			b := body.AppendNewBlock("resource", []string{r.Resource, r.Name}).Body()
+			b.SetAttributeRaw("scope", ic.reference(ic.Importables[r.Resource],
+				[]string{"scope"}, r.Data.Get("scope").(string)))
+			// secret data is exposed only within notebooks
+			b.SetAttributeRaw("string_value", ic.variable(
+				r.Name, fmt.Sprintf("Secret %s from %s scope",
+					r.Data.Get("key"), r.Data.Get("scope"))))
+			b.SetAttributeValue("key", cty.StringVal(r.Data.Get("key").(string)))
+			return nil
 		},
 	},
 	"databricks_secret_acl": {

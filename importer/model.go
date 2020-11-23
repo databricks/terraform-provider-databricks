@@ -32,20 +32,26 @@ type stateApproximation struct {
 }
 
 type importable struct {
-	Name    func(d *schema.ResourceData) string
-	List    func(ic *importContext) error
-	Search  func(ic *importContext, r *resource) error
-	Import  func(ic *importContext, d *schema.ResourceData) error
-	Depends []reference
+	// Logical (file) group that resources belong to
 	Service string
-	Body    func(ic *importContext, body *hclwrite.Body, r *resource) error
+	// Semantic resource block name
+	Name func(d *schema.ResourceData) string
+	// Method to perform depth-first search and emit resources
+	List func(ic *importContext) error
+	// Search resource by non-ID attribute
+	Search func(ic *importContext, r *resource) error
+	// Emit additional resources after Resource.ReadContext is called
+	Import func(ic *importContext, r *resource) error
+	// Define logical dependencies between resources
+	Depends []reference
+	// Custom HCL writer for resource body
+	Body func(ic *importContext, body *hclwrite.Body, r *resource) error
 }
 
 type reference struct {
 	Path     string
 	Resource string
 	Match    string
-	Pick     string
 }
 
 type resource struct {
@@ -54,6 +60,8 @@ type resource struct {
 	Attribute string
 	Value     string
 	Name      string
+	Mode      string
+	Data      *schema.ResourceData
 }
 
 func (r *resource) MatchPair() (string, string) {
@@ -66,6 +74,7 @@ func (r *resource) MatchPair() (string, string) {
 	return k, v
 }
 
+// String doubles its use as "hashcode"
 func (r *resource) String() string {
 	n := r.Name
 	if n == "" {

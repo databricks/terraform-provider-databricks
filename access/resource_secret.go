@@ -38,6 +38,11 @@ const (
 	ACLPermissionManage ACLPermission = "MANAGE"
 )
 
+// SecretScopeACL ...
+type SecretScopeACL struct {
+	Items []ACLItem `json:"items,omitempty"`
+}
+
 // ACLItem is a struct that contains information about a secret scope acl
 type ACLItem struct {
 	Principal  string        `json:"principal,omitempty"`

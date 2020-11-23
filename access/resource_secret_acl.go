@@ -46,9 +46,7 @@ func (a SecretAclsAPI) Read(scope string, principal string) (ACLItem, error) {
 
 // List lists the ACLs set on the given scope
 func (a SecretAclsAPI) List(scope string) ([]ACLItem, error) {
-	var aclItem struct {
-		Items []ACLItem `json:"items,omitempty"`
-	}
+	var aclItem SecretScopeACL
 	err := a.client.Get("/secrets/acls/list", map[string]string{
 		"scope": scope,
 	}, &aclItem)

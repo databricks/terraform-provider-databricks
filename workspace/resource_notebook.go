@@ -1,19 +1,18 @@
 package workspace
 
 import (
+	"context"
 	"encoding/base64"
 	"fmt"
 	"hash/crc32"
-	"log"
-	"math/rand"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"sync"
-	"time"
 
 	"github.com/databrickslabs/databricks-terraform/common"
 	"github.com/databrickslabs/databricks-terraform/internal"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/pkg/errors"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -52,11 +51,11 @@ const (
 	LibraryObject ObjectType = "LIBRARY"
 )
 
-// WorkspaceObjectStatus contains information when doing a get request or list request on the workspace api
-type WorkspaceObjectStatus struct {
-	ObjectID   int64      `json:"object_id,omitempty"`
-	ObjectType ObjectType `json:"object_type,omitempty"`
-	Path       string     `json:"path,omitempty"`
+// ObjectStatus contains information when doing a get request or list request on the workspace api
+type ObjectStatus struct {
+	ObjectID   int64      `json:"object_id" tf:"computed"`
+	ObjectType ObjectType `json:"object_type" tf:"computed"`
+	Path       string     `json:"path"`
 	Language   Language   `json:"language,omitempty"`
 }
 
@@ -65,13 +64,13 @@ type NotebookContent struct {
 	Content string `json:"content,omitempty"`
 }
 
-// NotebookImportRequest contains the payload to import a notebook
-type NotebookImportRequest struct {
-	Content   string       `json:"content,omitempty"`
-	Path      string       `json:"path,omitempty"`
-	Language  Language     `json:"language,omitempty"`
+// ImportRequest contains the payload to import a notebook
+type ImportRequest struct {
+	Content   string       `json:"content"`
+	Path      string       `json:"path"`
+	Language  string     `json:"language,omitempty"`
+	Format    string `json:"format,omitempty"`
 	Overwrite bool         `json:"overwrite,omitempty"`
-	Format    ExportFormat `json:"format,omitempty"`
 }
 
 // NotebookDeleteRequest contains the payload to delete a notebook
@@ -81,13 +80,13 @@ type NotebookDeleteRequest struct {
 }
 
 // NewNotebooksAPI creates NotebooksAPI instance from provider meta
-func NewNotebooksAPI(m interface{}) NotebooksAPI {
-	return NotebooksAPI{C: m.(*common.DatabricksClient)}
+func NewNotebooksAPI(ctx context.Context, m interface{}) NotebooksAPI {
+	return NotebooksAPI{client: m.(*common.DatabricksClient)}
 }
 
 // NotebooksAPI exposes the Notebooks API
 type NotebooksAPI struct {
-	C *common.DatabricksClient
+	client *common.DatabricksClient
 }
 
 // Mutex for synchronous deletes (api has poor limits in terms of allowed parallelism this increases stability of the deletes)
@@ -97,20 +96,16 @@ type NotebooksAPI struct {
 var mkdirMtx = &sync.Mutex{}
 
 // Create creates a notebook given the content and path
-func (a NotebooksAPI) Create(path string, content string, language Language, format ExportFormat, overwrite bool) error {
-	notebookCreateRequest := NotebookImportRequest{}
-	notebookCreateRequest.Content = content
-	notebookCreateRequest.Language = language
-	notebookCreateRequest.Path = path
-	notebookCreateRequest.Format = format
-	notebookCreateRequest.Overwrite = overwrite
-	return a.C.Post("/workspace/import", notebookCreateRequest, nil)
+func (a NotebooksAPI) Create(r ImportRequest) error {
+	mkdirMtx.Lock()
+	defer mkdirMtx.Unlock()
+	return a.client.Post("/workspace/import", r, nil)
 }
 
 // Read returns the notebook metadata and not the contents
-func (a NotebooksAPI) Read(path string) (WorkspaceObjectStatus, error) {
-	var notebookInfo WorkspaceObjectStatus
-	err := a.C.Get("/workspace/get-status", map[string]string{
+func (a NotebooksAPI) Read(path string) (ObjectStatus, error) {
+	var notebookInfo ObjectStatus
+	err := a.client.Get("/workspace/get-status", map[string]string{
 		"path": path,
 	}, &notebookInfo)
 	return notebookInfo, err
@@ -124,7 +119,7 @@ type workspacePathRequest struct {
 // Export returns the notebook content as a base64 string
 func (a NotebooksAPI) Export(path string, format ExportFormat) (string, error) {
 	var notebookContent NotebookContent
-	err := a.C.Get("/workspace/export", workspacePathRequest{
+	err := a.client.Get("/workspace/export", workspacePathRequest{
 		Format: format,
 		Path:   path,
 	}, &notebookContent)
@@ -135,18 +130,19 @@ func (a NotebooksAPI) Export(path string, format ExportFormat) (string, error) {
 func (a NotebooksAPI) Mkdirs(path string) error {
 	// This mutex will be removed when mkdirs is removed from the notebooks resource.
 	// Then we will switch to TF resource retry.
-	mkdirMtx.Lock() // this mutex might also be needed for /workspace/import
+	mkdirMtx.Lock()
 	defer mkdirMtx.Unlock()
-	return a.C.Post("/workspace/mkdirs", map[string]string{
+
+	return a.client.Post("/workspace/mkdirs", map[string]string{
 		"path": path,
 	}, nil)
 }
 
 // List will list all objects in a path on the workspace and with the recursive flag it will recursively list
 // all the objects
-func (a NotebooksAPI) List(path string, recursive bool) ([]WorkspaceObjectStatus, error) {
+func (a NotebooksAPI) List(path string, recursive bool) ([]ObjectStatus, error) {
 	if recursive {
-		var paths []WorkspaceObjectStatus
+		var paths []ObjectStatus
 		err := a.recursiveAddPaths(path, &paths)
 		if err != nil {
 			return nil, err
@@ -156,7 +152,7 @@ func (a NotebooksAPI) List(path string, recursive bool) ([]WorkspaceObjectStatus
 	return a.list(path)
 }
 
-func (a NotebooksAPI) recursiveAddPaths(path string, pathList *[]WorkspaceObjectStatus) error {
+func (a NotebooksAPI) recursiveAddPaths(path string, pathList *[]ObjectStatus) error {
 	notebookInfoList, err := a.list(path)
 	if err != nil {
 		return err
@@ -175,12 +171,12 @@ func (a NotebooksAPI) recursiveAddPaths(path string, pathList *[]WorkspaceObject
 }
 
 type objectList struct {
-	Objects []WorkspaceObjectStatus `json:"objects,omitempty" url:"objects,omitempty"`
+	Objects []ObjectStatus `json:"objects,omitempty" url:"objects,omitempty"`
 }
 
-func (a NotebooksAPI) list(path string) ([]WorkspaceObjectStatus, error) {
+func (a NotebooksAPI) list(path string) ([]ObjectStatus, error) {
 	var notebookList objectList
-	err := a.C.Get("/workspace/list", map[string]string{
+	err := a.client.Get("/workspace/list", map[string]string{
 		"path": path,
 	}, &notebookList)
 	return notebookList.Objects, err
@@ -188,7 +184,7 @@ func (a NotebooksAPI) list(path string) ([]WorkspaceObjectStatus, error) {
 
 // Delete will delete folders given a path and recursive flag
 func (a NotebooksAPI) Delete(path string, recursive bool) error {
-	return a.C.Post("/workspace/delete", NotebookDeleteRequest{
+	return a.client.Post("/workspace/delete", NotebookDeleteRequest{
 		Path:      path,
 		Recursive: recursive,
 	}, nil)
@@ -196,212 +192,106 @@ func (a NotebooksAPI) Delete(path string, recursive bool) error {
 
 // ResourceNotebook manages notebooks
 func ResourceNotebook() *schema.Resource {
-	return &schema.Resource{
-		Create: resourceNotebookCreate,
-		Read:   resourceNotebookRead,
-		Delete: resourceNotebookDelete,
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
-		Schema: map[string]*schema.Schema{
-			"content": {
-				Deprecated: "databricks_notebook.content is deprecated and is " +
-					"going to be renamed to `content_base64` in version 0.3",
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				StateFunc: func(i interface{}) string {
-					base64String := i.(string)
-					base64, err := convertBase64ToCheckSum(base64String)
-					if err != nil {
-						return ""
-					}
-					return base64
-				},
-				ValidateFunc: validation.StringIsBase64,
-			},
-			"path": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: ValidateNotebookPath,
-			},
-			"language": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					string(Scala),
-					string(Python),
-					string(R),
-					string(SQL),
-				}, false),
-			},
-			"overwrite": {
-				Deprecated: `databricks_notebook.overwrite must always be enabled in ` +
-					`order to follow expected behavior of terraform. This field ` +
-					`would be removed in v0.3.0 and always set to true.`,
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-				ForceNew: true,
-			},
-			"mkdirs": {
-				Deprecated: `databricks_notebook.mkdirs must always be enabled in ` +
-					`order to follow expected behavior of terraform. This field ` +
-					`would be removed in v0.3.0 and always set to true.`,
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  true,
-				ForceNew: true,
-			},
-			"format": {
-				Deprecated: `databricks_notebook.format is always having single possilbe ` +
-					`value and thus will be removed in v0.3.0`,
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  string(Source),
-				ForceNew: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					// Only supports source format as it is easiest to identify diff/delta
-					string(Source),
-				}, false),
-			},
-			"object_type": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"object_id": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-		},
-	}
-}
-
-func resourceNotebookCreate(d *schema.ResourceData, m interface{}) error {
-	client := m.(*common.DatabricksClient)
-	path := d.Get("path").(string)
-	content := d.Get("content").(string)
-	language := d.Get("language").(string)
-	format := d.Get("format").(string)
-	overwrite := d.Get("overwrite").(bool)
-	mkdirs := d.Get("mkdirs").(bool)
-
-	if mkdirs {
-		parentDir, err := internal.GetParentDirPath(path)
-		switch err {
-		// Notebook path is root directory so no need to make directory and there is no parent
-		case internal.DirPathRootDirError:
-			break
-		// Notebook path is empty thus a valid error
-		case internal.PathEmptyError:
-			return err
-		//	Notebook path is valid and has a parent directory
-		case nil:
-			workspaceObj, err := NewNotebooksAPI(client).Read(parentDir)
-			// Notebook parent path is not a directory and it could be a notebook
-			if err == nil && workspaceObj.ObjectType != Directory {
-				return fmt.Errorf("parent path %s should be a directory and not a %s",
-					workspaceObj.Path,
-					workspaceObj.ObjectType,
-				)
-			}
-			// Parent path is missing thus needs to be created as a directory
-			if e, ok := err.(common.APIError); ok && e.IsMissing() {
-				err := NewNotebooksAPI(client).Mkdirs(parentDir)
+	s := internal.StructToSchema(ImportRequest{}, func(s map[string]*schema.Schema) map[string]*schema.Schema {
+		return internal.StructToSchema(ObjectStatus{}, func(s2 map[string]*schema.Schema) map[string]*schema.Schema {
+			s["content"].StateFunc = func(i interface{}) string {
+				base64String := i.(string)
+				base64, err := convertBase64ToCheckSum(base64String)
 				if err != nil {
-					return errors.Wrapf(err, "failed to create directory %s", parentDir)
+					return ""
 				}
+				return base64
 			}
-		}
-	}
-
-	err := NewNotebooksAPI(client).Create(path, content, Language(language), ExportFormat(format), overwrite)
-	if err != nil {
-		return err
-	}
-	d.SetId(path)
-
-	err = d.Set("format", format)
-	if err != nil {
-		return err
-	}
-	err = d.Set("overwrite", overwrite)
-	if err != nil {
-		return err
-	}
-	err = d.Set("mkdirs", mkdirs)
-	if err != nil {
-		return err
-	}
-	return resourceNotebookRead(d, m)
-}
-
-func resourceNotebookRead(d *schema.ResourceData, m interface{}) error {
-	id := d.Id()
-	client := m.(*common.DatabricksClient)
-	format := d.Get("format").(string)
-	notebookData, err := NewNotebooksAPI(client).Export(id, ExportFormat(format))
-	if err != nil {
+			s["content"].ValidateFunc = validation.StringIsBase64
+			s["path"].ValidateFunc = ValidateNotebookPath
+			s["language"].ValidateFunc = validation.StringInSlice([]string{
+				string(Scala),
+				string(Python),
+				string(R),
+				string(SQL),
+			}, false)
+			delete(s, "overwrite")
+			delete(s, "mkdirs")
+			// TODO: deprecate for v0.3
+			//s["overwrite"].Default = true
+			// TODO: deprecate for v0.3
+			//s["mkdirs"].Default = true
+			// TODO: deprecate FORMAT for v0.3
+			for k,v := range s {
+				if v.Computed {
+					v.ForceNew = true
+				}
+				s2[k] = v
+			}
+			return s2
+		})
+	})
+	readContext := func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+		notebooksAPI := NewNotebooksAPI(ctx, m)
+		content, err := notebooksAPI.Export(d.Id(), Source)
 		if e, ok := err.(common.APIError); ok && e.IsMissing() {
-			log.Printf("missing resource due to error: %v\n", e)
 			d.SetId("")
 			return nil
 		}
-		return err
+		if err != nil {
+			return diag.FromErr(err)
+		}
+		d.Partial(true)
+		crc, err := convertBase64ToCheckSum(content)
+		if err != nil {
+			return diag.FromErr(err)
+		}
+		d.Set("content", crc)
+		objectStatus, err := notebooksAPI.Read(d.Id())
+		if err != nil {
+			return diag.FromErr(err)
+		}
+		err = internal.StructToData(objectStatus, s, d)
+		if err != nil {
+			return diag.FromErr(err)
+		}
+		d.Partial(false)
+		return nil
 	}
-	notebookInfo, err := NewNotebooksAPI(client).Read(id)
-	if err != nil {
-		return err
-	}
-	err = d.Set("path", id)
-	if err != nil {
-		return err
-	}
-
-	crc, err := convertBase64ToCheckSum(notebookData)
-	if err != nil {
-		return err
-	}
-	err = d.Set("content", crc)
-	if err != nil {
-		return err
-	}
-	err = d.Set("language", string(notebookInfo.Language))
-	if err != nil {
-		return err
-	}
-	err = d.Set("object_id", int(notebookInfo.ObjectID))
-	if err != nil {
-		return err
-	}
-	err = d.Set("object_type", string(notebookInfo.ObjectType))
-
-	return err
-}
-
-func resourceNotebookDelete(d *schema.ResourceData, m interface{}) error {
-	id := d.Id()
-	client := m.(*common.DatabricksClient)
-
-	// nolint should be a bigger context-aware refactor
-	return resource.Retry(5*time.Minute, func() *resource.RetryError {
-		err := NewNotebooksAPI(client).Delete(id, true)
-		if err == nil {
+	return &schema.Resource{
+		Schema: s,
+		SchemaVersion: 2,
+		// TODO: state migrate
+		ReadContext: readContext,
+		CreateContext: func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+			var notebookImport ImportRequest
+			err := internal.DataToStructPointer(d, s, &notebookImport)
+			if err != nil {
+				return diag.FromErr(err)
+			}
+			notebookImport.Format = "SOURCE"
+			notebookImport.Overwrite = true
+			notebooksAPI := NewNotebooksAPI(ctx, m)
+			parent := filepath.Dir(notebookImport.Path)
+			if parent != "" {
+				err = notebooksAPI.Mkdirs(parent)
+				if err != nil {
+					// TODO: handle RESOURCE_ALREADY_EXISTS
+					return diag.FromErr(err)
+				}
+			}
+			err = notebooksAPI.Create(notebookImport)
+			if err != nil {
+				return diag.FromErr(err)
+			}
+			return readContext(ctx, d, m)
+		},
+		DeleteContext: func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+			err := NewNotebooksAPI(ctx, m).Delete(d.Id(), true)
+			if err == nil {
+				return diag.FromErr(err)
+			}
 			return nil
-		}
-		var e common.APIError
-		if errors.As(err, &e) && e.IsTooManyRequests() {
-			// Wait for requests to clear up
-			baseDuration := 250 * time.Millisecond
-			jitter := time.Duration(rand.Intn(1000)) * time.Millisecond
-			// So all threads dont wake up at once
-			time.Sleep(baseDuration + jitter)
-			return resource.RetryableError(fmt.Errorf("request rate limit hit %w", err))
-		}
-		return resource.NonRetryableError(err)
-	})
+		},
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
+	}
 }
 
 func convertBase64ToCheckSum(b64 string) (string, error) {
@@ -409,58 +299,11 @@ func convertBase64ToCheckSum(b64 string) (string, error) {
 	if err != nil {
 		return "error", errors.Wrap(err, "error while trying to decode base64 content")
 	}
-	return strconv.Itoa(int(crc32.ChecksumIEEE(normalizeNotebookSource(dataArr)))), nil
+	// TODO: change it to something else
+	return strconv.Itoa(int(crc32.ChecksumIEEE(dataArr))), nil
 }
 
-// This will normalize the notebooks to only validate the contents of the notebook that is editable
-// and not be impacted by autogenerated text by databricks import and export
-func normalizeNotebookSource(dataArr []byte) []byte {
-	scalaMagic := "// MAGIC "
-	pythonRMagic := "# MAGIC "
-	sqlMagic := "-- MAGIC "
-	filteredDataArr := filter(strings.Split(string(dataArr), "\n"), func(s string) bool {
-		trimmedS := strings.TrimRight(s, " ")
-		scalaMagicStatements := trimmedS != strings.Trim(scalaMagic, " ")
-		pythonRMagicStatements := trimmedS != strings.Trim(pythonRMagic, " ")
-		sqlMagicStatements := trimmedS != strings.Trim(sqlMagic, " ")
-		ignoreScalaCmd := trimmedS != "// COMMAND ----------"
-		ignorePythonRCmd := trimmedS != "# COMMAND ----------"
-		ignoreSqlCmd := trimmedS != "-- COMMAND ----------"
-		ignoreNotebookHeader := !strings.HasSuffix(trimmedS, "Databricks notebook source")
-		return scalaMagicStatements && pythonRMagicStatements && sqlMagicStatements &&
-			ignoreScalaCmd && ignorePythonRCmd && ignoreSqlCmd && ignoreNotebookHeader && trimmedS != ""
-	})
-	transformedDataArr := transform(filteredDataArr, func(s string) string {
-		if strings.HasPrefix(s, scalaMagic) {
-			return strings.TrimPrefix(s, scalaMagic)
-		}
-		if strings.HasPrefix(s, pythonRMagic) {
-			return strings.TrimPrefix(s, pythonRMagic)
-		}
-		if strings.HasPrefix(s, sqlMagic) {
-			return strings.TrimPrefix(s, sqlMagic)
-		}
-		return s
-	})
-	return []byte(strings.Join(transformedDataArr, "\n"))
-}
-
-func filter(ss []string, test func(string) bool) (ret []string) {
-	for _, s := range ss {
-		if test(s) {
-			ret = append(ret, s)
-		}
-	}
-	return
-}
-
-func transform(ss []string, t func(string) string) (ret []string) {
-	for _, s := range ss {
-		ret = append(ret, t(s))
-	}
-	return
-}
-
+// ValidateNotebookPath ...
 func ValidateNotebookPath(val interface{}, key string) (warns []string, errs []error) {
 	v := val.(string)
 	switch {

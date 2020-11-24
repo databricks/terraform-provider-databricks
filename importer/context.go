@@ -131,11 +131,12 @@ func (ic *importContext) Run() error {
 	if len(ic.Scope) == 0 {
 		return fmt.Errorf("No resources to import")
 	}
-	sh, err := os.Create(fmt.Sprintf("%s/import.sh", ic.Directory))
+	sh, err := os.OpenFile(fmt.Sprintf("%s/import.sh", ic.Directory), os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0755)
 	if err != nil {
 		return err
 	}
 	defer sh.Close()
+	sh.WriteString("#!/bin/sh\n\n")
 
 	sort.Sort(ic.Scope)
 	for _, r := range ic.Scope {

@@ -61,7 +61,11 @@ func TestImporting(t *testing.T) {
 			Resource: "/api/2.0/preview/scim/v2/Groups?",
 			Response: identity.GroupList{
 				Resources: []identity.ScimGroup{
-					{ID: "a", DisplayName: "admins"},
+					{ID: "a", DisplayName: "admins",
+						Members: []identity.GroupMember{
+							{Display: "test@test.com", Value: "123", Ref: "Users/123"},
+						},
+					},
 					{ID: "b", DisplayName: "users"},
 					{ID: "c", DisplayName: "test"},
 				},
@@ -70,7 +74,11 @@ func TestImporting(t *testing.T) {
 		{
 			Method:   "GET",
 			Resource: "/api/2.0/preview/scim/v2/Groups/a",
-			Response: identity.ScimGroup{ID: "a", DisplayName: "admins"},
+			Response: identity.ScimGroup{ID: "a", DisplayName: "admins",
+				Members: []identity.GroupMember{
+					{Display: "test@test.com", Value: "123", Ref: "Users/123"},
+				},
+			},
 		},
 		{
 			Method:   "GET",
@@ -81,6 +89,23 @@ func TestImporting(t *testing.T) {
 			Method:   "GET",
 			Resource: "/api/2.0/preview/scim/v2/Groups/c",
 			Response: identity.ScimGroup{ID: "c", DisplayName: "test"},
+		},
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/preview/scim/v2/Users/123",
+			Response: identity.ScimUser{ID: "123", DisplayName: "test@test.com", UserName: "test@test.com"},
+		},
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/preview/scim/v2/Users?filter=userName%20eq%20%27test@test.com%27",
+			Response: identity.UserList{
+				Resources: []identity.ScimUser{
+					{ID: "123", DisplayName: "test@test.com", UserName: "test@test.com"},
+				},
+				StartIndex:   1,
+				TotalResults: 1,
+				ItemsPerPage: 1,
+			},
 		},
 		{
 			Method:   "GET",
@@ -150,10 +175,19 @@ func TestImporting(t *testing.T) {
 	os.Setenv("DATABRICKS_TOKEN", "..")
 
 	tmpDir := fmt.Sprintf("/tmp/tf-%s", qa.RandomName())
-	defer os.RemoveAll(tmpDir)
+	//defer os.RemoveAll(tmpDir)
 
 	err = Run("-directory", tmpDir)
 	assert.NoError(t, err)
+	// TODO: check the content of the generated files
+}
+
+func TestImportingWithError(t *testing.T) {
+	err := Run("-directory", "/bin/sh", "-services", "groups,users")
+	assert.EqualError(t, err, "The path /bin/sh is not a directory")
+
+	err = Run("-directory", "/bin/abcd", "-services", "groups,users")
+	assert.EqualError(t, err, "Can't create directory /bin/abcd")
 }
 
 func TestResourceName(t *testing.T) {

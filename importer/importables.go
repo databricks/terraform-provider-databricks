@@ -444,6 +444,8 @@ var resourcesMap map[string]importable = map[string]importable{
 	"databricks_user": {
 		Service: "users",
 		Name: func(d *schema.ResourceData) string {
+			// TODO: if I have 2 users from different domains: test@domain1.com & test@domain2.com - then I'll generate the same name
+			// use another algorithm for name generation, like, just replace non-word characters with '_'
 			s := strings.Split(d.Get("user_name").(string), "@")
 			return s[0]
 		},

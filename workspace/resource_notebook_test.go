@@ -79,23 +79,23 @@ func TestResourceNotebookCreate_DirDoesNotExists(t *testing.T) {
 			{
 				Method:   http.MethodPost,
 				Resource: "/api/2.0/workspace/mkdirs",
-				Response: NotebookImportRequest{
+				Response: ImportRequest{
 					Content:   content,
 					Path:      path,
-					Language:  Python,
+					Language:  "PYTHON",
 					Overwrite: true,
-					Format:    Source,
+					Format:    "SOURCE",
 				},
 			},
 			{
 				Method:   http.MethodPost,
 				Resource: "/api/2.0/workspace/import",
-				Response: NotebookImportRequest{
+				Response: ImportRequest{
 					Content:   content,
 					Path:      path,
-					Language:  Python,
+					Language:  "PYTHON",
 					Overwrite: true,
-					Format:    Source,
+					Format:    "SOURCE",
 				},
 			},
 			{
@@ -108,11 +108,11 @@ func TestResourceNotebookCreate_DirDoesNotExists(t *testing.T) {
 			{
 				Method:   http.MethodGet,
 				Resource: "/api/2.0/workspace/get-status?path=%2Ftest%2Fpath.py",
-				Response: WorkspaceObjectStatus{
+				Response: ObjectStatus{
 					ObjectID:   int64(objectId),
 					ObjectType: Notebook,
 					Path:       path,
-					Language:   Python,
+					Language:   "PYTHON",
 				},
 			},
 		},
@@ -120,8 +120,8 @@ func TestResourceNotebookCreate_DirDoesNotExists(t *testing.T) {
 		State: map[string]interface{}{
 			"path":      path,
 			"content":   content,
-			"language":  string(Python),
-			"format":    string(Source),
+			"language":  "PYTHON",
+			"format":    "SOURCE",
 			"overwrite": true,
 			"mkdirs":    true,
 		},
@@ -131,7 +131,7 @@ func TestResourceNotebookCreate_DirDoesNotExists(t *testing.T) {
 	assert.Equal(t, path, d.Id())
 	assert.Equal(t, checkSum, d.Get("content"))
 	assert.Equal(t, path, d.Get("path"))
-	assert.Equal(t, string(Python), d.Get("language"))
+	assert.Equal(t, "PYTHON", d.Get("language"))
 	assert.Equal(t, objectId, d.Get("object_id"))
 }
 
@@ -149,12 +149,12 @@ func TestResourceNotebookCreate_NoMkdirs(t *testing.T) {
 			{
 				Method:   http.MethodPost,
 				Resource: "/api/2.0/workspace/import",
-				Response: NotebookImportRequest{
+				Response: ImportRequest{
 					Content:   content,
 					Path:      path,
-					Language:  Python,
+					Language:  "PYTHON",
 					Overwrite: true,
-					Format:    Source,
+					Format:    "SOURCE",
 				},
 			},
 			{
@@ -167,11 +167,11 @@ func TestResourceNotebookCreate_NoMkdirs(t *testing.T) {
 			{
 				Method:   http.MethodGet,
 				Resource: "/api/2.0/workspace/get-status?path=%2Ftest%2Fpath.py",
-				Response: WorkspaceObjectStatus{
+				Response: ObjectStatus{
 					ObjectID:   int64(objectId),
 					ObjectType: Notebook,
 					Path:       path,
-					Language:   Python,
+					Language:   "PYTHON",
 				},
 			},
 		},
@@ -179,8 +179,8 @@ func TestResourceNotebookCreate_NoMkdirs(t *testing.T) {
 		State: map[string]interface{}{
 			"path":      path,
 			"content":   content,
-			"language":  string(Python),
-			"format":    string(Source),
+			"language":  "PYTHON",
+			"format":    "SOURCE",
 			"overwrite": true,
 			"mkdirs":    false,
 		},
@@ -190,7 +190,7 @@ func TestResourceNotebookCreate_NoMkdirs(t *testing.T) {
 	assert.Equal(t, path, d.Id())
 	assert.Equal(t, checkSum, d.Get("content"))
 	assert.Equal(t, path, d.Get("path"))
-	assert.Equal(t, string(Python), d.Get("language"))
+	assert.Equal(t, "PYTHON", d.Get("language"))
 	assert.Equal(t, objectId, d.Get("object_id"))
 }
 
@@ -214,11 +214,11 @@ func TestResourceNotebookRead(t *testing.T) {
 			{
 				Method:   http.MethodGet,
 				Resource: "/api/2.0/workspace/get-status?path=%2Ftest%2Fpath.py",
-				Response: WorkspaceObjectStatus{
+				Response: ObjectStatus{
 					ObjectID:   int64(objectId),
 					ObjectType: Notebook,
 					Path:       testId,
-					Language:   Python,
+					Language:   "PYTHON",
 				},
 			},
 		},
@@ -233,7 +233,7 @@ func TestResourceNotebookRead(t *testing.T) {
 	assert.Equal(t, testId, d.Id())
 	assert.Equal(t, checkSum, d.Get("content"))
 	assert.Equal(t, testId, d.Get("path"))
-	assert.Equal(t, string(Python), d.Get("language"))
+	assert.Equal(t, "PYTHON", d.Get("language"))
 	assert.Equal(t, objectId, d.Get("object_id"))
 }
 
@@ -328,12 +328,12 @@ func TestResourceNotebookCreate(t *testing.T) {
 			{
 				Method:   http.MethodPost,
 				Resource: "/api/2.0/workspace/import",
-				Response: NotebookImportRequest{
+				Response: ImportRequest{
 					Content:   "YWJjCg==",
 					Path:      "/path.py",
-					Language:  Python,
+					Language:  "PYTHON",
 					Overwrite: true,
-					Format:    Source,
+					Format:    "SOURCE",
 				},
 			},
 			{
@@ -346,11 +346,11 @@ func TestResourceNotebookCreate(t *testing.T) {
 			{
 				Method:   http.MethodGet,
 				Resource: "/api/2.0/workspace/get-status?path=%2Fpath.py",
-				Response: WorkspaceObjectStatus{
+				Response: ObjectStatus{
 					ObjectID:   4567,
 					ObjectType: "NOTEBOOK",
 					Path:       "/path.py",
-					Language:   Python,
+					Language:   "PYTHON",
 				},
 			},
 		},

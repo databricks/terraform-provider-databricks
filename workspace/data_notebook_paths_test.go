@@ -15,7 +15,7 @@ func TestDataSourceNotebookPaths(t *testing.T) {
 				Method:   "GET",
 				Resource: "/api/2.0/workspace/list?path=%2Fa%2Fb%2Fc",
 				Response: objectList{
-					Objects: []WorkspaceObjectStatus{
+					Objects: []ObjectStatus{
 						{
 							ObjectID:   987,
 							ObjectType: Directory,
@@ -28,7 +28,7 @@ func TestDataSourceNotebookPaths(t *testing.T) {
 				Method:   "GET",
 				Resource: "/api/2.0/workspace/list?path=%2Fa%2Fb%2Fc%2Fd",
 				Response: objectList{
-					Objects: []WorkspaceObjectStatus{
+					Objects: []ObjectStatus{
 						{
 							ObjectID:   988,
 							ObjectType: Notebook,

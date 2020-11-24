@@ -405,7 +405,7 @@ func TestResourcePermissionsCreate_NotebookPath(t *testing.T) {
 			{
 				Method:   http.MethodGet,
 				Resource: "/api/2.0/workspace/get-status?path=%2FDevelopment%2FInit",
-				Response: workspace.WorkspaceObjectStatus{
+				Response: workspace.ObjectStatus{
 					ObjectID:   988765,
 					ObjectType: "NOTEBOOK",
 				},

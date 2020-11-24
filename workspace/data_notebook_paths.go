@@ -1,17 +1,42 @@
 package workspace
 
 import (
+	"context"
 	"hash/fnv"
 
-	"github.com/databrickslabs/databricks-terraform/common"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
+// DataSourceNotebookPaths ...
 func DataSourceNotebookPaths() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceNotebookPathsRead,
+		ReadContext: func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+			path := d.Get("path").(string)
+			recursive := d.Get("recursive").(bool)
+			notebookList, err := NewNotebooksAPI(ctx, m).List(path, recursive)
+			if err != nil {
+				return diag.FromErr(err)
+			}
+			d.SetId(path)
+			if err = d.Set("recursive", recursive); err != nil {
+				return diag.FromErr(err)
+			}
+			if err = d.Set("path", path); err != nil {
+				return diag.FromErr(err)
+			}
+			var notebookPathList []map[string]string
+			for _, v := range notebookList {
+				notebookPathMap := map[string]string{}
+				notebookPathMap["path"] = v.Path
+				notebookPathMap["language"] = string(v.Language)
+				notebookPathList = append(notebookPathList, notebookPathMap)
+			}
+			// nolint
+			d.Set("notebook_path_list", notebookPathList)
+			return nil
+		},
 		Schema: map[string]*schema.Schema{
-
 			"path": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -41,41 +66,6 @@ func DataSourceNotebookPaths() *schema.Resource {
 			},
 		},
 	}
-}
-
-func dataSourceNotebookPathsRead(d *schema.ResourceData, m interface{}) error {
-	path := d.Get("path").(string)
-	recursive := d.Get("recursive").(bool)
-
-	client := m.(*common.DatabricksClient)
-
-	notebookList, err := NewNotebooksAPI(client).List(path, recursive)
-	if err != nil {
-		return err
-	}
-
-	d.SetId(path)
-	err = d.Set("recursive", recursive)
-	if err != nil {
-		return err
-	}
-
-	err = d.Set("path", path)
-	if err != nil {
-		return err
-	}
-
-	var notebookPathList []map[string]string
-	for _, v := range notebookList {
-		notebookPathMap := map[string]string{}
-		notebookPathMap["path"] = v.Path
-		notebookPathMap["language"] = string(v.Language)
-		notebookPathList = append(notebookPathList, notebookPathMap)
-	}
-
-	err = d.Set("notebook_path_list", notebookPathList)
-
-	return err
 }
 
 // NotebookPathListHash a hash

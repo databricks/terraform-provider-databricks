@@ -2,6 +2,7 @@ package acceptance
 
 import (
 	"bytes"
+	"context"
 	"encoding/base64"
 	"errors"
 	"fmt"
@@ -143,7 +144,7 @@ func testNotebookResourceDestroy(s *terraform.State) error {
 		if rs.Type != "databricks_notebook" {
 			continue
 		}
-		_, err := workspace.NewNotebooksAPI(client).Read(rs.Primary.ID)
+		_, err := workspace.NewNotebooksAPI(context.Background(), client).Read(rs.Primary.ID)
 		if err != nil {
 			return nil
 		}

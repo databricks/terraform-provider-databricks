@@ -141,6 +141,7 @@ func (ic *importContext) Run() error {
 		return err
 	}
 	defer sh.Close()
+	// nolint
 	sh.WriteString("#!/bin/sh\n\n")
 
 	sort.Sort(ic.Scope)

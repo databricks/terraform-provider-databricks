@@ -1,0 +1,35 @@
+{
+    "created_time": 1571676194487,
+    "creator_user_name": "test@test.com",
+    "job_id": 17,
+    "settings": {
+        "email_notifications": {},
+        "max_concurrent_runs": 1,
+        "name": "SparkR Test",
+        "new_cluster": {
+            "autoscale": {
+                "max_workers": 8,
+                "min_workers": 2
+            },
+            "aws_attributes": {
+                "availability": "SPOT_WITH_FALLBACK",
+                "ebs_volume_count": 0,
+                "first_on_demand": 1,
+                "spot_bid_price_percent": 100,
+                "zone_id": "us-west-2c"
+            },
+            "enable_elastic_disk": false,
+            "node_type_id": "i3.xlarge",
+            "spark_env_vars": {
+                "PYSPARK_PYTHON": "/databricks/python3/bin/python3"
+            },
+            "spark_version": "5.5.x-scala2.11"
+        },
+        "spark_submit_task": {
+            "parameters": [
+                "dbfs:/FileStore/jars/test.jar"
+            ]
+        },
+        "timeout_seconds": 0
+    }
+}

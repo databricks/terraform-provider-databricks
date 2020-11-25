@@ -1,0 +1,54 @@
+{
+  "access_control_list": [
+    {
+      "all_permissions": [
+        {
+          "inherited": false,
+          "permission_level": "IS_OWNER"
+        }
+      ],
+      "user_name": "test@test.com"
+    },
+    {
+      "all_permissions": [
+        {
+          "inherited": false,
+          "permission_level": "CAN_MANAGE_RUN"
+        }
+      ],
+      "group_name": "Automation"
+    },
+    {
+      "all_permissions": [
+        {
+          "inherited": false,
+          "permission_level": "CAN_MANAGE"
+        }
+      ],
+      "group_name": "Engineering"
+    },
+    {
+      "all_permissions": [
+        {
+          "inherited": true,
+          "inherited_from_object": [
+            "/jobs/"
+          ],
+          "permission_level": "CAN_MANAGE"
+        }
+      ],
+      "group_name": "admins"
+    },
+    {
+      "all_permissions": [
+        {
+          "inherited": false,
+          "permission_level": "CAN_VIEW"
+        }
+      ],
+      "group_name": "users"
+    }
+  ],
+  "object_id": "/jobs/15",
+  "object_type": "job"
+}

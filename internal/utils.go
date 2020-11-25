@@ -57,7 +57,6 @@ var (
 // they will replace slashes with other values.
 // This causes issues & errors when submitting the request
 func GetParentDirPath(filePath string) (string, error) {
-
 	// TODO: this function is not tested well. replace with filepath.Dir
 	if filePath == "" {
 		return "", PathEmptyError

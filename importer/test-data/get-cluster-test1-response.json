@@ -47,6 +47,13 @@
       "start_timestamp": 1606308924020
     }
   ],
+  "init_scripts": [
+    {
+       "dbfs": {
+          "destination": "dbfs:/FileStore/jars/test.jar"
+      }
+    }
+  ],
   "init_scripts_safe_mode": false,
   "jdbc_port": 10000,
   "last_state_loss_time": 1606308972982,

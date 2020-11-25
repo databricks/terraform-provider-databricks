@@ -1,6 +1,7 @@
 package sanity
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"strconv"
@@ -57,6 +58,8 @@ func TestAccMissingResourcesInWorkspace(t *testing.T) {
 	randomInstancePoolID := fmt.Sprintf("%v-%v-%s-pool-%s", acctest.RandIntRange(1000, 9999),
 		acctest.RandIntRange(100000, 999999), acctest.RandString(6), acctest.RandString(8))
 	client := common.CommonEnvironmentClient()
+
+	ctx := context.Background()
 	tests := []MissingResourceCheck{
 		{
 			Name: "Tokens",
@@ -89,7 +92,7 @@ func TestAccMissingResourcesInWorkspace(t *testing.T) {
 		{
 			Name: "Notebooks",
 			ReadFunc: func() error {
-				_, err := workspace.NewNotebooksAPI(client).Read("/" + randStringID)
+				_, err := workspace.NewNotebooksAPI(ctx, client).Read("/" + randStringID)
 				return err
 			},
 		},

@@ -1,6 +1,7 @@
 package access
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"os"
@@ -621,7 +622,7 @@ func permissionsTestHelper(t *testing.T,
 		d := ResourcePermissions().TestResourceData()
 		objectACL, err := permissionsAPI.Read(id)
 		require.NoError(t, err)
-		entity, err := objectACL.ToPermissionsEntity(d, me.UserName)
+		entity, err := objectACL.ToPermissionsEntity(context.Background(), d, me.UserName)
 		require.NoError(t, err)
 		return entity
 	})
@@ -812,7 +813,7 @@ func TestAccPermissionsJobs(t *testing.T) {
 func TestAccPermissionsNotebooks(t *testing.T) {
 	permissionsTestHelper(t, func(permissionsAPI PermissionsAPI, user, group string,
 		ef func(string) PermissionsEntity) {
-		workspaceAPI := workspace.NewNotebooksAPI(permissionsAPI.client)
+		workspaceAPI := workspace.NewNotebooksAPI(context.Background(), permissionsAPI.client)
 
 		notebookDir := fmt.Sprintf("/Testing/%s/something", group)
 		err := workspaceAPI.Mkdirs(notebookDir)
@@ -820,7 +821,13 @@ func TestAccPermissionsNotebooks(t *testing.T) {
 
 		notebookPath := fmt.Sprintf("%s/Dummy", notebookDir)
 
-		err = workspaceAPI.Create(notebookPath, "MSsx", "PYTHON", "SOURCE", true)
+		err = workspaceAPI.Create(workspace.ImportRequest{
+			Path:      notebookPath,
+			Content:   "MSsx",
+			Format:    "SOURCE",
+			Language:  "PYTHON",
+			Overwrite: true,
+		})
 		require.NoError(t, err)
 		defer func() {
 			assert.NoError(t, workspaceAPI.Delete(notebookDir, true))

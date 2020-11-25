@@ -66,11 +66,11 @@ type NotebookContent struct {
 
 // ImportRequest contains the payload to import a notebook
 type ImportRequest struct {
-	Content   string       `json:"content"`
-	Path      string       `json:"path"`
-	Language  string     `json:"language,omitempty"`
+	Content   string `json:"content"`
+	Path      string `json:"path"`
+	Language  string `json:"language,omitempty"`
 	Format    string `json:"format,omitempty"`
-	Overwrite bool         `json:"overwrite,omitempty"`
+	Overwrite bool   `json:"overwrite,omitempty"`
 }
 
 // NotebookDeleteRequest contains the payload to delete a notebook
@@ -202,8 +202,11 @@ func ResourceNotebook() *schema.Resource {
 				}
 				return base64
 			}
+			// nolint
 			s["content"].ValidateFunc = validation.StringIsBase64
+			// nolint
 			s["path"].ValidateFunc = ValidateNotebookPath
+			// nolint
 			s["language"].ValidateFunc = validation.StringInSlice([]string{
 				string(Scala),
 				string(Python),
@@ -212,12 +215,7 @@ func ResourceNotebook() *schema.Resource {
 			}, false)
 			delete(s, "overwrite")
 			delete(s, "mkdirs")
-			// TODO: deprecate for v0.3
-			//s["overwrite"].Default = true
-			// TODO: deprecate for v0.3
-			//s["mkdirs"].Default = true
-			// TODO: deprecate FORMAT for v0.3
-			for k,v := range s {
+			for k, v := range s {
 				if v.Computed {
 					v.ForceNew = true
 				}
@@ -241,6 +239,7 @@ func ResourceNotebook() *schema.Resource {
 		if err != nil {
 			return diag.FromErr(err)
 		}
+		// nolint
 		d.Set("content", crc)
 		objectStatus, err := notebooksAPI.Read(d.Id())
 		if err != nil {
@@ -254,7 +253,7 @@ func ResourceNotebook() *schema.Resource {
 		return nil
 	}
 	return &schema.Resource{
-		Schema: s,
+		Schema:        s,
 		SchemaVersion: 2,
 		// TODO: state migrate
 		ReadContext: readContext,

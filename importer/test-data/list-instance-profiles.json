@@ -1,0 +1,8 @@
+{
+  "instance_profiles": [
+    {
+      "instance_profile_arn": "arn:aws:iam::12345:instance-profile/shard-s3-access",
+      "is_meta_instance_profile": false
+    }
+  ]
+}

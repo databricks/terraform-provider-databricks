@@ -27,6 +27,7 @@ All arguments are optional and they tune what code is being generated.
 * `-listing` - Coma-separated list of services to be listed and further passed on for importing. `-services` parameter controls which transitive dependencies will be processed. We recommend limiting with `-listing` more often, than with `-services`.
 * `-match` - Match resource names during listing operation. This filter applies to all resources that are getting listed, so if you want to import all dependencies of just one cluster, specify `-match=autoscaling -listing=compute`. By default is empty, which matches everything.
 * `-mounts` - List DBFS mount points, which is a relatively slow operation and would not trigger unless explicitly specified.
+* `-generateProviderDeclaration` - flag that toggles generation of `databricks.tf` file with declaration of the Databricks Terraform provider that is necessary for Terraform versions since Terraform 0.13 (disabled by default).
 
 ## Services
 

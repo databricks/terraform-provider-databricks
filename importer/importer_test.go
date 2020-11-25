@@ -604,9 +604,36 @@ func TestImportingSecrets(t *testing.T) {
 	tmpDir := fmt.Sprintf("/tmp/tf-%s", qa.RandomName())
 	defer os.RemoveAll(tmpDir)
 
-	err = Run("-directory", tmpDir, "-listing", "secrets")
+	err = Run("-directory", tmpDir, "-listing", "secrets", "-generateProviderDeclaration", "true")
 	assert.NoError(t, err)
 }
+
+// func TestImportingMounts(t *testing.T) {
+// 	defer common.CleanupEnvironment()()
+// 	_, server, err := qa.HttpFixtureClient(t, []qa.HTTPFixture{
+// 		{
+// 			Method:   "GET",
+// 			Resource: "/api/2.0/clusters/list",
+// 			Response: compute.ClusterList{},
+// 		},
+// 		{
+// 			Method:   "GET",
+// 			Resource: "/api/2.0/clusters/list-node-types",
+// 			Response: compute.NodeTypeList{},
+// 		},
+// 	})
+// 	require.NoError(t, err)
+// 	defer server.Close()
+
+// 	os.Setenv("DATABRICKS_HOST", server.URL)
+// 	os.Setenv("DATABRICKS_TOKEN", "..")
+
+// 	tmpDir := fmt.Sprintf("/tmp/tf-%s", qa.RandomName())
+// 	defer os.RemoveAll(tmpDir)
+
+// 	err = Run("-directory", tmpDir, "-listing", "mounts", "-mounts", "true")
+// 	assert.NoError(t, err)
+// }
 
 func TestResourceName(t *testing.T) {
 	ic := newImportContext(&common.DatabricksClient{})

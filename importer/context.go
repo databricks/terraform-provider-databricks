@@ -63,12 +63,13 @@ type importContext struct {
 	mountMap    map[string]string
 	variables   map[string]string
 
-	debug          bool
-	mounts         bool
-	services       string
-	listing        string
-	match          string
-	lastActiveDays int64
+	debug               bool
+	mounts              bool
+	services            string
+	listing             string
+	match               string
+	lastActiveDays      int64
+	generateDeclaration bool
 }
 
 func newImportContext(c *common.DatabricksClient) *importContext {
@@ -143,6 +144,26 @@ func (ic *importContext) Run() error {
 	defer sh.Close()
 	// nolint
 	sh.WriteString("#!/bin/sh\n\n")
+
+	dcfile, err := os.Create(fmt.Sprintf("%s/databricks.tf", ic.Directory))
+	if err != nil {
+		return err
+	}
+	// nolint
+	dcfile.WriteString(
+		`terraform {
+			required_providers {
+			  databricks = {
+				source = "databrickslabs/databricks"
+				version = "` + common.Version() + `"
+			  }
+			}
+		  }
+
+		  provider "databricks" {
+		  }
+		  `)
+	dcfile.Close()
 
 	sort.Sort(ic.Scope)
 	for _, r := range ic.Scope {

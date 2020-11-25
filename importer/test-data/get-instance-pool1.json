@@ -1,0 +1,36 @@
+{
+  "instance_pool_name": "Pool 1",
+  "min_idle_instances": 0,
+  "aws_attributes": {
+    "availability": "SPOT",
+    "zone_id": "us-west-2a",
+    "spot_bid_price_percent": 100
+  },
+  "node_type_id": "c4.2xlarge",
+  "idle_instance_autotermination_minutes": 60,
+  "enable_elastic_disk": false,
+  "disk_spec": {
+    "disk_type": {
+      "ebs_volume_type": "GENERAL_PURPOSE_SSD"
+    },
+    "disk_count": 1,
+    "disk_size": 100
+  },
+  "preloaded_spark_versions": [
+    "5.4.x-scala2.11"
+  ],
+  "instance_pool_id": "pool1",
+  "default_tags": {
+    "Vendor": "Databricks",
+    "DatabricksInstancePoolCreatorId": "100125",
+    "DatabricksInstancePoolId": "101-120000-brick1-pool-ABCD1234"
+  },
+  "state": "ACTIVE",
+  "stats": {
+    "used_count": 10,
+    "idle_count": 5,
+    "pending_used_count": 5,
+    "pending_idle_count": 5
+  },
+  "status": {}
+}

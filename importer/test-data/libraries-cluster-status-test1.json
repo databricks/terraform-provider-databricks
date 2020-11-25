@@ -34,7 +34,21 @@
     {
       "is_library_for_all_clusters": false,
       "library": {
-        "jar": "dbfs:/FileStore/jars/e388b491_7af3_4a41_9d3f_1966272df00f-spark_mssql_connector_assembly_1_2_0-99f79.jar"
+        "jar": "dbfs:/FileStore/jars/test.jar"
+      },
+      "status": "INSTALLED"
+    },
+    {
+      "is_library_for_all_clusters": false,
+      "library": {
+        "egg": "dbfs:/FileStore/jars/test.jar"
+      },
+      "status": "INSTALLED"
+    },
+    {
+      "is_library_for_all_clusters": false,
+      "library": {
+        "whl": "dbfs:/FileStore/jars/test.jar"
       },
       "status": "INSTALLED"
     }

@@ -133,6 +133,81 @@
       "start_time": 1606308581693,
       "state": "RUNNING",
       "state_message": ""
+    },
+    {
+      "autoscale": {
+        "max_workers": 14,
+        "min_workers": 1
+      },
+      "autotermination_minutes": 150,
+      "aws_attributes": {
+        "availability": "SPOT_WITH_FALLBACK",
+        "ebs_volume_count": 0,
+        "first_on_demand": 1,
+        "instance_profile_arn": "arn:aws:iam::12345:instance-profile/shard-s3-access",
+        "spot_bid_price_percent": 100,
+        "zone_id": "us-west-2c"
+      },
+      "cluster_cores": 24,
+      "cluster_id": "awscluster",
+      "cluster_memory_mb": 187392,
+      "cluster_name": "AWS cluster",
+      "cluster_source": "UI",
+      "creator_user_name": "test@test.com",
+      "custom_tags": {
+        "KeepAlive": "True"
+      },
+      "default_tags": {
+        "ClusterId": "0804-220509-stead130",
+        "ClusterName": "AWS cluster",
+        "Creator": "test@test.com",
+        "Vendor": "Databricks"
+      },
+      "disk_spec": {
+        "disk_count": 0
+      },
+      "driver": {
+        "host_private_ip": "10.0.240.104",
+        "instance_id": "i-03f4397abdcd56838",
+        "node_aws_attributes": {
+          "is_spot": false
+        },
+        "node_id": "595cec952ea242d1a5f9fce089514460",
+        "private_ip": "10.0.248.172",
+        "public_dns": "",
+        "start_timestamp": 1606245100391
+      },
+      "driver_node_type_id": "i3.4xlarge",
+      "enable_elastic_disk": true,
+      "enable_local_disk_encryption": false,
+      "executors": [
+        {
+          "host_private_ip": "10.0.234.198",
+          "instance_id": "i-029a79eb283dde2a0",
+          "node_aws_attributes": {
+            "is_spot": true
+          },
+          "node_id": "ccdff72ddc0b46b79d3bb209c9e0cfe3",
+          "private_ip": "10.0.241.139",
+          "public_dns": "",
+          "start_timestamp": 1606304674531
+        }
+      ],
+      "init_scripts_safe_mode": false,
+      "jdbc_port": 10000,
+      "last_activity_time": 1606245156342,
+      "last_state_loss_time": 1606245179193,
+      "node_type_id": "i3.2xlarge",
+      "pinned_by_user_name": "100095",
+      "spark_conf": {
+        "spark.databricks.conda.condaMagic.enabled": "true"
+      },
+      "spark_context_id": 6101559920592247000,
+      "spark_version": "7.3.x-cpu-ml-scala2.12",
+      "start_time": 1606245029966,
+      "state": "RUNNING",
+      "state_message": "",
+      "terminated_time": 0
     }
   ]
 }

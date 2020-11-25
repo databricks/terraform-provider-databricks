@@ -45,6 +45,8 @@ func Run(args ...string) error {
 		"Items with older than activity specified won't be imported.")
 	flags.BoolVar(&ic.debug, "debug", false, "Print extra debug information.")
 	flags.BoolVar(&ic.mounts, "mounts", false, "List DBFS mount points.")
+	flags.BoolVar(&ic.generateDeclaration, "generateProviderDeclaration", false,
+		"Generate Databricks provider declaration (for Terraform >= 0.13).")
 
 	listing := ""
 	services := ""

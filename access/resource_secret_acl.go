@@ -55,11 +55,15 @@ func (a SecretAclsAPI) List(scope string) ([]ACLItem, error) {
 	return aclItem.Items, err
 }
 
+// ResourceSecretACL manages access to secret scopes
 func ResourceSecretACL() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceSecretACLCreate,
 		Read:   resourceSecretACLRead,
 		Delete: resourceSecretACLDelete,
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
 
 		Schema: map[string]*schema.Schema{
 			"scope": {

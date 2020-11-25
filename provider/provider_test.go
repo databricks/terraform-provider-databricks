@@ -373,6 +373,16 @@ func TestProvider_InvalidProfileGivesError(t *testing.T) {
 	assert.NotNil(t, err)
 }
 
+func TestAllResourcesMustHaveImport(t *testing.T) {
+	t.Skip("databricks_mws_* are currently not importable")
+	p := DatabricksProvider()
+	for name, r := range p.ResourcesMap {
+		if r.Importer == nil {
+			t.Logf("Missing importer: %s", name)
+		}
+	}
+}
+
 func TestProvider_DurationToSecondsString(t *testing.T) {
 	assert.Equal(t, durationToSecondsString(time.Hour), "3600")
 }

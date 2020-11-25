@@ -8,7 +8,7 @@ Use this resource to [configure VPC](https://docs.databricks.com/administration-
 * Databricks assigns two IP addresses per node, one for management traffic and one for Spark applications. The total number of instances for each subnet is equal to half of the available IP addresses.
 * Each subnet must have a netmask between /17 and /25.
 * Subnets must be private.
-* Subnets must have outbound access to the public network using a NAT gateway and internet gateway, or other similar customer-managed appliance infrastructure.
+* Subnets must have outbound access to the public network using a [aws_nat_gateway](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/nat_gateway) and [aws_internet_gateway](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/internet_gateway), or other similar customer-managed appliance infrastructure.
 * The NAT gateway must be set up in its subnet that routes quad-zero (0.0.0.0/0) traffic to an internet gateway or other customer-managed appliance infrastructure.
 
 Please follow this [complete runnable example](https://github.com/databrickslabs/terraform-provider-databricks/blob/master/scripts/awsmt-integration/main.tf) with new VPC and new workspace setup. Please pay special attention to the fact that there you have two different instances of a databricks provider - one for deploying workspaces (with host=https://accounts.cloud.databricks.com/) and another for the workspace you've created with databricks_mws_workspaces resource. If you want both creations of workspaces & clusters within the same Terraform module (essentially the same directory), you should use the provider aliasing feature of Terraform. We strongly recommend having one terraform module to create workspace + PAT token and the rest in different modules.
@@ -131,16 +131,9 @@ resource "databricks_mws_networks" "this" {
   account_id   = var.account_id
   network_name = "${var.prefix}-network"
   vpc_id       = aws_vpc.main.id
+
   subnet_ids   = [aws_subnet.public.id, aws_subnet.private.id]
   security_group_ids = [aws_security_group.test_sg.id]
-
-  lifecycle {
-    # you may need this workaround until issue #382 is fixed:
-    # https://github.com/databrickslabs/terraform-provider-databricks/issues/382
-    ignore_changes = [
-      deployment_name
-    ]
-  }
 }
 ```
 
@@ -148,17 +141,17 @@ resource "databricks_mws_networks" "this" {
 
 The following arguments are required:
 
-* `account_id` - (Required) (String) master account id (also used for `sts:ExternaId` of `sts:AssumeRole`)
-* `network_name` - (Required) (String) name under which this network is regisstered
-* `vpc_id` - (Required) (String) AWS VPC id
-* `subnet_ids` - (Required) (Set) ids of AWS VPC subnets
-* `security_group_ids` - (Required) (Set) ids of AWS Security Groups
+* `account_id` - master account id (also used for `sts:ExternaId` of `sts:AssumeRole`)
+* `network_name` - name under which this network is regisstered
+* `vpc_id` - [aws_vpc](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/vpc) id
+* `subnet_ids` - ids of [aws_subnet](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/subnet)
+* `security_group_ids` - ids of [aws_security_group](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/security_group)
 
 ## Attribute Reference
 
 In addition to all arguments above, the following attributes are exported:
 
 * `id` - Canonical unique identifier for the mws networks.
-* `network_id` - (String) id of network to be used for `databricks_mws_workspace` resource.
+* `network_id` - (String) id of network to be used for [databricks_mws_workspace](mws_workspaces.md) resource.
 * `vpc_status` - (String) VPC attachment status
 * `workspace_id` - (Integer) id of associated workspace

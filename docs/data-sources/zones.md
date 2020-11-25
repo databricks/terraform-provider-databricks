@@ -11,7 +11,7 @@ data "databricks_zones" "zones" {}
 ```
 ## Argument Reference
 
-The are no arguments to this data source and only attributes that are computed.
+There are no arguments to this data source and only attributes that are computed.
 
 ## Attribute Reference
 

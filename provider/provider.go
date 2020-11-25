@@ -175,8 +175,6 @@ func DatabricksProvider() *schema.Provider {
 				DefaultFunc: schema.MultiEnvDefaultFunc([]string{"DATABRICKS_AZURE_WORKSPACE_RESOURCE_ID", "AZURE_DATABRICKS_WORKSPACE_RESOURCE_ID"}, nil),
 				ConflictsWith: []string{
 					"azure_workspace_name",
-					// "azure_resource_group",
-					// "azure_subscription_id",
 				},
 			},
 			"azure_workspace_name": {

@@ -107,12 +107,15 @@ func (a SecretsAPI) Read(scope string, key string) (SecretMetadata, error) {
 	}
 }
 
+// ResourceSecret manages secrets
 func ResourceSecret() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceSecretCreate,
 		Read:   resourceSecretRead,
 		Delete: resourceSecretDelete,
-
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
 		Schema: map[string]*schema.Schema{
 			"string_value": {
 				Type:      schema.TypeString,

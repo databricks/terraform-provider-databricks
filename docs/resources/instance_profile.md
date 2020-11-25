@@ -1,6 +1,6 @@
 # databricks_instance_profile Resource
 
-This resource allows you to register or unregisters EC2 instance profiles that users can launch [databricks_cluster](cluster.md) and access data, like [databricks_aws_s3_mount](aws_s3_mount.md). The following example demonstrates how to create an instance profile and create cluster with it.
+This resource allows you to register or unregister EC2 instance profiles that users can launch [databricks_cluster](cluster.md) and access data, like [databricks_aws_s3_mount](aws_s3_mount.md). The following example demonstrates how to create an instance profile and create a cluster with it.
 
 ```hcl
 variable "crossaccount_role_name" {
@@ -65,6 +65,8 @@ resource "databricks_cluster" "this" {
 }
 ```
 
+## Usage with Cluster Policies
+
 It is advised to keep all common configurations in [Cluster Policies](cluster_policy.md) to maintain control of the environments launched, so `databricks_cluster` above could be replaced with `databricks_cluster_policy`:
 
 ```hcl
@@ -80,12 +82,32 @@ resource "databricks_cluster_policy" "this" {
 }
 ```
 
+## Granting access to all users
+
+You can make instance profile available to all users by [associating it](group_instance_profile.md) with the special group called `users` through [databricks_group](../data-sources/group.md) data source.
+
+```hcl
+resource "databricks_instance_profile" "this" {
+  instance_profile_arn = aws_iam_instance_profile.shared.arn
+  skip_validation      = false
+}
+
+data "databricks_group" "users" {
+  display_name = "users"
+}
+
+resource "databricks_group_instance_profile" "all" {
+  group_id            = data.databricks_group.users.id
+  instance_profile_id = databricks_instance_profile.this.id
+}
+```
+
 ## Argument Reference
 
 The following arguments are supported:
 
 * `instance_profile_arn` - (Required) `ARN` attribute of `aws_iam_instance_profile` output, the EC2 instance profile association to AWS IAM role.
-* `skip_validation` - (Required) whether or not to apply validation for 
+* `skip_validation` - (Required) whether or not to apply validation for. *In v0.3.x this field is going to be made optional with default value set to `false` and change in it would no longer trigger new resource*.
 
 ## Attribute Reference
 

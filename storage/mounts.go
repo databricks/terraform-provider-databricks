@@ -89,6 +89,9 @@ func commonMountResource(tpl Mount, s map[string]*schema.Schema) *schema.Resourc
 	resource.Create = mountCreate(tpl, resource)
 	resource.Read = mountRead(tpl, resource)
 	resource.Delete = mountDelete(tpl, resource)
+	resource.Importer = &schema.ResourceImporter{
+		StateContext: schema.ImportStatePassthroughContext,
+	}
 	return resource
 }
 

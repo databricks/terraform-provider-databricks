@@ -427,7 +427,7 @@ func (c *DatabricksClient) genericQuery(method, requestURL string, data interfac
 			headers += "\n"
 		}
 	}
-	log.Printf("[INFO] %s %s %s%v", method, requestURL, headers, c.redactedDump(requestBody))
+	log.Printf("[DEBUG] %s %s %s%v", method, requestURL, headers, c.redactedDump(requestBody))
 
 	r, err := retryablehttp.FromRequest(request)
 	if err != nil {
@@ -451,7 +451,7 @@ func (c *DatabricksClient) genericQuery(method, requestURL string, data interfac
 	if err != nil {
 		return nil, err
 	}
-	log.Printf("[INFO] %s %v <- %s %s", resp.Status, c.redactedDump(body), method, requestURL)
+	log.Printf("[DEBUG] %s %v <- %s %s", resp.Status, c.redactedDump(body), method, requestURL)
 	return body, nil
 }
 

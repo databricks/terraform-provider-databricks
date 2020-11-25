@@ -17,12 +17,16 @@ import (
 	"github.com/pkg/errors"
 )
 
+// ResourceDBFSFile manages files on DBFS
 func ResourceDBFSFile() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceDBFSFileCreate,
 		Read:   resourceDBFSFileRead,
 		Delete: resourceDBFSFileDelete,
 		Update: resourceDBFSFileUpdate,
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
 
 		Schema: map[string]*schema.Schema{
 			"content": {
@@ -128,7 +132,7 @@ func resourceDBFSFileRead(d *schema.ResourceData, m interface{}) error {
 	if validateRemoteFile, ok := d.GetOk("validate_remote_file"); ok {
 		validateFile := validateRemoteFile.(bool)
 		if validateFile {
-			log.Println("Validating remote file!")
+			log.Println("[DEBUG] Validating remote file!")
 			data, err := NewDBFSAPI(client).Read(id)
 			if err != nil {
 				return err

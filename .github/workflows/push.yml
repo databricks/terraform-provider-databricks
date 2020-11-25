@@ -1,0 +1,50 @@
+name: build
+
+on:
+  push:
+    branches: 
+      - '*'
+    tags-ignore:
+      - '*'
+    paths-ignore:
+      - 'docs/*'
+      - 'scripts/*'
+      - '*.md'
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Unshallow
+        run: git fetch --prune --unshallow
+
+      - name: Set up Go
+        uses: actions/setup-go@v1
+        with:
+          go-version: 1.14.x
+
+      - name: Cache packages
+        uses: actions/cache@v2
+        with:
+          path: |
+            ~/go/pkg/mod
+            ~/.cache/go-build
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+
+      - name: Set go env
+        run: |
+          echo "GOPATH=$(go env GOPATH)" >> $GITHUB_ENV
+          echo "$(go env GOPATH)/bin" >> $GITHUB_PATH
+          go get gotest.tools/gotestsum
+          go get github.com/golangci/golangci-lint/cmd/golangci-lint@v1.25.0
+
+      - name: Run tests
+        run: make test
+
+      - name: Publish test coverage
+        uses: codecov/codecov-action@v1

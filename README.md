@@ -45,7 +45,7 @@ End-to-end workspace creation on [AWS](scripts/awsmt-integration) or [Azure](scr
 | [Contributing and Development Guidelines](CONTRIBUTING.md)
 | [Changelog](CHANGELOG.md)
 
-[![Build Status](https://travis-ci.org/databrickslabs/terraform-provider-databricks.svg?branch=master)](https://travis-ci.org/databrickslabs/terraform-provider-databricks) [![codecov](https://codecov.io/gh/databrickslabs/terraform-provider-databricks/branch/master/graph/badge.svg)](https://codecov.io/gh/databrickslabs/terraform-provider-databricks)
+[![build](https://github.com/databrickslabs/terraform-provider-databricks/workflows/build/badge.svg?branch=master)](https://github.com/databrickslabs/terraform-provider-databricks/actions?query=workflow%3Abuild+branch%3Amaster) [![codecov](https://codecov.io/gh/databrickslabs/terraform-provider-databricks/branch/master/graph/badge.svg)](https://codecov.io/gh/databrickslabs/terraform-provider-databricks)
 
 If you use Terraform 0.13, please refer to instructions specified at [registry page](https://registry.terraform.io/providers/databrickslabs/databricks/latest):
 
@@ -81,7 +81,7 @@ data "databricks_node_type" "smallest" {
 resource "databricks_cluster" "shared_autoscaling" {
   cluster_name            = "Shared Autoscaling"
   spark_version           = "6.6.x-scala2.11"
-  node_type_id            = databricks_node_type.smallest.id
+  node_type_id            = data.databricks_node_type.smallest.id
   autotermination_minutes = 20
 
   autoscale {

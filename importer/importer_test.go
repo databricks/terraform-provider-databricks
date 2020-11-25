@@ -7,7 +7,6 @@ import (
 	"log"
 	"os"
 	"testing"
-	"time"
 
 	"github.com/databrickslabs/databricks-terraform/access"
 	"github.com/databrickslabs/databricks-terraform/common"
@@ -274,35 +273,18 @@ func TestImportingClusters(t *testing.T) {
 		{
 			Method:   "GET",
 			Resource: "/api/2.0/clusters/list",
-			Response: compute.ClusterList{
-				Clusters: []compute.ClusterInfo{
-					{
-						ClusterID: "test", ClusterName: "test", SparkVersion: "spark-3.0",
-						State: "TERMINATED", LastActivityTime: 1000,
-					},
-					{
-						ClusterID: "running", ClusterName: "running", SparkVersion: "spark-3.0",
-						State: "RUNNING", LastActivityTime: time.Now().Unix() - 100,
-						EnableElasticDisk: true, ClusterCores: 10.0,
-						CustomTags: map[string]string{"user": "test"},
-					},
-				},
-			},
+			Response: getJSONObject("test-data/clusters-list-response.json"),
 		},
-		// test for cluster 'test'
 		{
 			Method:   "GET",
-			Resource: "/api/2.0/clusters/get?cluster_id=test",
-			Response: compute.ClusterInfo{
-				ClusterID: "test", ClusterName: "test", SparkVersion: "spark-3.0",
-				State: "TERMINATED", LastActivityTime: 1000,
-			},
+			Resource: "/api/2.0/clusters/get?cluster_id=test1",
+			Response: getJSONObject("test-data/get-cluster-test1-response.json"),
 		},
 		{
 			Method:   "POST",
 			Resource: "/api/2.0/clusters/events",
 			ExpectedRequest: compute.EventsRequest{
-				ClusterID:  "test",
+				ClusterID:  "test1",
 				Order:      "DESC",
 				EventTypes: []compute.ClusterEventType{"PINNED", "UNPINNED"},
 				Limit:      1,
@@ -311,37 +293,34 @@ func TestImportingClusters(t *testing.T) {
 		},
 		{
 			Method:   "GET",
-			Resource: "/api/2.0/libraries/cluster-status?cluster_id=test",
-			Response: compute.ClusterLibraryStatuses{
-				ClusterID: "test",
-			},
+			Resource: "/api/2.0/libraries/cluster-status?cluster_id=test1",
+			Response: getJSONObject("test-data/libraries-cluster-status-test1.json"),
 		},
 		{
 			Method:   "GET",
-			Resource: "/api/2.0/preview/permissions/clusters/test",
-			Response: access.ObjectACL{},
+			Resource: "/api/2.0/preview/permissions/clusters/test1",
+			Response: getJSONObject("test-data/get-cluster-permissions-test1-response.json"),
 		},
 		{
 			Method:   "GET",
-			Resource: "/api/2.0/preview/scim/v2/Me",
-			Response: identity.ScimUser{},
+			Resource: "/api/2.0/dbfs/get-status?path=dbfs:%2FFileStore%2Fjars%2Fe388b491_7af3_4a41_9d3f_1966272df00f-spark_mssql_connector_assembly_1_2_0-99f79.jar",
+			Response: getJSONObject("test-data/get-dbfs-library-status.json"),
 		},
-		// tests for cluster 'running'
 		{
 			Method:   "GET",
-			Resource: "/api/2.0/clusters/get?cluster_id=running",
-			Response: compute.ClusterInfo{
-				ClusterID: "running", ClusterName: "running", SparkVersion: "spark-3.0",
-				State: "RUNNING", LastActivityTime: time.Now().Unix() - 100,
-				EnableElasticDisk: true, ClusterCores: 10.0,
-				CustomTags: map[string]string{"user": "test"},
-			},
+			Resource: "/api/2.0/dbfs/read?length=1000000&path=dbfs%3A%2FFileStore%2Fjars%2Fe388b491_7af3_4a41_9d3f_1966272df00f-spark_mssql_connector_assembly_1_2_0-99f79.jar",
+			Response: getJSONObject("test-data/get-dbfs-library-data.json"),
+		},
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/clusters/get?cluster_id=test2",
+			Response: getJSONObject("test-data/get-cluster-test2-response.json"),
 		},
 		{
 			Method:   "POST",
 			Resource: "/api/2.0/clusters/events",
 			ExpectedRequest: compute.EventsRequest{
-				ClusterID:  "running",
+				ClusterID:  "test2",
 				Order:      "DESC",
 				EventTypes: []compute.ClusterEventType{"PINNED", "UNPINNED"},
 				Limit:      1,
@@ -350,65 +329,29 @@ func TestImportingClusters(t *testing.T) {
 		},
 		{
 			Method:   "GET",
-			Resource: "/api/2.0/libraries/cluster-status?cluster_id=running",
-			Response: compute.ClusterLibraryStatuses{
-				ClusterID: "running",
-				LibraryStatuses: []compute.LibraryStatus{
-					{Library: &compute.Library{
-						Maven: &compute.Maven{
-							Coordinates: "com.microsoft.azure:azure-eventhubs-spark_2.12:2.3.17",
-							Repo:        "https://mvnrepository.com",
-							Exclusions:  []string{"abc", "def"},
-						},
-					},
-						Status: "RUNNING",
-					},
-					{Library: &compute.Library{
-						Pypi: &compute.PyPi{
-							Package: "plotly==4.8.2",
-							Repo:    "https://mvnrepository.com",
-						},
-					},
-						Status: "RUNNING",
-					},
-					{Library: &compute.Library{
-						Cran: &compute.Cran{
-							Package: "ggplot",
-							Repo:    "https://mvnrepository.com",
-						},
-					},
-						Status: "RUNNING",
-					},
-				},
-			},
+			Resource: "/api/2.0/libraries/cluster-status?cluster_id=test2",
+			Response: getJSONObject("test-data/libraries-cluster-status-test2.json"),
 		},
 		{
 			Method:   "GET",
-			Resource: "/api/2.0/preview/permissions/clusters/running",
-			Response: access.ObjectACL{
-				ObjectID: "/clusters/running", ObjectType: "cluster",
-				AccessControlList: []access.AccessControl{
-					{UserName: "test@test.com",
-						AllPermissions: []access.Permission{
-							{PermissionLevel: "CAN_MANAGE", Inherited: false},
-						},
-					},
-				},
-			},
+			Resource: "/api/2.0/preview/permissions/clusters/test2",
+			Response: getJSONObject("test-data/get-cluster-permissions-test2-response.json"),
 		},
 		{
 			Method:   "GET",
-			Resource: "/api/2.0/preview/scim/v2/Me",
-			Response: identity.ScimUser{ID: "a", DisplayName: "test@test.com"},
+			Resource: "/api/2.0/policies/clusters/get?policy_id=123",
+			Response: getJSONObject("test-data/get-cluster-policy.json"),
 		},
-		// the rest of the lists
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/preview/permissions/cluster-policies/123",
+			Response: getJSONObject("test-data/get-cluster-policy-permissions.json"),
+		},
 		{
 			Method:       "GET",
-			Resource:     "/api/2.0/secrets/scopes/list",
+			Resource:     "/api/2.0/preview/scim/v2/Me",
 			ReuseRequest: true,
-			Response: access.SecretScopeList{
-				Scopes: []access.SecretScope{},
-			},
+			Response:     identity.ScimUser{ID: "a", DisplayName: "test@test.com"},
 		},
 	})
 	require.NoError(t, err)
@@ -420,7 +363,7 @@ func TestImportingClusters(t *testing.T) {
 	tmpDir := fmt.Sprintf("/tmp/tf-%s", qa.RandomName())
 	defer os.RemoveAll(tmpDir)
 
-	err = Run("-directory", tmpDir)
+	err = Run("-directory", tmpDir, "-listing", "compute")
 	assert.NoError(t, err)
 }
 

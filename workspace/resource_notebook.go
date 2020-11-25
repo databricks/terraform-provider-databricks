@@ -236,18 +236,26 @@ func ResourceNotebook() *schema.Resource {
 				}, false),
 			},
 			"overwrite": {
+				Deprecated: `databricks_notebook.overwrite must always be enabled in `+
+							`order to follow expected behavior of terraform. This field `+
+							`would be removed in v0.3.0 and always set to true.`,
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
 				ForceNew: true,
 			},
 			"mkdirs": {
+				Deprecated: `databricks_notebook.mkdirs must always be enabled in `+
+							`order to follow expected behavior of terraform. This field `+
+							`would be removed in v0.3.0 and always set to true.`,
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  true,
 				ForceNew: true,
 			},
 			"format": {
+				Deprecated: `databricks_notebook.format is always having single possilbe `+
+							`value and thus will be removed in v0.3.0`,
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  string(Source),

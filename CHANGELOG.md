@@ -6,6 +6,10 @@
 * Added missing resource importers and test to cover it.
 * Migrated build from TravisCI to GitHub Actions.
 
+**Deprecations**
+* `network_error_messages` from `databricks_mws_workspaces` is deprecated and going to be removed in 0.3
+* `databricks_notebook` has got `overwrite`, `mkdirs` and `format` parameters, that always have to be set to certain values in order to follow expected behavior of terraform. These fields would be removed in 0.3 and always set to proper values.
+
 **Behavior changes**
 * `min_idle_instances` for `databricks_instance_pool` is now optional.
 * `skip_validation` for `databricks_instance_profile` is going to become optional in 0.3.x.

@@ -367,6 +367,95 @@ func TestImportingClusters(t *testing.T) {
 	assert.NoError(t, err)
 }
 
+func TestImportingJobs(t *testing.T) {
+	defer common.CleanupEnvironment()()
+	_, server, err := qa.HttpFixtureClient(t, []qa.HTTPFixture{
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/preview/scim/v2/Groups?",
+			Response: identity.GroupList{Resources: []identity.ScimGroup{}},
+		},
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/jobs/list",
+			Response: getJSONObject("test-data/get-jobs-list.json"),
+		},
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/jobs/get?job_id=14",
+			Response: getJSONObject("test-data/get-job-14.json"),
+		},
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/preview/permissions/jobs/14",
+			Response: getJSONObject("test-data/get-job-permissions-14.json"),
+		},
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/jobs/get?job_id=12",
+			Response: getJSONObject("test-data/get-job-12.json"),
+		},
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/preview/permissions/jobs/12",
+			Response: getJSONObject("test-data/get-job-permissions-12.json"),
+		},
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/clusters/get?cluster_id=test2",
+			Response: getJSONObject("test-data/get-cluster-test2-response.json"),
+		},
+		{
+			Method:   "POST",
+			Resource: "/api/2.0/clusters/events",
+			ExpectedRequest: compute.EventsRequest{
+				ClusterID:  "test2",
+				Order:      "DESC",
+				EventTypes: []compute.ClusterEventType{"PINNED", "UNPINNED"},
+				Limit:      1,
+			},
+			Response: compute.EventDetails{},
+		},
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/libraries/cluster-status?cluster_id=test2",
+			Response: getJSONObject("test-data/libraries-cluster-status-test2.json"),
+		},
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/preview/permissions/clusters/test2",
+			Response: getJSONObject("test-data/get-cluster-permissions-test2-response.json"),
+		},
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/policies/clusters/get?policy_id=123",
+			Response: getJSONObject("test-data/get-cluster-policy.json"),
+		},
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/preview/permissions/cluster-policies/123",
+			Response: getJSONObject("test-data/get-cluster-policy-permissions.json"),
+		},
+		{
+			Method:       "GET",
+			Resource:     "/api/2.0/preview/scim/v2/Me",
+			ReuseRequest: true,
+			Response:     identity.ScimUser{ID: "a", DisplayName: "test@test.com"},
+		},
+	})
+	require.NoError(t, err)
+	defer server.Close()
+
+	os.Setenv("DATABRICKS_HOST", server.URL)
+	os.Setenv("DATABRICKS_TOKEN", "..")
+
+	tmpDir := fmt.Sprintf("/tmp/tf-%s", qa.RandomName())
+	defer os.RemoveAll(tmpDir)
+
+	err = Run("-directory", tmpDir, "-listing", "jobs")
+	assert.NoError(t, err)
+}
+
 func TestImportingWithError(t *testing.T) {
 	err := Run("-directory", "/bin/sh", "-services", "groups,users")
 	assert.EqualError(t, err, "The path /bin/sh is not a directory")

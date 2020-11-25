@@ -1,0 +1,15 @@
+{
+  "created_time": 1605193982171,
+  "creator_user_name": "test@test.com",
+  "job_id": 12,
+  "settings": {
+    "email_notifications": {},
+    "existing_cluster_id": "test2",
+    "max_concurrent_runs": 1,
+    "name": "Test",
+    "notebook_task": {
+      "notebook_path": "/Users/test@test.com/Test"
+    },
+    "timeout_seconds": 0
+  }
+}

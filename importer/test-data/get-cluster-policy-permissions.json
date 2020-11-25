@@ -1,0 +1,27 @@
+{
+  "access_control_list": [
+    {
+      "all_permissions": [
+        {
+          "inherited": true,
+          "inherited_from_object": [
+            "/cluster-policies/cluster-policies"
+          ],
+          "permission_level": "CAN_USE"
+        }
+      ],
+      "group_name": "admins"
+    },
+    {
+      "all_permissions": [
+        {
+          "inherited": false,
+          "permission_level": "CAN_USE"
+        }
+      ],
+      "group_name": "users"
+    }
+  ],
+  "object_id": "/cluster-policies/123",
+  "object_type": "cluster-policy"
+}

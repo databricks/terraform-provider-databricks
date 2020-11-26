@@ -57,7 +57,7 @@ func (a CommandsAPI) Execute(clusterID, language, commandStr string) (result str
 	if err != nil {
 		return
 	}
-	err = a.waitForContextReady(context, clusterID, 1, 10)
+	err = a.waitForContextReady(context, clusterID)
 	if err != nil {
 		return
 	}

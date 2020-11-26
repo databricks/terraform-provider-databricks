@@ -1,6 +1,7 @@
 package acceptance
 
 import (
+	"context"
 	"errors"
 	"os"
 	"strconv"
@@ -90,7 +91,7 @@ func TestMwsAccWorkspaces(t *testing.T) {
 				if err != nil {
 					return err
 				}
-				_, err = NewWorkspacesAPI(client).Read(packagedMWSIds.MwsAcctID, idInt64)
+				_, err = NewWorkspacesAPI(context.Background(), client).Read(packagedMWSIds.MwsAcctID, idInt64)
 				if err != nil {
 					return nil
 				}

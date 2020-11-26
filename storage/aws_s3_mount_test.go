@@ -1,6 +1,7 @@
 package storage
 
 import (
+	"context"
 	"errors"
 	"strings"
 	"testing"
@@ -259,7 +260,8 @@ func TestResourceAwsS3MountDelete(t *testing.T) {
 func TestAwsAccS3Mount(t *testing.T) {
 	client := common.NewClientFromEnvironment()
 	instanceProfile := qa.GetEnvOrSkipTest(t, "TEST_EC2_INSTANCE_PROFILE")
-	identity.NewInstanceProfilesAPI(client).Synchronized(instanceProfile, func() {
+	ctx := context.Background()
+	identity.NewInstanceProfilesAPI(ctx, client).Synchronized(instanceProfile, func() {
 		bucket := qa.GetEnvOrSkipTest(t, "TEST_S3_BUCKET")
 		client := compute.CommonEnvironmentClientWithRealCommandExecutor()
 		clustersAPI := compute.NewClustersAPI(client)

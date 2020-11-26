@@ -71,7 +71,7 @@ func TestResourceGroupInstanceProfileCreate_Error(t *testing.T) {
 }
 
 func TestResourceGroupInstanceProfileCreate_Error_InvalidARN(t *testing.T) {
-	d, err := qa.ResourceFixture{
+	_, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "PATCH",
@@ -90,8 +90,7 @@ func TestResourceGroupInstanceProfileCreate_Error_InvalidARN(t *testing.T) {
 		},
 		Create: true,
 	}.Apply(t)
-	qa.AssertErrorStartsWith(t, err, "Illegal instance profile my-fake-instance-profile: arn: invalid prefix")
-	assert.Equal(t, "", d.Id(), "Id should be empty for error creates")
+	assert.EqualError(t, err, "Invalid config supplied. [instance_profile_id] Invalid ARN")
 }
 
 func TestResourceGroupInstanceProfileCreate_Error_OtherARN(t *testing.T) {

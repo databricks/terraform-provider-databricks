@@ -13,19 +13,25 @@ import (
 // Pair defines an ID pair
 type Pair struct {
 	Left, Right string
+	schema      map[string]*schema.Schema
 }
 
 // NewPairID creates new ID pair
 func NewPairID(left, right string) *Pair {
-	return &Pair{left, right}
+	return &Pair{
+		Left:  left,
+		Right: right,
+		schema: map[string]*schema.Schema{
+			left:  {Type: schema.TypeString, ForceNew: true, Required: true},
+			right: {Type: schema.TypeString, ForceNew: true, Required: true},
+		},
+	}
 }
 
-// Schema of paired fields
-func (p *Pair) Schema() map[string]*schema.Schema {
-	s := map[string]*schema.Schema{}
-	s[p.Left] = &schema.Schema{Type: schema.TypeString, ForceNew: true, Required: true}
-	s[p.Right] = &schema.Schema{Type: schema.TypeString, ForceNew: true, Required: true}
-	return s
+// Schema sets custom schema
+func (p *Pair) Schema(do func(map[string]*schema.Schema) map[string]*schema.Schema) *Pair {
+	p.schema = do(p.schema)
+	return p
 }
 
 // Unpack ID into two strings and set data
@@ -86,43 +92,37 @@ type BindResource struct {
 
 // BindResource creates resource that relies on binding ID pair with simple schema & importer
 func (p *Pair) BindResource(pr BindResource) *schema.Resource {
-	readContext := func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-		return p.ReadContext(d, func(left, right string) error {
-			return pr.ReadContext(ctx, left, right, m.(*common.DatabricksClient))
-		})
-	}
-	return &schema.Resource{
-		Schema:      p.Schema(),
-		ReadContext: readContext,
-		CreateContext: func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+	return CommonResource{
+		Schema: p.schema,
+		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			left, right, err := p.Unpack(d)
+			if err != nil {
+				return err
+			}
+			return pr.ReadContext(ctx, left, right, c)
+		},
+		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			left := d.Get(p.Left).(string)
 			if left == "" {
-				return diag.Errorf("%s cannot be empty", p.Left)
+				return fmt.Errorf("%s cannot be empty", p.Left)
 			}
 			right := d.Get(p.Right).(string)
 			if right == "" {
-				return diag.Errorf("%s cannot be empty", p.Right)
+				return fmt.Errorf("%s cannot be empty", p.Right)
 			}
-			err := pr.CreateContext(ctx, left, right, m.(*common.DatabricksClient))
+			err := pr.CreateContext(ctx, left, right, c)
 			if err != nil {
-				return diag.FromErr(err)
+				return err
 			}
 			p.Pack(d)
-			return readContext(ctx, d, m)
-		},
-		DeleteContext: func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-			left, right, err := p.Unpack(d)
-			if err != nil {
-				return diag.FromErr(err)
-			}
-			err = pr.DeleteContext(ctx, left, right, m.(*common.DatabricksClient))
-			if err != nil {
-				return diag.FromErr(err)
-			}
 			return nil
 		},
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			left, right, err := p.Unpack(d)
+			if err != nil {
+				return err
+			}
+			return pr.DeleteContext(ctx, left, right, c)
 		},
-	}
+	}.ToResource()
 }

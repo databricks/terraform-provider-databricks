@@ -1,6 +1,7 @@
 package identity
 
 import (
+	"context"
 	"testing"
 
 	"github.com/databrickslabs/databricks-terraform/common"
@@ -34,7 +35,6 @@ func TestResourceInstanceProfileCreate(t *testing.T) {
 		Resource: ResourceInstanceProfile(),
 		State: map[string]interface{}{
 			"instance_profile_arn": "arn:aws:iam::999999999999:instance-profile/my-fake-instance-profile",
-			"skip_validation":      true,
 		},
 		Create: true,
 	}.Apply(t)
@@ -58,7 +58,6 @@ func TestResourceInstanceProfileCreate_Error(t *testing.T) {
 		Resource: ResourceInstanceProfile(),
 		State: map[string]interface{}{
 			"instance_profile_arn": "arn:aws:iam::999999999999:instance-profile/my-fake-instance-profile",
-			"skip_validation":      true,
 		},
 		Create: true,
 	}.Apply(t)
@@ -71,7 +70,6 @@ func TestResourceInstanceProfileCreate_Error_InvalidARN(t *testing.T) {
 		Resource: ResourceInstanceProfile(),
 		State: map[string]interface{}{
 			"instance_profile_arn": "abc",
-			"skip_validation":      true,
 		},
 		Create: true,
 	}.Apply(t)
@@ -101,7 +99,6 @@ func TestResourceInstanceProfileRead(t *testing.T) {
 	assert.NoError(t, err, err)
 	assert.Equal(t, "arn:aws:iam::999999999999:instance-profile/my-fake-instance-profile", d.Id(), "Id should not be empty")
 	assert.Equal(t, "arn:aws:iam::999999999999:instance-profile/my-fake-instance-profile", d.Get("instance_profile_arn"))
-	assert.Equal(t, false, d.Get("skip_validation"))
 }
 
 func TestResourceInstanceProfileRead_NotFound(t *testing.T) {
@@ -187,7 +184,8 @@ func TestResourceInstanceProfileDelete_Error(t *testing.T) {
 func TestAwsAccInstanceProfiles(t *testing.T) {
 	arn := qa.GetEnvOrSkipTest(t, "TEST_EC2_INSTANCE_PROFILE")
 	client := common.NewClientFromEnvironment()
-	instanceProfilesAPI := NewInstanceProfilesAPI(client)
+	ctx := context.Background()
+	instanceProfilesAPI := NewInstanceProfilesAPI(ctx, client)
 	instanceProfilesAPI.Synchronized(arn, func() {
 		err := instanceProfilesAPI.Create(arn, true)
 		assert.NoError(t, err, err)

@@ -3,11 +3,15 @@ package identity
 import (
 	"context"
 	"fmt"
-	"log"
 	"net/http"
+	"strings"
 	"time"
 
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/databrickslabs/databricks-terraform/common"
+	"github.com/databrickslabs/databricks-terraform/internal/util"
+	"github.com/hashicorp/go-cty/cty"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -23,18 +27,22 @@ type InstanceProfileList struct {
 }
 
 // NewInstanceProfilesAPI creates InstanceProfilesAPI instance from provider meta
-func NewInstanceProfilesAPI(m interface{}) InstanceProfilesAPI {
-	return InstanceProfilesAPI{C: m.(*common.DatabricksClient)}
+func NewInstanceProfilesAPI(ctx context.Context, m interface{}) InstanceProfilesAPI {
+	return InstanceProfilesAPI{
+		client:  m.(*common.DatabricksClient),
+		context: ctx,
+	}
 }
 
 // InstanceProfilesAPI exposes the instance profiles api on the AWS deployment of Databricks
 type InstanceProfilesAPI struct {
-	C *common.DatabricksClient
+	client  *common.DatabricksClient
+	context context.Context
 }
 
 // Create creates an instance profile record on Databricks
 func (a InstanceProfilesAPI) Create(instanceProfileARN string, skipValidation bool) error {
-	return a.C.Post("/instance-profiles/add", map[string]interface{}{
+	return a.client.Post("/instance-profiles/add", map[string]interface{}{
 		"instance_profile_arn": instanceProfileARN,
 		"skip_validation":      skipValidation,
 	}, nil)
@@ -65,20 +73,20 @@ func (a InstanceProfilesAPI) Read(instanceProfileARN string) (string, error) {
 // List lists all the instance profiles in the workspace
 func (a InstanceProfilesAPI) List() ([]InstanceProfileInfo, error) {
 	var instanceProfilesArnList InstanceProfileList
-	err := a.C.Get("/instance-profiles/list", nil, &instanceProfilesArnList)
+	err := a.client.Get("/instance-profiles/list", nil, &instanceProfilesArnList)
 	return instanceProfilesArnList.InstanceProfiles, err
 }
 
 // Delete deletes the instance profile given an instance profile arn
 func (a InstanceProfilesAPI) Delete(instanceProfileARN string) error {
-	return a.C.Post("/instance-profiles/remove", map[string]interface{}{
+	return a.client.Post("/instance-profiles/remove", map[string]interface{}{
 		"instance_profile_arn": instanceProfileARN,
 	}, nil)
 }
 
 // Synchronized test helper for working with only single instance profile
 func (a InstanceProfilesAPI) Synchronized(arn string, cb func()) {
-	err := resource.RetryContext(context.Background(), 10*time.Minute, func() *resource.RetryError {
+	err := resource.RetryContext(a.context, 10*time.Minute, func() *resource.RetryError {
 		list, err := a.List()
 		if err != nil {
 			return resource.NonRetryableError(err)
@@ -97,64 +105,69 @@ func (a InstanceProfilesAPI) Synchronized(arn string, cb func()) {
 	}
 }
 
-// ResourceInstanceProfile managest Instance Profile ARN binding
+// ResourceInstanceProfile manages Instance Profile ARN binding
 func ResourceInstanceProfile() *schema.Resource {
-	return &schema.Resource{
-		Create: resourceInstanceProfileCreate,
-		Read:   resourceInstanceProfileRead,
-		Delete: resourceInstanceProfileDelete,
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
+	return util.CommonResource{
 		Schema: map[string]*schema.Schema{
 			"instance_profile_arn": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
-			},
-			"skip_validation": {
-				Type:     schema.TypeBool,
-				Required: true,
-				ForceNew: true,
+
+				ValidateDiagFunc: ValidInstanceProfile,
 			},
 		},
-	}
-}
-
-func resourceInstanceProfileCreate(d *schema.ResourceData, m interface{}) error {
-	instanceProfileArn := d.Get("instance_profile_arn").(string)
-	skipValidation := d.Get("skip_validation").(bool)
-	err := validateInstanceProfileARN(instanceProfileArn)
-	if err != nil {
-		return err
-	}
-	err = NewInstanceProfilesAPI(m).Create(instanceProfileArn, skipValidation)
-	if err != nil {
-		return err
-	}
-	d.SetId(instanceProfileArn)
-	err = d.Set("skip_validation", skipValidation)
-	if err != nil {
-		return err
-	}
-	return resourceInstanceProfileRead(d, m)
-}
-
-func resourceInstanceProfileRead(d *schema.ResourceData, m interface{}) error {
-	id := d.Id()
-	profile, err := NewInstanceProfilesAPI(m).Read(id)
-	if err != nil {
-		if e, ok := err.(common.APIError); ok && e.IsMissing() {
-			log.Printf("missing resource due to error: %v\n", e)
-			d.SetId("")
+		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			profile, err := NewInstanceProfilesAPI(ctx, c).Read(d.Id())
+			if err != nil {
+				return err
+			}
+			return d.Set("instance_profile_arn", profile)
+		},
+		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			ipa := d.Get("instance_profile_arn").(string)
+			if err := NewInstanceProfilesAPI(ctx, c).Create(ipa, false); err != nil {
+				return err
+			}
+			d.SetId(ipa)
 			return nil
-		}
-		return err
-	}
-	err = d.Set("instance_profile_arn", profile)
-	return err
+		},
+		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			return NewInstanceProfilesAPI(ctx, c).Delete(d.Id())
+		},
+	}.ToResource()
 }
 
-func resourceInstanceProfileDelete(d *schema.ResourceData, m interface{}) error {
-	return NewInstanceProfilesAPI(m).Delete(d.Id())
+// ValidInstanceProfile validate if it's valid instance profile ARN
+func ValidInstanceProfile(v interface{}, c cty.Path) diag.Diagnostics {
+	s, ok := v.(string)
+	if !ok {
+		return diag.Diagnostics{
+			diag.Diagnostic{
+				AttributePath: c,
+				Summary:       "Invalid ARN",
+				Detail:        "Not a string",
+			},
+		}
+	}
+	instanceProfileArn, err := arn.Parse(s)
+	if err != nil {
+		return diag.Diagnostics{
+			diag.Diagnostic{
+				AttributePath: c,
+				Summary:       "Invalid ARN",
+				Detail:        err.Error(),
+			},
+		}
+	}
+	if !strings.HasPrefix(instanceProfileArn.Resource, "instance-profile") {
+		return diag.Diagnostics{
+			diag.Diagnostic{
+				AttributePath: c,
+				Summary:       "Invalid ARN",
+				Detail:        fmt.Sprintf("Not an instance profile ARN: %s", v),
+			},
+		}
+	}
+	return nil
 }

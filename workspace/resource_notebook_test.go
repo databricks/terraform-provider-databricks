@@ -79,12 +79,8 @@ func TestResourceNotebookCreate_DirDoesNotExists(t *testing.T) {
 			{
 				Method:   http.MethodPost,
 				Resource: "/api/2.0/workspace/mkdirs",
-				Response: ImportRequest{
-					Content:   content,
-					Path:      path,
-					Language:  "PYTHON",
-					Overwrite: true,
-					Format:    "SOURCE",
+				ExpectedRequest: map[string]string{
+					"path": "/test",
 				},
 			},
 			{
@@ -118,71 +114,9 @@ func TestResourceNotebookCreate_DirDoesNotExists(t *testing.T) {
 		},
 		Resource: ResourceNotebook(),
 		State: map[string]interface{}{
-			"path":      path,
-			"content":   content,
-			"language":  "PYTHON",
-			"format":    "SOURCE",
-			"overwrite": true,
-			"mkdirs":    true,
-		},
-		Create: true,
-	}.Apply(t)
-	assert.NoError(t, err, err)
-	assert.Equal(t, path, d.Id())
-	assert.Equal(t, checkSum, d.Get("content"))
-	assert.Equal(t, path, d.Get("path"))
-	assert.Equal(t, "PYTHON", d.Get("language"))
-	assert.Equal(t, objectId, d.Get("object_id"))
-}
-
-func TestResourceNotebookCreate_NoMkdirs(t *testing.T) {
-	pythonNotebookDataB64, err := notebookToB64("acceptance/testdata/tf-test-python.py")
-	assert.NoError(t, err, err)
-	checkSum, err := convertBase64ToCheckSum(pythonNotebookDataB64)
-	assert.NoError(t, err, err)
-	path := "/test/path.py"
-	content := pythonNotebookDataB64
-	objectId := 12345
-
-	d, err := qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   http.MethodPost,
-				Resource: "/api/2.0/workspace/import",
-				Response: ImportRequest{
-					Content:   content,
-					Path:      path,
-					Language:  "PYTHON",
-					Overwrite: true,
-					Format:    "SOURCE",
-				},
-			},
-			{
-				Method:   http.MethodGet,
-				Resource: "/api/2.0/workspace/export?format=SOURCE&path=%2Ftest%2Fpath.py",
-				Response: NotebookContent{
-					Content: pythonNotebookDataB64,
-				},
-			},
-			{
-				Method:   http.MethodGet,
-				Resource: "/api/2.0/workspace/get-status?path=%2Ftest%2Fpath.py",
-				Response: ObjectStatus{
-					ObjectID:   int64(objectId),
-					ObjectType: Notebook,
-					Path:       path,
-					Language:   "PYTHON",
-				},
-			},
-		},
-		Resource: ResourceNotebook(),
-		State: map[string]interface{}{
-			"path":      path,
-			"content":   content,
-			"language":  "PYTHON",
-			"format":    "SOURCE",
-			"overwrite": true,
-			"mkdirs":    false,
+			"path":     path,
+			"content":  content,
+			"language": "PYTHON",
 		},
 		Create: true,
 	}.Apply(t)
@@ -224,10 +158,8 @@ func TestResourceNotebookRead(t *testing.T) {
 		},
 		Resource: ResourceNotebook(),
 		Read:     true,
+		New:      true,
 		ID:       testId,
-		State: map[string]interface{}{
-			"format": "SOURCE",
-		},
 	}.Apply(t)
 	assert.NoError(t, err, err)
 	assert.Equal(t, testId, d.Id())
@@ -356,11 +288,9 @@ func TestResourceNotebookCreate(t *testing.T) {
 		},
 		Resource: ResourceNotebook(),
 		State: map[string]interface{}{
-			"content":   "YWJjCg==",
-			"format":    "SOURCE",
-			"language":  "PYTHON",
-			"overwrite": true,
-			"path":      "/path.py",
+			"content":  "YWJjCg==",
+			"language": "PYTHON",
+			"path":     "/path.py",
 		},
 		Create: true,
 	}.Apply(t)
@@ -384,9 +314,7 @@ func TestResourceNotebookCreate_Error(t *testing.T) {
 		Resource: ResourceNotebook(),
 		State: map[string]interface{}{
 			"content":   "YWJjCg==",
-			"format":    "SOURCE",
 			"language":  "PYTHON",
-			"overwrite": true,
 			"path":      "/path.py",
 		},
 		Create: true,

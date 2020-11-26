@@ -618,7 +618,7 @@ func permissionsTestHelper(t *testing.T,
 		assert.NoError(t, groupsAPI.Delete(group.ID))
 	}()
 
-	permissionsAPI := NewPermissionsAPI(client)
+	permissionsAPI := NewPermissionsAPI(ctx, client)
 	cb(permissionsAPI, user.UserName, group.DisplayName, func(id string) PermissionsEntity {
 		d := ResourcePermissions().TestResourceData()
 		objectACL, err := permissionsAPI.Read(id)

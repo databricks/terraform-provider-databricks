@@ -1,6 +1,7 @@
 package acceptance
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -42,7 +43,8 @@ func TestAccDatabricksPermissionsResourceFullLifecycle(t *testing.T) {
 						"object_type", "notebook"),
 					acceptance.ResourceCheck("databricks_permissions.dummy",
 						func(client *common.DatabricksClient, id string) error {
-							permissions, err := NewPermissionsAPI(client).Read(id)
+							ctx := context.Background()
+							permissions, err := NewPermissionsAPI(ctx, client).Read(id)
 							if err != nil {
 								return err
 							}
@@ -80,7 +82,8 @@ func TestAccDatabricksPermissionsResourceFullLifecycle(t *testing.T) {
 				}`, randomName),
 				Check: acceptance.ResourceCheck("databricks_permissions.dummy",
 					func(client *common.DatabricksClient, id string) error {
-						permissions, err := NewPermissionsAPI(client).Read(id)
+						ctx := context.Background()
+						permissions, err := NewPermissionsAPI(ctx, client).Read(id)
 						if err != nil {
 							return err
 						}

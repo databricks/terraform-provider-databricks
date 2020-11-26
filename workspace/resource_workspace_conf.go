@@ -19,7 +19,7 @@ type WorkspaceConfAPI struct {
 }
 
 // NewWorkspaceConfAPI returns workspace conf API
-func NewWorkspaceConfAPI(m interface{}) WorkspaceConfAPI {
+func NewWorkspaceConfAPI(ctx context.Context, m interface{}) WorkspaceConfAPI {
 	return WorkspaceConfAPI{client: m.(*common.DatabricksClient)}
 }
 
@@ -43,7 +43,7 @@ func (a WorkspaceConfAPI) Read(conf *map[string]interface{}) error {
 // ResourceWorkspaceConf maintains workspace configuration for specified keys
 func ResourceWorkspaceConf() *schema.Resource {
 	readContext := func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-		wsConfAPI := NewWorkspaceConfAPI(m)
+		wsConfAPI := NewWorkspaceConfAPI(ctx, m)
 		config := d.Get("custom_config").(map[string]interface{})
 		log.Printf("[DEBUG] Config available in state: %v", config)
 		err := wsConfAPI.Read(&config)
@@ -57,7 +57,7 @@ func ResourceWorkspaceConf() *schema.Resource {
 	}
 
 	updateContext := func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-		wsConfAPI := NewWorkspaceConfAPI(m)
+		wsConfAPI := NewWorkspaceConfAPI(ctx, m)
 		o, n := d.GetChange("custom_config")
 		old, okOld := o.(map[string]interface{})
 		new, okNew := n.(map[string]interface{})
@@ -106,7 +106,7 @@ func ResourceWorkspaceConf() *schema.Resource {
 					config[k] = ""
 				}
 			}
-			wsConfAPI := NewWorkspaceConfAPI(m)
+			wsConfAPI := NewWorkspaceConfAPI(ctx, m)
 			err := wsConfAPI.Update(config)
 			if err != nil {
 				return diag.FromErr(err)

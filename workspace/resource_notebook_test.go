@@ -313,9 +313,9 @@ func TestResourceNotebookCreate_Error(t *testing.T) {
 		},
 		Resource: ResourceNotebook(),
 		State: map[string]interface{}{
-			"content":   "YWJjCg==",
-			"language":  "PYTHON",
-			"path":      "/path.py",
+			"content":  "YWJjCg==",
+			"language": "PYTHON",
+			"path":     "/path.py",
 		},
 		Create: true,
 	}.Apply(t)

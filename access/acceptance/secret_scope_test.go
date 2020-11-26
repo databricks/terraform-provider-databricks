@@ -1,6 +1,7 @@
 package acceptance
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"os"
@@ -66,6 +67,7 @@ func TestAccInitialManagePrincipals(t *testing.T) {
 	if _, ok := os.LookupEnv("CLOUD_ENV"); !ok {
 		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
 	}
+	ctx := context.Background()
 	client := common.CommonEnvironmentClient()
 	scopesAPI := NewSecretScopesAPI(client)
 
@@ -80,7 +82,7 @@ func TestAccInitialManagePrincipals(t *testing.T) {
 	acls, err := secretACLAPI.List(scope)
 	require.NoError(t, err)
 
-	usersAPI := identity.NewUsersAPI(client)
+	usersAPI := identity.NewUsersAPI(ctx, client)
 	me, err := usersAPI.Me()
 	require.NoError(t, err)
 	assert.Equal(t, 1, len(acls))
@@ -134,11 +136,12 @@ func TestAccSecretScopeResource(t *testing.T) {
 					resource.TestCheckResourceAttr("databricks_secret_scope.my_scope", "backend_type", "DATABRICKS"),
 					acceptance.ResourceCheck("databricks_secret_scope.my_scope",
 						func(client *common.DatabricksClient, id string) error {
+							ctx := context.Background()
 							secretACLAPI := NewSecretAclsAPI(client)
 							acls, err := secretACLAPI.List(id)
 							require.NoError(t, err)
 
-							usersAPI := identity.NewUsersAPI(client)
+							usersAPI := identity.NewUsersAPI(ctx, client)
 							me, err := usersAPI.Me()
 							require.NoError(t, err)
 							assert.Equal(t, 1, len(acls))

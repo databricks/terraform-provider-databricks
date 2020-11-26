@@ -100,7 +100,7 @@ func TestAccMissingResourcesInWorkspace(t *testing.T) {
 		{
 			Name: "Instance Pools",
 			ReadFunc: func() error {
-				_, err := compute.NewInstancePoolsAPI(client).Read(randomInstancePoolID)
+				_, err := compute.NewInstancePoolsAPI(ctx, client).Read(randomInstancePoolID)
 				return err
 			},
 		},

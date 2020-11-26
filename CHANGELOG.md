@@ -23,6 +23,7 @@
 * `format`, `overwrite`, and `mkdirs` were removed from `databricks_notebook`. TODO: handle RESOURCE_ALREADY_EXISTS for mkdirs.
 * `skip_validation` from `databricks_instance_profile` was removed and is always set to `true` for subsequent requests.
 * `databricks_mws_workspace` got `verify_workspace_runnning` removed and now validates all every deployment. In case deployment failed, it removes workspace that failed and returns error message with explanation.
+* `default_tags` were removed from `databricks_instance_pool`. `disk_spec` got new attribute `disk_type`, that contains `azure_disk_volume_type` and `ebs_volume_type`. This change is made to closer reflect API structure.
 
 ## 0.2.9
 

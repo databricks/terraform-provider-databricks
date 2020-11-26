@@ -22,7 +22,9 @@ resource "databricks_instance_pool" "smallest_nodes" {
   }
   idle_instance_autotermination_minutes = 10
   disk_spec {
-    ebs_volume_type = "GENERAL_PURPOSE_SSD"
+    disk_type {
+      ebs_volume_type = "GENERAL_PURPOSE_SSD"
+    }
     disk_size = 80
     disk_count = 1
   }
@@ -54,17 +56,17 @@ The following arguments are required:
 
 For disk_spec make sure to use **ebs_volume_type** only on AWS deployment of Databricks and **azure_disk_volume_type** only on a Azure deployment of Databricks.
 
-* `ebs_volume_type` - (Optional) (String) The EBS volume type to use. Options are: `GENERAL_PURPOSE_SSD` (Provision extra storage using AWS gp2 EBS volumes) or `THROUGHPUT_OPTIMIZED_HDD` (Provision extra storage using AWS st1 volumes). **This field is going to be moved to `disk_type` sub-block in v0.3.**
-* `azure_disk_volume_type` - (Optional) (String) The type of Azure disk to use. Options are: `PREMIUM_LRS` (Premium storage tier, backed by SSDs) or `"STANDARD_LRS"` (Standard storage tier, backed by HDDs). **This field is going to be moved to `disk_type` sub-block in v0.3.**
 * `disk_count` - (Optional) (Integer) The number of disks to attach to each instance. This feature is only enabled for supported node types. Users can choose up to the limit of the disks supported by the node type. For node types with no local disk, at least one disk needs to be specified.
-* `disk_size` - (Optional) (Integer) The size of each disk (in GiB) to attach. Values must fall into the supported range 
-for a particular instance type:
+* `disk_size` - (Optional) (Integer) The size of each disk (in GiB) to attach. 
 
-**AWS (ebs)**:
+#### disk_type sub-block
+`ebs_volume_type` - (Optional) (String) The EBS volume type to use. Options are: `GENERAL_PURPOSE_SSD` (Provision extra storage using AWS gp2 EBS volumes) or `THROUGHPUT_OPTIMIZED_HDD` (Provision extra storage using AWS st1 volumes)
+
   * General Purpose SSD: `100 - 4096` GiB
   * Throughput Optimized HDD: `500 - 4096` GiB
 
-**Azure (disk volume)**:
+`azure_disk_volume_type` - (Optional) (String) The type of Azure disk to use. Options are: `PREMIUM_LRS` (Premium storage tier, backed by SSDs) or `"STANDARD_LRS"` (Standard storage tier, backed by HDDs)
+
   * Premium LRS (SSD): `1 - 1023` GiB
   * Standard LRS (HDD): `1- 1023` GiB
 
@@ -73,7 +75,6 @@ for a particular instance type:
 In addition to all arguments above, the following attributes are exported:
 
 * `id` - Canonical unique identifier for the instance pool.
-* `default_tags` - default tag map. **This field is deprecated and going to be removed in v0.3.**
 
 ## Access Control
 

@@ -17,7 +17,7 @@ func TestResourceInstanceProfileCreate(t *testing.T) {
 				Resource: "/api/2.0/instance-profiles/add",
 				ExpectedRequest: map[string]interface{}{
 					"instance_profile_arn": "arn:aws:iam::999999999999:instance-profile/my-fake-instance-profile",
-					"skip_validation":      true,
+					"skip_validation":      false,
 				},
 			},
 			{
@@ -66,15 +66,14 @@ func TestResourceInstanceProfileCreate_Error(t *testing.T) {
 }
 
 func TestResourceInstanceProfileCreate_Error_InvalidARN(t *testing.T) {
-	d, err := qa.ResourceFixture{
+	_, err := qa.ResourceFixture{
 		Resource: ResourceInstanceProfile(),
 		State: map[string]interface{}{
 			"instance_profile_arn": "abc",
 		},
 		Create: true,
 	}.Apply(t)
-	qa.AssertErrorStartsWith(t, err, "Illegal instance profile abc: arn: invalid prefix")
-	assert.Equal(t, "", d.Id(), "Id should be empty for error creates")
+	assert.EqualError(t, err, "Invalid config supplied. [instance_profile_arn] Invalid ARN")
 }
 
 func TestResourceInstanceProfileRead(t *testing.T) {

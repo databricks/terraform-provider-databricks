@@ -1,6 +1,7 @@
 package acceptance
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"os"
@@ -133,7 +134,9 @@ func testGroupMemberResourceDestroy(s *terraform.State) error {
 		if rs.Type != "databricks_group" {
 			continue
 		}
-		_, err := NewUsersAPI(client).Read(rs.Primary.ID)
+		ctx := context.Background()
+		usersAPI := NewUsersAPI(ctx, client)
+		_, err := usersAPI.Read(rs.Primary.ID)
 		if err != nil {
 			return nil
 		}

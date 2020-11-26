@@ -1,6 +1,7 @@
 package acceptance
 
 import (
+	"context"
 	"testing"
 
 	"github.com/databrickslabs/databricks-terraform/common"
@@ -26,7 +27,7 @@ func TestAccWorkspaceConfFullLifecycle(t *testing.T) {
 							conf := map[string]interface{}{
 								"enableIpAccessLists": nil,
 							}
-							err := workspace.NewWorkspaceConfAPI(client).Read(&conf)
+							err := workspace.NewWorkspaceConfAPI(context.Background(), client).Read(&conf)
 							assert.NoError(t, err)
 							assert.Len(t, conf, 1)
 							assert.Equal(t, conf["enableIpAccessLists"], "true")

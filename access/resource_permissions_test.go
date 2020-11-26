@@ -598,7 +598,8 @@ func permissionsTestHelper(t *testing.T,
 	randomName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
 	client := common.NewClientFromEnvironment()
 
-	usersAPI := identity.NewUsersAPI(client)
+	ctx := context.Background()
+	usersAPI := identity.NewUsersAPI(ctx, client)
 	me, err := usersAPI.Me()
 	require.NoError(t, err)
 

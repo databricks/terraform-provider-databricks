@@ -1,6 +1,7 @@
 package identity
 
 import (
+	"context"
 	"os"
 	"testing"
 
@@ -16,10 +17,12 @@ func TestAccGroup(t *testing.T) {
 	}
 	client := common.NewClientFromEnvironment()
 
-	user, err := NewUsersAPI(client).Create(UserEntity{UserName: "test-acc2@databricks.com"})
+	ctx := context.Background()
+	usersAPI := NewUsersAPI(ctx, client)
+	user, err := usersAPI.Create("test-acc@example.com", "test account", nil, nil)
 	assert.NoError(t, err, err)
 
-	user2, err := NewUsersAPI(client).Create(UserEntity{UserName: "test-acc3@databricks.com"})
+	user2, err := usersAPI.Create("test-acc2@example.com", "test account", nil, nil)
 	assert.NoError(t, err, err)
 
 	//Create empty group
@@ -29,9 +32,9 @@ func TestAccGroup(t *testing.T) {
 	defer func() {
 		err := NewGroupsAPI(client).Delete(group.ID)
 		assert.NoError(t, err, err)
-		err = NewUsersAPI(client).Delete(user.ID)
+		err = usersAPI.Delete(user.ID)
 		assert.NoError(t, err, err)
-		err = NewUsersAPI(client).Delete(user2.ID)
+		err = usersAPI.Delete(user2.ID)
 		assert.NoError(t, err, err)
 	}()
 

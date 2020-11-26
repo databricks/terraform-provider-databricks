@@ -1,6 +1,7 @@
 package acceptance
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"os"
@@ -64,7 +65,7 @@ func TestMwsAccNetworks(t *testing.T) {
 			{
 				PreConfig: func() {
 					conn := common.CommonEnvironmentClient()
-					err := NewNetworksAPI(conn).Delete(network.AccountID, network.NetworkID)
+					err := NewNetworksAPI(context.Background(), conn).Delete(network.AccountID, network.NetworkID)
 					if err != nil {
 						panic(err)
 					}
@@ -91,7 +92,7 @@ func testMWSNetworkResourceDestroy(s *terraform.State) error {
 		if err != nil {
 			return err
 		}
-		_, err = NewNetworksAPI(client).Read(packagedMWSIds.MwsAcctID, packagedMWSIds.ResourceID)
+		_, err = NewNetworksAPI(context.Background(), client).Read(packagedMWSIds.MwsAcctID, packagedMWSIds.ResourceID)
 		if err != nil {
 			return nil
 		}
@@ -115,7 +116,7 @@ func testMWSNetworkResourceExists(n string, network *Network, t *testing.T) reso
 		if err != nil {
 			return err
 		}
-		resp, err := NewNetworksAPI(conn).Read(packagedMWSIds.MwsAcctID, packagedMWSIds.ResourceID)
+		resp, err := NewNetworksAPI(context.Background(), conn).Read(packagedMWSIds.MwsAcctID, packagedMWSIds.ResourceID)
 		if err != nil {
 			return err
 		}

@@ -8,7 +8,6 @@ import (
 	"github.com/databrickslabs/databricks-terraform/common"
 	"github.com/databrickslabs/databricks-terraform/internal"
 	"github.com/databrickslabs/databricks-terraform/internal/util"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
@@ -40,8 +39,8 @@ type LogDeliveryAPI struct {
 }
 
 // NewLogDeliveryAPI ...
-func NewLogDeliveryAPI(m interface{}) LogDeliveryAPI {
-	return LogDeliveryAPI{m.(*common.DatabricksClient), context.TODO()}
+func NewLogDeliveryAPI(ctx context.Context, m interface{}) LogDeliveryAPI {
+	return LogDeliveryAPI{m.(*common.DatabricksClient), ctx}
 }
 
 // Read reads log delivery configuration
@@ -75,76 +74,51 @@ func ResourceLogDelivery() *schema.Resource {
 		func(s map[string]*schema.Schema) map[string]*schema.Schema {
 			// nolint
 			s["config_name"].ValidateFunc = validation.StringLenBetween(0, 255)
-			for k, v := range s {
-				if v.Computed {
-					continue
-				}
-				s[k].ForceNew = true
-			}
 			s["delivery_start_time"].DiffSuppressFunc = func(
 				k, old, new string, d *schema.ResourceData) bool {
 				return false
 			}
 			return s
 		})
-	readContext := func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-		accountID, configID, err := p.Unpack(d)
-		if err != nil {
-			return diag.FromErr(err)
-		}
-		ldc, err := NewLogDeliveryAPI(m).Read(accountID, configID)
-		if e, ok := err.(common.APIError); ok && e.IsMissing() {
-			log.Printf("[DEBUG] Log delivery configuration %s was not found. Removing from state.", configID)
-			d.SetId("")
-			return nil
-		}
-		if err != nil {
-			return diag.FromErr(err)
-		}
-		if ldc.Status == "DISABLED" {
-			log.Printf("[DEBUG] Log delivery configuration %s was disabled. Removing from state.", configID)
-			d.SetId("")
-			return nil
-		}
-		err = internal.StructToData(ldc, s, d)
-		if err != nil {
-			return diag.FromErr(err)
-		}
-		return nil
-	}
-	return &schema.Resource{
-		Schema:      s,
-		ReadContext: readContext,
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
-		CreateContext: func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+	return util.CommonResource{
+		Schema: s,
+		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var ldc LogDeliveryConfiguration
-			err := internal.DataToStructPointer(d, s, &ldc)
-			if err != nil {
-				return diag.FromErr(err)
+			if err := internal.DataToStructPointer(d, s, &ldc); err != nil {
+				return err
 			}
-			configID, err := NewLogDeliveryAPI(m).Create(ldc)
+			configID, err := NewLogDeliveryAPI(ctx, c).Create(ldc)
 			if err != nil {
-				return diag.FromErr(err)
+				return err
 			}
-			err = d.Set("config_id", configID)
-			if err != nil {
-				return diag.FromErr(err)
+			if err = d.Set("config_id", configID); err != nil {
+				return err
 			}
 			p.Pack(d)
-			return readContext(ctx, d, m)
-		},
-		DeleteContext: func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-			accountID, configID, err := p.Unpack(d)
-			if err != nil {
-				return diag.FromErr(err)
-			}
-			err = NewLogDeliveryAPI(m).Disable(accountID, configID)
-			if err != nil {
-				return diag.FromErr(err)
-			}
 			return nil
 		},
-	}
+		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			accountID, configID, err := p.Unpack(d)
+			if err != nil {
+				return err
+			}
+			ldc, err := NewLogDeliveryAPI(ctx, c).Read(accountID, configID)
+			if err != nil {
+				return err
+			}
+			if ldc.Status == "DISABLED" {
+				log.Printf("[DEBUG] Log delivery configuration %s was disabled. Removing from state.", configID)
+				d.SetId("")
+				return nil
+			}
+			return internal.StructToData(ldc, s, d)
+		},
+		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			accountID, configID, err := p.Unpack(d)
+			if err != nil {
+				return err
+			}
+			return NewLogDeliveryAPI(ctx, c).Disable(accountID, configID)
+		},
+	}.ToResource()
 }

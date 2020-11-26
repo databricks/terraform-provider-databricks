@@ -42,10 +42,11 @@ func TestAccMutiworkspaceUsedFromNormalMode(t *testing.T) {
 		assert.True(t, ok)
 		assert.Equal(t, "INCORRECT_CONFIGURATION", a.ErrorCode)
 	}
+	ctx := context.Background()
 	checkCheck(mws.NewCredentialsAPI(client).List("_"))
-	checkCheck(mws.NewNetworksAPI(client).List("_"))
+	checkCheck(mws.NewNetworksAPI(ctx, client).List("_"))
 	checkCheck(mws.NewStorageConfigurationsAPI(client).List("_"))
-	checkCheck(mws.NewWorkspacesAPI(client).List("_"))
+	checkCheck(mws.NewWorkspacesAPI(ctx, client).List("_"))
 }
 
 func TestAccMissingResourcesInWorkspace(t *testing.T) {

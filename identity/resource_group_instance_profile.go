@@ -15,7 +15,7 @@ import (
 func ResourceGroupInstanceProfile() *schema.Resource {
 	return util.NewPairID("group_id", "instance_profile_id").BindResource(util.BindResource{
 		ReadContext: func(ctx context.Context, groupID, roleARN string, c *common.DatabricksClient) error {
-			group, err := NewGroupsAPI(c).Read(groupID)
+			group, err := NewGroupsAPI(ctx, c).Read(groupID)
 			if err == nil && !group.HasRole(roleARN) {
 				return common.NotFound("Group has no instance profile")
 			}
@@ -26,10 +26,10 @@ func ResourceGroupInstanceProfile() *schema.Resource {
 			if err != nil {
 				return err
 			}
-			return NewGroupsAPI(c).PatchR(groupID, scimPatchRequest("add", "roles", roleARN))
+			return NewGroupsAPI(ctx, c).PatchR(groupID, scimPatchRequest("add", "roles", roleARN))
 		},
 		DeleteContext: func(ctx context.Context, groupID, roleARN string, c *common.DatabricksClient) error {
-			return NewGroupsAPI(c).PatchR(groupID, scimPatchRequest(
+			return NewGroupsAPI(ctx, c).PatchR(groupID, scimPatchRequest(
 				"remove", fmt.Sprintf(`roles[value eq "%s"]`, roleARN), ""))
 		},
 	})

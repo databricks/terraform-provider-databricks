@@ -28,7 +28,8 @@ func TestAccGroupMemberResource(t *testing.T) {
 	defer func() {
 		client := common.CommonEnvironmentClient()
 		if client != nil && manuallyCreatedGroup != nil {
-			err := NewGroupsAPI(client).Delete(manuallyCreatedGroup.ID)
+			ctx := context.Background()
+			err := NewGroupsAPI(ctx, client).Delete(manuallyCreatedGroup.ID)
 			assert.NoError(t, err, err)
 		}
 	}()
@@ -56,10 +57,11 @@ func TestAccGroupMemberResource(t *testing.T) {
 				PreConfig: func() {
 					//	manually create subgroup c
 					client := common.CommonEnvironmentClient()
-					subGroupC, _ := NewGroupsAPI(client).Create("manually-created-group-"+randomName, nil, nil, nil)
+					ctx := context.Background()
+					subGroupC, _ := NewGroupsAPI(ctx, client).Create("manually-created-group-"+randomName, nil, nil, nil)
 					manuallyCreatedGroup = &subGroupC
 					//  Add new subgroup to current group
-					err := NewGroupsAPI(client).Patch(group.ID, []string{manuallyCreatedGroup.ID}, nil, GroupMembersPath)
+					err := NewGroupsAPI(ctx, client).Patch(group.ID, []string{manuallyCreatedGroup.ID}, nil, GroupMembersPath)
 					assert.NoError(t, err, err)
 				},
 				Config: testGroupMemberResource(groupName),
@@ -95,7 +97,8 @@ func TestAccGroupMemberResource(t *testing.T) {
 				// Test behavior to expect to attempt to create new role mapping because role is gone
 				PreConfig: func() {
 					client := common.CommonEnvironmentClient()
-					err := NewGroupsAPI(client).Delete(group.ID)
+					ctx := context.Background()
+					err := NewGroupsAPI(ctx, client).Delete(group.ID)
 					assert.NoError(t, err, err)
 				},
 				PlanOnly:           true,
@@ -109,7 +112,8 @@ func TestAccGroupMemberResource(t *testing.T) {
 				// Lets delete the manually created group
 				PreConfig: func() {
 					client := common.CommonEnvironmentClient()
-					err := NewGroupsAPI(client).Delete(manuallyCreatedGroup.ID)
+					ctx := context.Background()
+					err := NewGroupsAPI(ctx, client).Delete(manuallyCreatedGroup.ID)
 					assert.NoError(t, err, err)
 					manuallyCreatedGroup = nil
 				},
@@ -164,7 +168,8 @@ func testGroupMemberResourceExists(n string, group *ScimGroup, t *testing.T) res
 
 		// retrieve the configured client from the test setup
 		conn := common.CommonEnvironmentClient()
-		resp, err := NewGroupsAPI(conn).Read(rs.Primary.ID)
+		ctx := context.Background()
+		resp, err := NewGroupsAPI(ctx, conn).Read(rs.Primary.ID)
 		if err != nil {
 			return err
 		}

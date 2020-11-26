@@ -137,7 +137,8 @@ func testGroupResourceExists(n string, group *ScimGroup, t *testing.T) resource.
 
 		// retrieve the configured client from the test setup
 		conn := common.CommonEnvironmentClient()
-		resp, err := NewGroupsAPI(conn).Read(rs.Primary.ID)
+		ctx := context.Background()
+		resp, err := NewGroupsAPI(ctx, conn).Read(rs.Primary.ID)
 		if err != nil {
 			return err
 		}

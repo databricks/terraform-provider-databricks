@@ -1,6 +1,7 @@
 package acceptance
 
 import (
+	"context"
 	"os"
 	"testing"
 
@@ -38,7 +39,8 @@ func TestAccSecretAclResource(t *testing.T) {
 				Check: func(s *terraform.State) error {
 					client := common.CommonEnvironmentClient()
 
-					usersAPI := identity.NewUsersAPI(client)
+					ctx := context.Background()
+					usersAPI := identity.NewUsersAPI(ctx, client)
 					me, err := usersAPI.Me()
 					require.NoError(t, err)
 

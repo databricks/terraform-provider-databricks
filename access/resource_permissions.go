@@ -110,7 +110,7 @@ func (a PermissionsAPI) Update(objectID string, objectACL AccessControlChangeLis
 			}
 		}
 		if owners == 0 {
-			me, err := identity.NewUsersAPI(a.client).Me()
+			me, err := identity.NewUsersAPI(ctx, a.client).Me()
 			if err != nil {
 				return err
 			}
@@ -263,7 +263,7 @@ func ResourcePermissions() *schema.Resource {
 		if err != nil {
 			return diag.FromErr(err)
 		}
-		me, err := identity.NewUsersAPI(m).Me()
+		me, err := identity.NewUsersAPI(ctx, m).Me()
 		if err != nil {
 			return diag.FromErr(err)
 		}

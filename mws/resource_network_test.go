@@ -48,6 +48,7 @@ func TestResourceNetworkCreate(t *testing.T) {
 				Method:   "POST",
 				Resource: "/api/2.0/accounts/abc/networks",
 				ExpectedRequest: Network{
+					AccountID:        "abc",
 					SecurityGroupIds: []string{"one", "two"},
 					NetworkName:      "Open Workers",
 					VPCID:            "five",
@@ -129,6 +130,7 @@ func TestResourceNetworkRead(t *testing.T) {
 		},
 		Resource: ResourceNetwork(),
 		Read:     true,
+		New:      true,
 		ID:       "abc/nid",
 	}.Apply(t)
 	assert.NoError(t, err, err)

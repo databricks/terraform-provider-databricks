@@ -281,7 +281,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, c *commo
 			}
 		}
 	}
-	return resourceClusterRead(ctx, d, c)
+	return nil
 }
 
 // modifyClusterRequest helps remove all request fields that should not be submitted when instance pool is selected.

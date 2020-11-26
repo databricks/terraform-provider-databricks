@@ -1,6 +1,7 @@
 package acceptance
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -23,7 +24,7 @@ func TestAccClusterPolicyResourceFullLifecycle(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					acceptance.ResourceCheck("databricks_cluster_policy.external_metastore",
 						func(client *common.DatabricksClient, id string) error {
-							policy, err := NewClusterPoliciesAPI(client).Get(id)
+							policy, err := NewClusterPoliciesAPI(context.Background(), client).Get(id)
 							assert.NoError(t, err)
 							if policy.Definition == "" {
 								return fmt.Errorf("Empty policy definition found")

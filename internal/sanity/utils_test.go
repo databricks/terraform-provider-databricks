@@ -134,14 +134,14 @@ func TestAccMissingResourcesInWorkspace(t *testing.T) {
 		{
 			Name: "Cluster Policies",
 			ReadFunc: func() error {
-				_, err := compute.NewClusterPoliciesAPI(client).Get(randStringID)
+				_, err := compute.NewClusterPoliciesAPI(ctx, client).Get(randStringID)
 				return err
 			},
 		},
 		{
 			Name: "Cluster Policies Delete",
 			ReadFunc: func() error {
-				return compute.NewClusterPoliciesAPI(client).Delete(randStringID)
+				return compute.NewClusterPoliciesAPI(ctx, client).Delete(randStringID)
 			},
 		},
 		{

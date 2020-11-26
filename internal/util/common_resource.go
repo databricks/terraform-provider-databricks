@@ -26,6 +26,9 @@ func (r CommonResource) ToResource() *schema.Resource {
 			if err := r.Update(ctx, d, c); err != nil {
 				return diag.FromErr(err)
 			}
+			if err := r.Read(ctx, d, c); err != nil {
+				return diag.FromErr(err)
+			}
 			return nil
 		}
 	} else {

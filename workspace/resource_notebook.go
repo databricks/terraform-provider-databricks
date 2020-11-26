@@ -53,8 +53,8 @@ const (
 
 // ObjectStatus contains information when doing a get request or list request on the workspace api
 type ObjectStatus struct {
-	ObjectID   int64      `json:"object_id" tf:"computed"`
-	ObjectType ObjectType `json:"object_type" tf:"computed"`
+	ObjectID   int64      `json:"object_id,omitempty" tf:"computed"`
+	ObjectType ObjectType `json:"object_type,omitempty" tf:"computed"`
 	Path       string     `json:"path"`
 	Language   Language   `json:"language,omitempty"`
 }
@@ -215,8 +215,9 @@ func ResourceNotebook() *schema.Resource {
 			}, false)
 			delete(s, "overwrite")
 			delete(s, "mkdirs")
+			delete(s, "format")
 			for k, v := range s {
-				if v.Computed {
+				if !v.Computed {
 					v.ForceNew = true
 				}
 				s2[k] = v
@@ -267,7 +268,7 @@ func ResourceNotebook() *schema.Resource {
 			notebookImport.Overwrite = true
 			notebooksAPI := NewNotebooksAPI(ctx, m)
 			parent := filepath.Dir(notebookImport.Path)
-			if parent != "" {
+			if parent != "/" {
 				err = notebooksAPI.Mkdirs(parent)
 				if err != nil {
 					// TODO: handle RESOURCE_ALREADY_EXISTS
@@ -278,11 +279,11 @@ func ResourceNotebook() *schema.Resource {
 			if err != nil {
 				return diag.FromErr(err)
 			}
+			d.SetId(notebookImport.Path)
 			return readContext(ctx, d, m)
 		},
 		DeleteContext: func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-			err := NewNotebooksAPI(ctx, m).Delete(d.Id(), true)
-			if err == nil {
+			if err := NewNotebooksAPI(ctx, m).Delete(d.Id(), true); err != nil {
 				return diag.FromErr(err)
 			}
 			return nil

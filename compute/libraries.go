@@ -1,6 +1,7 @@
 package compute
 
 import (
+	"context"
 	"fmt"
 	"strings"
 
@@ -8,13 +9,18 @@ import (
 )
 
 // NewLibrariesAPI creates LibrariesAPI instance from provider meta
-func NewLibrariesAPI(m interface{}) LibrariesAPI {
-	return LibrariesAPI{client: m.(*common.DatabricksClient)}
+func NewLibrariesAPI(ctx context.Context, m interface{}) LibrariesAPI {
+	// TODO: context.WithValue
+	return LibrariesAPI{
+		client:  m.(*common.DatabricksClient),
+		context: ctx,
+	}
 }
 
 // LibrariesAPI exposes the Library API
 type LibrariesAPI struct {
-	client *common.DatabricksClient
+	client  *common.DatabricksClient
+	context context.Context
 }
 
 // Install library list on cluster

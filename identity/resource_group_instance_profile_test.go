@@ -94,7 +94,7 @@ func TestResourceGroupInstanceProfileCreate_Error_InvalidARN(t *testing.T) {
 }
 
 func TestResourceGroupInstanceProfileCreate_Error_OtherARN(t *testing.T) {
-	d, err := qa.ResourceFixture{
+	_, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "PATCH",
@@ -113,8 +113,7 @@ func TestResourceGroupInstanceProfileCreate_Error_OtherARN(t *testing.T) {
 		},
 		Create: true,
 	}.Apply(t)
-	qa.AssertErrorStartsWith(t, err, "Not an instance profile ARN: arn:aws:glue::999999999999:glue/my-fake-instance-profile")
-	assert.Equal(t, "", d.Id(), "Id should be empty for error creates")
+	assert.EqualError(t, err, "Invalid config supplied. [instance_profile_id] Invalid ARN")
 }
 
 func TestResourceGroupInstanceProfileRead(t *testing.T) {

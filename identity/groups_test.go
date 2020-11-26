@@ -58,74 +58,10 @@ func TestAccFilterGroup(t *testing.T) {
 		t.Skip("skipping integration test in short mode.")
 	}
 	client := common.NewClientFromEnvironment()
-	groupList, err := NewGroupsAPI(client).Filter("displayName eq admins")
+	ctx := context.Background()
+	groupsAPI := NewGroupsAPI(ctx, client)
+	groupList, err := groupsAPI.Filter("displayName eq admins")
 	assert.NoError(t, err, err)
 	assert.NotNil(t, groupList)
 	assert.Len(t, groupList.Resources, 1)
-}
-
-func TestAwsAccReadInheritedRolesFromGroup(t *testing.T) {
-	if testing.Short() {
-		t.Skip("skipping integration test in short mode.")
-	}
-	client := common.NewClientFromEnvironment()
-	// TODO: pass IAM role with ENV variable
-	myTestRole := "arn:aws:iam::123456789012:instance-profile/go-sdk-integeration-testing"
-	err := NewInstanceProfilesAPI(client).Create(myTestRole, true)
-	assert.NoError(t, err, err)
-	defer func() {
-		err := NewInstanceProfilesAPI(client).Delete(myTestRole)
-		assert.NoError(t, err, err)
-	}()
-
-	myTestGroup, err := NewGroupsAPI(client).Create("my-test-group", nil, nil, nil)
-	assert.NoError(t, err, err)
-
-	defer func() {
-		err := NewGroupsAPI(client).Delete(myTestGroup.ID)
-		assert.NoError(t, err, err)
-	}()
-
-	myTestSubGroup, err := NewGroupsAPI(client).Create("my-test-sub-group", nil, nil, nil)
-	assert.NoError(t, err, err)
-
-	defer func() {
-		err := NewGroupsAPI(client).Delete(myTestSubGroup.ID)
-		assert.NoError(t, err, err)
-	}()
-
-	err = NewGroupsAPI(client).Patch(myTestGroup.ID, []string{myTestRole}, nil, GroupRolesPath)
-	assert.NoError(t, err, err)
-
-	err = NewGroupsAPI(client).Patch(myTestGroup.ID, []string{myTestSubGroup.ID}, nil, GroupMembersPath)
-	assert.NoError(t, err, err)
-}
-
-func TestGroupsFilter(t *testing.T) {
-	client, server, err := qa.HttpFixtureClient(t, []qa.HTTPFixture{
-		{
-			Method:   "GET",
-			Resource: "/api/2.0/preview/scim/v2/Groups?",
-
-			Response: GroupList{
-				Resources: []ScimGroup{
-					{DisplayName: "admins"},
-				},
-			},
-		},
-		{
-			Method:   "GET",
-			Resource: "/api/2.0/preview/scim/v2/Groups?filter=displayName%20eq%20somebody",
-			Response: GroupList{},
-		},
-	})
-	require.NoError(t, err)
-	defer server.Close()
-	groups, err := NewGroupsAPI(client).Filter("")
-	require.NoError(t, err)
-	assert.Len(t, groups.Resources, 1)
-
-	groups, err = NewGroupsAPI(client).Filter("displayName eq somebody")
-	require.NoError(t, err)
-	assert.Len(t, groups.Resources, 0)
 }

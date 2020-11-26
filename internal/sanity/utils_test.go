@@ -156,7 +156,7 @@ func TestAccMissingResourcesInWorkspace(t *testing.T) {
 		tests = append(tests, MissingResourceCheck{
 			Name: "Instance Profiles",
 			ReadFunc: func() error {
-				_, err := identity.NewInstanceProfilesAPI(client).Read(randStringID)
+				_, err := identity.NewInstanceProfilesAPI(ctx, client).Read(randStringID)
 				return err
 			},
 		})

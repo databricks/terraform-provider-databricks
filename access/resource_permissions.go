@@ -86,14 +86,14 @@ func (acc AccessControlChange) String() string {
 // NewPermissionsAPI creates PermissionsAPI instance from provider meta
 func NewPermissionsAPI(ctx context.Context, m interface{}) PermissionsAPI {
 	return PermissionsAPI{
-		client: m.(*common.DatabricksClient),
+		client:  m.(*common.DatabricksClient),
 		context: ctx,
 	}
 }
 
 // PermissionsAPI exposes general permission related methods
 type PermissionsAPI struct {
-	client *common.DatabricksClient
+	client  *common.DatabricksClient
 	context context.Context
 }
 

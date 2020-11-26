@@ -1,6 +1,7 @@
 package acceptance
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -34,7 +35,8 @@ func getRunningClusterWithInstanceProfile(t *testing.T, client *common.Databrick
 func TestAwsAccS3IamMount_WithCluster(t *testing.T) {
 	client := common.NewClientFromEnvironment()
 	arn := qa.GetEnvOrSkipTest(t, "TEST_EC2_INSTANCE_PROFILE")
-	identity.NewInstanceProfilesAPI(client).Synchronized(arn, func() {
+	ctx := context.Background()
+	identity.NewInstanceProfilesAPI(ctx, client).Synchronized(arn, func() {
 		config := qa.EnvironmentTemplate(t, `
 		resource "databricks_instance_profile" "this" {
 			instance_profile_arn = "{env.TEST_EC2_INSTANCE_PROFILE}"
@@ -79,7 +81,8 @@ func TestAwsAccS3IamMount_WithCluster(t *testing.T) {
 func TestAwsAccS3IamMount_NoClusterGiven(t *testing.T) {
 	client := common.NewClientFromEnvironment()
 	arn := qa.GetEnvOrSkipTest(t, "TEST_EC2_INSTANCE_PROFILE")
-	identity.NewInstanceProfilesAPI(client).Synchronized(arn, func() {
+	ctx := context.Background()
+	identity.NewInstanceProfilesAPI(ctx, client).Synchronized(arn, func() {
 		config := qa.EnvironmentTemplate(t, `
 		resource "databricks_instance_profile" "this" {
 			instance_profile_arn = "{env.TEST_EC2_INSTANCE_PROFILE}"

@@ -79,8 +79,8 @@ func ResourceGroup() *schema.Resource {
 			}
 			// TODO: not currently possible to update group display name
 			if entitlementsAddList != nil || entitlementsRemoveList != nil {
-				if err := NewGroupsAPI(ctx, m).Patch(d.Id(), 
-					entitlementsAddList, entitlementsRemoveList, 
+				if err := NewGroupsAPI(ctx, m).Patch(d.Id(),
+					entitlementsAddList, entitlementsRemoveList,
 					GroupEntitlementsPath); err != nil {
 					return diag.FromErr(err)
 				}

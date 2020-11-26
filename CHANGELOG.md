@@ -4,7 +4,9 @@
 
 * Added optional parameter azure_environment to provider config which defaults to public ([#437](https://github.com/databrickslabs/terraform-provider-databricks/pull/437)).
 * * Added [databricks_service_principal](https://github.com/databrickslabs/terraform-provider-databricks/pull/386) resource.
-* `databricks_notebook` got behavior changed
+* `databricks_notebook` got behavior changed. TODO: handle RESOURCE_ALREADY_EXISTS for mkdirs.
+* `skip_validation` from `databricks_instance_profile` was removed and is always set to `true`.
+* Added [databricks_service_principal](https://github.com/databrickslabs/terraform-provider-databricks/pull/386) resource.
 
 **Behavior changes**
 

@@ -59,7 +59,8 @@ func TestAwsAccGroupInstanceProfileResource(t *testing.T) {
 				// Test behavior to expect to attempt to create new role mapping because role is gone
 				PreConfig: func() {
 					client := common.CommonEnvironmentClient()
-					err := NewInstanceProfilesAPI(client).Delete(role)
+					ctx := context.Background()
+					err := NewInstanceProfilesAPI(ctx, client).Delete(role)
 					assert.NoError(t, err, err)
 				},
 				PlanOnly:           true,
@@ -178,7 +179,8 @@ func TestAwsAccInstanceProfileResource(t *testing.T) {
 			{
 				PreConfig: func() {
 					client := common.CommonEnvironmentClient()
-					err := NewInstanceProfilesAPI(client).Delete(instanceProfile)
+					ctx := context.Background()
+					err := NewInstanceProfilesAPI(ctx, client).Delete(instanceProfile)
 					assert.NoError(t, err, err)
 				},
 				// use a dynamic configuration with the random name from above
@@ -222,7 +224,8 @@ func testAWSInstanceProfileResourceDestroy(s *terraform.State) error {
 		if rs.Type != "databricks_instance_profile" {
 			continue
 		}
-		_, err := NewInstanceProfilesAPI(client).Read(rs.Primary.ID)
+		ctx := context.Background()
+		_, err := NewInstanceProfilesAPI(ctx, client).Read(rs.Primary.ID)
 		if err != nil {
 			return nil
 		}
@@ -249,7 +252,8 @@ func testAWSInstanceProfileResourceExists(n string, instanceProfileInfo *Instanc
 
 		// retrieve the configured client from the test setup
 		conn := common.CommonEnvironmentClient()
-		resp, err := NewInstanceProfilesAPI(conn).Read(rs.Primary.ID)
+		ctx := context.Background()
+		resp, err := NewInstanceProfilesAPI(ctx, conn).Read(rs.Primary.ID)
 		if err != nil {
 			return err
 		}

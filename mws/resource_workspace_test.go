@@ -7,6 +7,7 @@ import (
 	"github.com/databrickslabs/databricks-terraform/common"
 	"github.com/databrickslabs/databricks-terraform/internal/qa"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestMwsAccWorkspace(t *testing.T) {
@@ -399,4 +400,164 @@ func TestResourceWorkspaceDelete_Error(t *testing.T) {
 	}.Apply(t)
 	qa.AssertErrorStartsWith(t, err, "Internal error happened")
 	assert.Equal(t, "abc/1234", d.Id())
+}
+
+func TestWaitForRunning(t *testing.T) {
+	client, server, err := qa.HttpFixtureClient(t, []qa.HTTPFixture{
+		{
+			Method:   "POST",
+			Resource: "/api/2.0/accounts/abc/workspaces",
+			ExpectedRequest: Workspace{
+				AccountID:              "abc",
+				IsNoPublicIPEnabled:    true,
+				WorkspaceName:          "labdata",
+				DeploymentName:         "900150983cd24fb0",
+				AwsRegion:              "us-east-1",
+				CredentialsID:          "bcd",
+				StorageConfigurationID: "ghi",
+				NetworkID:              "fgh",
+				CustomerManagedKeyID:   "def",
+			},
+			Response: Workspace{
+				WorkspaceID:    1234,
+				AccountID:      "abc",
+				DeploymentName: "900150983cd24fb0",
+			},
+		},
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/accounts/abc/workspaces/1234",
+			Response: Workspace{
+				WorkspaceID:            1234,
+				WorkspaceStatus:        WorkspaceStatusProvisioning,
+				WorkspaceName:          "labdata",
+				DeploymentName:         "900150983cd24fb0",
+				AwsRegion:              "us-east-1",
+				CredentialsID:          "bcd",
+				StorageConfigurationID: "ghi",
+				NetworkID:              "fgh",
+				CustomerManagedKeyID:   "def",
+				AccountID:              "abc",
+			},
+		},
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/accounts/abc/workspaces/1234",
+			Response: Workspace{
+				WorkspaceID:            1234,
+				WorkspaceStatus:        WorkspaceStatusRunning,
+				WorkspaceName:          "labdata",
+				DeploymentName:         "900150983cd24fb0",
+				AwsRegion:              "us-east-1",
+				CredentialsID:          "bcd",
+				StorageConfigurationID: "ghi",
+				NetworkID:              "fgh",
+				CustomerManagedKeyID:   "def",
+				AccountID:              "abc",
+			},
+		},
+	})
+	require.NoError(t, err)
+	defer server.Close()
+
+	err = NewWorkspacesAPI(context.Background(), client).Create(&Workspace{
+		AccountID:              "abc",
+		IsNoPublicIPEnabled:    true,
+		WorkspaceName:          "labdata",
+		DeploymentName:         "900150983cd24fb0",
+		AwsRegion:              "us-east-1",
+		CredentialsID:          "bcd",
+		StorageConfigurationID: "ghi",
+		NetworkID:              "fgh",
+		CustomerManagedKeyID:   "def",
+	})
+	require.NoError(t, err)
+}
+
+func TestCreateFailsAndCleansUp(t *testing.T) {
+	client, server, err := qa.HttpFixtureClient(t, []qa.HTTPFixture{
+		{
+			Method:   "POST",
+			Resource: "/api/2.0/accounts/abc/workspaces",
+			ExpectedRequest: Workspace{
+				AccountID:              "abc",
+				IsNoPublicIPEnabled:    true,
+				WorkspaceName:          "labdata",
+				DeploymentName:         "900150983cd24fb0",
+				AwsRegion:              "us-east-1",
+				CredentialsID:          "bcd",
+				StorageConfigurationID: "ghi",
+				NetworkID:              "fgh",
+				CustomerManagedKeyID:   "def",
+			},
+			Response: Workspace{
+				WorkspaceID:    1234,
+				AccountID:      "abc",
+				DeploymentName: "900150983cd24fb0",
+			},
+		},
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/accounts/abc/workspaces/1234",
+			Response: Workspace{
+				WorkspaceID:            1234,
+				WorkspaceStatus:        WorkspaceStatusFailed,
+				WorkspaceStatusMessage: "Always fails",
+				WorkspaceName:          "labdata",
+				DeploymentName:         "900150983cd24fb0",
+				AwsRegion:              "us-east-1",
+				NetworkID:              "fgh",
+				AccountID:              "abc",
+			},
+		},
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/accounts/abc/networks/fgh",
+			Response: Network{
+				ErrorMessages: []NetworkHealth{
+					{"FAIL", "Message"},
+				},
+			},
+		},
+		{
+			Method:   "DELETE",
+			Resource: "/api/2.0/accounts/abc/workspaces/1234",
+		},
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/accounts/abc/workspaces/1234",
+			Status:   404,
+		},
+	})
+	require.NoError(t, err)
+	defer server.Close()
+
+	err = NewWorkspacesAPI(context.Background(), client).Create(&Workspace{
+		AccountID:              "abc",
+		IsNoPublicIPEnabled:    true,
+		WorkspaceName:          "labdata",
+		DeploymentName:         "900150983cd24fb0",
+		AwsRegion:              "us-east-1",
+		CredentialsID:          "bcd",
+		StorageConfigurationID: "ghi",
+		NetworkID:              "fgh",
+		CustomerManagedKeyID:   "def",
+	})
+	require.EqualError(t, err, "Workspace failed to create: Always fails, network error message: error: FAIL;error_msg: Message;")
+}
+
+func TestListWorkspaces(t *testing.T) {
+	client, server, err := qa.HttpFixtureClient(t, []qa.HTTPFixture{
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/accounts/abc/workspaces",
+			Response: []Workspace{},
+		},
+	})
+	require.NoError(t, err)
+	defer server.Close()
+
+	l, err := NewWorkspacesAPI(context.Background(), client).List("abc")
+	require.NoError(t, err)
+	assert.Len(t, l, 0)
 }

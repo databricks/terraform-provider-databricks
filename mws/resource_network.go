@@ -1,6 +1,7 @@
 package mws
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"reflect"
@@ -15,19 +16,20 @@ import (
 
 // NewNetworksAPI creates MWSNetworksAPI instance from provider meta
 func NewNetworksAPI(m interface{}) NetworksAPI {
-	return NetworksAPI{client: m.(*common.DatabricksClient)}
+	return NetworksAPI{m.(*common.DatabricksClient), context.TODO()}
 }
 
 // NetworksAPI exposes the mws networks API
 type NetworksAPI struct {
-	client *common.DatabricksClient
+	client  *common.DatabricksClient
+	context context.Context
 }
 
 // Create creates a set of MWS Networks for the BYOVPC
 func (a NetworksAPI) Create(mwsAcctID, networkName string, vpcID string, subnetIds []string, securityGroupIds []string) (Network, error) {
 	var mwsNetwork Network
 	networksAPIPath := fmt.Sprintf("/accounts/%s/networks", mwsAcctID)
-	err := a.client.Post(networksAPIPath, Network{
+	err := a.client.Post(a.context, networksAPIPath, Network{
 		NetworkName:      networkName,
 		VPCID:            vpcID,
 		SubnetIds:        subnetIds,
@@ -40,21 +42,21 @@ func (a NetworksAPI) Create(mwsAcctID, networkName string, vpcID string, subnetI
 func (a NetworksAPI) Read(mwsAcctID, networksID string) (Network, error) {
 	var mwsNetwork Network
 	networksAPIPath := fmt.Sprintf("/accounts/%s/networks/%s", mwsAcctID, networksID)
-	err := a.client.Get(networksAPIPath, nil, &mwsNetwork)
+	err := a.client.Get(a.context, networksAPIPath, nil, &mwsNetwork)
 	return mwsNetwork, err
 }
 
 // Delete deletes the network object given a network id
 func (a NetworksAPI) Delete(mwsAcctID, networksID string) error {
 	networksAPIPath := fmt.Sprintf("/accounts/%s/networks/%s", mwsAcctID, networksID)
-	return a.client.Delete(networksAPIPath, nil)
+	return a.client.Delete(a.context, networksAPIPath, nil)
 }
 
 // List lists all the available network objects in the mws account
 func (a NetworksAPI) List(mwsAcctID string) ([]Network, error) {
 	var mwsNetworkList []Network
 	networksAPIPath := fmt.Sprintf("/accounts/%s/networks", mwsAcctID)
-	err := a.client.Get(networksAPIPath, nil, &mwsNetworkList)
+	err := a.client.Get(a.context, networksAPIPath, nil, &mwsNetworkList)
 	return mwsNetworkList, err
 }
 
@@ -227,13 +229,13 @@ func resourceMWSNetworksDelete(d *schema.ResourceData, m interface{}) error {
 	if err != nil {
 		return err
 	}
-	err = NewNetworksAPI(client).Delete(packagedMwsID.MwsAcctID, packagedMwsID.ResourceID)
+	networksAPI := NewNetworksAPI(client)
+	err = networksAPI.Delete(packagedMwsID.MwsAcctID, packagedMwsID.ResourceID)
 	if err != nil {
 		return err
 	}
-	// nolint should be a bigger context-aware refactor
-	return resource.Retry(60*time.Second, func() *resource.RetryError {
-		network, err := NewNetworksAPI(client).Read(packagedMwsID.MwsAcctID, packagedMwsID.ResourceID)
+	return resource.RetryContext(networksAPI.context, 60*time.Second, func() *resource.RetryError {
+		network, err := networksAPI.Read(packagedMwsID.MwsAcctID, packagedMwsID.ResourceID)
 		if e, ok := err.(common.APIError); ok && e.IsMissing() {
 			log.Printf("[INFO] Network %s is removed.", packagedMwsID.ResourceID)
 			return nil

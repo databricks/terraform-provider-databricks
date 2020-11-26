@@ -11,12 +11,16 @@ import (
 
 // NewGroupsAPI creates GroupsAPI instance from provider meta
 func NewGroupsAPI(ctx context.Context, m interface{}) GroupsAPI {
-	return GroupsAPI{client: m.(*common.DatabricksClient)}
+	return GroupsAPI{
+		client:  m.(*common.DatabricksClient),
+		context: ctx,
+	}
 }
 
 // GroupsAPI exposes the scim groups API
 type GroupsAPI struct {
-	client *common.DatabricksClient
+	client  *common.DatabricksClient
+	context context.Context
 }
 
 // Create creates a scim group in the Databricks workspace
@@ -45,13 +49,13 @@ func (a GroupsAPI) Create(groupName string, members []string, roles []string, en
 	for _, entitlement := range entitlements {
 		scimGroupRequest.Entitlements = append(scimGroupRequest.Entitlements, ValueListItem{Value: entitlement})
 	}
-	err = a.client.Scim(http.MethodPost, "/preview/scim/v2/Groups", scimGroupRequest, &group)
+	err = a.client.Scim(a.context, http.MethodPost, "/preview/scim/v2/Groups", scimGroupRequest, &group)
 	return
 }
 
 // Read reads and returns a Group object via SCIM api
 func (a GroupsAPI) Read(groupID string) (group ScimGroup, err error) {
-	err = a.client.Scim(http.MethodGet, fmt.Sprintf("/preview/scim/v2/Groups/%v", groupID), nil, &group)
+	err = a.client.Scim(a.context, http.MethodGet, fmt.Sprintf("/preview/scim/v2/Groups/%v", groupID), nil, &group)
 	if err != nil {
 		return
 	}
@@ -65,12 +69,12 @@ func (a GroupsAPI) Filter(filter string) (GroupList, error) {
 	if filter != "" {
 		req["filter"] = filter
 	}
-	err := a.client.Scim(http.MethodGet, "/preview/scim/v2/Groups", req, &groups)
+	err := a.client.Scim(a.context, http.MethodGet, "/preview/scim/v2/Groups", req, &groups)
 	return groups, err
 }
 
 func (a GroupsAPI) PatchR(groupID string, r patchRequest) error {
-	return a.client.Scim(http.MethodPatch, fmt.Sprintf("/preview/scim/v2/Groups/%v", groupID), r, nil)
+	return a.client.Scim(a.context, http.MethodPatch, fmt.Sprintf("/preview/scim/v2/Groups/%v", groupID), r, nil)
 }
 
 // Patch applys a patch request for a group given a path attribute
@@ -109,12 +113,12 @@ func (a GroupsAPI) Patch(groupID string, addList []string, removeList []string, 
 		}
 		groupPatchRequest.Operations = append(groupPatchRequest.Operations, removeOperations)
 	}
-	return a.client.Scim(http.MethodPatch, groupPath, groupPatchRequest, nil)
+	return a.client.Scim(a.context, http.MethodPatch, groupPath, groupPatchRequest, nil)
 }
 
 // Delete deletes a group given a group id
 func (a GroupsAPI) Delete(groupID string) error {
-	return a.client.Scim(http.MethodDelete,
+	return a.client.Scim(a.context, http.MethodDelete,
 		fmt.Sprintf("/preview/scim/v2/Groups/%v", groupID),
 		nil, nil)
 }

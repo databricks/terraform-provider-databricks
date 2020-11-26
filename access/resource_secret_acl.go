@@ -1,6 +1,7 @@
 package access
 
 import (
+	"context"
 	"log"
 
 	"github.com/databrickslabs/databricks-terraform/common"
@@ -9,17 +10,18 @@ import (
 
 // NewSecretAclsAPI creates SecretAclsAPI instance from provider meta
 func NewSecretAclsAPI(m interface{}) SecretAclsAPI {
-	return SecretAclsAPI{client: m.(*common.DatabricksClient)}
+	return SecretAclsAPI{m.(*common.DatabricksClient), context.TODO()}
 }
 
 // SecretAclsAPI exposes the Secret ACL API
 type SecretAclsAPI struct {
-	client *common.DatabricksClient
+	client  *common.DatabricksClient
+	context context.Context
 }
 
 // Create creates or overwrites the ACL associated with the given principal (user or group) on the specified scope point
 func (a SecretAclsAPI) Create(scope string, principal string, permission ACLPermission) error {
-	return a.client.Post("/secrets/acls/put", SecretACLRequest{
+	return a.client.Post(a.context, "/secrets/acls/put", SecretACLRequest{
 		Scope:      scope,
 		Principal:  principal,
 		Permission: permission,
@@ -28,7 +30,7 @@ func (a SecretAclsAPI) Create(scope string, principal string, permission ACLPerm
 
 // Delete deletes the given ACL on the given scope
 func (a SecretAclsAPI) Delete(scope string, principal string) error {
-	return a.client.Post("/secrets/acls/delete", SecretACLRequest{
+	return a.client.Post(a.context, "/secrets/acls/delete", SecretACLRequest{
 		Scope:     scope,
 		Principal: principal,
 	}, nil)
@@ -37,7 +39,7 @@ func (a SecretAclsAPI) Delete(scope string, principal string) error {
 // Read describe the details about the given ACL, such as the group and permission
 func (a SecretAclsAPI) Read(scope string, principal string) (ACLItem, error) {
 	var aclItem ACLItem
-	err := a.client.Get("/secrets/acls/get", SecretACLRequest{
+	err := a.client.Get(a.context, "/secrets/acls/get", SecretACLRequest{
 		Scope:     scope,
 		Principal: principal,
 	}, &aclItem)
@@ -49,7 +51,7 @@ func (a SecretAclsAPI) List(scope string) ([]ACLItem, error) {
 	var aclItem struct {
 		Items []ACLItem `json:"items,omitempty"`
 	}
-	err := a.client.Get("/secrets/acls/list", map[string]string{
+	err := a.client.Get(a.context, "/secrets/acls/list", map[string]string{
 		"scope": scope,
 	}, &aclItem)
 	return aclItem.Items, err

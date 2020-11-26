@@ -18,12 +18,13 @@ import (
 
 // NewWorkspacesAPI creates MWSWorkspacesAPI instance from provider meta
 func NewWorkspacesAPI(m interface{}) WorkspacesAPI {
-	return WorkspacesAPI{client: m.(*common.DatabricksClient)}
+	return WorkspacesAPI{m.(*common.DatabricksClient), context.TODO()}
 }
 
 // WorkspacesAPI exposes the mws workspaces API
 type WorkspacesAPI struct {
-	client *common.DatabricksClient
+	client  *common.DatabricksClient
+	context context.Context
 }
 
 // Create creates the workspace creation process
@@ -45,13 +46,13 @@ func (a WorkspacesAPI) Create(mwsAcctID, workspaceName, deploymentName, awsRegio
 	if !reflect.ValueOf(customerManagedKeyID).IsZero() {
 		mwsWorkspacesRequest.CustomerManagedKeyID = customerManagedKeyID
 	}
-	err := a.client.Post(workspacesAPIPath, mwsWorkspacesRequest, &mwsWorkspace)
+	err := a.client.Post(a.context, workspacesAPIPath, mwsWorkspacesRequest, &mwsWorkspace)
 	return mwsWorkspace, err
 }
 
 // WaitForWorkspaceRunning will hold the main thread till the workspace is in a running state
 func (a WorkspacesAPI) WaitForWorkspaceRunning(mwsAcctID string, workspaceID int64, timeout time.Duration) error {
-	return resource.RetryContext(context.Background(), timeout, func() *resource.RetryError {
+	return resource.RetryContext(a.context, timeout, func() *resource.RetryError {
 		workspace, err := a.Read(mwsAcctID, workspaceID)
 		if err != nil {
 			return resource.NonRetryableError(err)
@@ -87,14 +88,14 @@ func (a WorkspacesAPI) Patch(mwsAcctID string, workspaceID int64, awsRegion, cre
 	if !reflect.ValueOf(customerManagedKeyID).IsZero() {
 		mwsWorkspacesRequest.CustomerManagedKeyID = customerManagedKeyID
 	}
-	return a.client.Patch(workspacesAPIPath, mwsWorkspacesRequest)
+	return a.client.Patch(a.context, workspacesAPIPath, mwsWorkspacesRequest)
 }
 
 // Read will return the mws workspace metadata and status of the workspace deployment
 func (a WorkspacesAPI) Read(mwsAcctID string, workspaceID int64) (Workspace, error) {
 	var mwsWorkspace Workspace
 	workspacesAPIPath := fmt.Sprintf("/accounts/%s/workspaces/%d", mwsAcctID, workspaceID)
-	err := a.client.Get(workspacesAPIPath, nil, &mwsWorkspace)
+	err := a.client.Get(a.context, workspacesAPIPath, nil, &mwsWorkspace)
 	return mwsWorkspace, err
 }
 
@@ -102,14 +103,14 @@ func (a WorkspacesAPI) Read(mwsAcctID string, workspaceID int64) (Workspace, err
 // will be sent when the workspace is fully deleted.
 func (a WorkspacesAPI) Delete(mwsAcctID string, workspaceID int64) error {
 	workspacesAPIPath := fmt.Sprintf("/accounts/%s/workspaces/%d", mwsAcctID, workspaceID)
-	return a.client.Delete(workspacesAPIPath, nil)
+	return a.client.Delete(a.context, workspacesAPIPath, nil)
 }
 
 // List will list all workspaces in a given mws account
 func (a WorkspacesAPI) List(mwsAcctID string) ([]Workspace, error) {
 	var mwsWorkspacesList []Workspace
 	workspacesAPIPath := fmt.Sprintf("/accounts/%s/workspaces", mwsAcctID)
-	err := a.client.Get(workspacesAPIPath, nil, &mwsWorkspacesList)
+	err := a.client.Get(a.context, workspacesAPIPath, nil, &mwsWorkspacesList)
 	return mwsWorkspacesList, err
 }
 
@@ -221,7 +222,7 @@ func ResourceWorkspace() *schema.Resource {
 	}
 }
 
-func waitForWorkspaceURLResolution(workspace Workspace, timeoutDurationMinutes time.Duration) error {
+func waitForWorkspaceURLResolution(ctx context.Context, workspace Workspace, timeoutDurationMinutes time.Duration) error {
 	if workspace.DeploymentName == "900150983cd24fb0" {
 		// nobody would probably name workspace as 900150983cd24fb0,
 		// so we'll use it as unit testing shim
@@ -229,8 +230,7 @@ func waitForWorkspaceURLResolution(workspace Workspace, timeoutDurationMinutes t
 	}
 	hostAndPort := fmt.Sprintf("%s.cloud.databricks.com:443", workspace.DeploymentName)
 	url := fmt.Sprintf("https://%s.cloud.databricks.com", workspace.DeploymentName)
-	// nolint should be a bigger context-aware refactor
-	return resource.Retry(timeoutDurationMinutes, func() *resource.RetryError {
+	return resource.RetryContext(ctx, timeoutDurationMinutes, func() *resource.RetryError {
 		conn, err := net.DialTimeout("tcp", hostAndPort, 1*time.Minute)
 		if err != nil {
 			log.Printf("Cannot yet reach %s", url)
@@ -255,12 +255,15 @@ func resourceMWSWorkspacesCreate(d *schema.ResourceData, m interface{}) error {
 	isNoPublicIPEnabled := d.Get("is_no_public_ip_enabled").(bool)
 	var workspace Workspace
 	var err error
-	workspace, err = NewWorkspacesAPI(client).Create(mwsAcctID, workspaceName, deploymentName,
+
+	workspacesAPI := NewWorkspacesAPI(client)
+
+	workspace, err = workspacesAPI.Create(mwsAcctID, workspaceName, deploymentName,
 		awsRegion, credentialsID, storageConfigurationID, networkID, customerManagedKeyID, isNoPublicIPEnabled)
 	// Sometimes workspaces api is buggy
 	if err != nil {
 		time.Sleep(15 * time.Second)
-		workspace, err = NewWorkspacesAPI(client).Create(mwsAcctID, workspaceName, deploymentName,
+		workspace, err = workspacesAPI.Create(mwsAcctID, workspaceName, deploymentName,
 			awsRegion, credentialsID, storageConfigurationID, networkID, customerManagedKeyID, isNoPublicIPEnabled)
 		if err != nil {
 			return err
@@ -271,7 +274,7 @@ func resourceMWSWorkspacesCreate(d *schema.ResourceData, m interface{}) error {
 		ResourceID: strconv.Itoa(int(workspace.WorkspaceID)),
 	}
 	d.SetId(packMWSAccountID(workspaceResourceID))
-	err = NewWorkspacesAPI(client).WaitForWorkspaceRunning(mwsAcctID, workspace.WorkspaceID, 10*time.Minute)
+	err = workspacesAPI.WaitForWorkspaceRunning(mwsAcctID, workspace.WorkspaceID, 10*time.Minute)
 	if err != nil {
 		if !reflect.ValueOf(networkID).IsZero() {
 			network, networkReadErr := NewNetworksAPI(client).Read(mwsAcctID, networkID)
@@ -285,7 +288,7 @@ func resourceMWSWorkspacesCreate(d *schema.ResourceData, m interface{}) error {
 	// wait maximum 5 minute for DNS caches to refresh, as
 	// sometimes we cannot make API calls to new workspaces
 	// immediately after it's created
-	err = waitForWorkspaceURLResolution(workspace, 5*time.Minute)
+	err = waitForWorkspaceURLResolution(workspacesAPI.context, workspace, 5*time.Minute)
 	if err != nil {
 		return err
 	}
@@ -442,13 +445,12 @@ func resourceMWSWorkspacesDelete(d *schema.ResourceData, m interface{}) error {
 	if err != nil {
 		return err
 	}
-	err = NewWorkspacesAPI(client).Delete(packagedMwsID.MwsAcctID, idInt64)
-	if err != nil {
+	workspacesAPI := NewWorkspacesAPI(client)
+	if err = workspacesAPI.Delete(packagedMwsID.MwsAcctID, idInt64); err != nil {
 		return err
 	}
-	// nolint should be a bigger context-aware refactor
-	return resource.Retry(15*time.Minute, func() *resource.RetryError {
-		workspace, err := NewWorkspacesAPI(client).Read(packagedMwsID.MwsAcctID, idInt64)
+	return resource.RetryContext(workspacesAPI.context, 15*time.Minute, func() *resource.RetryError {
+		workspace, err := workspacesAPI.Read(packagedMwsID.MwsAcctID, idInt64)
 		if e, ok := err.(common.APIError); ok && e.IsMissing() {
 			log.Printf("[INFO] Workspace %s is removed.", packagedMwsID.ResourceID)
 			return nil

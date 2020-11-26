@@ -72,7 +72,7 @@ func TestResourceFixture(t *testing.T) {
 	assert.NoError(t, err)
 
 	var a HTTPFixture
-	err = client.Post("/a/b/c", map[string]bool{
+	err = client.Post(context.Background(), "/a/b/c", map[string]bool{
 		"check": true,
 	}, &a)
 	assert.NoError(t, err)
@@ -86,7 +86,7 @@ func TestResourceFixture_Hint(t *testing.T) {
 	assert.NoError(t, err)
 
 	var a HTTPFixture
-	err = client.Post("/a/b/c", map[string]bool{
+	err = client.Post(context.Background(), "/a/b/c", map[string]bool{
 		"check": true,
 	}, &a)
 	assert.Error(t, err)

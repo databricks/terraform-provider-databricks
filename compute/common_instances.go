@@ -1,6 +1,7 @@
 package compute
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"os"
@@ -40,8 +41,9 @@ func CommonInstancePoolID() string {
 	client := common.CommonEnvironmentClient()
 	oncePool.Do(func() { // atomic
 		log.Printf("[INFO] Initializing common instance pool")
+		ctx := context.Background()
 		instancePools := NewInstancePoolsAPI(client)
-		clusters := NewClustersAPI(client)
+		clusters := NewClustersAPI(ctx, client)
 		currentUserPool := fmt.Sprintf("Terraform Integration Test by %s", os.Getenv("USER"))
 		pools, err := instancePools.List()
 		if err != nil {
@@ -87,14 +89,17 @@ func CommonInstancePoolID() string {
 // CommonEnvironmentClientWithRealCommandExecutor is good for internal tests
 func CommonEnvironmentClientWithRealCommandExecutor() *common.DatabricksClient {
 	client := common.CommonEnvironmentClient()
-	client.WithCommandExecutor(NewCommandsAPI(client))
+	client.WithCommandExecutor(func(ctx context.Context, _ *common.DatabricksClient) common.CommandExecutor {
+		return NewCommandsAPI(ctx, client)
+	})
 	return client
 }
 
 // NewTinyClusterInCommonPool creates new cluster for short-lived purposes
 func NewTinyClusterInCommonPool() (c ClusterInfo, err error) {
 	randomName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
-	clusters := NewClustersAPI(CommonEnvironmentClientWithRealCommandExecutor())
+	ctx := context.Background()
+	clusters := NewClustersAPI(ctx, CommonEnvironmentClientWithRealCommandExecutor())
 	c, err = clusters.Create(Cluster{
 		NumWorkers:             1,
 		ClusterName:            "Terraform " + randomName,
@@ -110,7 +115,8 @@ func NewTinyClusterInCommonPool() (c ClusterInfo, err error) {
 func NewTinyClusterInCommonPoolPossiblyReused() (c ClusterInfo) {
 	randomName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
 	currentCluster := "TerraformIntegrationTest"
-	clusters := NewClustersAPI(CommonEnvironmentClientWithRealCommandExecutor())
+	ctx := context.Background()
+	clusters := NewClustersAPI(ctx, CommonEnvironmentClientWithRealCommandExecutor())
 	c, err := clusters.GetOrCreateRunningCluster(currentCluster, Cluster{
 		NumWorkers:             1,
 		ClusterName:            currentCluster,

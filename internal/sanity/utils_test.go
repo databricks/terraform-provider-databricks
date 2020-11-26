@@ -106,7 +106,7 @@ func TestAccMissingResourcesInWorkspace(t *testing.T) {
 		{
 			Name: "Clusters",
 			ReadFunc: func() error {
-				_, err := compute.NewClustersAPI(client).Get(randStringID)
+				_, err := compute.NewClustersAPI(ctx, client).Get(randStringID)
 				return err
 			},
 		},

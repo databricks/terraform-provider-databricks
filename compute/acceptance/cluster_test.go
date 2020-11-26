@@ -2,6 +2,7 @@ package acceptance
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"os"
 	"strings"
@@ -339,7 +340,8 @@ func TestAccClusterResource_CreateClusterWithLibraries(t *testing.T) {
 			{
 				PreConfig: func() {
 					client := common.CommonEnvironmentClient()
-					err := NewClustersAPI(client).Terminate(clusterInfo.ClusterID)
+					ctx := context.Background()
+					err := NewClustersAPI(ctx, client).Terminate(clusterInfo.ClusterID)
 					assert.NoError(t, err)
 				},
 				Config: newClusterHCLBuilder(randomName).
@@ -353,8 +355,9 @@ func TestAccClusterResource_CreateClusterWithLibraries(t *testing.T) {
 }
 
 func testClusterCheckExists(n string, cluster *ClusterInfo, t *testing.T) resource.TestCheckFunc {
+	ctx := context.Background()
 	return acceptance.ResourceCheck(n, func(client *common.DatabricksClient, id string) error {
-		clusters := NewClustersAPI(client)
+		clusters := NewClustersAPI(ctx, client)
 		c, err := clusters.Get(id)
 		*cluster = c
 		return err
@@ -362,8 +365,9 @@ func testClusterCheckExists(n string, cluster *ClusterInfo, t *testing.T) resour
 }
 
 func testClusterCheckAndTerminateForFutureTests(n string, t *testing.T) resource.TestCheckFunc {
+	ctx := context.Background()
 	return acceptance.ResourceCheck(n, func(client *common.DatabricksClient, id string) error {
-		return NewClustersAPI(client).Terminate(id)
+		return NewClustersAPI(ctx, client).Terminate(id)
 	})
 }
 

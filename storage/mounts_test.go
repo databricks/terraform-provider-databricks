@@ -1,6 +1,7 @@
 package storage
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"testing"
@@ -20,11 +21,12 @@ func mountPointThroughReusedCluster(t *testing.T) (*common.DatabricksClient, Mou
 	if _, ok := os.LookupEnv("CLOUD_ENV"); !ok {
 		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
 	}
+	ctx := context.Background()
 	client := common.CommonEnvironmentClient()
 	clusterInfo := compute.NewTinyClusterInCommonPoolPossiblyReused()
 	randomName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
 	return client, MountPoint{
-		exec:      client.CommandExecutor(),
+		exec:      client.CommandExecutor(ctx),
 		clusterID: clusterInfo.ClusterID,
 		name:      randomName,
 	}
@@ -128,8 +130,9 @@ func testMountFuncHelper(t *testing.T, mountFunc func(mp MountPoint, mount Mount
 		return expectedCommandResp, nil
 	})
 
+	ctx := context.Background()
 	mp := MountPoint{
-		exec:      c.CommandExecutor(),
+		exec:      c.CommandExecutor(ctx),
 		clusterID: "random_cluster_id",
 		name:      mountName,
 	}

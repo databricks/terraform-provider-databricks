@@ -669,10 +669,11 @@ func TestAccPermissionsInstancePool(t *testing.T) {
 	permissionsTestHelper(t, func(permissionsAPI PermissionsAPI, user, group string,
 		ef func(string) PermissionsEntity) {
 		poolsAPI := compute.NewInstancePoolsAPI(permissionsAPI.client)
+		ctx := context.Background()
 		ips, err := poolsAPI.Create(compute.InstancePool{
 			InstancePoolName: group,
 			NodeTypeID: compute.NewClustersAPI(
-				permissionsAPI.client).GetSmallestNodeType(
+				ctx, permissionsAPI.client).GetSmallestNodeType(
 				compute.NodeTypeRequest{
 					LocalDisk: true,
 				}),
@@ -708,7 +709,8 @@ func TestAccPermissionsInstancePool(t *testing.T) {
 func TestAccPermissionsClusters(t *testing.T) {
 	permissionsTestHelper(t, func(permissionsAPI PermissionsAPI, user, group string,
 		ef func(string) PermissionsEntity) {
-		clustersAPI := compute.NewClustersAPI(permissionsAPI.client)
+		ctx := context.Background()
+		clustersAPI := compute.NewClustersAPI(ctx, permissionsAPI.client)
 		clusterInfo, err := compute.NewTinyClusterInCommonPool()
 		require.NoError(t, err)
 		defer func() {
@@ -767,13 +769,14 @@ func TestAccPermissionsTokens(t *testing.T) {
 func TestAccPermissionsJobs(t *testing.T) {
 	permissionsTestHelper(t, func(permissionsAPI PermissionsAPI, user, group string,
 		ef func(string) PermissionsEntity) {
+		ctx := context.Background()
 		jobsAPI := compute.NewJobsAPI(permissionsAPI.client)
 		job, err := jobsAPI.Create(compute.JobSettings{
 			NewCluster: &compute.Cluster{
 				NumWorkers:   2,
 				SparkVersion: "6.4.x-scala2.11",
 				NodeTypeID: compute.NewClustersAPI(
-					permissionsAPI.client).GetSmallestNodeType(
+					ctx, permissionsAPI.client).GetSmallestNodeType(
 					compute.NodeTypeRequest{
 						LocalDisk: true,
 					}),

@@ -18,7 +18,8 @@ import (
 
 func getRunningClusterWithInstanceProfile(t *testing.T, client *common.DatabricksClient) (compute.ClusterInfo, error) {
 	clusterName := "TerraformIntegrationTestIAM"
-	clustersAPI := compute.NewClustersAPI(client)
+	ctx := context.Background()
+	clustersAPI := compute.NewClustersAPI(ctx, client)
 	instanceProfile := qa.GetEnvOrSkipTest(t, "TEST_EC2_INSTANCE_PROFILE")
 	return clustersAPI.GetOrCreateRunningCluster(clusterName, compute.Cluster{
 		NumWorkers:             1,
@@ -112,7 +113,8 @@ func TestAwsAccS3IamMount_NoClusterGiven(t *testing.T) {
 						clusterInfo, err := getRunningClusterWithInstanceProfile(t, client)
 						assert.NoError(t, err)
 
-						mp := NewMountPoint(client,
+						ctx := context.Background()
+						mp := NewMountPoint(client.CommandExecutor(ctx),
 							qa.FirstKeyValue(t, config, "mount_name"),
 							clusterInfo.ClusterID)
 						err = mp.Delete()

@@ -1,6 +1,7 @@
 package common
 
 import (
+	"context"
 	"crypto/tls"
 	"encoding/base64"
 	"fmt"
@@ -33,7 +34,7 @@ type DatabricksClient struct {
 	httpClient         *retryablehttp.Client
 	authMutex          sync.Mutex
 	authVisitor        func(r *http.Request) error
-	commandExecutor    CommandExecutor
+	commandFactory     func(context.Context, *DatabricksClient) CommandExecutor
 }
 
 // Configure client to work

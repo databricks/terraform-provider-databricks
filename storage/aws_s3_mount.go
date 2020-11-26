@@ -1,11 +1,13 @@
 package storage
 
 import (
+	"context"
 	"fmt"
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/databrickslabs/databricks-terraform/compute"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -24,6 +26,7 @@ func (m AWSIamMount) Config() map[string]string {
 	return make(map[string]string) // return empty map so nil map does not marshal to null
 }
 
+// ResourceAWSS3Mount ...
 func ResourceAWSS3Mount() *schema.Resource {
 	tpl := AWSIamMount{}
 	r := &schema.Resource{
@@ -60,39 +63,34 @@ func ResourceAWSS3Mount() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 	}
-	// nolint should be a bigger context-aware refactor
-	r.Create = func(d *schema.ResourceData, m interface{}) error {
-		err := preprocessS3Mount(d, m)
-		if err != nil {
-			return err
+	r.CreateContext = func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+		if err := preprocessS3Mount(ctx, d, m); err != nil {
+			return diag.FromErr(err)
 		}
-		return mountCreate(tpl, r)(d, m)
+		return mountCreate(tpl, r)(ctx, d, m)
 	}
-
-	r.Read = func(d *schema.ResourceData, m interface{}) error {
-		err := preprocessS3Mount(d, m)
-		if err != nil {
-			return err
+	r.ReadContext = func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+		if err := preprocessS3Mount(ctx, d, m); err != nil {
+			return diag.FromErr(err)
 		}
-		return mountRead(tpl, r)(d, m)
+		return mountRead(tpl, r)(ctx, d, m)
 	}
-	r.Delete = func(d *schema.ResourceData, m interface{}) error {
-		err := preprocessS3Mount(d, m)
-		if err != nil {
-			return err
+	r.DeleteContext = func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+		if err := preprocessS3Mount(ctx, d, m); err != nil {
+			return diag.FromErr(err)
 		}
-		return mountDelete(tpl, r)(d, m)
+		return mountDelete(tpl, r)(ctx, d, m)
 	}
 	return r
 }
 
-func preprocessS3Mount(d *schema.ResourceData, m interface{}) error {
+func preprocessS3Mount(ctx context.Context, d *schema.ResourceData, m interface{}) error {
 	clusterID := d.Get("cluster_id").(string)
 	instanceProfile := d.Get("instance_profile").(string)
 	if clusterID == "" && instanceProfile == "" {
 		return fmt.Errorf("Either cluster_id or instance_profile must be specified")
 	}
-	clustersAPI := compute.NewClustersAPI(m)
+	clustersAPI := compute.NewClustersAPI(ctx, m)
 	if clusterID != "" {
 		clusterInfo, err := clustersAPI.Get(clusterID)
 		if err != nil {

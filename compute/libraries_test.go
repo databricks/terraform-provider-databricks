@@ -130,21 +130,23 @@ func TestAccLibraryCreate(t *testing.T) {
 		},
 	}
 
-	err = NewLibrariesAPI(client).Install(ClusterLibraryList{
+	ctx := context.Background()
+	libsAPI := NewLibrariesAPI(ctx, client)
+	err = libsAPI.Install(ClusterLibraryList{
 		ClusterID: clusterID,
 		Libraries: libraries,
 	})
 	assert.NoError(t, err, err)
 
 	defer func() {
-		err = NewLibrariesAPI(client).Uninstall(ClusterLibraryList{
+		err = libsAPI.Uninstall(ClusterLibraryList{
 			ClusterID: clusterID,
 			Libraries: libraries,
 		})
 		assert.NoError(t, err, err)
 	}()
 
-	libraryStatusList, err := NewLibrariesAPI(client).ClusterStatus(clusterID)
+	libraryStatusList, err := libsAPI.ClusterStatus(clusterID)
 	assert.NoError(t, err, err)
 	assert.Equal(t, len(libraryStatusList.LibraryStatuses), len(libraries))
 }

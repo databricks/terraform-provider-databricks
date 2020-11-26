@@ -47,7 +47,7 @@ func TestResourceUserInstanceProfileCreate(t *testing.T) {
 }
 
 func TestResourceUserInstanceProfileCreate_Error_BadARN(t *testing.T) {
-	d, err := qa.ResourceFixture{
+	_, err := qa.ResourceFixture{
 		Resource: ResourceUserInstanceProfile(),
 		State: map[string]interface{}{
 			"user_id":             "abc",
@@ -55,8 +55,7 @@ func TestResourceUserInstanceProfileCreate_Error_BadARN(t *testing.T) {
 		},
 		Create: true,
 	}.Apply(t)
-	qa.AssertErrorStartsWith(t, err, "Illegal instance profile fake: arn: invalid prefix")
-	assert.Equal(t, "", d.Id(), "Id should be empty for error creates")
+	assert.EqualError(t, err, "Invalid config supplied. [instance_profile_id] Invalid ARN")
 }
 
 func TestResourceUserInstanceProfileCreate_Error(t *testing.T) {

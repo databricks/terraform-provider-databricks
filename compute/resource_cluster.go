@@ -113,13 +113,16 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, c *commo
 	if err = internal.DataToStructPointer(d, clusterSchema, &libraryList); err != nil {
 		return err
 	}
+	if len(libraryList.Libraries) == 0 {
+		// LEGACY support
+		libraryList = legacyReadLibraryListFromData(d)
+	}
+	librariesAPI := NewLibrariesAPI(ctx, c)
 	if len(libraryList.Libraries) > 0 {
-		err = NewLibrariesAPI(c).Install(libraryList)
-		if err != nil {
+		if err = librariesAPI.Install(libraryList); err != nil {
 			return err
 		}
-		_, err := waitForLibrariesInstalled(NewLibrariesAPI(c), clusterInfo)
-		if err != nil {
+		if _, err := waitForLibrariesInstalled(librariesAPI, clusterInfo); err != nil {
 			return err
 		}
 	}
@@ -156,7 +159,8 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, c *common.
 	if err = setPinnedStatus(d, clusterAPI); err != nil {
 		return err
 	}
-	libsClusterStatus, err := waitForLibrariesInstalled(NewLibrariesAPI(c), clusterInfo)
+	librariesAPI := NewLibrariesAPI(ctx, c)
+	libsClusterStatus, err := waitForLibrariesInstalled(librariesAPI, clusterInfo)
 	if err != nil {
 		return err
 	}
@@ -245,16 +249,15 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, c *commo
 	}
 
 	var libraryList ClusterLibraryList
-	err = internal.DataToStructPointer(d, clusterSchema, &libraryList)
-	if err != nil {
+	if err = internal.DataToStructPointer(d, clusterSchema, &libraryList); err != nil {
 		return err
 	}
 	if len(libraryList.Libraries) == 0 {
 		// LEGACY support
 		libraryList = legacyReadLibraryListFromData(d)
 	}
-	libraries := NewLibrariesAPI(c)
-	libsClusterStatus, err := libraries.ClusterStatus(clusterID)
+	librariesAPI := NewLibrariesAPI(ctx, c)
+	libsClusterStatus, err := librariesAPI.ClusterStatus(clusterID)
 	if err != nil {
 		return err
 	}
@@ -268,16 +271,14 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, c *commo
 				return err
 			}
 		}
-		err := updateLibraries(libraries, tmpClusterInfo, libsToInstall, libsToUninstall)
-		if err != nil {
+		if err = updateLibraries(librariesAPI, tmpClusterInfo, libsToInstall, libsToUninstall); err != nil {
 			return err
 		}
 		if clusterInfo.State == ClusterStateTerminated {
 			log.Printf("[INFO] %s was in TERMINATED state, so terminating it again", clusterID)
-			err = clusters.Terminate(clusterID)
-		}
-		if err != nil {
-			return err
+			if err = clusters.Terminate(clusterID); err != nil {
+				return err
+			}
 		}
 	}
 	return resourceClusterRead(ctx, d, c)

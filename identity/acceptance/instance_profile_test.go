@@ -73,7 +73,8 @@ func TestAwsAccGroupInstanceProfileResource(t *testing.T) {
 				// Test behavior to expect to attempt to create new role mapping because role is gone
 				PreConfig: func() {
 					client := common.CommonEnvironmentClient()
-					err := NewGroupsAPI(client).Delete(group.ID)
+					ctx := context.Background()
+					err := NewGroupsAPI(ctx, client).Delete(group.ID)
 					assert.NoError(t, err, err)
 				},
 				PlanOnly:           true,
@@ -120,7 +121,8 @@ func testGroupInstanceProfileResourceExists(n string, group *ScimGroup, t *testi
 
 		// retrieve the configured client from the test setup
 		conn := common.CommonEnvironmentClient()
-		resp, err := NewGroupsAPI(conn).Read(rs.Primary.ID)
+		ctx := context.Background()
+		resp, err := NewGroupsAPI(ctx, conn).Read(rs.Primary.ID)
 		if err != nil {
 			return err
 		}

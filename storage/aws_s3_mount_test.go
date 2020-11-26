@@ -264,14 +264,14 @@ func TestAwsAccS3Mount(t *testing.T) {
 	identity.NewInstanceProfilesAPI(ctx, client).Synchronized(instanceProfile, func() {
 		bucket := qa.GetEnvOrSkipTest(t, "TEST_S3_BUCKET")
 		client := compute.CommonEnvironmentClientWithRealCommandExecutor()
-		clustersAPI := compute.NewClustersAPI(client)
+		clustersAPI := compute.NewClustersAPI(ctx, client)
 		randomName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
 		clusterInfo, err := getOrCreateMountingClusterWithInstanceProfile(
 			clustersAPI, instanceProfile)
 		require.NoError(t, err)
 
 		testMounting(t, MountPoint{
-			exec:      client.CommandExecutor(),
+			exec:      client.CommandExecutor(ctx),
 			clusterID: clusterInfo.ClusterID,
 			name:      randomName,
 		}, AWSIamMount{

@@ -1,6 +1,7 @@
 package compute
 
 import (
+	"context"
 	"os"
 	"reflect"
 	"testing"
@@ -78,7 +79,8 @@ func TestGetOrCreateRunningCluster_AzureAuth(t *testing.T) {
 
 	client.AzureAuth.ResourceID = "/subscriptions/a/resourceGroups/b/providers/Microsoft.Databricks/workspaces/c"
 
-	clusterInfo, err := NewClustersAPI(client).GetOrCreateRunningCluster("mount")
+	ctx := context.Background()
+	clusterInfo, err := NewClustersAPI(ctx, client).GetOrCreateRunningCluster("mount")
 	require.NoError(t, err)
 
 	assert.NotNil(t, clusterInfo)
@@ -130,7 +132,8 @@ func TestGetOrCreateRunningCluster_Existing_AzureAuth(t *testing.T) {
 
 	client.AzureAuth.ResourceID = "/a/b/c"
 
-	clusterInfo, err := NewClustersAPI(client).GetOrCreateRunningCluster("mount")
+	ctx := context.Background()
+	clusterInfo, err := NewClustersAPI(ctx, client).GetOrCreateRunningCluster("mount")
 	require.NoError(t, err)
 
 	assert.NotNil(t, clusterInfo)
@@ -159,7 +162,8 @@ func TestWaitForClusterStatus_RetryOnNotFound(t *testing.T) {
 
 	client.AzureAuth.ResourceID = "/a/b/c"
 
-	clusterInfo, err := NewClustersAPI(client).waitForClusterStatus("abc", ClusterStateRunning)
+	ctx := context.Background()
+	clusterInfo, err := NewClustersAPI(ctx, client).waitForClusterStatus("abc", ClusterStateRunning)
 	require.NoError(t, err)
 
 	assert.NotNil(t, clusterInfo)
@@ -179,7 +183,8 @@ func TestWaitForClusterStatus_StopRetryingEarly(t *testing.T) {
 	defer server.Close()
 	require.NoError(t, err)
 
-	_, err = NewClustersAPI(client).waitForClusterStatus("abc", ClusterStateRunning)
+	ctx := context.Background()
+	_, err = NewClustersAPI(ctx, client).waitForClusterStatus("abc", ClusterStateRunning)
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "I am a teapot")
 }
@@ -200,7 +205,8 @@ func TestWaitForClusterStatus_NotReachable(t *testing.T) {
 
 	client.AzureAuth.ResourceID = "/a/b/c"
 
-	_, err = NewClustersAPI(client).waitForClusterStatus("abc", ClusterStateRunning)
+	ctx := context.Background()
+	_, err = NewClustersAPI(ctx, client).waitForClusterStatus("abc", ClusterStateRunning)
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "abc is not able to transition from UNKNOWN to RUNNING: Something strange is going on.")
 }
@@ -225,7 +231,8 @@ func TestWaitForClusterStatus_NormalRetry(t *testing.T) {
 	defer server.Close()
 	require.NoError(t, err)
 
-	clusterInfo, err := NewClustersAPI(client).waitForClusterStatus("abc", ClusterStateRunning)
+	ctx := context.Background()
+	clusterInfo, err := NewClustersAPI(ctx, client).waitForClusterStatus("abc", ClusterStateRunning)
 	require.NoError(t, err)
 	assert.Equal(t, ClusterStateRunning, string(clusterInfo.State))
 }
@@ -267,7 +274,8 @@ func TestEditCluster_Pending(t *testing.T) {
 	defer server.Close()
 	require.NoError(t, err)
 
-	clusterInfo, err := NewClustersAPI(client).Edit(Cluster{
+	ctx := context.Background()
+	clusterInfo, err := NewClustersAPI(ctx, client).Edit(Cluster{
 		ClusterID:   "abc",
 		ClusterName: "Morty",
 	})
@@ -312,7 +320,8 @@ func TestEditCluster_Terminating(t *testing.T) {
 	defer server.Close()
 	require.NoError(t, err)
 
-	clusterInfo, err := NewClustersAPI(client).Edit(Cluster{
+	ctx := context.Background()
+	clusterInfo, err := NewClustersAPI(ctx, client).Edit(Cluster{
 		ClusterID:   "abc",
 		ClusterName: "Morty",
 	})
@@ -335,7 +344,8 @@ func TestEditCluster_Error(t *testing.T) {
 	defer server.Close()
 	require.NoError(t, err)
 
-	_, err = NewClustersAPI(client).Edit(Cluster{
+	ctx := context.Background()
+	_, err = NewClustersAPI(ctx, client).Edit(Cluster{
 		ClusterID:   "abc",
 		ClusterName: "Morty",
 	})
@@ -365,7 +375,8 @@ func TestStartAndGetInfo_Pending(t *testing.T) {
 	defer server.Close()
 	require.NoError(t, err)
 
-	clusterInfo, err := NewClustersAPI(client).StartAndGetInfo("abc")
+	ctx := context.Background()
+	clusterInfo, err := NewClustersAPI(ctx, client).StartAndGetInfo("abc")
 	require.NoError(t, err)
 	assert.Equal(t, ClusterStateRunning, string(clusterInfo.State))
 }
@@ -407,7 +418,8 @@ func TestStartAndGetInfo_Terminating(t *testing.T) {
 	defer server.Close()
 	require.NoError(t, err)
 
-	clusterInfo, err := NewClustersAPI(client).StartAndGetInfo("abc")
+	ctx := context.Background()
+	clusterInfo, err := NewClustersAPI(ctx, client).StartAndGetInfo("abc")
 	require.NoError(t, err)
 	assert.Equal(t, ClusterStateRunning, string(clusterInfo.State))
 }
@@ -441,7 +453,8 @@ func TestStartAndGetInfo_Error(t *testing.T) {
 	defer server.Close()
 	require.NoError(t, err)
 
-	clusterInfo, err := NewClustersAPI(client).StartAndGetInfo("abc")
+	ctx := context.Background()
+	clusterInfo, err := NewClustersAPI(ctx, client).StartAndGetInfo("abc")
 	require.NoError(t, err)
 	assert.Equal(t, ClusterStateRunning, string(clusterInfo.State))
 }
@@ -471,7 +484,8 @@ func TestStartAndGetInfo_StartingError(t *testing.T) {
 	defer server.Close()
 	require.NoError(t, err)
 
-	_, err = NewClustersAPI(client).StartAndGetInfo("abc")
+	ctx := context.Background()
+	_, err = NewClustersAPI(ctx, client).StartAndGetInfo("abc")
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "I am a teapot")
 }
@@ -521,7 +535,8 @@ func TestPermanentDelete_Pinned(t *testing.T) {
 	defer server.Close()
 	require.NoError(t, err)
 
-	err = NewClustersAPI(client).PermanentDelete("abc")
+	ctx := context.Background()
+	err = NewClustersAPI(ctx, client).PermanentDelete("abc")
 	require.NoError(t, err)
 }
 
@@ -542,7 +557,8 @@ func TestAccListClustersIntegration(t *testing.T) {
 		IdempotencyToken:       "acc-list-" + randomName,
 		AutoterminationMinutes: 15,
 	}
-	clusterReadInfo, err := NewClustersAPI(client).Create(cluster)
+	ctx := context.Background()
+	clusterReadInfo, err := NewClustersAPI(ctx, client).Create(cluster)
 	assert.NoError(t, err, err)
 	assert.True(t, clusterReadInfo.NumWorkers == cluster.NumWorkers)
 	assert.True(t, clusterReadInfo.ClusterName == cluster.ClusterName)
@@ -552,24 +568,24 @@ func TestAccListClustersIntegration(t *testing.T) {
 	assert.True(t, clusterReadInfo.State == ClusterStateRunning)
 
 	defer func() {
-		err = NewClustersAPI(client).Terminate(clusterReadInfo.ClusterID)
+		err = NewClustersAPI(ctx, client).Terminate(clusterReadInfo.ClusterID)
 		assert.NoError(t, err, err)
 
-		clusterReadInfo, err = NewClustersAPI(client).Get(clusterReadInfo.ClusterID)
+		clusterReadInfo, err = NewClustersAPI(ctx, client).Get(clusterReadInfo.ClusterID)
 		assert.NoError(t, err, err)
 		assert.True(t, clusterReadInfo.State == ClusterStateTerminated)
 
-		err = NewClustersAPI(client).Unpin(clusterReadInfo.ClusterID)
+		err = NewClustersAPI(ctx, client).Unpin(clusterReadInfo.ClusterID)
 		assert.NoError(t, err, err)
 
-		err = NewClustersAPI(client).PermanentDelete(clusterReadInfo.ClusterID)
+		err = NewClustersAPI(ctx, client).PermanentDelete(clusterReadInfo.ClusterID)
 		assert.NoError(t, err, err)
 	}()
 
-	err = NewClustersAPI(client).Pin(clusterReadInfo.ClusterID)
+	err = NewClustersAPI(ctx, client).Pin(clusterReadInfo.ClusterID)
 	assert.NoError(t, err, err)
 
-	clusterReadInfo, err = NewClustersAPI(client).Get(clusterReadInfo.ClusterID)
+	clusterReadInfo, err = NewClustersAPI(ctx, client).Get(clusterReadInfo.ClusterID)
 	assert.NoError(t, err, err)
 	assert.True(t, clusterReadInfo.State == ClusterStateRunning)
 }
@@ -581,7 +597,8 @@ func TestAwsAccSmallestNodeType(t *testing.T) {
 	}
 
 	client := common.CommonEnvironmentClient()
-	nodeType := NewClustersAPI(client).GetSmallestNodeType(NodeTypeRequest{
+	ctx := context.Background()
+	nodeType := NewClustersAPI(ctx, client).GetSmallestNodeType(NodeTypeRequest{
 		LocalDisk: true,
 	})
 	assert.Equal(t, "m5d.large", nodeType)
@@ -593,7 +610,8 @@ func TestAzureAccNodeTypes(t *testing.T) {
 		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
 	}
 
-	clustersAPI := NewClustersAPI(common.CommonEnvironmentClient())
+	ctx := context.Background()
+	clustersAPI := NewClustersAPI(ctx, common.CommonEnvironmentClient())
 	m := map[string]NodeTypeRequest{
 		"Standard_F4s":     {},
 		"Standard_NC12":    {MinGPUs: 1},
@@ -632,7 +650,8 @@ func TestEventsSinglePage(t *testing.T) {
 	defer server.Close()
 	require.NoError(t, err)
 
-	clusterEvents, err := NewClustersAPI(client).Events(EventsRequest{ClusterID: "abc"})
+	ctx := context.Background()
+	clusterEvents, err := NewClustersAPI(ctx, client).Events(EventsRequest{ClusterID: "abc"})
 	require.NoError(t, err)
 	assert.Equal(t, len(clusterEvents), 1)
 	assert.Equal(t, clusterEvents[0].ClusterID, "abc")
@@ -695,7 +714,8 @@ func TestEventsTwoPages(t *testing.T) {
 	defer server.Close()
 	require.NoError(t, err)
 
-	clusterEvents, err := NewClustersAPI(client).Events(EventsRequest{ClusterID: "abc"})
+	ctx := context.Background()
+	clusterEvents, err := NewClustersAPI(ctx, client).Events(EventsRequest{ClusterID: "abc"})
 	require.NoError(t, err)
 	assert.Equal(t, len(clusterEvents), 2)
 	assert.Equal(t, clusterEvents[0].ClusterID, "abc")
@@ -742,7 +762,8 @@ func TestEventsTwoPagesMaxItems(t *testing.T) {
 	defer server.Close()
 	require.NoError(t, err)
 
-	clusterEvents, err := NewClustersAPI(client).Events(EventsRequest{ClusterID: "abc", MaxItems: 1, Limit: 1})
+	ctx := context.Background()
+	clusterEvents, err := NewClustersAPI(ctx, client).Events(EventsRequest{ClusterID: "abc", MaxItems: 1, Limit: 1})
 	require.NoError(t, err)
 	assert.Equal(t, len(clusterEvents), 1)
 	assert.Equal(t, clusterEvents[0].ClusterID, "abc")
@@ -824,7 +845,8 @@ func TestEventsTwoPagesMaxThreeItems(t *testing.T) {
 	defer server.Close()
 	require.NoError(t, err)
 
-	clusterEvents, err := NewClustersAPI(client).Events(EventsRequest{ClusterID: "abc", MaxItems: 3, Limit: 2})
+	ctx := context.Background()
+	clusterEvents, err := NewClustersAPI(ctx, client).Events(EventsRequest{ClusterID: "abc", MaxItems: 3, Limit: 2})
 	require.NoError(t, err)
 	assert.Equal(t, len(clusterEvents), 3)
 	assert.Equal(t, clusterEvents[0].ClusterID, "abc")
@@ -873,7 +895,8 @@ func TestEventsTwoPagesNoNextPage(t *testing.T) {
 	defer server.Close()
 	require.NoError(t, err)
 
-	clusterEvents, err := NewClustersAPI(client).Events(EventsRequest{ClusterID: "abc", MaxItems: 3, Limit: 2})
+	ctx := context.Background()
+	clusterEvents, err := NewClustersAPI(ctx, client).Events(EventsRequest{ClusterID: "abc", MaxItems: 3, Limit: 2})
 	require.NoError(t, err)
 	assert.Equal(t, len(clusterEvents), 2)
 	assert.Equal(t, clusterEvents[0].ClusterID, "abc")
@@ -902,7 +925,8 @@ func TestEventsEmptyResult(t *testing.T) {
 	defer server.Close()
 	require.NoError(t, err)
 
-	clusterEvents, err := NewClustersAPI(client).Events(EventsRequest{ClusterID: "abc", MaxItems: 3, Limit: 2})
+	ctx := context.Background()
+	clusterEvents, err := NewClustersAPI(ctx, client).Events(EventsRequest{ClusterID: "abc", MaxItems: 3, Limit: 2})
 	require.NoError(t, err)
 	assert.Equal(t, len(clusterEvents), 0)
 }

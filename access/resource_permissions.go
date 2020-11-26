@@ -84,13 +84,17 @@ func (acc AccessControlChange) String() string {
 }
 
 // NewPermissionsAPI creates PermissionsAPI instance from provider meta
-func NewPermissionsAPI(m interface{}) PermissionsAPI {
-	return PermissionsAPI{client: m.(*common.DatabricksClient)}
+func NewPermissionsAPI(ctx context.Context, m interface{}) PermissionsAPI {
+	return PermissionsAPI{
+		client: m.(*common.DatabricksClient),
+		context: ctx,
+	}
 }
 
 // PermissionsAPI exposes general permission related methods
 type PermissionsAPI struct {
 	client *common.DatabricksClient
+	context context.Context
 }
 
 // Update updates object permissions. Technically, it's using method named SetOrDelete, but here we do more
@@ -110,7 +114,7 @@ func (a PermissionsAPI) Update(objectID string, objectACL AccessControlChangeLis
 			}
 		}
 		if owners == 0 {
-			me, err := identity.NewUsersAPI(ctx, a.client).Me()
+			me, err := identity.NewUsersAPI(a.context, a.client).Me()
 			if err != nil {
 				return err
 			}
@@ -255,7 +259,7 @@ func ResourcePermissions() *schema.Resource {
 	})
 	readContext := func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 		id := d.Id()
-		objectACL, err := NewPermissionsAPI(m).Read(id)
+		objectACL, err := NewPermissionsAPI(ctx, m).Read(id)
 		if aerr, ok := err.(common.APIError); ok && aerr.IsMissing() {
 			d.SetId("")
 			return nil
@@ -298,7 +302,7 @@ func ResourcePermissions() *schema.Resource {
 						return diag.FromErr(err)
 					}
 					objectID := fmt.Sprintf("/%s/%s", mapping.resourceType, id)
-					err = NewPermissionsAPI(m).Update(objectID, AccessControlChangeList{
+					err = NewPermissionsAPI(ctx, m).Update(objectID, AccessControlChangeList{
 						AccessControlList: entity.AccessControlList,
 					})
 					if err != nil {
@@ -316,7 +320,7 @@ func ResourcePermissions() *schema.Resource {
 			if err != nil {
 				return diag.FromErr(err)
 			}
-			err = NewPermissionsAPI(m).Update(d.Id(), AccessControlChangeList{
+			err = NewPermissionsAPI(ctx, m).Update(d.Id(), AccessControlChangeList{
 				AccessControlList: entity.AccessControlList,
 			})
 			if err != nil {
@@ -325,7 +329,7 @@ func ResourcePermissions() *schema.Resource {
 			return readContext(ctx, d, m)
 		},
 		DeleteContext: func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-			err := NewPermissionsAPI(m).Delete(d.Id())
+			err := NewPermissionsAPI(ctx, m).Delete(d.Id())
 			if err != nil {
 				return diag.FromErr(err)
 			}

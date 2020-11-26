@@ -37,7 +37,10 @@ func (a WorkspacesAPI) Create(ws *Workspace) error {
 	}
 	if err = a.waitForRunning(*ws, 15*time.Minute); err != nil {
 		log.Printf("[ERROR] Deleting failed workspace: %s", err)
-		return a.Delete(ws.AccountID, ws.WorkspaceID)
+		if derr := a.Delete(ws.AccountID, ws.WorkspaceID); derr != nil {
+			return fmt.Errorf("%s - %s", err, derr)
+		}
+		return err
 	}
 	return nil
 }
@@ -51,19 +54,18 @@ func (a WorkspacesAPI) waitForRunning(ws Workspace, timeout time.Duration) error
 		}
 		switch workspace.WorkspaceStatus {
 		case WorkspaceStatusRunning:
+			// wait for DNS caches to refresh, as sometimes we cannot make
+			// API calls to new workspaces immediately after it's created
+			hostAndPort := fmt.Sprintf("%s.cloud.databricks.com:443", workspace.DeploymentName)
+			url := fmt.Sprintf("https://%s.cloud.databricks.com", workspace.DeploymentName)
 			log.Printf("[INFO] Workspace is now running")
 			if strings.Contains(workspace.DeploymentName, "900150983cd24fb0") {
 				// nobody would probably name workspace as 900150983cd24fb0,
 				// so we'll use it as unit testing shim
 				return nil
 			}
-			// wait for DNS caches to refresh, as sometimes we cannot make
-			// API calls to new workspaces immediately after it's created
-			hostAndPort := fmt.Sprintf("%s.cloud.databricks.com:443", workspace.DeploymentName)
-			url := fmt.Sprintf("https://%s.cloud.databricks.com", workspace.DeploymentName)
 			conn, err := net.DialTimeout("tcp", hostAndPort, 1*time.Minute)
 			if err != nil {
-				log.Printf("[DEBUG] Cannot yet reach %s", url)
 				return resource.RetryableError(err)
 			}
 			log.Printf("[INFO] Workspace %s is ready to use", url)
@@ -86,7 +88,7 @@ func (a WorkspacesAPI) waitForRunning(ws Workspace, timeout time.Duration) error
 			}
 			return resource.NonRetryableError(fmt.Errorf(
 				"Workspace failed to create: %v, network error message: %v",
-				err, strBuffer.String()))
+				workspace.WorkspaceStatusMessage, strBuffer.String()))
 		default:
 			log.Printf("[INFO] Workspace %s is %s: %s", workspace.DeploymentName,
 				workspace.WorkspaceStatus, workspace.WorkspaceStatusMessage)

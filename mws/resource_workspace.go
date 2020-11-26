@@ -52,7 +52,7 @@ func (a WorkspacesAPI) waitForRunning(ws Workspace, timeout time.Duration) error
 		switch workspace.WorkspaceStatus {
 		case WorkspaceStatusRunning:
 			log.Printf("[INFO] Workspace is now running")
-			if workspace.DeploymentName == "900150983cd24fb0" {
+			if strings.Contains(workspace.DeploymentName, "900150983cd24fb0") {
 				// nobody would probably name workspace as 900150983cd24fb0,
 				// so we'll use it as unit testing shim
 				return nil
@@ -203,10 +203,10 @@ func ResourceWorkspace() *schema.Resource {
 			if err != nil {
 				return err
 			}
+			workspace.WorkspaceURL = fmt.Sprintf("https://%s.cloud.databricks.com", workspace.DeploymentName)
 			if err = internal.StructToData(workspace, s, d); err != nil {
 				return err
 			}
-			workspace.WorkspaceURL = fmt.Sprintf("https://%s.cloud.databricks.com", workspace.DeploymentName)
 			return workspacesAPI.waitForRunning(workspace, 10*time.Minute)
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {

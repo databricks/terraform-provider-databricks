@@ -10,11 +10,12 @@ import (
 
 // CommonResource aims to simplify things like error & deleted entities handling
 type CommonResource struct {
-	Create func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error
-	Read   func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error
-	Update func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error
-	Delete func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error
-	Schema map[string]*schema.Schema
+	Create        func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error
+	Read          func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error
+	Update        func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error
+	Delete        func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error
+	Schema        map[string]*schema.Schema
+	SchemaVersion int
 }
 
 // ToResource converts to Terraform resource definition
@@ -32,15 +33,14 @@ func (r CommonResource) ToResource() *schema.Resource {
 			return nil
 		}
 	} else {
-		// set ForceNew to all non-optional attributes
+		// set ForceNew to all attributes
 		for _, v := range r.Schema {
-			if !v.Optional {
-				v.ForceNew = true
-			}
+			v.ForceNew = true
 		}
 	}
 	return &schema.Resource{
-		Schema: r.Schema,
+		Schema:        r.Schema,
+		SchemaVersion: r.SchemaVersion,
 		CreateContext: func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 			c := m.(*common.DatabricksClient)
 			err := r.Create(ctx, d, c)

@@ -1,6 +1,7 @@
 package mws
 
 import (
+	"context"
 	"testing"
 
 	"github.com/databrickslabs/databricks-terraform/common"
@@ -17,7 +18,7 @@ func TestMwsAccLogDelivery(t *testing.T) {
 	client := common.CommonEnvironmentClient()
 	randomName := qa.RandomName("tf-logdelivery-")
 
-	logDeliveryAPI := NewLogDeliveryAPI(client)
+	logDeliveryAPI := NewLogDeliveryAPI(context.Background(), client)
 	credentialsAPI := NewCredentialsAPI(client)
 	storageConfigurationsAPI := NewStorageConfigurationsAPI(client)
 

@@ -1,6 +1,7 @@
 package mws
 
 import (
+	"context"
 	"testing"
 
 	"github.com/databrickslabs/databricks-terraform/common"
@@ -15,19 +16,27 @@ func TestMWSNetworks(t *testing.T) {
 	}
 	acctID := qa.GetEnvOrSkipTest(t, "DATABRICKS_ACCOUNT_ID")
 	client := common.CommonEnvironmentClient()
-	networksList, err := NewNetworksAPI(client).List(acctID)
+	ctx := context.Background()
+	networksAPI := NewNetworksAPI(ctx, client)
+	networksList, err := networksAPI.List(acctID)
 	assert.NoError(t, err, err)
 	t.Log(networksList)
 
-	myNetwork, err := NewNetworksAPI(client).Create(acctID, "sri-mws-terraform-automation-network",
-		"vpc-0abcdef1234567890", []string{"subnet-0123456789abcdef0", "subnet-0fedcba9876543210"}, []string{"sg-0a1b2c3d4e5f6a7b8"})
+	network := Network{
+		AccountID:        acctID,
+		NetworkName:      qa.RandomName(),
+		VPCID:            "vpc-0abcdef1234567890",
+		SubnetIds:        []string{"subnet-0123456789abcdef0", "subnet-0fedcba9876543210"},
+		SecurityGroupIds: []string{"sg-0a1b2c3d4e5f6a7b8"},
+	}
+	err = networksAPI.Create(&network)
 	assert.NoError(t, err, err)
 	defer func() {
-		err = NewNetworksAPI(client).Delete(acctID, myNetwork.NetworkID)
+		err = networksAPI.Delete(acctID, network.NetworkID)
 		assert.NoError(t, err, err)
 	}()
 
-	myNetworkFull, err := NewNetworksAPI(client).Read(acctID, myNetwork.NetworkID)
+	myNetworkFull, err := networksAPI.Read(acctID, network.NetworkID)
 	assert.NoError(t, err, err)
 	t.Log(myNetworkFull)
 }
@@ -45,6 +54,7 @@ func TestResourceNetworkCreate(t *testing.T) {
 					SubnetIds:        []string{"four", "three"},
 				},
 				Response: Network{
+					AccountID: "abc",
 					NetworkID: "nid",
 				},
 			},
@@ -61,13 +71,13 @@ func TestResourceNetworkCreate(t *testing.T) {
 			},
 		},
 		Resource: ResourceNetwork(),
-		State: map[string]interface{}{
-			"account_id":         "abc",
-			"network_name":       "Open Workers",
-			"security_group_ids": []interface{}{"one", "two"},
-			"subnet_ids":         []interface{}{"three", "four"},
-			"vpc_id":             "five",
-		},
+		HCL: `
+		account_id = "abc"
+		network_name = "Open Workers"
+		security_group_ids = ["one", "two"]
+		subnet_ids = ["three", "four"]
+		vpc_id = "five"
+		`,
 		Create: true,
 	}.Apply(t)
 	assert.NoError(t, err, err)
@@ -183,6 +193,7 @@ func TestResourceNetworkDelete(t *testing.T) {
 				Method:   "GET",
 				Resource: "/api/2.0/accounts/abc/networks/nid",
 				Response: Network{
+					AccountID:   "abc",
 					NetworkID:   "nid",
 					NetworkName: "Open Workers",
 					VPCID:       "five",

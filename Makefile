@@ -11,17 +11,17 @@ lint: vendor
 	@golangci-lint run --skip-dirs-use-default --timeout 5m
 
 test: lint
-	@echo "✓ Running tests..."
+	@echo "✓ Running tests ..."
 	@gotestsum --format pkgname-and-test-fails --no-summary=skipped --raw-command go test -v -json -short -coverprofile=coverage.txt ./...
 
 coverage: test
-	@echo "✓ Opening coverage for unit tests..."
+	@echo "✓ Opening coverage for unit tests ..."
 	@go tool cover -html=coverage.txt
 
 VERSION = 0.3.0
 
-build: vendor
-	@echo "✓ Building source code with go build..."
+build:
+	@echo "✓ Building source code with go build ..."
 	@go build -mod vendor -v -ldflags="-X github.com/databrickslabs/databricks-terraform/common.version=${VERSION}" -o terraform-provider-databricks
 
 install: build
@@ -42,7 +42,7 @@ install: build
 	@echo "}"
 	
 vendor:
-	@echo "✓ Filling vendor folder with library code..."
+	@echo "✓ Filling vendor folder with library code ..."
 	@go mod vendor
 
 test-azcli: install
@@ -66,7 +66,7 @@ test-awsmt: install
 	@/bin/bash scripts/run.sh awsmt '^(TestAcc|TestAwsAcc)' --debug --tee
 
 snapshot:
-	@echo "✓ Making Snapshot..."
+	@echo "✓ Making Snapshot ..."
 	@goreleaser release --rm-dist --snapshot
 
 .PHONY: build fmt python-setup docs vendor build fmt coverage test lint

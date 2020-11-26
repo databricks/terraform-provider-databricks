@@ -1,6 +1,7 @@
 package mws
 
 import (
+	"context"
 	"os"
 	"testing"
 
@@ -22,6 +23,7 @@ func TestMwsAccMissingResources(t *testing.T) {
 	randStringID := acctest.RandString(10)
 	randIntID := 2000000 + acctest.RandIntRange(100000, 20000000)
 
+	ctx := context.Background()
 	client := common.CommonEnvironmentClient()
 	tests := []sanity.MissingResourceCheck{
 		{
@@ -34,7 +36,7 @@ func TestMwsAccMissingResources(t *testing.T) {
 		{
 			Name: "Network",
 			ReadFunc: func() error {
-				_, err := NewNetworksAPI(client).Read(mwsAcctID, randStringID)
+				_, err := NewNetworksAPI(ctx, client).Read(mwsAcctID, randStringID)
 				return err
 			},
 		},
@@ -55,7 +57,7 @@ func TestMwsAccMissingResources(t *testing.T) {
 		{
 			Name: "Workspace",
 			ReadFunc: func() error {
-				_, err := NewWorkspacesAPI(client).Read(mwsAcctID, int64(randIntID))
+				_, err := NewWorkspacesAPI(ctx, client).Read(mwsAcctID, int64(randIntID))
 				return err
 			},
 		},

@@ -1,6 +1,7 @@
 package mws
 
 import (
+	"context"
 	"testing"
 
 	"github.com/databrickslabs/databricks-terraform/common"
@@ -14,7 +15,7 @@ func TestMwsAccWorkspace(t *testing.T) {
 	}
 	acctID := qa.GetEnvOrSkipTest(t, "DATABRICKS_ACCOUNT_ID")
 	client := common.CommonEnvironmentClient()
-	workspaceList, err := NewWorkspacesAPI(client).List(acctID)
+	workspaceList, err := NewWorkspacesAPI(context.Background(), client).List(acctID)
 	assert.NoError(t, err, err)
 	t.Log(workspaceList)
 }

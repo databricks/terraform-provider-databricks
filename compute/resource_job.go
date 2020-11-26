@@ -1,6 +1,7 @@
 package compute
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"strconv"
@@ -14,18 +15,19 @@ import (
 
 // NewJobsAPI creates JobsAPI instance from provider meta
 func NewJobsAPI(m interface{}) JobsAPI {
-	return JobsAPI{client: m.(*common.DatabricksClient)}
+	return JobsAPI{m.(*common.DatabricksClient), context.TODO()}
 }
 
 // JobsAPI exposes the Jobs API
 type JobsAPI struct {
-	client *common.DatabricksClient
+	client  *common.DatabricksClient
+	context context.Context
 }
 
 // Create creates a job on the workspace given the job settings
 func (a JobsAPI) Create(jobSettings JobSettings) (Job, error) {
 	var job Job
-	err := a.client.Post("/jobs/create", jobSettings, &job)
+	err := a.client.Post(a.context, "/jobs/create", jobSettings, &job)
 	return job, err
 }
 
@@ -35,7 +37,7 @@ func (a JobsAPI) Update(id string, jobSettings JobSettings) error {
 	if err != nil {
 		return err
 	}
-	return wrapMissingJobError(a.client.Post("/jobs/reset", UpdateJobRequest{
+	return wrapMissingJobError(a.client.Post(a.context, "/jobs/reset", UpdateJobRequest{
 		JobID:       jobID,
 		NewSettings: &jobSettings,
 	}, nil), id)
@@ -47,7 +49,7 @@ func (a JobsAPI) Read(id string) (job Job, err error) {
 	if err != nil {
 		return
 	}
-	err = wrapMissingJobError(a.client.Get("/jobs/get", map[string]int64{
+	err = wrapMissingJobError(a.client.Get(a.context, "/jobs/get", map[string]int64{
 		"job_id": jobID,
 	}, &job), id)
 	return
@@ -59,7 +61,7 @@ func (a JobsAPI) Delete(id string) error {
 	if err != nil {
 		return err
 	}
-	return wrapMissingJobError(a.client.Post("/jobs/delete", map[string]int64{
+	return wrapMissingJobError(a.client.Post(a.context, "/jobs/delete", map[string]int64{
 		"job_id": jobID,
 	}, nil), id)
 }

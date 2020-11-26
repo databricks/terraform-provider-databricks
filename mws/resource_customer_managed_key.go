@@ -29,38 +29,39 @@ type CustomerManagedKey struct {
 
 // NewCustomerManagedKeysAPI creates CustomerManagedKeysAPI instance from provider meta
 func NewCustomerManagedKeysAPI(m interface{}) CustomerManagedKeysAPI {
-	return CustomerManagedKeysAPI{client: m.(*common.DatabricksClient)}
+	return CustomerManagedKeysAPI{m.(*common.DatabricksClient), context.TODO()}
 }
 
 // CustomerManagedKeysAPI exposes the mws customerManagedKeys API
 type CustomerManagedKeysAPI struct {
-	client *common.DatabricksClient
+	client  *common.DatabricksClient
+	context context.Context
 }
 
 // Create creates a set of MWS CustomerManagedKeys for the BYOVPC
 func (a CustomerManagedKeysAPI) Create(cmk CustomerManagedKey) (k CustomerManagedKey, err error) {
 	customerManagedKeysAPIPath := fmt.Sprintf("/accounts/%s/customer-managed-keys", cmk.AccountID)
-	err = a.client.Post(customerManagedKeysAPIPath, cmk, &k)
+	err = a.client.Post(a.context, customerManagedKeysAPIPath, cmk, &k)
 	return
 }
 
 // Read returns the customer managed key object along with metadata
 func (a CustomerManagedKeysAPI) Read(
 	mwsAcctID, customerManagedKeyID string) (k CustomerManagedKey, err error) {
-	err = a.client.Get(fmt.Sprintf("/accounts/%s/customer-managed-keys/%s",
+	err = a.client.Get(a.context, fmt.Sprintf("/accounts/%s/customer-managed-keys/%s",
 		mwsAcctID, customerManagedKeyID), nil, &k)
 	return
 }
 
 // Delete deletes the customer managed key object given a network id
 func (a CustomerManagedKeysAPI) Delete(mwsAcctID, customerManagedKeyID string) error {
-	return a.client.Delete(fmt.Sprintf("/accounts/%s/customer-managed-keys/%s",
+	return a.client.Delete(a.context, fmt.Sprintf("/accounts/%s/customer-managed-keys/%s",
 		mwsAcctID, customerManagedKeyID), nil)
 }
 
 // List lists all the available customer managed key objects in the mws account
 func (a CustomerManagedKeysAPI) List(mwsAcctID string) (kl []CustomerManagedKey, err error) {
-	err = a.client.Get(fmt.Sprintf("/accounts/%s/customer-managed-keys", mwsAcctID), nil, &kl)
+	err = a.client.Get(a.context, fmt.Sprintf("/accounts/%s/customer-managed-keys", mwsAcctID), nil, &kl)
 	return
 }
 

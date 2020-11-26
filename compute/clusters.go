@@ -32,7 +32,7 @@ type ClustersAPI struct {
 // Create creates a new Spark cluster and waits till it's running
 func (a ClustersAPI) Create(cluster Cluster) (info ClusterInfo, err error) {
 	var ci ClusterID
-	err = a.client.Post("/clusters/create", cluster, &ci)
+	err = a.client.Post(a.context, "/clusters/create", cluster, &ci)
 	if err != nil {
 		return
 	}
@@ -76,7 +76,7 @@ func (a ClustersAPI) Edit(cluster Cluster) (info ClusterInfo, err error) {
 		// we don't know what to do, so return error
 		return info, fmt.Errorf("Unexpected state: %#v", info.StateMessage)
 	}
-	err = a.client.Post("/clusters/edit", cluster, nil)
+	err = a.client.Post(a.context, "/clusters/edit", cluster, nil)
 	if err != nil {
 		return info, err
 	}
@@ -91,7 +91,7 @@ func (a ClustersAPI) Edit(cluster Cluster) (info ClusterInfo, err error) {
 // ListZones returns the zones info sent by the cloud service provider
 func (a ClustersAPI) ListZones() (ZonesInfo, error) {
 	var zonesInfo ZonesInfo
-	err := a.client.Get("/clusters/list-zones", nil, &zonesInfo)
+	err := a.client.Get(a.context, "/clusters/list-zones", nil, &zonesInfo)
 	return zonesInfo, err
 }
 
@@ -125,7 +125,7 @@ func (a ClustersAPI) StartAndGetInfo(clusterID string) (ClusterInfo, error) {
 		// most likely we can start error'ed cluster again...
 		log.Printf("[ERROR] Cluster %s: %s", info.State, info.StateMessage)
 	}
-	err = a.client.Post("/clusters/start", ClusterID{ClusterID: clusterID}, nil)
+	err = a.client.Post(a.context, "/clusters/start", ClusterID{ClusterID: clusterID}, nil)
 	if err != nil {
 		if !strings.Contains(err.Error(),
 			fmt.Sprintf("Cluster %s is in unexpected state Pending.", clusterID)) {
@@ -137,7 +137,7 @@ func (a ClustersAPI) StartAndGetInfo(clusterID string) (ClusterInfo, error) {
 
 // Restart restart a Spark cluster given its ID. If the cluster is not in a RUNNING state, nothing will happen.
 func (a ClustersAPI) Restart(clusterID string) error {
-	return a.client.Post("/clusters/restart", ClusterID{ClusterID: clusterID}, nil)
+	return a.client.Post(a.context, "/clusters/restart", ClusterID{ClusterID: clusterID}, nil)
 }
 
 func wrapMissingClusterError(err error, id string) error {
@@ -191,7 +191,7 @@ func (a ClustersAPI) waitForClusterStatus(clusterID string, desired ClusterState
 
 // Terminate terminates a Spark cluster given its ID
 func (a ClustersAPI) Terminate(clusterID string) error {
-	err := a.client.Post("/clusters/delete", ClusterID{ClusterID: clusterID}, nil)
+	err := a.client.Post(a.context, "/clusters/delete", ClusterID{ClusterID: clusterID}, nil)
 	if err != nil {
 		return err
 	}
@@ -206,7 +206,7 @@ func (a ClustersAPI) PermanentDelete(clusterID string) error {
 		return err
 	}
 	r := ClusterID{ClusterID: clusterID}
-	err = a.client.Post("/clusters/permanent-delete", r, nil)
+	err = a.client.Post(a.context, "/clusters/permanent-delete", r, nil)
 	if err == nil {
 		return nil
 	}
@@ -219,31 +219,31 @@ func (a ClustersAPI) PermanentDelete(clusterID string) error {
 		return err
 	}
 	// and try removing it again
-	return a.client.Post("/clusters/permanent-delete", r, nil)
+	return a.client.Post(a.context, "/clusters/permanent-delete", r, nil)
 }
 
 // Get retrieves the information for a cluster given its identifier
 func (a ClustersAPI) Get(clusterID string) (ci ClusterInfo, err error) {
-	err = wrapMissingClusterError(a.client.Get("/clusters/get",
+	err = wrapMissingClusterError(a.client.Get(a.context, "/clusters/get",
 		ClusterID{ClusterID: clusterID}, &ci), clusterID)
 	return
 }
 
 // Pin ensure that an interactive cluster configuration is retained even after a cluster has been terminated for more than 30 days
 func (a ClustersAPI) Pin(clusterID string) error {
-	return a.client.Post("/clusters/pin", ClusterID{ClusterID: clusterID}, nil)
+	return a.client.Post(a.context, "/clusters/pin", ClusterID{ClusterID: clusterID}, nil)
 }
 
 // Unpin allows the cluster to eventually be removed from the list returned by the List API
 func (a ClustersAPI) Unpin(clusterID string) error {
-	return a.client.Post("/clusters/unpin", ClusterID{ClusterID: clusterID}, nil)
+	return a.client.Post(a.context, "/clusters/unpin", ClusterID{ClusterID: clusterID}, nil)
 }
 
 // Cluster Events API - only using Cluster ID string to get all events
 // https://docs.databricks.com/dev-tools/api/latest/clusters.html#events
 func (a ClustersAPI) Events(eventsRequest EventsRequest) ([]ClusterEvent, error) {
 	var eventsResponse EventsResponse
-	err := a.client.Post("/clusters/events", eventsRequest, &eventsResponse)
+	err := a.client.Post(a.context, "/clusters/events", eventsRequest, &eventsResponse)
 	if err != nil {
 		return nil, err
 	}
@@ -260,7 +260,7 @@ func (a ClustersAPI) Events(eventsRequest EventsRequest) ([]ClusterEvent, error)
 	curPos := len(eventsResponse.Events)
 	copy(events[startPos:curPos], eventsResponse.Events)
 	for curPos < totalCount && eventsResponse.NextPage != nil {
-		err := a.client.Post("/clusters/events", eventsResponse.NextPage, &eventsResponse)
+		err := a.client.Post(a.context, "/clusters/events", eventsResponse.NextPage, &eventsResponse)
 		if err != nil {
 			return nil, err
 		}
@@ -282,13 +282,13 @@ func (a ClustersAPI) Events(eventsRequest EventsRequest) ([]ClusterEvent, error)
 // and up to 30 of the most recently terminated job clusters in the past 30 days
 func (a ClustersAPI) List() ([]ClusterInfo, error) {
 	var clusterList ClusterList
-	err := a.client.Get("/clusters/list", nil, &clusterList)
+	err := a.client.Get(a.context, "/clusters/list", nil, &clusterList)
 	return clusterList.Clusters, err
 }
 
 // ListNodeTypes returns a sorted list of supported Spark node types
 func (a ClustersAPI) ListNodeTypes() (l NodeTypeList, err error) {
-	err = a.client.Get("/clusters/list-node-types", nil, &l)
+	err = a.client.Get(a.context, "/clusters/list-node-types", nil, &l)
 	return
 }
 

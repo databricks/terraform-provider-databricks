@@ -125,7 +125,7 @@ func (a PermissionsAPI) Update(objectID string, objectACL AccessControlChangeLis
 			})
 		}
 	}
-	return a.client.Put("/preview/permissions"+objectID, objectACL)
+	return a.client.Put(a.context, "/preview/permissions"+objectID, objectACL)
 }
 
 // Delete gracefully removes permissions. Technically, it's using method named SetOrDelete, but here we do more
@@ -153,12 +153,12 @@ func (a PermissionsAPI) Delete(objectID string) error {
 			PermissionLevel: "IS_OWNER",
 		})
 	}
-	return a.client.Put("/preview/permissions"+objectID, accl)
+	return a.client.Put(a.context, "/preview/permissions"+objectID, accl)
 }
 
 // Read gets all relevant permissions for the object, including inherited ones
 func (a PermissionsAPI) Read(objectID string) (objectACL ObjectACL, err error) {
-	err = a.client.Get("/preview/permissions"+objectID, nil, &objectACL)
+	err = a.client.Get(a.context, "/preview/permissions"+objectID, nil, &objectACL)
 	return
 }
 

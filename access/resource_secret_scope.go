@@ -13,12 +13,13 @@ import (
 
 // NewSecretScopesAPI creates SecretScopesAPI instance from provider meta
 func NewSecretScopesAPI(m interface{}) SecretScopesAPI {
-	return SecretScopesAPI{client: m.(*common.DatabricksClient)}
+	return SecretScopesAPI{m.(*common.DatabricksClient), context.TODO()}
 }
 
 // SecretScopesAPI exposes the Secret Scopes API
 type SecretScopesAPI struct {
-	client *common.DatabricksClient
+	client  *common.DatabricksClient
+	context context.Context
 }
 
 // SecretScopeList holds list of secret scopes
@@ -69,12 +70,12 @@ func (a SecretScopesAPI) Create(s SecretScope) error {
 		req.BackendType = "AZURE_KEYVAULT"
 		req.BackendAzureKeyvault = s.KeyvaultMetadata
 	}
-	return a.client.Post("/secrets/scopes/create", req, nil)
+	return a.client.Post(a.context, "/secrets/scopes/create", req, nil)
 }
 
 // Delete deletes a secret scope
 func (a SecretScopesAPI) Delete(scope string) error {
-	return a.client.Post("/secrets/scopes/delete", map[string]string{
+	return a.client.Post(a.context, "/secrets/scopes/delete", map[string]string{
 		"scope": scope,
 	}, nil)
 }
@@ -82,7 +83,7 @@ func (a SecretScopesAPI) Delete(scope string) error {
 // List lists all secret scopes available in the workspace
 func (a SecretScopesAPI) List() ([]SecretScope, error) {
 	var listSecretScopesResponse SecretScopeList
-	err := a.client.Get("/secrets/scopes/list", nil, &listSecretScopesResponse)
+	err := a.client.Get(a.context, "/secrets/scopes/list", nil, &listSecretScopesResponse)
 	return listSecretScopesResponse.Scopes, err
 }
 

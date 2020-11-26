@@ -1,6 +1,7 @@
 package storage
 
 import (
+	"context"
 	"encoding/base64"
 
 	"github.com/databrickslabs/databricks-terraform/common"
@@ -54,12 +55,13 @@ type DBFSDeleteRequest struct {
 
 // NewDBFSAPI creates DBFSAPI instance from provider meta
 func NewDBFSAPI(m interface{}) DBFSAPI {
-	return DBFSAPI{client: m.(*common.DatabricksClient)}
+	return DBFSAPI{m.(*common.DatabricksClient), context.TODO()}
 }
 
 // DBFSAPI exposes the DBFS API
 type DBFSAPI struct {
-	client *common.DatabricksClient
+	client  *common.DatabricksClient
+	context context.Context
 }
 
 // Create creates a file in DBFS given data string in base64
@@ -153,7 +155,7 @@ func (a DBFSAPI) recursiveAddPaths(path string, pathList *[]FileInfo) error {
 
 // Move moves the file between DBFS locations via DBFS api
 func (a DBFSAPI) Move(src string, tgt string) error {
-	return a.client.Post("/dbfs/move", map[string]string{
+	return a.client.Post(a.context, "/dbfs/move", map[string]string{
 		"source_path":      src,
 		"destination_path": tgt,
 	}, nil)
@@ -161,7 +163,7 @@ func (a DBFSAPI) Move(src string, tgt string) error {
 
 // Delete deletes a file in DBFS via API
 func (a DBFSAPI) Delete(path string, recursive bool) error {
-	return a.client.Post("/dbfs/delete", dbfsRequest{
+	return a.client.Post(a.context, "/dbfs/delete", dbfsRequest{
 		Path:      path,
 		Recursive: recursive,
 	}, nil)
@@ -180,7 +182,7 @@ func (a DBFSAPI) ReadString(path string, offset, length int64) (int64, string, e
 		BytesRead int64  `json:"bytes_read,omitempty"`
 		Data      string `json:"data,omitempty"`
 	}
-	err := a.client.Get("/dbfs/read", dbfsRequest{
+	err := a.client.Get(a.context, "/dbfs/read", dbfsRequest{
 		Path:   path,
 		Offset: offset,
 		Length: length,
@@ -190,7 +192,7 @@ func (a DBFSAPI) ReadString(path string, offset, length int64) (int64, string, e
 
 // Status returns the status of a file in DBFS
 func (a DBFSAPI) Status(path string) (f FileInfo, err error) {
-	err = a.client.Get("/dbfs/get-status", map[string]interface{}{
+	err = a.client.Get(a.context, "/dbfs/get-status", map[string]interface{}{
 		"path": path,
 	}, &f)
 	return
@@ -202,7 +204,7 @@ type FileList struct {
 
 func (a DBFSAPI) list(path string) ([]FileInfo, error) {
 	var dbfsList FileList
-	err := a.client.Get("/dbfs/list", map[string]interface{}{
+	err := a.client.Get(a.context, "/dbfs/list", map[string]interface{}{
 		"path": path,
 	}, &dbfsList)
 	return dbfsList.Files, err
@@ -210,7 +212,7 @@ func (a DBFSAPI) list(path string) ([]FileInfo, error) {
 
 // Mkdirs makes the directories in DBFS include the parent paths
 func (a DBFSAPI) Mkdirs(path string) error {
-	return a.client.Post("/dbfs/mkdirs", map[string]interface{}{
+	return a.client.Post(a.context, "/dbfs/mkdirs", map[string]interface{}{
 		"path": path,
 	}, nil)
 }
@@ -219,7 +221,7 @@ func (a DBFSAPI) createHandle(path string, overwrite bool) (int64, error) {
 	var handle struct {
 		Handle int64 `json:"handle,omitempty" url:"handle,omitempty"`
 	}
-	err := a.client.Post("/dbfs/create", map[string]interface{}{
+	err := a.client.Post(a.context, "/dbfs/create", map[string]interface{}{
 		"path":      path,
 		"overwrite": overwrite,
 	}, &handle)
@@ -227,14 +229,14 @@ func (a DBFSAPI) createHandle(path string, overwrite bool) (int64, error) {
 }
 
 func (a DBFSAPI) addBlock(data string, handle int64) error {
-	return a.client.Post("/dbfs/add-block", map[string]interface{}{
+	return a.client.Post(a.context, "/dbfs/add-block", map[string]interface{}{
 		"data":   data,
 		"handle": handle,
 	}, nil)
 }
 
 func (a DBFSAPI) closeHandle(handle int64) error {
-	return a.client.Post("/dbfs/close", map[string]interface{}{
+	return a.client.Post(a.context, "/dbfs/close", map[string]interface{}{
 		"handle": handle,
 	}, nil)
 }

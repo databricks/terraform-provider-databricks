@@ -2,7 +2,6 @@ package identity
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"net/http"
 
@@ -11,12 +10,16 @@ import (
 
 // NewUsersAPI creates UsersAPI instance from provider meta
 func NewUsersAPI(ctx context.Context, m interface{}) UsersAPI {
-	return UsersAPI{C: m.(*common.DatabricksClient)}
+	return UsersAPI{
+		client:  m.(*common.DatabricksClient),
+		context: ctx,
+	}
 }
 
 // UsersAPI exposes the scim user API
 type UsersAPI struct {
-	C *common.DatabricksClient
+	client  *common.DatabricksClient
+	context context.Context
 }
 
 // UserEntity entity from which resource schema is made
@@ -51,7 +54,7 @@ func (u UserEntity) toRequest() ScimUser {
 
 // Create ..
 func (a UsersAPI) Create(ru UserEntity) (user ScimUser, err error) {
-	err = a.C.Scim(http.MethodPost, "/preview/scim/v2/Users", ru.toRequest(), &user)
+	err = a.client.Scim(a.context, http.MethodPost, "/preview/scim/v2/Users", ru.toRequest(), &user)
 	return user, err
 }
 
@@ -86,7 +89,7 @@ func (a UsersAPI) Me() (ScimUser, error) {
 }
 
 func (a UsersAPI) readByPath(userPath string) (user ScimUser, err error) {
-	err = a.C.Scim(http.MethodGet, userPath, nil, &user)
+	err = a.client.Scim(a.context, http.MethodGet, userPath, nil, &user)
 	return
 }
 
@@ -99,18 +102,18 @@ func (a UsersAPI) Update(userID string, ru UserEntity) error {
 	updateRequest := ru.toRequest()
 	updateRequest.Groups = user.Groups
 	updateRequest.Roles = user.Roles
-	return a.C.Scim(http.MethodPut,
+	return a.client.Scim(a.context, http.MethodPut,
 		fmt.Sprintf("/preview/scim/v2/Users/%v", userID),
 		updateRequest, nil)
 }
 
 // Patch updates resource-friendly entity
 func (a UsersAPI) Patch(userID string, r patchRequest) error {
-	return a.C.Scim(http.MethodPatch, fmt.Sprintf("/preview/scim/v2/Users/%v", userID), r, nil)
+	return a.client.Scim(a.context, http.MethodPatch, fmt.Sprintf("/preview/scim/v2/Users/%v", userID), r, nil)
 }
 
 // Delete will delete the user given the user id
 func (a UsersAPI) Delete(userID string) error {
 	userPath := fmt.Sprintf("/preview/scim/v2/Users/%v", userID)
-	return a.C.Scim(http.MethodDelete, userPath, nil, nil)
+	return a.client.Scim(a.context, http.MethodDelete, userPath, nil, nil)
 }

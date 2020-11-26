@@ -1,6 +1,7 @@
 package common
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -100,22 +101,22 @@ func TestGetClientSecretAuthorizer(t *testing.T) {
 
 func TestEnsureWorkspaceURL_CornerCases(t *testing.T) {
 	aa := AzureAuth{}
-	err := aa.ensureWorkspaceURL(nil)
+	err := aa.ensureWorkspaceURL(context.Background(), nil)
 	assert.EqualError(t, err, "DatabricksClient is not configured")
 
 	aa.databricksClient = &DatabricksClient{}
-	err = aa.ensureWorkspaceURL(nil)
+	err = aa.ensureWorkspaceURL(context.Background(), nil)
 	assert.EqualError(t, err, "Somehow resource id is not set")
 }
 
 func TestAcquirePAT_CornerCases(t *testing.T) {
 	aa := AzureAuth{}
-	_, err := aa.acquirePAT(func(resource string) (autorest.Authorizer, error) {
+	_, err := aa.acquirePAT(context.Background(), func(resource string) (autorest.Authorizer, error) {
 		return &autorest.BearerAuthorizer{}, fmt.Errorf("test")
 	})
 	assert.EqualError(t, err, "test")
 
-	_, err = aa.acquirePAT(func(resource string) (autorest.Authorizer, error) {
+	_, err = aa.acquirePAT(context.Background(), func(resource string) (autorest.Authorizer, error) {
 		return &autorest.BearerAuthorizer{}, nil
 	})
 	assert.EqualError(t, err, "DatabricksClient is not configured")
@@ -124,7 +125,7 @@ func TestAcquirePAT_CornerCases(t *testing.T) {
 	aa.temporaryPat = &TokenResponse{
 		TokenValue: "...",
 	}
-	auth, rre := aa.acquirePAT(func(resource string) (autorest.Authorizer, error) {
+	auth, rre := aa.acquirePAT(context.Background(), func(resource string) (autorest.Authorizer, error) {
 		return &autorest.BearerAuthorizer{}, nil
 	})
 	assert.NoError(t, rre)
@@ -179,10 +180,10 @@ func TestAzureAuth_ensureWorkspaceURL(t *testing.T) {
 		Type:        "Bearer",
 	}
 	authorizer := autorest.NewBearerAuthorizer(token)
-	err := aa.ensureWorkspaceURL(authorizer)
+	err := aa.ensureWorkspaceURL(context.Background(), authorizer)
 	assert.NoError(t, err)
 
-	err = aa.ensureWorkspaceURL(authorizer)
+	err = aa.ensureWorkspaceURL(context.Background(), authorizer)
 	assert.NoError(t, err)
 	assert.Equal(t, 1, cnt[0],
 		"Calls to Azure Management API must be done only once")
@@ -265,7 +266,7 @@ func TestAzureAuth_configureWithClientSecret(t *testing.T) {
 		DefaultZone string   `json:"default_zone,omitempty"`
 	}
 	var zi ZonesInfo
-	err = client.Get("/clusters/list-zones", nil, &zi)
+	err = client.Get(context.Background(), "/clusters/list-zones", nil, &zi)
 	assert.NotNil(t, zi)
 	assert.NoError(t, err)
 	assert.Len(t, zi.Zones, 3)

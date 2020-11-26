@@ -1,6 +1,7 @@
 package access
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"net/http"
@@ -53,17 +54,21 @@ type SecretACLRequest struct {
 
 // NewSecretsAPI creates SecretsAPI instance from provider meta
 func NewSecretsAPI(m interface{}) SecretsAPI {
-	return SecretsAPI{client: m.(*common.DatabricksClient)}
+	return SecretsAPI{
+		client:  m.(*common.DatabricksClient),
+		context: context.TODO(),
+	}
 }
 
 // SecretsAPI exposes the Secrets API
 type SecretsAPI struct {
-	client *common.DatabricksClient
+	client  *common.DatabricksClient
+	context context.Context
 }
 
 // Create creates or modifies a string secret depends on the type of scope backend
 func (a SecretsAPI) Create(stringValue, scope, key string) error {
-	return a.client.Post("/secrets/put", SecretsRequest{
+	return a.client.Post(a.context, "/secrets/put", SecretsRequest{
 		StringValue: stringValue,
 		Scope:       scope,
 		Key:         key,
@@ -72,7 +77,7 @@ func (a SecretsAPI) Create(stringValue, scope, key string) error {
 
 // Delete deletes a secret depends on the type of scope backend
 func (a SecretsAPI) Delete(scope, key string) error {
-	return a.client.Post("/secrets/delete", SecretsRequest{
+	return a.client.Post(a.context, "/secrets/delete", SecretsRequest{
 		Scope: scope,
 		Key:   key,
 	}, nil)
@@ -81,7 +86,7 @@ func (a SecretsAPI) Delete(scope, key string) error {
 // List lists the secret keys that are stored at this scope
 func (a SecretsAPI) List(scope string) ([]SecretMetadata, error) {
 	var secretsList SecretsList
-	err := a.client.Get("/secrets/list", map[string]string{
+	err := a.client.Get(a.context, "/secrets/list", map[string]string{
 		"scope": scope,
 	}, &secretsList)
 	return secretsList.Secrets, err

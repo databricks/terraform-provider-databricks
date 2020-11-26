@@ -15,18 +15,19 @@ import (
 
 // WorkspaceConfAPI exposes the workspace configurations API
 type WorkspaceConfAPI struct {
-	client *common.DatabricksClient
+	client  *common.DatabricksClient
+	context context.Context
 }
 
 // NewWorkspaceConfAPI returns workspace conf API
 func NewWorkspaceConfAPI(ctx context.Context, m interface{}) WorkspaceConfAPI {
-	return WorkspaceConfAPI{client: m.(*common.DatabricksClient)}
+	return WorkspaceConfAPI{m.(*common.DatabricksClient), ctx}
 }
 
 // Update will handle creation of new values as well as deletes. Deleting just implies that a value of "" or
 // the appropriate disable string like "false" is sent with the appropriate key
 func (a WorkspaceConfAPI) Update(workspaceConfMap map[string]interface{}) error {
-	return a.client.Patch("/workspace-conf", workspaceConfMap)
+	return a.client.Patch(a.context, "/workspace-conf", workspaceConfMap)
 }
 
 // Read just returns back a map of keys and values which keys are the configuration items and values are the settings
@@ -35,7 +36,7 @@ func (a WorkspaceConfAPI) Read(conf *map[string]interface{}) error {
 	for k := range *conf {
 		keys = append(keys, k)
 	}
-	return a.client.Get("/workspace-conf", map[string]string{
+	return a.client.Get(a.context, "/workspace-conf", map[string]string{
 		"keys": strings.Join(keys, ","),
 	}, &conf)
 }

@@ -1,6 +1,7 @@
 package common
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -125,7 +126,7 @@ func (aa *AzureAuth) configureWithClientSecret() (func(r *http.Request) error, e
 	log.Printf("[INFO] Using Azure Service Principal client secret authentication")
 	// return aa.simpleAADRequestVisitor(aa.getClientSecretAuthorizer, aa.addSpManagementTokenVisitor)
 	return func(r *http.Request) error {
-		pat, err := aa.acquirePAT(aa.getClientSecretAuthorizer, aa.addSpManagementTokenVisitor)
+		pat, err := aa.acquirePAT(r.Context(), aa.getClientSecretAuthorizer, aa.addSpManagementTokenVisitor)
 		if err != nil {
 			return err
 		}
@@ -166,6 +167,7 @@ func (aa *AzureAuth) addSpManagementTokenVisitor(r *http.Request, management aut
 
 // go nolint
 func (aa *AzureAuth) simpleAADRequestVisitor(
+	ctx context.Context,
 	authorizerFactory func(resource string) (autorest.Authorizer, error),
 	visitors ...func(r *http.Request, ma autorest.Authorizer) error) (func(r *http.Request) error, error) {
 	env, err := aa.getAzureEnvironment()
@@ -176,7 +178,7 @@ func (aa *AzureAuth) simpleAADRequestVisitor(
 	if err != nil {
 		return nil, err
 	}
-	err = aa.ensureWorkspaceURL(managementAuthorizer)
+	err = aa.ensureWorkspaceURL(ctx, managementAuthorizer)
 	if err != nil {
 		return nil, err
 	}
@@ -201,6 +203,7 @@ func (aa *AzureAuth) simpleAADRequestVisitor(
 }
 
 func (aa *AzureAuth) acquirePAT(
+	ctx context.Context,
 	factory func(resource string) (autorest.Authorizer, error),
 	visitors ...func(r *http.Request, ma autorest.Authorizer) error) (*TokenResponse, error) {
 	if aa.temporaryPat != nil {
@@ -220,11 +223,11 @@ func (aa *AzureAuth) acquirePAT(
 	if err != nil {
 		return nil, err
 	}
-	err = aa.ensureWorkspaceURL(management)
+	err = aa.ensureWorkspaceURL(ctx, management)
 	if err != nil {
 		return nil, err
 	}
-	token, err := aa.createPAT(func(r *http.Request) error {
+	token, err := aa.createPAT(ctx, func(r *http.Request) error {
 		if len(visitors) > 0 {
 			err = visitors[0](r, management)
 			if err != nil {
@@ -260,7 +263,8 @@ func (aa *AzureAuth) patRequest() TokenRequest {
 	}
 }
 
-func (aa *AzureAuth) ensureWorkspaceURL(managementAuthorizer autorest.Authorizer) error {
+func (aa *AzureAuth) ensureWorkspaceURL(ctx context.Context,
+	managementAuthorizer autorest.Authorizer) error {
 	if aa.databricksClient == nil {
 		return fmt.Errorf("DatabricksClient is not configured")
 	}
@@ -278,7 +282,7 @@ func (aa *AzureAuth) ensureWorkspaceURL(managementAuthorizer autorest.Authorizer
 		endpoint = aa.azureManagementEndpoint
 	}
 	var workspace azureDatabricksWorkspace
-	resp, err := aa.databricksClient.genericQuery(http.MethodGet,
+	resp, err := aa.databricksClient.genericQuery(ctx, http.MethodGet,
 		endpoint+resourceID,
 		map[string]string{
 			"api-version": "2018-04-01",
@@ -300,10 +304,11 @@ func (aa *AzureAuth) ensureWorkspaceURL(managementAuthorizer autorest.Authorizer
 	return nil
 }
 
-func (aa *AzureAuth) createPAT(interceptor func(r *http.Request) error) (tr TokenResponse, err error) {
+func (aa *AzureAuth) createPAT(ctx context.Context,
+	interceptor func(r *http.Request) error) (tr TokenResponse, err error) {
 	log.Println("[DEBUG] Creating workspace token")
 	url := fmt.Sprintf("%sapi/2.0/token/create", aa.databricksClient.Host)
-	body, err := aa.databricksClient.genericQuery(
+	body, err := aa.databricksClient.genericQuery(ctx,
 		http.MethodPost, url, aa.patRequest(), interceptor)
 	if err != nil {
 		return

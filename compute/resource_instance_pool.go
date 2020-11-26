@@ -1,6 +1,7 @@
 package compute
 
 import (
+	"context"
 	"log"
 	"time"
 
@@ -12,30 +13,31 @@ import (
 
 // NewInstancePoolsAPI creates InstancePoolsAPI instance from provider meta
 func NewInstancePoolsAPI(m interface{}) InstancePoolsAPI {
-	return InstancePoolsAPI{C: m.(*common.DatabricksClient)}
+	return InstancePoolsAPI{m.(*common.DatabricksClient), context.TODO()}
 }
 
 // InstancePoolsAPI exposes the instance pools api
 type InstancePoolsAPI struct {
-	C *common.DatabricksClient
+	client  *common.DatabricksClient
+	context context.Context
 }
 
 // Create creates the instance pool to given the instance pool configuration
 func (a InstancePoolsAPI) Create(instancePool InstancePool) (InstancePoolAndStats, error) {
 	var instancePoolInfo InstancePoolAndStats
-	err := a.C.Post("/instance-pools/create", instancePool, &instancePoolInfo)
+	err := a.client.Post(a.context, "/instance-pools/create", instancePool, &instancePoolInfo)
 	return instancePoolInfo, err
 }
 
 // Update edits the configuration of a instance pool to match the provided attributes and size
 func (a InstancePoolsAPI) Update(instancePoolInfo InstancePoolAndStats) error {
-	return a.C.Post("/instance-pools/edit", instancePoolInfo, nil)
+	return a.client.Post(a.context, "/instance-pools/edit", instancePoolInfo, nil)
 }
 
 // Read retrieves the information for a instance pool given its identifier
 func (a InstancePoolsAPI) Read(instancePoolID string) (InstancePoolAndStats, error) {
 	var instancePoolInfo InstancePoolAndStats
-	err := a.C.Get("/instance-pools/get", map[string]string{
+	err := a.client.Get(a.context, "/instance-pools/get", map[string]string{
 		"instance_pool_id": instancePoolID,
 	}, &instancePoolInfo)
 	return instancePoolInfo, err
@@ -43,13 +45,13 @@ func (a InstancePoolsAPI) Read(instancePoolID string) (InstancePoolAndStats, err
 
 // List retrieves the list of existing instance pools
 func (a InstancePoolsAPI) List() (ipl InstancePoolList, err error) {
-	err = a.C.Get("/instance-pools/list", nil, &ipl)
+	err = a.client.Get(a.context, "/instance-pools/list", nil, &ipl)
 	return
 }
 
 // Delete terminates a instance pool given its ID
 func (a InstancePoolsAPI) Delete(instancePoolID string) error {
-	return a.C.Post("/instance-pools/delete", map[string]string{
+	return a.client.Post(a.context, "/instance-pools/delete", map[string]string{
 		"instance_pool_id": instancePoolID,
 	}, nil)
 }

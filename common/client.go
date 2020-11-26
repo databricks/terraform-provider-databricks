@@ -30,7 +30,6 @@ type DatabricksClient struct {
 	TimeoutSeconds     int
 	DebugTruncateBytes int
 	DebugHeaders       bool
-	userAgent          string
 	httpClient         *retryablehttp.Client
 	authMutex          sync.Mutex
 	authVisitor        func(r *http.Request) error
@@ -41,7 +40,6 @@ type DatabricksClient struct {
 func (c *DatabricksClient) Configure() error {
 	c.configureHTTPCLient()
 	c.AzureAuth.databricksClient = c
-	c.userAgent = UserAgent()
 	if c.DebugTruncateBytes == 0 {
 		c.DebugTruncateBytes = 96
 	}

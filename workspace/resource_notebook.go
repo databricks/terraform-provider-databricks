@@ -81,12 +81,13 @@ type NotebookDeleteRequest struct {
 
 // NewNotebooksAPI creates NotebooksAPI instance from provider meta
 func NewNotebooksAPI(ctx context.Context, m interface{}) NotebooksAPI {
-	return NotebooksAPI{client: m.(*common.DatabricksClient)}
+	return NotebooksAPI{m.(*common.DatabricksClient), ctx}
 }
 
 // NotebooksAPI exposes the Notebooks API
 type NotebooksAPI struct {
-	client *common.DatabricksClient
+	client  *common.DatabricksClient
+	context context.Context
 }
 
 // Mutex for synchronous deletes (api has poor limits in terms of allowed parallelism this increases stability of the deletes)
@@ -99,13 +100,13 @@ var mkdirMtx = &sync.Mutex{}
 func (a NotebooksAPI) Create(r ImportRequest) error {
 	mkdirMtx.Lock()
 	defer mkdirMtx.Unlock()
-	return a.client.Post("/workspace/import", r, nil)
+	return a.client.Post(a.context, "/workspace/import", r, nil)
 }
 
 // Read returns the notebook metadata and not the contents
 func (a NotebooksAPI) Read(path string) (ObjectStatus, error) {
 	var notebookInfo ObjectStatus
-	err := a.client.Get("/workspace/get-status", map[string]string{
+	err := a.client.Get(a.context, "/workspace/get-status", map[string]string{
 		"path": path,
 	}, &notebookInfo)
 	return notebookInfo, err
@@ -119,7 +120,7 @@ type workspacePathRequest struct {
 // Export returns the notebook content as a base64 string
 func (a NotebooksAPI) Export(path string, format ExportFormat) (string, error) {
 	var notebookContent NotebookContent
-	err := a.client.Get("/workspace/export", workspacePathRequest{
+	err := a.client.Get(a.context, "/workspace/export", workspacePathRequest{
 		Format: format,
 		Path:   path,
 	}, &notebookContent)
@@ -133,7 +134,7 @@ func (a NotebooksAPI) Mkdirs(path string) error {
 	mkdirMtx.Lock()
 	defer mkdirMtx.Unlock()
 
-	return a.client.Post("/workspace/mkdirs", map[string]string{
+	return a.client.Post(a.context, "/workspace/mkdirs", map[string]string{
 		"path": path,
 	}, nil)
 }
@@ -176,7 +177,7 @@ type objectList struct {
 
 func (a NotebooksAPI) list(path string) ([]ObjectStatus, error) {
 	var notebookList objectList
-	err := a.client.Get("/workspace/list", map[string]string{
+	err := a.client.Get(a.context, "/workspace/list", map[string]string{
 		"path": path,
 	}, &notebookList)
 	return notebookList.Objects, err
@@ -184,7 +185,7 @@ func (a NotebooksAPI) list(path string) ([]ObjectStatus, error) {
 
 // Delete will delete folders given a path and recursive flag
 func (a NotebooksAPI) Delete(path string, recursive bool) error {
-	return a.client.Post("/workspace/delete", NotebookDeleteRequest{
+	return a.client.Post(a.context, "/workspace/delete", NotebookDeleteRequest{
 		Path:      path,
 		Recursive: recursive,
 	}, nil)

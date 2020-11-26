@@ -170,9 +170,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, c *common.
 
 func waitForLibrariesInstalled(
 	libraries LibrariesAPI, clusterInfo ClusterInfo) (result *ClusterLibraryStatuses, err error) {
-	// nolint should be a bigger refactor
-	// TODO: RetryContext
-	err = resource.Retry(30*time.Minute, func() *resource.RetryError {
+	err = resource.RetryContext(libraries.context, 30*time.Minute, func() *resource.RetryError {
 		libsClusterStatus, err := libraries.ClusterStatus(clusterInfo.ClusterID)
 		if ae, ok := err.(common.APIError); ok && ae.IsMissing() {
 			// eventual consistency error

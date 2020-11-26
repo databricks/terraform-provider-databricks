@@ -42,7 +42,7 @@ type InstanceProfilesAPI struct {
 
 // Create creates an instance profile record on Databricks
 func (a InstanceProfilesAPI) Create(instanceProfileARN string, skipValidation bool) error {
-	return a.client.Post("/instance-profiles/add", map[string]interface{}{
+	return a.client.Post(a.context, "/instance-profiles/add", map[string]interface{}{
 		"instance_profile_arn": instanceProfileARN,
 		"skip_validation":      skipValidation,
 	}, nil)
@@ -73,13 +73,13 @@ func (a InstanceProfilesAPI) Read(instanceProfileARN string) (string, error) {
 // List lists all the instance profiles in the workspace
 func (a InstanceProfilesAPI) List() ([]InstanceProfileInfo, error) {
 	var instanceProfilesArnList InstanceProfileList
-	err := a.client.Get("/instance-profiles/list", nil, &instanceProfilesArnList)
+	err := a.client.Get(a.context, "/instance-profiles/list", nil, &instanceProfilesArnList)
 	return instanceProfilesArnList.InstanceProfiles, err
 }
 
 // Delete deletes the instance profile given an instance profile arn
 func (a InstanceProfilesAPI) Delete(instanceProfileARN string) error {
-	return a.client.Post("/instance-profiles/remove", map[string]interface{}{
+	return a.client.Post(a.context, "/instance-profiles/remove", map[string]interface{}{
 		"instance_profile_arn": instanceProfileARN,
 	}, nil)
 }

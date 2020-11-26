@@ -1,6 +1,7 @@
 package mws
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/databrickslabs/databricks-terraform/common"
@@ -11,12 +12,13 @@ import (
 
 // NewCredentialsAPI creates MWSCredentialsAPI instance from provider meta
 func NewCredentialsAPI(m interface{}) CredentialsAPI {
-	return CredentialsAPI{client: m.(*common.DatabricksClient)}
+	return CredentialsAPI{m.(*common.DatabricksClient), context.TODO()}
 }
 
 // CredentialsAPI exposes the mws credentials API
 type CredentialsAPI struct {
-	client *common.DatabricksClient
+	client  *common.DatabricksClient
+	context context.Context
 }
 
 // TODO: move mwsAcctID into provider configuration...
@@ -25,7 +27,7 @@ type CredentialsAPI struct {
 func (a CredentialsAPI) Create(mwsAcctID, credentialsName string, roleArn string) (Credentials, error) {
 	var mwsCreds Credentials
 	credentialsAPIPath := fmt.Sprintf("/accounts/%s/credentials", mwsAcctID)
-	err := a.client.Post(credentialsAPIPath, Credentials{
+	err := a.client.Post(a.context, credentialsAPIPath, Credentials{
 		CredentialsName: credentialsName,
 		AwsCredentials: &AwsCredentials{
 			StsRole: &StsRole{
@@ -40,21 +42,21 @@ func (a CredentialsAPI) Create(mwsAcctID, credentialsName string, roleArn string
 func (a CredentialsAPI) Read(mwsAcctID, credentialsID string) (Credentials, error) {
 	var mwsCreds Credentials
 	credentialsAPIPath := fmt.Sprintf("/accounts/%s/credentials/%s", mwsAcctID, credentialsID)
-	err := a.client.Get(credentialsAPIPath, nil, &mwsCreds)
+	err := a.client.Get(a.context, credentialsAPIPath, nil, &mwsCreds)
 	return mwsCreds, err
 }
 
 // Delete deletes the credentials object given a credentials id
 func (a CredentialsAPI) Delete(mwsAcctID, credentialsID string) error {
 	credentialsAPIPath := fmt.Sprintf("/accounts/%s/credentials/%s", mwsAcctID, credentialsID)
-	return a.client.Delete(credentialsAPIPath, nil)
+	return a.client.Delete(a.context, credentialsAPIPath, nil)
 }
 
 // List lists all the available credentials object in the mws account
 func (a CredentialsAPI) List(mwsAcctID string) ([]Credentials, error) {
 	var mwsCredsList []Credentials
 	credentialsAPIPath := fmt.Sprintf("/accounts/%s/credentials", mwsAcctID)
-	err := a.client.Get(credentialsAPIPath, nil, &mwsCredsList)
+	err := a.client.Get(a.context, credentialsAPIPath, nil, &mwsCredsList)
 	return mwsCredsList, err
 }
 

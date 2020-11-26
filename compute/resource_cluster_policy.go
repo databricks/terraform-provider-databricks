@@ -12,12 +12,13 @@ import (
 // NewClusterPoliciesAPI creates ClusterPoliciesAPI instance from provider meta
 // Creation and editing is available to admins only.
 func NewClusterPoliciesAPI(ctx context.Context, m interface{}) ClusterPoliciesAPI {
-	return ClusterPoliciesAPI{client: m.(*common.DatabricksClient)}
+	return ClusterPoliciesAPI{m.(*common.DatabricksClient), ctx}
 }
 
 // Listing can be performed by any user and is limited to policies accessible by that user.
 type ClusterPoliciesAPI struct {
-	client *common.DatabricksClient
+	client  *common.DatabricksClient
+	context context.Context
 }
 
 type policyIDWrapper struct {
@@ -27,7 +28,7 @@ type policyIDWrapper struct {
 // Create creates new cluster policy and sets PolicyID
 func (a ClusterPoliciesAPI) Create(clusterPolicy *ClusterPolicy) error {
 	var policyIDResponse = policyIDWrapper{}
-	err := a.client.Post("/policies/clusters/create", clusterPolicy, &policyIDResponse)
+	err := a.client.Post(a.context, "/policies/clusters/create", clusterPolicy, &policyIDResponse)
 	if err != nil {
 		return err
 	}
@@ -40,18 +41,18 @@ func (a ClusterPoliciesAPI) Create(clusterPolicy *ClusterPolicy) error {
 // For such clusters the next cluster edit must provide a confirming configuration,
 // but otherwise they can continue to run.
 func (a ClusterPoliciesAPI) Edit(clusterPolicy *ClusterPolicy) error {
-	return a.client.Post("/policies/clusters/edit", clusterPolicy, nil)
+	return a.client.Post(a.context, "/policies/clusters/edit", clusterPolicy, nil)
 }
 
 // Get returns cluster policy
 func (a ClusterPoliciesAPI) Get(policyID string) (policy ClusterPolicy, err error) {
-	err = a.client.Get("/policies/clusters/get", policyIDWrapper{policyID}, &policy)
+	err = a.client.Get(a.context, "/policies/clusters/get", policyIDWrapper{policyID}, &policy)
 	return
 }
 
 // Delete removes cluster policy
 func (a ClusterPoliciesAPI) Delete(policyID string) error {
-	return a.client.Post("/policies/clusters/delete", policyIDWrapper{policyID}, nil)
+	return a.client.Post(a.context, "/policies/clusters/delete", policyIDWrapper{policyID}, nil)
 }
 
 func parsePolicyFromData(d *schema.ResourceData) (*ClusterPolicy, error) {

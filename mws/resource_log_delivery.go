@@ -35,25 +35,26 @@ type LogDeliveryConfiguration struct {
 
 // LogDeliveryAPI ...
 type LogDeliveryAPI struct {
-	client *common.DatabricksClient
+	client  *common.DatabricksClient
+	context context.Context
 }
 
 // NewLogDeliveryAPI ...
 func NewLogDeliveryAPI(m interface{}) LogDeliveryAPI {
-	return LogDeliveryAPI{client: m.(*common.DatabricksClient)}
+	return LogDeliveryAPI{m.(*common.DatabricksClient), context.TODO()}
 }
 
 // Read reads log delivery configuration
 func (a LogDeliveryAPI) Read(accountID, configID string) (LogDeliveryConfiguration, error) {
 	var ld LogDelivery
-	err := a.client.Get(fmt.Sprintf("/accounts/%s/log-delivery/%s", accountID, configID), nil, &ld)
+	err := a.client.Get(a.context, fmt.Sprintf("/accounts/%s/log-delivery/%s", accountID, configID), nil, &ld)
 	return ld.LogDeliveryConfiguration, err
 }
 
 // Create new log delivery configuration
 func (a LogDeliveryAPI) Create(ldc LogDeliveryConfiguration) (string, error) {
 	var ld LogDelivery
-	err := a.client.Post(fmt.Sprintf("/accounts/%s/log-delivery", ldc.AccountID), LogDelivery{
+	err := a.client.Post(a.context, fmt.Sprintf("/accounts/%s/log-delivery", ldc.AccountID), LogDelivery{
 		LogDeliveryConfiguration: ldc,
 	}, &ld)
 	// todo: verify with empty response - structs should have empty default strings
@@ -62,7 +63,7 @@ func (a LogDeliveryAPI) Create(ldc LogDeliveryConfiguration) (string, error) {
 
 // Disable log delivery configuration - e.g. delete it
 func (a LogDeliveryAPI) Disable(accountID, configID string) error {
-	return a.client.Patch(fmt.Sprintf("/accounts/%s/log-delivery/%s", accountID, configID), map[string]string{
+	return a.client.Patch(a.context, fmt.Sprintf("/accounts/%s/log-delivery/%s", accountID, configID), map[string]string{
 		"status": "DISABLED",
 	})
 }

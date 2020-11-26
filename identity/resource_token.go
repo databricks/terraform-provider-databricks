@@ -1,6 +1,7 @@
 package identity
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"net/http"
@@ -37,17 +38,18 @@ type TokenList struct {
 
 // NewTokensAPI creates TokensAPI instance from provider meta
 func NewTokensAPI(m interface{}) TokensAPI {
-	return TokensAPI{C: m.(*common.DatabricksClient)}
+	return TokensAPI{m.(*common.DatabricksClient), context.TODO()}
 }
 
 // TokensAPI exposes the Secrets API
 type TokensAPI struct {
-	C *common.DatabricksClient
+	client  *common.DatabricksClient
+	context context.Context
 }
 
 // Create creates a api token given a expiration duration and a comment
 func (a TokensAPI) Create(tokenLifetime time.Duration, comment string) (r TokenResponse, err error) {
-	err = a.C.Post("/token/create", TokenRequest{
+	err = a.client.Post(a.context, "/token/create", TokenRequest{
 		LifetimeSeconds: int32(tokenLifetime.Seconds()),
 		Comment:         comment,
 	}, &r)
@@ -57,7 +59,7 @@ func (a TokensAPI) Create(tokenLifetime time.Duration, comment string) (r TokenR
 // List will list all the token metadata and not the content of the tokens in the workspace
 func (a TokensAPI) List() ([]TokenInfo, error) {
 	var tokenListResult TokenList
-	err := a.C.Get("/token/list", nil, &tokenListResult)
+	err := a.client.Get(a.context, "/token/list", nil, &tokenListResult)
 	return tokenListResult.TokenInfos, err
 }
 
@@ -83,7 +85,7 @@ func (a TokensAPI) Read(tokenID string) (TokenInfo, error) {
 
 // Delete will delete the token given a token id
 func (a TokensAPI) Delete(tokenID string) error {
-	return a.C.Post("/token/delete", map[string]string{
+	return a.client.Post(a.context, "/token/delete", map[string]string{
 		"token_id": tokenID,
 	}, nil)
 }

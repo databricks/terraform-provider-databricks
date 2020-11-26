@@ -114,7 +114,7 @@ func (aa *AzureAuth) configureWithAzureCLI() (func(r *http.Request) error, error
 	if aa.UsePATForCLI {
 		log.Printf("[INFO] Using Azure CLI authentication with session-generated PAT")
 		return func(r *http.Request) error {
-			pat, err := aa.acquirePAT(aa.cliAuthorizer)
+			pat, err := aa.acquirePAT(r.Context(), aa.cliAuthorizer)
 			if err != nil {
 				return err
 			}
@@ -123,5 +123,5 @@ func (aa *AzureAuth) configureWithAzureCLI() (func(r *http.Request) error, error
 		}, nil
 	}
 	log.Printf("[INFO] Using Azure CLI authentication with AAD tokens")
-	return aa.simpleAADRequestVisitor(aa.cliAuthorizer)
+	return aa.simpleAADRequestVisitor(context.TODO(), aa.cliAuthorizer)
 }

@@ -1,6 +1,7 @@
 package mws
 
 import (
+	"context"
 	"fmt"
 	"log"
 
@@ -10,19 +11,20 @@ import (
 
 // NewStorageConfigurationsAPI creates MWSStorageConfigurationsAPI instance from provider meta
 func NewStorageConfigurationsAPI(m interface{}) StorageConfigurationsAPI {
-	return StorageConfigurationsAPI{client: m.(*common.DatabricksClient)}
+	return StorageConfigurationsAPI{m.(*common.DatabricksClient), context.TODO()}
 }
 
 // StorageConfigurationsAPI exposes the mws storageConfiguration API
 type StorageConfigurationsAPI struct {
-	client *common.DatabricksClient
+	client  *common.DatabricksClient
+	context context.Context
 }
 
 // Create creates a configuration for the root s3 bucket
 func (a StorageConfigurationsAPI) Create(mwsAcctID, storageConfigurationName string, bucketName string) (StorageConfiguration, error) {
 	var mwsStorageConfigurations StorageConfiguration
 	storageConfigurationAPIPath := fmt.Sprintf("/accounts/%s/storage-configurations", mwsAcctID)
-	err := a.client.Post(storageConfigurationAPIPath, StorageConfiguration{
+	err := a.client.Post(a.context, storageConfigurationAPIPath, StorageConfiguration{
 		StorageConfigurationName: storageConfigurationName,
 		RootBucketInfo: &RootBucketInfo{
 			BucketName: bucketName,
@@ -35,21 +37,21 @@ func (a StorageConfigurationsAPI) Create(mwsAcctID, storageConfigurationName str
 func (a StorageConfigurationsAPI) Read(mwsAcctID, storageConfigurationID string) (StorageConfiguration, error) {
 	var mwsStorageConfigurations StorageConfiguration
 	storageConfigurationAPIPath := fmt.Sprintf("/accounts/%s/storage-configurations/%s", mwsAcctID, storageConfigurationID)
-	err := a.client.Get(storageConfigurationAPIPath, nil, &mwsStorageConfigurations)
+	err := a.client.Get(a.context, storageConfigurationAPIPath, nil, &mwsStorageConfigurations)
 	return mwsStorageConfigurations, err
 }
 
 // Delete deletes the configuration for the root s3 bucket
 func (a StorageConfigurationsAPI) Delete(mwsAcctID, storageConfigurationID string) error {
 	storageConfigurationAPIPath := fmt.Sprintf("/accounts/%s/storage-configurations/%s", mwsAcctID, storageConfigurationID)
-	return a.client.Delete(storageConfigurationAPIPath, nil)
+	return a.client.Delete(a.context, storageConfigurationAPIPath, nil)
 }
 
 // List lists all the storage configurations for the root s3 buckets in the account ID provided to the client config
 func (a StorageConfigurationsAPI) List(mwsAcctID string) ([]StorageConfiguration, error) {
 	var mwsStorageConfigurationsList []StorageConfiguration
 	storageConfigurationAPIPath := fmt.Sprintf("/accounts/%s/storage-configurations", mwsAcctID)
-	err := a.client.Get(storageConfigurationAPIPath, nil, &mwsStorageConfigurationsList)
+	err := a.client.Get(a.context, storageConfigurationAPIPath, nil, &mwsStorageConfigurationsList)
 	return mwsStorageConfigurationsList, err
 }
 

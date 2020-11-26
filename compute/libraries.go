@@ -25,17 +25,17 @@ type LibrariesAPI struct {
 
 // Install library list on cluster
 func (a LibrariesAPI) Install(req ClusterLibraryList) error {
-	return a.client.Post("/libraries/install", req, nil)
+	return a.client.Post(a.context, "/libraries/install", req, nil)
 }
 
 // Uninstall library list from cluster
 func (a LibrariesAPI) Uninstall(req ClusterLibraryList) error {
-	return a.client.Post("/libraries/uninstall", req, nil)
+	return a.client.Post(a.context, "/libraries/uninstall", req, nil)
 }
 
 // ClusterStatus returns library status in cluster
 func (a LibrariesAPI) ClusterStatus(clusterID string) (cls ClusterLibraryStatuses, err error) {
-	err = a.client.Get("/libraries/cluster-status", ClusterID{ClusterID: clusterID}, &cls)
+	err = a.client.Get(a.context, "/libraries/cluster-status", ClusterID{ClusterID: clusterID}, &cls)
 	return
 }
 

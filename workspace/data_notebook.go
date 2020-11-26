@@ -33,14 +33,17 @@ func DataSourceNotebook() *schema.Resource {
 		},
 		"language": {
 			Type:     schema.TypeString,
+			Optional: true,
 			Computed: true,
 		},
 		"object_type": {
 			Type:     schema.TypeString,
+			Optional: true,
 			Computed: true,
 		},
 		"object_id": {
 			Type:     schema.TypeInt,
+			Optional: true,
 			Computed: true,
 		},
 	}

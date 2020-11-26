@@ -636,7 +636,8 @@ func TestAccPermissionsClusterPolicy(t *testing.T) {
 			Name:       group,
 			Definition: "{}",
 		}
-		policiesAPI := compute.NewClusterPoliciesAPI(permissionsAPI.client)
+		ctx := context.Background()
+		policiesAPI := compute.NewClusterPoliciesAPI(ctx, permissionsAPI.client)
 		require.NoError(t, policiesAPI.Create(&policy))
 		defer func() {
 			assert.NoError(t, policiesAPI.Delete(policy.PolicyID))

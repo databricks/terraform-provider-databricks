@@ -1,18 +1,17 @@
 package compute
 
 import (
-	"log"
+	"context"
 
 	"github.com/databrickslabs/databricks-terraform/common"
+	"github.com/databrickslabs/databricks-terraform/internal/util"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
-// ClusterPoliciesAPI  allows you to create, list, and edit cluster policies.
-//
-// Creation and editing is available to admins only.
 // NewClusterPoliciesAPI creates ClusterPoliciesAPI instance from provider meta
-func NewClusterPoliciesAPI(m interface{}) ClusterPoliciesAPI {
+// Creation and editing is available to admins only.
+func NewClusterPoliciesAPI(ctx context.Context, m interface{}) ClusterPoliciesAPI {
 	return ClusterPoliciesAPI{client: m.(*common.DatabricksClient)}
 }
 
@@ -67,74 +66,9 @@ func parsePolicyFromData(d *schema.ResourceData) (*ClusterPolicy, error) {
 	return clusterPolicy, nil
 }
 
-func resourceClusterPolicyCreate(d *schema.ResourceData, m interface{}) error {
-	client := m.(*common.DatabricksClient)
-	clusterPolicy, err := parsePolicyFromData(d)
-	if err != nil {
-		return err
-	}
-	err = NewClusterPoliciesAPI(client).Create(clusterPolicy)
-	if err != nil {
-		return err
-	}
-	d.SetId(clusterPolicy.PolicyID)
-	return resourceClusterPolicyRead(d, m)
-}
-
-func resourceClusterPolicyRead(d *schema.ResourceData, m interface{}) error {
-	client := m.(*common.DatabricksClient)
-	clusterPolicy, err := NewClusterPoliciesAPI(client).Get(d.Id())
-	if e, ok := err.(common.APIError); ok && e.IsMissing() {
-		log.Printf("[ERROR] missing resource due to error: %v\n", e)
-		d.SetId("")
-		return nil
-	}
-	if err != nil {
-		return err
-	}
-	err = d.Set("name", clusterPolicy.Name)
-	if err != nil {
-		return err
-	}
-	err = d.Set("definition", clusterPolicy.Definition)
-	if err != nil {
-		return err
-	}
-	err = d.Set("policy_id", clusterPolicy.PolicyID)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func resourceClusterPolicyUpdate(d *schema.ResourceData, m interface{}) error {
-	client := m.(*common.DatabricksClient)
-	clusterPolicy, err := parsePolicyFromData(d)
-	if err != nil {
-		return err
-	}
-	err = NewClusterPoliciesAPI(client).Edit(clusterPolicy)
-	if err != nil {
-		return err
-	}
-	return resourceClusterPolicyRead(d, m)
-}
-
-func resourceClusterPolicyDelete(d *schema.ResourceData, m interface{}) error {
-	id := d.Id()
-	client := m.(*common.DatabricksClient)
-	return NewClusterPoliciesAPI(client).Delete(id)
-}
-
+// ResourceClusterPolicy ...
 func ResourceClusterPolicy() *schema.Resource {
-	return &schema.Resource{
-		Create: resourceClusterPolicyCreate,
-		Read:   resourceClusterPolicyRead,
-		Update: resourceClusterPolicyUpdate,
-		Delete: resourceClusterPolicyDelete,
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
+	return util.CommonResource{
 		Schema: map[string]*schema.Schema{
 			"policy_id": {
 				Type:     schema.TypeString,
@@ -155,5 +89,42 @@ func ResourceClusterPolicy() *schema.Resource {
 				ValidateFunc: validation.StringIsJSON,
 			},
 		},
-	}
+		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			clusterPolicy, err := parsePolicyFromData(d)
+			if err != nil {
+				return err
+			}
+			if err = NewClusterPoliciesAPI(ctx, c).Create(clusterPolicy); err != nil {
+				return err
+			}
+			d.SetId(clusterPolicy.PolicyID)
+			return nil
+		},
+		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			clusterPolicy, err := NewClusterPoliciesAPI(ctx, c).Get(d.Id())
+			if err != nil {
+				return err
+			}
+			if err = d.Set("name", clusterPolicy.Name); err != nil {
+				return err
+			}
+			if err = d.Set("definition", clusterPolicy.Definition); err != nil {
+				return err
+			}
+			if err = d.Set("policy_id", clusterPolicy.PolicyID); err != nil {
+				return err
+			}
+			return nil
+		},
+		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			clusterPolicy, err := parsePolicyFromData(d)
+			if err != nil {
+				return err
+			}
+			return NewClusterPoliciesAPI(ctx, c).Edit(clusterPolicy)
+		},
+		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			return NewClusterPoliciesAPI(ctx, c).Delete(d.Id())
+		},
+	}.ToResource()
 }

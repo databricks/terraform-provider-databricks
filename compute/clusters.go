@@ -1,6 +1,7 @@
 package compute
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"strings"
@@ -15,13 +16,17 @@ func (a ClustersAPI) defaultTimeout() time.Duration {
 }
 
 // NewClustersAPI creates ClustersAPI instance from provider meta
-func NewClustersAPI(m interface{}) ClustersAPI {
-	return ClustersAPI{client: m.(*common.DatabricksClient)}
+func NewClustersAPI(ctx context.Context, m interface{}) ClustersAPI {
+	return ClustersAPI{
+		client:  m.(*common.DatabricksClient),
+		context: ctx,
+	}
 }
 
 // ClustersAPI is a struct that contains the Databricks api client to perform queries
 type ClustersAPI struct {
-	client *common.DatabricksClient
+	client  *common.DatabricksClient
+	context context.Context
 }
 
 // Create creates a new Spark cluster and waits till it's running
@@ -158,7 +163,7 @@ func wrapMissingClusterError(err error, id string) error {
 func (a ClustersAPI) waitForClusterStatus(clusterID string, desired ClusterState) (result ClusterInfo, err error) {
 	// this tangles client with terraform more, which is inevitable
 	// nolint should be a bigger context-aware refactor
-	return result, resource.Retry(a.defaultTimeout(), func() *resource.RetryError {
+	return result, resource.RetryContext(a.context, a.defaultTimeout(), func() *resource.RetryError {
 		clusterInfo, err := a.Get(clusterID)
 		if ae, ok := err.(common.APIError); ok && ae.IsMissing() {
 			log.Printf("[INFO] Cluster %s not found. Retrying", clusterID)

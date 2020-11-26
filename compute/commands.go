@@ -1,6 +1,7 @@
 package compute
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"html"
@@ -25,19 +26,23 @@ var (
 )
 
 // NewCommandsAPI creates CommandsAPI instance from provider meta
-func NewCommandsAPI(m interface{}) CommandsAPI {
-	return CommandsAPI{client: m.(*common.DatabricksClient)}
+func NewCommandsAPI(ctx context.Context, m interface{}) CommandsAPI {
+	return CommandsAPI{
+		client:  m.(*common.DatabricksClient),
+		context: ctx,
+	}
 }
 
 // CommandsAPI exposes the Context & Commands API
 type CommandsAPI struct {
-	client *common.DatabricksClient
+	client  *common.DatabricksClient
+	context context.Context
 }
 
 // Execute creates a spark context and executes a command and then closes context
 // Any leading whitespace is trimmed
 func (a CommandsAPI) Execute(clusterID, language, commandStr string) (result string, err error) {
-	cluster, err := NewClustersAPI(a.client).Get(clusterID)
+	cluster, err := NewClustersAPI(a.context, a.client).Get(clusterID)
 	if err != nil {
 		return
 	}
@@ -161,6 +166,7 @@ func (a CommandsAPI) createContext(language, clusterID string) (string, error) {
 }
 
 func (a CommandsAPI) waitForCommandFinished(commandID, contextID, clusterID string, sleepDurationSeconds time.Duration, timeoutDurationMinutes time.Duration) error {
+	// TODO: replace with resource.RetryContext
 	errChan := make(chan error, 1)
 	go func() {
 		for {
@@ -190,6 +196,7 @@ func (a CommandsAPI) waitForCommandFinished(commandID, contextID, clusterID stri
 
 func (a CommandsAPI) waitForContextReady(contextID, clusterID string,
 	sleepDurationSeconds time.Duration, timeoutDurationMinutes time.Duration) error {
+	// TODO: replace with resource.RetryContext
 	errChan := make(chan error, 1)
 	go func() {
 		for {

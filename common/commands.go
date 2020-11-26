@@ -1,20 +1,24 @@
 package common
 
+import "context"
+
 // WithCommandMock mocks all command executions for this client
 func (c *DatabricksClient) WithCommandMock(mock CommandMock) {
-	c.WithCommandExecutor(commandExecutorMock{
-		mock: mock,
+	c.WithCommandExecutor(func(_ context.Context, _ *DatabricksClient) CommandExecutor {
+		return commandExecutorMock{
+			mock: mock,
+		}
 	})
 }
 
 // WithCommandExecutor sets command executor implementation to use
-func (c *DatabricksClient) WithCommandExecutor(ce CommandExecutor) {
-	c.commandExecutor = ce
+func (c *DatabricksClient) WithCommandExecutor(cef func(context.Context, *DatabricksClient) CommandExecutor) {
+	c.commandFactory = cef
 }
 
 // CommandExecutor service
-func (c *DatabricksClient) CommandExecutor() CommandExecutor {
-	return c.commandExecutor
+func (c *DatabricksClient) CommandExecutor(ctx context.Context) CommandExecutor {
+	return c.commandFactory(ctx, c)
 }
 
 // CommandMock mocks the execution of command

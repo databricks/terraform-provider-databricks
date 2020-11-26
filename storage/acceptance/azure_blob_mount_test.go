@@ -1,6 +1,7 @@
 package acceptance
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"testing"
@@ -18,9 +19,11 @@ func mountResourceCheck(name string,
 	cb func(*common.DatabricksClient, MountPoint) error) resource.TestCheckFunc {
 	return acceptance.ResourceCheck(name,
 		func(client *common.DatabricksClient, id string) error {
-			client.WithCommandExecutor(compute.NewCommandsAPI(client))
+			client.WithCommandExecutor(func(ctx context.Context, client *common.DatabricksClient) common.CommandExecutor {
+				return compute.NewCommandsAPI(ctx, client)
+			})
 			clusterInfo := compute.NewTinyClusterInCommonPoolPossiblyReused()
-			mp := NewMountPoint(client, id, clusterInfo.ClusterID)
+			mp := NewMountPoint(client.CommandExecutor(context.Background()), id, clusterInfo.ClusterID)
 			return cb(client, mp)
 		})
 }
@@ -66,7 +69,7 @@ func TestAzureAccBlobMount_correctly_mounts(t *testing.T) {
 				PreConfig: func() {
 					client := compute.CommonEnvironmentClientWithRealCommandExecutor()
 					clusterInfo := compute.NewTinyClusterInCommonPoolPossiblyReused()
-					mp := NewMountPoint(client,
+					mp := NewMountPoint(client.CommandExecutor(context.Background()),
 						qa.FirstKeyValue(t, config, "mount_name"),
 						clusterInfo.ClusterID)
 					err := mp.Delete()

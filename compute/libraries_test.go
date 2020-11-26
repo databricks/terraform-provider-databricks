@@ -1,6 +1,7 @@
 package compute
 
 import (
+	"context"
 	"os"
 	"testing"
 
@@ -110,7 +111,8 @@ func TestAccLibraryCreate(t *testing.T) {
 	clusterInfo, err := NewTinyClusterInCommonPool()
 	assert.NoError(t, err, err)
 	defer func() {
-		err := NewClustersAPI(client).PermanentDelete(clusterInfo.ClusterID)
+		ctx := context.Background()
+		err := NewClustersAPI(ctx, client).PermanentDelete(clusterInfo.ClusterID)
 		assert.NoError(t, err, err)
 	}()
 

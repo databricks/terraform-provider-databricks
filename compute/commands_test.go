@@ -1,6 +1,7 @@
 package compute
 
 import (
+	"context"
 	"os"
 	"testing"
 
@@ -84,7 +85,8 @@ func TestSomeCommands(t *testing.T) {
 	})
 	defer server.Close()
 	require.NoError(t, err)
-	commands := NewCommandsAPI(client)
+	ctx := context.Background()
+	commands := NewCommandsAPI(ctx, client)
 
 	result, err := commands.Execute("abc", "python", `print("done")`)
 	require.NoError(t, err)
@@ -99,7 +101,8 @@ func TestAccContext(t *testing.T) {
 	client := common.CommonEnvironmentClient()
 	clusterInfo := NewTinyClusterInCommonPoolPossiblyReused()
 	clusterID := clusterInfo.ClusterID
-	c := NewCommandsAPI(client)
+	ctx := context.Background()
+	c := NewCommandsAPI(ctx, client)
 
 	result, err := c.Execute(clusterID, "python", `print('hello world')`)
 	require.NoError(t, err)

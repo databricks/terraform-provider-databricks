@@ -1,10 +1,12 @@
 package provider
 
 import (
+	"context"
 	"fmt"
 	"sort"
 	"strings"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
 	"github.com/databrickslabs/databricks-terraform/access"
@@ -213,7 +215,7 @@ func DatabricksProvider() *schema.Provider {
 				DefaultFunc: schema.EnvDefaultFunc("DATABRICKS_DEBUG_HEADERS", false),
 			},
 		},
-		ConfigureFunc: func(d *schema.ResourceData) (interface{}, error) {
+		ConfigureContextFunc: func(c context.Context, d *schema.ResourceData) (interface{}, diag.Diagnostics) {
 			pc := common.DatabricksClient{}
 
 			authsUsed := map[string]bool{}
@@ -303,14 +305,15 @@ func DatabricksProvider() *schema.Provider {
 			}
 			if len(authorizationMethodsUsed) > 1 {
 				sort.Strings(authorizationMethodsUsed)
-				return nil, fmt.Errorf("More than one authorization method configured: %s",
+				return nil, diag.Errorf("More than one authorization method configured: %s",
 					strings.Join(authorizationMethodsUsed, " and "))
 			}
-			err := pc.Configure()
-			if err != nil {
-				return nil, err
+			if err := pc.Configure(); err != nil {
+				return nil, diag.FromErr(err)
 			}
-			pc.WithCommandExecutor(compute.NewCommandsAPI(&pc))
+			pc.WithCommandExecutor(func(ctx context.Context, client *common.DatabricksClient) common.CommandExecutor {
+				return compute.NewCommandsAPI(ctx, client)
+			})
 			return &pc, nil
 		},
 	}

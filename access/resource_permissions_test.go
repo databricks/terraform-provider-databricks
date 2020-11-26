@@ -669,7 +669,7 @@ func TestAccPermissionsClusterPolicy(t *testing.T) {
 func TestAccPermissionsInstancePool(t *testing.T) {
 	permissionsTestHelper(t, func(permissionsAPI PermissionsAPI, user, group string,
 		ef func(string) PermissionsEntity) {
-		poolsAPI := compute.NewInstancePoolsAPI(permissionsAPI.client)
+		poolsAPI := compute.NewInstancePoolsAPI(context.Background(), permissionsAPI.client)
 		ctx := context.Background()
 		ips, err := poolsAPI.Create(compute.InstancePool{
 			InstancePoolName: group,

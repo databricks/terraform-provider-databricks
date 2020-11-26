@@ -42,7 +42,7 @@ func CommonInstancePoolID() string {
 	oncePool.Do(func() { // atomic
 		log.Printf("[INFO] Initializing common instance pool")
 		ctx := context.Background()
-		instancePools := NewInstancePoolsAPI(client)
+		instancePools := NewInstancePoolsAPI(ctx, client)
 		clusters := NewClustersAPI(ctx, client)
 		currentUserPool := fmt.Sprintf("Terraform Integration Test by %s", os.Getenv("USER"))
 		pools, err := instancePools.List()

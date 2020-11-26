@@ -1,6 +1,7 @@
 package compute
 
 import (
+	"context"
 	"os"
 	"testing"
 
@@ -37,15 +38,15 @@ func TestAccInstancePools(t *testing.T) {
 			Availability: AwsAvailabilitySpot,
 		}
 	}
-	poolInfo, err := NewInstancePoolsAPI(client).Create(pool)
+	poolInfo, err := NewInstancePoolsAPI(context.Background(), client).Create(pool)
 	assert.NoError(t, err, err)
 
 	defer func() {
-		err := NewInstancePoolsAPI(client).Delete(poolInfo.InstancePoolID)
+		err := NewInstancePoolsAPI(context.Background(), client).Delete(poolInfo.InstancePoolID)
 		assert.NoError(t, err, err)
 	}()
 
-	poolReadInfo, err := NewInstancePoolsAPI(client).Read(poolInfo.InstancePoolID)
+	poolReadInfo, err := NewInstancePoolsAPI(context.Background(), client).Read(poolInfo.InstancePoolID)
 	assert.NoError(t, err, err)
 	assert.Equal(t, poolInfo.InstancePoolID, poolReadInfo.InstancePoolID)
 	assert.Equal(t, pool.InstancePoolName, poolReadInfo.InstancePoolName)
@@ -54,7 +55,7 @@ func TestAccInstancePools(t *testing.T) {
 	assert.Equal(t, pool.NodeTypeID, poolReadInfo.NodeTypeID)
 	assert.Equal(t, pool.IdleInstanceAutoTerminationMinutes, poolReadInfo.IdleInstanceAutoTerminationMinutes)
 
-	u := InstancePoolAndStats{
+	u := InstancePool{
 		InstancePoolID:                     poolReadInfo.InstancePoolID,
 		InstancePoolName:                   "Terraform Integration Test Updated",
 		MinIdleInstances:                   0,
@@ -77,10 +78,10 @@ func TestAccInstancePools(t *testing.T) {
 			Availability: AwsAvailabilitySpot,
 		}
 	}
-	err = NewInstancePoolsAPI(client).Update(u)
+	err = NewInstancePoolsAPI(context.Background(), client).Update(u)
 	assert.NoError(t, err, err)
 
-	poolReadInfo, err = NewInstancePoolsAPI(client).Read(poolInfo.InstancePoolID)
+	poolReadInfo, err = NewInstancePoolsAPI(context.Background(), client).Read(poolInfo.InstancePoolID)
 	assert.NoError(t, err, err)
 	assert.Equal(t, poolReadInfo.MaxCapacity, int32(20))
 }
@@ -177,6 +178,7 @@ func TestResourceInstancePoolRead(t *testing.T) {
 		},
 		Resource: ResourceInstancePool(),
 		Read:     true,
+		New:      true,
 		ID:       "abc",
 	}.Apply(t)
 	assert.NoError(t, err, err)
@@ -237,6 +239,7 @@ func TestResourceInstancePoolUpdate(t *testing.T) {
 				Method:   "POST",
 				Resource: "/api/2.0/instance-pools/edit",
 				ExpectedRequest: InstancePoolAndStats{
+					EnableElasticDisk:                  true,
 					InstancePoolID:                     "abc",
 					MaxCapacity:                        500,
 					NodeTypeID:                         "i3.xlarge",

@@ -611,7 +611,7 @@ func permissionsTestHelper(t *testing.T,
 		assert.NoError(t, usersAPI.Delete(user.ID))
 	}()
 
-	groupsAPI := identity.NewGroupsAPI(client)
+	groupsAPI := identity.NewGroupsAPI(ctx, client)
 	group, err := groupsAPI.Create(fmt.Sprintf("tf-%s", randomName), []string{user.ID}, nil, nil)
 	require.NoError(t, err)
 	defer func() {

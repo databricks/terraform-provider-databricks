@@ -1,6 +1,7 @@
 package acceptance
 
 import (
+	"context"
 	"os"
 	"testing"
 
@@ -52,7 +53,8 @@ func TestAccUserResource(t *testing.T) {
 					func(s *terraform.State) error {
 						r := s.RootModule().Resources
 						client := common.CommonEnvironmentClient()
-						return NewGroupsAPI(client).Patch(r["databricks_group.first"].Primary.ID, []string{
+						ctx := context.Background()
+						return NewGroupsAPI(ctx, client).Patch(r["databricks_group.first"].Primary.ID, []string{
 							r["databricks_user.first"].Primary.ID,
 							r["databricks_user.second"].Primary.ID,
 						}, nil, GroupMembersPath)

@@ -120,7 +120,7 @@ func TestAccMissingResourcesInWorkspace(t *testing.T) {
 		{
 			Name: "Groups",
 			ReadFunc: func() error {
-				_, err := identity.NewGroupsAPI(client).Read(randStringID)
+				_, err := identity.NewGroupsAPI(ctx, client).Read(randStringID)
 				return err
 			},
 		},

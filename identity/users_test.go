@@ -98,7 +98,8 @@ func TestAccCreateAdminUser(t *testing.T) {
 	t.Log(user)
 	assert.NoError(t, err, err)
 
-	group, err := NewGroupsAPI(client).GetAdminGroup()
+	ctx := context.Background()
+	group, err := NewGroupsAPI(ctx, client).GetAdminGroup()
 	assert.NoError(t, err, err)
 
 	adminGroupID := group.ID

@@ -21,16 +21,6 @@ import (
 	"github.com/zclconf/go-cty/cty"
 )
 
-func maybeSplitClusterID(clusterID string) string {
-	// TODO: can panic with error "panic: runtime error: index out of range [2] with length 1" on the non-existing clusters,
-	splits := strings.Split(clusterID, "-")
-	if len(splits) > 2 {
-		return splits[2]
-	}
-	log.Printf("[WARN] Can't split cluster ID: %s", clusterID)
-	return splits[0]
-}
-
 var resourcesMap map[string]importable = map[string]importable{
 	"databricks_dbfs_file": {
 		Service: "storage",
@@ -92,11 +82,11 @@ var resourcesMap map[string]importable = map[string]importable{
 		Name: func(d *schema.ResourceData) string {
 			raw, ok := d.GetOk("instance_pool_name")
 			if !ok {
-				return maybeSplitClusterID(d.Id())
+				return strings.Split(d.Id(), "-")[2]
 			}
 			name := raw.(string)
 			if name == "" {
-				return maybeSplitClusterID(d.Id())
+				return strings.Split(d.Id(), "-")[2]
 			}
 			return name
 		},
@@ -137,7 +127,7 @@ var resourcesMap map[string]importable = map[string]importable{
 		Name: func(d *schema.ResourceData) string {
 			name := d.Get("cluster_name").(string)
 			if name == "" {
-				return maybeSplitClusterID(d.Id())
+				return strings.Split(d.Id(), "-")[2]
 			}
 			return name
 		},

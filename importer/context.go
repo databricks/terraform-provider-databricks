@@ -392,6 +392,9 @@ func (ic *importContext) Emit(r *resource) {
 			return
 		}
 	}
+	if r.Data.Id() == "" {
+		r.Data.SetId(r.ID)
+	}
 	r.Name = ic.ResourceName(r)
 	if ir.Import != nil {
 		if err := ir.Import(ic, r); err != nil {

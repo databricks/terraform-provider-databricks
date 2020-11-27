@@ -114,8 +114,8 @@ func ResourceInstancePool() *schema.Resource {
 			},
 			"default_tags": {
 				Deprecated: "`default_tags` are going to be removed in v0.3",
-				Type:     schema.TypeMap,
-				Computed: true,
+				Type:       schema.TypeMap,
+				Computed:   true,
 			},
 			"custom_tags": {
 				Type:     schema.TypeMap,

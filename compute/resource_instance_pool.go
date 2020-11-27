@@ -113,6 +113,7 @@ func ResourceInstancePool() *schema.Resource {
 				ForceNew: true,
 			},
 			"default_tags": {
+				Deprecated: "`default_tags` are going to be removed in v0.3",
 				Type:     schema.TypeMap,
 				Computed: true,
 			},
@@ -135,6 +136,7 @@ func ResourceInstancePool() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"ebs_volume_type": {
+							Deprecated:    "`ebs_volume_type` is going to be moved to `disk_type` sub-block in 0.3.",
 							Type:          schema.TypeString,
 							Optional:      true,
 							ForceNew:      true,
@@ -146,6 +148,7 @@ func ResourceInstancePool() *schema.Resource {
 								}, false),
 						},
 						"azure_disk_volume_type": {
+							Deprecated:    "`azure_disk_volume_type` is going to be moved to `disk_type` sub-block in 0.3.",
 							Type:          schema.TypeString,
 							Optional:      true,
 							ForceNew:      true,

@@ -173,7 +173,7 @@ The following arguments are required:
 * `workspace_name` - (Required) (String) name of the workspace, will appear on UI
 * `aws_region` - (Required) (String) AWS region of VPC
 * `storage_configuration_id` - (Required) (String) `storage_configuration_id` from [storage configuration](mws_storage_configurations.md)
-* `verify_workspace_runnning` - (Required) (Bool) wait until the workspace is running.
+* `verify_workspace_runnning` - (Required) (Bool) wait until the workspace is running. **This field is deprecated and are going to be removed in 0.3.** All workspaces would be verified to get into runnable state or cleaned up upon failure.
 
 ## Attribute Reference
 

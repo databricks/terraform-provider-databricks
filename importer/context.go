@@ -145,25 +145,27 @@ func (ic *importContext) Run() error {
 	// nolint
 	sh.WriteString("#!/bin/sh\n\n")
 
-	dcfile, err := os.Create(fmt.Sprintf("%s/databricks.tf", ic.Directory))
-	if err != nil {
-		return err
-	}
-	// nolint
-	dcfile.WriteString(
-		`terraform {
-			required_providers {
-			  databricks = {
-				source = "databrickslabs/databricks"
-				version = "` + common.Version() + `"
-			  }
-			}
-		  }
+	if ic.generateDeclaration {
+		dcfile, err := os.Create(fmt.Sprintf("%s/databricks.tf", ic.Directory))
+		if err != nil {
+			return err
+		}
+		// nolint
+		dcfile.WriteString(
+			`terraform {
+				required_providers {
+			  		databricks = {
+						source = "databrickslabs/databricks"
+						version = "` + common.Version() + `"
+				  	}
+				}
+		  	}
 
-		  provider "databricks" {
-		  }
-		  `)
-	dcfile.Close()
+		  	provider "databricks" {
+		  	}
+		  	`)
+		dcfile.Close()
+	}
 
 	sort.Sort(ic.Scope)
 	for _, r := range ic.Scope {

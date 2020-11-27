@@ -102,6 +102,7 @@ func ResourceNetwork() *schema.Resource {
 				Computed: true,
 			},
 			"error_messages": {
+				Deprecated: "`error_messages` are deprecated and would be removed in 0.3",
 				Type: schema.TypeList,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{

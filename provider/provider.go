@@ -341,6 +341,10 @@ func DatabricksProvider() *schema.Provider {
 				authsUsed["config profile"] = true
 				pc.Profile = v.(string)
 			}
+			if v, ok := d.GetOk("config_file"); ok {
+				authsUsed["config profile"] = true
+				pc.ConfigFile = v.(string)
+			}
 			if _, ok := d.GetOk("basic_auth"); ok {
 				authsUsed["password"] = true
 				username, userOk := d.GetOk("basic_auth.0.username")

@@ -2,6 +2,7 @@ package util
 
 import (
 	"context"
+	"log"
 
 	"github.com/databrickslabs/databricks-terraform/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -14,6 +15,7 @@ type CommonResource struct {
 	Read          func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error
 	Update        func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error
 	Delete        func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error
+	StateUpgraders []schema.StateUpgrader
 	Schema        map[string]*schema.Schema
 	SchemaVersion int
 }
@@ -33,19 +35,24 @@ func (r CommonResource) ToResource() *schema.Resource {
 			return nil
 		}
 	} else {
-		// set ForceNew to all attributes
+		// set ForceNew to all attributes with CRD
 		for _, v := range r.Schema {
+			if v.Computed {
+				continue
+			}
 			v.ForceNew = true
 		}
 	}
 	return &schema.Resource{
 		Schema:        r.Schema,
 		SchemaVersion: r.SchemaVersion,
+		StateUpgraders: r.StateUpgraders,
 		CreateContext: func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 			c := m.(*common.DatabricksClient)
 			err := r.Create(ctx, d, c)
 			if e, ok := err.(common.APIError); ok && e.IsMissing() {
-				// removing missing resource
+				log.Printf("[INFO] %s[id=%s] is removed on backend", 
+					common.ResourceName.GetOrUnknown(ctx), d.Id())
 				d.SetId("")
 				return nil
 			}
@@ -60,7 +67,8 @@ func (r CommonResource) ToResource() *schema.Resource {
 		ReadContext: func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 			err := r.Read(ctx, d, m.(*common.DatabricksClient))
 			if e, ok := err.(common.APIError); ok && e.IsMissing() {
-				// removing missing resource
+				log.Printf("[INFO] %s[id=%s] is removed on backend", 
+					common.ResourceName.GetOrUnknown(ctx), d.Id())
 				d.SetId("")
 				return nil
 			}

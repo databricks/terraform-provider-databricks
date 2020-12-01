@@ -2,7 +2,6 @@ package workspace
 
 import (
 	"context"
-	"hash/fnv"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -62,26 +61,8 @@ func DataSourceNotebookPaths() *schema.Resource {
 						},
 					},
 				},
-				Set: NotebookPathListHash,
+				Set: PathListHash,
 			},
 		},
 	}
-}
-
-// NotebookPathListHash a hash
-func NotebookPathListHash(v interface{}) int {
-	h := fnv.New32a()
-	m := v.(map[string]interface{})
-	var err error
-	if v, ok := m["path"]; ok {
-		_, err = h.Write([]byte(v.(string)))
-		if err != nil {
-			return 0
-		}
-	}
-	c := int(h.Sum32())
-	if -c >= 0 {
-		return -c
-	}
-	return c
 }

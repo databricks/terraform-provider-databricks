@@ -1,39 +1,32 @@
 package storage
 
 import (
-	"encoding/base64"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"net/url"
-	"os"
 	"testing"
 
-	"github.com/databrickslabs/databricks-terraform/common"
 	"github.com/databrickslabs/databricks-terraform/internal/qa"
-
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/stretchr/testify/assert"
 )
 
-func notebookToB64(filePath string) (string, error) {
-	notebookBytes, err := ioutil.ReadFile(filePath)
-	if err != nil {
-		return "", fmt.Errorf("unable to find notebook to convert to base64; %w", err)
-	}
-	return base64.StdEncoding.EncodeToString(notebookBytes), nil
-}
-
-func getTestDBFSFileData() (string, error) {
-	return notebookToB64("testdata/tf-test-python.py")
-}
+// func notebookToB64(filePath string) (string, error) {
+// 	notebookBytes, err := ioutil.ReadFile(filePath)
+// 	if err != nil {
+// 		return "", fmt.Errorf("unable to find notebook to convert to base64; %w", err)
+// 	}
+// 	return base64.StdEncoding.EncodeToString(notebookBytes), nil
+// }
+// func getTestDBFSFileData() (string, error) {
+// 	return notebookToB64("testdata/tf-test-python.py")
+// }
 
 func getBaseDBFSMkdirFixtures(path string) []qa.HTTPFixture {
 	return []qa.HTTPFixture{
 		{
 			Method:   http.MethodPost,
 			Resource: "/api/2.0/dbfs/mkdirs",
-			ExpectedRequest: DBFSMkdirRequest{
+			ExpectedRequest: dbfsRequest{
 				Path: path,
 			},
 		},
@@ -45,7 +38,7 @@ func getBaseDBFSDeleteFixtures(path string, recursive bool) []qa.HTTPFixture {
 		{
 			Method:   http.MethodPost,
 			Resource: "/api/2.0/dbfs/delete",
-			ExpectedRequest: DBFSDeleteRequest{
+			ExpectedRequest: dbfsRequest{
 				Path:      path,
 				Recursive: recursive,
 			},
@@ -53,7 +46,7 @@ func getBaseDBFSDeleteFixtures(path string, recursive bool) []qa.HTTPFixture {
 	}
 }
 
-func getBaseDBFSFileGetStatusFixtures(path string, fileSize int64, isDir bool, isMissing bool) []qa.HTTPFixture {
+func getBaseDBFSFileGetStatusFixtures(path string, isDir bool, isMissing bool) []qa.HTTPFixture {
 	if isMissing {
 		return []qa.HTTPFixture{
 			{
@@ -70,51 +63,48 @@ func getBaseDBFSFileGetStatusFixtures(path string, fileSize int64, isDir bool, i
 			Response: FileInfo{
 				Path:     path,
 				IsDir:    isDir,
-				FileSize: fileSize,
+				FileSize: 1024,
 			},
 		},
 	}
 }
 
-func getBaseDBFSFileReadFixtures(path string, content string, fileSize int64) []qa.HTTPFixture {
+func getBaseDBFSFileReadFixtures(path string) []qa.HTTPFixture {
 	return []qa.HTTPFixture{
 		{
 			Method:   http.MethodGet,
-			Resource: fmt.Sprintf("/api/2.0/dbfs/read?length=1000000\u0026path=%s", url.PathEscape(path)),
-			Response: DBFSReadResponse{
-				BytesRead: fileSize,
-				Data:      content,
+			Resource: fmt.Sprintf("/api/2.0/dbfs/read?length=1000000&path=%s", url.PathEscape(path)),
+			Response: ReadResponse{
+				BytesRead: 1024,
+				Data:      "...",
 			},
 		},
 	}
 }
 
-func getBaseDBFSFileCreateFixtures(path string, overwrite bool,
-	handleId int64, content string, fileSize int64) []qa.HTTPFixture {
+func getBaseDBFSFileCreateFixtures(path string) []qa.HTTPFixture {
 	return []qa.HTTPFixture{
 		{
 			Method:   http.MethodPost,
 			Resource: "/api/2.0/dbfs/create",
-			ExpectedRequest: DBFSHandleRequest{
+			ExpectedRequest: CreateHandle{
 				Path:      path,
-				Overwrite: overwrite,
+				Overwrite: true,
 			},
-			Response: DBFSHandleResponse{Handle: handleId},
+			Response: Handle{329874298374132},
 		},
 		{
 			Method:   http.MethodPost,
 			Resource: "/api/2.0/dbfs/add-block",
-			Response: DBFSBlockRequest{
-				Data:   content,
-				Handle: handleId,
-			},
+			// Response: DBFSBlockRequest{
+			// 	Data:   source,
+			// 	Handle: handleId,
+			// },
 		},
 		{
 			Method:   http.MethodPost,
 			Resource: "/api/2.0/dbfs/close",
-			Response: DBFSCloseRequest{
-				Handle: handleId,
-			},
+			Response: Handle{329874298374132},
 		},
 		{
 			Method:   http.MethodGet,
@@ -122,130 +112,95 @@ func getBaseDBFSFileCreateFixtures(path string, overwrite bool,
 			Response: FileInfo{
 				Path:     path,
 				IsDir:    false,
-				FileSize: fileSize,
+				FileSize: 1024,
 			},
 		},
 	}
 }
 
 func TestDBFSFileCreate(t *testing.T) {
-	handleId := int64(acctest.RandInt())
-
-	randomDir := "/" + acctest.RandString(5)
-	randomPath := "/" + acctest.RandString(5)
-	randomPathWithDir := randomDir + randomPath
-	content, err := getTestDBFSFileData()
-	assert.NoError(t, err, err)
-	checksum, err := GetMD5(content)
-	assert.NoError(t, err, err)
-	fileSize := int64(100)
+	randomDir := "/abc"
+	path := "/def"
+	pathWithDir := randomDir + path
 
 	tests := []struct {
 		name               string
 		fixtures           []qa.HTTPFixture
-		content            string
-		contentB64MD5      string
-		mkdirs             bool
-		overwrite          bool
-		fileSize           int64
+		source             string
 		validateRemoteFile bool
 		path               string
-		expectedError      error
+		expectedError      string
 	}{
 		{
 			name: "TestDBFSFileCreate_NoMkdirs",
 			fixtures: qa.UnionFixturesLists(
-				getBaseDBFSFileCreateFixtures(randomPath, true, handleId, content, fileSize),
-				getBaseDBFSFileGetStatusFixtures(randomPath, fileSize, false, false),
-				getBaseDBFSFileReadFixtures(randomPath, content, fileSize),
+				getBaseDBFSFileCreateFixtures(path),
+				getBaseDBFSFileGetStatusFixtures(path, false, false),
+				getBaseDBFSFileReadFixtures(path),
 			),
-			content:            content,
-			mkdirs:             false,
-			contentB64MD5:      checksum,
-			overwrite:          true,
-			fileSize:           fileSize,
+			source:             "testdata/tf-test-python.py",
 			validateRemoteFile: true,
-			path:               randomPath,
+			path:               path,
 		},
 		{
 			name: "TestDBFSFileCreate_Mkdirs_RootDir",
 			fixtures: qa.UnionFixturesLists(
-				getBaseDBFSFileCreateFixtures(randomPath, true, handleId, content, fileSize),
-				getBaseDBFSFileGetStatusFixtures(randomPath, fileSize, false, false),
-				getBaseDBFSFileReadFixtures(randomPath, content, fileSize),
+				getBaseDBFSFileCreateFixtures(path),
+				getBaseDBFSFileGetStatusFixtures(path, false, false),
+				getBaseDBFSFileReadFixtures(path),
 			),
-			content:            content,
-			contentB64MD5:      checksum,
-			mkdirs:             true,
-			overwrite:          true,
-			fileSize:           fileSize,
+			source:             "testdata/tf-test-python.py",
 			validateRemoteFile: true,
-			path:               randomPath,
+			path:               path,
 		},
 		{
 			name: "TestDBFSFileCreate_Mkdirs_NonRootDir_Exists",
 			fixtures: qa.UnionFixturesLists(
-				getBaseDBFSFileGetStatusFixtures(randomDir, fileSize, true, false),
-				getBaseDBFSFileCreateFixtures(randomPathWithDir, true, handleId, content, fileSize),
-				getBaseDBFSFileGetStatusFixtures(randomPathWithDir, fileSize, false, false),
-				getBaseDBFSFileReadFixtures(randomPathWithDir, content, fileSize),
+				getBaseDBFSFileGetStatusFixtures(randomDir, true, false),
+				getBaseDBFSFileCreateFixtures(pathWithDir),
+				getBaseDBFSFileGetStatusFixtures(pathWithDir, false, false),
+				getBaseDBFSFileReadFixtures(pathWithDir),
 			),
-			content:            content,
-			contentB64MD5:      checksum,
-			mkdirs:             true,
-			overwrite:          true,
-			fileSize:           fileSize,
+			source:             "testdata/tf-test-python.py",
 			validateRemoteFile: true,
-			path:               randomPathWithDir,
+			path:               pathWithDir,
 		},
 		{
 			name: "TestDBFSFileCreate_Mkdirs_NonRootDir_DoesNotExist",
 			fixtures: qa.UnionFixturesLists(
-				getBaseDBFSFileGetStatusFixtures(randomDir, fileSize, true, true),
+				getBaseDBFSFileGetStatusFixtures(randomDir, true, true),
 				getBaseDBFSMkdirFixtures(randomDir),
-				getBaseDBFSFileCreateFixtures(randomPathWithDir, true, handleId, content, fileSize),
-				getBaseDBFSFileGetStatusFixtures(randomPathWithDir, fileSize, false, false),
-				getBaseDBFSFileReadFixtures(randomPathWithDir, content, fileSize),
+				getBaseDBFSFileCreateFixtures(pathWithDir),
+				getBaseDBFSFileGetStatusFixtures(pathWithDir, false, false),
+				getBaseDBFSFileReadFixtures(pathWithDir),
 			),
-			content:            content,
-			contentB64MD5:      checksum,
-			mkdirs:             true,
-			overwrite:          true,
-			fileSize:           fileSize,
+			source:             "testdata/tf-test-python.py",
 			validateRemoteFile: true,
-			path:               randomPathWithDir,
+			path:               pathWithDir,
 		},
 		{
 			name: "TestDBFSFileCreate_Mkdirs_ParentDirIsNotDir",
 			fixtures: qa.UnionFixturesLists(
-				getBaseDBFSFileGetStatusFixtures(randomDir, fileSize, false, false),
-				getBaseDBFSFileCreateFixtures(randomPathWithDir, true, handleId, content, fileSize),
-				getBaseDBFSFileGetStatusFixtures(randomPathWithDir, fileSize, false, false),
-				getBaseDBFSFileReadFixtures(randomPathWithDir, content, fileSize),
+				getBaseDBFSFileGetStatusFixtures(randomDir, false, false),
+				getBaseDBFSFileCreateFixtures(pathWithDir),
+				getBaseDBFSFileGetStatusFixtures(pathWithDir, false, false),
+				getBaseDBFSFileReadFixtures(pathWithDir),
 			),
-			content:            content,
-			contentB64MD5:      checksum,
-			mkdirs:             true,
-			overwrite:          true,
-			fileSize:           fileSize,
+			source:             "testdata/tf-test-python.py",
 			validateRemoteFile: true,
-			path:               randomPathWithDir,
-			expectedError:      ParentPathIsFileError,
+			path:               pathWithDir,
+			expectedError:      "...",
 		},
 		{
 			name: "TestDBFSFileCreate_NoValidateRemote",
 			fixtures: qa.UnionFixturesLists(
-				getBaseDBFSFileCreateFixtures(randomPathWithDir, true, handleId, content, fileSize),
-				getBaseDBFSFileGetStatusFixtures(randomPathWithDir, fileSize, false, false),
+				getBaseDBFSFileCreateFixtures(pathWithDir),
+				getBaseDBFSFileGetStatusFixtures(pathWithDir, false, false),
 			),
-			content:            content,
-			contentB64MD5:      checksum,
-			mkdirs:             false,
-			overwrite:          true,
-			fileSize:           fileSize,
+			source:             "testdata/tf-test-python.py",
 			validateRemoteFile: false,
-			path:               randomPathWithDir,
-			expectedError:      ParentPathIsFileError,
+			path:               pathWithDir,
+			expectedError:      "...",
 		},
 	}
 	for _, tt := range tests {
@@ -255,169 +210,104 @@ func TestDBFSFileCreate(t *testing.T) {
 				Resource: ResourceDBFSFile(),
 				Create:   true,
 				State: map[string]interface{}{
-					"content":              tt.content,
-					"content_b64_md5":      tt.contentB64MD5,
+					"source":               tt.source,
 					"path":                 tt.path,
-					"overwrite":            tt.overwrite,
-					"mkdirs":               tt.mkdirs,
 					"validate_remote_file": tt.validateRemoteFile,
 				},
 			}.Apply(t)
-			if tt.expectedError == nil {
+			if tt.expectedError == "" {
 				assert.NoError(t, err, err)
 				assert.Equal(t, tt.path, d.Id())
-				assert.Equal(t, tt.content, d.Get("content"))
+				assert.Equal(t, tt.source, d.Get("content"))
 				assert.Equal(t, tt.path, d.Get("path"))
-				assert.Equal(t, int(tt.fileSize), d.Get("file_size"))
 			} else {
-				assert.Error(t, tt.expectedError, err)
+				assert.EqualError(t, err, tt.expectedError)
 			}
 		})
 	}
 }
 
-func TestDBFSFileCreate_ViaSource(t *testing.T) {
-	handleId := int64(acctest.RandInt())
-	randomDir := "/" + acctest.RandString(5)
-	randomPath := "/" + acctest.RandString(5)
-	randomPathWithDir := randomDir + randomPath
-	content, err := getTestDBFSFileData()
-	assert.NoError(t, err, err)
-	source := qa.TestCreateTempFile(t, content)
-	defer os.Remove(source)
-	sourceB64, err := GetLocalFileB64(source)
-	assert.NoError(t, err, err)
-	sourceMD5, err := GetMD5(sourceB64)
-	assert.NoError(t, err, err)
-	fileSize := int64(100)
-
-	d, err := qa.ResourceFixture{
-		Fixtures: qa.UnionFixturesLists(
-			getBaseDBFSFileGetStatusFixtures(randomDir, fileSize, true, false),
-			getBaseDBFSFileCreateFixtures(randomPathWithDir, true, handleId, sourceB64, fileSize),
-			getBaseDBFSFileGetStatusFixtures(randomPathWithDir, fileSize, false, false),
-			getBaseDBFSFileReadFixtures(randomPathWithDir, sourceB64, fileSize),
-		),
-		Resource: ResourceDBFSFile(),
-		Create:   true,
-		State: map[string]interface{}{
-			"source":               source,
-			"content_b64_md5":      sourceMD5,
-			"path":                 randomPathWithDir,
-			"overwrite":            true,
-			"mkdirs":               true,
-			"validate_remote_file": true,
-		},
-	}.Apply(t)
-	assert.NoError(t, err, err)
-	assert.Equal(t, randomPathWithDir, d.Id())
-	assert.Equal(t, source, d.Get("source"))
-	assert.Equal(t, randomPathWithDir, d.Get("path"))
-	assert.Equal(t, sourceMD5, d.Get("content_b64_md5"))
-}
+// TODO: via content
+// func TestDBFSFileCreate_ViaSource(t *testing.T) {
+// 	randomDir := "/abc"
+// 	path := "/def"
+// 	pathWithDir := randomDir + path
+// 	d, err := qa.ResourceFixture{
+// 		Fixtures: qa.UnionFixturesLists(
+// 			getBaseDBFSFileGetStatusFixtures(randomDir, true, false),
+// 			getBaseDBFSFileCreateFixtures(pathWithDir),
+// 			getBaseDBFSFileGetStatusFixtures(pathWithDir, false, false),
+// 			getBaseDBFSFileReadFixtures(pathWithDir),
+// 		),
+// 		Resource: ResourceDBFSFile(),
+// 		Create:   true,
+// 		State: map[string]interface{}{
+// 			"source":               source,
+// 			"path":                 pathWithDir,
+// 			"validate_remote_file": true,
+// 		},
+// 	}.Apply(t)
+// 	assert.NoError(t, err, err)
+// 	assert.Equal(t, pathWithDir, d.Id())
+// 	assert.Equal(t, source, d.Get("source"))
+// 	assert.Equal(t, pathWithDir, d.Get("path"))
+// 	assert.Equal(t, sourceMD5, d.Get("content_b64_md5"))
+// }
 
 func TestDBFSFileUpdate(t *testing.T) {
-	randomPath := "/" + acctest.RandString(5)
-	content, err := getTestDBFSFileData()
-	assert.NoError(t, err, err)
-	checksum, err := GetMD5(content)
-	assert.NoError(t, err, err)
-	fileSize := int64(100)
+	path := "/abc"
 	d, err := qa.ResourceFixture{
 		Fixtures: qa.UnionFixturesLists(
-			getBaseDBFSFileGetStatusFixtures(randomPath, fileSize, false, false),
-			getBaseDBFSFileReadFixtures(randomPath, content, fileSize),
+			getBaseDBFSFileGetStatusFixtures(path, false, false),
+			getBaseDBFSFileReadFixtures(path),
 		),
 		Resource: ResourceDBFSFile(),
 		Update:   true,
-		ID:       randomPath,
+		ID:       path,
 		State: map[string]interface{}{
-			"content":              content,
-			"content_b64_md5":      checksum,
-			"path":                 randomPath,
-			"overwrite":            true,
-			"mkdirs":               true,
+			"source":               "testdata/tf-test-python.py",
+			"path":                 path,
 			"validate_remote_file": true,
 		},
 	}.Apply(t)
 	assert.NoError(t, err, err)
-	assert.Equal(t, randomPath, d.Id())
-	assert.Equal(t, true, d.Get("overwrite"))
-	assert.Equal(t, true, d.Get("mkdirs"))
+	assert.Equal(t, path, d.Id())
 	assert.Equal(t, true, d.Get("validate_remote_file"))
 }
 
 func TestDBFSFileDelete(t *testing.T) {
-	content, err := getTestDBFSFileData()
-	assert.NoError(t, err, err)
-	checksum, err := GetMD5(content)
-	assert.NoError(t, err, err)
-	randomPath := "/" + acctest.RandString(5)
+	path := "/abc"
 	d, err := qa.ResourceFixture{
-		Fixtures: getBaseDBFSDeleteFixtures(randomPath, false),
+		Fixtures: getBaseDBFSDeleteFixtures(path, false),
 		Resource: ResourceDBFSFile(),
 		Delete:   true,
-		ID:       randomPath,
+		ID:       path,
 		State: map[string]interface{}{
-			"content":              content,
-			"content_b64_md5":      checksum,
-			"path":                 randomPath,
-			"overwrite":            true,
-			"mkdirs":               true,
+			"source":               "testdata/tf-test-python.py",
+			"path":                 path,
 			"validate_remote_file": true,
 		},
 	}.Apply(t)
 
 	assert.NoError(t, err, err)
-	assert.Equal(t, randomPath, d.Id())
-	assert.Equal(t, true, d.Get("overwrite"))
-	assert.Equal(t, true, d.Get("mkdirs"))
+	assert.Equal(t, path, d.Id())
 	assert.Equal(t, true, d.Get("validate_remote_file"))
 }
 
 func TestDBFSFileRead_IsMissingResource(t *testing.T) {
-	randomPath := "/" + acctest.RandString(5)
-	content, err := getTestDBFSFileData()
-	assert.NoError(t, err, err)
-	checksum, err := GetMD5(content)
-	assert.NoError(t, err, err)
-	fileSize := int64(100)
+	path := "/abc"
 	d, err := qa.ResourceFixture{
-		Fixtures: getBaseDBFSFileGetStatusFixtures(randomPath, fileSize, false, true),
+		Fixtures: getBaseDBFSFileGetStatusFixtures(path, false, true),
 		Resource: ResourceDBFSFile(),
 		Read:     true,
-		ID:       randomPath,
+		ID:       path,
 		State: map[string]interface{}{
-			"content":              content,
-			"content_b64_md5":      checksum,
-			"path":                 randomPath,
-			"overwrite":            true,
-			"mkdirs":               true,
+			"source":               "testdata/tf-test-python.py",
+			"path":                 path,
 			"validate_remote_file": false,
 		},
 	}.Apply(t)
 
 	assert.NoError(t, err, err)
 	assert.Equal(t, "", d.Id())
-}
-
-func TestDatabricksFile_Base64(t *testing.T) {
-	if _, ok := os.LookupEnv("CLOUD_ENV"); !ok {
-		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
-	}
-	client := common.NewClientFromEnvironment()
-	pythonNotebookDataB64, err := GetLocalFileB64("testdata/tf-test-python.py")
-	assert.NoError(t, err, err)
-	expected, err := GetMD5(pythonNotebookDataB64)
-	assert.NoError(t, err, err)
-	t.Log(expected)
-	t.Log(pythonNotebookDataB64)
-	err = NewDBFSAPI(client).Create("/tmp/tf-test/testfile.txt", true, pythonNotebookDataB64)
-	assert.NoError(t, err, err)
-	data, err := NewDBFSAPI(client).Read("/tmp/tf-test/testfile.txt")
-	t.Log(data)
-	assert.NoError(t, err, err)
-	actual, err := GetMD5(data)
-	assert.NoError(t, err, err)
-	assert.Equal(t, expected, actual)
 }

@@ -1,61 +1,35 @@
 # databricks_dbfs_file Resource
 
-This is a resource that lets you create, get and delete files in DBFS (Databricks File System).
+This is a resource that lets you manage relatively small files on Databricks File System (DBFS). The best use cases are libraries or some configuration files.
 
 ## Example Usage
 
-Using content field:
-
 ```hcl
-resource "databricks_dbfs_file" "my_dbfs_file" {
-  content = filebase64("README.md")
-  content_b64_md5 = md5(filebase64("README.md"))
+resource "databricks_dbfs_file" "readme" {
+  source = "${path.module}/README.md"
   path = "/sri/terraformdbfs/example/README.md"
-  overwrite = true
-  mkdirs = true
-  validate_remote_file = true
 }
 ```
 
-Using Source field:
-
-```hcl
-resource "databricks_dbfs_file" "my_dbfs_file" {
-  source = pathexpand("README.md")
-  content_b64_md5 = md5(filebase64(pathexpand("README.md")))
-  path = "/sri/terraformdbfs/example/README.md"
-  overwrite = true
-  mkdirs = true
-  validate_remote_file = true
-}
-```
-
-    
 ## Argument Reference
 
 The following arguments are supported:
 
-* `content` - (Optional) The content of the file as a base64 encoded string. **This field is deprecated and would be removed in the next version.**
-* `source` - (Optional) The full absolute path to the file. Please use [pathexpand](https://www.terraform.io/docs/configuration/functions/pathexpand.html).
-* `content_b64_md5` - (Required) The checksum for the content please use the [md5](https://www.terraform.io/docs/configuration/functions/md5.html) and [filebase64](https://www.terraform.io/docs/configuration/functions/filebase64.html) functions in terraform to retrieve the checksum. **This field is deprecated and would be removed in the next version.**
+* `source` - The full absolute path to the file. 
 * `path` - (Required) The path of the file in which you wish to save.
-* `overwrite` - (Optional) This is used to determine whether it should delete the existing file with the same name when it writes. The default is set to false. **This field is deprecated and would be removed in the next version.**
-* `mkdirs` - (Optional) When the resource is created, this field is used to determine if it needs to make the parent directories. The default value is set to true. **This field is deprecated and would be removed in the next version.**
-* `validate_remote_file` - (Optional) This is used to compare the actual contents of the file to determine if the remote file is valid or not. If the base64 content is different it will attempt to do a delete, create. **This field is deprecated and would be removed in the next version.**
-
 
 ## Attribute Reference
 
 In addition to all arguments above, the following attributes are exported:
 
-* `id` - The id for the dbfs file object.
+* `id` - Same as `path`.
 * `file_size` - The file size of the file that is being tracked by this resource in bytes.
 
 
 ## Import
 
-The resource dbfs file can be imported using the `object`, e.g.
+The resource dbfs file can be imported using the path of the file
 
 ```bash
-$ terraform import databricks_dbfs_file.object <dbfs-file-id>
+$ terraform import databricks_dbfs_file.this <dbfs-file-id>
 ```

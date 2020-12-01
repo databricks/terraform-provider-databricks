@@ -9,11 +9,22 @@ request to resource is 10MB.
 
 ## Example Usage
 
+
+```hcl
+data "databricks_me" "me" {
+}
+
+resource "databricks_notebook" "ddl" {
+    source = "${path.module}/DDLgen.py"
+    path = "${data.databricks_me.me.home}/AA/BB/CC"
+}
+```
+
 For deployment of an empty Python notebook, the following example might be useful:
 
 ```hcl
 resource "databricks_notebook" "notebook" {
-  content = base64encode("# Welcome to your Python notebook")
+  content_base64 = base64encode("# Welcome to your Python notebook")
   path = "/mynotebook"
   language = "PYTHON"
 }
@@ -23,17 +34,18 @@ resource "databricks_notebook" "notebook" {
 
 The following arguments are supported:
 
-* `content` - (Required) The base64-encoded content. If the limit (10MB) is exceeded, an exception with error code MAX_NOTEBOOK_SIZE_EXCEEDED will be thrown.
-* `path` -  (Required) The absolute path of the notebook or directory, beginning with "/", e.g. "/mynotebook". This field is **required**.
-* `language` -  (Required) The language. If format is set to SOURCE, this field is required; otherwise, it will be ignored. Possible choices are SCALA, PYTHON, SQL, R.
+* `path` -  (Required) The absolute path of the notebook or directory, beginning with "/", e.g. "/mynotebook". 
+* `source` - (optional, recommended)
+* `content_base64` - (optional) The base64-encoded content. If the limit (10MB) is exceeded, an exception with error code MAX_NOTEBOOK_SIZE_EXCEEDED will be thrown.
+* `language` -  (required with `content_base64`) The language. If format is set to SOURCE, this field is required; otherwise, it will be ignored. Possible choices are SCALA, PYTHON, SQL, R.
 
 ## Attribute Reference
 
 In addition to all arguments above, the following attributes are exported:
 
-* `id` -  The id for the notebook object (which is the same as `path`)
-* `object_id` -  Unique identifier for a NOTEBOOK or DIRECTORY.
-* `object_type` -  The type of the object. It could be NOTEBOOK, DIRECTORY or LIBRARY.
+* `id` -  Path of notebook on workspace
+* `url` - URL of the notebook
+* `object_id` -  Unique identifier for a NOTEBOOK
 
 ## Access Control
 

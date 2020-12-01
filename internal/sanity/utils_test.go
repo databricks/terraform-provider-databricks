@@ -114,7 +114,7 @@ func TestAccMissingResourcesInWorkspace(t *testing.T) {
 		{
 			Name: "DBFS Files",
 			ReadFunc: func() error {
-				_, err := storage.NewDBFSAPI(client).Read("/" + randStringID)
+				_, err := storage.NewDbfsAPI(ctx, client).Read("/" + randStringID)
 				return err
 			},
 		},

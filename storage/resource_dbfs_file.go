@@ -1,246 +1,48 @@
 package storage
 
 import (
-	"bufio"
-	"crypto/md5"
-	"encoding/base64"
-	"encoding/hex"
-	"fmt"
-	"io/ioutil"
-	"log"
-	"os"
-	"reflect"
+	"context"
 
 	"github.com/databrickslabs/databricks-terraform/common"
-	"github.com/databrickslabs/databricks-terraform/internal"
+	"github.com/databrickslabs/databricks-terraform/internal/util"
+	"github.com/databrickslabs/databricks-terraform/workspace"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/pkg/errors"
 )
 
 // ResourceDBFSFile manages files on DBFS
 func ResourceDBFSFile() *schema.Resource {
-	return &schema.Resource{
-		Create: resourceDBFSFileCreate,
-		Read:   resourceDBFSFileRead,
-		Delete: resourceDBFSFileDelete,
-		Update: resourceDBFSFileUpdate,
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
-
-		Schema: map[string]*schema.Schema{
-			"content": {
-				Deprecated: "databricks_dbfs_file.content is deprecated and would be " +
-					"renamed to `content_base64` in the next version. Please " +
-					"rewrite your configuration to use `source` field.",
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-			},
-			"source": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{"content"},
-			},
-			"content_b64_md5": {
-				Deprecated: "databricks_dbfs_file.content_b64_md5 is deprecated and would be " +
-					"removed in the next version.",
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"path": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"overwrite": {
-				Deprecated: "databricks_dbfs_file.overwrite is deprecated and would be " +
-					"removed in the next version.",
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"mkdirs": {
-				Deprecated: "databricks_dbfs_file.mkdirs is deprecated and would be " +
-					"removed in the next version.",
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  true,
-			},
-			"validate_remote_file": {
-				Deprecated: "databricks_dbfs_file.validate_remote_file is deprecated and would be " +
-					"removed in the next version.",
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
+	return util.CommonResource{
+		SchemaVersion: 2,
+		Schema: workspace.FileContentSchema(map[string]*schema.Schema{
 			"file_size": {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-		},
-	}
-}
-
-func resourceDBFSFileCreate(d *schema.ResourceData, m interface{}) error {
-	client := m.(*common.DatabricksClient)
-	path := d.Get("path").(string)
-	overwrite := d.Get("overwrite").(bool)
-	//checksum := d.Get("content_b64_md5").(string)
-	mkdirs := d.Get("mkdirs").(bool)
-
-	if mkdirs {
-		err := handleDBFSParentDirs(client, path)
-		if err != nil {
-			return err
-		}
-	}
-
-	content := d.Get("content").(string)
-	source := d.Get("source").(string)
-
-	var base64Content string
-	if !reflect.ValueOf(source).IsZero() {
-		b64, err := GetLocalFileB64(source)
-		if err != nil {
-			return err
-		}
-		base64Content = b64
-	} else {
-		base64Content = content
-	}
-
-	err := NewDBFSAPI(client).Create(path, overwrite, base64Content)
-	if err != nil {
-		return err
-	}
-
-	d.SetId(path)
-
-	return resourceDBFSFileRead(d, m)
-}
-
-func resourceDBFSFileRead(d *schema.ResourceData, m interface{}) error {
-	id := d.Id()
-	client := m.(*common.DatabricksClient)
-
-	fileInfo, err := NewDBFSAPI(client).Status(id)
-	if err != nil {
-		if e, ok := err.(common.APIError); ok && e.IsMissing() {
-			log.Printf("missing resource due to error: %v\n", e)
-			d.SetId("")
+		}),
+		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			path := d.Get("path").(string)
+			content, err := workspace.ReadContent(d)
+			if err != nil {
+				return err
+			}
+			if err = NewDbfsAPI(ctx, c).Create(path, content, true); err != nil {
+				return err
+			}
+			d.SetId(path)
 			return nil
-		}
-		return err
-	}
-	err = d.Set("path", fileInfo.Path)
-	if err != nil {
-		return err
-	}
-	err = d.Set("file_size", fileInfo.FileSize)
-
-	if validateRemoteFile, ok := d.GetOk("validate_remote_file"); ok {
-		validateFile := validateRemoteFile.(bool)
-		if validateFile {
-			log.Println("[DEBUG] Validating remote file!")
-			data, err := NewDBFSAPI(client).Read(id)
+		},
+		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			dbfsAPI := NewDbfsAPI(ctx, c)
+			fileInfo, err := dbfsAPI.Status(d.Id())
 			if err != nil {
 				return err
 			}
-			// Both source & content ways of providing data will validate the checksum
-			contentCheckSum, err := GetMD5(data)
-			if err != nil {
-				return err
-			}
-			err = d.Set("content_b64_md5", contentCheckSum)
-			if err != nil {
-				return err
-			}
-		}
-	}
-
-	return err
+			d.Set("path", fileInfo.Path)
+			d.Set("file_size", fileInfo.FileSize)
+			return nil
+		},
+		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			return NewDbfsAPI(ctx, c).Delete(d.Id(), false)
+		},
+	}.ToResource()
 }
-
-func resourceDBFSFileUpdate(d *schema.ResourceData, m interface{}) error {
-	overwrite := d.Get("overwrite").(bool)
-	mkdirs := d.Get("mkdirs").(bool)
-	validateRemoteFile := d.Get("validate_remote_file").(bool)
-
-	err := d.Set("overwrite", overwrite)
-	if err != nil {
-		return err
-	}
-	err = d.Set("mkdirs", mkdirs)
-	if err != nil {
-		return err
-	}
-	err = d.Set("validate_remote_file", validateRemoteFile)
-	if err != nil {
-		return err
-	}
-
-	return resourceDBFSFileRead(d, m)
-}
-
-func GetLocalFileB64(absPath string) (base64Content string, err error) {
-	f, err := os.Open(absPath)
-	if err != nil {
-		return base64Content, err
-	}
-	defer f.Close()
-
-	// Read entire file into byte slice.
-	reader := bufio.NewReader(f)
-	content, err := ioutil.ReadAll(reader)
-	if err != nil {
-		return base64Content, err
-	}
-
-	// Encode as base64.
-	base64Content = base64.StdEncoding.EncodeToString(content)
-	return
-}
-
-func GetMD5(text string) (string, error) {
-	hasher := md5.New()
-	_, err := hasher.Write([]byte(text))
-	return hex.EncodeToString(hasher.Sum(nil)), err
-}
-
-func resourceDBFSFileDelete(d *schema.ResourceData, m interface{}) error {
-	id := d.Id()
-	client := m.(*common.DatabricksClient)
-	return NewDBFSAPI(client).Delete(id, false)
-}
-
-// handleDBFSParentDirs handles the different branch paths to create dbfs parent directories
-func handleDBFSParentDirs(client *common.DatabricksClient, path string) error {
-	parentDir, err := internal.GetParentDirPath(path)
-	switch err {
-	// Notebook path is root directory so no need to make directory and there is no parent
-	case internal.DirPathRootDirError:
-		return nil
-	// Notebook path is empty thus a valid error
-	case internal.PathEmptyError:
-		return err
-	//	Notebook path is valid and has a parent directory
-	case nil:
-		dbfsObj, err := NewDBFSAPI(client).Status(parentDir)
-		// Notebook parent path is not a directory and it could be a notebook
-		if err == nil && !dbfsObj.IsDir {
-			return fmt.Errorf("parent path: %s caused error: %w", parentDir, ParentPathIsFileError)
-		}
-		// Parent path is missing thus needs to be created as a directory
-		if e, ok := err.(common.APIError); ok && e.IsMissing() {
-			err := NewDBFSAPI(client).Mkdirs(parentDir)
-			if err != nil {
-				return errors.Wrapf(err, "failed to create directory %s", parentDir)
-			}
-		}
-	}
-	return nil
-}
-
-var ParentPathIsFileError = errors.New("parent path should be a directory and not a file")

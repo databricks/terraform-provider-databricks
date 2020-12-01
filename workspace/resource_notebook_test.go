@@ -30,108 +30,82 @@ func notebookToB64(filePath string) (string, error) {
 	return base64.StdEncoding.EncodeToString(notebookBytes), nil
 }
 
-func TestValidateNotebookPath(t *testing.T) {
-	testCases := []struct {
-		name         string
-		notebookPath string
-		errorCount   int
-	}{
-		{"empty_path",
-			"",
-			2},
-		{"correct_path",
-			"/directory",
-			0},
-		{"path_starts_with_no_slash",
-			"directory",
-			1},
-	}
+// func TestResourceNotebookCreate_DirDoesNotExists(t *testing.T) {
+// 	pythonNotebookDataB64, err := notebookToB64("acceptance/testdata/tf-test-python.py")
+// 	assert.NoError(t, err, err)
+// 	checkSum, err := convertBase64ToCheckSum(pythonNotebookDataB64)
+// 	assert.NoError(t, err, err)
+// 	path := "/test/path.py"
+// 	content := pythonNotebookDataB64
+// 	objectId := 12345
 
-	for _, tc := range testCases {
-		t.Run(tc.name, func(t *testing.T) {
-			_, errs := ValidateNotebookPath(tc.notebookPath, "key")
-
-			assert.Lenf(t, errs, tc.errorCount, "directory '%s' does not generate the expected error count", tc.notebookPath)
-		})
-	}
-}
-
-func TestResourceNotebookCreate_DirDoesNotExists(t *testing.T) {
-	pythonNotebookDataB64, err := notebookToB64("acceptance/testdata/tf-test-python.py")
-	assert.NoError(t, err, err)
-	checkSum, err := convertBase64ToCheckSum(pythonNotebookDataB64)
-	assert.NoError(t, err, err)
-	path := "/test/path.py"
-	content := pythonNotebookDataB64
-	objectId := 12345
-
-	d, err := qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   http.MethodGet,
-				Resource: "/api/2.0/workspace/get-status?path=%2Ftest",
-				Response: common.APIErrorBody{
-					ErrorCode: "NOT_FOUND",
-					Message:   "not found",
-				},
-				Status: 404,
-			},
-			{
-				Method:   http.MethodPost,
-				Resource: "/api/2.0/workspace/mkdirs",
-				ExpectedRequest: map[string]string{
-					"path": "/test",
-				},
-			},
-			{
-				Method:   http.MethodPost,
-				Resource: "/api/2.0/workspace/import",
-				Response: ImportRequest{
-					Content:   content,
-					Path:      path,
-					Language:  "PYTHON",
-					Overwrite: true,
-					Format:    "SOURCE",
-				},
-			},
-			{
-				Method:   http.MethodGet,
-				Resource: "/api/2.0/workspace/export?format=SOURCE&path=%2Ftest%2Fpath.py",
-				Response: NotebookContent{
-					Content: pythonNotebookDataB64,
-				},
-			},
-			{
-				Method:   http.MethodGet,
-				Resource: "/api/2.0/workspace/get-status?path=%2Ftest%2Fpath.py",
-				Response: ObjectStatus{
-					ObjectID:   int64(objectId),
-					ObjectType: Notebook,
-					Path:       path,
-					Language:   "PYTHON",
-				},
-			},
-		},
-		Resource: ResourceNotebook(),
-		State: map[string]interface{}{
-			"path":     path,
-			"content":  content,
-			"language": "PYTHON",
-		},
-		Create: true,
-	}.Apply(t)
-	assert.NoError(t, err, err)
-	assert.Equal(t, path, d.Id())
-	assert.Equal(t, checkSum, d.Get("content"))
-	assert.Equal(t, path, d.Get("path"))
-	assert.Equal(t, "PYTHON", d.Get("language"))
-	assert.Equal(t, objectId, d.Get("object_id"))
-}
+// 	d, err := qa.ResourceFixture{
+// 		Fixtures: []qa.HTTPFixture{
+// 			{
+// 				Method:   http.MethodGet,
+// 				Resource: "/api/2.0/workspace/get-status?path=%2Ftest",
+// 				Response: common.APIErrorBody{
+// 					ErrorCode: "NOT_FOUND",
+// 					Message:   "not found",
+// 				},
+// 				Status: 404,
+// 			},
+// 			{
+// 				Method:   http.MethodPost,
+// 				Resource: "/api/2.0/workspace/mkdirs",
+// 				ExpectedRequest: map[string]string{
+// 					"path": "/test",
+// 				},
+// 			},
+// 			{
+// 				Method:   http.MethodPost,
+// 				Resource: "/api/2.0/workspace/import",
+// 				Response: ImportRequest{
+// 					Content:   content,
+// 					Path:      path,
+// 					Language:  "PYTHON",
+// 					Overwrite: true,
+// 					Format:    "SOURCE",
+// 				},
+// 			},
+// 			{
+// 				Method:   http.MethodGet,
+// 				Resource: "/api/2.0/workspace/export?format=SOURCE&path=%2Ftest%2Fpath.py",
+// 				Response: NotebookContent{
+// 					Content: pythonNotebookDataB64,
+// 				},
+// 			},
+// 			{
+// 				Method:   http.MethodGet,
+// 				Resource: "/api/2.0/workspace/get-status?path=%2Ftest%2Fpath.py",
+// 				Response: ObjectStatus{
+// 					ObjectID:   int64(objectId),
+// 					ObjectType: Notebook,
+// 					Path:       path,
+// 					Language:   "PYTHON",
+// 				},
+// 			},
+// 		},
+// 		Resource: ResourceNotebook(),
+// 		State: map[string]interface{}{
+// 			"path":     path,
+// 			"content":  content,
+// 			"language": "PYTHON",
+// 		},
+// 		Create: true,
+// 	}.Apply(t)
+// 	assert.NoError(t, err, err)
+// 	assert.Equal(t, path, d.Id())
+// 	assert.Equal(t, checkSum, d.Get("content"))
+// 	assert.Equal(t, path, d.Get("path"))
+// 	assert.Equal(t, "PYTHON", d.Get("language"))
+// 	assert.Equal(t, objectId, d.Get("object_id"))
+// }
 
 func TestResourceNotebookRead(t *testing.T) {
 	pythonNotebookDataB64, err := notebookToB64("acceptance/testdata/tf-test-python.py")
 	assert.NoError(t, err, err)
-	checkSum, err := convertBase64ToCheckSum(pythonNotebookDataB64)
+	checkSum := ".."
 	assert.NoError(t, err, err)
 	testId := "/test/path.py"
 	objectId := 12345

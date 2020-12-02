@@ -5,14 +5,13 @@ import (
 	"fmt"
 
 	"github.com/databrickslabs/databricks-terraform/common"
+	"github.com/databrickslabs/databricks-terraform/internal/util"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-
-	"log"
 )
 
 // NewCredentialsAPI creates MWSCredentialsAPI instance from provider meta
-func NewCredentialsAPI(m interface{}) CredentialsAPI {
-	return CredentialsAPI{m.(*common.DatabricksClient), context.TODO()}
+func NewCredentialsAPI(ctx context.Context, m interface{}) CredentialsAPI {
+	return CredentialsAPI{m.(*common.DatabricksClient), ctx}
 }
 
 // CredentialsAPI exposes the mws credentials API
@@ -60,12 +59,43 @@ func (a CredentialsAPI) List(mwsAcctID string) ([]Credentials, error) {
 	return mwsCredsList, err
 }
 
+// ResourceCredentials ...
 func ResourceCredentials() *schema.Resource {
-	return &schema.Resource{
-		Create: resourceMWSCredentialsCreate,
-		Read:   resourceMWSCredentialsRead,
-		Delete: resourceMWSCredentialsDelete,
-
+	p := util.NewPairSeparatedID("account_id", "credentials_id", "/")
+	return util.CommonResource{
+		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			accountID := d.Get("account_id").(string)
+			roleArn := d.Get("role_arn").(string)
+			credentialsName := d.Get("credentials_name").(string)
+			credentials, err := NewCredentialsAPI(ctx, c).Create(accountID, credentialsName, roleArn)
+			if err != nil {
+				return err
+			}
+			d.Set("credentials_id", credentials.CredentialsID)
+			p.Pack(d)
+			return nil
+		},
+		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			accountID, credsID, err := p.Unpack(d)
+			if err != nil {
+				return err
+			}
+			credentials, err := NewCredentialsAPI(ctx, c).Read(accountID, credsID)
+			if err != nil {
+				return err
+			}
+			d.Set("credentials_name", credentials.CredentialsName)
+			d.Set("role_arn", credentials.AwsCredentials.StsRole.RoleArn)
+			d.Set("creation_time", credentials.CreationTime)
+			return d.Set("external_id", credentials.AwsCredentials.StsRole.ExternalID)
+		},
+		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			accountID, credsID, err := p.Unpack(d)
+			if err != nil {
+				return err
+			}
+			return NewCredentialsAPI(ctx, c).Delete(accountID, credsID)
+		},
 		Schema: map[string]*schema.Schema{
 			"account_id": {
 				Type:      schema.TypeString,
@@ -96,69 +126,5 @@ func ResourceCredentials() *schema.Resource {
 				Computed: true,
 			},
 		},
-	}
-}
-
-func resourceMWSCredentialsCreate(d *schema.ResourceData, m interface{}) error {
-	credentialsName := d.Get("credentials_name").(string)
-	roleArn := d.Get("role_arn").(string)
-	mwsAcctID := d.Get("account_id").(string)
-	credentials, err := NewCredentialsAPI(m).Create(mwsAcctID, credentialsName, roleArn)
-	if err != nil {
-		return err
-	}
-	credentialsResourceID := PackagedMWSIds{
-		MwsAcctID:  mwsAcctID,
-		ResourceID: credentials.CredentialsID,
-	}
-	d.SetId(packMWSAccountID(credentialsResourceID))
-	return resourceMWSCredentialsRead(d, m)
-}
-
-func resourceMWSCredentialsRead(d *schema.ResourceData, m interface{}) error {
-	id := d.Id()
-	packagedMwsID, err := UnpackMWSAccountID(id)
-	if err != nil {
-		return err
-	}
-	credentials, err := NewCredentialsAPI(m).Read(packagedMwsID.MwsAcctID, packagedMwsID.ResourceID)
-	if err != nil {
-		if e, ok := err.(common.APIError); ok && e.IsMissing() {
-			log.Printf("missing resource due to error: %v\n", e)
-			d.SetId("")
-			return nil
-		}
-		return err
-	}
-	err = d.Set("credentials_name", credentials.CredentialsName)
-	if err != nil {
-		return err
-	}
-	err = d.Set("role_arn", credentials.AwsCredentials.StsRole.RoleArn)
-	if err != nil {
-		return err
-	}
-	err = d.Set("creation_time", credentials.CreationTime)
-	if err != nil {
-		return err
-	}
-	err = d.Set("external_id", credentials.AwsCredentials.StsRole.ExternalID)
-	if err != nil {
-		return err
-	}
-	err = d.Set("credentials_id", credentials.CredentialsID)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func resourceMWSCredentialsDelete(d *schema.ResourceData, m interface{}) error {
-	id := d.Id()
-	packagedMwsID, err := UnpackMWSAccountID(id)
-	if err != nil {
-		return err
-	}
-	err = NewCredentialsAPI(m).Delete(packagedMwsID.MwsAcctID, packagedMwsID.ResourceID)
-	return err
+	}.ToResource()
 }

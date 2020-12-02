@@ -18,8 +18,9 @@ func TestMwsAccLogDelivery(t *testing.T) {
 	client := common.CommonEnvironmentClient()
 	randomName := qa.RandomName("tf-logdelivery-")
 
-	logDeliveryAPI := NewLogDeliveryAPI(context.Background(), client)
-	credentialsAPI := NewCredentialsAPI(client)
+	ctx := context.Background()
+	logDeliveryAPI := NewLogDeliveryAPI(ctx, client)
+	credentialsAPI := NewCredentialsAPI(ctx, client)
 	storageConfigurationsAPI := NewStorageConfigurationsAPI(client)
 
 	creds, err := credentialsAPI.Create(acctID, randomName, roleARN)

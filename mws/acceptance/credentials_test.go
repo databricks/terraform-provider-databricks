@@ -1,6 +1,7 @@
 package acceptance
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"os"
@@ -59,7 +60,7 @@ func TestMwsAccCredentials(t *testing.T) {
 			{
 				PreConfig: func() {
 					conn := common.CommonEnvironmentClient()
-					err := NewCredentialsAPI(conn).Delete(creds.AccountID, creds.CredentialsID)
+					err := NewCredentialsAPI(context.Background(), conn).Delete(creds.AccountID, creds.CredentialsID)
 					if err != nil {
 						panic(err)
 					}
@@ -87,7 +88,7 @@ func testMWSCredentialsResourceDestroy(s *terraform.State) error {
 		if err != nil {
 			return err
 		}
-		_, err = NewCredentialsAPI(client).Read(packagedMWSIds.MwsAcctID, packagedMWSIds.ResourceID)
+		_, err = NewCredentialsAPI(context.Background(), client).Read(packagedMWSIds.MwsAcctID, packagedMWSIds.ResourceID)
 		if err != nil {
 			return nil
 		}
@@ -111,7 +112,7 @@ func testMWSCredentialsResourceExists(n string, mwsCreds *Credentials, t *testin
 		if err != nil {
 			return err
 		}
-		resp, err := NewCredentialsAPI(conn).Read(packagedMWSIds.MwsAcctID, packagedMWSIds.ResourceID)
+		resp, err := NewCredentialsAPI(context.Background(), conn).Read(packagedMWSIds.MwsAcctID, packagedMWSIds.ResourceID)
 		if err != nil {
 			return err
 		}

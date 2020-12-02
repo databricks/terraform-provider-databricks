@@ -1,6 +1,7 @@
 package mws
 
 import (
+	"context"
 	"testing"
 
 	"github.com/databrickslabs/databricks-terraform/common"
@@ -16,19 +17,20 @@ func TestMwsAccCreds(t *testing.T) {
 	}
 	acctID := qa.GetEnvOrSkipTest(t, "DATABRICKS_ACCOUNT_ID")
 	client := common.CommonEnvironmentClient()
-	credsList, err := NewCredentialsAPI(client).List(acctID)
+	credsAPI := NewCredentialsAPI(context.Background(), client)
+	credsList, err := credsAPI.List(acctID)
 	assert.NoError(t, err, err)
 	t.Log(credsList)
 
-	myCreds, err := NewCredentialsAPI(client).Create(acctID, "sri-mws-terraform-automation-role", "arn:aws:iam::997819999999:role/sri-e2-terraform-automation-role")
+	myCreds, err := credsAPI.Create(acctID, "sri-mws-terraform-automation-role", "arn:aws:iam::997819999999:role/sri-e2-terraform-automation-role")
 	assert.NoError(t, err, err)
 
-	myCredsFull, err := NewCredentialsAPI(client).Read(acctID, myCreds.CredentialsID)
+	myCredsFull, err := credsAPI.Read(acctID, myCreds.CredentialsID)
 	assert.NoError(t, err, err)
 	t.Log(myCredsFull.AwsCredentials.StsRole.ExternalID)
 
 	defer func() {
-		err = NewCredentialsAPI(client).Delete(acctID, myCreds.CredentialsID)
+		err = credsAPI.Delete(acctID, myCreds.CredentialsID)
 		assert.NoError(t, err, err)
 	}()
 }

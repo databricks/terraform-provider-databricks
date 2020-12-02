@@ -43,7 +43,7 @@ func TestAccMutiworkspaceUsedFromNormalMode(t *testing.T) {
 		assert.Equal(t, "INCORRECT_CONFIGURATION", a.ErrorCode)
 	}
 	ctx := context.Background()
-	checkCheck(mws.NewCredentialsAPI(client).List("_"))
+	checkCheck(mws.NewCredentialsAPI(ctx, client).List("_"))
 	checkCheck(mws.NewNetworksAPI(ctx, client).List("_"))
 	checkCheck(mws.NewStorageConfigurationsAPI(client).List("_"))
 	checkCheck(mws.NewWorkspacesAPI(ctx, client).List("_"))

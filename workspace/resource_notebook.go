@@ -205,6 +205,8 @@ func ResourceNotebook() *schema.Resource {
 		},
 		Schema: map[string]*schema.Schema{
 			"content": {
+				Deprecated: "databricks_notebook.content is deprecated and is "+
+							"going to be renamed to `content_base64` in version 0.3",
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,

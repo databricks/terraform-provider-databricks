@@ -31,6 +31,8 @@ jobs:
         env:
           GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
           PASSPHRASE: ${{ secrets.PASSPHRASE }}
+      - name: Pull external libraries
+        run: make vendor
       -
         name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v1

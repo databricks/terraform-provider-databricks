@@ -30,9 +30,9 @@ func ResourceDBFSFile() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"content": {
-				Deprecated: "databricks_dbfs_file.content is deprecated and would be "+
-							"renamed to `content_base64` in the next version. Please "+
-							"rewrite your configuration to use `source` field.",
+				Deprecated: "databricks_dbfs_file.content is deprecated and would be " +
+					"renamed to `content_base64` in the next version. Please " +
+					"rewrite your configuration to use `source` field.",
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
@@ -44,8 +44,8 @@ func ResourceDBFSFile() *schema.Resource {
 				ConflictsWith: []string{"content"},
 			},
 			"content_b64_md5": {
-				Deprecated: "databricks_dbfs_file.content_b64_md5 is deprecated and would be "+
-							"removed in the next version.",
+				Deprecated: "databricks_dbfs_file.content_b64_md5 is deprecated and would be " +
+					"removed in the next version.",
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -56,22 +56,22 @@ func ResourceDBFSFile() *schema.Resource {
 				ForceNew: true,
 			},
 			"overwrite": {
-				Deprecated: "databricks_dbfs_file.overwrite is deprecated and would be "+
-							"removed in the next version.",
+				Deprecated: "databricks_dbfs_file.overwrite is deprecated and would be " +
+					"removed in the next version.",
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
 			},
 			"mkdirs": {
-				Deprecated: "databricks_dbfs_file.mkdirs is deprecated and would be "+
-							"removed in the next version.",
+				Deprecated: "databricks_dbfs_file.mkdirs is deprecated and would be " +
+					"removed in the next version.",
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  true,
 			},
 			"validate_remote_file": {
-				Deprecated: "databricks_dbfs_file.validate_remote_file is deprecated and would be "+
-							"removed in the next version.",
+				Deprecated: "databricks_dbfs_file.validate_remote_file is deprecated and would be " +
+					"removed in the next version.",
 				Type:     schema.TypeBool,
 				Optional: true,
 			},

@@ -29,7 +29,7 @@ func TestMwsAccMissingResources(t *testing.T) {
 		{
 			Name: "Credential",
 			ReadFunc: func() error {
-				_, err := NewCredentialsAPI(client).Read(mwsAcctID, randStringID)
+				_, err := NewCredentialsAPI(ctx, client).Read(mwsAcctID, randStringID)
 				return err
 			},
 		},

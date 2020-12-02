@@ -1,6 +1,7 @@
 package mws
 
 import (
+	"context"
 	"testing"
 
 	"github.com/databrickslabs/databricks-terraform/common"
@@ -13,20 +14,20 @@ func TestMwsAccStorageConfigurations(t *testing.T) {
 		t.Skip("skipping integration test in short mode.")
 	}
 	acctID := qa.GetEnvOrSkipTest(t, "DATABRICKS_ACCOUNT_ID")
-	client := common.CommonEnvironmentClient()
-	storageConfigsList, err := NewStorageConfigurationsAPI(client).List(acctID)
+	storageAPI := NewStorageConfigurationsAPI(context.Background(), common.CommonEnvironmentClient())
+	storageConfigsList, err := storageAPI.List(acctID)
 	assert.NoError(t, err, err)
 	t.Log(storageConfigsList)
 
-	storageConfig, err := NewStorageConfigurationsAPI(client).Create(acctID, "sri-mws-terraform-storage-root-bucket", "sri-root-s3-bucket")
+	storageConfig, err := storageAPI.Create(acctID, "sri-mws-terraform-storage-root-bucket", "sri-root-s3-bucket")
 	assert.NoError(t, err, err)
 
-	myStorageConfig, err := NewStorageConfigurationsAPI(client).Read(acctID, storageConfig.StorageConfigurationID)
+	myStorageConfig, err := storageAPI.Read(acctID, storageConfig.StorageConfigurationID)
 	assert.NoError(t, err, err)
 	t.Log(myStorageConfig.RootBucketInfo.BucketName)
 
 	defer func() {
-		err = NewStorageConfigurationsAPI(client).Delete(acctID, storageConfig.StorageConfigurationID)
+		err = storageAPI.Delete(acctID, storageConfig.StorageConfigurationID)
 		assert.NoError(t, err, err)
 	}()
 }

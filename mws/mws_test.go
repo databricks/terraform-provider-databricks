@@ -43,7 +43,7 @@ func TestMwsAccMissingResources(t *testing.T) {
 		{
 			Name: "Storage",
 			ReadFunc: func() error {
-				_, err := NewStorageConfigurationsAPI(client).Read(mwsAcctID, randStringID)
+				_, err := NewStorageConfigurationsAPI(ctx, client).Read(mwsAcctID, randStringID)
 				return err
 			},
 		},

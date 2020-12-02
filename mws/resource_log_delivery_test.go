@@ -21,7 +21,7 @@ func TestMwsAccLogDelivery(t *testing.T) {
 	ctx := context.Background()
 	logDeliveryAPI := NewLogDeliveryAPI(ctx, client)
 	credentialsAPI := NewCredentialsAPI(ctx, client)
-	storageConfigurationsAPI := NewStorageConfigurationsAPI(client)
+	storageConfigurationsAPI := NewStorageConfigurationsAPI(ctx, client)
 
 	creds, err := credentialsAPI.Create(acctID, randomName, roleARN)
 	require.NoError(t, err)

@@ -1,6 +1,7 @@
 package acceptance
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"os"
@@ -49,7 +50,7 @@ func TestAccJobResource(t *testing.T) {
 					// query the API to retrieve the tokenInfo object
 					acceptance.ResourceCheck("databricks_job.this",
 						func(client *common.DatabricksClient, id string) error {
-							job, err := NewJobsAPI(client).Read(id)
+							job, err := NewJobsAPI(context.Background(), client).Read(id)
 							assert.NoError(t, err)
 							assert.NotNil(t, job.Settings)
 							assert.NotNil(t, job.Settings.NewCluster)
@@ -69,7 +70,7 @@ func TestAccJobResource(t *testing.T) {
 		},
 		CheckDestroy: acceptance.ResourceCheck("databricks_job.this",
 			func(client *common.DatabricksClient, id string) error {
-				_, err := NewJobsAPI(client).Read(id)
+				_, err := NewJobsAPI(context.Background(), client).Read(id)
 				if err != nil {
 					return nil
 				}
@@ -124,7 +125,7 @@ func TestAwsAccJobResource_NoInstancePool(t *testing.T) {
 					// query the API to retrieve the tokenInfo object
 					acceptance.ResourceCheck("databricks_job.this",
 						func(client *common.DatabricksClient, id string) error {
-							job, err := NewJobsAPI(client).Read(id)
+							job, err := NewJobsAPI(context.Background(), client).Read(id)
 							assert.NoError(t, err)
 							assert.NotNil(t, job.Settings)
 							assert.NotNil(t, job.Settings.NewCluster)
@@ -136,7 +137,7 @@ func TestAwsAccJobResource_NoInstancePool(t *testing.T) {
 		},
 		CheckDestroy: acceptance.ResourceCheck("databricks_job.this",
 			func(client *common.DatabricksClient, id string) error {
-				_, err := NewJobsAPI(client).Read(id)
+				_, err := NewJobsAPI(context.Background(), client).Read(id)
 				if err != nil {
 					return nil
 				}

@@ -125,14 +125,3 @@ func ResourceInstancePool() *schema.Resource {
 		},
 	}.ToResource()
 }
-
-// DEPRECATED
-func convertMapStringInterfaceToStringString(m map[string]interface{}) map[string]string {
-	response := make(map[string]string)
-	for k, v := range m {
-		if v != nil {
-			response[k] = v.(string)
-		}
-	}
-	return response
-}

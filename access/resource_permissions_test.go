@@ -771,7 +771,7 @@ func TestAccPermissionsJobs(t *testing.T) {
 	permissionsTestHelper(t, func(permissionsAPI PermissionsAPI, user, group string,
 		ef func(string) PermissionsEntity) {
 		ctx := context.Background()
-		jobsAPI := compute.NewJobsAPI(permissionsAPI.client)
+		jobsAPI := compute.NewJobsAPI(ctx, permissionsAPI.client)
 		job, err := jobsAPI.Create(compute.JobSettings{
 			NewCluster: &compute.Cluster{
 				NumWorkers:   2,

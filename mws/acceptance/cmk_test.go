@@ -1,6 +1,7 @@
 package acceptance
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"testing"
@@ -45,7 +46,7 @@ func TestMwsAccCustomerManagedKeys(t *testing.T) {
 			{
 				PreConfig: func() {
 					conn := common.CommonEnvironmentClient()
-					err := NewCustomerManagedKeysAPI(conn).Delete(customerManagedKey.AccountID,
+					err := NewCustomerManagedKeysAPI(context.Background(), conn).Delete(customerManagedKey.AccountID,
 						customerManagedKey.CustomerManagedKeyID)
 					if err != nil {
 						panic(err)
@@ -83,7 +84,7 @@ func testMWSCustomerManagedKeyResourceExists(n string, cmk *CustomerManagedKey, 
 		if err != nil {
 			return err
 		}
-		resp, err := NewCustomerManagedKeysAPI(conn).Read(packagedMWSIds.MwsAcctID, packagedMWSIds.ResourceID)
+		resp, err := NewCustomerManagedKeysAPI(context.Background(), conn).Read(packagedMWSIds.MwsAcctID, packagedMWSIds.ResourceID)
 		if err != nil {
 			return err
 		}

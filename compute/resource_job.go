@@ -136,7 +136,7 @@ var jobSchema = internal.StructToSchema(JobSettings{},
 // ResourceJob ...
 func ResourceJob() *schema.Resource {
 	return util.CommonResource{
-		Schema: jobSchema,
+		Schema:        jobSchema,
 		SchemaVersion: 2,
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var js JobSettings

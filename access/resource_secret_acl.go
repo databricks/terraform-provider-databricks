@@ -2,15 +2,15 @@ package access
 
 import (
 	"context"
-	"log"
 
 	"github.com/databrickslabs/databricks-terraform/common"
+	"github.com/databrickslabs/databricks-terraform/internal/util"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 // NewSecretAclsAPI creates SecretAclsAPI instance from provider meta
-func NewSecretAclsAPI(m interface{}) SecretAclsAPI {
-	return SecretAclsAPI{m.(*common.DatabricksClient), context.TODO()}
+func NewSecretAclsAPI(ctx context.Context, m interface{}) SecretAclsAPI {
+	return SecretAclsAPI{m.(*common.DatabricksClient), ctx}
 }
 
 // SecretAclsAPI exposes the Secret ACL API
@@ -59,14 +59,8 @@ func (a SecretAclsAPI) List(scope string) ([]ACLItem, error) {
 
 // ResourceSecretACL manages access to secret scopes
 func ResourceSecretACL() *schema.Resource {
-	return &schema.Resource{
-		Create: resourceSecretACLCreate,
-		Read:   resourceSecretACLRead,
-		Delete: resourceSecretACLDelete,
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
-
+	p := util.NewPairID("scope", "principal")
+	return util.CommonResource{
 		Schema: map[string]*schema.Schema{
 			"scope": {
 				Type:     schema.TypeString,
@@ -84,65 +78,33 @@ func ResourceSecretACL() *schema.Resource {
 				ForceNew: true,
 			},
 		},
-	}
-}
-
-func getSecretACLID(scope string, key string) (string, error) {
-	return scope + "|||" + key, nil
-}
-
-func getScopeAndKeyFromSecretACLID(secretACLIDString string) (string, string, error) {
-	return getScopeAndKeyFromSecretID(secretACLIDString)
-}
-
-func resourceSecretACLCreate(d *schema.ResourceData, m interface{}) error {
-	scopeName := d.Get("scope").(string)
-	principal := d.Get("principal").(string)
-	permission := ACLPermission(d.Get("permission").(string))
-	err := NewSecretAclsAPI(m).Create(scopeName, principal, permission)
-	if err != nil {
-		return err
-	}
-	id, err := getSecretACLID(scopeName, principal)
-	if err != nil {
-		return err
-	}
-	d.SetId(id)
-	return resourceSecretACLRead(d, m)
-}
-
-func resourceSecretACLRead(d *schema.ResourceData, m interface{}) error {
-	id := d.Id()
-	scope, principal, err := getScopeAndKeyFromSecretACLID(id)
-	if err != nil {
-		return err
-	}
-	secretACL, err := NewSecretAclsAPI(m).Read(scope, principal)
-	if err != nil {
-		if e, ok := err.(common.APIError); ok && e.IsMissing() {
-			log.Printf("missing resource due to error: %v\n", e)
-			d.SetId("")
+		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			if err := NewSecretAclsAPI(ctx, c).Create(
+				d.Get("scope").(string), d.Get("principal").(string),
+				ACLPermission(d.Get("permission").(string))); err != nil {
+				return err
+			}
+			// TODO: check what happens if ID is set before error happens in create
+			p.Pack(d)
 			return nil
-		}
-		return err
-	}
-	err = d.Set("scope", scope)
-	if err != nil {
-		return err
-	}
-	err = d.Set("principal", principal)
-	if err != nil {
-		return err
-	}
-	err = d.Set("permission", secretACL.Permission)
-	return err
-}
-
-func resourceSecretACLDelete(d *schema.ResourceData, m interface{}) error {
-	id := d.Id()
-	scope, key, err := getScopeAndKeyFromSecretACLID(id)
-	if err != nil {
-		return err
-	}
-	return NewSecretAclsAPI(m).Delete(scope, key)
+		},
+		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			scope, principal, err := p.Unpack(d)
+			if err != nil {
+				return err
+			}
+			secretACL, err := NewSecretAclsAPI(ctx, c).Read(scope, principal)
+			if err != nil {
+				return err
+			}
+			return d.Set("permission", secretACL.Permission)
+		},
+		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			scope, principal, err := p.Unpack(d)
+			if err != nil {
+				return err
+			}
+			return NewSecretAclsAPI(ctx, c).Delete(scope, principal)
+		},
+	}.ToResource()
 }

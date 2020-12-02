@@ -65,7 +65,7 @@ func TestAccMissingResourcesInWorkspace(t *testing.T) {
 		{
 			Name: "Tokens",
 			ReadFunc: func() error {
-				_, err := identity.NewTokensAPI(client).Read(randStringID)
+				_, err := identity.NewTokensAPI(ctx, client).Read(randStringID)
 				return err
 			},
 		},

@@ -4,11 +4,13 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"regexp"
 
 	"github.com/databrickslabs/databricks-terraform/common"
 	"github.com/databrickslabs/databricks-terraform/internal"
 	"github.com/databrickslabs/databricks-terraform/internal/util"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 // NewSecretScopesAPI creates SecretScopesAPI instance from provider meta
@@ -107,11 +109,17 @@ func (a SecretScopesAPI) Read(scopeName string) (SecretScope, error) {
 	}
 }
 
+var validScope = validation.StringMatch(regexp.MustCompile(`^[\w\.@_-]{1,128}$`),
+	"Must consist of alphanumeric characters, dashes, underscores, and periods, "+
+		"and may not exceed 128 characters.")
+
 // ResourceSecretScope manages secret scopes
 func ResourceSecretScope() *schema.Resource {
 	s := internal.StructToSchema(SecretScope{}, func(s map[string]*schema.Schema) map[string]*schema.Schema {
 		// TODO: DiffSuppressFunc for initial_manage_principal & importing
 		s["name"].ForceNew = true
+		// nolint
+		s["name"].ValidateFunc = validScope
 		s["initial_manage_principal"].ForceNew = true
 		s["keyvault_metadata"].ForceNew = true
 		return s

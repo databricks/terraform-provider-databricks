@@ -3,7 +3,6 @@ package util
 import (
 	"context"
 	"fmt"
-	"log"
 	"strings"
 
 	"github.com/databrickslabs/databricks-terraform/common"
@@ -12,15 +11,22 @@ import (
 
 // Pair defines an ID pair
 type Pair struct {
-	Left, Right string
+	left, right string
+	separator   string
 	schema      map[string]*schema.Schema
 }
 
 // NewPairID creates new ID pair
 func NewPairID(left, right string) *Pair {
+	return NewPairSeparatedID(left, right, "|")
+}
+
+// NewPairSeparatedID creates new ID pair with a custom separator
+func NewPairSeparatedID(left, right, separator string) *Pair {
 	return &Pair{
-		Left:  left,
-		Right: right,
+		left:      left,
+		right:     right,
+		separator: separator,
 		schema: map[string]*schema.Schema{
 			left:  {Type: schema.TypeString, ForceNew: true, Required: true},
 			right: {Type: schema.TypeString, ForceNew: true, Required: true},
@@ -37,29 +43,24 @@ func (p *Pair) Schema(do func(map[string]*schema.Schema) map[string]*schema.Sche
 // Unpack ID into two strings and set data
 func (p *Pair) Unpack(d *schema.ResourceData) (string, string, error) {
 	id := d.Id()
-	if strings.Contains(id, "|||") {
-		id = strings.ReplaceAll(id, "|||", "|")
-		log.Printf("[INFO] Migrated legacy [id=%s] to new [id=%s]", d.Id(), id)
-		d.SetId(id)
-	}
-	parts := strings.SplitN(id, "|", 2)
+	parts := strings.SplitN(id, p.separator, 2)
 	if len(parts) != 2 {
 		d.SetId("")
 		return "", "", fmt.Errorf("Invalid ID: %s", id)
 	}
 	if parts[0] == "" {
 		d.SetId("")
-		return "", "", fmt.Errorf("%s cannot be empty", p.Left)
+		return "", "", fmt.Errorf("%s cannot be empty", p.left)
 	}
 	if parts[1] == "" {
 		d.SetId("")
-		return "", "", fmt.Errorf("%s cannot be empty", p.Right)
+		return "", "", fmt.Errorf("%s cannot be empty", p.right)
 	}
-	err := d.Set(p.Left, parts[0])
+	err := d.Set(p.left, parts[0])
 	if err != nil {
 		return "", "", err
 	}
-	err = d.Set(p.Right, parts[1])
+	err = d.Set(p.right, parts[1])
 	if err != nil {
 		return "", "", err
 	}
@@ -68,7 +69,7 @@ func (p *Pair) Unpack(d *schema.ResourceData) (string, string, error) {
 
 // Pack data attributes to ID
 func (p *Pair) Pack(d *schema.ResourceData) {
-	d.SetId(fmt.Sprintf("%s|%s", d.Get(p.Left), d.Get(p.Right)))
+	d.SetId(fmt.Sprintf("%s%s%s", d.Get(p.left), p.separator, d.Get(p.right)))
 }
 
 // BindResource defines resource with simplified functions
@@ -90,13 +91,13 @@ func (p *Pair) BindResource(pr BindResource) *schema.Resource {
 			return pr.ReadContext(ctx, left, right, c)
 		},
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			left := d.Get(p.Left).(string)
+			left := d.Get(p.left).(string)
 			if left == "" {
-				return fmt.Errorf("%s cannot be empty", p.Left)
+				return fmt.Errorf("%s cannot be empty", p.left)
 			}
-			right := d.Get(p.Right).(string)
+			right := d.Get(p.right).(string)
 			if right == "" {
-				return fmt.Errorf("%s cannot be empty", p.Right)
+				return fmt.Errorf("%s cannot be empty", p.right)
 			}
 			err := pr.CreateContext(ctx, left, right, c)
 			if err != nil {

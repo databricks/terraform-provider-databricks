@@ -50,8 +50,8 @@ func ReadContent(d *schema.ResourceData) (content []byte, err error) {
 func FileContentSchema(extra map[string]*schema.Schema) map[string]*schema.Schema {
 	s := map[string]*schema.Schema{
 		"md5": {
-			Type: schema.TypeString,
-			Default: "different",
+			Type:     schema.TypeString,
+			Default:  "different",
 			Optional: true,
 			DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 				if _, err := ReadContent(d); err != nil {
@@ -116,10 +116,10 @@ func FileContentSchema(extra map[string]*schema.Schema) map[string]*schema.Schem
 				if v != clean {
 					return diag.Diagnostics{
 						{
-							Summary:       "Clean path required",
+							Summary: "Clean path required",
 							Detail: fmt.Sprintf(
 								"Replace value with %s to avoid resource replacement",
-								 clean),
+								clean),
 							Severity:      diag.Error,
 							AttributePath: p,
 						},

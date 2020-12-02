@@ -3,12 +3,10 @@ package mws
 import (
 	"context"
 	"fmt"
-	"log"
-
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 
 	"github.com/databrickslabs/databricks-terraform/common"
 	"github.com/databrickslabs/databricks-terraform/internal"
+	"github.com/databrickslabs/databricks-terraform/internal/util"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -28,8 +26,8 @@ type CustomerManagedKey struct {
 }
 
 // NewCustomerManagedKeysAPI creates CustomerManagedKeysAPI instance from provider meta
-func NewCustomerManagedKeysAPI(m interface{}) CustomerManagedKeysAPI {
-	return CustomerManagedKeysAPI{m.(*common.DatabricksClient), context.TODO()}
+func NewCustomerManagedKeysAPI(ctx context.Context, m interface{}) CustomerManagedKeysAPI {
+	return CustomerManagedKeysAPI{m.(*common.DatabricksClient), ctx}
 }
 
 // CustomerManagedKeysAPI exposes the mws customerManagedKeys API
@@ -47,91 +45,65 @@ func (a CustomerManagedKeysAPI) Create(cmk CustomerManagedKey) (k CustomerManage
 
 // Read returns the customer managed key object along with metadata
 func (a CustomerManagedKeysAPI) Read(
-	mwsAcctID, customerManagedKeyID string) (k CustomerManagedKey, err error) {
+	accountID, customerManagedKeyID string) (k CustomerManagedKey, err error) {
 	err = a.client.Get(a.context, fmt.Sprintf("/accounts/%s/customer-managed-keys/%s",
-		mwsAcctID, customerManagedKeyID), nil, &k)
+		accountID, customerManagedKeyID), nil, &k)
 	return
 }
 
 // Delete deletes the customer managed key object given a network id
-func (a CustomerManagedKeysAPI) Delete(mwsAcctID, customerManagedKeyID string) error {
+func (a CustomerManagedKeysAPI) Delete(accountID, customerManagedKeyID string) error {
 	return a.client.Delete(a.context, fmt.Sprintf("/accounts/%s/customer-managed-keys/%s",
-		mwsAcctID, customerManagedKeyID), nil)
+		accountID, customerManagedKeyID), nil)
 }
 
 // List lists all the available customer managed key objects in the mws account
-func (a CustomerManagedKeysAPI) List(mwsAcctID string) (kl []CustomerManagedKey, err error) {
-	err = a.client.Get(a.context, fmt.Sprintf("/accounts/%s/customer-managed-keys", mwsAcctID), nil, &kl)
+func (a CustomerManagedKeysAPI) List(accountID string) (kl []CustomerManagedKey, err error) {
+	err = a.client.Get(a.context, fmt.Sprintf("/accounts/%s/customer-managed-keys", accountID), nil, &kl)
 	return
 }
 
-var customerManagedKeySchema = resourceMWSCustomerManagedKeysSchema()
-
+// ResourceCustomerManagedKey ...
 func ResourceCustomerManagedKey() *schema.Resource {
-	return &schema.Resource{
-		CreateContext: resourceCustomerManagedKeyCreate,
-		ReadContext:   resourceCustomerManagedKeyRead,
-		DeleteContext: resourceCustomerManagedKeyDelete,
-		Schema:        customerManagedKeySchema,
-	}
-}
-
-func resourceMWSCustomerManagedKeysSchema() map[string]*schema.Schema {
-	return internal.StructToSchema(CustomerManagedKey{}, func(s map[string]*schema.Schema) map[string]*schema.Schema {
-		s["aws_key_info"].ForceNew = true
-		s["account_id"].ForceNew = true
-		return s
-	})
-}
-
-func resourceCustomerManagedKeyCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	customerMangedKeyApi := NewCustomerManagedKeysAPI(m)
-	var customerMangedKey CustomerManagedKey
-	err := internal.DataToStructPointer(d, customerManagedKeySchema, &customerMangedKey)
-	if err != nil {
-		return diag.FromErr(err)
-	}
-	customerManagedKeyData, err := customerMangedKeyApi.Create(customerMangedKey)
-	if err != nil {
-		return diag.FromErr(err)
-	}
-	d.SetId(packMWSAccountID(PackagedMWSIds{
-		MwsAcctID:  customerMangedKey.AccountID,
-		ResourceID: customerManagedKeyData.CustomerManagedKeyID,
-	}))
-	return resourceCustomerManagedKeyRead(ctx, d, m)
-}
-
-func resourceCustomerManagedKeyRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	customerMangedKeyApi := NewCustomerManagedKeysAPI(m)
-	id := d.Id()
-	packagedId, err := UnpackMWSAccountID(id)
-	if err != nil {
-		return diag.FromErr(err)
-	}
-	customerManagedKey, err := customerMangedKeyApi.Read(packagedId.MwsAcctID, packagedId.ResourceID)
-	if ae, ok := err.(common.APIError); ok && ae.IsMissing() {
-		log.Printf("Missing customer managed key with id: %s.", d.Id())
-		d.SetId("")
-		return nil
-	}
-	err = internal.StructToData(customerManagedKey, customerManagedKeySchema, d)
-	if err != nil {
-		return diag.FromErr(err)
-	}
-	return nil
-}
-
-func resourceCustomerManagedKeyDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	customerMangedKeyApi := NewCustomerManagedKeysAPI(m)
-	id := d.Id()
-	packagedId, err := UnpackMWSAccountID(id)
-	if err != nil {
-		return diag.FromErr(err)
-	}
-	err = customerMangedKeyApi.Delete(packagedId.MwsAcctID, packagedId.ResourceID)
-	if err != nil {
-		return diag.FromErr(err)
-	}
-	return nil
+	s := internal.StructToSchema(CustomerManagedKey{},
+		func(s map[string]*schema.Schema) map[string]*schema.Schema {
+			s["aws_key_info"].ForceNew = true
+			s["account_id"].ForceNew = true
+			return s
+		})
+	p := util.NewPairSeparatedID("account_id", "customer_managed_key_id", "/")
+	return util.CommonResource{
+		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			var cmk CustomerManagedKey
+			if err := internal.DataToStructPointer(d, s, &cmk); err != nil {
+				return err
+			}
+			customerManagedKeyData, err := NewCustomerManagedKeysAPI(ctx, c).Create(cmk)
+			if err != nil {
+				return err
+			}
+			d.Set("customer_managed_key_id", customerManagedKeyData.CustomerManagedKeyID)
+			p.Pack(d)
+			return nil
+		},
+		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			accountID, cmkID, err := p.Unpack(d)
+			if err != nil {
+				return err
+			}
+			cmk, err := NewCustomerManagedKeysAPI(ctx, c).Read(accountID, cmkID)
+			if err != nil {
+				return err
+			}
+			return internal.StructToData(cmk, s, d)
+		},
+		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			accountID, cmkID, err := p.Unpack(d)
+			if err != nil {
+				return err
+			}
+			return NewCustomerManagedKeysAPI(ctx, c).Delete(accountID, cmkID)
+		},
+		Schema: s,
+	}.ToResource()
 }

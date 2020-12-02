@@ -1,6 +1,7 @@
 package mws
 
 import (
+	"context"
 	"testing"
 
 	"github.com/databrickslabs/databricks-terraform/common"
@@ -16,7 +17,7 @@ func TestMwsAccCustomerManagedKeys(t *testing.T) {
 	kmsKeyArn := qa.GetEnvOrSkipTest(t, "TEST_KMS_KEY_ARN")
 	kmsKeyAlias := qa.GetEnvOrSkipTest(t, "TEST_KMS_KEY_ALIAS")
 	client := common.CommonEnvironmentClient()
-	cmkApi := NewCustomerManagedKeysAPI(client)
+	cmkApi := NewCustomerManagedKeysAPI(context.Background(), client)
 	cmkList, err := cmkApi.List(acctID)
 	assert.NoError(t, err, err)
 	t.Log(cmkList)

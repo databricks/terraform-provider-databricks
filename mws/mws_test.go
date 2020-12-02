@@ -50,7 +50,7 @@ func TestMwsAccMissingResources(t *testing.T) {
 		{
 			Name: "Customer Managed Key",
 			ReadFunc: func() error {
-				_, err := NewCustomerManagedKeysAPI(client).Read(mwsAcctID, randStringID)
+				_, err := NewCustomerManagedKeysAPI(ctx, client).Read(mwsAcctID, randStringID)
 				return err
 			},
 		},

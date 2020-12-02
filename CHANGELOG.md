@@ -5,9 +5,12 @@
 * Fixed documentation issues.
 * Added missing resource importers and test to cover it.
 * Migrated build from TravisCI to GitHub Actions.
+* Fixed custom `config_file` issue configuration handling ([#420](https://github.com/databrickslabs/terraform-provider-databricks/issues/420)).
 
 **Deprecations**
 * `databricks_notebook` has got `overwrite`, `mkdirs` and `format` parameters, that always have to be set to certain values in order to follow expected behavior of terraform. These fields would be removed in 0.3 and always set to proper values.
+* `databricks_notebook` & `databricks_dbfs_file` field `content` is deprecated and would be renamed to `content_base64` to further increase clarity. 
+* `databricks_dbfs_file` has got `content`, `content_b64_md5`, `overwrite`, `mkdirs`, `validate_remote_file` fields deprecated and they will be removed in the next version, where critical code path will be shared with `databricks_notebook`.
 * `network_error_messages` and `verify_workspace_runnning` from `databricks_mws_workspaces` is deprecated and going to be removed in 0.3.
 * `error_messages` from `databricks_mws_networks` are deprecated and would be removed in 0.3.
 * `ebs_volume_type` and `azure_disk_volume_type` from `databricks_instance_pool` is going to be moved to `disk_type` sub-block in 0.3, which means you'll slightly have to modify configuration while migrating to 0.3. Computed field `default_tags` is going to be removed from resource. This is done to further increase maintainability of provider in the future.

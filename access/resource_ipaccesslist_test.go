@@ -15,7 +15,7 @@ var (
 	TestingID               = "234567"
 	TestingLabel            = "Naughty"
 	TestingListTypeString   = "BLOCK"
-	TestingListType         = ipAccessListType(TestingListTypeString)
+	TestingListType         = "BLOCK"
 	TestingEnabled          = true
 	TestingIPAddresses      = []string{"1.2.3.4", "1.2.4.0/24"}
 	TestingIPAddressesState = []interface{}{"1.2.3.4", "1.2.4.0/24"}

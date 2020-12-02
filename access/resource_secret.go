@@ -8,6 +8,7 @@ import (
 	"github.com/databrickslabs/databricks-terraform/common"
 	"github.com/databrickslabs/databricks-terraform/internal/util"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 // SecretsRequest ...
@@ -113,24 +114,27 @@ func (a SecretsAPI) Read(scope string, key string) (SecretMetadata, error) {
 
 // ResourceSecret manages secrets
 func ResourceSecret() *schema.Resource {
-	p := util.NewPairID("scope", "key")
+	p := util.NewPairSeparatedID("scope", "key", "|||")
 	return util.CommonResource{
 		Schema: map[string]*schema.Schema{
 			"string_value": {
-				Type:      schema.TypeString,
-				Required:  true,
-				ForceNew:  true,
-				Sensitive: true,
+				Type:         schema.TypeString,
+				ValidateFunc: validation.StringIsNotEmpty,
+				Required:     true,
+				ForceNew:     true,
+				Sensitive:    true,
 			},
 			"scope": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:         schema.TypeString,
+				ValidateFunc: validScope,
+				Required:     true,
+				ForceNew:     true,
 			},
 			"key": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:         schema.TypeString,
+				ValidateFunc: validScope,
+				Required:     true,
+				ForceNew:     true,
 			},
 			"last_updated_timestamp": {
 				Type:     schema.TypeInt,

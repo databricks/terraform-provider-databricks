@@ -9,6 +9,7 @@
 * `databricks_notebook` & `databricks_dbfs_file` got new `source` field to specify location of a local file.
 * `databricks_notebook` can have `language` field optional, as long as `source` is set to a file with `.py`, `.scala`, `.sql`, or `.r` extension.
 * `databricks_me` data source was added to represent `user_name`, `home` & `id` of the caller user (or service principal).
+* Added validation for secret scope name in `databricks_secret`, `databricks_secret_scope` and `databricks_secret_acl`. Non-compliant names may cause errors.
 
 **Behavior changes**
 

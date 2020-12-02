@@ -59,13 +59,14 @@ func (a SecretAclsAPI) List(scope string) ([]ACLItem, error) {
 
 // ResourceSecretACL manages access to secret scopes
 func ResourceSecretACL() *schema.Resource {
-	p := util.NewPairID("scope", "principal")
+	p := util.NewPairSeparatedID("scope", "principal", "|||")
 	return util.CommonResource{
 		Schema: map[string]*schema.Schema{
 			"scope": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:         schema.TypeString,
+				ValidateFunc: validScope,
+				Required:     true,
+				ForceNew:     true,
 			},
 			"principal": {
 				Type:     schema.TypeString,

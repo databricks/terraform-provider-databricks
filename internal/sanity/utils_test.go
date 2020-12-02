@@ -72,21 +72,21 @@ func TestAccMissingResourcesInWorkspace(t *testing.T) {
 		{
 			Name: "Secret Scopes",
 			ReadFunc: func() error {
-				_, err := access.NewSecretScopesAPI(client).Read(randStringID)
+				_, err := access.NewSecretScopesAPI(ctx, client).Read(randStringID)
 				return err
 			},
 		},
 		{
 			Name: "Secrets",
 			ReadFunc: func() error {
-				_, err := access.NewSecretsAPI(client).Read(randStringID, randStringID)
+				_, err := access.NewSecretsAPI(ctx, client).Read(randStringID, randStringID)
 				return err
 			},
 		},
 		{
 			Name: "Secret ACLs",
 			ReadFunc: func() error {
-				_, err := access.NewSecretAclsAPI(client).Read(randStringID, randStringID)
+				_, err := access.NewSecretAclsAPI(ctx, client).Read(randStringID, randStringID)
 				return err
 			},
 		},

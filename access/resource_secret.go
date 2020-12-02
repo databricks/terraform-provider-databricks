@@ -3,11 +3,10 @@ package access
 import (
 	"context"
 	"fmt"
-	"log"
 	"net/http"
-	"strings"
 
 	"github.com/databrickslabs/databricks-terraform/common"
+	"github.com/databrickslabs/databricks-terraform/internal/util"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -53,10 +52,10 @@ type SecretACLRequest struct {
 }
 
 // NewSecretsAPI creates SecretsAPI instance from provider meta
-func NewSecretsAPI(m interface{}) SecretsAPI {
+func NewSecretsAPI(ctx context.Context, m interface{}) SecretsAPI {
 	return SecretsAPI{
 		client:  m.(*common.DatabricksClient),
-		context: context.TODO(),
+		context: ctx,
 	}
 }
 
@@ -114,13 +113,8 @@ func (a SecretsAPI) Read(scope string, key string) (SecretMetadata, error) {
 
 // ResourceSecret manages secrets
 func ResourceSecret() *schema.Resource {
-	return &schema.Resource{
-		Create: resourceSecretCreate,
-		Read:   resourceSecretRead,
-		Delete: resourceSecretDelete,
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
+	p := util.NewPairID("scope", "key")
+	return util.CommonResource{
 		Schema: map[string]*schema.Schema{
 			"string_value": {
 				Type:      schema.TypeString,
@@ -143,79 +137,31 @@ func ResourceSecret() *schema.Resource {
 				Computed: true,
 			},
 		},
-	}
-}
-
-func getSecretID(scope string, key string) (string, error) {
-	return scope + "|||" + key, nil
-}
-
-func getScopeAndKeyFromSecretID(secretIDString string) (string, string, error) {
-	split := strings.Split(secretIDString, "|||")
-	if len(split) != 2 {
-		return "", "", fmt.Errorf("Malformed secret id: %s", secretIDString)
-	}
-	return strings.Split(secretIDString, "|||")[0], strings.Split(secretIDString, "|||")[1], nil
-}
-
-func resourceSecretCreate(d *schema.ResourceData, m interface{}) error {
-	client := m.(*common.DatabricksClient)
-	scopeName := d.Get("scope").(string)
-	key := d.Get("key").(string)
-	secretValue := d.Get("string_value").(string)
-	err := NewSecretsAPI(client).Create(secretValue, scopeName, key)
-	if err != nil {
-		return err
-	}
-	id, err := getSecretID(scopeName, key)
-	if err != nil {
-		return err
-	}
-	d.SetId(id)
-	return resourceSecretRead(d, m)
-}
-
-func resourceSecretRead(d *schema.ResourceData, m interface{}) error {
-	id := d.Id()
-	client := m.(*common.DatabricksClient)
-	scope, key, err := getScopeAndKeyFromSecretID(id)
-	if err != nil {
-		return err
-	}
-	secretMetaData, err := NewSecretsAPI(client).Read(scope, key)
-	if err != nil {
-		if e, ok := err.(common.APIError); ok && e.IsMissing() {
-			log.Printf("missing resource due to error: %v\n", e)
-			d.SetId("")
+		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			if err := NewSecretsAPI(ctx, c).Create(d.Get("string_value").(string), d.Get("scope").(string),
+				d.Get("key").(string)); err != nil {
+				return err
+			}
+			p.Pack(d)
 			return nil
-		}
-		return err
-	}
-
-	err = d.Set("last_updated_timestamp", secretMetaData.LastUpdatedTimestamp)
-	if err != nil {
-		return err
-	}
-
-	err = d.Set("scope", scope)
-	if err != nil {
-		return err
-	}
-	err = d.Set("key", secretMetaData.Key)
-	if err != nil {
-		return err
-	}
-	d.SetId(id)
-	return nil
-}
-
-func resourceSecretDelete(d *schema.ResourceData, m interface{}) error {
-	client := m.(*common.DatabricksClient)
-	id := d.Id()
-	scope, key, err := getScopeAndKeyFromSecretID(id)
-	if err != nil {
-		return err
-	}
-	err = NewSecretsAPI(client).Delete(scope, key)
-	return err
+		},
+		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			scope, key, err := p.Unpack(d)
+			if err != nil {
+				return err
+			}
+			m, err := NewSecretsAPI(ctx, c).Read(scope, key)
+			if err != nil {
+				return err
+			}
+			return d.Set("last_updated_timestamp", m.LastUpdatedTimestamp)
+		},
+		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			scope, key, err := p.Unpack(d)
+			if err != nil {
+				return err
+			}
+			return NewSecretsAPI(ctx, c).Delete(scope, key)
+		},
+	}.ToResource()
 }

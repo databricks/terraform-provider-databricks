@@ -7,13 +7,13 @@ import (
 
 	"github.com/databrickslabs/databricks-terraform/common"
 	"github.com/databrickslabs/databricks-terraform/internal"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/databrickslabs/databricks-terraform/internal/util"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 // NewSecretScopesAPI creates SecretScopesAPI instance from provider meta
-func NewSecretScopesAPI(m interface{}) SecretScopesAPI {
-	return SecretScopesAPI{m.(*common.DatabricksClient), context.TODO()}
+func NewSecretScopesAPI(ctx context.Context, m interface{}) SecretScopesAPI {
+	return SecretScopesAPI{m.(*common.DatabricksClient), ctx}
 }
 
 // SecretScopesAPI exposes the Secret Scopes API
@@ -116,47 +116,29 @@ func ResourceSecretScope() *schema.Resource {
 		s["keyvault_metadata"].ForceNew = true
 		return s
 	})
-	readContext := func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-		scope, err := NewSecretScopesAPI(m).Read(d.Id())
-		if e, ok := err.(common.APIError); ok && e.IsMissing() {
-			d.SetId("")
-			return nil
-		}
-		if err != nil {
-			return diag.FromErr(err)
-		}
-		err = internal.StructToData(scope, s, d)
-		if err != nil {
-			return diag.FromErr(err)
-		}
-		return nil
-	}
-	return &schema.Resource{
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
-		CreateContext: func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+	return util.CommonResource{
+		Schema:        s,
+		SchemaVersion: 2,
+		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var scope SecretScope
-			err := internal.DataToStructPointer(d, s, &scope)
-			if err != nil {
-				return diag.FromErr(err)
+			if err := internal.DataToStructPointer(d, s, &scope); err != nil {
+				return err
 			}
-			err = NewSecretScopesAPI(m).Create(scope)
-			if err != nil {
-				return diag.FromErr(err)
+			if err := NewSecretScopesAPI(ctx, c).Create(scope); err != nil {
+				return err
 			}
 			d.SetId(scope.Name)
-			return readContext(ctx, d, m)
-		},
-		DeleteContext: func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-			err := NewSecretScopesAPI(m).Delete(d.Id())
-			if err != nil {
-				return diag.FromErr(err)
-			}
 			return nil
 		},
-		ReadContext:   readContext,
-		SchemaVersion: 2,
-		Schema:        s,
-	}
+		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			scope, err := NewSecretScopesAPI(ctx, c).Read(d.Id())
+			if err != nil {
+				return err
+			}
+			return internal.StructToData(scope, s, d)
+		},
+		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			return NewSecretScopesAPI(ctx, c).Delete(d.Id())
+		},
+	}.ToResource()
 }

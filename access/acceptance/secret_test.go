@@ -1,6 +1,7 @@
 package acceptance
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"os"
@@ -48,7 +49,7 @@ func TestAccSecretResource(t *testing.T) {
 				//Deleting and recreating the secret
 				PreConfig: func() {
 					client := common.CommonEnvironmentClient()
-					err := NewSecretsAPI(client).Delete(scope, secret.Key)
+					err := NewSecretsAPI(context.Background(), client).Delete(scope, secret.Key)
 					assert.NoError(t, err, err)
 				},
 				// use a dynamic configuration with the random name from above
@@ -69,7 +70,7 @@ func TestAccSecretResource(t *testing.T) {
 				//Deleting the scope should recreate the secret
 				PreConfig: func() {
 					client := common.CommonEnvironmentClient()
-					err := NewSecretScopesAPI(client).Delete(scope)
+					err := NewSecretScopesAPI(context.Background(), client).Delete(scope)
 					assert.NoError(t, err, err)
 				},
 				// use a dynamic configuration with the random name from above
@@ -96,11 +97,12 @@ func testSecretResourceDestroy(s *terraform.State) error {
 		if rs.Type != "databricks_secret" && rs.Type != "databricks_secret_scope" {
 			continue
 		}
-		_, err := NewSecretsAPI(client).Read(rs.Primary.Attributes["scope"], rs.Primary.Attributes["key"])
+		ctx := context.Background()
+		_, err := NewSecretsAPI(ctx, client).Read(rs.Primary.Attributes["scope"], rs.Primary.Attributes["key"])
 		if err == nil {
 			return errors.New("resource secret is not cleaned up")
 		}
-		_, err = NewSecretScopesAPI(client).Read(rs.Primary.Attributes["scope"])
+		_, err = NewSecretScopesAPI(ctx, client).Read(rs.Primary.Attributes["scope"])
 		if err == nil {
 			return errors.New("resource secret is not cleaned up")
 		}
@@ -127,7 +129,7 @@ func testSecretResourceExists(n string, secret *SecretMetadata, t *testing.T) re
 
 		// retrieve the configured client from the test setup
 		conn := common.CommonEnvironmentClient()
-		resp, err := NewSecretsAPI(conn).Read(rs.Primary.Attributes["scope"], rs.Primary.Attributes["key"])
+		resp, err := NewSecretsAPI(context.Background(), conn).Read(rs.Primary.Attributes["scope"], rs.Primary.Attributes["key"])
 		//t.Log(resp)
 		if err != nil {
 			return err

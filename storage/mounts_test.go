@@ -37,7 +37,8 @@ func testWithNewSecretScope(t *testing.T, callback func(string, string),
 	randomScope := "test" + suffix
 	randomKey := "key" + suffix
 
-	secretScopes := access.NewSecretScopesAPI(client)
+	ctx := context.Background()
+	secretScopes := access.NewSecretScopesAPI(ctx, client)
 	err := secretScopes.Create(access.SecretScope{
 		Name:                   randomScope,
 		InitialManagePrincipal: "users",
@@ -48,7 +49,7 @@ func testWithNewSecretScope(t *testing.T, callback func(string, string),
 		assert.NoError(t, err)
 	}()
 
-	secrets := access.NewSecretsAPI(client)
+	secrets := access.NewSecretsAPI(ctx, client)
 	err = secrets.Create(secret, randomScope, randomKey)
 	require.NoError(t, err)
 

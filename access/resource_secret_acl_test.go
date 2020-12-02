@@ -1,6 +1,7 @@
 package access
 
 import (
+	"context"
 	"os"
 	"testing"
 
@@ -9,14 +10,16 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-//go:generate easytags $GOFILE
-
 func TestSecretsScopesAclsIntegration(t *testing.T) {
 	cloud := os.Getenv("CLOUD_ENV")
 	if cloud == "" {
 		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
 	}
 	client := common.NewClientFromEnvironment()
+	ctx := context.Background()
+	scopesAPI := NewSecretScopesAPI(ctx, client)
+	secretsAPI := NewSecretsAPI(ctx, client)
+	secretAclsAPI := NewSecretAclsAPI(ctx, client)
 
 	testScope := "my-test-scope"
 	testKey := "my-test-key"
@@ -25,7 +28,7 @@ func TestSecretsScopesAclsIntegration(t *testing.T) {
 	// TODO: on random group
 	testPrincipal := "users"
 
-	err := NewSecretScopesAPI(client).Create(SecretScope{
+	err := scopesAPI.Create(SecretScope{
 		Name:                   testScope,
 		InitialManagePrincipal: initialManagePrincipal,
 	})
@@ -33,45 +36,45 @@ func TestSecretsScopesAclsIntegration(t *testing.T) {
 
 	defer func() {
 		//	Deleting scope deletes everything else
-		err := NewSecretScopesAPI(client).Delete(testScope)
+		err := scopesAPI.Delete(testScope)
 		assert.NoError(t, err, err)
 	}()
 
-	scopes, err := NewSecretScopesAPI(client).List()
+	scopes, err := scopesAPI.List()
 	assert.NoError(t, err, err)
 	assert.True(t, len(scopes) >= 1, "Scopes are empty list")
 
-	scope, err := NewSecretScopesAPI(client).Read(testScope)
+	scope, err := scopesAPI.Read(testScope)
 	assert.NoError(t, err, err)
 	assert.Equal(t, testScope, scope.Name, "Scope lookup does not yield same scope")
 
-	err = NewSecretsAPI(client).Create(testSecret, testScope, testKey)
+	err = secretsAPI.Create(testSecret, testScope, testKey)
 	assert.NoError(t, err, err)
 
-	secrets, err := NewSecretsAPI(client).List(testScope)
+	secrets, err := secretsAPI.List(testScope)
 	assert.NoError(t, err, err)
 	assert.True(t, len(secrets) > 0, "Secrets are empty list")
 
-	secret, err := NewSecretsAPI(client).Read(testScope, testKey)
+	secret, err := secretsAPI.Read(testScope, testKey)
 	assert.NoError(t, err, err)
 	assert.Equal(t, testKey, secret.Key, "Secret lookup does not yield same key")
 
-	err = NewSecretAclsAPI(client).Create(testScope, testPrincipal, ACLPermissionManage)
+	err = secretAclsAPI.Create(testScope, testPrincipal, ACLPermissionManage)
 	assert.NoError(t, err, err)
 
-	secretAcls, err := NewSecretAclsAPI(client).List(testScope)
+	secretAcls, err := secretAclsAPI.List(testScope)
 	assert.NoError(t, err, err)
 	assert.True(t, len(secretAcls) > 0, "Secrets acls are empty list")
 
-	secretACL, err := NewSecretAclsAPI(client).Read(testScope, testPrincipal)
+	secretACL, err := secretAclsAPI.Read(testScope, testPrincipal)
 	assert.NoError(t, err, err)
 	assert.Equal(t, testPrincipal, secretACL.Principal, "Secret lookup does not yield same key")
 	assert.Equal(t, ACLPermissionManage, secretACL.Permission, "Secret lookup does not yield same key")
 
-	err = NewSecretsAPI(client).Delete(testScope, testKey)
+	err = secretsAPI.Delete(testScope, testKey)
 	assert.NoError(t, err, err)
 
-	err = NewSecretAclsAPI(client).Delete(testScope, testPrincipal)
+	err = secretAclsAPI.Delete(testScope, testPrincipal)
 	assert.NoError(t, err, err)
 }
 

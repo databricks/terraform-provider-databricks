@@ -3,10 +3,10 @@ package util
 import (
 	"context"
 	"fmt"
+	"log"
 	"strings"
 
 	"github.com/databrickslabs/databricks-terraform/common"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -37,6 +37,11 @@ func (p *Pair) Schema(do func(map[string]*schema.Schema) map[string]*schema.Sche
 // Unpack ID into two strings and set data
 func (p *Pair) Unpack(d *schema.ResourceData) (string, string, error) {
 	id := d.Id()
+	if strings.Contains(id, "|||") {
+		id = strings.ReplaceAll(id, "|||", "|")
+		log.Printf("[INFO] Migrated legacy [id=%s] to new [id=%s]", d.Id(), id)
+		d.SetId(id)
+	}
 	parts := strings.SplitN(id, "|", 2)
 	if len(parts) != 2 {
 		d.SetId("")
@@ -59,23 +64,6 @@ func (p *Pair) Unpack(d *schema.ResourceData) (string, string, error) {
 		return "", "", err
 	}
 	return parts[0], parts[1], nil
-}
-
-// ReadContext helper function
-func (p *Pair) ReadContext(d *schema.ResourceData, do func(left, right string) error) diag.Diagnostics {
-	left, right, err := p.Unpack(d)
-	if err != nil {
-		return diag.FromErr(err)
-	}
-	err = do(left, right)
-	if e, ok := err.(common.APIError); ok && e.IsMissing() {
-		d.SetId("")
-		return nil
-	}
-	if err != nil {
-		return diag.FromErr(err)
-	}
-	return nil
 }
 
 // Pack data attributes to ID

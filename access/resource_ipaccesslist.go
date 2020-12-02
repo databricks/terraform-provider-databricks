@@ -2,13 +2,14 @@ package access
 
 import (
 	"context"
-	
+
 	"github.com/databrickslabs/databricks-terraform/common"
 	"github.com/databrickslabs/databricks-terraform/internal"
 	"github.com/databrickslabs/databricks-terraform/internal/util"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
+
 type listIPAccessListsResponse struct {
 	ListIPAccessListsResponse []ipAccessListStatus `json:"ip_access_lists,omitempty"`
 }
@@ -94,6 +95,7 @@ func (a ipAccessListsAPI) List() (listResponse listIPAccessListsResponse, err er
 // ResourceIPAccessList manages IP access lists
 func ResourceIPAccessList() *schema.Resource {
 	s := internal.StructToSchema(ipAccessListUpdateRequest{}, func(s map[string]*schema.Schema) map[string]*schema.Schema {
+		// nolint
 		s["list_type"].ValidateFunc = validation.StringInSlice([]string{"ALLOW", "BLOCK"}, false)
 		s["ip_addresses"].Elem = &schema.Schema{
 			Type:         schema.TypeString,

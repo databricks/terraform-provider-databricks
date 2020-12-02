@@ -120,8 +120,8 @@ func ResourceToken() *schema.Resource {
 			Computed: true,
 		},
 		"token_id": {
-			Type:      schema.TypeString,
-			Computed:  true,
+			Type:     schema.TypeString,
+			Computed: true,
 		},
 	}
 	return util.CommonResource{

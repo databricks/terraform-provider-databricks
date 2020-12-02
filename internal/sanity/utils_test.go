@@ -148,7 +148,7 @@ func TestAccMissingResourcesInWorkspace(t *testing.T) {
 		{
 			Name: "Jobs",
 			ReadFunc: func() error {
-				_, err := compute.NewJobsAPI(client).Read(strconv.Itoa(randIntID))
+				_, err := compute.NewJobsAPI(ctx, client).Read(strconv.Itoa(randIntID))
 				return err
 			},
 		},

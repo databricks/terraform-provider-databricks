@@ -1,6 +1,7 @@
 package compute
 
 import (
+	"context"
 	"os"
 	"testing"
 
@@ -15,6 +16,7 @@ func TestAwsAccJobsCreate(t *testing.T) {
 	}
 
 	client := common.NewClientFromEnvironment()
+	jobsAPI := NewJobsAPI(context.Background(), client)
 
 	jobSettings := JobSettings{
 		NewCluster: &Cluster{
@@ -51,25 +53,25 @@ func TestAwsAccJobsCreate(t *testing.T) {
 		MaxConcurrentRuns: 1,
 	}
 
-	job, err := NewJobsAPI(client).Create(jobSettings)
+	job, err := jobsAPI.Create(jobSettings)
 	assert.NoError(t, err, err)
 	id := job.ID()
 	defer func() {
-		err := NewJobsAPI(client).Delete(id)
+		err := jobsAPI.Delete(id)
 		assert.NoError(t, err, err)
 	}()
 	t.Log(id)
-	job, err = NewJobsAPI(client).Read(id)
+	job, err = jobsAPI.Read(id)
 	assert.NoError(t, err, err)
 	assert.True(t, job.Settings.NewCluster.SparkVersion == "6.4.x-scala2.11",
 		"Something is wrong with spark version")
 
 	jobSettings.NewCluster.SparkVersion = "6.1.x-scala2.11"
 
-	err = NewJobsAPI(client).Update(id, jobSettings)
+	err = jobsAPI.Update(id, jobSettings)
 	assert.NoError(t, err, err)
 
-	job, err = NewJobsAPI(client).Read(id)
+	job, err = jobsAPI.Read(id)
 	assert.NoError(t, err, err)
 	assert.True(t, job.Settings.NewCluster.SparkVersion == "6.1.x-scala2.11",
 		"Something is wrong with spark version")

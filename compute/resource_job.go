@@ -11,10 +11,11 @@ import (
 
 	"github.com/databrickslabs/databricks-terraform/common"
 	"github.com/databrickslabs/databricks-terraform/internal"
+	"github.com/databrickslabs/databricks-terraform/internal/util"
 )
 
 // NewJobsAPI creates JobsAPI instance from provider meta
-func NewJobsAPI(m interface{}) JobsAPI {
+func NewJobsAPI(ctx context.Context, m interface{}) JobsAPI {
 	return JobsAPI{m.(*common.DatabricksClient), context.TODO()}
 }
 
@@ -132,64 +133,41 @@ var jobSchema = internal.StructToSchema(JobSettings{},
 		return s
 	})
 
+// ResourceJob ...
 func ResourceJob() *schema.Resource {
-	return &schema.Resource{
+	return util.CommonResource{
+		Schema: jobSchema,
 		SchemaVersion: 2,
-		Create:        resourceJobCreate,
-		Read:          resourceJobRead,
-		Update:        resourceJobUpdate,
-		Delete:        resourceJobDelete,
-		Schema:        jobSchema,
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			var js JobSettings
+			err := internal.DataToStructPointer(d, jobSchema, &js)
+			if err != nil {
+				return err
+			}
+			job, err := NewJobsAPI(ctx, c).Create(js)
+			if err != nil {
+				return err
+			}
+			d.SetId(job.ID())
+			return nil
 		},
-	}
-}
-
-func resourceJobCreate(d *schema.ResourceData, m interface{}) error {
-	client := m.(*common.DatabricksClient)
-	var jobSettings JobSettings
-	err := internal.DataToStructPointer(d, jobSchema, &jobSettings)
-	if err != nil {
-		return err
-	}
-	job, err := NewJobsAPI(client).Create(jobSettings)
-	if err != nil {
-		return err
-	}
-	id := job.ID()
-	d.SetId(id)
-	return resourceJobRead(d, m)
-}
-
-func resourceJobRead(d *schema.ResourceData, m interface{}) error {
-	client := m.(*common.DatabricksClient)
-	job, err := NewJobsAPI(client).Read(d.Id())
-	if ae, ok := err.(common.APIError); ok && ae.IsMissing() {
-		d.SetId("")
-		return nil
-	}
-	if err != nil {
-		return err
-	}
-	return internal.StructToData(*job.Settings, jobSchema, d)
-}
-
-func resourceJobUpdate(d *schema.ResourceData, m interface{}) error {
-	client := m.(*common.DatabricksClient)
-	var jobSettings JobSettings
-	err := internal.DataToStructPointer(d, jobSchema, &jobSettings)
-	if err != nil {
-		return err
-	}
-	err = NewJobsAPI(client).Update(d.Id(), jobSettings)
-	if err != nil {
-		return err
-	}
-	return resourceJobRead(d, m)
-}
-
-func resourceJobDelete(d *schema.ResourceData, m interface{}) error {
-	client := m.(*common.DatabricksClient)
-	return NewJobsAPI(client).Delete(d.Id())
+		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			job, err := NewJobsAPI(ctx, c).Read(d.Id())
+			if err != nil {
+				return err
+			}
+			return internal.StructToData(*job.Settings, jobSchema, d)
+		},
+		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			var js JobSettings
+			err := internal.DataToStructPointer(d, jobSchema, &js)
+			if err != nil {
+				return err
+			}
+			return NewJobsAPI(ctx, c).Update(d.Id(), js)
+		},
+		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			return NewJobsAPI(ctx, c).Delete(d.Id())
+		},
+	}.ToResource()
 }

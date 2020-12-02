@@ -144,7 +144,7 @@ func (a PermissionsAPI) Delete(objectID string) error {
 		}
 	}
 	if strings.HasPrefix(objectID, "/jobs") {
-		job, err := compute.NewJobsAPI(a.client).Read(strings.ReplaceAll(objectID, "/jobs/", ""))
+		job, err := compute.NewJobsAPI(a.context, a.client).Read(strings.ReplaceAll(objectID, "/jobs/", ""))
 		if err != nil {
 			return err
 		}

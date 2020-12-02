@@ -26,6 +26,7 @@ sudo apt-get update
 sudo apt-get install make golang git -y
 git clone https://github.com/databrickslabs/terraform-provider-databricks.git
 cd terraform-provider-databricks
+make vendor
 make install
 ```
 

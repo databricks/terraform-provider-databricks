@@ -27,6 +27,7 @@ jobs:
           path: |
             ~/go/pkg/mod
             ~/.cache/go-build
+            vendor
           key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
           restore-keys: |
             ${{ runner.os }}-go-
@@ -37,6 +38,9 @@ jobs:
           echo "$(go env GOPATH)/bin" >> $GITHUB_PATH
           go get gotest.tools/gotestsum
           go get github.com/golangci/golangci-lint/cmd/golangci-lint@v1.25.0
+
+      - name: Pull external libraries
+        run: make vendor
 
       - name: Run tests
         run: make test

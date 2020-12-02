@@ -13,11 +13,11 @@ func DataSourceMe() *schema.Resource {
 	return &schema.Resource{
 		Schema: map[string]*schema.Schema{
 			"user_name": {
-				Type: schema.TypeString,
+				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"home": {
-				Type: schema.TypeString,
+				Type:     schema.TypeString,
 				Computed: true,
 			},
 		},

@@ -1,6 +1,7 @@
 package acceptance
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"os"
@@ -52,7 +53,7 @@ func TestAccTokenResource(t *testing.T) {
 				//Deleting and recreating the token
 				PreConfig: func() {
 					client := common.CommonEnvironmentClient()
-					err := NewTokensAPI(client).Delete(tokenInfo.TokenID)
+					err := NewTokensAPI(context.Background(), client).Delete(tokenInfo.TokenID)
 					assert.NoError(t, err, err)
 				},
 				// use a dynamic configuration with the random name from above
@@ -78,7 +79,7 @@ func testCheckTokenResourceDestroy(s *terraform.State) error {
 		if rs.Type != "databricks_token" {
 			continue
 		}
-		_, err := NewTokensAPI(conn).Read(rs.Primary.ID)
+		_, err := NewTokensAPI(context.Background(), conn).Read(rs.Primary.ID)
 		if err != nil {
 			return nil
 		}
@@ -107,7 +108,7 @@ func testCheckTokenResourceExists(n string, tokenInfo *TokenInfo, t *testing.T) 
 
 		// retrieve the configured client from the test setup
 		conn := common.CommonEnvironmentClient()
-		resp, err := NewTokensAPI(conn).Read(rs.Primary.ID)
+		resp, err := NewTokensAPI(context.Background(), conn).Read(rs.Primary.ID)
 		if err != nil {
 			return err
 		}

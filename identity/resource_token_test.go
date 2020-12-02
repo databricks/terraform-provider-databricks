@@ -1,6 +1,7 @@
 package identity
 
 import (
+	"context"
 	"os"
 	"testing"
 	"time"
@@ -202,23 +203,24 @@ func TestAccCreateToken(t *testing.T) {
 	}
 
 	client := common.NewClientFromEnvironment()
+	tokensAPI := NewTokensAPI(context.Background(), client)
 
 	lifeTimeSeconds := time.Duration(30) * time.Second
 	comment := "Hello world"
 
-	token, err := NewTokensAPI(client).Create(lifeTimeSeconds, comment)
+	token, err := tokensAPI.Create(lifeTimeSeconds, comment)
 	assert.NoError(t, err, err)
 	assert.True(t, len(token.TokenValue) > 0, "Token value is empty")
 
 	defer func() {
-		err := NewTokensAPI(client).Delete(token.TokenInfo.TokenID)
+		err := tokensAPI.Delete(token.TokenInfo.TokenID)
 		assert.NoError(t, err, err)
 	}()
 
-	_, err = NewTokensAPI(client).Read(token.TokenInfo.TokenID)
+	_, err = tokensAPI.Read(token.TokenInfo.TokenID)
 	assert.NoError(t, err, err)
 
-	tokenList, err := NewTokensAPI(client).List()
+	tokenList, err := tokensAPI.List()
 	assert.NoError(t, err, err)
 	assert.True(t, len(tokenList) > 0, "Token list is empty")
 }

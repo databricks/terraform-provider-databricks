@@ -3,15 +3,15 @@ package mws
 import (
 	"context"
 	"fmt"
-	"log"
 
 	"github.com/databrickslabs/databricks-terraform/common"
+	"github.com/databrickslabs/databricks-terraform/internal/util"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 // NewStorageConfigurationsAPI creates MWSStorageConfigurationsAPI instance from provider meta
-func NewStorageConfigurationsAPI(m interface{}) StorageConfigurationsAPI {
-	return StorageConfigurationsAPI{m.(*common.DatabricksClient), context.TODO()}
+func NewStorageConfigurationsAPI(ctx context.Context, m interface{}) StorageConfigurationsAPI {
+	return StorageConfigurationsAPI{m.(*common.DatabricksClient), ctx}
 }
 
 // StorageConfigurationsAPI exposes the mws storageConfiguration API
@@ -55,28 +55,55 @@ func (a StorageConfigurationsAPI) List(mwsAcctID string) ([]StorageConfiguration
 	return mwsStorageConfigurationsList, err
 }
 
+// ResourceStorageConfiguration ...
 func ResourceStorageConfiguration() *schema.Resource {
-	return &schema.Resource{
-		Create: resourceMWSStorageConfigurationsCreate,
-		Read:   resourceMWSStorageConfigurationsRead,
-		Delete: resourceMWSStorageConfigurationsDelete,
-
+	p := util.NewPairSeparatedID("account_id", "storage_configuration_id", "/")
+	return util.CommonResource{
+		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			name := d.Get("storage_configuration_name").(string)
+			bucketName := d.Get("bucket_name").(string)
+			accountID := d.Get("account_id").(string)
+			storageConfiguration, err := NewStorageConfigurationsAPI(ctx, c).Create(accountID, name, bucketName)
+			if err != nil {
+				return err
+			}
+			d.Set("storage_configuration_id", storageConfiguration.StorageConfigurationID)
+			p.Pack(d)
+			return nil
+		},
+		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			accountID, storageID, err := p.Unpack(d)
+			if err != nil {
+				return err
+			}
+			storageConifiguration, err := NewStorageConfigurationsAPI(ctx, c).Read(accountID, storageID)
+			if err != nil {
+				return err
+			}
+			d.Set("storage_configuration_name", storageConifiguration.StorageConfigurationName)
+			d.Set("bucket_name", storageConifiguration.RootBucketInfo.BucketName)
+			return d.Set("creation_time", storageConifiguration.CreationTime)
+		},
+		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			accountID, storageID, err := p.Unpack(d)
+			if err != nil {
+				return err
+			}
+			return NewStorageConfigurationsAPI(ctx, c).Delete(accountID, storageID)
+		},
 		Schema: map[string]*schema.Schema{
 			"account_id": {
 				Type:      schema.TypeString,
 				Required:  true,
 				Sensitive: true,
-				ForceNew:  true,
 			},
 			"storage_configuration_name": {
 				Type:     schema.TypeString,
 				Required: true,
-				ForceNew: true,
 			},
 			"bucket_name": {
 				Type:     schema.TypeString,
 				Required: true,
-				ForceNew: true,
 			},
 			"creation_time": {
 				Type:     schema.TypeInt,
@@ -87,73 +114,5 @@ func ResourceStorageConfiguration() *schema.Resource {
 				Computed: true,
 			},
 		},
-	}
-}
-
-func resourceMWSStorageConfigurationsCreate(d *schema.ResourceData, m interface{}) error {
-	client := m.(*common.DatabricksClient)
-	storageConfigurationName := d.Get("storage_configuration_name").(string)
-	bucketName := d.Get("bucket_name").(string)
-	mwsAcctID := d.Get("account_id").(string)
-	storageConfiguration, err := NewStorageConfigurationsAPI(client).Create(mwsAcctID, storageConfigurationName, bucketName)
-	if err != nil {
-		return err
-	}
-	storageConfigurationResourceID := PackagedMWSIds{
-		MwsAcctID:  mwsAcctID,
-		ResourceID: storageConfiguration.StorageConfigurationID,
-	}
-	d.SetId(packMWSAccountID(storageConfigurationResourceID))
-	return resourceMWSStorageConfigurationsRead(d, m)
-}
-
-func resourceMWSStorageConfigurationsRead(d *schema.ResourceData, m interface{}) error {
-	id := d.Id()
-	client := m.(*common.DatabricksClient)
-	packagedMwsID, err := UnpackMWSAccountID(id)
-	if err != nil {
-		return err
-	}
-	storageConifiguration, err := NewStorageConfigurationsAPI(client).Read(packagedMwsID.MwsAcctID, packagedMwsID.ResourceID)
-	if err != nil {
-		if e, ok := err.(common.APIError); ok && e.IsMissing() {
-			log.Printf("missing resource due to error: %v\n", e)
-			d.SetId("")
-			return nil
-		}
-		return err
-	}
-	err = d.Set("storage_configuration_name", storageConifiguration.StorageConfigurationName)
-	if err != nil {
-		return err
-	}
-	err = d.Set("bucket_name", storageConifiguration.RootBucketInfo.BucketName)
-	if err != nil {
-		return err
-	}
-	err = d.Set("account_id", storageConifiguration.AccountID)
-	if err != nil {
-		return err
-	}
-	err = d.Set("creation_time", storageConifiguration.CreationTime)
-	if err != nil {
-		return err
-	}
-	err = d.Set("storage_configuration_id", storageConifiguration.StorageConfigurationID)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func resourceMWSStorageConfigurationsDelete(d *schema.ResourceData, m interface{}) error {
-	id := d.Id()
-	client := m.(*common.DatabricksClient)
-	packagedMwsID, err := UnpackMWSAccountID(id)
-	if err != nil {
-		return err
-	}
-	err = NewStorageConfigurationsAPI(client).Delete(packagedMwsID.MwsAcctID, packagedMwsID.ResourceID)
-	return err
+	}.ToResource()
 }

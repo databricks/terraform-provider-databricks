@@ -45,7 +45,7 @@ func TestAccMutiworkspaceUsedFromNormalMode(t *testing.T) {
 	ctx := context.Background()
 	checkCheck(mws.NewCredentialsAPI(ctx, client).List("_"))
 	checkCheck(mws.NewNetworksAPI(ctx, client).List("_"))
-	checkCheck(mws.NewStorageConfigurationsAPI(client).List("_"))
+	checkCheck(mws.NewStorageConfigurationsAPI(ctx, client).List("_"))
 	checkCheck(mws.NewWorkspacesAPI(ctx, client).List("_"))
 }
 

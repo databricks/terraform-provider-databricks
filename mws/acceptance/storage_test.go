@@ -1,6 +1,7 @@
 package acceptance
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"os"
@@ -61,7 +62,7 @@ func TestMwsAccStorageConfigurations(t *testing.T) {
 			{
 				PreConfig: func() {
 					conn := common.CommonEnvironmentClient()
-					err := NewStorageConfigurationsAPI(conn).Delete(bucket.AccountID, bucket.StorageConfigurationID)
+					err := NewStorageConfigurationsAPI(context.Background(), conn).Delete(bucket.AccountID, bucket.StorageConfigurationID)
 					if err != nil {
 						panic(err)
 					}
@@ -89,7 +90,7 @@ func testMWSStorageConfigurationsResourceDestroy(s *terraform.State) error {
 		if err != nil {
 			return err
 		}
-		_, err = NewStorageConfigurationsAPI(client).Read(packagedMWSIds.MwsAcctID, packagedMWSIds.ResourceID)
+		_, err = NewStorageConfigurationsAPI(context.Background(), client).Read(packagedMWSIds.MwsAcctID, packagedMWSIds.ResourceID)
 		if err != nil {
 			return nil
 		}
@@ -113,7 +114,7 @@ func testMWSStorageConfigurationsResourceExists(n string, mwsCreds *StorageConfi
 		if err != nil {
 			return err
 		}
-		resp, err := NewStorageConfigurationsAPI(conn).Read(packagedMWSIds.MwsAcctID, packagedMWSIds.ResourceID)
+		resp, err := NewStorageConfigurationsAPI(context.Background(), conn).Read(packagedMWSIds.MwsAcctID, packagedMWSIds.ResourceID)
 		if err != nil {
 			return err
 		}

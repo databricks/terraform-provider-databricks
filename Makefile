@@ -18,7 +18,7 @@ coverage: test
 	@echo "✓ Opening coverage for unit tests..."
 	@go tool cover -html=coverage.txt
 
-VERSION = $(shell git describe --long --always | sed 's/v//')
+VERSION = 0.2.9
 
 build:
 	@echo "✓ Building source code with go build..."

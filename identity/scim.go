@@ -5,10 +5,11 @@ type URN string
 
 // Possible schema URNs for the Databricks SCIM api
 const (
-	UserSchema          URN = "urn:ietf:params:scim:schemas:core:2.0:User"
-	WorkspaceUserSchema URN = "urn:ietf:params:scim:schemas:extension:workspace:2.0:User"
-	PatchOp             URN = "urn:ietf:params:scim:api:messages:2.0:PatchOp"
-	GroupSchema         URN = "urn:ietf:params:scim:schemas:core:2.0:Group"
+	UserSchema             URN = "urn:ietf:params:scim:schemas:core:2.0:User"
+	ServicePrincipalSchema URN = "urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal"
+	WorkspaceUserSchema    URN = "urn:ietf:params:scim:schemas:extension:workspace:2.0:User"
+	PatchOp                URN = "urn:ietf:params:scim:api:messages:2.0:PatchOp"
+	GroupSchema            URN = "urn:ietf:params:scim:schemas:core:2.0:Group"
 )
 
 // MembersValue is a list of value items for the members path
@@ -149,16 +150,17 @@ type email struct {
 
 // ScimUser is a struct that contains all the information about a SCIM user
 type ScimUser struct {
-	ID           string                 `json:"id,omitempty"`
-	Emails       []email                `json:"emails,omitempty"`
-	DisplayName  string                 `json:"displayName,omitempty"`
-	Active       bool                   `json:"active,omitempty"`
-	Schemas      []URN                  `json:"schemas,omitempty"`
-	UserName     string                 `json:"userName,omitempty"`
-	Groups       []groupsListItem       `json:"groups,omitempty"`
-	Name         map[string]string      `json:"name,omitempty"`
-	Roles        []roleListItem         `json:"roles,omitempty"`
-	Entitlements []entitlementsListItem `json:"entitlements,omitempty"`
+	ID            string                 `json:"id,omitempty"`
+	Emails        []email                `json:"emails,omitempty"`
+	DisplayName   string                 `json:"displayName,omitempty"`
+	Active        bool                   `json:"active,omitempty"`
+	Schemas       []URN                  `json:"schemas,omitempty"`
+	UserName      string                 `json:"userName,omitempty"`
+	ApplicationID string                 `json:"application_id,omitempty"`
+	Groups        []groupsListItem       `json:"groups,omitempty"`
+	Name          map[string]string      `json:"name,omitempty"`
+	Roles         []roleListItem         `json:"roles,omitempty"`
+	Entitlements  []entitlementsListItem `json:"entitlements,omitempty"`
 }
 
 // HasRole returns true if group has a role

@@ -173,6 +173,15 @@ func (u ScimUser) HasRole(role string) bool {
 	return false
 }
 
+// UserList contains a list of Users fetched from a list api call from SCIM api
+type UserList struct {
+	TotalResults int32      `json:"totalResults,omitempty"`
+	StartIndex   int32      `json:"startIndex,omitempty"`
+	ItemsPerPage int32      `json:"itemsPerPage,omitempty"`
+	Schemas      []URN      `json:"schemas,omitempty"`
+	Resources    []ScimUser `json:"resources,omitempty"`
+}
+
 type patchOperation struct {
 	Op    string      `json:"op,omitempty"`
 	Path  string      `json:"path,omitempty"`

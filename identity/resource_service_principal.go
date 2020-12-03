@@ -3,23 +3,22 @@ package identity
 import (
 	"context"
 	"fmt"
-	"log"
-	"net/http"
 
 	"github.com/databrickslabs/databricks-terraform/common"
 	"github.com/databrickslabs/databricks-terraform/internal"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/databrickslabs/databricks-terraform/internal/util"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 // NewServicePrincipalsAPI creates ServicePrincipalsAPI instance from provider meta
-func NewServicePrincipalsAPI(m interface{}) ServicePrincipalsAPI {
-	return ServicePrincipalsAPI{client: m.(*common.DatabricksClient)}
+func NewServicePrincipalsAPI(ctx context.Context, m interface{}) ServicePrincipalsAPI {
+	return ServicePrincipalsAPI{m.(*common.DatabricksClient), ctx}
 }
 
 // ServicePrincipalsAPI exposes the scim servicePrincipal API
 type ServicePrincipalsAPI struct {
-	client *common.DatabricksClient
+	client  *common.DatabricksClient
+	context context.Context
 }
 
 // ServicePrincipalEntity entity from which resource schema is made
@@ -54,7 +53,7 @@ func (sp ServicePrincipalEntity) toRequest() ScimUser {
 
 // CreateR ..
 func (a ServicePrincipalsAPI) CreateR(rsp ServicePrincipalEntity) (sp ScimUser, err error) {
-	err = a.client.Scim(http.MethodPost, "/preview/scim/v2/ServicePrincipals", rsp.toRequest(), &sp)
+	err = a.client.Scim(a.context, "POST", "/preview/scim/v2/ServicePrincipals", rsp.toRequest(), &sp)
 	return sp, err
 }
 
@@ -80,7 +79,7 @@ func (a ServicePrincipalsAPI) ReadR(servicePrincipalID string) (rsp ServicePrinc
 
 func (a ServicePrincipalsAPI) read(servicePrincipalID string) (sp ScimUser, err error) {
 	servicePrincipalPath := fmt.Sprintf("/preview/scim/v2/ServicePrincipals/%v", servicePrincipalID)
-	err = a.client.Scim(http.MethodGet, servicePrincipalPath, nil, &sp)
+	err = a.client.Scim(a.context, "GET", servicePrincipalPath, nil, &sp)
 	return
 }
 
@@ -92,20 +91,22 @@ func (a ServicePrincipalsAPI) UpdateR(servicePrincipalID string, rsp ServicePrin
 	}
 	updateRequest := rsp.toRequest()
 	updateRequest.Groups = servicePrincipal.Groups
-	return a.client.Scim(http.MethodPut,
+	return a.client.Scim(a.context, "PUT",
 		fmt.Sprintf("/preview/scim/v2/ServicePrincipals/%v", servicePrincipalID),
 		updateRequest, nil)
 }
 
 // PatchR updates resource-friendly entity
 func (a ServicePrincipalsAPI) PatchR(servicePrincipalID string, r patchRequest) error {
-	return a.client.Scim(http.MethodPatch, fmt.Sprintf("/preview/scim/v2/ServicePrincipals/%v", servicePrincipalID), r, nil)
+	return a.client.Scim(a.context, "PATCH",
+		fmt.Sprintf("/preview/scim/v2/ServicePrincipals/%v",
+			servicePrincipalID), r, nil)
 }
 
 // Delete will delete the servicePrincipal given the servicePrincipal id
 func (a ServicePrincipalsAPI) Delete(servicePrincipalID string) error {
 	servicePrincipalPath := fmt.Sprintf("/preview/scim/v2/ServicePrincipals/%v", servicePrincipalID)
-	return a.client.Scim(http.MethodDelete, servicePrincipalPath, nil, nil)
+	return a.client.Scim(a.context, "DELETE", servicePrincipalPath, nil, nil)
 }
 
 // ResourceServicePrincipal manages service principals within workspace
@@ -116,59 +117,36 @@ func ResourceServicePrincipal() *schema.Resource {
 		s["active"].Default = true
 		return s
 	})
-	readContext := func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-		servicePrincipal, err := NewServicePrincipalsAPI(m).ReadR(d.Id())
-		if e, ok := err.(common.APIError); ok && e.IsMissing() {
-			log.Printf("missing resource due to error: %v\n", e)
-			d.SetId("")
-			return nil
-		}
-		if err != nil {
-			return diag.FromErr(err)
-		}
-		err = internal.StructToData(servicePrincipal, servicePrincipalSchema, d)
-		if err != nil {
-			return diag.FromErr(err)
-		}
-		return nil
-	}
-	return &schema.Resource{
-		Schema:      servicePrincipalSchema,
-		ReadContext: readContext,
-		CreateContext: func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-			var ru ServicePrincipalEntity
-			err := internal.DataToStructPointer(d, servicePrincipalSchema, &ru)
-			if err != nil {
-				return diag.FromErr(err)
+	return util.CommonResource{
+		Schema: servicePrincipalSchema,
+		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			var sp ServicePrincipalEntity
+			if err := internal.DataToStructPointer(d, servicePrincipalSchema, &sp); err != nil {
+				return err
 			}
-			servicePrincipal, err := NewServicePrincipalsAPI(m).CreateR(ru)
+			servicePrincipal, err := NewServicePrincipalsAPI(ctx, c).CreateR(sp)
 			if err != nil {
-				return diag.FromErr(err)
+				return err
 			}
 			d.SetId(servicePrincipal.ID)
-			return readContext(ctx, d, m)
-		},
-		UpdateContext: func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-			var ru ServicePrincipalEntity
-			err := internal.DataToStructPointer(d, servicePrincipalSchema, &ru)
-			if err != nil {
-				return diag.FromErr(err)
-			}
-			err = NewServicePrincipalsAPI(m).UpdateR(d.Id(), ru)
-			if err != nil {
-				return diag.FromErr(err)
-			}
-			return readContext(ctx, d, m)
-		},
-		DeleteContext: func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-			err := NewServicePrincipalsAPI(m).Delete(d.Id())
-			if err != nil {
-				return diag.FromErr(err)
-			}
 			return nil
 		},
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			servicePrincipal, err := NewServicePrincipalsAPI(ctx, c).ReadR(d.Id())
+			if err != nil {
+				return err
+			}
+			return internal.StructToData(servicePrincipal, servicePrincipalSchema, d)
 		},
-	}
+		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			var sp ServicePrincipalEntity
+			if err := internal.DataToStructPointer(d, servicePrincipalSchema, &sp); err != nil {
+				return err
+			}
+			return NewServicePrincipalsAPI(ctx, c).UpdateR(d.Id(), sp)
+		},
+		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			return NewServicePrincipalsAPI(ctx, c).Delete(d.Id())
+		},
+	}.ToResource()
 }

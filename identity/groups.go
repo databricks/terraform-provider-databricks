@@ -73,6 +73,7 @@ func (a GroupsAPI) Filter(filter string) (GroupList, error) {
 	return groups, err
 }
 
+// PatchR ...
 func (a GroupsAPI) PatchR(groupID string, r patchRequest) error {
 	return a.client.Scim(a.context, http.MethodPatch, fmt.Sprintf("/preview/scim/v2/Groups/%v", groupID), r, nil)
 }

@@ -113,10 +113,6 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, c *commo
 	if err = internal.DataToStructPointer(d, clusterSchema, &libraryList); err != nil {
 		return err
 	}
-	if len(libraryList.Libraries) == 0 {
-		// LEGACY support
-		libraryList = legacyReadLibraryListFromData(d)
-	}
 	librariesAPI := NewLibrariesAPI(ctx, c)
 	if len(libraryList.Libraries) > 0 {
 		if err = librariesAPI.Install(libraryList); err != nil {
@@ -249,10 +245,6 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, c *commo
 	var libraryList ClusterLibraryList
 	if err = internal.DataToStructPointer(d, clusterSchema, &libraryList); err != nil {
 		return err
-	}
-	if len(libraryList.Libraries) == 0 {
-		// LEGACY support
-		libraryList = legacyReadLibraryListFromData(d)
 	}
 	librariesAPI := NewLibrariesAPI(ctx, c)
 	libsClusterStatus, err := librariesAPI.ClusterStatus(clusterID)

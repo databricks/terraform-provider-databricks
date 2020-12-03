@@ -6,7 +6,7 @@ fmt:
 	@echo "✓ Formatting source code with gofmt ..."
 	@gofmt -w $(shell find . -type f -name '*.go' -not -path "./vendor/*")
 	
-lint: 
+lint: vendor
 	@echo "✓ Linting source code with golangci-lint make sure you run make fmt ..."
 	@golangci-lint run --skip-dirs-use-default --timeout 5m
 
@@ -18,9 +18,9 @@ coverage: test
 	@echo "✓ Opening coverage for unit tests..."
 	@go tool cover -html=coverage.txt
 
-VERSION = 0.2.9
+VERSION = 0.3.0
 
-build:
+build: vendor
 	@echo "✓ Building source code with go build..."
 	@go build -mod vendor -v -ldflags="-X github.com/databrickslabs/databricks-terraform/common.version=${VERSION}" -o terraform-provider-databricks
 

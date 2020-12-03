@@ -19,7 +19,7 @@ func TestResourceUserRead(t *testing.T) {
 					ID:          "abc",
 					DisplayName: "Example user",
 					UserName:    "me@example.com",
-					Groups: []GroupsListItem{
+					Groups: []groupsListItem{
 						{
 							Display: "admins",
 							Value:   "4567",
@@ -93,7 +93,7 @@ func TestResourceUserCreate(t *testing.T) {
 				ExpectedRequest: ScimUser{
 					DisplayName: "Example user",
 					Active:      true,
-					Entitlements: []EntitlementsListItem{
+					Entitlements: []entitlementsListItem{
 						{
 							Value: "allow-cluster-create",
 						},
@@ -113,12 +113,12 @@ func TestResourceUserCreate(t *testing.T) {
 					Active:      true,
 					UserName:    "me@example.com",
 					ID:          "abc",
-					Entitlements: []EntitlementsListItem{
+					Entitlements: []entitlementsListItem{
 						{
 							Value: AllowClusterCreateEntitlement,
 						},
 					},
-					Groups: []GroupsListItem{
+					Groups: []groupsListItem{
 						{
 							Display: "admins",
 							Value:   "4567",
@@ -172,12 +172,12 @@ func TestResourceUserUpdate(t *testing.T) {
 		DisplayName: "Changed Name",
 		UserName:    "me@example.com",
 		Active:      true,
-		Entitlements: []EntitlementsListItem{
+		Entitlements: []entitlementsListItem{
 			{
 				Value: AllowInstancePoolCreateEntitlement,
 			},
 		},
-		Groups: []GroupsListItem{
+		Groups: []groupsListItem{
 			{
 				Display: "admins",
 				Value:   "4567",
@@ -187,7 +187,7 @@ func TestResourceUserUpdate(t *testing.T) {
 				Value:   "9877",
 			},
 		},
-		Roles: []RoleListItem{
+		Roles: []roleListItem{
 			{
 				Value: "a",
 			},
@@ -206,12 +206,12 @@ func TestResourceUserUpdate(t *testing.T) {
 					Active:      true,
 					UserName:    "me@example.com",
 					ID:          "abc",
-					Entitlements: []EntitlementsListItem{
+					Entitlements: []entitlementsListItem{
 						{
 							Value: AllowClusterCreateEntitlement,
 						},
 					},
-					Groups: []GroupsListItem{
+					Groups: []groupsListItem{
 						{
 							Display: "admins",
 							Value:   "4567",
@@ -221,7 +221,7 @@ func TestResourceUserUpdate(t *testing.T) {
 							Value:   "9877",
 						},
 					},
-					Roles: []RoleListItem{
+					Roles: []roleListItem{
 						{
 							Value: "a",
 						},
@@ -293,12 +293,12 @@ func TestResourceUserUpdate_ErrorPut(t *testing.T) {
 					Active:      true,
 					UserName:    "me@example.com",
 					ID:          "abc",
-					Entitlements: []EntitlementsListItem{
+					Entitlements: []entitlementsListItem{
 						{
 							Value: AllowClusterCreateEntitlement,
 						},
 					},
-					Groups: []GroupsListItem{
+					Groups: []groupsListItem{
 						{
 							Display: "admins",
 							Value:   "4567",
@@ -308,7 +308,7 @@ func TestResourceUserUpdate_ErrorPut(t *testing.T) {
 							Value:   "9877",
 						},
 					},
-					Roles: []RoleListItem{
+					Roles: []roleListItem{
 						{
 							Value: "a",
 						},

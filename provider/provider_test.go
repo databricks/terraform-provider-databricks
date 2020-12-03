@@ -6,7 +6,6 @@ import (
 	"os"
 	"strings"
 	"testing"
-	"time"
 
 	"github.com/databrickslabs/databricks-terraform/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -381,8 +380,4 @@ func TestAllResourcesMustHaveImport(t *testing.T) {
 			t.Logf("Missing importer: %s", name)
 		}
 	}
-}
-
-func TestProvider_DurationToSecondsString(t *testing.T) {
-	assert.Equal(t, durationToSecondsString(time.Hour), "3600")
 }

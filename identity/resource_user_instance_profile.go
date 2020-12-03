@@ -17,17 +17,17 @@ func ResourceUserInstanceProfile() *schema.Resource {
 			if err != nil {
 				return err
 			}
-			return NewUsersAPI(c).PatchR(userID, scimPatchRequest("add", "roles", roleARN))
+			return NewUsersAPI(c).Patch(userID, scimPatchRequest("add", "roles", roleARN))
 		},
 		ReadContext: func(ctx context.Context, userID, roleARN string, c *common.DatabricksClient) error {
-			user, err := NewUsersAPI(c).Read(userID)
+			user, err := NewUsersAPI(c).read(userID)
 			if err == nil && !user.HasRole(roleARN) {
 				return common.NotFound("User has no role")
 			}
 			return err
 		},
 		DeleteContext: func(ctx context.Context, userID, roleARN string, c *common.DatabricksClient) error {
-			return NewUsersAPI(c).PatchR(userID, scimPatchRequest(
+			return NewUsersAPI(c).Patch(userID, scimPatchRequest(
 				"remove", fmt.Sprintf(`roles[value eq "%s"]`, roleARN), ""))
 		},
 	})

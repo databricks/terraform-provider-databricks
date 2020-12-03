@@ -12,6 +12,33 @@ Use the Databricks Terraform provider to interact with almost all of [Databricks
 
 ![Resources](https://github.com/databrickslabs/terraform-provider-databricks/raw/master/docs/resources.png)
 
+Compute resources
+* Deploy [databricks_cluster](resources/cluster.md) on selected [databricks_node_type](data-sources/node_type.md)
+* Schedule automated [databricks_job](resources/job.md)
+* Constrol cost and data access with [databricks_cluster_policy](resources/cluster_policy.md)
+* Speedup job & cluster startup with [databricks_instance_pool](resources/instance_pool.md)
+* Manage few [databricks_notebook](resources/notebook.md), and even [list them](data-sources/notebook_paths.md)
+
+Storage
+* Manage JAR, Wheel & Egg libraries through [databricks_dbfs_file](resources/dbfs_file.md)
+* List entries on DBFS with [databricks_dbfs_file_paths](data-sources/dbfs_file_paths.md)
+* Get contents of small files with [databricks_dbfs_file](data-sources/dbfs_file.md)
+* Mount your AWS storage using [databricks_aws_s3_mount](resources/aws_s3_mount.md)
+* Mount your Azure storage using [databricks_azure_adls_gen1_mount](resources/azure_adls_gen1_mount.md), [databricks_azure_adls_gen2_mount](resources/azure_adls_gen2_mount.md), [databricks_azure_blob_mount](resources/azure_blob_mount.md)
+
+Security
+* Organize [databricks_user](resources/user.md) into [databricks_group](resources/group.md) through [databricks_group_member](resources/group_member.md), also reading [metadata](data-sources/group.md)
+* Manage data access with [databricks_instance_profile](resources/instance_profile.md), which can be assigned through [databricks_group_instance_profile](resources/group_instance_profile.md) and [databricks_user_instance_profile](resources/user_instance_profile.md)
+* Control which networks can access workspace with [databricks_ip_access_list](resources/ip_access_list.md)
+* Generically manage [databricks_permissions](resources/permissions.md)
+* Keep sensitive elements like passwords in [databricks_secret](resources/secret.md), grouped into [databricks_secret_scope](resources/secret_scope.md) and controlled by [databricks_secret_acl](resources/secret_acl.md)
+
+
+E2 Architecture
+* Create [workspaces](resources/mws_workspaces.md) in your [VPC](resources/mws_networks.md) with [DBFS](resources/mws_storage_configurations.md) using [cross-account IAM roles](resources/mws_credentials.md), having your notebooks encrypted with [CMK](resources/mws_customer_managed_keys.md).
+* Use predefined AWS IAM Policy Templates: [databricks_aws_assume_role_policy](data-sources/aws_assume_role_policy.md), [databricks_aws_crossaccount_policy](data-sources/aws_crossaccount_policy.md), [databricks_aws_bucket_policy](data-sources/aws_bucket_policy.md)
+* Configure billing and audit [databricks_mws_log_delivery](resources/mws_log_delivery.md)
+
 ## Example Usage
 
 ```hcl

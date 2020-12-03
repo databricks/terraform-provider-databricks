@@ -7,10 +7,8 @@ import (
 	"testing"
 
 	"github.com/databrickslabs/databricks-terraform/common"
-	"github.com/databrickslabs/databricks-terraform/internal/qa"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 func TestAccReadUser(t *testing.T) {
@@ -24,7 +22,7 @@ func TestAccReadUser(t *testing.T) {
 
 	if strings.Contains(me.UserName, "@") {
 		// let's assume that service principals do not look like emails
-		ru, err := NewUsersAPI(client).ReadR(me.ID)
+		ru, err := NewUsersAPI(client).Read(me.ID)
 		assert.NoError(t, err, err)
 		assert.NotNil(t, ru)
 	}
@@ -42,10 +40,10 @@ func TestAccCreateRUserNonAdmin(t *testing.T) {
 		UserName:           fmt.Sprintf("test+%s@example.com", randomName),
 		AllowClusterCreate: true,
 	}
-	meh, err := NewUsersAPI(client).CreateR(given)
+	meh, err := NewUsersAPI(client).Create(given)
 	assert.NoError(t, err, err)
 
-	ru, err := NewUsersAPI(client).ReadR(meh.ID)
+	ru, err := NewUsersAPI(client).Read(meh.ID)
 	assert.NoError(t, err, err)
 	assert.NotNil(t, ru)
 

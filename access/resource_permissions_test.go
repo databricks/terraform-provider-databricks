@@ -601,7 +601,7 @@ func permissionsTestHelper(t *testing.T,
 	me, err := usersAPI.Me()
 	require.NoError(t, err)
 
-	user, err := usersAPI.CreateR(identity.UserEntity{
+	user, err := usersAPI.Create(identity.UserEntity{
 		UserName: fmt.Sprintf("tf-%s@example.com", randomName),
 	})
 	require.NoError(t, err)

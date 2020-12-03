@@ -17,7 +17,7 @@ func ResourceUserInstanceProfile() *schema.Resource {
 			if err != nil {
 				return err
 			}
-			return NewUsersAPI(c).PatchR(userID, scimPatchRequest("add", "roles", roleARN))
+			return NewUsersAPI(c).Patch(userID, scimPatchRequest("add", "roles", roleARN))
 		},
 		ReadContext: func(ctx context.Context, userID, roleARN string, c *common.DatabricksClient) error {
 			user, err := NewUsersAPI(c).read(userID)
@@ -27,7 +27,7 @@ func ResourceUserInstanceProfile() *schema.Resource {
 			return err
 		},
 		DeleteContext: func(ctx context.Context, userID, roleARN string, c *common.DatabricksClient) error {
-			return NewUsersAPI(c).PatchR(userID, scimPatchRequest(
+			return NewUsersAPI(c).Patch(userID, scimPatchRequest(
 				"remove", fmt.Sprintf(`roles[value eq "%s"]`, roleARN), ""))
 		},
 	})

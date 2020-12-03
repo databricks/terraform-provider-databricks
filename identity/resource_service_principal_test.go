@@ -15,11 +15,11 @@ func TestResourceServicePrincipalRead(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/preview/scim/v2/ServicePrincipals/abc",
-				Response: ScimServicePrincipal{
+				Response: ScimUser{
 					ID:            "abc",
 					DisplayName:   "Example Service Principal",
-					ApplicationId: "00000000-0000-0000-0000-000000000000",
-					Groups: []GroupsListItem{
+					ApplicationID: "00000000-0000-0000-0000-000000000000",
+					Groups: []groupsListItem{
 						{
 							Display: "admins",
 							Value:   "4567",
@@ -90,35 +90,35 @@ func TestResourceServicePrincipalCreate(t *testing.T) {
 			{
 				Method:   "POST",
 				Resource: "/api/2.0/preview/scim/v2/ServicePrincipals",
-				ExpectedRequest: ScimServicePrincipal{
+				ExpectedRequest: ScimUser{
 					DisplayName: "Example Service Principal",
 					Active:      true,
-					Entitlements: []EntitlementsListItem{
+					Entitlements: []entitlementsListItem{
 						{
 							Value: "allow-cluster-create",
 						},
 					},
-					ApplicationId: "00000000-0000-0000-0000-000000000000",
+					ApplicationID: "00000000-0000-0000-0000-000000000000",
 					Schemas:       []URN{ServicePrincipalSchema},
 				},
-				Response: ScimServicePrincipal{
+				Response: ScimUser{
 					ID: "abc",
 				},
 			},
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/preview/scim/v2/ServicePrincipals/abc",
-				Response: ScimServicePrincipal{
+				Response: ScimUser{
 					DisplayName:   "Example Service Principal",
 					Active:        true,
-					ApplicationId: "00000000-0000-0000-0000-000000000000",
+					ApplicationID: "00000000-0000-0000-0000-000000000000",
 					ID:            "abc",
-					Entitlements: []EntitlementsListItem{
+					Entitlements: []entitlementsListItem{
 						{
 							Value: AllowClusterCreateEntitlement,
 						},
 					},
-					Groups: []GroupsListItem{
+					Groups: []groupsListItem{
 						{
 							Display: "admins",
 							Value:   "4567",
@@ -167,17 +167,17 @@ func TestResourceServicePrincipalCreate_Error(t *testing.T) {
 }
 
 func TestResourceServicePrincipalUpdate(t *testing.T) {
-	newServicePrincipal := ScimServicePrincipal{
+	newServicePrincipal := ScimUser{
 		Schemas:       []URN{ServicePrincipalSchema},
 		DisplayName:   "Changed Name",
-		ApplicationId: "00000000-0000-0000-0000-000000000000",
+		ApplicationID: "00000000-0000-0000-0000-000000000000",
 		Active:        true,
-		Entitlements: []EntitlementsListItem{
+		Entitlements: []entitlementsListItem{
 			{
 				Value: AllowInstancePoolCreateEntitlement,
 			},
 		},
-		Groups: []GroupsListItem{
+		Groups: []groupsListItem{
 			{
 				Display: "admins",
 				Value:   "4567",
@@ -193,17 +193,17 @@ func TestResourceServicePrincipalUpdate(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/preview/scim/v2/ServicePrincipals/abc",
-				Response: ScimServicePrincipal{
+				Response: ScimUser{
 					DisplayName:   "Example Service Principal",
 					Active:        true,
-					ApplicationId: "00000000-0000-0000-0000-000000000000",
+					ApplicationID: "00000000-0000-0000-0000-000000000000",
 					ID:            "abc",
-					Entitlements: []EntitlementsListItem{
+					Entitlements: []entitlementsListItem{
 						{
 							Value: AllowClusterCreateEntitlement,
 						},
 					},
-					Groups: []GroupsListItem{
+					Groups: []groupsListItem{
 						{
 							Display: "admins",
 							Value:   "4567",
@@ -272,17 +272,17 @@ func TestResourceServicePrincipalUpdate_ErrorPut(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/preview/scim/v2/ServicePrincipals/abc",
-				Response: ScimServicePrincipal{
+				Response: ScimUser{
 					DisplayName:   "Example Service Principal",
 					Active:        true,
-					ApplicationId: "00000000-0000-0000-0000-000000000000",
+					ApplicationID: "00000000-0000-0000-0000-000000000000",
 					ID:            "abc",
-					Entitlements: []EntitlementsListItem{
+					Entitlements: []entitlementsListItem{
 						{
 							Value: AllowClusterCreateEntitlement,
 						},
 					},
-					Groups: []GroupsListItem{
+					Groups: []groupsListItem{
 						{
 							Display: "admins",
 							Value:   "4567",

@@ -150,16 +150,17 @@ type email struct {
 
 // ScimUser is a struct that contains all the information about a SCIM user
 type ScimUser struct {
-	ID           string                 `json:"id,omitempty"`
-	Emails       []email                `json:"emails,omitempty"`
-	DisplayName  string                 `json:"displayName,omitempty"`
-	Active       bool                   `json:"active,omitempty"`
-	Schemas      []URN                  `json:"schemas,omitempty"`
-	UserName     string                 `json:"userName,omitempty"`
-	Groups       []groupsListItem       `json:"groups,omitempty"`
-	Name         map[string]string      `json:"name,omitempty"`
-	Roles        []roleListItem         `json:"roles,omitempty"`
-	Entitlements []entitlementsListItem `json:"entitlements,omitempty"`
+	ID            string                 `json:"id,omitempty"`
+	Emails        []email                `json:"emails,omitempty"`
+	DisplayName   string                 `json:"displayName,omitempty"`
+	Active        bool                   `json:"active,omitempty"`
+	Schemas       []URN                  `json:"schemas,omitempty"`
+	UserName      string                 `json:"userName,omitempty"`
+	ApplicationID string                 `json:"application_id,omitempty"`
+	Groups        []groupsListItem       `json:"groups,omitempty"`
+	Name          map[string]string      `json:"name,omitempty"`
+	Roles         []roleListItem         `json:"roles,omitempty"`
+	Entitlements  []entitlementsListItem `json:"entitlements,omitempty"`
 }
 
 // HasRole returns true if group has a role

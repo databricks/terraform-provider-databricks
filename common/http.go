@@ -26,6 +26,9 @@ var (
 		"does not have any associated worker environments",
 		"There is no worker environment with id",
 		"ClusterNotReadyException",
+		"connection reset by peer",
+		"connection refused",
+		"i/o timeout",
 	}
 )
 
@@ -204,13 +207,8 @@ func (c *DatabricksClient) parseError(resp *http.Response) APIError {
 // checkHTTPRetry inspects HTTP errors from the Databricks API for known transient errors on Workspace creation
 func (c *DatabricksClient) checkHTTPRetry(ctx context.Context, resp *http.Response, err error) (bool, error) {
 	if ue, ok := err.(*url.Error); ok {
-		if strings.Contains(ue.Error(), "connection refused") || strings.Contains(ue.Error(), "i/o timeout") {
-			log.Printf("[INFO] Attempting retry because of IO error: %s", ue.Error())
-			return true, APIError{
-				Message:   ue.Error(),
-				ErrorCode: "IO_ERROR",
-			}
-		}
+		apiError := APIError{ErrorCode: "IO_ERROR", Message: ue.Error()}
+		return apiError.IsRetriable(), apiError
 	}
 	if resp == nil {
 		// If response is nil we can't make retry choices.

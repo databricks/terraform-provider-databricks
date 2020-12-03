@@ -5,7 +5,7 @@ import (
 )
 
 var (
-	version = "0.2.8"
+	version = "0.2.9"
 )
 
 // Version returns version of provider

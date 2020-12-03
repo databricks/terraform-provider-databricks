@@ -6,7 +6,6 @@ import (
 	"log"
 	"net/http"
 	"strconv"
-	"strings"
 	"sync"
 	"time"
 
@@ -27,8 +26,7 @@ type AzureAuth struct {
 	ResourceGroup  string
 	SubscriptionID string
 
-	// azurerm_databricks_workspace.this.id ->
-	// /subscriptions/{subscription}/resourceGroups/{rg}/providers/Microsoft.Databricks/workspaces/{name}
+	// azurerm_databricks_workspace.this.id
 	ResourceID string
 
 	ClientSecret string
@@ -69,22 +67,29 @@ var authorizerMutex sync.Mutex
 
 func (aa *AzureAuth) resourceID() string {
 	if aa.ResourceID != "" {
-		if aa.SubscriptionID == "" || aa.ResourceGroup == "" || aa.WorkspaceName == "" {
-			split := strings.Split(aa.ResourceID, "/")
-			if len(split) != 9 {
-				log.Printf("[WARN] Resource ID doesn't have exactly 9 elements: %s", aa.ResourceID)
+		if aa.SubscriptionID == "" {
+			res, err := azure.ParseResourceID(aa.ResourceID)
+			if err != nil {
+				log.Printf("[ERROR] %s", err)
 				return ""
 			}
-			aa.SubscriptionID, aa.ResourceGroup, aa.WorkspaceName = split[2], split[4], split[8]
+			aa.SubscriptionID = res.SubscriptionID
+			aa.ResourceGroup = res.ResourceGroup
+			aa.WorkspaceName = res.ResourceName
 		}
 		return aa.ResourceID
 	}
 	if aa.SubscriptionID == "" || aa.ResourceGroup == "" || aa.WorkspaceName == "" {
 		return ""
 	}
-	aa.ResourceID = fmt.Sprintf(
-		"/subscriptions/%s/resourceGroups/%s/providers/Microsoft.Databricks/workspaces/%s",
-		aa.SubscriptionID, aa.ResourceGroup, aa.WorkspaceName)
+	r := azure.Resource{
+		SubscriptionID: aa.SubscriptionID,
+		ResourceGroup:  aa.ResourceGroup,
+		Provider:       "Microsoft.Databricks",
+		ResourceType:   "workspaces",
+		ResourceName:   aa.WorkspaceName,
+	}
+	aa.ResourceID = r.String()
 	return aa.ResourceID
 }
 

@@ -19,7 +19,7 @@ func ResourceUser() *schema.Resource {
 		return s
 	})
 	readContext := func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-		user, err := NewUsersAPI(m).ReadR(d.Id())
+		user, err := NewUsersAPI(m).Read(d.Id())
 		if e, ok := err.(common.APIError); ok && e.IsMissing() {
 			log.Printf("missing resource due to error: %v\n", e)
 			d.SetId("")
@@ -43,7 +43,7 @@ func ResourceUser() *schema.Resource {
 			if err != nil {
 				return diag.FromErr(err)
 			}
-			user, err := NewUsersAPI(m).CreateR(ru)
+			user, err := NewUsersAPI(m).Create(ru)
 			if err != nil {
 				return diag.FromErr(err)
 			}
@@ -56,7 +56,7 @@ func ResourceUser() *schema.Resource {
 			if err != nil {
 				return diag.FromErr(err)
 			}
-			err = NewUsersAPI(m).UpdateR(d.Id(), ru)
+			err = NewUsersAPI(m).Update(d.Id(), ru)
 			if err != nil {
 				return diag.FromErr(err)
 			}

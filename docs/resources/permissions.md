@@ -52,7 +52,7 @@ resource "databricks_permissions" "cluster_usage" {
 
 ## Cluster Policy usage
 
-Cluster policies allow creation of [clusters](cluster.md), that match [given policy](https://docs.databricks.com/administration-guide/clusters/policies.html). It's possible to assign `CAN_USE` permission to users, service principals, and groups:
+Cluster policies allow creation of [clusters](cluster.md), that match [given policy](https://docs.databricks.com/administration-guide/clusters/policies.html). It's possible to assign `CAN_USE` permission to users and groups:
 
 ```hcl
 resource "databricks_group" "ds" {
@@ -273,8 +273,7 @@ resource "databricks_permissions" "folder_usage" {
 
 ## Passwords usage
 
-By default on AWS deployments, all admin users (or service principals) can sign in to Databricks using either SSO or their username and password, and all API users (or service principals) can authenticate to the Databricks REST APIs using their username and password. As an admin, you [can limit](https://docs.databricks.com/administration-guide/users-groups/single-sign-on/index.html#optional-configure-password-access-control) admin users’ and API users’ ability to authenticate with their username and password by configuring `CAN_USE` permissions using password access control.
-ign-On.
+By default on AWS deployments, all admin users can sign in to Databricks using either SSO or their username and password, and all API users can authenticate to the Databricks REST APIs using their username and password. As an admin, you [can limit](https://docs.databricks.com/administration-guide/users-groups/single-sign-on/index.html#optional-configure-password-access-control) admin users’ and API users’ ability to authenticate with their username and password by configuring `CAN_USE` permissions using password access control.
 
 ```hcl
 resource "databricks_group" "guests" {

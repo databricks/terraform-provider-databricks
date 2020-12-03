@@ -2,16 +2,19 @@
 
 This resource allows you to manage instance pools on Databricks. An instance pool reduces [cluster](cluster.md) start and auto-scaling times by maintaining a set of idle, ready-to-use cloud instances. When a [cluster](cluster.md) attached to a pool needs an instance, it first attempts to allocate one of the pool’s idle instances. If the pool has no idle instances, it expands by allocating a new instance from the instance provider in order to accommodate the cluster’s request. When a [cluster](cluster.md) releases an instance, it returns to the pool and is free for another [cluster](cluster.md) to use. Only clusters attached to a pool can use that pool’s idle instances.
 
--> **Note** It is important to know what that different cloud service providers have different `node_type_id`, `disk_specs` and potentially other configurations.
+-> **Note** It is important to know that different cloud service providers have different `node_type_id`, `disk_specs` and potentially other configurations.
 
 ## Example Usage
 
 ```hcl
-resource "databricks_instance_pool" "my-pool" {
-  instance_pool_name = "reserved-i3.xlarge-pool"
+data "databricks_node_type" "smallest" {
+}
+
+resource "databricks_instance_pool" "smallest_nodes" {
+  instance_pool_name = "Smallest Nodes"
   min_idle_instances = 0
   max_capacity       = 300
-  node_type_id       = "i3.xlarge"
+  node_type_id       = data.databricks_node_type.smallest.id
   aws_attributes {
     availability = "ON_DEMAND"
     zone_id = "us-east-1a"
@@ -31,7 +34,7 @@ resource "databricks_instance_pool" "my-pool" {
 The following arguments are required:
 
 * `instance_pool_name` - (Required) (String) The name of the instance pool. This is required for create and edit operations. It must be unique, non-empty, and less than 100 characters.
-* `min_idle_instances` - (Required) (Integer) The minimum number of idle instances maintained by the pool. This is in addition to any instances in use by active clusters.
+* `min_idle_instances` - (Optional) (Integer) The minimum number of idle instances maintained by the pool. This is in addition to any instances in use by active clusters.
 * `max_capacity` - (Optional) (Integer) The maximum number of instances the pool can contain, including both idle instances and ones in use by clusters. Once the maximum capacity is reached, you cannot create new clusters from the pool and existing clusters cannot autoscale up until some instances are made idle in the pool via [cluster](cluster.md) termination or down-scaling.
 * `idle_instance_autotermination_minutes` - (Required) (Integer) The number of minutes that idle instances in excess of the min_idle_instances are maintained by the pool before being terminated. If not specified, excess idle instances are terminated automatically after a default timeout period. If specified, the time must be between 0 and 10000 minutes. If you specify 0, excess idle instances are removed as soon as possible.
 * `node_type_id` - (Required) (String) The node type for the instances in the pool. All clusters attached to the pool inherit this node type and the pool’s idle instances are allocated based on this type. You can retrieve a list of available node types by using the [List Node Types API](https://docs.databricks.com/dev-tools/api/latest/clusters.html#clusterclusterservicelistnodetypes) call.
@@ -72,6 +75,10 @@ In addition to all arguments above, the following attributes are exported:
 * `id` - Canonical unique identifier for the instance pool.
 * `default_tags` - default tag map.
 
+## Access Control
+
+* [databricks_group](group.md#allow_instance_pool_create) and [databricks_user](user.md#allow_instance_pool_create) can control which groups or individual users can create instance pools.
+* [databricks_permissions](permissions.md#Instance-Pool-usage) can control which groups or individual users can *Manage* or *Attach to* individual instance pools.
 
 ## Import
 

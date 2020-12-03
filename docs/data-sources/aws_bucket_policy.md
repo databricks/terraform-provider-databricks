@@ -1,6 +1,6 @@
 # databricks_aws_bucket_policy Data Source
 
-This datasource configures simple access policy for AWS S3 buckets, so that Databricks can access data in it. 
+This datasource configures a simple access policy for AWS S3 buckets, so that Databricks can access data in it. 
 
 ## Example Usage
 
@@ -70,7 +70,7 @@ resource "aws_s3_bucket_policy" "ds" {
 
 ## Argument Reference
 
-* `bucket` - (Required) AWS S3 Bucket name for which to generate policy document.
+* `bucket` - (Required) AWS S3 Bucket name for which to generate the policy document.
 * `full_access_role` - (Optional) Data access role that can have full access for this bucket
 
 ## Attribute Reference

@@ -80,6 +80,7 @@ func (tt providerConfigTest) rawConfig() map[string]interface{} {
 }
 
 func TestProviderConfigurationOptions(t *testing.T) {
+	azResourceID := "/subscriptions/a/resourceGroups/b/providers/Microsoft.Databricks/workspaces/c"
 	tests := []providerConfigTest{
 		{
 			assertError: "Authentication is not configured for provider",
@@ -214,7 +215,7 @@ func TestProviderConfigurationOptions(t *testing.T) {
 		{
 			// this test will skip ensureWorkspaceUrl
 			host:                     "x",
-			azureWorkspaceResourceID: "/a/b/c",
+			azureWorkspaceResourceID: azResourceID,
 			env: map[string]string{
 				// // these may fail on windows. use docker container for testing.
 				"PATH": "../common/testdata:/bin",
@@ -225,7 +226,7 @@ func TestProviderConfigurationOptions(t *testing.T) {
 			assertToken: "",
 		},
 		{
-			azureWorkspaceResourceID: "/a/b/c",
+			azureWorkspaceResourceID: azResourceID,
 			env: map[string]string{
 				// these may fail on windows. use docker container for testing.
 				"PATH": "../common/testdata:/bin",
@@ -236,7 +237,7 @@ func TestProviderConfigurationOptions(t *testing.T) {
 		},
 		{
 			// `az` not installed, which is expected for deployers on other clouds...
-			azureWorkspaceResourceID: "/a/b/c",
+			azureWorkspaceResourceID: azResourceID,
 			env: map[string]string{
 				"PATH": "/bin",
 				"HOME": "../common/testdata",
@@ -244,7 +245,7 @@ func TestProviderConfigurationOptions(t *testing.T) {
 			assertError: "Most likely Azure CLI is not installed.",
 		},
 		{
-			azureWorkspaceResourceID: "/a/b/c",
+			azureWorkspaceResourceID: azResourceID,
 			token:                    "x",
 			env: map[string]string{
 				// these may fail on windows. use docker container for testing.
@@ -255,7 +256,7 @@ func TestProviderConfigurationOptions(t *testing.T) {
 		},
 		{
 			// omit request to management endpoint to get workspace properties
-			azureWorkspaceResourceID: "/a/b/c",
+			azureWorkspaceResourceID: azResourceID,
 			host:                     "x",
 			env: map[string]string{
 				// these may fail on windows. use docker container for testing.
@@ -267,7 +268,7 @@ func TestProviderConfigurationOptions(t *testing.T) {
 		},
 		{
 			host:                     "x",
-			azureWorkspaceResourceID: "/a/b/c",
+			azureWorkspaceResourceID: azResourceID,
 			env: map[string]string{
 				// these may fail on windows. use docker container for testing.
 				"PATH":                "../common/testdata:/bin",
@@ -277,7 +278,7 @@ func TestProviderConfigurationOptions(t *testing.T) {
 			assertError: "More than one authorization method configured: azure and password",
 		},
 		{
-			azureWorkspaceResourceID: "/a/b/c",
+			azureWorkspaceResourceID: azResourceID,
 			azureClientID:            "x",
 			azureClientSecret:        "y",
 			azureTenantID:            "z",
@@ -370,6 +371,16 @@ func TestProvider_InvalidProfileGivesError(t *testing.T) {
 	p := DatabricksProvider()
 	err := p.Configure(context.Background(), terraform.NewResourceConfigRaw(raw))
 	assert.NotNil(t, err)
+}
+
+func TestAllResourcesMustHaveImport(t *testing.T) {
+	t.Skip("databricks_mws_* are currently not importable")
+	p := DatabricksProvider()
+	for name, r := range p.ResourcesMap {
+		if r.Importer == nil {
+			t.Logf("Missing importer: %s", name)
+		}
+	}
 }
 
 func TestProvider_DurationToSecondsString(t *testing.T) {

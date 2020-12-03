@@ -33,7 +33,7 @@ output "databricks_token" {
 The following arguments are available:
 
 * `lifetime_seconds` - (Optional) (Integer) The lifetime of the token, in seconds. If no lifetime is specified, the token remains valid indefinitely.
-* `comment` - (Optional) (String) Comment that will appear on user settings page for this token.
+* `comment` - (Optional) (String) Comment that will appear on the user’s settings page for this token.
 
 ## Attribute Reference
 

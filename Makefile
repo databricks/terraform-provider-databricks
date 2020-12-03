@@ -1,16 +1,16 @@
 default: build
 
 fmt:
-	@echo "✓ Formatting source code with gofmt & goimports..."
+	@echo "✓ Formatting source code with goimports ..."
 	@goimports -w $(shell find . -type f -name '*.go' -not -path "./vendor/*")
+	@echo "✓ Formatting source code with gofmt ..."
 	@gofmt -w $(shell find . -type f -name '*.go' -not -path "./vendor/*")
-	@go fmt ./...
-
+	
 lint: 
 	@echo "✓ Linting source code with golangci-lint make sure you run make fmt ..."
 	@golangci-lint run --skip-dirs-use-default --timeout 5m
 
-test:
+test: lint
 	@echo "✓ Running tests..."
 	@gotestsum --format pkgname-and-test-fails --no-summary=skipped --raw-command go test -v -json -short -coverprofile=coverage.txt ./...
 
@@ -29,7 +29,7 @@ install: build
 	@test -d $(HOME)/.terraform.d/plugins && rm $(HOME)/.terraform.d/plugins/terraform-provider-databricks* || mkdir -p $(HOME)/.terraform.d/plugins
 	@cp terraform-provider-databricks $(HOME)/.terraform.d/plugins
 	@mkdir -p '$(HOME)/.terraform.d/plugins/registry.terraform.io/databrickslabs/databricks/${VERSION}/$(shell go version | awk '{print $$4}' | sed 's#/#_#')'
-	@cp terraform-provider-databricks '$(HOME)/.terraform.d/plugins/registry.terraform.io/databrickslabs/databricks/${VERSION}/$(shell go version | awk '{print $$4}' | sed 's#/#_#')'
+	@cp terraform-provider-databricks '$(HOME)/.terraform.d/plugins/registry.terraform.io/databrickslabs/databricks/${VERSION}/$(shell go version | awk '{print $$4}' | sed 's#/#_#')/terraform-provider-databricks-v${VERSION}'
 	@echo "✓ Use the following configuration to enable the version you've built"
 	@echo 
 	@echo "terraform {"
@@ -65,20 +65,8 @@ test-awsmt:
 	@echo "✓ Running Terraform Acceptance Tests for AWS MT..."
 	@/bin/bash scripts/run.sh awsmt '^(TestAcc|TestAwsAcc)' --debug --tee
 
-terraform-setup: build
-	@echo "✓ Initializing Terraform..."
-	@terraform init
-
-terraform-apply: terraform-setup
-	@echo "✓ Initializing Terraform plan..."
-	@TF_LOG_PATH=log.out TF_LOG=debug terraform apply
-
 snapshot:
 	@echo "✓ Making Snapshot..."
 	@goreleaser release --rm-dist --snapshot
 
-hugo:
-	@echo "✓ Making Docs..."
-	@cd website && hugo -d ../docs/
-
-.PHONY: build fmt python-setup docs vendor terraform-local build fmt coverage test lint
+.PHONY: build fmt python-setup docs vendor build fmt coverage test lint

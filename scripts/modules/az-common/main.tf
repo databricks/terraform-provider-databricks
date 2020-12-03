@@ -3,6 +3,11 @@ variable "owner" {
   default = ""
 }
 
+variable "region" {
+  type = string
+  default = "westeurope"
+}
+
 provider "azurerm" {
   version = "~> 2.14"
   features {}
@@ -33,7 +38,7 @@ locals {
 
 resource "azurerm_resource_group" "example" {
   name     = "${local.prefix}-rg"
-  location = "westeurope"
+  location = var.region
   tags     = local.tags
 }
 
@@ -152,8 +157,16 @@ resource "azurerm_key_vault" "example" {
   }
 }
 
-output "test_key_vault" {
+output "test_key_vault_name" {
   value = azurerm_key_vault.example.name
+}
+
+output "test_key_vault_resource_id" {
+  value = azurerm_key_vault.example.id
+}
+
+output "test_key_vault_dns_name" {
+  value = azurerm_key_vault.example.vault_uri
 }
 
 // "Key Vault Administrator" role required for SP
@@ -162,6 +175,17 @@ resource "azurerm_key_vault_secret" "example" {
   value        = "42"
   key_vault_id = azurerm_key_vault.example.id
   tags         = local.tags
+}
+
+output "test_key_vault_secret" {
+  value = azurerm_key_vault_secret.example.name
+}
+
+output "test_key_vault_secret_value" {
+  // this is for testing purposes only. 
+  // must not be a practice for production.
+  value = azurerm_key_vault_secret.example.value
+  sensitive = true
 }
 
 output "cloud_env" {

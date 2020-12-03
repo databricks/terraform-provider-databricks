@@ -56,6 +56,9 @@ func ResourceAWSS3Mount() *schema.Resource {
 			},
 		},
 		SchemaVersion: 2,
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
 	}
 	// nolint should be a bigger context-aware refactor
 	r.Create = func(d *schema.ResourceData, m interface{}) error {
@@ -123,10 +126,12 @@ func getOrCreateMountingClusterWithInstanceProfile(clustersAPI compute.ClustersA
 	}
 	clusterName := fmt.Sprintf("terraform-mount-%s", instanceProfileParts[1])
 	return clustersAPI.GetOrCreateRunningCluster(clusterName, compute.Cluster{
-		NumWorkers:             1,
-		ClusterName:            clusterName,
-		SparkVersion:           compute.CommonRuntimeVersion(),
-		NodeTypeID:             clustersAPI.GetSmallestNodeTypeWithStorage(),
+		NumWorkers:   1,
+		ClusterName:  clusterName,
+		SparkVersion: compute.CommonRuntimeVersion(),
+		NodeTypeID: clustersAPI.GetSmallestNodeType(compute.NodeTypeRequest{
+			LocalDisk: true,
+		}),
 		AutoterminationMinutes: 10,
 		AwsAttributes: &compute.AwsAttributes{
 			InstanceProfileArn: instanceProfile,

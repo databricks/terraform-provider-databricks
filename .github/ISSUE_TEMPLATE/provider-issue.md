@@ -2,7 +2,6 @@
 name: Provider Issue
 about: Use this to identify a issue or a bug with the provider.
 title: "[ISSUE] Provider bug"
-labels: bug
 ---
 
 Hi there,
@@ -32,6 +31,12 @@ To get relevant environment variable _names_ please copypaste the output of the 
 
 ### Debug Output
 Please add turn on logging, e.g. `TF_LOG=DEBUG terraform apply` and run command again, paste it to gist & provide the link to gist. If you're still willing to paste in log output, make sure you provide only relevant log lines with requests.
+
+It would make it more readable, if you pipe the log through `| grep databricks | sed -E 's/^.* plugin[^:]+: (.*)$/\1/'`, e.g.:
+
+```
+TF_LOG=DEBUG terraform plan 2>&1 | grep databricks | sed -E 's/^.* plugin[^:]+: (.*)$/\1/'
+```
 
 ### Panic Output
 If Terraform produced a panic, please provide a link to a GitHub Gist containing the output of the `crash.log`.

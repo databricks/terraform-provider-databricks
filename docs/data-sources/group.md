@@ -2,6 +2,8 @@
 
 Retrieves information about [databricks_group](../resources/group.md) members, entitlements and instance profiles.
 
+!> [Do not use](https://www.terraform.io/docs/configuration/data-sources.html#data-resource-dependencies) `depends_on` meta-argument within data sources, unless you explicitly want to have dependent resources updated each apply.
+
 ## Example Usage
 
 Adding user to administrative group
@@ -25,7 +27,7 @@ resource "databricks_group_member" "my_member_a" {
 
 Data source allows you to pick groups by the following attributes
 
-* `display_name` - (Required) Display name of the group. Group must exist before this resource can be planned.
+* `display_name` - (Required) Display name of the group. The group must exist before this resource can be planned.
 * `recursive` - (Optional) Collect information for all nested groups. *Defaults to true.*
 
 ## Attribute Reference

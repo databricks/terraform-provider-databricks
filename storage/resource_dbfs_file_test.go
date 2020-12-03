@@ -67,7 +67,7 @@ func getBaseDBFSFileGetStatusFixtures(path string, fileSize int64, isDir bool, i
 		{
 			Method:   http.MethodGet,
 			Resource: fmt.Sprintf("/api/2.0/dbfs/get-status?path=%s", url.PathEscape(path)),
-			Response: DBFSFileInfo{
+			Response: FileInfo{
 				Path:     path,
 				IsDir:    isDir,
 				FileSize: fileSize,
@@ -119,7 +119,7 @@ func getBaseDBFSFileCreateFixtures(path string, overwrite bool,
 		{
 			Method:   http.MethodGet,
 			Resource: fmt.Sprintf("/api/2.0/dbfs/get-status?path=%s", url.PathEscape(path)),
-			Response: DBFSFileInfo{
+			Response: FileInfo{
 				Path:     path,
 				IsDir:    false,
 				FileSize: fileSize,

@@ -25,7 +25,7 @@ type UsersAPI struct {
 // UserEntity entity from which resource schema is made
 type UserEntity struct {
 	UserName                string `json:"user_name"`
-	DisplayName             string `json:"display_name,omitempty"`
+	DisplayName             string `json:"display_name,omitempty" tf:"computed"`
 	Active                  bool   `json:"active,omitempty"`
 	AllowClusterCreate      bool   `json:"allow_cluster_create,omitempty"`
 	AllowInstancePoolCreate bool   `json:"allow_instance_pool_create,omitempty"`
@@ -76,6 +76,21 @@ func (a UsersAPI) Create(userName string, displayName string, entitlements []str
 	}
 	err := a.C.Scim(http.MethodPost, "/preview/scim/v2/Users", createRequest, &user)
 	return user, err
+}
+
+// Filter retrieves users by filter
+func (a UsersAPI) Filter(filter string) (u []ScimUser, err error) {
+	var users UserList
+	req := map[string]string{}
+	if filter != "" {
+		req["filter"] = filter
+	}
+	err = a.C.Scim(http.MethodGet, "/preview/scim/v2/Users", req, &users)
+	if err != nil {
+		return
+	}
+	u = users.Resources
+	return
 }
 
 // ReadR reads resource-friendly entity

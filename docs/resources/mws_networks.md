@@ -1,12 +1,17 @@
 # databricks_mws_networks Resource
 
--> **Note** This resource has evolving API, which may change in future versions of provider.
+-> **Note** This resource has an evolving API, which may change in future versions of the provider.
 
-This resource to configure VPC & subnets for new workspaces within AWS.
+Use this resource to [configure VPC](https://docs.databricks.com/administration-guide/cloud-configurations/aws/customer-managed-vpc.html) & subnets for new workspaces within AWS. It is essential to understand that this will require you to configure your provider separately for the multiple workspaces resources.
 
-It is important to understand that this will require you to configure your provider separately for the multiple workspaces resources. This will point to https://accounts.cloud.databricks.com for the HOST and it will use basic auth as that is the only authentication method available for multiple workspaces api. 
+* Databricks must have access to at least two subnets for each workspace, with each subnet in a different Availability Zone. You cannot specify more than one Databricks workspace subnet per Availability Zone in the Create network configuration API call. You can have more than one subnet per Availability Zone as part of your network setup, but you can choose only one subnet per Availability Zone for the Databricks workspace.
+* Databricks assigns two IP addresses per node, one for management traffic and one for Spark applications. The total number of instances for each subnet is equal to half of the available IP addresses.
+* Each subnet must have a netmask between /17 and /25.
+* Subnets must be private.
+* Subnets must have outbound access to the public network using a [aws_nat_gateway](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/nat_gateway) and [aws_internet_gateway](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/internet_gateway), or other similar customer-managed appliance infrastructure.
+* The NAT gateway must be set up in its subnet that routes quad-zero (0.0.0.0/0) traffic to an internet gateway or other customer-managed appliance infrastructure.
 
-Please follow this [complete runnable example](https://github.com/databrickslabs/terraform-provider-databricks/blob/master/scripts/awsmt-integration/main.tf) with new VPC and new workspace setup. Please pay special attention to the fact that there you have two different instances of a databricks provider - one for deploying workspaces (with host=https://accounts.cloud.databricks.com/) and another for the workspace you've created with databricks_mws_workspaces resource. If you want both creation of workspaces & clusters within workspace within the same terraform module (essentially same directory), you should use the provider aliasing feature of Terraform. We strongly recommend having one terraform module for creation of workspace + PAT token and the rest in different modules.
+Please follow this [complete runnable example](https://github.com/databrickslabs/terraform-provider-databricks/blob/master/scripts/awsmt-integration/main.tf) with new VPC and new workspace setup. Please pay special attention to the fact that there you have two different instances of a databricks provider - one for deploying workspaces (with host=https://accounts.cloud.databricks.com/) and another for the workspace you've created with databricks_mws_workspaces resource. If you want both creations of workspaces & clusters within the same Terraform module (essentially the same directory), you should use the provider aliasing feature of Terraform. We strongly recommend having one terraform module to create workspace + PAT token and the rest in different modules.
 
 ## Example Usage
 
@@ -30,6 +35,44 @@ resource "aws_subnet" "public" {
   })
 }
 
+resource "aws_internet_gateway" "gw" {
+  vpc_id = aws_vpc.main.id
+  tags = merge(var.tags, {
+    Name = "${var.prefix}-igw"
+  })
+}
+
+resource "aws_route_table" "public" {
+  vpc_id = aws_vpc.main.id
+  
+  route {
+    gateway_id = aws_internet_gateway.gw.id
+    cidr_block = "0.0.0.0/0"
+  }
+
+  tags = merge(var.tags, {
+    Name = "${var.prefix}-public-rt"
+  })
+}
+
+resource "aws_route_table_association" "public" {
+  route_table_id = aws_route_table.public.id
+  subnet_id = aws_subnet.public.id
+}
+
+resource "aws_eip" "nat" {
+  vpc = true
+  depends_on = [aws_internet_gateway.gw]
+}
+
+resource "aws_nat_gateway" "gw" {
+  allocation_id = aws_eip.nat.id
+  subnet_id     = aws_subnet.public.id
+  tags = merge(var.tags, {
+    Name = "${var.prefix}-nat"
+  })
+}
+
 resource "aws_subnet" "private" {
   vpc_id            = aws_vpc.main.id
   cidr_block        = cidrsubnet(aws_vpc.main.cidr_block, 3, 1)
@@ -40,17 +83,22 @@ resource "aws_subnet" "private" {
   })
 }
 
-resource "aws_internet_gateway" "gw" {
+resource "aws_route_table" "private" {
   vpc_id = aws_vpc.main.id
+
+  route {
+    nat_gateway_id = aws_nat_gateway.gw.id
+    cidr_block = "0.0.0.0/0"
+  }
+
   tags = merge(var.tags, {
-    Name = "${var.prefix}-igw"
+    Name = "${var.prefix}-private-rt"
   })
 }
 
-resource "aws_route" "r" {
-  route_table_id            = aws_vpc.main.default_route_table_id
-  destination_cidr_block    = "0.0.0.0/0"
-  gateway_id = aws_internet_gateway.gw.id
+resource "aws_route_table_association" "private" {
+  route_table_id = aws_route_table.private.id
+  subnet_id = aws_subnet.private.id
 }
 
 resource "aws_security_group" "test_sg" {
@@ -83,6 +131,7 @@ resource "databricks_mws_networks" "this" {
   account_id   = var.account_id
   network_name = "${var.prefix}-network"
   vpc_id       = aws_vpc.main.id
+
   subnet_ids   = [aws_subnet.public.id, aws_subnet.private.id]
   security_group_ids = [aws_security_group.test_sg.id]
 }
@@ -92,17 +141,17 @@ resource "databricks_mws_networks" "this" {
 
 The following arguments are required:
 
-* `account_id` - (Required) (String) master account id (also used for `sts:ExternaId` of `sts:AssumeRole`)
-* `network_name` - (Required) (String) name under which this network is regisstered
-* `vpc_id` - (Required) (String) AWS VPC id
-* `subnet_ids` - (Required) (Set) ids of AWS VPC subnets
-* `security_group_ids` - (Required) (Set) ids of AWS Security Groups
+* `account_id` - master account id (also used for `sts:ExternaId` of `sts:AssumeRole`)
+* `network_name` - name under which this network is regisstered
+* `vpc_id` - [aws_vpc](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/vpc) id
+* `subnet_ids` - ids of [aws_subnet](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/subnet)
+* `security_group_ids` - ids of [aws_security_group](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/security_group)
 
 ## Attribute Reference
 
 In addition to all arguments above, the following attributes are exported:
 
 * `id` - Canonical unique identifier for the mws networks.
-* `network_id` - (String) id of network to be used for `databricks_mws_workspace` resource.
+* `network_id` - (String) id of network to be used for [databricks_mws_workspace](mws_workspaces.md) resource.
 * `vpc_status` - (String) VPC attachment status
 * `workspace_id` - (Integer) id of associated workspace

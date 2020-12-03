@@ -1,6 +1,9 @@
 package compute
 
-import "fmt"
+import (
+	"fmt"
+	"sort"
+)
 
 // AutoScale is a struct the describes auto scaling for clusters
 type AutoScale struct {
@@ -118,6 +121,7 @@ type SparkVersion struct {
 }
 
 // AwsAttributes encapsulates the aws attributes for aws based clusters
+// https://docs.databricks.com/dev-tools/api/latest/clusters.html#clusterclusterattributes
 type AwsAttributes struct {
 	FirstOnDemand       int32           `json:"first_on_demand,omitempty" tf:"computed"`
 	Availability        AwsAvailability `json:"availability,omitempty" tf:"computed"`
@@ -171,6 +175,7 @@ type SparkNode struct {
 // TerminationReason encapsulates the termination code and potential parameters
 type TerminationReason struct {
 	Code       string            `json:"code,omitempty"`
+	Type       string            `json:"type,omitempty"`
 	Parameters map[string]string `json:"parameters,omitempty"`
 }
 
@@ -418,6 +423,38 @@ type NodeTypeList struct {
 	NodeTypes []NodeType `json:"node_types,omitempty"`
 }
 
+// Sort NodeTypes within this struct
+func (l *NodeTypeList) Sort() {
+	sort.Slice(l.NodeTypes, func(i, j int) bool {
+		if l.NodeTypes[i].IsDeprecated != l.NodeTypes[j].IsDeprecated {
+			return !l.NodeTypes[i].IsDeprecated
+		}
+		if l.NodeTypes[i].NodeInstanceType != nil &&
+			l.NodeTypes[j].NodeInstanceType != nil {
+			if l.NodeTypes[i].NodeInstanceType.LocalDisks !=
+				l.NodeTypes[j].NodeInstanceType.LocalDisks {
+				return l.NodeTypes[i].NodeInstanceType.LocalDisks <
+					l.NodeTypes[j].NodeInstanceType.LocalDisks
+			}
+			if l.NodeTypes[i].NodeInstanceType.LocalDiskSizeGB !=
+				l.NodeTypes[j].NodeInstanceType.LocalDiskSizeGB {
+				return l.NodeTypes[i].NodeInstanceType.LocalDiskSizeGB <
+					l.NodeTypes[j].NodeInstanceType.LocalDiskSizeGB
+			}
+		}
+		if l.NodeTypes[i].MemoryMB != l.NodeTypes[j].MemoryMB {
+			return l.NodeTypes[i].MemoryMB < l.NodeTypes[j].MemoryMB
+		}
+		if l.NodeTypes[i].NumCores != l.NodeTypes[j].NumCores {
+			return l.NodeTypes[i].NumCores < l.NodeTypes[j].NumCores
+		}
+		if l.NodeTypes[i].NumGPUs != l.NodeTypes[j].NumGPUs {
+			return l.NodeTypes[i].NumGPUs < l.NodeTypes[j].NumGPUs
+		}
+		return l.NodeTypes[i].InstanceTypeID < l.NodeTypes[j].InstanceTypeID
+	})
+}
+
 // NotebookTask contains the information for notebook jobs
 type NotebookTask struct {
 	NotebookPath   string            `json:"notebook_path"`
@@ -516,4 +553,98 @@ type Maven struct {
 type Cran struct {
 	Package string `json:"package"`
 	Repo    string `json:"repo,omitempty"`
+}
+
+// SortOrder - constants for API
+// https://docs.databricks.com/dev-tools/api/latest/clusters.html#clusterlistorder
+type SortOrder string
+
+// constants for SortOrder
+const (
+	SortDescending SortOrder = "DESC"
+	SortAscending  SortOrder = "ASC"
+)
+
+// ClusterEventType - constants for API
+type ClusterEventType string
+
+// Constants for Event Types
+const (
+	EvTypeCreating            ClusterEventType = "CREATING"
+	EvTypeDidNotExpandDisk    ClusterEventType = "DID_NOT_EXPAND_DISK"
+	EvTypeExpandedDisk        ClusterEventType = "EXPANDED_DISK"
+	EvTypeFailedToExpandDisk  ClusterEventType = "FAILED_TO_EXPAND_DISK"
+	EvTypeInitScriptsStarting ClusterEventType = "INIT_SCRIPTS_STARTING"
+	EvTypeInitScriptsFinished ClusterEventType = "INIT_SCRIPTS_FINISHED"
+	EvTypeStarting            ClusterEventType = "STARTING"
+	EvTypeRestarting          ClusterEventType = "RESTARTING"
+	EvTypeTerminating         ClusterEventType = "TERMINATING"
+	EvTypeEdited              ClusterEventType = "EDITED"
+	EvTypeRunning             ClusterEventType = "RUNNING"
+	EvTypeResizing            ClusterEventType = "RESIZING"
+	EvTypeUpsizeCompleted     ClusterEventType = "UPSIZE_COMPLETED"
+	EvTypeNodesLost           ClusterEventType = "NODES_LOST"
+	EvTypeDriverHealthy       ClusterEventType = "DRIVER_HEALTHY"
+	EvTypeDriverUnavailable   ClusterEventType = "DRIVER_UNAVAILABLE"
+	EvTypeSparkException      ClusterEventType = "SPARK_EXCEPTION"
+	EvTypeDriverNotResponding ClusterEventType = "DRIVER_NOT_RESPONDING"
+	EvTypeDbfsDown            ClusterEventType = "DBFS_DOWN"
+	EvTypeMetastoreDown       ClusterEventType = "METASTORE_DOWN"
+	EvTypeNodeBlacklisted     ClusterEventType = "NODE_BLACKLISTED"
+	EvTypePinned              ClusterEventType = "PINNED"
+	EvTypeUnpinned            ClusterEventType = "UNPINNED"
+)
+
+// EventsRequest - request structure
+// https://docs.databricks.com/dev-tools/api/latest/clusters.html#request-structure
+type EventsRequest struct {
+	ClusterID  string             `json:"cluster_id"`
+	StartTime  int64              `json:"start_time,omitempty"`
+	EndTime    int64              `json:"end_time,omitempty"`
+	Order      SortOrder          `json:"order,omitempty"`
+	EventTypes []ClusterEventType `json:"event_types,omitempty"`
+	Offset     int64              `json:"offset,omitempty"`
+	Limit      int64              `json:"limit,omitempty"`
+	MaxItems   uint               `json:"-"`
+}
+
+// ClusterSize is structure to keep
+// https://docs.databricks.com/dev-tools/api/latest/clusters.html#clusterclustersize
+type ClusterSize struct {
+	NumWorkers int32      `json:"num_workers"`
+	AutoScale  *AutoScale `json:"autoscale"`
+}
+
+// ResizeCause holds reason for resizing
+type ResizeCause string
+
+// EventDetails - details about specific events
+// https://docs.databricks.com/dev-tools/api/latest/clusters.html#clustereventseventdetails
+type EventDetails struct {
+	CurrentNumWorkers   int32              `json:"current_num_workers,omitempty"`
+	TargetNumWorkers    int32              `json:"target_num_workers,omitempty"`
+	PreviousAttributes  *AwsAttributes     `json:"previous_attributes,omitempty"`
+	Attributes          *AwsAttributes     `json:"attributes,omitempty"`
+	PreviousClusterSize *ClusterSize       `json:"previous_cluster_size,omitempty"`
+	ClusterSize         *ClusterSize       `json:"cluster_size,omitempty"`
+	ResizeCause         *ResizeCause       `json:"cause,omitempty"`
+	Reason              *TerminationReason `json:"reason,omitempty"`
+	User                string             `json:"user"`
+}
+
+// ClusterEvent - event information
+// https://docs.databricks.com/dev-tools/api/latest/clusters.html#clustereventsclusterevent
+type ClusterEvent struct {
+	ClusterID string           `json:"cluster_id"`
+	Timestamp int64            `json:"timestamp"`
+	Type      ClusterEventType `json:"type"`
+	Details   EventDetails     `json:"details"`
+}
+
+// EventsResponse - answer from API
+// https://docs.databricks.com/dev-tools/api/latest/clusters.html#response-structure
+type EventsResponse struct {
+	Events     []ClusterEvent `json:"events"`
+	NextPage   *EventsRequest `json:"next_page"`
+	TotalCount int64          `json:"total_count"`
 }

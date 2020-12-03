@@ -5,7 +5,9 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/databrickslabs/databricks-terraform/common"
 	"github.com/databrickslabs/databricks-terraform/compute"
+	"github.com/databrickslabs/databricks-terraform/identity"
 	"github.com/databrickslabs/databricks-terraform/internal"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/stretchr/testify/assert"
@@ -255,20 +257,23 @@ func TestResourceAwsS3MountDelete(t *testing.T) {
 }
 
 func TestAwsAccS3Mount(t *testing.T) {
-	bucket := qa.GetEnvOrSkipTest(t, "TEST_S3_BUCKET")
+	client := common.NewClientFromEnvironment()
 	instanceProfile := qa.GetEnvOrSkipTest(t, "TEST_EC2_INSTANCE_PROFILE")
+	identity.NewInstanceProfilesAPI(client).Synchronized(instanceProfile, func() {
+		bucket := qa.GetEnvOrSkipTest(t, "TEST_S3_BUCKET")
+		client := compute.CommonEnvironmentClientWithRealCommandExecutor()
+		clustersAPI := compute.NewClustersAPI(client)
+		randomName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
+		clusterInfo, err := getOrCreateMountingClusterWithInstanceProfile(
+			clustersAPI, instanceProfile)
+		require.NoError(t, err)
 
-	client := compute.CommonEnvironmentClientWithRealCommandExecutor()
-	clustersAPI := compute.NewClustersAPI(client)
-	randomName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
-	clusterInfo, err := getOrCreateMountingClusterWithInstanceProfile(clustersAPI, instanceProfile)
-	require.NoError(t, err)
-
-	testMounting(t, MountPoint{
-		exec:      client.CommandExecutor(),
-		clusterID: clusterInfo.ClusterID,
-		name:      randomName,
-	}, AWSIamMount{
-		S3BucketName: bucket,
+		testMounting(t, MountPoint{
+			exec:      client.CommandExecutor(),
+			clusterID: clusterInfo.ClusterID,
+			name:      randomName,
+		}, AWSIamMount{
+			S3BucketName: bucket,
+		})
 	})
 }

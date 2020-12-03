@@ -1,7 +1,6 @@
 package access
 
 import (
-	"net/http"
 	"os"
 	"testing"
 
@@ -22,11 +21,14 @@ func TestSecretsScopesAclsIntegration(t *testing.T) {
 	testScope := "my-test-scope"
 	testKey := "my-test-key"
 	testSecret := "my-test-secret"
-	initialManagePrincipal := "users"
-	//TODO: Please replace it with users api and get random user
+	initialManagePrincipal := ""
+	// TODO: on random group
 	testPrincipal := "users"
 
-	err := NewSecretScopesAPI(client).Create(testScope, initialManagePrincipal)
+	err := NewSecretScopesAPI(client).Create(SecretScope{
+		Name:                   testScope,
+		InitialManagePrincipal: initialManagePrincipal,
+	})
 	assert.NoError(t, err, err)
 
 	defer func() {
@@ -71,159 +73,6 @@ func TestSecretsScopesAclsIntegration(t *testing.T) {
 
 	err = NewSecretAclsAPI(client).Delete(testScope, testPrincipal)
 	assert.NoError(t, err, err)
-}
-
-func TestSecretAclsAPI_Create(t *testing.T) {
-	type args struct {
-		Scope      string        `json:"scope"`
-		Principal  string        `json:"principal"`
-		Permission ACLPermission `json:"permission"`
-	}
-	tests := []struct {
-		name     string
-		response string
-		args     args
-		wantErr  bool
-	}{
-		{
-			name:     "Basic Test",
-			response: "",
-			args: args{
-				Scope:      "my-scope",
-				Principal:  "my-principal",
-				Permission: ACLPermissionManage,
-			},
-			wantErr: false,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			var input args
-			qa.AssertRequestWithMockServer(t, &tt.args, http.MethodPost, "/api/2.0/secrets/acls/put", &input, tt.response, http.StatusOK, nil, tt.wantErr, func(client *common.DatabricksClient) (interface{}, error) {
-				return nil, NewSecretAclsAPI(client).Create(tt.args.Scope, tt.args.Principal, tt.args.Permission)
-			})
-		})
-	}
-}
-
-func TestSecretAclsAPI_Delete(t *testing.T) {
-	type args struct {
-		Scope     string `json:"scope"`
-		Principal string `json:"principal"`
-	}
-	tests := []struct {
-		name     string
-		response string
-		args     args
-		wantErr  bool
-	}{
-		{
-			name:     "Basic test",
-			response: "",
-			args: args{
-				Scope:     "my-scope",
-				Principal: "my-principal",
-			},
-			wantErr: false,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			var input args
-			qa.AssertRequestWithMockServer(t, &tt.args, http.MethodPost, "/api/2.0/secrets/acls/delete", &input, tt.response, http.StatusOK, nil, tt.wantErr, func(client *common.DatabricksClient) (interface{}, error) {
-				return nil, NewSecretAclsAPI(client).Delete(tt.args.Scope, tt.args.Principal)
-			})
-		})
-	}
-}
-
-func TestSecretAclsAPI_List(t *testing.T) {
-	type args struct {
-		Scope string `json:"scope"`
-	}
-	tests := []struct {
-		name     string
-		response string
-		args     args
-		want     []ACLItem
-		wantErr  bool
-	}{
-		{
-			name: "Basic test",
-			response: `{
-						  "items": [
-							{
-								"principal": "admins",
-								"permission": "MANAGE"
-							},{
-								"principal": "data-scientists",
-								"permission": "READ"
-							}
-						  ]
-						}`,
-			args: args{
-				Scope: "my-scope",
-			},
-			want: []ACLItem{
-				{
-					Principal:  "admins",
-					Permission: ACLPermissionManage,
-				},
-				{
-					Principal:  "data-scientists",
-					Permission: ACLPermissionRead,
-				},
-			},
-			wantErr: false,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			var input args
-			qa.AssertRequestWithMockServer(t, &tt.args, http.MethodGet, "/api/2.0/secrets/acls/list?scope=my-scope", &input, tt.response, http.StatusOK, tt.want, tt.wantErr, func(client *common.DatabricksClient) (interface{}, error) {
-				return NewSecretAclsAPI(client).List(tt.args.Scope)
-			})
-		})
-	}
-}
-
-func TestSecretAclsAPI_Read(t *testing.T) {
-	type args struct {
-		Scope     string `json:"scope"`
-		Principal string `json:"principal"`
-	}
-	tests := []struct {
-		name     string
-		response string
-		args     args
-		want     ACLItem
-		wantErr  bool
-	}{
-		{
-			name: "Basic test",
-			response: `{
-						  "principal": "data-scientists",
-						  "permission": "READ"
-						}`,
-			args: args{
-				Scope:     "my-scope",
-				Principal: "my-principal",
-			},
-			want: ACLItem{
-				Principal:  "data-scientists",
-				Permission: ACLPermissionRead,
-			},
-			wantErr: false,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			var input args
-			qa.AssertRequestWithMockServer(t, &tt.args, http.MethodGet, "/api/2.0/secrets/acls/get?principal=my-principal&scope=my-scope", &input, tt.response, http.StatusOK, tt.want, tt.wantErr, func(client *common.DatabricksClient) (interface{}, error) {
-				return NewSecretAclsAPI(client).Read(tt.args.Scope, tt.args.Principal)
-			})
-		})
-	}
 }
 
 func TestResourceSecretACLRead(t *testing.T) {

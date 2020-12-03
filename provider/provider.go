@@ -29,15 +29,17 @@ func DatabricksProvider() *schema.Provider {
 			"databricks_dbfs_file_paths":         storage.DataSourceDBFSFilePaths(),
 			"databricks_default_user_roles":      identity.DataSourceDefaultUserRoles(),
 			"databricks_group":                   identity.DataSourceGroup(),
+			"databricks_node_type":               compute.DataSourceNodeType(),
 			"databricks_notebook":                workspace.DataSourceNotebook(),
 			"databricks_notebook_paths":          workspace.DataSourceNotebookPaths(),
 			"databricks_zones":                   compute.DataSourceClusterZones(),
 		},
 		ResourcesMap: map[string]*schema.Resource{
-			"databricks_secret":       access.ResourceSecret(),
-			"databricks_secret_scope": access.ResourceSecretScope(),
-			"databricks_secret_acl":   access.ResourceSecretACL(),
-			"databricks_permissions":  access.ResourcePermissions(),
+			"databricks_secret":         access.ResourceSecret(),
+			"databricks_secret_scope":   access.ResourceSecretScope(),
+			"databricks_secret_acl":     access.ResourceSecretACL(),
+			"databricks_permissions":    access.ResourcePermissions(),
+			"databricks_ip_access_list": access.ResourceIPAccessList(),
 
 			"databricks_cluster":        compute.ResourceCluster(),
 			"databricks_cluster_policy": compute.ResourceClusterPolicy(),
@@ -54,11 +56,12 @@ func DatabricksProvider() *schema.Provider {
 			"databricks_token":                  identity.ResourceToken(),
 			"databricks_user":                   identity.ResourceUser(),
 
-			"databricks_mws_credentials":            mws.ResourceCredentials(),
-			"databricks_mws_storage_configurations": mws.ResourceStorageConfiguration(),
-			"databricks_mws_networks":               mws.ResourceNetwork(),
-			"databricks_mws_workspaces":             mws.ResourceWorkspace(),
 			"databricks_mws_customer_managed_keys":  mws.ResourceCustomerManagedKey(),
+			"databricks_mws_credentials":            mws.ResourceCredentials(),
+			"databricks_mws_log_delivery":           mws.ResourceLogDelivery(),
+			"databricks_mws_networks":               mws.ResourceNetwork(),
+			"databricks_mws_storage_configurations": mws.ResourceStorageConfiguration(),
+			"databricks_mws_workspaces":             mws.ResourceWorkspace(),
 
 			"databricks_aws_s3_mount":          storage.ResourceAWSS3Mount(),
 			"databricks_azure_adls_gen1_mount": storage.ResourceAzureAdlsGen1Mount(),
@@ -66,7 +69,8 @@ func DatabricksProvider() *schema.Provider {
 			"databricks_azure_blob_mount":      storage.ResourceAzureBlobMount(),
 			"databricks_dbfs_file":             storage.ResourceDBFSFile(),
 
-			"databricks_notebook": workspace.ResourceNotebook(),
+			"databricks_notebook":       workspace.ResourceNotebook(),
+			"databricks_workspace_conf": workspace.ResourceWorkspaceConf(),
 		},
 		Schema: map[string]*schema.Schema{
 			"host": {
@@ -170,8 +174,6 @@ func DatabricksProvider() *schema.Provider {
 				DefaultFunc: schema.MultiEnvDefaultFunc([]string{"DATABRICKS_AZURE_WORKSPACE_RESOURCE_ID", "AZURE_DATABRICKS_WORKSPACE_RESOURCE_ID"}, nil),
 				ConflictsWith: []string{
 					"azure_workspace_name",
-					// "azure_resource_group",
-					// "azure_subscription_id",
 				},
 			},
 			"azure_workspace_name": {
@@ -241,55 +243,55 @@ func DatabricksProvider() *schema.Provider {
 						"managed_resource_group": {
 							Optional:    true,
 							Type:        schema.TypeString,
-							Deprecated:  "This field is not used internally and will be removed in version 0.3",
+							Deprecated:  "`managed_resource_group` is not used internally and will be removed in version 0.3",
 							DefaultFunc: schema.EnvDefaultFunc("DATABRICKS_AZURE_MANAGED_RESOURCE_GROUP", nil),
 						},
 						"azure_region": {
 							Optional:    true,
 							Type:        schema.TypeString,
-							Deprecated:  "This field is not used internally and will be removed in version 0.3",
+							Deprecated:  "`azure_region` is not used internally and will be removed in version 0.3",
 							DefaultFunc: schema.EnvDefaultFunc("AZURE_REGION", nil),
 						},
 						"workspace_name": {
 							Type:        schema.TypeString,
 							Optional:    true,
-							Deprecated:  "This field is deprecated and will be removed in version 0.3. Please use azure_workspace_name",
+							Deprecated:  "`workspace_name` is deprecated and will be removed in version 0.3. Please use `azure_workspace_name`",
 							DefaultFunc: schema.EnvDefaultFunc("DATABRICKS_AZURE_WORKSPACE_NAME", nil),
 						},
 						"resource_group": {
 							Type:        schema.TypeString,
 							Optional:    true,
-							Deprecated:  "This field is deprecated and will be removed in version 0.3. Please use azure_resource_group",
+							Deprecated:  "`resource_group` is deprecated and will be removed in version 0.3. Please use `azure_resource_group`",
 							DefaultFunc: schema.EnvDefaultFunc("DATABRICKS_AZURE_RESOURCE_GROUP", nil),
 						},
 						"subscription_id": {
 							Type:        schema.TypeString,
 							Optional:    true,
-							Deprecated:  "This field is deprecated and will be removed in version 0.3. Please use azure_subscription_id",
+							Deprecated:  "`subscription_id` is deprecated and will be removed in version 0.3. Please use `azure_subscription_id`",
 							DefaultFunc: schema.MultiEnvDefaultFunc([]string{"DATABRICKS_AZURE_SUBSCRIPTION_ID", "ARM_SUBSCRIPTION_ID"}, nil),
 						},
 						"client_secret": {
 							Type:        schema.TypeString,
 							Optional:    true,
-							Deprecated:  "This field is deprecated and will be removed in version 0.3. Please use azure_client_secret",
+							Deprecated:  "`client_secret` is deprecated and will be removed in version 0.3. Please use `azure_client_secret`",
 							DefaultFunc: schema.MultiEnvDefaultFunc([]string{"DATABRICKS_AZURE_CLIENT_SECRET", "ARM_CLIENT_SECRET"}, nil),
 						},
 						"client_id": {
 							Type:        schema.TypeString,
 							Optional:    true,
-							Deprecated:  "This field is deprecated and will be removed in version 0.3. Please use azure_client_id",
+							Deprecated:  "`client_id` is deprecated and will be removed in version 0.3. Please use `azure_client_id`",
 							DefaultFunc: schema.MultiEnvDefaultFunc([]string{"DATABRICKS_AZURE_CLIENT_ID", "ARM_CLIENT_ID"}, nil),
 						},
 						"tenant_id": {
 							Type:        schema.TypeString,
 							Optional:    true,
-							Deprecated:  "This field is deprecated and will be removed in version 0.3. Please use azure_tenant_id",
+							Deprecated:  "`tenant_id` is deprecated and will be removed in version 0.3. Please use `azure_tenant_id`",
 							DefaultFunc: schema.MultiEnvDefaultFunc([]string{"DATABRICKS_AZURE_TENANT_ID", "ARM_TENANT_ID"}, nil),
 						},
 						"pat_token_duration_seconds": {
 							Type:        schema.TypeString,
 							Optional:    true,
-							Deprecated:  "This field is deprecated and will be removed in version 0.3. Please use azure_pat_token_duration_seconds",
+							Deprecated:  "`pat_token_duration_seconds` is deprecated and will be removed in version 0.3. Please use `azure_pat_token_duration_seconds`",
 							Description: "Currently secret scopes are not accessible via AAD tokens so we will need to create a PAT token",
 							Default:     durationToSecondsString(time.Hour),
 						},
@@ -303,9 +305,16 @@ func DatabricksProvider() *schema.Provider {
 				Default:     false,
 			},
 			"debug_truncate_bytes": {
-				Type:        schema.TypeInt,
 				Optional:    true,
+				Type:        schema.TypeInt,
+				Description: "Truncate JSON fields in JSON above this limit. Default is 96. Visible only when TF_LOG=DEBUG is set",
 				DefaultFunc: schema.EnvDefaultFunc("DATABRICKS_DEBUG_TRUNCATE_BYTES", 96),
+			},
+			"debug_headers": {
+				Optional:    true,
+				Type:        schema.TypeBool,
+				Description: "Debug HTTP headers of requests made by the provider. Default is false. Visible only when TF_LOG=DEBUG is set",
+				DefaultFunc: schema.EnvDefaultFunc("DATABRICKS_DEBUG_HEADERS", false),
 			},
 		},
 		ConfigureFunc: func(d *schema.ResourceData) (interface{}, error) {
@@ -330,6 +339,10 @@ func DatabricksProvider() *schema.Provider {
 			if v, ok := d.GetOk("profile"); ok {
 				authsUsed["config profile"] = true
 				pc.Profile = v.(string)
+			}
+			if v, ok := d.GetOk("config_file"); ok {
+				authsUsed["config profile"] = true
+				pc.ConfigFile = v.(string)
 			}
 			if _, ok := d.GetOk("basic_auth"); ok {
 				authsUsed["password"] = true
@@ -376,6 +389,9 @@ func DatabricksProvider() *schema.Provider {
 			}
 			if v, ok := d.GetOk("debug_truncate_bytes"); ok {
 				pc.DebugTruncateBytes = v.(int)
+			}
+			if v, ok := d.GetOk("debug_headers"); ok {
+				pc.DebugHeaders = v.(bool)
 			}
 			if v, ok := d.GetOk("azure_use_pat_for_cli"); ok {
 				pc.AzureAuth.UsePATForCLI = v.(bool)

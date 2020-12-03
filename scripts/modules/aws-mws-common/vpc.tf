@@ -38,6 +38,47 @@ resource "aws_subnet" "public" {
   })
 }
 
+resource "aws_internet_gateway" "gw" {
+  vpc_id = aws_vpc.main.id
+  tags = merge(var.tags, {
+    Name = "${var.prefix}-igw"
+  })
+}
+
+resource "aws_route_table" "public" {
+  vpc_id = aws_vpc.main.id
+  
+  route {
+    gateway_id = aws_internet_gateway.gw.id
+    cidr_block = "0.0.0.0/0"
+  }
+
+  tags = merge(var.tags, {
+    Name = "${var.prefix}-public-rt"
+  })
+}
+
+resource "aws_route_table_association" "public" {
+  route_table_id = aws_route_table.public.id
+  subnet_id = aws_subnet.public.id
+}
+
+resource "aws_eip" "nat" {
+  vpc = true
+  depends_on = [aws_internet_gateway.gw]
+  tags = merge(var.tags, {
+    Name = "${var.prefix}-eip"
+  })
+}
+
+resource "aws_nat_gateway" "gw" {
+  allocation_id = aws_eip.nat.id
+  subnet_id     = aws_subnet.public.id
+  tags = merge(var.tags, {
+    Name = "${var.prefix}-nat"
+  })
+}
+
 output "subnet_public" {
   value = aws_subnet.public.id
 }
@@ -52,23 +93,26 @@ resource "aws_subnet" "private" {
   })
 }
 
-output "subnet_private" {
-  value = aws_subnet.private.id
-}
-
-resource "aws_internet_gateway" "gw" {
+resource "aws_route_table" "private" {
   vpc_id = aws_vpc.main.id
+
+  route {
+    nat_gateway_id = aws_nat_gateway.gw.id
+    cidr_block = "0.0.0.0/0"
+  }
+
   tags = merge(var.tags, {
-    Name = "${var.prefix}-igw"
+    Name = "${var.prefix}-private-rt"
   })
 }
 
-resource "aws_route" "r" {
-  route_table_id            = aws_vpc.main.default_route_table_id
-  destination_cidr_block    = "0.0.0.0/0"
-  gateway_id = aws_internet_gateway.gw.id
+resource "aws_route_table_association" "private" {
+  route_table_id = aws_route_table.private.id
+  subnet_id = aws_subnet.private.id
+}
 
-  depends_on = [aws_internet_gateway.gw, aws_vpc.main]
+output "subnet_private" {
+  value = aws_subnet.private.id
 }
 
 resource "aws_security_group" "test_sg" {

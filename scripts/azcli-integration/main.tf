@@ -61,6 +61,27 @@ output "test_storage_v2_wasbs" {
   sensitive = true
 }
 
+output "test_key_vault_name" {
+  value = module.this.test_key_vault_name
+}
+
+output "test_key_vault_resource_id" {
+  value = module.this.test_key_vault_resource_id
+}
+
+output "test_key_vault_dns_name" {
+  value = module.this.test_key_vault_dns_name
+}
+
+output "test_key_vault_secret" {
+  value = module.this.test_key_vault_secret
+  sensitive = true # :)
+}
+
+output "test_key_vault_secret_value" {
+  value = module.this.test_key_vault_secret_value
+}
+
 output "databricks_azure_workspace_resource_id" {
   value = module.this.databricks_azure_workspace_resource_id
 }

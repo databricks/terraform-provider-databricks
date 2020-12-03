@@ -10,25 +10,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-// ScopeBackendType is a custom type for the backend type for secret scopes
-type ScopeBackendType string
-
-// List of constants of ScopeBackendType
-const (
-	ScopeBackendTypeDatabricks ScopeBackendType = "DATABRICKS"
-)
-
-// SecretScopeList holds list of secret scopes
-type SecretScopeList struct {
-	Scopes []SecretScope `json:"scopes,omitempty"`
-}
-
-// SecretScope is a struct that encapsulates the secret scope
-type SecretScope struct {
-	Name        string           `json:"name,omitempty"`
-	BackendType ScopeBackendType `json:"backend_type,omitempty"`
-}
-
 // SecretsRequest ...
 type SecretsRequest struct {
 	StringValue string `json:"string_value,omitempty" mask:"true"`
@@ -126,12 +107,15 @@ func (a SecretsAPI) Read(scope string, key string) (SecretMetadata, error) {
 	}
 }
 
+// ResourceSecret manages secrets
 func ResourceSecret() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceSecretCreate,
 		Read:   resourceSecretRead,
 		Delete: resourceSecretDelete,
-
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
 		Schema: map[string]*schema.Schema{
 			"string_value": {
 				Type:      schema.TypeString,

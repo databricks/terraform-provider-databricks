@@ -16,10 +16,10 @@ func TestAccGroup(t *testing.T) {
 	}
 	client := common.NewClientFromEnvironment()
 
-	user, err := NewUsersAPI(client).CreateR(UserEntity{UserName: "test-acc2@databricks.com"})
+	user, err := NewUsersAPI(client).Create(UserEntity{UserName: "test-acc2@databricks.com"})
 	assert.NoError(t, err, err)
 
-	user2, err := NewUsersAPI(client).CreateR(UserEntity{UserName: "test-acc3@databricks.com"})
+	user2, err := NewUsersAPI(client).Create(UserEntity{UserName: "test-acc3@databricks.com"})
 	assert.NoError(t, err, err)
 
 	//Create empty group

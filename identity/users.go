@@ -47,30 +47,14 @@ func (u UserEntity) toRequest() ScimUser {
 	}
 }
 
-// CreateR ..
-func (a UsersAPI) CreateR(ru UserEntity) (user ScimUser, err error) {
+// Create ..
+func (a UsersAPI) Create(ru UserEntity) (user ScimUser, err error) {
 	err = a.C.Scim(http.MethodPost, "/preview/scim/v2/Users", ru.toRequest(), &user)
 	return user, err
 }
 
-
-// Filter retrieves users by filter
-func (a UsersAPI) Filter(filter string) (u []ScimUser, err error) {
-	var users UserList
-	req := map[string]string{}
-	if filter != "" {
-		req["filter"] = filter
-	}
-	err = a.C.Scim(http.MethodGet, "/preview/scim/v2/Users", req, &users)
-	if err != nil {
-		return
-	}
-	u = users.Resources
-	return
-}
-
-// ReadR reads resource-friendly entity
-func (a UsersAPI) ReadR(userID string) (ru UserEntity, err error) {
+// Read reads resource-friendly entity
+func (a UsersAPI) Read(userID string) (ru UserEntity, err error) {
 	user, err := a.read(userID)
 	if err != nil {
 		return
@@ -104,8 +88,8 @@ func (a UsersAPI) readByPath(userPath string) (user ScimUser, err error) {
 	return
 }
 
-// UpdateR replaces resource-friendly-entity
-func (a UsersAPI) UpdateR(userID string, ru UserEntity) error {
+// Update replaces resource-friendly-entity
+func (a UsersAPI) Update(userID string, ru UserEntity) error {
 	user, err := a.read(userID)
 	if err != nil {
 		return err
@@ -118,8 +102,8 @@ func (a UsersAPI) UpdateR(userID string, ru UserEntity) error {
 		updateRequest, nil)
 }
 
-// PatchR updates resource-friendly entity
-func (a UsersAPI) PatchR(userID string, r patchRequest) error {
+// Patch updates resource-friendly entity
+func (a UsersAPI) Patch(userID string, r patchRequest) error {
 	return a.C.Scim(http.MethodPatch, fmt.Sprintf("/preview/scim/v2/Users/%v", userID), r, nil)
 }
 

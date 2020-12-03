@@ -124,7 +124,7 @@ func TestAccMissingResourcesInWorkspace(t *testing.T) {
 		{
 			Name: "Users",
 			ReadFunc: func() error {
-				_, err := identity.NewUsersAPI(client).ReadR(randStringID)
+				_, err := identity.NewUsersAPI(client).Read(randStringID)
 				return err
 			},
 		},

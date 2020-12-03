@@ -6,9 +6,7 @@ import (
 	"testing"
 
 	"github.com/databrickslabs/databricks-terraform/common"
-	"github.com/databrickslabs/databricks-terraform/internal/qa"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 func TestAccGroup(t *testing.T) {
@@ -19,18 +17,20 @@ func TestAccGroup(t *testing.T) {
 
 	ctx := context.Background()
 	usersAPI := NewUsersAPI(ctx, client)
-	user, err := usersAPI.Create("test-acc@example.com", "test account", nil, nil)
+	groupsAPI := NewGroupsAPI(ctx, client)
+
+	user, err := usersAPI.Create(UserEntity{UserName: "test-acc@example.com"})
 	assert.NoError(t, err, err)
 
-	user2, err := usersAPI.Create("test-acc2@example.com", "test account", nil, nil)
+	user2, err := usersAPI.Create(UserEntity{UserName: "test-acc2@example.com"})
 	assert.NoError(t, err, err)
 
 	//Create empty group
-	group, err := NewGroupsAPI(client).Create("my-test-group", nil, nil, nil)
+	group, err := groupsAPI.Create("my-test-group", nil, nil, nil)
 	assert.NoError(t, err, err)
 
 	defer func() {
-		err := NewGroupsAPI(client).Delete(group.ID)
+		err := groupsAPI.Delete(group.ID)
 		assert.NoError(t, err, err)
 		err = usersAPI.Delete(user.ID)
 		assert.NoError(t, err, err)
@@ -38,16 +38,16 @@ func TestAccGroup(t *testing.T) {
 		assert.NoError(t, err, err)
 	}()
 
-	group, err = NewGroupsAPI(client).Read(group.ID)
+	group, err = groupsAPI.Read(group.ID)
 	assert.NoError(t, err, err)
 
-	err = NewGroupsAPI(client).Patch(group.ID, []string{user.ID, user2.ID}, nil, GroupMembersPath)
+	err = groupsAPI.Patch(group.ID, []string{user.ID, user2.ID}, nil, GroupMembersPath)
 	assert.NoError(t, err, err)
 
-	err = NewGroupsAPI(client).Patch(group.ID, nil, []string{user.ID}, GroupMembersPath)
+	err = groupsAPI.Patch(group.ID, nil, []string{user.ID}, GroupMembersPath)
 	assert.NoError(t, err, err)
 
-	group, err = NewGroupsAPI(client).Read(group.ID)
+	group, err = groupsAPI.Read(group.ID)
 	assert.NoError(t, err, err)
 	assert.True(t, len(group.Members) == 1)
 	assert.True(t, group.Members[0].Value == user2.ID)

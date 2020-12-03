@@ -18,7 +18,7 @@ coverage: test
 	@echo "✓ Opening coverage for unit tests..."
 	@go tool cover -html=coverage.txt
 
-VERSION = $(shell git describe --long --always | sed 's/v//')
+VERSION = 0.2.9
 
 build:
 	@echo "✓ Building source code with go build..."
@@ -45,23 +45,23 @@ vendor:
 	@echo "✓ Filling vendor folder with library code..."
 	@go mod vendor
 
-test-azcli:
+test-azcli: install
 	@echo "✓ Running Terraform Acceptance Tests for Azure..."
 	@/bin/bash scripts/run.sh azcli '^(TestAcc|TestAzureAcc)' --debug --tee
 
-test-azsp:
+test-azsp: install
 	@echo "✓ Running Terraform Acceptance Tests for Azure..."
 	@/bin/bash scripts/run.sh azsp '^(TestAcc|TestAzureAcc)' --debug --tee
 
-test-mws:
+test-mws: install
 	@echo "✓ Running acceptance Tests for Multiple Workspace APIs on AWS..."
 	@/bin/bash scripts/run.sh mws '^TestMwsAcc' --debug --tee
 
-test-awsst:
+test-awsst: install
 	@echo "✓ Running Terraform Acceptance Tests for AWS ST..."
 	@/bin/bash scripts/run.sh awsst '^(TestAcc|TestAwsAcc)' --debug --tee
 
-test-awsmt:
+test-awsmt: install
 	@echo "✓ Running Terraform Acceptance Tests for AWS MT..."
 	@/bin/bash scripts/run.sh awsmt '^(TestAcc|TestAwsAcc)' --debug --tee
 

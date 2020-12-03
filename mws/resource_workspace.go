@@ -160,6 +160,8 @@ func ResourceWorkspace() *schema.Resource {
 				Required: true,
 			},
 			"verify_workspace_runnning": {
+				Deprecated: "`verify_workspace_runnning` is deprecated and are going to be removed in 0.3. " +
+					"All workspaces would be verified to get into runnable state or cleaned up upon failure.",
 				Type:     schema.TypeBool,
 				Required: true,
 			},
@@ -198,8 +200,9 @@ func ResourceWorkspace() *schema.Resource {
 				Computed: true,
 			},
 			"network_error_messages": {
-				Deprecated: "`network_error_messages` are deprecated and are going to be removed in 0.3",
-				Type:       schema.TypeList,
+				Deprecated: "`network_error_messages` are deprecated and are going to be removed in 0.3. " +
+					"Any VPC failures would simply return an error directly.",
+				Type: schema.TypeList,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"error_type": {

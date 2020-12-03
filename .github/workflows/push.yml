@@ -1,15 +1,10 @@
 name: build
 
 on:
+  pull_request:
+    types: [opened, synchronize]
   push:
-    branches: 
-      - '*'
-    tags-ignore:
-      - '*'
-    paths-ignore:
-      - 'docs/*'
-      - 'scripts/*'
-      - '*.md'
+    branches: [master]
 
 jobs:
   tests:

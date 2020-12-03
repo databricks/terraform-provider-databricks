@@ -133,7 +133,7 @@ There are four assignable [permission levels](https://docs.databricks.com/securi
 * The creator of a job has `IS_OWNER` permission. Destroying `databricks_permissions` resource for a job would revert ownership to the creator.
 * A job must have exactly one owner. If resource is changed and no owner is specified, currently authenticated principal would become new owner of the job. Nothing would change, per se, if the job was created through Terraform.
 * A job cannot have a group as an owner.
-* Jobs triggered through *Run Now* assume the permissions of the job owner and not the user, and service principal who issued Run Now. 
+* Jobs triggered through *Run Now* assume the permissions of the job owner and not the user, and service principal who issued Run Now.
 * Read [main documentation](https://docs.databricks.com/security/access-control/jobs-acl.html) for additional detail.
 
 ```hcl
@@ -225,7 +225,7 @@ resource "databricks_permissions" "notebook_usage" {
 
 ## Folder usage
 
-Valid [permission levels](https://docs.databricks.com/security/access-control/workspace-acl.html#folder-permissions) for folders of [databricks_notebook](notebook.md) are: `CAN_READ`, `CAN_RUN`, `CAN_EDIT`, and `CAN_MANAGE`. Notebooks and experiments in a folder inherit all permissions settings of that folder. For example, a user (or service principal) that has `CAN_RUN` permission on a folder has `CAN_RUN` permission on the notebooks in that folder. 
+Valid [permission levels](https://docs.databricks.com/security/access-control/workspace-acl.html#folder-permissions) for folders of [databricks_notebook](notebook.md) are: `CAN_READ`, `CAN_RUN`, `CAN_EDIT`, and `CAN_MANAGE`. Notebooks and experiments in a folder inherit all permissions settings of that folder. For example, a user (or service principal) that has `CAN_RUN` permission on a folder has `CAN_RUN` permission on the notebooks in that folder.
 
 * All users can list items in the folder without any permissions.
 * All users (or service principals) have `CAN_MANAGE` permission for items in the Workspace > Shared Icon Shared folder. You can grant `CAN_MANAGE` permission to notebooks and folders by moving them to the Shared Icon Shared folder.
@@ -325,7 +325,7 @@ resource "databricks_permissions" "token_usage" {
 
 ## Secrets
 
-One can control access to [databricks_secret](secret.md) through `initial_manage_principal` argument on [databricks_secret_scope](secret_scope.md) or [databricks_secret_acl](secret_acl.md), so that users(or service principals) can `READ`, `WRITE` or `MANAGE` entries within secret scope.
+One can control access to [databricks_secret](secret.md) through `initial_manage_principal` argument on [databricks_secret_scope](secret_scope.md) or [databricks_secret_acl](secret_acl.md), so that users (or service principals) can `READ`, `WRITE` or `MANAGE` entries within secret scope.
 
 ## Tables, Views and Databases
 

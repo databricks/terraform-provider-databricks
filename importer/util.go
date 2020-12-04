@@ -149,8 +149,7 @@ func (ic *importContext) refreshMounts() error {
 	}
 	// TODO: edit instance profile of a cluster in a loop
 	j, err := commandAPI.Execute(cluster.ClusterID, "python", `
-	import json
-	json.dumps({mp.replace('/mnt/', ''):source for mp, source, _ in dbutils.fs.mounts()})`)
+	import json; print(json.dumps({mp.replace('/mnt/', ''):source for mp, source, _ in dbutils.fs.mounts()}))`)
 	if err != nil {
 		return err
 	}

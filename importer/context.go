@@ -13,6 +13,7 @@ import (
 	"strings"
 
 	"github.com/databrickslabs/databricks-terraform/common"
+	"github.com/databrickslabs/databricks-terraform/compute"
 	"github.com/databrickslabs/databricks-terraform/identity"
 	"github.com/databrickslabs/databricks-terraform/provider"
 
@@ -73,6 +74,7 @@ type importContext struct {
 
 func newImportContext(c *common.DatabricksClient) *importContext {
 	p := provider.DatabricksProvider()
+	c.WithCommandExecutor(compute.NewCommandsAPI(c))
 	return &importContext{
 		Client:      c,
 		State:       stateApproximation{},

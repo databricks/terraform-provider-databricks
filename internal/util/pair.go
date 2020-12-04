@@ -3,6 +3,7 @@ package util
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/databrickslabs/databricks-terraform/common"
@@ -56,20 +57,22 @@ func (p *Pair) Unpack(d *schema.ResourceData) (string, string, error) {
 		d.SetId("")
 		return "", "", fmt.Errorf("%s cannot be empty", p.right)
 	}
-	err := d.Set(p.left, parts[0])
-	if err != nil {
-		return "", "", err
-	}
-	err = d.Set(p.right, parts[1])
-	if err != nil {
-		return "", "", err
+	d.Set(p.left, parts[0])
+	if p.schema[p.right].Type == schema.TypeInt {
+		i64, err := strconv.ParseInt(parts[1], 10, 64)
+		if err != nil {
+			return parts[0], parts[1], err
+		}
+		d.Set(p.right, i64)
+	} else {
+		d.Set(p.right, parts[1])
 	}
 	return parts[0], parts[1], nil
 }
 
 // Pack data attributes to ID
 func (p *Pair) Pack(d *schema.ResourceData) {
-	d.SetId(fmt.Sprintf("%s%s%s", d.Get(p.left), p.separator, d.Get(p.right)))
+	d.SetId(fmt.Sprintf("%s%s%v", d.Get(p.left), p.separator, d.Get(p.right)))
 }
 
 // BindResource defines resource with simplified functions

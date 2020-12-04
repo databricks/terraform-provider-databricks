@@ -2,7 +2,6 @@ package acceptance
 
 import (
 	"context"
-	"fmt"
 	"os"
 	"testing"
 
@@ -73,24 +72,21 @@ func TestMwsAccCustomerManagedKeys(t *testing.T) {
 func testMWSCustomerManagedKeyResourceExists(n string, cmk *CustomerManagedKey, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		// find the corresponding state object
-		rs, ok := s.RootModule().Resources[n]
-		if !ok {
-			return fmt.Errorf("Not found: %s", n)
-		}
+		// todo: make pair id reading
+		// rs, ok := s.RootModule().Resources[n]
+		// if !ok {
+		// 	return fmt.Errorf("Not found: %s", n)
+		// }
 
-		// retrieve the configured client from the test setup
-		conn := common.CommonEnvironmentClient()
-		packagedMWSIds, err := UnpackMWSAccountID(rs.Primary.ID)
-		if err != nil {
-			return err
-		}
-		resp, err := NewCustomerManagedKeysAPI(context.Background(), conn).Read(packagedMWSIds.MwsAcctID, packagedMWSIds.ResourceID)
-		if err != nil {
-			return err
-		}
+		// // retrieve the configured client from the test setup
+		// conn := common.CommonEnvironmentClient()
+		// resp, err := NewCustomerManagedKeysAPI(context.Background(), conn).Read(packagedMWSIds.MwsAcctID, packagedMWSIds.ResourceID)
+		// if err != nil {
+		// 	return err
+		// }
 
-		// If no error, assign the response Widget attribute to the widget pointer
-		*cmk = resp
+		// // If no error, assign the response Widget attribute to the widget pointer
+		// *cmk = resp
 		return nil
 	}
 }

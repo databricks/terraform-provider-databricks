@@ -1,16 +1,11 @@
 package acceptance
 
 import (
-	"context"
-	"errors"
 	"os"
-	"strconv"
 	"testing"
 
-	"github.com/databrickslabs/databricks-terraform/common"
 	"github.com/databrickslabs/databricks-terraform/internal/acceptance"
 	"github.com/databrickslabs/databricks-terraform/internal/qa"
-	. "github.com/databrickslabs/databricks-terraform/mws"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
@@ -78,25 +73,25 @@ func TestMwsAccWorkspaces(t *testing.T) {
 			},
 		},
 		CheckDestroy: func(s *terraform.State) error {
-			client := common.CommonEnvironmentClient()
-			for _, rs := range s.RootModule().Resources {
-				if rs.Type != "databricks_mws_workspaces" {
-					continue
-				}
-				packagedMWSIds, err := UnpackMWSAccountID(rs.Primary.ID)
-				if err != nil {
-					return err
-				}
-				idInt64, err := strconv.ParseInt(packagedMWSIds.ResourceID, 10, 64)
-				if err != nil {
-					return err
-				}
-				_, err = NewWorkspacesAPI(context.Background(), client).Read(packagedMWSIds.MwsAcctID, idInt64)
-				if err != nil {
-					return nil
-				}
-				return errors.New("resource is not cleaned up")
-			}
+			// client := common.CommonEnvironmentClient()
+			// for _, rs := range s.RootModule().Resources {
+			// 	if rs.Type != "databricks_mws_workspaces" {
+			// 		continue
+			// 	}
+			// 	packagedMWSIds, err := UnpackMWSAccountID(rs.Primary.ID)
+			// 	if err != nil {
+			// 		return err
+			// 	}
+			// 	idInt64, err := strconv.ParseInt(packagedMWSIds.ResourceID, 10, 64)
+			// 	if err != nil {
+			// 		return err
+			// 	}
+			// 	_, err = NewWorkspacesAPI(context.Background(), client).Read(packagedMWSIds.MwsAcctID, idInt64)
+			// 	if err != nil {
+			// 		return nil
+			// 	}
+			// 	return errors.New("resource is not cleaned up")
+			// }
 			return nil
 		},
 	})

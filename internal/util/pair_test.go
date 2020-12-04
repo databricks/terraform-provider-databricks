@@ -8,6 +8,7 @@ import (
 
 	"github.com/databrickslabs/databricks-terraform/common"
 	"github.com/databrickslabs/databricks-terraform/internal/qa"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -21,6 +22,7 @@ func TestPairIDResource(t *testing.T) {
 		err                  error
 		assertError          string
 		removed              bool
+		schema               func(m map[string]*schema.Schema) map[string]*schema.Schema
 	}
 	tests := []bindResourceFixture{
 		{
@@ -49,6 +51,17 @@ func TestPairIDResource(t *testing.T) {
 			left:     "a",
 			right:    "b",
 			assertID: "a|b",
+		},
+		{
+			read:     true,
+			id:       "a|123",
+			left:     "a",
+			right:    "123",
+			assertID: "a|123",
+			schema: func(m map[string]*schema.Schema) map[string]*schema.Schema {
+				m["right_id"].Type = schema.TypeInt
+				return m
+			},
 		},
 		{
 			read:     true,
@@ -126,8 +139,12 @@ func TestPairIDResource(t *testing.T) {
 					"right_id": tt.right,
 				}
 			}
+			p := NewPairID("left_id", "right_id")
+			if tt.schema != nil {
+				p.Schema(tt.schema)
+			}
 			d, err := qa.ResourceFixture{
-				Resource: NewPairID("left_id", "right_id").BindResource(BindResource{
+				Resource: p.BindResource(BindResource{
 					ReadContext: func(ctx context.Context, left, right string, c *common.DatabricksClient) error {
 						return tt.err
 					},
@@ -153,7 +170,7 @@ func TestPairIDResource(t *testing.T) {
 			}
 			assert.Equal(t, tt.assertID, d.Id(), "ID does not match")
 			assert.Equal(t, tt.left, d.Get("left_id"), "Invalid left")
-			assert.Equal(t, tt.right, d.Get("right_id"), "Invalid right")
+			assert.Equal(t, tt.right, fmt.Sprintf("%v", d.Get("right_id")), "Invalid right")
 		})
 	}
 }

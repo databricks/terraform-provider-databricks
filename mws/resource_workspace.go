@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"log"
 	"net"
-	"strconv"
 	"strings"
 	"time"
 
@@ -37,7 +36,7 @@ func (a WorkspacesAPI) Create(ws *Workspace) error {
 	}
 	if err = a.waitForRunning(*ws, 15*time.Minute); err != nil {
 		log.Printf("[ERROR] Deleting failed workspace: %s", err)
-		if derr := a.Delete(ws.AccountID, ws.WorkspaceID); derr != nil {
+		if derr := a.Delete(ws.AccountID, fmt.Sprintf("%d", ws.WorkspaceID)); derr != nil {
 			return fmt.Errorf("%s - %s", err, derr)
 		}
 		return err
@@ -45,10 +44,20 @@ func (a WorkspacesAPI) Create(ws *Workspace) error {
 	return nil
 }
 
+func dial(hostAndPort, url string, timeout time.Duration) *resource.RetryError {
+	conn, err := net.DialTimeout("tcp", hostAndPort, 1*time.Minute)
+	if err != nil {
+		return resource.RetryableError(err)
+	}
+	log.Printf("[INFO] Workspace %s is ready to use", url)
+	defer conn.Close()
+	return nil
+}
+
 // waitForRunning will wait until workspace is running, otherwise will try to explain why it failed
 func (a WorkspacesAPI) waitForRunning(ws Workspace, timeout time.Duration) error {
 	return resource.RetryContext(a.context, timeout, func() *resource.RetryError {
-		workspace, err := a.Read(ws.AccountID, ws.WorkspaceID)
+		workspace, err := a.Read(ws.AccountID, fmt.Sprintf("%d", ws.WorkspaceID))
 		if err != nil {
 			return resource.NonRetryableError(err)
 		}
@@ -64,13 +73,7 @@ func (a WorkspacesAPI) waitForRunning(ws Workspace, timeout time.Duration) error
 				// so we'll use it as unit testing shim
 				return nil
 			}
-			conn, err := net.DialTimeout("tcp", hostAndPort, 1*time.Minute)
-			if err != nil {
-				return resource.RetryableError(err)
-			}
-			log.Printf("[INFO] Workspace %s is ready to use", url)
-			defer conn.Close()
-			return nil
+			return dial(hostAndPort, url, 1*time.Minute)
 		case WorkspaceStatusCanceled, WorkspaceStatusFailed:
 			log.Printf("[ERROR] Cannot start workspace: %s", workspace.WorkspaceStatusMessage)
 			if workspace.NetworkID == "" {
@@ -115,17 +118,17 @@ func (a WorkspacesAPI) Patch(ws Workspace) error {
 }
 
 // Read will return the mws workspace metadata and status of the workspace deployment
-func (a WorkspacesAPI) Read(mwsAcctID string, workspaceID int64) (Workspace, error) {
+func (a WorkspacesAPI) Read(mwsAcctID, workspaceID string) (Workspace, error) {
 	var mwsWorkspace Workspace
-	workspacesAPIPath := fmt.Sprintf("/accounts/%s/workspaces/%d", mwsAcctID, workspaceID)
+	workspacesAPIPath := fmt.Sprintf("/accounts/%s/workspaces/%s", mwsAcctID, workspaceID)
 	err := a.client.Get(a.context, workspacesAPIPath, nil, &mwsWorkspace)
 	return mwsWorkspace, err
 }
 
 // Delete will delete the configuration for the workspace given a workspace id and will not block. A follow up email
 // will be sent when the workspace is fully deleted.
-func (a WorkspacesAPI) Delete(mwsAcctID string, workspaceID int64) error {
-	workspacesAPIPath := fmt.Sprintf("/accounts/%s/workspaces/%d", mwsAcctID, workspaceID)
+func (a WorkspacesAPI) Delete(mwsAcctID, workspaceID string) error {
+	workspacesAPIPath := fmt.Sprintf("/accounts/%s/workspaces/%s", mwsAcctID, workspaceID)
 	err := a.client.Delete(a.context, workspacesAPIPath, nil)
 	if err != nil {
 		return err
@@ -133,7 +136,7 @@ func (a WorkspacesAPI) Delete(mwsAcctID string, workspaceID int64) error {
 	return resource.RetryContext(a.context, 15*time.Minute, func() *resource.RetryError {
 		workspace, err := a.Read(mwsAcctID, workspaceID)
 		if e, ok := err.(common.APIError); ok && e.IsMissing() {
-			log.Printf("[INFO] Workspace %s/%d is removed.", mwsAcctID, workspaceID)
+			log.Printf("[INFO] Workspace %s/%s is removed.", mwsAcctID, workspaceID)
 			return nil
 		}
 		if err != nil {
@@ -173,6 +176,10 @@ func ResourceWorkspace() *schema.Resource {
 		s["is_no_public_ip_enabled"].Default = false
 		return s
 	})
+	p := util.NewPairSeparatedID("account_id", "workspace_id", "/").Schema(
+		func(_ map[string]*schema.Schema) map[string]*schema.Schema {
+			return s
+		})
 	return util.CommonResource{
 		Schema:        s,
 		SchemaVersion: 2,
@@ -185,23 +192,17 @@ func ResourceWorkspace() *schema.Resource {
 			if err := workspacesAPI.Create(&workspace); err != nil {
 				return err
 			}
-			d.SetId(packMWSAccountID(PackagedMWSIds{
-				MwsAcctID:  workspace.AccountID,
-				ResourceID: strconv.Itoa(int(workspace.WorkspaceID)),
-			}))
+			d.Set("workspace_id", workspace.WorkspaceID)
+			p.Pack(d)
 			return nil
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			packagedMwsID, err := UnpackMWSAccountID(d.Id())
-			if err != nil {
-				return err
-			}
-			idInt64, err := strconv.ParseInt(packagedMwsID.ResourceID, 10, 64)
+			accountID, workspaceID, err := p.Unpack(d)
 			if err != nil {
 				return err
 			}
 			workspacesAPI := NewWorkspacesAPI(ctx, c)
-			workspace, err := workspacesAPI.Read(packagedMwsID.MwsAcctID, idInt64)
+			workspace, err := workspacesAPI.Read(accountID, workspaceID)
 			if err != nil {
 				return err
 			}
@@ -220,15 +221,11 @@ func ResourceWorkspace() *schema.Resource {
 			return workspacesAPI.Patch(workspace)
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			packagedMwsID, err := UnpackMWSAccountID(d.Id())
+			accountID, workspaceID, err := p.Unpack(d)
 			if err != nil {
 				return err
 			}
-			idInt64, err := strconv.ParseInt(packagedMwsID.ResourceID, 10, 64)
-			if err != nil {
-				return err
-			}
-			return NewWorkspacesAPI(ctx, c).Delete(packagedMwsID.MwsAcctID, idInt64)
+			return NewWorkspacesAPI(ctx, c).Delete(accountID, workspaceID)
 		},
 	}.ToResource()
 }

@@ -154,7 +154,7 @@ func TestResourceAwsS3MountRead(t *testing.T) {
 }
 
 func TestResourceAwsS3MountRead_NotFound(t *testing.T) {
-	d, err := qa.ResourceFixture{
+	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:       "GET",
@@ -179,12 +179,10 @@ func TestResourceAwsS3MountRead_NotFound(t *testing.T) {
 			"mount_name":     "this_mount",
 			"s3_bucket_name": testS3BucketName,
 		},
-		ID:   "this_mount",
-		Read: true,
-	}.Apply(t)
-	require.NoError(t, err)
-	assert.Equal(t, "", d.Id())
-	assert.Equal(t, "", d.Get("source"))
+		ID:      "this_mount",
+		Read:    true,
+		Removed: true,
+	}.ApplyNoError(t)
 }
 
 func TestResourceAwsS3MountRead_Error(t *testing.T) {

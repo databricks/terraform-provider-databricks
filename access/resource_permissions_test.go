@@ -77,7 +77,7 @@ func TestResourcePermissionsRead(t *testing.T) {
 }
 
 func TestResourcePermissionsRead_NotFound(t *testing.T) {
-	d, err := qa.ResourceFixture{
+	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   http.MethodGet,
@@ -92,10 +92,9 @@ func TestResourcePermissionsRead_NotFound(t *testing.T) {
 		Resource: ResourcePermissions(),
 		Read:     true,
 		New:      true,
+		Removed:  true,
 		ID:       "/clusters/abc",
-	}.Apply(t)
-	assert.NoError(t, err, err)
-	assert.Equal(t, "", d.Id())
+	}.ApplyNoError(t)
 }
 
 func TestResourcePermissionsRead_some_error(t *testing.T) {

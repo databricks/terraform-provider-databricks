@@ -191,7 +191,7 @@ func TestResourceInstancePoolRead(t *testing.T) {
 }
 
 func TestResourceInstancePoolRead_NotFound(t *testing.T) {
-	d, err := qa.ResourceFixture{
+	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
@@ -205,10 +205,9 @@ func TestResourceInstancePoolRead_NotFound(t *testing.T) {
 		},
 		Resource: ResourceInstancePool(),
 		Read:     true,
+		Removed:  true,
 		ID:       "abc",
-	}.Apply(t)
-	assert.NoError(t, err, err)
-	assert.Equal(t, "", d.Id(), "Id should be empty for missing resources")
+	}.ApplyNoError(t)
 }
 
 func TestResourceInstancePoolRead_Error(t *testing.T) {

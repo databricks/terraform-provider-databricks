@@ -113,14 +113,17 @@ func ResourceToken() *schema.Resource {
 		},
 		"creation_time": {
 			Type:     schema.TypeInt,
+			Optional: true,
 			Computed: true,
 		},
 		"expiry_time": {
 			Type:     schema.TypeInt,
+			Optional: true,
 			Computed: true,
 		},
 		"token_id": {
 			Type:     schema.TypeString,
+			Optional: true,
 			Computed: true,
 		},
 	}

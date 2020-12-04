@@ -21,10 +21,10 @@ type createIPAccessListRequest struct {
 }
 
 type ipAccessListStatus struct {
-	ListID        string   `json:"list_id,omitempty"`
-	Label         string   `json:"label,omitempty"`
-	ListType      string   `json:"list_type,omitempty"`
-	IPAddresses   []string `json:"ip_addresses,omitempty"`
+	ListID        string   `json:"list_id"`
+	Label         string   `json:"label"`
+	ListType      string   `json:"list_type"`
+	IPAddresses   []string `json:"ip_addresses"`
 	AddressCount  int      `json:"address_count,omitempty"`
 	CreatedAt     int64    `json:"created_at,omitempty"`
 	CreatorUserID int64    `json:"creator_user_id,omitempty"`

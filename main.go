@@ -1,7 +1,9 @@
 package main
 
 import (
+	"fmt"
 	"log"
+	"os"
 
 	"github.com/databrickslabs/databricks-terraform/common"
 	"github.com/databrickslabs/databricks-terraform/provider"
@@ -10,6 +12,10 @@ import (
 
 func main() {
 	log.SetFlags(0)
+	if len(os.Args) > 1 && os.Args[1] == "version" {
+		fmt.Println(common.Version())
+		return
+	}
 	log.Printf(`Databricks Terraform Provider (experimental)
 
 Version %s

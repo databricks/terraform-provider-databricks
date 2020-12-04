@@ -209,6 +209,7 @@ func TestIPACLRead(t *testing.T) {
 		},
 		Resource: ResourceIPAccessList(),
 		Read:     true,
+		New:      true,
 		ID:       TestingID,
 	}.Apply(t)
 	assert.NoError(t, err, err)
@@ -220,7 +221,7 @@ func TestIPACLRead(t *testing.T) {
 }
 
 func TestIPACLRead_NotFound(t *testing.T) {
-	d, err := qa.ResourceFixture{
+	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   http.MethodGet,
@@ -234,10 +235,9 @@ func TestIPACLRead_NotFound(t *testing.T) {
 		},
 		Resource: ResourceIPAccessList(),
 		Read:     true,
+		Removed:  true,
 		ID:       TestingID,
-	}.Apply(t)
-	assert.NoError(t, err)
-	assert.Equal(t, "", d.Id())
+	}.ApplyNoError(t)
 }
 
 func TestIPACLRead_Error(t *testing.T) {

@@ -45,7 +45,7 @@ func TestResourceUserRead(t *testing.T) {
 }
 
 func TestResourceUserRead_NotFound(t *testing.T) {
-	d, err := qa.ResourceFixture{
+	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
@@ -56,10 +56,9 @@ func TestResourceUserRead_NotFound(t *testing.T) {
 		Resource: ResourceUser(),
 		New:      true,
 		Read:     true,
+		Removed:  true,
 		ID:       "abc",
-	}.Apply(t)
-	require.NoError(t, err, err)
-	assert.Equal(t, "", d.Id())
+	}.ApplyNoError(t)
 }
 
 func TestResourceUserRead_Error(t *testing.T) {

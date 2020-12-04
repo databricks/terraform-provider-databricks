@@ -54,7 +54,7 @@ func (stub *resourceTestStub) Reads(t *testing.T) {
 	}`)
 	stub.stoobyDo(t, "Read_NotFound", `
 	func TestResource{{.Name}}Read_NotFound(t *testing.T) {
-		d, err := qa.ResourceFixture{
+		qa.ResourceFixture{
 			Fixtures: []qa.HTTPFixture{
 				{   // read log output for correct url...
 					Method:   "GET",
@@ -68,10 +68,9 @@ func (stub *resourceTestStub) Reads(t *testing.T) {
 			},
 			Resource: Resource{{.Name}}(),
 			Read: true,
+			Removed: true,
 			ID: "abc",
-		}.Apply(t)
-		assert.NoError(t, err, err)
-		assert.Equal(t, "", d.Id(), "Id should be empty for missing resources")
+		}.ApplyNoError(t)
 	}`)
 	stub.stoobyDo(t, "Read_Error", `
 	func TestResource{{.Name}}Read_Error(t *testing.T) {

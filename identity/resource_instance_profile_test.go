@@ -101,7 +101,7 @@ func TestResourceInstanceProfileRead(t *testing.T) {
 }
 
 func TestResourceInstanceProfileRead_NotFound(t *testing.T) {
-	d, err := qa.ResourceFixture{
+	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{ // read log output for correct url...
 				Method:   "GET",
@@ -113,10 +113,9 @@ func TestResourceInstanceProfileRead_NotFound(t *testing.T) {
 		},
 		Resource: ResourceInstanceProfile(),
 		Read:     true,
+		Removed:  true,
 		ID:       "arn:aws:iam::999999999999:instance-profile/my-fake-instance-profile",
-	}.Apply(t)
-	assert.NoError(t, err, err)
-	assert.Equal(t, "", d.Id(), "Id should be empty for missing resources")
+	}.ApplyNoError(t)
 }
 
 func TestResourceInstanceProfileRead_Error(t *testing.T) {

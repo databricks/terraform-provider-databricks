@@ -249,7 +249,7 @@ func TestResourceJobRead(t *testing.T) {
 }
 
 func TestResourceJobRead_NotFound(t *testing.T) {
-	d, err := qa.ResourceFixture{
+	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
@@ -264,10 +264,9 @@ func TestResourceJobRead_NotFound(t *testing.T) {
 		Resource: ResourceJob(),
 		Read:     true,
 		New:      true,
+		Removed:  true,
 		ID:       "789",
-	}.Apply(t)
-	assert.NoError(t, err, err)
-	assert.Equal(t, "", d.Id(), "Id should be empty for missing resources")
+	}.ApplyNoError(t)
 }
 
 func TestResourceJobRead_Error(t *testing.T) {

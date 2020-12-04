@@ -135,7 +135,7 @@ func TestResourceCredentialsRead(t *testing.T) {
 }
 
 func TestResourceCredentialsRead_NotFound(t *testing.T) {
-	d, err := qa.ResourceFixture{
+	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
@@ -149,10 +149,9 @@ func TestResourceCredentialsRead_NotFound(t *testing.T) {
 		},
 		Resource: ResourceCredentials(),
 		Read:     true,
+		Removed:  true,
 		ID:       "abc/cid",
-	}.Apply(t)
-	assert.NoError(t, err, err)
-	assert.Equal(t, "", d.Id(), "Id should be empty for missing resources")
+	}.ApplyNoError(t)
 }
 
 func TestResourceCredentialsRead_Error(t *testing.T) {

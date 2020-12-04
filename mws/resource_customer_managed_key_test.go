@@ -181,7 +181,7 @@ func TestResourceCustomerManagedKeyRead(t *testing.T) {
 }
 
 func TestResourceCustomerManagedKeyRead_NotFound(t *testing.T) {
-	d, err := qa.ResourceFixture{
+	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
@@ -201,11 +201,10 @@ func TestResourceCustomerManagedKeyRead_NotFound(t *testing.T) {
 				key_alias = "key-alias"
 			}
 		`,
-		ID:   "abc/cmkid",
-		Read: true,
-	}.Apply(t)
-	assert.NoError(t, err, err)
-	assert.Equal(t, "", d.Id())
+		ID:      "abc/cmkid",
+		Read:    true,
+		Removed: true,
+	}.ApplyNoError(t)
 }
 
 func TestResourceCustomerManagedKeyDelete(t *testing.T) {

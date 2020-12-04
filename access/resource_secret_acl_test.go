@@ -101,7 +101,7 @@ func TestResourceSecretACLRead(t *testing.T) {
 }
 
 func TestResourceSecretACLRead_NotFound(t *testing.T) {
-	d, err := qa.ResourceFixture{
+	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
@@ -115,10 +115,9 @@ func TestResourceSecretACLRead_NotFound(t *testing.T) {
 		},
 		Resource: ResourceSecretACL(),
 		Read:     true,
+		Removed:  true,
 		ID:       "global|||something",
-	}.Apply(t)
-	assert.NoError(t, err, err)
-	assert.Equal(t, "", d.Id(), "Id should be empty for missing resources")
+	}.ApplyNoError(t)
 }
 
 func TestResourceSecretACLRead_Error(t *testing.T) {

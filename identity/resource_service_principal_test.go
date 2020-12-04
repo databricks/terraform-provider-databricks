@@ -45,7 +45,7 @@ func TestResourceServicePrincipalRead(t *testing.T) {
 }
 
 func TestResourceServicePrincipalRead_NotFound(t *testing.T) {
-	d, err := qa.ResourceFixture{
+	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
@@ -56,10 +56,9 @@ func TestResourceServicePrincipalRead_NotFound(t *testing.T) {
 		Resource: ResourceServicePrincipal(),
 		New:      true,
 		Read:     true,
+		Removed:  true,
 		ID:       "abc",
-	}.Apply(t)
-	require.NoError(t, err, err)
-	assert.Equal(t, "", d.Id())
+	}.ApplyNoError(t)
 }
 
 func TestResourceServicePrincipalRead_Error(t *testing.T) {

@@ -124,12 +124,11 @@ func TestDBFSFileCreate(t *testing.T) {
 	pathWithDir := randomDir + path
 
 	tests := []struct {
-		name               string
-		fixtures           []qa.HTTPFixture
-		source             string
-		validateRemoteFile bool
-		path               string
-		expectedError      string
+		name          string
+		fixtures      []qa.HTTPFixture
+		source        string
+		path          string
+		expectedError string
 	}{
 		{
 			name: "TestDBFSFileCreate_NoMkdirs",
@@ -138,9 +137,8 @@ func TestDBFSFileCreate(t *testing.T) {
 				getBaseDBFSFileGetStatusFixtures(path, false, false),
 				getBaseDBFSFileReadFixtures(path),
 			),
-			source:             "testdata/tf-test-python.py",
-			validateRemoteFile: true,
-			path:               path,
+			source: "testdata/tf-test-python.py",
+			path:   path,
 		},
 		{
 			name: "TestDBFSFileCreate_Mkdirs_RootDir",
@@ -149,9 +147,8 @@ func TestDBFSFileCreate(t *testing.T) {
 				getBaseDBFSFileGetStatusFixtures(path, false, false),
 				getBaseDBFSFileReadFixtures(path),
 			),
-			source:             "testdata/tf-test-python.py",
-			validateRemoteFile: true,
-			path:               path,
+			source: "testdata/tf-test-python.py",
+			path:   path,
 		},
 		{
 			name: "TestDBFSFileCreate_Mkdirs_NonRootDir_Exists",
@@ -161,9 +158,8 @@ func TestDBFSFileCreate(t *testing.T) {
 				getBaseDBFSFileGetStatusFixtures(pathWithDir, false, false),
 				getBaseDBFSFileReadFixtures(pathWithDir),
 			),
-			source:             "testdata/tf-test-python.py",
-			validateRemoteFile: true,
-			path:               pathWithDir,
+			source: "testdata/tf-test-python.py",
+			path:   pathWithDir,
 		},
 		{
 			name: "TestDBFSFileCreate_Mkdirs_NonRootDir_DoesNotExist",
@@ -174,34 +170,21 @@ func TestDBFSFileCreate(t *testing.T) {
 				getBaseDBFSFileGetStatusFixtures(pathWithDir, false, false),
 				getBaseDBFSFileReadFixtures(pathWithDir),
 			),
-			source:             "testdata/tf-test-python.py",
-			validateRemoteFile: true,
-			path:               pathWithDir,
+			source: "testdata/tf-test-python.py",
+			path:   pathWithDir,
 		},
-		{
-			name: "TestDBFSFileCreate_Mkdirs_ParentDirIsNotDir",
-			fixtures: qa.UnionFixturesLists(
-				getBaseDBFSFileGetStatusFixtures(randomDir, false, false),
-				getBaseDBFSFileCreateFixtures(pathWithDir),
-				getBaseDBFSFileGetStatusFixtures(pathWithDir, false, false),
-				getBaseDBFSFileReadFixtures(pathWithDir),
-			),
-			source:             "testdata/tf-test-python.py",
-			validateRemoteFile: true,
-			path:               pathWithDir,
-			expectedError:      "...",
-		},
-		{
-			name: "TestDBFSFileCreate_NoValidateRemote",
-			fixtures: qa.UnionFixturesLists(
-				getBaseDBFSFileCreateFixtures(pathWithDir),
-				getBaseDBFSFileGetStatusFixtures(pathWithDir, false, false),
-			),
-			source:             "testdata/tf-test-python.py",
-			validateRemoteFile: false,
-			path:               pathWithDir,
-			expectedError:      "...",
-		},
+		// {
+		// 	name: "TestDBFSFileCreate_Mkdirs_ParentDirIsNotDir",
+		// 	fixtures: qa.UnionFixturesLists(
+		// 		getBaseDBFSFileGetStatusFixtures(randomDir, false, false),
+		// 		getBaseDBFSFileCreateFixtures(pathWithDir),
+		// 		getBaseDBFSFileGetStatusFixtures(pathWithDir, false, false),
+		// 		getBaseDBFSFileReadFixtures(pathWithDir),
+		// 	),
+		// 	source:        "testdata/tf-test-python.py",
+		// 	path:          pathWithDir,
+		// 	expectedError: "...",
+		// },
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -210,15 +193,14 @@ func TestDBFSFileCreate(t *testing.T) {
 				Resource: ResourceDBFSFile(),
 				Create:   true,
 				State: map[string]interface{}{
-					"source":               tt.source,
-					"path":                 tt.path,
-					"validate_remote_file": tt.validateRemoteFile,
+					"source": tt.source,
+					"path":   tt.path,
 				},
 			}.Apply(t)
 			if tt.expectedError == "" {
 				assert.NoError(t, err, err)
 				assert.Equal(t, tt.path, d.Id())
-				assert.Equal(t, tt.source, d.Get("content"))
+				assert.Equal(t, tt.source, d.Get("source"))
 				assert.Equal(t, tt.path, d.Get("path"))
 			} else {
 				assert.EqualError(t, err, tt.expectedError)
@@ -254,27 +236,6 @@ func TestDBFSFileCreate(t *testing.T) {
 // 	assert.Equal(t, sourceMD5, d.Get("content_b64_md5"))
 // }
 
-func TestDBFSFileUpdate(t *testing.T) {
-	path := "/abc"
-	d, err := qa.ResourceFixture{
-		Fixtures: qa.UnionFixturesLists(
-			getBaseDBFSFileGetStatusFixtures(path, false, false),
-			getBaseDBFSFileReadFixtures(path),
-		),
-		Resource: ResourceDBFSFile(),
-		Update:   true,
-		ID:       path,
-		State: map[string]interface{}{
-			"source":               "testdata/tf-test-python.py",
-			"path":                 path,
-			"validate_remote_file": true,
-		},
-	}.Apply(t)
-	assert.NoError(t, err, err)
-	assert.Equal(t, path, d.Id())
-	assert.Equal(t, true, d.Get("validate_remote_file"))
-}
-
 func TestDBFSFileDelete(t *testing.T) {
 	path := "/abc"
 	d, err := qa.ResourceFixture{
@@ -283,31 +244,26 @@ func TestDBFSFileDelete(t *testing.T) {
 		Delete:   true,
 		ID:       path,
 		State: map[string]interface{}{
-			"source":               "testdata/tf-test-python.py",
-			"path":                 path,
-			"validate_remote_file": true,
+			"source": "testdata/tf-test-python.py",
+			"path":   path,
 		},
 	}.Apply(t)
 
 	assert.NoError(t, err, err)
 	assert.Equal(t, path, d.Id())
-	assert.Equal(t, true, d.Get("validate_remote_file"))
 }
 
 func TestDBFSFileRead_IsMissingResource(t *testing.T) {
 	path := "/abc"
-	d, err := qa.ResourceFixture{
+	qa.ResourceFixture{
 		Fixtures: getBaseDBFSFileGetStatusFixtures(path, false, true),
 		Resource: ResourceDBFSFile(),
 		Read:     true,
 		ID:       path,
+		Removed:  true,
 		State: map[string]interface{}{
-			"source":               "testdata/tf-test-python.py",
-			"path":                 path,
-			"validate_remote_file": false,
+			"source": "testdata/tf-test-python.py",
+			"path":   path,
 		},
-	}.Apply(t)
-
-	assert.NoError(t, err, err)
-	assert.Equal(t, "", d.Id())
+	}.ApplyNoError(t)
 }

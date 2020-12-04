@@ -20,6 +20,7 @@ func TestPairIDResource(t *testing.T) {
 		assertID             string
 		err                  error
 		assertError          string
+		removed              bool
 	}
 	tests := []bindResourceFixture{
 		{
@@ -64,11 +65,12 @@ func TestPairIDResource(t *testing.T) {
 			assertID: "a|b|c|d",
 		},
 		{
-			read:  true,
-			id:    "a|b",
-			err:   common.NotFound("Nope"),
-			left:  "a",
-			right: "b",
+			read:    true,
+			id:      "a|b",
+			err:     common.NotFound("Nope"),
+			left:    "a",
+			right:   "b",
+			removed: true,
 		},
 		{
 			read:        true,
@@ -103,6 +105,7 @@ func TestPairIDResource(t *testing.T) {
 			assertError: "Nope",
 			// ID is not set on error for create
 			assertID: "",
+			removed:  true,
 		},
 		{
 			delete:      true,
@@ -135,11 +138,12 @@ func TestPairIDResource(t *testing.T) {
 						return tt.err
 					},
 				}),
-				Create: tt.create,
-				Read:   tt.read,
-				Delete: tt.delete,
-				ID:     tt.id,
-				State:  state,
+				Create:  tt.create,
+				Read:    tt.read,
+				Delete:  tt.delete,
+				ID:      tt.id,
+				Removed: tt.removed,
+				State:   state,
 			}.Apply(t)
 			if tt.assertError != "" {
 				require.NotNilf(t, err, "Expected to have %s error", tt.assertError)

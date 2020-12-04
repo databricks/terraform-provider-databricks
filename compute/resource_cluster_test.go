@@ -454,7 +454,7 @@ func TestResourceClusterRead(t *testing.T) {
 }
 
 func TestResourceClusterRead_NotFound(t *testing.T) {
-	d, err := qa.ResourceFixture{
+	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
@@ -468,10 +468,9 @@ func TestResourceClusterRead_NotFound(t *testing.T) {
 		},
 		Resource: ResourceCluster(),
 		Read:     true,
+		Removed:  true,
 		ID:       "abc",
-	}.Apply(t)
-	assert.NoError(t, err, err)
-	assert.Equal(t, "", d.Id(), "Id should be empty for missing resources")
+	}.ApplyNoError(t)
 }
 
 func TestResourceClusterRead_Error(t *testing.T) {

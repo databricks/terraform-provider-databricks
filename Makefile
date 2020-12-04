@@ -22,21 +22,21 @@ VERSION = 0.3.0
 
 build:
 	@echo "✓ Building source code with go build ..."
-	@go build -mod vendor -v -ldflags="-X github.com/databrickslabs/databricks-terraform/common.version=${VERSION}" -o terraform-provider-databricks
+	@go build -mod vendor -v -o terraform-provider-databricks
 
 install: build
 	@echo "✓ Installing provider into ~/.terraform.d/plugins ..."
 	@test -d $(HOME)/.terraform.d/plugins && rm $(HOME)/.terraform.d/plugins/terraform-provider-databricks* || mkdir -p $(HOME)/.terraform.d/plugins
 	@cp terraform-provider-databricks $(HOME)/.terraform.d/plugins
-	@mkdir -p '$(HOME)/.terraform.d/plugins/registry.terraform.io/databrickslabs/databricks/${VERSION}/$(shell go version | awk '{print $$4}' | sed 's#/#_#')'
-	@cp terraform-provider-databricks '$(HOME)/.terraform.d/plugins/registry.terraform.io/databrickslabs/databricks/${VERSION}/$(shell go version | awk '{print $$4}' | sed 's#/#_#')/terraform-provider-databricks-v${VERSION}'
+	@mkdir -p '$(HOME)/.terraform.d/plugins/registry.terraform.io/databrickslabs/databricks/$(shell ./terraform-provider-databricks version)/$(shell go version | awk '{print $$4}' | sed 's#/#_#')'
+	@cp terraform-provider-databricks '$(HOME)/.terraform.d/plugins/registry.terraform.io/databrickslabs/databricks/$(shell ./terraform-provider-databricks version)/$(shell go version | awk '{print $$4}' | sed 's#/#_#')/terraform-provider-databricks-v$(shell ./terraform-provider-databricks version)'
 	@echo "✓ Use the following configuration to enable the version you've built"
 	@echo 
 	@echo "terraform {"
 	@echo "  required_providers {"
 	@echo "    databricks = {"
 	@echo '      source = "databrickslabs/databricks"'
-	@echo '      version = "${VERSION}"'
+	@echo '      version = "$(shell ./terraform-provider-databricks version)"'
 	@echo "    }"
 	@echo "  }"
 	@echo "}"

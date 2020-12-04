@@ -141,7 +141,7 @@ func TestResourceGroupInstanceProfileRead(t *testing.T) {
 }
 
 func TestResourceGroupInstanceProfileRead_NotFound(t *testing.T) {
-	d, err := qa.ResourceFixture{
+	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
@@ -155,14 +155,13 @@ func TestResourceGroupInstanceProfileRead_NotFound(t *testing.T) {
 		},
 		Resource: ResourceGroupInstanceProfile(),
 		Read:     true,
+		Removed:  true,
 		ID:       "abc|arn:aws:iam::999999999999:instance-profile/my-fake-instance-profile",
-	}.Apply(t)
-	assert.NoError(t, err, err)
-	assert.Equal(t, "", d.Id(), "Id should be empty for missing resources")
+	}.ApplyNoError(t)
 }
 
 func TestResourceGroupInstanceProfileRead_NotFound_Role(t *testing.T) {
-	d, err := qa.ResourceFixture{
+	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
@@ -176,10 +175,9 @@ func TestResourceGroupInstanceProfileRead_NotFound_Role(t *testing.T) {
 		},
 		Resource: ResourceGroupInstanceProfile(),
 		Read:     true,
+		Removed:  true,
 		ID:       "abc|arn:aws:iam::999999999999:instance-profile/my-fake-instance-profile",
-	}.Apply(t)
-	assert.NoError(t, err, err)
-	assert.Equal(t, "", d.Id(), "Id should be empty for missing resources")
+	}.ApplyNoError(t)
 }
 
 func TestResourceGroupInstanceProfileRead_Error(t *testing.T) {

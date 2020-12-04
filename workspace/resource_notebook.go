@@ -194,9 +194,8 @@ func (a NotebooksAPI) Delete(path string, recursive bool) error {
 func ResourceNotebook() *schema.Resource {
 	s := FileContentSchema(map[string]*schema.Schema{
 		"language": {
-			Type:         schema.TypeString,
-			Optional:     true,
-			RequiredWith: []string{"content_base64"},
+			Type:     schema.TypeString,
+			Optional: true,
 			ValidateFunc: validation.StringInSlice([]string{
 				string(Scala),
 				string(Python),
@@ -226,6 +225,7 @@ func ResourceNotebook() *schema.Resource {
 			Computed: true,
 		},
 	})
+	s["content_base64"].RequiredWith = []string{"language"}
 	return util.CommonResource{
 		Schema:        s,
 		SchemaVersion: 2,

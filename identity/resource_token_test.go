@@ -31,6 +31,7 @@ func TestResourceTokenRead(t *testing.T) {
 		},
 		Resource: ResourceToken(),
 		Read:     true,
+		New:      true,
 		ID:       "abc",
 	}.Apply(t)
 	assert.NoError(t, err, err)
@@ -42,7 +43,7 @@ func TestResourceTokenRead(t *testing.T) {
 }
 
 func TestResourceTokenRead_NotFound(t *testing.T) {
-	d, err := qa.ResourceFixture{
+	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
@@ -61,10 +62,9 @@ func TestResourceTokenRead_NotFound(t *testing.T) {
 		},
 		Resource: ResourceToken(),
 		Read:     true,
+		Removed:  true,
 		ID:       "abc",
-	}.Apply(t)
-	assert.NoError(t, err, err)
-	assert.Equal(t, "", d.Id(), "Id should be empty for missing resources")
+	}.ApplyNoError(t)
 }
 
 func TestResourceTokenRead_Error(t *testing.T) {

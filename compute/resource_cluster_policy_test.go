@@ -34,7 +34,7 @@ func TestResourceClusterPolicyRead(t *testing.T) {
 }
 
 func TestResourceClusterPolicyRead_NotFound(t *testing.T) {
-	d, err := qa.ResourceFixture{
+	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{ // read log output for correct url...
 				Method:   "GET",
@@ -48,10 +48,9 @@ func TestResourceClusterPolicyRead_NotFound(t *testing.T) {
 		},
 		Resource: ResourceClusterPolicy(),
 		Read:     true,
+		Removed:  true,
 		ID:       "abc",
-	}.Apply(t)
-	assert.NoError(t, err, err)
-	assert.Equal(t, "", d.Id(), "Id should be empty for missing resources")
+	}.ApplyNoError(t)
 }
 
 func TestResourceClusterPolicyRead_Error(t *testing.T) {

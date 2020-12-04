@@ -74,6 +74,7 @@ type ResourceFixture struct {
 	Read        bool
 	Update      bool
 	Delete      bool
+	Removed     bool
 	ID          string
 	NonWritable bool
 	Azure       bool
@@ -148,6 +149,9 @@ func (f ResourceFixture) Apply(t *testing.T) (*schema.ResourceData, error) {
 		if f.ID == "" {
 			return nil, errors.New("ID must be set for Update")
 		}
+		if f.Resource.UpdateContext == nil && f.Resource.Update == nil {
+			return nil, errors.New("Resource does not support Update")
+		}
 		whatever = func(d *schema.ResourceData, m interface{}) error {
 			d.SetId(f.ID)
 			return pick(f.Resource.Update, f.Resource.UpdateContext, d, m)
@@ -191,6 +195,9 @@ func (f ResourceFixture) Apply(t *testing.T) (*schema.ResourceData, error) {
 	if err != nil {
 		return resourceData, err
 	}
+	if resourceData.Id() == "" && !f.Removed {
+		return resourceData, fmt.Errorf("Resource is not expected to be removed")
+	}
 	newState := resourceData.State()
 	diff, err = schemaMap.Diff(ctx, newState, resourceConfig, nil, client, true)
 	if err != nil {
@@ -210,6 +217,12 @@ func (f ResourceFixture) Apply(t *testing.T) (*schema.ResourceData, error) {
 		err = fmt.Errorf("Changes from backend require new: %s", strings.Join(requireNew, ", "))
 	}
 	return resourceData, err
+}
+
+// ApplyNoError is a convenience method for no-data tests
+func (f ResourceFixture) ApplyNoError(t *testing.T) {
+	_, err := f.Apply(t)
+	assert.NoError(t, err, err)
 }
 
 func diagsToString(diags diag.Diagnostics) string {

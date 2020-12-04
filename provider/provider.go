@@ -78,7 +78,6 @@ func DatabricksProvider() *schema.Provider {
 				DefaultFunc: schema.EnvDefaultFunc("DATABRICKS_HOST", nil),
 				ConflictsWith: []string{
 					"config_file",
-					"azure_auth",
 				},
 			},
 			"token": {
@@ -90,9 +89,7 @@ func DatabricksProvider() *schema.Provider {
 					"username",
 					"password",
 					"config_file",
-					"basic_auth",
 					"profile",
-					"azure_auth",
 				},
 			},
 			"username": {
@@ -121,8 +118,6 @@ func DatabricksProvider() *schema.Provider {
 					"in ~/.databrickscfg. Check  https://docs.databricks.com/dev-tools/cli/index.html#set-up-authentication for docs. Config\n" +
 					"file credentials will only be used when host/token are not provided.",
 				ConflictsWith: []string{
-					"azure_auth",
-					"basic_auth",
 					"token",
 					"host",
 				},
@@ -134,7 +129,6 @@ func DatabricksProvider() *schema.Provider {
 				Description: "Connection profile specified within ~/.databrickscfg. Please check\n" +
 					"https://docs.databricks.com/dev-tools/cli/index.html#connection-profiles for documentation.",
 				ConflictsWith: []string{
-					"basic_auth",
 					"token",
 				},
 			},

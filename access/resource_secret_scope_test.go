@@ -74,7 +74,7 @@ func TestResourceSecretScopeRead_KeyVault(t *testing.T) {
 }
 
 func TestResourceSecretScopeRead_NotFound(t *testing.T) {
-	d, err := qa.ResourceFixture{
+	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   http.MethodGet,
@@ -92,10 +92,9 @@ func TestResourceSecretScopeRead_NotFound(t *testing.T) {
 		},
 		Resource: ResourceSecretScope(),
 		Read:     true,
+		Removed:  true,
 		ID:       "abc",
-	}.Apply(t)
-	assert.NoError(t, err, err)
-	assert.Equal(t, "", d.Id())
+	}.ApplyNoError(t)
 }
 
 func TestResourceSecretScopeRead_Error(t *testing.T) {

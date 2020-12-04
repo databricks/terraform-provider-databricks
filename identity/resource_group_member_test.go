@@ -96,7 +96,7 @@ func TestResourceGroupMemberRead(t *testing.T) {
 }
 
 func TestResourceGroupMemberRead_NoMember(t *testing.T) {
-	d, err := qa.ResourceFixture{
+	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
@@ -110,14 +110,13 @@ func TestResourceGroupMemberRead_NoMember(t *testing.T) {
 		},
 		Resource: ResourceGroupMember(),
 		Read:     true,
+		Removed:  true,
 		ID:       "abc|bcd",
-	}.Apply(t)
-	assert.NoError(t, err, err)
-	assert.Equal(t, "", d.Id(), "Id should be empty for missing resources")
+	}.ApplyNoError(t)
 }
 
 func TestResourceGroupMemberRead_NotFound(t *testing.T) {
-	d, err := qa.ResourceFixture{
+	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
@@ -131,10 +130,9 @@ func TestResourceGroupMemberRead_NotFound(t *testing.T) {
 		},
 		Resource: ResourceGroupMember(),
 		Read:     true,
+		Removed:  true,
 		ID:       "abc|bcd",
-	}.Apply(t)
-	assert.NoError(t, err, err)
-	assert.Equal(t, "", d.Id(), "Id should be empty for missing resources")
+	}.ApplyNoError(t)
 }
 
 func TestResourceGroupMemberRead_Error(t *testing.T) {

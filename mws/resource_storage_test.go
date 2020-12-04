@@ -125,7 +125,7 @@ func TestResourceStorageConfigurationRead(t *testing.T) {
 }
 
 func TestResourceStorageConfigurationRead_NotFound(t *testing.T) {
-	d, err := qa.ResourceFixture{
+	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
@@ -139,10 +139,9 @@ func TestResourceStorageConfigurationRead_NotFound(t *testing.T) {
 		},
 		Resource: ResourceStorageConfiguration(),
 		Read:     true,
+		Removed:  true,
 		ID:       "abc/scid",
-	}.Apply(t)
-	assert.NoError(t, err, err)
-	assert.Equal(t, "", d.Id(), "Id should be empty for missing resources")
+	}.ApplyNoError(t)
 }
 
 func TestResourceStorageConfigurationRead_Error(t *testing.T) {

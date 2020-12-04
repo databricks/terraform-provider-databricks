@@ -20,7 +20,8 @@ func ResourceDBFSFile() *schema.Resource {
 			},
 		}),
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			path := d.Get("path").(string)
+			// TODO: make mandatory DBFS prefix or something to facilitate use for DBFS libraries?...
+			path := d.Get("path").(string) // fmt.Sprintf("dbfs:%s", d.Get("path"))
 			content, err := workspace.ReadContent(d)
 			if err != nil {
 				return err

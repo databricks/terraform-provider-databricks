@@ -107,7 +107,7 @@ func TestResourceUserInstanceProfileRead(t *testing.T) {
 }
 
 func TestResourceUserInstanceProfileRead_NoRole(t *testing.T) {
-	d, err := qa.ResourceFixture{
+	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
@@ -121,14 +121,13 @@ func TestResourceUserInstanceProfileRead_NoRole(t *testing.T) {
 		},
 		Resource: ResourceUserInstanceProfile(),
 		Read:     true,
+		Removed:  true,
 		ID:       "abc|arn:aws:iam::999999999999:instance-profile/my-fake-instance-profile",
-	}.Apply(t)
-	assert.NoError(t, err, err)
-	assert.Equal(t, "", d.Id(), "Id should be empty for missing resources")
+	}.ApplyNoError(t)
 }
 
 func TestResourceUserInstanceProfileRead_NotFound(t *testing.T) {
-	d, err := qa.ResourceFixture{
+	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
@@ -142,10 +141,9 @@ func TestResourceUserInstanceProfileRead_NotFound(t *testing.T) {
 		},
 		Resource: ResourceUserInstanceProfile(),
 		Read:     true,
+		Removed:  true,
 		ID:       "abc|arn:aws:iam::999999999999:instance-profile/my-fake-instance-profile",
-	}.Apply(t)
-	assert.NoError(t, err, err)
-	assert.Equal(t, "", d.Id(), "Id should be empty for missing resources")
+	}.ApplyNoError(t)
 }
 
 func TestResourceUserInstanceProfileRead_Error(t *testing.T) {

@@ -1,19 +1,7 @@
 package workspace
 
 import (
-	"archive/zip"
-	"bufio"
-	"bytes"
-	"encoding/base64"
-	"encoding/json"
-	"fmt"
-	"hash/crc32"
-	"io"
-	"io/ioutil"
 	"net/http"
-	"net/url"
-	"sort"
-	"strconv"
 	"testing"
 
 	"github.com/databrickslabs/databricks-terraform/common"
@@ -21,14 +9,6 @@ import (
 
 	"github.com/stretchr/testify/assert"
 )
-
-func notebookToB64(filePath string) (string, error) {
-	notebookBytes, err := ioutil.ReadFile(filePath)
-	if err != nil {
-		return "", fmt.Errorf("unable to find notebook to convert to base64; %w", err)
-	}
-	return base64.StdEncoding.EncodeToString(notebookBytes), nil
-}
 
 // func TestResourceNotebookCreate_DirDoesNotExists(t *testing.T) {
 // 	pythonNotebookDataB64, err := notebookToB64("acceptance/testdata/tf-test-python.py")
@@ -103,29 +83,17 @@ func notebookToB64(filePath string) (string, error) {
 // }
 
 func TestResourceNotebookRead(t *testing.T) {
-	pythonNotebookDataB64, err := notebookToB64("acceptance/testdata/tf-test-python.py")
-	assert.NoError(t, err, err)
-	checkSum := ".."
-	assert.NoError(t, err, err)
-	testId := "/test/path.py"
-	objectId := 12345
-	assert.NoError(t, err, err)
+	path := "/test/path.py"
+	objectID := 12345
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   http.MethodGet,
-				Resource: "/api/2.0/workspace/export?format=SOURCE&path=%2Ftest%2Fpath.py",
-				Response: NotebookContent{
-					Content: pythonNotebookDataB64,
-				},
-			},
-			{
-				Method:   http.MethodGet,
 				Resource: "/api/2.0/workspace/get-status?path=%2Ftest%2Fpath.py",
 				Response: ObjectStatus{
-					ObjectID:   int64(objectId),
+					ObjectID:   int64(objectID),
 					ObjectType: Notebook,
-					Path:       testId,
+					Path:       path,
 					Language:   "PYTHON",
 				},
 			},
@@ -133,37 +101,36 @@ func TestResourceNotebookRead(t *testing.T) {
 		Resource: ResourceNotebook(),
 		Read:     true,
 		New:      true,
-		ID:       testId,
+		ID:       path,
 	}.Apply(t)
 	assert.NoError(t, err, err)
-	assert.Equal(t, testId, d.Id())
-	assert.Equal(t, checkSum, d.Get("content"))
-	assert.Equal(t, testId, d.Get("path"))
+	assert.Equal(t, path, d.Id())
+	assert.Equal(t, path, d.Get("path"))
 	assert.Equal(t, "PYTHON", d.Get("language"))
-	assert.Equal(t, objectId, d.Get("object_id"))
+	assert.Equal(t, objectID, d.Get("object_id"))
 }
 
 func TestResourceNotebookDelete(t *testing.T) {
-	testId := "/test/path.py"
+	path := "/test/path.py"
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:          http.MethodPost,
 				Resource:        "/api/2.0/workspace/delete",
 				Status:          http.StatusOK,
-				ExpectedRequest: NotebookDeleteRequest{Path: testId, Recursive: true},
+				ExpectedRequest: NotebookDeleteRequest{Path: path, Recursive: true},
 			},
 		},
 		Resource: ResourceNotebook(),
 		Delete:   true,
-		ID:       testId,
+		ID:       path,
 	}.Apply(t)
 	assert.NoError(t, err, err)
-	assert.Equal(t, testId, d.Id())
+	assert.Equal(t, path, d.Id())
 }
 
 func TestResourceNotebookDelete_TooManyRequests(t *testing.T) {
-	testId := "/test/path.py"
+	testID := "/test/path.py"
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
@@ -175,23 +142,23 @@ func TestResourceNotebookDelete_TooManyRequests(t *testing.T) {
 				Method:          http.MethodPost,
 				Resource:        "/api/2.0/workspace/delete",
 				Status:          http.StatusOK,
-				ExpectedRequest: NotebookDeleteRequest{Path: testId, Recursive: true},
+				ExpectedRequest: NotebookDeleteRequest{Path: testID, Recursive: true},
 			},
 		},
 		Resource: ResourceNotebook(),
 		Delete:   true,
-		ID:       testId,
+		ID:       testID,
 	}.Apply(t)
 	assert.NoError(t, err, err)
-	assert.Equal(t, testId, d.Id())
+	assert.Equal(t, testID, d.Id())
 }
 
 func TestResourceNotebookRead_NotFound(t *testing.T) {
-	d, err := qa.ResourceFixture{
+	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{ // read log output for correct url...
 				Method:   "GET",
-				Resource: "/api/2.0/workspace/export?format=SOURCE&path=%2Ftest%2Fpath.py",
+				Resource: "/api/2.0/workspace/get-status?path=%2Ftest%2Fpath",
 				Response: common.APIErrorBody{
 					ErrorCode: "NOT_FOUND",
 					Message:   "Item not found",
@@ -201,18 +168,17 @@ func TestResourceNotebookRead_NotFound(t *testing.T) {
 		},
 		Resource: ResourceNotebook(),
 		Read:     true,
-		ID:       "/test/path.py",
-	}.Apply(t)
-	assert.NoError(t, err, err)
-	assert.Equal(t, "", d.Id(), "Id should be empty for missing resources")
+		Removed:  true,
+		ID:       "/test/path",
+	}.ApplyNoError(t)
 }
 
 func TestResourceNotebookRead_Error(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
-			{ // read log output for correct url...
+			{
 				Method:   "GET",
-				Resource: "/api/2.0/workspace/export?format=SOURCE&path=%2Ftest%2Fpath.py",
+				Resource: "/api/2.0/workspace/get-status?path=%2Ftest%2Fpath",
 				Response: common.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
@@ -222,10 +188,10 @@ func TestResourceNotebookRead_Error(t *testing.T) {
 		},
 		Resource: ResourceNotebook(),
 		Read:     true,
-		ID:       "/test/path.py",
+		ID:       "/test/path",
 	}.Apply(t)
 	qa.AssertErrorStartsWith(t, err, "Internal error happened")
-	assert.Equal(t, "/test/path.py", d.Id(), "Id should not be empty for error reads")
+	assert.Equal(t, "/test/path", d.Id(), "Id should not be empty for error reads")
 }
 
 func TestResourceNotebookCreate(t *testing.T) {
@@ -234,7 +200,7 @@ func TestResourceNotebookCreate(t *testing.T) {
 			{
 				Method:   http.MethodPost,
 				Resource: "/api/2.0/workspace/import",
-				Response: ImportRequest{
+				ExpectedRequest: ImportRequest{
 					Content:   "YWJjCg==",
 					Path:      "/path.py",
 					Language:  "PYTHON",
@@ -262,14 +228,52 @@ func TestResourceNotebookCreate(t *testing.T) {
 		},
 		Resource: ResourceNotebook(),
 		State: map[string]interface{}{
-			"content":  "YWJjCg==",
-			"language": "PYTHON",
-			"path":     "/path.py",
+			"content_base64": "YWJjCg==",
+			"language":       "PYTHON",
+			"path":           "/path.py",
 		},
 		Create: true,
 	}.Apply(t)
 	assert.NoError(t, err, err)
 	assert.Equal(t, "/path.py", d.Id())
+}
+
+func TestResourceNotebookCreateSource(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   http.MethodPost,
+				Resource: "/api/2.0/workspace/import",
+				ExpectedRequest: ImportRequest{
+					Content: "LS0gRGF0YWJyaWNrcyBub3RlYm9vayBzb3VyY2UKU0VMRUNUIDEwKjIwC" +
+						"gotLSBDT01NQU5EIC0tLS0tLS0tLS0KClNFTEVDVCAyMCoxMDAKCi0tIE" +
+						"NPTU1BTkQgLS0tLS0tLS0tLQoKCg==",
+					Path:      "/Dashboard",
+					Language:  "SQL",
+					Overwrite: true,
+					Format:    "SOURCE",
+				},
+			},
+			{
+				Method:   http.MethodGet,
+				Resource: "/api/2.0/workspace/get-status?path=%2FDashboard",
+				Response: ObjectStatus{
+					ObjectID:   4567,
+					ObjectType: "NOTEBOOK",
+					Path:       "/Dashboard",
+					Language:   "SQL",
+				},
+			},
+		},
+		Resource: ResourceNotebook(),
+		State: map[string]interface{}{
+			"source": "acceptance/testdata/tf-test-sql.sql",
+			"path":   "/Dashboard",
+		},
+		Create: true,
+	}.Apply(t)
+	assert.NoError(t, err, err)
+	assert.Equal(t, "/Dashboard", d.Id())
 }
 
 func TestResourceNotebookCreate_Error(t *testing.T) {
@@ -287,9 +291,9 @@ func TestResourceNotebookCreate_Error(t *testing.T) {
 		},
 		Resource: ResourceNotebook(),
 		State: map[string]interface{}{
-			"content":  "YWJjCg==",
-			"language": "PYTHON",
-			"path":     "/path.py",
+			"content_base64": "YWJjCg==",
+			"language":       "R",
+			"path":           "/path.py",
 		},
 		Create: true,
 	}.Apply(t)
@@ -316,64 +320,4 @@ func TestResourceNotebookDelete_Error(t *testing.T) {
 	}.Apply(t)
 	qa.AssertErrorStartsWith(t, err, "Internal error happened")
 	assert.Equal(t, "abc", d.Id())
-}
-
-func TestUri(t *testing.T) {
-	uri := "https://sri-e2-test-workspace-3.cloud.databricks.com/api/2.0/workspace/export?format=DBC\u0026path=/demo-notebook-rbc"
-	t.Log(url.PathUnescape(uri))
-}
-
-// nolint this should be refactored to support dbc files
-func convertZipBytesToCRC(b64 []byte) (string, error) {
-	r, err := zip.NewReader(bytes.NewReader(b64), int64(len(b64)))
-	if err != nil {
-		return "0", err
-	}
-	var totalSum int64
-	for _, f := range r.File {
-		if f.FileInfo().IsDir() == false {
-			file, err := f.Open()
-			if err != nil {
-				return "", err
-			}
-			crc, err := getDBCCheckSumForCommands(file)
-			if err != nil {
-				return "", err
-			}
-			totalSum += int64(crc)
-		}
-	}
-	return strconv.Itoa(int(totalSum)), nil
-}
-
-// nolint this should be refactored to support dbc files
-func getDBCCheckSumForCommands(fileIO io.Reader) (int, error) {
-	var stringBuff bytes.Buffer
-	scanner := bufio.NewScanner(fileIO)
-	buf := make([]byte, 0, 64*1024)
-	scanner.Buffer(buf, 1024*1024)
-	for scanner.Scan() {
-		stringBuff.WriteString(scanner.Text())
-	}
-	jsonString := stringBuff.Bytes()
-	var notebook map[string]interface{}
-	err := json.Unmarshal(jsonString, &notebook)
-	if err != nil {
-		return 0, err
-	}
-	var commandsBuffer bytes.Buffer
-	commandsMap := map[int]string{}
-	commands := notebook["commands"].([]interface{})
-	for _, command := range commands {
-		commandsMap[int(command.(map[string]interface{})["position"].(float64))] = command.(map[string]interface{})["command"].(string)
-	}
-	keys := make([]int, 0, len(commandsMap))
-	for k := range commandsMap {
-		keys = append(keys, k)
-	}
-	sort.Ints(keys)
-	for _, k := range keys {
-		commandsBuffer.WriteString(commandsMap[k])
-	}
-	return int(crc32.ChecksumIEEE(commandsBuffer.Bytes())), nil
 }

@@ -154,6 +154,10 @@ func TestResourceFixture_ID(t *testing.T) {
 
 	f.ID = ""
 	_, err = f.Apply(t)
+	assert.EqualError(t, err, "Resource is not expected to be removed")
+
+	f.Removed = true
+	_, err = f.Apply(t)
 	assert.NoError(t, err)
 }
 

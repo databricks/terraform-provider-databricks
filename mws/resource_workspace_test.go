@@ -219,7 +219,7 @@ func TestResourceWorkspaceRead_Issue382(t *testing.T) {
 }
 
 func TestResourceWorkspaceRead_NotFound(t *testing.T) {
-	d, err := qa.ResourceFixture{
+	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
@@ -233,10 +233,9 @@ func TestResourceWorkspaceRead_NotFound(t *testing.T) {
 		},
 		Resource: ResourceWorkspace(),
 		Read:     true,
+		Removed:  true,
 		ID:       "abc/1234",
-	}.Apply(t)
-	assert.NoError(t, err, err)
-	assert.Equal(t, "", d.Id(), "Id should be empty for missing resources")
+	}.ApplyNoError(t)
 }
 
 func TestResourceWorkspaceRead_Error(t *testing.T) {

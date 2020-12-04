@@ -1,10 +1,5 @@
 package mws
 
-import (
-	"fmt"
-	"strings"
-)
-
 // StsRole is the object that contains cross account role arn and external app id
 type StsRole struct {
 	RoleArn    string `json:"role_arn,omitempty"`
@@ -99,30 +94,4 @@ type Workspace struct {
 	WorkspaceStatus        string `json:"workspace_status,omitempty" tf:"computed"`
 	WorkspaceStatusMessage string `json:"workspace_status_message,omitempty" tf:"computed"`
 	CreationTime           int64  `json:"creation_time,omitempty" tf:"computed"`
-}
-
-// PackagedMWSIds is a struct that contains both the MWS acct id and the ResourceId (resources are networks, creds, etc.)
-type PackagedMWSIds struct {
-	MwsAcctID  string
-	ResourceID string
-}
-
-// Helps package up MWSAccountId with another id such as credentials id or network id
-// uses format mwsAcctID/otherId
-func packMWSAccountID(idsToPackage PackagedMWSIds) string {
-	return fmt.Sprintf("%s/%s", idsToPackage.MwsAcctID, idsToPackage.ResourceID)
-}
-
-// UnpackMWSAccountID Helps unpackage MWSAccountId from another id such as credentials id or network id
-func UnpackMWSAccountID(combined string) (PackagedMWSIds, error) {
-	// TODO: harmonize with other combined ID functions - e.g. secret scopes/keys/acls
-	var packagedMWSIds PackagedMWSIds
-	parts := strings.Split(combined, "/")
-	if len(parts) != 2 {
-		// TODO: set id to "" if invalid format
-		return packagedMWSIds, fmt.Errorf("unpacked account has more than or less than two parts, combined id: %s", combined)
-	}
-	packagedMWSIds.MwsAcctID = parts[0]
-	packagedMWSIds.ResourceID = parts[1]
-	return packagedMWSIds, nil
 }

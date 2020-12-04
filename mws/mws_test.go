@@ -2,6 +2,7 @@ package mws
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"testing"
 
@@ -57,7 +58,7 @@ func TestMwsAccMissingResources(t *testing.T) {
 		{
 			Name: "Workspace",
 			ReadFunc: func() error {
-				_, err := NewWorkspacesAPI(ctx, client).Read(mwsAcctID, int64(randIntID))
+				_, err := NewWorkspacesAPI(ctx, client).Read(mwsAcctID, fmt.Sprintf("%d", randIntID))
 				return err
 			},
 		},

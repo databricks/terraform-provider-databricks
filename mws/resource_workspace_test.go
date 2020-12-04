@@ -2,7 +2,11 @@ package mws
 
 import (
 	"context"
+	"net/http"
+	"net/http/httptest"
+	"strings"
 	"testing"
+	"time"
 
 	"github.com/databrickslabs/databricks-terraform/common"
 	"github.com/databrickslabs/databricks-terraform/internal/qa"
@@ -559,4 +563,15 @@ func TestListWorkspaces(t *testing.T) {
 	l, err := NewWorkspacesAPI(context.Background(), client).List("abc")
 	require.NoError(t, err)
 	assert.Len(t, l, 0)
+}
+
+func TestDial(t *testing.T) {
+	err := dial("127.0.0.1:32456", "localhost", 50*time.Millisecond)
+	assert.NotNil(t, err)
+	assert.Equal(t, err.Err.Error(), "dial tcp 127.0.0.1:32456: connect: connection refused")
+
+	s := httptest.NewServer(http.HandlerFunc(http.NotFound))
+	defer s.Close()
+	err = dial(strings.ReplaceAll(s.URL, "http://", ""), s.URL, 500*time.Millisecond)
+	assert.Nil(t, err)
 }

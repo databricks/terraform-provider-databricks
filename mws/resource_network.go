@@ -79,6 +79,7 @@ func ResourceNetwork() *schema.Resource {
 		s["security_group_ids"].MaxItems = 5
 		return s
 	})
+	p := util.NewPairSeparatedID("account_id", "network_id", "/")
 	return util.CommonResource{
 		Schema: s,
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
@@ -89,29 +90,27 @@ func ResourceNetwork() *schema.Resource {
 			if err := NewNetworksAPI(ctx, c).Create(&network); err != nil {
 				return err
 			}
-			d.SetId(packMWSAccountID(PackagedMWSIds{
-				MwsAcctID:  network.AccountID,
-				ResourceID: network.NetworkID,
-			}))
+			d.Set("network_id", network.NetworkID)
+			p.Pack(d)
 			return nil
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			packagedMwsID, err := UnpackMWSAccountID(d.Id())
+			accountID, networkID, err := p.Unpack(d)
 			if err != nil {
 				return err
 			}
-			network, err := NewNetworksAPI(ctx, c).Read(packagedMwsID.MwsAcctID, packagedMwsID.ResourceID)
+			network, err := NewNetworksAPI(ctx, c).Read(accountID, networkID)
 			if err != nil {
 				return err
 			}
 			return internal.StructToData(network, s, d)
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			packagedMwsID, err := UnpackMWSAccountID(d.Id())
+			accountID, networkID, err := p.Unpack(d)
 			if err != nil {
 				return err
 			}
-			return NewNetworksAPI(ctx, c).Delete(packagedMwsID.MwsAcctID, packagedMwsID.ResourceID)
+			return NewNetworksAPI(ctx, c).Delete(accountID, networkID)
 		},
 	}.ToResource()
 }

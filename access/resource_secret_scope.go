@@ -57,6 +57,9 @@ func (a SecretScopesAPI) Create(s SecretScope) error {
 		BackendType:            "DATABRICKS",
 	}
 	if s.KeyvaultMetadata != nil {
+		if err := a.client.Authenticate(); err != nil {
+			return err
+		}
 		if !a.client.IsAzure() {
 			return fmt.Errorf("Azure KeyVault is not available")
 		}

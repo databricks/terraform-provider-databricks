@@ -638,3 +638,27 @@ type EventsResponse struct {
 	NextPage   *EventsRequest `json:"next_page"`
 	TotalCount int64          `json:"total_count"`
 }
+
+// SparkVersion - contains information about specific version
+type SparkVersion struct {
+	Version     string `json:"key"`
+	Description string `json:"name"`
+}
+
+// SparkVersionsList - returns a list of all currently supported Spark Versions
+// https://docs.databricks.com/dev-tools/api/latest/clusters.html#runtime-versions
+type SparkVersionsList struct {
+	SparkVersions []SparkVersion `json:"versions"`
+}
+
+// SparkVersionRequest - filtering request
+type SparkVersionRequest struct {
+	LongTermSupport bool   `json:"long_term_support,omitempty" tf:"optional,default:false"`
+	Beta            bool   `json:"beta,omitempty" tf:"optional,default:false,conflicts:long_term_support"`
+	Latest          bool   `json:"latest,omitempty" tf:"optional,default:true"`
+	ML              bool   `json:"ml,omitempty" tf:"optional,default:false"`
+	Genomics        bool   `json:"genomics,omitempty" tf:"optional,default:false"`
+	GPU             bool   `json:"gpu,omitempty" tf:"optional,default:false"`
+	Scala           string `json:"scala,omitempty" tf:"optional,default:2.12"`
+	SparkVersion    string `json:"spark_version,omitempty" tf:"optional,default:"`
+}

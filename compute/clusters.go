@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"sort"
 	"strings"
 	"time"
 
@@ -239,7 +240,7 @@ func (a ClustersAPI) Unpin(clusterID string) error {
 	return a.client.Post(a.context, "/clusters/unpin", ClusterID{ClusterID: clusterID}, nil)
 }
 
-// Cluster Events API - only using Cluster ID string to get all events
+// Events - only using Cluster ID string to get all events
 // https://docs.databricks.com/dev-tools/api/latest/clusters.html#events
 func (a ClustersAPI) Events(eventsRequest EventsRequest) ([]ClusterEvent, error) {
 	var eventsResponse EventsResponse
@@ -392,4 +393,55 @@ func (a ClustersAPI) GetSmallestNodeType(r NodeTypeRequest) string {
 		return "Standard_D3_v2"
 	}
 	return "i3.xlarge"
+}
+
+// ListSparkVersions returns smallest (or default) node type id given the criteria
+func (a ClustersAPI) ListSparkVersions() (SparkVersionsList, error) {
+	var sparkVersions SparkVersionsList
+	err := a.client.Get(a.context, "/clusters/spark-versions", nil, &sparkVersions)
+	return sparkVersions, err
+}
+
+// LatestSparkVersion returns latest version matching the request parameters
+func (sparkVersions SparkVersionsList) LatestSparkVersion(req SparkVersionRequest) (string, error) {
+	var versions []string
+
+	for _, version := range sparkVersions.SparkVersions {
+		if strings.Contains(version.Version, "-scala"+req.Scala) {
+			matches := ((!strings.Contains(version.Version, "apache-spark-")) &&
+				(strings.Contains(version.Version, "-ml-") == req.ML) &&
+				(strings.Contains(version.Version, "-hls-") == req.Genomics) &&
+				(strings.Contains(version.Version, "-gpu-") == req.GPU) &&
+				(strings.Contains(version.Description, "Beta") == req.Beta))
+			if matches && req.LongTermSupport {
+				matches = (matches && strings.Contains(version.Description, "LTS"))
+			}
+			if matches && len(req.SparkVersion) > 0 {
+				matches = (matches && strings.Contains(version.Description, "Apache Spark "+req.SparkVersion))
+			}
+			if matches {
+				versions = append(versions, version.Version)
+			}
+		}
+	}
+	if len(versions) < 1 {
+		return "", fmt.Errorf("Spark versions query returned no results. Please change your search criteria and try again")
+	} else if len(versions) > 1 {
+		if req.Latest {
+			sort.Sort(sort.Reverse(sort.StringSlice(versions)))
+		} else {
+			return "", fmt.Errorf("Spark versions query returned multiple results. Please change your search criteria and try again")
+		}
+	}
+
+	return versions[0], nil
+}
+
+// LatestSparkVersion returns latest version matching the request parameters
+func (a ClustersAPI) LatestSparkVersion(svr SparkVersionRequest) (string, error) {
+	sparkVersions, err := a.ListSparkVersions()
+	if err != nil {
+		return "", err
+	}
+	return sparkVersions.LatestSparkVersion(svr)
 }

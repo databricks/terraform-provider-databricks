@@ -9,6 +9,10 @@ data "databricks_node_type" "smallest" {
     local_disk = true
 }
 
+data "databricks_spark_version" "latest_lts" {
+  long_term_support = true
+}
+
 resource "databricks_job" "this" {
     name = "Featurization"
     timeout_seconds = 3600
@@ -17,7 +21,7 @@ resource "databricks_job" "this" {
     
     new_cluster  {
         num_workers   = 300
-        spark_version = "6.6.x-scala2.11"
+        spark_version = data.databricks_spark_version.latest_lts.id
         node_type_id  = data.databricks_node_type.smallest.id
     }
     

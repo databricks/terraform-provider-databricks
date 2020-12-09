@@ -2,10 +2,12 @@
 
 ## 0.3.0
 
+* Added [support for other clouds](https://github.com/databrickslabs/terraform-provider-databricks/pull/437).
 * Added [databricks_service_principal](https://github.com/databrickslabs/terraform-provider-databricks/pull/386) resource.
 
 **Behavior changes**
 
+* Added optional parameter `azure_environment` to provider config which defaults to `public`.
 * Removed deprecated `library_jar`, `library_egg`, `library_whl`, `library_pypi`, `library_cran`, and `library_maven` from `databricks_cluster` and `databricks_job` in favor of more API-transparent [library](https://registry.terraform.io/providers/databrickslabs/databricks/latest/docs/resources/cluster#library-configuration-block) configuration block.
 * Removed deprecated `notebook_path` and `notebook_base_parameters` from `databricks_job` in favor of [notebook_task](https://registry.terraform.io/providers/databrickslabs/databricks/latest/docs/resources/job#notebook_task-configuration-block) configuration block.
 * Removed deprecated `jar_uri`, `jar_main_class_name`, and `jar_parameters` from `databricks_job` in favor of [spark_jar_task](https://registry.terraform.io/providers/databrickslabs/databricks/latest/docs/resources/job#spark_jar_task-configuration-block) configuration block.

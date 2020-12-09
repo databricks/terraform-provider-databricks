@@ -189,6 +189,12 @@ func DatabricksProvider() *schema.Provider {
 				Default:     false,
 				Description: "Create ephemeral PAT tokens also for AZ CLI authenticated requests",
 			},
+			"azure_environment": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Sensitive:   true,
+				DefaultFunc: schema.MultiEnvDefaultFunc([]string{"DATABRICKS_AZURE_ENVIRONMENT", "ARM_ENVIRONMENT"}, "public"),
+			},
 			"skip_verify": {
 				Type:        schema.TypeBool,
 				Description: "Skip SSL certificate verification for HTTP calls. Use at your own risk.",
@@ -286,6 +292,9 @@ func DatabricksProvider() *schema.Provider {
 			}
 			if v, ok := d.GetOk("azure_use_pat_for_cli"); ok {
 				pc.AzureAuth.UsePATForCLI = v.(bool)
+			}
+			if v, ok := d.GetOk("azure_environment"); ok {
+				pc.AzureAuth.Environment = v.(string)
 			}
 			authorizationMethodsUsed := []string{}
 			for name, used := range authsUsed {

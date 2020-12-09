@@ -7,9 +7,13 @@ data "databricks_node_type" "smallest" {
   local_disk = true
 }
 
+data "databricks_spark_version" "latest_lts" {
+  long_term_support = true
+}
+
 resource "databricks_cluster" "shared_autoscaling" {
   cluster_name            = "Shared Autoscaling"
-  spark_version           = "6.6.x-scala2.11"
+  spark_version           = data.databricks_spark_version.latest_lts.id
   node_type_id            = data.databricks_node_type.smallest.id
   autotermination_minutes = 20
   autoscale {
@@ -22,7 +26,7 @@ resource "databricks_cluster" "shared_autoscaling" {
 ## Argument Reference
 
 * `cluster_name` - (Optional) Cluster name, which doesn’t have to be unique. If not specified at creation, the cluster name will be an empty string.
-* `spark_version` - (Required) [Runtime version](https://docs.databricks.com/runtime/index.html) of the cluster. You can retrieve [list of available Spark versions](https://docs.databricks.com/release-notes/runtime/releases.html) by using the Runtime Versions API call or `databricks clusters spark-versions` CLI command. We advise using [Cluster Policies](cluster_policy.md) to restrict the list of versions for simplicity while maintaining enough control.
+* `spark_version` - (Required) [Runtime version](https://docs.databricks.com/runtime/index.html) of the cluster. Any supported [databricks_spark_version](../data-sources/spark_version.md) id.  We advise using [Cluster Policies](cluster_policy.md) to restrict the list of versions for simplicity while maintaining enough control.
 * `driver_node_type_id` - (Optional) The node type of the Spark driver. This field is optional; if unset, API will set the driver node type to the same value as `node_type_id` defined above.
 * `node_type_id` - (Required - optional if `instance_pool_id` is given) Any supported [databricks_node_type](../data-sources/node_type.md) id. If `instance_pool_id` is specified, this field is not needed.
 * `instance_pool_id` (Optional - required if `node_type_id` is not given) - To reduce cluster start time, you can attach a cluster to a [predefined pool of idle instances](instance_pool.md). When attached to a pool, a cluster allocates its driver and worker nodes from the pool. If the pool does not have sufficient idle resources to accommodate the cluster’s request, it expands by allocating new instances from the instance provider. When an attached cluster changes its state to `TERMINATED`, the instances it used are returned to the pool and reused by a different cluster.
@@ -45,9 +49,13 @@ data "databricks_node_type" "smallest" {
   local_disk = true
 }
 
+data "databricks_spark_version" "latest_lts" {
+  long_term_support = true
+}
+
 resource "databricks_cluster" "shared_autoscaling" {
   cluster_name            = "Shared Autoscaling"
-  spark_version           = "6.6.x-scala2.11"
+  spark_version           = data.databricks_spark_version.latest_lts.id
   node_type_id            = data.databricks_node_type.smallest.id
   autotermination_minutes = 20
   autoscale {

@@ -43,7 +43,7 @@ The following arguments are required:
 * `custom_tags` - (Optional) (Map) Additional tags for instance pool resources. Databricks tags all pool resources (e.g. AWS & Azure instances and Disk volumes) with these tags in addition to default_tags. *Databricks allows at most 43 custom tags.*
 * `enable_elastic_disk` - (Optional) (Bool) Autoscaling Local Storage: when enabled, the instances in the pool dynamically acquire additional disk space when they are running low on disk space.
 
-* `preloaded_spark_versions` - (Optional) (List) A list with the runtime version the pool installs on each instance. Pool clusters that use a preloaded runtime version start faster as they do have to wait for the image to download. You can retrieve a list of available runtime versions by using the [Runtime Versions API](https://docs.databricks.com/dev-tools/api/latest/clusters.html#clusterclusterservicelistsparkversions) call.
+* `preloaded_spark_versions` - (Optional) (List) A list with the runtime version the pool installs on each instance. Pool clusters that use a preloaded runtime version start faster as they do have to wait for the image to download.  You can retrieve them via [databricks_spark_version](../data-source/spark-version.md) data source or via  [Runtime Versions API](https://docs.databricks.com/dev-tools/api/latest/clusters.html#clusterclusterservicelistsparkversions) call.
 
 ### aws_attributes Configuration Block
 

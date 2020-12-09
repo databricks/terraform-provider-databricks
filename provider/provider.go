@@ -192,8 +192,7 @@ func DatabricksProvider() *schema.Provider {
 			"azure_environment": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Sensitive:   true,
-				DefaultFunc: schema.MultiEnvDefaultFunc([]string{"DATABRICKS_AZURE_ENVIRONMENT", "ARM_ENVIRONMENT"}, "public"),
+				DefaultFunc: schema.EnvDefaultFunc("ARM_ENVIRONMENT", "public"),
 			},
 			"skip_verify": {
 				Type:        schema.TypeBool,

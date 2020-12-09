@@ -16,5 +16,4 @@ func TestCommonEnvironmentClient(t *testing.T) {
 	c2 := CommonEnvironmentClient()
 	assert.Equal(t, UserAgent(), c.userAgent)
 	assert.Equal(t, c2.userAgent, c.userAgent)
-
 }

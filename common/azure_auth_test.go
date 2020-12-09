@@ -11,6 +11,7 @@ import (
 
 	"github.com/Azure/go-autorest/autorest"
 	"github.com/Azure/go-autorest/autorest/adal"
+	"github.com/Azure/go-autorest/autorest/azure"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -268,4 +269,32 @@ func TestAzureAuth_configureWithClientSecret(t *testing.T) {
 	assert.NotNil(t, zi)
 	assert.NoError(t, err)
 	assert.Len(t, zi.Zones, 3)
+}
+
+func TestAzureEnvironment(t *testing.T) {
+	aa := AzureAuth{}
+	env, err := aa.getAzureEnvironment()
+
+	assert.Nil(t, err)
+	assert.Equal(t, azure.PublicCloud, env)
+
+	aa.Environment = "public"
+	env, err = aa.getAzureEnvironment()
+	assert.Nil(t, err)
+	assert.Equal(t, azure.PublicCloud, env)
+
+	aa.Environment = "china"
+	env, err = aa.getAzureEnvironment()
+	assert.Nil(t, err)
+	assert.Equal(t, azure.ChinaCloud, env)
+
+	aa.Environment = "german"
+	env, err = aa.getAzureEnvironment()
+	assert.Nil(t, err)
+	assert.Equal(t, azure.GermanCloud, env)
+
+	aa.Environment = "usgovernment"
+	env, err = aa.getAzureEnvironment()
+	assert.Nil(t, err)
+	assert.Equal(t, azure.USGovernmentCloud, env)
 }

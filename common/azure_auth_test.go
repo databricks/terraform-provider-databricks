@@ -297,4 +297,30 @@ func TestAzureEnvironment(t *testing.T) {
 	env, err = aa.getAzureEnvironment()
 	assert.Nil(t, err)
 	assert.Equal(t, azure.USGovernmentCloud, env)
+
+	aa.Environment = "xyzdummy"
+	_, err = aa.getAzureEnvironment()
+	assert.NotNil(t, err)
+}
+
+func TestInvalidAzureEnvironment(t *testing.T) {
+	aa := AzureAuth{}
+
+	aa.Environment = "xyzdummy"
+	_, envErr := aa.getAzureEnvironment()
+	assert.NotNil(t, envErr)
+
+	mockFunc := func(resource string) (autorest.Authorizer, error) {
+		return nil, nil
+	}
+
+	_, err := aa.simpleAADRequestVisitor(mockFunc)
+
+	assert.Equal(t, envErr, err)
+
+	_, err = aa.acquirePAT(mockFunc)
+	assert.Equal(t, envErr, err)
+
+	_, err = aa.getClientSecretAuthorizer("")
+	assert.Equal(t, envErr, err)
 }

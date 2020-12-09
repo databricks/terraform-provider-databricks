@@ -2,7 +2,7 @@
 
 ## 0.3.0
 
-* Added [support for other clouds](https://github.com/databrickslabs/terraform-provider-databricks/pull/437).
+* Added optional parameter azure_environment to provider config which defaults to public ([#437](https://github.com/databrickslabs/terraform-provider-databricks/pull/437)).
 * Added [databricks_service_principal](https://github.com/databrickslabs/terraform-provider-databricks/pull/386) resource.
 
 **Behavior changes**

@@ -151,7 +151,7 @@ func (aa *AzureAuth) addSpManagementTokenVisitor(r *http.Request, management aut
 func (aa *AzureAuth) simpleAADRequestVisitor(
 	authorizerFactory func(resource string) (autorest.Authorizer, error),
 	visitors ...func(r *http.Request, ma autorest.Authorizer) error) (func(r *http.Request) error, error) {
-	managementAuthorizer, err := authorizerFactory(azure.PublicCloud.ServiceManagementEndpoint)
+	managementAuthorizer, err := authorizerFactory(GetAzureEnvironment().ServiceManagementEndpoint)
 	if err != nil {
 		return nil, err
 	}
@@ -191,7 +191,7 @@ func (aa *AzureAuth) acquirePAT(
 	if aa.temporaryPat != nil {
 		return aa.temporaryPat, nil
 	}
-	management, err := factory(azure.PublicCloud.ServiceManagementEndpoint)
+	management, err := factory(GetAzureEnvironment().ServiceManagementEndpoint)
 	if err != nil {
 		return nil, err
 	}
@@ -300,12 +300,12 @@ func (aa *AzureAuth) getClientSecretAuthorizer(resource string) (autorest.Author
 				auth.TenantID:     aa.TenantID,
 				auth.Resource:     resource,
 			},
-			Environment: azure.PublicCloud,
+			Environment: GetAzureEnvironment(),
 		}
 		return es.GetAuthorizer()
 	}
 	platformTokenOAuthCfg, err := adal.NewOAuthConfigWithAPIVersion(
-		azure.PublicCloud.ActiveDirectoryEndpoint,
+		GetAzureEnvironment().ActiveDirectoryEndpoint,
 		aa.TenantID,
 		nil)
 	if err != nil {

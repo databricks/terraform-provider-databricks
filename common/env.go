@@ -6,6 +6,7 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/Azure/go-autorest/autorest/azure"
 	"github.com/mitchellh/go-homedir"
 )
 
@@ -14,6 +15,27 @@ var (
 	onceClient   sync.Once
 	commonClient *DatabricksClient
 )
+
+// GetAzureEnvironment returns the azure environment
+func GetAzureEnvironment() azure.Environment {
+	env := os.Getenv("ARM_ENVIRONMENT")
+
+	if env == "public" {
+		return azure.PublicCloud
+	}
+	if env == "china" {
+		return azure.ChinaCloud
+	}
+	if env == "german" {
+		return azure.GermanCloud
+	}
+	if env == "usgovernment" {
+		return azure.USGovernmentCloud
+	}
+
+	// default to public cloud
+	return azure.PublicCloud
+}
 
 // NewClientFromEnvironment makes very good client for testing purposes
 func NewClientFromEnvironment() *DatabricksClient {

@@ -32,6 +32,7 @@ func DatabricksProvider() *schema.Provider {
 			"databricks_node_type":               compute.DataSourceNodeType(),
 			"databricks_notebook":                workspace.DataSourceNotebook(),
 			"databricks_notebook_paths":          workspace.DataSourceNotebookPaths(),
+			"databricks_spark_version":           compute.DataSourceSparkVersion(),
 			"databricks_zones":                   compute.DataSourceClusterZones(),
 		},
 		ResourcesMap: map[string]*schema.Resource{

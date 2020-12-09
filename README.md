@@ -38,6 +38,7 @@ End-to-end workspace creation on [AWS](scripts/awsmt-integration) or [Azure](scr
 | [databricks_secret](docs/resources/secret.md)
 | [databricks_secret_acl](docs/resources/secret_acl.md)
 | [databricks_secret_scope](docs/resources/secret_scope.md)
+| [databricks_spark_version](docs/data-sources/spark_version.md) data
 | [databricks_token](docs/resources/token.md)
 | [databricks_user](docs/resources/user.md)
 | [databricks_user_instance_profile](docs/resources/user_instance_profile.md)
@@ -78,9 +79,13 @@ data "databricks_node_type" "smallest" {
   local_disk = true
 }
 
+data "databricks_spark_version" "latest_lts" {
+  long_term_support = true
+}
+
 resource "databricks_cluster" "shared_autoscaling" {
   cluster_name            = "Shared Autoscaling"
-  spark_version           = "6.6.x-scala2.11"
+  spark_version           = data.databricks_spark_version.latest_lts.id
   node_type_id            = data.databricks_node_type.smallest.id
   autotermination_minutes = 20
 

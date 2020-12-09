@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 
@@ -32,6 +33,7 @@ type AzureAuth struct {
 	ClientSecret string
 	ClientID     string
 	TenantID     string
+	Environment  string
 
 	// temporary workaround for SP-based auth
 	PATTokenDurationSeconds string
@@ -64,6 +66,21 @@ type TokenInfo struct {
 }
 
 var authorizerMutex sync.Mutex
+
+func (aa *AzureAuth) getAzureEnvironment() (azure.Environment, error) {
+	if aa.Environment == "" {
+		return azure.PublicCloud, nil
+	}
+
+	envName := fmt.Sprintf("AZURE%sCLOUD", strings.ToUpper(aa.Environment))
+	env, err := azure.EnvironmentFromName(envName)
+
+	if err != nil {
+		return env, err
+	}
+
+	return env, nil
+}
 
 func (aa *AzureAuth) resourceID() string {
 	if aa.ResourceID != "" {
@@ -151,7 +168,11 @@ func (aa *AzureAuth) addSpManagementTokenVisitor(r *http.Request, management aut
 func (aa *AzureAuth) simpleAADRequestVisitor(
 	authorizerFactory func(resource string) (autorest.Authorizer, error),
 	visitors ...func(r *http.Request, ma autorest.Authorizer) error) (func(r *http.Request) error, error) {
-	managementAuthorizer, err := authorizerFactory(GetAzureEnvironment().ServiceManagementEndpoint)
+	env, err := aa.getAzureEnvironment()
+	if err != nil {
+		return nil, err
+	}
+	managementAuthorizer, err := authorizerFactory(env.ServiceManagementEndpoint)
 	if err != nil {
 		return nil, err
 	}
@@ -191,7 +212,11 @@ func (aa *AzureAuth) acquirePAT(
 	if aa.temporaryPat != nil {
 		return aa.temporaryPat, nil
 	}
-	management, err := factory(GetAzureEnvironment().ServiceManagementEndpoint)
+	env, err := aa.getAzureEnvironment()
+	if err != nil {
+		return nil, err
+	}
+	management, err := factory(env.ServiceManagementEndpoint)
 	if err != nil {
 		return nil, err
 	}
@@ -292,6 +317,10 @@ func (aa *AzureAuth) getClientSecretAuthorizer(resource string) (autorest.Author
 		// todo: probably should be two different ones...
 		return aa.authorizer, nil
 	}
+	env, err := aa.getAzureEnvironment()
+	if err != nil {
+		return nil, err
+	}
 	if resource != AzureDatabricksResourceID {
 		es := auth.EnvironmentSettings{
 			Values: map[string]string{
@@ -300,12 +329,12 @@ func (aa *AzureAuth) getClientSecretAuthorizer(resource string) (autorest.Author
 				auth.TenantID:     aa.TenantID,
 				auth.Resource:     resource,
 			},
-			Environment: GetAzureEnvironment(),
+			Environment: env,
 		}
 		return es.GetAuthorizer()
 	}
 	platformTokenOAuthCfg, err := adal.NewOAuthConfigWithAPIVersion(
-		GetAzureEnvironment().ActiveDirectoryEndpoint,
+		env.ActiveDirectoryEndpoint,
 		aa.TenantID,
 		nil)
 	if err != nil {

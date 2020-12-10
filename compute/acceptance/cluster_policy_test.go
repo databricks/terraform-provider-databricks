@@ -23,8 +23,8 @@ func TestAccClusterPolicyResourceFullLifecycle(t *testing.T) {
 				Config: testExternalMetastore(randomName),
 				Check: resource.ComposeTestCheckFunc(
 					acceptance.ResourceCheck("databricks_cluster_policy.external_metastore",
-						func(client *common.DatabricksClient, id string) error {
-							policy, err := NewClusterPoliciesAPI(context.Background(), client).Get(id)
+						func(ctx context.Context, client *common.DatabricksClient, id string) error {
+							policy, err := NewClusterPoliciesAPI(ctx, client).Get(id)
 							assert.NoError(t, err)
 							if policy.Definition == "" {
 								return fmt.Errorf("Empty policy definition found")

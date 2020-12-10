@@ -17,17 +17,17 @@ import (
 )
 
 type cloudSpecificHCLStatements struct {
-	nodeTypeId   string
+	nodeTypeID   string
 	diskSpecType string
 }
 
 var (
 	azureClusterDefaults = cloudSpecificHCLStatements{
-		nodeTypeId:   "node_type_id = \"Standard_DS3_v2\"",
+		nodeTypeID:   "node_type_id = \"Standard_DS3_v2\"",
 		diskSpecType: "azure_disk_volume_type = \"PREMIUM_LRS\"\n",
 	}
 	awsClusterDefaults = cloudSpecificHCLStatements{
-		nodeTypeId:   "node_type_id = \"i3.xlarge\"",
+		nodeTypeID:   "node_type_id = \"i3.xlarge\"",
 		diskSpecType: "ebs_volume_type = \"GENERAL_PURPOSE_SSD\"\n",
 	}
 )
@@ -48,7 +48,7 @@ func testDefaultZones() string {
 type instancePoolHCLBuilder struct {
 	Name          string
 	identifier    string
-	nodeTypeId    string
+	nodeTypeID    string
 	diskSpecType  string
 	awsAttributes string
 }
@@ -62,7 +62,7 @@ func newInstancePoolHCLBuilder(name string) *instancePoolHCLBuilder {
 
 func (i *instancePoolHCLBuilder) withCloudEnv() *instancePoolHCLBuilder {
 	cloudHCLStatements := getCloudSpecificHCLStatements()
-	i.nodeTypeId = cloudHCLStatements.nodeTypeId
+	i.nodeTypeID = cloudHCLStatements.nodeTypeID
 	i.diskSpecType = cloudHCLStatements.diskSpecType
 	return i
 }
@@ -83,7 +83,7 @@ resource "databricks_instance_pool" "%[1]s" {
 		disk_count = 1
 	}
 }
-`, i.Name, i.nodeTypeId, i.awsAttributes, i.diskSpecType)
+`, i.Name, i.nodeTypeID, i.awsAttributes, i.diskSpecType)
 }
 
 func getAwsAttributes(attributesMap map[string]string) string {
@@ -133,7 +133,7 @@ type clusterHCLBuilder struct {
 	awsAttributes string
 	instancePool  string
 	libraries     string
-	nodeTypeId    string
+	nodeTypeID    string
 	diskSpec      string
 }
 
@@ -195,7 +195,7 @@ resource "databricks_cluster" "%[1]s" {
 	custom_tags = {
 		"ResourceClass" = "Serverless"
 	}
-}`, c.Name, c.instancePool, c.awsAttributes, c.libraries, c.nodeTypeId, c.diskSpec)
+}`, c.Name, c.instancePool, c.awsAttributes, c.libraries, c.nodeTypeID, c.diskSpec)
 }
 
 func TestAwsAccClusterResource_ValidatePlan(t *testing.T) {
@@ -205,7 +205,7 @@ func TestAwsAccClusterResource_ValidatePlan(t *testing.T) {
 	awsAttrInstanceProfile := map[string]string{
 		"instance_profile_arn": "my_instance_profile_arn",
 	}
-	awsConfigWithNoZoneId := newClusterHCLBuilder(planName).
+	awsConfigWithNoZoneID := newClusterHCLBuilder(planName).
 		withAwsAttributes(awsAttrNoZoneID).
 		withCloudDiskSpec().
 		build()
@@ -216,7 +216,7 @@ func TestAwsAccClusterResource_ValidatePlan(t *testing.T) {
 	acceptance.AccTest(t, resource.TestCase{
 		Steps: []resource.TestStep{
 			{
-				Config:             awsConfigWithNoZoneId,
+				Config:             awsConfigWithNoZoneID,
 				PlanOnly:           true,
 				ExpectNonEmptyPlan: true,
 			},
@@ -235,7 +235,7 @@ func TestAwsAccClusterResource_CreateClusterViaInstancePool(t *testing.T) {
 	randomInstancePoolInterpolation := fmt.Sprintf("databricks_instance_pool.%s.id", randomInstancePoolName)
 	randomClusterSuffix := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
 	randomClusterName := fmt.Sprintf("cluster-%s", randomClusterSuffix)
-	randomClusterId := fmt.Sprintf("databricks_cluster.%s", randomClusterName)
+	randomClusterID := fmt.Sprintf("databricks_cluster.%s", randomClusterName)
 	awsAttrInstancePool := map[string]string{
 		"zone_id":      "${data.databricks_zones.default_zones.default_zone}",
 		"availability": "SPOT",
@@ -272,19 +272,19 @@ func TestAwsAccClusterResource_CreateClusterViaInstancePool(t *testing.T) {
 			{
 				Config: clusterNoInstanceProfileConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testClusterCheckAndTerminateForFutureTests(randomClusterId, t),
+					testClusterCheckAndTerminateForFutureTests(randomClusterID, t),
 				),
 			},
 			{
 				Config: clusterWithInstanceProfileConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testClusterCheckAndTerminateForFutureTests(randomClusterId, t),
+					testClusterCheckAndTerminateForFutureTests(randomClusterID, t),
 				),
 			},
 			{
 				Config: clusterNoInstanceProfileConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testClusterCheckAndTerminateForFutureTests(randomClusterId, t),
+					testClusterCheckAndTerminateForFutureTests(randomClusterID, t),
 				),
 				PlanOnly:           true,
 				ExpectNonEmptyPlan: true,
@@ -292,7 +292,7 @@ func TestAwsAccClusterResource_CreateClusterViaInstancePool(t *testing.T) {
 			{
 				Config: clusterNoInstanceProfileConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testClusterCheckAndTerminateForFutureTests(randomClusterId, t),
+					testClusterCheckAndTerminateForFutureTests(randomClusterID, t),
 				),
 			},
 		},
@@ -323,7 +323,6 @@ func TestAccClusterResource_CreateClusterWithLibraries(t *testing.T) {
 		return
 	}
 	randomName := fmt.Sprintf("cluster-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
-	randomClusterID := fmt.Sprintf("databricks_cluster.%s", randomName)
 	var clusterInfo ClusterInfo
 
 	acceptance.AccTest(t, resource.TestCase{
@@ -333,9 +332,6 @@ func TestAccClusterResource_CreateClusterWithLibraries(t *testing.T) {
 					withInstancePool(fmt.Sprintf("%#v", CommonInstancePoolID())).
 					withAwsAttributes(nil).
 					build(),
-				Check: resource.ComposeTestCheckFunc(
-					testClusterCheckExists(randomClusterID, &clusterInfo, t),
-				),
 			},
 			{
 				PreConfig: func() {
@@ -354,21 +350,11 @@ func TestAccClusterResource_CreateClusterWithLibraries(t *testing.T) {
 	})
 }
 
-func testClusterCheckExists(n string, cluster *ClusterInfo, t *testing.T) resource.TestCheckFunc {
-	ctx := context.Background()
-	return acceptance.ResourceCheck(n, func(client *common.DatabricksClient, id string) error {
-		clusters := NewClustersAPI(ctx, client)
-		c, err := clusters.Get(id)
-		*cluster = c
-		return err
-	})
-}
-
 func testClusterCheckAndTerminateForFutureTests(n string, t *testing.T) resource.TestCheckFunc {
-	ctx := context.Background()
-	return acceptance.ResourceCheck(n, func(client *common.DatabricksClient, id string) error {
-		return NewClustersAPI(ctx, client).Terminate(id)
-	})
+	return acceptance.ResourceCheck(n,
+		func(ctx context.Context, client *common.DatabricksClient, id string) error {
+			return NewClustersAPI(ctx, client).Terminate(id)
+		})
 }
 
 func testAWSDatabricksInstanceProfile(instanceProfile string, name string) string {

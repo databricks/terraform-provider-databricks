@@ -2,7 +2,6 @@ package acceptance
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"os"
 	"testing"
@@ -49,8 +48,8 @@ func TestAccJobResource(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					// query the API to retrieve the tokenInfo object
 					acceptance.ResourceCheck("databricks_job.this",
-						func(client *common.DatabricksClient, id string) error {
-							job, err := NewJobsAPI(context.Background(), client).Read(id)
+						func(ctx context.Context, client *common.DatabricksClient, id string) error {
+							job, err := NewJobsAPI(ctx, client).Read(id)
 							assert.NoError(t, err)
 							assert.NotNil(t, job.Settings)
 							assert.NotNil(t, job.Settings.NewCluster)
@@ -68,14 +67,6 @@ func TestAccJobResource(t *testing.T) {
 				),
 			},
 		},
-		CheckDestroy: acceptance.ResourceCheck("databricks_job.this",
-			func(client *common.DatabricksClient, id string) error {
-				_, err := NewJobsAPI(context.Background(), client).Read(id)
-				if err != nil {
-					return nil
-				}
-				return errors.New("resource job is not cleaned up")
-			}),
 	})
 }
 
@@ -124,8 +115,8 @@ func TestAwsAccJobResource_NoInstancePool(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					// query the API to retrieve the tokenInfo object
 					acceptance.ResourceCheck("databricks_job.this",
-						func(client *common.DatabricksClient, id string) error {
-							job, err := NewJobsAPI(context.Background(), client).Read(id)
+						func(ctx context.Context, client *common.DatabricksClient, id string) error {
+							job, err := NewJobsAPI(ctx, client).Read(id)
 							assert.NoError(t, err)
 							assert.NotNil(t, job.Settings)
 							assert.NotNil(t, job.Settings.NewCluster)
@@ -135,13 +126,5 @@ func TestAwsAccJobResource_NoInstancePool(t *testing.T) {
 				),
 			},
 		},
-		CheckDestroy: acceptance.ResourceCheck("databricks_job.this",
-			func(client *common.DatabricksClient, id string) error {
-				_, err := NewJobsAPI(context.Background(), client).Read(id)
-				if err != nil {
-					return nil
-				}
-				return errors.New("resource job is not cleaned up")
-			}),
 	})
 }

@@ -315,11 +315,12 @@ func TestInvalidAzureEnvironment(t *testing.T) {
 		return nil, nil
 	}
 
-	_, err := aa.simpleAADRequestVisitor(mockFunc)
+	ctx := context.Background()
+	_, err := aa.simpleAADRequestVisitor(ctx, mockFunc)
 
 	assert.Equal(t, envErr, err)
 
-	_, err = aa.acquirePAT(mockFunc)
+	_, err = aa.acquirePAT(ctx, mockFunc)
 	assert.Equal(t, envErr, err)
 
 	_, err = aa.getClientSecretAuthorizer("")

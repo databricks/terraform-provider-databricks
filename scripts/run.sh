@@ -109,10 +109,13 @@ fi
 if [[ $@ == *"--debug"* ]]; then
     export TF_LOG="DEBUG"
     export TF_LOG_PATH=$PWD/tf.log
+    export TF_ACC_LOG_PATH=$PWD/tf.log
     echo "[*] To see debug logs: tail -f $PWD/tf.log"
 fi
 
 function go_test {
+    # set tmp dir to short one
+    export TMPDIR=/tmp
     TF_ACC=1 gotestsum \
     --format short-verbose \
     --raw-command go test -v \

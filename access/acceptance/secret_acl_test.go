@@ -80,8 +80,8 @@ func TestAccSecretAclResourceDefaultPrincipal(t *testing.T) {
 						scope = databricks_secret_scope.app.name
 					}`),
 				Check: acceptance.ResourceCheck("databricks_secret_scope.app",
-					func(client *common.DatabricksClient, id string) error {
-						secretACLAPI := NewSecretAclsAPI(context.Background(), client)
+					func(ctx context.Context, client *common.DatabricksClient, id string) error {
+						secretACLAPI := NewSecretAclsAPI(ctx, client)
 						acls, err := secretACLAPI.List(id)
 						require.NoError(t, err)
 						assert.Equal(t, 1, len(acls))

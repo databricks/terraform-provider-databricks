@@ -18,7 +18,7 @@ import (
 func mountResourceCheck(name string,
 	cb func(*common.DatabricksClient, MountPoint) error) resource.TestCheckFunc {
 	return acceptance.ResourceCheck(name,
-		func(client *common.DatabricksClient, id string) error {
+		func(ctx context.Context, client *common.DatabricksClient, id string) error {
 			client.WithCommandExecutor(func(ctx context.Context, client *common.DatabricksClient) common.CommandExecutor {
 				return compute.NewCommandsAPI(ctx, client)
 			})

@@ -5,7 +5,7 @@ fmt:
 	@goimports -w $(shell find . -type f -name '*.go' -not -path "./vendor/*")
 	@echo "✓ Formatting source code with gofmt ..."
 	@gofmt -w $(shell find . -type f -name '*.go' -not -path "./vendor/*")
-	
+
 lint: vendor
 	@echo "✓ Linting source code with golangci-lint make sure you run make fmt ..."
 	@golangci-lint run --skip-dirs-use-default --timeout 5m
@@ -40,7 +40,7 @@ install: build
 	@echo "    }"
 	@echo "  }"
 	@echo "}"
-	
+
 vendor:
 	@echo "✓ Filling vendor folder with library code ..."
 	@go mod vendor

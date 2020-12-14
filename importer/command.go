@@ -65,9 +65,9 @@ func Run(args ...string) error {
 		}
 	}
 	flags.StringVar(&ic.services, "services", services,
-		"Coma-separated list of services to import. By default all services are imported.")
+		"Comma-separated list of services to import. By default all services are imported.")
 	flags.StringVar(&ic.listing, "listing", listing,
-		"Coma-separated list of services to be listed and further passed on for importing. "+
+		"Comma-separated list of services to be listed and further passed on for importing. "+
 			"`-services` parameter controls which transitive dependencies will be processed. "+
 			"We recommend limiting services with `-listing` more often, than `-services`.")
 	flags.StringVar(&ic.match, "match", "", "Match resource names during listing operation. "+

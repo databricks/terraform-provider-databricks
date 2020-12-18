@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"strings"
 	"sync"
 
 	"github.com/databrickslabs/databricks-terraform/common"
@@ -16,22 +15,6 @@ var (
 	oncePool           sync.Once
 	commonInstancePool *InstancePoolAndStats
 )
-
-// CommonRuntimeVersion presents recommended Spark Version
-func CommonRuntimeVersion() string {
-	return "6.6.x-scala2.11"
-}
-
-// CommonInstanceType presents smallest recommended instance type
-func CommonInstanceType() string {
-	cloudEnv := os.Getenv("CLOUD_ENV")
-	if strings.ToLower(cloudEnv) == "azure" {
-		return "Standard_DS3_v2"
-	}
-	// TODO: create a method on ClustersAPI to give
-	// cloud specific delta-cache enabled instance by default.
-	return "m4.large"
-}
 
 // CommonInstancePoolID returns common instance pool that is supposed to be used for internal testing purposes
 func CommonInstancePoolID() string {
@@ -60,7 +43,8 @@ func CommonInstancePoolID() string {
 			}
 		}
 		instancePool := InstancePool{
-			PreloadedSparkVersions: []string{CommonRuntimeVersion()},
+			PreloadedSparkVersions: []string{
+				clusters.LatestSparkVersionOrDefault(SparkVersionRequest{Latest: true, LongTermSupport: true})},
 			NodeTypeID: clusters.GetSmallestNodeType(NodeTypeRequest{
 				LocalDisk: true,
 			}),
@@ -103,7 +87,7 @@ func NewTinyClusterInCommonPool() (c ClusterInfo, err error) {
 	c, err = clusters.Create(Cluster{
 		NumWorkers:             1,
 		ClusterName:            "Terraform " + randomName,
-		SparkVersion:           CommonRuntimeVersion(),
+		SparkVersion:           clusters.LatestSparkVersionOrDefault(SparkVersionRequest{Latest: true, LongTermSupport: true}),
 		InstancePoolID:         CommonInstancePoolID(),
 		IdempotencyToken:       "tf-" + randomName,
 		AutoterminationMinutes: 20,
@@ -120,7 +104,7 @@ func NewTinyClusterInCommonPoolPossiblyReused() (c ClusterInfo) {
 	c, err := clusters.GetOrCreateRunningCluster(currentCluster, Cluster{
 		NumWorkers:             1,
 		ClusterName:            currentCluster,
-		SparkVersion:           CommonRuntimeVersion(),
+		SparkVersion:           clusters.LatestSparkVersionOrDefault(SparkVersionRequest{Latest: true, LongTermSupport: true}),
 		InstancePoolID:         CommonInstancePoolID(),
 		IdempotencyToken:       "tf-" + randomName,
 		AutoterminationMinutes: 20,

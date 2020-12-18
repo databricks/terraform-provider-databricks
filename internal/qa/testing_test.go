@@ -227,13 +227,6 @@ func TestResourceFixture_Apply_Fail(t *testing.T) {
 	assert.EqualError(t, err, "Invalid config supplied. [check] Invalid or unknown key")
 }
 
-func TestGetCloudInstanceType(t *testing.T) {
-	c := &common.DatabricksClient{}
-	assert.Equal(t, "m4.large", GetCloudInstanceType(c))
-	c.Host = "https://adb-0987654321.2.azuredatabricks.net/"
-	assert.Equal(t, "Standard_DS3_v2", GetCloudInstanceType(c))
-}
-
 func TestTestCreateTempFile(t *testing.T) {
 	a := TestCreateTempFile(t, "abc")
 	assert.FileExists(t, a)

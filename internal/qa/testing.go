@@ -440,16 +440,6 @@ func AssertErrorStartsWith(t *testing.T, err error, message string) bool {
 	return assert.True(t, strings.HasPrefix(err.Error(), message), err.Error())
 }
 
-// GetCloudInstanceType gives common minimal instance type, depending on a cloud
-func GetCloudInstanceType(c *common.DatabricksClient) string {
-	if c.IsAzure() {
-		return "Standard_DS3_v2"
-	}
-	// TODO: create a method on ClustersAPI to give
-	// cloud specific delta-cache enabled instance by default.
-	return "m4.large"
-}
-
 // TestCreateTempFile  ...
 func TestCreateTempFile(t *testing.T, data string) string {
 	tmpFile, err := ioutil.TempFile("", "tf-test-create-dbfs-file")

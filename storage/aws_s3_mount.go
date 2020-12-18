@@ -126,7 +126,7 @@ func getOrCreateMountingClusterWithInstanceProfile(clustersAPI compute.ClustersA
 	return clustersAPI.GetOrCreateRunningCluster(clusterName, compute.Cluster{
 		NumWorkers:   1,
 		ClusterName:  clusterName,
-		SparkVersion: compute.CommonRuntimeVersion(),
+		SparkVersion: clustersAPI.LatestSparkVersionOrDefault(compute.SparkVersionRequest{Latest: true, LongTermSupport: true}),
 		NodeTypeID: clustersAPI.GetSmallestNodeType(compute.NodeTypeRequest{
 			LocalDisk: true,
 		}),

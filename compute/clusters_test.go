@@ -23,6 +23,31 @@ func TestGetOrCreateRunningCluster_AzureAuth(t *testing.T) {
 		{
 			Method:       "GET",
 			ReuseRequest: true,
+			Resource:     "/api/2.0/clusters/spark-versions",
+			Response: SparkVersionsList{
+				SparkVersions: []SparkVersion{
+					{
+						Version:     "7.1.x-cpu-ml-scala2.12",
+						Description: "7.1 ML (includes Apache Spark 3.0.0, Scala 2.12)",
+					},
+					{
+						Version:     "apache-spark-2.4.x-scala2.11",
+						Description: "Light 2.4 (includes Apache Spark 2.4, Scala 2.11)",
+					},
+					{
+						Version:     "7.3.x-scala2.12",
+						Description: "7.3 LTS (includes Apache Spark 3.0.1, Scala 2.12)",
+					},
+					{
+						Version:     "6.4.x-scala2.11",
+						Description: "6.4 (includes Apache Spark 2.4.5, Scala 2.11)",
+					},
+				},
+			},
+		},
+		{
+			Method:       "GET",
+			ReuseRequest: true,
 			Resource:     "/api/2.0/clusters/list-node-types",
 			Response: NodeTypeList{
 				[]NodeType{
@@ -61,7 +86,7 @@ func TestGetOrCreateRunningCluster_AzureAuth(t *testing.T) {
 				ClusterName:            "mount",
 				NodeTypeID:             "Standard_F4s",
 				NumWorkers:             1,
-				SparkVersion:           CommonRuntimeVersion(),
+				SparkVersion:           "7.3.x-scala2.12",
 			},
 			Response: ClusterID{
 				ClusterID: "bcd",
@@ -101,7 +126,7 @@ func TestGetOrCreateRunningCluster_Existing_AzureAuth(t *testing.T) {
 						ClusterName:            "mount",
 						NodeTypeID:             "Standard_F4s",
 						NumWorkers:             1,
-						SparkVersion:           CommonRuntimeVersion(),
+						SparkVersion:           "7.3.x-scala2.12",
 					},
 				},
 			},
@@ -548,18 +573,19 @@ func TestAccListClustersIntegration(t *testing.T) {
 	}
 
 	client := common.CommonEnvironmentClient()
+	ctx := context.Background()
+	clustersAPI := NewClustersAPI(ctx, client)
 	randomName := qa.RandomName()
 
 	cluster := Cluster{
 		NumWorkers:             1,
 		ClusterName:            "Terraform Integration Test " + randomName,
-		SparkVersion:           CommonRuntimeVersion(),
+		SparkVersion:           clustersAPI.LatestSparkVersionOrDefault(SparkVersionRequest{Latest: true, LongTermSupport: true}),
 		InstancePoolID:         CommonInstancePoolID(),
 		IdempotencyToken:       "acc-list-" + randomName,
 		AutoterminationMinutes: 15,
 	}
-	ctx := context.Background()
-	clusterReadInfo, err := NewClustersAPI(ctx, client).Create(cluster)
+	clusterReadInfo, err := clustersAPI.Create(cluster)
 	assert.NoError(t, err, err)
 	assert.True(t, clusterReadInfo.NumWorkers == cluster.NumWorkers)
 	assert.True(t, clusterReadInfo.ClusterName == cluster.ClusterName)

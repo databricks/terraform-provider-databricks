@@ -24,7 +24,7 @@ func getRunningClusterWithInstanceProfile(t *testing.T, client *common.Databrick
 	return clustersAPI.GetOrCreateRunningCluster(clusterName, compute.Cluster{
 		NumWorkers:             1,
 		ClusterName:            clusterName,
-		SparkVersion:           compute.CommonRuntimeVersion(),
+		SparkVersion:           clustersAPI.LatestSparkVersionOrDefault(compute.SparkVersionRequest{Latest: true, LongTermSupport: true}),
 		InstancePoolID:         compute.CommonInstancePoolID(),
 		AutoterminationMinutes: 10,
 		AwsAttributes: &compute.AwsAttributes{
@@ -37,6 +37,7 @@ func TestAwsAccS3IamMount_WithCluster(t *testing.T) {
 	client := common.NewClientFromEnvironment()
 	arn := qa.GetEnvOrSkipTest(t, "TEST_EC2_INSTANCE_PROFILE")
 	ctx := context.Background()
+	clustersAPI := compute.NewClustersAPI(ctx, client)
 	identity.NewInstanceProfilesAPI(ctx, client).Synchronized(arn, func() {
 		config := qa.EnvironmentTemplate(t, `
 		resource "databricks_instance_profile" "this" {
@@ -59,7 +60,7 @@ func TestAwsAccS3IamMount_WithCluster(t *testing.T) {
 			s3_bucket_name = "{env.TEST_S3_BUCKET}"
 		}`, map[string]string{
 			"POOL":  compute.CommonInstancePoolID(),
-			"SPARK": compute.CommonRuntimeVersion(),
+			"SPARK": clustersAPI.LatestSparkVersionOrDefault(compute.SparkVersionRequest{Latest: true, LongTermSupport: true}),
 		})
 		acceptance.AccTest(t, resource.TestCase{
 			Steps: []resource.TestStep{

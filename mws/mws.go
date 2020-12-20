@@ -95,3 +95,13 @@ type Workspace struct {
 	WorkspaceStatusMessage string `json:"workspace_status_message,omitempty" tf:"computed"`
 	CreationTime           int64  `json:"creation_time,omitempty" tf:"computed"`
 }
+
+// VPCEndpoint is the object that contains all the information for registering an VPC endpoint
+//ToDo: Find the actual name for the vpc endpoint status
+type VPCEndpoint struct {
+	AccountID         string `json:"account_id"`
+	VPCEndpointName   string `json:"vpc_endpoint_name"`
+	AwsRegion         string `json:"aws_region"`
+	AWSVPCEndpointID  string `json:"aws_vpc_endpoint_id"`
+	VPCEndpointStatus string `json:"vpc_endpoint_status,omitempty" tf:"computed"` 
+}

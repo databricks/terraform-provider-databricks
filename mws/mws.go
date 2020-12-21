@@ -103,5 +103,14 @@ type VPCEndpoint struct {
 	VPCEndpointName   string `json:"vpc_endpoint_name"`
 	AwsRegion         string `json:"aws_region"`
 	AWSVPCEndpointID  string `json:"aws_vpc_endpoint_id"`
-	VPCEndpointStatus string `json:"vpc_endpoint_status,omitempty" tf:"computed"` 
+	VPCEndpointStatus string `json:"vpc_endpoint_status,omitempty" tf:"computed"`
+}
+
+//PAS is the object that contains all the information for creating an PAS
+type PAS struct {
+	AccountID string `json:"account_id"`
+	PasID     string `json:"private_access_settings_id"`
+	AwsRegion string `json:"aws_region"`
+	PasName   string `json:"private_access_settings_name"`
+	PasStatus string `json:"private_access_settings_status,omitempty" tf:"computed"`
 }

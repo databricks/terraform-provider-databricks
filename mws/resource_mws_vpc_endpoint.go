@@ -71,6 +71,7 @@ func (a VPCEndpointAPI) List(mwsAcctID string) ([]VPCEndpoint, error) {
 // ResourceVPCEndpoint ...
 func ResourceVPCEndpoint() *schema.Resource {
 	s := internal.StructToSchema(VPCEndpoint{}, func(s map[string]*schema.Schema) map[string]*schema.Schema {
+		s["account_id"].MinItems = 1
 		s["vpc_endpoint_name"].ValidateFunc = validation.StringLenBetween(4, 256)
 		s["aws_vpc_endpoint_id"].MinItems = 1
 		s["aws_region"].MinItems = 1

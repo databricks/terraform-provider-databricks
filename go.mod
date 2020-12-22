@@ -8,6 +8,7 @@ require (
 	github.com/Azure/go-autorest/autorest/azure/auth v0.5.3
 	github.com/Azure/go-autorest/autorest/azure/cli v0.4.2
 	github.com/aws/aws-sdk-go v1.35.36
+	github.com/golangci/golangci-lint v1.25.0 // indirect
 	github.com/google/go-querystring v1.0.0
 	github.com/hashicorp/go-cty v1.4.1-0.20200414143053-d3edf31b6320
 	github.com/hashicorp/go-retryablehttp v0.6.8
@@ -17,6 +18,7 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/smartystreets/goconvey v1.6.4 // indirect
 	github.com/stretchr/testify v1.6.1
-	gopkg.in/check.v1 v1.0.0-20190902080502-41f04d3bba15 // indirect
+	golang.org/x/tools v0.0.0-20201218024724-ae774e9781d2 // indirect
 	gopkg.in/ini.v1 v1.62.0
+	gotest.tools/gotestsum v0.6.0 // indirect
 )

@@ -71,10 +71,8 @@ func (a PASAPI) List(mwsAcctID string) ([]PAS, error) {
 // ResourcePAS ...
 func ResourcePAS() *schema.Resource {
 	s := internal.StructToSchema(PAS{}, func(s map[string]*schema.Schema) map[string]*schema.Schema {
-		s["account_id"].MinItems = 1
+		// nolint
 		s["private_access_settings_name"].ValidateFunc = validation.StringLenBetween(4, 256)
-		s["private_access_settings_id"].MinItems = 1
-		s["aws_region"].MinItems = 1
 		return s
 	})
 	p := util.NewPairSeparatedID("account_id", "private_access_settings_id", "/")

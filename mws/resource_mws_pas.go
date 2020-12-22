@@ -54,7 +54,7 @@ func (a PASAPI) Delete(mwsAcctID, pasID string) error {
 		if err != nil {
 			return resource.NonRetryableError(err)
 		}
-		msg := fmt.Errorf("private access settings %s is not removed yet. private access settings Status: %s", pas.PasName, pas.PasStatus)
+		msg := fmt.Errorf("private access settings %s is not removed yet. private access settings Status: %s", pas.PasName, pas.PASStatus)
 		log.Printf("[INFO] %s", msg)
 		return resource.RetryableError(msg)
 	})

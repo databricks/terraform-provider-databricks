@@ -54,7 +54,7 @@ func (a VPCEndpointAPI) Delete(mwsAcctID, vpcEndpointID string) error {
 		if err != nil {
 			return resource.NonRetryableError(err)
 		}
-		msg := fmt.Errorf("VPCEndpoint %s is not removed yet. VPCEndpoint Status: %s", vpcEndpoint.VPCEndpointName, vpcEndpoint.VPCEndpointStatus)
+		msg := fmt.Errorf("VPCEndpoint %s is not removed yet. VPCEndpoint State: %s", vpcEndpoint.VPCEndpointName, vpcEndpoint.State)
 		log.Printf("[INFO] %s", msg)
 		return resource.RetryableError(msg)
 	})
@@ -71,10 +71,8 @@ func (a VPCEndpointAPI) List(mwsAcctID string) ([]VPCEndpoint, error) {
 // ResourceVPCEndpoint ...
 func ResourceVPCEndpoint() *schema.Resource {
 	s := internal.StructToSchema(VPCEndpoint{}, func(s map[string]*schema.Schema) map[string]*schema.Schema {
-		s["account_id"].MinItems = 1
+		// nolint
 		s["vpc_endpoint_name"].ValidateFunc = validation.StringLenBetween(4, 256)
-		s["aws_vpc_endpoint_id"].MinItems = 1
-		s["aws_region"].MinItems = 1
 		return s
 	})
 	p := util.NewPairSeparatedID("account_id", "aws_vpc_endpoint_id", "/")
@@ -88,7 +86,7 @@ func ResourceVPCEndpoint() *schema.Resource {
 			if err := NewVPCEndpointAPI(ctx, c).Create(&vpcEndpoint); err != nil {
 				return err
 			}
-			d.Set("aws_vpc_endpoint_id", vpcEndpoint.AWSVPCEndpointID)
+			d.Set("aws_vpc_endpoint_id", vpcEndpoint.AwsVPCEndpointID)
 			p.Pack(d)
 			return nil
 		},

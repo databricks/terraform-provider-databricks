@@ -63,6 +63,11 @@ Installing `gotestsum`:
 go get gotest.tools/gotestsum
 ```
 
+Installing `goimports`:
+```bash
+go get golang.org/x/tools/cmd/goimports
+```
+
 After this, you should be able to run `make test`.
 
 ## Developing with Visual Studio Code Devcontainers

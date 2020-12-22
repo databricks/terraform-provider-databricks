@@ -63,7 +63,7 @@ func DatabricksProvider() *schema.Provider {
 			"databricks_mws_storage_configurations": mws.ResourceStorageConfiguration(),
 			"databricks_mws_workspaces":             mws.ResourceWorkspace(),
 			// "databricks_mws_vpc_endpoint": 			 mws.ResourceVPCEndpoint(),
-			// "databricks_databricks_mws_pas":  		 mws.ResourcePAS(),						
+			// "databricks_databricks_mws_pas":  		 mws.ResourcePAS(),
 
 			"databricks_aws_s3_mount":          storage.ResourceAWSS3Mount(),
 			"databricks_azure_adls_gen1_mount": storage.ResourceAzureAdlsGen1Mount(),

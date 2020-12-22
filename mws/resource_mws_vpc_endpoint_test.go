@@ -8,6 +8,7 @@ import (
 	"github.com/databrickslabs/databricks-terraform/internal/qa"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestMWSVPCEndpoint(t *testing.T) {
@@ -51,10 +52,6 @@ func TestResourceVPCEndpointCreate(t *testing.T) {
 					Region:           "ar",
 					AwsVPCEndpointID: "ave_id",
 				},
-
-				// Response: VPCEndpoint {
-				// 	// fill in specific fields...
-				// },
 			},
 			{
 				Method:   "GET",
@@ -107,7 +104,7 @@ func TestResourceVPCEndpointCreate_Error(t *testing.T) {
 	assert.Equal(t, "", d.Id(), "Id should be empty for error creates")
 }
 
-func TestResourceMWSVPCEndpointRead(t *testing.T) {
+func TestResourceVPCEndpointRead(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
@@ -230,4 +227,20 @@ func TestResourceVPCEndpointDelete_Error(t *testing.T) {
 	}.Apply(t)
 	qa.AssertErrorStartsWith(t, err, "Internal error happened")
 	assert.Equal(t, "abc/veid", d.Id())
+}
+
+func TestResourceVPCEndpointList(t *testing.T) {
+	client, server, err := qa.HttpFixtureClient(t, []qa.HTTPFixture{
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/accounts/abc/vpc-endpoints",
+			Response: []VPCEndpoint{},
+		},
+	})
+	require.NoError(t, err)
+	defer server.Close()
+
+	l, err := NewVPCEndpointAPI(context.Background(), client).List("abc")
+	require.NoError(t, err)
+	assert.Len(t, l, 0)
 }

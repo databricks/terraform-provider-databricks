@@ -96,15 +96,6 @@ type Workspace struct {
 	CreationTime           int64  `json:"creation_time,omitempty" tf:"computed"`
 }
 
-//PAS is the object that contains all the information for creating an PAS
-type PAS struct {
-	AccountID string `json:"account_id"`
-	PasID     string `json:"private_access_settings_id"`
-	AwsRegion string `json:"aws_region"`
-	PasName   string `json:"private_access_settings_name"`
-	PasStatus string `json:"private_access_settings_status,omitempty" tf:"computed"`
-}
-
 // VPCEndpoint is the object that contains all the information for registering an VPC endpoint
 //Schema From List Customer VPC Endpoint Id API
 type VPCEndpoint struct {
@@ -118,4 +109,14 @@ type VPCEndpoint struct {
 	AwsAccountID            string `json:"aws_account_id,omitempty"`
 	State                   string `json:"state,omitempty" tf:"computed"`
 	CreationTime            int64  `json:"creation_time,omitempty" tf:"computed"`
+}
+
+//PAS is the object that contains all the information for creating an PAS
+type PAS struct {
+	AccountID    string `json:"account_id,omitempty"`
+	PasID        string `json:"private_access_settings_id,omitempty"`
+	PasName      string `json:"private_access_settings_name"`
+	Region       string `json:"region"`
+	PASStatus    string `json:"status,omitempty" tf:"computed"`
+	CreationTime int64  `json:"creation_time,omitempty" tf:"computed"`
 }

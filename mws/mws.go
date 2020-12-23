@@ -40,18 +40,25 @@ type NetworkHealth struct {
 	ErrorMessage string `json:"error_message,omitempty"`
 }
 
+// NetworkVPCEndpoints is the object that contains VPC endpoints of a network
+type NetworkVPCEndpoints struct {
+	RestAPI           []string `json:"rest_api" tf:"slice_set"`
+	DataplaneRelayAPI []string `json:"dataplane_relay_api" tf:"slice_set"`
+}
+
 // Network is the object that contains all the information for BYOVPC
 type Network struct {
-	AccountID        string          `json:"account_id"`
-	NetworkID        string          `json:"network_id,omitempty" tf:"computed"`
-	NetworkName      string          `json:"network_name"`
-	VPCID            string          `json:"vpc_id"`
-	SubnetIds        []string        `json:"subnet_ids" tf:"slice_set"`
-	SecurityGroupIds []string        `json:"security_group_ids" tf:"slice_set"`
-	VPCStatus        string          `json:"vpc_status,omitempty" tf:"computed"`
-	ErrorMessages    []NetworkHealth `json:"error_messages,omitempty" tf:"computed"`
-	WorkspaceID      int64           `json:"workspace_id,omitempty" tf:"computed"`
-	CreationTime     int64           `json:"creation_time,omitempty" tf:"computed"`
+	AccountID           string               `json:"account_id"`
+	NetworkID           string               `json:"network_id,omitempty" tf:"computed"`
+	NetworkName         string               `json:"network_name"`
+	VPCID               string               `json:"vpc_id"`
+	SubnetIds           []string             `json:"subnet_ids" tf:"slice_set"`
+	SecurityGroupIds    []string             `json:"security_group_ids" tf:"slice_set"`
+	VPCStatus           string               `json:"vpc_status,omitempty" tf:"computed"`
+	ErrorMessages       []NetworkHealth      `json:"error_messages,omitempty" tf:"computed"`
+	WorkspaceID         int64                `json:"workspace_id,omitempty" tf:"computed"`
+	NetworkVPCEndpoints *NetworkVPCEndpoints `json:"vpc_endpoints,omitempty"`
+	CreationTime        int64                `json:"creation_time,omitempty" tf:"computed"`
 }
 
 // List of workspace statuses for provisioning the workspace

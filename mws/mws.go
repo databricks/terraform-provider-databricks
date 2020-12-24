@@ -86,21 +86,22 @@ func ContainsWorkspaceState(workspaceStates []string, searchState string) bool {
 
 // Workspace is the object that contains all the information for deploying a workspace
 type Workspace struct {
-	AccountID              string `json:"account_id"`
-	WorkspaceName          string `json:"workspace_name"`
-	DeploymentName         string `json:"deployment_name"`
-	AwsRegion              string `json:"aws_region"`
-	CredentialsID          string `json:"credentials_id"`
-	StorageConfigurationID string `json:"storage_configuration_id"`
-	CustomerManagedKeyID   string `json:"customer_managed_key_id,omitempty"`
-	NetworkID              string `json:"network_id,omitempty"`
-	IsNoPublicIPEnabled    bool   `json:"is_no_public_ip_enabled,omitempty"`
-
-	WorkspaceID            int64  `json:"workspace_id,omitempty" tf:"computed"`
-	WorkspaceURL           string `json:"workspace_url,omitempty" tf:"computed"`
-	WorkspaceStatus        string `json:"workspace_status,omitempty" tf:"computed"`
-	WorkspaceStatusMessage string `json:"workspace_status_message,omitempty" tf:"computed"`
-	CreationTime           int64  `json:"creation_time,omitempty" tf:"computed"`
+	AccountID               string `json:"account_id"`
+	WorkspaceName           string `json:"workspace_name"`
+	DeploymentName          string `json:"deployment_name"`
+	AwsRegion               string `json:"aws_region"`
+	CredentialsID           string `json:"credentials_id"`
+	StorageConfigurationID  string `json:"storage_configuration_id"`
+	CustomerManagedKeyID    string `json:"customer_managed_key_id,omitempty"`
+	NetworkID               string `json:"network_id,omitempty"`
+	IsNoPublicIPEnabled     bool   `json:"is_no_public_ip_enabled,omitempty"`
+	WorkspaceID             int64  `json:"workspace_id,omitempty" tf:"computed"`
+	WorkspaceURL            string `json:"workspace_url,omitempty" tf:"computed"`
+	WorkspaceStatus         string `json:"workspace_status,omitempty" tf:"computed"`
+	WorkspaceStatusMessage  string `json:"workspace_status_message,omitempty" tf:"computed"`
+	PricingTier             string `json:"pricing_tier,omitempty"`
+	PrivateAccessSettingsID string `json:"private_access_settings_id,omitempty"`
+	CreationTime            int64  `json:"creation_time,omitempty" tf:"computed"`
 }
 
 // VPCEndpoint is the object that contains all the information for registering an VPC endpoint

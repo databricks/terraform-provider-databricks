@@ -2,8 +2,12 @@ package compute
 
 import (
 	"context"
+	"fmt"
 	"log"
+	"strings"
 	"time"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -82,14 +86,36 @@ func resourceClusterSchema() map[string]*schema.Schema {
 			Type:     schema.TypeMap,
 			Computed: true,
 		}
+		s["num_workers"] = &schema.Schema{
+			Type:         schema.TypeInt,
+			Optional:     true,
+			Default:      0,
+			ValidateFunc: validation.IntAtLeast(0),
+		}
 		return s
 	})
+}
+
+func validateClusterDefinition(cluster Cluster) error {
+	if cluster.NumWorkers > 0 || cluster.Autoscale != nil {
+		return nil
+	}
+	profile := cluster.SparkConf["spark.databricks.cluster.profile"]
+	master := cluster.SparkConf["spark.master"]
+	if profile == "singleNode" && strings.HasPrefix(master, "local") {
+		return nil
+	}
+	return fmt.Errorf("NumWorkers could be 0 only for SingleNode clusters. See https://docs.databricks.com/clusters/single-node.html for more details")
 }
 
 func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 	var cluster Cluster
 	clusters := NewClustersAPI(ctx, c)
 	err := internal.DataToStructPointer(d, clusterSchema, &cluster)
+	if err != nil {
+		return err
+	}
+	err = validateClusterDefinition(cluster)
 	if err != nil {
 		return err
 	}
@@ -218,6 +244,10 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, c *commo
 	var clusterInfo ClusterInfo
 	if hasClusterConfigChanged(d) {
 		log.Printf("[DEBUG] Cluster state has changed!")
+		err = validateClusterDefinition(cluster)
+		if err != nil {
+			return err
+		}
 		modifyClusterRequest(&cluster)
 		clusterInfo, err = clusters.Edit(cluster)
 		if err != nil {

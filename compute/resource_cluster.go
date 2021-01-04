@@ -87,10 +87,10 @@ func resourceClusterSchema() map[string]*schema.Schema {
 			Computed: true,
 		}
 		s["num_workers"] = &schema.Schema{
-			Type:         schema.TypeInt,
-			Optional:     true,
-			Default:      0,
-			ValidateFunc: validation.IntAtLeast(0),
+			Type:             schema.TypeInt,
+			Optional:         true,
+			Default:          0,
+			ValidateDiagFunc: validation.ToDiagFunc(validation.IntAtLeast(0)),
 		}
 		return s
 	})

@@ -102,7 +102,7 @@ var jobSchema = internal.StructToSchema(JobSettings{},
 			p.Optional = true
 			p.Default = 0
 			p.Type = schema.TypeInt
-			p.ValidateFunc = validation.IntAtLeast(0)
+			p.ValidateDiagFunc = validation.ToDiagFunc(validation.IntAtLeast(0))
 			p.Required = false
 		}
 

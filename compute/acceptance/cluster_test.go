@@ -78,7 +78,9 @@ resource "databricks_instance_pool" "%[1]s" {
 	%[3]s
 	idle_instance_autotermination_minutes = 10
 	disk_spec {
-		%[4]s
+        disk_type {
+		    %[4]s
+        }
 		disk_size = 80
 		disk_count = 1
 	}
@@ -106,14 +108,18 @@ func (i *instancePoolHCLBuilder) withAwsAttributes(attributesMap map[string]stri
 
 func getCommonLibraries() string {
 	return `
-	library_maven {
-		coordinates = "org.jsoup:jsoup:1.7.2"
-		repo = "https://mavencentral.org"
-		exclusions = ["slf4j:slf4j"]
+	library {
+		maven {
+			coordinates = "org.jsoup:jsoup:1.7.2"
+			repo = "https://mavencentral.org"
+			exclusions = ["slf4j:slf4j"]
+		}
 	}
-	library_pypi {
-		package = "faker"
-		repo = "https://pypi.org"
+	library {
+		pypi {
+			package = "Faker"
+			repo = "https://pypi.org/simple"
+		}
 	}
 	library {
 		pypi {

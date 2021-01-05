@@ -18,12 +18,12 @@ func TestMWSPAS(t *testing.T) {
 	acctID := qa.GetEnvOrSkipTest(t, "DATABRICKS_ACCOUNT_ID")
 	client := common.CommonEnvironmentClient()
 	ctx := context.Background()
-	pasAPI := NewPASAPI(ctx, client)
+	pasAPI := NewPrivateAccessSettingsAPI(ctx, client)
 	pasList, err := pasAPI.List(acctID)
 	assert.NoError(t, err, err)
 	t.Log(pasList)
 
-	pas := PAS{
+	pas := PrivateAccessSettings{
 		AccountID: acctID,
 		PasName:   qa.RandomName(),
 		PasID:     "",
@@ -46,7 +46,7 @@ func TestResourcePASCreate(t *testing.T) {
 			{
 				Method:   "POST",
 				Resource: "/api/2.0/accounts/abc/private-access-settings",
-				ExpectedRequest: PAS{
+				ExpectedRequest: PrivateAccessSettings{
 					AccountID: "abc",
 					Region:    "ar",
 					PasName:   "pas_name",
@@ -57,7 +57,7 @@ func TestResourcePASCreate(t *testing.T) {
 				Method:   "GET",
 				Resource: "/api/2.0/accounts/abc/private-access-settings/pas_id",
 
-				Response: PAS{
+				Response: PrivateAccessSettings{
 					AccountID: "abc",
 					Region:    "ar",
 					PasName:   "pas_name",
@@ -65,7 +65,7 @@ func TestResourcePASCreate(t *testing.T) {
 				},
 			},
 		},
-		Resource: ResourcePAS(),
+		Resource: ResourcePrivateAccessSettings(),
 		HCL: `
 		account_id = "abc"
 		private_access_settings_name = "pas_name"
@@ -91,7 +91,7 @@ func TestResourcePASCreate_Error(t *testing.T) {
 				Status: 400,
 			},
 		},
-		Resource: ResourcePAS(),
+		Resource: ResourcePrivateAccessSettings(),
 		State: map[string]interface{}{
 			"account_id":                   "abc",
 			"private_access_settings_name": "pas_name",
@@ -110,7 +110,7 @@ func TestResourcePASRead(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/accounts/abc/private-access-settings/pas_id",
-				Response: PAS{
+				Response: PrivateAccessSettings{
 					AccountID: "account_id",
 					PasID:     "pas_id",
 					PasName:   "pas_name",
@@ -118,7 +118,7 @@ func TestResourcePASRead(t *testing.T) {
 				},
 			},
 		},
-		Resource: ResourcePAS(),
+		Resource: ResourcePrivateAccessSettings(),
 		Read:     true,
 		New:      true,
 		ID:       "abc/pas_id",
@@ -145,7 +145,7 @@ func TestResourcePAStRead_NotFound(t *testing.T) {
 				Status: 404,
 			},
 		},
-		Resource: ResourcePAS(),
+		Resource: ResourcePrivateAccessSettings(),
 		Read:     true,
 		Removed:  true,
 		ID:       "abc/pas_id",
@@ -165,7 +165,7 @@ func TestResourcePAS_Error(t *testing.T) {
 				Status: 400,
 			},
 		},
-		Resource: ResourcePAS(),
+		Resource: ResourcePrivateAccessSettings(),
 		Read:     true,
 		ID:       "abc/pas_id",
 	}.Apply(t)
@@ -183,7 +183,7 @@ func TestResourcePASDelete(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/accounts/abc/private-access-settings/pas_id",
-				Response: PAS{
+				Response: PrivateAccessSettings{
 					AccountID: "account_id",
 					PasID:     "pas_id",
 					PasName:   "pas_name",
@@ -200,7 +200,7 @@ func TestResourcePASDelete(t *testing.T) {
 				Status: 404,
 			},
 		},
-		Resource: ResourcePAS(),
+		Resource: ResourcePrivateAccessSettings(),
 		Delete:   true,
 		ID:       "abc/pas_id",
 	}.Apply(t)
@@ -221,7 +221,7 @@ func TestResourcePASDelete_Error(t *testing.T) {
 				Status: 400,
 			},
 		},
-		Resource: ResourcePAS(),
+		Resource: ResourcePrivateAccessSettings(),
 		Delete:   true,
 		ID:       "abc/pas_id",
 	}.Apply(t)
@@ -234,13 +234,13 @@ func TestResourcePASList(t *testing.T) {
 		{
 			Method:   "GET",
 			Resource: "/api/2.0/accounts/abc/private-access-settings",
-			Response: []PAS{},
+			Response: []PrivateAccessSettings{},
 		},
 	})
 	require.NoError(t, err)
 	defer server.Close()
 
-	l, err := NewPASAPI(context.Background(), client).List("abc")
+	l, err := NewPrivateAccessSettingsAPI(context.Background(), client).List("abc")
 	require.NoError(t, err)
 	assert.Len(t, l, 0)
 }

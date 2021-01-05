@@ -3,74 +3,59 @@ package mws
 import (
 	"context"
 	"fmt"
-	"log"
-	"time"
 
 	"github.com/databrickslabs/databricks-terraform/common"
 	"github.com/databrickslabs/databricks-terraform/internal"
 	"github.com/databrickslabs/databricks-terraform/internal/util"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
-// NewPASAPI creates VPCEndpointAPI instance from provider meta
-func NewPASAPI(ctx context.Context, m interface{}) PASAPI {
-	return PASAPI{m.(*common.DatabricksClient), ctx}
+// NewPrivateAccessSettingsAPI creates VPCEndpointAPI instance from provider meta
+func NewPrivateAccessSettingsAPI(ctx context.Context, m interface{}) PrivateAccessSettingsAPI {
+	return PrivateAccessSettingsAPI{m.(*common.DatabricksClient), ctx}
 }
 
-// PASAPI exposes the PAS API
-type PASAPI struct {
+// PrivateAccessSettingsAPI exposes the PAS API
+type PrivateAccessSettingsAPI struct {
 	client  *common.DatabricksClient
 	context context.Context
 }
 
 // Create creates the PAS ceation process
-func (a PASAPI) Create(pas *PAS) error {
+func (a PrivateAccessSettingsAPI) Create(pas *PrivateAccessSettings) error {
 	pasAPIPath := fmt.Sprintf("/accounts/%s/private-access-settings", pas.AccountID)
 	return a.client.Post(a.context, pasAPIPath, pas, &pas)
 }
 
 // Read returns the PAS object along with metadata and any additional errors
-func (a PASAPI) Read(mwsAcctID, pasID string) (PAS, error) {
-	var pas PAS
+func (a PrivateAccessSettingsAPI) Read(mwsAcctID, pasID string) (PrivateAccessSettings, error) {
+	var pas PrivateAccessSettings
 	pasAPIPath := fmt.Sprintf("/accounts/%s/private-access-settings/%s", mwsAcctID, pasID)
 	err := a.client.Get(a.context, pasAPIPath, nil, &pas)
 	return pas, err
 }
 
 // Delete deletes the PAS object given a pas id
-func (a PASAPI) Delete(mwsAcctID, pasID string) error {
+func (a PrivateAccessSettingsAPI) Delete(mwsAcctID, pasID string) error {
 	pasAPIPath := fmt.Sprintf("/accounts/%s/private-access-settings/%s", mwsAcctID, pasID)
 	if err := a.client.Delete(a.context, pasAPIPath, nil); err != nil {
 		return err
 	}
-	return resource.RetryContext(a.context, 60*time.Second, func() *resource.RetryError {
-		pas, err := a.Read(mwsAcctID, pasID)
-		if e, ok := err.(common.APIError); ok && e.IsMissing() {
-			log.Printf("[INFO] private access settings %s/%s is removed.", mwsAcctID, pasID)
-			return nil
-		}
-		if err != nil {
-			return resource.NonRetryableError(err)
-		}
-		msg := fmt.Errorf("private access settings %s is not removed yet. private access settings Status: %s", pas.PasName, pas.PASStatus)
-		log.Printf("[INFO] %s", msg)
-		return resource.RetryableError(msg)
-	})
+	return nil
 }
 
 // List lists all the available PAS objects in the mws account
-func (a PASAPI) List(mwsAcctID string) ([]PAS, error) {
-	var pasList []PAS
+func (a PrivateAccessSettingsAPI) List(mwsAcctID string) ([]PrivateAccessSettings, error) {
+	var pasList []PrivateAccessSettings
 	pasAPIPath := fmt.Sprintf("/accounts/%s/private-access-settings", mwsAcctID)
 	err := a.client.Get(a.context, pasAPIPath, nil, &pasList)
 	return pasList, err
 }
 
-// ResourcePAS ...
-func ResourcePAS() *schema.Resource {
-	s := internal.StructToSchema(PAS{}, func(s map[string]*schema.Schema) map[string]*schema.Schema {
+// ResourcePrivateAccessSettings ...
+func ResourcePrivateAccessSettings() *schema.Resource {
+	s := internal.StructToSchema(PrivateAccessSettings{}, func(s map[string]*schema.Schema) map[string]*schema.Schema {
 		// nolint
 		s["private_access_settings_name"].ValidateFunc = validation.StringLenBetween(4, 256)
 		return s
@@ -79,11 +64,11 @@ func ResourcePAS() *schema.Resource {
 	return util.CommonResource{
 		Schema: s,
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			var pas PAS
+			var pas PrivateAccessSettings
 			if err := internal.DataToStructPointer(d, s, &pas); err != nil {
 				return err
 			}
-			if err := NewPASAPI(ctx, c).Create(&pas); err != nil {
+			if err := NewPrivateAccessSettingsAPI(ctx, c).Create(&pas); err != nil {
 				return err
 			}
 			d.Set("private_access_settings_id", pas.PasID)
@@ -95,7 +80,7 @@ func ResourcePAS() *schema.Resource {
 			if err != nil {
 				return err
 			}
-			pas, err := NewPASAPI(ctx, c).Read(accountID, pasID)
+			pas, err := NewPrivateAccessSettingsAPI(ctx, c).Read(accountID, pasID)
 			if err != nil {
 				return err
 			}
@@ -106,7 +91,7 @@ func ResourcePAS() *schema.Resource {
 			if err != nil {
 				return err
 			}
-			return NewPASAPI(ctx, c).Delete(accountID, pasID)
+			return NewPrivateAccessSettingsAPI(ctx, c).Delete(accountID, pasID)
 		},
 	}.ToResource()
 }

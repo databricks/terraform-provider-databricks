@@ -3,13 +3,10 @@ package mws
 import (
 	"context"
 	"fmt"
-	"log"
-	"time"
 
 	"github.com/databrickslabs/databricks-terraform/common"
 	"github.com/databrickslabs/databricks-terraform/internal"
 	"github.com/databrickslabs/databricks-terraform/internal/util"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
@@ -45,19 +42,7 @@ func (a VPCEndpointAPI) Delete(mwsAcctID, vpcEndpointID string) error {
 	if err := a.client.Delete(a.context, vpcEndpointAPIPath, nil); err != nil {
 		return err
 	}
-	return resource.RetryContext(a.context, 60*time.Second, func() *resource.RetryError {
-		vpcEndpoint, err := a.Read(mwsAcctID, vpcEndpointID)
-		if e, ok := err.(common.APIError); ok && e.IsMissing() {
-			log.Printf("[INFO] VPCEndpoint %s/%s is removed.", mwsAcctID, vpcEndpointID)
-			return nil
-		}
-		if err != nil {
-			return resource.NonRetryableError(err)
-		}
-		msg := fmt.Errorf("VPCEndpoint %s is not removed yet. VPCEndpoint State: %s", vpcEndpoint.VPCEndpointName, vpcEndpoint.State)
-		log.Printf("[INFO] %s", msg)
-		return resource.RetryableError(msg)
-	})
+	return nil
 }
 
 // List lists all the available network objects in the mws account

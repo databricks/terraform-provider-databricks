@@ -10,7 +10,7 @@ lint: vendor
 	@echo "✓ Linting source code with golangci-lint make sure you run make fmt ..."
 	@golangci-lint run --skip-dirs-use-default --timeout 5m
 
-test: 
+test: lint
 	@echo "✓ Running tests ..."
 	@gotestsum --format pkgname-and-test-fails --no-summary=skipped --raw-command go test -v -json -short -coverprofile=coverage.txt ./...
 

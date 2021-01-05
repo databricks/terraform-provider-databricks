@@ -53,11 +53,11 @@ type Network struct {
 	NetworkName         string               `json:"network_name"`
 	VPCID               string               `json:"vpc_id"`
 	SubnetIds           []string             `json:"subnet_ids" tf:"slice_set"`
+	NetworkVPCEndpoints *NetworkVPCEndpoints `json:"vpc_endpoints,omitempty"`
 	SecurityGroupIds    []string             `json:"security_group_ids" tf:"slice_set"`
 	VPCStatus           string               `json:"vpc_status,omitempty" tf:"computed"`
 	ErrorMessages       []NetworkHealth      `json:"error_messages,omitempty" tf:"computed"`
 	WorkspaceID         int64                `json:"workspace_id,omitempty" tf:"computed"`
-	NetworkVPCEndpoints *NetworkVPCEndpoints `json:"vpc_endpoints,omitempty"`
 	CreationTime        int64                `json:"creation_time,omitempty" tf:"computed"`
 }
 
@@ -93,14 +93,14 @@ type Workspace struct {
 	CredentialsID           string `json:"credentials_id"`
 	StorageConfigurationID  string `json:"storage_configuration_id"`
 	CustomerManagedKeyID    string `json:"customer_managed_key_id,omitempty"`
+	PricingTier             string `json:"pricing_tier,omitempty"`
+	PrivateAccessSettingsID string `json:"private_access_settings_id,omitempty"`
 	NetworkID               string `json:"network_id,omitempty"`
 	IsNoPublicIPEnabled     bool   `json:"is_no_public_ip_enabled,omitempty"`
 	WorkspaceID             int64  `json:"workspace_id,omitempty" tf:"computed"`
 	WorkspaceURL            string `json:"workspace_url,omitempty" tf:"computed"`
 	WorkspaceStatus         string `json:"workspace_status,omitempty" tf:"computed"`
 	WorkspaceStatusMessage  string `json:"workspace_status_message,omitempty" tf:"computed"`
-	PricingTier             string `json:"pricing_tier,omitempty"`
-	PrivateAccessSettingsID string `json:"private_access_settings_id,omitempty"`
 	CreationTime            int64  `json:"creation_time,omitempty" tf:"computed"`
 }
 
@@ -119,8 +119,8 @@ type VPCEndpoint struct {
 	CreationTime            int64  `json:"creation_time,omitempty" tf:"computed"`
 }
 
-//PAS is the object that contains all the information for creating an PAS
-type PAS struct {
+//PrivateAccessSettings (PAS) is the object that contains all the information for creating an PrivateAccessSettings (PAS)
+type PrivateAccessSettings struct {
 	AccountID    string `json:"account_id,omitempty"`
 	PasID        string `json:"private_access_settings_id,omitempty"`
 	PasName      string `json:"private_access_settings_name"`

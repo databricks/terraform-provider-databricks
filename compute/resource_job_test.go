@@ -89,6 +89,171 @@ func TestResourceJobCreate(t *testing.T) {
 	assert.Equal(t, "789", d.Id())
 }
 
+func TestResourceJobCreateSingleNode(t *testing.T) {
+	cluster := Cluster{
+		NumWorkers: 0, SparkVersion: "7.3.x-scala2.12", NodeTypeID: "Standard_DS3_v2",
+		SparkConf: map[string]string{
+			"spark.master":                     "local[*]",
+			"spark.databricks.cluster.profile": "singleNode",
+		},
+	}
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/jobs/create",
+				ExpectedRequest: JobSettings{
+					NewCluster: &cluster,
+					SparkJarTask: &SparkJarTask{
+						MainClassName: "com.labs.BarMain",
+					},
+					Name:                   "Featurizer",
+					MaxRetries:             3,
+					MinRetryIntervalMillis: 5000,
+					RetryOnTimeout:         true,
+					MaxConcurrentRuns:      1,
+				},
+				Response: Job{
+					JobID: 789,
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/jobs/get?job_id=789",
+				Response: Job{
+					JobID: 789,
+					Settings: &JobSettings{
+						ExistingClusterID: "abc",
+						SparkJarTask: &SparkJarTask{
+							MainClassName: "com.labs.BarMain",
+						},
+						Name:                   "Featurizer",
+						MaxRetries:             3,
+						MinRetryIntervalMillis: 5000,
+						RetryOnTimeout:         true,
+						MaxConcurrentRuns:      1,
+					},
+				},
+			},
+		},
+		Create:   true,
+		Resource: ResourceJob(),
+		HCL: `new_cluster  {
+			num_workers   = 0
+			spark_version = "7.3.x-scala2.12"
+			node_type_id  = "Standard_DS3_v2"
+			spark_conf {
+				"spark.master" = "local[*]"
+				"spark.databricks.cluster.profile" = "singleNode"
+			  }
+		  }	
+		max_concurrent_runs = 1
+		max_retries = 3
+		min_retry_interval_millis = 5000
+		name = "Featurizer"
+		retry_on_timeout = true
+
+		spark_jar_task {
+			main_class_name = "com.labs.BarMain"
+		}`,
+	}.Apply(t)
+	assert.NoError(t, err, err)
+	assert.Equal(t, "789", d.Id())
+}
+
+func TestResourceJobCreateNWorkers(t *testing.T) {
+	cluster := Cluster{
+		NumWorkers: 5, SparkVersion: "7.3.x-scala2.12", NodeTypeID: "Standard_DS3_v2",
+	}
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/jobs/create",
+				ExpectedRequest: JobSettings{
+					NewCluster: &cluster,
+					SparkJarTask: &SparkJarTask{
+						MainClassName: "com.labs.BarMain",
+					},
+					Name:                   "Featurizer",
+					MaxRetries:             3,
+					MinRetryIntervalMillis: 5000,
+					RetryOnTimeout:         true,
+					MaxConcurrentRuns:      1,
+				},
+				Response: Job{
+					JobID: 789,
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/jobs/get?job_id=789",
+				Response: Job{
+					JobID: 789,
+					Settings: &JobSettings{
+						ExistingClusterID: "abc",
+						SparkJarTask: &SparkJarTask{
+							MainClassName: "com.labs.BarMain",
+						},
+						Name:                   "Featurizer",
+						MaxRetries:             3,
+						MinRetryIntervalMillis: 5000,
+						RetryOnTimeout:         true,
+						MaxConcurrentRuns:      1,
+					},
+				},
+			},
+		},
+		Create:   true,
+		Resource: ResourceJob(),
+		HCL: `new_cluster  {
+			num_workers   = 5
+			spark_version = "7.3.x-scala2.12"
+			node_type_id  = "Standard_DS3_v2"
+		  }	
+		max_concurrent_runs = 1
+		max_retries = 3
+		min_retry_interval_millis = 5000
+		name = "Featurizer"
+		retry_on_timeout = true
+
+		spark_jar_task {
+			main_class_name = "com.labs.BarMain"
+		}`,
+	}.Apply(t)
+	assert.NoError(t, err, err)
+	assert.Equal(t, "789", d.Id())
+}
+
+func TestResourceJobCreateSingleNode_Fail(t *testing.T) {
+	_, err := qa.ResourceFixture{
+		Create:   true,
+		Resource: ResourceJob(),
+		HCL: `new_cluster  {
+			num_workers   = 0
+			spark_version = "7.3.x-scala2.12"
+			node_type_id  = "Standard_DS3_v2"
+		  }	
+		max_concurrent_runs = 1
+		max_retries = 3
+		min_retry_interval_millis = 5000
+		name = "Featurizer"
+		retry_on_timeout = true
+
+		spark_jar_task {
+			main_class_name = "com.labs.BarMain"
+		}
+		library {
+			jar = "dbfs://aa/bb/cc.jar"
+		}
+		library {
+			jar = "dbfs://ff/gg/hh.jar"
+		}`,
+	}.Apply(t)
+	assert.Error(t, err, err)
+	require.Equal(t, true, strings.Contains(err.Error(), "NumWorkers could be 0 only for SingleNode clusters"))
+}
+
 func TestResourceJobCreate_Error(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
@@ -365,150 +530,6 @@ func TestResourceJobDelete(t *testing.T) {
 	assert.Equal(t, "789", d.Id())
 }
 
-func TestResourceJobDelete_Error(t *testing.T) {
-	d, err := qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   "POST",
-				Resource: "/api/2.0/jobs/delete",
-				Response: common.APIErrorBody{
-					ErrorCode: "INVALID_REQUEST",
-					Message:   "Internal error happened",
-				},
-				Status: 400,
-			},
-		},
-		ID:       "789",
-		Delete:   true,
-		Resource: ResourceJob(),
-	}.Apply(t)
-	qa.AssertErrorStartsWith(t, err, "Internal error happened")
-	assert.Equal(t, "789", d.Id())
-}
-
-func TestResourceJobCreateSingleNode(t *testing.T) {
-	cluster := Cluster{
-		NumWorkers: 0, SparkVersion: "7.3.x-scala2.12", NodeTypeID: "Standard_DS3_v2",
-		SparkConf: map[string]string{
-			"spark.master":                     "local[*]",
-			"spark.databricks.cluster.profile": "singleNode",
-		},
-	}
-	d, err := qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   "POST",
-				Resource: "/api/2.0/jobs/create",
-				ExpectedRequest: JobSettings{
-					NewCluster: &cluster,
-					SparkJarTask: &SparkJarTask{
-						MainClassName: "com.labs.BarMain",
-					},
-					Libraries: []Library{
-						{
-							Jar: "dbfs://ff/gg/hh.jar",
-						},
-						{
-							Jar: "dbfs://aa/bb/cc.jar",
-						},
-					},
-					Name:                   "Featurizer",
-					MaxRetries:             3,
-					MinRetryIntervalMillis: 5000,
-					RetryOnTimeout:         true,
-					MaxConcurrentRuns:      1,
-				},
-				Response: Job{
-					JobID: 789,
-				},
-			},
-			{
-				Method:   "GET",
-				Resource: "/api/2.0/jobs/get?job_id=789",
-				Response: Job{
-					JobID: 789,
-					Settings: &JobSettings{
-						ExistingClusterID: "abc",
-						SparkJarTask: &SparkJarTask{
-							MainClassName: "com.labs.BarMain",
-						},
-						Libraries: []Library{
-							{
-								Jar: "dbfs://ff/gg/hh.jar",
-							},
-							{
-								Jar: "dbfs://aa/bb/cc.jar",
-							},
-						},
-						Name:                   "Featurizer",
-						MaxRetries:             3,
-						MinRetryIntervalMillis: 5000,
-						RetryOnTimeout:         true,
-						MaxConcurrentRuns:      1,
-					},
-				},
-			},
-		},
-		Create:   true,
-		Resource: ResourceJob(),
-		HCL: `new_cluster  {
-			num_workers   = 0
-			spark_version = "7.3.x-scala2.12"
-			node_type_id  = "Standard_DS3_v2"
-			spark_conf {
-				"spark.master" = "local[*]"
-				"spark.databricks.cluster.profile" = "singleNode"
-			  }
-		  }	
-		max_concurrent_runs = 1
-		max_retries = 3
-		min_retry_interval_millis = 5000
-		name = "Featurizer"
-		retry_on_timeout = true
-
-		spark_jar_task {
-			main_class_name = "com.labs.BarMain"
-		}
-		library {
-			jar = "dbfs://aa/bb/cc.jar"
-		}
-		library {
-			jar = "dbfs://ff/gg/hh.jar"
-		}`,
-	}.Apply(t)
-	assert.NoError(t, err, err)
-	assert.Equal(t, "789", d.Id())
-}
-
-func TestResourceJobCreateSingleNode_Fail(t *testing.T) {
-	_, err := qa.ResourceFixture{
-		Create:   true,
-		Resource: ResourceJob(),
-		HCL: `new_cluster  {
-			num_workers   = 0
-			spark_version = "7.3.x-scala2.12"
-			node_type_id  = "Standard_DS3_v2"
-		  }	
-		max_concurrent_runs = 1
-		max_retries = 3
-		min_retry_interval_millis = 5000
-		name = "Featurizer"
-		retry_on_timeout = true
-
-		spark_jar_task {
-			main_class_name = "com.labs.BarMain"
-		}
-		library {
-			jar = "dbfs://aa/bb/cc.jar"
-		}
-		library {
-			jar = "dbfs://ff/gg/hh.jar"
-		}`,
-	}.Apply(t)
-	assert.Error(t, err, err)
-	require.Equal(t, true, strings.Contains(err.Error(), "NumWorkers could be 0 only for SingleNode clusters"))
-}
-
 func TestResourceJobUpdate_FailNumWorkersZero(t *testing.T) {
 	_, err := qa.ResourceFixture{
 		ID:       "789",
@@ -528,14 +549,29 @@ func TestResourceJobUpdate_FailNumWorkersZero(t *testing.T) {
 		spark_jar_task {
 			main_class_name = "com.labs.BarMain"
 			parameters = ["--cleanup", "full"]
-		}
-		library {
-			jar = "dbfs://aa/bb/cc.jar"
-		}
-		library {
-			jar = "dbfs://ff/gg/hh.jar"
 		}`,
 	}.Apply(t)
 	assert.Error(t, err, err)
 	require.Equal(t, true, strings.Contains(err.Error(), "NumWorkers could be 0 only for SingleNode clusters"))
+}
+
+func TestResourceJobDelete_Error(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/jobs/delete",
+				Response: common.APIErrorBody{
+					ErrorCode: "INVALID_REQUEST",
+					Message:   "Internal error happened",
+				},
+				Status: 400,
+			},
+		},
+		ID:       "789",
+		Delete:   true,
+		Resource: ResourceJob(),
+	}.Apply(t)
+	qa.AssertErrorStartsWith(t, err, "Internal error happened")
+	assert.Equal(t, "789", d.Id())
 }

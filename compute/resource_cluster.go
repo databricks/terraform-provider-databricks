@@ -115,8 +115,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, c *commo
 	if err != nil {
 		return err
 	}
-	err = validateClusterDefinition(cluster)
-	if err != nil {
+	if err = validateClusterDefinition(cluster); err != nil {
 		return err
 	}
 	modifyClusterRequest(&cluster)

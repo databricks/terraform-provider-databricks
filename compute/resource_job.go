@@ -97,8 +97,7 @@ var jobSchema = internal.StructToSchema(JobSettings{},
 			"`new_cluster` for greater reliability."
 		s["new_cluster"].Description = "Same set of parameters as for " +
 			"[databricks_cluster](cluster.md) resource."
-		p, err := internal.SchemaPath(s, "new_cluster", "num_workers")
-		if err == nil {
+		if p, err := internal.SchemaPath(s, "new_cluster", "num_workers"); err == nil {
 			p.Optional = true
 			p.Default = 0
 			p.Type = schema.TypeInt
@@ -155,8 +154,7 @@ func ResourceJob() *schema.Resource {
 				return err
 			}
 			if js.NewCluster != nil {
-				err = validateClusterDefinition(*js.NewCluster)
-				if err != nil {
+				if err = validateClusterDefinition(*js.NewCluster); err != nil {
 					return err
 				}
 			}

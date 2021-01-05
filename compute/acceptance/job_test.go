@@ -24,21 +24,23 @@ func TestAwsAccJobsCreate(t *testing.T) {
 
 	client := common.NewClientFromEnvironment()
 	jobsAPI := NewJobsAPI(context.Background(), client)
+	clustersAPI := NewClustersAPI(context.Background(), client)
+	sparkVersion := clustersAPI.LatestSparkVersionOrDefault(compute.SparkVersionRequest{Latest: true, LongTermSupport: true})
 
 	jobSettings := JobSettings{
 		NewCluster: &Cluster{
 			NumWorkers:   2,
-			SparkVersion: "6.4.x-scala2.11",
+			SparkVersion: sparkVersion,
 			SparkConf:    nil,
 			AwsAttributes: &AwsAttributes{
 				Availability: "ON_DEMAND",
 			},
-			NodeTypeID: "r3.xlarge",
+			NodeTypeID: clustersAPI.GetSmallestNodeType(NodeTypeRequest{}),
 		},
 		NotebookTask: &NotebookTask{
-			NotebookPath: "/Users/sri.tikkireddy@databricks.com/demo-terraform/demo-notebook",
+			NotebookPath: "/tf-test/demo-terraform/demo-notebook",
 		},
-		Name: "1-sri-test-job",
+		Name: "1-test-job",
 		Libraries: []Library{
 			{
 				Maven: &Maven{
@@ -70,18 +72,17 @@ func TestAwsAccJobsCreate(t *testing.T) {
 	t.Log(id)
 	job, err = jobsAPI.Read(id)
 	assert.NoError(t, err, err)
-	assert.True(t, job.Settings.NewCluster.SparkVersion == "6.4.x-scala2.11",
-		"Something is wrong with spark version")
+	assert.True(t, job.Settings.NewCluster.SparkVersion == sparkVersion, "Something is wrong with spark version")
 
-	jobSettings.NewCluster.SparkVersion = "6.1.x-scala2.11"
+	newSparkVersion := clustersAPI.LatestSparkVersionOrDefault(compute.SparkVersionRequest{Latest: true})
+	jobSettings.NewCluster.SparkVersion = newSparkVersion
 
 	err = jobsAPI.Update(id, jobSettings)
 	assert.NoError(t, err, err)
 
 	job, err = jobsAPI.Read(id)
 	assert.NoError(t, err, err)
-	assert.True(t, job.Settings.NewCluster.SparkVersion == "6.1.x-scala2.11",
-		"Something is wrong with spark version")
+	assert.True(t, job.Settings.NewCluster.SparkVersion == newSparkVersion, "Something is wrong with spark version")
 }
 
 func TestAccJobResource(t *testing.T) {

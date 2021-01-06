@@ -356,6 +356,34 @@ func TestAccClusterResource_CreateClusterWithLibraries(t *testing.T) {
 	})
 }
 
+func TestAccClusterResource_CreateSingleNodeCluster(t *testing.T) {
+	if os.Getenv("CLOUD_ENV") == "" {
+		return
+	}
+	randomName := fmt.Sprintf("cluster-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+	clusterAPI := NewClustersAPI(context.Background(), common.CommonEnvironmentClient())
+
+	acceptance.AccTest(t, resource.TestCase{
+		Steps: []resource.TestStep{
+			{
+				Config: fmt.Sprintf(`
+				resource "databricks_cluster" "%[1]s" {
+					cluster_name = "%[1]s"
+					spark_version = "%[3]s"
+					node_type_id = "%[2]s"
+					num_workers = 0
+					autotermination_minutes = 10
+					spark_conf = {
+						"spark.databricks.cluster.profile" = "singleNode"
+						"spark.master" = "local[*]"
+					}
+				}`, randomName, clusterAPI.GetSmallestNodeType(NodeTypeRequest{LocalDisk: true}),
+					clusterAPI.LatestSparkVersionOrDefault(SparkVersionRequest{Latest: true, LongTermSupport: true})),
+			},
+		},
+	})
+}
+
 func testClusterCheckAndTerminateForFutureTests(n string, t *testing.T) resource.TestCheckFunc {
 	return acceptance.ResourceCheck(n,
 		func(ctx context.Context, client *common.DatabricksClient, id string) error {

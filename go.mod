@@ -17,5 +17,6 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/smartystreets/goconvey v1.6.4 // indirect
 	github.com/stretchr/testify v1.6.1
+	github.com/ulule/deepcopier v0.0.0-20200430083143-45decc6639b6
 	gopkg.in/ini.v1 v1.62.0
 )

@@ -178,11 +178,13 @@ func (c *clusterHCLBuilder) withCloudDiskSpec() *clusterHCLBuilder {
 }
 
 func (c *clusterHCLBuilder) build() string {
+	clusterAPI := NewClustersAPI(context.Background(), common.CommonEnvironmentClient())
+	sparkVersion := clusterAPI.LatestSparkVersionOrDefault(SparkVersionRequest{Latest: true, LongTermSupport: true})
 	return fmt.Sprintf(`
 resource "databricks_cluster" "%[1]s" {
 	cluster_name = "%[1]s"
 	%[2]s
-	spark_version = "6.6.x-scala2.11"
+	spark_version = "%[6]s"
 	autoscale {
 		min_workers = 1
 		max_workers = 2
@@ -201,7 +203,7 @@ resource "databricks_cluster" "%[1]s" {
 	custom_tags = {
 		"ResourceClass" = "Serverless"
 	}
-}`, c.Name, c.instancePool, c.awsAttributes, c.libraries, c.nodeTypeID, c.diskSpec)
+}`, c.Name, c.instancePool, c.awsAttributes, c.libraries, c.nodeTypeID, sparkVersion)
 }
 
 func TestAwsAccClusterResource_ValidatePlan(t *testing.T) {
@@ -306,6 +308,9 @@ func TestAwsAccClusterResource_CreateClusterViaInstancePool(t *testing.T) {
 }
 
 func TestAzureAccClusterResource_CreateClusterViaInstancePool(t *testing.T) {
+	if os.Getenv("CLOUD_ENV") == "" {
+		return
+	}
 	randomInstancePoolName := fmt.Sprintf("pool_%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
 	randomClusterName := fmt.Sprintf("cluster_%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
 	defaultAzureInstancePoolClusterTest := newInstancePoolHCLBuilder(randomInstancePoolName).withCloudEnv().build() +

@@ -2,17 +2,14 @@ package compute
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"log"
-	"reflect"
 	"sort"
 	"strings"
 	"time"
 
 	"github.com/databrickslabs/databricks-terraform/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/ulule/deepcopier"
 )
 
 func (a ClustersAPI) defaultTimeout() time.Duration {
@@ -459,38 +456,4 @@ func (a ClustersAPI) LatestSparkVersionOrDefault(svr SparkVersionRequest) string
 		return "7.3.x-scala2.12"
 	}
 	return version
-}
-
-// MarshalJSON generates JSON based on the definition, removing num_workers if necessary
-func (c Cluster) MarshalJSON() ([]byte, error) {
-	if c.Autoscale != nil && c.NumWorkers != 0 {
-		return nil, fmt.Errorf("Can't use Autoscale and NumWorkers equal to %d", c.NumWorkers)
-	}
-	if c.SparkVersion == "" {
-		return nil, fmt.Errorf("SparkVersion can't be empty")
-	}
-
-	var sfs []reflect.StructField
-	t := reflect.TypeOf(c)
-	for i := 0; i < t.NumField(); i++ {
-		f := t.Field(i)
-		n := f.Name
-		if n == "NumWorkers" && c.Autoscale != nil {
-			continue
-		}
-		sf := reflect.StructField{
-			Name: n,
-			Type: f.Type,
-			Tag:  f.Tag,
-		}
-		sfs = append(sfs, sf)
-	}
-
-	so := reflect.New(reflect.StructOf(sfs))
-	stInstance := so.Interface()
-	if err := deepcopier.Copy(c).To(stInstance); err != nil {
-		return nil, err
-	}
-
-	return json.Marshal(stInstance)
 }

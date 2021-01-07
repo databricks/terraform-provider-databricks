@@ -2,7 +2,6 @@ package compute
 
 import (
 	"context"
-	"encoding/json"
 	"os"
 	"reflect"
 	"strings"
@@ -286,9 +285,8 @@ func TestEditCluster_Pending(t *testing.T) {
 			Method:   "POST",
 			Resource: "/api/2.0/clusters/edit",
 			Response: Cluster{
-				ClusterID:    "abc",
-				ClusterName:  "Morty",
-				SparkVersion: "7.3.x-scala2.12",
+				ClusterID:   "abc",
+				ClusterName: "Morty",
 			},
 		},
 		{
@@ -304,9 +302,8 @@ func TestEditCluster_Pending(t *testing.T) {
 
 	ctx := context.Background()
 	clusterInfo, err := NewClustersAPI(ctx, client).Edit(Cluster{
-		ClusterID:    "abc",
-		ClusterName:  "Morty",
-		SparkVersion: "7.3.x-scala2.12",
+		ClusterID:   "abc",
+		ClusterName: "Morty",
 	})
 	require.NoError(t, err)
 	assert.Equal(t, ClusterStateRunning, string(clusterInfo.State))
@@ -334,9 +331,8 @@ func TestEditCluster_Terminating(t *testing.T) {
 			Method:   "POST",
 			Resource: "/api/2.0/clusters/edit",
 			Response: Cluster{
-				ClusterID:    "abc",
-				ClusterName:  "Morty",
-				SparkVersion: "7.3.x-scala2.12",
+				ClusterID:   "abc",
+				ClusterName: "Morty",
 			},
 		},
 		{
@@ -352,9 +348,8 @@ func TestEditCluster_Terminating(t *testing.T) {
 
 	ctx := context.Background()
 	clusterInfo, err := NewClustersAPI(ctx, client).Edit(Cluster{
-		ClusterID:    "abc",
-		ClusterName:  "Morty",
-		SparkVersion: "7.3.x-scala2.12",
+		ClusterID:   "abc",
+		ClusterName: "Morty",
 	})
 	require.NoError(t, err)
 	assert.Equal(t, ClusterStateTerminated, string(clusterInfo.State))
@@ -377,9 +372,8 @@ func TestEditCluster_Error(t *testing.T) {
 
 	ctx := context.Background()
 	_, err = NewClustersAPI(ctx, client).Edit(Cluster{
-		ClusterID:    "abc",
-		ClusterName:  "Morty",
-		SparkVersion: "7.3.x-scala2.12",
+		ClusterID:   "abc",
+		ClusterName: "Morty",
 	})
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "I am a teapot")
@@ -1075,20 +1069,4 @@ func TestGetLatestSparkVersion(t *testing.T) {
 	_, err = versions.LatestSparkVersion(SparkVersionRequest{Scala: "2.12", SparkVersion: "3.10"})
 	require.Error(t, err)
 	require.Equal(t, true, strings.Contains(err.Error(), "query returned no results"))
-}
-
-func TestClusterMarshalling(t *testing.T) {
-	b, err := json.Marshal(Cluster{SparkVersion: "test", NumWorkers: 5})
-	require.NoError(t, err, "Problem marhalling to JSON")
-	require.Equal(t, `{"spark_version":"test","num_workers":5}`, string(b))
-	// fmt.Printf("json='%s'\n", string(b))
-	b, err = json.Marshal(Cluster{SparkVersion: "test", NumWorkers: 0, Autoscale: &AutoScale{MinWorkers: 1, MaxWorkers: 10}})
-	require.NoError(t, err, "Problem marhalling to JSON")
-	require.Equal(t, `{"spark_version":"test","autoscale":{"min_workers":1,"max_workers":10}}`, string(b))
-	// error cases
-	_, err = json.Marshal(Cluster{})
-	require.Error(t, err, "Should error on missing SparkVersion")
-	_, err = json.Marshal(Cluster{SparkVersion: "test", NumWorkers: 5,
-		Autoscale: &AutoScale{MinWorkers: 1, MaxWorkers: 10}})
-	require.Error(t, err, "Should error on missing SparkVersion")
 }

@@ -41,16 +41,6 @@ install: build
 	@echo "  }"
 	@echo "}"
 
-install-tf-0.12: build
-	@echo "✓ Installing provider for Terraform 0.12 ..."
-	@mkdir -p '$(HOME)/.terraform.d/plugins/$(shell go version | awk '{print $$4}' | sed 's#/#_#')/'
-	@cp terraform-provider-databricks '$(HOME)/.terraform.d/plugins/$(shell go version | awk '{print $$4}' | sed 's#/#_#')/terraform-provider-databricks_v$(shell ./terraform-provider-databricks version)'
-	@echo "✓ Use the following configuration for Terraform 0.12 to enable the version you've built"
-	@echo ""
-	@echo 'provider "databricks" {'
-	@echo '  version = "0.3.0"'
-	@echo '}'
-
 vendor:
 	@echo "✓ Filling vendor folder with library code ..."
 	@go mod vendor

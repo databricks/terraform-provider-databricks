@@ -11,7 +11,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestMWSPAS(t *testing.T) {
+func TestMwsPAS(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping integration test in short mode.")
 	}
@@ -26,7 +26,6 @@ func TestMWSPAS(t *testing.T) {
 	pas := PrivateAccessSettings{
 		AccountID: acctID,
 		PasName:   qa.RandomName(),
-		PasID:     "",
 	}
 	err = pasAPI.Create(&pas)
 	assert.NoError(t, err, err)
@@ -50,7 +49,9 @@ func TestResourcePASCreate(t *testing.T) {
 					AccountID: "abc",
 					Region:    "ar",
 					PasName:   "pas_name",
-					PasID:     "pas_id",
+				},
+				Response: PrivateAccessSettings{
+					PasID: "pas_id",
 				},
 			},
 			{
@@ -59,9 +60,9 @@ func TestResourcePASCreate(t *testing.T) {
 
 				Response: PrivateAccessSettings{
 					AccountID: "abc",
+					PasID:     "pas_id",
 					Region:    "ar",
 					PasName:   "pas_name",
-					PasID:     "pas_id",
 				},
 			},
 		},
@@ -70,7 +71,6 @@ func TestResourcePASCreate(t *testing.T) {
 		account_id = "abc"
 		private_access_settings_name = "pas_name"
 		region = "ar"
-		private_access_settings_id = "pas_id"
 		`,
 		Create: true,
 	}.Apply(t)
@@ -96,7 +96,6 @@ func TestResourcePASCreate_Error(t *testing.T) {
 			"account_id":                   "abc",
 			"private_access_settings_name": "pas_name",
 			"region":                       "ar",
-			"private_access_settings_id":   "pas_id",
 		},
 		Create: true,
 	}.Apply(t)
@@ -112,7 +111,6 @@ func TestResourcePASRead(t *testing.T) {
 				Resource: "/api/2.0/accounts/abc/private-access-settings/pas_id",
 				Response: PrivateAccessSettings{
 					AccountID: "account_id",
-					PasID:     "pas_id",
 					PasName:   "pas_name",
 					Region:    "ar",
 				},

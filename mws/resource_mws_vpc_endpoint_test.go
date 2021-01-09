@@ -11,11 +11,13 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestMWSVPCEndpoint(t *testing.T) {
+func TestMwsVPCEndpoint(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping integration test in short mode.")
 	}
 	acctID := qa.GetEnvOrSkipTest(t, "DATABRICKS_ACCOUNT_ID")
+	awsvreID := qa.GetEnvOrSkipTest(t, "AWS_VPC_RELAY_ENDPOINT_ID")
+	awsRegion := qa.GetEnvOrSkipTest(t, "AWS_DEFAULT_REGION")
 	client := common.CommonEnvironmentClient()
 	ctx := context.Background()
 	vpcEndpointAPI := NewVPCEndpointAPI(ctx, client)
@@ -26,16 +28,17 @@ func TestMWSVPCEndpoint(t *testing.T) {
 	vpcEndpoint := VPCEndpoint{
 		AccountID:        acctID,
 		VPCEndpointName:  qa.RandomName(),
-		AwsVPCEndpointID: "",
+		AwsVPCEndpointID: awsvreID,
+		Region:           awsRegion,
 	}
 	err = vpcEndpointAPI.Create(&vpcEndpoint)
 	assert.NoError(t, err, err)
 	defer func() {
-		err = vpcEndpointAPI.Delete(acctID, vpcEndpoint.AwsVPCEndpointID)
+		err = vpcEndpointAPI.Delete(acctID, vpcEndpoint.VPCEndpointID)
 		assert.NoError(t, err, err)
 	}()
 
-	myVpcEndpoints, err := vpcEndpointAPI.Read(acctID, vpcEndpoint.AwsVPCEndpointID)
+	myVpcEndpoints, err := vpcEndpointAPI.Read(acctID, vpcEndpoint.VPCEndpointID)
 	assert.NoError(t, err, err)
 	t.Log(myVpcEndpoints)
 }
@@ -52,16 +55,21 @@ func TestResourceVPCEndpointCreate(t *testing.T) {
 					Region:           "ar",
 					AwsVPCEndpointID: "ave_id",
 				},
+				Response: VPCEndpoint{
+					VPCEndpointID: "ve_id",
+				},
 			},
+
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/accounts/abc/vpc-endpoints/ave_id",
+				Resource: "/api/2.0/accounts/abc/vpc-endpoints/ve_id",
 
 				Response: VPCEndpoint{
 					AccountID:        "abc",
 					VPCEndpointName:  "ve_name",
 					Region:           "ar",
 					AwsVPCEndpointID: "ave_id",
+					VPCEndpointID:    "ve_id",
 				},
 			},
 		},
@@ -75,7 +83,7 @@ func TestResourceVPCEndpointCreate(t *testing.T) {
 		Create: true,
 	}.Apply(t)
 	assert.NoError(t, err, err)
-	assert.Equal(t, "abc/ave_id", d.Id())
+	assert.Equal(t, "abc/ve_id", d.Id())
 }
 
 func TestResourceVPCEndpointCreate_Error(t *testing.T) {
@@ -111,10 +119,10 @@ func TestResourceVPCEndpointRead(t *testing.T) {
 				Method:   "GET",
 				Resource: "/api/2.0/accounts/abc/vpc-endpoints/veid",
 				Response: VPCEndpoint{
-					AccountID:        "veid",
-					VPCEndpointName:  "ve_name",
-					Region:           "ar",
-					AwsVPCEndpointID: "ave_id",
+					AccountID:       "veid",
+					VPCEndpointName: "ve_name",
+					Region:          "ar",
+					VPCEndpointID:   "ave_id",
 				},
 			},
 		},
@@ -129,7 +137,7 @@ func TestResourceVPCEndpointRead(t *testing.T) {
 	assert.Equal(t, "veid", d.Get("account_id"))
 	assert.Equal(t, "ve_name", d.Get("vpc_endpoint_name"))
 	assert.Equal(t, "ar", d.Get("region"))
-	assert.Equal(t, "ave_id", d.Get("aws_vpc_endpoint_id"))
+	assert.Equal(t, "ave_id", d.Get("vpc_endpoint_id"))
 }
 
 func TestResourceVPCEndpointRead_NotFound(t *testing.T) {
@@ -184,10 +192,10 @@ func TestResourceVPCEndpointDelete(t *testing.T) {
 				Method:   "GET",
 				Resource: "/api/2.0/accounts/abc/vpc-endpoints/veid",
 				Response: VPCEndpoint{
-					AccountID:        "abc",
-					VPCEndpointName:  "ve_name",
-					Region:           "ar",
-					AwsVPCEndpointID: "ave_id",
+					AccountID:       "abc",
+					VPCEndpointName: "ve_name",
+					Region:          "ar",
+					VPCEndpointID:   "ave_id",
 				},
 			},
 			{

@@ -60,10 +60,10 @@ func DatabricksProvider() *schema.Provider {
 			"databricks_mws_credentials":             mws.ResourceCredentials(),
 			"databricks_mws_log_delivery":            mws.ResourceLogDelivery(),
 			"databricks_mws_networks":                mws.ResourceNetwork(),
-			"databricks_mws_storage_configurations":  mws.ResourceStorageConfiguration(),
-			"databricks_mws_workspaces":              mws.ResourceWorkspace(),
-			"databricks_mws_vpc_endpoint":            mws.ResourceVPCEndpoint(),
 			"databricks_mws_private_access_settings": mws.ResourcePrivateAccessSettings(),
+			"databricks_mws_storage_configurations":  mws.ResourceStorageConfiguration(),
+			"databricks_mws_vpc_endpoint":            mws.ResourceVPCEndpoint(),
+			"databricks_mws_workspaces":              mws.ResourceWorkspace(),
 
 			"databricks_aws_s3_mount":          storage.ResourceAWSS3Mount(),
 			"databricks_azure_adls_gen1_mount": storage.ResourceAzureAdlsGen1Mount(),

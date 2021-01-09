@@ -60,7 +60,7 @@ func ResourceVPCEndpoint() *schema.Resource {
 		s["vpc_endpoint_name"].ValidateFunc = validation.StringLenBetween(4, 256)
 		return s
 	})
-	p := util.NewPairSeparatedID("account_id", "aws_vpc_endpoint_id", "/")
+	p := util.NewPairSeparatedID("account_id", "vpc_endpoint_id", "/")
 	return util.CommonResource{
 		Schema: s,
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
@@ -71,7 +71,7 @@ func ResourceVPCEndpoint() *schema.Resource {
 			if err := NewVPCEndpointAPI(ctx, c).Create(&vpcEndpoint); err != nil {
 				return err
 			}
-			d.Set("aws_vpc_endpoint_id", vpcEndpoint.AwsVPCEndpointID)
+			d.Set("vpc_endpoint_id", vpcEndpoint.VPCEndpointID)
 			p.Pack(d)
 			return nil
 		},

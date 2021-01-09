@@ -21,9 +21,9 @@ func TestMwsAccVpcEndpoint(t *testing.T) {
 			}
 			resource "databricks_mws_vpc_endpoint" "my_vpc_endpoint" {
 				account_id   = "{env.DATABRICKS_ACCOUNT_ID}"
-				vpc_endpoint_name = "my_vpc_name"
+				vpc_endpoint_name = "my_vpce_name"
 				region = "{env.TEST_REGION}"
-				aws_vpc_endpoint_id       = "vpc-endpoint-11111111"
+				aws_vpc_endpoint_id       = "{env.AWS_VPC_RELAY_ENDPOINT_ID}"
 			}`,
 		},
 	})

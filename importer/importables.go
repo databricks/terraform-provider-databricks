@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"path"
+	"regexp"
 	"strings"
 	"time"
 
@@ -18,6 +19,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/zclconf/go-cty/cty"
+)
+
+var (
+	//adlsGen2Regex = regexp.MustCompile(`^((?:abfs|wasb)s?)://([^@]+)@([^.]+)\.(?:[^/]+)(/.*)?$`)
+	adlsGen2Regex = regexp.MustCompile(`^(abfss?)://([^@]+)@([^.]+)\.(?:[^/]+)(/.*)?$`)
+	adlsGen1Regex = regexp.MustCompile(`^(adls?)://([^.]+)\.(?:[^/]+)(/.*)?$`)
 )
 
 var resourcesMap map[string]importable = map[string]importable{
@@ -615,12 +622,132 @@ var resourcesMap map[string]importable = map[string]importable{
 		Import: func(ic *importContext, r *resource) error {
 			// TODO: add instance_profile
 			bucket := strings.ReplaceAll(ic.mountMap[r.ID], "s3a://", "")
+			if err := r.Data.Set("mount_name", strings.Replace(r.ID, "/mnt/", "", 1)); err != nil {
+				return err
+			}
 			return r.Data.Set("s3_bucket_name", bucket)
 		},
 		Depends: []reference{
 			{Path: "s3_bucket_name", Resource: "aws_s3_bucket", Match: "bucket"},
 			{Path: "instance_profile", Resource: "databricks_instance_profile"},
-			{Path: "cluster_id", Resource: "databricks_cluster"},
+			// TODO: do we need it here? Can we detect what cluster was used for creaing the mount?
+			//{Path: "cluster_id", Resource: "databricks_cluster"},
+		},
+	},
+	"databricks_azure_adls_gen2_mount": {
+		Service: "mounts",
+		List: func(ic *importContext) error {
+			if !ic.mounts {
+				return nil
+			}
+			if err := ic.refreshMounts(); err != nil {
+				return err
+			}
+			for mountName, source := range ic.mountMap {
+				if res := adlsGen2Regex.FindStringSubmatch(source); res == nil {
+					log.Printf("[INFO] skipping %s mounted at %s", source, mountName)
+					continue
+				}
+				if !ic.MatchesName(mountName) {
+					continue
+				}
+				ic.Emit(&resource{
+					Resource: "databricks_azure_adls_gen2_mount",
+					ID:       mountName,
+				})
+			}
+			return nil
+		},
+		Body: func(ic *importContext, body *hclwrite.Body, r *resource) error {
+			b := body.AppendNewBlock("resource", []string{r.Resource, r.Name}).Body()
+
+			mount := ic.mountMap[r.ID]
+			res := adlsGen2Regex.FindStringSubmatch(mount)
+			if res == nil {
+				return fmt.Errorf("Can't extract ADLSv2 information from string '%s'", mount)
+			}
+			containerName := res[2]
+			storageAccountName := res[3]
+			b.SetAttributeValue("container_name", cty.StringVal(containerName))
+			b.SetAttributeValue("storage_account_name", cty.StringVal(storageAccountName))
+			if res[4] != "" && res[4] != "/" {
+				b.SetAttributeValue("directory", cty.StringVal(res[4]))
+			}
+			b.SetAttributeValue("mount_name", cty.StringVal(strings.Replace(r.ID, "/mnt/", "", 1)))
+
+			varName := "_" + storageAccountName + "_" + containerName
+			textStr := fmt.Sprintf(" for mounting ADLSv2 resource %s://%s@%s",
+				res[1], containerName, storageAccountName)
+
+			b.SetAttributeRaw("client_id", ic.variable(
+				"client_id"+varName, "Client ID"+textStr))
+			b.SetAttributeRaw("tenant_id", ic.variable(
+				"tenant_id"+varName, "Tenant ID"+textStr))
+			b.SetAttributeRaw("client_secret_scope", ic.variable(
+				"client_secret_scope"+varName,
+				"Secret scope name that stores app client secret"+textStr))
+			b.SetAttributeRaw("client_secret_key", ic.variable(
+				"client_secret_key"+varName,
+				"Key in secret scope that stores app client secret"+textStr))
+
+			return nil
+		},
+		Depends: []reference{
+			{Path: "storage_account_name", Resource: "azurerm_storage_account", Match: "name"},
+			{Path: "container_name", Resource: "azurerm_storage_container", Match: "name"},
+		},
+	},
+	"databricks_azure_adls_gen1_mount": {
+		Service: "mounts",
+		List: func(ic *importContext) error {
+			if !ic.mounts {
+				return nil
+			}
+			if err := ic.refreshMounts(); err != nil {
+				return err
+			}
+			for mountName, source := range ic.mountMap {
+				if res := adlsGen1Regex.FindStringSubmatch(source); res == nil {
+					continue
+				}
+				if !ic.MatchesName(mountName) {
+					continue
+				}
+				ic.Emit(&resource{
+					Resource: "databricks_azure_adls_gen1_mount",
+					ID:       mountName,
+				})
+			}
+			return nil
+		},
+		Body: func(ic *importContext, body *hclwrite.Body, r *resource) error {
+			b := body.AppendNewBlock("resource", []string{r.Resource, r.Name}).Body()
+
+			mount := ic.mountMap[r.ID]
+			res := adlsGen1Regex.FindStringSubmatch(mount)
+			if res == nil {
+				return fmt.Errorf("Can't extract ADLSv1 information from string '%s'", mount)
+			}
+			storageResourceName := res[2]
+			b.SetAttributeValue("storage_resource_name", cty.StringVal(storageResourceName))
+			if res[3] != "" && res[3] != "/" {
+				b.SetAttributeValue("directory", cty.StringVal(res[3]))
+			}
+			b.SetAttributeValue("mount_name", cty.StringVal(strings.Replace(r.ID, "/mnt/", "", 1)))
+			varName := "_" + storageResourceName
+			textStr := fmt.Sprintf(" for mounting ADLSv1 resource %s://%s", res[1], storageResourceName)
+
+			b.SetAttributeRaw("client_id", ic.variable("client_id"+varName, "Client ID"+textStr))
+			b.SetAttributeRaw("tenant_id", ic.variable("tenant_id"+varName, "Tenant IDs"+textStr))
+			b.SetAttributeRaw("client_secret_scope", ic.variable(
+				"client_secret_scope"+varName, "Secret scope name that stores app client secret"+textStr))
+			b.SetAttributeRaw("client_secret_key", ic.variable(
+				"client_secret_key"+varName, "Key in secret scope that stores app client secret"+textStr))
+
+			return nil
+		},
+		Depends: []reference{
+			{Path: "storage_resource_name", Resource: "azurerm_data_lake_store", Match: "name"},
 		},
 	},
 }

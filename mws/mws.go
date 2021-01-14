@@ -111,8 +111,8 @@ type VPCEndpoint struct {
 	AwsVPCEndpointID        string `json:"aws_vpc_endpoint_id"`
 	AccountID               string `json:"account_id,omitempty"`
 	VPCEndpointName         string `json:"vpc_endpoint_name"`
-	AwsVPCEndpointServiceID string `json:"aws_endpoint_service_id,omitempty"`
-	UseCase                 string `json:"use_case,omitempty"`
+	AwsVPCEndpointServiceID string `json:"aws_endpoint_service_id,omitempty" tf:"computed"`
+	UseCase                 string `json:"use_case,omitempty" tf:"computed"`
 	Region                  string `json:"region"`
 	AwsAccountID            string `json:"aws_account_id,omitempty"`
 	State                   string `json:"state,omitempty" tf:"computed"`

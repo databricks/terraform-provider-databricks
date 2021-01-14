@@ -11,11 +11,12 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestMwsPAS(t *testing.T) {
+func TestMwsAccPAS(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping integration test in short mode.")
 	}
 	acctID := qa.GetEnvOrSkipTest(t, "DATABRICKS_ACCOUNT_ID")
+	awsRegion := qa.GetEnvOrSkipTest(t, "AWS_DEFAULT_REGION")
 	client := common.CommonEnvironmentClient()
 	ctx := context.Background()
 	pasAPI := NewPrivateAccessSettingsAPI(ctx, client)
@@ -26,6 +27,7 @@ func TestMwsPAS(t *testing.T) {
 	pas := PrivateAccessSettings{
 		AccountID: acctID,
 		PasName:   qa.RandomName(),
+		Region:    awsRegion,
 	}
 	err = pasAPI.Create(&pas)
 	assert.NoError(t, err, err)

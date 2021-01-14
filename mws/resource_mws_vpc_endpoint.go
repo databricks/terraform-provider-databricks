@@ -39,10 +39,7 @@ func (a VPCEndpointAPI) Read(mwsAcctID, vpcEndpointID string) (VPCEndpoint, erro
 // Delete deletes the VPCEndpoint object given a VPCEndpoint id
 func (a VPCEndpointAPI) Delete(mwsAcctID, vpcEndpointID string) error {
 	vpcEndpointAPIPath := fmt.Sprintf("/accounts/%s/vpc-endpoints/%s", mwsAcctID, vpcEndpointID)
-	if err := a.client.Delete(a.context, vpcEndpointAPIPath, nil); err != nil {
-		return err
-	}
-	return nil
+	return a.client.Delete(a.context, vpcEndpointAPIPath, nil)
 }
 
 // List lists all the available network objects in the mws account

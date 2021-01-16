@@ -1,4 +1,7 @@
 provider "aws" {
+  // region                  = "us-west-2"
+  shared_credentials_file = "{$PATH_TO_AWS_CRED_FILE}"
+  profile                 = "{$AWS_CLI_PROFILE_NAME}"
 }
 
 provider "random" {
@@ -62,9 +65,9 @@ resource "aws_s3_bucket" "logdelivery" {
     enabled = false
   }
   force_destroy = true
-  tags = merge(local.tags, {
-    Name = "${local.prefix}-logdelivery"
-  })
+  // tags = merge(local.tags, {
+  //   Name = "${local.prefix}-logdelivery"
+  // })
 }
 
 output "test_logdelivery_bucket" {
@@ -101,6 +104,46 @@ resource "aws_s3_bucket_policy" "logdelivery" {
   bucket = aws_s3_bucket.logdelivery.id
   policy = data.databricks_aws_bucket_policy.logdelivery.json
 }
+
+locals {
+ user_to_workspace = {
+   "us-west-2": "com.amazonaws.vpce.us-west-2.vpce-svc-0129f463fcfbc46c5",
+   "us-east-1": "com.amazonaws.vpce.us-east-1.vpce-svc-09143d1e626de2f04",
+   "eu-west-1": "com.amazonaws.vpce.eu-west-1.vpce-svc-0da6ebf1461278016",
+ }
+ dataplane_to_controlplane = {
+   "us-west-2": "com.amazonaws.vpce.us-west-2.vpce-svc-0129f463fcfbc46c5"
+   "us-east-1": "com.amazonaws.vpce.us-east-1.vpce-svc-09143d1e626de2f04",
+   "eu-west-1": "com.amazonaws.vpce.eu-west-1.vpce-svc-0da6ebf1461278016",
+ }
+}
+ 
+resource "aws_vpc_endpoint" "relay" {
+ service_name        = local.dataplane_to_controlplane[data.external.env.result.TEST_REGION]
+ vpc_id              = module.aws_common.vpc_id
+ vpc_endpoint_type   = "Interface"
+ security_group_ids  = [module.aws_common.security_group]
+ subnet_ids          = [module.aws_common.subnet_private]
+ private_dns_enabled = true
+}
+ 
+output "test_relay_vpc_endpoint" {
+ value = aws_vpc_endpoint.relay.id
+}
+ 
+resource "aws_vpc_endpoint" "rest_api" {
+ service_name        = local.dataplane_to_controlplane[data.external.env.result.TEST_REGION]
+ vpc_id              = module.aws_common.vpc_id
+ vpc_endpoint_type   = "Interface"
+ security_group_ids  = [module.aws_common.security_group]
+ subnet_ids          = [module.aws_common.subnet_private]
+ private_dns_enabled = true
+}
+ 
+output "test_rest_api_vpc_endpoint" {
+ value = aws_vpc_endpoint.rest_api.id
+}
+
 
 output "cloud_env" {
   // needed to distinguish between azure, aws & mws tests

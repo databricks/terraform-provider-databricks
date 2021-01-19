@@ -43,7 +43,7 @@ type NetworkHealth struct {
 // NetworkVPCEndpoints is the object that contains VPC endpoints of a network
 type NetworkVPCEndpoints struct {
 	RestAPI           []string `json:"rest_api" tf:"slice_set"`
-	DataplaneRelayAPI []string `json:"dataplane_relay_api" tf:"slice_set"`
+	DataplaneRelayAPI []string `json:"dataplane_relay" tf:"slice_set"`
 }
 
 // Network is the object that contains all the information for BYOVPC

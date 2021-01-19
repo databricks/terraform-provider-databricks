@@ -1,3 +1,5 @@
+variable "subnet_ids" {}
+variable "security_group_ids" {} 
 
 provider "aws" {
   // region                  = "us-west-2"
@@ -37,6 +39,21 @@ resource "databricks_mws_private_access_settings" "pas"{
     private_access_settings_name=data.external.env.result.DATABRICKS_PAS_NAME
     region= data.external.env.result.TEST_REGION
 
+}
+
+//create a network
+resource "databricks_mws_networks" "this" {
+  provider           = databricks.mws
+  account_id         = data.external.env.result.DATABRICKS_ACCOUNT_ID
+  network_name       = data.external.env.result.network_name
+  subnet_ids         = var.subnet_ids
+  vpc_id             = data.external.env.result.vpc_id
+  security_group_ids = var.security_group_ids
+  
+  vpc_endpoints{
+    rest_api = [databricks_mws_vpc_endpoint.vpce_rest.vpc_endpoint_id]
+    dataplane_relay = [databricks_mws_vpc_endpoint.vpce_relay.vpc_endpoint_id]
+  }
 }
 
 output "test_databricks_mws_vpc_relay_endpoint" {

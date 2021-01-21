@@ -53,7 +53,7 @@ type Network struct {
 	NetworkName         string               `json:"network_name"`
 	VPCID               string               `json:"vpc_id"`
 	SubnetIds           []string             `json:"subnet_ids" tf:"slice_set"`
-	NetworkVPCEndpoints *NetworkVPCEndpoints `json:"vpc_endpoints,omitempty"`
+	VPCEndpoints        *NetworkVPCEndpoints `json:"vpc_endpoints,omitempty" tf:"computed"`
 	SecurityGroupIds    []string             `json:"security_group_ids" tf:"slice_set"`
 	VPCStatus           string               `json:"vpc_status,omitempty" tf:"computed"`
 	ErrorMessages       []NetworkHealth      `json:"error_messages,omitempty" tf:"computed"`
@@ -72,17 +72,6 @@ const (
 
 // WorkspaceStatusesNonRunnable is a list of statuses in which the workspace is not runnable
 var WorkspaceStatusesNonRunnable = []string{WorkspaceStatusCanceled, WorkspaceStatusFailed}
-
-// ContainsWorkspaceState given a list of workspaceStates and the search state
-// it will return true if it found the search state
-func ContainsWorkspaceState(workspaceStates []string, searchState string) bool {
-	for _, state := range workspaceStates {
-		if state == searchState {
-			return true
-		}
-	}
-	return false
-}
 
 // Workspace is the object that contains all the information for deploying a workspace
 type Workspace struct {
@@ -112,19 +101,17 @@ type VPCEndpoint struct {
 	AccountID               string `json:"account_id,omitempty"`
 	VPCEndpointName         string `json:"vpc_endpoint_name"`
 	AwsVPCEndpointServiceID string `json:"aws_endpoint_service_id,omitempty" tf:"computed"`
+	AWSAccountID            string `json:"aws_account_id,omitempty" tf:"computed"`
 	UseCase                 string `json:"use_case,omitempty" tf:"computed"`
 	Region                  string `json:"region"`
-	AwsAccountID            string `json:"aws_account_id,omitempty"`
 	State                   string `json:"state,omitempty" tf:"computed"`
-	CreationTime            int64  `json:"creation_time,omitempty" tf:"computed"`
 }
 
 //PrivateAccessSettings (PAS) is the object that contains all the information for creating an PrivateAccessSettings (PAS)
 type PrivateAccessSettings struct {
-	AccountID    string `json:"account_id,omitempty"`
-	PasID        string `json:"private_access_settings_id,omitempty" tf:"computed"`
-	PasName      string `json:"private_access_settings_name"`
-	Region       string `json:"region"`
-	PASStatus    string `json:"status,omitempty" tf:"computed"`
-	CreationTime int64  `json:"creation_time,omitempty" tf:"computed"`
+	AccountID string `json:"account_id,omitempty"`
+	PasID     string `json:"private_access_settings_id,omitempty" tf:"computed"`
+	PasName   string `json:"private_access_settings_name"`
+	Region    string `json:"region"`
+	Status    string `json:"status,omitempty" tf:"computed"`
 }

@@ -14,9 +14,10 @@ func TestMwsAccPrivateAccessSettings(t *testing.T) {
 	}
 	acceptance.Test(t, []acceptance.Step{
 		{
-			Template: `resource "databricks_mws_private_access_settings" "my_pas" {
-				account_id   = "{env.DATABRICKS_ACCOUNT_ID}"
-				private_access_settings_name = "my_pas"
+			Template: `
+			resource "databricks_mws_private_access_settings" "this" {
+				account_id = "{env.DATABRICKS_ACCOUNT_ID}"
+				private_access_settings_name = "tf-{var.RANDOM}"
 				region = "{env.TEST_REGION}"
 			}`,
 		},

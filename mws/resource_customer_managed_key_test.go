@@ -17,12 +17,12 @@ func TestMwsAccCustomerManagedKeys(t *testing.T) {
 	kmsKeyArn := qa.GetEnvOrSkipTest(t, "TEST_KMS_KEY_ARN")
 	kmsKeyAlias := qa.GetEnvOrSkipTest(t, "TEST_KMS_KEY_ALIAS")
 	client := common.CommonEnvironmentClient()
-	cmkApi := NewCustomerManagedKeysAPI(context.Background(), client)
-	cmkList, err := cmkApi.List(acctID)
+	cmkAPI := NewCustomerManagedKeysAPI(context.Background(), client)
+	cmkList, err := cmkAPI.List(acctID)
 	assert.NoError(t, err, err)
 	t.Log(cmkList)
 
-	keyInfo, err := cmkApi.Create(CustomerManagedKey{
+	keyInfo, err := cmkAPI.Create(CustomerManagedKey{
 		AwsKeyInfo: &AwsKeyInfo{
 			KeyArn:   kmsKeyArn,
 			KeyAlias: kmsKeyAlias,
@@ -34,11 +34,11 @@ func TestMwsAccCustomerManagedKeys(t *testing.T) {
 	keyID := keyInfo.CustomerManagedKeyID
 
 	defer func() {
-		err := cmkApi.Delete(acctID, keyID)
+		err := cmkAPI.Delete(acctID, keyID)
 		assert.NoError(t, err, err)
 	}()
 
-	getKeyInfo, err := cmkApi.Read(acctID, keyID)
+	getKeyInfo, err := cmkAPI.Read(acctID, keyID)
 	assert.NoError(t, err, err)
 	assert.NotNil(t, getKeyInfo, "key info should not be nil")
 }

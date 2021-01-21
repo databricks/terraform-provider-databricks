@@ -16,7 +16,7 @@ func TestMwsAccPAS(t *testing.T) {
 		t.Skip("skipping integration test in short mode.")
 	}
 	acctID := qa.GetEnvOrSkipTest(t, "DATABRICKS_ACCOUNT_ID")
-	awsRegion := qa.GetEnvOrSkipTest(t, "AWS_DEFAULT_REGION")
+	awsRegion := qa.GetEnvOrSkipTest(t, "TEST_REGION")
 	client := common.CommonEnvironmentClient()
 	ctx := context.Background()
 	pasAPI := NewPrivateAccessSettingsAPI(ctx, client)
@@ -26,7 +26,7 @@ func TestMwsAccPAS(t *testing.T) {
 
 	pas := PrivateAccessSettings{
 		AccountID: acctID,
-		PasName:   qa.RandomName(),
+		PasName:   qa.RandomName("tf-"),
 		Region:    awsRegion,
 	}
 	err = pasAPI.Create(&pas)
@@ -125,7 +125,6 @@ func TestResourcePASRead(t *testing.T) {
 	}.Apply(t)
 	assert.NoError(t, err, err)
 	assert.Equal(t, "abc/pas_id", d.Id(), "Id should not be empty")
-	assert.Equal(t, 0, d.Get("creation_time"))
 	assert.Equal(t, "account_id", d.Get("account_id"))
 	assert.Equal(t, "pas_name", d.Get("private_access_settings_name"))
 	assert.Equal(t, "ar", d.Get("region"))

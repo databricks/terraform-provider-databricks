@@ -3,10 +3,13 @@ package mws
 import (
 	"context"
 	"fmt"
+	"strings"
+	"time"
 
 	"github.com/databrickslabs/databricks-terraform/common"
 	"github.com/databrickslabs/databricks-terraform/internal"
 	"github.com/databrickslabs/databricks-terraform/internal/util"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
@@ -25,15 +28,35 @@ type VPCEndpointAPI struct {
 // Create creates the VPC endpoint registeration process
 func (a VPCEndpointAPI) Create(vpcEndpoint *VPCEndpoint) error {
 	vpcEndpointAPIPath := fmt.Sprintf("/accounts/%s/vpc-endpoints", vpcEndpoint.AccountID)
-	return a.client.Post(a.context, vpcEndpointAPIPath, vpcEndpoint, &vpcEndpoint)
+	err := a.client.Post(a.context, vpcEndpointAPIPath, vpcEndpoint, &vpcEndpoint)
+	if err != nil {
+		return err
+	}
+	return resource.RetryContext(a.context, 15*time.Minute, func() *resource.RetryError {
+		ve, err := a.Read(vpcEndpoint.AccountID, vpcEndpoint.VPCEndpointID)
+		if err != nil {
+			return resource.NonRetryableError(err)
+		}
+		switch state := strings.ToLower(ve.State); state {
+		case "available":
+			return nil
+		case "pending", "pendingacceptance":
+			return resource.RetryableError(
+				fmt.Errorf("Endpoint %s is still %s",
+					ve.AwsVPCEndpointID, ve.State))
+		default:
+			return resource.NonRetryableError(
+				fmt.Errorf("Cannot register %s: %s",
+					ve.AwsVPCEndpointID, ve.State))
+		}
+	})
 }
 
 // Read returns the VPCEndpoint object along with metadata and any additional errors when attaching to workspace
-func (a VPCEndpointAPI) Read(mwsAcctID, vpcEndpointID string) (VPCEndpoint, error) {
-	var mwsVPCEndpoint VPCEndpoint
+func (a VPCEndpointAPI) Read(mwsAcctID, vpcEndpointID string) (ve VPCEndpoint, err error) {
 	vpcEndpointAPIPath := fmt.Sprintf("/accounts/%s/vpc-endpoints/%s", mwsAcctID, vpcEndpointID)
-	err := a.client.Get(a.context, vpcEndpointAPIPath, nil, &mwsVPCEndpoint)
-	return mwsVPCEndpoint, err
+	err = a.client.Get(a.context, vpcEndpointAPIPath, nil, &ve)
+	return
 }
 
 // Delete deletes the VPCEndpoint object given a VPCEndpoint id

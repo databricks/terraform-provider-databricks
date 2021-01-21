@@ -17,13 +17,16 @@ func TestAccInstancePools(t *testing.T) {
 	}
 	client := common.NewClientFromEnvironment()
 
+	clustersAPI := NewClustersAPI(context.Background(), client)
+	sparkVersion := clustersAPI.LatestSparkVersionOrDefault(SparkVersionRequest{Latest: true, LongTermSupport: true})
+	nodeType := clustersAPI.GetSmallestNodeType(NodeTypeRequest{})
 	pool := InstancePool{
 		InstancePoolName:                   "Terraform Integration Test",
 		MinIdleInstances:                   0,
-		NodeTypeID:                         qa.GetCloudInstanceType(client),
+		NodeTypeID:                         nodeType,
 		IdleInstanceAutoTerminationMinutes: 20,
 		PreloadedSparkVersions: []string{
-			"7.1.x-scala2.12",
+			sparkVersion,
 		},
 	}
 	if !client.IsAzure() {
@@ -60,10 +63,10 @@ func TestAccInstancePools(t *testing.T) {
 		InstancePoolName:                   "Terraform Integration Test Updated",
 		MinIdleInstances:                   0,
 		MaxCapacity:                        20,
-		NodeTypeID:                         qa.GetCloudInstanceType(client),
+		NodeTypeID:                         nodeType,
 		IdleInstanceAutoTerminationMinutes: 20,
 		PreloadedSparkVersions: []string{
-			"7.1.x-scala2.12",
+			sparkVersion,
 		},
 	}
 	if !client.IsAzure() {

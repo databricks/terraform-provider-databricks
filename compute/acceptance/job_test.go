@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 
 	"github.com/databrickslabs/databricks-terraform/common"
+	"github.com/databrickslabs/databricks-terraform/compute"
 	. "github.com/databrickslabs/databricks-terraform/compute"
 	"github.com/databrickslabs/databricks-terraform/internal/acceptance"
 	"github.com/databrickslabs/databricks-terraform/internal/qa"
@@ -20,6 +21,9 @@ func TestAccJobResource(t *testing.T) {
 	if _, ok := os.LookupEnv("CLOUD_ENV"); !ok {
 		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
 	}
+
+	clustersAPI := NewClustersAPI(context.Background(), common.CommonEnvironmentClient())
+	sparkVersion := clustersAPI.LatestSparkVersionOrDefault(compute.SparkVersionRequest{Latest: true, LongTermSupport: true})
 	acceptance.AccTest(t, resource.TestCase{
 		Steps: []resource.TestStep{
 			{
@@ -42,8 +46,7 @@ func TestAccJobResource(t *testing.T) {
 					timeout_seconds = 3600
 					max_retries = 1
 					max_concurrent_runs = 1
-				  }`, CommonInstancePoolID(), CommonRuntimeVersion(),
-					qa.RandomLongName()),
+				  }`, CommonInstancePoolID(), sparkVersion, qa.RandomLongName()),
 				// compose a basic test, checking both remote and local values
 				Check: resource.ComposeTestCheckFunc(
 					// query the API to retrieve the tokenInfo object
@@ -57,7 +60,7 @@ func TestAccJobResource(t *testing.T) {
 							assert.NotNil(t, job.Settings.NotebookTask)
 							assert.Equal(t, 2, int(job.Settings.NewCluster.Autoscale.MinWorkers))
 							assert.Equal(t, 3, int(job.Settings.NewCluster.Autoscale.MaxWorkers))
-							assert.Equal(t, CommonRuntimeVersion(), job.Settings.NewCluster.SparkVersion)
+							assert.Equal(t, sparkVersion, job.Settings.NewCluster.SparkVersion)
 							assert.Equal(t, "/Production/MakeFeatures", job.Settings.NotebookTask.NotebookPath)
 							assert.Equal(t, 3600, int(job.Settings.TimeoutSeconds))
 							assert.Equal(t, 1, int(job.Settings.MaxRetries))
@@ -74,6 +77,8 @@ func TestAwsAccJobResource_NoInstancePool(t *testing.T) {
 	if _, ok := os.LookupEnv("CLOUD_ENV"); !ok {
 		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
 	}
+	clustersAPI := NewClustersAPI(context.Background(), common.CommonEnvironmentClient())
+	sparkVersion := clustersAPI.LatestSparkVersionOrDefault(compute.SparkVersionRequest{Latest: true, LongTermSupport: true})
 	randomStr := acctest.RandStringFromCharSet(5, acctest.CharSetAlphaNum)
 	instanceProfileARN := fmt.Sprintf("arn:aws:iam::999999999999:instance-profile/tf-test-%s", randomStr)
 	acceptance.AccTest(t, resource.TestCase{
@@ -109,7 +114,7 @@ func TestAwsAccJobResource_NoInstancePool(t *testing.T) {
 					timeout_seconds = 3600
 					max_retries = 1
 					max_concurrent_runs = 1
-				  }`, instanceProfileARN, CommonRuntimeVersion(),
+				  }`, instanceProfileARN, sparkVersion,
 					qa.RandomLongName()),
 				// compose a basic test, checking both remote and local values
 				Check: resource.ComposeTestCheckFunc(

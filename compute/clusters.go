@@ -326,9 +326,12 @@ func (a ClustersAPI) GetOrCreateRunningCluster(name string, custom ...Cluster) (
 	})
 	log.Printf("[INFO] Creating an autoterminating cluster with node type %s", smallestNodeType)
 	r := Cluster{
-		NumWorkers:             1,
-		ClusterName:            name,
-		SparkVersion:           CommonRuntimeVersion(),
+		NumWorkers:  1,
+		ClusterName: name,
+		SparkVersion: a.LatestSparkVersionOrDefault(SparkVersionRequest{
+			Latest:          true,
+			LongTermSupport: true,
+		}),
 		NodeTypeID:             smallestNodeType,
 		AutoterminationMinutes: 10,
 	}
@@ -444,4 +447,13 @@ func (a ClustersAPI) LatestSparkVersion(svr SparkVersionRequest) (string, error)
 		return "", err
 	}
 	return sparkVersions.LatestSparkVersion(svr)
+}
+
+// LatestSparkVersionOrDefault returns Spark version matching the definition, or default in case of error
+func (a ClustersAPI) LatestSparkVersionOrDefault(svr SparkVersionRequest) string {
+	version, err := a.LatestSparkVersion(svr)
+	if err != nil {
+		return "7.3.x-scala2.12"
+	}
+	return version
 }

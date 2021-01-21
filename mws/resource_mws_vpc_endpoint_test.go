@@ -2,6 +2,7 @@ package mws
 
 import (
 	"context"
+	"os"
 	"testing"
 
 	"github.com/databrickslabs/databricks-terraform/common"
@@ -11,36 +12,36 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestMwsVPCEndpoint(t *testing.T) {
-	if testing.Short() {
-		t.Skip("skipping integration test in short mode.")
+func TestMwsAccVPCEndpoint(t *testing.T) {
+	cloudEnv := os.Getenv("CLOUD_ENV")
+	if cloudEnv != "MWS" {
+		t.Skip("Cannot run test on non-MWS environment")
 	}
 	acctID := qa.GetEnvOrSkipTest(t, "DATABRICKS_ACCOUNT_ID")
-	awsvreID := qa.GetEnvOrSkipTest(t, "AWS_VPC_RELAY_ENDPOINT_ID")
-	awsRegion := qa.GetEnvOrSkipTest(t, "AWS_DEFAULT_REGION")
+	awsvreID := qa.GetEnvOrSkipTest(t, "TEST_RELAY_VPC_ENDPOINT")
+	awsRegion := qa.GetEnvOrSkipTest(t, "TEST_REGION")
 	client := common.CommonEnvironmentClient()
 	ctx := context.Background()
 	vpcEndpointAPI := NewVPCEndpointAPI(ctx, client)
-	vpcEndpointList, err := vpcEndpointAPI.List(acctID)
-	assert.NoError(t, err, err)
-	t.Log(vpcEndpointList)
+	endpointList, err := vpcEndpointAPI.List(acctID)
+	require.NoError(t, err, err)
+	t.Logf("VPC Endpoints: %v", endpointList)
 
 	vpcEndpoint := VPCEndpoint{
 		AccountID:        acctID,
-		VPCEndpointName:  qa.RandomName(),
+		VPCEndpointName:  qa.RandomName("tf-"),
 		AwsVPCEndpointID: awsvreID,
 		Region:           awsRegion,
 	}
 	err = vpcEndpointAPI.Create(&vpcEndpoint)
-	assert.NoError(t, err, err)
+	require.NoError(t, err, err)
 	defer func() {
 		err = vpcEndpointAPI.Delete(acctID, vpcEndpoint.VPCEndpointID)
 		assert.NoError(t, err, err)
 	}()
-
-	myVpcEndpoints, err := vpcEndpointAPI.Read(acctID, vpcEndpoint.VPCEndpointID)
+	thisEndpoint, err := vpcEndpointAPI.Read(acctID, vpcEndpoint.VPCEndpointID)
 	assert.NoError(t, err, err)
-	t.Log(myVpcEndpoints)
+	assert.Equal(t, "available", thisEndpoint.State)
 }
 
 func TestResourceVPCEndpointCreate(t *testing.T) {
@@ -59,17 +60,17 @@ func TestResourceVPCEndpointCreate(t *testing.T) {
 					VPCEndpointID: "ve_id",
 				},
 			},
-
 			{
-				Method:   "GET",
-				Resource: "/api/2.0/accounts/abc/vpc-endpoints/ve_id",
-
+				Method:       "GET",
+				Resource:     "/api/2.0/accounts/abc/vpc-endpoints/ve_id",
+				ReuseRequest: true,
 				Response: VPCEndpoint{
 					AccountID:        "abc",
 					VPCEndpointName:  "ve_name",
 					Region:           "ar",
 					AwsVPCEndpointID: "ave_id",
 					VPCEndpointID:    "ve_id",
+					State:            "Available",
 				},
 			},
 		},
@@ -133,7 +134,6 @@ func TestResourceVPCEndpointRead(t *testing.T) {
 	}.Apply(t)
 	assert.NoError(t, err, err)
 	assert.Equal(t, "abc/veid", d.Id(), "Id should not be empty")
-	assert.Equal(t, 0, d.Get("creation_time"))
 	assert.Equal(t, "veid", d.Get("account_id"))
 	assert.Equal(t, "ve_name", d.Get("vpc_endpoint_name"))
 	assert.Equal(t, "ar", d.Get("region"))
@@ -251,4 +251,47 @@ func TestResourceVPCEndpointList(t *testing.T) {
 	l, err := NewVPCEndpointAPI(context.Background(), client).List("abc")
 	require.NoError(t, err)
 	assert.Len(t, l, 0)
+}
+
+func TestResourceVPCEndpointCreatePendingAndFails(t *testing.T) {
+	client, server, err := qa.HttpFixtureClient(t, []qa.HTTPFixture{
+		{
+			Method:   "POST",
+			Resource: "/api/2.0/accounts/a/vpc-endpoints",
+			ExpectedRequest: VPCEndpoint{
+				AwsVPCEndpointID: "a",
+				VPCEndpointName:  "a",
+				Region:           "a",
+				AccountID:        "a",
+			},
+			Response: VPCEndpoint{
+				VPCEndpointID: "b",
+			},
+		},
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/accounts/a/vpc-endpoints/b",
+			Response: VPCEndpoint{
+				State: "PENDING",
+			},
+		},
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/accounts/a/vpc-endpoints/b",
+			Response: VPCEndpoint{
+				AwsVPCEndpointID: "x",
+				State:            "bad thing",
+			},
+		},
+	})
+	require.NoError(t, err)
+	defer server.Close()
+
+	err = NewVPCEndpointAPI(context.Background(), client).Create(&VPCEndpoint{
+		AccountID:        "a",
+		AwsVPCEndpointID: "a",
+		VPCEndpointName:  "a",
+		Region:           "a",
+	})
+	require.EqualError(t, err, "Cannot register x: bad thing")
 }

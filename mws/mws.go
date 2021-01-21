@@ -48,17 +48,17 @@ type NetworkVPCEndpoints struct {
 
 // Network is the object that contains all the information for BYOVPC
 type Network struct {
-	AccountID           string               `json:"account_id"`
-	NetworkID           string               `json:"network_id,omitempty" tf:"computed"`
-	NetworkName         string               `json:"network_name"`
-	VPCID               string               `json:"vpc_id"`
-	SubnetIds           []string             `json:"subnet_ids" tf:"slice_set"`
-	VPCEndpoints        *NetworkVPCEndpoints `json:"vpc_endpoints,omitempty" tf:"computed"`
-	SecurityGroupIds    []string             `json:"security_group_ids" tf:"slice_set"`
-	VPCStatus           string               `json:"vpc_status,omitempty" tf:"computed"`
-	ErrorMessages       []NetworkHealth      `json:"error_messages,omitempty" tf:"computed"`
-	WorkspaceID         int64                `json:"workspace_id,omitempty" tf:"computed"`
-	CreationTime        int64                `json:"creation_time,omitempty" tf:"computed"`
+	AccountID        string               `json:"account_id"`
+	NetworkID        string               `json:"network_id,omitempty" tf:"computed"`
+	NetworkName      string               `json:"network_name"`
+	VPCID            string               `json:"vpc_id"`
+	SubnetIds        []string             `json:"subnet_ids" tf:"slice_set"`
+	VPCEndpoints     *NetworkVPCEndpoints `json:"vpc_endpoints,omitempty" tf:"computed"`
+	SecurityGroupIds []string             `json:"security_group_ids" tf:"slice_set"`
+	VPCStatus        string               `json:"vpc_status,omitempty" tf:"computed"`
+	ErrorMessages    []NetworkHealth      `json:"error_messages,omitempty" tf:"computed"`
+	WorkspaceID      int64                `json:"workspace_id,omitempty" tf:"computed"`
+	CreationTime     int64                `json:"creation_time,omitempty" tf:"computed"`
 }
 
 // List of workspace statuses for provisioning the workspace

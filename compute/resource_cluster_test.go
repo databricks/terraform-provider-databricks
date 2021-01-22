@@ -2,6 +2,7 @@ package compute
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/databrickslabs/databricks-terraform/common"
@@ -907,4 +908,139 @@ func TestResourceClusterDelete_Error(t *testing.T) {
 	}.Apply(t)
 	qa.AssertErrorStartsWith(t, err, "Internal error happened")
 	assert.Equal(t, "abc", d.Id())
+}
+
+func TestResourceClusterCreate_SingleNode(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/clusters/create",
+				ExpectedRequest: Cluster{
+					NumWorkers:             0,
+					ClusterName:            "Single Node Cluster",
+					SparkVersion:           "7.3.x-scala12",
+					NodeTypeID:             "Standard_F4s",
+					AutoterminationMinutes: 120,
+					SparkConf: map[string]string{
+						"spark.master":                     "local[*]",
+						"spark.databricks.cluster.profile": "singleNode",
+					},
+				},
+				Response: ClusterInfo{
+					ClusterID: "abc",
+					State:     ClusterStateRunning,
+				},
+			},
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/clusters/events",
+				ExpectedRequest: EventsRequest{
+					ClusterID:  "abc",
+					Limit:      1,
+					Order:      SortDescending,
+					EventTypes: []ClusterEventType{EvTypePinned, EvTypeUnpinned},
+				},
+				Response: EventsResponse{
+					Events:     []ClusterEvent{},
+					TotalCount: 0,
+				},
+			},
+			{
+				Method:       "GET",
+				ReuseRequest: true,
+				Resource:     "/api/2.0/clusters/get?cluster_id=abc",
+				Response: ClusterInfo{
+					ClusterID:              "abc",
+					ClusterName:            "Single Node Cluster",
+					SparkVersion:           "7.3.x-scala12",
+					NodeTypeID:             "Standard_F4s",
+					AutoterminationMinutes: 120,
+					State:                  ClusterStateRunning,
+					SparkConf: map[string]string{
+						"spark.master":                     "local[*]",
+						"spark.databricks.cluster.profile": "singleNode",
+					},
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/libraries/cluster-status?cluster_id=abc",
+				Response: ClusterLibraryStatuses{
+					LibraryStatuses: []LibraryStatus{},
+				},
+			},
+		},
+		Create:   true,
+		Resource: ResourceCluster(),
+		State: map[string]interface{}{
+			"autotermination_minutes": 120,
+			"cluster_name":            "Single Node Cluster",
+			"spark_version":           "7.3.x-scala12",
+			"node_type_id":            "Standard_F4s",
+			"is_pinned":               false,
+			"spark_conf": map[string]interface{}{
+				"spark.master":                     "local[*]",
+				"spark.databricks.cluster.profile": "singleNode",
+			},
+		},
+	}.Apply(t)
+	assert.NoError(t, err, err)
+	assert.Equal(t, 0, d.Get("num_workers"))
+}
+
+func TestResourceClusterCreate_SingleNodeFail(t *testing.T) {
+	_, err := qa.ResourceFixture{
+		Create:   true,
+		Resource: ResourceCluster(),
+		State: map[string]interface{}{
+			"autotermination_minutes": 120,
+			"cluster_name":            "Single Node Cluster",
+			"spark_version":           "7.3.x-scala12",
+			"node_type_id":            "Standard_F4s",
+			"is_pinned":               false,
+		},
+	}.Apply(t)
+	assert.Error(t, err, err)
+	require.Equal(t, true, strings.Contains(err.Error(), "NumWorkers could be 0 only for SingleNode clusters"))
+}
+
+func TestResourceClusterCreate_NegativeNumWorkers(t *testing.T) {
+	_, err := qa.ResourceFixture{
+		Create:   true,
+		Resource: ResourceCluster(),
+		State: map[string]interface{}{
+			"autotermination_minutes": 120,
+			"cluster_name":            "Broken Cluster",
+			"spark_version":           "7.3.x-scala12",
+			"node_type_id":            "Standard_F4s",
+			"num_workers":             -10,
+		},
+	}.Apply(t)
+	assert.Error(t, err, err)
+	require.Equal(t, true, strings.Contains(err.Error(), "expected num_workers to be at least (0)"))
+}
+
+func TestResourceClusterUpdate_FailNumWorkersZero(t *testing.T) {
+	_, err := qa.ResourceFixture{
+		ID:       "abc",
+		Update:   true,
+		Resource: ResourceCluster(),
+		InstanceState: map[string]string{
+			"autotermination_minutes": "15",
+			"cluster_name":            "Shared Autoscaling",
+			"spark_version":           "7.1-scala12",
+			"node_type_id":            "i3.xlarge",
+			"num_workers":             "100",
+		},
+		State: map[string]interface{}{
+			"autotermination_minutes": 15,
+			"cluster_name":            "Shared Autoscaling",
+			"spark_version":           "7.1-scala12",
+			"node_type_id":            "i3.xlarge",
+			"num_workers":             0,
+		},
+	}.Apply(t)
+	assert.Error(t, err, err)
+	require.Equal(t, true, strings.Contains(err.Error(), "NumWorkers could be 0 only for SingleNode clusters"))
 }

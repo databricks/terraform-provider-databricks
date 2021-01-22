@@ -15,7 +15,7 @@ func NewClusterPoliciesAPI(ctx context.Context, m interface{}) ClusterPoliciesAP
 	return ClusterPoliciesAPI{m.(*common.DatabricksClient), ctx}
 }
 
-// Listing can be performed by any user and is limited to policies accessible by that user.
+// ClusterPoliciesAPI struct for cluster policies API
 type ClusterPoliciesAPI struct {
 	client  *common.DatabricksClient
 	context context.Context

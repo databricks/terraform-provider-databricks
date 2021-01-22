@@ -17,6 +17,74 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func TestAwsAccJobsCreate(t *testing.T) {
+	if _, ok := os.LookupEnv("CLOUD_ENV"); !ok {
+		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
+	}
+
+	client := common.NewClientFromEnvironment()
+	jobsAPI := NewJobsAPI(context.Background(), client)
+	clustersAPI := NewClustersAPI(context.Background(), client)
+	sparkVersion := clustersAPI.LatestSparkVersionOrDefault(compute.SparkVersionRequest{Latest: true, LongTermSupport: true})
+
+	jobSettings := JobSettings{
+		NewCluster: &Cluster{
+			NumWorkers:   2,
+			SparkVersion: sparkVersion,
+			SparkConf:    nil,
+			AwsAttributes: &AwsAttributes{
+				Availability: "ON_DEMAND",
+			},
+			NodeTypeID: clustersAPI.GetSmallestNodeType(NodeTypeRequest{}),
+		},
+		NotebookTask: &NotebookTask{
+			NotebookPath: "/tf-test/demo-terraform/demo-notebook",
+		},
+		Name: "1-test-job",
+		Libraries: []Library{
+			{
+				Maven: &Maven{
+					Coordinates: "org.jsoup:jsoup:1.7.2",
+				},
+			},
+		},
+		EmailNotifications: &JobEmailNotifications{
+			OnStart:   []string{},
+			OnSuccess: []string{},
+			OnFailure: []string{},
+		},
+		TimeoutSeconds: 3600,
+		MaxRetries:     1,
+		Schedule: &CronSchedule{
+			QuartzCronExpression: "0 15 22 ? * *",
+			TimezoneID:           "America/Los_Angeles",
+		},
+		MaxConcurrentRuns: 1,
+	}
+
+	job, err := jobsAPI.Create(jobSettings)
+	assert.NoError(t, err, err)
+	id := job.ID()
+	defer func() {
+		err := jobsAPI.Delete(id)
+		assert.NoError(t, err, err)
+	}()
+	t.Log(id)
+	job, err = jobsAPI.Read(id)
+	assert.NoError(t, err, err)
+	assert.True(t, job.Settings.NewCluster.SparkVersion == sparkVersion, "Something is wrong with spark version")
+
+	newSparkVersion := clustersAPI.LatestSparkVersionOrDefault(compute.SparkVersionRequest{Latest: true})
+	jobSettings.NewCluster.SparkVersion = newSparkVersion
+
+	err = jobsAPI.Update(id, jobSettings)
+	assert.NoError(t, err, err)
+
+	job, err = jobsAPI.Read(id)
+	assert.NoError(t, err, err)
+	assert.True(t, job.Settings.NewCluster.SparkVersion == newSparkVersion, "Something is wrong with spark version")
+}
+
 func TestAccJobResource(t *testing.T) {
 	if _, ok := os.LookupEnv("CLOUD_ENV"); !ok {
 		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")

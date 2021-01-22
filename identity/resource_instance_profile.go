@@ -41,10 +41,10 @@ type InstanceProfilesAPI struct {
 }
 
 // Create creates an instance profile record on Databricks
-func (a InstanceProfilesAPI) Create(instanceProfileARN string, skipValidation bool) error {
+func (a InstanceProfilesAPI) Create(instanceProfileARN string) error {
 	return a.client.Post(a.context, "/instance-profiles/add", map[string]interface{}{
 		"instance_profile_arn": instanceProfileARN,
-		"skip_validation":      skipValidation,
+		"skip_validation":      false,
 	}, nil)
 }
 
@@ -86,7 +86,7 @@ func (a InstanceProfilesAPI) Delete(instanceProfileARN string) error {
 
 // Synchronized test helper for working with only single instance profile
 func (a InstanceProfilesAPI) Synchronized(arn string, cb func()) {
-	err := resource.RetryContext(a.context, 10*time.Minute, func() *resource.RetryError {
+	err := resource.RetryContext(a.context, 30*time.Minute, func() *resource.RetryError {
 		list, err := a.List()
 		if err != nil {
 			return resource.NonRetryableError(err)
@@ -126,7 +126,7 @@ func ResourceInstanceProfile() *schema.Resource {
 		},
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			ipa := d.Get("instance_profile_arn").(string)
-			if err := NewInstanceProfilesAPI(ctx, c).Create(ipa, false); err != nil {
+			if err := NewInstanceProfilesAPI(ctx, c).Create(ipa); err != nil {
 				return err
 			}
 			d.SetId(ipa)

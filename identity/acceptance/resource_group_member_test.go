@@ -74,9 +74,9 @@ func TestAccGroupMemberResource(t *testing.T) {
 				Check:  acceptance.ResourceCheck("databricks_group", assertMembers(3)),
 			},
 			{
-				Config: `resource "databricks_group" "root" {
-					display_name = "group-membership-step3"
-				}`,
+				Config: qa.EnvironmentTemplate(t, `resource "databricks_group" "root" {
+					display_name = "tf-{var.RANDOM}"
+				}`),
 				Check: acceptance.ResourceCheck("databricks_group", assertMembers(1)),
 			},
 		},

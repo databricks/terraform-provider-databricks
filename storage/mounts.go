@@ -109,7 +109,21 @@ func NewMountPoint(executor common.CommandExecutor, name, clusterID string) Moun
 func getMountingClusterID(ctx context.Context, client *common.DatabricksClient, clusterID string) (string, error) {
 	clustersAPI := compute.NewClustersAPI(ctx, client)
 	if clusterID == "" {
-		cluster, err := clustersAPI.GetOrCreateRunningCluster("terraform-mount")
+		r := compute.Cluster{
+			NumWorkers:  0,
+			ClusterName: "terraform-mount",
+			SparkVersion: clustersAPI.LatestSparkVersionOrDefault(compute.SparkVersionRequest{
+				Latest:          true,
+				LongTermSupport: true,
+			}),
+			NodeTypeID:             clustersAPI.GetSmallestNodeType(compute.NodeTypeRequest{LocalDisk: true}),
+			AutoterminationMinutes: 10,
+			SparkConf: map[string]string{
+				"spark.master":                     "local[*]",
+				"spark.databricks.cluster.profile": "singleNode",
+			},
+		}
+		cluster, err := clustersAPI.GetOrCreateRunningCluster("terraform-mount", r)
 		if err != nil {
 			return "", err
 		}

@@ -1,3 +1,14 @@
+terraform {
+  required_providers {
+    azurerm =  "~> 2.33"
+    random = "~> 2.2"
+  }
+}
+
+provider "azurerm" {
+  features {}
+}
+
 variable "owner" {
   type    = string
   default = ""
@@ -6,15 +17,6 @@ variable "owner" {
 variable "region" {
   type = string
   default = "westeurope"
-}
-
-provider "azurerm" {
-  version = "~> 2.14"
-  features {}
-}
-
-provider "random" {
-  version = "~> 2.2"
 }
 
 resource "random_string" "naming" {

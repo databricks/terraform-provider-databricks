@@ -259,7 +259,11 @@ func TestAwsAccS3Mount(t *testing.T) {
 	client := common.NewClientFromEnvironment()
 	instanceProfile := qa.GetEnvOrSkipTest(t, "TEST_EC2_INSTANCE_PROFILE")
 	ctx := context.Background()
-	identity.NewInstanceProfilesAPI(ctx, client).Synchronized(instanceProfile, func() {
+	instanceProfilesAPI := identity.NewInstanceProfilesAPI(ctx, client)
+	instanceProfilesAPI.Synchronized(instanceProfile, func() {
+		err := instanceProfilesAPI.Create(instanceProfile)
+		require.NoError(t, err)
+
 		bucket := qa.GetEnvOrSkipTest(t, "TEST_S3_BUCKET")
 		client := compute.CommonEnvironmentClientWithRealCommandExecutor()
 		clustersAPI := compute.NewClustersAPI(ctx, client)

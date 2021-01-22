@@ -42,7 +42,6 @@ func TestAwsAccS3IamMount_WithCluster(t *testing.T) {
 		config := qa.EnvironmentTemplate(t, `
 		resource "databricks_instance_profile" "this" {
 			instance_profile_arn = "{env.TEST_EC2_INSTANCE_PROFILE}"
-			skip_validation      = false
 		}
 		resource "databricks_cluster" "this" {
 			cluster_name = "ready-{var.RANDOM}"
@@ -88,7 +87,6 @@ func TestAwsAccS3IamMount_NoClusterGiven(t *testing.T) {
 		config := qa.EnvironmentTemplate(t, `
 		resource "databricks_instance_profile" "this" {
 			instance_profile_arn = "{env.TEST_EC2_INSTANCE_PROFILE}"
-			skip_validation      = false
 		}
 		resource "databricks_aws_s3_mount" "mount" {
 			mount_name        = "{var.RANDOM}"

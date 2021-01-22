@@ -60,7 +60,6 @@ resource "databricks_mws_workspaces" "this" {
   credentials_id            = databricks_mws_credentials.this.credentials_id
   storage_configuration_id  = databricks_mws_storage_configurations.this.storage_configuration_id
   network_id                = databricks_mws_networks.this.network_id
-  verify_workspace_runnning = true
 }
 
 provider "databricks" {
@@ -157,11 +156,12 @@ resource "databricks_mws_workspaces" "this" {
 
   credentials_id            = databricks_mws_credentials.this.credentials_id
   storage_configuration_id  = databricks_mws_storage_configurations.this.storage_configuration_id
-  verify_workspace_runnning = true
 }
 ```
 
 ## Argument Reference
+
+-> **Note** All workspaces would be verified to get into runnable state or cleaned up upon failure.
 
 The following arguments are required:
 
@@ -173,7 +173,6 @@ The following arguments are required:
 * `workspace_name` - (Required) (String) name of the workspace, will appear on UI
 * `aws_region` - (Required) (String) AWS region of VPC
 * `storage_configuration_id` - (Required) (String) `storage_configuration_id` from [storage configuration](mws_storage_configurations.md)
-* `verify_workspace_runnning` - (Required) (Bool) wait until the workspace is running. **This field is deprecated and are going to be removed in 0.3.** All workspaces would be verified to get into runnable state or cleaned up upon failure.
 
 ## Attribute Reference
 

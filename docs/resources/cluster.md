@@ -197,7 +197,9 @@ Attributes are the same as for the `cluster_log_conf` configuration block.
 
 ## aws_attributes
 
-`aws_attributes` optional configuration block contains attributes related to [clusters running on Amazon Web Services](https://docs.databricks.com/clusters/configure.html#aws-configurations). If not specified at cluster creation, a set of default values will be used.
+`aws_attributes` optional configuration block contains attributes related to [clusters running on Amazon Web Services](https://docs.databricks.com/clusters/configure.html#aws-configurations).
+
+-> **Note** *(AWS only)* Please specify empty configuration block (`aws_attributes {}`), even if you're not setting any custom values. This will prevent any resource update issues.
 
 Here is the example of shared autoscaling cluster with some of AWS options set:
 

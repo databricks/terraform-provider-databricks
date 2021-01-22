@@ -176,9 +176,8 @@ provider "databricks" {
   azure_tenant_id             = var.tenant_id
 }
 
-resource "databricks_scim_user" "my-user" {
-  user_name     = "test-user@databricks.com"
-  display_name  = "Test User"
+resource "databricks_user" "my-user" {
+  user_name = "test-user@databricks.com"
 }
 ```
 
@@ -202,7 +201,7 @@ provider "databricks" {
   azure_workspace_resource_id = azurerm_databricks_workspace.this.id
 }
 
-resource "databricks_scim_user" "my-user" {
+resource "databricks_user" "my-user" {
   user_name     = "test-user@databricks.com"
   display_name  = "Test User"
 }

@@ -58,30 +58,10 @@ func TestAccInstancePools(t *testing.T) {
 	assert.Equal(t, pool.NodeTypeID, poolReadInfo.NodeTypeID)
 	assert.Equal(t, pool.IdleInstanceAutoTerminationMinutes, poolReadInfo.IdleInstanceAutoTerminationMinutes)
 
-	u := InstancePool{
-		InstancePoolID:                     poolReadInfo.InstancePoolID,
-		InstancePoolName:                   "Terraform Integration Test Updated",
-		MinIdleInstances:                   0,
-		MaxCapacity:                        20,
-		NodeTypeID:                         nodeType,
-		IdleInstanceAutoTerminationMinutes: 20,
-		PreloadedSparkVersions: []string{
-			sparkVersion,
-		},
-	}
-	if !client.IsAzure() {
-		u.DiskSpec = &InstancePoolDiskSpec{
-			DiskType: &InstancePoolDiskType{
-				EbsVolumeType: EbsVolumeTypeGeneralPurposeSsd,
-			},
-			DiskCount: 1,
-			DiskSize:  32,
-		}
-		u.AwsAttributes = &InstancePoolAwsAttributes{
-			Availability: AwsAvailabilitySpot,
-		}
-	}
-	err = NewInstancePoolsAPI(context.Background(), client).Update(u)
+
+	poolReadInfo.InstancePoolName = "Terraform Integration Test Updated"
+	poolReadInfo.MaxCapacity = 20
+	err = NewInstancePoolsAPI(context.Background(), client).Update(poolReadInfo)
 	assert.NoError(t, err, err)
 
 	poolReadInfo, err = NewInstancePoolsAPI(context.Background(), client).Read(poolInfo.InstancePoolID)

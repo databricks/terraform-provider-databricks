@@ -29,17 +29,16 @@ func (a InstancePoolsAPI) Create(instancePool InstancePool) (InstancePoolAndStat
 }
 
 // Update edits the configuration of a instance pool to match the provided attributes and size
-func (a InstancePoolsAPI) Update(instancePoolInfo InstancePool) error {
-	return a.client.Post(a.context, "/instance-pools/edit", instancePoolInfo, nil)
+func (a InstancePoolsAPI) Update(ip InstancePool) error {
+	return a.client.Post(a.context, "/instance-pools/edit", ip, nil)
 }
 
 // Read retrieves the information for a instance pool given its identifier
-func (a InstancePoolsAPI) Read(instancePoolID string) (InstancePoolAndStats, error) {
-	var instancePoolInfo InstancePoolAndStats
-	err := a.client.Get(a.context, "/instance-pools/get", map[string]string{
+func (a InstancePoolsAPI) Read(instancePoolID string) (ip InstancePool, err error) {
+	err = a.client.Get(a.context, "/instance-pools/get", map[string]string{
 		"instance_pool_id": instancePoolID,
-	}, &instancePoolInfo)
-	return instancePoolInfo, err
+	}, &ip)
+	return
 }
 
 // List retrieves the list of existing instance pools

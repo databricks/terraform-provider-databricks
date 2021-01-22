@@ -209,33 +209,6 @@ func TestDBFSFileCreate(t *testing.T) {
 	}
 }
 
-// TODO: via content
-// func TestDBFSFileCreate_ViaSource(t *testing.T) {
-// 	randomDir := "/abc"
-// 	path := "/def"
-// 	pathWithDir := randomDir + path
-// 	d, err := qa.ResourceFixture{
-// 		Fixtures: qa.UnionFixturesLists(
-// 			getBaseDBFSFileGetStatusFixtures(randomDir, true, false),
-// 			getBaseDBFSFileCreateFixtures(pathWithDir),
-// 			getBaseDBFSFileGetStatusFixtures(pathWithDir, false, false),
-// 			getBaseDBFSFileReadFixtures(pathWithDir),
-// 		),
-// 		Resource: ResourceDBFSFile(),
-// 		Create:   true,
-// 		State: map[string]interface{}{
-// 			"source":               source,
-// 			"path":                 pathWithDir,
-// 			"validate_remote_file": true,
-// 		},
-// 	}.Apply(t)
-// 	assert.NoError(t, err, err)
-// 	assert.Equal(t, pathWithDir, d.Id())
-// 	assert.Equal(t, source, d.Get("source"))
-// 	assert.Equal(t, pathWithDir, d.Get("path"))
-// 	assert.Equal(t, sourceMD5, d.Get("content_b64_md5"))
-// }
-
 func TestDBFSFileDelete(t *testing.T) {
 	path := "/abc"
 	d, err := qa.ResourceFixture{

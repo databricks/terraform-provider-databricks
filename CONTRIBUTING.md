@@ -130,7 +130,7 @@ Eventually, all of resources would be automatically checked for a unit test pres
 
 ```go
 for name, resource := range p.ResourcesMap {
-	if name != "databricks_scim_user" {
+	if name != "databricks_user" {
 		continue
 	}
 	//...

@@ -237,76 +237,6 @@ func TestAwsAccClusterResource_ValidatePlan(t *testing.T) {
 	})
 }
 
-func TestAwsAccClusterResource_CreateClusterViaInstancePool(t *testing.T) {
-	randomInstancePoolSuffix := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
-	randomInstancePoolName := fmt.Sprintf("pool-%s", randomInstancePoolSuffix)
-	randomInstancePoolInterpolation := fmt.Sprintf("databricks_instance_pool.%s.id", randomInstancePoolName)
-	randomClusterSuffix := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
-	randomClusterName := fmt.Sprintf("cluster-%s", randomClusterSuffix)
-	randomClusterID := fmt.Sprintf("databricks_cluster.%s", randomClusterName)
-	awsAttrInstancePool := map[string]string{
-		"zone_id":      "${data.databricks_zones.default_zones.default_zone}",
-		"availability": "SPOT",
-	}
-	randomStr := acctest.RandStringFromCharSet(5, acctest.CharSetAlphaNum)
-	instanceProfileRName := "my-tf-test-instance-profile"
-	instanceProfile := fmt.Sprintf("arn:aws:iam::999999999999:instance-profile/tf-test-%s", randomStr)
-	awsAttrCluster := map[string]string{
-		"instance_profile_arn": fmt.Sprintf("${databricks_instance_profile.%s.id}", instanceProfileRName),
-	}
-
-	clusterNoInstanceProfileConfig := testDefaultZones() +
-		testAWSDatabricksInstanceProfile(instanceProfile, instanceProfileRName) +
-		newInstancePoolHCLBuilder(randomInstancePoolName).
-			withAwsAttributes(awsAttrInstancePool).withCloudEnv().
-			build() +
-		newClusterHCLBuilder(randomClusterName).
-			withAwsAttributes(nil).
-			withInstancePool(randomInstancePoolInterpolation).
-			build()
-
-	clusterWithInstanceProfileConfig := testDefaultZones() +
-		testAWSDatabricksInstanceProfile(instanceProfile, instanceProfileRName) +
-		newInstancePoolHCLBuilder(randomInstancePoolName).
-			withAwsAttributes(awsAttrInstancePool).withCloudEnv().
-			build() +
-		newClusterHCLBuilder(randomClusterName).
-			withAwsAttributes(awsAttrCluster).
-			withInstancePool(randomInstancePoolInterpolation).
-			build()
-
-	acceptance.AccTest(t, resource.TestCase{
-		Steps: []resource.TestStep{
-			{
-				Config: clusterNoInstanceProfileConfig,
-				Check: resource.ComposeTestCheckFunc(
-					testClusterCheckAndTerminateForFutureTests(randomClusterID, t),
-				),
-			},
-			{
-				Config: clusterWithInstanceProfileConfig,
-				Check: resource.ComposeTestCheckFunc(
-					testClusterCheckAndTerminateForFutureTests(randomClusterID, t),
-				),
-			},
-			{
-				Config: clusterNoInstanceProfileConfig,
-				Check: resource.ComposeTestCheckFunc(
-					testClusterCheckAndTerminateForFutureTests(randomClusterID, t),
-				),
-				PlanOnly:           true,
-				ExpectNonEmptyPlan: true,
-			},
-			{
-				Config: clusterNoInstanceProfileConfig,
-				Check: resource.ComposeTestCheckFunc(
-					testClusterCheckAndTerminateForFutureTests(randomClusterID, t),
-				),
-			},
-		},
-	})
-}
-
 func TestAzureAccClusterResource_CreateClusterViaInstancePool(t *testing.T) {
 	if os.Getenv("CLOUD_ENV") == "" {
 		return
@@ -382,6 +312,7 @@ func TestAccClusterResource_CreateSingleNodeCluster(t *testing.T) {
 						"spark.databricks.cluster.profile" = "singleNode"
 						"spark.master" = "local[*]"
 					}
+					aws_attributes {}
 				}`, randomName, clusterAPI.GetSmallestNodeType(NodeTypeRequest{LocalDisk: true}),
 					clusterAPI.LatestSparkVersionOrDefault(SparkVersionRequest{Latest: true, LongTermSupport: true})),
 			},
@@ -400,7 +331,6 @@ func testAWSDatabricksInstanceProfile(instanceProfile string, name string) strin
 	return fmt.Sprintf(`
 		resource "databricks_instance_profile" "%s" {
 			instance_profile_arn = "%s"
-			skip_validation = true
 		}
 		`, name, instanceProfile)
 }

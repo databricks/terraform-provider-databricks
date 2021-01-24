@@ -26,8 +26,8 @@ build:
 
 install: build
 	@echo "✓ Installing provider into ~/.terraform.d/plugins ..."
-	@test -d $(HOME)/.terraform.d/plugins && rm $(HOME)/.terraform.d/plugins/terraform-provider-databricks* || mkdir -p $(HOME)/.terraform.d/plugins
-	@cp terraform-provider-databricks $(HOME)/.terraform.d/plugins
+	#@test -d $(HOME)/.terraform.d/plugins && rm $(HOME)/.terraform.d/plugins/terraform-provider-databricks* || mkdir -p $(HOME)/.terraform.d/plugins
+	#@cp terraform-provider-databricks $(HOME)/.terraform.d/plugins
 	@mkdir -p '$(HOME)/.terraform.d/plugins/registry.terraform.io/databrickslabs/databricks/$(shell ./terraform-provider-databricks version)/$(shell go version | awk '{print $$4}' | sed 's#/#_#')'
 	@cp terraform-provider-databricks '$(HOME)/.terraform.d/plugins/registry.terraform.io/databrickslabs/databricks/$(shell ./terraform-provider-databricks version)/$(shell go version | awk '{print $$4}' | sed 's#/#_#')/terraform-provider-databricks'
 	@echo "✓ Use the following configuration to enable the version you've built"

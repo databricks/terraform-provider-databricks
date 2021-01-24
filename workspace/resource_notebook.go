@@ -228,8 +228,7 @@ func ResourceNotebook() *schema.Resource {
 	s["content_base64"].RequiredWith = []string{"language"}
 	return util.CommonResource{
 		Schema:        s,
-		SchemaVersion: 2,
-		// TODO: state migrate
+		SchemaVersion: 1,
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			content, err := ReadContent(d)
 			if err != nil {

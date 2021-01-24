@@ -15,17 +15,6 @@ Certain resources undergone changes in order to ensure consistency with REST API
 * Rewrite `notebook_path` and `notebook_base_parameters` with [notebook_task](https://registry.terraform.io/providers/databrickslabs/databricks/latest/docs/resources/job#notebook_task-configuration-block) configuration block.
 * Rewrite `library_jar`, `library_egg`, `library_whl`, `library_pypi`, `library_cran`, and `library_maven` with [library](https://registry.terraform.io/providers/databrickslabs/databricks/latest/docs/resources/cluster#library-configuration-block) configuration block.
 
-## databricks_notebook
-
-* Rename `content` to `content_base64`, as this closer represents actual data within the field and simplifies internal code reusability.
-* Remove `format` attribute. Starting from v0.3.0 it behaves as if it is set to `SOURCE`.
-* Remove `overwrite` attribute. Starting from v0.3.0 it behaves as if it is set to `true`.
-* Remove `mkdirs` attributes. Starting from v0.3.0 it behaves as if it is set to `true`.
-
-## databricks_cluster
-
-* Rewrite `library_jar`, `library_egg`, `library_whl`, `library_pypi`, `library_cran`, and `library_maven` with [library](https://registry.terraform.io/providers/databrickslabs/databricks/latest/docs/resources/cluster#library-configuration-block) configuration block.
-
 ## databricks_dbfs_file
 
 * Rename `content` to `content_base64`, as this closer represents actual data within the field and simplifies internal code reusability.
@@ -33,6 +22,23 @@ Certain resources undergone changes in order to ensure consistency with REST API
 * Remove `mkdirs` attribute. Starting from v0.3.0 it behaves as if it is set to `true`.
 * Remove `validate_remote_file` attribute. Due to performance reasons, starting from v0.3.0 it doesn't fetch the contents of remote file to verify the checksum. 
 * If you've relied on internal `content_b64_md5` attribute, please remove it. Starting from v0.3.0 its behavior is internalized.
+
+DBFS files would only be changed, if Terraform stage did change. This means that any manual changes to managed file won't be overwritten by Terraform, if there's no local change. 
+
+## databricks_notebook
+
+* Rename `content` to `content_base64`, as this closer represents actual data within the field and simplifies internal code reusability.
+* Remove `format` attribute. Starting from v0.3.0 it behaves as if it is set to `SOURCE`.
+* Remove `overwrite` attribute. Starting from v0.3.0 it behaves as if it is set to `true`.
+* Remove `mkdirs` attributes. Starting from v0.3.0 it behaves as if it is set to `true`.
+
+After changing the code, `terraform apply` would replace managed notebooks.
+
+Notebook on Databricks workspace would only be changed, if Terraform stage did change. This means that any manual changes to managed notebook won't be overwritten by Terraform, if there's no local change to notebook sources. Notebooks are identified by their path, so changing notebook's name manually on the workspace and then applying Terraform state would result in creation of notebook from Terraform state.
+
+## databricks_cluster
+
+* Rewrite `library_jar`, `library_egg`, `library_whl`, `library_pypi`, `library_cran`, and `library_maven` with [library](https://registry.terraform.io/providers/databrickslabs/databricks/latest/docs/resources/cluster#library-configuration-block) configuration block.
 
 ## databricks_instance_profile
 

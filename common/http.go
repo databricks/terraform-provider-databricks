@@ -413,6 +413,9 @@ func (c *DatabricksClient) genericQuery(ctx context.Context, method, requestURL 
 	if c.httpClient == nil {
 		return nil, fmt.Errorf("DatabricksClient is not configured")
 	}
+	if err = c.rateLimiter.Wait(ctx); err != nil {
+		return nil, err
+	}
 	requestBody, err := makeRequestBody(method, &requestURL, data, true)
 	if err != nil {
 		return nil, err

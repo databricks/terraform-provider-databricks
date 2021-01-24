@@ -212,6 +212,12 @@ func DatabricksProvider() *schema.Provider {
 				Description: "Debug HTTP headers of requests made by the provider. Default is false. Visible only when TF_LOG=DEBUG is set",
 				DefaultFunc: schema.EnvDefaultFunc("DATABRICKS_DEBUG_HEADERS", false),
 			},
+			"rate_limit": {
+				Optional:    true,
+				Type:        schema.TypeInt,
+				Description: "Maximum number of requests per minute made to Databricks REST API by Terraform.",
+				DefaultFunc: schema.EnvDefaultFunc("DATABRICKS_RATE_LIMIT", 1200),
+			},
 		},
 		ConfigureContextFunc: func(c context.Context, d *schema.ResourceData) (interface{}, diag.Diagnostics) {
 			pc := common.DatabricksClient{}
@@ -285,6 +291,9 @@ func DatabricksProvider() *schema.Provider {
 			}
 			if v, ok := d.GetOk("debug_truncate_bytes"); ok {
 				pc.DebugTruncateBytes = v.(int)
+			}
+			if v, ok := d.GetOk("rate_limit"); ok {
+				pc.RateLimit = v.(int)
 			}
 			if v, ok := d.GetOk("debug_headers"); ok {
 				pc.DebugHeaders = v.(bool)

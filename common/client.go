@@ -12,6 +12,8 @@ import (
 	"sync"
 	"time"
 
+	"golang.org/x/time/rate"
+
 	"github.com/hashicorp/go-retryablehttp"
 	"github.com/mitchellh/go-homedir"
 	"gopkg.in/ini.v1"
@@ -30,6 +32,8 @@ type DatabricksClient struct {
 	TimeoutSeconds     int
 	DebugTruncateBytes int
 	DebugHeaders       bool
+	RateLimit          int
+	rateLimiter        *rate.Limiter
 	httpClient         *retryablehttp.Client
 	authMutex          sync.Mutex
 	authVisitor        func(r *http.Request) error
@@ -177,6 +181,10 @@ func (c *DatabricksClient) configureHTTPCLient() {
 	if c.TimeoutSeconds == 0 {
 		c.TimeoutSeconds = 60
 	}
+	if c.RateLimit == 0 {
+		c.RateLimit = 1200
+	}
+	c.rateLimiter = rate.NewLimiter(rate.Every(1*time.Minute), c.RateLimit)
 	// Set up a retryable HTTP Client to handle cases where the service returns
 	// a transient error on initial creation
 	retryDelayDuration := 10 * time.Second

@@ -204,7 +204,7 @@ func DatabricksProvider() *schema.Provider {
 				Optional:    true,
 				Type:        schema.TypeInt,
 				Description: "Truncate JSON fields in JSON above this limit. Default is 96. Visible only when TF_LOG=DEBUG is set",
-				DefaultFunc: schema.EnvDefaultFunc("DATABRICKS_DEBUG_TRUNCATE_BYTES", 96),
+				DefaultFunc: schema.EnvDefaultFunc("DATABRICKS_DEBUG_TRUNCATE_BYTES", common.DebugTruncateBytes),
 			},
 			"debug_headers": {
 				Optional:    true,
@@ -216,7 +216,7 @@ func DatabricksProvider() *schema.Provider {
 				Optional:    true,
 				Type:        schema.TypeInt,
 				Description: "Maximum number of requests per minute made to Databricks REST API by Terraform.",
-				DefaultFunc: schema.EnvDefaultFunc("DATABRICKS_RATE_LIMIT", 1200),
+				DefaultFunc: schema.EnvDefaultFunc("DATABRICKS_RATE_LIMIT", common.DefaultRateLimit),
 			},
 		},
 		ConfigureContextFunc: func(c context.Context, d *schema.ResourceData) (interface{}, diag.Diagnostics) {

@@ -63,5 +63,5 @@ func TestAwsAccGroupInstanceProfileResource(t *testing.T) {
 				},
 			},
 		})
-	})	
+	})
 }

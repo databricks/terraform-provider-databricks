@@ -58,7 +58,6 @@ func TestAccInstancePools(t *testing.T) {
 	assert.Equal(t, pool.NodeTypeID, poolReadInfo.NodeTypeID)
 	assert.Equal(t, pool.IdleInstanceAutoTerminationMinutes, poolReadInfo.IdleInstanceAutoTerminationMinutes)
 
-
 	poolReadInfo.InstancePoolName = "Terraform Integration Test Updated"
 	poolReadInfo.MaxCapacity = 20
 	err = NewInstancePoolsAPI(context.Background(), client).Update(poolReadInfo)

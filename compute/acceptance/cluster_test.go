@@ -41,10 +41,6 @@ func getCloudSpecificHCLStatements() cloudSpecificHCLStatements {
 	}
 }
 
-func testDefaultZones() string {
-	return "data \"databricks_zones\" \"default_zones\" {}\n"
-}
-
 type instancePoolHCLBuilder struct {
 	Name          string
 	identifier    string
@@ -99,11 +95,6 @@ func getAwsAttributes(attributesMap map[string]string) string {
 	}
 	awsAttr.WriteString("\t}")
 	return awsAttr.String()
-}
-
-func (i *instancePoolHCLBuilder) withAwsAttributes(attributesMap map[string]string) *instancePoolHCLBuilder {
-	i.awsAttributes = getAwsAttributes(attributesMap)
-	return i
 }
 
 func getCommonLibraries() string {
@@ -325,12 +316,4 @@ func testClusterCheckAndTerminateForFutureTests(n string, t *testing.T) resource
 		func(ctx context.Context, client *common.DatabricksClient, id string) error {
 			return NewClustersAPI(ctx, client).Terminate(id)
 		})
-}
-
-func testAWSDatabricksInstanceProfile(instanceProfile string, name string) string {
-	return fmt.Sprintf(`
-		resource "databricks_instance_profile" "%s" {
-			instance_profile_arn = "%s"
-		}
-		`, name, instanceProfile)
 }

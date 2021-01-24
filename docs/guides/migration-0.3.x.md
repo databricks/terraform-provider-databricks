@@ -1,6 +1,6 @@
 # Migration from 0.2.x to 0.3.x
 
-Certain resources undergone changes in order to ensure consistency with REST API and standard expecte Terraform behavior.
+Certain resources undergone changes in order to ensure consistency with REST API and standard expected Terraform behavior.
 
 ## provider
 
@@ -29,6 +29,10 @@ Certain resources undergone changes in order to ensure consistency with REST API
 ## databricks_dbfs_file
 
 * Rename `content` to `content_base64`, as this closer represents actual data within the field and simplifies internal code reusability.
+* Remove `overwrite` attribute. Starting from v0.3.0 it behaves as if it is set to `true`.
+* Remove `mkdirs` attribute. Starting from v0.3.0 it behaves as if it is set to `true`.
+* Remove `validate_remote_file` attribute. Due to performance reasons, starting from v0.3.0 it doesn't fetch the contents of remote file to verify the checksum. 
+* If you've relied on internal `content_b64_md5` attribute, please remove it. Starting from v0.3.0 its behavior is internalized.
 
 ## databricks_instance_profile
 

@@ -145,7 +145,6 @@ resource "azurerm_key_vault" "example" {
   location                 = azurerm_resource_group.example.location
   resource_group_name      = azurerm_resource_group.example.name
   tenant_id                = data.azurerm_client_config.current.tenant_id
-  soft_delete_enabled      = false
   purge_protection_enabled = false
   sku_name                 = "standard"
   tags                     = local.tags
@@ -192,11 +191,6 @@ output "test_key_vault_secret_value" {
 
 output "cloud_env" {
   value = "azure"
-}
-
-output "test_node_type" {
-  // or i3.xlarge for AWS
-  value = "Standard_D3_v2"
 }
 
 output "test_prefix" {

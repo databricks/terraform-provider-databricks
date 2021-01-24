@@ -52,10 +52,6 @@ output "cloud_env" {
   value = "azure"
 }
 
-output "test_node_type" {
-  value = "Standard_D3_v2"
-}
-
 output "test_storage_v2_account" {
   value = module.this.test_storage_v2_account
 }

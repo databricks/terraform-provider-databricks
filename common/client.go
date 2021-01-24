@@ -19,6 +19,13 @@ import (
 	"gopkg.in/ini.v1"
 )
 
+// Default settings
+const (
+	DefaultRateLimit      = 1200
+	DebugTruncateBytes    = 96
+	DefaultTimeoutSeconds = 60
+)
+
 // DatabricksClient is the client struct that contains clients for all the services available on Databricks
 type DatabricksClient struct {
 	Host               string
@@ -45,7 +52,7 @@ func (c *DatabricksClient) Configure() error {
 	c.configureHTTPCLient()
 	c.AzureAuth.databricksClient = c
 	if c.DebugTruncateBytes == 0 {
-		c.DebugTruncateBytes = 96
+		c.DebugTruncateBytes = DebugTruncateBytes
 	}
 	return nil
 }
@@ -179,10 +186,10 @@ func (c *DatabricksClient) encodeBasicAuth(username, password string) string {
 
 func (c *DatabricksClient) configureHTTPCLient() {
 	if c.TimeoutSeconds == 0 {
-		c.TimeoutSeconds = 60
+		c.TimeoutSeconds = DefaultTimeoutSeconds
 	}
 	if c.RateLimit == 0 {
-		c.RateLimit = 1200
+		c.RateLimit = DefaultRateLimit
 	}
 	c.rateLimiter = rate.NewLimiter(rate.Every(1*time.Minute), c.RateLimit)
 	// Set up a retryable HTTP Client to handle cases where the service returns

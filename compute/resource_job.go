@@ -139,6 +139,10 @@ var jobSchema = internal.StructToSchema(JobSettings{},
 			"Run Now in the Jobs UI or sending an API request to runNow."
 		s["max_concurrent_runs"].Description = "An optional maximum allowed number of " +
 			"concurrent runs of the job."
+		s["url"] = &schema.Schema{
+			Type:     schema.TypeString,
+			Computed: true,
+		}
 		return s
 	})
 
@@ -170,6 +174,7 @@ func ResourceJob() *schema.Resource {
 			if err != nil {
 				return err
 			}
+			d.Set("url", fmt.Sprintf("%s#job/%s", c.Host, d.Id()))
 			return internal.StructToData(*job.Settings, jobSchema, d)
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {

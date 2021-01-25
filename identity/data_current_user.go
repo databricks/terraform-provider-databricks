@@ -12,8 +12,8 @@ import (
 
 var nonAlphanumeric = regexp.MustCompile(`\W`)
 
-// DataSourceCallerIdentity returns information about caller identity
-func DataSourceCallerIdentity() *schema.Resource {
+// DataSourceCurrentUser returns information about caller identity
+func DataSourceCurrentUser() *schema.Resource {
 	return &schema.Resource{
 		Schema: map[string]*schema.Schema{
 			"user_name": {

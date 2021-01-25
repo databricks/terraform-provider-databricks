@@ -25,7 +25,7 @@ func DatabricksProvider() *schema.Provider {
 			"databricks_aws_crossaccount_policy": access.DataAwsCrossAccountRolicy(),
 			"databricks_aws_assume_role_policy":  access.DataAwsAssumeRolePolicy(),
 			"databricks_aws_bucket_policy":       access.DataAwsBucketPolicy(),
-			"databricks_caller_identity":         identity.DataSourceCallerIdentity(),
+			"databricks_current_user":            identity.DataSourceCurrentUser(),
 			"databricks_dbfs_file":               storage.DataSourceDBFSFile(),
 			"databricks_dbfs_file_paths":         storage.DataSourceDBFSFilePaths(),
 			"databricks_group":                   identity.DataSourceGroup(),

@@ -45,28 +45,46 @@ E2 Architecture
 
 ```hcl
 provider "databricks" {
-  host = "https://abc-defg-024.cloud.databricks.com/"
-  token = "<your PAT token>"
 }
 
+data "databricks_current_user" "me" {}
+data "databricks_spark_version" "latest" {}
 data "databricks_node_type" "smallest" {
   local_disk = true
 }
 
-data "databricks_spark_version" "latest_lts" {
-  long_term_support = true
+resource "databricks_notebook" "this" {
+  path     = "${data.databricks_current_user.me.home}/Terraform"
+  language = "PYTHON"
+  content_base64 = base64encode(<<-EOT
+    # created from ${abspath(path.module)}
+    display(spark.range(10))
+    EOT
+  )
 }
 
-resource "databricks_cluster" "shared_autoscaling" {
-  cluster_name            = "Shared Autoscaling"
-  spark_version           = data.databricks_spark_version.latest_lts.id
-  node_type_id            = data.databricks_node_type.smallest.id
-  autotermination_minutes = 20
+resource "databricks_job" "this" {
+  name = "Terraform Demo (${data.databricks_current_user.me.alphanumeric})"
 
-  autoscale {
-    min_workers = 1
-    max_workers = 50
+  new_cluster {
+    num_workers   = 1
+    spark_version = data.databricks_spark_version.latest.id
+    node_type_id  = data.databricks_node_type.smallest.id
   }
+
+  notebook_task {
+    notebook_path = databricks_notebook.this.path
+  }
+
+  email_notifications {}
+}
+
+output "notebook_url" {
+  value = databricks_notebook.this.url
+}
+
+output "job_url" {
+  value = databricks_job.this.url
 }
 ```
 

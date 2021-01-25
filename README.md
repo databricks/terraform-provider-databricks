@@ -15,6 +15,7 @@ End-to-end workspace creation on [AWS](scripts/awsmt-integration) or [Azure](scr
 | [databricks_azure_blob_mount](docs/resources/azure_blob_mount.md)
 | [databricks_cluster](docs/resources/cluster.md)
 | [databricks_cluster_policy](docs/resources/cluster_policy.md)
+| [databricks_current_user](docs/data-sources/current_user.md)
 | [databricks_dbfs_file](docs/resources/dbfs_file.md)
 | [databricks_dbfs_file_paths](docs/data-sources/dbfs_file_paths.md) data
 | [databricks_dbfs_file](docs/data-sources/dbfs_file.md) data
@@ -76,24 +77,44 @@ provider "databricks" {
   token = "<your PAT token>"
 }
 
+data "databricks_current_user" "me" {}
+data "databricks_spark_version" "latest" {}
 data "databricks_node_type" "smallest" {
   local_disk = true
 }
 
-data "databricks_spark_version" "latest_lts" {
-  long_term_support = true
+resource "databricks_notebook" "this" {
+  path     = "${data.databricks_current_user.me.home}/Terraform"
+  language = "PYTHON"
+  content_base64 = base64encode(<<-EOT
+    # created from ${abspath(path.module)}
+    display(spark.range(10))
+    EOT
+  )
 }
 
-resource "databricks_cluster" "shared_autoscaling" {
-  cluster_name            = "Shared Autoscaling"
-  spark_version           = data.databricks_spark_version.latest_lts.id
-  node_type_id            = data.databricks_node_type.smallest.id
-  autotermination_minutes = 20
+resource "databricks_job" "this" {
+  name = "Terraform Demo (${data.databricks_current_user.me.alphanumeric})"
 
-  autoscale {
-    min_workers = 1
-    max_workers = 50
+  new_cluster {
+    num_workers   = 1
+    spark_version = data.databricks_spark_version.latest.id
+    node_type_id  = data.databricks_node_type.smallest.id
   }
+
+  notebook_task {
+    notebook_path = databricks_notebook.this.path
+  }
+
+  email_notifications {}
+}
+
+output "notebook_url" {
+  value = databricks_notebook.this.url
+}
+
+output "job_url" {
+  value = databricks_job.this.url
 }
 ```
 

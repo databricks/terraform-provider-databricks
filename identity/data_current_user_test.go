@@ -14,8 +14,8 @@ func TestDataSourceCallerIdentity(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/preview/scim/v2/Me",
-				Response: ScimUser {
-					ID: "123",
+				Response: ScimUser{
+					ID:       "123",
 					UserName: "mr.test@example.com",
 				},
 			},

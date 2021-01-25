@@ -48,7 +48,7 @@ func ResourceDBFSFile() *schema.Resource {
 		StateUpgraders: []schema.StateUpgrader{
 			{
 				Version: 0,
-				Type: DbfsFileV0(),
+				Type:    DbfsFileV0(),
 				Upgrade: workspace.MigrateV0,
 			},
 		},

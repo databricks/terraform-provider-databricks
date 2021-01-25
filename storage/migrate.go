@@ -1,8 +1,8 @@
 package storage
 
 import (
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/go-cty/cty"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 // DbfsFileV0 contains v0.2.x schema

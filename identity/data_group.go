@@ -3,6 +3,7 @@ package identity
 import (
 	"context"
 	"fmt"
+	"sort"
 
 	"github.com/databrickslabs/databricks-terraform/internal"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -76,6 +77,9 @@ func DataSourceGroup() *schema.Resource {
 					}
 				}
 			}
+			sort.Strings(this.Groups)
+			sort.Strings(this.Members)
+			sort.Strings(this.InstanceProfiles)
 			err = internal.StructToData(this, s, d)
 			if err != nil {
 				return diag.FromErr(err)

@@ -1,6 +1,6 @@
 # Migration from 0.2.x to 0.3.x
 
-Certain resources undergone changes in order to ensure consistency with REST API and standard expected Terraform behavior.
+Certain resources undergone changes in order to ensure consistency with REST API and standard expected Terraform behavior. You can upgrade provider with `terraform init -upgrade`.
 
 ## provider
 

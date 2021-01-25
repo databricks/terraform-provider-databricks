@@ -107,51 +107,6 @@ func (cll *ClusterLibraryList) Diff(cls ClusterLibraryStatuses) (ClusterLibraryL
 	return toInstall, toUninstall
 }
 
-// AddLibraryFromMap is convenience method
-func (cll *ClusterLibraryList) AddLibraryFromMap(libraryType string, m map[string]interface{}) {
-	lib := Library{}
-	switch libraryType {
-	case "library_whl":
-		if v, ok := m["path"].(string); ok {
-			lib.Whl = v
-		}
-	case "library_egg":
-		if v, ok := m["path"].(string); ok {
-			lib.Egg = v
-		}
-	case "library_jar":
-		if v, ok := m["path"].(string); ok {
-			lib.Jar = v
-		}
-	case "library_pypi":
-		lib.Pypi = &PyPi{}
-		if v, ok := m["package"].(string); ok {
-			lib.Pypi.Package = v
-		}
-		if v, ok := m["repo"].(string); ok {
-			lib.Pypi.Repo = v
-		}
-	case "library_maven":
-		lib.Maven = &Maven{}
-		if v, ok := m["coordinates"].(string); ok {
-			lib.Maven.Coordinates = v
-		}
-		if v, ok := m["repo"].(string); ok {
-			lib.Maven.Repo = v
-		}
-		// exclusions won't be added for now.
-	case "library_cran":
-		lib.Cran = &Cran{}
-		if v, ok := m["package"].(string); ok {
-			lib.Cran.Package = v
-		}
-		if v, ok := m["repo"].(string); ok {
-			lib.Cran.Repo = v
-		}
-	}
-	cll.Libraries = append(cll.Libraries, lib)
-}
-
 // LibraryStatus is the status on a given cluster when using the libraries status api
 type LibraryStatus struct {
 	Library                         *Library `json:"library,omitempty"`

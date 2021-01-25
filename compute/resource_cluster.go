@@ -124,9 +124,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, c *commo
 		return err
 	}
 	d.SetId(clusterInfo.ClusterID)
-	if err = d.Set("cluster_id", clusterInfo.ClusterID); err != nil {
-		return err
-	}
+	d.Set("cluster_id", clusterInfo.ClusterID)
 	isPinned, ok := d.GetOk("is_pinned")
 	if ok && isPinned.(bool) {
 		err = clusters.Pin(clusterInfo.ClusterID)

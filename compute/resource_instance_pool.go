@@ -63,16 +63,16 @@ func ResourceInstancePool() *schema.Resource {
 		s["enable_elastic_disk"].ForceNew = true
 		s["enable_elastic_disk"].Default = true
 		// TODO: check if it's really force new...
-		if v, err := internal.SchemaPath(s, "aws_attributes", "availability"); err != nil {
+		if v, err := internal.SchemaPath(s, "aws_attributes", "availability"); err == nil {
 			v.ForceNew = true
 		}
-		if v, err := internal.SchemaPath(s, "aws_attributes", "zone_id"); err != nil {
+		if v, err := internal.SchemaPath(s, "aws_attributes", "zone_id"); err == nil {
 			v.ForceNew = true
 		}
-		if v, err := internal.SchemaPath(s, "aws_attributes", "spot_bid_price_percent"); err != nil {
+		if v, err := internal.SchemaPath(s, "aws_attributes", "spot_bid_price_percent"); err == nil {
 			v.ForceNew = true
 		}
-		if v, err := internal.SchemaPath(s, "disk_spec", "disk_type", "azure_disk_volume_type"); err != nil {
+		if v, err := internal.SchemaPath(s, "disk_spec", "disk_type", "azure_disk_volume_type"); err == nil {
 			v.ForceNew = true
 			// nolint
 			v.ValidateFunc = validation.StringInSlice([]string{
@@ -80,7 +80,7 @@ func ResourceInstancePool() *schema.Resource {
 				AzureDiskVolumeTypeStandard,
 			}, false)
 		}
-		if v, err := internal.SchemaPath(s, "disk_spec", "disk_type", "ebs_volume_type"); err != nil {
+		if v, err := internal.SchemaPath(s, "disk_spec", "disk_type", "ebs_volume_type"); err == nil {
 			v.ForceNew = true
 			// nolint
 			v.ValidateFunc = validation.StringInSlice([]string{

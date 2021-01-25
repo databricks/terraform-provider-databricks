@@ -112,11 +112,16 @@ func getMountingClusterID(ctx context.Context, client *common.DatabricksClient, 
 		r := compute.Cluster{
 			NumWorkers:  0,
 			ClusterName: "terraform-mount",
-			SparkVersion: clustersAPI.LatestSparkVersionOrDefault(compute.SparkVersionRequest{
-				Latest:          true,
-				LongTermSupport: true,
-			}),
-			NodeTypeID:             clustersAPI.GetSmallestNodeType(compute.NodeTypeRequest{LocalDisk: true}),
+			SparkVersion: clustersAPI.LatestSparkVersionOrDefault(
+				compute.SparkVersionRequest{
+					Latest:          true,
+					LongTermSupport: true,
+				}),
+			NodeTypeID: clustersAPI.GetSmallestNodeType(
+				compute.NodeTypeRequest{
+					LocalDisk: true,
+				}),
+
 			AutoterminationMinutes: 10,
 			SparkConf: map[string]string{
 				"spark.master":                     "local[*]",

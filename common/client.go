@@ -21,8 +21,8 @@ import (
 
 // Default settings
 const (
-	DefaultRateLimit      = 1200
-	DebugTruncateBytes    = 96
+	DefaultRateLimit      = 15
+	DefaultTruncateBytes  = 96
 	DefaultTimeoutSeconds = 60
 )
 
@@ -52,7 +52,7 @@ func (c *DatabricksClient) Configure() error {
 	c.configureHTTPCLient()
 	c.AzureAuth.databricksClient = c
 	if c.DebugTruncateBytes == 0 {
-		c.DebugTruncateBytes = DebugTruncateBytes
+		c.DebugTruncateBytes = DefaultTruncateBytes
 	}
 	return nil
 }
@@ -191,7 +191,7 @@ func (c *DatabricksClient) configureHTTPCLient() {
 	if c.RateLimit == 0 {
 		c.RateLimit = DefaultRateLimit
 	}
-	c.rateLimiter = rate.NewLimiter(rate.Every(1*time.Minute), c.RateLimit)
+	c.rateLimiter = rate.NewLimiter(rate.Every(1*time.Second), c.RateLimit)
 	// Set up a retryable HTTP Client to handle cases where the service returns
 	// a transient error on initial creation
 	retryDelayDuration := 10 * time.Second

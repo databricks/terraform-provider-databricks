@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"net/url"
+	"path"
 	"strconv"
 	"strings"
 	"sync"
@@ -43,9 +45,8 @@ type AzureAuth struct {
 	// private property to give resource access
 	databricksClient *DatabricksClient
 
-	azureManagementEndpoint string
-	authorizer              autorest.Authorizer
-	temporaryPat            *TokenResponse
+	authorizer   autorest.Authorizer
+	temporaryPat *TokenResponse
 }
 
 type TokenRequest struct {
@@ -68,19 +69,27 @@ type TokenInfo struct {
 
 var authorizerMutex sync.Mutex
 
-func (aa *AzureAuth) getAzureEnvironment() (azure.Environment, error) {
-	if aa.Environment == "" {
+type environmentFetcherInterface interface {
+	getAzureEnvironment(environment string) (azure.Environment, error)
+}
+
+type environmentFetcher struct{}
+
+func (e environmentFetcher) getAzureEnvironment(environment string) (azure.Environment, error) {
+	if environment == "" {
 		return azure.PublicCloud, nil
 	}
 
-	envName := fmt.Sprintf("AZURE%sCLOUD", strings.ToUpper(aa.Environment))
+	envName := fmt.Sprintf("AZURE%sCLOUD", strings.ToUpper(environment))
 	env, err := azure.EnvironmentFromName(envName)
 
-	if err != nil {
-		return env, err
-	}
+	return env, err
+}
 
-	return env, nil
+var thisEnvironmentFetcher environmentFetcherInterface
+
+func init() {
+	thisEnvironmentFetcher = environmentFetcher{}
 }
 
 func (aa *AzureAuth) resourceID() string {
@@ -170,7 +179,7 @@ func (aa *AzureAuth) simpleAADRequestVisitor(
 	ctx context.Context,
 	authorizerFactory func(resource string) (autorest.Authorizer, error),
 	visitors ...func(r *http.Request, ma autorest.Authorizer) error) (func(r *http.Request) error, error) {
-	env, err := aa.getAzureEnvironment()
+	env, err := thisEnvironmentFetcher.getAzureEnvironment(aa.Environment)
 	if err != nil {
 		return nil, err
 	}
@@ -215,7 +224,7 @@ func (aa *AzureAuth) acquirePAT(
 	if aa.temporaryPat != nil {
 		return aa.temporaryPat, nil
 	}
-	env, err := aa.getAzureEnvironment()
+	env, err := thisEnvironmentFetcher.getAzureEnvironment(aa.Environment)
 	if err != nil {
 		return nil, err
 	}
@@ -276,14 +285,20 @@ func (aa *AzureAuth) ensureWorkspaceURL(ctx context.Context,
 		return fmt.Errorf("Somehow resource id is not set")
 	}
 	log.Println("[DEBUG] Getting Workspace ID via management token.")
-	endpoint := "https://management.azure.com"
-	if aa.azureManagementEndpoint != "" {
-		// sets endpoint specified in unit test
-		endpoint = aa.azureManagementEndpoint
+	env, err := thisEnvironmentFetcher.getAzureEnvironment(aa.Environment)
+	if err != nil {
+		return err
 	}
+	managementUrl, err := url.Parse(env.ResourceManagerEndpoint)
+	if err != nil {
+		return fmt.Errorf("Somehow unable to parse correct azure environment")
+	}
+	managementUrl.Path = path.Join(managementUrl.Path, resourceID)
+	managementResourceUrl := managementUrl.String()
+
 	var workspace azureDatabricksWorkspace
 	resp, err := aa.databricksClient.genericQuery(ctx, http.MethodGet,
-		endpoint+resourceID,
+		managementResourceUrl,
 		map[string]string{
 			"api-version": "2018-04-01",
 		}, func(r *http.Request) error {
@@ -322,7 +337,7 @@ func (aa *AzureAuth) getClientSecretAuthorizer(resource string) (autorest.Author
 		// todo: probably should be two different ones...
 		return aa.authorizer, nil
 	}
-	env, err := aa.getAzureEnvironment()
+	env, err := thisEnvironmentFetcher.getAzureEnvironment(aa.Environment)
 	if err != nil {
 		return nil, err
 	}

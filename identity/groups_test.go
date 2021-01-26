@@ -6,7 +6,9 @@ import (
 	"testing"
 
 	"github.com/databrickslabs/databricks-terraform/common"
+	"github.com/databrickslabs/databricks-terraform/internal/qa"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestAccGroup(t *testing.T) {
@@ -19,15 +21,15 @@ func TestAccGroup(t *testing.T) {
 	usersAPI := NewUsersAPI(ctx, client)
 	groupsAPI := NewGroupsAPI(ctx, client)
 
-	user, err := usersAPI.Create(UserEntity{UserName: "test-acc@example.com"})
-	assert.NoError(t, err, err)
+	user, err := usersAPI.Create(UserEntity{UserName: qa.RandomEmail()})
+	require.NoError(t, err, err)
 
-	user2, err := usersAPI.Create(UserEntity{UserName: "test-acc2@example.com"})
-	assert.NoError(t, err, err)
+	user2, err := usersAPI.Create(UserEntity{UserName: qa.RandomEmail()})
+	require.NoError(t, err, err)
 
 	//Create empty group
-	group, err := groupsAPI.Create("my-test-group", nil, nil, nil)
-	assert.NoError(t, err, err)
+	group, err := groupsAPI.Create(qa.RandomName("tf-"), nil, nil, nil)
+	require.NoError(t, err, err)
 
 	defer func() {
 		err := groupsAPI.Delete(group.ID)
@@ -39,7 +41,7 @@ func TestAccGroup(t *testing.T) {
 	}()
 
 	group, err = groupsAPI.Read(group.ID)
-	assert.NoError(t, err, err)
+	require.NoError(t, err, err)
 
 	err = groupsAPI.Patch(group.ID, []string{user.ID, user2.ID}, nil, GroupMembersPath)
 	assert.NoError(t, err, err)

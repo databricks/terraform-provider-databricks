@@ -140,7 +140,7 @@ resource "databricks_group" "marketing" {
   display_name = "Marketing"
 }
 
-resource "databricks_scim_user" "first" {
+resource "databricks_user" "first" {
   user_name    = "marketing-member@example.com"
   display_name = "Marketing Member"
   default_roles = []
@@ -149,14 +149,14 @@ resource "databricks_scim_user" "first" {
 
 resource "databricks_group_member" "first" {
   group_id  = databricks_group.marketing.id
-  member_id = databricks_scim_user.first.id
+  member_id = databricks_user.first.id
 }
 
 resource "databricks_group" "support" {
   display_name = "Support"
 }
 
-resource "databricks_scim_user" "second" {
+resource "databricks_user" "second" {
   user_name    = "support-member@example.com"
   display_name = "Support Member"
   default_roles = []
@@ -165,7 +165,7 @@ resource "databricks_scim_user" "second" {
 
 resource "databricks_group_member" "second" {
   group_id  = databricks_group.support.id
-  member_id = databricks_scim_user.second.id
+  member_id = databricks_user.second.id
 }
 
 resource "databricks_notebook" "simple" {

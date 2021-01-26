@@ -12,6 +12,8 @@ Use the Databricks Terraform provider to interact with almost all of [Databricks
 
 ![Resources](https://github.com/databrickslabs/terraform-provider-databricks/raw/master/docs/resources.png)
 
+If you're migrating from version 0.2.x, please follow [this guide](guides/migration-0.3.x.md). Changelog is available [on GitHub](https://github.com/databrickslabs/terraform-provider-databricks/blob/master/CHANGELOG.md).
+
 Compute resources
 * Deploy [databricks_cluster](resources/cluster.md) on selected [databricks_node_type](data-sources/node_type.md)
 * Schedule automated [databricks_job](resources/job.md)
@@ -176,9 +178,8 @@ provider "databricks" {
   azure_tenant_id             = var.tenant_id
 }
 
-resource "databricks_scim_user" "my-user" {
-  user_name     = "test-user@databricks.com"
-  display_name  = "Test User"
+resource "databricks_user" "my-user" {
+  user_name = "test-user@databricks.com"
 }
 ```
 
@@ -202,7 +203,7 @@ provider "databricks" {
   azure_workspace_resource_id = azurerm_databricks_workspace.this.id
 }
 
-resource "databricks_scim_user" "my-user" {
+resource "databricks_user" "my-user" {
   user_name     = "test-user@databricks.com"
   display_name  = "Test User"
 }

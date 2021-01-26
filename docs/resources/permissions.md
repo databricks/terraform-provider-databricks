@@ -195,12 +195,9 @@ resource "databricks_group" "eng" {
 }
 
 resource "databricks_notebook" "this" {
-    content = base64encode("# Welcome to your Python notebook")
+    content_base64 = base64encode("# Welcome to your Python notebook")
     path = "/Production/ETL/Features"
-    overwrite = true
-    mkdirs = true
     language = "PYTHON"
-    format = "SOURCE"
 }
 
 resource "databricks_permissions" "notebook_usage" {
@@ -242,12 +239,9 @@ resource "databricks_group" "eng" {
 }
 
 resource "databricks_notebook" "this" {
-    content = base64encode("# Welcome to your Python notebook")
+    content_base64 = base64encode("# Welcome to your Python notebook")
     path = "/Production/ETL/Features"
-    overwrite = true
-    mkdirs = true
     language = "PYTHON"
-    format = "SOURCE"
 }
 
 resource "databricks_permissions" "folder_usage" {
@@ -348,7 +342,7 @@ One or more `access_control` blocks are required to actually set the permission 
 
 ```hcl
 access_control {
-    group_name = databricks_scim_group.datascience.display_name
+    group_name = databricks_group.datascience.display_name
     permission_level = "CAN_USE"
 }
 ```

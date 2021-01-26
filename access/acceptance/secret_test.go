@@ -44,9 +44,9 @@ func TestAccSecretResource(t *testing.T) {
 				},
 				Config: config,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("databricks_secret.my_secret", "scope", scope),
-					resource.TestCheckResourceAttr("databricks_secret.my_secret", "key", key),
-					resource.TestCheckResourceAttr("databricks_secret.my_secret", "string_value", secret),
+					resource.TestCheckResourceAttr("databricks_secret.this", "scope", scope),
+					resource.TestCheckResourceAttr("databricks_secret.this", "key", key),
+					resource.TestCheckResourceAttr("databricks_secret.this", "string_value", secret),
 				),
 			},
 		},

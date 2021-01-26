@@ -17,13 +17,16 @@ func TestAccInstancePools(t *testing.T) {
 	}
 	client := common.NewClientFromEnvironment()
 
+	clustersAPI := NewClustersAPI(context.Background(), client)
+	sparkVersion := clustersAPI.LatestSparkVersionOrDefault(SparkVersionRequest{Latest: true, LongTermSupport: true})
+	nodeType := clustersAPI.GetSmallestNodeType(NodeTypeRequest{})
 	pool := InstancePool{
 		InstancePoolName:                   "Terraform Integration Test",
 		MinIdleInstances:                   0,
-		NodeTypeID:                         qa.GetCloudInstanceType(client),
+		NodeTypeID:                         nodeType,
 		IdleInstanceAutoTerminationMinutes: 20,
 		PreloadedSparkVersions: []string{
-			"7.1.x-scala2.12",
+			sparkVersion,
 		},
 	}
 	if !client.IsAzure() {
@@ -55,30 +58,9 @@ func TestAccInstancePools(t *testing.T) {
 	assert.Equal(t, pool.NodeTypeID, poolReadInfo.NodeTypeID)
 	assert.Equal(t, pool.IdleInstanceAutoTerminationMinutes, poolReadInfo.IdleInstanceAutoTerminationMinutes)
 
-	u := InstancePool{
-		InstancePoolID:                     poolReadInfo.InstancePoolID,
-		InstancePoolName:                   "Terraform Integration Test Updated",
-		MinIdleInstances:                   0,
-		MaxCapacity:                        20,
-		NodeTypeID:                         qa.GetCloudInstanceType(client),
-		IdleInstanceAutoTerminationMinutes: 20,
-		PreloadedSparkVersions: []string{
-			"7.1.x-scala2.12",
-		},
-	}
-	if !client.IsAzure() {
-		u.DiskSpec = &InstancePoolDiskSpec{
-			DiskType: &InstancePoolDiskType{
-				EbsVolumeType: EbsVolumeTypeGeneralPurposeSsd,
-			},
-			DiskCount: 1,
-			DiskSize:  32,
-		}
-		u.AwsAttributes = &InstancePoolAwsAttributes{
-			Availability: AwsAvailabilitySpot,
-		}
-	}
-	err = NewInstancePoolsAPI(context.Background(), client).Update(u)
+	poolReadInfo.InstancePoolName = "Terraform Integration Test Updated"
+	poolReadInfo.MaxCapacity = 20
+	err = NewInstancePoolsAPI(context.Background(), client).Update(poolReadInfo)
 	assert.NoError(t, err, err)
 
 	poolReadInfo, err = NewInstancePoolsAPI(context.Background(), client).Read(poolInfo.InstancePoolID)

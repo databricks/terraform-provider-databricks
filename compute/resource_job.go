@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
 	"github.com/databrickslabs/databricks-terraform/common"
 	"github.com/databrickslabs/databricks-terraform/internal"
@@ -96,6 +97,14 @@ var jobSchema = internal.StructToSchema(JobSettings{},
 			"`new_cluster` for greater reliability."
 		s["new_cluster"].Description = "Same set of parameters as for " +
 			"[databricks_cluster](cluster.md) resource."
+		if p, err := internal.SchemaPath(s, "new_cluster", "num_workers"); err == nil {
+			p.Optional = true
+			p.Default = 0
+			p.Type = schema.TypeInt
+			p.ValidateDiagFunc = validation.ToDiagFunc(validation.IntAtLeast(0))
+			p.Required = false
+		}
+
 		if v, err := internal.SchemaPath(s, "new_cluster", "spark_conf"); err == nil {
 			v.DiffSuppressFunc = func(k, old, new string, d *schema.ResourceData) bool {
 				isPossiblyLegacyConfig := "new_cluster.0.spark_conf.%" == k && "1" == old && "0" == new
@@ -144,6 +153,11 @@ func ResourceJob() *schema.Resource {
 			if err != nil {
 				return err
 			}
+			if js.NewCluster != nil {
+				if err = validateClusterDefinition(*js.NewCluster); err != nil {
+					return err
+				}
+			}
 			job, err := NewJobsAPI(ctx, c).Create(js)
 			if err != nil {
 				return err
@@ -163,6 +177,12 @@ func ResourceJob() *schema.Resource {
 			err := internal.DataToStructPointer(d, jobSchema, &js)
 			if err != nil {
 				return err
+			}
+			if js.NewCluster != nil {
+				err = validateClusterDefinition(*js.NewCluster)
+				if err != nil {
+					return err
+				}
 			}
 			return NewJobsAPI(ctx, c).Update(d.Id(), js)
 		},

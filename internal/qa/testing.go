@@ -37,6 +37,11 @@ func RandomLongName() string {
 	return "Terraform Integration Test " + acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
 }
 
+// RandomEmail generates random email
+func RandomEmail() string {
+	return fmt.Sprintf("%s@example.com", RandomName("tf"))
+}
+
 // RandomName gives random name with optional prefix. e.g. qa.RandomName("tf-")
 func RandomName(prefix ...string) string {
 	randLen := 12
@@ -438,16 +443,6 @@ func FirstKeyValue(t *testing.T, str, key string) string {
 // AssertErrorStartsWith ..
 func AssertErrorStartsWith(t *testing.T, err error, message string) bool {
 	return assert.True(t, strings.HasPrefix(err.Error(), message), err.Error())
-}
-
-// GetCloudInstanceType gives common minimal instance type, depending on a cloud
-func GetCloudInstanceType(c *common.DatabricksClient) string {
-	if c.IsAzure() {
-		return "Standard_DS3_v2"
-	}
-	// TODO: create a method on ClustersAPI to give
-	// cloud specific delta-cache enabled instance by default.
-	return "m4.large"
 }
 
 // TestCreateTempFile  ...

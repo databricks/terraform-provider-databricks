@@ -1,5 +1,10 @@
+terraform {
+  required_providers {
+    azurerm =  "~> 2.33"
+  }
+}
+
 provider "azurerm" {
-  version = "~> 2.14"
   features {}
 }
 
@@ -29,10 +34,6 @@ output "arm_tenant_id" {
 
 output "cloud_env" {
   value = "azure"
-}
-
-output "test_node_type" {
-  value = "Standard_D3_v2"
 }
 
 output "test_resource_group" {
@@ -80,6 +81,7 @@ output "test_key_vault_secret" {
 
 output "test_key_vault_secret_value" {
   value = module.this.test_key_vault_secret_value
+  sensitive = true
 }
 
 output "databricks_azure_workspace_resource_id" {

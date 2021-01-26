@@ -228,7 +228,7 @@ type Cluster struct {
 	ClusterName string `json:"cluster_name,omitempty"`
 
 	SparkVersion              string     `json:"spark_version"` // TODO: perhaps make a default
-	NumWorkers                int32      `json:"num_workers,omitempty" tf:"group:size"`
+	NumWorkers                int32      `json:"num_workers" tf:"group:size"`
 	Autoscale                 *AutoScale `json:"autoscale,omitempty" tf:"group:size"`
 	EnableElasticDisk         bool       `json:"enable_elastic_disk,omitempty" tf:"computed"`
 	EnableLocalDiskEncryption bool       `json:"enable_local_disk_encryption,omitempty"`

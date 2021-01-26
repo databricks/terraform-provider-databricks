@@ -3,6 +3,8 @@
 ![Resources](docs/resources.png)
 
 End-to-end workspace creation on [AWS](scripts/awsmt-integration) or [Azure](scripts/azvnet-integration/databricks.tf)
+| [Migration from 0.2.x to 0.3.x](docs/guides/migration-0.3.x.md)
+| [Changelog](CHANGELOG.md)
 | [Authentication](docs/index.md)
 | [databricks_aws_s3_mount](docs/resources/aws_s3_mount.md)
 | [databricks_aws_assume_role_policy](docs/data-sources/aws_assume_role_policy.md) data
@@ -44,7 +46,6 @@ End-to-end workspace creation on [AWS](scripts/awsmt-integration) or [Azure](scr
 | [databricks_user_instance_profile](docs/resources/user_instance_profile.md)
 | [databricks_workspace_conf](docs/resources/workspace_conf.md)
 | [Contributing and Development Guidelines](CONTRIBUTING.md)
-| [Changelog](CHANGELOG.md)
 
 [![build](https://github.com/databrickslabs/terraform-provider-databricks/workflows/build/badge.svg?branch=master)](https://github.com/databrickslabs/terraform-provider-databricks/actions?query=workflow%3Abuild+branch%3Amaster) [![codecov](https://codecov.io/gh/databrickslabs/terraform-provider-databricks/branch/master/graph/badge.svg)](https://codecov.io/gh/databrickslabs/terraform-provider-databricks)
 

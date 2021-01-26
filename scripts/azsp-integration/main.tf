@@ -1,5 +1,10 @@
+terraform {
+  required_providers {
+    azurerm =  "~> 2.33"
+  }
+}
+
 provider "azurerm" {
-  version = "~> 2.14"
   features {}
 }
 
@@ -45,10 +50,6 @@ resource "azurerm_storage_blob" "example" {
 
 output "cloud_env" {
   value = "azure"
-}
-
-output "test_node_type" {
-  value = "Standard_D3_v2"
 }
 
 output "test_storage_v2_account" {

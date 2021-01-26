@@ -9,7 +9,6 @@ This resource allows you to attach instance profiles to groups created by the [g
 ```hcl
 resource "databricks_instance_profile" "instance_profile" {
     instance_profile_arn = "my_instance_profile_arn"
-    skip_validation = true
 }
 
 resource "databricks_group" "my_group" {

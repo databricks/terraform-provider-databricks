@@ -5,7 +5,7 @@ fmt:
 	@goimports -w $(shell find . -type f -name '*.go' -not -path "./vendor/*")
 	@echo "✓ Formatting source code with gofmt ..."
 	@gofmt -w $(shell find . -type f -name '*.go' -not -path "./vendor/*")
-	
+
 lint: vendor
 	@echo "✓ Linting source code with golangci-lint make sure you run make fmt ..."
 	@golangci-lint run --skip-dirs-use-default --timeout 5m
@@ -26,10 +26,10 @@ build:
 
 install: build
 	@echo "✓ Installing provider into ~/.terraform.d/plugins ..."
-	@test -d $(HOME)/.terraform.d/plugins && rm $(HOME)/.terraform.d/plugins/terraform-provider-databricks* || mkdir -p $(HOME)/.terraform.d/plugins
-	@cp terraform-provider-databricks $(HOME)/.terraform.d/plugins
+	#@test -d $(HOME)/.terraform.d/plugins && rm $(HOME)/.terraform.d/plugins/terraform-provider-databricks* || mkdir -p $(HOME)/.terraform.d/plugins
+	#@cp terraform-provider-databricks $(HOME)/.terraform.d/plugins
 	@mkdir -p '$(HOME)/.terraform.d/plugins/registry.terraform.io/databrickslabs/databricks/$(shell ./terraform-provider-databricks version)/$(shell go version | awk '{print $$4}' | sed 's#/#_#')'
-	@cp terraform-provider-databricks '$(HOME)/.terraform.d/plugins/registry.terraform.io/databrickslabs/databricks/$(shell ./terraform-provider-databricks version)/$(shell go version | awk '{print $$4}' | sed 's#/#_#')/terraform-provider-databricks-v$(shell ./terraform-provider-databricks version)'
+	@cp terraform-provider-databricks '$(HOME)/.terraform.d/plugins/registry.terraform.io/databrickslabs/databricks/$(shell ./terraform-provider-databricks version)/$(shell go version | awk '{print $$4}' | sed 's#/#_#')/terraform-provider-databricks'
 	@echo "✓ Use the following configuration to enable the version you've built"
 	@echo 
 	@echo "terraform {"
@@ -40,7 +40,7 @@ install: build
 	@echo "    }"
 	@echo "  }"
 	@echo "}"
-	
+
 vendor:
 	@echo "✓ Filling vendor folder with library code ..."
 	@go mod vendor

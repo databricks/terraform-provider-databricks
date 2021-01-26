@@ -185,7 +185,7 @@ func TestAwsAccInstanceProfiles(t *testing.T) {
 	ctx := context.Background()
 	instanceProfilesAPI := NewInstanceProfilesAPI(ctx, client)
 	instanceProfilesAPI.Synchronized(arn, func() {
-		err := instanceProfilesAPI.Create(arn, true)
+		err := instanceProfilesAPI.Create(arn)
 		assert.NoError(t, err, err)
 		defer func() {
 			err := instanceProfilesAPI.Delete(arn)

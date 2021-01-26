@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/databrickslabs/databricks-terraform/access"
@@ -71,7 +72,7 @@ func testMounting(t *testing.T, mp MountPoint, m Mount) {
 func TestAccDeleteInvalidMountFails(t *testing.T) {
 	_, mp := mountPointThroughReusedCluster(t)
 	err := mp.Delete()
-	qa.AssertErrorStartsWith(t, err, "Directory not mounted: /mnt/"+mp.name)
+	assert.True(t, strings.Contains(err.Error(), "Directory not mounted"), err.Error())
 }
 
 func TestAccSourceOnInvalidMountFails(t *testing.T) {

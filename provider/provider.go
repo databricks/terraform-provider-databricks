@@ -56,12 +56,14 @@ func DatabricksProvider() *schema.Provider {
 			"databricks_user":                   identity.ResourceUser(),
 			"databricks_service_principal":      identity.ResourceServicePrincipal(),
 
-			"databricks_mws_customer_managed_keys":  mws.ResourceCustomerManagedKey(),
-			"databricks_mws_credentials":            mws.ResourceCredentials(),
-			"databricks_mws_log_delivery":           mws.ResourceLogDelivery(),
-			"databricks_mws_networks":               mws.ResourceNetwork(),
-			"databricks_mws_storage_configurations": mws.ResourceStorageConfiguration(),
-			"databricks_mws_workspaces":             mws.ResourceWorkspace(),
+			"databricks_mws_customer_managed_keys":   mws.ResourceCustomerManagedKey(),
+			"databricks_mws_credentials":             mws.ResourceCredentials(),
+			"databricks_mws_log_delivery":            mws.ResourceLogDelivery(),
+			"databricks_mws_networks":                mws.ResourceNetwork(),
+			"databricks_mws_private_access_settings": mws.ResourcePrivateAccessSettings(),
+			"databricks_mws_storage_configurations":  mws.ResourceStorageConfiguration(),
+			"databricks_mws_vpc_endpoint":            mws.ResourceVPCEndpoint(),
+			"databricks_mws_workspaces":              mws.ResourceWorkspace(),
 
 			"databricks_aws_s3_mount":          storage.ResourceAWSS3Mount(),
 			"databricks_azure_adls_gen1_mount": storage.ResourceAzureAdlsGen1Mount(),
@@ -202,13 +204,19 @@ func DatabricksProvider() *schema.Provider {
 				Optional:    true,
 				Type:        schema.TypeInt,
 				Description: "Truncate JSON fields in JSON above this limit. Default is 96. Visible only when TF_LOG=DEBUG is set",
-				DefaultFunc: schema.EnvDefaultFunc("DATABRICKS_DEBUG_TRUNCATE_BYTES", 96),
+				DefaultFunc: schema.EnvDefaultFunc("DATABRICKS_DEBUG_TRUNCATE_BYTES", common.DebugTruncateBytes),
 			},
 			"debug_headers": {
 				Optional:    true,
 				Type:        schema.TypeBool,
 				Description: "Debug HTTP headers of requests made by the provider. Default is false. Visible only when TF_LOG=DEBUG is set",
 				DefaultFunc: schema.EnvDefaultFunc("DATABRICKS_DEBUG_HEADERS", false),
+			},
+			"rate_limit": {
+				Optional:    true,
+				Type:        schema.TypeInt,
+				Description: "Maximum number of requests per minute made to Databricks REST API by Terraform.",
+				DefaultFunc: schema.EnvDefaultFunc("DATABRICKS_RATE_LIMIT", common.DefaultRateLimit),
 			},
 		},
 		ConfigureContextFunc: func(c context.Context, d *schema.ResourceData) (interface{}, diag.Diagnostics) {
@@ -283,6 +291,9 @@ func DatabricksProvider() *schema.Provider {
 			}
 			if v, ok := d.GetOk("debug_truncate_bytes"); ok {
 				pc.DebugTruncateBytes = v.(int)
+			}
+			if v, ok := d.GetOk("rate_limit"); ok {
+				pc.RateLimit = v.(int)
 			}
 			if v, ok := d.GetOk("debug_headers"); ok {
 				pc.DebugHeaders = v.(bool)

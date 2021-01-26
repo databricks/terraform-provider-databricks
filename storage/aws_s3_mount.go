@@ -113,7 +113,8 @@ func preprocessS3Mount(ctx context.Context, d *schema.ResourceData, m interface{
 	return nil
 }
 
-func getOrCreateMountingClusterWithInstanceProfile(clustersAPI compute.ClustersAPI, instanceProfile string) (i compute.ClusterInfo, err error) {
+func getOrCreateMountingClusterWithInstanceProfile(
+	clustersAPI compute.ClustersAPI, instanceProfile string) (i compute.ClusterInfo, err error) {
 	ia, err := arn.Parse(instanceProfile)
 	if err != nil {
 		return i, err
@@ -124,12 +125,17 @@ func getOrCreateMountingClusterWithInstanceProfile(clustersAPI compute.ClustersA
 	}
 	clusterName := fmt.Sprintf("terraform-mount-%s", instanceProfileParts[1])
 	return clustersAPI.GetOrCreateRunningCluster(clusterName, compute.Cluster{
-		NumWorkers:   1,
-		ClusterName:  clusterName,
-		SparkVersion: compute.CommonRuntimeVersion(),
-		NodeTypeID: clustersAPI.GetSmallestNodeType(compute.NodeTypeRequest{
-			LocalDisk: true,
-		}),
+		NumWorkers:  1,
+		ClusterName: clusterName,
+		SparkVersion: clustersAPI.LatestSparkVersionOrDefault(
+			compute.SparkVersionRequest{
+				Latest:          true,
+				LongTermSupport: true,
+			}),
+		NodeTypeID: clustersAPI.GetSmallestNodeType(
+			compute.NodeTypeRequest{
+				LocalDisk: true,
+			}),
 		AutoterminationMinutes: 10,
 		AwsAttributes: &compute.AwsAttributes{
 			InstanceProfileArn: instanceProfile,

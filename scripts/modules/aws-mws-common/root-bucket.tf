@@ -15,8 +15,9 @@ output "root_bucket" {
 }
 
 resource "aws_s3_bucket_public_access_block" "root_storage_bucket" {
-  bucket              = aws_s3_bucket.root_storage_bucket.id
-  ignore_public_acls  = true
+  bucket             = aws_s3_bucket.root_storage_bucket.id
+  ignore_public_acls = true
+  depends_on         = [aws_s3_bucket.root_storage_bucket]
 }
 
 data "databricks_aws_bucket_policy" "this" {

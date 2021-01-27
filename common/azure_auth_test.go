@@ -107,6 +107,16 @@ func TestEnsureWorkspaceURL_CornerCases(t *testing.T) {
 	aa.databricksClient = &DatabricksClient{}
 	err = aa.ensureWorkspaceURL(context.Background(), nil)
 	assert.EqualError(t, err, "Somehow resource id is not set")
+
+	aa = AzureAuth{
+		Environment:      "xyz",
+		SubscriptionID:   "a",
+		ResourceGroup:    "b",
+		WorkspaceName:    "c",
+		databricksClient: &DatabricksClient{},
+	}
+	err = aa.ensureWorkspaceURL(context.Background(), nil)
+	assert.EqualError(t, err, "autorest/azure: There is no cloud environment matching the name \"AZUREXYZCLOUD\"")
 }
 
 func TestAcquirePAT_CornerCases(t *testing.T) {
@@ -132,18 +142,6 @@ func TestAcquirePAT_CornerCases(t *testing.T) {
 	assert.Equal(t, "...", auth.TokenValue)
 }
 
-func TestAzureAuth_isClientSecretSet(t *testing.T) {
-	aa := AzureAuth{}
-	assert.False(t, aa.IsClientSecretSet())
-
-	aa.ClientID = "a"
-	assert.False(t, aa.IsClientSecretSet())
-	aa.ClientSecret = "b"
-	assert.False(t, aa.IsClientSecretSet())
-	aa.TenantID = "c"
-	assert.True(t, aa.IsClientSecretSet())
-}
-
 func TestAzureAuth_ensureWorkspaceURL(t *testing.T) {
 	aa := AzureAuth{}
 
@@ -167,7 +165,8 @@ func TestAzureAuth_ensureWorkspaceURL(t *testing.T) {
 	defer server.Close()
 
 	aa.ResourceID = "/subscriptions/a/resourceGroups/b/providers/Microsoft.Databricks/workspaces/c"
-	aa.azureManagementEndpoint = server.URL
+	// resource management endpoints end with a trailing slash in url
+	aa.azureManagementEndpoint = fmt.Sprintf("%s/", server.URL)
 
 	client := DatabricksClient{InsecureSkipVerify: true}
 	client.configureHTTPCLient()
@@ -249,7 +248,8 @@ func TestAzureAuth_configureWithClientSecret(t *testing.T) {
 	aa.ClientID = "a"
 	aa.ClientSecret = "b"
 	aa.TenantID = "c"
-	aa.azureManagementEndpoint = server.URL
+	// resource management endpoints end with a trailing slash in url
+	aa.azureManagementEndpoint = fmt.Sprintf("%s/", server.URL)
 	auth, err = aa.configureWithClientSecret()
 	assert.NotNil(t, auth)
 	assert.NoError(t, err)

@@ -145,6 +145,8 @@ func TestAzureAuth_isClientSecretSet(t *testing.T) {
 }
 
 func TestAzureAuth_ensureWorkspaceURL(t *testing.T) {
+	aa := AzureAuth{}
+
 	cnt := []int{0}
 	var serverURL string
 	server := httptest.NewUnstartedServer(http.HandlerFunc(
@@ -164,15 +166,10 @@ func TestAzureAuth_ensureWorkspaceURL(t *testing.T) {
 	serverURL = server.URL
 	defer server.Close()
 
-	aa := AzureAuth{}
-
-	// Temporarily used mock urls
-	thisEnvironmentFetcher = mockEnvironmentFetcher{ResourceManagerEndpoint: serverURL}
-	defer func() { thisEnvironmentFetcher = environmentFetcher{} }()
-
 	aa.ResourceID = "/subscriptions/a/resourceGroups/b/providers/Microsoft.Databricks/workspaces/c"
-	client := DatabricksClient{}
-	client.InsecureSkipVerify = true
+	aa.azureManagementEndpoint = server.URL
+
+	client := DatabricksClient{InsecureSkipVerify: true}
 	client.configureHTTPCLient()
 	aa.databricksClient = &client
 	client.AzureAuth = aa
@@ -190,16 +187,6 @@ func TestAzureAuth_ensureWorkspaceURL(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, 1, cnt[0],
 		"Calls to Azure Management API must be done only once")
-}
-
-type mockEnvironmentFetcher struct {
-	ResourceManagerEndpoint string
-}
-
-func (e mockEnvironmentFetcher) getAzureEnvironment(environment string) (azure.Environment, error) {
-	return azure.Environment{
-		ResourceManagerEndpoint: e.ResourceManagerEndpoint,
-	}, nil
 }
 
 func TestAzureAuth_configureWithClientSecret(t *testing.T) {
@@ -259,13 +246,10 @@ func TestAzureAuth_configureWithClientSecret(t *testing.T) {
 	serverURL = server.URL
 	defer server.Close()
 
-	// Temporarily used mock urls
-	thisEnvironmentFetcher = mockEnvironmentFetcher{ResourceManagerEndpoint: serverURL}
-	defer func() { thisEnvironmentFetcher = environmentFetcher{} }()
-
 	aa.ClientID = "a"
 	aa.ClientSecret = "b"
 	aa.TenantID = "c"
+	aa.azureManagementEndpoint = server.URL
 	auth, err = aa.configureWithClientSecret()
 	assert.NotNil(t, auth)
 	assert.NoError(t, err)
@@ -290,33 +274,33 @@ func TestAzureAuth_configureWithClientSecret(t *testing.T) {
 
 func TestAzureEnvironment(t *testing.T) {
 	aa := AzureAuth{}
-	env, err := thisEnvironmentFetcher.getAzureEnvironment(aa.Environment)
+	env, err := aa.getAzureEnvironment()
 
 	assert.Nil(t, err)
 	assert.Equal(t, azure.PublicCloud, env)
 
 	aa.Environment = "public"
-	env, err = thisEnvironmentFetcher.getAzureEnvironment(aa.Environment)
+	env, err = aa.getAzureEnvironment()
 	assert.Nil(t, err)
 	assert.Equal(t, azure.PublicCloud, env)
 
 	aa.Environment = "china"
-	env, err = thisEnvironmentFetcher.getAzureEnvironment(aa.Environment)
+	env, err = aa.getAzureEnvironment()
 	assert.Nil(t, err)
 	assert.Equal(t, azure.ChinaCloud, env)
 
 	aa.Environment = "german"
-	env, err = thisEnvironmentFetcher.getAzureEnvironment(aa.Environment)
+	env, err = aa.getAzureEnvironment()
 	assert.Nil(t, err)
 	assert.Equal(t, azure.GermanCloud, env)
 
 	aa.Environment = "usgovernment"
-	env, err = thisEnvironmentFetcher.getAzureEnvironment(aa.Environment)
+	env, err = aa.getAzureEnvironment()
 	assert.Nil(t, err)
 	assert.Equal(t, azure.USGovernmentCloud, env)
 
 	aa.Environment = "xyzdummy"
-	_, err = thisEnvironmentFetcher.getAzureEnvironment(aa.Environment)
+	_, err = aa.getAzureEnvironment()
 	assert.NotNil(t, err)
 }
 
@@ -324,7 +308,7 @@ func TestInvalidAzureEnvironment(t *testing.T) {
 	aa := AzureAuth{}
 
 	aa.Environment = "xyzdummy"
-	_, envErr := thisEnvironmentFetcher.getAzureEnvironment(aa.Environment)
+	_, envErr := aa.getAzureEnvironment()
 	assert.NotNil(t, envErr)
 
 	mockFunc := func(resource string) (autorest.Authorizer, error) {

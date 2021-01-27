@@ -75,7 +75,7 @@ resource "databricks_cluster_policy" "this" {
     # most likely policy might have way more things init.
     "aws_attributes.instance_profile_arn": {
       "type": "fixed",
-       "value": databricks_instance_profile.shared.arn
+      "value": databricks_instance_profile.shared.arn
     }
   })
 }

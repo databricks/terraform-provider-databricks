@@ -23,8 +23,8 @@ Compute resources
 
 Storage
 * Manage JAR, Wheel & Egg libraries through [databricks_dbfs_file](resources/dbfs_file.md)
-* List entries on DBFS with [databricks_dbfs_file_paths](data-sources/dbfs_file_paths.md)
-* Get contents of small files with [databricks_dbfs_file](data-sources/dbfs_file.md)
+* List entries on DBFS with [databricks_dbfs_file_paths](data-sources/dbfs_file_paths.md) data source
+* Get contents of small files with [databricks_dbfs_file](data-sources/dbfs_file.md) data source
 * Mount your AWS storage using [databricks_aws_s3_mount](resources/aws_s3_mount.md)
 * Mount your Azure storage using [databricks_azure_adls_gen1_mount](resources/azure_adls_gen1_mount.md), [databricks_azure_adls_gen2_mount](resources/azure_adls_gen2_mount.md), [databricks_azure_blob_mount](resources/azure_blob_mount.md)
 

@@ -29,6 +29,7 @@ provider "databricks" {
 }
 
 data "databricks_aws_assume_role_policy" "this" {
+  provider    = databricks.mws
   external_id = data.external.env.result.DATABRICKS_ACCOUNT_ID
 }
 
@@ -39,6 +40,7 @@ resource "aws_iam_role" "cross_account_role" {
 }
 
 data "databricks_aws_crossaccount_policy" "this" {
+  provider   = databricks.mws
   pass_roles = [aws_iam_role.data_role.arn]
 }
 

@@ -6,8 +6,6 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"net/url"
-	"path"
 	"strconv"
 	"strings"
 	"sync"
@@ -283,12 +281,8 @@ func (aa *AzureAuth) ensureWorkspaceURL(ctx context.Context,
 	if err != nil {
 		return err
 	}
-	managementUrl, err := url.Parse(env.ResourceManagerEndpoint)
-	if err != nil {
-		return fmt.Errorf("Somehow unable to parse correct azure resource manager endpoint")
-	}
-	managementUrl.Path = path.Join(managementUrl.Path, resourceID)
-	managementResourceUrl := managementUrl.String()
+	// All azure endpoints typically end with a trailing slash removing it because resourceID starts with slash
+	managementResourceUrl := strings.TrimSuffix(env.ResourceManagerEndpoint, "/") + resourceID
 	var workspace azureDatabricksWorkspace
 	resp, err := aa.databricksClient.genericQuery(ctx, http.MethodGet,
 		managementResourceUrl,

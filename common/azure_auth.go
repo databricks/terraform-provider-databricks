@@ -285,7 +285,7 @@ func (aa *AzureAuth) ensureWorkspaceURL(ctx context.Context,
 	}
 	managementUrl, err := url.Parse(env.ResourceManagerEndpoint)
 	if err != nil {
-		return fmt.Errorf("Somehow unable to parse correct azure environment")
+		return fmt.Errorf("Somehow unable to parse correct azure resource manager endpoint")
 	}
 	managementUrl.Path = path.Join(managementUrl.Path, resourceID)
 	managementResourceUrl := managementUrl.String()

@@ -272,6 +272,23 @@ func TestAzureAuth_configureWithClientSecret(t *testing.T) {
 	assert.Len(t, zi.Zones, 3)
 }
 
+func TestAzureEnvironment_WithAzureManagementEndpoint(t *testing.T) {
+	fakeEndpoint := "http://google.com"
+	aa := AzureAuth{azureManagementEndpoint: fakeEndpoint}
+	env, err := aa.getAzureEnvironment()
+	assert.Nil(t, err)
+	// This value should be populated with azureManagementEndpoint for testing
+	assert.Equal(t, env.ResourceManagerEndpoint, fakeEndpoint)
+	// The rest should be nill
+	assert.Equal(t, env.ActiveDirectoryEndpoint, "")
+
+	// Making the azureManagementEndpoint empty should yield PublicCloud
+	aa.azureManagementEndpoint = ""
+	env, err = aa.getAzureEnvironment()
+	assert.Nil(t, err)
+	assert.Equal(t, azure.PublicCloud, env)
+}
+
 func TestAzureEnvironment(t *testing.T) {
 	aa := AzureAuth{}
 	env, err := aa.getAzureEnvironment()

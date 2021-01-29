@@ -44,6 +44,19 @@ func (r CommonResource) ToResource() *schema.Resource {
 			v.ForceNew = true
 		}
 	}
+	read := func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+		err := r.Read(ctx, d, m.(*common.DatabricksClient))
+		if e, ok := err.(common.APIError); ok && e.IsMissing() {
+			log.Printf("[INFO] %s[id=%s] is removed on backend",
+				common.ResourceName.GetOrUnknown(ctx), d.Id())
+			d.SetId("")
+			return nil
+		}
+		if err != nil {
+			return diag.FromErr(err)
+		}
+		return nil
+	}
 	return &schema.Resource{
 		Schema:         r.Schema,
 		SchemaVersion:  r.SchemaVersion,
@@ -65,19 +78,7 @@ func (r CommonResource) ToResource() *schema.Resource {
 			}
 			return nil
 		},
-		ReadContext: func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-			err := r.Read(ctx, d, m.(*common.DatabricksClient))
-			if e, ok := err.(common.APIError); ok && e.IsMissing() {
-				log.Printf("[INFO] %s[id=%s] is removed on backend",
-					common.ResourceName.GetOrUnknown(ctx), d.Id())
-				d.SetId("")
-				return nil
-			}
-			if err != nil {
-				return diag.FromErr(err)
-			}
-			return nil
-		},
+		ReadContext:   read,
 		UpdateContext: update,
 		DeleteContext: func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 			if err := r.Delete(ctx, d, m.(*common.DatabricksClient)); err != nil {
@@ -86,7 +87,15 @@ func (r CommonResource) ToResource() *schema.Resource {
 			return nil
 		},
 		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+			StateContext: func(ctx context.Context, d *schema.ResourceData, m interface{}) (data []*schema.ResourceData, e error) {
+				d.MarkNewResource()
+				diags := read(ctx, d, m)
+				var err error
+				if diags.HasError() {
+					err = diags[0].Validate()
+				}
+				return []*schema.ResourceData{d}, err
+			},
 		},
 		Timeouts: r.Timeouts,
 	}

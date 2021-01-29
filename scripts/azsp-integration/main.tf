@@ -92,6 +92,7 @@ output "test_key_vault_secret" {
 }
 
 output "test_key_vault_secret_value" {
+  sensitive = true
   value = module.this.test_key_vault_secret_value
 }
 

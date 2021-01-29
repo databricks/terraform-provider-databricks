@@ -1,6 +1,8 @@
 package identity
 
 import (
+	"context"
+	"os"
 	"testing"
 
 	"github.com/databrickslabs/databricks-terraform/common"
@@ -8,6 +10,38 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
+
+func TestAzureAccSP(t *testing.T) {
+	if _, ok := os.LookupEnv("CLOUD_ENV"); !ok {
+		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
+	}
+
+	client := common.NewClientFromEnvironment()
+	ctx := context.Background()
+
+	spAPI := NewServicePrincipalsAPI(ctx, client)
+
+	sp, err := spAPI.CreateR(ServicePrincipalEntity{
+		ApplicationID:           "00000000-0000-0000-0000-000000000001",
+		AllowInstancePoolCreate: true,
+		AllowClusterCreate:      true,
+		DisplayName:             "ABC SP",
+		Active:                  true,
+	})
+	require.NoError(t, err)
+	defer func() {
+		err := spAPI.Delete(sp.ID)
+		require.NoError(t, err)
+	}()
+
+	err = spAPI.UpdateR(sp.ID, ServicePrincipalEntity{
+		ApplicationID:           sp.ApplicationID,
+		AllowClusterCreate:      false,
+		AllowInstancePoolCreate: false,
+		DisplayName:             "BCD",
+	})
+	require.NoError(t, err)
+}
 
 func TestResourceServicePrincipalRead(t *testing.T) {
 	d, err := qa.ResourceFixture{

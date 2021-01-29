@@ -2,6 +2,7 @@
 
 ## 0.3.0
 
+* Added global timeout for resource provisioning, which defaults to 15 minutes.
 * Added [databricks_current_user] to simplify applying the same Terraform configuration by different users in the shared workspace for testing purposes. 
 * Added client-side rate limiting to release the pressure on backend APIs and prevent client blocking ([#465](https://github.com/databrickslabs/terraform-provider-databricks/pull/465))
 * Member usernames, group names and instance profile names in `databricks_group` data source are now sorted and providing consistent behavior between runs ([#449](https://github.com/databrickslabs/terraform-provider-databricks/issues/449))

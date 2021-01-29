@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestDataSourceCallerIdentity(t *testing.T) {
+func TestDataSourceCurrentUser(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
@@ -22,7 +22,7 @@ func TestDataSourceCallerIdentity(t *testing.T) {
 		},
 		Read:        true,
 		NonWritable: true,
-		Resource:    DataSourceCallerIdentity(),
+		Resource:    DataSourceCurrentUser(),
 		ID:          ".",
 	}.Apply(t)
 	require.NoError(t, err)

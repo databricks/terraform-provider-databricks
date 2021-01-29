@@ -5,6 +5,7 @@ import (
 	"os"
 	"testing"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -20,7 +21,8 @@ func TestCommonEnvironmentClient(t *testing.T) {
 	assert.Equal(t, "databricks-tf-provider/"+version+" (+unknown) terraform/unknown", c.userAgent(ctx))
 
 	ctx = context.WithValue(ctx, ResourceName, "cluster")
-	ctx = context.WithValue(ctx, TerraformVersion, "0.12")
-
+	c.Provider = &schema.Provider{
+		TerraformVersion: "0.12",
+	}
 	assert.Equal(t, "databricks-tf-provider/"+version+" (+cluster) terraform/0.12", c.userAgent(ctx))
 }

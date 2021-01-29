@@ -156,7 +156,7 @@ type ScimUser struct {
 	Active        bool                   `json:"active,omitempty"`
 	Schemas       []URN                  `json:"schemas,omitempty"`
 	UserName      string                 `json:"userName,omitempty"`
-	ApplicationID string                 `json:"application_id,omitempty"`
+	ApplicationID string                 `json:"applicationId,omitempty"`
 	Groups        []groupsListItem       `json:"groups,omitempty"`
 	Name          map[string]string      `json:"name,omitempty"`
 	Roles         []roleListItem         `json:"roles,omitempty"`

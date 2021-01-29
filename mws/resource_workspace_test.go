@@ -473,7 +473,7 @@ func TestWaitForRunning(t *testing.T) {
 		StorageConfigurationID: "ghi",
 		NetworkID:              "fgh",
 		CustomerManagedKeyID:   "def",
-	})
+	}, DefaultProvisionTimeout)
 	require.NoError(t, err)
 }
 
@@ -545,7 +545,7 @@ func TestCreateFailsAndCleansUp(t *testing.T) {
 		StorageConfigurationID: "ghi",
 		NetworkID:              "fgh",
 		CustomerManagedKeyID:   "def",
-	})
+	}, DefaultProvisionTimeout)
 	require.EqualError(t, err, "Workspace failed to create: Always fails, network error message: error: FAIL;error_msg: Message;")
 }
 

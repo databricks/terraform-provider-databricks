@@ -24,11 +24,11 @@ func TestAzureAccServicePrincipalResource(t *testing.T) {
 		resource "databricks_service_principal" "sp_second" {
 			application_id = "00000000-1234-5678-0000-000000000002"
 			display_name = "Tweede {var.RANDOM}"
-				allow_cluster_create = true
+			allow_cluster_create = true
 		}
 		resource "databricks_service_principal" "sp_third" {
 			application_id = "00000000-1234-5678-0000-000000000003"
-				allow_instance_pool_create = true
+			allow_instance_pool_create = true
 		}`)
 	acceptance.AccTest(t, resource.TestCase{
 		Steps: []resource.TestStep{

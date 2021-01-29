@@ -3,6 +3,7 @@ package compute
 import (
 	"context"
 	"fmt"
+	"sort"
 	"strings"
 
 	"github.com/databrickslabs/databricks-terraform/common"
@@ -130,6 +131,11 @@ func (cls ClusterLibraryStatuses) ToLibraryList() ClusterLibraryList {
 	for _, lib := range cls.LibraryStatuses {
 		cll.Libraries = append(cll.Libraries, *lib.Library)
 	}
+	sort.Slice(cll.Libraries, func(i, j int) bool {
+		a, b := cll.Libraries[i].TypeAndKey()
+		c, d := cll.Libraries[j].TypeAndKey()
+		return a+b < c+d
+	})
 	return cll
 }
 

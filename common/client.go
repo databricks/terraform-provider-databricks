@@ -15,15 +15,16 @@ import (
 	"golang.org/x/time/rate"
 
 	"github.com/hashicorp/go-retryablehttp"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/mitchellh/go-homedir"
 	"gopkg.in/ini.v1"
 )
 
 // Default settings
 const (
-	DefaultRateLimit      = 15
-	DefaultTruncateBytes  = 96
-	DefaultTimeoutSeconds = 60
+	DefaultTruncateBytes      = 96
+	DefaultRateLimitPerSecond = 15
+	DefaultHTTPTimeoutSeconds = 60
 )
 
 // DatabricksClient is the client struct that contains clients for all the services available on Databricks
@@ -36,13 +37,14 @@ type DatabricksClient struct {
 	ConfigFile         string
 	AzureAuth          AzureAuth
 	InsecureSkipVerify bool
-	TimeoutSeconds     int
+	HTTPTimeoutSeconds int
 	DebugTruncateBytes int
 	DebugHeaders       bool
-	RateLimit          int
-	rateLimiter        *rate.Limiter
-	httpClient         *retryablehttp.Client
+	RateLimitPerSecond int
 	authMutex          sync.Mutex
+	rateLimiter        *rate.Limiter
+	Provider           *schema.Provider
+	httpClient         *retryablehttp.Client
 	authVisitor        func(r *http.Request) error
 	commandFactory     func(context.Context, *DatabricksClient) CommandExecutor
 }
@@ -185,13 +187,13 @@ func (c *DatabricksClient) encodeBasicAuth(username, password string) string {
 }
 
 func (c *DatabricksClient) configureHTTPCLient() {
-	if c.TimeoutSeconds == 0 {
-		c.TimeoutSeconds = DefaultTimeoutSeconds
+	if c.HTTPTimeoutSeconds == 0 {
+		c.HTTPTimeoutSeconds = DefaultHTTPTimeoutSeconds
 	}
-	if c.RateLimit == 0 {
-		c.RateLimit = DefaultRateLimit
+	if c.RateLimitPerSecond == 0 {
+		c.RateLimitPerSecond = DefaultRateLimitPerSecond
 	}
-	c.rateLimiter = rate.NewLimiter(rate.Every(1*time.Second), c.RateLimit)
+	c.rateLimiter = rate.NewLimiter(rate.Every(1*time.Second), c.RateLimitPerSecond)
 	// Set up a retryable HTTP Client to handle cases where the service returns
 	// a transient error on initial creation
 	retryDelayDuration := 10 * time.Second
@@ -199,7 +201,7 @@ func (c *DatabricksClient) configureHTTPCLient() {
 	defaultTransport := http.DefaultTransport.(*http.Transport)
 	c.httpClient = &retryablehttp.Client{
 		HTTPClient: &http.Client{
-			Timeout: time.Duration(c.TimeoutSeconds) * time.Second,
+			Timeout: time.Duration(c.HTTPTimeoutSeconds) * time.Second,
 			Transport: &http.Transport{
 				Proxy:                 defaultTransport.Proxy,
 				DialContext:           defaultTransport.DialContext,

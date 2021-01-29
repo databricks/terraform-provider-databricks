@@ -17,26 +17,29 @@ import (
 	"github.com/databrickslabs/databricks-terraform/internal/util"
 )
 
+// DefaultProvisionTimeout ...
+const DefaultProvisionTimeout = 30 * time.Minute
+
 var clusterSchema = resourceClusterSchema()
 
 // ResourceCluster - returns Cluster resource description
 func ResourceCluster() *schema.Resource {
-	s := util.CommonResource{
+	return util.CommonResource{
 		Create: resourceClusterCreate,
 		Read:   resourceClusterRead,
 		Update: resourceClusterUpdate,
-		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+		Delete: func(ctx context.Context,
+			d *schema.ResourceData, c *common.DatabricksClient) error {
 			return NewClustersAPI(ctx, c).PermanentDelete(d.Id())
 		},
-		Schema: clusterSchema,
+		Schema:        clusterSchema,
+		SchemaVersion: 2,
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(DefaultProvisionTimeout),
+			Update: schema.DefaultTimeout(DefaultProvisionTimeout),
+			Delete: schema.DefaultTimeout(DefaultProvisionTimeout),
+		},
 	}.ToResource()
-	s.SchemaVersion = 2
-	s.Timeouts = &schema.ResourceTimeout{
-		Create: schema.DefaultTimeout(30 * time.Minute),
-		Update: schema.DefaultTimeout(30 * time.Minute),
-		Delete: schema.DefaultTimeout(30 * time.Minute),
-	}
-	return s
 }
 
 func resourceClusterSchema() map[string]*schema.Schema {

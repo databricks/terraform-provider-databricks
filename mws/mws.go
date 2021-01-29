@@ -82,7 +82,7 @@ type Workspace struct {
 	CredentialsID           string `json:"credentials_id"`
 	StorageConfigurationID  string `json:"storage_configuration_id"`
 	CustomerManagedKeyID    string `json:"customer_managed_key_id,omitempty"`
-	PricingTier             string `json:"pricing_tier,omitempty"`
+	PricingTier             string `json:"pricing_tier,omitempty" tf:"computed"`
 	PrivateAccessSettingsID string `json:"private_access_settings_id,omitempty"`
 	NetworkID               string `json:"network_id,omitempty"`
 	IsNoPublicIPEnabled     bool   `json:"is_no_public_ip_enabled,omitempty"`

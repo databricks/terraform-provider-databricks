@@ -95,7 +95,7 @@ func (a InstanceProfilesAPI) IsRegistered(arn string) bool {
 
 // Synchronized test helper for working with only single instance profile
 func (a InstanceProfilesAPI) Synchronized(arn string, testCallback func() bool) {
-	timeout := 30*time.Minute
+	timeout := 30 * time.Minute
 	err := resource.RetryContext(a.context, timeout,
 		func() *resource.RetryError {
 			list, err := a.List()

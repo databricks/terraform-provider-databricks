@@ -269,7 +269,7 @@ func TestAwsAccS3Mount(t *testing.T) {
 		clusterInfo, err := getOrCreateMountingClusterWithInstanceProfile(
 			clustersAPI, instanceProfile)
 		require.NoError(t, err)
-		defer func(){
+		defer func() {
 			err = clustersAPI.PermanentDelete(clusterInfo.ClusterID)
 			assert.NoError(t, err)
 			err = instanceProfilesAPI.Delete(instanceProfile)

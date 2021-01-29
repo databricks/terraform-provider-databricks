@@ -1,6 +1,6 @@
 # End to end workspace management
 
-Once you have the workspace setup on [Azure](azure-workspace.md) or [AWS](aws-workspace.md), you have to start managing resources within your workpsace. The following configuration blocks initializes ths most common variables:
+Once you have the workspace setup on [Azure](azure-workspace.md) or [AWS](aws-workspace.md), you have to start managing resources within your workpsace. The following configuration blocks initializes ths most common variables, [databricks_spark_version](../data-sources/spark_version.md), [databricks_node_type](../data-sources/node_type.md), and [databricks_current_user](../data-sources/current_user.md).
 
 ```hcl
 terraform {
@@ -23,7 +23,7 @@ data "databricks_node_type" "smallest" {
 
 ## Part 1: Standard functionality
 
-These resources do not require administrative priviliges.
+These resources do not require administrative priviliges. More documentation is available at dedicated pages for [databricks_secret_scope](../resources/secret_scope.md), [databricks_token](../resources/token.md), [databricks_secret](../resources/secret.md), [databricks_notebook](../data-sources/notebook.md), [databricks_job](../resources/job.md), [databricks_cluster](../resources/cluster.md), [databricks_cluster_policy](../resources/cluster_policy.md), [databricks_instance_pool](../resources/instance_pool.md).
 
 ```hcl
 resource "databricks_secret_scope" "this" {
@@ -116,7 +116,7 @@ output "job_url" {
 
 ## Part 2: Workspace security
 
-Managing security requires administrative priviliges.
+Managing security requires administrative priviliges. More documentation is available at dedicated pages for [databricks_secret_acl](../resources/secret_acl.md), [databricks_group](../data-sources/group.md), [databricks_user](../resources/user.md), [databricks_group_member](../resources/group_member.md), [databricks_permissions](../resources/permissions.md).
 
 ```hcl
 resource "databricks_secret_acl" "spectators" {
@@ -192,7 +192,19 @@ resource "databricks_permissions" "pool" {
 }
 ```
 
-## Part 3: Advanced configuration
+## Part 3: Storage
+
+Depending on your preferences and needs, you can
+
+* Manage JAR, Wheel & Egg libraries through [databricks_dbfs_file](../resources/dbfs_file.md).
+* List entries on DBFS with [databricks_dbfs_file_paths](../data-sources/dbfs_file_paths.md) data source.
+* Get contents of small files with [databricks_dbfs_file](../data-sources/dbfs_file.md) data source.
+* Mount your AWS storage using [databricks_aws_s3_mount](../resources/aws_s3_mount.md).
+* Mount your Azure storage using [databricks_azure_adls_gen1_mount](../resources/azure_adls_gen1_mount.md), [databricks_azure_adls_gen2_mount](../resources/azure_adls_gen2_mount.md), [databricks_azure_blob_mount](../resources/azure_blob_mount.md).
+
+## Part 4: Advanced configuration
+
+More documentation is available at dedicated pages for [databricks_workspace_conf](../resources/workspace_conf.md) and [databricks_ip_access_list](../resources/ip_access_list.md).
 
 ```hcl
 data "http" "my" {

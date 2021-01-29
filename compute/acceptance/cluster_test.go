@@ -12,21 +12,15 @@ func TestAccClusterResource_CreateClusterWithLibraries(t *testing.T) {
 			Template: `
 			data "databricks_spark_version" "latest" {
 			}
-			data "databricks_node_type" "smallest" {
-				local_disk = true
-			}
 			resource "databricks_cluster" "this" {
 				cluster_name = "libs-{var.RANDOM}"
 				spark_version = data.databricks_spark_version.latest.id
-				node_type_id = data.databricks_node_type.smallest.id
+				instance_pool_id = "{var.COMMON_INSTANCE_POOL_ID}"
 				autotermination_minutes = 10
-				autoscale {
-					min_workers = 1
-					max_workers = 2
-				}
+				num_workers = 1
 				spark_conf = {
-					"spark.databricks.cluster.profile" = "serverless"
 					"spark.databricks.repl.allowedLanguages" = "sql,python,r"
+					"spark.databricks.cluster.profile" = "serverless"
 				}
 				custom_tags = {
 					"ResourceClass" = "Serverless"
@@ -40,8 +34,8 @@ func TestAccClusterResource_CreateClusterWithLibraries(t *testing.T) {
 				}
 				library {
 					pypi {
-						package = "Faker"
 						repo = "https://pypi.org/simple"
+						package = "Faker"
 					}
 				}
 				library {
@@ -54,6 +48,7 @@ func TestAccClusterResource_CreateClusterWithLibraries(t *testing.T) {
 						coordinates = "com.microsoft.azure:azure-eventhubs-spark_2.11:2.3.7"
 					}
 				}
+				{var.AWS_ATTRIBUTES}
 			}`,
 		},
 	})
@@ -65,19 +60,17 @@ func TestAccClusterResource_CreateSingleNodeCluster(t *testing.T) {
 			Template: `
 			data "databricks_spark_version" "latest" {
 			}
-			data "databricks_node_type" "smallest" {
-				local_disk = true
-			}
 			resource "databricks_cluster" "this" {
 				cluster_name = "singlenode-{var.RANDOM}"
 				spark_version = data.databricks_spark_version.latest.id
-				node_type_id = data.databricks_node_type.smallest.id
+				instance_pool_id = "{var.COMMON_INSTANCE_POOL_ID}"
 				num_workers = 0
 				autotermination_minutes = 10
 				spark_conf = {
 					"spark.databricks.cluster.profile" = "singleNode"
 					"spark.master" = "local[*]"
 				}
+				{var.AWS_ATTRIBUTES}
 			}`,
 		},
 	})

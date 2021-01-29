@@ -43,7 +43,7 @@ func (r CommonResource) ToResource() *schema.Resource {
 			v.ForceNew = true
 		}
 	}
-	readFunc := func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+	read := func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 		err := r.Read(ctx, d, m.(*common.DatabricksClient))
 		if e, ok := err.(common.APIError); ok && e.IsMissing() {
 			log.Printf("[INFO] %s[id=%s] is removed on backend",
@@ -56,7 +56,6 @@ func (r CommonResource) ToResource() *schema.Resource {
 		}
 		return nil
 	}
-
 	return &schema.Resource{
 		Schema:         r.Schema,
 		SchemaVersion:  r.SchemaVersion,
@@ -78,7 +77,7 @@ func (r CommonResource) ToResource() *schema.Resource {
 			}
 			return nil
 		},
-		ReadContext:   readFunc,
+		ReadContext:   read,
 		UpdateContext: update,
 		DeleteContext: func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 			if err := r.Delete(ctx, d, m.(*common.DatabricksClient)); err != nil {
@@ -89,7 +88,7 @@ func (r CommonResource) ToResource() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: func(ctx context.Context, d *schema.ResourceData, m interface{}) (data []*schema.ResourceData, e error) {
 				d.MarkNewResource()
-				diags := readFunc(ctx, d, m)
+				diags := read(ctx, d, m)
 				var err error
 				if diags.HasError() {
 					err = diags[0].Validate()

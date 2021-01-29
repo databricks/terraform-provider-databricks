@@ -24,10 +24,13 @@ build:
 	@echo "✓ Building source code with go build ..."
 	@go build -mod vendor -v -o terraform-provider-databricks
 
+install12: build
+	@echo "✓ Installing provider for Terraform 0.12 into ~/.terraform.d/plugins ..."
+	@test -d $(HOME)/.terraform.d/plugins && rm $(HOME)/.terraform.d/plugins/terraform-provider-databricks* || mkdir -p $(HOME)/.terraform.d/plugins
+	@cp terraform-provider-databricks $(HOME)/.terraform.d/plugins
+
 install: build
-	@echo "✓ Installing provider into ~/.terraform.d/plugins ..."
-	#@test -d $(HOME)/.terraform.d/plugins && rm $(HOME)/.terraform.d/plugins/terraform-provider-databricks* || mkdir -p $(HOME)/.terraform.d/plugins
-	#@cp terraform-provider-databricks $(HOME)/.terraform.d/plugins
+	@echo "✓ Installing provider for Terraform 0.13+ into ~/.terraform.d/plugins ..."
 	@mkdir -p '$(HOME)/.terraform.d/plugins/registry.terraform.io/databrickslabs/databricks/$(shell ./terraform-provider-databricks version)/$(shell go version | awk '{print $$4}' | sed 's#/#_#')'
 	@cp terraform-provider-databricks '$(HOME)/.terraform.d/plugins/registry.terraform.io/databrickslabs/databricks/$(shell ./terraform-provider-databricks version)/$(shell go version | awk '{print $$4}' | sed 's#/#_#')/terraform-provider-databricks'
 	@echo "✓ Use the following configuration to enable the version you've built"

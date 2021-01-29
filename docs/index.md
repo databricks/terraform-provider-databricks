@@ -8,11 +8,9 @@ description: |-
 
 # Databricks Provider
 
-Use the Databricks Terraform provider to interact with almost all of [Databricks](http://databricks.com/) resources. 
+Use the Databricks Terraform provider to interact with almost all of [Databricks](http://databricks.com/) resources. If you're new to Databricks, please follow guide to create a workspace on [Azure](guides/azure-workspace.md) or [AWS](guides/aws-workspace.md) and then this [workspace management](guides/workspace-management.md) tutorial. If you're migrating from version *0.2.x*, please follow [this guide](guides/migration-0.3.x.md). Changelog is available [on GitHub](https://github.com/databrickslabs/terraform-provider-databricks/blob/master/CHANGELOG.md).
 
 ![Resources](https://github.com/databrickslabs/terraform-provider-databricks/raw/master/docs/resources.png)
-
-If you're migrating from version 0.2.x, please follow [this guide](guides/migration-0.3.x.md). Changelog is available [on GitHub](https://github.com/databrickslabs/terraform-provider-databricks/blob/master/CHANGELOG.md).
 
 Compute resources
 * Deploy [databricks_cluster](resources/cluster.md) on selected [databricks_node_type](data-sources/node_type.md)
@@ -36,7 +34,7 @@ Security
 * Keep sensitive elements like passwords in [databricks_secret](resources/secret.md), grouped into [databricks_secret_scope](resources/secret_scope.md) and controlled by [databricks_secret_acl](resources/secret_acl.md)
 
 
-E2 Architecture
+[E2 Architecture](../docs/guides/aws-workspace.md)
 * Create [workspaces](resources/mws_workspaces.md) in your [VPC](resources/mws_networks.md) with [DBFS](resources/mws_storage_configurations.md) using [cross-account IAM roles](resources/mws_credentials.md), having your notebooks encrypted with [CMK](resources/mws_customer_managed_keys.md).
 * Use predefined AWS IAM Policy Templates: [databricks_aws_assume_role_policy](data-sources/aws_assume_role_policy.md), [databricks_aws_crossaccount_policy](data-sources/aws_crossaccount_policy.md), [databricks_aws_bucket_policy](data-sources/aws_bucket_policy.md)
 * Configure billing and audit [databricks_mws_log_delivery](resources/mws_log_delivery.md)

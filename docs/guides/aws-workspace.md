@@ -2,12 +2,12 @@
 
 ## Provider initialization for E2 workspaces
 
-This guide assumes you have `username` and `password` for [https://accounts.cloud.databricks.com](https://accounts.cloud.databricks.com) and can find `account_id` in the top right corner of the page, once you're logged in. This guide is provided as is and assumes you'll use it as the basis for your setup.
+This guide assumes you have `databricks_account_username` and `databricks_account_password` for [https://accounts.cloud.databricks.com](https://accounts.cloud.databricks.com) and can find `databricks_account_id` in the top right corner of the page, once you're logged in. This guide is provided as is and assumes you'll use it as the basis for your setup.
 
 ```hcl
-variable "username" {}
-variable "password" {}
-variable "account_id" {}
+variable "databricks_account_username" {}
+variable "databricks_account_password" {}
+variable "databricks_account_id" {}
 
 variable "cidr_block" {
     default = "10.4.0.0/16"
@@ -27,7 +27,7 @@ locals {
   prefix = "databricks${random_string.naming.result}"
   tags = {
     Environment = "Demo"
-    Owner       = var.username
+    Owner       = var.databricks_account_username
   }
 }
 ```
@@ -52,8 +52,8 @@ provider "aws" {
 provider "databricks" {
   alias    = "mws"
   host     = "https://accounts.cloud.databricks.com"
-  username = var.username
-  password = var.password
+  databricks_account_username = var.databricks_account_username
+  databricks_account_password = var.databricks_account_password
 }
 ```
 
@@ -64,7 +64,7 @@ Cross-account IAM role is registered with [databricks_mws_credentials](../resour
 ```hcl
 
 data "databricks_aws_assume_role_policy" "this" {
-  external_id = var.account_id
+  external_id = var.databricks_account_id
 }
 
 resource "aws_iam_role" "cross_account_role" {
@@ -85,7 +85,7 @@ resource "aws_iam_role_policy" "this" {
 
 resource "databricks_mws_credentials" "this" {
   provider         = databricks.mws
-  account_id       = var.account_id
+  databricks_account_id       = var.databricks_account_id
   role_arn         = aws_iam_role.cross_account_role.arn
   credentials_name = "${local.prefix}-creds"
   depends_on       = [aws_iam_role_policy.this]
@@ -261,7 +261,7 @@ resource "aws_security_group" "this" {
 
 resource "databricks_mws_networks" "this" {
   provider           = databricks.mws
-  account_id         = var.account_id
+  databricks_account_id         = var.databricks_account_id
   network_name       = "${local.prefix}-network"
   subnet_ids         = [aws_subnet.private.id, aws_subnet.private_secondary.id]
   vpc_id             = aws_vpc.main.id
@@ -303,7 +303,7 @@ resource "aws_s3_bucket_policy" "root_bucket_policy" {
 
 resource "databricks_mws_storage_configurations" "this" {
   provider                   = databricks.mws
-  account_id                 = var.account_id
+  databricks_account_id                 = var.databricks_account_id
   bucket_name                = aws_s3_bucket.root_storage_bucket.bucket
   storage_configuration_name = "${local.prefix}-storage"
 }
@@ -316,7 +316,7 @@ Once you have [VPC](#vpc), [cross-account role](#cross-account-iam-role), and [r
 ```hcl
 resource "databricks_mws_workspaces" "this" {
   provider        = databricks.mws
-  account_id      = var.account_id
+  databricks_account_id      = var.databricks_account_id
   aws_region      = var.region
   workspace_name  = local.prefix
   deployment_name = local.prefix

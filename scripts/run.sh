@@ -99,7 +99,8 @@ if [[ $@ == *"--destroy"* ]]; then
 fi
 
 if [ -f "main.tf" ]; then
-    terraform init  >/dev/null 2>&1
+    rm -fr .terraform .terraform.lock.hcl
+    terraform init -upgrade
     terraform apply -auto-approve
     export $(terraform output --json | jq -r $JQ) >/dev/null 2>&1
 else

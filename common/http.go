@@ -401,10 +401,11 @@ func (c *DatabricksClient) userAgent(ctx context.Context) string {
 	if rn, ok := ctx.Value(ResourceName).(string); ok {
 		resource = rn
 	}
-	if tv, ok := ctx.Value(TerraformVersion).(string); ok {
-		terraformVersion = tv
+	if c.Provider != nil {
+		terraformVersion = c.Provider.TerraformVersion
 	}
-	return fmt.Sprintf("databricks-tf-provider/%s (+%s) terraform/%s", Version(), resource, terraformVersion)
+	return fmt.Sprintf("databricks-tf-provider/%s (+%s) terraform/%s",
+		Version(), resource, terraformVersion)
 }
 
 // todo: do is better name

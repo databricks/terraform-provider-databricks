@@ -2,6 +2,9 @@
 
 ## 0.3.0
 
+* Added global timeout for resource provisioning, which defaults to 15 minutes.
+* Added [databricks_current_user] to simplify applying the same Terraform configuration by different users in the shared workspace for testing purposes. 
+* Added client-side rate limiting to release the pressure on backend APIs and prevent client blocking ([#465](https://github.com/databrickslabs/terraform-provider-databricks/pull/465))
 * Member usernames, group names and instance profile names in `databricks_group` data source are now sorted and providing consistent behavior between runs ([#449](https://github.com/databrickslabs/terraform-provider-databricks/issues/449))
 * Fixed redundant multiple mounting clusters ([#445](https://github.com/databrickslabs/terraform-provider-databricks/issues/445))
 * Added optional parameter azure_environment to provider config which defaults to public ([#437](https://github.com/databrickslabs/terraform-provider-databricks/pull/437)).
@@ -14,11 +17,10 @@
 * Added validation for secret scope name in `databricks_secret`, `databricks_secret_scope` and `databricks_secret_acl`. Non-compliant names may cause errors.
 * Added [databricks_spark_version](https://github.com/databrickslabs/terraform-provider-databricks/issues/347) data source.
 * Fixed support for [single node clusters](https://docs.databricks.com/clusters/single-node.html) support by allowing [`num_workers` to be `0`](https://github.com/databrickslabs/terraform-provider-databricks/pull/454).
-* All resource imports are now making call to corresponding Databricks API by default ([#471](https://github.com/databrickslabs/terraform-provider-databricks/issues/471))
+* Fixed bug in destruction of IP access lists ([#426](https://github.com/databrickslabs/terraform-provider-databricks/issues/426)).
+* All resource imports are now making call to corresponding Databricks API by default ([#471](https://github.com/databrickslabs/terraform-provider-databricks/issues/471)).
 
 **Behavior changes**
-
-* Added optional parameter `azure_environment` to provider config which defaults to `public`.
 * Removed deprecated `library_jar`, `library_egg`, `library_whl`, `library_pypi`, `library_cran`, and `library_maven` from `databricks_cluster` and `databricks_job` in favor of more API-transparent [library](https://registry.terraform.io/providers/databrickslabs/databricks/latest/docs/resources/cluster#library-configuration-block) configuration block.
 * Removed deprecated `notebook_path` and `notebook_base_parameters` from `databricks_job` in favor of [notebook_task](https://registry.terraform.io/providers/databrickslabs/databricks/latest/docs/resources/job#notebook_task-configuration-block) configuration block.
 * Removed deprecated `jar_uri`, `jar_main_class_name`, and `jar_parameters` from `databricks_job` in favor of [spark_jar_task](https://registry.terraform.io/providers/databrickslabs/databricks/latest/docs/resources/job#spark_jar_task-configuration-block) configuration block.
@@ -28,7 +30,7 @@
 * Removed deprecated `databricks_scim_group` resource in favor of [databricks_group](https://registry.terraform.io/providers/databrickslabs/databricks/latest/docs/resources/group).
 * Removed deprecated `databricks_default_user_roles` data source in favor of [databricks_group](https://registry.terraform.io/providers/databrickslabs/databricks/latest/docs/data-sources/group#attribute-reference) data source.
 * Removed deprecated `basic_auth` and `azure_auth` provider configuration blocks in favor of [documented authentication methods](https://registry.terraform.io/providers/databrickslabs/databricks/latest/docs).
-* `format`, `overwrite`, and `mkdirs` were removed from `databricks_notebook`. TODO: handle RESOURCE_ALREADY_EXISTS for mkdirs.
+* `format`, `overwrite`, and `mkdirs` were removed from `databricks_notebook`. To follow expected behavior of Terraform, notebooks are always overwritten.
 * `skip_validation` from `databricks_instance_profile` was removed and is always set to `true` for subsequent requests.
 * `databricks_mws_workspace` got `verify_workspace_runnning` removed and now validates all every deployment. In case deployment failed, it removes workspace that failed and returns error message with explanation.
 * `default_tags` were removed from `databricks_instance_pool`. `disk_spec` got new attribute `disk_type`, that contains `azure_disk_volume_type` and `ebs_volume_type`. This change is made to closer reflect API structure.

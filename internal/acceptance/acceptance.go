@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/databrickslabs/databricks-terraform/common"
+	"github.com/databrickslabs/databricks-terraform/compute"
 	"github.com/databrickslabs/databricks-terraform/internal"
 	"github.com/databrickslabs/databricks-terraform/internal/qa"
 	"github.com/databrickslabs/databricks-terraform/provider"
@@ -22,11 +23,21 @@ type Step struct {
 	Template string
 	Callback func(ctx context.Context, client *common.DatabricksClient, id string) error
 	Check    func(*terraform.State) error
+
+	Destroy                   bool
+	ExpectNonEmptyPlan        bool
+	ExpectError               *regexp.Regexp
+	PlanOnly                  bool
+	PreventDiskCleanup        bool
+	PreventPostDestroyRefresh bool
+	ImportState               bool
+	ImportStateVerify         bool
 }
 
 // Test wrapper over terraform testing framework
 func Test(t *testing.T, steps []Step, otherVars ...map[string]string) {
-	if _, ok := os.LookupEnv("CLOUD_ENV"); !ok {
+	cloudEnv := os.Getenv("CLOUD_ENV")
+	if cloudEnv == "" {
 		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
 	}
 	provider := provider.DatabricksProvider()
@@ -34,9 +45,18 @@ func Test(t *testing.T, steps []Step, otherVars ...map[string]string) {
 	if err != nil {
 		t.Skip(err.Error())
 	}
+	awsAttrs := ""
+	if cloudEnv == "AWS" {
+		awsAttrs = "aws_attributes {}"
+	}
+	instancePoolID := ""
+	if cloudEnv != "MWS" {
+		instancePoolID = compute.CommonInstancePoolID()
+	}
 	vars := map[string]string{
-		"CWD":    cwd,
-		"RANDOM": qa.RandomName("t"),
+		"CWD":                     cwd,
+		"AWS_ATTRIBUTES":          awsAttrs,
+		"COMMON_INSTANCE_POOL_ID": instancePoolID,
 	}
 	ts := []resource.TestStep{}
 	ctx := context.Background()
@@ -56,10 +76,20 @@ func Test(t *testing.T, steps []Step, otherVars ...map[string]string) {
 			stepConfig = qa.EnvironmentTemplate(t, s.Template, vars)
 		}
 		ts = append(ts, resource.TestStep{
-			Config: stepConfig,
+			Config:                    stepConfig,
+			Destroy:                   s.Destroy,
+			ExpectNonEmptyPlan:        s.ExpectNonEmptyPlan,
+			PlanOnly:                  s.PlanOnly,
+			PreventDiskCleanup:        s.PreventDiskCleanup,
+			PreventPostDestroyRefresh: s.PreventPostDestroyRefresh,
+			ImportState:               s.ImportState,
+			ImportStateVerify:         s.ImportStateVerify,
 			Check: func(state *terraform.State) error {
 				for n, is := range state.RootModule().Resources {
 					p := strings.Split(n, ".")
+					if p[0] == "data" {
+						continue
+					}
 					r := provider.ResourcesMap[p[0]]
 					resourcesEverCreated[testResource{
 						ID:       is.Primary.ID,
@@ -75,7 +105,9 @@ func Test(t *testing.T, steps []Step, otherVars ...map[string]string) {
 				}
 				if s.Callback != nil {
 					match := resourceAndName.FindStringSubmatch(stepConfig)
-					id := state.RootModule().Resources[match[0]+"."+match[1]].Primary.ID
+					rootModule := state.RootModule()
+					res := rootModule.Resources[match[1]+"."+match[2]]
+					id := res.Primary.ID
 					return s.Callback(ctx, client, id)
 				}
 				if s.Check != nil {

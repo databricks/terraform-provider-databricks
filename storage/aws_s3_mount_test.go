@@ -10,7 +10,6 @@ import (
 	"github.com/databrickslabs/databricks-terraform/compute"
 	"github.com/databrickslabs/databricks-terraform/identity"
 	"github.com/databrickslabs/databricks-terraform/internal"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -258,22 +257,31 @@ func TestResourceAwsS3MountDelete(t *testing.T) {
 func TestAwsAccS3Mount(t *testing.T) {
 	client := common.NewClientFromEnvironment()
 	instanceProfile := qa.GetEnvOrSkipTest(t, "TEST_EC2_INSTANCE_PROFILE")
-	ctx := context.Background()
-	identity.NewInstanceProfilesAPI(ctx, client).Synchronized(instanceProfile, func() {
+	ctx := context.WithValue(context.Background(), common.Current, t.Name())
+	instanceProfilesAPI := identity.NewInstanceProfilesAPI(ctx, client)
+	instanceProfilesAPI.Synchronized(instanceProfile, func() bool {
+		if err := instanceProfilesAPI.Create(instanceProfile); err != nil {
+			return false
+		}
 		bucket := qa.GetEnvOrSkipTest(t, "TEST_S3_BUCKET")
 		client := compute.CommonEnvironmentClientWithRealCommandExecutor()
 		clustersAPI := compute.NewClustersAPI(ctx, client)
-		randomName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
 		clusterInfo, err := getOrCreateMountingClusterWithInstanceProfile(
 			clustersAPI, instanceProfile)
 		require.NoError(t, err)
-
+		defer func() {
+			err = clustersAPI.PermanentDelete(clusterInfo.ClusterID)
+			assert.NoError(t, err)
+			err = instanceProfilesAPI.Delete(instanceProfile)
+			assert.NoError(t, err)
+		}()
 		testMounting(t, MountPoint{
 			exec:      client.CommandExecutor(ctx),
 			clusterID: clusterInfo.ClusterID,
-			name:      randomName,
+			name:      qa.RandomName("t"),
 		}, AWSIamMount{
 			S3BucketName: bucket,
 		})
+		return true
 	})
 }

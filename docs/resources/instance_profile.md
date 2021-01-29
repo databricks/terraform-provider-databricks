@@ -44,7 +44,6 @@ resource "aws_iam_instance_profile" "shared" {
 }
 resource "databricks_instance_profile" "shared" {
   instance_profile_arn = aws_iam_instance_profile.shared.arn
-  skip_validation      = false
 }
 resource "databricks_cluster" "this" {
   cluster_name            = "Shared Autoscaling"
@@ -76,7 +75,7 @@ resource "databricks_cluster_policy" "this" {
     # most likely policy might have way more things init.
     "aws_attributes.instance_profile_arn": {
       "type": "fixed",
-       "value": databricks_instance_profile.shared.arn
+      "value": databricks_instance_profile.shared.arn
     }
   })
 }
@@ -89,7 +88,6 @@ You can make instance profile available to all users by [associating it](group_i
 ```hcl
 resource "databricks_instance_profile" "this" {
   instance_profile_arn = aws_iam_instance_profile.shared.arn
-  skip_validation      = false
 }
 
 data "databricks_group" "users" {
@@ -107,7 +105,6 @@ resource "databricks_group_instance_profile" "all" {
 The following arguments are supported:
 
 * `instance_profile_arn` - (Required) `ARN` attribute of `aws_iam_instance_profile` output, the EC2 instance profile association to AWS IAM role.
-* `skip_validation` - (Required) whether or not to apply validation for. *In v0.3.x this field is going to be made optional with default value set to `false` and change in it would no longer trigger new resource*.
 
 ## Attribute Reference
 

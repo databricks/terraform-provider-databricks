@@ -5,39 +5,44 @@ The databricks_job resource allows you to create, edit, and delete jobs, which r
 ## Example Usage
 
 ```hcl
+data "databricks_current_user" "me" {}
+data "databricks_spark_version" "latest" {}
 data "databricks_node_type" "smallest" {
-    local_disk = true
+  local_disk = true
 }
 
-data "databricks_spark_version" "latest_lts" {
-  long_term_support = true
+resource "databricks_notebook" "this" {
+  path     = "${data.databricks_current_user.me.home}/Terraform"
+  language = "PYTHON"
+  content_base64 = base64encode(<<-EOT
+    # created from ${abspath(path.module)}
+    display(spark.range(10))
+    EOT
+  )
 }
 
 resource "databricks_job" "this" {
-    name = "Featurization"
-    timeout_seconds = 3600
-    max_retries = 1
-    max_concurrent_runs = 1
-    
-    new_cluster  {
-        num_workers   = 300
-        spark_version = data.databricks_spark_version.latest_lts.id
-        node_type_id  = data.databricks_node_type.smallest.id
-    }
-    
-    notebook_task {
-        notebook_path = "/Production/MakeFeatures"
-    }
-    
-    library {
-        pypi {
-            package = "fbprophet==0.6"
-        }
-    }
-    
-    email_notifications {
-        no_alert_for_skipped_runs = true
-    }
+  name = "Terraform Demo (${data.databricks_current_user.me.alphanumeric})"
+
+  new_cluster {
+    num_workers   = 1
+    spark_version = data.databricks_spark_version.latest.id
+    node_type_id  = data.databricks_node_type.smallest.id
+  }
+
+  notebook_task {
+    notebook_path = databricks_notebook.this.path
+  }
+
+  email_notifications {}
+}
+
+output "notebook_url" {
+  value = databricks_notebook.this.url
+}
+
+output "job_url" {
+  value = databricks_job.this.url
 }
 ```
 

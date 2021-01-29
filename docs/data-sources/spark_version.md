@@ -1,6 +1,6 @@
 # databricks_spark_version Data Source
 
-Gets Databricks Runtime (DBR) version that could be used for `spark_version` parameter in [databricks_cluster](../resources/cluster.md) and other resources that fits search criteria, like specific Spark or Scala version, ML or Genomics runtime, etc., similar to executing `databricks clusters spark-versions`, and filters it to return the latest version that matches criteria.
+Gets Databricks Runtime (DBR) version that could be used for `spark_version` parameter in [databricks_cluster](../resources/cluster.md) and other resources that fits search criteria, like specific Spark or Scala version, ML or Genomics runtime, etc., similar to executing `databricks clusters spark-versions`, and filters it to return the latest version that matches criteria. Often used along [databricks_node_type](node_type.md) data source.
 
 -> **Note** This is experimental functionality, which aims to simplify things. In case of wrong parameters given (e.g. together `ml = true` and `genomics = true`, or something like), data source will throw an error.  Similarly, if search returns multiple results, and `latest = false`, data source will throw an error.
 

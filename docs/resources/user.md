@@ -1,6 +1,6 @@
 # databricks_user Resource
 
-Directly creates a user, that could be added to [databricks_group](group.md) within the workspace. Upon user creation the user will receive a password reset email.
+Directly creates a user, that could be added to [databricks_group](group.md) within the workspace. Upon user creation the user will receive a password reset email. You can also get information about caller identity using [databricks_current_user](../data-sources/current_user.md) data source.
 
 ## Example Usage
 

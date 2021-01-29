@@ -18,6 +18,7 @@ type CommonResource struct {
 	StateUpgraders []schema.StateUpgrader
 	Schema         map[string]*schema.Schema
 	SchemaVersion  int
+	Timeouts       *schema.ResourceTimeout
 }
 
 // ToResource converts to Terraform resource definition
@@ -96,5 +97,6 @@ func (r CommonResource) ToResource() *schema.Resource {
 				return []*schema.ResourceData{d}, err
 			},
 		},
+		Timeouts: r.Timeouts,
 	}
 }

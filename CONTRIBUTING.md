@@ -17,6 +17,14 @@ Contributing to Databricks Terraform Provider
 
 We happily welcome contributions to databricks-terraform. We use GitHub Issues to track community reported issues and GitHub Pull Requests for accepting changes.
 
+## Installing for Terraform 0.12
+
+If you use Terraform 0.12, please execute the following curl command in your shell:
+
+```bash
+curl https://raw.githubusercontent.com/databrickslabs/databricks-terraform/master/godownloader-databricks-provider.sh | bash -s -- -b $HOME/.terraform.d/plugins
+```
+
 ## Installing from source
 
 The following command (tested on Ubuntu 20.04) will install `make`, `golang`, `git` with all of the dependent packages as well as Databricks Terrafrom provider from sources. Required version of GoLang is at least 1.13. Required version of terraform is at least 0.12. 
@@ -27,19 +35,6 @@ On MacOS X, you can install GoLang through `brew install go`, on Debian-based Li
 git clone https://github.com/databrickslabs/terraform-provider-databricks.git
 cd terraform-provider-databricks
 make install
-```
-
-Now your plugin for the Databricks Terraform provider is installed correctly. If you have Terraform 0.13, you'd need to paste configuration that might look like the following one into your `main.tf`:
-
-```hcl
-terraform {
-  required_providers {
-    databricks = {
-      source = "databrickslabs/databricks"
-      version = "0.2.3-22-gd91b475"
-    }
-  }
-}
 ```
 
 Most likely, `terraform init -upgrade -verify-plugins=false -lock=false` would be a very great command to use.

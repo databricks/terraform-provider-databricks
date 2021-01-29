@@ -166,7 +166,7 @@ Alternatively, you can provide this value as an environment variable `DATABRICKS
 
 ## Special configurations for Azure
 
-To work with Azure Databricks workspace, the provider must know its `id` (or construct it from `azure_subscription_id`, `azure_workspace_name` and `azure_workspace_name`). The provider works with [Azure CLI authentication](https://docs.microsoft.com/en-us/cli/azure/authenticate-azure-cli?view=azure-cli-latest) to facilitate local development workflows, though for automated scenarios a service principal auth is necessary (and specification of `azure_client_id`, `azure_client_secret` and `azure_tenant_id` parameters).
+To work with Azure Databricks workspace, the provider must know its `azure_workspace_resource_id` (or construct it from `azure_subscription_id`, `azure_resource_group` and `azure_workspace_name`). The provider works with [Azure CLI authentication](https://docs.microsoft.com/en-us/cli/azure/authenticate-azure-cli?view=azure-cli-latest) to facilitate local development workflows, though for automated scenarios a service principal auth is necessary (and specification of `azure_client_id`, `azure_client_secret` and `azure_tenant_id` parameters).
 
 ### Authenticating with Azure Service Principal
 

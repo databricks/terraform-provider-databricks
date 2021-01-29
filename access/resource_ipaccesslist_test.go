@@ -3,12 +3,15 @@ package access
 // REST API: https://docs.databricks.com/dev-tools/api/latest/ip-access-list.html#operation/create-list
 
 import (
+	"context"
 	"net/http"
+	"os"
 	"testing"
 
 	"github.com/databrickslabs/databricks-terraform/common"
 	"github.com/databrickslabs/databricks-terraform/internal/qa"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 var (
@@ -20,6 +23,36 @@ var (
 	TestingIPAddresses      = []string{"1.2.3.4", "1.2.4.0/24"}
 	TestingIPAddressesState = []interface{}{"1.2.3.4", "1.2.4.0/24"}
 )
+
+func TestAccIPACL(t *testing.T) {
+	cloud := os.Getenv("CLOUD_ENV")
+	if cloud == "" {
+		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
+	}
+	client := common.NewClientFromEnvironment()
+	ctx := context.Background()
+	ipAccessListsAPI := NewIPAccessListsAPI(ctx, client)
+	res, err := ipAccessListsAPI.Create(createIPAccessListRequest{
+		Label:       qa.RandomName("ipacl-"),
+		ListType:    "BLOCK",
+		IPAddresses: TestingIPAddresses,
+	})
+	require.NoError(t, err)
+	defer func() {
+		err = ipAccessListsAPI.Delete(res.ListID)
+		require.NoError(t, err)
+	}()
+	err = ipAccessListsAPI.Update(res.ListID, ipAccessListUpdateRequest{
+		Label:       res.Label,
+		ListType:    res.ListType,
+		Enabled:     true,
+		IPAddresses: []string{"4.3.2.1"},
+	})
+	require.NoError(t, err)
+	updated, err := ipAccessListsAPI.Read(res.ListID)
+	require.NoError(t, err)
+	assert.Equal(t, "4.3.2.1", updated.IPAddresses[0])
+}
 
 func TestIPACLCreate(t *testing.T) {
 	d, err := qa.ResourceFixture{

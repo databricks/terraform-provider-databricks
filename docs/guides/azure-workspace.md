@@ -64,7 +64,7 @@ output "databricks_host" {
 
 ## Provider configuration
 
-In [the next step](workspace-management.md), please use the following configuration for the provider:
+In [the next step](workspace-management.md), please use the [special configurations for Azure](../index.md#special-configurations-for-azure):
 
 ```hcl
 provider "databricks" {

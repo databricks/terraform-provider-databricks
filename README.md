@@ -2,7 +2,11 @@
 
 ![Resources](docs/resources.png)
 
-End-to-end workspace creation on [AWS](scripts/awsmt-integration) or [Azure](scripts/azvnet-integration/databricks.tf)
+[AWS](docs/guides/aws-workspace.md) tutorial
+| [Azure](docs/guides/azure-workspace.md) tutorial
+| [End-to-end](docs/guides/workspace-management.md) tutorial
+| Migration from [0.2.x to 0.3.x](docs/guides/migration-0.3.x.md)
+| [Changelog](CHANGELOG.md)
 | [Authentication](docs/index.md)
 | [databricks_aws_s3_mount](docs/resources/aws_s3_mount.md)
 | [databricks_aws_assume_role_policy](docs/data-sources/aws_assume_role_policy.md) data
@@ -13,6 +17,7 @@ End-to-end workspace creation on [AWS](scripts/awsmt-integration) or [Azure](scr
 | [databricks_azure_blob_mount](docs/resources/azure_blob_mount.md)
 | [databricks_cluster](docs/resources/cluster.md)
 | [databricks_cluster_policy](docs/resources/cluster_policy.md)
+| [databricks_current_user](docs/data-sources/current_user.md)
 | [databricks_dbfs_file](docs/resources/dbfs_file.md)
 | [databricks_dbfs_file_paths](docs/data-sources/dbfs_file_paths.md) data
 | [databricks_dbfs_file](docs/data-sources/dbfs_file.md) data
@@ -44,7 +49,6 @@ End-to-end workspace creation on [AWS](scripts/awsmt-integration) or [Azure](scr
 | [databricks_user_instance_profile](docs/resources/user_instance_profile.md)
 | [databricks_workspace_conf](docs/resources/workspace_conf.md)
 | [Contributing and Development Guidelines](CONTRIBUTING.md)
-| [Changelog](CHANGELOG.md)
 
 [![build](https://github.com/databrickslabs/terraform-provider-databricks/workflows/build/badge.svg?branch=master)](https://github.com/databrickslabs/terraform-provider-databricks/actions?query=workflow%3Abuild+branch%3Amaster) [![codecov](https://codecov.io/gh/databrickslabs/terraform-provider-databricks/branch/master/graph/badge.svg)](https://codecov.io/gh/databrickslabs/terraform-provider-databricks)
 
@@ -75,24 +79,44 @@ provider "databricks" {
   token = "<your PAT token>"
 }
 
+data "databricks_current_user" "me" {}
+data "databricks_spark_version" "latest" {}
 data "databricks_node_type" "smallest" {
   local_disk = true
 }
 
-data "databricks_spark_version" "latest_lts" {
-  long_term_support = true
+resource "databricks_notebook" "this" {
+  path     = "${data.databricks_current_user.me.home}/Terraform"
+  language = "PYTHON"
+  content_base64 = base64encode(<<-EOT
+    # created from ${abspath(path.module)}
+    display(spark.range(10))
+    EOT
+  )
 }
 
-resource "databricks_cluster" "shared_autoscaling" {
-  cluster_name            = "Shared Autoscaling"
-  spark_version           = data.databricks_spark_version.latest_lts.id
-  node_type_id            = data.databricks_node_type.smallest.id
-  autotermination_minutes = 20
+resource "databricks_job" "this" {
+  name = "Terraform Demo (${data.databricks_current_user.me.alphanumeric})"
 
-  autoscale {
-    min_workers = 1
-    max_workers = 50
+  new_cluster {
+    num_workers   = 1
+    spark_version = data.databricks_spark_version.latest.id
+    node_type_id  = data.databricks_node_type.smallest.id
   }
+
+  notebook_task {
+    notebook_path = databricks_notebook.this.path
+  }
+
+  email_notifications {}
+}
+
+output "notebook_url" {
+  value = databricks_notebook.this.url
+}
+
+output "job_url" {
+  value = databricks_job.this.url
 }
 ```
 

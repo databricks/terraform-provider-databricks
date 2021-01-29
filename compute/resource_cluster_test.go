@@ -1044,3 +1044,21 @@ func TestResourceClusterUpdate_FailNumWorkersZero(t *testing.T) {
 	assert.Error(t, err, err)
 	require.Equal(t, true, strings.Contains(err.Error(), "NumWorkers could be 0 only for SingleNode clusters"))
 }
+
+func TestModifyClusterRequest(t *testing.T) {
+	c := Cluster{
+		InstancePoolID: "a",
+		AwsAttributes: &AwsAttributes{
+			InstanceProfileArn: "b",
+			ZoneID:             "c",
+		},
+		EnableElasticDisk: true,
+		NodeTypeID:        "d",
+		DriverNodeTypeID:  "e",
+	}
+	modifyClusterRequest(&c)
+	assert.Equal(t, "", c.AwsAttributes.ZoneID)
+	assert.Equal(t, "", c.NodeTypeID)
+	assert.Equal(t, "", c.DriverNodeTypeID)
+	assert.Equal(t, false, c.EnableElasticDisk)
+}

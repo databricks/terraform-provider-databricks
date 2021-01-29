@@ -112,7 +112,6 @@ resource "aws_iam_instance_profile" "this" {
 // Step 13: Register instance profile at Databricks
 resource "databricks_instance_profile" "ds" {
   instance_profile_arn = aws_iam_instance_profile.this.arn
-  skip_validation      = false
 }
 
 // Step 14: now you can do `%fs ls /mnt/experiments` in notebooks

@@ -37,6 +37,11 @@ func RandomLongName() string {
 	return "Terraform Integration Test " + acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
 }
 
+// RandomEmail generates random email
+func RandomEmail() string {
+	return fmt.Sprintf("%s@example.com", RandomName("tf"))
+}
+
 // RandomName gives random name with optional prefix. e.g. qa.RandomName("tf-")
 func RandomName(prefix ...string) string {
 	randLen := 12
@@ -379,7 +384,7 @@ func fixHCL(v interface{}) interface{} {
 // For writing a unit test to intercept the errors (t.Fatalf literally ends the test in failure)
 func environmentTemplate(t *testing.T, template string, otherVars ...map[string]string) (string, error) {
 	vars := map[string]string{
-		"RANDOM": acctest.RandStringFromCharSet(5, acctest.CharSetAlphaNum),
+		"RANDOM": RandomName("t"),
 	}
 	if len(otherVars) > 1 {
 		return "", errors.New("Cannot have more than one customer variable map")
@@ -430,7 +435,7 @@ func FirstKeyValue(t *testing.T, str, key string) string {
 	r := regexp.MustCompile(key + `\s+=\s+"([^"]*)"`)
 	match := r.FindStringSubmatch(str)
 	if len(match) != 2 {
-		t.Fatalf("Cannot find %s in given string", key)
+		t.Fatalf("Cannot fin	d %s in given string", key)
 	}
 	return match[1]
 }

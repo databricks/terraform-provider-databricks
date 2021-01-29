@@ -2,6 +2,7 @@ package workspace
 
 import (
 	"bufio"
+	"context"
 	"crypto/md5"
 	"encoding/base64"
 	"fmt"
@@ -18,21 +19,24 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
-// ReadContent to work with `content_base64` and `source` properties accordingly
+func readFileContent(s interface{}) (content []byte, err error) {
+	source := s.(string)
+	log.Printf("[INFO] Reading %s", source)
+	f, err := os.Open(source)
+	if err != nil {
+		return
+	}
+	// TODO: size error
+	defer f.Close()
+	reader := bufio.NewReader(f)
+	return ioutil.ReadAll(reader)
+}
+
+// ReadContent to work with `content_base64` and `source` properties accordingly and set MD5 checksum
 func ReadContent(d *schema.ResourceData) (content []byte, err error) {
 	b64 := d.Get("content_base64").(string)
-	source := d.Get("source").(string)
 	if b64 == "" {
-		log.Printf("[INFO] Reading %s", source)
-		f, rre := os.Open(source)
-		if rre != nil {
-			err = rre
-			return
-		}
-		// TODO: size error
-		defer f.Close()
-		reader := bufio.NewReader(f)
-		content, err = ioutil.ReadAll(reader)
+		content, err = readFileContent(d.Get("source"))
 	} else {
 		log.Printf("[INFO] Reading `content_base64` of %d bytes", len(b64))
 		content, err = base64.StdEncoding.DecodeString(b64)
@@ -44,6 +48,39 @@ func ReadContent(d *schema.ResourceData) (content []byte, err error) {
 	d.Set("md5", fmt.Sprintf("%x", md5.Sum(content)))
 	log.Printf("[INFO] Setting file content hash to %s", d.Get("md5"))
 	return
+}
+
+// MigrateV0 migrates from version 0.2.x state
+func MigrateV0(ctx context.Context,
+	rawState map[string]interface{},
+	meta interface{}) (map[string]interface{}, error) {
+	newState := map[string]interface{}{}
+	for k, v := range rawState {
+		switch k {
+		case "overwrite", "mkdirs", "validate_remote_file", "content_b64_md5":
+			log.Printf("[INFO] Migrated from v0.2.x and removed %s from databricks_dbfs_file", k)
+			continue
+		case "source":
+			newState["source"] = v
+			if v != nil {
+				if content, err := readFileContent(v); err == nil {
+					newState["md5"] = fmt.Sprintf("%x", md5.Sum(content))
+					log.Printf("[INFO] State of %s file is migrated from v0.2.x", newState["md5"])
+				}
+			}
+		case "content":
+			newState["content_base64"] = v
+			if v != nil {
+				if content, err := base64.StdEncoding.DecodeString(v.(string)); err == nil {
+					newState["md5"] = fmt.Sprintf("%x", md5.Sum(content))
+					log.Printf("[INFO] State of %s direct content is migrated from v0.2.x", newState["md5"])
+				}
+			}
+		default:
+			newState[k] = v
+		}
+	}
+	return newState, nil
 }
 
 // FileContentSchema returns common schema for file resources

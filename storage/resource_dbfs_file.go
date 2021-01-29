@@ -12,7 +12,7 @@ import (
 // ResourceDBFSFile manages files on DBFS
 func ResourceDBFSFile() *schema.Resource {
 	return util.CommonResource{
-		SchemaVersion: 2,
+		SchemaVersion: 1,
 		Schema: workspace.FileContentSchema(map[string]*schema.Schema{
 			"file_size": {
 				Type:     schema.TypeInt,
@@ -44,6 +44,13 @@ func ResourceDBFSFile() *schema.Resource {
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			return NewDbfsAPI(ctx, c).Delete(d.Id(), false)
+		},
+		StateUpgraders: []schema.StateUpgrader{
+			{
+				Version: 0,
+				Type:    DbfsFileV0(),
+				Upgrade: workspace.MigrateV0,
+			},
 		},
 	}.ToResource()
 }

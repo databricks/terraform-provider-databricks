@@ -4,10 +4,12 @@ import "context"
 
 var (
 	version = "0.3.0"
-	// ResourceName ...
+	// ResourceName is resource name without databricks_ prefix
 	ResourceName contextKey = 1
-	// TerraformVersion ...
-	TerraformVersion contextKey = 2
+	// Provider is the current instance of provider
+	Provider contextKey = 2
+	// Current is the current name of integration test
+	Current contextKey = 3
 )
 
 type contextKey int

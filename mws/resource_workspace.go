@@ -16,6 +16,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
+// DefaultProvisionTimeout is the amount of minutes terraform will wait
+// for workspace to be provisioned and DNS entry to be available. Increasing
+// this may help with local DNS cache issues.
+const DefaultProvisionTimeout = 20 * time.Minute
+
 // NewWorkspacesAPI creates MWSWorkspacesAPI instance from provider meta
 func NewWorkspacesAPI(ctx context.Context, m interface{}) WorkspacesAPI {
 	return WorkspacesAPI{m.(*common.DatabricksClient), ctx}
@@ -28,13 +33,13 @@ type WorkspacesAPI struct {
 }
 
 // Create creates the workspace creation process
-func (a WorkspacesAPI) Create(ws *Workspace) error {
+func (a WorkspacesAPI) Create(ws *Workspace, timeout time.Duration) error {
 	workspacesAPIPath := fmt.Sprintf("/accounts/%s/workspaces", ws.AccountID)
 	err := a.client.Post(a.context, workspacesAPIPath, ws, &ws)
 	if err != nil {
 		return err
 	}
-	if err = a.waitForRunning(*ws, 15*time.Minute); err != nil {
+	if err = a.waitForRunning(*ws, timeout); err != nil {
 		log.Printf("[ERROR] Deleting failed workspace: %s", err)
 		if derr := a.Delete(ws.AccountID, fmt.Sprintf("%d", ws.WorkspaceID)); derr != nil {
 			return fmt.Errorf("%s - %s", err, derr)
@@ -45,7 +50,7 @@ func (a WorkspacesAPI) Create(ws *Workspace) error {
 }
 
 func dial(hostAndPort, url string, timeout time.Duration) *resource.RetryError {
-	conn, err := net.DialTimeout("tcp", hostAndPort, 1*time.Minute)
+	conn, err := net.DialTimeout("tcp", hostAndPort, timeout)
 	if err != nil {
 		return resource.RetryableError(err)
 	}
@@ -73,7 +78,7 @@ func (a WorkspacesAPI) waitForRunning(ws Workspace, timeout time.Duration) error
 				// so we'll use it as unit testing shim
 				return nil
 			}
-			return dial(hostAndPort, url, 1*time.Minute)
+			return dial(hostAndPort, url, 10*time.Second)
 		case WorkspaceStatusCanceled, WorkspaceStatusFailed:
 			log.Printf("[ERROR] Cannot start workspace: %s", workspace.WorkspaceStatusMessage)
 			if workspace.NetworkID == "" {
@@ -101,7 +106,7 @@ func (a WorkspacesAPI) waitForRunning(ws Workspace, timeout time.Duration) error
 }
 
 // Patch will relaunch the workspace deployment
-func (a WorkspacesAPI) Patch(ws Workspace) error {
+func (a WorkspacesAPI) Patch(ws Workspace, timeout time.Duration) error {
 	workspacesAPIPath := fmt.Sprintf("/accounts/%s/workspaces/%d", ws.AccountID, ws.WorkspaceID)
 	err := a.client.Patch(a.context, workspacesAPIPath, Workspace{
 		AwsRegion:              ws.AwsRegion,
@@ -114,7 +119,7 @@ func (a WorkspacesAPI) Patch(ws Workspace) error {
 	if err != nil {
 		return err
 	}
-	return a.waitForRunning(ws, 10*time.Minute)
+	return a.waitForRunning(ws, timeout)
 }
 
 // Read will return the mws workspace metadata and status of the workspace deployment
@@ -189,7 +194,7 @@ func ResourceWorkspace() *schema.Resource {
 			if err := internal.DataToStructPointer(d, s, &workspace); err != nil {
 				return err
 			}
-			if err := workspacesAPI.Create(&workspace); err != nil {
+			if err := workspacesAPI.Create(&workspace, d.Timeout(schema.TimeoutCreate)); err != nil {
 				return err
 			}
 			d.Set("workspace_id", workspace.WorkspaceID)
@@ -210,7 +215,7 @@ func ResourceWorkspace() *schema.Resource {
 			if err = internal.StructToData(workspace, s, d); err != nil {
 				return err
 			}
-			return workspacesAPI.waitForRunning(workspace, 10*time.Minute)
+			return workspacesAPI.waitForRunning(workspace, d.Timeout(schema.TimeoutRead))
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var workspace Workspace
@@ -218,7 +223,7 @@ func ResourceWorkspace() *schema.Resource {
 			if err := internal.DataToStructPointer(d, s, &workspace); err != nil {
 				return err
 			}
-			return workspacesAPI.Patch(workspace)
+			return workspacesAPI.Patch(workspace, d.Timeout(schema.TimeoutUpdate))
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			accountID, workspaceID, err := p.Unpack(d)
@@ -226,6 +231,11 @@ func ResourceWorkspace() *schema.Resource {
 				return err
 			}
 			return NewWorkspacesAPI(ctx, c).Delete(accountID, workspaceID)
+		},
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(DefaultProvisionTimeout),
+			Read:   schema.DefaultTimeout(DefaultProvisionTimeout),
+			Update: schema.DefaultTimeout(DefaultProvisionTimeout),
 		},
 	}.ToResource()
 }

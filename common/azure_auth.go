@@ -69,18 +69,19 @@ type TokenInfo struct {
 var authorizerMutex sync.Mutex
 
 func (aa *AzureAuth) getAzureEnvironment() (azure.Environment, error) {
+	// Used for unit testing purposes
+	if aa.azureManagementEndpoint != "" {
+		return azure.Environment{
+			ResourceManagerEndpoint: aa.azureManagementEndpoint,
+		}, nil
+	}
+
 	if aa.Environment == "" {
 		return azure.PublicCloud, nil
 	}
 
 	envName := fmt.Sprintf("AZURE%sCLOUD", strings.ToUpper(aa.Environment))
-	env, err := azure.EnvironmentFromName(envName)
-
-	if err != nil {
-		return env, err
-	}
-
-	return env, nil
+	return azure.EnvironmentFromName(envName)
 }
 
 func (aa *AzureAuth) resourceID() string {
@@ -276,14 +277,15 @@ func (aa *AzureAuth) ensureWorkspaceURL(ctx context.Context,
 		return fmt.Errorf("Somehow resource id is not set")
 	}
 	log.Println("[DEBUG] Getting Workspace ID via management token.")
-	endpoint := "https://management.azure.com"
-	if aa.azureManagementEndpoint != "" {
-		// sets endpoint specified in unit test
-		endpoint = aa.azureManagementEndpoint
+	env, err := aa.getAzureEnvironment()
+	if err != nil {
+		return err
 	}
+	// All azure endpoints typically end with a trailing slash removing it because resourceID starts with slash
+	managementResourceUrl := strings.TrimSuffix(env.ResourceManagerEndpoint, "/") + resourceID
 	var workspace azureDatabricksWorkspace
 	resp, err := aa.databricksClient.genericQuery(ctx, http.MethodGet,
-		endpoint+resourceID,
+		managementResourceUrl,
 		map[string]string{
 			"api-version": "2018-04-01",
 		}, func(r *http.Request) error {

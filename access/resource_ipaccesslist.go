@@ -75,7 +75,7 @@ func (a ipAccessListsAPI) Update(objectID string, ur ipAccessListUpdateRequest) 
 }
 
 func (a ipAccessListsAPI) Delete(objectID string) (err error) {
-	err = a.client.Delete(a.context, "/ip-access-lists/"+objectID, nil)
+	err = a.client.Delete(a.context, "/ip-access-lists/"+objectID, map[string]interface{}{})
 	return
 }
 

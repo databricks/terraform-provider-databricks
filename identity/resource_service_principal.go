@@ -96,13 +96,6 @@ func (a ServicePrincipalsAPI) UpdateR(servicePrincipalID string, rsp ServicePrin
 		updateRequest, nil)
 }
 
-// PatchR updates resource-friendly entity
-func (a ServicePrincipalsAPI) PatchR(servicePrincipalID string, r patchRequest) error {
-	return a.client.Scim(a.context, "PATCH",
-		fmt.Sprintf("/preview/scim/v2/ServicePrincipals/%v",
-			servicePrincipalID), r, nil)
-}
-
 // Delete will delete the servicePrincipal given the servicePrincipal id
 func (a ServicePrincipalsAPI) Delete(servicePrincipalID string) error {
 	servicePrincipalPath := fmt.Sprintf("/preview/scim/v2/ServicePrincipals/%v", servicePrincipalID)

@@ -12,13 +12,13 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestMwsAccVPCEndpoint(t *testing.T) {
+func TestMwsAccVPCEndpointIntegration(t *testing.T) {
 	cloudEnv := os.Getenv("CLOUD_ENV")
 	if cloudEnv != "MWS" {
 		t.Skip("Cannot run test on non-MWS environment")
 	}
 	acctID := qa.GetEnvOrSkipTest(t, "DATABRICKS_ACCOUNT_ID")
-	awsvreID := qa.GetEnvOrSkipTest(t, "TEST_RELAY_VPC_ENDPOINT")
+	awsvreID := qa.GetEnvOrSkipTest(t, "TEST_REST_API_VPC_ENDPOINT")
 	awsRegion := qa.GetEnvOrSkipTest(t, "TEST_REGION")
 	client := common.CommonEnvironmentClient()
 	ctx := context.Background()

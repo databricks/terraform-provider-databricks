@@ -25,10 +25,10 @@ func DatabricksProvider() *schema.Provider {
 			"databricks_aws_crossaccount_policy": access.DataAwsCrossAccountRolicy(),
 			"databricks_aws_assume_role_policy":  access.DataAwsAssumeRolePolicy(),
 			"databricks_aws_bucket_policy":       access.DataAwsBucketPolicy(),
+			"databricks_current_user":            identity.DataSourceCurrentUser(),
 			"databricks_dbfs_file":               storage.DataSourceDBFSFile(),
 			"databricks_dbfs_file_paths":         storage.DataSourceDBFSFilePaths(),
 			"databricks_group":                   identity.DataSourceGroup(),
-			"databricks_me":                      identity.DataSourceMe(),
 			"databricks_node_type":               compute.DataSourceNodeType(),
 			"databricks_notebook":                workspace.DataSourceNotebook(),
 			"databricks_notebook_paths":          workspace.DataSourceNotebookPaths(),
@@ -204,7 +204,7 @@ func DatabricksProvider() *schema.Provider {
 				Optional:    true,
 				Type:        schema.TypeInt,
 				Description: "Truncate JSON fields in JSON above this limit. Default is 96. Visible only when TF_LOG=DEBUG is set",
-				DefaultFunc: schema.EnvDefaultFunc("DATABRICKS_DEBUG_TRUNCATE_BYTES", common.DebugTruncateBytes),
+				DefaultFunc: schema.EnvDefaultFunc("DATABRICKS_DEBUG_TRUNCATE_BYTES", common.DefaultTruncateBytes),
 			},
 			"debug_headers": {
 				Optional:    true,
@@ -215,115 +215,121 @@ func DatabricksProvider() *schema.Provider {
 			"rate_limit": {
 				Optional:    true,
 				Type:        schema.TypeInt,
-				Description: "Maximum number of requests per minute made to Databricks REST API by Terraform.",
-				DefaultFunc: schema.EnvDefaultFunc("DATABRICKS_RATE_LIMIT", common.DefaultRateLimit),
+				Description: "Maximum number of requests per second made to Databricks REST API by Terraform.",
+				DefaultFunc: schema.EnvDefaultFunc("DATABRICKS_RATE_LIMIT", common.DefaultRateLimitPerSecond),
 			},
 		},
-		ConfigureContextFunc: func(c context.Context, d *schema.ResourceData) (interface{}, diag.Diagnostics) {
-			pc := common.DatabricksClient{}
-
-			authsUsed := map[string]bool{}
-			if host, ok := d.GetOk("host"); ok {
-				pc.Host = host.(string)
-			}
-			if token, ok := d.GetOk("token"); ok {
-				authsUsed["token"] = true
-				pc.Token = token.(string)
-			}
-			if v, ok := d.GetOk("username"); ok {
-				authsUsed["password"] = true
-				pc.Username = v.(string)
-			}
-			if v, ok := d.GetOk("password"); ok {
-				authsUsed["password"] = true
-				pc.Password = v.(string)
-			}
-			if v, ok := d.GetOk("profile"); ok {
-				authsUsed["config profile"] = true
-				pc.Profile = v.(string)
-			}
-			if v, ok := d.GetOk("config_file"); ok {
-				authsUsed["config profile"] = true
-				pc.ConfigFile = v.(string)
-			}
-			if _, ok := d.GetOk("basic_auth"); ok {
-				authsUsed["password"] = true
-				username, userOk := d.GetOk("basic_auth.0.username")
-				password, passOk := d.GetOk("basic_auth.0.password")
-				if userOk && passOk {
-					pc.Username = fmt.Sprintf("%s", username)
-					pc.Password = fmt.Sprintf("%s", password)
-				}
-			}
-			if v, ok := d.GetOk("azure_workspace_resource_id"); ok {
-				authsUsed["azure"] = true
-				pc.AzureAuth.ResourceID = v.(string)
-			}
-			if v, ok := d.GetOk("azure_workspace_name"); ok {
-				authsUsed["azure"] = true
-				pc.AzureAuth.WorkspaceName = v.(string)
-			}
-			if v, ok := d.GetOk("azure_resource_group"); ok {
-				authsUsed["azure"] = true
-				pc.AzureAuth.ResourceGroup = v.(string)
-			}
-			if v, ok := d.GetOk("azure_subscription_id"); ok {
-				authsUsed["azure"] = true
-				pc.AzureAuth.SubscriptionID = v.(string)
-			}
-			if v, ok := d.GetOk("azure_client_secret"); ok {
-				authsUsed["azure"] = true
-				pc.AzureAuth.ClientSecret = v.(string)
-			}
-			if v, ok := d.GetOk("azure_client_id"); ok {
-				authsUsed["azure"] = true
-				pc.AzureAuth.ClientID = v.(string)
-			}
-			if v, ok := d.GetOk("azure_tenant_id"); ok {
-				authsUsed["azure"] = true
-				pc.AzureAuth.TenantID = v.(string)
-			}
-			if v, ok := d.GetOk("azure_pat_token_duration_seconds"); ok {
-				pc.AzureAuth.PATTokenDurationSeconds = v.(string)
-			}
-			if v, ok := d.GetOk("skip_verify"); ok {
-				pc.InsecureSkipVerify = v.(bool)
-			}
-			if v, ok := d.GetOk("debug_truncate_bytes"); ok {
-				pc.DebugTruncateBytes = v.(int)
-			}
-			if v, ok := d.GetOk("rate_limit"); ok {
-				pc.RateLimit = v.(int)
-			}
-			if v, ok := d.GetOk("debug_headers"); ok {
-				pc.DebugHeaders = v.(bool)
-			}
-			if v, ok := d.GetOk("azure_use_pat_for_cli"); ok {
-				pc.AzureAuth.UsePATForCLI = v.(bool)
-			}
-			if v, ok := d.GetOk("azure_environment"); ok {
-				pc.AzureAuth.Environment = v.(string)
-			}
-			authorizationMethodsUsed := []string{}
-			for name, used := range authsUsed {
-				if used {
-					authorizationMethodsUsed = append(authorizationMethodsUsed, name)
-				}
-			}
-			if len(authorizationMethodsUsed) > 1 {
-				sort.Strings(authorizationMethodsUsed)
-				return nil, diag.Errorf("More than one authorization method configured: %s",
-					strings.Join(authorizationMethodsUsed, " and "))
-			}
-			if err := pc.Configure(); err != nil {
-				return nil, diag.FromErr(err)
-			}
-			pc.WithCommandExecutor(func(ctx context.Context, client *common.DatabricksClient) common.CommandExecutor {
-				return compute.NewCommandsAPI(ctx, client)
-			})
-			return &pc, nil
-		},
+	}
+	p.ConfigureContextFunc = func(ctx context.Context, d *schema.ResourceData) (interface{}, diag.Diagnostics) {
+		ctx = context.WithValue(ctx, common.Provider, p)
+		return configureDatabricksClient(ctx, d)
 	}
 	addContextToAllResources(p)
 	return p
+}
+
+func configureDatabricksClient(ctx context.Context, d *schema.ResourceData) (interface{}, diag.Diagnostics) {
+	pc := common.DatabricksClient{
+		Provider: ctx.Value(common.Provider).(*schema.Provider),
+	}
+	authsUsed := map[string]bool{}
+	if host, ok := d.GetOk("host"); ok {
+		pc.Host = host.(string)
+	}
+	if token, ok := d.GetOk("token"); ok {
+		authsUsed["token"] = true
+		pc.Token = token.(string)
+	}
+	if v, ok := d.GetOk("username"); ok {
+		authsUsed["password"] = true
+		pc.Username = v.(string)
+	}
+	if v, ok := d.GetOk("password"); ok {
+		authsUsed["password"] = true
+		pc.Password = v.(string)
+	}
+	if v, ok := d.GetOk("profile"); ok {
+		authsUsed["config profile"] = true
+		pc.Profile = v.(string)
+	}
+	if v, ok := d.GetOk("config_file"); ok {
+		authsUsed["config profile"] = true
+		pc.ConfigFile = v.(string)
+	}
+	if _, ok := d.GetOk("basic_auth"); ok {
+		authsUsed["password"] = true
+		username, userOk := d.GetOk("basic_auth.0.username")
+		password, passOk := d.GetOk("basic_auth.0.password")
+		if userOk && passOk {
+			pc.Username = fmt.Sprintf("%s", username)
+			pc.Password = fmt.Sprintf("%s", password)
+		}
+	}
+	if v, ok := d.GetOk("azure_workspace_resource_id"); ok {
+		authsUsed["azure"] = true
+		pc.AzureAuth.ResourceID = v.(string)
+	}
+	if v, ok := d.GetOk("azure_workspace_name"); ok {
+		authsUsed["azure"] = true
+		pc.AzureAuth.WorkspaceName = v.(string)
+	}
+	if v, ok := d.GetOk("azure_resource_group"); ok {
+		authsUsed["azure"] = true
+		pc.AzureAuth.ResourceGroup = v.(string)
+	}
+	if v, ok := d.GetOk("azure_subscription_id"); ok {
+		authsUsed["azure"] = true
+		pc.AzureAuth.SubscriptionID = v.(string)
+	}
+	if v, ok := d.GetOk("azure_client_secret"); ok {
+		authsUsed["azure"] = true
+		pc.AzureAuth.ClientSecret = v.(string)
+	}
+	if v, ok := d.GetOk("azure_client_id"); ok {
+		authsUsed["azure"] = true
+		pc.AzureAuth.ClientID = v.(string)
+	}
+	if v, ok := d.GetOk("azure_tenant_id"); ok {
+		authsUsed["azure"] = true
+		pc.AzureAuth.TenantID = v.(string)
+	}
+	if v, ok := d.GetOk("azure_pat_token_duration_seconds"); ok {
+		pc.AzureAuth.PATTokenDurationSeconds = v.(string)
+	}
+	if v, ok := d.GetOk("skip_verify"); ok {
+		pc.InsecureSkipVerify = v.(bool)
+	}
+	if v, ok := d.GetOk("debug_truncate_bytes"); ok {
+		pc.DebugTruncateBytes = v.(int)
+	}
+	if v, ok := d.GetOk("rate_limit"); ok {
+		pc.RateLimitPerSecond = v.(int)
+	}
+	if v, ok := d.GetOk("debug_headers"); ok {
+		pc.DebugHeaders = v.(bool)
+	}
+	if v, ok := d.GetOk("azure_use_pat_for_cli"); ok {
+		pc.AzureAuth.UsePATForCLI = v.(bool)
+	}
+	if v, ok := d.GetOk("azure_environment"); ok {
+		pc.AzureAuth.Environment = v.(string)
+	}
+	authorizationMethodsUsed := []string{}
+	for name, used := range authsUsed {
+		if used {
+			authorizationMethodsUsed = append(authorizationMethodsUsed, name)
+		}
+	}
+	if len(authorizationMethodsUsed) > 1 {
+		sort.Strings(authorizationMethodsUsed)
+		return nil, diag.Errorf("More than one authorization method configured: %s",
+			strings.Join(authorizationMethodsUsed, " and "))
+	}
+	if err := pc.Configure(); err != nil {
+		return nil, diag.FromErr(err)
+	}
+	pc.WithCommandExecutor(func(ctx context.Context, client *common.DatabricksClient) common.CommandExecutor {
+		return compute.NewCommandsAPI(ctx, client)
+	})
+	return &pc, nil
 }

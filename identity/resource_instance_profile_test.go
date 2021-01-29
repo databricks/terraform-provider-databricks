@@ -182,11 +182,13 @@ func TestResourceInstanceProfileDelete_Error(t *testing.T) {
 func TestAwsAccInstanceProfiles(t *testing.T) {
 	arn := qa.GetEnvOrSkipTest(t, "TEST_EC2_INSTANCE_PROFILE")
 	client := common.NewClientFromEnvironment()
-	ctx := context.Background()
+	ctx := context.WithValue(context.Background(), common.Current, t.Name())
 	instanceProfilesAPI := NewInstanceProfilesAPI(ctx, client)
-	instanceProfilesAPI.Synchronized(arn, func() {
+	instanceProfilesAPI.Synchronized(arn, func() bool {
 		err := instanceProfilesAPI.Create(arn)
-		assert.NoError(t, err, err)
+		if err != nil {
+			return false
+		}
 		defer func() {
 			err := instanceProfilesAPI.Delete(arn)
 			assert.NoError(t, err, err)
@@ -195,5 +197,6 @@ func TestAwsAccInstanceProfiles(t *testing.T) {
 		arnSearch, err := instanceProfilesAPI.Read(arn)
 		assert.NoError(t, err, err)
 		assert.True(t, len(arnSearch) > 0)
+		return true
 	})
 }

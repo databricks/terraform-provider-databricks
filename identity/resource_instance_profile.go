@@ -3,6 +3,7 @@ package identity
 import (
 	"context"
 	"fmt"
+	"log"
 	"net/http"
 	"strings"
 	"time"
@@ -84,22 +85,51 @@ func (a InstanceProfilesAPI) Delete(instanceProfileARN string) error {
 	}, nil)
 }
 
+// IsRegistered checks if instance profile exists
+func (a InstanceProfilesAPI) IsRegistered(arn string) bool {
+	if _, err := a.Read(arn); err == nil {
+		return true
+	}
+	return false
+}
+
 // Synchronized test helper for working with only single instance profile
-func (a InstanceProfilesAPI) Synchronized(arn string, cb func()) {
-	err := resource.RetryContext(a.context, 30*time.Minute, func() *resource.RetryError {
-		list, err := a.List()
-		if err != nil {
-			return resource.NonRetryableError(err)
-		}
-		for _, ip := range list {
-			if ip.InstanceProfileArn == arn {
-				return resource.RetryableError(fmt.Errorf(
-					"%s is registered, waiting to release", arn))
+func (a InstanceProfilesAPI) Synchronized(arn string, testCallback func() bool) {
+	timeout := 30*time.Minute
+	err := resource.RetryContext(a.context, timeout,
+		func() *resource.RetryError {
+			list, err := a.List()
+			if err != nil {
+				return resource.NonRetryableError(err)
 			}
-		}
-		cb()
-		return nil
-	})
+			currentTest := common.Current.GetOrUnknown(a.context)
+			for _, ip := range list {
+				if ip.InstanceProfileArn == arn {
+					log.Printf("[INFO] %s: Waiting to acquire instance profile", currentTest)
+					return resource.RetryableError(fmt.Errorf(
+						"%s is registered, waiting to release", arn))
+				}
+			}
+			cbError := resource.RetryContext(a.context, timeout, func() *resource.RetryError {
+				if a.IsRegistered(arn) {
+					log.Printf("[INFO] %s: Waiting to acquire instance profile", currentTest)
+					return resource.RetryableError(fmt.Errorf("%s: Waiting to acquire", currentTest))
+				}
+				if !testCallback() {
+					log.Printf("[INFO] %s: Callback returned false", currentTest)
+					return resource.RetryableError(fmt.Errorf("%s: Callback returned false", currentTest))
+				}
+				log.Printf("[INFO] %s: Successfully tested instance profile", currentTest)
+				if _, err = a.Read(arn); err == nil {
+					log.Printf("[INFO] %s: Didn't release instance profile", currentTest)
+				}
+				return nil
+			})
+			if cbError != nil {
+				return resource.RetryableError(cbError)
+			}
+			return nil
+		})
 	if err != nil {
 		panic(err)
 	}

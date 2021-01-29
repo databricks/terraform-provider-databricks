@@ -36,18 +36,23 @@ func getRunningClusterWithInstanceProfile(t *testing.T, client *common.Databrick
 func TestAwsAccS3IamMount_WithCluster(t *testing.T) {
 	client := common.NewClientFromEnvironment()
 	arn := qa.GetEnvOrSkipTest(t, "TEST_EC2_INSTANCE_PROFILE")
-	ctx := context.Background()
-	clustersAPI := compute.NewClustersAPI(ctx, client)
-	identity.NewInstanceProfilesAPI(ctx, client).Synchronized(arn, func() {
+	ctx := context.WithValue(context.Background(), common.Current, t.Name())
+	instanceProfilesAPI := identity.NewInstanceProfilesAPI(ctx, client)
+	instanceProfilesAPI.Synchronized(arn, func() bool {
+		if instanceProfilesAPI.IsRegistered(arn) {
+			return false
+		}
 		config := qa.EnvironmentTemplate(t, `
 		resource "databricks_instance_profile" "this" {
 			instance_profile_arn = "{env.TEST_EC2_INSTANCE_PROFILE}"
 		}
+		data "databricks_spark_version" "latest" {
+		}
 		resource "databricks_cluster" "this" {
 			cluster_name = "ready-{var.RANDOM}"
-			instance_pool_id = "{var.POOL}"
-			spark_version    = "{var.SPARK}"
-			  autotermination_minutes = 10
+			spark_version = data.databricks_spark_version.latest.id
+			instance_pool_id = "{var.COMMON_INSTANCE_POOL_ID}"
+			autotermination_minutes = 5
 			num_workers = 1
 			aws_attributes {
 				instance_profile_arn = databricks_instance_profile.this.id
@@ -57,10 +62,7 @@ func TestAwsAccS3IamMount_WithCluster(t *testing.T) {
 			cluster_id     = databricks_cluster.this.id
 			mount_name     = "{var.RANDOM}"
 			s3_bucket_name = "{env.TEST_S3_BUCKET}"
-		}`, map[string]string{
-			"POOL":  compute.CommonInstancePoolID(),
-			"SPARK": clustersAPI.LatestSparkVersionOrDefault(compute.SparkVersionRequest{Latest: true, LongTermSupport: true}),
-		})
+		}`)
 		acceptance.AccTest(t, resource.TestCase{
 			Steps: []resource.TestStep{
 				{
@@ -76,14 +78,16 @@ func TestAwsAccS3IamMount_WithCluster(t *testing.T) {
 				},
 			},
 		})
+		return true
 	})
 }
 
 func TestAwsAccS3IamMount_NoClusterGiven(t *testing.T) {
 	client := common.NewClientFromEnvironment()
 	arn := qa.GetEnvOrSkipTest(t, "TEST_EC2_INSTANCE_PROFILE")
-	ctx := context.Background()
-	identity.NewInstanceProfilesAPI(ctx, client).Synchronized(arn, func() {
+	ctx := context.WithValue(context.Background(), common.Current, t.Name())
+	instanceProfilesAPI := identity.NewInstanceProfilesAPI(ctx, client)
+	instanceProfilesAPI.Synchronized(arn, func() bool {
 		config := qa.EnvironmentTemplate(t, `
 		resource "databricks_instance_profile" "this" {
 			instance_profile_arn = "{env.TEST_EC2_INSTANCE_PROFILE}"
@@ -129,5 +133,6 @@ func TestAwsAccS3IamMount_NoClusterGiven(t *testing.T) {
 				},
 			},
 		})
+		return true
 	})
 }

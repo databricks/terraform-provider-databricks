@@ -3,7 +3,7 @@ module github.com/databrickslabs/databricks-terraform
 go 1.13
 
 require (
-	github.com/Azure/go-autorest/autorest v0.11.15
+	github.com/Azure/go-autorest/autorest v0.11.17
 	github.com/Azure/go-autorest/autorest/adal v0.9.10
 	github.com/Azure/go-autorest/autorest/azure/auth v0.5.5
 	github.com/Azure/go-autorest/autorest/azure/cli v0.4.2

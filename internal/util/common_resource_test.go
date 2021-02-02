@@ -32,6 +32,37 @@ func TestImportingCallsRead(t *testing.T) {
 		&common.DatabricksClient{})
 	require.NoError(t, err)
 	assert.Len(t, datas, 1)
+	assert.True(t, r.Schema["foo"].ForceNew)
 	assert.Equal(t, "abc", d.Id())
 	assert.Equal(t, 1, d.Get("foo"))
+}
+
+func TestUpdate(t *testing.T) {
+	r := CommonResource{
+		Update: func(ctx context.Context,
+			d *schema.ResourceData,
+			c *common.DatabricksClient) error {
+			return d.Set("foo", 1)
+		},
+		Read: func(ctx context.Context,
+			d *schema.ResourceData,
+			c *common.DatabricksClient) error {
+			return common.NotFound("nope")
+		},
+		Schema: map[string]*schema.Schema{
+			"foo": {
+				Type:     schema.TypeInt,
+				Required: true,
+			},
+		},
+	}.ToResource()
+
+	d := r.TestResourceData()
+	datas, err := r.Importer.StateContext(
+		context.Background(), d,
+		&common.DatabricksClient{})
+	require.NoError(t, err)
+	assert.Len(t, datas, 1)
+	assert.False(t, r.Schema["foo"].ForceNew)
+	assert.Equal(t, "", d.Id())
 }

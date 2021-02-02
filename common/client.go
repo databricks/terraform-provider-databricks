@@ -35,6 +35,7 @@ type DatabricksClient struct {
 	Password           string
 	Profile            string
 	ConfigFile         string
+	AccountID          string
 	AzureAuth          AzureAuth
 	InsecureSkipVerify bool
 	HTTPTimeoutSeconds int
@@ -223,7 +224,7 @@ func (c *DatabricksClient) configureHTTPCLient() {
 		Backoff:      retryablehttp.LinearJitterBackoff,
 		RetryWaitMin: retryDelayDuration,
 		RetryWaitMax: retryDelayDuration,
-		RetryMax:     int(retryMaximumDuration / retryDelayDuration), // + request & response log hooks
+		RetryMax:     int(retryMaximumDuration / retryDelayDuration),
 	}
 }
 

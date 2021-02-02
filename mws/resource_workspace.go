@@ -39,7 +39,7 @@ func (a WorkspacesAPI) Create(ws *Workspace, timeout time.Duration) error {
 	if err != nil {
 		return err
 	}
-	if err = a.waitForRunning(*ws, timeout); err != nil {
+	if err = a.WaitForRunning(*ws, timeout); err != nil {
 		log.Printf("[ERROR] Deleting failed workspace: %s", err)
 		if derr := a.Delete(ws.AccountID, fmt.Sprintf("%d", ws.WorkspaceID)); derr != nil {
 			return fmt.Errorf("%s - %s", err, derr)
@@ -59,8 +59,8 @@ func dial(hostAndPort, url string, timeout time.Duration) *resource.RetryError {
 	return nil
 }
 
-// waitForRunning will wait until workspace is running, otherwise will try to explain why it failed
-func (a WorkspacesAPI) waitForRunning(ws Workspace, timeout time.Duration) error {
+// WaitForRunning will wait until workspace is running, otherwise will try to explain why it failed
+func (a WorkspacesAPI) WaitForRunning(ws Workspace, timeout time.Duration) error {
 	return resource.RetryContext(a.context, timeout, func() *resource.RetryError {
 		workspace, err := a.Read(ws.AccountID, fmt.Sprintf("%d", ws.WorkspaceID))
 		if err != nil {
@@ -119,7 +119,7 @@ func (a WorkspacesAPI) Patch(ws Workspace, timeout time.Duration) error {
 	if err != nil {
 		return err
 	}
-	return a.waitForRunning(ws, timeout)
+	return a.WaitForRunning(ws, timeout)
 }
 
 // Read will return the mws workspace metadata and status of the workspace deployment
@@ -215,7 +215,7 @@ func ResourceWorkspace() *schema.Resource {
 			if err = internal.StructToData(workspace, s, d); err != nil {
 				return err
 			}
-			return workspacesAPI.waitForRunning(workspace, d.Timeout(schema.TimeoutRead))
+			return workspacesAPI.WaitForRunning(workspace, d.Timeout(schema.TimeoutRead))
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var workspace Workspace

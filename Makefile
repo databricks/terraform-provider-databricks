@@ -20,7 +20,7 @@ coverage: test
 
 VERSION = 0.3.0
 
-build:
+build: vendor
 	@echo "✓ Building source code with go build ..."
 	@go build -mod vendor -v -o terraform-provider-databricks
 

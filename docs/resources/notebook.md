@@ -7,12 +7,12 @@ This resource allows you to manage Databricks notebooks. You can also work with 
 You can declare Terraform-managed notebook by specifying `source` attribute of corresponding local file. Only `.scala`, `.py`, `.sql` and `.r` extensions are supported, if you would like to omit `language` attribute.
 
 ```hcl
-data "databricks_me" "me" {
+data "databricks_current_user" "me" {
 }
 
 resource "databricks_notebook" "ddl" {
   source = "${path.module}/DDLgen.py"
-  path = "${data.databricks_me.me.home}/AA/BB/CC"
+  path = "${data.databricks_current_user.me.home}/AA/BB/CC"
 }
 ```
 

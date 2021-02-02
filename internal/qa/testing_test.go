@@ -72,7 +72,7 @@ func TestResourceFixture(t *testing.T) {
 	assert.NoError(t, err)
 
 	var a HTTPFixture
-	err = client.Post("/a/b/c", map[string]bool{
+	err = client.Post(context.Background(), "/a/b/c", map[string]bool{
 		"check": true,
 	}, &a)
 	assert.NoError(t, err)
@@ -86,7 +86,7 @@ func TestResourceFixture_Hint(t *testing.T) {
 	assert.NoError(t, err)
 
 	var a HTTPFixture
-	err = client.Post("/a/b/c", map[string]bool{
+	err = client.Post(context.Background(), "/a/b/c", map[string]bool{
 		"check": true,
 	}, &a)
 	assert.Error(t, err)
@@ -153,6 +153,10 @@ func TestResourceFixture_ID(t *testing.T) {
 	assert.EqualError(t, err, "ID is not available for Create")
 
 	f.ID = ""
+	_, err = f.Apply(t)
+	assert.EqualError(t, err, "Resource is not expected to be removed")
+
+	f.Removed = true
 	_, err = f.Apply(t)
 	assert.NoError(t, err)
 }
@@ -221,13 +225,6 @@ func TestResourceFixture_Apply_Fail(t *testing.T) {
 		},
 	}.Apply(t)
 	assert.EqualError(t, err, "Invalid config supplied. [check] Invalid or unknown key")
-}
-
-func TestGetCloudInstanceType(t *testing.T) {
-	c := &common.DatabricksClient{}
-	assert.Equal(t, "m4.large", GetCloudInstanceType(c))
-	c.Host = "https://adb-0987654321.2.azuredatabricks.net/"
-	assert.Equal(t, "Standard_DS3_v2", GetCloudInstanceType(c))
 }
 
 func TestTestCreateTempFile(t *testing.T) {

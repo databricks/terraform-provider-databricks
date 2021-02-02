@@ -1,8 +1,10 @@
 package compute
 
 import (
+	"context"
 	"os"
 	"reflect"
+	"strings"
 	"testing"
 
 	"github.com/databrickslabs/databricks-terraform/common"
@@ -17,6 +19,31 @@ func TestGetOrCreateRunningCluster_AzureAuth(t *testing.T) {
 			Method:   "GET",
 			Resource: "/api/2.0/clusters/list",
 			Response: map[string]interface{}{},
+		},
+		{
+			Method:       "GET",
+			ReuseRequest: true,
+			Resource:     "/api/2.0/clusters/spark-versions",
+			Response: SparkVersionsList{
+				SparkVersions: []SparkVersion{
+					{
+						Version:     "7.1.x-cpu-ml-scala2.12",
+						Description: "7.1 ML (includes Apache Spark 3.0.0, Scala 2.12)",
+					},
+					{
+						Version:     "apache-spark-2.4.x-scala2.11",
+						Description: "Light 2.4 (includes Apache Spark 2.4, Scala 2.11)",
+					},
+					{
+						Version:     "7.3.x-scala2.12",
+						Description: "7.3 LTS (includes Apache Spark 3.0.1, Scala 2.12)",
+					},
+					{
+						Version:     "6.4.x-scala2.11",
+						Description: "6.4 (includes Apache Spark 2.4.5, Scala 2.11)",
+					},
+				},
+			},
 		},
 		{
 			Method:       "GET",
@@ -59,7 +86,7 @@ func TestGetOrCreateRunningCluster_AzureAuth(t *testing.T) {
 				ClusterName:            "mount",
 				NodeTypeID:             "Standard_F4s",
 				NumWorkers:             1,
-				SparkVersion:           CommonRuntimeVersion(),
+				SparkVersion:           "7.3.x-scala2.12",
 			},
 			Response: ClusterID{
 				ClusterID: "bcd",
@@ -78,7 +105,8 @@ func TestGetOrCreateRunningCluster_AzureAuth(t *testing.T) {
 
 	client.AzureAuth.ResourceID = "/subscriptions/a/resourceGroups/b/providers/Microsoft.Databricks/workspaces/c"
 
-	clusterInfo, err := NewClustersAPI(client).GetOrCreateRunningCluster("mount")
+	ctx := context.Background()
+	clusterInfo, err := NewClustersAPI(ctx, client).GetOrCreateRunningCluster("mount")
 	require.NoError(t, err)
 
 	assert.NotNil(t, clusterInfo)
@@ -98,7 +126,7 @@ func TestGetOrCreateRunningCluster_Existing_AzureAuth(t *testing.T) {
 						ClusterName:            "mount",
 						NodeTypeID:             "Standard_F4s",
 						NumWorkers:             1,
-						SparkVersion:           CommonRuntimeVersion(),
+						SparkVersion:           "7.3.x-scala2.12",
 					},
 				},
 			},
@@ -130,7 +158,8 @@ func TestGetOrCreateRunningCluster_Existing_AzureAuth(t *testing.T) {
 
 	client.AzureAuth.ResourceID = "/a/b/c"
 
-	clusterInfo, err := NewClustersAPI(client).GetOrCreateRunningCluster("mount")
+	ctx := context.Background()
+	clusterInfo, err := NewClustersAPI(ctx, client).GetOrCreateRunningCluster("mount")
 	require.NoError(t, err)
 
 	assert.NotNil(t, clusterInfo)
@@ -159,7 +188,8 @@ func TestWaitForClusterStatus_RetryOnNotFound(t *testing.T) {
 
 	client.AzureAuth.ResourceID = "/a/b/c"
 
-	clusterInfo, err := NewClustersAPI(client).waitForClusterStatus("abc", ClusterStateRunning)
+	ctx := context.Background()
+	clusterInfo, err := NewClustersAPI(ctx, client).waitForClusterStatus("abc", ClusterStateRunning)
 	require.NoError(t, err)
 
 	assert.NotNil(t, clusterInfo)
@@ -179,7 +209,8 @@ func TestWaitForClusterStatus_StopRetryingEarly(t *testing.T) {
 	defer server.Close()
 	require.NoError(t, err)
 
-	_, err = NewClustersAPI(client).waitForClusterStatus("abc", ClusterStateRunning)
+	ctx := context.Background()
+	_, err = NewClustersAPI(ctx, client).waitForClusterStatus("abc", ClusterStateRunning)
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "I am a teapot")
 }
@@ -200,7 +231,8 @@ func TestWaitForClusterStatus_NotReachable(t *testing.T) {
 
 	client.AzureAuth.ResourceID = "/a/b/c"
 
-	_, err = NewClustersAPI(client).waitForClusterStatus("abc", ClusterStateRunning)
+	ctx := context.Background()
+	_, err = NewClustersAPI(ctx, client).waitForClusterStatus("abc", ClusterStateRunning)
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "abc is not able to transition from UNKNOWN to RUNNING: Something strange is going on.")
 }
@@ -225,7 +257,8 @@ func TestWaitForClusterStatus_NormalRetry(t *testing.T) {
 	defer server.Close()
 	require.NoError(t, err)
 
-	clusterInfo, err := NewClustersAPI(client).waitForClusterStatus("abc", ClusterStateRunning)
+	ctx := context.Background()
+	clusterInfo, err := NewClustersAPI(ctx, client).waitForClusterStatus("abc", ClusterStateRunning)
 	require.NoError(t, err)
 	assert.Equal(t, ClusterStateRunning, string(clusterInfo.State))
 }
@@ -267,7 +300,8 @@ func TestEditCluster_Pending(t *testing.T) {
 	defer server.Close()
 	require.NoError(t, err)
 
-	clusterInfo, err := NewClustersAPI(client).Edit(Cluster{
+	ctx := context.Background()
+	clusterInfo, err := NewClustersAPI(ctx, client).Edit(Cluster{
 		ClusterID:   "abc",
 		ClusterName: "Morty",
 	})
@@ -312,7 +346,8 @@ func TestEditCluster_Terminating(t *testing.T) {
 	defer server.Close()
 	require.NoError(t, err)
 
-	clusterInfo, err := NewClustersAPI(client).Edit(Cluster{
+	ctx := context.Background()
+	clusterInfo, err := NewClustersAPI(ctx, client).Edit(Cluster{
 		ClusterID:   "abc",
 		ClusterName: "Morty",
 	})
@@ -335,7 +370,8 @@ func TestEditCluster_Error(t *testing.T) {
 	defer server.Close()
 	require.NoError(t, err)
 
-	_, err = NewClustersAPI(client).Edit(Cluster{
+	ctx := context.Background()
+	_, err = NewClustersAPI(ctx, client).Edit(Cluster{
 		ClusterID:   "abc",
 		ClusterName: "Morty",
 	})
@@ -365,7 +401,8 @@ func TestStartAndGetInfo_Pending(t *testing.T) {
 	defer server.Close()
 	require.NoError(t, err)
 
-	clusterInfo, err := NewClustersAPI(client).StartAndGetInfo("abc")
+	ctx := context.Background()
+	clusterInfo, err := NewClustersAPI(ctx, client).StartAndGetInfo("abc")
 	require.NoError(t, err)
 	assert.Equal(t, ClusterStateRunning, string(clusterInfo.State))
 }
@@ -407,7 +444,8 @@ func TestStartAndGetInfo_Terminating(t *testing.T) {
 	defer server.Close()
 	require.NoError(t, err)
 
-	clusterInfo, err := NewClustersAPI(client).StartAndGetInfo("abc")
+	ctx := context.Background()
+	clusterInfo, err := NewClustersAPI(ctx, client).StartAndGetInfo("abc")
 	require.NoError(t, err)
 	assert.Equal(t, ClusterStateRunning, string(clusterInfo.State))
 }
@@ -441,7 +479,8 @@ func TestStartAndGetInfo_Error(t *testing.T) {
 	defer server.Close()
 	require.NoError(t, err)
 
-	clusterInfo, err := NewClustersAPI(client).StartAndGetInfo("abc")
+	ctx := context.Background()
+	clusterInfo, err := NewClustersAPI(ctx, client).StartAndGetInfo("abc")
 	require.NoError(t, err)
 	assert.Equal(t, ClusterStateRunning, string(clusterInfo.State))
 }
@@ -471,7 +510,8 @@ func TestStartAndGetInfo_StartingError(t *testing.T) {
 	defer server.Close()
 	require.NoError(t, err)
 
-	_, err = NewClustersAPI(client).StartAndGetInfo("abc")
+	ctx := context.Background()
+	_, err = NewClustersAPI(ctx, client).StartAndGetInfo("abc")
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "I am a teapot")
 }
@@ -521,7 +561,8 @@ func TestPermanentDelete_Pinned(t *testing.T) {
 	defer server.Close()
 	require.NoError(t, err)
 
-	err = NewClustersAPI(client).PermanentDelete("abc")
+	ctx := context.Background()
+	err = NewClustersAPI(ctx, client).PermanentDelete("abc")
 	require.NoError(t, err)
 }
 
@@ -532,17 +573,19 @@ func TestAccListClustersIntegration(t *testing.T) {
 	}
 
 	client := common.CommonEnvironmentClient()
+	ctx := context.Background()
+	clustersAPI := NewClustersAPI(ctx, client)
 	randomName := qa.RandomName()
 
 	cluster := Cluster{
 		NumWorkers:             1,
 		ClusterName:            "Terraform Integration Test " + randomName,
-		SparkVersion:           CommonRuntimeVersion(),
+		SparkVersion:           clustersAPI.LatestSparkVersionOrDefault(SparkVersionRequest{Latest: true, LongTermSupport: true}),
 		InstancePoolID:         CommonInstancePoolID(),
 		IdempotencyToken:       "acc-list-" + randomName,
 		AutoterminationMinutes: 15,
 	}
-	clusterReadInfo, err := NewClustersAPI(client).Create(cluster)
+	clusterReadInfo, err := clustersAPI.Create(cluster)
 	assert.NoError(t, err, err)
 	assert.True(t, clusterReadInfo.NumWorkers == cluster.NumWorkers)
 	assert.True(t, clusterReadInfo.ClusterName == cluster.ClusterName)
@@ -552,24 +595,24 @@ func TestAccListClustersIntegration(t *testing.T) {
 	assert.True(t, clusterReadInfo.State == ClusterStateRunning)
 
 	defer func() {
-		err = NewClustersAPI(client).Terminate(clusterReadInfo.ClusterID)
+		err = NewClustersAPI(ctx, client).Terminate(clusterReadInfo.ClusterID)
 		assert.NoError(t, err, err)
 
-		clusterReadInfo, err = NewClustersAPI(client).Get(clusterReadInfo.ClusterID)
+		clusterReadInfo, err = NewClustersAPI(ctx, client).Get(clusterReadInfo.ClusterID)
 		assert.NoError(t, err, err)
 		assert.True(t, clusterReadInfo.State == ClusterStateTerminated)
 
-		err = NewClustersAPI(client).Unpin(clusterReadInfo.ClusterID)
+		err = NewClustersAPI(ctx, client).Unpin(clusterReadInfo.ClusterID)
 		assert.NoError(t, err, err)
 
-		err = NewClustersAPI(client).PermanentDelete(clusterReadInfo.ClusterID)
+		err = NewClustersAPI(ctx, client).PermanentDelete(clusterReadInfo.ClusterID)
 		assert.NoError(t, err, err)
 	}()
 
-	err = NewClustersAPI(client).Pin(clusterReadInfo.ClusterID)
+	err = NewClustersAPI(ctx, client).Pin(clusterReadInfo.ClusterID)
 	assert.NoError(t, err, err)
 
-	clusterReadInfo, err = NewClustersAPI(client).Get(clusterReadInfo.ClusterID)
+	clusterReadInfo, err = NewClustersAPI(ctx, client).Get(clusterReadInfo.ClusterID)
 	assert.NoError(t, err, err)
 	assert.True(t, clusterReadInfo.State == ClusterStateRunning)
 }
@@ -581,7 +624,8 @@ func TestAwsAccSmallestNodeType(t *testing.T) {
 	}
 
 	client := common.CommonEnvironmentClient()
-	nodeType := NewClustersAPI(client).GetSmallestNodeType(NodeTypeRequest{
+	ctx := context.Background()
+	nodeType := NewClustersAPI(ctx, client).GetSmallestNodeType(NodeTypeRequest{
 		LocalDisk: true,
 	})
 	assert.Equal(t, "m5d.large", nodeType)
@@ -593,7 +637,8 @@ func TestAzureAccNodeTypes(t *testing.T) {
 		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
 	}
 
-	clustersAPI := NewClustersAPI(common.CommonEnvironmentClient())
+	ctx := context.Background()
+	clustersAPI := NewClustersAPI(ctx, common.CommonEnvironmentClient())
 	m := map[string]NodeTypeRequest{
 		"Standard_F4s":     {},
 		"Standard_NC12":    {MinGPUs: 1},
@@ -632,7 +677,8 @@ func TestEventsSinglePage(t *testing.T) {
 	defer server.Close()
 	require.NoError(t, err)
 
-	clusterEvents, err := NewClustersAPI(client).Events(EventsRequest{ClusterID: "abc"})
+	ctx := context.Background()
+	clusterEvents, err := NewClustersAPI(ctx, client).Events(EventsRequest{ClusterID: "abc"})
 	require.NoError(t, err)
 	assert.Equal(t, len(clusterEvents), 1)
 	assert.Equal(t, clusterEvents[0].ClusterID, "abc")
@@ -695,7 +741,8 @@ func TestEventsTwoPages(t *testing.T) {
 	defer server.Close()
 	require.NoError(t, err)
 
-	clusterEvents, err := NewClustersAPI(client).Events(EventsRequest{ClusterID: "abc"})
+	ctx := context.Background()
+	clusterEvents, err := NewClustersAPI(ctx, client).Events(EventsRequest{ClusterID: "abc"})
 	require.NoError(t, err)
 	assert.Equal(t, len(clusterEvents), 2)
 	assert.Equal(t, clusterEvents[0].ClusterID, "abc")
@@ -742,7 +789,8 @@ func TestEventsTwoPagesMaxItems(t *testing.T) {
 	defer server.Close()
 	require.NoError(t, err)
 
-	clusterEvents, err := NewClustersAPI(client).Events(EventsRequest{ClusterID: "abc", MaxItems: 1, Limit: 1})
+	ctx := context.Background()
+	clusterEvents, err := NewClustersAPI(ctx, client).Events(EventsRequest{ClusterID: "abc", MaxItems: 1, Limit: 1})
 	require.NoError(t, err)
 	assert.Equal(t, len(clusterEvents), 1)
 	assert.Equal(t, clusterEvents[0].ClusterID, "abc")
@@ -824,7 +872,8 @@ func TestEventsTwoPagesMaxThreeItems(t *testing.T) {
 	defer server.Close()
 	require.NoError(t, err)
 
-	clusterEvents, err := NewClustersAPI(client).Events(EventsRequest{ClusterID: "abc", MaxItems: 3, Limit: 2})
+	ctx := context.Background()
+	clusterEvents, err := NewClustersAPI(ctx, client).Events(EventsRequest{ClusterID: "abc", MaxItems: 3, Limit: 2})
 	require.NoError(t, err)
 	assert.Equal(t, len(clusterEvents), 3)
 	assert.Equal(t, clusterEvents[0].ClusterID, "abc")
@@ -873,7 +922,8 @@ func TestEventsTwoPagesNoNextPage(t *testing.T) {
 	defer server.Close()
 	require.NoError(t, err)
 
-	clusterEvents, err := NewClustersAPI(client).Events(EventsRequest{ClusterID: "abc", MaxItems: 3, Limit: 2})
+	ctx := context.Background()
+	clusterEvents, err := NewClustersAPI(ctx, client).Events(EventsRequest{ClusterID: "abc", MaxItems: 3, Limit: 2})
 	require.NoError(t, err)
 	assert.Equal(t, len(clusterEvents), 2)
 	assert.Equal(t, clusterEvents[0].ClusterID, "abc")
@@ -902,7 +952,121 @@ func TestEventsEmptyResult(t *testing.T) {
 	defer server.Close()
 	require.NoError(t, err)
 
-	clusterEvents, err := NewClustersAPI(client).Events(EventsRequest{ClusterID: "abc", MaxItems: 3, Limit: 2})
+	ctx := context.Background()
+	clusterEvents, err := NewClustersAPI(ctx, client).Events(EventsRequest{ClusterID: "abc", MaxItems: 3, Limit: 2})
 	require.NoError(t, err)
 	assert.Equal(t, len(clusterEvents), 0)
+}
+
+func TestListSparkVersions(t *testing.T) {
+	client, server, err := qa.HttpFixtureClient(t, []qa.HTTPFixture{
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/clusters/spark-versions",
+			Response: SparkVersionsList{
+				SparkVersions: []SparkVersion{
+					{
+						Version:     "7.1.x-cpu-ml-scala2.12",
+						Description: "7.1 ML (includes Apache Spark 3.0.0, Scala 2.12)",
+					},
+					{
+						Version:     "apache-spark-2.4.x-scala2.11",
+						Description: "Light 2.4 (includes Apache Spark 2.4, Scala 2.11)",
+					},
+					{
+						Version:     "7.3.x-hls-scala2.12",
+						Description: "7.3 LTS Genomics (includes Apache Spark 3.0.1, Scala 2.12)",
+					},
+					{
+						Version:     "6.4.x-scala2.11",
+						Description: "6.4 (includes Apache Spark 2.4.5, Scala 2.11)",
+					},
+				},
+			},
+		},
+	})
+	defer server.Close()
+	require.NoError(t, err)
+
+	ctx := context.Background()
+	sparkVersions, err := NewClustersAPI(ctx, client).ListSparkVersions()
+	require.NoError(t, err)
+	require.Equal(t, 4, len(sparkVersions.SparkVersions))
+	require.Equal(t, "6.4.x-scala2.11", sparkVersions.SparkVersions[3].Version)
+}
+
+func TestListSparkVersionsWithError(t *testing.T) {
+	client, server, err := qa.HttpFixtureClient(t, []qa.HTTPFixture{
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/clusters/spark-versions",
+			Response: "{garbage....",
+		},
+	})
+	defer server.Close()
+	require.NoError(t, err)
+
+	ctx := context.Background()
+	_, err = NewClustersAPI(ctx, client).ListSparkVersions()
+	require.Error(t, err)
+	require.Equal(t, true, strings.Contains(err.Error(), "Invalid JSON received"))
+}
+
+func TestGetLatestSparkVersion(t *testing.T) {
+	versions := SparkVersionsList{
+		SparkVersions: []SparkVersion{
+			{
+				Version:     "7.1.x-cpu-ml-scala2.12",
+				Description: "7.1 ML (includes Apache Spark 3.0.0, Scala 2.12)",
+			},
+			{
+				Version:     "apache-spark-2.4.x-scala2.11",
+				Description: "Light 2.4 (includes Apache Spark 2.4, Scala 2.11)",
+			},
+			{
+				Version:     "7.3.x-hls-scala2.12",
+				Description: "7.3 LTS Genomics (includes Apache Spark 3.0.1, Scala 2.12)",
+			},
+			{
+				Version:     "6.4.x-scala2.11",
+				Description: "6.4 (includes Apache Spark 2.4.5, Scala 2.11)",
+			},
+			{
+				Version:     "7.3.x-scala2.12",
+				Description: "7.3 LTS (includes Apache Spark 3.0.1, Scala 2.12)",
+			},
+			{
+				Version:     "7.4.x-scala2.12",
+				Description: "7.4 (includes Apache Spark 3.0.1, Scala 2.12)",
+			},
+			{
+				Version:     "7.1.x-scala2.12",
+				Description: "7.1 (includes Apache Spark 3.0.0, Scala 2.12)",
+			},
+		},
+	}
+
+	version, err := versions.LatestSparkVersion(SparkVersionRequest{Scala: "2.12", Latest: true})
+	require.NoError(t, err)
+	require.Equal(t, "7.4.x-scala2.12", version)
+
+	version, err = versions.LatestSparkVersion(SparkVersionRequest{Scala: "2.12", LongTermSupport: true, Latest: true})
+	require.NoError(t, err)
+	require.Equal(t, "7.3.x-scala2.12", version)
+
+	version, err = versions.LatestSparkVersion(SparkVersionRequest{Scala: "2.12", Latest: true, SparkVersion: "3.0.0"})
+	require.NoError(t, err)
+	require.Equal(t, "7.1.x-scala2.12", version)
+
+	_, err = versions.LatestSparkVersion(SparkVersionRequest{Scala: "2.12"})
+	require.Error(t, err)
+	require.Equal(t, true, strings.Contains(err.Error(), "query returned multiple results"))
+
+	_, err = versions.LatestSparkVersion(SparkVersionRequest{Scala: "2.12", ML: true, Genomics: true})
+	require.Error(t, err)
+	require.Equal(t, true, strings.Contains(err.Error(), "query returned no results"))
+
+	_, err = versions.LatestSparkVersion(SparkVersionRequest{Scala: "2.12", SparkVersion: "3.10"})
+	require.Error(t, err)
+	require.Equal(t, true, strings.Contains(err.Error(), "query returned no results"))
 }

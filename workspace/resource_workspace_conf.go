@@ -5,28 +5,30 @@ package workspace
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"strings"
 
 	"github.com/databrickslabs/databricks-terraform/common"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/databrickslabs/databricks-terraform/internal/util"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 // WorkspaceConfAPI exposes the workspace configurations API
 type WorkspaceConfAPI struct {
-	client *common.DatabricksClient
+	client  *common.DatabricksClient
+	context context.Context
 }
 
 // NewWorkspaceConfAPI returns workspace conf API
-func NewWorkspaceConfAPI(m interface{}) WorkspaceConfAPI {
-	return WorkspaceConfAPI{client: m.(*common.DatabricksClient)}
+func NewWorkspaceConfAPI(ctx context.Context, m interface{}) WorkspaceConfAPI {
+	return WorkspaceConfAPI{m.(*common.DatabricksClient), ctx}
 }
 
 // Update will handle creation of new values as well as deletes. Deleting just implies that a value of "" or
 // the appropriate disable string like "false" is sent with the appropriate key
 func (a WorkspaceConfAPI) Update(workspaceConfMap map[string]interface{}) error {
-	return a.client.Patch("/workspace-conf", workspaceConfMap)
+	return a.client.Patch(a.context, "/workspace-conf", workspaceConfMap)
 }
 
 // Read just returns back a map of keys and values which keys are the configuration items and values are the settings
@@ -35,34 +37,20 @@ func (a WorkspaceConfAPI) Read(conf *map[string]interface{}) error {
 	for k := range *conf {
 		keys = append(keys, k)
 	}
-	return a.client.Get("/workspace-conf", map[string]string{
+	return a.client.Get(a.context, "/workspace-conf", map[string]string{
 		"keys": strings.Join(keys, ","),
 	}, &conf)
 }
 
 // ResourceWorkspaceConf maintains workspace configuration for specified keys
 func ResourceWorkspaceConf() *schema.Resource {
-	readContext := func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-		wsConfAPI := NewWorkspaceConfAPI(m)
-		config := d.Get("custom_config").(map[string]interface{})
-		log.Printf("[DEBUG] Config available in state: %v", config)
-		err := wsConfAPI.Read(&config)
-		if err != nil {
-			return diag.FromErr(err)
-		}
-		log.Printf("[DEBUG] Setting new config to state: %v", config)
-		// nolint
-		d.Set("custom_config", config)
-		return nil
-	}
-
-	updateContext := func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-		wsConfAPI := NewWorkspaceConfAPI(m)
+	create := func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+		wsConfAPI := NewWorkspaceConfAPI(ctx, c)
 		o, n := d.GetChange("custom_config")
 		old, okOld := o.(map[string]interface{})
 		new, okNew := n.(map[string]interface{})
 		if !okNew || !okOld {
-			return diag.Errorf("Internal type casting error")
+			return fmt.Errorf("Internal type casting error")
 		}
 		log.Printf("[DEBUG] Old worspace config: %v, new: %v", old, new)
 		patch := map[string]interface{}{}
@@ -85,17 +73,26 @@ func ResourceWorkspaceConf() *schema.Resource {
 		}
 		err := wsConfAPI.Update(patch)
 		if err != nil {
-			return diag.FromErr(err)
+			return err
 		}
 		d.SetId("_")
-		return readContext(ctx, d, m)
+		return nil
 	}
-
-	return &schema.Resource{
-		ReadContext:   readContext,
-		CreateContext: updateContext,
-		UpdateContext: updateContext,
-		DeleteContext: func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+	return util.CommonResource{
+		Create: create,
+		Update: create,
+		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			wsConfAPI := NewWorkspaceConfAPI(ctx, c)
+			config := d.Get("custom_config").(map[string]interface{})
+			log.Printf("[DEBUG] Config available in state: %v", config)
+			err := wsConfAPI.Read(&config)
+			if err != nil {
+				return err
+			}
+			log.Printf("[DEBUG] Setting new config to state: %v", config)
+			return d.Set("custom_config", config)
+		},
+		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			config := d.Get("custom_config").(map[string]interface{})
 			for k := range config {
 				if strings.HasPrefix(k, "enable") ||
@@ -106,12 +103,8 @@ func ResourceWorkspaceConf() *schema.Resource {
 					config[k] = ""
 				}
 			}
-			wsConfAPI := NewWorkspaceConfAPI(m)
-			err := wsConfAPI.Update(config)
-			if err != nil {
-				return diag.FromErr(err)
-			}
-			return nil
+			wsConfAPI := NewWorkspaceConfAPI(ctx, c)
+			return wsConfAPI.Update(config)
 		},
 		Schema: map[string]*schema.Schema{
 			"custom_config": {
@@ -119,5 +112,5 @@ func ResourceWorkspaceConf() *schema.Resource {
 				Optional: true,
 			},
 		},
-	}
+	}.ToResource()
 }

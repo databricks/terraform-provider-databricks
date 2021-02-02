@@ -227,7 +227,7 @@ func singleRequestServer(t *testing.T, method, url, response string) (*Databrick
 func TestGet_Error(t *testing.T) {
 	defer CleanupEnvironment()()
 	ws := DatabricksClient{}
-	err := ws.Get("/imaginary/endpoint", nil, nil)
+	err := ws.Get(context.Background(), "/imaginary/endpoint", nil, nil)
 	require.Error(t, err)
 	assert.True(t, strings.HasPrefix(err.Error(), "Authentication is not configured"),
 		"Actual message: %s", err.Error())
@@ -238,7 +238,7 @@ func TestPost_Error(t *testing.T) {
 	defer server.Close()
 
 	var resp map[string]string
-	err := ws.Post("/imaginary/endpoint", APIErrorBody{
+	err := ws.Post(context.Background(), "/imaginary/endpoint", APIErrorBody{
 		ScimDetail: "some",
 	}, &resp)
 	require.Error(t, err)
@@ -250,7 +250,7 @@ func TestDelete(t *testing.T) {
 	ws, server := singleRequestServer(t, "DELETE", "/api/2.0/imaginary/endpoint", ``)
 	defer server.Close()
 
-	err := ws.Delete("/imaginary/endpoint", APIErrorBody{
+	err := ws.Delete(context.Background(), "/imaginary/endpoint", APIErrorBody{
 		ScimDetail: "some",
 	})
 	require.NoError(t, err)
@@ -260,7 +260,7 @@ func TestPatch(t *testing.T) {
 	ws, server := singleRequestServer(t, "PATCH", "/api/2.0/imaginary/endpoint", ``)
 	defer server.Close()
 
-	err := ws.Patch("/imaginary/endpoint", APIErrorBody{
+	err := ws.Patch(context.Background(), "/imaginary/endpoint", APIErrorBody{
 		ScimDetail: "some",
 	})
 	require.NoError(t, err)
@@ -270,7 +270,7 @@ func TestPut(t *testing.T) {
 	ws, server := singleRequestServer(t, "PUT", "/api/2.0/imaginary/endpoint", ``)
 	defer server.Close()
 
-	err := ws.Put("/imaginary/endpoint", APIErrorBody{
+	err := ws.Put(context.Background(), "/imaginary/endpoint", APIErrorBody{
 		ScimDetail: "some",
 	})
 	require.NoError(t, err)
@@ -308,7 +308,7 @@ func TestScim(t *testing.T) {
 	defer server.Close()
 
 	var resp map[string]string
-	err := ws.Scim("GET", "/imaginary/endpoint", nil, &resp)
+	err := ws.Scim(context.Background(), "GET", "/imaginary/endpoint", nil, &resp)
 	require.NoError(t, err)
 }
 
@@ -317,7 +317,7 @@ func TestOldAPI(t *testing.T) {
 	defer server.Close()
 
 	var resp map[string]string
-	err := ws.OldAPI("GET", "/imaginary/endpoint", nil, &resp)
+	err := ws.OldAPI(context.Background(), "GET", "/imaginary/endpoint", nil, &resp)
 	require.NoError(t, err)
 }
 
@@ -357,7 +357,7 @@ func TestClient_HandleErrors(t *testing.T) {
 			expectedResource:   "/api/2.0/token/create",
 			expectedStatusCode: 404,
 			apiCall: func(client *DatabricksClient) error {
-				return client.Post("/token/create", map[string]string{
+				return client.Post(context.Background(), "/token/create", map[string]string{
 					"foo": "bar",
 				}, nil)
 			},
@@ -371,7 +371,7 @@ func TestClient_HandleErrors(t *testing.T) {
 			expectedResource:   "/api/2.0/token/create",
 			expectedStatusCode: 404,
 			apiCall: func(client *DatabricksClient) error {
-				return client.Post("/token/create", map[string]string{
+				return client.Post(context.Background(), "/token/create", map[string]string{
 					"foo": "bar",
 				}, nil)
 			},
@@ -385,7 +385,7 @@ func TestClient_HandleErrors(t *testing.T) {
 			expectedResource:   "/api/2.0/token/create",
 			expectedStatusCode: 404,
 			apiCall: func(client *DatabricksClient) error {
-				return client.Post("/token/create", map[string]string{
+				return client.Post(context.Background(), "/token/create", map[string]string{
 					"foo": "bar",
 				}, nil)
 			},

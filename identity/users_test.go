@@ -1,8 +1,8 @@
 package identity
 
 import (
+	"context"
 	"fmt"
-	"log"
 	"os"
 	"strings"
 	"testing"
@@ -20,39 +20,17 @@ func TestAccReadUser(t *testing.T) {
 	}
 
 	client := common.NewClientFromEnvironment()
-	me, err := NewUsersAPI(client).Me()
+	ctx := context.Background()
+	usersAPI := NewUsersAPI(ctx, client)
+	me, err := usersAPI.Me()
 	assert.NoError(t, err, err)
 
 	if strings.Contains(me.UserName, "@") {
 		// let's assume that service principals do not look like emails
-		ru, err := NewUsersAPI(client).ReadR(me.ID)
+		ru, err := usersAPI.Read(me.ID)
 		assert.NoError(t, err, err)
 		assert.NotNil(t, ru)
 	}
-}
-
-func TestAccCreateRUserNonAdmin(t *testing.T) {
-	if _, ok := os.LookupEnv("CLOUD_ENV"); !ok {
-		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
-	}
-
-	client := common.NewClientFromEnvironment()
-	randomName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
-	given := UserEntity{
-		DisplayName:        "Mr " + randomName,
-		UserName:           fmt.Sprintf("test+%s@example.com", randomName),
-		AllowClusterCreate: true,
-	}
-	meh, err := NewUsersAPI(client).CreateR(given)
-	assert.NoError(t, err, err)
-
-	ru, err := NewUsersAPI(client).ReadR(meh.ID)
-	assert.NoError(t, err, err)
-	assert.NotNil(t, ru)
-
-	assert.Equal(t, given.UserName, ru.UserName)
-	assert.Equal(t, given.DisplayName, ru.DisplayName)
-	assert.True(t, ru.AllowClusterCreate)
 }
 
 func TestAccCreateUser(t *testing.T) {
@@ -62,94 +40,29 @@ func TestAccCreateUser(t *testing.T) {
 
 	client := common.NewClientFromEnvironment()
 	randomName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
-	user, err := NewUsersAPI(client).Create(
-		fmt.Sprintf("test+%s@example.com", randomName), "Display Name", nil, nil)
+	ctx := context.Background()
+	usersAPI := NewUsersAPI(ctx, client)
+	user, err := usersAPI.Create(UserEntity{
+		UserName: fmt.Sprintf("test+%s@example.com", randomName),
+	})
 	assert.NoError(t, err, err)
 	assert.True(t, len(user.ID) > 0, "User id is empty")
 	idToDelete := user.ID
 	defer func() {
-		err := NewUsersAPI(client).Delete(idToDelete)
+		err := usersAPI.Delete(idToDelete)
 		assert.NoError(t, err, err)
 	}()
 
-	user, err = NewUsersAPI(client).Read(user.ID)
+	user, err = usersAPI.read(user.ID)
 	t.Log(user)
 	assert.NoError(t, err, err)
 
-	err = NewUsersAPI(client).Update(user.ID, fmt.Sprintf("updated+%s@example.com", randomName),
-		"Test User", []string{string(AllowClusterCreateEntitlement)}, nil)
+	err = usersAPI.Update(user.ID, UserEntity{
+		UserName:           fmt.Sprintf("updated+%s@example.com", randomName),
+		AllowClusterCreate: true,
+		DisplayName:        "TU",
+	})
 	//t.Log(user)
-	assert.NoError(t, err, err)
-}
-
-func TestAccCreateAdminUser(t *testing.T) {
-	if _, ok := os.LookupEnv("CLOUD_ENV"); !ok {
-		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
-	}
-
-	client := common.NewClientFromEnvironment()
-
-	randomName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
-	user, err := NewUsersAPI(client).Create(
-		fmt.Sprintf("terraform+%s@example.com", randomName),
-		"Terra "+randomName, nil, nil)
-	assert.NoError(t, err, err)
-	assert.True(t, len(user.ID) > 0, "User id is empty")
-	idToDelete := user.ID
-	defer func() {
-		err := NewUsersAPI(client).Delete(idToDelete)
-		assert.NoError(t, err, err)
-	}()
-	log.Println(idToDelete)
-
-	user, err = NewUsersAPI(client).Read(user.ID)
-	t.Log(user)
-	assert.NoError(t, err, err)
-
-	group, err := NewGroupsAPI(client).GetAdminGroup()
-	assert.NoError(t, err, err)
-
-	adminGroupID := group.ID
-
-	err = NewUsersAPI(client).SetUserAsAdmin(user.ID, adminGroupID)
-	assert.NoError(t, err, err)
-
-	userIsAdmin, err := NewUsersAPI(client).VerifyUserAsAdmin(user.ID, adminGroupID)
-	assert.NoError(t, err, err)
-	assert.True(t, userIsAdmin == true)
-	log.Println(userIsAdmin)
-
-	err = NewUsersAPI(client).RemoveUserAsAdmin(user.ID, adminGroupID)
-	assert.NoError(t, err, err)
-
-	userIsAdmin, err = NewUsersAPI(client).VerifyUserAsAdmin(user.ID, adminGroupID)
-	assert.NoError(t, err, err)
-	assert.True(t, userIsAdmin == false)
-	log.Println(userIsAdmin)
-}
-
-func TestAccRoleDifferences(t *testing.T) {
-	if _, ok := os.LookupEnv("CLOUD_ENV"); !ok {
-		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
-	}
-	client := common.NewClientFromEnvironment()
-
-	randomName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
-	user, err := NewUsersAPI(client).Create(
-		fmt.Sprintf("terraform+%s@example.com", randomName),
-		"Terra "+randomName, nil, nil)
-	assert.NoError(t, err, err)
-	assert.True(t, len(user.ID) > 0, "User id is empty")
-	idToDelete := user.ID
-
-	user, err = NewUsersAPI(client).Read(idToDelete)
-	assert.NoError(t, err, err)
-	t.Log(user.Roles)
-	t.Log(user.Groups)
-	t.Log(user.InheritedRoles)
-	t.Log(user.UnInheritedRoles)
-
-	err = NewUsersAPI(client).Delete(idToDelete)
 	assert.NoError(t, err, err)
 }
 
@@ -173,11 +86,13 @@ func TestUsersFilter(t *testing.T) {
 	})
 	require.NoError(t, err)
 	defer server.Close()
-	users, err := NewUsersAPI(client).Filter("")
+	ctx := context.Background()
+	usersAPI := NewUsersAPI(ctx, client)
+	users, err := usersAPI.Filter("")
 	require.NoError(t, err)
 	assert.Len(t, users, 1)
 
-	users, err = NewUsersAPI(client).Filter("userName eq somebody")
+	users, err = usersAPI.Filter("userName eq somebody")
 	require.NoError(t, err)
 	assert.Len(t, users, 0)
 }

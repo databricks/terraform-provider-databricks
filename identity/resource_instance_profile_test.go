@@ -1,6 +1,7 @@
 package identity
 
 import (
+	"context"
 	"testing"
 
 	"github.com/databrickslabs/databricks-terraform/common"
@@ -16,7 +17,7 @@ func TestResourceInstanceProfileCreate(t *testing.T) {
 				Resource: "/api/2.0/instance-profiles/add",
 				ExpectedRequest: map[string]interface{}{
 					"instance_profile_arn": "arn:aws:iam::999999999999:instance-profile/my-fake-instance-profile",
-					"skip_validation":      true,
+					"skip_validation":      false,
 				},
 			},
 			{
@@ -34,7 +35,6 @@ func TestResourceInstanceProfileCreate(t *testing.T) {
 		Resource: ResourceInstanceProfile(),
 		State: map[string]interface{}{
 			"instance_profile_arn": "arn:aws:iam::999999999999:instance-profile/my-fake-instance-profile",
-			"skip_validation":      true,
 		},
 		Create: true,
 	}.Apply(t)
@@ -58,7 +58,6 @@ func TestResourceInstanceProfileCreate_Error(t *testing.T) {
 		Resource: ResourceInstanceProfile(),
 		State: map[string]interface{}{
 			"instance_profile_arn": "arn:aws:iam::999999999999:instance-profile/my-fake-instance-profile",
-			"skip_validation":      true,
 		},
 		Create: true,
 	}.Apply(t)
@@ -67,16 +66,14 @@ func TestResourceInstanceProfileCreate_Error(t *testing.T) {
 }
 
 func TestResourceInstanceProfileCreate_Error_InvalidARN(t *testing.T) {
-	d, err := qa.ResourceFixture{
+	_, err := qa.ResourceFixture{
 		Resource: ResourceInstanceProfile(),
 		State: map[string]interface{}{
 			"instance_profile_arn": "abc",
-			"skip_validation":      true,
 		},
 		Create: true,
 	}.Apply(t)
-	qa.AssertErrorStartsWith(t, err, "Illegal instance profile abc: arn: invalid prefix")
-	assert.Equal(t, "", d.Id(), "Id should be empty for error creates")
+	assert.EqualError(t, err, "Invalid config supplied. [instance_profile_arn] Invalid ARN")
 }
 
 func TestResourceInstanceProfileRead(t *testing.T) {
@@ -101,11 +98,10 @@ func TestResourceInstanceProfileRead(t *testing.T) {
 	assert.NoError(t, err, err)
 	assert.Equal(t, "arn:aws:iam::999999999999:instance-profile/my-fake-instance-profile", d.Id(), "Id should not be empty")
 	assert.Equal(t, "arn:aws:iam::999999999999:instance-profile/my-fake-instance-profile", d.Get("instance_profile_arn"))
-	assert.Equal(t, false, d.Get("skip_validation"))
 }
 
 func TestResourceInstanceProfileRead_NotFound(t *testing.T) {
-	d, err := qa.ResourceFixture{
+	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{ // read log output for correct url...
 				Method:   "GET",
@@ -117,10 +113,9 @@ func TestResourceInstanceProfileRead_NotFound(t *testing.T) {
 		},
 		Resource: ResourceInstanceProfile(),
 		Read:     true,
+		Removed:  true,
 		ID:       "arn:aws:iam::999999999999:instance-profile/my-fake-instance-profile",
-	}.Apply(t)
-	assert.NoError(t, err, err)
-	assert.Equal(t, "", d.Id(), "Id should be empty for missing resources")
+	}.ApplyNoError(t)
 }
 
 func TestResourceInstanceProfileRead_Error(t *testing.T) {
@@ -187,10 +182,13 @@ func TestResourceInstanceProfileDelete_Error(t *testing.T) {
 func TestAwsAccInstanceProfiles(t *testing.T) {
 	arn := qa.GetEnvOrSkipTest(t, "TEST_EC2_INSTANCE_PROFILE")
 	client := common.NewClientFromEnvironment()
-	instanceProfilesAPI := NewInstanceProfilesAPI(client)
-	instanceProfilesAPI.Synchronized(arn, func() {
-		err := instanceProfilesAPI.Create(arn, true)
-		assert.NoError(t, err, err)
+	ctx := context.WithValue(context.Background(), common.Current, t.Name())
+	instanceProfilesAPI := NewInstanceProfilesAPI(ctx, client)
+	instanceProfilesAPI.Synchronized(arn, func() bool {
+		err := instanceProfilesAPI.Create(arn)
+		if err != nil {
+			return false
+		}
 		defer func() {
 			err := instanceProfilesAPI.Delete(arn)
 			assert.NoError(t, err, err)
@@ -199,5 +197,6 @@ func TestAwsAccInstanceProfiles(t *testing.T) {
 		arnSearch, err := instanceProfilesAPI.Read(arn)
 		assert.NoError(t, err, err)
 		assert.True(t, len(arnSearch) > 0)
+		return true
 	})
 }

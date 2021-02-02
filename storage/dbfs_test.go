@@ -2,7 +2,8 @@ package storage
 
 import (
 	"bytes"
-	"encoding/base64"
+	"context"
+	"crypto/md5"
 	"os"
 	"testing"
 
@@ -32,41 +33,38 @@ func TestAccCreateFile(t *testing.T) {
 	path3 := dir + "/dir2/randomfile2"
 
 	randomStr := GenString(500)
-	t.Log(len(randomStr))
-	t.Log(len(base64.StdEncoding.EncodeToString(randomStr)))
-
 	client := common.NewClientFromEnvironment()
 
-	err := NewDBFSAPI(client).Mkdirs(dir)
+	dbfsAPI := NewDbfsAPI(context.Background(), client)
+	err := dbfsAPI.Mkdirs(dir)
 	assert.NoError(t, err, err)
 
-	err = NewDBFSAPI(client).Mkdirs(dir2)
+	err = dbfsAPI.Mkdirs(dir2)
 	assert.NoError(t, err, err)
 
-	inputData := base64.StdEncoding.EncodeToString(randomStr)
-	err = NewDBFSAPI(client).Create(path, true, inputData)
+	err = dbfsAPI.Create(path, randomStr, true)
 	assert.NoError(t, err, err)
 
-	err = NewDBFSAPI(client).Create(path2, true, inputData)
+	err = dbfsAPI.Create(path2, randomStr, true)
 	assert.NoError(t, err, err)
 
-	err = NewDBFSAPI(client).Create(path3, true, inputData)
+	err = dbfsAPI.Create(path3, randomStr, true)
 	assert.NoError(t, err, err)
 
 	defer func() {
-		err := NewDBFSAPI(client).Delete(dir, true)
+		err := dbfsAPI.Delete(dir, true)
 		assert.NoError(t, err, err)
 	}()
 
-	base64Resp, err := NewDBFSAPI(client).Read(path)
+	resp, err := dbfsAPI.Read(path)
 	assert.NoError(t, err, err)
-	assert.True(t, inputData == base64Resp)
+	assert.True(t, md5.Sum(randomStr) == md5.Sum(resp))
 
-	items, err := NewDBFSAPI(client).List(dir, false)
+	items, err := dbfsAPI.List(dir, false)
 	assert.NoError(t, err, err)
 	assert.Len(t, items, 2)
 
-	items, err = NewDBFSAPI(client).List(dir, true)
+	items, err = dbfsAPI.List(dir, true)
 	assert.NoError(t, err, err)
 	assert.Len(t, items, 3)
 }

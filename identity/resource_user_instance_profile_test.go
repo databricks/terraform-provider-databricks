@@ -28,7 +28,7 @@ func TestResourceUserInstanceProfileCreate(t *testing.T) {
 				Response: ScimUser{
 					Schemas:     []URN{"urn:ietf:params:scim:schemas:core:2.0:User"},
 					DisplayName: "Data Scientists",
-					Roles: []RoleListItem{
+					Roles: []roleListItem{
 						{"arn:aws:iam::999999999999:instance-profile/my-fake-instance-profile"},
 					},
 					ID: "abc",
@@ -47,7 +47,7 @@ func TestResourceUserInstanceProfileCreate(t *testing.T) {
 }
 
 func TestResourceUserInstanceProfileCreate_Error_BadARN(t *testing.T) {
-	d, err := qa.ResourceFixture{
+	_, err := qa.ResourceFixture{
 		Resource: ResourceUserInstanceProfile(),
 		State: map[string]interface{}{
 			"user_id":             "abc",
@@ -55,8 +55,7 @@ func TestResourceUserInstanceProfileCreate_Error_BadARN(t *testing.T) {
 		},
 		Create: true,
 	}.Apply(t)
-	qa.AssertErrorStartsWith(t, err, "Illegal instance profile fake: arn: invalid prefix")
-	assert.Equal(t, "", d.Id(), "Id should be empty for error creates")
+	assert.EqualError(t, err, "Invalid config supplied. [instance_profile_id] Invalid ARN")
 }
 
 func TestResourceUserInstanceProfileCreate_Error(t *testing.T) {
@@ -92,7 +91,7 @@ func TestResourceUserInstanceProfileRead(t *testing.T) {
 				Response: ScimUser{
 					Schemas:     []URN{"urn:ietf:params:scim:schemas:core:2.0:User"},
 					DisplayName: "Data Scientists",
-					Roles: []RoleListItem{
+					Roles: []roleListItem{
 						{"arn:aws:iam::999999999999:instance-profile/my-fake-instance-profile"},
 					},
 					ID: "abc",
@@ -108,7 +107,7 @@ func TestResourceUserInstanceProfileRead(t *testing.T) {
 }
 
 func TestResourceUserInstanceProfileRead_NoRole(t *testing.T) {
-	d, err := qa.ResourceFixture{
+	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
@@ -122,14 +121,13 @@ func TestResourceUserInstanceProfileRead_NoRole(t *testing.T) {
 		},
 		Resource: ResourceUserInstanceProfile(),
 		Read:     true,
+		Removed:  true,
 		ID:       "abc|arn:aws:iam::999999999999:instance-profile/my-fake-instance-profile",
-	}.Apply(t)
-	assert.NoError(t, err, err)
-	assert.Equal(t, "", d.Id(), "Id should be empty for missing resources")
+	}.ApplyNoError(t)
 }
 
 func TestResourceUserInstanceProfileRead_NotFound(t *testing.T) {
-	d, err := qa.ResourceFixture{
+	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
@@ -143,10 +141,9 @@ func TestResourceUserInstanceProfileRead_NotFound(t *testing.T) {
 		},
 		Resource: ResourceUserInstanceProfile(),
 		Read:     true,
+		Removed:  true,
 		ID:       "abc|arn:aws:iam::999999999999:instance-profile/my-fake-instance-profile",
-	}.Apply(t)
-	assert.NoError(t, err, err)
-	assert.Equal(t, "", d.Id(), "Id should be empty for missing resources")
+	}.ApplyNoError(t)
 }
 
 func TestResourceUserInstanceProfileRead_Error(t *testing.T) {

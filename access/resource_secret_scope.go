@@ -4,21 +4,24 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"regexp"
 
 	"github.com/databrickslabs/databricks-terraform/common"
 	"github.com/databrickslabs/databricks-terraform/internal"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/databrickslabs/databricks-terraform/internal/util"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 // NewSecretScopesAPI creates SecretScopesAPI instance from provider meta
-func NewSecretScopesAPI(m interface{}) SecretScopesAPI {
-	return SecretScopesAPI{client: m.(*common.DatabricksClient)}
+func NewSecretScopesAPI(ctx context.Context, m interface{}) SecretScopesAPI {
+	return SecretScopesAPI{m.(*common.DatabricksClient), ctx}
 }
 
 // SecretScopesAPI exposes the Secret Scopes API
 type SecretScopesAPI struct {
-	client *common.DatabricksClient
+	client  *common.DatabricksClient
+	context context.Context
 }
 
 // SecretScopeList holds list of secret scopes
@@ -57,6 +60,9 @@ func (a SecretScopesAPI) Create(s SecretScope) error {
 		BackendType:            "DATABRICKS",
 	}
 	if s.KeyvaultMetadata != nil {
+		if err := a.client.Authenticate(); err != nil {
+			return err
+		}
 		if !a.client.IsAzure() {
 			return fmt.Errorf("Azure KeyVault is not available")
 		}
@@ -66,12 +72,12 @@ func (a SecretScopesAPI) Create(s SecretScope) error {
 		req.BackendType = "AZURE_KEYVAULT"
 		req.BackendAzureKeyvault = s.KeyvaultMetadata
 	}
-	return a.client.Post("/secrets/scopes/create", req, nil)
+	return a.client.Post(a.context, "/secrets/scopes/create", req, nil)
 }
 
 // Delete deletes a secret scope
 func (a SecretScopesAPI) Delete(scope string) error {
-	return a.client.Post("/secrets/scopes/delete", map[string]string{
+	return a.client.Post(a.context, "/secrets/scopes/delete", map[string]string{
 		"scope": scope,
 	}, nil)
 }
@@ -79,7 +85,7 @@ func (a SecretScopesAPI) Delete(scope string) error {
 // List lists all secret scopes available in the workspace
 func (a SecretScopesAPI) List() ([]SecretScope, error) {
 	var listSecretScopesResponse SecretScopeList
-	err := a.client.Get("/secrets/scopes/list", nil, &listSecretScopesResponse)
+	err := a.client.Get(a.context, "/secrets/scopes/list", nil, &listSecretScopesResponse)
 	return listSecretScopesResponse.Scopes, err
 }
 
@@ -103,56 +109,44 @@ func (a SecretScopesAPI) Read(scopeName string) (SecretScope, error) {
 	}
 }
 
+var validScope = validation.StringMatch(regexp.MustCompile(`^[\w\.@_-]{1,128}$`),
+	"Must consist of alphanumeric characters, dashes, underscores, and periods, "+
+		"and may not exceed 128 characters.")
+
 // ResourceSecretScope manages secret scopes
 func ResourceSecretScope() *schema.Resource {
 	s := internal.StructToSchema(SecretScope{}, func(s map[string]*schema.Schema) map[string]*schema.Schema {
 		// TODO: DiffSuppressFunc for initial_manage_principal & importing
 		s["name"].ForceNew = true
+		// nolint
+		s["name"].ValidateFunc = validScope
 		s["initial_manage_principal"].ForceNew = true
 		s["keyvault_metadata"].ForceNew = true
 		return s
 	})
-	readContext := func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-		scope, err := NewSecretScopesAPI(m).Read(d.Id())
-		if e, ok := err.(common.APIError); ok && e.IsMissing() {
-			d.SetId("")
-			return nil
-		}
-		if err != nil {
-			return diag.FromErr(err)
-		}
-		err = internal.StructToData(scope, s, d)
-		if err != nil {
-			return diag.FromErr(err)
-		}
-		return nil
-	}
-	return &schema.Resource{
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
-		CreateContext: func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+	return util.CommonResource{
+		Schema:        s,
+		SchemaVersion: 2,
+		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var scope SecretScope
-			err := internal.DataToStructPointer(d, s, &scope)
-			if err != nil {
-				return diag.FromErr(err)
+			if err := internal.DataToStructPointer(d, s, &scope); err != nil {
+				return err
 			}
-			err = NewSecretScopesAPI(m).Create(scope)
-			if err != nil {
-				return diag.FromErr(err)
+			if err := NewSecretScopesAPI(ctx, c).Create(scope); err != nil {
+				return err
 			}
 			d.SetId(scope.Name)
-			return readContext(ctx, d, m)
-		},
-		DeleteContext: func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-			err := NewSecretScopesAPI(m).Delete(d.Id())
-			if err != nil {
-				return diag.FromErr(err)
-			}
 			return nil
 		},
-		ReadContext:   readContext,
-		SchemaVersion: 2,
-		Schema:        s,
-	}
+		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			scope, err := NewSecretScopesAPI(ctx, c).Read(d.Id())
+			if err != nil {
+				return err
+			}
+			return internal.StructToData(scope, s, d)
+		},
+		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			return NewSecretScopesAPI(ctx, c).Delete(d.Id())
+		},
+	}.ToResource()
 }

@@ -1,10 +1,12 @@
 package access
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"regexp"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
@@ -26,9 +28,10 @@ type awsIamPolicyStatement struct {
 	Condition    map[string]map[string]string `json:"Condition,omitempty"`
 }
 
+// DataAwsCrossAccountRolicy ...
 func DataAwsCrossAccountRolicy() *schema.Resource {
 	return &schema.Resource{
-		Read: func(d *schema.ResourceData, m interface{}) error {
+		ReadContext: func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 			policy := awsIamPolicy{
 				Version: "2008-10-17",
 				Statements: []*awsIamPolicyStatement{
@@ -127,10 +130,12 @@ func DataAwsCrossAccountRolicy() *schema.Resource {
 			}
 			policyJSON, err := json.MarshalIndent(policy, "", "  ")
 			if err != nil {
-				return err
+				return diag.FromErr(err)
 			}
 			d.SetId("cross-account")
-			return d.Set("json", string(policyJSON))
+			// nolint
+			d.Set("json", string(policyJSON))
+			return nil
 		},
 		Schema: map[string]*schema.Schema{
 			"pass_roles": {
@@ -149,9 +154,10 @@ func DataAwsCrossAccountRolicy() *schema.Resource {
 	}
 }
 
+// DataAwsAssumeRolePolicy ...
 func DataAwsAssumeRolePolicy() *schema.Resource {
 	return &schema.Resource{
-		Read: func(d *schema.ResourceData, m interface{}) error {
+		ReadContext: func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 			externalID := d.Get("external_id").(string)
 			policy := awsIamPolicy{
 				Version: "2008-10-17",
@@ -179,10 +185,12 @@ func DataAwsAssumeRolePolicy() *schema.Resource {
 			}
 			policyJSON, err := json.MarshalIndent(policy, "", "  ")
 			if err != nil {
-				return err
+				return diag.FromErr(err)
 			}
 			d.SetId(externalID)
-			return d.Set("json", string(policyJSON))
+			// nolint
+			d.Set("json", string(policyJSON))
+			return nil
 		},
 		Schema: map[string]*schema.Schema{
 			"databricks_account_id": {
@@ -209,9 +217,10 @@ func DataAwsAssumeRolePolicy() *schema.Resource {
 	}
 }
 
+// DataAwsBucketPolicy ...
 func DataAwsBucketPolicy() *schema.Resource {
 	return &schema.Resource{
-		Read: func(d *schema.ResourceData, m interface{}) error {
+		ReadContext: func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 			bucket := d.Get("bucket").(string)
 			policy := awsIamPolicy{
 				Version: "2008-10-17",
@@ -241,10 +250,12 @@ func DataAwsBucketPolicy() *schema.Resource {
 			}
 			policyJSON, err := json.MarshalIndent(policy, "", "  ")
 			if err != nil {
-				return err
+				return diag.FromErr(err)
 			}
 			d.SetId(bucket)
-			return d.Set("json", string(policyJSON))
+			// nolint
+			d.Set("json", string(policyJSON))
+			return nil
 		},
 		Schema: map[string]*schema.Schema{
 			"databricks_account_id": {

@@ -1,10 +1,10 @@
 package compute
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"os"
-	"strings"
 	"sync"
 
 	"github.com/databrickslabs/databricks-terraform/common"
@@ -16,22 +16,6 @@ var (
 	commonInstancePool *InstancePoolAndStats
 )
 
-// CommonRuntimeVersion presents recommended Spark Version
-func CommonRuntimeVersion() string {
-	return "6.6.x-scala2.11"
-}
-
-// CommonInstanceType presents smallest recommended instance type
-func CommonInstanceType() string {
-	cloudEnv := os.Getenv("CLOUD_ENV")
-	if strings.ToLower(cloudEnv) == "azure" {
-		return "Standard_DS3_v2"
-	}
-	// TODO: create a method on ClustersAPI to give
-	// cloud specific delta-cache enabled instance by default.
-	return "m4.large"
-}
-
 // CommonInstancePoolID returns common instance pool that is supposed to be used for internal testing purposes
 func CommonInstancePoolID() string {
 	if commonInstancePool != nil {
@@ -40,8 +24,9 @@ func CommonInstancePoolID() string {
 	client := common.CommonEnvironmentClient()
 	oncePool.Do(func() { // atomic
 		log.Printf("[INFO] Initializing common instance pool")
-		instancePools := NewInstancePoolsAPI(client)
-		clusters := NewClustersAPI(client)
+		ctx := context.Background()
+		instancePools := NewInstancePoolsAPI(ctx, client)
+		clusters := NewClustersAPI(ctx, client)
 		currentUserPool := fmt.Sprintf("Terraform Integration Test by %s", os.Getenv("USER"))
 		pools, err := instancePools.List()
 		if err != nil {
@@ -58,7 +43,8 @@ func CommonInstancePoolID() string {
 			}
 		}
 		instancePool := InstancePool{
-			PreloadedSparkVersions: []string{CommonRuntimeVersion()},
+			PreloadedSparkVersions: []string{
+				clusters.LatestSparkVersionOrDefault(SparkVersionRequest{Latest: true, LongTermSupport: true})},
 			NodeTypeID: clusters.GetSmallestNodeType(NodeTypeRequest{
 				LocalDisk: true,
 			}),
@@ -87,18 +73,21 @@ func CommonInstancePoolID() string {
 // CommonEnvironmentClientWithRealCommandExecutor is good for internal tests
 func CommonEnvironmentClientWithRealCommandExecutor() *common.DatabricksClient {
 	client := common.CommonEnvironmentClient()
-	client.WithCommandExecutor(NewCommandsAPI(client))
+	client.WithCommandExecutor(func(ctx context.Context, _ *common.DatabricksClient) common.CommandExecutor {
+		return NewCommandsAPI(ctx, client)
+	})
 	return client
 }
 
 // NewTinyClusterInCommonPool creates new cluster for short-lived purposes
 func NewTinyClusterInCommonPool() (c ClusterInfo, err error) {
 	randomName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
-	clusters := NewClustersAPI(CommonEnvironmentClientWithRealCommandExecutor())
+	ctx := context.Background()
+	clusters := NewClustersAPI(ctx, CommonEnvironmentClientWithRealCommandExecutor())
 	c, err = clusters.Create(Cluster{
 		NumWorkers:             1,
 		ClusterName:            "Terraform " + randomName,
-		SparkVersion:           CommonRuntimeVersion(),
+		SparkVersion:           clusters.LatestSparkVersionOrDefault(SparkVersionRequest{Latest: true, LongTermSupport: true}),
 		InstancePoolID:         CommonInstancePoolID(),
 		IdempotencyToken:       "tf-" + randomName,
 		AutoterminationMinutes: 20,
@@ -110,11 +99,12 @@ func NewTinyClusterInCommonPool() (c ClusterInfo, err error) {
 func NewTinyClusterInCommonPoolPossiblyReused() (c ClusterInfo) {
 	randomName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
 	currentCluster := "TerraformIntegrationTest"
-	clusters := NewClustersAPI(CommonEnvironmentClientWithRealCommandExecutor())
+	ctx := context.Background()
+	clusters := NewClustersAPI(ctx, CommonEnvironmentClientWithRealCommandExecutor())
 	c, err := clusters.GetOrCreateRunningCluster(currentCluster, Cluster{
 		NumWorkers:             1,
 		ClusterName:            currentCluster,
-		SparkVersion:           CommonRuntimeVersion(),
+		SparkVersion:           clusters.LatestSparkVersionOrDefault(SparkVersionRequest{Latest: true, LongTermSupport: true}),
 		InstancePoolID:         CommonInstancePoolID(),
 		IdempotencyToken:       "tf-" + randomName,
 		AutoterminationMinutes: 20,

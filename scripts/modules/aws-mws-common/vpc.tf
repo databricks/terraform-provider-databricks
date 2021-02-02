@@ -4,13 +4,19 @@ variable "region" {}
 locals {
   // see https://docs.databricks.com/administration-guide/cloud-configurations/aws/customer-managed-vpc.html
   allows = {
-    "us-east-1": [
+    "us-east-1" : [
       "52.27.216.188/32",
       "54.156.226.103/32",
     ],
-    "us-east-2": [
+    "us-east-2" : [
       "52.27.216.188/32",
       "18.221.200.169/32",
+    ],
+    "us-west-2" : [
+      "10.200.0.0/16"
+    ],
+    "eu-west-1" : [
+      "46.137.47.49/32",
     ]
   }
 }
@@ -29,9 +35,9 @@ output "vpc_id" {
 }
 
 resource "aws_subnet" "public" {
-  vpc_id            = aws_vpc.main.id
-  cidr_block        = cidrsubnet(aws_vpc.main.cidr_block, 3, 0)
-  availability_zone = "${var.region}b"
+  vpc_id     = aws_vpc.main.id
+  cidr_block = cidrsubnet(aws_vpc.main.cidr_block, 3, 0)
+  //availability_zone = "${var.region}b"
 
   tags = merge(var.tags, {
     Name = "${var.prefix}-public-sn"
@@ -47,7 +53,7 @@ resource "aws_internet_gateway" "gw" {
 
 resource "aws_route_table" "public" {
   vpc_id = aws_vpc.main.id
-  
+
   route {
     gateway_id = aws_internet_gateway.gw.id
     cidr_block = "0.0.0.0/0"
@@ -60,11 +66,11 @@ resource "aws_route_table" "public" {
 
 resource "aws_route_table_association" "public" {
   route_table_id = aws_route_table.public.id
-  subnet_id = aws_subnet.public.id
+  subnet_id      = aws_subnet.public.id
 }
 
 resource "aws_eip" "nat" {
-  vpc = true
+  vpc        = true
   depends_on = [aws_internet_gateway.gw]
   tags = merge(var.tags, {
     Name = "${var.prefix}-eip"
@@ -84,9 +90,9 @@ output "subnet_public" {
 }
 
 resource "aws_subnet" "private" {
-  vpc_id            = aws_vpc.main.id
-  cidr_block        = cidrsubnet(aws_vpc.main.cidr_block, 3, 1)
-  availability_zone = "${var.region}a"
+  vpc_id     = aws_vpc.main.id
+  cidr_block = cidrsubnet(aws_vpc.main.cidr_block, 3, 1)
+  //availability_zone = "${var.region}a"
 
   tags = merge(var.tags, {
     Name = "${var.prefix}-private-sn"
@@ -98,7 +104,7 @@ resource "aws_route_table" "private" {
 
   route {
     nat_gateway_id = aws_nat_gateway.gw.id
-    cidr_block = "0.0.0.0/0"
+    cidr_block     = "0.0.0.0/0"
   }
 
   tags = merge(var.tags, {
@@ -108,7 +114,7 @@ resource "aws_route_table" "private" {
 
 resource "aws_route_table_association" "private" {
   route_table_id = aws_route_table.private.id
-  subnet_id = aws_subnet.private.id
+  subnet_id      = aws_subnet.private.id
 }
 
 output "subnet_private" {
@@ -125,7 +131,7 @@ resource "aws_security_group" "test_sg" {
     protocol    = "tcp"
     from_port   = 0
     to_port     = 65535
-    self = true
+    self        = true
   }
 
   ingress {
@@ -133,23 +139,23 @@ resource "aws_security_group" "test_sg" {
     protocol    = "udp"
     from_port   = 0
     to_port     = 65535
-    self = true
+    self        = true
   }
 
   ingress {
     cidr_blocks = local.allows[var.region]
     description = "ssh"
-    from_port = 22
-    to_port = 22
-    protocol = "tcp"
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
   }
 
   ingress {
     cidr_blocks = local.allows[var.region]
     description = "proxy"
-    from_port = 5557
-    to_port = 5557
-    protocol = "tcp"
+    from_port   = 5557
+    to_port     = 5557
+    protocol    = "tcp"
   }
 
   egress {

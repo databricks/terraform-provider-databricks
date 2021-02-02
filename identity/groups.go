@@ -1,22 +1,26 @@
 package identity
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"net/http"
-	"sort"
 
 	"github.com/databrickslabs/databricks-terraform/common"
 )
 
 // NewGroupsAPI creates GroupsAPI instance from provider meta
-func NewGroupsAPI(m interface{}) GroupsAPI {
-	return GroupsAPI{client: m.(*common.DatabricksClient)}
+func NewGroupsAPI(ctx context.Context, m interface{}) GroupsAPI {
+	return GroupsAPI{
+		client:  m.(*common.DatabricksClient),
+		context: ctx,
+	}
 }
 
 // GroupsAPI exposes the scim groups API
 type GroupsAPI struct {
-	client *common.DatabricksClient
+	client  *common.DatabricksClient
+	context context.Context
 }
 
 // Create creates a scim group in the Databricks workspace
@@ -45,28 +49,16 @@ func (a GroupsAPI) Create(groupName string, members []string, roles []string, en
 	for _, entitlement := range entitlements {
 		scimGroupRequest.Entitlements = append(scimGroupRequest.Entitlements, ValueListItem{Value: entitlement})
 	}
-	err = a.client.Scim(http.MethodPost, "/preview/scim/v2/Groups", scimGroupRequest, &group)
+	err = a.client.Scim(a.context, http.MethodPost, "/preview/scim/v2/Groups", scimGroupRequest, &group)
 	return
 }
 
 // Read reads and returns a Group object via SCIM api
 func (a GroupsAPI) Read(groupID string) (group ScimGroup, err error) {
-	err = a.client.Scim(http.MethodGet, fmt.Sprintf("/preview/scim/v2/Groups/%v", groupID), nil, &group)
+	err = a.client.Scim(a.context, http.MethodGet, fmt.Sprintf("/preview/scim/v2/Groups/%v", groupID), nil, &group)
 	if err != nil {
 		return
 	}
-	//get inherited groups
-	var groups []ScimGroup
-	for _, inheritedGroup := range group.Parents {
-		inheritedGroupFull, err := a.Read(inheritedGroup.Value)
-		if err != nil {
-			return group, err
-		}
-		groups = append(groups, inheritedGroupFull)
-	}
-	inherited, unInherited := a.getInheritedAndNonInheritedRoles(group, groups)
-	group.InheritedRoles = inherited
-	group.UnInheritedRoles = unInherited
 	return
 }
 
@@ -77,29 +69,13 @@ func (a GroupsAPI) Filter(filter string) (GroupList, error) {
 	if filter != "" {
 		req["filter"] = filter
 	}
-	err := a.client.Scim(http.MethodGet, "/preview/scim/v2/Groups", req, &groups)
+	err := a.client.Scim(a.context, http.MethodGet, "/preview/scim/v2/Groups", req, &groups)
 	return groups, err
 }
 
-// GetAdminGroup returns the admin group in a given workspace by fetching with query "displayName+eq+admins"
-func (a GroupsAPI) GetAdminGroup() (ScimGroup, error) {
-	var group ScimGroup
-	var groups GroupList
-	err := a.client.Scim(http.MethodGet, "/preview/scim/v2/Groups", map[string]string{
-		"filter": "displayName+eq+admins",
-	}, &groups)
-	if err != nil {
-		return group, err
-	}
-	resources := groups.Resources
-	if len(resources) == 1 {
-		return resources[0], err
-	}
-	return group, errors.New("Unable to identify the admin group! ")
-}
-
+// PatchR ...
 func (a GroupsAPI) PatchR(groupID string, r patchRequest) error {
-	return a.client.Scim(http.MethodPatch, fmt.Sprintf("/preview/scim/v2/Groups/%v", groupID), r, nil)
+	return a.client.Scim(a.context, http.MethodPatch, fmt.Sprintf("/preview/scim/v2/Groups/%v", groupID), r, nil)
 }
 
 // Patch applys a patch request for a group given a path attribute
@@ -138,38 +114,12 @@ func (a GroupsAPI) Patch(groupID string, addList []string, removeList []string, 
 		}
 		groupPatchRequest.Operations = append(groupPatchRequest.Operations, removeOperations)
 	}
-	return a.client.Scim(http.MethodPatch, groupPath, groupPatchRequest, nil)
+	return a.client.Scim(a.context, http.MethodPatch, groupPath, groupPatchRequest, nil)
 }
 
 // Delete deletes a group given a group id
 func (a GroupsAPI) Delete(groupID string) error {
-	return a.client.Scim(http.MethodDelete,
+	return a.client.Scim(a.context, http.MethodDelete,
 		fmt.Sprintf("/preview/scim/v2/Groups/%v", groupID),
 		nil, nil)
-}
-
-func (a GroupsAPI) getInheritedAndNonInheritedRoles(
-	group ScimGroup, groups []ScimGroup) (inherited []RoleListItem,
-	unInherited []RoleListItem) {
-	allRoles := group.Roles
-	var inheritedRoles []RoleListItem
-	inheritedRolesKeys := []string{}
-	inheritedRolesMap := map[string]RoleListItem{}
-	for _, group := range groups {
-		inheritedRoles = append(inheritedRoles, group.Roles...)
-	}
-	for _, role := range inheritedRoles {
-		inheritedRolesKeys = append(inheritedRolesKeys, role.Value)
-		inheritedRolesMap[role.Value] = role
-	}
-	sort.Strings(inheritedRolesKeys)
-	for _, roleKey := range inheritedRolesKeys {
-		inherited = append(inherited, inheritedRolesMap[roleKey])
-	}
-	for _, role := range allRoles {
-		if _, ok := inheritedRolesMap[role.Value]; !ok {
-			unInherited = append(unInherited, role)
-		}
-	}
-	return inherited, unInherited
 }

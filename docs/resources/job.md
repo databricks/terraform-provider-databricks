@@ -5,35 +5,44 @@ The databricks_job resource allows you to create, edit, and delete jobs, which r
 ## Example Usage
 
 ```hcl
+data "databricks_current_user" "me" {}
+data "databricks_spark_version" "latest" {}
 data "databricks_node_type" "smallest" {
-    local_disk = true
+  local_disk = true
+}
+
+resource "databricks_notebook" "this" {
+  path     = "${data.databricks_current_user.me.home}/Terraform"
+  language = "PYTHON"
+  content_base64 = base64encode(<<-EOT
+    # created from ${abspath(path.module)}
+    display(spark.range(10))
+    EOT
+  )
 }
 
 resource "databricks_job" "this" {
-    name = "Featurization"
-    timeout_seconds = 3600
-    max_retries = 1
-    max_concurrent_runs = 1
-    
-    new_cluster  {
-        num_workers   = 300
-        spark_version = "6.6.x-scala2.11"
-        node_type_id  = data.databricks_node_type.smallest.id
-    }
-    
-    notebook_task {
-        notebook_path = "/Production/MakeFeatures"
-    }
-    
-    library {
-        pypi {
-            package = "fbprophet==0.6"
-        }
-    }
-    
-    email_notifications {
-        no_alert_for_skipped_runs = true
-    }
+  name = "Terraform Demo (${data.databricks_current_user.me.alphanumeric})"
+
+  new_cluster {
+    num_workers   = 1
+    spark_version = data.databricks_spark_version.latest.id
+    node_type_id  = data.databricks_node_type.smallest.id
+  }
+
+  notebook_task {
+    notebook_path = databricks_notebook.this.path
+  }
+
+  email_notifications {}
+}
+
+output "notebook_url" {
+  value = databricks_notebook.this.url
+}
+
+output "job_url" {
+  value = databricks_job.this.url
 }
 ```
 
@@ -55,7 +64,7 @@ The following arguments are required:
 
 ### schedule Configuration Block
 
-* `quartz_cron_expression` - (Required) (String) A Cron expression using Quartz syntax that describes the schedule for a job. This field is required.
+* `quartz_cron_expression` - (Required) (String) A [Cron expression using Quartz syntax](http://www.quartz-scheduler.org/documentation/quartz-2.3.0/tutorials/crontrigger.html) that describes the schedule for a job. This field is required.
 * `timezone_id` - (Required) (String) A Java timezone ID. The schedule for a job will be resolved with respect to this timezone. See Java TimeZone for details. This field is required.
 
 ### spark_jar_task Configuration Block

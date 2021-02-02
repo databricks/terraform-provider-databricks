@@ -17,30 +17,27 @@ Contributing to Databricks Terraform Provider
 
 We happily welcome contributions to databricks-terraform. We use GitHub Issues to track community reported issues and GitHub Pull Requests for accepting changes.
 
+## Installing for Terraform 0.12
+
+If you use Terraform 0.12, please execute the following curl command in your shell:
+
+```bash
+curl https://raw.githubusercontent.com/databrickslabs/databricks-terraform/master/godownloader-databricks-provider.sh | bash -s -- -b $HOME/.terraform.d/plugins
+```
+
 ## Installing from source
 
 The following command (tested on Ubuntu 20.04) will install `make`, `golang`, `git` with all of the dependent packages as well as Databricks Terrafrom provider from sources. Required version of GoLang is at least 1.13. Required version of terraform is at least 0.12. 
 
+On MacOS X, you can install GoLang through `brew install go`, on Debian-based Linux, you can install it by `sudo apt-get install golang -y`.
+
 ```bash
-sudo apt-get update
-sudo apt-get install make golang git -y
 git clone https://github.com/databrickslabs/terraform-provider-databricks.git
 cd terraform-provider-databricks
 make install
 ```
 
-Now your plugin for the Databricks Terraform provider is installed correctly. If you have Terraform 0.13, you'd need to paste configuration that might look like the following one into your `main.tf`:
-
-```hcl
-terraform {
-  required_providers {
-    databricks = {
-      source = "databrickslabs/databricks"
-      version = "0.2.3-22-gd91b475"
-    }
-  }
-}
-```
+Most likely, `terraform init -upgrade -verify-plugins=false -lock=false` would be a very great command to use.
 
 ## Developing provider
 
@@ -60,6 +57,11 @@ $(go env GOPATH)/bin/golangci-lint
 Installing `gotestsum`:
 ```bash
 go get gotest.tools/gotestsum
+```
+
+Installing `goimports`:
+```bash
+go get golang.org/x/tools/cmd/goimports
 ```
 
 After this, you should be able to run `make test`.
@@ -103,6 +105,7 @@ $ docker run -it -v $(pwd):/workpace -w /workpace databricks-terraform apply
 * Consider test functions as scenarios, that you are debugging from IDE when specific issues arise. Test tables are discouraged. Single-use functions in tests are discouraged, unless resource definitions they make are longer than 80 lines.
 * All tests should be capable of repeatedly running on "dirty" environment, which means not requiring a new clean environment every time the test runs.
 * All tests should re-use compute resources whenever possible.
+* Prefer `require.NoError` (stops the test on error) to `assert.NoError` (continues the test on error) when checking the results.
 
 ## Code conventions
 
@@ -123,7 +126,7 @@ Eventually, all of resources would be automatically checked for a unit test pres
 
 ```go
 for name, resource := range p.ResourcesMap {
-	if name != "databricks_scim_user" {
+	if name != "databricks_user" {
 		continue
 	}
 	//...

@@ -26,6 +26,9 @@ var (
 		"does not have any associated worker environments",
 		"There is no worker environment with id",
 		"ClusterNotReadyException",
+		"connection reset by peer",
+		"connection refused",
+		"i/o timeout",
 	}
 )
 
@@ -204,13 +207,8 @@ func (c *DatabricksClient) parseError(resp *http.Response) APIError {
 // checkHTTPRetry inspects HTTP errors from the Databricks API for known transient errors on Workspace creation
 func (c *DatabricksClient) checkHTTPRetry(ctx context.Context, resp *http.Response, err error) (bool, error) {
 	if ue, ok := err.(*url.Error); ok {
-		if strings.Contains(ue.Error(), "connection refused") || strings.Contains(ue.Error(), "i/o timeout") {
-			log.Printf("[INFO] Attempting retry because of IO error: %s", ue.Error())
-			return true, APIError{
-				Message:   ue.Error(),
-				ErrorCode: "IO_ERROR",
-			}
-		}
+		apiError := APIError{ErrorCode: "IO_ERROR", Message: ue.Error()}
+		return apiError.IsRetriable(), apiError
 	}
 	if resp == nil {
 		// If response is nil we can't make retry choices.
@@ -232,8 +230,8 @@ func (c *DatabricksClient) checkHTTPRetry(ctx context.Context, resp *http.Respon
 }
 
 // Get on path
-func (c *DatabricksClient) Get(path string, request interface{}, response interface{}) error {
-	body, err := c.authenticatedQuery(http.MethodGet, path, request, c.api2)
+func (c *DatabricksClient) Get(ctx context.Context, path string, request interface{}, response interface{}) error {
+	body, err := c.authenticatedQuery(ctx, http.MethodGet, path, request, c.api2)
 	if err != nil {
 		return err
 	}
@@ -241,8 +239,8 @@ func (c *DatabricksClient) Get(path string, request interface{}, response interf
 }
 
 // Post on path
-func (c *DatabricksClient) Post(path string, request interface{}, response interface{}) error {
-	body, err := c.authenticatedQuery(http.MethodPost, path, request, c.api2)
+func (c *DatabricksClient) Post(ctx context.Context, path string, request interface{}, response interface{}) error {
+	body, err := c.authenticatedQuery(ctx, http.MethodPost, path, request, c.api2)
 	if err != nil {
 		return err
 	}
@@ -250,20 +248,20 @@ func (c *DatabricksClient) Post(path string, request interface{}, response inter
 }
 
 // Delete on path
-func (c *DatabricksClient) Delete(path string, request interface{}) error {
-	_, err := c.authenticatedQuery(http.MethodDelete, path, request, c.api2)
+func (c *DatabricksClient) Delete(ctx context.Context, path string, request interface{}) error {
+	_, err := c.authenticatedQuery(ctx, http.MethodDelete, path, request, c.api2)
 	return err
 }
 
 // Patch on path
-func (c *DatabricksClient) Patch(path string, request interface{}) error {
-	_, err := c.authenticatedQuery(http.MethodPatch, path, request, c.api2)
+func (c *DatabricksClient) Patch(ctx context.Context, path string, request interface{}) error {
+	_, err := c.authenticatedQuery(ctx, http.MethodPatch, path, request, c.api2)
 	return err
 }
 
 // Put on path
-func (c *DatabricksClient) Put(path string, request interface{}) error {
-	_, err := c.authenticatedQuery(http.MethodPut, path, request, c.api2)
+func (c *DatabricksClient) Put(ctx context.Context, path string, request interface{}) error {
+	_, err := c.authenticatedQuery(ctx, http.MethodPut, path, request, c.api2)
 	return err
 }
 
@@ -322,8 +320,8 @@ func (c *DatabricksClient) api12(r *http.Request) error {
 }
 
 // Scim sets SCIM headers
-func (c *DatabricksClient) Scim(method, path string, request interface{}, response interface{}) error {
-	body, err := c.authenticatedQuery(method, path, request, c.api2, func(r *http.Request) error {
+func (c *DatabricksClient) Scim(ctx context.Context, method, path string, request interface{}, response interface{}) error {
+	body, err := c.authenticatedQuery(ctx, method, path, request, c.api2, func(r *http.Request) error {
 		r.Header.Set("Content-Type", "application/scim+json")
 		return nil
 	})
@@ -334,22 +332,22 @@ func (c *DatabricksClient) Scim(method, path string, request interface{}, respon
 }
 
 // OldAPI performs call on context api
-func (c *DatabricksClient) OldAPI(method, path string, request interface{}, response interface{}) error {
-	body, err := c.authenticatedQuery(method, path, request, c.api12)
+func (c *DatabricksClient) OldAPI(ctx context.Context, method, path string, request interface{}, response interface{}) error {
+	body, err := c.authenticatedQuery(ctx, method, path, request, c.api12)
 	if err != nil {
 		return err
 	}
 	return c.unmarshall(path, body, &response)
 }
 
-func (c *DatabricksClient) authenticatedQuery(method, requestURL string, data interface{},
-	visitors ...func(*http.Request) error) (body []byte, err error) {
+func (c *DatabricksClient) authenticatedQuery(ctx context.Context, method, requestURL string,
+	data interface{}, visitors ...func(*http.Request) error) (body []byte, err error) {
 	err = c.Authenticate()
 	if err != nil {
 		return
 	}
 	visitors = append([]func(*http.Request) error{c.authVisitor}, visitors...)
-	return c.genericQuery(method, requestURL, data, visitors...)
+	return c.genericQuery(ctx, method, requestURL, data, visitors...)
 }
 
 func (c *DatabricksClient) recursiveMask(requestMap map[string]interface{}) interface{} {
@@ -397,21 +395,37 @@ func (c *DatabricksClient) redactedDump(body []byte) (res string) {
 	return onlyNBytes(string(rePacked), 1024)
 }
 
+func (c *DatabricksClient) userAgent(ctx context.Context) string {
+	resource := "unknown"
+	terraformVersion := "unknown"
+	if rn, ok := ctx.Value(ResourceName).(string); ok {
+		resource = rn
+	}
+	if c.Provider != nil {
+		terraformVersion = c.Provider.TerraformVersion
+	}
+	return fmt.Sprintf("databricks-tf-provider/%s (+%s) terraform/%s",
+		Version(), resource, terraformVersion)
+}
+
 // todo: do is better name
-func (c *DatabricksClient) genericQuery(method, requestURL string, data interface{},
+func (c *DatabricksClient) genericQuery(ctx context.Context, method, requestURL string, data interface{},
 	visitors ...func(*http.Request) error) (body []byte, err error) {
 	if c.httpClient == nil {
 		return nil, fmt.Errorf("DatabricksClient is not configured")
+	}
+	if err = c.rateLimiter.Wait(ctx); err != nil {
+		return nil, err
 	}
 	requestBody, err := makeRequestBody(method, &requestURL, data, true)
 	if err != nil {
 		return nil, err
 	}
-	request, err := http.NewRequest(method, requestURL, bytes.NewBuffer(requestBody))
+	request, err := http.NewRequestWithContext(ctx, method, requestURL, bytes.NewBuffer(requestBody))
 	if err != nil {
 		return nil, err
 	}
-	request.Header.Set("User-Agent", c.userAgent)
+	request.Header.Set("User-Agent", c.userAgent(ctx))
 	for _, requestVisitor := range visitors {
 		err = requestVisitor(request)
 		if err != nil {
@@ -421,7 +435,7 @@ func (c *DatabricksClient) genericQuery(method, requestURL string, data interfac
 	headers := ""
 	if c.DebugHeaders {
 		for k, v := range request.Header {
-			headers += fmt.Sprintf("\n * %s: %s", k, onlyNBytes(strings.Join(v, ""), 16))
+			headers += fmt.Sprintf("\n * %s: %s", k, onlyNBytes(strings.Join(v, ""), c.DebugTruncateBytes))
 		}
 		if len(headers) > 0 {
 			headers += "\n"

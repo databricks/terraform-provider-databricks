@@ -1,6 +1,7 @@
 package compute
 
 import (
+	"context"
 	"os"
 	"testing"
 
@@ -110,7 +111,8 @@ func TestAccLibraryCreate(t *testing.T) {
 	clusterInfo, err := NewTinyClusterInCommonPool()
 	assert.NoError(t, err, err)
 	defer func() {
-		err := NewClustersAPI(client).PermanentDelete(clusterInfo.ClusterID)
+		ctx := context.Background()
+		err := NewClustersAPI(ctx, client).PermanentDelete(clusterInfo.ClusterID)
 		assert.NoError(t, err, err)
 	}()
 
@@ -128,21 +130,23 @@ func TestAccLibraryCreate(t *testing.T) {
 		},
 	}
 
-	err = NewLibrariesAPI(client).Install(ClusterLibraryList{
+	ctx := context.Background()
+	libsAPI := NewLibrariesAPI(ctx, client)
+	err = libsAPI.Install(ClusterLibraryList{
 		ClusterID: clusterID,
 		Libraries: libraries,
 	})
 	assert.NoError(t, err, err)
 
 	defer func() {
-		err = NewLibrariesAPI(client).Uninstall(ClusterLibraryList{
+		err = libsAPI.Uninstall(ClusterLibraryList{
 			ClusterID: clusterID,
 			Libraries: libraries,
 		})
 		assert.NoError(t, err, err)
 	}()
 
-	libraryStatusList, err := NewLibrariesAPI(client).ClusterStatus(clusterID)
+	libraryStatusList, err := libsAPI.ClusterStatus(clusterID)
 	assert.NoError(t, err, err)
 	assert.Equal(t, len(libraryStatusList.LibraryStatuses), len(libraries))
 }

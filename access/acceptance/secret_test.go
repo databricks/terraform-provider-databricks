@@ -1,8 +1,7 @@
 package acceptance
 
 import (
-	"errors"
-	"fmt"
+	"context"
 	"os"
 	"testing"
 
@@ -10,9 +9,8 @@ import (
 
 	"github.com/databrickslabs/databricks-terraform/common"
 	"github.com/databrickslabs/databricks-terraform/internal/acceptance"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/databrickslabs/databricks-terraform/internal/qa"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -20,136 +18,37 @@ func TestAccSecretResource(t *testing.T) {
 	if _, ok := os.LookupEnv("CLOUD_ENV"); !ok {
 		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
 	}
-	var secret SecretMetadata
-	randomName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
-	scope := fmt.Sprintf("tf-scope-%s", randomName)
-	key := fmt.Sprintf("tf-key-%s", randomName)
-	stringValue := "my super secret key"
+	config := qa.EnvironmentTemplate(t, `
+	resource "databricks_secret_scope" "this" {
+		name = "tf-scope-{var.RANDOM}"
+	}
+	resource "databricks_secret" "this" {
+		scope = databricks_secret_scope.this.name
+		string_value = "{var.RANDOM}"
+		key = "password"
+	}`)
+	scope := qa.FirstKeyValue(t, config, "name")
+	key := qa.FirstKeyValue(t, config, "key")
+	secret := qa.FirstKeyValue(t, config, "string_value")
 
 	acceptance.AccTest(t, resource.TestCase{
-		CheckDestroy: testSecretResourceDestroy,
 		Steps: []resource.TestStep{
 			{
-				// use a dynamic configuration with the random name from above
-				Config: testSecretResource(scope, key, stringValue),
-				// compose a basic test, checking both remote and local values
-				Check: resource.ComposeTestCheckFunc(
-					// query the API to retrieve the tokenInfo object
-					testSecretResourceExists("databricks_secret.my_secret", &secret, t),
-					// verify remote values
-					testSecretValues(t, &secret, key),
-					// verify local values
-					resource.TestCheckResourceAttr("databricks_secret.my_secret", "scope", scope),
-					resource.TestCheckResourceAttr("databricks_secret.my_secret", "key", key),
-					resource.TestCheckResourceAttr("databricks_secret.my_secret", "string_value", stringValue),
-				),
+				Config: config,
 			},
 			{
-				//Deleting and recreating the secret
 				PreConfig: func() {
 					client := common.CommonEnvironmentClient()
-					err := NewSecretsAPI(client).Delete(scope, secret.Key)
+					err := NewSecretsAPI(context.Background(), client).Delete(scope, key)
 					assert.NoError(t, err, err)
 				},
-				// use a dynamic configuration with the random name from above
-				Config: testSecretResource(scope, key, stringValue),
-				// compose a basic test, checking both remote and local values
+				Config: config,
 				Check: resource.ComposeTestCheckFunc(
-					// query the API to retrieve the tokenInfo object
-					testSecretResourceExists("databricks_secret.my_secret", &secret, t),
-					// verify remote values
-					testSecretValues(t, &secret, key),
-					// verify local values
-					resource.TestCheckResourceAttr("databricks_secret.my_secret", "scope", scope),
-					resource.TestCheckResourceAttr("databricks_secret.my_secret", "key", key),
-					resource.TestCheckResourceAttr("databricks_secret.my_secret", "string_value", stringValue),
-				),
-			},
-			{
-				//Deleting the scope should recreate the secret
-				PreConfig: func() {
-					client := common.CommonEnvironmentClient()
-					err := NewSecretScopesAPI(client).Delete(scope)
-					assert.NoError(t, err, err)
-				},
-				// use a dynamic configuration with the random name from above
-				Config: testSecretResource(scope, key, stringValue),
-				// compose a basic test, checking both remote and local values
-				Check: resource.ComposeTestCheckFunc(
-					// query the API to retrieve the tokenInfo object
-					testSecretResourceExists("databricks_secret.my_secret", &secret, t),
-					// verify remote values
-					testSecretValues(t, &secret, key),
-					// verify local values
-					resource.TestCheckResourceAttr("databricks_secret.my_secret", "scope", scope),
-					resource.TestCheckResourceAttr("databricks_secret.my_secret", "key", key),
-					resource.TestCheckResourceAttr("databricks_secret.my_secret", "string_value", stringValue),
+					resource.TestCheckResourceAttr("databricks_secret.this", "scope", scope),
+					resource.TestCheckResourceAttr("databricks_secret.this", "key", key),
+					resource.TestCheckResourceAttr("databricks_secret.this", "string_value", secret),
 				),
 			},
 		},
 	})
-}
-
-func testSecretResourceDestroy(s *terraform.State) error {
-	client := common.CommonEnvironmentClient()
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "databricks_secret" && rs.Type != "databricks_secret_scope" {
-			continue
-		}
-		_, err := NewSecretsAPI(client).Read(rs.Primary.Attributes["scope"], rs.Primary.Attributes["key"])
-		if err == nil {
-			return errors.New("resource secret is not cleaned up")
-		}
-		_, err = NewSecretScopesAPI(client).Read(rs.Primary.Attributes["scope"])
-		if err == nil {
-			return errors.New("resource secret is not cleaned up")
-		}
-	}
-	return nil
-}
-
-func testSecretValues(t *testing.T, secret *SecretMetadata, key string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		assert.True(t, secret.Key == key)
-		assert.True(t, secret.LastUpdatedTimestamp > 0)
-		return nil
-	}
-}
-
-// testAccCheckTokenResourceExists queries the API and retrieves the matching Widget.
-func testSecretResourceExists(n string, secret *SecretMetadata, t *testing.T) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		// find the corresponding state object
-		rs, ok := s.RootModule().Resources[n]
-		if !ok {
-			return fmt.Errorf("Not found: %s", n)
-		}
-
-		// retrieve the configured client from the test setup
-		conn := common.CommonEnvironmentClient()
-		resp, err := NewSecretsAPI(conn).Read(rs.Primary.Attributes["scope"], rs.Primary.Attributes["key"])
-		//t.Log(resp)
-		if err != nil {
-			return err
-		}
-
-		// If no error, assign the response Widget attribute to the widget pointer
-		*secret = resp
-		return nil
-		//return fmt.Errorf("Token (%s) not found", rs.Primary.ID)
-	}
-}
-
-// testAccTokenResource returns an configuration for an Example Widget with the provided name
-func testSecretResource(scopeName, key, value string) string {
-	return fmt.Sprintf(`
-		resource "databricks_secret_scope" "my_scope" {
-			name = "%s"
-		}
-		resource "databricks_secret" "my_secret" {
-			key = "%s"
-			string_value = "%s"
-			scope = databricks_secret_scope.my_scope.name
-		}
-		`, scopeName, key, value)
 }

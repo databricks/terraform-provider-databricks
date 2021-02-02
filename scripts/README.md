@@ -4,21 +4,21 @@ The `run.sh` script will setup the required resources in specific clouds, if the
 
 # Destruction
 
-Bu default, we don't encourage creation/destruction of infrastructure multiple times per day, because in some cases it may take up to 30 minutes just to boot everything up. Therefore only `--destroy` flag in `run.sh` will trigger `terraform destroy -auto-approve`. `make test-*` tasks won't explicitly request destruction by default. 
+By default, we don't encourage creation/destruction of infrastructure multiple times per day, because in some cases it may take up to 30 minutes just to boot everything up. Therefore only `--destroy` flag in `run.sh` will trigger `terraform destroy -auto-approve`. `make test-*` tasks won't explicitly request destruction by default.
 
 # Conventions
 
 * `azcli` - Azure authenticated with `az login` command. No `require_env` file needed. Runnable test name prefixes are `TestAcc` and `TestAzureAcc`. By far, the simplest way to develop provider's functionality.
-* `azsp` - Azure authenticated with Service Principal's ID/Secret pairs. Runnable test name prefixes are `TestAcc` and `TestAzureAcc`. Service pricipal must have `Storage Blob Data Contributor` role on ADLS account used. `ARM_SUBSCRIPTION_ID`, `ARM_CLIENT_SECRET`, `ARM_CLIENT_ID`, `ARM_TENANT_ID`, `OWNER` environment vars required. Note that these integration tests will use service principal based auth. Even though it is using a service principal, it will still be generating a personal access token to perform creation of resources. 
+* `azsp` - Azure authenticated with Service Principal's ID/Secret pairs. Runnable test name prefixes are `TestAcc` and `TestAzureAcc`. Service pricipal must have `Storage Blob Data Contributor` role on ADLS account used. `ARM_SUBSCRIPTION_ID`, `ARM_CLIENT_SECRET`, `ARM_CLIENT_ID`, `ARM_TENANT_ID`, `OWNER` environment vars required. Note that these integration tests will use service principal based auth. Even though it is using a service principal, it will still be generating a personal access token to perform creation of resources.
 
 * `mws` - AWS with Databricks Multiworkspace API. Runnable test name prefix is `TestMws`. Please [check if you're able to use it](https://docs.databricks.com/administration-guide/multiworkspace/new-workspace-aws.html). Required variables are `DATABRICKS_ACCOUNT_ID`, `DATABRICKS_USERNAME`, `DATABRICKS_PASSWORD` (something you use for https://accounts.cloud.databricks.com/), `TEST_REGION`, `TEST_CIDR`, `OWNER`. Only multiworkspace resources are tested.
 * `awsst` - `DATABRICKS_CONFIG_PROFILE` (section within Databricks CLI `~/.databrickscfg` file) & `CLOUD_ENV=AWS`. In case you want to test provider on existing development single-tenant shard. Runnable test name prefixes are `TestAcc` and `TestAwsAcc`.
-* `awsmt` - AWS with Databricks Multitenant Workspace. Currently work in progress and test environment cannot be fully started.
+* `awsmt` - AWS with Databricks Multitenant Workspace. Currently work in progress and the test environment cannot be fully started.
 * most of the tests should aim to be cloud-agnostic. Though, in case of specific branching needed, you can check `CLOUD_ENV` value (possible values are `Azure`, `AWS` & `MWS`).
 * all environment variables are used by *DatabricksClient*, *provider integration tests* and *terraform configuration*.
-* **each `output` becomes an environment variable** with case changed to upper. This gives an easy way to manage complexity of testing environment. This is what gives those variables for `export $(scripts/run.sh azcli --export)` under the hood.
+* **each `output` becomes an environment variable** with the case changed to upper. This gives an easy way to manage the complexity of the testing environment. This is what gives those variables for `export $(scripts/run.sh azcli --export)` under the hood.
 * `qa.EnvironmentTemplate` must be used to make readable templates with environment variable presence validation.
-* `OWNER` is variable name, that holds your email address. It's propagated down to all resourced on the cloud.
+* `OWNER` is a variable name that holds your email address. It's propagated down to all resourced on the cloud.
 * One must aim to write integration tests that will run on all clouds without causing panic under any circumstance.
 
 # Development loop
@@ -27,7 +27,7 @@ Bu default, we don't encourage creation/destruction of infrastructure multiple t
 # keep credentials outside of repository
 source ~/path/to-env-files.sh
 
-# export all related enviroment vars - a.k.a. activating environment
+# export all related environment vars - a.k.a. activating environment
 export $(scripts/run.sh azcli --export)
 
 # launch VSCode with those environment vars, so that debugging is more seamless
@@ -73,7 +73,7 @@ func TestMwsAccStorageConfigurations(t *testing.T) {
 
 ## Cloud Specific testing
 
-Basic cloud-integration test should have prefix `TestAcc` if it is supposed to run on both clouds. Client must be created with `NewClientFromEnvironment()` as described in the following snippet:
+Basic cloud-integration test should have a prefix `TestAcc` if it is supposed to run on both clouds. Client must be created with `NewClientFromEnvironment()` as described in the following snippet:
 
 ```go
 func TestAccListClustersIntegration(t *testing.T) {

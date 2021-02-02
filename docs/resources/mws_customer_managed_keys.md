@@ -1,6 +1,6 @@
 # databricks_mws_customer_managed_keys Resource
 
--> **Note** This resource has evolving API, which may change in future versions of provider.
+-> **Note** This resource has an evolving API, which may change in future versions of the provider.
 
 This resource to configure AWS KMS key for new workspaces within AWS. This KMS key will be used to encrypt your notebooks in your workspace.
 

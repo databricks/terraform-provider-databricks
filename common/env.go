@@ -32,6 +32,7 @@ func NewClientFromEnvironment() *DatabricksClient {
 			ClientID:       os.Getenv("ARM_CLIENT_ID"),
 			ClientSecret:   os.Getenv("ARM_CLIENT_SECRET"),
 			TenantID:       os.Getenv("ARM_TENANT_ID"),
+			Environment:    os.Getenv("ARM_ENVIRONMENT"),
 		},
 	}
 	err := client.Configure()
@@ -77,13 +78,8 @@ func CleanupEnvironment() func() {
 		log.Printf("[WARN] Cannot set HOME to old PWD: %v", err)
 	}
 	homedir.DisableCache = true
-	// version is technically made out of git + $PATH, if empty
-	// and this is why we are backing it up
-	prevVersion := version
-	version = "dev"
 	// and return restore function
 	return func() {
-		version = prevVersion
 		for _, kv := range prevEnv {
 			kvs := strings.SplitN(kv, "=", 2)
 			os.Setenv(kvs[0], kvs[1])

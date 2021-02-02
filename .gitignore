@@ -19,7 +19,7 @@ common/testdata/.azure
 *.out
 
 # Dependency directories (remove the comment below to include it)
-# vendor/
+vendor/
 
 ### Go Patch ###
 #/vendor/
@@ -320,6 +320,8 @@ pip-selfcheck.json
 # Remove tfvars to prevent secrets from leaking and ignore any terraform files in root folder
 **/*.tfvars
 /*.tf
+*.lock.hcl
+*.lock.info
 
 .DS_Store
 /*.dbc
@@ -332,3 +334,5 @@ website/public/**
 .vscode/private.env
 tf.log
 *.env
+
+scripts/tt

@@ -24,12 +24,12 @@ func TestDataSourceGroup(t *testing.T) {
 						{
 							DisplayName: "ds",
 							ID:          "eerste",
-							Entitlements: []EntitlementsListItem{
+							Entitlements: []entitlementsListItem{
 								{
 									Value: "allow-cluster-create",
 								},
 							},
-							Roles: []RoleListItem{
+							Roles: []roleListItem{
 								{
 									Value: "a",
 								},
@@ -54,12 +54,12 @@ func TestDataSourceGroup(t *testing.T) {
 				Response: ScimGroup{
 					DisplayName: "product",
 					ID:          "abc",
-					Entitlements: []EntitlementsListItem{
+					Entitlements: []entitlementsListItem{
 						{
 							Value: "allow-instance-pool-create",
 						},
 					},
-					Roles: []RoleListItem{
+					Roles: []roleListItem{
 						{
 							Value: "b",
 						},

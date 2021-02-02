@@ -1,6 +1,7 @@
 package acceptance
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -20,12 +21,9 @@ func TestAccDatabricksPermissionsResourceFullLifecycle(t *testing.T) {
 			{
 				Config: fmt.Sprintf(`
 				resource "databricks_notebook" "this" {
-					content = base64encode("# Databricks notebook source\nprint(1)")
+					content_base64 = base64encode("# Databricks notebook source\nprint(1)")
 					path = "/Beginning/%[1]s/Init"
-					overwrite = true
-					mkdirs = true
 					language = "PYTHON"
-					format = "SOURCE"
 				}
 				resource "databricks_group" "first" {
 					display_name = "First %[1]s"
@@ -41,8 +39,8 @@ func TestAccDatabricksPermissionsResourceFullLifecycle(t *testing.T) {
 					resource.TestCheckResourceAttr("databricks_permissions.dummy",
 						"object_type", "notebook"),
 					acceptance.ResourceCheck("databricks_permissions.dummy",
-						func(client *common.DatabricksClient, id string) error {
-							permissions, err := NewPermissionsAPI(client).Read(id)
+						func(ctx context.Context, client *common.DatabricksClient, id string) error {
+							permissions, err := NewPermissionsAPI(ctx, client).Read(id)
 							if err != nil {
 								return err
 							}
@@ -54,12 +52,9 @@ func TestAccDatabricksPermissionsResourceFullLifecycle(t *testing.T) {
 			{
 				Config: fmt.Sprintf(`
 				resource "databricks_notebook" "this" {
-					content = base64encode("# Databricks notebook source\nprint(1)")
+					content_base64 = base64encode("# Databricks notebook source\nprint(1)")
 					path = "/Beginning/%[1]s/Init"
-					overwrite = true
-					mkdirs = true
 					language = "PYTHON"
-					format = "SOURCE"
 				}
 				resource "databricks_group" "first" {
 					display_name = "First %[1]s"
@@ -79,8 +74,8 @@ func TestAccDatabricksPermissionsResourceFullLifecycle(t *testing.T) {
 					}
 				}`, randomName),
 				Check: acceptance.ResourceCheck("databricks_permissions.dummy",
-					func(client *common.DatabricksClient, id string) error {
-						permissions, err := NewPermissionsAPI(client).Read(id)
+					func(ctx context.Context, client *common.DatabricksClient, id string) error {
+						permissions, err := NewPermissionsAPI(ctx, client).Read(id)
 						if err != nil {
 							return err
 						}

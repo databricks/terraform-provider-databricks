@@ -1,62 +1,53 @@
 # databricks_dbfs_file Resource
 
-This is a resource that lets you create, get and delete files in DBFS (Databricks File System).
+This is a resource that lets you manage relatively small files on Databricks File System (DBFS). The best use cases are libraries for [databricks_cluster](cluster.md) or [databricks_job](job.md). You can also use [databricks_dbfs_file](../data-sources/dbfs_file.md) and [databricks_dbfs_file_paths](../data-sources/dbfs_file_paths.md) data sources.
 
 ## Example Usage
 
-Using content field:
+In order to manage file on Databricks File System with Terraform, you must specify `source` attribute containing full path to the file on local filesystem.
 
 ```hcl
-resource "databricks_dbfs_file" "my_dbfs_file" {
-  content = filebase64("README.md")
-  content_b64_md5 = md5(filebase64("README.md"))
-  path = "/sri/terraformdbfs/example/README.md"
-  overwrite = true
-  mkdirs = true
-  validate_remote_file = true
+resource "databricks_dbfs_file" "this" {
+  source = "${path.module}/main.tf"
+  path = "/tmp/main.tf"
 }
 ```
 
-Using Source field:
+Alternatively, you can create DBFS files with custom content, using [filesystem functions](https://www.terraform.io/docs/language/functions/templatefile.html).
 
 ```hcl
-resource "databricks_dbfs_file" "my_dbfs_file" {
-  source = pathexpand("README.md")
-  content_b64_md5 = md5(filebase64(pathexpand("README.md")))
-  path = "/sri/terraformdbfs/example/README.md"
-  overwrite = true
-  mkdirs = true
-  validate_remote_file = true
+resource "databricks_dbfs_file" "this" {
+  content_base64 = base64encode(<<-EOT
+    Hello, world!
+    Module is ${abspath(path.module)}
+    EOT
+  )
+  path = "/tmp/this.txt"
 }
 ```
 
-    
 ## Argument Reference
+
+-> **Note** DBFS files would only be changed, if Terraform stage did change. This means that any manual changes to managed file won't be overwritten by Terraform, if there's no local change. 
 
 The following arguments are supported:
 
-* `content` - (Optional) The content of the file as a base64 encoded string.
-* `source` - (Optional) The full absolute path to the file. Please use [pathexpand](https://www.terraform.io/docs/configuration/functions/pathexpand.html).
-* `content_b64_md5` - (Required) The checksum for the content please use the [md5](https://www.terraform.io/docs/configuration/functions/md5.html) and [filebase64](https://www.terraform.io/docs/configuration/functions/filebase64.html) functions in terraform to retrieve the checksum.
+* `source` - The full absolute path to the file. Conflicts with `content_base64`.
+* `content_base64` - Encoded file contents. Conflicts with `source`. Use of `content_base64` is discouraged, as it's increasing memory footprint of Terraform state and should only be used in exceptional circumstances, like creating a data pipeline configuration file.
 * `path` - (Required) The path of the file in which you wish to save.
-* `overwrite` - (Optional) This is used to determine whether it should delete the existing file when with the same name when it writes. The default is set to false.
-* `mkdirs` - (Optional) When the resource is created, this field is used to determine if it needs to make the parent directories. The default value is set to true.
-* `validate_remote_file` - (Optional) This is used to compare the actual contents of the file to determine if the remote file is valid or not. If the base64 content is different 
-it will attempt to do a delete, create.
-
 
 ## Attribute Reference
 
 In addition to all arguments above, the following attributes are exported:
 
-* `id` - The id for the dbfs file object.
+* `id` - Same as `path`.
 * `file_size` - The file size of the file that is being tracked by this resource in bytes.
 
 
 ## Import
 
-The resource dbfs file can be imported using the `object`, e.g.
+The resource dbfs file can be imported using the path of the file
 
 ```bash
-$ terraform import databricks_dbfs_file.object <dbfs-file-id>
+$ terraform import databricks_dbfs_file.this <path>
 ```

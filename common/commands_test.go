@@ -1,6 +1,7 @@
 package common
 
 import (
+	"context"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -20,7 +21,8 @@ func TestCommandMock(t *testing.T) {
 		assert.Equal(t, "print 1", commandStr)
 		return "done", nil
 	})
-	res, err := c.CommandExecutor().Execute("irrelevant", "python", "print 1")
+	ctx := context.Background()
+	res, err := c.CommandExecutor(ctx).Execute("irrelevant", "python", "print 1")
 
 	assert.Equal(t, true, called)
 	assert.Equal(t, "done", res)

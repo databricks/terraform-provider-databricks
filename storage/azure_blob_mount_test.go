@@ -129,7 +129,7 @@ func TestResourceAzureBlobMountRead(t *testing.T) {
 }
 
 func TestResourceAzureBlobMountRead_NotFound(t *testing.T) {
-	d, err := qa.ResourceFixture{
+	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
@@ -155,12 +155,10 @@ func TestResourceAzureBlobMountRead_NotFound(t *testing.T) {
 			"token_secret_key":     "g",
 			"token_secret_scope":   "h",
 		},
-		ID:   "e",
-		Read: true,
-	}.Apply(t)
-	require.NoError(t, err)
-	assert.Equal(t, "", d.Id())
-	assert.Equal(t, "", d.Get("source"))
+		ID:      "e",
+		Read:    true,
+		Removed: true,
+	}.ApplyNoError(t)
 }
 
 func TestResourceAzureBlobMountRead_Error(t *testing.T) {

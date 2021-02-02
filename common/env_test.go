@@ -1,9 +1,11 @@
 package common
 
 import (
+	"context"
 	"os"
 	"testing"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -14,6 +16,13 @@ func TestCommonEnvironmentClient(t *testing.T) {
 	os.Setenv("DATABRICKS_HOST", ".")
 	c := CommonEnvironmentClient()
 	c2 := CommonEnvironmentClient()
-	assert.Equal(t, UserAgent(), c.userAgent)
-	assert.Equal(t, c2.userAgent, c.userAgent)
+	ctx := context.Background()
+	assert.Equal(t, c2.userAgent(ctx), c.userAgent(ctx))
+	assert.Equal(t, "databricks-tf-provider/"+version+" (+unknown) terraform/unknown", c.userAgent(ctx))
+
+	ctx = context.WithValue(ctx, ResourceName, "cluster")
+	c.Provider = &schema.Provider{
+		TerraformVersion: "0.12",
+	}
+	assert.Equal(t, "databricks-tf-provider/"+version+" (+cluster) terraform/0.12", c.userAgent(ctx))
 }

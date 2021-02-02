@@ -36,6 +36,7 @@ func (m AzureADLSGen2Mount) Config() map[string]string {
 	}
 }
 
+// ResourceAzureAdlsGen2Mount creates the resource
 func ResourceAzureAdlsGen2Mount() *schema.Resource {
 	return commonMountResource(AzureADLSGen2Mount{}, map[string]*schema.Schema{
 		"cluster_id": {

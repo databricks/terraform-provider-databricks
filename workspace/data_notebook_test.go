@@ -14,7 +14,7 @@ func TestDataSourceNotebook(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/workspace/get-status?path=%2Fa%2Fb%2Fc",
-				Response: WorkspaceObjectStatus{
+				Response: ObjectStatus{
 					ObjectID:   987,
 					Language:   "PYTHON",
 					ObjectType: "NOTEBOOK",

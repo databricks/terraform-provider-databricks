@@ -1,7 +1,7 @@
 package acceptance
 
 import (
-	"errors"
+	"context"
 	"fmt"
 	"os"
 	"testing"
@@ -14,7 +14,6 @@ import (
 	"github.com/databrickslabs/databricks-terraform/internal/qa"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -24,7 +23,7 @@ func TestAccRemoveScopes(t *testing.T) {
 		t.Skip("Cleaning up tests only from IDE")
 	}
 	client := common.CommonEnvironmentClient()
-	scopesAPI := NewSecretScopesAPI(client)
+	scopesAPI := NewSecretScopesAPI(context.Background(), client)
 	scopeList, err := scopesAPI.List()
 	require.NoError(t, err)
 	for _, scope := range scopeList {
@@ -40,7 +39,7 @@ func TestAzureAccKeyVaultSimple(t *testing.T) {
 	if client.AzureAuth.IsClientSecretSet() {
 		t.Skip("AKV scopes don't work for SP auth yet")
 	}
-	scopesAPI := NewSecretScopesAPI(client)
+	scopesAPI := NewSecretScopesAPI(context.Background(), client)
 	name := qa.RandomName("tf-scope-")
 
 	err := scopesAPI.Create(SecretScope{
@@ -66,8 +65,9 @@ func TestAccInitialManagePrincipals(t *testing.T) {
 	if _, ok := os.LookupEnv("CLOUD_ENV"); !ok {
 		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
 	}
+	ctx := context.Background()
 	client := common.CommonEnvironmentClient()
-	scopesAPI := NewSecretScopesAPI(client)
+	scopesAPI := NewSecretScopesAPI(context.Background(), client)
 
 	scope := fmt.Sprintf("tf-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
 	err := scopesAPI.Create(SecretScope{Name: scope})
@@ -76,11 +76,11 @@ func TestAccInitialManagePrincipals(t *testing.T) {
 		assert.NoError(t, scopesAPI.Delete(scope))
 	}()
 
-	secretACLAPI := NewSecretAclsAPI(client)
+	secretACLAPI := NewSecretAclsAPI(ctx, client)
 	acls, err := secretACLAPI.List(scope)
 	require.NoError(t, err)
 
-	usersAPI := identity.NewUsersAPI(client)
+	usersAPI := identity.NewUsersAPI(ctx, client)
 	me, err := usersAPI.Me()
 	require.NoError(t, err)
 	assert.Equal(t, 1, len(acls))
@@ -92,7 +92,8 @@ func TestAccInitialManagePrincipalsGroup(t *testing.T) {
 		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
 	}
 	client := common.CommonEnvironmentClient()
-	scopesAPI := NewSecretScopesAPI(client)
+	ctx := context.Background()
+	scopesAPI := NewSecretScopesAPI(ctx, client)
 
 	scope := fmt.Sprintf("tf-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
 	err := scopesAPI.Create(SecretScope{
@@ -104,7 +105,7 @@ func TestAccInitialManagePrincipalsGroup(t *testing.T) {
 		assert.NoError(t, scopesAPI.Delete(scope))
 	}()
 
-	secretACLAPI := NewSecretAclsAPI(client)
+	secretACLAPI := NewSecretAclsAPI(ctx, client)
 	acls, err := secretACLAPI.List(scope)
 	require.NoError(t, err)
 	assert.Equal(t, 1, len(acls))
@@ -115,30 +116,25 @@ func TestAccSecretScopeResource(t *testing.T) {
 	if _, ok := os.LookupEnv("CLOUD_ENV"); !ok {
 		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
 	}
-	var secretScope SecretScope
 	scope := qa.RandomName("tf-")
 	acceptance.AccTest(t, resource.TestCase{
-		CheckDestroy: testSecretScopeResourceDestroy,
 		Steps: []resource.TestStep{
 			{
-				// use a dynamic configuration with the random name from above
-				Config: testSecretScopeResource(scope),
-				// compose a basic test, checking both remote and local values
+				Config: fmt.Sprintf(`
+				resource "databricks_secret_scope" "my_scope" {
+					name = "%s"
+				}`, scope),
 				Check: resource.ComposeTestCheckFunc(
-					// query the API to retrieve the tokenInfo object
-					testSecretScopeResourceExists("databricks_secret_scope.my_scope", &secretScope, t),
-					// verify remote values
-					testSecretScopeValues(t, &secretScope, scope),
 					// verify local values
 					resource.TestCheckResourceAttr("databricks_secret_scope.my_scope", "name", scope),
 					resource.TestCheckResourceAttr("databricks_secret_scope.my_scope", "backend_type", "DATABRICKS"),
 					acceptance.ResourceCheck("databricks_secret_scope.my_scope",
-						func(client *common.DatabricksClient, id string) error {
-							secretACLAPI := NewSecretAclsAPI(client)
+						func(ctx context.Context, client *common.DatabricksClient, id string) error {
+							secretACLAPI := NewSecretAclsAPI(ctx, client)
 							acls, err := secretACLAPI.List(id)
 							require.NoError(t, err)
 
-							usersAPI := identity.NewUsersAPI(client)
+							usersAPI := identity.NewUsersAPI(ctx, client)
 							me, err := usersAPI.Me()
 							require.NoError(t, err)
 							assert.Equal(t, 1, len(acls))
@@ -150,77 +146,19 @@ func TestAccSecretScopeResource(t *testing.T) {
 			{
 				PreConfig: func() {
 					client := common.CommonEnvironmentClient()
-					err := NewSecretScopesAPI(client).Delete(scope)
+					err := NewSecretScopesAPI(context.Background(), client).Delete(scope)
 					assert.NoError(t, err, err)
 				},
-				// use a dynamic configuration with the random name from above
-				Config: testSecretScopeResource(scope),
+				Config: fmt.Sprintf(`
+				resource "databricks_secret_scope" "my_scope" {
+					name = "%s"
+				}`, scope),
 				// compose a basic test, checking both remote and local values
 				Check: resource.ComposeTestCheckFunc(
-					// query the API to retrieve the tokenInfo object
-					testSecretScopeResourceExists("databricks_secret_scope.my_scope", &secretScope, t),
-					// verify remote values
-					testSecretScopeValues(t, &secretScope, scope),
-					// verify local values
 					resource.TestCheckResourceAttr("databricks_secret_scope.my_scope", "name", scope),
 					resource.TestCheckResourceAttr("databricks_secret_scope.my_scope", "backend_type", "DATABRICKS"),
 				),
 			},
 		},
 	})
-}
-
-func testSecretScopeResourceDestroy(s *terraform.State) error {
-	client := common.CommonEnvironmentClient()
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "databricks_secret_scope" {
-			continue
-		}
-		_, err := NewSecretScopesAPI(client).Read(rs.Primary.ID)
-		if err != nil {
-			return nil
-		}
-		return errors.New("resource token is not cleaned up")
-	}
-	return nil
-}
-
-func testSecretScopeValues(t *testing.T, secretScope *SecretScope, scope string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		assert.True(t, secretScope.Name == scope)
-		assert.True(t, secretScope.BackendType == "DATABRICKS")
-		return nil
-	}
-}
-
-// testAccCheckTokenResourceExists queries the API and retrieves the matching Widget.
-func testSecretScopeResourceExists(n string, secretScope *SecretScope, t *testing.T) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		// find the corresponding state object
-		rs, ok := s.RootModule().Resources[n]
-		if !ok {
-			return fmt.Errorf("Not found: %s", n)
-		}
-
-		// retrieve the configured client from the test setup
-		conn := common.CommonEnvironmentClient()
-		resp, err := NewSecretScopesAPI(conn).Read(rs.Primary.ID)
-		//t.Log(resp)
-		if err != nil {
-			return err
-		}
-
-		// If no error, assign the response Widget attribute to the widget pointer
-		*secretScope = resp
-		return nil
-	}
-}
-
-// testAccTokenResource returns an configuration for an Example Widget with the provided name
-func testSecretScopeResource(scopeName string) string {
-	return fmt.Sprintf(`
-		resource "databricks_secret_scope" "my_scope" {
-			name = "%s"
-		}
-		`, scopeName)
 }

@@ -27,13 +27,14 @@ resource "databricks_group_member" "my_member_a" {
 
 Data source allows you to pick groups by the following attributes
 
-* `display_name` - (Required) Display name of the group. Group must exist before this resource can be planned.
+* `display_name` - (Required) Display name of the group. The group must exist before this resource can be planned.
 * `recursive` - (Optional) Collect information for all nested groups. *Defaults to true.*
 
 ## Attribute Reference
 
 Data source exposes the following attributes:
 
+* `id` -  The id for the group object.
 * `members` - Set of [user](../resources/user.md) identifiers, that can be modified with [databricks_group_member](../resources/group_member.md) resource.
 * `groups` - Set of [group](../resources/group.md) identifiers, that can be modified with [databricks_group_member](../resources/group_member.md) resource.
 * `instance_profiles` - Set of [instance profile](../resources/instance_profile.md) ARNs, that can be modified by [databricks_group_instance_profile](../resources/group_instance_profile.md) resource.

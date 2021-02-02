@@ -37,6 +37,11 @@ func RandomLongName() string {
 	return "Terraform Integration Test " + acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
 }
 
+// RandomEmail generates random email
+func RandomEmail() string {
+	return fmt.Sprintf("%s@example.com", RandomName("tf"))
+}
+
 // RandomName gives random name with optional prefix. e.g. qa.RandomName("tf-")
 func RandomName(prefix ...string) string {
 	randLen := 12
@@ -74,6 +79,7 @@ type ResourceFixture struct {
 	Read        bool
 	Update      bool
 	Delete      bool
+	Removed     bool
 	ID          string
 	NonWritable bool
 	Azure       bool
@@ -148,6 +154,9 @@ func (f ResourceFixture) Apply(t *testing.T) (*schema.ResourceData, error) {
 		if f.ID == "" {
 			return nil, errors.New("ID must be set for Update")
 		}
+		if f.Resource.UpdateContext == nil && f.Resource.Update == nil {
+			return nil, errors.New("Resource does not support Update")
+		}
 		whatever = func(d *schema.ResourceData, m interface{}) error {
 			d.SetId(f.ID)
 			return pick(f.Resource.Update, f.Resource.UpdateContext, d, m)
@@ -191,6 +200,9 @@ func (f ResourceFixture) Apply(t *testing.T) (*schema.ResourceData, error) {
 	if err != nil {
 		return resourceData, err
 	}
+	if resourceData.Id() == "" && !f.Removed {
+		return resourceData, fmt.Errorf("Resource is not expected to be removed")
+	}
 	newState := resourceData.State()
 	diff, err = schemaMap.Diff(ctx, newState, resourceConfig, nil, client, true)
 	if err != nil {
@@ -210,6 +222,12 @@ func (f ResourceFixture) Apply(t *testing.T) (*schema.ResourceData, error) {
 		err = fmt.Errorf("Changes from backend require new: %s", strings.Join(requireNew, ", "))
 	}
 	return resourceData, err
+}
+
+// ApplyNoError is a convenience method for no-data tests
+func (f ResourceFixture) ApplyNoError(t *testing.T) {
+	_, err := f.Apply(t)
+	assert.NoError(t, err, err)
 }
 
 func diagsToString(diags diag.Diagnostics) string {
@@ -366,7 +384,7 @@ func fixHCL(v interface{}) interface{} {
 // For writing a unit test to intercept the errors (t.Fatalf literally ends the test in failure)
 func environmentTemplate(t *testing.T, template string, otherVars ...map[string]string) (string, error) {
 	vars := map[string]string{
-		"RANDOM": acctest.RandStringFromCharSet(5, acctest.CharSetAlphaNum),
+		"RANDOM": RandomName("t"),
 	}
 	if len(otherVars) > 1 {
 		return "", errors.New("Cannot have more than one customer variable map")
@@ -417,7 +435,7 @@ func FirstKeyValue(t *testing.T, str, key string) string {
 	r := regexp.MustCompile(key + `\s+=\s+"([^"]*)"`)
 	match := r.FindStringSubmatch(str)
 	if len(match) != 2 {
-		t.Fatalf("Cannot find %s in given string", key)
+		t.Fatalf("Cannot fin	d %s in given string", key)
 	}
 	return match[1]
 }
@@ -425,16 +443,6 @@ func FirstKeyValue(t *testing.T, str, key string) string {
 // AssertErrorStartsWith ..
 func AssertErrorStartsWith(t *testing.T, err error, message string) bool {
 	return assert.True(t, strings.HasPrefix(err.Error(), message), err.Error())
-}
-
-// GetCloudInstanceType gives common minimal instance type, depending on a cloud
-func GetCloudInstanceType(c *common.DatabricksClient) string {
-	if c.IsAzure() {
-		return "Standard_DS3_v2"
-	}
-	// TODO: create a method on ClustersAPI to give
-	// cloud specific delta-cache enabled instance by default.
-	return "m4.large"
 }
 
 // TestCreateTempFile  ...

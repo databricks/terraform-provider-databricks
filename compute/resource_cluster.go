@@ -1,83 +1,45 @@
 package compute
 
 import (
+	"context"
+	"fmt"
 	"log"
+	"strings"
 	"time"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
 	"github.com/databrickslabs/databricks-terraform/common"
 	"github.com/databrickslabs/databricks-terraform/internal"
+	"github.com/databrickslabs/databricks-terraform/internal/util"
 )
+
+// DefaultProvisionTimeout ...
+const DefaultProvisionTimeout = 30 * time.Minute
 
 var clusterSchema = resourceClusterSchema()
 
 // ResourceCluster - returns Cluster resource description
 func ResourceCluster() *schema.Resource {
-	return &schema.Resource{
-		SchemaVersion: 2,
-		Create:        resourceClusterCreate,
-		Read:          resourceClusterRead,
-		Update:        resourceClusterUpdate,
-		Delete:        resourceClusterDelete,
+	return util.CommonResource{
+		Create: resourceClusterCreate,
+		Read:   resourceClusterRead,
+		Update: resourceClusterUpdate,
+		Delete: func(ctx context.Context,
+			d *schema.ResourceData, c *common.DatabricksClient) error {
+			return NewClustersAPI(ctx, c).PermanentDelete(d.Id())
+		},
 		Schema:        clusterSchema,
+		SchemaVersion: 2,
 		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(30 * time.Minute),
-			Update: schema.DefaultTimeout(30 * time.Minute),
-			Delete: schema.DefaultTimeout(30 * time.Minute),
+			Create: schema.DefaultTimeout(DefaultProvisionTimeout),
+			Update: schema.DefaultTimeout(DefaultProvisionTimeout),
+			Delete: schema.DefaultTimeout(DefaultProvisionTimeout),
 		},
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
-	}
-}
-
-func addMavenExclusions(scm *schema.Schema) {
-	resource, ok := scm.Elem.(*schema.Resource)
-	if !ok {
-		log.Printf("[DEBUG] invalid elem not a resource, unable to wrap maven exclusions to resource")
-		return
-	}
-	resource.Schema["exclusions"] = &schema.Schema{
-		Type:     schema.TypeList,
-		Optional: true,
-		Elem: &schema.Schema{
-			Type: schema.TypeString,
-		},
-	}
-}
-
-func librarySchema(dims ...string) *schema.Schema {
-	fields := map[string]*schema.Schema{
-		"messages": {
-			// consider removing it...
-			Type: schema.TypeList,
-			Elem: &schema.Schema{
-				Type: schema.TypeString,
-			},
-			Computed: true,
-		},
-		"status": {
-			Type:     schema.TypeString,
-			Computed: true,
-		},
-	}
-	for _, dim := range dims {
-		fields[dim] = &schema.Schema{
-			Type:     schema.TypeString,
-			Optional: true,
-		}
-	}
-	return &schema.Schema{
-		Deprecated: "`library_*` blocks are deprecated and will be removed in v0.3. Please use more generic `library` block",
-		Type:       schema.TypeSet,
-		Optional:   true,
-		ConfigMode: schema.SchemaConfigModeAttr,
-		Elem: &schema.Resource{
-			Schema: fields,
-		},
-	}
+	}.ToResource()
 }
 
 func resourceClusterSchema() map[string]*schema.Schema {
@@ -127,23 +89,36 @@ func resourceClusterSchema() map[string]*schema.Schema {
 			Type:     schema.TypeMap,
 			Computed: true,
 		}
-		// legacy library configuration blocks
-		s["library_jar"] = librarySchema("path")
-		s["library_egg"] = librarySchema("path")
-		s["library_whl"] = librarySchema("path")
-		s["library_pypi"] = librarySchema("package", "repo")
-		s["library_cran"] = librarySchema("package", "repo")
-		s["library_maven"] = librarySchema("coordinates", "repo")
-		addMavenExclusions(s["library_maven"])
+		s["num_workers"] = &schema.Schema{
+			Type:             schema.TypeInt,
+			Optional:         true,
+			Default:          0,
+			ValidateDiagFunc: validation.ToDiagFunc(validation.IntAtLeast(0)),
+		}
 		return s
 	})
 }
 
-func resourceClusterCreate(d *schema.ResourceData, m interface{}) error {
-	clusters := NewClustersAPI(m)
+func validateClusterDefinition(cluster Cluster) error {
+	if cluster.NumWorkers > 0 || cluster.Autoscale != nil {
+		return nil
+	}
+	profile := cluster.SparkConf["spark.databricks.cluster.profile"]
+	master := cluster.SparkConf["spark.master"]
+	if profile == "singleNode" && strings.HasPrefix(master, "local") {
+		return nil
+	}
+	return fmt.Errorf("NumWorkers could be 0 only for SingleNode clusters. See https://docs.databricks.com/clusters/single-node.html for more details")
+}
+
+func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 	var cluster Cluster
+	clusters := NewClustersAPI(ctx, c)
 	err := internal.DataToStructPointer(d, clusterSchema, &cluster)
 	if err != nil {
+		return err
+	}
+	if err = validateClusterDefinition(cluster); err != nil {
 		return err
 	}
 	modifyClusterRequest(&cluster)
@@ -152,10 +127,7 @@ func resourceClusterCreate(d *schema.ResourceData, m interface{}) error {
 		return err
 	}
 	d.SetId(clusterInfo.ClusterID)
-	err = d.Set("cluster_id", clusterInfo.ClusterID)
-	if err != nil {
-		return err
-	}
+	d.Set("cluster_id", clusterInfo.ClusterID)
 	isPinned, ok := d.GetOk("is_pinned")
 	if ok && isPinned.(bool) {
 		err = clusters.Pin(clusterInfo.ClusterID)
@@ -164,25 +136,19 @@ func resourceClusterCreate(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 	var libraryList ClusterLibraryList
-	err = internal.DataToStructPointer(d, clusterSchema, &libraryList)
-	if err != nil {
+	if err = internal.DataToStructPointer(d, clusterSchema, &libraryList); err != nil {
 		return err
 	}
-	if len(libraryList.Libraries) == 0 {
-		// LEGACY support
-		libraryList = legacyReadLibraryListFromData(d)
-	}
+	librariesAPI := NewLibrariesAPI(ctx, c)
 	if len(libraryList.Libraries) > 0 {
-		err = NewLibrariesAPI(m).Install(libraryList)
-		if err != nil {
+		if err = librariesAPI.Install(libraryList); err != nil {
 			return err
 		}
-		_, err := waitForLibrariesInstalled(NewLibrariesAPI(m), clusterInfo)
-		if err != nil {
+		if _, err := waitForLibrariesInstalled(librariesAPI, clusterInfo); err != nil {
 			return err
 		}
 	}
-	return resourceClusterRead(d, m)
+	return nil
 }
 
 func setPinnedStatus(d *schema.ResourceData, clusterAPI ClustersAPI) error {
@@ -203,27 +169,20 @@ func setPinnedStatus(d *schema.ResourceData, clusterAPI ClustersAPI) error {
 	return d.Set("is_pinned", pinnedEvent == EvTypePinned)
 }
 
-func resourceClusterRead(d *schema.ResourceData, m interface{}) error {
-	client := m.(*common.DatabricksClient)
-	clusterAPI := NewClustersAPI(client)
+func resourceClusterRead(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+	clusterAPI := NewClustersAPI(ctx, c)
 	clusterInfo, err := clusterAPI.Get(d.Id())
-	if ae, ok := err.(common.APIError); ok && ae.IsMissing() {
-		log.Printf("Missing cluster with id: %s.", d.Id())
-		d.SetId("")
-		return nil
-	}
 	if err != nil {
 		return err
 	}
-	err = internal.StructToData(clusterInfo, clusterSchema, d)
-	if err != nil {
+	if err = internal.StructToData(clusterInfo, clusterSchema, d); err != nil {
 		return err
 	}
-	err = setPinnedStatus(d, clusterAPI)
-	if err != nil {
+	if err = setPinnedStatus(d, clusterAPI); err != nil {
 		return err
 	}
-	libsClusterStatus, err := waitForLibrariesInstalled(NewLibrariesAPI(client), clusterInfo)
+	librariesAPI := NewLibrariesAPI(ctx, c)
+	libsClusterStatus, err := waitForLibrariesInstalled(librariesAPI, clusterInfo)
 	if err != nil {
 		return err
 	}
@@ -233,8 +192,7 @@ func resourceClusterRead(d *schema.ResourceData, m interface{}) error {
 
 func waitForLibrariesInstalled(
 	libraries LibrariesAPI, clusterInfo ClusterInfo) (result *ClusterLibraryStatuses, err error) {
-	// nolint should be a bigger refactor
-	err = resource.Retry(30*time.Minute, func() *resource.RetryError {
+	err = resource.RetryContext(libraries.context, 30*time.Minute, func() *resource.RetryError {
 		libsClusterStatus, err := libraries.ClusterStatus(clusterInfo.ClusterID)
 		if ae, ok := err.(common.APIError); ok && ae.IsMissing() {
 			// eventual consistency error
@@ -262,22 +220,6 @@ func waitForLibrariesInstalled(
 	return
 }
 
-func legacyReadLibraryListFromData(d *schema.ResourceData) (cll ClusterLibraryList) {
-	for _, n := range []string{"library_jar", "library_egg",
-		"library_whl", "library_pypi", "library_maven",
-		"library_cran"} {
-		libs, ok := d.GetOk(n)
-		if !ok {
-			continue
-		}
-		for _, l := range libs.(*schema.Set).List() {
-			cll.AddLibraryFromMap(n, l.(map[string]interface{}))
-		}
-	}
-	cll.ClusterID = d.Id()
-	return
-}
-
 func hasClusterConfigChanged(d *schema.ResourceData) bool {
 	for k := range clusterSchema {
 		// TODO: create a map if we'll add more non-cluster config parameters in the future
@@ -291,9 +233,8 @@ func hasClusterConfigChanged(d *schema.ResourceData) bool {
 	return false
 }
 
-func resourceClusterUpdate(d *schema.ResourceData, m interface{}) error {
-	client := m.(*common.DatabricksClient)
-	clusters := NewClustersAPI(client)
+func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+	clusters := NewClustersAPI(ctx, c)
 	clusterID := d.Id()
 	cluster := Cluster{ClusterID: clusterID}
 	err := internal.DataToStructPointer(d, clusterSchema, &cluster)
@@ -303,6 +244,10 @@ func resourceClusterUpdate(d *schema.ResourceData, m interface{}) error {
 	var clusterInfo ClusterInfo
 	if hasClusterConfigChanged(d) {
 		log.Printf("[DEBUG] Cluster state has changed!")
+		err = validateClusterDefinition(cluster)
+		if err != nil {
+			return err
+		}
 		modifyClusterRequest(&cluster)
 		clusterInfo, err = clusters.Edit(cluster)
 		if err != nil {
@@ -328,16 +273,11 @@ func resourceClusterUpdate(d *schema.ResourceData, m interface{}) error {
 	}
 
 	var libraryList ClusterLibraryList
-	err = internal.DataToStructPointer(d, clusterSchema, &libraryList)
-	if err != nil {
+	if err = internal.DataToStructPointer(d, clusterSchema, &libraryList); err != nil {
 		return err
 	}
-	if len(libraryList.Libraries) == 0 {
-		// LEGACY support
-		libraryList = legacyReadLibraryListFromData(d)
-	}
-	libraries := NewLibrariesAPI(client)
-	libsClusterStatus, err := libraries.ClusterStatus(clusterID)
+	librariesAPI := NewLibrariesAPI(ctx, c)
+	libsClusterStatus, err := librariesAPI.ClusterStatus(clusterID)
 	if err != nil {
 		return err
 	}
@@ -351,19 +291,17 @@ func resourceClusterUpdate(d *schema.ResourceData, m interface{}) error {
 				return err
 			}
 		}
-		err := updateLibraries(libraries, tmpClusterInfo, libsToInstall, libsToUninstall)
-		if err != nil {
+		if err = updateLibraries(librariesAPI, tmpClusterInfo, libsToInstall, libsToUninstall); err != nil {
 			return err
 		}
 		if clusterInfo.State == ClusterStateTerminated {
 			log.Printf("[INFO] %s was in TERMINATED state, so terminating it again", clusterID)
-			err = clusters.Terminate(clusterID)
-		}
-		if err != nil {
-			return err
+			if err = clusters.Terminate(clusterID); err != nil {
+				return err
+			}
 		}
 	}
-	return resourceClusterRead(d, m)
+	return nil
 }
 
 // modifyClusterRequest helps remove all request fields that should not be submitted when instance pool is selected.
@@ -400,8 +338,4 @@ func updateLibraries(libraries LibrariesAPI, clusterInfo ClusterInfo,
 	}
 	_, err := waitForLibrariesInstalled(libraries, clusterInfo)
 	return err
-}
-
-func resourceClusterDelete(d *schema.ResourceData, m interface{}) error {
-	return NewClustersAPI(m).PermanentDelete(d.Id())
 }

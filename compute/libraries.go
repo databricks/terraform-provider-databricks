@@ -1,35 +1,42 @@
 package compute
 
 import (
+	"context"
 	"fmt"
+	"sort"
 	"strings"
 
 	"github.com/databrickslabs/databricks-terraform/common"
 )
 
 // NewLibrariesAPI creates LibrariesAPI instance from provider meta
-func NewLibrariesAPI(m interface{}) LibrariesAPI {
-	return LibrariesAPI{client: m.(*common.DatabricksClient)}
+func NewLibrariesAPI(ctx context.Context, m interface{}) LibrariesAPI {
+	// TODO: context.WithValue
+	return LibrariesAPI{
+		client:  m.(*common.DatabricksClient),
+		context: ctx,
+	}
 }
 
 // LibrariesAPI exposes the Library API
 type LibrariesAPI struct {
-	client *common.DatabricksClient
+	client  *common.DatabricksClient
+	context context.Context
 }
 
 // Install library list on cluster
 func (a LibrariesAPI) Install(req ClusterLibraryList) error {
-	return a.client.Post("/libraries/install", req, nil)
+	return a.client.Post(a.context, "/libraries/install", req, nil)
 }
 
 // Uninstall library list from cluster
 func (a LibrariesAPI) Uninstall(req ClusterLibraryList) error {
-	return a.client.Post("/libraries/uninstall", req, nil)
+	return a.client.Post(a.context, "/libraries/uninstall", req, nil)
 }
 
 // ClusterStatus returns library status in cluster
 func (a LibrariesAPI) ClusterStatus(clusterID string) (cls ClusterLibraryStatuses, err error) {
-	err = a.client.Get("/libraries/cluster-status", ClusterID{ClusterID: clusterID}, &cls)
+	err = a.client.Get(a.context, "/libraries/cluster-status", ClusterID{ClusterID: clusterID}, &cls)
 	return
 }
 
@@ -101,51 +108,6 @@ func (cll *ClusterLibraryList) Diff(cls ClusterLibraryStatuses) (ClusterLibraryL
 	return toInstall, toUninstall
 }
 
-// AddLibraryFromMap is convenience method
-func (cll *ClusterLibraryList) AddLibraryFromMap(libraryType string, m map[string]interface{}) {
-	lib := Library{}
-	switch libraryType {
-	case "library_whl":
-		if v, ok := m["path"].(string); ok {
-			lib.Whl = v
-		}
-	case "library_egg":
-		if v, ok := m["path"].(string); ok {
-			lib.Egg = v
-		}
-	case "library_jar":
-		if v, ok := m["path"].(string); ok {
-			lib.Jar = v
-		}
-	case "library_pypi":
-		lib.Pypi = &PyPi{}
-		if v, ok := m["package"].(string); ok {
-			lib.Pypi.Package = v
-		}
-		if v, ok := m["repo"].(string); ok {
-			lib.Pypi.Repo = v
-		}
-	case "library_maven":
-		lib.Maven = &Maven{}
-		if v, ok := m["coordinates"].(string); ok {
-			lib.Maven.Coordinates = v
-		}
-		if v, ok := m["repo"].(string); ok {
-			lib.Maven.Repo = v
-		}
-		// exclusions won't be added for now.
-	case "library_cran":
-		lib.Cran = &Cran{}
-		if v, ok := m["package"].(string); ok {
-			lib.Cran.Package = v
-		}
-		if v, ok := m["repo"].(string); ok {
-			lib.Cran.Repo = v
-		}
-	}
-	cll.Libraries = append(cll.Libraries, lib)
-}
-
 // LibraryStatus is the status on a given cluster when using the libraries status api
 type LibraryStatus struct {
 	Library                         *Library `json:"library,omitempty"`
@@ -169,6 +131,11 @@ func (cls ClusterLibraryStatuses) ToLibraryList() ClusterLibraryList {
 	for _, lib := range cls.LibraryStatuses {
 		cll.Libraries = append(cll.Libraries, *lib.Library)
 	}
+	sort.Slice(cll.Libraries, func(i, j int) bool {
+		a, b := cll.Libraries[i].TypeAndKey()
+		c, d := cll.Libraries[j].TypeAndKey()
+		return a+b < c+d
+	})
 	return cll
 }
 

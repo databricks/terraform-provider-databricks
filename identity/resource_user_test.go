@@ -19,7 +19,7 @@ func TestResourceUserRead(t *testing.T) {
 					ID:          "abc",
 					DisplayName: "Example user",
 					UserName:    "me@example.com",
-					Groups: []GroupMember{
+					Groups: []groupsListItem{
 						{
 							Display: "admins",
 							Value:   "4567",
@@ -45,7 +45,7 @@ func TestResourceUserRead(t *testing.T) {
 }
 
 func TestResourceUserRead_NotFound(t *testing.T) {
-	d, err := qa.ResourceFixture{
+	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
@@ -56,10 +56,9 @@ func TestResourceUserRead_NotFound(t *testing.T) {
 		Resource: ResourceUser(),
 		New:      true,
 		Read:     true,
+		Removed:  true,
 		ID:       "abc",
-	}.Apply(t)
-	require.NoError(t, err, err)
-	assert.Equal(t, "", d.Id())
+	}.ApplyNoError(t)
 }
 
 func TestResourceUserRead_Error(t *testing.T) {
@@ -93,7 +92,7 @@ func TestResourceUserCreate(t *testing.T) {
 				ExpectedRequest: ScimUser{
 					DisplayName: "Example user",
 					Active:      true,
-					Entitlements: []EntitlementsListItem{
+					Entitlements: []entitlementsListItem{
 						{
 							Value: "allow-cluster-create",
 						},
@@ -113,12 +112,12 @@ func TestResourceUserCreate(t *testing.T) {
 					Active:      true,
 					UserName:    "me@example.com",
 					ID:          "abc",
-					Entitlements: []EntitlementsListItem{
+					Entitlements: []entitlementsListItem{
 						{
 							Value: AllowClusterCreateEntitlement,
 						},
 					},
-					Groups: []GroupMember{
+					Groups: []groupsListItem{
 						{
 							Display: "admins",
 							Value:   "4567",
@@ -172,12 +171,12 @@ func TestResourceUserUpdate(t *testing.T) {
 		DisplayName: "Changed Name",
 		UserName:    "me@example.com",
 		Active:      true,
-		Entitlements: []EntitlementsListItem{
+		Entitlements: []entitlementsListItem{
 			{
 				Value: AllowInstancePoolCreateEntitlement,
 			},
 		},
-		Groups: []GroupMember{
+		Groups: []groupsListItem{
 			{
 				Display: "admins",
 				Value:   "4567",
@@ -187,7 +186,7 @@ func TestResourceUserUpdate(t *testing.T) {
 				Value:   "9877",
 			},
 		},
-		Roles: []RoleListItem{
+		Roles: []roleListItem{
 			{
 				Value: "a",
 			},
@@ -206,12 +205,12 @@ func TestResourceUserUpdate(t *testing.T) {
 					Active:      true,
 					UserName:    "me@example.com",
 					ID:          "abc",
-					Entitlements: []EntitlementsListItem{
+					Entitlements: []entitlementsListItem{
 						{
 							Value: AllowClusterCreateEntitlement,
 						},
 					},
-					Groups: []GroupMember{
+					Groups: []groupsListItem{
 						{
 							Display: "admins",
 							Value:   "4567",
@@ -221,7 +220,7 @@ func TestResourceUserUpdate(t *testing.T) {
 							Value:   "9877",
 						},
 					},
-					Roles: []RoleListItem{
+					Roles: []roleListItem{
 						{
 							Value: "a",
 						},
@@ -293,12 +292,12 @@ func TestResourceUserUpdate_ErrorPut(t *testing.T) {
 					Active:      true,
 					UserName:    "me@example.com",
 					ID:          "abc",
-					Entitlements: []EntitlementsListItem{
+					Entitlements: []entitlementsListItem{
 						{
 							Value: AllowClusterCreateEntitlement,
 						},
 					},
-					Groups: []GroupMember{
+					Groups: []groupsListItem{
 						{
 							Display: "admins",
 							Value:   "4567",
@@ -308,7 +307,7 @@ func TestResourceUserUpdate_ErrorPut(t *testing.T) {
 							Value:   "9877",
 						},
 					},
-					Roles: []RoleListItem{
+					Roles: []roleListItem{
 						{
 							Value: "a",
 						},

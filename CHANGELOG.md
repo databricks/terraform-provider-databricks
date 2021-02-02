@@ -1,14 +1,65 @@
 # Version changelog
 
+## 0.3.0
+
+* Added configurable provisioning timeout for `databricks_mws_workspaces`, so that local DNS cache issues would be more tolerated.
+* Added [databricks_current_user] to simplify applying the same Terraform configuration by different users in the shared workspace for testing purposes. 
+* Added client-side rate limiting to release the pressure on backend APIs and prevent client blocking ([#465](https://github.com/databrickslabs/terraform-provider-databricks/pull/465))
+* Member usernames, group names and instance profile names in `databricks_group` data source are now sorted and providing consistent behavior between runs ([#449](https://github.com/databrickslabs/terraform-provider-databricks/issues/449))
+* Fixed redundant multiple mounting clusters ([#445](https://github.com/databrickslabs/terraform-provider-databricks/issues/445))
+* Added optional parameter azure_environment to provider config which defaults to public ([#437](https://github.com/databrickslabs/terraform-provider-databricks/pull/437)).
+* Added [databricks_service_principal](https://github.com/databrickslabs/terraform-provider-databricks/pull/386) resource.
+* `skip_validation` from `databricks_instance_profile` was removed and is always set to `true`.
+* Added propagation of terraform version to `User-Agent` header, along with type of resource used.
+* `databricks_notebook` & `databricks_dbfs_file` got new `source` field to specify location of a local file.
+* `databricks_notebook` can have `language` field optional, as long as `source` is set to a file with `.py`, `.scala`, `.sql`, or `.r` extension.
+* `databricks_me` data source was added to represent `user_name`, `home` & `id` of the caller user (or service principal).
+* Added validation for secret scope name in `databricks_secret`, `databricks_secret_scope` and `databricks_secret_acl`. Non-compliant names may cause errors.
+* Added [databricks_spark_version](https://github.com/databrickslabs/terraform-provider-databricks/issues/347) data source.
+* Fixed support for [single node clusters](https://docs.databricks.com/clusters/single-node.html) support by allowing [`num_workers` to be `0`](https://github.com/databrickslabs/terraform-provider-databricks/pull/454).
+* Fixed bug in destruction of IP access lists ([#426](https://github.com/databrickslabs/terraform-provider-databricks/issues/426)).
+* All resource imports are now making call to corresponding Databricks API by default ([#471](https://github.com/databrickslabs/terraform-provider-databricks/issues/471)).
+
+**Behavior changes**
+* Removed deprecated `library_jar`, `library_egg`, `library_whl`, `library_pypi`, `library_cran`, and `library_maven` from `databricks_cluster` and `databricks_job` in favor of more API-transparent [library](https://registry.terraform.io/providers/databrickslabs/databricks/latest/docs/resources/cluster#library-configuration-block) configuration block.
+* Removed deprecated `notebook_path` and `notebook_base_parameters` from `databricks_job` in favor of [notebook_task](https://registry.terraform.io/providers/databrickslabs/databricks/latest/docs/resources/job#notebook_task-configuration-block) configuration block.
+* Removed deprecated `jar_uri`, `jar_main_class_name`, and `jar_parameters` from `databricks_job` in favor of [spark_jar_task](https://registry.terraform.io/providers/databrickslabs/databricks/latest/docs/resources/job#spark_jar_task-configuration-block) configuration block.
+* Removed deprecated `python_file` and `python_parameters` from `databricks_job` in favor of [spark_python_task](https://registry.terraform.io/providers/databrickslabs/databricks/latest/docs/resources/job#spark_python_task-configuration-block) configuration block.
+* Removed deprecated `spark_submit_parameters` from `databricks_job` in favor of [spark_submit_task](https://registry.terraform.io/providers/databrickslabs/databricks/latest/docs/resources/job#spark_submit_task-configuration-block) configuration block.
+* Removed deprecated `databricks_scim_user` resource in favor of [databricks_user](https://registry.terraform.io/providers/databrickslabs/databricks/latest/docs/resources/user).
+* Removed deprecated `databricks_scim_group` resource in favor of [databricks_group](https://registry.terraform.io/providers/databrickslabs/databricks/latest/docs/resources/group).
+* Removed deprecated `databricks_default_user_roles` data source in favor of [databricks_group](https://registry.terraform.io/providers/databrickslabs/databricks/latest/docs/data-sources/group#attribute-reference) data source.
+* Removed deprecated `basic_auth` and `azure_auth` provider configuration blocks in favor of [documented authentication methods](https://registry.terraform.io/providers/databrickslabs/databricks/latest/docs).
+* `format`, `overwrite`, and `mkdirs` were removed from `databricks_notebook`. To follow expected behavior of Terraform, notebooks are always overwritten.
+* `skip_validation` from `databricks_instance_profile` was removed and is always set to `true` for subsequent requests.
+* `databricks_mws_workspace` got `verify_workspace_runnning` removed and now validates all every deployment. In case deployment failed, it removes workspace that failed and returns error message with explanation.
+* `default_tags` were removed from `databricks_instance_pool`. `disk_spec` got new attribute `disk_type`, that contains `azure_disk_volume_type` and `ebs_volume_type`. This change is made to closer reflect API structure.
+* `databricks_notebook` & `databricks_dbfs_file` got `content` attribute renamed to `content_base64` and now share the same logic to work with local files.
+
 ## 0.2.9
 
 * Fixed documentation issues.
 * Added missing resource importers and test to cover it.
 * Migrated build from TravisCI to GitHub Actions.
+* Fixed custom `config_file` issue configuration handling ([#420](https://github.com/databrickslabs/terraform-provider-databricks/issues/420)).
+
+**Deprecations**
+* `databricks_notebook` has got `overwrite`, `mkdirs` and `format` parameters, that always have to be set to certain values in order to follow expected behavior of terraform. These fields would be removed in 0.3 and always set to proper values.
+* `databricks_notebook` & `databricks_dbfs_file` field `content` is deprecated and would be renamed to `content_base64` to further increase clarity. 
+* `databricks_dbfs_file` has got `content`, `content_b64_md5`, `overwrite`, `mkdirs`, `validate_remote_file` fields deprecated and they will be removed in the next version, where critical code path will be shared with `databricks_notebook`.
+* `network_error_messages` and `verify_workspace_runnning` from `databricks_mws_workspaces` is deprecated and going to be removed in 0.3.
+* `error_messages` from `databricks_mws_networks` are deprecated and would be removed in 0.3.
+* `ebs_volume_type` and `azure_disk_volume_type` from `databricks_instance_pool` is going to be moved to `disk_type` sub-block in 0.3, which means you'll slightly have to modify configuration while migrating to 0.3. Computed field `default_tags` is going to be removed from resource. This is done to further increase maintainability of provider in the future.
+
+Updated dependency versions:
+
+* github.com/aws/aws-sdk-go 35.36
+* github.com/hashicorp/go-retryablehttp 0.6.8
+* github.com/Azure/go-autorest/autorest 0.11.12
 
 **Behavior changes**
 * `min_idle_instances` for `databricks_instance_pool` is now optional.
-* `skip_validation` for `databricks_instance_profile` is going to become optional in 0.3.x.
+* `skip_validation` for `databricks_instance_profile` is going to be removed in 0.3.
 
 ## 0.2.8
 

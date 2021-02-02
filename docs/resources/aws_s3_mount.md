@@ -1,8 +1,8 @@
 # databricks_aws_s3_mount Resource
 
--> **Note** This resource has evolving API, which may change in future versions of provider.
+-> **Note** This resource has an evolving API, which may change in future versions of the provider.
 
-This resource will mount your S3 bucket on `dbfs:/mnt/yourname`. It is important to understand that this will start up the [cluster](cluster.md) if the cluster is terminated. The read and refresh terraform command will require a cluster and make take some time to validate mount. If cluster_id is not specified, it will create the smallest possible cluster called `terraform-mount` for shortest possible amount of time. 
+This resource will mount your S3 bucket on `dbfs:/mnt/yourname`. It is important to understand that this will start up the [cluster](cluster.md) if the cluster is terminated. The read and refresh terraform command will require a cluster and may take some time to validate the mount. If cluster_id is not specified, it will create the smallest possible cluster called `terraform-mount` for the shortest possible amount of time.
 
 ## Example Usage
 
@@ -77,7 +77,7 @@ resource "aws_iam_policy" "cross_account_policy" {
   policy = data.databricks_aws_crossaccount_policy.this.json
 }
 
-// Step 8: Allow Databricks to perform actions within your account, given requests are with ExternalId you've received on website.
+// Step 8: Allow Databricks to perform actions within your account, given requests are with ExternalId you've received on the website.
 data "databricks_aws_assume_role_policy" "this" {
     external_id = var.account_id
 }
@@ -112,7 +112,6 @@ resource "aws_iam_instance_profile" "this" {
 // Step 13: Register instance profile at Databricks
 resource "databricks_instance_profile" "ds" {
   instance_profile_arn = aws_iam_instance_profile.this.arn
-  skip_validation      = false
 }
 
 // Step 14: now you can do `%fs ls /mnt/experiments` in notebooks
@@ -127,8 +126,8 @@ resource "databricks_s3_mount" "this" {
 
 The following arguments are required:
 
-* `cluster_id` - (Optional) (String) [Cluster](cluster.md) to use for mounting. If no cluster is specified, new cluster will be created and will mount the bucket for all of the clusters in this workspace. If cluster is specified, mount will be visible for all clusters with the same [instance profile](./instance_profile.md). If cluster is not running - it's going to be started, so be aware to set autotermination rules on it.
-* `instance_profile` - (Optional) (String) ARN of registeted [instance profile](instance_profile.md) for data access.
+* `cluster_id` - (Optional) (String) [Cluster](cluster.md) to use for mounting. If no cluster is specified, a new cluster will be created and will mount the bucket for all of the clusters in this workspace. If a cluster is specified, mount will be visible for all clusters with the same [instance profile](./instance_profile.md). If the cluster is not running - it's going to be started, so be aware to set auto-termination rules on it.
+* `instance_profile` - (Optional) (String) ARN of registered [instance profile](instance_profile.md) for data access.
 * `mount_name` - (Required) (String) Name, under which mount will be accessible in `dbfs:/mnt/<MOUNT_NAME>` or locally on each instance through FUSE mount `/dbfs/mnt/<MOUNT_NAME>`.
 * `s3_bucket_name` - (Required) (String) S3 bucket name to be mounted.
 

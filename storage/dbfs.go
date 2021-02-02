@@ -1,10 +1,16 @@
 package storage
 
 import (
+	"context"
 	"encoding/base64"
 
 	"github.com/databrickslabs/databricks-terraform/common"
 )
+
+// FileList contains list of file metadata entries
+type FileList struct {
+	Files []FileInfo `json:"files,omitempty"`
+}
 
 // FileInfo contains information when listing files or fetching files from DBFS api
 type FileInfo struct {
@@ -13,61 +19,42 @@ type FileInfo struct {
 	FileSize int64  `json:"file_size,omitempty"`
 }
 
-// DBFSHandleRequest contains the payload to create a handle which is a connection for uploading blocks of file data
-type DBFSHandleRequest struct {
-	Path      string `json:"path,omitempty" url:"path,omitempty"`
-	Overwrite bool   `json:"overwrite,omitempty" url:"overwrite,omitempty"`
+// CreateHandle contains the payload to create a handle which is a connection for uploading blocks of file data
+type CreateHandle struct {
+	Path      string `json:"path,omitempty"`
+	Overwrite bool   `json:"overwrite,omitempty"`
 }
 
-// DBFSHandleResponse contains the response from making an handle request
-type DBFSHandleResponse struct {
-	Handle int64 `json:"handle,omitempty" url:"handle,omitempty"`
+// Handle contains the response from making an handle request
+type Handle struct {
+	Handle int64 `json:"handle,omitempty"`
 }
 
-// DBFSBlockRequest contains the payload to upload a block of base64 data to a handle
-type DBFSBlockRequest struct {
-	Data   string `json:"data,omitempty" url:"data,omitempty"`
-	Handle int64  `json:"handle,omitempty" url:"handle,omitempty"`
+// AddBlock contains the payload to upload a block of base64 data to a handle
+type AddBlock struct {
+	Data   string `json:"data,omitempty"`
+	Handle int64  `json:"handle,omitempty"`
 }
 
-// DBFSCloseRequest contains the payload close an opened connection (handle) to a dbfs path
-type DBFSCloseRequest struct {
-	Handle int64 `json:"handle,omitempty" url:"handle,omitempty"`
+// ReadResponse contains the response from reading a portion of a file in DBFS
+type ReadResponse struct {
+	BytesRead int64  `json:"bytes_read"`
+	Data      string `json:"data"`
 }
 
-// DBFSReadResponse contains the response from reading a portion of a file in DBFS
-type DBFSReadResponse struct {
-	BytesRead int64  `json:"bytes_read,omitempty" url:"bytes_read,omitempty"`
-	Data      string `json:"data,omitempty" url:"data,omitempty"`
+// NewDbfsAPI creates DBFSAPI instance from provider meta
+func NewDbfsAPI(ctx context.Context, m interface{}) DbfsAPI {
+	return DbfsAPI{m.(*common.DatabricksClient), ctx}
 }
 
-// DBFSMkdirRequest contains the payload to make a directory in dbfs
-type DBFSMkdirRequest struct {
-	Path string `json:"path,omitempty" url:"path,omitempty"`
+// DbfsAPI exposes the DBFS API
+type DbfsAPI struct {
+	client  *common.DatabricksClient
+	context context.Context
 }
 
-// DBFSDeleteRequest contains the payload to delete a file/directory in dbfs
-type DBFSDeleteRequest struct {
-	Path      string `json:"path,omitempty" url:"path,omitempty"`
-	Recursive bool   `json:"recursive,omitempty" url:"recursive,omitempty"`
-}
-
-// NewDBFSAPI creates DBFSAPI instance from provider meta
-func NewDBFSAPI(m interface{}) DBFSAPI {
-	return DBFSAPI{client: m.(*common.DatabricksClient)}
-}
-
-// DBFSAPI exposes the DBFS API
-type DBFSAPI struct {
-	client *common.DatabricksClient
-}
-
-// Create creates a file in DBFS given data string in base64
-func (a DBFSAPI) Create(path string, overwrite bool, data string) (err error) {
-	byteArr, err := base64.StdEncoding.DecodeString(data)
-	if err != nil {
-		return
-	}
+// Create creates a file on DBFS
+func (a DbfsAPI) Create(path string, byteArr []byte, overwrite bool) (err error) {
 	byteChunks := split(byteArr, 1e6)
 	handle, err := a.createHandle(path, overwrite)
 	if err != nil {
@@ -89,39 +76,22 @@ func (a DBFSAPI) Create(path string, overwrite bool, data string) (err error) {
 	return
 }
 
-// Read returns the contents of a file in DBFS as a base64 encoded string
-func (a DBFSAPI) Read(path string) (string, error) {
-	var bytesFetched []byte
-	fetchLoop := true
-	offSet := int64(0)
-	length := int64(1e6)
-	for fetchLoop {
-		bytesRead, bytes, err := a.read(path, offSet, length)
-		if err != nil {
-			return "", err
-		}
-		if bytesRead == 0 || bytesRead < length {
-			fetchLoop = false
-		}
-
-		bytesFetched = append(bytesFetched, bytes...)
-		offSet += length
-	}
-	resp := base64.StdEncoding.EncodeToString(bytesFetched)
-	return resp, nil
+func (a DbfsAPI) createHandle(path string, overwrite bool) (int64, error) {
+	var h Handle
+	err := a.client.Post(a.context, "/dbfs/create", CreateHandle{path, overwrite}, &h)
+	return h.Handle, err
 }
 
-func (a DBFSAPI) read(path string, offset, length int64) (int64, []byte, error) {
-	bytesRead, data, err := a.ReadString(path, offset, length)
-	if err != nil {
-		return bytesRead, nil, err
-	}
-	dataBytes, err := base64.StdEncoding.DecodeString(data)
-	return bytesRead, dataBytes, err
+func (a DbfsAPI) addBlock(data string, handle int64) error {
+	return a.client.Post(a.context, "/dbfs/add-block", AddBlock{data, handle}, nil)
+}
+
+func (a DbfsAPI) closeHandle(handle int64) error {
+	return a.client.Post(a.context, "/dbfs/close", Handle{handle}, nil)
 }
 
 // List returns a list of files in DBFS and the recursive flag lets you recursively list files
-func (a DBFSAPI) List(path string, recursive bool) ([]FileInfo, error) {
+func (a DbfsAPI) List(path string, recursive bool) ([]FileInfo, error) {
 	if recursive {
 		var paths []FileInfo
 		err := a.recursiveAddPaths(path, &paths)
@@ -133,7 +103,7 @@ func (a DBFSAPI) List(path string, recursive bool) ([]FileInfo, error) {
 	return a.list(path)
 }
 
-func (a DBFSAPI) recursiveAddPaths(path string, pathList *[]FileInfo) error {
+func (a DbfsAPI) recursiveAddPaths(path string, pathList *[]FileInfo) error {
 	fileInfoList, err := a.list(path)
 	if err != nil {
 		return err
@@ -151,17 +121,25 @@ func (a DBFSAPI) recursiveAddPaths(path string, pathList *[]FileInfo) error {
 	return nil
 }
 
+func (a DbfsAPI) list(path string) ([]FileInfo, error) {
+	var dbfsList FileList
+	err := a.client.Get(a.context, "/dbfs/list", map[string]interface{}{
+		"path": path,
+	}, &dbfsList)
+	return dbfsList.Files, err
+}
+
 // Move moves the file between DBFS locations via DBFS api
-func (a DBFSAPI) Move(src string, tgt string) error {
-	return a.client.Post("/dbfs/move", map[string]string{
+func (a DbfsAPI) Move(src string, tgt string) error {
+	return a.client.Post(a.context, "/dbfs/move", map[string]string{
 		"source_path":      src,
 		"destination_path": tgt,
 	}, nil)
 }
 
 // Delete deletes a file in DBFS via API
-func (a DBFSAPI) Delete(path string, recursive bool) error {
-	return a.client.Post("/dbfs/delete", dbfsRequest{
+func (a DbfsAPI) Delete(path string, recursive bool) error {
+	return a.client.Post(a.context, "/dbfs/delete", dbfsRequest{
 		Path:      path,
 		Recursive: recursive,
 	}, nil)
@@ -174,13 +152,38 @@ type dbfsRequest struct {
 	Recursive bool   `json:"recursive,omitempty" url:"recursive,omitempty"`
 }
 
-// ReadString reads a "block" of data in DBFS given a offset and length as a base64 encoded string
-func (a DBFSAPI) ReadString(path string, offset, length int64) (int64, string, error) {
-	var readBytes struct {
-		BytesRead int64  `json:"bytes_read,omitempty"`
-		Data      string `json:"data,omitempty"`
+// Read returns the contents of a file
+func (a DbfsAPI) Read(path string) (content []byte, err error) {
+	fetchLoop := true
+	offSet := int64(0)
+	length := int64(1e6)
+	for fetchLoop {
+		bytesRead, bytes, err := a.read(path, offSet, length)
+		if err != nil {
+			return content, err
+		}
+		if bytesRead == 0 || bytesRead < length {
+			fetchLoop = false
+		}
+		content = append(content, bytes...)
+		offSet += length
 	}
-	err := a.client.Get("/dbfs/read", dbfsRequest{
+	return content, err
+}
+
+func (a DbfsAPI) read(path string, offset, length int64) (int64, []byte, error) {
+	bytesRead, data, err := a.readString(path, offset, length)
+	if err != nil {
+		return bytesRead, nil, err
+	}
+	dataBytes, err := base64.StdEncoding.DecodeString(data)
+	return bytesRead, dataBytes, err
+}
+
+// readString reads a "block" of data in DBFS given a offset and length as a base64 encoded string
+func (a DbfsAPI) readString(path string, offset, length int64) (int64, string, error) {
+	var readBytes ReadResponse
+	err := a.client.Get(a.context, "/dbfs/read", dbfsRequest{
 		Path:   path,
 		Offset: offset,
 		Length: length,
@@ -189,53 +192,17 @@ func (a DBFSAPI) ReadString(path string, offset, length int64) (int64, string, e
 }
 
 // Status returns the status of a file in DBFS
-func (a DBFSAPI) Status(path string) (f FileInfo, err error) {
-	err = a.client.Get("/dbfs/get-status", map[string]interface{}{
+func (a DbfsAPI) Status(path string) (f FileInfo, err error) {
+	err = a.client.Get(a.context, "/dbfs/get-status", map[string]interface{}{
 		"path": path,
 	}, &f)
 	return
 }
 
-type FileList struct {
-	Files []FileInfo `json:"files,omitempty" url:"files,omitempty"`
-}
-
-func (a DBFSAPI) list(path string) ([]FileInfo, error) {
-	var dbfsList FileList
-	err := a.client.Get("/dbfs/list", map[string]interface{}{
-		"path": path,
-	}, &dbfsList)
-	return dbfsList.Files, err
-}
-
 // Mkdirs makes the directories in DBFS include the parent paths
-func (a DBFSAPI) Mkdirs(path string) error {
-	return a.client.Post("/dbfs/mkdirs", map[string]interface{}{
+func (a DbfsAPI) Mkdirs(path string) error {
+	return a.client.Post(a.context, "/dbfs/mkdirs", map[string]interface{}{
 		"path": path,
-	}, nil)
-}
-
-func (a DBFSAPI) createHandle(path string, overwrite bool) (int64, error) {
-	var handle struct {
-		Handle int64 `json:"handle,omitempty" url:"handle,omitempty"`
-	}
-	err := a.client.Post("/dbfs/create", map[string]interface{}{
-		"path":      path,
-		"overwrite": overwrite,
-	}, &handle)
-	return handle.Handle, err
-}
-
-func (a DBFSAPI) addBlock(data string, handle int64) error {
-	return a.client.Post("/dbfs/add-block", map[string]interface{}{
-		"data":   data,
-		"handle": handle,
-	}, nil)
-}
-
-func (a DBFSAPI) closeHandle(handle int64) error {
-	return a.client.Post("/dbfs/close", map[string]interface{}{
-		"handle": handle,
 	}, nil)
 }
 

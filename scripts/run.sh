@@ -99,7 +99,8 @@ if [[ $@ == *"--destroy"* ]]; then
 fi
 
 if [ -f "main.tf" ]; then
-    terraform init  >/dev/null 2>&1
+    rm -fr .terraform .terraform.lock.hcl
+    terraform init -upgrade
     terraform apply -auto-approve
     export $(terraform output --json | jq -r $JQ) >/dev/null 2>&1
 else
@@ -109,10 +110,13 @@ fi
 if [[ $@ == *"--debug"* ]]; then
     export TF_LOG="DEBUG"
     export TF_LOG_PATH=$PWD/tf.log
+    export TF_ACC_LOG_PATH=$PWD/tf.log
     echo "[*] To see debug logs: tail -f $PWD/tf.log"
 fi
 
 function go_test {
+    # set tmp dir to short one
+    export TMPDIR=/tmp
     TF_ACC=1 gotestsum \
     --format short-verbose \
     --raw-command go test -v \

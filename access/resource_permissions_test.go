@@ -1,6 +1,7 @@
 package access
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"os"
@@ -76,7 +77,7 @@ func TestResourcePermissionsRead(t *testing.T) {
 }
 
 func TestResourcePermissionsRead_NotFound(t *testing.T) {
-	d, err := qa.ResourceFixture{
+	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   http.MethodGet,
@@ -91,10 +92,9 @@ func TestResourcePermissionsRead_NotFound(t *testing.T) {
 		Resource: ResourcePermissions(),
 		Read:     true,
 		New:      true,
+		Removed:  true,
 		ID:       "/clusters/abc",
-	}.Apply(t)
-	assert.NoError(t, err, err)
-	assert.Equal(t, "", d.Id())
+	}.ApplyNoError(t)
 }
 
 func TestResourcePermissionsRead_some_error(t *testing.T) {
@@ -405,7 +405,7 @@ func TestResourcePermissionsCreate_NotebookPath(t *testing.T) {
 			{
 				Method:   http.MethodGet,
 				Resource: "/api/2.0/workspace/get-status?path=%2FDevelopment%2FInit",
-				Response: workspace.WorkspaceObjectStatus{
+				Response: workspace.ObjectStatus{
 					ObjectID:   988765,
 					ObjectType: "NOTEBOOK",
 				},
@@ -597,11 +597,12 @@ func permissionsTestHelper(t *testing.T,
 	randomName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
 	client := common.NewClientFromEnvironment()
 
-	usersAPI := identity.NewUsersAPI(client)
+	ctx := context.Background()
+	usersAPI := identity.NewUsersAPI(ctx, client)
 	me, err := usersAPI.Me()
 	require.NoError(t, err)
 
-	user, err := usersAPI.CreateR(identity.UserEntity{
+	user, err := usersAPI.Create(identity.UserEntity{
 		UserName: fmt.Sprintf("tf-%s@example.com", randomName),
 	})
 	require.NoError(t, err)
@@ -609,19 +610,19 @@ func permissionsTestHelper(t *testing.T,
 		assert.NoError(t, usersAPI.Delete(user.ID))
 	}()
 
-	groupsAPI := identity.NewGroupsAPI(client)
+	groupsAPI := identity.NewGroupsAPI(ctx, client)
 	group, err := groupsAPI.Create(fmt.Sprintf("tf-%s", randomName), []string{user.ID}, nil, nil)
 	require.NoError(t, err)
 	defer func() {
 		assert.NoError(t, groupsAPI.Delete(group.ID))
 	}()
 
-	permissionsAPI := NewPermissionsAPI(client)
+	permissionsAPI := NewPermissionsAPI(ctx, client)
 	cb(permissionsAPI, user.UserName, group.DisplayName, func(id string) PermissionsEntity {
 		d := ResourcePermissions().TestResourceData()
 		objectACL, err := permissionsAPI.Read(id)
 		require.NoError(t, err)
-		entity, err := objectACL.ToPermissionsEntity(d, me.UserName)
+		entity, err := objectACL.ToPermissionsEntity(context.Background(), d, me.UserName)
 		require.NoError(t, err)
 		return entity
 	})
@@ -634,7 +635,8 @@ func TestAccPermissionsClusterPolicy(t *testing.T) {
 			Name:       group,
 			Definition: "{}",
 		}
-		policiesAPI := compute.NewClusterPoliciesAPI(permissionsAPI.client)
+		ctx := context.Background()
+		policiesAPI := compute.NewClusterPoliciesAPI(ctx, permissionsAPI.client)
 		require.NoError(t, policiesAPI.Create(&policy))
 		defer func() {
 			assert.NoError(t, policiesAPI.Delete(policy.PolicyID))
@@ -666,11 +668,12 @@ func TestAccPermissionsClusterPolicy(t *testing.T) {
 func TestAccPermissionsInstancePool(t *testing.T) {
 	permissionsTestHelper(t, func(permissionsAPI PermissionsAPI, user, group string,
 		ef func(string) PermissionsEntity) {
-		poolsAPI := compute.NewInstancePoolsAPI(permissionsAPI.client)
+		poolsAPI := compute.NewInstancePoolsAPI(context.Background(), permissionsAPI.client)
+		ctx := context.Background()
 		ips, err := poolsAPI.Create(compute.InstancePool{
 			InstancePoolName: group,
 			NodeTypeID: compute.NewClustersAPI(
-				permissionsAPI.client).GetSmallestNodeType(
+				ctx, permissionsAPI.client).GetSmallestNodeType(
 				compute.NodeTypeRequest{
 					LocalDisk: true,
 				}),
@@ -706,7 +709,8 @@ func TestAccPermissionsInstancePool(t *testing.T) {
 func TestAccPermissionsClusters(t *testing.T) {
 	permissionsTestHelper(t, func(permissionsAPI PermissionsAPI, user, group string,
 		ef func(string) PermissionsEntity) {
-		clustersAPI := compute.NewClustersAPI(permissionsAPI.client)
+		ctx := context.Background()
+		clustersAPI := compute.NewClustersAPI(ctx, permissionsAPI.client)
 		clusterInfo, err := compute.NewTinyClusterInCommonPool()
 		require.NoError(t, err)
 		defer func() {
@@ -765,13 +769,14 @@ func TestAccPermissionsTokens(t *testing.T) {
 func TestAccPermissionsJobs(t *testing.T) {
 	permissionsTestHelper(t, func(permissionsAPI PermissionsAPI, user, group string,
 		ef func(string) PermissionsEntity) {
-		jobsAPI := compute.NewJobsAPI(permissionsAPI.client)
+		ctx := context.Background()
+		jobsAPI := compute.NewJobsAPI(ctx, permissionsAPI.client)
 		job, err := jobsAPI.Create(compute.JobSettings{
 			NewCluster: &compute.Cluster{
 				NumWorkers:   2,
 				SparkVersion: "6.4.x-scala2.11",
 				NodeTypeID: compute.NewClustersAPI(
-					permissionsAPI.client).GetSmallestNodeType(
+					ctx, permissionsAPI.client).GetSmallestNodeType(
 					compute.NodeTypeRequest{
 						LocalDisk: true,
 					}),
@@ -812,7 +817,7 @@ func TestAccPermissionsJobs(t *testing.T) {
 func TestAccPermissionsNotebooks(t *testing.T) {
 	permissionsTestHelper(t, func(permissionsAPI PermissionsAPI, user, group string,
 		ef func(string) PermissionsEntity) {
-		workspaceAPI := workspace.NewNotebooksAPI(permissionsAPI.client)
+		workspaceAPI := workspace.NewNotebooksAPI(context.Background(), permissionsAPI.client)
 
 		notebookDir := fmt.Sprintf("/Testing/%s/something", group)
 		err := workspaceAPI.Mkdirs(notebookDir)
@@ -820,7 +825,13 @@ func TestAccPermissionsNotebooks(t *testing.T) {
 
 		notebookPath := fmt.Sprintf("%s/Dummy", notebookDir)
 
-		err = workspaceAPI.Create(notebookPath, "MSsx", "PYTHON", "SOURCE", true)
+		err = workspaceAPI.Create(workspace.ImportRequest{
+			Path:      notebookPath,
+			Content:   "MSsx",
+			Format:    "SOURCE",
+			Language:  "PYTHON",
+			Overwrite: true,
+		})
 		require.NoError(t, err)
 		defer func() {
 			assert.NoError(t, workspaceAPI.Delete(notebookDir, true))

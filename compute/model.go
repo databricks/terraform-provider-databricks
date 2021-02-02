@@ -228,7 +228,7 @@ type Cluster struct {
 	ClusterName string `json:"cluster_name,omitempty"`
 
 	SparkVersion              string     `json:"spark_version"` // TODO: perhaps make a default
-	NumWorkers                int32      `json:"num_workers,omitempty" tf:"group:size"`
+	NumWorkers                int32      `json:"num_workers" tf:"group:size"`
 	Autoscale                 *AutoScale `json:"autoscale,omitempty" tf:"group:size"`
 	EnableElasticDisk         bool       `json:"enable_elastic_disk,omitempty" tf:"computed"`
 	EnableLocalDiskEncryption bool       `json:"enable_local_disk_encryption,omitempty"`
@@ -345,7 +345,7 @@ type Command struct {
 // InstancePoolAwsAttributes contains aws attributes for AWS Databricks deployments for instance pools
 type InstancePoolAwsAttributes struct {
 	Availability        AwsAvailability `json:"availability,omitempty"`
-	ZoneID              string          `json:"zone_id,omitempty"`
+	ZoneID              string          `json:"zone_id"`
 	SpotBidPricePercent int32           `json:"spot_bid_price_percent,omitempty"`
 }
 
@@ -364,13 +364,14 @@ type InstancePoolDiskSpec struct {
 
 // InstancePool describes the instance pool object on Databricks
 type InstancePool struct {
-	InstancePoolName                   string                     `json:"instance_pool_name,omitempty"`
+	InstancePoolID                     string                     `json:"instance_pool_id,omitempty" tf:"computed"`
+	InstancePoolName                   string                     `json:"instance_pool_name"`
 	MinIdleInstances                   int32                      `json:"min_idle_instances,omitempty"`
 	MaxCapacity                        int32                      `json:"max_capacity,omitempty"`
+	IdleInstanceAutoTerminationMinutes int32                      `json:"idle_instance_autotermination_minutes"`
 	AwsAttributes                      *InstancePoolAwsAttributes `json:"aws_attributes,omitempty"`
-	NodeTypeID                         string                     `json:"node_type_id,omitempty"`
+	NodeTypeID                         string                     `json:"node_type_id"`
 	CustomTags                         map[string]string          `json:"custom_tags,omitempty"`
-	IdleInstanceAutoTerminationMinutes int32                      `json:"idle_instance_autotermination_minutes,omitempty"`
 	EnableElasticDisk                  bool                       `json:"enable_elastic_disk,omitempty"`
 	DiskSpec                           *InstancePoolDiskSpec      `json:"disk_spec,omitempty"`
 	PreloadedSparkVersions             []string                   `json:"preloaded_spark_versions,omitempty"`
@@ -386,15 +387,15 @@ type InstancePoolStats struct {
 
 // InstancePoolAndStats encapsulates a get response from the GET api for instance pools on Databricks
 type InstancePoolAndStats struct {
-	InstancePoolID                     string                     `json:"instance_pool_id,omitempty"`
-	InstancePoolName                   string                     `json:"instance_pool_name,omitempty"`
+	InstancePoolID                     string                     `json:"instance_pool_id,omitempty" tf:"computed"`
+	InstancePoolName                   string                     `json:"instance_pool_name"`
 	MinIdleInstances                   int32                      `json:"min_idle_instances,omitempty"`
 	MaxCapacity                        int32                      `json:"max_capacity,omitempty"`
 	AwsAttributes                      *InstancePoolAwsAttributes `json:"aws_attributes,omitempty"`
-	NodeTypeID                         string                     `json:"node_type_id,omitempty"`
-	DefaultTags                        map[string]string          `json:"default_tags,omitempty"`
+	NodeTypeID                         string                     `json:"node_type_id"`
+	DefaultTags                        map[string]string          `json:"default_tags,omitempty" tf:"computed"`
 	CustomTags                         map[string]string          `json:"custom_tags,omitempty"`
-	IdleInstanceAutoTerminationMinutes int32                      `json:"idle_instance_autotermination_minutes,omitempty"`
+	IdleInstanceAutoTerminationMinutes int32                      `json:"idle_instance_autotermination_minutes"`
 	EnableElasticDisk                  bool                       `json:"enable_elastic_disk,omitempty"`
 	DiskSpec                           *InstancePoolDiskSpec      `json:"disk_spec,omitempty"`
 	PreloadedSparkVersions             []string                   `json:"preloaded_spark_versions,omitempty"`
@@ -685,4 +686,28 @@ type EventsResponse struct {
 	Events     []ClusterEvent `json:"events"`
 	NextPage   *EventsRequest `json:"next_page"`
 	TotalCount int64          `json:"total_count"`
+}
+
+// SparkVersion - contains information about specific version
+type SparkVersion struct {
+	Version     string `json:"key"`
+	Description string `json:"name"`
+}
+
+// SparkVersionsList - returns a list of all currently supported Spark Versions
+// https://docs.databricks.com/dev-tools/api/latest/clusters.html#runtime-versions
+type SparkVersionsList struct {
+	SparkVersions []SparkVersion `json:"versions"`
+}
+
+// SparkVersionRequest - filtering request
+type SparkVersionRequest struct {
+	LongTermSupport bool   `json:"long_term_support,omitempty" tf:"optional,default:false"`
+	Beta            bool   `json:"beta,omitempty" tf:"optional,default:false,conflicts:long_term_support"`
+	Latest          bool   `json:"latest,omitempty" tf:"optional,default:true"`
+	ML              bool   `json:"ml,omitempty" tf:"optional,default:false"`
+	Genomics        bool   `json:"genomics,omitempty" tf:"optional,default:false"`
+	GPU             bool   `json:"gpu,omitempty" tf:"optional,default:false"`
+	Scala           string `json:"scala,omitempty" tf:"optional,default:2.12"`
+	SparkVersion    string `json:"spark_version,omitempty" tf:"optional,default:"`
 }

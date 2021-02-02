@@ -84,13 +84,17 @@ func (acc AccessControlChange) String() string {
 }
 
 // NewPermissionsAPI creates PermissionsAPI instance from provider meta
-func NewPermissionsAPI(m interface{}) PermissionsAPI {
-	return PermissionsAPI{client: m.(*common.DatabricksClient)}
+func NewPermissionsAPI(ctx context.Context, m interface{}) PermissionsAPI {
+	return PermissionsAPI{
+		client:  m.(*common.DatabricksClient),
+		context: ctx,
+	}
 }
 
 // PermissionsAPI exposes general permission related methods
 type PermissionsAPI struct {
-	client *common.DatabricksClient
+	client  *common.DatabricksClient
+	context context.Context
 }
 
 // Update updates object permissions. Technically, it's using method named SetOrDelete, but here we do more
@@ -110,7 +114,7 @@ func (a PermissionsAPI) Update(objectID string, objectACL AccessControlChangeLis
 			}
 		}
 		if owners == 0 {
-			me, err := identity.NewUsersAPI(a.client).Me()
+			me, err := identity.NewUsersAPI(a.context, a.client).Me()
 			if err != nil {
 				return err
 			}
@@ -121,7 +125,7 @@ func (a PermissionsAPI) Update(objectID string, objectACL AccessControlChangeLis
 			})
 		}
 	}
-	return a.client.Put("/preview/permissions"+objectID, objectACL)
+	return a.client.Put(a.context, "/preview/permissions"+objectID, objectACL)
 }
 
 // Delete gracefully removes permissions. Technically, it's using method named SetOrDelete, but here we do more
@@ -140,7 +144,7 @@ func (a PermissionsAPI) Delete(objectID string) error {
 		}
 	}
 	if strings.HasPrefix(objectID, "/jobs") {
-		job, err := compute.NewJobsAPI(a.client).Read(strings.ReplaceAll(objectID, "/jobs/", ""))
+		job, err := compute.NewJobsAPI(a.context, a.client).Read(strings.ReplaceAll(objectID, "/jobs/", ""))
 		if err != nil {
 			return err
 		}
@@ -149,12 +153,12 @@ func (a PermissionsAPI) Delete(objectID string) error {
 			PermissionLevel: "IS_OWNER",
 		})
 	}
-	return a.client.Put("/preview/permissions"+objectID, accl)
+	return a.client.Put(a.context, "/preview/permissions"+objectID, accl)
 }
 
 // Read gets all relevant permissions for the object, including inherited ones
 func (a PermissionsAPI) Read(objectID string) (objectACL ObjectACL, err error) {
-	err = a.client.Get("/preview/permissions"+objectID, nil, &objectACL)
+	err = a.client.Get(a.context, "/preview/permissions"+objectID, nil, &objectACL)
 	return
 }
 
@@ -166,12 +170,12 @@ type permissionsIDFieldMapping struct {
 }
 
 // PermissionsResourceIDFields shows mapping of id columns to resource types
-func permissionsResourceIDFields() []permissionsIDFieldMapping {
+func permissionsResourceIDFields(ctx context.Context) []permissionsIDFieldMapping {
 	SIMPLE := func(client *common.DatabricksClient, id string) (string, error) {
 		return id, nil
 	}
 	PATH := func(client *common.DatabricksClient, path string) (string, error) {
-		info, err := workspace.NewNotebooksAPI(client).Read(path)
+		info, err := workspace.NewNotebooksAPI(ctx, client).Read(path)
 		if err != nil {
 			return "", errors.Wrapf(err, "Cannot load path %s", path)
 		}
@@ -198,7 +202,7 @@ type PermissionsEntity struct {
 }
 
 // ToPermissionsEntity ..
-func (oa *ObjectACL) ToPermissionsEntity(d *schema.ResourceData, me string) (PermissionsEntity, error) {
+func (oa *ObjectACL) ToPermissionsEntity(ctx context.Context, d *schema.ResourceData, me string) (PermissionsEntity, error) {
 	entity := PermissionsEntity{}
 	for _, accessControl := range oa.AccessControlList {
 		if accessControl.GroupName == "admins" && d.Id() != "/authorization/passwords" {
@@ -213,7 +217,7 @@ func (oa *ObjectACL) ToPermissionsEntity(d *schema.ResourceData, me string) (Per
 			entity.AccessControlList = append(entity.AccessControlList, change)
 		}
 	}
-	for _, mapping := range permissionsResourceIDFields() {
+	for _, mapping := range permissionsResourceIDFields(ctx) {
 		if mapping.objectType != oa.ObjectType {
 			continue
 		}
@@ -236,13 +240,14 @@ func (oa *ObjectACL) ToPermissionsEntity(d *schema.ResourceData, me string) (Per
 // ResourcePermissions definition
 func ResourcePermissions() *schema.Resource {
 	s := internal.StructToSchema(PermissionsEntity{}, func(s map[string]*schema.Schema) map[string]*schema.Schema {
-		for _, mapping := range permissionsResourceIDFields() {
+		ctx := context.Background()
+		for _, mapping := range permissionsResourceIDFields(ctx) {
 			s[mapping.field] = &schema.Schema{
 				ForceNew: true,
 				Type:     schema.TypeString,
 				Optional: true,
 			}
-			for _, m := range permissionsResourceIDFields() {
+			for _, m := range permissionsResourceIDFields(ctx) {
 				if m.field == mapping.field {
 					continue
 				}
@@ -254,7 +259,7 @@ func ResourcePermissions() *schema.Resource {
 	})
 	readContext := func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 		id := d.Id()
-		objectACL, err := NewPermissionsAPI(m).Read(id)
+		objectACL, err := NewPermissionsAPI(ctx, m).Read(id)
 		if aerr, ok := err.(common.APIError); ok && aerr.IsMissing() {
 			d.SetId("")
 			return nil
@@ -262,11 +267,11 @@ func ResourcePermissions() *schema.Resource {
 		if err != nil {
 			return diag.FromErr(err)
 		}
-		me, err := identity.NewUsersAPI(m).Me()
+		me, err := identity.NewUsersAPI(ctx, m).Me()
 		if err != nil {
 			return diag.FromErr(err)
 		}
-		entity, err := objectACL.ToPermissionsEntity(d, me.UserName)
+		entity, err := objectACL.ToPermissionsEntity(ctx, d, me.UserName)
 		if err != nil {
 			return diag.FromErr(err)
 		}
@@ -290,14 +295,14 @@ func ResourcePermissions() *schema.Resource {
 			if err != nil {
 				return diag.FromErr(err)
 			}
-			for _, mapping := range permissionsResourceIDFields() {
+			for _, mapping := range permissionsResourceIDFields(ctx) {
 				if v, ok := d.GetOk(mapping.field); ok {
 					id, err := mapping.idRetriever(m.(*common.DatabricksClient), v.(string))
 					if err != nil {
 						return diag.FromErr(err)
 					}
 					objectID := fmt.Sprintf("/%s/%s", mapping.resourceType, id)
-					err = NewPermissionsAPI(m).Update(objectID, AccessControlChangeList{
+					err = NewPermissionsAPI(ctx, m).Update(objectID, AccessControlChangeList{
 						AccessControlList: entity.AccessControlList,
 					})
 					if err != nil {
@@ -315,7 +320,7 @@ func ResourcePermissions() *schema.Resource {
 			if err != nil {
 				return diag.FromErr(err)
 			}
-			err = NewPermissionsAPI(m).Update(d.Id(), AccessControlChangeList{
+			err = NewPermissionsAPI(ctx, m).Update(d.Id(), AccessControlChangeList{
 				AccessControlList: entity.AccessControlList,
 			})
 			if err != nil {
@@ -324,7 +329,7 @@ func ResourcePermissions() *schema.Resource {
 			return readContext(ctx, d, m)
 		},
 		DeleteContext: func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-			err := NewPermissionsAPI(m).Delete(d.Id())
+			err := NewPermissionsAPI(ctx, m).Delete(d.Id())
 			if err != nil {
 				return diag.FromErr(err)
 			}

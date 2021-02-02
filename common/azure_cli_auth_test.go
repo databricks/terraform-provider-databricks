@@ -51,12 +51,12 @@ func TestAzureCliAuth(t *testing.T) {
 		DefaultZone string   `json:"default_zone,omitempty"`
 	}
 	var zi ZonesInfo
-	err = client.Get("/clusters/list-zones", nil, &zi)
+	err = client.Get(context.Background(), "/clusters/list-zones", nil, &zi)
 	assert.NoError(t, err)
 	assert.NotNil(t, zi)
 	assert.Len(t, zi.Zones, 3)
 
-	err = client.Get("/clusters/list-zones", nil, &zi)
+	err = client.Get(context.Background(), "/clusters/list-zones", nil, &zi)
 	assert.NoError(t, err)
 
 	assert.Equal(t, 2, cnt[0], "There should be only one HTTP call")

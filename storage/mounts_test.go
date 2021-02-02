@@ -1,8 +1,10 @@
 package storage
 
 import (
+	"context"
 	"fmt"
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/databrickslabs/databricks-terraform/access"
@@ -20,11 +22,12 @@ func mountPointThroughReusedCluster(t *testing.T) (*common.DatabricksClient, Mou
 	if _, ok := os.LookupEnv("CLOUD_ENV"); !ok {
 		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
 	}
+	ctx := context.Background()
 	client := common.CommonEnvironmentClient()
 	clusterInfo := compute.NewTinyClusterInCommonPoolPossiblyReused()
 	randomName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
 	return client, MountPoint{
-		exec:      client.CommandExecutor(),
+		exec:      client.CommandExecutor(ctx),
 		clusterID: clusterInfo.ClusterID,
 		name:      randomName,
 	}
@@ -35,7 +38,8 @@ func testWithNewSecretScope(t *testing.T, callback func(string, string),
 	randomScope := "test" + suffix
 	randomKey := "key" + suffix
 
-	secretScopes := access.NewSecretScopesAPI(client)
+	ctx := context.Background()
+	secretScopes := access.NewSecretScopesAPI(ctx, client)
 	err := secretScopes.Create(access.SecretScope{
 		Name:                   randomScope,
 		InitialManagePrincipal: "users",
@@ -46,7 +50,7 @@ func testWithNewSecretScope(t *testing.T, callback func(string, string),
 		assert.NoError(t, err)
 	}()
 
-	secrets := access.NewSecretsAPI(client)
+	secrets := access.NewSecretsAPI(ctx, client)
 	err = secrets.Create(secret, randomScope, randomKey)
 	require.NoError(t, err)
 
@@ -68,7 +72,7 @@ func testMounting(t *testing.T, mp MountPoint, m Mount) {
 func TestAccDeleteInvalidMountFails(t *testing.T) {
 	_, mp := mountPointThroughReusedCluster(t)
 	err := mp.Delete()
-	qa.AssertErrorStartsWith(t, err, "Directory not mounted: /mnt/"+mp.name)
+	assert.True(t, strings.Contains(err.Error(), "Directory not mounted"), err.Error())
 }
 
 func TestAccSourceOnInvalidMountFails(t *testing.T) {
@@ -128,8 +132,9 @@ func testMountFuncHelper(t *testing.T, mountFunc func(mp MountPoint, mount Mount
 		return expectedCommandResp, nil
 	})
 
+	ctx := context.Background()
 	mp := MountPoint{
-		exec:      c.CommandExecutor(),
+		exec:      c.CommandExecutor(ctx),
 		clusterID: "random_cluster_id",
 		name:      mountName,
 	}

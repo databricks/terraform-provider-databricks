@@ -1,5 +1,10 @@
+terraform {
+  required_providers {
+    azurerm =  "~> 2.33"
+  }
+}
+
 provider "azurerm" {
-  version = "~> 2.14"
   features {}
 }
 
@@ -47,10 +52,6 @@ output "cloud_env" {
   value = "azure"
 }
 
-output "test_node_type" {
-  value = "Standard_D3_v2"
-}
-
 output "test_storage_v2_account" {
   value = module.this.test_storage_v2_account
 }
@@ -91,6 +92,7 @@ output "test_key_vault_secret" {
 }
 
 output "test_key_vault_secret_value" {
+  sensitive = true
   value = module.this.test_key_vault_secret_value
 }
 

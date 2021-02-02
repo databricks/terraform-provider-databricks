@@ -8,36 +8,32 @@ Please follow this [complete runnable example](https://github.com/databrickslabs
 
 ## Example Usage
 
--> **Note** This resource has evolving API, which may change in future versions of provider.
+-> **Note** This resource has an evolving API, which may change in future versions of the provider.
 
 ```hcl
+data "databricks_aws_assume_role_policy" "this" {
+  external_id = var.account_id
+}
+
 resource "aws_iam_role" "cross_account_role" {
-  name = "${var.prefix}-crossaccount"
-  assume_role_policy = data.template_file.cross_account_role_assume_policy.rendered
+  name               = "${local.prefix}-crossaccount"
+  assume_role_policy = data.databricks_aws_assume_role_policy.this.json
   tags               = var.tags
 }
 
-resource "aws_iam_policy" "cross_account_role_policy" {
-  name = "${var.prefix}-policy"
-  description = "Workspace Cross account role policy policy"
-  policy = data.template_file.cross_account_role_policy.rendered
+data "databricks_aws_crossaccount_policy" "this" {
 }
 
-resource "aws_iam_role_policy_attachment" "cross_account_role_policy_attach" {
-  role       = aws_iam_role.cross_account_role.name
-  policy_arn = aws_iam_policy.cross_account_role_policy.arn
+resource "aws_iam_role_policy" "this" {
+  name   = "${local.prefix}-policy"
+  role   = aws_iam_role.cross_account_role.id
+  policy = data.databricks_aws_crossaccount_policy.this.json
 }
 
-provider "databricks" {
-  alias = "mws"
-  host  = "https://accounts.cloud.databricks.com"
-}
-
-// register cross-account ARN
 resource "databricks_mws_credentials" "this" {
   provider         = databricks.mws
   account_id       = var.account_id
-  credentials_name = "${var.prefix}-creds"
+  credentials_name = "${local.prefix}-creds"
   role_arn         = aws_iam_role.cross_account_role.arn
 }
 ```

@@ -60,7 +60,6 @@ resource "databricks_mws_workspaces" "this" {
   credentials_id            = databricks_mws_credentials.this.credentials_id
   storage_configuration_id  = databricks_mws_storage_configurations.this.storage_configuration_id
   network_id                = databricks_mws_networks.this.network_id
-  verify_workspace_runnning = true
 }
 
 provider "databricks" {
@@ -157,11 +156,12 @@ resource "databricks_mws_workspaces" "this" {
 
   credentials_id            = databricks_mws_credentials.this.credentials_id
   storage_configuration_id  = databricks_mws_storage_configurations.this.storage_configuration_id
-  verify_workspace_runnning = true
 }
 ```
 
 ## Argument Reference
+
+-> **Note** All workspaces would be verified to get into runnable state or cleaned up upon failure.
 
 The following arguments are required:
 
@@ -173,7 +173,6 @@ The following arguments are required:
 * `workspace_name` - (Required) (String) name of the workspace, will appear on UI
 * `aws_region` - (Required) (String) AWS region of VPC
 * `storage_configuration_id` - (Required) (String) `storage_configuration_id` from [storage configuration](mws_storage_configurations.md)
-* `verify_workspace_runnning` - (Required) (Bool) wait until workspace is running.
 
 ## Attribute Reference
 
@@ -185,3 +184,23 @@ In addition to all arguments above, the following attributes are exported:
 * `creation_time` - (Integer) time when workspace was created
 * `workspace_url` - (String) URL of the workspace
 * `workspace_id` - (Integer) same as `id`
+
+## Timeouts
+
+The `timeouts` block allows you to specify `create`, `read` and `update` timeouts. It usually takes 5-7 minutes to provision Databricks E2 Workspace and another couple of minutes for your local DNS caches to resolve. Please launch `TF_LOG=DEBUG terraform apply` whenever you observe timeout issues.
+
+```
+timeouts {
+  create = "30m"
+  read   = "10m"
+  update = "20m
+}
+```
+
+You can reset local DNS caches before provisioning new workspaces with one of the following commands:
+
+* Linux - `sudo /etc/init.d/nscd restart`
+* Mac OS Sierra, X El Capitan, X Mavericks, X Mountain Lion, or X Lion - `sudo killall -HUP mDNSResponder`
+* Mac OS X Yosemite - `sudo discoveryutil udnsflushcaches`
+* Mac OS X Snow Leopard - `sudo dscacheutil -flushcache`
+* Mac OS X Leopard and below - `sudo lookupd -flushcache`

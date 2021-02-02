@@ -23,7 +23,7 @@ func DataSourceNodeType() *schema.Resource {
 			if err != nil {
 				return diag.FromErr(err)
 			}
-			clustersAPI := NewClustersAPI(m)
+			clustersAPI := NewClustersAPI(ctx, m)
 			d.SetId(clustersAPI.GetSmallestNodeType(this))
 			return nil
 		},

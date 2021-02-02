@@ -1,9 +1,12 @@
 package compute
 
 import (
+	"context"
 	"fmt"
 	"log"
+	"sort"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/databrickslabs/databricks-terraform/common"
@@ -15,19 +18,23 @@ func (a ClustersAPI) defaultTimeout() time.Duration {
 }
 
 // NewClustersAPI creates ClustersAPI instance from provider meta
-func NewClustersAPI(m interface{}) ClustersAPI {
-	return ClustersAPI{client: m.(*common.DatabricksClient)}
+func NewClustersAPI(ctx context.Context, m interface{}) ClustersAPI {
+	return ClustersAPI{
+		client:  m.(*common.DatabricksClient),
+		context: ctx,
+	}
 }
 
 // ClustersAPI is a struct that contains the Databricks api client to perform queries
 type ClustersAPI struct {
-	client *common.DatabricksClient
+	client  *common.DatabricksClient
+	context context.Context
 }
 
 // Create creates a new Spark cluster and waits till it's running
 func (a ClustersAPI) Create(cluster Cluster) (info ClusterInfo, err error) {
 	var ci ClusterID
-	err = a.client.Post("/clusters/create", cluster, &ci)
+	err = a.client.Post(a.context, "/clusters/create", cluster, &ci)
 	if err != nil {
 		return
 	}
@@ -71,7 +78,7 @@ func (a ClustersAPI) Edit(cluster Cluster) (info ClusterInfo, err error) {
 		// we don't know what to do, so return error
 		return info, fmt.Errorf("Unexpected state: %#v", info.StateMessage)
 	}
-	err = a.client.Post("/clusters/edit", cluster, nil)
+	err = a.client.Post(a.context, "/clusters/edit", cluster, nil)
 	if err != nil {
 		return info, err
 	}
@@ -86,7 +93,7 @@ func (a ClustersAPI) Edit(cluster Cluster) (info ClusterInfo, err error) {
 // ListZones returns the zones info sent by the cloud service provider
 func (a ClustersAPI) ListZones() (ZonesInfo, error) {
 	var zonesInfo ZonesInfo
-	err := a.client.Get("/clusters/list-zones", nil, &zonesInfo)
+	err := a.client.Get(a.context, "/clusters/list-zones", nil, &zonesInfo)
 	return zonesInfo, err
 }
 
@@ -120,7 +127,7 @@ func (a ClustersAPI) StartAndGetInfo(clusterID string) (ClusterInfo, error) {
 		// most likely we can start error'ed cluster again...
 		log.Printf("[ERROR] Cluster %s: %s", info.State, info.StateMessage)
 	}
-	err = a.client.Post("/clusters/start", ClusterID{ClusterID: clusterID}, nil)
+	err = a.client.Post(a.context, "/clusters/start", ClusterID{ClusterID: clusterID}, nil)
 	if err != nil {
 		if !strings.Contains(err.Error(),
 			fmt.Sprintf("Cluster %s is in unexpected state Pending.", clusterID)) {
@@ -132,7 +139,7 @@ func (a ClustersAPI) StartAndGetInfo(clusterID string) (ClusterInfo, error) {
 
 // Restart restart a Spark cluster given its ID. If the cluster is not in a RUNNING state, nothing will happen.
 func (a ClustersAPI) Restart(clusterID string) error {
-	return a.client.Post("/clusters/restart", ClusterID{ClusterID: clusterID}, nil)
+	return a.client.Post(a.context, "/clusters/restart", ClusterID{ClusterID: clusterID}, nil)
 }
 
 func wrapMissingClusterError(err error, id string) error {
@@ -158,7 +165,7 @@ func wrapMissingClusterError(err error, id string) error {
 func (a ClustersAPI) waitForClusterStatus(clusterID string, desired ClusterState) (result ClusterInfo, err error) {
 	// this tangles client with terraform more, which is inevitable
 	// nolint should be a bigger context-aware refactor
-	return result, resource.Retry(a.defaultTimeout(), func() *resource.RetryError {
+	return result, resource.RetryContext(a.context, a.defaultTimeout(), func() *resource.RetryError {
 		clusterInfo, err := a.Get(clusterID)
 		if ae, ok := err.(common.APIError); ok && ae.IsMissing() {
 			log.Printf("[INFO] Cluster %s not found. Retrying", clusterID)
@@ -186,7 +193,7 @@ func (a ClustersAPI) waitForClusterStatus(clusterID string, desired ClusterState
 
 // Terminate terminates a Spark cluster given its ID
 func (a ClustersAPI) Terminate(clusterID string) error {
-	err := a.client.Post("/clusters/delete", ClusterID{ClusterID: clusterID}, nil)
+	err := a.client.Post(a.context, "/clusters/delete", ClusterID{ClusterID: clusterID}, nil)
 	if err != nil {
 		return err
 	}
@@ -201,7 +208,7 @@ func (a ClustersAPI) PermanentDelete(clusterID string) error {
 		return err
 	}
 	r := ClusterID{ClusterID: clusterID}
-	err = a.client.Post("/clusters/permanent-delete", r, nil)
+	err = a.client.Post(a.context, "/clusters/permanent-delete", r, nil)
 	if err == nil {
 		return nil
 	}
@@ -214,31 +221,31 @@ func (a ClustersAPI) PermanentDelete(clusterID string) error {
 		return err
 	}
 	// and try removing it again
-	return a.client.Post("/clusters/permanent-delete", r, nil)
+	return a.client.Post(a.context, "/clusters/permanent-delete", r, nil)
 }
 
 // Get retrieves the information for a cluster given its identifier
 func (a ClustersAPI) Get(clusterID string) (ci ClusterInfo, err error) {
-	err = wrapMissingClusterError(a.client.Get("/clusters/get",
+	err = wrapMissingClusterError(a.client.Get(a.context, "/clusters/get",
 		ClusterID{ClusterID: clusterID}, &ci), clusterID)
 	return
 }
 
 // Pin ensure that an interactive cluster configuration is retained even after a cluster has been terminated for more than 30 days
 func (a ClustersAPI) Pin(clusterID string) error {
-	return a.client.Post("/clusters/pin", ClusterID{ClusterID: clusterID}, nil)
+	return a.client.Post(a.context, "/clusters/pin", ClusterID{ClusterID: clusterID}, nil)
 }
 
 // Unpin allows the cluster to eventually be removed from the list returned by the List API
 func (a ClustersAPI) Unpin(clusterID string) error {
-	return a.client.Post("/clusters/unpin", ClusterID{ClusterID: clusterID}, nil)
+	return a.client.Post(a.context, "/clusters/unpin", ClusterID{ClusterID: clusterID}, nil)
 }
 
-// Cluster Events API - only using Cluster ID string to get all events
+// Events - only using Cluster ID string to get all events
 // https://docs.databricks.com/dev-tools/api/latest/clusters.html#events
 func (a ClustersAPI) Events(eventsRequest EventsRequest) ([]ClusterEvent, error) {
 	var eventsResponse EventsResponse
-	err := a.client.Post("/clusters/events", eventsRequest, &eventsResponse)
+	err := a.client.Post(a.context, "/clusters/events", eventsRequest, &eventsResponse)
 	if err != nil {
 		return nil, err
 	}
@@ -255,7 +262,7 @@ func (a ClustersAPI) Events(eventsRequest EventsRequest) ([]ClusterEvent, error)
 	curPos := len(eventsResponse.Events)
 	copy(events[startPos:curPos], eventsResponse.Events)
 	for curPos < totalCount && eventsResponse.NextPage != nil {
-		err := a.client.Post("/clusters/events", eventsResponse.NextPage, &eventsResponse)
+		err := a.client.Post(a.context, "/clusters/events", eventsResponse.NextPage, &eventsResponse)
 		if err != nil {
 			return nil, err
 		}
@@ -277,18 +284,26 @@ func (a ClustersAPI) Events(eventsRequest EventsRequest) ([]ClusterEvent, error)
 // and up to 30 of the most recently terminated job clusters in the past 30 days
 func (a ClustersAPI) List() ([]ClusterInfo, error) {
 	var clusterList ClusterList
-	err := a.client.Get("/clusters/list", nil, &clusterList)
+	err := a.client.Get(a.context, "/clusters/list", nil, &clusterList)
 	return clusterList.Clusters, err
 }
 
 // ListNodeTypes returns a sorted list of supported Spark node types
 func (a ClustersAPI) ListNodeTypes() (l NodeTypeList, err error) {
-	err = a.client.Get("/clusters/list-node-types", nil, &l)
+	err = a.client.Get(a.context, "/clusters/list-node-types", nil, &l)
 	return
 }
 
+// getOrCreateClusterMutex guards "mounting" cluster creation to prevent multiple
+// redundant instances created at the same name. Compute package private property.
+// https://github.com/databrickslabs/terraform-provider-databricks/issues/445
+var getOrCreateClusterMutex sync.Mutex
+
 // GetOrCreateRunningCluster creates an autoterminating cluster if it doesn't exist
 func (a ClustersAPI) GetOrCreateRunningCluster(name string, custom ...Cluster) (c ClusterInfo, err error) {
+	getOrCreateClusterMutex.Lock()
+	defer getOrCreateClusterMutex.Unlock()
+
 	if len(custom) > 1 {
 		err = fmt.Errorf("You can only specify 1 custom cluster conf, not %d", len(custom))
 		return
@@ -320,9 +335,12 @@ func (a ClustersAPI) GetOrCreateRunningCluster(name string, custom ...Cluster) (
 	})
 	log.Printf("[INFO] Creating an autoterminating cluster with node type %s", smallestNodeType)
 	r := Cluster{
-		NumWorkers:             1,
-		ClusterName:            name,
-		SparkVersion:           CommonRuntimeVersion(),
+		NumWorkers:  1,
+		ClusterName: name,
+		SparkVersion: a.LatestSparkVersionOrDefault(SparkVersionRequest{
+			Latest:          true,
+			LongTermSupport: true,
+		}),
 		NodeTypeID:             smallestNodeType,
 		AutoterminationMinutes: 10,
 	}
@@ -387,4 +405,64 @@ func (a ClustersAPI) GetSmallestNodeType(r NodeTypeRequest) string {
 		return "Standard_D3_v2"
 	}
 	return "i3.xlarge"
+}
+
+// ListSparkVersions returns smallest (or default) node type id given the criteria
+func (a ClustersAPI) ListSparkVersions() (SparkVersionsList, error) {
+	var sparkVersions SparkVersionsList
+	err := a.client.Get(a.context, "/clusters/spark-versions", nil, &sparkVersions)
+	return sparkVersions, err
+}
+
+// LatestSparkVersion returns latest version matching the request parameters
+func (sparkVersions SparkVersionsList) LatestSparkVersion(req SparkVersionRequest) (string, error) {
+	var versions []string
+
+	for _, version := range sparkVersions.SparkVersions {
+		if strings.Contains(version.Version, "-scala"+req.Scala) {
+			matches := ((!strings.Contains(version.Version, "apache-spark-")) &&
+				(strings.Contains(version.Version, "-ml-") == req.ML) &&
+				(strings.Contains(version.Version, "-hls-") == req.Genomics) &&
+				(strings.Contains(version.Version, "-gpu-") == req.GPU) &&
+				(strings.Contains(version.Description, "Beta") == req.Beta))
+			if matches && req.LongTermSupport {
+				matches = (matches && strings.Contains(version.Description, "LTS"))
+			}
+			if matches && len(req.SparkVersion) > 0 {
+				matches = (matches && strings.Contains(version.Description, "Apache Spark "+req.SparkVersion))
+			}
+			if matches {
+				versions = append(versions, version.Version)
+			}
+		}
+	}
+	if len(versions) < 1 {
+		return "", fmt.Errorf("Spark versions query returned no results. Please change your search criteria and try again")
+	} else if len(versions) > 1 {
+		if req.Latest {
+			sort.Sort(sort.Reverse(sort.StringSlice(versions)))
+		} else {
+			return "", fmt.Errorf("Spark versions query returned multiple results. Please change your search criteria and try again")
+		}
+	}
+
+	return versions[0], nil
+}
+
+// LatestSparkVersion returns latest version matching the request parameters
+func (a ClustersAPI) LatestSparkVersion(svr SparkVersionRequest) (string, error) {
+	sparkVersions, err := a.ListSparkVersions()
+	if err != nil {
+		return "", err
+	}
+	return sparkVersions.LatestSparkVersion(svr)
+}
+
+// LatestSparkVersionOrDefault returns Spark version matching the definition, or default in case of error
+func (a ClustersAPI) LatestSparkVersionOrDefault(svr SparkVersionRequest) string {
+	version, err := a.LatestSparkVersion(svr)
+	if err != nil {
+		return "7.3.x-scala2.12"
+	}
+	return version
 }

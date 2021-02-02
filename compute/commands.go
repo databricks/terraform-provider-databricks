@@ -1,6 +1,7 @@
 package compute
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"html"
@@ -11,6 +12,7 @@ import (
 
 	"github.com/databrickslabs/databricks-terraform/common"
 	"github.com/databrickslabs/databricks-terraform/internal"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
 var (
@@ -25,19 +27,23 @@ var (
 )
 
 // NewCommandsAPI creates CommandsAPI instance from provider meta
-func NewCommandsAPI(m interface{}) CommandsAPI {
-	return CommandsAPI{client: m.(*common.DatabricksClient)}
+func NewCommandsAPI(ctx context.Context, m interface{}) CommandsAPI {
+	return CommandsAPI{
+		client:  m.(*common.DatabricksClient),
+		context: ctx,
+	}
 }
 
 // CommandsAPI exposes the Context & Commands API
 type CommandsAPI struct {
-	client *common.DatabricksClient
+	client  *common.DatabricksClient
+	context context.Context
 }
 
 // Execute creates a spark context and executes a command and then closes context
 // Any leading whitespace is trimmed
 func (a CommandsAPI) Execute(clusterID, language, commandStr string) (result string, err error) {
-	cluster, err := NewClustersAPI(a.client).Get(clusterID)
+	cluster, err := NewClustersAPI(a.context, a.client).Get(clusterID)
 	if err != nil {
 		return
 	}
@@ -51,7 +57,7 @@ func (a CommandsAPI) Execute(clusterID, language, commandStr string) (result str
 	if err != nil {
 		return
 	}
-	err = a.waitForContextReady(context, clusterID, 1, 10)
+	err = a.waitForContextReady(context, clusterID)
 	if err != nil {
 		return
 	}
@@ -59,7 +65,7 @@ func (a CommandsAPI) Execute(clusterID, language, commandStr string) (result str
 	if err != nil {
 		return
 	}
-	err = a.waitForCommandFinished(commandID, context, clusterID, 5, 10)
+	err = a.waitForCommandFinished(commandID, context, clusterID)
 	if err != nil {
 		return
 	}
@@ -116,7 +122,7 @@ type genericCommandRequest struct {
 
 func (a CommandsAPI) createCommand(contextID, clusterID, language, commandStr string) (string, error) {
 	var command Command
-	err := a.client.OldAPI("POST", "/commands/execute", genericCommandRequest{
+	err := a.client.OldAPI(a.context, "POST", "/commands/execute", genericCommandRequest{
 		Language:  language,
 		ClusterID: clusterID,
 		ContextID: contextID,
@@ -127,7 +133,7 @@ func (a CommandsAPI) createCommand(contextID, clusterID, language, commandStr st
 
 func (a CommandsAPI) getCommand(commandID, contextID, clusterID string) (Command, error) {
 	var commandResp Command
-	err := a.client.OldAPI("GET", "/commands/status", genericCommandRequest{
+	err := a.client.OldAPI(a.context, "GET", "/commands/status", genericCommandRequest{
 		CommandID: commandID,
 		ContextID: contextID,
 		ClusterID: clusterID,
@@ -136,7 +142,7 @@ func (a CommandsAPI) getCommand(commandID, contextID, clusterID string) (Command
 }
 
 func (a CommandsAPI) deleteContext(contextID, clusterID string) error {
-	return a.client.OldAPI("POST", "/contexts/destroy", genericCommandRequest{
+	return a.client.OldAPI(a.context, "POST", "/contexts/destroy", genericCommandRequest{
 		ContextID: contextID,
 		ClusterID: clusterID,
 	}, nil)
@@ -144,7 +150,7 @@ func (a CommandsAPI) deleteContext(contextID, clusterID string) error {
 
 func (a CommandsAPI) getContext(contextID, clusterID string) (string, error) {
 	var contextStatus Command // internal hack, yes
-	err := a.client.OldAPI("GET", "/contexts/status", genericCommandRequest{
+	err := a.client.OldAPI(a.context, "GET", "/contexts/status", genericCommandRequest{
 		ContextID: contextID,
 		ClusterID: clusterID,
 	}, &contextStatus)
@@ -153,67 +159,42 @@ func (a CommandsAPI) getContext(contextID, clusterID string) (string, error) {
 
 func (a CommandsAPI) createContext(language, clusterID string) (string, error) {
 	var context Command // internal hack, yes
-	err := a.client.OldAPI("POST", "/contexts/create", genericCommandRequest{
+	err := a.client.OldAPI(a.context, "POST", "/contexts/create", genericCommandRequest{
 		Language:  language,
 		ClusterID: clusterID,
 	}, &context)
 	return context.ID, err
 }
 
-func (a CommandsAPI) waitForCommandFinished(commandID, contextID, clusterID string, sleepDurationSeconds time.Duration, timeoutDurationMinutes time.Duration) error {
-	errChan := make(chan error, 1)
-	go func() {
-		for {
-			commandInfo, err := a.getCommand(commandID, contextID, clusterID)
-			if err != nil {
-				errChan <- err
-				return
-			}
-			if commandInfo.Status == "Finished" {
-				errChan <- nil
-				return
-			} else if commandInfo.Status == "Cancelling" || commandInfo.Status == "Cancelled" || commandInfo.Status == "Error" {
-				errChan <- fmt.Errorf("context is in a failure state: %s", commandInfo.Status)
-				return
-			}
-			log.Println(fmt.Sprintf("[DEBUG] Waiting for command to finish, current state is: %s.", commandInfo.Status))
-			time.Sleep(sleepDurationSeconds * time.Second)
+func (a CommandsAPI) waitForCommandFinished(commandID, contextID, clusterID string) error {
+	return resource.RetryContext(a.context, 10*time.Minute, func() *resource.RetryError {
+		commandInfo, err := a.getCommand(commandID, contextID, clusterID)
+		if err != nil {
+			return resource.NonRetryableError(err)
 		}
-	}()
-	select {
-	case err := <-errChan:
-		return err
-	case <-time.After(timeoutDurationMinutes * time.Minute):
-		return errors.New("Timed out context has not reached running state")
-	}
+		switch commandInfo.Status {
+		case "Cancelling", "Cancelled", "Error":
+			return resource.NonRetryableError(fmt.Errorf("Command cannot finish: %s", commandInfo.Status))
+		case "Finished":
+			return nil
+		}
+		log.Printf("[DEBUG] Command is in %s state", commandInfo.Status)
+		return resource.RetryableError(fmt.Errorf(commandInfo.Status))
+	})
 }
 
-func (a CommandsAPI) waitForContextReady(contextID, clusterID string,
-	sleepDurationSeconds time.Duration, timeoutDurationMinutes time.Duration) error {
-	errChan := make(chan error, 1)
-	go func() {
-		for {
-			status, err := a.getContext(contextID, clusterID)
-			if err != nil {
-				errChan <- err
-				return
-			}
-			if status == "Running" {
-				errChan <- nil
-				return
-			} else if status == "Error" {
-				errChan <- errors.New("context is in a errored state")
-				return
-			}
-
-			log.Printf("[DEBUG] Waiting for context to go to running, current state is %s", status)
-			time.Sleep(sleepDurationSeconds * time.Second)
+func (a CommandsAPI) waitForContextReady(contextID, clusterID string) error {
+	return resource.RetryContext(a.context, 10*time.Minute, func() *resource.RetryError {
+		status, err := a.getContext(contextID, clusterID)
+		if err != nil {
+			return resource.NonRetryableError(err)
 		}
-	}()
-	select {
-	case err := <-errChan:
-		return err
-	case <-time.After(timeoutDurationMinutes * time.Minute):
-		return errors.New("Timed out context has not reached running state")
-	}
+		if status == "Error" {
+			return resource.NonRetryableError(fmt.Errorf(status))
+		}
+		if status == "Running" {
+			return nil
+		}
+		return resource.RetryableError(fmt.Errorf(status))
+	})
 }

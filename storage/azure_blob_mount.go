@@ -36,6 +36,7 @@ func (m AzureBlobMount) Config() map[string]string {
 	}
 }
 
+// ResourceAzureBlobMount creates the resource
 func ResourceAzureBlobMount() *schema.Resource {
 	return commonMountResource(AzureBlobMount{}, map[string]*schema.Schema{
 		"cluster_id": {

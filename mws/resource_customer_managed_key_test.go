@@ -1,6 +1,7 @@
 package mws
 
 import (
+	"context"
 	"testing"
 
 	"github.com/databrickslabs/databricks-terraform/common"
@@ -16,12 +17,12 @@ func TestMwsAccCustomerManagedKeys(t *testing.T) {
 	kmsKeyArn := qa.GetEnvOrSkipTest(t, "TEST_KMS_KEY_ARN")
 	kmsKeyAlias := qa.GetEnvOrSkipTest(t, "TEST_KMS_KEY_ALIAS")
 	client := common.CommonEnvironmentClient()
-	cmkApi := NewCustomerManagedKeysAPI(client)
-	cmkList, err := cmkApi.List(acctID)
+	cmkAPI := NewCustomerManagedKeysAPI(context.Background(), client)
+	cmkList, err := cmkAPI.List(acctID)
 	assert.NoError(t, err, err)
 	t.Log(cmkList)
 
-	keyInfo, err := cmkApi.Create(CustomerManagedKey{
+	keyInfo, err := cmkAPI.Create(CustomerManagedKey{
 		AwsKeyInfo: &AwsKeyInfo{
 			KeyArn:   kmsKeyArn,
 			KeyAlias: kmsKeyAlias,
@@ -33,11 +34,11 @@ func TestMwsAccCustomerManagedKeys(t *testing.T) {
 	keyID := keyInfo.CustomerManagedKeyID
 
 	defer func() {
-		err := cmkApi.Delete(acctID, keyID)
+		err := cmkAPI.Delete(acctID, keyID)
 		assert.NoError(t, err, err)
 	}()
 
-	getKeyInfo, err := cmkApi.Read(acctID, keyID)
+	getKeyInfo, err := cmkAPI.Read(acctID, keyID)
 	assert.NoError(t, err, err)
 	assert.NotNil(t, getKeyInfo, "key info should not be nil")
 }
@@ -180,7 +181,7 @@ func TestResourceCustomerManagedKeyRead(t *testing.T) {
 }
 
 func TestResourceCustomerManagedKeyRead_NotFound(t *testing.T) {
-	d, err := qa.ResourceFixture{
+	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
@@ -200,11 +201,10 @@ func TestResourceCustomerManagedKeyRead_NotFound(t *testing.T) {
 				key_alias = "key-alias"
 			}
 		`,
-		ID:   "abc/cmkid",
-		Read: true,
-	}.Apply(t)
-	assert.NoError(t, err, err)
-	assert.Equal(t, "", d.Id())
+		ID:      "abc/cmkid",
+		Read:    true,
+		Removed: true,
+	}.ApplyNoError(t)
 }
 
 func TestResourceCustomerManagedKeyDelete(t *testing.T) {

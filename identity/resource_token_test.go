@@ -1,6 +1,7 @@
 package identity
 
 import (
+	"context"
 	"os"
 	"testing"
 	"time"
@@ -30,6 +31,7 @@ func TestResourceTokenRead(t *testing.T) {
 		},
 		Resource: ResourceToken(),
 		Read:     true,
+		New:      true,
 		ID:       "abc",
 	}.Apply(t)
 	assert.NoError(t, err, err)
@@ -41,7 +43,7 @@ func TestResourceTokenRead(t *testing.T) {
 }
 
 func TestResourceTokenRead_NotFound(t *testing.T) {
-	d, err := qa.ResourceFixture{
+	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
@@ -60,10 +62,9 @@ func TestResourceTokenRead_NotFound(t *testing.T) {
 		},
 		Resource: ResourceToken(),
 		Read:     true,
+		Removed:  true,
 		ID:       "abc",
-	}.Apply(t)
-	assert.NoError(t, err, err)
-	assert.Equal(t, "", d.Id(), "Id should be empty for missing resources")
+	}.ApplyNoError(t)
 }
 
 func TestResourceTokenRead_Error(t *testing.T) {
@@ -202,23 +203,24 @@ func TestAccCreateToken(t *testing.T) {
 	}
 
 	client := common.NewClientFromEnvironment()
+	tokensAPI := NewTokensAPI(context.Background(), client)
 
 	lifeTimeSeconds := time.Duration(30) * time.Second
 	comment := "Hello world"
 
-	token, err := NewTokensAPI(client).Create(lifeTimeSeconds, comment)
+	token, err := tokensAPI.Create(lifeTimeSeconds, comment)
 	assert.NoError(t, err, err)
 	assert.True(t, len(token.TokenValue) > 0, "Token value is empty")
 
 	defer func() {
-		err := NewTokensAPI(client).Delete(token.TokenInfo.TokenID)
+		err := tokensAPI.Delete(token.TokenInfo.TokenID)
 		assert.NoError(t, err, err)
 	}()
 
-	_, err = NewTokensAPI(client).Read(token.TokenInfo.TokenID)
+	_, err = tokensAPI.Read(token.TokenInfo.TokenID)
 	assert.NoError(t, err, err)
 
-	tokenList, err := NewTokensAPI(client).List()
+	tokenList, err := tokensAPI.List()
 	assert.NoError(t, err, err)
 	assert.True(t, len(tokenList) > 0, "Token list is empty")
 }

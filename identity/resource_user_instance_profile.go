@@ -11,23 +11,23 @@ import (
 
 // ResourceUserInstanceProfile binds user and instance profile
 func ResourceUserInstanceProfile() *schema.Resource {
-	return util.NewPairID("user_id", "instance_profile_id").BindResource(util.BindResource{
+	return util.NewPairID("user_id", "instance_profile_id").Schema(func(
+		m map[string]*schema.Schema) map[string]*schema.Schema {
+		m["instance_profile_id"].ValidateDiagFunc = ValidInstanceProfile
+		return m
+	}).BindResource(util.BindResource{
 		CreateContext: func(ctx context.Context, userID, roleARN string, c *common.DatabricksClient) error {
-			err := validateInstanceProfileARN(roleARN)
-			if err != nil {
-				return err
-			}
-			return NewUsersAPI(c).PatchR(userID, scimPatchRequest("add", "roles", roleARN))
+			return NewUsersAPI(ctx, c).Patch(userID, scimPatchRequest("add", "roles", roleARN))
 		},
 		ReadContext: func(ctx context.Context, userID, roleARN string, c *common.DatabricksClient) error {
-			user, err := NewUsersAPI(c).Read(userID)
+			user, err := NewUsersAPI(ctx, c).read(userID)
 			if err == nil && !user.HasRole(roleARN) {
 				return common.NotFound("User has no role")
 			}
 			return err
 		},
 		DeleteContext: func(ctx context.Context, userID, roleARN string, c *common.DatabricksClient) error {
-			return NewUsersAPI(c).PatchR(userID, scimPatchRequest(
+			return NewUsersAPI(ctx, c).Patch(userID, scimPatchRequest(
 				"remove", fmt.Sprintf(`roles[value eq "%s"]`, roleARN), ""))
 		},
 	})

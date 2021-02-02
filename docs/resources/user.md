@@ -1,6 +1,6 @@
 # databricks_user Resource
 
-Directly creates user, that could be added to [databricks_group](group.md) within workspace. Upon user creation user will receive a password reset email.
+Directly creates a user, that could be added to [databricks_group](group.md) within the workspace. Upon user creation the user will receive a password reset email. You can also get information about caller identity using [databricks_current_user](../data-sources/current_user.md) data source.
 
 ## Example Usage
 
@@ -44,9 +44,9 @@ resource "databricks_user" "me" {
 The following arguments are available:
 
 * `user_name` - (Required) This is the username of the given user and will be their form of access and identity.
-* `display_name` - (Optional) This is an alias for the username can be the full name of the user.
-* `allow_cluster_create` -  (Optional) Allow the user to have [cluster](cluster.md) create priviliges. Defaults to false. More fine grained permissions could be assigned with [databricks_permissions](permissions.md#Cluster-usage) and `cluster_id` argument. Everyone without `allow_cluster_create` arugment set, but with [permission to use](permissions.md#Cluster-Policy-usage) Cluster Policy would be able to create clusters, but within boundaries of that specific policy.
-* `allow_instance_pool_create` -  (Optional) Allow the user to have [instance pool](instance_pool.md) create priviliges. Defaults to false. More fine grained permissions could be assigned with [databricks_permissions](permissions.md#Instance-Pool-usage) and [instance_pool_id](permissions.md#instance_pool_id) argument.
+* `display_name` - (Optional) This is an alias for the username that can be the full name of the user.
+* `allow_cluster_create` -  (Optional) Allow the user to have [cluster](cluster.md) create privileges. Defaults to false. More fine grained permissions could be assigned with [databricks_permissions](permissions.md#Cluster-usage) and `cluster_id` argument. Everyone without `allow_cluster_create` argument set, but with [permission to use](permissions.md#Cluster-Policy-usage) Cluster Policy would be able to create clusters, but within boundaries of that specific policy.
+* `allow_instance_pool_create` -  (Optional) Allow the user to have [instance pool](instance_pool.md) create privileges. Defaults to false. More fine grained permissions could be assigned with [databricks_permissions](permissions.md#Instance-Pool-usage) and [instance_pool_id](permissions.md#instance_pool_id) argument.
 * `active` - (Optional) Either user is active or not. True by default, but can be set to false in case of user deactivation with preserving user assets.
 
 ## Attribute Reference

@@ -1,6 +1,8 @@
 package mws
 
 import (
+	"context"
+	"fmt"
 	"os"
 	"testing"
 
@@ -22,40 +24,41 @@ func TestMwsAccMissingResources(t *testing.T) {
 	randStringID := acctest.RandString(10)
 	randIntID := 2000000 + acctest.RandIntRange(100000, 20000000)
 
+	ctx := context.Background()
 	client := common.CommonEnvironmentClient()
 	tests := []sanity.MissingResourceCheck{
 		{
 			Name: "Credential",
 			ReadFunc: func() error {
-				_, err := NewCredentialsAPI(client).Read(mwsAcctID, randStringID)
+				_, err := NewCredentialsAPI(ctx, client).Read(mwsAcctID, randStringID)
 				return err
 			},
 		},
 		{
 			Name: "Network",
 			ReadFunc: func() error {
-				_, err := NewNetworksAPI(client).Read(mwsAcctID, randStringID)
+				_, err := NewNetworksAPI(ctx, client).Read(mwsAcctID, randStringID)
 				return err
 			},
 		},
 		{
 			Name: "Storage",
 			ReadFunc: func() error {
-				_, err := NewStorageConfigurationsAPI(client).Read(mwsAcctID, randStringID)
+				_, err := NewStorageConfigurationsAPI(ctx, client).Read(mwsAcctID, randStringID)
 				return err
 			},
 		},
 		{
 			Name: "Customer Managed Key",
 			ReadFunc: func() error {
-				_, err := NewCustomerManagedKeysAPI(client).Read(mwsAcctID, randStringID)
+				_, err := NewCustomerManagedKeysAPI(ctx, client).Read(mwsAcctID, randStringID)
 				return err
 			},
 		},
 		{
 			Name: "Workspace",
 			ReadFunc: func() error {
-				_, err := NewWorkspacesAPI(client).Read(mwsAcctID, int64(randIntID))
+				_, err := NewWorkspacesAPI(ctx, client).Read(mwsAcctID, fmt.Sprintf("%d", randIntID))
 				return err
 			},
 		},

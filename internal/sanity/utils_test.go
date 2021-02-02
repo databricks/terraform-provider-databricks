@@ -1,6 +1,7 @@
 package sanity
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"strconv"
@@ -41,10 +42,11 @@ func TestAccMutiworkspaceUsedFromNormalMode(t *testing.T) {
 		assert.True(t, ok)
 		assert.Equal(t, "INCORRECT_CONFIGURATION", a.ErrorCode)
 	}
-	checkCheck(mws.NewCredentialsAPI(client).List("_"))
-	checkCheck(mws.NewNetworksAPI(client).List("_"))
-	checkCheck(mws.NewStorageConfigurationsAPI(client).List("_"))
-	checkCheck(mws.NewWorkspacesAPI(client).List("_"))
+	ctx := context.Background()
+	checkCheck(mws.NewCredentialsAPI(ctx, client).List("_"))
+	checkCheck(mws.NewNetworksAPI(ctx, client).List("_"))
+	checkCheck(mws.NewStorageConfigurationsAPI(ctx, client).List("_"))
+	checkCheck(mws.NewWorkspacesAPI(ctx, client).List("_"))
 }
 
 func TestAccMissingResourcesInWorkspace(t *testing.T) {
@@ -57,94 +59,96 @@ func TestAccMissingResourcesInWorkspace(t *testing.T) {
 	randomInstancePoolID := fmt.Sprintf("%v-%v-%s-pool-%s", acctest.RandIntRange(1000, 9999),
 		acctest.RandIntRange(100000, 999999), acctest.RandString(6), acctest.RandString(8))
 	client := common.CommonEnvironmentClient()
+
+	ctx := context.Background()
 	tests := []MissingResourceCheck{
 		{
 			Name: "Tokens",
 			ReadFunc: func() error {
-				_, err := identity.NewTokensAPI(client).Read(randStringID)
+				_, err := identity.NewTokensAPI(ctx, client).Read(randStringID)
 				return err
 			},
 		},
 		{
 			Name: "Secret Scopes",
 			ReadFunc: func() error {
-				_, err := access.NewSecretScopesAPI(client).Read(randStringID)
+				_, err := access.NewSecretScopesAPI(ctx, client).Read(randStringID)
 				return err
 			},
 		},
 		{
 			Name: "Secrets",
 			ReadFunc: func() error {
-				_, err := access.NewSecretsAPI(client).Read(randStringID, randStringID)
+				_, err := access.NewSecretsAPI(ctx, client).Read(randStringID, randStringID)
 				return err
 			},
 		},
 		{
 			Name: "Secret ACLs",
 			ReadFunc: func() error {
-				_, err := access.NewSecretAclsAPI(client).Read(randStringID, randStringID)
+				_, err := access.NewSecretAclsAPI(ctx, client).Read(randStringID, randStringID)
 				return err
 			},
 		},
 		{
 			Name: "Notebooks",
 			ReadFunc: func() error {
-				_, err := workspace.NewNotebooksAPI(client).Read("/" + randStringID)
+				_, err := workspace.NewNotebooksAPI(ctx, client).Read("/" + randStringID)
 				return err
 			},
 		},
 		{
 			Name: "Instance Pools",
 			ReadFunc: func() error {
-				_, err := compute.NewInstancePoolsAPI(client).Read(randomInstancePoolID)
+				_, err := compute.NewInstancePoolsAPI(ctx, client).Read(randomInstancePoolID)
 				return err
 			},
 		},
 		{
 			Name: "Clusters",
 			ReadFunc: func() error {
-				_, err := compute.NewClustersAPI(client).Get(randStringID)
+				_, err := compute.NewClustersAPI(ctx, client).Get(randStringID)
 				return err
 			},
 		},
 		{
 			Name: "DBFS Files",
 			ReadFunc: func() error {
-				_, err := storage.NewDBFSAPI(client).Read("/" + randStringID)
+				_, err := storage.NewDbfsAPI(ctx, client).Read("/" + randStringID)
 				return err
 			},
 		},
 		{
 			Name: "Groups",
 			ReadFunc: func() error {
-				_, err := identity.NewGroupsAPI(client).Read(randStringID)
+				_, err := identity.NewGroupsAPI(ctx, client).Read(randStringID)
 				return err
 			},
 		},
 		{
 			Name: "Users",
 			ReadFunc: func() error {
-				_, err := identity.NewUsersAPI(client).Read(randStringID)
+				_, err := identity.NewUsersAPI(ctx, client).Read(randStringID)
 				return err
 			},
 		},
 		{
 			Name: "Cluster Policies",
 			ReadFunc: func() error {
-				_, err := compute.NewClusterPoliciesAPI(client).Get(randStringID)
+				_, err := compute.NewClusterPoliciesAPI(ctx, client).Get(randStringID)
 				return err
 			},
 		},
 		{
 			Name: "Cluster Policies Delete",
 			ReadFunc: func() error {
-				return compute.NewClusterPoliciesAPI(client).Delete(randStringID)
+				return compute.NewClusterPoliciesAPI(ctx, client).Delete(randStringID)
 			},
 		},
 		{
 			Name: "Jobs",
 			ReadFunc: func() error {
-				_, err := compute.NewJobsAPI(client).Read(strconv.Itoa(randIntID))
+				_, err := compute.NewJobsAPI(ctx, client).Read(strconv.Itoa(randIntID))
 				return err
 			},
 		},
@@ -153,7 +157,7 @@ func TestAccMissingResourcesInWorkspace(t *testing.T) {
 		tests = append(tests, MissingResourceCheck{
 			Name: "Instance Profiles",
 			ReadFunc: func() error {
-				_, err := identity.NewInstanceProfilesAPI(client).Read(randStringID)
+				_, err := identity.NewInstanceProfilesAPI(ctx, client).Read(randStringID)
 				return err
 			},
 		})

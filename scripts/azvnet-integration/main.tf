@@ -29,8 +29,3 @@ output "workspace_url" {
 output "cloud_env" {
   value = "azure"
 }
-
-output "test_node_type" {
-  // or i3.xlarge for AWS
-  value = "Standard_D3_v2"
-}

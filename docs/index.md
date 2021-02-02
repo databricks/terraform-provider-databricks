@@ -8,38 +8,87 @@ description: |-
 
 # Databricks Provider
 
-Use the Databricks Terraform provider to interact with almost all of [Databricks](http://databricks.com/) resources. 
+Use the Databricks Terraform provider to interact with almost all of [Databricks](http://databricks.com/) resources. If you're new to Databricks, please follow guide to create a workspace on [Azure](guides/azure-workspace.md) or [AWS](guides/aws-workspace.md) and then this [workspace management](guides/workspace-management.md) tutorial. If you're migrating from version *0.2.x*, please follow [this guide](guides/migration-0.3.x.md). Changelog is available [on GitHub](https://github.com/databrickslabs/terraform-provider-databricks/blob/master/CHANGELOG.md).
 
 ![Resources](https://github.com/databrickslabs/terraform-provider-databricks/raw/master/docs/resources.png)
+
+Compute resources
+* Deploy [databricks_cluster](resources/cluster.md) on selected [databricks_node_type](data-sources/node_type.md)
+* Schedule automated [databricks_job](resources/job.md)
+* Constrol cost and data access with [databricks_cluster_policy](resources/cluster_policy.md)
+* Speedup job & cluster startup with [databricks_instance_pool](resources/instance_pool.md)
+* Manage few [databricks_notebook](resources/notebook.md), and even [list them](data-sources/notebook_paths.md)
+
+Storage
+* Manage JAR, Wheel & Egg libraries through [databricks_dbfs_file](resources/dbfs_file.md)
+* List entries on DBFS with [databricks_dbfs_file_paths](data-sources/dbfs_file_paths.md) data source
+* Get contents of small files with [databricks_dbfs_file](data-sources/dbfs_file.md) data source
+* Mount your AWS storage using [databricks_aws_s3_mount](resources/aws_s3_mount.md)
+* Mount your Azure storage using [databricks_azure_adls_gen1_mount](resources/azure_adls_gen1_mount.md), [databricks_azure_adls_gen2_mount](resources/azure_adls_gen2_mount.md), [databricks_azure_blob_mount](resources/azure_blob_mount.md)
+
+Security
+* Organize [databricks_user](resources/user.md) into [databricks_group](resources/group.md) through [databricks_group_member](resources/group_member.md), also reading [metadata](data-sources/group.md)
+* Manage data access with [databricks_instance_profile](resources/instance_profile.md), which can be assigned through [databricks_group_instance_profile](resources/group_instance_profile.md) and [databricks_user_instance_profile](resources/user_instance_profile.md)
+* Control which networks can access workspace with [databricks_ip_access_list](resources/ip_access_list.md)
+* Generically manage [databricks_permissions](resources/permissions.md)
+* Keep sensitive elements like passwords in [databricks_secret](resources/secret.md), grouped into [databricks_secret_scope](resources/secret_scope.md) and controlled by [databricks_secret_acl](resources/secret_acl.md)
+
+
+[E2 Architecture](../docs/guides/aws-workspace.md)
+* Create [workspaces](resources/mws_workspaces.md) in your [VPC](resources/mws_networks.md) with [DBFS](resources/mws_storage_configurations.md) using [cross-account IAM roles](resources/mws_credentials.md), having your notebooks encrypted with [CMK](resources/mws_customer_managed_keys.md).
+* Use predefined AWS IAM Policy Templates: [databricks_aws_assume_role_policy](data-sources/aws_assume_role_policy.md), [databricks_aws_crossaccount_policy](data-sources/aws_crossaccount_policy.md), [databricks_aws_bucket_policy](data-sources/aws_bucket_policy.md)
+* Configure billing and audit [databricks_mws_log_delivery](resources/mws_log_delivery.md)
 
 ## Example Usage
 
 ```hcl
 provider "databricks" {
-  host = "https://abc-defg-024.cloud.databricks.com/"
-  token = "<your PAT token>"
 }
 
+data "databricks_current_user" "me" {}
+data "databricks_spark_version" "latest" {}
 data "databricks_node_type" "smallest" {
   local_disk = true
 }
 
-resource "databricks_cluster" "shared_autoscaling" {
-  cluster_name            = "Shared Autoscaling"
-  spark_version           = "6.6.x-scala2.11"
-  node_type_id            = data.databricks_node_type.smallest.id
-  autotermination_minutes = 20
+resource "databricks_notebook" "this" {
+  path     = "${data.databricks_current_user.me.home}/Terraform"
+  language = "PYTHON"
+  content_base64 = base64encode(<<-EOT
+    # created from ${abspath(path.module)}
+    display(spark.range(10))
+    EOT
+  )
+}
 
-  autoscale {
-    min_workers = 1
-    max_workers = 50
+resource "databricks_job" "this" {
+  name = "Terraform Demo (${data.databricks_current_user.me.alphanumeric})"
+
+  new_cluster {
+    num_workers   = 1
+    spark_version = data.databricks_spark_version.latest.id
+    node_type_id  = data.databricks_node_type.smallest.id
   }
+
+  notebook_task {
+    notebook_path = databricks_notebook.this.path
+  }
+
+  email_notifications {}
+}
+
+output "notebook_url" {
+  value = databricks_notebook.this.url
+}
+
+output "job_url" {
+  value = databricks_job.this.url
 }
 ```
 
 ## Authentication
 
-!> **Warning** Please be aware that hard coding any credentials in plain text is not something that is recommended. We strongly recommend using Terraform backend that supports encryption. Please use [environment variables](#environment-variables), `~/.databrickscfg` file, encrypted `.tfvars` files or secret store of your choice (Hashicorp [Vault](https://www.vaultproject.io/), AWS [Secrets Manager](https://aws.amazon.com/secrets-manager/), AWS [Param Store](https://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-parameter-store.html), Azure [Key Vault](https://azure.microsoft.com/en-us/services/key-vault/))
+!> **Warning** Please be aware that hard coding any credentials in plain text is not something that is recommended. We strongly recommend using a Terraform backend that supports encryption. Please use [environment variables](#environment-variables), `~/.databrickscfg` file, encrypted `.tfvars` files or secret store of your choice (Hashicorp [Vault](https://www.vaultproject.io/), AWS [Secrets Manager](https://aws.amazon.com/secrets-manager/), AWS [Param Store](https://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-parameter-store.html), Azure [Key Vault](https://azure.microsoft.com/en-us/services/key-vault/))
 
 
 There are currently three supported methods [to authenticate into](https://docs.databricks.com/dev-tools/api/latest/authentication.html) the Databricks platform to create resources:
@@ -117,7 +166,7 @@ Alternatively, you can provide this value as an environment variable `DATABRICKS
 
 ## Special configurations for Azure
 
-To work with Azure Databricks workspace, the provider must know its `id` (or construct it from `azure_subscription_id`, `azure_workspace_name` and `azure_workspace_name`). The provider works with [Azure CLI authentication](https://docs.microsoft.com/en-us/cli/azure/authenticate-azure-cli?view=azure-cli-latest) to facilitate local development workflows, though for automated scenarios a service principal auth is necessary (and specification of `azure_client_id`, `azure_client_secret` and `azure_tenant_id` parameters).
+To work with Azure Databricks workspace, the provider must know its `azure_workspace_resource_id` (or construct it from `azure_subscription_id`, `azure_resource_group` and `azure_workspace_name`). The provider works with [Azure CLI authentication](https://docs.microsoft.com/en-us/cli/azure/authenticate-azure-cli?view=azure-cli-latest) to facilitate local development workflows, though for automated scenarios a service principal auth is necessary (and specification of `azure_client_id`, `azure_client_secret` and `azure_tenant_id` parameters).
 
 ### Authenticating with Azure Service Principal
 
@@ -145,9 +194,8 @@ provider "databricks" {
   azure_tenant_id             = var.tenant_id
 }
 
-resource "databricks_scim_user" "my-user" {
-  user_name     = "test-user@databricks.com"
-  display_name  = "Test User"
+resource "databricks_user" "my-user" {
+  user_name = "test-user@databricks.com"
 }
 ```
 
@@ -171,7 +219,7 @@ provider "databricks" {
   azure_workspace_resource_id = azurerm_databricks_workspace.this.id
 }
 
-resource "databricks_scim_user" "my-user" {
+resource "databricks_user" "my-user" {
   user_name     = "test-user@databricks.com"
   display_name  = "Test User"
 }
@@ -185,6 +233,7 @@ resource "databricks_scim_user" "my-user" {
 * `azure_client_id` - (optional) This is the Azure Enterprise Application (Service principal) client id. This service principal requires contributor access to your Azure Databricks deployment. Alternatively, you can provide this value as an environment variable `DATABRICKS_AZURE_CLIENT_ID` or `ARM_CLIENT_ID`.
 * `azure_tenant_id` - (optional) This is the Azure Active Directory Tenant id in which the Enterprise Application (Service Principal) 
 resides. Alternatively, you can provide this value as an environment variable `DATABRICKS_AZURE_TENANT_ID` or `ARM_TENANT_ID`.
+* `azure_environment` - (optional) This is the Azure Environment which defaults to the `public` cloud. Other options are `german`, `china` and `usgovernment`. Alternatively, you can provide this value as an environment variable `ARM_ENVIRONMENT`.
 * `pat_token_duration_seconds` - The current implementation of the azure auth via sp requires the provider to create a temporary personal access token within Databricks. The current AAD implementation does not cover all the APIs for Authentication. This field determines the duration in which that temporary PAT token is alive. It is measured in seconds and will default to `3600` seconds. 
 * `debug_truncate_bytes` - Applicable only when `TF_LOG=DEBUG` is set. Truncate JSON fields in HTTP requests and responses above this limit. Default is *96*.
 * `debug_headers` - Applicable only when `TF_LOG=DEBUG` is set. Debug HTTP headers of requests made by the provider. Default is *false*.
@@ -195,23 +244,24 @@ There are multiple environment variable options, the `DATABRICKS_AZURE_*` enviro
 
 The following configuration attributes can be passed via environment variables:
 
-| Argument | Environment variable |
-| --: | --- |
-| `host` | `DATABRICKS_HOST` |
-| `token` | `DATABRICKS_TOKEN` |
-| `username` | `DATABRICKS_USERNAME` |
-| `password` | `DATABRICKS_PASSWORD` |
-| `config_file` | `DATABRICKS_CONFIG_FILE` |
-| `profile` | `DATABRICKS_CONFIG_PROFILE` |
-| `azure_workspace_resource_id` | `DATABRICKS_AZURE_WORKSPACE_RESOURCE_ID` |
-| `azure_workspace_name` | `DATABRICKS_AZURE_WORKSPACE_NAME` |
-| `azure_resource_group` | `DATABRICKS_AZURE_RESOURCE_GROUP` |
-| `azure_subscription_id` | `DATABRICKS_AZURE_SUBSCRIPTION_ID` or `ARM_SUBSCRIPTION_ID` |
-| `azure_client_secret` | `DATABRICKS_AZURE_CLIENT_SECRET` or `ARM_CLIENT_SECRET` |
-| `azure_client_id` | `DATABRICKS_AZURE_CLIENT_ID` or `ARM_CLIENT_ID` |
-| `azure_tenant_id` | `DATABRICKS_AZURE_TENANT_ID` or `ARM_TENANT_ID` |
-| `debug_truncate_bytes` | `DATABRICKS_DEBUG_TRUNCATE_BYTES` |
-| `debug_headers` | `DATABRICKS_DEBUG_HEADERS` |
+|                      Argument | Environment variable                                        |
+| ----------------------------: | ----------------------------------------------------------- |
+|                        `host` | `DATABRICKS_HOST`                                           |
+|                       `token` | `DATABRICKS_TOKEN`                                          |
+|                    `username` | `DATABRICKS_USERNAME`                                       |
+|                    `password` | `DATABRICKS_PASSWORD`                                       |
+|                 `config_file` | `DATABRICKS_CONFIG_FILE`                                    |
+|                     `profile` | `DATABRICKS_CONFIG_PROFILE`                                 |
+| `azure_workspace_resource_id` | `DATABRICKS_AZURE_WORKSPACE_RESOURCE_ID`                    |
+|        `azure_workspace_name` | `DATABRICKS_AZURE_WORKSPACE_NAME`                           |
+|        `azure_resource_group` | `DATABRICKS_AZURE_RESOURCE_GROUP`                           |
+|       `azure_subscription_id` | `DATABRICKS_AZURE_SUBSCRIPTION_ID` or `ARM_SUBSCRIPTION_ID` |
+|         `azure_client_secret` | `DATABRICKS_AZURE_CLIENT_SECRET` or `ARM_CLIENT_SECRET`     |
+|             `azure_client_id` | `DATABRICKS_AZURE_CLIENT_ID` or `ARM_CLIENT_ID`             |
+|             `azure_tenant_id` | `DATABRICKS_AZURE_TENANT_ID` or `ARM_TENANT_ID`             |
+|           `azure_environment` | `ARM_ENVIRONMENT`                                           |
+|        `debug_truncate_bytes` | `DATABRICKS_DEBUG_TRUNCATE_BYTES`                           |
+|               `debug_headers` | `DATABRICKS_DEBUG_HEADERS`                                  |
 
 ## Empty provider block
 

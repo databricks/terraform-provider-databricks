@@ -1,6 +1,7 @@
 package acceptance
 
 import (
+	"context"
 	"os"
 	"testing"
 
@@ -38,11 +39,12 @@ func TestAccSecretAclResource(t *testing.T) {
 				Check: func(s *terraform.State) error {
 					client := common.CommonEnvironmentClient()
 
-					usersAPI := identity.NewUsersAPI(client)
+					ctx := context.Background()
+					usersAPI := identity.NewUsersAPI(ctx, client)
 					me, err := usersAPI.Me()
 					require.NoError(t, err)
 
-					secretACLAPI := NewSecretAclsAPI(client)
+					secretACLAPI := NewSecretAclsAPI(ctx, client)
 					scope := s.RootModule().Resources["databricks_secret_scope.app"].Primary.ID
 					acls, err := secretACLAPI.List(scope)
 					require.NoError(t, err)
@@ -78,8 +80,8 @@ func TestAccSecretAclResourceDefaultPrincipal(t *testing.T) {
 						scope = databricks_secret_scope.app.name
 					}`),
 				Check: acceptance.ResourceCheck("databricks_secret_scope.app",
-					func(client *common.DatabricksClient, id string) error {
-						secretACLAPI := NewSecretAclsAPI(client)
+					func(ctx context.Context, client *common.DatabricksClient, id string) error {
+						secretACLAPI := NewSecretAclsAPI(ctx, client)
 						acls, err := secretACLAPI.List(id)
 						require.NoError(t, err)
 						assert.Equal(t, 1, len(acls))

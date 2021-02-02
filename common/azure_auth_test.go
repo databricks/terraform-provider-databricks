@@ -1,6 +1,7 @@
 package common
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -11,6 +12,7 @@ import (
 
 	"github.com/Azure/go-autorest/autorest"
 	"github.com/Azure/go-autorest/autorest/adal"
+	"github.com/Azure/go-autorest/autorest/azure"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -99,22 +101,32 @@ func TestGetClientSecretAuthorizer(t *testing.T) {
 
 func TestEnsureWorkspaceURL_CornerCases(t *testing.T) {
 	aa := AzureAuth{}
-	err := aa.ensureWorkspaceURL(nil)
+	err := aa.ensureWorkspaceURL(context.Background(), nil)
 	assert.EqualError(t, err, "DatabricksClient is not configured")
 
 	aa.databricksClient = &DatabricksClient{}
-	err = aa.ensureWorkspaceURL(nil)
+	err = aa.ensureWorkspaceURL(context.Background(), nil)
 	assert.EqualError(t, err, "Somehow resource id is not set")
+
+	aa = AzureAuth{
+		Environment:      "xyz",
+		SubscriptionID:   "a",
+		ResourceGroup:    "b",
+		WorkspaceName:    "c",
+		databricksClient: &DatabricksClient{},
+	}
+	err = aa.ensureWorkspaceURL(context.Background(), nil)
+	assert.EqualError(t, err, "autorest/azure: There is no cloud environment matching the name \"AZUREXYZCLOUD\"")
 }
 
 func TestAcquirePAT_CornerCases(t *testing.T) {
 	aa := AzureAuth{}
-	_, err := aa.acquirePAT(func(resource string) (autorest.Authorizer, error) {
+	_, err := aa.acquirePAT(context.Background(), func(resource string) (autorest.Authorizer, error) {
 		return &autorest.BearerAuthorizer{}, fmt.Errorf("test")
 	})
 	assert.EqualError(t, err, "test")
 
-	_, err = aa.acquirePAT(func(resource string) (autorest.Authorizer, error) {
+	_, err = aa.acquirePAT(context.Background(), func(resource string) (autorest.Authorizer, error) {
 		return &autorest.BearerAuthorizer{}, nil
 	})
 	assert.EqualError(t, err, "DatabricksClient is not configured")
@@ -123,23 +135,11 @@ func TestAcquirePAT_CornerCases(t *testing.T) {
 	aa.temporaryPat = &TokenResponse{
 		TokenValue: "...",
 	}
-	auth, rre := aa.acquirePAT(func(resource string) (autorest.Authorizer, error) {
+	auth, rre := aa.acquirePAT(context.Background(), func(resource string) (autorest.Authorizer, error) {
 		return &autorest.BearerAuthorizer{}, nil
 	})
 	assert.NoError(t, rre)
 	assert.Equal(t, "...", auth.TokenValue)
-}
-
-func TestAzureAuth_isClientSecretSet(t *testing.T) {
-	aa := AzureAuth{}
-	assert.False(t, aa.IsClientSecretSet())
-
-	aa.ClientID = "a"
-	assert.False(t, aa.IsClientSecretSet())
-	aa.ClientSecret = "b"
-	assert.False(t, aa.IsClientSecretSet())
-	aa.TenantID = "c"
-	assert.True(t, aa.IsClientSecretSet())
 }
 
 func TestAzureAuth_ensureWorkspaceURL(t *testing.T) {
@@ -165,7 +165,8 @@ func TestAzureAuth_ensureWorkspaceURL(t *testing.T) {
 	defer server.Close()
 
 	aa.ResourceID = "/subscriptions/a/resourceGroups/b/providers/Microsoft.Databricks/workspaces/c"
-	aa.azureManagementEndpoint = server.URL
+	// resource management endpoints end with a trailing slash in url
+	aa.azureManagementEndpoint = fmt.Sprintf("%s/", server.URL)
 
 	client := DatabricksClient{InsecureSkipVerify: true}
 	client.configureHTTPCLient()
@@ -178,10 +179,10 @@ func TestAzureAuth_ensureWorkspaceURL(t *testing.T) {
 		Type:        "Bearer",
 	}
 	authorizer := autorest.NewBearerAuthorizer(token)
-	err := aa.ensureWorkspaceURL(authorizer)
+	err := aa.ensureWorkspaceURL(context.Background(), authorizer)
 	assert.NoError(t, err)
 
-	err = aa.ensureWorkspaceURL(authorizer)
+	err = aa.ensureWorkspaceURL(context.Background(), authorizer)
 	assert.NoError(t, err)
 	assert.Equal(t, 1, cnt[0],
 		"Calls to Azure Management API must be done only once")
@@ -247,7 +248,8 @@ func TestAzureAuth_configureWithClientSecret(t *testing.T) {
 	aa.ClientID = "a"
 	aa.ClientSecret = "b"
 	aa.TenantID = "c"
-	aa.azureManagementEndpoint = server.URL
+	// resource management endpoints end with a trailing slash in url
+	aa.azureManagementEndpoint = fmt.Sprintf("%s/", server.URL)
 	auth, err = aa.configureWithClientSecret()
 	assert.NotNil(t, auth)
 	assert.NoError(t, err)
@@ -264,8 +266,80 @@ func TestAzureAuth_configureWithClientSecret(t *testing.T) {
 		DefaultZone string   `json:"default_zone,omitempty"`
 	}
 	var zi ZonesInfo
-	err = client.Get("/clusters/list-zones", nil, &zi)
+	err = client.Get(context.Background(), "/clusters/list-zones", nil, &zi)
 	assert.NotNil(t, zi)
 	assert.NoError(t, err)
 	assert.Len(t, zi.Zones, 3)
+}
+
+func TestAzureEnvironment_WithAzureManagementEndpoint(t *testing.T) {
+	fakeEndpoint := "http://google.com"
+	aa := AzureAuth{azureManagementEndpoint: fakeEndpoint}
+	env, err := aa.getAzureEnvironment()
+	assert.Nil(t, err)
+	// This value should be populated with azureManagementEndpoint for testing
+	assert.Equal(t, env.ResourceManagerEndpoint, fakeEndpoint)
+	// The rest should be nill
+	assert.Equal(t, env.ActiveDirectoryEndpoint, "")
+
+	// Making the azureManagementEndpoint empty should yield PublicCloud
+	aa.azureManagementEndpoint = ""
+	env, err = aa.getAzureEnvironment()
+	assert.Nil(t, err)
+	assert.Equal(t, azure.PublicCloud, env)
+}
+
+func TestAzureEnvironment(t *testing.T) {
+	aa := AzureAuth{}
+	env, err := aa.getAzureEnvironment()
+
+	assert.Nil(t, err)
+	assert.Equal(t, azure.PublicCloud, env)
+
+	aa.Environment = "public"
+	env, err = aa.getAzureEnvironment()
+	assert.Nil(t, err)
+	assert.Equal(t, azure.PublicCloud, env)
+
+	aa.Environment = "china"
+	env, err = aa.getAzureEnvironment()
+	assert.Nil(t, err)
+	assert.Equal(t, azure.ChinaCloud, env)
+
+	aa.Environment = "german"
+	env, err = aa.getAzureEnvironment()
+	assert.Nil(t, err)
+	assert.Equal(t, azure.GermanCloud, env)
+
+	aa.Environment = "usgovernment"
+	env, err = aa.getAzureEnvironment()
+	assert.Nil(t, err)
+	assert.Equal(t, azure.USGovernmentCloud, env)
+
+	aa.Environment = "xyzdummy"
+	_, err = aa.getAzureEnvironment()
+	assert.NotNil(t, err)
+}
+
+func TestInvalidAzureEnvironment(t *testing.T) {
+	aa := AzureAuth{}
+
+	aa.Environment = "xyzdummy"
+	_, envErr := aa.getAzureEnvironment()
+	assert.NotNil(t, envErr)
+
+	mockFunc := func(resource string) (autorest.Authorizer, error) {
+		return nil, nil
+	}
+
+	ctx := context.Background()
+	_, err := aa.simpleAADRequestVisitor(ctx, mockFunc)
+
+	assert.Equal(t, envErr, err)
+
+	_, err = aa.acquirePAT(ctx, mockFunc)
+	assert.Equal(t, envErr, err)
+
+	_, err = aa.getClientSecretAuthorizer("")
+	assert.Equal(t, envErr, err)
 }

@@ -29,6 +29,7 @@ provider "databricks" {
 }
 
 data "databricks_aws_assume_role_policy" "this" {
+  provider    = databricks.mws
   external_id = data.external.env.result.DATABRICKS_ACCOUNT_ID
 }
 
@@ -39,6 +40,7 @@ resource "aws_iam_role" "cross_account_role" {
 }
 
 data "databricks_aws_crossaccount_policy" "this" {
+  provider   = databricks.mws
   pass_roles = [aws_iam_role.data_role.arn]
 }
 
@@ -96,7 +98,6 @@ resource "databricks_mws_workspaces" "this" {
   credentials_id            = databricks_mws_credentials.this.credentials_id
   storage_configuration_id  = databricks_mws_storage_configurations.this.storage_configuration_id
   network_id                = databricks_mws_networks.this.network_id
-  verify_workspace_runnning = true
 }
 
 // initialize provider in normal mode

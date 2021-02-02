@@ -1,45 +1,53 @@
 # databricks_notebook Resource
 
--> **Note** This resource has evolving API, which may change in future versions of provider.
-
-This resource allows you to manage the import, export, and delete notebooks. The maximum allowed size of a 
-request to resource is 10MB. 
-
--> **Note** Though the public workspace import api supports notebooks of type `DBC`, `JUPYTER` and `HTML` this resource does not support those types as determining changes is quite challenging as the format includes additional information such as timestamps execution counts thus a base64 diff causes issues.
+This resource allows you to manage Databricks notebooks. You can also work with [databricks_notebook](../data-sources/notebook.md) and [databricks_notebook_paths](../data-sources/notebook_paths.md) data sources.
 
 ## Example Usage
 
-For deployment of an empty Python notebook, the following example might be useful:
+You can declare Terraform-managed notebook by specifying `source` attribute of corresponding local file. Only `.scala`, `.py`, `.sql` and `.r` extensions are supported, if you would like to omit `language` attribute.
+
+```hcl
+data "databricks_me" "me" {
+}
+
+resource "databricks_notebook" "ddl" {
+  source = "${path.module}/DDLgen.py"
+  path = "${data.databricks_me.me.home}/AA/BB/CC"
+}
+```
+
+You can also create managed notebook with inline sources through `content_base64` and `language` attributes.
 
 ```hcl
 resource "databricks_notebook" "notebook" {
-  content = base64encode("# Welcome to your Python notebook")
-  path = "/mynotebook"
-  overwrite = false
-  mkdirs = true
+  content_base64 = base64encode(<<-EOT
+    # created from ${abspath(path.module)}
+    display(spark.range(10))
+    EOT
+  )
+  path = "/Shared/Demo"
   language = "PYTHON"
-  format = "SOURCE"
 }
 ```
     
 ## Argument Reference
 
-The following arguments are supported:
+-> **Note** Notebook on Databricks workspace would only be changed, if Terraform stage did change. This means that any manual changes to managed notebook won't be overwritten by Terraform, if there's no local change to notebook sources. Notebooks are identified by their path, so changing notebook's name manually on the workspace and then applying Terraform state would result in creation of notebook from Terraform state.
 
-* `content` - (Required) The base64-encoded content. If the limit (10MB) is exceeded, exception with error code MAX_NOTEBOOK_SIZE_EXCEEDED will be thrown.
-* `path` -  (Required) The absolute path of the notebook or directory, beginning with "/", e.g. "/mynotebook". This field is **required**.
-* `language` -  (Required) The language. If format is set to SOURCE, this field is required; otherwise, it will be ignored. Possible choices are SCALA, PYTHON, SQL, R.
-* `overwrite` - (Required) The flag that specifies whether to overwrite existing object. It is false by default.
-* `mkdirs` - (Required) Create the given directory and necessary parent directories if they do not exists. If there exists an object (not a directory) at any prefix of the input path, this call returns an error RESOURCE_ALREADY_EXISTS. If this operation fails it may have succeeded in creating some of the necessary parent directories.
-* `format` -  (Required) This specifies the format of the file to be imported. This resource currently only supports SOURCE. The value is case sensitive. SOURCE is suitable for .scala, .py, .r, .sql extension based files, HTML for .html files, JUPYTER for .ipynb files. Though the API supports DBC, HTML, and JUPYTER currently we do not support them as effectively identifying DIFF is currently not feasible.
+The size of a notebook source code must not exceed few megabytes. The following arguments are supported:
+
+* `path` -  (Required) The absolute path of the notebook or directory, beginning with "/", e.g. "/Demo". 
+* `source` - Path to notebook in source code format on local filesystem. Conflicts with `content_base64`.
+* `content_base64` - The base64-encoded notebook source code. Conflicts with `source`. Use of `content_base64` is discouraged, as it's increasing memory footprint of Terraform state and should only be used in exceptional circumstances, like creating a notebook with configuration properties for a data pipeline.
+* `language` -  (required with `content_base64`) One of `SCALA`, `PYTHON`, `SQL`, `R`.
 
 ## Attribute Reference
 
 In addition to all arguments above, the following attributes are exported:
 
-* `id` -  The id for the notebook object.
-* `object_id` -  Unique identifier for a NOTEBOOK or DIRECTORY.
-* `object_type` -  The type of the object. It could be NOTEBOOK, DIRECTORY or LIBRARY.
+* `id` -  Path of notebook on workspace
+* `url` - Routable URL of the notebook
+* `object_id` -  Unique identifier for a NOTEBOOK
 
 ## Access Control
 
@@ -47,8 +55,8 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-The resource notebook can be imported using notebook id
+The resource notebook can be imported using notebook path
 
 ```bash
-$ terraform import databricks_notebook.this <notebook-id>
+$ terraform import databricks_notebook.this /path/to/notebook
 ```

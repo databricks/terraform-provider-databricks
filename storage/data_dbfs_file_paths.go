@@ -1,14 +1,35 @@
 package storage
 
 import (
-	"github.com/databrickslabs/databricks-terraform/common"
+	"context"
+
 	"github.com/databrickslabs/databricks-terraform/workspace"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
+// DataSourceDBFSFilePaths ...
 func DataSourceDBFSFilePaths() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceDBFSFilePathsRead,
+		ReadContext: func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+			path := d.Get("path").(string)
+			recursive := d.Get("recursive").(bool)
+			paths, err := NewDbfsAPI(ctx, m).List(path, recursive)
+			if err != nil {
+				return diag.FromErr(err)
+			}
+			d.SetId(path)
+			pathList := []map[string]interface{}{}
+			for _, pathInfo := range paths {
+				pathData := map[string]interface{}{}
+				pathData["path"] = pathInfo.Path
+				pathData["file_size"] = pathInfo.FileSize
+				pathList = append(pathList, pathData)
+			}
+			// nolint
+			d.Set("path_list", pathList)
+			return nil
+		},
 		Schema: map[string]*schema.Schema{
 			"path": {
 				Type:     schema.TypeString,
@@ -35,32 +56,8 @@ func DataSourceDBFSFilePaths() *schema.Resource {
 						},
 					},
 				},
-				Set: workspace.NotebookPathListHash,
+				Set: workspace.PathListHash,
 			},
 		},
 	}
-}
-
-func dataSourceDBFSFilePathsRead(d *schema.ResourceData, m interface{}) error {
-	path := d.Get("path").(string)
-	recursive := d.Get("recursive").(bool)
-	client := m.(*common.DatabricksClient)
-
-	paths, err := NewDBFSAPI(client).List(path, recursive)
-	if err != nil {
-		return err
-	}
-
-	d.SetId(path)
-	pathList := []map[string]interface{}{}
-	for _, pathInfo := range paths {
-		pathData := map[string]interface{}{}
-		pathData["path"] = pathInfo.Path
-		pathData["file_size"] = pathInfo.FileSize
-		pathList = append(pathList, pathData)
-	}
-
-	err = d.Set("path_list", pathList)
-
-	return err
 }

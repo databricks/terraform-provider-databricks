@@ -1,6 +1,7 @@
 package compute
 
 import (
+	"context"
 	"os"
 	"testing"
 
@@ -16,13 +17,16 @@ func TestAccInstancePools(t *testing.T) {
 	}
 	client := common.NewClientFromEnvironment()
 
+	clustersAPI := NewClustersAPI(context.Background(), client)
+	sparkVersion := clustersAPI.LatestSparkVersionOrDefault(SparkVersionRequest{Latest: true, LongTermSupport: true})
+	nodeType := clustersAPI.GetSmallestNodeType(NodeTypeRequest{})
 	pool := InstancePool{
 		InstancePoolName:                   "Terraform Integration Test",
 		MinIdleInstances:                   0,
-		NodeTypeID:                         qa.GetCloudInstanceType(client),
+		NodeTypeID:                         nodeType,
 		IdleInstanceAutoTerminationMinutes: 20,
 		PreloadedSparkVersions: []string{
-			"7.1.x-scala2.12",
+			sparkVersion,
 		},
 	}
 	if !client.IsAzure() {
@@ -37,15 +41,15 @@ func TestAccInstancePools(t *testing.T) {
 			Availability: AwsAvailabilitySpot,
 		}
 	}
-	poolInfo, err := NewInstancePoolsAPI(client).Create(pool)
+	poolInfo, err := NewInstancePoolsAPI(context.Background(), client).Create(pool)
 	assert.NoError(t, err, err)
 
 	defer func() {
-		err := NewInstancePoolsAPI(client).Delete(poolInfo.InstancePoolID)
+		err := NewInstancePoolsAPI(context.Background(), client).Delete(poolInfo.InstancePoolID)
 		assert.NoError(t, err, err)
 	}()
 
-	poolReadInfo, err := NewInstancePoolsAPI(client).Read(poolInfo.InstancePoolID)
+	poolReadInfo, err := NewInstancePoolsAPI(context.Background(), client).Read(poolInfo.InstancePoolID)
 	assert.NoError(t, err, err)
 	assert.Equal(t, poolInfo.InstancePoolID, poolReadInfo.InstancePoolID)
 	assert.Equal(t, pool.InstancePoolName, poolReadInfo.InstancePoolName)
@@ -54,33 +58,12 @@ func TestAccInstancePools(t *testing.T) {
 	assert.Equal(t, pool.NodeTypeID, poolReadInfo.NodeTypeID)
 	assert.Equal(t, pool.IdleInstanceAutoTerminationMinutes, poolReadInfo.IdleInstanceAutoTerminationMinutes)
 
-	u := InstancePoolAndStats{
-		InstancePoolID:                     poolReadInfo.InstancePoolID,
-		InstancePoolName:                   "Terraform Integration Test Updated",
-		MinIdleInstances:                   0,
-		MaxCapacity:                        20,
-		NodeTypeID:                         qa.GetCloudInstanceType(client),
-		IdleInstanceAutoTerminationMinutes: 20,
-		PreloadedSparkVersions: []string{
-			"7.1.x-scala2.12",
-		},
-	}
-	if !client.IsAzure() {
-		u.DiskSpec = &InstancePoolDiskSpec{
-			DiskType: &InstancePoolDiskType{
-				EbsVolumeType: EbsVolumeTypeGeneralPurposeSsd,
-			},
-			DiskCount: 1,
-			DiskSize:  32,
-		}
-		u.AwsAttributes = &InstancePoolAwsAttributes{
-			Availability: AwsAvailabilitySpot,
-		}
-	}
-	err = NewInstancePoolsAPI(client).Update(u)
+	poolReadInfo.InstancePoolName = "Terraform Integration Test Updated"
+	poolReadInfo.MaxCapacity = 20
+	err = NewInstancePoolsAPI(context.Background(), client).Update(poolReadInfo)
 	assert.NoError(t, err, err)
 
-	poolReadInfo, err = NewInstancePoolsAPI(client).Read(poolInfo.InstancePoolID)
+	poolReadInfo, err = NewInstancePoolsAPI(context.Background(), client).Read(poolInfo.InstancePoolID)
 	assert.NoError(t, err, err)
 	assert.Equal(t, poolReadInfo.MaxCapacity, int32(20))
 }
@@ -177,6 +160,7 @@ func TestResourceInstancePoolRead(t *testing.T) {
 		},
 		Resource: ResourceInstancePool(),
 		Read:     true,
+		New:      true,
 		ID:       "abc",
 	}.Apply(t)
 	assert.NoError(t, err, err)
@@ -189,7 +173,7 @@ func TestResourceInstancePoolRead(t *testing.T) {
 }
 
 func TestResourceInstancePoolRead_NotFound(t *testing.T) {
-	d, err := qa.ResourceFixture{
+	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
@@ -203,10 +187,9 @@ func TestResourceInstancePoolRead_NotFound(t *testing.T) {
 		},
 		Resource: ResourceInstancePool(),
 		Read:     true,
+		Removed:  true,
 		ID:       "abc",
-	}.Apply(t)
-	assert.NoError(t, err, err)
-	assert.Equal(t, "", d.Id(), "Id should be empty for missing resources")
+	}.ApplyNoError(t)
 }
 
 func TestResourceInstancePoolRead_Error(t *testing.T) {
@@ -237,6 +220,7 @@ func TestResourceInstancePoolUpdate(t *testing.T) {
 				Method:   "POST",
 				Resource: "/api/2.0/instance-pools/edit",
 				ExpectedRequest: InstancePoolAndStats{
+					EnableElasticDisk:                  true,
 					InstancePoolID:                     "abc",
 					MaxCapacity:                        500,
 					NodeTypeID:                         "i3.xlarge",

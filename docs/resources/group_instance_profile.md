@@ -1,6 +1,6 @@
 # databricks_group_instance_profile Resource
 
--> **Note** This resource has evolving API, which may change in future versions of provider.
+-> **Note** This resource has an evolving API, which may change in future versions of the provider.
 
 This resource allows you to attach instance profiles to groups created by the [group](group.md) resource.
 
@@ -9,7 +9,6 @@ This resource allows you to attach instance profiles to groups created by the [g
 ```hcl
 resource "databricks_instance_profile" "instance_profile" {
     instance_profile_arn = "my_instance_profile_arn"
-    skip_validation = true
 }
 
 resource "databricks_group" "my_group" {

@@ -90,7 +90,7 @@ func TestResourceGroupRead(t *testing.T) {
 }
 
 func TestResourceGroupRead_NotFound(t *testing.T) {
-	d, err := qa.ResourceFixture{
+	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
@@ -104,10 +104,9 @@ func TestResourceGroupRead_NotFound(t *testing.T) {
 		},
 		Resource: ResourceGroup(),
 		Read:     true,
+		Removed:  true,
 		ID:       "abc",
-	}.Apply(t)
-	assert.NoError(t, err, err)
-	assert.Equal(t, "", d.Id(), "Id should be empty for missing resources")
+	}.ApplyNoError(t)
 }
 
 func TestResourceGroupRead_Error(t *testing.T) {

@@ -1,14 +1,9 @@
-provider "aws" {
-}
-
-provider "random" {
-  version = "~> 2.2"
-}
-
 // get any env var to tf
 data "external" "env" {
   program = ["python", "-c", "import sys,os,json;json.dump(dict(os.environ), sys.stdout)"]
 }
+
+provider "random" {}
 
 resource "random_string" "naming" {
   special = false
@@ -19,11 +14,27 @@ resource "random_string" "naming" {
 locals {
   // dltp - databricks labs terraform provider
   prefix = "dltp${random_string.naming.result}"
+  region = data.external.env.result.TEST_REGION
   tags = {
     Environment = "Testing"
     Owner       = data.external.env.result.OWNER
     Epoch       = random_string.naming.result
   }
+  pl_user_to_workspace = {
+    "us-west-2" : "com.amazonaws.vpce.us-west-2.vpce-svc-0129f463fcfbc46c5",
+    "us-east-1" : "com.amazonaws.vpce.us-east-1.vpce-svc-09143d1e626de2f04",
+    "eu-west-1" : "com.amazonaws.vpce.eu-west-1.vpce-svc-0da6ebf1461278016",
+  }
+  pl_dataplane_to_controlplane = {
+    "us-west-2" : "com.amazonaws.vpce.us-west-2.vpce-svc-0129f463fcfbc46c5"
+    "us-east-1" : "com.amazonaws.vpce.us-east-1.vpce-svc-09143d1e626de2f04",
+    # "eu-west-1": "com.amazonaws.vpce.eu-west-1.vpce-svc-0da6ebf1461278016",
+    "eu-west-1" : "com.amazonaws.vpce.eu-west-1.vpce-svc-09b4eb2bc775f4e8c",
+  }
+}
+
+provider "aws" {
+  region = local.region
 }
 
 provider "databricks" {}
@@ -48,11 +59,11 @@ resource "aws_iam_role_policy" "test_policy" {
 }
 
 module "aws_common" {
-  source = "../modules/aws-mws-common"
+  source     = "../modules/aws-mws-common"
   cidr_block = data.external.env.result.TEST_CIDR
-  region = data.external.env.result.TEST_REGION
-  prefix = local.prefix
-  tags = local.tags
+  region     = local.region
+  prefix     = local.prefix
+  tags       = local.tags
 }
 
 resource "aws_s3_bucket" "logdelivery" {
@@ -62,9 +73,6 @@ resource "aws_s3_bucket" "logdelivery" {
     enabled = false
   }
   force_destroy = true
-  tags = merge(local.tags, {
-    Name = "${local.prefix}-logdelivery"
-  })
 }
 
 output "test_logdelivery_bucket" {
@@ -77,7 +85,7 @@ resource "aws_s3_bucket_public_access_block" "logdelivery" {
 }
 
 data "databricks_aws_assume_role_policy" "logdelivery" {
-  external_id = data.external.env.result.DATABRICKS_ACCOUNT_ID
+  external_id      = data.external.env.result.DATABRICKS_ACCOUNT_ID
   for_log_delivery = true
 }
 
@@ -100,6 +108,36 @@ data "databricks_aws_bucket_policy" "logdelivery" {
 resource "aws_s3_bucket_policy" "logdelivery" {
   bucket = aws_s3_bucket.logdelivery.id
   policy = data.databricks_aws_bucket_policy.logdelivery.json
+}
+
+resource "aws_vpc_endpoint" "relay" {
+  service_name       = local.pl_dataplane_to_controlplane[local.region]
+  vpc_id             = module.aws_common.vpc_id
+  vpc_endpoint_type  = "Interface"
+  security_group_ids = [module.aws_common.security_group]
+  subnet_ids         = [module.aws_common.subnet_private]
+}
+
+output "test_relay_vpc_endpoint" {
+  value = aws_vpc_endpoint.relay.id
+}
+
+resource "aws_vpc_endpoint" "rest_api" {
+  service_name       = local.pl_dataplane_to_controlplane[local.region]
+  vpc_id             = module.aws_common.vpc_id
+  vpc_endpoint_type  = "Interface"
+  security_group_ids = [module.aws_common.security_group]
+  subnet_ids         = [module.aws_common.subnet_private]
+}
+
+data "aws_caller_identity" "current" {}
+
+output "test_aws_account_id" {
+  value = data.aws_caller_identity.current.account_id
+}
+
+output "test_rest_api_vpc_endpoint" {
+  value = aws_vpc_endpoint.rest_api.id
 }
 
 output "cloud_env" {
@@ -144,10 +182,10 @@ output "test_prefix" {
 }
 
 output "test_region" {
-  value = data.external.env.result.TEST_REGION
+  value = local.region
 }
 
 output "databricks_account_id" {
-  value = data.external.env.result.DATABRICKS_ACCOUNT_ID
+  value     = data.external.env.result.DATABRICKS_ACCOUNT_ID
   sensitive = true
 }

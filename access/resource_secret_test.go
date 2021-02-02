@@ -37,7 +37,7 @@ func TestResourceSecretRead(t *testing.T) {
 }
 
 func TestResourceSecretRead_NotFound(t *testing.T) {
-	d, err := qa.ResourceFixture{
+	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
@@ -54,10 +54,9 @@ func TestResourceSecretRead_NotFound(t *testing.T) {
 		},
 		Resource: ResourceSecret(),
 		Read:     true,
+		Removed:  true,
 		ID:       "foo|||missing",
-	}.Apply(t)
-	assert.NoError(t, err, err)
-	assert.Equal(t, "", d.Id())
+	}.ApplyNoError(t)
 }
 
 func TestResourceSecretRead_Error(t *testing.T) {

@@ -1,25 +1,26 @@
-package provider
+package common
 
 import (
 	"context"
 	"strings"
 
-	"github.com/databrickslabs/databricks-terraform/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-func addContextToAllResources(p *schema.Provider) {
+// AddContextToAllResources ...
+func AddContextToAllResources(p *schema.Provider, prefix string) {
 	for k, r := range p.DataSourcesMap {
+		k = strings.ReplaceAll(k, prefix+"_", "")
 		addContextToResource(k, r)
 	}
 	for k, r := range p.ResourcesMap {
+		k = strings.ReplaceAll(k, prefix+"_", "")
 		addContextToResource(k, r)
 	}
 }
 
 func addContextToResource(name string, r *schema.Resource) {
-	name = strings.ReplaceAll(name, "databricks_", "")
 	if r.CreateContext != nil {
 		r.CreateContext = addContextToStage(name, r.CreateContext)
 	}
@@ -38,7 +39,7 @@ func addContextToStage(name string,
 	f func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics) func(
 	ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	return func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-		ctx = context.WithValue(ctx, common.ResourceName, name)
+		ctx = context.WithValue(ctx, ResourceName, name)
 		return f(ctx, d, m)
 	}
 }

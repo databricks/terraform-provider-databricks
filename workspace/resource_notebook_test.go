@@ -8,6 +8,7 @@ import (
 	"github.com/databrickslabs/databricks-terraform/internal/qa"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestResourceNotebookRead(t *testing.T) {
@@ -126,11 +127,18 @@ func TestResourceNotebookCreate(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
+				Method:   "POST",
+				Resource: "/api/2.0/workspace/mkdirs",
+				ExpectedRequest: map[string]string{
+					"path": "/foo",
+				},
+			},
+			{
 				Method:   http.MethodPost,
 				Resource: "/api/2.0/workspace/import",
 				ExpectedRequest: ImportRequest{
 					Content:   "YWJjCg==",
-					Path:      "/path.py",
+					Path:      "/foo/path.py",
 					Language:  "PYTHON",
 					Overwrite: true,
 					Format:    "SOURCE",
@@ -138,18 +146,18 @@ func TestResourceNotebookCreate(t *testing.T) {
 			},
 			{
 				Method:   http.MethodGet,
-				Resource: "/api/2.0/workspace/export?format=SOURCE&path=%2Fpath.py",
+				Resource: "/api/2.0/workspace/export?format=SOURCE&path=%2Ffoo%2Fpath.py",
 				Response: NotebookContent{
 					Content: "YWJjCg==",
 				},
 			},
 			{
 				Method:   http.MethodGet,
-				Resource: "/api/2.0/workspace/get-status?path=%2Fpath.py",
+				Resource: "/api/2.0/workspace/get-status?path=%2Ffoo%2Fpath.py",
 				Response: ObjectStatus{
 					ObjectID:   4567,
 					ObjectType: "NOTEBOOK",
-					Path:       "/path.py",
+					Path:       "/foo/path.py",
 					Language:   "PYTHON",
 				},
 			},
@@ -158,12 +166,12 @@ func TestResourceNotebookCreate(t *testing.T) {
 		State: map[string]interface{}{
 			"content_base64": "YWJjCg==",
 			"language":       "PYTHON",
-			"path":           "/path.py",
+			"path":           "/foo/path.py",
 		},
 		Create: true,
 	}.Apply(t)
 	assert.NoError(t, err, err)
-	assert.Equal(t, "/path.py", d.Id())
+	assert.Equal(t, "/foo/path.py", d.Id())
 }
 
 func TestResourceNotebookCreateSource(t *testing.T) {
@@ -248,4 +256,41 @@ func TestResourceNotebookDelete_Error(t *testing.T) {
 	}.Apply(t)
 	qa.AssertErrorStartsWith(t, err, "Internal error happened")
 	assert.Equal(t, "abc", d.Id())
+}
+
+func TestResourceNotebookUpdate(t *testing.T) {
+	_, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/workspace/import",
+				ExpectedRequest: ImportRequest{
+					Format:    "SOURCE",
+					Overwrite: true,
+					Content:   "YWJjCg==",
+					Path:      "abc",
+					Language:  "R",
+				},
+			},
+			{
+				Method:   http.MethodGet,
+				Resource: "/api/2.0/workspace/get-status?path=abc",
+				Response: ObjectStatus{
+					ObjectID:   4567,
+					ObjectType: "NOTEBOOK",
+					Path:       "abc",
+					Language:   "R",
+				},
+			},
+		},
+		Resource: ResourceNotebook(),
+		State: map[string]interface{}{
+			"content_base64": "YWJjCg==",
+			"language":       "R",
+			"path":           "/path.py",
+		},
+		ID:     "abc",
+		Update: true,
+	}.Apply(t)
+	require.NoError(t, err)
 }

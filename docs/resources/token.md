@@ -10,7 +10,6 @@ provider "databricks" {
   alias = "created_workspace" 
   
   host  = databricks_mws_workspaces.this.workspace_url
-  basic_auth {}
 }
 
 // create PAT token to provision entities within workspace

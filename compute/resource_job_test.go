@@ -1,6 +1,7 @@
 package compute
 
 import (
+	"context"
 	"strings"
 	"testing"
 
@@ -574,4 +575,35 @@ func TestResourceJobDelete_Error(t *testing.T) {
 	}.Apply(t)
 	qa.AssertErrorStartsWith(t, err, "Internal error happened")
 	assert.Equal(t, "789", d.Id())
+}
+
+func TestJobsAPIRunsList(t *testing.T) {
+	c, s, err := qa.HttpFixtureClient(t, []qa.HTTPFixture{
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/jobs/runs/list?completed_only=true&job_id=234&limit=1",
+			Response: JobRunsList{
+				Runs: []JobRun{
+					{
+						State: RunState{
+							ResultState:    "SUCCESS",
+							LifeCycleState: "TERMINATED",
+						},
+					},
+				},
+			},
+		},
+	})
+	require.NoError(t, err)
+	defer s.Close()
+
+	a := NewJobsAPI(context.Background(), c)
+	l, err := a.RunsList(JobRunsListRequest{
+		JobID:         234,
+		CompletedOnly: true,
+		Limit:         1,
+		Offset:        0,
+	})
+	require.NoError(t, err)
+	assert.Len(t, l.Runs, 1)
 }

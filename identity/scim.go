@@ -51,6 +51,9 @@ type GroupMember struct {
 	Display string `json:"display,omitempty"`
 	Value   string `json:"value,omitempty"`
 	Ref     string `json:"$ref,omitempty"`
+
+	// https://tools.ietf.org/html/rfc7643#page-64
+	Type string `json:"type,omitempty"`
 }
 
 // ValueListItem is a struct that contains a field Value.
@@ -132,6 +135,9 @@ type groupsListItem struct {
 	// TODO: combine entitlementsListItem & roleListItem into this one
 	Display string `json:"display,omitempty"`
 	Value   string `json:"value,omitempty"`
+
+	// https://tools.ietf.org/html/rfc7643#page-64
+	Type string `json:"type,omitempty"`
 }
 
 type entitlementsListItem struct {

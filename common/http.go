@@ -172,7 +172,7 @@ func (c *DatabricksClient) parseError(resp *http.Response) APIError {
 			Resource:   resp.Request.URL.Path,
 		}
 	}
-	log.Printf("[INFO] %s %v", resp.Status, c.redactedDump(body))
+	log.Printf("[DEBUG] %s %v", resp.Status, c.redactedDump(body))
 	mwsError := c.commonErrorClarity(resp)
 	if mwsError != nil {
 		return *mwsError

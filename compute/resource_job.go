@@ -26,6 +26,18 @@ type JobsAPI struct {
 	context context.Context
 }
 
+// List all jobs
+func (a JobsAPI) List() (l JobList, err error) {
+	err = a.client.Get(a.context, "/jobs/list", nil, &l)
+	return
+}
+
+// RunsList ...
+func (a JobsAPI) RunsList(r JobRunsListRequest) (jrl JobRunsList, err error) {
+	err = a.client.Get(a.context, "/jobs/runs/list", r, &jrl)
+	return
+}
+
 // Create creates a job on the workspace given the job settings
 func (a JobsAPI) Create(jobSettings JobSettings) (Job, error) {
 	var job Job

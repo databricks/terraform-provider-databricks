@@ -52,8 +52,8 @@ provider "aws" {
 provider "databricks" {
   alias    = "mws"
   host     = "https://accounts.cloud.databricks.com"
-  databricks_account_username = var.databricks_account_username
-  databricks_account_password = var.databricks_account_password
+  username = var.databricks_account_username
+  password = var.databricks_account_password
 }
 ```
 
@@ -85,7 +85,7 @@ resource "aws_iam_role_policy" "this" {
 
 resource "databricks_mws_credentials" "this" {
   provider         = databricks.mws
-  databricks_account_id       = var.databricks_account_id
+  account_id       = var.databricks_account_id
   role_arn         = aws_iam_role.cross_account_role.arn
   credentials_name = "${local.prefix}-creds"
   depends_on       = [aws_iam_role_policy.this]
@@ -121,7 +121,7 @@ resource "aws_vpc" "main" {
   enable_dns_hostnames = true
 
   tags = merge(var.tags, {
-    Name = "${var.prefix}-vpc"
+    Name = "${local.prefix}-vpc"
   })
 }
 
@@ -129,14 +129,14 @@ resource "aws_subnet" "public" {
   vpc_id     = aws_vpc.main.id
   cidr_block = cidrsubnet(aws_vpc.main.cidr_block, 3, 0)
   tags = merge(var.tags, {
-    Name = "${var.prefix}-public-sn"
+    Name = "${local.prefix}-public-sn"
   })
 }
 
 resource "aws_internet_gateway" "gw" {
   vpc_id = aws_vpc.main.id
   tags = merge(var.tags, {
-    Name = "${var.prefix}-igw"
+    Name = "${local.prefix}-igw"
   })
 }
 
@@ -148,7 +148,7 @@ resource "aws_route_table" "public" {
   }
 
   tags = merge(var.tags, {
-    Name = "${var.prefix}-public-rt"
+    Name = "${local.prefix}-public-rt"
   })
 }
 
@@ -161,7 +161,7 @@ resource "aws_eip" "nat" {
   vpc        = true
   depends_on = [aws_internet_gateway.gw]
   tags = merge(var.tags, {
-    Name = "${var.prefix}-eip"
+    Name = "${local.prefix}-eip"
   })
 }
 
@@ -169,7 +169,7 @@ resource "aws_nat_gateway" "gw" {
   allocation_id = aws_eip.nat.id
   subnet_id     = aws_subnet.public.id
   tags = merge(var.tags, {
-    Name = "${var.prefix}-nat"
+    Name = "${local.prefix}-nat"
   })
 }
 
@@ -177,7 +177,7 @@ resource "aws_subnet" "private" {
   vpc_id     = aws_vpc.main.id
   cidr_block = cidrsubnet(aws_vpc.main.cidr_block, 3, 1)
   tags = merge(var.tags, {
-    Name = "${var.prefix}-private-sn"
+    Name = "${local.prefix}-private-sn"
   })
 }
 
@@ -185,7 +185,7 @@ resource "aws_subnet" "private_secondary" {
   vpc_id     = aws_vpc.main.id
   cidr_block = cidrsubnet(aws_vpc.main.cidr_block, 3, 2)
   tags = merge(var.tags, {
-    Name = "${var.prefix}-private-sn"
+    Name = "${local.prefix}-private-sn"
   })
 }
 
@@ -196,7 +196,7 @@ resource "aws_route_table" "private" {
     cidr_block     = "0.0.0.0/0"
   }
   tags = merge(var.tags, {
-    Name = "${var.prefix}-private-rt"
+    Name = "${local.prefix}-private-rt"
   })
 }
 
@@ -255,13 +255,13 @@ resource "aws_security_group" "this" {
   }
 
   tags = merge(var.tags, {
-    Name = "${var.prefix}-sg"
+    Name = "${local.prefix}-sg"
   })
 }
 
 resource "databricks_mws_networks" "this" {
   provider           = databricks.mws
-  databricks_account_id         = var.databricks_account_id
+  account_id         = var.databricks_account_id
   network_name       = "${local.prefix}-network"
   subnet_ids         = [aws_subnet.private.id, aws_subnet.private_secondary.id]
   vpc_id             = aws_vpc.main.id
@@ -275,14 +275,14 @@ Once [VPC](#vpc) is ready, you need to create AWS S3 bucket for DBFS workspace s
 
 ```hcl
 resource "aws_s3_bucket" "root_storage_bucket" {
-  bucket = "${var.prefix}-rootbucket"
+  bucket = "${local.prefix}-rootbucket"
   acl    = "private"
   versioning {
     enabled = false
   }
   force_destroy = true
   tags = merge(var.tags, {
-    Name = "${var.prefix}-rootbucket"
+    Name = "${local.prefix}-rootbucket"
   })
 }
 
@@ -303,7 +303,7 @@ resource "aws_s3_bucket_policy" "root_bucket_policy" {
 
 resource "databricks_mws_storage_configurations" "this" {
   provider                   = databricks.mws
-  databricks_account_id                 = var.databricks_account_id
+  account_id                 = var.databricks_account_id
   bucket_name                = aws_s3_bucket.root_storage_bucket.bucket
   storage_configuration_name = "${local.prefix}-storage"
 }
@@ -316,7 +316,7 @@ Once you have [VPC](#vpc), [cross-account role](#cross-account-iam-role), and [r
 ```hcl
 resource "databricks_mws_workspaces" "this" {
   provider        = databricks.mws
-  databricks_account_id      = var.databricks_account_id
+  account_id      = var.databricks_account_id
   aws_region      = var.region
   workspace_name  = local.prefix
   deployment_name = local.prefix
@@ -359,7 +359,7 @@ In [the next step](workspace-management.md), please use the following configurat
 
 ```hcl
 provider "databricks" {
-    host = module.ai.databricks_host
-    token = module.ai.databricks_token
+  host = module.ai.databricks_host
+  token = module.ai.databricks_token
 }
 ```

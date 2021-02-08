@@ -584,7 +584,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			{Path: "principal", Resource: "databricks_user", Match: "user_name"},
 		},
 	},
-	"databricks_s3_mount": {
+	"databricks_aws_s3_mount": {
 		Service: "mounts",
 		List: func(ic *importContext) error {
 			if !ic.mounts {
@@ -601,7 +601,7 @@ var resourcesMap map[string]importable = map[string]importable{
 					continue
 				}
 				ic.Emit(&resource{
-					Resource: "databricks_s3_mount",
+					Resource: "databricks_aws_s3_mount",
 					ID:       mountName,
 				})
 			}

@@ -2,7 +2,6 @@ package provider
 
 import (
 	"context"
-	"fmt"
 	"sort"
 	"strings"
 
@@ -224,7 +223,7 @@ func DatabricksProvider() *schema.Provider {
 		ctx = context.WithValue(ctx, common.Provider, p)
 		return configureDatabricksClient(ctx, d)
 	}
-	addContextToAllResources(p)
+	common.AddContextToAllResources(p, "databricks")
 	return p
 }
 
@@ -255,15 +254,6 @@ func configureDatabricksClient(ctx context.Context, d *schema.ResourceData) (int
 	if v, ok := d.GetOk("config_file"); ok {
 		authsUsed["config profile"] = true
 		pc.ConfigFile = v.(string)
-	}
-	if _, ok := d.GetOk("basic_auth"); ok {
-		authsUsed["password"] = true
-		username, userOk := d.GetOk("basic_auth.0.username")
-		password, passOk := d.GetOk("basic_auth.0.password")
-		if userOk && passOk {
-			pc.Username = fmt.Sprintf("%s", username)
-			pc.Password = fmt.Sprintf("%s", password)
-		}
 	}
 	if v, ok := d.GetOk("azure_workspace_resource_id"); ok {
 		authsUsed["azure"] = true

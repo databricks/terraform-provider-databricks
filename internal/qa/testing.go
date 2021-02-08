@@ -102,6 +102,7 @@ func (f ResourceFixture) Apply(t *testing.T) (*schema.ResourceData, error) {
 	}
 	if len(f.HCL) > 0 {
 		var out interface{}
+		// TODO: update to HCLv2 somehow, so that importer and this use the same stuff
 		err = hcl.Decode(&out, f.HCL)
 		if err != nil {
 			return nil, err

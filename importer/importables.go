@@ -1,7 +1,6 @@
 package importer
 
 import (
-	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -29,8 +28,8 @@ var resourcesMap map[string]importable = map[string]importable{
 			return s[len(s)-1]
 		},
 		Body: func(ic *importContext, body *hclwrite.Body, r *resource) error {
-			dbfsAPI := storage.NewDBFSAPI(ic.Client)
-			b64, err := dbfsAPI.Read(r.ID)
+			dbfsAPI := storage.NewDbfsAPI(ic.Context, ic.Client)
+			fileBytes, err := dbfsAPI.Read(r.ID)
 			if err != nil {
 				return err
 			}
@@ -43,10 +42,6 @@ var resourcesMap map[string]importable = map[string]importable{
 				return err
 			}
 			defer local.Close()
-			fileBytes, err := base64.StdEncoding.DecodeString(b64)
-			if err != nil {
-				return err
-			}
 			_, err = local.Write(fileBytes)
 			if err != nil {
 				return err
@@ -60,20 +55,6 @@ var resourcesMap map[string]importable = map[string]importable{
 				&hclwrite.Token{Type: hclsyntax.TokenQuotedLit, Bytes: []byte(relativeFile)},
 				&hclwrite.Token{Type: hclsyntax.TokenCQuote, Bytes: []byte{'"'}},
 			})
-			b.SetAttributeRaw("content_b64_md5", hclwrite.Tokens{
-				&hclwrite.Token{Type: hclsyntax.TokenStringLit, Bytes: []byte("md5")},
-				&hclwrite.Token{Type: hclsyntax.TokenOParen, Bytes: []byte{'('}},
-				&hclwrite.Token{Type: hclsyntax.TokenStringLit, Bytes: []byte("filebase64")},
-				&hclwrite.Token{Type: hclsyntax.TokenOParen, Bytes: []byte{'('}},
-				&hclwrite.Token{Type: hclsyntax.TokenOQuote, Bytes: []byte{'"'}},
-				&hclwrite.Token{Type: hclsyntax.TokenQuotedLit, Bytes: []byte(relativeFile)},
-				&hclwrite.Token{Type: hclsyntax.TokenCQuote, Bytes: []byte{'"'}},
-				&hclwrite.Token{Type: hclsyntax.TokenCParen, Bytes: []byte{')'}},
-				&hclwrite.Token{Type: hclsyntax.TokenCParen, Bytes: []byte{')'}},
-			})
-			b.SetAttributeValue("validate_remote_file", cty.BoolVal(false))
-			b.SetAttributeValue("overwrite", cty.BoolVal(true))
-			b.SetAttributeValue("mkdirs", cty.BoolVal(true))
 			return nil
 		},
 	},
@@ -140,7 +121,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			{Path: "library.egg", Resource: "databricks_dbfs_file"},
 		},
 		List: func(ic *importContext) error {
-			clusters, err := compute.NewClustersAPI(ic.Client).List()
+			clusters, err := compute.NewClustersAPI(ic.Context, ic.Client).List()
 			if err != nil {
 				return err
 			}
@@ -253,7 +234,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			return ic.importLibraries(r.Data, s)
 		},
 		List: func(ic *importContext) error {
-			a := compute.NewJobsAPI(ic.Client)
+			a := compute.NewJobsAPI(ic.Context, ic.Client)
 			nowSeconds := time.Now().Unix()
 			starterAfter := (nowSeconds - (ic.lastActiveDays * 24 * 60 * 60)) * 1000
 			if l, err := a.List(); err == nil {
@@ -403,7 +384,7 @@ var resourcesMap map[string]importable = map[string]importable{
 					log.Printf("[INFO] Importing %d members of %s",
 						len(g.Members), g.DisplayName)
 				}
-				for _, parent := range g.Parents {
+				for _, parent := range g.Groups {
 					ic.Emit(&resource{
 						Resource: "databricks_group",
 						ID:       parent.Value,
@@ -538,7 +519,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			return d.Get("name").(string)
 		},
 		List: func(ic *importContext) error {
-			ssAPI := access.NewSecretScopesAPI(ic.Client)
+			ssAPI := access.NewSecretScopesAPI(ic.Context, ic.Client)
 			if scopes, err := ssAPI.List(); err == nil {
 				for i, scope := range scopes {
 					if !ic.MatchesName(scope.Name) {
@@ -555,7 +536,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			return nil
 		},
 		Import: func(ic *importContext, r *resource) error {
-			if l, err := access.NewSecretsAPI(ic.Client).List(r.ID); err == nil {
+			if l, err := access.NewSecretsAPI(ic.Context, ic.Client).List(r.ID); err == nil {
 				for _, secret := range l {
 					ic.Emit(&resource{
 						Resource: "databricks_secret",
@@ -563,7 +544,7 @@ var resourcesMap map[string]importable = map[string]importable{
 					})
 				}
 			}
-			if l, err := access.NewSecretAclsAPI(ic.Client).List(r.ID); err == nil {
+			if l, err := access.NewSecretAclsAPI(ic.Context, ic.Client).List(r.ID); err == nil {
 				for _, acl := range l {
 					ic.Emit(&resource{
 						Resource: "databricks_secret_acl",

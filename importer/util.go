@@ -77,7 +77,7 @@ func (ic *importContext) importLibraries(d *schema.ResourceData, s map[string]*s
 func (ic *importContext) cacheGroups() error {
 	if len(ic.allGroups) == 0 {
 		log.Printf("[INFO] Caching groups in memory ...")
-		groupsAPI := identity.NewGroupsAPI(ic.Client)
+		groupsAPI := identity.NewGroupsAPI(ic.Context, ic.Client)
 		g, err := groupsAPI.Filter("")
 		if err != nil {
 			return err
@@ -104,7 +104,7 @@ func (ic *importContext) cacheGroups() error {
 // }
 
 func (ic *importContext) findUserByName(name string) (u identity.ScimUser, err error) {
-	a := identity.NewUsersAPI(ic.Client)
+	a := identity.NewUsersAPI(ic.Context, ic.Client)
 	users, err := a.Filter(fmt.Sprintf("userName eq '%s'", name))
 	if err != nil {
 		return
@@ -141,8 +141,8 @@ func (ic *importContext) refreshMounts() error {
 	if ic.mountMap != nil {
 		return nil
 	}
-	clustersAPI := compute.NewClustersAPI(ic.Client)
-	commandAPI := ic.Client.CommandExecutor()
+	clustersAPI := compute.NewClustersAPI(ic.Context, ic.Client)
+	commandAPI := ic.Client.CommandExecutor(ic.Context)
 	cluster, err := clustersAPI.GetOrCreateRunningCluster("terraform-mount")
 	if err != nil {
 		return err

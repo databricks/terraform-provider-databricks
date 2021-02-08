@@ -28,13 +28,13 @@ type JobsAPI struct {
 
 // List all jobs
 func (a JobsAPI) List() (l JobList, err error) {
-	err = a.client.Get("/jobs/list", nil, &l)
+	err = a.client.Get(a.context, "/jobs/list", nil, &l)
 	return
 }
 
 // RunsList ...
 func (a JobsAPI) RunsList(r JobRunsListRequest) (jrl JobRunsList, err error) {
-	err = a.client.Get("/jobs/runs/list", r, &jrl)
+	err = a.client.Get(a.context, "/jobs/runs/list", r, &jrl)
 	return
 }
 

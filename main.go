@@ -17,6 +17,13 @@ func main() {
 		fmt.Println(common.Version())
 		return
 	}
+	if len(os.Args) > 1 && os.Args[1] == "importer" {
+		if err := importer.Run(os.Args...); err != nil {
+			log.Printf("[ERROR] %s", err.Error())
+			os.Exit(1)
+		}
+		return
+	}
 	log.Printf(`Databricks Terraform Provider (experimental)
 
 Version %s

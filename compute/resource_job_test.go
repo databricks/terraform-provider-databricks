@@ -1,6 +1,7 @@
 package compute
 
 import (
+	"context"
 	"strings"
 	"testing"
 
@@ -596,7 +597,7 @@ func TestJobsAPIRunsList(t *testing.T) {
 	require.NoError(t, err)
 	defer s.Close()
 
-	a := NewJobsAPI(c)
+	a := NewJobsAPI(context.Background(), c)
 	l, err := a.RunsList(JobRunsListRequest{
 		JobID:         234,
 		CompletedOnly: true,

@@ -66,7 +66,7 @@ func DataSourceGroup() *schema.Resource {
 						this.AllowInstancePoolCreate = true
 					}
 				}
-				for _, x := range current.Parents {
+				for _, x := range current.Groups {
 					this.Groups = append(this.Groups, x.Value)
 					if this.Recursive {
 						childGroup, err := groupsAPI.Read(x.Value)

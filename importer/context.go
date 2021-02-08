@@ -47,6 +47,7 @@ import (
 
 type importContext struct {
 	Module      string
+	Context     context.Context
 	Client      *common.DatabricksClient
 	State       stateApproximation
 	Importables map[string]importable
@@ -72,8 +73,12 @@ type importContext struct {
 
 func newImportContext(c *common.DatabricksClient) *importContext {
 	p := provider.DatabricksProvider()
+	p.TerraformVersion = "importer"
+	p.SetMeta(c)
+	ctx := context.WithValue(context.Background(), common.Provider, p)
 	return &importContext{
 		Client:      c,
+		Context:     ctx,
 		State:       stateApproximation{},
 		Importables: resourcesMap,
 		Resources:   p.ResourcesMap,

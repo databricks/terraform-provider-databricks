@@ -1,3 +1,6 @@
+---
+subcategory: "Security"
+---
 # databricks_group Data Source
 
 Retrieves information about [databricks_group](../resources/group.md) members, entitlements and instance profiles.

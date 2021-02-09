@@ -1,3 +1,6 @@
+---
+subcategory: "Security"
+---
 # databricks_service_principal Resource
 
 Directly creates service principal, that could be added to [databricks_group](group.md) within workspace.

@@ -1,3 +1,6 @@
+---
+subcategory: "AWS"
+---
 # databricks_aws_bucket_policy Data Source
 
 This datasource configures a simple access policy for AWS S3 buckets, so that Databricks can access data in it. 

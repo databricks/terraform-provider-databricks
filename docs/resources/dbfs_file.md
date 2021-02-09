@@ -1,3 +1,6 @@
+---
+subcategory: "Storage"
+---
 # databricks_dbfs_file Resource
 
 This is a resource that lets you manage relatively small files on Databricks File System (DBFS). The best use cases are libraries for [databricks_cluster](cluster.md) or [databricks_job](job.md). You can also use [databricks_dbfs_file](../data-sources/dbfs_file.md) and [databricks_dbfs_file_paths](../data-sources/dbfs_file_paths.md) data sources.

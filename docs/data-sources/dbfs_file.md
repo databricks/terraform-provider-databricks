@@ -1,3 +1,6 @@
+---
+subcategory: "Storage"
+---
 # databricks_dbfs_file Data Source
 
 This data source allows to get file content from DBFS

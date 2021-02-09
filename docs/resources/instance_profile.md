@@ -1,3 +1,6 @@
+---
+subcategory: "AWS"
+---
 # databricks_instance_profile Resource
 
 This resource allows you to register or unregister EC2 instance profiles that users can launch [databricks_cluster](cluster.md) and access data, like [databricks_aws_s3_mount](aws_s3_mount.md). The following example demonstrates how to create an instance profile and create a cluster with it.

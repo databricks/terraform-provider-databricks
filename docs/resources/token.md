@@ -1,3 +1,6 @@
+---
+subcategory: "Security"
+---
 # databricks_token Resource
 
 This resource creates an api token that can be used to create Databricks resources. This will create an API token for the user that has authenticated on the provider. So if you have used an admin user to setup the provider then you will be making API tokens for that admin user. 

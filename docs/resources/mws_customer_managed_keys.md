@@ -1,3 +1,6 @@
+---
+subcategory: "E2"
+---
 # databricks_mws_customer_managed_keys Resource
 
 -> **Note** This resource has an evolving API, which may change in future versions of the provider.

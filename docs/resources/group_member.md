@@ -1,3 +1,6 @@
+---
+subcategory: "Security"
+---
 # databricks_group_member Resource
 
 This resource allows you to attach [users](user.md) and [groups](group.md) as group members.

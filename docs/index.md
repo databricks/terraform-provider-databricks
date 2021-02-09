@@ -17,6 +17,7 @@ Compute resources
 * Schedule automated [databricks_job](resources/job.md)
 * Constrol cost and data access with [databricks_cluster_policy](resources/cluster_policy.md)
 * Speedup job & cluster startup with [databricks_instance_pool](resources/instance_pool.md)
+* Customize clusters with [databricks_global_init_script](resources/global_init_script.md)
 * Manage few [databricks_notebook](resources/notebook.md), and even [list them](data-sources/notebook_paths.md)
 
 Storage

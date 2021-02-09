@@ -11,129 +11,47 @@ Use this resource to [configure VPC](https://docs.databricks.com/administration-
 * Subnets must have outbound access to the public network using a [aws_nat_gateway](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/nat_gateway) and [aws_internet_gateway](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/internet_gateway), or other similar customer-managed appliance infrastructure.
 * The NAT gateway must be set up in its subnet that routes quad-zero (0.0.0.0/0) traffic to an internet gateway or other customer-managed appliance infrastructure.
 
-Please follow this [complete runnable example](https://github.com/databrickslabs/terraform-provider-databricks/blob/master/scripts/awsmt-integration/main.tf) with new VPC and new workspace setup. Please pay special attention to the fact that there you have two different instances of a databricks provider - one for deploying workspaces (with host=https://accounts.cloud.databricks.com/) and another for the workspace you've created with databricks_mws_workspaces resource. If you want both creations of workspaces & clusters within the same Terraform module (essentially the same directory), you should use the provider aliasing feature of Terraform. We strongly recommend having one terraform module to create workspace + PAT token and the rest in different modules.
+Please follow this [complete runnable example](../guides/aws-workspace.md) with new VPC and new workspace setup. Please pay special attention to the fact that there you have two different instances of a databricks provider - one for deploying workspaces (with host=https://accounts.cloud.databricks.com/) and another for the workspace you've created with `databricks_mws_workspaces` resource. If you want both creations of workspaces & clusters within the same Terraform module (essentially the same directory), you should use the provider aliasing feature of Terraform. We strongly recommend having one terraform module to create workspace + PAT token and the rest in different modules.
 
 ## Example Usage
 
 ```hcl
-resource "aws_vpc" "main" {
-  cidr_block           = data.external.env.result.TEST_CIDR
+data "aws_availability_zones" "available" {}
+
+module "vpc" {
+  source  = "terraform-aws-modules/vpc/aws"
+  version = "2.70.0"
+
+  name = local.prefix
+  cidr = var.cidr_block
+  azs  = data.aws_availability_zones.available.names
+  tags = var.tags
+
   enable_dns_hostnames = true
+  enable_nat_gateway   = true
+  create_igw           = true
 
-  tags = merge(var.tags, {
-    Name = "${var.prefix}-vpc"
-  })
-}
+  public_subnets = [cidrsubnet(var.cidr_block, 3, 0)]
+  private_subnets = [cidrsubnet(var.cidr_block, 3, 1),
+  cidrsubnet(var.cidr_block, 3, 2)]
 
-resource "aws_subnet" "public" {
-  vpc_id            = aws_vpc.main.id
-  cidr_block        = cidrsubnet(aws_vpc.main.cidr_block, 3, 0)
-  availability_zone = "${data.external.env.result.TEST_REGION}b"
+  default_security_group_egress = [{
+    cidr_blocks = "0.0.0.0/0"
+  }]
 
-  tags = merge(var.tags, {
-    Name = "${var.prefix}-public-sn"
-  })
-}
-
-resource "aws_internet_gateway" "gw" {
-  vpc_id = aws_vpc.main.id
-  tags = merge(var.tags, {
-    Name = "${var.prefix}-igw"
-  })
-}
-
-resource "aws_route_table" "public" {
-  vpc_id = aws_vpc.main.id
-  
-  route {
-    gateway_id = aws_internet_gateway.gw.id
-    cidr_block = "0.0.0.0/0"
-  }
-
-  tags = merge(var.tags, {
-    Name = "${var.prefix}-public-rt"
-  })
-}
-
-resource "aws_route_table_association" "public" {
-  route_table_id = aws_route_table.public.id
-  subnet_id = aws_subnet.public.id
-}
-
-resource "aws_eip" "nat" {
-  vpc = true
-  depends_on = [aws_internet_gateway.gw]
-}
-
-resource "aws_nat_gateway" "gw" {
-  allocation_id = aws_eip.nat.id
-  subnet_id     = aws_subnet.public.id
-  tags = merge(var.tags, {
-    Name = "${var.prefix}-nat"
-  })
-}
-
-resource "aws_subnet" "private" {
-  vpc_id            = aws_vpc.main.id
-  cidr_block        = cidrsubnet(aws_vpc.main.cidr_block, 3, 1)
-  availability_zone = "${data.external.env.result.TEST_REGION}a"
-
-  tags = merge(var.tags, {
-    Name = "${var.prefix}-private-sn"
-  })
-}
-
-resource "aws_route_table" "private" {
-  vpc_id = aws_vpc.main.id
-
-  route {
-    nat_gateway_id = aws_nat_gateway.gw.id
-    cidr_block = "0.0.0.0/0"
-  }
-
-  tags = merge(var.tags, {
-    Name = "${var.prefix}-private-rt"
-  })
-}
-
-resource "aws_route_table_association" "private" {
-  route_table_id = aws_route_table.private.id
-  subnet_id = aws_subnet.private.id
-}
-
-resource "aws_security_group" "test_sg" {
-  name        = "all all"
-  description = "Allow inbound traffic"
-  vpc_id      = aws_vpc.main.id
-
-  ingress {
-    description = "All"
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  tags = merge(var.tags, {
-    Name = "${var.prefix}-sg"
-  })
+  default_security_group_ingress = [{
+    description = "Allow all internal TCP and UDP"
+    self        = true
+  }]
 }
 
 resource "databricks_mws_networks" "this" {
-  provider     = databricks.mws
-  account_id   = var.account_id
-  network_name = "${var.prefix}-network"
-  vpc_id       = aws_vpc.main.id
-
-  subnet_ids   = [aws_subnet.public.id, aws_subnet.private.id]
-  security_group_ids = [aws_security_group.test_sg.id]
+  provider           = databricks.mws
+  account_id         = var.databricks_account_id
+  network_name       = "${local.prefix}-network"
+  security_group_ids = [module.vpc.default_security_group_id]
+  subnet_ids         = module.vpc.private_subnets
+  vpc_id             = module.vpc.vpc_id
 }
 ```
 

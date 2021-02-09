@@ -9,8 +9,12 @@ variable "databricks_account_username" {}
 variable "databricks_account_password" {}
 variable "databricks_account_id" {}
 
+variable "tags" {
+  default = {}
+}
+
 variable "cidr_block" {
-    default = "10.4.0.0/16"
+  default = "10.4.0.0/16"
 }
 
 variable "region" {
@@ -24,11 +28,7 @@ resource "random_string" "naming" {
 }
 
 locals {
-  prefix = "databricks${random_string.naming.result}"
-  tags = {
-    Environment = "Demo"
-    Owner       = var.databricks_account_username
-  }
+  prefix = "demo${random_string.naming.result}"
 }
 ```
 
@@ -62,7 +62,6 @@ provider "databricks" {
 Cross-account IAM role is registered with [databricks_mws_credentials](../resources/mws_credentials.md) resource.
 
 ```hcl
-
 data "databricks_aws_assume_role_policy" "this" {
   external_id = var.databricks_account_id
 }
@@ -70,11 +69,10 @@ data "databricks_aws_assume_role_policy" "this" {
 resource "aws_iam_role" "cross_account_role" {
   name               = "${local.prefix}-crossaccount"
   assume_role_policy = data.databricks_aws_assume_role_policy.this.json
-  tags               = local.tags
+  tags               = var.tags
 }
 
 data "databricks_aws_crossaccount_policy" "this" {
-  pass_roles = [aws_iam_role.data_role.arn]
 }
 
 resource "aws_iam_role_policy" "this" {
@@ -97,175 +95,42 @@ resource "databricks_mws_credentials" "this" {
 The very first step is VPC creation with necessary firewall rules. Please consult [main documetation page](https://docs.databricks.com/administration-guide/cloud-configurations/aws/customer-managed-vpc.html) for **the most complete and up-to-date details on networking**. AWS VPS is registered as [databricks_mws_networks](../resources/mws_networks.md) resource.
 
 ```hcl
-locals {
-  allows = {
-    "us-east-1" : [
-      "52.27.216.188/32",
-      "54.156.226.103/32",
-    ],
-    "us-east-2" : [
-      "52.27.216.188/32",
-      "18.221.200.169/32",
-    ],
-    "us-west-2" : [
-      "10.200.0.0/16"
-    ],
-    "eu-west-1" : [
-      "46.137.47.49/32",
-    ]
-  }
-}
+data "aws_availability_zones" "available" {}
 
-resource "aws_vpc" "main" {
-  cidr_block           = var.cidr_block
+module "vpc" {
+  source  = "terraform-aws-modules/vpc/aws"
+  version = "2.70.0"
+
+  name = local.prefix
+  cidr = var.cidr_block
+  azs  = data.aws_availability_zones.available.names
+  tags = var.tags
+
   enable_dns_hostnames = true
+  enable_nat_gateway   = true
+  create_igw           = true
 
-  tags = merge(var.tags, {
-    Name = "${local.prefix}-vpc"
-  })
-}
+  public_subnets  = [cidrsubnet(var.cidr_block, 3, 0)]
+  private_subnets = [cidrsubnet(var.cidr_block, 3, 1),
+                     cidrsubnet(var.cidr_block, 3, 2)]
 
-resource "aws_subnet" "public" {
-  vpc_id     = aws_vpc.main.id
-  cidr_block = cidrsubnet(aws_vpc.main.cidr_block, 3, 0)
-  tags = merge(var.tags, {
-    Name = "${local.prefix}-public-sn"
-  })
-}
+  default_security_group_egress = [{
+    cidr_blocks = "0.0.0.0/0"
+  }]
 
-resource "aws_internet_gateway" "gw" {
-  vpc_id = aws_vpc.main.id
-  tags = merge(var.tags, {
-    Name = "${local.prefix}-igw"
-  })
-}
-
-resource "aws_route_table" "public" {
-  vpc_id = aws_vpc.main.id
-  route {
-    gateway_id = aws_internet_gateway.gw.id
-    cidr_block = "0.0.0.0/0"
-  }
-
-  tags = merge(var.tags, {
-    Name = "${local.prefix}-public-rt"
-  })
-}
-
-resource "aws_route_table_association" "public" {
-  route_table_id = aws_route_table.public.id
-  subnet_id      = aws_subnet.public.id
-}
-
-resource "aws_eip" "nat" {
-  vpc        = true
-  depends_on = [aws_internet_gateway.gw]
-  tags = merge(var.tags, {
-    Name = "${local.prefix}-eip"
-  })
-}
-
-resource "aws_nat_gateway" "gw" {
-  allocation_id = aws_eip.nat.id
-  subnet_id     = aws_subnet.public.id
-  tags = merge(var.tags, {
-    Name = "${local.prefix}-nat"
-  })
-}
-
-resource "aws_subnet" "private" {
-  vpc_id     = aws_vpc.main.id
-  cidr_block = cidrsubnet(aws_vpc.main.cidr_block, 3, 1)
-  tags = merge(var.tags, {
-    Name = "${local.prefix}-private-sn"
-  })
-}
-
-resource "aws_subnet" "private_secondary" {
-  vpc_id     = aws_vpc.main.id
-  cidr_block = cidrsubnet(aws_vpc.main.cidr_block, 3, 2)
-  tags = merge(var.tags, {
-    Name = "${local.prefix}-private-sn"
-  })
-}
-
-resource "aws_route_table" "private" {
-  vpc_id = aws_vpc.main.id
-  route {
-    nat_gateway_id = aws_nat_gateway.gw.id
-    cidr_block     = "0.0.0.0/0"
-  }
-  tags = merge(var.tags, {
-    Name = "${local.prefix}-private-rt"
-  })
-}
-
-resource "aws_route_table_association" "private" {
-  route_table_id = aws_route_table.private.id
-  subnet_id      = aws_subnet.private.id
-}
-
-resource "aws_route_table_association" "private_secondary" {
-  route_table_id = aws_route_table.private.id
-  subnet_id      = aws_subnet.private_secondary.id
-}
-
-resource "aws_security_group" "this" {
-  name        = "all all"
-  description = "Allow inbound traffic"
-  vpc_id      = aws_vpc.main.id
-
-  ingress {
-    description = "All Internal TCP"
-    protocol    = "tcp"
-    from_port   = 0
-    to_port     = 65535
+  default_security_group_ingress = [{
+    description = "Allow all internal TCP and UDP"
     self        = true
-  }
-
-  ingress {
-    description = "All Internal UDP"
-    protocol    = "udp"
-    from_port   = 0
-    to_port     = 65535
-    self        = true
-  }
-
-  ingress {
-    cidr_blocks = local.allows[var.region]
-    description = "ssh"
-    from_port   = 22
-    to_port     = 22
-    protocol    = "tcp"
-  }
-
-  ingress {
-    cidr_blocks = local.allows[var.region]
-    description = "proxy"
-    from_port   = 5557
-    to_port     = 5557
-    protocol    = "tcp"
-  }
-
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  tags = merge(var.tags, {
-    Name = "${local.prefix}-sg"
-  })
+  }]
 }
 
 resource "databricks_mws_networks" "this" {
   provider           = databricks.mws
   account_id         = var.databricks_account_id
   network_name       = "${local.prefix}-network"
-  subnet_ids         = [aws_subnet.private.id, aws_subnet.private_secondary.id]
-  vpc_id             = aws_vpc.main.id
-  security_group_ids = [aws_security_group.this.id]
+  security_group_ids = [module.vpc.default_security_group_id]
+  subnet_ids         = module.vpc.private_subnets
+  vpc_id             = module.vpc.vpc_id
 }
 ```
 
@@ -321,9 +186,13 @@ resource "databricks_mws_workspaces" "this" {
   workspace_name  = local.prefix
   deployment_name = local.prefix
 
-  credentials_id            = databricks_mws_credentials.this.credentials_id
-  storage_configuration_id  = databricks_mws_storage_configurations.this.storage_configuration_id
-  network_id                = databricks_mws_networks.this.network_id
+  credentials_id           = databricks_mws_credentials.this.credentials_id
+  storage_configuration_id = databricks_mws_storage_configurations.this.storage_configuration_id
+  network_id               = databricks_mws_networks.this.network_id
+}
+
+output "databricks_host" {
+  value = databricks_mws_workspaces.this.workspace_url
 }
 
 // initialize provider in normal mode
@@ -337,13 +206,7 @@ provider "databricks" {
 resource "databricks_token" "pat" {
   provider = databricks.created_workspace
   comment  = "Terraform Provisioning"
-  // 1 day token
   lifetime_seconds = 86400
-}
-
-// export host for integration tests to run on
-output "databricks_host" {
-  value = databricks_mws_workspaces.this.workspace_url
 }
 
 // export token for integraiton tests to run on

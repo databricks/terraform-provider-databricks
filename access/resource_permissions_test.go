@@ -299,6 +299,23 @@ func TestResourcePermissionsCreate_conflicting_fields(t *testing.T) {
 	qa.AssertErrorStartsWith(t, err, "Invalid config supplied. cluster_id: conflicts with notebook_path. notebook_path: conflicts with cluster_id")
 }
 
+func TestResourcePermissionsCreate_AdminsThrowError(t *testing.T) {
+	_, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{},
+		Resource: ResourcePermissions(),
+		Create:   true,
+		HCL: `
+		cluster_id = "abc"
+		access_control {
+			group_name = "admins"
+			permission_level = "CAN_MANAGE"
+		}
+		`,
+	}.Apply(t)
+	assert.EqualError(t, err, "Invalid config supplied. [access_control] "+
+		"It is not possible to restrict any permissions from `admins`.")
+}
+
 func TestResourcePermissionsCreate(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{

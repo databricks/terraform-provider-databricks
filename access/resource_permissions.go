@@ -12,6 +12,7 @@ import (
 	"github.com/databrickslabs/databricks-terraform/identity"
 	"github.com/databrickslabs/databricks-terraform/internal"
 	"github.com/databrickslabs/databricks-terraform/workspace"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/pkg/errors"
@@ -255,6 +256,23 @@ func ResourcePermissions() *schema.Resource {
 			}
 		}
 		s["access_control"].MinItems = 1
+		if groupNameSchema, err := internal.SchemaPath(s,
+			"access_control", "group_name"); err == nil {
+			groupNameSchema.ValidateDiagFunc = func(i interface{}, p cty.Path) diag.Diagnostics {
+				if v, ok := i.(string); ok {
+					if "admins" == strings.ToLower(v) {
+						return diag.Diagnostics{
+							{
+								Summary:       "It is not possible to restrict any permissions from `admins`.",
+								Severity:      diag.Error,
+								AttributePath: p,
+							},
+						}
+					}
+				}
+				return nil
+			}
+		}
 		return s
 	})
 	readContext := func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {

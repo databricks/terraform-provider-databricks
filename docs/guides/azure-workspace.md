@@ -1,3 +1,8 @@
+---
+page_title: "Provisioning Azure Databricks Workspace"
+subcategory: "Guides"
+---
+
 # Provisioning Azure Databricks
 
 The following sample configuration assumes you have authorized with `az login` on your local machine and have `Contributor` rights to your subscription.

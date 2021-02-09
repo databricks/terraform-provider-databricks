@@ -2,6 +2,7 @@ package provider
 
 import (
 	"context"
+	"log"
 	"sort"
 	"strings"
 
@@ -135,9 +136,11 @@ func DatabricksProvider() *schema.Provider {
 				},
 			},
 			"azure_workspace_resource_id": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				DefaultFunc: schema.MultiEnvDefaultFunc([]string{"DATABRICKS_AZURE_WORKSPACE_RESOURCE_ID", "AZURE_DATABRICKS_WORKSPACE_RESOURCE_ID"}, nil),
+				Type:     schema.TypeString,
+				Optional: true,
+				DefaultFunc: schema.MultiEnvDefaultFunc([]string{
+					"DATABRICKS_AZURE_WORKSPACE_RESOURCE_ID",
+					"AZURE_DATABRICKS_WORKSPACE_RESOURCE_ID"}, nil),
 				ConflictsWith: []string{
 					"azure_workspace_name",
 				},
@@ -154,27 +157,35 @@ func DatabricksProvider() *schema.Provider {
 				DefaultFunc: schema.EnvDefaultFunc("DATABRICKS_AZURE_RESOURCE_GROUP", nil),
 			},
 			"azure_subscription_id": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Sensitive:   true,
-				DefaultFunc: schema.MultiEnvDefaultFunc([]string{"DATABRICKS_AZURE_SUBSCRIPTION_ID", "ARM_SUBSCRIPTION_ID"}, nil),
+				Type:      schema.TypeString,
+				Optional:  true,
+				Sensitive: true,
+				DefaultFunc: schema.MultiEnvDefaultFunc([]string{
+					"DATABRICKS_AZURE_SUBSCRIPTION_ID",
+					"ARM_SUBSCRIPTION_ID"}, nil),
 			},
 			"azure_client_id": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				DefaultFunc: schema.MultiEnvDefaultFunc([]string{"DATABRICKS_AZURE_CLIENT_ID", "ARM_CLIENT_ID"}, nil),
+				Type:     schema.TypeString,
+				Optional: true,
+				DefaultFunc: schema.MultiEnvDefaultFunc([]string{
+					"DATABRICKS_AZURE_CLIENT_ID",
+					"ARM_CLIENT_ID"}, nil),
 			},
 			"azure_client_secret": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Sensitive:   true,
-				DefaultFunc: schema.MultiEnvDefaultFunc([]string{"DATABRICKS_AZURE_CLIENT_SECRET", "ARM_CLIENT_SECRET"}, nil),
+				Type:      schema.TypeString,
+				Optional:  true,
+				Sensitive: true,
+				DefaultFunc: schema.MultiEnvDefaultFunc([]string{
+					"DATABRICKS_AZURE_CLIENT_SECRET",
+					"ARM_CLIENT_SECRET"}, nil),
 			},
 			"azure_tenant_id": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Sensitive:   true,
-				DefaultFunc: schema.MultiEnvDefaultFunc([]string{"DATABRICKS_AZURE_TENANT_ID", "ARM_TENANT_ID"}, nil),
+				Type:      schema.TypeString,
+				Optional:  true,
+				Sensitive: true,
+				DefaultFunc: schema.MultiEnvDefaultFunc([]string{
+					"DATABRICKS_AZURE_TENANT_ID",
+					"ARM_TENANT_ID"}, nil),
 			},
 			"azure_pat_token_duration_seconds": {
 				Type:        schema.TypeString,
@@ -228,9 +239,30 @@ func DatabricksProvider() *schema.Provider {
 }
 
 func configureDatabricksClient(ctx context.Context, d *schema.ResourceData) (interface{}, diag.Diagnostics) {
+	prov := ctx.Value(common.Provider).(*schema.Provider)
 	pc := common.DatabricksClient{
-		Provider: ctx.Value(common.Provider).(*schema.Provider),
+		Provider: prov,
 	}
+	attrsUsed := []string{}
+	for attr, schm := range prov.Schema {
+		if schm.Type != schema.TypeString {
+			continue
+		}
+		if attr == "azure_pat_token_duration_seconds" {
+			continue
+		}
+		if value, ok := d.GetOk(attr); ok {
+			if value.(string) == "" {
+				continue
+			}
+			if attr == "azure_environment" && value.(string) == "public" {
+				continue
+			}
+			attrsUsed = append(attrsUsed, attr)
+		}
+	}
+	sort.Strings(attrsUsed)
+	log.Printf("[INFO] Explicit and implicit attributes: %s", strings.Join(attrsUsed, ", "))
 	authsUsed := map[string]bool{}
 	if host, ok := d.GetOk("host"); ok {
 		pc.Host = host.(string)

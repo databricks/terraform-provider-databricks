@@ -1,3 +1,6 @@
+---
+subcategory: "Compute"
+---
 # databricks_job Resource
 
 The databricks_job resource allows you to create, edit, and delete jobs, which run on either new or existing [clusters](cluster.md).

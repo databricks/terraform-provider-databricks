@@ -1,3 +1,6 @@
+---
+subcategory: "Storage"
+---
 # databricks_dbfs_file_paths Data Source
 
 This data source allows to get list of file names from DBFS

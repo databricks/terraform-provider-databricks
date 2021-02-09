@@ -1,3 +1,6 @@
+---
+subcategory: "Security"
+---
 # databricks_group Resource
 
 This resource allows you to create groups in Databricks. You can also [associate](group_member.md) Databricks users to groups. This is useful if you are using an application to sync users & groups with SCIM API.

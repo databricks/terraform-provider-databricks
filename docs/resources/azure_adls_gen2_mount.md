@@ -1,3 +1,6 @@
+---
+subcategory: "Azure"
+---
 # databricks_azure_adls_gen2_mount Resource
 
 -> **Note** This resource has an evolving API, which may change in future versions of the provider.

@@ -1,3 +1,6 @@
+---
+subcategory: "Security"
+---
 # databricks_permissions Resource
 
 This resource allows you to generically manage permissions for other resources in Databricks workspace. It would guarantee, that only *admins*, *authenticated principal* and those declared within `access_control` blocks would have specified access. It is not possible to remove management rights from *admins* group.

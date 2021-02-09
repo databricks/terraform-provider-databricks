@@ -1,3 +1,6 @@
+---
+subcategory: "Workspace"
+---
 # databricks_notebook Resource
 
 This resource allows you to manage Databricks notebooks. You can also work with [databricks_notebook](../data-sources/notebook.md) and [databricks_notebook_paths](../data-sources/notebook_paths.md) data sources.

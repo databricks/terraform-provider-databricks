@@ -1,3 +1,6 @@
+---
+subcategory: "Security"
+---
 # databricks_current_user Data Source
 
 Retrieves information about [databricks_user](../resources/user.md) or [databricks_service_principal](../resources/service_principal.md), that is calling Databricks REST API. Might be useful in applying the same Terraform by different users in the shared workspace for testing purposes. 

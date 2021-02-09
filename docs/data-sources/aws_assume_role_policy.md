@@ -1,3 +1,7 @@
+---
+subcategory: "AWS"
+---
+
 # databricks_aws_assume_role_policy Data Source
 
 This data source constructs necessary AWS STS assume role policy for you.

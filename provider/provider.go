@@ -71,8 +71,9 @@ func DatabricksProvider() *schema.Provider {
 			"databricks_azure_blob_mount":      storage.ResourceAzureBlobMount(),
 			"databricks_dbfs_file":             storage.ResourceDBFSFile(),
 
-			"databricks_notebook":       workspace.ResourceNotebook(),
-			"databricks_workspace_conf": workspace.ResourceWorkspaceConf(),
+			"databricks_global_init_script": workspace.ResourceGlobalInitScript(),
+			"databricks_notebook":           workspace.ResourceNotebook(),
+			"databricks_workspace_conf":     workspace.ResourceWorkspaceConf(),
 		},
 		Schema: map[string]*schema.Schema{
 			"host": {

@@ -1,3 +1,6 @@
+---
+subcategory: "Compute"
+---
 # databricks_spark_version Data Source
 
 Gets Databricks Runtime (DBR) version that could be used for `spark_version` parameter in [databricks_cluster](../resources/cluster.md) and other resources that fits search criteria, like specific Spark or Scala version, ML or Genomics runtime, etc., similar to executing `databricks clusters spark-versions`, and filters it to return the latest version that matches criteria. Often used along [databricks_node_type](node_type.md) data source.

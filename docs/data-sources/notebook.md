@@ -1,3 +1,6 @@
+---
+subcategory: "Workspace"
+---
 # databricks_notebook Data Source
 
 This data source allows to export a notebook from workspace

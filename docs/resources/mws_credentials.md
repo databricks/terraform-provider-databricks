@@ -1,3 +1,6 @@
+---
+subcategory: "E2"
+---
 # databricks_mws_credentials Resource
 
 This resource to configure the cross-account role for creation of new workspaces within AWS.

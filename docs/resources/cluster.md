@@ -1,3 +1,6 @@
+---
+subcategory: "Compute"
+---
 # databricks_cluster resource
 
 This resource allows you to create, update, and delete clusters.

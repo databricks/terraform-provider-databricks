@@ -1,3 +1,6 @@
+---
+subcategory: "Compute"
+---
 # databricks_instance_pool Resource
 
 This resource allows you to manage instance pools on Databricks. An instance pool reduces [cluster](cluster.md) start and auto-scaling times by maintaining a set of idle, ready-to-use cloud instances. When a [cluster](cluster.md) attached to a pool needs an instance, it first attempts to allocate one of the pool’s idle instances. If the pool has no idle instances, it expands by allocating a new instance from the instance provider in order to accommodate the cluster’s request. When a [cluster](cluster.md) releases an instance, it returns to the pool and is free for another [cluster](cluster.md) to use. Only clusters attached to a pool can use that pool’s idle instances.

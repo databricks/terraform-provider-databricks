@@ -1,3 +1,6 @@
+---
+subcategory: "Compute"
+---
 # databricks_node_type Data Source
 
 Gets the smallest node type for [databricks_cluster](../resources/cluster.md) that fits search criteria, like amount of RAM or number of cores. [AWS](https://databricks.com/product/aws-pricing/instance-types) or [Azure](https://azure.microsoft.com/en-us/pricing/details/databricks/). Internally data source fetches [node types](https://docs.databricks.com/dev-tools/api/latest/clusters.html#list-node-types) available per cloud, similar to executing `databricks clusters list-node-types`, and filters it to return the smallest possible node with criteria.

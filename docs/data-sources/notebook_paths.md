@@ -1,3 +1,6 @@
+---
+subcategory: "Workspace"
+---
 # databricks_notebook_paths Data Source
 
 This data source allows to list notebooks in the workspace

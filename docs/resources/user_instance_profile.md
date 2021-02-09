@@ -1,3 +1,6 @@
+---
+subcategory: "Security"
+---
 # databricks_user_instance_profile Resource
 
 -> **Note** This resource has an evolving API, which may change in future versions of the provider.

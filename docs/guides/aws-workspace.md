@@ -1,3 +1,8 @@
+---
+page_title: "Provisioning AWS Databricks E2"
+subcategory: "Guides"
+---
+
 # Provisioning AWS Databricks E2
 
 ## Provider initialization for E2 workspaces

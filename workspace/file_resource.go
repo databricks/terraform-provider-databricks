@@ -83,8 +83,8 @@ func MigrateV0(ctx context.Context,
 	return newState, nil
 }
 
-// FileContentSchema returns common schema for file resources
-func FileContentSchema(extra map[string]*schema.Schema) map[string]*schema.Schema {
+// FileContentSchemaWithoutPath returns common schema for file resources, but without path
+func FileContentSchemaWithoutPath(extra map[string]*schema.Schema) map[string]*schema.Schema {
 	s := map[string]*schema.Schema{
 		"md5": {
 			Type:     schema.TypeString,
@@ -122,6 +122,16 @@ func FileContentSchema(extra map[string]*schema.Schema) map[string]*schema.Schem
 				return nil
 			},
 		},
+	}
+	for k, v := range extra {
+		s[k] = v
+	}
+	return s
+}
+
+// FileContentSchema returns common schema for file resources
+func FileContentSchema(extra map[string]*schema.Schema) map[string]*schema.Schema {
+	pathMap := map[string]*schema.Schema{
 		"path": {
 			Type:     schema.TypeString,
 			Required: true,
@@ -166,6 +176,7 @@ func FileContentSchema(extra map[string]*schema.Schema) map[string]*schema.Schem
 			},
 		},
 	}
+	s := FileContentSchemaWithoutPath(pathMap)
 	for k, v := range extra {
 		s[k] = v
 	}

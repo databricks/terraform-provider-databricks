@@ -2,6 +2,8 @@
 
 ## 0.3.1
 
+* Added `databricks_global_init_script` resource to configure global init scripts ([#487](https://github.com/databrickslabs/terraform-provider-databricks/issues/487))
+
 **Behavior changes**
 
 * Assigning any permission to `admins` would result in an error, so that behavior is consistent ([#486](https://github.com/databrickslabs/terraform-provider-databricks/issues/486)).

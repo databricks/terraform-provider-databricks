@@ -1,5 +1,11 @@
 # Version changelog
 
+## 0.3.1
+
+**Behavior changes**
+
+* Assigning any permission to `admins` would result in an error, so that behavior is consistent ([#486](https://github.com/databrickslabs/terraform-provider-databricks/issues/486)).
+
 ## 0.3.0
 
 * Added configurable provisioning timeout for `databricks_mws_workspaces`, so that local DNS cache issues would be more tolerated.

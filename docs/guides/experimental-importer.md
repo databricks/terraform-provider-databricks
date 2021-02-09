@@ -1,3 +1,7 @@
+---
+page_title: "Experimental resource importer"
+subcategory: "Guides"
+---
 # Experimental resource importer
 
 Generates `*.tf` files for Databricks resources as well as `import.sh` to run import state. Available as part of provider binary. The only possible way to authenticate is through [environment variables](../index.md#Environment-variables).

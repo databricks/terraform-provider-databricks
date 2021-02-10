@@ -149,10 +149,14 @@ func (c *DatabricksClient) configureFromDatabricksCfg() (func(r *http.Request) e
 		return nil, err
 	}
 	if c.Profile == "" {
-		log.Printf("[INFO] Using DEFAULT profile from ~/.databrickscfg")
+		log.Printf("[INFO] Using DEFAULT profile from %s", configFile)
 		c.Profile = "DEFAULT"
 	}
 	dbcli := cfg.Section(c.Profile)
+	if len(dbcli.Keys()) == 0 {
+		// here we meet a heavy user of Databricks CLI
+		return nil, fmt.Errorf("%s has no %s profile configured", configFile, c.Profile)
+	}
 	c.Host = dbcli.Key("host").String()
 	if c.Host == "" {
 		return nil, fmt.Errorf("config file %s is corrupt: cannot find host in %s profile",

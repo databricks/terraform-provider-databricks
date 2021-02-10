@@ -17,7 +17,7 @@ import (
 
 // NewJobsAPI creates JobsAPI instance from provider meta
 func NewJobsAPI(ctx context.Context, m interface{}) JobsAPI {
-	return JobsAPI{m.(*common.DatabricksClient), context.TODO()}
+	return JobsAPI{m.(*common.DatabricksClient), ctx}
 }
 
 // JobsAPI exposes the Jobs API

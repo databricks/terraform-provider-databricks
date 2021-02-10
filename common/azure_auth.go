@@ -118,7 +118,7 @@ func (aa *AzureAuth) IsClientSecretSet() bool {
 }
 
 func (aa *AzureAuth) configureWithClientSecret() (func(r *http.Request) error, error) {
-	if aa.resourceID() == "" {
+	if aa.databricksClient != nil && !aa.databricksClient.IsAzure() {
 		return nil, nil
 	}
 	if !aa.IsClientSecretSet() {
@@ -194,7 +194,10 @@ func (aa *AzureAuth) simpleAADRequestVisitor(
 				return err
 			}
 		}
-		r.Header.Set("X-Databricks-Azure-Workspace-Resource-Id", aa.resourceID())
+		resourceID := aa.resourceID()
+		if resourceID != "" {
+			r.Header.Set("X-Databricks-Azure-Workspace-Resource-Id", resourceID)
+		}
 		_, err = autorest.Prepare(r, platformAuthorizer.WithAuthorization())
 		if err != nil {
 			return err
@@ -239,7 +242,10 @@ func (aa *AzureAuth) acquirePAT(
 		if err != nil {
 			return err
 		}
-		r.Header.Set("X-Databricks-Azure-Workspace-Resource-Id", aa.resourceID())
+		resourceID := aa.resourceID()
+		if resourceID != "" {
+			r.Header.Set("X-Databricks-Azure-Workspace-Resource-Id", resourceID)
+		}
 		_, err = autorest.Prepare(r, platform.WithAuthorization())
 		if err != nil {
 			return err

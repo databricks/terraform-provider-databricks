@@ -1,6 +1,5 @@
 ---
 page_title: "Experimental resource importer"
-subcategory: "Guides"
 ---
 # Experimental resource importer
 

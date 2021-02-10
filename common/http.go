@@ -19,7 +19,7 @@ import (
 )
 
 var (
-	e2example                   = "https://github.com/databrickslabs/terraform-provider-databricks/blob/master/scripts/awsmt-integration/main.tf"
+	e2example                   = "https://registry.terraform.io/providers/databrickslabs/databricks/latest/docs/guides/aws-workspace"
 	accountsHost                = "accounts.cloud.databricks.com"
 	transientErrorStringMatches = []string{
 		"com.databricks.backend.manager.util.UnknownWorkerEnvironmentException",

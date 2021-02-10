@@ -1,6 +1,5 @@
 ---
 page_title: "Provisioning Azure Databricks Workspace"
-subcategory: "Guides"
 ---
 
 # Provisioning Azure Databricks

@@ -12,6 +12,10 @@ This resource configures the delivery of the two supported log types from Databr
 End-to-end example of usage and audit log delivery:
 
 ```hcl
+variable "databricks_account_id" {
+  description = "Account Id that could be found in the top right corner of https://accounts.cloud.databricks.com/"
+}
+
 resource "aws_s3_bucket" "logdelivery" {
   bucket = "${var.prefix}-logdelivery"
   acl    = "private"
@@ -30,7 +34,7 @@ resource "aws_s3_bucket_public_access_block" "logdelivery" {
 }
 
 data "databricks_aws_assume_role_policy" "logdelivery" {
-  external_id = var.account_id
+  external_id = var.databricks_account_id
   for_log_delivery = true
 }
 
@@ -52,19 +56,19 @@ resource "aws_s3_bucket_policy" "logdelivery" {
 }
 
 resource "databricks_mws_credentials" "log_writer" {
-    account_id       = var.account_id
+    account_id       = var.databricks_account_id
     credentials_name = "Usage Delivery"
     role_arn         = aws_iam_role.logdelivery.arn
 }
 
 resource "databricks_mws_storage_configurations" "log_bucket" {
-    account_id                 = var.account_id
+    account_id                 = var.databricks_account_id
     storage_configuration_name = "Usage Logs"
     bucket_name                = aws_s3_bucket.logdelivery.bucket
 }
 
 resource "databricks_mws_log_delivery" "usage_logs" {
-    account_id = var.account_id
+    account_id = var.databricks_account_id
     credentials_id = databricks_mws_credentials.log_writer.credentials_id
     storage_configuration_id = databricks_mws_storage_configurations.log_bucket.storage_configuration_id
     delivery_path_prefix = "billable-usage"
@@ -74,7 +78,7 @@ resource "databricks_mws_log_delivery" "usage_logs" {
 }
 
 resource "databricks_mws_log_delivery" "audit_logs" {
-    account_id = var.account_id
+    account_id = var.databricks_account_id
     credentials_id = databricks_mws_credentials.log_writer.credentials_id
     storage_configuration_id = databricks_mws_storage_configurations.log_bucket.storage_configuration_id
     delivery_path_prefix = "audit-logs"
@@ -92,7 +96,7 @@ Common processing scenario is to apply [cost allocation tags](https://docs.aws.a
 
 ```hcl
 resource "databricks_mws_log_delivery" "usage_logs" {
-    account_id = var.account_id
+    account_id = var.databricks_account_id
     credentials_id = databricks_mws_credentials.log_writer.credentials_id
     storage_configuration_id = databricks_mws_storage_configurations.log_bucket.storage_configuration_id
     delivery_path_prefix = "billable-usage"
@@ -108,7 +112,7 @@ JSON files with [static schema](https://docs.databricks.com/administration-guide
 
 ```hcl
 resource "databricks_mws_log_delivery" "audit_logs" {
-    account_id = var.account_id
+    account_id = var.databricks_account_id
     credentials_id = databricks_mws_credentials.log_writer.credentials_id
     storage_configuration_id = databricks_mws_storage_configurations.log_bucket.storage_configuration_id
     delivery_path_prefix = "audit-logs"
@@ -120,7 +124,7 @@ resource "databricks_mws_log_delivery" "audit_logs" {
 
 ## Argument reference
 
-* `account_id` - The Databricks account ID that hosts the log delivery configuration.
+* `account_id` - Account Id that could be found in the top right corner of [Accounts Console](https://accounts.cloud.databricks.com/).
 * `config_name` - The optional human-readable name of the log delivery configuration. Defaults to empty.
 * `log_type` - The type of log delivery. `BILLABLE_USAGE` and `AUDIT_LOGS` are supported.
 * `output_format` - The file type of log delivery. Currently `CSV` (for `BILLABLE_USAGE`) and `JSON` (for `AUDIT_LOGS`) are supported.

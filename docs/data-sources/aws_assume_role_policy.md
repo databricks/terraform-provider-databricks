@@ -11,9 +11,8 @@ This data source constructs necessary AWS STS assume role policy for you.
 End-to-end example of provisioning Cross-account IAM role:
 
 ```hcl
-variable "account_id" {
-  type        = string
-  description = "External ID you find on https://accounts.cloud.databricks.com/#aws"
+variable "databricks_account_id" {
+  description = "Account Id that could be found in the top right corner of https://accounts.cloud.databricks.com/"
 }
 
 data "databricks_aws_crossaccount_policy" "this" {}
@@ -24,7 +23,7 @@ resource "aws_iam_policy" "cross_account_policy" {
 }
 
 data "databricks_aws_assume_role_policy" "this" {
-    external_id = var.account_id
+  external_id = var.databricks_account_id
 }
 
 resource "aws_iam_role" "cross_account" {
@@ -41,7 +40,7 @@ resource "aws_iam_role_policy_attachment" "cross_account" {
 // required only in case of multiworkspace setup
 resource "databricks_mws_credentials" "this" {
   provider         = databricks.mws
-  account_id       = var.account_id
+  account_id       = var.databricks_account_id
   credentials_name = "${var.prefix}-creds"
   role_arn         = aws_iam_role.cross_account.arn
 }
@@ -49,7 +48,7 @@ resource "databricks_mws_credentials" "this" {
 
 ## Argument Reference
 
-* `external_id` (Required) (String) External ID that can be found at http://accounts.cloud.databricks.com/#aws
+* `external_id` (Required) Account Id that could be found in the top right corner of [Accounts Console](https://accounts.cloud.databricks.com/).
 * `for_log_delivery` (Optional) Either or not this assume role policy should be created for usage log delivery. Defaults to false.
 
 ## Attribute Reference

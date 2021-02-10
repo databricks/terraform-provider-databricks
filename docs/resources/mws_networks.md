@@ -19,6 +19,10 @@ Please follow this [complete runnable example](../guides/aws-workspace.md) with 
 ## Example Usage
 
 ```hcl
+variable "databricks_account_id" {
+  description = "Account Id that could be found in the top right corner of https://accounts.cloud.databricks.com/"
+}
+
 data "aws_availability_zones" "available" {}
 
 module "vpc" {
@@ -62,7 +66,7 @@ resource "databricks_mws_networks" "this" {
 
 The following arguments are required:
 
-* `account_id` - master account id (also used for `sts:ExternaId` of `sts:AssumeRole`)
+* `account_id` - Account Id that could be found in the top right corner of [Accounts Console](https://accounts.cloud.databricks.com/)
 * `network_name` - name under which this network is regisstered
 * `vpc_id` - [aws_vpc](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/vpc) id
 * `subnet_ids` - ids of [aws_subnet](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/subnet)

@@ -1,6 +1,5 @@
 ---
 page_title: "End to end workspace management"
-subcategory: "Guides"
 ---
 
 # End to end workspace management

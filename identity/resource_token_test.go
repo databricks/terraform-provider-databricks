@@ -157,6 +157,47 @@ func TestResourceTokenCreate_Error(t *testing.T) {
 	assert.Equal(t, "", d.Id(), "Id should be empty for error creates")
 }
 
+func TestResourceTokenCreate_NoExpiration(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:          "POST",
+				Resource:        "/api/2.0/token/create",
+				ExpectedRequest: TokenRequest{},
+				Response: TokenResponse{
+					TokenValue: "dapi...",
+					TokenInfo: &TokenInfo{
+						TokenID:    "abc",
+						Comment:    "",
+						ExpiryTime: -1,
+					},
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/token/list",
+				Response: TokenList{
+					TokenInfos: []TokenInfo{
+						{
+							Comment:      "",
+							CreationTime: 10,
+							ExpiryTime:   -1,
+							TokenID:      "abc",
+						},
+					},
+				},
+			},
+		},
+		Resource: ResourceToken(),
+		State:    map[string]interface{}{},
+		Create:   true,
+	}.Apply(t)
+	assert.NoError(t, err, err)
+	assert.Equal(t, "abc", d.Id())
+	assert.Equal(t, -1, d.Get("expiry_time")) // tokens without expiration have expiry_time set to -1 as listed in the examples on https://docs.databricks.com/dev-tools/api/latest/tokens.html#list
+	assert.Equal(t, "dapi...", d.Get("token_value"))
+}
+
 func TestResourceTokenDelete(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
@@ -225,7 +266,7 @@ func TestAccCreateToken(t *testing.T) {
 	assert.True(t, len(tokenList) > 0, "Token list is empty")
 }
 
-func TestAccCreateTokenNoExpiration(t *testing.T) {
+func TestAccCreateToken_NoExpiration(t *testing.T) {
 	if _, ok := os.LookupEnv("CLOUD_ENV"); !ok {
 		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
 	}

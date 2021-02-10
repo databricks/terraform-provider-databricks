@@ -14,8 +14,8 @@ import (
 
 // TokenRequest asks for a token
 type TokenRequest struct {
-	LifetimeSeconds int32  `json:"lifetime_seconds"`
-	Comment         string `json:"comment"`
+	LifetimeSeconds int32  `json:"lifetime_seconds,omitempty"`
+	Comment         string `json:"comment,omitempty"`
 }
 
 // TokenResponse is a struct that contains information about token that is created from the create tokens api
@@ -50,10 +50,16 @@ type TokensAPI struct {
 
 // Create creates a api token given a expiration duration and a comment
 func (a TokensAPI) Create(tokenLifetime time.Duration, comment string) (r TokenResponse, err error) {
-	err = a.client.Post(a.context, "/token/create", TokenRequest{
-		LifetimeSeconds: int32(tokenLifetime.Seconds()),
-		Comment:         comment,
-	}, &r)
+	request := TokenRequest{}
+	seconds := int32(tokenLifetime.Seconds())
+	if seconds > 0 {
+		request.LifetimeSeconds = seconds
+	}
+	if comment != "" {
+		request.Comment = comment
+	}
+
+	err = a.client.Post(a.context, "/token/create", request, &r)
 	return
 }
 
@@ -98,13 +104,11 @@ func ResourceToken() *schema.Resource {
 			Type:     schema.TypeInt,
 			Optional: true,
 			ForceNew: true,
-			Default:  0,
 		},
 		"comment": {
 			Type:     schema.TypeString,
 			Optional: true,
 			ForceNew: true,
-			Default:  "",
 		},
 		"token_value": {
 			Type:      schema.TypeString,

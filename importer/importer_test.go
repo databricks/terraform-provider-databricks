@@ -110,7 +110,7 @@ func TestImportingUsersGroupsSecretScopes(t *testing.T) {
 			Method:   "GET",
 			Resource: "/api/2.0/preview/scim/v2/Groups/c",
 			Response: identity.ScimGroup{ID: "c", DisplayName: "test",
-				Parents: []identity.GroupMember{
+				Groups: []identity.GroupMember{
 					{Display: "admins", Value: "a", Ref: "Groups/a", Type: "direct"},
 				},
 			},
@@ -131,11 +131,7 @@ func TestImportingUsersGroupsSecretScopes(t *testing.T) {
 			Resource: "/api/2.0/preview/scim/v2/Users?filter=userName%20eq%20%27test@test.com%27",
 			Response: identity.UserList{
 				Resources: []identity.ScimUser{
-					{ID: "123", DisplayName: "test@test.com", UserName: "test@test.com",
-						Groups: []identity.GroupMember{
-							{Display: "admins", Value: "a", Ref: "Groups/a", Type: "direct"},
-						},
-					},
+					{ID: "123", DisplayName: "test@test.com", UserName: "test@test.com"},
 				},
 				StartIndex:   1,
 				TotalResults: 1,

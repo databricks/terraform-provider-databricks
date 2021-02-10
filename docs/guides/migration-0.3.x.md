@@ -1,6 +1,5 @@
 ---
 page_title: "Migration from 0.2.x to 0.3.x"
-subcategory: "Guides"
 ---
 # Migration from 0.2.x to 0.3.x
 

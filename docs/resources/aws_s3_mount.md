@@ -23,6 +23,10 @@ resource "databricks_s3_mount" "this" {
 Full end-to-end actions required to securely mount S3 bucket on all clusters with the same [instance profile](instance_profile.md):
 
 ```hcl
+variable "databricks_account_id" {
+  description = "Account Id that could be found in the top right corner of https://accounts.cloud.databricks.com/"
+}
+
 // Step 1: Create bucket
 resource "aws_s3_bucket" "ds" {
   bucket = "${var.prefix}-ds"
@@ -80,9 +84,9 @@ resource "aws_iam_policy" "cross_account_policy" {
   policy = data.databricks_aws_crossaccount_policy.this.json
 }
 
-// Step 8: Allow Databricks to perform actions within your account, given requests are with ExternalId you've received on the website.
+// Step 8: Allow Databricks to perform actions within your account through configuring trust relationship
 data "databricks_aws_assume_role_policy" "this" {
-    external_id = var.account_id
+    external_id = var.databricks_account_id
 }
 
 // Step 9: Grant Databricks full access to VPC resources
@@ -101,7 +105,7 @@ resource "aws_iam_role_policy_attachment" "cross_account" {
 // Step 11: Register cross-account role for multi-workspace scenario (only if you're using multi-workspace setup)
 resource "databricks_mws_credentials" "this" {
   provider         = databricks.mws
-  account_id       = var.account_id
+  account_id       = var.databricks_account_id
   credentials_name = "${var.prefix}-creds"
   role_arn         = aws_iam_role.cross_account.arn
 }

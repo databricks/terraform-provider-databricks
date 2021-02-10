@@ -7,7 +7,7 @@ subcategory: "E2"
 
 This resource allows you to set up [workspaces in E2 architecture on AWS](https://docs.databricks.com/getting-started/overview.html#e2-architecture-1). 
 
--> **Note** Please follow this [complete runnable example](https://github.com/databrickslabs/terraform-provider-databricks/blob/master/scripts/awsmt-integration/main.tf) with new VPC and new workspace setup. Please pay special attention to the fact that there you have two different instances of a databricks provider - one for deploying workspaces (with host=https://accounts.cloud.databricks.com/) and another for the workspace you’ve created with `databricks_mws_workspaces` resource. If you want both creations of workspaces & clusters within the same Terraform module (essentially the same directory), you should use the provider aliasing feature of Terraform. We strongly recommend having one terraform module to create workspace + PAT token and the rest in different modules.
+-> **Note** Please follow this [complete runnable example](../guides/aws-workspace.md) with new VPC and new workspace setup. Please pay special attention to the fact that there you have two different instances of a databricks provider - one for deploying workspaces (with host=https://accounts.cloud.databricks.com/) and another for the workspace you’ve created with `databricks_mws_workspaces` resource. If you want both creations of workspaces & clusters within the same Terraform module (essentially the same directory), you should use the provider aliasing feature of Terraform. We strongly recommend having one terraform module to create workspace + PAT token and the rest in different modules.
 
 ## Example Usage
 
@@ -21,6 +21,10 @@ To get workspace running, you have to configure a couple of things:
  * [databricks_mws_customer_managed_keys](mws_customer_managed_keys.md) - You can share a customer-managed key across workspaces.  
 
 ```hcl
+variable "databricks_account_id" {
+  description = "Account Id that could be found in the top right corner of https://accounts.cloud.databricks.com/"
+}
+
 provider "databricks" {
   alias = "mws"
   host  = "https://accounts.cloud.databricks.com"
@@ -29,7 +33,7 @@ provider "databricks" {
 // register cross-account ARN
 resource "databricks_mws_credentials" "this" {
   provider         = databricks.mws
-  account_id       = var.account_id
+  account_id       = var.databricks_account_id
   credentials_name = "${var.prefix}-creds"
   role_arn         = var.crossaccount_arn
 }
@@ -37,7 +41,7 @@ resource "databricks_mws_credentials" "this" {
 // register root bucket
 resource "databricks_mws_storage_configurations" "this" {
   provider                   = databricks.mws
-  account_id                 = var.account_id
+  account_id                 = var.databricks_account_id
   storage_configuration_name = "${var.prefix}-storage"
   bucket_name                = var.root_bucket
 }
@@ -45,7 +49,7 @@ resource "databricks_mws_storage_configurations" "this" {
 // register VPC
 resource "databricks_mws_networks" "this" {
   provider     = databricks.mws
-  account_id   = var.account_id
+  account_id   = var.databricks_account_id
   network_name = "${var.prefix}-network"
   vpc_id       = var.vpc_id
   subnet_ids = [var.subnet_public, var.subnet_private]
@@ -55,7 +59,7 @@ resource "databricks_mws_networks" "this" {
 // create workspace in given VPC with DBFS on root bucket
 resource "databricks_mws_workspaces" "this" {
   provider        = databricks.mws
-  account_id      = var.account_id
+  account_id      = var.databricks_account_id
   workspace_name  = var.prefix
   deployment_name = var.prefix
   aws_region      = var.region
@@ -86,6 +90,10 @@ resource "databricks_token" "pat" {
 By default, Databricks creates a VPC in your AWS account for each workspace. Databricks uses it for running clusters in the workspace. Optionally, you can use your VPC for the workspace, using the feature customer-managed VPC. Databricks recommends that you provide your VPC with [databricks_mws_networks](notebook.md) so that you can configure it according to your organization’s enterprise cloud standards while still conforming to Databricks requirements. You cannot migrate an existing workspace to your VPC. Please see the difference described through IAM policy actions [on this page](https://docs.databricks.com/administration-guide/account-api/iam-role.html).
 
 ```hcl
+variable "databricks_account_id" {
+  description = "Account Id that could be found in the top right corner of https://accounts.cloud.databricks.com/"
+}
+
 resource "random_string" "naming" {
   special = false
   upper   = false
@@ -97,7 +105,7 @@ locals {
 }
 
 data "databricks_aws_assume_role_policy" "this" {
-  external_id = var.account_id
+  external_id = var.databricks_account_id
 }
 
 resource "aws_iam_role" "cross_account_role" {
@@ -116,7 +124,7 @@ resource "aws_iam_role_policy" "this" {
 }
 
 resource "databricks_mws_credentials" "this" {
-  account_id       = var.account_id
+  account_id       = var.databricks_account_id
   credentials_name = "${local.prefix}-creds"
   role_arn         = aws_iam_role.cross_account_role.arn
 }
@@ -146,13 +154,13 @@ resource "aws_s3_bucket_policy" "root_bucket_policy" {
 }
 
 resource "databricks_mws_storage_configurations" "this" {
-  account_id                 = var.account_id
+  account_id                 = var.databricks_account_id
   storage_configuration_name = "${local.prefix}-storage"
   bucket_name                = aws_s3_bucket.root_storage_bucket.bucket
 }
 
 resource "databricks_mws_workspaces" "this" {
-  account_id      = var.account_id
+  account_id      = var.databricks_account_id
   workspace_name  = local.prefix
   deployment_name = local.prefix
   aws_region      = "us-east-1"
@@ -168,14 +176,14 @@ resource "databricks_mws_workspaces" "this" {
 
 The following arguments are required:
 
-* `network_id` - (Optional) (String) `network_id` from [networks](mws_networks.md)
-* `account_id` - (Required) (String) master account id (also used for `sts:ExternaId` of `sts:AssumeRole`)
-* `credentials_id` - (Required) (String) `credentials_id` from [credentials](mws_credentials.md)
-* `customer_managed_key_id` - (Optional) (String) `customer_managed_key_id` from [customer managed keys](mws_customer_managed_keys.md)
-* `deployment_name` - (Required) (String) part of URL: `https://<deployment-name>.cloud.databricks.com`
-* `workspace_name` - (Required) (String) name of the workspace, will appear on UI
-* `aws_region` - (Required) (String) AWS region of VPC
-* `storage_configuration_id` - (Required) (String) `storage_configuration_id` from [storage configuration](mws_storage_configurations.md)
+* `network_id` - (Optional) `network_id` from [networks](mws_networks.md)
+* `account_id` - Account Id that could be found in the top right corner of [Accounts Console](https://accounts.cloud.databricks.com/).
+* `credentials_id` - `credentials_id` from [credentials](mws_credentials.md)
+* `customer_managed_key_id` - (Optional) `customer_managed_key_id` from [customer managed keys](mws_customer_managed_keys.md)
+* `deployment_name` - part of URL: `https://<deployment-name>.cloud.databricks.com`
+* `workspace_name` - name of the workspace, will appear on UI
+* `aws_region` - AWS region of VPC
+* `storage_configuration_id` - `storage_configuration_id` from [storage configuration](mws_storage_configurations.md)
 
 ## Attribute Reference
 

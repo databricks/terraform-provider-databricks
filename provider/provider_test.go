@@ -303,6 +303,12 @@ func TestProviderConfigurationOptions(t *testing.T) {
 			assertHost:  "",
 			assertToken: "",
 		},
+		{
+			env: map[string]string{
+				"HOME": "../common/testdata/corrupt",
+			},
+			assertError: "../common/testdata/corrupt/.databrickscfg has no DEFAULT profile configured",
+		},
 	}
 	for _, tt := range tests {
 		t.Run(fmt.Sprintf("config:%v env:%v", tt.rawConfig(), tt.env), func(t *testing.T) {

@@ -315,6 +315,118 @@ resource "databricks_permissions" "token_usage" {
 }
 ```
 
+## SQL Endpoint Usage
+
+[SQL endpoints](https://docs.databricks.com/sql/user/security/access-control/sql-endpoint-acl.html) have two possible permissions:  `CAN_USE` and `CAN_MANAGE`:
+
+```hcl
+resource "databricks_group" "auto" {
+    display_name = "Automation"
+}
+
+resource "databricks_group" "eng" {
+    display_name = "Engineering"
+}
+
+resource "databricks_permissions" "endpoint_usage" {
+    sql_endpoint_id = "3244325"
+
+    access_control {
+        group_name = databricks_group.auto.display_name
+        permission_level = "CAN_USE"
+    }
+
+    access_control {
+        group_name = databricks_group.eng.display_name
+        permission_level = "CAN_MANAGE"
+    }
+}
+```
+
+## SQL Dashboard usage
+
+[SQL dashboards](https://docs.databricks.com/sql/user/security/access-control/dashboard-acl.html) have two possible permissions:  `CAN_RUN` and `CAN_MANAGE`:
+
+```hcl
+resource "databricks_group" "auto" {
+    display_name = "Automation"
+}
+
+resource "databricks_group" "eng" {
+    display_name = "Engineering"
+}
+
+resource "databricks_permissions" "endpoint_usage" {
+    sql_dashboard_id = "3244325"
+
+    access_control {
+        group_name = databricks_group.auto.display_name
+        permission_level = "CAN_RUN"
+    }
+
+    access_control {
+        group_name = databricks_group.eng.display_name
+        permission_level = "CAN_MANAGE"
+    }
+}
+```
+
+## SQL Query usage
+
+[SQL queries](https://docs.databricks.com/sql/user/security/access-control/query-acl.html) have two possible permissions:  `CAN_RUN` and `CAN_MANAGE`:
+
+```hcl
+resource "databricks_group" "auto" {
+    display_name = "Automation"
+}
+
+resource "databricks_group" "eng" {
+    display_name = "Engineering"
+}
+
+resource "databricks_permissions" "endpoint_usage" {
+    sql_query_id = "3244325"
+
+    access_control {
+        group_name = databricks_group.auto.display_name
+        permission_level = "CAN_RUN"
+    }
+
+    access_control {
+        group_name = databricks_group.eng.display_name
+        permission_level = "CAN_MANAGE"
+    }
+}
+```
+
+## SQL Alert usage
+
+[SQL alerts](https://docs.databricks.com/sql/user/security/access-control/alert-acl.html) have two possible permissions:  `CAN_RUN` and `CAN_MANAGE`:
+
+```hcl
+resource "databricks_group" "auto" {
+    display_name = "Automation"
+}
+
+resource "databricks_group" "eng" {
+    display_name = "Engineering"
+}
+
+resource "databricks_permissions" "endpoint_usage" {
+    sql_alert_id = "3244325"
+
+    access_control {
+        group_name = databricks_group.auto.display_name
+        permission_level = "CAN_RUN"
+    }
+
+    access_control {
+        group_name = databricks_group.eng.display_name
+        permission_level = "CAN_MANAGE"
+    }
+}
+```
+
 ## Instance Profiles
 
 [Instance Profiles](instance_profile.md) are not managed by General Permissions API and therefore [databricks_group_instance_profile](group_instance_profile.md) and [databricks_user_instance_profile](user_instance_profile.md) should be used to allow usage of specific AWS EC2 IAM roles to users or groups.

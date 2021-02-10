@@ -224,3 +224,28 @@ func TestAccCreateToken(t *testing.T) {
 	assert.NoError(t, err, err)
 	assert.True(t, len(tokenList) > 0, "Token list is empty")
 }
+
+func TestAccCreateTokenNoExpiration(t *testing.T) {
+	if _, ok := os.LookupEnv("CLOUD_ENV"); !ok {
+		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
+	}
+
+	client := common.NewClientFromEnvironment()
+	tokensAPI := NewTokensAPI(context.Background(), client)
+
+	token, err := tokensAPI.Create(0, "")
+	assert.NoError(t, err, err)
+	assert.True(t, len(token.TokenValue) > 0, "Token value is empty")
+
+	defer func() {
+		err := tokensAPI.Delete(token.TokenInfo.TokenID)
+		assert.NoError(t, err, err)
+	}()
+
+	_, err = tokensAPI.Read(token.TokenInfo.TokenID)
+	assert.NoError(t, err, err)
+
+	tokenList, err := tokensAPI.List()
+	assert.NoError(t, err, err)
+	assert.True(t, len(tokenList) > 0, "Token list is empty")
+}

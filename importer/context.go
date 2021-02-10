@@ -63,12 +63,13 @@ type importContext struct {
 	mountMap    map[string]string
 	variables   map[string]string
 
-	debug          bool
-	mounts         bool
-	services       string
-	listing        string
-	match          string
-	lastActiveDays int64
+	debug               bool
+	mounts              bool
+	services            string
+	listing             string
+	match               string
+	lastActiveDays      int64
+	generateDeclaration bool
 }
 
 func newImportContext(c *common.DatabricksClient) *importContext {
@@ -136,11 +137,35 @@ func (ic *importContext) Run() error {
 	if len(ic.Scope) == 0 {
 		return fmt.Errorf("No resources to import")
 	}
-	sh, err := os.Create(fmt.Sprintf("%s/import.sh", ic.Directory))
+	sh, err := os.OpenFile(fmt.Sprintf("%s/import.sh", ic.Directory), os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0755)
 	if err != nil {
 		return err
 	}
 	defer sh.Close()
+	// nolint
+	sh.WriteString("#!/bin/sh\n\n")
+
+	if ic.generateDeclaration {
+		dcfile, err := os.Create(fmt.Sprintf("%s/databricks.tf", ic.Directory))
+		if err != nil {
+			return err
+		}
+		// nolint
+		dcfile.WriteString(
+			`terraform {
+				required_providers {
+			  		databricks = {
+						source = "databrickslabs/databricks"
+						version = "` + common.Version() + `"
+				  	}
+				}
+		  	}
+
+		  	provider "databricks" {
+		  	}
+		  	`)
+		dcfile.Close()
+	}
 
 	sort.Sort(ic.Scope)
 	for _, r := range ic.Scope {
@@ -373,6 +398,9 @@ func (ic *importContext) Emit(r *resource) {
 			log.Printf("[ERROR] Error reading %s#%s: %v", r.Resource, r.ID, dia)
 			return
 		}
+	}
+	if r.Data.Id() == "" {
+		r.Data.SetId(r.ID)
 	}
 	r.Name = ic.ResourceName(r)
 	if ir.Import != nil {

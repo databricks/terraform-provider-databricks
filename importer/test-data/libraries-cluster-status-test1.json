@@ -1,0 +1,56 @@
+{
+  "cluster_id": "test1",
+  "library_statuses": [
+    {
+      "is_library_for_all_clusters": false,
+      "library": {
+        "maven": {
+          "coordinates": "com.microsoft.azure:azure-eventhubs-spark_2.12:2.3.17",
+          "repo": "https://some-repo"
+        }
+      },
+      "status": "INSTALLED"
+    },
+    {
+      "is_library_for_all_clusters": false,
+      "library": {
+        "pypi": {
+            "package": "plotly==4.8.2",
+            "repo": "https://some-repo"
+        }
+      },
+      "status": "INSTALLED"
+    },
+    {
+      "is_library_for_all_clusters": false,
+      "library": {
+        "cran": {
+            "package": "ggplot",
+            "repo": "https://some-repo"
+        }
+      },
+      "status": "INSTALLED"
+    },
+    {
+      "is_library_for_all_clusters": false,
+      "library": {
+        "jar": "dbfs:/FileStore/jars/test.jar"
+      },
+      "status": "INSTALLED"
+    },
+    {
+      "is_library_for_all_clusters": false,
+      "library": {
+        "egg": "dbfs:/FileStore/jars/test.jar"
+      },
+      "status": "INSTALLED"
+    },
+    {
+      "is_library_for_all_clusters": false,
+      "library": {
+        "whl": "dbfs:/FileStore/jars/test.jar"
+      },
+      "status": "INSTALLED"
+    }
+  ]
+}

@@ -96,7 +96,7 @@ func (aa *AzureAuth) cliAuthorizer(resource string) (autorest.Authorizer, error)
 }
 
 func (aa *AzureAuth) configureWithAzureCLI() (func(r *http.Request) error, error) {
-	if aa.resourceID() == "" {
+	if aa.databricksClient != nil && !aa.databricksClient.IsAzure() {
 		return nil, nil
 	}
 	if aa.IsClientSecretSet() {

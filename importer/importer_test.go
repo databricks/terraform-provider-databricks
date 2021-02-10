@@ -1,7 +1,9 @@
 package importer
 
 import (
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"os"
 	"testing"
@@ -54,6 +56,21 @@ func TestAccImportJobs(t *testing.T) {
 	assert.NoError(t, err)
 }
 
+// nolint
+func getJSONObject(filename string) interface{} {
+	data, _ := ioutil.ReadFile(filename)
+	var obj map[string]interface{}
+	err := json.Unmarshal(data, &obj)
+	if err != nil {
+		fmt.Printf("[ERROR] error! err=%v\n", err)
+		fmt.Printf("[ERROR] data=%s\n", string(data))
+	}
+	return obj
+}
+
+// TODO: don't craft the answers manually, especially complex ones, but instead read them from the JSON files?
+// TODO: add test for outputing import.sh into directory without permissions, like `/bin`
+
 func TestImportingUsersGroupsSecretScopes(t *testing.T) {
 	defer common.CleanupEnvironment()()
 	_, server, err := qa.HttpFixtureClient(t, []qa.HTTPFixture{
@@ -83,36 +100,7 @@ func TestImportingUsersGroupsSecretScopes(t *testing.T) {
 					{Display: "Test group", Value: "f", Ref: "Groups/f"},
 				},
 			},
-		},
-		{
-			Method:   "GET",
-			Resource: "/api/2.0/preview/scim/v2/Groups/a",
-			Response: identity.ScimGroup{ID: "a", DisplayName: "admins",
-				Members: []identity.GroupMember{
-					{Display: "test@test.com", Value: "123", Ref: "Users/123"},
-					{Display: "Test group", Value: "f", Ref: "Groups/f"},
-				},
-			},
-		},
-		{
-			Method:   "GET",
-			Resource: "/api/2.0/preview/scim/v2/Groups/a",
-			Response: identity.ScimGroup{ID: "a", DisplayName: "admins",
-				Members: []identity.GroupMember{
-					{Display: "test@test.com", Value: "123", Ref: "Users/123"},
-					{Display: "Test group", Value: "f", Ref: "Groups/f"},
-				},
-			},
-		},
-		{
-			Method:   "GET",
-			Resource: "/api/2.0/preview/scim/v2/Groups/a",
-			Response: identity.ScimGroup{ID: "a", DisplayName: "admins",
-				Members: []identity.GroupMember{
-					{Display: "test@test.com", Value: "123", Ref: "Users/123"},
-					{Display: "Test group", Value: "f", Ref: "Groups/f"},
-				},
-			},
+			ReuseRequest: true,
 		},
 		{
 			Method:   "GET",
@@ -288,8 +276,16 @@ func TestImportingClusters(t *testing.T) {
 			Resource: "/api/2.0/clusters/list",
 			Response: compute.ClusterList{
 				Clusters: []compute.ClusterInfo{
-					{ClusterID: "test", ClusterName: "test", SparkVersion: "spark-3.0"},
-					{ClusterID: "running", ClusterName: "running", SparkVersion: "spark-3.0"},
+					{
+						ClusterID: "test", ClusterName: "test", SparkVersion: "spark-3.0",
+						State: "TERMINATED", LastActivityTime: 1000,
+					},
+					{
+						ClusterID: "running", ClusterName: "running", SparkVersion: "spark-3.0",
+						State: "RUNNING", LastActivityTime: time.Now().Unix() - 100,
+						EnableElasticDisk: true, ClusterCores: 10.0,
+						CustomTags: map[string]string{"user": "test"},
+					},
 				},
 			},
 		},
@@ -337,6 +333,8 @@ func TestImportingClusters(t *testing.T) {
 			Response: compute.ClusterInfo{
 				ClusterID: "running", ClusterName: "running", SparkVersion: "spark-3.0",
 				State: "RUNNING", LastActivityTime: time.Now().Unix() - 100,
+				EnableElasticDisk: true, ClusterCores: 10.0,
+				CustomTags: map[string]string{"user": "test"},
 			},
 		},
 		{
@@ -432,6 +430,62 @@ func TestImportingWithError(t *testing.T) {
 
 	err = Run("-directory", "/bin/abcd", "-services", "groups,users")
 	assert.EqualError(t, err, "Can't create directory /bin/abcd")
+}
+
+func TestImportingSecrets(t *testing.T) {
+	defer common.CleanupEnvironment()()
+	_, server, err := qa.HttpFixtureClient(t, []qa.HTTPFixture{
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/preview/scim/v2/Groups?",
+			Response: identity.GroupList{Resources: []identity.ScimGroup{}},
+		},
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/jobs/list",
+			Response: compute.JobList{},
+		},
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/clusters/list",
+			Response: compute.ClusterList{},
+		},
+		{
+			Method:       "GET",
+			Resource:     "/api/2.0/secrets/scopes/list",
+			ReuseRequest: true,
+			Response:     getJSONObject("test-data/secret-scopes-response.json"),
+		},
+		{
+			Method:       "GET",
+			Resource:     "/api/2.0/secrets/list?scope=some-kv-scope",
+			ReuseRequest: true,
+			Response:     getJSONObject("test-data/secret-scopes-list-scope-response.json"),
+		},
+		{
+			Method:       "GET",
+			Resource:     "/api/2.0/secrets/acls/list?scope=some-kv-scope",
+			ReuseRequest: true,
+			Response:     getJSONObject("test-data/secret-scopes-list-scope-acls-response.json"),
+		},
+		{
+			Method:       "GET",
+			Resource:     "/api/2.0/secrets/acls/get?principal=test%40test.com&scope=some-kv-scope",
+			ReuseRequest: true,
+			Response:     getJSONObject("test-data/secret-scopes-get-principal-response.json"),
+		},
+	})
+	require.NoError(t, err)
+	defer server.Close()
+
+	os.Setenv("DATABRICKS_HOST", server.URL)
+	os.Setenv("DATABRICKS_TOKEN", "..")
+
+	tmpDir := fmt.Sprintf("/tmp/tf-%s", qa.RandomName())
+	defer os.RemoveAll(tmpDir)
+
+	err = Run("-directory", tmpDir, "-listing", "secrets")
+	assert.NoError(t, err)
 }
 
 func TestResourceName(t *testing.T) {

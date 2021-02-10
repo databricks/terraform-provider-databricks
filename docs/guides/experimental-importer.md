@@ -27,7 +27,7 @@ All arguments are optional and they tune what code is being generated.
 * `-module` - Name of module in Terraform state, that would affect reference resolution and prefixes for generated commands in `import.sh`.
 * `-last-active-days` - Items with older than `-last-active-days` won't be imported. By default the value is set to 3650 (10 years). Has effect on listing [databricks_cluster](../resources/cluster.md) and [databricks_job](../resources/job.md) resources.
 * `-services` - Coma-separated list of services to import. By default all services are imported. 
-* `listing` - Coma-separated list of services to be listed and further passed on for importing. `-services` parameter controls which transitive dependencies will be processed. We recommend limiting with `-listing` more often, than with `-services`.
+* `-listing` - Coma-separated list of services to be listed and further passed on for importing. `-services` parameter controls which transitive dependencies will be processed. We recommend limiting with `-listing` more often, than with `-services`.
 * `-match` - Match resource names during listing operation. This filter applies to all resources that are getting listed, so if you want to import all dependencies of just one cluster, specify `-match=autoscaling -listing=compute`. By default is empty, which matches everything.
 * `-mounts` - List DBFS mount points, which is a relatively slow operation and would not trigger unless explicitly specified.
 

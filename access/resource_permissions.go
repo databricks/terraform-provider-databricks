@@ -193,6 +193,10 @@ func permissionsResourceIDFields(ctx context.Context) []permissionsIDFieldMappin
 		{"directory_path", "directory", "directories", PATH},
 		{"authorization", "tokens", "authorization", SIMPLE},
 		{"authorization", "passwords", "authorization", SIMPLE},
+		{"sql_endpoint_id", "sql/endpoint", "sql/endpoints", SIMPLE},
+		{"sql_dashboard_id", "sql/dashboard", "sql/dashboards", SIMPLE},
+		{"sql_alert_id", "sql/alert", "sql/alerts", SIMPLE},
+		{"sql_query_id", "sql/query", "sql/queries", SIMPLE},
 	}
 }
 

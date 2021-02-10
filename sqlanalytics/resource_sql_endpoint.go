@@ -11,20 +11,33 @@ import (
 	"github.com/databrickslabs/databricks-terraform/internal/util"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 // SQLEndpoint ...
 type SQLEndpoint struct {
-	ID                string `json:"id,omitempty"`
-	Name              string `json:"name"`
-	ClusterSize       string `json:"cluster_size"`
-	AutoStopMinutes   int    `json:"auto_stop_mins,omitempty"`
-	MinNumClusters    int    `json:"min_num_clusters,omitempty"`
-	MaxNumClusters    int    `json:"max_num_clusters,omitempty"`
-	NumClusters       int    `json:"num_clusters,omitempty"`
-	NumActiveSessions int    `json:"num_active_sessions,omitempty"`
-	State             string `json:"state,omitempty" tf:"computed"`
-	JdbcURL           string `json:"jdbc_url,omitempty" tf:"computed"`
+	ID              string `json:"id,omitempty" tf:"computed"`
+	Name            string `json:"name"`
+	ClusterSize     string `json:"cluster_size"`
+	AutoStopMinutes int    `json:"auto_stop_mins,omitempty"`
+	MinNumClusters  int    `json:"min_num_clusters,omitempty"`
+	MaxNumClusters  int    `json:"max_num_clusters,omitempty"`
+	NumClusters     int    `json:"num_clusters,omitempty"`
+	EnablePhoton    bool   `json:"enable_photon,omitempty"`
+	State           string `json:"state,omitempty" tf:"computed"`
+	JdbcURL         string `json:"jdbc_url,omitempty" tf:"computed"`
+	Tags            *Tags  `json:"tags,omitempty"`
+}
+
+// Tags ...
+type Tags struct {
+	CustomTags []Tag `json:"custom_tags"`
+}
+
+// Tag ...
+type Tag struct {
+	Key   string `json:"key"`
+	Value string `json:"value"`
 }
 
 // EndpointList ...
@@ -100,30 +113,27 @@ func (a SQLEndpointsAPI) waitForRunning(id string, timeout time.Duration) error 
 }
 
 // Edit ...
-func (a SQLEndpointsAPI) Edit(se SQLEndpoint, timeout time.Duration) error {
-	err := a.client.Post(a.context, fmt.Sprintf("/sql/endpoints/%s/edit", se.ID), se, nil)
-	if err != nil {
-		return err
-	}
-	r, err := a.Get(se.ID)
-	if err != nil {
-		return err
-	}
-	if r.State != "RUNNING" {
-		return a.Start(se.ID, timeout)
-	}
-	return a.waitForRunning(se.ID, timeout)
+func (a SQLEndpointsAPI) Edit(se SQLEndpoint) error {
+	return a.client.Post(a.context, fmt.Sprintf("/sql/endpoints/%s/edit", se.ID), se, nil)
 }
 
 // Delete ...
 func (a SQLEndpointsAPI) Delete(endpointID string) error {
-	return a.client.Delete(a.context, fmt.Sprintf("/sql/endpoints/%s", endpointID), nil)
+	return a.client.Delete(a.context, fmt.Sprintf("/sql/endpoints/%s", endpointID),
+		map[string]interface{}{})
 }
 
 // ResourceSQLEndpoint ...
 func ResourceSQLEndpoint() *schema.Resource {
 	s := internal.StructToSchema(SQLEndpoint{}, func(
 		m map[string]*schema.Schema) map[string]*schema.Schema {
+		m["cluster_size"].ValidateDiagFunc = validation.ToDiagFunc(
+			validation.StringInSlice([]string{
+				"2X-Small", "X-Small", "Small", "Medium", "Large", "X-Large", "2X-Large", "3X-Large", "4X-Large",
+			}, false))
+		m["max_num_clusters"].Default = 1
+		m["max_num_clusters"].ValidateDiagFunc = validation.ToDiagFunc(
+			validation.IntBetween(1, 30))
 		return m
 	})
 	return util.CommonResource{
@@ -144,17 +154,14 @@ func ResourceSQLEndpoint() *schema.Resource {
 			if err != nil {
 				return err
 			}
-			if err = internal.StructToData(se, s, d); err != nil {
-				return err
-			}
-			return endpointsAPI.waitForRunning(d.Id(), d.Timeout(schema.TimeoutRead))
+			return internal.StructToData(se, s, d)
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var se SQLEndpoint
 			if err := internal.DataToStructPointer(d, s, &se); err != nil {
 				return err
 			}
-			return NewSQLEndpointsAPI(ctx, c).Edit(se, d.Timeout(schema.TimeoutUpdate))
+			return NewSQLEndpointsAPI(ctx, c).Edit(se)
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			return NewSQLEndpointsAPI(ctx, c).Delete(d.Id())

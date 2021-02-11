@@ -16,18 +16,27 @@ import (
 
 // SQLEndpoint ...
 type SQLEndpoint struct {
-	ID                 string `json:"id,omitempty" tf:"computed"`
-	Name               string `json:"name"`
-	ClusterSize        string `json:"cluster_size"`
-	AutoStopMinutes    int    `json:"auto_stop_mins,omitempty"`
-	MinNumClusters     int    `json:"min_num_clusters,omitempty"`
-	MaxNumClusters     int    `json:"max_num_clusters,omitempty"`
-	NumClusters        int    `json:"num_clusters,omitempty"`
-	EnablePhoton       bool   `json:"enable_photon,omitempty"`
-	InstanceProfileARN string `json:"instance_profile_arn,omitempty"`
-	State              string `json:"state,omitempty" tf:"computed"`
-	JdbcURL            string `json:"jdbc_url,omitempty" tf:"computed"`
-	Tags               *Tags  `json:"tags,omitempty"`
+	ID                 string      `json:"id,omitempty" tf:"computed"`
+	Name               string      `json:"name"`
+	ClusterSize        string      `json:"cluster_size"`
+	AutoStopMinutes    int         `json:"auto_stop_mins,omitempty"`
+	MinNumClusters     int         `json:"min_num_clusters,omitempty"`
+	MaxNumClusters     int         `json:"max_num_clusters,omitempty"`
+	NumClusters        int         `json:"num_clusters,omitempty"`
+	EnablePhoton       bool        `json:"enable_photon,omitempty"`
+	InstanceProfileARN string      `json:"instance_profile_arn,omitempty"`
+	State              string      `json:"state,omitempty" tf:"computed"`
+	JdbcURL            string      `json:"jdbc_url,omitempty" tf:"computed"`
+	OdbcParams         *OdbcParams `json:"odbc_params,omitempty" tf:"computed"`
+	Tags               *Tags       `json:"tags,omitempty"`
+}
+
+// OdbcParams ...
+type OdbcParams struct {
+	Host     string `json:"host"`
+	Path     string `json:"path"`
+	Protocol string `json:"protocol"`
+	Port     int32  `json:"port"`
 }
 
 // Tags ...

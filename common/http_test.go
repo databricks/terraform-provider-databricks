@@ -18,7 +18,7 @@ import (
 func TestAPIError(t *testing.T) {
 	ae := NotFound("ClusterNotReadyException: test")
 	ae.Resource = "c"
-	assert.Equal(t, "ClusterNotReadyException: test\n(404 on c)", ae.Error())
+	assert.Equal(t, "ClusterNotReadyException: test", ae.Error())
 	assert.True(t, ae.IsMissing())
 	assert.True(t, ae.IsRetriable())
 

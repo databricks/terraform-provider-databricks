@@ -1,5 +1,5 @@
 ---
-subcategory: "E2"
+subcategory: "Log Delivery"
 ---
 # databricks_mws_log_delivery Resource
 

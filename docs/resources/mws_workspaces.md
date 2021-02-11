@@ -200,7 +200,7 @@ In addition to all arguments above, the following attributes are exported:
 
 The `timeouts` block allows you to specify `create`, `read` and `update` timeouts. It usually takes 5-7 minutes to provision Databricks E2 Workspace and another couple of minutes for your local DNS caches to resolve. Please launch `TF_LOG=DEBUG terraform apply` whenever you observe timeout issues.
 
-```
+```hcl
 timeouts {
   create = "30m"
   read   = "10m"

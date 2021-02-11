@@ -129,6 +129,7 @@ type Entitlement string
 const (
 	AllowClusterCreateEntitlement      Entitlement = "allow-cluster-create"
 	AllowInstancePoolCreateEntitlement Entitlement = "allow-instance-pool-create"
+	AllowSQLAnalyticsAccessEntitlement Entitlement = "sql-analytics-access"
 )
 
 type groupsListItem struct {

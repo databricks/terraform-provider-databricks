@@ -40,6 +40,9 @@ Security
 * Use predefined AWS IAM Policy Templates: [databricks_aws_assume_role_policy](data-sources/aws_assume_role_policy.md), [databricks_aws_crossaccount_policy](data-sources/aws_crossaccount_policy.md), [databricks_aws_bucket_policy](data-sources/aws_bucket_policy.md)
 * Configure billing and audit [databricks_mws_log_delivery](resources/mws_log_delivery.md)
 
+SQL Analytics
+* Create [databricks_sql_endpoint](resources/sql_endpoint.md) controlled by [databricks_permissions](resources/permissions.md).
+
 ## Example Usage
 
 ```hcl

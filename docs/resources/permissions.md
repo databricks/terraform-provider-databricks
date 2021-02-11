@@ -320,6 +320,8 @@ resource "databricks_permissions" "token_usage" {
 [SQL endpoints](https://docs.databricks.com/sql/user/security/access-control/sql-endpoint-acl.html) have two possible permissions:  `CAN_USE` and `CAN_MANAGE`:
 
 ```hcl
+data "databricks_current_user" "me" {}
+
 resource "databricks_group" "auto" {
     display_name = "Automation"
 }
@@ -328,8 +330,21 @@ resource "databricks_group" "eng" {
     display_name = "Engineering"
 }
 
+resource "databricks_sql_endpoint" "this" {
+  name = "Endpoint of ${data.databricks_current_user.me.alphanumeric}"
+  cluster_size = "Small"
+  max_num_clusters = 1
+
+  tags {
+    custom_tags {
+        key = "City"
+        value = "Amsterdam"
+    }
+  }
+}
+
 resource "databricks_permissions" "endpoint_usage" {
-    sql_endpoint_id = "3244325"
+    sql_endpoint_id = databricks_sql_endpoint.this.id
 
     access_control {
         group_name = databricks_group.auto.display_name

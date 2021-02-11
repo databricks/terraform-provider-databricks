@@ -14,8 +14,8 @@ import (
 // Test interface compliance
 var _ common.CommandExecutor = (*CommandsAPI)(nil)
 
-func TestSomeCommands(t *testing.T) {
-	client, server, err := qa.HttpFixtureClient(t, []qa.HTTPFixture{
+func commonFixtureWithStatusResponse(response Command) []qa.HTTPFixture {
+	return []qa.HTTPFixture{
 		{
 			Method:       "GET",
 			ReuseRequest: true,
@@ -66,13 +66,7 @@ func TestSomeCommands(t *testing.T) {
 			Method:       "GET",
 			ReuseRequest: true,
 			Resource:     "/api/1.2/commands/status?clusterId=abc&commandId=234&contextId=123",
-			Response: Command{
-				Status: "Finished",
-				Results: &CommandResults{
-					ResultType: "text",
-					Data:       "done",
-				},
-			},
+			Response:     response,
 		},
 		{
 			Method:   "POST",
@@ -82,7 +76,105 @@ func TestSomeCommands(t *testing.T) {
 				ContextID: "123",
 			},
 		},
-	})
+	}
+}
+
+func TestCommandWithExecutionError(t *testing.T) {
+	client, server, err := qa.HttpFixtureClient(t, commonFixtureWithStatusResponse(Command{
+		Status: "Finished",
+		Results: &CommandResults{
+			ResultType: "error",
+			Cause: `
+---
+ExecutionError: An error occurred
+StatusCode=400
+StatusDescription=BadRequest
+---
+			`,
+		},
+	}))
+	defer server.Close()
+	require.NoError(t, err)
+	ctx := context.Background()
+	commands := NewCommandsAPI(ctx, client)
+
+	_, err = commands.Execute("abc", "python", `print("done")`)
+	assert.Equal(t, `An error occurred
+StatusCode=400
+StatusDescription=BadRequest`, err.Error())
+}
+
+func TestCommandWithEmptyErrorMessageUsesSummary(t *testing.T) {
+	client, server, err := qa.HttpFixtureClient(t, commonFixtureWithStatusResponse(Command{
+		Status: "Finished",
+		Results: &CommandResults{
+			ResultType: "error",
+			Cause: `
+---
+ErrorCode=
+ErrorMessage=
+    other text
+---
+			`,
+			Summary: "Proper error",
+		},
+	}))
+	defer server.Close()
+	require.NoError(t, err)
+	ctx := context.Background()
+	commands := NewCommandsAPI(ctx, client)
+
+	_, err = commands.Execute("abc", "python", `print("done")`)
+	assert.Equal(t, "Proper error", err.Error())
+}
+
+func TestCommandWithErrorMessage(t *testing.T) {
+	client, server, err := qa.HttpFixtureClient(t, commonFixtureWithStatusResponse(Command{
+		Status: "Finished",
+		Results: &CommandResults{
+			ResultType: "error",
+			Cause: `
+---
+ErrorCode=
+ErrorMessage=An error occurred
+---
+			`,
+		},
+	}))
+	defer server.Close()
+	require.NoError(t, err)
+	ctx := context.Background()
+	commands := NewCommandsAPI(ctx, client)
+
+	_, err = commands.Execute("abc", "python", `print("done")`)
+	assert.Equal(t, "An error occurred", err.Error())
+}
+
+func TestCommandWithExceptionMessage(t *testing.T) {
+	client, server, err := qa.HttpFixtureClient(t, commonFixtureWithStatusResponse(Command{
+		Status: "Finished",
+		Results: &CommandResults{
+			ResultType: "error",
+			Summary:    "Exception: An error occurred",
+		},
+	}))
+	defer server.Close()
+	require.NoError(t, err)
+	ctx := context.Background()
+	commands := NewCommandsAPI(ctx, client)
+
+	_, err = commands.Execute("abc", "python", `print("done")`)
+	assert.Equal(t, "An error occurred", err.Error())
+}
+
+func TestSomeCommands(t *testing.T) {
+	client, server, err := qa.HttpFixtureClient(t, commonFixtureWithStatusResponse(Command{
+		Status: "Finished",
+		Results: &CommandResults{
+			ResultType: "text",
+			Data:       "done",
+		},
+	}))
 	defer server.Close()
 	require.NoError(t, err)
 	ctx := context.Background()

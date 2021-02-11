@@ -22,8 +22,10 @@ var (
 	tagRE = regexp.MustCompile(`<[^>]*>`)
 	// just exception content without exception name
 	exceptionRE = regexp.MustCompile(`.*Exception: (.*)`)
+	// execution errors resulting from http errors are sometimes hidden in these keys
+	executionErrorRE = regexp.MustCompile(`ExecutionError: ([\s\S]*)\n(StatusCode=[0-9]*)\n(StatusDescription=.*)\n`)
 	// usual error message explanation is hidden in this key
-	errorMessageRE = regexp.MustCompile(`ErrorMessage=(.*)\n`)
+	errorMessageRE = regexp.MustCompile(`ErrorMessage=(.+)\n`)
 )
 
 // NewCommandsAPI creates CommandsAPI instance from provider meta
@@ -98,6 +100,11 @@ func (a CommandsAPI) parseCommandResults(command Command) (result string, err er
 			summary = strings.ReplaceAll(exceptionMatches[1], "; nested exception is:", "")
 			summary = strings.TrimRight(summary, " ")
 			err = errors.New(summary)
+			return
+		}
+		executionErrorMatches := executionErrorRE.FindStringSubmatch(command.Results.Cause)
+		if len(executionErrorMatches) == 4 {
+			err = errors.New(strings.Join(executionErrorMatches[1:], "\n"))
 			return
 		}
 		errorMessageMatches := errorMessageRE.FindStringSubmatch(command.Results.Cause)

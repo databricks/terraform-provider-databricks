@@ -22,8 +22,10 @@ var (
 	tagRE = regexp.MustCompile(`<[^>]*>`)
 	// just exception content without exception name
 	exceptionRE = regexp.MustCompile(`.*Exception: (.*)`)
+	// execution errors resulting from http errors are sometimes hidden in these keys
+	executionErrorRE = regexp.MustCompile(`ExecutionError: ([\s\S]*)\n(StatusCode=[0-9]*)\n(StatusDescription=.*)\n`)
 	// usual error message explanation is hidden in this key
-	errorMessageRE = regexp.MustCompile(`ErrorMessage=(.*)\n`)
+	errorMessageRE = regexp.MustCompile(`ErrorMessage=(.+)\n`)
 )
 
 // NewCommandsAPI creates CommandsAPI instance from provider meta
@@ -91,25 +93,35 @@ func (a CommandsAPI) parseCommandResults(command Command) (result string, err er
 		return
 	case "error":
 		log.Printf("[DEBUG] error caused by command: %s", command.Results.Cause)
-		summary := tagRE.ReplaceAllLiteralString(command.Results.Summary, "")
-		summary = html.UnescapeString(summary)
-		exceptionMatches := exceptionRE.FindStringSubmatch(summary)
-		if len(exceptionMatches) == 2 {
-			summary = strings.ReplaceAll(exceptionMatches[1], "; nested exception is:", "")
-			summary = strings.TrimRight(summary, " ")
-			err = errors.New(summary)
-			return
-		}
-		errorMessageMatches := errorMessageRE.FindStringSubmatch(command.Results.Cause)
-		if len(errorMessageMatches) == 2 {
-			err = errors.New(errorMessageMatches[1])
-			return
-		}
-		err = errors.New(summary)
+		err = a.getCommandResultErrorMessage(command)
 		return
 	}
 	err = fmt.Errorf("Unknown result type %s: %v", command.Results.ResultType, command.Results.Data)
 	return
+}
+
+func (a CommandsAPI) getCommandResultErrorMessage(command Command) error {
+	summary := tagRE.ReplaceAllLiteralString(command.Results.Summary, "")
+	summary = html.UnescapeString(summary)
+
+	exceptionMatches := exceptionRE.FindStringSubmatch(summary)
+	if len(exceptionMatches) == 2 {
+		summary = strings.ReplaceAll(exceptionMatches[1], "; nested exception is:", "")
+		summary = strings.TrimRight(summary, " ")
+		return errors.New(summary)
+	}
+
+	executionErrorMatches := executionErrorRE.FindStringSubmatch(command.Results.Cause)
+	if len(executionErrorMatches) == 4 {
+		return errors.New(strings.Join(executionErrorMatches[1:], "\n"))
+	}
+
+	errorMessageMatches := errorMessageRE.FindStringSubmatch(command.Results.Cause)
+	if len(errorMessageMatches) == 2 {
+		return errors.New(errorMessageMatches[1])
+	}
+
+	return errors.New(summary)
 }
 
 type genericCommandRequest struct {

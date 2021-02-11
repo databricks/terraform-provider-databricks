@@ -14,6 +14,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
+// ClusterSizes for SQL endpoints
+var (
+	ClusterSizes   = []string{"2X-Small", "X-Small", "Small", "Medium", "Large", "X-Large", "2X-Large", "3X-Large", "4X-Large"}
+	MaxNumClusters = 30
+)
+
 // SQLEndpoint ...
 type SQLEndpoint struct {
 	ID                 string      `json:"id,omitempty" tf:"computed"`
@@ -138,12 +144,10 @@ func ResourceSQLEndpoint() *schema.Resource {
 	s := internal.StructToSchema(SQLEndpoint{}, func(
 		m map[string]*schema.Schema) map[string]*schema.Schema {
 		m["cluster_size"].ValidateDiagFunc = validation.ToDiagFunc(
-			validation.StringInSlice([]string{
-				"2X-Small", "X-Small", "Small", "Medium", "Large", "X-Large", "2X-Large", "3X-Large", "4X-Large",
-			}, false))
+			validation.StringInSlice(ClusterSizes, false))
 		m["max_num_clusters"].Default = 1
 		m["max_num_clusters"].ValidateDiagFunc = validation.ToDiagFunc(
-			validation.IntBetween(1, 30))
+			validation.IntBetween(1, MaxNumClusters))
 		return m
 	})
 	return util.CommonResource{

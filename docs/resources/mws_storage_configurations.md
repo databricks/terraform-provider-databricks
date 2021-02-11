@@ -1,5 +1,5 @@
 ---
-subcategory: "E2"
+subcategory: "AWS"
 ---
 # databricks_mws_storage_configurations Resource
 

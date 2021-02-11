@@ -44,6 +44,7 @@
 | [databricks_secret](docs/resources/secret.md)
 | [databricks_secret_acl](docs/resources/secret_acl.md)
 | [databricks_secret_scope](docs/resources/secret_scope.md)
+| [databricks_sql_endpoint](docs/resources/sql_endpoint.md)
 | [databricks_spark_version](docs/data-sources/spark_version.md) data
 | [databricks_token](docs/resources/token.md)
 | [databricks_user](docs/resources/user.md)

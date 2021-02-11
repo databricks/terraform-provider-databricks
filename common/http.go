@@ -53,13 +53,11 @@ type APIError struct {
 
 // Error returns error message string instead of
 func (apiError APIError) Error() string {
-	docs := apiError.DocumentationURL()
-	if docs == "" {
-		return fmt.Sprintf("%s\n(%d on %s)", apiError.Message, apiError.StatusCode, apiError.Resource)
+	if apiError.StatusCode != 404 {
+		docs := apiError.DocumentationURL()
+		log.Printf("[WARN] %s:%d - %s %s", apiError.Resource, apiError.StatusCode, apiError.Message, docs)
 	}
-	return fmt.Sprintf("%s\nPlease consult API docs at %s for details.",
-		apiError.Message,
-		docs)
+	return apiError.Message
 }
 
 // IsMissing tells if it is missing resource

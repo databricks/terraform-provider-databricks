@@ -43,6 +43,7 @@ The following arguments are supported:
 In addition to all arguments above, the following attributes are exported:
 
 * `jdbc_url` - JDBC connection string.
+* `odbc_params` - ODBC connection params: `odbc_params.host`, `odbc_params.path`, `odbc_params.protocol`, and `odbc_params.port`.
 
 ## Access Control
 

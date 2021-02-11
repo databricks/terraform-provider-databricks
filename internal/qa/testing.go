@@ -28,6 +28,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
@@ -63,6 +64,7 @@ type HTTPFixture struct {
 	Status          int
 	ExpectedRequest interface{}
 	ReuseRequest    bool
+	MatchAny        bool
 }
 
 // ResourceFixture helps testing resources and commands
@@ -231,6 +233,48 @@ func (f ResourceFixture) ApplyNoError(t *testing.T) {
 	assert.NoError(t, err, err)
 }
 
+// ExpectError passes if there's an error
+func (f ResourceFixture) ExpectError(t *testing.T, msg string) {
+	_, err := f.Apply(t)
+	assert.EqualError(t, err, msg)
+}
+
+// ResourceCornerCases checks for corner cases of error handling. Optional field name used to create error
+func ResourceCornerCases(t *testing.T, resource *schema.Resource) {
+	teapot := "I'm a teapot"
+	m := map[string]func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics{
+		"create": resource.CreateContext,
+		"read":   resource.ReadContext,
+		"update": resource.UpdateContext,
+		"delete": resource.DeleteContext,
+	}
+	HTTPFixturesApply(t, []HTTPFixture{
+		{
+			MatchAny:     true,
+			ReuseRequest: true,
+			Status:       418,
+			Response: common.APIError{
+				ErrorCode:  "NONSENSE",
+				StatusCode: 418,
+				Message:    teapot,
+			},
+		},
+	}, func(ctx context.Context, client *common.DatabricksClient) {
+		validData := resource.TestResourceData()
+		validData.SetId("x")
+		for n, v := range m {
+			if v == nil {
+				continue
+			}
+			diags := v(ctx, validData, client)
+			if assert.Len(t, diags, 1) {
+				assert.Equalf(t, diags[0].Summary, teapot,
+					"%s didn't handle correct error on valid data", n)
+			}
+		}
+	})
+}
+
 func diagsToString(diags diag.Diagnostics) string {
 	if diags.HasError() {
 		sort.Slice(diags, func(i, j int) bool {
@@ -278,7 +322,7 @@ func HttpFixtureClient(t *testing.T, fixtures []HTTPFixture) (client *common.Dat
 	server = httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
 		found := false
 		for i, fixture := range fixtures {
-			if req.Method == fixture.Method && req.RequestURI == fixture.Resource {
+			if (req.Method == fixture.Method && req.RequestURI == fixture.Resource) || fixture.MatchAny {
 				if fixture.Status == 0 {
 					rw.WriteHeader(200)
 				} else {
@@ -361,6 +405,14 @@ func HttpFixtureClient(t *testing.T, fixtures []HTTPFixture) (client *common.Dat
 	}
 	err = client.Configure()
 	return client, server, err
+}
+
+// HTTPFixturesApply is a helper method
+func HTTPFixturesApply(t *testing.T, fixtures []HTTPFixture, callback func(ctx context.Context, client *common.DatabricksClient)) {
+	client, server, err := HttpFixtureClient(t, fixtures)
+	defer server.Close()
+	require.NoError(t, err)
+	callback(context.Background(), client)
 }
 
 func fixHCL(v interface{}) interface{} {

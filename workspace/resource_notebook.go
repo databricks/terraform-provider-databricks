@@ -236,7 +236,7 @@ func ResourceNotebook() *schema.Resource {
 			}
 			notebooksAPI := NewNotebooksAPI(ctx, c)
 			path := d.Get("path").(string)
-			parent := filepath.Dir(path)
+			parent := filepath.ToSlash(filepath.Dir(path))
 			if parent != "/" {
 				err = notebooksAPI.Mkdirs(parent)
 				if err != nil {

@@ -14,6 +14,7 @@ import (
 	"github.com/databrickslabs/databricks-terraform/compute"
 	"github.com/databrickslabs/databricks-terraform/identity"
 	"github.com/databrickslabs/databricks-terraform/mws"
+	"github.com/databrickslabs/databricks-terraform/sqlanalytics"
 	"github.com/databrickslabs/databricks-terraform/storage"
 	"github.com/databrickslabs/databricks-terraform/workspace"
 )
@@ -70,6 +71,8 @@ func DatabricksProvider() *schema.Provider {
 			"databricks_azure_adls_gen2_mount": storage.ResourceAzureAdlsGen2Mount(),
 			"databricks_azure_blob_mount":      storage.ResourceAzureBlobMount(),
 			"databricks_dbfs_file":             storage.ResourceDBFSFile(),
+
+			"databricks_sql_endpoint": sqlanalytics.ResourceSQLEndpoint(),
 
 			"databricks_global_init_script": workspace.ResourceGlobalInitScript(),
 			"databricks_notebook":           workspace.ResourceNotebook(),

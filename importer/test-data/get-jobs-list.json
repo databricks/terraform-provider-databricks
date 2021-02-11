@@ -1,0 +1,158 @@
+{
+  "jobs": [
+    {
+      "created_time": 1606301532298,
+      "creator_user_name": "test@test.com",
+      "job_id": 14,
+      "settings": {
+        "email_notifications": {
+          "on_failure": [
+            "test@test.com"
+          ]
+        },
+        "libraries": [
+          {
+            "maven": {
+              "coordinates": "com.microsoft.azure:azure-eventhubs-spark_2.12:2.3.17"
+            }
+          },
+          {
+            "pypi": {
+              "package": "spacy"
+            }
+          }
+        ],
+        "max_concurrent_runs": 1,
+        "name": "Demo job",
+        "new_cluster": {
+          "azure_attributes": {
+            "availability": "ON_DEMAND_AZURE"
+          },
+          "enable_elastic_disk": true,
+          "node_type_id": "Standard_DS3_v2",
+          "num_workers": 2,
+          "spark_conf": {
+            "spark.databricks.delta.preview.enabled": "true"
+          },
+          "spark_version": "7.3.x-scala2.12"
+        },
+        "notebook_task": {
+          "notebook_path": "/Production/MakeFeatures"
+        },
+        "schedule": {
+          "pause_status": "UNPAUSED",
+          "quartz_cron_expression": "0 15 22 ? * *",
+          "timezone_id": "UTC"
+        },
+        "timeout_seconds": 0
+      }
+    },
+    {
+      "created_time": 1605193982171,
+      "creator_user_name": "test@test.com",
+      "job_id": 12,
+      "settings": {
+        "email_notifications": {},
+        "existing_cluster_id": "test2",
+        "max_concurrent_runs": 1,
+        "name": "Test",
+        "notebook_task": {
+          "notebook_path": "/Users/test@test.com/Test"
+        },
+        "timeout_seconds": 0
+      }
+    },
+    {
+      "created_time": 1561026045903,
+      "creator_user_name": "test@test.com",
+      "job_id": 15,
+      "settings": {
+        "email_notifications": {},
+        "libraries": [
+          {
+            "jar": "dbfs:/FileStore/jars/test.jar"
+          }
+        ],
+        "max_concurrent_runs": 1,
+        "max_retries": 1,
+        "min_retry_interval_millis": 0,
+        "name": "Scala Project",
+        "new_cluster": {
+          "instance_pool_id": "pool1",
+          "num_workers": 2,
+          "spark_version": "6.4.x-scala2.11"
+        },
+        "retry_on_timeout": false,
+        "spark_jar_task": {
+          "jar_uri": "dbfs:/FileStore/jars/test.jar",
+          "main_class_name": "com.databricks.examples.ProjectDriver",
+          "run_as_repl": true
+        },
+        "timeout_seconds": 3600
+      }
+    },
+    {
+      "created_time": 1561026045903,
+      "creator_user_name": "test@test.com",
+      "job_id": 15,
+      "settings": {
+        "email_notifications": {},
+        "libraries": [
+            {
+                "jar": "dbfs:/FileStore/jars/test.jar"
+            }
+        ],
+        "max_concurrent_runs": 1,
+        "max_retries": 1,
+        "min_retry_interval_millis": 0,
+        "name": "Python Project",
+        "new_cluster": {
+            "instance_pool_id": "pool1",
+            "num_workers": 2,
+            "spark_version": "6.4.x-scala2.11"
+        },
+        "retry_on_timeout": false,
+        "spark_python_task": {
+            "python_file": "dbfs:/FileStore/jars/test.jar",
+            "parameters": ["param1"]
+        },
+        "timeout_seconds": 3600
+      }
+    },
+    {
+      "created_time": 1571676194487,
+      "creator_user_name": "test@test.com",
+      "job_id": 17,
+      "settings": {
+        "email_notifications": {},
+        "max_concurrent_runs": 1,
+        "name": "SparkR Test",
+        "new_cluster": {
+            "autoscale": {
+                "max_workers": 8,
+                "min_workers": 2
+            },
+            "aws_attributes": {
+                "availability": "SPOT_WITH_FALLBACK",
+                "ebs_volume_count": 0,
+                "first_on_demand": 1,
+                "spot_bid_price_percent": 100,
+                "zone_id": "us-west-2c"
+            },
+            "enable_elastic_disk": false,
+            "node_type_id": "i3.xlarge",
+            "spark_env_vars": {
+                "PYSPARK_PYTHON": "/databricks/python3/bin/python3"
+            },
+            "spark_version": "5.5.x-scala2.11"
+        },
+        "spark_submit_task": {
+            "parameters": [
+                "dbfs:/FileStore/jars/test.jar"
+            ]
+        },
+        "timeout_seconds": 0
+      }
+    }  
+  ]
+}

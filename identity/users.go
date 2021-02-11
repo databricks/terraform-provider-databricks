@@ -28,6 +28,7 @@ type UserEntity struct {
 	DisplayName             string `json:"display_name,omitempty" tf:"computed"`
 	Active                  bool   `json:"active,omitempty"`
 	AllowClusterCreate      bool   `json:"allow_cluster_create,omitempty"`
+	AllowSQLAnalyticsAccess bool   `json:"allow_sql_analytics_access,omitempty"`
 	AllowInstancePoolCreate bool   `json:"allow_instance_pool_create,omitempty"`
 }
 
@@ -36,6 +37,11 @@ func (u UserEntity) toRequest() ScimUser {
 	if u.AllowClusterCreate {
 		entitlements = append(entitlements, entitlementsListItem{
 			Value: Entitlement("allow-cluster-create"),
+		})
+	}
+	if u.AllowSQLAnalyticsAccess {
+		entitlements = append(entitlements, entitlementsListItem{
+			Value: Entitlement("sql-analytics-access"),
 		})
 	}
 	if u.AllowInstancePoolCreate {

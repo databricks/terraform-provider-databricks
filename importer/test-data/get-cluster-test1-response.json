@@ -1,0 +1,71 @@
+{
+  "autotermination_minutes": 120,
+  "azure_attributes": {
+    "availability": "ON_DEMAND_AZURE",
+    "first_on_demand": 1,
+    "spot_bid_max_price": -1
+  },
+  "cluster_cores": 12,
+  "cluster_id": "test1",
+  "cluster_memory_mb": 43008,
+  "cluster_name": "Test1",
+  "cluster_source": "UI",
+  "creator_user_name": "test@test.com",
+  "default_tags": {
+    "ClusterId": "test1",
+    "ClusterName": "Test1",
+    "Creator": "test@test.com",
+    "Vendor": "Databricks"
+  },
+  "disk_spec": {},
+  "driver": {
+    "host_private_ip": "10.139.0.10",
+    "instance_id": "4edec295d2944f82937e359a1dc0bc09",
+    "node_id": "68402f35830045dcbf42469fb2410b8b",
+    "private_ip": "10.139.64.10",
+    "public_dns": "51.144.17.214",
+    "start_timestamp": 1606308923964
+  },
+  "driver_node_type_id": "Standard_DS3_v2",
+  "enable_elastic_disk": true,
+  "enable_local_disk_encryption": false,
+  "executors": [
+    {
+      "host_private_ip": "10.139.0.9",
+      "instance_id": "5e90f23fbe1c4083a87bf6afc4c3d6bd",
+      "node_id": "fae6e38136cd4b0eb1aeb39640591c8c",
+      "private_ip": "10.139.64.9",
+      "public_dns": "51.144.17.184",
+      "start_timestamp": 1606308923993
+    },
+    {
+      "host_private_ip": "10.139.0.8",
+      "instance_id": "2fea62632e084708901872d201657917",
+      "node_id": "df573232e56b44798d8ae32bf1f09936",
+      "private_ip": "10.139.64.8",
+      "public_dns": "40.91.193.220",
+      "start_timestamp": 1606308924020
+    }
+  ],
+  "init_scripts": [
+    {
+       "dbfs": {
+          "destination": "dbfs:/FileStore/jars/test.jar"
+      }
+    }
+  ],
+  "init_scripts_safe_mode": false,
+  "jdbc_port": 10000,
+  "last_state_loss_time": 1606308972982,
+  "node_type_id": "Standard_DS3_v2",
+  "num_workers": 2,
+  "pinned_by_user_name": "661448457191611",
+  "spark_conf": {
+    "spark.databricks.delta.preview.enabled": "true"
+  },
+  "spark_context_id": 5558306221970383000,
+  "spark_version": "7.3.x-scala2.12",
+  "start_time": 1603891857812,
+  "state": "RUNNING",
+  "state_message": ""
+}

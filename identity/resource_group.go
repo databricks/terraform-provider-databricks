@@ -27,6 +27,9 @@ func ResourceGroup() *schema.Resource {
 		if err = d.Set("allow_cluster_create", isGroupClusterCreateEntitled(&group)); err != nil {
 			return diag.FromErr(err)
 		}
+		if err = d.Set("allow_sql_analytics_access", isGroupSQLAnalyticsAccessEntitled(&group)); err != nil {
+			return diag.FromErr(err)
+		}
 		if err = d.Set("allow_instance_pool_create", isGroupInstancePoolCreateEntitled(&group)); err != nil {
 			return diag.FromErr(err)
 		}
@@ -37,11 +40,15 @@ func ResourceGroup() *schema.Resource {
 			groupName := d.Get("display_name").(string)
 			allowClusterCreate := d.Get("allow_cluster_create").(bool)
 			allowInstancePoolCreate := d.Get("allow_instance_pool_create").(bool)
+			allowSQLAnalyticsAccess := d.Get("allow_sql_analytics_access").(bool)
 
 			// If entitlement flags are set to be true
 			var entitlementsList []string
 			if allowClusterCreate {
 				entitlementsList = append(entitlementsList, string(AllowClusterCreateEntitlement))
+			}
+			if allowSQLAnalyticsAccess {
+				entitlementsList = append(entitlementsList, string(AllowSQLAnalyticsAccessEntitlement))
 			}
 			if allowInstancePoolCreate {
 				entitlementsList = append(entitlementsList, string(AllowInstancePoolCreateEntitlement))
@@ -66,6 +73,16 @@ func ResourceGroup() *schema.Resource {
 				}
 				// Changed to false
 				entitlementsRemoveList = append(entitlementsRemoveList, string(AllowClusterCreateEntitlement))
+			}
+			// If allow_sql_analytics_access has changed
+			if d.HasChange("allow_sql_analytics_access") {
+				allowSQLAnalyticsAccess := d.Get("allow_sql_analytics_access").(bool)
+				// Changed to true
+				if allowSQLAnalyticsAccess {
+					entitlementsAddList = append(entitlementsAddList, string(AllowSQLAnalyticsAccessEntitlement))
+				}
+				// Changed to false
+				entitlementsRemoveList = append(entitlementsRemoveList, string(AllowSQLAnalyticsAccessEntitlement))
 			}
 			// If allow_instance_pool_create has changed
 			if d.HasChange("allow_instance_pool_create") {
@@ -107,6 +124,10 @@ func ResourceGroup() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
+			"allow_sql_analytics_access": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
 			"allow_instance_pool_create": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -118,6 +139,15 @@ func ResourceGroup() *schema.Resource {
 func isGroupClusterCreateEntitled(group *ScimGroup) bool {
 	for _, entitlement := range group.Entitlements {
 		if entitlement.Value == AllowClusterCreateEntitlement {
+			return true
+		}
+	}
+	return false
+}
+
+func isGroupSQLAnalyticsAccessEntitled(group *ScimGroup) bool {
+	for _, entitlement := range group.Entitlements {
+		if entitlement.Value == AllowSQLAnalyticsAccessEntitlement {
 			return true
 		}
 	}

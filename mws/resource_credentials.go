@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	"github.com/databrickslabs/terraform-provider-databricks/common"
-	"github.com/databrickslabs/terraform-provider-databricks/internal/util"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -61,8 +61,8 @@ func (a CredentialsAPI) List(mwsAcctID string) ([]Credentials, error) {
 
 // ResourceCredentials ...
 func ResourceCredentials() *schema.Resource {
-	p := util.NewPairSeparatedID("account_id", "credentials_id", "/")
-	return util.CommonResource{
+	p := common.NewPairSeparatedID("account_id", "credentials_id", "/")
+	return common.Resource{
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			accountID := d.Get("account_id").(string)
 			roleArn := d.Get("role_arn").(string)

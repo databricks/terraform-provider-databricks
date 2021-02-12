@@ -6,7 +6,7 @@ import (
 
 	"github.com/databrickslabs/terraform-provider-databricks/common"
 	"github.com/databrickslabs/terraform-provider-databricks/internal"
-	"github.com/databrickslabs/terraform-provider-databricks/internal/util"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -110,7 +110,7 @@ func ResourceServicePrincipal() *schema.Resource {
 		s["active"].Default = true
 		return s
 	})
-	return util.CommonResource{
+	return common.Resource{
 		Schema: servicePrincipalSchema,
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var sp ServicePrincipalEntity

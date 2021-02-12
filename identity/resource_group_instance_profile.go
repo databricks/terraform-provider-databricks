@@ -5,17 +5,17 @@ import (
 	"fmt"
 
 	"github.com/databrickslabs/terraform-provider-databricks/common"
-	"github.com/databrickslabs/terraform-provider-databricks/internal/util"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 // ResourceGroupInstanceProfile defines group role resource
 func ResourceGroupInstanceProfile() *schema.Resource {
-	return util.NewPairID("group_id", "instance_profile_id").Schema(func(
+	return common.NewPairID("group_id", "instance_profile_id").Schema(func(
 		m map[string]*schema.Schema) map[string]*schema.Schema {
 		m["instance_profile_id"].ValidateDiagFunc = ValidInstanceProfile
 		return m
-	}).BindResource(util.BindResource{
+	}).BindResource(common.BindResource{
 		ReadContext: func(ctx context.Context, groupID, roleARN string, c *common.DatabricksClient) error {
 			group, err := NewGroupsAPI(ctx, c).Read(groupID)
 			if err == nil && !group.HasRole(roleARN) {

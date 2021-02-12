@@ -6,7 +6,7 @@ import (
 
 	"github.com/databrickslabs/terraform-provider-databricks/common"
 	"github.com/databrickslabs/terraform-provider-databricks/internal"
-	"github.com/databrickslabs/terraform-provider-databricks/internal/util"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -71,8 +71,8 @@ func ResourceCustomerManagedKey() *schema.Resource {
 			s["account_id"].ForceNew = true
 			return s
 		})
-	p := util.NewPairSeparatedID("account_id", "customer_managed_key_id", "/")
-	return util.CommonResource{
+	p := common.NewPairSeparatedID("account_id", "customer_managed_key_id", "/")
+	return common.Resource{
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var cmk CustomerManagedKey
 			if err := internal.DataToStructPointer(d, s, &cmk); err != nil {

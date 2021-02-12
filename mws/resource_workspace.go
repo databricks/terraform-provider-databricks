@@ -11,7 +11,7 @@ import (
 
 	"github.com/databrickslabs/terraform-provider-databricks/common"
 	"github.com/databrickslabs/terraform-provider-databricks/internal"
-	"github.com/databrickslabs/terraform-provider-databricks/internal/util"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -181,11 +181,11 @@ func ResourceWorkspace() *schema.Resource {
 		s["is_no_public_ip_enabled"].Default = false
 		return s
 	})
-	p := util.NewPairSeparatedID("account_id", "workspace_id", "/").Schema(
+	p := common.NewPairSeparatedID("account_id", "workspace_id", "/").Schema(
 		func(_ map[string]*schema.Schema) map[string]*schema.Schema {
 			return s
 		})
-	return util.CommonResource{
+	return common.Resource{
 		Schema:        s,
 		SchemaVersion: 2,
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {

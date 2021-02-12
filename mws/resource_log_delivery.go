@@ -7,7 +7,7 @@ import (
 
 	"github.com/databrickslabs/terraform-provider-databricks/common"
 	"github.com/databrickslabs/terraform-provider-databricks/internal"
-	"github.com/databrickslabs/terraform-provider-databricks/internal/util"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
@@ -69,7 +69,7 @@ func (a LogDeliveryAPI) Disable(accountID, configID string) error {
 
 // ResourceLogDelivery ..
 func ResourceLogDelivery() *schema.Resource {
-	p := util.NewPairID("account_id", "config_id")
+	p := common.NewPairID("account_id", "config_id")
 	s := internal.StructToSchema(LogDeliveryConfiguration{},
 		func(s map[string]*schema.Schema) map[string]*schema.Schema {
 			// nolint
@@ -80,7 +80,7 @@ func ResourceLogDelivery() *schema.Resource {
 			}
 			return s
 		})
-	return util.CommonResource{
+	return common.Resource{
 		Schema: s,
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var ldc LogDeliveryConfiguration

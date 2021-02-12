@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	"github.com/databrickslabs/terraform-provider-databricks/common"
-	"github.com/databrickslabs/terraform-provider-databricks/internal/util"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -57,8 +57,8 @@ func (a StorageConfigurationsAPI) List(mwsAcctID string) ([]StorageConfiguration
 
 // ResourceStorageConfiguration ...
 func ResourceStorageConfiguration() *schema.Resource {
-	p := util.NewPairSeparatedID("account_id", "storage_configuration_id", "/")
-	return util.CommonResource{
+	p := common.NewPairSeparatedID("account_id", "storage_configuration_id", "/")
+	return common.Resource{
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			name := d.Get("storage_configuration_name").(string)
 			bucketName := d.Get("bucket_name").(string)

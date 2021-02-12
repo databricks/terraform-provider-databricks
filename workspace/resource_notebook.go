@@ -10,7 +10,6 @@ import (
 
 	"github.com/databrickslabs/terraform-provider-databricks/common"
 	"github.com/databrickslabs/terraform-provider-databricks/internal"
-	"github.com/databrickslabs/terraform-provider-databricks/internal/util"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -226,7 +225,7 @@ func ResourceNotebook() *schema.Resource {
 		},
 	})
 	s["content_base64"].RequiredWith = []string{"language"}
-	return util.CommonResource{
+	return common.Resource{
 		Schema:        s,
 		SchemaVersion: 1,
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {

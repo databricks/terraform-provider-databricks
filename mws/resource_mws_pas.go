@@ -6,7 +6,7 @@ import (
 
 	"github.com/databrickslabs/terraform-provider-databricks/common"
 	"github.com/databrickslabs/terraform-provider-databricks/internal"
-	"github.com/databrickslabs/terraform-provider-databricks/internal/util"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
@@ -60,8 +60,8 @@ func ResourcePrivateAccessSettings() *schema.Resource {
 		s["private_access_settings_name"].ValidateFunc = validation.StringLenBetween(4, 256)
 		return s
 	})
-	p := util.NewPairSeparatedID("account_id", "private_access_settings_id", "/")
-	return util.CommonResource{
+	p := common.NewPairSeparatedID("account_id", "private_access_settings_id", "/")
+	return common.Resource{
 		Schema: s,
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var pas PrivateAccessSettings

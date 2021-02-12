@@ -1,20 +1,19 @@
-package util
+package common
 
 import (
 	"context"
 	"testing"
 
-	"github.com/databrickslabs/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func TestImportingCallsRead(t *testing.T) {
-	r := CommonResource{
+	r := Resource{
 		Read: func(ctx context.Context,
 			d *schema.ResourceData,
-			c *common.DatabricksClient) error {
+			c *DatabricksClient) error {
 			d.SetId("abc")
 			return d.Set("foo", 1)
 		},
@@ -29,7 +28,7 @@ func TestImportingCallsRead(t *testing.T) {
 	d := r.TestResourceData()
 	datas, err := r.Importer.StateContext(
 		context.Background(), d,
-		&common.DatabricksClient{})
+		&DatabricksClient{})
 	require.NoError(t, err)
 	assert.Len(t, datas, 1)
 	assert.True(t, r.Schema["foo"].ForceNew)
@@ -38,16 +37,16 @@ func TestImportingCallsRead(t *testing.T) {
 }
 
 func TestUpdate(t *testing.T) {
-	r := CommonResource{
+	r := Resource{
 		Update: func(ctx context.Context,
 			d *schema.ResourceData,
-			c *common.DatabricksClient) error {
+			c *DatabricksClient) error {
 			return d.Set("foo", 1)
 		},
 		Read: func(ctx context.Context,
 			d *schema.ResourceData,
-			c *common.DatabricksClient) error {
-			return common.NotFound("nope")
+			c *DatabricksClient) error {
+			return NotFound("nope")
 		},
 		Schema: map[string]*schema.Schema{
 			"foo": {
@@ -60,7 +59,7 @@ func TestUpdate(t *testing.T) {
 	d := r.TestResourceData()
 	datas, err := r.Importer.StateContext(
 		context.Background(), d,
-		&common.DatabricksClient{})
+		&DatabricksClient{})
 	require.NoError(t, err)
 	assert.Len(t, datas, 1)
 	assert.False(t, r.Schema["foo"].ForceNew)

@@ -40,7 +40,7 @@ func DataSourceGroup() *schema.Resource {
 				return diag.FromErr(err)
 			}
 			groupsAPI := NewGroupsAPI(ctx, m)
-			groupList, err := groupsAPI.Filter(fmt.Sprintf("displayName eq %s", this.DisplayName))
+			groupList, err := groupsAPI.Filter(fmt.Sprintf("displayName eq '%s'", this.DisplayName))
 			if err != nil {
 				return diag.FromErr(err)
 			}

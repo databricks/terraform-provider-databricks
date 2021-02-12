@@ -3,7 +3,7 @@ package workspace
 import (
 	"context"
 
-	"github.com/databrickslabs/databricks-terraform/common"
+	"github.com/databrickslabs/terraform-provider-databricks/common"
 )
 
 // NewGlobalInitScriptsAPI creates GlobalInitScriptsAPI instance from provider meta

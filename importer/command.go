@@ -6,7 +6,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/databrickslabs/databricks-terraform/common"
+	"github.com/databrickslabs/terraform-provider-databricks/common"
 )
 
 type levelWriter []string

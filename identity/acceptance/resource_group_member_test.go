@@ -4,10 +4,10 @@ import (
 	"context"
 	"testing"
 
-	. "github.com/databrickslabs/databricks-terraform/identity"
+	. "github.com/databrickslabs/terraform-provider-databricks/identity"
 
-	"github.com/databrickslabs/databricks-terraform/common"
-	"github.com/databrickslabs/databricks-terraform/internal/acceptance"
+	"github.com/databrickslabs/terraform-provider-databricks/common"
+	"github.com/databrickslabs/terraform-provider-databricks/internal/acceptance"
 	"github.com/stretchr/testify/assert"
 )
 

@@ -6,9 +6,9 @@ import (
 	"log"
 	"strings"
 
-	"github.com/databrickslabs/databricks-terraform/compute"
-	"github.com/databrickslabs/databricks-terraform/identity"
-	"github.com/databrickslabs/databricks-terraform/internal"
+	"github.com/databrickslabs/terraform-provider-databricks/compute"
+	"github.com/databrickslabs/terraform-provider-databricks/identity"
+	"github.com/databrickslabs/terraform-provider-databricks/internal"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 

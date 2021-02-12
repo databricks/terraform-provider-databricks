@@ -10,8 +10,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/databrickslabs/databricks-terraform/common"
-	"github.com/databrickslabs/databricks-terraform/internal"
+	"github.com/databrickslabs/terraform-provider-databricks/common"
+	"github.com/databrickslabs/terraform-provider-databricks/internal"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 

@@ -3,7 +3,7 @@ package storage
 import (
 	"context"
 
-	"github.com/databrickslabs/databricks-terraform/workspace"
+	"github.com/databrickslabs/terraform-provider-databricks/workspace"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )

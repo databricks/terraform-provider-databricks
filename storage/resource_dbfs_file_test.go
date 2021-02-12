@@ -6,7 +6,7 @@ import (
 	"net/url"
 	"testing"
 
-	"github.com/databrickslabs/databricks-terraform/internal/qa"
+	"github.com/databrickslabs/terraform-provider-databricks/internal/qa"
 	"github.com/stretchr/testify/assert"
 )
 

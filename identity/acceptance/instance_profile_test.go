@@ -3,10 +3,10 @@ package acceptance
 import (
 	"context"
 
-	"github.com/databrickslabs/databricks-terraform/common"
-	"github.com/databrickslabs/databricks-terraform/identity"
-	"github.com/databrickslabs/databricks-terraform/internal/acceptance"
-	"github.com/databrickslabs/databricks-terraform/internal/qa"
+	"github.com/databrickslabs/terraform-provider-databricks/common"
+	"github.com/databrickslabs/terraform-provider-databricks/identity"
+	"github.com/databrickslabs/terraform-provider-databricks/internal/acceptance"
+	"github.com/databrickslabs/terraform-provider-databricks/internal/qa"
 
 	"os"
 	"testing"

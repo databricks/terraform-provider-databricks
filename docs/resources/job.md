@@ -54,7 +54,7 @@ output "job_url" {
 The following arguments are required:
 
 * `name` - (Optional) (String) An optional name for the job. The default value is Untitled.
-* `new_cluster` - (Optional) (List) Same set of parameters as for [databricks_cluster](cluster.md) resource. This field is a block and is documented below.
+* `new_cluster` - (Optional) (List) Same set of parameters as for [databricks_cluster](cluster.md) resource.
 * `existing_cluster_id` - (Optional) (String) If existing_cluster_id, the ID of an existing [cluster](cluster.md) that will be used for all runs of this job. When running jobs on an existing cluster, you may need to manually restart the cluster if it stops responding. We strongly suggest to use `new_cluster` for greater reliability.
 * `library` - (Optional) (Set) An optional list of libraries to be installed on the cluster that will execute the job. Please consult [libraries section](cluster.md#libraries) for [databricks_cluster](cluster.md) resource.
 * `retry_on_timeout` - (Optional) (Bool) An optional policy to specify whether to retry a job when it times out. The default behavior is to not retry on timeout.

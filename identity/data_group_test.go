@@ -18,7 +18,7 @@ func TestDataSourceGroup(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/Groups?filter=displayName%20eq%20ds",
+				Resource: "/api/2.0/preview/scim/v2/Groups?filter=displayName%20eq%20%27ds%27",
 				Response: GroupList{
 					Resources: []ScimGroup{
 						{

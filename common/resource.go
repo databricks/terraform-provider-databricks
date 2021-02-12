@@ -1,20 +1,19 @@
-package util
+package common
 
 import (
 	"context"
 	"log"
 
-	"github.com/databrickslabs/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-// CommonResource aims to simplify things like error & deleted entities handling
-type CommonResource struct {
-	Create         func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error
-	Read           func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error
-	Update         func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error
-	Delete         func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error
+// Resource aims to simplify things like error & deleted entities handling
+type Resource struct {
+	Create         func(ctx context.Context, d *schema.ResourceData, c *DatabricksClient) error
+	Read           func(ctx context.Context, d *schema.ResourceData, c *DatabricksClient) error
+	Update         func(ctx context.Context, d *schema.ResourceData, c *DatabricksClient) error
+	Delete         func(ctx context.Context, d *schema.ResourceData, c *DatabricksClient) error
 	StateUpgraders []schema.StateUpgrader
 	Schema         map[string]*schema.Schema
 	SchemaVersion  int
@@ -22,11 +21,11 @@ type CommonResource struct {
 }
 
 // ToResource converts to Terraform resource definition
-func (r CommonResource) ToResource() *schema.Resource {
+func (r Resource) ToResource() *schema.Resource {
 	var update func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics
 	if r.Update != nil {
 		update = func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-			c := m.(*common.DatabricksClient)
+			c := m.(*DatabricksClient)
 			if err := r.Update(ctx, d, c); err != nil {
 				return diag.FromErr(err)
 			}
@@ -45,10 +44,10 @@ func (r CommonResource) ToResource() *schema.Resource {
 		}
 	}
 	read := func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-		err := r.Read(ctx, d, m.(*common.DatabricksClient))
-		if e, ok := err.(common.APIError); ok && e.IsMissing() {
+		err := r.Read(ctx, d, m.(*DatabricksClient))
+		if e, ok := err.(APIError); ok && e.IsMissing() {
 			log.Printf("[INFO] %s[id=%s] is removed on backend",
-				common.ResourceName.GetOrUnknown(ctx), d.Id())
+				ResourceName.GetOrUnknown(ctx), d.Id())
 			d.SetId("")
 			return nil
 		}
@@ -62,11 +61,11 @@ func (r CommonResource) ToResource() *schema.Resource {
 		SchemaVersion:  r.SchemaVersion,
 		StateUpgraders: r.StateUpgraders,
 		CreateContext: func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-			c := m.(*common.DatabricksClient)
+			c := m.(*DatabricksClient)
 			err := r.Create(ctx, d, c)
-			if e, ok := err.(common.APIError); ok && e.IsMissing() {
+			if e, ok := err.(APIError); ok && e.IsMissing() {
 				log.Printf("[INFO] %s[id=%s] is removed on backend",
-					common.ResourceName.GetOrUnknown(ctx), d.Id())
+					ResourceName.GetOrUnknown(ctx), d.Id())
 				d.SetId("")
 				return nil
 			}
@@ -81,7 +80,7 @@ func (r CommonResource) ToResource() *schema.Resource {
 		ReadContext:   read,
 		UpdateContext: update,
 		DeleteContext: func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-			if err := r.Delete(ctx, d, m.(*common.DatabricksClient)); err != nil {
+			if err := r.Delete(ctx, d, m.(*DatabricksClient)); err != nil {
 				return diag.FromErr(err)
 			}
 			return nil

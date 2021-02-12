@@ -4,14 +4,14 @@ import (
 	"context"
 
 	"github.com/databrickslabs/terraform-provider-databricks/common"
-	"github.com/databrickslabs/terraform-provider-databricks/internal/util"
+
 	"github.com/databrickslabs/terraform-provider-databricks/workspace"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 // ResourceDBFSFile manages files on DBFS
 func ResourceDBFSFile() *schema.Resource {
-	return util.CommonResource{
+	return common.Resource{
 		SchemaVersion: 1,
 		Schema: workspace.FileContentSchema(map[string]*schema.Schema{
 			"file_size": {

@@ -6,7 +6,7 @@ import (
 	"github.com/databrickslabs/terraform-provider-databricks/common"
 	"github.com/databrickslabs/terraform-provider-databricks/identity"
 	"github.com/databrickslabs/terraform-provider-databricks/internal/acceptance"
-	"github.com/databrickslabs/terraform-provider-databricks/internal/qa"
+	"github.com/databrickslabs/terraform-provider-databricks/qa"
 
 	"os"
 	"testing"

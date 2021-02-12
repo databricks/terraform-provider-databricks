@@ -5,13 +5,13 @@ import (
 	"fmt"
 
 	"github.com/databrickslabs/terraform-provider-databricks/common"
-	"github.com/databrickslabs/terraform-provider-databricks/internal/util"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 // ResourceGroupMember bind group with member
 func ResourceGroupMember() *schema.Resource {
-	return util.NewPairID("group_id", "member_id").BindResource(util.BindResource{
+	return common.NewPairID("group_id", "member_id").BindResource(common.BindResource{
 		CreateContext: func(ctx context.Context, groupID, memberID string, c *common.DatabricksClient) error {
 			return NewGroupsAPI(ctx, c).PatchR(groupID, scimPatchRequest("add", "members", memberID))
 		},

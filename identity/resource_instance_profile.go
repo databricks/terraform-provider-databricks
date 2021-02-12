@@ -10,7 +10,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/databrickslabs/terraform-provider-databricks/common"
-	"github.com/databrickslabs/terraform-provider-databricks/internal/util"
+
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -137,7 +137,7 @@ func (a InstanceProfilesAPI) Synchronized(arn string, testCallback func() bool) 
 
 // ResourceInstanceProfile manages Instance Profile ARN binding
 func ResourceInstanceProfile() *schema.Resource {
-	return util.CommonResource{
+	return common.Resource{
 		Schema: map[string]*schema.Schema{
 			"instance_profile_arn": {
 				Type:     schema.TypeString,

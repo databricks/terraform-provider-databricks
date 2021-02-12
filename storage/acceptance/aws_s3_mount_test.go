@@ -9,11 +9,10 @@ import (
 	"github.com/databrickslabs/terraform-provider-databricks/compute"
 	"github.com/databrickslabs/terraform-provider-databricks/identity"
 	"github.com/databrickslabs/terraform-provider-databricks/internal/acceptance"
+	"github.com/databrickslabs/terraform-provider-databricks/qa"
 	. "github.com/databrickslabs/terraform-provider-databricks/storage"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/stretchr/testify/assert"
-
-	"github.com/databrickslabs/terraform-provider-databricks/internal/qa"
 )
 
 func getRunningClusterWithInstanceProfile(t *testing.T, client *common.DatabricksClient) (compute.ClusterInfo, error) {

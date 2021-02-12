@@ -14,7 +14,6 @@ import (
 
 	"github.com/databrickslabs/terraform-provider-databricks/common"
 	"github.com/databrickslabs/terraform-provider-databricks/internal"
-	"github.com/databrickslabs/terraform-provider-databricks/internal/util"
 )
 
 // DefaultProvisionTimeout ...
@@ -24,7 +23,7 @@ var clusterSchema = resourceClusterSchema()
 
 // ResourceCluster - returns Cluster resource description
 func ResourceCluster() *schema.Resource {
-	return util.CommonResource{
+	return common.Resource{
 		Create: resourceClusterCreate,
 		Read:   resourceClusterRead,
 		Update: resourceClusterUpdate,

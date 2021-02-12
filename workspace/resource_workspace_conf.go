@@ -10,7 +10,7 @@ import (
 	"strings"
 
 	"github.com/databrickslabs/terraform-provider-databricks/common"
-	"github.com/databrickslabs/terraform-provider-databricks/internal/util"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -78,7 +78,7 @@ func ResourceWorkspaceConf() *schema.Resource {
 		d.SetId("_")
 		return nil
 	}
-	return util.CommonResource{
+	return common.Resource{
 		Create: create,
 		Update: create,
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {

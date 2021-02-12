@@ -6,7 +6,7 @@ import (
 	"net/http"
 
 	"github.com/databrickslabs/terraform-provider-databricks/common"
-	"github.com/databrickslabs/terraform-provider-databricks/internal/util"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
@@ -119,8 +119,8 @@ func (a SecretsAPI) Read(scope string, key string) (SecretMetadata, error) {
 
 // ResourceSecret manages secrets
 func ResourceSecret() *schema.Resource {
-	p := util.NewPairSeparatedID("scope", "key", "|||")
-	return util.CommonResource{
+	p := common.NewPairSeparatedID("scope", "key", "|||")
+	return common.Resource{
 		Schema: map[string]*schema.Schema{
 			"string_value": {
 				Type:         schema.TypeString,

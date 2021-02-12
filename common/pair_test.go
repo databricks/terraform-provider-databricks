@@ -1,14 +1,15 @@
-package util
+package common
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 	"testing"
 
-	"github.com/databrickslabs/terraform-provider-databricks/common"
-	"github.com/databrickslabs/terraform-provider-databricks/internal/qa"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -21,7 +22,6 @@ func TestPairIDResource(t *testing.T) {
 		assertID             string
 		err                  error
 		assertError          string
-		removed              bool
 		schema               func(m map[string]*schema.Schema) map[string]*schema.Schema
 	}
 	tests := []bindResourceFixture{
@@ -78,12 +78,12 @@ func TestPairIDResource(t *testing.T) {
 			assertID: "a|b|c|d",
 		},
 		{
-			read:    true,
-			id:      "a|b",
-			err:     common.NotFound("Nope"),
-			left:    "a",
-			right:   "b",
-			removed: true,
+			read:     true,
+			id:       "a|b",
+			err:      NotFound("Nope"),
+			left:     "a",
+			right:    "b",
+			assertID: "",
 		},
 		{
 			read:        true,
@@ -118,7 +118,6 @@ func TestPairIDResource(t *testing.T) {
 			assertError: "Nope",
 			// ID is not set on error for create
 			assertID: "",
-			removed:  true,
 		},
 		{
 			delete:      true,
@@ -132,9 +131,9 @@ func TestPairIDResource(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(fmt.Sprintf("%#v", tt), func(t *testing.T) {
-			var state map[string]interface{}
+			var state map[string]string
 			if tt.create {
-				state = map[string]interface{}{
+				state = map[string]string{
 					"left_id":  tt.left,
 					"right_id": tt.right,
 				}
@@ -143,25 +142,36 @@ func TestPairIDResource(t *testing.T) {
 			if tt.schema != nil {
 				p.Schema(tt.schema)
 			}
-			d, err := qa.ResourceFixture{
-				Resource: p.BindResource(BindResource{
-					ReadContext: func(ctx context.Context, left, right string, c *common.DatabricksClient) error {
-						return tt.err
-					},
-					CreateContext: func(ctx context.Context, left, right string, c *common.DatabricksClient) error {
-						return tt.err
-					},
-					DeleteContext: func(ctx context.Context, left, right string, c *common.DatabricksClient) error {
-						return tt.err
-					},
-				}),
-				Create:  tt.create,
-				Read:    tt.read,
-				Delete:  tt.delete,
-				ID:      tt.id,
-				Removed: tt.removed,
-				State:   state,
-			}.Apply(t)
+			resource := p.BindResource(BindResource{
+				ReadContext: func(ctx context.Context, left, right string, c *DatabricksClient) error {
+					return tt.err
+				},
+				CreateContext: func(ctx context.Context, left, right string, c *DatabricksClient) error {
+					return tt.err
+				},
+				DeleteContext: func(ctx context.Context, left, right string, c *DatabricksClient) error {
+					return tt.err
+				},
+			})
+			ctx := context.Background()
+			d := resource.Data(&terraform.InstanceState{
+				Attributes: state,
+				ID:         tt.id,
+			})
+			var err error
+			var diags diag.Diagnostics
+			client := &DatabricksClient{}
+			switch {
+			case tt.create:
+				diags = resource.CreateContext(ctx, d, client)
+			case tt.read:
+				diags = resource.ReadContext(ctx, d, client)
+			case tt.delete:
+				diags = resource.DeleteContext(ctx, d, client)
+			}
+			if diags != nil {
+				err = errors.New(diags[0].Summary)
+			}
 			if tt.assertError != "" {
 				require.NotNilf(t, err, "Expected to have %s error", tt.assertError)
 				require.True(t, strings.HasPrefix(err.Error(), tt.assertError), err)

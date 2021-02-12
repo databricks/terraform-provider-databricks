@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/databrickslabs/terraform-provider-databricks/common"
-	"github.com/databrickslabs/terraform-provider-databricks/internal/util"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
@@ -69,7 +69,7 @@ func parsePolicyFromData(d *schema.ResourceData) (*ClusterPolicy, error) {
 
 // ResourceClusterPolicy ...
 func ResourceClusterPolicy() *schema.Resource {
-	return util.CommonResource{
+	return common.Resource{
 		Schema: map[string]*schema.Schema{
 			"policy_id": {
 				Type:     schema.TypeString,

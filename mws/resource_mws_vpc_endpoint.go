@@ -8,7 +8,7 @@ import (
 
 	"github.com/databrickslabs/terraform-provider-databricks/common"
 	"github.com/databrickslabs/terraform-provider-databricks/internal"
-	"github.com/databrickslabs/terraform-provider-databricks/internal/util"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -81,8 +81,8 @@ func ResourceVPCEndpoint() *schema.Resource {
 		// s["aws_account_id"].ForceNew = false
 		return s
 	})
-	p := util.NewPairSeparatedID("account_id", "vpc_endpoint_id", "/")
-	return util.CommonResource{
+	p := common.NewPairSeparatedID("account_id", "vpc_endpoint_id", "/")
+	return common.Resource{
 		Schema: s,
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var vpcEndpoint VPCEndpoint

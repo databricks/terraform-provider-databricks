@@ -1,4 +1,4 @@
-package util
+package common
 
 import (
 	"context"
@@ -6,7 +6,6 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/databrickslabs/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -77,23 +76,23 @@ func (p *Pair) Pack(d *schema.ResourceData) {
 
 // BindResource defines resource with simplified functions
 type BindResource struct {
-	ReadContext   func(ctx context.Context, left, right string, c *common.DatabricksClient) error
-	CreateContext func(ctx context.Context, left, right string, c *common.DatabricksClient) error
-	DeleteContext func(ctx context.Context, left, right string, c *common.DatabricksClient) error
+	ReadContext   func(ctx context.Context, left, right string, c *DatabricksClient) error
+	CreateContext func(ctx context.Context, left, right string, c *DatabricksClient) error
+	DeleteContext func(ctx context.Context, left, right string, c *DatabricksClient) error
 }
 
 // BindResource creates resource that relies on binding ID pair with simple schema & importer
 func (p *Pair) BindResource(pr BindResource) *schema.Resource {
-	return CommonResource{
+	return Resource{
 		Schema: p.schema,
-		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+		Read: func(ctx context.Context, d *schema.ResourceData, c *DatabricksClient) error {
 			left, right, err := p.Unpack(d)
 			if err != nil {
 				return err
 			}
 			return pr.ReadContext(ctx, left, right, c)
 		},
-		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+		Create: func(ctx context.Context, d *schema.ResourceData, c *DatabricksClient) error {
 			left := d.Get(p.left).(string)
 			if left == "" {
 				return fmt.Errorf("%s cannot be empty", p.left)
@@ -109,7 +108,7 @@ func (p *Pair) BindResource(pr BindResource) *schema.Resource {
 			p.Pack(d)
 			return nil
 		},
-		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+		Delete: func(ctx context.Context, d *schema.ResourceData, c *DatabricksClient) error {
 			left, right, err := p.Unpack(d)
 			if err != nil {
 				return err

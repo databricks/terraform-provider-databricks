@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/databrickslabs/terraform-provider-databricks/common"
-	"github.com/databrickslabs/terraform-provider-databricks/internal/util"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -57,8 +57,8 @@ func (a SecretAclsAPI) List(scope string) ([]ACLItem, error) {
 
 // ResourceSecretACL manages access to secret scopes
 func ResourceSecretACL() *schema.Resource {
-	p := util.NewPairSeparatedID("scope", "principal", "|||")
-	return util.CommonResource{
+	p := common.NewPairSeparatedID("scope", "principal", "|||")
+	return common.Resource{
 		Schema: map[string]*schema.Schema{
 			"scope": {
 				Type:         schema.TypeString,

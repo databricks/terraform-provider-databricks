@@ -8,7 +8,7 @@ import (
 
 	"github.com/databrickslabs/terraform-provider-databricks/common"
 	"github.com/databrickslabs/terraform-provider-databricks/internal"
-	"github.com/databrickslabs/terraform-provider-databricks/internal/util"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -150,7 +150,7 @@ func ResourceSQLEndpoint() *schema.Resource {
 			validation.IntBetween(1, MaxNumClusters))
 		return m
 	})
-	return util.CommonResource{
+	return common.Resource{
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var se SQLEndpoint
 			if err := internal.DataToStructPointer(d, s, &se); err != nil {

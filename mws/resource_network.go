@@ -8,7 +8,7 @@ import (
 
 	"github.com/databrickslabs/terraform-provider-databricks/common"
 	"github.com/databrickslabs/terraform-provider-databricks/internal"
-	"github.com/databrickslabs/terraform-provider-databricks/internal/util"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -79,8 +79,8 @@ func ResourceNetwork() *schema.Resource {
 		s["security_group_ids"].MaxItems = 5
 		return s
 	})
-	p := util.NewPairSeparatedID("account_id", "network_id", "/")
-	return util.CommonResource{
+	p := common.NewPairSeparatedID("account_id", "network_id", "/")
+	return common.Resource{
 		Schema: s,
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var network Network

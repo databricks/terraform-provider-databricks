@@ -8,7 +8,7 @@ import (
 
 	"github.com/databrickslabs/terraform-provider-databricks/common"
 	"github.com/databrickslabs/terraform-provider-databricks/internal"
-	"github.com/databrickslabs/terraform-provider-databricks/internal/util"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
@@ -124,7 +124,7 @@ func ResourceSecretScope() *schema.Resource {
 		s["keyvault_metadata"].ForceNew = true
 		return s
 	})
-	return util.CommonResource{
+	return common.Resource{
 		Schema:        s,
 		SchemaVersion: 2,
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {

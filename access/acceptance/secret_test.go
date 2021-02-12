@@ -5,11 +5,12 @@ import (
 	"os"
 	"testing"
 
-	. "github.com/databrickslabs/terraform-provider-databricks/access"
+	"github.com/databrickslabs/terraform-provider-databricks/access"
+	"github.com/databrickslabs/terraform-provider-databricks/qa"
 
 	"github.com/databrickslabs/terraform-provider-databricks/common"
 	"github.com/databrickslabs/terraform-provider-databricks/internal/acceptance"
-	"github.com/databrickslabs/terraform-provider-databricks/internal/qa"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/stretchr/testify/assert"
 )
@@ -39,7 +40,7 @@ func TestAccSecretResource(t *testing.T) {
 			{
 				PreConfig: func() {
 					client := common.CommonEnvironmentClient()
-					err := NewSecretsAPI(context.Background(), client).Delete(scope, key)
+					err := access.NewSecretsAPI(context.Background(), client).Delete(scope, key)
 					assert.NoError(t, err, err)
 				},
 				Config: config,

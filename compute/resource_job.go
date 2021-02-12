@@ -12,7 +12,6 @@ import (
 
 	"github.com/databrickslabs/terraform-provider-databricks/common"
 	"github.com/databrickslabs/terraform-provider-databricks/internal"
-	"github.com/databrickslabs/terraform-provider-databricks/internal/util"
 )
 
 // NewJobsAPI creates JobsAPI instance from provider meta
@@ -160,7 +159,7 @@ var jobSchema = internal.StructToSchema(JobSettings{},
 
 // ResourceJob ...
 func ResourceJob() *schema.Resource {
-	return util.CommonResource{
+	return common.Resource{
 		Schema:        jobSchema,
 		SchemaVersion: 2,
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {

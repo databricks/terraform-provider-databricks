@@ -12,7 +12,8 @@ import (
 	"github.com/databrickslabs/terraform-provider-databricks/compute"
 	. "github.com/databrickslabs/terraform-provider-databricks/compute"
 	"github.com/databrickslabs/terraform-provider-databricks/internal/acceptance"
-	"github.com/databrickslabs/terraform-provider-databricks/internal/qa"
+	"github.com/databrickslabs/terraform-provider-databricks/qa"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"

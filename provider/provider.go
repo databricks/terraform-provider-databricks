@@ -9,14 +9,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
-	"github.com/databrickslabs/databricks-terraform/access"
-	"github.com/databrickslabs/databricks-terraform/common"
-	"github.com/databrickslabs/databricks-terraform/compute"
-	"github.com/databrickslabs/databricks-terraform/identity"
-	"github.com/databrickslabs/databricks-terraform/mws"
-	"github.com/databrickslabs/databricks-terraform/sqlanalytics"
-	"github.com/databrickslabs/databricks-terraform/storage"
-	"github.com/databrickslabs/databricks-terraform/workspace"
+	"github.com/databrickslabs/terraform-provider-databricks/access"
+	"github.com/databrickslabs/terraform-provider-databricks/common"
+	"github.com/databrickslabs/terraform-provider-databricks/compute"
+	"github.com/databrickslabs/terraform-provider-databricks/identity"
+	"github.com/databrickslabs/terraform-provider-databricks/mws"
+	"github.com/databrickslabs/terraform-provider-databricks/sqlanalytics"
+	"github.com/databrickslabs/terraform-provider-databricks/storage"
+	"github.com/databrickslabs/terraform-provider-databricks/workspace"
 )
 
 // DatabricksProvider returns the entire terraform provider object

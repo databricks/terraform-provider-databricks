@@ -4,7 +4,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/databrickslabs/databricks-terraform/internal/acceptance"
+	"github.com/databrickslabs/terraform-provider-databricks/internal/acceptance"
 )
 
 func TestMwsAccNetworks(t *testing.T) {

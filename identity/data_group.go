@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"sort"
 
-	"github.com/databrickslabs/databricks-terraform/internal"
+	"github.com/databrickslabs/terraform-provider-databricks/internal"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"

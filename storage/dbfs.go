@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/base64"
 
-	"github.com/databrickslabs/databricks-terraform/common"
+	"github.com/databrickslabs/terraform-provider-databricks/common"
 )
 
 // FileList contains list of file metadata entries

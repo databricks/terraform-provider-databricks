@@ -6,7 +6,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/databrickslabs/databricks-terraform/common"
+	"github.com/databrickslabs/terraform-provider-databricks/common"
 )
 
 // NewLibrariesAPI creates LibrariesAPI instance from provider meta

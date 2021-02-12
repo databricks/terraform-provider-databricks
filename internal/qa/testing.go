@@ -17,8 +17,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/databrickslabs/databricks-terraform/common"
-	"github.com/databrickslabs/databricks-terraform/internal"
+	"github.com/databrickslabs/terraform-provider-databricks/common"
+	"github.com/databrickslabs/terraform-provider-databricks/internal"
 
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/hcl"

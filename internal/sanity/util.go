@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/databrickslabs/databricks-terraform/common"
+	"github.com/databrickslabs/terraform-provider-databricks/common"
 	"github.com/stretchr/testify/assert"
 )
 

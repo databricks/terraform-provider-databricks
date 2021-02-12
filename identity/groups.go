@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/databrickslabs/databricks-terraform/common"
+	"github.com/databrickslabs/terraform-provider-databricks/common"
 )
 
 // NewGroupsAPI creates GroupsAPI instance from provider meta

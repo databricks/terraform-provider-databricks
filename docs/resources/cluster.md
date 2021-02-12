@@ -175,7 +175,7 @@ There are a few more advanced attributes for S3 log delivery:
 
 ## init_scripts
 
-You can specify up to 10 different init scripts for the cluster.
+You can specify up to 10 different init scripts for the specific cluster. If you want a shell script to run on all clusters and jobs within the same workspace, you should consider [databricks_global_init_script](global_init_script.md).
 
 Example of taking init script from DBFS:
 ```hcl
@@ -236,6 +236,37 @@ The following options are available:
 * `ebs_volume_count` - (Optional) The number of volumes launched for each instance. You can choose up to 10 volumes. This feature is only enabled for supported node types. Legacy node types cannot specify custom EBS volumes. For node types with no instance store, at least one EBS volume needs to be specified; otherwise, cluster creation will fail. These EBS volumes will be mounted at /ebs0, /ebs1, and etc. Instance store volumes will be mounted at /local_disk0, /local_disk1, and etc. If EBS volumes are attached, Databricks will configure Spark to use only the EBS volumes for scratch storage because heterogeneously sized scratch devices can lead to inefficient disk utilization. If no EBS volumes are attached, Databricks will configure Spark to use instance store volumes. If EBS volumes are specified, then the Spark configuration spark.local.dir will be overridden.
 * `ebs_volume_size` - (Optional) The size of each EBS volume (in GiB) launched for each instance. For general purpose SSD, this value must be within the range 100 - 4096. For throughput optimized HDD, this value must be within the range 500 - 4096. Custom EBS volumes cannot be specified for the legacy node types (memory-optimized and compute-optimized).
 
+## docker_image
+
+[Databricks Container Services](https://docs.databricks.com/clusters/custom-containers.html) lets you specify a Docker image when you create a cluster. You need to enable Container Services in *Admin Console /  Advanced* page in the user interface. By enabling this feature, you acknowledge and agree that your usage of this feature is subject to the [applicable additional terms](http://www.databricks.com/product-specific-terms).
+
+`docker_image` configuration block has the following attributes:
+
+* `url` - URL for the Docker image
+* `basic_auth` - (Optional) `basic_auth.username` and `basic_auth.password` for Docker repository. Docker registry credentials are encrypted when they are stored in Databricks internal storage and when they are passed to a registry upon fetching Docker images at cluster launch. However, other authenticated and authorized API users of this workspace can access the username and password.
+
+Example usage with [azurerm_container_registry](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/container_registry) and [docker_registry_image](https://registry.terraform.io/providers/kreuzwerker/docker/latest/docs/resources/registry_image), that you can adapt to your specific use-case:
+
+```hcl
+resource "docker_registry_image" "this" {
+  name = "${azurerm_container_registry.this.login_server}/sample:latest"
+  build {
+    # ...
+  }
+}
+
+resource "databricks_cluster" "this" {
+  # ...
+  docker_image {
+    url = docker_registry_image.this.name
+    basic_auth {
+      username = azurerm_container_registry.this.admin_username
+      password = azurerm_container_registry.this.admin_password
+    }
+  }
+}
+```
+
 ## Attribute Reference
 
 In addition to all arguments above, the following attributes are exported:
@@ -250,7 +281,7 @@ In addition to all arguments above, the following attributes are exported:
 * [databricks_cluster_policy](cluster_policy.md) can control which kinds of clusters users can create.
 * Users, who have access to Cluster Policy, but do not have an `allow_cluster_create` argument set would still be able to create clusters, but within the boundary of the policy.
 * [databricks_permissions](permissions.md#Cluster-usage) can control which groups or individual users can *Manage*, *Restart* or *Attach to* individual clusters.
-* `instance_profile_arn` can control which data a given cluster can access through cloud-native controls.
+* `instance_profile_arn` *(AWS only)* can control which data a given cluster can access through cloud-native controls.
 
 ## Import
 

@@ -3,7 +3,7 @@ subcategory: "Workspace"
 ---
 # databricks_global_init_script Resource
 
-This resource allows you to manage [Databricks global init scripts](https://docs.databricks.com/clusters/init-scripts.html#global-init-scripts).
+This resource allows you to manage [Databricks global init scripts](https://docs.databricks.com/clusters/init-scripts.html#global-init-scripts), which are run on all [databricks_cluster](cluster.md#init_scripts) and [databricks_job](job.md#new_cluster).
 
 ## Example Usage
 

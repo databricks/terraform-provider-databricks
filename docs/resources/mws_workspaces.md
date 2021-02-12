@@ -5,13 +5,11 @@ subcategory: "AWS"
 
 -> **Note** This resource has an evolving API, which may change in future versions of the provider.
 
-This resource allows you to set up [workspaces in E2 architecture on AWS](https://docs.databricks.com/getting-started/overview.html#e2-architecture-1). 
-
--> **Note** Please follow this [complete runnable example](../guides/aws-workspace.md) with new VPC and new workspace setup. Please pay special attention to the fact that there you have two different instances of a databricks provider - one for deploying workspaces (with host=https://accounts.cloud.databricks.com/) and another for the workspace you’ve created with `databricks_mws_workspaces` resource. If you want both creations of workspaces & clusters within the same Terraform module (essentially the same directory), you should use the provider aliasing feature of Terraform. We strongly recommend having one terraform module to create workspace + PAT token and the rest in different modules.
+This resource allows you to set up [workspaces in E2 architecture on AWS](https://docs.databricks.com/getting-started/overview.html#e2-architecture-1). Please follow this [complete runnable example](../guides/aws-workspace.md) with new VPC and new workspace setup.
 
 ## Example Usage
 
-![VPCs](https://docs.databricks.com/_images/customer-managed-vpc.png)
+![Simplest multiworkspace](https://github.com/databrickslabs/terraform-provider-databricks/raw/master/docs/simplest-multiworkspace.png)
 
 To get workspace running, you have to configure a couple of things:
 
@@ -86,6 +84,8 @@ resource "databricks_token" "pat" {
 ```
 
 ## Workspace with Databricks-Managed VPC
+
+![VPCs](https://docs.databricks.com/_images/customer-managed-vpc.png)
 
 By default, Databricks creates a VPC in your AWS account for each workspace. Databricks uses it for running clusters in the workspace. Optionally, you can use your VPC for the workspace, using the feature customer-managed VPC. Databricks recommends that you provide your VPC with [databricks_mws_networks](notebook.md) so that you can configure it according to your organization’s enterprise cloud standards while still conforming to Databricks requirements. You cannot migrate an existing workspace to your VPC. Please see the difference described through IAM policy actions [on this page](https://docs.databricks.com/administration-guide/account-api/iam-role.html).
 
@@ -194,7 +194,6 @@ In addition to all arguments above, the following attributes are exported:
 * `workspace_status` - (String) workspace status
 * `creation_time` - (Integer) time when workspace was created
 * `workspace_url` - (String) URL of the workspace
-* `workspace_id` - (Integer) same as `id`
 
 ## Timeouts
 

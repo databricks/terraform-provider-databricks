@@ -66,12 +66,22 @@ output "databricks_host" {
 }
 ```
 
+### Data resources and Authentication is not configured errors
+
+*In Terraform 0.13 and later*, data resources have the same dependency resolution behavior [as defined for managed resources](https://www.terraform.io/docs/language/resources/behavior.html#resource-dependencies). Most data resources make an API call to a workspace. If a workspace doesn't exist yet, `Authentication is not configured for provider` error is raised. To work around this issue and guarantee a proper lazy authentication with data resources, you should add `depends_on = [azurerm_databricks_workspace.this]` to the body. This issue doesn't occur if workspace is created *in one module* and resources [within the workspace](workspace-management.md) are created *in another*. We do not recommend using Terraform 0.12 and earlier, if your usage involves data resources.
+
+```hcl
+data "databricks_current_user" "me" {
+  depends_on = [azurerm_databricks_workspace.this]
+}
+```
+
 ## Provider configuration
 
 In [the next step](workspace-management.md), please use the [special configurations for Azure](../index.md#special-configurations-for-azure):
 
 ```hcl
 provider "databricks" {
-    azure_workspace_resource_id = azurerm_databricks_workspace.this.id
+  azure_workspace_resource_id = azurerm_databricks_workspace.this.id
 }
 ```

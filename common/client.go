@@ -96,7 +96,7 @@ func (c *DatabricksClient) Authenticate() error {
 		"4. azure_databricks_workspace_id + azure_client_id + azure_client_secret + azure_tenant_id " +
 		"for Azure Service Principal authentication.\n" +
 		"5. Run `databricks configure --token` that will create ~/.databrickscfg file.\n\n" +
-		"Please check https://github.com/databrickslabs/terraform-provider-databricks/blob/master/docs/index.md#authentication for details")
+		"Please check https://registry.terraform.io/providers/databrickslabs/databricks/latest/docs#authentication for details")
 }
 
 func (c *DatabricksClient) fixHost() {

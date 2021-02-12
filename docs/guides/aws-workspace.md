@@ -230,7 +230,7 @@ output "databricks_token" {
 
 ```hcl
 data "databricks_current_user" "me" {
-  depends_on = [azurerm_databricks_workspace.this]
+  depends_on = [databricks_mws_workspaces.this]
 }
 ```
 

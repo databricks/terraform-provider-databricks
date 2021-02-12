@@ -4,6 +4,10 @@ page_title: "Provisioning AWS Databricks E2"
 
 # Provisioning AWS Databricks E2
 
+You can provision multiple Databricks workspaces with Terraform. 
+
+![Simplest multiworkspace](https://github.com/databrickslabs/terraform-provider-databricks/raw/master/docs/simplest-multiworkspace.png)
+
 ## Provider initialization for E2 workspaces
 
 This guide assumes you have `databricks_account_username` and `databricks_account_password` for [https://accounts.cloud.databricks.com](https://accounts.cloud.databricks.com) and can find `databricks_account_id` in the top right corner of the page, once you're logged in. This guide is provided as is and assumes you'll use it as the basis for your setup.
@@ -217,6 +221,16 @@ resource "databricks_token" "pat" {
 output "databricks_token" {
   value     = databricks_token.pat.token_value
   sensitive = true
+}
+```
+
+### Data resources and Authentication is not configured errors
+
+*In Terraform 0.13 and later*, data resources have the same dependency resolution behavior [as defined for managed resources](https://www.terraform.io/docs/language/resources/behavior.html#resource-dependencies). Most data resources make an API call to a workspace. If a workspace doesn't exist yet, `Authentication is not configured for provider` error is raised. To work around this issue and guarantee a proper lazy authentication with data resources, you should add `depends_on = [databricks_mws_workspaces.this]` to the body. This issue doesn't occur if workspace is created *in one module* and resources [within the workspace](workspace-management.md) are created *in another*. We do not recommend using Terraform 0.12 and earlier, if your usage involves data resources.
+
+```hcl
+data "databricks_current_user" "me" {
+  depends_on = [azurerm_databricks_workspace.this]
 }
 ```
 

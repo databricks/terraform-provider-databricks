@@ -6,9 +6,10 @@ import (
 	"log"
 	"strings"
 
+	"github.com/databrickslabs/terraform-provider-databricks/common"
 	"github.com/databrickslabs/terraform-provider-databricks/compute"
 	"github.com/databrickslabs/terraform-provider-databricks/identity"
-	"github.com/databrickslabs/terraform-provider-databricks/internal"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -47,7 +48,7 @@ func (ic *importContext) importCluster(c *compute.Cluster) error {
 
 func (ic *importContext) importLibraries(d *schema.ResourceData, s map[string]*schema.Schema) error {
 	var cll compute.ClusterLibraryList
-	err := internal.DataToStructPointer(d, s, &cll)
+	err := common.DataToStructPointer(d, s, &cll)
 	if err != nil {
 		return err
 	}

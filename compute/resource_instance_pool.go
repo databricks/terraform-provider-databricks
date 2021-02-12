@@ -4,7 +4,6 @@ import (
 	"context"
 
 	"github.com/databrickslabs/terraform-provider-databricks/common"
-	"github.com/databrickslabs/terraform-provider-databricks/internal"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -56,23 +55,23 @@ func (a InstancePoolsAPI) Delete(instancePoolID string) error {
 
 // ResourceInstancePool ...
 func ResourceInstancePool() *schema.Resource {
-	s := internal.StructToSchema(InstancePool{}, func(s map[string]*schema.Schema) map[string]*schema.Schema {
+	s := common.StructToSchema(InstancePool{}, func(s map[string]*schema.Schema) map[string]*schema.Schema {
 		s["aws_attributes"].ForceNew = true
 		s["node_type_id"].ForceNew = true
 		s["custom_tags"].ForceNew = true
 		s["enable_elastic_disk"].ForceNew = true
 		s["enable_elastic_disk"].Default = true
 		// TODO: check if it's really force new...
-		if v, err := internal.SchemaPath(s, "aws_attributes", "availability"); err == nil {
+		if v, err := common.SchemaPath(s, "aws_attributes", "availability"); err == nil {
 			v.ForceNew = true
 		}
-		if v, err := internal.SchemaPath(s, "aws_attributes", "zone_id"); err == nil {
+		if v, err := common.SchemaPath(s, "aws_attributes", "zone_id"); err == nil {
 			v.ForceNew = true
 		}
-		if v, err := internal.SchemaPath(s, "aws_attributes", "spot_bid_price_percent"); err == nil {
+		if v, err := common.SchemaPath(s, "aws_attributes", "spot_bid_price_percent"); err == nil {
 			v.ForceNew = true
 		}
-		if v, err := internal.SchemaPath(s, "disk_spec", "disk_type", "azure_disk_volume_type"); err == nil {
+		if v, err := common.SchemaPath(s, "disk_spec", "disk_type", "azure_disk_volume_type"); err == nil {
 			v.ForceNew = true
 			// nolint
 			v.ValidateFunc = validation.StringInSlice([]string{
@@ -80,7 +79,7 @@ func ResourceInstancePool() *schema.Resource {
 				AzureDiskVolumeTypeStandard,
 			}, false)
 		}
-		if v, err := internal.SchemaPath(s, "disk_spec", "disk_type", "ebs_volume_type"); err == nil {
+		if v, err := common.SchemaPath(s, "disk_spec", "disk_type", "ebs_volume_type"); err == nil {
 			v.ForceNew = true
 			// nolint
 			v.ValidateFunc = validation.StringInSlice([]string{
@@ -94,7 +93,7 @@ func ResourceInstancePool() *schema.Resource {
 		Schema: s,
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var ip InstancePool
-			if err := internal.DataToStructPointer(d, s, &ip); err != nil {
+			if err := common.DataToStructPointer(d, s, &ip); err != nil {
 				return err
 			}
 			instancePoolInfo, err := NewInstancePoolsAPI(ctx, c).Create(ip)
@@ -109,11 +108,11 @@ func ResourceInstancePool() *schema.Resource {
 			if err != nil {
 				return err
 			}
-			return internal.StructToData(ip, s, d)
+			return common.StructToData(ip, s, d)
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var ip InstancePool
-			if err := internal.DataToStructPointer(d, s, &ip); err != nil {
+			if err := common.DataToStructPointer(d, s, &ip); err != nil {
 				return err
 			}
 			ip.InstancePoolID = d.Id()

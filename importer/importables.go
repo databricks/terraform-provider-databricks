@@ -11,8 +11,9 @@ import (
 	"time"
 
 	"github.com/databrickslabs/terraform-provider-databricks/access"
+	"github.com/databrickslabs/terraform-provider-databricks/common"
 	"github.com/databrickslabs/terraform-provider-databricks/compute"
-	"github.com/databrickslabs/terraform-provider-databricks/internal"
+
 	"github.com/databrickslabs/terraform-provider-databricks/storage"
 	"github.com/hashicorp/hcl/v2/hclsyntax"
 	"github.com/hashicorp/hcl/v2/hclwrite"
@@ -156,7 +157,7 @@ var resourcesMap map[string]importable = map[string]importable{
 		Import: func(ic *importContext, r *resource) error {
 			var c compute.Cluster
 			s := ic.Resources["databricks_cluster"].Schema
-			if err := internal.DataToStructPointer(r.Data, s, &c); err != nil {
+			if err := common.DataToStructPointer(r.Data, s, &c); err != nil {
 				return err
 			}
 			if err := ic.importCluster(&c); err != nil {
@@ -193,7 +194,7 @@ var resourcesMap map[string]importable = map[string]importable{
 		Import: func(ic *importContext, r *resource) error {
 			var job compute.JobSettings
 			s := ic.Resources["databricks_job"].Schema
-			if err := internal.DataToStructPointer(r.Data, s, &job); err != nil {
+			if err := common.DataToStructPointer(r.Data, s, &job); err != nil {
 				return err
 			}
 			if err := ic.importCluster(job.NewCluster); err != nil {
@@ -503,7 +504,7 @@ var resourcesMap map[string]importable = map[string]importable{
 		Import: func(ic *importContext, r *resource) error {
 			var permissions access.PermissionsEntity
 			s := ic.Resources["databricks_permissions"].Schema
-			err := internal.DataToStructPointer(r.Data, s, &permissions)
+			err := common.DataToStructPointer(r.Data, s, &permissions)
 			if err != nil {
 				return err
 			}

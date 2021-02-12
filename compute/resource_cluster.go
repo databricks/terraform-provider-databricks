@@ -13,7 +13,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
 	"github.com/databrickslabs/terraform-provider-databricks/common"
-	"github.com/databrickslabs/terraform-provider-databricks/internal"
 )
 
 // DefaultProvisionTimeout ...
@@ -42,7 +41,7 @@ func ResourceCluster() *schema.Resource {
 }
 
 func resourceClusterSchema() map[string]*schema.Schema {
-	return internal.StructToSchema(Cluster{}, func(s map[string]*schema.Schema) map[string]*schema.Schema {
+	return common.StructToSchema(Cluster{}, func(s map[string]*schema.Schema) map[string]*schema.Schema {
 		s["spark_conf"].DiffSuppressFunc = func(k, old, new string, d *schema.ResourceData) bool {
 			isPossiblyLegacyConfig := "spark_conf.%" == k && "1" == old && "0" == new
 			isLegacyConfig := "spark_conf.spark.databricks.delta.preview.enabled" == k
@@ -53,12 +52,12 @@ func resourceClusterSchema() map[string]*schema.Schema {
 			return false
 		}
 		// adds `libraries` configuration block
-		s["library"] = internal.StructToSchema(ClusterLibraryList{},
+		s["library"] = common.StructToSchema(ClusterLibraryList{},
 			func(ss map[string]*schema.Schema) map[string]*schema.Schema {
 				return ss
 			})["library"]
 
-		p, err := internal.SchemaPath(s, "docker_image", "basic_auth", "password")
+		p, err := common.SchemaPath(s, "docker_image", "basic_auth", "password")
 		if err == nil {
 			p.Sensitive = true
 		}
@@ -113,7 +112,7 @@ func validateClusterDefinition(cluster Cluster) error {
 func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 	var cluster Cluster
 	clusters := NewClustersAPI(ctx, c)
-	err := internal.DataToStructPointer(d, clusterSchema, &cluster)
+	err := common.DataToStructPointer(d, clusterSchema, &cluster)
 	if err != nil {
 		return err
 	}
@@ -135,7 +134,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, c *commo
 		}
 	}
 	var libraryList ClusterLibraryList
-	if err = internal.DataToStructPointer(d, clusterSchema, &libraryList); err != nil {
+	if err = common.DataToStructPointer(d, clusterSchema, &libraryList); err != nil {
 		return err
 	}
 	librariesAPI := NewLibrariesAPI(ctx, c)
@@ -174,7 +173,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, c *common.
 	if err != nil {
 		return err
 	}
-	if err = internal.StructToData(clusterInfo, clusterSchema, d); err != nil {
+	if err = common.StructToData(clusterInfo, clusterSchema, d); err != nil {
 		return err
 	}
 	if err = setPinnedStatus(d, clusterAPI); err != nil {
@@ -186,7 +185,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, c *common.
 		return err
 	}
 	libList := libsClusterStatus.ToLibraryList()
-	return internal.StructToData(libList, clusterSchema, d)
+	return common.StructToData(libList, clusterSchema, d)
 }
 
 func waitForLibrariesInstalled(
@@ -236,7 +235,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, c *commo
 	clusters := NewClustersAPI(ctx, c)
 	clusterID := d.Id()
 	cluster := Cluster{ClusterID: clusterID}
-	err := internal.DataToStructPointer(d, clusterSchema, &cluster)
+	err := common.DataToStructPointer(d, clusterSchema, &cluster)
 	if err != nil {
 		return err
 	}
@@ -272,7 +271,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, c *commo
 	}
 
 	var libraryList ClusterLibraryList
-	if err = internal.DataToStructPointer(d, clusterSchema, &libraryList); err != nil {
+	if err = common.DataToStructPointer(d, clusterSchema, &libraryList); err != nil {
 		return err
 	}
 	librariesAPI := NewLibrariesAPI(ctx, c)

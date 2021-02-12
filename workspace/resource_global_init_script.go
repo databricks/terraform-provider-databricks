@@ -7,7 +7,6 @@ import (
 	"regexp"
 
 	"github.com/databrickslabs/terraform-provider-databricks/common"
-	"github.com/databrickslabs/terraform-provider-databricks/internal"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -74,7 +73,7 @@ func ResourceGlobalInitScript() *schema.Resource {
 			if err != nil {
 				return err
 			}
-			return internal.StructToData(scriptStatus, s, d)
+			return common.StructToData(scriptStatus, s, d)
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			content, err := ReadContent(d)

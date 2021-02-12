@@ -10,7 +10,7 @@ import (
 	"github.com/databrickslabs/terraform-provider-databricks/common"
 	"github.com/databrickslabs/terraform-provider-databricks/compute"
 	"github.com/databrickslabs/terraform-provider-databricks/identity"
-	"github.com/databrickslabs/terraform-provider-databricks/internal"
+
 	"github.com/databrickslabs/terraform-provider-databricks/workspace"
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -244,7 +244,7 @@ func (oa *ObjectACL) ToPermissionsEntity(ctx context.Context, d *schema.Resource
 
 // ResourcePermissions definition
 func ResourcePermissions() *schema.Resource {
-	s := internal.StructToSchema(PermissionsEntity{}, func(s map[string]*schema.Schema) map[string]*schema.Schema {
+	s := common.StructToSchema(PermissionsEntity{}, func(s map[string]*schema.Schema) map[string]*schema.Schema {
 		ctx := context.Background()
 		for _, mapping := range permissionsResourceIDFields(ctx) {
 			s[mapping.field] = &schema.Schema{
@@ -260,7 +260,7 @@ func ResourcePermissions() *schema.Resource {
 			}
 		}
 		s["access_control"].MinItems = 1
-		if groupNameSchema, err := internal.SchemaPath(s,
+		if groupNameSchema, err := common.SchemaPath(s,
 			"access_control", "group_name"); err == nil {
 			groupNameSchema.ValidateDiagFunc = func(i interface{}, p cty.Path) diag.Diagnostics {
 				if v, ok := i.(string); ok {
@@ -302,7 +302,7 @@ func ResourcePermissions() *schema.Resource {
 			d.SetId("")
 			return nil
 		}
-		err = internal.StructToData(entity, s, d)
+		err = common.StructToData(entity, s, d)
 		if err != nil {
 			return diag.FromErr(err)
 		}
@@ -313,7 +313,7 @@ func ResourcePermissions() *schema.Resource {
 		ReadContext: readContext,
 		CreateContext: func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 			var entity PermissionsEntity
-			err := internal.DataToStructPointer(d, s, &entity)
+			err := common.DataToStructPointer(d, s, &entity)
 			if err != nil {
 				return diag.FromErr(err)
 			}
@@ -338,7 +338,7 @@ func ResourcePermissions() *schema.Resource {
 		},
 		UpdateContext: func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 			var entity PermissionsEntity
-			err := internal.DataToStructPointer(d, s, &entity)
+			err := common.DataToStructPointer(d, s, &entity)
 			if err != nil {
 				return diag.FromErr(err)
 			}

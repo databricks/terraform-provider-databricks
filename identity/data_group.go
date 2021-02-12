@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"sort"
 
-	"github.com/databrickslabs/terraform-provider-databricks/internal"
+	"github.com/databrickslabs/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -23,7 +23,7 @@ func DataSourceGroup() *schema.Resource {
 		AllowInstancePoolCreate bool     `json:"allow_instance_pool_create,omitempty" tf:"computed"`
 	}
 
-	s := internal.StructToSchema(entity{}, func(
+	s := common.StructToSchema(entity{}, func(
 		s map[string]*schema.Schema) map[string]*schema.Schema {
 		// nolint once SDKv2 has Diagnostics-returning validators, change
 		s["display_name"].ValidateFunc = validation.StringIsNotEmpty
@@ -35,7 +35,7 @@ func DataSourceGroup() *schema.Resource {
 		Schema: s,
 		ReadContext: func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 			var this entity
-			err := internal.DataToStructPointer(d, s, &this)
+			err := common.DataToStructPointer(d, s, &this)
 			if err != nil {
 				return diag.FromErr(err)
 			}
@@ -80,7 +80,7 @@ func DataSourceGroup() *schema.Resource {
 			sort.Strings(this.Groups)
 			sort.Strings(this.Members)
 			sort.Strings(this.InstanceProfiles)
-			err = internal.StructToData(this, s, d)
+			err = common.StructToData(this, s, d)
 			if err != nil {
 				return diag.FromErr(err)
 			}

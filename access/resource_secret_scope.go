@@ -7,7 +7,6 @@ import (
 	"regexp"
 
 	"github.com/databrickslabs/terraform-provider-databricks/common"
-	"github.com/databrickslabs/terraform-provider-databricks/internal"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -115,7 +114,7 @@ var validScope = validation.StringMatch(regexp.MustCompile(`^[\w\.@_-]{1,128}$`)
 
 // ResourceSecretScope manages secret scopes
 func ResourceSecretScope() *schema.Resource {
-	s := internal.StructToSchema(SecretScope{}, func(s map[string]*schema.Schema) map[string]*schema.Schema {
+	s := common.StructToSchema(SecretScope{}, func(s map[string]*schema.Schema) map[string]*schema.Schema {
 		// TODO: DiffSuppressFunc for initial_manage_principal & importing
 		s["name"].ForceNew = true
 		// nolint
@@ -129,7 +128,7 @@ func ResourceSecretScope() *schema.Resource {
 		SchemaVersion: 2,
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var scope SecretScope
-			if err := internal.DataToStructPointer(d, s, &scope); err != nil {
+			if err := common.DataToStructPointer(d, s, &scope); err != nil {
 				return err
 			}
 			if err := NewSecretScopesAPI(ctx, c).Create(scope); err != nil {
@@ -143,7 +142,7 @@ func ResourceSecretScope() *schema.Resource {
 			if err != nil {
 				return err
 			}
-			return internal.StructToData(scope, s, d)
+			return common.StructToData(scope, s, d)
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			return NewSecretScopesAPI(ctx, c).Delete(d.Id())

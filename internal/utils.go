@@ -1,7 +1,6 @@
 package internal
 
 import (
-	"errors"
 	"strings"
 )
 
@@ -33,43 +32,4 @@ func TrimLeadingWhitespace(commandStr string) (newCommand string) {
 		}
 	}
 	return
-}
-
-// ConvertListInterfaceToString ...
-func ConvertListInterfaceToString(m []interface{}) []string {
-	response := []string{}
-	for _, v := range m {
-		if v != nil {
-			response = append(response, v.(string))
-		}
-	}
-	return response
-}
-
-var (
-	// ...
-	PathEmptyError = errors.New("provided path is empty")
-	//...
-	DirPathRootDirError = errors.New("dir path is root directory")
-)
-
-// GetParentDirPath Os libraries behave bizarely on windows as
-// they will replace slashes with other values.
-// This causes issues & errors when submitting the request
-func GetParentDirPath(filePath string) (string, error) {
-	// TODO: this function is not tested well. replace with filepath.Dir
-	if filePath == "" {
-		return "", PathEmptyError
-	}
-
-	pathParts := strings.Split(filePath, "/")
-
-	// if length of pathParts is just two items then the parent should be the root directory
-	if len(pathParts) == 2 {
-		return "", DirPathRootDirError
-	}
-
-	dirPath := strings.Join(pathParts[0:len(pathParts)-1], "/")
-
-	return dirPath, nil
 }

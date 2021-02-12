@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/databrickslabs/terraform-provider-databricks/common"
-	"github.com/databrickslabs/terraform-provider-databricks/internal"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -149,7 +148,7 @@ func ResourceToken() *schema.Resource {
 			if err != nil {
 				return err
 			}
-			return internal.StructToData(tokenInfo, s, d)
+			return common.StructToData(tokenInfo, s, d)
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			return NewTokensAPI(ctx, c).Delete(d.Id())

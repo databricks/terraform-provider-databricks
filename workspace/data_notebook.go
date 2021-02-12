@@ -3,7 +3,7 @@ package workspace
 import (
 	"context"
 
-	"github.com/databrickslabs/terraform-provider-databricks/internal"
+	"github.com/databrickslabs/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -64,7 +64,7 @@ func DataSourceNotebook() *schema.Resource {
 			if err != nil {
 				return diag.FromErr(err)
 			}
-			err = internal.StructToData(objectStatus, s, d)
+			err = common.StructToData(objectStatus, s, d)
 			if err != nil {
 				return diag.FromErr(err)
 			}

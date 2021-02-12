@@ -11,7 +11,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
 	"github.com/databrickslabs/terraform-provider-databricks/common"
-	"github.com/databrickslabs/terraform-provider-databricks/internal"
 )
 
 // NewJobsAPI creates JobsAPI instance from provider meta
@@ -99,7 +98,7 @@ func wrapMissingJobError(err error, id string) error {
 	return err
 }
 
-var jobSchema = internal.StructToSchema(JobSettings{},
+var jobSchema = common.StructToSchema(JobSettings{},
 	func(s map[string]*schema.Schema) map[string]*schema.Schema {
 		s["existing_cluster_id"].Description = "If existing_cluster_id, the ID " +
 			"of an existing cluster that will be used for all runs of this job. " +
@@ -108,7 +107,7 @@ var jobSchema = internal.StructToSchema(JobSettings{},
 			"`new_cluster` for greater reliability."
 		s["new_cluster"].Description = "Same set of parameters as for " +
 			"[databricks_cluster](cluster.md) resource."
-		if p, err := internal.SchemaPath(s, "new_cluster", "num_workers"); err == nil {
+		if p, err := common.SchemaPath(s, "new_cluster", "num_workers"); err == nil {
 			p.Optional = true
 			p.Default = 0
 			p.Type = schema.TypeInt
@@ -116,7 +115,7 @@ var jobSchema = internal.StructToSchema(JobSettings{},
 			p.Required = false
 		}
 
-		if v, err := internal.SchemaPath(s, "new_cluster", "spark_conf"); err == nil {
+		if v, err := common.SchemaPath(s, "new_cluster", "spark_conf"); err == nil {
 			v.DiffSuppressFunc = func(k, old, new string, d *schema.ResourceData) bool {
 				isPossiblyLegacyConfig := "new_cluster.0.spark_conf.%" == k && "1" == old && "0" == new
 				isLegacyConfig := "new_cluster.0.spark_conf.spark.databricks.delta.preview.enabled" == k
@@ -164,7 +163,7 @@ func ResourceJob() *schema.Resource {
 		SchemaVersion: 2,
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var js JobSettings
-			err := internal.DataToStructPointer(d, jobSchema, &js)
+			err := common.DataToStructPointer(d, jobSchema, &js)
 			if err != nil {
 				return err
 			}
@@ -186,11 +185,11 @@ func ResourceJob() *schema.Resource {
 				return err
 			}
 			d.Set("url", fmt.Sprintf("%s#job/%s", c.Host, d.Id()))
-			return internal.StructToData(*job.Settings, jobSchema, d)
+			return common.StructToData(*job.Settings, jobSchema, d)
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var js JobSettings
-			err := internal.DataToStructPointer(d, jobSchema, &js)
+			err := common.DataToStructPointer(d, jobSchema, &js)
 			if err != nil {
 				return err
 			}

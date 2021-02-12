@@ -9,7 +9,6 @@ import (
 	"sync"
 
 	"github.com/databrickslabs/terraform-provider-databricks/common"
-	"github.com/databrickslabs/terraform-provider-databricks/internal"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -267,7 +266,7 @@ func ResourceNotebook() *schema.Resource {
 				return err
 			}
 			d.Set("url", fmt.Sprintf("%s#workspace%s", c.Host, d.Id()))
-			return internal.StructToData(objectStatus, s, d)
+			return common.StructToData(objectStatus, s, d)
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			notebooksAPI := NewNotebooksAPI(ctx, c)

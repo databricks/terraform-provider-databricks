@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	"github.com/databrickslabs/terraform-provider-databricks/common"
-	"github.com/databrickslabs/terraform-provider-databricks/internal"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -55,7 +54,7 @@ func (a PrivateAccessSettingsAPI) List(mwsAcctID string) ([]PrivateAccessSetting
 
 // ResourcePrivateAccessSettings ...
 func ResourcePrivateAccessSettings() *schema.Resource {
-	s := internal.StructToSchema(PrivateAccessSettings{}, func(s map[string]*schema.Schema) map[string]*schema.Schema {
+	s := common.StructToSchema(PrivateAccessSettings{}, func(s map[string]*schema.Schema) map[string]*schema.Schema {
 		// nolint
 		s["private_access_settings_name"].ValidateFunc = validation.StringLenBetween(4, 256)
 		return s
@@ -65,7 +64,7 @@ func ResourcePrivateAccessSettings() *schema.Resource {
 		Schema: s,
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var pas PrivateAccessSettings
-			if err := internal.DataToStructPointer(d, s, &pas); err != nil {
+			if err := common.DataToStructPointer(d, s, &pas); err != nil {
 				return err
 			}
 			if err := NewPrivateAccessSettingsAPI(ctx, c).Create(&pas); err != nil {
@@ -84,7 +83,7 @@ func ResourcePrivateAccessSettings() *schema.Resource {
 			if err != nil {
 				return err
 			}
-			return internal.StructToData(pas, s, d)
+			return common.StructToData(pas, s, d)
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			accountID, pasID, err := p.Unpack(d)

@@ -11,7 +11,7 @@ import (
 
 	"github.com/databrickslabs/terraform-provider-databricks/common"
 	"github.com/databrickslabs/terraform-provider-databricks/compute"
-	"github.com/databrickslabs/terraform-provider-databricks/internal"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -165,7 +165,7 @@ func mountCluster(ctx context.Context, tpl interface{}, d *schema.ResourceData,
 	mountType := reflect.TypeOf(tpl)
 	mountTypePointer := reflect.New(mountType)
 	mountReflectValue := mountTypePointer.Elem()
-	err = internal.DataToReflectValue(d, r, mountReflectValue)
+	err = common.DataToReflectValue(d, r, mountReflectValue)
 	if err != nil {
 		return mountConfig, mountPoint, err
 	}

@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	"github.com/databrickslabs/terraform-provider-databricks/common"
-	"github.com/databrickslabs/terraform-provider-databricks/internal"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -104,7 +103,7 @@ func (a ServicePrincipalsAPI) Delete(servicePrincipalID string) error {
 
 // ResourceServicePrincipal manages service principals within workspace
 func ResourceServicePrincipal() *schema.Resource {
-	servicePrincipalSchema := internal.StructToSchema(ServicePrincipalEntity{}, func(
+	servicePrincipalSchema := common.StructToSchema(ServicePrincipalEntity{}, func(
 		s map[string]*schema.Schema) map[string]*schema.Schema {
 		s["application_id"].ForceNew = true
 		s["active"].Default = true
@@ -114,7 +113,7 @@ func ResourceServicePrincipal() *schema.Resource {
 		Schema: servicePrincipalSchema,
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var sp ServicePrincipalEntity
-			if err := internal.DataToStructPointer(d, servicePrincipalSchema, &sp); err != nil {
+			if err := common.DataToStructPointer(d, servicePrincipalSchema, &sp); err != nil {
 				return err
 			}
 			servicePrincipal, err := NewServicePrincipalsAPI(ctx, c).CreateR(sp)
@@ -129,11 +128,11 @@ func ResourceServicePrincipal() *schema.Resource {
 			if err != nil {
 				return err
 			}
-			return internal.StructToData(servicePrincipal, servicePrincipalSchema, d)
+			return common.StructToData(servicePrincipal, servicePrincipalSchema, d)
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var sp ServicePrincipalEntity
-			if err := internal.DataToStructPointer(d, servicePrincipalSchema, &sp); err != nil {
+			if err := common.DataToStructPointer(d, servicePrincipalSchema, &sp); err != nil {
 				return err
 			}
 			return NewServicePrincipalsAPI(ctx, c).UpdateR(d.Id(), sp)

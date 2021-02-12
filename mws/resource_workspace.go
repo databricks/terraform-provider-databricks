@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"github.com/databrickslabs/terraform-provider-databricks/common"
-	"github.com/databrickslabs/terraform-provider-databricks/internal"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -164,7 +163,7 @@ func (a WorkspacesAPI) List(mwsAcctID string) ([]Workspace, error) {
 
 // ResourceWorkspace manages E2 workspaces
 func ResourceWorkspace() *schema.Resource {
-	s := internal.StructToSchema(Workspace{}, func(s map[string]*schema.Schema) map[string]*schema.Schema {
+	s := common.StructToSchema(Workspace{}, func(s map[string]*schema.Schema) map[string]*schema.Schema {
 		s["account_id"].Sensitive = true
 		s["account_id"].ForceNew = true
 		s["workspace_name"].ForceNew = true
@@ -191,7 +190,7 @@ func ResourceWorkspace() *schema.Resource {
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var workspace Workspace
 			workspacesAPI := NewWorkspacesAPI(ctx, c)
-			if err := internal.DataToStructPointer(d, s, &workspace); err != nil {
+			if err := common.DataToStructPointer(d, s, &workspace); err != nil {
 				return err
 			}
 			if err := workspacesAPI.Create(&workspace, d.Timeout(schema.TimeoutCreate)); err != nil {
@@ -212,7 +211,7 @@ func ResourceWorkspace() *schema.Resource {
 				return err
 			}
 			workspace.WorkspaceURL = fmt.Sprintf("https://%s.cloud.databricks.com", workspace.DeploymentName)
-			if err = internal.StructToData(workspace, s, d); err != nil {
+			if err = common.StructToData(workspace, s, d); err != nil {
 				return err
 			}
 			return workspacesAPI.WaitForRunning(workspace, d.Timeout(schema.TimeoutRead))
@@ -220,7 +219,7 @@ func ResourceWorkspace() *schema.Resource {
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var workspace Workspace
 			workspacesAPI := NewWorkspacesAPI(ctx, c)
-			if err := internal.DataToStructPointer(d, s, &workspace); err != nil {
+			if err := common.DataToStructPointer(d, s, &workspace); err != nil {
 				return err
 			}
 			return workspacesAPI.Patch(workspace, d.Timeout(schema.TimeoutUpdate))

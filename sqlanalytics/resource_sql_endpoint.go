@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/databrickslabs/terraform-provider-databricks/common"
-	"github.com/databrickslabs/terraform-provider-databricks/internal"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -141,7 +140,7 @@ func (a SQLEndpointsAPI) Delete(endpointID string) error {
 
 // ResourceSQLEndpoint ...
 func ResourceSQLEndpoint() *schema.Resource {
-	s := internal.StructToSchema(SQLEndpoint{}, func(
+	s := common.StructToSchema(SQLEndpoint{}, func(
 		m map[string]*schema.Schema) map[string]*schema.Schema {
 		m["cluster_size"].ValidateDiagFunc = validation.ToDiagFunc(
 			validation.StringInSlice(ClusterSizes, false))
@@ -153,7 +152,7 @@ func ResourceSQLEndpoint() *schema.Resource {
 	return common.Resource{
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var se SQLEndpoint
-			if err := internal.DataToStructPointer(d, s, &se); err != nil {
+			if err := common.DataToStructPointer(d, s, &se); err != nil {
 				return err
 			}
 			if err := NewSQLEndpointsAPI(ctx, c).Create(&se, d.Timeout(schema.TimeoutCreate)); err != nil {
@@ -168,11 +167,11 @@ func ResourceSQLEndpoint() *schema.Resource {
 			if err != nil {
 				return err
 			}
-			return internal.StructToData(se, s, d)
+			return common.StructToData(se, s, d)
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var se SQLEndpoint
-			if err := internal.DataToStructPointer(d, s, &se); err != nil {
+			if err := common.DataToStructPointer(d, s, &se); err != nil {
 				return err
 			}
 			return NewSQLEndpointsAPI(ctx, c).Edit(se)

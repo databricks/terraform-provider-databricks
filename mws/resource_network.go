@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/databrickslabs/terraform-provider-databricks/common"
-	"github.com/databrickslabs/terraform-provider-databricks/internal"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -70,7 +69,7 @@ func (a NetworksAPI) List(mwsAcctID string) ([]Network, error) {
 
 // ResourceNetwork ...
 func ResourceNetwork() *schema.Resource {
-	s := internal.StructToSchema(Network{}, func(s map[string]*schema.Schema) map[string]*schema.Schema {
+	s := common.StructToSchema(Network{}, func(s map[string]*schema.Schema) map[string]*schema.Schema {
 		s["account_id"].Sensitive = true
 		// nolint
 		s["network_name"].ValidateFunc = validation.StringLenBetween(4, 256)
@@ -84,7 +83,7 @@ func ResourceNetwork() *schema.Resource {
 		Schema: s,
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var network Network
-			if err := internal.DataToStructPointer(d, s, &network); err != nil {
+			if err := common.DataToStructPointer(d, s, &network); err != nil {
 				return err
 			}
 			if err := NewNetworksAPI(ctx, c).Create(&network); err != nil {
@@ -103,7 +102,7 @@ func ResourceNetwork() *schema.Resource {
 			if err != nil {
 				return err
 			}
-			return internal.StructToData(network, s, d)
+			return common.StructToData(network, s, d)
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			accountID, networkID, err := p.Unpack(d)

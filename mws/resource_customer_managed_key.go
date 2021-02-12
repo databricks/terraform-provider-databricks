@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	"github.com/databrickslabs/terraform-provider-databricks/common"
-	"github.com/databrickslabs/terraform-provider-databricks/internal"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -65,7 +64,7 @@ func (a CustomerManagedKeysAPI) List(accountID string) (kl []CustomerManagedKey,
 
 // ResourceCustomerManagedKey ...
 func ResourceCustomerManagedKey() *schema.Resource {
-	s := internal.StructToSchema(CustomerManagedKey{},
+	s := common.StructToSchema(CustomerManagedKey{},
 		func(s map[string]*schema.Schema) map[string]*schema.Schema {
 			s["aws_key_info"].ForceNew = true
 			s["account_id"].ForceNew = true
@@ -75,7 +74,7 @@ func ResourceCustomerManagedKey() *schema.Resource {
 	return common.Resource{
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var cmk CustomerManagedKey
-			if err := internal.DataToStructPointer(d, s, &cmk); err != nil {
+			if err := common.DataToStructPointer(d, s, &cmk); err != nil {
 				return err
 			}
 			customerManagedKeyData, err := NewCustomerManagedKeysAPI(ctx, c).Create(cmk)
@@ -95,7 +94,7 @@ func ResourceCustomerManagedKey() *schema.Resource {
 			if err != nil {
 				return err
 			}
-			return internal.StructToData(cmk, s, d)
+			return common.StructToData(cmk, s, d)
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			accountID, cmkID, err := p.Unpack(d)

@@ -6,7 +6,6 @@ import (
 	"log"
 
 	"github.com/databrickslabs/terraform-provider-databricks/common"
-	"github.com/databrickslabs/terraform-provider-databricks/internal"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -70,7 +69,7 @@ func (a LogDeliveryAPI) Disable(accountID, configID string) error {
 // ResourceLogDelivery ..
 func ResourceLogDelivery() *schema.Resource {
 	p := common.NewPairID("account_id", "config_id")
-	s := internal.StructToSchema(LogDeliveryConfiguration{},
+	s := common.StructToSchema(LogDeliveryConfiguration{},
 		func(s map[string]*schema.Schema) map[string]*schema.Schema {
 			// nolint
 			s["config_name"].ValidateFunc = validation.StringLenBetween(0, 255)
@@ -84,7 +83,7 @@ func ResourceLogDelivery() *schema.Resource {
 		Schema: s,
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var ldc LogDeliveryConfiguration
-			if err := internal.DataToStructPointer(d, s, &ldc); err != nil {
+			if err := common.DataToStructPointer(d, s, &ldc); err != nil {
 				return err
 			}
 			configID, err := NewLogDeliveryAPI(ctx, c).Create(ldc)
@@ -111,7 +110,7 @@ func ResourceLogDelivery() *schema.Resource {
 				d.SetId("")
 				return nil
 			}
-			return internal.StructToData(ldc, s, d)
+			return common.StructToData(ldc, s, d)
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			accountID, configID, err := p.Unpack(d)

@@ -4,14 +4,13 @@ import (
 	"context"
 
 	"github.com/databrickslabs/terraform-provider-databricks/common"
-	"github.com/databrickslabs/terraform-provider-databricks/internal"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 // ResourceUser manages users within workspace
 func ResourceUser() *schema.Resource {
-	userSchema := internal.StructToSchema(UserEntity{}, func(
+	userSchema := common.StructToSchema(UserEntity{}, func(
 		s map[string]*schema.Schema) map[string]*schema.Schema {
 		s["user_name"].ForceNew = true
 		s["active"].Default = true
@@ -21,7 +20,7 @@ func ResourceUser() *schema.Resource {
 		Schema: userSchema,
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var ru UserEntity
-			if err := internal.DataToStructPointer(d, userSchema, &ru); err != nil {
+			if err := common.DataToStructPointer(d, userSchema, &ru); err != nil {
 				return err
 			}
 			user, err := NewUsersAPI(ctx, c).Create(ru)
@@ -36,11 +35,11 @@ func ResourceUser() *schema.Resource {
 			if err != nil {
 				return err
 			}
-			return internal.StructToData(user, userSchema, d)
+			return common.StructToData(user, userSchema, d)
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var ru UserEntity
-			if err := internal.DataToStructPointer(d, userSchema, &ru); err != nil {
+			if err := common.DataToStructPointer(d, userSchema, &ru); err != nil {
 				return err
 			}
 			return NewUsersAPI(ctx, c).Update(d.Id(), ru)

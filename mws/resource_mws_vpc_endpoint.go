@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/databrickslabs/terraform-provider-databricks/common"
-	"github.com/databrickslabs/terraform-provider-databricks/internal"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -75,7 +74,7 @@ func (a VPCEndpointAPI) List(mwsAcctID string) ([]VPCEndpoint, error) {
 
 // ResourceVPCEndpoint ...
 func ResourceVPCEndpoint() *schema.Resource {
-	s := internal.StructToSchema(VPCEndpoint{}, func(s map[string]*schema.Schema) map[string]*schema.Schema {
+	s := common.StructToSchema(VPCEndpoint{}, func(s map[string]*schema.Schema) map[string]*schema.Schema {
 		// nolint
 		s["vpc_endpoint_name"].ValidateFunc = validation.StringLenBetween(4, 256)
 		// s["aws_account_id"].ForceNew = false
@@ -86,7 +85,7 @@ func ResourceVPCEndpoint() *schema.Resource {
 		Schema: s,
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var vpcEndpoint VPCEndpoint
-			if err := internal.DataToStructPointer(d, s, &vpcEndpoint); err != nil {
+			if err := common.DataToStructPointer(d, s, &vpcEndpoint); err != nil {
 				return err
 			}
 			if err := NewVPCEndpointAPI(ctx, c).Create(&vpcEndpoint); err != nil {
@@ -105,7 +104,7 @@ func ResourceVPCEndpoint() *schema.Resource {
 			if err != nil {
 				return err
 			}
-			return internal.StructToData(vpcEndpoint, s, d)
+			return common.StructToData(vpcEndpoint, s, d)
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			accountID, vpcEndpointID, err := p.Unpack(d)

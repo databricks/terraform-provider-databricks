@@ -4,7 +4,6 @@ import (
 	"context"
 
 	"github.com/databrickslabs/terraform-provider-databricks/common"
-	"github.com/databrickslabs/terraform-provider-databricks/internal"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -94,7 +93,7 @@ func (a ipAccessListsAPI) List() (listResponse listIPAccessListsResponse, err er
 
 // ResourceIPAccessList manages IP access lists
 func ResourceIPAccessList() *schema.Resource {
-	s := internal.StructToSchema(ipAccessListUpdateRequest{}, func(s map[string]*schema.Schema) map[string]*schema.Schema {
+	s := common.StructToSchema(ipAccessListUpdateRequest{}, func(s map[string]*schema.Schema) map[string]*schema.Schema {
 		// nolint
 		s["list_type"].ValidateFunc = validation.StringInSlice([]string{"ALLOW", "BLOCK"}, false)
 		s["ip_addresses"].Elem = &schema.Schema{
@@ -108,7 +107,7 @@ func ResourceIPAccessList() *schema.Resource {
 		Schema: s,
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var iacl createIPAccessListRequest
-			if err := internal.DataToStructPointer(d, s, &iacl); err != nil {
+			if err := common.DataToStructPointer(d, s, &iacl); err != nil {
 				return err
 			}
 			status, err := NewIPAccessListsAPI(ctx, c).Create(iacl)
@@ -123,11 +122,11 @@ func ResourceIPAccessList() *schema.Resource {
 			if err != nil {
 				return err
 			}
-			return internal.StructToData(status, s, d)
+			return common.StructToData(status, s, d)
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var iacl ipAccessListUpdateRequest
-			if err := internal.DataToStructPointer(d, s, &iacl); err != nil {
+			if err := common.DataToStructPointer(d, s, &iacl); err != nil {
 				return err
 			}
 			return NewIPAccessListsAPI(ctx, c).Update(d.Id(), iacl)

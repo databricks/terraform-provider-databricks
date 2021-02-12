@@ -12,9 +12,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
-	"github.com/databrickslabs/databricks-terraform/common"
-	"github.com/databrickslabs/databricks-terraform/internal"
-	"github.com/databrickslabs/databricks-terraform/internal/util"
+	"github.com/databrickslabs/terraform-provider-databricks/common"
+	"github.com/databrickslabs/terraform-provider-databricks/internal"
+	"github.com/databrickslabs/terraform-provider-databricks/internal/util"
 )
 
 // DefaultProvisionTimeout ...

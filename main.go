@@ -5,9 +5,9 @@ import (
 	"log"
 	"os"
 
-	"github.com/databrickslabs/databricks-terraform/common"
-	"github.com/databrickslabs/databricks-terraform/importer"
-	"github.com/databrickslabs/databricks-terraform/provider"
+	"github.com/databrickslabs/terraform-provider-databricks/common"
+	"github.com/databrickslabs/terraform-provider-databricks/importer"
+	"github.com/databrickslabs/terraform-provider-databricks/provider"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/plugin"
 )
 

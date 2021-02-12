@@ -8,9 +8,9 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 
-	"github.com/databrickslabs/databricks-terraform/common"
-	"github.com/databrickslabs/databricks-terraform/internal/qa"
-	"github.com/databrickslabs/databricks-terraform/internal/sanity"
+	"github.com/databrickslabs/terraform-provider-databricks/common"
+	"github.com/databrickslabs/terraform-provider-databricks/internal/qa"
+	"github.com/databrickslabs/terraform-provider-databricks/internal/sanity"
 )
 
 func TestMwsAccMissingResources(t *testing.T) {

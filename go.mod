@@ -1,4 +1,4 @@
-module github.com/databrickslabs/databricks-terraform
+module github.com/databrickslabs/terraform-provider-databricks
 
 go 1.13
 

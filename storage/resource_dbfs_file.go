@@ -3,9 +3,9 @@ package storage
 import (
 	"context"
 
-	"github.com/databrickslabs/databricks-terraform/common"
-	"github.com/databrickslabs/databricks-terraform/internal/util"
-	"github.com/databrickslabs/databricks-terraform/workspace"
+	"github.com/databrickslabs/terraform-provider-databricks/common"
+	"github.com/databrickslabs/terraform-provider-databricks/internal/util"
+	"github.com/databrickslabs/terraform-provider-databricks/workspace"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 

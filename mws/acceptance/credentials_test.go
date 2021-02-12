@@ -3,7 +3,7 @@ package acceptance
 import (
 	"os"
 
-	"github.com/databrickslabs/databricks-terraform/internal/acceptance"
+	"github.com/databrickslabs/terraform-provider-databricks/internal/acceptance"
 
 	"testing"
 )

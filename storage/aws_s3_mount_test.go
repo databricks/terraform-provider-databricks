@@ -6,14 +6,14 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/databrickslabs/databricks-terraform/common"
-	"github.com/databrickslabs/databricks-terraform/compute"
-	"github.com/databrickslabs/databricks-terraform/identity"
-	"github.com/databrickslabs/databricks-terraform/internal"
+	"github.com/databrickslabs/terraform-provider-databricks/common"
+	"github.com/databrickslabs/terraform-provider-databricks/compute"
+	"github.com/databrickslabs/terraform-provider-databricks/identity"
+	"github.com/databrickslabs/terraform-provider-databricks/internal"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/databrickslabs/databricks-terraform/internal/qa"
+	"github.com/databrickslabs/terraform-provider-databricks/internal/qa"
 )
 
 // Test interface compliance via compile time error

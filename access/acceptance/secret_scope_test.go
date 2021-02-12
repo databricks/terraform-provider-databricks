@@ -6,12 +6,12 @@ import (
 	"os"
 	"testing"
 
-	. "github.com/databrickslabs/databricks-terraform/access"
-	"github.com/databrickslabs/databricks-terraform/identity"
+	. "github.com/databrickslabs/terraform-provider-databricks/access"
+	"github.com/databrickslabs/terraform-provider-databricks/identity"
 
-	"github.com/databrickslabs/databricks-terraform/common"
-	"github.com/databrickslabs/databricks-terraform/internal/acceptance"
-	"github.com/databrickslabs/databricks-terraform/internal/qa"
+	"github.com/databrickslabs/terraform-provider-databricks/common"
+	"github.com/databrickslabs/terraform-provider-databricks/internal/acceptance"
+	"github.com/databrickslabs/terraform-provider-databricks/internal/qa"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/stretchr/testify/assert"

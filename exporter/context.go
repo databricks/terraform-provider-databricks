@@ -1,4 +1,4 @@
-package importer
+package exporter
 
 import (
 	"context"
@@ -168,7 +168,9 @@ func (ic *importContext) Run() error {
 	}
 
 	sort.Sort(ic.Scope)
-	for _, r := range ic.Scope {
+	scopeSize := len(ic.Scope)
+	log.Printf("[INFO] Generating configuration for %d resources", scopeSize)
+	for i, r := range ic.Scope {
 		ir := ic.Importables[r.Resource]
 		f, ok := ic.Files[ir.Service]
 		if !ok {
@@ -189,6 +191,9 @@ func (ic *importContext) Run() error {
 				return err
 			}
 		}
+		if i%50 == 0 {
+			log.Printf("[INFO] Generated %d of %d resources", i, scopeSize)
+		}
 		if r.Mode != "data" {
 			// nolint
 			sh.WriteString(r.ImportCommand(ic) + "\n")
@@ -199,13 +204,15 @@ func (ic *importContext) Run() error {
 		// fix some formatting in a hacky way instead of writing 100 lines
 		// of HCL AST writer code
 		formatted = []byte(ic.regexFix(string(formatted), ic.hclFixes))
-		log.Printf("[INFO] %s", formatted)
-		if tf, err := os.Create(fmt.Sprintf("%s/%s.tf", ic.Directory, service)); err == nil {
+		log.Printf("[DEBUG] %s", formatted)
+		generatedFile := fmt.Sprintf("%s/%s.tf", ic.Directory, service)
+		if tf, err := os.Create(generatedFile); err == nil {
 			defer tf.Close()
 			if _, err = tf.Write(formatted); err != nil {
 				return err
 			}
 		}
+		log.Printf("[INFO] Created %s", generatedFile)
 	}
 	if len(ic.variables) > 0 {
 		vf, err := os.Create(fmt.Sprintf("%s/vars.tf", ic.Directory))
@@ -229,6 +236,7 @@ func (ic *importContext) Run() error {
 	if err != nil {
 		return err
 	}
+	log.Printf("[INFO] Done. Please edit the files and roll out new environment.")
 	return nil
 }
 

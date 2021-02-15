@@ -1,7 +1,10 @@
 ---
-page_title: "Experimental resource importer"
+page_title: "Experimental resource exporter"
 ---
-# Experimental resource importer
+# Experimental resource exporter
+
+-> **Note** This tooling is experimental and provided as is. It has an evolving API, which may change or be removed in future versions of the provider.
+
 
 Generates `*.tf` files for Databricks resources as well as `import.sh` to run import state. Available as part of provider binary. The only possible way to authenticate is through [environment variables](../index.md#Environment-variables).
 
@@ -10,7 +13,7 @@ Generates `*.tf` files for Databricks resources as well as `import.sh` to run im
 ```bash
 export DATABRICKS_HOST=...
 export DATABRICKS_TOKEN=...
-./terraform-provider-databricks importer \
+./terraform-provider-databricks exporter \
     -services=groups,secrets,access,compute,users,jobs,storage \
     -listing=jobs,compute \
     -last-active-days=90 \
@@ -20,6 +23,8 @@ sh import.sh
 ```
 
 ## Argument Reference
+
+!> **Warning** This tooling was only extensively tested with administrator priviliges. 
 
 All arguments are optional and they tune what code is being generated.
 

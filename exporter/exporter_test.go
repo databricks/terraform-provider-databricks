@@ -1,4 +1,4 @@
-package importer
+package exporter
 
 import (
 	"encoding/json"
@@ -22,9 +22,8 @@ func TestAccImporter(t *testing.T) {
 	if _, ok := os.LookupEnv("VSCODE_PID"); !ok {
 		t.Skip("Running this test is only meant for IDE")
 	}
-	log.SetOutput(&levelWriter{"[INFO]", "[ERROR]", "[WARN]"})
-	c := common.NewClientFromEnvironment()
-	err := newImportContext(c).Run()
+	log.SetOutput(&levelWriter{"[INFO]", "[ERROR]", "[WARN]", "[DEBUG]"})
+	err := Run()
 	assert.NoError(t, err)
 }
 

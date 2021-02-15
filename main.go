@@ -6,7 +6,7 @@ import (
 	"os"
 
 	"github.com/databrickslabs/terraform-provider-databricks/common"
-	"github.com/databrickslabs/terraform-provider-databricks/importer"
+	"github.com/databrickslabs/terraform-provider-databricks/exporter"
 	"github.com/databrickslabs/terraform-provider-databricks/provider"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/plugin"
 )
@@ -17,8 +17,8 @@ func main() {
 		fmt.Println(common.Version())
 		return
 	}
-	if len(os.Args) > 1 && os.Args[1] == "importer" {
-		if err := importer.Run(os.Args...); err != nil {
+	if len(os.Args) > 1 && os.Args[1] == "exporter" {
+		if err := exporter.Run(os.Args...); err != nil {
 			log.Printf("[ERROR] %s", err.Error())
 			os.Exit(1)
 		}

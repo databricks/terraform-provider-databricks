@@ -34,6 +34,7 @@ func NewClientFromEnvironment() *DatabricksClient {
 			TenantID:       os.Getenv("ARM_TENANT_ID"),
 			Environment:    os.Getenv("ARM_ENVIRONMENT"),
 		},
+		RateLimitPerSecond: 10,
 	}
 	err := client.Configure()
 	if err != nil {

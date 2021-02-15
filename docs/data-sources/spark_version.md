@@ -44,7 +44,7 @@ Data source allows you to pick groups by the following attributes:
 * `genomics` - (boolean, optional)  if we should limit the search only to Genomics (HLS) runtimes. Default to `false`
 * `gpu` - (boolean, optional)  if we should limit the search only to runtimes that support GPUs. Default to `false`
 * `beta` - (boolean, optional) if we should limit the search only to runtimes that are in Beta stage. Default to `false`
-* `scala` - (boolean, optional) if we should limit the search only to runtimes that are based on specific Scala version. Default to `2.12`
+* `scala` - (string, optional) if we should limit the search only to runtimes that are based on specific Scala version. Default to `2.12`
 * `spark_version` - (string, optional) if we should limit the search only to runtimes that are based on specific Spark version. Default to empty string.  It could be specified as `3`, or `3.0`, or full version, like, `3.0.1`
 
 ## Attribute Reference

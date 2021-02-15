@@ -132,7 +132,7 @@ const (
 	AllowSQLAnalyticsAccessEntitlement Entitlement = "sql-analytics-access"
 )
 
-type groupsListItem struct {
+type GroupsListItem struct {
 	// TODO: combine entitlementsListItem & roleListItem into this one
 	Display string `json:"display,omitempty"`
 	Value   string `json:"value,omitempty"`
@@ -164,7 +164,7 @@ type ScimUser struct {
 	Schemas       []URN                  `json:"schemas,omitempty"`
 	UserName      string                 `json:"userName,omitempty"`
 	ApplicationID string                 `json:"applicationId,omitempty"`
-	Groups        []groupsListItem       `json:"groups,omitempty"`
+	Groups        []GroupsListItem       `json:"groups,omitempty"`
 	Name          map[string]string      `json:"name,omitempty"`
 	Roles         []roleListItem         `json:"roles,omitempty"`
 	Entitlements  []entitlementsListItem `json:"entitlements,omitempty"`

@@ -3,10 +3,10 @@ page_title: "Experimental resource exporter"
 ---
 # Experimental resource exporter
 
--> **Note** This tooling is experimental and provided as is. It has an evolving API, which may change or be removed in future versions of the provider.
+-> **Note** This tooling is experimental and provided as is. It has an evolving interfaces, which may change or be removed in future versions of the provider.
 
 
-Generates `*.tf` files for Databricks resources as well as `import.sh` to run import state. Available as part of provider binary. The only possible way to authenticate is through [environment variables](../index.md#Environment-variables).
+Generates `*.tf` files for Databricks resources as well as `import.sh` to run import state. Available as part of provider binary. The only possible way to authenticate is through [environment variables](../index.md#Environment-variables). It's best used, when you need to quickly export Terraform configuration for an existing Databricks workspace. After generating configuration, we strongly recommend to manually review all created files.
 
 ## Example Usage
 
@@ -34,7 +34,7 @@ All arguments are optional and they tune what code is being generated.
 * `-services` - Coma-separated list of services to import. By default all services are imported. 
 * `-listing` - Coma-separated list of services to be listed and further passed on for importing. `-services` parameter controls which transitive dependencies will be processed. We recommend limiting with `-listing` more often, than with `-services`.
 * `-match` - Match resource names during listing operation. This filter applies to all resources that are getting listed, so if you want to import all dependencies of just one cluster, specify `-match=autoscaling -listing=compute`. By default is empty, which matches everything.
-* `-mounts` - List DBFS mount points, which is a relatively slow operation and would not trigger unless explicitly specified.
+* `-mounts` - List DBFS mount points, which is a extremely slow operation and would not trigger unless explicitly specified.
 * `-generateProviderDeclaration` - flag that toggles generation of `databricks.tf` file with declaration of the Databricks Terraform provider that is necessary for Terraform versions since Terraform 0.13 (disabled by default).
 
 ## Services
@@ -49,7 +49,7 @@ Services are just logical groups of resources used for filtering and organizatio
 * `access` - [databricks_permissions](../resources/permissions.md) and [databricks_instance_profile](../resources/instance_profile.md).
 * `secrets` - **listing** [databricks_secret_scope](../resources/secret_scope.md) along with [keys](../resources/secret.md) and [ACLs](../resources/secret_acl.md). 
 * `storage` - any [databricks_dbfs_file](../resources/dbfs_file.md) will be downloaded locally and propertly arranged into terraform state.
-* `mounts` - works only in combination with `-mounts` for [databricks_s3_mount].
+* `mounts` - works only in combination with `-mounts` for [databricks_s3_mount](../resources/aws_s3_mount.md), [databricks_azure_adls_gen1_mount](../resources/azure_adls_gen1_mount.md), and [databricks_azure_adls_gen2_mount](../resources/azure_adls_gen2_mount.md).
 
 ## Secrets
 

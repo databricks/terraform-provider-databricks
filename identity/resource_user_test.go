@@ -20,7 +20,7 @@ func TestResourceUserRead(t *testing.T) {
 					ID:          "abc",
 					DisplayName: "Example user",
 					UserName:    "me@example.com",
-					Groups: []groupsListItem{
+					Groups: []GroupsListItem{
 						{
 							Display: "admins",
 							Value:   "4567",
@@ -118,7 +118,7 @@ func TestResourceUserCreate(t *testing.T) {
 							Value: AllowClusterCreateEntitlement,
 						},
 					},
-					Groups: []groupsListItem{
+					Groups: []GroupsListItem{
 						{
 							Display: "admins",
 							Value:   "4567",
@@ -177,7 +177,7 @@ func TestResourceUserUpdate(t *testing.T) {
 				Value: AllowInstancePoolCreateEntitlement,
 			},
 		},
-		Groups: []groupsListItem{
+		Groups: []GroupsListItem{
 			{
 				Display: "admins",
 				Value:   "4567",
@@ -211,7 +211,7 @@ func TestResourceUserUpdate(t *testing.T) {
 							Value: AllowClusterCreateEntitlement,
 						},
 					},
-					Groups: []groupsListItem{
+					Groups: []GroupsListItem{
 						{
 							Display: "admins",
 							Value:   "4567",
@@ -298,7 +298,7 @@ func TestResourceUserUpdate_ErrorPut(t *testing.T) {
 							Value: AllowClusterCreateEntitlement,
 						},
 					},
-					Groups: []groupsListItem{
+					Groups: []GroupsListItem{
 						{
 							Display: "admins",
 							Value:   "4567",

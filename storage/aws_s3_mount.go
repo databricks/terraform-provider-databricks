@@ -104,7 +104,7 @@ func preprocessS3Mount(ctx context.Context, d *schema.ResourceData, m interface{
 		}
 	}
 	if instanceProfile != "" {
-		cluster, err := getOrCreateMountingClusterWithInstanceProfile(clustersAPI, instanceProfile)
+		cluster, err := GetOrCreateMountingClusterWithInstanceProfile(clustersAPI, instanceProfile)
 		if err != nil {
 			return err
 		}
@@ -113,7 +113,8 @@ func preprocessS3Mount(ctx context.Context, d *schema.ResourceData, m interface{
 	return nil
 }
 
-func getOrCreateMountingClusterWithInstanceProfile(
+// GetOrCreateMountingClusterWithInstanceProfile ...
+func GetOrCreateMountingClusterWithInstanceProfile(
 	clustersAPI compute.ClustersAPI, instanceProfile string) (i compute.ClusterInfo, err error) {
 	ia, err := arn.Parse(instanceProfile)
 	if err != nil {

@@ -266,7 +266,7 @@ func TestAwsAccS3Mount(t *testing.T) {
 		bucket := qa.GetEnvOrSkipTest(t, "TEST_S3_BUCKET")
 		client := compute.CommonEnvironmentClientWithRealCommandExecutor()
 		clustersAPI := compute.NewClustersAPI(ctx, client)
-		clusterInfo, err := getOrCreateMountingClusterWithInstanceProfile(
+		clusterInfo, err := GetOrCreateMountingClusterWithInstanceProfile(
 			clustersAPI, instanceProfile)
 		require.NoError(t, err)
 		defer func() {

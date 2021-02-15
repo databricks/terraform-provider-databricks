@@ -3,7 +3,7 @@ subcategory: "Compute"
 ---
 # databricks_job Resource
 
-The databricks_job resource allows you to create, edit, and delete jobs, which run on either new or existing [clusters](cluster.md).
+The `databricks_job` resource allows you to create, edit, and delete jobs, which run on either new or existing [clusters](cluster.md).
 
 ## Example Usage
 
@@ -53,9 +53,9 @@ output "job_url" {
 
 The following arguments are required:
 
-* `name` - (Optional) (String) An optional name for the job. The default value is Untitled.
-* `new_cluster` - (Optional) (List) Same set of parameters as for [databricks_cluster](cluster.md) resource.
-* `existing_cluster_id` - (Optional) (String) If existing_cluster_id, the ID of an existing [cluster](cluster.md) that will be used for all runs of this job. When running jobs on an existing cluster, you may need to manually restart the cluster if it stops responding. We strongly suggest to use `new_cluster` for greater reliability.
+* `name` - (Optional) An optional name for the job. The default value is Untitled.
+* `new_cluster` - (Optional) Same set of parameters as for [databricks_cluster](cluster.md) resource.
+* `existing_cluster_id` - (Optional) If existing_cluster_id, the ID of an existing [cluster](cluster.md) that will be used for all runs of this job. When running jobs on an existing cluster, you may need to manually restart the cluster if it stops responding. We strongly suggest to use `new_cluster` for greater reliability.
 * `library` - (Optional) (Set) An optional list of libraries to be installed on the cluster that will execute the job. Please consult [libraries section](cluster.md#libraries) for [databricks_cluster](cluster.md) resource.
 * `retry_on_timeout` - (Optional) (Bool) An optional policy to specify whether to retry a job when it times out. The default behavior is to not retry on timeout.
 * `max_retries` - (Optional) (Integer) An optional maximum number of times to retry an unsuccessful run. A run is considered to be unsuccessful if it completes with a FAILED result_state or INTERNAL_ERROR life_cycle_state. The value -1 means to retry indefinitely and the value 0 means to never retry. The default behavior is to never retry.
@@ -67,29 +67,29 @@ The following arguments are required:
 
 ### schedule Configuration Block
 
-* `quartz_cron_expression` - (Required) (String) A [Cron expression using Quartz syntax](http://www.quartz-scheduler.org/documentation/quartz-2.3.0/tutorials/crontrigger.html) that describes the schedule for a job. This field is required.
-* `timezone_id` - (Required) (String) A Java timezone ID. The schedule for a job will be resolved with respect to this timezone. See Java TimeZone for details. This field is required.
+* `quartz_cron_expression` - (Required) A [Cron expression using Quartz syntax](http://www.quartz-scheduler.org/documentation/quartz-2.3.0/tutorials/crontrigger.html) that describes the schedule for a job. This field is required.
+* `timezone_id` - (Required) A Java timezone ID. The schedule for a job will be resolved with respect to this timezone. See Java TimeZone for details. This field is required.
 
 ### spark_jar_task Configuration Block
 
 * `parameters` - (Optional) (List) Parameters passed to the main method.
-* `main_class_name` - (Optional) (String) The full name of the class containing the main method to be executed. This class must be contained in a JAR provided as a library. The code should use `SparkContext.getOrCreate` to obtain a Spark context; otherwise, runs of the job will fail.
+* `main_class_name` - (Optional) The full name of the class containing the main method to be executed. This class must be contained in a JAR provided as a library. The code should use `SparkContext.getOrCreate` to obtain a Spark context; otherwise, runs of the job will fail.
 
 ### spark_submit_task Configuration Block
 
-You can invoke Spark submit tasks only on new clusters. In the new_cluster specification, libraries and spark_conf are not supported. Instead, use --jars and --py-files to add Java and Python libraries and --conf to set the Spark configuration. By default, the Spark submit job uses all available memory (excluding reserved memory for Databricks services). You can set --driver-memory, and --executor-memory to a smaller value to leave some room for off-heap usage. **Please use `spark_jar_task`, `spark_python_task` or `notebook_task` wherever possible**.
+You can invoke Spark submit tasks only on new clusters. **In the `new_cluster` specification, `libraries` and `spark_conf` are not supported**. Instead, use --jars and --py-files to add Java and Python libraries and `--conf` to set the Spark configuration. By default, the Spark submit job uses all available memory (excluding reserved memory for Databricks services). You can set `--driver-memory`, and `--executor-memory` to a smaller value to leave some room for off-heap usage. **Please use `spark_jar_task`, `spark_python_task` or `notebook_task` wherever possible**.
 
 * `parameters` - (Optional) (List) Command-line parameters passed to spark submit.
 
 ### spark_python_task Configuration Block
 
-* `python_file` - (Required) (String) The URI of the Python file to be executed. DBFS and S3 paths are supported. This field is required.
+* `python_file` - (Required) The URI of the Python file to be executed. [databricks_dbfs_file](dbfs_file.md#path) and S3 paths are supported. This field is required.
 * `parameters` - (Optional) (List) Command line parameters passed to the Python file.
 
 ### notebook_task Configuration Block
 
 * `base_parameters` - (Optional) (Map) Base parameters to be used for each run of this job. If the run is initiated by a call to run-now with parameters specified, the two parameters maps will be merged. If the same key is specified in base_parameters and in run-now, the value from run-now will be used. If the notebook takes a parameter that is not specified in the job’s base_parameters or the run-now override parameters, the default value from the notebook will be used. Retrieve these parameters in a notebook using `dbutils.widgets.get`.
-* `notebook_path` - (Required) (String) The absolute path of the notebook to be run in the Databricks workspace. This path must begin with a slash. This field is required.
+* `notebook_path` - (Required) The absolute path of the [databricks_notebook](notebook.md#path) to be run in the Databricks workspace. This path must begin with a slash. This field is required.
 
 ### email_notifications Configuration Block
 

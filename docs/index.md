@@ -240,7 +240,7 @@ resides. Alternatively, you can provide this value as an environment variable `D
 * `azure_environment` - (optional) This is the Azure Environment which defaults to the `public` cloud. Other options are `german`, `china` and `usgovernment`. Alternatively, you can provide this value as an environment variable `ARM_ENVIRONMENT`.
 * `pat_token_duration_seconds` - The current implementation of the azure auth via sp requires the provider to create a temporary personal access token within Databricks. The current AAD implementation does not cover all the APIs for Authentication. This field determines the duration in which that temporary PAT token is alive. It is measured in seconds and will default to `3600` seconds. 
 * `debug_truncate_bytes` - Applicable only when `TF_LOG=DEBUG` is set. Truncate JSON fields in HTTP requests and responses above this limit. Default is *96*.
-* `debug_headers` - Applicable only when `TF_LOG=DEBUG` is set. Debug HTTP headers of requests made by the provider. Default is *false*.
+* `debug_headers` - Applicable only when `TF_LOG=DEBUG` is set. Debug HTTP headers of requests made by the provider. Default is *false*. We recommend to turn this flag on only under exceptional circumstances, when troubleshooting authentication issues. Turning this flag on will log first `debug_truncate_bytes` of any HTTP header value in cleartext.
 
 There are multiple environment variable options, the `DATABRICKS_AZURE_*` environment variables take precedence, and the `ARM_*` environment variables provide a way to share authentication configuration using the `databricks` provider alongside the `azurerm` provider.
 

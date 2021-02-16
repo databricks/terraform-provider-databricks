@@ -1,6 +1,7 @@
 package storage
 
 import (
+	"bytes"
 	"context"
 	"encoding/base64"
 
@@ -55,7 +56,6 @@ type DbfsAPI struct {
 
 // Create creates a file on DBFS
 func (a DbfsAPI) Create(path string, byteArr []byte, overwrite bool) (err error) {
-	byteChunks := split(byteArr, 1e6)
 	handle, err := a.createHandle(path, overwrite)
 	if err != nil {
 		return
@@ -66,7 +66,12 @@ func (a DbfsAPI) Create(path string, byteArr []byte, overwrite bool) (err error)
 			err = cerr
 		}
 	}()
-	for _, byteChunk := range byteChunks {
+	buffer := bytes.NewBuffer(byteArr)
+	for {
+		byteChunk := buffer.Next(1e6)
+		if len(byteChunk) == 0 {
+			break
+		}
 		b64Data := base64.StdEncoding.EncodeToString(byteChunk)
 		err = a.addBlock(b64Data, handle)
 		if err != nil {
@@ -204,25 +209,4 @@ func (a DbfsAPI) Mkdirs(path string) error {
 	return a.client.Post(a.context, "/dbfs/mkdirs", map[string]interface{}{
 		"path": path,
 	}, nil)
-}
-
-func split(buf []byte, lim int) [][]byte {
-	var chunk []byte
-	portion := len(buf)
-	// even though we don't recommend files larger than 10mb,
-	// let's introduce the upper cap on uploaded libraries.
-	// terraform is not spark and should not manage large
-	// object on dbfs.
-	if portion > 1e9 {
-		portion = 1e9
-	}
-	chunks := make([][]byte, 0, portion/lim+1)
-	for len(buf) >= lim {
-		chunk, buf = buf[:lim], buf[lim:]
-		chunks = append(chunks, chunk)
-	}
-	if len(buf) > 0 {
-		chunks = append(chunks, buf)
-	}
-	return chunks
 }

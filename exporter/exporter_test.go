@@ -223,6 +223,14 @@ func TestImportingUsersGroupsSecretScopes(t *testing.T) {
 				},
 			},
 			{
+				Method:       "GET",
+				Resource:     "/api/2.0/global-init-scripts",
+				ReuseRequest: true,
+				Response: map[string]interface{}{
+					"scripts": []map[string]interface{}{},
+				},
+			},
+			{
 				Method:   "GET",
 				Resource: "/api/2.0/preview/scim/v2/Groups/a",
 				Response: identity.ScimGroup{ID: "a", DisplayName: "admins",
@@ -353,6 +361,14 @@ func TestImportingNoResourcesError(t *testing.T) {
 				Method:   "GET",
 				Resource: "/api/2.0/preview/scim/v2/Groups?",
 				Response: identity.GroupList{Resources: []identity.ScimGroup{}},
+			},
+			{
+				Method:       "GET",
+				Resource:     "/api/2.0/global-init-scripts",
+				ReuseRequest: true,
+				Response: map[string]interface{}{
+					"scripts": []map[string]interface{}{},
+				},
 			},
 			{
 				Method:   "GET",
@@ -810,4 +826,42 @@ func TestResourceName(t *testing.T) {
 		Name: "General Policy - All Users",
 	})
 	assert.Equal(t, "general_policy_all_users", norm)
+}
+
+func TestImportingGlobalInitScripts(t *testing.T) {
+	qa.HTTPFixturesApply(t,
+		[]qa.HTTPFixture{
+			meAdminFixture,
+			{
+				Method:       "GET",
+				Resource:     "/api/2.0/global-init-scripts",
+				ReuseRequest: true,
+				Response:     getJSONObject("test-data/global-init-scripts-list.json"),
+			},
+			{
+				Method:       "GET",
+				Resource:     "/api/2.0/global-init-scripts/C39FD6BAC8088BBC",
+				ReuseRequest: true,
+				Response:     getJSONObject("test-data/global-init-script-get1.json"),
+			},
+			{
+				Method:       "GET",
+				Resource:     "/api/2.0/global-init-scripts/F931E63C248C1D8C",
+				ReuseRequest: true,
+				Response:     getJSONObject("test-data/global-init-script-get2.json"),
+			},
+		}, func(ctx context.Context, client *common.DatabricksClient) {
+			tmpDir := fmt.Sprintf("/tmp/tf-%s", qa.RandomName())
+			defer os.RemoveAll(tmpDir)
+
+			ic := newImportContext(client)
+			ic.Directory = tmpDir
+			ic.listing = "workspace"
+			services, _ := ic.allServicesAndListing()
+			ic.services = services
+			ic.generateDeclaration = true
+
+			err := ic.Run()
+			assert.NoError(t, err)
+		})
 }

@@ -208,7 +208,15 @@ func (a DbfsAPI) Mkdirs(path string) error {
 
 func split(buf []byte, lim int) [][]byte {
 	var chunk []byte
-	chunks := make([][]byte, 0, len(buf)/lim+1)
+	portion := len(buf)
+	// even though we don't recommend files larger than 10mb,
+	// let's introduce the upper cap on uploaded libraries.
+	// terraform is not spark and should not manage large
+	// object on dbfs.
+	if portion > 1e9 {
+		portion = 1e9
+	}
+	chunks := make([][]byte, 0, portion/lim+1)
 	for len(buf) >= lim {
 		chunk, buf = buf[:lim], buf[lim:]
 		chunks = append(chunks, chunk)

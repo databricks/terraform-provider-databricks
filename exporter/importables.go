@@ -41,7 +41,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			if err != nil {
 				return err
 			}
-			err = os.Mkdir(fmt.Sprintf("%s/files", ic.Directory), 0755)
+			err = os.MkdirAll(fmt.Sprintf("%s/files", ic.Directory), 0755)
 			if err != nil && !os.IsExist(err) {
 				return err
 			}

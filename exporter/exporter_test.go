@@ -17,7 +17,6 @@ import (
 	"github.com/hashicorp/hcl/v2/hclwrite"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 // func TestAccImporter(t *testing.T) {
@@ -227,8 +226,9 @@ func TestImportingMounts(t *testing.T) {
 // TODO: add test for outputing import.sh into directory without permissions, like `/bin`
 
 var meAdminFixture = qa.HTTPFixture{
-	Method:   "GET",
-	Resource: "/api/2.0/preview/scim/v2/Me",
+	Method:       "GET",
+	ReuseRequest: true,
+	Resource:     "/api/2.0/preview/scim/v2/Me",
 	Response: identity.ScimUser{
 		Groups: []identity.GroupsListItem{
 			{
@@ -239,188 +239,189 @@ var meAdminFixture = qa.HTTPFixture{
 }
 
 func TestImportingUsersGroupsSecretScopes(t *testing.T) {
-	defer common.CleanupEnvironment()()
-	_, server, err := qa.HttpFixtureClient(t, []qa.HTTPFixture{
-		meAdminFixture,
-		{
-			Method:   "GET",
-			Resource: "/api/2.0/preview/scim/v2/Groups?",
-			Response: identity.GroupList{
-				Resources: []identity.ScimGroup{
-					// TODO: add another user for which there is no filter resut
-					{ID: "a", DisplayName: "admins",
-						Members: []identity.GroupMember{
-							{Display: "test@test.com", Value: "123", Ref: "Users/123"},
-							{Display: "Test group", Value: "f", Ref: "Groups/f"},
+	qa.HTTPFixturesApply(t,
+		[]qa.HTTPFixture{
+			meAdminFixture,
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/preview/scim/v2/Groups?",
+				Response: identity.GroupList{
+					Resources: []identity.ScimGroup{
+						// TODO: add another user for which there is no filter resut
+						{ID: "a", DisplayName: "admins",
+							Members: []identity.GroupMember{
+								{Display: "test@test.com", Value: "123", Ref: "Users/123"},
+								{Display: "Test group", Value: "f", Ref: "Groups/f"},
+							},
 						},
+						{ID: "b", DisplayName: "users"},
+						{ID: "c", DisplayName: "test"},
 					},
-					{ID: "b", DisplayName: "users"},
-					{ID: "c", DisplayName: "test"},
 				},
 			},
-		},
-		{
-			Method:   "GET",
-			Resource: "/api/2.0/preview/scim/v2/Groups/a",
-			Response: identity.ScimGroup{ID: "a", DisplayName: "admins",
-				Members: []identity.GroupMember{
-					{Display: "test@test.com", Value: "123", Ref: "Users/123"},
-					{Display: "Test group", Value: "f", Ref: "Groups/f"},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/preview/scim/v2/Groups/a",
+				Response: identity.ScimGroup{ID: "a", DisplayName: "admins",
+					Members: []identity.GroupMember{
+						{Display: "test@test.com", Value: "123", Ref: "Users/123"},
+						{Display: "Test group", Value: "f", Ref: "Groups/f"},
+					},
+				},
+				ReuseRequest: true,
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/preview/scim/v2/Groups/b",
+				Response: identity.ScimGroup{ID: "b", DisplayName: "users"},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/preview/scim/v2/Groups/c",
+				Response: identity.ScimGroup{ID: "c", DisplayName: "test",
+					Groups: []identity.GroupMember{
+						{Display: "admins", Value: "a", Ref: "Groups/a", Type: "direct"},
+					},
 				},
 			},
-			ReuseRequest: true,
-		},
-		{
-			Method:   "GET",
-			Resource: "/api/2.0/preview/scim/v2/Groups/b",
-			Response: identity.ScimGroup{ID: "b", DisplayName: "users"},
-		},
-		{
-			Method:   "GET",
-			Resource: "/api/2.0/preview/scim/v2/Groups/c",
-			Response: identity.ScimGroup{ID: "c", DisplayName: "test",
-				Groups: []identity.GroupMember{
-					{Display: "admins", Value: "a", Ref: "Groups/a", Type: "direct"},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/preview/scim/v2/Groups/f",
+				Response: identity.ScimGroup{ID: "f", DisplayName: "nested"},
+			},
+			// TODO: add groups to the output
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/preview/scim/v2/Users/123",
+				Response: identity.ScimUser{ID: "123", DisplayName: "test@test.com", UserName: "test@test.com"},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/preview/scim/v2/Users?filter=userName%20eq%20%27test@test.com%27",
+				Response: identity.UserList{
+					Resources: []identity.ScimUser{
+						{ID: "123", DisplayName: "test@test.com", UserName: "test@test.com"},
+					},
+					StartIndex:   1,
+					TotalResults: 1,
+					ItemsPerPage: 1,
 				},
 			},
-		},
-		{
-			Method:   "GET",
-			Resource: "/api/2.0/preview/scim/v2/Groups/f",
-			Response: identity.ScimGroup{ID: "f", DisplayName: "nested"},
-		},
-		// TODO: add groups to the output
-		{
-			Method:   "GET",
-			Resource: "/api/2.0/preview/scim/v2/Users/123",
-			Response: identity.ScimUser{ID: "123", DisplayName: "test@test.com", UserName: "test@test.com"},
-		},
-		{
-			Method:   "GET",
-			Resource: "/api/2.0/preview/scim/v2/Users?filter=userName%20eq%20%27test@test.com%27",
-			Response: identity.UserList{
-				Resources: []identity.ScimUser{
-					{ID: "123", DisplayName: "test@test.com", UserName: "test@test.com"},
-				},
-				StartIndex:   1,
-				TotalResults: 1,
-				ItemsPerPage: 1,
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/jobs/list",
+				Response: compute.JobList{},
 			},
-		},
-		{
-			Method:   "GET",
-			Resource: "/api/2.0/jobs/list",
-			Response: compute.JobList{},
-		},
-		{
-			Method:   "GET",
-			Resource: "/api/2.0/clusters/list",
-			Response: compute.ClusterList{},
-		},
-		{
-			Method:       "GET",
-			Resource:     "/api/2.0/secrets/scopes/list",
-			ReuseRequest: true,
-			Response: access.SecretScopeList{
-				Scopes: []access.SecretScope{
-					{Name: "a"},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/clusters/list",
+				Response: compute.ClusterList{},
+			},
+			{
+				Method:       "GET",
+				Resource:     "/api/2.0/secrets/scopes/list",
+				ReuseRequest: true,
+				Response: access.SecretScopeList{
+					Scopes: []access.SecretScope{
+						{Name: "a"},
+					},
 				},
 			},
-		},
-		{
-			Method:       "GET",
-			Resource:     "/api/2.0/secrets/list?scope=a",
-			ReuseRequest: true,
-			Response: access.SecretsList{
-				Secrets: []access.SecretMetadata{
-					{Key: "b"},
+			{
+				Method:       "GET",
+				Resource:     "/api/2.0/secrets/list?scope=a",
+				ReuseRequest: true,
+				Response: access.SecretsList{
+					Secrets: []access.SecretMetadata{
+						{Key: "b"},
+					},
 				},
 			},
-		},
-		{
-			Method:   "GET",
-			Resource: "/api/2.0/secrets/acls/list?scope=a",
-			Response: access.SecretScopeACL{
-				Items: []access.ACLItem{
-					{Permission: "MANAGE", Principal: "test"},
-					{Permission: "READ", Principal: "users"},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/secrets/acls/list?scope=a",
+				Response: access.SecretScopeACL{
+					Items: []access.ACLItem{
+						{Permission: "MANAGE", Principal: "test"},
+						{Permission: "READ", Principal: "users"},
+					},
 				},
 			},
-		},
-		{
-			Method:   "GET",
-			Resource: "/api/2.0/secrets/acls/list?scope=a",
-			Response: access.SecretScopeACL{
-				Items: []access.ACLItem{
-					{Permission: "MANAGE", Principal: "test"},
-					{Permission: "READ", Principal: "users"},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/secrets/acls/list?scope=a",
+				Response: access.SecretScopeACL{
+					Items: []access.ACLItem{
+						{Permission: "MANAGE", Principal: "test"},
+						{Permission: "READ", Principal: "users"},
+					},
 				},
 			},
-		},
-		{
-			Method:   "GET",
-			Resource: "/api/2.0/secrets/acls/get?principal=test&scope=a",
-			Response: access.ACLItem{Permission: "MANAGE", Principal: "test"},
-		},
-		{
-			Method:   "GET",
-			Resource: "/api/2.0/secrets/acls/get?principal=users&scope=a",
-			Response: access.ACLItem{Permission: "READ", Principal: "users"},
-		},
-	})
-	require.NoError(t, err)
-	defer server.Close()
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/secrets/acls/get?principal=test&scope=a",
+				Response: access.ACLItem{Permission: "MANAGE", Principal: "test"},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/secrets/acls/get?principal=users&scope=a",
+				Response: access.ACLItem{Permission: "READ", Principal: "users"},
+			},
+		}, func(ctx context.Context, client *common.DatabricksClient) {
+			tmpDir := fmt.Sprintf("/tmp/tf-%s", qa.RandomName())
+			defer os.RemoveAll(tmpDir)
 
-	os.Setenv("DATABRICKS_HOST", server.URL)
-	os.Setenv("DATABRICKS_TOKEN", "..")
+			ic := newImportContext(client)
+			ic.Directory = tmpDir
+			services, listing := ic.allServicesAndListing()
+			ic.services = services
+			ic.listing = listing
 
-	tmpDir := fmt.Sprintf("/tmp/tf-%s", qa.RandomName())
-	defer os.RemoveAll(tmpDir)
-
-	err = Run("-directory", tmpDir)
-	assert.NoError(t, err)
-	// TODO: check the content of the generated files
+			err := ic.Run()
+			assert.NoError(t, err)
+		})
 }
 
 func TestImportingNoResourcesError(t *testing.T) {
-	defer common.CleanupEnvironment()()
-	_, server, err := qa.HttpFixtureClient(t, []qa.HTTPFixture{
-		meAdminFixture,
-		{
-			Method:   "GET",
-			Resource: "/api/2.0/preview/scim/v2/Groups?",
-			Response: identity.GroupList{Resources: []identity.ScimGroup{}},
-		},
-		{
-			Method:   "GET",
-			Resource: "/api/2.0/jobs/list",
-			Response: compute.JobList{},
-		},
-		{
-			Method:   "GET",
-			Resource: "/api/2.0/clusters/list",
-			Response: compute.ClusterList{},
-		},
-		{
-			Method:       "GET",
-			Resource:     "/api/2.0/secrets/scopes/list",
-			ReuseRequest: true,
-			Response: access.SecretScopeList{
-				Scopes: []access.SecretScope{},
+	qa.HTTPFixturesApply(t,
+		[]qa.HTTPFixture{
+			meAdminFixture,
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/preview/scim/v2/Groups?",
+				Response: identity.GroupList{Resources: []identity.ScimGroup{}},
 			},
-		},
-	})
-	require.NoError(t, err)
-	defer server.Close()
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/jobs/list",
+				Response: compute.JobList{},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/clusters/list",
+				Response: compute.ClusterList{},
+			},
+			{
+				Method:       "GET",
+				Resource:     "/api/2.0/secrets/scopes/list",
+				ReuseRequest: true,
+				Response: access.SecretScopeList{
+					Scopes: []access.SecretScope{},
+				},
+			},
+		}, func(ctx context.Context, client *common.DatabricksClient) {
+			tmpDir := fmt.Sprintf("/tmp/tf-%s", qa.RandomName())
+			defer os.RemoveAll(tmpDir)
 
-	os.Setenv("DATABRICKS_HOST", server.URL)
-	os.Setenv("DATABRICKS_TOKEN", "..")
+			ic := newImportContext(client)
+			ic.Directory = tmpDir
+			services, listing := ic.allServicesAndListing()
+			ic.listing = listing
+			ic.services = services
 
-	tmpDir := fmt.Sprintf("/tmp/tf-%s", qa.RandomName())
-	defer os.RemoveAll(tmpDir)
-
-	err = Run("-directory", tmpDir)
-	assert.EqualError(t, err, "No resources to import")
+			err := ic.Run()
+			assert.EqualError(t, err, "No resources to import")
+		})
 }
 
 func TestImportingClusters(t *testing.T) {
@@ -563,8 +564,7 @@ func TestImportingClusters(t *testing.T) {
 		})
 }
 
-// TODO: add spark_submit_task job
-func TestImportingJobs(t *testing.T) {
+func TestImportingJobs_JobList(t *testing.T) {
 	nowSeconds := time.Now().Unix()
 	jobRuns := compute.JobRunsList{
 		Runs: []compute.JobRun{
@@ -578,95 +578,34 @@ func TestImportingJobs(t *testing.T) {
 			meAdminFixture,
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/Groups?",
-				Response: identity.GroupList{Resources: []identity.ScimGroup{}},
-			},
-			{
-				Method:   "GET",
 				Resource: "/api/2.0/jobs/list",
-				Response: getJSONObject("test-data/get-jobs-list.json"),
-			},
-			{
-				Method:   "GET",
-				Resource: "/api/2.0/jobs/get?job_id=14",
-				Response: getJSONObject("test-data/get-job-14.json"),
+				Response: compute.JobList{
+					Jobs: []compute.Job{
+						{
+							JobID: 14,
+							Settings: &compute.JobSettings{
+								Name: "Demo job",
+							},
+						},
+						{
+							JobID: 15,
+							Settings: &compute.JobSettings{
+								Name: "Demo job",
+							},
+						},
+						{
+							JobID: 16,
+							Settings: &compute.JobSettings{
+								Name: "Demo job",
+							},
+						},
+					},
+				},
 			},
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/preview/permissions/jobs/14",
-				Response: getJSONObject("test-data/get-job-permissions-14.json"),
-			},
-			{
-				Method:   "GET",
-				Resource: "/api/2.0/jobs/runs/list?completed_only=true&job_id=14&limit=1",
-				Response: jobRuns,
-			},
-			{
-				Method:   "GET",
-				Resource: "/api/2.0/jobs/get?job_id=12",
-				Response: getJSONObject("test-data/get-job-12.json"),
-			},
-			{
-				Method:   "GET",
-				Resource: "/api/2.0/preview/permissions/jobs/12",
-				Response: getJSONObject("test-data/get-job-permissions-12.json"),
-			},
-			{
-				Method:   "GET",
-				Resource: "/api/2.0/jobs/runs/list?completed_only=true&job_id=12&limit=1",
-				Response: jobRuns,
-			},
-			{
-				Method:   "GET",
-				Resource: "/api/2.0/clusters/get?cluster_id=test2",
-				Response: getJSONObject("test-data/get-cluster-test2-response.json"),
-			},
-			{
-				Method:   "POST",
-				Resource: "/api/2.0/clusters/events",
-				ExpectedRequest: compute.EventsRequest{
-					ClusterID:  "test2",
-					Order:      "DESC",
-					EventTypes: []compute.ClusterEventType{"PINNED", "UNPINNED"},
-					Limit:      1,
-				},
-				Response: compute.EventDetails{},
-			},
-			{
-				Method:   "GET",
-				Resource: "/api/2.0/libraries/cluster-status?cluster_id=test2",
-				Response: getJSONObject("test-data/libraries-cluster-status-test2.json"),
-			},
-			{
-				Method:   "GET",
-				Resource: "/api/2.0/preview/permissions/clusters/test2",
-				Response: getJSONObject("test-data/get-cluster-permissions-test2-response.json"),
-			},
-			{
-				Method:   "GET",
-				Resource: "/api/2.0/policies/clusters/get?policy_id=123",
-				Response: getJSONObject("test-data/get-cluster-policy.json"),
-			},
-			{
-				Method:   "GET",
-				Resource: "/api/2.0/preview/permissions/cluster-policies/123",
-				Response: getJSONObject("test-data/get-cluster-policy-permissions.json"),
-			},
-			{
-				Method:   "GET",
-				Resource: "/api/2.0/jobs/get?job_id=15",
-				Response: getJSONObject("test-data/get-job-15.json"),
-			},
-			{
-				Method:       "GET",
-				ReuseRequest: true,
-				Resource:     "/api/2.0/jobs/runs/list?completed_only=true&job_id=15&limit=1",
-				Response:     jobRuns,
-			},
-			{
-				Method:   "GET",
-				Resource: "/api/2.0/preview/permissions/jobs/15",
-				Response: getJSONObject("test-data/get-job-permissions-15.json"),
+				Response: getJSONObject("test-data/get-job-14-permissions.json"),
 			},
 			{
 				Method:       "GET",
@@ -690,57 +629,138 @@ func TestImportingJobs(t *testing.T) {
 				Method:       "GET",
 				Resource:     "/api/2.0/preview/permissions/instance-pools/pool1",
 				ReuseRequest: true,
-				Response:     getJSONObject("test-data/get-instance-pool1-permissions.json"),
+				Response:     getJSONObject("test-data/get-job-14-permissions.json"),
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/jobs/get?job_id=16",
-				Response: getJSONObject("test-data/get-job-16.json"),
+				Resource: "/api/2.0/jobs/get?job_id=14",
+				Response: compute.Job{
+					JobID: 14,
+					Settings: &compute.JobSettings{
+						RetryOnTimeout: true,
+						Libraries: []compute.Library{
+							{Jar: "dbfs:/FileStore/jars/test.jar"},
+						},
+						Name: "Dummy",
+						NewCluster: &compute.Cluster{
+							InstancePoolID: "pool1",
+							NumWorkers:     2,
+							SparkVersion:   "6.4.x-scala2.11",
+							PolicyID:       "123",
+						},
+						SparkJarTask: &compute.SparkJarTask{
+							JarURI:        "dbfs:/FileStore/jars/test.jar",
+							MainClassName: "com.databricks.examples.ProjectDriver",
+						},
+						SparkPythonTask: &compute.SparkPythonTask{
+							// this makes no sense for prod, but does for tests ;-)
+							PythonFile: "/foo/bar.py",
+							Parameters: []string{
+								"dbfs:/FileStore/jars/test.jar",
+								"etc",
+							},
+						},
+					},
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/policies/clusters/get?policy_id=123",
+				Response: compute.ClusterPolicy{
+					PolicyID: "123",
+					Name:     "dummy",
+					Definition: `{
+						"aws_attributes.instance_profile_arn": {
+							"type": "fixed",
+							"value": "arn:aws:iam::12345:instance-profile/shard-s3-access",
+							"hidden": true
+						},
+						"instance_pool_id": {
+							"type": "fixed",
+							"value": "pool1",
+							"hidden": true
+						}
+					}`,
+				},
+			},
+			{
+				Method:       "GET",
+				ReuseRequest: true,
+				Resource:     "/api/2.0/instance-profiles/list",
+				Response: identity.InstanceProfileList{
+					InstanceProfiles: []identity.InstanceProfileInfo{
+						{
+							InstanceProfileArn: "arn:aws:iam::12345:instance-profile/shard-s3-access",
+						},
+					},
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/preview/permissions/cluster-policies/123",
+				Response: getJSONObject("test-data/get-cluster-policy-permissions.json"),
+			},
+
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/jobs/runs/list?completed_only=true&job_id=14&limit=1",
+				Response: jobRuns,
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/jobs/runs/list?completed_only=true&job_id=15&limit=1",
+				Response: compute.JobRunsList{
+					Runs: []compute.JobRun{},
+				},
 			},
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/jobs/runs/list?completed_only=true&job_id=16&limit=1",
-				Response: jobRuns,
-			},
-			{
-				Method:   "GET",
-				Resource: "/api/2.0/preview/permissions/jobs/16",
-				Response: getJSONObject("test-data/get-job-permissions-16.json"),
-			},
-			{
-				Method:   "GET",
-				Resource: "/api/2.0/jobs/get?job_id=17",
-				Response: getJSONObject("test-data/get-job-17.json"),
-			},
-			{
-				Method:   "GET",
-				Resource: "/api/2.0/preview/permissions/jobs/17",
-				Response: getJSONObject("test-data/get-job-permissions-17.json"),
-			},
-			{
-				Method:   "GET",
-				Resource: "/api/2.0/jobs/runs/list?completed_only=true&job_id=17&limit=1",
-				Response: jobRuns,
-			},
-			{
-				Method:       "GET",
-				Resource:     "/api/2.0/preview/scim/v2/Me",
-				ReuseRequest: true,
-				Response:     identity.ScimUser{ID: "a", DisplayName: "test@test.com"},
+				Response: compute.JobRunsList{
+					Runs: []compute.JobRun{
+						{
+							StartTime: 0,
+						},
+					},
+				},
 			},
 		},
 		func(ctx context.Context, client *common.DatabricksClient) {
+			ic := newImportContext(client)
+			ic.services = "jobs,access,storage,compute"
+			ic.listing = "jobs"
+			ic.mounts = true
+			ic.meAdmin = true
 			tmpDir := fmt.Sprintf("/tmp/tf-%s", qa.RandomName())
 			defer os.RemoveAll(tmpDir)
-
-			ic := newImportContext(client)
 			ic.Directory = tmpDir
-			ic.listing = "jobs"
-			services, _ := ic.allServicesAndListing()
-			ic.services = services
 
-			err := ic.Run()
+			err := ic.Importables["databricks_job"].List(ic)
 			assert.NoError(t, err)
+
+			for _, res := range ic.Scope {
+				if res.Resource != "databricks_dbfs_file" {
+					continue
+				}
+				err = ic.Importables["databricks_dbfs_file"].Body(ic,
+					hclwrite.NewEmptyFile().Body(), res)
+				assert.NoError(t, err)
+			}
+
+			for _, res := range ic.Scope {
+				if res.Resource != "databricks_job" {
+					continue
+				}
+				// simulate complex HCL write
+				err = ic.dataToHcl(
+					ic.Importables["databricks_job"],
+					[]string{},
+					ic.Resources["databricks_job"],
+					res.Data,
+					hclwrite.NewEmptyFile().Body())
+
+				assert.NoError(t, err)
+			}
 		})
 }
 
@@ -753,60 +773,62 @@ func TestImportingWithError(t *testing.T) {
 }
 
 func TestImportingSecrets(t *testing.T) {
-	defer common.CleanupEnvironment()()
-	_, server, err := qa.HttpFixtureClient(t, []qa.HTTPFixture{
-		meAdminFixture,
-		{
-			Method:   "GET",
-			Resource: "/api/2.0/preview/scim/v2/Groups?",
-			Response: identity.GroupList{Resources: []identity.ScimGroup{}},
-		},
-		{
-			Method:   "GET",
-			Resource: "/api/2.0/jobs/list",
-			Response: compute.JobList{},
-		},
-		{
-			Method:   "GET",
-			Resource: "/api/2.0/clusters/list",
-			Response: compute.ClusterList{},
-		},
-		{
-			Method:       "GET",
-			Resource:     "/api/2.0/secrets/scopes/list",
-			ReuseRequest: true,
-			Response:     getJSONObject("test-data/secret-scopes-response.json"),
-		},
-		{
-			Method:       "GET",
-			Resource:     "/api/2.0/secrets/list?scope=some-kv-scope",
-			ReuseRequest: true,
-			Response:     getJSONObject("test-data/secret-scopes-list-scope-response.json"),
-		},
-		{
-			Method:       "GET",
-			Resource:     "/api/2.0/secrets/acls/list?scope=some-kv-scope",
-			ReuseRequest: true,
-			Response:     getJSONObject("test-data/secret-scopes-list-scope-acls-response.json"),
-		},
-		{
-			Method:       "GET",
-			Resource:     "/api/2.0/secrets/acls/get?principal=test%40test.com&scope=some-kv-scope",
-			ReuseRequest: true,
-			Response:     getJSONObject("test-data/secret-scopes-get-principal-response.json"),
-		},
-	})
-	require.NoError(t, err)
-	defer server.Close()
+	qa.HTTPFixturesApply(t,
+		[]qa.HTTPFixture{
+			meAdminFixture,
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/preview/scim/v2/Groups?",
+				Response: identity.GroupList{Resources: []identity.ScimGroup{}},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/jobs/list",
+				Response: compute.JobList{},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/clusters/list",
+				Response: compute.ClusterList{},
+			},
+			{
+				Method:       "GET",
+				Resource:     "/api/2.0/secrets/scopes/list",
+				ReuseRequest: true,
+				Response:     getJSONObject("test-data/secret-scopes-response.json"),
+			},
+			{
+				Method:       "GET",
+				Resource:     "/api/2.0/secrets/list?scope=some-kv-scope",
+				ReuseRequest: true,
+				Response:     getJSONObject("test-data/secret-scopes-list-scope-response.json"),
+			},
+			{
+				Method:       "GET",
+				Resource:     "/api/2.0/secrets/acls/list?scope=some-kv-scope",
+				ReuseRequest: true,
+				Response:     getJSONObject("test-data/secret-scopes-list-scope-acls-response.json"),
+			},
+			{
+				Method:       "GET",
+				Resource:     "/api/2.0/secrets/acls/get?principal=test%40test.com&scope=some-kv-scope",
+				ReuseRequest: true,
+				Response:     getJSONObject("test-data/secret-scopes-get-principal-response.json"),
+			},
+		}, func(ctx context.Context, client *common.DatabricksClient) {
+			tmpDir := fmt.Sprintf("/tmp/tf-%s", qa.RandomName())
+			defer os.RemoveAll(tmpDir)
 
-	os.Setenv("DATABRICKS_HOST", server.URL)
-	os.Setenv("DATABRICKS_TOKEN", "..")
+			ic := newImportContext(client)
+			ic.Directory = tmpDir
+			ic.listing = "secrets"
+			services, _ := ic.allServicesAndListing()
+			ic.services = services
+			ic.generateDeclaration = true
 
-	tmpDir := fmt.Sprintf("/tmp/tf-%s", qa.RandomName())
-	defer os.RemoveAll(tmpDir)
-
-	err = Run("-directory", tmpDir, "-listing", "secrets", "-generateProviderDeclaration", "true")
-	assert.NoError(t, err)
+			err := ic.Run()
+			assert.NoError(t, err)
+		})
 }
 
 func TestResourceName(t *testing.T) {

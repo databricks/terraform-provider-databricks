@@ -13,6 +13,7 @@ import (
 	"strings"
 
 	"github.com/databrickslabs/terraform-provider-databricks/common"
+	"github.com/databrickslabs/terraform-provider-databricks/compute"
 	"github.com/databrickslabs/terraform-provider-databricks/identity"
 	"github.com/databrickslabs/terraform-provider-databricks/provider"
 
@@ -60,7 +61,7 @@ type importContext struct {
 	hclFixes    []regexFix
 	allUsers    []identity.ScimUser
 	allGroups   []identity.ScimGroup
-	mountMap    map[string]string
+	mountMap    map[string]mount
 	variables   map[string]string
 
 	debug               bool
@@ -70,6 +71,13 @@ type importContext struct {
 	match               string
 	lastActiveDays      int64
 	generateDeclaration bool
+	meAdmin             bool
+}
+
+type mount struct {
+	URL             string
+	InstanceProfile string
+	ClusterID       string
 }
 
 func newImportContext(c *common.DatabricksClient) *importContext {
@@ -77,6 +85,11 @@ func newImportContext(c *common.DatabricksClient) *importContext {
 	p.TerraformVersion = "importer"
 	p.SetMeta(c)
 	ctx := context.WithValue(context.Background(), common.Provider, p)
+	c.WithCommandExecutor(func(
+		ctx context.Context,
+		c *common.DatabricksClient) common.CommandExecutor {
+		return compute.NewCommandsAPI(ctx, c)
+	})
 	return &importContext{
 		Client:      c,
 		Context:     ctx,
@@ -120,7 +133,17 @@ func (ic *importContext) Run() error {
 	} else if !info.IsDir() {
 		return fmt.Errorf("The path %s is not a directory", ic.Directory)
 	}
-
+	usersAPI := identity.NewUsersAPI(ic.Context, ic.Client)
+	me, err := usersAPI.Me()
+	if err != nil {
+		return err
+	}
+	for _, g := range me.Groups {
+		if g.Display == "admins" {
+			ic.meAdmin = true
+			break
+		}
+	}
 	for resourceName, ir := range ic.Importables {
 		if ir.List == nil {
 			continue
@@ -181,14 +204,14 @@ func (ic *importContext) Run() error {
 		if ir.Body != nil {
 			err := ir.Body(ic, body, r)
 			if err != nil {
-				return err
+				log.Printf("[ERROR] %s", err.Error())
 			}
 		} else {
 			resourceBlock := body.AppendNewBlock("resource", []string{r.Resource, r.Name})
 			err := ic.dataToHcl(ir, []string{}, ic.Resources[r.Resource],
 				r.Data, resourceBlock.Body())
 			if err != nil {
-				return err
+				log.Printf("[ERROR] %s", err.Error())
 			}
 		}
 		if i%50 == 0 {
@@ -389,26 +412,28 @@ func (ic *importContext) Emit(r *resource) {
 			return
 		}
 	}
-	// empty data with resource schema
-	r.Data = pr.Data(&terraform.InstanceState{
-		Attributes: map[string]string{},
-		ID:         r.ID,
-	})
-	r.Data.MarkNewResource()
+	if r.Data == nil {
+		// empty data with resource schema
+		r.Data = pr.Data(&terraform.InstanceState{
+			Attributes: map[string]string{},
+			ID:         r.ID,
+		})
+		r.Data.MarkNewResource()
 
-	if pr.Read != nil {
-		if err := pr.Read(r.Data, ic.Client); err != nil {
-			log.Printf("[ERROR] Error reading %s#%s: %v", r.Resource, r.ID, err)
-			return
+		if pr.Read != nil {
+			if err := pr.Read(r.Data, ic.Client); err != nil {
+				log.Printf("[ERROR] Error reading %s#%s: %v", r.Resource, r.ID, err)
+				return
+			}
+		} else {
+			if dia := pr.ReadContext(context.Background(), r.Data, ic.Client); dia != nil {
+				log.Printf("[ERROR] Error reading %s#%s: %v", r.Resource, r.ID, dia)
+				return
+			}
 		}
-	} else {
-		if dia := pr.ReadContext(context.Background(), r.Data, ic.Client); dia != nil {
-			log.Printf("[ERROR] Error reading %s#%s: %v", r.Resource, r.ID, dia)
-			return
+		if r.Data.Id() == "" {
+			r.Data.SetId(r.ID)
 		}
-	}
-	if r.Data.Id() == "" {
-		r.Data.SetId(r.ID)
 	}
 	r.Name = ic.ResourceName(r)
 	if ir.Import != nil {

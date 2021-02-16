@@ -41,7 +41,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			if err != nil {
 				return err
 			}
-			err = os.Mkdir(fmt.Sprintf("%s/files", ic.Directory), 0755)
+			err = os.MkdirAll(fmt.Sprintf("%s/files", ic.Directory), 0755)
 			if err != nil && !os.IsExist(err) {
 				return err
 			}
@@ -80,11 +80,13 @@ var resourcesMap map[string]importable = map[string]importable{
 			return name
 		},
 		Import: func(ic *importContext, r *resource) error {
-			ic.Emit(&resource{
-				Resource: "databricks_permissions",
-				ID:       fmt.Sprintf("/instance-pools/%s", r.ID),
-				Name:     ic.Importables["databricks_instance_pool"].Name(r.Data),
-			})
+			if ic.meAdmin {
+				ic.Emit(&resource{
+					Resource: "databricks_permissions",
+					ID:       fmt.Sprintf("/instance-pools/%s", r.ID),
+					Name:     ic.Importables["databricks_instance_pool"].Name(r.Data),
+				})
+			}
 			return nil
 		},
 	},
@@ -94,14 +96,6 @@ var resourcesMap map[string]importable = map[string]importable{
 			arn := d.Get("instance_profile_arn").(string)
 			splits := strings.Split(arn, "/")
 			return splits[len(splits)-1]
-		},
-		Body: func(ic *importContext, body *hclwrite.Body, r *resource) error {
-			ipa := "instance_profile_arn"
-			b := body.AppendNewBlock("resource", []string{r.Resource, r.Name}).Body()
-			b.SetAttributeRaw(ipa, ic.reference(ic.Importables[r.Resource],
-				[]string{ipa}, r.Data.Get(ipa).(string)))
-			b.SetAttributeValue("skip_validation", cty.BoolVal(false))
-			return nil
 		},
 	},
 	"databricks_group_instance_profile": {
@@ -139,11 +133,15 @@ var resourcesMap map[string]importable = map[string]importable{
 					log.Printf("[INFO] Skipping job cluster %s", c.ClusterID)
 					continue
 				}
+				if strings.HasPrefix(c.ClusterName, "terraform-") {
+					log.Printf("[INFO] Skipping terraform-specific cluster %s", c.ClusterName)
+					continue
+				}
 				if !ic.MatchesName(c.ClusterName) {
 					continue
 				}
 				if c.LastActivityTime < time.Now().Unix()-lastActiveMs {
-					log.Printf("[INFO] Older inactive cluster %s", c.ClusterID)
+					log.Printf("[INFO] Older inactive cluster %s", c.ClusterName)
 					continue
 				}
 				ic.Emit(&resource{
@@ -163,11 +161,13 @@ var resourcesMap map[string]importable = map[string]importable{
 			if err := ic.importCluster(&c); err != nil {
 				return err
 			}
-			ic.Emit(&resource{
-				Resource: "databricks_permissions",
-				ID:       fmt.Sprintf("/clusters/%s", r.ID),
-				Name:     r.Data.Get("cluster_name").(string),
-			})
+			if ic.meAdmin {
+				ic.Emit(&resource{
+					Resource: "databricks_permissions",
+					ID:       fmt.Sprintf("/clusters/%s", r.ID),
+					Name:     r.Data.Get("cluster_name").(string),
+				})
+			}
 			return ic.importLibraries(r.Data, s)
 		},
 	},
@@ -204,11 +204,13 @@ var resourcesMap map[string]importable = map[string]importable{
 				Resource: "databricks_cluster",
 				ID:       job.ExistingClusterID,
 			})
-			ic.Emit(&resource{
-				Resource: "databricks_permissions",
-				ID:       fmt.Sprintf("/jobs/%s", r.ID),
-				Name:     r.Data.Get("name").(string),
-			})
+			if ic.meAdmin {
+				ic.Emit(&resource{
+					Resource: "databricks_permissions",
+					ID:       fmt.Sprintf("/jobs/%s", r.ID),
+					Name:     r.Data.Get("name").(string),
+				})
+			}
 			if job.SparkPythonTask != nil {
 				ic.emitIfDbfsFile(job.SparkPythonTask.PythonFile)
 				for _, p := range job.SparkPythonTask.Parameters {
@@ -607,32 +609,47 @@ var resourcesMap map[string]importable = map[string]importable{
 				return err
 			}
 			for mountName, source := range ic.mountMap {
-				if !strings.HasPrefix(source, "s3a://") {
+				if !strings.HasPrefix(source.URL, "s3a://") {
 					continue
 				}
 				if !ic.MatchesName(mountName) {
 					continue
 				}
+				log.Printf("[INFO] Emitting databricks_aws_s3_mount: %s",
+					source.URL)
+				attrs := map[string]string{
+					"s3_bucket_name": strings.ReplaceAll(source.URL, "s3a://", ""),
+					"mount_name":     mountName,
+				}
+				if source.InstanceProfile != "" {
+					attrs["instance_profile"] = source.InstanceProfile
+					ic.Emit(&resource{
+						Resource: "databricks_instance_profile",
+						ID:       source.InstanceProfile,
+					})
+				} else if source.ClusterID != "" {
+					attrs["cluster_id"] = source.ClusterID
+					ic.Emit(&resource{
+						Resource: "databricks_cluster",
+						ID:       source.ClusterID,
+					})
+				}
 				ic.Emit(&resource{
-					Resource: "databricks_aws_s3_mount",
 					ID:       mountName,
+					Resource: "databricks_aws_s3_mount",
+					Data: ic.Resources["databricks_aws_s3_mount"].Data(
+						&terraform.InstanceState{
+							ID:         mountName,
+							Attributes: attrs,
+						}),
 				})
 			}
 			return nil
 		},
-		Import: func(ic *importContext, r *resource) error {
-			// TODO: add instance_profile
-			bucket := strings.ReplaceAll(ic.mountMap[r.ID], "s3a://", "")
-			if err := r.Data.Set("mount_name", strings.Replace(r.ID, "/mnt/", "", 1)); err != nil {
-				return err
-			}
-			return r.Data.Set("s3_bucket_name", bucket)
-		},
 		Depends: []reference{
 			{Path: "s3_bucket_name", Resource: "aws_s3_bucket", Match: "bucket"},
 			{Path: "instance_profile", Resource: "databricks_instance_profile"},
-			// TODO: do we need it here? Can we detect what cluster was used for creaing the mount?
-			//{Path: "cluster_id", Resource: "databricks_cluster"},
+			{Path: "cluster_id", Resource: "databricks_cluster"},
 		},
 	},
 	"databricks_azure_adls_gen2_mount": {
@@ -645,8 +662,8 @@ var resourcesMap map[string]importable = map[string]importable{
 				return err
 			}
 			for mountName, source := range ic.mountMap {
-				if res := adlsGen2Regex.FindStringSubmatch(source); res == nil {
-					log.Printf("[INFO] skipping %s mounted at %s", source, mountName)
+				if res := adlsGen2Regex.FindStringSubmatch(source.URL); res == nil {
+					log.Printf("[DEBUG] skipping %s mounted at %s", source, mountName)
 					continue
 				}
 				if !ic.MatchesName(mountName) {
@@ -655,6 +672,12 @@ var resourcesMap map[string]importable = map[string]importable{
 				ic.Emit(&resource{
 					Resource: "databricks_azure_adls_gen2_mount",
 					ID:       mountName,
+					Data: ic.Resources["databricks_azure_adls_gen2_mount"].Data(
+						&terraform.InstanceState{
+							ID: mountName,
+							// don't open another command/context
+							Attributes: map[string]string{},
+						}),
 				})
 			}
 			return nil
@@ -663,7 +686,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			b := body.AppendNewBlock("resource", []string{r.Resource, r.Name}).Body()
 
 			mount := ic.mountMap[r.ID]
-			res := adlsGen2Regex.FindStringSubmatch(mount)
+			res := adlsGen2Regex.FindStringSubmatch(mount.URL)
 			if res == nil {
 				return fmt.Errorf("Can't extract ADLSv2 information from string '%s'", mount)
 			}
@@ -708,7 +731,7 @@ var resourcesMap map[string]importable = map[string]importable{
 				return err
 			}
 			for mountName, source := range ic.mountMap {
-				if res := adlsGen1Regex.FindStringSubmatch(source); res == nil {
+				if res := adlsGen1Regex.FindStringSubmatch(source.URL); res == nil {
 					continue
 				}
 				if !ic.MatchesName(mountName) {
@@ -717,6 +740,12 @@ var resourcesMap map[string]importable = map[string]importable{
 				ic.Emit(&resource{
 					Resource: "databricks_azure_adls_gen1_mount",
 					ID:       mountName,
+					Data: ic.Resources["databricks_azure_adls_gen2_mount"].Data(
+						&terraform.InstanceState{
+							ID: mountName,
+							// don't open another command/context
+							Attributes: map[string]string{},
+						}),
 				})
 			}
 			return nil
@@ -725,7 +754,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			b := body.AppendNewBlock("resource", []string{r.Resource, r.Name}).Body()
 
 			mount := ic.mountMap[r.ID]
-			res := adlsGen1Regex.FindStringSubmatch(mount)
+			res := adlsGen1Regex.FindStringSubmatch(mount.URL)
 			if res == nil {
 				return fmt.Errorf("Can't extract ADLSv1 information from string '%s'", mount)
 			}

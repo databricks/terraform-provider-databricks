@@ -59,30 +59,6 @@ func TestResourceNotebookDelete(t *testing.T) {
 	assert.Equal(t, path, d.Id())
 }
 
-func TestResourceNotebookDelete_TooManyRequests(t *testing.T) {
-	testID := "/test/path.py"
-	d, err := qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   http.MethodPost,
-				Resource: "/api/2.0/workspace/delete",
-				Status:   http.StatusTooManyRequests,
-			},
-			{
-				Method:          http.MethodPost,
-				Resource:        "/api/2.0/workspace/delete",
-				Status:          http.StatusOK,
-				ExpectedRequest: NotebookDeleteRequest{Path: testID, Recursive: true},
-			},
-		},
-		Resource: ResourceNotebook(),
-		Delete:   true,
-		ID:       testID,
-	}.Apply(t)
-	assert.NoError(t, err, err)
-	assert.Equal(t, testID, d.Id())
-}
-
 func TestResourceNotebookRead_NotFound(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{

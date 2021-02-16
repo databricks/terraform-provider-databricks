@@ -9,6 +9,7 @@ import (
 	"github.com/databrickslabs/terraform-provider-databricks/common"
 	"github.com/databrickslabs/terraform-provider-databricks/compute"
 	"github.com/databrickslabs/terraform-provider-databricks/identity"
+	"github.com/databrickslabs/terraform-provider-databricks/storage"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -142,18 +143,104 @@ func (ic *importContext) refreshMounts() error {
 	if ic.mountMap != nil {
 		return nil
 	}
-	clustersAPI := compute.NewClustersAPI(ic.Context, ic.Client)
 	commandAPI := ic.Client.CommandExecutor(ic.Context)
+	clustersAPI := compute.NewClustersAPI(ic.Context, ic.Client)
 	cluster, err := clustersAPI.GetOrCreateRunningCluster("terraform-mount")
 	if err != nil {
 		return err
 	}
-	// TODO: edit instance profile of a cluster in a loop
-	j, err := commandAPI.Execute(cluster.ClusterID, "python", `
-	import json; print(json.dumps({mp.replace('/mnt/', '').strip('/'):source for mp, source, _ in dbutils.fs.mounts() if mp.startswith('/mnt/')}))`)
+	log.Printf("[INFO] Refreshing worskpace-wide mounts")
+	mountMap, err := ic.getMountsThroughCluster(commandAPI, cluster.ClusterID)
 	if err != nil {
 		return err
 	}
-	ic.mountMap = map[string]string{}
-	return json.Unmarshal([]byte(j), &ic.mountMap)
+	log.Printf("[INFO] Found %d worskpace-wide mounts", len(mountMap))
+	ic.mountMap = map[string]mount{}
+	for k, v := range mountMap {
+		ic.mountMap[k] = mount{
+			URL: v,
+			// cluster id is needed for AWS S3 mounts, that may
+			// be visible for every cluster
+			ClusterID: cluster.ClusterID,
+		}
+	}
+	if !ic.Client.IsAzure() {
+		profiles, err := identity.NewInstanceProfilesAPI(ic.Context, ic.Client).List()
+		if err != nil {
+			return err
+		}
+		for _, instanceProfile := range profiles {
+			log.Printf("[INFO] Refreshing mounts accessible by %s", instanceProfile.InstanceProfileArn)
+			profileCluster, err := storage.GetOrCreateMountingClusterWithInstanceProfile(
+				clustersAPI, instanceProfile.InstanceProfileArn)
+			if err != nil {
+				return err
+			}
+			profileMountMap, err := ic.getMountsThroughCluster(commandAPI, profileCluster.ClusterID)
+			if err != nil {
+				return err
+			}
+			i := 0
+			for k, v := range profileMountMap {
+				if _, has := ic.mountMap[k]; has {
+					continue
+				}
+				i++
+				ic.mountMap[k] = mount{
+					URL:             v,
+					InstanceProfile: instanceProfile.InstanceProfileArn,
+				}
+			}
+			if i > 0 {
+				log.Printf("[INFO] Found %d mounts accessible by %s",
+					len(profileMountMap), instanceProfile.InstanceProfileArn)
+			}
+		}
+	}
+	return nil
+}
+
+var getReadableMountsCommand = `
+import scala.concurrent._
+import scala.concurrent.duration._
+import ExecutionContext.Implicits.global
+import scala.concurrent.{Await, Future}
+import com.fasterxml.jackson.databind.{DeserializationFeature, ObjectMapper}
+import com.fasterxml.jackson.module.scala.experimental.ScalaObjectMapper
+import com.fasterxml.jackson.module.scala.DefaultScalaModule
+
+val readableMounts = dbutils.fs.mounts
+  .filter(_.mountPoint.startsWith("/mnt"))
+  .par.map { mount =>
+    try {
+        Await.result(Future {
+            dbutils.fs.ls(mount.mountPoint)
+            (mount.mountPoint
+                .replace("/mnt/", "")
+                .stripSuffix("/"), 
+             mount.source)
+        }, 5.second)
+    } catch {
+        case _ : Throwable => (null, mount.source)
+    }
+  }.seq.filter {
+      mount => mount._1 != null
+  } toMap
+
+val mapper = new ObjectMapper() with ScalaObjectMapper
+mapper.registerModule(DefaultScalaModule)
+mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+
+println(mapper.writeValueAsString(readableMounts))`
+
+func (ic *importContext) getMountsThroughCluster(
+	commandAPI common.CommandExecutor, clusterID string) (mm map[string]string, err error) {
+	// Scala has actually working timeout handling, compared to Python
+	j, err := commandAPI.Execute(clusterID, "scala", getReadableMountsCommand)
+	if err != nil {
+		return
+	}
+	lines := strings.Split(j, "\n")
+	err = json.Unmarshal([]byte(lines[0]), &mm)
+	return
 }

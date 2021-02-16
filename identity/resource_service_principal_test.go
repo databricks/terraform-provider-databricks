@@ -54,7 +54,7 @@ func TestResourceServicePrincipalRead(t *testing.T) {
 					ID:            "abc",
 					DisplayName:   "Example Service Principal",
 					ApplicationID: "00000000-0000-0000-0000-000000000000",
-					Groups: []groupsListItem{
+					Groups: []GroupsListItem{
 						{
 							Display: "admins",
 							Value:   "4567",
@@ -152,7 +152,7 @@ func TestResourceServicePrincipalCreate(t *testing.T) {
 							Value: AllowClusterCreateEntitlement,
 						},
 					},
-					Groups: []groupsListItem{
+					Groups: []GroupsListItem{
 						{
 							Display: "admins",
 							Value:   "4567",
@@ -211,7 +211,7 @@ func TestResourceServicePrincipalUpdate(t *testing.T) {
 				Value: AllowInstancePoolCreateEntitlement,
 			},
 		},
-		Groups: []groupsListItem{
+		Groups: []GroupsListItem{
 			{
 				Display: "admins",
 				Value:   "4567",
@@ -237,7 +237,7 @@ func TestResourceServicePrincipalUpdate(t *testing.T) {
 							Value: AllowClusterCreateEntitlement,
 						},
 					},
-					Groups: []groupsListItem{
+					Groups: []GroupsListItem{
 						{
 							Display: "admins",
 							Value:   "4567",
@@ -316,7 +316,7 @@ func TestResourceServicePrincipalUpdate_ErrorPut(t *testing.T) {
 							Value: AllowClusterCreateEntitlement,
 						},
 					},
-					Groups: []groupsListItem{
+					Groups: []GroupsListItem{
 						{
 							Display: "admins",
 							Value:   "4567",

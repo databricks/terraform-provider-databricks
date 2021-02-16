@@ -29,7 +29,7 @@ func Run(args ...string) error {
 	c := common.NewClientFromEnvironment()
 	ic := newImportContext(c)
 
-	flags := flag.NewFlagSet("importer", flag.ExitOnError)
+	flags := flag.NewFlagSet("exporter", flag.ExitOnError)
 	flags.StringVar(&ic.Module, "module", "",
 		"Terraform module name, that changes are imported. "+
 			"Defaults to empty string. Makes effect on generated "+
@@ -73,7 +73,11 @@ func Run(args ...string) error {
 	flags.StringVar(&ic.match, "match", "", "Match resource names during listing operation. "+
 		"This filter applies to all resources that are getting listed, so if you want to import "+
 		"all dependencies of just one cluster, specify -listing=compute")
-	err = flags.Parse(args)
+	newArgs := args
+	if len(args) > 1 && args[1] == "exporter" {
+		newArgs = args[2:]
+	}
+	err = flags.Parse(newArgs)
 	if err != nil {
 		return err
 	}

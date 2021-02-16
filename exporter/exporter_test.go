@@ -19,43 +19,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-// func TestAccImporter(t *testing.T) {
-// 	if _, ok := os.LookupEnv("VSCODE_PID"); !ok {
-// 		t.Skip("Running this test is only meant for IDE")
-// 	}
-// 	log.SetOutput(&levelWriter{"[INFO]", "[ERROR]", "[WARN]", "[DEBUG]"})
-// 	err := Run("-listing", "mounts", "-mounts")
-// 	assert.NoError(t, err)
-// }
-
-// func TestAccImportIdentity(t *testing.T) {
-// 	if _, ok := os.LookupEnv("VSCODE_PID"); !ok {
-// 		t.Skip("Running this test is only meant for IDE")
-// 	}
-// 	err := Run("-directory", "/tmp/data-group", "-services", "groups,users")
-// 	assert.NoError(t, err)
-// }
-
-// func TestAccImportSecrets(t *testing.T) {
-// 	if _, ok := os.LookupEnv("VSCODE_PID"); !ok {
-// 		t.Skip("Running this test is only meant for IDE")
-// 	}
-// 	err := Run("-directory", "/tmp/data-group", "-services", "secrets,users,groups")
-// 	assert.NoError(t, err)
-// }
-
-// func TestAccImportJobs(t *testing.T) {
-// 	if _, ok := os.LookupEnv("VSCODE_PID"); !ok {
-// 		t.Skip("Running this test is only meant for IDE")
-// 	}
-// 	err := Run(
-// 		"-directory=/tmp/data-group",
-// 		"-match=dbxtest7-sample",
-// 		"-listing=jobs",
-// 		"-last-active-days=30")
-// 	assert.NoError(t, err)
-// }
-
 // nolint
 func getJSONObject(filename string) interface{} {
 	data, _ := ioutil.ReadFile(filename)

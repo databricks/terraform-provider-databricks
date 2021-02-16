@@ -1,0 +1,24 @@
+{
+  "scripts": [
+    {
+      "created_at": 1613470125117,
+      "created_by": "user@domain.com",
+      "enabled": true,
+      "name": "init_script1",
+      "position": 0,
+      "script_id": "C39FD6BAC8088BBC",
+      "updated_at": 1613470125117,
+      "updated_by": "user@domain.com"
+    },
+    {
+      "created_at": 1613470124868,
+      "created_by": "user@domain.com",
+      "enabled": true,
+      "name": "init_script2",
+      "position": 1,
+      "script_id": "F931E63C248C1D8C",
+      "updated_at": 1613470124868,
+      "updated_by": "user@domain.com"
+    }
+  ]
+}

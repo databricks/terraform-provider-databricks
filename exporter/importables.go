@@ -1,6 +1,7 @@
 package exporter
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -13,6 +14,7 @@ import (
 	"github.com/databrickslabs/terraform-provider-databricks/access"
 	"github.com/databrickslabs/terraform-provider-databricks/common"
 	"github.com/databrickslabs/terraform-provider-databricks/compute"
+	"github.com/databrickslabs/terraform-provider-databricks/workspace"
 
 	"github.com/databrickslabs/terraform-provider-databricks/storage"
 	"github.com/hashicorp/hcl/v2/hclsyntax"
@@ -778,6 +780,64 @@ var resourcesMap map[string]importable = map[string]importable{
 		},
 		Depends: []reference{
 			{Path: "storage_resource_name", Resource: "azurerm_data_lake_store", Match: "name"},
+		},
+	},
+	"databricks_global_init_script": {
+		Service: "workspace",
+		Name: func(d *schema.ResourceData) string {
+			name := d.Get("name").(string)
+			if name == "" {
+				return d.Id()
+			}
+			re := regexp.MustCompile(`[^0-9A-Za-z_]`)
+			return re.ReplaceAllString(name, "_")
+		},
+		List: func(ic *importContext) error {
+			globalInitScripts, err := workspace.NewGlobalInitScriptsAPI(ic.Context, ic.Client).List()
+			if err != nil {
+				return err
+			}
+			for offset, gis := range globalInitScripts {
+				ic.Emit(&resource{
+					Resource: "databricks_global_init_script",
+					ID:       gis.ScriptID,
+				})
+				log.Printf("[INFO] Scanned %d of %d clusters", offset+1, len(globalInitScripts))
+			}
+			return nil
+		},
+		Body: func(ic *importContext, body *hclwrite.Body, r *resource) error {
+			gis, err := workspace.NewGlobalInitScriptsAPI(ic.Context, ic.Client).Get(r.ID)
+			if err != nil {
+				return err
+			}
+			err = os.Mkdir(fmt.Sprintf("%s/files", ic.Directory), 0755)
+			if err != nil && !os.IsExist(err) {
+				return err
+			}
+			local, err := os.Create(fmt.Sprintf("%s/files/gis-%s", ic.Directory, path.Base(r.Name)))
+			if err != nil {
+				return err
+			}
+			defer local.Close()
+			fileBytes, err := base64.StdEncoding.DecodeString(gis.ContentBase64)
+			if err != nil {
+				return err
+			}
+			_, err = local.Write(fileBytes)
+			if err != nil {
+				return err
+			}
+			relativeFile := fmt.Sprintf("${path.module}/files/gis-%s", path.Base(r.Name))
+			b := body.AppendNewBlock("resource", []string{r.Resource, r.Name}).Body()
+			b.SetAttributeValue("name", cty.StringVal(gis.Name))
+			b.SetAttributeValue("enabled", cty.BoolVal(gis.Enabled))
+			b.SetAttributeRaw("source", hclwrite.Tokens{
+				&hclwrite.Token{Type: hclsyntax.TokenOQuote, Bytes: []byte{'"'}},
+				&hclwrite.Token{Type: hclsyntax.TokenQuotedLit, Bytes: []byte(relativeFile)},
+				&hclwrite.Token{Type: hclsyntax.TokenCQuote, Bytes: []byte{'"'}},
+			})
+			return nil
 		},
 	},
 }

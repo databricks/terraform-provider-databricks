@@ -1,0 +1,11 @@
+{
+  "created_at": 1613470125117,
+  "created_by": "user@domain.com",
+  "enabled": true,
+  "name": "init_script1",
+  "position": 0,
+  "script": "IyEvYmluL3NoCgplY2hvICJIZWxsbyB3b3JsZCEiCg==",
+  "script_id": "C39FD6BAC8088BBC",
+  "updated_at": 1613470125117,
+  "updated_by": "user@domain.com"
+}

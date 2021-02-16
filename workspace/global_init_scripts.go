@@ -46,10 +46,15 @@ type globalInitScriptCreateResponse struct {
 	ScriptID string `json:"script_id"`
 }
 
+type globalInitScriptListResponse struct {
+	Scripts []GlobalInitScriptInfo `json:"scripts"`
+}
+
 // List returns a list of registered global init scripts
-func (a GlobalInitScriptsAPI) List() (initScripts []GlobalInitScriptInfo, err error) {
-	err = a.client.Get(a.context, "/global-init-scripts", nil, &initScripts)
-	return
+func (a GlobalInitScriptsAPI) List() ([]GlobalInitScriptInfo, error) {
+	var giss globalInitScriptListResponse
+	err := a.client.Get(a.context, "/global-init-scripts", nil, &giss)
+	return giss.Scripts, err
 }
 
 // Get returns information about specific global init scripts

@@ -49,7 +49,7 @@ type AzureAuth struct {
 }
 
 type TokenRequest struct {
-	LifetimeSeconds int32  `json:"lifetime_seconds,omitempty"`
+	LifetimeSeconds int64  `json:"lifetime_seconds,omitempty"`
 	Comment         string `json:"comment,omitempty"`
 }
 
@@ -260,12 +260,12 @@ func (aa *AzureAuth) acquirePAT(
 }
 
 func (aa *AzureAuth) patRequest() TokenRequest {
-	seconds, err := strconv.Atoi(aa.PATTokenDurationSeconds)
+	seconds, err := strconv.ParseInt(aa.PATTokenDurationSeconds, 10, 64)
 	if err != nil {
 		seconds = 60 * 60
 	}
 	return TokenRequest{
-		LifetimeSeconds: int32(seconds),
+		LifetimeSeconds: seconds,
 		Comment:         "Secret made via Terraform",
 	}
 }

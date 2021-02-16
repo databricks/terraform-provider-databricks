@@ -245,7 +245,7 @@ provider "databricks" {
 }
 ```
 
-## Credentials validation checks errors
+### Credentials validation checks errors
 
 Due to a bug in the Terraform AWS provider (spotted in v3.28) the Databricks AWS crossaccount policy creation and attachment to the IAM role takes longer than the AWS request confirmation to Terraform. As Terraform continues creating the Workspace, validation checks for the credentials are failing, as the policy doesn't get applied quick enough. Showing the error:
 
@@ -254,7 +254,7 @@ Error: MALFORMED_REQUEST: Failed credentials validation checks: Spot Cancellatio
 (400 on /api/2.0/accounts/{UUID}/workspaces)
 ```
 
-As a workaround give the `aws_iam_role` more time to be created with a `time_sleep` resource, which you need to added as a dependency to the `databricks_mws_workspaces` resource.
+As a workaround give the `aws_iam_role` more time to be created with a `time_sleep` resource, which you need to add as a dependency to the `databricks_mws_workspaces` resource.
 
 ```hcl
 resource "time_sleep" "wait" {

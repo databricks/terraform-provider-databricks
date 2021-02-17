@@ -57,7 +57,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			// libraries installed with init scripts won't be exported.
 			b := body.AppendNewBlock("resource", []string{r.Resource, r.Name}).Body()
 			relativeFile := fmt.Sprintf("${path.module}/files/%s", path.Base(r.ID))
-			b.SetAttributeValue("path", cty.StringVal(r.ID))
+			b.SetAttributeValue("path", cty.StringVal(strings.Replace(r.ID, "dbfs:", "", 1)))
 			b.SetAttributeRaw("source", hclwrite.Tokens{
 				&hclwrite.Token{Type: hclsyntax.TokenOQuote, Bytes: []byte{'"'}},
 				&hclwrite.Token{Type: hclsyntax.TokenQuotedLit, Bytes: []byte(relativeFile)},

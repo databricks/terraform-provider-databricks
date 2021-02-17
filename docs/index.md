@@ -15,7 +15,7 @@ Use the Databricks Terraform provider to interact with almost all of [Databricks
 Compute resources
 * Deploy [databricks_cluster](resources/cluster.md) on selected [databricks_node_type](data-sources/node_type.md)
 * Schedule automated [databricks_job](resources/job.md)
-* Constrol cost and data access with [databricks_cluster_policy](resources/cluster_policy.md)
+* Control cost and data access with [databricks_cluster_policy](resources/cluster_policy.md)
 * Speedup job & cluster startup with [databricks_instance_pool](resources/instance_pool.md)
 * Customize clusters with [databricks_global_init_script](resources/global_init_script.md)
 * Manage few [databricks_notebook](resources/notebook.md), and even [list them](data-sources/notebook_paths.md)

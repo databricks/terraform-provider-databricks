@@ -47,7 +47,7 @@ resource "databricks_cluster" "shared_autoscaling" {
 
 The following example demonstrates how to create an autoscaling cluster with [Delta Cache](https://docs.databricks.com/delta/optimizations/delta-cache.html) enabled:
 
-```
+```hcl
 data "databricks_node_type" "smallest" {
   local_disk = true
 }
@@ -91,7 +91,7 @@ and also `custom_tag` entry:
 
 The following example demonstrates how to create an single node cluster:
 
-```
+```hcl
 data "databricks_node_type" "smallest" {
   local_disk = true
 }

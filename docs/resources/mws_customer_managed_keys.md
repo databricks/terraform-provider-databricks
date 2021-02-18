@@ -1,5 +1,5 @@
 ---
-subcategory: "AWS"
+subcategory: "AWS Workspace Creation"
 ---
 # databricks_mws_customer_managed_keys Resource
 

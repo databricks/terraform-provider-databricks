@@ -2,11 +2,28 @@
 
 ## 0.3.1
 
-* Added `databricks_global_init_script` resource to configure global init scripts ([#487](https://github.com/databrickslabs/terraform-provider-databricks/issues/487))
+* Added `databricks_global_init_script` resource to configure global init scripts ([#487](https://github.com/databrickslabs/terraform-provider-databricks/issues/487)).
+* Added `databricks_sql_endpoint` resource ([#498](https://github.com/databrickslabs/terraform-provider-databricks/pull/498))
+* Added [experimental resource exporter](https://github.com/databrickslabs/terraform-provider-databricks/blob/master/docs/guides/experimental-exporter.md) to generate configuration for entire workspace.
+* Improved user-facing documentaiton ([#508](https://github.com/databrickslabs/terraform-provider-databricks/pull/508/files), [#516](https://github.com/databrickslabs/terraform-provider-databricks/pull/516), [#511](https://github.com/databrickslabs/terraform-provider-databricks/pull/511), [#504](https://github.com/databrickslabs/terraform-provider-databricks/pull/504), [#492]([Update docs in various places](https://github.com/databrickslabs/terraform-provider-databricks/pull/492)))
+* Simplified authentication issues debugging ([#490](https://github.com/databrickslabs/terraform-provider-databricks/pull/490))
+* Made cleaner error message for no config profile ([#491](https://github.com/databrickslabs/terraform-provider-databricks/pull/491))
+* Allow tokens without comment or expiration ([#495](https://github.com/databrickslabs/terraform-provider-databricks/pull/495/files))
+* Ensured consistent slashes in notebook paths for different OSes ([#500](https://github.com/databrickslabs/terraform-provider-databricks/pull/500))
+* Fix error message panic in command result parsing ([#502](https://github.com/databrickslabs/terraform-provider-databricks/pull/502))
+* Updated `databricks_group` data resource to allow non-alphanumeric characters in group name filter ([#507](https://github.com/databrickslabs/terraform-provider-databricks/pull/507/files))
 
 **Behavior changes**
 
 * Assigning any permission to `admins` would result in an error, so that behavior is consistent ([#486](https://github.com/databrickslabs/terraform-provider-databricks/issues/486)).
+
+Updated dependency versions:
+
+* github.com/zclconf/go-cty from 1.2.1 to 1.7.1
+* github.com/Azure/go-autorest/autorest/azure/auth from 0.5.6 to 0.5.7 
+* github.com/hashicorp/hcl/v2 from 2.3.0 to 2.8.2
+* github.com/aws/aws-sdk-go from 1.37.1 to 1.37.11
+* github.com/Azure/go-autorest/autorest from 0.11.17 to 0.11.18
 
 ## 0.3.0
 

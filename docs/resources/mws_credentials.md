@@ -1,5 +1,5 @@
 ---
-subcategory: "AWS"
+subcategory: "AWS Workspace Creation"
 ---
 # databricks_mws_credentials Resource
 

@@ -228,29 +228,3 @@ resource "databricks_ip_access_list" "only_me" {
   depends_on = [databricks_workspace_conf.this]
 }
 ```
-
-## Part 5: SQL Analytics
-
-You can configure [databricks_sql_endpoint](../resources/sql_endpoint.md) and access to it:
-
-```hcl
-resource "databricks_sql_endpoint" "this" {
-  name = "Endpoint of ${data.databricks_current_user.me.alphanumeric}"
-  cluster_size = "Small"
-  max_num_clusters = 1
-}
-
-resource "databricks_permissions" "endpoint_usage" {
-  sql_endpoint_id = databricks_sql_endpoint.this.id
-
-  access_control {
-    group_name       = databricks_group.spectators.display_name
-    permission_level = "CAN_USE"
-  }
-
-  access_control {
-    user_name        = databricks_user.dummy.user_name
-    permission_level = "CAN_MANAGE"
-  }
-}
-```

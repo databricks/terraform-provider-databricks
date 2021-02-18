@@ -127,6 +127,9 @@ func getMountingClusterID(ctx context.Context, client *common.DatabricksClient, 
 				"spark.master":                     "local[*]",
 				"spark.databricks.cluster.profile": "singleNode",
 			},
+			CustomTags: map[string]string{
+				"ResourceClass": "SingleNode",
+			},
 		}
 		cluster, err := clustersAPI.GetOrCreateRunningCluster("terraform-mount", r)
 		if err != nil {

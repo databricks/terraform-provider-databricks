@@ -103,7 +103,8 @@ func validateClusterDefinition(cluster Cluster) error {
 	}
 	profile := cluster.SparkConf["spark.databricks.cluster.profile"]
 	master := cluster.SparkConf["spark.master"]
-	if profile == "singleNode" && strings.HasPrefix(master, "local") {
+	resourceClass := cluster.CustomTags["ResourceClass"]
+	if profile == "singleNode" && strings.HasPrefix(master, "local") && resourceClass == "SingleNode" {
 		return nil
 	}
 	return fmt.Errorf("NumWorkers could be 0 only for SingleNode clusters. See https://docs.databricks.com/clusters/single-node.html for more details")

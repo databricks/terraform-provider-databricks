@@ -98,6 +98,9 @@ func TestResourceJobCreateSingleNode(t *testing.T) {
 			"spark.master":                     "local[*]",
 			"spark.databricks.cluster.profile": "singleNode",
 		},
+		CustomTags: map[string]string{
+			"ResourceClass": "SingleNode",
+		},
 	}
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
@@ -147,7 +150,10 @@ func TestResourceJobCreateSingleNode(t *testing.T) {
 			spark_conf {
 				"spark.master" = "local[*]"
 				"spark.databricks.cluster.profile" = "singleNode"
-			  }
+			}
+            custom_tags {
+                "ResourceClass" = "SingleNode"
+            }
 		  }	
 		max_concurrent_runs = 1
 		max_retries = 3

@@ -18,7 +18,7 @@ coverage: test
 	@echo "✓ Opening coverage for unit tests ..."
 	@go tool cover -html=coverage.txt
 
-VERSION = 0.3.0
+VERSION = 0.3.1
 
 build: vendor
 	@echo "✓ Building source code with go build ..."

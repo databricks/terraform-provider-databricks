@@ -100,7 +100,7 @@ data "databricks_spark_version" "latest_lts" {
   long_term_support = true
 }
 
-resource "databricks_cluster" "shared_autoscaling" {
+resource "databricks_cluster" "single_node" {
   cluster_name            = "Single Node"
   spark_version           = data.databricks_spark_version.latest_lts.id
   node_type_id            = data.databricks_node_type.smallest.id

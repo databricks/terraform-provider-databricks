@@ -73,6 +73,7 @@ resource "aws_s3_bucket" "logdelivery" {
     enabled = false
   }
   force_destroy = true
+  tags = local.tags
 }
 
 output "test_logdelivery_bucket" {

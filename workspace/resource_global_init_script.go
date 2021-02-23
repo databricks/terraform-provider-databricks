@@ -30,7 +30,7 @@ func ResourceGlobalInitScript() *schema.Resource {
 			Type:     schema.TypeString,
 			Required: true,
 			ValidateDiagFunc: validation.ToDiagFunc(
-				validation.StringMatch(regexp.MustCompile("^[-a-zA-Z0-9_.]{1,100}$"), "Name should match regex!")),
+				validation.StringMatch(regexp.MustCompile("^[-a-zA-Z0-9_. ]{1,100}$"), "Name should match regex!")),
 		},
 		"position": {
 			Type:             schema.TypeInt,

@@ -12,7 +12,7 @@ End-to-end example of provisioning Cross-account IAM role:
 
 ```hcl
 variable "databricks_account_id" {
-  description = "Account Id that could be found in the top right corner of https://accounts.cloud.databricks.com/"
+  description = "Account Id that could be found in the bottom left corner of https://accounts.cloud.databricks.com/"
 }
 
 data "databricks_aws_crossaccount_policy" "this" {}
@@ -48,7 +48,7 @@ resource "databricks_mws_credentials" "this" {
 
 ## Argument Reference
 
-* `external_id` (Required) Account Id that could be found in the top right corner of [Accounts Console](https://accounts.cloud.databricks.com/).
+* `external_id` (Required) Account Id that could be found in the bottom left corner of [Accounts Console](https://accounts.cloud.databricks.com/).
 * `for_log_delivery` (Optional) Either or not this assume role policy should be created for usage log delivery. Defaults to false.
 
 ## Attribute Reference

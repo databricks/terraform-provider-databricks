@@ -3,9 +3,9 @@ subcategory: "AWS"
 ---
 # databricks_zones Data Source
 
-This data source allows you to fetch all available availability zones on your aws workspace.
+-> **Note** If you have a fully automated setup with workspaces created by [databricks_mws_workspaces](../resources/mws_workspaces.md) or [azurerm_databricks_workspace](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/databricks_workspace), please make sure to add [depends_on attribute](../index.md#data-resources-and-authentication-is-not-configured-errors) in order to prevent _Authentication is not configured for provider_ errors.
 
--> **Note** This is only available on an AWS workspace. 
+This data source allows you to fetch all available AWS availability zones on your workspace on AWS.
 
 ## Example Usage
 

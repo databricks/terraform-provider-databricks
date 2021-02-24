@@ -24,7 +24,7 @@ Full end-to-end actions required to securely mount S3 bucket on all clusters wit
 
 ```hcl
 variable "databricks_account_id" {
-  description = "Account Id that could be found in the top right corner of https://accounts.cloud.databricks.com/"
+  description = "Account Id that could be found in the bottom left corner of https://accounts.cloud.databricks.com/"
 }
 
 // Step 1: Create bucket

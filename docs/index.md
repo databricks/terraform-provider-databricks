@@ -15,7 +15,7 @@ Use the Databricks Terraform provider to interact with almost all of [Databricks
 Compute resources
 * Deploy [databricks_cluster](resources/cluster.md) on selected [databricks_node_type](data-sources/node_type.md)
 * Schedule automated [databricks_job](resources/job.md)
-* Constrol cost and data access with [databricks_cluster_policy](resources/cluster_policy.md)
+* Control cost and data access with [databricks_cluster_policy](resources/cluster_policy.md)
 * Speedup job & cluster startup with [databricks_instance_pool](resources/instance_pool.md)
 * Customize clusters with [databricks_global_init_script](resources/global_init_script.md)
 * Manage few [databricks_notebook](resources/notebook.md), and even [list them](data-sources/notebook_paths.md)
@@ -92,10 +92,10 @@ output "job_url" {
 
 ## Authentication
 
-!> **Warning** Please be aware that hard coding any credentials in plain text is not something that is recommended. We strongly recommend using a Terraform backend that supports encryption. Please use [environment variables](#environment-variables), `~/.databrickscfg` file, encrypted `.tfvars` files or secret store of your choice (Hashicorp [Vault](https://www.vaultproject.io/), AWS [Secrets Manager](https://aws.amazon.com/secrets-manager/), AWS [Param Store](https://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-parameter-store.html), Azure [Key Vault](https://azure.microsoft.com/en-us/services/key-vault/))
+> ⚠️ **WARNING** Please be aware that hard coding any credentials in plain text is not something that is recommended. We strongly recommend using a Terraform backend that supports encryption. Please use [environment variables](#environment-variables), `~/.databrickscfg` file, encrypted `.tfvars` files or secret store of your choice (Hashicorp [Vault](https://www.vaultproject.io/), AWS [Secrets Manager](https://aws.amazon.com/secrets-manager/), AWS [Param Store](https://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-parameter-store.html), Azure [Key Vault](https://azure.microsoft.com/en-us/services/key-vault/))
 
 
-There are currently three supported methods [to authenticate into](https://docs.databricks.com/dev-tools/api/latest/authentication.html) the Databricks platform to create resources:
+There are currently three supported methods to [authenticate](https://docs.databricks.com/dev-tools/api/latest/authentication.html) into the Databricks platform to create resources:
 
 * [PAT Tokens](https://docs.databricks.com/dev-tools/api/latest/authentication.html)
 * Username and password pair
@@ -174,7 +174,7 @@ To work with Azure Databricks workspace, the provider must know its `azure_works
 
 ### Authenticating with Azure Service Principal
 
-!> **Warning** Please note that the azure service principal authentication currently uses a generated Databricks PAT token and not an AAD token for the authentication. Azure Databricks does not yet support AAD tokens for [secret scopes](https://docs.microsoft.com/en-us/azure/databricks/dev-tools/api/latest/secrets#--create-secret-scope). Databricks Labs team will refactor it transparently once that support is available. The only impacted field is `pat_token_duration_seconds`, which will be deprecated and fully supported after AAD support. 
+> ⚠️ **WARNING** Please note that the azure service principal authentication currently uses a generated Databricks PAT token and not an AAD token for the authentication. Azure Databricks does not yet support AAD tokens for [secret scopes](https://docs.microsoft.com/en-us/azure/databricks/dev-tools/api/latest/secrets#--create-secret-scope). Databricks Labs team will refactor it transparently once that support is available. The only impacted field is `pat_token_duration_seconds`, which will be deprecated and fully supported after AAD support. 
 
 ```hcl
 provider "azurerm" {
@@ -275,7 +275,7 @@ For example, with the following zero-argument configuration:
 provider "databricks" {}
 ```
 
-1. Provider will check all of the supported environment variables and set values of relevant arguments.
+1. Provider will check all the supported environment variables and set values of relevant arguments.
 2. In case any conflicting arguments are present, the plan will end with an error.
 3. Will check for the presence of `host` + `token` pair, continue trying otherwise.
 4. Will check for `host` + `username` + `password` presence, continue trying otherwise.
@@ -297,7 +297,7 @@ registry.terraform.io does not have a provider named
 registry.terraform.io/hashicorp/databricks
 ```
 
-Whenever you see this error, it might be due to the fact, that [required_providers](https://www.terraform.io/docs/language/providers/requirements.html#requiring-providers) block is not defined in **every module**, that uses Databricks Terraform Provider. You have to create `versions.tf` file with the following contents:
+If you notice below error, it might be due to the fact that [required_providers](https://www.terraform.io/docs/language/providers/requirements.html#requiring-providers) block is not defined in *every module*, that uses Databricks Terraform Provider. Create `versions.tf` file with the following contents:
 
 ```hcl
 # versions.tf
@@ -311,7 +311,7 @@ terraform {
 }
 ```
 
-... and place this file in every module in your codebase. Our recommendation is to skip `version` field for `versions.tf` file on module level, and keep it only on environment level.
+... and copy the file in every module in your codebase. Our recommendation is to skip `version` field for `versions.tf` file on module level, and keep it only on environment level.
 
 ```
 ├── environments
@@ -335,4 +335,4 @@ terraform {
 
 ## Project Support
 
-**Important:** Projects in the `databrickslabs` GitHub account, including the Databricks Terraform Provider, are not formally supported by Databricks. They are maintained by Databricks Field teams and provided as-is. There is no service level agreement (SLA). Databricks makes no guarantees of any kind. If you discover an issue with the provider, please file a GitHub Issue on the repo, and it will be reviewed by project maintainers as time permits.
+> ❗️ **Important:** Projects in the `databrickslabs` GitHub account, including the Databricks Terraform Provider, are not formally supported by Databricks. They are maintained by Databricks Field teams and provided as-is. There is no service level agreement (SLA). Databricks makes no guarantees of any kind. If you discover an issue with the provider, please file a GitHub Issue on the repo, and it will be reviewed by project maintainers as time permits.

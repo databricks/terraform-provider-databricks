@@ -40,7 +40,14 @@ locals {
 }
 ```
 
-Before [managing workspace](workspace-management.md), you have to create [VPC](#vpc), [root bucket](#root-bucket), [cross-account role](#cross-account-iam-role), [Databricks E2 workspace](#databricks-e2-workspace), and [host and token outputs](#provider-configuration). Initializing provider with `alias = "mws"` and using `provider = databricks.mws` for all `databricks_mws_*` resources is ultimately important. We require all `databricks_mws_*` resources to be created within it's own dedicated terraform module of your environment. Usually this module creates VPC and IAM roles as well.
+Before [managing workspace](workspace-management.md), you have to create:
+  - [VPC](#vpc)
+  - [root bucket](#root-bucket)
+  - [cross-account role](#cross-account-iam-role)
+  - [Databricks E2 workspace](#databricks-e2-workspace)
+  - [host and token outputs](#provider-configuration) 
+
+> ❗️ **Important:** Initializing provider with `alias = "mws"` and using `provider = databricks.mws` for all `databricks_mws_*` resources. We require all `databricks_mws_*` resources to be created within it's own dedicated terraform module of your environment. Usually this module creates VPC and IAM roles as well.
 
 ```hcl
 terraform {
@@ -144,7 +151,7 @@ resource "databricks_mws_networks" "this" {
 
 ## Root bucket
 
-Once [VPC](#vpc) is ready, you need to create AWS S3 bucket for DBFS workspace storage, which is commonly referred to as **root bucket**. This provider has [databricks_aws_bucket_policy](../data-sources/aws_bucket_policy.md) with the necessary IAM policy template. AWS S3 bucket has to be registered through [databricks_mws_storage_configurations](../resources/mws_storage_configurations.md).
+Once [VPC](#vpc) is ready, create AWS S3 bucket for DBFS workspace storage, which is commonly referred to as **root bucket**. This provider has [databricks_aws_bucket_policy](../data-sources/aws_bucket_policy.md) with the necessary IAM policy template. AWS S3 bucket has to be registered through [databricks_mws_storage_configurations](../resources/mws_storage_configurations.md).
 
 ```hcl
 resource "aws_s3_bucket" "root_storage_bucket" {
@@ -184,7 +191,9 @@ resource "databricks_mws_storage_configurations" "this" {
 
 ## Databricks E2 Workspace
 
-Once you have [VPC](#vpc), [cross-account role](#cross-account-iam-role), and [root bucket](#root-bucket) setup, you can create Databricks AWS E2 workspace through [databricks_mws_workspaces](../resources/mws_workspaces.md) resource. Code, that creates workpaces and code that [manages workspaces](workspace-management.md) must be in separate terraform modules to avoid common confusion between `provider = databricks.mws` and `provider = databricks.created_workspace`. This is we specify `databricks_host` and `databricks_token` outputs, that have to be used in the latter modules.
+Once  [VPC](#vpc), [cross-account role](#cross-account-iam-role), and [root bucket](#root-bucket) are setup, you can create Databricks AWS E2 workspace through [databricks_mws_workspaces](../resources/mws_workspaces.md) resource. 
+
+> ❗️ **Important:** Code, that creates workspaces and code that [manages workspaces](workspace-management.md) must be in separate terraform modules to avoid common confusion between `provider = databricks.mws` and `provider = databricks.created_workspace`. This is why we specify `databricks_host` and `databricks_token` outputs, that have to be used in the latter modules.
 
 ```hcl
 resource "databricks_mws_workspaces" "this" {
@@ -217,7 +226,7 @@ resource "databricks_token" "pat" {
   lifetime_seconds = 86400
 }
 
-// export token for integraiton tests to run on
+// export token for integration tests to run on
 output "databricks_token" {
   value     = databricks_token.pat.token_value
   sensitive = true
@@ -258,7 +267,28 @@ As a workaround give the `aws_iam_role` more time to be created with a `time_sle
 
 ```hcl
 resource "time_sleep" "wait" {
-  depends_on = [aws_iam_role.cross_account_role]
+  depends_on = [
+    aws_iam_role.cross_account_role]
   create_duration = "10s"
+}
 ```
 
+#### IAM policy error
+
+If you notice below error:
+
+```
+Error: MALFORMED_REQUEST: Failed credentials validation checks: Spot Cancellation, Create Placement Group, Delete Tags, Describe Availability Zones, Describe instances, Describe Instance Status, Describe Placement Group, Describe Route Tables, Describe Security Groups, Describe Spot Instances, Describe Spot Price History, Describe Subnets, Describe Volumes, Describe Vpcs, Request Spot Instances
+```
+
+- Try creating workspace from UI:
+  
+<p align="center">
+  <img src="https://files.gitter.im/5e1bfddad73408ce4fd67bf5/Mimt/Screen-Shot-2021-02-25-at-1.03.37-PM.png">
+</p>
+
+- Verify if the role and policy exists (assume role should allow external id)
+
+<p align="center">
+  <img src="https://files.gitter.im/5e1bfddad73408ce4fd67bf5/Sxux/Screen-Shot-2021-02-26-at-11.04.13-AM.png">
+</p>

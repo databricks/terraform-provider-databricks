@@ -282,13 +282,13 @@ Error: MALFORMED_REQUEST: Failed credentials validation checks: Spot Cancellatio
 ```
 
 - Try creating workspace from UI:
-  
+
 <p align="center">
-  <img src="https://files.gitter.im/5e1bfddad73408ce4fd67bf5/Mimt/Screen-Shot-2021-02-25-at-1.03.37-PM.png">
+  <img src="https://github.com/databrickslabs/terraform-provider-databricks/raw/master/docs/images/create_workspace_error.png">
 </p>
 
 - Verify if the role and policy exists (assume role should allow external id)
 
 <p align="center">
-  <img src="https://files.gitter.im/5e1bfddad73408ce4fd67bf5/Sxux/Screen-Shot-2021-02-26-at-11.04.13-AM.png">
+  <img src="https://github.com/databrickslabs/terraform-provider-databricks/raw/master/docs/images/iam_role_trust_error.png">
 </p>

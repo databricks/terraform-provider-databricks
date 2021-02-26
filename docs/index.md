@@ -289,6 +289,49 @@ provider "databricks" {}
 
 *In Terraform 0.13 and later*, data resources have the same dependency resolution behavior [as defined for managed resources](https://www.terraform.io/docs/language/resources/behavior.html#resource-dependencies). Most data resources make an API call to a workspace. If a workspace doesn't exist yet, `Authentication is not configured for provider` error is raised. To work around this issue and guarantee a proper lazy authentication with data resources, you should add `depends_on = [azurerm_databricks_workspace.this]` or `depends_on = [databricks_mws_workspaces.this]` to the body. This issue doesn't occur if workspace is created *in one module* and resources [within the workspace](guides/workspace-management.md) are created *in another*. We do not recommend using Terraform 0.12 and earlier, if your usage involves data resources.
 
+## Error while installing: registry does not have a provider
+
+```
+Error while installing hashicorp/databricks: provider registry
+registry.terraform.io does not have a provider named
+registry.terraform.io/hashicorp/databricks
+```
+
+Whenever you see this error, it might be due to the fact, that [required_providers](https://www.terraform.io/docs/language/providers/requirements.html#requiring-providers) block is not defined in **every module**, that uses Databricks Terraform Provider. You have to create `versions.tf` file with the following contents:
+
+```hcl
+# versions.tf
+terraform {
+  required_providers {
+    databricks = {
+      source = "databrickslabs/databricks"
+      version = "0.3.2"
+    }
+  }
+}
+```
+
+... and place this file in every module in your codebase. Our recommendation is to skip `version` field for `versions.tf` file on module level, and keep it only on environment level.
+
+```
+├── environments
+│   ├── sandbox
+│   │   ├── README.md
+│   │   ├── main.tf
+│   │   └── versions.tf
+│   └── production
+│       ├── README.md
+│       ├── main.tf
+│       └── versions.tf
+└── modules
+    ├── first-module
+    │   ├── ...
+    │   └── versions.tf
+    └── second-module
+        ├── ...
+        └── versions.tf
+```
+
 
 ## Project Support
 

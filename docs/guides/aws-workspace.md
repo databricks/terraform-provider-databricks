@@ -42,12 +42,12 @@ locals {
 
 Before [managing workspace](workspace-management.md), you have to create:
   - [VPC](#vpc)
-  - [root bucket](#root-bucket)
-  - [cross-account role](#cross-account-iam-role)
+  - [Root bucket](#root-bucket)
+  - [Cross-account role](#cross-account-iam-role)
   - [Databricks E2 workspace](#databricks-e2-workspace)
-  - [host and token outputs](#provider-configuration) 
+  - [Host and Token outputs](#provider-configuration) 
 
-> ❗️ **Important:** Initializing provider with `alias = "mws"` and using `provider = databricks.mws` for all `databricks_mws_*` resources. We require all `databricks_mws_*` resources to be created within it's own dedicated terraform module of your environment. Usually this module creates VPC and IAM roles as well.
+> Initializing provider with `alias = "mws"` and using `provider = databricks.mws` for all `databricks_mws_*` resources. We require all `databricks_mws_*` resources to be created within it's own dedicated terraform module of your environment. Usually this module creates VPC and IAM roles as well.
 
 ```hcl
 terraform {
@@ -193,7 +193,7 @@ resource "databricks_mws_storage_configurations" "this" {
 
 Once  [VPC](#vpc), [cross-account role](#cross-account-iam-role), and [root bucket](#root-bucket) are setup, you can create Databricks AWS E2 workspace through [databricks_mws_workspaces](../resources/mws_workspaces.md) resource. 
 
-> ❗️ **Important:** Code, that creates workspaces and code that [manages workspaces](workspace-management.md) must be in separate terraform modules to avoid common confusion between `provider = databricks.mws` and `provider = databricks.created_workspace`. This is why we specify `databricks_host` and `databricks_token` outputs, that have to be used in the latter modules.
+Code that creates workspaces and code that [manages workspaces](workspace-management.md) must be in separate terraform modules to avoid common confusion between `provider = databricks.mws` and `provider = databricks.created_workspace`. This is why we specify `databricks_host` and `databricks_token` outputs, that have to be used in the latter modules.
 
 ```hcl
 resource "databricks_mws_workspaces" "this" {
@@ -283,12 +283,10 @@ Error: MALFORMED_REQUEST: Failed credentials validation checks: Spot Cancellatio
 
 - Try creating workspace from UI:
 
-<p align="center">
-  <img src="https://github.com/databrickslabs/terraform-provider-databricks/raw/master/docs/images/create_workspace_error.png">
-</p>
+![create_workspace_error](https://github.com/databrickslabs/terraform-provider-databricks/raw/master/docs/images/create_workspace_error.png)
+
 
 - Verify if the role and policy exists (assume role should allow external id)
 
-<p align="center">
-  <img src="https://github.com/databrickslabs/terraform-provider-databricks/raw/master/docs/images/iam_role_trust_error.png">
-</p>
+![iam_role_trust_error](https://github.com/databrickslabs/terraform-provider-databricks/raw/master/docs/images/iam_role_trust_error.png)
+

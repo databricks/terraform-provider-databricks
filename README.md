@@ -52,7 +52,7 @@
 | [databricks_workspace_conf](docs/resources/workspace_conf.md)
 | [Contributing and Development Guidelines](CONTRIBUTING.md)
 
-[![build](https://github.com/databrickslabs/terraform-provider-databricks/workflows/build/badge.svg?branch=master)](https://github.com/databrickslabs/terraform-provider-databricks/actions?query=workflow%3Abuild+branch%3Amaster) [![codecov](https://codecov.io/gh/databrickslabs/terraform-provider-databricks/branch/master/graph/badge.svg)](https://codecov.io/gh/databrickslabs/terraform-provider-databricks)
+[![build](https://github.com/databrickslabs/terraform-provider-databricks/workflows/build/badge.svg?branch=master)](https://github.com/databrickslabs/terraform-provider-databricks/actions?query=workflow%3Abuild+branch%3Amaster) [![codecov](https://codecov.io/gh/databrickslabs/terraform-provider-databricks/branch/master/graph/badge.svg)](https://codecov.io/gh/databrickslabs/terraform-provider-databricks) ![lines](https://img.shields.io/tokei/lines/github/databrickslabs/terraform-provider-databricks) [![downloads](https://img.shields.io/github/downloads/databrickslabs/terraform-provider-databricks/total.svg)](https://hanadigital.github.io/grev/?user=databrickslabs&repo=terraform-provider-databricks)
 
 If you use Terraform 0.13 or newer, please refer to instructions specified at [registry page](https://registry.terraform.io/providers/databrickslabs/databricks/latest). If you use older versions of Terraform or want to build it from sources, please refer to [contributing guidelines](CONTRIBUTING.md) page.
 

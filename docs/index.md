@@ -15,7 +15,7 @@ Use the Databricks Terraform provider to interact with almost all of [Databricks
 Compute resources
 * Deploy [databricks_cluster](resources/cluster.md) on selected [databricks_node_type](data-sources/node_type.md)
 * Schedule automated [databricks_job](resources/job.md)
-* Constrol cost and data access with [databricks_cluster_policy](resources/cluster_policy.md)
+* Control cost and data access with [databricks_cluster_policy](resources/cluster_policy.md)
 * Speedup job & cluster startup with [databricks_instance_pool](resources/instance_pool.md)
 * Customize clusters with [databricks_global_init_script](resources/global_init_script.md)
 * Manage few [databricks_notebook](resources/notebook.md), and even [list them](data-sources/notebook_paths.md)
@@ -95,7 +95,7 @@ output "job_url" {
 !> **Warning** Please be aware that hard coding any credentials in plain text is not something that is recommended. We strongly recommend using a Terraform backend that supports encryption. Please use [environment variables](#environment-variables), `~/.databrickscfg` file, encrypted `.tfvars` files or secret store of your choice (Hashicorp [Vault](https://www.vaultproject.io/), AWS [Secrets Manager](https://aws.amazon.com/secrets-manager/), AWS [Param Store](https://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-parameter-store.html), Azure [Key Vault](https://azure.microsoft.com/en-us/services/key-vault/))
 
 
-There are currently three supported methods [to authenticate into](https://docs.databricks.com/dev-tools/api/latest/authentication.html) the Databricks platform to create resources:
+There are currently three supported methods to [authenticate](https://docs.databricks.com/dev-tools/api/latest/authentication.html) into the Databricks platform to create resources:
 
 * [PAT Tokens](https://docs.databricks.com/dev-tools/api/latest/authentication.html)
 * Username and password pair
@@ -275,7 +275,7 @@ For example, with the following zero-argument configuration:
 provider "databricks" {}
 ```
 
-1. Provider will check all of the supported environment variables and set values of relevant arguments.
+1. Provider will check all the supported environment variables and set values of relevant arguments.
 2. In case any conflicting arguments are present, the plan will end with an error.
 3. Will check for the presence of `host` + `token` pair, continue trying otherwise.
 4. Will check for `host` + `username` + `password` presence, continue trying otherwise.
@@ -288,6 +288,49 @@ provider "databricks" {}
 ## Data resources and Authentication is not configured errors
 
 *In Terraform 0.13 and later*, data resources have the same dependency resolution behavior [as defined for managed resources](https://www.terraform.io/docs/language/resources/behavior.html#resource-dependencies). Most data resources make an API call to a workspace. If a workspace doesn't exist yet, `Authentication is not configured for provider` error is raised. To work around this issue and guarantee a proper lazy authentication with data resources, you should add `depends_on = [azurerm_databricks_workspace.this]` or `depends_on = [databricks_mws_workspaces.this]` to the body. This issue doesn't occur if workspace is created *in one module* and resources [within the workspace](guides/workspace-management.md) are created *in another*. We do not recommend using Terraform 0.12 and earlier, if your usage involves data resources.
+
+## Error while installing: registry does not have a provider
+
+```
+Error while installing hashicorp/databricks: provider registry
+registry.terraform.io does not have a provider named
+registry.terraform.io/hashicorp/databricks
+```
+
+If you notice below error, it might be due to the fact that [required_providers](https://www.terraform.io/docs/language/providers/requirements.html#requiring-providers) block is not defined in *every module*, that uses Databricks Terraform Provider. Create `versions.tf` file with the following contents:
+
+```hcl
+# versions.tf
+terraform {
+  required_providers {
+    databricks = {
+      source = "databrickslabs/databricks"
+      version = "0.3.2"
+    }
+  }
+}
+```
+
+... and copy the file in every module in your codebase. Our recommendation is to skip `version` field for `versions.tf` file on module level, and keep it only on environment level.
+
+```
+├── environments
+│   ├── sandbox
+│   │   ├── README.md
+│   │   ├── main.tf
+│   │   └── versions.tf
+│   └── production
+│       ├── README.md
+│       ├── main.tf
+│       └── versions.tf
+└── modules
+    ├── first-module
+    │   ├── ...
+    │   └── versions.tf
+    └── second-module
+        ├── ...
+        └── versions.tf
+```
 
 
 ## Project Support

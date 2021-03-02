@@ -4,6 +4,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/databrickslabs/terraform-provider-databricks/common"
 	"github.com/databrickslabs/terraform-provider-databricks/compute"
 	"github.com/databrickslabs/terraform-provider-databricks/internal"
 
@@ -44,7 +45,7 @@ func TestResourceAdlsGen1Mount_Create(t *testing.T) {
 			},
 		},
 		Resource: ResourceAzureAdlsGen1Mount(),
-		CommandMock: func(commandStr string) (string, error) {
+		CommandMock: func(commandStr string) common.CommandResults {
 			trunc := internal.TrimLeadingWhitespace(commandStr)
 			t.Logf("Received command:\n%s", trunc)
 			if strings.HasPrefix(trunc, "def safe_mount") {
@@ -52,7 +53,10 @@ func TestResourceAdlsGen1Mount_Create(t *testing.T) {
 				assert.Contains(t, trunc, `"fs.adl.oauth2.credential":dbutils.secrets.get("c", "d")`)
 			}
 			assert.Contains(t, trunc, "/mnt/this_mount")
-			return testS3BucketPath, nil
+			return common.CommandResults{
+				ResultType: "text",
+				Data:       testS3BucketPath,
+			}
 		},
 		State: map[string]interface{}{
 			"cluster_id":            "this_cluster",

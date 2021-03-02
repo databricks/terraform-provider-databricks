@@ -83,7 +83,7 @@ func commonFixtureWithStatusResponse(response Command) []qa.HTTPFixture {
 func TestCommandWithExecutionError(t *testing.T) {
 	client, server, err := qa.HttpFixtureClient(t, commonFixtureWithStatusResponse(Command{
 		Status: "Finished",
-		Results: &CommandResults{
+		Results: &common.CommandResults{
 			ResultType: "error",
 			Cause: `
 ---
@@ -99,16 +99,15 @@ StatusDescription=BadRequest
 	ctx := context.Background()
 	commands := NewCommandsAPI(ctx, client)
 
-	_, err = commands.Execute("abc", "python", `print("done")`)
-	assert.Equal(t, `An error occurred
-StatusCode=400
-StatusDescription=BadRequest`, err.Error())
+	result := commands.Execute("abc", "python", `print("done")`)
+	assert.Equal(t, true, result.Failed())
+	assert.Equal(t, "An error occurred\nStatusCode=400\nStatusDescription=BadRequest", result.Error())
 }
 
 func TestCommandWithEmptyErrorMessageUsesSummary(t *testing.T) {
 	client, server, err := qa.HttpFixtureClient(t, commonFixtureWithStatusResponse(Command{
 		Status: "Finished",
-		Results: &CommandResults{
+		Results: &common.CommandResults{
 			ResultType: "error",
 			Cause: `
 ---
@@ -125,14 +124,15 @@ ErrorMessage=
 	ctx := context.Background()
 	commands := NewCommandsAPI(ctx, client)
 
-	_, err = commands.Execute("abc", "python", `print("done")`)
-	assert.Equal(t, "Proper error", err.Error())
+	result := commands.Execute("abc", "python", `print("done")`)
+	assert.Equal(t, true, result.Failed())
+	assert.Equal(t, "Proper error", result.Error())
 }
 
 func TestCommandWithErrorMessage(t *testing.T) {
 	client, server, err := qa.HttpFixtureClient(t, commonFixtureWithStatusResponse(Command{
 		Status: "Finished",
-		Results: &CommandResults{
+		Results: &common.CommandResults{
 			ResultType: "error",
 			Cause: `
 ---
@@ -147,14 +147,15 @@ ErrorMessage=An error occurred
 	ctx := context.Background()
 	commands := NewCommandsAPI(ctx, client)
 
-	_, err = commands.Execute("abc", "python", `print("done")`)
-	assert.Equal(t, "An error occurred", err.Error())
+	result := commands.Execute("abc", "python", `print("done")`)
+	assert.Equal(t, true, result.Failed())
+	assert.Equal(t, "An error occurred", result.Error())
 }
 
 func TestCommandWithExceptionMessage(t *testing.T) {
 	client, server, err := qa.HttpFixtureClient(t, commonFixtureWithStatusResponse(Command{
 		Status: "Finished",
-		Results: &CommandResults{
+		Results: &common.CommandResults{
 			ResultType: "error",
 			Summary:    "Exception: An error occurred",
 		},
@@ -164,14 +165,15 @@ func TestCommandWithExceptionMessage(t *testing.T) {
 	ctx := context.Background()
 	commands := NewCommandsAPI(ctx, client)
 
-	_, err = commands.Execute("abc", "python", `print("done")`)
-	assert.Equal(t, "An error occurred", err.Error())
+	result := commands.Execute("abc", "python", `print("done")`)
+	assert.Equal(t, true, result.Failed())
+	assert.Equal(t, "An error occurred", result.Error())
 }
 
 func TestSomeCommands(t *testing.T) {
 	client, server, err := qa.HttpFixtureClient(t, commonFixtureWithStatusResponse(Command{
 		Status: "Finished",
-		Results: &CommandResults{
+		Results: &common.CommandResults{
 			ResultType: "text",
 			Data:       "done",
 		},
@@ -181,9 +183,9 @@ func TestSomeCommands(t *testing.T) {
 	ctx := context.Background()
 	commands := NewCommandsAPI(ctx, client)
 
-	result, err := commands.Execute("abc", "python", `print("done")`)
-	require.NoError(t, err)
-	assert.Equal(t, "done", result)
+	result := commands.Execute("abc", "python", `print("done")`)
+	assert.Equal(t, false, result.Failed())
+	assert.Equal(t, "done", result.Text())
 }
 
 func TestAccContext(t *testing.T) {
@@ -197,32 +199,26 @@ func TestAccContext(t *testing.T) {
 	ctx := context.Background()
 	c := NewCommandsAPI(ctx, client)
 
-	result, err := c.Execute(clusterID, "python", `print('hello world')`)
-	require.NoError(t, err)
-	assert.Equal(t, "hello world", result)
+	result := c.Execute(clusterID, "python", `print('hello world')`)
+	assert.Equal(t, "hello world", result.Text())
 
 	// exceptions are regexed away for readability
-	result, err = c.Execute(clusterID, "python", `raise Exception("Not Found")`)
-	qa.AssertErrorStartsWith(t, err, "Not Found")
-	assert.Equal(t, "", result)
+	result = c.Execute(clusterID, "python", `raise Exception("Not Found")`)
+	qa.AssertErrorStartsWith(t, result.Err(), "Not Found")
 
 	// but errors are not
-	result, err = c.Execute(clusterID, "python", `raise KeyError("foo")`)
-	qa.AssertErrorStartsWith(t, err, "KeyError: 'foo'")
-	assert.Equal(t, "", result)
+	result = c.Execute(clusterID, "python", `raise KeyError("foo")`)
+	qa.AssertErrorStartsWith(t, result.Err(), "KeyError: 'foo'")
 
 	// so it is more clear to read and debug
-	result, err = c.Execute(clusterID, "python", `return 'hello world'`)
-	qa.AssertErrorStartsWith(t, err, "SyntaxError: 'return' outside function")
-	assert.Equal(t, "", result)
+	result = c.Execute(clusterID, "python", `return 'hello world'`)
+	qa.AssertErrorStartsWith(t, result.Err(), "SyntaxError: 'return' outside function")
 
-	result, err = c.Execute(clusterID, "python", `"Hello World!"`)
-	assert.NoError(t, err)
-	assert.Equal(t, "'Hello World!'", result)
+	result = c.Execute(clusterID, "python", `"Hello World!"`)
+	assert.Equal(t, "'Hello World!'", result.Text())
 
-	result, err = c.Execute(clusterID, "python", `
-		print("Hello World!")
-		dbutils.notebook.exit("success")`)
-	assert.NoError(t, err)
-	assert.Equal(t, "success", result)
+	result = c.Execute(clusterID, "python", `
+ 		print("Hello World!")
+ 		dbutils.notebook.exit("success")`)
+	assert.Equal(t, "success", result.Text())
 }

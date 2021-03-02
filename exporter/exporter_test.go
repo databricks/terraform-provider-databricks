@@ -96,7 +96,7 @@ func TestImportingMounts(t *testing.T) {
 				Resource:     "/api/1.2/commands/status?clusterId=mount&commandId=run&contextId=context",
 				Response: compute.Command{
 					Status: "Finished",
-					Results: &compute.CommandResults{
+					Results: &common.CommandResults{
 						ResultType: "text",
 						Data: `{"foo": "s3a://foo", "bar": "abfss://bar@baz.com/thing", "third": "adls://foo.bar.com/path"}
 					and some chatty messages`,

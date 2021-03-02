@@ -31,18 +31,19 @@ type MountPoint struct {
 
 // Source returns mountpoint source
 func (mp MountPoint) Source() (string, error) {
-	return mp.exec.Execute(mp.clusterID, "python", fmt.Sprintf(`
+	result := mp.exec.Execute(mp.clusterID, "python", fmt.Sprintf(`
 		dbutils.fs.refreshMounts()
 		for mount in dbutils.fs.mounts():
 			if mount.mountPoint == "/mnt/%s":
 				dbutils.notebook.exit(mount.source)
 		raise Exception("Mount not found")
 	`, mp.name))
+	return result.Text(), result.Err()
 }
 
 // Delete removes mount from workspace
 func (mp MountPoint) Delete() error {
-	_, err := mp.exec.Execute(mp.clusterID, "python", fmt.Sprintf(`
+	result := mp.exec.Execute(mp.clusterID, "python", fmt.Sprintf(`
 		mount_point = "/mnt/%s"
 		dbutils.fs.unmount(mount_point)
 		dbutils.fs.refreshMounts()
@@ -51,7 +52,7 @@ func (mp MountPoint) Delete() error {
 				raise Exception("Failed to unmount")
 		dbutils.notebook.exit("success")
 	`, mp.name))
-	return err
+	return result.Err()
 }
 
 // Mount mounts object store on workspace
@@ -81,8 +82,8 @@ func (mp MountPoint) Mount(mo Mount) (source string, err error) {
 		mount_source = safe_mount("/mnt/%s", "%v", %s)
 		dbutils.notebook.exit(mount_source)
 	`, mp.name, mo.Source(), extraConfigs)
-	source, err = mp.exec.Execute(mp.clusterID, "python", command)
-	return
+	result := mp.exec.Execute(mp.clusterID, "python", command)
+	return result.Text(), result.Err()
 }
 
 func commonMountResource(tpl Mount, s map[string]*schema.Schema) *schema.Resource {

@@ -128,7 +128,7 @@ func TestAcquirePAT_CornerCases(t *testing.T) {
 	assert.EqualError(t, err, "DatabricksClient is not configured")
 
 	aa.databricksClient = &DatabricksClient{}
-	aa.temporaryPat = &TokenResponse{
+	aa.temporaryPat = &tokenResponse{
 		TokenValue: "...",
 	}
 	auth, rre := aa.acquirePAT(context.Background(), func(resource string) (autorest.Authorizer, error) {

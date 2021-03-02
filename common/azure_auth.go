@@ -45,23 +45,21 @@ type AzureAuth struct {
 
 	azureManagementEndpoint string
 	authorizer              autorest.Authorizer
-	temporaryPat            *TokenResponse
+	temporaryPat            *tokenResponse
 }
 
-// TokenRequest contains request
-type TokenRequest struct {
+type tokenRequest struct {
 	LifetimeSeconds int64  `json:"lifetime_seconds,omitempty"`
 	Comment         string `json:"comment,omitempty"`
 }
 
-// TokenResponse contains response
-type TokenResponse struct {
+type tokenResponse struct {
 	TokenValue string     `json:"token_value,omitempty"`
-	TokenInfo  *TokenInfo `json:"token_info,omitempty"`
+	TokenInfo  *tokenInfo `json:"token_info,omitempty"`
 }
 
-// TokenInfo is a struct that contains metadata about a given token
-type TokenInfo struct {
+// tokenInfo is a struct that contains metadata about a given token
+type tokenInfo struct {
 	TokenID      string `json:"token_id,omitempty"`
 	CreationTime int64  `json:"creation_time,omitempty"`
 	ExpiryTime   int64  `json:"expiry_time,omitempty"`
@@ -211,7 +209,7 @@ func (aa *AzureAuth) simpleAADRequestVisitor(
 func (aa *AzureAuth) acquirePAT(
 	ctx context.Context,
 	factory func(resource string) (autorest.Authorizer, error),
-	visitors ...func(r *http.Request, ma autorest.Authorizer) error) (*TokenResponse, error) {
+	visitors ...func(r *http.Request, ma autorest.Authorizer) error) (*tokenResponse, error) {
 	if aa.temporaryPat != nil {
 		// todo: add IsExpired
 		return aa.temporaryPat, nil
@@ -261,12 +259,12 @@ func (aa *AzureAuth) acquirePAT(
 	return aa.temporaryPat, nil
 }
 
-func (aa *AzureAuth) patRequest() TokenRequest {
+func (aa *AzureAuth) patRequest() tokenRequest {
 	seconds, err := strconv.ParseInt(aa.PATTokenDurationSeconds, 10, 64)
 	if err != nil {
 		seconds = 60 * 60
 	}
-	return TokenRequest{
+	return tokenRequest{
 		LifetimeSeconds: seconds,
 		Comment:         "Secret made via Terraform",
 	}
@@ -315,7 +313,7 @@ func (aa *AzureAuth) ensureWorkspaceURL(ctx context.Context,
 }
 
 func (aa *AzureAuth) createPAT(ctx context.Context,
-	interceptor func(r *http.Request) error) (tr TokenResponse, err error) {
+	interceptor func(r *http.Request) error) (tr tokenResponse, err error) {
 	log.Println("[DEBUG] Creating workspace token")
 	url := fmt.Sprintf("%sapi/2.0/token/create", aa.databricksClient.Host)
 	body, err := aa.databricksClient.genericQuery(ctx,

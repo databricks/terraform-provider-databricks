@@ -163,8 +163,11 @@ func TestResourceFixture_ID(t *testing.T) {
 
 func TestResourceFixture_Apply(t *testing.T) {
 	d, err := ResourceFixture{
-		CommandMock: func(commandStr string) (string, error) {
-			return "yes", nil
+		CommandMock: func(commandStr string) common.CommandResults {
+			return common.CommandResults{
+				ResultType: "text",
+				Data:       "yes",
+			}
 		},
 		Azure:    true,
 		Resource: noopResource,
@@ -179,8 +182,11 @@ func TestResourceFixture_Apply(t *testing.T) {
 
 func TestResourceFixture_ApplyDelete(t *testing.T) {
 	d, err := ResourceFixture{
-		CommandMock: func(commandStr string) (string, error) {
-			return "yes", nil
+		CommandMock: func(commandStr string) common.CommandResults {
+			return common.CommandResults{
+				ResultType: "text",
+				Data:       "yes",
+			}
 		},
 		Azure:    true,
 		Resource: noopContextResource,
@@ -214,8 +220,11 @@ func TestResourceFixture_InstanceState(t *testing.T) {
 
 func TestResourceFixture_Apply_Fail(t *testing.T) {
 	_, err := ResourceFixture{
-		CommandMock: func(commandStr string) (string, error) {
-			return "yes", nil
+		CommandMock: func(commandStr string) common.CommandResults {
+			return common.CommandResults{
+				ResultType: "text",
+				Data:       "yes",
+			}
 		},
 		Resource: noopResource,
 		Create:   true,

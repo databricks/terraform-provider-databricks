@@ -236,11 +236,12 @@ println(mapper.writeValueAsString(readableMounts))`
 func (ic *importContext) getMountsThroughCluster(
 	commandAPI common.CommandExecutor, clusterID string) (mm map[string]string, err error) {
 	// Scala has actually working timeout handling, compared to Python
-	j, err := commandAPI.Execute(clusterID, "scala", getReadableMountsCommand)
-	if err != nil {
+	result := commandAPI.Execute(clusterID, "scala", getReadableMountsCommand)
+	if result.Failed() {
+		err = result.Err()
 		return
 	}
-	lines := strings.Split(j, "\n")
+	lines := strings.Split(result.Text(), "\n")
 	err = json.Unmarshal([]byte(lines[0]), &mm)
 	return
 }

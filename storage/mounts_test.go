@@ -128,10 +128,13 @@ func testMountFuncHelper(t *testing.T, mountFunc func(mp MountPoint, mount Mount
 
 	var called bool
 
-	c.WithCommandMock(func(commandStr string) (s string, e error) {
+	c.WithCommandMock(func(commandStr string) common.CommandResults {
 		called = true
 		assert.Equal(t, internal.TrimLeadingWhitespace(expectedCommand), internal.TrimLeadingWhitespace(commandStr))
-		return expectedCommandResp, nil
+		return common.CommandResults{
+			ResultType: "text",
+			Data:       expectedCommandResp,
+		}
 	})
 
 	ctx := context.Background()

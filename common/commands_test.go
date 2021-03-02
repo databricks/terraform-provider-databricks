@@ -16,15 +16,18 @@ func TestCommandMock(t *testing.T) {
 	assert.NoError(t, err)
 
 	called := false
-	c.WithCommandMock(func(commandStr string) (string, error) {
+	c.WithCommandMock(func(commandStr string) CommandResults {
 		called = true
 		assert.Equal(t, "print 1", commandStr)
-		return "done", nil
+		return CommandResults{
+			ResultType: "text",
+			Data:       "done",
+		}
 	})
 	ctx := context.Background()
-	res, err := c.CommandExecutor(ctx).Execute("irrelevant", "python", "print 1")
+	cr := c.CommandExecutor(ctx).Execute("irrelevant", "python", "print 1")
 
 	assert.Equal(t, true, called)
-	assert.Equal(t, "done", res)
-	assert.NoError(t, err, err)
+	assert.Equal(t, false, cr.Failed())
+	assert.Equal(t, "done", cr.Text())
 }

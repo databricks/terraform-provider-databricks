@@ -42,6 +42,7 @@ func DatabricksProvider() *schema.Provider {
 			"databricks_secret_acl":     access.ResourceSecretACL(),
 			"databricks_permissions":    access.ResourcePermissions(),
 			"databricks_ip_access_list": access.ResourceIPAccessList(),
+			"databricks_table_acl":      access.ResourceTableACL(),
 
 			"databricks_cluster":        compute.ResourceCluster(),
 			"databricks_cluster_policy": compute.ResourceClusterPolicy(),

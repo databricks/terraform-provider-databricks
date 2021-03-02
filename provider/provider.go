@@ -23,7 +23,7 @@ import (
 func DatabricksProvider() *schema.Provider {
 	p := &schema.Provider{
 		DataSourcesMap: map[string]*schema.Resource{
-			"databricks_aws_crossaccount_policy": access.DataAwsCrossAccountRolicy(),
+			"databricks_aws_crossaccount_policy": access.DataAwsCrossAccountPolicy(),
 			"databricks_aws_assume_role_policy":  access.DataAwsAssumeRolePolicy(),
 			"databricks_aws_bucket_policy":       access.DataAwsBucketPolicy(),
 			"databricks_current_user":            identity.DataSourceCurrentUser(),

@@ -542,6 +542,7 @@ var resourcesMap map[string]importable = map[string]importable{
 					ic.Emit(&resource{
 						Resource: "databricks_secret_scope",
 						ID:       scope.Name,
+						Name:     scope.Name,
 					})
 					log.Printf("[INFO] Imported %d of %d secret scopes",
 						i, len(scopes))

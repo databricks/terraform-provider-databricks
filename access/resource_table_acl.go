@@ -3,28 +3,45 @@ package access
 import (
 	"context"
 	"fmt"
+	"log"
 	"strings"
 
 	"github.com/databrickslabs/terraform-provider-databricks/common"
 	"github.com/databrickslabs/terraform-provider-databricks/compute"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 // https://docs.databricks.com/security/access-control/table-acls/object-privileges.html#operations-and-privileges
 
 // TableACL defines table access control
 type TableACL struct {
-	Table     string   `json:"table,omitempty"`
-	View      string   `json:"view,omitempty"`
-	Database  string   `json:"database,omitempty"`
-	Principal string   `json:"principal"`
-	Grants    []string `json:"grants,omitempty" tf:"slice_set"`
-	Denies    []string `json:"denies,omitempty" tf:"slice_set"`
-	Owner     string   `json:"owner,omitempty"`
-	ClusterID string   `json:"cluster_id,omitempty"`
+	Table             string `json:"table,omitempty"`
+	View              string `json:"view,omitempty"`
+	Database          string `json:"database,omitempty"`
+	Catalog           bool   `json:"catalog,omitempty"`
+	AnyFile           bool   `json:"any_file,omitempty"`
+	AnonymousFunction bool   `json:"anonymous_function,omitempty"`
+
+	//
+	Grants    []*TablePermissions `json:"grant,omitempty"`
+	Denies    []*TablePermissions `json:"deny,omitempty"`
+	Owner     string              `json:"owner,omitempty"`
+	ClusterID string              `json:"cluster_id,omitempty"`
 	// SanityCheck bool     `json:"sanity_check,omitempty"`
+}
+
+// TablePermissions ...
+type TablePermissions struct {
+	Principal  string   `json:"principal"`
+	Privileges []string `json:"privileges" tf:"slice_set"`
+}
+
+func (ta *TableACL) permissions() map[string][]*TablePermissions {
+	return map[string][]*TablePermissions{
+		"GRANT": ta.Grants,
+		"DENY":  ta.Denies,
+	}
 }
 
 func (ta *TableACL) actualDatabase() string {
@@ -45,6 +62,15 @@ func (ta *TableACL) TypeAndKey() (string, string) {
 	if ta.Database != "" {
 		return "DATABASE", ta.Database
 	}
+	if ta.Catalog {
+		return "CATALOG", ""
+	}
+	if ta.AnyFile {
+		return "ANY FILE", ""
+	}
+	if ta.AnonymousFunction {
+		return "ANONYMOUS FUNCTION", ""
+	}
 	return "", ""
 }
 
@@ -52,16 +78,15 @@ func (ta *TableACL) TypeAndKey() (string, string) {
 func (ta *TableACL) ID() string {
 	objectType, key := ta.TypeAndKey()
 	noBackticks := strings.ReplaceAll(key, "`", "")
-	return fmt.Sprintf("%s/%s/%s", objectType, noBackticks, ta.Principal)
+	return fmt.Sprintf("%s/%s", strings.ToLower(objectType), noBackticks)
 }
 
 func loadTableACL(id string) (TableACL, error) {
 	ta := TableACL{}
-	split := strings.SplitN(id, "/", 3)
-	if len(split) != 3 {
+	split := strings.SplitN(id, "/", 2)
+	if len(split) != 2 {
 		return ta, fmt.Errorf("ID must be three elements: %s", id)
 	}
-	ta.Principal = split[2]
 	switch strings.ToLower(split[0]) {
 	case "database":
 		ta.Database = split[1]
@@ -79,60 +104,110 @@ func loadTableACL(id string) (TableACL, error) {
 		}
 		ta.Database = dav[0]
 		ta.Table = dav[1]
+	case "catalog":
+		ta.Catalog = true
+	case "any file":
+		ta.AnyFile = true
+	case "anonymous function":
+		ta.AnonymousFunction = true
 	default:
 		return ta, fmt.Errorf("Illegal ID type: %s", split[0])
 	}
 	return ta, nil
 }
 
-// Read shows all grants
-func (ta *TableACL) Read(exec common.CommandExecutor) error {
-	// objectType, key := ta.TypeAndKey()
-	// result := exec.Execute(ta.ClusterID, "sql", fmt.Sprintf(
-	// 	"SHOW GRANT `%s` ON %s %s", ta.Principal, objectType, key))
-	// if result.Failed() {
-	// 	failure := result.Error()
-	// 	if strings.Contains(failure, "does not exist") ||
-	// 		strings.Contains(failure, "RESOURCE_DOES_NOT_EXIST") {
-	// 		return common.APIError{
-	// 			Message:    failure,
-	// 			StatusCode: 404,
-	// 		}
-	// 	}
-	// 	return fmt.Errorf(failure)
-	// }
-	// // clear any previous entries
-	// ta.Grants = []string{}
-	// ta.Denies = []string{}
-	// var principal, actionType, objType, objectKey string
-	// for result.Scan(&principal, &actionType, &objType, &objectKey) {
-	// 	if principal != ta.Principal {
-	// 		continue
-	// 	}
-	// 	if objectType != objType {
-	// 		continue
-	// 	}
-	// 	if objectKey != key {
-	// 		continue
-	// 	}
-	// 	if strings.HasPrefix(actionType, "DENIED_") {
-	// 		ta.Denies = append(ta.Denies, strings.Replace(actionType, "DENIED_", "", 1))
-	// 		continue
-	// 	}
-	// 	ta.Grants = append(ta.Grants, actionType)
-	// }
-	// return nil
-	return fmt.Errorf("NOT IMPLEMENTED")
+func (ta *TableACL) read(exec common.CommandExecutor) error {
+	objectType, key := ta.TypeAndKey()
+	result := exec.Execute(ta.ClusterID, "sql", fmt.Sprintf(
+		"SHOW GRANT ON %s %s", objectType, key))
+	if result.Failed() {
+		failure := result.Error()
+		if strings.Contains(failure, "does not exist") ||
+			strings.Contains(failure, "RESOURCE_DOES_NOT_EXIST") {
+			return common.NotFound(failure)
+		}
+		return fmt.Errorf(failure)
+	}
+	// clear any previous entries
+	ta.Grants = []*TablePermissions{}
+	ta.Denies = []*TablePermissions{}
+	var principal, actionType, objType, objectKey string
+	for result.Scan(&principal, &actionType, &objType, &objectKey) {
+		if !strings.EqualFold(objectType, objType) {
+			continue
+		}
+		if !strings.EqualFold(objectKey, key) {
+			continue
+		}
+		target := ta.Grants
+		var isDeny = strings.HasPrefix(actionType, "DENIED_")
+		if isDeny {
+			actionType = strings.Replace(actionType, "DENIED_", "", 1)
+			target = ta.Denies
+		}
+		var tablePerms *TablePermissions
+		for _, tp := range target {
+			if tp.Principal == principal {
+				tablePerms = tp
+			}
+		}
+		if tablePerms == nil {
+			tablePerms = &TablePermissions{
+				Principal:  principal,
+				Privileges: []string{},
+			}
+			if isDeny {
+				ta.Denies = append(ta.Denies, tablePerms)
+			} else {
+				ta.Grants = append(ta.Grants, tablePerms)
+			}
+		}
+		tablePerms.Privileges = append(tablePerms.Privileges, actionType)
+	}
+	return nil
 }
 
-// Apply ACL to an object
-func (ta *TableACL) Apply(exec common.CommandExecutor, action, privilege, direction string) error {
-	return fmt.Errorf("NOT IMPLEMENTED")
-	// objectType, key := ta.TypeAndKey()
-	// r := exec.Execute(ta.ClusterID, "sql", fmt.Sprintf(
-	// 	"%s %s ON %s %s %s %s", action, privilege,
-	// 	objectType, key, direction, ta.Principal))
-	// return r.Err()
+func (ta *TableACL) revoke(commandsAPI common.CommandExecutor) error {
+	existing, err := loadTableACL(ta.ID())
+	if err != nil {
+		return err
+	}
+	for _, tps := range existing.permissions() {
+		for _, priv := range tps {
+			if err = ta.apply(commandsAPI, func(objType, key string) string {
+				return fmt.Sprintf("REVOKE ALL PRIVILEGES ON %s %s FROM `%s`",
+					objType, key, priv.Principal)
+			}); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
+func (ta *TableACL) enforce(commandsAPI common.CommandExecutor) (err error) {
+	if err = ta.revoke(commandsAPI); err != nil {
+		return err
+	}
+	for action, grantsOrDenies := range ta.permissions() {
+		for _, grant := range grantsOrDenies {
+			if err = ta.apply(commandsAPI, func(objType, key string) string {
+				privileges := strings.Join(grant.Privileges, ", ")
+				return fmt.Sprintf("%s %s ON %s %s TO `%s`",
+					action, privileges, objType, key, grant.Principal)
+			}); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
+func (ta *TableACL) apply(exec common.CommandExecutor, qb func(objType, key string) string) error {
+	sqlQuery := qb(ta.TypeAndKey())
+	log.Printf("[INFO] Executing SQL: %s", sqlQuery)
+	r := exec.Execute(ta.ClusterID, "sql", sqlQuery)
+	return r.Err()
 }
 
 func newTableACLExecutor(ctx context.Context, ta *TableACL, d *schema.ResourceData, m interface{}) (common.CommandExecutor, error) {
@@ -159,8 +234,6 @@ func ResourceTableACL() *schema.Resource {
 		s["view"].ForceNew = true
 		s["database"].ForceNew = true
 		s["database"].Default = "default"
-
-		s["principal"].ValidateFunc = validation.StringIsNotEmpty
 
 		alof := []string{"database", "table", "view"}
 		s["table"].AtLeastOneOf = alof
@@ -191,18 +264,8 @@ func ResourceTableACL() *schema.Resource {
 			if err != nil {
 				return err
 			}
-			if err = ta.Apply(commandsAPI, "REVOKE", "ALL PRIVILEGES", "FROM"); err != nil {
+			if err = ta.enforce(commandsAPI); err != nil {
 				return err
-			}
-			for _, grant := range ta.Grants {
-				if err = ta.Apply(commandsAPI, "GRANT", grant, "TO"); err != nil {
-					return err
-				}
-			}
-			for _, deny := range ta.Denies {
-				if err = ta.Apply(commandsAPI, "DENY", deny, "TO"); err != nil {
-					return err
-				}
 			}
 			d.SetId(ta.ID())
 			// TODO: owner
@@ -217,57 +280,24 @@ func ResourceTableACL() *schema.Resource {
 			if err != nil {
 				return err
 			}
-			if err = ta.Read(commandsAPI); err != nil {
+			if err = ta.read(commandsAPI); err != nil {
 				return err
 			}
 			return common.StructToData(ta, s, d)
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			old, err := loadTableACL(d.Id())
-			if err != nil {
-				return err
-			}
 			var new TableACL
-
-			if err = common.DataToStructPointer(d, s, &new); err != nil {
+			if err := common.DataToStructPointer(d, s, &new); err != nil {
 				return err
 			}
 			commandsAPI, err := newTableACLExecutor(ctx, &new, d, c)
 			if err != nil {
 				return err
 			}
-			applyDiff := func(a, b []string, action, direction string) (err error) {
-				for _, newGrant := range a {
-					for _, oldGrant := range b {
-						if oldGrant == newGrant {
-							return
-						}
-					}
-					err = new.Apply(commandsAPI, action, newGrant, direction)
-					if err != nil {
-						return
-					}
-				}
-				return
-			}
-			// at first glance, we may not need Update here, though if we revoke all privileges
-			// from the group during the lifetime of streaming query, it might fail. so that is
-			// why we're carefully revoking grants only when they change
-			for _, err := range []error{
-				applyDiff(new.Grants, old.Grants, "GRANT", "TO"),
-				applyDiff(old.Grants, new.Grants, "REVOKE", "FROM"),
-				applyDiff(new.Denies, old.Denies, "DENY", "TO"),
-				applyDiff(old.Denies, new.Denies, "REVOKE", "FROM"),
-			} {
-				if err != nil {
-					return err
-				}
-			}
-			return nil
+			return new.enforce(commandsAPI)
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var ta TableACL
-
 			if err := common.DataToStructPointer(d, s, &ta); err != nil {
 				return err
 			}
@@ -275,7 +305,7 @@ func ResourceTableACL() *schema.Resource {
 			if err != nil {
 				return err
 			}
-			return ta.Apply(commandsAPI, "REVOKE", "ALL PRIVILEGES", "FROM")
+			return ta.revoke(commandsAPI)
 		},
 	}.ToResource()
 }

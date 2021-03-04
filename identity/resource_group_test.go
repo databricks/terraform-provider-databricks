@@ -149,10 +149,6 @@ func TestResourceGroupUpdate(t *testing.T) {
 								},
 							},
 						},
-						{
-							Op:   "remove",
-							Path: "entitlements[value eq \"allow-cluster-create\"]",
-						},
 					},
 				},
 			},

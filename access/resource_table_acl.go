@@ -22,12 +22,11 @@ type TableACL struct {
 	Catalog           bool   `json:"catalog,omitempty"`
 	AnyFile           bool   `json:"any_file,omitempty"`
 	AnonymousFunction bool   `json:"anonymous_function,omitempty"`
+	Owner             string `json:"owner,omitempty"`
+	ClusterID         string `json:"cluster_id,omitempty" tf:"computed"`
 
-	//
-	Grants    []*TablePermissions `json:"grant,omitempty"`
-	Denies    []*TablePermissions `json:"deny,omitempty"`
-	Owner     string              `json:"owner,omitempty"`
-	ClusterID string              `json:"cluster_id,omitempty"`
+	Grants []TablePermissions `json:"grant,omitempty"`
+	Denies []TablePermissions `json:"deny,omitempty"`
 	// SanityCheck bool     `json:"sanity_check,omitempty"`
 }
 
@@ -37,8 +36,8 @@ type TablePermissions struct {
 	Privileges []string `json:"privileges" tf:"slice_set"`
 }
 
-func (ta *TableACL) permissions() map[string][]*TablePermissions {
-	return map[string][]*TablePermissions{
+func (ta *TableACL) permissions() map[string][]TablePermissions {
+	return map[string][]TablePermissions{
 		"GRANT": ta.Grants,
 		"DENY":  ta.Denies,
 	}
@@ -129,8 +128,8 @@ func (ta *TableACL) read(exec common.CommandExecutor) error {
 		return fmt.Errorf(failure)
 	}
 	// clear any previous entries
-	ta.Grants = []*TablePermissions{}
-	ta.Denies = []*TablePermissions{}
+	ta.Grants = []TablePermissions{}
+	ta.Denies = []TablePermissions{}
 	var principal, actionType, objType, objectKey string
 	for result.Scan(&principal, &actionType, &objType, &objectKey) {
 		if !strings.EqualFold(objectType, objType) {
@@ -145,24 +144,30 @@ func (ta *TableACL) read(exec common.CommandExecutor) error {
 			actionType = strings.Replace(actionType, "DENIED_", "", 1)
 			target = ta.Denies
 		}
-		var tablePerms *TablePermissions
-		for _, tp := range target {
+		var privileges *[]string
+		for i, tp := range target {
 			if tp.Principal == principal {
-				tablePerms = tp
+				if isDeny {
+					privileges = &ta.Denies[i].Privileges
+				} else {
+					privileges = &ta.Grants[i].Privileges
+				}
 			}
 		}
-		if tablePerms == nil {
-			tablePerms = &TablePermissions{
+		if privileges == nil {
+			tablePerms := TablePermissions{
 				Principal:  principal,
 				Privileges: []string{},
 			}
 			if isDeny {
 				ta.Denies = append(ta.Denies, tablePerms)
+				privileges = &ta.Denies[len(ta.Denies)-1].Privileges
 			} else {
 				ta.Grants = append(ta.Grants, tablePerms)
+				privileges = &ta.Grants[len(ta.Grants)-1].Privileges
 			}
 		}
-		tablePerms.Privileges = append(tablePerms.Privileges, actionType)
+		*privileges = append(*privileges, actionType)
 	}
 	return nil
 }
@@ -170,6 +175,9 @@ func (ta *TableACL) read(exec common.CommandExecutor) error {
 func (ta *TableACL) revoke(commandsAPI common.CommandExecutor) error {
 	existing, err := loadTableACL(ta.ID())
 	if err != nil {
+		return err
+	}
+	if err = existing.read(commandsAPI); err != nil {
 		return err
 	}
 	for _, tps := range existing.permissions() {
@@ -210,11 +218,34 @@ func (ta *TableACL) apply(exec common.CommandExecutor, qb func(objType, key stri
 	return r.Err()
 }
 
-func newTableACLExecutor(ctx context.Context, ta *TableACL, d *schema.ResourceData, m interface{}) (common.CommandExecutor, error) {
-	clustersAPI := compute.NewClustersAPI(ctx, m)
-	// TODO: create cluster if not exists
+func newTableACLExecutor(ctx context.Context,
+	ta *TableACL, d *schema.ResourceData,
+	c *common.DatabricksClient) (common.CommandExecutor, error) {
+	clustersAPI := compute.NewClustersAPI(ctx, c)
 	if ci, ok := d.GetOk("cluster_id"); ok {
 		ta.ClusterID = ci.(string)
+	} else {
+		sparkVersion := clustersAPI.LatestSparkVersionOrDefault(compute.SparkVersionRequest{
+			Latest: true,
+		})
+		nodeType := clustersAPI.GetSmallestNodeType(compute.NodeTypeRequest{LocalDisk: true})
+		aclCluster, err := clustersAPI.GetOrCreateRunningCluster("terrraform-table-acl", compute.Cluster{
+			ClusterName:            "terrraform-table-acl",
+			SparkVersion:           sparkVersion,
+			NodeTypeID:             nodeType,
+			AutoterminationMinutes: 10,
+			SparkConf: map[string]string{
+				"spark.databricks.acl.dfAclsEnabled": "true",
+				"spark.master":                       "local[*]",
+			},
+			CustomTags: map[string]string{
+				"ResourceClass": "SingleNode",
+			},
+		})
+		if err != nil {
+			return nil, err
+		}
+		ta.ClusterID = aclCluster.ClusterID
 	}
 	clusterInfo, err := clustersAPI.StartAndGetInfo(ta.ClusterID)
 	if err != nil {
@@ -224,24 +255,20 @@ func newTableACLExecutor(ctx context.Context, ta *TableACL, d *schema.ResourceDa
 		return nil, fmt.Errorf("cluster_id: not a High-Concurrency cluster: %s (%s)",
 			clusterInfo.ClusterName, clusterInfo.ClusterID)
 	}
-	return compute.NewCommandsAPI(ctx, m), nil
+	return c.CommandExecutor(ctx), nil
 }
 
 // ResourceTableACL manages table ACLs
 func ResourceTableACL() *schema.Resource {
 	s := common.StructToSchema(TableACL{}, func(s map[string]*schema.Schema) map[string]*schema.Schema {
-		s["table"].ForceNew = true
-		s["view"].ForceNew = true
-		s["database"].ForceNew = true
+		alof := []string{"database", "table", "view", "catalog", "any_file", "anonymous_function"}
+		for _, field := range alof {
+			s[field].ForceNew = true
+			s[field].Optional = true
+			s[field].AtLeastOneOf = alof
+		}
 		s["database"].Default = "default"
-
-		alof := []string{"database", "table", "view"}
-		s["table"].AtLeastOneOf = alof
-		s["view"].AtLeastOneOf = alof
-		s["database"].AtLeastOneOf = alof
-
-		s["table"].ConflictsWith = []string{"view"}
-		s["view"].ConflictsWith = []string{"table"}
+		// TODO: ignore changes on cluster_id
 
 		// validateGrants := validation.StringInSlice([]string{
 		// 	"SELECT",
@@ -255,6 +282,7 @@ func ResourceTableACL() *schema.Resource {
 		return s
 	})
 	return common.Resource{
+		Schema: s,
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var ta TableACL
 			if err := common.DataToStructPointer(d, s, &ta); err != nil {

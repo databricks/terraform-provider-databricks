@@ -236,3 +236,13 @@ func (c *DatabricksClient) configureHTTPCLient() {
 func (c *DatabricksClient) IsAzure() bool {
 	return c.AzureAuth.resourceID() != "" || strings.Contains(c.Host, "azuredatabricks.net")
 }
+
+// FormatURL creates URL from the client Host and additional strings
+func (c *DatabricksClient) FormatURL(strs ...string) string {
+	host := c.Host
+	if !strings.HasSuffix(host, "/") {
+		host += "/"
+	}
+	data := append([]string{host}, strs...)
+	return strings.Join(data, "")
+}

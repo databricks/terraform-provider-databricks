@@ -48,11 +48,13 @@ type AzureAuth struct {
 	temporaryPat            *TokenResponse
 }
 
+// TokenRequest contains request
 type TokenRequest struct {
 	LifetimeSeconds int64  `json:"lifetime_seconds,omitempty"`
 	Comment         string `json:"comment,omitempty"`
 }
 
+// TokenResponse contains response
 type TokenResponse struct {
 	TokenValue string     `json:"token_value,omitempty"`
 	TokenInfo  *TokenInfo `json:"token_info,omitempty"`
@@ -288,10 +290,10 @@ func (aa *AzureAuth) ensureWorkspaceURL(ctx context.Context,
 		return err
 	}
 	// All azure endpoints typically end with a trailing slash removing it because resourceID starts with slash
-	managementResourceUrl := strings.TrimSuffix(env.ResourceManagerEndpoint, "/") + resourceID
+	managementResourceURL := strings.TrimSuffix(env.ResourceManagerEndpoint, "/") + resourceID
 	var workspace azureDatabricksWorkspace
 	resp, err := aa.databricksClient.genericQuery(ctx, http.MethodGet,
-		managementResourceUrl,
+		managementResourceURL,
 		map[string]string{
 			"api-version": "2018-04-01",
 		}, func(r *http.Request) error {

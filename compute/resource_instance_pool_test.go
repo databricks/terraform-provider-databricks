@@ -30,7 +30,7 @@ func TestAccInstancePools(t *testing.T) {
 			sparkVersion,
 		},
 	}
-	if !client.IsAzure() {
+	if client.IsAws() {
 		pool.DiskSpec = &InstancePoolDiskSpec{
 			DiskType: &InstancePoolDiskType{
 				EbsVolumeType: EbsVolumeTypeGeneralPurposeSsd,

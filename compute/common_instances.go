@@ -53,7 +53,7 @@ func CommonInstancePoolID() string {
 
 			IdleInstanceAutoTerminationMinutes: 15,
 		}
-		if !client.IsAzure() {
+		if client.IsAws() {
 			instancePool.AwsAttributes = &InstancePoolAwsAttributes{
 				Availability: AwsAvailabilitySpot,
 			}

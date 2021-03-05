@@ -164,7 +164,7 @@ func (ic *importContext) refreshMounts() error {
 			ClusterID: cluster.ClusterID,
 		}
 	}
-	if !ic.Client.IsAzure() {
+	if ic.Client.IsAws() {
 		profiles, err := identity.NewInstanceProfilesAPI(ic.Context, ic.Client).List()
 		if err != nil {
 			return err

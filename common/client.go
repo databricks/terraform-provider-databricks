@@ -234,7 +234,17 @@ func (c *DatabricksClient) configureHTTPCLient() {
 
 // IsAzure returns true if client is configured for Azure Databricks - either by using AAD auth or with host+token combination
 func (c *DatabricksClient) IsAzure() bool {
-	return c.AzureAuth.resourceID() != "" || strings.Contains(c.Host, "azuredatabricks.net")
+	return c.AzureAuth.resourceID() != "" || strings.Contains(c.Host, ".azuredatabricks.net")
+}
+
+// IsAws returns true if client is configured for AWS
+func (c *DatabricksClient) IsAws() bool {
+	return !c.IsAzure() && !c.IsGcp()
+}
+
+// IsGcp returns true if client is configured for GCP
+func (c *DatabricksClient) IsGcp() bool {
+	return strings.Contains(c.Host, ".gcp.databricks.com")
 }
 
 // FormatURL creates URL from the client Host and additional strings

@@ -344,7 +344,7 @@ func (a ClustersAPI) GetOrCreateRunningCluster(name string, custom ...Cluster) (
 		NodeTypeID:             smallestNodeType,
 		AutoterminationMinutes: 10,
 	}
-	if !a.client.IsAzure() {
+	if a.client.IsAws() {
 		r.AwsAttributes = &AwsAttributes{
 			Availability: "SPOT",
 		}
@@ -365,16 +365,22 @@ type NodeTypeRequest struct {
 	Category    string `json:"category,omitempty"`
 }
 
+func defaultSmallestNodeType(a ClustersAPI) string {
+	if a.client.IsAzure() {
+		return "Standard_D3_v2"
+	} else if a.client.IsGcp() {
+		return "n1-standard-4"
+	}
+	return "i3.xlarge"
+}
+
 // GetSmallestNodeType returns smallest (or default) node type id given the criteria
 func (a ClustersAPI) GetSmallestNodeType(r NodeTypeRequest) string {
 	list, _ := a.ListNodeTypes()
 	// error is explicitly ingored here, because Azure returns
 	// apparently too big of a JSON for Go to parse
 	if len(list.NodeTypes) == 0 {
-		if a.client.IsAzure() {
-			return "Standard_D3_v2"
-		}
-		return "i3.xlarge"
+		return defaultSmallestNodeType(a)
 	}
 	list.Sort()
 	for _, nt := range list.NodeTypes {
@@ -401,10 +407,7 @@ func (a ClustersAPI) GetSmallestNodeType(r NodeTypeRequest) string {
 		}
 		return nt.NodeTypeID
 	}
-	if a.client.IsAzure() {
-		return "Standard_D3_v2"
-	}
-	return "i3.xlarge"
+	return defaultSmallestNodeType(a)
 }
 
 // ListSparkVersions returns smallest (or default) node type id given the criteria

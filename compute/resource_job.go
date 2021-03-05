@@ -197,7 +197,7 @@ func ResourceJob() *schema.Resource {
 			if err != nil {
 				return err
 			}
-			d.Set("url", fmt.Sprintf("%s#job/%s", c.Host, d.Id()))
+			d.Set("url", c.FormatURL("#job/", d.Id()))
 			return common.StructToData(*job.Settings, jobSchema, d)
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {

@@ -3,7 +3,6 @@ package workspace
 import (
 	"context"
 	"encoding/base64"
-	"fmt"
 	"path/filepath"
 	"strings"
 	"sync"
@@ -265,7 +264,7 @@ func ResourceNotebook() *schema.Resource {
 			if err != nil {
 				return err
 			}
-			d.Set("url", fmt.Sprintf("%s#workspace%s", c.Host, d.Id()))
+			d.Set("url", c.FormatURL("#workspace", d.Id()))
 			return common.StructToData(objectStatus, s, d)
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {

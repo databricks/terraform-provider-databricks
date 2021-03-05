@@ -68,6 +68,8 @@ func resourceClusterSchema() map[string]*schema.Schema {
 			Optional: true,
 			Computed: true,
 		}
+		s["aws_attributes"].ConflictsWith = []string{"azure_attributes"}
+		s["azure_attributes"].ConflictsWith = []string{"aws_attributes"}
 		s["is_pinned"] = &schema.Schema{
 			Type:     schema.TypeBool,
 			Optional: true,
@@ -320,6 +322,9 @@ func modifyClusterRequest(clusterModel *Cluster) {
 			InstanceProfileArn: clusterModel.AwsAttributes.InstanceProfileArn,
 		}
 		clusterModel.AwsAttributes = &awsAttributes
+	}
+	if clusterModel.AzureAttributes != nil {
+		clusterModel.AzureAttributes = nil
 	}
 	clusterModel.EnableElasticDisk = false
 	clusterModel.NodeTypeID = ""

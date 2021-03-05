@@ -3,6 +3,7 @@
 ## 0.3.2
 
 * Fix incorrect escaping of notebook names ([#566](https://github.com/databrickslabs/terraform-provider-databricks/pull/566))
+* Added support for spot instances on Azure (TODO)
 
 ## 0.3.1
 

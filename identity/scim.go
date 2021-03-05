@@ -132,6 +132,7 @@ const (
 	AllowSQLAnalyticsAccessEntitlement Entitlement = "sql-analytics-access"
 )
 
+// GroupsListItem contains information about group item
 type GroupsListItem struct {
 	// TODO: combine entitlementsListItem & roleListItem into this one
 	Display string `json:"display,omitempty"`

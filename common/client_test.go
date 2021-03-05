@@ -151,3 +151,8 @@ func TestDatabricksClientConfigure_InvalidConfigFilePath(t *testing.T) {
 // 	})
 // 	assert.EqualError(t, err, ".")
 // }
+
+func TestDatabricksClient_FormatURL(t *testing.T) {
+	client := DatabricksClient{Host: "https://some.host"}
+	assert.Equal(t, "https://some.host/#job/123", client.FormatURL("#job/123"))
+}

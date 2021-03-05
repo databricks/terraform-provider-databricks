@@ -93,6 +93,10 @@ func resourceClusterSchema() map[string]*schema.Schema {
 			Default:          0,
 			ValidateDiagFunc: validation.ToDiagFunc(validation.IntAtLeast(0)),
 		}
+		s["url"] = &schema.Schema{
+			Type:     schema.TypeString,
+			Computed: true,
+		}
 		return s
 	})
 }
@@ -180,6 +184,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, c *common.
 	if err = setPinnedStatus(d, clusterAPI); err != nil {
 		return err
 	}
+	d.Set("url", c.FormatURL("#setting/clusters/", d.Id(), "/configuration"))
 	librariesAPI := NewLibrariesAPI(ctx, c)
 	libsClusterStatus, err := waitForLibrariesInstalled(librariesAPI, clusterInfo)
 	if err != nil {

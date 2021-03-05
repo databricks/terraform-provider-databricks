@@ -33,6 +33,7 @@ func ResourceGroup() *schema.Resource {
 		if err = d.Set("allow_instance_pool_create", isGroupInstancePoolCreateEntitled(&group)); err != nil {
 			return diag.FromErr(err)
 		}
+		d.Set("url", m.(*common.DatabricksClient).FormatURL("#setting/accounts/groups/", d.Id()))
 		return nil
 	}
 	return &schema.Resource{
@@ -131,6 +132,10 @@ func ResourceGroup() *schema.Resource {
 			"allow_instance_pool_create": {
 				Type:     schema.TypeBool,
 				Optional: true,
+			},
+			"url": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 		},
 	}

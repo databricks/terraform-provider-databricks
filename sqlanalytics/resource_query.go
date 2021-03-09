@@ -35,10 +35,13 @@ type QueryParameter struct {
 
 	// Type specific structs.
 	// Only one of them may be set.
-	Text   *QueryParameterText   `json:"text,omitempty"`
-	Number *QueryParameterNumber `json:"number,omitempty"`
-	Enum   *QueryParameterEnum   `json:"enum,omitempty"`
-	Query  *QueryParameterQuery  `json:"query,omitempty"`
+	Text        *QueryParameterText        `json:"text,omitempty"`
+	Number      *QueryParameterNumber      `json:"number,omitempty"`
+	Enum        *QueryParameterEnum        `json:"enum,omitempty"`
+	Query       *QueryParameterQuery       `json:"query,omitempty"`
+	Date        *QueryParameterDate        `json:"date,omitempty"`
+	DateTime    *QueryParameterDateTime    `json:"datetime,omitempty"`
+	DateTimeSec *QueryParameterDateTimeSec `json:"datetimesec,omitempty"`
 }
 
 // QueryParameterText ...
@@ -63,6 +66,21 @@ type QueryParameterQuery struct {
 	Value    string                       `json:"value"`
 	QueryID  string                       `json:"query_id"`
 	Multiple *QueryParameterAllowMultiple `json:"multiple,omitempty"`
+}
+
+// QueryParameterDate ...
+type QueryParameterDate struct {
+	Value string `json:"value"`
+}
+
+// QueryParameterDateTime ...
+type QueryParameterDateTime struct {
+	Value string `json:"value"`
+}
+
+// QueryParameterDateTimeSec ...
+type QueryParameterDateTimeSec struct {
+	Value string `json:"value"`
 }
 
 // QueryParameterAllowMultiple ...
@@ -162,6 +180,21 @@ func (r *queryResource) toAPIObject(d *schema.ResourceData) (*api.Query, error) 
 					tmp.Multi = p.Query.Multiple.toAPIObject()
 				}
 				iface = tmp
+			case p.Date != nil:
+				iface = api.QueryParameterDate{
+					QueryParameter: ap,
+					Value:          p.Date.Value,
+				}
+			case p.DateTime != nil:
+				iface = api.QueryParameterDateTime{
+					QueryParameter: ap,
+					Value:          p.DateTime.Value,
+				}
+			case p.DateTimeSec != nil:
+				iface = api.QueryParameterDateTimeSec{
+					QueryParameter: ap,
+					Value:          p.DateTimeSec.Value,
+				}
 			default:
 				log.Fatalf("Don't know what to do for QueryParameter...")
 			}
@@ -224,6 +257,24 @@ func (r *queryResource) fromAPIObject(aq *api.Query, d *schema.ResourceData) err
 					Value:    apv.Value,
 					QueryID:  apv.QueryID,
 					Multiple: newQueryParameterAllowMultiple(apv.Multi),
+				}
+			case *api.QueryParameterDate:
+				p.Name = apv.Name
+				p.Title = apv.Title
+				p.Date = &QueryParameterDate{
+					Value: apv.Value,
+				}
+			case *api.QueryParameterDateTime:
+				p.Name = apv.Name
+				p.Title = apv.Title
+				p.DateTime = &QueryParameterDateTime{
+					Value: apv.Value,
+				}
+			case *api.QueryParameterDateTimeSec:
+				p.Name = apv.Name
+				p.Title = apv.Title
+				p.DateTimeSec = &QueryParameterDateTimeSec{
+					Value: apv.Value,
 				}
 			default:
 				log.Fatalf("Don't know what to do for type: %#v", reflect.TypeOf(apv).String())

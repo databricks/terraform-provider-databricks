@@ -169,6 +169,9 @@ type Address struct {
 	Line      string `json:"line" tf:"group:v"`
 	Lijn      string `json:"lijn" tf:"group:v"`
 	IsPrimary bool   `json:"primary"`
+
+	OptionalString string `json:"optional_string,omitempty"`
+	RequiredString string `json:"required_string"`
 }
 
 type Dummy struct {
@@ -352,6 +355,18 @@ func TestStructToData(t *testing.T) {
 	assert.Equal(t, "something", d.Get("description"))
 	assert.Equal(t, false, d.Get("enabled"))
 	assert.Equal(t, 2, d.Get("addresses.#"))
+
+	// Empty optional string should not be set.
+	{
+		_, ok := d.GetOkExists("addresses.0.optional_string")
+		assert.Falsef(t, ok, "Empty optional string should not be set in ResourceData")
+	}
+
+	// Empty required string should be set.
+	{
+		_, ok := d.GetOkExists("addresses.0.required_string")
+		assert.Truef(t, ok, "Empty required string should be set in ResourceData")
+	}
 
 	var dummyCopy Dummy
 	err = DataToStructPointer(d, s, &dummyCopy)

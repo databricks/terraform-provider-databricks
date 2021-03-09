@@ -35,13 +35,16 @@ type QueryParameter struct {
 
 	// Type specific structs.
 	// Only one of them may be set.
-	Text        *QueryParameterText        `json:"text,omitempty"`
-	Number      *QueryParameterNumber      `json:"number,omitempty"`
-	Enum        *QueryParameterEnum        `json:"enum,omitempty"`
-	Query       *QueryParameterQuery       `json:"query,omitempty"`
-	Date        *QueryParameterDate        `json:"date,omitempty"`
-	DateTime    *QueryParameterDateTime    `json:"datetime,omitempty"`
-	DateTimeSec *QueryParameterDateTimeSec `json:"datetimesec,omitempty"`
+	Text             *QueryParameterText             `json:"text,omitempty"`
+	Number           *QueryParameterNumber           `json:"number,omitempty"`
+	Enum             *QueryParameterEnum             `json:"enum,omitempty"`
+	Query            *QueryParameterQuery            `json:"query,omitempty"`
+	Date             *QueryParameterDate             `json:"date,omitempty"`
+	DateTime         *QueryParameterDateTime         `json:"datetime,omitempty"`
+	DateTimeSec      *QueryParameterDateTimeSec      `json:"datetimesec,omitempty"`
+	DateRange        *QueryParameterDateRange        `json:"date_range,omitempty"`
+	DateTimeRange    *QueryParameterDateTimeRange    `json:"datetime_range,omitempty"`
+	DateTimeSecRange *QueryParameterDateTimeSecRange `json:"datetimesec_range,omitempty"`
 }
 
 // QueryParameterText ...
@@ -80,6 +83,21 @@ type QueryParameterDateTime struct {
 
 // QueryParameterDateTimeSec ...
 type QueryParameterDateTimeSec struct {
+	Value string `json:"value"`
+}
+
+// QueryParameterDateRange ...
+type QueryParameterDateRange struct {
+	Value string `json:"value"`
+}
+
+// QueryParameterDateTimeRange ...
+type QueryParameterDateTimeRange struct {
+	Value string `json:"value"`
+}
+
+// QueryParameterDateTimeSecRange ...
+type QueryParameterDateTimeSecRange struct {
 	Value string `json:"value"`
 }
 
@@ -195,6 +213,21 @@ func (r *queryResource) toAPIObject(d *schema.ResourceData) (*api.Query, error) 
 					QueryParameter: ap,
 					Value:          p.DateTimeSec.Value,
 				}
+			case p.DateRange != nil:
+				iface = api.QueryParameterDateRange{
+					QueryParameter: ap,
+					Value:          p.DateRange.Value,
+				}
+			case p.DateTimeRange != nil:
+				iface = api.QueryParameterDateTimeRange{
+					QueryParameter: ap,
+					Value:          p.DateTimeRange.Value,
+				}
+			case p.DateTimeSecRange != nil:
+				iface = api.QueryParameterDateTimeSecRange{
+					QueryParameter: ap,
+					Value:          p.DateTimeSecRange.Value,
+				}
 			default:
 				log.Fatalf("Don't know what to do for QueryParameter...")
 			}
@@ -274,6 +307,24 @@ func (r *queryResource) fromAPIObject(aq *api.Query, d *schema.ResourceData) err
 				p.Name = apv.Name
 				p.Title = apv.Title
 				p.DateTimeSec = &QueryParameterDateTimeSec{
+					Value: apv.Value,
+				}
+			case *api.QueryParameterDateRange:
+				p.Name = apv.Name
+				p.Title = apv.Title
+				p.DateRange = &QueryParameterDateRange{
+					Value: apv.Value,
+				}
+			case *api.QueryParameterDateTimeRange:
+				p.Name = apv.Name
+				p.Title = apv.Title
+				p.DateTimeRange = &QueryParameterDateTimeRange{
+					Value: apv.Value,
+				}
+			case *api.QueryParameterDateTimeSecRange:
+				p.Name = apv.Name
+				p.Title = apv.Title
+				p.DateTimeSecRange = &QueryParameterDateTimeSecRange{
 					Value: apv.Value,
 				}
 			default:

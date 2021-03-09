@@ -180,7 +180,7 @@ func ResourceVisualization() *schema.Resource {
 					if err != nil {
 						panic(err)
 					}
-					return bytes.Compare(oldp, newp) == 0
+					return bytes.Equal(oldp, newp)
 				}
 				return m
 			}),

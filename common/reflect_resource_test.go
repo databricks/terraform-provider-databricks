@@ -358,12 +358,14 @@ func TestStructToData(t *testing.T) {
 
 	// Empty optional string should not be set.
 	{
+		// nolint: marked as deprecated, without viable alternative.
 		_, ok := d.GetOkExists("addresses.0.optional_string")
 		assert.Falsef(t, ok, "Empty optional string should not be set in ResourceData")
 	}
 
 	// Empty required string should be set.
 	{
+		// nolint: marked as deprecated, without viable alternative.
 		_, ok := d.GetOkExists("addresses.0.required_string")
 		assert.Truef(t, ok, "Empty required string should be set in ResourceData")
 	}

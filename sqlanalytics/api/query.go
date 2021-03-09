@@ -95,12 +95,13 @@ type QueryParameter struct {
 	Name  string `json:"name"`
 	Title string `json:"title,omitempty"`
 	Type  string `json:"type"`
-	Value string `json:"value"`
 }
 
 // QueryParameterText ...
 type QueryParameterText struct {
 	QueryParameter
+
+	Value string `json:"value"`
 }
 
 // MarshalJSON sets the type before marshaling.
@@ -113,6 +114,8 @@ func (p QueryParameterText) MarshalJSON() ([]byte, error) {
 // QueryParameterNumber ...
 type QueryParameterNumber struct {
 	QueryParameter
+
+	Value float64 `json:"value"`
 }
 
 // MarshalJSON sets the type before marshaling.
@@ -132,6 +135,8 @@ type QueryParameterMultipleValuesOptions struct {
 // QueryParameterEnum ...
 type QueryParameterEnum struct {
 	QueryParameter
+
+	Value   string                               `json:"value"`
 	Options string                               `json:"enumOptions"`
 	Multi   *QueryParameterMultipleValuesOptions `json:"multiValuesOptions,omitempty"`
 }
@@ -146,6 +151,8 @@ func (p QueryParameterEnum) MarshalJSON() ([]byte, error) {
 // QueryParameterQuery ...
 type QueryParameterQuery struct {
 	QueryParameter
+
+	Value   string                               `json:"value"`
 	QueryID string                               `json:"queryId"`
 	Multi   *QueryParameterMultipleValuesOptions `json:"multiValuesOptions,omitempty"`
 }

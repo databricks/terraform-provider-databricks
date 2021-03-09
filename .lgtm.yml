@@ -1,0 +1,10 @@
+
+extraction:
+  javascript:
+    index:
+      exclude: 
+        - "*"
+  python:
+    index:
+      exclude: 
+        - "*"

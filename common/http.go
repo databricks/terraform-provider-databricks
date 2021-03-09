@@ -443,7 +443,7 @@ func (c *DatabricksClient) genericQuery(ctx context.Context, method, requestURL 
 			headers += "\n"
 		}
 	}
-	log.Printf("[DEBUG] %s %s %s%v", method, requestURL, headers, c.redactedDump(requestBody))
+	log.Printf("[DEBUG] %s %s %s%v", method, requestURL, headers, c.redactedDump(requestBody)) // lgtm[go/clear-text-logging]
 
 	r, err := retryablehttp.FromRequest(request)
 	if err != nil {

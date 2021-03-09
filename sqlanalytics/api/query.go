@@ -66,19 +66,19 @@ func (o *QueryOptions) UnmarshalJSON(b []byte) error {
 		// Acquire pointer to the correct parameter type.
 		var i interface{}
 		switch qp.Type {
-		case "text":
+		case queryParameterTextTypeName:
 			i = &QueryParameterText{}
-		case "number":
+		case queryParameterNumberTypeName:
 			i = &QueryParameterNumber{}
-		case "enum":
+		case queryParameterEnumTypeName:
 			i = &QueryParameterEnum{}
-		case "query":
+		case queryParameterQueryTypeName:
 			i = &QueryParameterQuery{}
-		case "date":
+		case queryParameterDateTypeName:
 			i = &QueryParameterDate{}
-		case "datetime-local":
+		case queryParameterDateTimeTypeName:
 			i = &QueryParameterDateTime{}
-		case "datetime-with-seconds":
+		case queryParameterDateTimeSecTypeName:
 			i = &QueryParameterDateTimeSec{}
 		default:
 			panic("don't know what to do...")
@@ -103,6 +103,17 @@ type QueryParameter struct {
 	Type  string `json:"type"`
 }
 
+// Valid type values.
+const (
+	queryParameterTextTypeName        = "text"
+	queryParameterNumberTypeName      = "number"
+	queryParameterEnumTypeName        = "enum"
+	queryParameterQueryTypeName       = "query"
+	queryParameterDateTypeName        = "date"
+	queryParameterDateTimeTypeName    = "datetime-local"
+	queryParameterDateTimeSecTypeName = "datetime-with-seconds"
+)
+
 // QueryParameterText ...
 type QueryParameterText struct {
 	QueryParameter
@@ -112,7 +123,7 @@ type QueryParameterText struct {
 
 // MarshalJSON sets the type before marshaling.
 func (p QueryParameterText) MarshalJSON() ([]byte, error) {
-	p.QueryParameter.Type = "text"
+	p.QueryParameter.Type = queryParameterTextTypeName
 	type localQueryParameter QueryParameterText
 	return json.Marshal((localQueryParameter)(p))
 }
@@ -126,7 +137,7 @@ type QueryParameterNumber struct {
 
 // MarshalJSON sets the type before marshaling.
 func (p QueryParameterNumber) MarshalJSON() ([]byte, error) {
-	p.QueryParameter.Type = "number"
+	p.QueryParameter.Type = queryParameterNumberTypeName
 	type localQueryParameter QueryParameterNumber
 	return json.Marshal((localQueryParameter)(p))
 }
@@ -149,7 +160,7 @@ type QueryParameterEnum struct {
 
 // MarshalJSON sets the type before marshaling.
 func (p QueryParameterEnum) MarshalJSON() ([]byte, error) {
-	p.QueryParameter.Type = "enum"
+	p.QueryParameter.Type = queryParameterEnumTypeName
 	type localQueryParameter QueryParameterEnum
 	return json.Marshal((localQueryParameter)(p))
 }
@@ -165,7 +176,7 @@ type QueryParameterQuery struct {
 
 // MarshalJSON sets the type before marshaling.
 func (p QueryParameterQuery) MarshalJSON() ([]byte, error) {
-	p.QueryParameter.Type = "query"
+	p.QueryParameter.Type = queryParameterQueryTypeName
 	type localQueryParameter QueryParameterQuery
 	return json.Marshal((localQueryParameter)(p))
 }
@@ -179,7 +190,7 @@ type QueryParameterDate struct {
 
 // MarshalJSON sets the type before marshaling.
 func (p QueryParameterDate) MarshalJSON() ([]byte, error) {
-	p.QueryParameter.Type = "date"
+	p.QueryParameter.Type = queryParameterDateTypeName
 	type localQueryParameter QueryParameterDate
 	return json.Marshal((localQueryParameter)(p))
 }
@@ -193,7 +204,7 @@ type QueryParameterDateTime struct {
 
 // MarshalJSON sets the type before marshaling.
 func (p QueryParameterDateTime) MarshalJSON() ([]byte, error) {
-	p.QueryParameter.Type = "datetime-local"
+	p.QueryParameter.Type = queryParameterDateTimeTypeName
 	type localQueryParameter QueryParameterDateTime
 	return json.Marshal((localQueryParameter)(p))
 }
@@ -207,7 +218,7 @@ type QueryParameterDateTimeSec struct {
 
 // MarshalJSON sets the type before marshaling.
 func (p QueryParameterDateTimeSec) MarshalJSON() ([]byte, error) {
-	p.QueryParameter.Type = "datetime-with-seconds"
+	p.QueryParameter.Type = queryParameterDateTimeSecTypeName
 	type localQueryParameter QueryParameterDateTimeSec
 	return json.Marshal((localQueryParameter)(p))
 }

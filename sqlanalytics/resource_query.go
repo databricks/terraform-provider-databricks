@@ -32,14 +32,9 @@ type QuerySchedule struct {
 type QueryParameter struct {
 	Name  string `json:"name"`
 	Title string `json:"title,omitempty"`
-	Type  string `json:"type,omitempty"`
-	Value string `json:"value,omitempty"`
 
-	// // This is optional and conflicts with the struct types below.
-	// // It is included for types that don't need additional type specific parameters (e.g. text or number).
-	// // They can be specified as an empty block, but `type = "text"` is easier on the eyes.
-	// Type string `json:"type,omitempty"`
-
+	// Type specific structs.
+	// Only one of them may be set.
 	Text   *QueryParameterText   `json:"text,omitempty"`
 	Number *QueryParameterNumber `json:"number,omitempty"`
 	Enum   *QueryParameterEnum   `json:"enum,omitempty"`
@@ -48,20 +43,24 @@ type QueryParameter struct {
 
 // QueryParameterText ...
 type QueryParameterText struct {
+	Value string `json:"value"`
 }
 
 // QueryParameterNumber ...
 type QueryParameterNumber struct {
+	Value float64 `json:"value"`
 }
 
 // QueryParameterEnum ...
 type QueryParameterEnum struct {
+	Value    string                       `json:"value"`
 	Options  []string                     `json:"options"`
 	Multiple *QueryParameterAllowMultiple `json:"multiple,omitempty"`
 }
 
 // QueryParameterQuery ...
 type QueryParameterQuery struct {
+	Value    string                       `json:"value"`
 	QueryID  string                       `json:"query_id"`
 	Multiple *QueryParameterAllowMultiple `json:"multiple,omitempty"`
 }
@@ -128,7 +127,6 @@ func (r *queryResource) toAPIObject(d *schema.ResourceData) (*api.Query, error) 
 			ap := api.QueryParameter{
 				Name:  p.Name,
 				Title: p.Title,
-				Value: p.Value,
 			}
 
 			var iface interface{}
@@ -137,14 +135,17 @@ func (r *queryResource) toAPIObject(d *schema.ResourceData) (*api.Query, error) 
 			case p.Text != nil:
 				iface = api.QueryParameterText{
 					QueryParameter: ap,
+					Value:          p.Text.Value,
 				}
 			case p.Number != nil:
 				iface = api.QueryParameterNumber{
 					QueryParameter: ap,
+					Value:          p.Number.Value,
 				}
 			case p.Enum != nil:
 				tmp := api.QueryParameterEnum{
 					QueryParameter: ap,
+					Value:          p.Enum.Value,
 					Options:        strings.Join(p.Enum.Options, "\n"),
 				}
 				if p.Enum.Multiple != nil {
@@ -154,25 +155,13 @@ func (r *queryResource) toAPIObject(d *schema.ResourceData) (*api.Query, error) 
 			case p.Query != nil:
 				tmp := api.QueryParameterQuery{
 					QueryParameter: ap,
+					Value:          p.Query.Value,
 					QueryID:        p.Query.QueryID,
 				}
 				if p.Query.Multiple != nil {
 					tmp.Multi = p.Query.Multiple.toAPIObject()
 				}
 				iface = tmp
-			case p.Type != "":
-				switch p.Type {
-				case "text":
-					iface = api.QueryParameterText{
-						QueryParameter: ap,
-					}
-				case "number":
-					iface = api.QueryParameterNumber{
-						QueryParameter: ap,
-					}
-				default:
-					log.Fatalf("Don't know what to do for type: %#v", p.Type)
-				}
 			default:
 				log.Fatalf("Don't know what to do for QueryParameter...")
 			}
@@ -211,26 +200,28 @@ func (r *queryResource) fromAPIObject(aq *api.Query, d *schema.ResourceData) err
 			case *api.QueryParameterText:
 				p.Name = apv.Name
 				p.Title = apv.Title
-				p.Type = "text"
-				p.Value = apv.Value
+				p.Text = &QueryParameterText{
+					Value: apv.Value,
+				}
 			case *api.QueryParameterNumber:
 				p.Name = apv.Name
 				p.Title = apv.Title
-				p.Type = "number"
-				p.Value = apv.Value
+				p.Number = &QueryParameterNumber{
+					Value: apv.Value,
+				}
 			case *api.QueryParameterEnum:
 				p.Name = apv.Name
 				p.Title = apv.Title
-				p.Value = apv.Value
 				p.Enum = &QueryParameterEnum{
+					Value:    apv.Value,
 					Options:  strings.Split(apv.Options, "\n"),
 					Multiple: newQueryParameterAllowMultiple(apv.Multi),
 				}
 			case *api.QueryParameterQuery:
 				p.Name = apv.Name
 				p.Title = apv.Title
-				p.Value = apv.Value
 				p.Query = &QueryParameterQuery{
+					Value:    apv.Value,
 					QueryID:  apv.QueryID,
 					Multiple: newQueryParameterAllowMultiple(apv.Multi),
 				}

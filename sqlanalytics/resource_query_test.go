@@ -217,19 +217,24 @@ func TestQueryUpdateWithParams(t *testing.T) {
 			parameter {
 				name = "1"
 				title = "Title for column 1"
-				type = "text"
+				text {
+					value = ""
+				}
 			}
 
 			parameter {
 				name = "2"
 				title = "Title for column 2"
-				type = "number"
+				number {
+					value = 0
+				}
 			}
 
 			parameter {
 				name = "3"
 				title = "Title for column 3"
 				enum {
+					value = ""
 					options = ["e1", "e2"]
 					multiple {
 						prefix = "\""
@@ -243,6 +248,7 @@ func TestQueryUpdateWithParams(t *testing.T) {
 				name = "3"
 				title = "Title for column 3 without multiple"
 				enum {
+					value = ""
 					options = ["e1", "e2"]
 				}
 			}
@@ -251,6 +257,7 @@ func TestQueryUpdateWithParams(t *testing.T) {
 				name = "4"
 				title = "Title for column 4"
 				query {
+					value = ""
 					query_id = "abc"
 					multiple {
 						prefix = "\""
@@ -264,6 +271,7 @@ func TestQueryUpdateWithParams(t *testing.T) {
 				name = "4"
 				title = "Title for column 4 without multiple"
 				query {
+					value = ""
 					query_id = "abc"
 					multiple {
 						prefix = "\""

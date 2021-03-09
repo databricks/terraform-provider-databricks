@@ -205,6 +205,21 @@ func TestQueryUpdateWithParams(t *testing.T) {
 						Name: "7",
 					},
 				},
+				api.QueryParameterDateRange{
+					QueryParameter: api.QueryParameter{
+						Name: "8",
+					},
+				},
+				api.QueryParameterDateTimeRange{
+					QueryParameter: api.QueryParameter{
+						Name: "9",
+					},
+				},
+				api.QueryParameterDateTimeSecRange{
+					QueryParameter: api.QueryParameter{
+						Name: "10",
+					},
+				},
 			},
 		},
 	}
@@ -316,6 +331,27 @@ func TestQueryUpdateWithParams(t *testing.T) {
 					value = ""
 				}
 			}
+
+			parameter {
+				name = "8"
+				date_range {
+					value = ""
+				}
+			}
+
+			parameter {
+				name = "9"
+				datetime_range {
+					value = ""
+				}
+			}
+
+			parameter {
+				name = "10"
+				datetimesec_range {
+					value = ""
+				}
+			}
 		`,
 	}.Apply(t)
 
@@ -325,7 +361,7 @@ func TestQueryUpdateWithParams(t *testing.T) {
 	assert.Equal(t, "xyz", d.Get("data_source_id"))
 	assert.Equal(t, "Updated name", d.Get("name"))
 	assert.Equal(t, "SELECT 1, 2, 3, 4", d.Get("query"))
-	assert.Len(t, d.Get("parameter").([]interface{}), 9)
+	assert.Len(t, d.Get("parameter").([]interface{}), 12)
 }
 
 func TestQueryDelete(t *testing.T) {

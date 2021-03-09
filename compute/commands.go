@@ -65,6 +65,7 @@ func (a CommandsAPI) Execute(clusterID, language, commandStr string) common.Comm
 			Summary:    err.Error(),
 		}
 	}
+	// TODO: merge getCommand and waitForCommandFinished to "waitForCommandResults"
 	err = a.waitForCommandFinished(commandID, context, clusterID)
 	if err != nil {
 		return common.CommandResults{
@@ -87,9 +88,10 @@ func (a CommandsAPI) Execute(clusterID, language, commandStr string) common.Comm
 		}
 	}
 	if command.Results == nil {
+		log.Printf("[ERROR] Command has no results: %#v", command)
 		return common.CommandResults{
 			ResultType: "error",
-			Summary:    fmt.Sprintf("Command has no results: %#v", command),
+			Summary:    "Command has no results",
 		}
 	}
 	return *command.Results

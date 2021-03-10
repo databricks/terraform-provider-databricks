@@ -31,6 +31,10 @@ type AccessControl struct {
 	GroupName            string       `json:"group_name,omitempty"`
 	ServicePrincipalName string       `json:"service_principal_name,omitempty"`
 	AllPermissions       []Permission `json:"all_permissions,omitempty"`
+
+	// SQLA entities don't use the `all_permissions` nesting, but rather a simple
+	// top level string with the permission level when retrieving permissions.
+	PermissionLevel string `json:"permission_level,omitempty"`
 }
 
 func (ac AccessControl) toAccessControlChange() (AccessControlChange, bool) {
@@ -40,6 +44,14 @@ func (ac AccessControl) toAccessControlChange() (AccessControlChange, bool) {
 		}
 		return AccessControlChange{
 			PermissionLevel:      permission.PermissionLevel,
+			UserName:             ac.UserName,
+			GroupName:            ac.GroupName,
+			ServicePrincipalName: ac.ServicePrincipalName,
+		}, true
+	}
+	if ac.PermissionLevel != "" {
+		return AccessControlChange{
+			PermissionLevel:      ac.PermissionLevel,
 			UserName:             ac.UserName,
 			GroupName:            ac.GroupName,
 			ServicePrincipalName: ac.ServicePrincipalName,
@@ -98,6 +110,34 @@ type PermissionsAPI struct {
 	context context.Context
 }
 
+func urlPathForObjectID(objectID string) string {
+	if strings.HasPrefix(objectID, "/sql/") {
+		// Permissions for SQLA entities are routed differently from the others.
+		return "/preview/sql/permissions" + objectID[4:]
+	}
+	return "/preview/permissions" + objectID
+}
+
+// Helper function to select the correct HTTP method depending on the object types.
+func (a PermissionsAPI) put(objectID string, objectACL AccessControlChangeList) error {
+	if strings.HasPrefix(objectID, "/sql/") {
+		// SQLA entities always have `CAN_MANAGE` permission for the calling user.
+		me, err := identity.NewUsersAPI(a.context, a.client).Me()
+		if err != nil {
+			return err
+		}
+		objectACL.AccessControlList = append(objectACL.AccessControlList, AccessControlChange{
+			UserName:        me.UserName,
+			PermissionLevel: "CAN_MANAGE",
+		})
+
+		// The SQLA entities use HTTP POST for permission updates.
+		return a.client.Post(a.context, urlPathForObjectID(objectID), objectACL, nil)
+	}
+
+	return a.client.Put(a.context, urlPathForObjectID(objectID), objectACL)
+}
+
 // Update updates object permissions. Technically, it's using method named SetOrDelete, but here we do more
 func (a PermissionsAPI) Update(objectID string, objectACL AccessControlChangeList) error {
 	if "/authorization/tokens" == objectID {
@@ -126,7 +166,7 @@ func (a PermissionsAPI) Update(objectID string, objectACL AccessControlChangeLis
 			})
 		}
 	}
-	return a.client.Put(a.context, "/preview/permissions"+objectID, objectACL)
+	return a.put(objectID, objectACL)
 }
 
 // Delete gracefully removes permissions. Technically, it's using method named SetOrDelete, but here we do more
@@ -154,12 +194,12 @@ func (a PermissionsAPI) Delete(objectID string) error {
 			PermissionLevel: "IS_OWNER",
 		})
 	}
-	return a.client.Put(a.context, "/preview/permissions"+objectID, accl)
+	return a.put(objectID, accl)
 }
 
 // Read gets all relevant permissions for the object, including inherited ones
 func (a PermissionsAPI) Read(objectID string) (objectACL ObjectACL, err error) {
-	err = a.client.Get(a.context, "/preview/permissions"+objectID, nil, &objectACL)
+	err = a.client.Get(a.context, urlPathForObjectID(objectID), nil, &objectACL)
 	return
 }
 
@@ -193,10 +233,10 @@ func permissionsResourceIDFields(ctx context.Context) []permissionsIDFieldMappin
 		{"directory_path", "directory", "directories", PATH},
 		{"authorization", "tokens", "authorization", SIMPLE},
 		{"authorization", "passwords", "authorization", SIMPLE},
-		{"sql_endpoint_id", "sql/endpoint", "sql/endpoints", SIMPLE},
-		{"sql_dashboard_id", "sql/dashboard", "sql/dashboards", SIMPLE},
-		{"sql_alert_id", "sql/alert", "sql/alerts", SIMPLE},
-		{"sql_query_id", "sql/query", "sql/queries", SIMPLE},
+		{"sql_endpoint_id", "endpoint", "sql/endpoints", SIMPLE},
+		{"sql_dashboard_id", "dashboard", "sql/dashboards", SIMPLE},
+		{"sql_alert_id", "alert", "sql/alerts", SIMPLE},
+		{"sql_query_id", "query", "sql/queries", SIMPLE},
 	}
 }
 

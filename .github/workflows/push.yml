@@ -16,9 +16,6 @@ jobs:
       - name: Unshallow
         run: git fetch --prune --unshallow
 
-      - name: AC CLI installed?..
-        run: type az
-
       - name: Set up Go
         uses: actions/setup-go@v1
         with:

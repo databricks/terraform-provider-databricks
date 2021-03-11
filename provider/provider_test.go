@@ -217,7 +217,7 @@ func TestProviderConfigurationOptions(t *testing.T) {
 			azureWorkspaceResourceID: azResourceID,
 			env: map[string]string{
 				// // these may fail on windows. use docker container for testing.
-				"PATH": "../common/testdata:/bin",
+				"PATH": "../common/testdata",
 				"HOME": "../common/testdata",
 			},
 			assertAzure: true,
@@ -228,7 +228,7 @@ func TestProviderConfigurationOptions(t *testing.T) {
 			azureWorkspaceResourceID: azResourceID,
 			env: map[string]string{
 				// these may fail on windows. use docker container for testing.
-				"PATH": "../common/testdata:/bin",
+				"PATH": "../common/testdata",
 				"FAIL": "yes",
 				"HOME": "../common/testdata",
 			},
@@ -248,7 +248,7 @@ func TestProviderConfigurationOptions(t *testing.T) {
 			token:                    "x",
 			env: map[string]string{
 				// these may fail on windows. use docker container for testing.
-				"PATH": "../common/testdata:/bin",
+				"PATH": "../common/testdata",
 				"HOME": "../common/testdata",
 			},
 			assertError: "More than one authorization method configured: azure and token",
@@ -259,7 +259,7 @@ func TestProviderConfigurationOptions(t *testing.T) {
 			host:                     "x",
 			env: map[string]string{
 				// these may fail on windows. use docker container for testing.
-				"PATH": "../common/testdata:/bin",
+				"PATH": "../common/testdata",
 				"HOME": "../common/testdata",
 			},
 			assertAzure: true,
@@ -270,7 +270,7 @@ func TestProviderConfigurationOptions(t *testing.T) {
 			azureWorkspaceResourceID: azResourceID,
 			env: map[string]string{
 				// these may fail on windows. use docker container for testing.
-				"PATH":                "../common/testdata:/bin",
+				"PATH":                "../common/testdata",
 				"HOME":                "../common/testdata",
 				"DATABRICKS_USERNAME": "x",
 			},

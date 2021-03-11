@@ -64,7 +64,7 @@ func CommonEnvironmentClient() *DatabricksClient {
 // clears it and restores it in the end. It's meant strictly for "unit" tests
 // as last resort, because it slows down parallel execution with mutex.
 func CleanupEnvironment() func() {
-	// make a backed-up pristince environment
+	// make a backed-up pristine environment
 	envMutex.Lock()
 	prevEnv := os.Environ()
 	oldPath := os.Getenv("PATH")

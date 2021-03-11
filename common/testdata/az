@@ -16,7 +16,7 @@ if [ "" = "${EXP}" ]; then
   # Linux
   EXPIRE=$(echo $EXPIRE | sed 's/S/seconds/')
   EXPIRE=$(echo $EXPIRE | sed 's/M/minutes/')
-  EXP=$(date --date=+${EXPIRE:=10seconds} +'%F %T')
+  EXP=$(date --date=+${EXPIRE:=10seconds} +'%FT%T')
 fi
 
 /bin/echo "{

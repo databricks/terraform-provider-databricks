@@ -250,5 +250,5 @@ func TestCliAuthorizer_Error(t *testing.T) {
 	_, err := aa.cliAuthorizer("x")
 	require.Error(t, err)
 	assert.True(t, strings.HasPrefix(err.Error(), `Cannot get access token: exec: "az"`),
-		"Actual message: %s, PATH: %s HOME: %s", err.Error(), os.Getenv("PATH"), os.Getenv("HOME"))
+		"Actual message: %s, PATH: %s HOME: %s", err.Error())
 }

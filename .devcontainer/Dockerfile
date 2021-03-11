@@ -33,8 +33,7 @@ RUN \
 RUN \
     wget -c https://dl.google.com/go/go1.15.2.linux-amd64.tar.gz -O - | tar -xz -C /usr/local \
     && export PATH=$PATH:/usr/local/go/bin \
-    && echo 'export PATH="/usr/local/go/bin:$PATH"' >> /root/.bashrc \
-    && echo 'export GOPATH="/usr/local/go"' >> /root/.bashrc \
+    && echo 'export PATH="/root/go/bin:/usr/local/go/bin:$PATH"' >> /root/.bashrc \
     && ln -s /usr/local/go/bin/go /bin/go
 
 ENV GO111MODULE=on
@@ -44,7 +43,7 @@ RUN \
     # --> Delve for debugging
     go get github.com/go-delve/delve/cmd/dlv \
     # --> Go language server
-    && go get golang.org/x/tools/gopls \
+    && go get -v golang.org/x/tools/gopls \
     # --> Goimports
     && go get golang.org/x/tools/cmd/goimports \
     # --> Gotestsum
@@ -53,3 +52,5 @@ RUN \
     && go get github.com/acroca/go-symbols@v0.1.1 && go get github.com/ramya-rao-a/go-outline@7182a932836a71948db4a81991a494751eccfe77 \
     # --> GolangCI-lint
     && go get github.com/golangci/golangci-lint/cmd/golangci-lint@v1.25.0 \
+
+USER developer

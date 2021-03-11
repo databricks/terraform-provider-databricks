@@ -229,8 +229,8 @@ func TestProviderConfigurationOptions(t *testing.T) {
 			env: map[string]string{
 				// these may fail on windows. use docker container for testing.
 				"PATH": "../common/testdata",
-				"FAIL": "yes",
 				"HOME": "../common/testdata",
+				"FAIL": "yes",
 			},
 			assertError: "Invoking Azure CLI failed with the following error: This is just a failing script.",
 		},
@@ -238,7 +238,7 @@ func TestProviderConfigurationOptions(t *testing.T) {
 			// `az` not installed, which is expected for deployers on other clouds...
 			azureWorkspaceResourceID: azResourceID,
 			env: map[string]string{
-				"PATH": "../common/testdata",
+				"PATH": "whatever",
 				"HOME": "../common/testdata",
 			},
 			assertError: "Most likely Azure CLI is not installed.",
@@ -282,6 +282,7 @@ func TestProviderConfigurationOptions(t *testing.T) {
 			azureClientSecret:        "y",
 			azureTenantID:            "z",
 			env: map[string]string{
+				"PATH": "../common/testdata",
 				"HOME": "../common/testdata",
 			},
 			assertAzure: true,
@@ -298,6 +299,7 @@ func TestProviderConfigurationOptions(t *testing.T) {
 				"ARM_SUBSCRIPTION_ID": "q",
 				"ARM_TENANT_ID":       "z",
 				"HOME":                "../common/testdata",
+				"PATH":                "../common/testdata",
 			},
 			assertAzure: true,
 			assertHost:  "",

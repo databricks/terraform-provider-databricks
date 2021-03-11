@@ -19,7 +19,7 @@ if [ "" = "${EXP}" ]; then
   EXP=$(date --date=+${EXPIRE:=10seconds} +'%F %T')
 fi
 
-echo "{
+/bin/echo "{
   \"accessToken\": \"...\",
   \"expiresOn\": \"${EXP}\",
   \"subscription\": \"aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee\",

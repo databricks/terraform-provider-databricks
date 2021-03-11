@@ -8,6 +8,8 @@ RUN \
     && apt-get -y install --no-install-recommends apt-utils bash-completion curl icu-devtools jq \
     # Verify git, process tools, lsb-release (common in install instructions for CLIs) installed
     && apt-get -y install git iproute2 procps lsb-release unzip wget gcc build-essential \
+    # Github actions has Azure CLI installed
+    && curl -sL https://aka.ms/InstallAzureCLIDeb | bash \
     # Clean up
     && apt-get autoremove -y \
     && apt-get clean -y \

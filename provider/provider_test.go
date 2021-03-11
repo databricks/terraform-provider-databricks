@@ -238,7 +238,6 @@ func TestProviderConfigurationOptions(t *testing.T) {
 			// `az` not installed, which is expected for deployers on other clouds...
 			azureWorkspaceResourceID: azResourceID,
 			env: map[string]string{
-				"PATH": "/bin",
 				"HOME": "../common/testdata",
 			},
 			assertError: "Most likely Azure CLI is not installed.",

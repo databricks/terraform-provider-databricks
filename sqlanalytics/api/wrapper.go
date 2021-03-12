@@ -125,3 +125,41 @@ func (a Wrapper) UpdateQuery(q *Query) (*Query, error) {
 func (a Wrapper) DeleteQuery(q *Query) error {
 	return a.client.Delete(a.context, fmt.Sprintf("%s/queries/%s", sqlaBasePath, q.ID), nil)
 }
+
+// CreateDashboard ...
+func (a Wrapper) CreateDashboard(d *Dashboard) (*Dashboard, error) {
+	var dout Dashboard
+	err := a.client.Post(a.context, fmt.Sprintf("%s/dashboards", sqlaBasePath), d, &dout)
+	if err != nil {
+		return nil, err
+	}
+
+	return &dout, err
+}
+
+// ReadDashboard ...
+func (a Wrapper) ReadDashboard(d *Dashboard) (*Dashboard, error) {
+	var dout Dashboard
+	err := a.client.Get(a.context, fmt.Sprintf("%s/dashboards/%s", sqlaBasePath, d.ID), nil, &dout)
+	if err != nil {
+		return nil, err
+	}
+
+	return &dout, nil
+}
+
+// UpdateDashboard ...
+func (a Wrapper) UpdateDashboard(d *Dashboard) (*Dashboard, error) {
+	var dout Dashboard
+	err := a.client.Post(a.context, fmt.Sprintf("%s/dashboards/%s", sqlaBasePath, d.ID), d, &dout)
+	if err != nil {
+		return nil, err
+	}
+
+	return &dout, nil
+}
+
+// DeleteDashboard ...
+func (a Wrapper) DeleteDashboard(d *Dashboard) error {
+	return a.client.Delete(a.context, fmt.Sprintf("%s/dashboards/%s", sqlaBasePath, d.ID), nil)
+}

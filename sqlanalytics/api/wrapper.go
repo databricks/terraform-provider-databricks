@@ -163,3 +163,61 @@ func (a Wrapper) UpdateDashboard(d *Dashboard) (*Dashboard, error) {
 func (a Wrapper) DeleteDashboard(d *Dashboard) error {
 	return a.client.Delete(a.context, fmt.Sprintf("%s/dashboards/%s", sqlaBasePath, d.ID), nil)
 }
+
+// CreateWidget ...
+func (a Wrapper) CreateWidget(w *Widget) (*Widget, error) {
+	var wout Widget
+	err := a.client.Post(a.context, fmt.Sprintf("%s/widgets", sqlaBasePath), w, &wout)
+	if err != nil {
+		return nil, err
+	}
+
+	return &wout, err
+}
+
+// ReadWidget ...
+func (a Wrapper) ReadWidget(w *Widget) (*Widget, error) {
+	if w.DashboardID == "" {
+		return nil, errors.Errorf("Cannot read widget without dashboard ID")
+	}
+
+	var d Dashboard
+	err := a.client.Get(a.context, fmt.Sprintf("%s/dashboards/%s", sqlaBasePath, w.DashboardID), nil, &d)
+	if err != nil {
+		return nil, err
+	}
+
+	// Look for matching widget ID.
+	for _, wp := range d.Widgets {
+		var wnew Widget
+		err = json.Unmarshal(wp, &wnew)
+		if err != nil {
+			return nil, err
+		}
+
+		if wnew.ID == w.ID {
+			// Include dashboard ID in returned object.
+			// It's not part of the API response.
+			wnew.DashboardID = w.DashboardID
+			return &wnew, nil
+		}
+	}
+
+	return nil, errors.Errorf("Cannot find widget %d attached to dashboard %s", w.ID, w.DashboardID)
+}
+
+// UpdateWidget ...
+func (a Wrapper) UpdateWidget(w *Widget) (*Widget, error) {
+	var wout Widget
+	err := a.client.Post(a.context, fmt.Sprintf("%s/widgets/%d", sqlaBasePath, w.ID), w, &wout)
+	if err != nil {
+		return nil, err
+	}
+
+	return &wout, nil
+}
+
+// DeleteWidget ...
+func (a Wrapper) DeleteWidget(w *Widget) error {
+	return a.client.Delete(a.context, fmt.Sprintf("%s/widgets/%d", sqlaBasePath, w.ID), nil)
+}

@@ -9,7 +9,7 @@ type Query struct {
 	ID             string            `json:"id,omitempty"`
 	DataSourceID   string            `json:"data_source_id"`
 	Name           string            `json:"name"`
-	Description    string            `json:"description,omitempty"`
+	Description    string            `json:"description"`
 	Query          string            `json:"query"`
 	Schedule       *QuerySchedule    `json:"schedule,omitempty"`
 	Options        *QueryOptions     `json:"options,omitempty"`

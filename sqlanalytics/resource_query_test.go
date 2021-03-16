@@ -156,6 +156,7 @@ func TestQueryUpdateWithParams(t *testing.T) {
 						Title: "Title for column 3",
 					},
 					Options: "e1\ne2",
+					Values:  []string{"e1"},
 					Multi: &api.QueryParameterMultipleValuesOptions{
 						Prefix:    "\"",
 						Suffix:    "\"",
@@ -168,6 +169,7 @@ func TestQueryUpdateWithParams(t *testing.T) {
 						Title: "Title for column 3 without multiple",
 					},
 					Options: "e1\ne2",
+					Values:  []string{"e1"},
 					Multi:   nil,
 				},
 				api.QueryParameterQuery{
@@ -176,6 +178,7 @@ func TestQueryUpdateWithParams(t *testing.T) {
 						Title: "Title for column 4",
 					},
 					QueryID: "abc",
+					Values:  []string{"e1"},
 					Multi: &api.QueryParameterMultipleValuesOptions{
 						Prefix:    "\"",
 						Suffix:    "\"",
@@ -188,6 +191,7 @@ func TestQueryUpdateWithParams(t *testing.T) {
 						Title: "Title for column 4 without multiple",
 					},
 					QueryID: "abc",
+					Values:  []string{"e1"},
 					Multi:   nil,
 				},
 				api.QueryParameterDate{
@@ -264,8 +268,8 @@ func TestQueryUpdateWithParams(t *testing.T) {
 				name = "3"
 				title = "Title for column 3"
 				enum {
-					value = ""
 					options = ["e1", "e2"]
+					values = ["e1"]
 					multiple {
 						prefix = "\""
 						suffix = "\""
@@ -278,8 +282,8 @@ func TestQueryUpdateWithParams(t *testing.T) {
 				name = "3"
 				title = "Title for column 3 without multiple"
 				enum {
-					value = ""
 					options = ["e1", "e2"]
+					value = "e1"
 				}
 			}
 
@@ -287,8 +291,8 @@ func TestQueryUpdateWithParams(t *testing.T) {
 				name = "4"
 				title = "Title for column 4"
 				query {
-					value = ""
 					query_id = "abc"
+					values = ["e1"]
 					multiple {
 						prefix = "\""
 						suffix = "\""
@@ -301,13 +305,8 @@ func TestQueryUpdateWithParams(t *testing.T) {
 				name = "4"
 				title = "Title for column 4 without multiple"
 				query {
-					value = ""
 					query_id = "abc"
-					multiple {
-						prefix = "\""
-						suffix = "\""
-						separator = ","
-					}
+					value = "e1"
 				}
 			}
 

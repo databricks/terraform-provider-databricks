@@ -96,6 +96,23 @@ func (a Wrapper) CreateQuery(q *Query) (*Query, error) {
 		return nil, err
 	}
 
+	// New queries are created with a table visualization by default.
+	// We don't manage that visualization here, so immediately remove it.
+	if len(qp.Visualizations) > 0 {
+		for _, rv := range qp.Visualizations {
+			var v Visualization
+			err = json.Unmarshal(rv, &v)
+			if err != nil {
+				return nil, err
+			}
+			err = a.DeleteVisualization(&v)
+			if err != nil {
+				return nil, err
+			}
+		}
+		qp.Visualizations = []json.RawMessage{}
+	}
+
 	return &qp, err
 }
 

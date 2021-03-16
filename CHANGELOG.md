@@ -1,5 +1,9 @@
 # Version changelog
 
+## 0.3.2
+
+* Fix incorrect escaping of notebook names ([#566](https://github.com/databrickslabs/terraform-provider-databricks/pull/566))
+
 ## 0.3.1
 
 * Added `databricks_global_init_script` resource to configure global init scripts ([#487](https://github.com/databrickslabs/terraform-provider-databricks/issues/487)).

@@ -162,7 +162,9 @@ type QueryParameterMultipleValuesOptions struct {
 type QueryParameterEnum struct {
 	QueryParameter
 
-	Value   string                               `json:"value"`
+	Values []string `json:"-"`
+
+	Value   json.RawMessage                      `json:"value"`
 	Options string                               `json:"enumOptions"`
 	Multi   *QueryParameterMultipleValuesOptions `json:"multiValuesOptions,omitempty"`
 }
@@ -170,15 +172,63 @@ type QueryParameterEnum struct {
 // MarshalJSON sets the type before marshaling.
 func (p QueryParameterEnum) MarshalJSON() ([]byte, error) {
 	p.QueryParameter.Type = queryParameterEnumTypeName
+
+	// Set `Value` depending on multiple options being allowed or not.
+	var err error
+	if p.Multi == nil {
+		// Set as single string.
+		p.Value, err = json.Marshal(p.Values[0])
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		// Set as array of strings.
+		p.Value, err = json.Marshal(p.Values)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	type localQueryParameter QueryParameterEnum
 	return json.Marshal((localQueryParameter)(p))
+}
+
+// UnmarshalJSON deals with polymorphism of the `value` field.
+func (p *QueryParameterEnum) UnmarshalJSON(b []byte) error {
+	type localQueryParameter QueryParameterEnum
+	err := json.Unmarshal(b, (*localQueryParameter)(p))
+	if err != nil {
+		return err
+	}
+
+	// If multiple options aren't configured, assume `value` is a string.
+	// Otherwise, it's an array of strings.
+	if p.Multi == nil {
+		var v string
+		err = json.Unmarshal(p.Value, &v)
+		if err != nil {
+			return nil
+		}
+		p.Values = []string{v}
+	} else {
+		var vs []string
+		err = json.Unmarshal(p.Value, &vs)
+		if err != nil {
+			return nil
+		}
+		p.Values = vs
+	}
+
+	return nil
 }
 
 // QueryParameterQuery ...
 type QueryParameterQuery struct {
 	QueryParameter
 
-	Value   string                               `json:"value"`
+	Values []string `json:"-"`
+
+	Value   json.RawMessage                      `json:"value"`
 	QueryID string                               `json:"queryId"`
 	Multi   *QueryParameterMultipleValuesOptions `json:"multiValuesOptions,omitempty"`
 }
@@ -186,8 +236,54 @@ type QueryParameterQuery struct {
 // MarshalJSON sets the type before marshaling.
 func (p QueryParameterQuery) MarshalJSON() ([]byte, error) {
 	p.QueryParameter.Type = queryParameterQueryTypeName
+
+	// Set `Value` depending on multiple options being allowed or not.
+	var err error
+	if p.Multi == nil {
+		// Set as single string.
+		p.Value, err = json.Marshal(p.Values[0])
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		// Set as array of strings.
+		p.Value, err = json.Marshal(p.Values)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	type localQueryParameter QueryParameterQuery
 	return json.Marshal((localQueryParameter)(p))
+}
+
+// UnmarshalJSON deals with polymorphism of the `value` field.
+func (p *QueryParameterQuery) UnmarshalJSON(b []byte) error {
+	type localQueryParameter QueryParameterQuery
+	err := json.Unmarshal(b, (*localQueryParameter)(p))
+	if err != nil {
+		return err
+	}
+
+	// If multiple options aren't configured, assume `value` is a string.
+	// Otherwise, it's an array of strings.
+	if p.Multi == nil {
+		var v string
+		err = json.Unmarshal(p.Value, &v)
+		if err != nil {
+			return nil
+		}
+		p.Values = []string{v}
+	} else {
+		var vs []string
+		err = json.Unmarshal(p.Value, &vs)
+		if err != nil {
+			return nil
+		}
+		p.Values = vs
+	}
+
+	return nil
 }
 
 // QueryParameterDate ...

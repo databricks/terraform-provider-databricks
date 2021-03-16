@@ -59,14 +59,22 @@ type QueryParameterNumber struct {
 
 // QueryParameterEnum ...
 type QueryParameterEnum struct {
-	Value    string                       `json:"value"`
+	// Value iff `multiple == nil`
+	Value string `json:"value,omitempty"`
+	// Values iff `multiple != nil`
+	Values []string `json:"values,omitempty"`
+
 	Options  []string                     `json:"options"`
 	Multiple *QueryParameterAllowMultiple `json:"multiple,omitempty"`
 }
 
 // QueryParameterQuery ...
 type QueryParameterQuery struct {
-	Value    string                       `json:"value"`
+	// Value iff `multiple == nil`
+	Value string `json:"value,omitempty"`
+	// Values iff `multiple != nil`
+	Values []string `json:"values,omitempty"`
+
 	QueryID  string                       `json:"query_id"`
 	Multiple *QueryParameterAllowMultiple `json:"multiple,omitempty"`
 }
@@ -181,21 +189,25 @@ func (r *queryResource) toAPIObject(d *schema.ResourceData) (*api.Query, error) 
 			case p.Enum != nil:
 				tmp := api.QueryParameterEnum{
 					QueryParameter: ap,
-					Value:          p.Enum.Value,
 					Options:        strings.Join(p.Enum.Options, "\n"),
 				}
 				if p.Enum.Multiple != nil {
+					tmp.Values = p.Enum.Values
 					tmp.Multi = p.Enum.Multiple.toAPIObject()
+				} else {
+					tmp.Values = []string{p.Enum.Value}
 				}
 				iface = tmp
 			case p.Query != nil:
 				tmp := api.QueryParameterQuery{
 					QueryParameter: ap,
-					Value:          p.Query.Value,
 					QueryID:        p.Query.QueryID,
 				}
 				if p.Query.Multiple != nil {
+					tmp.Values = p.Query.Values
 					tmp.Multi = p.Query.Multiple.toAPIObject()
+				} else {
+					tmp.Values = []string{p.Query.Value}
 				}
 				iface = tmp
 			case p.Date != nil:
@@ -279,17 +291,25 @@ func (r *queryResource) fromAPIObject(aq *api.Query, d *schema.ResourceData) err
 				p.Name = apv.Name
 				p.Title = apv.Title
 				p.Enum = &QueryParameterEnum{
-					Value:    apv.Value,
 					Options:  strings.Split(apv.Options, "\n"),
 					Multiple: newQueryParameterAllowMultiple(apv.Multi),
+				}
+				if p.Enum.Multiple != nil {
+					p.Enum.Values = apv.Values
+				} else {
+					p.Enum.Value = apv.Values[0]
 				}
 			case *api.QueryParameterQuery:
 				p.Name = apv.Name
 				p.Title = apv.Title
 				p.Query = &QueryParameterQuery{
-					Value:    apv.Value,
 					QueryID:  apv.QueryID,
 					Multiple: newQueryParameterAllowMultiple(apv.Multi),
+				}
+				if p.Query.Multiple != nil {
+					p.Query.Values = apv.Values
+				} else {
+					p.Query.Value = apv.Values[0]
 				}
 			case *api.QueryParameterDate:
 				p.Name = apv.Name

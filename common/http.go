@@ -483,8 +483,9 @@ func makeRequestBody(method string, requestURL *string, data interface{}, marsha
 				if v.IsZero() {
 					continue
 				}
-				s = append(s, fmt.Sprintf("%v=%s", k.Interface(),
-					url.PathEscape(fmt.Sprintf("%v", v.Interface()))))
+				s = append(s, fmt.Sprintf("%s=%s",
+					strings.Replace(url.QueryEscape(fmt.Sprintf("%v", k.Interface())), "+", "%20", -1),
+					strings.Replace(url.QueryEscape(fmt.Sprintf("%v", v.Interface())), "+", "%20", -1)))
 			}
 			*requestURL += "?" + strings.Join(s, "&")
 		case reflect.Struct:

@@ -62,7 +62,7 @@ resource "databricks_azure_adls_gen2_mount" "marketing" {
 
 The following arguments are required:
 
-* `client_id` - (Required) (String) This is the client_id for the enterprise application for the service principal. 
+* `client_id` - (Required) (String) This is the client_id (Application Object ID) for the enterprise application for the service principal. 
 * `tenant_id` - (Required) (String) This is your azure directory tenant id. This is required for creating the mount.
 * `client_secret_key` - (Required) (String) This is the secret key in which your service principal/enterprise app client secret will be stored.
 * `client_secret_scope` - (Required) (String) This is the secret scope in which your service principal/enterprise app client secret will be stored.

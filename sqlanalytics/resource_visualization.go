@@ -13,8 +13,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-// Visualization ...
-type Visualization struct {
+// VisualizationEntity defines the parameters that can be set in the resource.
+type VisualizationEntity struct {
 	ID          string `json:"id,omitempty" tf:"computed"`
 	QueryID     string `json:"query_id"`
 	Type        string `json:"type"`
@@ -23,15 +23,9 @@ type Visualization struct {
 	Options     string `json:"options"`
 }
 
-type visualizationResource struct {
-	schema map[string]*schema.Schema
-}
-
-func (r *visualizationResource) toAPIObject(d *schema.ResourceData) (*api.Visualization, error) {
-	var v Visualization
-
-	// Transform from ResourceData.
-	if err := common.DataToStructPointer(d, r.schema, &v); err != nil {
+func (v *VisualizationEntity) toAPIObject(schema map[string]*schema.Schema, data *schema.ResourceData) (*api.Visualization, error) {
+	// Extract from ResourceData.
+	if err := common.DataToStructPointer(data, schema, v); err != nil {
 		return nil, err
 	}
 
@@ -54,10 +48,8 @@ func (r *visualizationResource) toAPIObject(d *schema.ResourceData) (*api.Visual
 	return &av, nil
 }
 
-func (r *visualizationResource) fromAPIObject(av *api.Visualization, d *schema.ResourceData) error {
-	var v Visualization
-
-	// Transform from API object.
+func (v *VisualizationEntity) fromAPIObject(av *api.Visualization, schema map[string]*schema.Schema, data *schema.ResourceData) error {
+	// Copy from API object.
 	v.ID = strconv.Itoa(av.ID)
 	v.QueryID = av.QueryID
 	v.Type = strings.ToLower(av.Type)
@@ -66,83 +58,7 @@ func (r *visualizationResource) fromAPIObject(av *api.Visualization, d *schema.R
 	v.Options = string(av.Options)
 
 	// Transform to ResourceData.
-	if err := common.StructToData(v, r.schema, d); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (r *visualizationResource) create(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-	av, err := r.toAPIObject(d)
-	if err != nil {
-		return err
-	}
-
-	var w = api.NewWrapper(ctx, c)
-	avNew, err := w.CreateVisualization(av)
-	if err != nil {
-		return err
-	}
-
-	err = r.fromAPIObject(avNew, d)
-	if err != nil {
-		return err
-	}
-
-	d.SetId(strconv.Itoa(avNew.ID))
-	return nil
-}
-
-func (r *visualizationResource) read(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-	av, err := r.toAPIObject(d)
-	if err != nil {
-		return err
-	}
-
-	var w = api.NewWrapper(ctx, c)
-	avNew, err := w.ReadVisualization(av)
-	if err != nil {
-		return err
-	}
-
-	err = r.fromAPIObject(avNew, d)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (r *visualizationResource) update(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-	av, err := r.toAPIObject(d)
-	if err != nil {
-		return err
-	}
-
-	var w = api.NewWrapper(ctx, c)
-	avNew, err := w.UpdateVisualization(av)
-	if err != nil {
-		return err
-	}
-
-	err = r.fromAPIObject(avNew, d)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (r *visualizationResource) delete(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-	av, err := r.toAPIObject(d)
-	if err != nil {
-		return err
-	}
-
-	var w = api.NewWrapper(ctx, c)
-	err = w.DeleteVisualization(av)
-	if err != nil {
+	if err := common.StructToData(*v, schema, data); err != nil {
 		return err
 	}
 
@@ -167,32 +83,83 @@ func jsonRemarshal(in []byte) ([]byte, error) {
 
 // ResourceVisualization ...
 func ResourceVisualization() *schema.Resource {
-	r := visualizationResource{
-		common.StructToSchema(
-			Visualization{},
-			func(m map[string]*schema.Schema) map[string]*schema.Schema {
-				// We care only about logical changes to the JSON payload in `options`.
-				m["options"].DiffSuppressFunc = func(_, old, new string, d *schema.ResourceData) bool {
-					oldp, err := jsonRemarshal([]byte(old))
-					if err != nil {
-						log.Printf("[WARN] Unable to remarshal value %#v", old)
-						return false
-					}
-					newp, err := jsonRemarshal([]byte(new))
-					if err != nil {
-						log.Printf("[WARN] Unable to remarshal value %#v", new)
-						return false
-					}
-					return bytes.Equal(oldp, newp)
+	s := common.StructToSchema(
+		VisualizationEntity{},
+		func(m map[string]*schema.Schema) map[string]*schema.Schema {
+			// We care only about logical changes to the JSON payload in `options`.
+			m["options"].DiffSuppressFunc = func(_, old, new string, d *schema.ResourceData) bool {
+				oldp, err := jsonRemarshal([]byte(old))
+				if err != nil {
+					log.Printf("[WARN] Unable to remarshal value %#v", old)
+					return false
 				}
-				return m
-			}),
-	}
+				newp, err := jsonRemarshal([]byte(new))
+				if err != nil {
+					log.Printf("[WARN] Unable to remarshal value %#v", new)
+					return false
+				}
+				return bytes.Equal(oldp, newp)
+			}
+			return m
+		})
+
 	return common.Resource{
-		Schema: r.schema,
-		Create: r.create,
-		Read:   r.read,
-		Update: r.update,
-		Delete: r.delete,
+		Create: func(ctx context.Context, data *schema.ResourceData, c *common.DatabricksClient) error {
+			var v VisualizationEntity
+			av, err := v.toAPIObject(s, data)
+			if err != nil {
+				return err
+			}
+
+			avNew, err := api.NewWrapper(ctx, c).CreateVisualization(av)
+			if err != nil {
+				return err
+			}
+
+			// No need to set anything because the resource is going to be
+			// read immediately after being created.
+			data.SetId(strconv.Itoa(avNew.ID))
+			return nil
+		},
+		Read: func(ctx context.Context, data *schema.ResourceData, c *common.DatabricksClient) error {
+			var v VisualizationEntity
+			av, err := v.toAPIObject(s, data)
+			if err != nil {
+				return err
+			}
+
+			avNew, err := api.NewWrapper(ctx, c).ReadVisualization(av)
+			if err != nil {
+				return err
+			}
+
+			return v.fromAPIObject(avNew, s, data)
+		},
+		Update: func(ctx context.Context, data *schema.ResourceData, c *common.DatabricksClient) error {
+			var v VisualizationEntity
+			av, err := v.toAPIObject(s, data)
+			if err != nil {
+				return err
+			}
+
+			_, err = api.NewWrapper(ctx, c).UpdateVisualization(av)
+			if err != nil {
+				return err
+			}
+
+			// No need to set anything because the resource is going to be
+			// read immediately after being created.
+			return nil
+		},
+		Delete: func(ctx context.Context, data *schema.ResourceData, c *common.DatabricksClient) error {
+			var v VisualizationEntity
+			av, err := v.toAPIObject(s, data)
+			if err != nil {
+				return err
+			}
+
+			return api.NewWrapper(ctx, c).DeleteVisualization(av)
+		},
+		Schema: s,
 	}.ToResource()
 }

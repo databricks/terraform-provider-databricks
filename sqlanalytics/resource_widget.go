@@ -34,7 +34,10 @@ type WidgetParameter struct {
 	Type  string `json:"type"`
 	MapTo string `json:"map_to,omitempty"`
 	Title string `json:"title,omitempty"`
-	Value string `json:"value,omitempty"`
+
+	// Mutually exclusive.
+	Value  string   `json:"value,omitempty"`
+	Values []string `json:"values,omitempty"`
 }
 
 func (w *WidgetEntity) toAPIObject(schema map[string]*schema.Schema, data *schema.ResourceData) (*api.Widget, error) {
@@ -82,13 +85,20 @@ func (w *WidgetEntity) toAPIObject(schema map[string]*schema.Schema, data *schem
 	if len(w.Parameter) > 0 {
 		aw.Options.ParameterMapping = make(map[string]api.WidgetParameterMapping)
 		for _, wp := range w.Parameter {
-			aw.Options.ParameterMapping[wp.Name] = api.WidgetParameterMapping{
+			wpm := api.WidgetParameterMapping{
 				Name:  wp.Name,
 				Type:  wp.Type,
 				MapTo: wp.MapTo,
 				Title: wp.Title,
-				Value: wp.Value,
 			}
+
+			if len(wp.Values) > 0 {
+				wpm.Value = wp.Values
+			} else {
+				wpm.Value = wp.Value
+			}
+
+			aw.Options.ParameterMapping[wp.Name] = wpm
 		}
 	}
 

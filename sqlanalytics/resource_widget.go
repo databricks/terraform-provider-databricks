@@ -79,14 +79,16 @@ func (w *WidgetEntity) toAPIObject(schema map[string]*schema.Schema, data *schem
 		}
 	}
 
-	aw.Options.ParameterMapping = make(map[string]api.WidgetParameterMapping)
-	for _, wp := range w.Parameter {
-		aw.Options.ParameterMapping[wp.Name] = api.WidgetParameterMapping{
-			Name:  wp.Name,
-			Type:  wp.Type,
-			MapTo: wp.MapTo,
-			Title: wp.Title,
-			Value: wp.Value,
+	if len(w.Parameter) > 0 {
+		aw.Options.ParameterMapping = make(map[string]api.WidgetParameterMapping)
+		for _, wp := range w.Parameter {
+			aw.Options.ParameterMapping[wp.Name] = api.WidgetParameterMapping{
+				Name:  wp.Name,
+				Type:  wp.Type,
+				MapTo: wp.MapTo,
+				Title: wp.Title,
+				Value: wp.Value,
+			}
 		}
 	}
 

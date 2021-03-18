@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"log"
 	"strconv"
 	"strings"
 
@@ -174,11 +175,13 @@ func ResourceVisualization() *schema.Resource {
 				m["options"].DiffSuppressFunc = func(_, old, new string, d *schema.ResourceData) bool {
 					oldp, err := jsonRemarshal([]byte(old))
 					if err != nil {
-						panic(err)
+						log.Printf("[WARN] Unable to remarshal value %#v", old)
+						return false
 					}
 					newp, err := jsonRemarshal([]byte(new))
 					if err != nil {
-						panic(err)
+						log.Printf("[WARN] Unable to remarshal value %#v", new)
+						return false
 					}
 					return bytes.Equal(oldp, newp)
 				}

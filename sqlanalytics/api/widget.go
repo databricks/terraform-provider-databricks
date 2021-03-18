@@ -14,17 +14,21 @@ type Widget struct {
 	VisualizationID *int    `json:"visualization_id"`
 	Text            *string `json:"text"`
 
+	// Options apply to both visualization and text widgets.
+	Options WidgetOptions `json:"options"`
+
 	// This field is no longer in use, but is still required as part of the schema.
 	// It's OK that the field value is 0 everywhere.
 	Width int `json:"width"`
 
-	Options struct {
-		ParameterMapping map[string]WidgetParameterMapping `json:"parameterMappings"`
-		Position         *WidgetPosition                   `json:"position,omitempty"`
-	} `json:"options"`
-
 	// Fields below are set only when retrieving an existing widget.
 	Visualization json.RawMessage `json:"visualization,omitempty"`
+}
+
+// WidgetOptions ...
+type WidgetOptions struct {
+	ParameterMapping map[string]WidgetParameterMapping `json:"parameterMappings"`
+	Position         *WidgetPosition                   `json:"position,omitempty"`
 }
 
 // WidgetPosition ...

@@ -15,7 +15,6 @@ import (
 
 // VisualizationEntity defines the parameters that can be set in the resource.
 type VisualizationEntity struct {
-	ID          string `json:"id,omitempty" tf:"computed"`
 	QueryID     string `json:"query_id"`
 	Type        string `json:"type"`
 	Name        string `json:"name"`
@@ -32,8 +31,8 @@ func (v *VisualizationEntity) toAPIObject(schema map[string]*schema.Schema, data
 	// Transform to API object.
 	var av api.Visualization
 
-	if v.ID != "" {
-		id, err := strconv.Atoi(v.ID)
+	if data.Id() != "" {
+		id, err := strconv.Atoi(data.Id())
 		if err != nil {
 			return nil, err
 		}
@@ -50,7 +49,6 @@ func (v *VisualizationEntity) toAPIObject(schema map[string]*schema.Schema, data
 
 func (v *VisualizationEntity) fromAPIObject(av *api.Visualization, schema map[string]*schema.Schema, data *schema.ResourceData) error {
 	// Copy from API object.
-	v.ID = strconv.Itoa(av.ID)
 	v.QueryID = av.QueryID
 	v.Type = strings.ToLower(av.Type)
 	v.Name = av.Name

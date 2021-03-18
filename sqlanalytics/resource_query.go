@@ -11,8 +11,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-// Query ...
-type Query struct {
+// QueryEntity defines the parameters that can be set in the resource.
+type QueryEntity struct {
 	ID           string           `json:"id,omitempty" tf:"computed"`
 	DataSourceID string           `json:"data_source_id"`
 	Name         string           `json:"name"`
@@ -135,15 +135,9 @@ func newQueryParameterAllowMultiple(aq *api.QueryParameterMultipleValuesOptions)
 	}
 }
 
-type queryResource struct {
-	schema map[string]*schema.Schema
-}
-
-func (r *queryResource) toAPIObject(d *schema.ResourceData) (*api.Query, error) {
-	var q Query
-
-	// Transform from ResourceData.
-	if err := common.DataToStructPointer(d, r.schema, &q); err != nil {
+func (q *QueryEntity) toAPIObject(schema map[string]*schema.Schema, data *schema.ResourceData) (*api.Query, error) {
+	// Extract from ResourceData.
+	if err := common.DataToStructPointer(data, schema, q); err != nil {
 		return nil, err
 	}
 
@@ -154,15 +148,12 @@ func (r *queryResource) toAPIObject(d *schema.ResourceData) (*api.Query, error) 
 	aq.Name = q.Name
 	aq.Description = q.Description
 	aq.Query = q.Query
+	aq.Tags = append([]string{}, q.Tags...)
 
 	if s := q.Schedule; s != nil {
 		aq.Schedule = &api.QuerySchedule{
 			Interval: s.Interval,
 		}
-	}
-
-	if len(q.Tags) > 0 {
-		aq.Tags = append(aq.Tags, q.Tags...)
 	}
 
 	if len(q.Parameter) > 0 {
@@ -251,15 +242,14 @@ func (r *queryResource) toAPIObject(d *schema.ResourceData) (*api.Query, error) 
 	return &aq, nil
 }
 
-func (r *queryResource) fromAPIObject(aq *api.Query, d *schema.ResourceData) error {
-	var q Query
-
-	// Transform from API object.
+func (q *QueryEntity) fromAPIObject(aq *api.Query, schema map[string]*schema.Schema, data *schema.ResourceData) error {
+	// Copy from API object.
 	q.ID = aq.ID
 	q.DataSourceID = aq.DataSourceID
 	q.Name = aq.Name
 	q.Description = aq.Description
 	q.Query = aq.Query
+	q.Tags = append([]string{}, aq.Tags...)
 
 	if s := aq.Schedule; s != nil {
 		q.Schedule = &QuerySchedule{
@@ -267,11 +257,9 @@ func (r *queryResource) fromAPIObject(aq *api.Query, d *schema.ResourceData) err
 		}
 	}
 
-	if len(aq.Tags) > 0 {
-		q.Tags = append(q.Tags, aq.Tags...)
-	}
-
 	if aq.Options != nil {
+		q.Parameter = nil
+
 		for _, ap := range aq.Options.Parameters {
 			var p QueryParameter
 			switch apv := ap.(type) {
@@ -356,83 +344,7 @@ func (r *queryResource) fromAPIObject(aq *api.Query, d *schema.ResourceData) err
 	}
 
 	// Transform to ResourceData.
-	if err := common.StructToData(q, r.schema, d); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (r *queryResource) create(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-	aq, err := r.toAPIObject(d)
-	if err != nil {
-		return err
-	}
-
-	var w = api.NewWrapper(ctx, c)
-	aqNew, err := w.CreateQuery(aq)
-	if err != nil {
-		return err
-	}
-
-	err = r.fromAPIObject(aqNew, d)
-	if err != nil {
-		return err
-	}
-
-	d.SetId(aqNew.ID)
-	return nil
-}
-
-func (r *queryResource) read(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-	aq, err := r.toAPIObject(d)
-	if err != nil {
-		return err
-	}
-
-	var w = api.NewWrapper(ctx, c)
-	aqNew, err := w.ReadQuery(aq)
-	if err != nil {
-		return err
-	}
-
-	err = r.fromAPIObject(aqNew, d)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (r *queryResource) update(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-	aq, err := r.toAPIObject(d)
-	if err != nil {
-		return err
-	}
-
-	var w = api.NewWrapper(ctx, c)
-	aqNew, err := w.UpdateQuery(aq)
-	if err != nil {
-		return err
-	}
-
-	err = r.fromAPIObject(aqNew, d)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (r *queryResource) delete(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-	aq, err := r.toAPIObject(d)
-	if err != nil {
-		return err
-	}
-
-	var w = api.NewWrapper(ctx, c)
-	err = w.DeleteQuery(aq)
-	if err != nil {
+	if err := common.StructToData(*q, schema, data); err != nil {
 		return err
 	}
 
@@ -441,18 +353,69 @@ func (r *queryResource) delete(ctx context.Context, d *schema.ResourceData, c *c
 
 // ResourceQuery ...
 func ResourceQuery() *schema.Resource {
-	r := queryResource{
-		common.StructToSchema(
-			Query{},
-			func(m map[string]*schema.Schema) map[string]*schema.Schema {
-				return m
-			}),
-	}
+	s := common.StructToSchema(
+		QueryEntity{},
+		func(m map[string]*schema.Schema) map[string]*schema.Schema {
+			return m
+		})
+
 	return common.Resource{
-		Schema: r.schema,
-		Create: r.create,
-		Read:   r.read,
-		Update: r.update,
-		Delete: r.delete,
+		Create: func(ctx context.Context, data *schema.ResourceData, c *common.DatabricksClient) error {
+			var q QueryEntity
+			aq, err := q.toAPIObject(s, data)
+			if err != nil {
+				return err
+			}
+
+			aqNew, err := api.NewWrapper(ctx, c).CreateQuery(aq)
+			if err != nil {
+				return err
+			}
+
+			// No need to set anything because the resource is going to be
+			// read immediately after being created.
+			data.SetId(aqNew.ID)
+			return nil
+		},
+		Read: func(ctx context.Context, data *schema.ResourceData, c *common.DatabricksClient) error {
+			var q QueryEntity
+			aq, err := q.toAPIObject(s, data)
+			if err != nil {
+				return err
+			}
+
+			aqNew, err := api.NewWrapper(ctx, c).ReadQuery(aq)
+			if err != nil {
+				return err
+			}
+
+			return q.fromAPIObject(aqNew, s, data)
+		},
+		Update: func(ctx context.Context, data *schema.ResourceData, c *common.DatabricksClient) error {
+			var q QueryEntity
+			aq, err := q.toAPIObject(s, data)
+			if err != nil {
+				return err
+			}
+
+			_, err = api.NewWrapper(ctx, c).UpdateQuery(aq)
+			if err != nil {
+				return err
+			}
+
+			// No need to set anything because the resource is going to be
+			// read immediately after being created.
+			return nil
+		},
+		Delete: func(ctx context.Context, data *schema.ResourceData, c *common.DatabricksClient) error {
+			var q QueryEntity
+			aq, err := q.toAPIObject(s, data)
+			if err != nil {
+				return err
+			}
+
+			return api.NewWrapper(ctx, c).DeleteQuery(aq)
+		},
+		Schema: s,
 	}.ToResource()
 }

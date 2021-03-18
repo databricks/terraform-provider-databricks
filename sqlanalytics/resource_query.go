@@ -13,7 +13,6 @@ import (
 
 // QueryEntity defines the parameters that can be set in the resource.
 type QueryEntity struct {
-	ID           string           `json:"id,omitempty" tf:"computed"`
 	DataSourceID string           `json:"data_source_id"`
 	Name         string           `json:"name"`
 	Description  string           `json:"description,omitempty"`
@@ -143,7 +142,7 @@ func (q *QueryEntity) toAPIObject(schema map[string]*schema.Schema, data *schema
 
 	// Transform to API object.
 	var aq api.Query
-	aq.ID = q.ID
+	aq.ID = data.Id()
 	aq.DataSourceID = q.DataSourceID
 	aq.Name = q.Name
 	aq.Description = q.Description
@@ -244,7 +243,6 @@ func (q *QueryEntity) toAPIObject(schema map[string]*schema.Schema, data *schema
 
 func (q *QueryEntity) fromAPIObject(aq *api.Query, schema map[string]*schema.Schema, data *schema.ResourceData) error {
 	// Copy from API object.
-	q.ID = aq.ID
 	q.DataSourceID = aq.DataSourceID
 	q.Name = aq.Name
 	q.Description = aq.Description

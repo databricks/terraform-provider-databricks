@@ -77,6 +77,8 @@ func DatabricksProvider() *schema.Provider {
 			"databricks_global_init_script": workspace.ResourceGlobalInitScript(),
 			"databricks_notebook":           workspace.ResourceNotebook(),
 			"databricks_workspace_conf":     workspace.ResourceWorkspaceConf(),
+
+			"databricks_live_table": compute.ResourceLiveTable(),
 		},
 		Schema: map[string]*schema.Schema{
 			"host": {

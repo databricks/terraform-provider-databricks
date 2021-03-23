@@ -140,6 +140,13 @@ type AzureAttributes struct {
 	SpotBidMaxPrice float64      `json:"spot_bid_max_price,omitempty" tf:"computed"`
 }
 
+// GcpAttributes encapsultes GCP specific attributes
+// https://docs.gcp.databricks.com/dev-tools/api/latest/clusters.html#clustergcpattributes
+type GcpAttributes struct {
+	UsePreemptibleExecutors bool   `json:"use_preemptible_executors,omitempty" tf:"computed"`
+	GoogleServiceAccount    string `json:"google_service_account,omitempty" tf:"computed"`
+}
+
 // DbfsStorageInfo contains the destination string for DBFS
 type DbfsStorageInfo struct {
 	Destination string `json:"destination"`
@@ -257,6 +264,7 @@ type Cluster struct {
 	PolicyID               string           `json:"policy_id,omitempty"`
 	AwsAttributes          *AwsAttributes   `json:"aws_attributes,omitempty" tf:"conflicts:instance_pool_id"`
 	AzureAttributes        *AzureAttributes `json:"azure_attributes,omitempty" tf:"conflicts:instance_pool_id"`
+	GcpAttributes          *GcpAttributes   `json:"gcp_attributes,omitempty" tf:"conflicts:instance_pool_id"`
 	AutoterminationMinutes int32            `json:"autotermination_minutes,omitempty"`
 
 	SparkConf    map[string]string `json:"spark_conf,omitempty"`
@@ -292,6 +300,7 @@ type ClusterInfo struct {
 	SparkConf                 map[string]string  `json:"spark_conf,omitempty"`
 	AwsAttributes             *AwsAttributes     `json:"aws_attributes,omitempty"`
 	AzureAttributes           *AzureAttributes   `json:"azure_attributes,omitempty"`
+	GcpAttributes             *GcpAttributes     `json:"gcp_attributes,omitempty"`
 	NodeTypeID                string             `json:"node_type_id,omitempty"`
 	DriverNodeTypeID          string             `json:"driver_node_type_id,omitempty"`
 	SSHPublicKeys             []string           `json:"ssh_public_keys,omitempty"`

@@ -24,6 +24,7 @@ const (
 	AwsAvailabilitySpotWithFallback = "SPOT_WITH_FALLBACK"
 )
 
+// https://docs.microsoft.com/en-us/azure/databricks/dev-tools/api/latest/clusters#--azureavailability
 const (
 	// AzureAvailabilitySpot is spot instance type for clusters
 	AzureAvailabilitySpot = "SPOT_AZURE"
@@ -133,7 +134,7 @@ type AwsAttributes struct {
 }
 
 // AzureAttributes encapsulates the Azure attributes for Azure based clusters
-// TODO: add link to documentation after release
+// https://docs.microsoft.com/en-us/azure/databricks/dev-tools/api/latest/clusters#clusterazureattributes
 type AzureAttributes struct {
 	FirstOnDemand   int32        `json:"first_on_demand,omitempty" tf:"computed"`
 	Availability    Availability `json:"availability,omitempty" tf:"computed"`
@@ -378,6 +379,13 @@ type InstancePoolAwsAttributes struct {
 	SpotBidPricePercent int32        `json:"spot_bid_price_percent,omitempty"`
 }
 
+// InstancePoolAzureAttributes contains aws attributes for Azure Databricks deployments for instance pools
+// https://docs.microsoft.com/en-us/azure/databricks/dev-tools/api/latest/instance-pools#clusterinstancepoolazureattributes
+type InstancePoolAzureAttributes struct {
+	Availability    Availability `json:"availability,omitempty"`
+	SpotBidMaxPrice float64      `json:"spot_bid_max_price,omitempty" tf:"computed"`
+}
+
 // InstancePoolDiskType contains disk type information for each of the different cloud service providers
 type InstancePoolDiskType struct {
 	AzureDiskVolumeType string `json:"azure_disk_volume_type,omitempty"`
@@ -393,17 +401,18 @@ type InstancePoolDiskSpec struct {
 
 // InstancePool describes the instance pool object on Databricks
 type InstancePool struct {
-	InstancePoolID                     string                     `json:"instance_pool_id,omitempty" tf:"computed"`
-	InstancePoolName                   string                     `json:"instance_pool_name"`
-	MinIdleInstances                   int32                      `json:"min_idle_instances,omitempty"`
-	MaxCapacity                        int32                      `json:"max_capacity,omitempty"`
-	IdleInstanceAutoTerminationMinutes int32                      `json:"idle_instance_autotermination_minutes"`
-	AwsAttributes                      *InstancePoolAwsAttributes `json:"aws_attributes,omitempty"`
-	NodeTypeID                         string                     `json:"node_type_id"`
-	CustomTags                         map[string]string          `json:"custom_tags,omitempty"`
-	EnableElasticDisk                  bool                       `json:"enable_elastic_disk,omitempty"`
-	DiskSpec                           *InstancePoolDiskSpec      `json:"disk_spec,omitempty"`
-	PreloadedSparkVersions             []string                   `json:"preloaded_spark_versions,omitempty"`
+	InstancePoolID                     string                       `json:"instance_pool_id,omitempty" tf:"computed"`
+	InstancePoolName                   string                       `json:"instance_pool_name"`
+	MinIdleInstances                   int32                        `json:"min_idle_instances,omitempty"`
+	MaxCapacity                        int32                        `json:"max_capacity,omitempty"`
+	IdleInstanceAutoTerminationMinutes int32                        `json:"idle_instance_autotermination_minutes"`
+	AwsAttributes                      *InstancePoolAwsAttributes   `json:"aws_attributes,omitempty"`
+	AzureAttributes                    *InstancePoolAzureAttributes `json:"azure_attributes,omitempty"`
+	NodeTypeID                         string                       `json:"node_type_id"`
+	CustomTags                         map[string]string            `json:"custom_tags,omitempty"`
+	EnableElasticDisk                  bool                         `json:"enable_elastic_disk,omitempty"`
+	DiskSpec                           *InstancePoolDiskSpec        `json:"disk_spec,omitempty"`
+	PreloadedSparkVersions             []string                     `json:"preloaded_spark_versions,omitempty"`
 }
 
 // InstancePoolStats contains the stats on a given pool
@@ -416,20 +425,21 @@ type InstancePoolStats struct {
 
 // InstancePoolAndStats encapsulates a get response from the GET api for instance pools on Databricks
 type InstancePoolAndStats struct {
-	InstancePoolID                     string                     `json:"instance_pool_id,omitempty" tf:"computed"`
-	InstancePoolName                   string                     `json:"instance_pool_name"`
-	MinIdleInstances                   int32                      `json:"min_idle_instances,omitempty"`
-	MaxCapacity                        int32                      `json:"max_capacity,omitempty"`
-	AwsAttributes                      *InstancePoolAwsAttributes `json:"aws_attributes,omitempty"`
-	NodeTypeID                         string                     `json:"node_type_id"`
-	DefaultTags                        map[string]string          `json:"default_tags,omitempty" tf:"computed"`
-	CustomTags                         map[string]string          `json:"custom_tags,omitempty"`
-	IdleInstanceAutoTerminationMinutes int32                      `json:"idle_instance_autotermination_minutes"`
-	EnableElasticDisk                  bool                       `json:"enable_elastic_disk,omitempty"`
-	DiskSpec                           *InstancePoolDiskSpec      `json:"disk_spec,omitempty"`
-	PreloadedSparkVersions             []string                   `json:"preloaded_spark_versions,omitempty"`
-	State                              string                     `json:"state,omitempty"`
-	Stats                              *InstancePoolStats         `json:"stats,omitempty"`
+	InstancePoolID                     string                       `json:"instance_pool_id,omitempty" tf:"computed"`
+	InstancePoolName                   string                       `json:"instance_pool_name"`
+	MinIdleInstances                   int32                        `json:"min_idle_instances,omitempty"`
+	MaxCapacity                        int32                        `json:"max_capacity,omitempty"`
+	AwsAttributes                      *InstancePoolAwsAttributes   `json:"aws_attributes,omitempty"`
+	AzureAttributes                    *InstancePoolAzureAttributes `json:"azure_attributes,omitempty"`
+	NodeTypeID                         string                       `json:"node_type_id"`
+	DefaultTags                        map[string]string            `json:"default_tags,omitempty" tf:"computed"`
+	CustomTags                         map[string]string            `json:"custom_tags,omitempty"`
+	IdleInstanceAutoTerminationMinutes int32                        `json:"idle_instance_autotermination_minutes"`
+	EnableElasticDisk                  bool                         `json:"enable_elastic_disk,omitempty"`
+	DiskSpec                           *InstancePoolDiskSpec        `json:"disk_spec,omitempty"`
+	PreloadedSparkVersions             []string                     `json:"preloaded_spark_versions,omitempty"`
+	State                              string                       `json:"state,omitempty"`
+	Stats                              *InstancePoolStats           `json:"stats,omitempty"`
 }
 
 // InstancePoolList shows list of instance pools

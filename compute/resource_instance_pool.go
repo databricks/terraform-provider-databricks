@@ -61,6 +61,8 @@ func ResourceInstancePool() *schema.Resource {
 		s["custom_tags"].ForceNew = true
 		s["enable_elastic_disk"].ForceNew = true
 		s["enable_elastic_disk"].Default = true
+		s["aws_attributes"].ConflictsWith = []string{"azure_attributes"}
+		s["azure_attributes"].ConflictsWith = []string{"aws_attributes"}
 		// TODO: check if it's really force new...
 		if v, err := common.SchemaPath(s, "aws_attributes", "availability"); err == nil {
 			v.ForceNew = true
@@ -69,6 +71,12 @@ func ResourceInstancePool() *schema.Resource {
 			v.ForceNew = true
 		}
 		if v, err := common.SchemaPath(s, "aws_attributes", "spot_bid_price_percent"); err == nil {
+			v.ForceNew = true
+		}
+		if v, err := common.SchemaPath(s, "azure_attributes", "availability"); err == nil {
+			v.ForceNew = true
+		}
+		if v, err := common.SchemaPath(s, "azure_attributes", "spot_bid_max_price"); err == nil {
 			v.ForceNew = true
 		}
 		if v, err := common.SchemaPath(s, "disk_spec", "disk_type", "azure_disk_volume_type"); err == nil {

@@ -328,7 +328,10 @@ func modifyClusterRequest(clusterModel *Cluster) {
 		clusterModel.AzureAttributes = nil
 	}
 	if clusterModel.GcpAttributes != nil {
-		clusterModel.GcpAttributes = nil
+		gcpAttributes := GcpAttributes{
+			GoogleServiceAccount: clusterModel.GcpAttributes.GoogleServiceAccount,
+		}
+		clusterModel.GcpAttributes = &gcpAttributes
 	}
 	clusterModel.EnableElasticDisk = false
 	clusterModel.NodeTypeID = ""

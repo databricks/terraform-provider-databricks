@@ -1055,7 +1055,7 @@ func TestResourceClusterUpdate_FailNumWorkersZero(t *testing.T) {
 	require.Equal(t, true, strings.Contains(err.Error(), "NumWorkers could be 0 only for SingleNode clusters"))
 }
 
-func TestModifyClusterRequest(t *testing.T) {
+func TestModifyClusterRequestAws(t *testing.T) {
 	c := Cluster{
 		InstancePoolID: "a",
 		AwsAttributes: &AwsAttributes{
@@ -1068,6 +1068,40 @@ func TestModifyClusterRequest(t *testing.T) {
 	}
 	modifyClusterRequest(&c)
 	assert.Equal(t, "", c.AwsAttributes.ZoneID)
+	assert.Equal(t, "", c.NodeTypeID)
+	assert.Equal(t, "", c.DriverNodeTypeID)
+	assert.Equal(t, false, c.EnableElasticDisk)
+}
+
+func TestModifyClusterRequestAzure(t *testing.T) {
+	c := Cluster{
+		InstancePoolID: "a",
+		AzureAttributes: &AzureAttributes{
+			FirstOnDemand: 1,
+		},
+		EnableElasticDisk: true,
+		NodeTypeID:        "d",
+		DriverNodeTypeID:  "e",
+	}
+	modifyClusterRequest(&c)
+	assert.Nil(t, c.AzureAttributes)
+	assert.Equal(t, "", c.NodeTypeID)
+	assert.Equal(t, "", c.DriverNodeTypeID)
+	assert.Equal(t, false, c.EnableElasticDisk)
+}
+
+func TestModifyClusterRequestGcp(t *testing.T) {
+	c := Cluster{
+		InstancePoolID: "a",
+		GcpAttributes: &GcpAttributes{
+			UsePreemptibleExecutors: true,
+		},
+		EnableElasticDisk: true,
+		NodeTypeID:        "d",
+		DriverNodeTypeID:  "e",
+	}
+	modifyClusterRequest(&c)
+	assert.Equal(t, false, c.GcpAttributes.UsePreemptibleExecutors)
 	assert.Equal(t, "", c.NodeTypeID)
 	assert.Equal(t, "", c.DriverNodeTypeID)
 	assert.Equal(t, false, c.EnableElasticDisk)

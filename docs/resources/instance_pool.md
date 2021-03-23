@@ -56,6 +56,17 @@ The following arguments are required:
 * `availability` - (Optional) (String) Availability type used for all instances in the pool. Only `ON_DEMAND` and `SPOT` are supported.
 * `zone_id` - (Required) (String) Identifier for the availability zone/datacenter in which the instance pool resides. This string is of a form like `"us-west-2a"`. The provided availability zone must be in the same region as the Databricks deployment. For example, `"us-west-2a"` is not a valid zone ID if the Databricks deployment resides in the `"us-east-1"` region. This is an optional field. If not specified, a default zone is used. You can find the list of available zones as well as the default value by using the [List Zones API](https://docs.databricks.com/dev-tools/api/latest/clusters.html#clusterclusterservicelistavailablezones).
 
+## azure_attributes Configuration Block
+
+`azure_attributes` optional configuration block contains attributes related to [instance pools on Azure](https://docs.microsoft.com/en-us/azure/databricks/dev-tools/api/latest/instance-pools#--instancepoolazureattributes).
+
+-> **Note** *(Azure only)* Please specify empty configuration block (`azure_attributes {}`), even if you're not setting any custom values. This will prevent any resource update issues.
+
+The following options are [available](https://docs.microsoft.com/en-us/azure/databricks/dev-tools/api/latest/clusters#--azureattributes):
+
+* `availability` - (Optional) Availability type used for all subsequent nodes past the `first_on_demand` ones. Valid values are `SPOT_AZURE` and `ON_DEMAND_AZURE`.
+* `spot_bid_max_price` - (Optional) The max price for Azure spot instances.  Use `-1` to specify lowest price.
+
 
 ### disk_spec Configuration Block
 

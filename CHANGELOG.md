@@ -5,6 +5,10 @@
 * Fix incorrect escaping of notebook names ([#566](https://github.com/databrickslabs/terraform-provider-databricks/pull/566))
 * Added support for spot instances on Azure ([#571](https://github.com/databrickslabs/terraform-provider-databricks/pull/571))
 
+**Behavior changes**
+
+* Job schedules now have their schedule configuration block to support pause_status as a optional field. ([#575](https://github.com/databrickslabs/terraform-provider-databricks/pull/575))
+
 ## 0.3.1
 
 * Added `databricks_global_init_script` resource to configure global init scripts ([#487](https://github.com/databrickslabs/terraform-provider-databricks/issues/487)).

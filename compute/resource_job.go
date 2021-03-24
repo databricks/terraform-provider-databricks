@@ -115,6 +115,14 @@ var jobSchema = common.StructToSchema(JobSettings{},
 			p.Required = false
 		}
 
+		if p, err := common.SchemaPath(s, "schedule", "pause_status"); err == nil {
+			p.Optional = true
+			p.Computed = true
+			p.Type = schema.TypeString
+			p.Required = false
+			p.ValidateFunc = validation.StringInSlice([]string{"PAUSED", "UNPAUSED"}, false)
+		}
+
 		if v, err := common.SchemaPath(s, "new_cluster", "spark_conf"); err == nil {
 			v.DiffSuppressFunc = func(k, old, new string, d *schema.ResourceData) bool {
 				isPossiblyLegacyConfig := "new_cluster.0.spark_conf.%" == k && "1" == old && "0" == new

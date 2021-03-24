@@ -520,7 +520,7 @@ type JobEmailNotifications struct {
 type CronSchedule struct {
 	QuartzCronExpression string `json:"quartz_cron_expression"`
 	TimezoneID           string `json:"timezone_id"`
-	PauseStatus          string `json:"pause_status,omitempty" tf:"computed"`
+	PauseStatus          string `json:"pause_status,omitempty"`
 }
 
 // JobSettings contains the information for configuring a job on databricks

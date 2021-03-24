@@ -263,6 +263,7 @@ func collectionToMaps(v interface{}, s *schema.Schema) ([]interface{}, error) {
 			path []string, valueField *reflect.Value) error {
 			fieldName := path[len(path)-1]
 			fieldValue := valueField.Interface()
+			fieldPath := strings.Join(path, ".")
 			switch fieldSchema.Type {
 			case schema.TypeList, schema.TypeSet:
 				nv, err := collectionToMaps(fieldValue, fieldSchema)
@@ -271,7 +272,7 @@ func collectionToMaps(v interface{}, s *schema.Schema) ([]interface{}, error) {
 				}
 				data[fieldName] = nv
 			default:
-				if s, ok := fieldValue.(string); ok && s == "" {
+				if fieldSchema.Optional && isValueNilOrEmpty(valueField, fieldPath) {
 					return nil
 				}
 				data[fieldName] = fieldValue

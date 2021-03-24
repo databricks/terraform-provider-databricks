@@ -1,25 +1,25 @@
 #!/bin/bash
 
 if [ "yes" == "$FAIL" ]; then 
-    >&2 echo "This is just a failing script."
+    >&2 /bin/echo "This is just a failing script."
     exit 1
 fi
 
 if [ "corrupt" == "$FAIL" ]; then 
-    echo "{accessToken: ..corrupt"
+    /bin/echo "{accessToken: ..corrupt"
     exit
 fi
 
 # Macos
-EXP="$(date -v+${EXPIRE:=10S} +'%F %T' 2>/dev/null)"
+EXP="$(/bin/date -v+${EXPIRE:=10S} +'%F %T' 2>/dev/null)"
 if [ "" = "${EXP}" ]; then
   # Linux
-  EXPIRE=$(echo $EXPIRE | sed 's/S/seconds/')
-  EXPIRE=$(echo $EXPIRE | sed 's/M/minutes/')
-  EXP=$(date --date=+${EXPIRE:=10seconds} +'%F %T')
+  EXPIRE=$(/bin/echo $EXPIRE | /bin/sed 's/S/seconds/')
+  EXPIRE=$(/bin/echo $EXPIRE | /bin/sed 's/M/minutes/')
+  EXP=$(/bin/date --date=+${EXPIRE:=10seconds} +'%FT%TZ')
 fi
 
-echo "{
+/bin/echo "{
   \"accessToken\": \"...\",
   \"expiresOn\": \"${EXP}\",
   \"subscription\": \"aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee\",

@@ -83,11 +83,7 @@ func TestAddSpManagementTokenVisitor_RefreshedError(t *testing.T) {
 
 func TestGetClientSecretAuthorizer(t *testing.T) {
 	aa := AzureAuth{}
-	auth, err := aa.getClientSecretAuthorizer("x")
-	require.NotNil(t, auth)
-	require.NoError(t, err)
-
-	auth, err = aa.getClientSecretAuthorizer(AzureDatabricksResourceID)
+	auth, err := aa.getClientSecretAuthorizer(AzureDatabricksResourceID)
 	require.Nil(t, auth)
 	require.EqualError(t, err, "parameter 'clientID' cannot be empty")
 

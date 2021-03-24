@@ -126,7 +126,7 @@ func TestInternalRefresh_ExitError(t *testing.T) {
 
 func TestInternalRefresh_OtherError(t *testing.T) {
 	defer CleanupEnvironment()()
-	os.Setenv("PATH", "whatever:/bin")
+	os.Setenv("PATH", "whatever")
 
 	rct := refreshableCliToken{
 		token: &adal.Token{
@@ -226,7 +226,7 @@ func TestConfigureWithAzureCLI_Error(t *testing.T) {
 
 func TestConfigureWithAzureCLI_NotInstalled(t *testing.T) {
 	defer CleanupEnvironment()()
-	os.Setenv("PATH", "whatever:/bin")
+	os.Setenv("PATH", "whatever")
 
 	// token without expiry in this case
 	client, server := singleRequestServer(t, "POST", "/api/2.0/token/create", `{
@@ -245,7 +245,7 @@ func TestConfigureWithAzureCLI_NotInstalled(t *testing.T) {
 
 func TestCliAuthorizer_Error(t *testing.T) {
 	defer CleanupEnvironment()()
-	os.Setenv("PATH", "whatever:/bin")
+	os.Setenv("PATH", "whatever")
 	aa := AzureAuth{}
 	_, err := aa.cliAuthorizer("x")
 	require.Error(t, err)

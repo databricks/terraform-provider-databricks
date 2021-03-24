@@ -116,10 +116,6 @@ var jobSchema = common.StructToSchema(JobSettings{},
 		}
 
 		if p, err := common.SchemaPath(s, "schedule", "pause_status"); err == nil {
-			p.Optional = true
-			p.Computed = true
-			p.Type = schema.TypeString
-			p.Required = false
 			p.ValidateFunc = validation.StringInSlice([]string{"PAUSED", "UNPAUSED"}, false)
 		}
 

@@ -40,17 +40,19 @@ func ResourceCluster() *schema.Resource {
 	}.ToResource()
 }
 
+func sparkConfDiffSuppressFunc(k, old, new string, d *schema.ResourceData) bool {
+	isPossiblyLegacyConfig := "spark_conf.%" == k && "1" == old && "0" == new
+	isLegacyConfig := "spark_conf.spark.databricks.delta.preview.enabled" == k
+	if isPossiblyLegacyConfig || isLegacyConfig {
+		log.Printf("[DEBUG] Suppressing diff for k=%#v old=%#v new=%#v", k, old, new)
+		return true
+	}
+	return false
+}
+
 func resourceClusterSchema() map[string]*schema.Schema {
 	return common.StructToSchema(Cluster{}, func(s map[string]*schema.Schema) map[string]*schema.Schema {
-		s["spark_conf"].DiffSuppressFunc = func(k, old, new string, d *schema.ResourceData) bool {
-			isPossiblyLegacyConfig := "spark_conf.%" == k && "1" == old && "0" == new
-			isLegacyConfig := "spark_conf.spark.databricks.delta.preview.enabled" == k
-			if isPossiblyLegacyConfig || isLegacyConfig {
-				log.Printf("[DEBUG] Suppressing diff for k=%#v old=%#v new=%#v", k, old, new)
-				return true
-			}
-			return false
-		}
+		s["spark_conf"].DiffSuppressFunc = sparkConfDiffSuppressFunc
 		// adds `libraries` configuration block
 		s["library"] = common.StructToSchema(ClusterLibraryList{},
 			func(ss map[string]*schema.Schema) map[string]*schema.Schema {

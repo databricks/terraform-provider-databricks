@@ -207,6 +207,10 @@ func ResourceExample() *schema.Resource {
 
 *Write unit tests.* 
 
+## Debugging
+
+**TF_LOG=DEBUG terraform apply** allows you to see the internal logs from `terraform apply`.
+
 ## Testing
 
 * [Integration tests](scripts/README.md) should be run at a client level against both azure and aws to maintain sdk parity against both apis.

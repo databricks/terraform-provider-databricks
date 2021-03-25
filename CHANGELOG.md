@@ -4,6 +4,7 @@
 
 * Fix incorrect escaping of notebook names ([#566](https://github.com/databrickslabs/terraform-provider-databricks/pull/566))
 * Added support for spot instances on Azure ([#571](https://github.com/databrickslabs/terraform-provider-databricks/pull/571))
+* Fix entitlements for groups. ([#549](https://github.com/databrickslabs/terraform-provider-databricks/pull/549))
 
 ## 0.3.1
 

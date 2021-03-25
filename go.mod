@@ -15,18 +15,11 @@ require (
 	github.com/hashicorp/hcl/v2 v2.9.0
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.4.0
 	github.com/mitchellh/go-homedir v1.1.0
-	github.com/onsi/ginkgo v1.8.0 // indirect
-	github.com/onsi/gomega v1.4.3 // indirect
 	github.com/pkg/errors v0.9.1
-	github.com/sirupsen/logrus v1.0.5 // indirect
 	github.com/smartystreets/goconvey v1.6.4 // indirect
 	github.com/stretchr/testify v1.7.0
 	github.com/zclconf/go-cty v1.8.0
 	golang.org/x/time v0.0.0-20191024005414-555d28b269f0
 	golang.org/x/tools v0.1.0 // indirect
-	gopkg.in/airbrake/gobrake.v2 v2.0.9 // indirect
-	gopkg.in/gemnasium/logrus-airbrake-hook.v2 v2.1.2 // indirect
 	gopkg.in/ini.v1 v1.62.0
-	gotest.tools v2.1.0+incompatible // indirect
-	gotest.tools/gotestsum v1.6.2 // indirect
 )

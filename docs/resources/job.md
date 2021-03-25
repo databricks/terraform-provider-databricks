@@ -69,7 +69,7 @@ The following arguments are required:
 
 * `quartz_cron_expression` - (Required) A [Cron expression using Quartz syntax](http://www.quartz-scheduler.org/documentation/quartz-2.3.0/tutorials/crontrigger.html) that describes the schedule for a job. This field is required.
 * `timezone_id` - (Required) A Java timezone ID. The schedule for a job will be resolved with respect to this timezone. See Java TimeZone for details. This field is required.
-* `pause_status` - (Optional) Indicate whether this schedule is paused or not. Either “PAUSED” or “UNPAUSED”.
+* `pause_status` - (Optional) Indicate whether this schedule is paused or not. Either “PAUSED” or “UNPAUSED”. When the pause_status field is omitted and a schedule is provided, the server will default to using "UNPAUSED" as a value for pause_status.
 
 ### spark_jar_task Configuration Block
 

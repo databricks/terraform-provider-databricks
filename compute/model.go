@@ -165,10 +165,22 @@ type S3StorageInfo struct {
 	CannedACL        string `json:"canned_acl,omitempty"`
 }
 
+// LocalFileInfo ...
+type LocalFileInfo struct {
+	Destination string `json:"destination,omitempty" tf:"optional"`
+}
+
 // StorageInfo contains the struct for either DBFS or S3 storage depending on which one is relevant.
 type StorageInfo struct {
 	Dbfs *DbfsStorageInfo `json:"dbfs,omitempty" tf:"group:storage"`
 	S3   *S3StorageInfo   `json:"s3,omitempty" tf:"group:storage"`
+}
+
+// InitScriptStorageInfo ...
+type InitScriptStorageInfo struct {
+	Dbfs *DbfsStorageInfo `json:"dbfs,omitempty" tf:"group:storage"`
+	S3   *S3StorageInfo   `json:"s3,omitempty" tf:"group:storage"`
+	File *LocalFileInfo   `json:"file,omitempty" tf:"optional"`
 }
 
 // SparkNodeAwsAttributes is the struct that determines if the node is a spot instance or not
@@ -272,10 +284,10 @@ type Cluster struct {
 	SparkEnvVars map[string]string `json:"spark_env_vars,omitempty"`
 	CustomTags   map[string]string `json:"custom_tags,omitempty"`
 
-	SSHPublicKeys  []string      `json:"ssh_public_keys,omitempty" tf:"max_items:10"`
-	InitScripts    []StorageInfo `json:"init_scripts,omitempty" tf:"max_items:10"` // TODO: tf:alias
-	ClusterLogConf *StorageInfo  `json:"cluster_log_conf,omitempty"`
-	DockerImage    *DockerImage  `json:"docker_image,omitempty"`
+	SSHPublicKeys  []string                `json:"ssh_public_keys,omitempty" tf:"max_items:10"`
+	InitScripts    []InitScriptStorageInfo `json:"init_scripts,omitempty" tf:"max_items:10"` // TODO: tf:alias
+	ClusterLogConf *StorageInfo            `json:"cluster_log_conf,omitempty"`
+	DockerImage    *DockerImage            `json:"docker_image,omitempty"`
 
 	SingleUserName   string `json:"single_user_name,omitempty"`
 	IdempotencyToken string `json:"idempotency_token,omitempty"`

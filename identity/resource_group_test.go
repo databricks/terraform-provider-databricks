@@ -20,6 +20,17 @@ func TestResourceGroupCreate(t *testing.T) {
 				ExpectedRequest: ScimGroup{
 					Schemas:     []URN{"urn:ietf:params:scim:schemas:core:2.0:Group"},
 					DisplayName: "Data Scientists",
+					Entitlements: []entitlementsListItem{
+						{
+							AllowClusterCreateEntitlement,
+						},
+						{
+							AllowSQLAnalyticsAccessEntitlement,
+						},
+						{
+							AllowInstancePoolCreateEntitlement,
+						},
+					},
 				},
 				Response: ScimGroup{
 					ID: "abc",
@@ -32,17 +43,35 @@ func TestResourceGroupCreate(t *testing.T) {
 					Schemas:     []URN{"urn:ietf:params:scim:schemas:core:2.0:Group"},
 					DisplayName: "Data Scientists",
 					ID:          "abc",
+					Entitlements: []entitlementsListItem{
+						{
+							AllowClusterCreateEntitlement,
+						},
+						{
+							AllowSQLAnalyticsAccessEntitlement,
+						},
+						{
+							AllowInstancePoolCreateEntitlement,
+						},
+					},
 				},
 			},
 		},
 		Resource: ResourceGroup(),
-		State: map[string]interface{}{
-			"display_name": "Data Scientists",
-		},
+		HCL: `
+		display_name = "Data Scientists"
+		allow_instance_pool_create = true
+		allow_cluster_create = true
+		allow_sql_analytics_access = true
+		`,
 		Create: true,
 	}.Apply(t)
 	assert.NoError(t, err, err)
 	assert.Equal(t, "abc", d.Id())
+	assert.Equal(t, "Data Scientists", d.Get("display_name"))
+	assert.Equal(t, true, d.Get("allow_cluster_create"))
+	assert.Equal(t, true, d.Get("allow_instance_pool_create"))
+	assert.Equal(t, true, d.Get("allow_sql_analytics_access"))
 }
 
 func TestResourceGroupCreate_Error(t *testing.T) {
@@ -78,6 +107,42 @@ func TestResourceGroupRead(t *testing.T) {
 					Schemas:     []URN{"urn:ietf:params:scim:schemas:core:2.0:Group"},
 					DisplayName: "Data Scientists",
 					ID:          "abc",
+					Entitlements: []entitlementsListItem{
+						{
+							AllowSQLAnalyticsAccessEntitlement,
+						},
+						{
+							AllowClusterCreateEntitlement,
+						},
+						{
+							AllowInstancePoolCreateEntitlement,
+						},
+					},
+				},
+			},
+		},
+		Resource: ResourceGroup(),
+		Read:     true,
+		ID:       "abc",
+	}.Apply(t)
+	assert.NoError(t, err, err)
+	assert.Equal(t, "abc", d.Id(), "Id should not be empty")
+	assert.Equal(t, true, d.Get("allow_cluster_create"))
+	assert.Equal(t, true, d.Get("allow_instance_pool_create"))
+	assert.Equal(t, true, d.Get("allow_sql_analytics_access"))
+	assert.Equal(t, "Data Scientists", d.Get("display_name"))
+}
+
+func TestResourceGroupRead_NoEntitlements(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/preview/scim/v2/Groups/abc",
+				Response: ScimGroup{
+					Schemas:     []URN{"urn:ietf:params:scim:schemas:core:2.0:Group"},
+					DisplayName: "Data Scientists",
+					ID:          "abc",
 				},
 			},
 		},
@@ -89,6 +154,7 @@ func TestResourceGroupRead(t *testing.T) {
 	assert.Equal(t, "abc", d.Id(), "Id should not be empty")
 	assert.Equal(t, false, d.Get("allow_cluster_create"))
 	assert.Equal(t, false, d.Get("allow_instance_pool_create"))
+	assert.Equal(t, false, d.Get("allow_sql_analytics_access"))
 	assert.Equal(t, "Data Scientists", d.Get("display_name"))
 }
 

@@ -165,7 +165,7 @@ type S3StorageInfo struct {
 	CannedACL        string `json:"canned_acl,omitempty"`
 }
 
-// LocalFileInfo ...
+// LocalFileInfo represents a local file on disk, e.g. in a customer's container.
 type LocalFileInfo struct {
 	Destination string `json:"destination,omitempty" tf:"optional"`
 }
@@ -176,7 +176,7 @@ type StorageInfo struct {
 	S3   *S3StorageInfo   `json:"s3,omitempty" tf:"group:storage"`
 }
 
-// InitScriptStorageInfo ...
+// InitScriptStorageInfo captures the allowed sources of init scripts.
 type InitScriptStorageInfo struct {
 	Dbfs *DbfsStorageInfo `json:"dbfs,omitempty" tf:"group:storage"`
 	S3   *S3StorageInfo   `json:"s3,omitempty" tf:"group:storage"`

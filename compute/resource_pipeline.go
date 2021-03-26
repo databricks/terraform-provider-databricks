@@ -202,6 +202,7 @@ func ResourcePipeline() *schema.Resource {
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			i, err := newPipelinesAPI(ctx, c).read(d.Id())
+			fmt.Printf("%#v", i)
 			if err != nil {
 				return err
 			}

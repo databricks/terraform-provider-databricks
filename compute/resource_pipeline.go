@@ -208,7 +208,7 @@ func adjustPipelineResourceSchema(m map[string]*schema.Schema) map[string]*schem
 	return m
 }
 
-// ResourcePipeline ...
+// ResourcePipeline defines the Terraform resource for pipelines.
 func ResourcePipeline() *schema.Resource {
 	var pipelineSchema = common.StructToSchema(pipelineSpec{}, adjustPipelineResourceSchema)
 	return common.Resource{

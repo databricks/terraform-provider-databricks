@@ -264,7 +264,6 @@ type DockerImage struct {
 type Cluster struct {
 	ClusterID   string `json:"cluster_id,omitempty"`
 	ClusterName string `json:"cluster_name,omitempty"`
-	Label       string `json:"label,omitempty"` // used only by pipelines
 
 	SparkVersion              string     `json:"spark_version"` // TODO: perhaps make a default
 	NumWorkers                int32      `json:"num_workers" tf:"group:size"`

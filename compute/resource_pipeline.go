@@ -3,7 +3,6 @@ package compute
 import (
 	"context"
 	"fmt"
-	"log"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -11,6 +10,9 @@ import (
 
 	"github.com/databrickslabs/terraform-provider-databricks/common"
 )
+
+// DefaultTimeout is the default amount of time that Terraform will wait when creating, updating and deleting pipelines.
+const DefaultTimeout = 20 * time.Minute
 
 // We separate this struct from Cluster for two reasons:
 // 1. Pipeline clusters include a `Label` field.
@@ -131,31 +133,33 @@ func (a pipelinesAPI) delete(id string) error {
 	return a.client.Delete(a.ctx, "/pipelines/"+id, map[string]string{})
 }
 
-func (a pipelinesAPI) defaultTimeout() time.Duration {
-	return 30 * time.Minute
+func (a pipelinesAPI) waitForState(id string, timeout time.Duration, desiredState PipelineState) error {
+	return resource.RetryContext(a.ctx, timeout,
+		func() *resource.RetryError {
+			i, err := a.read(id)
+			if err != nil {
+				return resource.NonRetryableError(err)
+			}
+			state := *i.State
+			if state == desiredState {
+				return nil
+			}
+			return resource.RetryableError(fmt.Errorf("Pipeline %s is in state %s, not yet in state %s", id, state, desiredState))
+		})
 }
 
-func (a pipelinesAPI) retryFunc(id string, desiredState PipelineState, lastState *PipelineState) *resource.RetryError {
-	s, err := a.read(id)
-	if err != nil {
-		if e, ok := err.(common.APIError); ok && e.ErrorCode == "RESOURCE_DOES_NOT_EXIST" {
-			*lastState = StateDeleted
-		} else {
-			return resource.NonRetryableError(err)
-		}
-	} else {
-		lastState = s.State
-	}
-	log.Printf("[DEBUG] Pipeline %s is in state %s", id, *lastState)
-	if *lastState == desiredState {
-		return nil
-	}
-	return resource.RetryableError(fmt.Errorf("Pipeline %s is in state %s, not yet in state %s", id, *lastState, desiredState))
-}
-
-func (a pipelinesAPI) waitForState(id string, desiredState PipelineState) (PipelineState, error) {
-	var lastState PipelineState
-	return lastState, resource.RetryContext(a.ctx, a.defaultTimeout(), func() *resource.RetryError { return a.retryFunc(id, desiredState, &lastState) })
+func (a pipelinesAPI) waitForDeleted(id string, timeout time.Duration) error {
+	return resource.RetryContext(a.ctx, timeout,
+		func() *resource.RetryError {
+			i, err := a.read(id)
+			if err != nil {
+				if e, ok := err.(common.APIError); ok && e.IsMissing() {
+					return nil
+				}
+				return resource.NonRetryableError(err)
+			}
+			return resource.RetryableError(fmt.Errorf("Pipeline %s is in state %s, not yet deleted", id, *i.State))
+		})
 }
 
 func adjustPipelineResourceSchema(m map[string]*schema.Schema) map[string]*schema.Schema {
@@ -193,7 +197,7 @@ func ResourcePipeline() *schema.Resource {
 			if err != nil {
 				return err
 			}
-			_, err = api.waitForState(id, StateRunning)
+			err = api.waitForState(id, d.Timeout(schema.TimeoutCreate), StateRunning)
 			if err != nil {
 				return err
 			}
@@ -202,7 +206,6 @@ func ResourcePipeline() *schema.Resource {
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			i, err := newPipelinesAPI(ctx, c).read(d.Id())
-			fmt.Printf("%#v", i)
 			if err != nil {
 				return err
 			}
@@ -222,8 +225,11 @@ func ResourcePipeline() *schema.Resource {
 			if err != nil {
 				return err
 			}
-			_, err = api.waitForState(d.Id(), StateDeleted)
+			err = api.waitForDeleted(d.Id(), d.Timeout(schema.TimeoutDelete))
 			return err
+		},
+		Timeouts: &schema.ResourceTimeout{
+			Default: schema.DefaultTimeout(DefaultTimeout),
 		},
 	}.ToResource()
 }

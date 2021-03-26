@@ -144,6 +144,104 @@ func TestResourcePipelineCreate_Error(t *testing.T) {
 	assert.Equal(t, "", d.Id(), "Id should be empty for error creates")
 }
 
+func TestResourcePipelineCreate_ErrorWhenWaitingFailedCleanup(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/pipelines",
+				Response: createPipelineResponse{
+					PipelineID: "abcd",
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/pipelines/abcd",
+				Response: map[string]interface{}{
+					"id":    "abcd",
+					"name":  "test-pipeline",
+					"state": "FAILED",
+				},
+			},
+			{
+				Method:   "DELETE",
+				Resource: "/api/2.0/pipelines/abcd",
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/pipelines/abcd",
+				Response: common.APIErrorBody{
+					ErrorCode: "INTERNAL_ERROR",
+					Message:   "Internal error",
+				},
+				Status: 500,
+			},
+		},
+		Resource: ResourcePipeline(),
+		HCL: `name = "test"
+		storage = "/test/storage"
+		libraries {
+			jar = "jar"
+		}
+		filters {
+			include = ["a"]
+		}
+		`,
+		Create: true,
+	}.Apply(t)
+	qa.AssertErrorStartsWith(t, err, "Multiple errors occurred when creating pipeline. Error while waiting for creation: \"Pipeline abcd has failed\"; error while attempting to clean up failed pipeline: \"Internal error\"")
+	assert.Equal(t, "", d.Id(), "Id should be empty for error creates")
+}
+
+func TestResourcePipelineCreate_ErrorWhenWaitingSuccessfulCleanup(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/pipelines",
+				Response: createPipelineResponse{
+					PipelineID: "abcd",
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/pipelines/abcd",
+				Response: map[string]interface{}{
+					"id":    "abcd",
+					"name":  "test-pipeline",
+					"state": "FAILED",
+				},
+			},
+			{
+				Method:   "DELETE",
+				Resource: "/api/2.0/pipelines/abcd",
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/pipelines/abcd",
+				Response: common.APIErrorBody{
+					ErrorCode: "RESOURCE_DOES_NOT_EXIST",
+					Message:   "No such resource",
+				},
+				Status: 404,
+			},
+		},
+		Resource: ResourcePipeline(),
+		HCL: `name = "test"
+		storage = "/test/storage"
+		libraries {
+			jar = "jar"
+		}
+		filters {
+			include = ["a"]
+		}
+		`,
+		Create: true,
+	}.Apply(t)
+	qa.AssertErrorStartsWith(t, err, "Pipeline abcd has failed")
+	assert.Equal(t, "", d.Id(), "Id should be empty for error creates")
+}
+
 func TestResourcePipelineRead(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
@@ -213,25 +311,36 @@ func TestResourcePipelineRead_Error(t *testing.T) {
 }
 
 func TestResourcePipelineUpdate(t *testing.T) {
+	state := StateRunning
+	spec := pipelineSpec{
+		ID:      "abcd",
+		Name:    "test",
+		Storage: "/test/storage",
+		Libraries: []pipelineLibrary{
+			{
+				Maven: &Maven{
+					Coordinates: "coordinates",
+				},
+			},
+		},
+		Filters: &filters{
+			Include: []string{"com.databricks.include"},
+		},
+	}
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
-				Method:   "PUT",
+				Method:          "PUT",
+				Resource:        "/api/2.0/pipelines/abcd",
+				ExpectedRequest: spec,
+			},
+			{
+				Method:   "GET",
 				Resource: "/api/2.0/pipelines/abcd",
-				ExpectedRequest: pipelineSpec{
-					ID:      "abcd",
-					Name:    "test",
-					Storage: "/test/storage",
-					Libraries: []pipelineLibrary{
-						{
-							Maven: &Maven{
-								Coordinates: "coordinates",
-							},
-						},
-					},
-					Filters: &filters{
-						Include: []string{"com.databricks.include"},
-					},
+				Response: pipelineInfo{
+					PipelineID: "abcd",
+					Spec:       &spec,
+					State:      &state,
 				},
 			},
 			{
@@ -239,21 +348,8 @@ func TestResourcePipelineUpdate(t *testing.T) {
 				Resource: "/api/2.0/pipelines/abcd",
 				Response: pipelineInfo{
 					PipelineID: "abcd",
-					Spec: &pipelineSpec{
-						ID:      "abcd",
-						Name:    "test",
-						Storage: "/test/storage",
-						Libraries: []pipelineLibrary{
-							{
-								Maven: &Maven{
-									Coordinates: "coordinates",
-								},
-							},
-						},
-						Filters: &filters{
-							Include: []string{"com.databricks.include"},
-						},
-					},
+					Spec:       &spec,
+					State:      &state,
 				},
 			},
 		},
@@ -304,6 +400,58 @@ func TestResourcePipelineUpdate_Error(t *testing.T) {
 	}.Apply(t)
 	qa.AssertErrorStartsWith(t, err, "Internal error happened")
 	assert.Equal(t, "abcd", d.Id())
+}
+
+func TestResourcePipelineUpdate_FailsAfterUpdate(t *testing.T) {
+	state := StateFailed
+	spec := pipelineSpec{
+		ID:      "abcd",
+		Name:    "test",
+		Storage: "/test/storage",
+		Libraries: []pipelineLibrary{
+			{
+				Maven: &Maven{
+					Coordinates: "coordinates",
+				},
+			},
+		},
+		Filters: &filters{
+			Include: []string{"com.databricks.include"},
+		},
+	}
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:          "PUT",
+				Resource:        "/api/2.0/pipelines/abcd",
+				ExpectedRequest: spec,
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/pipelines/abcd",
+				Response: pipelineInfo{
+					PipelineID: "abcd",
+					Spec:       &spec,
+					State:      &state,
+				},
+			},
+		},
+		Resource: ResourcePipeline(),
+		HCL: `name = "test"
+		storage = "/test/storage"
+		libraries {
+			maven {
+				coordinates = "coordinates"
+			}
+		}
+		filters {
+			include = [ "com.databricks.include" ]
+		}`,
+		Update: true,
+		ID:     "abcd",
+	}.Apply(t)
+	qa.AssertErrorStartsWith(t, err, "Pipeline abcd has failed")
+	assert.Equal(t, "abcd", d.Id(), "Id should be the same as in reading")
 }
 
 func TestResourcePipelineDelete(t *testing.T) {

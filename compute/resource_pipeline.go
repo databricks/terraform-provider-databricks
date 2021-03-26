@@ -3,6 +3,7 @@ package compute
 import (
 	"context"
 	"fmt"
+	"log"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -114,10 +115,25 @@ func newPipelinesAPI(ctx context.Context, m interface{}) pipelinesAPI {
 	return pipelinesAPI{m.(*common.DatabricksClient), ctx}
 }
 
-func (a pipelinesAPI) create(s pipelineSpec, allowDuplicateNames bool) (string, error) {
-	var id createPipelineResponse
-	err := a.client.Post(a.ctx, "/pipelines", s, &id)
-	return id.PipelineID, err
+func (a pipelinesAPI) create(s pipelineSpec, timeout time.Duration) (string, error) {
+	var resp createPipelineResponse
+	err := a.client.Post(a.ctx, "/pipelines", s, &resp)
+	if err != nil {
+		return "", err
+	}
+	id := resp.PipelineID
+	err = a.waitForState(id, timeout, StateRunning)
+	if err != nil {
+		log.Printf("[INFO] Pipeline creation failed, attempting to clean up pipeline %s", id)
+		err2 := a.delete(id, timeout)
+		if err2 != nil {
+			log.Printf("[WARN] Unable to delete pipeline %s; this resource needs to be manually cleaned up", id)
+			return "", fmt.Errorf("Multiple errors occurred when creating pipeline. Error while waiting for creation: \"%v\"; error while attempting to clean up failed pipeline: \"%v\"", err, err2)
+		}
+		log.Printf("[INFO] Successfully cleaned up pipeline %s", id)
+		return "", err
+	}
+	return id, nil
 }
 
 func (a pipelinesAPI) read(id string) (p pipelineInfo, err error) {
@@ -125,12 +141,32 @@ func (a pipelinesAPI) read(id string) (p pipelineInfo, err error) {
 	return
 }
 
-func (a pipelinesAPI) update(id string, s pipelineSpec, allowDuplicateNames bool) error {
-	return a.client.Put(a.ctx, "/pipelines/"+id, s)
+func (a pipelinesAPI) update(id string, s pipelineSpec, timeout time.Duration) error {
+	err := a.client.Put(a.ctx, "/pipelines/"+id, s)
+	if err != nil {
+		return err
+	}
+	return a.waitForState(id, timeout, StateRunning)
 }
 
-func (a pipelinesAPI) delete(id string) error {
-	return a.client.Delete(a.ctx, "/pipelines/"+id, map[string]string{})
+func (a pipelinesAPI) delete(id string, timeout time.Duration) error {
+	err := a.client.Delete(a.ctx, "/pipelines/"+id, map[string]string{})
+	if err != nil {
+		return err
+	}
+	return resource.RetryContext(a.ctx, timeout,
+		func() *resource.RetryError {
+			i, err := a.read(id)
+			if err != nil {
+				if e, ok := err.(common.APIError); ok && e.IsMissing() {
+					return nil
+				}
+				return resource.NonRetryableError(err)
+			}
+			message := fmt.Sprintf("Pipeline %s is in state %s, not yet deleted", id, *i.State)
+			log.Printf("[DEBUG] %s", message)
+			return resource.RetryableError(fmt.Errorf(message))
+		})
 }
 
 func (a pipelinesAPI) waitForState(id string, timeout time.Duration, desiredState PipelineState) error {
@@ -144,21 +180,12 @@ func (a pipelinesAPI) waitForState(id string, timeout time.Duration, desiredStat
 			if state == desiredState {
 				return nil
 			}
-			return resource.RetryableError(fmt.Errorf("Pipeline %s is in state %s, not yet in state %s", id, state, desiredState))
-		})
-}
-
-func (a pipelinesAPI) waitForDeleted(id string, timeout time.Duration) error {
-	return resource.RetryContext(a.ctx, timeout,
-		func() *resource.RetryError {
-			i, err := a.read(id)
-			if err != nil {
-				if e, ok := err.(common.APIError); ok && e.IsMissing() {
-					return nil
-				}
-				return resource.NonRetryableError(err)
+			if state == StateFailed {
+				return resource.NonRetryableError(fmt.Errorf("Pipeline %s has failed", id))
 			}
-			return resource.RetryableError(fmt.Errorf("Pipeline %s is in state %s, not yet deleted", id, *i.State))
+			message := fmt.Sprintf("Pipeline %s is in state %s, not yet in state %s", id, state, desiredState)
+			log.Printf("[DEBUG] %s", message)
+			return resource.RetryableError(fmt.Errorf(message))
 		})
 }
 
@@ -193,11 +220,8 @@ func ResourcePipeline() *schema.Resource {
 				return err
 			}
 			api := newPipelinesAPI(ctx, c)
-			id, err := api.create(s, false)
+			id, err := api.create(s, d.Timeout(schema.TimeoutCreate))
 			if err != nil {
-				return err
-			}
-			if err = api.waitForState(id, d.Timeout(schema.TimeoutCreate), StateRunning); err != nil {
 				return err
 			}
 			d.SetId(id)
@@ -215,14 +239,11 @@ func ResourcePipeline() *schema.Resource {
 			if err := common.DataToStructPointer(d, pipelineSchema, &s); err != nil {
 				return err
 			}
-			return newPipelinesAPI(ctx, c).update(d.Id(), s, false)
+			return newPipelinesAPI(ctx, c).update(d.Id(), s, d.Timeout(schema.TimeoutUpdate))
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			api := newPipelinesAPI(ctx, c)
-			if err := api.delete(d.Id()); err != nil {
-				return err
-			}
-			return api.waitForDeleted(d.Id(), d.Timeout(schema.TimeoutDelete))
+			return api.delete(d.Id(), d.Timeout(schema.TimeoutDelete))
 		},
 		Timeouts: &schema.ResourceTimeout{
 			Default: schema.DefaultTimeout(DefaultTimeout),

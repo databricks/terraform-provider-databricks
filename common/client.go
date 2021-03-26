@@ -198,7 +198,7 @@ func (c *DatabricksClient) configureHTTPCLient() {
 	if c.RateLimitPerSecond == 0 {
 		c.RateLimitPerSecond = DefaultRateLimitPerSecond
 	}
-	c.rateLimiter = rate.NewLimiter(rate.Every(1*time.Second), c.RateLimitPerSecond)
+	c.rateLimiter = rate.NewLimiter(rate.Limit(c.RateLimitPerSecond), 1)
 	// Set up a retryable HTTP Client to handle cases where the service returns
 	// a transient error on initial creation
 	retryDelayDuration := 10 * time.Second

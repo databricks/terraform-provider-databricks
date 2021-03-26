@@ -122,8 +122,10 @@ Some interesting points to note here:
 * Use the custom `tf` tag indicates properties to be annotated on the Terraform schema for this struct. Supported values are:
   * `optional` for optional fields
   * `computed` for computed fields
+  * `alias:X` to use a custom name in HCL for a field
   * `default:X` to set a default value for a field
-  * `max_items:N` to set the maximum number of items for a list
+  * `max_items:N` to set the maximum number of items for a multi-valued parameter
+  * `slice_set` to indicate that a the parameter should accept a set instead of a list
 * Do not use bare references to structs in the model; rather, use pointers to structs. Maps and slices are permitted, as well as the following primitive types: int, int32, int64, float64, bool, string.
 See `typeToSchema` in `common/reflect_resource.go` for the up-to-date list of all supported field types and values for the `tf` tag.
 

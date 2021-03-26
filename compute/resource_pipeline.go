@@ -73,15 +73,15 @@ type PipelineState string
 
 // Constants for PipelineStates
 const (
-	StatusDeploying  PipelineState = "DEPLOYING"
-	StatusStarting   PipelineState = "STARTING"
-	StatusRunning    PipelineState = "RUNNING"
-	StatusStopping   PipelineState = "STOPPPING"
-	StatusDeleted    PipelineState = "DELETED"
-	StatusRecovering PipelineState = "RECOVERING"
-	StatusFailed     PipelineState = "FAILED"
-	StatusResetting  PipelineState = "RESETTING"
-	StatusIdle       PipelineState = "IDLE"
+	StateDeploying  PipelineState = "DEPLOYING"
+	StateStarting   PipelineState = "STARTING"
+	StateRunning    PipelineState = "RUNNING"
+	StateStopping   PipelineState = "STOPPPING"
+	StateDeleted    PipelineState = "DELETED"
+	StateRecovering PipelineState = "RECOVERING"
+	StateFailed     PipelineState = "FAILED"
+	StateResetting  PipelineState = "RESETTING"
+	StateIdle       PipelineState = "IDLE"
 )
 
 // PipelineHealthStatus ...
@@ -139,7 +139,7 @@ func (a pipelinesAPI) retryFunc(id string, desiredState PipelineState, lastState
 	s, err := a.read(id)
 	if err != nil {
 		if e, ok := err.(common.APIError); ok && e.ErrorCode == "RESOURCE_DOES_NOT_EXIST" {
-			*lastState = StatusDeleted
+			*lastState = StateDeleted
 		} else {
 			return resource.NonRetryableError(err)
 		}
@@ -193,7 +193,7 @@ func ResourcePipeline() *schema.Resource {
 			if err != nil {
 				return err
 			}
-			_, err = api.waitForState(id, StatusRunning)
+			_, err = api.waitForState(id, StateRunning)
 			if err != nil {
 				return err
 			}
@@ -221,7 +221,7 @@ func ResourcePipeline() *schema.Resource {
 			if err != nil {
 				return err
 			}
-			_, err = api.waitForState(d.Id(), StatusDeleted)
+			_, err = api.waitForState(d.Id(), StateDeleted)
 			return err
 		},
 	}.ToResource()

@@ -12,6 +12,30 @@ import (
 	"github.com/databrickslabs/terraform-provider-databricks/common"
 )
 
+// We separate this struct from Cluster for two reasons:
+// 1. Pipeline clusters include a `Label` field.
+// 2. Spark version is not required (and shouldn't be specified) for pipeline clusters.
+// 3. num_workers is optional, and there is no single-node support for pipelines clusters.
+type pipelineCluster struct {
+	Label string `json:"label,omitempty"` // used only by pipelines
+
+	NumWorkers int32      `json:"num_workers,omitempty" tf:"group:size"`
+	Autoscale  *AutoScale `json:"autoscale,omitempty" tf:"group:size"`
+
+	NodeTypeID       string         `json:"node_type_id,omitempty" tf:"group:node_type,computed"`
+	DriverNodeTypeID string         `json:"driver_node_type_id,omitempty" tf:"conflicts:instance_pool_id,computed"`
+	InstancePoolID   string         `json:"instance_pool_id,omitempty" tf:"group:node_type"`
+	AwsAttributes    *AwsAttributes `json:"aws_attributes,omitempty" tf:"conflicts:instance_pool_id"`
+
+	SparkConf    map[string]string `json:"spark_conf,omitempty"`
+	SparkEnvVars map[string]string `json:"spark_env_vars,omitempty"`
+	CustomTags   map[string]string `json:"custom_tags,omitempty"`
+
+	SSHPublicKeys  []string                `json:"ssh_public_keys,omitempty" tf:"max_items:10"`
+	InitScripts    []InitScriptStorageInfo `json:"init_scripts,omitempty" tf:"max_items:10"` // TODO: tf:alias
+	ClusterLogConf *StorageInfo            `json:"cluster_log_conf,omitempty"`
+}
+
 type notebookLibrary struct {
 	Path string `json:"path"`
 }
@@ -33,7 +57,7 @@ type pipelineSpec struct {
 	Name                string            `json:"name,omitempty"`
 	Storage             string            `json:"storage,omitempty"`
 	Configuration       map[string]string `json:"configuration,omitempty"`
-	Clusters            []Cluster         `json:"clusters,omitempty"`
+	Clusters            []pipelineCluster `json:"clusters,omitempty"`
 	Libraries           []pipelineLibrary `json:"libraries,omitempty"`
 	Filters             *filters          `json:"filters"`
 	Continuous          bool              `json:"continuous,omitempty"`
@@ -44,35 +68,39 @@ type createPipelineResponse struct {
 	PipelineID string `json:"pipeline_id"`
 }
 
-type pipelineState string
+// PipelineState ...
+type PipelineState string
 
+// Constants for PipelineStates
 const (
-	statusDeploying  pipelineState = "DEPLOYING"
-	statusStarting   pipelineState = "STARTING"
-	statusRunning    pipelineState = "RUNNING"
-	statusStopping   pipelineState = "STOPPPING"
-	statusDeleted    pipelineState = "DELETED"
-	statusRecovering pipelineState = "RECOVERING"
-	statusFailed     pipelineState = "FAILED"
-	statusResetting  pipelineState = "RESETTING"
-	statusIdle       pipelineState = "IDLE"
+	StatusDeploying  PipelineState = "DEPLOYING"
+	StatusStarting   PipelineState = "STARTING"
+	StatusRunning    PipelineState = "RUNNING"
+	StatusStopping   PipelineState = "STOPPPING"
+	StatusDeleted    PipelineState = "DELETED"
+	StatusRecovering PipelineState = "RECOVERING"
+	StatusFailed     PipelineState = "FAILED"
+	StatusResetting  PipelineState = "RESETTING"
+	StatusIdle       PipelineState = "IDLE"
 )
 
-type pipelineHealthStatus string
+// PipelineHealthStatus ...
+type PipelineHealthStatus string
 
+// Constants for PipelineHealthStatus
 const (
-	healthStatusHealthy   pipelineHealthStatus = "HEALTHY"
-	healthStatusUnhealthy pipelineHealthStatus = "UNHEALTHY"
+	HealthStatusHealthy   PipelineHealthStatus = "HEALTHY"
+	HealthStatusUnhealthy PipelineHealthStatus = "UNHEALTHY"
 )
 
 type pipelineInfo struct {
 	PipelineID string                `json:"pipeline_id"`
 	Spec       *pipelineSpec         `json:"spec"`
-	State      *pipelineState        `json:"state"`
+	State      *PipelineState        `json:"state"`
 	Cause      string                `json:"cause"`
 	ClusterID  string                `json:"cluster_id"`
 	Name       string                `json:"name"`
-	Health     *pipelineHealthStatus `json:"health"`
+	Health     *PipelineHealthStatus `json:"health"`
 }
 
 type pipelinesAPI struct {
@@ -107,11 +135,11 @@ func (a pipelinesAPI) defaultTimeout() time.Duration {
 	return 30 * time.Minute
 }
 
-func (a pipelinesAPI) retryFunc(id string, desiredState pipelineState, lastState *pipelineState) *resource.RetryError {
+func (a pipelinesAPI) retryFunc(id string, desiredState PipelineState, lastState *PipelineState) *resource.RetryError {
 	s, err := a.read(id)
 	if err != nil {
 		if e, ok := err.(common.APIError); ok && e.ErrorCode == "RESOURCE_DOES_NOT_EXIST" {
-			*lastState = statusDeleted
+			*lastState = StatusDeleted
 		} else {
 			return resource.NonRetryableError(err)
 		}
@@ -125,35 +153,14 @@ func (a pipelinesAPI) retryFunc(id string, desiredState pipelineState, lastState
 	return resource.RetryableError(fmt.Errorf("Pipeline %s is in state %s, not yet in state %s", id, *lastState, desiredState))
 }
 
-func (a pipelinesAPI) waitForState(id string, desiredState pipelineState) (pipelineState, error) {
-	var lastState pipelineState
+func (a pipelinesAPI) waitForState(id string, desiredState PipelineState) (PipelineState, error) {
+	var lastState PipelineState
 	return lastState, resource.RetryContext(a.ctx, a.defaultTimeout(), func() *resource.RetryError { return a.retryFunc(id, desiredState, &lastState) })
 }
 
-func removeUnsupportedFields(m map[string]*schema.Schema) map[string]*schema.Schema {
+func adjustPipelineResourceSchema(m map[string]*schema.Schema) map[string]*schema.Schema {
 	clusters, _ := m["clusters"].Elem.(*schema.Resource)
 	clustersSchema := clusters.Schema
-	delete(clustersSchema, "cluster_id")
-	delete(clustersSchema, "cluster_name")
-	delete(clustersSchema, "spark_version")
-	delete(clustersSchema, "enable_elastic_disk")
-	delete(clustersSchema, "enable_local_disk_encryption")
-	delete(clustersSchema, "policy_id")
-	delete(clustersSchema, "autotermination_minutes")
-	delete(clustersSchema, "docker_image")
-	delete(clustersSchema, "single_user_name")
-	delete(clustersSchema, "idempotency_token")
-
-	// Pipelines clusters are labeled
-	clustersSchema["label"] = &schema.Schema{
-		Type:     schema.TypeString,
-		Optional: true,
-	}
-	// num_workers is optional, but because the Cluster struct requires this field, we have to here as well.
-	// Otherwise, we get the following error:
-	// Error: clusters: Inconsistency: num_workers is optional, default is empty, but has no omitempty
-	// clustersSchema["num_workers"].Required = false
-	// clustersSchema["num_workers"].Optional = true
 	clustersSchema["spark_conf"].DiffSuppressFunc = sparkConfDiffSuppressFunc
 
 	awsAttributes, _ := clustersSchema["aws_attributes"].Elem.(*schema.Resource)
@@ -172,7 +179,7 @@ func removeUnsupportedFields(m map[string]*schema.Schema) map[string]*schema.Sch
 
 // ResourcePipeline ...
 func ResourcePipeline() *schema.Resource {
-	var pipelineSchema = common.StructToSchema(pipelineSpec{}, removeUnsupportedFields)
+	var pipelineSchema = common.StructToSchema(pipelineSpec{}, adjustPipelineResourceSchema)
 	return common.Resource{
 		Schema: pipelineSchema,
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
@@ -186,8 +193,11 @@ func ResourcePipeline() *schema.Resource {
 			if err != nil {
 				return err
 			}
-			_, err = api.waitForState(id, statusRunning)
-			d.SetId(string(id))
+			_, err = api.waitForState(id, StatusRunning)
+			if err != nil {
+				return err
+			}
+			d.SetId(id)
 			return nil
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
@@ -211,7 +221,7 @@ func ResourcePipeline() *schema.Resource {
 			if err != nil {
 				return err
 			}
-			_, err = api.waitForState(d.Id(), statusDeleted)
+			_, err = api.waitForState(d.Id(), StatusDeleted)
 			return err
 		},
 	}.ToResource()

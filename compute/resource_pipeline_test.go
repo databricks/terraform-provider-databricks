@@ -307,11 +307,21 @@ func TestResourcePipelineUpdate_Error(t *testing.T) {
 }
 
 func TestResourcePipelineDelete(t *testing.T) {
+	state := StateRunning
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "DELETE",
 				Resource: "/api/2.0/pipelines/abcd",
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/pipelines/abcd",
+				Response: pipelineInfo{
+					PipelineID: "abcd",
+					Spec:       &basicPipelineSpec,
+					State:      &state,
+				},
 			},
 			{
 				Method:   "GET",

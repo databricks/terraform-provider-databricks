@@ -110,6 +110,7 @@ type Field struct {
 }
 
 type Example struct {
+ ID string `json:"id"`
  TheField *Field `json:"the_field"`
  AnotherField bool `json:"another_field"`
  Filters []string `json:"filters" tf:"optional"`
@@ -205,7 +206,50 @@ func ResourceExample() *schema.Resource {
 
 *Add the resource to the top-level provider.* Simply add the resource to the provider definition in `provider/provider.go`.
 
-*Write unit tests.* 
+*Write unit tests for your resource.* To write your unit tests, you can make use of `ResourceFixture` and `HTTPFixture` structs defined in the `qa` package. This starts a fake HTTP server, asserting that your resource provdier generates the correct request for a given HCL template body for your resource. An example:
+
+```go
+func TestExampleResourceCreate(t *testing.T) {
+		d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:          "POST",
+				Resource:        "/api/2.0/example",
+				ExpectedRequest: Example{
+					TheField: Field{
+						A: "test",
+					},
+				},
+				Response: map[string]interface{} {
+					"id": "abcd",
+					"the_field": map[string]interface{} {
+						"a": "test",
+					},
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/example/abcd",
+				Response: map[string]interface{}{
+					"id":    "abcd",
+					"the_field": map[string]interface{} {
+						"a": "test",
+					},
+				},
+			},
+		},
+		Create:   true,
+		Resource: ResourceExample(),
+		HCL: `the_field {
+			a = "test"
+		}`,
+	}.Apply(t)
+	assert.NoError(t, err, err)
+	assert.Equal(t, "abcd", d.Id())
+}
+```
+
+*Write acceptance tests.* These are E2E tests which actually run a
 
 ## Debugging
 

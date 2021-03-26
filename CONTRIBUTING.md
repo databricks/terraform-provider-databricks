@@ -249,7 +249,29 @@ func TestExampleResourceCreate(t *testing.T) {
 }
 ```
 
-*Write acceptance tests.* These are E2E tests which actually run a
+*Write acceptance tests.* These are E2E tests which run terraform against the live cloud and Databricks APIs. For these, you can use the `Test` and `Step` structs defined in the `acceptance` package. An example:
+
+```go
+func TestPreviewAccPipelineResource_CreatePipeline(t *testing.T) {
+	acceptance.Test(t, []acceptance.Step{
+		{
+			Template: `
+			resource "databricks_example" "this" {
+				the_field {
+					a = "test"
+					a_more_complicated_name = 3
+				}
+				another_field = true
+				filters = [
+					"a",
+					"b"
+				]
+			}
+			`,
+		},
+	})
+}
+```
 
 ## Debugging
 

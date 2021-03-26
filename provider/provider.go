@@ -47,6 +47,7 @@ func DatabricksProvider() *schema.Provider {
 			"databricks_cluster_policy": compute.ResourceClusterPolicy(),
 			"databricks_instance_pool":  compute.ResourceInstancePool(),
 			"databricks_job":            compute.ResourceJob(),
+			"databricks_pipeline":       compute.ResourcePipeline(),
 
 			"databricks_group":                  identity.ResourceGroup(),
 			"databricks_group_instance_profile": identity.ResourceGroupInstanceProfile(),
@@ -77,8 +78,6 @@ func DatabricksProvider() *schema.Provider {
 			"databricks_global_init_script": workspace.ResourceGlobalInitScript(),
 			"databricks_notebook":           workspace.ResourceNotebook(),
 			"databricks_workspace_conf":     workspace.ResourceWorkspaceConf(),
-
-			"databricks_pipeline": compute.ResourcePipeline(),
 		},
 		Schema: map[string]*schema.Schema{
 			"host": {

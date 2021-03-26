@@ -197,8 +197,7 @@ func ResourcePipeline() *schema.Resource {
 			if err != nil {
 				return err
 			}
-			err = api.waitForState(id, d.Timeout(schema.TimeoutCreate), StateRunning)
-			if err != nil {
+			if err = api.waitForState(id, d.Timeout(schema.TimeoutCreate), StateRunning); err != nil {
 				return err
 			}
 			d.SetId(id)
@@ -213,20 +212,17 @@ func ResourcePipeline() *schema.Resource {
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var s pipelineSpec
-			err := common.DataToStructPointer(d, pipelineSchema, &s)
-			if err != nil {
+			if err := common.DataToStructPointer(d, pipelineSchema, &s); err != nil {
 				return err
 			}
 			return newPipelinesAPI(ctx, c).update(d.Id(), s, false)
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			api := newPipelinesAPI(ctx, c)
-			err := api.delete(d.Id())
-			if err != nil {
+			if err := api.delete(d.Id()); err != nil {
 				return err
 			}
-			err = api.waitForDeleted(d.Id(), d.Timeout(schema.TimeoutDelete))
-			return err
+			return api.waitForDeleted(d.Id(), d.Timeout(schema.TimeoutDelete))
 		},
 		Timeouts: &schema.ResourceTimeout{
 			Default: schema.DefaultTimeout(DefaultTimeout),

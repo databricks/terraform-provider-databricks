@@ -133,6 +133,7 @@ func TestTableACL_Enforce(t *testing.T) {
 			{"users", "READ", "table", "`default`.`foo`"},
 			{"users", "SELECT", "database", "default"},
 			{"interns", "DENIED_SELECT", "table", "`default`.`foo`"},
+			{"interns", "DENIED_READ", "table", "`default`.`foo`"},
 		},
 		"REVOKE ALL PRIVILEGES ON TABLE `default`.`foo` FROM `users`":        {},
 		"REVOKE ALL PRIVILEGES ON TABLE `default`.`foo` FROM `interns`":      {},
@@ -141,6 +142,82 @@ func TestTableACL_Enforce(t *testing.T) {
 		"DENY SELECT ON TABLE `default`.`foo` TO `foo@example.com`":          {},
 	})
 	require.NoError(t, err)
+}
+
+var createHighConcurrencyCluster = []qa.HTTPFixture{
+	{
+		Method:       "GET",
+		ReuseRequest: true,
+		Resource:     "/api/2.0/clusters/list",
+		Response:     map[string]interface{}{},
+	},
+	{
+		Method:       "GET",
+		ReuseRequest: true,
+		Resource:     "/api/2.0/clusters/spark-versions",
+		Response: compute.SparkVersionsList{
+			SparkVersions: []compute.SparkVersion{
+				{
+					Version:     "7.1.x-cpu-ml-scala2.12",
+					Description: "7.1 ML (includes Apache Spark 3.0.0, Scala 2.12)",
+				},
+			},
+		},
+	},
+	{
+		Method:       "GET",
+		ReuseRequest: true,
+		Resource:     "/api/2.0/clusters/list-node-types",
+		Response: compute.NodeTypeList{
+			NodeTypes: []compute.NodeType{
+				{
+					NodeTypeID:     "Standard_F4s",
+					InstanceTypeID: "Standard_F4s",
+					MemoryMB:       8192,
+					NumCores:       4,
+					NodeInstanceType: &compute.NodeInstanceType{
+						LocalDisks:      1,
+						InstanceTypeID:  "Standard_F4s",
+						LocalDiskSizeGB: 16,
+						LocalNVMeDisks:  0,
+					},
+				},
+			},
+		},
+	},
+	{
+		Method:       "POST",
+		ReuseRequest: true,
+		Resource:     "/api/2.0/clusters/create",
+		ExpectedRequest: compute.Cluster{
+			AutoterminationMinutes: 10,
+			ClusterName:            "terrraform-table-acl",
+			NodeTypeID:             "Standard_F4s",
+			SparkVersion:           "7.3.x-scala2.12",
+			CustomTags: map[string]string{
+				"ResourceClass": "SingleNode",
+			},
+			SparkConf: map[string]string{
+				"spark.databricks.acl.dfAclsEnabled": "true",
+				"spark.master":                       "local[*]",
+			},
+		},
+		Response: compute.ClusterID{
+			ClusterID: "bcd",
+		},
+	},
+	{
+		Method:       "GET",
+		ReuseRequest: true,
+		Resource:     "/api/2.0/clusters/get?cluster_id=bcd",
+		Response: compute.ClusterInfo{
+			ClusterID: "bcd",
+			State:     "RUNNING",
+			SparkConf: map[string]string{
+				"spark.databricks.acl.dfAclsEnabled": "true",
+			},
+		},
+	},
 }
 
 func TestResourceTableACL_Read(t *testing.T) {
@@ -154,82 +231,112 @@ func TestResourceTableACL_Read(t *testing.T) {
 				{"interns", "DENIED_SELECT", "table", "`default`.`foo`"},
 			},
 		}.toCommandMock(),
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   "GET",
-				Resource: "/api/2.0/clusters/list",
-				Response: map[string]interface{}{},
-			},
-			{
-				Method:       "GET",
-				ReuseRequest: true,
-				Resource:     "/api/2.0/clusters/spark-versions",
-				Response: compute.SparkVersionsList{
-					SparkVersions: []compute.SparkVersion{
-						{
-							Version:     "7.1.x-cpu-ml-scala2.12",
-							Description: "7.1 ML (includes Apache Spark 3.0.0, Scala 2.12)",
-						},
-					},
-				},
-			},
-			{
-				Method:       "GET",
-				ReuseRequest: true,
-				Resource:     "/api/2.0/clusters/list-node-types",
-				Response: compute.NodeTypeList{
-					NodeTypes: []compute.NodeType{
-						{
-							NodeTypeID:     "Standard_F4s",
-							InstanceTypeID: "Standard_F4s",
-							MemoryMB:       8192,
-							NumCores:       4,
-							NodeInstanceType: &compute.NodeInstanceType{
-								LocalDisks:      1,
-								InstanceTypeID:  "Standard_F4s",
-								LocalDiskSizeGB: 16,
-								LocalNVMeDisks:  0,
-							},
-						},
-					},
-				},
-			},
-			{
-				Method:   "POST",
-				Resource: "/api/2.0/clusters/create",
-				ExpectedRequest: compute.Cluster{
-					AutoterminationMinutes: 10,
-					ClusterName:            "terrraform-table-acl",
-					NodeTypeID:             "Standard_F4s",
-					SparkVersion:           "7.3.x-scala2.12",
-					CustomTags: map[string]string{
-						"ResourceClass": "SingleNode",
-					},
-					SparkConf: map[string]string{
-						"spark.databricks.acl.dfAclsEnabled": "true",
-						"spark.master":                       "local[*]",
-					},
-				},
-				Response: compute.ClusterID{
-					ClusterID: "bcd",
-				},
-			},
-			{
-				Method:       "GET",
-				ReuseRequest: true,
-				Resource:     "/api/2.0/clusters/get?cluster_id=bcd",
-				Response: compute.ClusterInfo{
-					ClusterID: "bcd",
-					State:     "RUNNING",
-					SparkConf: map[string]string{
-						"spark.databricks.acl.dfAclsEnabled": "true",
-					},
-				},
-			},
-		},
+		Fixtures: createHighConcurrencyCluster,
 		Resource: ResourceTableACL(),
 		Read:     true,
 		New:      true,
+		ID:       "table/default.foo",
+	}.ApplyNoError(t)
+}
+
+func TestResourceTableACL_Create(t *testing.T) {
+	qa.ResourceFixture{
+		CommandMock: mockData{
+			"SHOW GRANT ON TABLE `default`.`foo`": {
+				// TODO: transform mockData into a sequence,
+				// as this query should return two different results,
+				// based on the order of execution
+				{"users", "SELECT", "database", "foo"},
+				{"users", "SELECT", "table", "`default`.`foo`"},
+				{"users", "READ", "table", "`default`.`foo`"},
+				{"users", "SELECT", "database", "default"},
+				{"interns", "DENIED_SELECT", "table", "`default`.`foo`"},
+			},
+			"REVOKE ALL PRIVILEGES ON TABLE `default`.`foo` FROM `users`":                {},
+			"REVOKE ALL PRIVILEGES ON TABLE `default`.`foo` FROM `interns`":              {},
+			"GRANT READ, MODIFY, SELECT ON TABLE `default`.`foo` TO `serge@example.com`": {},
+			"DENY SELECT ON TABLE `default`.`foo` TO `users`":                            {},
+		}.toCommandMock(),
+		HCL: `
+		table = "foo"
+		grant {
+			principal = "serge@example.com"
+			privileges = ["SELECT", "READ", "MODIFY"]
+		}
+		deny {
+			principal = "users"
+			privileges = ["SELECT"]
+		}
+		`,
+		Fixtures: createHighConcurrencyCluster,
+		Resource: ResourceTableACL(),
+		Create:   true,
+	}.ApplyNoError(t)
+}
+
+func TestResourceTableACL_Update(t *testing.T) {
+	qa.ResourceFixture{
+		CommandMock: mockData{
+			"SHOW GRANT ON TABLE `default`.`foo`": {
+				// TODO: transform mockData into a sequence,
+				// as this query should return two different results,
+				// based on the order of execution
+				{"users", "SELECT", "database", "foo"},
+				{"users", "SELECT", "table", "`default`.`foo`"},
+				{"users", "READ", "table", "`default`.`foo`"},
+				{"users", "SELECT", "database", "default"},
+				{"interns", "DENIED_SELECT", "table", "`default`.`foo`"},
+			},
+			"REVOKE ALL PRIVILEGES ON TABLE `default`.`foo` FROM `users`":                {},
+			"REVOKE ALL PRIVILEGES ON TABLE `default`.`foo` FROM `interns`":              {},
+			"GRANT READ, MODIFY, SELECT ON TABLE `default`.`foo` TO `serge@example.com`": {},
+			"DENY SELECT ON TABLE `default`.`foo` TO `users`":                            {},
+		}.toCommandMock(),
+		HCL: `
+		table = "foo"
+		grant {
+			principal = "serge@example.com"
+			privileges = ["SELECT", "READ", "MODIFY"]
+		}
+		deny {
+			principal = "users"
+			privileges = ["SELECT"]
+		}
+		`,
+		Fixtures: createHighConcurrencyCluster,
+		Resource: ResourceTableACL(),
+		Update:   true,
+		ID:       "table/default.foo",
+	}.ApplyNoError(t)
+}
+
+func TestResourceTableACL_Delete(t *testing.T) {
+	qa.ResourceFixture{
+		CommandMock: mockData{
+			"SHOW GRANT ON TABLE `default`.`foo`": {
+				{"users", "SELECT", "database", "foo"},
+				{"users", "SELECT", "table", "`default`.`foo`"},
+				{"users", "READ", "table", "`default`.`foo`"},
+				{"users", "SELECT", "database", "default"},
+				{"interns", "DENIED_SELECT", "table", "`default`.`foo`"},
+			},
+			"REVOKE ALL PRIVILEGES ON TABLE `default`.`foo` FROM `users`":   {},
+			"REVOKE ALL PRIVILEGES ON TABLE `default`.`foo` FROM `interns`": {},
+		}.toCommandMock(),
+		HCL: `
+		table = "foo"
+		grant {
+			principal = "serge@example.com"
+			privileges = ["SELECT", "READ", "MODIFY"]
+		}
+		deny {
+			principal = "users"
+			privileges = ["SELECT"]
+		}
+		`,
+		Fixtures: createHighConcurrencyCluster,
+		Resource: ResourceTableACL(),
+		Delete:   true,
 		ID:       "table/default.foo",
 	}.ApplyNoError(t)
 }

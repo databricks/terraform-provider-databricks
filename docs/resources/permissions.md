@@ -452,7 +452,7 @@ One can control access to [databricks_secret](secret.md) through `initial_manage
 
 ## Tables, Views and Databases
 
-General Permissions API does not apply to access control for tables and permissions have to be managed separately. Though, terraform integration is coming in the future versions.
+General Permissions API does not apply to access control for tables and they have to be managed separately using the [databricks_table_acl](table_acl.md) resource.
 
 ## Argument Reference
 

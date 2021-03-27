@@ -54,7 +54,7 @@ You must specify one or many `grant` and/or `deny` configuration blocks to decla
 * `principal` - `display_name` of [databricks_group](group.md#display_name) or [databricks_user](user.md#display_name).
 * `privileges` - set of available privilege names in upper case.
 
-[Available](https://docs.databricks.com/security/access-control/table-acls/object-privileges.html) piivilege names are:
+[Available](https://docs.databricks.com/security/access-control/table-acls/object-privileges.html) privilege names are:
 
 * `SELECT` - gives read access to an object.
 * `CREATE` - gives ability to create an object (for example, a table in a database).
@@ -64,7 +64,6 @@ You must specify one or many `grant` and/or `deny` configuration blocks to decla
 * `CREATE_NAMED_FUNCTION` - gives ability to create a named UDF in an existing catalog or database.
 * `MODIFY_CLASSPATH` - gives ability to add files to the Spark class path.
 * `ALL PRIVILEGES` - gives all privileges (is translated into all the above privileges).
-
 
 ## Import
 

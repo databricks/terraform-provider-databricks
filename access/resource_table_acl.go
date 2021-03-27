@@ -92,14 +92,14 @@ func loadTableACL(id string) (TableACL, error) {
 	case "view":
 		dav := strings.SplitN(split[1], ".", 2)
 		if len(dav) != 2 {
-			return ta, fmt.Errorf("View must be two elements")
+			return ta, fmt.Errorf("view must have two elements")
 		}
 		ta.Database = dav[0]
 		ta.View = dav[1]
 	case "table":
 		dav := strings.SplitN(split[1], ".", 2)
 		if len(dav) != 2 {
-			return ta, fmt.Errorf("Table must be two elements")
+			return ta, fmt.Errorf("table must have two elements")
 		}
 		ta.Database = dav[0]
 		ta.Table = dav[1]
@@ -110,7 +110,7 @@ func loadTableACL(id string) (TableACL, error) {
 	case "anonymous function":
 		ta.AnonymousFunction = true
 	default:
-		return ta, fmt.Errorf("Illegal ID type: %s", split[0])
+		return ta, fmt.Errorf("illegal ID type: %s", split[0])
 	}
 	return ta, nil
 }

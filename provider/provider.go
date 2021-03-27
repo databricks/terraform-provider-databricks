@@ -47,6 +47,7 @@ func DatabricksProvider() *schema.Provider {
 			"databricks_cluster_policy": compute.ResourceClusterPolicy(),
 			"databricks_instance_pool":  compute.ResourceInstancePool(),
 			"databricks_job":            compute.ResourceJob(),
+			"databricks_pipeline":       compute.ResourcePipeline(),
 
 			"databricks_group":                  identity.ResourceGroup(),
 			"databricks_group_instance_profile": identity.ResourceGroupInstanceProfile(),

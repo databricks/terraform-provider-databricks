@@ -227,7 +227,15 @@ init_scripts {
 }
 ```
 
-Attributes are the same as for the `cluster_log_conf` configuration block.
+Like the `cluster_log_conf` configuration block, init scripts support S3 and DBFS locations. In addition, you can also specify a local file as follows:
+
+```hcl
+init_scripts {
+  file {
+    destination = "file:/my/local/file.sh"
+  }
+}
+```
 
 ## aws_attributes
 

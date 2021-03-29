@@ -27,7 +27,8 @@ type TableACL struct {
 
 	Grants []TablePermissions `json:"grant,omitempty"`
 	Denies []TablePermissions `json:"deny,omitempty"`
-	// SanityCheck bool     `json:"sanity_check,omitempty"`
+
+	exec common.CommandExecutor
 }
 
 // TablePermissions ...
@@ -84,7 +85,7 @@ func loadTableACL(id string) (TableACL, error) {
 	ta := TableACL{}
 	split := strings.SplitN(id, "/", 2)
 	if len(split) != 2 {
-		return ta, fmt.Errorf("ID must be three elements: %s", id)
+		return ta, fmt.Errorf("ID must be two elements: %s", id)
 	}
 	switch strings.ToLower(split[0]) {
 	case "database":
@@ -115,9 +116,9 @@ func loadTableACL(id string) (TableACL, error) {
 	return ta, nil
 }
 
-func (ta *TableACL) read(exec common.CommandExecutor) error {
+func (ta *TableACL) read() error {
 	objectType, key := ta.TypeAndKey()
-	result := exec.Execute(ta.ClusterID, "sql", fmt.Sprintf(
+	result := ta.exec.Execute(ta.ClusterID, "sql", fmt.Sprintf(
 		"SHOW GRANT ON %s %s", objectType, key))
 	if result.Failed() {
 		failure := result.Error()
@@ -172,17 +173,19 @@ func (ta *TableACL) read(exec common.CommandExecutor) error {
 	return nil
 }
 
-func (ta *TableACL) revoke(commandsAPI common.CommandExecutor) error {
+func (ta *TableACL) revoke() error {
 	existing, err := loadTableACL(ta.ID())
 	if err != nil {
 		return err
 	}
-	if err = existing.read(commandsAPI); err != nil {
+	existing.exec = ta.exec
+	existing.ClusterID = ta.ClusterID
+	if err = existing.read(); err != nil {
 		return err
 	}
 	for _, tps := range existing.permissions() {
 		for _, priv := range tps {
-			if err = ta.apply(commandsAPI, func(objType, key string) string {
+			if err = ta.apply(func(objType, key string) string {
 				return fmt.Sprintf("REVOKE ALL PRIVILEGES ON %s %s FROM `%s`",
 					objType, key, priv.Principal)
 			}); err != nil {
@@ -193,13 +196,13 @@ func (ta *TableACL) revoke(commandsAPI common.CommandExecutor) error {
 	return nil
 }
 
-func (ta *TableACL) enforce(commandsAPI common.CommandExecutor) (err error) {
-	if err = ta.revoke(commandsAPI); err != nil {
+func (ta *TableACL) enforce() (err error) {
+	if err = ta.revoke(); err != nil {
 		return err
 	}
 	for action, grantsOrDenies := range ta.permissions() {
 		for _, grant := range grantsOrDenies {
-			if err = ta.apply(commandsAPI, func(objType, key string) string {
+			if err = ta.apply(func(objType, key string) string {
 				privileges := strings.Join(grant.Privileges, ", ")
 				return fmt.Sprintf("%s %s ON %s %s TO `%s`",
 					action, privileges, objType, key, grant.Principal)
@@ -211,51 +214,77 @@ func (ta *TableACL) enforce(commandsAPI common.CommandExecutor) (err error) {
 	return nil
 }
 
-func (ta *TableACL) apply(exec common.CommandExecutor, qb func(objType, key string) string) error {
+func (ta *TableACL) apply(qb func(objType, key string) string) error {
 	sqlQuery := qb(ta.TypeAndKey())
 	log.Printf("[INFO] Executing SQL: %s", sqlQuery)
-	r := exec.Execute(ta.ClusterID, "sql", sqlQuery)
+	r := ta.exec.Execute(ta.ClusterID, "sql", sqlQuery)
 	return r.Err()
 }
 
-func newTableACLExecutor(ctx context.Context,
-	ta *TableACL, d *schema.ResourceData,
-	c *common.DatabricksClient) (common.CommandExecutor, error) {
+func (ta *TableACL) initCluster(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) (err error) {
 	clustersAPI := compute.NewClustersAPI(ctx, c)
 	if ci, ok := d.GetOk("cluster_id"); ok {
 		ta.ClusterID = ci.(string)
 	} else {
-		sparkVersion := clustersAPI.LatestSparkVersionOrDefault(compute.SparkVersionRequest{
-			Latest: true,
-		})
-		nodeType := clustersAPI.GetSmallestNodeType(compute.NodeTypeRequest{LocalDisk: true})
-		aclCluster, err := clustersAPI.GetOrCreateRunningCluster("terrraform-table-acl", compute.Cluster{
-			ClusterName:            "terrraform-table-acl",
-			SparkVersion:           sparkVersion,
-			NodeTypeID:             nodeType,
-			AutoterminationMinutes: 10,
-			SparkConf: map[string]string{
-				"spark.databricks.acl.dfAclsEnabled": "true",
-				"spark.master":                       "local[*]",
-			},
-			CustomTags: map[string]string{
-				"ResourceClass": "SingleNode",
-			},
-		})
+		ta.ClusterID, err = ta.getOrCreateCluster(clustersAPI)
 		if err != nil {
-			return nil, err
+			return
 		}
-		ta.ClusterID = aclCluster.ClusterID
 	}
 	clusterInfo, err := clustersAPI.StartAndGetInfo(ta.ClusterID)
 	if err != nil {
-		return nil, err
+		return
 	}
 	if v, ok := clusterInfo.SparkConf["spark.databricks.acl.dfAclsEnabled"]; !ok || v != "true" {
-		return nil, fmt.Errorf("cluster_id: not a High-Concurrency cluster: %s (%s)",
+		err = fmt.Errorf("cluster_id: not a High-Concurrency cluster: %s (%s)",
 			clusterInfo.ClusterName, clusterInfo.ClusterID)
+		return
 	}
-	return c.CommandExecutor(ctx), nil
+	ta.exec = c.CommandExecutor(ctx)
+	return nil
+}
+
+func (ta *TableACL) getOrCreateCluster(clustersAPI compute.ClustersAPI) (string, error) {
+	sparkVersion := clustersAPI.LatestSparkVersionOrDefault(compute.SparkVersionRequest{
+		Latest: true,
+	})
+	nodeType := clustersAPI.GetSmallestNodeType(compute.NodeTypeRequest{LocalDisk: true})
+	aclCluster, err := clustersAPI.GetOrCreateRunningCluster("terrraform-table-acl", compute.Cluster{
+		ClusterName:            "terrraform-table-acl",
+		SparkVersion:           sparkVersion,
+		NodeTypeID:             nodeType,
+		AutoterminationMinutes: 10,
+		SparkConf: map[string]string{
+			"spark.databricks.acl.dfAclsEnabled": "true",
+			"spark.master":                       "local[*]",
+		},
+		CustomTags: map[string]string{
+			"ResourceClass": "SingleNode",
+		},
+	})
+	if err != nil {
+		return "", err
+	}
+	return aclCluster.ClusterID, nil
+}
+
+func tableAclForUpdate(ctx context.Context, d *schema.ResourceData,
+	s map[string]*schema.Schema, c *common.DatabricksClient) (ta TableACL, err error) {
+	if err = common.DataToStructPointer(d, s, &ta); err != nil {
+		return
+	}
+	err = ta.initCluster(ctx, d, c)
+	return
+}
+
+func tableAclForLoad(ctx context.Context, d *schema.ResourceData,
+	s map[string]*schema.Schema, c *common.DatabricksClient) (ta TableACL, err error) {
+	ta, err = loadTableACL(d.Id())
+	if err != nil {
+		return
+	}
+	err = ta.initCluster(ctx, d, c)
+	return
 }
 
 // ResourceTableACL manages table ACLs
@@ -284,56 +313,39 @@ func ResourceTableACL() *schema.Resource {
 	return common.Resource{
 		Schema: s,
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			var ta TableACL
-			if err := common.DataToStructPointer(d, s, &ta); err != nil {
-				return err
-			}
-			commandsAPI, err := newTableACLExecutor(ctx, &ta, d, c)
+			ta, err := tableAclForUpdate(ctx, d, s, c)
 			if err != nil {
 				return err
 			}
-			if err = ta.enforce(commandsAPI); err != nil {
+			if err = ta.enforce(); err != nil {
 				return err
 			}
 			d.SetId(ta.ID())
-			// TODO: owner
 			return nil
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			ta, err := loadTableACL(d.Id())
+			ta, err := tableAclForLoad(ctx, d, s, c)
 			if err != nil {
 				return err
 			}
-			commandsAPI, err := newTableACLExecutor(ctx, &ta, d, c)
-			if err != nil {
-				return err
-			}
-			if err = ta.read(commandsAPI); err != nil {
+			if err = ta.read(); err != nil {
 				return err
 			}
 			return common.StructToData(ta, s, d)
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			var new TableACL
-			if err := common.DataToStructPointer(d, s, &new); err != nil {
-				return err
-			}
-			commandsAPI, err := newTableACLExecutor(ctx, &new, d, c)
+			ta, err := tableAclForUpdate(ctx, d, s, c)
 			if err != nil {
 				return err
 			}
-			return new.enforce(commandsAPI)
+			return ta.enforce()
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			var ta TableACL
-			if err := common.DataToStructPointer(d, s, &ta); err != nil {
-				return err
-			}
-			commandsAPI, err := newTableACLExecutor(ctx, &ta, d, c)
+			ta, err := tableAclForLoad(ctx, d, s, c)
 			if err != nil {
 				return err
 			}
-			return ta.revoke(commandsAPI)
+			return ta.revoke()
 		},
 	}.ToResource()
 }

@@ -3,6 +3,8 @@ subcategory: "Security"
 ---
 # databricks_table_acl Resource
 
+-> **Note** This resource has an evolving API, which may change in the upcoming versions.
+
 This resource manages data object access control lists in Databricks workspaces for things like tables, views, databases, and [more](https://docs.databricks.com/security/access-control/table-acls/object-privileges.html). 
 
 ## Example Usage

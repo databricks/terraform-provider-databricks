@@ -30,6 +30,18 @@ func TestTableACLID(t *testing.T) {
 	}
 }
 
+func TestTableACLID_errors(t *testing.T) {
+	for id, exp := range map[string]string{
+		"table":      "ID must be two elements: table",
+		"table/beep": "table must have two elements",
+		"view/beep":  "view must have two elements",
+		"vuew/beep":  "illegal ID type: vuew",
+	} {
+		_, err := loadTableACL(id)
+		assert.EqualError(t, err, exp)
+	}
+}
+
 type mockData map[string][][]string
 
 func (md mockData) Execute(clusterID, language, commandStr string) common.CommandResults {
@@ -61,16 +73,17 @@ func (md mockData) toCommandMock() func(string) common.CommandResults {
 }
 
 func TestTableACLGrants(t *testing.T) {
-	ta := TableACL{Table: "foo"}
-	// principal, actionType, objType, objectKey
-	err := ta.read(mockData{
+	ta := TableACL{Table: "foo", exec: mockData{
 		"SHOW GRANT ON TABLE `default`.`foo`": {
+			// principal, actionType, objType, objectKey
 			{"users", "SELECT", "database", "foo"},
 			{"users", "SELECT", "table", "`default`.`foo`"},
 			{"users", "READ", "table", "`default`.`foo`"},
 			{"users", "SELECT", "database", "default"},
 			{"interns", "DENIED_SELECT", "table", "`default`.`foo`"},
-		}})
+		},
+	}}
+	err := ta.read()
 	assert.NoError(t, err)
 	assert.Len(t, ta.Grants, 1)
 	assert.Len(t, ta.Denies, 1)
@@ -87,21 +100,26 @@ func (fc failedCommand) Execute(clusterID, language, commandStr string) common.C
 	}
 }
 
+func (fc failedCommand) toCommandMock() func(commandStr string) common.CommandResults {
+	return func(commandStr string) common.CommandResults {
+		return fc.Execute("..", "sql", commandStr)
+	}
+}
+
 func TestTableACL_NotFound(t *testing.T) {
-	ta := TableACL{Table: "foo"}
-	err := ta.read(failedCommand("Table does not exist"))
+	ta := TableACL{Table: "foo", exec: failedCommand("Table does not exist")}
+	err := ta.read()
 	assert.EqualError(t, err, "Table does not exist")
 }
 
 func TestTableACL_OtherError(t *testing.T) {
-	ta := TableACL{Table: "foo"}
-	err := ta.read(failedCommand("Some error"))
+	ta := TableACL{Table: "foo", exec: failedCommand("Some error")}
+	err := ta.read()
 	assert.EqualError(t, err, "Some error")
 }
 
 func TestTableACL_Revoke(t *testing.T) {
-	ta := TableACL{Table: "foo"}
-	err := ta.revoke(mockData{
+	ta := TableACL{Table: "foo", exec: mockData{
 		"SHOW GRANT ON TABLE `default`.`foo`": {
 			{"users", "SELECT", "database", "foo"},
 			{"users", "SELECT", "table", "`default`.`foo`"},
@@ -111,7 +129,8 @@ func TestTableACL_Revoke(t *testing.T) {
 		},
 		"REVOKE ALL PRIVILEGES ON TABLE `default`.`foo` FROM `users`":   {},
 		"REVOKE ALL PRIVILEGES ON TABLE `default`.`foo` FROM `interns`": {},
-	})
+	}}
+	err := ta.revoke()
 	require.NoError(t, err)
 }
 
@@ -125,22 +144,23 @@ func TestTableACL_Enforce(t *testing.T) {
 		Denies: []TablePermissions{
 			{"foo@example.com", []string{"SELECT"}},
 		},
-	}
-	err := ta.enforce(mockData{
-		"SHOW GRANT ON TABLE `default`.`foo`": {
-			{"users", "SELECT", "database", "foo"},
-			{"users", "SELECT", "table", "`default`.`foo`"},
-			{"users", "READ", "table", "`default`.`foo`"},
-			{"users", "SELECT", "database", "default"},
-			{"interns", "DENIED_SELECT", "table", "`default`.`foo`"},
-			{"interns", "DENIED_READ", "table", "`default`.`foo`"},
+		exec: mockData{
+			"SHOW GRANT ON TABLE `default`.`foo`": {
+				{"users", "SELECT", "database", "foo"},
+				{"users", "SELECT", "table", "`default`.`foo`"},
+				{"users", "READ", "table", "`default`.`foo`"},
+				{"users", "SELECT", "database", "default"},
+				{"interns", "DENIED_SELECT", "table", "`default`.`foo`"},
+				{"interns", "DENIED_READ", "table", "`default`.`foo`"},
+			},
+			"REVOKE ALL PRIVILEGES ON TABLE `default`.`foo` FROM `users`":        {},
+			"REVOKE ALL PRIVILEGES ON TABLE `default`.`foo` FROM `interns`":      {},
+			"GRANT MODIFY, SELECT, READ ON TABLE `default`.`foo` TO `engineers`": {},
+			"GRANT SELECT ON TABLE `default`.`foo` TO `support`":                 {},
+			"DENY SELECT ON TABLE `default`.`foo` TO `foo@example.com`":          {},
 		},
-		"REVOKE ALL PRIVILEGES ON TABLE `default`.`foo` FROM `users`":        {},
-		"REVOKE ALL PRIVILEGES ON TABLE `default`.`foo` FROM `interns`":      {},
-		"GRANT MODIFY, SELECT, READ ON TABLE `default`.`foo` TO `engineers`": {},
-		"GRANT SELECT ON TABLE `default`.`foo` TO `support`":                 {},
-		"DENY SELECT ON TABLE `default`.`foo` TO `foo@example.com`":          {},
-	})
+	}
+	err := ta.enforce()
 	require.NoError(t, err)
 }
 
@@ -239,6 +259,26 @@ func TestResourceTableACL_Read(t *testing.T) {
 	}.ApplyNoError(t)
 }
 
+func TestResourceTableACL_Read_Error(t *testing.T) {
+	qa.ResourceFixture{
+		Resource: ResourceTableACL(),
+		Read:     true,
+		New:      true,
+		ID:       "something",
+	}.ExpectError(t, "ID must be two elements: something")
+}
+
+func TestResourceTableACL_Read_ErrorCommand(t *testing.T) {
+	qa.ResourceFixture{
+		CommandMock: failedCommand("does not compute").toCommandMock(),
+		Fixtures:    createHighConcurrencyCluster,
+		Resource:    ResourceTableACL(),
+		ID:          "database/foo",
+		Read:        true,
+		New:         true,
+	}.ExpectError(t, "does not compute")
+}
+
 func TestResourceTableACL_Create(t *testing.T) {
 	qa.ResourceFixture{
 		CommandMock: mockData{
@@ -272,6 +312,24 @@ func TestResourceTableACL_Create(t *testing.T) {
 		Resource: ResourceTableACL(),
 		Create:   true,
 	}.ApplyNoError(t)
+}
+
+func TestResourceTableACL_Create_Error(t *testing.T) {
+	qa.ResourceFixture{
+		HCL: `table = "foo"
+		grant {
+			principal = "serge@example.com"
+			privileges = ["SELECT", "READ", "MODIFY"]
+		}
+		deny {
+			principal = "users"
+			privileges = ["SELECT"]
+		}`,
+		CommandMock: failedCommand("Some error").toCommandMock(),
+		Fixtures:    createHighConcurrencyCluster,
+		Resource:    ResourceTableACL(),
+		Create:      true,
+	}.ExpectError(t, "Some error")
 }
 
 func TestResourceTableACL_Update(t *testing.T) {
@@ -339,4 +397,8 @@ func TestResourceTableACL_Delete(t *testing.T) {
 		Delete:   true,
 		ID:       "table/default.foo",
 	}.ApplyNoError(t)
+}
+
+func TestResourceTableACL_CornerCases(t *testing.T) {
+	qa.ResourceCornerCases(t, ResourceTableACL(), "database/foo")
 }

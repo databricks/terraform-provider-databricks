@@ -240,13 +240,17 @@ func (f ResourceFixture) ExpectError(t *testing.T, msg string) {
 }
 
 // ResourceCornerCases checks for corner cases of error handling. Optional field name used to create error
-func ResourceCornerCases(t *testing.T, resource *schema.Resource) {
+func ResourceCornerCases(t *testing.T, resource *schema.Resource, id ...string) {
 	teapot := "I'm a teapot"
 	m := map[string]func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics{
 		"create": resource.CreateContext,
 		"read":   resource.ReadContext,
 		"update": resource.UpdateContext,
 		"delete": resource.DeleteContext,
+	}
+	fakeID := "x"
+	if len(id) > 0 {
+		fakeID = id[0]
 	}
 	HTTPFixturesApply(t, []HTTPFixture{
 		{
@@ -261,7 +265,7 @@ func ResourceCornerCases(t *testing.T, resource *schema.Resource) {
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		validData := resource.TestResourceData()
-		validData.SetId("x")
+		validData.SetId(fakeID)
 		for n, v := range m {
 			if v == nil {
 				continue

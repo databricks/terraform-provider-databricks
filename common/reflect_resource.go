@@ -106,6 +106,11 @@ func chooseFieldName(typeField reflect.StructField) string {
 		return alias
 	}
 	jsonTag := typeField.Tag.Get("json")
+	// fields without JSON tags would be treated as if ignored,
+	// but keeping linters happy
+	if jsonTag == "" {
+		return "-"
+	}
 	return strings.Split(jsonTag, ",")[0]
 }
 

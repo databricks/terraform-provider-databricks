@@ -18,8 +18,6 @@ coverage: test
 	@echo "✓ Opening coverage for unit tests ..."
 	@go tool cover -html=coverage.txt
 
-VERSION = 0.3.1
-
 build: vendor
 	@echo "✓ Building source code with go build ..."
 	@go build -mod vendor -v -o terraform-provider-databricks

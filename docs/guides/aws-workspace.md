@@ -54,7 +54,7 @@ terraform {
   required_providers {
     databricks = {
       source  = "databrickslabs/databricks"
-      version = "0.3.1"
+      version = "0.3.2"
     }
   }
 }
@@ -177,8 +177,9 @@ data "databricks_aws_bucket_policy" "this" {
 }
 
 resource "aws_s3_bucket_policy" "root_bucket_policy" {
-  bucket = aws_s3_bucket.root_storage_bucket.id
-  policy = data.databricks_aws_bucket_policy.this.json
+  bucket     = aws_s3_bucket.root_storage_bucket.id
+  policy     = data.databricks_aws_bucket_policy.this.json
+  depends_on = [aws_s3_bucket_public_access_block.root_storage_bucket]
 }
 
 resource "databricks_mws_storage_configurations" "this" {

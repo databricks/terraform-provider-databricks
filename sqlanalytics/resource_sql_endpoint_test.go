@@ -83,6 +83,33 @@ func TestResourceSQLEndpointCreate(t *testing.T) {
 	assert.Equal(t, "abc", d.Id(), "Id should not be empty")
 }
 
+func TestResourceSQLEndpointCreate_ErrorDisabled(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/sql/endpoints",
+				ExpectedRequest: SQLEndpoint{
+					Name:           "foo",
+					ClusterSize:    "Small",
+					MaxNumClusters: 1,
+				},
+				Status: 404,
+				Response: common.APIError{
+					ErrorCode: "FEATURE_DISABLED",
+					Message:   "SQL Analytics is not supported",
+				},
+			},
+		},
+		Resource: ResourceSQLEndpoint(),
+		Create:   true,
+		HCL: `
+		name = "foo"
+  		cluster_size = "Small"
+		`,
+	}.ExpectError(t, "SQL Analytics is not supported")
+}
+
 func TestResourceSQLEndpointRead(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{

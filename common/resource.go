@@ -63,12 +63,6 @@ func (r Resource) ToResource() *schema.Resource {
 		CreateContext: func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 			c := m.(*DatabricksClient)
 			err := r.Create(ctx, d, c)
-			if e, ok := err.(APIError); ok && e.IsMissing() {
-				log.Printf("[INFO] %s[id=%s] is removed on backend",
-					ResourceName.GetOrUnknown(ctx), d.Id())
-				d.SetId("")
-				return nil
-			}
 			if err != nil {
 				return diag.FromErr(err)
 			}

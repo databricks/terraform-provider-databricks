@@ -6,7 +6,7 @@ import (
 	"github.com/databrickslabs/terraform-provider-databricks/internal/acceptance"
 )
 
-func TestAccSQLEndpoint(t *testing.T) {
+func TestPreviewAccSQLEndpoint(t *testing.T) {
 	acceptance.Test(t, []acceptance.Step{
 		{
 			Template: `resource "databricks_sql_endpoint" "this" {

@@ -70,6 +70,9 @@ func TestAccClusterResource_CreateSingleNodeCluster(t *testing.T) {
 					"spark.databricks.cluster.profile" = "singleNode"
 					"spark.master" = "local[*]"
 				}
+				custom_tags = {
+					"ResourceClass" = "SingleNode"
+				}
 				{var.AWS_ATTRIBUTES}
 			}`,
 		},

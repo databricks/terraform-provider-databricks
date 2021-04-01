@@ -2,10 +2,21 @@
 
 ## 0.3.2
 
-* Fix incorrect escaping of notebook names ([#566](https://github.com/databrickslabs/terraform-provider-databricks/pull/566))
+* Fixed minor issues to add support for GCP ([#558](https://github.com/databrickslabs/terraform-provider-databricks/pull/558))
+* Fixed `databricks_permissions` for SQL Analytics Entities ([#535](https://github.com/databrickslabs/terraform-provider-databricks/issues/535))
+* Fixed incorrect HTTP 404 handling on create ([#564](https://github.com/databrickslabs/terraform-provider-databricks/issues/564), [#576](https://github.com/databrickslabs/terraform-provider-databricks/issues/576))
+* Fixed incorrect escaping of notebook names ([#566](https://github.com/databrickslabs/terraform-provider-databricks/pull/566))
+* Fixed entitlements for databricks_group ([#549](https://github.com/databrickslabs/terraform-provider-databricks/pull/549))
 * Added support for spot instances on Azure ([#571](https://github.com/databrickslabs/terraform-provider-databricks/pull/571))
-* Fix entitlements for groups. ([#549](https://github.com/databrickslabs/terraform-provider-databricks/pull/549))
-* Job schedules support pause_status as a optional field. ([#575](https://github.com/databrickslabs/terraform-provider-databricks/pull/575))
+* Added job schedules support for `pause_status` as a optional field. ([#575](https://github.com/databrickslabs/terraform-provider-databricks/pull/575))
+* Fixed minor documentation issues.
+
+Updated dependency versions:
+
+* Bump github.com/aws/aws-sdk-go from 1.37.20 to 1.38.10
+* Bump github.com/hashicorp/hcl/v2 from 2.9.0 to 2.9.1 
+* Bump github.com/zclconf/go-cty from 1.8.0 to 1.8.1
+* Bump github.com/google/go-querystring from 1.0.0 to 1.1.0
 
 ## 0.3.1
 

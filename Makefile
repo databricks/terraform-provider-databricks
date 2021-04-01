@@ -68,6 +68,10 @@ test-awsmt: install
 	@echo "✓ Running Terraform Acceptance Tests for AWS MT..."
 	@/bin/bash scripts/run.sh awsmt '^(TestAcc|TestAwsAcc)' --debug --tee
 
+test-preview: install
+	@echo "✓ Running acceptance Tests for Preview features..."
+	@/bin/bash scripts/run.sh preview '^TestPreviewAcc' --debug --tee
+
 snapshot:
 	@echo "✓ Making Snapshot ..."
 	@goreleaser release --rm-dist --snapshot

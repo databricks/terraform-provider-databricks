@@ -7,6 +7,7 @@
 * Fixed incorrect HTTP 404 handling on create ([#564](https://github.com/databrickslabs/terraform-provider-databricks/issues/564), [#576](https://github.com/databrickslabs/terraform-provider-databricks/issues/576))
 * Fixed incorrect escaping of notebook names ([#566](https://github.com/databrickslabs/terraform-provider-databricks/pull/566))
 * Fixed entitlements for databricks_group ([#549](https://github.com/databrickslabs/terraform-provider-databricks/pull/549))
+* Fixed rate limiting to perform more than 1 request per second ([#577](https://github.com/databrickslabs/terraform-provider-databricks/pull/577))
 * Added support for spot instances on Azure ([#571](https://github.com/databrickslabs/terraform-provider-databricks/pull/571))
 * Added job schedules support for `pause_status` as a optional field. ([#575](https://github.com/databrickslabs/terraform-provider-databricks/pull/575))
 * Fixed minor documentation issues.

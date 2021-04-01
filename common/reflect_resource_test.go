@@ -366,7 +366,7 @@ func TestStructToData(t *testing.T) {
 
 	// Empty required string should be set.
 	{
-		//lint:ignore SA1019 
+		//lint:ignore SA1019
 		// nolint
 		_, ok := d.GetOkExists("addresses.0.required_string")
 		assert.Truef(t, ok, "Empty required string should be set in ResourceData")

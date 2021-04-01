@@ -640,9 +640,8 @@ func TestAzureAccNodeTypes(t *testing.T) {
 	ctx := context.Background()
 	clustersAPI := NewClustersAPI(ctx, common.CommonEnvironmentClient())
 	m := map[string]NodeTypeRequest{
-		"Standard_F4s":     {},
-		"Standard_NC12":    {MinGPUs: 1},
-		"Standard_L32s_v2": {MinCores: 32, GBPerCore: 8},
+		"Standard_F4s":         {},
+		"Standard_L32s_v2":     {MinCores: 32, GBPerCore: 8},
 	}
 
 	for k, v := range m {

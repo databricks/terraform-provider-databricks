@@ -179,7 +179,7 @@ func (ta *TableACL) read() error {
 				ta.Denies = append(ta.Denies, firstSeenPrincipalPermissions)
 				privileges = &ta.Denies[len(ta.Denies)-1].Privileges
 			} else {
-				// point priviliges to be of the newly added principal
+				// point privileges to be of the newly added principal
 				ta.Grants = append(ta.Grants, firstSeenPrincipalPermissions)
 				privileges = &ta.Grants[len(ta.Grants)-1].Privileges
 			}

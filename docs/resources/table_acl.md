@@ -40,7 +40,7 @@ resource "databricks_table_acl" "foo_table" {
 
 ## Argument Reference
 
-The following arguments are available to specify the data object you need to enfore access controls on. You must specify only one of those arguments (except for `table` and `view`), otherwise resource creation will fail.
+The following arguments are available to specify the data object you need to enforce access controls on. You must specify only one of those arguments (except for `table` and `view`), otherwise resource creation will fail.
 
 * `database` - Name of the database. Has default value of `default`.
 * `table` - Name of the table. Can be combined with `database`. 
@@ -51,7 +51,7 @@ The following arguments are available to specify the data object you need to enf
 
 ### `grant` and `deny` blocks
 
-You must specify one or many `grant` and/or `deny` configuration blocks to declare `privileges` to a `principal`, which corresponds to `display_name` of [databricks_group](group.md#display_name) or [databricks_user](user.md#display_name). Terraform would ensure that only those principals and priviliges defined in the resource are applied for the data object and would remove anything else. It would not remove any transitive privileges. Every `grant` or `deny` has the following required arguments:
+You must specify one or many `grant` and/or `deny` configuration blocks to declare `privileges` to a `principal`, which corresponds to `display_name` of [databricks_group](group.md#display_name) or [databricks_user](user.md#display_name). Terraform would ensure that only those principals and privileges defined in the resource are applied for the data object and would remove anything else. It would not remove any transitive privileges. Every `grant` or `deny` has the following required arguments:
 
 * `principal` - `display_name` of [databricks_group](group.md#display_name) or [databricks_user](user.md#display_name).
 * `privileges` - set of available privilege names in upper case.
@@ -59,12 +59,12 @@ You must specify one or many `grant` and/or `deny` configuration blocks to decla
 [Available](https://docs.databricks.com/security/access-control/table-acls/object-privileges.html) privilege names are:
 
 * `SELECT` - gives read access to an object.
-* `CREATE` - gives ability to create an object (for example, a table in a database).
-* `MODIFY` - gives ability to add, delete, and modify data to or from an object.
-* `USAGE` - does not give any abilities, but is an additional requirement to perform any action on a database object.
-* `READ_METADATA` - gives ability to view an object and its metadata.
-* `CREATE_NAMED_FUNCTION` - gives ability to create a named UDF in an existing catalog or database.
-* `MODIFY_CLASSPATH` - gives ability to add files to the Spark class path.
+* `CREATE` - gives the ability to create an object (for example, a table in a database).
+* `MODIFY` - gives the ability to add, delete, and modify data to or from an object.
+* `USAGE` - do not give any abilities, but is an additional requirement to perform any action on a database object.
+* `READ_METADATA` - gives the ability to view an object and its metadata.
+* `CREATE_NAMED_FUNCTION` - gives the ability to create a named UDF in an existing catalog or database.
+* `MODIFY_CLASSPATH` - gives the ability to add files to the Spark class path.
 * `ALL PRIVILEGES` - gives all privileges (is translated into all the above privileges).
 
 ## Import

@@ -10,6 +10,7 @@ import (
 	"github.com/databrickslabs/terraform-provider-databricks/compute"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 // https://docs.databricks.com/security/access-control/table-acls/object-privileges.html#operations-and-privileges
@@ -26,7 +27,7 @@ type TableACL struct {
 	ClusterID         string `json:"cluster_id,omitempty" tf:"computed"`
 
 	Grants []TablePermissions `json:"grant,omitempty"`
-	Denies []TablePermissions `json:"deny,omitempty"`
+	Denies []TablePermissions `json:"deny,omitempty"` // TODO: remove denies
 
 	exec common.CommandExecutor
 }
@@ -51,8 +52,8 @@ func (ta *TableACL) actualDatabase() string {
 	return ta.Database
 }
 
-// TypeAndKey returns ACL object type and key
-func (ta *TableACL) TypeAndKey() (string, string) {
+// typeAndKey returns ACL object type and key
+func (ta *TableACL) typeAndKey() (string, string) {
 	if ta.Table != "" {
 		return "TABLE", fmt.Sprintf("`%s`.`%s`", ta.actualDatabase(), ta.Table)
 	}
@@ -76,7 +77,10 @@ func (ta *TableACL) TypeAndKey() (string, string) {
 
 // ID returns Terraform resource ID
 func (ta *TableACL) ID() string {
-	objectType, key := ta.TypeAndKey()
+	objectType, key := ta.typeAndKey()
+	if objectType == "" && key == "" {
+		return ""
+	}
 	noBackticks := strings.ReplaceAll(key, "`", "")
 	return fmt.Sprintf("%s/%s", strings.ToLower(objectType), noBackticks)
 }
@@ -117,11 +121,14 @@ func loadTableACL(id string) (TableACL, error) {
 }
 
 func (ta *TableACL) read() error {
-	objectType, key := ta.TypeAndKey()
-	result := ta.exec.Execute(ta.ClusterID, "sql", fmt.Sprintf(
-		"SHOW GRANT ON %s %s", objectType, key))
-	if result.Failed() {
-		failure := result.Error()
+	thisType, thisKey := ta.typeAndKey()
+	if thisType == "" && thisKey == "" {
+		return fmt.Errorf("invalid ID")
+	}
+	currentGrantsOnThis := ta.exec.Execute(ta.ClusterID, "sql", fmt.Sprintf(
+		"SHOW GRANT ON %s %s", thisType, thisKey))
+	if currentGrantsOnThis.Failed() {
+		failure := currentGrantsOnThis.Error()
 		if strings.Contains(failure, "does not exist") ||
 			strings.Contains(failure, "RESOURCE_DOES_NOT_EXIST") {
 			return common.NotFound(failure)
@@ -131,23 +138,28 @@ func (ta *TableACL) read() error {
 	// clear any previous entries
 	ta.Grants = []TablePermissions{}
 	ta.Denies = []TablePermissions{}
-	var principal, actionType, objType, objectKey string
-	for result.Scan(&principal, &actionType, &objType, &objectKey) {
-		if !strings.EqualFold(objectType, objType) {
+
+	// iterate over existing permissions over given data object
+	var currentPrincipal, currentAction, currentType, currentKey string
+	for currentGrantsOnThis.Scan(&currentPrincipal, &currentAction, &currentType, &currentKey) {
+		if !strings.EqualFold(currentType, thisType) {
 			continue
 		}
-		if !strings.EqualFold(objectKey, key) {
+		if !strings.EqualFold(currentKey, thisKey) {
 			continue
 		}
+		// find existing grants or denies for all principals
 		target := ta.Grants
-		var isDeny = strings.HasPrefix(actionType, "DENIED_")
+		var isDeny = strings.HasPrefix(currentAction, "DENIED_")
 		if isDeny {
-			actionType = strings.Replace(actionType, "DENIED_", "", 1)
+			// TODO: this is going to be removed
+			currentAction = strings.Replace(currentAction, "DENIED_", "", 1)
 			target = ta.Denies
 		}
 		var privileges *[]string
-		for i, tp := range target {
-			if tp.Principal == principal {
+		for i, tablePermissions := range target {
+			// correct all privileges for the same principal into a slide
+			if tablePermissions.Principal == currentPrincipal {
 				if isDeny {
 					privileges = &ta.Denies[i].Privileges
 				} else {
@@ -156,19 +168,24 @@ func (ta *TableACL) read() error {
 			}
 		}
 		if privileges == nil {
-			tablePerms := TablePermissions{
-				Principal:  principal,
+			// initialize permissions wrapper for a principal not seen
+			// in previous iterations
+			firstSeenPrincipalPermissions := TablePermissions{
+				Principal:  currentPrincipal,
 				Privileges: []string{},
 			}
 			if isDeny {
-				ta.Denies = append(ta.Denies, tablePerms)
+				// TODO: this will be removed
+				ta.Denies = append(ta.Denies, firstSeenPrincipalPermissions)
 				privileges = &ta.Denies[len(ta.Denies)-1].Privileges
 			} else {
-				ta.Grants = append(ta.Grants, tablePerms)
+				// point priviliges to be of the newly added principal
+				ta.Grants = append(ta.Grants, firstSeenPrincipalPermissions)
 				privileges = &ta.Grants[len(ta.Grants)-1].Privileges
 			}
 		}
-		*privileges = append(*privileges, actionType)
+		// add action for the principal on current iteration
+		*privileges = append(*privileges, currentAction)
 	}
 	return nil
 }
@@ -215,7 +232,11 @@ func (ta *TableACL) enforce() (err error) {
 }
 
 func (ta *TableACL) apply(qb func(objType, key string) string) error {
-	sqlQuery := qb(ta.TypeAndKey())
+	objType, key := ta.typeAndKey()
+	if objType == "" && key == "" {
+		return fmt.Errorf("invalid ID")
+	}
+	sqlQuery := qb(objType, key)
 	log.Printf("[INFO] Executing SQL: %s", sqlQuery)
 	r := ta.exec.Execute(ta.ClusterID, "sql", sqlQuery)
 	return r.Err()
@@ -256,6 +277,7 @@ func (ta *TableACL) getOrCreateCluster(clustersAPI compute.ClustersAPI) (string,
 		AutoterminationMinutes: 10,
 		SparkConf: map[string]string{
 			"spark.databricks.acl.dfAclsEnabled": "true",
+			"spark.databricks.cluster.profile":   "singleNode",
 			"spark.master":                       "local[*]",
 		},
 		CustomTags: map[string]string{
@@ -299,15 +321,18 @@ func ResourceTableACL() *schema.Resource {
 		s["database"].Default = "default"
 		// TODO: ignore changes on cluster_id
 
-		// validateGrants := validation.StringInSlice([]string{
-		// 	"SELECT",
-		// 	"CREATE",
-		// 	"MODIFY",
-		// 	"READ_METADATA",
-		// 	"CREATE_NAMED_FUNCTION",
-		// }, false)
-		// s["grants"].ValidateFunc = validateGrants
-		// s["denies"].ValidateFunc = validateGrants
+		validateGrants := validation.StringInSlice([]string{
+			"SELECT",
+			"CREATE",
+			"MODIFY",
+			"USAGE",
+			"READ_METADATA",
+			"CREATE_NAMED_FUNCTION",
+			"MODIFY_CLASSPATH",
+			"ALL PRIVILEGES",
+		}, false)
+		s["grants"].ValidateDiagFunc = validation.ToDiagFunc(validateGrants)
+		s["denies"].ValidateDiagFunc = validation.ToDiagFunc(validateGrants)
 		return s
 	})
 	return common.Resource{

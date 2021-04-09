@@ -390,7 +390,11 @@ func (c *DatabricksClient) redactedDump(body []byte) (res string) {
 		// error in this case is not much relevant
 		return
 	}
-	return onlyNBytes(string(rePacked), 1024)
+	maxBytes := 1024
+	if c.DebugTruncateBytes > maxBytes {
+		maxBytes = c.DebugTruncateBytes
+	}
+	return onlyNBytes(string(rePacked), maxBytes)
 }
 
 func (c *DatabricksClient) userAgent(ctx context.Context) string {

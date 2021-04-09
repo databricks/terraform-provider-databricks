@@ -223,6 +223,8 @@ func TestWaitForClusterStatus_NotReachable(t *testing.T) {
 			Response: ClusterInfo{
 				State:        ClusterStateUnknown,
 				StateMessage: "Something strange is going on",
+				TerminationReason: &TerminationReason{Code: "unknown", Type: "broken",
+					Parameters: map[string]string{"abc": "def"}},
 			},
 		},
 	})

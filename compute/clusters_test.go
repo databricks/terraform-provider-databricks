@@ -236,7 +236,8 @@ func TestWaitForClusterStatus_NotReachable(t *testing.T) {
 	ctx := context.Background()
 	_, err = NewClustersAPI(ctx, client).waitForClusterStatus("abc", ClusterStateRunning)
 	require.Error(t, err)
-	assert.Contains(t, err.Error(), "abc is not able to transition from UNKNOWN to RUNNING: Something strange is going on.")
+	assert.Contains(t, err.Error(), "abc is not able to transition from UNKNOWN to RUNNING: Something strange is going on")
+	assert.Contains(t, err.Error(), "code: unknown, type: broken")
 }
 
 func TestWaitForClusterStatus_NormalRetry(t *testing.T) {

@@ -181,6 +181,11 @@ func (a ClustersAPI) waitForClusterStatus(clusterID string, desired ClusterState
 		}
 		if !clusterInfo.State.CanReach(desired) {
 			docLink := "https://docs.databricks.com/dev-tools/api/latest/clusters.html#clusterclusterstate"
+			if clusterInfo.TerminationReason != nil {
+				log.Printf("[DEBUG] Cluster %s termination info: code: %s, type: %s, parameters: %v",
+					clusterID, clusterInfo.TerminationReason.Code, clusterInfo.TerminationReason.Type,
+					clusterInfo.TerminationReason.Parameters)
+			}
 			return resource.NonRetryableError(fmt.Errorf(
 				"%s is not able to transition from %s to %s: %s. Please see %s for more details",
 				clusterID, clusterInfo.State, desired, clusterInfo.StateMessage, docLink))

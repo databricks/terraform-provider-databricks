@@ -2,6 +2,7 @@ package sqlanalytics
 
 import (
 	"context"
+	"strings"
 
 	"github.com/databrickslabs/terraform-provider-databricks/common"
 	"github.com/databrickslabs/terraform-provider-databricks/sqlanalytics/api"
@@ -47,6 +48,63 @@ func (d *DashboardEntity) fromAPIObject(ad *api.Dashboard, schema map[string]*sc
 	return nil
 }
 
+// NewDashboardAPI ...
+func NewDashboardAPI(ctx context.Context, m interface{}) DashboardAPI {
+	return DashboardAPI{m.(*common.DatabricksClient), ctx}
+}
+
+// DashboardAPI ...
+type DashboardAPI struct {
+	client  *common.DatabricksClient
+	context context.Context
+}
+
+func (a DashboardAPI) buildPath(path ...string) string {
+	out := "/preview/sql/dashboards"
+	if len(path) == 1 {
+		out = out + "/" + strings.Join(path, "/")
+	}
+	return out
+}
+
+// Create ...
+func (a DashboardAPI) Create(d *api.Dashboard) (*api.Dashboard, error) {
+	var dout api.Dashboard
+	err := a.client.Post(a.context, a.buildPath(), d, &dout)
+	if err != nil {
+		return nil, err
+	}
+
+	return &dout, err
+}
+
+// Read ...
+func (a DashboardAPI) Read(d *api.Dashboard) (*api.Dashboard, error) {
+	var dout api.Dashboard
+	err := a.client.Get(a.context, a.buildPath(d.ID), nil, &dout)
+	if err != nil {
+		return nil, err
+	}
+
+	return &dout, nil
+}
+
+// Update ...
+func (a DashboardAPI) Update(d *api.Dashboard) (*api.Dashboard, error) {
+	var dout api.Dashboard
+	err := a.client.Post(a.context, a.buildPath(d.ID), d, &dout)
+	if err != nil {
+		return nil, err
+	}
+
+	return &dout, nil
+}
+
+// Delete ...
+func (a DashboardAPI) Delete(d *api.Dashboard) error {
+	return a.client.Delete(a.context, a.buildPath(d.ID), nil)
+}
+
 // ResourceDashboard ...
 func ResourceDashboard() *schema.Resource {
 	s := common.StructToSchema(
@@ -63,7 +121,7 @@ func ResourceDashboard() *schema.Resource {
 				return err
 			}
 
-			adNew, err := api.NewWrapper(ctx, c).CreateDashboard(ad)
+			adNew, err := NewDashboardAPI(ctx, c).Create(ad)
 			if err != nil {
 				return err
 			}
@@ -80,7 +138,7 @@ func ResourceDashboard() *schema.Resource {
 				return err
 			}
 
-			adNew, err := api.NewWrapper(ctx, c).ReadDashboard(ad)
+			adNew, err := NewDashboardAPI(ctx, c).Read(ad)
 			if err != nil {
 				return err
 			}
@@ -94,7 +152,7 @@ func ResourceDashboard() *schema.Resource {
 				return err
 			}
 
-			_, err = api.NewWrapper(ctx, c).UpdateDashboard(ad)
+			_, err = NewDashboardAPI(ctx, c).Update(ad)
 			if err != nil {
 				return err
 			}
@@ -110,7 +168,7 @@ func ResourceDashboard() *schema.Resource {
 				return err
 			}
 
-			return api.NewWrapper(ctx, c).DeleteDashboard(ad)
+			return NewDashboardAPI(ctx, c).Delete(ad)
 		},
 		Schema: s,
 	}.ToResource()

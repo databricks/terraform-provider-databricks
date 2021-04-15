@@ -2,6 +2,7 @@ package sqlanalytics
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"strconv"
 
@@ -134,6 +135,82 @@ func (w *WidgetEntity) fromAPIObject(aw *api.Widget, schema map[string]*schema.S
 	return nil
 }
 
+// NewWidgetAPI ...
+func NewWidgetAPI(ctx context.Context, m interface{}) WidgetAPI {
+	return WidgetAPI{m.(*common.DatabricksClient), ctx}
+}
+
+// WidgetAPI ...
+type WidgetAPI struct {
+	client  *common.DatabricksClient
+	context context.Context
+}
+
+func (a WidgetAPI) buildPath(path ...int) string {
+	out := "/preview/sql/widgets"
+	if len(path) == 1 {
+		out = fmt.Sprintf("%s/%d", out, path[0])
+	}
+	return out
+}
+
+// Create ...
+func (a WidgetAPI) Create(w *api.Widget) (*api.Widget, error) {
+	var wout api.Widget
+	err := a.client.Post(a.context, a.buildPath(), w, &wout)
+	if err != nil {
+		return nil, err
+	}
+
+	return &wout, err
+}
+
+// Read ...
+func (a WidgetAPI) Read(w *api.Widget) (*api.Widget, error) {
+	if w.DashboardID == "" {
+		return nil, fmt.Errorf("Cannot read widget without dashboard ID")
+	}
+
+	d, err := NewDashboardAPI(a.context, a.client).Read(&api.Dashboard{ID: w.DashboardID})
+	if err != nil {
+		return nil, err
+	}
+
+	// Look for matching widget ID.
+	for _, wp := range d.Widgets {
+		var wnew api.Widget
+		err = json.Unmarshal(wp, &wnew)
+		if err != nil {
+			return nil, err
+		}
+
+		if wnew.ID == w.ID {
+			// Include dashboard ID in returned object.
+			// It's not part of the API response.
+			wnew.DashboardID = w.DashboardID
+			return &wnew, nil
+		}
+	}
+
+	return nil, fmt.Errorf("Cannot find widget %d attached to dashboard %s", w.ID, w.DashboardID)
+}
+
+// Update ...
+func (a WidgetAPI) Update(w *api.Widget) (*api.Widget, error) {
+	var wout api.Widget
+	err := a.client.Post(a.context, a.buildPath(w.ID), w, &wout)
+	if err != nil {
+		return nil, err
+	}
+
+	return &wout, nil
+}
+
+// Delete ...
+func (a WidgetAPI) Delete(w *api.Widget) error {
+	return a.client.Delete(a.context, a.buildPath(w.ID), nil)
+}
+
 // ResourceWidget ...
 func ResourceWidget() *schema.Resource {
 	s := common.StructToSchema(
@@ -151,7 +228,7 @@ func ResourceWidget() *schema.Resource {
 				return err
 			}
 
-			awp, err := api.NewWrapper(ctx, c).CreateWidget(aw)
+			awp, err := NewWidgetAPI(ctx, c).Create(aw)
 			if err != nil {
 				return err
 			}
@@ -168,7 +245,7 @@ func ResourceWidget() *schema.Resource {
 				return err
 			}
 
-			awNew, err := api.NewWrapper(ctx, c).ReadWidget(aw)
+			awNew, err := NewWidgetAPI(ctx, c).Read(aw)
 			if err != nil {
 				return err
 			}
@@ -182,7 +259,7 @@ func ResourceWidget() *schema.Resource {
 				return err
 			}
 
-			_, err = api.NewWrapper(ctx, c).UpdateWidget(ad)
+			_, err = NewWidgetAPI(ctx, c).Update(ad)
 			if err != nil {
 				return err
 			}
@@ -198,7 +275,7 @@ func ResourceWidget() *schema.Resource {
 				return err
 			}
 
-			return api.NewWrapper(ctx, c).DeleteWidget(aw)
+			return NewWidgetAPI(ctx, c).Delete(aw)
 		},
 		Schema: s,
 	}.ToResource()

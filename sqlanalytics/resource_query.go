@@ -2,6 +2,7 @@ package sqlanalytics
 
 import (
 	"context"
+	"encoding/json"
 	"log"
 	"reflect"
 	"strings"
@@ -349,6 +350,81 @@ func (q *QueryEntity) fromAPIObject(aq *api.Query, schema map[string]*schema.Sch
 	return nil
 }
 
+// NewQueryAPI ...
+func NewQueryAPI(ctx context.Context, m interface{}) QueryAPI {
+	return QueryAPI{m.(*common.DatabricksClient), ctx}
+}
+
+// QueryAPI ...
+type QueryAPI struct {
+	client  *common.DatabricksClient
+	context context.Context
+}
+
+func (a QueryAPI) buildPath(path ...string) string {
+	out := "/preview/sql/queries"
+	if len(path) == 1 {
+		out = out + "/" + strings.Join(path, "/")
+	}
+	return out
+}
+
+// Create ...
+func (a QueryAPI) Create(q *api.Query) (*api.Query, error) {
+	var qp api.Query
+	err := a.client.Post(a.context, a.buildPath(), q, &qp)
+	if err != nil {
+		return nil, err
+	}
+
+	// New queries are created with a table visualization by default.
+	// We don't manage that visualization here, so immediately remove it.
+	if len(qp.Visualizations) > 0 {
+		for _, rv := range qp.Visualizations {
+			var v api.Visualization
+			err = json.Unmarshal(rv, &v)
+			if err != nil {
+				return nil, err
+			}
+			// TODO
+			// err = a.DeleteVisualization(&v)
+			// if err != nil {
+			// 	return nil, err
+			// }
+		}
+		qp.Visualizations = []json.RawMessage{}
+	}
+
+	return &qp, err
+}
+
+// Read ...
+func (a QueryAPI) Read(q *api.Query) (*api.Query, error) {
+	var qp api.Query
+	err := a.client.Get(a.context, a.buildPath(q.ID), nil, &qp)
+	if err != nil {
+		return nil, err
+	}
+
+	return &qp, nil
+}
+
+// Update ...
+func (a QueryAPI) Update(q *api.Query) (*api.Query, error) {
+	var qp api.Query
+	err := a.client.Post(a.context, a.buildPath(q.ID), q, &qp)
+	if err != nil {
+		return nil, err
+	}
+
+	return &qp, nil
+}
+
+// Delete ...
+func (a QueryAPI) Delete(q *api.Query) error {
+	return a.client.Delete(a.context, a.buildPath(q.ID), nil)
+}
+
 // ResourceQuery ...
 func ResourceQuery() *schema.Resource {
 	s := common.StructToSchema(
@@ -365,7 +441,7 @@ func ResourceQuery() *schema.Resource {
 				return err
 			}
 
-			aqNew, err := api.NewWrapper(ctx, c).CreateQuery(aq)
+			aqNew, err := NewQueryAPI(ctx, c).Create(aq)
 			if err != nil {
 				return err
 			}
@@ -382,7 +458,7 @@ func ResourceQuery() *schema.Resource {
 				return err
 			}
 
-			aqNew, err := api.NewWrapper(ctx, c).ReadQuery(aq)
+			aqNew, err := NewQueryAPI(ctx, c).Read(aq)
 			if err != nil {
 				return err
 			}
@@ -396,7 +472,7 @@ func ResourceQuery() *schema.Resource {
 				return err
 			}
 
-			_, err = api.NewWrapper(ctx, c).UpdateQuery(aq)
+			_, err = NewQueryAPI(ctx, c).Update(aq)
 			if err != nil {
 				return err
 			}
@@ -412,7 +488,7 @@ func ResourceQuery() *schema.Resource {
 				return err
 			}
 
-			return api.NewWrapper(ctx, c).DeleteQuery(aq)
+			return NewQueryAPI(ctx, c).Delete(aq)
 		},
 		Schema: s,
 	}.ToResource()

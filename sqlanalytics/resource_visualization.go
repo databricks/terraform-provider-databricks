@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
 	"log"
 	"strconv"
 	"strings"
@@ -63,6 +64,90 @@ func (v *VisualizationEntity) fromAPIObject(av *api.Visualization, schema map[st
 	return nil
 }
 
+// NewVisualizationAPI ...
+func NewVisualizationAPI(ctx context.Context, m interface{}) VisualizationAPI {
+	return VisualizationAPI{m.(*common.DatabricksClient), ctx}
+}
+
+// VisualizationAPI ...
+type VisualizationAPI struct {
+	client  *common.DatabricksClient
+	context context.Context
+}
+
+func (a VisualizationAPI) buildPath(path ...int) string {
+	out := "/preview/sql/visualizations"
+	if len(path) == 1 {
+		out = fmt.Sprintf("%s/%d", out, path[0])
+	}
+	return out
+}
+
+// Create ...
+func (a VisualizationAPI) Create(v *api.Visualization) (*api.Visualization, error) {
+	var vp api.Visualization
+	err := a.client.Post(a.context, a.buildPath(), v, &vp)
+	if err != nil {
+		return nil, err
+	}
+
+	// Set query ID on returned object.
+	// It's not included in the POST response.
+	vp.QueryID = v.QueryID
+
+	return &vp, err
+}
+
+// Read ...
+func (a VisualizationAPI) Read(v *api.Visualization) (*api.Visualization, error) {
+	if v.QueryID == "" {
+		return nil, fmt.Errorf("Cannot read visualization without query ID")
+	}
+
+	q, err := NewQueryAPI(a.context, a.client).Read(&api.Query{ID: v.QueryID})
+	if err != nil {
+		return nil, err
+	}
+
+	// Look for matching visualization ID.
+	for _, vp := range q.Visualizations {
+		var vnew api.Visualization
+		err = json.Unmarshal(vp, &vnew)
+		if err != nil {
+			return nil, err
+		}
+
+		if vnew.ID == v.ID {
+			// Include query ID in returned object.
+			// It's not part of the API response.
+			vnew.QueryID = v.QueryID
+			return &vnew, nil
+		}
+	}
+
+	return nil, fmt.Errorf("Cannot find visualization %d attached to query %s", v.ID, v.QueryID)
+}
+
+// Update ...
+func (a VisualizationAPI) Update(v *api.Visualization) (*api.Visualization, error) {
+	var vp api.Visualization
+	err := a.client.Post(a.context, a.buildPath(v.ID), v, &vp)
+	if err != nil {
+		return nil, err
+	}
+
+	// Set query ID on returned object.
+	// It's not included in the POST response.
+	vp.QueryID = v.QueryID
+
+	return &vp, nil
+}
+
+// Delete ...
+func (a VisualizationAPI) Delete(v *api.Visualization) error {
+	return a.client.Delete(a.context, a.buildPath(v.ID), nil)
+}
+
 func jsonRemarshal(in []byte) ([]byte, error) {
 	var v interface{}
 	if len(in) == 0 {
@@ -109,7 +194,7 @@ func ResourceVisualization() *schema.Resource {
 				return err
 			}
 
-			avNew, err := api.NewWrapper(ctx, c).CreateVisualization(av)
+			avNew, err := NewVisualizationAPI(ctx, c).Create(av)
 			if err != nil {
 				return err
 			}
@@ -126,7 +211,7 @@ func ResourceVisualization() *schema.Resource {
 				return err
 			}
 
-			avNew, err := api.NewWrapper(ctx, c).ReadVisualization(av)
+			avNew, err := NewVisualizationAPI(ctx, c).Read(av)
 			if err != nil {
 				return err
 			}
@@ -140,7 +225,7 @@ func ResourceVisualization() *schema.Resource {
 				return err
 			}
 
-			_, err = api.NewWrapper(ctx, c).UpdateVisualization(av)
+			_, err = NewVisualizationAPI(ctx, c).Update(av)
 			if err != nil {
 				return err
 			}
@@ -156,7 +241,7 @@ func ResourceVisualization() *schema.Resource {
 				return err
 			}
 
-			return api.NewWrapper(ctx, c).DeleteVisualization(av)
+			return NewVisualizationAPI(ctx, c).Delete(av)
 		},
 		Schema: s,
 	}.ToResource()

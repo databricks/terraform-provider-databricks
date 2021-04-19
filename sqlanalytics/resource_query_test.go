@@ -374,12 +374,6 @@ func TestQueryDelete(t *testing.T) {
 		Resource: ResourceQuery(),
 		Delete:   true,
 		ID:       "foo",
-		State: map[string]interface{}{
-			"data_source_id": "xyz",
-			"name":           "Updated name",
-			"description":    "Updated description",
-			"query":          "SELECT 2",
-		},
 	}.Apply(t)
 
 	assert.NoError(t, err, err)

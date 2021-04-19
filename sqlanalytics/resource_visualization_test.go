@@ -228,13 +228,6 @@ func TestVisualizationDelete(t *testing.T) {
 		Resource: ResourceVisualization(),
 		Delete:   true,
 		ID:       "12345",
-		State: map[string]interface{}{
-			"query_id":    "foo",
-			"type":        "chart",
-			"name":        "My Updated Chart",
-			"description": "Some Updated Description",
-			"options":     "{}",
-		},
 	}.Apply(t)
 
 	assert.NoError(t, err, err)

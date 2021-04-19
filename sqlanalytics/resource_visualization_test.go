@@ -238,7 +238,5 @@ func TestVisualizationDelete(t *testing.T) {
 	}.Apply(t)
 
 	assert.NoError(t, err, err)
-
-	// Delete doesn't touch schema.ResourceData, so the ID should survive.
-	assert.Equal(t, "12345", d.Id())
+	assert.Equal(t, "12345", d.Id(), "Resource ID should not be empty")
 }

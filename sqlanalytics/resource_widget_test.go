@@ -152,3 +152,20 @@ func TestWidgetCreateWithParamValue(t *testing.T) {
 	assert.Equal(t, "12345", d.Id(), "Resource ID should not be empty")
 	assert.Equal(t, "678", d.Get("visualization_id"))
 }
+
+func TestWidgetDelete(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "DELETE",
+				Resource: "/api/2.0/preview/sql/widgets/12345",
+			},
+		},
+		Resource: ResourceWidget(),
+		Delete:   true,
+		ID:       "12345",
+	}.Apply(t)
+
+	assert.NoError(t, err, err)
+	assert.Equal(t, "12345", d.Id(), "Resource ID should not be empty")
+}

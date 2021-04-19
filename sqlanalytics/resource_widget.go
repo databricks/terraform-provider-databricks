@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"sort"
 	"strconv"
 
 	"github.com/databrickslabs/terraform-provider-databricks/common"
@@ -39,6 +40,20 @@ type WidgetParameter struct {
 	// Mutually exclusive.
 	Value  string   `json:"value,omitempty"`
 	Values []string `json:"values,omitempty"`
+}
+
+type sortWidgetParameter []WidgetParameter
+
+func (a sortWidgetParameter) Len() int {
+	return len(a)
+}
+
+func (a sortWidgetParameter) Swap(i, j int) {
+	a[i], a[j] = a[j], a[i]
+}
+
+func (a sortWidgetParameter) Less(i, j int) bool {
+	return a[i].Name < a[j].Name
 }
 
 func (w *WidgetEntity) toAPIObject(schema map[string]*schema.Schema, data *schema.ResourceData) (*api.Widget, error) {
@@ -126,6 +141,51 @@ func (w *WidgetEntity) fromAPIObject(aw *api.Widget, schema map[string]*schema.S
 			PosY:  pos.PosY,
 		}
 	}
+
+	w.Parameter = make([]WidgetParameter, 0, len(aw.Options.ParameterMapping))
+	for _, p := range aw.Options.ParameterMapping {
+		wp := WidgetParameter{
+			Name:  p.Name,
+			Type:  p.Type,
+			MapTo: p.MapTo,
+			Title: p.Title,
+		}
+
+		// Re-marshal value so we can try to unmarshal different types.
+		// We don't know about the type it holds, because it depends
+		// on the parameter's type, which we don't have access to.
+		b, err := json.Marshal(p.Value)
+		if err != nil {
+			return err
+		}
+
+		// Try unmarshalling `string`.
+		{
+			var v string
+			err := json.Unmarshal(b, &v)
+			if err == nil {
+				wp.Value = v
+				w.Parameter = append(w.Parameter, wp)
+				continue
+			}
+		}
+
+		// Try unmarshalling `[]string`.
+		{
+			var vs []string
+			err := json.Unmarshal(b, &vs)
+			if err == nil {
+				wp.Values = vs
+				w.Parameter = append(w.Parameter, wp)
+				continue
+			}
+		}
+
+		return fmt.Errorf("Unable to derive type from message: %v", string(b))
+	}
+
+	// Sort parameters by their name for deterministic order.
+	sort.Sort(sortWidgetParameter(w.Parameter))
 
 	// Pass to ResourceData.
 	if err := common.StructToData(*w, schema, data); err != nil {

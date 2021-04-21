@@ -283,7 +283,8 @@ func (q *QueryEntity) fromAPIObject(aq *api.Query, schema map[string]*schema.Sch
 
 	if s := aq.Schedule; s != nil {
 		q.Schedule = &QuerySchedule{}
-		if s.Interval%secondsInWeek == 0 {
+		switch {
+		case s.Interval%secondsInWeek == 0:
 			q.Schedule.Weekly = &QueryScheduleWeekly{
 				IntervalWeeks: s.Interval / secondsInWeek,
 			}
@@ -296,7 +297,7 @@ func (q *QueryEntity) fromAPIObject(aq *api.Query, schema map[string]*schema.Sch
 			if s.Until != nil {
 				q.Schedule.Weekly.UntilDate = *s.Until
 			}
-		} else if s.Interval%secondsInDay == 0 {
+		case s.Interval%secondsInDay == 0:
 			q.Schedule.Daily = &QueryScheduleDaily{
 				IntervalDays: s.Interval / secondsInDay,
 			}
@@ -306,7 +307,7 @@ func (q *QueryEntity) fromAPIObject(aq *api.Query, schema map[string]*schema.Sch
 			if s.Until != nil {
 				q.Schedule.Daily.UntilDate = *s.Until
 			}
-		} else {
+		default:
 			q.Schedule.Continuous = &QueryScheduleContinuous{
 				IntervalSeconds: s.Interval,
 			}

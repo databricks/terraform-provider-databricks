@@ -26,7 +26,6 @@ type TableACL struct {
 	ClusterID         string `json:"cluster_id,omitempty" tf:"computed"`
 
 	Grants []TablePermissions `json:"grant,omitempty"`
-	Denies []TablePermissions `json:"deny,omitempty"` // TODO: remove denies
 
 	exec common.CommandExecutor
 }
@@ -40,7 +39,6 @@ type TablePermissions struct {
 func (ta *TableACL) permissions() map[string][]TablePermissions {
 	return map[string][]TablePermissions{
 		"GRANT": ta.Grants,
-		"DENY":  ta.Denies,
 	}
 }
 
@@ -136,7 +134,6 @@ func (ta *TableACL) read() error {
 	}
 	// clear any previous entries
 	ta.Grants = []TablePermissions{}
-	ta.Denies = []TablePermissions{}
 
 	// iterate over existing permissions over given data object
 	var currentPrincipal, currentAction, currentType, currentKey string
@@ -147,23 +144,17 @@ func (ta *TableACL) read() error {
 		if !strings.EqualFold(currentKey, thisKey) {
 			continue
 		}
+		if strings.HasPrefix(currentAction, "DENIED_") {
+			// DENY statements are intentionally not supported.
+			continue
+		}
 		// find existing grants or denies for all principals
 		target := ta.Grants
-		var isDeny = strings.HasPrefix(currentAction, "DENIED_")
-		if isDeny {
-			// TODO: this is going to be removed
-			currentAction = strings.Replace(currentAction, "DENIED_", "", 1)
-			target = ta.Denies
-		}
 		var privileges *[]string
 		for i, tablePermissions := range target {
 			// correct all privileges for the same principal into a slide
 			if tablePermissions.Principal == currentPrincipal {
-				if isDeny {
-					privileges = &ta.Denies[i].Privileges
-				} else {
-					privileges = &ta.Grants[i].Privileges
-				}
+				privileges = &ta.Grants[i].Privileges
 			}
 		}
 		if privileges == nil {
@@ -173,15 +164,9 @@ func (ta *TableACL) read() error {
 				Principal:  currentPrincipal,
 				Privileges: []string{},
 			}
-			if isDeny {
-				// TODO: this will be removed
-				ta.Denies = append(ta.Denies, firstSeenPrincipalPermissions)
-				privileges = &ta.Denies[len(ta.Denies)-1].Privileges
-			} else {
-				// point privileges to be of the newly added principal
-				ta.Grants = append(ta.Grants, firstSeenPrincipalPermissions)
-				privileges = &ta.Grants[len(ta.Grants)-1].Privileges
-			}
+			// point privileges to be of the newly added principal
+			ta.Grants = append(ta.Grants, firstSeenPrincipalPermissions)
+			privileges = &ta.Grants[len(ta.Grants)-1].Privileges
 		}
 		// add action for the principal on current iteration
 		*privileges = append(*privileges, currentAction)

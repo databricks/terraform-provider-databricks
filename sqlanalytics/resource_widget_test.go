@@ -63,7 +63,9 @@ func TestWidgetCreateWithVisualization(t *testing.T) {
 	}.Apply(t)
 
 	assert.NoError(t, err, err)
-	assert.Equal(t, "12345", d.Id(), "Resource ID should not be empty")
+	assert.Equal(t, "some-uuid/12345", d.Id(), "Resource ID should not be empty")
+	assert.Equal(t, "some-uuid", d.Get("dashboard_id"))
+	assert.Equal(t, "12345", d.Get("widget_id"))
 	assert.Equal(t, "678", d.Get("visualization_id"))
 }
 
@@ -121,7 +123,9 @@ func TestWidgetCreateWithText(t *testing.T) {
 	}.Apply(t)
 
 	assert.NoError(t, err, err)
-	assert.Equal(t, "12345", d.Id(), "Resource ID should not be empty")
+	assert.Equal(t, "some-uuid/12345", d.Id(), "Resource ID should not be empty")
+	assert.Equal(t, "some-uuid", d.Get("dashboard_id"))
+	assert.Equal(t, "12345", d.Get("widget_id"))
 	assert.Equal(t, sText, d.Get("text"))
 }
 
@@ -222,7 +226,9 @@ func TestWidgetCreateWithParamValue(t *testing.T) {
 	}.Apply(t)
 
 	assert.NoError(t, err, err)
-	assert.Equal(t, "12345", d.Id(), "Resource ID should not be empty")
+	assert.Equal(t, "some-uuid/12345", d.Id(), "Resource ID should not be empty")
+	assert.Equal(t, "some-uuid", d.Get("dashboard_id"))
+	assert.Equal(t, "12345", d.Get("widget_id"))
 	assert.Equal(t, "678", d.Get("visualization_id"))
 
 	// First parameter
@@ -325,7 +331,9 @@ func TestWidgetCreateWithPosition(t *testing.T) {
 	}.Apply(t)
 
 	assert.NoError(t, err, err)
-	assert.Equal(t, "12345", d.Id(), "Resource ID should not be empty")
+	assert.Equal(t, "some-uuid/12345", d.Id(), "Resource ID should not be empty")
+	assert.Equal(t, "some-uuid", d.Get("dashboard_id"))
+	assert.Equal(t, "12345", d.Get("widget_id"))
 	assert.Equal(t, "678", d.Get("visualization_id"))
 
 	// The position is a nested type, which can only be modeled in Terraform
@@ -345,7 +353,6 @@ func TestWidgetUpdate(t *testing.T) {
 				Method:   "POST",
 				Resource: "/api/2.0/preview/sql/widgets/12345",
 				ExpectedRequest: api.Widget{
-					ID:          12345,
 					DashboardID: "some-uuid",
 					Text:        &sText,
 				},
@@ -384,7 +391,7 @@ func TestWidgetUpdate(t *testing.T) {
 		},
 		Resource: ResourceWidget(),
 		Update:   true,
-		ID:       "12345",
+		ID:       "some-uuid/12345",
 		InstanceState: map[string]string{
 			"dashboard_id":     "some-uuid",
 			"visualization_id": "678",
@@ -396,7 +403,9 @@ func TestWidgetUpdate(t *testing.T) {
 	}.Apply(t)
 
 	assert.NoError(t, err, err)
-	assert.Equal(t, "12345", d.Id(), "Resource ID should not be empty")
+	assert.Equal(t, "some-uuid/12345", d.Id(), "Resource ID should not be empty")
+	assert.Equal(t, "some-uuid", d.Get("dashboard_id"))
+	assert.Equal(t, "12345", d.Get("widget_id"))
 
 	// Test that visualization_id is now unset (see instance state).
 	{
@@ -422,9 +431,9 @@ func TestWidgetDelete(t *testing.T) {
 		},
 		Resource: ResourceWidget(),
 		Delete:   true,
-		ID:       "12345",
+		ID:       "some-uuid/12345",
 	}.Apply(t)
 
 	assert.NoError(t, err, err)
-	assert.Equal(t, "12345", d.Id(), "Resource ID should not be empty")
+	assert.Equal(t, "some-uuid/12345", d.Id(), "Resource ID should not be empty")
 }

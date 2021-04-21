@@ -14,7 +14,9 @@ import (
 
 // WidgetEntity defines the parameters that can be set in the resource.
 type WidgetEntity struct {
-	DashboardID     string `json:"dashboard_id"`
+	DashboardID string `json:"dashboard_id"`
+	WidgetID    string `json:"widget_id,omitempty" tf:"computed"`
+
 	Text            string `json:"text,omitempty"`
 	VisualizationID string `json:"visualization_id,omitempty"`
 
@@ -62,15 +64,6 @@ func (w *WidgetEntity) toAPIObject(schema map[string]*schema.Schema, data *schem
 	// Extract from ResourceData.
 	if err := common.DataToStructPointer(data, schema, w); err != nil {
 		return nil, err
-	}
-
-	// Only copy over the ID if this is an existing resource.
-	if data.Id() != "" {
-		id, err := strconv.Atoi(data.Id())
-		if err != nil {
-			return nil, err
-		}
-		aw.ID = id
 	}
 
 	aw.DashboardID = w.DashboardID
@@ -124,6 +117,7 @@ func (w *WidgetEntity) toAPIObject(schema map[string]*schema.Schema, data *schem
 func (w *WidgetEntity) fromAPIObject(aw *api.Widget, schema map[string]*schema.Schema, data *schema.ResourceData) error {
 	// Copy from API object.
 	w.DashboardID = aw.DashboardID
+	w.WidgetID = strconv.Itoa(aw.ID)
 
 	if aw.VisualizationID != nil {
 		w.VisualizationID = fmt.Sprint(*aw.VisualizationID)
@@ -206,32 +200,14 @@ type WidgetAPI struct {
 	context context.Context
 }
 
-func (a WidgetAPI) buildPath(path ...int) string {
-	out := "/preview/sql/widgets"
-	if len(path) == 1 {
-		out = fmt.Sprintf("%s/%d", out, path[0])
-	}
-	return out
-}
-
 // Create ...
-func (a WidgetAPI) Create(w *api.Widget) (*api.Widget, error) {
-	var wout api.Widget
-	err := a.client.Post(a.context, a.buildPath(), w, &wout)
-	if err != nil {
-		return nil, err
-	}
-
-	return &wout, err
+func (a WidgetAPI) Create(w *api.Widget) error {
+	return a.client.Post(a.context, "/preview/sql/widgets", w, &w)
 }
 
 // Read ...
-func (a WidgetAPI) Read(w *api.Widget) (*api.Widget, error) {
-	if w.DashboardID == "" {
-		return nil, fmt.Errorf("Cannot read widget without dashboard ID")
-	}
-
-	d, err := NewDashboardAPI(a.context, a.client).Read(&api.Dashboard{ID: w.DashboardID})
+func (a WidgetAPI) Read(dashboardID, widgetID string) (*api.Widget, error) {
+	d, err := NewDashboardAPI(a.context, a.client).Read(&api.Dashboard{ID: dashboardID})
 	if err != nil {
 		return nil, err
 	}
@@ -244,35 +220,30 @@ func (a WidgetAPI) Read(w *api.Widget) (*api.Widget, error) {
 			return nil, err
 		}
 
-		if wnew.ID == w.ID {
+		if strconv.Itoa(wnew.ID) == widgetID {
 			// Include dashboard ID in returned object.
 			// It's not part of the API response.
-			wnew.DashboardID = w.DashboardID
+			wnew.DashboardID = dashboardID
 			return &wnew, nil
 		}
 	}
 
-	return nil, fmt.Errorf("Cannot find widget %d attached to dashboard %s", w.ID, w.DashboardID)
+	return nil, fmt.Errorf("Cannot find widget %s attached to dashboard %s", widgetID, dashboardID)
 }
 
 // Update ...
-func (a WidgetAPI) Update(w *api.Widget) (*api.Widget, error) {
-	var wout api.Widget
-	err := a.client.Post(a.context, a.buildPath(w.ID), w, &wout)
-	if err != nil {
-		return nil, err
-	}
-
-	return &wout, nil
+func (a WidgetAPI) Update(widgetID string, w *api.Widget) error {
+	return a.client.Post(a.context, fmt.Sprintf("/preview/sql/widgets/%s", widgetID), w, nil)
 }
 
 // Delete ...
-func (a WidgetAPI) Delete(w *api.Widget) error {
-	return a.client.Delete(a.context, a.buildPath(w.ID), nil)
+func (a WidgetAPI) Delete(widgetID string) error {
+	return a.client.Delete(a.context, fmt.Sprintf("/preview/sql/widgets/%s", widgetID), nil)
 }
 
 // ResourceWidget ...
 func ResourceWidget() *schema.Resource {
+	p := common.NewPairSeparatedID("dashboard_id", "widget_id", "/")
 	s := common.StructToSchema(
 		WidgetEntity{},
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
@@ -288,54 +259,57 @@ func ResourceWidget() *schema.Resource {
 				return err
 			}
 
-			awp, err := NewWidgetAPI(ctx, c).Create(aw)
+			err = NewWidgetAPI(ctx, c).Create(aw)
 			if err != nil {
 				return err
 			}
 
-			// No need to set anything because the resource is going to be
-			// read immediately after being created.
-			data.SetId(fmt.Sprint(awp.ID))
+			// Convert API object back to resource data.
+			// This includes setting the `widget_id`, which is
+			// needed to synthesize the composite resource identifier.
+			err = w.fromAPIObject(aw, s, data)
+			if err != nil {
+				return err
+			}
+
+			// Set composite resource identifier.
+			p.Pack(data)
 			return nil
 		},
 		Read: func(ctx context.Context, data *schema.ResourceData, c *common.DatabricksClient) error {
+			dashboardID, widgetID, err := p.Unpack(data)
+			if err != nil {
+				return err
+			}
+
+			aw, err := NewWidgetAPI(ctx, c).Read(dashboardID, widgetID)
+			if err != nil {
+				return err
+			}
+
 			var w WidgetEntity
-			aw, err := w.toAPIObject(s, data)
-			if err != nil {
-				return err
-			}
-
-			awNew, err := NewWidgetAPI(ctx, c).Read(aw)
-			if err != nil {
-				return err
-			}
-
-			return w.fromAPIObject(awNew, s, data)
+			return w.fromAPIObject(aw, s, data)
 		},
 		Update: func(ctx context.Context, data *schema.ResourceData, c *common.DatabricksClient) error {
-			var d WidgetEntity
-			ad, err := d.toAPIObject(s, data)
+			_, widgetID, err := p.Unpack(data)
 			if err != nil {
 				return err
 			}
 
-			_, err = NewWidgetAPI(ctx, c).Update(ad)
-			if err != nil {
-				return err
-			}
-
-			// No need to set anything because the resource is going to be
-			// read immediately after being created.
-			return nil
-		},
-		Delete: func(ctx context.Context, data *schema.ResourceData, c *common.DatabricksClient) error {
 			var w WidgetEntity
 			aw, err := w.toAPIObject(s, data)
 			if err != nil {
 				return err
 			}
 
-			return NewWidgetAPI(ctx, c).Delete(aw)
+			return NewWidgetAPI(ctx, c).Update(widgetID, aw)
+		},
+		Delete: func(ctx context.Context, data *schema.ResourceData, c *common.DatabricksClient) error {
+			_, widgetID, err := p.Unpack(data)
+			if err != nil {
+				return err
+			}
+			return NewWidgetAPI(ctx, c).Delete(widgetID)
 		},
 		Schema: s,
 	}.ToResource()

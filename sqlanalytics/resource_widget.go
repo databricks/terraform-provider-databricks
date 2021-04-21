@@ -182,11 +182,7 @@ func (w *WidgetEntity) fromAPIObject(aw *api.Widget, schema map[string]*schema.S
 	sort.Sort(sortWidgetParameter(w.Parameter))
 
 	// Pass to ResourceData.
-	if err := common.StructToData(*w, schema, data); err != nil {
-		return err
-	}
-
-	return nil
+	return common.StructToData(*w, schema, data)
 }
 
 // NewWidgetAPI ...

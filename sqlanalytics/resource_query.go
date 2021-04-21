@@ -343,11 +343,7 @@ func (q *QueryEntity) fromAPIObject(aq *api.Query, schema map[string]*schema.Sch
 	}
 
 	// Transform to ResourceData.
-	if err := common.StructToData(*q, schema, data); err != nil {
-		return err
-	}
-
-	return nil
+	return common.StructToData(*q, schema, data)
 }
 
 // NewQueryAPI ...

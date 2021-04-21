@@ -14,7 +14,7 @@ var (
 	// HTML tags
 	tagRE = regexp.MustCompile(`<[^>]*>`)
 	// just exception content without exception name
-	exceptionRE = regexp.MustCompile(`.*Exception: (.*)`)
+	exceptionRE = regexp.MustCompile(`.*Exception:\s+(.*)`)
 	// execution errors resulting from http errors are sometimes hidden in these keys
 	executionErrorRE = regexp.MustCompile(`ExecutionError: ([\s\S]*)\n(StatusCode=[0-9]*)\n(StatusDescription=.*)\n`)
 	// usual error message explanation is hidden in this key

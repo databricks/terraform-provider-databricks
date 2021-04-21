@@ -211,9 +211,10 @@ var createHighConcurrencyCluster = []qa.HTTPFixture{
 				"ResourceClass": "SingleNode",
 			},
 			SparkConf: map[string]string{
-				"spark.databricks.acl.dfAclsEnabled": "true",
-				"spark.databricks.cluster.profile":   "singleNode",
-				"spark.master":                       "local[*]",
+				"spark.databricks.acl.dfAclsEnabled":     "true",
+				"spark.databricks.repl.allowedLanguages": "python,sql",
+				"spark.databricks.cluster.profile":       "serverless",
+				"spark.master":                           "local[*]",
 			},
 		},
 		Response: compute.ClusterID{
@@ -241,6 +242,7 @@ func TestResourceSqlPermissions_Read(t *testing.T) {
 			"SHOW GRANT ON TABLE `default`.`foo`": {
 				{"users", "SELECT", "database", "foo"},
 				{"users", "SELECT", "table", "`default`.`foo`"},
+				{"bob@example.com", "OWN", "table", "`default`.`foo`"},
 				{"users", "READ", "table", "`default`.`foo`"},
 				{"users", "SELECT", "database", "default"},
 				{"interns", "DENIED_SELECT", "table", "`default`.`foo`"},
@@ -283,19 +285,18 @@ func TestResourceSqlPermissions_Create(t *testing.T) {
 				// based on the order of execution
 				{"users", "SELECT", "database", "foo"},
 				{"users", "SELECT", "table", "`default`.`foo`"},
-				{"users", "READ", "table", "`default`.`foo`"},
 				{"users", "SELECT", "database", "default"},
 				{"interns", "DENIED_SELECT", "table", "`default`.`foo`"},
 			},
-			"REVOKE ALL PRIVILEGES ON TABLE `default`.`foo` FROM `users`":                {},
-			"REVOKE ALL PRIVILEGES ON TABLE `default`.`foo` FROM `interns`":              {},
-			"GRANT READ, MODIFY, SELECT ON TABLE `default`.`foo` TO `serge@example.com`": {},
+			"REVOKE ALL PRIVILEGES ON TABLE `default`.`foo` FROM `users`":          {},
+			"REVOKE ALL PRIVILEGES ON TABLE `default`.`foo` FROM `interns`":        {},
+			"GRANT MODIFY, SELECT ON TABLE `default`.`foo` TO `serge@example.com`": {},
 		}.toCommandMock(),
 		HCL: `
 		table = "foo"
 		privilege_assignments {
 			principal = "serge@example.com"
-			privileges = ["SELECT", "READ", "MODIFY"]
+			privileges = ["SELECT", "MODIFY"]
 		}
 		`,
 		Fixtures: createHighConcurrencyCluster,
@@ -316,6 +317,32 @@ func TestResourceSqlPermissions_Create_Error(t *testing.T) {
 		Resource:    ResourceSqlPermissions(),
 		Create:      true,
 	}.ExpectError(t, "Some error")
+}
+
+func TestResourceSqlPermissions_Create_Error2(t *testing.T) {
+	qa.ResourceFixture{
+		HCL: `table = "foo"
+		privilege_assignments {
+			principal = "serge@example.com"
+			privileges = ["SELECT", "READ", "MODIFY"]
+		}`,
+		CommandMock: func(commandStr string) common.CommandResults {
+			md := mockData{
+				"SHOW GRANT ON TABLE `default`.`foo`": {},
+			}
+			if _, ok := md[commandStr]; ok {
+				return md.toCommandMock()(commandStr)
+			}
+			return common.CommandResults{
+				ResultType: "error",
+				Cause:      "com.x.y.z.d.Exceptions$SQLExecutionException: org.apache.spark.s...",
+				Summary:    "Error in SQL statement: ParseException: \nAction Unknown ActionType READ cannot be granted on tab... (127 more bytes)",
+			}
+		},
+		Fixtures: createHighConcurrencyCluster,
+		Resource: ResourceSqlPermissions(),
+		Create:   true,
+	}.ExpectError(t, "Action Unknown ActionType READ cannot be granted on tab... (127 more bytes)")
 }
 
 func TestResourceSqlPermissions_Update(t *testing.T) {

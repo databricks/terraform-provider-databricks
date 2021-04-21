@@ -35,16 +35,16 @@ type QueryParameter struct {
 
 	// Type specific structs.
 	// Only one of them may be set.
-	Text             *QueryParameterText             `json:"text,omitempty"`
-	Number           *QueryParameterNumber           `json:"number,omitempty"`
-	Enum             *QueryParameterEnum             `json:"enum,omitempty"`
-	Query            *QueryParameterQuery            `json:"query,omitempty"`
-	Date             *QueryParameterDate             `json:"date,omitempty"`
-	DateTime         *QueryParameterDateTime         `json:"datetime,omitempty"`
-	DateTimeSec      *QueryParameterDateTimeSec      `json:"datetimesec,omitempty"`
-	DateRange        *QueryParameterDateRange        `json:"date_range,omitempty"`
-	DateTimeRange    *QueryParameterDateTimeRange    `json:"datetime_range,omitempty"`
-	DateTimeSecRange *QueryParameterDateTimeSecRange `json:"datetimesec_range,omitempty"`
+	Text             *QueryParameterText          `json:"text,omitempty"`
+	Number           *QueryParameterNumber        `json:"number,omitempty"`
+	Enum             *QueryParameterEnum          `json:"enum,omitempty"`
+	Query            *QueryParameterQuery         `json:"query,omitempty"`
+	Date             *QueryParameterDateLike      `json:"date,omitempty"`
+	DateTime         *QueryParameterDateLike      `json:"datetime,omitempty"`
+	DateTimeSec      *QueryParameterDateLike      `json:"datetimesec,omitempty"`
+	DateRange        *QueryParameterDateRangeLike `json:"date_range,omitempty"`
+	DateTimeRange    *QueryParameterDateRangeLike `json:"datetime_range,omitempty"`
+	DateTimeSecRange *QueryParameterDateRangeLike `json:"datetimesec_range,omitempty"`
 }
 
 // QueryParameterText ...
@@ -79,33 +79,13 @@ type QueryParameterQuery struct {
 	Multiple *QueryParameterAllowMultiple `json:"multiple,omitempty"`
 }
 
-// QueryParameterDate ...
-type QueryParameterDate struct {
+// QueryParameterDateLike ...
+type QueryParameterDateLike struct {
 	Value string `json:"value"`
 }
 
-// QueryParameterDateTime ...
-type QueryParameterDateTime struct {
-	Value string `json:"value"`
-}
-
-// QueryParameterDateTimeSec ...
-type QueryParameterDateTimeSec struct {
-	Value string `json:"value"`
-}
-
-// QueryParameterDateRange ...
-type QueryParameterDateRange struct {
-	Value string `json:"value"`
-}
-
-// QueryParameterDateTimeRange ...
-type QueryParameterDateTimeRange struct {
-	Value string `json:"value"`
-}
-
-// QueryParameterDateTimeSecRange ...
-type QueryParameterDateTimeSecRange struct {
+// QueryParameterDateRangeLike ...
+type QueryParameterDateRangeLike struct {
 	Value string `json:"value"`
 }
 
@@ -301,37 +281,37 @@ func (q *QueryEntity) fromAPIObject(aq *api.Query, schema map[string]*schema.Sch
 			case *api.QueryParameterDate:
 				p.Name = apv.Name
 				p.Title = apv.Title
-				p.Date = &QueryParameterDate{
+				p.Date = &QueryParameterDateLike{
 					Value: apv.Value,
 				}
 			case *api.QueryParameterDateTime:
 				p.Name = apv.Name
 				p.Title = apv.Title
-				p.DateTime = &QueryParameterDateTime{
+				p.DateTime = &QueryParameterDateLike{
 					Value: apv.Value,
 				}
 			case *api.QueryParameterDateTimeSec:
 				p.Name = apv.Name
 				p.Title = apv.Title
-				p.DateTimeSec = &QueryParameterDateTimeSec{
+				p.DateTimeSec = &QueryParameterDateLike{
 					Value: apv.Value,
 				}
 			case *api.QueryParameterDateRange:
 				p.Name = apv.Name
 				p.Title = apv.Title
-				p.DateRange = &QueryParameterDateRange{
+				p.DateRange = &QueryParameterDateRangeLike{
 					Value: apv.Value,
 				}
 			case *api.QueryParameterDateTimeRange:
 				p.Name = apv.Name
 				p.Title = apv.Title
-				p.DateTimeRange = &QueryParameterDateTimeRange{
+				p.DateTimeRange = &QueryParameterDateRangeLike{
 					Value: apv.Value,
 				}
 			case *api.QueryParameterDateTimeSecRange:
 				p.Name = apv.Name
 				p.Title = apv.Title
-				p.DateTimeSecRange = &QueryParameterDateTimeSecRange{
+				p.DateTimeSecRange = &QueryParameterDateRangeLike{
 					Value: apv.Value,
 				}
 			default:

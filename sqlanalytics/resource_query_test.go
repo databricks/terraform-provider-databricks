@@ -216,7 +216,7 @@ func TestQueryCreateWithWeeklySchedule(t *testing.T) {
 	intervalWeeks := 2
 	intervalSeconds := intervalWeeks * 7 * 24 * 60 * 60
 	timeOfDay := "06:00"
-	dayOfWeek := "sunday"
+	dayOfWeek := "Sunday"
 	untilDate := "2021-04-21"
 
 	d, err := qa.ResourceFixture{
@@ -267,7 +267,7 @@ func TestQueryCreateWithWeeklySchedule(t *testing.T) {
 				weekly {
 					interval_weeks = 2
 					time_of_day = "06:00"
-					day_of_week = "sunday"
+					day_of_week = "Sunday"
 					until_date = "2021-04-21"
 				}
 			}

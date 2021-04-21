@@ -52,11 +52,7 @@ func (v *VisualizationEntity) fromAPIObject(av *api.Visualization, schema map[st
 	v.Options = string(av.Options)
 
 	// Transform to ResourceData.
-	if err := common.StructToData(*v, schema, data); err != nil {
-		return err
-	}
-
-	return nil
+	return common.StructToData(*v, schema, data)
 }
 
 // NewVisualizationAPI ...

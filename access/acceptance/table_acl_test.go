@@ -10,8 +10,8 @@ func TestAccTableACL(t *testing.T) {
 	acceptance.Test(t, []acceptance.Step{
 		{
 			Template: `
-			resource "databricks_table_acl" "this" {
-				table = "table_acl_{var.RANDOM}"
+			resource "databricks_sql_permissions" "this" {
+				table = "sql_permissions_{var.RANDOM}"
 			
 				grant {
 					principal = "tf-{var.RANDOM}@example.com"

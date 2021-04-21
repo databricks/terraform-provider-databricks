@@ -1,7 +1,7 @@
 ---
 subcategory: "Security"
 ---
-# databricks_table_acl Resource
+# databricks_sql_permissions Resource
 
 -> **Note** This resource has an evolving API, which may change in the upcoming versions.
 
@@ -15,10 +15,9 @@ The following resource definition will enforce access control on a table by exec
 * ```REVOKE ALL PRIVILEGES ON TABLE `default`.`foo` FROM ... every group and user that has access to it ...```
 * ```GRANT READ, MODIFY, SELECT ON TABLE `default`.`foo` TO `serge@example.com` ```
 * ```GRANT READ, MODIFY, SELECT ON TABLE `default`.`foo` TO `special group` ```
-* ```DENY SELECT, READ ON TABLE `default`.`foo` TO `users` ```
 
 ```hcl
-resource "databricks_table_acl" "foo_table" {
+resource "databricks_sql_permissions" "foo_table" {
     table = "foo"
 
     grant {
@@ -29,11 +28,6 @@ resource "databricks_table_acl" "foo_table" {
     grant {
         principal = "special group"
         privileges = ["SELECT", "READ", "MODIFY"]
-    }
-
-    deny {
-        principal = "users"
-        privileges = ["SELECT", "READ"]
     }
 }
 ```
@@ -49,9 +43,9 @@ The following arguments are available to specify the data object you need to enf
 * `any_file` - (Boolean) If this access control for reading any file. Defaults to `false`.
 * `anonymous_function` - (Boolean) If this access control for using anonymous function. Defaults to `false`.
 
-### `grant` and `deny` blocks
+### `grant` blocks
 
-You must specify one or many `grant` and/or `deny` configuration blocks to declare `privileges` to a `principal`, which corresponds to `display_name` of [databricks_group](group.md#display_name) or [databricks_user](user.md#display_name). Terraform would ensure that only those principals and privileges defined in the resource are applied for the data object and would remove anything else. It would not remove any transitive privileges. Every `grant` or `deny` has the following required arguments:
+You must specify one or many `grant` configuration blocks to declare `privileges` to a `principal`, which corresponds to `display_name` of [databricks_group](group.md#display_name) or [databricks_user](user.md#display_name). Terraform would ensure that only those principals and privileges defined in the resource are applied for the data object and would remove anything else. It would not remove any transitive privileges. `DENY` statements are intentionally not supported. Every `grant` has the following required arguments:
 
 * `principal` - `display_name` of [databricks_group](group.md#display_name) or [databricks_user](user.md#display_name).
 * `privileges` - set of available privilege names in upper case.
@@ -79,5 +73,5 @@ The resource can be imported using a synthetic identifier. Examples of valid syn
 * `anonymous function/` - anonymous function. `/` suffix is mandatory.
 
 ```bash
-$ terraform import databricks_table_acl.foo /<object-type>/<object-name>
+$ terraform import databricks_sql_permissions.foo /<object-type>/<object-name>
 ```

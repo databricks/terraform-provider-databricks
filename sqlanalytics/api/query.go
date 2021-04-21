@@ -11,7 +11,7 @@ type Query struct {
 	Name           string            `json:"name"`
 	Description    string            `json:"description"`
 	Query          string            `json:"query"`
-	Schedule       *QuerySchedule    `json:"schedule,omitempty"`
+	Schedule       *QuerySchedule    `json:"schedule"`
 	Options        *QueryOptions     `json:"options,omitempty"`
 	Tags           []string          `json:"tags,omitempty"`
 	Visualizations []json.RawMessage `json:"visualizations,omitempty"`
@@ -19,7 +19,21 @@ type Query struct {
 
 // QuerySchedule ...
 type QuerySchedule struct {
+	// Interval in seconds.
+	//
+	// For daily schedules, this MUST be a multiple of 86400.
+	// For weekly schedules, this MUST be a multiple of 604800.
+	//
 	Interval int `json:"interval"`
+
+	// Time of day, for daily and weekly schedules.
+	Time *string `json:"time"`
+
+	// Day of week, for weekly schedules.
+	DayOfWeek *string `json:"day_of_week"`
+
+	// Schedule should be active until this date.
+	Until *string `json:"until"`
 }
 
 // QueryOptions ...

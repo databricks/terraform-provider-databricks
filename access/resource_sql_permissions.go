@@ -22,7 +22,6 @@ type SqlPermissions struct {
 	Catalog              bool                  `json:"catalog,omitempty"`
 	AnyFile              bool                  `json:"any_file,omitempty"`
 	AnonymousFunction    bool                  `json:"anonymous_function,omitempty"`
-	Owner                string                `json:"owner,omitempty"`
 	ClusterID            string                `json:"cluster_id,omitempty" tf:"computed"`
 	PrivilegeAssignments []PrivilegeAssignment `json:"privilege_assignments,omitempty"`
 
@@ -141,6 +140,10 @@ func (ta *SqlPermissions) read() error {
 			// DENY statements are intentionally not supported.
 			continue
 		}
+		if currentAction == "OWN" {
+			// skip table ownership definitions for now
+			continue
+		}
 		// find existing grants for all principals
 		var privileges *[]string
 		for i, privilegeAssignment := range ta.PrivilegeAssignments {
@@ -225,6 +228,14 @@ func (ta *SqlPermissions) initCluster(ctx context.Context, d *schema.ResourceDat
 		}
 	}
 	clusterInfo, err := clustersAPI.StartAndGetInfo(ta.ClusterID)
+	if e, ok := err.(common.APIError); ok && e.IsMissing() {
+		// cluster that was previously in a tfstate was deleted
+		ta.ClusterID, err = ta.getOrCreateCluster(clustersAPI)
+		if err != nil {
+			return
+		}
+		clusterInfo, err = clustersAPI.StartAndGetInfo(ta.ClusterID)
+	}
 	if err != nil {
 		return
 	}
@@ -242,20 +253,22 @@ func (ta *SqlPermissions) getOrCreateCluster(clustersAPI compute.ClustersAPI) (s
 		Latest: true,
 	})
 	nodeType := clustersAPI.GetSmallestNodeType(compute.NodeTypeRequest{LocalDisk: true})
-	aclCluster, err := clustersAPI.GetOrCreateRunningCluster("terrraform-table-acl", compute.Cluster{
-		ClusterName:            "terrraform-table-acl",
-		SparkVersion:           sparkVersion,
-		NodeTypeID:             nodeType,
-		AutoterminationMinutes: 10,
-		SparkConf: map[string]string{
-			"spark.databricks.acl.dfAclsEnabled": "true",
-			"spark.databricks.cluster.profile":   "singleNode",
-			"spark.master":                       "local[*]",
-		},
-		CustomTags: map[string]string{
-			"ResourceClass": "SingleNode",
-		},
-	})
+	aclCluster, err := clustersAPI.GetOrCreateRunningCluster(
+		"terrraform-table-acl", compute.Cluster{
+			ClusterName:            "terrraform-table-acl",
+			SparkVersion:           sparkVersion,
+			NodeTypeID:             nodeType,
+			AutoterminationMinutes: 10,
+			SparkConf: map[string]string{
+				"spark.databricks.acl.dfAclsEnabled":     "true",
+				"spark.databricks.repl.allowedLanguages": "python,sql",
+				"spark.databricks.cluster.profile":       "serverless",
+				"spark.master":                           "local[*]",
+			},
+			CustomTags: map[string]string{
+				"ResourceClass": "SingleNode",
+			},
+		})
 	if err != nil {
 		return "", err
 	}
@@ -290,8 +303,8 @@ func ResourceSqlPermissions() *schema.Resource {
 			s[field].Optional = true
 			s[field].AtLeastOneOf = alof
 		}
+		s["cluster_id"].Computed = true
 		s["database"].Default = "default"
-		// TODO: ignore changes on cluster_id
 		return s
 	})
 	return common.Resource{
@@ -314,6 +327,10 @@ func ResourceSqlPermissions() *schema.Resource {
 			}
 			if err = ta.read(); err != nil {
 				return err
+			}
+			if len(ta.PrivilegeAssignments) == 0 {
+				// reflect resource is skipping empty privilege_assignments
+				d.Set("privilege_assignments", []interface{}{})
 			}
 			return common.StructToData(ta, s, d)
 		},

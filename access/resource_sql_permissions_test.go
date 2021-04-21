@@ -86,9 +86,7 @@ func TestTableACLGrants(t *testing.T) {
 	err := ta.read()
 	assert.NoError(t, err)
 	assert.Len(t, ta.Grants, 1)
-	assert.Len(t, ta.Denies, 1)
 	assert.Len(t, ta.Grants[0].Privileges, 2)
-	assert.Len(t, ta.Denies[0].Privileges, 1)
 }
 
 type failedCommand string
@@ -125,7 +123,6 @@ func TestTableACL_Revoke(t *testing.T) {
 			{"users", "SELECT", "table", "`default`.`foo`"},
 			{"users", "READ", "table", "`default`.`foo`"},
 			{"users", "SELECT", "database", "default"},
-			{"interns", "DENIED_SELECT", "table", "`default`.`foo`"},
 		},
 		"REVOKE ALL PRIVILEGES ON TABLE `default`.`foo` FROM `users`":   {},
 		"REVOKE ALL PRIVILEGES ON TABLE `default`.`foo` FROM `interns`": {},
@@ -141,9 +138,6 @@ func TestTableACL_Enforce(t *testing.T) {
 			{"engineers", []string{"MODIFY", "SELECT", "READ"}},
 			{"support", []string{"SELECT"}},
 		},
-		Denies: []TablePermissions{
-			{"foo@example.com", []string{"SELECT"}},
-		},
 		exec: mockData{
 			"SHOW GRANT ON TABLE `default`.`foo`": {
 				{"users", "SELECT", "database", "foo"},
@@ -157,7 +151,6 @@ func TestTableACL_Enforce(t *testing.T) {
 			"REVOKE ALL PRIVILEGES ON TABLE `default`.`foo` FROM `interns`":      {},
 			"GRANT MODIFY, SELECT, READ ON TABLE `default`.`foo` TO `engineers`": {},
 			"GRANT SELECT ON TABLE `default`.`foo` TO `support`":                 {},
-			"DENY SELECT ON TABLE `default`.`foo` TO `foo@example.com`":          {},
 		},
 	}
 	err := ta.enforce()
@@ -297,17 +290,12 @@ func TestResourceSqlPermissions_Create(t *testing.T) {
 			"REVOKE ALL PRIVILEGES ON TABLE `default`.`foo` FROM `users`":                {},
 			"REVOKE ALL PRIVILEGES ON TABLE `default`.`foo` FROM `interns`":              {},
 			"GRANT READ, MODIFY, SELECT ON TABLE `default`.`foo` TO `serge@example.com`": {},
-			"DENY SELECT ON TABLE `default`.`foo` TO `users`":                            {},
 		}.toCommandMock(),
 		HCL: `
 		table = "foo"
 		grant {
 			principal = "serge@example.com"
 			privileges = ["SELECT", "READ", "MODIFY"]
-		}
-		deny {
-			principal = "users"
-			privileges = ["SELECT"]
 		}
 		`,
 		Fixtures: createHighConcurrencyCluster,
@@ -322,10 +310,6 @@ func TestResourceSqlPermissions_Create_Error(t *testing.T) {
 		grant {
 			principal = "serge@example.com"
 			privileges = ["SELECT", "READ", "MODIFY"]
-		}
-		deny {
-			principal = "users"
-			privileges = ["SELECT"]
 		}`,
 		CommandMock: failedCommand("Some error").toCommandMock(),
 		Fixtures:    createHighConcurrencyCluster,
@@ -350,17 +334,12 @@ func TestResourceSqlPermissions_Update(t *testing.T) {
 			"REVOKE ALL PRIVILEGES ON TABLE `default`.`foo` FROM `users`":                {},
 			"REVOKE ALL PRIVILEGES ON TABLE `default`.`foo` FROM `interns`":              {},
 			"GRANT READ, MODIFY, SELECT ON TABLE `default`.`foo` TO `serge@example.com`": {},
-			"DENY SELECT ON TABLE `default`.`foo` TO `users`":                            {},
 		}.toCommandMock(),
 		HCL: `
 		table = "foo"
 		grant {
 			principal = "serge@example.com"
 			privileges = ["SELECT", "READ", "MODIFY"]
-		}
-		deny {
-			principal = "users"
-			privileges = ["SELECT"]
 		}
 		`,
 		Fixtures: createHighConcurrencyCluster,
@@ -388,10 +367,6 @@ func TestResourceSqlPermissions_Delete(t *testing.T) {
 		grant {
 			principal = "serge@example.com"
 			privileges = ["SELECT", "READ", "MODIFY"]
-		}
-		deny {
-			principal = "users"
-			privileges = ["SELECT"]
 		}
 		`,
 		Fixtures: createHighConcurrencyCluster,

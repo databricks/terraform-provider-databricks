@@ -219,6 +219,7 @@ var createHighConcurrencyCluster = []qa.HTTPFixture{
 			},
 			SparkConf: map[string]string{
 				"spark.databricks.acl.dfAclsEnabled": "true",
+				"spark.databricks.cluster.profile":   "singleNode",
 				"spark.master":                       "local[*]",
 			},
 		},
@@ -235,12 +236,13 @@ var createHighConcurrencyCluster = []qa.HTTPFixture{
 			State:     "RUNNING",
 			SparkConf: map[string]string{
 				"spark.databricks.acl.dfAclsEnabled": "true",
+				"spark.databricks.cluster.profile":   "singleNode",
 			},
 		},
 	},
 }
 
-func TestResourceTableACL_Read(t *testing.T) {
+func TestResourceSqlPermissions_Read(t *testing.T) {
 	qa.ResourceFixture{
 		CommandMock: mockData{
 			"SHOW GRANT ON TABLE `default`.`foo`": {
@@ -252,34 +254,34 @@ func TestResourceTableACL_Read(t *testing.T) {
 			},
 		}.toCommandMock(),
 		Fixtures: createHighConcurrencyCluster,
-		Resource: ResourceTableACL(),
+		Resource: ResourceSqlPermissions(),
 		Read:     true,
 		New:      true,
 		ID:       "table/default.foo",
 	}.ApplyNoError(t)
 }
 
-func TestResourceTableACL_Read_Error(t *testing.T) {
+func TestResourceSqlPermissions_Read_Error(t *testing.T) {
 	qa.ResourceFixture{
-		Resource: ResourceTableACL(),
+		Resource: ResourceSqlPermissions(),
 		Read:     true,
 		New:      true,
 		ID:       "something",
 	}.ExpectError(t, "ID must be two elements: something")
 }
 
-func TestResourceTableACL_Read_ErrorCommand(t *testing.T) {
+func TestResourceSqlPermissions_Read_ErrorCommand(t *testing.T) {
 	qa.ResourceFixture{
 		CommandMock: failedCommand("does not compute").toCommandMock(),
 		Fixtures:    createHighConcurrencyCluster,
-		Resource:    ResourceTableACL(),
+		Resource:    ResourceSqlPermissions(),
 		ID:          "database/foo",
 		Read:        true,
 		New:         true,
 	}.ExpectError(t, "does not compute")
 }
 
-func TestResourceTableACL_Create(t *testing.T) {
+func TestResourceSqlPermissions_Create(t *testing.T) {
 	qa.ResourceFixture{
 		CommandMock: mockData{
 			"SHOW GRANT ON TABLE `default`.`foo`": {
@@ -309,12 +311,12 @@ func TestResourceTableACL_Create(t *testing.T) {
 		}
 		`,
 		Fixtures: createHighConcurrencyCluster,
-		Resource: ResourceTableACL(),
+		Resource: ResourceSqlPermissions(),
 		Create:   true,
 	}.ApplyNoError(t)
 }
 
-func TestResourceTableACL_Create_Error(t *testing.T) {
+func TestResourceSqlPermissions_Create_Error(t *testing.T) {
 	qa.ResourceFixture{
 		HCL: `table = "foo"
 		grant {
@@ -327,12 +329,12 @@ func TestResourceTableACL_Create_Error(t *testing.T) {
 		}`,
 		CommandMock: failedCommand("Some error").toCommandMock(),
 		Fixtures:    createHighConcurrencyCluster,
-		Resource:    ResourceTableACL(),
+		Resource:    ResourceSqlPermissions(),
 		Create:      true,
 	}.ExpectError(t, "Some error")
 }
 
-func TestResourceTableACL_Update(t *testing.T) {
+func TestResourceSqlPermissions_Update(t *testing.T) {
 	qa.ResourceFixture{
 		CommandMock: mockData{
 			"SHOW GRANT ON TABLE `default`.`foo`": {
@@ -362,13 +364,13 @@ func TestResourceTableACL_Update(t *testing.T) {
 		}
 		`,
 		Fixtures: createHighConcurrencyCluster,
-		Resource: ResourceTableACL(),
+		Resource: ResourceSqlPermissions(),
 		Update:   true,
 		ID:       "table/default.foo",
 	}.ApplyNoError(t)
 }
 
-func TestResourceTableACL_Delete(t *testing.T) {
+func TestResourceSqlPermissions_Delete(t *testing.T) {
 	qa.ResourceFixture{
 		CommandMock: mockData{
 			"SHOW GRANT ON TABLE `default`.`foo`": {
@@ -393,12 +395,12 @@ func TestResourceTableACL_Delete(t *testing.T) {
 		}
 		`,
 		Fixtures: createHighConcurrencyCluster,
-		Resource: ResourceTableACL(),
+		Resource: ResourceSqlPermissions(),
 		Delete:   true,
 		ID:       "table/default.foo",
 	}.ApplyNoError(t)
 }
 
-func TestResourceTableACL_CornerCases(t *testing.T) {
-	qa.ResourceCornerCases(t, ResourceTableACL(), "database/foo")
+func TestResourceSqlPermissions_CornerCases(t *testing.T) {
+	qa.ResourceCornerCases(t, ResourceSqlPermissions(), "database/foo")
 }

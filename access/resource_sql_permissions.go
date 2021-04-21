@@ -10,7 +10,6 @@ import (
 	"github.com/databrickslabs/terraform-provider-databricks/compute"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 // https://docs.databricks.com/security/access-control/table-acls/object-privileges.html#operations-and-privileges
@@ -309,8 +308,8 @@ func tableAclForLoad(ctx context.Context, d *schema.ResourceData,
 	return
 }
 
-// ResourceTableACL manages table ACLs
-func ResourceTableACL() *schema.Resource {
+// ResourceSqlPermissions manages table ACLs
+func ResourceSqlPermissions() *schema.Resource {
 	s := common.StructToSchema(TableACL{}, func(s map[string]*schema.Schema) map[string]*schema.Schema {
 		alof := []string{"database", "table", "view", "catalog", "any_file", "anonymous_function"}
 		for _, field := range alof {
@@ -321,18 +320,18 @@ func ResourceTableACL() *schema.Resource {
 		s["database"].Default = "default"
 		// TODO: ignore changes on cluster_id
 
-		validateGrants := validation.StringInSlice([]string{
-			"SELECT",
-			"CREATE",
-			"MODIFY",
-			"USAGE",
-			"READ_METADATA",
-			"CREATE_NAMED_FUNCTION",
-			"MODIFY_CLASSPATH",
-			"ALL PRIVILEGES",
-		}, false)
-		s["grants"].ValidateDiagFunc = validation.ToDiagFunc(validateGrants)
-		s["denies"].ValidateDiagFunc = validation.ToDiagFunc(validateGrants)
+		// validateGrants := validation.StringInSlice([]string{
+		// 	"SELECT",
+		// 	"CREATE",
+		// 	"MODIFY",
+		// 	"USAGE",
+		// 	"READ_METADATA",
+		// 	"CREATE_NAMED_FUNCTION",
+		// 	"MODIFY_CLASSPATH",
+		// 	"ALL PRIVILEGES",
+		// }, false)
+		// s["grant"].ValidateDiagFunc = validation.ToDiagFunc(validateGrants)
+		// s["deny"].ValidateDiagFunc = validation.ToDiagFunc(validateGrants)
 		return s
 	})
 	return common.Resource{

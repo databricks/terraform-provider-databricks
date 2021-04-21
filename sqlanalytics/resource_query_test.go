@@ -306,6 +306,33 @@ func TestQueryRead(t *testing.T) {
 	assert.Equal(t, "foo", d.Id())
 }
 
+func TestQueryReadWithSchedule(t *testing.T) {
+	// Note: this tests that if a schedule is returned by the API,
+	// it will always show up in the resulting resource data.
+	// If it doesn't, we wouldn't be able to erase a schedule
+	// that was defined out of band.
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/preview/sql/queries/foo",
+				Response: api.Query{
+					ID: "foo",
+					Schedule: &api.QuerySchedule{
+						Interval: 12345,
+					},
+				},
+			},
+		},
+		Resource: ResourceQuery(),
+		Read:     true,
+		ID:       "foo",
+	}.Apply(t)
+
+	assert.NoError(t, err, err)
+	assert.Equal(t, 12345, d.Get("schedule.0.continuous.0.interval_seconds"))
+}
+
 func TestQueryUpdate(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{

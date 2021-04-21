@@ -73,8 +73,9 @@ func TestVisualizationCreate(t *testing.T) {
 
 	assert.NoError(t, err, err)
 
-	assert.Equal(t, "12345", d.Id())
+	assert.Equal(t, "foo/12345", d.Id())
 	assert.Equal(t, "foo", d.Get("query_id"))
+	assert.Equal(t, "12345", d.Get("visualization_id"))
 	assert.Equal(t, "chart", d.Get("type"))
 	assert.Equal(t, "My Chart", d.Get("name"))
 	assert.Equal(t, "Some Description", d.Get("description"))
@@ -115,7 +116,7 @@ func TestVisualizationRead(t *testing.T) {
 		},
 		Resource: ResourceVisualization(),
 		Read:     true,
-		ID:       "12345",
+		ID:       "foo/12345",
 		State: map[string]interface{}{
 			"query_id":    "foo",
 			"type":        "chart",
@@ -127,8 +128,9 @@ func TestVisualizationRead(t *testing.T) {
 
 	assert.NoError(t, err, err)
 
-	assert.Equal(t, "12345", d.Id())
+	assert.Equal(t, "foo/12345", d.Id())
 	assert.Equal(t, "foo", d.Get("query_id"))
+	assert.Equal(t, "12345", d.Get("visualization_id"))
 	assert.Equal(t, "chart", d.Get("type"))
 	assert.Equal(t, "My Chart", d.Get("name"))
 	assert.Equal(t, "Some Description", d.Get("description"))
@@ -142,7 +144,6 @@ func TestVisualizationUpdate(t *testing.T) {
 				Method:   "POST",
 				Resource: "/api/2.0/preview/sql/visualizations/12345",
 				ExpectedRequest: api.Visualization{
-					ID:          12345,
 					QueryID:     "foo",
 					Type:        "CHART",
 					Name:        "My Updated Chart",
@@ -190,7 +191,7 @@ func TestVisualizationUpdate(t *testing.T) {
 		},
 		Resource: ResourceVisualization(),
 		Update:   true,
-		ID:       "12345",
+		ID:       "foo/12345",
 		InstanceState: map[string]string{
 			"query_id":    "foo",
 			"type":        "chart",
@@ -209,8 +210,9 @@ func TestVisualizationUpdate(t *testing.T) {
 
 	assert.NoError(t, err, err)
 
-	assert.Equal(t, "12345", d.Id())
+	assert.Equal(t, "foo/12345", d.Id())
 	assert.Equal(t, "foo", d.Get("query_id"))
+	assert.Equal(t, "12345", d.Get("visualization_id"))
 	assert.Equal(t, "chart", d.Get("type"))
 	assert.Equal(t, "My Updated Chart", d.Get("name"))
 	assert.Equal(t, "Some Updated Description", d.Get("description"))
@@ -227,9 +229,9 @@ func TestVisualizationDelete(t *testing.T) {
 		},
 		Resource: ResourceVisualization(),
 		Delete:   true,
-		ID:       "12345",
+		ID:       "foo/12345",
 	}.Apply(t)
 
 	assert.NoError(t, err, err)
-	assert.Equal(t, "12345", d.Id(), "Resource ID should not be empty")
+	assert.Equal(t, "foo/12345", d.Id(), "Resource ID should not be empty")
 }

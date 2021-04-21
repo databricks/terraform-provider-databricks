@@ -65,7 +65,7 @@ resource "databricks_cluster" "shared_autoscaling" {
     min_workers = 1
     max_workers = 50
   }
-  spark_conf {
+  spark_conf = {
     "spark.databricks.io.cache.enabled": true,
     "spark.databricks.io.cache.maxDiskUsage": "50g",
     "spark.databricks.io.cache.maxMetaDataCache": "1g"

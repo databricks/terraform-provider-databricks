@@ -437,3 +437,7 @@ func TestWidgetDelete(t *testing.T) {
 	assert.NoError(t, err, err)
 	assert.Equal(t, "some-uuid/12345", d.Id(), "Resource ID should not be empty")
 }
+
+func TestResourceWidgetCornerCases(t *testing.T) {
+	qa.ResourceCornerCases(t, ResourceWidget(), "foo/bar")
+}

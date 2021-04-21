@@ -59,6 +59,228 @@ func TestQueryCreate(t *testing.T) {
 	assert.Equal(t, "SELECT 1", d.Get("query"))
 }
 
+func TestQueryCreateWithMultipleSchedules(t *testing.T) {
+	_, err := qa.ResourceFixture{
+		Resource: ResourceQuery(),
+		Create:   true,
+		HCL: `
+			data_source_id = "xyz"
+			name = "Query name"
+			query = "SELECT 1"
+
+			schedule {
+				continuous {
+					interval_seconds = 3600
+				}
+				daily {
+					interval_days = 1
+					time_of_day = "11:30"
+				}
+			}
+		`,
+	}.Apply(t)
+
+	assert.Error(t, err, "Expected validation error")
+	assert.Contains(t, err.Error(), " conflicts with ")
+}
+
+func TestQueryCreateWithContinuousSchedule(t *testing.T) {
+	intervalSeconds := 3600
+	untilDate := "2021-04-21"
+
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/preview/sql/queries",
+				ExpectedRequest: api.Query{
+					DataSourceID: "xyz",
+					Name:         "Query name",
+					Query:        "SELECT 1",
+					Schedule: &api.QuerySchedule{
+						Interval:  intervalSeconds,
+						Time:      nil,
+						DayOfWeek: nil,
+						Until:     &untilDate,
+					},
+				},
+				Response: api.Query{
+					ID: "foo",
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/preview/sql/queries/foo",
+				Response: api.Query{
+					ID:           "foo",
+					DataSourceID: "xyz",
+					Name:         "Query name",
+					Query:        "SELECT 1",
+					Schedule: &api.QuerySchedule{
+						Interval:  intervalSeconds,
+						Time:      nil,
+						DayOfWeek: nil,
+						Until:     &untilDate,
+					},
+				},
+			},
+		},
+		Resource: ResourceQuery(),
+		Create:   true,
+		HCL: `
+			data_source_id = "xyz"
+			name = "Query name"
+			query = "SELECT 1"
+
+			schedule {
+				continuous {
+					interval_seconds = 3600
+					until_date = "2021-04-21"
+				}
+			}
+		`,
+	}.Apply(t)
+
+	assert.NoError(t, err, err)
+	assert.Equal(t, intervalSeconds, d.Get("schedule.0.continuous.0.interval_seconds"))
+	assert.Equal(t, untilDate, d.Get("schedule.0.continuous.0.until_date"))
+}
+
+func TestQueryCreateWithDailySchedule(t *testing.T) {
+	intervalDays := 2
+	intervalSeconds := intervalDays * 24 * 60 * 60
+	timeOfDay := "06:00"
+	untilDate := "2021-04-21"
+
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/preview/sql/queries",
+				ExpectedRequest: api.Query{
+					DataSourceID: "xyz",
+					Name:         "Query name",
+					Query:        "SELECT 1",
+					Schedule: &api.QuerySchedule{
+						Interval:  intervalSeconds,
+						Time:      &timeOfDay,
+						DayOfWeek: nil,
+						Until:     &untilDate,
+					},
+				},
+				Response: api.Query{
+					ID: "foo",
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/preview/sql/queries/foo",
+				Response: api.Query{
+					ID:           "foo",
+					DataSourceID: "xyz",
+					Name:         "Query name",
+					Query:        "SELECT 1",
+					Schedule: &api.QuerySchedule{
+						Interval:  intervalSeconds,
+						Time:      &timeOfDay,
+						DayOfWeek: nil,
+						Until:     &untilDate,
+					},
+				},
+			},
+		},
+		Resource: ResourceQuery(),
+		Create:   true,
+		HCL: `
+			data_source_id = "xyz"
+			name = "Query name"
+			query = "SELECT 1"
+
+			schedule {
+				daily {
+					interval_days = 2
+					time_of_day = "06:00"
+					until_date = "2021-04-21"
+				}
+			}
+		`,
+	}.Apply(t)
+
+	assert.NoError(t, err, err)
+	assert.Equal(t, intervalDays, d.Get("schedule.0.daily.0.interval_days"))
+	assert.Equal(t, timeOfDay, d.Get("schedule.0.daily.0.time_of_day"))
+	assert.Equal(t, untilDate, d.Get("schedule.0.daily.0.until_date"))
+}
+
+func TestQueryCreateWithWeeklySchedule(t *testing.T) {
+	intervalWeeks := 2
+	intervalSeconds := intervalWeeks * 7 * 24 * 60 * 60
+	timeOfDay := "06:00"
+	dayOfWeek := "sunday"
+	untilDate := "2021-04-21"
+
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/preview/sql/queries",
+				ExpectedRequest: api.Query{
+					DataSourceID: "xyz",
+					Name:         "Query name",
+					Query:        "SELECT 1",
+					Schedule: &api.QuerySchedule{
+						Interval:  intervalSeconds,
+						Time:      &timeOfDay,
+						DayOfWeek: &dayOfWeek,
+						Until:     &untilDate,
+					},
+				},
+				Response: api.Query{
+					ID: "foo",
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/preview/sql/queries/foo",
+				Response: api.Query{
+					ID:           "foo",
+					DataSourceID: "xyz",
+					Name:         "Query name",
+					Query:        "SELECT 1",
+					Schedule: &api.QuerySchedule{
+						Interval:  intervalSeconds,
+						Time:      &timeOfDay,
+						DayOfWeek: &dayOfWeek,
+						Until:     &untilDate,
+					},
+				},
+			},
+		},
+		Resource: ResourceQuery(),
+		Create:   true,
+		HCL: `
+			data_source_id = "xyz"
+			name = "Query name"
+			query = "SELECT 1"
+
+			schedule {
+				weekly {
+					interval_weeks = 2
+					time_of_day = "06:00"
+					day_of_week = "sunday"
+					until_date = "2021-04-21"
+				}
+			}
+		`,
+	}.Apply(t)
+
+	assert.NoError(t, err, err)
+	assert.Equal(t, intervalWeeks, d.Get("schedule.0.weekly.0.interval_weeks"))
+	assert.Equal(t, dayOfWeek, d.Get("schedule.0.weekly.0.day_of_week"))
+	assert.Equal(t, timeOfDay, d.Get("schedule.0.weekly.0.time_of_day"))
+	assert.Equal(t, untilDate, d.Get("schedule.0.weekly.0.until_date"))
+}
+
 func TestQueryRead(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{

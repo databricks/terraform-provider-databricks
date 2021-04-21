@@ -3,6 +3,7 @@ package sqlanalytics
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"log"
 	"reflect"
 	"strings"
@@ -25,7 +26,30 @@ type QueryEntity struct {
 
 // QuerySchedule ...
 type QuerySchedule struct {
-	Interval int `json:"interval"`
+	Continuous *QueryScheduleContinuous `json:"continuous,omitempty"`
+	Daily      *QueryScheduleDaily      `json:"daily,omitempty"`
+	Weekly     *QueryScheduleWeekly     `json:"weekly,omitempty"`
+}
+
+// QueryScheduleContinuous ...
+type QueryScheduleContinuous struct {
+	IntervalSeconds int    `json:"interval_seconds"`
+	UntilDate       string `json:"until_date,omitempty"`
+}
+
+// QueryScheduleDaily ...
+type QueryScheduleDaily struct {
+	IntervalDays int    `json:"interval_days"`
+	TimeOfDay    string `json:"time_of_day"`
+	UntilDate    string `json:"until_date,omitempty"`
+}
+
+// QueryScheduleWeekly ...
+type QueryScheduleWeekly struct {
+	IntervalWeeks int    `json:"interval_weeks"`
+	DayOfWeek     string `json:"day_of_week"`
+	TimeOfDay     string `json:"time_of_day"`
+	UntilDate     string `json:"until_date,omitempty"`
 }
 
 // QueryParameter ...
@@ -115,6 +139,9 @@ func newQueryParameterAllowMultiple(aq *api.QueryParameterMultipleValuesOptions)
 	}
 }
 
+const secondsInDay = 24 * 60 * 60
+const secondsInWeek = 7 * secondsInDay
+
 func (q *QueryEntity) toAPIObject(schema map[string]*schema.Schema, data *schema.ResourceData) (*api.Query, error) {
 	// Extract from ResourceData.
 	if err := common.DataToStructPointer(data, schema, q); err != nil {
@@ -131,8 +158,32 @@ func (q *QueryEntity) toAPIObject(schema map[string]*schema.Schema, data *schema
 	aq.Tags = append([]string{}, q.Tags...)
 
 	if s := q.Schedule; s != nil {
-		aq.Schedule = &api.QuerySchedule{
-			Interval: s.Interval,
+		if sp := s.Continuous; sp != nil {
+			aq.Schedule = &api.QuerySchedule{
+				Interval: sp.IntervalSeconds,
+			}
+			if sp.UntilDate != "" {
+				aq.Schedule.Until = &sp.UntilDate
+			}
+		}
+		if sp := s.Daily; sp != nil {
+			aq.Schedule = &api.QuerySchedule{
+				Interval: sp.IntervalDays * secondsInDay,
+				Time:     &sp.TimeOfDay,
+			}
+			if sp.UntilDate != "" {
+				aq.Schedule.Until = &sp.UntilDate
+			}
+		}
+		if sp := s.Weekly; sp != nil {
+			aq.Schedule = &api.QuerySchedule{
+				Interval:  sp.IntervalWeeks * secondsInWeek,
+				DayOfWeek: &sp.DayOfWeek,
+				Time:      &sp.TimeOfDay,
+			}
+			if sp.UntilDate != "" {
+				aq.Schedule.Until = &sp.UntilDate
+			}
 		}
 	}
 
@@ -231,9 +282,44 @@ func (q *QueryEntity) fromAPIObject(aq *api.Query, schema map[string]*schema.Sch
 	q.Tags = append([]string{}, aq.Tags...)
 
 	if s := aq.Schedule; s != nil {
-		q.Schedule = &QuerySchedule{
-			Interval: s.Interval,
+		q.Schedule = &QuerySchedule{}
+		if s.Interval%secondsInWeek == 0 {
+			q.Schedule.Weekly = &QueryScheduleWeekly{
+				IntervalWeeks: s.Interval / secondsInWeek,
+			}
+			if s.DayOfWeek != nil {
+				q.Schedule.Weekly.DayOfWeek = *s.DayOfWeek
+			}
+			if s.Time != nil {
+				q.Schedule.Weekly.TimeOfDay = *s.Time
+			}
+			if s.Until != nil {
+				q.Schedule.Weekly.UntilDate = *s.Until
+			}
+		} else if s.Interval%secondsInDay == 0 {
+			q.Schedule.Daily = &QueryScheduleDaily{
+				IntervalDays: s.Interval / secondsInDay,
+			}
+			if s.Time != nil {
+				q.Schedule.Daily.TimeOfDay = *s.Time
+			}
+			if s.Until != nil {
+				q.Schedule.Daily.UntilDate = *s.Until
+			}
+		} else {
+			q.Schedule.Continuous = &QueryScheduleContinuous{
+				IntervalSeconds: s.Interval,
+			}
+			if s.Until != nil {
+				q.Schedule.Continuous.UntilDate = *s.Until
+			}
 		}
+	} else {
+		// Overwrite `schedule` in case it's not set on the server side.
+		// This would have been skipped by `common.StructToData` because of slice emptiness.
+		// Ideally, the reflection code also sets empty values, but we'd risk
+		// clobbering values we actually want to keep around in existing code.
+		data.Set("schedule", nil)
 	}
 
 	if aq.Options != nil {
@@ -406,6 +492,19 @@ func ResourceQuery() *schema.Resource {
 	s := common.StructToSchema(
 		QueryEntity{},
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
+			// Make different query schedule types mutually exclusive.
+			{
+				schedule := m["schedule"].Elem.(*schema.Resource)
+				ns := []string{"continuous", "daily", "weekly"}
+				for _, n1 := range ns {
+					for _, n2 := range ns {
+						if n1 == n2 {
+							continue
+						}
+						schedule.Schema[n1].ConflictsWith = append(schedule.Schema[n1].ConflictsWith, fmt.Sprintf("schedule.0.%s", n2))
+					}
+				}
+			}
 			return m
 		})
 

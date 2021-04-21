@@ -120,3 +120,7 @@ func TestDashboardDelete(t *testing.T) {
 	assert.NoError(t, err, err)
 	assert.Equal(t, "xyz", d.Id(), "Resource ID should not be empty")
 }
+
+func TestResourceDashboardCornerCases(t *testing.T) {
+	qa.ResourceCornerCases(t, ResourceDashboard())
+}

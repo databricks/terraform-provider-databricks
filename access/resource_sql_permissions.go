@@ -14,35 +14,28 @@ import (
 
 // https://docs.databricks.com/security/access-control/table-acls/object-privileges.html#operations-and-privileges
 
-// TableACL defines table access control
-type TableACL struct {
-	Table             string `json:"table,omitempty"`
-	View              string `json:"view,omitempty"`
-	Database          string `json:"database,omitempty"`
-	Catalog           bool   `json:"catalog,omitempty"`
-	AnyFile           bool   `json:"any_file,omitempty"`
-	AnonymousFunction bool   `json:"anonymous_function,omitempty"`
-	Owner             string `json:"owner,omitempty"`
-	ClusterID         string `json:"cluster_id,omitempty" tf:"computed"`
-
-	Grants []TablePermissions `json:"grant,omitempty"`
+// SqlPermissions defines table access control
+type SqlPermissions struct {
+	Table                string                `json:"table,omitempty"`
+	View                 string                `json:"view,omitempty"`
+	Database             string                `json:"database,omitempty"`
+	Catalog              bool                  `json:"catalog,omitempty"`
+	AnyFile              bool                  `json:"any_file,omitempty"`
+	AnonymousFunction    bool                  `json:"anonymous_function,omitempty"`
+	Owner                string                `json:"owner,omitempty"`
+	ClusterID            string                `json:"cluster_id,omitempty" tf:"computed"`
+	PrivilegeAssignments []PrivilegeAssignment `json:"privilege_assignments,omitempty"`
 
 	exec common.CommandExecutor
 }
 
-// TablePermissions ...
-type TablePermissions struct {
+// PrivilegeAssignment ...
+type PrivilegeAssignment struct {
 	Principal  string   `json:"principal"`
 	Privileges []string `json:"privileges" tf:"slice_set"`
 }
 
-func (ta *TableACL) permissions() map[string][]TablePermissions {
-	return map[string][]TablePermissions{
-		"GRANT": ta.Grants,
-	}
-}
-
-func (ta *TableACL) actualDatabase() string {
+func (ta *SqlPermissions) actualDatabase() string {
 	if ta.Database == "" {
 		return "default"
 	}
@@ -50,7 +43,7 @@ func (ta *TableACL) actualDatabase() string {
 }
 
 // typeAndKey returns ACL object type and key
-func (ta *TableACL) typeAndKey() (string, string) {
+func (ta *SqlPermissions) typeAndKey() (string, string) {
 	if ta.Table != "" {
 		return "TABLE", fmt.Sprintf("`%s`.`%s`", ta.actualDatabase(), ta.Table)
 	}
@@ -73,7 +66,7 @@ func (ta *TableACL) typeAndKey() (string, string) {
 }
 
 // ID returns Terraform resource ID
-func (ta *TableACL) ID() string {
+func (ta *SqlPermissions) ID() string {
 	objectType, key := ta.typeAndKey()
 	if objectType == "" && key == "" {
 		return ""
@@ -82,8 +75,8 @@ func (ta *TableACL) ID() string {
 	return fmt.Sprintf("%s/%s", strings.ToLower(objectType), noBackticks)
 }
 
-func loadTableACL(id string) (TableACL, error) {
-	ta := TableACL{}
+func loadTableACL(id string) (SqlPermissions, error) {
+	ta := SqlPermissions{}
 	split := strings.SplitN(id, "/", 2)
 	if len(split) != 2 {
 		return ta, fmt.Errorf("ID must be two elements: %s", id)
@@ -117,7 +110,7 @@ func loadTableACL(id string) (TableACL, error) {
 	return ta, nil
 }
 
-func (ta *TableACL) read() error {
+func (ta *SqlPermissions) read() error {
 	thisType, thisKey := ta.typeAndKey()
 	if thisType == "" && thisKey == "" {
 		return fmt.Errorf("invalid ID")
@@ -133,7 +126,7 @@ func (ta *TableACL) read() error {
 		return fmt.Errorf(failure)
 	}
 	// clear any previous entries
-	ta.Grants = []TablePermissions{}
+	ta.PrivilegeAssignments = []PrivilegeAssignment{}
 
 	// iterate over existing permissions over given data object
 	var currentPrincipal, currentAction, currentType, currentKey string
@@ -148,25 +141,24 @@ func (ta *TableACL) read() error {
 			// DENY statements are intentionally not supported.
 			continue
 		}
-		// find existing grants or denies for all principals
-		target := ta.Grants
+		// find existing grants for all principals
 		var privileges *[]string
-		for i, tablePermissions := range target {
+		for i, privilegeAssignment := range ta.PrivilegeAssignments {
 			// correct all privileges for the same principal into a slide
-			if tablePermissions.Principal == currentPrincipal {
-				privileges = &ta.Grants[i].Privileges
+			if privilegeAssignment.Principal == currentPrincipal {
+				privileges = &ta.PrivilegeAssignments[i].Privileges
 			}
 		}
 		if privileges == nil {
 			// initialize permissions wrapper for a principal not seen
 			// in previous iterations
-			firstSeenPrincipalPermissions := TablePermissions{
+			firstSeenPrincipalPermissions := PrivilegeAssignment{
 				Principal:  currentPrincipal,
 				Privileges: []string{},
 			}
 			// point privileges to be of the newly added principal
-			ta.Grants = append(ta.Grants, firstSeenPrincipalPermissions)
-			privileges = &ta.Grants[len(ta.Grants)-1].Privileges
+			ta.PrivilegeAssignments = append(ta.PrivilegeAssignments, firstSeenPrincipalPermissions)
+			privileges = &ta.PrivilegeAssignments[len(ta.PrivilegeAssignments)-1].Privileges
 		}
 		// add action for the principal on current iteration
 		*privileges = append(*privileges, currentAction)
@@ -174,7 +166,7 @@ func (ta *TableACL) read() error {
 	return nil
 }
 
-func (ta *TableACL) revoke() error {
+func (ta *SqlPermissions) revoke() error {
 	existing, err := loadTableACL(ta.ID())
 	if err != nil {
 		return err
@@ -184,38 +176,34 @@ func (ta *TableACL) revoke() error {
 	if err = existing.read(); err != nil {
 		return err
 	}
-	for _, tps := range existing.permissions() {
-		for _, priv := range tps {
-			if err = ta.apply(func(objType, key string) string {
-				return fmt.Sprintf("REVOKE ALL PRIVILEGES ON %s %s FROM `%s`",
-					objType, key, priv.Principal)
-			}); err != nil {
-				return err
-			}
+	for _, privilegeAssignment := range existing.PrivilegeAssignments {
+		if err = ta.apply(func(objType, key string) string {
+			return fmt.Sprintf("REVOKE ALL PRIVILEGES ON %s %s FROM `%s`",
+				objType, key, privilegeAssignment.Principal)
+		}); err != nil {
+			return err
 		}
 	}
 	return nil
 }
 
-func (ta *TableACL) enforce() (err error) {
+func (ta *SqlPermissions) enforce() (err error) {
 	if err = ta.revoke(); err != nil {
 		return err
 	}
-	for action, grantsOrDenies := range ta.permissions() {
-		for _, grant := range grantsOrDenies {
-			if err = ta.apply(func(objType, key string) string {
-				privileges := strings.Join(grant.Privileges, ", ")
-				return fmt.Sprintf("%s %s ON %s %s TO `%s`",
-					action, privileges, objType, key, grant.Principal)
-			}); err != nil {
-				return err
-			}
+	for _, privilegeAssignment := range ta.PrivilegeAssignments {
+		if err = ta.apply(func(objType, key string) string {
+			privileges := strings.Join(privilegeAssignment.Privileges, ", ")
+			return fmt.Sprintf("GRANT %s ON %s %s TO `%s`",
+				privileges, objType, key, privilegeAssignment.Principal)
+		}); err != nil {
+			return err
 		}
 	}
 	return nil
 }
 
-func (ta *TableACL) apply(qb func(objType, key string) string) error {
+func (ta *SqlPermissions) apply(qb func(objType, key string) string) error {
 	objType, key := ta.typeAndKey()
 	if objType == "" && key == "" {
 		return fmt.Errorf("invalid ID")
@@ -226,7 +214,7 @@ func (ta *TableACL) apply(qb func(objType, key string) string) error {
 	return r.Err()
 }
 
-func (ta *TableACL) initCluster(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) (err error) {
+func (ta *SqlPermissions) initCluster(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) (err error) {
 	clustersAPI := compute.NewClustersAPI(ctx, c)
 	if ci, ok := d.GetOk("cluster_id"); ok {
 		ta.ClusterID = ci.(string)
@@ -249,7 +237,7 @@ func (ta *TableACL) initCluster(ctx context.Context, d *schema.ResourceData, c *
 	return nil
 }
 
-func (ta *TableACL) getOrCreateCluster(clustersAPI compute.ClustersAPI) (string, error) {
+func (ta *SqlPermissions) getOrCreateCluster(clustersAPI compute.ClustersAPI) (string, error) {
 	sparkVersion := clustersAPI.LatestSparkVersionOrDefault(compute.SparkVersionRequest{
 		Latest: true,
 	})
@@ -275,7 +263,7 @@ func (ta *TableACL) getOrCreateCluster(clustersAPI compute.ClustersAPI) (string,
 }
 
 func tableAclForUpdate(ctx context.Context, d *schema.ResourceData,
-	s map[string]*schema.Schema, c *common.DatabricksClient) (ta TableACL, err error) {
+	s map[string]*schema.Schema, c *common.DatabricksClient) (ta SqlPermissions, err error) {
 	if err = common.DataToStructPointer(d, s, &ta); err != nil {
 		return
 	}
@@ -284,7 +272,7 @@ func tableAclForUpdate(ctx context.Context, d *schema.ResourceData,
 }
 
 func tableAclForLoad(ctx context.Context, d *schema.ResourceData,
-	s map[string]*schema.Schema, c *common.DatabricksClient) (ta TableACL, err error) {
+	s map[string]*schema.Schema, c *common.DatabricksClient) (ta SqlPermissions, err error) {
 	ta, err = loadTableACL(d.Id())
 	if err != nil {
 		return
@@ -295,7 +283,7 @@ func tableAclForLoad(ctx context.Context, d *schema.ResourceData,
 
 // ResourceSqlPermissions manages table ACLs
 func ResourceSqlPermissions() *schema.Resource {
-	s := common.StructToSchema(TableACL{}, func(s map[string]*schema.Schema) map[string]*schema.Schema {
+	s := common.StructToSchema(SqlPermissions{}, func(s map[string]*schema.Schema) map[string]*schema.Schema {
 		alof := []string{"database", "table", "view", "catalog", "any_file", "anonymous_function"}
 		for _, field := range alof {
 			s[field].ForceNew = true
@@ -304,19 +292,6 @@ func ResourceSqlPermissions() *schema.Resource {
 		}
 		s["database"].Default = "default"
 		// TODO: ignore changes on cluster_id
-
-		// validateGrants := validation.StringInSlice([]string{
-		// 	"SELECT",
-		// 	"CREATE",
-		// 	"MODIFY",
-		// 	"USAGE",
-		// 	"READ_METADATA",
-		// 	"CREATE_NAMED_FUNCTION",
-		// 	"MODIFY_CLASSPATH",
-		// 	"ALL PRIVILEGES",
-		// }, false)
-		// s["grant"].ValidateDiagFunc = validation.ToDiagFunc(validateGrants)
-		// s["deny"].ValidateDiagFunc = validation.ToDiagFunc(validateGrants)
 		return s
 	})
 	return common.Resource{

@@ -11,6 +11,7 @@ import (
 	"github.com/databrickslabs/terraform-provider-databricks/common"
 	"github.com/databrickslabs/terraform-provider-databricks/sqlanalytics/api"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 // QueryEntity defines the parameters that can be set in the resource.
@@ -493,9 +494,10 @@ func ResourceQuery() *schema.Resource {
 	s := common.StructToSchema(
 		QueryEntity{},
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
+			schedule := m["schedule"].Elem.(*schema.Resource)
+
 			// Make different query schedule types mutually exclusive.
 			{
-				schedule := m["schedule"].Elem.(*schema.Resource)
 				ns := []string{"continuous", "daily", "weekly"}
 				for _, n1 := range ns {
 					for _, n2 := range ns {
@@ -506,6 +508,19 @@ func ResourceQuery() *schema.Resource {
 					}
 				}
 			}
+
+			// Validate week of day in weekly schedule.
+			// Manually verified that this is case sensitive.
+			weekly := schedule.Schema["weekly"].Elem.(*schema.Resource)
+			weekly.Schema["day_of_week"].ValidateFunc = validation.StringInSlice([]string{
+				"Sunday",
+				"Monday",
+				"Tuesday",
+				"Wednesday",
+				"Thursday",
+				"Friday",
+				"Saturday",
+			}, false)
 			return m
 		})
 

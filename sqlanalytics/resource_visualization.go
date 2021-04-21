@@ -16,7 +16,9 @@ import (
 
 // VisualizationEntity defines the parameters that can be set in the resource.
 type VisualizationEntity struct {
-	QueryID     string `json:"query_id"`
+	QueryID         string `json:"query_id"`
+	VisualizationID string `json:"visualization_id,omitempty" tf:"computed"`
+
 	Type        string `json:"type"`
 	Name        string `json:"name"`
 	Description string `json:"description,omitempty"`
@@ -32,14 +34,6 @@ func (v *VisualizationEntity) toAPIObject(schema map[string]*schema.Schema, data
 	// Transform to API object.
 	var av api.Visualization
 
-	if data.Id() != "" {
-		id, err := strconv.Atoi(data.Id())
-		if err != nil {
-			return nil, err
-		}
-		av.ID = id
-	}
-
 	av.QueryID = v.QueryID
 	av.Type = strings.ToUpper(v.Type)
 	av.Name = v.Name
@@ -51,6 +45,7 @@ func (v *VisualizationEntity) toAPIObject(schema map[string]*schema.Schema, data
 func (v *VisualizationEntity) fromAPIObject(av *api.Visualization, schema map[string]*schema.Schema, data *schema.ResourceData) error {
 	// Copy from API object.
 	v.QueryID = av.QueryID
+	v.VisualizationID = strconv.Itoa(av.ID)
 	v.Type = strings.ToLower(av.Type)
 	v.Name = av.Name
 	v.Description = av.Description
@@ -75,36 +70,14 @@ type VisualizationAPI struct {
 	context context.Context
 }
 
-func (a VisualizationAPI) buildPath(path ...int) string {
-	out := "/preview/sql/visualizations"
-	if len(path) == 1 {
-		out = fmt.Sprintf("%s/%d", out, path[0])
-	}
-	return out
-}
-
 // Create ...
-func (a VisualizationAPI) Create(v *api.Visualization) (*api.Visualization, error) {
-	var vp api.Visualization
-	err := a.client.Post(a.context, a.buildPath(), v, &vp)
-	if err != nil {
-		return nil, err
-	}
-
-	// Set query ID on returned object.
-	// It's not included in the POST response.
-	vp.QueryID = v.QueryID
-
-	return &vp, err
+func (a VisualizationAPI) Create(v *api.Visualization) error {
+	return a.client.Post(a.context, "/preview/sql/visualizations", v, &v)
 }
 
 // Read ...
-func (a VisualizationAPI) Read(v *api.Visualization) (*api.Visualization, error) {
-	if v.QueryID == "" {
-		return nil, fmt.Errorf("Cannot read visualization without query ID")
-	}
-
-	q, err := NewQueryAPI(a.context, a.client).Read(&api.Query{ID: v.QueryID})
+func (a VisualizationAPI) Read(queryID, visualizationID string) (*api.Visualization, error) {
+	q, err := NewQueryAPI(a.context, a.client).Read(&api.Query{ID: queryID})
 	if err != nil {
 		return nil, err
 	}
@@ -117,35 +90,25 @@ func (a VisualizationAPI) Read(v *api.Visualization) (*api.Visualization, error)
 			return nil, err
 		}
 
-		if vnew.ID == v.ID {
+		if strconv.Itoa(vnew.ID) == visualizationID {
 			// Include query ID in returned object.
 			// It's not part of the API response.
-			vnew.QueryID = v.QueryID
+			vnew.QueryID = queryID
 			return &vnew, nil
 		}
 	}
 
-	return nil, fmt.Errorf("Cannot find visualization %d attached to query %s", v.ID, v.QueryID)
+	return nil, fmt.Errorf("Cannot find visualization %s attached to query %s", visualizationID, queryID)
 }
 
 // Update ...
-func (a VisualizationAPI) Update(v *api.Visualization) (*api.Visualization, error) {
-	var vp api.Visualization
-	err := a.client.Post(a.context, a.buildPath(v.ID), v, &vp)
-	if err != nil {
-		return nil, err
-	}
-
-	// Set query ID on returned object.
-	// It's not included in the POST response.
-	vp.QueryID = v.QueryID
-
-	return &vp, nil
+func (a VisualizationAPI) Update(visualizationID string, v *api.Visualization) error {
+	return a.client.Post(a.context, fmt.Sprintf("/preview/sql/visualizations/%s", visualizationID), &v, nil)
 }
 
 // Delete ...
-func (a VisualizationAPI) Delete(v *api.Visualization) error {
-	return a.client.Delete(a.context, a.buildPath(v.ID), nil)
+func (a VisualizationAPI) Delete(visualizationID string) error {
+	return a.client.Delete(a.context, fmt.Sprintf("/preview/sql/visualizations/%s", visualizationID), nil)
 }
 
 func jsonRemarshal(in []byte) ([]byte, error) {
@@ -166,6 +129,7 @@ func jsonRemarshal(in []byte) ([]byte, error) {
 
 // ResourceVisualization ...
 func ResourceVisualization() *schema.Resource {
+	p := common.NewPairSeparatedID("query_id", "visualization_id", "/")
 	s := common.StructToSchema(
 		VisualizationEntity{},
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
@@ -194,54 +158,57 @@ func ResourceVisualization() *schema.Resource {
 				return err
 			}
 
-			avNew, err := NewVisualizationAPI(ctx, c).Create(av)
+			err = NewVisualizationAPI(ctx, c).Create(av)
 			if err != nil {
 				return err
 			}
 
-			// No need to set anything because the resource is going to be
-			// read immediately after being created.
-			data.SetId(strconv.Itoa(avNew.ID))
+			// Convert API object back to resource data.
+			// This includes setting the `visualization_id`, which is
+			// needed to synthesize the composite resource identifier.
+			err = v.fromAPIObject(av, s, data)
+			if err != nil {
+				return err
+			}
+
+			// Set composite resource identifier.
+			p.Pack(data)
 			return nil
 		},
 		Read: func(ctx context.Context, data *schema.ResourceData, c *common.DatabricksClient) error {
+			queryID, visualizationID, err := p.Unpack(data)
+			if err != nil {
+				return err
+			}
+
+			av, err := NewVisualizationAPI(ctx, c).Read(queryID, visualizationID)
+			if err != nil {
+				return err
+			}
+
 			var v VisualizationEntity
-			av, err := v.toAPIObject(s, data)
-			if err != nil {
-				return err
-			}
-
-			avNew, err := NewVisualizationAPI(ctx, c).Read(av)
-			if err != nil {
-				return err
-			}
-
-			return v.fromAPIObject(avNew, s, data)
+			return v.fromAPIObject(av, s, data)
 		},
 		Update: func(ctx context.Context, data *schema.ResourceData, c *common.DatabricksClient) error {
+			_, visualizationID, err := p.Unpack(data)
+			if err != nil {
+				return err
+			}
+
 			var v VisualizationEntity
 			av, err := v.toAPIObject(s, data)
 			if err != nil {
 				return err
 			}
 
-			_, err = NewVisualizationAPI(ctx, c).Update(av)
-			if err != nil {
-				return err
-			}
-
-			// No need to set anything because the resource is going to be
-			// read immediately after being created.
-			return nil
+			return NewVisualizationAPI(ctx, c).Update(visualizationID, av)
 		},
 		Delete: func(ctx context.Context, data *schema.ResourceData, c *common.DatabricksClient) error {
-			var v VisualizationEntity
-			av, err := v.toAPIObject(s, data)
+			_, visualizationID, err := p.Unpack(data)
 			if err != nil {
 				return err
 			}
-
-			return NewVisualizationAPI(ctx, c).Delete(av)
+			return NewVisualizationAPI(ctx, c).Delete(visualizationID)
 		},
 		Schema: s,
 	}.ToResource()

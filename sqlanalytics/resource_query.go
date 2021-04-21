@@ -283,6 +283,15 @@ func (q *QueryEntity) fromAPIObject(aq *api.Query, schema map[string]*schema.Sch
 	q.Tags = append([]string{}, aq.Tags...)
 
 	if s := aq.Schedule; s != nil {
+		// Set `schedule` to non-empty value to ensure it's picked up by `StructToSchema`.
+		// If it is not yet set in `schema.ResourceData`, then `StructToSchema` mistakingly
+		// interprets the server side value as a default and skips the field.
+		// This means, however, that if the schedule is configured out-of-band (e.g. manually),
+		// running `terraform apply` again won't remove the setting.
+		data.Set("schedule", []interface{}{
+			map[string][]interface{}{},
+		})
+
 		q.Schedule = &QuerySchedule{}
 		switch {
 		case s.Interval%secondsInWeek == 0:

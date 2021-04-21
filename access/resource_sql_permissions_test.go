@@ -12,7 +12,7 @@ import (
 )
 
 func TestTableACLID(t *testing.T) {
-	for id, ta := range map[string]TableACL{
+	for id, ta := range map[string]SqlPermissions{
 		"table/default.foo":   {Table: "foo"},
 		"view/bar.foo":        {View: "foo", Database: "bar"},
 		"database/bar":        {Database: "bar"},
@@ -73,7 +73,7 @@ func (md mockData) toCommandMock() func(string) common.CommandResults {
 }
 
 func TestTableACLGrants(t *testing.T) {
-	ta := TableACL{Table: "foo", exec: mockData{
+	ta := SqlPermissions{Table: "foo", exec: mockData{
 		"SHOW GRANT ON TABLE `default`.`foo`": {
 			// principal, actionType, objType, objectKey
 			{"users", "SELECT", "database", "foo"},
@@ -85,8 +85,8 @@ func TestTableACLGrants(t *testing.T) {
 	}}
 	err := ta.read()
 	assert.NoError(t, err)
-	assert.Len(t, ta.Grants, 1)
-	assert.Len(t, ta.Grants[0].Privileges, 2)
+	assert.Len(t, ta.PrivilegeAssignments, 1)
+	assert.Len(t, ta.PrivilegeAssignments[0].Privileges, 2)
 }
 
 type failedCommand string
@@ -105,19 +105,19 @@ func (fc failedCommand) toCommandMock() func(commandStr string) common.CommandRe
 }
 
 func TestTableACL_NotFound(t *testing.T) {
-	ta := TableACL{Table: "foo", exec: failedCommand("Table does not exist")}
+	ta := SqlPermissions{Table: "foo", exec: failedCommand("Table does not exist")}
 	err := ta.read()
 	assert.EqualError(t, err, "Table does not exist")
 }
 
 func TestTableACL_OtherError(t *testing.T) {
-	ta := TableACL{Table: "foo", exec: failedCommand("Some error")}
+	ta := SqlPermissions{Table: "foo", exec: failedCommand("Some error")}
 	err := ta.read()
 	assert.EqualError(t, err, "Some error")
 }
 
 func TestTableACL_Revoke(t *testing.T) {
-	ta := TableACL{Table: "foo", exec: mockData{
+	ta := SqlPermissions{Table: "foo", exec: mockData{
 		"SHOW GRANT ON TABLE `default`.`foo`": {
 			{"users", "SELECT", "database", "foo"},
 			{"users", "SELECT", "table", "`default`.`foo`"},
@@ -132,9 +132,9 @@ func TestTableACL_Revoke(t *testing.T) {
 }
 
 func TestTableACL_Enforce(t *testing.T) {
-	ta := TableACL{
+	ta := SqlPermissions{
 		Table: "foo",
-		Grants: []TablePermissions{
+		PrivilegeAssignments: []PrivilegeAssignment{
 			{"engineers", []string{"MODIFY", "SELECT", "READ"}},
 			{"support", []string{"SELECT"}},
 		},
@@ -293,7 +293,7 @@ func TestResourceSqlPermissions_Create(t *testing.T) {
 		}.toCommandMock(),
 		HCL: `
 		table = "foo"
-		grant {
+		privilege_assignments {
 			principal = "serge@example.com"
 			privileges = ["SELECT", "READ", "MODIFY"]
 		}
@@ -307,7 +307,7 @@ func TestResourceSqlPermissions_Create(t *testing.T) {
 func TestResourceSqlPermissions_Create_Error(t *testing.T) {
 	qa.ResourceFixture{
 		HCL: `table = "foo"
-		grant {
+		privilege_assignments {
 			principal = "serge@example.com"
 			privileges = ["SELECT", "READ", "MODIFY"]
 		}`,
@@ -337,7 +337,7 @@ func TestResourceSqlPermissions_Update(t *testing.T) {
 		}.toCommandMock(),
 		HCL: `
 		table = "foo"
-		grant {
+		privilege_assignments {
 			principal = "serge@example.com"
 			privileges = ["SELECT", "READ", "MODIFY"]
 		}
@@ -364,7 +364,7 @@ func TestResourceSqlPermissions_Delete(t *testing.T) {
 		}.toCommandMock(),
 		HCL: `
 		table = "foo"
-		grant {
+		privilege_assignments {
 			principal = "serge@example.com"
 			privileges = ["SELECT", "READ", "MODIFY"]
 		}

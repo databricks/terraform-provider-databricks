@@ -20,12 +20,12 @@ The following resource definition will enforce access control on a table by exec
 resource "databricks_sql_permissions" "foo_table" {
     table = "foo"
 
-    grant {
+    privilege_assignments {
         principal = "serge@example.com"
         privileges = ["SELECT", "READ", "MODIFY"]
     }
 
-    grant {
+    privilege_assignments {
         principal = "special group"
         privileges = ["SELECT", "READ", "MODIFY"]
     }
@@ -43,9 +43,9 @@ The following arguments are available to specify the data object you need to enf
 * `any_file` - (Boolean) If this access control for reading any file. Defaults to `false`.
 * `anonymous_function` - (Boolean) If this access control for using anonymous function. Defaults to `false`.
 
-### `grant` blocks
+### `privilege_assignments` blocks
 
-You must specify one or many `grant` configuration blocks to declare `privileges` to a `principal`, which corresponds to `display_name` of [databricks_group](group.md#display_name) or [databricks_user](user.md#display_name). Terraform would ensure that only those principals and privileges defined in the resource are applied for the data object and would remove anything else. It would not remove any transitive privileges. `DENY` statements are intentionally not supported. Every `grant` has the following required arguments:
+You must specify one or many `privilege_assignments` configuration blocks to declare `privileges` to a `principal`, which corresponds to `display_name` of [databricks_group](group.md#display_name) or [databricks_user](user.md#display_name). Terraform would ensure that only those principals and privileges defined in the resource are applied for the data object and would remove anything else. It would not remove any transitive privileges. `DENY` statements are intentionally not supported. Every `privilege_assignments` has the following required arguments:
 
 * `principal` - `display_name` of [databricks_group](group.md#display_name) or [databricks_user](user.md#display_name).
 * `privileges` - set of available privilege names in upper case.

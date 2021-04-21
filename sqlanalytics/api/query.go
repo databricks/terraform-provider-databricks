@@ -137,6 +137,16 @@ func (p QueryParameterText) MarshalJSON() ([]byte, error) {
 	return json.Marshal((localQueryParameter)(p))
 }
 
+// UnmarshalJSON clears the type after marshaling.
+func (p *QueryParameterText) UnmarshalJSON(b []byte) error {
+	type localQueryParameter QueryParameterText
+	if err := json.Unmarshal(b, (*localQueryParameter)(p)); err != nil {
+		return err
+	}
+	p.Type = ""
+	return nil
+}
+
 // QueryParameterNumber ...
 type QueryParameterNumber struct {
 	QueryParameter
@@ -149,6 +159,16 @@ func (p QueryParameterNumber) MarshalJSON() ([]byte, error) {
 	p.QueryParameter.Type = queryParameterNumberTypeName
 	type localQueryParameter QueryParameterNumber
 	return json.Marshal((localQueryParameter)(p))
+}
+
+// UnmarshalJSON clears the type after marshaling.
+func (p *QueryParameterNumber) UnmarshalJSON(b []byte) error {
+	type localQueryParameter QueryParameterNumber
+	if err := json.Unmarshal(b, (*localQueryParameter)(p)); err != nil {
+		return err
+	}
+	p.Type = ""
+	return nil
 }
 
 // QueryParameterMultipleValuesOptions ...
@@ -219,6 +239,8 @@ func (p *QueryParameterEnum) UnmarshalJSON(b []byte) error {
 		p.Values = vs
 	}
 
+	p.Type = ""
+	p.Value = nil
 	return nil
 }
 
@@ -283,6 +305,8 @@ func (p *QueryParameterQuery) UnmarshalJSON(b []byte) error {
 		p.Values = vs
 	}
 
+	p.Type = ""
+	p.Value = nil
 	return nil
 }
 
@@ -300,6 +324,16 @@ func (p QueryParameterDate) MarshalJSON() ([]byte, error) {
 	return json.Marshal((localQueryParameter)(p))
 }
 
+// UnmarshalJSON clears the type after marshaling.
+func (p *QueryParameterDate) UnmarshalJSON(b []byte) error {
+	type localQueryParameter QueryParameterDate
+	if err := json.Unmarshal(b, (*localQueryParameter)(p)); err != nil {
+		return err
+	}
+	p.Type = ""
+	return nil
+}
+
 // QueryParameterDateTime ...
 type QueryParameterDateTime struct {
 	QueryParameter
@@ -312,6 +346,16 @@ func (p QueryParameterDateTime) MarshalJSON() ([]byte, error) {
 	p.QueryParameter.Type = queryParameterDateTimeTypeName
 	type localQueryParameter QueryParameterDateTime
 	return json.Marshal((localQueryParameter)(p))
+}
+
+// UnmarshalJSON clears the type after marshaling.
+func (p *QueryParameterDateTime) UnmarshalJSON(b []byte) error {
+	type localQueryParameter QueryParameterDateTime
+	if err := json.Unmarshal(b, (*localQueryParameter)(p)); err != nil {
+		return err
+	}
+	p.Type = ""
+	return nil
 }
 
 // QueryParameterDateTimeSec ...
@@ -328,6 +372,16 @@ func (p QueryParameterDateTimeSec) MarshalJSON() ([]byte, error) {
 	return json.Marshal((localQueryParameter)(p))
 }
 
+// UnmarshalJSON clears the type after marshaling.
+func (p *QueryParameterDateTimeSec) UnmarshalJSON(b []byte) error {
+	type localQueryParameter QueryParameterDateTimeSec
+	if err := json.Unmarshal(b, (*localQueryParameter)(p)); err != nil {
+		return err
+	}
+	p.Type = ""
+	return nil
+}
+
 // QueryParameterDateRange ...
 type QueryParameterDateRange struct {
 	QueryParameter
@@ -340,6 +394,16 @@ func (p QueryParameterDateRange) MarshalJSON() ([]byte, error) {
 	p.QueryParameter.Type = queryParameterDateRangeTypeName
 	type localQueryParameter QueryParameterDateRange
 	return json.Marshal((localQueryParameter)(p))
+}
+
+// UnmarshalJSON clears the type after marshaling.
+func (p *QueryParameterDateRange) UnmarshalJSON(b []byte) error {
+	type localQueryParameter QueryParameterDateRange
+	if err := json.Unmarshal(b, (*localQueryParameter)(p)); err != nil {
+		return err
+	}
+	p.Type = ""
+	return nil
 }
 
 // QueryParameterDateTimeRange ...
@@ -356,6 +420,16 @@ func (p QueryParameterDateTimeRange) MarshalJSON() ([]byte, error) {
 	return json.Marshal((localQueryParameter)(p))
 }
 
+// UnmarshalJSON clears the type after marshaling.
+func (p *QueryParameterDateTimeRange) UnmarshalJSON(b []byte) error {
+	type localQueryParameter QueryParameterDateTimeRange
+	if err := json.Unmarshal(b, (*localQueryParameter)(p)); err != nil {
+		return err
+	}
+	p.Type = ""
+	return nil
+}
+
 // QueryParameterDateTimeSecRange ...
 type QueryParameterDateTimeSecRange struct {
 	QueryParameter
@@ -368,4 +442,14 @@ func (p QueryParameterDateTimeSecRange) MarshalJSON() ([]byte, error) {
 	p.QueryParameter.Type = queryParameterDateTimeSecRangeTypeName
 	type localQueryParameter QueryParameterDateTimeSecRange
 	return json.Marshal((localQueryParameter)(p))
+}
+
+// UnmarshalJSON clears the type after marshaling.
+func (p *QueryParameterDateTimeSecRange) UnmarshalJSON(b []byte) error {
+	type localQueryParameter QueryParameterDateTimeSecRange
+	if err := json.Unmarshal(b, (*localQueryParameter)(p)); err != nil {
+		return err
+	}
+	p.Type = ""
+	return nil
 }

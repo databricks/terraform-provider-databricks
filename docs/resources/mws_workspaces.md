@@ -174,7 +174,7 @@ resource "databricks_mws_workspaces" "this" {
 
 -> **Note** All workspaces would be verified to get into runnable state or cleaned up upon failure.
 
-The following arguments are required:
+The following arguments are available:
 
 * `network_id` - (Optional) `network_id` from [networks](mws_networks.md)
 * `account_id` - Account Id that could be found in the bottom left corner of [Accounts Console](https://accounts.cloud.databricks.com/).
@@ -184,6 +184,7 @@ The following arguments are required:
 * `workspace_name` - name of the workspace, will appear on UI
 * `aws_region` - AWS region of VPC
 * `storage_configuration_id` - `storage_configuration_id` from [storage configuration](mws_storage_configurations.md)
+* `private_access_settings_id` - (Optional) Canonical unique identifier of [databricks_mws_private_access_settings](mws_private_access_settings.md) in Databricks Account
 
 ## Attribute Reference
 

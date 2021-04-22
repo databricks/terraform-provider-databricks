@@ -2,7 +2,7 @@ package sqlanalytics
 
 import (
 	"context"
-	"strings"
+	"fmt"
 
 	"github.com/databrickslabs/terraform-provider-databricks/common"
 	"github.com/databrickslabs/terraform-provider-databricks/sqlanalytics/api"
@@ -59,50 +59,30 @@ type DashboardAPI struct {
 	context context.Context
 }
 
-func (a DashboardAPI) buildPath(path ...string) string {
-	out := "/preview/sql/dashboards"
-	if len(path) == 1 {
-		out = out + "/" + strings.Join(path, "/")
-	}
-	return out
-}
-
 // Create ...
-func (a DashboardAPI) Create(d *api.Dashboard) (*api.Dashboard, error) {
-	var dout api.Dashboard
-	err := a.client.Post(a.context, a.buildPath(), d, &dout)
-	if err != nil {
-		return nil, err
-	}
-
-	return &dout, err
+func (a DashboardAPI) Create(d *api.Dashboard) error {
+	return a.client.Post(a.context, "/preview/sql/dashboards", d, &d)
 }
 
 // Read ...
-func (a DashboardAPI) Read(d *api.Dashboard) (*api.Dashboard, error) {
-	var dout api.Dashboard
-	err := a.client.Get(a.context, a.buildPath(d.ID), nil, &dout)
+func (a DashboardAPI) Read(dashboardID string) (*api.Dashboard, error) {
+	var d api.Dashboard
+	err := a.client.Get(a.context, fmt.Sprintf("/preview/sql/dashboards/%s", dashboardID), nil, &d)
 	if err != nil {
 		return nil, err
 	}
 
-	return &dout, nil
+	return &d, nil
 }
 
 // Update ...
-func (a DashboardAPI) Update(d *api.Dashboard) (*api.Dashboard, error) {
-	var dout api.Dashboard
-	err := a.client.Post(a.context, a.buildPath(d.ID), d, &dout)
-	if err != nil {
-		return nil, err
-	}
-
-	return &dout, nil
+func (a DashboardAPI) Update(dashboardID string, d *api.Dashboard) error {
+	return a.client.Post(a.context, fmt.Sprintf("/preview/sql/dashboards/%s", dashboardID), d, nil)
 }
 
 // Delete ...
-func (a DashboardAPI) Delete(d *api.Dashboard) error {
-	return a.client.Delete(a.context, a.buildPath(d.ID), nil)
+func (a DashboardAPI) Delete(dashboardID string) error {
+	return a.client.Delete(a.context, fmt.Sprintf("/preview/sql/dashboards/%s", dashboardID), nil)
 }
 
 // ResourceDashboard ...
@@ -121,29 +101,24 @@ func ResourceDashboard() *schema.Resource {
 				return err
 			}
 
-			adNew, err := NewDashboardAPI(ctx, c).Create(ad)
+			err = NewDashboardAPI(ctx, c).Create(ad)
 			if err != nil {
 				return err
 			}
 
 			// No need to set anything because the resource is going to be
 			// read immediately after being created.
-			data.SetId(adNew.ID)
+			data.SetId(ad.ID)
 			return nil
 		},
 		Read: func(ctx context.Context, data *schema.ResourceData, c *common.DatabricksClient) error {
+			ad, err := NewDashboardAPI(ctx, c).Read(data.Id())
+			if err != nil {
+				return err
+			}
+
 			var d DashboardEntity
-			ad, err := d.toAPIObject(s, data)
-			if err != nil {
-				return err
-			}
-
-			adNew, err := NewDashboardAPI(ctx, c).Read(ad)
-			if err != nil {
-				return err
-			}
-
-			return d.fromAPIObject(adNew, s, data)
+			return d.fromAPIObject(ad, s, data)
 		},
 		Update: func(ctx context.Context, data *schema.ResourceData, c *common.DatabricksClient) error {
 			var d DashboardEntity
@@ -152,23 +127,10 @@ func ResourceDashboard() *schema.Resource {
 				return err
 			}
 
-			_, err = NewDashboardAPI(ctx, c).Update(ad)
-			if err != nil {
-				return err
-			}
-
-			// No need to set anything because the resource is going to be
-			// read immediately after being created.
-			return nil
+			return NewDashboardAPI(ctx, c).Update(data.Id(), ad)
 		},
 		Delete: func(ctx context.Context, data *schema.ResourceData, c *common.DatabricksClient) error {
-			var d DashboardEntity
-			ad, err := d.toAPIObject(s, data)
-			if err != nil {
-				return err
-			}
-
-			return NewDashboardAPI(ctx, c).Delete(ad)
+			return NewDashboardAPI(ctx, c).Delete(data.Id())
 		},
 		Schema: s,
 	}.ToResource()

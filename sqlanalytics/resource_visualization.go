@@ -143,6 +143,11 @@ func ResourceVisualization() *schema.Resource {
 				}
 				return bytes.Equal(oldp, newp)
 			}
+
+			// Changing part of the composite ID forces recreate.
+			m["query_id"].ForceNew = true
+			m["visualization_id"].ForceNew = true
+
 			return m
 		})
 

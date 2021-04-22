@@ -203,7 +203,7 @@ func (a WidgetAPI) Create(w *api.Widget) error {
 
 // Read ...
 func (a WidgetAPI) Read(dashboardID, widgetID string) (*api.Widget, error) {
-	d, err := NewDashboardAPI(a.context, a.client).Read(&api.Dashboard{ID: dashboardID})
+	d, err := NewDashboardAPI(a.context, a.client).Read(dashboardID)
 	if err != nil {
 		return nil, err
 	}

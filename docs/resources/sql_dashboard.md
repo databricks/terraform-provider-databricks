@@ -9,4 +9,30 @@ To manage [SQLA resources](https://docs.databricks.com/sql/get-started/concepts.
 
 **Note:** documentation for this resource is a work in progress.
 
-In the meantime, you can refer to the tests for this resource for usage examples.
+A dashboard may have one or more [widgets](sql_widget.md).
+
+## Example Usage
+
+```hcl
+resource "databricks_sql_dashboard" "d1" {
+  name = "My Dashboard Name"
+
+  tags = [
+    "some-tag",
+    "another-tag",
+  ]
+}
+```
+
+Example [permission](permissions.md) to share dashboard with all users:
+
+```hcl
+resource "databricks_permissions" "d1" {
+  sql_dashboard_id = databricks_sql_dashboard.d1.id
+
+  access_control {
+    group_name       = data.databricks_group.users.display_name
+    permission_level = "CAN_RUN"
+  }
+}
+```

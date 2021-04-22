@@ -36,6 +36,7 @@ All arguments are optional and they tune what code is being generated.
 * `-match` - Match resource names during listing operation. This filter applies to all resources that are getting listed, so if you want to import all dependencies of just one cluster, specify `-match=autoscaling -listing=compute`. By default is empty, which matches everything.
 * `-mounts` - List DBFS mount points, which is a extremely slow operation and would not trigger unless explicitly specified.
 * `-generateProviderDeclaration` - flag that toggles generation of `databricks.tf` file with declaration of the Databricks Terraform provider that is necessary for Terraform versions since Terraform 0.13 (disabled by default).
+* `-prefix` - optional prefix that will be added to the name of all exported resources - that's useful for exporting resources multiple workspaces for merging into single one.
 
 ## Services
 

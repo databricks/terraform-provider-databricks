@@ -47,7 +47,8 @@ var resourcesMap map[string]importable = map[string]importable{
 			if err != nil && !os.IsExist(err) {
 				return err
 			}
-			local, err := os.Create(fmt.Sprintf("%s/files/%s", ic.Directory, path.Base(r.ID)))
+			fileName := ic.prefix + path.Base(r.ID)
+			local, err := os.Create(fmt.Sprintf("%s/files/%s", ic.Directory, fileName))
 			if err != nil {
 				return err
 			}
@@ -58,7 +59,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			}
 			// libraries installed with init scripts won't be exported.
 			b := body.AppendNewBlock("resource", []string{r.Resource, r.Name}).Body()
-			relativeFile := fmt.Sprintf("${path.module}/files/%s", path.Base(r.ID))
+			relativeFile := fmt.Sprintf("${path.module}/files/%s", fileName)
 			b.SetAttributeValue("path", cty.StringVal(strings.Replace(r.ID, "dbfs:", "", 1)))
 			b.SetAttributeRaw("source", hclwrite.Tokens{
 				&hclwrite.Token{Type: hclsyntax.TokenOQuote, Bytes: []byte{'"'}},
@@ -816,7 +817,8 @@ var resourcesMap map[string]importable = map[string]importable{
 			if err != nil && !os.IsExist(err) {
 				return err
 			}
-			local, err := os.Create(fmt.Sprintf("%s/files/gis-%s", ic.Directory, path.Base(r.Name)))
+			fileName := path.Base(r.Name)
+			local, err := os.Create(fmt.Sprintf("%s/files/gis-%s", ic.Directory, fileName))
 			if err != nil {
 				return err
 			}
@@ -829,7 +831,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			if err != nil {
 				return err
 			}
-			relativeFile := fmt.Sprintf("${path.module}/files/gis-%s", path.Base(r.Name))
+			relativeFile := fmt.Sprintf("${path.module}/files/gis-%s", fileName)
 			b := body.AppendNewBlock("resource", []string{r.Resource, r.Name}).Body()
 			b.SetAttributeValue("name", cty.StringVal(gis.Name))
 			b.SetAttributeValue("enabled", cty.BoolVal(gis.Enabled))

@@ -72,6 +72,7 @@ type importContext struct {
 	lastActiveDays      int64
 	generateDeclaration bool
 	meAdmin             bool
+	prefix              string
 }
 
 type mount struct {
@@ -359,6 +360,7 @@ func (ic *importContext) ResourceName(r *resource) string {
 	if name == "" {
 		name = r.ID
 	}
+	name = ic.prefix + name
 	name = strings.ToLower(name)
 	name = ic.regexFix(name, ic.nameFixes)
 	// this is either numeric id or all-non-ascii

@@ -747,7 +747,7 @@ func TestImportingWithError(t *testing.T) {
 	err := Run("-directory", "/bin/sh", "-services", "groups,users")
 	assert.EqualError(t, err, "The path /bin/sh is not a directory")
 
-	err = Run("-directory", "/bin/abcd", "-services", "groups,users")
+	err = Run("-directory", "/bin/abcd", "-services", "groups,users", "-prefix", "abc")
 	assert.EqualError(t, err, "Can't create directory /bin/abcd")
 }
 

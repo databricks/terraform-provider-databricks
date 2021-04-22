@@ -13,7 +13,7 @@ resource "databricks_cluster" "cluster_with_table_access_control" {
 
   spark_conf = {
     "spark.databricks.acl.dfAclsEnabled": "true",
-    "spark.databricks.repl.allowedLanguages": "sql,python,r",
+    "spark.databricks.repl.allowedLanguages": "python,sql",
     "spark.databricks.cluster.profile": "serverless"
   }
 

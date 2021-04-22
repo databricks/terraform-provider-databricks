@@ -10,17 +10,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-// func notebookToB64(filePath string) (string, error) {
-// 	notebookBytes, err := ioutil.ReadFile(filePath)
-// 	if err != nil {
-// 		return "", fmt.Errorf("unable to find notebook to convert to base64; %w", err)
-// 	}
-// 	return base64.StdEncoding.EncodeToString(notebookBytes), nil
-// }
-// func getTestDBFSFileData() (string, error) {
-// 	return notebookToB64("testdata/tf-test-python.py")
-// }
-
 func getBaseDBFSMkdirFixtures(path string) []qa.HTTPFixture {
 	return []qa.HTTPFixture{
 		{
@@ -173,18 +162,6 @@ func TestDBFSFileCreate(t *testing.T) {
 			source: "testdata/tf-test-python.py",
 			path:   pathWithDir,
 		},
-		// {
-		// 	name: "TestDBFSFileCreate_Mkdirs_ParentDirIsNotDir",
-		// 	fixtures: qa.UnionFixturesLists(
-		// 		getBaseDBFSFileGetStatusFixtures(randomDir, false, false),
-		// 		getBaseDBFSFileCreateFixtures(pathWithDir),
-		// 		getBaseDBFSFileGetStatusFixtures(pathWithDir, false, false),
-		// 		getBaseDBFSFileReadFixtures(pathWithDir),
-		// 	),
-		// 	source:        "testdata/tf-test-python.py",
-		// 	path:          pathWithDir,
-		// 	expectedError: "...",
-		// },
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

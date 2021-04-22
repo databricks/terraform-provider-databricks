@@ -1,6 +1,7 @@
 package sqlanalytics
 
 import (
+	"encoding/json"
 	"testing"
 
 	"github.com/databrickslabs/terraform-provider-databricks/qa"
@@ -279,6 +280,60 @@ func TestQueryCreateWithWeeklySchedule(t *testing.T) {
 	assert.Equal(t, dayOfWeek, d.Get("schedule.0.weekly.0.day_of_week"))
 	assert.Equal(t, timeOfDay, d.Get("schedule.0.weekly.0.time_of_day"))
 	assert.Equal(t, untilDate, d.Get("schedule.0.weekly.0.until_date"))
+}
+
+func TestQueryCreateDeletesDefaultVisualization(t *testing.T) {
+	_, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/preview/sql/queries",
+				ExpectedRequest: api.Query{
+					DataSourceID: "xyz",
+					Name:         "Query name",
+					Query:        "SELECT 1",
+				},
+				Response: api.Query{
+					ID:           "foo",
+					DataSourceID: "xyz",
+					Name:         "Query name",
+					Query:        "SELECT 1",
+
+					// The automatically created visualization should be deleted.
+					Visualizations: []json.RawMessage{
+						json.RawMessage(`
+							{
+								"id": 12345
+							}
+						`),
+					},
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/preview/sql/queries/foo",
+				Response: api.Query{
+					ID:           "foo",
+					DataSourceID: "xyz",
+					Name:         "Query name",
+					Query:        "SELECT 1",
+				},
+			},
+			{
+				Method:   "DELETE",
+				Resource: "/api/2.0/preview/sql/visualizations/12345",
+			},
+		},
+		Resource: ResourceQuery(),
+		Create:   true,
+		State: map[string]interface{}{
+			"data_source_id": "xyz",
+			"name":           "Query name",
+			"query":          "SELECT 1",
+		},
+	}.Apply(t)
+
+	assert.NoError(t, err, err)
 }
 
 func TestQueryRead(t *testing.T) {

@@ -261,6 +261,10 @@ func ResourceWidget() *schema.Resource {
 				return extractVisualizationID(old) == extractVisualizationID(new)
 			}
 
+			// Changing part of the composite ID forces recreate.
+			m["dashboard_id"].ForceNew = true
+			m["widget_id"].ForceNew = true
+
 			return m
 		})
 

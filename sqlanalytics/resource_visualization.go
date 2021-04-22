@@ -73,7 +73,7 @@ func (a VisualizationAPI) Create(v *api.Visualization) error {
 
 // Read ...
 func (a VisualizationAPI) Read(queryID, visualizationID string) (*api.Visualization, error) {
-	q, err := NewQueryAPI(a.context, a.client).Read(&api.Query{ID: queryID})
+	q, err := NewQueryAPI(a.context, a.client).Read(queryID)
 	if err != nil {
 		return nil, err
 	}

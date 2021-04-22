@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"reflect"
+	"strconv"
 	"strings"
 
 	"github.com/databrickslabs/terraform-provider-databricks/common"
@@ -449,11 +450,11 @@ func (a QueryAPI) Create(q *api.Query) error {
 		if err != nil {
 			return err
 		}
-		// TODO
-		// err = a.DeleteVisualization(&v)
-		// if err != nil {
-		// 	return nil, err
-		// }
+		// This is a best effort -- don't fail if it doesn't work.
+		err = NewVisualizationAPI(a.context, a.client).Delete(strconv.Itoa(v.ID))
+		if err != nil {
+			log.Printf("[WARN] Unable to delete automatically created visualization for query %s (%d)", q.ID, v.ID)
+		}
 	}
 	q.Visualizations = []json.RawMessage{}
 	return nil

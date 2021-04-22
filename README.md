@@ -44,10 +44,13 @@
 | [databricks_secret](docs/resources/secret.md)
 | [databricks_secret_acl](docs/resources/secret_acl.md)
 | [databricks_secret_scope](docs/resources/secret_scope.md)
+| [databricks_spark_version](docs/data-sources/spark_version.md) data
+| [databricks_sql_dashboard](docs/resources/sql_dashboard.md)
 | [databricks_sql_endpoint](docs/resources/sql_endpoint.md)
 | [databricks_sql_permissions](docs/resources/sql_permissions.md)
-| [databricks_spark_version](docs/data-sources/spark_version.md) data
-| [databricks_sql_permissions](docs/resources/sql_permissions.md)
+| [databricks_sql_query](docs/resources/sql_query.md)
+| [databricks_sql_visualization](docs/resources/sql_visualization.md)
+| [databricks_sql_widget](docs/resources/sql_widget.md)
 | [databricks_token](docs/resources/token.md)
 | [databricks_user](docs/resources/user.md)
 | [databricks_user_instance_profile](docs/resources/user_instance_profile.md)

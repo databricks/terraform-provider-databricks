@@ -2,6 +2,7 @@
 
 ## 0.3.3
 
+* Added resources for SQL Analytics queries and dashboards: `databricks_sql_query`, `databricks_sql_visualization`, `databricks_sql_dashboard`, `databricks_sql_widget` ([#553](https://github.com/databrickslabs/terraform-provider-databricks/pull/553))
 * Added `databricks_sql_permissions` resource ([#545](https://github.com/databrickslabs/terraform-provider-databricks/pull/545/files))
 * Fixed documentation bugs ([#603](https://github.com/databrickslabs/terraform-provider-databricks/issues/603))
 * Improved resource exporter ([#593](https://github.com/databrickslabs/terraform-provider-databricks/issues/593))

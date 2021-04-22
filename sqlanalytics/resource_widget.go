@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"sort"
 	"strconv"
+	"strings"
 
 	"github.com/databrickslabs/terraform-provider-databricks/common"
 	"github.com/databrickslabs/terraform-provider-databricks/sqlanalytics/api"
@@ -58,6 +59,14 @@ func (a sortWidgetParameter) Less(i, j int) bool {
 	return a[i].Name < a[j].Name
 }
 
+// Use second part of ID if it's a composite ID, or the verbatim value.
+// This allows setting the visualization ID as the backend visualization ID
+// or as the visualization's resource composite ID. Both will work.
+func extractVisualizationID(id string) string {
+	parts := strings.SplitN(id, "/", 2)
+	return parts[len(parts)-1]
+}
+
 func (w *WidgetEntity) toAPIObject(schema map[string]*schema.Schema, data *schema.ResourceData) (*api.Widget, error) {
 	var aw api.Widget
 
@@ -70,7 +79,7 @@ func (w *WidgetEntity) toAPIObject(schema map[string]*schema.Schema, data *schem
 
 	// The visualization ID is a string for the Terraform resource and an integer in the API.
 	if w.VisualizationID != "" {
-		visualizationID, err := strconv.Atoi(w.VisualizationID)
+		visualizationID, err := strconv.Atoi(extractVisualizationID(w.VisualizationID))
 		if err != nil {
 			return nil, err
 		}
@@ -244,6 +253,14 @@ func ResourceWidget() *schema.Resource {
 		WidgetEntity{},
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
 			m["text"].ConflictsWith = []string{"visualization_id"}
+
+			// Ignore the query ID part in composite visualization ID.
+			// It is present in this field if users refer to a visualization by the native
+			// Terraform resource ID (e.g. `databricks_sql_visualization.name.id`)
+			m["visualization_id"].DiffSuppressFunc = func(_, old, new string, d *schema.ResourceData) bool {
+				return extractVisualizationID(old) == extractVisualizationID(new)
+			}
+
 			return m
 		})
 

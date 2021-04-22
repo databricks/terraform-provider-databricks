@@ -52,3 +52,26 @@ type WidgetParameterMapping struct {
 	// This title overrides the title given to this parameter by the query, if specified.
 	Title string `json:"title,omitempty"`
 }
+
+// UnmarshalJSON ...
+func (w *Widget) UnmarshalJSON(b []byte) error {
+	type localWidget Widget
+	err := json.Unmarshal(b, (*localWidget)(w))
+	if err != nil {
+		return err
+	}
+
+	// If a visualization is configured, set the corresponding visualization ID.
+	// The visualization ID is only used when creating or updating a widget
+	// and not set when retrieving an existing widget with visualization.
+	if w.Visualization != nil {
+		var v Visualization
+		err = json.Unmarshal(w.Visualization, &v)
+		if err != nil {
+			return err
+		}
+		w.VisualizationID = &v.ID
+	}
+
+	return nil
+}

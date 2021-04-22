@@ -1,5 +1,17 @@
 # Version changelog
 
+## 0.3.3
+
+* Added `databricks_sql_permissions` resource ([#545](https://github.com/databrickslabs/terraform-provider-databricks/pull/545/files))
+* Fixed documentation bugs ([#603](https://github.com/databrickslabs/terraform-provider-databricks/issues/603))
+* Improved resource exporter ([#593](https://github.com/databrickslabs/terraform-provider-databricks/issues/593))
+* Added missing properties to `databricks_mws_private_access_settings` ([#590](https://github.com/databrickslabs/terraform-provider-databricks/issues/590))
+* Include SQLA data source ID in `databricks_sql_endpoint` state ([#601](https://github.com/databrickslabs/terraform-provider-databricks/issues/601))
+* Apply `debug_truncate_bytes` also for response dumps ([#589](https://github.com/databrickslabs/terraform-provider-databricks/issues/589))
+* More verbose logging of `databricks_cluster` termination reason ([#588](https://github.com/databrickslabs/terraform-provider-databricks/issues/588))
+* Move non-auth provider config documentation into separate section ([#587](https://github.com/databrickslabs/terraform-provider-databricks/pull/587))
+
+
 ## 0.3.2
 
 * Fixed minor issues to add support for GCP ([#558](https://github.com/databrickslabs/terraform-provider-databricks/pull/558))

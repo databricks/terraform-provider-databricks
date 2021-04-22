@@ -77,6 +77,8 @@ func Run(args ...string) error {
 	flags.StringVar(&ic.match, "match", "", "Match resource names during listing operation. "+
 		"This filter applies to all resources that are getting listed, so if you want to import "+
 		"all dependencies of just one cluster, specify -listing=compute")
+	prefix := ""
+	flags.StringVar(&prefix, "prefix", "", "Prefix that will be added to the name of all exported resources")
 	newArgs := args
 	if len(args) > 1 && args[1] == "exporter" {
 		newArgs = args[2:]
@@ -84,6 +86,9 @@ func Run(args ...string) error {
 	err = flags.Parse(newArgs)
 	if err != nil {
 		return err
+	}
+	if len(prefix) > 0 {
+		ic.prefix = prefix + "_"
 	}
 	if ic.debug {
 		logLevel = append(logLevel, "[DEBUG]")

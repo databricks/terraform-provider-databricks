@@ -434,68 +434,50 @@ type QueryAPI struct {
 	context context.Context
 }
 
-func (a QueryAPI) buildPath(path ...string) string {
-	out := "/preview/sql/queries"
-	if len(path) == 1 {
-		out = out + "/" + strings.Join(path, "/")
-	}
-	return out
-}
-
 // Create ...
-func (a QueryAPI) Create(q *api.Query) (*api.Query, error) {
-	var qp api.Query
-	err := a.client.Post(a.context, a.buildPath(), q, &qp)
+func (a QueryAPI) Create(q *api.Query) error {
+	err := a.client.Post(a.context, "/preview/sql/queries", q, &q)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	// New queries are created with a table visualization by default.
 	// We don't manage that visualization here, so immediately remove it.
-	if len(qp.Visualizations) > 0 {
-		for _, rv := range qp.Visualizations {
-			var v api.Visualization
-			err = json.Unmarshal(rv, &v)
-			if err != nil {
-				return nil, err
-			}
-			// TODO
-			// err = a.DeleteVisualization(&v)
-			// if err != nil {
-			// 	return nil, err
-			// }
+	for _, rv := range q.Visualizations {
+		var v api.Visualization
+		err = json.Unmarshal(rv, &v)
+		if err != nil {
+			return err
 		}
-		qp.Visualizations = []json.RawMessage{}
+		// TODO
+		// err = a.DeleteVisualization(&v)
+		// if err != nil {
+		// 	return nil, err
+		// }
 	}
-
-	return &qp, err
+	q.Visualizations = []json.RawMessage{}
+	return nil
 }
 
 // Read ...
-func (a QueryAPI) Read(q *api.Query) (*api.Query, error) {
-	var qp api.Query
-	err := a.client.Get(a.context, a.buildPath(q.ID), nil, &qp)
+func (a QueryAPI) Read(queryID string) (*api.Query, error) {
+	var q api.Query
+	err := a.client.Get(a.context, fmt.Sprintf("/preview/sql/queries/%s", queryID), nil, &q)
 	if err != nil {
 		return nil, err
 	}
 
-	return &qp, nil
+	return &q, nil
 }
 
 // Update ...
-func (a QueryAPI) Update(q *api.Query) (*api.Query, error) {
-	var qp api.Query
-	err := a.client.Post(a.context, a.buildPath(q.ID), q, &qp)
-	if err != nil {
-		return nil, err
-	}
-
-	return &qp, nil
+func (a QueryAPI) Update(queryID string, q *api.Query) error {
+	return a.client.Post(a.context, fmt.Sprintf("/preview/sql/queries/%s", queryID), q, nil)
 }
 
 // Delete ...
-func (a QueryAPI) Delete(q *api.Query) error {
-	return a.client.Delete(a.context, a.buildPath(q.ID), nil)
+func (a QueryAPI) Delete(queryID string) error {
+	return a.client.Delete(a.context, fmt.Sprintf("/preview/sql/queries/%s", queryID), nil)
 }
 
 // ResourceQuery ...
@@ -541,29 +523,24 @@ func ResourceQuery() *schema.Resource {
 				return err
 			}
 
-			aqNew, err := NewQueryAPI(ctx, c).Create(aq)
+			err = NewQueryAPI(ctx, c).Create(aq)
 			if err != nil {
 				return err
 			}
 
 			// No need to set anything because the resource is going to be
 			// read immediately after being created.
-			data.SetId(aqNew.ID)
+			data.SetId(aq.ID)
 			return nil
 		},
 		Read: func(ctx context.Context, data *schema.ResourceData, c *common.DatabricksClient) error {
+			aq, err := NewQueryAPI(ctx, c).Read(data.Id())
+			if err != nil {
+				return err
+			}
+
 			var q QueryEntity
-			aq, err := q.toAPIObject(s, data)
-			if err != nil {
-				return err
-			}
-
-			aqNew, err := NewQueryAPI(ctx, c).Read(aq)
-			if err != nil {
-				return err
-			}
-
-			return q.fromAPIObject(aqNew, s, data)
+			return q.fromAPIObject(aq, s, data)
 		},
 		Update: func(ctx context.Context, data *schema.ResourceData, c *common.DatabricksClient) error {
 			var q QueryEntity
@@ -572,23 +549,10 @@ func ResourceQuery() *schema.Resource {
 				return err
 			}
 
-			_, err = NewQueryAPI(ctx, c).Update(aq)
-			if err != nil {
-				return err
-			}
-
-			// No need to set anything because the resource is going to be
-			// read immediately after being created.
-			return nil
+			return NewQueryAPI(ctx, c).Update(data.Id(), aq)
 		},
 		Delete: func(ctx context.Context, data *schema.ResourceData, c *common.DatabricksClient) error {
-			var q QueryEntity
-			aq, err := q.toAPIObject(s, data)
-			if err != nil {
-				return err
-			}
-
-			return NewQueryAPI(ctx, c).Delete(aq)
+			return NewQueryAPI(ctx, c).Delete(data.Id())
 		},
 		Schema: s,
 	}.ToResource()

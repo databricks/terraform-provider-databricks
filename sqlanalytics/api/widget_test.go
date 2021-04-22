@@ -49,3 +49,27 @@ func TestWidgetMarshalUnmarshal(t *testing.T) {
 
 	assert.Equal(t, w, wp)
 }
+
+func TestWidgetUnmarshalWithVisualization(t *testing.T) {
+	w := Widget{
+		Visualization: json.RawMessage(`
+			{
+				"id": 12345
+			}
+		`),
+	}
+
+	out, err := json.Marshal(w)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	var wp Widget
+	if err := json.Unmarshal(out, &wp); err != nil {
+		t.Fatal(err)
+	}
+
+	if assert.NotNil(t, wp.VisualizationID) {
+		assert.Equal(t, 12345, *wp.VisualizationID)
+	}
+}

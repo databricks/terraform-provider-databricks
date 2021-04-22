@@ -120,9 +120,9 @@ var resourcesMap map[string]importable = map[string]importable{
 			{Path: "aws_attributes.instance_profile_arn", Resource: "databricks_instance_profile"},
 			{Path: "instance_pool_id", Resource: "databricks_instance_pool"},
 			{Path: "init_scripts.dbfs.destination", Resource: "databricks_dbfs_file"},
-			{Path: "library.jar", Resource: "databricks_dbfs_file"},
-			{Path: "library.whl", Resource: "databricks_dbfs_file"},
-			{Path: "library.egg", Resource: "databricks_dbfs_file"},
+			{Path: "library.jar", Resource: "databricks_dbfs_file", Match: "dbfs_path"},
+			{Path: "library.whl", Resource: "databricks_dbfs_file", Match: "dbfs_path"},
+			{Path: "library.egg", Resource: "databricks_dbfs_file", Match: "dbfs_path"},
 		},
 		List: func(ic *importContext) error {
 			clusters, err := compute.NewClustersAPI(ic.Context, ic.Client).List()
@@ -186,12 +186,12 @@ var resourcesMap map[string]importable = map[string]importable{
 			{Path: "new_cluster.init_scripts.dbfs.destination", Resource: "databricks_dbfs_file"},
 			{Path: "new_cluster.instance_pool_id", Resource: "databricks_instance_pool"},
 			{Path: "existing_cluster_id", Resource: "databricks_cluster"},
-			{Path: "library.jar", Resource: "databricks_dbfs_file"},
-			{Path: "library.whl", Resource: "databricks_dbfs_file"},
-			{Path: "library.egg", Resource: "databricks_dbfs_file"},
-			{Path: "spark_python_task.python_file", Resource: "databricks_dbfs_file"},
-			{Path: "spark_python_task.parameters", Resource: "databricks_dbfs_file"},
-			{Path: "spark_jar_task.jar_uri", Resource: "databricks_dbfs_file"},
+			{Path: "library.jar", Resource: "databricks_dbfs_file", Match: "dbfs_path"},
+			{Path: "library.whl", Resource: "databricks_dbfs_file", Match: "dbfs_path"},
+			{Path: "library.egg", Resource: "databricks_dbfs_file", Match: "dbfs_path"},
+			{Path: "spark_python_task.python_file", Resource: "databricks_dbfs_file", Match: "dbfs_path"},
+			{Path: "spark_python_task.parameters", Resource: "databricks_dbfs_file", Match: "dbfs_path"},
+			{Path: "spark_jar_task.jar_uri", Resource: "databricks_dbfs_file", Match: "dbfs_path"},
 		},
 		Import: func(ic *importContext, r *resource) error {
 			var job compute.JobSettings

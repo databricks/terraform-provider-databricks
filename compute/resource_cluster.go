@@ -73,6 +73,10 @@ func resourceClusterSchema() map[string]*schema.Schema {
 		s["aws_attributes"].ConflictsWith = []string{"azure_attributes", "gcp_attributes"}
 		s["azure_attributes"].ConflictsWith = []string{"aws_attributes", "gcp_attributes"}
 		s["gcp_attributes"].ConflictsWith = []string{"aws_attributes", "azure_attributes"}
+		s["aws_attributes"].DiffSuppressFunc = makeEmptyBlockSuppressFunc("aws_attributes.#")
+		s["azure_attributes"].DiffSuppressFunc = makeEmptyBlockSuppressFunc("azure_attributes.#")
+		s["gcp_attributes"].DiffSuppressFunc = makeEmptyBlockSuppressFunc("gcp_attributes.#")
+
 		s["is_pinned"] = &schema.Schema{
 			Type:     schema.TypeBool,
 			Optional: true,

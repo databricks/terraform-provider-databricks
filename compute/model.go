@@ -378,7 +378,7 @@ type Command struct {
 // InstancePoolAwsAttributes contains aws attributes for AWS Databricks deployments for instance pools
 type InstancePoolAwsAttributes struct {
 	Availability        Availability `json:"availability,omitempty"`
-	ZoneID              string       `json:"zone_id"`
+	ZoneID              string       `json:"zone_id,omitempty" tf:"computed"`
 	SpotBidPricePercent int32        `json:"spot_bid_price_percent,omitempty"`
 }
 
@@ -386,7 +386,7 @@ type InstancePoolAwsAttributes struct {
 // https://docs.microsoft.com/en-us/azure/databricks/dev-tools/api/latest/instance-pools#clusterinstancepoolazureattributes
 type InstancePoolAzureAttributes struct {
 	Availability    Availability `json:"availability,omitempty"`
-	SpotBidMaxPrice float64      `json:"spot_bid_max_price,omitempty" tf:"computed"`
+	SpotBidMaxPrice float64      `json:"spot_bid_max_price,omitempty"`
 }
 
 // InstancePoolDiskType contains disk type information for each of the different cloud service providers

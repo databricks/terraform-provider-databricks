@@ -130,13 +130,18 @@ var jobSchema = common.StructToSchema(JobSettings{},
 				return false
 			}
 		}
-		s["email_notifications"].DiffSuppressFunc = func(k, old, new string, d *schema.ResourceData) bool {
-			log.Printf("[INFO] k='%v', old='%v', new='%v'", k, old, new)
-			if old == "1" && new == "0" {
-				return true
-			}
-			return false
+
+		if v, err := common.SchemaPath(s, "new_cluster", "aws_attributes"); err == nil {
+			v.DiffSuppressFunc = makeEmptyBlockSuppressFunc("new_cluster.0.aws_attributes.#")
 		}
+		if v, err := common.SchemaPath(s, "new_cluster", "azure_attributes"); err == nil {
+			v.DiffSuppressFunc = makeEmptyBlockSuppressFunc("new_cluster.0.azure_attributes.#")
+		}
+		if v, err := common.SchemaPath(s, "new_cluster", "gcp_attributes"); err == nil {
+			v.DiffSuppressFunc = makeEmptyBlockSuppressFunc("new_cluster.0.gcp_attributes.#")
+		}
+
+		s["email_notifications"].DiffSuppressFunc = makeEmptyBlockSuppressFunc("email_notifications.#")
 
 		s["name"].Description = "An optional name for the job. The default value is Untitled."
 		s["library"].Description = "An optional list of libraries to be installed on " +

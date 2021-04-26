@@ -241,8 +241,6 @@ init_scripts {
 
 `aws_attributes` optional configuration block contains attributes related to [clusters running on Amazon Web Services](https://docs.databricks.com/clusters/configure.html#aws-configurations).
 
--> **Note** *(AWS only)* Please specify empty configuration block (`aws_attributes {}`), even if you're not setting any custom values. This will prevent any resource update issues.
-
 Here is the example of shared autoscaling cluster with some of AWS options set:
 
 ```hcl
@@ -279,8 +277,6 @@ The following options are available:
 
 `azure_attributes` optional configuration block contains attributes related to [clusters running on Azure](https://docs.microsoft.com/en-us/azure/databricks/dev-tools/api/latest/clusters#--azureattributes).
 
--> **Note** *(Azure only)* Please specify empty configuration block (`azure_attributes {}`), even if you're not setting any custom values. This will prevent any resource update issues.
-
 Here is the example of shared autoscaling cluster with some of AWS options set:
 
 ```hcl
@@ -310,8 +306,6 @@ The following options are [available](https://docs.microsoft.com/en-us/azure/dat
 ## gcp_attributes
 
 `gcp_attributes` optional configuration block contains attributes related to [clusters running on GCP](https://docs.gcp.databricks.com/dev-tools/api/latest/clusters.html#clustergcpattributes).
-
--> **Note** *(GCP only)* Please specify empty configuration block (`gcp_attributes {}`), even if you're not setting any custom values. This will prevent any resource update issues.
 
 The following options are available:
 

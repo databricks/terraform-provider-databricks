@@ -3,7 +3,7 @@ subcategory: "AWS"
 ---
 # databricks_mws_workspaces resource
 
--> **Note** This resource has an evolving API, which may change in future versions of the provider.
+-> **Note** This resource has an evolving API, which will change in the upcoming versions of the provider in order to simplify user experience.
 
 This resource allows you to set up [workspaces in E2 architecture on AWS](https://docs.databricks.com/getting-started/overview.html#e2-architecture-1). Please follow this [complete runnable example](../guides/aws-workspace.md) with new VPC and new workspace setup.
 
@@ -20,7 +20,7 @@ To get workspace running, you have to configure a couple of things:
 
 ```hcl
 variable "databricks_account_id" {
-  description = "Account Id that could be found in the top right corner of https://accounts.cloud.databricks.com/"
+  description = "Account Id that could be found in the bottom left corner of https://accounts.cloud.databricks.com/"
 }
 
 provider "databricks" {
@@ -91,7 +91,7 @@ By default, Databricks creates a VPC in your AWS account for each workspace. Dat
 
 ```hcl
 variable "databricks_account_id" {
-  description = "Account Id that could be found in the top right corner of https://accounts.cloud.databricks.com/"
+  description = "Account Id that could be found in the bottom left corner of https://accounts.cloud.databricks.com/"
 }
 
 resource "random_string" "naming" {
@@ -177,7 +177,7 @@ resource "databricks_mws_workspaces" "this" {
 The following arguments are required:
 
 * `network_id` - (Optional) `network_id` from [networks](mws_networks.md)
-* `account_id` - Account Id that could be found in the top right corner of [Accounts Console](https://accounts.cloud.databricks.com/).
+* `account_id` - Account Id that could be found in the bottom left corner of [Accounts Console](https://accounts.cloud.databricks.com/).
 * `credentials_id` - `credentials_id` from [credentials](mws_credentials.md)
 * `customer_managed_key_id` - (Optional) `customer_managed_key_id` from [customer managed keys](mws_customer_managed_keys.md)
 * `deployment_name` - part of URL: `https://<deployment-name>.cloud.databricks.com`

@@ -3,7 +3,7 @@ subcategory: "AWS"
 ---
 # databricks_mws_storage_configurations Resource
 
--> **Note** This resource has an evolving API, which may change in future versions of the provider.
+-> **Note** This resource has an evolving API, which will change in the upcoming versions of the provider in order to simplify user experience.
 
 This resource to configure root bucket new workspaces within AWS.
 
@@ -15,7 +15,7 @@ Please follow this [complete runnable example](../guides/aws-workspace.md) with 
 
 ```hcl
 variable "databricks_account_id" {
-  description = "Account Id that could be found in the top right corner of https://accounts.cloud.databricks.com/"
+  description = "Account Id that could be found in the bottom left corner of https://accounts.cloud.databricks.com/"
 }
 
 resource "aws_s3_bucket" "root_storage_bucket" {
@@ -39,7 +39,7 @@ resource "databricks_mws_storage_configurations" "this" {
 The following arguments are required:
 
 * `bucket_name` - name of AWS S3 bucket
-* `account_id` - Account Id that could be found in the top right corner of [Accounts Console](https://accounts.cloud.databricks.com/)
+* `account_id` - Account Id that could be found in the bottom left corner of [Accounts Console](https://accounts.cloud.databricks.com/)
 * `storage_configuration_name` - name under which this storage configuration is stored
 
 ## Attribute Reference

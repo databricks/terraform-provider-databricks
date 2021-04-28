@@ -927,6 +927,9 @@ func TestResourceClusterCreate_SingleNode(t *testing.T) {
 						"spark.master":                     "local[*]",
 						"spark.databricks.cluster.profile": "singleNode",
 					},
+					CustomTags: map[string]string{
+						"ResourceClass": "SingleNode",
+					},
 				},
 				Response: ClusterInfo{
 					ClusterID: "abc",
@@ -962,6 +965,9 @@ func TestResourceClusterCreate_SingleNode(t *testing.T) {
 						"spark.master":                     "local[*]",
 						"spark.databricks.cluster.profile": "singleNode",
 					},
+					CustomTags: map[string]string{
+						"ResourceClass": "SingleNode",
+					},
 				},
 			},
 			{
@@ -983,6 +989,9 @@ func TestResourceClusterCreate_SingleNode(t *testing.T) {
 			"spark_conf": map[string]interface{}{
 				"spark.master":                     "local[*]",
 				"spark.databricks.cluster.profile": "singleNode",
+			},
+			"custom_tags": map[string]interface{}{
+				"ResourceClass": "SingleNode",
 			},
 		},
 	}.Apply(t)

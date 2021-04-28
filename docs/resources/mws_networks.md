@@ -3,7 +3,7 @@ subcategory: "AWS"
 ---
 # databricks_mws_networks Resource
 
--> **Note** This resource has an evolving API, which may change in future versions of the provider.
+-> **Note** This resource has an evolving API, which will change in the upcoming versions of the provider in order to simplify user experience.
 
 Use this resource to [configure VPC](https://docs.databricks.com/administration-guide/cloud-configurations/aws/customer-managed-vpc.html) & subnets for new workspaces within AWS. It is essential to understand that this will require you to configure your provider separately for the multiple workspaces resources.
 
@@ -20,7 +20,7 @@ Please follow this [complete runnable example](../guides/aws-workspace.md) with 
 
 ```hcl
 variable "databricks_account_id" {
-  description = "Account Id that could be found in the top right corner of https://accounts.cloud.databricks.com/"
+  description = "Account Id that could be found in the bottom left corner of https://accounts.cloud.databricks.com/"
 }
 
 data "aws_availability_zones" "available" {}
@@ -66,7 +66,7 @@ resource "databricks_mws_networks" "this" {
 
 The following arguments are required:
 
-* `account_id` - Account Id that could be found in the top right corner of [Accounts Console](https://accounts.cloud.databricks.com/)
+* `account_id` - Account Id that could be found in the bottom left corner of [Accounts Console](https://accounts.cloud.databricks.com/)
 * `network_name` - name under which this network is regisstered
 * `vpc_id` - [aws_vpc](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/vpc) id
 * `subnet_ids` - ids of [aws_subnet](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/subnet)

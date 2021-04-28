@@ -3,7 +3,7 @@ subcategory: "AWS"
 ---
 # databricks_mws_customer_managed_keys Resource
 
--> **Note** This resource has an evolving API, which may change in future versions of the provider.
+-> **Note** This resource has an evolving API, which will change in the upcoming versions of the provider in order to simplify user experience.
 
 This resource to configure AWS KMS key for new workspaces within AWS. This KMS key will be used to encrypt your notebooks in your workspace.
 
@@ -16,7 +16,7 @@ Please follow this [complete runnable example](../guides/aws-workspace.md) with 
 
 ```hcl
 variable "databricks_account_id" {
-  description = "Account Id that could be found in the top right corner of https://accounts.cloud.databricks.com/"
+  description = "Account Id that could be found in the bottom left corner of https://accounts.cloud.databricks.com/"
 }
 
 resource "aws_kms_key" "customer_managed_key" {
@@ -49,7 +49,7 @@ resource "databricks_mws_customer_managed_keys" "my_cmk" {
 The following arguments are required:
 
 * `aws_key_info` - This field is a block and is documented below.
-* `account_id` - Account Id that could be found in the top right corner of [Accounts Console](https://accounts.cloud.databricks.com/)
+* `account_id` - Account Id that could be found in the bottom left corner of [Accounts Console](https://accounts.cloud.databricks.com/)
 
 
 ### aws_key_info Configuration Block

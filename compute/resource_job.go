@@ -126,6 +126,14 @@ var jobSchema = common.StructToSchema(JobSettings{},
 				return false
 			}
 		}
+		s["email_notifications"].DiffSuppressFunc = func(k, old, new string, d *schema.ResourceData) bool {
+			log.Printf("[INFO] k='%v', old='%v', new='%v'", k, old, new)
+			if old == "1" && new == "0" {
+				return true
+			}
+			return false
+		}
+
 		s["name"].Description = "An optional name for the job. The default value is Untitled."
 		s["library"].Description = "An optional list of libraries to be installed on " +
 			"the cluster that will execute the job. The default value is an empty list."
@@ -147,11 +155,16 @@ var jobSchema = common.StructToSchema(JobSettings{},
 		s["schedule"].Description = "An optional periodic schedule for this job. " +
 			"The default behavior is that the job runs when triggered by clicking " +
 			"Run Now in the Jobs UI or sending an API request to runNow."
-		s["max_concurrent_runs"].Description = "An optional maximum allowed number of " +
-			"concurrent runs of the job."
 		s["url"] = &schema.Schema{
 			Type:     schema.TypeString,
 			Computed: true,
+		}
+		s["max_concurrent_runs"] = &schema.Schema{
+			Optional:         true,
+			Default:          1,
+			Type:             schema.TypeInt,
+			ValidateDiagFunc: validation.ToDiagFunc(validation.IntAtLeast(1)),
+			Description:      "An optional maximum allowed number of concurrent runs of the job.",
 		}
 		return s
 	})

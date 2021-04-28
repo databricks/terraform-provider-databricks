@@ -9,8 +9,7 @@ This datasource configures a simple access policy for AWS S3 buckets, so that Da
 
 ```hcl
 resource "aws_s3_bucket" "this" {
-  bucket = "things"
-  region = "eu-west-1"
+  bucket = "<unique_bucket_name>"
   acl    = "private"
   force_destroy = true
 }

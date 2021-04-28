@@ -2,6 +2,7 @@ package storage
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/databrickslabs/terraform-provider-databricks/common"
 
@@ -18,10 +19,13 @@ func ResourceDBFSFile() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
+			"dbfs_path": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		}),
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			// TODO: make mandatory DBFS prefix or something to facilitate use for DBFS libraries?...
-			path := d.Get("path").(string) // fmt.Sprintf("dbfs:%s", d.Get("path"))
+			path := d.Get("path").(string)
 			content, err := workspace.ReadContent(d)
 			if err != nil {
 				return err
@@ -39,6 +43,7 @@ func ResourceDBFSFile() *schema.Resource {
 				return err
 			}
 			d.Set("path", fileInfo.Path)
+			d.Set("dbfs_path", fmt.Sprint("dbfs:", fileInfo.Path))
 			d.Set("file_size", fileInfo.FileSize)
 			return nil
 		},

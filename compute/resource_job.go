@@ -115,6 +115,10 @@ var jobSchema = common.StructToSchema(JobSettings{},
 			p.Required = false
 		}
 
+		if p, err := common.SchemaPath(s, "schedule", "pause_status"); err == nil {
+			p.ValidateFunc = validation.StringInSlice([]string{"PAUSED", "UNPAUSED"}, false)
+		}
+
 		if v, err := common.SchemaPath(s, "new_cluster", "spark_conf"); err == nil {
 			v.DiffSuppressFunc = func(k, old, new string, d *schema.ResourceData) bool {
 				isPossiblyLegacyConfig := "new_cluster.0.spark_conf.%" == k && "1" == old && "0" == new
@@ -126,13 +130,18 @@ var jobSchema = common.StructToSchema(JobSettings{},
 				return false
 			}
 		}
-		s["email_notifications"].DiffSuppressFunc = func(k, old, new string, d *schema.ResourceData) bool {
-			log.Printf("[INFO] k='%v', old='%v', new='%v'", k, old, new)
-			if old == "1" && new == "0" {
-				return true
-			}
-			return false
+
+		if v, err := common.SchemaPath(s, "new_cluster", "aws_attributes"); err == nil {
+			v.DiffSuppressFunc = makeEmptyBlockSuppressFunc("new_cluster.0.aws_attributes.#")
 		}
+		if v, err := common.SchemaPath(s, "new_cluster", "azure_attributes"); err == nil {
+			v.DiffSuppressFunc = makeEmptyBlockSuppressFunc("new_cluster.0.azure_attributes.#")
+		}
+		if v, err := common.SchemaPath(s, "new_cluster", "gcp_attributes"); err == nil {
+			v.DiffSuppressFunc = makeEmptyBlockSuppressFunc("new_cluster.0.gcp_attributes.#")
+		}
+
+		s["email_notifications"].DiffSuppressFunc = makeEmptyBlockSuppressFunc("email_notifications.#")
 
 		s["name"].Description = "An optional name for the job. The default value is Untitled."
 		s["library"].Description = "An optional list of libraries to be installed on " +
@@ -197,7 +206,7 @@ func ResourceJob() *schema.Resource {
 			if err != nil {
 				return err
 			}
-			d.Set("url", fmt.Sprintf("%s#job/%s", c.Host, d.Id()))
+			d.Set("url", c.FormatURL("#job/", d.Id()))
 			return common.StructToData(*job.Settings, jobSchema, d)
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {

@@ -1,5 +1,37 @@
 # Version changelog
 
+## 0.3.3
+
+* Added resources for SQL Analytics queries and dashboards: `databricks_sql_query`, `databricks_sql_visualization`, `databricks_sql_dashboard`, `databricks_sql_widget` ([#553](https://github.com/databrickslabs/terraform-provider-databricks/pull/553))
+* Added `databricks_sql_permissions` resource ([#545](https://github.com/databrickslabs/terraform-provider-databricks/pull/545/files))
+* Fixed documentation bugs ([#603](https://github.com/databrickslabs/terraform-provider-databricks/issues/603))
+* Improved resource exporter ([#593](https://github.com/databrickslabs/terraform-provider-databricks/issues/593))
+* Added missing properties to `databricks_mws_private_access_settings` ([#590](https://github.com/databrickslabs/terraform-provider-databricks/issues/590))
+* Include SQLA data source ID in `databricks_sql_endpoint` state ([#601](https://github.com/databrickslabs/terraform-provider-databricks/issues/601))
+* Apply `debug_truncate_bytes` also for response dumps ([#589](https://github.com/databrickslabs/terraform-provider-databricks/issues/589))
+* More verbose logging of `databricks_cluster` termination reason ([#588](https://github.com/databrickslabs/terraform-provider-databricks/issues/588))
+* Move non-auth provider config documentation into separate section ([#587](https://github.com/databrickslabs/terraform-provider-databricks/pull/587))
+
+
+## 0.3.2
+
+* Fixed minor issues to add support for GCP ([#558](https://github.com/databrickslabs/terraform-provider-databricks/pull/558))
+* Fixed `databricks_permissions` for SQL Analytics Entities ([#535](https://github.com/databrickslabs/terraform-provider-databricks/issues/535))
+* Fixed incorrect HTTP 404 handling on create ([#564](https://github.com/databrickslabs/terraform-provider-databricks/issues/564), [#576](https://github.com/databrickslabs/terraform-provider-databricks/issues/576))
+* Fixed incorrect escaping of notebook names ([#566](https://github.com/databrickslabs/terraform-provider-databricks/pull/566))
+* Fixed entitlements for databricks_group ([#549](https://github.com/databrickslabs/terraform-provider-databricks/pull/549))
+* Fixed rate limiting to perform more than 1 request per second ([#577](https://github.com/databrickslabs/terraform-provider-databricks/pull/577))
+* Added support for spot instances on Azure ([#571](https://github.com/databrickslabs/terraform-provider-databricks/pull/571))
+* Added job schedules support for `pause_status` as a optional field. ([#575](https://github.com/databrickslabs/terraform-provider-databricks/pull/575))
+* Fixed minor documentation issues.
+
+Updated dependency versions:
+
+* Bump github.com/aws/aws-sdk-go from 1.37.20 to 1.38.10
+* Bump github.com/hashicorp/hcl/v2 from 2.9.0 to 2.9.1 
+* Bump github.com/zclconf/go-cty from 1.8.0 to 1.8.1
+* Bump github.com/google/go-querystring from 1.0.0 to 1.1.0
+
 ## 0.3.1
 
 * Added `databricks_global_init_script` resource to configure global init scripts ([#487](https://github.com/databrickslabs/terraform-provider-databricks/issues/487)).

@@ -7,10 +7,10 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestDataAwsCrossAccountRolicy(t *testing.T) {
+func TestDataAwsCrossAccountPolicy(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Read:        true,
-		Resource:    DataAwsCrossAccountRolicy(),
+		Resource:    DataAwsCrossAccountPolicy(),
 		NonWritable: true,
 		ID:          ".",
 	}.Apply(t)
@@ -19,10 +19,10 @@ func TestDataAwsCrossAccountRolicy(t *testing.T) {
 	assert.Lenf(t, j, 2759, "Strange length for policy: %s", j)
 }
 
-func TestDataAwsCrossAccountRolicy_WithPassRoles(t *testing.T) {
+func TestDataAwsCrossAccountPolicy_WithPassRoles(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Read:        true,
-		Resource:    DataAwsCrossAccountRolicy(),
+		Resource:    DataAwsCrossAccountPolicy(),
 		NonWritable: true,
 		HCL:         `pass_roles = ["a", "b", "c"]`,
 		ID:          ".",

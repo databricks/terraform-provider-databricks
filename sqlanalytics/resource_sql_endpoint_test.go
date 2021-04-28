@@ -2,6 +2,7 @@ package sqlanalytics
 
 import (
 	"context"
+	"encoding/json"
 	"os"
 	"testing"
 	"time"
@@ -13,7 +14,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestAccSQLEndpoints(t *testing.T) {
+func TestPreviewAccSQLEndpoints(t *testing.T) {
 	if _, ok := os.LookupEnv("CLOUD_ENV"); !ok {
 		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
 	}
@@ -44,6 +45,26 @@ func TestAccSQLEndpoints(t *testing.T) {
 	require.NoError(t, err)
 }
 
+// Define fixture for retrieving all data sources.
+// Shared between tests that end up performing a read operation.
+var dataSourceListHTTPFixture = qa.HTTPFixture{
+	Method:       "GET",
+	Resource:     "/api/2.0/preview/sql/data_sources",
+	ReuseRequest: true,
+	Response: json.RawMessage(`
+		[
+			{
+				"id": "2f47f0f9-b4b7-40e2-b130-43103151864c",
+				"endpoint_id": "def"
+			},
+			{
+				"id": "d7c9d05c-7496-4c69-b089-48823edad40c",
+				"endpoint_id": "abc"
+			}
+		]
+	`),
+}
+
 func TestResourceSQLEndpointCreate(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
@@ -71,6 +92,7 @@ func TestResourceSQLEndpointCreate(t *testing.T) {
 					MaxNumClusters: 1,
 				},
 			},
+			dataSourceListHTTPFixture,
 		},
 		Resource: ResourceSQLEndpoint(),
 		Create:   true,
@@ -81,6 +103,34 @@ func TestResourceSQLEndpointCreate(t *testing.T) {
 	}.Apply(t)
 	require.NoError(t, err, err)
 	assert.Equal(t, "abc", d.Id(), "Id should not be empty")
+	assert.Equal(t, "d7c9d05c-7496-4c69-b089-48823edad40c", d.Get("data_source_id"))
+}
+
+func TestResourceSQLEndpointCreate_ErrorDisabled(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/sql/endpoints",
+				ExpectedRequest: SQLEndpoint{
+					Name:           "foo",
+					ClusterSize:    "Small",
+					MaxNumClusters: 1,
+				},
+				Status: 404,
+				Response: common.APIError{
+					ErrorCode: "FEATURE_DISABLED",
+					Message:   "SQL Analytics is not supported",
+				},
+			},
+		},
+		Resource: ResourceSQLEndpoint(),
+		Create:   true,
+		HCL: `
+		name = "foo"
+  		cluster_size = "Small"
+		`,
+	}.ExpectError(t, "SQL Analytics is not supported")
 }
 
 func TestResourceSQLEndpointRead(t *testing.T) {
@@ -97,6 +147,7 @@ func TestResourceSQLEndpointRead(t *testing.T) {
 					State:       "RUNNING",
 				},
 			},
+			dataSourceListHTTPFixture,
 		},
 		Resource: ResourceSQLEndpoint(),
 		ID:       "abc",
@@ -108,6 +159,7 @@ func TestResourceSQLEndpointRead(t *testing.T) {
 	}.Apply(t)
 	require.NoError(t, err, err)
 	assert.Equal(t, "abc", d.Id(), "Id should not be empty")
+	assert.Equal(t, "d7c9d05c-7496-4c69-b089-48823edad40c", d.Get("data_source_id"))
 }
 
 func TestResourceSQLEndpointUpdate(t *testing.T) {
@@ -134,6 +186,7 @@ func TestResourceSQLEndpointUpdate(t *testing.T) {
 					State:       "RUNNING",
 				},
 			},
+			dataSourceListHTTPFixture,
 		},
 		Resource: ResourceSQLEndpoint(),
 		ID:       "abc",
@@ -145,6 +198,7 @@ func TestResourceSQLEndpointUpdate(t *testing.T) {
 	}.Apply(t)
 	require.NoError(t, err, err)
 	assert.Equal(t, "abc", d.Id(), "Id should not be empty")
+	assert.Equal(t, "d7c9d05c-7496-4c69-b089-48823edad40c", d.Get("data_source_id"))
 }
 
 func TestResourceSQLEndpointDelete(t *testing.T) {

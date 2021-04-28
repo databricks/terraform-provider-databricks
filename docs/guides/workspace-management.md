@@ -4,14 +4,14 @@ page_title: "End to end workspace management"
 
 # End to end workspace management
 
-Once you have the workspace setup on [Azure](azure-workspace.md) or [AWS](aws-workspace.md), you have to start managing resources within your workpsace. The following configuration blocks initializes ths most common variables, [databricks_spark_version](../data-sources/spark_version.md), [databricks_node_type](../data-sources/node_type.md), and [databricks_current_user](../data-sources/current_user.md).
+Once you have the workspace setup on [Azure](azure-workspace.md) or [AWS](aws-workspace.md), you have to start managing resources within your workspace. The following configuration blocks initializes ths most common variables, [databricks_spark_version](../data-sources/spark_version.md), [databricks_node_type](../data-sources/node_type.md), and [databricks_current_user](../data-sources/current_user.md).
 
 ```hcl
 terraform {
   required_providers {
     databricks = {
       source  = "databrickslabs/databricks"
-      version = "0.3.1"
+      version = "0.3.3"
     }
   }
 }

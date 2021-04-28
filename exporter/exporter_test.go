@@ -96,7 +96,7 @@ func TestImportingMounts(t *testing.T) {
 				Resource:     "/api/1.2/commands/status?clusterId=mount&commandId=run&contextId=context",
 				Response: compute.Command{
 					Status: "Finished",
-					Results: &compute.CommandResults{
+					Results: &common.CommandResults{
 						ResultType: "text",
 						Data: `{"foo": "s3a://foo", "bar": "abfss://bar@baz.com/thing", "third": "adls://foo.bar.com/path"}
 					and some chatty messages`,
@@ -268,7 +268,7 @@ func TestImportingUsersGroupsSecretScopes(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/Users?filter=userName%20eq%20%27test@test.com%27",
+				Resource: "/api/2.0/preview/scim/v2/Users?filter=userName%20eq%20%27test%40test.com%27",
 				Response: identity.UserList{
 					Resources: []identity.ScimUser{
 						{ID: "123", DisplayName: "test@test.com", UserName: "test@test.com"},
@@ -444,7 +444,7 @@ func TestImportingClusters(t *testing.T) {
 			},
 			{
 				Method:       "GET",
-				Resource:     "/api/2.0/dbfs/get-status?path=dbfs:%2FFileStore%2Fjars%2Ftest.jar",
+				Resource:     "/api/2.0/dbfs/get-status?path=dbfs%3A%2FFileStore%2Fjars%2Ftest.jar",
 				ReuseRequest: true,
 				Response:     getJSONObject("test-data/get-dbfs-library-status.json"),
 			},
@@ -588,7 +588,7 @@ func TestImportingJobs_JobList(t *testing.T) {
 			},
 			{
 				Method:       "GET",
-				Resource:     "/api/2.0/dbfs/get-status?path=dbfs:%2FFileStore%2Fjars%2Ftest.jar",
+				Resource:     "/api/2.0/dbfs/get-status?path=dbfs%3A%2FFileStore%2Fjars%2Ftest.jar",
 				ReuseRequest: true,
 				Response:     getJSONObject("test-data/get-dbfs-library-status.json"),
 			},
@@ -747,7 +747,7 @@ func TestImportingWithError(t *testing.T) {
 	err := Run("-directory", "/bin/sh", "-services", "groups,users")
 	assert.EqualError(t, err, "The path /bin/sh is not a directory")
 
-	err = Run("-directory", "/bin/abcd", "-services", "groups,users")
+	err = Run("-directory", "/bin/abcd", "-services", "groups,users", "-prefix", "abc")
 	assert.EqualError(t, err, "Can't create directory /bin/abcd")
 }
 

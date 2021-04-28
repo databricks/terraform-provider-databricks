@@ -32,6 +32,7 @@ Security
 * Manage data access with [databricks_instance_profile](resources/instance_profile.md), which can be assigned through [databricks_group_instance_profile](resources/group_instance_profile.md) and [databricks_user_instance_profile](resources/user_instance_profile.md)
 * Control which networks can access workspace with [databricks_ip_access_list](resources/ip_access_list.md)
 * Generically manage [databricks_permissions](resources/permissions.md)
+* Manage data object access control lists with [databricks_sql_permissions](resources/sql_permissions.md)
 * Keep sensitive elements like passwords in [databricks_secret](resources/secret.md), grouped into [databricks_secret_scope](resources/secret_scope.md) and controlled by [databricks_secret_acl](resources/secret_acl.md)
 
 
@@ -42,6 +43,8 @@ Security
 
 SQL Analytics
 * Create [databricks_sql_endpoint](resources/sql_endpoint.md) controlled by [databricks_permissions](resources/permissions.md).
+* Manage [queries](resources/sql_query.md) and their [visualizations](resources/sql_visualization.md).
+* Manage [dashboards](resources/sql_dashboard.md) and their [widgets](resources/sql_widget.md).
 
 ## Example Usage
 
@@ -239,10 +242,18 @@ resource "databricks_user" "my-user" {
 resides. Alternatively, you can provide this value as an environment variable `DATABRICKS_AZURE_TENANT_ID` or `ARM_TENANT_ID`.
 * `azure_environment` - (optional) This is the Azure Environment which defaults to the `public` cloud. Other options are `german`, `china` and `usgovernment`. Alternatively, you can provide this value as an environment variable `ARM_ENVIRONMENT`.
 * `pat_token_duration_seconds` - The current implementation of the azure auth via sp requires the provider to create a temporary personal access token within Databricks. The current AAD implementation does not cover all the APIs for Authentication. This field determines the duration in which that temporary PAT token is alive. It is measured in seconds and will default to `3600` seconds. 
-* `debug_truncate_bytes` - Applicable only when `TF_LOG=DEBUG` is set. Truncate JSON fields in HTTP requests and responses above this limit. Default is *96*.
-* `debug_headers` - Applicable only when `TF_LOG=DEBUG` is set. Debug HTTP headers of requests made by the provider. Default is *false*. We recommend to turn this flag on only under exceptional circumstances, when troubleshooting authentication issues. Turning this flag on will log first `debug_truncate_bytes` of any HTTP header value in cleartext.
 
 There are multiple environment variable options, the `DATABRICKS_AZURE_*` environment variables take precedence, and the `ARM_*` environment variables provide a way to share authentication configuration using the `databricks` provider alongside the `azurerm` provider.
+
+## Miscellaneous configuration parameters
+
+This section covers configuration parameters not related to authentication.  They could be used when debugging problems, or do an additional tuning of provider's behaviour:
+
+* `rate_limit` - defines maximum number of requests per second made to Databricks REST API by Terraform. Default is *15*.
+* `debug_truncate_bytes` - Applicable only when `TF_LOG=DEBUG` is set. Truncate JSON fields in HTTP requests and responses above this limit. Default is *96*.
+* `debug_headers` - Applicable only when `TF_LOG=DEBUG` is set. Debug HTTP headers of requests made by the provider. Default is *false*. We recommend to turn this flag on only under exceptional circumstances, when troubleshooting authentication issues. Turning this flag on will log first `debug_truncate_bytes` of any HTTP header value in cleartext.
+* `skip_verify` - skips SSL certificate verification for HTTP calls. *Use at your own risk.* Default is *false* (don't skip verification).
+
 
 ## Environment variables
 
@@ -266,6 +277,8 @@ The following configuration attributes can be passed via environment variables:
 |           `azure_environment` | `ARM_ENVIRONMENT`                                           |
 |        `debug_truncate_bytes` | `DATABRICKS_DEBUG_TRUNCATE_BYTES`                           |
 |               `debug_headers` | `DATABRICKS_DEBUG_HEADERS`                                  |
+|               `rate_limit`    | `DATABRICKS_RATE_LIMIT`                                     |
+
 
 ## Empty provider block
 
@@ -305,7 +318,7 @@ terraform {
   required_providers {
     databricks = {
       source = "databrickslabs/databricks"
-      version = "0.3.2"
+      version = "0.3.3"
     }
   }
 }

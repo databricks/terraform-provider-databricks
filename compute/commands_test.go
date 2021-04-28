@@ -83,7 +83,7 @@ func commonFixtureWithStatusResponse(response Command) []qa.HTTPFixture {
 func TestCommandWithExecutionError(t *testing.T) {
 	client, server, err := qa.HttpFixtureClient(t, commonFixtureWithStatusResponse(Command{
 		Status: "Finished",
-		Results: &CommandResults{
+		Results: &common.CommandResults{
 			ResultType: "error",
 			Cause: `
 ---
@@ -99,16 +99,15 @@ StatusDescription=BadRequest
 	ctx := context.Background()
 	commands := NewCommandsAPI(ctx, client)
 
-	_, err = commands.Execute("abc", "python", `print("done")`)
-	assert.Equal(t, `An error occurred
-StatusCode=400
-StatusDescription=BadRequest`, err.Error())
+	result := commands.Execute("abc", "python", `print("done")`)
+	assert.Equal(t, true, result.Failed())
+	assert.Equal(t, "An error occurred\nStatusCode=400\nStatusDescription=BadRequest", result.Error())
 }
 
 func TestCommandWithEmptyErrorMessageUsesSummary(t *testing.T) {
 	client, server, err := qa.HttpFixtureClient(t, commonFixtureWithStatusResponse(Command{
 		Status: "Finished",
-		Results: &CommandResults{
+		Results: &common.CommandResults{
 			ResultType: "error",
 			Cause: `
 ---
@@ -125,14 +124,15 @@ ErrorMessage=
 	ctx := context.Background()
 	commands := NewCommandsAPI(ctx, client)
 
-	_, err = commands.Execute("abc", "python", `print("done")`)
-	assert.Equal(t, "Proper error", err.Error())
+	result := commands.Execute("abc", "python", `print("done")`)
+	assert.Equal(t, true, result.Failed())
+	assert.Equal(t, "Proper error", result.Error())
 }
 
 func TestCommandWithErrorMessage(t *testing.T) {
 	client, server, err := qa.HttpFixtureClient(t, commonFixtureWithStatusResponse(Command{
 		Status: "Finished",
-		Results: &CommandResults{
+		Results: &common.CommandResults{
 			ResultType: "error",
 			Cause: `
 ---
@@ -147,14 +147,15 @@ ErrorMessage=An error occurred
 	ctx := context.Background()
 	commands := NewCommandsAPI(ctx, client)
 
-	_, err = commands.Execute("abc", "python", `print("done")`)
-	assert.Equal(t, "An error occurred", err.Error())
+	result := commands.Execute("abc", "python", `print("done")`)
+	assert.Equal(t, true, result.Failed())
+	assert.Equal(t, "An error occurred", result.Error())
 }
 
 func TestCommandWithExceptionMessage(t *testing.T) {
 	client, server, err := qa.HttpFixtureClient(t, commonFixtureWithStatusResponse(Command{
 		Status: "Finished",
-		Results: &CommandResults{
+		Results: &common.CommandResults{
 			ResultType: "error",
 			Summary:    "Exception: An error occurred",
 		},
@@ -164,14 +165,15 @@ func TestCommandWithExceptionMessage(t *testing.T) {
 	ctx := context.Background()
 	commands := NewCommandsAPI(ctx, client)
 
-	_, err = commands.Execute("abc", "python", `print("done")`)
-	assert.Equal(t, "An error occurred", err.Error())
+	result := commands.Execute("abc", "python", `print("done")`)
+	assert.Equal(t, true, result.Failed())
+	assert.Equal(t, "An error occurred", result.Error())
 }
 
 func TestSomeCommands(t *testing.T) {
 	client, server, err := qa.HttpFixtureClient(t, commonFixtureWithStatusResponse(Command{
 		Status: "Finished",
-		Results: &CommandResults{
+		Results: &common.CommandResults{
 			ResultType: "text",
 			Data:       "done",
 		},
@@ -181,9 +183,334 @@ func TestSomeCommands(t *testing.T) {
 	ctx := context.Background()
 	commands := NewCommandsAPI(ctx, client)
 
-	result, err := commands.Execute("abc", "python", `print("done")`)
-	require.NoError(t, err)
-	assert.Equal(t, "done", result)
+	result := commands.Execute("abc", "python", `print("done")`)
+	assert.Equal(t, false, result.Failed())
+	assert.Equal(t, "done", result.Text())
+}
+
+func TestCommandsAPIExecute_FailGettingCluster(t *testing.T) {
+	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/clusters/get?cluster_id=abc",
+			Status:   417,
+			Response: common.APIError{
+				Message: "Does not compute",
+			},
+		},
+	}, func(ctx context.Context, client *common.DatabricksClient) {
+		commands := NewCommandsAPI(ctx, client)
+		cr := commands.Execute("abc", "cobol", "Hello?")
+		assert.EqualError(t, cr.Err(), "Does not compute")
+	})
+}
+
+func TestCommandsAPIExecute_StoppedCluster(t *testing.T) {
+	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/clusters/get?cluster_id=abc",
+			Response: ClusterInfo{
+				State: "TERMINATED",
+			},
+		},
+	}, func(ctx context.Context, client *common.DatabricksClient) {
+		commands := NewCommandsAPI(ctx, client)
+		cr := commands.Execute("abc", "cobol", "Hello?")
+		assert.EqualError(t, cr.Err(), "Cluster abc has to be running or resizing, but is TERMINATED")
+	})
+}
+
+func TestCommandsAPIExecute_FailToCreateContext(t *testing.T) {
+	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/clusters/get?cluster_id=abc",
+			Response: ClusterInfo{
+				State: "RUNNING",
+			},
+		},
+		{
+			Method:   "POST",
+			Resource: "/api/1.2/contexts/create",
+			Status:   417,
+			Response: common.APIError{
+				Message: "Does not compute",
+			},
+		},
+	}, func(ctx context.Context, client *common.DatabricksClient) {
+		commands := NewCommandsAPI(ctx, client)
+		cr := commands.Execute("abc", "cobol", "Hello?")
+		assert.EqualError(t, cr.Err(), "Does not compute")
+	})
+}
+
+func TestCommandsAPIExecute_FailToWaitForContext(t *testing.T) {
+	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/clusters/get?cluster_id=abc",
+			Response: ClusterInfo{
+				State: "RUNNING",
+			},
+		},
+		{
+			Method:   "POST",
+			Resource: "/api/1.2/contexts/create",
+			Response: Command{
+				ID: "abc",
+			},
+		},
+		{
+			Method:   "GET",
+			Resource: "/api/1.2/contexts/status?clusterId=abc&contextId=abc",
+			Status:   417,
+			Response: common.APIError{
+				Message: "Does not compute",
+			},
+		},
+	}, func(ctx context.Context, client *common.DatabricksClient) {
+		commands := NewCommandsAPI(ctx, client)
+		cr := commands.Execute("abc", "cobol", "Hello?")
+		assert.EqualError(t, cr.Err(), "Does not compute")
+	})
+}
+
+func TestCommandsAPIExecute_FailToCreateCommand(t *testing.T) {
+	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/clusters/get?cluster_id=abc",
+			Response: ClusterInfo{
+				State: "RUNNING",
+			},
+		},
+		{
+			Method:   "POST",
+			Resource: "/api/1.2/contexts/create",
+			Response: Command{
+				ID: "abc",
+			},
+		},
+		{
+			Method:   "GET",
+			Resource: "/api/1.2/contexts/status?clusterId=abc&contextId=abc",
+			Response: Command{
+				Status: "Running",
+			},
+		},
+		{
+			Method:   "POST",
+			Resource: "/api/1.2/commands/execute",
+			Status:   417,
+			Response: common.APIError{
+				Message: "Does not compute",
+			},
+		},
+	}, func(ctx context.Context, client *common.DatabricksClient) {
+		commands := NewCommandsAPI(ctx, client)
+		cr := commands.Execute("abc", "cobol", "Hello?")
+		assert.EqualError(t, cr.Err(), "Does not compute")
+	})
+}
+
+func TestCommandsAPIExecute_FailToWaitForCommand(t *testing.T) {
+	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/clusters/get?cluster_id=abc",
+			Response: ClusterInfo{
+				State: "RUNNING",
+			},
+		},
+		{
+			Method:   "POST",
+			Resource: "/api/1.2/contexts/create",
+			Response: Command{
+				ID: "abc",
+			},
+		},
+		{
+			Method:   "GET",
+			Resource: "/api/1.2/contexts/status?clusterId=abc&contextId=abc",
+			Response: Command{
+				Status: "Running",
+			},
+		},
+		{
+			Method:   "POST",
+			Resource: "/api/1.2/commands/execute",
+			Response: Command{
+				ID: "abc",
+			},
+		},
+		{
+			Method:   "GET",
+			Resource: "/api/1.2/commands/status?clusterId=abc&commandId=abc&contextId=abc",
+			Status:   417,
+			Response: common.APIError{
+				Message: "Does not compute",
+			},
+		},
+	}, func(ctx context.Context, client *common.DatabricksClient) {
+		commands := NewCommandsAPI(ctx, client)
+		cr := commands.Execute("abc", "cobol", "Hello?")
+		assert.EqualError(t, cr.Err(), "Does not compute")
+	})
+}
+
+func TestCommandsAPIExecute_FailToGetCommand(t *testing.T) {
+	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/clusters/get?cluster_id=abc",
+			Response: ClusterInfo{
+				State: "RUNNING",
+			},
+		},
+		{
+			Method:   "POST",
+			Resource: "/api/1.2/contexts/create",
+			Response: Command{
+				ID: "abc",
+			},
+		},
+		{
+			Method:   "GET",
+			Resource: "/api/1.2/contexts/status?clusterId=abc&contextId=abc",
+			Response: Command{
+				Status: "Running",
+			},
+		},
+		{
+			Method:   "POST",
+			Resource: "/api/1.2/commands/execute",
+			Response: Command{
+				ID: "abc",
+			},
+		},
+		{
+			Method:   "GET",
+			Resource: "/api/1.2/commands/status?clusterId=abc&commandId=abc&contextId=abc",
+			Response: Command{
+				Status: "Finished",
+			},
+		},
+		{
+			Method:   "GET",
+			Resource: "/api/1.2/commands/status?clusterId=abc&commandId=abc&contextId=abc",
+			Status:   417,
+			Response: common.APIError{
+				Message: "Does not compute",
+			},
+		},
+	}, func(ctx context.Context, client *common.DatabricksClient) {
+		commands := NewCommandsAPI(ctx, client)
+		cr := commands.Execute("abc", "cobol", "Hello?")
+		assert.EqualError(t, cr.Err(), "Does not compute")
+	})
+}
+
+func TestCommandsAPIExecute_FailToDeleteContext(t *testing.T) {
+	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/clusters/get?cluster_id=abc",
+			Response: ClusterInfo{
+				State: "RUNNING",
+			},
+		},
+		{
+			Method:   "POST",
+			Resource: "/api/1.2/contexts/create",
+			Response: Command{
+				ID: "abc",
+			},
+		},
+		{
+			Method:   "GET",
+			Resource: "/api/1.2/contexts/status?clusterId=abc&contextId=abc",
+			Response: Command{
+				Status: "Running",
+			},
+		},
+		{
+			Method:   "POST",
+			Resource: "/api/1.2/commands/execute",
+			Response: Command{
+				ID: "abc",
+			},
+		},
+		{
+			Method:       "GET",
+			ReuseRequest: true,
+			Resource:     "/api/1.2/commands/status?clusterId=abc&commandId=abc&contextId=abc",
+			Response: Command{
+				Status: "Finished",
+			},
+		},
+		{
+			Method:   "POST",
+			Resource: "/api/1.2/contexts/destroy",
+			Status:   417,
+			Response: common.APIError{
+				Message: "Does not compute",
+			},
+		},
+	}, func(ctx context.Context, client *common.DatabricksClient) {
+		commands := NewCommandsAPI(ctx, client)
+		cr := commands.Execute("abc", "cobol", "Hello?")
+		assert.EqualError(t, cr.Err(), "Does not compute")
+	})
+}
+
+func TestCommandsAPIExecute_NoCommandResults(t *testing.T) {
+	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/clusters/get?cluster_id=abc",
+			Response: ClusterInfo{
+				State: "RUNNING",
+			},
+		},
+		{
+			Method:   "POST",
+			Resource: "/api/1.2/contexts/create",
+			Response: Command{
+				ID: "abc",
+			},
+		},
+		{
+			Method:   "GET",
+			Resource: "/api/1.2/contexts/status?clusterId=abc&contextId=abc",
+			Response: Command{
+				Status: "Running",
+			},
+		},
+		{
+			Method:   "POST",
+			Resource: "/api/1.2/commands/execute",
+			Response: Command{
+				ID: "abc",
+			},
+		},
+		{
+			Method:       "GET",
+			ReuseRequest: true,
+			Resource:     "/api/1.2/commands/status?clusterId=abc&commandId=abc&contextId=abc",
+			Response: Command{
+				Status: "Finished",
+			},
+		},
+		{
+			Method:   "POST",
+			Resource: "/api/1.2/contexts/destroy",
+		},
+	}, func(ctx context.Context, client *common.DatabricksClient) {
+		commands := NewCommandsAPI(ctx, client)
+		cr := commands.Execute("abc", "cobol", "Hello?")
+		assert.EqualError(t, cr.Err(), "Command has no results")
+	})
 }
 
 func TestAccContext(t *testing.T) {
@@ -197,32 +524,26 @@ func TestAccContext(t *testing.T) {
 	ctx := context.Background()
 	c := NewCommandsAPI(ctx, client)
 
-	result, err := c.Execute(clusterID, "python", `print('hello world')`)
-	require.NoError(t, err)
-	assert.Equal(t, "hello world", result)
+	result := c.Execute(clusterID, "python", `print('hello world')`)
+	assert.Equal(t, "hello world", result.Text())
 
 	// exceptions are regexed away for readability
-	result, err = c.Execute(clusterID, "python", `raise Exception("Not Found")`)
-	qa.AssertErrorStartsWith(t, err, "Not Found")
-	assert.Equal(t, "", result)
+	result = c.Execute(clusterID, "python", `raise Exception("Not Found")`)
+	qa.AssertErrorStartsWith(t, result.Err(), "Not Found")
 
 	// but errors are not
-	result, err = c.Execute(clusterID, "python", `raise KeyError("foo")`)
-	qa.AssertErrorStartsWith(t, err, "KeyError: 'foo'")
-	assert.Equal(t, "", result)
+	result = c.Execute(clusterID, "python", `raise KeyError("foo")`)
+	qa.AssertErrorStartsWith(t, result.Err(), "KeyError: 'foo'")
 
 	// so it is more clear to read and debug
-	result, err = c.Execute(clusterID, "python", `return 'hello world'`)
-	qa.AssertErrorStartsWith(t, err, "SyntaxError: 'return' outside function")
-	assert.Equal(t, "", result)
+	result = c.Execute(clusterID, "python", `return 'hello world'`)
+	qa.AssertErrorStartsWith(t, result.Err(), "SyntaxError: 'return' outside function")
 
-	result, err = c.Execute(clusterID, "python", `"Hello World!"`)
-	assert.NoError(t, err)
-	assert.Equal(t, "'Hello World!'", result)
+	result = c.Execute(clusterID, "python", `"Hello World!"`)
+	assert.Equal(t, "'Hello World!'", result.Text())
 
-	result, err = c.Execute(clusterID, "python", `
-		print("Hello World!")
-		dbutils.notebook.exit("success")`)
-	assert.NoError(t, err)
-	assert.Equal(t, "success", result)
+	result = c.Execute(clusterID, "python", `
+ 		print("Hello World!")
+ 		dbutils.notebook.exit("success")`)
+	assert.Equal(t, "success", result.Text())
 }

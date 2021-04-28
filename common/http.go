@@ -390,7 +390,11 @@ func (c *DatabricksClient) redactedDump(body []byte) (res string) {
 		// error in this case is not much relevant
 		return
 	}
-	return onlyNBytes(string(rePacked), 1024)
+	maxBytes := 1024
+	if c.DebugTruncateBytes > maxBytes {
+		maxBytes = c.DebugTruncateBytes
+	}
+	return onlyNBytes(string(rePacked), maxBytes)
 }
 
 func (c *DatabricksClient) userAgent(ctx context.Context) string {
@@ -439,7 +443,7 @@ func (c *DatabricksClient) genericQuery(ctx context.Context, method, requestURL 
 			headers += "\n"
 		}
 	}
-	log.Printf("[DEBUG] %s %s %s%v", method, requestURL, headers, c.redactedDump(requestBody))
+	log.Printf("[DEBUG] %s %s %s%v", method, requestURL, headers, c.redactedDump(requestBody)) // lgtm[go/clear-text-logging]
 
 	r, err := retryablehttp.FromRequest(request)
 	if err != nil {
@@ -483,8 +487,9 @@ func makeRequestBody(method string, requestURL *string, data interface{}, marsha
 				if v.IsZero() {
 					continue
 				}
-				s = append(s, fmt.Sprintf("%v=%s", k.Interface(),
-					url.PathEscape(fmt.Sprintf("%v", v.Interface()))))
+				s = append(s, fmt.Sprintf("%s=%s",
+					strings.Replace(url.QueryEscape(fmt.Sprintf("%v", k.Interface())), "+", "%20", -1),
+					strings.Replace(url.QueryEscape(fmt.Sprintf("%v", v.Interface())), "+", "%20", -1)))
 			}
 			*requestURL += "?" + strings.Join(s, "&")
 		case reflect.Struct:

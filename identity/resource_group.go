@@ -33,6 +33,7 @@ func ResourceGroup() *schema.Resource {
 		if err = d.Set("allow_instance_pool_create", isGroupInstancePoolCreateEntitled(&group)); err != nil {
 			return diag.FromErr(err)
 		}
+		d.Set("url", m.(*common.DatabricksClient).FormatURL("#setting/accounts/groups/", d.Id()))
 		return nil
 	}
 	return &schema.Resource{
@@ -70,9 +71,10 @@ func ResourceGroup() *schema.Resource {
 				// Changed to true
 				if allowClusterCreate {
 					entitlementsAddList = append(entitlementsAddList, string(AllowClusterCreateEntitlement))
+				} else {
+					// Changed to false
+					entitlementsRemoveList = append(entitlementsRemoveList, string(AllowClusterCreateEntitlement))
 				}
-				// Changed to false
-				entitlementsRemoveList = append(entitlementsRemoveList, string(AllowClusterCreateEntitlement))
 			}
 			// If allow_sql_analytics_access has changed
 			if d.HasChange("allow_sql_analytics_access") {
@@ -80,19 +82,21 @@ func ResourceGroup() *schema.Resource {
 				// Changed to true
 				if allowSQLAnalyticsAccess {
 					entitlementsAddList = append(entitlementsAddList, string(AllowSQLAnalyticsAccessEntitlement))
+				} else {
+					// Changed to false
+					entitlementsRemoveList = append(entitlementsRemoveList, string(AllowSQLAnalyticsAccessEntitlement))
 				}
-				// Changed to false
-				entitlementsRemoveList = append(entitlementsRemoveList, string(AllowSQLAnalyticsAccessEntitlement))
 			}
 			// If allow_instance_pool_create has changed
 			if d.HasChange("allow_instance_pool_create") {
 				allowClusterCreate := d.Get("allow_instance_pool_create").(bool)
 				// Changed to true
 				if allowClusterCreate {
-					entitlementsAddList = append(entitlementsAddList, string(AllowClusterCreateEntitlement))
+					entitlementsAddList = append(entitlementsAddList, string(AllowInstancePoolCreateEntitlement))
+				} else {
+					// Changed to false
+					entitlementsRemoveList = append(entitlementsRemoveList, string(AllowInstancePoolCreateEntitlement))
 				}
-				// Changed to false
-				entitlementsRemoveList = append(entitlementsRemoveList, string(AllowClusterCreateEntitlement))
 			}
 			// TODO: not currently possible to update group display name
 			if entitlementsAddList != nil || entitlementsRemoveList != nil {
@@ -132,6 +136,10 @@ func ResourceGroup() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
+			"url": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -156,7 +164,7 @@ func isGroupSQLAnalyticsAccessEntitled(group *ScimGroup) bool {
 
 func isGroupInstancePoolCreateEntitled(group *ScimGroup) bool {
 	for _, entitlement := range group.Entitlements {
-		if entitlement.Value == AllowClusterCreateEntitlement {
+		if entitlement.Value == AllowInstancePoolCreateEntitlement {
 			return true
 		}
 	}

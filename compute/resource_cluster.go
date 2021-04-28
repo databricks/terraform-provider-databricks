@@ -40,17 +40,19 @@ func ResourceCluster() *schema.Resource {
 	}.ToResource()
 }
 
+func sparkConfDiffSuppressFunc(k, old, new string, d *schema.ResourceData) bool {
+	isPossiblyLegacyConfig := "spark_conf.%" == k && "1" == old && "0" == new
+	isLegacyConfig := "spark_conf.spark.databricks.delta.preview.enabled" == k
+	if isPossiblyLegacyConfig || isLegacyConfig {
+		log.Printf("[DEBUG] Suppressing diff for k=%#v old=%#v new=%#v", k, old, new)
+		return true
+	}
+	return false
+}
+
 func resourceClusterSchema() map[string]*schema.Schema {
 	return common.StructToSchema(Cluster{}, func(s map[string]*schema.Schema) map[string]*schema.Schema {
-		s["spark_conf"].DiffSuppressFunc = func(k, old, new string, d *schema.ResourceData) bool {
-			isPossiblyLegacyConfig := "spark_conf.%" == k && "1" == old && "0" == new
-			isLegacyConfig := "spark_conf.spark.databricks.delta.preview.enabled" == k
-			if isPossiblyLegacyConfig || isLegacyConfig {
-				log.Printf("[DEBUG] Suppressing diff for k=%#v old=%#v new=%#v", k, old, new)
-				return true
-			}
-			return false
-		}
+		s["spark_conf"].DiffSuppressFunc = sparkConfDiffSuppressFunc
 		// adds `libraries` configuration block
 		s["library"] = common.StructToSchema(ClusterLibraryList{},
 			func(ss map[string]*schema.Schema) map[string]*schema.Schema {
@@ -68,6 +70,13 @@ func resourceClusterSchema() map[string]*schema.Schema {
 			Optional: true,
 			Computed: true,
 		}
+		s["aws_attributes"].ConflictsWith = []string{"azure_attributes", "gcp_attributes"}
+		s["azure_attributes"].ConflictsWith = []string{"aws_attributes", "gcp_attributes"}
+		s["gcp_attributes"].ConflictsWith = []string{"aws_attributes", "azure_attributes"}
+		s["aws_attributes"].DiffSuppressFunc = makeEmptyBlockSuppressFunc("aws_attributes.#")
+		s["azure_attributes"].DiffSuppressFunc = makeEmptyBlockSuppressFunc("azure_attributes.#")
+		s["gcp_attributes"].DiffSuppressFunc = makeEmptyBlockSuppressFunc("gcp_attributes.#")
+
 		s["is_pinned"] = &schema.Schema{
 			Type:     schema.TypeBool,
 			Optional: true,
@@ -92,6 +101,10 @@ func resourceClusterSchema() map[string]*schema.Schema {
 			Optional:         true,
 			Default:          0,
 			ValidateDiagFunc: validation.ToDiagFunc(validation.IntAtLeast(0)),
+		}
+		s["url"] = &schema.Schema{
+			Type:     schema.TypeString,
+			Computed: true,
 		}
 		return s
 	})
@@ -180,6 +193,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, c *common.
 	if err = setPinnedStatus(d, clusterAPI); err != nil {
 		return err
 	}
+	d.Set("url", c.FormatURL("#setting/clusters/", d.Id(), "/configuration"))
 	librariesAPI := NewLibrariesAPI(ctx, c)
 	libsClusterStatus, err := waitForLibrariesInstalled(librariesAPI, clusterInfo)
 	if err != nil {
@@ -315,6 +329,15 @@ func modifyClusterRequest(clusterModel *Cluster) {
 			InstanceProfileArn: clusterModel.AwsAttributes.InstanceProfileArn,
 		}
 		clusterModel.AwsAttributes = &awsAttributes
+	}
+	if clusterModel.AzureAttributes != nil {
+		clusterModel.AzureAttributes = nil
+	}
+	if clusterModel.GcpAttributes != nil {
+		gcpAttributes := GcpAttributes{
+			GoogleServiceAccount: clusterModel.GcpAttributes.GoogleServiceAccount,
+		}
+		clusterModel.GcpAttributes = &gcpAttributes
 	}
 	clusterModel.EnableElasticDisk = false
 	clusterModel.NodeTypeID = ""

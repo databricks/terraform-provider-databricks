@@ -223,6 +223,8 @@ func TestWaitForClusterStatus_NotReachable(t *testing.T) {
 			Response: ClusterInfo{
 				State:        ClusterStateUnknown,
 				StateMessage: "Something strange is going on",
+				TerminationReason: &TerminationReason{Code: "unknown", Type: "broken",
+					Parameters: map[string]string{"abc": "def"}},
 			},
 		},
 	})
@@ -234,7 +236,8 @@ func TestWaitForClusterStatus_NotReachable(t *testing.T) {
 	ctx := context.Background()
 	_, err = NewClustersAPI(ctx, client).waitForClusterStatus("abc", ClusterStateRunning)
 	require.Error(t, err)
-	assert.Contains(t, err.Error(), "abc is not able to transition from UNKNOWN to RUNNING: Something strange is going on.")
+	assert.Contains(t, err.Error(), "abc is not able to transition from UNKNOWN to RUNNING: Something strange is going on")
+	assert.Contains(t, err.Error(), "code: unknown, type: broken")
 }
 
 func TestWaitForClusterStatus_NormalRetry(t *testing.T) {
@@ -641,7 +644,6 @@ func TestAzureAccNodeTypes(t *testing.T) {
 	clustersAPI := NewClustersAPI(ctx, common.CommonEnvironmentClient())
 	m := map[string]NodeTypeRequest{
 		"Standard_F4s":     {},
-		"Standard_NC12":    {MinGPUs: 1},
 		"Standard_L32s_v2": {MinCores: 32, GBPerCore: 8},
 	}
 

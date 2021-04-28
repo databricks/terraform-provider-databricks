@@ -28,8 +28,8 @@ type awsIamPolicyStatement struct {
 	Condition    map[string]map[string]string `json:"Condition,omitempty"`
 }
 
-// DataAwsCrossAccountRolicy ...
-func DataAwsCrossAccountRolicy() *schema.Resource {
+// DataAwsCrossAccountPolicy ...
+func DataAwsCrossAccountPolicy() *schema.Resource {
 	return &schema.Resource{
 		ReadContext: func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 			policy := awsIamPolicy{

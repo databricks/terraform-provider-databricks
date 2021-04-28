@@ -18,8 +18,6 @@ coverage: test
 	@echo "✓ Opening coverage for unit tests ..."
 	@go tool cover -html=coverage.txt
 
-VERSION = 0.3.1
-
 build: vendor
 	@echo "✓ Building source code with go build ..."
 	@go build -mod vendor -v -o terraform-provider-databricks
@@ -67,6 +65,10 @@ test-awsst: install
 test-awsmt: install
 	@echo "✓ Running Terraform Acceptance Tests for AWS MT..."
 	@/bin/bash scripts/run.sh awsmt '^(TestAcc|TestAwsAcc)' --debug --tee
+
+test-preview: install
+	@echo "✓ Running acceptance Tests for Preview features..."
+	@/bin/bash scripts/run.sh preview '^TestPreviewAcc' --debug --tee
 
 snapshot:
 	@echo "✓ Making Snapshot ..."

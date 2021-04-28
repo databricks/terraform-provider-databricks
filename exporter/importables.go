@@ -47,7 +47,8 @@ var resourcesMap map[string]importable = map[string]importable{
 			if err != nil && !os.IsExist(err) {
 				return err
 			}
-			local, err := os.Create(fmt.Sprintf("%s/files/%s", ic.Directory, path.Base(r.ID)))
+			fileName := ic.prefix + path.Base(r.ID)
+			local, err := os.Create(fmt.Sprintf("%s/files/%s", ic.Directory, fileName))
 			if err != nil {
 				return err
 			}
@@ -58,7 +59,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			}
 			// libraries installed with init scripts won't be exported.
 			b := body.AppendNewBlock("resource", []string{r.Resource, r.Name}).Body()
-			relativeFile := fmt.Sprintf("${path.module}/files/%s", path.Base(r.ID))
+			relativeFile := fmt.Sprintf("${path.module}/files/%s", fileName)
 			b.SetAttributeValue("path", cty.StringVal(strings.Replace(r.ID, "dbfs:", "", 1)))
 			b.SetAttributeRaw("source", hclwrite.Tokens{
 				&hclwrite.Token{Type: hclsyntax.TokenOQuote, Bytes: []byte{'"'}},
@@ -120,9 +121,9 @@ var resourcesMap map[string]importable = map[string]importable{
 			{Path: "aws_attributes.instance_profile_arn", Resource: "databricks_instance_profile"},
 			{Path: "instance_pool_id", Resource: "databricks_instance_pool"},
 			{Path: "init_scripts.dbfs.destination", Resource: "databricks_dbfs_file"},
-			{Path: "library.jar", Resource: "databricks_dbfs_file"},
-			{Path: "library.whl", Resource: "databricks_dbfs_file"},
-			{Path: "library.egg", Resource: "databricks_dbfs_file"},
+			{Path: "library.jar", Resource: "databricks_dbfs_file", Match: "dbfs_path"},
+			{Path: "library.whl", Resource: "databricks_dbfs_file", Match: "dbfs_path"},
+			{Path: "library.egg", Resource: "databricks_dbfs_file", Match: "dbfs_path"},
 		},
 		List: func(ic *importContext) error {
 			clusters, err := compute.NewClustersAPI(ic.Context, ic.Client).List()
@@ -186,12 +187,12 @@ var resourcesMap map[string]importable = map[string]importable{
 			{Path: "new_cluster.init_scripts.dbfs.destination", Resource: "databricks_dbfs_file"},
 			{Path: "new_cluster.instance_pool_id", Resource: "databricks_instance_pool"},
 			{Path: "existing_cluster_id", Resource: "databricks_cluster"},
-			{Path: "library.jar", Resource: "databricks_dbfs_file"},
-			{Path: "library.whl", Resource: "databricks_dbfs_file"},
-			{Path: "library.egg", Resource: "databricks_dbfs_file"},
-			{Path: "spark_python_task.python_file", Resource: "databricks_dbfs_file"},
-			{Path: "spark_python_task.parameters", Resource: "databricks_dbfs_file"},
-			{Path: "spark_jar_task.jar_uri", Resource: "databricks_dbfs_file"},
+			{Path: "library.jar", Resource: "databricks_dbfs_file", Match: "dbfs_path"},
+			{Path: "library.whl", Resource: "databricks_dbfs_file", Match: "dbfs_path"},
+			{Path: "library.egg", Resource: "databricks_dbfs_file", Match: "dbfs_path"},
+			{Path: "spark_python_task.python_file", Resource: "databricks_dbfs_file", Match: "dbfs_path"},
+			{Path: "spark_python_task.parameters", Resource: "databricks_dbfs_file", Match: "dbfs_path"},
+			{Path: "spark_jar_task.jar_uri", Resource: "databricks_dbfs_file", Match: "dbfs_path"},
 		},
 		Import: func(ic *importContext, r *resource) error {
 			var job compute.JobSettings
@@ -542,6 +543,7 @@ var resourcesMap map[string]importable = map[string]importable{
 					ic.Emit(&resource{
 						Resource: "databricks_secret_scope",
 						ID:       scope.Name,
+						Name:     scope.Name,
 					})
 					log.Printf("[INFO] Imported %d of %d secret scopes",
 						i, len(scopes))
@@ -815,7 +817,8 @@ var resourcesMap map[string]importable = map[string]importable{
 			if err != nil && !os.IsExist(err) {
 				return err
 			}
-			local, err := os.Create(fmt.Sprintf("%s/files/gis-%s", ic.Directory, path.Base(r.Name)))
+			fileName := path.Base(r.Name)
+			local, err := os.Create(fmt.Sprintf("%s/files/gis-%s", ic.Directory, fileName))
 			if err != nil {
 				return err
 			}
@@ -828,7 +831,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			if err != nil {
 				return err
 			}
-			relativeFile := fmt.Sprintf("${path.module}/files/gis-%s", path.Base(r.Name))
+			relativeFile := fmt.Sprintf("${path.module}/files/gis-%s", fileName)
 			b := body.AppendNewBlock("resource", []string{r.Resource, r.Name}).Body()
 			b.SetAttributeValue("name", cty.StringVal(gis.Name))
 			b.SetAttributeValue("enabled", cty.BoolVal(gis.Enabled))

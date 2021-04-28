@@ -3,6 +3,8 @@ package compute
 import (
 	"fmt"
 	"sort"
+
+	"github.com/databrickslabs/terraform-provider-databricks/common"
 )
 
 // AutoScale is a struct the describes auto scaling for clusters
@@ -11,8 +13,8 @@ type AutoScale struct {
 	MaxWorkers int32 `json:"max_workers,omitempty"`
 }
 
-// AwsAvailability is a type for describing AWS availability on cluster nodes
-type AwsAvailability string
+// Availability is a type for describing AWS availability on cluster nodes
+type Availability string
 
 const (
 	// AwsAvailabilitySpot is spot instance type for clusters
@@ -22,6 +24,17 @@ const (
 	// AwsAvailabilitySpotWithFallback is Spot instance type for clusters with option
 	// to fallback into on-demand if instance cannot be acquired
 	AwsAvailabilitySpotWithFallback = "SPOT_WITH_FALLBACK"
+)
+
+// https://docs.microsoft.com/en-us/azure/databricks/dev-tools/api/latest/clusters#--azureavailability
+const (
+	// AzureAvailabilitySpot is spot instance type for clusters
+	AzureAvailabilitySpot = "SPOT_AZURE"
+	// AzureAvailabilityOnDemand is OnDemand instance type for clusters
+	AzureAvailabilityOnDemand = "ON_DEMAND_AZURE"
+	// AzureAvailabilitySpotWithFallback is Spot instance type for clusters with option
+	// to fallback into on-demand if instance cannot be acquired
+	AzureAvailabilitySpotWithFallback = "SPOT_WITH_FALLBACK_AZURE"
 )
 
 // AzureDiskVolumeType is disk type on azure vms
@@ -112,14 +125,29 @@ type ZonesInfo struct {
 // AwsAttributes encapsulates the aws attributes for aws based clusters
 // https://docs.databricks.com/dev-tools/api/latest/clusters.html#clusterclusterattributes
 type AwsAttributes struct {
-	FirstOnDemand       int32           `json:"first_on_demand,omitempty" tf:"computed"`
-	Availability        AwsAvailability `json:"availability,omitempty" tf:"computed"`
-	ZoneID              string          `json:"zone_id,omitempty" tf:"computed"`
-	InstanceProfileArn  string          `json:"instance_profile_arn,omitempty"`
-	SpotBidPricePercent int32           `json:"spot_bid_price_percent,omitempty" tf:"computed"`
-	EbsVolumeType       EbsVolumeType   `json:"ebs_volume_type,omitempty" tf:"computed"`
-	EbsVolumeCount      int32           `json:"ebs_volume_count,omitempty" tf:"computed"`
-	EbsVolumeSize       int32           `json:"ebs_volume_size,omitempty" tf:"computed"`
+	FirstOnDemand       int32         `json:"first_on_demand,omitempty" tf:"computed"`
+	Availability        Availability  `json:"availability,omitempty" tf:"computed"`
+	ZoneID              string        `json:"zone_id,omitempty" tf:"computed"`
+	InstanceProfileArn  string        `json:"instance_profile_arn,omitempty"`
+	SpotBidPricePercent int32         `json:"spot_bid_price_percent,omitempty" tf:"computed"`
+	EbsVolumeType       EbsVolumeType `json:"ebs_volume_type,omitempty" tf:"computed"`
+	EbsVolumeCount      int32         `json:"ebs_volume_count,omitempty" tf:"computed"`
+	EbsVolumeSize       int32         `json:"ebs_volume_size,omitempty" tf:"computed"`
+}
+
+// AzureAttributes encapsulates the Azure attributes for Azure based clusters
+// https://docs.microsoft.com/en-us/azure/databricks/dev-tools/api/latest/clusters#clusterazureattributes
+type AzureAttributes struct {
+	FirstOnDemand   int32        `json:"first_on_demand,omitempty" tf:"computed"`
+	Availability    Availability `json:"availability,omitempty" tf:"computed"`
+	SpotBidMaxPrice float64      `json:"spot_bid_max_price,omitempty" tf:"computed"`
+}
+
+// GcpAttributes encapsultes GCP specific attributes
+// https://docs.gcp.databricks.com/dev-tools/api/latest/clusters.html#clustergcpattributes
+type GcpAttributes struct {
+	UsePreemptibleExecutors bool   `json:"use_preemptible_executors,omitempty" tf:"computed"`
+	GoogleServiceAccount    string `json:"google_service_account,omitempty" tf:"computed"`
 }
 
 // DbfsStorageInfo contains the destination string for DBFS
@@ -139,10 +167,22 @@ type S3StorageInfo struct {
 	CannedACL        string `json:"canned_acl,omitempty"`
 }
 
+// LocalFileInfo represents a local file on disk, e.g. in a customer's container.
+type LocalFileInfo struct {
+	Destination string `json:"destination,omitempty" tf:"optional"`
+}
+
 // StorageInfo contains the struct for either DBFS or S3 storage depending on which one is relevant.
 type StorageInfo struct {
 	Dbfs *DbfsStorageInfo `json:"dbfs,omitempty" tf:"group:storage"`
 	S3   *S3StorageInfo   `json:"s3,omitempty" tf:"group:storage"`
+}
+
+// InitScriptStorageInfo captures the allowed sources of init scripts.
+type InitScriptStorageInfo struct {
+	Dbfs *DbfsStorageInfo `json:"dbfs,omitempty" tf:"group:storage"`
+	S3   *S3StorageInfo   `json:"s3,omitempty" tf:"group:storage"`
+	File *LocalFileInfo   `json:"file,omitempty" tf:"optional"`
 }
 
 // SparkNodeAwsAttributes is the struct that determines if the node is a spot instance or not
@@ -233,21 +273,23 @@ type Cluster struct {
 	EnableElasticDisk         bool       `json:"enable_elastic_disk,omitempty" tf:"computed"`
 	EnableLocalDiskEncryption bool       `json:"enable_local_disk_encryption,omitempty"`
 
-	NodeTypeID             string         `json:"node_type_id,omitempty" tf:"group:node_type,computed"`
-	DriverNodeTypeID       string         `json:"driver_node_type_id,omitempty" tf:"conflicts:instance_pool_id,computed"`
-	InstancePoolID         string         `json:"instance_pool_id,omitempty" tf:"group:node_type"`
-	PolicyID               string         `json:"policy_id,omitempty"`
-	AwsAttributes          *AwsAttributes `json:"aws_attributes,omitempty" tf:"conflicts:instance_pool_id"`
-	AutoterminationMinutes int32          `json:"autotermination_minutes,omitempty"`
+	NodeTypeID             string           `json:"node_type_id,omitempty" tf:"group:node_type,computed"`
+	DriverNodeTypeID       string           `json:"driver_node_type_id,omitempty" tf:"conflicts:instance_pool_id,computed"`
+	InstancePoolID         string           `json:"instance_pool_id,omitempty" tf:"group:node_type"`
+	PolicyID               string           `json:"policy_id,omitempty"`
+	AwsAttributes          *AwsAttributes   `json:"aws_attributes,omitempty" tf:"conflicts:instance_pool_id"`
+	AzureAttributes        *AzureAttributes `json:"azure_attributes,omitempty" tf:"conflicts:instance_pool_id"`
+	GcpAttributes          *GcpAttributes   `json:"gcp_attributes,omitempty" tf:"conflicts:instance_pool_id"`
+	AutoterminationMinutes int32            `json:"autotermination_minutes,omitempty"`
 
 	SparkConf    map[string]string `json:"spark_conf,omitempty"`
 	SparkEnvVars map[string]string `json:"spark_env_vars,omitempty"`
 	CustomTags   map[string]string `json:"custom_tags,omitempty"`
 
-	SSHPublicKeys  []string      `json:"ssh_public_keys,omitempty" tf:"max_items:10"`
-	InitScripts    []StorageInfo `json:"init_scripts,omitempty" tf:"max_items:10"` // TODO: tf:alias
-	ClusterLogConf *StorageInfo  `json:"cluster_log_conf,omitempty"`
-	DockerImage    *DockerImage  `json:"docker_image,omitempty"`
+	SSHPublicKeys  []string                `json:"ssh_public_keys,omitempty" tf:"max_items:10"`
+	InitScripts    []InitScriptStorageInfo `json:"init_scripts,omitempty" tf:"max_items:10"` // TODO: tf:alias
+	ClusterLogConf *StorageInfo            `json:"cluster_log_conf,omitempty"`
+	DockerImage    *DockerImage            `json:"docker_image,omitempty"`
 
 	SingleUserName   string `json:"single_user_name,omitempty"`
 	IdempotencyToken string `json:"idempotency_token,omitempty"`
@@ -272,6 +314,8 @@ type ClusterInfo struct {
 	SparkVersion              string             `json:"spark_version"`
 	SparkConf                 map[string]string  `json:"spark_conf,omitempty"`
 	AwsAttributes             *AwsAttributes     `json:"aws_attributes,omitempty"`
+	AzureAttributes           *AzureAttributes   `json:"azure_attributes,omitempty"`
+	GcpAttributes             *GcpAttributes     `json:"gcp_attributes,omitempty"`
 	NodeTypeID                string             `json:"node_type_id,omitempty"`
 	DriverNodeTypeID          string             `json:"driver_node_type_id,omitempty"`
 	SSHPublicKeys             []string           `json:"ssh_public_keys,omitempty"`
@@ -285,7 +329,7 @@ type ClusterInfo struct {
 	InstancePoolID            string             `json:"instance_pool_id,omitempty"`
 	PolicyID                  string             `json:"policy_id,omitempty"`
 	SingleUserName            string             `json:"single_user_name,omitempty"`
-	ClusterSource             AwsAvailability    `json:"cluster_source,omitempty"`
+	ClusterSource             Availability       `json:"cluster_source,omitempty"`
 	DockerImage               *DockerImage       `json:"docker_image,omitempty"`
 	State                     ClusterState       `json:"state"`
 	StateMessage              string             `json:"state_message,omitempty"`
@@ -324,29 +368,25 @@ type ClusterPolicyCreate struct {
 	Definition string `json:"definition"`
 }
 
-// CommandResults is the out put when the command finishes in API 1.2
-type CommandResults struct {
-	ResultType   string      `json:"resultType,omitempty"`
-	Summary      string      `json:"summary,omitempty"`
-	Cause        string      `json:"cause,omitempty"`
-	Data         interface{} `json:"data,omitempty"`
-	Schema       interface{} `json:"schema,omitempty"`
-	Truncated    bool        `json:"truncated,omitempty"`
-	IsJSONSchema bool        `json:"isJsonSchema,omitempty"`
-}
-
 // Command is the struct that contains what the 1.2 api returns for the commands api
 type Command struct {
-	ID      string          `json:"id,omitempty"`
-	Status  string          `json:"status,omitempty"`
-	Results *CommandResults `json:"results,omitempty"`
+	ID      string                 `json:"id,omitempty"`
+	Status  string                 `json:"status,omitempty"`
+	Results *common.CommandResults `json:"results,omitempty"`
 }
 
 // InstancePoolAwsAttributes contains aws attributes for AWS Databricks deployments for instance pools
 type InstancePoolAwsAttributes struct {
-	Availability        AwsAvailability `json:"availability,omitempty"`
-	ZoneID              string          `json:"zone_id"`
-	SpotBidPricePercent int32           `json:"spot_bid_price_percent,omitempty"`
+	Availability        Availability `json:"availability,omitempty"`
+	ZoneID              string       `json:"zone_id,omitempty" tf:"computed"`
+	SpotBidPricePercent int32        `json:"spot_bid_price_percent,omitempty"`
+}
+
+// InstancePoolAzureAttributes contains aws attributes for Azure Databricks deployments for instance pools
+// https://docs.microsoft.com/en-us/azure/databricks/dev-tools/api/latest/instance-pools#clusterinstancepoolazureattributes
+type InstancePoolAzureAttributes struct {
+	Availability    Availability `json:"availability,omitempty"`
+	SpotBidMaxPrice float64      `json:"spot_bid_max_price,omitempty"`
 }
 
 // InstancePoolDiskType contains disk type information for each of the different cloud service providers
@@ -364,17 +404,18 @@ type InstancePoolDiskSpec struct {
 
 // InstancePool describes the instance pool object on Databricks
 type InstancePool struct {
-	InstancePoolID                     string                     `json:"instance_pool_id,omitempty" tf:"computed"`
-	InstancePoolName                   string                     `json:"instance_pool_name"`
-	MinIdleInstances                   int32                      `json:"min_idle_instances,omitempty"`
-	MaxCapacity                        int32                      `json:"max_capacity,omitempty"`
-	IdleInstanceAutoTerminationMinutes int32                      `json:"idle_instance_autotermination_minutes"`
-	AwsAttributes                      *InstancePoolAwsAttributes `json:"aws_attributes,omitempty"`
-	NodeTypeID                         string                     `json:"node_type_id"`
-	CustomTags                         map[string]string          `json:"custom_tags,omitempty"`
-	EnableElasticDisk                  bool                       `json:"enable_elastic_disk,omitempty"`
-	DiskSpec                           *InstancePoolDiskSpec      `json:"disk_spec,omitempty"`
-	PreloadedSparkVersions             []string                   `json:"preloaded_spark_versions,omitempty"`
+	InstancePoolID                     string                       `json:"instance_pool_id,omitempty" tf:"computed"`
+	InstancePoolName                   string                       `json:"instance_pool_name"`
+	MinIdleInstances                   int32                        `json:"min_idle_instances,omitempty"`
+	MaxCapacity                        int32                        `json:"max_capacity,omitempty"`
+	IdleInstanceAutoTerminationMinutes int32                        `json:"idle_instance_autotermination_minutes"`
+	AwsAttributes                      *InstancePoolAwsAttributes   `json:"aws_attributes,omitempty"`
+	AzureAttributes                    *InstancePoolAzureAttributes `json:"azure_attributes,omitempty"`
+	NodeTypeID                         string                       `json:"node_type_id"`
+	CustomTags                         map[string]string            `json:"custom_tags,omitempty"`
+	EnableElasticDisk                  bool                         `json:"enable_elastic_disk,omitempty"`
+	DiskSpec                           *InstancePoolDiskSpec        `json:"disk_spec,omitempty"`
+	PreloadedSparkVersions             []string                     `json:"preloaded_spark_versions,omitempty"`
 }
 
 // InstancePoolStats contains the stats on a given pool
@@ -387,20 +428,21 @@ type InstancePoolStats struct {
 
 // InstancePoolAndStats encapsulates a get response from the GET api for instance pools on Databricks
 type InstancePoolAndStats struct {
-	InstancePoolID                     string                     `json:"instance_pool_id,omitempty" tf:"computed"`
-	InstancePoolName                   string                     `json:"instance_pool_name"`
-	MinIdleInstances                   int32                      `json:"min_idle_instances,omitempty"`
-	MaxCapacity                        int32                      `json:"max_capacity,omitempty"`
-	AwsAttributes                      *InstancePoolAwsAttributes `json:"aws_attributes,omitempty"`
-	NodeTypeID                         string                     `json:"node_type_id"`
-	DefaultTags                        map[string]string          `json:"default_tags,omitempty" tf:"computed"`
-	CustomTags                         map[string]string          `json:"custom_tags,omitempty"`
-	IdleInstanceAutoTerminationMinutes int32                      `json:"idle_instance_autotermination_minutes"`
-	EnableElasticDisk                  bool                       `json:"enable_elastic_disk,omitempty"`
-	DiskSpec                           *InstancePoolDiskSpec      `json:"disk_spec,omitempty"`
-	PreloadedSparkVersions             []string                   `json:"preloaded_spark_versions,omitempty"`
-	State                              string                     `json:"state,omitempty"`
-	Stats                              *InstancePoolStats         `json:"stats,omitempty"`
+	InstancePoolID                     string                       `json:"instance_pool_id,omitempty" tf:"computed"`
+	InstancePoolName                   string                       `json:"instance_pool_name"`
+	MinIdleInstances                   int32                        `json:"min_idle_instances,omitempty"`
+	MaxCapacity                        int32                        `json:"max_capacity,omitempty"`
+	AwsAttributes                      *InstancePoolAwsAttributes   `json:"aws_attributes,omitempty"`
+	AzureAttributes                    *InstancePoolAzureAttributes `json:"azure_attributes,omitempty"`
+	NodeTypeID                         string                       `json:"node_type_id"`
+	DefaultTags                        map[string]string            `json:"default_tags,omitempty" tf:"computed"`
+	CustomTags                         map[string]string            `json:"custom_tags,omitempty"`
+	IdleInstanceAutoTerminationMinutes int32                        `json:"idle_instance_autotermination_minutes"`
+	EnableElasticDisk                  bool                         `json:"enable_elastic_disk,omitempty"`
+	DiskSpec                           *InstancePoolDiskSpec        `json:"disk_spec,omitempty"`
+	PreloadedSparkVersions             []string                     `json:"preloaded_spark_versions,omitempty"`
+	State                              string                       `json:"state,omitempty"`
+	Stats                              *InstancePoolStats           `json:"stats,omitempty"`
 }
 
 // InstancePoolList shows list of instance pools

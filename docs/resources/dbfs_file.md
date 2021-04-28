@@ -45,6 +45,7 @@ In addition to all arguments above, the following attributes are exported:
 
 * `id` - Same as `path`.
 * `file_size` - The file size of the file that is being tracked by this resource in bytes.
+* `dbfs_path` - Path, but with `dbfs:` prefix
 
 
 ## Import

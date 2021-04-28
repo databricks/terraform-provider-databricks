@@ -181,9 +181,15 @@ func (a ClustersAPI) waitForClusterStatus(clusterID string, desired ClusterState
 		}
 		if !clusterInfo.State.CanReach(desired) {
 			docLink := "https://docs.databricks.com/dev-tools/api/latest/clusters.html#clusterclusterstate"
+			details := ""
+			if clusterInfo.TerminationReason != nil {
+				details = fmt.Sprintf(", Termination info: code: %s, type: %s, parameters: %v",
+					clusterInfo.TerminationReason.Code, clusterInfo.TerminationReason.Type,
+					clusterInfo.TerminationReason.Parameters)
+			}
 			return resource.NonRetryableError(fmt.Errorf(
-				"%s is not able to transition from %s to %s: %s. Please see %s for more details",
-				clusterID, clusterInfo.State, desired, clusterInfo.StateMessage, docLink))
+				"%s is not able to transition from %s to %s: %s%s. Please see %s for more details",
+				clusterID, clusterInfo.State, desired, clusterInfo.StateMessage, details, docLink))
 		}
 		return resource.RetryableError(
 			fmt.Errorf("%s is %s, but has to be %s",
@@ -344,7 +350,7 @@ func (a ClustersAPI) GetOrCreateRunningCluster(name string, custom ...Cluster) (
 		NodeTypeID:             smallestNodeType,
 		AutoterminationMinutes: 10,
 	}
-	if !a.client.IsAzure() {
+	if a.client.IsAws() {
 		r.AwsAttributes = &AwsAttributes{
 			Availability: "SPOT",
 		}
@@ -365,16 +371,22 @@ type NodeTypeRequest struct {
 	Category    string `json:"category,omitempty"`
 }
 
+func defaultSmallestNodeType(a ClustersAPI) string {
+	if a.client.IsAzure() {
+		return "Standard_D3_v2"
+	} else if a.client.IsGcp() {
+		return "n1-standard-4"
+	}
+	return "i3.xlarge"
+}
+
 // GetSmallestNodeType returns smallest (or default) node type id given the criteria
 func (a ClustersAPI) GetSmallestNodeType(r NodeTypeRequest) string {
 	list, _ := a.ListNodeTypes()
 	// error is explicitly ingored here, because Azure returns
 	// apparently too big of a JSON for Go to parse
 	if len(list.NodeTypes) == 0 {
-		if a.client.IsAzure() {
-			return "Standard_D3_v2"
-		}
-		return "i3.xlarge"
+		return defaultSmallestNodeType(a)
 	}
 	list.Sort()
 	for _, nt := range list.NodeTypes {
@@ -401,10 +413,7 @@ func (a ClustersAPI) GetSmallestNodeType(r NodeTypeRequest) string {
 		}
 		return nt.NodeTypeID
 	}
-	if a.client.IsAzure() {
-		return "Standard_D3_v2"
-	}
-	return "i3.xlarge"
+	return defaultSmallestNodeType(a)
 }
 
 // ListSparkVersions returns smallest (or default) node type id given the criteria

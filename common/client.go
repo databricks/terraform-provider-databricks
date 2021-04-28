@@ -198,7 +198,7 @@ func (c *DatabricksClient) configureHTTPCLient() {
 	if c.RateLimitPerSecond == 0 {
 		c.RateLimitPerSecond = DefaultRateLimitPerSecond
 	}
-	c.rateLimiter = rate.NewLimiter(rate.Every(1*time.Second), c.RateLimitPerSecond)
+	c.rateLimiter = rate.NewLimiter(rate.Limit(c.RateLimitPerSecond), 1)
 	// Set up a retryable HTTP Client to handle cases where the service returns
 	// a transient error on initial creation
 	retryDelayDuration := 10 * time.Second
@@ -234,5 +234,25 @@ func (c *DatabricksClient) configureHTTPCLient() {
 
 // IsAzure returns true if client is configured for Azure Databricks - either by using AAD auth or with host+token combination
 func (c *DatabricksClient) IsAzure() bool {
-	return c.AzureAuth.resourceID() != "" || strings.Contains(c.Host, "azuredatabricks.net")
+	return c.AzureAuth.resourceID() != "" || strings.Contains(c.Host, ".azuredatabricks.net")
+}
+
+// IsAws returns true if client is configured for AWS
+func (c *DatabricksClient) IsAws() bool {
+	return !c.IsAzure() && !c.IsGcp()
+}
+
+// IsGcp returns true if client is configured for GCP
+func (c *DatabricksClient) IsGcp() bool {
+	return strings.Contains(c.Host, ".gcp.databricks.com")
+}
+
+// FormatURL creates URL from the client Host and additional strings
+func (c *DatabricksClient) FormatURL(strs ...string) string {
+	host := c.Host
+	if !strings.HasSuffix(host, "/") {
+		host += "/"
+	}
+	data := append([]string{host}, strs...)
+	return strings.Join(data, "")
 }

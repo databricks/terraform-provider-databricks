@@ -23,7 +23,7 @@ import (
 func DatabricksProvider() *schema.Provider {
 	p := &schema.Provider{
 		DataSourcesMap: map[string]*schema.Resource{
-			"databricks_aws_crossaccount_policy": access.DataAwsCrossAccountRolicy(),
+			"databricks_aws_crossaccount_policy": access.DataAwsCrossAccountPolicy(),
 			"databricks_aws_assume_role_policy":  access.DataAwsAssumeRolePolicy(),
 			"databricks_aws_bucket_policy":       access.DataAwsBucketPolicy(),
 			"databricks_current_user":            identity.DataSourceCurrentUser(),
@@ -37,16 +37,18 @@ func DatabricksProvider() *schema.Provider {
 			"databricks_zones":                   compute.DataSourceClusterZones(),
 		},
 		ResourcesMap: map[string]*schema.Resource{
-			"databricks_secret":         access.ResourceSecret(),
-			"databricks_secret_scope":   access.ResourceSecretScope(),
-			"databricks_secret_acl":     access.ResourceSecretACL(),
-			"databricks_permissions":    access.ResourcePermissions(),
-			"databricks_ip_access_list": access.ResourceIPAccessList(),
+			"databricks_secret":          access.ResourceSecret(),
+			"databricks_secret_scope":    access.ResourceSecretScope(),
+			"databricks_secret_acl":      access.ResourceSecretACL(),
+			"databricks_permissions":     access.ResourcePermissions(),
+			"databricks_sql_permissions": access.ResourceSqlPermissions(),
+			"databricks_ip_access_list":  access.ResourceIPAccessList(),
 
 			"databricks_cluster":        compute.ResourceCluster(),
 			"databricks_cluster_policy": compute.ResourceClusterPolicy(),
 			"databricks_instance_pool":  compute.ResourceInstancePool(),
 			"databricks_job":            compute.ResourceJob(),
+			"databricks_pipeline":       compute.ResourcePipeline(),
 
 			"databricks_group":                  identity.ResourceGroup(),
 			"databricks_group_instance_profile": identity.ResourceGroupInstanceProfile(),
@@ -72,7 +74,11 @@ func DatabricksProvider() *schema.Provider {
 			"databricks_azure_blob_mount":      storage.ResourceAzureBlobMount(),
 			"databricks_dbfs_file":             storage.ResourceDBFSFile(),
 
-			"databricks_sql_endpoint": sqlanalytics.ResourceSQLEndpoint(),
+			"databricks_sql_dashboard":     sqlanalytics.ResourceDashboard(),
+			"databricks_sql_endpoint":      sqlanalytics.ResourceSQLEndpoint(),
+			"databricks_sql_query":         sqlanalytics.ResourceQuery(),
+			"databricks_sql_visualization": sqlanalytics.ResourceVisualization(),
+			"databricks_sql_widget":        sqlanalytics.ResourceWidget(),
 
 			"databricks_global_init_script": workspace.ResourceGlobalInitScript(),
 			"databricks_notebook":           workspace.ResourceNotebook(),

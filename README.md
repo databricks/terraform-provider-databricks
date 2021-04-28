@@ -44,15 +44,20 @@
 | [databricks_secret](docs/resources/secret.md)
 | [databricks_secret_acl](docs/resources/secret_acl.md)
 | [databricks_secret_scope](docs/resources/secret_scope.md)
-| [databricks_sql_endpoint](docs/resources/sql_endpoint.md)
 | [databricks_spark_version](docs/data-sources/spark_version.md) data
+| [databricks_sql_dashboard](docs/resources/sql_dashboard.md)
+| [databricks_sql_endpoint](docs/resources/sql_endpoint.md)
+| [databricks_sql_permissions](docs/resources/sql_permissions.md)
+| [databricks_sql_query](docs/resources/sql_query.md)
+| [databricks_sql_visualization](docs/resources/sql_visualization.md)
+| [databricks_sql_widget](docs/resources/sql_widget.md)
 | [databricks_token](docs/resources/token.md)
 | [databricks_user](docs/resources/user.md)
 | [databricks_user_instance_profile](docs/resources/user_instance_profile.md)
 | [databricks_workspace_conf](docs/resources/workspace_conf.md)
 | [Contributing and Development Guidelines](CONTRIBUTING.md)
 
-[![build](https://github.com/databrickslabs/terraform-provider-databricks/workflows/build/badge.svg?branch=master)](https://github.com/databrickslabs/terraform-provider-databricks/actions?query=workflow%3Abuild+branch%3Amaster) [![codecov](https://codecov.io/gh/databrickslabs/terraform-provider-databricks/branch/master/graph/badge.svg)](https://codecov.io/gh/databrickslabs/terraform-provider-databricks) ![lines](https://img.shields.io/tokei/lines/github/databrickslabs/terraform-provider-databricks) ![downloads](https://img.shields.io/github/downloads/databrickslabs/terraform-provider-databricks/total.svg)
+[![build](https://github.com/databrickslabs/terraform-provider-databricks/workflows/build/badge.svg?branch=master)](https://github.com/databrickslabs/terraform-provider-databricks/actions?query=workflow%3Abuild+branch%3Amaster) [![codecov](https://codecov.io/gh/databrickslabs/terraform-provider-databricks/branch/master/graph/badge.svg)](https://codecov.io/gh/databrickslabs/terraform-provider-databricks) ![lines](https://img.shields.io/tokei/lines/github/databrickslabs/terraform-provider-databricks) [![downloads](https://img.shields.io/github/downloads/databrickslabs/terraform-provider-databricks/total.svg)](https://hanadigital.github.io/grev/?user=databrickslabs&repo=terraform-provider-databricks)
 
 If you use Terraform 0.13 or newer, please refer to instructions specified at [registry page](https://registry.terraform.io/providers/databrickslabs/databricks/latest). If you use older versions of Terraform or want to build it from sources, please refer to [contributing guidelines](CONTRIBUTING.md) page.
 
@@ -61,7 +66,7 @@ terraform {
   required_providers {
     databricks = {
       source = "databrickslabs/databricks"
-      version = "0.3.1"
+      version = "0.3.3"
     }
   }
 }

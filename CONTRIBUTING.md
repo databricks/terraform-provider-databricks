@@ -98,6 +98,187 @@ $ docker run -it -v $(pwd):/workpace -w /workpace databricks-terraform plan
 $ docker run -it -v $(pwd):/workpace -w /workpace databricks-terraform apply
 ```
 
+## Adding a new resource
+
+The general process for adding a new resource is:
+
+*Define the resource models.* The models for a resource are `struct`s defining the schemas of the objects in the Databricks REST API. Define structures used for multiple resources in a common `models.go` file; otherwise, you can define these directly in your resource file. An example model:
+```go
+type Field struct {
+ A string `json:"a,omitempty"`
+ AMoreComplicatedName int `json:"a_more_complicated_name,omitempty"`
+}
+
+type Example struct {
+ ID string `json:"id"`
+ TheField *Field `json:"the_field"`
+ AnotherField bool `json:"another_field"`
+ Filters []string `json:"filters" tf:"optional"`
+}
+```
+
+Some interesting points to note here:
+* Use the `json` tag to determine the serde properties of the field. The allowed tags are defined here: https://go.googlesource.com/go/+/go1.16/src/encoding/json/encode.go#158
+* Use the custom `tf` tag indicates properties to be annotated on the Terraform schema for this struct. Supported values are:
+  * `optional` for optional fields
+  * `computed` for computed fields
+  * `alias:X` to use a custom name in HCL for a field
+  * `default:X` to set a default value for a field
+  * `max_items:N` to set the maximum number of items for a multi-valued parameter
+  * `slice_set` to indicate that a the parameter should accept a set instead of a list
+* Do not use bare references to structs in the model; rather, use pointers to structs. Maps and slices are permitted, as well as the following primitive types: int, int32, int64, float64, bool, string.
+See `typeToSchema` in `common/reflect_resource.go` for the up-to-date list of all supported field types and values for the `tf` tag.
+
+*Define the Terraform schema.* This is made easy for you by the `StructToSchema` method in the `common` package, which converts your struct automatically to a Terraform schema, accepting also a function allowing the user to post-process the automatically generated schema, if needed.
+```go
+var exampleSchema = common.StructToSchema(Example{}, func(m map[string]*schema.Schema) map[string]*schema.Schema { return m })
+```
+
+*Define the API client for the resource.* You will need to implement create, read, update, and delete functions.
+```go
+type ExampleApi struct {
+	client *common.DatabricksClient
+	ctx    context.Context
+}
+
+func NewExampleApi(ctx context.Context, m interface{}) ExampleApi {
+	return ExampleApi{m.(*common.DatabricksClient), ctx}
+}
+
+func (a ExampleApi) Create(e Example) (string, error) {
+	var id string
+	err := a.client.Post(a.ctx, "/example", e, &id)
+	return id, err
+}
+
+func (a ExampleApi) Read(id string) (e Example, err error) {
+	err = a.client.Get(a.ctx, "/example/"+id, nil, &e)
+	return
+}
+
+func (a ExampleApi) Update(id string, e Example) error {
+	return a.client.Put(a.ctx, "/example/"+string(id), e)
+}
+
+func (a ExampleApi) Delete(id string) error {
+	return a.client.Delete(a.ctx, "/pipelines/"+id, nil)
+}
+```
+
+*Define the Resource object itself.* This is made quite simple by using the `toResource` function defined on the `Resource` type in the `common` package. A simple example:
+```go
+func ResourceExample() *schema.Resource {
+	return common.Resource{
+		Schema:        exampleSchema,
+		SchemaVersion: 2,
+		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			var e Example
+			err := common.DataToStructPointer(d, exampleSchema, &e)
+			if err != nil {
+				return err
+			}
+			id, err := NewExampleApi(ctx, c).Create(e)
+			if err != nil {
+				return err
+			}
+			d.SetId(string(id))
+			return nil
+		},
+		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			i, err := NewExampleApi(ctx, c).Read(d.Id())
+			if err != nil {
+				return err
+			}
+			return common.StructToData(i.Spec, exampleSchema, d)
+		},
+		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			var e Example
+			err := common.DataToStructPointer(d, exampleSchema, &e)
+			if err != nil {
+				return err
+			}
+			return NewExampleApi(ctx, c).Update(d.Id(), e)
+		},
+		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			return NewExampleApi(ctx, c).Delete(d.Id())
+		},
+	}.ToResource()
+}
+```
+
+*Add the resource to the top-level provider.* Simply add the resource to the provider definition in `provider/provider.go`.
+
+*Write unit tests for your resource.* To write your unit tests, you can make use of `ResourceFixture` and `HTTPFixture` structs defined in the `qa` package. This starts a fake HTTP server, asserting that your resource provdier generates the correct request for a given HCL template body for your resource. An example:
+
+```go
+func TestExampleResourceCreate(t *testing.T) {
+		d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:          "POST",
+				Resource:        "/api/2.0/example",
+				ExpectedRequest: Example{
+					TheField: Field{
+						A: "test",
+					},
+				},
+				Response: map[string]interface{} {
+					"id": "abcd",
+					"the_field": map[string]interface{} {
+						"a": "test",
+					},
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/example/abcd",
+				Response: map[string]interface{}{
+					"id":    "abcd",
+					"the_field": map[string]interface{} {
+						"a": "test",
+					},
+				},
+			},
+		},
+		Create:   true,
+		Resource: ResourceExample(),
+		HCL: `the_field {
+			a = "test"
+		}`,
+	}.Apply(t)
+	assert.NoError(t, err, err)
+	assert.Equal(t, "abcd", d.Id())
+}
+```
+
+*Write acceptance tests.* These are E2E tests which run terraform against the live cloud and Databricks APIs. For these, you can use the `Test` and `Step` structs defined in the `acceptance` package. An example:
+
+```go
+func TestPreviewAccPipelineResource_CreatePipeline(t *testing.T) {
+	acceptance.Test(t, []acceptance.Step{
+		{
+			Template: `
+			resource "databricks_example" "this" {
+				the_field {
+					a = "test"
+					a_more_complicated_name = 3
+				}
+				another_field = true
+				filters = [
+					"a",
+					"b"
+				]
+			}
+			`,
+		},
+	})
+}
+```
+
+## Debugging
+
+**TF_LOG=DEBUG terraform apply** allows you to see the internal logs from `terraform apply`.
+
 ## Testing
 
 * [Integration tests](scripts/README.md) should be run at a client level against both azure and aws to maintain sdk parity against both apis.

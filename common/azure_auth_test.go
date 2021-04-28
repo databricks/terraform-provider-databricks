@@ -83,11 +83,7 @@ func TestAddSpManagementTokenVisitor_RefreshedError(t *testing.T) {
 
 func TestGetClientSecretAuthorizer(t *testing.T) {
 	aa := AzureAuth{}
-	auth, err := aa.getClientSecretAuthorizer("x")
-	require.NotNil(t, auth)
-	require.NoError(t, err)
-
-	auth, err = aa.getClientSecretAuthorizer(AzureDatabricksResourceID)
+	auth, err := aa.getClientSecretAuthorizer(AzureDatabricksResourceID)
 	require.Nil(t, auth)
 	require.EqualError(t, err, "parameter 'clientID' cannot be empty")
 
@@ -132,7 +128,7 @@ func TestAcquirePAT_CornerCases(t *testing.T) {
 	assert.EqualError(t, err, "DatabricksClient is not configured")
 
 	aa.databricksClient = &DatabricksClient{}
-	aa.temporaryPat = &TokenResponse{
+	aa.temporaryPat = &tokenResponse{
 		TokenValue: "...",
 	}
 	auth, rre := aa.acquirePAT(context.Background(), func(resource string) (autorest.Authorizer, error) {

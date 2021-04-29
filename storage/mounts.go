@@ -35,6 +35,7 @@ func (mp MountPoint) Source() (string, error) {
 		dbutils.fs.refreshMounts()
 		for mount in dbutils.fs.mounts():
 			if mount.mountPoint == "/mnt/%s":
+				dbutils.fs.ls(mount.mountPoint)
 				dbutils.notebook.exit(mount.source)
 		raise Exception("Mount not found")
 	`, mp.name))

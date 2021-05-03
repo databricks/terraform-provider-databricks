@@ -71,13 +71,15 @@ func ResourceInstancePool() *schema.Resource {
 		s["aws_attributes"].ForceNew = true
 		s["node_type_id"].ForceNew = true
 		s["custom_tags"].ForceNew = true
+		s["preloaded_spark_versions"].ForceNew = true
+		s["azure_attributes"].ForceNew = true
+		s["disk_spec"].ForceNew = true
 		s["enable_elastic_disk"].ForceNew = true
 		s["enable_elastic_disk"].Default = true
 		s["aws_attributes"].ConflictsWith = []string{"azure_attributes"}
 		s["azure_attributes"].ConflictsWith = []string{"aws_attributes"}
 		s["aws_attributes"].DiffSuppressFunc = makeEmptyBlockSuppressFunc("aws_attributes.#")
 		s["azure_attributes"].DiffSuppressFunc = makeEmptyBlockSuppressFunc("azure_attributes.#")
-		// TODO: check if it's really force new...
 		if v, err := common.SchemaPath(s, "aws_attributes", "availability"); err == nil {
 			v.ForceNew = true
 			v.Default = AwsAvailabilitySpot

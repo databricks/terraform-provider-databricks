@@ -105,7 +105,7 @@ func ResourceGroup() *schema.Resource {
 					entitlementsRemoveList = append(entitlementsRemoveList, string(AllowInstancePoolCreateEntitlement))
 				}
 			}
-			// If allow_instance_pool_create has changed
+			// If allow_workspace_access has changed
 			if d.HasChange("allow_workspace_access") {
 				allowClusterCreate := d.Get("allow_workspace_access").(bool)
 				// Changed to true

@@ -30,6 +30,7 @@ type UserEntity struct {
 	AllowClusterCreate      bool   `json:"allow_cluster_create,omitempty"`
 	AllowSQLAnalyticsAccess bool   `json:"allow_sql_analytics_access,omitempty"`
 	AllowInstancePoolCreate bool   `json:"allow_instance_pool_create,omitempty"`
+	AllowWorkspaceAccess    bool   `json:"allow_workspace_access,omitempty"`
 }
 
 func (u UserEntity) toRequest() ScimUser {
@@ -47,6 +48,11 @@ func (u UserEntity) toRequest() ScimUser {
 	if u.AllowInstancePoolCreate {
 		entitlements = append(entitlements, entitlementsListItem{
 			Value: Entitlement("allow-instance-pool-create"),
+		})
+	}
+	if u.AllowWorkspaceAccess {
+		entitlements = append(entitlements, entitlementsListItem{
+			Value: Entitlement("workspace-access"),
 		})
 	}
 	return ScimUser{
@@ -94,6 +100,10 @@ func (a UsersAPI) Read(userID string) (ru UserEntity, err error) {
 			ru.AllowClusterCreate = true
 		case AllowInstancePoolCreateEntitlement:
 			ru.AllowInstancePoolCreate = true
+		case AllowSQLAnalyticsAccessEntitlement:
+			ru.AllowSQLAnalyticsAccess = true
+		case AllowWorkspaceAccessEntitlement:
+			ru.AllowWorkspaceAccess = true
 		}
 	}
 	return

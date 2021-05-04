@@ -130,6 +130,7 @@ const (
 	AllowClusterCreateEntitlement      Entitlement = "allow-cluster-create"
 	AllowInstancePoolCreateEntitlement Entitlement = "allow-instance-pool-create"
 	AllowSQLAnalyticsAccessEntitlement Entitlement = "sql-analytics-access"
+	AllowWorkspaceAccessEntitlement    Entitlement = "workspace-access"
 )
 
 // GroupsListItem contains information about group item

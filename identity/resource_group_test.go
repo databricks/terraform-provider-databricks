@@ -30,6 +30,9 @@ func TestResourceGroupCreate(t *testing.T) {
 						{
 							AllowInstancePoolCreateEntitlement,
 						},
+						{
+							AllowWorkspaceAccessEntitlement,
+						},
 					},
 				},
 				Response: ScimGroup{
@@ -53,6 +56,9 @@ func TestResourceGroupCreate(t *testing.T) {
 						{
 							AllowInstancePoolCreateEntitlement,
 						},
+						{
+							AllowWorkspaceAccessEntitlement,
+						},
 					},
 				},
 			},
@@ -63,6 +69,7 @@ func TestResourceGroupCreate(t *testing.T) {
 		allow_instance_pool_create = true
 		allow_cluster_create = true
 		allow_sql_analytics_access = true
+		allow_workspace_access = true
 		`,
 		Create: true,
 	}.Apply(t)
@@ -72,6 +79,7 @@ func TestResourceGroupCreate(t *testing.T) {
 	assert.Equal(t, true, d.Get("allow_cluster_create"))
 	assert.Equal(t, true, d.Get("allow_instance_pool_create"))
 	assert.Equal(t, true, d.Get("allow_sql_analytics_access"))
+	assert.Equal(t, true, d.Get("allow_workspace_access"))
 }
 
 func TestResourceGroupCreate_Error(t *testing.T) {
@@ -117,6 +125,10 @@ func TestResourceGroupRead(t *testing.T) {
 						{
 							AllowInstancePoolCreateEntitlement,
 						},
+
+						{
+							AllowWorkspaceAccessEntitlement,
+						},
 					},
 				},
 			},
@@ -130,6 +142,7 @@ func TestResourceGroupRead(t *testing.T) {
 	assert.Equal(t, true, d.Get("allow_cluster_create"))
 	assert.Equal(t, true, d.Get("allow_instance_pool_create"))
 	assert.Equal(t, true, d.Get("allow_sql_analytics_access"))
+	assert.Equal(t, true, d.Get("allow_workspace_access"))
 	assert.Equal(t, "Data Scientists", d.Get("display_name"))
 }
 
@@ -155,6 +168,7 @@ func TestResourceGroupRead_NoEntitlements(t *testing.T) {
 	assert.Equal(t, false, d.Get("allow_cluster_create"))
 	assert.Equal(t, false, d.Get("allow_instance_pool_create"))
 	assert.Equal(t, false, d.Get("allow_sql_analytics_access"))
+	assert.Equal(t, false, d.Get("allow_workspace_access"))
 	assert.Equal(t, "Data Scientists", d.Get("display_name"))
 }
 
@@ -221,6 +235,9 @@ func TestResourceGroupUpdate_AddPerms(t *testing.T) {
 								{
 									Value: "allow-instance-pool-create",
 								},
+								{
+									Value: "workspace-access",
+								},
 							},
 						},
 					},
@@ -243,6 +260,9 @@ func TestResourceGroupUpdate_AddPerms(t *testing.T) {
 						{
 							AllowInstancePoolCreateEntitlement,
 						},
+						{
+							AllowWorkspaceAccessEntitlement,
+						},
 					},
 				},
 			},
@@ -253,12 +273,14 @@ func TestResourceGroupUpdate_AddPerms(t *testing.T) {
 			"allow_instance_pool_create": "false",
 			"allow_cluster_create":       "false",
 			"allow_sql_analytics_access": "false",
+			"allow_workspace_access":     "false",
 		},
 		HCL: `
 		display_name = "Data Ninjas"
 		allow_instance_pool_create = true
 		allow_cluster_create = true
 		allow_sql_analytics_access = true
+		allow_workspace_access = true
 		`,
 		Update: true,
 		ID:     "abc",
@@ -269,6 +291,7 @@ func TestResourceGroupUpdate_AddPerms(t *testing.T) {
 	assert.Equal(t, true, d.Get("allow_cluster_create"))
 	assert.Equal(t, true, d.Get("allow_instance_pool_create"))
 	assert.Equal(t, true, d.Get("allow_sql_analytics_access"))
+	assert.Equal(t, true, d.Get("allow_workspace_access"))
 }
 
 func TestResourceGroupUpdate_RemovePerms(t *testing.T) {
@@ -292,6 +315,10 @@ func TestResourceGroupUpdate_RemovePerms(t *testing.T) {
 							Op:   "remove",
 							Path: "entitlements[value eq \"allow-instance-pool-create\"]",
 						},
+						{
+							Op:   "remove",
+							Path: "entitlements[value eq \"workspace-access\"]",
+						},
 					},
 				},
 			},
@@ -314,12 +341,14 @@ func TestResourceGroupUpdate_RemovePerms(t *testing.T) {
 			"allow_instance_pool_create": "true",
 			"allow_cluster_create":       "true",
 			"allow_sql_analytics_access": "true",
+			"allow_workspace_access":     "true",
 		},
 		HCL: `
 		display_name = "Data Ninjas"
 		allow_instance_pool_create = false
 		allow_cluster_create = false
 		allow_sql_analytics_access = false
+		allow_workspace_access = false
 		`,
 	}.Apply(t)
 	require.NoError(t, err, err)
@@ -328,6 +357,7 @@ func TestResourceGroupUpdate_RemovePerms(t *testing.T) {
 	assert.Equal(t, false, d.Get("allow_cluster_create"))
 	assert.Equal(t, false, d.Get("allow_instance_pool_create"))
 	assert.Equal(t, false, d.Get("allow_sql_analytics_access"))
+	assert.Equal(t, false, d.Get("allow_workspace_access"))
 }
 
 func TestResourceGroupUpdate_Error(t *testing.T) {

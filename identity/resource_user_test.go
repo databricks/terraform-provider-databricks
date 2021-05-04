@@ -97,6 +97,9 @@ func TestResourceUserCreate(t *testing.T) {
 						{
 							Value: "allow-cluster-create",
 						},
+						{
+							Value: "workspace-access",
+						},
 					},
 					UserName: "me@example.com",
 					Schemas:  []URN{UserSchema},
@@ -116,6 +119,9 @@ func TestResourceUserCreate(t *testing.T) {
 					Entitlements: []entitlementsListItem{
 						{
 							Value: AllowClusterCreateEntitlement,
+						},
+						{
+							Value: AllowWorkspaceAccessEntitlement,
 						},
 					},
 					Groups: []GroupsListItem{
@@ -137,6 +143,7 @@ func TestResourceUserCreate(t *testing.T) {
 		user_name    = "me@example.com"
 		display_name = "Example user"
 		allow_cluster_create = true
+		allow_workspace_access = true
 		`,
 	}.Apply(t)
 	require.NoError(t, err, err)
@@ -144,6 +151,7 @@ func TestResourceUserCreate(t *testing.T) {
 	assert.Equal(t, "me@example.com", d.Get("user_name"))
 	assert.Equal(t, "Example user", d.Get("display_name"))
 	assert.Equal(t, true, d.Get("allow_cluster_create"))
+	assert.Equal(t, true, d.Get("allow_workspace_access"))
 }
 
 func TestResourceUserCreate_Error(t *testing.T) {
@@ -175,6 +183,9 @@ func TestResourceUserUpdate(t *testing.T) {
 		Entitlements: []entitlementsListItem{
 			{
 				Value: AllowInstancePoolCreateEntitlement,
+			},
+			{
+				Value: AllowWorkspaceAccessEntitlement,
 			},
 		},
 		Groups: []GroupsListItem{
@@ -250,6 +261,7 @@ func TestResourceUserUpdate(t *testing.T) {
 		display_name = "Changed Name"
 		allow_cluster_create = false
 		allow_instance_pool_create = true
+		allow_workspace_access = true
 		`,
 	}.Apply(t)
 	require.NoError(t, err, err)
@@ -258,6 +270,7 @@ func TestResourceUserUpdate(t *testing.T) {
 	assert.Equal(t, "Changed Name", d.Get("display_name"))
 	assert.Equal(t, false, d.Get("allow_cluster_create"))
 	assert.Equal(t, true, d.Get("allow_instance_pool_create"))
+	assert.Equal(t, true, d.Get("allow_workspace_access"))
 }
 
 func TestResourceUserUpdate_Error(t *testing.T) {

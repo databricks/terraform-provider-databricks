@@ -33,6 +33,9 @@ func ResourceGroup() *schema.Resource {
 		if err = d.Set("allow_instance_pool_create", isGroupInstancePoolCreateEntitled(&group)); err != nil {
 			return diag.FromErr(err)
 		}
+		if err = d.Set("allow_workspace_access", isGroupWorkspaceAccessEntitled(&group)); err != nil {
+			return diag.FromErr(err)
+		}
 		d.Set("url", m.(*common.DatabricksClient).FormatURL("#setting/accounts/groups/", d.Id()))
 		return nil
 	}
@@ -42,6 +45,7 @@ func ResourceGroup() *schema.Resource {
 			allowClusterCreate := d.Get("allow_cluster_create").(bool)
 			allowInstancePoolCreate := d.Get("allow_instance_pool_create").(bool)
 			allowSQLAnalyticsAccess := d.Get("allow_sql_analytics_access").(bool)
+			allowWorkspaceAccess := d.Get("allow_workspace_access").(bool)
 
 			// If entitlement flags are set to be true
 			var entitlementsList []string
@@ -53,6 +57,9 @@ func ResourceGroup() *schema.Resource {
 			}
 			if allowInstancePoolCreate {
 				entitlementsList = append(entitlementsList, string(AllowInstancePoolCreateEntitlement))
+			}
+			if allowWorkspaceAccess {
+				entitlementsList = append(entitlementsList, string(AllowWorkspaceAccessEntitlement))
 			}
 			group, err := NewGroupsAPI(ctx, m).Create(groupName, nil, nil, entitlementsList)
 			if err != nil {
@@ -98,6 +105,17 @@ func ResourceGroup() *schema.Resource {
 					entitlementsRemoveList = append(entitlementsRemoveList, string(AllowInstancePoolCreateEntitlement))
 				}
 			}
+			// If allow_instance_pool_create has changed
+			if d.HasChange("allow_workspace_access") {
+				allowClusterCreate := d.Get("allow_workspace_access").(bool)
+				// Changed to true
+				if allowClusterCreate {
+					entitlementsAddList = append(entitlementsAddList, string(AllowWorkspaceAccessEntitlement))
+				} else {
+					// Changed to false
+					entitlementsRemoveList = append(entitlementsRemoveList, string(AllowWorkspaceAccessEntitlement))
+				}
+			}
 			// TODO: not currently possible to update group display name
 			if entitlementsAddList != nil || entitlementsRemoveList != nil {
 				if err := NewGroupsAPI(ctx, m).Patch(d.Id(),
@@ -136,6 +154,10 @@ func ResourceGroup() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
+			"allow_workspace_access": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
 			"url": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -165,6 +187,15 @@ func isGroupSQLAnalyticsAccessEntitled(group *ScimGroup) bool {
 func isGroupInstancePoolCreateEntitled(group *ScimGroup) bool {
 	for _, entitlement := range group.Entitlements {
 		if entitlement.Value == AllowInstancePoolCreateEntitlement {
+			return true
+		}
+	}
+	return false
+}
+
+func isGroupWorkspaceAccessEntitled(group *ScimGroup) bool {
+	for _, entitlement := range group.Entitlements {
+		if entitlement.Value == AllowWorkspaceAccessEntitlement {
 			return true
 		}
 	}

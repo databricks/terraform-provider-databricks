@@ -20,6 +20,20 @@ func TestResourceUserRead(t *testing.T) {
 					ID:          "abc",
 					DisplayName: "Example user",
 					UserName:    "me@example.com",
+					Entitlements: []entitlementsListItem{
+						{
+							Value: AllowWorkspaceAccessEntitlement,
+						},
+						{
+							Value: AllowSQLAnalyticsAccessEntitlement,
+						},
+						{
+							Value: AllowInstancePoolCreateEntitlement,
+						},
+						{
+							Value: AllowClusterCreateEntitlement,
+						},
+					},
 					Groups: []GroupsListItem{
 						{
 							Display: "admins",
@@ -42,7 +56,10 @@ func TestResourceUserRead(t *testing.T) {
 	assert.Equal(t, "abc", d.Id(), "Id should not be empty")
 	assert.Equal(t, "me@example.com", d.Get("user_name"))
 	assert.Equal(t, "Example user", d.Get("display_name"))
-	assert.Equal(t, false, d.Get("allow_cluster_create"))
+	assert.Equal(t, true, d.Get("allow_cluster_create"))
+	assert.Equal(t, true, d.Get("allow_workspace_access"))
+	assert.Equal(t, true, d.Get("allow_sql_analytics_access"))
+	assert.Equal(t, true, d.Get("allow_instance_pool_create"))
 }
 
 func TestResourceUserRead_NotFound(t *testing.T) {
@@ -98,6 +115,9 @@ func TestResourceUserCreate(t *testing.T) {
 							Value: "allow-cluster-create",
 						},
 						{
+							Value: "sql-analytics-access",
+						},
+						{
 							Value: "workspace-access",
 						},
 					},
@@ -119,6 +139,9 @@ func TestResourceUserCreate(t *testing.T) {
 					Entitlements: []entitlementsListItem{
 						{
 							Value: AllowClusterCreateEntitlement,
+						},
+						{
+							Value: AllowSQLAnalyticsAccessEntitlement,
 						},
 						{
 							Value: AllowWorkspaceAccessEntitlement,
@@ -144,6 +167,7 @@ func TestResourceUserCreate(t *testing.T) {
 		display_name = "Example user"
 		allow_cluster_create = true
 		allow_workspace_access = true
+		allow_sql_analytics_access = true
 		`,
 	}.Apply(t)
 	require.NoError(t, err, err)
@@ -152,6 +176,7 @@ func TestResourceUserCreate(t *testing.T) {
 	assert.Equal(t, "Example user", d.Get("display_name"))
 	assert.Equal(t, true, d.Get("allow_cluster_create"))
 	assert.Equal(t, true, d.Get("allow_workspace_access"))
+	assert.Equal(t, true, d.Get("allow_sql_analytics_access"))
 }
 
 func TestResourceUserCreate_Error(t *testing.T) {

@@ -125,7 +125,6 @@ func TestResourceGroupRead(t *testing.T) {
 						{
 							AllowInstancePoolCreateEntitlement,
 						},
-
 						{
 							AllowWorkspaceAccessEntitlement,
 						},

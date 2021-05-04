@@ -1,5 +1,9 @@
 # Version changelog
 
+## 0.3.4
+
+* Added entitlement for `allow_workspace_access` resources: `databricks_group` and `databricks_user` [#633](https://github.com/databrickslabs/terraform-provider-databricks/pull/633)
+
 ## 0.3.3
 
 * Added resources for SQL Analytics queries and dashboards: `databricks_sql_query`, `databricks_sql_visualization`, `databricks_sql_dashboard`, `databricks_sql_widget` ([#553](https://github.com/databrickslabs/terraform-provider-databricks/pull/553))

@@ -3,6 +3,7 @@ package identity
 import (
 	"context"
 	"log"
+	"sort"
 
 	"github.com/databrickslabs/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -11,6 +12,14 @@ import (
 
 // ResourceGroup manages user groups
 func ResourceGroup() *schema.Resource {
+	entitlementsMap := map[string]Entitlement{
+		"allow_cluster_create":       AllowClusterCreateEntitlement,
+		"allow_instance_pool_create": AllowInstancePoolCreateEntitlement,
+		"allow_sql_analytics_access": AllowSQLAnalyticsAccessEntitlement,
+		"allow_workspace_access":     AllowWorkspaceAccessEntitlement,
+	}
+	//To make sure the order of fields are in consistent sorted order and make the testing accurate
+	entitlementFields := getSortedKeys(entitlementsMap)
 	readContext := func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 		group, err := NewGroupsAPI(ctx, m).Read(d.Id())
 		if err != nil {
@@ -24,42 +33,23 @@ func ResourceGroup() *schema.Resource {
 		if err = d.Set("display_name", group.DisplayName); err != nil {
 			return diag.FromErr(err)
 		}
-		if err = d.Set("allow_cluster_create", isGroupClusterCreateEntitled(&group)); err != nil {
-			return diag.FromErr(err)
-		}
-		if err = d.Set("allow_sql_analytics_access", isGroupSQLAnalyticsAccessEntitled(&group)); err != nil {
-			return diag.FromErr(err)
-		}
-		if err = d.Set("allow_instance_pool_create", isGroupInstancePoolCreateEntitled(&group)); err != nil {
-			return diag.FromErr(err)
-		}
-		if err = d.Set("allow_workspace_access", isGroupWorkspaceAccessEntitled(&group)); err != nil {
-			return diag.FromErr(err)
+		for _, entitlementField := range entitlementFields {
+			if err = d.Set(entitlementField, groupEntitlementExists(&group, entitlementsMap[entitlementField])); err != nil {
+				return diag.FromErr(err)
+			}
 		}
 		d.Set("url", m.(*common.DatabricksClient).FormatURL("#setting/accounts/groups/", d.Id()))
 		return nil
 	}
-	return &schema.Resource{
+	groupResource := &schema.Resource{
 		CreateContext: func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 			groupName := d.Get("display_name").(string)
-			allowClusterCreate := d.Get("allow_cluster_create").(bool)
-			allowInstancePoolCreate := d.Get("allow_instance_pool_create").(bool)
-			allowSQLAnalyticsAccess := d.Get("allow_sql_analytics_access").(bool)
-			allowWorkspaceAccess := d.Get("allow_workspace_access").(bool)
-
-			// If entitlement flags are set to be true
 			var entitlementsList []string
-			if allowClusterCreate {
-				entitlementsList = append(entitlementsList, string(AllowClusterCreateEntitlement))
-			}
-			if allowSQLAnalyticsAccess {
-				entitlementsList = append(entitlementsList, string(AllowSQLAnalyticsAccessEntitlement))
-			}
-			if allowInstancePoolCreate {
-				entitlementsList = append(entitlementsList, string(AllowInstancePoolCreateEntitlement))
-			}
-			if allowWorkspaceAccess {
-				entitlementsList = append(entitlementsList, string(AllowWorkspaceAccessEntitlement))
+			for _, entitlementField := range entitlementFields {
+				fieldValue := d.Get(entitlementField).(bool)
+				if fieldValue {
+					entitlementsList = append(entitlementsList, string(entitlementsMap[entitlementField]))
+				}
 			}
 			group, err := NewGroupsAPI(ctx, m).Create(groupName, nil, nil, entitlementsList)
 			if err != nil {
@@ -72,48 +62,17 @@ func ResourceGroup() *schema.Resource {
 			// Handle entitlements update
 			var entitlementsAddList []string
 			var entitlementsRemoveList []string
-			// If allow_cluster_create has changed
-			if d.HasChange("allow_cluster_create") {
-				allowClusterCreate := d.Get("allow_cluster_create").(bool)
-				// Changed to true
-				if allowClusterCreate {
-					entitlementsAddList = append(entitlementsAddList, string(AllowClusterCreateEntitlement))
-				} else {
-					// Changed to false
-					entitlementsRemoveList = append(entitlementsRemoveList, string(AllowClusterCreateEntitlement))
-				}
-			}
-			// If allow_sql_analytics_access has changed
-			if d.HasChange("allow_sql_analytics_access") {
-				allowSQLAnalyticsAccess := d.Get("allow_sql_analytics_access").(bool)
-				// Changed to true
-				if allowSQLAnalyticsAccess {
-					entitlementsAddList = append(entitlementsAddList, string(AllowSQLAnalyticsAccessEntitlement))
-				} else {
-					// Changed to false
-					entitlementsRemoveList = append(entitlementsRemoveList, string(AllowSQLAnalyticsAccessEntitlement))
-				}
-			}
-			// If allow_instance_pool_create has changed
-			if d.HasChange("allow_instance_pool_create") {
-				allowClusterCreate := d.Get("allow_instance_pool_create").(bool)
-				// Changed to true
-				if allowClusterCreate {
-					entitlementsAddList = append(entitlementsAddList, string(AllowInstancePoolCreateEntitlement))
-				} else {
-					// Changed to false
-					entitlementsRemoveList = append(entitlementsRemoveList, string(AllowInstancePoolCreateEntitlement))
-				}
-			}
-			// If allow_workspace_access has changed
-			if d.HasChange("allow_workspace_access") {
-				allowClusterCreate := d.Get("allow_workspace_access").(bool)
-				// Changed to true
-				if allowClusterCreate {
-					entitlementsAddList = append(entitlementsAddList, string(AllowWorkspaceAccessEntitlement))
-				} else {
-					// Changed to false
-					entitlementsRemoveList = append(entitlementsRemoveList, string(AllowWorkspaceAccessEntitlement))
+			for _, entitlementField := range entitlementFields {
+				// If entitlement field has changed
+				if d.HasChange(entitlementField) {
+					fieldValue := d.Get(entitlementField).(bool)
+					// Changed to true
+					if fieldValue {
+						entitlementsAddList = append(entitlementsAddList, string(entitlementsMap[entitlementField]))
+					} else {
+						// Changed to false
+						entitlementsRemoveList = append(entitlementsRemoveList, string(entitlementsMap[entitlementField]))
+					}
 				}
 			}
 			// TODO: not currently possible to update group display name
@@ -142,62 +101,38 @@ func ResourceGroup() *schema.Resource {
 				ForceNew: true,
 				Required: true,
 			},
-			"allow_cluster_create": {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
-			"allow_sql_analytics_access": {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
-			"allow_instance_pool_create": {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
-			"allow_workspace_access": {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
 			"url": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 		},
 	}
+	//Add entitlements to the schema
+	for _, entitlementField := range entitlementFields {
+		groupResource.Schema[entitlementField] = &schema.Schema{
+			Type:     schema.TypeBool,
+			Optional: true,
+		}
+	}
+	return groupResource
 }
 
-func isGroupClusterCreateEntitled(group *ScimGroup) bool {
-	for _, entitlement := range group.Entitlements {
-		if entitlement.Value == AllowClusterCreateEntitlement {
+func groupEntitlementExists(group *ScimGroup, entitlement Entitlement) bool {
+	for _, groupEntitlement := range group.Entitlements {
+		if groupEntitlement.Value == entitlement {
 			return true
 		}
 	}
 	return false
 }
 
-func isGroupSQLAnalyticsAccessEntitled(group *ScimGroup) bool {
-	for _, entitlement := range group.Entitlements {
-		if entitlement.Value == AllowSQLAnalyticsAccessEntitlement {
-			return true
-		}
+func getSortedKeys(m map[string]Entitlement) []string {
+	keys := make([]string, len(m))
+	i := 0
+	for k := range m {
+		keys[i] = k
+		i++
 	}
-	return false
-}
-
-func isGroupInstancePoolCreateEntitled(group *ScimGroup) bool {
-	for _, entitlement := range group.Entitlements {
-		if entitlement.Value == AllowInstancePoolCreateEntitlement {
-			return true
-		}
-	}
-	return false
-}
-
-func isGroupWorkspaceAccessEntitled(group *ScimGroup) bool {
-	for _, entitlement := range group.Entitlements {
-		if entitlement.Value == AllowWorkspaceAccessEntitlement {
-			return true
-		}
-	}
-	return false
+	sort.Strings(keys)
+	return keys
 }

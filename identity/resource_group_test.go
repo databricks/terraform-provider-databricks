@@ -25,10 +25,10 @@ func TestResourceGroupCreate(t *testing.T) {
 							AllowClusterCreateEntitlement,
 						},
 						{
-							AllowSQLAnalyticsAccessEntitlement,
+							AllowInstancePoolCreateEntitlement,
 						},
 						{
-							AllowInstancePoolCreateEntitlement,
+							AllowSQLAnalyticsAccessEntitlement,
 						},
 						{
 							AllowWorkspaceAccessEntitlement,
@@ -51,10 +51,10 @@ func TestResourceGroupCreate(t *testing.T) {
 							AllowClusterCreateEntitlement,
 						},
 						{
-							AllowSQLAnalyticsAccessEntitlement,
+							AllowInstancePoolCreateEntitlement,
 						},
 						{
-							AllowInstancePoolCreateEntitlement,
+							AllowSQLAnalyticsAccessEntitlement,
 						},
 						{
 							AllowWorkspaceAccessEntitlement,
@@ -229,10 +229,10 @@ func TestResourceGroupUpdate_AddPerms(t *testing.T) {
 									Value: "allow-cluster-create",
 								},
 								{
-									Value: "sql-analytics-access",
+									Value: "allow-instance-pool-create",
 								},
 								{
-									Value: "allow-instance-pool-create",
+									Value: "sql-analytics-access",
 								},
 								{
 									Value: "workspace-access",
@@ -308,11 +308,11 @@ func TestResourceGroupUpdate_RemovePerms(t *testing.T) {
 						},
 						{
 							Op:   "remove",
-							Path: "entitlements[value eq \"sql-analytics-access\"]",
+							Path: "entitlements[value eq \"allow-instance-pool-create\"]",
 						},
 						{
 							Op:   "remove",
-							Path: "entitlements[value eq \"allow-instance-pool-create\"]",
+							Path: "entitlements[value eq \"sql-analytics-access\"]",
 						},
 						{
 							Op:   "remove",

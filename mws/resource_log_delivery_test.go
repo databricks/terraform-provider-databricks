@@ -71,7 +71,7 @@ func TestResourceLogDeliveryCreate(t *testing.T) {
 						OutputFormat:           "JSON",
 						StorageConfigurationID: "def",
 						DeliveryStartTime:      "2020-10",
-						WorkspaceIdsFilter:     []string{"e", "f"},
+						WorkspaceIdsFilter:     []int{1111111111111111, 222222222222222},
 					},
 				},
 				Response: LogDelivery{
@@ -94,7 +94,7 @@ func TestResourceLogDeliveryCreate(t *testing.T) {
 						OutputFormat:           "JSON",
 						StorageConfigurationID: "def",
 						DeliveryStartTime:      "2020-10",
-						WorkspaceIdsFilter:     []string{"e", "f"},
+						WorkspaceIdsFilter:     []int{1111111111111111, 222222222222222},
 					},
 				},
 			},
@@ -108,7 +108,7 @@ func TestResourceLogDeliveryCreate(t *testing.T) {
 		log_type = "AUDIT_LOGS"
 		output_format = "JSON"
 		delivery_path_prefix = "/a/b"
-		workspace_ids_filter = ["e", "f"]
+		workspace_ids_filter = [1111111111111111, 222222222222222]
 		delivery_start_time = "2020-10"`,
 		Create: true,
 	}.Apply(t)
@@ -139,7 +139,7 @@ func TestResourceLogDeliveryCreate_Error(t *testing.T) {
 		log_type = "AUDIT_LOGS"
 		output_format = "JSON"
 		delivery_path_prefix = "/a/b"
-		workspace_ids_filter = ["e", "f"]
+		workspace_ids_filter = [1111111111111111, 222222222222222]
 		delivery_start_time = "2020-10"`,
 		Create: true,
 	}.Apply(t)
@@ -165,7 +165,7 @@ func TestResourceLogDeliveryRead(t *testing.T) {
 						OutputFormat:           "JSON",
 						StorageConfigurationID: "def",
 						DeliveryStartTime:      "2020-10",
-						WorkspaceIdsFilter:     []string{"e", "f"},
+						WorkspaceIdsFilter:     []int{1111111111111111, 222222222222222},
 					},
 				},
 			},

@@ -3,6 +3,7 @@
 ## 0.3.4
 
 * Fixed state refresh bugs in `databricks_sql_permissions` ([#620](https://github.com/databrickslabs/terraform-provider-databricks/issues/620), [#619](https://github.com/databrickslabs/terraform-provider-databricks/issues/620))
+* Fixed `workspace_ids_filter` mapping for `databricks_mws_log_delivery` ([#635](https://github.com/databrickslabs/terraform-provider-databricks/issues/635))
 
 ## 0.3.3
 

@@ -130,6 +130,10 @@ func (ta *SqlPermissions) read() error {
 	// iterate over existing permissions over given data object
 	var currentPrincipal, currentAction, currentType, currentKey string
 	for currentGrantsOnThis.Scan(&currentPrincipal, &currentAction, &currentType, &currentKey) {
+		if currentType == "CATALOG$" {
+			currentType = "CATALOG"
+			currentKey = ""
+		}
 		if !strings.EqualFold(currentType, thisType) {
 			continue
 		}
@@ -304,7 +308,7 @@ func ResourceSqlPermissions() *schema.Resource {
 			s[field].AtLeastOneOf = alof
 		}
 		s["cluster_id"].Computed = true
-		s["database"].Default = "default"
+		//s["database"].Default = "default"
 		return s
 	})
 	return common.Resource{

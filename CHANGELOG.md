@@ -1,5 +1,9 @@
 # Version changelog
 
+## 0.3.4
+
+* Fixed state refresh bugs in `databricks_sql_permissions` ([#620](https://github.com/databrickslabs/terraform-provider-databricks/issues/620), [#619](https://github.com/databrickslabs/terraform-provider-databricks/issues/620))
+
 ## 0.3.3
 
 * Added resources for SQL Analytics queries and dashboards: `databricks_sql_query`, `databricks_sql_visualization`, `databricks_sql_dashboard`, `databricks_sql_widget` ([#553](https://github.com/databrickslabs/terraform-provider-databricks/pull/553))

@@ -308,7 +308,6 @@ func ResourceSqlPermissions() *schema.Resource {
 			s[field].AtLeastOneOf = alof
 		}
 		s["cluster_id"].Computed = true
-		//s["database"].Default = "default"
 		return s
 	})
 	return common.Resource{

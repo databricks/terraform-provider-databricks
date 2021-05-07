@@ -176,7 +176,7 @@ func typeToSchema(v reflect.Value, t reflect.Type) map[string]*schema.Schema {
 			scm[fieldName].Type = ft
 			elem := typeField.Type.Elem()
 			switch elem.Kind() {
-			case reflect.Int:
+			case reflect.Int, reflect.Int32, reflect.Int64:
 				scm[fieldName].Elem = &schema.Schema{Type: schema.TypeInt}
 			case reflect.Float64:
 				scm[fieldName].Elem = &schema.Schema{Type: schema.TypeFloat}
@@ -536,7 +536,7 @@ func setPrimitiveValueOfKind(
 			return fmt.Errorf("%s[%v] is not a string", fieldPath, elem)
 		}
 		item.SetString(v)
-	case reflect.Int:
+	case reflect.Int, reflect.Int64:
 		v, ok := elem.(int)
 		if !ok {
 			return fmt.Errorf("%s[%v] is not an int", fieldPath, elem)

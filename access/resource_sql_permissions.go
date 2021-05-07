@@ -23,7 +23,7 @@ type SqlPermissions struct {
 	AnyFile              bool                  `json:"any_file,omitempty"`
 	AnonymousFunction    bool                  `json:"anonymous_function,omitempty"`
 	ClusterID            string                `json:"cluster_id,omitempty" tf:"computed"`
-	PrivilegeAssignments []PrivilegeAssignment `json:"privilege_assignments,omitempty"`
+	PrivilegeAssignments []PrivilegeAssignment `json:"privilege_assignments,omitempty" tf:"slice_set"`
 
 	exec common.CommandExecutor
 }

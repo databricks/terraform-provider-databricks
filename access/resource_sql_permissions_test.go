@@ -305,6 +305,30 @@ func TestResourceSqlPermissions_Create(t *testing.T) {
 	}.ApplyNoError(t)
 }
 
+func TestResourceSqlPermissions_Create_Catalog(t *testing.T) {
+	qa.ResourceFixture{
+		CommandMock: mockData{
+			// yes, space in the end is needed
+			"SHOW GRANT ON CATALOG ": {
+				{"users", "SELECT", "CATALOG$", "None"},
+				{"users", "MODIFY", "CATALOG$", "None"},
+			},
+			"REVOKE ALL PRIVILEGES ON CATALOG  FROM `users`":  {},
+			"GRANT SELECT ON CATALOG  TO `serge@example.com`": {},
+		}.toCommandMock(),
+		HCL: `
+		catalog = true
+		privilege_assignments {
+			principal = "serge@example.com"
+			privileges = ["SELECT"]
+		}
+		`,
+		Fixtures: createHighConcurrencyCluster,
+		Resource: ResourceSqlPermissions(),
+		Create:   true,
+	}.ApplyNoError(t)
+}
+
 func TestResourceSqlPermissions_Create_Error(t *testing.T) {
 	qa.ResourceFixture{
 		HCL: `table = "foo"

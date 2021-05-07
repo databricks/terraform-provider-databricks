@@ -3,8 +3,6 @@ subcategory: "Security"
 ---
 # databricks_sql_permissions Resource
 
--> **Note** This resource has an evolving API, which may change in the upcoming versions.
-
 This resource manages data object access control lists in Databricks workspaces for things like tables, views, databases, and [more](https://docs.databricks.com/security/access-control/table-acls/object-privileges.html). In order to enable Table Access control, you have to login to the workspace as administrator, go to `Admin Console`, pick `Access Control` tab, click on `Enable` button in `Table Access Control` section, and click `Confirm`. The security guarantees of table access control **will only be effective if cluster access control is also turned on**. Please make sure that no users can create clusters in your workspace and all [databricks_cluster](cluster.md) have approximately the following configuration:
 
 ```hcl
@@ -75,7 +73,8 @@ You must specify one or many `privilege_assignments` configuration blocks to dec
 * `READ_METADATA` - gives the ability to view an object and its metadata.
 * `CREATE_NAMED_FUNCTION` - gives the ability to create a named UDF in an existing catalog or database.
 * `MODIFY_CLASSPATH` - gives the ability to add files to the Spark class path.
-* `ALL PRIVILEGES` - gives all privileges (is translated into all the above privileges).
+
+-> Even though the value `ALL PRIVILEGES` is mentioned in Table ACL documentation, it's not recommended to use it from terraform, as it may result in unnecessary state updates.
 
 ## Import
 

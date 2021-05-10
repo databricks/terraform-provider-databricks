@@ -312,15 +312,14 @@ func TestResourcePermissionsCreate_invalid(t *testing.T) {
 }
 
 func TestResourcePermissionsCreate_no_access_control(t *testing.T) {
-	_, err := qa.ResourceFixture{
+	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{},
 		Resource: ResourcePermissions(),
 		Create:   true,
 		State: map[string]interface{}{
 			"cluster_id": "abc",
 		},
-	}.Apply(t)
-	qa.AssertErrorStartsWith(t, err, "Invalid config supplied. [access_control] Required attribute is not set")
+	}.ExpectError(t, "Invalid config supplied. [access_control] Missing required argument")
 }
 
 func TestResourcePermissionsCreate_conflicting_fields(t *testing.T) {

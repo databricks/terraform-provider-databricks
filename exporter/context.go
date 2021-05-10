@@ -120,7 +120,7 @@ func newImportContext(c *common.DatabricksClient) *importContext {
 
 func (ic *importContext) Run() error {
 	if len(ic.services) == 0 {
-		return fmt.Errorf("No services to import")
+		return fmt.Errorf("no services to import")
 	}
 	log.Printf("[INFO] Importing %s module into %s directory Databricks resources of %s services",
 		ic.Module, ic.Directory, ic.services)
@@ -129,10 +129,10 @@ func (ic *importContext) Run() error {
 	if os.IsNotExist(err) {
 		err = os.MkdirAll(ic.Directory, 0755)
 		if err != nil {
-			return fmt.Errorf("Can't create directory %s", ic.Directory)
+			return fmt.Errorf("can't create directory %s", ic.Directory)
 		}
 	} else if !info.IsDir() {
-		return fmt.Errorf("The path %s is not a directory", ic.Directory)
+		return fmt.Errorf("the path %s is not a directory", ic.Directory)
 	}
 	usersAPI := identity.NewUsersAPI(ic.Context, ic.Client)
 	me, err := usersAPI.Me()
@@ -159,7 +159,7 @@ func (ic *importContext) Run() error {
 		}
 	}
 	if len(ic.Scope) == 0 {
-		return fmt.Errorf("No resources to import")
+		return fmt.Errorf("no resources to import")
 	}
 	sh, err := os.OpenFile(fmt.Sprintf("%s/import.sh", ic.Directory), os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0755)
 	if err != nil {
@@ -278,7 +278,7 @@ func (ic *importContext) Find(r *resource, pick string) hcl.Traversal {
 		}
 		for _, i := range sr.Instances {
 			if i.Attributes[r.Attribute].(string) == r.Value {
-				if "data" == sr.Mode {
+				if sr.Mode == "data" {
 					return hcl.Traversal{
 						hcl.TraverseRoot{Name: "data"},
 						hcl.TraverseAttr{Name: sr.Type},
@@ -364,8 +364,8 @@ func (ic *importContext) ResourceName(r *resource) string {
 	name = strings.ToLower(name)
 	name = ic.regexFix(name, ic.nameFixes)
 	// this is either numeric id or all-non-ascii
-	if regexp.MustCompile(`^\d`).MatchString(name) || "" == name {
-		if "" == name {
+	if regexp.MustCompile(`^\d`).MatchString(name) || name == "" {
+		if name == "" {
 			name = r.ID
 		}
 		name = fmt.Sprintf("r%x", md5.Sum([]byte(name)))[0:12]
@@ -548,7 +548,7 @@ func (ic *importContext) dataToHcl(i importable, path []string,
 				}
 			}
 		default:
-			return fmt.Errorf("Unsupported schema type: %v", path)
+			return fmt.Errorf("unsupported schema type: %v", path)
 		}
 	}
 	return nil
@@ -597,7 +597,7 @@ func (ic *importContext) readListFromData(i importable, path []string, d *schema
 				toks = append(toks, hclwrite.TokensForValue(
 					cty.NumberIntVal(int64(x)))...)
 			default:
-				return fmt.Errorf("Unsupported primitive list: %#v", path)
+				return fmt.Errorf("unsupported primitive list: %#v", path)
 			}
 		}
 		toks = append(toks, &hclwrite.Token{

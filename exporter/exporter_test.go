@@ -399,7 +399,7 @@ func TestImportingNoResourcesError(t *testing.T) {
 			ic.services = services
 
 			err := ic.Run()
-			assert.EqualError(t, err, "No resources to import")
+			assert.EqualError(t, err, "no resources to import")
 		})
 }
 
@@ -745,10 +745,10 @@ func TestImportingJobs_JobList(t *testing.T) {
 
 func TestImportingWithError(t *testing.T) {
 	err := Run("-directory", "/bin/sh", "-services", "groups,users")
-	assert.EqualError(t, err, "The path /bin/sh is not a directory")
+	assert.EqualError(t, err, "the path /bin/sh is not a directory")
 
 	err = Run("-directory", "/bin/abcd", "-services", "groups,users", "-prefix", "abc")
-	assert.EqualError(t, err, "Can't create directory /bin/abcd")
+	assert.EqualError(t, err, "can't create directory /bin/abcd")
 }
 
 func TestImportingSecrets(t *testing.T) {

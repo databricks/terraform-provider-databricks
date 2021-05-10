@@ -140,11 +140,11 @@ func (aa *AzureAuth) addSpManagementTokenVisitor(r *http.Request, management aut
 	log.Printf("[DEBUG] Setting 'X-Databricks-Azure-SP-Management-Token' header")
 	ba, ok := management.(*autorest.BearerAuthorizer)
 	if !ok {
-		return fmt.Errorf("Supposed to get BearerAuthorizer, but got %#v", management)
+		return fmt.Errorf("supposed to get BearerAuthorizer, but got %#v", management)
 	}
 	tokenProvider := ba.TokenProvider()
 	if tokenProvider == nil {
-		return fmt.Errorf("Token provider is nil")
+		return fmt.Errorf("token provider is nil")
 	}
 	accessToken := tokenProvider.OAuthToken()
 	if accessToken == "" {
@@ -280,7 +280,7 @@ func (aa *AzureAuth) ensureWorkspaceURL(ctx context.Context,
 	}
 	resourceID := aa.resourceID()
 	if resourceID == "" {
-		return fmt.Errorf("Somehow resource id is not set")
+		return fmt.Errorf("somehow resource id is not set")
 	}
 	log.Println("[DEBUG] Getting Workspace ID via management token.")
 	env, err := aa.getAzureEnvironment()

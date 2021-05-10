@@ -94,7 +94,7 @@ func (a VisualizationAPI) Read(queryID, visualizationID string) (*api.Visualizat
 		}
 	}
 
-	return nil, fmt.Errorf("Cannot find visualization %s attached to query %s", visualizationID, queryID)
+	return nil, fmt.Errorf("cannot find visualization %s attached to query %s", visualizationID, queryID)
 }
 
 // Update ...

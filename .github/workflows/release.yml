@@ -20,11 +20,12 @@ jobs:
         uses: actions/setup-go@v1
         with:
           go-version: 1.13.x
-      - name: Download gotestsum and golangci
+      - name: Download gotestsum and staticcheck
         run: |
-          # Install
-          curl -sSL "https://github.com/gotestyourself/gotestsum/releases/download/v0.4.2/gotestsum_0.4.2_linux_amd64.tar.gz" | sudo tar -xz -C /usr/local/bin gotestsum
-          curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.25.0
+          echo "GOPATH=$(go env GOPATH)" >> $GITHUB_ENV
+          echo "$(go env GOPATH)/bin" >> $GITHUB_PATH
+          go get gotest.tools/gotestsum
+          go install honnef.co/go/tools/cmd/staticcheck@latest
       - name: Import GPG key
         id: import_gpg
         uses: crazy-max/ghaction-import-gpg@v2

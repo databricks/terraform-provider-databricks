@@ -1,8 +1,6 @@
 ignore:
   - "vendor/**/*"
-  - "website/**/*"
   - "dist/**/*"
-  - "examples/**/*"
 
 coverage:
   status:

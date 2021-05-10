@@ -140,7 +140,7 @@ func (a SQLEndpointsAPI) ResolveDataSourceID(endpointID string) (dataSourceID st
 
 	// We assume there is a data source ID for every endpoint.
 	// It is therefore an error if we can't find it.
-	err = fmt.Errorf("Unable to find data source ID for endpoint: %v", endpointID)
+	err = fmt.Errorf("unable to find data source ID for endpoint: %v", endpointID)
 	return
 }
 
@@ -155,9 +155,9 @@ func (a SQLEndpointsAPI) waitForRunning(id string, timeout time.Duration) error 
 			return nil
 		case "DELETED":
 			return resource.NonRetryableError(
-				fmt.Errorf("Endpoint got deleted during creation"))
+				fmt.Errorf("endpoint got deleted during creation"))
 		default:
-			msg := fmt.Errorf("Endpoint %s is %s", id, endpoint.State)
+			msg := fmt.Errorf("endpoint %s is %s", id, endpoint.State)
 			log.Printf("[INFO] %s", msg.Error())
 			return resource.RetryableError(msg)
 		}

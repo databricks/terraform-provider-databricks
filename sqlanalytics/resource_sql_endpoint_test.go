@@ -281,7 +281,7 @@ func TestSQLEnpointAPI(t *testing.T) {
 		assert.EqualError(t, err, "nope")
 
 		err = a.Start("deleting", 5*time.Minute)
-		assert.EqualError(t, err, "Endpoint got deleted during creation")
+		assert.EqualError(t, err, "endpoint got deleted during creation")
 
 		err = a.waitForRunning("cantwait", 5*time.Minute)
 		assert.EqualError(t, err, "does not compute")

@@ -51,7 +51,7 @@ func ResourceGlobalInitScript() *schema.Resource {
 				return err
 			}
 			if contentLen := len(content); contentLen > maxScriptSize {
-				return fmt.Errorf("Size of the global init script (%d bytes) exceeds maximal allowed (%d bytes)",
+				return fmt.Errorf("size of the global init script (%d bytes) exceeds maximal allowed (%d bytes)",
 					contentLen, maxScriptSize)
 			}
 			globalInitScriptsAPI := NewGlobalInitScriptsAPI(ctx, c)
@@ -81,7 +81,7 @@ func ResourceGlobalInitScript() *schema.Resource {
 				return err
 			}
 			if contentLen := len(content); contentLen > maxScriptSize {
-				return fmt.Errorf("Size of the global init script (%d bytes) exceeds maximal allowed (%d bytes)",
+				return fmt.Errorf("size of the global init script (%d bytes) exceeds maximal allowed (%d bytes)",
 					contentLen, maxScriptSize)
 			}
 			globalInitScriptsAPI := NewGlobalInitScriptsAPI(ctx, c)

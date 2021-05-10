@@ -63,9 +63,11 @@ func (a SecretScopesAPI) Create(s SecretScope) error {
 			return err
 		}
 		if !a.client.IsAzure() {
+			//lint:ignore ST1005 Azure is a valid capitalized string
 			return fmt.Errorf("Azure KeyVault is not available")
 		}
 		if a.client.AzureAuth.IsClientSecretSet() {
+			//lint:ignore ST1005 Azure is a valid capitalized string
 			return fmt.Errorf("Azure KeyVault cannot yet be configured for Service Principal authorization")
 		}
 		req.BackendType = "AZURE_KEYVAULT"

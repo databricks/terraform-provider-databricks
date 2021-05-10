@@ -86,7 +86,7 @@ func (a WorkspacesAPI) WaitForRunning(ws Workspace, timeout time.Duration) error
 			network, nerr := NewNetworksAPI(a.context, a.client).Read(ws.AccountID, ws.NetworkID)
 			if nerr != nil {
 				return resource.NonRetryableError(fmt.Errorf(
-					"Failed to start workspace. Cannot read network: %s", nerr))
+					"failed to start workspace. Cannot read network: %s", nerr))
 			}
 			var strBuffer bytes.Buffer
 			for _, networkHealth := range network.ErrorMessages {

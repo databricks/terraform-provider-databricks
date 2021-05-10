@@ -154,7 +154,7 @@ func TestResourceFixture_ID(t *testing.T) {
 
 	f.ID = ""
 	_, err = f.Apply(t)
-	assert.EqualError(t, err, "Resource is not expected to be removed")
+	assert.EqualError(t, err, "resource is not expected to be removed")
 
 	f.Removed = true
 	_, err = f.Apply(t)
@@ -215,7 +215,7 @@ func TestResourceFixture_InstanceState(t *testing.T) {
 			"trigger": "x",
 		},
 	}.Apply(t)
-	AssertErrorStartsWith(t, err, "Changes from backend require new")
+	AssertErrorStartsWith(t, err, "changes from backend require new")
 }
 
 func TestResourceFixture_Apply_Fail(t *testing.T) {
@@ -233,7 +233,7 @@ func TestResourceFixture_Apply_Fail(t *testing.T) {
 			"check": false,
 		},
 	}.Apply(t)
-	assert.EqualError(t, err, "Invalid config supplied. [check] Invalid or unknown key")
+	assert.EqualError(t, err, "invalid config supplied. [check] Invalid or unknown key")
 }
 
 func TestTestCreateTempFile(t *testing.T) {

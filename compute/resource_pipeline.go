@@ -128,7 +128,7 @@ func (a pipelinesAPI) create(s pipelineSpec, timeout time.Duration) (string, err
 		err2 := a.delete(id, timeout)
 		if err2 != nil {
 			log.Printf("[WARN] Unable to delete pipeline %s; this resource needs to be manually cleaned up", id)
-			return "", fmt.Errorf("Multiple errors occurred when creating pipeline. Error while waiting for creation: \"%v\"; error while attempting to clean up failed pipeline: \"%v\"", err, err2)
+			return "", fmt.Errorf("multiple errors occurred when creating pipeline. Error while waiting for creation: \"%v\"; error while attempting to clean up failed pipeline: \"%v\"", err, err2)
 		}
 		log.Printf("[INFO] Successfully cleaned up pipeline %s", id)
 		return "", err
@@ -181,7 +181,7 @@ func (a pipelinesAPI) waitForState(id string, timeout time.Duration, desiredStat
 				return nil
 			}
 			if state == StateFailed {
-				return resource.NonRetryableError(fmt.Errorf("Pipeline %s has failed", id))
+				return resource.NonRetryableError(fmt.Errorf("pipeline %s has failed", id))
 			}
 			message := fmt.Sprintf("Pipeline %s is in state %s, not yet in state %s", id, state, desiredState)
 			log.Printf("[DEBUG] %s", message)

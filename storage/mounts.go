@@ -107,38 +107,43 @@ func NewMountPoint(executor common.CommandExecutor, name, clusterID string) Moun
 	}
 }
 
+func getOrCreateMountingCluster(clustersAPI compute.ClustersAPI) (string, error) {
+	cluster, err := clustersAPI.GetOrCreateRunningCluster("terraform-mount", compute.Cluster{
+		NumWorkers:  0,
+		ClusterName: "terraform-mount",
+		SparkVersion: clustersAPI.LatestSparkVersionOrDefault(
+			compute.SparkVersionRequest{
+				Latest:          true,
+				LongTermSupport: true,
+			}),
+		NodeTypeID: clustersAPI.GetSmallestNodeType(
+			compute.NodeTypeRequest{
+				LocalDisk: true,
+			}),
+		AutoterminationMinutes: 10,
+		SparkConf: map[string]string{
+			"spark.master":                     "local[*]",
+			"spark.databricks.cluster.profile": "singleNode",
+		},
+		CustomTags: map[string]string{
+			"ResourceClass": "SingleNode",
+		},
+	})
+	if err != nil {
+		return "", err
+	}
+	return cluster.ClusterID, nil
+}
+
 func getMountingClusterID(ctx context.Context, client *common.DatabricksClient, clusterID string) (string, error) {
 	clustersAPI := compute.NewClustersAPI(ctx, client)
 	if clusterID == "" {
-		r := compute.Cluster{
-			NumWorkers:  0,
-			ClusterName: "terraform-mount",
-			SparkVersion: clustersAPI.LatestSparkVersionOrDefault(
-				compute.SparkVersionRequest{
-					Latest:          true,
-					LongTermSupport: true,
-				}),
-			NodeTypeID: clustersAPI.GetSmallestNodeType(
-				compute.NodeTypeRequest{
-					LocalDisk: true,
-				}),
-
-			AutoterminationMinutes: 10,
-			SparkConf: map[string]string{
-				"spark.master":                     "local[*]",
-				"spark.databricks.cluster.profile": "singleNode",
-			},
-			CustomTags: map[string]string{
-				"ResourceClass": "SingleNode",
-			},
-		}
-		cluster, err := clustersAPI.GetOrCreateRunningCluster("terraform-mount", r)
-		if err != nil {
-			return "", err
-		}
-		return cluster.ClusterID, nil
+		return getOrCreateMountingCluster(clustersAPI)
 	}
 	clusterInfo, err := clustersAPI.Get(clusterID)
+	if e, ok := err.(common.APIError); ok && e.IsMissing() {
+		return getOrCreateMountingCluster(clustersAPI)
+	}
 	if err != nil {
 		return "", err
 	}

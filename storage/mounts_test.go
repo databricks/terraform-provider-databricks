@@ -274,8 +274,8 @@ func TestDeletedMountClusterRecreates(t *testing.T) {
 					"ResourceClass": "SingleNode",
 				},
 				SparkConf: map[string]string{
-					"spark.databricks.cluster.profile":       "singleNode",
-					"spark.master":                           "local[*]",
+					"spark.databricks.cluster.profile": "singleNode",
+					"spark.master":                     "local[*]",
 				},
 			},
 			Response: compute.ClusterID{

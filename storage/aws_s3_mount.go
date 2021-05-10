@@ -88,7 +88,7 @@ func preprocessS3Mount(ctx context.Context, d *schema.ResourceData, m interface{
 	clusterID := d.Get("cluster_id").(string)
 	instanceProfile := d.Get("instance_profile").(string)
 	if clusterID == "" && instanceProfile == "" {
-		return fmt.Errorf("Either cluster_id or instance_profile must be specified")
+		return fmt.Errorf("either cluster_id or instance_profile must be specified")
 	}
 	clustersAPI := compute.NewClustersAPI(ctx, m)
 	if clusterID != "" {
@@ -97,10 +97,10 @@ func preprocessS3Mount(ctx context.Context, d *schema.ResourceData, m interface{
 			return err
 		}
 		if clusterInfo.AwsAttributes == nil {
-			return fmt.Errorf("Cluster %s must have AWS attributes", clusterID)
+			return fmt.Errorf("cluster %s must have AWS attributes", clusterID)
 		}
 		if len(clusterInfo.AwsAttributes.InstanceProfileArn) == 0 {
-			return fmt.Errorf("Cluster %s must have EC2 instance profile attached", clusterID)
+			return fmt.Errorf("cluster %s must have EC2 instance profile attached", clusterID)
 		}
 	}
 	if instanceProfile != "" {
@@ -122,7 +122,7 @@ func GetOrCreateMountingClusterWithInstanceProfile(
 	}
 	instanceProfileParts := strings.Split(ia.Resource, "/")
 	if len(instanceProfileParts) != 2 {
-		return i, fmt.Errorf("Should have gotten two parts: %v", instanceProfileParts)
+		return i, fmt.Errorf("should have gotten two parts: %v", instanceProfileParts)
 	}
 	clusterName := fmt.Sprintf("terraform-mount-%s", instanceProfileParts[1])
 	return clustersAPI.GetOrCreateRunningCluster(clusterName, compute.Cluster{

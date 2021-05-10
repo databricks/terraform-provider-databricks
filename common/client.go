@@ -88,7 +88,7 @@ func (c *DatabricksClient) Authenticate() error {
 		c.fixHost()
 		return nil
 	}
-	return fmt.Errorf("Authentication is not configured for provider. Please configure it\n" +
+	return fmt.Errorf("authentication is not configured for provider. Please configure it\n" +
 		"through one of the following options:\n" +
 		"1. DATABRICKS_HOST + DATABRICKS_TOKEN environment variables.\n" +
 		"2. host + token provider arguments.\n" +
@@ -120,7 +120,7 @@ func (c *DatabricksClient) configureAuthWithDirectParams() (func(r *http.Request
 		needsHostBecause = "token"
 	}
 	if needsHostBecause != "" && c.Host == "" {
-		return nil, fmt.Errorf("Host is empty, but is required by %s", needsHostBecause)
+		return nil, fmt.Errorf("host is empty, but is required by %s", needsHostBecause)
 	}
 	if c.Token == "" || c.Host == "" {
 		return nil, nil

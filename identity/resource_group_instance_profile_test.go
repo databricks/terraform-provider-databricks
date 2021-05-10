@@ -91,7 +91,7 @@ func TestResourceGroupInstanceProfileCreate_Error_InvalidARN(t *testing.T) {
 		},
 		Create: true,
 	}.Apply(t)
-	assert.EqualError(t, err, "Invalid config supplied. [instance_profile_id] Invalid ARN")
+	assert.EqualError(t, err, "invalid config supplied. [instance_profile_id] Invalid ARN")
 }
 
 func TestResourceGroupInstanceProfileCreate_Error_OtherARN(t *testing.T) {
@@ -114,7 +114,7 @@ func TestResourceGroupInstanceProfileCreate_Error_OtherARN(t *testing.T) {
 		},
 		Create: true,
 	}.Apply(t)
-	assert.EqualError(t, err, "Invalid config supplied. [instance_profile_id] Invalid ARN")
+	assert.EqualError(t, err, "invalid config supplied. [instance_profile_id] Invalid ARN")
 }
 
 func TestResourceGroupInstanceProfileRead(t *testing.T) {

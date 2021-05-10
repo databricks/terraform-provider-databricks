@@ -45,7 +45,7 @@ func DataSourceGroup() *schema.Resource {
 				return diag.FromErr(err)
 			}
 			if len(groupList.Resources) == 0 {
-				return diag.FromErr(fmt.Errorf("Cannot find group %s", this.DisplayName))
+				return diag.FromErr(fmt.Errorf("cannot find group %s", this.DisplayName))
 			}
 			d.SetId(groupList.Resources[0].ID)
 			queue := []ScimGroup{groupList.Resources[0]}

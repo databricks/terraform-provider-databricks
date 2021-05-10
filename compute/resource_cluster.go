@@ -41,8 +41,8 @@ func ResourceCluster() *schema.Resource {
 }
 
 func sparkConfDiffSuppressFunc(k, old, new string, d *schema.ResourceData) bool {
-	isPossiblyLegacyConfig := "spark_conf.%" == k && "1" == old && "0" == new
-	isLegacyConfig := "spark_conf.spark.databricks.delta.preview.enabled" == k
+	isPossiblyLegacyConfig := k == "spark_conf.%" && old == "1" && new == "0"
+	isLegacyConfig := k == "spark_conf.spark.databricks.delta.preview.enabled"
 	if isPossiblyLegacyConfig || isLegacyConfig {
 		log.Printf("[DEBUG] Suppressing diff for k=%#v old=%#v new=%#v", k, old, new)
 		return true

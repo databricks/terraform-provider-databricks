@@ -9,7 +9,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 
 	"github.com/databrickslabs/terraform-provider-databricks/common"
-	"github.com/databrickslabs/terraform-provider-databricks/compute"
 	. "github.com/databrickslabs/terraform-provider-databricks/compute"
 	"github.com/databrickslabs/terraform-provider-databricks/internal/acceptance"
 	"github.com/databrickslabs/terraform-provider-databricks/qa"
@@ -27,7 +26,7 @@ func TestAwsAccJobsCreate(t *testing.T) {
 	client := common.NewClientFromEnvironment()
 	jobsAPI := NewJobsAPI(context.Background(), client)
 	clustersAPI := NewClustersAPI(context.Background(), client)
-	sparkVersion := clustersAPI.LatestSparkVersionOrDefault(compute.SparkVersionRequest{Latest: true, LongTermSupport: true})
+	sparkVersion := clustersAPI.LatestSparkVersionOrDefault(SparkVersionRequest{Latest: true, LongTermSupport: true})
 
 	jobSettings := JobSettings{
 		NewCluster: &Cluster{
@@ -78,7 +77,7 @@ func TestAwsAccJobsCreate(t *testing.T) {
 	assert.NoError(t, err, err)
 	assert.True(t, job.Settings.NewCluster.SparkVersion == sparkVersion, "Something is wrong with spark version")
 
-	newSparkVersion := clustersAPI.LatestSparkVersionOrDefault(compute.SparkVersionRequest{Latest: true})
+	newSparkVersion := clustersAPI.LatestSparkVersionOrDefault(SparkVersionRequest{Latest: true})
 	jobSettings.NewCluster.SparkVersion = newSparkVersion
 
 	err = jobsAPI.Update(id, jobSettings)
@@ -95,7 +94,7 @@ func TestAccJobResource(t *testing.T) {
 	}
 
 	clustersAPI := NewClustersAPI(context.Background(), common.CommonEnvironmentClient())
-	sparkVersion := clustersAPI.LatestSparkVersionOrDefault(compute.SparkVersionRequest{Latest: true, LongTermSupport: true})
+	sparkVersion := clustersAPI.LatestSparkVersionOrDefault(SparkVersionRequest{Latest: true, LongTermSupport: true})
 	acceptance.AccTest(t, resource.TestCase{
 		Steps: []resource.TestStep{
 			{
@@ -150,7 +149,7 @@ func TestAwsAccJobResource_NoInstancePool(t *testing.T) {
 		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
 	}
 	clustersAPI := NewClustersAPI(context.Background(), common.CommonEnvironmentClient())
-	sparkVersion := clustersAPI.LatestSparkVersionOrDefault(compute.SparkVersionRequest{Latest: true, LongTermSupport: true})
+	sparkVersion := clustersAPI.LatestSparkVersionOrDefault(SparkVersionRequest{Latest: true, LongTermSupport: true})
 	randomStr := acctest.RandStringFromCharSet(5, acctest.CharSetAlphaNum)
 	instanceProfileARN := fmt.Sprintf("arn:aws:iam::999999999999:instance-profile/tf-test-%s", randomStr)
 	acceptance.AccTest(t, resource.TestCase{

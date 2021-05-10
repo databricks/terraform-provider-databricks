@@ -52,7 +52,7 @@ func SchemaPath(s map[string]*schema.Schema, path ...string) (*schema.Schema, er
 	for _, p := range path {
 		v, ok := cs[p]
 		if !ok {
-			return nil, fmt.Errorf("Missing key %s", p)
+			return nil, fmt.Errorf("missing key %s", p)
 		}
 		if p == path[len(path)-1] {
 			return v, nil
@@ -191,7 +191,7 @@ func typeToSchema(v reflect.Value, t reflect.Type) map[string]*schema.Schema {
 				}
 			}
 		default:
-			panic(fmt.Errorf("Unknown type for %s: %s", fieldName, reflectKind(typeField.Type.Kind())))
+			panic(fmt.Errorf("unknown type for %s: %s", fieldName, reflectKind(typeField.Type.Kind())))
 		}
 	}
 	return scm
@@ -201,7 +201,7 @@ func iterFields(rv reflect.Value, path []string, s map[string]*schema.Schema,
 	cb func(fieldSchema *schema.Schema, path []string, valueField *reflect.Value) error) error {
 	rk := rv.Kind()
 	if rk != reflect.Struct {
-		return fmt.Errorf("Value of Struct is expected, but got %s: %#v", reflectKind(rk), rv)
+		return fmt.Errorf("value of Struct is expected, but got %s: %#v", reflectKind(rk), rv)
 	}
 	if !rv.IsValid() {
 		return fmt.Errorf("%s: got invalid reflect value %#v", path, rv)
@@ -219,11 +219,11 @@ func iterFields(rv reflect.Value, path []string, s map[string]*schema.Schema,
 		}
 		omitEmpty := strings.Contains(jsonTag, "omitempty")
 		if omitEmpty && !fieldSchema.Optional {
-			return fmt.Errorf("Inconsistency: %s has omitempty, but is not optional", fieldName)
+			return fmt.Errorf("inconsistency: %s has omitempty, but is not optional", fieldName)
 		}
 		defaultEmpty := reflect.ValueOf(fieldSchema.Default).Kind() == reflect.Invalid
 		if fieldSchema.Optional && defaultEmpty && !omitEmpty {
-			return fmt.Errorf("Inconsistency: %s is optional, default is empty, but has no omitempty", fieldName)
+			return fmt.Errorf("inconsistency: %s is optional, default is empty, but has no omitempty", fieldName)
 		}
 		valueField := rv.Field(i)
 		err := cb(fieldSchema, append(path, fieldName), &valueField)
@@ -362,7 +362,7 @@ func DataToStructPointer(d *schema.ResourceData, scm map[string]*schema.Schema, 
 	rv := reflect.ValueOf(result)
 	rk := rv.Kind()
 	if rk != reflect.Ptr {
-		return fmt.Errorf("Pointer is expected, but got %s: %#v", reflectKind(rk), result)
+		return fmt.Errorf("pointer is expected, but got %s: %#v", reflectKind(rk), result)
 	}
 	rv = rv.Elem()
 	return readReflectValueFromData([]string{}, d, rv, scm)

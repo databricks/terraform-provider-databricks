@@ -28,7 +28,7 @@ func TestPairIDResource(t *testing.T) {
 		{
 			read:        true,
 			id:          "a",
-			assertError: "Invalid ID: a",
+			assertError: "invalid ID: a",
 		},
 		{
 			read:        true,
@@ -43,7 +43,7 @@ func TestPairIDResource(t *testing.T) {
 		{
 			delete:      true,
 			id:          "a",
-			assertError: "Invalid ID: a",
+			assertError: "invalid ID: a",
 		},
 		{
 			read:     true,

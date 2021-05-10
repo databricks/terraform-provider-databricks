@@ -145,7 +145,7 @@ func TestResourcePipelineCreate_Error(t *testing.T) {
 }
 
 func TestResourcePipelineCreate_ErrorWhenWaitingFailedCleanup(t *testing.T) {
-	d, err := qa.ResourceFixture{
+	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "POST",
@@ -188,9 +188,9 @@ func TestResourcePipelineCreate_ErrorWhenWaitingFailedCleanup(t *testing.T) {
 		}
 		`,
 		Create: true,
-	}.Apply(t)
-	qa.AssertErrorStartsWith(t, err, "Multiple errors occurred when creating pipeline. Error while waiting for creation: \"Pipeline abcd has failed\"; error while attempting to clean up failed pipeline: \"Internal error\"")
-	assert.Equal(t, "", d.Id(), "Id should be empty for error creates")
+	}.ExpectError(t, "multiple errors occurred when creating pipeline. "+
+		"Error while waiting for creation: \"pipeline abcd has failed\"; "+
+		"error while attempting to clean up failed pipeline: \"Internal error\"")
 }
 
 func TestResourcePipelineCreate_ErrorWhenWaitingSuccessfulCleanup(t *testing.T) {
@@ -238,7 +238,7 @@ func TestResourcePipelineCreate_ErrorWhenWaitingSuccessfulCleanup(t *testing.T) 
 		`,
 		Create: true,
 	}.Apply(t)
-	qa.AssertErrorStartsWith(t, err, "Pipeline abcd has failed")
+	qa.AssertErrorStartsWith(t, err, "pipeline abcd has failed")
 	assert.Equal(t, "", d.Id(), "Id should be empty for error creates")
 }
 
@@ -450,7 +450,7 @@ func TestResourcePipelineUpdate_FailsAfterUpdate(t *testing.T) {
 		Update: true,
 		ID:     "abcd",
 	}.Apply(t)
-	qa.AssertErrorStartsWith(t, err, "Pipeline abcd has failed")
+	qa.AssertErrorStartsWith(t, err, "pipeline abcd has failed")
 	assert.Equal(t, "abcd", d.Id(), "Id should be the same as in reading")
 }
 

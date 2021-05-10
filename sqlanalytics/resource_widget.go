@@ -184,7 +184,7 @@ func (w *WidgetEntity) fromAPIObject(aw *api.Widget, schema map[string]*schema.S
 			}
 		}
 
-		return fmt.Errorf("Unable to derive type from message: %v", string(b))
+		return fmt.Errorf("unable to derive type from message: %v", string(b))
 	}
 
 	// Sort parameters by their name for deterministic order.
@@ -233,7 +233,7 @@ func (a WidgetAPI) Read(dashboardID, widgetID string) (*api.Widget, error) {
 		}
 	}
 
-	return nil, fmt.Errorf("Cannot find widget %s attached to dashboard %s", widgetID, dashboardID)
+	return nil, fmt.Errorf("cannot find widget %s attached to dashboard %s", widgetID, dashboardID)
 }
 
 // Update ...

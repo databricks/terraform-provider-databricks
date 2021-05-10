@@ -285,7 +285,7 @@ func (c *DatabricksClient) unmarshall(path string, body []byte, response interfa
 
 func (c *DatabricksClient) api2(r *http.Request) error {
 	if r.URL == nil {
-		return fmt.Errorf("No URL found in request")
+		return fmt.Errorf("no URL found in request")
 	}
 	r.URL.Path = fmt.Sprintf("/api/2.0%s", r.URL.Path)
 	r.Header.Set("Content-Type", "application/json")
@@ -302,7 +302,7 @@ func (c *DatabricksClient) api2(r *http.Request) error {
 
 func (c *DatabricksClient) api12(r *http.Request) error {
 	if r.URL == nil {
-		return fmt.Errorf("No URL found in request")
+		return fmt.Errorf("no URL found in request")
 	}
 	r.URL.Path = fmt.Sprintf("/api/1.2%s", r.URL.Path)
 	r.Header.Set("Content-Type", "application/json")
@@ -499,7 +499,7 @@ func makeRequestBody(method string, requestURL *string, data interface{}, marsha
 			}
 			*requestURL += "?" + params.Encode()
 		default:
-			return requestBody, fmt.Errorf("Unsupported request data: %#v", data)
+			return requestBody, fmt.Errorf("unsupported request data: %#v", data)
 		}
 	} else {
 		if marshalJSON {

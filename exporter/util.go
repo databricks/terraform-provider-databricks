@@ -112,7 +112,7 @@ func (ic *importContext) findUserByName(name string) (u identity.ScimUser, err e
 		return
 	}
 	if len(users) == 0 {
-		err = fmt.Errorf("User %s not found", name)
+		err = fmt.Errorf("user %s not found", name)
 		return
 	}
 	u = users[0]

@@ -74,7 +74,7 @@ func TestResourceInstanceProfileCreate_Error_InvalidARN(t *testing.T) {
 		},
 		Create: true,
 	}.Apply(t)
-	assert.EqualError(t, err, "Invalid config supplied. [instance_profile_arn] Invalid ARN")
+	assert.EqualError(t, err, "invalid config supplied. [instance_profile_arn] Invalid ARN")
 }
 
 func TestResourceInstanceProfileRead(t *testing.T) {

@@ -310,13 +310,13 @@ var resourcesMap map[string]importable = map[string]importable{
 				if !vok || !dok {
 					continue
 				}
-				if "aws_attributes.instance_profile_arn" == k {
+				if k == "aws_attributes.instance_profile_arn" {
 					ic.Emit(&resource{
 						Resource: "databricks_instance_profile",
 						ID:       fmt.Sprintf("%s%s", value, defaultValue),
 					})
 				}
-				if "instance_pool_id" == k {
+				if k == "instance_pool_id" {
 					ic.Emit(&resource{
 						Resource: "databricks_instance_pool",
 						ID:       fmt.Sprintf("%s%s", value, defaultValue),
@@ -402,7 +402,7 @@ var resourcesMap map[string]importable = map[string]importable{
 						Resource: "databricks_group",
 						ID:       parent.Value,
 					})
-					if "direct" == parent.Type {
+					if parent.Type == "direct" {
 						ic.Emit(&resource{
 							Resource: "databricks_group_member",
 							ID:       fmt.Sprintf("%s|%s", parent.Value, g.ID),
@@ -476,7 +476,7 @@ var resourcesMap map[string]importable = map[string]importable{
 				return err
 			}
 			for _, g := range u.Groups {
-				if "direct" != g.Type {
+				if g.Type != "direct" {
 					continue
 				}
 				ic.Emit(&resource{
@@ -692,7 +692,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			mount := ic.mountMap[r.ID]
 			res := adlsGen2Regex.FindStringSubmatch(mount.URL)
 			if res == nil {
-				return fmt.Errorf("Can't extract ADLSv2 information from string '%s'", mount)
+				return fmt.Errorf("can't extract ADLSv2 information from string '%s'", mount)
 			}
 			containerName := res[2]
 			storageAccountName := res[3]
@@ -760,7 +760,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			mount := ic.mountMap[r.ID]
 			res := adlsGen1Regex.FindStringSubmatch(mount.URL)
 			if res == nil {
-				return fmt.Errorf("Can't extract ADLSv1 information from string '%s'", mount)
+				return fmt.Errorf("can't extract ADLSv1 information from string '%s'", mount)
 			}
 			storageResourceName := res[2]
 			b.SetAttributeValue("storage_resource_name", cty.StringVal(storageResourceName))

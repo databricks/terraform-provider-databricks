@@ -71,7 +71,7 @@ func TestResourceAwsS3MountCreate_nothing_specified(t *testing.T) {
 		},
 		Create: true,
 	}.Apply(t)
-	require.EqualError(t, err, "Either cluster_id or instance_profile must be specified")
+	require.EqualError(t, err, "either cluster_id or instance_profile must be specified")
 }
 
 func TestResourceAwsS3MountCreate_invalid_arn(t *testing.T) {

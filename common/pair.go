@@ -46,7 +46,7 @@ func (p *Pair) Unpack(d *schema.ResourceData) (string, string, error) {
 	parts := strings.SplitN(id, p.separator, 2)
 	if len(parts) != 2 {
 		d.SetId("")
-		return "", "", fmt.Errorf("Invalid ID: %s", id)
+		return "", "", fmt.Errorf("invalid ID: %s", id)
 	}
 	if parts[0] == "" {
 		d.SetId("")

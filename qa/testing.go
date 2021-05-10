@@ -131,6 +131,7 @@ func (f ResourceFixture) Apply(t *testing.T) (*schema.ResourceData, error) {
 	case f.Create:
 		// nolint should be a bigger context-aware refactor
 		whatever = func(d *schema.ResourceData, m interface{}) error {
+			//lint:ignore SA1019 TODO - remove later
 			return pick(f.Resource.Create, f.Resource.CreateContext, d, m)
 		}
 		if f.ID != "" {
@@ -158,7 +159,7 @@ func (f ResourceFixture) Apply(t *testing.T) (*schema.ResourceData, error) {
 			return nil, errors.New("ID must be set for Update")
 		}
 		if f.Resource.UpdateContext == nil && f.Resource.Update == nil {
-			return nil, errors.New("Resource does not support Update")
+			return nil, errors.New("resource does not support Update")
 		}
 		whatever = func(d *schema.ResourceData, m interface{}) error {
 			d.SetId(f.ID)
@@ -177,7 +178,7 @@ func (f ResourceFixture) Apply(t *testing.T) (*schema.ResourceData, error) {
 	if f.State != nil {
 		diags := f.Resource.Validate(resourceConfig)
 		if diags.HasError() {
-			return nil, fmt.Errorf("Invalid config supplied. %s",
+			return nil, fmt.Errorf("invalid config supplied. %s",
 				strings.ReplaceAll(diagsToString(diags), "\"", ""))
 		}
 	}
@@ -204,7 +205,7 @@ func (f ResourceFixture) Apply(t *testing.T) (*schema.ResourceData, error) {
 		return resourceData, err
 	}
 	if resourceData.Id() == "" && !f.Removed {
-		return resourceData, fmt.Errorf("Resource is not expected to be removed")
+		return resourceData, fmt.Errorf("resource is not expected to be removed")
 	}
 	newState := resourceData.State()
 	diff, err = schemaMap.Diff(ctx, newState, resourceConfig, nil, client, true)
@@ -222,7 +223,7 @@ func (f ResourceFixture) Apply(t *testing.T) (*schema.ResourceData, error) {
 		}
 	}
 	if len(requireNew) > 0 && !f.RequiresNew {
-		err = fmt.Errorf("Changes from backend require new: %s", strings.Join(requireNew, ", "))
+		err = fmt.Errorf("changes from backend require new: %s", strings.Join(requireNew, ", "))
 	}
 	return resourceData, err
 }
@@ -444,7 +445,7 @@ func environmentTemplate(t *testing.T, template string, otherVars ...map[string]
 		"RANDOM": RandomName("t"),
 	}
 	if len(otherVars) > 1 {
-		return "", errors.New("Cannot have more than one customer variable map")
+		return "", errors.New("cannot have more than one custom variable map")
 	}
 	if len(otherVars) == 1 {
 		for k, v := range otherVars[0] {

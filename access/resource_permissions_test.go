@@ -319,7 +319,7 @@ func TestResourcePermissionsCreate_no_access_control(t *testing.T) {
 		State: map[string]interface{}{
 			"cluster_id": "abc",
 		},
-	}.ExpectError(t, "Invalid config supplied. [access_control] Missing required argument")
+	}.ExpectError(t, "invalid config supplied. [access_control] Missing required argument")
 }
 
 func TestResourcePermissionsCreate_conflicting_fields(t *testing.T) {
@@ -338,7 +338,7 @@ func TestResourcePermissionsCreate_conflicting_fields(t *testing.T) {
 			},
 		},
 	}.Apply(t)
-	qa.AssertErrorStartsWith(t, err, "Invalid config supplied. cluster_id: conflicts with notebook_path. notebook_path: conflicts with cluster_id")
+	qa.AssertErrorStartsWith(t, err, "invalid config supplied. cluster_id: conflicts with notebook_path. notebook_path: conflicts with cluster_id")
 }
 
 func TestResourcePermissionsCreate_AdminsThrowError(t *testing.T) {
@@ -354,7 +354,7 @@ func TestResourcePermissionsCreate_AdminsThrowError(t *testing.T) {
 		}
 		`,
 	}.Apply(t)
-	assert.EqualError(t, err, "Invalid config supplied. [access_control] "+
+	assert.EqualError(t, err, "invalid config supplied. [access_control] "+
 		"It is not possible to restrict any permissions from `admins`.")
 }
 
@@ -716,7 +716,7 @@ func TestResourcePermissionsUpdate(t *testing.T) {
 func permissionsTestHelper(t *testing.T,
 	cb func(permissionsAPI PermissionsAPI, user, group string,
 		ef func(string) PermissionsEntity)) {
-	if "" == os.Getenv("CLOUD_ENV") {
+	if os.Getenv("CLOUD_ENV") == "" {
 		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
 	}
 	randomName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)

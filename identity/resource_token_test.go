@@ -247,6 +247,7 @@ func TestAccCreateToken(t *testing.T) {
 	client := common.NewClientFromEnvironment()
 	tokensAPI := NewTokensAPI(context.Background(), client)
 
+	//lint:ignore ST1011 it's a test here
 	lifeTimeSeconds := time.Duration(30) * time.Second
 	comment := "Hello world"
 

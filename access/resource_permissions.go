@@ -140,7 +140,7 @@ func (a PermissionsAPI) put(objectID string, objectACL AccessControlChangeList) 
 
 // Update updates object permissions. Technically, it's using method named SetOrDelete, but here we do more
 func (a PermissionsAPI) Update(objectID string, objectACL AccessControlChangeList) error {
-	if "/authorization/tokens" == objectID {
+	if objectID == "/authorization/tokens" {
 		// Cannot remove admins's CAN_MANAGE permission on tokens
 		objectACL.AccessControlList = append(objectACL.AccessControlList, AccessControlChange{
 			GroupName:       "admins",
@@ -279,7 +279,7 @@ func (oa *ObjectACL) ToPermissionsEntity(ctx context.Context, d *schema.Resource
 		}
 		return entity, nil
 	}
-	return entity, fmt.Errorf("Unknown object type %s", oa.ObjectType)
+	return entity, fmt.Errorf("unknown object type %s", oa.ObjectType)
 }
 
 // ResourcePermissions definition
@@ -304,7 +304,7 @@ func ResourcePermissions() *schema.Resource {
 			"access_control", "group_name"); err == nil {
 			groupNameSchema.ValidateDiagFunc = func(i interface{}, p cty.Path) diag.Diagnostics {
 				if v, ok := i.(string); ok {
-					if "admins" == strings.ToLower(v) {
+					if strings.ToLower(v) == "admins" {
 						return diag.Diagnostics{
 							{
 								Summary:       "It is not possible to restrict any permissions from `admins`.",

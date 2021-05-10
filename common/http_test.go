@@ -229,7 +229,7 @@ func TestGet_Error(t *testing.T) {
 	ws := DatabricksClient{}
 	err := ws.Get(context.Background(), "/imaginary/endpoint", nil, nil)
 	require.Error(t, err)
-	assert.True(t, strings.HasPrefix(err.Error(), "Authentication is not configured"),
+	assert.True(t, strings.HasPrefix(err.Error(), "authentication is not configured"),
 		"Actual message: %s", err.Error())
 }
 
@@ -288,7 +288,7 @@ func TestAPI2(t *testing.T) {
 	ws := DatabricksClient{Host: "ht_tp://example.com/"}
 	err := ws.api2(&http.Request{})
 	require.Error(t, err)
-	assert.True(t, strings.HasPrefix(err.Error(), "No URL found in request"),
+	assert.True(t, strings.HasPrefix(err.Error(), "no URL found in request"),
 		"Actual message: %s", err.Error())
 
 	err = ws.api2(&http.Request{

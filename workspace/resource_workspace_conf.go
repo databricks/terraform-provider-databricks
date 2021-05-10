@@ -50,7 +50,7 @@ func ResourceWorkspaceConf() *schema.Resource {
 		old, okOld := o.(map[string]interface{})
 		new, okNew := n.(map[string]interface{})
 		if !okNew || !okOld {
-			return fmt.Errorf("Internal type casting error")
+			return fmt.Errorf("internal type casting error")
 		}
 		log.Printf("[DEBUG] Old worspace config: %v, new: %v", old, new)
 		patch := map[string]interface{}{}

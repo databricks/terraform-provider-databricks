@@ -41,11 +41,11 @@ func (a VPCEndpointAPI) Create(vpcEndpoint *VPCEndpoint) error {
 			return nil
 		case "pending", "pendingacceptance":
 			return resource.RetryableError(
-				fmt.Errorf("Endpoint %s is still %s",
+				fmt.Errorf("endpoint %s is still %s",
 					ve.AwsVPCEndpointID, ve.State))
 		default:
 			return resource.NonRetryableError(
-				fmt.Errorf("Cannot register %s: %s",
+				fmt.Errorf("cannot register %s: %s",
 					ve.AwsVPCEndpointID, ve.State))
 		}
 	})

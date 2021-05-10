@@ -82,19 +82,19 @@ func TestProviderConfigurationOptions(t *testing.T) {
 	azResourceID := "/subscriptions/a/resourceGroups/b/providers/Microsoft.Databricks/workspaces/c"
 	tests := []providerConfigTest{
 		{
-			assertError: "Authentication is not configured for provider",
+			assertError: "authentication is not configured for provider",
 		},
 		{
 			env: map[string]string{
 				"DATABRICKS_HOST": "x",
 			},
-			assertError: "Authentication is not configured for provider",
+			assertError: "authentication is not configured for provider",
 		},
 		{
 			env: map[string]string{
 				"DATABRICKS_TOKEN": "x",
 			},
-			assertError: "Host is empty, but is required by token",
+			assertError: "host is empty, but is required by token",
 		},
 		{
 			env: map[string]string{
@@ -117,7 +117,7 @@ func TestProviderConfigurationOptions(t *testing.T) {
 				"DATABRICKS_USERNAME": "x",
 				"DATABRICKS_PASSWORD": "x",
 			},
-			assertError: "Host is empty, but is required by basic_auth",
+			assertError: "host is empty, but is required by basic_auth",
 			assertToken: "x",
 			assertHost:  "https://x",
 		},
@@ -177,7 +177,7 @@ func TestProviderConfigurationOptions(t *testing.T) {
 			env: map[string]string{
 				"CONFIG_FILE": "x",
 			},
-			assertError: "Authentication is not configured for provider",
+			assertError: "authentication is not configured for provider",
 		},
 		{
 			// loading with DEFAULT profile in databrickscfs
@@ -241,7 +241,7 @@ func TestProviderConfigurationOptions(t *testing.T) {
 				"PATH": "whatever",
 				"HOME": "../common/testdata",
 			},
-			assertError: "Most likely Azure CLI is not installed.",
+			assertError: "most likely Azure CLI is not installed.",
 		},
 		{
 			azureWorkspaceResourceID: azResourceID,

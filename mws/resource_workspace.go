@@ -108,12 +108,13 @@ func (a WorkspacesAPI) WaitForRunning(ws Workspace, timeout time.Duration) error
 func (a WorkspacesAPI) Patch(ws Workspace, timeout time.Duration) error {
 	workspacesAPIPath := fmt.Sprintf("/accounts/%s/workspaces/%d", ws.AccountID, ws.WorkspaceID)
 	err := a.client.Patch(a.context, workspacesAPIPath, Workspace{
-		AwsRegion:              ws.AwsRegion,
-		CredentialsID:          ws.CredentialsID,
-		StorageConfigurationID: ws.StorageConfigurationID,
-		IsNoPublicIPEnabled:    ws.IsNoPublicIPEnabled,
-		NetworkID:              ws.NetworkID,
-		CustomerManagedKeyID:   ws.CustomerManagedKeyID,
+		AwsRegion:                           ws.AwsRegion,
+		CredentialsID:                       ws.CredentialsID,
+		StorageConfigurationID:              ws.StorageConfigurationID,
+		IsNoPublicIPEnabled:                 ws.IsNoPublicIPEnabled,
+		NetworkID:                           ws.NetworkID,
+		ManagedServicesCustomerManagedKeyID: ws.ManagedServicesCustomerManagedKeyID,
+		StoragexCustomerManagedKeyID:        ws.StoragexCustomerManagedKeyID,
 	})
 	if err != nil {
 		return err
@@ -178,6 +179,10 @@ func ResourceWorkspace() *schema.Resource {
 			return !strings.HasSuffix(new, old)
 		}
 		s["is_no_public_ip_enabled"].Default = false
+		s["customer_managed_key_id"].Deprecated = "Use managed_services_customer_managed_key_id instead"
+		s["customer_managed_key_id"].ConflictsWith = []string{"managed_services_customer_managed_key_id", "storage_customer_managed_key_id"}
+		s["managed_services_customer_managed_key_id"].ConflictsWith = []string{"customer_managed_key_id"}
+		s["storage_customer_managed_key_id"].ConflictsWith = []string{"customer_managed_key_id"}
 		return s
 	})
 	p := common.NewPairSeparatedID("account_id", "workspace_id", "/").Schema(
@@ -192,6 +197,11 @@ func ResourceWorkspace() *schema.Resource {
 			workspacesAPI := NewWorkspacesAPI(ctx, c)
 			if err := common.DataToStructPointer(d, s, &workspace); err != nil {
 				return err
+			}
+			if len(workspace.CustomerManagedKeyID) > 0 && len(workspace.ManagedServicesCustomerManagedKeyID) == 0 {
+				log.Print("[INFO] Using existing customer_managed_key_id as value for new managed_services_customer_managed_key_id")
+				workspace.ManagedServicesCustomerManagedKeyID = workspace.CustomerManagedKeyID
+				workspace.CustomerManagedKeyID = ""
 			}
 			if err := workspacesAPI.Create(&workspace, d.Timeout(schema.TimeoutCreate)); err != nil {
 				return err
@@ -221,6 +231,11 @@ func ResourceWorkspace() *schema.Resource {
 			workspacesAPI := NewWorkspacesAPI(ctx, c)
 			if err := common.DataToStructPointer(d, s, &workspace); err != nil {
 				return err
+			}
+			if len(workspace.CustomerManagedKeyID) > 0 && len(workspace.ManagedServicesCustomerManagedKeyID) == 0 {
+				log.Print("[INFO] Using existing customer_managed_key_id as value for new managed_services_customer_managed_key_id")
+				workspace.ManagedServicesCustomerManagedKeyID = workspace.CustomerManagedKeyID
+				workspace.CustomerManagedKeyID = ""
 			}
 			return workspacesAPI.Patch(workspace, d.Timeout(schema.TimeoutUpdate))
 		},

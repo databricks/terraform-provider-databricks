@@ -40,6 +40,7 @@ resource "databricks_mws_customer_managed_keys" "my_cmk" {
         key_arn   = aws_kms_key.customer_managed_key.arn
         key_alias = aws_kms_alias.customer_managed_key_alias.name
     }
+    use_cases = ["MANAGED_SERVICES", "STORAGE"]
 }
 ```
 
@@ -50,6 +51,9 @@ The following arguments are required:
 
 * `aws_key_info` - This field is a block and is documented below.
 * `account_id` - Account Id that could be found in the bottom left corner of [Accounts Console](https://accounts.cloud.databricks.com/)
+* `use_cases` - list of use cases for which this key will be used.  Possible values are:
+  * `MANAGED_SERVICES` - for encryption of the workspace objects (notebooks, secrets) that are stored in the control plane
+  * `STORAGE` - for encryption of the  DBFS Storage & Cluster EBS Volumes
 
 
 ### aws_key_info Configuration Block

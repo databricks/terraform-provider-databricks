@@ -68,7 +68,7 @@ func (mp MountPoint) Mount(mo Mount, client *common.DatabricksClient) (source st
 	if err != nil {
 		return
 	}
-	b := regexp.MustCompile(`"\{secrets/([^/]+)/([^\}]+)\}"`)
+	b := regexp.MustCompile(`"\{\{secrets/([^/]+)/([^\}]+)\}\}"`)
 	extraConfigs = b.ReplaceAll(extraConfigs, []byte(`dbutils.secrets.get("$1", "$2")`))
 	command := fmt.Sprintf(`
 		def safe_mount(mount_point, mount_source, configs):

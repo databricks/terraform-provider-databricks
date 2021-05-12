@@ -31,7 +31,7 @@ func (m AzureADLSGen1Mount) Config(client *common.DatabricksClient) map[string]s
 		m.PrefixType + ".oauth2.access.token.provider.type": "ClientCredential",
 
 		m.PrefixType + ".oauth2.client.id":   m.ClientID,
-		m.PrefixType + ".oauth2.credential":  fmt.Sprintf("{secrets/%s/%s}", m.SecretScope, m.SecretKey),
+		m.PrefixType + ".oauth2.credential":  fmt.Sprintf("{{secrets/%s/%s}}", m.SecretScope, m.SecretKey),
 		m.PrefixType + ".oauth2.refresh.url": fmt.Sprintf("%s/%s/oauth2/token", aadEndpoint, m.TenantID),
 	}
 }

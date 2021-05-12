@@ -33,7 +33,7 @@ func (m AzureBlobMount) Config(client *common.DatabricksClient) map[string]strin
 		confKey = fmt.Sprintf("fs.azure.account.key.%s.blob.core.windows.net", m.StorageAccountName)
 	}
 	return map[string]string{
-		confKey: fmt.Sprintf("{secrets/%s/%s}", m.SecretScope, m.SecretKey),
+		confKey: fmt.Sprintf("{{secrets/%s/%s}}", m.SecretScope, m.SecretKey),
 	}
 }
 

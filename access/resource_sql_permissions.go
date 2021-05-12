@@ -307,6 +307,12 @@ func ResourceSqlPermissions() *schema.Resource {
 			s[field].Optional = true
 			s[field].AtLeastOneOf = alof
 		}
+		s["database"].DiffSuppressFunc = func(k, old, new string, d *schema.ResourceData) bool {
+			if old == "default" && new == "" {
+				return true
+			}
+			return false
+		}
 		s["cluster_id"].Computed = true
 		return s
 	})

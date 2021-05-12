@@ -8,10 +8,11 @@
 * Mounting clusters are recreated now, even when they are deleted ([#637](https://github.com/databrickslabs/terraform-provider-databricks/issues/637))
 * Fixed handling of empty blocks for clusters/jobs/instance pools ([22cdf2f](https://github.com/databrickslabs/terraform-provider-databricks/commit/22cdf2fc9d50f67b14b49d11e7fbaacce0f52399))
 * Mark instance pool attributes as ForceNew when it's requited ([#629](https://github.com/databrickslabs/terraform-provider-databricks/issues/629))
+* Switched to use https://staticcheck.io/ for static code analysis ([#602](https://github.com/databrickslabs/terraform-provider-databricks/issues/602))
 
 **Behavior changes**
 
-* The `customer_managed_key_id` field in `databricks_mws_workspaces` resource is deprecated and should be replaced with `managed_services_customer_managed_key_id` (and optionally `storage_customer_managed_key_id`).  `databricks_mws_customer_managed_keys` now requires the parameter `use_cases` ([#642](https://github.com/databrickslabs/terraform-provider-databricks/pull/642))
+* The `customer_managed_key_id` field in `databricks_mws_workspaces` resource is deprecated and should be replaced with `managed_services_customer_managed_key_id` (and optionally `storage_customer_managed_key_id`). `databricks_mws_customer_managed_keys` now requires the parameter `use_cases` ([#642](https://github.com/databrickslabs/terraform-provider-databricks/pull/642)). *If you've used the resource before, please add `use_cases = ["MANAGED_SERVICES"]` to keep the behaviour.*
 
 Updated dependency versions:
 

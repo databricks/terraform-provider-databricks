@@ -244,3 +244,11 @@ func TestResourceCustomerManagedKeyDelete(t *testing.T) {
 	assert.NoError(t, err, err)
 	assert.Equal(t, "abc/cmkid", d.Id())
 }
+
+func TestCmkStateUpgrader(t *testing.T) {
+	state, err := migrateResourceCustomerManagedKeyV0(context.Background(),
+		map[string]interface{}{}, nil)
+	assert.NoError(t, err)
+	_, ok := state["use_cases"]
+	assert.True(t, ok)
+}

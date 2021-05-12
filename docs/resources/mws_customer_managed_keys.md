@@ -14,6 +14,8 @@ Please follow this [complete runnable example](../guides/aws-workspace.md) with 
 
 ## Example Usage
 
+-> **Note** If you've used the resource before, please add `use_cases = ["MANAGED_SERVICES"]` to keep the previous behaviour.
+
 ```hcl
 variable "databricks_account_id" {
   description = "Account Id that could be found in the bottom left corner of https://accounts.cloud.databricks.com/"
@@ -26,7 +28,9 @@ resource "aws_kms_grant" "databricks-grant" {
   name = "databricks-grant"
   key_id  = aws_kms_key.customer_managed_key.key_id
   grantee_principal = "arn:aws:iam::414351767826:root"
-  operations = ["Encrypt", "Decrypt"]
+  operations = ["Encrypt", "Decrypt", "DescribeKey", 
+    "GenerateDataKey", "ReEncryptFrom", "ReEncryptTo", 
+    "GenerateDataKeyWithoutPlaintext"]
 }
 
 resource "aws_kms_alias" "customer_managed_key_alias" {
@@ -51,7 +55,7 @@ The following arguments are required:
 
 * `aws_key_info` - This field is a block and is documented below.
 * `account_id` - Account Id that could be found in the bottom left corner of [Accounts Console](https://accounts.cloud.databricks.com/)
-* `use_cases` - list of use cases for which this key will be used.  Possible values are:
+* `use_cases` - *(since v0.3.4)* List of use cases for which this key will be used. *If you've used the resource before, please add `use_cases = ["MANAGED_SERVICES"]` to keep the previous behaviour.* Possible values are:
   * `MANAGED_SERVICES` - for encryption of the workspace objects (notebooks, secrets) that are stored in the control plane
   * `STORAGE` - for encryption of the  DBFS Storage & Cluster EBS Volumes
 

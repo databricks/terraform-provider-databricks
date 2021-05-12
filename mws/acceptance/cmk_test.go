@@ -25,6 +25,7 @@ func TestMwsAccCustomerManagedKeys(t *testing.T) {
 					key_arn   = "{env.TEST_KMS_KEY_ARN}"
 					key_alias = "{env.TEST_KMS_KEY_ALIAS}"
 				}
+				use_cases = ["MANAGED_SERVICES"]
 			}`,
 		},
 	})

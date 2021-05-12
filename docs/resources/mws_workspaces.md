@@ -179,7 +179,9 @@ The following arguments are available:
 * `network_id` - (Optional) `network_id` from [networks](mws_networks.md)
 * `account_id` - Account Id that could be found in the bottom left corner of [Accounts Console](https://accounts.cloud.databricks.com/).
 * `credentials_id` - `credentials_id` from [credentials](mws_credentials.md)
-* `customer_managed_key_id` - (Optional) `customer_managed_key_id` from [customer managed keys](mws_customer_managed_keys.md)
+* `customer_managed_key_id` - (Optional, **Deprecated**, see `managed_services_customer_managed_key_id` and `storage_customer_managed_key_id`) `customer_managed_key_id` from [customer managed keys](mws_customer_managed_keys.md)
+* `managed_services_customer_managed_key_id` - (Optional) `customer_managed_key_id` from [customer managed keys](mws_customer_managed_keys.md) with `use_cases` set to `MANAGED_SERVICES`. This is used to encrypt the workspace's notebook and secret data in the control plane.
+* `storage_customer_managed_key_id` - (Optional, **Deprecated**) `customer_managed_key_id` from [customer managed keys](mws_customer_managed_keys.md) with `use_cases` set to `STORAGE`. This is used to encrypt the DBFS Storage & Cluster EBS Volumes.
 * `deployment_name` - part of URL: `https://<deployment-name>.cloud.databricks.com`
 * `workspace_name` - name of the workspace, will appear on UI
 * `aws_region` - AWS region of VPC

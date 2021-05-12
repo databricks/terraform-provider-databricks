@@ -22,6 +22,7 @@ type CustomerManagedKey struct {
 	AwsKeyInfo           *AwsKeyInfo `json:"aws_key_info"`
 	AccountID            string      `json:"account_id"`
 	CreationTime         int64       `json:"creation_time,omitempty" tf:"computed"`
+	UseCases             []string    `json:"use_cases"`
 }
 
 // NewCustomerManagedKeysAPI creates CustomerManagedKeysAPI instance from provider meta

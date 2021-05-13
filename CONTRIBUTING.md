@@ -50,7 +50,7 @@ echo "export PATH=\$PATH:$(go env GOPATH)/bin" >> ~/.bash_profile
 
 Installing `staticcheck`:
 ```bash
-go install honnef.co/go/tools/cmd/staticcheck@latest
+go install honnef.co/go/tools/cmd/staticcheck
 ```
 
 Installing `gotestsum`:

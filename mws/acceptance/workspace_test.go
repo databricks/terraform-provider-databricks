@@ -26,6 +26,7 @@ func TestMwsAccWorkspaces(t *testing.T) {
 					key_arn   = "{env.TEST_KMS_KEY_ARN}"
 					key_alias = "{env.TEST_KMS_KEY_ALIAS}"
 				}
+                use_cases = ["STORAGE", "MANAGED_SERVICES"]
 			}
 			resource "databricks_mws_storage_configurations" "this" {
 				account_id                 = "{env.DATABRICKS_ACCOUNT_ID}"
@@ -52,7 +53,7 @@ func TestMwsAccWorkspaces(t *testing.T) {
 		
 				credentials_id = databricks_mws_credentials.this.credentials_id
 				storage_configuration_id = databricks_mws_storage_configurations.this.storage_configuration_id
-				customer_managed_key_id = databricks_mws_customer_managed_keys.this.customer_managed_key_id
+				managed_services_customer_managed_key_id = databricks_mws_customer_managed_keys.this.customer_managed_key_id
 				network_id = databricks_mws_networks.this.network_id
 			}`,
 		},

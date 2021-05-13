@@ -4,6 +4,23 @@
 
 * Fixed state refresh bugs in `databricks_sql_permissions` ([#620](https://github.com/databrickslabs/terraform-provider-databricks/issues/620), [#619](https://github.com/databrickslabs/terraform-provider-databricks/issues/620))
 * Fixed `workspace_ids_filter` mapping for `databricks_mws_log_delivery` ([#635](https://github.com/databrickslabs/terraform-provider-databricks/issues/635))
+* Multiple documentation improvements ([#597](https://github.com/databrickslabs/terraform-provider-databricks/issues/597), [eb60d10](https://github.com/databrickslabs/terraform-provider-databricks/commit/eb60d103ea63221a1eb0069723ba3a0af45dbe3b), [edcd4b1](https://github.com/databrickslabs/terraform-provider-databricks/commit/edcd4b121254e3ff3130bed9c4ef9d849d342561), [404bdab](https://github.com/databrickslabs/terraform-provider-databricks/commit/404bdab637c0a4a15b6a4b6a77567166315955ca), [#615](https://github.com/databrickslabs/terraform-provider-databricks/pull/615), [f14b825](https://github.com/databrickslabs/terraform-provider-databricks/commit/f14b825e9cb11d75e9ad077b35c7e9c410fd8351), [e615c3a](https://github.com/databrickslabs/terraform-provider-databricks/commit/e615c3a68d1ad45f91453ec448b55ca7b204fb97), [#612](https://github.com/databrickslabs/terraform-provider-databricks/pull/612))
+* Mounting clusters are recreated now, even when they are deleted ([#637](https://github.com/databrickslabs/terraform-provider-databricks/issues/637))
+* Fixed handling of empty blocks for clusters/jobs/instance pools ([22cdf2f](https://github.com/databrickslabs/terraform-provider-databricks/commit/22cdf2fc9d50f67b14b49d11e7fbaacce0f52399))
+* Mark instance pool attributes as ForceNew when it's requited ([#629](https://github.com/databrickslabs/terraform-provider-databricks/issues/629))
+* Switched to use https://staticcheck.io/ for static code analysis ([#602](https://github.com/databrickslabs/terraform-provider-databricks/issues/602))
+
+**Behavior changes**
+
+* The `customer_managed_key_id` field in `databricks_mws_workspaces` resource is deprecated and should be replaced with `managed_services_customer_managed_key_id` (and optionally `storage_customer_managed_key_id`). `databricks_mws_customer_managed_keys` now requires the parameter `use_cases` ([#642](https://github.com/databrickslabs/terraform-provider-databricks/pull/642)). *If you've used the resource before, please add `use_cases = ["MANAGED_SERVICES"]` to keep the behaviour.*
+
+Updated dependency versions:
+
+* Bump github.com/aws/aws-sdk-go to v1.38.30
+* Bump github.com/hashicorp/go-retryablehttp to v0.7.0
+* Bump github.com/hashicorp/hcl/v2 to v2.10.0
+* Bump github.com/hashicorp/terraform-plugin-sdk/v2 to v2.6.1
+* Bump github.com/zclconf/go-cty to v1.8.2
 
 ## 0.3.3
 

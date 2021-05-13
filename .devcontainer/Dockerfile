@@ -53,6 +53,6 @@ RUN \
     # --> Go symbols and outline for go to symbol support and test support 
     && go get github.com/acroca/go-symbols@v0.1.1 && go get github.com/ramya-rao-a/go-outline@7182a932836a71948db4a81991a494751eccfe77 \
     # --> Static checker
-    && go install honnef.co/go/tools/cmd/staticcheck@latest \
+    && go install honnef.co/go/tools/cmd/staticcheck \
 
 USER developer

@@ -23,7 +23,7 @@ data "databricks_user" "me" {
 
 resource "databricks_group_member" "my_member_a" {
   group_id = data.databricks_group.admins.id
-  member_id = databricks_user.me.id
+  member_id = data.databricks_user.me.id
 }
 ```
 

@@ -5,15 +5,40 @@ subcategory: "AWS"
 
 -> **Public Preview** This feature is in [Public Preview](https://docs.databricks.com/release-notes/release-types.html). Contact your Databricks representative to request access. 
 
+Allows you to create a [Private Access Setting](https://docs.databricks.com/administration-guide/cloud-configurations/aws/privatelink.html#step-5-create-a-private-access-settings-configuration-using-the-databricks-account-api) that can be used as part of a [databricks_mws_workspaces](mws_networks.md) resource to create a [Databricks Workspace that leverages AWS PrivateLink](https://docs.databricks.com/administration-guide/cloud-configurations/aws/privatelink.html).
+
+It is strongly recommended that customers read the [Enable Private Link](https://docs.databricks.com/administration-guide/cloud-configurations/aws/privatelink.html) documentation before trying to leverage this resource.
+
 -> **Note** This resource has an evolving API, which will change in the upcoming versions of the provider in order to simplify user experience.
 
 ## Example Usage
 
 ```hcl
 resource "databricks_mws_private_access_settings" "pas" {
+  provider                     = databricks.mws
   account_id                   = var.databricks_account_id
-  private_access_settings_name = "Private Access Settings for ${aws_vpc.main.id}"
-  region                       = local.region
+  private_access_settings_name = "Private Access Settings for ${local.prefix}"
+  region                       = var.region
+  public_access_enabled        = true
+}
+
+```
+
+The `databricks_mws_private_access_settings.pas.private_access_settings_id` can then be used as part of a [databricks_mws_workspaces](databricks_mws_workspaces.md) resource:
+
+```hcl
+resource "databricks_mws_workspaces" "this" {
+  provider                   = databricks.mws
+  account_id                 = var.databricks_account_id
+  aws_region                 = var.region
+  workspace_name             = local.prefix
+  deployment_name            = local.prefix
+  credentials_id             = databricks_mws_credentials.this.credentials_id
+  storage_configuration_id   = databricks_mws_storage_configurations.this.storage_configuration_id
+  network_id                 = databricks_mws_networks.this.network_id
+  private_access_settings_id = databricks_mws_private_access_settings.pas.private_access_settings_id
+  pricing_tier               = "ENTERPRISE"
+  depends_on                 = [databricks_mws_networks.this]
 }
 ```
 

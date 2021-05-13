@@ -13,11 +13,13 @@ func TestDataSourceUser(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/Users?filter=userName%20eq%20%27mr.test%40example.com%27",
-				Response: []ScimUser{
-					{
-						ID:       "123",
-						UserName: "mr.test@example.com",
+				Resource: "/api/2.0/preview/scim/v2/Users?filter=userName%20eq%20%27ds%27",
+				Response: UserList{
+					Resources: []ScimUser{
+						{
+							ID:       "123",
+							UserName: "mr.test@example.com",
+						},
 					},
 				},
 			},

@@ -8,8 +8,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-
-
 func TestDataSourceUser(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{

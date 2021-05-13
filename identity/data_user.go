@@ -11,13 +11,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
-
 // DataSourceUser returns information about user specified by user name
 func DataSourceUser() *schema.Resource {
 	type entity struct {
-		UserName             	string   `json:"user_name"`
-		Home             	string   `json:"home" tf:"computed"`
-		Alphanumeric             	string   `json:"alphanumeric" tf:"computed"`
+		UserName     string `json:"user_name"`
+		Home         string `json:"home" tf:"computed"`
+		Alphanumeric string `json:"alphanumeric" tf:"computed"`
 	}
 
 	s := common.StructToSchema(entity{}, func(

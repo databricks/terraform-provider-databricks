@@ -170,6 +170,8 @@ resource "databricks_mws_workspaces" "this" {
 }
 ```
 
+In order to create a [Databricks Workspace that leverages AWS PrivateLink](https://docs.databricks.com/administration-guide/cloud-configurations/aws/privatelink.html) please ensure that you have read and understood the [Enable Private Link](https://docs.databricks.com/administration-guide/cloud-configurations/aws/privatelink.html) documentation and then customise the example above with the relevant examples from [mws_vpc_endpoint](mws_vpc_endpoint.md), [mws_private_access_settings](mws_private_access_settings.md) and [mws_networks](mws_networks.md). 
+
 ## Argument Reference
 
 -> **Note** All workspaces would be verified to get into runnable state or cleaned up upon failure.

@@ -121,10 +121,7 @@ func GetOrCreateMountingClusterWithInstanceProfile(
 		return i, err
 	}
 	instanceProfileParts := strings.Split(ia.Resource, "/")
-	if len(instanceProfileParts) != 2 {
-		return i, fmt.Errorf("should have gotten two parts: %v", instanceProfileParts)
-	}
-	clusterName := fmt.Sprintf("terraform-mount-%s", instanceProfileParts[1])
+	clusterName := fmt.Sprintf("terraform-mount-%s", strings.Join(instanceProfileParts[1:], "-"))
 	return clustersAPI.GetOrCreateRunningCluster(clusterName, compute.Cluster{
 		NumWorkers:  1,
 		ClusterName: clusterName,

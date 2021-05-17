@@ -139,7 +139,7 @@ You can use `host` and `token` parameters to supply credentials to the workspace
 
 ``` hcl
 provider "databricks" {
-  host  = "http://abc-cdef-ghi.cloud.databricks.com"
+  host  = "https://abc-cdef-ghi.cloud.databricks.com"
   token = "dapitokenhere"
 }
 ```
@@ -152,7 +152,7 @@ You can use the `username` + `password` attributes to authenticate provider for 
 
 ``` hcl
 provider "databricks" {
-  host = "http://accounts.cloud.databricks.com"
+  host = "https://accounts.cloud.databricks.com"
   username = var.user
   password = var.password
 }

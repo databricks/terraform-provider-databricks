@@ -17,6 +17,7 @@ import (
 	"github.com/databrickslabs/terraform-provider-databricks/permissions"
 	"github.com/databrickslabs/terraform-provider-databricks/repos"
 	"github.com/databrickslabs/terraform-provider-databricks/secrets"
+	"github.com/databrickslabs/terraform-provider-databricks/sql"
 	"github.com/databrickslabs/terraform-provider-databricks/workspace"
 
 	"github.com/databrickslabs/terraform-provider-databricks/storage"
@@ -34,6 +35,49 @@ var (
 	gsRegex                 = regexp.MustCompile(`^gs://([^/]+)(/.*)?$`)
 	globalWorkspaceConfName = "global_workspace_conf"
 )
+
+type sqlaListResponse struct {
+	Results    []map[string]interface{} `json:"results"`
+	Page       int64                    `json:"page"`
+	TotalCount int64                    `json:"count"`
+	PageSize   int64                    `json:"page_size"`
+}
+
+// Generic function to list objects related to the SQL Analytics
+func sqlaListObjects(ic *importContext, path string) ([]map[string]interface{}, error) {
+	var listResponse sqlaListResponse
+	err := ic.Client.Get(ic.Context, path, nil, &listResponse)
+	if err != nil {
+		return nil, err
+	}
+
+	totalCount := int(listResponse.TotalCount)
+	events := make([]map[string]interface{}, totalCount)
+	if totalCount == 0 {
+		return events, nil
+	}
+	startPos := 0
+	curPos := len(listResponse.Results)
+	copy(events[startPos:curPos], listResponse.Results)
+	for curPos < totalCount {
+		err := ic.Client.Get(ic.Context, path,
+			map[string]interface{}{"page_size": listResponse.PageSize, "page": listResponse.Page + 1},
+			&listResponse)
+		if err != nil {
+			return nil, err
+		}
+		startPos = curPos
+		curLen := len(listResponse.Results)
+		restItems := totalCount - startPos
+		if restItems < curLen {
+			curLen = restItems
+		}
+		curPos += curLen
+		copy(events[startPos:curPos], listResponse.Results[0:curLen])
+	}
+
+	return events[0:curPos], err
+}
 
 func generateMountBody(ic *importContext, body *hclwrite.Body, r *resource) error {
 	mount := ic.mountMap[r.ID]
@@ -899,6 +943,72 @@ var resourcesMap map[string]importable = map[string]importable{
 		},
 		Depends: []reference{
 			{Path: "source", File: true},
+		},
+	},
+	// "databricks_sql_query": {
+	// 	Service: "sqlanalytics",
+	// 	Name: func(d *schema.ResourceData) string {
+	// 		return d.Get("id").(string)
+	// 	},
+	// 	List: func(ic *importContext) error {
+	// 		if qs, err := sqlaListObjects(ic, "/preview/sql/queries"); err == nil {
+	// 			for i, q := range qs {
+	// 				ic.Emit(&resource{
+	// 					Resource: "databricks_sql_query",
+	// 					ID:       q["id"].(string),
+	// 					Name:     q["id"].(string),
+	// 				})
+	// 				log.Printf("[INFO] Imported %d of %d SQLA queries", i, len(qs))
+	// 			}
+	// 		}
+	// 		return nil
+	// 	},
+	// 	/*		Import: func(ic *importContext, r *resource) error {
+	// 			// TODO: implement
+	// 			// if ic.meAdmin {
+	// 			// 	ic.Emit(&resource{
+	// 			// 		Resource: "databricks_permissions",
+	// 			// 		ID:       fmt.Sprintf("/clusters/%s", r.ID),
+	// 			// 		Name:     r.Data.Get("cluster_name").(string),
+	// 			// 	})
+	// 			// }
+	// 			return nil
+	// 		},*/
+	// },
+	"databricks_sql_endpoint": {
+		Service: "sql",
+		Name: func(d *schema.ResourceData) string {
+			name := d.Get("name").(string)
+			if name == "" {
+				name = d.Get("id").(string)
+			}
+			return name
+		},
+		List: func(ic *importContext) error {
+			endpoints, err := sql.NewSQLEndpointsAPI(ic.Context, ic.Client).List()
+			if err != nil {
+				return err
+			}
+			for i, q := range endpoints {
+				ic.Emit(&resource{
+					Resource: "databricks_sql_endpoint",
+					ID:       q.ID,
+					Name:     q.Name,
+				})
+				log.Printf("[INFO] Imported %d of %d SQLA endpoints", i, len(endpoints))
+			}
+			return nil
+		},
+		Import: func(ic *importContext, r *resource) error {
+			// TODO: implement
+			if ic.meAdmin {
+				ic.Emit(&resource{
+					Resource: "databricks_permissions",
+					ID:       fmt.Sprintf("/sql/endpoints/%s", r.ID),
+					Name:     r.Data.Get("name").(string),
+				})
+			}
+			return nil
 		},
 	},
 }

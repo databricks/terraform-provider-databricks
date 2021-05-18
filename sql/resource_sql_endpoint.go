@@ -82,8 +82,8 @@ type DataSource struct {
 	EndpointID string `json:"endpoint_id"`
 }
 
-// EndpointList ...
-type EndpointList struct {
+// endpointList ...
+type endpointList struct {
 	Endpoints []SQLEndpoint `json:"endpoints"`
 }
 
@@ -99,9 +99,13 @@ type SQLEndpointsAPI struct {
 }
 
 // List all SQL endpoints
-func (a SQLEndpointsAPI) List() (l EndpointList, err error) {
-	err = a.client.Get(a.context, "/sql/endpoints", nil, &l)
-	return
+func (a SQLEndpointsAPI) List() ([]SQLEndpoint, error) {
+	var lst endpointList
+	if err := a.client.Get(a.context, "/sql/endpoints", nil, &lst); err != nil {
+		return nil, err
+	}
+
+	return lst.Endpoints, nil
 }
 
 // Start ..

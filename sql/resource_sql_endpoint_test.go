@@ -231,8 +231,8 @@ func TestSQLEnpointAPI(t *testing.T) {
 		{
 			Method:   "GET",
 			Resource: "/api/2.0/sql/endpoints",
-			Response: EndpointList{
-				Endpoints: []SQLEndpoint{
+			Response: map[string]interface{}{
+				"endpoints": []SQLEndpoint{
 					{
 						ID:   "foo",
 						Name: "bar",
@@ -280,7 +280,7 @@ func TestSQLEnpointAPI(t *testing.T) {
 		a := NewSQLEndpointsAPI(ctx, client)
 		list, err := a.List()
 		require.NoError(t, err)
-		assert.Len(t, list.Endpoints, 1)
+		assert.Len(t, list, 1)
 
 		err = a.Start("failstart", 5*time.Minute)
 		assert.EqualError(t, err, "nope")

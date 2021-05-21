@@ -178,7 +178,20 @@ func ResourceWorkspace() *schema.Resource {
 			// https://github.com/databrickslabs/terraform-provider-databricks/issues/382
 			return !strings.HasSuffix(new, old)
 		}
-		s["is_no_public_ip_enabled"].Default = false
+		// It cannot be marked as `omitempty` in the struct annotation because Go's JON marshaller
+		// skips booleans set to `false` if set. Thus, we mark it optional here.
+		s["is_no_public_ip_enabled"].Optional = true
+		s["is_no_public_ip_enabled"].Required = false
+		// The API defaults this field to `true`. Apply the same behavior here.
+		s["is_no_public_ip_enabled"].Default = true
+		// The value of `is_no_public_ip_enabled` isn't part of the GET payload.
+		// Keep diff when creating (i.e. `old` == ""), suppress diff otherwise.
+		s["is_no_public_ip_enabled"].DiffSuppressFunc = func(k, old, new string, d *schema.ResourceData) bool {
+			if old == "" {
+				return false
+			}
+			return true
+		}
 		s["customer_managed_key_id"].Deprecated = "Use managed_services_customer_managed_key_id instead"
 		s["customer_managed_key_id"].ConflictsWith = []string{"managed_services_customer_managed_key_id", "storage_customer_managed_key_id"}
 		s["managed_services_customer_managed_key_id"].ConflictsWith = []string{"customer_managed_key_id"}
@@ -220,6 +233,9 @@ func ResourceWorkspace() *schema.Resource {
 			if err != nil {
 				return err
 			}
+			// Default the value of `is_no_public_ip_enabled` because it isn't part of the GET payload.
+			// The field is only used on creation and we therefore suppress all diffs.
+			workspace.IsNoPublicIPEnabled = true
 			workspace.WorkspaceURL = fmt.Sprintf("https://%s.cloud.databricks.com", workspace.DeploymentName)
 			if err = common.StructToData(workspace, s, d); err != nil {
 				return err

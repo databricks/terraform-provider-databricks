@@ -78,7 +78,68 @@ func TestResourceWorkspaceCreate(t *testing.T) {
 			"storage_customer_managed_key_id":          "def",
 			"deployment_name":                          "900150983cd24fb0",
 			"workspace_name":                           "labdata",
-			"is_no_public_ip_enabled":                  true,
+			"network_id":                               "fgh",
+			"storage_configuration_id":                 "ghi",
+		},
+		Create: true,
+	}.Apply(t)
+	assert.NoError(t, err, err)
+	assert.Equal(t, "abc/1234", d.Id())
+}
+
+func TestResourceWorkspaceCreateWithIsNoPublicIPEnabledFalse(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/accounts/abc/workspaces",
+				ExpectedRequest: Workspace{
+					AccountID:                           "abc",
+					IsNoPublicIPEnabled:                 false,
+					WorkspaceName:                       "labdata",
+					DeploymentName:                      "900150983cd24fb0",
+					AwsRegion:                           "us-east-1",
+					CredentialsID:                       "bcd",
+					StorageConfigurationID:              "ghi",
+					NetworkID:                           "fgh",
+					ManagedServicesCustomerManagedKeyID: "def",
+					StoragexCustomerManagedKeyID:        "def",
+				},
+				Response: Workspace{
+					WorkspaceID:    1234,
+					AccountID:      "abc",
+					DeploymentName: "900150983cd24fb0",
+				},
+			},
+			{
+				Method:       "GET",
+				ReuseRequest: true,
+				Resource:     "/api/2.0/accounts/abc/workspaces/1234",
+				Response: Workspace{
+					WorkspaceID:                         1234,
+					WorkspaceStatus:                     WorkspaceStatusRunning,
+					WorkspaceName:                       "labdata",
+					DeploymentName:                      "900150983cd24fb0",
+					AwsRegion:                           "us-east-1",
+					CredentialsID:                       "bcd",
+					StorageConfigurationID:              "ghi",
+					NetworkID:                           "fgh",
+					ManagedServicesCustomerManagedKeyID: "def",
+					StoragexCustomerManagedKeyID:        "def",
+					AccountID:                           "abc",
+				},
+			},
+		},
+		Resource: ResourceWorkspace(),
+		State: map[string]interface{}{
+			"account_id":     "abc",
+			"aws_region":     "us-east-1",
+			"credentials_id": "bcd",
+			"managed_services_customer_managed_key_id": "def",
+			"storage_customer_managed_key_id":          "def",
+			"deployment_name":                          "900150983cd24fb0",
+			"workspace_name":                           "labdata",
+			"is_no_public_ip_enabled":                  false,
 			"network_id":                               "fgh",
 			"storage_configuration_id":                 "ghi",
 		},
@@ -137,7 +198,6 @@ func TestResourceWorkspaceCreateLegacyConfig(t *testing.T) {
 			"customer_managed_key_id":  "def",
 			"deployment_name":          "900150983cd24fb0",
 			"workspace_name":           "labdata",
-			"is_no_public_ip_enabled":  true,
 			"network_id":               "fgh",
 			"storage_configuration_id": "ghi",
 		},
@@ -199,7 +259,6 @@ func TestResourceWorkspaceRead(t *testing.T) {
 				Response: Workspace{
 					AccountID:                           "abc",
 					WorkspaceStatus:                     WorkspaceStatusRunning,
-					IsNoPublicIPEnabled:                 true,
 					WorkspaceName:                       "labdata",
 					DeploymentName:                      "900150983cd24fb0",
 					AwsRegion:                           "us-east-1",
@@ -243,7 +302,6 @@ func TestResourceWorkspaceRead_Issue382(t *testing.T) {
 				Response: Workspace{
 					AccountID:                           "abc",
 					WorkspaceStatus:                     WorkspaceStatusRunning,
-					IsNoPublicIPEnabled:                 true,
 					WorkspaceName:                       "labdata",
 					DeploymentName:                      "prefix-900150983cd24fb0",
 					AwsRegion:                           "us-east-1",
@@ -264,7 +322,6 @@ func TestResourceWorkspaceRead_Issue382(t *testing.T) {
 			"storage_customer_managed_key_id":          "def",
 			"deployment_name":                          "900150983cd24fb0",
 			"workspace_name":                           "labdata",
-			"is_no_public_ip_enabled":                  "true",
 			"network_id":                               "fgh",
 			"storage_configuration_id":                 "ghi",
 		},
@@ -276,7 +333,6 @@ func TestResourceWorkspaceRead_Issue382(t *testing.T) {
 			"storage_customer_managed_key_id":          "def",
 			"deployment_name":                          "900150983cd24fb0",
 			"workspace_name":                           "labdata",
-			"is_no_public_ip_enabled":                  true,
 			"network_id":                               "fgh",
 			"storage_configuration_id":                 "ghi",
 		},
@@ -354,7 +410,6 @@ func TestResourceWorkspaceUpdate(t *testing.T) {
 				Resource:     "/api/2.0/accounts/abc/workspaces/1234",
 				Response: Workspace{
 					WorkspaceStatus:                     WorkspaceStatusRunning,
-					IsNoPublicIPEnabled:                 true,
 					WorkspaceName:                       "labdata",
 					DeploymentName:                      "900150983cd24fb0",
 					AwsRegion:                           "us-east-1",
@@ -431,7 +486,6 @@ func TestResourceWorkspaceUpdateLegacyConfig(t *testing.T) {
 			"customer_managed_key_id":  "def",
 			"deployment_name":          "900150983cd24fb0",
 			"workspace_name":           "labdata",
-			"is_no_public_ip_enabled":  true,
 			"network_id":               "fgh",
 			"storage_configuration_id": "ghi",
 			"workspace_id":             1234,
@@ -465,7 +519,6 @@ func TestResourceWorkspaceUpdate_Error(t *testing.T) {
 			"storage_customer_managed_key_id":          "def",
 			"deployment_name":                          "900150983cd24fb0",
 			"workspace_name":                           "labdata",
-			"is_no_public_ip_enabled":                  true,
 			"network_id":                               "fgh",
 			"storage_configuration_id":                 "ghi",
 			"workspace_id":                             1234,

@@ -87,7 +87,7 @@ type Workspace struct {
 	PricingTier                         string `json:"pricing_tier,omitempty" tf:"computed"`
 	PrivateAccessSettingsID             string `json:"private_access_settings_id,omitempty"`
 	NetworkID                           string `json:"network_id,omitempty"`
-	IsNoPublicIPEnabled                 bool   `json:"is_no_public_ip_enabled,omitempty"`
+	IsNoPublicIPEnabled                 bool   `json:"is_no_public_ip_enabled"`
 	WorkspaceID                         int64  `json:"workspace_id,omitempty" tf:"computed"`
 	WorkspaceURL                        string `json:"workspace_url,omitempty" tf:"computed"`
 	WorkspaceStatus                     string `json:"workspace_status,omitempty" tf:"computed"`

@@ -187,10 +187,7 @@ func ResourceWorkspace() *schema.Resource {
 		// The value of `is_no_public_ip_enabled` isn't part of the GET payload.
 		// Keep diff when creating (i.e. `old` == ""), suppress diff otherwise.
 		s["is_no_public_ip_enabled"].DiffSuppressFunc = func(k, old, new string, d *schema.ResourceData) bool {
-			if old == "" {
-				return false
-			}
-			return true
+			return old != ""
 		}
 		s["customer_managed_key_id"].Deprecated = "Use managed_services_customer_managed_key_id instead"
 		s["customer_managed_key_id"].ConflictsWith = []string{"managed_services_customer_managed_key_id", "storage_customer_managed_key_id"}

@@ -107,7 +107,7 @@ resource "databricks_group_instance_profile" "all" {
 
 The following arguments are supported:
 
-* `instance_profile_arn` - (Required) `ARN` attribute of `aws_iam_instance_profile` output, the EC2 instance profile association to AWS IAM role.
+* `instance_profile_arn` - (Required) `ARN` attribute of `aws_iam_instance_profile` output, the EC2 instance profile association to AWS IAM role. This ARN would be validated upon resource creation and it's not possible to skip validation.
 
 ## Attribute Reference
 

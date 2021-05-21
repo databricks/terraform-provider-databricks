@@ -83,7 +83,7 @@ type mount struct {
 
 func newImportContext(c *common.DatabricksClient) *importContext {
 	p := provider.DatabricksProvider()
-	p.TerraformVersion = "importer"
+	p.TerraformVersion = "exporter"
 	p.SetMeta(c)
 	ctx := context.WithValue(context.Background(), common.Provider, p)
 	c.WithCommandExecutor(func(
@@ -277,7 +277,13 @@ func (ic *importContext) Find(r *resource, pick string) hcl.Traversal {
 			continue
 		}
 		for _, i := range sr.Instances {
-			if i.Attributes[r.Attribute].(string) == r.Value {
+			v := i.Attributes[r.Attribute]
+			if v == nil {
+				log.Printf("[WARN] Can't find instance attribute '%v' in resource: '%v' with name '%v', ID: '%v'",
+					r.Attribute, r.Resource, r.Name, r.ID)
+				continue
+			}
+			if v.(string) == r.Value {
 				if sr.Mode == "data" {
 					return hcl.Traversal{
 						hcl.TraverseRoot{Name: "data"},

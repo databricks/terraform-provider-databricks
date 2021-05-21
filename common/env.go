@@ -3,6 +3,7 @@ package common
 import (
 	"log"
 	"os"
+	"strconv"
 	"strings"
 	"sync"
 
@@ -17,6 +18,14 @@ var (
 
 // NewClientFromEnvironment makes very good client for testing purposes
 func NewClientFromEnvironment() *DatabricksClient {
+	debugBytes, err := strconv.Atoi(os.Getenv("DATABRICKS_DEBUG_TRUNCATE_BYTES"))
+	if err != nil {
+		debugBytes = DefaultTruncateBytes
+	}
+	debugHeaders, err := strconv.ParseBool(os.Getenv("DATABRICKS_DEBUG_HEADERS"))
+	if err != nil {
+		debugHeaders = false
+	}
 	client := DatabricksClient{
 		Host:       os.Getenv("DATABRICKS_HOST"),
 		Token:      os.Getenv("DATABRICKS_TOKEN"),
@@ -35,8 +44,10 @@ func NewClientFromEnvironment() *DatabricksClient {
 			Environment:    os.Getenv("ARM_ENVIRONMENT"),
 		},
 		RateLimitPerSecond: 10,
+		DebugTruncateBytes: debugBytes,
+		DebugHeaders:       debugHeaders,
 	}
-	err := client.Configure()
+	err = client.Configure()
 	if err != nil {
 		panic(err)
 	}

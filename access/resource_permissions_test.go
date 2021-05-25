@@ -29,7 +29,7 @@ func TestResourcePermissionsRead(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   http.MethodGet,
-				Resource: "/api/2.0/preview/permissions/clusters/abc",
+				Resource: "/api/2.0/permissions/clusters/abc",
 				Response: ObjectACL{
 					ObjectID:   "/clusters/abc",
 					ObjectType: "cluster",
@@ -124,7 +124,7 @@ func TestResourcePermissionsRead_NotFound(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   http.MethodGet,
-				Resource: "/api/2.0/preview/permissions/clusters/abc",
+				Resource: "/api/2.0/permissions/clusters/abc",
 				Response: common.APIErrorBody{
 					ErrorCode: "NOT_FOUND",
 					Message:   "Cluster does not exist",
@@ -145,7 +145,7 @@ func TestResourcePermissionsRead_some_error(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   http.MethodGet,
-				Resource: "/api/2.0/preview/permissions/clusters/abc",
+				Resource: "/api/2.0/permissions/clusters/abc",
 				Response: common.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
@@ -165,7 +165,7 @@ func TestResourcePermissionsRead_ErrorOnScimMe(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   http.MethodGet,
-				Resource: "/api/2.0/preview/permissions/clusters/abc",
+				Resource: "/api/2.0/permissions/clusters/abc",
 				Response: ObjectACL{
 					ObjectID:   "/clusters/abc",
 					ObjectType: "clusters",
@@ -213,7 +213,7 @@ func TestResourcePermissionsDelete(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   http.MethodGet,
-				Resource: "/api/2.0/preview/permissions/clusters/abc",
+				Resource: "/api/2.0/permissions/clusters/abc",
 				Response: ObjectACL{
 					ObjectID:   "/clusters/abc",
 					ObjectType: "clusters",
@@ -241,7 +241,7 @@ func TestResourcePermissionsDelete(t *testing.T) {
 			},
 			{
 				Method:          http.MethodPut,
-				Resource:        "/api/2.0/preview/permissions/clusters/abc",
+				Resource:        "/api/2.0/permissions/clusters/abc",
 				ExpectedRequest: ObjectACL{},
 			},
 		},
@@ -258,7 +258,7 @@ func TestResourcePermissionsDelete_error(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   http.MethodGet,
-				Resource: "/api/2.0/preview/permissions/clusters/abc",
+				Resource: "/api/2.0/permissions/clusters/abc",
 				Response: ObjectACL{
 					ObjectID:   "/clusters/abc",
 					ObjectType: "clusters",
@@ -286,7 +286,7 @@ func TestResourcePermissionsDelete_error(t *testing.T) {
 			},
 			{
 				Method:          http.MethodPut,
-				Resource:        "/api/2.0/preview/permissions/clusters/abc",
+				Resource:        "/api/2.0/permissions/clusters/abc",
 				ExpectedRequest: ObjectACL{},
 				Response: common.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
@@ -363,7 +363,7 @@ func TestResourcePermissionsCreate(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   http.MethodPut,
-				Resource: "/api/2.0/preview/permissions/clusters/abc",
+				Resource: "/api/2.0/permissions/clusters/abc",
 				ExpectedRequest: AccessControlChangeList{
 					AccessControlList: []AccessControlChange{
 						{
@@ -375,7 +375,7 @@ func TestResourcePermissionsCreate(t *testing.T) {
 			},
 			{
 				Method:   http.MethodGet,
-				Resource: "/api/2.0/preview/permissions/clusters/abc",
+				Resource: "/api/2.0/permissions/clusters/abc",
 				Response: ObjectACL{
 					ObjectID:   "/clusters/abc",
 					ObjectType: "cluster",
@@ -495,6 +495,72 @@ func TestResourcePermissionsCreate_SQLA_Asset(t *testing.T) {
 	assert.Equal(t, "CAN_READ", firstElem["permission_level"])
 }
 
+func TestResourcePermissionsCreate_SQLA_Endpoint(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   http.MethodPatch,
+				Resource: "/api/2.0/permissions/sql/endpoints/abc",
+				ExpectedRequest: AccessControlChangeList{
+					AccessControlList: []AccessControlChange{
+						{
+							UserName:        TestingUser,
+							PermissionLevel: "CAN_READ",
+						},
+						{
+							UserName:        TestingAdminUser,
+							PermissionLevel: "CAN_MANAGE",
+						},
+					},
+				},
+			},
+			{
+				Method:   http.MethodGet,
+				Resource: "/api/2.0/permissions/sql/endpoints/abc",
+				Response: ObjectACL{
+					ObjectID:   "/sql/dashboards/abc",
+					ObjectType: "dashboard",
+					AccessControlList: []AccessControl{
+						{
+							UserName:        TestingUser,
+							PermissionLevel: "CAN_READ",
+						},
+						{
+							UserName:        TestingAdminUser,
+							PermissionLevel: "CAN_MANAGE",
+						},
+					},
+				},
+			},
+			{
+				Method:       http.MethodGet,
+				ReuseRequest: true,
+				Resource:     "/api/2.0/preview/scim/v2/Me",
+				Response: identity.ScimUser{
+					UserName: TestingAdminUser,
+				},
+			},
+		},
+		Resource: ResourcePermissions(),
+		State: map[string]interface{}{
+			"sql_endpoint_id": "abc",
+			"access_control": []interface{}{
+				map[string]interface{}{
+					"user_name":        TestingUser,
+					"permission_level": "CAN_READ",
+				},
+			},
+		},
+		Create: true,
+	}.Apply(t)
+	assert.NoError(t, err, err)
+	ac := d.Get("access_control").(*schema.Set)
+	require.Equal(t, 1, len(ac.List()))
+	firstElem := ac.List()[0].(map[string]interface{})
+	assert.Equal(t, TestingUser, firstElem["user_name"])
+	assert.Equal(t, "CAN_READ", firstElem["permission_level"])
+}
+
 func TestResourcePermissionsCreate_NotebookPath_NotExists(t *testing.T) {
 	_, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
@@ -537,7 +603,7 @@ func TestResourcePermissionsCreate_NotebookPath(t *testing.T) {
 			},
 			{
 				Method:   http.MethodPut,
-				Resource: "/api/2.0/preview/permissions/notebooks/988765",
+				Resource: "/api/2.0/permissions/notebooks/988765",
 				ExpectedRequest: AccessControlChangeList{
 					AccessControlList: []AccessControlChange{
 						{
@@ -549,7 +615,7 @@ func TestResourcePermissionsCreate_NotebookPath(t *testing.T) {
 			},
 			{
 				Method:   http.MethodGet,
-				Resource: "/api/2.0/preview/permissions/notebooks/988765",
+				Resource: "/api/2.0/permissions/notebooks/988765",
 				Response: ObjectACL{
 					ObjectID:   "/notebooks/988765",
 					ObjectType: "notebook",
@@ -609,7 +675,7 @@ func TestResourcePermissionsCreate_error(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   http.MethodPut,
-				Resource: "/api/2.0/preview/permissions/clusters/abc",
+				Resource: "/api/2.0/permissions/clusters/abc",
 				Response: common.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
@@ -641,7 +707,7 @@ func TestResourcePermissionsUpdate(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   http.MethodGet,
-				Resource: "/api/2.0/preview/permissions/jobs/9",
+				Resource: "/api/2.0/permissions/jobs/9",
 				Response: ObjectACL{
 					ObjectID:   "/jobs/9",
 					ObjectType: "job",
@@ -677,7 +743,7 @@ func TestResourcePermissionsUpdate(t *testing.T) {
 			},
 			{
 				Method:   http.MethodPut,
-				Resource: "/api/2.0/preview/permissions/jobs/9",
+				Resource: "/api/2.0/permissions/jobs/9",
 				ExpectedRequest: AccessControlChangeList{
 					AccessControlList: []AccessControlChange{
 						{

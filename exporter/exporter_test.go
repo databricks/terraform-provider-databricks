@@ -439,7 +439,7 @@ func TestImportingClusters(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/preview/permissions/clusters/test1",
+				Resource: "/api/2.0/permissions/clusters/test1",
 				Response: getJSONObject("test-data/get-cluster-permissions-test1-response.json"),
 			},
 			{
@@ -477,7 +477,7 @@ func TestImportingClusters(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/preview/permissions/clusters/test2",
+				Resource: "/api/2.0/permissions/clusters/test2",
 				Response: getJSONObject("test-data/get-cluster-permissions-test2-response.json"),
 			},
 			{
@@ -487,7 +487,7 @@ func TestImportingClusters(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/preview/permissions/cluster-policies/123",
+				Resource: "/api/2.0/permissions/cluster-policies/123",
 				Response: getJSONObject("test-data/get-cluster-policy-permissions.json"),
 			},
 			{
@@ -513,7 +513,7 @@ func TestImportingClusters(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/preview/permissions/clusters/awscluster",
+				Resource: "/api/2.0/permissions/clusters/awscluster",
 				Response: getJSONObject("test-data/get-cluster-permissions-awscluster-response.json"),
 			},
 			{
@@ -583,7 +583,7 @@ func TestImportingJobs_JobList(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/preview/permissions/jobs/14",
+				Resource: "/api/2.0/permissions/jobs/14",
 				Response: getJSONObject("test-data/get-job-14-permissions.json"),
 			},
 			{
@@ -606,7 +606,7 @@ func TestImportingJobs_JobList(t *testing.T) {
 			},
 			{
 				Method:       "GET",
-				Resource:     "/api/2.0/preview/permissions/instance-pools/pool1",
+				Resource:     "/api/2.0/permissions/instance-pools/pool1",
 				ReuseRequest: true,
 				Response:     getJSONObject("test-data/get-job-14-permissions.json"),
 			},
@@ -676,7 +676,7 @@ func TestImportingJobs_JobList(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/preview/permissions/cluster-policies/123",
+				Resource: "/api/2.0/permissions/cluster-policies/123",
 				Response: getJSONObject("test-data/get-cluster-policy-permissions.json"),
 			},
 

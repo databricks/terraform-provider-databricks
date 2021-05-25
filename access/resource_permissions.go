@@ -111,11 +111,11 @@ type PermissionsAPI struct {
 }
 
 func urlPathForObjectID(objectID string) string {
-	if strings.HasPrefix(objectID, "/sql/") {
+	if strings.HasPrefix(objectID, "/sql/") && !strings.HasPrefix(objectID, "/sql/endpoints") {
 		// Permissions for SQLA entities are routed differently from the others.
 		return "/preview/sql/permissions" + objectID[4:]
 	}
-	return "/preview/permissions" + objectID
+	return "/permissions" + objectID
 }
 
 // Helper function to select the correct HTTP method depending on the object types.
@@ -131,8 +131,12 @@ func (a PermissionsAPI) put(objectID string, objectACL AccessControlChangeList) 
 			PermissionLevel: "CAN_MANAGE",
 		})
 
-		// The SQLA entities use HTTP POST for permission updates.
-		return a.client.Post(a.context, urlPathForObjectID(objectID), objectACL, nil)
+		if strings.HasPrefix(objectID, "/sql/endpoints/") {
+			return a.client.Patch(a.context, urlPathForObjectID(objectID), objectACL)
+		} else {
+			// The rest of SQLA entities use HTTP POST for permission updates.
+			return a.client.Post(a.context, urlPathForObjectID(objectID), objectACL, nil)
+		}
 	}
 
 	return a.client.Put(a.context, urlPathForObjectID(objectID), objectACL)
@@ -233,7 +237,7 @@ func permissionsResourceIDFields(ctx context.Context) []permissionsIDFieldMappin
 		{"directory_path", "directory", "directories", PATH},
 		{"authorization", "tokens", "authorization", SIMPLE},
 		{"authorization", "passwords", "authorization", SIMPLE},
-		{"sql_endpoint_id", "endpoint", "sql/endpoints", SIMPLE},
+		{"sql_endpoint_id", "endpoints", "sql/endpoints", SIMPLE},
 		{"sql_dashboard_id", "dashboard", "sql/dashboards", SIMPLE},
 		{"sql_alert_id", "alert", "sql/alerts", SIMPLE},
 		{"sql_query_id", "query", "sql/queries", SIMPLE},

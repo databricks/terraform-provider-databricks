@@ -120,7 +120,7 @@ resource "databricks_cluster" "single_node" {
 
 ### library Configuration Block
 
-To install libraries, one must specify each library in its configuration block. Each different type of library has a slightly different syntax. It's possible to set only one type of library within one config block. Otherwise, the plan will fail with an error.
+To install libraries, one must specify each library in a separate configuration block. Each different type of library has a slightly different syntax. It's possible to set only one type of library within one config block. Otherwise, the plan will fail with an error.
 
 Installing JAR artifacts on a cluster. Location can be anything, that is DBFS or mounted object store (s3, adls, ...)
 ```hcl

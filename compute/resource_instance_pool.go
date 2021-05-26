@@ -72,6 +72,7 @@ func ResourceInstancePool() *schema.Resource {
 		s["node_type_id"].ForceNew = true
 		s["custom_tags"].ForceNew = true
 		s["preloaded_spark_versions"].ForceNew = true
+		s["preloaded_docker_image"].ForceNew = true
 		s["azure_attributes"].ForceNew = true
 		s["disk_spec"].ForceNew = true
 		s["enable_elastic_disk"].ForceNew = true
@@ -121,6 +122,15 @@ func ResourceInstancePool() *schema.Resource {
 				EbsVolumeTypeGeneralPurposeSsd,
 				EbsVolumeTypeThroughputOptimizedHdd,
 			}, false)
+		}
+		if v, err := common.SchemaPath(s, "preloaded_docker_image", "url"); err == nil {
+			v.ForceNew = true
+		}
+		if v, err := common.SchemaPath(s, "preloaded_docker_image", "basic_auth", "username"); err == nil {
+			v.ForceNew = true
+		}
+		if v, err := common.SchemaPath(s, "preloaded_docker_image", "basic_auth", "password"); err == nil {
+			v.ForceNew = true
 		}
 		return s
 	})

@@ -1,5 +1,11 @@
 # Version changelog
 
+## 0.3.5
+
+* Fixed setting of permissions for SQLA endpoints ([#661](https://github.com/databrickslabs/terraform-provider-databricks/issues/661))
+* Added support for preloading of Docker images into instance pools ([#663](https://github.com/databrickslabs/terraform-provider-databricks/issues/663))
+* Added the `databricks_user` data source ([#648](https://github.com/databrickslabs/terraform-provider-databricks/pull/648))
+
 ## 0.3.4
 
 * Fixed state refresh bugs in `databricks_sql_permissions` ([#620](https://github.com/databrickslabs/terraform-provider-databricks/issues/620), [#619](https://github.com/databrickslabs/terraform-provider-databricks/issues/620))

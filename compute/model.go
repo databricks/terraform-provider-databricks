@@ -416,6 +416,7 @@ type InstancePool struct {
 	EnableElasticDisk                  bool                         `json:"enable_elastic_disk,omitempty"`
 	DiskSpec                           *InstancePoolDiskSpec        `json:"disk_spec,omitempty"`
 	PreloadedSparkVersions             []string                     `json:"preloaded_spark_versions,omitempty"`
+	PreloadedDockerImages              []DockerImage                `json:"preloaded_docker_images,omitempty" tf:"slice_set,alias:preloaded_docker_image"`
 }
 
 // InstancePoolStats contains the stats on a given pool
@@ -443,6 +444,7 @@ type InstancePoolAndStats struct {
 	PreloadedSparkVersions             []string                     `json:"preloaded_spark_versions,omitempty"`
 	State                              string                       `json:"state,omitempty"`
 	Stats                              *InstancePoolStats           `json:"stats,omitempty"`
+	PreloadedDockerImages              []DockerImage                `json:"preloaded_docker_images,omitempty" tf:"slice_set,alias:preloaded_docker_image"`
 }
 
 // InstancePoolList shows list of instance pools

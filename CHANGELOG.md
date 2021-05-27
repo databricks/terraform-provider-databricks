@@ -5,6 +5,7 @@
 * Fixed setting of permissions for SQLA endpoints ([#661](https://github.com/databrickslabs/terraform-provider-databricks/issues/661))
 * Added support for preloading of Docker images into instance pools ([#663](https://github.com/databrickslabs/terraform-provider-databricks/issues/663))
 * Added the `databricks_user` data source ([#648](https://github.com/databrickslabs/terraform-provider-databricks/pull/648))
+* Fixed support for `spot_instance_policy` in SQLA Endpoints ([#665](https://github.com/databrickslabs/terraform-provider-databricks/issues/665))
 
 ## 0.3.4
 

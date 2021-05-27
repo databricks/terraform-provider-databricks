@@ -34,6 +34,7 @@ type SQLEndpoint struct {
 	JdbcURL            string      `json:"jdbc_url,omitempty" tf:"computed"`
 	OdbcParams         *OdbcParams `json:"odbc_params,omitempty" tf:"computed"`
 	Tags               *Tags       `json:"tags,omitempty"`
+	SpotInstancePolicy string      `json:"spot_instance_policy,omitempty"`
 
 	// The data source ID is not part of the endpoint API response.
 	// We manually resolve it by retrieving the list of data sources

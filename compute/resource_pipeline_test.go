@@ -90,7 +90,7 @@ func TestResourcePipelineCreate(t *testing.T) {
 		  key1 = "value1"
 		  key2 = "value2"
 		}
-		clusters {
+		cluster {
 		  label = "default"
 		  custom_tags = {
 			"cluster_tag1" = "cluster_value1"

@@ -22,7 +22,7 @@ The following arguments are supported:
 
 ## keyvault_metadata
 
-On Azure it's possible to create and manage secrets in Azure Key Vault and have use Azure Databricks secret redaction & access control functionality for reading them. There has to be a single Key Vault per single secret scope.
+On Azure it's possible to create and manage secrets in Azure Key Vault and have use Azure Databricks secret redaction & access control functionality for reading them. There has to be a single Key Vault per single secret scope. To define AKV access policies, you must use [azurerm_key_vault_access_policy](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/key_vault_access_policy) instead of [access_policy](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/key_vault#access_policy) blocks on `azurerm_key_vault`, otherwise Terraform will remove access policies needed to access the Key Vault and secret scope won't be in a usable state anymore.
 
 -> **Note** Currently, it's only possible to create Azure Key Vault scopes with Azure CLI authentication and not with Service Principal. That means, `az login --service-principal --username $ARM_CLIENT_ID --password $ARM_CLIENT_SECRET --tenant $ARM_TENANT_ID` won't work as well. This is the limitation from underlying cloud resources.
 
@@ -39,14 +39,13 @@ resource "azurerm_key_vault" "this" {
   purge_protection_enabled = false
   sku_name                 = "standard"
   tags                     = var.tags
+}
 
-  access_policy {
-    tenant_id = data.azurerm_client_config.current.tenant_id
-    object_id = data.azurerm_client_config.current.object_id
-    secret_permissions = [
-      "delete", "get", "list", "set"
-    ]
-  }
+resource "azurerm_key_vault_access_policy" "this" {
+  key_vault_id       = azurerm_key_vault.this.id
+  tenant_id          = data.azurerm_client_config.current.tenant_id
+  object_id          = data.azurerm_client_config.current.object_id
+  secret_permissions = ["delete", "get", "list", "set"]
 }
 
 resource "databricks_secret_scope" "kv" {

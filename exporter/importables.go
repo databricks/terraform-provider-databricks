@@ -1,6 +1,7 @@
 package exporter
 
 import (
+	"crypto/md5"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
@@ -47,7 +48,8 @@ var resourcesMap map[string]importable = map[string]importable{
 			if err != nil && !os.IsExist(err) {
 				return err
 			}
-			fileName := ic.prefix + path.Base(r.ID)
+			fileNameMd5 := fmt.Sprintf("%x", md5.Sum([]byte(r.ID)))
+			fileName := ic.prefix + fileNameMd5 + "_" + path.Base(r.ID)
 			local, err := os.Create(fmt.Sprintf("%s/files/%s", ic.Directory, fileName))
 			if err != nil {
 				return err
@@ -58,7 +60,7 @@ var resourcesMap map[string]importable = map[string]importable{
 				return err
 			}
 			// libraries installed with init scripts won't be exported.
-			b := body.AppendNewBlock("resource", []string{r.Resource, r.Name}).Body()
+			b := body.AppendNewBlock("resource", []string{r.Resource, r.Name + "_" + fileNameMd5}).Body()
 			relativeFile := fmt.Sprintf("${path.module}/files/%s", fileName)
 			b.SetAttributeValue("path", cty.StringVal(strings.Replace(r.ID, "dbfs:", "", 1)))
 			b.SetAttributeRaw("source", hclwrite.Tokens{
@@ -87,7 +89,7 @@ var resourcesMap map[string]importable = map[string]importable{
 				ic.Emit(&resource{
 					Resource: "databricks_permissions",
 					ID:       fmt.Sprintf("/instance-pools/%s", r.ID),
-					Name:     ic.Importables["databricks_instance_pool"].Name(r.Data),
+					Name:     "inst_pool_" + ic.Importables["databricks_instance_pool"].Name(r.Data),
 				})
 			}
 			return nil
@@ -168,7 +170,7 @@ var resourcesMap map[string]importable = map[string]importable{
 				ic.Emit(&resource{
 					Resource: "databricks_permissions",
 					ID:       fmt.Sprintf("/clusters/%s", r.ID),
-					Name:     r.Data.Get("cluster_name").(string),
+					Name:     "cluster_" + ic.Importables["databricks_cluster"].Name(r.Data),
 				})
 			}
 			return ic.importLibraries(r.Data, s)
@@ -177,7 +179,7 @@ var resourcesMap map[string]importable = map[string]importable{
 	"databricks_job": {
 		Service: "jobs",
 		Name: func(d *schema.ResourceData) string {
-			return d.Get("name").(string)
+			return fmt.Sprintf("%s_%s", d.Get("name").(string), d.Id())
 		},
 		Depends: []reference{
 			{Path: "email_notifications.on_failure", Resource: "databricks_user", Match: "user_name"},
@@ -211,7 +213,7 @@ var resourcesMap map[string]importable = map[string]importable{
 				ic.Emit(&resource{
 					Resource: "databricks_permissions",
 					ID:       fmt.Sprintf("/jobs/%s", r.ID),
-					Name:     r.Data.Get("name").(string),
+					Name:     "job_" + ic.Importables["databricks_job"].Name(r.Data),
 				})
 			}
 			if job.SparkPythonTask != nil {
@@ -297,7 +299,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			ic.Emit(&resource{
 				Resource: "databricks_permissions",
 				ID:       fmt.Sprintf("/cluster-policies/%s", r.ID),
-				Name:     r.Data.Get("name").(string),
+				Name:     "clust_policy_" + ic.Importables["databricks_cluster_policy"].Name(r.Data),
 			})
 			var definition map[string]map[string]interface{}
 			err := json.Unmarshal([]byte(r.Data.Get("definition").(string)), &definition)

@@ -60,8 +60,8 @@ type pipelineSpec struct {
 	Name                string            `json:"name,omitempty"`
 	Storage             string            `json:"storage,omitempty"`
 	Configuration       map[string]string `json:"configuration,omitempty"`
-	Clusters            []pipelineCluster `json:"clusters,omitempty"`
-	Libraries           []pipelineLibrary `json:"libraries,omitempty"`
+	Clusters            []pipelineCluster `json:"clusters,omitempty" tf:"slice_set,alias:cluster"`
+	Libraries           []pipelineLibrary `json:"libraries,omitempty" tf:"slice_set,alias:library"`
 	Filters             *filters          `json:"filters"`
 	Continuous          bool              `json:"continuous,omitempty"`
 	AllowDuplicateNames bool              `json:"allow_duplicate_names,omitempty"`
@@ -122,6 +122,9 @@ func (a pipelinesAPI) create(s pipelineSpec, timeout time.Duration) (string, err
 		return "", err
 	}
 	id := resp.PipelineID
+	if !s.Continuous {
+		return id, nil
+	}
 	err = a.waitForState(id, timeout, StateRunning)
 	if err != nil {
 		log.Printf("[INFO] Pipeline creation failed, attempting to clean up pipeline %s", id)
@@ -190,7 +193,7 @@ func (a pipelinesAPI) waitForState(id string, timeout time.Duration, desiredStat
 }
 
 func adjustPipelineResourceSchema(m map[string]*schema.Schema) map[string]*schema.Schema {
-	clusters, _ := m["clusters"].Elem.(*schema.Resource)
+	clusters, _ := m["cluster"].Elem.(*schema.Resource)
 	clustersSchema := clusters.Schema
 	clustersSchema["spark_conf"].DiffSuppressFunc = sparkConfDiffSuppressFunc
 
@@ -203,7 +206,7 @@ func adjustPipelineResourceSchema(m map[string]*schema.Schema) map[string]*schem
 	delete(awsAttributesSchema, "ebs_volume_count")
 	delete(awsAttributesSchema, "ebs_volume_size")
 
-	m["libraries"].MinItems = 1
+	m["library"].MinItems = 1
 
 	return m
 }

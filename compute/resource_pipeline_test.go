@@ -46,7 +46,6 @@ func TestResourcePipelineCreate(t *testing.T) {
 			{
 				Method:          "POST",
 				Resource:        "/api/2.0/pipelines",
-				ExpectedRequest: basicPipelineSpec,
 				Response: createPipelineResponse{
 					PipelineID: "abcd",
 				},

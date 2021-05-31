@@ -96,10 +96,10 @@ func TestResourcePipelineCreate(t *testing.T) {
 			"cluster_tag1" = "cluster_value1"
 		  }
 		}
-		libraries {
+		library {
 		  jar = "dbfs:/pipelines/code/abcde.jar"
 		}
-		libraries {
+		library {
 		  maven {
 			coordinates = "com.microsoft.azure:azure-eventhubs-spark_2.12:2.3.18"
 		  }
@@ -131,7 +131,7 @@ func TestResourcePipelineCreate_Error(t *testing.T) {
 		Resource: ResourcePipeline(),
 		HCL: `name = "test"
 		storage = "/test/storage"
-		libraries {
+		library {
 			jar = "jar"
 		}
 		filters {
@@ -180,7 +180,7 @@ func TestResourcePipelineCreate_ErrorWhenWaitingFailedCleanup(t *testing.T) {
 		Resource: ResourcePipeline(),
 		HCL: `name = "test"
 		storage = "/test/storage"
-		libraries {
+		library {
 			jar = "jar"
 		}
 		filters {
@@ -229,7 +229,7 @@ func TestResourcePipelineCreate_ErrorWhenWaitingSuccessfulCleanup(t *testing.T) 
 		Resource: ResourcePipeline(),
 		HCL: `name = "test"
 		storage = "/test/storage"
-		libraries {
+		library {
 			jar = "jar"
 		}
 		filters {
@@ -356,7 +356,7 @@ func TestResourcePipelineUpdate(t *testing.T) {
 		Resource: ResourcePipeline(),
 		HCL: `name = "test"
 		storage = "/test/storage"
-		libraries {
+		library {
 			maven {
 				coordinates = "coordinates"
 			}
@@ -387,7 +387,7 @@ func TestResourcePipelineUpdate_Error(t *testing.T) {
 		Resource: ResourcePipeline(),
 		HCL: `name = "test"
 		storage = "/test/storage"
-		libraries {
+		library {
 			maven {
 				coordinates = "coordinates"
 			}
@@ -439,7 +439,7 @@ func TestResourcePipelineUpdate_FailsAfterUpdate(t *testing.T) {
 		Resource: ResourcePipeline(),
 		HCL: `name = "test"
 		storage = "/test/storage"
-		libraries {
+		library {
 			maven {
 				coordinates = "coordinates"
 			}

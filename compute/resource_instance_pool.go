@@ -2,7 +2,6 @@ package compute
 
 import (
 	"context"
-	"log"
 
 	"github.com/databrickslabs/terraform-provider-databricks/common"
 
@@ -54,17 +53,6 @@ func (a InstancePoolsAPI) Delete(instancePoolID string) error {
 	}, nil)
 }
 
-func makeEmptyBlockSuppressFunc(name string) func(k, old, new string, d *schema.ResourceData) bool {
-	return func(k, old, new string, d *schema.ResourceData) bool {
-		log.Printf("[DEBUG] k='%v', old='%v', new='%v'", k, old, new)
-		if k == name && old == "1" && new == "0" {
-			log.Printf("[DEBUG] Disable removal of empty block")
-			return true
-		}
-		return false
-	}
-}
-
 // ResourceInstancePool ...
 func ResourceInstancePool() *schema.Resource {
 	s := common.StructToSchema(InstancePool{}, func(s map[string]*schema.Schema) map[string]*schema.Schema {
@@ -79,8 +67,8 @@ func ResourceInstancePool() *schema.Resource {
 		s["enable_elastic_disk"].Default = true
 		s["aws_attributes"].ConflictsWith = []string{"azure_attributes"}
 		s["azure_attributes"].ConflictsWith = []string{"aws_attributes"}
-		s["aws_attributes"].DiffSuppressFunc = makeEmptyBlockSuppressFunc("aws_attributes.#")
-		s["azure_attributes"].DiffSuppressFunc = makeEmptyBlockSuppressFunc("azure_attributes.#")
+		s["aws_attributes"].DiffSuppressFunc = common.MakeEmptyBlockSuppressFunc("aws_attributes.#")
+		s["azure_attributes"].DiffSuppressFunc = common.MakeEmptyBlockSuppressFunc("azure_attributes.#")
 		if v, err := common.SchemaPath(s, "aws_attributes", "availability"); err == nil {
 			v.ForceNew = true
 			v.Default = AwsAvailabilitySpot

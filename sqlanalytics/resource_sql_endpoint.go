@@ -180,11 +180,16 @@ func (a SQLEndpointsAPI) Delete(endpointID string) error {
 func ResourceSQLEndpoint() *schema.Resource {
 	s := common.StructToSchema(SQLEndpoint{}, func(
 		m map[string]*schema.Schema) map[string]*schema.Schema {
+		m["auto_stop_mins"].Default = 120
 		m["cluster_size"].ValidateDiagFunc = validation.ToDiagFunc(
 			validation.StringInSlice(ClusterSizes, false))
 		m["max_num_clusters"].Default = 1
 		m["max_num_clusters"].ValidateDiagFunc = validation.ToDiagFunc(
 			validation.IntBetween(1, MaxNumClusters))
+		m["min_num_clusters"].Default = 1
+		m["num_clusters"].Default = 1
+		m["spot_instance_policy"].Default = "COST_OPTIMIZED"
+		m["tags"].DiffSuppressFunc = common.MakeEmptyBlockSuppressFunc("tags.#")
 		return m
 	})
 	return common.Resource{

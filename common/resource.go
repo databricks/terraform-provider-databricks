@@ -93,3 +93,14 @@ func (r Resource) ToResource() *schema.Resource {
 		Timeouts: r.Timeouts,
 	}
 }
+
+func MakeEmptyBlockSuppressFunc(name string) func(k, old, new string, d *schema.ResourceData) bool {
+	return func(k, old, new string, d *schema.ResourceData) bool {
+		log.Printf("[DEBUG] k='%v', old='%v', new='%v'", k, old, new)
+		if k == name && old == "1" && new == "0" {
+			log.Printf("[DEBUG] Disable removal of empty block")
+			return true
+		}
+		return false
+	}
+}

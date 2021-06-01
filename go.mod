@@ -18,7 +18,7 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/smartystreets/goconvey v1.6.4 // indirect
 	github.com/stretchr/testify v1.7.0
-	github.com/zclconf/go-cty v1.8.2
+	github.com/zclconf/go-cty v1.8.3
 	golang.org/x/time v0.0.0-20191024005414-555d28b269f0
 	golang.org/x/tools v0.1.0 // indirect
 	gopkg.in/ini.v1 v1.62.0

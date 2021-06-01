@@ -122,9 +122,6 @@ func (a pipelinesAPI) create(s pipelineSpec, timeout time.Duration) (string, err
 		return "", err
 	}
 	id := resp.PipelineID
-	if !s.Continuous {
-		return id, nil
-	}
 	err = a.waitForState(id, timeout, StateRunning)
 	if err != nil {
 		log.Printf("[INFO] Pipeline creation failed, attempting to clean up pipeline %s", id)
@@ -186,6 +183,10 @@ func (a pipelinesAPI) waitForState(id string, timeout time.Duration, desiredStat
 			if state == StateFailed {
 				return resource.NonRetryableError(fmt.Errorf("pipeline %s has failed", id))
 			}
+			if i.Spec.Continuous {
+				// continuous pipelines just need a non-FAILED check
+				return nil
+			}
 			message := fmt.Sprintf("Pipeline %s is in state %s, not yet in state %s", id, state, desiredState)
 			log.Printf("[DEBUG] %s", message)
 			return resource.RetryableError(fmt.Errorf(message))
@@ -234,6 +235,9 @@ func ResourcePipeline() *schema.Resource {
 			i, err := newPipelinesAPI(ctx, c).read(d.Id())
 			if err != nil {
 				return err
+			}
+			if i.Spec == nil {
+				return fmt.Errorf("pipeline spec is nil for '%v'", i.PipelineID)
 			}
 			return common.StructToData(*i.Spec, pipelineSchema, d)
 		},

@@ -183,7 +183,7 @@ func (a pipelinesAPI) waitForState(id string, timeout time.Duration, desiredStat
 			if state == StateFailed {
 				return resource.NonRetryableError(fmt.Errorf("pipeline %s has failed", id))
 			}
-			if i.Spec.Continuous {
+			if !i.Spec.Continuous {
 				// continuous pipelines just need a non-FAILED check
 				return nil
 			}

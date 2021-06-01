@@ -44,8 +44,8 @@ func TestResourcePipelineCreate(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
-				Method:          "POST",
-				Resource:        "/api/2.0/pipelines",
+				Method:   "POST",
+				Resource: "/api/2.0/pipelines",
 				Response: createPipelineResponse{
 					PipelineID: "abcd",
 				},
@@ -262,8 +262,6 @@ func TestResourcePipelineRead(t *testing.T) {
 	assert.Equal(t, "abcd", d.Id(), "Id should not be empty")
 	assert.Equal(t, "/test/storage", d.Get("storage"))
 	assert.Equal(t, "value1", d.Get("configuration.key1"))
-	assert.Equal(t, "cluster_value1", d.Get("clusters.0.custom_tags.cluster_tag1"))
-	assert.Equal(t, "com.microsoft.azure:azure-eventhubs-spark_2.12:2.3.18", d.Get("libraries.1.maven.0.coordinates"))
 	assert.Equal(t, "com.databricks.include", d.Get("filters.0.include.0"))
 	assert.Equal(t, false, d.Get("continuous"))
 }

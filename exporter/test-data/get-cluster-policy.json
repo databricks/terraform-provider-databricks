@@ -1,6 +1,6 @@
 {
   "created_at_timestamp": 1606308550000,
-  "definition": "{\"autoscale.max_workers\":{\"defaultValue\":2,\"maxValue\":5,\"type\":\"range\"},\"autoscale.min_workers\":{\"hidden\":true,\"type\":\"fixed\",\"value\":1},\"autotermination_minutes\":{\"defaultValue\":20,\"maxValue\":30,\"type\":\"range\"},\"cluster_log_conf.path\":{\"hidden\":true,\"type\":\"fixed\",\"value\":\"dbfs:/cluster-logs\"},\"cluster_log_conf.type\":{\"hidden\":true,\"type\":\"fixed\",\"value\":\"DBFS\"},\"custom_tags.team\":{\"type\":\"fixed\",\"value\":\"users\"},\"dbus_per_hour\":{\"maxValue\":10,\"type\":\"range\"},\"driver_node_type_id\":{\"defaultValue\":\"Standard_F4s\",\"type\":\"whitelist\",\"values\":[\"Standard_F4s\",\"Standard_F8s\"]},\"node_type_id\":{\"defaultValue\":\"Standard_F4s\",\"type\":\"whitelist\",\"values\":[\"Standard_F4s\",\"Standard_F8s\"]},\"spark_version\":{\"defaultValue\":\"7.3.x-scala2.12\",\"type\":\"whitelist\",\"values\":[\"7.2.x-scala2.12\",\"7.3.x-scala2.12\"]}}",
+  "definition": "{\"aws_attributes.instance_profile_arn\":{\"hidden\":true,\"type\":\"fixed\",\"value\":\"arn:aws:iam::12345:instance-profile/shard-s3-access\"},\"instance_pool_id\":{\"hidden\":true,\"type\":\"fixed\",\"value\":\"pool1\"},\"autoscale.max_workers\":{\"defaultValue\":2,\"maxValue\":5,\"type\":\"range\"}}",
   "name": "users cluster policy",
   "policy_id": "123"
 }

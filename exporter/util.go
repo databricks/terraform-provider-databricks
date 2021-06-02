@@ -245,3 +245,13 @@ func (ic *importContext) getMountsThroughCluster(
 	err = json.Unmarshal([]byte(lines[0]), &mm)
 	return
 }
+
+func eitherString(a interface{}, b interface{}) string {
+	if a != nil {
+		return a.(string)
+	}
+	if b != nil {
+		return b.(string)
+	}
+	return ""
+}

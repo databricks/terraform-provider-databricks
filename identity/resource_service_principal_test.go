@@ -193,6 +193,17 @@ func TestResourceServicePrincipalCreate_Error(t *testing.T) {
 	require.Error(t, err, err)
 }
 
+func TestResourceServicePrincipalCreate_Error_AzureNoApplicationID(t *testing.T) {
+	qa.ResourceFixture{
+		Resource: ResourceServicePrincipal(),
+		Create:   true,
+		Azure:    true,
+		HCL: `
+		display_name = "abc"
+		`,
+	}.ExpectError(t, "application_id is required for service principals in Azure Databricks")
+}
+
 func TestResourceServicePrincipalUpdate(t *testing.T) {
 	newServicePrincipal := ScimUser{
 		Schemas:     []URN{ServicePrincipalSchema},

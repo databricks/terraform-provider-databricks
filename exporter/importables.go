@@ -309,19 +309,19 @@ var resourcesMap map[string]importable = map[string]importable{
 			for k, policy := range definition {
 				value, vok := policy["value"]
 				defaultValue, dok := policy["defaultValue"]
-				if !vok || !dok {
+				if !vok && !dok {
 					continue
 				}
 				if k == "aws_attributes.instance_profile_arn" {
 					ic.Emit(&resource{
 						Resource: "databricks_instance_profile",
-						ID:       fmt.Sprintf("%s%s", value, defaultValue),
+						ID:       eitherString(value, defaultValue),
 					})
 				}
 				if k == "instance_pool_id" {
 					ic.Emit(&resource{
 						Resource: "databricks_instance_pool",
-						ID:       fmt.Sprintf("%s%s", value, defaultValue),
+						ID:       eitherString(value, defaultValue),
 					})
 				}
 			}

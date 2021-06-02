@@ -679,7 +679,23 @@ func TestImportingJobs_JobList(t *testing.T) {
 				Resource: "/api/2.0/permissions/cluster-policies/123",
 				Response: getJSONObject("test-data/get-cluster-policy-permissions.json"),
 			},
-
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/instance-profiles/list",
+				Response: getJSONObject("test-data/list-instance-profiles.json"),
+			},
+			{
+				Method:       "GET",
+				Resource:     "/api/2.0/instance-pools/get?instance_pool_id=pool1",
+				ReuseRequest: true,
+				Response:     getJSONObject("test-data/get-instance-pool1.json"),
+			},
+			{
+				Method:       "GET",
+				Resource:     "/api/2.0/permissions/instance-pools/pool1",
+				ReuseRequest: true,
+				Response:     getJSONObject("test-data/get-job-14-permissions.json"),
+			},
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/jobs/runs/list?completed_only=true&job_id=14&limit=1",
@@ -864,4 +880,50 @@ func TestImportingGlobalInitScripts(t *testing.T) {
 			err := ic.Run()
 			assert.NoError(t, err)
 		})
+}
+
+func TestImportingUser(t *testing.T) {
+	qa.HTTPFixturesApply(t,
+		[]qa.HTTPFixture{
+			{
+				Method:       "GET",
+				ReuseRequest: true,
+				Resource:     "/api/2.0/preview/scim/v2/Users?filter=userName%20eq%20%27me%27",
+				Response: identity.UserList{
+					Resources: []identity.ScimUser{
+						{
+							ID:       "123",
+							UserName: "me",
+							Groups: []identity.GroupsListItem{
+								{
+									Value: "abc",
+									Type:  "direct",
+								},
+							},
+						},
+					},
+				},
+			},
+		}, func(ctx context.Context, client *common.DatabricksClient) {
+			ic := newImportContext(client)
+			err := resourcesMap["databricks_user"].Search(ic, &resource{
+				Resource: "databricks_user",
+				Value:    "me",
+			})
+			assert.NoError(t, err)
+
+			d := ic.Resources["databricks_user"].TestResourceData()
+			d.Set("user_name", "me")
+			err = resourcesMap["databricks_user"].Import(ic, &resource{
+				Resource: "databricks_user",
+				Data:     d,
+			})
+			assert.NoError(t, err)
+		})
+}
+
+func TestEitherString(t *testing.T) {
+	assert.Equal(t, "a", eitherString("a", nil))
+	assert.Equal(t, "a", eitherString(nil, "a"))
+	assert.Equal(t, "", eitherString(nil, nil))
 }

@@ -3,7 +3,7 @@ subcategory: "Security"
 ---
 # databricks_service_principal Resource
 
-Directly creates service principal, that could be added to [databricks_group](group.md) within workspace.
+Directly creates a service principal that could be added to [databricks_group](group.md) within workspace.
 
 ## Example Usage
 
@@ -19,7 +19,7 @@ Creating service principal with administrative permissions - referencing special
 
 ```hcl
 data "databricks_group" "admins" {
-    display_name = "admins"
+  display_name = "admins"
 }
 
 resource "databricks_service_principal" "sp" {
@@ -44,12 +44,14 @@ resource "databricks_service_principal" "sp" {
 
 ## Argument Reference
 
+-> `application_id` is required on Azure Databricks and is not allowed on other clouds. `display_name` is required on all clouds except Azure.
+
 The following arguments are available:
 
-* `application_id` - (Required) This is the application id of the given service principal and will be their form of access and identity.
-* `display_name` - (Optional) This is an alias for the service principal can be the full name of the service principal.
-* `allow_cluster_create` -  (Optional) Allow the service principal to have [cluster](cluster.md) create priviliges. Defaults to false. More fine grained permissions could be assigned with [databricks_permissions](permissions.md#Cluster-usage) and `cluster_id` argument. Everyone without `allow_cluster_create` arugment set, but with [permission to use](permissions.md#Cluster-Policy-usage) Cluster Policy would be able to create clusters, but within boundaries of that specific policy.
-* `allow_instance_pool_create` -  (Optional) Allow the service principal to have [instance pool](instance_pool.md) create priviliges. Defaults to false. More fine grained permissions could be assigned with [databricks_permissions](permissions.md#Instance-Pool-usage) and [instance_pool_id](permissions.md#instance_pool_id) argument.
+* `application_id` - This is the application id of the given service principal and will be their form of access and identity. On other clouds than Azure this value is auto-generated.
+* `display_name` - (Required) This is an alias for the service principal and can be the full name of the service principal.
+* `allow_cluster_create` -  (Optional) Allow the service principal to have [cluster](cluster.md) create privileges. Defaults to false. More fine grained permissions could be assigned with [databricks_permissions](permissions.md#Cluster-usage) and `cluster_id` argument. Everyone without `allow_cluster_create` argument set, but with [permission to use](permissions.md#Cluster-Policy-usage) Cluster Policy would be able to create clusters, but within the boundaries of that specific policy.
+* `allow_instance_pool_create` -  (Optional) Allow the service principal to have [instance pool](instance_pool.md) create privileges. Defaults to false. More fine grained permissions could be assigned with [databricks_permissions](permissions.md#Instance-Pool-usage) and [instance_pool_id](permissions.md#instance_pool_id) argument.
 * `active` - (Optional) Either service principal is active or not. True by default, but can be set to false in case of service principal deactivation with preserving service principal assets.
 
 ## Attribute Reference

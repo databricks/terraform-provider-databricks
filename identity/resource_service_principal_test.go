@@ -13,7 +13,7 @@ import (
 )
 
 func TestAzureAccSP(t *testing.T) {
-	if _, ok := os.LookupEnv("CLOUD_ENV"); !ok {
+	if cloud, ok := os.LookupEnv("CLOUD_ENV"); !ok || cloud != "azure" {
 		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
 	}
 
@@ -51,9 +51,8 @@ func TestResourceServicePrincipalRead(t *testing.T) {
 				Method:   "GET",
 				Resource: "/api/2.0/preview/scim/v2/ServicePrincipals/abc",
 				Response: ScimUser{
-					ID:            "abc",
-					DisplayName:   "Example Service Principal",
-					ApplicationID: "00000000-0000-0000-0000-000000000000",
+					ID:          "abc",
+					DisplayName: "Example Service Principal",
 					Groups: []GroupsListItem{
 						{
 							Display: "admins",
@@ -74,7 +73,6 @@ func TestResourceServicePrincipalRead(t *testing.T) {
 	}.Apply(t)
 	require.NoError(t, err, err)
 	assert.Equal(t, "abc", d.Id(), "Id should not be empty")
-	assert.Equal(t, "00000000-0000-0000-0000-000000000000", d.Get("application_id"))
 	assert.Equal(t, "Example Service Principal", d.Get("display_name"))
 	assert.Equal(t, false, d.Get("allow_cluster_create"))
 }
@@ -132,8 +130,7 @@ func TestResourceServicePrincipalCreate(t *testing.T) {
 							Value: "allow-cluster-create",
 						},
 					},
-					ApplicationID: "00000000-0000-0000-0000-000000000000",
-					Schemas:       []URN{ServicePrincipalSchema},
+					Schemas: []URN{ServicePrincipalSchema},
 				},
 				Response: ScimUser{
 					ID: "abc",
@@ -143,10 +140,9 @@ func TestResourceServicePrincipalCreate(t *testing.T) {
 				Method:   "GET",
 				Resource: "/api/2.0/preview/scim/v2/ServicePrincipals/abc",
 				Response: ScimUser{
-					DisplayName:   "Example Service Principal",
-					Active:        true,
-					ApplicationID: "00000000-0000-0000-0000-000000000000",
-					ID:            "abc",
+					DisplayName: "Example Service Principal",
+					Active:      true,
+					ID:          "abc",
 					Entitlements: []entitlementsListItem{
 						{
 							Value: AllowClusterCreateEntitlement,
@@ -168,14 +164,12 @@ func TestResourceServicePrincipalCreate(t *testing.T) {
 		Resource: ResourceServicePrincipal(),
 		Create:   true,
 		HCL: `
-		application_id    = "00000000-0000-0000-0000-000000000000"
 		display_name = "Example Service Principal"
 		allow_cluster_create = true
 		`,
 	}.Apply(t)
 	require.NoError(t, err, err)
 	assert.Equal(t, "abc", d.Id(), "Id should not be empty")
-	assert.Equal(t, "00000000-0000-0000-0000-000000000000", d.Get("application_id"))
 	assert.Equal(t, "Example Service Principal", d.Get("display_name"))
 	assert.Equal(t, true, d.Get("allow_cluster_create"))
 }
@@ -192,7 +186,6 @@ func TestResourceServicePrincipalCreate_Error(t *testing.T) {
 		Resource: ResourceServicePrincipal(),
 		Create:   true,
 		HCL: `
-		application_id    = "00000000-0000-0000-0000-000000000000"
 		display_name = "Example Service Principal"
 		allow_cluster_create = true
 		`,
@@ -202,10 +195,9 @@ func TestResourceServicePrincipalCreate_Error(t *testing.T) {
 
 func TestResourceServicePrincipalUpdate(t *testing.T) {
 	newServicePrincipal := ScimUser{
-		Schemas:       []URN{ServicePrincipalSchema},
-		DisplayName:   "Changed Name",
-		ApplicationID: "00000000-0000-0000-0000-000000000000",
-		Active:        true,
+		Schemas:     []URN{ServicePrincipalSchema},
+		DisplayName: "Changed Name",
+		Active:      true,
 		Entitlements: []entitlementsListItem{
 			{
 				Value: AllowInstancePoolCreateEntitlement,
@@ -228,10 +220,9 @@ func TestResourceServicePrincipalUpdate(t *testing.T) {
 				Method:   "GET",
 				Resource: "/api/2.0/preview/scim/v2/ServicePrincipals/abc",
 				Response: ScimUser{
-					DisplayName:   "Example Service Principal",
-					Active:        true,
-					ApplicationID: "00000000-0000-0000-0000-000000000000",
-					ID:            "abc",
+					DisplayName: "Example Service Principal",
+					Active:      true,
+					ID:          "abc",
 					Entitlements: []entitlementsListItem{
 						{
 							Value: AllowClusterCreateEntitlement,
@@ -264,7 +255,6 @@ func TestResourceServicePrincipalUpdate(t *testing.T) {
 		Update:   true,
 		ID:       "abc",
 		HCL: `
-		application_id    = "00000000-0000-0000-0000-000000000000"
 		display_name = "Changed Name"
 		allow_cluster_create = false
 		allow_instance_pool_create = true
@@ -272,7 +262,6 @@ func TestResourceServicePrincipalUpdate(t *testing.T) {
 	}.Apply(t)
 	require.NoError(t, err, err)
 	assert.Equal(t, "abc", d.Id(), "Id should not be empty")
-	assert.Equal(t, "00000000-0000-0000-0000-000000000000", d.Get("application_id"))
 	assert.Equal(t, "Changed Name", d.Get("display_name"))
 	assert.Equal(t, false, d.Get("allow_cluster_create"))
 	assert.Equal(t, true, d.Get("allow_instance_pool_create"))
@@ -291,7 +280,6 @@ func TestResourceServicePrincipalUpdate_Error(t *testing.T) {
 		Update:   true,
 		ID:       "abc",
 		HCL: `
-		application_id    = "00000000-0000-0000-0000-000000000000"
 		display_name = "Changed Name"
 		allow_cluster_create = false
 		allow_instance_pool_create = true
@@ -307,10 +295,9 @@ func TestResourceServicePrincipalUpdate_ErrorPut(t *testing.T) {
 				Method:   "GET",
 				Resource: "/api/2.0/preview/scim/v2/ServicePrincipals/abc",
 				Response: ScimUser{
-					DisplayName:   "Example Service Principal",
-					Active:        true,
-					ApplicationID: "00000000-0000-0000-0000-000000000000",
-					ID:            "abc",
+					DisplayName: "Example Service Principal",
+					Active:      true,
+					ID:          "abc",
 					Entitlements: []entitlementsListItem{
 						{
 							Value: AllowClusterCreateEntitlement,
@@ -338,7 +325,6 @@ func TestResourceServicePrincipalUpdate_ErrorPut(t *testing.T) {
 		Update:   true,
 		ID:       "abc",
 		HCL: `
-		application_id    = "00000000-0000-0000-0000-000000000000"
 		display_name = "Changed Name"
 		allow_cluster_create = false
 		allow_instance_pool_create = true

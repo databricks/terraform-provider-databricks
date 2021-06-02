@@ -125,7 +125,7 @@ func TestResourceServicePrincipalCreate(t *testing.T) {
 				ExpectedRequest: ScimUser{
 					DisplayName: "Example Service Principal",
 					Active:      true,
-					Entitlements: []entitlementsListItem{
+					Entitlements: []valueItem{
 						{
 							Value: "allow-cluster-create",
 						},

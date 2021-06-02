@@ -28,7 +28,7 @@ func TestAccReadUser(t *testing.T) {
 
 	if strings.Contains(me.UserName, "@") {
 		// let's assume that service principals do not look like emails
-		ru, err := usersAPI.Read(me.ID)
+		ru, err := usersAPI.read(me.ID)
 		assert.NoError(t, err, err)
 		assert.NotNil(t, ru)
 	}

@@ -24,31 +24,25 @@ type GroupsAPI struct {
 }
 
 // Create creates a scim group in the Databricks workspace
-func (a GroupsAPI) Create(groupName string, members []string, roles []string, entitlements []string) (group ScimGroup, err error) {
+func (a GroupsAPI) Create(groupName string, members []string, roles []string, e entitlements) (group ScimGroup, err error) {
 	scimGroupRequest := struct {
 		Schemas      []URN           `json:"schemas,omitempty"`
 		DisplayName  string          `json:"displayName,omitempty"`
 		Members      []ValueListItem `json:"members,omitempty"`
-		Entitlements []ValueListItem `json:"entitlements,omitempty"`
+		Entitlements entitlements    `json:"entitlements,omitempty"`
 		Roles        []ValueListItem `json:"roles,omitempty"`
 	}{}
 	scimGroupRequest.Schemas = []URN{GroupSchema}
 	scimGroupRequest.DisplayName = groupName
-
 	scimGroupRequest.Members = []ValueListItem{}
 	for _, member := range members {
 		scimGroupRequest.Members = append(scimGroupRequest.Members, ValueListItem{Value: member})
 	}
-
 	scimGroupRequest.Roles = []ValueListItem{}
 	for _, role := range roles {
 		scimGroupRequest.Roles = append(scimGroupRequest.Roles, ValueListItem{Value: role})
 	}
-
-	scimGroupRequest.Entitlements = []ValueListItem{}
-	for _, entitlement := range entitlements {
-		scimGroupRequest.Entitlements = append(scimGroupRequest.Entitlements, ValueListItem{Value: entitlement})
-	}
+	scimGroupRequest.Entitlements = e
 	err = a.client.Scim(a.context, http.MethodPost, "/preview/scim/v2/Groups", scimGroupRequest, &group)
 	return
 }

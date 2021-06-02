@@ -1,5 +1,9 @@
 package identity
 
+import (
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+)
+
 // URN is a custom type for the SCIM spec for the schema
 type URN string
 
@@ -58,6 +62,7 @@ type GroupMember struct {
 
 // ValueListItem is a struct that contains a field Value.
 // This is for the scim api.
+// TODO: replace with valueItem
 type ValueListItem struct {
 	Value string `json:"value,omitempty"`
 }
@@ -78,13 +83,13 @@ const (
 
 // ScimGroup contains information about the SCIM group
 type ScimGroup struct {
-	ID           string                 `json:"id,omitempty"`
-	Schemas      []URN                  `json:"schemas,omitempty"`
-	DisplayName  string                 `json:"displayName,omitempty"`
-	Members      []GroupMember          `json:"members,omitempty"`
-	Groups       []GroupMember          `json:"groups,omitempty"`
-	Roles        []roleListItem         `json:"roles,omitempty"`
-	Entitlements []entitlementsListItem `json:"entitlements,omitempty"`
+	ID           string         `json:"id,omitempty"`
+	Schemas      []URN          `json:"schemas,omitempty"`
+	DisplayName  string         `json:"displayName,omitempty"`
+	Members      []GroupMember  `json:"members,omitempty"`
+	Groups       []GroupMember  `json:"groups,omitempty"`
+	Roles        []roleListItem `json:"roles,omitempty"`
+	Entitlements entitlements   `json:"entitlements,omitempty"`
 }
 
 // HasMember returns true if group has given user or another group id as member
@@ -132,6 +137,72 @@ const (
 	AllowSQLAnalyticsAccessEntitlement Entitlement = "sql-analytics-access"
 )
 
+var entitlementMapping = map[string]string{
+	"allow-cluster-create":       "allow_cluster_create",
+	"allow-instance-pool-create": "allow_instance_pool_create",
+	"sql-analytics-access":       "allow_sql_analytics_access",
+}
+
+// order is important for tests
+var possibleEntitlements = []string{
+	"allow-cluster-create",
+	"allow-instance-pool-create",
+	"sql-analytics-access"}
+
+type entitlements []valueItem
+
+func (e entitlements) Read(d *schema.ResourceData) error {
+	for _, ent := range e {
+		field_name := entitlementMapping[ent.Value]
+		if err := d.Set(field_name, true); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func UpdateEntitlements(d *schema.ResourceData) ([]string, []string) {
+	added := []string{}
+	removed := []string{}
+	for _, entitlement := range possibleEntitlements {
+		field_name := entitlementMapping[entitlement]
+		_o, _n := d.GetChange(field_name)
+		old, new := _o.(bool), _n.(bool)
+		if old == new {
+			continue
+		}
+		if !old && new {
+			added = append(added, entitlement)
+		} else {
+			removed = append(removed, entitlement)
+		}
+	}
+	return added, removed
+}
+
+func CreateEntitlements(d *schema.ResourceData) entitlements {
+	var e entitlements
+	for _, entitlement := range possibleEntitlements {
+		field_name := entitlementMapping[entitlement]
+		if d.Get(field_name).(bool) {
+			e = append(e, valueItem{
+				Value: entitlement,
+			})
+		}
+	}
+	return e
+}
+
+func addEntitlementsToSchema(s *map[string]*schema.Schema) {
+	for _, entitlement := range possibleEntitlements {
+		field_name := entitlementMapping[entitlement]
+		(*s)[field_name] = &schema.Schema{
+			Type: schema.TypeBool,
+			Optional: true,
+		}
+	}
+}
+
 // GroupsListItem contains information about group item
 type GroupsListItem struct {
 	// TODO: combine entitlementsListItem & roleListItem into this one
@@ -142,8 +213,8 @@ type GroupsListItem struct {
 	Type string `json:"type,omitempty"`
 }
 
-type entitlementsListItem struct {
-	Value Entitlement `json:"value,omitempty"`
+type valueItem struct {
+	Value string `json:"value,omitempty"`
 }
 
 type roleListItem struct {
@@ -158,17 +229,17 @@ type email struct {
 
 // ScimUser is a struct that contains all the information about a SCIM user
 type ScimUser struct {
-	ID            string                 `json:"id,omitempty"`
-	Emails        []email                `json:"emails,omitempty"`
-	DisplayName   string                 `json:"displayName,omitempty"`
-	Active        bool                   `json:"active,omitempty"`
-	Schemas       []URN                  `json:"schemas,omitempty"`
-	UserName      string                 `json:"userName,omitempty"`
-	ApplicationID string                 `json:"applicationId,omitempty"`
-	Groups        []GroupsListItem       `json:"groups,omitempty"`
-	Name          map[string]string      `json:"name,omitempty"`
-	Roles         []roleListItem         `json:"roles,omitempty"`
-	Entitlements  []entitlementsListItem `json:"entitlements,omitempty"`
+	ID            string            `json:"id,omitempty"`
+	Emails        []email           `json:"emails,omitempty"`
+	DisplayName   string            `json:"displayName,omitempty"`
+	Active        bool              `json:"active,omitempty"`
+	Schemas       []URN             `json:"schemas,omitempty"`
+	UserName      string            `json:"userName,omitempty"`
+	ApplicationID string            `json:"applicationId,omitempty"`
+	Groups        []GroupsListItem  `json:"groups,omitempty"`
+	Name          map[string]string `json:"name,omitempty"`
+	Roles         []roleListItem    `json:"roles,omitempty"`
+	Entitlements  entitlements      `json:"entitlements,omitempty"`
 }
 
 // HasRole returns true if group has a role

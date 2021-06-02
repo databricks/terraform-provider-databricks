@@ -93,7 +93,7 @@ func TestResourceUserCreate(t *testing.T) {
 				ExpectedRequest: ScimUser{
 					DisplayName: "Example user",
 					Active:      true,
-					Entitlements: []entitlementsListItem{
+					Entitlements: []valueItem{
 						{
 							Value: "allow-cluster-create",
 						},
@@ -113,7 +113,7 @@ func TestResourceUserCreate(t *testing.T) {
 					Active:      true,
 					UserName:    "me@example.com",
 					ID:          "abc",
-					Entitlements: []entitlementsListItem{
+					Entitlements: []valueItem{
 						{
 							Value: AllowClusterCreateEntitlement,
 						},
@@ -172,7 +172,7 @@ func TestResourceUserUpdate(t *testing.T) {
 		DisplayName: "Changed Name",
 		UserName:    "me@example.com",
 		Active:      true,
-		Entitlements: []entitlementsListItem{
+		Entitlements: []valueItem{
 			{
 				Value: AllowInstancePoolCreateEntitlement,
 			},
@@ -206,7 +206,7 @@ func TestResourceUserUpdate(t *testing.T) {
 					Active:      true,
 					UserName:    "me@example.com",
 					ID:          "abc",
-					Entitlements: []entitlementsListItem{
+					Entitlements: []valueItem{
 						{
 							Value: AllowClusterCreateEntitlement,
 						},
@@ -293,7 +293,7 @@ func TestResourceUserUpdate_ErrorPut(t *testing.T) {
 					Active:      true,
 					UserName:    "me@example.com",
 					ID:          "abc",
-					Entitlements: []entitlementsListItem{
+					Entitlements: []valueItem{
 						{
 							Value: AllowClusterCreateEntitlement,
 						},

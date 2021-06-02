@@ -20,7 +20,7 @@ func TestResourceGroupCreate(t *testing.T) {
 				ExpectedRequest: ScimGroup{
 					Schemas:     []URN{"urn:ietf:params:scim:schemas:core:2.0:Group"},
 					DisplayName: "Data Scientists",
-					Entitlements: []entitlementsListItem{
+					Entitlements: []valueItem{
 						{
 							AllowClusterCreateEntitlement,
 						},
@@ -43,7 +43,7 @@ func TestResourceGroupCreate(t *testing.T) {
 					Schemas:     []URN{"urn:ietf:params:scim:schemas:core:2.0:Group"},
 					DisplayName: "Data Scientists",
 					ID:          "abc",
-					Entitlements: []entitlementsListItem{
+					Entitlements: []valueItem{
 						{
 							AllowClusterCreateEntitlement,
 						},
@@ -107,7 +107,7 @@ func TestResourceGroupRead(t *testing.T) {
 					Schemas:     []URN{"urn:ietf:params:scim:schemas:core:2.0:Group"},
 					DisplayName: "Data Scientists",
 					ID:          "abc",
-					Entitlements: []entitlementsListItem{
+					Entitlements: []valueItem{
 						{
 							AllowSQLAnalyticsAccessEntitlement,
 						},
@@ -233,7 +233,7 @@ func TestResourceGroupUpdate_AddPerms(t *testing.T) {
 					Schemas:     []URN{"urn:ietf:params:scim:schemas:core:2.0:Group"},
 					DisplayName: "Data Ninjas",
 					ID:          "abc",
-					Entitlements: []entitlementsListItem{
+					Entitlements: []valueItem{
 						{
 							AllowSQLAnalyticsAccessEntitlement,
 						},
@@ -302,7 +302,7 @@ func TestResourceGroupUpdate_RemovePerms(t *testing.T) {
 					Schemas:      []URN{"urn:ietf:params:scim:schemas:core:2.0:Group"},
 					DisplayName:  "Data Ninjas",
 					ID:           "abc",
-					Entitlements: []entitlementsListItem{},
+					Entitlements: []valueItem{},
 				},
 			},
 		},

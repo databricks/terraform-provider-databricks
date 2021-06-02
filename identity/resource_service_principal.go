@@ -22,7 +22,7 @@ type ServicePrincipalsAPI struct {
 
 // ServicePrincipalEntity entity from which resource schema is made
 type ServicePrincipalEntity struct {
-	ApplicationID           string `json:"application_id"`
+	ApplicationID           string `json:"application_id,omitempty" tf:"computed"`
 	DisplayName             string `json:"display_name,omitempty" tf:"computed"`
 	Active                  bool   `json:"active,omitempty"`
 	AllowClusterCreate      bool   `json:"allow_cluster_create,omitempty"`
@@ -115,6 +115,15 @@ func ResourceServicePrincipal() *schema.Resource {
 			var sp ServicePrincipalEntity
 			if err := common.DataToStructPointer(d, servicePrincipalSchema, &sp); err != nil {
 				return err
+			}
+			if c.IsAzure() && sp.ApplicationID == "" {
+				return fmt.Errorf("application_id is required for service principals in Azure Databricks")
+			}
+			if c.IsAws() && sp.ApplicationID != "" {
+				return fmt.Errorf("application_id is not allowed for service principals in Databricks on AWS")
+			}
+			if c.IsAws() && sp.DisplayName == "" {
+				return fmt.Errorf("display_name is required for service principals in Databricks on AWS")
 			}
 			servicePrincipal, err := NewServicePrincipalsAPI(ctx, c).CreateR(sp)
 			if err != nil {

@@ -7,6 +7,7 @@
 * Added the `databricks_user` data source ([#648](https://github.com/databrickslabs/terraform-provider-databricks/pull/648))
 * Fixed support for `spot_instance_policy` in SQLA Endpoints ([#665](https://github.com/databrickslabs/terraform-provider-databricks/issues/665))
 * Added documentation for `databricks_pipeline` resource ([#673](https://github.com/databrickslabs/terraform-provider-databricks/pull/673))
+* Fixed mapping for `databricks_service_principal` on AWS ([#656](https://github.com/databrickslabs/terraform-provider-databricks/issues/656))
 * Made preview environment tests to run on a release basis
 
 Updated dependency versions:

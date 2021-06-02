@@ -10,16 +10,27 @@ import (
 
 // ResourceUser manages users within workspace
 func ResourceUser() *schema.Resource {
-	userSchema := common.StructToSchema(UserEntity{}, func(
-		s map[string]*schema.Schema) map[string]*schema.Schema {
-		s["user_name"].ForceNew = true
-		s["active"].Default = true
-		return s
-	})
+	userSchema := map[string]*schema.Schema{
+		"user_name": {
+			Type:     schema.TypeString,
+			ForceNew: true,
+		},
+		"display_name": {
+			Type:     schema.TypeString,
+			Optional: true,
+			Computed: true,
+		},
+		"active": {
+			Type:     schema.TypeBool,
+			Optional: true,
+			Default:  true,
+		},
+	}
+	addEntitlementsToSchema(&userSchema)
 	return common.Resource{
 		Schema: userSchema,
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			var ru UserEntity
+			var ru ScimUser
 			if err := common.DataToStructPointer(d, userSchema, &ru); err != nil {
 				return err
 			}
@@ -31,17 +42,21 @@ func ResourceUser() *schema.Resource {
 			return nil
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			user, err := NewUsersAPI(ctx, c).Read(d.Id())
+			user, err := NewUsersAPI(ctx, c).read(d.Id())
 			if err != nil {
 				return err
 			}
-			return common.StructToData(user, userSchema, d)
+			d.Set("user_name", user.UserName)
+			d.Set("display_name", user.DisplayName)
+			d.Set("active", user.Active)
+			return user.Entitlements.Read(d)
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			var ru UserEntity
+			var ru ScimUser
 			if err := common.DataToStructPointer(d, userSchema, &ru); err != nil {
 				return err
 			}
+			ru.Entitlements = CreateEntitlements(d)
 			return NewUsersAPI(ctx, c).Update(d.Id(), ru)
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {

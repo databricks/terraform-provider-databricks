@@ -30,14 +30,14 @@ type ServicePrincipalEntity struct {
 }
 
 func (sp ServicePrincipalEntity) toRequest() ScimUser {
-	entitlements := []entitlementsListItem{}
+	entitlements := []valueItem{}
 	if sp.AllowClusterCreate {
-		entitlements = append(entitlements, entitlementsListItem{
+		entitlements = append(entitlements, valueItem{
 			Value: Entitlement("allow-cluster-create"),
 		})
 	}
 	if sp.AllowInstancePoolCreate {
-		entitlements = append(entitlements, entitlementsListItem{
+		entitlements = append(entitlements, valueItem{
 			Value: Entitlement("allow-instance-pool-create"),
 		})
 	}

@@ -23,6 +23,7 @@ type UsersAPI struct {
 }
 
 // UserEntity entity from which resource schema is made
+// TODO: remove
 type UserEntity struct {
 	UserName                string `json:"user_name"`
 	DisplayName             string `json:"display_name,omitempty" tf:"computed"`
@@ -32,35 +33,9 @@ type UserEntity struct {
 	AllowInstancePoolCreate bool   `json:"allow_instance_pool_create,omitempty"`
 }
 
-func (u UserEntity) toRequest() ScimUser {
-	entitlements := []entitlementsListItem{}
-	if u.AllowClusterCreate {
-		entitlements = append(entitlements, entitlementsListItem{
-			Value: Entitlement("allow-cluster-create"),
-		})
-	}
-	if u.AllowSQLAnalyticsAccess {
-		entitlements = append(entitlements, entitlementsListItem{
-			Value: Entitlement("sql-analytics-access"),
-		})
-	}
-	if u.AllowInstancePoolCreate {
-		entitlements = append(entitlements, entitlementsListItem{
-			Value: Entitlement("allow-instance-pool-create"),
-		})
-	}
-	return ScimUser{
-		Schemas:      []URN{UserSchema},
-		UserName:     u.UserName,
-		Active:       u.Active,
-		DisplayName:  u.DisplayName,
-		Entitlements: entitlements,
-	}
-}
-
 // Create ..
-func (a UsersAPI) Create(ru UserEntity) (user ScimUser, err error) {
-	err = a.client.Scim(a.context, http.MethodPost, "/preview/scim/v2/Users", ru.toRequest(), &user)
+func (a UsersAPI) Create(ru ScimUser) (user ScimUser, err error) {
+	err = a.client.Scim(a.context, http.MethodPost, "/preview/scim/v2/Users", ru, &user)
 	return user, err
 }
 
@@ -76,26 +51,6 @@ func (a UsersAPI) Filter(filter string) (u []ScimUser, err error) {
 		return
 	}
 	u = users.Resources
-	return
-}
-
-// Read reads resource-friendly entity
-func (a UsersAPI) Read(userID string) (ru UserEntity, err error) {
-	user, err := a.read(userID)
-	if err != nil {
-		return
-	}
-	ru.UserName = user.UserName
-	ru.DisplayName = user.DisplayName
-	ru.Active = user.Active
-	for _, ent := range user.Entitlements {
-		switch ent.Value {
-		case AllowClusterCreateEntitlement:
-			ru.AllowClusterCreate = true
-		case AllowInstancePoolCreateEntitlement:
-			ru.AllowInstancePoolCreate = true
-		}
-	}
 	return
 }
 
@@ -115,12 +70,11 @@ func (a UsersAPI) readByPath(userPath string) (user ScimUser, err error) {
 }
 
 // Update replaces resource-friendly-entity
-func (a UsersAPI) Update(userID string, ru UserEntity) error {
+func (a UsersAPI) Update(userID string, updateRequest ScimUser) error {
 	user, err := a.read(userID)
 	if err != nil {
 		return err
 	}
-	updateRequest := ru.toRequest()
 	updateRequest.Groups = user.Groups
 	updateRequest.Roles = user.Roles
 	return a.client.Scim(a.context, http.MethodPut,

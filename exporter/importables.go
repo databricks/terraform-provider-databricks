@@ -35,8 +35,10 @@ var resourcesMap map[string]importable = map[string]importable{
 	"databricks_dbfs_file": {
 		Service: "storage",
 		Name: func(d *schema.ResourceData) string {
+			fileNameMd5 := fmt.Sprintf("%x", md5.Sum([]byte(d.Id())))
 			s := strings.Split(d.Id(), "/")
-			return s[len(s)-1]
+			name := "_" + s[len(s)-1] + "_" + fileNameMd5
+			return name
 		},
 		Body: func(ic *importContext, body *hclwrite.Body, r *resource) error {
 			dbfsAPI := storage.NewDbfsAPI(ic.Context, ic.Client)
@@ -48,8 +50,8 @@ var resourcesMap map[string]importable = map[string]importable{
 			if err != nil && !os.IsExist(err) {
 				return err
 			}
-			fileNameMd5 := fmt.Sprintf("%x", md5.Sum([]byte(r.ID)))
-			fileName := ic.prefix + fileNameMd5 + "_" + path.Base(r.ID)
+			name := ic.Importables["databricks_dbfs_file"].Name(r.Data)
+			fileName := ic.prefix + name
 			local, err := os.Create(fmt.Sprintf("%s/files/%s", ic.Directory, fileName))
 			if err != nil {
 				return err
@@ -60,7 +62,7 @@ var resourcesMap map[string]importable = map[string]importable{
 				return err
 			}
 			// libraries installed with init scripts won't be exported.
-			b := body.AppendNewBlock("resource", []string{r.Resource, r.Name + "_" + fileNameMd5}).Body()
+			b := body.AppendNewBlock("resource", []string{r.Resource, r.Name}).Body()
 			relativeFile := fmt.Sprintf("${path.module}/files/%s", fileName)
 			b.SetAttributeValue("path", cty.StringVal(strings.Replace(r.ID, "dbfs:", "", 1)))
 			b.SetAttributeRaw("source", hclwrite.Tokens{

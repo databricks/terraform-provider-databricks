@@ -54,24 +54,9 @@ func (ic *importContext) importLibraries(d *schema.ResourceData, s map[string]*s
 		return err
 	}
 	for _, lib := range cll.Libraries {
-		if strings.HasPrefix(lib.Whl, "dbfs:") {
-			ic.Emit(&resource{
-				Resource: "databricks_dbfs_file",
-				ID:       lib.Whl,
-			})
-		}
-		if strings.HasPrefix(lib.Jar, "dbfs:") {
-			ic.Emit(&resource{
-				Resource: "databricks_dbfs_file",
-				ID:       lib.Jar,
-			})
-		}
-		if strings.HasPrefix(lib.Egg, "dbfs:") {
-			ic.Emit(&resource{
-				Resource: "databricks_dbfs_file",
-				ID:       lib.Egg,
-			})
-		}
+		ic.emitIfDbfsFile(lib.Whl)
+		ic.emitIfDbfsFile(lib.Jar)
+		ic.emitIfDbfsFile(lib.Egg)
 	}
 	return nil
 }

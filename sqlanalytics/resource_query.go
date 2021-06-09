@@ -24,6 +24,7 @@ type QueryEntity struct {
 	Schedule     *QuerySchedule   `json:"schedule,omitempty"`
 	Tags         []string         `json:"tags,omitempty"`
 	Parameter    []QueryParameter `json:"parameter,omitempty"`
+	RunAsRole    string           `json:"run_as_role,omitempty"`
 }
 
 // QuerySchedule ...
@@ -272,6 +273,13 @@ func (q *QueryEntity) toAPIObject(schema map[string]*schema.Schema, data *schema
 		}
 	}
 
+	if q.RunAsRole != "" {
+		if aq.Options == nil {
+			aq.Options = &api.QueryOptions{}
+		}
+		aq.Options.RunAsRole = q.RunAsRole
+	}
+
 	return &aq, nil
 }
 
@@ -418,6 +426,8 @@ func (q *QueryEntity) fromAPIObject(aq *api.Query, schema map[string]*schema.Sch
 
 			q.Parameter = append(q.Parameter, p)
 		}
+
+		q.RunAsRole = aq.Options.RunAsRole
 	}
 
 	// Transform to ResourceData.
@@ -513,6 +523,8 @@ func ResourceQuery() *schema.Resource {
 				"Friday",
 				"Saturday",
 			}, false)
+
+			m["run_as_role"].ValidateFunc = validation.StringInSlice([]string{"viewer", "owner"}, false)
 			return m
 		})
 

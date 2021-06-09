@@ -20,6 +20,9 @@ func TestQueryCreate(t *testing.T) {
 					Name:         "Query name",
 					Description:  "Query description",
 					Query:        "SELECT 1",
+					Options: &api.QueryOptions{
+						RunAsRole: "viewer",
+					},
 				},
 				Response: api.Query{
 					ID:           "foo",
@@ -27,6 +30,9 @@ func TestQueryCreate(t *testing.T) {
 					Name:         "Query name",
 					Description:  "Query description",
 					Query:        "SELECT 1",
+					Options: &api.QueryOptions{
+						RunAsRole: "viewer",
+					},
 				},
 			},
 			{
@@ -38,6 +44,9 @@ func TestQueryCreate(t *testing.T) {
 					Name:         "Query name",
 					Description:  "Query description",
 					Query:        "SELECT 1",
+					Options: &api.QueryOptions{
+						RunAsRole: "viewer",
+					},
 				},
 			},
 		},
@@ -48,6 +57,7 @@ func TestQueryCreate(t *testing.T) {
 			"name":           "Query name",
 			"description":    "Query description",
 			"query":          "SELECT 1",
+			"run_as_role":    "viewer",
 		},
 	}.Apply(t)
 
@@ -58,6 +68,7 @@ func TestQueryCreate(t *testing.T) {
 	assert.Equal(t, "Query name", d.Get("name"))
 	assert.Equal(t, "Query description", d.Get("description"))
 	assert.Equal(t, "SELECT 1", d.Get("query"))
+	assert.Equal(t, "viewer", d.Get("run_as_role"))
 }
 
 func TestQueryCreateWithMultipleSchedules(t *testing.T) {

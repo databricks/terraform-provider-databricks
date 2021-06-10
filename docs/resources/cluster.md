@@ -125,21 +125,21 @@ To install libraries, one must specify each library in a separate configuration 
 Installing JAR artifacts on a cluster. Location can be anything, that is DBFS or mounted object store (s3, adls, ...)
 ```hcl
 library {
-  jar = "dbfs://FileStore/app-0.0.1.jar"
+  jar = "dbfs:/FileStore/app-0.0.1.jar"
 }
 ```
 
 Installing Python EGG artifacts. Location can be anything, that is DBFS or mounted object store (s3, adls, ...)
 ```hcl
 library {
-  egg = "dbfs://FileStore/foo.egg"
+  egg = "dbfs:/FileStore/foo.egg"
 }
 ```
 
 Installing Python Wheel artifacts. Location can be anything, that is DBFS or mounted object store (s3, adls, ...)
 ```hcl
 library {
-  whl = "dbfs://FileStore/baz.whl"
+  whl = "dbfs:/FileStore/baz.whl"
 }
 ```
 
@@ -179,7 +179,7 @@ Example of pushing all cluster logs to DBFS:
 ```hcl
 cluster_log_conf {
   dbfs {
-    destination = "dbfs://cluster-logs"
+    destination = "dbfs:/cluster-logs"
   }
 }
 ```
@@ -212,7 +212,7 @@ Example of taking init script from DBFS:
 ```hcl
 init_scripts {
   dbfs {
-    destination = "dbfs://init-scripts/install-elk.sh"
+    destination = "dbfs:/init-scripts/install-elk.sh"
   }
 }
 ```

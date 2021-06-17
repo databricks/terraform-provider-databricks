@@ -119,7 +119,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			if name == "" {
 				return strings.Split(d.Id(), "-")[2]
 			}
-			return name
+			return fmt.Sprintf("%s_%s", name, d.Id())
 		},
 		Depends: []reference{
 			{Path: "aws_attributes.instance_profile_arn", Resource: "databricks_instance_profile"},
@@ -509,6 +509,15 @@ var resourcesMap map[string]importable = map[string]importable{
 			{Path: "cluster_policy_id", Resource: "databricks_cluster_policy"},
 			{Path: "access_control.user_name", Resource: "databricks_user", Match: "user_name"},
 			{Path: "access_control.group_name", Resource: "databricks_group", Match: "display_name"},
+		},
+		Ignore: func(ic *importContext, r *resource) bool {
+			var permissions access.PermissionsEntity
+			s := ic.Resources["databricks_permissions"].Schema
+			err := common.DataToStructPointer(r.Data, s, &permissions)
+			if err != nil {
+				return false
+			}
+			return (len(permissions.AccessControlList) == 0)
 		},
 		Import: func(ic *importContext, r *resource) error {
 			var permissions access.PermissionsEntity

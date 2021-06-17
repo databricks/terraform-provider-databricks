@@ -109,9 +109,7 @@ func newImportContext(c *common.DatabricksClient) *importContext {
 			{regexp.MustCompile(`\W+`), ""},
 			{regexp.MustCompile(`[_]{2,}`), "_"},
 		},
-		hclFixes: []regexFix{
-			{regexp.MustCompile(`\{ `), "{\n\t\t"},
-			{regexp.MustCompile(`, `), ",\n\t\t"},
+		hclFixes: []regexFix{ // Be careful with that! it may break working code
 		},
 		allUsers:  []identity.ScimUser{},
 		variables: map[string]string{},
@@ -200,6 +198,9 @@ func (ic *importContext) Run() error {
 		if !ok {
 			f = hclwrite.NewEmptyFile()
 			ic.Files[ir.Service] = f
+		}
+		if ir.Ignore != nil && ir.Ignore(ic, r) {
+			continue
 		}
 		body := f.Body()
 		if ir.Body != nil {

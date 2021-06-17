@@ -46,6 +46,8 @@ type importable struct {
 	Depends []reference
 	// Custom HCL writer for resource body
 	Body func(ic *importContext, body *hclwrite.Body, r *resource) error
+	// Function to detect if the given resource should be ignored or not
+	Ignore func(ic *importContext, r *resource) bool
 }
 
 type reference struct {

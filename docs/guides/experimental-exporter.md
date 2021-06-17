@@ -5,6 +5,7 @@ page_title: "Experimental resource exporter"
 
 -> **Note** This tooling is experimental and provided as is. It has an evolving interfaces, which may change or be removed in future versions of the provider.
 
+-> **Note** Use the same user who did the exporting to import the exported templates.  Otherwise it could cause the changes in the jobs ownership.
 
 Generates `*.tf` files for Databricks resources as well as `import.sh` to run import state. Available as part of provider binary. The only possible way to authenticate is through [environment variables](../index.md#Environment-variables). It's best used, when you need to quickly export Terraform configuration for an existing Databricks workspace. After generating configuration, we strongly recommend to manually review all created files.
 

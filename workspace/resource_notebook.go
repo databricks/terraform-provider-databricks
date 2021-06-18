@@ -181,6 +181,8 @@ func (a NotebooksAPI) list(path string) ([]ObjectStatus, error) {
 
 // Delete will delete folders given a path and recursive flag
 func (a NotebooksAPI) Delete(path string, recursive bool) error {
+	mtx.Lock()
+	defer mtx.Unlock()
 	return a.client.Post(a.context, "/workspace/delete", NotebookDeleteRequest{
 		Path:      path,
 		Recursive: recursive,

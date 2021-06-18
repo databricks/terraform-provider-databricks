@@ -81,6 +81,7 @@ func DatabricksProvider() *schema.Provider {
 			"databricks_sql_visualization": sqlanalytics.ResourceVisualization(),
 			"databricks_sql_widget":        sqlanalytics.ResourceWidget(),
 
+			"databricks_directory":          workspace.ResourceDirectory(),
 			"databricks_global_init_script": workspace.ResourceGlobalInitScript(),
 			"databricks_notebook":           workspace.ResourceNotebook(),
 			"databricks_workspace_conf":     workspace.ResourceWorkspaceConf(),

@@ -1,5 +1,9 @@
 # Version changelog
 
+## 0.3.6
+
+* Added support for hybrid pools ([#689](https://github.com/databrickslabs/terraform-provider-databricks/pull/689))
+
 ## 0.3.5
 
 * Fixed setting of permissions for SQLA endpoints ([#661](https://github.com/databrickslabs/terraform-provider-databricks/issues/661))

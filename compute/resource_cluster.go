@@ -77,6 +77,11 @@ func resourceClusterSchema() map[string]*schema.Schema {
 		s["azure_attributes"].DiffSuppressFunc = common.MakeEmptyBlockSuppressFunc("azure_attributes.#")
 		s["gcp_attributes"].DiffSuppressFunc = common.MakeEmptyBlockSuppressFunc("gcp_attributes.#")
 
+		s["instance_pool_id"].ConflictsWith = []string{"driver_node_type_id", "node_type_id"}
+		s["driver_instance_pool_id"].ConflictsWith = []string{"driver_node_type_id", "node_type_id"}
+		s["driver_node_type_id"].ConflictsWith = []string{"driver_instance_pool_id", "instance_pool_id"}
+		s["node_type_id"].ConflictsWith = []string{"driver_instance_pool_id", "instance_pool_id"}
+
 		s["is_pinned"] = &schema.Schema{
 			Type:     schema.TypeBool,
 			Optional: true,

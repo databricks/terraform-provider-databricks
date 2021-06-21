@@ -29,6 +29,19 @@ func ResourceDirectory() *schema.Resource {
 		},
 	}
 
+	directoryRead := func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+		notebooksAPI := NewNotebooksAPI(ctx, c)
+		objectStatus, err := notebooksAPI.Read(d.Id())
+		if err != nil {
+			return err
+		}
+		if objectStatus.ObjectType != Directory {
+			d.SetId("")
+			return fmt.Errorf("different object type, %s, on this path other than a directory", objectStatus.ObjectType)
+		}
+		return common.StructToData(objectStatus, s, d)
+	}
+
 	return common.Resource{
 		Schema: s,
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
@@ -41,17 +54,9 @@ func ResourceDirectory() *schema.Resource {
 			d.SetId(path)
 			return nil
 		},
-		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			notebooksAPI := NewNotebooksAPI(ctx, c)
-			objectStatus, err := notebooksAPI.Read(d.Id())
-			if err != nil {
-				return err
-			}
-			if objectStatus.ObjectType != Directory {
-				d.SetId("")
-				return fmt.Errorf("different object type, %s, on this path other than a directory", objectStatus.ObjectType)
-			}
-			return common.StructToData(objectStatus, s, d)
+		Read: directoryRead,
+		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			return directoryRead(ctx, d, c)
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			return NewNotebooksAPI(ctx, c).Delete(d.Id(), d.Get("delete_recursive").(bool))

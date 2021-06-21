@@ -54,10 +54,8 @@ func ResourceDirectory() *schema.Resource {
 			d.SetId(path)
 			return nil
 		},
-		Read: directoryRead,
-		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			return directoryRead(ctx, d, c)
-		},
+		Read:   directoryRead,
+		Update: directoryRead,
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			return NewNotebooksAPI(ctx, c).Delete(d.Id(), d.Get("delete_recursive").(bool))
 		},

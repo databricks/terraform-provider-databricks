@@ -127,6 +127,7 @@ func TestResourceDirectoryCreate(t *testing.T) {
 		},
 		Resource: ResourceDirectory(),
 		State: map[string]interface{}{
+			"object_id":        4567,
 			"path":             path,
 			"delete_recursive": false,
 		},

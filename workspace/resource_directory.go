@@ -18,7 +18,8 @@ func ResourceDirectory() *schema.Resource {
 			ForceNew: true,
 		},
 		"object_id": {
-			Type:     schema.TypeString,
+			Type:     schema.TypeInt,
+			Optional: true,
 			Computed: true,
 		},
 		"delete_recursive": {

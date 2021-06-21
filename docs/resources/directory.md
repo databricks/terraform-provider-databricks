@@ -21,7 +21,7 @@ resource "databricks_directory" "my_custom_directory" {
 The following arguments are supported:
 
 - `path` - (Required) The absolute path of the directory, beginning with "/", e.g. "/Demo".
-- `delete_recursive` - Wether or not to trigger a recursive delete of this directory and its resources when deleting this on Terraform.
+- `delete_recursive` - Wether or not to trigger a recursive delete of this directory and its resources when deleting this on Terraform. Defaults to `false`
 
 ## Attribute Reference
 

@@ -36,8 +36,8 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-The resource notebook can be imported using notebook path
+The resource directory can be imported using directory path
 
 ```bash
-$ terraform import databricks_directory.this /path/to/notebook
+$ terraform import databricks_directory.this /path/to/directory
 ```

@@ -29,7 +29,7 @@ func ResourceDirectory() *schema.Resource {
 	}
 
 	return common.Resource{
-		Schema:        s,
+		Schema: s,
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			notebooksAPI := NewNotebooksAPI(ctx, c)
 			path := d.Get("path").(string)
@@ -47,6 +47,7 @@ func ResourceDirectory() *schema.Resource {
 				return err
 			}
 			if objectStatus.ObjectType != Directory {
+				d.SetId("")
 				return fmt.Errorf("different object type, %s, on this path other than a directory", objectStatus.ObjectType)
 			}
 			return common.StructToData(objectStatus, s, d)

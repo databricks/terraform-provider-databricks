@@ -2,7 +2,7 @@ package workspace
 
 import (
 	"context"
-	"errors"
+	"fmt"
 
 	"github.com/databrickslabs/terraform-provider-databricks/common"
 
@@ -17,6 +17,10 @@ func ResourceDirectory() *schema.Resource {
 			Required: true,
 			ForceNew: true,
 		},
+		"object_id": {
+			Type:     schema.TypeString,
+			Computed: true,
+		},
 		"delete_recursive": {
 			Type:     schema.TypeBool,
 			Default:  false,
@@ -26,7 +30,6 @@ func ResourceDirectory() *schema.Resource {
 
 	return common.Resource{
 		Schema:        s,
-		SchemaVersion: 1,
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			notebooksAPI := NewNotebooksAPI(ctx, c)
 			path := d.Get("path").(string)
@@ -44,8 +47,7 @@ func ResourceDirectory() *schema.Resource {
 				return err
 			}
 			if objectStatus.ObjectType != Directory {
-				// TODO: better error message
-				return errors.New("different object type on this path other than a directory")
+				return fmt.Errorf("different object type, %s, on this path other than a directory", objectStatus.ObjectType)
 			}
 			return common.StructToData(objectStatus, s, d)
 		},

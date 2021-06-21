@@ -10,6 +10,7 @@ import (
 	"github.com/databrickslabs/terraform-provider-databricks/qa"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestResourceDirectoryRead(t *testing.T) {
@@ -185,4 +186,72 @@ func TestResourceDirectoryDelete_Error(t *testing.T) {
 	}.Apply(t)
 	qa.AssertErrorStartsWith(t, err, "Internal error happened")
 	assert.Equal(t, path, d.Id())
+}
+
+func TestResourceDirectoryUpdate(t *testing.T) {
+	path := "/test/path"
+	object_id := 4567
+	_, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/workspace/mkdirs",
+				ExpectedRequest: map[string]string{
+					"path": path,
+				},
+			},
+			{
+				Method:   http.MethodGet,
+				Resource: fmt.Sprintf("/api/2.0/workspace/get-status?path=%s", url.PathEscape(path)),
+				Response: ObjectStatus{
+					ObjectID:   int64(object_id),
+					ObjectType: "DIRECTORY",
+					Path:       path,
+				},
+			},
+			{
+				Method:   http.MethodGet,
+				Resource: fmt.Sprintf("/api/2.0/workspace/get-status?path=%s", url.PathEscape(path)),
+				Response: ObjectStatus{
+					ObjectID:   int64(object_id),
+					ObjectType: "DIRECTORY",
+					Path:       path,
+				},
+			},
+		},
+		Resource: ResourceDirectory(),
+		State: map[string]interface{}{
+			"object_id":        object_id,
+			"path":             path,
+			"delete_recursive": true,
+		},
+		ID:     path,
+		Update: true,
+	}.Apply(t)
+	require.NoError(t, err)
+}
+
+func TestResourceDirectoryReadNotDirectory(t *testing.T) {
+	path := "/test/path"
+	objectID := 12345
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   http.MethodGet,
+				Resource: fmt.Sprintf("/api/2.0/workspace/get-status?path=%s", url.PathEscape(path)),
+				Response: ObjectStatus{
+					ObjectID:   int64(objectID),
+					ObjectType: Notebook,
+					Path:       path,
+					Language:   Python,
+				},
+			},
+		},
+		Resource: ResourceDirectory(),
+		Read:     true,
+		New:      true,
+		ID:       path,
+	}.Apply(t)
+	qa.AssertErrorStartsWith(t, err, "different object type")
+	assert.Equal(t, "", d.Id(), "Id should be empty for different object type read")
 }

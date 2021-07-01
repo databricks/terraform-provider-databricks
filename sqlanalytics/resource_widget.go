@@ -27,10 +27,11 @@ type WidgetEntity struct {
 
 // WidgetPosition ...
 type WidgetPosition struct {
-	SizeX int `json:"size_x"`
-	SizeY int `json:"size_y"`
-	PosX  int `json:"pos_x"`
-	PosY  int `json:"pos_y"`
+	SizeX      int  `json:"size_x"`
+	SizeY      int  `json:"size_y"`
+	PosX       int  `json:"pos_x"`
+	PosY       int  `json:"pos_y"`
+	AutoHeight bool `json:"auto_height,omitempty"`
 }
 
 // WidgetParameter ...
@@ -92,7 +93,7 @@ func (w *WidgetEntity) toAPIObject(schema map[string]*schema.Schema, data *schem
 
 	if w.Position != nil {
 		aw.Options.Position = &api.WidgetPosition{
-			AutoHeight: false,
+			AutoHeight: w.Position.AutoHeight,
 			SizeX:      w.Position.SizeX,
 			SizeY:      w.Position.SizeY,
 			PosX:       w.Position.PosX,
@@ -138,10 +139,11 @@ func (w *WidgetEntity) fromAPIObject(aw *api.Widget, schema map[string]*schema.S
 
 	if pos := aw.Options.Position; pos != nil {
 		w.Position = &WidgetPosition{
-			SizeX: pos.SizeX,
-			SizeY: pos.SizeY,
-			PosX:  pos.PosX,
-			PosY:  pos.PosY,
+			AutoHeight: pos.AutoHeight,
+			SizeX:      pos.SizeX,
+			SizeY:      pos.SizeY,
+			PosX:       pos.PosX,
+			PosY:       pos.PosY,
 		}
 	}
 

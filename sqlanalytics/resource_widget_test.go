@@ -402,6 +402,102 @@ func TestWidgetCreateWithPosition(t *testing.T) {
 	assert.Equal(t, 4, d.Get("position.0.size_y"))
 	assert.Equal(t, 5, d.Get("position.0.pos_x"))
 	assert.Equal(t, 6, d.Get("position.0.pos_y"))
+	assert.Equal(t, false, d.Get("position.0.auto_height"))
+}
+
+func TestWidgetCreateWithPositionAndAutoheight(t *testing.T) {
+	i678 := 678
+
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/preview/sql/widgets",
+				ExpectedRequest: api.Widget{
+					DashboardID:     "some-uuid",
+					VisualizationID: &i678,
+					Options: api.WidgetOptions{
+						Position: &api.WidgetPosition{
+							AutoHeight: true,
+							SizeX:      3,
+							SizeY:      0,
+							PosX:       5,
+							PosY:       6,
+						},
+					},
+				},
+				Response: api.Widget{
+					ID:          12345,
+					DashboardID: "some-uuid",
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/preview/sql/dashboards/some-uuid",
+				Response: api.Dashboard{
+					ID: "some-uuid",
+					Widgets: []json.RawMessage{
+						json.RawMessage(`
+							{
+								"id": 12344,
+								"visualization_id": null
+							}
+						`),
+						json.RawMessage(`
+							{
+								"id": 12345,
+								"visualization_id": 678,
+								"options": {
+									"position": {
+										"autoHeight": true,
+										"sizeX": 3,
+										"sizeY": 0,
+										"col": 5,
+										"row": 6
+									}
+								}
+							}
+						`),
+						json.RawMessage(`
+							{
+								"id": 12345,
+								"visualization_id": null
+							}
+						`),
+					},
+				},
+			},
+		},
+		Resource: ResourceWidget(),
+		Create:   true,
+		HCL: `
+			dashboard_id = "some-uuid"
+			visualization_id = "678"
+
+			position {
+				size_x = 3
+				size_y = 0
+				pos_x = 5
+				pos_y = 6
+
+				auto_height = true
+			}
+		`,
+	}.Apply(t)
+
+	assert.NoError(t, err, err)
+	assert.Equal(t, "some-uuid/12345", d.Id(), "Resource ID should not be empty")
+	assert.Equal(t, "some-uuid", d.Get("dashboard_id"))
+	assert.Equal(t, "12345", d.Get("widget_id"))
+	assert.Equal(t, "678", d.Get("visualization_id"))
+
+	// The position is a nested type, which can only be modeled in Terraform
+	// by a list type with a single element.
+	assert.Equal(t, 3, d.Get("position.0.size_x"))
+	assert.Equal(t, 0, d.Get("position.0.size_y"))
+	assert.Equal(t, 5, d.Get("position.0.pos_x"))
+	assert.Equal(t, 6, d.Get("position.0.pos_y"))
+	assert.Equal(t, true, d.Get("position.0.auto_height"))
 }
 
 func TestWidgetUpdate(t *testing.T) {

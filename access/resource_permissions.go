@@ -14,6 +14,7 @@ import (
 	"github.com/databrickslabs/terraform-provider-databricks/workspace"
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/pkg/errors"
 )
@@ -286,6 +287,15 @@ func (oa *ObjectACL) ToPermissionsEntity(ctx context.Context, d *schema.Resource
 	return entity, fmt.Errorf("unknown object type %s", oa.ObjectType)
 }
 
+func stringInSlice(a string, list []string) bool {
+	for _, b := range list {
+		if b == a {
+			return true
+		}
+	}
+	return false
+}
+
 // ResourcePermissions definition
 func ResourcePermissions() *schema.Resource {
 	s := common.StructToSchema(PermissionsEntity{}, func(s map[string]*schema.Schema) map[string]*schema.Schema {
@@ -353,7 +363,87 @@ func ResourcePermissions() *schema.Resource {
 		return nil
 	}
 	return &schema.Resource{
-		Schema:      s,
+		Schema: s,
+		CustomizeDiff: customdiff.Sequence(
+			func(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
+				// Plan time validation for object permission levels
+				objectPermissionLevelMappingList := []struct {
+					objectKey               string
+					allowedPermissionLevels []string
+				}{
+					{
+						objectKey:               "cluster_policy_id",
+						allowedPermissionLevels: []string{"CAN_USE"},
+					},
+					{
+						objectKey:               "instance_pool_id",
+						allowedPermissionLevels: []string{"CAN_ATTACH_TO", "CAN_MANAGE"},
+					},
+					{
+						objectKey:               "cluster_id",
+						allowedPermissionLevels: []string{"CAN_ATTACH_TO", "CAN_RESTART", "CAN_MANAGE"},
+					},
+					{
+						objectKey:               "job_id",
+						allowedPermissionLevels: []string{"CAN_VIEW", "CAN_MANAGE_RUN", "IS_OWNER", "CAN_MANAGE"},
+					},
+					{
+						objectKey:               "notebook_id",
+						allowedPermissionLevels: []string{"CAN_READ", "CAN_RUN", "CAN_EDIT", "CAN_MANAGE"},
+					},
+					{
+						objectKey:               "notebook_path",
+						allowedPermissionLevels: []string{"CAN_READ", "CAN_RUN", "CAN_EDIT", "CAN_MANAGE"},
+					},
+					{
+						objectKey:               "directory_id",
+						allowedPermissionLevels: []string{"CAN_READ", "CAN_RUN", "CAN_EDIT", "CAN_MANAGE"},
+					},
+					{
+						objectKey:               "directory_path",
+						allowedPermissionLevels: []string{"CAN_READ", "CAN_RUN", "CAN_EDIT", "CAN_MANAGE"},
+					},
+					{
+						objectKey:               "authorization",
+						allowedPermissionLevels: []string{"CAN_USE"},
+					},
+					{
+						objectKey:               "sql_endpoint_id",
+						allowedPermissionLevels: []string{"CAN_USE", "CAN_MANAGE"},
+					},
+					{
+						objectKey:               "sql_dashboard_id",
+						allowedPermissionLevels: []string{"CAN_USE", "CAN_MANAGE"},
+					},
+					{
+						objectKey:               "sql_alert_id",
+						allowedPermissionLevels: []string{"CAN_USE", "CAN_MANAGE"},
+					},
+					{
+						objectKey:               "sql_query_id",
+						allowedPermissionLevels: []string{"CAN_USE", "CAN_MANAGE"},
+					},
+				}
+				for _, objectPermissionLevelMapping := range objectPermissionLevelMappingList {
+					if _, ok := diff.GetOk(objectPermissionLevelMapping.objectKey); !ok {
+						continue
+					}
+
+					access_control_list := diff.Get("access_control").(*schema.Set).List()
+					for _, access_control := range access_control_list {
+						m := access_control.(map[string]interface{})
+
+						permission_level := m["permission_level"].(string)
+
+						if !stringInSlice(permission_level, objectPermissionLevelMapping.allowedPermissionLevels) {
+							return fmt.Errorf(`permission_level %s is not supported with %s objects`, permission_level, objectPermissionLevelMapping.objectKey)
+						}
+					}
+				}
+
+				return nil
+			},
+		),
 		ReadContext: readContext,
 		CreateContext: func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 			var entity PermissionsEntity

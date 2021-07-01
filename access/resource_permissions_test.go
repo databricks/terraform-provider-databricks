@@ -368,7 +368,7 @@ func TestResourcePermissionsCreate(t *testing.T) {
 					AccessControlList: []AccessControlChange{
 						{
 							UserName:        TestingUser,
-							PermissionLevel: "CAN_READ",
+							PermissionLevel: "CAN_ATTACH_TO",
 						},
 					},
 				},
@@ -384,7 +384,7 @@ func TestResourcePermissionsCreate(t *testing.T) {
 							UserName: TestingUser,
 							AllPermissions: []Permission{
 								{
-									PermissionLevel: "CAN_READ",
+									PermissionLevel: "CAN_ATTACH_TO",
 									Inherited:       false,
 								},
 							},
@@ -415,7 +415,7 @@ func TestResourcePermissionsCreate(t *testing.T) {
 			"access_control": []interface{}{
 				map[string]interface{}{
 					"user_name":        TestingUser,
-					"permission_level": "CAN_READ",
+					"permission_level": "CAN_ATTACH_TO",
 				},
 			},
 		},
@@ -426,7 +426,7 @@ func TestResourcePermissionsCreate(t *testing.T) {
 	require.Equal(t, 1, len(ac.List()))
 	firstElem := ac.List()[0].(map[string]interface{})
 	assert.Equal(t, TestingUser, firstElem["user_name"])
-	assert.Equal(t, "CAN_READ", firstElem["permission_level"])
+	assert.Equal(t, "CAN_ATTACH_TO", firstElem["permission_level"])
 }
 
 func TestResourcePermissionsCreate_SQLA_Asset(t *testing.T) {
@@ -439,7 +439,7 @@ func TestResourcePermissionsCreate_SQLA_Asset(t *testing.T) {
 					AccessControlList: []AccessControlChange{
 						{
 							UserName:        TestingUser,
-							PermissionLevel: "CAN_READ",
+							PermissionLevel: "CAN_USE",
 						},
 						{
 							UserName:        TestingAdminUser,
@@ -457,7 +457,7 @@ func TestResourcePermissionsCreate_SQLA_Asset(t *testing.T) {
 					AccessControlList: []AccessControl{
 						{
 							UserName:        TestingUser,
-							PermissionLevel: "CAN_READ",
+							PermissionLevel: "CAN_USE",
 						},
 						{
 							UserName:        TestingAdminUser,
@@ -481,7 +481,7 @@ func TestResourcePermissionsCreate_SQLA_Asset(t *testing.T) {
 			"access_control": []interface{}{
 				map[string]interface{}{
 					"user_name":        TestingUser,
-					"permission_level": "CAN_READ",
+					"permission_level": "CAN_USE",
 				},
 			},
 		},
@@ -492,7 +492,7 @@ func TestResourcePermissionsCreate_SQLA_Asset(t *testing.T) {
 	require.Equal(t, 1, len(ac.List()))
 	firstElem := ac.List()[0].(map[string]interface{})
 	assert.Equal(t, TestingUser, firstElem["user_name"])
-	assert.Equal(t, "CAN_READ", firstElem["permission_level"])
+	assert.Equal(t, "CAN_USE", firstElem["permission_level"])
 }
 
 func TestResourcePermissionsCreate_SQLA_Endpoint(t *testing.T) {
@@ -505,7 +505,7 @@ func TestResourcePermissionsCreate_SQLA_Endpoint(t *testing.T) {
 					AccessControlList: []AccessControlChange{
 						{
 							UserName:        TestingUser,
-							PermissionLevel: "CAN_READ",
+							PermissionLevel: "CAN_USE",
 						},
 						{
 							UserName:        TestingAdminUser,
@@ -523,7 +523,7 @@ func TestResourcePermissionsCreate_SQLA_Endpoint(t *testing.T) {
 					AccessControlList: []AccessControl{
 						{
 							UserName:        TestingUser,
-							PermissionLevel: "CAN_READ",
+							PermissionLevel: "CAN_USE",
 						},
 						{
 							UserName:        TestingAdminUser,
@@ -547,7 +547,7 @@ func TestResourcePermissionsCreate_SQLA_Endpoint(t *testing.T) {
 			"access_control": []interface{}{
 				map[string]interface{}{
 					"user_name":        TestingUser,
-					"permission_level": "CAN_READ",
+					"permission_level": "CAN_USE",
 				},
 			},
 		},
@@ -558,7 +558,7 @@ func TestResourcePermissionsCreate_SQLA_Endpoint(t *testing.T) {
 	require.Equal(t, 1, len(ac.List()))
 	firstElem := ac.List()[0].(map[string]interface{})
 	assert.Equal(t, TestingUser, firstElem["user_name"])
-	assert.Equal(t, "CAN_READ", firstElem["permission_level"])
+	assert.Equal(t, "CAN_USE", firstElem["permission_level"])
 }
 
 func TestResourcePermissionsCreate_NotebookPath_NotExists(t *testing.T) {
@@ -608,7 +608,7 @@ func TestResourcePermissionsCreate_NotebookPath(t *testing.T) {
 					AccessControlList: []AccessControlChange{
 						{
 							UserName:        TestingUser,
-							PermissionLevel: "CAN_USE",
+							PermissionLevel: "CAN_READ",
 						},
 					},
 				},
@@ -624,7 +624,7 @@ func TestResourcePermissionsCreate_NotebookPath(t *testing.T) {
 							UserName: TestingUser,
 							AllPermissions: []Permission{
 								{
-									PermissionLevel: "CAN_USE",
+									PermissionLevel: "CAN_READ",
 									Inherited:       false,
 								},
 							},
@@ -655,7 +655,7 @@ func TestResourcePermissionsCreate_NotebookPath(t *testing.T) {
 			"access_control": []interface{}{
 				map[string]interface{}{
 					"user_name":        TestingUser,
-					"permission_level": "CAN_USE",
+					"permission_level": "CAN_READ",
 				},
 			},
 		},
@@ -667,7 +667,7 @@ func TestResourcePermissionsCreate_NotebookPath(t *testing.T) {
 	require.Equal(t, 1, len(ac.List()))
 	firstElem := ac.List()[0].(map[string]interface{})
 	assert.Equal(t, TestingUser, firstElem["user_name"])
-	assert.Equal(t, "CAN_USE", firstElem["permission_level"])
+	assert.Equal(t, "CAN_READ", firstElem["permission_level"])
 }
 
 func TestResourcePermissionsCreate_error(t *testing.T) {
@@ -716,7 +716,7 @@ func TestResourcePermissionsUpdate(t *testing.T) {
 							UserName: TestingUser,
 							AllPermissions: []Permission{
 								{
-									PermissionLevel: "CAN_RUN",
+									PermissionLevel: "CAN_VIEW",
 									Inherited:       false,
 								},
 							},
@@ -748,7 +748,7 @@ func TestResourcePermissionsUpdate(t *testing.T) {
 					AccessControlList: []AccessControlChange{
 						{
 							UserName:        TestingUser,
-							PermissionLevel: "CAN_RUN",
+							PermissionLevel: "CAN_VIEW",
 						},
 						{
 							UserName:        TestingAdminUser,
@@ -763,7 +763,7 @@ func TestResourcePermissionsUpdate(t *testing.T) {
 
 		access_control {
 			user_name = "ben"
-			permission_level = "CAN_RUN"
+			permission_level = "CAN_VIEW"
 		}
 		`,
 		Resource: ResourcePermissions(),
@@ -776,7 +776,7 @@ func TestResourcePermissionsUpdate(t *testing.T) {
 	require.Equal(t, 1, len(ac.List()))
 	firstElem := ac.List()[0].(map[string]interface{})
 	assert.Equal(t, TestingUser, firstElem["user_name"])
-	assert.Equal(t, "CAN_RUN", firstElem["permission_level"])
+	assert.Equal(t, "CAN_VIEW", firstElem["permission_level"])
 }
 
 func permissionsTestHelper(t *testing.T,

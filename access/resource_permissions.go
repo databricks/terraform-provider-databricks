@@ -212,6 +212,8 @@ func (a PermissionsAPI) Read(objectID string) (objectACL ObjectACL, err error) {
 type permissionsIDFieldMapping struct {
 	field, objectType, resourceType string
 
+	allowedPermissionLevels []string
+
 	idRetriever func(client *common.DatabricksClient, id string) (string, error)
 }
 
@@ -228,20 +230,20 @@ func permissionsResourceIDFields(ctx context.Context) []permissionsIDFieldMappin
 		return strconv.FormatInt(info.ObjectID, 10), nil
 	}
 	return []permissionsIDFieldMapping{
-		{"cluster_policy_id", "cluster-policy", "cluster-policies", SIMPLE},
-		{"instance_pool_id", "instance-pool", "instance-pools", SIMPLE},
-		{"cluster_id", "cluster", "clusters", SIMPLE},
-		{"job_id", "job", "jobs", SIMPLE},
-		{"notebook_id", "notebook", "notebooks", SIMPLE},
-		{"notebook_path", "notebook", "notebooks", PATH},
-		{"directory_id", "directory", "directories", SIMPLE},
-		{"directory_path", "directory", "directories", PATH},
-		{"authorization", "tokens", "authorization", SIMPLE},
-		{"authorization", "passwords", "authorization", SIMPLE},
-		{"sql_endpoint_id", "endpoints", "sql/endpoints", SIMPLE},
-		{"sql_dashboard_id", "dashboard", "sql/dashboards", SIMPLE},
-		{"sql_alert_id", "alert", "sql/alerts", SIMPLE},
-		{"sql_query_id", "query", "sql/queries", SIMPLE},
+		{"cluster_policy_id", "cluster-policy", "cluster-policies", []string{"CAN_USE"}, SIMPLE},
+		{"instance_pool_id", "instance-pool", "instance-pools", []string{"CAN_ATTACH_TO", "CAN_MANAGE"}, SIMPLE},
+		{"cluster_id", "cluster", "clusters", []string{"CAN_ATTACH_TO", "CAN_RESTART", "CAN_MANAGE"}, SIMPLE},
+		{"job_id", "job", "jobs", []string{"CAN_VIEW", "CAN_MANAGE_RUN", "IS_OWNER", "CAN_MANAGE"}, SIMPLE},
+		{"notebook_id", "notebook", "notebooks", []string{"CAN_READ", "CAN_RUN", "CAN_EDIT", "CAN_MANAGE"}, SIMPLE},
+		{"notebook_path", "notebook", "notebooks", []string{"CAN_READ", "CAN_RUN", "CAN_EDIT", "CAN_MANAGE"}, PATH},
+		{"directory_id", "directory", "directories", []string{"CAN_READ", "CAN_RUN", "CAN_EDIT", "CAN_MANAGE"}, SIMPLE},
+		{"directory_path", "directory", "directories", []string{"CAN_READ", "CAN_RUN", "CAN_EDIT", "CAN_MANAGE"}, PATH},
+		{"authorization", "tokens", "authorization", []string{"CAN_USE"}, SIMPLE},
+		{"authorization", "passwords", "authorization", []string{"CAN_USE"}, SIMPLE},
+		{"sql_endpoint_id", "endpoints", "sql/endpoints", []string{"CAN_USE", "CAN_MANAGE"}, SIMPLE},
+		{"sql_dashboard_id", "dashboard", "sql/dashboards", []string{"CAN_USE", "CAN_MANAGE"}, SIMPLE},
+		{"sql_alert_id", "alert", "sql/alerts", []string{"CAN_USE", "CAN_MANAGE"}, SIMPLE},
+		{"sql_query_id", "query", "sql/queries", []string{"CAN_USE", "CAN_MANAGE"}, SIMPLE},
 	}
 }
 
@@ -365,67 +367,10 @@ func ResourcePermissions() *schema.Resource {
 	return &schema.Resource{
 		Schema: s,
 		CustomizeDiff: customdiff.Sequence(
-			func(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
+			func(ctx context.Context, diff *schema.ResourceDiff, v interface{}) error {
 				// Plan time validation for object permission levels
-				objectPermissionLevelMappingList := []struct {
-					objectKey               string
-					allowedPermissionLevels []string
-				}{
-					{
-						objectKey:               "cluster_policy_id",
-						allowedPermissionLevels: []string{"CAN_USE"},
-					},
-					{
-						objectKey:               "instance_pool_id",
-						allowedPermissionLevels: []string{"CAN_ATTACH_TO", "CAN_MANAGE"},
-					},
-					{
-						objectKey:               "cluster_id",
-						allowedPermissionLevels: []string{"CAN_ATTACH_TO", "CAN_RESTART", "CAN_MANAGE"},
-					},
-					{
-						objectKey:               "job_id",
-						allowedPermissionLevels: []string{"CAN_VIEW", "CAN_MANAGE_RUN", "IS_OWNER", "CAN_MANAGE"},
-					},
-					{
-						objectKey:               "notebook_id",
-						allowedPermissionLevels: []string{"CAN_READ", "CAN_RUN", "CAN_EDIT", "CAN_MANAGE"},
-					},
-					{
-						objectKey:               "notebook_path",
-						allowedPermissionLevels: []string{"CAN_READ", "CAN_RUN", "CAN_EDIT", "CAN_MANAGE"},
-					},
-					{
-						objectKey:               "directory_id",
-						allowedPermissionLevels: []string{"CAN_READ", "CAN_RUN", "CAN_EDIT", "CAN_MANAGE"},
-					},
-					{
-						objectKey:               "directory_path",
-						allowedPermissionLevels: []string{"CAN_READ", "CAN_RUN", "CAN_EDIT", "CAN_MANAGE"},
-					},
-					{
-						objectKey:               "authorization",
-						allowedPermissionLevels: []string{"CAN_USE"},
-					},
-					{
-						objectKey:               "sql_endpoint_id",
-						allowedPermissionLevels: []string{"CAN_USE", "CAN_MANAGE"},
-					},
-					{
-						objectKey:               "sql_dashboard_id",
-						allowedPermissionLevels: []string{"CAN_USE", "CAN_MANAGE"},
-					},
-					{
-						objectKey:               "sql_alert_id",
-						allowedPermissionLevels: []string{"CAN_USE", "CAN_MANAGE"},
-					},
-					{
-						objectKey:               "sql_query_id",
-						allowedPermissionLevels: []string{"CAN_USE", "CAN_MANAGE"},
-					},
-				}
-				for _, objectPermissionLevelMapping := range objectPermissionLevelMappingList {
-					if _, ok := diff.GetOk(objectPermissionLevelMapping.objectKey); !ok {
+				for _, mapping := range permissionsResourceIDFields(ctx) {
+					if _, ok := diff.GetOk(mapping.field); !ok {
 						continue
 					}
 
@@ -435,8 +380,8 @@ func ResourcePermissions() *schema.Resource {
 
 						permission_level := m["permission_level"].(string)
 
-						if !stringInSlice(permission_level, objectPermissionLevelMapping.allowedPermissionLevels) {
-							return fmt.Errorf(`permission_level %s is not supported with %s objects`, permission_level, objectPermissionLevelMapping.objectKey)
+						if !stringInSlice(permission_level, mapping.allowedPermissionLevels) {
+							return fmt.Errorf(`permission_level %s is not supported with %s objects`, permission_level, mapping.field)
 						}
 					}
 				}

@@ -32,13 +32,13 @@ resource "databricks_group_member" "my_member_a" {
 Data source allows you to pick groups by the following attributes
 
 - `user_name` - (Optional) User name of the user. The user must exist before this resource can be planned.
-- `id` - (Optional) ID of the user. 
+- `user_id` - (Optional) ID of the user. 
 
 ## Attribute Reference
 
 Data source exposes the following attributes:
 
-- `id` - The id of the calling user.
+- `id` - The id of the user.
 - `user_name` - Name of the [user](../resources/user.md), e.g. `mr.foo@example.com`.
 - `display_name` - Display name of the [user](../resources/user.md), e.g. `Mr Foo`.
 - `home` - Home folder of the [user](../resources/user.md), e.g. `/Users/mr.foo@example.com`.

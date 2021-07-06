@@ -22,11 +22,20 @@ import (
 var (
 	TestingUser      = "ben"
 	TestingAdminUser = "admin"
+	me               = qa.HTTPFixture{
+		ReuseRequest: true,
+		Method:   "GET",
+		Resource: "/api/2.0/preview/scim/v2/Me",
+		Response: identity.ScimUser{
+			UserName: TestingAdminUser,
+		},
+	}
 )
 
 func TestResourcePermissionsRead(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
+			me,
 			{
 				Method:   http.MethodGet,
 				Resource: "/api/2.0/permissions/clusters/abc",
@@ -55,13 +64,6 @@ func TestResourcePermissionsRead(t *testing.T) {
 					},
 				},
 			},
-			{
-				Method:   http.MethodGet,
-				Resource: "/api/2.0/preview/scim/v2/Me",
-				Response: identity.ScimUser{
-					UserName: TestingAdminUser,
-				},
-			},
 		},
 		Resource: ResourcePermissions(),
 		Read:     true,
@@ -80,6 +82,7 @@ func TestResourcePermissionsRead(t *testing.T) {
 func TestResourcePermissionsRead_SQLA_Asset(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
+			me,
 			{
 				Method:   http.MethodGet,
 				Resource: "/api/2.0/preview/sql/permissions/dashboards/abc",
@@ -96,13 +99,6 @@ func TestResourcePermissionsRead_SQLA_Asset(t *testing.T) {
 							PermissionLevel: "CAN_MANAGE",
 						},
 					},
-				},
-			},
-			{
-				Method:   http.MethodGet,
-				Resource: "/api/2.0/preview/scim/v2/Me",
-				Response: identity.ScimUser{
-					UserName: TestingAdminUser,
 				},
 			},
 		},
@@ -122,6 +118,7 @@ func TestResourcePermissionsRead_SQLA_Asset(t *testing.T) {
 func TestResourcePermissionsRead_NotFound(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
+			me,
 			{
 				Method:   http.MethodGet,
 				Resource: "/api/2.0/permissions/clusters/abc",
@@ -143,6 +140,7 @@ func TestResourcePermissionsRead_NotFound(t *testing.T) {
 func TestResourcePermissionsRead_some_error(t *testing.T) {
 	_, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
+			me,
 			{
 				Method:   http.MethodGet,
 				Resource: "/api/2.0/permissions/clusters/abc",
@@ -211,6 +209,7 @@ func TestResourcePermissionsRead_ErrorOnScimMe(t *testing.T) {
 func TestResourcePermissionsDelete(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
+			me,
 			{
 				Method:   http.MethodGet,
 				Resource: "/api/2.0/permissions/clusters/abc",
@@ -256,6 +255,7 @@ func TestResourcePermissionsDelete(t *testing.T) {
 func TestResourcePermissionsDelete_error(t *testing.T) {
 	_, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
+			me,
 			{
 				Method:   http.MethodGet,
 				Resource: "/api/2.0/permissions/clusters/abc",
@@ -304,7 +304,7 @@ func TestResourcePermissionsDelete_error(t *testing.T) {
 
 func TestResourcePermissionsCreate_invalid(t *testing.T) {
 	_, err := qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{},
+		Fixtures: []qa.HTTPFixture{me},
 		Resource: ResourcePermissions(),
 		Create:   true,
 	}.Apply(t)
@@ -360,6 +360,7 @@ func TestResourcePermissionsCreate_AdminsThrowError(t *testing.T) {
 func TestResourcePermissionsCreate(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
+			me,
 			{
 				Method:   http.MethodPut,
 				Resource: "/api/2.0/permissions/clusters/abc",
@@ -400,13 +401,6 @@ func TestResourcePermissionsCreate(t *testing.T) {
 					},
 				},
 			},
-			{
-				Method:   http.MethodGet,
-				Resource: "/api/2.0/preview/scim/v2/Me",
-				Response: identity.ScimUser{
-					UserName: TestingAdminUser,
-				},
-			},
 		},
 		Resource: ResourcePermissions(),
 		State: map[string]interface{}{
@@ -431,6 +425,7 @@ func TestResourcePermissionsCreate(t *testing.T) {
 func TestResourcePermissionsCreate_SQLA_Asset(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
+			me,
 			{
 				Method:   http.MethodPost,
 				Resource: "/api/2.0/preview/sql/permissions/dashboards/abc",
@@ -465,14 +460,6 @@ func TestResourcePermissionsCreate_SQLA_Asset(t *testing.T) {
 					},
 				},
 			},
-			{
-				Method:       http.MethodGet,
-				ReuseRequest: true,
-				Resource:     "/api/2.0/preview/scim/v2/Me",
-				Response: identity.ScimUser{
-					UserName: TestingAdminUser,
-				},
-			},
 		},
 		Resource: ResourcePermissions(),
 		State: map[string]interface{}{
@@ -497,6 +484,7 @@ func TestResourcePermissionsCreate_SQLA_Asset(t *testing.T) {
 func TestResourcePermissionsCreate_SQLA_Endpoint(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
+			me,
 			{
 				Method:   http.MethodPatch,
 				Resource: "/api/2.0/permissions/sql/endpoints/abc",
@@ -531,14 +519,6 @@ func TestResourcePermissionsCreate_SQLA_Endpoint(t *testing.T) {
 					},
 				},
 			},
-			{
-				Method:       http.MethodGet,
-				ReuseRequest: true,
-				Resource:     "/api/2.0/preview/scim/v2/Me",
-				Response: identity.ScimUser{
-					UserName: TestingAdminUser,
-				},
-			},
 		},
 		Resource: ResourcePermissions(),
 		State: map[string]interface{}{
@@ -563,6 +543,7 @@ func TestResourcePermissionsCreate_SQLA_Endpoint(t *testing.T) {
 func TestResourcePermissionsCreate_NotebookPath_NotExists(t *testing.T) {
 	_, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
+			me,
 			{
 				Method:   http.MethodGet,
 				Resource: "/api/2.0/workspace/get-status?path=%2FDevelopment%2FInit",
@@ -592,6 +573,7 @@ func TestResourcePermissionsCreate_NotebookPath_NotExists(t *testing.T) {
 func TestResourcePermissionsCreate_NotebookPath(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
+			me,
 			{
 				Method:   http.MethodGet,
 				Resource: "/api/2.0/workspace/get-status?path=%2FDevelopment%2FInit",
@@ -640,13 +622,6 @@ func TestResourcePermissionsCreate_NotebookPath(t *testing.T) {
 					},
 				},
 			},
-			{
-				Method:   http.MethodGet,
-				Resource: "/api/2.0/preview/scim/v2/Me",
-				Response: identity.ScimUser{
-					UserName: TestingAdminUser,
-				},
-			},
 		},
 		Resource: ResourcePermissions(),
 		State: map[string]interface{}{
@@ -672,6 +647,7 @@ func TestResourcePermissionsCreate_NotebookPath(t *testing.T) {
 func TestResourcePermissionsCreate_error(t *testing.T) {
 	_, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
+			me,
 			{
 				Method:   http.MethodPut,
 				Resource: "/api/2.0/permissions/clusters/abc",
@@ -704,6 +680,7 @@ func TestResourcePermissionsCreate_error(t *testing.T) {
 func TestResourcePermissionsUpdate(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
+			me,
 			{
 				Method:   http.MethodGet,
 				Resource: "/api/2.0/permissions/jobs/9",
@@ -730,14 +707,6 @@ func TestResourcePermissionsUpdate(t *testing.T) {
 							},
 						},
 					},
-				},
-			},
-			{
-				Method:       http.MethodGet,
-				ReuseRequest: true,
-				Resource:     "/api/2.0/preview/scim/v2/Me",
-				Response: identity.ScimUser{
-					UserName: TestingAdminUser,
 				},
 			},
 			{

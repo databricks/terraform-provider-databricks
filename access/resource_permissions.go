@@ -367,25 +367,28 @@ func ResourcePermissions() *schema.Resource {
 	return &schema.Resource{
 		Schema: s,
 		CustomizeDiff: customdiff.Sequence(
-			func(ctx context.Context, diff *schema.ResourceDiff, v interface{}) error {
+			func(ctx context.Context, diff *schema.ResourceDiff, m interface{}) error {
+				me, err := identity.NewUsersAPI(ctx, m).Me()
+				if err != nil {
+					return err
+				}
 				// Plan time validation for object permission levels
 				for _, mapping := range permissionsResourceIDFields(ctx) {
 					if _, ok := diff.GetOk(mapping.field); !ok {
 						continue
 					}
-
 					access_control_list := diff.Get("access_control").(*schema.Set).List()
 					for _, access_control := range access_control_list {
 						m := access_control.(map[string]interface{})
-
 						permission_level := m["permission_level"].(string)
-
 						if !stringInSlice(permission_level, mapping.allowedPermissionLevels) {
 							return fmt.Errorf(`permission_level %s is not supported with %s objects`, permission_level, mapping.field)
 						}
+						if m["user_name"].(string) == me.UserName {
+							return fmt.Errorf("it is not possible to decrease administrative permissions for the current user: %s", me.UserName)
+						}
 					}
 				}
-
 				return nil
 			},
 		),

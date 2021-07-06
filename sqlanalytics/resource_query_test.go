@@ -72,7 +72,7 @@ func TestQueryCreate(t *testing.T) {
 }
 
 func TestQueryCreateWithMultipleSchedules(t *testing.T) {
-	_, err := qa.ResourceFixture{
+	qa.ResourceFixture{
 		Resource: ResourceQuery(),
 		Create:   true,
 		HCL: `
@@ -90,10 +90,7 @@ func TestQueryCreateWithMultipleSchedules(t *testing.T) {
 				}
 			}
 		`,
-	}.Apply(t)
-
-	assert.Error(t, err, "Expected validation error")
-	assert.Contains(t, err.Error(), " conflicts with ")
+	}.ExpectError(t, "invalid config supplied. [schedule.#.continuous] Conflicting configuration arguments. [schedule.#.daily] Conflicting configuration arguments")
 }
 
 func TestQueryCreateWithContinuousSchedule(t *testing.T) {

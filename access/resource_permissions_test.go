@@ -323,7 +323,7 @@ func TestResourcePermissionsCreate_no_access_control(t *testing.T) {
 }
 
 func TestResourcePermissionsCreate_conflicting_fields(t *testing.T) {
-	_, err := qa.ResourceFixture{
+	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{},
 		Resource: ResourcePermissions(),
 		Create:   true,
@@ -337,8 +337,7 @@ func TestResourcePermissionsCreate_conflicting_fields(t *testing.T) {
 				},
 			},
 		},
-	}.Apply(t)
-	qa.AssertErrorStartsWith(t, err, "invalid config supplied. cluster_id: conflicts with notebook_path. notebook_path: conflicts with cluster_id")
+	}.ExpectError(t, "invalid config supplied. [cluster_id] Conflicting configuration arguments. [notebook_path] Conflicting configuration arguments")
 }
 
 func TestResourcePermissionsCreate_AdminsThrowError(t *testing.T) {

@@ -27,7 +27,7 @@ jobs:
           path: |
             ~/go/pkg/mod
             ~/.cache/go-build
-           /opt/hostedtoolcache/go
+            /opt/hostedtoolcache/go
             vendor
           key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
           restore-keys: |

@@ -31,12 +31,12 @@ func DataSourceUser() *schema.Resource {
 		Schema: map[string]*schema.Schema{
 			"user_name": {
 				Type:         schema.TypeString,
-				ExactlyOneOf: []string{"user_name", "id"},
+				ExactlyOneOf: []string{"user_name", "user_id"},
 				Optional:     true,
 			},
-			"id": {
+			"user_id": {
 				Type:         schema.TypeString,
-				ExactlyOneOf: []string{"user_name", "id"},
+				ExactlyOneOf: []string{"user_name", "user_id"},
 				Optional:     true,
 			},
 			"home": {
@@ -54,7 +54,7 @@ func DataSourceUser() *schema.Resource {
 		},
 		ReadContext: func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 			usersAPI := NewUsersAPI(ctx, m)
-			user, err := getUser(usersAPI, d.Get("id").(string), d.Get("user_name").(string))
+			user, err := getUser(usersAPI, d.Get("user_id").(string), d.Get("user_name").(string))
 			if err != nil {
 				return diag.FromErr(err)
 			}

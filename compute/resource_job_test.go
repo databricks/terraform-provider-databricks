@@ -2,6 +2,7 @@ package compute
 
 import (
 	"context"
+	"os"
 	"strings"
 	"testing"
 
@@ -493,6 +494,17 @@ func TestResourceJobUpdate(t *testing.T) {
 	assert.NoError(t, err, err)
 	assert.Equal(t, "789", d.Id(), "Id should be the same as in reading")
 	assert.Equal(t, "Featurizer New", d.Get("name"))
+}
+
+func TestAccRestartJob(t *testing.T) {
+	if _, ok := os.LookupEnv("VSCODE_PID"); !ok {
+		t.Skip("This test is supposed to be run only from IDE")
+	}
+	// TODO: remove this test after functionality is ready
+	client := common.CommonEnvironmentClient()
+	jobsAPI := NewJobsAPI(context.Background(), client)
+	err := restartJob(jobsAPI, "210")
+	assert.NoError(t, err)
 }
 
 func TestResourceJobUpdate_Error(t *testing.T) {

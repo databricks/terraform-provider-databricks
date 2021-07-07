@@ -6,7 +6,9 @@ import (
 	"log"
 	"strconv"
 	"strings"
+	"time"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
@@ -15,13 +17,14 @@ import (
 
 // NewJobsAPI creates JobsAPI instance from provider meta
 func NewJobsAPI(ctx context.Context, m interface{}) JobsAPI {
-	return JobsAPI{m.(*common.DatabricksClient), ctx}
+	return JobsAPI{m.(*common.DatabricksClient), ctx, 5 * time.Minute}
 }
 
 // JobsAPI exposes the Jobs API
 type JobsAPI struct {
 	client  *common.DatabricksClient
 	context context.Context
+	timeout time.Duration
 }
 
 // List all jobs
@@ -37,18 +40,91 @@ func (a JobsAPI) RunsList(r JobRunsListRequest) (jrl JobRunsList, err error) {
 }
 
 // RunsCancel ...
-func (a JobsAPI) RunsCancel(id int64) error {
+func (a JobsAPI) RunsCancel(runID int64) error {
 	var response interface{}
-	return a.client.Post(a.context, "/jobs/runs/cancel", map[string]interface{}{
-		"run_id": id,
+	err := a.client.Post(a.context, "/jobs/runs/cancel", map[string]interface{}{
+		"run_id": runID,
 	}, &response)
+	if err != nil {
+		return err
+	}
+	return a.waitForRunState(runID, "TERMINATED")
 }
 
-// RunNow ...
-func (a JobsAPI) RunNow(rp RunParameters) (JobRun, error) {
+func (a JobsAPI) waitForRunState(runID int64, desiredState string) error {
+	return resource.RetryContext(a.context, a.timeout, func() *resource.RetryError {
+		jobRun, err := a.RunsGet(runID)
+		if err != nil {
+			return resource.NonRetryableError(
+				fmt.Errorf("cannot get job %s: %v", desiredState, err))
+		}
+		state := jobRun.State
+		if state.LifeCycleState == desiredState {
+			return nil
+		}
+		if state.LifeCycleState == "INTERNAL_ERROR" {
+			return resource.NonRetryableError(
+				fmt.Errorf("cannot get job %s: %s",
+					desiredState, state.StateMessage))
+		}
+		return resource.RetryableError(
+			fmt.Errorf("run is %s: %s",
+				state.LifeCycleState,
+				state.StateMessage))
+	})
+}
+
+// RunNow triggers the job and returns a run ID
+func (a JobsAPI) RunNow(jobID int64) (int64, error) {
 	var jr JobRun
-	err := a.client.Post(a.context, "/jobs/run-now", rp, &jr)
+	err := a.client.Post(a.context, "/jobs/run-now", RunParameters{
+		JobID: jobID,
+	}, &jr)
+	return jr.RunID, err
+}
+
+// RunsGet to retrieve information about the run
+func (a JobsAPI) RunsGet(runID int64) (JobRun, error) {
+	var jr JobRun
+	err := a.client.Get(a.context, "/jobs/runs/get", map[string]interface{}{
+		"run_id": runID,
+	}, &jr)
 	return jr, err
+}
+
+func (a JobsAPI) Run(jobID int64) error {
+	runID, err := a.RunNow(jobID)
+	if err != nil {
+		return fmt.Errorf("cannot start job run: %v", err)
+	}
+	return a.waitForRunState(runID, "RUNNING")
+}
+
+func (a JobsAPI) Restart(id string) error {
+	jobID, err := strconv.ParseInt(id, 10, 32)
+	if err != nil {
+		return err
+	}
+	runs, err := a.RunsList(JobRunsListRequest{JobID: jobID, ActiveOnly: true})
+	if err != nil {
+		return err
+	}
+	if len(runs.Runs) == 0 {
+		// nothing to cancel
+		return a.Run(jobID)
+	}
+	if len(runs.Runs) > 1 {
+		return fmt.Errorf("`always_running` must be specified only with "+
+			"`max_concurrent_runs = 1`. There are %d active runs", len(runs.Runs))
+	}
+	if len(runs.Runs) == 1 {
+		activeRun := runs.Runs[0]
+		err = a.RunsCancel(activeRun.RunID)
+		if err != nil {
+			return fmt.Errorf("cannot cancel run %d: %v", activeRun.RunID, err)
+		}
+	}
+	return a.Run(jobID)
 }
 
 // Create creates a job on the workspace given the job settings
@@ -115,13 +191,6 @@ func wrapMissingJobError(err error, id string) error {
 
 var jobSchema = common.StructToSchema(JobSettings{},
 	func(s map[string]*schema.Schema) map[string]*schema.Schema {
-		s["existing_cluster_id"].Description = "If existing_cluster_id, the ID " +
-			"of an existing cluster that will be used for all runs of this job. " +
-			"When running jobs on an existing cluster, you may need to manually " +
-			"restart the cluster if it stops responding. We strongly suggest to use " +
-			"`new_cluster` for greater reliability."
-		s["new_cluster"].Description = "Same set of parameters as for " +
-			"[databricks_cluster](cluster.md) resource."
 		if p, err := common.SchemaPath(s, "new_cluster", "num_workers"); err == nil {
 			p.Optional = true
 			p.Default = 0
@@ -129,11 +198,9 @@ var jobSchema = common.StructToSchema(JobSettings{},
 			p.ValidateDiagFunc = validation.ToDiagFunc(validation.IntAtLeast(0))
 			p.Required = false
 		}
-
 		if p, err := common.SchemaPath(s, "schedule", "pause_status"); err == nil {
 			p.ValidateFunc = validation.StringInSlice([]string{"PAUSED", "UNPAUSED"}, false)
 		}
-
 		if v, err := common.SchemaPath(s, "new_cluster", "spark_conf"); err == nil {
 			v.DiffSuppressFunc = func(k, old, new string, d *schema.ResourceData) bool {
 				isPossiblyLegacyConfig := k == "new_cluster.0.spark_conf.%" && old == "1" && new == "0"
@@ -145,7 +212,6 @@ var jobSchema = common.StructToSchema(JobSettings{},
 				return false
 			}
 		}
-
 		if v, err := common.SchemaPath(s, "new_cluster", "aws_attributes"); err == nil {
 			v.DiffSuppressFunc = common.MakeEmptyBlockSuppressFunc("new_cluster.0.aws_attributes.#")
 		}
@@ -155,81 +221,32 @@ var jobSchema = common.StructToSchema(JobSettings{},
 		if v, err := common.SchemaPath(s, "new_cluster", "gcp_attributes"); err == nil {
 			v.DiffSuppressFunc = common.MakeEmptyBlockSuppressFunc("new_cluster.0.gcp_attributes.#")
 		}
-
 		s["email_notifications"].DiffSuppressFunc = common.MakeEmptyBlockSuppressFunc("email_notifications.#")
-
-		s["name"].Description = "An optional name for the job. The default value is Untitled."
-		s["library"].Description = "An optional list of libraries to be installed on " +
-			"the cluster that will execute the job. The default value is an empty list."
-		s["email_notifications"].Description = "An optional set of email addresses " +
-			"notified when runs of this job begin and complete and when this job is " +
-			"deleted. The default behavior is to not send any emails."
-		s["timeout_seconds"].Description = "An optional timeout applied to each run " +
-			"of this job. The default behavior is to have no timeout."
-		s["max_retries"].Description = "An optional maximum number of times to retry " +
-			"an unsuccessful run. A run is considered to be unsuccessful if it " +
-			"completes with a FAILED result_state or INTERNAL_ERROR life_cycle_state. " +
-			"The value -1 means to retry indefinitely and the value 0 means to never " +
-			"retry. The default behavior is to never retry."
-		s["min_retry_interval_millis"].Description = "An optional minimal interval in " +
-			"milliseconds between the start of the failed run and the subsequent retry run. " +
-			"The default behavior is that unsuccessful runs are immediately retried."
-		s["retry_on_timeout"].Description = "An optional policy to specify whether to " +
-			"retry a job when it times out. The default behavior is to not retry on timeout."
-		s["schedule"].Description = "An optional periodic schedule for this job. " +
-			"The default behavior is that the job runs when triggered by clicking " +
-			"Run Now in the Jobs UI or sending an API request to runNow."
 		s["url"] = &schema.Schema{
 			Type:     schema.TypeString,
 			Computed: true,
 		}
-		s["max_concurrent_runs"] = &schema.Schema{
-			Optional:         true,
-			Default:          1,
-			Type:             schema.TypeInt,
-			ValidateDiagFunc: validation.ToDiagFunc(validation.IntAtLeast(1)),
-			Description:      "An optional maximum allowed number of concurrent runs of the job.",
+		s["always_running"] = &schema.Schema{
+			Optional: true,
+			Default:  false,
+			Type:     schema.TypeBool,
 		}
 		return s
 	})
-
-func restartJob(jobsAPI JobsAPI, id string) error {
-	jobID, err := strconv.ParseInt(id, 10, 32)
-	if err != nil {
-		return err
-	}
-	runs, err := jobsAPI.RunsList(JobRunsListRequest{JobID: jobID, ActiveOnly: true})
-	if err != nil {
-		return err
-	}
-	if len(runs.Runs) == 0 {
-		// nothing to cancel
-		return nil
-	}
-	if len(runs.Runs) > 1 {
-		// nothing to cancel
-		return fmt.Errorf("`always_running` must be specified only with "+
-			"`max_concurrent_runs = 1`. There are %d active runs", len(runs.Runs))
-	}
-	activeRun := runs.Runs[0]
-	err = jobsAPI.RunsCancel(activeRun.RunID)
-	if err != nil {
-		return fmt.Errorf("cannot cancel run %d: %v", activeRun.RunID, err)
-	}
-	_, err = jobsAPI.RunNow(RunParameters{
-		JobID: jobID,
-	})
-	if err != nil {
-		return fmt.Errorf("cannot start job run: %v", err)
-	}
-	return nil
-}
 
 // ResourceJob ...
 func ResourceJob() *schema.Resource {
 	return common.Resource{
 		Schema:        jobSchema,
 		SchemaVersion: 2,
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, c interface{}) error {
+			alwaysRunning := d.Get("always_running").(bool)
+			maxConcurrentRuns := d.Get("max_concurrent_runs").(int)
+			if alwaysRunning && maxConcurrentRuns > 1 {
+				return fmt.Errorf("`always_running` must be specified only with `max_concurrent_runs = 1`")
+			}
+			return nil
+		},
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var js JobSettings
 			err := common.DataToStructPointer(d, jobSchema, &js)
@@ -241,11 +258,15 @@ func ResourceJob() *schema.Resource {
 					return err
 				}
 			}
-			job, err := NewJobsAPI(ctx, c).Create(js)
+			jobsAPI := NewJobsAPI(ctx, c)
+			job, err := jobsAPI.Create(js)
 			if err != nil {
 				return err
 			}
 			d.SetId(job.ID())
+			if d.Get("always_running").(bool) {
+				return jobsAPI.Run(job.JobID)
+			}
 			return nil
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
@@ -273,9 +294,8 @@ func ResourceJob() *schema.Resource {
 			if err != nil {
 				return err
 			}
-			if js.AlwaysRunning {
-				// TODO: fail if Maximum Concurrent Runs is not 1
-				return restartJob(jobsAPI, d.Id())
+			if d.Get("always_running").(bool) {
+				return jobsAPI.Restart(d.Id())
 			}
 			return nil
 		},

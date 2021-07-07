@@ -503,7 +503,7 @@ func TestAccRestartJob(t *testing.T) {
 	// TODO: remove this test after functionality is ready
 	client := common.CommonEnvironmentClient()
 	jobsAPI := NewJobsAPI(context.Background(), client)
-	err := restartJob(jobsAPI, "210")
+	err := jobsAPI.Restart("210")
 	assert.NoError(t, err)
 }
 

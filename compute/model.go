@@ -551,9 +551,6 @@ type JobSettings struct {
 	MaxConcurrentRuns      int32         `json:"max_concurrent_runs,omitempty"`
 
 	EmailNotifications *JobEmailNotifications `json:"email_notifications,omitempty"`
-
-	// custom property for always-on streaming jobs
-	AlwaysRunning bool `json:"always_running,omitempty"`
 }
 
 // JobList ...

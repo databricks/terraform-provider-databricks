@@ -14,6 +14,7 @@ type Resource struct {
 	Read           func(ctx context.Context, d *schema.ResourceData, c *DatabricksClient) error
 	Update         func(ctx context.Context, d *schema.ResourceData, c *DatabricksClient) error
 	Delete         func(ctx context.Context, d *schema.ResourceData, c *DatabricksClient) error
+	CustomizeDiff  func(ctx context.Context, d *schema.ResourceDiff, c interface{}) error
 	StateUpgraders []schema.StateUpgrader
 	Schema         map[string]*schema.Schema
 	SchemaVersion  int
@@ -60,6 +61,7 @@ func (r Resource) ToResource() *schema.Resource {
 		Schema:         r.Schema,
 		SchemaVersion:  r.SchemaVersion,
 		StateUpgraders: r.StateUpgraders,
+		CustomizeDiff:  r.CustomizeDiff,
 		CreateContext: func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 			c := m.(*DatabricksClient)
 			err := r.Create(ctx, d, c)

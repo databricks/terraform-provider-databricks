@@ -551,6 +551,9 @@ type JobSettings struct {
 	MaxConcurrentRuns      int32         `json:"max_concurrent_runs,omitempty"`
 
 	EmailNotifications *JobEmailNotifications `json:"email_notifications,omitempty"`
+
+	// custom property for always-on streaming jobs
+	AlwaysRunning bool `json:"always_running,omitempty"`
 }
 
 // JobList ...
@@ -573,7 +576,9 @@ func (j Job) ID() string {
 
 // RunParameters ...
 type RunParameters struct {
-	// TODO: if we add job_id, it can be also a request to RunNow
+	// a shortcut field to reuse this type for RunNow
+	JobID int64 `json:"job_id,omitempty"`
+
 	NotebookParams    map[string]string `json:"notebook_params,omitempty"`
 	JarParams         []string          `json:"jar_params,omitempty"`
 	PythonParams      []string          `json:"python_params,omitempty"`

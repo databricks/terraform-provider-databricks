@@ -36,6 +36,21 @@ func (a JobsAPI) RunsList(r JobRunsListRequest) (jrl JobRunsList, err error) {
 	return
 }
 
+// RunsCancel ...
+func (a JobsAPI) RunsCancel(id int64) error {
+	var response interface{}
+	return a.client.Post(a.context, "/jobs/runs/cancel", map[string]interface{}{
+		"run_id": id,
+	}, &response)
+}
+
+// RunNow ...
+func (a JobsAPI) RunNow(rp RunParameters) (JobRun, error) {
+	var jr JobRun
+	err := a.client.Post(a.context, "/jobs/run-now", rp, &jr)
+	return jr, err
+}
+
 // Create creates a job on the workspace given the job settings
 func (a JobsAPI) Create(jobSettings JobSettings) (Job, error) {
 	var job Job
@@ -178,6 +193,38 @@ var jobSchema = common.StructToSchema(JobSettings{},
 		return s
 	})
 
+func restartJob(jobsAPI JobsAPI, id string) error {
+	jobID, err := strconv.ParseInt(id, 10, 32)
+	if err != nil {
+		return err
+	}
+	runs, err := jobsAPI.RunsList(JobRunsListRequest{JobID: jobID, ActiveOnly: true})
+	if err != nil {
+		return err
+	}
+	if len(runs.Runs) == 0 {
+		// nothing to cancel
+		return nil
+	}
+	if len(runs.Runs) > 1 {
+		// nothing to cancel
+		return fmt.Errorf("`always_running` must be specified only with "+
+			"`max_concurrent_runs = 1`. There are %d active runs", len(runs.Runs))
+	}
+	activeRun := runs.Runs[0]
+	err = jobsAPI.RunsCancel(activeRun.RunID)
+	if err != nil {
+		return fmt.Errorf("cannot cancel run %d: %v", activeRun.RunID, err)
+	}
+	_, err = jobsAPI.RunNow(RunParameters{
+		JobID: jobID,
+	})
+	if err != nil {
+		return fmt.Errorf("cannot start job run: %v", err)
+	}
+	return nil
+}
+
 // ResourceJob ...
 func ResourceJob() *schema.Resource {
 	return common.Resource{
@@ -221,7 +268,16 @@ func ResourceJob() *schema.Resource {
 					return err
 				}
 			}
-			return NewJobsAPI(ctx, c).Update(d.Id(), js)
+			jobsAPI := NewJobsAPI(ctx, c)
+			err = jobsAPI.Update(d.Id(), js)
+			if err != nil {
+				return err
+			}
+			if js.AlwaysRunning {
+				// TODO: fail if Maximum Concurrent Runs is not 1
+				return restartJob(jobsAPI, d.Id())
+			}
+			return nil
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			return NewJobsAPI(ctx, c).Delete(d.Id())

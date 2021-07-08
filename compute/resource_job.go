@@ -17,14 +17,13 @@ import (
 
 // NewJobsAPI creates JobsAPI instance from provider meta
 func NewJobsAPI(ctx context.Context, m interface{}) JobsAPI {
-	return JobsAPI{m.(*common.DatabricksClient), ctx, 20 * time.Minute}
+	return JobsAPI{m.(*common.DatabricksClient), ctx}
 }
 
 // JobsAPI exposes the Jobs API
 type JobsAPI struct {
 	client  *common.DatabricksClient
 	context context.Context
-	timeout time.Duration
 }
 
 // List all jobs
@@ -40,7 +39,7 @@ func (a JobsAPI) RunsList(r JobRunsListRequest) (jrl JobRunsList, err error) {
 }
 
 // RunsCancel ...
-func (a JobsAPI) RunsCancel(runID int64) error {
+func (a JobsAPI) RunsCancel(runID int64, timeout time.Duration) error {
 	var response interface{}
 	err := a.client.Post(a.context, "/jobs/runs/cancel", map[string]interface{}{
 		"run_id": runID,
@@ -48,11 +47,11 @@ func (a JobsAPI) RunsCancel(runID int64) error {
 	if err != nil {
 		return err
 	}
-	return a.waitForRunState(runID, "TERMINATED")
+	return a.waitForRunState(runID, "TERMINATED", timeout)
 }
 
-func (a JobsAPI) waitForRunState(runID int64, desiredState string) error {
-	return resource.RetryContext(a.context, a.timeout, func() *resource.RetryError {
+func (a JobsAPI) waitForRunState(runID int64, desiredState string, timeout time.Duration) error {
+	return resource.RetryContext(a.context, timeout, func() *resource.RetryError {
 		jobRun, err := a.RunsGet(runID)
 		if err != nil {
 			return resource.NonRetryableError(
@@ -92,15 +91,15 @@ func (a JobsAPI) RunsGet(runID int64) (JobRun, error) {
 	return jr, err
 }
 
-func (a JobsAPI) Start(jobID int64) error {
+func (a JobsAPI) Start(jobID int64, timeout time.Duration) error {
 	runID, err := a.RunNow(jobID)
 	if err != nil {
 		return fmt.Errorf("cannot start job run: %v", err)
 	}
-	return a.waitForRunState(runID, "RUNNING")
+	return a.waitForRunState(runID, "RUNNING", timeout)
 }
 
-func (a JobsAPI) Restart(id string) error {
+func (a JobsAPI) Restart(id string, timeout time.Duration) error {
 	jobID, err := strconv.ParseInt(id, 10, 32)
 	if err != nil {
 		return err
@@ -111,7 +110,7 @@ func (a JobsAPI) Restart(id string) error {
 	}
 	if len(runs.Runs) == 0 {
 		// nothing to cancel
-		return a.Start(jobID)
+		return a.Start(jobID, timeout)
 	}
 	if len(runs.Runs) > 1 {
 		return fmt.Errorf("`always_running` must be specified only with "+
@@ -119,12 +118,12 @@ func (a JobsAPI) Restart(id string) error {
 	}
 	if len(runs.Runs) == 1 {
 		activeRun := runs.Runs[0]
-		err = a.RunsCancel(activeRun.RunID)
+		err = a.RunsCancel(activeRun.RunID, timeout)
 		if err != nil {
 			return fmt.Errorf("cannot cancel run %d: %v", activeRun.RunID, err)
 		}
 	}
-	return a.Start(jobID)
+	return a.Start(jobID, timeout)
 }
 
 // Create creates a job on the workspace given the job settings
@@ -222,6 +221,7 @@ var jobSchema = common.StructToSchema(JobSettings{},
 			v.DiffSuppressFunc = common.MakeEmptyBlockSuppressFunc("new_cluster.0.gcp_attributes.#")
 		}
 		s["email_notifications"].DiffSuppressFunc = common.MakeEmptyBlockSuppressFunc("email_notifications.#")
+		s["max_concurrent_runs"].ValidateDiagFunc = validation.ToDiagFunc(validation.IntAtLeast(1))
 		s["url"] = &schema.Schema{
 			Type:     schema.TypeString,
 			Computed: true,
@@ -239,6 +239,10 @@ func ResourceJob() *schema.Resource {
 	return common.Resource{
 		Schema:        jobSchema,
 		SchemaVersion: 2,
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(DefaultProvisionTimeout),
+			Update: schema.DefaultTimeout(DefaultProvisionTimeout),
+		},
 		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, c interface{}) error {
 			alwaysRunning := d.Get("always_running").(bool)
 			maxConcurrentRuns := d.Get("max_concurrent_runs").(int)
@@ -265,7 +269,7 @@ func ResourceJob() *schema.Resource {
 			}
 			d.SetId(job.ID())
 			if d.Get("always_running").(bool) {
-				return jobsAPI.Start(job.JobID)
+				return jobsAPI.Start(job.JobID, d.Timeout(schema.TimeoutCreate))
 			}
 			return nil
 		},
@@ -295,7 +299,7 @@ func ResourceJob() *schema.Resource {
 				return err
 			}
 			if d.Get("always_running").(bool) {
-				return jobsAPI.Restart(d.Id())
+				return jobsAPI.Restart(d.Id(), d.Timeout(schema.TimeoutUpdate))
 			}
 			return nil
 		},

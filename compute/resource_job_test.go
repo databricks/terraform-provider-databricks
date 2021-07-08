@@ -116,8 +116,8 @@ func TestResourceJobCreate_AlwaysRunning(t *testing.T) {
 					SparkJarTask: &SparkJarTask{
 						MainClassName: "com.labs.BarMain",
 					},
-					Name:                   "Featurizer",
-					MaxRetries:             3,
+					Name:       "Featurizer",
+					MaxRetries: 3,
 				},
 				Response: Job{
 					JobID: 789,
@@ -133,25 +133,25 @@ func TestResourceJobCreate_AlwaysRunning(t *testing.T) {
 						SparkJarTask: &SparkJarTask{
 							MainClassName: "com.labs.BarMain",
 						},
-						Name:                   "Featurizer",
-						MaxRetries:             3,
+						Name:       "Featurizer",
+						MaxRetries: 3,
 					},
 				},
 			},
 			{
 				Method:   "POST",
 				Resource: "/api/2.0/jobs/run-now",
-				ExpectedRequest: RunParameters {
+				ExpectedRequest: RunParameters{
 					JobID: 789,
 				},
-				Response: JobRun {
+				Response: JobRun{
 					RunID: 890,
 				},
 			},
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/jobs/runs/get?run_id=890",
-				Response: JobRun {
+				Response: JobRun{
 					State: RunState{
 						LifeCycleState: "RUNNING",
 					},
@@ -600,22 +600,22 @@ func TestResourceJobUpdate_Restart(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/jobs/runs/list?active_only=true&job_id=789",
-				Response: JobRunsList {},
+				Response: JobRunsList{},
 			},
 			{
 				Method:   "POST",
 				Resource: "/api/2.0/jobs/run-now",
-				ExpectedRequest: RunParameters {
+				ExpectedRequest: RunParameters{
 					JobID: 789,
 				},
-				Response: JobRun {
+				Response: JobRun{
 					RunID: 890,
 				},
 			},
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/jobs/runs/get?run_id=890",
-				Response: JobRun {
+				Response: JobRun{
 					State: RunState{
 						LifeCycleState: "RUNNING",
 					},
@@ -638,19 +638,19 @@ func TestResourceJobUpdate_Restart(t *testing.T) {
 func TestJobRestarts(t *testing.T) {
 	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
 		{
-			Method:   "POST",
-			Resource: "/api/2.0/jobs/run-now",
+			Method:       "POST",
+			Resource:     "/api/2.0/jobs/run-now",
 			ReuseRequest: true,
-			ExpectedRequest: RunParameters {
+			ExpectedRequest: RunParameters{
 				JobID: 123,
 			},
-			Response: JobRun {
+			Response: JobRun{
 				RunID: 234,
 			},
 		},
 		{
-			Method:   "GET",
-			Resource: "/api/2.0/jobs/runs/get?run_id=234",
+			Method:       "GET",
+			Resource:     "/api/2.0/jobs/runs/get?run_id=234",
 			ReuseRequest: true,
 			Response: JobRun{
 				State: RunState{
@@ -661,7 +661,7 @@ func TestJobRestarts(t *testing.T) {
 		{
 			Method:   "GET",
 			Resource: "/api/2.0/jobs/runs/get?run_id=345",
-			Status: 400,
+			Status:   400,
 			Response: common.APIError{
 				Message: "nope",
 			},
@@ -672,21 +672,21 @@ func TestJobRestarts(t *testing.T) {
 			Response: JobRun{
 				State: RunState{
 					LifeCycleState: "INTERNAL_ERROR",
-					StateMessage: "Quota exceeded",
+					StateMessage:   "Quota exceeded",
 				},
 			},
 		},
 		{
 			Method:   "GET",
 			Resource: "/api/2.0/jobs/runs/list?active_only=true&job_id=123",
-			Response: JobRunsList {
+			Response: JobRunsList{
 				Runs: []JobRun{},
 			},
 		},
 		{
 			Method:   "GET",
 			Resource: "/api/2.0/jobs/runs/list?active_only=true&job_id=123",
-			Response: JobRunsList {
+			Response: JobRunsList{
 				Runs: []JobRun{
 					{
 						RunID: 567,
@@ -697,13 +697,13 @@ func TestJobRestarts(t *testing.T) {
 		{
 			Method:   "POST",
 			Resource: "/api/2.0/jobs/runs/cancel",
-			ExpectedRequest: map[string]interface {}{
+			ExpectedRequest: map[string]interface{}{
 				"run_id": 567,
 			},
 		},
 		{
-			Method:   "GET",
-			Resource: "/api/2.0/jobs/runs/get?run_id=567",
+			Method:       "GET",
+			Resource:     "/api/2.0/jobs/runs/get?run_id=567",
 			ReuseRequest: true,
 			Response: JobRun{
 				State: RunState{
@@ -714,7 +714,7 @@ func TestJobRestarts(t *testing.T) {
 		{
 			Method:   "GET",
 			Resource: "/api/2.0/jobs/runs/list?active_only=true&job_id=678",
-			Response: JobRunsList {
+			Response: JobRunsList{
 				Runs: []JobRun{
 					{
 						RunID: 789,
@@ -745,7 +745,7 @@ func TestJobRestarts(t *testing.T) {
 		assert.NoError(t, err)
 
 		err = ja.Restart("678")
-		assert.EqualError(t, err, "`always_running` must be specified only " + 
+		assert.EqualError(t, err, "`always_running` must be specified only "+
 			"with `max_concurrent_runs = 1`. There are 2 active runs")
 	})
 }

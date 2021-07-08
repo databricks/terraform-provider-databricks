@@ -59,7 +59,7 @@ func (rct *refreshableCliToken) RefreshExchangeWithContext(ctx context.Context, 
 }
 
 func (rct *refreshableCliToken) refreshInternal(resource string) (err error) {
-	out, err := exec.Command("az", "account", "get-access-token", "--resource", resource).Output()
+	out, err := exec.Command("az", "account", "get-access-token", "--resource", resource, "--output", "json").Output()
 	if ee, ok := err.(*exec.ExitError); ok {
 		err = fmt.Errorf("cannot get access token: %s", string(ee.Stderr))
 		return

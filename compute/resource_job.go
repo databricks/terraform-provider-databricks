@@ -17,7 +17,7 @@ import (
 
 // NewJobsAPI creates JobsAPI instance from provider meta
 func NewJobsAPI(ctx context.Context, m interface{}) JobsAPI {
-	return JobsAPI{m.(*common.DatabricksClient), ctx, 5 * time.Minute}
+	return JobsAPI{m.(*common.DatabricksClient), ctx, 20 * time.Minute}
 }
 
 // JobsAPI exposes the Jobs API
@@ -92,7 +92,7 @@ func (a JobsAPI) RunsGet(runID int64) (JobRun, error) {
 	return jr, err
 }
 
-func (a JobsAPI) Run(jobID int64) error {
+func (a JobsAPI) Start(jobID int64) error {
 	runID, err := a.RunNow(jobID)
 	if err != nil {
 		return fmt.Errorf("cannot start job run: %v", err)
@@ -111,7 +111,7 @@ func (a JobsAPI) Restart(id string) error {
 	}
 	if len(runs.Runs) == 0 {
 		// nothing to cancel
-		return a.Run(jobID)
+		return a.Start(jobID)
 	}
 	if len(runs.Runs) > 1 {
 		return fmt.Errorf("`always_running` must be specified only with "+
@@ -124,7 +124,7 @@ func (a JobsAPI) Restart(id string) error {
 			return fmt.Errorf("cannot cancel run %d: %v", activeRun.RunID, err)
 		}
 	}
-	return a.Run(jobID)
+	return a.Start(jobID)
 }
 
 // Create creates a job on the workspace given the job settings
@@ -265,7 +265,7 @@ func ResourceJob() *schema.Resource {
 			}
 			d.SetId(job.ID())
 			if d.Get("always_running").(bool) {
-				return jobsAPI.Run(job.JobID)
+				return jobsAPI.Start(job.JobID)
 			}
 			return nil
 		},

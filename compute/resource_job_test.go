@@ -4,6 +4,7 @@ import (
 	"context"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/databrickslabs/terraform-provider-databricks/common"
 
@@ -677,6 +678,17 @@ func TestJobRestarts(t *testing.T) {
 			},
 		},
 		{
+			Method:       "GET",
+			Resource:     "/api/2.0/jobs/runs/get?run_id=890",
+			ReuseRequest: true,
+			Response: JobRun{
+				State: RunState{
+					LifeCycleState: "SOMETHING",
+					StateMessage:   "Checking...",
+				},
+			},
+		},
+		{
 			Method:   "GET",
 			Resource: "/api/2.0/jobs/runs/list?active_only=true&job_id=123",
 			Response: JobRunsList{
@@ -699,6 +711,33 @@ func TestJobRestarts(t *testing.T) {
 			Resource: "/api/2.0/jobs/runs/cancel",
 			ExpectedRequest: map[string]interface{}{
 				"run_id": 567,
+			},
+		},
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/jobs/runs/list?active_only=true&job_id=111",
+			Response: JobRunsList{
+				Runs: []JobRun{
+					{
+						RunID: 567,
+					},
+				},
+			},
+		},
+		{
+			Method:   "POST",
+			Resource: "/api/2.0/jobs/runs/cancel",
+			Status:   400,
+			Response: common.APIError{
+				Message: "nope",
+			},
+		},
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/jobs/runs/list?active_only=true&job_id=222",
+			Status:   400,
+			Response: common.APIError{
+				Message: "nope",
 			},
 		},
 		{
@@ -727,6 +766,8 @@ func TestJobRestarts(t *testing.T) {
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		ja := NewJobsAPI(ctx, client)
+		ja.timeout = 500 * time.Millisecond
+
 		err := ja.Start(123)
 		assert.NoError(t, err)
 
@@ -736,6 +777,9 @@ func TestJobRestarts(t *testing.T) {
 		err = ja.waitForRunState(456, "TERMINATED")
 		assert.EqualError(t, err, "cannot get job TERMINATED: Quota exceeded")
 
+		err = ja.waitForRunState(890, "RUNNING")
+		assert.EqualError(t, err, "run is SOMETHING: Checking...")
+
 		// no active runs for the first time
 		err = ja.Restart("123")
 		assert.NoError(t, err)
@@ -743,6 +787,15 @@ func TestJobRestarts(t *testing.T) {
 		// one active run for the second time
 		err = ja.Restart("123")
 		assert.NoError(t, err)
+
+		err = ja.Restart("111")
+		assert.EqualError(t, err, "cannot cancel run 567: nope")
+
+		err = ja.Restart("a")
+		assert.EqualError(t, err, "strconv.ParseInt: parsing \"a\": invalid syntax")
+
+		err = ja.Restart("222")
+		assert.EqualError(t, err, "nope")
 
 		err = ja.Restart("678")
 		assert.EqualError(t, err, "`always_running` must be specified only "+

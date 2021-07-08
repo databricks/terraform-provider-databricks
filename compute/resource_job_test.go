@@ -2,7 +2,6 @@ package compute
 
 import (
 	"context"
-	"os"
 	"strings"
 	"testing"
 
@@ -104,6 +103,85 @@ func TestResourceJobCreate(t *testing.T) {
 	}.Apply(t)
 	assert.NoError(t, err, err)
 	assert.Equal(t, "789", d.Id())
+}
+
+func TestResourceJobCreate_AlwaysRunning(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/jobs/create",
+				ExpectedRequest: JobSettings{
+					ExistingClusterID: "abc",
+					SparkJarTask: &SparkJarTask{
+						MainClassName: "com.labs.BarMain",
+					},
+					Name:                   "Featurizer",
+					MaxRetries:             3,
+				},
+				Response: Job{
+					JobID: 789,
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/jobs/get?job_id=789",
+				Response: Job{
+					JobID: 789,
+					Settings: &JobSettings{
+						ExistingClusterID: "abc",
+						SparkJarTask: &SparkJarTask{
+							MainClassName: "com.labs.BarMain",
+						},
+						Name:                   "Featurizer",
+						MaxRetries:             3,
+					},
+				},
+			},
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/jobs/run-now",
+				ExpectedRequest: RunParameters {
+					JobID: 789,
+				},
+				Response: JobRun {
+					RunID: 890,
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/jobs/runs/get?run_id=890",
+				Response: JobRun {
+					State: RunState{
+						LifeCycleState: "RUNNING",
+					},
+				},
+			},
+		},
+		Create:   true,
+		Resource: ResourceJob(),
+		HCL: `existing_cluster_id = "abc"
+		max_retries = 3
+		name = "Featurizer"
+		spark_jar_task {
+			main_class_name = "com.labs.BarMain"
+		}
+		always_running = true
+		`,
+	}.Apply(t)
+	assert.NoError(t, err, err)
+	assert.Equal(t, "789", d.Id())
+}
+
+func TestResourceJobCreate_AlwaysRunning_Conflict(t *testing.T) {
+	qa.ResourceFixture{
+		Create:   true,
+		Resource: ResourceJob(),
+		HCL: `
+		always_running = true
+		max_concurrent_runs = 2
+		`,
+	}.ExpectError(t, "`always_running` must be specified only with `max_concurrent_runs = 1`")
 }
 
 func TestResourceJobCreateSingleNode(t *testing.T) {
@@ -496,15 +574,180 @@ func TestResourceJobUpdate(t *testing.T) {
 	assert.Equal(t, "Featurizer New", d.Get("name"))
 }
 
-func TestAccRestartJob(t *testing.T) {
-	if _, ok := os.LookupEnv("VSCODE_PID"); !ok {
-		t.Skip("This test is supposed to be run only from IDE")
-	}
-	// TODO: remove this test after functionality is ready
-	client := common.CommonEnvironmentClient()
-	jobsAPI := NewJobsAPI(context.Background(), client)
-	err := jobsAPI.Restart("210")
-	assert.NoError(t, err)
+func TestResourceJobUpdate_Restart(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/jobs/reset",
+				ExpectedRequest: UpdateJobRequest{
+					JobID: 789,
+					NewSettings: &JobSettings{
+						Name: "Featurizer New",
+					},
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/jobs/get?job_id=789",
+				Response: Job{
+					JobID: 789,
+					Settings: &JobSettings{
+						Name: "Featurizer New",
+					},
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/jobs/runs/list?active_only=true&job_id=789",
+				Response: JobRunsList {},
+			},
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/jobs/run-now",
+				ExpectedRequest: RunParameters {
+					JobID: 789,
+				},
+				Response: JobRun {
+					RunID: 890,
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/jobs/runs/get?run_id=890",
+				Response: JobRun {
+					State: RunState{
+						LifeCycleState: "RUNNING",
+					},
+				},
+			},
+		},
+		ID:       "789",
+		Update:   true,
+		Resource: ResourceJob(),
+		HCL: `
+		name = "Featurizer New"
+		always_running = true
+		`,
+	}.Apply(t)
+	assert.NoError(t, err, err)
+	assert.Equal(t, "789", d.Id(), "Id should be the same as in reading")
+	assert.Equal(t, "Featurizer New", d.Get("name"))
+}
+
+func TestJobRestarts(t *testing.T) {
+	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
+		{
+			Method:   "POST",
+			Resource: "/api/2.0/jobs/run-now",
+			ReuseRequest: true,
+			ExpectedRequest: RunParameters {
+				JobID: 123,
+			},
+			Response: JobRun {
+				RunID: 234,
+			},
+		},
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/jobs/runs/get?run_id=234",
+			ReuseRequest: true,
+			Response: JobRun{
+				State: RunState{
+					LifeCycleState: "RUNNING",
+				},
+			},
+		},
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/jobs/runs/get?run_id=345",
+			Status: 400,
+			Response: common.APIError{
+				Message: "nope",
+			},
+		},
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/jobs/runs/get?run_id=456",
+			Response: JobRun{
+				State: RunState{
+					LifeCycleState: "INTERNAL_ERROR",
+					StateMessage: "Quota exceeded",
+				},
+			},
+		},
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/jobs/runs/list?active_only=true&job_id=123",
+			Response: JobRunsList {
+				Runs: []JobRun{},
+			},
+		},
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/jobs/runs/list?active_only=true&job_id=123",
+			Response: JobRunsList {
+				Runs: []JobRun{
+					{
+						RunID: 567,
+					},
+				},
+			},
+		},
+		{
+			Method:   "POST",
+			Resource: "/api/2.0/jobs/runs/cancel",
+			ExpectedRequest: map[string]interface {}{
+				"run_id": 567,
+			},
+		},
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/jobs/runs/get?run_id=567",
+			ReuseRequest: true,
+			Response: JobRun{
+				State: RunState{
+					LifeCycleState: "TERMINATED",
+				},
+			},
+		},
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/jobs/runs/list?active_only=true&job_id=678",
+			Response: JobRunsList {
+				Runs: []JobRun{
+					{
+						RunID: 789,
+					},
+					{
+						RunID: 890,
+					},
+				},
+			},
+		},
+	}, func(ctx context.Context, client *common.DatabricksClient) {
+		ja := NewJobsAPI(ctx, client)
+		err := ja.Start(123)
+		assert.NoError(t, err)
+
+		err = ja.waitForRunState(345, "RUNNING")
+		assert.EqualError(t, err, "cannot get job RUNNING: nope")
+
+		err = ja.waitForRunState(456, "TERMINATED")
+		assert.EqualError(t, err, "cannot get job TERMINATED: Quota exceeded")
+
+		// no active runs for the first time
+		err = ja.Restart("123")
+		assert.NoError(t, err)
+
+		// one active run for the second time
+		err = ja.Restart("123")
+		assert.NoError(t, err)
+
+		err = ja.Restart("678")
+		assert.EqualError(t, err, "`always_running` must be specified only " + 
+			"with `max_concurrent_runs = 1`. There are 2 active runs")
+	})
 }
 
 func TestResourceJobUpdate_Error(t *testing.T) {

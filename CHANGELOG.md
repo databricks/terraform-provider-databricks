@@ -3,6 +3,22 @@
 ## 0.3.6
 
 * Added support for hybrid pools ([#689](https://github.com/databrickslabs/terraform-provider-databricks/pull/689))
+* Added support for `always_running` jobs, which are restarted on resource updates ([#715](https://github.com/databrickslabs/terraform-provider-databricks/pull/715))
+* Azure CLI auth is now forcing JSON output ([#717](https://github.com/databrickslabs/terraform-provider-databricks/pull/717))
+* `databricks_permissions` are getting validation on `terraform plan` stage ([#706](https://github.com/databrickslabs/terraform-provider-databricks/pull/706))
+* Added `databricks_directory` resource ([#690](https://github.com/databrickslabs/terraform-provider-databricks/pull/690))
+* Added support for hybrid instance pools ([#689](https://github.com/databrickslabs/terraform-provider-databricks/pull/689))
+* Added `run_as_role` field to `databricks_sql_query` ([#684](https://github.com/databrickslabs/terraform-provider-databricks/pull/684))
+* Added `user_id` attribute for `databricks_user` data resource, so that it's possible to dynamically create resources based on members of the group ([#714](https://github.com/databrickslabs/terraform-provider-databricks/pull/714))
+
+Updated dependency versions:
+
+* Bump github.com/aws/aws-sdk-go from 1.38.51 to 1.38.71
+* Bump github.com/Azure/go-autorest/autorest/azure/auth from 0.5.7 to 0.5.8
+* Bump github.com/Azure/go-autorest/autorest from 0.11.18 to 0.11.19
+* Bump github.com/Azure/go-autorest/autorest/adal from 0.9.13 to 0.9.14
+* Bump github.com/zclconf/go-cty from 1.8.3 to 1.8.4 
+* Bump github.com/hashicorp/terraform-plugin-sdk/v2 from 2.6.1 to 2.7.0
 
 ## 0.3.5
 

@@ -766,38 +766,38 @@ func TestJobRestarts(t *testing.T) {
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		ja := NewJobsAPI(ctx, client)
-		ja.timeout = 500 * time.Millisecond
+		timeout := 500 * time.Millisecond
 
-		err := ja.Start(123)
+		err := ja.Start(123, timeout)
 		assert.NoError(t, err)
 
-		err = ja.waitForRunState(345, "RUNNING")
+		err = ja.waitForRunState(345, "RUNNING", timeout)
 		assert.EqualError(t, err, "cannot get job RUNNING: nope")
 
-		err = ja.waitForRunState(456, "TERMINATED")
+		err = ja.waitForRunState(456, "TERMINATED", timeout)
 		assert.EqualError(t, err, "cannot get job TERMINATED: Quota exceeded")
 
-		err = ja.waitForRunState(890, "RUNNING")
+		err = ja.waitForRunState(890, "RUNNING", timeout)
 		assert.EqualError(t, err, "run is SOMETHING: Checking...")
 
 		// no active runs for the first time
-		err = ja.Restart("123")
+		err = ja.Restart("123", timeout)
 		assert.NoError(t, err)
 
 		// one active run for the second time
-		err = ja.Restart("123")
+		err = ja.Restart("123", timeout)
 		assert.NoError(t, err)
 
-		err = ja.Restart("111")
+		err = ja.Restart("111", timeout)
 		assert.EqualError(t, err, "cannot cancel run 567: nope")
 
-		err = ja.Restart("a")
+		err = ja.Restart("a", timeout)
 		assert.EqualError(t, err, "strconv.ParseInt: parsing \"a\": invalid syntax")
 
-		err = ja.Restart("222")
+		err = ja.Restart("222", timeout)
 		assert.EqualError(t, err, "nope")
 
-		err = ja.Restart("678")
+		err = ja.Restart("678", timeout)
 		assert.EqualError(t, err, "`always_running` must be specified only "+
 			"with `max_concurrent_runs = 1`. There are 2 active runs")
 	})

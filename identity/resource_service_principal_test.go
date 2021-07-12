@@ -22,12 +22,13 @@ func TestAzureAccSP(t *testing.T) {
 
 	spAPI := NewServicePrincipalsAPI(ctx, client)
 
-	sp, err := spAPI.CreateR(ServicePrincipalEntity{
-		ApplicationID:           "00000000-0000-0000-0000-000000000001",
-		AllowInstancePoolCreate: true,
-		AllowClusterCreate:      true,
-		DisplayName:             "ABC SP",
-		Active:                  true,
+	sp, err := spAPI.Create(ScimUser{
+		ApplicationID: "00000000-0000-0000-0000-000000000001",
+		Entitlements: entitlements{
+			{"allow-cluster-create"},
+		},
+		DisplayName: "ABC SP",
+		Active:      true,
 	})
 	require.NoError(t, err)
 	defer func() {
@@ -35,11 +36,12 @@ func TestAzureAccSP(t *testing.T) {
 		require.NoError(t, err)
 	}()
 
-	err = spAPI.UpdateR(sp.ID, ServicePrincipalEntity{
-		ApplicationID:           sp.ApplicationID,
-		AllowClusterCreate:      false,
-		AllowInstancePoolCreate: false,
-		DisplayName:             "BCD",
+	err = spAPI.Update(sp.ID, ScimUser{
+		ApplicationID: sp.ApplicationID,
+		Entitlements: entitlements{
+			{"allow-instance-pool-create"},
+		},
+		DisplayName: "BCD",
 	})
 	require.NoError(t, err)
 }
@@ -67,6 +69,7 @@ func TestResourceServicePrincipalRead(t *testing.T) {
 			},
 		},
 		Resource: ResourceServicePrincipal(),
+		HCL: 	  `display_name = "Sylens"`,
 		New:      true,
 		Read:     true,
 		ID:       "abc",
@@ -91,11 +94,41 @@ func TestResourceServicePrincipalRead_NotFound(t *testing.T) {
 		Read:     true,
 		Removed:  true,
 		ID:       "abc",
+		HCL: 	  `display_name = "Scotchmo"`,
 	}.ApplyNoError(t)
 }
 
+func TestResourceServicePrincipalRead_Invalid_Azure(t *testing.T) {
+	qa.ResourceFixture{
+		Resource: ResourceServicePrincipal(),
+		New:      true,
+		Read:     true,
+		Azure:    true,
+		ID:       "abc",
+	}.ExpectError(t, "application_id is required for service principals in Azure Databricks")
+}
+
+func TestResourceServicePrincipalRead_Invalid_AWS(t *testing.T) {
+	qa.ResourceFixture{
+		Resource: ResourceServicePrincipal(),
+		New:      true,
+		Read:     true,
+		ID:       "abc",
+	}.ExpectError(t, "display_name is required for service principals in Databricks on AWS")
+}
+
+func TestResourceServicePrincipalRead_Invalid2_AWS(t *testing.T) {
+	qa.ResourceFixture{
+		Resource: ResourceServicePrincipal(),
+		New:      true,
+		Read:     true,
+		ID:       "abc",
+		HCL:      `application_id = "discobot"`,
+	}.ExpectError(t, "application_id is not allowed for service principals in Databricks on AWS")
+}
+
 func TestResourceServicePrincipalRead_Error(t *testing.T) {
-	d, err := qa.ResourceFixture{
+	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
@@ -111,9 +144,8 @@ func TestResourceServicePrincipalRead_Error(t *testing.T) {
 		New:      true,
 		Read:     true,
 		ID:       "abc",
-	}.Apply(t)
-	require.Error(t, err)
-	assert.Equal(t, "abc", d.Id())
+		HCL: 	  `display_name = "Nightly Runner"`,
+	}.ExpectError(t, "Something")
 }
 
 func TestResourceServicePrincipalCreate(t *testing.T) {
@@ -143,9 +175,9 @@ func TestResourceServicePrincipalCreate(t *testing.T) {
 					DisplayName: "Example Service Principal",
 					Active:      true,
 					ID:          "abc",
-					Entitlements: []entitlementsListItem{
+					Entitlements: entitlements{
 						{
-							Value: AllowClusterCreateEntitlement,
+							Value: "allow-cluster-create",
 						},
 					},
 					Groups: []GroupsListItem{
@@ -209,9 +241,9 @@ func TestResourceServicePrincipalUpdate(t *testing.T) {
 		Schemas:     []URN{ServicePrincipalSchema},
 		DisplayName: "Changed Name",
 		Active:      true,
-		Entitlements: []entitlementsListItem{
+		Entitlements: entitlements{
 			{
-				Value: AllowInstancePoolCreateEntitlement,
+				Value: "allow-instance-pool-create",
 			},
 		},
 		Groups: []GroupsListItem{
@@ -234,9 +266,9 @@ func TestResourceServicePrincipalUpdate(t *testing.T) {
 					DisplayName: "Example Service Principal",
 					Active:      true,
 					ID:          "abc",
-					Entitlements: []entitlementsListItem{
+					Entitlements: entitlements{
 						{
-							Value: AllowClusterCreateEntitlement,
+							Value: "allow-cluster-create",
 						},
 					},
 					Groups: []GroupsListItem{
@@ -309,9 +341,9 @@ func TestResourceServicePrincipalUpdate_ErrorPut(t *testing.T) {
 					DisplayName: "Example Service Principal",
 					Active:      true,
 					ID:          "abc",
-					Entitlements: []entitlementsListItem{
+					Entitlements: entitlements{
 						{
-							Value: AllowClusterCreateEntitlement,
+							Value: "allow-cluster-create",
 						},
 					},
 					Groups: []GroupsListItem{
@@ -353,6 +385,7 @@ func TestResourceServicePrincipalDelete(t *testing.T) {
 			},
 		},
 		Resource: ResourceServicePrincipal(),
+		HCL: 	  `display_name = "Squanchy"`,
 		Delete:   true,
 		ID:       "abc",
 	}.Apply(t)

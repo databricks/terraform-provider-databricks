@@ -29,7 +29,7 @@ func TestDataSourceGroup(t *testing.T) {
 									Value: "allow-cluster-create",
 								},
 							},
-							Roles: []roleListItem{
+							Roles: []valueItem{
 								{
 									Value: "a",
 								},
@@ -59,7 +59,7 @@ func TestDataSourceGroup(t *testing.T) {
 							Value: "allow-instance-pool-create",
 						},
 					},
-					Roles: []roleListItem{
+					Roles: []valueItem{
 						{
 							Value: "b",
 						},

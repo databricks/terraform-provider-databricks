@@ -14,13 +14,11 @@ import (
 // DataSourceGroup returns information about group specified by display name
 func DataSourceGroup() *schema.Resource {
 	type entity struct {
-		DisplayName             string   `json:"display_name"`
-		Recursive               bool     `json:"recursive,omitempty"`
-		Members                 []string `json:"members,omitempty" tf:"slice_set,computed"`
-		Groups                  []string `json:"groups,omitempty" tf:"slice_set,computed"`
-		InstanceProfiles        []string `json:"instance_profiles,omitempty" tf:"slice_set,computed"`
-		AllowClusterCreate      bool     `json:"allow_cluster_create,omitempty" tf:"computed"`
-		AllowInstancePoolCreate bool     `json:"allow_instance_pool_create,omitempty" tf:"computed"`
+		DisplayName      string   `json:"display_name"`
+		Recursive        bool     `json:"recursive,omitempty"`
+		Members          []string `json:"members,omitempty" tf:"slice_set,computed"`
+		Groups           []string `json:"groups,omitempty" tf:"slice_set,computed"`
+		InstanceProfiles []string `json:"instance_profiles,omitempty" tf:"slice_set,computed"`
 	}
 
 	s := common.StructToSchema(entity{}, func(
@@ -28,6 +26,7 @@ func DataSourceGroup() *schema.Resource {
 		// nolint once SDKv2 has Diagnostics-returning validators, change
 		s["display_name"].ValidateFunc = validation.StringIsNotEmpty
 		s["recursive"].Default = true
+		addEntitlementsToSchema(&s)
 		return s
 	})
 
@@ -58,14 +57,8 @@ func DataSourceGroup() *schema.Resource {
 				for _, x := range current.Roles {
 					this.InstanceProfiles = append(this.InstanceProfiles, x.Value)
 				}
-				for _, x := range current.Entitlements {
-					switch x.Value {
-					case AllowClusterCreateEntitlement:
-						this.AllowClusterCreate = true
-					case AllowInstancePoolCreateEntitlement:
-						this.AllowInstancePoolCreate = true
-					}
-				}
+				// TODO: check if entity is having all entitlements
+				current.Entitlements.readIntoData(d)
 				for _, x := range current.Groups {
 					this.Groups = append(this.Groups, x.Value)
 					if this.Recursive {

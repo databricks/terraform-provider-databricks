@@ -35,6 +35,9 @@ type UserEntity struct {
 
 // Create ..
 func (a UsersAPI) Create(ru ScimUser) (user ScimUser, err error) {
+	if ru.Schemas == nil {
+		ru.Schemas = []URN{UserSchema}
+	}
 	err = a.client.Scim(a.context, http.MethodPost, "/preview/scim/v2/Users", ru, &user)
 	return user, err
 }
@@ -77,6 +80,9 @@ func (a UsersAPI) Update(userID string, updateRequest ScimUser) error {
 	}
 	updateRequest.Groups = user.Groups
 	updateRequest.Roles = user.Roles
+	if updateRequest.Schemas == nil {
+		updateRequest.Schemas = []URN{UserSchema}
+	}
 	return a.client.Scim(a.context, http.MethodPut,
 		fmt.Sprintf("/preview/scim/v2/Users/%v", userID),
 		updateRequest, nil)

@@ -761,7 +761,7 @@ func permissionsTestHelper(t *testing.T,
 	me, err := usersAPI.Me()
 	require.NoError(t, err)
 
-	user, err := usersAPI.Create(identity.UserEntity{
+	user, err := usersAPI.Create(identity.ScimUser{
 		UserName: fmt.Sprintf("tf-%s@example.com", randomName),
 	})
 	require.NoError(t, err)
@@ -770,7 +770,14 @@ func permissionsTestHelper(t *testing.T,
 	}()
 
 	groupsAPI := identity.NewGroupsAPI(ctx, client)
-	group, err := groupsAPI.Create(fmt.Sprintf("tf-%s", randomName), []string{user.ID}, nil, nil)
+	group, err := groupsAPI.Create(identity.ScimGroup{
+		DisplayName: fmt.Sprintf("tf-%s", randomName),
+		Members: []identity.GroupMember{
+			{
+				Value: user.ID,
+			},
+		},
+	})
 	require.NoError(t, err)
 	defer func() {
 		assert.NoError(t, groupsAPI.Delete(group.ID))

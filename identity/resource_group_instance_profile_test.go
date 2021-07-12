@@ -29,7 +29,7 @@ func TestResourceGroupInstanceProfileCreate(t *testing.T) {
 				Response: ScimGroup{
 					Schemas:     []URN{"urn:ietf:params:scim:schemas:core:2.0:Group"},
 					DisplayName: "Data Scientists",
-					Roles: []roleListItem{
+					Roles: []valueItem{
 						{"arn:aws:iam::999999999999:instance-profile/my-fake-instance-profile"},
 					},
 					ID: "abc",
@@ -126,7 +126,7 @@ func TestResourceGroupInstanceProfileRead(t *testing.T) {
 				Response: ScimGroup{
 					Schemas:     []URN{"urn:ietf:params:scim:schemas:core:2.0:Group"},
 					DisplayName: "Data Scientists",
-					Roles: []roleListItem{
+					Roles: []valueItem{
 						{"arn:aws:iam::999999999999:instance-profile/my-fake-instance-profile"},
 					},
 					ID: "abc",

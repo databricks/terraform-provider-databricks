@@ -357,6 +357,17 @@ func StructToData(result interface{}, s map[string]*schema.Schema, d *schema.Res
 	})
 }
 
+// DiffToStructPointer reads resource diff with given schema onto result pointer
+func DiffToStructPointer(d *schema.ResourceDiff, scm map[string]*schema.Schema, result interface{}) error {
+	rv := reflect.ValueOf(result)
+	rk := rv.Kind()
+	if rk != reflect.Ptr {
+		return fmt.Errorf("pointer is expected, but got %s: %#v", reflectKind(rk), result)
+	}
+	rv = rv.Elem()
+	return readReflectValueFromData([]string{}, d, rv, scm)
+}
+
 // DataToStructPointer reads resource data with given schema onto result pointer
 func DataToStructPointer(d *schema.ResourceData, scm map[string]*schema.Schema, result interface{}) error {
 	rv := reflect.ValueOf(result)
@@ -368,12 +379,19 @@ func DataToStructPointer(d *schema.ResourceData, scm map[string]*schema.Schema, 
 	return readReflectValueFromData([]string{}, d, rv, scm)
 }
 
+// attributeGetter is a generalization between schema.ResourceDiff & schema.ResourceData
+// to those who'll be reading this code and would know public equivalent interface from
+// TF SDK - feel free to replace the usages of this interface in a PR.
+type attributeGetter interface {
+	GetOk(key string) (interface{}, bool)
+}
+
 // DataToReflectValue reads reflect value from data
 func DataToReflectValue(d *schema.ResourceData, r *schema.Resource, rv reflect.Value) error {
 	return readReflectValueFromData([]string{}, d, rv, r.Schema)
 }
 
-func readReflectValueFromData(path []string, d *schema.ResourceData,
+func readReflectValueFromData(path []string, d attributeGetter,
 	rv reflect.Value, s map[string]*schema.Schema) error {
 	return iterFields(rv, path, s, func(fieldSchema *schema.Schema,
 		path []string, valueField *reflect.Value) error {
@@ -476,7 +494,7 @@ func primitiveReflectValueFromInterface(rk reflect.Kind,
 	return rv, err
 }
 
-func readListFromData(path []string, d *schema.ResourceData,
+func readListFromData(path []string, d attributeGetter,
 	rawList []interface{}, valueField *reflect.Value, fieldSchema *schema.Schema,
 	offsetConverter func(i int) string) error {
 	if len(rawList) == 0 {

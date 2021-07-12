@@ -77,7 +77,7 @@ var WorkspaceStatusesNonRunnable = []string{WorkspaceStatusCanceled, WorkspaceSt
 type Workspace struct {
 	AccountID                           string `json:"account_id"`
 	WorkspaceName                       string `json:"workspace_name"`
-	DeploymentName                      string `json:"deployment_name"`
+	DeploymentName                      string `json:"deployment_name,omitempty"`
 	AwsRegion                           string `json:"aws_region"`
 	CredentialsID                       string `json:"credentials_id"`
 	CustomerManagedKeyID                string `json:"customer_managed_key_id,omitempty"` // just for compatibility, will be removed
@@ -93,10 +93,11 @@ type Workspace struct {
 	WorkspaceStatus                     string `json:"workspace_status,omitempty" tf:"computed"`
 	WorkspaceStatusMessage              string `json:"workspace_status_message,omitempty" tf:"computed"`
 	CreationTime                        int64  `json:"creation_time,omitempty" tf:"computed"`
+
+	ExternalCustomerInfo *externalCustomerInfo `json:"external_customer_info,omitempty" tf:"computed"`
 }
 
 // VPCEndpoint is the object that contains all the information for registering an VPC endpoint
-//Schema From List Customer VPC Endpoint Id API
 type VPCEndpoint struct {
 	VPCEndpointID           string `json:"vpc_endpoint_id,omitempty" tf:"computed"`
 	AwsVPCEndpointID        string `json:"aws_vpc_endpoint_id"`
@@ -109,7 +110,7 @@ type VPCEndpoint struct {
 	State                   string `json:"state,omitempty" tf:"computed"`
 }
 
-//PrivateAccessSettings (PAS) is the object that contains all the information for creating an PrivateAccessSettings (PAS)
+// PrivateAccessSettings (PAS) is the object that contains all the information for creating an PrivateAccessSettings (PAS)
 type PrivateAccessSettings struct {
 	AccountID           string `json:"account_id,omitempty"`
 	PasID               string `json:"private_access_settings_id,omitempty" tf:"computed"`
@@ -117,4 +118,10 @@ type PrivateAccessSettings struct {
 	Region              string `json:"region"`
 	Status              string `json:"status,omitempty" tf:"computed"`
 	PublicAccessEnabled bool   `json:"public_access_enabled,omitempty"`
+}
+
+type externalCustomerInfo struct {
+	CustomerName              string `json:"customer_name"`
+	AuthoritativeUserEmail    string `json:"authoritative_user_email"`
+	AuthoritativeUserFullName string `json:"authoritative_user_full_name"`
 }

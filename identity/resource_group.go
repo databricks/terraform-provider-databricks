@@ -24,8 +24,10 @@ func ResourceGroup() *schema.Resource {
 	return common.Resource{
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			groupName := d.Get("display_name").(string)
-			entitlements := CreateEntitlements(d)
-			group, err := NewGroupsAPI(ctx, c).Create(groupName, nil, nil, entitlements)
+			group, err := NewGroupsAPI(ctx, c).Create(ScimGroup{
+				DisplayName: groupName,
+				Entitlements: readEntitlementsFromData(d),
+			})
 			if err != nil {
 				return err
 			}
@@ -39,13 +41,11 @@ func ResourceGroup() *schema.Resource {
 			}
 			d.Set("display_name", group.DisplayName)
 			d.Set("url", c.FormatURL("#setting/accounts/groups/", d.Id()))
-			return group.Entitlements.Read(d)
+			return group.Entitlements.readIntoData(d)
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			// Handle entitlements update
-			added, removed := UpdateEntitlements(d)
-			// TODO: not currently possible to update group display name
-			return NewGroupsAPI(ctx, c).Patch(d.Id(), added, removed, GroupEntitlementsPath)
+			groupName := d.Get("display_name").(string)
+			return NewGroupsAPI(ctx, c).UpdateNameAndEntitlements(d.Id(), groupName, readEntitlementsFromData(d))
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			return NewGroupsAPI(ctx, c).Delete(d.Id())

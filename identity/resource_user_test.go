@@ -93,7 +93,7 @@ func TestResourceUserCreate(t *testing.T) {
 				ExpectedRequest: ScimUser{
 					DisplayName: "Example user",
 					Active:      true,
-					Entitlements: []valueItem{
+					Entitlements: entitlements{
 						{
 							Value: "allow-cluster-create",
 						},
@@ -113,9 +113,9 @@ func TestResourceUserCreate(t *testing.T) {
 					Active:      true,
 					UserName:    "me@example.com",
 					ID:          "abc",
-					Entitlements: []valueItem{
+					Entitlements: entitlements{
 						{
-							Value: AllowClusterCreateEntitlement,
+							"allow-cluster-create",
 						},
 					},
 					Groups: []GroupsListItem{
@@ -172,9 +172,9 @@ func TestResourceUserUpdate(t *testing.T) {
 		DisplayName: "Changed Name",
 		UserName:    "me@example.com",
 		Active:      true,
-		Entitlements: []valueItem{
+		Entitlements: entitlements{
 			{
-				Value: AllowInstancePoolCreateEntitlement,
+				"allow-instance-pool-create",
 			},
 		},
 		Groups: []GroupsListItem{
@@ -187,7 +187,7 @@ func TestResourceUserUpdate(t *testing.T) {
 				Value:   "9877",
 			},
 		},
-		Roles: []roleListItem{
+		Roles: []valueItem{
 			{
 				Value: "a",
 			},
@@ -208,7 +208,7 @@ func TestResourceUserUpdate(t *testing.T) {
 					ID:          "abc",
 					Entitlements: []valueItem{
 						{
-							Value: AllowClusterCreateEntitlement,
+							"allow-cluster-create",
 						},
 					},
 					Groups: []GroupsListItem{
@@ -221,7 +221,7 @@ func TestResourceUserUpdate(t *testing.T) {
 							Value:   "9877",
 						},
 					},
-					Roles: []roleListItem{
+					Roles: []valueItem{
 						{
 							Value: "a",
 						},
@@ -295,7 +295,7 @@ func TestResourceUserUpdate_ErrorPut(t *testing.T) {
 					ID:          "abc",
 					Entitlements: []valueItem{
 						{
-							Value: AllowClusterCreateEntitlement,
+							"allow-cluster-create",
 						},
 					},
 					Groups: []GroupsListItem{
@@ -308,7 +308,7 @@ func TestResourceUserUpdate_ErrorPut(t *testing.T) {
 							Value:   "9877",
 						},
 					},
-					Roles: []roleListItem{
+					Roles: []valueItem{
 						{
 							Value: "a",
 						},

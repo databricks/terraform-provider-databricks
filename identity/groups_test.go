@@ -22,14 +22,16 @@ func TestAccGroup(t *testing.T) {
 	usersAPI := NewUsersAPI(ctx, client)
 	groupsAPI := NewGroupsAPI(ctx, client)
 
-	user, err := usersAPI.Create(UserEntity{UserName: qa.RandomEmail()})
+	user, err := usersAPI.Create(ScimUser{UserName: qa.RandomEmail()})
 	require.NoError(t, err, err)
 
-	user2, err := usersAPI.Create(UserEntity{UserName: qa.RandomEmail()})
+	user2, err := usersAPI.Create(ScimUser{UserName: qa.RandomEmail()})
 	require.NoError(t, err, err)
 
 	//Create empty group
-	group, err := groupsAPI.Create(qa.RandomName("tf-"), nil, nil, nil)
+	group, err := groupsAPI.Create(ScimGroup{
+		DisplayName: qa.RandomName("tf-"),
+	})
 	require.NoError(t, err, err)
 
 	defer func() {
@@ -43,12 +45,6 @@ func TestAccGroup(t *testing.T) {
 
 	group, err = groupsAPI.Read(group.ID)
 	require.NoError(t, err, err)
-
-	err = groupsAPI.Patch(group.ID, []string{user.ID, user2.ID}, nil, GroupMembersPath)
-	assert.NoError(t, err, err)
-
-	err = groupsAPI.Patch(group.ID, nil, []string{user.ID}, GroupMembersPath)
-	assert.NoError(t, err, err)
 
 	group, err = groupsAPI.Read(group.ID)
 	assert.NoError(t, err, err)

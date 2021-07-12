@@ -88,7 +88,7 @@ type ScimGroup struct {
 	DisplayName  string         `json:"displayName,omitempty"`
 	Members      []GroupMember  `json:"members,omitempty"`
 	Groups       []GroupMember  `json:"groups,omitempty"`
-	Roles        []roleListItem `json:"roles,omitempty"`
+	Roles        []valueItem    `json:"roles,omitempty"`
 	Entitlements entitlements   `json:"entitlements,omitempty"`
 }
 
@@ -121,37 +121,21 @@ type GroupList struct {
 	Resources    []ScimGroup `json:"resources,omitempty"`
 }
 
-// GroupPatchRequest contains a request structure to make a patch op against SCIM api
-type GroupPatchRequest struct {
-	Schemas    []URN                  `json:"schemas,omitempty"`
-	Operations []GroupPatchOperations `json:"Operations,omitempty"`
-}
-
-// Entitlement is a custom type that contains a set of entitlements for a user/group
-type Entitlement string
-
-// List of possible entitlement constants on Databricks
-const (
-	AllowClusterCreateEntitlement      Entitlement = "allow-cluster-create"
-	AllowInstancePoolCreateEntitlement Entitlement = "allow-instance-pool-create"
-	AllowSQLAnalyticsAccessEntitlement Entitlement = "sql-analytics-access"
-)
-
 var entitlementMapping = map[string]string{
 	"allow-cluster-create":       "allow_cluster_create",
 	"allow-instance-pool-create": "allow_instance_pool_create",
-	"sql-analytics-access":       "allow_sql_analytics_access",
+	"databricks-sql-access":      "allow_sql_analytics_access", // TODO: state change
 }
 
 // order is important for tests
 var possibleEntitlements = []string{
 	"allow-cluster-create",
 	"allow-instance-pool-create",
-	"sql-analytics-access"}
+	"databricks-sql-access"}
 
 type entitlements []valueItem
 
-func (e entitlements) Read(d *schema.ResourceData) error {
+func (e entitlements) readIntoData(d *schema.ResourceData) error {
 	for _, ent := range e {
 		field_name := entitlementMapping[ent.Value]
 		if err := d.Set(field_name, true); err != nil {
@@ -161,26 +145,7 @@ func (e entitlements) Read(d *schema.ResourceData) error {
 	return nil
 }
 
-func UpdateEntitlements(d *schema.ResourceData) ([]string, []string) {
-	added := []string{}
-	removed := []string{}
-	for _, entitlement := range possibleEntitlements {
-		field_name := entitlementMapping[entitlement]
-		_o, _n := d.GetChange(field_name)
-		old, new := _o.(bool), _n.(bool)
-		if old == new {
-			continue
-		}
-		if !old && new {
-			added = append(added, entitlement)
-		} else {
-			removed = append(removed, entitlement)
-		}
-	}
-	return added, removed
-}
-
-func CreateEntitlements(d *schema.ResourceData) entitlements {
+func readEntitlementsFromData(d *schema.ResourceData) entitlements {
 	var e entitlements
 	for _, entitlement := range possibleEntitlements {
 		field_name := entitlementMapping[entitlement]
@@ -197,7 +162,7 @@ func addEntitlementsToSchema(s *map[string]*schema.Schema) {
 	for _, entitlement := range possibleEntitlements {
 		field_name := entitlementMapping[entitlement]
 		(*s)[field_name] = &schema.Schema{
-			Type: schema.TypeBool,
+			Type:     schema.TypeBool,
 			Optional: true,
 		}
 	}
@@ -217,10 +182,6 @@ type valueItem struct {
 	Value string `json:"value,omitempty"`
 }
 
-type roleListItem struct {
-	Value string `json:"value,omitempty"`
-}
-
 type email struct {
 	Type    interface{} `json:"type,omitempty"`
 	Value   string      `json:"value,omitempty"`
@@ -231,14 +192,14 @@ type email struct {
 type ScimUser struct {
 	ID            string            `json:"id,omitempty"`
 	Emails        []email           `json:"emails,omitempty"`
-	DisplayName   string            `json:"displayName,omitempty"`
+	DisplayName   string            `json:"displayName,omitempty" tf:"alias:display_name"`
 	Active        bool              `json:"active,omitempty"`
 	Schemas       []URN             `json:"schemas,omitempty"`
-	UserName      string            `json:"userName,omitempty"`
-	ApplicationID string            `json:"applicationId,omitempty"`
+	UserName      string            `json:"userName,omitempty" tf:"alias:user_name"`
+	ApplicationID string            `json:"applicationId,omitempty" tf:"alias:application_id"`
 	Groups        []GroupsListItem  `json:"groups,omitempty"`
 	Name          map[string]string `json:"name,omitempty"`
-	Roles         []roleListItem    `json:"roles,omitempty"`
+	Roles         []valueItem       `json:"roles,omitempty"`
 	Entitlements  entitlements      `json:"entitlements,omitempty"`
 }
 

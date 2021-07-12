@@ -43,7 +43,7 @@ func TestAccCreateUser(t *testing.T) {
 	randomName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
 	ctx := context.Background()
 	usersAPI := NewUsersAPI(ctx, client)
-	user, err := usersAPI.Create(UserEntity{
+	user, err := usersAPI.Create(ScimUser{
 		UserName: fmt.Sprintf("test+%s@example.com", randomName),
 	})
 	assert.NoError(t, err, err)
@@ -58,10 +58,10 @@ func TestAccCreateUser(t *testing.T) {
 	t.Log(user)
 	assert.NoError(t, err, err)
 
-	err = usersAPI.Update(user.ID, UserEntity{
-		UserName:           fmt.Sprintf("updated+%s@example.com", randomName),
-		AllowClusterCreate: true,
-		DisplayName:        "TU",
+	err = usersAPI.Update(user.ID, ScimUser{
+		UserName: fmt.Sprintf("updated+%s@example.com", randomName),
+		// AllowClusterCreate: true,
+		DisplayName: "TU",
 	})
 	//t.Log(user)
 	assert.NoError(t, err, err)

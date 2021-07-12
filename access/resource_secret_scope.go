@@ -8,6 +8,7 @@ import (
 
 	"github.com/databrickslabs/terraform-provider-databricks/common"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
@@ -123,11 +124,13 @@ func ResourceSecretScope() *schema.Resource {
 		s["name"].ValidateFunc = validScope
 		s["initial_manage_principal"].ForceNew = true
 		s["keyvault_metadata"].ForceNew = true
+
 		return s
 	})
-	return common.Resource{
+	resource := common.Resource{
 		Schema:        s,
 		SchemaVersion: 2,
+
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var scope SecretScope
 			if err := common.DataToStructPointer(d, s, &scope); err != nil {
@@ -150,4 +153,20 @@ func ResourceSecretScope() *schema.Resource {
 			return NewSecretScopesAPI(ctx, c).Delete(d.Id())
 		},
 	}.ToResource()
+
+	resource.CustomizeDiff = customdiff.Sequence(
+		func(ctx context.Context, diff *schema.ResourceDiff, v interface{}) error {
+			kvLst := diff.Get("keyvault_metadata").([]interface{})
+			if len(kvLst) == 0 {
+				return nil
+			}
+			client := v.(*common.DatabricksClient)
+			if client.IsAzure() && client.AzureAuth.IsClientSecretSet() {
+				return fmt.Errorf("you can't set up Azure KeyVault-based secret scope via Service Principal")
+			}
+
+			return nil
+		},
+	)
+	return resource
 }

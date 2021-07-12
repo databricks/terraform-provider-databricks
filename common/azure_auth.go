@@ -3,6 +3,7 @@ package common
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -39,6 +40,7 @@ type AzureAuth struct {
 	// temporary workaround for SP-based auth
 	PATTokenDurationSeconds string
 	UsePATForCLI            bool
+	UsePATForSPN            bool
 
 	// private property to give resource access
 	databricksClient *DatabricksClient
@@ -125,15 +127,20 @@ func (aa *AzureAuth) configureWithClientSecret() (func(r *http.Request) error, e
 		return nil, nil
 	}
 	log.Printf("[INFO] Using Azure Service Principal client secret authentication")
-	// return aa.simpleAADRequestVisitor(aa.getClientSecretAuthorizer, aa.addSpManagementTokenVisitor)
-	return func(r *http.Request) error {
-		pat, err := aa.acquirePAT(r.Context(), aa.getClientSecretAuthorizer, aa.addSpManagementTokenVisitor)
-		if err != nil {
-			return err
-		}
-		r.Header.Set("Authorization", fmt.Sprintf("Bearer %s", pat.TokenValue))
-		return nil
-	}, nil
+	if aa.UsePATForSPN {
+		log.Printf("[INFO] Generating PAT token Azure Service Principal client secret authentication")
+		return func(r *http.Request) error {
+			pat, err := aa.acquirePAT(r.Context(), aa.getClientSecretAuthorizer, aa.addSpManagementTokenVisitor)
+			if err != nil {
+				return err
+			}
+			r.Header.Set("Authorization", fmt.Sprintf("Bearer %s", pat.TokenValue))
+			return nil
+		}, nil
+	}
+
+	log.Printf("[INFO] Generating AAD token for Azure Service Principal")
+	return aa.simpleAADRequestVisitor(context.TODO(), aa.getClientSecretAuthorizer, aa.addSpManagementTokenVisitor)
 }
 
 func (aa *AzureAuth) addSpManagementTokenVisitor(r *http.Request, management autorest.Authorizer) error {
@@ -270,6 +277,19 @@ func (aa *AzureAuth) patRequest() tokenRequest {
 	}
 }
 
+func maybeExtendAuthzError(err error) error {
+	var ae APIError
+	fmtString := "Azure authorization error.  Does your SPN  have Contributor access to Databricks workspace. %v"
+	if errors.As(err, &ae) {
+		if ae.ErrorCode == "403" {
+			return fmt.Errorf(fmtString, err)
+		}
+	} else if strings.Contains(err.Error(), "does not have authorization to perform action") {
+		return fmt.Errorf(fmtString, err)
+	}
+	return err
+}
+
 func (aa *AzureAuth) ensureWorkspaceURL(ctx context.Context,
 	managementAuthorizer autorest.Authorizer) error {
 	if aa.databricksClient == nil {
@@ -285,7 +305,7 @@ func (aa *AzureAuth) ensureWorkspaceURL(ctx context.Context,
 	log.Println("[DEBUG] Getting Workspace ID via management token.")
 	env, err := aa.getAzureEnvironment()
 	if err != nil {
-		return err
+		return maybeExtendAuthzError(err)
 	}
 	// All azure endpoints typically end with a trailing slash removing it because resourceID starts with slash
 	managementResourceURL := strings.TrimSuffix(env.ResourceManagerEndpoint, "/") + resourceID
@@ -297,12 +317,12 @@ func (aa *AzureAuth) ensureWorkspaceURL(ctx context.Context,
 		}, func(r *http.Request) error {
 			_, err := autorest.Prepare(r, managementAuthorizer.WithAuthorization())
 			if err != nil {
-				return err
+				return maybeExtendAuthzError(err)
 			}
 			return nil
 		})
 	if err != nil {
-		return err
+		return maybeExtendAuthzError(err)
 	}
 	err = json.Unmarshal(resp, &workspace)
 	if err != nil {
@@ -351,7 +371,7 @@ func (aa *AzureAuth) getClientSecretAuthorizer(resource string) (autorest.Author
 		aa.TenantID,
 		nil)
 	if err != nil {
-		return nil, err
+		return nil, maybeExtendAuthzError(err)
 	}
 	spt, err := adal.NewServicePrincipalToken(
 		*platformTokenOAuthCfg,
@@ -359,7 +379,7 @@ func (aa *AzureAuth) getClientSecretAuthorizer(resource string) (autorest.Author
 		aa.ClientSecret,
 		AzureDatabricksResourceID)
 	if err != nil {
-		return nil, err
+		return nil, maybeExtendAuthzError(err)
 	}
 	return autorest.NewBearerAuthorizer(spt), nil
 }

@@ -184,7 +184,7 @@ func TestAzureAuth_ensureWorkspaceURL(t *testing.T) {
 		"Calls to Azure Management API must be done only once")
 }
 
-func TestAzureAuth_configureWithClientSecret(t *testing.T) {
+func TestAzureAuth_configureWithClientSecretPAT(t *testing.T) {
 	aa := AzureAuth{}
 	auth, err := aa.configureWithClientSecret()
 	assert.Nil(t, auth)
@@ -201,6 +201,7 @@ func TestAzureAuth_configureWithClientSecret(t *testing.T) {
 		Type:        "Bearer",
 	}
 	aa.authorizer = autorest.NewBearerAuthorizer(token)
+	aa.UsePATForSPN = true
 
 	var serverURL string
 	dummyPAT := "dapi234567"
@@ -252,6 +253,70 @@ func TestAzureAuth_configureWithClientSecret(t *testing.T) {
 
 	client := DatabricksClient{InsecureSkipVerify: true}
 	client.authVisitor = auth
+	err = client.Configure()
+	assert.NoError(t, err)
+	aa.databricksClient = &client
+	client.AzureAuth = aa
+
+	type ZonesInfo struct {
+		Zones       []string `json:"zones,omitempty"`
+		DefaultZone string   `json:"default_zone,omitempty"`
+	}
+	var zi ZonesInfo
+	err = client.Get(context.Background(), "/clusters/list-zones", nil, &zi)
+	assert.NotNil(t, zi)
+	assert.NoError(t, err)
+	assert.Len(t, zi.Zones, 3)
+}
+
+func TestAzureAuth_configureWithClientSecretAAD(t *testing.T) {
+	aa := AzureAuth{}
+	aa.ResourceID = "/subscriptions/a/resourceGroups/b/providers/Microsoft.Databricks/workspaces/c"
+
+	token := &adal.Token{
+		AccessToken: "TestToken",
+		Resource:    "https://azure.microsoft.com/",
+		Type:        "Bearer",
+	}
+	aa.authorizer = autorest.NewBearerAuthorizer(token)
+
+	var serverURL string
+	server := httptest.NewUnstartedServer(http.HandlerFunc(
+		func(rw http.ResponseWriter, req *http.Request) {
+			if req.RequestURI ==
+				"/subscriptions/a/resourceGroups/b/providers/Microsoft.Databricks/workspaces/c?api-version=2018-04-01" {
+				_, err := rw.Write([]byte(fmt.Sprintf(`{"properties": {"workspaceUrl": "%s"}}`,
+					strings.ReplaceAll(serverURL, "https://", ""))))
+				assert.NoError(t, err)
+				return
+			}
+			if req.RequestURI == "/api/2.0/clusters/list-zones" {
+				assert.Equal(t, token.AccessToken, req.Header.Get("X-Databricks-Azure-SP-Management-Token"))
+				assert.Equal(t, "Bearer "+token.AccessToken, req.Header.Get("Authorization"))
+				assert.Equal(t, aa.ResourceID, req.Header.Get("X-Databricks-Azure-Workspace-Resource-Id"))
+				_, err := rw.Write([]byte(`{"zones": ["a", "b", "c"]}`))
+				assert.NoError(t, err)
+				return
+			}
+			assert.Fail(t, fmt.Sprintf("Received unexpected call: %s %s",
+				req.Method, req.RequestURI))
+		}))
+	server.StartTLS()
+	serverURL = server.URL
+	defer server.Close()
+
+	aa.ClientID = "a"
+	aa.ClientSecret = "b"
+	aa.TenantID = "c"
+	aa.databricksClient = &DatabricksClient{InsecureSkipVerify: true}
+	// resource management endpoints end with a trailing slash in url
+	aa.azureManagementEndpoint = fmt.Sprintf("%s/", server.URL)
+	auth, err := aa.configureWithClientSecret()
+	assert.NoError(t, err)
+
+	client := DatabricksClient{InsecureSkipVerify: true}
+	client.authVisitor = auth
+	aa.databricksClient = &client
 	err = client.Configure()
 	assert.NoError(t, err)
 	aa.databricksClient = &client

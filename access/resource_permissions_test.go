@@ -24,8 +24,8 @@ var (
 	TestingAdminUser = "admin"
 	me               = qa.HTTPFixture{
 		ReuseRequest: true,
-		Method:   "GET",
-		Resource: "/api/2.0/preview/scim/v2/Me",
+		Method:       "GET",
+		Resource:     "/api/2.0/preview/scim/v2/Me",
 		Response: identity.ScimUser{
 			UserName: TestingAdminUser,
 		},

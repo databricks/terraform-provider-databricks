@@ -53,15 +53,15 @@ func TestDataSourceUserGerUser(t *testing.T) {
 		{
 			Method:   "GET",
 			Resource: "/api/2.0/preview/scim/v2/Users?filter=userName%20eq%20%27searching_error%27",
-			Status: 404,
-			Response: common.APIError {
+			Status:   404,
+			Response: common.APIError{
 				Message: "searching_error",
 			},
 		},
 		{
 			Method:   "GET",
 			Resource: "/api/2.0/preview/scim/v2/Users?filter=userName%20eq%20%27empty_search%27",
-			Response: UserList {},
+			Response: UserList{},
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		usersAPI := NewUsersAPI(ctx, client)

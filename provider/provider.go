@@ -211,6 +211,13 @@ func DatabricksProvider() *schema.Provider {
 				Default:     false,
 				Description: "Create ephemeral PAT tokens also for AZ CLI authenticated requests",
 			},
+			"azure_use_pat_for_spn": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     false,
+				Description: "Create ephemeral PAT tokens instead of AAD tokens for SPN",
+				DefaultFunc: schema.EnvDefaultFunc("DATABRICKS_AZURE_USE_PAT_FOR_SPN", false),
+			},
 			"azure_environment": {
 				Type:        schema.TypeString,
 				Optional:    true,
@@ -344,6 +351,9 @@ func configureDatabricksClient(ctx context.Context, d *schema.ResourceData) (int
 	}
 	if v, ok := d.GetOk("azure_use_pat_for_cli"); ok {
 		pc.AzureAuth.UsePATForCLI = v.(bool)
+	}
+	if v, ok := d.GetOk("azure_use_pat_for_spn"); ok {
+		pc.AzureAuth.UsePATForSPN = v.(bool)
 	}
 	if v, ok := d.GetOk("azure_environment"); ok {
 		pc.AzureAuth.Environment = v.(string)

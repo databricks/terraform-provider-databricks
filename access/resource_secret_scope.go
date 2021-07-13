@@ -114,6 +114,21 @@ var validScope = validation.StringMatch(regexp.MustCompile(`^[\w\.@_-]{1,128}$`)
 	"Must consist of alphanumeric characters, dashes, underscores, and periods, "+
 		"and may not exceed 128 characters.")
 
+func kvDiffFunc(ctx context.Context, diff *schema.ResourceDiff, v interface{}) error {
+	if diff == nil {
+		return nil
+	}
+	kvLst := diff.Get("keyvault_metadata").([]interface{})
+	if len(kvLst) == 0 {
+		return nil
+	}
+	client := v.(*common.DatabricksClient)
+	if client.IsAzure() && client.AzureAuth.IsClientSecretSet() {
+		return fmt.Errorf("you can't set up Azure KeyVault-based secret scope via Service Principal")
+	}
+	return nil
+}
+
 // ResourceSecretScope manages secret scopes
 func ResourceSecretScope() *schema.Resource {
 	s := common.StructToSchema(SecretScope{}, func(s map[string]*schema.Schema) map[string]*schema.Schema {
@@ -123,11 +138,13 @@ func ResourceSecretScope() *schema.Resource {
 		s["name"].ValidateFunc = validScope
 		s["initial_manage_principal"].ForceNew = true
 		s["keyvault_metadata"].ForceNew = true
+
 		return s
 	})
 	return common.Resource{
 		Schema:        s,
 		SchemaVersion: 2,
+
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var scope SecretScope
 			if err := common.DataToStructPointer(d, s, &scope); err != nil {
@@ -149,5 +166,6 @@ func ResourceSecretScope() *schema.Resource {
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			return NewSecretScopesAPI(ctx, c).Delete(d.Id())
 		},
+		CustomizeDiff: kvDiffFunc,
 	}.ToResource()
 }

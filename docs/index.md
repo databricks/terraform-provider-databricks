@@ -179,7 +179,7 @@ To work with Azure Databricks workspace, the provider must know its `azure_works
 
 ### Authenticating with Azure Service Principal
 
-!> **Warning** Please note that the azure service principal authentication currently uses a generated Databricks PAT token and not an AAD token for the authentication. Azure Databricks does not yet support AAD tokens for [secret scopes](https://docs.microsoft.com/en-us/azure/databricks/dev-tools/api/latest/secrets#--create-secret-scope). Databricks Labs team will refactor it transparently once that support is available. The only impacted field is `pat_token_duration_seconds`, which will be deprecated and fully supported after AAD support. 
+!> **Warning** Please note that the azure service principal authentication currently (since version 0.3.6) uses the AAD token for the authentication (SPN should have **Contributor** role on Databricks workspace).  You can restore previous functionality (generating the PAT for service principal)  by setting `azure_use_pat_for_spn` to `true` (you can regulate the lifetime of generated PAT with `pat_token_duration_seconds` setting). Azure Databricks does not yet support AAD tokens for [secret scopes](https://docs.microsoft.com/en-us/azure/databricks/dev-tools/api/latest/secrets#--create-secret-scope). Databricks Labs team will refactor it transparently once that support is available. The only impacted field is `pat_token_duration_seconds`, which will be deprecated and fully supported after AAD support. 
 
 ```hcl
 provider "azurerm" {
@@ -276,6 +276,7 @@ The following configuration attributes can be passed via environment variables:
 |         `azure_client_secret` | `DATABRICKS_AZURE_CLIENT_SECRET` or `ARM_CLIENT_SECRET`     |
 |             `azure_client_id` | `DATABRICKS_AZURE_CLIENT_ID` or `ARM_CLIENT_ID`             |
 |             `azure_tenant_id` | `DATABRICKS_AZURE_TENANT_ID` or `ARM_TENANT_ID`             |
+|       `azure_use_pat_for_spn` | `DATABRICKS_AZURE_USE_PAT_FOR_SPN`                          |
 |           `azure_environment` | `ARM_ENVIRONMENT`                                           |
 |        `debug_truncate_bytes` | `DATABRICKS_DEBUG_TRUNCATE_BYTES`                           |
 |               `debug_headers` | `DATABRICKS_DEBUG_HEADERS`                                  |

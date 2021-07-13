@@ -32,6 +32,7 @@ type providerConfigTest struct {
 	assertToken              string
 	assertHost               string
 	assertAzure              bool
+	usePATForSPN             bool
 }
 
 func (tt providerConfigTest) rawConfig() map[string]interface{} {
@@ -74,6 +75,9 @@ func (tt providerConfigTest) rawConfig() map[string]interface{} {
 	}
 	if tt.azureWorkspaceResourceID != "" {
 		rawConfig["azure_workspace_resource_id"] = tt.azureWorkspaceResourceID
+	}
+	if tt.usePATForSPN {
+		rawConfig["azure_use_pat_for_spn"] = true
 	}
 	return rawConfig
 }
@@ -285,9 +289,10 @@ func TestProviderConfigurationOptions(t *testing.T) {
 				"PATH": "../common/testdata",
 				"HOME": "../common/testdata",
 			},
-			assertAzure: true,
-			assertHost:  "",
-			assertToken: "",
+			assertAzure:  true,
+			usePATForSPN: true,
+			assertHost:   "",
+			assertToken:  "",
 		},
 		{
 			// https://github.com/databrickslabs/terraform-provider-databricks/issues/294
@@ -301,9 +306,10 @@ func TestProviderConfigurationOptions(t *testing.T) {
 				"HOME":                "../common/testdata",
 				"PATH":                "../common/testdata",
 			},
-			assertAzure: true,
-			assertHost:  "",
-			assertToken: "",
+			assertAzure:  true,
+			usePATForSPN: true,
+			assertHost:   "",
+			assertToken:  "",
 		},
 		{
 			env: map[string]string{
@@ -346,10 +352,12 @@ func configureProviderAndReturnClient(t *testing.T, tt providerConfigTest) (*com
 		return nil, fmt.Errorf(strings.Join(issues, ", "))
 	}
 	client := p.Meta().(*common.DatabricksClient)
+	client.AzureAuth.UsePATForSPN = tt.usePATForSPN
 	err := client.Authenticate()
 	if err != nil {
 		return nil, err
 	}
+
 	return client, nil
 }
 

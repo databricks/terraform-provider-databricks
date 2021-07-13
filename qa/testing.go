@@ -86,7 +86,8 @@ type ResourceFixture struct {
 	NonWritable bool
 	Azure       bool
 	// new resource
-	New bool
+	New       bool
+	AzureAuth *common.AzureAuth
 }
 
 // Apply runs tests from fixture
@@ -101,6 +102,9 @@ func (f ResourceFixture) Apply(t *testing.T) (*schema.ResourceData, error) {
 	}
 	if f.Azure {
 		client.AzureAuth.ResourceID = "/subscriptions/a/resourceGroups/b/providers/Microsoft.Databricks/workspaces/c"
+	}
+	if f.AzureAuth != nil {
+		client.AzureAuth = *f.AzureAuth
 	}
 	if len(f.HCL) > 0 {
 		var out interface{}

@@ -203,7 +203,7 @@ func TestResourceGroupUpdate(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/preview/scim/v2/Groups/abc",
-				Response: ScimGroup {
+				Response: ScimGroup{
 					Members: []GroupMember{
 						{
 							Display: "scotchmo",

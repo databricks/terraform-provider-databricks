@@ -1,5 +1,5 @@
 ---
-subcategory: "SQL Analytics"
+subcategory: "Databricks SQL"
 ---
 # databricks_sql_query Resource
 

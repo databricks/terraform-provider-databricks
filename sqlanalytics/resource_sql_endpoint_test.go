@@ -128,7 +128,7 @@ func TestResourceSQLEndpointCreate_ErrorDisabled(t *testing.T) {
 				Status: 404,
 				Response: common.APIError{
 					ErrorCode: "FEATURE_DISABLED",
-					Message:   "SQL Analytics is not supported",
+					Message:   "Databricks SQL is not supported",
 				},
 			},
 		},
@@ -138,7 +138,7 @@ func TestResourceSQLEndpointCreate_ErrorDisabled(t *testing.T) {
 		name = "foo"
   		cluster_size = "Small"
 		`,
-	}.ExpectError(t, "SQL Analytics is not supported")
+	}.ExpectError(t, "Databricks SQL is not supported")
 }
 
 func TestResourceSQLEndpointRead(t *testing.T) {

@@ -185,15 +185,12 @@ func TestImportingMounts(t *testing.T) {
 		})
 }
 
-// TODO: don't craft the answers manually, especially complex ones, but instead read them from the JSON files?
-// TODO: add test for outputing import.sh into directory without permissions, like `/bin`
-
 var meAdminFixture = qa.HTTPFixture{
 	Method:       "GET",
 	ReuseRequest: true,
 	Resource:     "/api/2.0/preview/scim/v2/Me",
 	Response: identity.ScimUser{
-		Groups: []identity.GroupsListItem{
+		Groups: []identity.ComplexValue{
 			{
 				Display: "admins",
 			},
@@ -212,7 +209,7 @@ func TestImportingUsersGroupsSecretScopes(t *testing.T) {
 					Resources: []identity.ScimGroup{
 						// TODO: add another user for which there is no filter resut
 						{ID: "a", DisplayName: "admins",
-							Members: []identity.GroupMember{
+							Members: []identity.ComplexValue{
 								{Display: "test@test.com", Value: "123", Ref: "Users/123"},
 								{Display: "Test group", Value: "f", Ref: "Groups/f"},
 							},
@@ -234,7 +231,7 @@ func TestImportingUsersGroupsSecretScopes(t *testing.T) {
 				Method:   "GET",
 				Resource: "/api/2.0/preview/scim/v2/Groups/a",
 				Response: identity.ScimGroup{ID: "a", DisplayName: "admins",
-					Members: []identity.GroupMember{
+					Members: []identity.ComplexValue{
 						{Display: "test@test.com", Value: "123", Ref: "Users/123"},
 						{Display: "Test group", Value: "f", Ref: "Groups/f"},
 					},
@@ -250,7 +247,7 @@ func TestImportingUsersGroupsSecretScopes(t *testing.T) {
 				Method:   "GET",
 				Resource: "/api/2.0/preview/scim/v2/Groups/c",
 				Response: identity.ScimGroup{ID: "c", DisplayName: "test",
-					Groups: []identity.GroupMember{
+					Groups: []identity.ComplexValue{
 						{Display: "admins", Value: "a", Ref: "Groups/a", Type: "direct"},
 					},
 				},
@@ -894,7 +891,7 @@ func TestImportingUser(t *testing.T) {
 						{
 							ID:       "123",
 							UserName: "me",
-							Groups: []identity.GroupsListItem{
+							Groups: []identity.ComplexValue{
 								{
 									Value: "abc",
 									Type:  "direct",

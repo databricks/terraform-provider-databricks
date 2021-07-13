@@ -16,71 +16,26 @@ const (
 	GroupSchema            URN = "urn:ietf:params:scim:schemas:core:2.0:Group"
 )
 
-// GroupMember contains information of a member in a scim group
-// TODO: merge GroupMember, GroupsListItem into valueItem
-type GroupMember struct {
-	Display string `json:"display,omitempty"`
+// Generalisation of most common complex values from SCIM protocol
+// Details at https://datatracker.ietf.org/doc/html/rfc7643#section-2.3.8
+type ComplexValue struct {
 	Value   string `json:"value,omitempty"`
+	Display string `json:"display,omitempty"`
 	Ref     string `json:"$ref,omitempty"`
 
 	// https://tools.ietf.org/html/rfc7643#page-64
 	Type string `json:"type,omitempty"`
 }
 
-// GroupsListItem contains information about group item
-// TODO: merge GroupMember, GroupsListItem into valueItem
-type GroupsListItem struct {
-	// TODO: combine entitlementsListItem & roleListItem into this one
-	Display string `json:"display,omitempty"`
-	Value   string `json:"value,omitempty"`
+type complexValues []ComplexValue
 
-	// https://tools.ietf.org/html/rfc7643#page-64
-	Type string `json:"type,omitempty"`
-}
-
-// TODO: merge GroupMember, GroupsListItem into valueItem
-type valueItem struct {
-	Value string `json:"value,omitempty"`
-}
-
-// ScimGroup contains information about the SCIM group
-type ScimGroup struct {
-	ID           string        `json:"id,omitempty"`
-	Schemas      []URN         `json:"schemas,omitempty"`
-	DisplayName  string        `json:"displayName,omitempty"`
-	Members      []GroupMember `json:"members,omitempty"`
-	Groups       []GroupMember `json:"groups,omitempty"`
-	Roles        []valueItem   `json:"roles,omitempty"`
-	Entitlements entitlements  `json:"entitlements,omitempty"`
-}
-
-// HasMember returns true if group has given user or another group id as member
-func (g ScimGroup) HasMember(memberID string) bool {
-	for _, member := range g.Members {
-		if member.Value == memberID {
+func (cv complexValues) HasValue(value string) bool {
+	for _, v := range cv {
+		if v.Value == value {
 			return true
 		}
 	}
 	return false
-}
-
-// HasRole returns true if group has a role
-func (g ScimGroup) HasRole(role string) bool {
-	for _, groupRole := range g.Roles {
-		if groupRole.Value == role {
-			return true
-		}
-	}
-	return false
-}
-
-// GroupList contains a list of groups fetched from a list api call from SCIM api
-type GroupList struct {
-	TotalResults int32       `json:"totalResults,omitempty"`
-	StartIndex   int32       `json:"startIndex,omitempty"`
-	ItemsPerPage int32       `json:"itemsPerPage,omitempty"`
-	Schemas      []URN       `json:"schemas,omitempty"`
-	Resources    []ScimGroup `json:"resources,omitempty"`
 }
 
 var entitlementMapping = map[string]string{
@@ -95,7 +50,7 @@ var possibleEntitlements = []string{
 	"allow-instance-pool-create",
 	"databricks-sql-access"}
 
-type entitlements []valueItem
+type entitlements []ComplexValue
 
 func (e entitlements) readIntoData(d *schema.ResourceData) error {
 	for _, ent := range e {
@@ -112,7 +67,7 @@ func readEntitlementsFromData(d *schema.ResourceData) entitlements {
 	for _, entitlement := range possibleEntitlements {
 		field_name := entitlementMapping[entitlement]
 		if d.Get(field_name).(bool) {
-			e = append(e, valueItem{
+			e = append(e, ComplexValue{
 				Value: entitlement,
 			})
 		}
@@ -130,6 +85,26 @@ func addEntitlementsToSchema(s *map[string]*schema.Schema) {
 	}
 }
 
+// ScimGroup contains information about the SCIM group
+type ScimGroup struct {
+	ID           string         `json:"id,omitempty"`
+	Schemas      []URN          `json:"schemas,omitempty"`
+	DisplayName  string         `json:"displayName,omitempty"`
+	Members      []ComplexValue `json:"members,omitempty"`
+	Groups       []ComplexValue `json:"groups,omitempty"`
+	Roles        []ComplexValue `json:"roles,omitempty"`
+	Entitlements entitlements   `json:"entitlements,omitempty"`
+}
+
+// GroupList contains a list of groups fetched from a list api call from SCIM api
+type GroupList struct {
+	TotalResults int32       `json:"totalResults,omitempty"`
+	StartIndex   int32       `json:"startIndex,omitempty"`
+	ItemsPerPage int32       `json:"itemsPerPage,omitempty"`
+	Schemas      []URN       `json:"schemas,omitempty"`
+	Resources    []ScimGroup `json:"resources,omitempty"`
+}
+
 type email struct {
 	Type    interface{} `json:"type,omitempty"`
 	Value   string      `json:"value,omitempty"`
@@ -145,20 +120,10 @@ type ScimUser struct {
 	Schemas       []URN             `json:"schemas,omitempty"`
 	UserName      string            `json:"userName,omitempty" tf:"alias:user_name"`
 	ApplicationID string            `json:"applicationId,omitempty" tf:"alias:application_id"`
-	Groups        []GroupsListItem  `json:"groups,omitempty"`
+	Groups        []ComplexValue    `json:"groups,omitempty"`
 	Name          map[string]string `json:"name,omitempty"`
-	Roles         []valueItem       `json:"roles,omitempty"`
+	Roles         []ComplexValue    `json:"roles,omitempty"`
 	Entitlements  entitlements      `json:"entitlements,omitempty"`
-}
-
-// HasRole returns true if group has a role
-func (u ScimUser) HasRole(role string) bool {
-	for _, r := range u.Roles {
-		if r.Value == role {
-			return true
-		}
-	}
-	return false
 }
 
 // UserList contains a list of Users fetched from a list api call from SCIM api
@@ -187,7 +152,7 @@ func scimPatchRequest(op, path, value string) patchRequest {
 		Path: path,
 	}
 	if value != "" {
-		o.Value = []valueItem{{value}}
+		o.Value = []ComplexValue{{Value: value}}
 	}
 	return patchRequest{
 		Schemas:    []URN{PatchOp},

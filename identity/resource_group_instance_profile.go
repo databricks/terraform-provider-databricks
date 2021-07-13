@@ -18,7 +18,8 @@ func ResourceGroupInstanceProfile() *schema.Resource {
 	}).BindResource(common.BindResource{
 		ReadContext: func(ctx context.Context, groupID, roleARN string, c *common.DatabricksClient) error {
 			group, err := NewGroupsAPI(ctx, c).Read(groupID)
-			if err == nil && !group.HasRole(roleARN) {
+			hasRole := complexValues(group.Roles).HasValue(roleARN)
+			if err == nil && !hasRole {
 				return common.NotFound("Group has no instance profile")
 			}
 			return err

@@ -10,6 +10,7 @@
 * Added support for hybrid instance pools ([#689](https://github.com/databrickslabs/terraform-provider-databricks/pull/689))
 * Added `run_as_role` field to `databricks_sql_query` ([#684](https://github.com/databrickslabs/terraform-provider-databricks/pull/684))
 * Added `user_id` attribute for `databricks_user` data resource, so that it's possible to dynamically create resources based on members of the group ([#714](https://github.com/databrickslabs/terraform-provider-databricks/pull/714))
+* Added more selectors to `databricks_node_type` data source ([#723](https://github.com/databrickslabs/terraform-provider-databricks/pull/723))
 
 Updated dependency versions:
 

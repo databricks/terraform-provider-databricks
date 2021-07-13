@@ -19,9 +19,15 @@ func TestResourceGroupCreate(t *testing.T) {
 					Schemas:     []URN{"urn:ietf:params:scim:schemas:core:2.0:Group"},
 					DisplayName: "Data Scientists",
 					Entitlements: []ComplexValue{
-						{Value: "allow-cluster-create"},
-						{Value: "allow-instance-pool-create"},
-						{Value: "databricks-sql-access"},
+						{
+							Value: "allow-cluster-create",
+						},
+						{
+							Value: "allow-instance-pool-create",
+						},
+						{
+							Value: "databricks-sql-access",
+						},
 					},
 				},
 				Response: ScimGroup{
@@ -36,9 +42,15 @@ func TestResourceGroupCreate(t *testing.T) {
 					DisplayName: "Data Scientists",
 					ID:          "abc",
 					Entitlements: []ComplexValue{
-						{Value: "allow-cluster-create"},
-						{Value: "databricks-sql-access"},
-						{Value: "allow-instance-pool-create"},
+						{
+							Value: "allow-cluster-create",
+						},
+						{
+							Value: "databricks-sql-access",
+						},
+						{
+							Value: "allow-instance-pool-create",
+						},
 					},
 				},
 			},
@@ -92,9 +104,15 @@ func TestResourceGroupRead(t *testing.T) {
 					DisplayName: "Data Scientists",
 					ID:          "abc",
 					Entitlements: []ComplexValue{
-						{Value: "databricks-sql-access"},
-						{Value: "allow-cluster-create"},
-						{Value: "allow-instance-pool-create"},
+						{
+							Value: "databricks-sql-access",
+						},
+						{
+							Value: "allow-cluster-create",
+						},
+						{
+							Value: "allow-instance-pool-create",
+						},
 					},
 				},
 			},
@@ -188,7 +206,9 @@ func TestResourceGroupUpdate(t *testing.T) {
 						},
 					},
 					Roles: []ComplexValue{
-						{Value: "reader"},
+						{
+							Value: "reader",
+						},
 					},
 					Groups: []ComplexValue{
 						{
@@ -203,9 +223,15 @@ func TestResourceGroupUpdate(t *testing.T) {
 				ExpectedRequest: ScimGroup{
 					DisplayName: "Data Ninjas",
 					Entitlements: entitlements{
-						{Value: "allow-cluster-create"},
-						{Value: "allow-instance-pool-create"},
-						{Value: "databricks-sql-access"},
+						{
+							Value: "allow-cluster-create",
+						},
+						{
+							Value: "allow-instance-pool-create",
+						},
+						{
+							Value: "databricks-sql-access",
+						},
 					},
 					Members: []ComplexValue{
 						{
@@ -213,7 +239,9 @@ func TestResourceGroupUpdate(t *testing.T) {
 						},
 					},
 					Roles: []ComplexValue{
-						{Value: "reader"},
+						{
+							Value: "reader",
+						},
 					},
 					Groups: []ComplexValue{
 						{
@@ -229,9 +257,15 @@ func TestResourceGroupUpdate(t *testing.T) {
 				Response: ScimGroup{
 					DisplayName: "Data Ninjas",
 					Entitlements: entitlements{
-						{Value: "allow-cluster-create"},
-						{Value: "allow-instance-pool-create"},
-						{Value: "databricks-sql-access"},
+						{
+							Value: "allow-cluster-create",
+						},
+						{
+							Value: "allow-instance-pool-create",
+						},
+						{
+							Value: "databricks-sql-access",
+						},
 					},
 					// we don't care about other fields in this response
 				},

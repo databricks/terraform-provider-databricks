@@ -94,7 +94,9 @@ func TestResourceUserCreate(t *testing.T) {
 					DisplayName: "Example user",
 					Active:      true,
 					Entitlements: entitlements{
-						{Value: "allow-cluster-create"},
+						{
+							Value: "allow-cluster-create",
+						},
 					},
 					UserName: "me@example.com",
 					Schemas:  []URN{UserSchema},
@@ -112,7 +114,9 @@ func TestResourceUserCreate(t *testing.T) {
 					UserName:    "me@example.com",
 					ID:          "abc",
 					Entitlements: entitlements{
-						{Value: "allow-cluster-create"},
+						{
+							Value: "allow-cluster-create",
+						},
 					},
 					Groups: []ComplexValue{
 						{
@@ -169,7 +173,9 @@ func TestResourceUserUpdate(t *testing.T) {
 		UserName:    "me@example.com",
 		Active:      true,
 		Entitlements: entitlements{
-			{Value: "allow-instance-pool-create"},
+			{
+				Value: "allow-instance-pool-create",
+			},
 		},
 		Groups: []ComplexValue{
 			{
@@ -182,8 +188,12 @@ func TestResourceUserUpdate(t *testing.T) {
 			},
 		},
 		Roles: []ComplexValue{
-			{Value: "a"},
-			{Value: "b"},
+			{
+				Value: "a",
+			},
+			{
+				Value: "b",
+			},
 		},
 	}
 	d, err := qa.ResourceFixture{
@@ -197,7 +207,9 @@ func TestResourceUserUpdate(t *testing.T) {
 					UserName:    "me@example.com",
 					ID:          "abc",
 					Entitlements: []ComplexValue{
-						{Value: "allow-cluster-create"},
+						{
+							Value: "allow-cluster-create",
+						},
 					},
 					Groups: []ComplexValue{
 						{
@@ -210,8 +222,12 @@ func TestResourceUserUpdate(t *testing.T) {
 						},
 					},
 					Roles: []ComplexValue{
-						{Value: "a"},
-						{Value: "b"},
+						{
+							Value: "a",
+						},
+						{
+							Value: "b",
+						},
 					},
 				},
 			},
@@ -278,7 +294,9 @@ func TestResourceUserUpdate_ErrorPut(t *testing.T) {
 					UserName:    "me@example.com",
 					ID:          "abc",
 					Entitlements: []ComplexValue{
-						{Value: "allow-cluster-create"},
+						{
+							Value: "allow-cluster-create",
+						},
 					},
 					Groups: []ComplexValue{
 						{
@@ -291,8 +309,12 @@ func TestResourceUserUpdate_ErrorPut(t *testing.T) {
 						},
 					},
 					Roles: []ComplexValue{
-						{Value: "a"},
-						{Value: "b"},
+						{
+							Value: "a",
+						},
+						{
+							Value: "b",
+						},
 					},
 				},
 			},

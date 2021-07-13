@@ -20,7 +20,7 @@ func TestResourceUserRead(t *testing.T) {
 					ID:          "abc",
 					DisplayName: "Example user",
 					UserName:    "me@example.com",
-					Groups: []GroupsListItem{
+					Groups: []ComplexValue{
 						{
 							Display: "admins",
 							Value:   "4567",
@@ -94,7 +94,7 @@ func TestResourceUserCreate(t *testing.T) {
 					DisplayName: "Example user",
 					Active:      true,
 					Entitlements: entitlements{
-						{"allow-cluster-create"},
+						{Value: "allow-cluster-create"},
 					},
 					UserName: "me@example.com",
 					Schemas:  []URN{UserSchema},
@@ -112,9 +112,9 @@ func TestResourceUserCreate(t *testing.T) {
 					UserName:    "me@example.com",
 					ID:          "abc",
 					Entitlements: entitlements{
-						{"allow-cluster-create"},
+						{Value: "allow-cluster-create"},
 					},
-					Groups: []GroupsListItem{
+					Groups: []ComplexValue{
 						{
 							Display: "admins",
 							Value:   "4567",
@@ -169,9 +169,9 @@ func TestResourceUserUpdate(t *testing.T) {
 		UserName:    "me@example.com",
 		Active:      true,
 		Entitlements: entitlements{
-			{"allow-instance-pool-create"},
+			{Value: "allow-instance-pool-create"},
 		},
-		Groups: []GroupsListItem{
+		Groups: []ComplexValue{
 			{
 				Display: "admins",
 				Value:   "4567",
@@ -181,9 +181,9 @@ func TestResourceUserUpdate(t *testing.T) {
 				Value:   "9877",
 			},
 		},
-		Roles: []valueItem{
-			{"a"},
-			{"b"},
+		Roles: []ComplexValue{
+			{Value: "a"},
+			{Value: "b"},
 		},
 	}
 	d, err := qa.ResourceFixture{
@@ -196,10 +196,10 @@ func TestResourceUserUpdate(t *testing.T) {
 					Active:      true,
 					UserName:    "me@example.com",
 					ID:          "abc",
-					Entitlements: []valueItem{
-						{"allow-cluster-create"},
+					Entitlements: []ComplexValue{
+						{Value: "allow-cluster-create"},
 					},
-					Groups: []GroupsListItem{
+					Groups: []ComplexValue{
 						{
 							Display: "admins",
 							Value:   "4567",
@@ -209,9 +209,9 @@ func TestResourceUserUpdate(t *testing.T) {
 							Value:   "9877",
 						},
 					},
-					Roles: []valueItem{
-						{"a"},
-						{"b"},
+					Roles: []ComplexValue{
+						{Value: "a"},
+						{Value: "b"},
 					},
 				},
 			},
@@ -277,10 +277,10 @@ func TestResourceUserUpdate_ErrorPut(t *testing.T) {
 					Active:      true,
 					UserName:    "me@example.com",
 					ID:          "abc",
-					Entitlements: []valueItem{
-						{"allow-cluster-create"},
+					Entitlements: []ComplexValue{
+						{Value: "allow-cluster-create"},
 					},
-					Groups: []GroupsListItem{
+					Groups: []ComplexValue{
 						{
 							Display: "admins",
 							Value:   "4567",
@@ -290,9 +290,9 @@ func TestResourceUserUpdate_ErrorPut(t *testing.T) {
 							Value:   "9877",
 						},
 					},
-					Roles: []valueItem{
-						{"a"},
-						{"b"},
+					Roles: []ComplexValue{
+						{Value: "a"},
+						{Value: "b"},
 					},
 				},
 			},

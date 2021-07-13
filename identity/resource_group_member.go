@@ -17,7 +17,8 @@ func ResourceGroupMember() *schema.Resource {
 		},
 		ReadContext: func(ctx context.Context, groupID, memberID string, c *common.DatabricksClient) error {
 			group, err := NewGroupsAPI(ctx, c).Read(groupID)
-			if err == nil && !group.HasMember(memberID) {
+			hasMember := complexValues(group.Members).HasValue(memberID)
+			if err == nil && !hasMember {
 				return common.NotFound("Group has no member")
 			}
 			return err

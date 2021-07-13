@@ -29,8 +29,8 @@ func TestResourceUserInstanceProfileCreate(t *testing.T) {
 				Response: ScimUser{
 					Schemas:     []URN{"urn:ietf:params:scim:schemas:core:2.0:User"},
 					DisplayName: "Data Scientists",
-					Roles: []valueItem{
-						{"arn:aws:iam::999999999999:instance-profile/my-fake-instance-profile"},
+					Roles: []ComplexValue{
+						{Value: "arn:aws:iam::999999999999:instance-profile/my-fake-instance-profile"},
 					},
 					ID: "abc",
 				},
@@ -92,8 +92,8 @@ func TestResourceUserInstanceProfileRead(t *testing.T) {
 				Response: ScimUser{
 					Schemas:     []URN{"urn:ietf:params:scim:schemas:core:2.0:User"},
 					DisplayName: "Data Scientists",
-					Roles: []valueItem{
-						{"arn:aws:iam::999999999999:instance-profile/my-fake-instance-profile"},
+					Roles: []ComplexValue{
+						{Value: "arn:aws:iam::999999999999:instance-profile/my-fake-instance-profile"},
 					},
 					ID: "abc",
 				},

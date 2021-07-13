@@ -25,7 +25,7 @@ func TestAzureAccSP(t *testing.T) {
 	sp, err := spAPI.Create(ScimUser{
 		ApplicationID: "00000000-0000-0000-0000-000000000001",
 		Entitlements: entitlements{
-			{"allow-cluster-create"},
+			{Value: "allow-cluster-create"},
 		},
 		DisplayName: "ABC SP",
 		Active:      true,
@@ -39,7 +39,7 @@ func TestAzureAccSP(t *testing.T) {
 	err = spAPI.Update(sp.ID, ScimUser{
 		ApplicationID: sp.ApplicationID,
 		Entitlements: entitlements{
-			{"allow-instance-pool-create"},
+			{Value: "allow-instance-pool-create"},
 		},
 		DisplayName: "BCD",
 	})
@@ -55,7 +55,7 @@ func TestResourceServicePrincipalRead(t *testing.T) {
 				Response: ScimUser{
 					ID:          "abc",
 					DisplayName: "Example Service Principal",
-					Groups: []GroupsListItem{
+					Groups: []ComplexValue{
 						{
 							Display: "admins",
 							Value:   "4567",
@@ -157,8 +157,8 @@ func TestResourceServicePrincipalCreate(t *testing.T) {
 				ExpectedRequest: ScimUser{
 					DisplayName: "Example Service Principal",
 					Active:      true,
-					Entitlements: []valueItem{
-						{"allow-cluster-create"},
+					Entitlements: []ComplexValue{
+						{Value: "allow-cluster-create"},
 					},
 					Schemas: []URN{ServicePrincipalSchema},
 				},
@@ -174,9 +174,9 @@ func TestResourceServicePrincipalCreate(t *testing.T) {
 					Active:      true,
 					ID:          "abc",
 					Entitlements: entitlements{
-						{"allow-cluster-create"},
+						{Value: "allow-cluster-create"},
 					},
-					Groups: []GroupsListItem{
+					Groups: []ComplexValue{
 						{
 							Display: "admins",
 							Value:   "4567",
@@ -238,9 +238,9 @@ func TestResourceServicePrincipalUpdate(t *testing.T) {
 		DisplayName: "Changed Name",
 		Active:      true,
 		Entitlements: entitlements{
-			{"allow-instance-pool-create"},
+			{Value: "allow-instance-pool-create"},
 		},
-		Groups: []GroupsListItem{
+		Groups: []ComplexValue{
 			{
 				Display: "admins",
 				Value:   "4567",
@@ -261,9 +261,9 @@ func TestResourceServicePrincipalUpdate(t *testing.T) {
 					Active:      true,
 					ID:          "abc",
 					Entitlements: entitlements{
-						{"allow-cluster-create"},
+						{Value: "allow-cluster-create"},
 					},
-					Groups: []GroupsListItem{
+					Groups: []ComplexValue{
 						{
 							Display: "admins",
 							Value:   "4567",
@@ -334,9 +334,9 @@ func TestResourceServicePrincipalUpdate_ErrorPut(t *testing.T) {
 					Active:      true,
 					ID:          "abc",
 					Entitlements: entitlements{
-						{"allow-cluster-create"},
+						{Value: "allow-cluster-create"},
 					},
-					Groups: []GroupsListItem{
+					Groups: []ComplexValue{
 						{
 							Display: "admins",
 							Value:   "4567",

@@ -26,7 +26,7 @@ func TestResourceGroupMemberCreate(t *testing.T) {
 				Response: ScimGroup{
 					Schemas:     []URN{"urn:ietf:params:scim:schemas:core:2.0:Group"},
 					DisplayName: "Data Scientists",
-					Members: []GroupMember{
+					Members: []ComplexValue{
 						{
 							Value: "bcd",
 						},
@@ -79,7 +79,7 @@ func TestResourceGroupMemberRead(t *testing.T) {
 				Response: ScimGroup{
 					Schemas:     []URN{"urn:ietf:params:scim:schemas:core:2.0:Group"},
 					DisplayName: "Data Scientists",
-					Members: []GroupMember{
+					Members: []ComplexValue{
 						{
 							Value: "bcd",
 						},

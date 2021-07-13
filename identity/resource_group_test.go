@@ -19,15 +19,9 @@ func TestResourceGroupCreate(t *testing.T) {
 					Schemas:     []URN{"urn:ietf:params:scim:schemas:core:2.0:Group"},
 					DisplayName: "Data Scientists",
 					Entitlements: []valueItem{
-						{
-							"allow-cluster-create",
-						},
-						{
-							"allow-instance-pool-create",
-						},
-						{
-							"databricks-sql-access",
-						},
+						{"allow-cluster-create"},
+						{"allow-instance-pool-create"},
+						{"databricks-sql-access"},
 					},
 				},
 				Response: ScimGroup{
@@ -42,15 +36,9 @@ func TestResourceGroupCreate(t *testing.T) {
 					DisplayName: "Data Scientists",
 					ID:          "abc",
 					Entitlements: []valueItem{
-						{
-							"allow-cluster-create",
-						},
-						{
-							"databricks-sql-access",
-						},
-						{
-							"allow-instance-pool-create",
-						},
+						{"allow-cluster-create"},
+						{"databricks-sql-access"},
+						{"allow-instance-pool-create"},
 					},
 				},
 			},
@@ -73,7 +61,7 @@ func TestResourceGroupCreate(t *testing.T) {
 }
 
 func TestResourceGroupCreate_Error(t *testing.T) {
-	d, err := qa.ResourceFixture{
+	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "POST",
@@ -90,9 +78,7 @@ func TestResourceGroupCreate_Error(t *testing.T) {
 			"display_name": "Data Scientists",
 		},
 		Create: true,
-	}.Apply(t)
-	qa.AssertErrorStartsWith(t, err, "Internal error happened")
-	assert.Equal(t, "", d.Id(), "Id should be empty for error creates")
+	}.ExpectError(t, "Internal error happened")
 }
 
 func TestResourceGroupRead(t *testing.T) {
@@ -106,15 +92,9 @@ func TestResourceGroupRead(t *testing.T) {
 					DisplayName: "Data Scientists",
 					ID:          "abc",
 					Entitlements: []valueItem{
-						{
-							"databricks-sql-access",
-						},
-						{
-							"allow-cluster-create",
-						},
-						{
-							"allow-instance-pool-create",
-						},
+						{"databricks-sql-access"},
+						{"allow-cluster-create"},
+						{"allow-instance-pool-create"},
 					},
 				},
 			},
@@ -177,7 +157,7 @@ func TestResourceGroupRead_NotFound(t *testing.T) {
 }
 
 func TestResourceGroupRead_Error(t *testing.T) {
-	d, err := qa.ResourceFixture{
+	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
@@ -192,9 +172,7 @@ func TestResourceGroupRead_Error(t *testing.T) {
 		Resource: ResourceGroup(),
 		Read:     true,
 		ID:       "abc",
-	}.Apply(t)
-	qa.AssertErrorStartsWith(t, err, "Internal error happened")
-	assert.Equal(t, "abc", d.Id(), "Id should not be empty for error reads")
+	}.ExpectError(t, "Internal error happened")
 }
 
 func TestResourceGroupUpdate(t *testing.T) {
@@ -278,7 +256,7 @@ func TestResourceGroupUpdate(t *testing.T) {
 }
 
 func TestResourceGroupUpdate_Error(t *testing.T) {
-	d, err := qa.ResourceFixture{
+	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
@@ -297,13 +275,11 @@ func TestResourceGroupUpdate_Error(t *testing.T) {
 		},
 		Update: true,
 		ID:     "abc",
-	}.Apply(t)
-	qa.AssertErrorStartsWith(t, err, "Internal error happened")
-	assert.Equal(t, "abc", d.Id())
+	}.ExpectError(t, "Internal error happened")
 }
 
 func TestResourceGroupDelete(t *testing.T) {
-	d, err := qa.ResourceFixture{
+	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "DELETE",
@@ -313,13 +289,11 @@ func TestResourceGroupDelete(t *testing.T) {
 		Resource: ResourceGroup(),
 		Delete:   true,
 		ID:       "abc",
-	}.Apply(t)
-	assert.NoError(t, err, err)
-	assert.Equal(t, "abc", d.Id())
+	}.ApplyNoError(t)
 }
 
 func TestResourceGroupDelete_Error(t *testing.T) {
-	d, err := qa.ResourceFixture{
+	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "DELETE",
@@ -334,7 +308,5 @@ func TestResourceGroupDelete_Error(t *testing.T) {
 		Resource: ResourceGroup(),
 		Delete:   true,
 		ID:       "abc",
-	}.Apply(t)
-	qa.AssertErrorStartsWith(t, err, "Internal error happened")
-	assert.Equal(t, "abc", d.Id())
+	}.ExpectError(t, "Internal error happened")
 }

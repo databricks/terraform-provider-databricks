@@ -94,9 +94,7 @@ func TestResourceUserCreate(t *testing.T) {
 					DisplayName: "Example user",
 					Active:      true,
 					Entitlements: entitlements{
-						{
-							Value: "allow-cluster-create",
-						},
+						{"allow-cluster-create"},
 					},
 					UserName: "me@example.com",
 					Schemas:  []URN{UserSchema},
@@ -114,9 +112,7 @@ func TestResourceUserCreate(t *testing.T) {
 					UserName:    "me@example.com",
 					ID:          "abc",
 					Entitlements: entitlements{
-						{
-							"allow-cluster-create",
-						},
+						{"allow-cluster-create"},
 					},
 					Groups: []GroupsListItem{
 						{
@@ -173,9 +169,7 @@ func TestResourceUserUpdate(t *testing.T) {
 		UserName:    "me@example.com",
 		Active:      true,
 		Entitlements: entitlements{
-			{
-				"allow-instance-pool-create",
-			},
+			{"allow-instance-pool-create"},
 		},
 		Groups: []GroupsListItem{
 			{
@@ -188,12 +182,8 @@ func TestResourceUserUpdate(t *testing.T) {
 			},
 		},
 		Roles: []valueItem{
-			{
-				Value: "a",
-			},
-			{
-				Value: "b",
-			},
+			{"a"},
+			{"b"},
 		},
 	}
 	d, err := qa.ResourceFixture{
@@ -207,9 +197,7 @@ func TestResourceUserUpdate(t *testing.T) {
 					UserName:    "me@example.com",
 					ID:          "abc",
 					Entitlements: []valueItem{
-						{
-							"allow-cluster-create",
-						},
+						{"allow-cluster-create"},
 					},
 					Groups: []GroupsListItem{
 						{
@@ -222,12 +210,8 @@ func TestResourceUserUpdate(t *testing.T) {
 						},
 					},
 					Roles: []valueItem{
-						{
-							Value: "a",
-						},
-						{
-							Value: "b",
-						},
+						{"a"},
+						{"b"},
 					},
 				},
 			},
@@ -294,9 +278,7 @@ func TestResourceUserUpdate_ErrorPut(t *testing.T) {
 					UserName:    "me@example.com",
 					ID:          "abc",
 					Entitlements: []valueItem{
-						{
-							"allow-cluster-create",
-						},
+						{"allow-cluster-create"},
 					},
 					Groups: []GroupsListItem{
 						{
@@ -309,12 +291,8 @@ func TestResourceUserUpdate_ErrorPut(t *testing.T) {
 						},
 					},
 					Roles: []valueItem{
-						{
-							Value: "a",
-						},
-						{
-							Value: "b",
-						},
+						{"a"},
+						{"b"},
 					},
 				},
 			},
@@ -338,7 +316,7 @@ func TestResourceUserUpdate_ErrorPut(t *testing.T) {
 }
 
 func TestResourceUserDelete(t *testing.T) {
-	d, err := qa.ResourceFixture{
+	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "DELETE",
@@ -348,9 +326,7 @@ func TestResourceUserDelete(t *testing.T) {
 		Resource: ResourceUser(),
 		Delete:   true,
 		ID:       "abc",
-	}.Apply(t)
-	require.NoError(t, err, err)
-	assert.Equal(t, "abc", d.Id(), "Id should not be empty")
+	}.ApplyNoError(t)
 }
 
 func TestResourceUserDelete_Error(t *testing.T) {

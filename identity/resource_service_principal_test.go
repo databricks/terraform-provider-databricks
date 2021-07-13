@@ -158,9 +158,7 @@ func TestResourceServicePrincipalCreate(t *testing.T) {
 					DisplayName: "Example Service Principal",
 					Active:      true,
 					Entitlements: []valueItem{
-						{
-							Value: "allow-cluster-create",
-						},
+						{"allow-cluster-create"},
 					},
 					Schemas: []URN{ServicePrincipalSchema},
 				},
@@ -176,9 +174,7 @@ func TestResourceServicePrincipalCreate(t *testing.T) {
 					Active:      true,
 					ID:          "abc",
 					Entitlements: entitlements{
-						{
-							Value: "allow-cluster-create",
-						},
+						{"allow-cluster-create"},
 					},
 					Groups: []GroupsListItem{
 						{
@@ -242,9 +238,7 @@ func TestResourceServicePrincipalUpdate(t *testing.T) {
 		DisplayName: "Changed Name",
 		Active:      true,
 		Entitlements: entitlements{
-			{
-				Value: "allow-instance-pool-create",
-			},
+			{"allow-instance-pool-create"},
 		},
 		Groups: []GroupsListItem{
 			{
@@ -267,9 +261,7 @@ func TestResourceServicePrincipalUpdate(t *testing.T) {
 					Active:      true,
 					ID:          "abc",
 					Entitlements: entitlements{
-						{
-							Value: "allow-cluster-create",
-						},
+						{"allow-cluster-create"},
 					},
 					Groups: []GroupsListItem{
 						{
@@ -342,9 +334,7 @@ func TestResourceServicePrincipalUpdate_ErrorPut(t *testing.T) {
 					Active:      true,
 					ID:          "abc",
 					Entitlements: entitlements{
-						{
-							Value: "allow-cluster-create",
-						},
+						{"allow-cluster-create"},
 					},
 					Groups: []GroupsListItem{
 						{

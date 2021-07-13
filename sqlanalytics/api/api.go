@@ -1,4 +1,4 @@
-// Package api contains API structures for use with the SQL Analytics API.
+// Package api contains API structures for use with the Databricks SQL API.
 //
 // These are not intended to be used directly.
 //

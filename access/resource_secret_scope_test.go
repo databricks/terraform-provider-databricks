@@ -1,6 +1,7 @@
 package access
 
 import (
+	"context"
 	"net/http"
 	"testing"
 
@@ -300,4 +301,38 @@ func TestResourceSecretScopeDelete_Error(t *testing.T) {
 	}.Apply(t)
 	qa.AssertErrorStartsWith(t, err, "Internal error happened")
 	assert.Equal(t, "abc", d.Id())
+}
+
+func TestKVDiffFuncNil(t *testing.T) {
+	err := kvDiffFunc(context.TODO(), nil, common.DatabricksClient{Host: ""})
+	assert.Nil(t, err)
+}
+
+func TestKVDiffFuncSPN(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/secrets/scopes/create",
+				ExpectedRequest: secretScopeRequest{
+					Scope:       "Boom",
+					BackendType: "AZURE_KEYVAULT",
+					BackendAzureKeyvault: &KeyvaultMetadata{
+						ResourceID: "bcd",
+						DNSName:    "def",
+					},
+				},
+			},
+		},
+		Resource: ResourceSecretScope(),
+		HCL: `
+			name = "Boom"
+			keyvault_metadata {
+				resource_id = "bcd"
+				dns_name = "def"
+			}`,
+		AzureAuth: &common.AzureAuth{ClientID: "123", ClientSecret: "123", TenantID: "123",
+			ResourceID: "/subscriptions/a/resourceGroups/b/providers/Microsoft.Databricks/workspaces/c"},
+		Create: true,
+	}.ExpectError(t, "you can't set up Azure KeyVault-based secret scope via Service Principal")
 }

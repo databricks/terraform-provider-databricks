@@ -259,14 +259,14 @@ func (ta *SqlPermissions) getOrCreateCluster(clustersAPI compute.ClustersAPI) (s
 	nodeType := clustersAPI.GetSmallestNodeType(compute.NodeTypeRequest{LocalDisk: true})
 	aclCluster, err := clustersAPI.GetOrCreateRunningCluster(
 		"terrraform-table-acl", compute.Cluster{
-			ClusterName:            "terrraform-table-acl",
+			ClusterName:            "terraform-table-acl",
 			SparkVersion:           sparkVersion,
 			NodeTypeID:             nodeType,
 			AutoterminationMinutes: 10,
 			SparkConf: map[string]string{
 				"spark.databricks.acl.dfAclsEnabled":     "true",
 				"spark.databricks.repl.allowedLanguages": "python,sql",
-				"spark.databricks.cluster.profile":       "serverless",
+				"spark.databricks.cluster.profile":       "singleNode",
 				"spark.master":                           "local[*]",
 			},
 			CustomTags: map[string]string{

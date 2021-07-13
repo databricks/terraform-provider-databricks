@@ -119,6 +119,36 @@ resource "databricks_cluster" "single_node" {
 }
 ```
 
+### High-Concurrency clusters
+
+To create High-Concurrency cluster, following settings should be provided:
+
+* `spark_conf` should have following items:
+  * `spark.databricks.repl.allowedLanguages` set to a list of supported languages, for example: `python,sql`, or `python,sql,r`.  Scala is not supported!
+  * `spark.databricks.cluster.profile` set to `serverless`
+* `custom_tags` should have tag `ResourceClass` set to value `Serverless`
+
+For example:
+
+```
+esource "databricks_cluster" "cluster_with_table_access_control" {
+  cluster_name            = "Shared High-Concurrency"
+  spark_version           = data.databricks_spark_version.latest_lts.id
+  node_type_id            = data.databricks_node_type.smallest.id
+  autotermination_minutes = 20
+
+  spark_conf = {
+    "spark.databricks.repl.allowedLanguages": "python,sql",
+    "spark.databricks.cluster.profile": "serverless"
+  }
+
+  custom_tags = {
+    "ResourceClass" = "Serverless"
+  }
+}  
+```
+
+
 ### library Configuration Block
 
 To install libraries, one must specify each library in a separate configuration block. Each different type of library has a slightly different syntax. It's possible to set only one type of library within one config block. Otherwise, the plan will fail with an error.

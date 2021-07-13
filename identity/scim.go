@@ -83,13 +83,13 @@ const (
 
 // ScimGroup contains information about the SCIM group
 type ScimGroup struct {
-	ID           string         `json:"id,omitempty"`
-	Schemas      []URN          `json:"schemas,omitempty"`
-	DisplayName  string         `json:"displayName,omitempty"`
-	Members      []GroupMember  `json:"members,omitempty"`
-	Groups       []GroupMember  `json:"groups,omitempty"`
-	Roles        []valueItem    `json:"roles,omitempty"`
-	Entitlements entitlements   `json:"entitlements,omitempty"`
+	ID           string        `json:"id,omitempty"`
+	Schemas      []URN         `json:"schemas,omitempty"`
+	DisplayName  string        `json:"displayName,omitempty"`
+	Members      []GroupMember `json:"members,omitempty"`
+	Groups       []GroupMember `json:"groups,omitempty"`
+	Roles        []valueItem   `json:"roles,omitempty"`
+	Entitlements entitlements  `json:"entitlements,omitempty"`
 }
 
 // HasMember returns true if group has given user or another group id as member

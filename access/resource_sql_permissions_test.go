@@ -204,7 +204,7 @@ var createHighConcurrencyCluster = []qa.HTTPFixture{
 		Resource:     "/api/2.0/clusters/create",
 		ExpectedRequest: compute.Cluster{
 			AutoterminationMinutes: 10,
-			ClusterName:            "terrraform-table-acl",
+			ClusterName:            "terraform-table-acl",
 			NodeTypeID:             "Standard_F4s",
 			SparkVersion:           "7.3.x-scala2.12",
 			CustomTags: map[string]string{
@@ -213,7 +213,7 @@ var createHighConcurrencyCluster = []qa.HTTPFixture{
 			SparkConf: map[string]string{
 				"spark.databricks.acl.dfAclsEnabled":     "true",
 				"spark.databricks.repl.allowedLanguages": "python,sql",
-				"spark.databricks.cluster.profile":       "serverless",
+				"spark.databricks.cluster.profile":       "singleNode",
 				"spark.master":                           "local[*]",
 			},
 		},

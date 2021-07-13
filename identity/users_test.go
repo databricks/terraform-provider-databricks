@@ -60,10 +60,8 @@ func TestAccCreateUser(t *testing.T) {
 
 	err = usersAPI.Update(user.ID, ScimUser{
 		UserName: fmt.Sprintf("updated+%s@example.com", randomName),
-		// AllowClusterCreate: true,
 		DisplayName: "TU",
 	})
-	//t.Log(user)
 	assert.NoError(t, err, err)
 }
 

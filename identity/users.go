@@ -22,18 +22,7 @@ type UsersAPI struct {
 	context context.Context
 }
 
-// UserEntity entity from which resource schema is made
-// TODO: remove
-type UserEntity struct {
-	UserName                string `json:"user_name"`
-	DisplayName             string `json:"display_name,omitempty" tf:"computed"`
-	Active                  bool   `json:"active,omitempty"`
-	AllowClusterCreate      bool   `json:"allow_cluster_create,omitempty"`
-	AllowSQLAnalyticsAccess bool   `json:"allow_sql_analytics_access,omitempty"`
-	AllowInstancePoolCreate bool   `json:"allow_instance_pool_create,omitempty"`
-}
-
-// Create ..
+// Create user in the backend
 func (a UsersAPI) Create(ru ScimUser) (user ScimUser, err error) {
 	if ru.Schemas == nil {
 		ru.Schemas = []URN{UserSchema}
@@ -72,7 +61,7 @@ func (a UsersAPI) readByPath(userPath string) (user ScimUser, err error) {
 	return
 }
 
-// Update replaces resource-friendly-entity
+// Update replaces user information for given ID
 func (a UsersAPI) Update(userID string, updateRequest ScimUser) error {
 	user, err := a.read(userID)
 	if err != nil {

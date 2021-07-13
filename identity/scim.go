@@ -16,41 +16,8 @@ const (
 	GroupSchema            URN = "urn:ietf:params:scim:schemas:core:2.0:Group"
 )
 
-// MembersValue is a list of value items for the members path
-type MembersValue struct {
-	Members []ValueListItem `json:"members,omitempty"`
-}
-
-// RolesValue is a list of value items for the roles path
-type RolesValue struct {
-	Roles []ValueListItem `json:"roles,omitempty"`
-}
-
-// ValueList is a generic list of value items for any path
-type ValueList struct {
-	Value []ValueListItem `json:"value,omitempty"`
-}
-
-// GroupsValue is a list of value items for the groups path
-type GroupsValue struct {
-	Groups []ValueListItem `json:"groups,omitempty"`
-}
-
-// GroupPatchOperations is a list of path operations for add or removing group attributes
-type GroupPatchOperations struct {
-	Op    string          `json:"op,omitempty"`
-	Path  GroupPathType   `json:"path,omitempty"`
-	Value []ValueListItem `json:"value,omitempty"`
-}
-
-// UserPatchOperations is a list of path operations for add or removing user attributes
-type UserPatchOperations struct {
-	Op    string       `json:"op,omitempty"`
-	Path  string       `json:"path,omitempty"`
-	Value *GroupsValue `json:"value,omitempty"`
-}
-
 // GroupMember contains information of a member in a scim group
+// TODO: merge GroupMember, GroupsListItem into valueItem
 type GroupMember struct {
 	Display string `json:"display,omitempty"`
 	Value   string `json:"value,omitempty"`
@@ -60,26 +27,21 @@ type GroupMember struct {
 	Type string `json:"type,omitempty"`
 }
 
-// ValueListItem is a struct that contains a field Value.
-// This is for the scim api.
-// TODO: replace with valueItem
-type ValueListItem struct {
-	Value string `json:"value,omitempty"`
+// GroupsListItem contains information about group item
+// TODO: merge GroupMember, GroupsListItem into valueItem
+type GroupsListItem struct {
+	// TODO: combine entitlementsListItem & roleListItem into this one
+	Display string `json:"display,omitempty"`
+	Value   string `json:"value,omitempty"`
+
+	// https://tools.ietf.org/html/rfc7643#page-64
+	Type string `json:"type,omitempty"`
 }
 
-// GroupPathType describes the possible paths in the SCIM RFC for patch operations
-type GroupPathType string
-
-const (
-	// GroupMembersPath is the members path for SCIM patch operation.
-	GroupMembersPath GroupPathType = "members"
-
-	// GroupRolesPath is the roles path for SCIM patch operation.
-	GroupRolesPath GroupPathType = "roles"
-
-	// GroupEntitlementsPath is the entitlements path for SCIM patch operation.
-	GroupEntitlementsPath GroupPathType = "entitlements"
-)
+// TODO: merge GroupMember, GroupsListItem into valueItem
+type valueItem struct {
+	Value string `json:"value,omitempty"`
+}
 
 // ScimGroup contains information about the SCIM group
 type ScimGroup struct {
@@ -168,20 +130,6 @@ func addEntitlementsToSchema(s *map[string]*schema.Schema) {
 	}
 }
 
-// GroupsListItem contains information about group item
-type GroupsListItem struct {
-	// TODO: combine entitlementsListItem & roleListItem into this one
-	Display string `json:"display,omitempty"`
-	Value   string `json:"value,omitempty"`
-
-	// https://tools.ietf.org/html/rfc7643#page-64
-	Type string `json:"type,omitempty"`
-}
-
-type valueItem struct {
-	Value string `json:"value,omitempty"`
-}
-
 type email struct {
 	Type    interface{} `json:"type,omitempty"`
 	Value   string      `json:"value,omitempty"`
@@ -239,7 +187,7 @@ func scimPatchRequest(op, path, value string) patchRequest {
 		Path: path,
 	}
 	if value != "" {
-		o.Value = []ValueListItem{{value}}
+		o.Value = []valueItem{{value}}
 	}
 	return patchRequest{
 		Schemas:    []URN{PatchOp},

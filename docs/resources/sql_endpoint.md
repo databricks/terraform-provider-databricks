@@ -1,5 +1,5 @@
 ---
-subcategory: "SQL Analytics"
+subcategory: "Databricks SQL"
 ---
 # databricks_sql_endpoint Resource
 
@@ -55,7 +55,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Timeouts
 
-The `timeouts` block allows you to specify `create` timeouts. It usually takes 10-20 minutes to provision SQL Analytics endpoint.
+The `timeouts` block allows you to specify `create` timeouts. It usually takes 10-20 minutes to provision Databricks SQL endpoint.
 
 ```hcl
 timeouts {

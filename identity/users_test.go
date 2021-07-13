@@ -59,7 +59,7 @@ func TestAccCreateUser(t *testing.T) {
 	assert.NoError(t, err, err)
 
 	err = usersAPI.Update(user.ID, ScimUser{
-		UserName: fmt.Sprintf("updated+%s@example.com", randomName),
+		UserName:    fmt.Sprintf("updated+%s@example.com", randomName),
 		DisplayName: "TU",
 	})
 	assert.NoError(t, err, err)

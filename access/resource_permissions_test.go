@@ -772,7 +772,7 @@ func permissionsTestHelper(t *testing.T,
 	groupsAPI := identity.NewGroupsAPI(ctx, client)
 	group, err := groupsAPI.Create(identity.ScimGroup{
 		DisplayName: fmt.Sprintf("tf-%s", randomName),
-		Members: []identity.GroupMember{
+		Members: []identity.ComplexValue{
 			{
 				Value: user.ID,
 			},

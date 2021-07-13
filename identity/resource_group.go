@@ -25,7 +25,7 @@ func ResourceGroup() *schema.Resource {
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			groupName := d.Get("display_name").(string)
 			group, err := NewGroupsAPI(ctx, c).Create(ScimGroup{
-				DisplayName: groupName,
+				DisplayName:  groupName,
 				Entitlements: readEntitlementsFromData(d),
 			})
 			if err != nil {

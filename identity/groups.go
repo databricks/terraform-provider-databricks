@@ -61,12 +61,12 @@ func (a GroupsAPI) UpdateNameAndEntitlements(groupID string, name string, e enti
 	return a.client.Scim(a.context, http.MethodPut,
 		fmt.Sprintf("/preview/scim/v2/Groups/%v", groupID),
 		ScimGroup{
-			DisplayName: name,
+			DisplayName:  name,
 			Entitlements: e,
-			Groups: g.Groups,
-			Roles: g.Roles,
-			Members: g.Members,
-			Schemas: []URN{GroupSchema},
+			Groups:       g.Groups,
+			Roles:        g.Roles,
+			Members:      g.Members,
+			Schemas:      []URN{GroupSchema},
 		}, nil)
 }
 

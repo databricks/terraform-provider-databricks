@@ -69,7 +69,7 @@ func TestResourceServicePrincipalRead(t *testing.T) {
 			},
 		},
 		Resource: ResourceServicePrincipal(),
-		HCL: 	  `display_name = "Sylens"`,
+		HCL:      `display_name = "Sylens"`,
 		New:      true,
 		Read:     true,
 		ID:       "abc",
@@ -94,7 +94,7 @@ func TestResourceServicePrincipalRead_NotFound(t *testing.T) {
 		Read:     true,
 		Removed:  true,
 		ID:       "abc",
-		HCL: 	  `display_name = "Scotchmo"`,
+		HCL:      `display_name = "Scotchmo"`,
 	}.ApplyNoError(t)
 }
 
@@ -144,7 +144,7 @@ func TestResourceServicePrincipalRead_Error(t *testing.T) {
 		New:      true,
 		Read:     true,
 		ID:       "abc",
-		HCL: 	  `display_name = "Nightly Runner"`,
+		HCL:      `display_name = "Nightly Runner"`,
 	}.ExpectError(t, "Something")
 }
 
@@ -385,7 +385,7 @@ func TestResourceServicePrincipalDelete(t *testing.T) {
 			},
 		},
 		Resource: ResourceServicePrincipal(),
-		HCL: 	  `display_name = "Squanchy"`,
+		HCL:      `display_name = "Squanchy"`,
 		Delete:   true,
 		ID:       "abc",
 	}.Apply(t)

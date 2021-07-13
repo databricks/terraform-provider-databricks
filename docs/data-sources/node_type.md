@@ -51,7 +51,10 @@ Data source allows you to pick groups by the following attributes
   * `Storage optimized`
   * `Compute optimized`
   * `GPU`
-
+* `photon_worker_capable` - (Optional) Pick only nodes that can run Photon workers. Defaults to *false*.
+* `photon_driver_capable` - (Optional) Pick only nodes that can run Photon driver. Defaults to *false*.
+* `is_io_cache_enabled` - (Optional) . Pick only nodes that have IO Cache. Defaults to *false*.
+* `support_port_forwarding` - (Optional) Pick only nodes that support port forwarding. Defaults to *false*.
 
 ## Attribute Reference
 

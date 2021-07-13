@@ -3,7 +3,6 @@ package common
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -278,12 +277,9 @@ func (aa *AzureAuth) patRequest() tokenRequest {
 }
 
 func maybeExtendAuthzError(err error) error {
-	var ae APIError
-	fmtString := "Azure authorization error.  Does your SPN  have Contributor access to Databricks workspace. %v"
-	if errors.As(err, &ae) {
-		if ae.ErrorCode == "403" {
-			return fmt.Errorf(fmtString, err)
-		}
+	fmtString := "Azure authorization error. Does your SPN have Contributor access to Databricks workspace? %v"
+	if e, ok := err.(APIError); ok && e.StatusCode == 403 {
+		return fmt.Errorf(fmtString, err)
 	} else if strings.Contains(err.Error(), "does not have authorization to perform action") {
 		return fmt.Errorf(fmtString, err)
 	}

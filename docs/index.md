@@ -276,6 +276,7 @@ The following configuration attributes can be passed via environment variables:
 |         `azure_client_secret` | `DATABRICKS_AZURE_CLIENT_SECRET` or `ARM_CLIENT_SECRET`     |
 |             `azure_client_id` | `DATABRICKS_AZURE_CLIENT_ID` or `ARM_CLIENT_ID`             |
 |             `azure_tenant_id` | `DATABRICKS_AZURE_TENANT_ID` or `ARM_TENANT_ID`             |
+|       `azure_use_pat_for_spn` | `DATABRICKS_AZURE_USE_PAT_FOR_SPN`                          |
 |           `azure_environment` | `ARM_ENVIRONMENT`                                           |
 |        `debug_truncate_bytes` | `DATABRICKS_DEBUG_TRUNCATE_BYTES`                           |
 |               `debug_headers` | `DATABRICKS_DEBUG_HEADERS`                                  |

@@ -352,11 +352,12 @@ func configureProviderAndReturnClient(t *testing.T, tt providerConfigTest) (*com
 		return nil, fmt.Errorf(strings.Join(issues, ", "))
 	}
 	client := p.Meta().(*common.DatabricksClient)
+	client.AzureAuth.UsePATForSPN = tt.usePATForSPN
 	err := client.Authenticate()
 	if err != nil {
 		return nil, err
 	}
-	client.AzureAuth.UsePATForSPN = tt.usePATForSPN
+
 	return client, nil
 }
 

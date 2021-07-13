@@ -404,3 +404,20 @@ func TestInvalidAzureEnvironment(t *testing.T) {
 	_, err = aa.getClientSecretAuthorizer("")
 	assert.Equal(t, envErr, err)
 }
+
+func TestMaybeExtendError(t *testing.T) {
+	err := fmt.Errorf("Some test")
+	err2 := maybeExtendAuthzError(err)
+
+	assert.EqualError(t, err2, err.Error())
+
+	msg := "Azure authorization error. Does your SPN"
+
+	err = fmt.Errorf("something does not have authorization to perform action abc")
+	err2 = maybeExtendAuthzError(err)
+	assert.True(t, strings.HasPrefix(err2.Error(), msg), err2.Error())
+
+	err = APIError{StatusCode: 403}
+	err2 = maybeExtendAuthzError(err)
+	assert.True(t, strings.HasPrefix(err2.Error(), msg), err2.Error())
+}

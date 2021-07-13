@@ -216,6 +216,7 @@ func DatabricksProvider() *schema.Provider {
 				Optional:    true,
 				Default:     false,
 				Description: "Create ephemeral PAT tokens instead of AAD tokens for SPN",
+				DefaultFunc: schema.EnvDefaultFunc("DATABRICKS_AZURE_USE_PAT_FOR_SPN", false),
 			},
 			"azure_environment": {
 				Type:        schema.TypeString,

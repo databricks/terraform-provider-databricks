@@ -248,6 +248,8 @@ type NodeType struct {
 	DisplayOrder          int32                         `json:"display_order,omitempty"`
 	NodeInfo              *ClusterCloudProviderNodeInfo `json:"node_info,omitempty"`
 	NodeInstanceType      *NodeInstanceType             `json:"node_instance_type,omitempty"`
+	PhotonWorkerCapable   bool                          `json:"photon_worker_capable,omitempty"`
+	PhotonDriverCapable   bool                          `json:"photon_driver_capable,omitempty"`
 }
 
 // DockerBasicAuth contains the auth information when fetching containers

@@ -363,12 +363,16 @@ func (a ClustersAPI) GetOrCreateRunningCluster(name string, custom ...Cluster) (
 
 // NodeTypeRequest is a wrapper for local filtering of node types
 type NodeTypeRequest struct {
-	MinMemoryGB int32  `json:"min_memory_gb,omitempty"`
-	GBPerCore   int32  `json:"gb_per_core,omitempty"`
-	MinCores    int32  `json:"min_cores,omitempty"`
-	MinGPUs     int32  `json:"min_gpus,omitempty"`
-	LocalDisk   bool   `json:"local_disk,omitempty"`
-	Category    string `json:"category,omitempty"`
+	MinMemoryGB           int32  `json:"min_memory_gb,omitempty"`
+	GBPerCore             int32  `json:"gb_per_core,omitempty"`
+	MinCores              int32  `json:"min_cores,omitempty"`
+	MinGPUs               int32  `json:"min_gpus,omitempty"`
+	LocalDisk             bool   `json:"local_disk,omitempty"`
+	Category              string `json:"category,omitempty"`
+	PhotonWorkerCapable   bool   `json:"photon_worker_capable,omitempty"`
+	PhotonDriverCapable   bool   `json:"photon_driver_capable,omitempty"`
+	IsIOCacheEnabled      bool   `json:"is_io_cache_enabled,omitempty"`
+	SupportPortForwarding bool   `json:"support_port_forwarding,omitempty"`
 }
 
 func defaultSmallestNodeType(a ClustersAPI) string {
@@ -409,6 +413,18 @@ func (a ClustersAPI) GetSmallestNodeType(r NodeTypeRequest) string {
 			continue
 		}
 		if r.Category != "" && nt.Category != r.Category {
+			continue
+		}
+		if r.IsIOCacheEnabled && nt.IsIOCacheEnabled != r.IsIOCacheEnabled {
+			continue
+		}
+		if r.SupportPortForwarding && nt.SupportPortForwarding != r.SupportPortForwarding {
+			continue
+		}
+		if r.PhotonDriverCapable && nt.PhotonDriverCapable != r.PhotonDriverCapable {
+			continue
+		}
+		if r.PhotonWorkerCapable && nt.PhotonWorkerCapable != r.PhotonWorkerCapable {
 			continue
 		}
 		return nt.NodeTypeID

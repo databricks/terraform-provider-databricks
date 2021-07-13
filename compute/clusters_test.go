@@ -1072,3 +1072,56 @@ func TestGetLatestSparkVersion(t *testing.T) {
 	require.Error(t, err)
 	require.Equal(t, true, strings.Contains(err.Error(), "query returned no results"))
 }
+
+func TestListNodeTypes(t *testing.T) {
+	client, server, err := qa.HttpFixtureClient(t, []qa.HTTPFixture{
+		{
+			Method:       "GET",
+			ReuseRequest: true,
+			Resource:     "/api/2.0/clusters/list-node-types",
+			Response: NodeTypeList{
+				[]NodeType{
+					{
+						NodeTypeID:     "Standard_F4s",
+						InstanceTypeID: "Standard_F4s",
+						MemoryMB:       8192,
+						NumCores:       4,
+						NodeInstanceType: &NodeInstanceType{
+							LocalDisks:      1,
+							InstanceTypeID:  "Standard_F4s",
+							LocalDiskSizeGB: 16,
+							LocalNVMeDisks:  0,
+						},
+					},
+					{
+						NodeTypeID:     "Standard_L80s_v2",
+						InstanceTypeID: "Standard_L80s_v2",
+						MemoryMB:       655360,
+						NumCores:       80,
+						NodeInstanceType: &NodeInstanceType{
+							LocalDisks:      2,
+							InstanceTypeID:  "Standard_L80s_v2",
+							LocalDiskSizeGB: 160,
+							LocalNVMeDisks:  1,
+						},
+					},
+				},
+			},
+		},
+	})
+	defer server.Close()
+	require.NoError(t, err)
+
+	ctx := context.Background()
+	api := NewClustersAPI(ctx, client)
+	nodeType := api.GetSmallestNodeType(NodeTypeRequest{SupportPortForwarding: true})
+	assert.Equal(t, nodeType, defaultSmallestNodeType(api))
+	nodeType = api.GetSmallestNodeType(NodeTypeRequest{PhotonWorkerCapable: true})
+	assert.Equal(t, nodeType, defaultSmallestNodeType(api))
+	nodeType = api.GetSmallestNodeType(NodeTypeRequest{PhotonDriverCapable: true})
+	assert.Equal(t, nodeType, defaultSmallestNodeType(api))
+	nodeType = api.GetSmallestNodeType(NodeTypeRequest{IsIOCacheEnabled: true})
+	assert.Equal(t, nodeType, defaultSmallestNodeType(api))
+	nodeType = api.GetSmallestNodeType(NodeTypeRequest{Category: "Storage Optimized"})
+	assert.Equal(t, nodeType, defaultSmallestNodeType(api))
+}

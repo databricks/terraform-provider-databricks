@@ -25,7 +25,9 @@ func TestAzureAccSP(t *testing.T) {
 	sp, err := spAPI.Create(ScimUser{
 		ApplicationID: "00000000-0000-0000-0000-000000000001",
 		Entitlements: entitlements{
-			{Value: "allow-cluster-create"},
+			{
+				Value: "allow-cluster-create",
+			},
 		},
 		DisplayName: "ABC SP",
 		Active:      true,
@@ -39,7 +41,9 @@ func TestAzureAccSP(t *testing.T) {
 	err = spAPI.Update(sp.ID, ScimUser{
 		ApplicationID: sp.ApplicationID,
 		Entitlements: entitlements{
-			{Value: "allow-instance-pool-create"},
+			{
+				Value: "allow-instance-pool-create",
+			},
 		},
 		DisplayName: "BCD",
 	})
@@ -158,7 +162,9 @@ func TestResourceServicePrincipalCreate(t *testing.T) {
 					DisplayName: "Example Service Principal",
 					Active:      true,
 					Entitlements: []ComplexValue{
-						{Value: "allow-cluster-create"},
+						{
+							Value: "allow-cluster-create",
+						},
 					},
 					Schemas: []URN{ServicePrincipalSchema},
 				},
@@ -174,7 +180,9 @@ func TestResourceServicePrincipalCreate(t *testing.T) {
 					Active:      true,
 					ID:          "abc",
 					Entitlements: entitlements{
-						{Value: "allow-cluster-create"},
+						{
+							Value: "allow-cluster-create",
+						},
 					},
 					Groups: []ComplexValue{
 						{
@@ -238,7 +246,9 @@ func TestResourceServicePrincipalUpdate(t *testing.T) {
 		DisplayName: "Changed Name",
 		Active:      true,
 		Entitlements: entitlements{
-			{Value: "allow-instance-pool-create"},
+			{
+				Value: "allow-instance-pool-create",
+			},
 		},
 		Groups: []ComplexValue{
 			{
@@ -261,7 +271,9 @@ func TestResourceServicePrincipalUpdate(t *testing.T) {
 					Active:      true,
 					ID:          "abc",
 					Entitlements: entitlements{
-						{Value: "allow-cluster-create"},
+						{
+							Value: "allow-cluster-create",
+						},
 					},
 					Groups: []ComplexValue{
 						{
@@ -334,7 +346,9 @@ func TestResourceServicePrincipalUpdate_ErrorPut(t *testing.T) {
 					Active:      true,
 					ID:          "abc",
 					Entitlements: entitlements{
-						{Value: "allow-cluster-create"},
+						{
+							Value: "allow-cluster-create",
+						},
 					},
 					Groups: []ComplexValue{
 						{

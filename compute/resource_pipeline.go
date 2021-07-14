@@ -65,6 +65,7 @@ type pipelineSpec struct {
 	Filters             *filters          `json:"filters"`
 	Continuous          bool              `json:"continuous,omitempty"`
 	AllowDuplicateNames bool              `json:"allow_duplicate_names,omitempty"`
+	Target              string            `json:"target,omitempty"`
 }
 
 type createPipelineResponse struct {

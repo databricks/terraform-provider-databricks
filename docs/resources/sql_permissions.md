@@ -19,7 +19,7 @@ resource "databricks_cluster" "cluster_with_table_access_control" {
 
 It could be combined with creation of High-Concurrency and Single-Node clusters - in this case it should have corresponding `custom_tags` and `spark.databricks.cluster.profile` in Spark configuration as described in [documentation for `databricks_cluster` resource](cluster.md).
 
-The created cluster could be referred by providing its ID as `cluster_id` property.
+The created cluster could be referred to by providing its ID as `cluster_id` property.
 
 
 ```hcl

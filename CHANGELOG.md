@@ -12,6 +12,8 @@
 * Added `user_id` attribute for `databricks_user` data resource, so that it's possible to dynamically create resources based on members of the group ([#714](https://github.com/databrickslabs/terraform-provider-databricks/pull/714))
 * Added more selectors to `databricks_node_type` data source ([#723](https://github.com/databrickslabs/terraform-provider-databricks/pull/723))
 * Azure auth with SPN now uses AAD token by default instead of PAT. Previous behavior (using PAT) could be restored by setting `azure_use_pat_for_spn` to `true` ([#721](https://github.com/databrickslabs/terraform-provider-databricks/pull/721))
+* `deployment_name` for `databricks_mws_workspaces` is now optional, how it should have been. This enables creation of Databricks workspaces without an account prefix.
+* Various documentation and bugfixes
 
 Updated dependency versions:
 

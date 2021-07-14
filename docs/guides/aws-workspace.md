@@ -158,8 +158,8 @@ resource "databricks_mws_networks" "this" {
 
 ## Regional endpoints
 
-For STS, S3 and Kinesis, you can create VPC gateway or interface endpoints such that the relevant in-region traffic from clusters could transit over the secure AWS backbone rather than the public network, for more direct connections and reduced cost compared to AWS global endpoints. See [Add VPC endpoints for other AWS services (recommended but optional)
-](https://docs.databricks.com/administration-guide/cloud-configurations/aws/privatelink.html#step-9-add-vpc-endpoints-for-other-aws-services-recommended-but-optional) for more information:
+For STS, S3 and Kinesis, you can create VPC gateway or interface endpoints such that the relevant in-region traffic from clusters could transit over the secure AWS backbone rather than the public network, for more direct connections and reduced cost compared to AWS global endpoints. See [Regional endpoints]
+](https://docs.databricks.com/administration-guide/cloud-configurations/aws/customer-managed-vpc.html#regional-endpoints-1) for more information:
 
 ```hcl
 module "vpc" {

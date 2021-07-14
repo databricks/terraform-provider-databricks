@@ -56,6 +56,10 @@ terraform {
       source  = "databrickslabs/databricks"
       version = "0.3.5"
     }
+    aws = {
+      source = "hashicorp/aws"
+      version = "3.49.0"
+    }    
   }
 }
 
@@ -112,9 +116,14 @@ The very first step is VPC creation with necessary firewall rules. Please consul
 ```hcl
 data "aws_availability_zones" "available" {}
 
+data "aws_security_group" "default" {
+  name   = "default"
+  vpc_id = module.vpc.vpc_id
+}
+
 module "vpc" {
   source  = "terraform-aws-modules/vpc/aws"
-  version = "2.70.0"
+  version = "3.2.0"
 
   name = local.prefix
   cidr = var.cidr_block
@@ -128,6 +137,9 @@ module "vpc" {
   public_subnets  = [cidrsubnet(var.cidr_block, 3, 0)]
   private_subnets = [cidrsubnet(var.cidr_block, 3, 1),
                      cidrsubnet(var.cidr_block, 3, 2)]
+
+  manage_default_security_group = true
+  default_security_group_name = "${local.prefix}-sg"
 
   default_security_group_egress = [{
     cidr_blocks = "0.0.0.0/0"
@@ -146,6 +158,79 @@ resource "databricks_mws_networks" "this" {
   security_group_ids = [module.vpc.default_security_group_id]
   subnet_ids         = module.vpc.private_subnets
   vpc_id             = module.vpc.vpc_id
+}
+```
+
+## Regional endpoints
+
+For STS, S3 and Kinesis, you can create VPC gateway or interface endpoints such that the relevant in-region traffic from clusters could transit over the secure AWS backbone rather than the public network, for more direct connections and reduced cost compared to AWS global endpoints:
+
+```hcl
+data "aws_security_group" "default" {
+  name   = "default"
+  vpc_id = module.vpc.vpc_id
+}
+
+# Data source used to avoid race condition
+data "aws_vpc_endpoint_service" "s3" {
+  service = "s3"
+
+  filter {
+    name   = "service-type"
+    values = ["Gateway"]
+  }
+}
+
+data "aws_iam_policy_document" "s3_endpoint_policy" {
+  statement {
+    effect    = "Deny"
+    actions   = ["s3:*"]
+    resources = ["*"]
+
+    principals {
+      type        = "*"
+      identifiers = ["*"]
+    }
+
+    condition {
+      test     = "StringNotEquals"
+      variable = "aws:sourceVpce"
+
+      values = [data.aws_vpc_endpoint_service.s3.id]
+    }
+  }
+}
+
+module "vpc_endpoints" {
+  source = "terraform-aws-modules/vpc/aws//modules/vpc-endpoints"
+  version = "3.2.0"
+
+  vpc_id             = module.vpc.vpc_id
+  security_group_ids = [data.aws_security_group.default.id]
+
+  endpoints = {
+    s3 = {
+      service         = "s3"
+      service_type    = "Gateway"
+      route_table_ids = flatten([module.vpc.intra_route_table_ids, module.vpc.private_route_table_ids, module.vpc.public_route_table_ids])
+      policy          = data.aws_iam_policy_document.s3_endpoint_policy.json
+      tags            = { Name = "${local.prefix}-s3-vpc-endpoint" }
+    },
+    sts = {
+      service             = "sts"
+      private_dns_enabled = true
+      subnet_ids          = module.vpc.private_subnets
+      tags                = { Name = "${local.prefix}-sts-vpc-endpoint" }
+    },
+    kinesis-streams = {
+      service             = "kinesis-streams"
+      private_dns_enabled = true
+      subnet_ids          = module.vpc.private_subnets
+      tags                = { Name = "${local.prefix}-kinesis-vpc-endpoint" }
+    },    
+  }
+
+  tags = var.tags
 }
 ```
 

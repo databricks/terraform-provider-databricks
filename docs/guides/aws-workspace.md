@@ -116,11 +116,6 @@ The very first step is VPC creation with necessary firewall rules. Please consul
 ```hcl
 data "aws_availability_zones" "available" {}
 
-data "aws_security_group" "default" {
-  name   = "default"
-  vpc_id = module.vpc.vpc_id
-}
-
 module "vpc" {
   source  = "terraform-aws-modules/vpc/aws"
   version = "3.2.0"
@@ -163,42 +158,38 @@ resource "databricks_mws_networks" "this" {
 
 ## Regional endpoints
 
-For STS, S3 and Kinesis, you can create VPC gateway or interface endpoints such that the relevant in-region traffic from clusters could transit over the secure AWS backbone rather than the public network, for more direct connections and reduced cost compared to AWS global endpoints:
+For STS, S3 and Kinesis, you can create VPC gateway or interface endpoints such that the relevant in-region traffic from clusters could transit over the secure AWS backbone rather than the public network, for more direct connections and reduced cost compared to AWS global endpoints. See [Add VPC endpoints for other AWS services (recommended but optional)
+](https://docs.databricks.com/administration-guide/cloud-configurations/aws/privatelink.html#step-9-add-vpc-endpoints-for-other-aws-services-recommended-but-optional) for more information:
 
 ```hcl
-data "aws_security_group" "default" {
-  name   = "default"
-  vpc_id = module.vpc.vpc_id
-}
+module "vpc" {
+  source  = "terraform-aws-modules/vpc/aws"
+  version = "3.2.0"
 
-# Data source used to avoid race condition
-data "aws_vpc_endpoint_service" "s3" {
-  service = "s3"
+  name = local.prefix
+  cidr = var.cidr_block
+  azs  = data.aws_availability_zones.available.names
+  tags = var.tags
 
-  filter {
-    name   = "service-type"
-    values = ["Gateway"]
-  }
-}
+  enable_dns_hostnames = true
+  enable_nat_gateway   = true
+  create_igw           = true
 
-data "aws_iam_policy_document" "s3_endpoint_policy" {
-  statement {
-    effect    = "Deny"
-    actions   = ["s3:*"]
-    resources = ["*"]
+  public_subnets  = [cidrsubnet(var.cidr_block, 3, 0)]
+  private_subnets = [cidrsubnet(var.cidr_block, 3, 1),
+                     cidrsubnet(var.cidr_block, 3, 2)]
 
-    principals {
-      type        = "*"
-      identifiers = ["*"]
-    }
+  manage_default_security_group = true
+  default_security_group_name = "${local.prefix}-sg"
 
-    condition {
-      test     = "StringNotEquals"
-      variable = "aws:sourceVpce"
+  default_security_group_egress = [{
+    cidr_blocks = "0.0.0.0/0"
+  }]
 
-      values = [data.aws_vpc_endpoint_service.s3.id]
-    }
-  }
+  default_security_group_ingress = [{
+    description = "Allow all internal TCP and UDP"
+    self        = true
+  }]
 }
 
 module "vpc_endpoints" {
@@ -206,27 +197,32 @@ module "vpc_endpoints" {
   version = "3.2.0"
 
   vpc_id             = module.vpc.vpc_id
-  security_group_ids = [data.aws_security_group.default.id]
+  security_group_ids = [module.vpc.default_security_group_id]
 
   endpoints = {
     s3 = {
       service         = "s3"
       service_type    = "Gateway"
-      route_table_ids = flatten([module.vpc.intra_route_table_ids, module.vpc.private_route_table_ids, module.vpc.public_route_table_ids])
-      policy          = data.aws_iam_policy_document.s3_endpoint_policy.json
-      tags            = { Name = "${local.prefix}-s3-vpc-endpoint" }
+      route_table_ids = flatten([module.vpc.private_route_table_ids, module.vpc.public_route_table_ids])
+      tags            = {
+        Name = "${local.prefix}-s3-vpc-endpoint"
+      }
     },
     sts = {
       service             = "sts"
       private_dns_enabled = true
       subnet_ids          = module.vpc.private_subnets
-      tags                = { Name = "${local.prefix}-sts-vpc-endpoint" }
+      tags                = {
+        Name = "${local.prefix}-sts-vpc-endpoint"
+      }
     },
     kinesis-streams = {
       service             = "kinesis-streams"
       private_dns_enabled = true
       subnet_ids          = module.vpc.private_subnets
-      tags                = { Name = "${local.prefix}-kinesis-vpc-endpoint" }
+      tags                = {
+        Name = "${local.prefix}-kinesis-vpc-endpoint"
+      }
     },    
   }
 

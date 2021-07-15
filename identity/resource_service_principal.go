@@ -93,9 +93,6 @@ func ResourceServicePrincipal() *schema.Resource {
 			if client.IsAzure() && sp.ApplicationID == "" {
 				return fmt.Errorf("application_id is required for service principals in Azure Databricks")
 			}
-			if client.IsAws() && sp.ApplicationID != "" {
-				return fmt.Errorf("application_id is not allowed for service principals in Databricks on AWS")
-			}
 			if client.IsAws() && sp.DisplayName == "" {
 				return fmt.Errorf("display_name is required for service principals in Databricks on AWS")
 			}
@@ -105,6 +102,9 @@ func ResourceServicePrincipal() *schema.Resource {
 			sp, err := spFromData(d)
 			if err != nil {
 				return err
+			}
+			if c.IsAws() && sp.ApplicationID != "" {
+				return fmt.Errorf("application_id is not allowed for service principals in Databricks on AWS")
 			}
 			servicePrincipal, err := NewServicePrincipalsAPI(ctx, c).Create(sp)
 			if err != nil {

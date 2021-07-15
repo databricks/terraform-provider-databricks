@@ -28,7 +28,6 @@ func TestAccGroup(t *testing.T) {
 	user2, err := usersAPI.Create(ScimUser{UserName: qa.RandomEmail()})
 	require.NoError(t, err, err)
 
-	//Create empty group
 	group, err := groupsAPI.Create(ScimGroup{
 		DisplayName: qa.RandomName("tf-"),
 	})
@@ -45,11 +44,21 @@ func TestAccGroup(t *testing.T) {
 
 	group, err = groupsAPI.Read(group.ID)
 	require.NoError(t, err, err)
+	assert.True(t, len(group.Members) == 0)
+
+	err = groupsAPI.Patch(group.ID, scimPatchRequest("add", "members", user.ID))
+	assert.NoError(t, err, err)
 
 	group, err = groupsAPI.Read(group.ID)
 	assert.NoError(t, err, err)
 	assert.True(t, len(group.Members) == 1)
-	assert.True(t, group.Members[0].Value == user2.ID)
+
+	err = groupsAPI.Patch(group.ID, scimPatchRequest("add", "members", user2.ID))
+	assert.NoError(t, err, err)
+
+	group, err = groupsAPI.Read(group.ID)
+	assert.NoError(t, err, err)
+	assert.True(t, len(group.Members) == 2)
 }
 
 func TestAccFilterGroup(t *testing.T) {

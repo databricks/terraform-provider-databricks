@@ -30,10 +30,6 @@ func TestAccUserResource(t *testing.T) {
 		user_name = "derde+{var.RANDOM}@example.com"
 		display_name = "Derde {var.RANDOM}"
 		allow_instance_pool_create = true
-	}
-	
-	resource "databricks_group" "first" {
-		display_name = "Vierde {var.RANDOM}"
 	}`)
 	acceptance.AccTest(t, resource.TestCase{
 		Steps: []resource.TestStep{

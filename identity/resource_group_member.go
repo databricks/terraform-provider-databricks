@@ -13,7 +13,7 @@ import (
 func ResourceGroupMember() *schema.Resource {
 	return common.NewPairID("group_id", "member_id").BindResource(common.BindResource{
 		CreateContext: func(ctx context.Context, groupID, memberID string, c *common.DatabricksClient) error {
-			return NewGroupsAPI(ctx, c).PatchR(groupID, scimPatchRequest("add", "members", memberID))
+			return NewGroupsAPI(ctx, c).Patch(groupID, scimPatchRequest("add", "members", memberID))
 		},
 		ReadContext: func(ctx context.Context, groupID, memberID string, c *common.DatabricksClient) error {
 			group, err := NewGroupsAPI(ctx, c).Read(groupID)
@@ -24,7 +24,7 @@ func ResourceGroupMember() *schema.Resource {
 			return err
 		},
 		DeleteContext: func(ctx context.Context, groupID, memberID string, c *common.DatabricksClient) error {
-			return NewGroupsAPI(ctx, c).PatchR(groupID, scimPatchRequest(
+			return NewGroupsAPI(ctx, c).Patch(groupID, scimPatchRequest(
 				"remove", fmt.Sprintf(`members[value eq "%s"]`, memberID), ""))
 		},
 	})

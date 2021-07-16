@@ -71,12 +71,6 @@ func testMounting(t *testing.T, mp MountPoint, m Mount) {
 	require.Equalf(t, m.Source(), source, "Error: %v", err)
 }
 
-func TestAccDeleteInvalidMountFails(t *testing.T) {
-	_, mp := mountPointThroughReusedCluster(t)
-	err := mp.Delete()
-	assert.True(t, strings.Contains(err.Error(), "Directory not mounted"), err.Error())
-}
-
 func TestAccSourceOnInvalidMountFails(t *testing.T) {
 	_, mp := mountPointThroughReusedCluster(t)
 	source, err := mp.Source()

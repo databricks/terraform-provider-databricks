@@ -201,7 +201,14 @@ func TestMountPoint_Source(t *testing.T) {
 func TestMountPoint_Delete(t *testing.T) {
 	mountName := "this_mount"
 	expectedCommand := fmt.Sprintf(`
+		found = False
 		mount_point = "/mnt/%s"
+		dbutils.fs.refreshMounts()
+		for mount in dbutils.fs.mounts():
+			if mount.mountPoint == mount_point:
+				found = True
+		if not found:
+			dbutils.notebook.exit("success")
 		dbutils.fs.unmount(mount_point)
 		dbutils.fs.refreshMounts()
 		for mount in dbutils.fs.mounts():

@@ -44,7 +44,14 @@ func (mp MountPoint) Source() (string, error) {
 // Delete removes mount from workspace
 func (mp MountPoint) Delete() error {
 	result := mp.exec.Execute(mp.clusterID, "python", fmt.Sprintf(`
+		found = False
 		mount_point = "/mnt/%s"
+		dbutils.fs.refreshMounts()
+		for mount in dbutils.fs.mounts():
+			if mount.mountPoint == mount_point:
+				found = True
+		if not found:
+			dbutils.notebook.exit("success")
 		dbutils.fs.unmount(mount_point)
 		dbutils.fs.refreshMounts()
 		for mount in dbutils.fs.mounts():

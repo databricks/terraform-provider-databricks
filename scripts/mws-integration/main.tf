@@ -66,6 +66,15 @@ module "aws_common" {
   tags       = local.tags
 }
 
+data "databricks_aws_bucket_policy" "this" {
+  bucket = module.aws_common.root_bucket
+}
+
+resource "aws_s3_bucket_policy" "root_bucket_policy" {
+  bucket     = module.aws_common.root_bucket
+  policy     = data.databricks_aws_bucket_policy.this.json
+}
+
 resource "aws_s3_bucket" "logdelivery" {
   bucket = "${local.prefix}-logdelivery"
   acl    = "private"

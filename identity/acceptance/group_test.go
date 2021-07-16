@@ -33,11 +33,6 @@ func TestAccGroupResource(t *testing.T) {
 				ExpectNonEmptyPlan: true,
 				Destroy:            false,
 			},
-			{
-				ResourceName:      "databricks_group.my_group",
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
 		},
 	})
 }

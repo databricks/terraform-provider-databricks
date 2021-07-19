@@ -122,7 +122,7 @@ func (ta *SqlPermissions) read() error {
 			strings.Contains(failure, "RESOURCE_DOES_NOT_EXIST") {
 			return common.NotFound(failure)
 		}
-		return fmt.Errorf(failure)
+		return fmt.Errorf("cannot read current grants: %s", failure)
 	}
 	// clear any previous entries
 	ta.PrivilegeAssignments = []PrivilegeAssignment{}
@@ -218,7 +218,10 @@ func (ta *SqlPermissions) apply(qb func(objType, key string) string) error {
 	sqlQuery := qb(objType, key)
 	log.Printf("[INFO] Executing SQL: %s", sqlQuery)
 	r := ta.exec.Execute(ta.ClusterID, "sql", sqlQuery)
-	return r.Err()
+	if !r.Failed() {
+		return nil
+	}
+	return fmt.Errorf("cannot execute %s: %s", sqlQuery, r.Error())
 }
 
 func (ta *SqlPermissions) initCluster(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) (err error) {

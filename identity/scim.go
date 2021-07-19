@@ -84,7 +84,7 @@ func addEntitlementsToSchema(s *map[string]*schema.Schema) {
 		(*s)[field_name] = &schema.Schema{
 			Type:     schema.TypeBool,
 			Optional: true,
-			Default: false,
+			Default:  false,
 		}
 	}
 }

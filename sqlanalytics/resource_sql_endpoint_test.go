@@ -78,6 +78,7 @@ func TestResourceSQLEndpointCreate(t *testing.T) {
 					AutoStopMinutes:    120,
 					MinNumClusters:     1,
 					NumClusters:        1,
+					EnablePhoton:       true,
 					SpotInstancePolicy: "COST_OPTIMIZED",
 				},
 				Response: SQLEndpoint{
@@ -116,16 +117,7 @@ func TestResourceSQLEndpointCreate_ErrorDisabled(t *testing.T) {
 			{
 				Method:   "POST",
 				Resource: "/api/2.0/sql/endpoints",
-				ExpectedRequest: SQLEndpoint{
-					Name:               "foo",
-					ClusterSize:        "Small",
-					AutoStopMinutes:    120,
-					MaxNumClusters:     1,
-					MinNumClusters:     1,
-					NumClusters:        1,
-					SpotInstancePolicy: "COST_OPTIMIZED",
-				},
-				Status: 404,
+				Status:   404,
 				Response: common.APIError{
 					ErrorCode: "FEATURE_DISABLED",
 					Message:   "Databricks SQL is not supported",
@@ -184,6 +176,7 @@ func TestResourceSQLEndpointUpdate(t *testing.T) {
 					MaxNumClusters:     1,
 					MinNumClusters:     1,
 					NumClusters:        1,
+					EnablePhoton:       true,
 					SpotInstancePolicy: "COST_OPTIMIZED",
 				},
 			},

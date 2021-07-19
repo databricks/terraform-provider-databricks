@@ -113,7 +113,7 @@ func TestTableACL_NotFound(t *testing.T) {
 func TestTableACL_OtherError(t *testing.T) {
 	ta := SqlPermissions{Table: "foo", exec: failedCommand("Some error")}
 	err := ta.read()
-	assert.EqualError(t, err, "Some error")
+	assert.EqualError(t, err, "cannot read current grants: Some error")
 }
 
 func TestTableACL_Revoke(t *testing.T) {
@@ -273,7 +273,7 @@ func TestResourceSqlPermissions_Read_ErrorCommand(t *testing.T) {
 		ID:          "database/foo",
 		Read:        true,
 		New:         true,
-	}.ExpectError(t, "does not compute")
+	}.ExpectError(t, "cannot read current grants: does not compute")
 }
 
 func TestResourceSqlPermissions_Create(t *testing.T) {
@@ -340,7 +340,7 @@ func TestResourceSqlPermissions_Create_Error(t *testing.T) {
 		Fixtures:    createHighConcurrencyCluster,
 		Resource:    ResourceSqlPermissions(),
 		Create:      true,
-	}.ExpectError(t, "Some error")
+	}.ExpectError(t, "cannot read current grants: Some error")
 }
 
 func TestResourceSqlPermissions_Create_Error2(t *testing.T) {
@@ -366,7 +366,7 @@ func TestResourceSqlPermissions_Create_Error2(t *testing.T) {
 		Fixtures: createHighConcurrencyCluster,
 		Resource: ResourceSqlPermissions(),
 		Create:   true,
-	}.ExpectError(t, "Action Unknown ActionType READ cannot be granted on tab... (127 more bytes)")
+	}.ExpectError(t, "cannot execute GRANT READ, MODIFY, SELECT ON TABLE `default`.`foo` TO `serge@example.com`: Action Unknown ActionType READ cannot be granted on tab... (127 more bytes)")
 }
 
 func TestResourceSqlPermissions_Update(t *testing.T) {

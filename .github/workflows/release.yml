@@ -20,19 +20,15 @@ jobs:
         uses: actions/setup-go@v1
         with:
           go-version: 1.16.x
-      - name: Download gotestsum and staticcheck
-        run: |
-          echo "GOPATH=$(go env GOPATH)" >> $GITHUB_ENV
-          echo "$(go env GOPATH)/bin" >> $GITHUB_PATH
-          go get gotest.tools/gotestsum
-          go install honnef.co/go/tools/cmd/staticcheck
-      - name: Import GPG key
+      - 
+        name: Import GPG key
         id: import_gpg
         uses: crazy-max/ghaction-import-gpg@v2
         env:
           GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
           PASSPHRASE: ${{ secrets.PASSPHRASE }}
-      - name: Pull external libraries
+      - 
+        name: Pull external libraries
         run: make vendor
       -
         name: Run GoReleaser

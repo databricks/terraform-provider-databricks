@@ -189,6 +189,7 @@ func ResourceSQLEndpoint() *schema.Resource {
 		m["min_num_clusters"].Default = 1
 		m["num_clusters"].Default = 1
 		m["spot_instance_policy"].Default = "COST_OPTIMIZED"
+		m["enable_photon"].Default = true
 		m["tags"].DiffSuppressFunc = common.MakeEmptyBlockSuppressFunc("tags.#")
 		return m
 	})

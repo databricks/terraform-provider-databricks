@@ -38,7 +38,7 @@ The following arguments are supported:
 * `instance_profile_arn` - [databricks_instance_profile](instance_profile.md) used to access storage from the SQL endpoint. This field is optional.
 * `tags` - Databricks tags all endpoint resources with these tags.
 * `spot_instance_policy` - The spot policy to use for allocating instances to clusters: `COST_OPTIMIZED` or `RELIABILITY_OPTIMIZED`. This field is optional. Default is `COST_OPTIMIZED`.
-* `enable_photon` - Whether to enable [Photon](https://databricks.com/product/delta-engine). This field is optional.
+* `enable_photon` - Whether to enable [Photon](https://databricks.com/product/delta-engine). This field is optional and is enabled by default.
 
 ## Attribute Reference
 

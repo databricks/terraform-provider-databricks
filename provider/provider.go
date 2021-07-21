@@ -56,6 +56,7 @@ func DatabricksProvider() *schema.Provider {
 			"databricks_user_instance_profile":  identity.ResourceUserInstanceProfile(),
 			"databricks_instance_profile":       identity.ResourceInstanceProfile(),
 			"databricks_group_member":           identity.ResourceGroupMember(),
+			"databricks_obo_token":              identity.ResourceOboToken(),
 			"databricks_token":                  identity.ResourceToken(),
 			"databricks_user":                   identity.ResourceUser(),
 			"databricks_service_principal":      identity.ResourceServicePrincipal(),

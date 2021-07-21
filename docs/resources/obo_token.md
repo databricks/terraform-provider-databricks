@@ -7,7 +7,7 @@ This resource creates On-Behalf-Of tokens for a Service Principal in Databricks 
 
 ## Example Usage
 
-Creating a token for a narrowly-scoped service principal
+Creating a token for a narrowly-scoped service principal, that would be the only one (besides admins) allowed to use PAT token in this given workspace, keeping your automated deployment highly secure. Keep in mind, that given declaration of `databricks_permissions.token_usage` would remove permissions to use PAT tokens from `users` group.
 
 ```hcl
 resource "databricks_service_principal" "this" {

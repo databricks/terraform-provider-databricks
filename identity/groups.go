@@ -49,6 +49,19 @@ func (a GroupsAPI) Filter(filter string) (GroupList, error) {
 	return groups, err
 }
 
+func (a GroupsAPI) ReadByDisplayName(displayName string) (group ScimGroup, err error) {
+	groupList, err := a.Filter(fmt.Sprintf("displayName eq '%s'", displayName))
+	if err != nil {
+		return
+	}
+	if len(groupList.Resources) == 0 {
+		err = fmt.Errorf("cannot find group: %s", displayName)
+		return
+	}
+	group = groupList.Resources[0]
+	return
+}
+
 func (a GroupsAPI) Patch(groupID string, r patchRequest) error {
 	return a.client.Scim(a.context, http.MethodPatch, fmt.Sprintf("/preview/scim/v2/Groups/%v", groupID), r, nil)
 }

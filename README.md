@@ -40,6 +40,7 @@
 | [databricks_notebook](docs/resources/notebook.md)
 | [databricks_notebook](docs/data-sources/notebook.md) data
 | [databricks_notebook_paths](docs/data-sources/notebook_paths.md) data
+| [databricks_obo_token](docs/resources/obo_token.md)
 | [databricks_permissions](docs/resources/permissions.md)
 | [databricks_pipeline](docs/resources/pipeline.md)
 | [databricks_secret](docs/resources/secret.md)

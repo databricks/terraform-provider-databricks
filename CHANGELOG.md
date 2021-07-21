@@ -1,5 +1,9 @@
 # Version changelog
 
+## 0.3.7
+
+* Added `databricks_obo_token` resource to create On-Behalf-Of tokens for a Service Principal in Databricks workspaces on AWS. It is very useful, when you want to provision resources within a workspace through narrowly-scoped service principal, that has no access to other workspaces within the same Databricks Account ([#736](https://github.com/databrickslabs/terraform-provider-databricks/pull/736))
+
 ## 0.3.6
 
 * Added support for hybrid pools ([#689](https://github.com/databrickslabs/terraform-provider-databricks/pull/689))

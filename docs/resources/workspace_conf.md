@@ -12,6 +12,8 @@ Manages workspace configuration for expert usage. Currently, more than one insta
 Allows specification of custom configuration properties for expert usage:
 
  * `enableIpAccessLists` - enables the use of [databricks_ip_access_list](ip_access_list.md) resources
+ * `maxTokenLifetimeDays` - (string) Maximum token lifetime of new tokens in days, as an integer. If zero, new tokens are permitted to have no lifetime limit. Negative numbers are unsupported. **WARNING:** This limit only applies to new tokens, so there may be tokens with lifetimes longer than this value, including unlimited lifetime. Such tokens may have been created before the current maximum token lifetime was set. 
+ * `enableTokensConfig` - (boolean) Enable or disable personal access tokens for this workspace.
 
 ```hcl
 resource "databricks_workspace_conf" "this" {

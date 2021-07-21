@@ -29,6 +29,7 @@ Storage
 
 Security
 * Organize [databricks_user](resources/user.md) into [databricks_group](resources/group.md) through [databricks_group_member](resources/group_member.md), also reading [metadata](data-sources/group.md)
+* Create [databricks_service_principal](resources/service_principal.md) with [databricks_obo_token](resources/obo_token.md) to enable even more restricted access control.
 * Manage data access with [databricks_instance_profile](resources/instance_profile.md), which can be assigned through [databricks_group_instance_profile](resources/group_instance_profile.md) and [databricks_user_instance_profile](resources/user_instance_profile.md)
 * Control which networks can access workspace with [databricks_ip_access_list](resources/ip_access_list.md)
 * Generically manage [databricks_permissions](resources/permissions.md)

@@ -3,9 +3,11 @@ subcategory: "Security"
 ---
 # databricks_obo_token Resource
 
-This resource creates On-Behalf-Of-Token for a Service Principal in AWS workspaces.
+This resource creates On-Behalf-Of tokens for a Service Principal in Databricks workspaces on AWS. It is very useful, when you want to provision resources within a workspace through narrowly-scoped service principal, that has no access to other workspaces within the same Databricks Account.
 
 ## Example Usage
+
+Creating a token for a narrowly-scoped service principal
 
 ```hcl
 resource "databricks_service_principal" "this" {
@@ -30,6 +32,30 @@ resource "databricks_obo_token" "this" {
 output "obo" {
   value = databricks_obo_token.this.token_value
   sensitive = true
+}
+```
+
+Creating a token for a service principal with admin privileges
+
+```hcl
+resource "databricks_service_principal" "this" {
+  display_name = "Terraform"
+}
+
+data "databricks_group" "admins" {
+  display_name = "admins"
+}
+
+resource "databricks_group_member" "this" {
+  group_id = data.databricks_group.admins.id
+  member_id = databricks_service_principal.this.id
+}
+
+resource "databricks_obo_token" "this" {
+  depends_on = [databricks_group_member.this]
+  application_id = databricks_service_principal.this.application_id
+  comment = "PAT on behalf of ${databricks_service_principal.this.display_name}"
+  lifetime_seconds = 3600
 }
 ```
 

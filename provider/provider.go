@@ -229,6 +229,13 @@ func DatabricksProvider() *schema.Provider {
 				Optional:    true,
 				Default:     false,
 			},
+			"development_mode": {
+				Type:        schema.TypeBool,
+				Description: "Turn off certain error checks. Reserved for internal use only.",
+				DefaultFunc: schema.EnvDefaultFunc("DATABRICKS_DEV", false),
+				Optional:    true,
+				Default:     false,
+			},
 			"debug_truncate_bytes": {
 				Optional:    true,
 				Type:        schema.TypeInt,
@@ -339,6 +346,9 @@ func configureDatabricksClient(ctx context.Context, d *schema.ResourceData) (int
 	}
 	if v, ok := d.GetOk("skip_verify"); ok {
 		pc.InsecureSkipVerify = v.(bool)
+	}
+	if v, ok := d.GetOk("development_mode"); ok {
+		pc.DevelopmentMode = v.(bool)
 	}
 	if v, ok := d.GetOk("debug_truncate_bytes"); ok {
 		pc.DebugTruncateBytes = v.(int)

@@ -117,8 +117,9 @@ func TestResourceJobCreate_AlwaysRunning(t *testing.T) {
 					SparkJarTask: &SparkJarTask{
 						MainClassName: "com.labs.BarMain",
 					},
-					Name:       "Featurizer",
-					MaxRetries: 3,
+					Name:              "Featurizer",
+					MaxRetries:        3,
+					MaxConcurrentRuns: 1,
 				},
 				Response: Job{
 					JobID: 789,
@@ -584,7 +585,8 @@ func TestResourceJobUpdate_Restart(t *testing.T) {
 				ExpectedRequest: UpdateJobRequest{
 					JobID: 789,
 					NewSettings: &JobSettings{
-						Name: "Featurizer New",
+						Name:              "Featurizer New",
+						MaxConcurrentRuns: 1,
 					},
 				},
 			},

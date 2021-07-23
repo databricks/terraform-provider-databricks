@@ -222,6 +222,7 @@ var jobSchema = common.StructToSchema(JobSettings{},
 		}
 		s["email_notifications"].DiffSuppressFunc = common.MakeEmptyBlockSuppressFunc("email_notifications.#")
 		s["max_concurrent_runs"].ValidateDiagFunc = validation.ToDiagFunc(validation.IntAtLeast(1))
+		s["max_concurrent_runs"].Default = 1
 		s["url"] = &schema.Schema{
 			Type:     schema.TypeString,
 			Computed: true,

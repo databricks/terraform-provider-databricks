@@ -46,7 +46,7 @@ func (r Resource) ToResource() *schema.Resource {
 	}
 	read := func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 		err := r.Read(ctx, d, m.(*DatabricksClient))
-		if e, ok := err.(APIError); ok && e.IsMissing() {
+		if IsMissing(err) {
 			log.Printf("[INFO] %s[id=%s] is removed on backend",
 				ResourceName.GetOrUnknown(ctx), d.Id())
 			d.SetId("")

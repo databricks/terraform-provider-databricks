@@ -159,7 +159,7 @@ func (a pipelinesAPI) delete(id string, timeout time.Duration) error {
 		func() *resource.RetryError {
 			i, err := a.read(id)
 			if err != nil {
-				if e, ok := err.(common.APIError); ok && e.IsMissing() {
+				if common.IsMissing(err) {
 					return nil
 				}
 				return resource.NonRetryableError(err)

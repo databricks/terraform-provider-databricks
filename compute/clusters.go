@@ -167,7 +167,7 @@ func (a ClustersAPI) waitForClusterStatus(clusterID string, desired ClusterState
 	// nolint should be a bigger context-aware refactor
 	return result, resource.RetryContext(a.context, a.defaultTimeout(), func() *resource.RetryError {
 		clusterInfo, err := a.Get(clusterID)
-		if ae, ok := err.(common.APIError); ok && ae.IsMissing() {
+		if common.IsMissing(err) {
 			log.Printf("[INFO] Cluster %s not found. Retrying", clusterID)
 			return resource.RetryableError(err)
 		}

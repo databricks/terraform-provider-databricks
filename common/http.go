@@ -60,6 +60,17 @@ func (apiError APIError) Error() string {
 	return apiError.Message
 }
 
+// IsMissing tells if error is about missing resource
+func IsMissing(err error) bool {
+	if err == nil {
+		return false
+	}
+	if e, ok := err.(APIError); ok && e.IsMissing() {
+		return true
+	}
+	return false
+}
+
 // IsMissing tells if it is missing resource
 func (apiError APIError) IsMissing() bool {
 	return apiError.StatusCode == http.StatusNotFound

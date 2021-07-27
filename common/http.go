@@ -65,10 +65,8 @@ func IsMissing(err error) bool {
 	if err == nil {
 		return false
 	}
-	if e, ok := err.(APIError); ok && e.IsMissing() {
-		return true
-	}
-	return false
+	e, ok := err.(APIError)
+	return ok && e.IsMissing()
 }
 
 // IsMissing tells if it is missing resource

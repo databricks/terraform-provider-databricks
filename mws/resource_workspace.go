@@ -165,7 +165,7 @@ func (a WorkspacesAPI) Delete(mwsAcctID, workspaceID string) error {
 	}
 	return resource.RetryContext(a.context, 15*time.Minute, func() *resource.RetryError {
 		workspace, err := a.Read(mwsAcctID, workspaceID)
-		if e, ok := err.(common.APIError); ok && e.IsMissing() {
+		if common.IsMissing(err) {
 			log.Printf("[INFO] Workspace %s/%s is removed.", mwsAcctID, workspaceID)
 			return nil
 		}

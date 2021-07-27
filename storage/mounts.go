@@ -148,7 +148,7 @@ func getMountingClusterID(ctx context.Context, client *common.DatabricksClient, 
 		return getOrCreateMountingCluster(clustersAPI)
 	}
 	clusterInfo, err := clustersAPI.Get(clusterID)
-	if e, ok := err.(common.APIError); ok && e.IsMissing() {
+	if common.IsMissing(err) {
 		return getOrCreateMountingCluster(clustersAPI)
 	}
 	if err != nil {

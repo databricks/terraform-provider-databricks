@@ -3,6 +3,7 @@ package access
 import (
 	"context"
 	"fmt"
+	"log"
 	"path"
 	"strconv"
 	"strings"
@@ -337,7 +338,8 @@ func ResourcePermissions() *schema.Resource {
 	readContext := func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 		id := d.Id()
 		objectACL, err := NewPermissionsAPI(ctx, m).Read(id)
-		if aerr, ok := err.(common.APIError); ok && aerr.IsMissing() {
+		if common.IsMissing(err) {
+			log.Printf("[INFO] %s is removed on backend", d.Id())
 			d.SetId("")
 			return nil
 		}
@@ -431,6 +433,10 @@ func ResourcePermissions() *schema.Resource {
 		},
 		DeleteContext: func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 			err := NewPermissionsAPI(ctx, m).Delete(d.Id())
+			if common.IsMissing(err) {
+				log.Printf("[INFO] %s is already removed on backend", d.Id())
+				return nil
+			}
 			if err != nil {
 				return diag.FromErr(err)
 			}

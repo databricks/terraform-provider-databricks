@@ -235,7 +235,7 @@ func (ta *SqlPermissions) initCluster(ctx context.Context, d *schema.ResourceDat
 		}
 	}
 	clusterInfo, err := clustersAPI.StartAndGetInfo(ta.ClusterID)
-	if e, ok := err.(common.APIError); ok && e.IsMissing() {
+	if common.IsMissing(err) {
 		// cluster that was previously in a tfstate was deleted
 		ta.ClusterID, err = ta.getOrCreateCluster(clustersAPI)
 		if err != nil {

@@ -4,6 +4,14 @@
 
 * Added `databricks_obo_token` resource to create On-Behalf-Of tokens for a Service Principal in Databricks workspaces on AWS. It is very useful, when you want to provision resources within a workspace through narrowly-scoped service principal, that has no access to other workspaces within the same Databricks Account ([#736](https://github.com/databrickslabs/terraform-provider-databricks/pull/736))
 
+Updated dependency versions:
+
+* Bump github.com/aws/aws-sdk-go to v1.40.8
+* Bump github.com/hashicorp/hcl/v2 to v2.10.1
+* Bump github.com/zclconf/go-cty to v1.9.0
+* Bump golang.org/x/time to v0.0.0-20210723032227-1f47c861a9ac
+* Bump golang.org/x/tools to v0.1.5
+
 ## 0.3.6
 
 * Added support for hybrid pools ([#689](https://github.com/databrickslabs/terraform-provider-databricks/pull/689))

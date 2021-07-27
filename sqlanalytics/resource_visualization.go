@@ -94,7 +94,10 @@ func (a VisualizationAPI) Read(queryID, visualizationID string) (*api.Visualizat
 		}
 	}
 
-	return nil, fmt.Errorf("cannot find visualization %s attached to query %s", visualizationID, queryID)
+	// Cannot find visualization with `visualizationID` attached to query `queryID`.
+	// Terraform can deal with this situation by recreating it so don't return an error.
+	log.Printf("[WARN] Cannot find visualization %s attached to query %s", visualizationID, queryID)
+	return nil, nil
 }
 
 // Update ...
@@ -185,6 +188,12 @@ func ResourceVisualization() *schema.Resource {
 			av, err := NewVisualizationAPI(ctx, c).Read(queryID, visualizationID)
 			if err != nil {
 				return err
+			}
+
+			// Handle if visualization was not found.
+			if av == nil {
+				data.SetId("")
+				return nil
 			}
 
 			var v VisualizationEntity

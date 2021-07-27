@@ -500,6 +500,40 @@ func TestWidgetCreateWithPositionAndAutoheight(t *testing.T) {
 	assert.Equal(t, true, d.Get("position.0.auto_height"))
 }
 
+func TestWidgetReadNotFound(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/preview/sql/dashboards/some-uuid",
+				Response: api.Dashboard{
+					ID: "some-uuid",
+					Widgets: []json.RawMessage{
+						json.RawMessage(`
+							{
+								"id": "12345",
+								"text": "text"
+							}
+						`),
+					},
+				},
+			},
+		},
+		Resource:    ResourceWidget(),
+		Read:        true,
+		Removed:     true,
+		RequiresNew: true,
+		ID:          "some-uuid/12344",
+		InstanceState: map[string]string{
+			"dashboard_id":     "some-uuid",
+			"visualization_id": "678",
+		},
+	}.Apply(t)
+
+	assert.NoError(t, err, err)
+	assert.Equal(t, "", d.Id(), "Resource ID should be empty")
+}
+
 func TestWidgetUpdate(t *testing.T) {
 	sText := "text"
 

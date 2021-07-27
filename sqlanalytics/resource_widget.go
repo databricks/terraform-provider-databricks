@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"log"
+	"net/http"
 	"sort"
 	"strconv"
 	"strings"
@@ -236,10 +236,11 @@ func (a WidgetAPI) Read(dashboardID, widgetID string) (*api.Widget, error) {
 		}
 	}
 
-	// Cannot find widget with `widgetID` attached to dashboard `dashboardID`.
-	// Terraform can deal with this situation by recreating it so don't return an error.
-	log.Printf("[WARN] Cannot find widget %s attached to dashboard %s", widgetID, dashboardID)
-	return nil, nil
+	return nil, common.APIError{
+		ErrorCode:  "NOT_FOUND",
+		StatusCode: http.StatusNotFound,
+		Message:    fmt.Sprintf("Cannot find widget %s attached to dashboard %s", widgetID, dashboardID),
+	}
 }
 
 // Update ...
@@ -308,12 +309,6 @@ func ResourceWidget() *schema.Resource {
 			aw, err := NewWidgetAPI(ctx, c).Read(dashboardID, widgetID)
 			if err != nil {
 				return err
-			}
-
-			// Handle if widget was not found.
-			if aw == nil {
-				data.SetId("")
-				return nil
 			}
 
 			var w WidgetEntity

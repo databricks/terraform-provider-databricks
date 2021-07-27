@@ -19,7 +19,8 @@ import (
 
 // InstanceProfileInfo contains the ARN for aws instance profiles
 type InstanceProfileInfo struct {
-	InstanceProfileArn string `json:"instance_profile_arn,omitempty"`
+	InstanceProfileArn    string `json:"instance_profile_arn,omitempty"`
+	IsMetaInstanceProfile string `json:"is_meta_instance_profile,omitempty"`
 }
 
 // InstanceProfileList ...
@@ -42,33 +43,30 @@ type InstanceProfilesAPI struct {
 }
 
 // Create creates an instance profile record on Databricks
-func (a InstanceProfilesAPI) Create(instanceProfileARN string) error {
-	return a.client.Post(a.context, "/instance-profiles/add", map[string]interface{}{
-		"instance_profile_arn": instanceProfileARN,
-		"skip_validation":      false,
-	}, nil)
+func (a InstanceProfilesAPI) Create(ipi InstanceProfileInfo) error {
+	return a.client.Post(a.context, "/instance-profiles/add", ipi, nil)
 }
 
 // Read returns the ARN back if it exists on the Databricks workspace
-func (a InstanceProfilesAPI) Read(instanceProfileARN string) (string, error) {
-	var response string
+func (a InstanceProfilesAPI) Read(instanceProfileARN string) (result InstanceProfileInfo, err error) {
 	instanceProfiles, err := a.List()
 	if err != nil {
-		return response, err
+		return
 	}
 	for _, profile := range instanceProfiles {
 		if profile.InstanceProfileArn == instanceProfileARN {
-			response = profile.InstanceProfileArn
-			return response, nil
+			result = profile
+			return
 		}
 	}
-	return response, common.APIError{
+	err = common.APIError{
 		ErrorCode: "NOT_FOUND",
 		Message: fmt.Sprintf("Instance profile with name: %s not found in "+
 			"list of instance profiles in the workspace!", instanceProfileARN),
 		Resource:   "/api/2.0/instance-profiles/list",
 		StatusCode: http.StatusNotFound,
 	}
+	return
 }
 
 // List lists all the instance profiles in the workspace
@@ -137,29 +135,29 @@ func (a InstanceProfilesAPI) Synchronized(arn string, testCallback func() bool) 
 
 // ResourceInstanceProfile manages Instance Profile ARN binding
 func ResourceInstanceProfile() *schema.Resource {
+	instanceProfileSchema := common.StructToSchema(InstanceProfileInfo{},
+		func(m map[string]*schema.Schema) map[string]*schema.Schema {
+			m["instance_profile_arn"].ValidateDiagFunc = ValidInstanceProfile
+			return m
+		})
 	return common.Resource{
-		Schema: map[string]*schema.Schema{
-			"instance_profile_arn": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-
-				ValidateDiagFunc: ValidInstanceProfile,
-			},
-		},
+		Schema: instanceProfileSchema,
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			profile, err := NewInstanceProfilesAPI(ctx, c).Read(d.Id())
 			if err != nil {
 				return err
 			}
-			return d.Set("instance_profile_arn", profile)
+			return common.StructToData(profile, instanceProfileSchema, d)
 		},
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			ipa := d.Get("instance_profile_arn").(string)
-			if err := NewInstanceProfilesAPI(ctx, c).Create(ipa); err != nil {
+			var profile InstanceProfileInfo
+			if err := common.DataToStructPointer(d, instanceProfileSchema, &profile); err != nil {
 				return err
 			}
-			d.SetId(ipa)
+			if err := NewInstanceProfilesAPI(ctx, c).Create(profile); err != nil {
+				return err
+			}
+			d.SetId(profile.InstanceProfileArn)
 			return nil
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {

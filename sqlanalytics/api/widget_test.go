@@ -8,14 +8,14 @@ import (
 )
 
 func TestWidgetMarshalUnmarshal(t *testing.T) {
-	i678 := 678
+	s678 := stringOrInt("678")
 	sAbc := "text"
 
 	w := Widget{
 		ID:          "12345",
 		DashboardID: "dashboardID",
 
-		VisualizationID: &i678,
+		VisualizationID: &s678,
 		Text:            &sAbc,
 
 		Options: WidgetOptions{
@@ -70,6 +70,6 @@ func TestWidgetUnmarshalWithVisualization(t *testing.T) {
 	}
 
 	if assert.NotNil(t, wp.VisualizationID) {
-		assert.Equal(t, 12345, *wp.VisualizationID)
+		assert.Equal(t, "12345", string(*wp.VisualizationID))
 	}
 }

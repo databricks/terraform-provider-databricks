@@ -420,6 +420,19 @@ func TestResourceWorkspaceUpdate(t *testing.T) {
 			},
 		},
 		Resource: ResourceWorkspace(),
+		InstanceState: map[string]string{
+			"account_id":     "abc",
+			"aws_region":     "us-east-1",
+			"credentials_id": "__OLDER__",
+			"managed_services_customer_managed_key_id": "def",
+			"storage_customer_managed_key_id":          "__OLDER__",
+			"deployment_name":                          "900150983cd24fb0",
+			"workspace_name":                           "labdata",
+			"is_no_public_ip_enabled":                  "true",
+			"network_id":                               "fgh",
+			"storage_configuration_id":                 "ghi",
+			"workspace_id":                             "1234",
+		},
 		State: map[string]interface{}{
 			"account_id":     "abc",
 			"aws_region":     "us-east-1",
@@ -472,7 +485,7 @@ func TestResourceWorkspaceUpdate_NotAllowed(t *testing.T) {
 		},
 		Update: true,
 		ID:     "abc/1234",
-	}.ExpectError(t, "it is not allowed to change account_id on a running workspace")
+	}.ExpectError(t, "changes require new: account_id")
 }
 
 func TestResourceWorkspaceUpdateLegacyConfig(t *testing.T) {
@@ -506,6 +519,18 @@ func TestResourceWorkspaceUpdateLegacyConfig(t *testing.T) {
 			},
 		},
 		Resource: ResourceWorkspace(),
+		InstanceState: map[string]string{
+			"account_id":               "abc",
+			"aws_region":               "us-east-1",
+			"credentials_id":           "bcd",
+			"customer_managed_key_id":  "def",
+			"deployment_name":          "900150983cd24fb0",
+			"is_no_public_ip_enabled":  "true",
+			"workspace_name":           "labdata",
+			"network_id":               "fgh",
+			"storage_configuration_id": "ghi",
+			"workspace_id":             "1234",
+		},
 		State: map[string]interface{}{
 			"account_id":               "abc",
 			"aws_region":               "us-east-1",
@@ -525,7 +550,7 @@ func TestResourceWorkspaceUpdateLegacyConfig(t *testing.T) {
 }
 
 func TestResourceWorkspaceUpdate_Error(t *testing.T) {
-	d, err := qa.ResourceFixture{
+	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "PATCH",
@@ -550,11 +575,10 @@ func TestResourceWorkspaceUpdate_Error(t *testing.T) {
 			"storage_configuration_id":                 "ghi",
 			"workspace_id":                             1234,
 		},
-		Update: true,
-		ID:     "abc/1234",
-	}.Apply(t)
-	qa.AssertErrorStartsWith(t, err, "Internal error happened")
-	assert.Equal(t, "abc/1234", d.Id())
+		Update:      true,
+		RequiresNew: true,
+		ID:          "abc/1234",
+	}.ExpectError(t, "Internal error happened")
 }
 
 func TestResourceWorkspaceDelete(t *testing.T) {

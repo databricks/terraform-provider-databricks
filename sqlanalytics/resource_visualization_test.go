@@ -137,6 +137,43 @@ func TestVisualizationRead(t *testing.T) {
 	assert.Less(t, 0, len(d.Get("options").(string)))
 }
 
+func TestVisualizationReadNotFound(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/preview/sql/queries/foo",
+				Response: api.Query{
+					ID: "foo",
+					Visualizations: []json.RawMessage{
+						json.RawMessage(`
+							{
+								"id": 12345,
+								"type": "CHART"
+							}
+						`),
+					},
+				},
+			},
+		},
+		Resource:    ResourceVisualization(),
+		Read:        true,
+		Removed:     true,
+		RequiresNew: true,
+		ID:          "foo/1234",
+		State: map[string]interface{}{
+			"query_id":    "foo",
+			"type":        "chart",
+			"name":        "My Chart",
+			"description": "Some Description",
+			"options":     "{}",
+		},
+	}.Apply(t)
+
+	assert.NoError(t, err, err)
+	assert.Equal(t, "", d.Id(), "Resource ID should be empty")
+}
+
 func TestVisualizationUpdate(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{

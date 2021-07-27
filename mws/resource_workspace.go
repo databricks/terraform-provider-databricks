@@ -129,6 +129,8 @@ func (a WorkspacesAPI) WaitForRunning(ws Workspace, timeout time.Duration) error
 	})
 }
 
+var workspaceRunningUpdatesAllowed = []string{"credentials_id", "network_id", "storage_customer_managed_key_id"}
+
 // UpdateRunning will update running workspace with couple of possible fields
 func (a WorkspacesAPI) UpdateRunning(ws Workspace, timeout time.Duration) error {
 	workspacesAPIPath := fmt.Sprintf("/accounts/%s/workspaces/%d", ws.AccountID, ws.WorkspaceID)
@@ -195,10 +197,21 @@ func (a WorkspacesAPI) List(mwsAcctID string) ([]Workspace, error) {
 // ResourceWorkspace manages E2 workspaces
 func ResourceWorkspace() *schema.Resource {
 	workspaceSchema := common.StructToSchema(Workspace{}, func(s map[string]*schema.Schema) map[string]*schema.Schema {
+		for name, fieldSchema := range s {
+			if fieldSchema.Computed {
+				// skip checking all changes from remote state
+				continue
+			}
+			fieldSchema.ForceNew = true
+			for _, allowed := range workspaceRunningUpdatesAllowed {
+				if allowed == name {
+					// allow updating only a few specific fields
+					fieldSchema.ForceNew = false
+					break
+				}
+			}
+		}
 		s["account_id"].Sensitive = true
-		s["account_id"].ForceNew = true
-		s["workspace_name"].ForceNew = true
-		s["deployment_name"].ForceNew = true
 		s["deployment_name"].DiffSuppressFunc = func(k, old, new string, d *schema.ResourceData) bool {
 			if old == "" && new != "" {
 				return false
@@ -232,32 +245,6 @@ func ResourceWorkspace() *schema.Resource {
 	return common.Resource{
 		Schema:        workspaceSchema,
 		SchemaVersion: 2,
-		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, c interface{}) error {
-			runningUpdatesAllowed := []string{"credentials_id", "network_id", "storage_customer_managed_key_id"}
-			for name, fieldSchema := range workspaceSchema {
-				if fieldSchema.Computed {
-					// skip checking all changes from remote state
-					continue
-				}
-				old, _ := d.GetChange(name)
-				if old == fieldSchema.ZeroValue() {
-					// skip checking on Create stage
-					continue
-				}
-				if !d.HasChange(name) {
-					// skip checking fields that are not changed
-					continue
-				}
-				for _, allowed := range runningUpdatesAllowed {
-					if allowed == name {
-						// allow updates for specific list of fields
-						continue
-					}
-				}
-				return fmt.Errorf("it is not allowed to change %s on a running workspace", name)
-			}
-			return nil
-		},
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var workspace Workspace
 			workspacesAPI := NewWorkspacesAPI(ctx, c)

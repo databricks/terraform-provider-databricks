@@ -24,7 +24,7 @@ func TestVisualizationCreate(t *testing.T) {
 				},
 				Response: api.Visualization{
 					// Note: "query_id" is not included in POST response.
-					ID:          12345,
+					ID:          "12345",
 					Type:        "CHART",
 					Name:        "My Chart",
 					Description: "Some Description",
@@ -189,7 +189,7 @@ func TestVisualizationUpdate(t *testing.T) {
 				},
 				Response: api.Visualization{
 					// Note: "query_id" is not included in POST response.
-					ID:          12345,
+					ID:          "12345",
 					Type:        "CHART",
 					Name:        "My Updated Chart",
 					Description: "Some Updated Description",

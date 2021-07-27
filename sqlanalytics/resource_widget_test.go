@@ -10,7 +10,7 @@ import (
 )
 
 func TestWidgetCreateWithVisualization(t *testing.T) {
-	i678 := 678
+	i678 := api.NewStringOrInt("678")
 
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
@@ -70,7 +70,7 @@ func TestWidgetCreateWithVisualization(t *testing.T) {
 }
 
 func TestWidgetCreateWithVisualizationByResourceID(t *testing.T) {
-	i678 := 678
+	i678 := api.NewStringOrInt("678")
 
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
@@ -190,7 +190,7 @@ func TestWidgetCreateWithText(t *testing.T) {
 }
 
 func TestWidgetCreateWithParamValue(t *testing.T) {
-	i678 := 678
+	i678 := api.NewStringOrInt("678")
 
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
@@ -313,7 +313,7 @@ func TestWidgetCreateWithParamValue(t *testing.T) {
 }
 
 func TestWidgetCreateWithPosition(t *testing.T) {
-	i678 := 678
+	i678 := api.NewStringOrInt("678")
 
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
@@ -406,7 +406,7 @@ func TestWidgetCreateWithPosition(t *testing.T) {
 }
 
 func TestWidgetCreateWithPositionAndAutoheight(t *testing.T) {
-	i678 := 678
+	i678 := api.NewStringOrInt("678")
 
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{

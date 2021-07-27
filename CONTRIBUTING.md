@@ -207,7 +207,9 @@ func ResourceExample() *schema.Resource {
 
 *Add the resource to the top-level provider.* Simply add the resource to the provider definition in `provider/provider.go`.
 
-*Write unit tests for your resource.* To write your unit tests, you can make use of `ResourceFixture` and `HTTPFixture` structs defined in the `qa` package. This starts a fake HTTP server, asserting that your resource provdier generates the correct request for a given HCL template body for your resource. An example:
+*Write unit tests for your resource.* To write your unit tests, you can make use of `ResourceFixture` and `HTTPFixture` structs defined in the `qa` package. This starts a fake HTTP server, asserting that your resource provdier generates the correct request for a given HCL template body for your resource. Update tests should have `InstanceState` field in order to test various corner-cases, like `ForceNew` schemas. It's possible to expect fixture to require new resource by specifying `RequiresNew` field.
+
+A simple example:
 
 ```go
 func TestExampleResourceCreate(t *testing.T) {

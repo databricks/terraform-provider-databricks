@@ -9,7 +9,6 @@ import (
 	"github.com/databrickslabs/terraform-provider-databricks/qa"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 func TestResourceNotebookRead(t *testing.T) {
@@ -236,7 +235,7 @@ func TestResourceNotebookDelete_Error(t *testing.T) {
 }
 
 func TestResourceNotebookUpdate(t *testing.T) {
-	_, err := qa.ResourceFixture{
+	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "POST",
@@ -266,8 +265,8 @@ func TestResourceNotebookUpdate(t *testing.T) {
 			"language":       "R",
 			"path":           "/path.py",
 		},
-		ID:     "abc",
-		Update: true,
-	}.Apply(t)
-	require.NoError(t, err)
+		ID:          "abc",
+		RequiresNew: true,
+		Update:      true,
+	}.ApplyNoError(t)
 }

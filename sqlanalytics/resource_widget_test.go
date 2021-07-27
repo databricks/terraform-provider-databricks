@@ -22,7 +22,7 @@ func TestWidgetCreateWithVisualization(t *testing.T) {
 					VisualizationID: &i678,
 				},
 				Response: api.Widget{
-					ID:          12345,
+					ID:          "12345",
 					DashboardID: "some-uuid",
 				},
 			},
@@ -34,19 +34,19 @@ func TestWidgetCreateWithVisualization(t *testing.T) {
 					Widgets: []json.RawMessage{
 						json.RawMessage(`
 							{
-								"id": 12344,
+								"id": "12344",
 								"visualization_id": null
 							}
 						`),
 						json.RawMessage(`
 							{
-								"id": 12345,
+								"id": "12345",
 								"visualization_id": 678
 							}
 						`),
 						json.RawMessage(`
 							{
-								"id": 12346,
+								"id": "12346",
 								"visualization_id": null
 							}
 						`),
@@ -82,7 +82,7 @@ func TestWidgetCreateWithVisualizationByResourceID(t *testing.T) {
 					VisualizationID: &i678,
 				},
 				Response: api.Widget{
-					ID:          12345,
+					ID:          "12345",
 					DashboardID: "some-uuid",
 				},
 			},
@@ -94,12 +94,12 @@ func TestWidgetCreateWithVisualizationByResourceID(t *testing.T) {
 					Widgets: []json.RawMessage{
 						json.RawMessage(`
 							{
-								"id": 12344
+								"id": "12344"
 							}
 						`),
 						json.RawMessage(`
 							{
-								"id": 12345,
+								"id": "12345",
 								"visualization": {
 									"id": 678
 								}
@@ -107,7 +107,7 @@ func TestWidgetCreateWithVisualizationByResourceID(t *testing.T) {
 						`),
 						json.RawMessage(`
 							{
-								"id": 12346
+								"id": "12346"
 							}
 						`),
 					},
@@ -142,7 +142,7 @@ func TestWidgetCreateWithText(t *testing.T) {
 					Text:        &sText,
 				},
 				Response: api.Widget{
-					ID:          12345,
+					ID:          "12345",
 					DashboardID: "some-uuid",
 				},
 			},
@@ -154,19 +154,19 @@ func TestWidgetCreateWithText(t *testing.T) {
 					Widgets: []json.RawMessage{
 						json.RawMessage(`
 							{
-								"id": 12344,
+								"id": "12344",
 								"text": null
 							}
 						`),
 						json.RawMessage(`
 							{
-								"id": 12345,
+								"id": "12345",
 								"text": "` + sText + `"
 							}
 						`),
 						json.RawMessage(`
 							{
-								"id": 12346,
+								"id": "12346",
 								"text": null
 							}
 						`),
@@ -216,7 +216,7 @@ func TestWidgetCreateWithParamValue(t *testing.T) {
 					},
 				},
 				Response: api.Widget{
-					ID:          12345,
+					ID:          "12345",
 					DashboardID: "some-uuid",
 				},
 			},
@@ -228,13 +228,13 @@ func TestWidgetCreateWithParamValue(t *testing.T) {
 					Widgets: []json.RawMessage{
 						json.RawMessage(`
 							{
-								"id": 12344,
+								"id": "12344",
 								"visualization_id": null
 							}
 						`),
 						json.RawMessage(`
 							{
-								"id": 12345,
+								"id": "12345",
 								"visualization_id": 678,
 								"options": {
 									"parameterMappings": {
@@ -257,7 +257,7 @@ func TestWidgetCreateWithParamValue(t *testing.T) {
 						`),
 						json.RawMessage(`
 							{
-								"id": 12346,
+								"id": "12346",
 								"visualization_id": null
 							}
 						`),
@@ -334,7 +334,7 @@ func TestWidgetCreateWithPosition(t *testing.T) {
 					},
 				},
 				Response: api.Widget{
-					ID:          12345,
+					ID:          "12345",
 					DashboardID: "some-uuid",
 				},
 			},
@@ -346,13 +346,13 @@ func TestWidgetCreateWithPosition(t *testing.T) {
 					Widgets: []json.RawMessage{
 						json.RawMessage(`
 							{
-								"id": 12344,
+								"id": "12344",
 								"visualization_id": null
 							}
 						`),
 						json.RawMessage(`
 							{
-								"id": 12345,
+								"id": "12345",
 								"visualization_id": 678,
 								"options": {
 									"position": {
@@ -367,7 +367,7 @@ func TestWidgetCreateWithPosition(t *testing.T) {
 						`),
 						json.RawMessage(`
 							{
-								"id": 12345,
+								"id": "12345",
 								"visualization_id": null
 							}
 						`),
@@ -427,7 +427,7 @@ func TestWidgetCreateWithPositionAndAutoheight(t *testing.T) {
 					},
 				},
 				Response: api.Widget{
-					ID:          12345,
+					ID:          "12345",
 					DashboardID: "some-uuid",
 				},
 			},
@@ -439,13 +439,13 @@ func TestWidgetCreateWithPositionAndAutoheight(t *testing.T) {
 					Widgets: []json.RawMessage{
 						json.RawMessage(`
 							{
-								"id": 12344,
+								"id": "12344",
 								"visualization_id": null
 							}
 						`),
 						json.RawMessage(`
 							{
-								"id": 12345,
+								"id": "12345",
 								"visualization_id": 678,
 								"options": {
 									"position": {
@@ -460,7 +460,7 @@ func TestWidgetCreateWithPositionAndAutoheight(t *testing.T) {
 						`),
 						json.RawMessage(`
 							{
-								"id": 12345,
+								"id": "12345",
 								"visualization_id": null
 							}
 						`),
@@ -513,7 +513,7 @@ func TestWidgetUpdate(t *testing.T) {
 					Text:        &sText,
 				},
 				Response: api.Widget{
-					ID:          12345,
+					ID:          "12345",
 					DashboardID: "some-uuid",
 				},
 			},
@@ -525,19 +525,19 @@ func TestWidgetUpdate(t *testing.T) {
 					Widgets: []json.RawMessage{
 						json.RawMessage(`
 							{
-								"id": 12344,
+								"id": "12344",
 								"visualization_id": null
 							}
 						`),
 						json.RawMessage(`
 							{
-								"id": 12345,
+								"id": "12345",
 								"text": "text"
 							}
 						`),
 						json.RawMessage(`
 							{
-								"id": 12345,
+								"id": "12345",
 								"visualization_id": null
 							}
 						`),

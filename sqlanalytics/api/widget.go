@@ -4,7 +4,7 @@ import "encoding/json"
 
 // Widget ...
 type Widget struct {
-	ID int `json:"id,omitempty"`
+	ID string `json:"id,omitempty"`
 
 	// Widgets are part of a dashboard.
 	DashboardID string `json:"dashboard_id"`

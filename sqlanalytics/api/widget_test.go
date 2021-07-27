@@ -12,7 +12,7 @@ func TestWidgetMarshalUnmarshal(t *testing.T) {
 	sAbc := "text"
 
 	w := Widget{
-		ID:          12345,
+		ID:          "12345",
 		DashboardID: "dashboardID",
 
 		VisualizationID: &i678,

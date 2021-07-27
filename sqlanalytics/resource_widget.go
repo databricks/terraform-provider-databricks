@@ -127,7 +127,7 @@ func (w *WidgetEntity) toAPIObject(schema map[string]*schema.Schema, data *schem
 func (w *WidgetEntity) fromAPIObject(aw *api.Widget, schema map[string]*schema.Schema, data *schema.ResourceData) error {
 	// Copy from API object.
 	w.DashboardID = aw.DashboardID
-	w.WidgetID = strconv.Itoa(aw.ID)
+	w.WidgetID = aw.ID
 
 	if aw.VisualizationID != nil {
 		w.VisualizationID = fmt.Sprint(*aw.VisualizationID)
@@ -227,7 +227,7 @@ func (a WidgetAPI) Read(dashboardID, widgetID string) (*api.Widget, error) {
 			return nil, err
 		}
 
-		if strconv.Itoa(wnew.ID) == widgetID {
+		if wnew.ID == widgetID {
 			// Include dashboard ID in returned object.
 			// It's not part of the API response.
 			wnew.DashboardID = dashboardID

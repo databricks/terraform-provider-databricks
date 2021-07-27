@@ -245,6 +245,10 @@ func TestResourceUserUpdate(t *testing.T) {
 		Resource: ResourceUser(),
 		Update:   true,
 		ID:       "abc",
+		InstanceState: map[string]string{
+			"user_name":    "me@example.com",
+			"display_name": "Old Name",
+		},
 		HCL: `
 		user_name    = "me@example.com"
 		display_name = "Changed Name"

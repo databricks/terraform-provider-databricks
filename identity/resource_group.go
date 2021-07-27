@@ -12,7 +12,6 @@ func ResourceGroup() *schema.Resource {
 	groupSchema := map[string]*schema.Schema{
 		"display_name": {
 			Type:     schema.TypeString,
-			ForceNew: true,
 			Required: true,
 		},
 		"url": {

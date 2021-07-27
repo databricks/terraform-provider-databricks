@@ -7,6 +7,11 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func TestStringOrIntBasics(t *testing.T) {
+	s := NewStringOrInt("1234")
+	assert.Equal(t, "1234", s.String())
+}
+
 func TestStringOrIntMarshal(t *testing.T) {
 	{
 		s := stringOrInt("1234")
@@ -38,6 +43,11 @@ func TestStringOrIntUnmarshal(t *testing.T) {
 	{
 		var s stringOrInt
 		err := json.Unmarshal([]byte("[1]"), &s)
+		assert.Error(t, err)
+	}
+	{
+		var s stringOrInt
+		err := json.Unmarshal([]byte("this is invalid json"), &s)
 		assert.Error(t, err)
 	}
 }

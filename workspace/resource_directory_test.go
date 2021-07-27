@@ -220,10 +220,13 @@ func TestResourceDirectoryUpdate(t *testing.T) {
 			},
 		},
 		Resource: ResourceDirectory(),
-		State: map[string]interface{}{
-			"object_id":        object_id,
+		InstanceState: map[string]string{
 			"path":             path,
-			"delete_recursive": true,
+			"delete_recursive": "true",
+		},
+		State: map[string]interface{}{
+			"object_id": object_id,
+			"path":      path,
 		},
 		ID:     path,
 		Update: true,

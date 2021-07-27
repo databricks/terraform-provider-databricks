@@ -386,6 +386,9 @@ func TestResourceSqlPermissions_Update(t *testing.T) {
 			"REVOKE ALL PRIVILEGES ON TABLE `default`.`foo` FROM `interns`":              {},
 			"GRANT READ, MODIFY, SELECT ON TABLE `default`.`foo` TO `serge@example.com`": {},
 		}.toCommandMock(),
+		InstanceState: map[string]string{
+			"table": "foo",
+		},
 		HCL: `
 		table = "foo"
 		privilege_assignments {

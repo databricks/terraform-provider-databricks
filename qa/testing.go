@@ -196,6 +196,12 @@ func (f ResourceFixture) Apply(t *testing.T) (*schema.ResourceData, error) {
 	if err != nil {
 		return nil, err
 	}
+	if f.Update {
+		err = f.requiresNew(diff)
+		if err != nil {
+			return nil, err
+		}
+	}
 	resourceData, err := schemaMap.Data(is, diff)
 	if err != nil {
 		return nil, err
@@ -217,19 +223,27 @@ func (f ResourceFixture) Apply(t *testing.T) (*schema.ResourceData, error) {
 		return nil, err
 	}
 	if diff == nil || f.InstanceState == nil {
-		return resourceData, err
+		return resourceData, nil
 	}
+	err = f.requiresNew(diff)
+	return resourceData, err
+}
+
+func (f ResourceFixture) requiresNew(diff *terraform.InstanceDiff) error {
 	requireNew := []string{}
 	for k, v := range diff.Attributes {
+		if v.Old == v.New {
+			continue
+		}
 		if v.RequiresNew {
-			log.Printf("[WARN] %s requires new: %#v %#v", k, v.Old, v.New)
+			log.Printf("[WARN] %s requires new: %#v -> %#v", k, v.Old, v.New)
 			requireNew = append(requireNew, k)
 		}
 	}
 	if len(requireNew) > 0 && !f.RequiresNew {
-		err = fmt.Errorf("changes from backend require new: %s", strings.Join(requireNew, ", "))
+		return fmt.Errorf("changes require new: %s", strings.Join(requireNew, ", "))
 	}
-	return resourceData, err
+	return nil
 }
 
 // ApplyNoError is a convenience method for no-data tests

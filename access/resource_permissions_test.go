@@ -726,6 +726,9 @@ func TestResourcePermissionsUpdate(t *testing.T) {
 				},
 			},
 		},
+		InstanceState: map[string]string{
+			"job_id": "9",
+		},
 		HCL: `
 		job_id = 9
 

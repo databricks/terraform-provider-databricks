@@ -202,7 +202,7 @@ func TestResourceFixture_ApplyDelete(t *testing.T) {
 }
 
 func TestResourceFixture_InstanceState(t *testing.T) {
-	_, err := ResourceFixture{
+	ResourceFixture{
 		Resource: noopContextResource,
 		ID:       "x",
 		Update:   true,
@@ -214,8 +214,7 @@ func TestResourceFixture_InstanceState(t *testing.T) {
 			"dummy":   "true",
 			"trigger": "x",
 		},
-	}.Apply(t)
-	AssertErrorStartsWith(t, err, "changes from backend require new")
+	}.ExpectError(t, "changes require new: trigger")
 }
 
 func TestResourceFixture_Apply_Fail(t *testing.T) {

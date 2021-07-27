@@ -209,6 +209,7 @@ func (c *DatabricksClient) Configure(attrsUsed ...string) error {
 
 // Authenticate lazily authenticates across authorizers or returns error
 func (c *DatabricksClient) Authenticate() error {
+	// TODO: add context
 	if c.authVisitor != nil {
 		return nil
 	}
@@ -220,6 +221,7 @@ func (c *DatabricksClient) Authenticate() error {
 	authorizers := []func() (func(r *http.Request) error, error){
 		c.configureAuthWithDirectParams,
 		c.configureWithClientSecret,
+		c.configureWithManagedIdentity,
 		c.configureWithAzureCLI,
 		c.configureWithGoogleForAccountsAPI,
 		c.configureWithGoogleForWorkspace,

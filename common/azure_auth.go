@@ -113,6 +113,19 @@ func (aa *DatabricksClient) configureWithClientSecret() (func(r *http.Request) e
 	return aa.simpleAADRequestVisitor(aa.InitContext, aa.getClientSecretAuthorizer, aa.addSpManagementTokenVisitor)
 }
 
+func (aa *DatabricksClient) configureWithManagedIdentity() (func(r *http.Request) error, error) {
+	ctx := context.TODO()
+	if !adal.MSIAvailable(ctx, aa.httpClient.HTTPClient) {
+		return nil, nil
+	}
+	log.Printf("[INFO] Using Azure Managed Identity authentication")
+	return aa.simpleAADRequestVisitor(ctx, func(resource string) (autorest.Authorizer, error) {
+		return auth.MSIConfig{
+			Resource: resource,
+		}.Authorizer()
+	}, aa.addSpManagementTokenVisitor)
+}
+
 func (aa *DatabricksClient) addSpManagementTokenVisitor(r *http.Request, management autorest.Authorizer) error {
 	log.Printf("[DEBUG] Setting 'X-Databricks-Azure-SP-Management-Token' header")
 	ba, ok := management.(*autorest.BearerAuthorizer)

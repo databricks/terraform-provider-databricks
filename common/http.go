@@ -137,12 +137,16 @@ func (c *DatabricksClient) parseUnknownError(
 	return
 }
 
+func (c *DatabricksClient) isAccountsClient() bool {
+	return strings.HasPrefix(c.Host, "https://accounts")
+}
+
 func (c *DatabricksClient) commonErrorClarity(resp *http.Response) *APIError {
 	if c.DevelopmentMode {
 		return nil
 	}
 	isAccountsAPI := strings.HasPrefix(resp.Request.URL.Path, "/api/2.0/accounts")
-	isAccountsClient := strings.Contains(c.Host, accountsHost)
+	isAccountsClient := c.isAccountsClient()
 	isTesting := strings.HasPrefix(resp.Request.URL.Host, "127.0.0.1")
 	if !isTesting && isAccountsClient && !isAccountsAPI {
 		return &APIError{

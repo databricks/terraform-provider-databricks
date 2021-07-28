@@ -19,7 +19,9 @@ require (
 	github.com/smartystreets/goconvey v1.6.4 // indirect
 	github.com/stretchr/testify v1.7.0
 	github.com/zclconf/go-cty v1.9.0
+	golang.org/x/oauth2 v0.0.0-20210514164344-f6687ab2804c
 	golang.org/x/time v0.0.0-20210723032227-1f47c861a9ac
 	golang.org/x/tools v0.1.5 // indirect
+	google.golang.org/api v0.48.0
 	gopkg.in/ini.v1 v1.62.0
 )

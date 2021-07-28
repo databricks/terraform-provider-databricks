@@ -3,6 +3,7 @@
 ## 0.3.7
 
 * Added `databricks_obo_token` resource to create On-Behalf-Of tokens for a Service Principal in Databricks workspaces on AWS. It is very useful, when you want to provision resources within a workspace through narrowly-scoped service principal, that has no access to other workspaces within the same Databricks Account ([#736](https://github.com/databrickslabs/terraform-provider-databricks/pull/736))
+* Added support for [IAM credential passthrough](https://docs.databricks.com/security/credential-passthrough/iam-passthrough.html) with `is_meta_instance_profile` property for `databricks_instance_profile` ([#745](https://github.com/databrickslabs/terraform-provider-databricks/pull/745))
 * Fixed incorrect workspace update bug and added more validation error messaging ([#649](https://github.com/databrickslabs/terraform-provider-databricks/pull/649))
 * Clarify network modification procedure on active workspaces ([#732](https://github.com/databrickslabs/terraform-provider-databricks/issues/732))
 * Various bug fixes in Databricks SQL resources

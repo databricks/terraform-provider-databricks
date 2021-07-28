@@ -37,12 +37,18 @@ type DatabricksClient struct {
 	ConfigFile         string
 	AccountID          string
 	AzureAuth          AzureAuth
+	GoogleServiceAccount string
 	InsecureSkipVerify bool
 	DevelopmentMode    bool
 	HTTPTimeoutSeconds int
 	DebugTruncateBytes int
 	DebugHeaders       bool
 	RateLimitPerSecond int
+
+	// Context from `ConfigureContextFunc` that is 
+	// to be re-used with OAuth token exchanges
+	InitContext        context.Context
+
 	authMutex          sync.Mutex
 	rateLimiter        *rate.Limiter
 	Provider           *schema.Provider
@@ -75,6 +81,7 @@ func (c *DatabricksClient) Authenticate() error {
 		c.configureAuthWithDirectParams,
 		c.AzureAuth.configureWithClientSecret,
 		c.AzureAuth.configureWithAzureCLI,
+		c.configureWithGoogleServiceAccount,
 		c.configureFromDatabricksCfg,
 	}
 	for _, authProvider := range authorizers {
@@ -198,6 +205,9 @@ func (c *DatabricksClient) configureHTTPCLient() {
 	}
 	if c.RateLimitPerSecond == 0 {
 		c.RateLimitPerSecond = DefaultRateLimitPerSecond
+	}
+	if c.InitContext == nil {
+		c.InitContext = context.Background()
 	}
 	c.rateLimiter = rate.NewLimiter(rate.Limit(c.RateLimitPerSecond), 1)
 	// Set up a retryable HTTP Client to handle cases where the service returns

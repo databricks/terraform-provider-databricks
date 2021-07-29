@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"golang.org/x/time/rate"
+	"google.golang.org/api/option"
 
 	"github.com/hashicorp/go-retryablehttp"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -37,7 +38,6 @@ type DatabricksClient struct {
 	ConfigFile         string
 	AccountID          string
 	AzureAuth          AzureAuth
-	GoogleServiceAccount string
 	InsecureSkipVerify bool
 	DevelopmentMode    bool
 	HTTPTimeoutSeconds int
@@ -45,16 +45,19 @@ type DatabricksClient struct {
 	DebugHeaders       bool
 	RateLimitPerSecond int
 
-	// Context from `ConfigureContextFunc` that is 
-	// to be re-used with OAuth token exchanges
-	InitContext        context.Context
+	GoogleServiceAccount string
+	googleAuthOptions    []option.ClientOption
 
-	authMutex          sync.Mutex
-	rateLimiter        *rate.Limiter
-	Provider           *schema.Provider
-	httpClient         *retryablehttp.Client
-	authVisitor        func(r *http.Request) error
-	commandFactory     func(context.Context, *DatabricksClient) CommandExecutor
+	// Context from `ConfigureContextFunc` that is
+	// to be re-used with OAuth token exchanges
+	InitContext context.Context
+
+	authMutex      sync.Mutex
+	rateLimiter    *rate.Limiter
+	Provider       *schema.Provider
+	httpClient     *retryablehttp.Client
+	authVisitor    func(r *http.Request) error
+	commandFactory func(context.Context, *DatabricksClient) CommandExecutor
 }
 
 // Configure client to work
@@ -81,7 +84,8 @@ func (c *DatabricksClient) Authenticate() error {
 		c.configureAuthWithDirectParams,
 		c.AzureAuth.configureWithClientSecret,
 		c.AzureAuth.configureWithAzureCLI,
-		c.configureWithGoogleServiceAccount,
+		c.configureWithGoogleForAccountsAPI,
+		c.configureWithGoogleForWorkspace,
 		c.configureFromDatabricksCfg,
 	}
 	for _, authProvider := range authorizers {

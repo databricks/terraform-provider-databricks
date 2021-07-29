@@ -227,6 +227,7 @@ func DatabricksProvider() *schema.Provider {
 			"google_service_account": {
 				Type:        schema.TypeString,
 				Optional:    true,
+				DefaultFunc: schema.EnvDefaultFunc("DATABRICKS_GOOGLE_SERVICE_ACCOUNT", nil),
 			},
 			"skip_verify": {
 				Type:        schema.TypeBool,
@@ -272,7 +273,7 @@ func DatabricksProvider() *schema.Provider {
 func configureDatabricksClient(ctx context.Context, d *schema.ResourceData) (interface{}, diag.Diagnostics) {
 	prov := ctx.Value(common.Provider).(*schema.Provider)
 	pc := common.DatabricksClient{
-		Provider: prov,
+		Provider:    prov,
 		InitContext: ctx,
 	}
 	attrsUsed := []string{}

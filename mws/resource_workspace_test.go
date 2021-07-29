@@ -2,6 +2,7 @@ package mws
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -24,6 +25,32 @@ func TestMwsAccWorkspace(t *testing.T) {
 	workspaceList, err := NewWorkspacesAPI(context.Background(), client).List(acctID)
 	assert.NoError(t, err, err)
 	t.Log(workspaceList)
+}
+
+func TestGcpAccWorkspace(t *testing.T) {
+	acctID := qa.GetEnvOrSkipTest(t, "DATABRICKS_ACCOUNT_ID")
+	client := common.CommonEnvironmentClient()
+	workspacesAPI := NewWorkspacesAPI(client.InitContext, client)
+
+	workspaceList, err := workspacesAPI.List(acctID)
+	require.NoError(t, err, err)
+	t.Log(workspaceList)
+
+	ws := Workspace{
+		AccountID:     acctID,
+		WorkspaceName: qa.RandomName(qa.GetEnvOrSkipTest(t, "TEST_PREFIX") + "-"),
+		Location:      qa.GetEnvOrSkipTest(t, "GOOGLE_REGION"),
+		CloudResourceBucket: &CloudResourceBucket{
+			GCP: &GCP{
+				ProjectID: qa.GetEnvOrSkipTest(t, "GOOGLE_PROJECT"),
+			},
+		},
+	}
+	err = workspacesAPI.Create(&ws, 5*time.Minute)
+	require.NoError(t, err)
+
+	err = workspacesAPI.Delete(acctID, fmt.Sprintf("%d", ws.WorkspaceID))
+	require.NoError(t, err)
 }
 
 func TestResourceWorkspaceCreate(t *testing.T) {

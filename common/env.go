@@ -27,12 +27,13 @@ func NewClientFromEnvironment() *DatabricksClient {
 		debugHeaders = false
 	}
 	client := DatabricksClient{
-		Host:       os.Getenv("DATABRICKS_HOST"),
-		Token:      os.Getenv("DATABRICKS_TOKEN"),
-		Username:   os.Getenv("DATABRICKS_USERNAME"),
-		Password:   os.Getenv("DATABRICKS_PASSWORD"),
-		ConfigFile: os.Getenv("DATABRICKS_CONFIG_FILE"),
-		Profile:    os.Getenv("DATABRICKS_CONFIG_PROFILE"),
+		Host:                 os.Getenv("DATABRICKS_HOST"),
+		Token:                os.Getenv("DATABRICKS_TOKEN"),
+		Username:             os.Getenv("DATABRICKS_USERNAME"),
+		Password:             os.Getenv("DATABRICKS_PASSWORD"),
+		ConfigFile:           os.Getenv("DATABRICKS_CONFIG_FILE"),
+		Profile:              os.Getenv("DATABRICKS_CONFIG_PROFILE"),
+		GoogleServiceAccount: os.Getenv("DATABRICKS_GOOGLE_SERVICE_ACCOUNT"),
 		AzureAuth: AzureAuth{
 			ResourceID:     os.Getenv("DATABRICKS_AZURE_WORKSPACE_RESOURCE_ID"),
 			WorkspaceName:  os.Getenv("DATABRICKS_AZURE_WORKSPACE_NAME"),

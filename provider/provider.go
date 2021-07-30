@@ -266,8 +266,7 @@ func DatabricksProvider() *schema.Provider {
 func configureDatabricksClient(ctx context.Context, d *schema.ResourceData) (interface{}, diag.Diagnostics) {
 	prov := ctx.Value(common.Provider).(*schema.Provider)
 	pc := common.DatabricksClient{
-		Provider:    prov,
-		InitContext: ctx,
+		Provider: prov,
 	}
 	attrsUsed := []string{}
 	for attr, schm := range prov.Schema {

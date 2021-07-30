@@ -104,9 +104,9 @@ type Workspace struct {
 	AccountID                           string `json:"account_id"`
 	WorkspaceName                       string `json:"workspace_name"`
 	DeploymentName                      string `json:"deployment_name,omitempty"`
-	AwsRegion                           string `json:"aws_region,omitempty"` // required for AWS, not allowed for GCP
-	CredentialsID                       string `json:"credentials_id,omitempty"` // required for AWS, not allowed for GCP
-	CustomerManagedKeyID                string `json:"customer_managed_key_id,omitempty"` // just for compatibility, will be removed
+	AwsRegion                           string `json:"aws_region,omitempty"`               // required for AWS, not allowed for GCP
+	CredentialsID                       string `json:"credentials_id,omitempty"`           // required for AWS, not allowed for GCP
+	CustomerManagedKeyID                string `json:"customer_managed_key_id,omitempty"`  // just for compatibility, will be removed
 	StorageConfigurationID              string `json:"storage_configuration_id,omitempty"` // required for AWS, not allowed for GCP
 	ManagedServicesCustomerManagedKeyID string `json:"managed_services_customer_managed_key_id,omitempty"`
 	StorageCustomerManagedKeyID         string `json:"storage_customer_managed_key_id,omitempty"`
@@ -120,11 +120,11 @@ type Workspace struct {
 	WorkspaceStatusMessage              string `json:"workspace_status_message,omitempty" tf:"computed"`
 	CreationTime                        int64  `json:"creation_time,omitempty" tf:"computed"`
 
-	ExternalCustomerInfo *externalCustomerInfo `json:"external_customer_info,omitempty" tf:"computed"`
+	ExternalCustomerInfo *externalCustomerInfo `json:"external_customer_info,omitempty"`
 
 	CloudResourceBucket *CloudResourceBucket `json:"cloud_resource_bucket,omitempty"`
 	Network             *GCPNetwork          `json:"network,omitempty"`
-	Cloud               string               `json:"cloud,omitempty"`
+	Cloud               string               `json:"cloud,omitempty" tf:"computed"`
 	Location            string               `json:"location,omitempty"`
 }
 

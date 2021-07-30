@@ -41,6 +41,8 @@ type AzureAuth struct {
 	UsePATForCLI            bool
 	UsePATForSPN            bool
 
+	AzureEnvironment *azure.Environment
+
 	// private property to give resource access
 	databricksClient *DatabricksClient
 
@@ -69,7 +71,7 @@ type tokenInfo struct {
 
 var authorizerMutex sync.Mutex
 
-func (aa *AzureAuth) GetAzureEnvironment() (azure.Environment, error) {
+func (aa *AzureAuth) getAzureEnvironment() (azure.Environment, error) {
 	// Used for unit testing purposes
 	if aa.azureManagementEndpoint != "" {
 		return azure.Environment{
@@ -125,6 +127,11 @@ func (aa *AzureAuth) configureWithClientSecret() (func(r *http.Request) error, e
 	if !aa.IsClientSecretSet() {
 		return nil, nil
 	}
+	azureEnvironment, err := aa.getAzureEnvironment()
+	if err != nil {
+		return nil, err
+	}
+	aa.AzureEnvironment = &azureEnvironment
 	log.Printf("[INFO] Using Azure Service Principal client secret authentication")
 	if aa.UsePATForSPN {
 		log.Printf("[INFO] Generating PAT token Azure Service Principal client secret authentication")
@@ -172,11 +179,7 @@ func (aa *AzureAuth) simpleAADRequestVisitor(
 	ctx context.Context,
 	authorizerFactory func(resource string) (autorest.Authorizer, error),
 	visitors ...func(r *http.Request, ma autorest.Authorizer) error) (func(r *http.Request) error, error) {
-	env, err := aa.GetAzureEnvironment()
-	if err != nil {
-		return nil, err
-	}
-	managementAuthorizer, err := authorizerFactory(env.ServiceManagementEndpoint)
+	managementAuthorizer, err := authorizerFactory(aa.AzureEnvironment.ServiceManagementEndpoint)
 	if err != nil {
 		return nil, err
 	}
@@ -220,11 +223,7 @@ func (aa *AzureAuth) acquirePAT(
 	if aa.temporaryPat != nil {
 		return aa.temporaryPat, nil
 	}
-	env, err := aa.GetAzureEnvironment()
-	if err != nil {
-		return nil, err
-	}
-	management, err := factory(env.ServiceManagementEndpoint)
+	management, err := factory(aa.AzureEnvironment.ServiceManagementEndpoint)
 	if err != nil {
 		return nil, err
 	}
@@ -294,12 +293,8 @@ func (aa *AzureAuth) ensureWorkspaceURL(ctx context.Context,
 		return fmt.Errorf("somehow resource id is not set")
 	}
 	log.Println("[DEBUG] Getting Workspace ID via management token.")
-	env, err := aa.GetAzureEnvironment()
-	if err != nil {
-		return maybeExtendAuthzError(err)
-	}
 	// All azure endpoints typically end with a trailing slash removing it because resourceID starts with slash
-	managementResourceURL := strings.TrimSuffix(env.ResourceManagerEndpoint, "/") + resourceID
+	managementResourceURL := strings.TrimSuffix(aa.AzureEnvironment.ResourceManagerEndpoint, "/") + resourceID
 	var workspace azureDatabricksWorkspace
 	resp, err := aa.databricksClient.genericQuery(ctx, http.MethodGet,
 		managementResourceURL,
@@ -341,10 +336,6 @@ func (aa *AzureAuth) getClientSecretAuthorizer(resource string) (autorest.Author
 		// todo: probably should be two different ones...
 		return aa.authorizer, nil
 	}
-	env, err := aa.GetAzureEnvironment()
-	if err != nil {
-		return nil, err
-	}
 	if resource != AzureDatabricksResourceID {
 		es := auth.EnvironmentSettings{
 			Values: map[string]string{
@@ -353,12 +344,12 @@ func (aa *AzureAuth) getClientSecretAuthorizer(resource string) (autorest.Author
 				auth.TenantID:     aa.TenantID,
 				auth.Resource:     resource,
 			},
-			Environment: env,
+			Environment: *aa.AzureEnvironment,
 		}
 		return es.GetAuthorizer()
 	}
 	platformTokenOAuthCfg, err := adal.NewOAuthConfigWithAPIVersion(
-		env.ActiveDirectoryEndpoint,
+		aa.AzureEnvironment.ActiveDirectoryEndpoint,
 		aa.TenantID,
 		nil)
 	if err != nil {

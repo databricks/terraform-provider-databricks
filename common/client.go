@@ -39,7 +39,6 @@ type DatabricksClient struct {
 	AccountID          string
 	AzureAuth          AzureAuth
 	InsecureSkipVerify bool
-	DevelopmentMode    bool
 	HTTPTimeoutSeconds int
 	DebugTruncateBytes int
 	DebugHeaders       bool

@@ -245,6 +245,17 @@ func ResourceWorkspace() *schema.Resource {
 		func(_ map[string]*schema.Schema) map[string]*schema.Schema {
 			return workspaceSchema
 		})
+	requireFields := func(onThisCloud bool, d *schema.ResourceData, fields ...string) error {
+		if !onThisCloud {
+			return nil
+		}
+		for _, fieldName := range fields {
+			if d.Get(fieldName) == workspaceSchema[fieldName].ZeroValue() {
+				return fmt.Errorf("%s is required", fieldName)
+			}
+		}
+		return nil
+	}
 	return common.Resource{
 		Schema:        workspaceSchema,
 		SchemaVersion: 2,
@@ -252,6 +263,12 @@ func ResourceWorkspace() *schema.Resource {
 			var workspace Workspace
 			workspacesAPI := NewWorkspacesAPI(ctx, c)
 			if err := common.DataToStructPointer(d, workspaceSchema, &workspace); err != nil {
+				return err
+			}
+			if err := requireFields(c.IsAws(), d, "aws_region", "credentials_id", "storage_configuration_id"); err != nil {
+				return err
+			}
+			if err := requireFields(c.IsGcp(), d, "location"); err != nil {
 				return err
 			}
 			if len(workspace.CustomerManagedKeyID) > 0 && len(workspace.ManagedServicesCustomerManagedKeyID) == 0 {

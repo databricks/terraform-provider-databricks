@@ -17,6 +17,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/Azure/go-autorest/autorest/azure"
 	"github.com/databrickslabs/terraform-provider-databricks/common"
 	"github.com/databrickslabs/terraform-provider-databricks/internal"
 
@@ -422,9 +423,12 @@ func HttpFixtureClient(t *testing.T, fixtures []HTTPFixture) (client *common.Dat
 			t.FailNow()
 		}
 	}))
+	aa := common.AzureAuth{}
+	aa.AzureEnvironment = &azure.PublicCloud
 	client = &common.DatabricksClient{
-		Host:  server.URL,
-		Token: "...",
+		Host:      server.URL,
+		Token:     "...",
+		AzureAuth: aa,
 	}
 	err = client.Configure()
 	return client, server, err

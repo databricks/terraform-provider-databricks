@@ -47,8 +47,6 @@ type DatabricksClient struct {
 	GoogleServiceAccount string
 	googleAuthOptions    []option.ClientOption
 
-	// Context from `ConfigureContextFunc` that is
-	// to be re-used with OAuth token exchanges
 	InitContext context.Context
 
 	authMutex      sync.Mutex

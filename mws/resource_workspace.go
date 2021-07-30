@@ -34,6 +34,9 @@ type WorkspacesAPI struct {
 
 // Create creates the workspace creation process
 func (a WorkspacesAPI) Create(ws *Workspace, timeout time.Duration) error {
+	if a.client.IsGcp() {
+		ws.Cloud = "gcp"
+	}
 	workspacesAPIPath := fmt.Sprintf("/accounts/%s/workspaces", ws.AccountID)
 	err := a.client.Post(a.context, workspacesAPIPath, ws, &ws)
 	if err != nil {

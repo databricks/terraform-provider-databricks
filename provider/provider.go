@@ -224,6 +224,11 @@ func DatabricksProvider() *schema.Provider {
 				Optional:    true,
 				DefaultFunc: schema.EnvDefaultFunc("ARM_ENVIRONMENT", "public"),
 			},
+			"google_service_account": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				DefaultFunc: schema.EnvDefaultFunc("DATABRICKS_GOOGLE_SERVICE_ACCOUNT", nil),
+			},
 			"skip_verify": {
 				Type:        schema.TypeBool,
 				Description: "Skip SSL certificate verification for HTTP calls. Use at your own risk.",
@@ -268,7 +273,8 @@ func DatabricksProvider() *schema.Provider {
 func configureDatabricksClient(ctx context.Context, d *schema.ResourceData) (interface{}, diag.Diagnostics) {
 	prov := ctx.Value(common.Provider).(*schema.Provider)
 	pc := common.DatabricksClient{
-		Provider: prov,
+		Provider:    prov,
+		InitContext: ctx,
 	}
 	attrsUsed := []string{}
 	for attr, schm := range prov.Schema {
@@ -368,6 +374,10 @@ func configureDatabricksClient(ctx context.Context, d *schema.ResourceData) (int
 	}
 	if v, ok := d.GetOk("azure_environment"); ok {
 		pc.AzureAuth.Environment = v.(string)
+	}
+	if v, ok := d.GetOk("google_service_account"); ok {
+		authsUsed["google"] = true
+		pc.GoogleServiceAccount = v.(string)
 	}
 	authorizationMethodsUsed := []string{}
 	for name, used := range authsUsed {

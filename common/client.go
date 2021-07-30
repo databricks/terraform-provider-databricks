@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"golang.org/x/time/rate"
+	"google.golang.org/api/option"
 
 	"github.com/hashicorp/go-retryablehttp"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -43,12 +44,20 @@ type DatabricksClient struct {
 	DebugTruncateBytes int
 	DebugHeaders       bool
 	RateLimitPerSecond int
-	authMutex          sync.Mutex
-	rateLimiter        *rate.Limiter
-	Provider           *schema.Provider
-	httpClient         *retryablehttp.Client
-	authVisitor        func(r *http.Request) error
-	commandFactory     func(context.Context, *DatabricksClient) CommandExecutor
+
+	GoogleServiceAccount string
+	googleAuthOptions    []option.ClientOption
+
+	// Context from `ConfigureContextFunc` that is
+	// to be re-used with OAuth token exchanges
+	InitContext context.Context
+
+	authMutex      sync.Mutex
+	rateLimiter    *rate.Limiter
+	Provider       *schema.Provider
+	httpClient     *retryablehttp.Client
+	authVisitor    func(r *http.Request) error
+	commandFactory func(context.Context, *DatabricksClient) CommandExecutor
 }
 
 // Configure client to work
@@ -75,6 +84,8 @@ func (c *DatabricksClient) Authenticate() error {
 		c.configureAuthWithDirectParams,
 		c.AzureAuth.configureWithClientSecret,
 		c.AzureAuth.configureWithAzureCLI,
+		c.configureWithGoogleForAccountsAPI,
+		c.configureWithGoogleForWorkspace,
 		c.configureFromDatabricksCfg,
 	}
 	for _, authProvider := range authorizers {
@@ -198,6 +209,9 @@ func (c *DatabricksClient) configureHTTPCLient() {
 	}
 	if c.RateLimitPerSecond == 0 {
 		c.RateLimitPerSecond = DefaultRateLimitPerSecond
+	}
+	if c.InitContext == nil {
+		c.InitContext = context.Background()
 	}
 	c.rateLimiter = rate.NewLimiter(rate.Limit(c.RateLimitPerSecond), 1)
 	// Set up a retryable HTTP Client to handle cases where the service returns

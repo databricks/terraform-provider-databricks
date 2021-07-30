@@ -1,5 +1,7 @@
 package mws
 
+import "encoding/json"
+
 // StsRole is the object that contains cross account role arn and external app id
 type StsRole struct {
 	RoleArn    string `json:"role_arn,omitempty"`
@@ -73,6 +75,30 @@ const (
 // WorkspaceStatusesNonRunnable is a list of statuses in which the workspace is not runnable
 var WorkspaceStatusesNonRunnable = []string{WorkspaceStatusCanceled, WorkspaceStatusFailed}
 
+type GCP struct {
+	ProjectID string `json:"project_id"`
+}
+
+type CloudResourceBucket struct {
+	GCP *GCP `json:"gcp"`
+}
+
+type GCPManagedNetworkConfig struct {
+	SubnetCIDR               string `json:"subnet_cidr"`
+	GKEClusterPodIPRange     string `json:"gke_cluster_pod_ip_range"`
+	GKEClusterServiceIPRange string `json:"gke_cluster_service_ip_range"`
+}
+
+type GCPCommonNetworkConfig struct {
+	GKEConnectivityType     string `json:"gke_connectivity_type"`
+	GKEClusterMasterIPRange string `json:"gke_cluster_master_ip_range"`
+}
+
+type GCPNetwork struct {
+	GCPManagedNetworkConfig *GCPManagedNetworkConfig `json:"gcp_managed_network_config"`
+	GCPCommonNetworkConfig  *GCPManagedNetworkConfig `json:"gcp_common_network_config"`
+}
+
 // Workspace is the object that contains all the information for deploying a workspace
 type Workspace struct {
 	AccountID                           string `json:"account_id"`
@@ -95,6 +121,34 @@ type Workspace struct {
 	CreationTime                        int64  `json:"creation_time,omitempty" tf:"computed"`
 
 	ExternalCustomerInfo *externalCustomerInfo `json:"external_customer_info,omitempty" tf:"computed"`
+
+	CloudResourceBucket *CloudResourceBucket `json:"cloud_resource_bucket,omitempty"`
+	Network             *GCPNetwork          `json:"network,omitempty"`
+	Cloud               string               `json:"cloud,omitempty"`
+	Location            string               `json:"location,omitempty"`
+}
+
+// this type alias hack is required for Marshaller to work without an infinite loop
+type aWorkspace Workspace
+
+// MarshalJSON is required to overcome the limitations of `omitempty` usage with reflect_resource.go
+// for workspace creation in Accounts API for AWS and GCP. It exits early on AWS and picks only
+// the relevant fields for GCP.
+func (w *Workspace) MarshalJSON() ([]byte, error) {
+	if w.Cloud != "gcp" {
+		return json.Marshal(aWorkspace(*w))
+	}
+	workspaceCreationRequest := map[string]interface{}{
+		"account_id":            w.AccountID,
+		"cloud":                 w.Cloud,
+		"cloud_resource_bucket": w.CloudResourceBucket,
+		"location":              w.Location,
+		"workspace_name":        w.WorkspaceName,
+	}
+	if w.Network != nil {
+		workspaceCreationRequest["network"] = w.Network
+	}
+	return json.Marshal(workspaceCreationRequest)
 }
 
 // VPCEndpoint is the object that contains all the information for registering an VPC endpoint

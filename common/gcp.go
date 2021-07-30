@@ -8,20 +8,20 @@ import (
 	"google.golang.org/api/impersonate"
 )
 
-func (c *DatabricksClient) getGoogleOIDCSource() (ts oauth2.TokenSource, err error) {
+func (c *DatabricksClient) getGoogleOIDCSource() (oauth2.TokenSource, error) {
 	// source for generateIdToken
-	ts, err = impersonate.IDTokenSource(c.InitContext, impersonate.IDTokenConfig{
+	ts, err := impersonate.IDTokenSource(c.InitContext, impersonate.IDTokenConfig{
 		Audience:        c.Host,
 		TargetPrincipal: c.GoogleServiceAccount,
 		IncludeEmail:    true,
 	}, c.googleAuthOptions...)
 	if err != nil {
 		err = fmt.Errorf("could not obtain OIDC token. %w Running 'gcloud auth application-default login' may help", err)
-		return
+		return nil, err
 	}
 	// TODO: verify that refreshers work...
 	ts = oauth2.ReuseTokenSource(nil, ts)
-	return
+	return ts, nil
 }
 
 func (c *DatabricksClient) configureWithGoogleForAccountsAPI() (func(r *http.Request) error, error) {

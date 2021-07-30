@@ -56,6 +56,7 @@ func DatabricksProvider() *schema.Provider {
 			"databricks_user_instance_profile":  identity.ResourceUserInstanceProfile(),
 			"databricks_instance_profile":       identity.ResourceInstanceProfile(),
 			"databricks_group_member":           identity.ResourceGroupMember(),
+			"databricks_obo_token":              identity.ResourceOboToken(),
 			"databricks_token":                  identity.ResourceToken(),
 			"databricks_user":                   identity.ResourceUser(),
 			"databricks_service_principal":      identity.ResourceServicePrincipal(),
@@ -223,9 +224,21 @@ func DatabricksProvider() *schema.Provider {
 				Optional:    true,
 				DefaultFunc: schema.EnvDefaultFunc("ARM_ENVIRONMENT", "public"),
 			},
+			"google_service_account": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				DefaultFunc: schema.EnvDefaultFunc("DATABRICKS_GOOGLE_SERVICE_ACCOUNT", nil),
+			},
 			"skip_verify": {
 				Type:        schema.TypeBool,
 				Description: "Skip SSL certificate verification for HTTP calls. Use at your own risk.",
+				Optional:    true,
+				Default:     false,
+			},
+			"development_mode": {
+				Type:        schema.TypeBool,
+				Description: "Turn off certain error checks. Reserved for internal use only.",
+				DefaultFunc: schema.EnvDefaultFunc("DATABRICKS_DEV", false),
 				Optional:    true,
 				Default:     false,
 			},
@@ -260,7 +273,8 @@ func DatabricksProvider() *schema.Provider {
 func configureDatabricksClient(ctx context.Context, d *schema.ResourceData) (interface{}, diag.Diagnostics) {
 	prov := ctx.Value(common.Provider).(*schema.Provider)
 	pc := common.DatabricksClient{
-		Provider: prov,
+		Provider:    prov,
+		InitContext: ctx,
 	}
 	attrsUsed := []string{}
 	for attr, schm := range prov.Schema {
@@ -340,6 +354,9 @@ func configureDatabricksClient(ctx context.Context, d *schema.ResourceData) (int
 	if v, ok := d.GetOk("skip_verify"); ok {
 		pc.InsecureSkipVerify = v.(bool)
 	}
+	if v, ok := d.GetOk("development_mode"); ok {
+		pc.DevelopmentMode = v.(bool)
+	}
 	if v, ok := d.GetOk("debug_truncate_bytes"); ok {
 		pc.DebugTruncateBytes = v.(int)
 	}
@@ -357,6 +374,10 @@ func configureDatabricksClient(ctx context.Context, d *schema.ResourceData) (int
 	}
 	if v, ok := d.GetOk("azure_environment"); ok {
 		pc.AzureAuth.Environment = v.(string)
+	}
+	if v, ok := d.GetOk("google_service_account"); ok {
+		authsUsed["google"] = true
+		pc.GoogleServiceAccount = v.(string)
 	}
 	authorizationMethodsUsed := []string{}
 	for name, used := range authsUsed {

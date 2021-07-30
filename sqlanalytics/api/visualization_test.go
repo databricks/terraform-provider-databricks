@@ -9,7 +9,7 @@ import (
 
 func TestVisualizationMarshalUnmarshal(t *testing.T) {
 	v := Visualization{
-		ID:          12345,
+		ID:          "12345",
 		QueryID:     "queryID",
 		Type:        "type",
 		Name:        "name",

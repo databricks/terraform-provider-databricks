@@ -4,8 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"net/http"
 	"sort"
-	"strconv"
 	"strings"
 
 	"github.com/databrickslabs/terraform-provider-databricks/common"
@@ -80,10 +80,7 @@ func (w *WidgetEntity) toAPIObject(schema map[string]*schema.Schema, data *schem
 
 	// The visualization ID is a string for the Terraform resource and an integer in the API.
 	if w.VisualizationID != "" {
-		visualizationID, err := strconv.Atoi(extractVisualizationID(w.VisualizationID))
-		if err != nil {
-			return nil, err
-		}
+		visualizationID := api.NewStringOrInt(extractVisualizationID(w.VisualizationID))
 		aw.VisualizationID = &visualizationID
 	}
 
@@ -127,7 +124,7 @@ func (w *WidgetEntity) toAPIObject(schema map[string]*schema.Schema, data *schem
 func (w *WidgetEntity) fromAPIObject(aw *api.Widget, schema map[string]*schema.Schema, data *schema.ResourceData) error {
 	// Copy from API object.
 	w.DashboardID = aw.DashboardID
-	w.WidgetID = strconv.Itoa(aw.ID)
+	w.WidgetID = aw.ID.String()
 
 	if aw.VisualizationID != nil {
 		w.VisualizationID = fmt.Sprint(*aw.VisualizationID)
@@ -227,7 +224,7 @@ func (a WidgetAPI) Read(dashboardID, widgetID string) (*api.Widget, error) {
 			return nil, err
 		}
 
-		if strconv.Itoa(wnew.ID) == widgetID {
+		if wnew.ID.String() == widgetID {
 			// Include dashboard ID in returned object.
 			// It's not part of the API response.
 			wnew.DashboardID = dashboardID
@@ -235,7 +232,11 @@ func (a WidgetAPI) Read(dashboardID, widgetID string) (*api.Widget, error) {
 		}
 	}
 
-	return nil, fmt.Errorf("cannot find widget %s attached to dashboard %s", widgetID, dashboardID)
+	return nil, common.APIError{
+		ErrorCode:  "NOT_FOUND",
+		StatusCode: http.StatusNotFound,
+		Message:    fmt.Sprintf("Cannot find widget %s attached to dashboard %s", widgetID, dashboardID),
+	}
 }
 
 // Update ...

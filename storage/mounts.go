@@ -44,7 +44,14 @@ func (mp MountPoint) Source() (string, error) {
 // Delete removes mount from workspace
 func (mp MountPoint) Delete() error {
 	result := mp.exec.Execute(mp.clusterID, "python", fmt.Sprintf(`
+		found = False
 		mount_point = "/mnt/%s"
+		dbutils.fs.refreshMounts()
+		for mount in dbutils.fs.mounts():
+			if mount.mountPoint == mount_point:
+				found = True
+		if not found:
+			dbutils.notebook.exit("success")
 		dbutils.fs.unmount(mount_point)
 		dbutils.fs.refreshMounts()
 		for mount in dbutils.fs.mounts():
@@ -141,7 +148,7 @@ func getMountingClusterID(ctx context.Context, client *common.DatabricksClient, 
 		return getOrCreateMountingCluster(clustersAPI)
 	}
 	clusterInfo, err := clustersAPI.Get(clusterID)
-	if e, ok := err.(common.APIError); ok && e.IsMissing() {
+	if common.IsMissing(err) {
 		return getOrCreateMountingCluster(clustersAPI)
 	}
 	if err != nil {

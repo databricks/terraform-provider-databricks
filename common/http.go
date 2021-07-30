@@ -60,6 +60,15 @@ func (apiError APIError) Error() string {
 	return apiError.Message
 }
 
+// IsMissing tells if error is about missing resource
+func IsMissing(err error) bool {
+	if err == nil {
+		return false
+	}
+	e, ok := err.(APIError)
+	return ok && e.IsMissing()
+}
+
 // IsMissing tells if it is missing resource
 func (apiError APIError) IsMissing() bool {
 	return apiError.StatusCode == http.StatusNotFound
@@ -128,9 +137,16 @@ func (c *DatabricksClient) parseUnknownError(
 	return
 }
 
+func (c *DatabricksClient) isAccountsClient() bool {
+	return strings.HasPrefix(c.Host, "https://accounts")
+}
+
 func (c *DatabricksClient) commonErrorClarity(resp *http.Response) *APIError {
+	if c.DevelopmentMode {
+		return nil
+	}
 	isAccountsAPI := strings.HasPrefix(resp.Request.URL.Path, "/api/2.0/accounts")
-	isAccountsClient := strings.Contains(c.Host, accountsHost)
+	isAccountsClient := c.isAccountsClient()
 	isTesting := strings.HasPrefix(resp.Request.URL.Host, "127.0.0.1")
 	if !isTesting && isAccountsClient && !isAccountsAPI {
 		return &APIError{

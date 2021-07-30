@@ -212,7 +212,7 @@ func waitForLibrariesInstalled(
 	libraries LibrariesAPI, clusterInfo ClusterInfo) (result *ClusterLibraryStatuses, err error) {
 	err = resource.RetryContext(libraries.context, 30*time.Minute, func() *resource.RetryError {
 		libsClusterStatus, err := libraries.ClusterStatus(clusterInfo.ClusterID)
-		if ae, ok := err.(common.APIError); ok && ae.IsMissing() {
+		if common.IsMissing(err) {
 			// eventual consistency error
 			return resource.RetryableError(err)
 		}

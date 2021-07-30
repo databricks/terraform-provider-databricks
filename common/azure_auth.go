@@ -152,22 +152,17 @@ func (aa *AzureAuth) addSpManagementTokenVisitor(r *http.Request, management aut
 	if tokenProvider == nil {
 		return fmt.Errorf("token provider is nil")
 	}
-	accessToken := tokenProvider.OAuthToken()
-	if accessToken == "" {
-		// DATABRICKS_HOST was provided, so request to Management API is not made,
-		// therefore we manually need to ensure token refresh here
-		var err error
-		switch rf := tokenProvider.(type) {
-		case adal.RefresherWithContext:
-			err = rf.EnsureFreshWithContext(r.Context())
-		case adal.Refresher:
-			err = rf.EnsureFresh()
-		}
-		if err != nil {
-			return err
-		}
-		accessToken = tokenProvider.OAuthToken()
+	var err error
+	switch rf := tokenProvider.(type) {
+	case adal.RefresherWithContext:
+		err = rf.EnsureFreshWithContext(r.Context())
+	case adal.Refresher:
+		err = rf.EnsureFresh()
 	}
+	if err != nil {
+		return err
+	}
+	accessToken := tokenProvider.OAuthToken()
 	r.Header.Set("X-Databricks-Azure-SP-Management-Token", accessToken)
 	return nil
 }

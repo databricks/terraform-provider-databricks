@@ -1,5 +1,21 @@
 # Version changelog
 
+## 0.3.7
+
+* Added `databricks_obo_token` resource to create On-Behalf-Of tokens for a Service Principal in Databricks workspaces on AWS. It is very useful, when you want to provision resources within a workspace through narrowly-scoped service principal, that has no access to other workspaces within the same Databricks Account ([#736](https://github.com/databrickslabs/terraform-provider-databricks/pull/736))
+* Added support for [IAM credential passthrough](https://docs.databricks.com/security/credential-passthrough/iam-passthrough.html) with `is_meta_instance_profile` property for `databricks_instance_profile` ([#745](https://github.com/databrickslabs/terraform-provider-databricks/pull/745))
+* Fixed incorrect workspace update bug and added more validation error messaging ([#649](https://github.com/databrickslabs/terraform-provider-databricks/pull/649))
+* Clarify network modification procedure on active workspaces ([#732](https://github.com/databrickslabs/terraform-provider-databricks/issues/732))
+* Various bug fixes in Databricks SQL resources
+
+Updated dependency versions:
+
+* Bump github.com/aws/aws-sdk-go to v1.40.8
+* Bump github.com/hashicorp/hcl/v2 to v2.10.1
+* Bump github.com/zclconf/go-cty to v1.9.0
+* Bump golang.org/x/time to v0.0.0-20210723032227-1f47c861a9ac
+* Bump golang.org/x/tools to v0.1.5
+
 ## 0.3.6
 
 * Added support for hybrid pools ([#689](https://github.com/databrickslabs/terraform-provider-databricks/pull/689))
@@ -7,11 +23,13 @@
 * Azure CLI auth is now forcing JSON output ([#717](https://github.com/databrickslabs/terraform-provider-databricks/pull/717))
 * `databricks_permissions` are getting validation on `terraform plan` stage ([#706](https://github.com/databrickslabs/terraform-provider-databricks/pull/706))
 * Added `databricks_directory` resource ([#690](https://github.com/databrickslabs/terraform-provider-databricks/pull/690))
-* Added support for hybrid instance pools ([#689](https://github.com/databrickslabs/terraform-provider-databricks/pull/689))
 * Added `run_as_role` field to `databricks_sql_query` ([#684](https://github.com/databrickslabs/terraform-provider-databricks/pull/684))
 * Added `user_id` attribute for `databricks_user` data resource, so that it's possible to dynamically create resources based on members of the group ([#714](https://github.com/databrickslabs/terraform-provider-databricks/pull/714))
 * Added more selectors to `databricks_node_type` data source ([#723](https://github.com/databrickslabs/terraform-provider-databricks/pull/723))
 * Azure auth with SPN now uses AAD token by default instead of PAT. Previous behavior (using PAT) could be restored by setting `azure_use_pat_for_spn` to `true` ([#721](https://github.com/databrickslabs/terraform-provider-databricks/pull/721))
+* `deployment_name` for `databricks_mws_workspaces` is now optional, how it should have been. This enables creation of Databricks workspaces without an account prefix.
+* To replicate default behavior of Databricks SQL UI, `enable_photon` is now `true` by default for `databricks_sql_endpoint`.
+* Various documentation and bugfixes
 
 Updated dependency versions:
 

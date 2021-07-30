@@ -433,7 +433,7 @@ func TestResourcePermissionsCreate_SQLA_Asset(t *testing.T) {
 					AccessControlList: []AccessControlChange{
 						{
 							UserName:        TestingUser,
-							PermissionLevel: "CAN_USE",
+							PermissionLevel: "CAN_RUN",
 						},
 						{
 							UserName:        TestingAdminUser,
@@ -451,7 +451,7 @@ func TestResourcePermissionsCreate_SQLA_Asset(t *testing.T) {
 					AccessControlList: []AccessControl{
 						{
 							UserName:        TestingUser,
-							PermissionLevel: "CAN_USE",
+							PermissionLevel: "CAN_RUN",
 						},
 						{
 							UserName:        TestingAdminUser,
@@ -467,7 +467,7 @@ func TestResourcePermissionsCreate_SQLA_Asset(t *testing.T) {
 			"access_control": []interface{}{
 				map[string]interface{}{
 					"user_name":        TestingUser,
-					"permission_level": "CAN_USE",
+					"permission_level": "CAN_RUN",
 				},
 			},
 		},
@@ -478,7 +478,7 @@ func TestResourcePermissionsCreate_SQLA_Asset(t *testing.T) {
 	require.Equal(t, 1, len(ac.List()))
 	firstElem := ac.List()[0].(map[string]interface{})
 	assert.Equal(t, TestingUser, firstElem["user_name"])
-	assert.Equal(t, "CAN_USE", firstElem["permission_level"])
+	assert.Equal(t, "CAN_RUN", firstElem["permission_level"])
 }
 
 func TestResourcePermissionsCreate_SQLA_Endpoint(t *testing.T) {
@@ -725,6 +725,9 @@ func TestResourcePermissionsUpdate(t *testing.T) {
 					},
 				},
 			},
+		},
+		InstanceState: map[string]string{
+			"job_id": "9",
 		},
 		HCL: `
 		job_id = 9

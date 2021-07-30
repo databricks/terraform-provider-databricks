@@ -243,7 +243,9 @@ func TestAwsAccS3Mount(t *testing.T) {
 	ctx := context.WithValue(context.Background(), common.Current, t.Name())
 	instanceProfilesAPI := identity.NewInstanceProfilesAPI(ctx, client)
 	instanceProfilesAPI.Synchronized(instanceProfile, func() bool {
-		if err := instanceProfilesAPI.Create(instanceProfile); err != nil {
+		if err := instanceProfilesAPI.Create(identity.InstanceProfileInfo{
+			InstanceProfileArn: instanceProfile,
+		}); err != nil {
 			return false
 		}
 		bucket := qa.GetEnvOrSkipTest(t, "TEST_S3_BUCKET")

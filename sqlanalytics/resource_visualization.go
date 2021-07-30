@@ -6,7 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
-	"strconv"
+	"net/http"
 	"strings"
 
 	"github.com/databrickslabs/terraform-provider-databricks/common"
@@ -45,7 +45,7 @@ func (v *VisualizationEntity) toAPIObject(schema map[string]*schema.Schema, data
 func (v *VisualizationEntity) fromAPIObject(av *api.Visualization, schema map[string]*schema.Schema, data *schema.ResourceData) error {
 	// Copy from API object.
 	v.QueryID = av.QueryID
-	v.VisualizationID = strconv.Itoa(av.ID)
+	v.VisualizationID = av.ID.String()
 	v.Type = strings.ToLower(av.Type)
 	v.Name = av.Name
 	v.Description = av.Description
@@ -86,7 +86,7 @@ func (a VisualizationAPI) Read(queryID, visualizationID string) (*api.Visualizat
 			return nil, err
 		}
 
-		if strconv.Itoa(vnew.ID) == visualizationID {
+		if vnew.ID.String() == visualizationID {
 			// Include query ID in returned object.
 			// It's not part of the API response.
 			vnew.QueryID = queryID
@@ -94,7 +94,11 @@ func (a VisualizationAPI) Read(queryID, visualizationID string) (*api.Visualizat
 		}
 	}
 
-	return nil, fmt.Errorf("cannot find visualization %s attached to query %s", visualizationID, queryID)
+	return nil, common.APIError{
+		ErrorCode:  "NOT_FOUND",
+		StatusCode: http.StatusNotFound,
+		Message:    fmt.Sprintf("Cannot find visualization %s attached to query %s", visualizationID, queryID),
+	}
 }
 
 // Update ...

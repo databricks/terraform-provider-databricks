@@ -2,7 +2,6 @@ package identity
 
 import (
 	"context"
-	"fmt"
 	"sort"
 
 	"github.com/databrickslabs/terraform-provider-databricks/common"
@@ -39,15 +38,12 @@ func DataSourceGroup() *schema.Resource {
 				return diag.FromErr(err)
 			}
 			groupsAPI := NewGroupsAPI(ctx, m)
-			groupList, err := groupsAPI.Filter(fmt.Sprintf("displayName eq '%s'", this.DisplayName))
+			group, err := groupsAPI.ReadByDisplayName(this.DisplayName)
 			if err != nil {
 				return diag.FromErr(err)
 			}
-			if len(groupList.Resources) == 0 {
-				return diag.FromErr(fmt.Errorf("cannot find group %s", this.DisplayName))
-			}
-			d.SetId(groupList.Resources[0].ID)
-			queue := []ScimGroup{groupList.Resources[0]}
+			d.SetId(group.ID)
+			queue := []ScimGroup{group}
 			for len(queue) > 0 {
 				current := queue[0]
 				queue = queue[1:]
@@ -57,7 +53,6 @@ func DataSourceGroup() *schema.Resource {
 				for _, x := range current.Roles {
 					this.InstanceProfiles = append(this.InstanceProfiles, x.Value)
 				}
-				// TODO: check if entity is having all entitlements
 				current.Entitlements.readIntoData(d)
 				for _, x := range current.Groups {
 					this.Groups = append(this.Groups, x.Value)

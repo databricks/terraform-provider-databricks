@@ -4,15 +4,17 @@ import "encoding/json"
 
 // Widget ...
 type Widget struct {
-	ID int `json:"id,omitempty"`
+	// Widgets evolved from having integer IDs to string UUIDs.
+	// This type supports either in support of a transition without breakage.
+	ID stringOrInt `json:"id,omitempty"`
 
 	// Widgets are part of a dashboard.
 	DashboardID string `json:"dashboard_id"`
 
 	// They are either linked to a query visualization or embed a piece of Markdown text.
 	// These fields are mutually exclusive and must be `null` if they don't apply.
-	VisualizationID *int    `json:"visualization_id"`
-	Text            *string `json:"text"`
+	VisualizationID *stringOrInt `json:"visualization_id"`
+	Text            *string      `json:"text"`
 
 	// Options apply to both visualization and text widgets.
 	Options WidgetOptions `json:"options"`

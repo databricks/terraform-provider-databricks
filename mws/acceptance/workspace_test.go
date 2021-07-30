@@ -59,3 +59,26 @@ func TestMwsAccWorkspaces(t *testing.T) {
 		},
 	})
 }
+
+func TestGcpAccWorkspaces(t *testing.T) {
+	cloudEnv := os.Getenv("CLOUD_ENV")
+	if cloudEnv != "gcp-accounts" {
+		t.Skip("Acceptance tests skipped unless CLOUD_ENV=gcp-accounts is set")
+	}
+	acceptance.Test(t, []acceptance.Step{
+		{
+			Template: `
+			resource "databricks_mws_workspaces" "this" {
+				account_id      = "{env.DATABRICKS_ACCOUNT_ID}"
+				workspace_name  = "{env.TEST_PREFIX}-acc-{var.RANDOM}"
+				location        = "{env.GOOGLE_REGION}"
+		
+				cloud_resource_bucket {
+					gcp {
+						project_id = "{env.GOOGLE_PROJECT}"
+					}
+				}
+			}`,
+		},
+	})
+}

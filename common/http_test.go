@@ -52,6 +52,7 @@ func TestCommonErrorFromE2ClientToWorkspace(t *testing.T) {
 	ws := DatabricksClient{
 		Host: "accounts.cloud.databricks.com",
 	}
+	ws.fixHost()
 	accountsAPIForWorkspaceClient := ws.commonErrorClarity(&http.Response{
 		Request: httptest.NewRequest(
 			"GET", "https://querty.cloud.databricks.com/api/2.0/clusters/list",

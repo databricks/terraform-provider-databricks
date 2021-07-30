@@ -42,13 +42,16 @@ var entitlementMapping = map[string]string{
 	"allow-cluster-create":       "allow_cluster_create",
 	"allow-instance-pool-create": "allow_instance_pool_create",
 	"databricks-sql-access":      "allow_sql_analytics_access", // TODO: state change
+	"workspace-access":           "workspace_access",
 }
 
 // order is important for tests
 var possibleEntitlements = []string{
 	"allow-cluster-create",
 	"allow-instance-pool-create",
-	"databricks-sql-access"}
+	"databricks-sql-access",
+	"workspace-access",
+}
 
 type entitlements []ComplexValue
 
@@ -81,6 +84,7 @@ func addEntitlementsToSchema(s *map[string]*schema.Schema) {
 		(*s)[field_name] = &schema.Schema{
 			Type:     schema.TypeBool,
 			Optional: true,
+			Default:  false,
 		}
 	}
 }

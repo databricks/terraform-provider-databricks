@@ -234,6 +234,7 @@ func TestResourceInstancePoolUpdate(t *testing.T) {
 				Method:   "GET",
 				Resource: "/api/2.0/instance-pools/get?instance_pool_id=abc",
 				Response: InstancePoolAndStats{
+					EnableElasticDisk:                  true,
 					InstancePoolID:                     "abc",
 					MaxCapacity:                        500,
 					NodeTypeID:                         "i3.xlarge",
@@ -250,6 +251,10 @@ func TestResourceInstancePoolUpdate(t *testing.T) {
 			"max_capacity":                          500,
 			"min_idle_instances":                    5,
 			"node_type_id":                          "i3.xlarge",
+		},
+		InstanceState: map[string]string{
+			"node_type_id":        "i3.xlarge",
+			"enable_elastic_disk": "true",
 		},
 		Update: true,
 		ID:     "abc",
@@ -278,8 +283,9 @@ func TestResourceInstancePoolUpdate_Error(t *testing.T) {
 			"min_idle_instances":                    5,
 			"node_type_id":                          "i3.xlarge",
 		},
-		Update: true,
-		ID:     "abc",
+		Update:      true,
+		RequiresNew: true,
+		ID:          "abc",
 	}.Apply(t)
 	qa.AssertErrorStartsWith(t, err, "Internal error happened")
 	assert.Equal(t, "abc", d.Id())

@@ -3,6 +3,7 @@ package access
 import (
 	"context"
 	"fmt"
+	"log"
 	"path"
 	"strconv"
 	"strings"
@@ -240,9 +241,9 @@ func permissionsResourceIDFields(ctx context.Context) []permissionsIDFieldMappin
 		{"authorization", "tokens", "authorization", []string{"CAN_USE"}, SIMPLE},
 		{"authorization", "passwords", "authorization", []string{"CAN_USE"}, SIMPLE},
 		{"sql_endpoint_id", "endpoints", "sql/endpoints", []string{"CAN_USE", "CAN_MANAGE"}, SIMPLE},
-		{"sql_dashboard_id", "dashboard", "sql/dashboards", []string{"CAN_USE", "CAN_MANAGE"}, SIMPLE},
-		{"sql_alert_id", "alert", "sql/alerts", []string{"CAN_USE", "CAN_MANAGE"}, SIMPLE},
-		{"sql_query_id", "query", "sql/queries", []string{"CAN_USE", "CAN_MANAGE"}, SIMPLE},
+		{"sql_dashboard_id", "dashboard", "sql/dashboards", []string{"CAN_EDIT", "CAN_RUN", "CAN_MANAGE"}, SIMPLE},
+		{"sql_alert_id", "alert", "sql/alerts", []string{"CAN_EDIT", "CAN_RUN", "CAN_MANAGE"}, SIMPLE},
+		{"sql_query_id", "query", "sql/queries", []string{"CAN_EDIT", "CAN_RUN", "CAN_MANAGE"}, SIMPLE},
 	}
 }
 
@@ -337,7 +338,8 @@ func ResourcePermissions() *schema.Resource {
 	readContext := func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 		id := d.Id()
 		objectACL, err := NewPermissionsAPI(ctx, m).Read(id)
-		if aerr, ok := err.(common.APIError); ok && aerr.IsMissing() {
+		if common.IsMissing(err) {
+			log.Printf("[INFO] %s is removed on backend", d.Id())
 			d.SetId("")
 			return nil
 		}
@@ -431,6 +433,10 @@ func ResourcePermissions() *schema.Resource {
 		},
 		DeleteContext: func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 			err := NewPermissionsAPI(ctx, m).Delete(d.Id())
+			if common.IsMissing(err) {
+				log.Printf("[INFO] %s is already removed on backend", d.Id())
+				return nil
+			}
 			if err != nil {
 				return diag.FromErr(err)
 			}

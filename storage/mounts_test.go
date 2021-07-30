@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"strings"
 	"testing"
 
 	"github.com/databrickslabs/terraform-provider-databricks/access"
@@ -69,12 +68,6 @@ func testMounting(t *testing.T, mp MountPoint, m Mount) {
 	}()
 	source, err = mp.Source()
 	require.Equalf(t, m.Source(), source, "Error: %v", err)
-}
-
-func TestAccDeleteInvalidMountFails(t *testing.T) {
-	_, mp := mountPointThroughReusedCluster(t)
-	err := mp.Delete()
-	assert.True(t, strings.Contains(err.Error(), "Directory not mounted"), err.Error())
 }
 
 func TestAccSourceOnInvalidMountFails(t *testing.T) {
@@ -201,7 +194,14 @@ func TestMountPoint_Source(t *testing.T) {
 func TestMountPoint_Delete(t *testing.T) {
 	mountName := "this_mount"
 	expectedCommand := fmt.Sprintf(`
+		found = False
 		mount_point = "/mnt/%s"
+		dbutils.fs.refreshMounts()
+		for mount in dbutils.fs.mounts():
+			if mount.mountPoint == mount_point:
+				found = True
+		if not found:
+			dbutils.notebook.exit("success")
 		dbutils.fs.unmount(mount_point)
 		dbutils.fs.refreshMounts()
 		for mount in dbutils.fs.mounts():

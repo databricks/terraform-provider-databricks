@@ -278,7 +278,7 @@ type Cluster struct {
 	NodeTypeID             string           `json:"node_type_id,omitempty" tf:"group:node_type,computed"`
 	DriverNodeTypeID       string           `json:"driver_node_type_id,omitempty" tf:"group:node_type,computed"`
 	InstancePoolID         string           `json:"instance_pool_id,omitempty" tf:"group:node_type"`
-	DriverInstancePoolID   string           `json:"driver_instance_pool_id,omitempty" tf:"group:node_type"`
+	DriverInstancePoolID   string           `json:"driver_instance_pool_id,omitempty" tf:"group:node_type,computed"`
 	PolicyID               string           `json:"policy_id,omitempty"`
 	AwsAttributes          *AwsAttributes   `json:"aws_attributes,omitempty" tf:"conflicts:instance_pool_id"`
 	AzureAttributes        *AzureAttributes `json:"azure_attributes,omitempty" tf:"conflicts:instance_pool_id"`
@@ -330,7 +330,7 @@ type ClusterInfo struct {
 	EnableElasticDisk         bool               `json:"enable_elastic_disk,omitempty"`
 	EnableLocalDiskEncryption bool               `json:"enable_local_disk_encryption,omitempty"`
 	InstancePoolID            string             `json:"instance_pool_id,omitempty"`
-	DriverInstancePoolID      string             `json:"driver_instance_pool_id,omitempty"`
+	DriverInstancePoolID      string             `json:"driver_instance_pool_id,omitempty" tf:"computed"`
 	PolicyID                  string             `json:"policy_id,omitempty"`
 	SingleUserName            string             `json:"single_user_name,omitempty"`
 	ClusterSource             Availability       `json:"cluster_source,omitempty"`

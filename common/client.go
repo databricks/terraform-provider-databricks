@@ -258,7 +258,7 @@ func (c *DatabricksClient) IsAws() bool {
 
 // IsGcp returns true if client is configured for GCP
 func (c *DatabricksClient) IsGcp() bool {
-	return strings.Contains(c.Host, ".gcp.databricks.com")
+	return c.GoogleServiceAccount != "" || strings.Contains(c.Host, ".gcp.databricks.com")
 }
 
 // FormatURL creates URL from the client Host and additional strings

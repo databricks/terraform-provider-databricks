@@ -114,6 +114,60 @@ func TestResourceWorkspaceCreate(t *testing.T) {
 	assert.Equal(t, "abc/1234", d.Id())
 }
 
+func TestResourceWorkspaceCreateGcp(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/accounts/abc/workspaces",
+				// retreating to raw JSON, as certain fields don't work well together
+				ExpectedRequest: map[string]interface {}{
+					"account_id":"abc", 
+					"cloud":"gcp", 
+					"cloud_resource_bucket":map[string]interface {}{
+						"gcp":map[string]interface {}{
+							"project_id":"def",
+						},
+					},
+					"location":"bcd", 
+					"workspace_name":"labdata",
+				},
+				Response: Workspace{
+					WorkspaceID:    1234,
+					AccountID:      "abc",
+					DeploymentName: "900150983cd24fb0",
+					WorkspaceName: "labdata",
+				},
+			},
+			{
+				Method:       "GET",
+				ReuseRequest: true,
+				Resource:     "/api/2.0/accounts/abc/workspaces/1234",
+				Response: Workspace{
+					AccountID:       "abc",
+					WorkspaceID:     1234,
+					WorkspaceStatus: WorkspaceStatusRunning,
+					DeploymentName:  "900150983cd24fb0",
+					WorkspaceName: "labdata",
+				},
+			},
+		},
+		Resource: ResourceWorkspace(),
+		HCL: `
+		account_id      = "abc"
+		workspace_name  = "labdata"
+		deployment_name = "900150983cd24fb0"
+		location        = "bcd"
+		cloud_resource_bucket {
+			gcp {
+				project_id = "def"
+			}
+		}`,
+		Gcp:    true,
+		Create: true,
+	}.ApplyNoError(t)
+}
+
 func TestResourceWorkspaceCreateWithIsNoPublicIPEnabledFalse(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{

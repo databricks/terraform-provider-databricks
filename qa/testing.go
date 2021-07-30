@@ -86,6 +86,7 @@ type ResourceFixture struct {
 	ID          string
 	NonWritable bool
 	Azure       bool
+	Gcp         bool
 	// new resource
 	New       bool
 	AzureAuth *common.AzureAuth
@@ -106,6 +107,9 @@ func (f ResourceFixture) Apply(t *testing.T) (*schema.ResourceData, error) {
 	}
 	if f.AzureAuth != nil {
 		client.AzureAuth = *f.AzureAuth
+	}
+	if f.Gcp {
+		client.GoogleServiceAccount = "sa@prj.iam.gserviceaccount.com"
 	}
 	if len(f.HCL) > 0 {
 		var out interface{}

@@ -104,10 +104,10 @@ type Workspace struct {
 	AccountID                           string `json:"account_id"`
 	WorkspaceName                       string `json:"workspace_name"`
 	DeploymentName                      string `json:"deployment_name,omitempty"`
-	AwsRegion                           string `json:"aws_region"`
-	CredentialsID                       string `json:"credentials_id"`
+	AwsRegion                           string `json:"aws_region,omitempty"` // required for AWS, not allowed for GCP
+	CredentialsID                       string `json:"credentials_id,omitempty"` // required for AWS, not allowed for GCP
 	CustomerManagedKeyID                string `json:"customer_managed_key_id,omitempty"` // just for compatibility, will be removed
-	StorageConfigurationID              string `json:"storage_configuration_id"`
+	StorageConfigurationID              string `json:"storage_configuration_id,omitempty"` // required for AWS, not allowed for GCP
 	ManagedServicesCustomerManagedKeyID string `json:"managed_services_customer_managed_key_id,omitempty"`
 	StorageCustomerManagedKeyID         string `json:"storage_customer_managed_key_id,omitempty"`
 	PricingTier                         string `json:"pricing_tier,omitempty" tf:"computed"`

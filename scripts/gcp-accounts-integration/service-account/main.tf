@@ -12,7 +12,7 @@ resource "google_service_account" "sa2" {
 
 output "service_account" {
   value = google_service_account.sa2.email
-  description = "This email has to be added to Databricks Account Console"
+  description = "Add this email as a user in the Databricks account console to use in Account API"
 }
 
 data "google_iam_policy" "this" {

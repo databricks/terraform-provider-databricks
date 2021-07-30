@@ -70,7 +70,7 @@ func TestGcpAccWorkspaces(t *testing.T) {
 			Template: `
 			resource "databricks_mws_workspaces" "this" {
 				account_id      = "{env.DATABRICKS_ACCOUNT_ID}"
-				workspace_name  = "{env.TEST_PREFIX}-acc-{var.RANDOM}"
+				workspace_name  = "{env.TEST_PREFIX}-{var.RANDOM}"
 				location        = "{env.GOOGLE_REGION}"
 		
 				cloud_resource_bucket {

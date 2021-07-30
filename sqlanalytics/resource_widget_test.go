@@ -6,6 +6,7 @@ import (
 
 	"github.com/databrickslabs/terraform-provider-databricks/qa"
 	"github.com/databrickslabs/terraform-provider-databricks/sqlanalytics/api"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -291,24 +292,29 @@ func TestWidgetCreateWithParamValue(t *testing.T) {
 	assert.Equal(t, "12345", d.Get("widget_id"))
 	assert.Equal(t, "678", d.Get("visualization_id"))
 
-	// First parameter
-	assert.Equal(t, "p1", d.Get("parameter.0.name"))
-	assert.Equal(t, "dashboard-level", d.Get("parameter.0.type"))
-	assert.Equal(t, "v1", d.Get("parameter.0.value"))
-	{
-		_, ok := d.GetOk("parameter.0.values")
-		assert.False(t, ok, "Expected `values` to not be set")
-	}
+	params := d.Get("parameter").(*schema.Set)
+	assert.Equal(t, 2, params.Len())
 
-	// Second parameter
-	assert.Equal(t, "p2", d.Get("parameter.1.name"))
-	assert.Equal(t, "dashboard-level", d.Get("parameter.1.type"))
-	assert.Equal(t, 2, d.Get("parameter.1.values.#"))
-	assert.Equal(t, "v2_0", d.Get("parameter.1.values.0"))
-	assert.Equal(t, "v2_1", d.Get("parameter.1.values.1"))
-	{
-		_, ok := d.GetOk("parameter.1.value")
-		assert.False(t, ok, "Expected `value` to not be set")
+	for _, param := range params.List() {
+		m := param.(map[string]interface{})
+		switch m["name"].(string) {
+		case "p1":
+			// First parameter
+			assert.Equal(t, "dashboard-level", m["type"])
+			assert.Equal(t, "v1", m["value"])
+			values := m["values"].([]interface{})
+			assert.Equal(t, 0, len(values))
+		case "p2":
+			// Second parameter
+			assert.Equal(t, "dashboard-level", m["type"])
+			assert.Equal(t, "", m["value"])
+			values := m["values"].([]interface{})
+			assert.Equal(t, 2, len(values))
+			assert.Equal(t, "v2_0", values[0].(string))
+			assert.Equal(t, "v2_1", values[1].(string))
+		default:
+			t.Fatalf("Unexpected parameter: %v", m["name"])
+		}
 	}
 }
 

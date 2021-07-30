@@ -292,9 +292,13 @@ func (aa *AzureAuth) ensureWorkspaceURL(ctx context.Context,
 	if resourceID == "" {
 		return fmt.Errorf("somehow resource id is not set")
 	}
+	env, err := aa.getAzureEnvironment()
+	if err != nil {
+		return maybeExtendAuthzError(err)
+	}
 	log.Println("[DEBUG] Getting Workspace ID via management token.")
 	// All azure endpoints typically end with a trailing slash removing it because resourceID starts with slash
-	managementResourceURL := strings.TrimSuffix(aa.AzureEnvironment.ResourceManagerEndpoint, "/") + resourceID
+	managementResourceURL := strings.TrimSuffix(env.ResourceManagerEndpoint, "/") + resourceID
 	var workspace azureDatabricksWorkspace
 	resp, err := aa.databricksClient.genericQuery(ctx, http.MethodGet,
 		managementResourceURL,

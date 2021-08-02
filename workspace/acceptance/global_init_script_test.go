@@ -12,7 +12,7 @@ func TestAccGlobalInitScriptResource_Create(t *testing.T) {
 			Template: `
 			resource "databricks_global_init_script" "this" {
 				name = "init-{var.RANDOM}"
-				enabled = false
+				enabled = true
 				content_base64 = "ZWNobyBoZWxsbw=="
 			}`,
 		},

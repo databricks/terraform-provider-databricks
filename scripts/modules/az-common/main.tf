@@ -38,24 +38,28 @@ locals {
   }
 }
 
-resource "azurerm_resource_group" "example" {
+resource "azurerm_resource_group" "this" {
   name     = "${local.prefix}-rg"
   location = var.region
   tags     = local.tags
 }
 
 output "azure_region" {
-  value = azurerm_resource_group.example.location
+  value = azurerm_resource_group.this.location
 }
 
 output "test_resource_group" {
-  value = azurerm_resource_group.example.name
+  value = azurerm_resource_group.this.name
 }
 
-resource "azurerm_databricks_workspace" "example" {
+output "test_resource_group_id" {
+  value = azurerm_resource_group.this.id
+}
+
+resource "azurerm_databricks_workspace" "this" {
   name                        = "${local.prefix}-workspace"
-  resource_group_name         = azurerm_resource_group.example.name
-  location                    = azurerm_resource_group.example.location
+  resource_group_name         = azurerm_resource_group.this.name
+  location                    = azurerm_resource_group.this.location
   sku                         = "premium"
   managed_resource_group_name = "${local.prefix}-workspace-rg"
   tags                        = local.tags
@@ -63,18 +67,18 @@ resource "azurerm_databricks_workspace" "example" {
 
 output "databricks_azure_workspace_resource_id" {
   // The ID of the Databricks Workspace in the Azure management plane.
-  value = azurerm_databricks_workspace.example.id
+  value = azurerm_databricks_workspace.this.id
 }
 
 output "databricks_host" {
-  value = "https://${azurerm_databricks_workspace.example.workspace_url}/"
+  value = "https://${azurerm_databricks_workspace.this.workspace_url}/"
 }
 
 // ADLSv1 resource
 resource "azurerm_data_lake_store" "gen1" {
   name                = "${local.prefix}adlsv1"
-  resource_group_name = azurerm_resource_group.example.name
-  location            = azurerm_resource_group.example.location
+  resource_group_name = azurerm_resource_group.this.name
+  location            = azurerm_resource_group.this.location
 }
 
 output "test_data_lake_store_name" {
@@ -84,8 +88,8 @@ output "test_data_lake_store_name" {
 # Create container in storage acc and container for use by blob mount tests
 resource "azurerm_storage_account" "v2" {
   name                     = "${local.prefix}adlsv2"
-  resource_group_name      = azurerm_resource_group.example.name
-  location                 = azurerm_resource_group.example.location
+  resource_group_name      = azurerm_resource_group.this.name
+  location                 = azurerm_resource_group.this.location
   account_tier             = "Standard"
   account_replication_type = "LRS"
   account_kind             = "StorageV2"
@@ -111,7 +115,7 @@ output "test_storage_v2_wasbs" {
   value     = azurerm_storage_container.wasbs.name
 }
 
-data "azurerm_storage_account_blob_container_sas" "example" {
+data "azurerm_storage_account_blob_container_sas" "this" {
   connection_string = azurerm_storage_account.v2.primary_connection_string
   container_name    = azurerm_storage_container.wasbs.name
   https_only        = true
@@ -128,11 +132,11 @@ data "azurerm_storage_account_blob_container_sas" "example" {
 }
 
 output "test_storage_v2_wasbs_sas" {
-  value = data.azurerm_storage_account_blob_container_sas.example.sas
+  value = data.azurerm_storage_account_blob_container_sas.this.sas
   sensitive = true
 }
 
-resource "azurerm_storage_blob" "example" {
+resource "azurerm_storage_blob" "this" {
   name                   = "main.tf"
   storage_account_name   = azurerm_storage_account.v2.name
   storage_container_name = azurerm_storage_container.wasbs.name
@@ -140,52 +144,51 @@ resource "azurerm_storage_blob" "example" {
   source                 = "${path.module}/main.tf"
 }
 
-resource "azurerm_key_vault" "example" {
+resource "azurerm_key_vault" "this" {
   name                     = "${local.prefix}-kv"
-  location                 = azurerm_resource_group.example.location
-  resource_group_name      = azurerm_resource_group.example.name
+  location                 = azurerm_resource_group.this.location
+  resource_group_name      = azurerm_resource_group.this.name
   tenant_id                = data.azurerm_client_config.current.tenant_id
   purge_protection_enabled = false
   sku_name                 = "standard"
   tags                     = local.tags
+}
 
-  access_policy {
-    tenant_id = data.azurerm_client_config.current.tenant_id
-    object_id = data.azurerm_client_config.current.object_id
-    secret_permissions = [
-      "delete", "get", "list", "set"
-    ]
-  }
+resource "azurerm_key_vault_access_policy" "this" {
+  key_vault_id       = azurerm_key_vault.this.id
+  tenant_id          = data.azurerm_client_config.current.tenant_id
+  object_id          = data.azurerm_client_config.current.object_id
+  secret_permissions = ["Delete", "Get", "List", "Set"]
 }
 
 output "test_key_vault_name" {
-  value = azurerm_key_vault.example.name
+  value = azurerm_key_vault.this.name
 }
 
 output "test_key_vault_resource_id" {
-  value = azurerm_key_vault.example.id
+  value = azurerm_key_vault.this.id
 }
 
 output "test_key_vault_dns_name" {
-  value = azurerm_key_vault.example.vault_uri
+  value = azurerm_key_vault.this.vault_uri
 }
 
 // "Key Vault Administrator" role required for SP
-resource "azurerm_key_vault_secret" "example" {
+resource "azurerm_key_vault_secret" "this" {
   name         = "answer"
   value        = "42"
-  key_vault_id = azurerm_key_vault.example.id
+  key_vault_id = azurerm_key_vault.this.id
   tags         = local.tags
 }
 
 output "test_key_vault_secret" {
-  value = azurerm_key_vault_secret.example.name
+  value = azurerm_key_vault_secret.this.name
 }
 
 output "test_key_vault_secret_value" {
   // this is for testing purposes only. 
   // must not be a practice for production.
-  value = azurerm_key_vault_secret.example.value
+  value = azurerm_key_vault_secret.this.value
   sensitive = true
 }
 

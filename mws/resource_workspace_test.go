@@ -129,7 +129,18 @@ func TestResourceWorkspaceCreateGcp(t *testing.T) {
 							"project_id": "def",
 						},
 					},
-					"location":       "bcd",
+					"location": "bcd",
+					"network": map[string]interface{}{
+						"gcp_common_network_config": map[string]interface{}{
+							"gke_cluster_master_ip_range": "e",
+							"gke_connectivity_type":       "d",
+						},
+						"gcp_managed_network_config": map[string]interface{}{
+							"gke_cluster_pod_ip_range":     "b",
+							"gke_cluster_service_ip_range": "c",
+							"subnet_cidr":                  "a",
+						},
+					},
 					"workspace_name": "labdata",
 				},
 				Response: Workspace{
@@ -162,7 +173,19 @@ func TestResourceWorkspaceCreateGcp(t *testing.T) {
 			gcp {
 				project_id = "def"
 			}
-		}`,
+		}
+		network {
+			gcp_managed_network_config {
+				subnet_cidr = "a"
+				gke_cluster_pod_ip_range = "b"
+				gke_cluster_service_ip_range = "c"
+			}
+			gcp_common_network_config {
+				gke_connectivity_type = "d"
+				gke_cluster_master_ip_range = "e"
+			}
+		}
+		`,
 		Gcp:    true,
 		Create: true,
 	}.ApplyNoError(t)

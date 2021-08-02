@@ -96,7 +96,7 @@ type GCPCommonNetworkConfig struct {
 
 type GCPNetwork struct {
 	GCPManagedNetworkConfig *GCPManagedNetworkConfig `json:"gcp_managed_network_config"`
-	GCPCommonNetworkConfig  *GCPManagedNetworkConfig `json:"gcp_common_network_config"`
+	GCPCommonNetworkConfig  *GCPCommonNetworkConfig  `json:"gcp_common_network_config"`
 }
 
 // Workspace is the object that contains all the information for deploying a workspace

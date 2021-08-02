@@ -62,10 +62,6 @@ test-gcp-accounts: install
 	@echo "✓ Running acceptance Tests for Multiple Workspace APIs on GCP..."
 	@/bin/bash scripts/run.sh gcp-accounts '^TestGcpAcc' --debug --tee
 
-test-awsst: install
-	@echo "✓ Running Terraform Acceptance Tests for AWS ST..."
-	@/bin/bash scripts/run.sh awsst '^(TestAcc|TestAwsAcc)' --debug --tee
-
 test-awsmt: install
 	@echo "✓ Running Terraform Acceptance Tests for AWS MT..."
 	@/bin/bash scripts/run.sh awsmt '^(TestAcc|TestAwsAcc)' --debug --tee
@@ -73,9 +69,5 @@ test-awsmt: install
 test-preview: install
 	@echo "✓ Running acceptance Tests for Preview features..."
 	@/bin/bash scripts/run.sh preview '^TestPreviewAcc' --debug --tee
-
-snapshot:
-	@echo "✓ Making Snapshot ..."
-	@goreleaser release --rm-dist --snapshot
 
 .PHONY: build fmt python-setup docs vendor build fmt coverage test lint

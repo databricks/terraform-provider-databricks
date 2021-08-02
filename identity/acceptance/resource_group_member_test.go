@@ -11,7 +11,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestAccComplexValueResource(t *testing.T) {
+func TestAccGroupMemberResource(t *testing.T) {
 	acceptance.Test(t, []acceptance.Step{
 		{
 			Template: `

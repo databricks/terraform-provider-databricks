@@ -6,11 +6,12 @@
 * Added support for [IAM credential passthrough](https://docs.databricks.com/security/credential-passthrough/iam-passthrough.html) with `is_meta_instance_profile` property for `databricks_instance_profile` ([#745](https://github.com/databrickslabs/terraform-provider-databricks/pull/745))
 * Fixed incorrect workspace update bug and added more validation error messaging ([#649](https://github.com/databrickslabs/terraform-provider-databricks/pull/649))
 * Clarify network modification procedure on active workspaces ([#732](https://github.com/databrickslabs/terraform-provider-databricks/issues/732))
+* Updated AWS IAM policy templates version to `2012-10-17` (`databricks_aws_bucket_policy`, `databricks_aws_assume_role_policy`, and `databricks_aws_crossaccount_policy`) ([#688](https://github.com/databrickslabs/terraform-provider-databricks/issues/688))
 * Various bug fixes in Databricks SQL resources
 
 Updated dependency versions:
 
-* Bump github.com/aws/aws-sdk-go to v1.40.8
+* Bump github.com/aws/aws-sdk-go to v1.40.12
 * Bump github.com/hashicorp/hcl/v2 to v2.10.1
 * Bump github.com/zclconf/go-cty to v1.9.0
 * Bump golang.org/x/time to v0.0.0-20210723032227-1f47c861a9ac

@@ -121,22 +121,22 @@ func TestResourceWorkspaceCreateGcp(t *testing.T) {
 				Method:   "POST",
 				Resource: "/api/2.0/accounts/abc/workspaces",
 				// retreating to raw JSON, as certain fields don't work well together
-				ExpectedRequest: map[string]interface {}{
-					"account_id":"abc", 
-					"cloud":"gcp", 
-					"cloud_resource_bucket":map[string]interface {}{
-						"gcp":map[string]interface {}{
-							"project_id":"def",
+				ExpectedRequest: map[string]interface{}{
+					"account_id": "abc",
+					"cloud":      "gcp",
+					"cloud_resource_bucket": map[string]interface{}{
+						"gcp": map[string]interface{}{
+							"project_id": "def",
 						},
 					},
-					"location":"bcd", 
-					"workspace_name":"labdata",
+					"location":       "bcd",
+					"workspace_name": "labdata",
 				},
 				Response: Workspace{
 					WorkspaceID:    1234,
 					AccountID:      "abc",
 					DeploymentName: "900150983cd24fb0",
-					WorkspaceName: "labdata",
+					WorkspaceName:  "labdata",
 				},
 			},
 			{
@@ -148,7 +148,7 @@ func TestResourceWorkspaceCreateGcp(t *testing.T) {
 					WorkspaceID:     1234,
 					WorkspaceStatus: WorkspaceStatusRunning,
 					DeploymentName:  "900150983cd24fb0",
-					WorkspaceName: "labdata",
+					WorkspaceName:   "labdata",
 				},
 			},
 		},

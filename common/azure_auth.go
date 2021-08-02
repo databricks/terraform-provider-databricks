@@ -89,7 +89,7 @@ func (aa *AzureAuth) getAzureEnvironment() (azure.Environment, error) {
 
 func (aa *AzureAuth) resourceID() string {
 	if aa.ResourceID != "" {
-		if aa.SubscriptionID == "" {
+		if aa.SubscriptionID == "" || aa.ResourceGroup == "" {
 			res, err := azure.ParseResourceID(aa.ResourceID)
 			if err != nil {
 				log.Printf("[ERROR] %s", err)

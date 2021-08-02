@@ -25,6 +25,7 @@ var (
 		"com.databricks.backend.manager.util.UnknownWorkerEnvironmentException",
 		"does not have any associated worker environments",
 		"There is no worker environment with id",
+		"Unknown worker environment",
 		"ClusterNotReadyException",
 		"connection reset by peer",
 		"connection refused",

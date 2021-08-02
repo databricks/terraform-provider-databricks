@@ -83,6 +83,9 @@ func TestAddSpManagementTokenVisitor_RefreshedError(t *testing.T) {
 
 func TestGetClientSecretAuthorizer(t *testing.T) {
 	aa := AzureAuth{}
+	env, err := aa.getAzureEnvironment()
+	require.NoError(t, err)
+	aa.AzureEnvironment = &env
 	auth, err := aa.getClientSecretAuthorizer(AzureDatabricksResourceID)
 	require.Nil(t, auth)
 	require.EqualError(t, err, "parameter 'clientID' cannot be empty")
@@ -97,7 +100,10 @@ func TestGetClientSecretAuthorizer(t *testing.T) {
 
 func TestEnsureWorkspaceURL_CornerCases(t *testing.T) {
 	aa := AzureAuth{}
-	err := aa.ensureWorkspaceURL(context.Background(), nil)
+	env, err := aa.getAzureEnvironment()
+	require.NoError(t, err)
+	aa.AzureEnvironment = &env
+	err = aa.ensureWorkspaceURL(context.Background(), nil)
 	assert.EqualError(t, err, "DatabricksClient is not configured")
 
 	aa.databricksClient = &DatabricksClient{}
@@ -111,13 +117,14 @@ func TestEnsureWorkspaceURL_CornerCases(t *testing.T) {
 		WorkspaceName:    "c",
 		databricksClient: &DatabricksClient{},
 	}
-	err = aa.ensureWorkspaceURL(context.Background(), nil)
-	assert.EqualError(t, err, "autorest/azure: There is no cloud environment matching the name \"AZUREXYZCLOUD\"")
 }
 
 func TestAcquirePAT_CornerCases(t *testing.T) {
 	aa := AzureAuth{}
-	_, err := aa.acquirePAT(context.Background(), func(resource string) (autorest.Authorizer, error) {
+	env, err := aa.getAzureEnvironment()
+	require.NoError(t, err)
+	aa.AzureEnvironment = &env
+	_, err = aa.acquirePAT(context.Background(), func(resource string) (autorest.Authorizer, error) {
 		return &autorest.BearerAuthorizer{}, fmt.Errorf("test")
 	})
 	assert.EqualError(t, err, "test")
@@ -140,6 +147,9 @@ func TestAcquirePAT_CornerCases(t *testing.T) {
 
 func TestAzureAuth_ensureWorkspaceURL(t *testing.T) {
 	aa := AzureAuth{}
+	env, err := aa.getAzureEnvironment()
+	require.NoError(t, err)
+	aa.AzureEnvironment = &env
 
 	cnt := []int{0}
 	var serverURL string
@@ -175,7 +185,7 @@ func TestAzureAuth_ensureWorkspaceURL(t *testing.T) {
 		Type:        "Bearer",
 	}
 	authorizer := autorest.NewBearerAuthorizer(token)
-	err := aa.ensureWorkspaceURL(context.Background(), authorizer)
+	err = aa.ensureWorkspaceURL(context.Background(), authorizer)
 	assert.NoError(t, err)
 
 	err = aa.ensureWorkspaceURL(context.Background(), authorizer)
@@ -380,29 +390,6 @@ func TestAzureEnvironment(t *testing.T) {
 	aa.Environment = "xyzdummy"
 	_, err = aa.getAzureEnvironment()
 	assert.NotNil(t, err)
-}
-
-func TestInvalidAzureEnvironment(t *testing.T) {
-	aa := AzureAuth{}
-
-	aa.Environment = "xyzdummy"
-	_, envErr := aa.getAzureEnvironment()
-	assert.NotNil(t, envErr)
-
-	mockFunc := func(resource string) (autorest.Authorizer, error) {
-		return nil, nil
-	}
-
-	ctx := context.Background()
-	_, err := aa.simpleAADRequestVisitor(ctx, mockFunc)
-
-	assert.Equal(t, envErr, err)
-
-	_, err = aa.acquirePAT(ctx, mockFunc)
-	assert.Equal(t, envErr, err)
-
-	_, err = aa.getClientSecretAuthorizer("")
-	assert.Equal(t, envErr, err)
 }
 
 func TestMaybeExtendError(t *testing.T) {

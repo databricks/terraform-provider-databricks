@@ -7,7 +7,7 @@ require (
 	github.com/Azure/go-autorest/autorest/adal v0.9.14
 	github.com/Azure/go-autorest/autorest/azure/auth v0.5.8
 	github.com/Azure/go-autorest/autorest/azure/cli v0.4.2
-	github.com/aws/aws-sdk-go v1.40.8
+	github.com/aws/aws-sdk-go v1.40.12
 	github.com/google/go-querystring v1.1.0
 	github.com/hashicorp/go-cty v1.4.1-0.20200414143053-d3edf31b6320
 	github.com/hashicorp/go-retryablehttp v0.7.0
@@ -19,9 +19,8 @@ require (
 	github.com/smartystreets/goconvey v1.6.4 // indirect
 	github.com/stretchr/testify v1.7.0
 	github.com/zclconf/go-cty v1.9.0
-	golang.org/x/oauth2 v0.0.0-20210514164344-f6687ab2804c
+	golang.org/x/oauth2 v0.0.0-20210628180205-a41e5a781914
 	golang.org/x/time v0.0.0-20210723032227-1f47c861a9ac
-	golang.org/x/tools v0.1.5 // indirect
-	google.golang.org/api v0.48.0
+	google.golang.org/api v0.52.0
 	gopkg.in/ini.v1 v1.62.0
 )

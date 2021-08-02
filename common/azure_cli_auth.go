@@ -105,8 +105,13 @@ func (aa *AzureAuth) configureWithAzureCLI() (func(r *http.Request) error, error
 	if aa.IsClientSecretSet() {
 		return nil, nil
 	}
+	azureEnvironment, err := aa.getAzureEnvironment()
+	if err != nil {
+		return nil, err
+	}
+	aa.AzureEnvironment = &azureEnvironment
 	// verify that Azure CLI is authenticated
-	_, err := cli.GetTokenFromCLI(AzureDatabricksResourceID)
+	_, err = cli.GetTokenFromCLI(AzureDatabricksResourceID)
 	if err != nil {
 		if err.Error() == "Invoking Azure CLI failed with the following error: " {
 			return nil, fmt.Errorf("most likely Azure CLI is not installed. " +

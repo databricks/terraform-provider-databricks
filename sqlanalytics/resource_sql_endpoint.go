@@ -21,20 +21,21 @@ var (
 
 // SQLEndpoint ...
 type SQLEndpoint struct {
-	ID                 string      `json:"id,omitempty" tf:"computed"`
-	Name               string      `json:"name"`
-	ClusterSize        string      `json:"cluster_size"`
-	AutoStopMinutes    int         `json:"auto_stop_mins,omitempty"`
-	MinNumClusters     int         `json:"min_num_clusters,omitempty"`
-	MaxNumClusters     int         `json:"max_num_clusters,omitempty"`
-	NumClusters        int         `json:"num_clusters,omitempty"`
-	EnablePhoton       bool        `json:"enable_photon,omitempty"`
-	InstanceProfileARN string      `json:"instance_profile_arn,omitempty"`
-	State              string      `json:"state,omitempty" tf:"computed"`
-	JdbcURL            string      `json:"jdbc_url,omitempty" tf:"computed"`
-	OdbcParams         *OdbcParams `json:"odbc_params,omitempty" tf:"computed"`
-	Tags               *Tags       `json:"tags,omitempty"`
-	SpotInstancePolicy string      `json:"spot_instance_policy,omitempty"`
+	ID                      string      `json:"id,omitempty" tf:"computed"`
+	Name                    string      `json:"name"`
+	ClusterSize             string      `json:"cluster_size"`
+	AutoStopMinutes         int         `json:"auto_stop_mins,omitempty"`
+	MinNumClusters          int         `json:"min_num_clusters,omitempty"`
+	MaxNumClusters          int         `json:"max_num_clusters,omitempty"`
+	NumClusters             int         `json:"num_clusters,omitempty"`
+	EnablePhoton            bool        `json:"enable_photon,omitempty"`
+	EnableServerlessCompute bool        `json:"enable_serverless_compute,omitempty"`
+	InstanceProfileARN      string      `json:"instance_profile_arn,omitempty"`
+	State                   string      `json:"state,omitempty" tf:"computed"`
+	JdbcURL                 string      `json:"jdbc_url,omitempty" tf:"computed"`
+	OdbcParams              *OdbcParams `json:"odbc_params,omitempty" tf:"computed"`
+	Tags                    *Tags       `json:"tags,omitempty"`
+	SpotInstancePolicy      string      `json:"spot_instance_policy,omitempty"`
 
 	// The data source ID is not part of the endpoint API response.
 	// We manually resolve it by retrieving the list of data sources

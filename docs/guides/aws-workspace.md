@@ -111,57 +111,12 @@ resource "databricks_mws_credentials" "this" {
 
 ## VPC
 
-The very first step is VPC creation with necessary firewall rules. Please consult [main documetation page](https://docs.databricks.com/administration-guide/cloud-configurations/aws/customer-managed-vpc.html) for **the most complete and up-to-date details on networking**. AWS VPS is registered as [databricks_mws_networks](../resources/mws_networks.md) resource.
+The very first step is VPC creation with necessary firewall rules. Please consult [main documetation page](https://docs.databricks.com/administration-guide/cloud-configurations/aws/customer-managed-vpc.html) for **the most complete and up-to-date details on networking**. AWS VPS is registered as [databricks_mws_networks](../resources/mws_networks.md) resource. For STS, S3 and Kinesis, you can create VPC gateway or interface endpoints such that the relevant in-region traffic from clusters could transit over the secure AWS backbone rather than the public network, for more direct connections and reduced cost compared to AWS global endpoints. For more information, see [Regional endpoints]
+](https://docs.databricks.com/administration-guide/cloud-configurations/aws/customer-managed-vpc.html#regional-endpoints-1).
 
 ```hcl
 data "aws_availability_zones" "available" {}
 
-module "vpc" {
-  source  = "terraform-aws-modules/vpc/aws"
-  version = "3.2.0"
-
-  name = local.prefix
-  cidr = var.cidr_block
-  azs  = data.aws_availability_zones.available.names
-  tags = var.tags
-
-  enable_dns_hostnames = true
-  enable_nat_gateway   = true
-  create_igw           = true
-
-  public_subnets  = [cidrsubnet(var.cidr_block, 3, 0)]
-  private_subnets = [cidrsubnet(var.cidr_block, 3, 1),
-                     cidrsubnet(var.cidr_block, 3, 2)]
-
-  manage_default_security_group = true
-  default_security_group_name = "${local.prefix}-sg"
-
-  default_security_group_egress = [{
-    cidr_blocks = "0.0.0.0/0"
-  }]
-
-  default_security_group_ingress = [{
-    description = "Allow all internal TCP and UDP"
-    self        = true
-  }]
-}
-
-resource "databricks_mws_networks" "this" {
-  provider           = databricks.mws
-  account_id         = var.databricks_account_id
-  network_name       = "${local.prefix}-network"
-  security_group_ids = [module.vpc.default_security_group_id]
-  subnet_ids         = module.vpc.private_subnets
-  vpc_id             = module.vpc.vpc_id
-}
-```
-
-## Regional endpoints
-
-For STS, S3 and Kinesis, you can create VPC gateway or interface endpoints such that the relevant in-region traffic from clusters could transit over the secure AWS backbone rather than the public network, for more direct connections and reduced cost compared to AWS global endpoints. See [Regional endpoints]
-](https://docs.databricks.com/administration-guide/cloud-configurations/aws/customer-managed-vpc.html#regional-endpoints-1) for more information:
-
-```hcl
 module "vpc" {
   source  = "terraform-aws-modules/vpc/aws"
   version = "3.2.0"
@@ -203,7 +158,9 @@ module "vpc_endpoints" {
     s3 = {
       service         = "s3"
       service_type    = "Gateway"
-      route_table_ids = flatten([module.vpc.private_route_table_ids, module.vpc.public_route_table_ids])
+      route_table_ids = flatten([
+        module.vpc.private_route_table_ids, 
+        module.vpc.public_route_table_ids])
       tags            = {
         Name = "${local.prefix}-s3-vpc-endpoint"
       }
@@ -227,6 +184,15 @@ module "vpc_endpoints" {
   }
 
   tags = var.tags
+}
+
+resource "databricks_mws_networks" "this" {
+  provider           = databricks.mws
+  account_id         = var.databricks_account_id
+  network_name       = "${local.prefix}-network"
+  security_group_ids = [module.vpc.default_security_group_id]
+  subnet_ids         = module.vpc.private_subnets
+  vpc_id             = module.vpc.vpc_id
 }
 ```
 

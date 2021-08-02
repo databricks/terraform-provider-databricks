@@ -20,7 +20,7 @@ import (
 // InstanceProfileInfo contains the ARN for aws instance profiles
 type InstanceProfileInfo struct {
 	InstanceProfileArn    string `json:"instance_profile_arn,omitempty"`
-	IsMetaInstanceProfile string `json:"is_meta_instance_profile,omitempty"`
+	IsMetaInstanceProfile bool   `json:"is_meta_instance_profile,omitempty"`
 }
 
 // InstanceProfileList ...

@@ -62,6 +62,32 @@ resource "databricks_mws_networks" "this" {
 }
 ```
 
+In order to create a VPC [that leverages AWS PrivateLink](https://docs.databricks.com/administration-guide/cloud-configurations/aws/privatelink.html) you would need to add the `vpc_endpoint_id` Attributes from [mws_vpc_endpoint](mws_vpc_endpoint.md) resources into the [databricks_mws_networks](databricks_mws_networks.md) resource. For example:
+
+```hcl
+ resource "databricks_mws_networks" "this" {
+  provider           = databricks.mws
+  account_id         = var.databricks_account_id
+  network_name       = "${local.prefix}-network"
+  security_group_ids = [module.vpc.default_security_group_id]
+  subnet_ids         = module.vpc.private_subnets
+  vpc_id             = module.vpc.vpc_id
+  vpc_endpoints {
+    dataplane_relay  = [databricks_mws_vpc_endpoint.relay.vpc_endpoint_id]
+    rest_api         = [databricks_mws_vpc_endpoint.workspace.vpc_endpoint_id]
+  }
+  depends_on         = [aws_vpc_endpoint.workspace, aws_vpc_endpoint.relay]
+}
+  ```
+
+## Modifying networks on running workspaces
+
+Due to specifics of platform APIs, changing any attribute of network configuration would cause `databricks_mws_networks` to be re-created - deleted & added again with special case for running workspaces. Once network configuration is attached to a running [databricks_mws_workspaces](mws_workspaces.md), you cannot delete it and `terraform apply` would result in `INVALID_STATE: Unable to delete, Network is being used by active workspace X` error. In order to modify any attributes of a network, you have to perform three different `terraform apply` steps:
+
+1. Create a new `databricks_mws_networks` resource.
+2. Update the `databricks_mws_workspaces` to point to the new `network_id`.
+3. Delete the old `databricks_mws_networks` resource.
+
 ## Argument Reference
 
 The following arguments are available:

@@ -3,8 +3,6 @@ package identity
 import (
 	"testing"
 
-	"github.com/stretchr/testify/require"
-
 	"github.com/databrickslabs/terraform-provider-databricks/common"
 
 	"github.com/databrickslabs/terraform-provider-databricks/qa"
@@ -20,15 +18,15 @@ func TestResourceGroupCreate(t *testing.T) {
 				ExpectedRequest: ScimGroup{
 					Schemas:     []URN{"urn:ietf:params:scim:schemas:core:2.0:Group"},
 					DisplayName: "Data Scientists",
-					Entitlements: []entitlementsListItem{
+					Entitlements: []ComplexValue{
 						{
-							AllowClusterCreateEntitlement,
+							Value: "allow-cluster-create",
 						},
 						{
-							AllowSQLAnalyticsAccessEntitlement,
+							Value: "allow-instance-pool-create",
 						},
 						{
-							AllowInstancePoolCreateEntitlement,
+							Value: "databricks-sql-access",
 						},
 					},
 				},
@@ -43,15 +41,15 @@ func TestResourceGroupCreate(t *testing.T) {
 					Schemas:     []URN{"urn:ietf:params:scim:schemas:core:2.0:Group"},
 					DisplayName: "Data Scientists",
 					ID:          "abc",
-					Entitlements: []entitlementsListItem{
+					Entitlements: []ComplexValue{
 						{
-							AllowClusterCreateEntitlement,
+							Value: "allow-cluster-create",
 						},
 						{
-							AllowSQLAnalyticsAccessEntitlement,
+							Value: "databricks-sql-access",
 						},
 						{
-							AllowInstancePoolCreateEntitlement,
+							Value: "allow-instance-pool-create",
 						},
 					},
 				},
@@ -75,7 +73,7 @@ func TestResourceGroupCreate(t *testing.T) {
 }
 
 func TestResourceGroupCreate_Error(t *testing.T) {
-	d, err := qa.ResourceFixture{
+	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "POST",
@@ -92,9 +90,7 @@ func TestResourceGroupCreate_Error(t *testing.T) {
 			"display_name": "Data Scientists",
 		},
 		Create: true,
-	}.Apply(t)
-	qa.AssertErrorStartsWith(t, err, "Internal error happened")
-	assert.Equal(t, "", d.Id(), "Id should be empty for error creates")
+	}.ExpectError(t, "Internal error happened")
 }
 
 func TestResourceGroupRead(t *testing.T) {
@@ -107,15 +103,15 @@ func TestResourceGroupRead(t *testing.T) {
 					Schemas:     []URN{"urn:ietf:params:scim:schemas:core:2.0:Group"},
 					DisplayName: "Data Scientists",
 					ID:          "abc",
-					Entitlements: []entitlementsListItem{
+					Entitlements: []ComplexValue{
 						{
-							AllowSQLAnalyticsAccessEntitlement,
+							Value: "databricks-sql-access",
 						},
 						{
-							AllowClusterCreateEntitlement,
+							Value: "allow-cluster-create",
 						},
 						{
-							AllowInstancePoolCreateEntitlement,
+							Value: "allow-instance-pool-create",
 						},
 					},
 				},
@@ -179,7 +175,7 @@ func TestResourceGroupRead_NotFound(t *testing.T) {
 }
 
 func TestResourceGroupRead_Error(t *testing.T) {
-	d, err := qa.ResourceFixture{
+	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
@@ -194,66 +190,88 @@ func TestResourceGroupRead_Error(t *testing.T) {
 		Resource: ResourceGroup(),
 		Read:     true,
 		ID:       "abc",
-	}.Apply(t)
-	qa.AssertErrorStartsWith(t, err, "Internal error happened")
-	assert.Equal(t, "abc", d.Id(), "Id should not be empty for error reads")
+	}.ExpectError(t, "Internal error happened")
 }
 
-func TestResourceGroupUpdate_AddPerms(t *testing.T) {
+func TestResourceGroupUpdate(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
-				Method:   "PATCH",
+				Method:   "GET",
 				Resource: "/api/2.0/preview/scim/v2/Groups/abc",
-				ExpectedRequest: GroupPatchRequest{
-					Schemas: []URN{"urn:ietf:params:scim:api:messages:2.0:PatchOp"},
-					Operations: []GroupPatchOperations{
+				Response: ScimGroup{
+					Members: []ComplexValue{
 						{
-							Op:   "add",
-							Path: "entitlements",
-							Value: []ValueListItem{
-								{
-									Value: "allow-cluster-create",
-								},
-								{
-									Value: "sql-analytics-access",
-								},
-								{
-									Value: "allow-instance-pool-create",
-								},
-							},
+							Display: "scotchmo",
 						},
 					},
+					Roles: []ComplexValue{
+						{
+							Value: "reader",
+						},
+					},
+					Groups: []ComplexValue{
+						{
+							Display: "Rangers",
+						},
+					},
+				},
+			},
+			{
+				Method:   "PUT",
+				Resource: "/api/2.0/preview/scim/v2/Groups/abc",
+				ExpectedRequest: ScimGroup{
+					DisplayName: "Data Ninjas",
+					Entitlements: entitlements{
+						{
+							Value: "allow-cluster-create",
+						},
+						{
+							Value: "allow-instance-pool-create",
+						},
+						{
+							Value: "databricks-sql-access",
+						},
+					},
+					Members: []ComplexValue{
+						{
+							Display: "scotchmo",
+						},
+					},
+					Roles: []ComplexValue{
+						{
+							Value: "reader",
+						},
+					},
+					Groups: []ComplexValue{
+						{
+							Display: "Rangers",
+						},
+					},
+					Schemas: []URN{GroupSchema},
 				},
 			},
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/preview/scim/v2/Groups/abc",
 				Response: ScimGroup{
-					Schemas:     []URN{"urn:ietf:params:scim:schemas:core:2.0:Group"},
 					DisplayName: "Data Ninjas",
-					ID:          "abc",
-					Entitlements: []entitlementsListItem{
+					Entitlements: entitlements{
 						{
-							AllowSQLAnalyticsAccessEntitlement,
+							Value: "allow-cluster-create",
 						},
 						{
-							AllowClusterCreateEntitlement,
+							Value: "allow-instance-pool-create",
 						},
 						{
-							AllowInstancePoolCreateEntitlement,
+							Value: "databricks-sql-access",
 						},
 					},
+					// we don't care about other fields in this response
 				},
 			},
 		},
 		Resource: ResourceGroup(),
-		InstanceState: map[string]string{
-			"display_name":               "Data Ninjas",
-			"allow_instance_pool_create": "false",
-			"allow_cluster_create":       "false",
-			"allow_sql_analytics_access": "false",
-		},
 		HCL: `
 		display_name = "Data Ninjas"
 		allow_instance_pool_create = true
@@ -271,70 +289,11 @@ func TestResourceGroupUpdate_AddPerms(t *testing.T) {
 	assert.Equal(t, true, d.Get("allow_sql_analytics_access"))
 }
 
-func TestResourceGroupUpdate_RemovePerms(t *testing.T) {
-	d, err := qa.ResourceFixture{
+func TestResourceGroupUpdate_Error(t *testing.T) {
+	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   "PATCH",
-				Resource: "/api/2.0/preview/scim/v2/Groups/abc",
-				ExpectedRequest: GroupPatchRequest{
-					Schemas: []URN{"urn:ietf:params:scim:api:messages:2.0:PatchOp"},
-					Operations: []GroupPatchOperations{
-						{
-							Op:   "remove",
-							Path: "entitlements[value eq \"allow-cluster-create\"]",
-						},
-						{
-							Op:   "remove",
-							Path: "entitlements[value eq \"sql-analytics-access\"]",
-						},
-						{
-							Op:   "remove",
-							Path: "entitlements[value eq \"allow-instance-pool-create\"]",
-						},
-					},
-				},
-			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/Groups/abc",
-				Response: ScimGroup{
-					Schemas:      []URN{"urn:ietf:params:scim:schemas:core:2.0:Group"},
-					DisplayName:  "Data Ninjas",
-					ID:           "abc",
-					Entitlements: []entitlementsListItem{},
-				},
-			},
-		},
-		Resource: ResourceGroup(),
-		Update:   true,
-		ID:       "abc",
-		InstanceState: map[string]string{
-			"display_name":               "Data Ninjas",
-			"allow_instance_pool_create": "true",
-			"allow_cluster_create":       "true",
-			"allow_sql_analytics_access": "true",
-		},
-		HCL: `
-		display_name = "Data Ninjas"
-		allow_instance_pool_create = false
-		allow_cluster_create = false
-		allow_sql_analytics_access = false
-		`,
-	}.Apply(t)
-	require.NoError(t, err, err)
-	assert.Equal(t, "abc", d.Id(), "Id should not be empty")
-	assert.Equal(t, "Data Ninjas", d.Get("display_name"))
-	assert.Equal(t, false, d.Get("allow_cluster_create"))
-	assert.Equal(t, false, d.Get("allow_instance_pool_create"))
-	assert.Equal(t, false, d.Get("allow_sql_analytics_access"))
-}
-
-func TestResourceGroupUpdate_Error(t *testing.T) {
-	d, err := qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   "PATCH",
 				Resource: "/api/2.0/preview/scim/v2/Groups/abc",
 				Response: common.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
@@ -350,13 +309,11 @@ func TestResourceGroupUpdate_Error(t *testing.T) {
 		},
 		Update: true,
 		ID:     "abc",
-	}.Apply(t)
-	qa.AssertErrorStartsWith(t, err, "Internal error happened")
-	assert.Equal(t, "abc", d.Id())
+	}.ExpectError(t, "Internal error happened")
 }
 
 func TestResourceGroupDelete(t *testing.T) {
-	d, err := qa.ResourceFixture{
+	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "DELETE",
@@ -366,13 +323,11 @@ func TestResourceGroupDelete(t *testing.T) {
 		Resource: ResourceGroup(),
 		Delete:   true,
 		ID:       "abc",
-	}.Apply(t)
-	assert.NoError(t, err, err)
-	assert.Equal(t, "abc", d.Id())
+	}.ApplyNoError(t)
 }
 
 func TestResourceGroupDelete_Error(t *testing.T) {
-	d, err := qa.ResourceFixture{
+	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "DELETE",
@@ -387,7 +342,5 @@ func TestResourceGroupDelete_Error(t *testing.T) {
 		Resource: ResourceGroup(),
 		Delete:   true,
 		ID:       "abc",
-	}.Apply(t)
-	qa.AssertErrorStartsWith(t, err, "Internal error happened")
-	assert.Equal(t, "abc", d.Id())
+	}.ExpectError(t, "Internal error happened")
 }

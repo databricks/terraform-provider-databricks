@@ -54,24 +54,9 @@ func (ic *importContext) importLibraries(d *schema.ResourceData, s map[string]*s
 		return err
 	}
 	for _, lib := range cll.Libraries {
-		if strings.HasPrefix(lib.Whl, "dbfs:") {
-			ic.Emit(&resource{
-				Resource: "databricks_dbfs_file",
-				ID:       lib.Whl,
-			})
-		}
-		if strings.HasPrefix(lib.Jar, "dbfs:") {
-			ic.Emit(&resource{
-				Resource: "databricks_dbfs_file",
-				ID:       lib.Jar,
-			})
-		}
-		if strings.HasPrefix(lib.Egg, "dbfs:") {
-			ic.Emit(&resource{
-				Resource: "databricks_dbfs_file",
-				ID:       lib.Egg,
-			})
-		}
+		ic.emitIfDbfsFile(lib.Whl)
+		ic.emitIfDbfsFile(lib.Jar)
+		ic.emitIfDbfsFile(lib.Egg)
 	}
 	return nil
 }
@@ -112,7 +97,7 @@ func (ic *importContext) findUserByName(name string) (u identity.ScimUser, err e
 		return
 	}
 	if len(users) == 0 {
-		err = fmt.Errorf("User %s not found", name)
+		err = fmt.Errorf("user %s not found", name)
 		return
 	}
 	u = users[0]
@@ -244,4 +229,14 @@ func (ic *importContext) getMountsThroughCluster(
 	lines := strings.Split(result.Text(), "\n")
 	err = json.Unmarshal([]byte(lines[0]), &mm)
 	return
+}
+
+func eitherString(a interface{}, b interface{}) string {
+	if a != nil {
+		return a.(string)
+	}
+	if b != nil {
+		return b.(string)
+	}
+	return ""
 }

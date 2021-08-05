@@ -1,9 +1,10 @@
 ---
 subcategory: "Security"
 ---
+
 # databricks_permissions Resource
 
-This resource allows you to generically manage permissions for other resources in Databricks workspace. It would guarantee, that only *admins*, *authenticated principal* and those declared within `access_control` blocks would have specified access. It is not possible to remove management rights from *admins* group.
+This resource allows you to generically manage permissions for other resources in Databricks workspace. It would guarantee, that only _admins_, _authenticated principal_ and those declared within `access_control` blocks would have specified access. It is not possible to remove management rights from _admins_ group.
 
 ## Cluster usage
 
@@ -133,11 +134,11 @@ resource "databricks_permissions" "pool_usage" {
 
 There are four assignable [permission levels](https://docs.databricks.com/security/access-control/jobs-acl.html#job-permissions) for [databricks_job](job.md): `CAN_VIEW`, `CAN_MANAGE_RUN`, `IS_OWNER`, and `CAN_MANAGE`. Admins are granted the `CAN_MANAGE` permission by default, and they can assign that permission to non-admin users, and service principals.
 
-* The creator of a job has `IS_OWNER` permission. Destroying `databricks_permissions` resource for a job would revert ownership to the creator.
-* A job must have exactly one owner. If resource is changed and no owner is specified, currently authenticated principal would become new owner of the job. Nothing would change, per se, if the job was created through Terraform.
-* A job cannot have a group as an owner.
-* Jobs triggered through *Run Now* assume the permissions of the job owner and not the user, and service principal who issued Run Now.
-* Read [main documentation](https://docs.databricks.com/security/access-control/jobs-acl.html) for additional detail.
+- The creator of a job has `IS_OWNER` permission. Destroying `databricks_permissions` resource for a job would revert ownership to the creator.
+- A job must have exactly one owner. If resource is changed and no owner is specified, currently authenticated principal would become new owner of the job. Nothing would change, per se, if the job was created through Terraform.
+- A job cannot have a group as an owner.
+- Jobs triggered through _Run Now_ assume the permissions of the job owner and not the user, and service principal who issued Run Now.
+- Read [main documentation](https://docs.databricks.com/security/access-control/jobs-acl.html) for additional detail.
 
 ```hcl
 resource "databricks_group" "auto" {
@@ -158,7 +159,7 @@ resource "databricks_job" "this" {
         spark_version = "6.6.x-scala2.11"
         node_type_id  = "Standard_DS3_v2"
     }
-    
+
     notebook_task {
         notebook_path = "/Production/MakeFeatures"
     }
@@ -225,12 +226,12 @@ resource "databricks_permissions" "notebook_usage" {
 
 ## Folder usage
 
-Valid [permission levels](https://docs.databricks.com/security/access-control/workspace-acl.html#folder-permissions) for folders of [databricks_notebook](notebook.md) are: `CAN_READ`, `CAN_RUN`, `CAN_EDIT`, and `CAN_MANAGE`. Notebooks and experiments in a folder inherit all permissions settings of that folder. For example, a user (or service principal) that has `CAN_RUN` permission on a folder has `CAN_RUN` permission on the notebooks in that folder.
+Valid [permission levels](https://docs.databricks.com/security/access-control/workspace-acl.html#folder-permissions) for folders of [databricks_directory](directory.md) are: `CAN_READ`, `CAN_RUN`, `CAN_EDIT`, and `CAN_MANAGE`. Notebooks and experiments in a folder inherit all permissions settings of that folder. For example, a user (or service principal) that has `CAN_RUN` permission on a folder has `CAN_RUN` permission on the notebooks in that folder.
 
-* All users can list items in the folder without any permissions.
-* All users (or service principals) have `CAN_MANAGE` permission for items in the Workspace > Shared Icon Shared folder. You can grant `CAN_MANAGE` permission to notebooks and folders by moving them to the Shared Icon Shared folder.
-* All users (or service principals) have `CAN_MANAGE` permission for objects the user creates.
-* User home directory - The user (or service principal) has `CAN_MANAGE` permission. All other users (or service principals) can list their directories.
+- All users can list items in the folder without any permissions.
+- All users (or service principals) have `CAN_MANAGE` permission for items in the Workspace > Shared Icon Shared folder. You can grant `CAN_MANAGE` permission to notebooks and folders by moving them to the Shared Icon Shared folder.
+- All users (or service principals) have `CAN_MANAGE` permission for objects the user creates.
+- User home directory - The user (or service principal) has `CAN_MANAGE` permission. All other users (or service principals) can list their directories.
 
 ```hcl
 resource "databricks_group" "auto" {
@@ -241,15 +242,13 @@ resource "databricks_group" "eng" {
     display_name = "Engineering"
 }
 
-resource "databricks_notebook" "this" {
-    content_base64 = base64encode("# Welcome to your Python notebook")
-    path = "/Production/ETL/Features"
-    language = "PYTHON"
+resource "databricks_directory" "this" {
+    path = "/Production/ETL"
 }
 
 resource "databricks_permissions" "folder_usage" {
-    directory_path = "/Production/ETL"
-    depends_on = [databricks_notebook.this]
+    directory_path = databricks_directory.this.path
+    depends_on = [databricks_directory.this]
 
     access_control {
         group_name = "users"
@@ -289,7 +288,7 @@ resource "databricks_permissions" "password_usage" {
 
 ## Token usage
 
-Only [possible permission](https://docs.databricks.com/administration-guide/access-control/tokens.html) to assign to non-admin group is `CAN_USE`, where *admins* `CAN_MANAGE` all tokens:
+Only [possible permission](https://docs.databricks.com/administration-guide/access-control/tokens.html) to assign to non-admin group is `CAN_USE`, where _admins_ `CAN_MANAGE` all tokens:
 
 ```hcl
 resource "databricks_group" "auto" {
@@ -317,7 +316,7 @@ resource "databricks_permissions" "token_usage" {
 
 ## SQL Endpoint Usage
 
-[SQL endpoints](https://docs.databricks.com/sql/user/security/access-control/sql-endpoint-acl.html) have two possible permissions:  `CAN_USE` and `CAN_MANAGE`:
+[SQL endpoints](https://docs.databricks.com/sql/user/security/access-control/sql-endpoint-acl.html) have two possible permissions: `CAN_USE` and `CAN_MANAGE`:
 
 ```hcl
 data "databricks_current_user" "me" {}
@@ -360,7 +359,7 @@ resource "databricks_permissions" "endpoint_usage" {
 
 ## SQL Dashboard usage
 
-[SQL dashboards](https://docs.databricks.com/sql/user/security/access-control/dashboard-acl.html) have two possible permissions:  `CAN_RUN` and `CAN_MANAGE`:
+[SQL dashboards](https://docs.databricks.com/sql/user/security/access-control/dashboard-acl.html) have two possible permissions: `CAN_RUN` and `CAN_MANAGE`:
 
 ```hcl
 resource "databricks_group" "auto" {
@@ -388,7 +387,7 @@ resource "databricks_permissions" "endpoint_usage" {
 
 ## SQL Query usage
 
-[SQL queries](https://docs.databricks.com/sql/user/security/access-control/query-acl.html) have two possible permissions:  `CAN_RUN` and `CAN_MANAGE`:
+[SQL queries](https://docs.databricks.com/sql/user/security/access-control/query-acl.html) have two possible permissions: `CAN_RUN` and `CAN_MANAGE`:
 
 ```hcl
 resource "databricks_group" "auto" {
@@ -416,7 +415,7 @@ resource "databricks_permissions" "endpoint_usage" {
 
 ## SQL Alert usage
 
-[SQL alerts](https://docs.databricks.com/sql/user/security/access-control/alert-acl.html) have two possible permissions:  `CAN_RUN` and `CAN_MANAGE`:
+[SQL alerts](https://docs.databricks.com/sql/user/security/access-control/alert-acl.html) have two possible permissions: `CAN_RUN` and `CAN_MANAGE`:
 
 ```hcl
 resource "databricks_group" "auto" {
@@ -458,15 +457,15 @@ General Permissions API does not apply to access control for tables and they hav
 
 Exactly one of the following attributes is required:
 
-* `cluster_id` - [cluster](cluster.md) id
-* `job_id` - [job](job.md) id
-* `directory_id` - [directory](notebook.md) id
-* `directory_path` - path of directory
-* `notebook_id` - ID of [notebook](notebook.md) within workspace
-* `notebook_path` - path of notebook
-* `cluster_policy_id` - [cluster policy](cluster_policy.md) id
-* `instance_pool_id` - [instance pool](instance_pool.md) id
-* `authorization` - either [`tokens`](https://docs.databricks.com/administration-guide/access-control/tokens.html) or [`passwords`](https://docs.databricks.com/administration-guide/users-groups/single-sign-on/index.html#configure-password-permission).
+- `cluster_id` - [cluster](cluster.md) id
+- `job_id` - [job](job.md) id
+- `directory_id` - [directory](notebook.md) id
+- `directory_path` - path of directory
+- `notebook_id` - ID of [notebook](notebook.md) within workspace
+- `notebook_path` - path of notebook
+- `cluster_policy_id` - [cluster policy](cluster_policy.md) id
+- `instance_pool_id` - [instance pool](instance_pool.md) id
+- `authorization` - either [`tokens`](https://docs.databricks.com/administration-guide/access-control/tokens.html) or [`passwords`](https://docs.databricks.com/administration-guide/users-groups/single-sign-on/index.html#configure-password-permission).
 
 One or more `access_control` blocks are required to actually set the permission levels:
 
@@ -479,16 +478,16 @@ access_control {
 
 Attributes are:
 
-* `permission_level` - (Required) permission level according to specific resource. See examples above for the reference.
-* `user_name` - (Optional) name of the [user](user.md), which should be used if group name is not used
-* `group_name` - (Optional) name of the [group](group.md), which should be used if the user name is not used. We recommend setting permissions on groups.
+- `permission_level` - (Required) permission level according to specific resource. See examples above for the reference.
+- `user_name` - (Optional) name of the [user](user.md), which should be used if group name is not used
+- `group_name` - (Optional) name of the [group](group.md), which should be used if the user name is not used. We recommend setting permissions on groups.
 
 ## Attribute Reference
 
 In addition to all arguments above, the following attributes are exported:
 
-* `id` - Canonical unique identifier for the permissions.
-* `object_type` - type of permissions.
+- `id` - Canonical unique identifier for the permissions.
+- `object_type` - type of permissions.
 
 ## Import
 

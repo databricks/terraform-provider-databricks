@@ -7,8 +7,8 @@ fmt:
 	@gofmt -w $(shell find . -type f -name '*.go' -not -path "./vendor/*")
 
 lint: vendor
-	@echo "✓ Linting source code with golangci-lint make sure you run make fmt ..."
-	@golangci-lint run --skip-dirs-use-default --timeout 5m
+	@echo "✓ Linting source code with https://staticcheck.io/ ..."
+	@staticcheck ./...
 
 test: lint
 	@echo "✓ Running tests ..."
@@ -58,9 +58,9 @@ test-mws: install
 	@echo "✓ Running acceptance Tests for Multiple Workspace APIs on AWS..."
 	@/bin/bash scripts/run.sh mws '^TestMwsAcc' --debug --tee
 
-test-awsst: install
-	@echo "✓ Running Terraform Acceptance Tests for AWS ST..."
-	@/bin/bash scripts/run.sh awsst '^(TestAcc|TestAwsAcc)' --debug --tee
+test-gcp-accounts: install
+	@echo "✓ Running acceptance Tests for Multiple Workspace APIs on GCP..."
+	@/bin/bash scripts/run.sh gcp-accounts '^TestGcpAcc' --debug --tee
 
 test-awsmt: install
 	@echo "✓ Running Terraform Acceptance Tests for AWS MT..."
@@ -69,9 +69,5 @@ test-awsmt: install
 test-preview: install
 	@echo "✓ Running acceptance Tests for Preview features..."
 	@/bin/bash scripts/run.sh preview '^TestPreviewAcc' --debug --tee
-
-snapshot:
-	@echo "✓ Making Snapshot ..."
-	@goreleaser release --rm-dist --snapshot
 
 .PHONY: build fmt python-setup docs vendor build fmt coverage test lint

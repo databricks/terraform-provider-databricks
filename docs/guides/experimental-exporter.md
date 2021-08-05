@@ -5,6 +5,7 @@ page_title: "Experimental resource exporter"
 
 -> **Note** This tooling is experimental and provided as is. It has an evolving interfaces, which may change or be removed in future versions of the provider.
 
+-> **Note** Use the same user who did the exporting to import the exported templates.  Otherwise it could cause the changes in the jobs ownership.
 
 Generates `*.tf` files for Databricks resources as well as `import.sh` to run import state. Available as part of provider binary. The only possible way to authenticate is through [environment variables](../index.md#Environment-variables). It's best used, when you need to quickly export Terraform configuration for an existing Databricks workspace. After generating configuration, we strongly recommend to manually review all created files.
 
@@ -39,8 +40,6 @@ All arguments are optional and they tune what code is being generated.
 * `-prefix` - optional prefix that will be added to the name of all exported resources - that's useful for exporting resources multiple workspaces for merging into single one.
 
 ## Services
-
-~> `secrets` service works the same way as any other services in this tool and if no corresponding secret reference is found in state resources, `string_value` will contain a plain-text key. It will try to see if there's a matching secret anywhere in the terraform state, but if nothing is found - it'll dump it clear. So don't check the generated code into version control without verification.
 
 Services are just logical groups of resources used for filtering and organization in files written in `-directory`. All resources are globally sorted by their resource name, which technically allows you to use generated files for compliance purposes. Nevertheless, managing entire Databricks workspace with Terraform is the prefered way. With the exception of notebooks and possibly libraries, which may have their own CI/CD processes.
 * `groups` - [databricks_group](../data-sources/group.md) with [membership](../resources/group_member.md) and [data access](../resources/group_instance_profile.md).

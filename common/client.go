@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"golang.org/x/time/rate"
+	"google.golang.org/api/option"
 
 	"github.com/hashicorp/go-retryablehttp"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -42,12 +43,18 @@ type DatabricksClient struct {
 	DebugTruncateBytes int
 	DebugHeaders       bool
 	RateLimitPerSecond int
-	authMutex          sync.Mutex
-	rateLimiter        *rate.Limiter
-	Provider           *schema.Provider
-	httpClient         *retryablehttp.Client
-	authVisitor        func(r *http.Request) error
-	commandFactory     func(context.Context, *DatabricksClient) CommandExecutor
+
+	GoogleServiceAccount string
+	googleAuthOptions    []option.ClientOption
+
+	InitContext context.Context
+
+	authMutex      sync.Mutex
+	rateLimiter    *rate.Limiter
+	Provider       *schema.Provider
+	httpClient     *retryablehttp.Client
+	authVisitor    func(r *http.Request) error
+	commandFactory func(context.Context, *DatabricksClient) CommandExecutor
 }
 
 // Configure client to work
@@ -74,6 +81,8 @@ func (c *DatabricksClient) Authenticate() error {
 		c.configureAuthWithDirectParams,
 		c.AzureAuth.configureWithClientSecret,
 		c.AzureAuth.configureWithAzureCLI,
+		c.configureWithGoogleForAccountsAPI,
+		c.configureWithGoogleForWorkspace,
 		c.configureFromDatabricksCfg,
 	}
 	for _, authProvider := range authorizers {
@@ -88,7 +97,7 @@ func (c *DatabricksClient) Authenticate() error {
 		c.fixHost()
 		return nil
 	}
-	return fmt.Errorf("Authentication is not configured for provider. Please configure it\n" +
+	return fmt.Errorf("authentication is not configured for provider. Please configure it\n" +
 		"through one of the following options:\n" +
 		"1. DATABRICKS_HOST + DATABRICKS_TOKEN environment variables.\n" +
 		"2. host + token provider arguments.\n" +
@@ -120,7 +129,7 @@ func (c *DatabricksClient) configureAuthWithDirectParams() (func(r *http.Request
 		needsHostBecause = "token"
 	}
 	if needsHostBecause != "" && c.Host == "" {
-		return nil, fmt.Errorf("Host is empty, but is required by %s", needsHostBecause)
+		return nil, fmt.Errorf("host is empty, but is required by %s", needsHostBecause)
 	}
 	if c.Token == "" || c.Host == "" {
 		return nil, nil
@@ -198,6 +207,9 @@ func (c *DatabricksClient) configureHTTPCLient() {
 	if c.RateLimitPerSecond == 0 {
 		c.RateLimitPerSecond = DefaultRateLimitPerSecond
 	}
+	if c.InitContext == nil {
+		c.InitContext = context.Background()
+	}
 	c.rateLimiter = rate.NewLimiter(rate.Limit(c.RateLimitPerSecond), 1)
 	// Set up a retryable HTTP Client to handle cases where the service returns
 	// a transient error on initial creation
@@ -244,7 +256,7 @@ func (c *DatabricksClient) IsAws() bool {
 
 // IsGcp returns true if client is configured for GCP
 func (c *DatabricksClient) IsGcp() bool {
-	return strings.Contains(c.Host, ".gcp.databricks.com")
+	return c.GoogleServiceAccount != "" || strings.Contains(c.Host, ".gcp.databricks.com")
 }
 
 // FormatURL creates URL from the client Host and additional strings

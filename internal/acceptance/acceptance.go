@@ -52,7 +52,7 @@ func Test(t *testing.T, steps []Step, otherVars ...map[string]string) {
 		awsAttrs = "aws_attributes {}"
 	}
 	instancePoolID := ""
-	if cloudEnv != "MWS" {
+	if cloudEnv != "MWS" && cloudEnv != "gcp-accounts" {
 		instancePoolID = compute.CommonInstancePoolID()
 	}
 	vars := map[string]string{
@@ -166,7 +166,7 @@ func ResourceCheck(name string,
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
-			return fmt.Errorf("Not found: %s", name)
+			return fmt.Errorf("not found: %s", name)
 		}
 		client := common.CommonEnvironmentClient()
 		return cb(context.Background(), client, rs.Primary.ID)

@@ -16,9 +16,8 @@ func TestResourceInstanceProfileCreate(t *testing.T) {
 			{
 				Method:   "POST",
 				Resource: "/api/2.0/instance-profiles/add",
-				ExpectedRequest: map[string]interface{}{
-					"instance_profile_arn": "arn:aws:iam::999999999999:instance-profile/my-fake-instance-profile",
-					"skip_validation":      false,
+				ExpectedRequest: InstanceProfileInfo{
+					InstanceProfileArn: "arn:aws:iam::999999999999:instance-profile/my-fake-instance-profile",
 				},
 			},
 			{
@@ -74,7 +73,7 @@ func TestResourceInstanceProfileCreate_Error_InvalidARN(t *testing.T) {
 		},
 		Create: true,
 	}.Apply(t)
-	assert.EqualError(t, err, "Invalid config supplied. [instance_profile_arn] Invalid ARN")
+	assert.EqualError(t, err, "invalid config supplied. [instance_profile_arn] Invalid ARN")
 }
 
 func TestResourceInstanceProfileRead(t *testing.T) {
@@ -94,6 +93,7 @@ func TestResourceInstanceProfileRead(t *testing.T) {
 		},
 		Resource: ResourceInstanceProfile(),
 		Read:     true,
+		New:      true,
 		ID:       "arn:aws:iam::999999999999:instance-profile/my-fake-instance-profile",
 	}.Apply(t)
 	assert.NoError(t, err, err)
@@ -186,7 +186,9 @@ func TestAwsAccInstanceProfiles(t *testing.T) {
 	ctx := context.WithValue(context.Background(), common.Current, t.Name())
 	instanceProfilesAPI := NewInstanceProfilesAPI(ctx, client)
 	instanceProfilesAPI.Synchronized(arn, func() bool {
-		err := instanceProfilesAPI.Create(arn)
+		err := instanceProfilesAPI.Create(InstanceProfileInfo{
+			InstanceProfileArn: arn,
+		})
 		if err != nil {
 			return false
 		}
@@ -197,7 +199,7 @@ func TestAwsAccInstanceProfiles(t *testing.T) {
 
 		arnSearch, err := instanceProfilesAPI.Read(arn)
 		assert.NoError(t, err, err)
-		assert.True(t, len(arnSearch) > 0)
+		assert.True(t, len(arnSearch.InstanceProfileArn) > 0)
 		return true
 	})
 }

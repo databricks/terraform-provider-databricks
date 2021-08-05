@@ -71,7 +71,7 @@ func TestResourceAwsS3MountCreate_nothing_specified(t *testing.T) {
 		},
 		Create: true,
 	}.Apply(t)
-	require.EqualError(t, err, "Either cluster_id or instance_profile must be specified")
+	require.EqualError(t, err, "either cluster_id or instance_profile must be specified")
 }
 
 func TestResourceAwsS3MountCreate_invalid_arn(t *testing.T) {
@@ -243,7 +243,9 @@ func TestAwsAccS3Mount(t *testing.T) {
 	ctx := context.WithValue(context.Background(), common.Current, t.Name())
 	instanceProfilesAPI := identity.NewInstanceProfilesAPI(ctx, client)
 	instanceProfilesAPI.Synchronized(instanceProfile, func() bool {
-		if err := instanceProfilesAPI.Create(instanceProfile); err != nil {
+		if err := instanceProfilesAPI.Create(identity.InstanceProfileInfo{
+			InstanceProfileArn: instanceProfile,
+		}); err != nil {
 			return false
 		}
 		bucket := qa.GetEnvOrSkipTest(t, "TEST_S3_BUCKET")

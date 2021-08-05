@@ -21,7 +21,8 @@ func ResourceUserInstanceProfile() *schema.Resource {
 		},
 		ReadContext: func(ctx context.Context, userID, roleARN string, c *common.DatabricksClient) error {
 			user, err := NewUsersAPI(ctx, c).read(userID)
-			if err == nil && !user.HasRole(roleARN) {
+			hasRole := complexValues(user.Roles).HasValue(roleARN)
+			if err == nil && !hasRole {
 				return common.NotFound("User has no role")
 			}
 			return err

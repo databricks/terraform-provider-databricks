@@ -2,7 +2,6 @@ package compute
 
 import (
 	"context"
-	"log"
 
 	"github.com/databrickslabs/terraform-provider-databricks/common"
 
@@ -54,30 +53,22 @@ func (a InstancePoolsAPI) Delete(instancePoolID string) error {
 	}, nil)
 }
 
-func makeEmptyBlockSuppressFunc(name string) func(k, old, new string, d *schema.ResourceData) bool {
-	return func(k, old, new string, d *schema.ResourceData) bool {
-		log.Printf("[DEBUG] k='%v', old='%v', new='%v'", k, old, new)
-		if k == name && old == "1" && new == "0" {
-			log.Printf("[DEBUG] Disable removal of empty block")
-			return true
-		}
-		return false
-	}
-}
-
 // ResourceInstancePool ...
 func ResourceInstancePool() *schema.Resource {
 	s := common.StructToSchema(InstancePool{}, func(s map[string]*schema.Schema) map[string]*schema.Schema {
 		s["aws_attributes"].ForceNew = true
 		s["node_type_id"].ForceNew = true
 		s["custom_tags"].ForceNew = true
+		s["preloaded_spark_versions"].ForceNew = true
+		s["preloaded_docker_image"].ForceNew = true
+		s["azure_attributes"].ForceNew = true
+		s["disk_spec"].ForceNew = true
 		s["enable_elastic_disk"].ForceNew = true
 		s["enable_elastic_disk"].Default = true
 		s["aws_attributes"].ConflictsWith = []string{"azure_attributes"}
 		s["azure_attributes"].ConflictsWith = []string{"aws_attributes"}
-		s["aws_attributes"].DiffSuppressFunc = makeEmptyBlockSuppressFunc("aws_attributes.#")
-		s["azure_attributes"].DiffSuppressFunc = makeEmptyBlockSuppressFunc("azure_attributes.#")
-		// TODO: check if it's really force new...
+		s["aws_attributes"].DiffSuppressFunc = common.MakeEmptyBlockSuppressFunc("aws_attributes.#")
+		s["azure_attributes"].DiffSuppressFunc = common.MakeEmptyBlockSuppressFunc("azure_attributes.#")
 		if v, err := common.SchemaPath(s, "aws_attributes", "availability"); err == nil {
 			v.ForceNew = true
 			v.Default = AwsAvailabilitySpot
@@ -119,6 +110,15 @@ func ResourceInstancePool() *schema.Resource {
 				EbsVolumeTypeGeneralPurposeSsd,
 				EbsVolumeTypeThroughputOptimizedHdd,
 			}, false)
+		}
+		if v, err := common.SchemaPath(s, "preloaded_docker_image", "url"); err == nil {
+			v.ForceNew = true
+		}
+		if v, err := common.SchemaPath(s, "preloaded_docker_image", "basic_auth", "username"); err == nil {
+			v.ForceNew = true
+		}
+		if v, err := common.SchemaPath(s, "preloaded_docker_image", "basic_auth", "password"); err == nil {
+			v.ForceNew = true
 		}
 		return s
 	})

@@ -23,7 +23,7 @@ type SqlPermissions struct {
 	AnyFile              bool                  `json:"any_file,omitempty"`
 	AnonymousFunction    bool                  `json:"anonymous_function,omitempty"`
 	ClusterID            string                `json:"cluster_id,omitempty" tf:"computed"`
-	PrivilegeAssignments []PrivilegeAssignment `json:"privilege_assignments,omitempty"`
+	PrivilegeAssignments []PrivilegeAssignment `json:"privilege_assignments,omitempty" tf:"slice_set"`
 
 	exec common.CommandExecutor
 }
@@ -122,7 +122,7 @@ func (ta *SqlPermissions) read() error {
 			strings.Contains(failure, "RESOURCE_DOES_NOT_EXIST") {
 			return common.NotFound(failure)
 		}
-		return fmt.Errorf(failure)
+		return fmt.Errorf("cannot read current grants: %s", failure)
 	}
 	// clear any previous entries
 	ta.PrivilegeAssignments = []PrivilegeAssignment{}
@@ -130,6 +130,10 @@ func (ta *SqlPermissions) read() error {
 	// iterate over existing permissions over given data object
 	var currentPrincipal, currentAction, currentType, currentKey string
 	for currentGrantsOnThis.Scan(&currentPrincipal, &currentAction, &currentType, &currentKey) {
+		if currentType == "CATALOG$" {
+			currentType = "CATALOG"
+			currentKey = ""
+		}
 		if !strings.EqualFold(currentType, thisType) {
 			continue
 		}
@@ -214,7 +218,10 @@ func (ta *SqlPermissions) apply(qb func(objType, key string) string) error {
 	sqlQuery := qb(objType, key)
 	log.Printf("[INFO] Executing SQL: %s", sqlQuery)
 	r := ta.exec.Execute(ta.ClusterID, "sql", sqlQuery)
-	return r.Err()
+	if !r.Failed() {
+		return nil
+	}
+	return fmt.Errorf("cannot execute %s: %s", sqlQuery, r.Error())
 }
 
 func (ta *SqlPermissions) initCluster(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) (err error) {
@@ -228,7 +235,7 @@ func (ta *SqlPermissions) initCluster(ctx context.Context, d *schema.ResourceDat
 		}
 	}
 	clusterInfo, err := clustersAPI.StartAndGetInfo(ta.ClusterID)
-	if e, ok := err.(common.APIError); ok && e.IsMissing() {
+	if common.IsMissing(err) {
 		// cluster that was previously in a tfstate was deleted
 		ta.ClusterID, err = ta.getOrCreateCluster(clustersAPI)
 		if err != nil {
@@ -254,15 +261,15 @@ func (ta *SqlPermissions) getOrCreateCluster(clustersAPI compute.ClustersAPI) (s
 	})
 	nodeType := clustersAPI.GetSmallestNodeType(compute.NodeTypeRequest{LocalDisk: true})
 	aclCluster, err := clustersAPI.GetOrCreateRunningCluster(
-		"terrraform-table-acl", compute.Cluster{
-			ClusterName:            "terrraform-table-acl",
+		"terraform-table-acl", compute.Cluster{
+			ClusterName:            "terraform-table-acl",
 			SparkVersion:           sparkVersion,
 			NodeTypeID:             nodeType,
 			AutoterminationMinutes: 10,
 			SparkConf: map[string]string{
 				"spark.databricks.acl.dfAclsEnabled":     "true",
 				"spark.databricks.repl.allowedLanguages": "python,sql",
-				"spark.databricks.cluster.profile":       "serverless",
+				"spark.databricks.cluster.profile":       "singleNode",
 				"spark.master":                           "local[*]",
 			},
 			CustomTags: map[string]string{
@@ -303,8 +310,13 @@ func ResourceSqlPermissions() *schema.Resource {
 			s[field].Optional = true
 			s[field].AtLeastOneOf = alof
 		}
+		s["database"].DiffSuppressFunc = func(k, old, new string, d *schema.ResourceData) bool {
+			if old == "default" && new == "" {
+				return true
+			}
+			return false
+		}
 		s["cluster_id"].Computed = true
-		s["database"].Default = "default"
 		return s
 	})
 	return common.Resource{

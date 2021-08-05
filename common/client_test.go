@@ -25,7 +25,7 @@ func TestDatabricksClientConfigure_Nothing(t *testing.T) {
 	os.Setenv("PATH", "testdata:/bin")
 
 	_, err := configureAndAuthenticate(&DatabricksClient{})
-	AssertErrorStartsWith(t, err, "Authentication is not configured for provider")
+	AssertErrorStartsWith(t, err, "authentication is not configured for provider")
 }
 
 func TestDatabricksClientConfigure_BasicAuth_NoHost(t *testing.T) {
@@ -34,7 +34,7 @@ func TestDatabricksClientConfigure_BasicAuth_NoHost(t *testing.T) {
 		Password: "bar",
 	})
 
-	AssertErrorStartsWith(t, err, "Host is empty, but is required by basic_auth")
+	AssertErrorStartsWith(t, err, "host is empty, but is required by basic_auth")
 	assert.Equal(t, "Zm9vOmJhcg==", dc.Token)
 }
 
@@ -65,7 +65,7 @@ func TestDatabricksClientConfigure_Token_NoHost(t *testing.T) {
 		Token: "dapi345678",
 	})
 
-	AssertErrorStartsWith(t, err, "Host is empty, but is required by token")
+	AssertErrorStartsWith(t, err, "host is empty, but is required by token")
 	assert.Equal(t, "dapi345678", dc.Token)
 }
 

@@ -20,7 +20,7 @@ func TestResourceUserRead(t *testing.T) {
 					ID:          "abc",
 					DisplayName: "Example user",
 					UserName:    "me@example.com",
-					Groups: []GroupsListItem{
+					Groups: []ComplexValue{
 						{
 							Display: "admins",
 							Value:   "4567",
@@ -93,7 +93,7 @@ func TestResourceUserCreate(t *testing.T) {
 				ExpectedRequest: ScimUser{
 					DisplayName: "Example user",
 					Active:      true,
-					Entitlements: []entitlementsListItem{
+					Entitlements: entitlements{
 						{
 							Value: "allow-cluster-create",
 						},
@@ -113,12 +113,12 @@ func TestResourceUserCreate(t *testing.T) {
 					Active:      true,
 					UserName:    "me@example.com",
 					ID:          "abc",
-					Entitlements: []entitlementsListItem{
+					Entitlements: entitlements{
 						{
-							Value: AllowClusterCreateEntitlement,
+							Value: "allow-cluster-create",
 						},
 					},
-					Groups: []GroupsListItem{
+					Groups: []ComplexValue{
 						{
 							Display: "admins",
 							Value:   "4567",
@@ -172,12 +172,12 @@ func TestResourceUserUpdate(t *testing.T) {
 		DisplayName: "Changed Name",
 		UserName:    "me@example.com",
 		Active:      true,
-		Entitlements: []entitlementsListItem{
+		Entitlements: entitlements{
 			{
-				Value: AllowInstancePoolCreateEntitlement,
+				Value: "allow-instance-pool-create",
 			},
 		},
-		Groups: []GroupsListItem{
+		Groups: []ComplexValue{
 			{
 				Display: "admins",
 				Value:   "4567",
@@ -187,7 +187,7 @@ func TestResourceUserUpdate(t *testing.T) {
 				Value:   "9877",
 			},
 		},
-		Roles: []roleListItem{
+		Roles: []ComplexValue{
 			{
 				Value: "a",
 			},
@@ -206,12 +206,12 @@ func TestResourceUserUpdate(t *testing.T) {
 					Active:      true,
 					UserName:    "me@example.com",
 					ID:          "abc",
-					Entitlements: []entitlementsListItem{
+					Entitlements: []ComplexValue{
 						{
-							Value: AllowClusterCreateEntitlement,
+							Value: "allow-cluster-create",
 						},
 					},
-					Groups: []GroupsListItem{
+					Groups: []ComplexValue{
 						{
 							Display: "admins",
 							Value:   "4567",
@@ -221,7 +221,7 @@ func TestResourceUserUpdate(t *testing.T) {
 							Value:   "9877",
 						},
 					},
-					Roles: []roleListItem{
+					Roles: []ComplexValue{
 						{
 							Value: "a",
 						},
@@ -245,6 +245,10 @@ func TestResourceUserUpdate(t *testing.T) {
 		Resource: ResourceUser(),
 		Update:   true,
 		ID:       "abc",
+		InstanceState: map[string]string{
+			"user_name":    "me@example.com",
+			"display_name": "Old Name",
+		},
 		HCL: `
 		user_name    = "me@example.com"
 		display_name = "Changed Name"
@@ -293,12 +297,12 @@ func TestResourceUserUpdate_ErrorPut(t *testing.T) {
 					Active:      true,
 					UserName:    "me@example.com",
 					ID:          "abc",
-					Entitlements: []entitlementsListItem{
+					Entitlements: []ComplexValue{
 						{
-							Value: AllowClusterCreateEntitlement,
+							Value: "allow-cluster-create",
 						},
 					},
-					Groups: []GroupsListItem{
+					Groups: []ComplexValue{
 						{
 							Display: "admins",
 							Value:   "4567",
@@ -308,7 +312,7 @@ func TestResourceUserUpdate_ErrorPut(t *testing.T) {
 							Value:   "9877",
 						},
 					},
-					Roles: []roleListItem{
+					Roles: []ComplexValue{
 						{
 							Value: "a",
 						},
@@ -338,7 +342,7 @@ func TestResourceUserUpdate_ErrorPut(t *testing.T) {
 }
 
 func TestResourceUserDelete(t *testing.T) {
-	d, err := qa.ResourceFixture{
+	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "DELETE",
@@ -348,9 +352,7 @@ func TestResourceUserDelete(t *testing.T) {
 		Resource: ResourceUser(),
 		Delete:   true,
 		ID:       "abc",
-	}.Apply(t)
-	require.NoError(t, err, err)
-	assert.Equal(t, "abc", d.Id(), "Id should not be empty")
+	}.ApplyNoError(t)
 }
 
 func TestResourceUserDelete_Error(t *testing.T) {

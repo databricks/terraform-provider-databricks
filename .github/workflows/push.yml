@@ -19,7 +19,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v1
         with:
-          go-version: 1.14.x
+          go-version: 1.16.x
 
       - name: Cache packages
         uses: actions/cache@v2
@@ -27,6 +27,7 @@ jobs:
           path: |
             ~/go/pkg/mod
             ~/.cache/go-build
+            /opt/hostedtoolcache/go
             vendor
           key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
           restore-keys: |
@@ -37,7 +38,7 @@ jobs:
           echo "GOPATH=$(go env GOPATH)" >> $GITHUB_ENV
           echo "$(go env GOPATH)/bin" >> $GITHUB_PATH
           go get gotest.tools/gotestsum
-          go get github.com/golangci/golangci-lint/cmd/golangci-lint@v1.25.0
+          go install honnef.co/go/tools/cmd/staticcheck@latest
 
       - name: Pull external libraries
         run: make vendor

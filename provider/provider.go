@@ -34,6 +34,7 @@ func DatabricksProvider() *schema.Provider {
 			"databricks_notebook":                workspace.DataSourceNotebook(),
 			"databricks_notebook_paths":          workspace.DataSourceNotebookPaths(),
 			"databricks_spark_version":           compute.DataSourceSparkVersion(),
+			"databricks_user":                    identity.DataSourceUser(),
 			"databricks_zones":                   compute.DataSourceClusterZones(),
 		},
 		ResourcesMap: map[string]*schema.Resource{
@@ -55,6 +56,7 @@ func DatabricksProvider() *schema.Provider {
 			"databricks_user_instance_profile":  identity.ResourceUserInstanceProfile(),
 			"databricks_instance_profile":       identity.ResourceInstanceProfile(),
 			"databricks_group_member":           identity.ResourceGroupMember(),
+			"databricks_obo_token":              identity.ResourceOboToken(),
 			"databricks_token":                  identity.ResourceToken(),
 			"databricks_user":                   identity.ResourceUser(),
 			"databricks_service_principal":      identity.ResourceServicePrincipal(),
@@ -80,6 +82,7 @@ func DatabricksProvider() *schema.Provider {
 			"databricks_sql_visualization": sqlanalytics.ResourceVisualization(),
 			"databricks_sql_widget":        sqlanalytics.ResourceWidget(),
 
+			"databricks_directory":          workspace.ResourceDirectory(),
 			"databricks_global_init_script": workspace.ResourceGlobalInitScript(),
 			"databricks_notebook":           workspace.ResourceNotebook(),
 			"databricks_workspace_conf":     workspace.ResourceWorkspaceConf(),
@@ -209,10 +212,22 @@ func DatabricksProvider() *schema.Provider {
 				Default:     false,
 				Description: "Create ephemeral PAT tokens also for AZ CLI authenticated requests",
 			},
+			"azure_use_pat_for_spn": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     false,
+				Description: "Create ephemeral PAT tokens instead of AAD tokens for SPN",
+				DefaultFunc: schema.EnvDefaultFunc("DATABRICKS_AZURE_USE_PAT_FOR_SPN", false),
+			},
 			"azure_environment": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				DefaultFunc: schema.EnvDefaultFunc("ARM_ENVIRONMENT", "public"),
+			},
+			"google_service_account": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				DefaultFunc: schema.EnvDefaultFunc("DATABRICKS_GOOGLE_SERVICE_ACCOUNT", nil),
 			},
 			"skip_verify": {
 				Type:        schema.TypeBool,
@@ -343,8 +358,15 @@ func configureDatabricksClient(ctx context.Context, d *schema.ResourceData) (int
 	if v, ok := d.GetOk("azure_use_pat_for_cli"); ok {
 		pc.AzureAuth.UsePATForCLI = v.(bool)
 	}
+	if v, ok := d.GetOk("azure_use_pat_for_spn"); ok {
+		pc.AzureAuth.UsePATForSPN = v.(bool)
+	}
 	if v, ok := d.GetOk("azure_environment"); ok {
 		pc.AzureAuth.Environment = v.(string)
+	}
+	if v, ok := d.GetOk("google_service_account"); ok {
+		authsUsed["google"] = true
+		pc.GoogleServiceAccount = v.(string)
 	}
 	authorizationMethodsUsed := []string{}
 	for name, used := range authsUsed {

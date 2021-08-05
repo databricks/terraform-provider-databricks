@@ -6,11 +6,12 @@ import (
 
 	"github.com/databrickslabs/terraform-provider-databricks/qa"
 	"github.com/databrickslabs/terraform-provider-databricks/sqlanalytics/api"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestWidgetCreateWithVisualization(t *testing.T) {
-	i678 := 678
+	i678 := api.NewStringOrInt("678")
 
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
@@ -22,7 +23,7 @@ func TestWidgetCreateWithVisualization(t *testing.T) {
 					VisualizationID: &i678,
 				},
 				Response: api.Widget{
-					ID:          12345,
+					ID:          "12345",
 					DashboardID: "some-uuid",
 				},
 			},
@@ -34,19 +35,19 @@ func TestWidgetCreateWithVisualization(t *testing.T) {
 					Widgets: []json.RawMessage{
 						json.RawMessage(`
 							{
-								"id": 12344,
+								"id": "12344",
 								"visualization_id": null
 							}
 						`),
 						json.RawMessage(`
 							{
-								"id": 12345,
+								"id": "12345",
 								"visualization_id": 678
 							}
 						`),
 						json.RawMessage(`
 							{
-								"id": 12346,
+								"id": "12346",
 								"visualization_id": null
 							}
 						`),
@@ -70,7 +71,7 @@ func TestWidgetCreateWithVisualization(t *testing.T) {
 }
 
 func TestWidgetCreateWithVisualizationByResourceID(t *testing.T) {
-	i678 := 678
+	i678 := api.NewStringOrInt("678")
 
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
@@ -82,7 +83,7 @@ func TestWidgetCreateWithVisualizationByResourceID(t *testing.T) {
 					VisualizationID: &i678,
 				},
 				Response: api.Widget{
-					ID:          12345,
+					ID:          "12345",
 					DashboardID: "some-uuid",
 				},
 			},
@@ -94,12 +95,12 @@ func TestWidgetCreateWithVisualizationByResourceID(t *testing.T) {
 					Widgets: []json.RawMessage{
 						json.RawMessage(`
 							{
-								"id": 12344
+								"id": "12344"
 							}
 						`),
 						json.RawMessage(`
 							{
-								"id": 12345,
+								"id": "12345",
 								"visualization": {
 									"id": 678
 								}
@@ -107,7 +108,7 @@ func TestWidgetCreateWithVisualizationByResourceID(t *testing.T) {
 						`),
 						json.RawMessage(`
 							{
-								"id": 12346
+								"id": "12346"
 							}
 						`),
 					},
@@ -142,7 +143,7 @@ func TestWidgetCreateWithText(t *testing.T) {
 					Text:        &sText,
 				},
 				Response: api.Widget{
-					ID:          12345,
+					ID:          "12345",
 					DashboardID: "some-uuid",
 				},
 			},
@@ -154,19 +155,19 @@ func TestWidgetCreateWithText(t *testing.T) {
 					Widgets: []json.RawMessage{
 						json.RawMessage(`
 							{
-								"id": 12344,
+								"id": "12344",
 								"text": null
 							}
 						`),
 						json.RawMessage(`
 							{
-								"id": 12345,
+								"id": "12345",
 								"text": "` + sText + `"
 							}
 						`),
 						json.RawMessage(`
 							{
-								"id": 12346,
+								"id": "12346",
 								"text": null
 							}
 						`),
@@ -190,7 +191,7 @@ func TestWidgetCreateWithText(t *testing.T) {
 }
 
 func TestWidgetCreateWithParamValue(t *testing.T) {
-	i678 := 678
+	i678 := api.NewStringOrInt("678")
 
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
@@ -216,7 +217,7 @@ func TestWidgetCreateWithParamValue(t *testing.T) {
 					},
 				},
 				Response: api.Widget{
-					ID:          12345,
+					ID:          "12345",
 					DashboardID: "some-uuid",
 				},
 			},
@@ -228,13 +229,13 @@ func TestWidgetCreateWithParamValue(t *testing.T) {
 					Widgets: []json.RawMessage{
 						json.RawMessage(`
 							{
-								"id": 12344,
+								"id": "12344",
 								"visualization_id": null
 							}
 						`),
 						json.RawMessage(`
 							{
-								"id": 12345,
+								"id": "12345",
 								"visualization_id": 678,
 								"options": {
 									"parameterMappings": {
@@ -257,7 +258,7 @@ func TestWidgetCreateWithParamValue(t *testing.T) {
 						`),
 						json.RawMessage(`
 							{
-								"id": 12346,
+								"id": "12346",
 								"visualization_id": null
 							}
 						`),
@@ -291,29 +292,34 @@ func TestWidgetCreateWithParamValue(t *testing.T) {
 	assert.Equal(t, "12345", d.Get("widget_id"))
 	assert.Equal(t, "678", d.Get("visualization_id"))
 
-	// First parameter
-	assert.Equal(t, "p1", d.Get("parameter.0.name"))
-	assert.Equal(t, "dashboard-level", d.Get("parameter.0.type"))
-	assert.Equal(t, "v1", d.Get("parameter.0.value"))
-	{
-		_, ok := d.GetOk("parameter.0.values")
-		assert.False(t, ok, "Expected `values` to not be set")
-	}
+	params := d.Get("parameter").(*schema.Set)
+	assert.Equal(t, 2, params.Len())
 
-	// Second parameter
-	assert.Equal(t, "p2", d.Get("parameter.1.name"))
-	assert.Equal(t, "dashboard-level", d.Get("parameter.1.type"))
-	assert.Equal(t, 2, d.Get("parameter.1.values.#"))
-	assert.Equal(t, "v2_0", d.Get("parameter.1.values.0"))
-	assert.Equal(t, "v2_1", d.Get("parameter.1.values.1"))
-	{
-		_, ok := d.GetOk("parameter.1.value")
-		assert.False(t, ok, "Expected `value` to not be set")
+	for _, param := range params.List() {
+		m := param.(map[string]interface{})
+		switch m["name"].(string) {
+		case "p1":
+			// First parameter
+			assert.Equal(t, "dashboard-level", m["type"])
+			assert.Equal(t, "v1", m["value"])
+			values := m["values"].([]interface{})
+			assert.Equal(t, 0, len(values))
+		case "p2":
+			// Second parameter
+			assert.Equal(t, "dashboard-level", m["type"])
+			assert.Equal(t, "", m["value"])
+			values := m["values"].([]interface{})
+			assert.Equal(t, 2, len(values))
+			assert.Equal(t, "v2_0", values[0].(string))
+			assert.Equal(t, "v2_1", values[1].(string))
+		default:
+			t.Fatalf("Unexpected parameter: %v", m["name"])
+		}
 	}
 }
 
 func TestWidgetCreateWithPosition(t *testing.T) {
-	i678 := 678
+	i678 := api.NewStringOrInt("678")
 
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
@@ -334,7 +340,7 @@ func TestWidgetCreateWithPosition(t *testing.T) {
 					},
 				},
 				Response: api.Widget{
-					ID:          12345,
+					ID:          "12345",
 					DashboardID: "some-uuid",
 				},
 			},
@@ -346,13 +352,13 @@ func TestWidgetCreateWithPosition(t *testing.T) {
 					Widgets: []json.RawMessage{
 						json.RawMessage(`
 							{
-								"id": 12344,
+								"id": "12344",
 								"visualization_id": null
 							}
 						`),
 						json.RawMessage(`
 							{
-								"id": 12345,
+								"id": "12345",
 								"visualization_id": 678,
 								"options": {
 									"position": {
@@ -367,7 +373,7 @@ func TestWidgetCreateWithPosition(t *testing.T) {
 						`),
 						json.RawMessage(`
 							{
-								"id": 12345,
+								"id": "12345",
 								"visualization_id": null
 							}
 						`),
@@ -402,6 +408,136 @@ func TestWidgetCreateWithPosition(t *testing.T) {
 	assert.Equal(t, 4, d.Get("position.0.size_y"))
 	assert.Equal(t, 5, d.Get("position.0.pos_x"))
 	assert.Equal(t, 6, d.Get("position.0.pos_y"))
+	assert.Equal(t, false, d.Get("position.0.auto_height"))
+}
+
+func TestWidgetCreateWithPositionAndAutoheight(t *testing.T) {
+	i678 := api.NewStringOrInt("678")
+
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/preview/sql/widgets",
+				ExpectedRequest: api.Widget{
+					DashboardID:     "some-uuid",
+					VisualizationID: &i678,
+					Options: api.WidgetOptions{
+						Position: &api.WidgetPosition{
+							AutoHeight: true,
+							SizeX:      3,
+							SizeY:      0,
+							PosX:       5,
+							PosY:       6,
+						},
+					},
+				},
+				Response: api.Widget{
+					ID:          "12345",
+					DashboardID: "some-uuid",
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/preview/sql/dashboards/some-uuid",
+				Response: api.Dashboard{
+					ID: "some-uuid",
+					Widgets: []json.RawMessage{
+						json.RawMessage(`
+							{
+								"id": "12344",
+								"visualization_id": null
+							}
+						`),
+						json.RawMessage(`
+							{
+								"id": "12345",
+								"visualization_id": 678,
+								"options": {
+									"position": {
+										"autoHeight": true,
+										"sizeX": 3,
+										"sizeY": 0,
+										"col": 5,
+										"row": 6
+									}
+								}
+							}
+						`),
+						json.RawMessage(`
+							{
+								"id": "12345",
+								"visualization_id": null
+							}
+						`),
+					},
+				},
+			},
+		},
+		Resource: ResourceWidget(),
+		Create:   true,
+		HCL: `
+			dashboard_id = "some-uuid"
+			visualization_id = "678"
+
+			position {
+				size_x = 3
+				size_y = 0
+				pos_x = 5
+				pos_y = 6
+
+				auto_height = true
+			}
+		`,
+	}.Apply(t)
+
+	assert.NoError(t, err, err)
+	assert.Equal(t, "some-uuid/12345", d.Id(), "Resource ID should not be empty")
+	assert.Equal(t, "some-uuid", d.Get("dashboard_id"))
+	assert.Equal(t, "12345", d.Get("widget_id"))
+	assert.Equal(t, "678", d.Get("visualization_id"))
+
+	// The position is a nested type, which can only be modeled in Terraform
+	// by a list type with a single element.
+	assert.Equal(t, 3, d.Get("position.0.size_x"))
+	assert.Equal(t, 0, d.Get("position.0.size_y"))
+	assert.Equal(t, 5, d.Get("position.0.pos_x"))
+	assert.Equal(t, 6, d.Get("position.0.pos_y"))
+	assert.Equal(t, true, d.Get("position.0.auto_height"))
+}
+
+func TestWidgetReadNotFound(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/preview/sql/dashboards/some-uuid",
+				Response: api.Dashboard{
+					ID: "some-uuid",
+					Widgets: []json.RawMessage{
+						json.RawMessage(`
+							{
+								"id": "12345",
+								"text": "text"
+							}
+						`),
+					},
+				},
+			},
+		},
+		Resource:    ResourceWidget(),
+		Read:        true,
+		Removed:     true,
+		RequiresNew: true,
+		ID:          "some-uuid/12344",
+		InstanceState: map[string]string{
+			"dashboard_id":     "some-uuid",
+			"visualization_id": "678",
+		},
+	}.Apply(t)
+
+	assert.NoError(t, err, err)
+	assert.Equal(t, "", d.Id(), "Resource ID should be empty")
 }
 
 func TestWidgetUpdate(t *testing.T) {
@@ -417,7 +553,7 @@ func TestWidgetUpdate(t *testing.T) {
 					Text:        &sText,
 				},
 				Response: api.Widget{
-					ID:          12345,
+					ID:          "12345",
 					DashboardID: "some-uuid",
 				},
 			},
@@ -429,19 +565,19 @@ func TestWidgetUpdate(t *testing.T) {
 					Widgets: []json.RawMessage{
 						json.RawMessage(`
 							{
-								"id": 12344,
+								"id": "12344",
 								"visualization_id": null
 							}
 						`),
 						json.RawMessage(`
 							{
-								"id": 12345,
+								"id": "12345",
 								"text": "text"
 							}
 						`),
 						json.RawMessage(`
 							{
-								"id": 12345,
+								"id": "12345",
 								"visualization_id": null
 							}
 						`),

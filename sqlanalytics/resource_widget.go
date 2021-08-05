@@ -4,8 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"net/http"
 	"sort"
-	"strconv"
 	"strings"
 
 	"github.com/databrickslabs/terraform-provider-databricks/common"
@@ -22,15 +22,16 @@ type WidgetEntity struct {
 	VisualizationID string `json:"visualization_id,omitempty"`
 
 	Position  *WidgetPosition   `json:"position,omitempty"`
-	Parameter []WidgetParameter `json:"parameter,omitempty"`
+	Parameter []WidgetParameter `json:"parameter,omitempty" tf:"slice_set"`
 }
 
 // WidgetPosition ...
 type WidgetPosition struct {
-	SizeX int `json:"size_x"`
-	SizeY int `json:"size_y"`
-	PosX  int `json:"pos_x"`
-	PosY  int `json:"pos_y"`
+	SizeX      int  `json:"size_x"`
+	SizeY      int  `json:"size_y"`
+	PosX       int  `json:"pos_x"`
+	PosY       int  `json:"pos_y"`
+	AutoHeight bool `json:"auto_height,omitempty"`
 }
 
 // WidgetParameter ...
@@ -79,10 +80,7 @@ func (w *WidgetEntity) toAPIObject(schema map[string]*schema.Schema, data *schem
 
 	// The visualization ID is a string for the Terraform resource and an integer in the API.
 	if w.VisualizationID != "" {
-		visualizationID, err := strconv.Atoi(extractVisualizationID(w.VisualizationID))
-		if err != nil {
-			return nil, err
-		}
+		visualizationID := api.NewStringOrInt(extractVisualizationID(w.VisualizationID))
 		aw.VisualizationID = &visualizationID
 	}
 
@@ -92,7 +90,7 @@ func (w *WidgetEntity) toAPIObject(schema map[string]*schema.Schema, data *schem
 
 	if w.Position != nil {
 		aw.Options.Position = &api.WidgetPosition{
-			AutoHeight: false,
+			AutoHeight: w.Position.AutoHeight,
 			SizeX:      w.Position.SizeX,
 			SizeY:      w.Position.SizeY,
 			PosX:       w.Position.PosX,
@@ -126,7 +124,7 @@ func (w *WidgetEntity) toAPIObject(schema map[string]*schema.Schema, data *schem
 func (w *WidgetEntity) fromAPIObject(aw *api.Widget, schema map[string]*schema.Schema, data *schema.ResourceData) error {
 	// Copy from API object.
 	w.DashboardID = aw.DashboardID
-	w.WidgetID = strconv.Itoa(aw.ID)
+	w.WidgetID = aw.ID.String()
 
 	if aw.VisualizationID != nil {
 		w.VisualizationID = fmt.Sprint(*aw.VisualizationID)
@@ -138,10 +136,11 @@ func (w *WidgetEntity) fromAPIObject(aw *api.Widget, schema map[string]*schema.S
 
 	if pos := aw.Options.Position; pos != nil {
 		w.Position = &WidgetPosition{
-			SizeX: pos.SizeX,
-			SizeY: pos.SizeY,
-			PosX:  pos.PosX,
-			PosY:  pos.PosY,
+			AutoHeight: pos.AutoHeight,
+			SizeX:      pos.SizeX,
+			SizeY:      pos.SizeY,
+			PosX:       pos.PosX,
+			PosY:       pos.PosY,
 		}
 	}
 
@@ -184,7 +183,7 @@ func (w *WidgetEntity) fromAPIObject(aw *api.Widget, schema map[string]*schema.S
 			}
 		}
 
-		return fmt.Errorf("Unable to derive type from message: %v", string(b))
+		return fmt.Errorf("unable to derive type from message: %v", string(b))
 	}
 
 	// Sort parameters by their name for deterministic order.
@@ -225,7 +224,7 @@ func (a WidgetAPI) Read(dashboardID, widgetID string) (*api.Widget, error) {
 			return nil, err
 		}
 
-		if strconv.Itoa(wnew.ID) == widgetID {
+		if wnew.ID.String() == widgetID {
 			// Include dashboard ID in returned object.
 			// It's not part of the API response.
 			wnew.DashboardID = dashboardID
@@ -233,7 +232,11 @@ func (a WidgetAPI) Read(dashboardID, widgetID string) (*api.Widget, error) {
 		}
 	}
 
-	return nil, fmt.Errorf("Cannot find widget %s attached to dashboard %s", widgetID, dashboardID)
+	return nil, common.APIError{
+		ErrorCode:  "NOT_FOUND",
+		StatusCode: http.StatusNotFound,
+		Message:    fmt.Sprintf("Cannot find widget %s attached to dashboard %s", widgetID, dashboardID),
+	}
 }
 
 // Update ...

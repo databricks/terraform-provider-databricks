@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws/arn"
+	"github.com/databrickslabs/terraform-provider-databricks/common"
 	"github.com/databrickslabs/terraform-provider-databricks/compute"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -22,7 +23,7 @@ func (m AWSIamMount) Source() string {
 }
 
 // Config ...
-func (m AWSIamMount) Config() map[string]string {
+func (m AWSIamMount) Config(client *common.DatabricksClient) map[string]string {
 	return make(map[string]string) // return empty map so nil map does not marshal to null
 }
 
@@ -88,7 +89,7 @@ func preprocessS3Mount(ctx context.Context, d *schema.ResourceData, m interface{
 	clusterID := d.Get("cluster_id").(string)
 	instanceProfile := d.Get("instance_profile").(string)
 	if clusterID == "" && instanceProfile == "" {
-		return fmt.Errorf("Either cluster_id or instance_profile must be specified")
+		return fmt.Errorf("either cluster_id or instance_profile must be specified")
 	}
 	clustersAPI := compute.NewClustersAPI(ctx, m)
 	if clusterID != "" {
@@ -97,10 +98,10 @@ func preprocessS3Mount(ctx context.Context, d *schema.ResourceData, m interface{
 			return err
 		}
 		if clusterInfo.AwsAttributes == nil {
-			return fmt.Errorf("Cluster %s must have AWS attributes", clusterID)
+			return fmt.Errorf("cluster %s must have AWS attributes", clusterID)
 		}
 		if len(clusterInfo.AwsAttributes.InstanceProfileArn) == 0 {
-			return fmt.Errorf("Cluster %s must have EC2 instance profile attached", clusterID)
+			return fmt.Errorf("cluster %s must have EC2 instance profile attached", clusterID)
 		}
 	}
 	if instanceProfile != "" {
@@ -121,10 +122,7 @@ func GetOrCreateMountingClusterWithInstanceProfile(
 		return i, err
 	}
 	instanceProfileParts := strings.Split(ia.Resource, "/")
-	if len(instanceProfileParts) != 2 {
-		return i, fmt.Errorf("Should have gotten two parts: %v", instanceProfileParts)
-	}
-	clusterName := fmt.Sprintf("terraform-mount-%s", instanceProfileParts[1])
+	clusterName := fmt.Sprintf("terraform-mount-%s", strings.Join(instanceProfileParts[1:], "-"))
 	return clustersAPI.GetOrCreateRunningCluster(clusterName, compute.Cluster{
 		NumWorkers:  1,
 		ClusterName: clusterName,

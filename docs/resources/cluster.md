@@ -33,6 +33,7 @@ resource "databricks_cluster" "shared_autoscaling" {
 * `driver_node_type_id` - (Optional) The node type of the Spark driver. This field is optional; if unset, API will set the driver node type to the same value as `node_type_id` defined above.
 * `node_type_id` - (Required - optional if `instance_pool_id` is given) Any supported [databricks_node_type](../data-sources/node_type.md) id. If `instance_pool_id` is specified, this field is not needed.
 * `instance_pool_id` (Optional - required if `node_type_id` is not given) - To reduce cluster start time, you can attach a cluster to a [predefined pool of idle instances](instance_pool.md). When attached to a pool, a cluster allocates its driver and worker nodes from the pool. If the pool does not have sufficient idle resources to accommodate the cluster’s request, it expands by allocating new instances from the instance provider. When an attached cluster changes its state to `TERMINATED`, the instances it used are returned to the pool and reused by a different cluster.
+* `driver_instance_pool_id` (Optional) - similar to `instance_pool_id`, but for driver node. If omitted, and `instance_pool_id` is specified, then driver will be allocated from that pool.
 * `policy_id` - (Optional) Identifier of [Cluster Policy](cluster_policy.md) to validate cluster and preset certain defaults. *The primary use for cluster policies is to allow users to create policy-scoped clusters via UI rather than sharing configuration for API-created clusters.* For example, when you specify `policy_id` of [external metastore](https://docs.databricks.com/administration-guide/clusters/policies.html#external-metastore-policy) policy, you still have to fill in relevant keys for `spark_conf`.
 * `autotermination_minutes` - (Optional) Automatically terminate the cluster after being inactive for this time in minutes. If not set, Databricks won't automatically terminate an inactive cluster. If specified, the threshold must be between 10 and 10000 minutes. You can also set this value to 0 to explicitly disable automatic termination. _We highly recommend having this setting present for Interactive/BI clusters._
 * `enable_elastic_disk` - (Optional) If you don’t want to allocate a fixed number of EBS volumes at cluster creation time, use autoscaling local storage. With autoscaling local storage, Databricks monitors the amount of free disk space available on your cluster’s Spark workers. If a worker begins to run too low on disk, Databricks automatically attaches a new EBS volume to the worker before it runs out of disk space. EBS volumes are attached up to a limit of 5 TB of total disk space per instance (including the instance’s local storage). To scale down EBS usage, make sure you have `autotermination_minutes` and `autoscale` attributes set. More documentation available at [cluster configuration page](https://docs.databricks.com/clusters/configure.html#autoscaling-local-storage-1).
@@ -118,28 +119,58 @@ resource "databricks_cluster" "single_node" {
 }
 ```
 
+### High-Concurrency clusters
+
+To create High-Concurrency cluster, following settings should be provided:
+
+* `spark_conf` should have following items:
+  * `spark.databricks.repl.allowedLanguages` set to a list of supported languages, for example: `python,sql`, or `python,sql,r`.  Scala is not supported!
+  * `spark.databricks.cluster.profile` set to `serverless`
+* `custom_tags` should have tag `ResourceClass` set to value `Serverless`
+
+For example:
+
+```
+esource "databricks_cluster" "cluster_with_table_access_control" {
+  cluster_name            = "Shared High-Concurrency"
+  spark_version           = data.databricks_spark_version.latest_lts.id
+  node_type_id            = data.databricks_node_type.smallest.id
+  autotermination_minutes = 20
+
+  spark_conf = {
+    "spark.databricks.repl.allowedLanguages": "python,sql",
+    "spark.databricks.cluster.profile": "serverless"
+  }
+
+  custom_tags = {
+    "ResourceClass" = "Serverless"
+  }
+}  
+```
+
+
 ### library Configuration Block
 
-To install libraries, one must specify each library in its configuration block. Each different type of library has a slightly different syntax. It's possible to set only one type of library within one config block. Otherwise, the plan will fail with an error.
+To install libraries, one must specify each library in a separate configuration block. Each different type of library has a slightly different syntax. It's possible to set only one type of library within one config block. Otherwise, the plan will fail with an error.
 
 Installing JAR artifacts on a cluster. Location can be anything, that is DBFS or mounted object store (s3, adls, ...)
 ```hcl
 library {
-  jar = "dbfs://FileStore/app-0.0.1.jar"
+  jar = "dbfs:/FileStore/app-0.0.1.jar"
 }
 ```
 
 Installing Python EGG artifacts. Location can be anything, that is DBFS or mounted object store (s3, adls, ...)
 ```hcl
 library {
-  egg = "dbfs://FileStore/foo.egg"
+  egg = "dbfs:/FileStore/foo.egg"
 }
 ```
 
 Installing Python Wheel artifacts. Location can be anything, that is DBFS or mounted object store (s3, adls, ...)
 ```hcl
 library {
-  whl = "dbfs://FileStore/baz.whl"
+  whl = "dbfs:/FileStore/baz.whl"
 }
 ```
 
@@ -179,7 +210,7 @@ Example of pushing all cluster logs to DBFS:
 ```hcl
 cluster_log_conf {
   dbfs {
-    destination = "dbfs://cluster-logs"
+    destination = "dbfs:/cluster-logs"
   }
 }
 ```
@@ -212,7 +243,7 @@ Example of taking init script from DBFS:
 ```hcl
 init_scripts {
   dbfs {
-    destination = "dbfs://init-scripts/install-elk.sh"
+    destination = "dbfs:/init-scripts/install-elk.sh"
   }
 }
 ```
@@ -299,7 +330,7 @@ resource "databricks_cluster" "this" {
 
 The following options are [available](https://docs.microsoft.com/en-us/azure/databricks/dev-tools/api/latest/clusters#--azureattributes):
 
-* `availability` - (Optional) Availability type used for all subsequent nodes past the `first_on_demand` ones. Valid values are `SPOT_AZURE`, `SPOT_WITH_FALLBACK`, and `ON_DEMAND_AZURE`. Note: If `first_on_demand` is zero, this availability type will be used for the entire cluster.
+* `availability` - (Optional) Availability type used for all subsequent nodes past the `first_on_demand` ones. Valid values are `SPOT_AZURE`, `SPOT_WITH_FALLBACK_AZURE`, and `ON_DEMAND_AZURE`. Note: If `first_on_demand` is zero, this availability type will be used for the entire cluster.
 * `first_on_demand` - (Optional) The first `first_on_demand` nodes of the cluster will be placed on on-demand instances. If this value is greater than 0, the cluster driver node will be placed on an on-demand instance. If this value is greater than or equal to the current cluster size, all nodes will be placed on on-demand instances. If this value is less than the current cluster size, `first_on_demand` nodes will be placed on on-demand instances, and the remainder will be placed on availability instances. This value does not affect cluster size and cannot be mutated over the lifetime of a cluster.
 * `spot_bid_max_price` - (Optional) The max price for Azure spot instances.  Use `-1` to specify lowest price.
 

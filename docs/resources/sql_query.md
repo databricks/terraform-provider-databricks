@@ -1,5 +1,5 @@
 ---
-subcategory: "SQL Analytics"
+subcategory: "Databricks SQL"
 ---
 # databricks_sql_query Resource
 
@@ -18,6 +18,7 @@ resource "databricks_sql_query" "q1" {
   data_source_id = databricks_sql_endpoint.example.data_source_id
   name = "My Query Name"
   query = "SELECT {{ p1 }} AS p1, 2 as p2"
+  run_as_role = "viewer"
 
   schedule {
     continuous {
@@ -49,6 +50,12 @@ resource "databricks_permissions" "q1" {
   access_control {
     group_name       = data.databricks_group.users.display_name
     permission_level = "CAN_RUN"
+  }
+
+  // You can only specify "CAN_EDIT" permissions if the query `run_as_role` equals `viewer`.
+  access_control {
+    group_name       = data.databricks_group.team.display_name
+    permission_level = "CAN_EDIT"
   }
 }
 ```

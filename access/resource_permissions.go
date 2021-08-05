@@ -3,6 +3,7 @@ package access
 import (
 	"context"
 	"fmt"
+	"log"
 	"path"
 	"strconv"
 	"strings"
@@ -111,11 +112,11 @@ type PermissionsAPI struct {
 }
 
 func urlPathForObjectID(objectID string) string {
-	if strings.HasPrefix(objectID, "/sql/") {
+	if strings.HasPrefix(objectID, "/sql/") && !strings.HasPrefix(objectID, "/sql/endpoints") {
 		// Permissions for SQLA entities are routed differently from the others.
 		return "/preview/sql/permissions" + objectID[4:]
 	}
-	return "/preview/permissions" + objectID
+	return "/permissions" + objectID
 }
 
 // Helper function to select the correct HTTP method depending on the object types.
@@ -131,8 +132,12 @@ func (a PermissionsAPI) put(objectID string, objectACL AccessControlChangeList) 
 			PermissionLevel: "CAN_MANAGE",
 		})
 
-		// The SQLA entities use HTTP POST for permission updates.
-		return a.client.Post(a.context, urlPathForObjectID(objectID), objectACL, nil)
+		if strings.HasPrefix(objectID, "/sql/endpoints/") {
+			return a.client.Patch(a.context, urlPathForObjectID(objectID), objectACL)
+		} else {
+			// The rest of SQLA entities use HTTP POST for permission updates.
+			return a.client.Post(a.context, urlPathForObjectID(objectID), objectACL, nil)
+		}
 	}
 
 	return a.client.Put(a.context, urlPathForObjectID(objectID), objectACL)
@@ -140,7 +145,7 @@ func (a PermissionsAPI) put(objectID string, objectACL AccessControlChangeList) 
 
 // Update updates object permissions. Technically, it's using method named SetOrDelete, but here we do more
 func (a PermissionsAPI) Update(objectID string, objectACL AccessControlChangeList) error {
-	if "/authorization/tokens" == objectID {
+	if objectID == "/authorization/tokens" {
 		// Cannot remove admins's CAN_MANAGE permission on tokens
 		objectACL.AccessControlList = append(objectACL.AccessControlList, AccessControlChange{
 			GroupName:       "admins",
@@ -207,6 +212,8 @@ func (a PermissionsAPI) Read(objectID string) (objectACL ObjectACL, err error) {
 type permissionsIDFieldMapping struct {
 	field, objectType, resourceType string
 
+	allowedPermissionLevels []string
+
 	idRetriever func(client *common.DatabricksClient, id string) (string, error)
 }
 
@@ -223,20 +230,20 @@ func permissionsResourceIDFields(ctx context.Context) []permissionsIDFieldMappin
 		return strconv.FormatInt(info.ObjectID, 10), nil
 	}
 	return []permissionsIDFieldMapping{
-		{"cluster_policy_id", "cluster-policy", "cluster-policies", SIMPLE},
-		{"instance_pool_id", "instance-pool", "instance-pools", SIMPLE},
-		{"cluster_id", "cluster", "clusters", SIMPLE},
-		{"job_id", "job", "jobs", SIMPLE},
-		{"notebook_id", "notebook", "notebooks", SIMPLE},
-		{"notebook_path", "notebook", "notebooks", PATH},
-		{"directory_id", "directory", "directories", SIMPLE},
-		{"directory_path", "directory", "directories", PATH},
-		{"authorization", "tokens", "authorization", SIMPLE},
-		{"authorization", "passwords", "authorization", SIMPLE},
-		{"sql_endpoint_id", "endpoint", "sql/endpoints", SIMPLE},
-		{"sql_dashboard_id", "dashboard", "sql/dashboards", SIMPLE},
-		{"sql_alert_id", "alert", "sql/alerts", SIMPLE},
-		{"sql_query_id", "query", "sql/queries", SIMPLE},
+		{"cluster_policy_id", "cluster-policy", "cluster-policies", []string{"CAN_USE"}, SIMPLE},
+		{"instance_pool_id", "instance-pool", "instance-pools", []string{"CAN_ATTACH_TO", "CAN_MANAGE"}, SIMPLE},
+		{"cluster_id", "cluster", "clusters", []string{"CAN_ATTACH_TO", "CAN_RESTART", "CAN_MANAGE"}, SIMPLE},
+		{"job_id", "job", "jobs", []string{"CAN_VIEW", "CAN_MANAGE_RUN", "IS_OWNER", "CAN_MANAGE"}, SIMPLE},
+		{"notebook_id", "notebook", "notebooks", []string{"CAN_READ", "CAN_RUN", "CAN_EDIT", "CAN_MANAGE"}, SIMPLE},
+		{"notebook_path", "notebook", "notebooks", []string{"CAN_READ", "CAN_RUN", "CAN_EDIT", "CAN_MANAGE"}, PATH},
+		{"directory_id", "directory", "directories", []string{"CAN_READ", "CAN_RUN", "CAN_EDIT", "CAN_MANAGE"}, SIMPLE},
+		{"directory_path", "directory", "directories", []string{"CAN_READ", "CAN_RUN", "CAN_EDIT", "CAN_MANAGE"}, PATH},
+		{"authorization", "tokens", "authorization", []string{"CAN_USE"}, SIMPLE},
+		{"authorization", "passwords", "authorization", []string{"CAN_USE"}, SIMPLE},
+		{"sql_endpoint_id", "endpoints", "sql/endpoints", []string{"CAN_USE", "CAN_MANAGE"}, SIMPLE},
+		{"sql_dashboard_id", "dashboard", "sql/dashboards", []string{"CAN_EDIT", "CAN_RUN", "CAN_MANAGE"}, SIMPLE},
+		{"sql_alert_id", "alert", "sql/alerts", []string{"CAN_EDIT", "CAN_RUN", "CAN_MANAGE"}, SIMPLE},
+		{"sql_query_id", "query", "sql/queries", []string{"CAN_EDIT", "CAN_RUN", "CAN_MANAGE"}, SIMPLE},
 	}
 }
 
@@ -279,7 +286,16 @@ func (oa *ObjectACL) ToPermissionsEntity(ctx context.Context, d *schema.Resource
 		}
 		return entity, nil
 	}
-	return entity, fmt.Errorf("Unknown object type %s", oa.ObjectType)
+	return entity, fmt.Errorf("unknown object type %s", oa.ObjectType)
+}
+
+func stringInSlice(a string, list []string) bool {
+	for _, b := range list {
+		if b == a {
+			return true
+		}
+	}
+	return false
 }
 
 // ResourcePermissions definition
@@ -304,7 +320,7 @@ func ResourcePermissions() *schema.Resource {
 			"access_control", "group_name"); err == nil {
 			groupNameSchema.ValidateDiagFunc = func(i interface{}, p cty.Path) diag.Diagnostics {
 				if v, ok := i.(string); ok {
-					if "admins" == strings.ToLower(v) {
+					if strings.ToLower(v) == "admins" {
 						return diag.Diagnostics{
 							{
 								Summary:       "It is not possible to restrict any permissions from `admins`.",
@@ -322,7 +338,8 @@ func ResourcePermissions() *schema.Resource {
 	readContext := func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 		id := d.Id()
 		objectACL, err := NewPermissionsAPI(ctx, m).Read(id)
-		if aerr, ok := err.(common.APIError); ok && aerr.IsMissing() {
+		if common.IsMissing(err) {
+			log.Printf("[INFO] %s is removed on backend", d.Id())
 			d.SetId("")
 			return nil
 		}
@@ -349,7 +366,31 @@ func ResourcePermissions() *schema.Resource {
 		return nil
 	}
 	return &schema.Resource{
-		Schema:      s,
+		Schema: s,
+		CustomizeDiff: func(ctx context.Context, diff *schema.ResourceDiff, m interface{}) error {
+			me, err := identity.NewUsersAPI(ctx, m).Me()
+			if err != nil {
+				return err
+			}
+			// Plan time validation for object permission levels
+			for _, mapping := range permissionsResourceIDFields(ctx) {
+				if _, ok := diff.GetOk(mapping.field); !ok {
+					continue
+				}
+				access_control_list := diff.Get("access_control").(*schema.Set).List()
+				for _, access_control := range access_control_list {
+					m := access_control.(map[string]interface{})
+					permission_level := m["permission_level"].(string)
+					if !stringInSlice(permission_level, mapping.allowedPermissionLevels) {
+						return fmt.Errorf(`permission_level %s is not supported with %s objects`, permission_level, mapping.field)
+					}
+					if m["user_name"].(string) == me.UserName {
+						return fmt.Errorf("it is not possible to decrease administrative permissions for the current user: %s", me.UserName)
+					}
+				}
+			}
+			return nil
+		},
 		ReadContext: readContext,
 		CreateContext: func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 			var entity PermissionsEntity
@@ -392,6 +433,10 @@ func ResourcePermissions() *schema.Resource {
 		},
 		DeleteContext: func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 			err := NewPermissionsAPI(ctx, m).Delete(d.Id())
+			if common.IsMissing(err) {
+				log.Printf("[INFO] %s is already removed on backend", d.Id())
+				return nil
+			}
 			if err != nil {
 				return diag.FromErr(err)
 			}

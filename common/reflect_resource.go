@@ -52,7 +52,7 @@ func SchemaPath(s map[string]*schema.Schema, path ...string) (*schema.Schema, er
 	for _, p := range path {
 		v, ok := cs[p]
 		if !ok {
-			return nil, fmt.Errorf("Missing key %s", p)
+			return nil, fmt.Errorf("missing key %s", p)
 		}
 		if p == path[len(path)-1] {
 			return v, nil
@@ -176,7 +176,7 @@ func typeToSchema(v reflect.Value, t reflect.Type) map[string]*schema.Schema {
 			scm[fieldName].Type = ft
 			elem := typeField.Type.Elem()
 			switch elem.Kind() {
-			case reflect.Int:
+			case reflect.Int, reflect.Int32, reflect.Int64:
 				scm[fieldName].Elem = &schema.Schema{Type: schema.TypeInt}
 			case reflect.Float64:
 				scm[fieldName].Elem = &schema.Schema{Type: schema.TypeFloat}
@@ -191,7 +191,7 @@ func typeToSchema(v reflect.Value, t reflect.Type) map[string]*schema.Schema {
 				}
 			}
 		default:
-			panic(fmt.Errorf("Unknown type for %s: %s", fieldName, reflectKind(typeField.Type.Kind())))
+			panic(fmt.Errorf("unknown type for %s: %s", fieldName, reflectKind(typeField.Type.Kind())))
 		}
 	}
 	return scm
@@ -201,7 +201,7 @@ func iterFields(rv reflect.Value, path []string, s map[string]*schema.Schema,
 	cb func(fieldSchema *schema.Schema, path []string, valueField *reflect.Value) error) error {
 	rk := rv.Kind()
 	if rk != reflect.Struct {
-		return fmt.Errorf("Value of Struct is expected, but got %s: %#v", reflectKind(rk), rv)
+		return fmt.Errorf("value of Struct is expected, but got %s: %#v", reflectKind(rk), rv)
 	}
 	if !rv.IsValid() {
 		return fmt.Errorf("%s: got invalid reflect value %#v", path, rv)
@@ -219,11 +219,11 @@ func iterFields(rv reflect.Value, path []string, s map[string]*schema.Schema,
 		}
 		omitEmpty := strings.Contains(jsonTag, "omitempty")
 		if omitEmpty && !fieldSchema.Optional {
-			return fmt.Errorf("Inconsistency: %s has omitempty, but is not optional", fieldName)
+			return fmt.Errorf("inconsistency: %s has omitempty, but is not optional", fieldName)
 		}
 		defaultEmpty := reflect.ValueOf(fieldSchema.Default).Kind() == reflect.Invalid
 		if fieldSchema.Optional && defaultEmpty && !omitEmpty {
-			return fmt.Errorf("Inconsistency: %s is optional, default is empty, but has no omitempty", fieldName)
+			return fmt.Errorf("inconsistency: %s is optional, default is empty, but has no omitempty", fieldName)
 		}
 		valueField := rv.Field(i)
 		err := cb(fieldSchema, append(path, fieldName), &valueField)
@@ -357,15 +357,33 @@ func StructToData(result interface{}, s map[string]*schema.Schema, d *schema.Res
 	})
 }
 
+// DiffToStructPointer reads resource diff with given schema onto result pointer
+func DiffToStructPointer(d *schema.ResourceDiff, scm map[string]*schema.Schema, result interface{}) error {
+	rv := reflect.ValueOf(result)
+	rk := rv.Kind()
+	if rk != reflect.Ptr {
+		return fmt.Errorf("pointer is expected, but got %s: %#v", reflectKind(rk), result)
+	}
+	rv = rv.Elem()
+	return readReflectValueFromData([]string{}, d, rv, scm)
+}
+
 // DataToStructPointer reads resource data with given schema onto result pointer
 func DataToStructPointer(d *schema.ResourceData, scm map[string]*schema.Schema, result interface{}) error {
 	rv := reflect.ValueOf(result)
 	rk := rv.Kind()
 	if rk != reflect.Ptr {
-		return fmt.Errorf("Pointer is expected, but got %s: %#v", reflectKind(rk), result)
+		return fmt.Errorf("pointer is expected, but got %s: %#v", reflectKind(rk), result)
 	}
 	rv = rv.Elem()
 	return readReflectValueFromData([]string{}, d, rv, scm)
+}
+
+// attributeGetter is a generalization between schema.ResourceDiff & schema.ResourceData
+// to those who'll be reading this code and would know public equivalent interface from
+// TF SDK - feel free to replace the usages of this interface in a PR.
+type attributeGetter interface {
+	GetOk(key string) (interface{}, bool)
 }
 
 // DataToReflectValue reads reflect value from data
@@ -373,7 +391,7 @@ func DataToReflectValue(d *schema.ResourceData, r *schema.Resource, rv reflect.V
 	return readReflectValueFromData([]string{}, d, rv, r.Schema)
 }
 
-func readReflectValueFromData(path []string, d *schema.ResourceData,
+func readReflectValueFromData(path []string, d attributeGetter,
 	rv reflect.Value, s map[string]*schema.Schema) error {
 	return iterFields(rv, path, s, func(fieldSchema *schema.Schema,
 		path []string, valueField *reflect.Value) error {
@@ -476,7 +494,7 @@ func primitiveReflectValueFromInterface(rk reflect.Kind,
 	return rv, err
 }
 
-func readListFromData(path []string, d *schema.ResourceData,
+func readListFromData(path []string, d attributeGetter,
 	rawList []interface{}, valueField *reflect.Value, fieldSchema *schema.Schema,
 	offsetConverter func(i int) string) error {
 	if len(rawList) == 0 {
@@ -536,7 +554,7 @@ func setPrimitiveValueOfKind(
 			return fmt.Errorf("%s[%v] is not a string", fieldPath, elem)
 		}
 		item.SetString(v)
-	case reflect.Int:
+	case reflect.Int, reflect.Int64:
 		v, ok := elem.(int)
 		if !ok {
 			return fmt.Errorf("%s[%v] is not an int", fieldPath, elem)

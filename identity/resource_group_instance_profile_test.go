@@ -29,8 +29,10 @@ func TestResourceGroupInstanceProfileCreate(t *testing.T) {
 				Response: ScimGroup{
 					Schemas:     []URN{"urn:ietf:params:scim:schemas:core:2.0:Group"},
 					DisplayName: "Data Scientists",
-					Roles: []roleListItem{
-						{"arn:aws:iam::999999999999:instance-profile/my-fake-instance-profile"},
+					Roles: []ComplexValue{
+						{
+							Value: "arn:aws:iam::999999999999:instance-profile/my-fake-instance-profile",
+						},
 					},
 					ID: "abc",
 				},
@@ -91,7 +93,7 @@ func TestResourceGroupInstanceProfileCreate_Error_InvalidARN(t *testing.T) {
 		},
 		Create: true,
 	}.Apply(t)
-	assert.EqualError(t, err, "Invalid config supplied. [instance_profile_id] Invalid ARN")
+	assert.EqualError(t, err, "invalid config supplied. [instance_profile_id] Invalid ARN")
 }
 
 func TestResourceGroupInstanceProfileCreate_Error_OtherARN(t *testing.T) {
@@ -114,7 +116,7 @@ func TestResourceGroupInstanceProfileCreate_Error_OtherARN(t *testing.T) {
 		},
 		Create: true,
 	}.Apply(t)
-	assert.EqualError(t, err, "Invalid config supplied. [instance_profile_id] Invalid ARN")
+	assert.EqualError(t, err, "invalid config supplied. [instance_profile_id] Invalid ARN")
 }
 
 func TestResourceGroupInstanceProfileRead(t *testing.T) {
@@ -126,8 +128,10 @@ func TestResourceGroupInstanceProfileRead(t *testing.T) {
 				Response: ScimGroup{
 					Schemas:     []URN{"urn:ietf:params:scim:schemas:core:2.0:Group"},
 					DisplayName: "Data Scientists",
-					Roles: []roleListItem{
-						{"arn:aws:iam::999999999999:instance-profile/my-fake-instance-profile"},
+					Roles: []ComplexValue{
+						{
+							Value: "arn:aws:iam::999999999999:instance-profile/my-fake-instance-profile",
+						},
 					},
 					ID: "abc",
 				},

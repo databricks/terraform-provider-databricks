@@ -72,9 +72,14 @@ func TestResourceSQLEndpointCreate(t *testing.T) {
 				Method:   "POST",
 				Resource: "/api/2.0/sql/endpoints",
 				ExpectedRequest: SQLEndpoint{
-					Name:           "foo",
-					ClusterSize:    "Small",
-					MaxNumClusters: 1,
+					Name:               "foo",
+					ClusterSize:        "Small",
+					MaxNumClusters:     1,
+					AutoStopMinutes:    120,
+					MinNumClusters:     1,
+					NumClusters:        1,
+					EnablePhoton:       true,
+					SpotInstancePolicy: "COST_OPTIMIZED",
 				},
 				Response: SQLEndpoint{
 					ID: "abc",
@@ -112,15 +117,10 @@ func TestResourceSQLEndpointCreate_ErrorDisabled(t *testing.T) {
 			{
 				Method:   "POST",
 				Resource: "/api/2.0/sql/endpoints",
-				ExpectedRequest: SQLEndpoint{
-					Name:           "foo",
-					ClusterSize:    "Small",
-					MaxNumClusters: 1,
-				},
-				Status: 404,
+				Status:   404,
 				Response: common.APIError{
 					ErrorCode: "FEATURE_DISABLED",
-					Message:   "SQL Analytics is not supported",
+					Message:   "Databricks SQL is not supported",
 				},
 			},
 		},
@@ -130,7 +130,7 @@ func TestResourceSQLEndpointCreate_ErrorDisabled(t *testing.T) {
 		name = "foo"
   		cluster_size = "Small"
 		`,
-	}.ExpectError(t, "SQL Analytics is not supported")
+	}.ExpectError(t, "Databricks SQL is not supported")
 }
 
 func TestResourceSQLEndpointRead(t *testing.T) {
@@ -169,10 +169,15 @@ func TestResourceSQLEndpointUpdate(t *testing.T) {
 				Method:   "POST",
 				Resource: "/api/2.0/sql/endpoints/abc/edit",
 				ExpectedRequest: SQLEndpoint{
-					ID:             "abc",
-					Name:           "foo",
-					ClusterSize:    "Small",
-					MaxNumClusters: 1,
+					ID:                 "abc",
+					Name:               "foo",
+					ClusterSize:        "Small",
+					AutoStopMinutes:    120,
+					MaxNumClusters:     1,
+					MinNumClusters:     1,
+					NumClusters:        1,
+					EnablePhoton:       true,
+					SpotInstancePolicy: "COST_OPTIMIZED",
 				},
 			},
 			{
@@ -281,7 +286,7 @@ func TestSQLEnpointAPI(t *testing.T) {
 		assert.EqualError(t, err, "nope")
 
 		err = a.Start("deleting", 5*time.Minute)
-		assert.EqualError(t, err, "Endpoint got deleted during creation")
+		assert.EqualError(t, err, "endpoint got deleted during creation")
 
 		err = a.waitForRunning("cantwait", 5*time.Minute)
 		assert.EqualError(t, err, "does not compute")

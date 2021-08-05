@@ -44,9 +44,8 @@ func TestResourcePipelineCreate(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
-				Method:          "POST",
-				Resource:        "/api/2.0/pipelines",
-				ExpectedRequest: basicPipelineSpec,
+				Method:   "POST",
+				Resource: "/api/2.0/pipelines",
 				Response: createPipelineResponse{
 					PipelineID: "abcd",
 				},
@@ -90,16 +89,16 @@ func TestResourcePipelineCreate(t *testing.T) {
 		  key1 = "value1"
 		  key2 = "value2"
 		}
-		clusters {
+		cluster {
 		  label = "default"
 		  custom_tags = {
 			"cluster_tag1" = "cluster_value1"
 		  }
 		}
-		libraries {
+		library {
 		  jar = "dbfs:/pipelines/code/abcde.jar"
 		}
-		libraries {
+		library {
 		  maven {
 			coordinates = "com.microsoft.azure:azure-eventhubs-spark_2.12:2.3.18"
 		  }
@@ -131,7 +130,7 @@ func TestResourcePipelineCreate_Error(t *testing.T) {
 		Resource: ResourcePipeline(),
 		HCL: `name = "test"
 		storage = "/test/storage"
-		libraries {
+		library {
 			jar = "jar"
 		}
 		filters {
@@ -145,7 +144,7 @@ func TestResourcePipelineCreate_Error(t *testing.T) {
 }
 
 func TestResourcePipelineCreate_ErrorWhenWaitingFailedCleanup(t *testing.T) {
-	d, err := qa.ResourceFixture{
+	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "POST",
@@ -180,7 +179,7 @@ func TestResourcePipelineCreate_ErrorWhenWaitingFailedCleanup(t *testing.T) {
 		Resource: ResourcePipeline(),
 		HCL: `name = "test"
 		storage = "/test/storage"
-		libraries {
+		library {
 			jar = "jar"
 		}
 		filters {
@@ -188,9 +187,9 @@ func TestResourcePipelineCreate_ErrorWhenWaitingFailedCleanup(t *testing.T) {
 		}
 		`,
 		Create: true,
-	}.Apply(t)
-	qa.AssertErrorStartsWith(t, err, "Multiple errors occurred when creating pipeline. Error while waiting for creation: \"Pipeline abcd has failed\"; error while attempting to clean up failed pipeline: \"Internal error\"")
-	assert.Equal(t, "", d.Id(), "Id should be empty for error creates")
+	}.ExpectError(t, "multiple errors occurred when creating pipeline. "+
+		"Error while waiting for creation: \"pipeline abcd has failed\"; "+
+		"error while attempting to clean up failed pipeline: \"Internal error\"")
 }
 
 func TestResourcePipelineCreate_ErrorWhenWaitingSuccessfulCleanup(t *testing.T) {
@@ -229,7 +228,7 @@ func TestResourcePipelineCreate_ErrorWhenWaitingSuccessfulCleanup(t *testing.T) 
 		Resource: ResourcePipeline(),
 		HCL: `name = "test"
 		storage = "/test/storage"
-		libraries {
+		library {
 			jar = "jar"
 		}
 		filters {
@@ -238,7 +237,7 @@ func TestResourcePipelineCreate_ErrorWhenWaitingSuccessfulCleanup(t *testing.T) 
 		`,
 		Create: true,
 	}.Apply(t)
-	qa.AssertErrorStartsWith(t, err, "Pipeline abcd has failed")
+	qa.AssertErrorStartsWith(t, err, "pipeline abcd has failed")
 	assert.Equal(t, "", d.Id(), "Id should be empty for error creates")
 }
 
@@ -263,8 +262,6 @@ func TestResourcePipelineRead(t *testing.T) {
 	assert.Equal(t, "abcd", d.Id(), "Id should not be empty")
 	assert.Equal(t, "/test/storage", d.Get("storage"))
 	assert.Equal(t, "value1", d.Get("configuration.key1"))
-	assert.Equal(t, "cluster_value1", d.Get("clusters.0.custom_tags.cluster_tag1"))
-	assert.Equal(t, "com.microsoft.azure:azure-eventhubs-spark_2.12:2.3.18", d.Get("libraries.1.maven.0.coordinates"))
 	assert.Equal(t, "com.databricks.include", d.Get("filters.0.include.0"))
 	assert.Equal(t, false, d.Get("continuous"))
 }
@@ -356,7 +353,7 @@ func TestResourcePipelineUpdate(t *testing.T) {
 		Resource: ResourcePipeline(),
 		HCL: `name = "test"
 		storage = "/test/storage"
-		libraries {
+		library {
 			maven {
 				coordinates = "coordinates"
 			}
@@ -387,7 +384,7 @@ func TestResourcePipelineUpdate_Error(t *testing.T) {
 		Resource: ResourcePipeline(),
 		HCL: `name = "test"
 		storage = "/test/storage"
-		libraries {
+		library {
 			maven {
 				coordinates = "coordinates"
 			}
@@ -439,7 +436,7 @@ func TestResourcePipelineUpdate_FailsAfterUpdate(t *testing.T) {
 		Resource: ResourcePipeline(),
 		HCL: `name = "test"
 		storage = "/test/storage"
-		libraries {
+		library {
 			maven {
 				coordinates = "coordinates"
 			}
@@ -450,7 +447,7 @@ func TestResourcePipelineUpdate_FailsAfterUpdate(t *testing.T) {
 		Update: true,
 		ID:     "abcd",
 	}.Apply(t)
-	qa.AssertErrorStartsWith(t, err, "Pipeline abcd has failed")
+	qa.AssertErrorStartsWith(t, err, "pipeline abcd has failed")
 	assert.Equal(t, "abcd", d.Id(), "Id should be the same as in reading")
 }
 

@@ -20,60 +20,13 @@ type ServicePrincipalsAPI struct {
 	context context.Context
 }
 
-// ServicePrincipalEntity entity from which resource schema is made
-type ServicePrincipalEntity struct {
-	ApplicationID           string `json:"application_id"`
-	DisplayName             string `json:"display_name,omitempty" tf:"computed"`
-	Active                  bool   `json:"active,omitempty"`
-	AllowClusterCreate      bool   `json:"allow_cluster_create,omitempty"`
-	AllowInstancePoolCreate bool   `json:"allow_instance_pool_create,omitempty"`
-}
-
-func (sp ServicePrincipalEntity) toRequest() ScimUser {
-	entitlements := []entitlementsListItem{}
-	if sp.AllowClusterCreate {
-		entitlements = append(entitlements, entitlementsListItem{
-			Value: Entitlement("allow-cluster-create"),
-		})
-	}
-	if sp.AllowInstancePoolCreate {
-		entitlements = append(entitlements, entitlementsListItem{
-			Value: Entitlement("allow-instance-pool-create"),
-		})
-	}
-	return ScimUser{
-		Schemas:       []URN{ServicePrincipalSchema},
-		ApplicationID: sp.ApplicationID,
-		Active:        sp.Active,
-		DisplayName:   sp.DisplayName,
-		Entitlements:  entitlements,
-	}
-}
-
 // CreateR ..
-func (a ServicePrincipalsAPI) CreateR(rsp ServicePrincipalEntity) (sp ScimUser, err error) {
-	err = a.client.Scim(a.context, "POST", "/preview/scim/v2/ServicePrincipals", rsp.toRequest(), &sp)
+func (a ServicePrincipalsAPI) Create(rsp ScimUser) (sp ScimUser, err error) {
+	if rsp.Schemas == nil {
+		rsp.Schemas = []URN{ServicePrincipalSchema}
+	}
+	err = a.client.Scim(a.context, "POST", "/preview/scim/v2/ServicePrincipals", rsp, &sp)
 	return sp, err
-}
-
-// ReadR reads resource-friendly entity
-func (a ServicePrincipalsAPI) ReadR(servicePrincipalID string) (rsp ServicePrincipalEntity, err error) {
-	servicePrincipal, err := a.read(servicePrincipalID)
-	if err != nil {
-		return
-	}
-	rsp.ApplicationID = servicePrincipal.ApplicationID
-	rsp.DisplayName = servicePrincipal.DisplayName
-	rsp.Active = servicePrincipal.Active
-	for _, ent := range servicePrincipal.Entitlements {
-		switch ent.Value {
-		case AllowClusterCreateEntitlement:
-			rsp.AllowClusterCreate = true
-		case AllowInstancePoolCreateEntitlement:
-			rsp.AllowInstancePoolCreate = true
-		}
-	}
-	return
 }
 
 func (a ServicePrincipalsAPI) read(servicePrincipalID string) (sp ScimUser, err error) {
@@ -82,13 +35,15 @@ func (a ServicePrincipalsAPI) read(servicePrincipalID string) (sp ScimUser, err 
 	return
 }
 
-// UpdateR replaces resource-friendly-entity
-func (a ServicePrincipalsAPI) UpdateR(servicePrincipalID string, rsp ServicePrincipalEntity) error {
+// Update replaces resource-friendly-entity
+func (a ServicePrincipalsAPI) Update(servicePrincipalID string, updateRequest ScimUser) error {
 	servicePrincipal, err := a.read(servicePrincipalID)
 	if err != nil {
 		return err
 	}
-	updateRequest := rsp.toRequest()
+	if updateRequest.Schemas == nil {
+		updateRequest.Schemas = []URN{ServicePrincipalSchema}
+	}
 	updateRequest.Groups = servicePrincipal.Groups
 	return a.client.Scim(a.context, "PUT",
 		fmt.Sprintf("/preview/scim/v2/ServicePrincipals/%v", servicePrincipalID),
@@ -103,20 +58,55 @@ func (a ServicePrincipalsAPI) Delete(servicePrincipalID string) error {
 
 // ResourceServicePrincipal manages service principals within workspace
 func ResourceServicePrincipal() *schema.Resource {
-	servicePrincipalSchema := common.StructToSchema(ServicePrincipalEntity{}, func(
-		s map[string]*schema.Schema) map[string]*schema.Schema {
-		s["application_id"].ForceNew = true
-		s["active"].Default = true
-		return s
-	})
+	type entity struct {
+		ApplicationID string `json:"application_id,omitempty" tf:"computed"`
+		DisplayName   string `json:"display_name,omitempty" tf:"computed"`
+		Active        bool   `json:"active,omitempty"`
+	}
+	servicePrincipalSchema := common.StructToSchema(entity{},
+		func(m map[string]*schema.Schema) map[string]*schema.Schema {
+			addEntitlementsToSchema(&m)
+			m["application_id"].ForceNew = true
+			m["active"].Default = true
+			return m
+		})
+	spFromData := func(d *schema.ResourceData) (user ScimUser, err error) {
+		var u entity
+		if err = common.DataToStructPointer(d, servicePrincipalSchema, &u); err != nil {
+			return
+		}
+		return ScimUser{
+			ApplicationID: u.ApplicationID,
+			DisplayName:   u.DisplayName,
+			Active:        u.Active,
+			Entitlements:  readEntitlementsFromData(d),
+		}, nil
+	}
 	return common.Resource{
 		Schema: servicePrincipalSchema,
-		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			var sp ServicePrincipalEntity
-			if err := common.DataToStructPointer(d, servicePrincipalSchema, &sp); err != nil {
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, c interface{}) error {
+			var sp entity
+			if err := common.DiffToStructPointer(d, servicePrincipalSchema, &sp); err != nil {
 				return err
 			}
-			servicePrincipal, err := NewServicePrincipalsAPI(ctx, c).CreateR(sp)
+			client := c.(*common.DatabricksClient)
+			if client.IsAzure() && sp.ApplicationID == "" {
+				return fmt.Errorf("application_id is required for service principals in Azure Databricks")
+			}
+			if client.IsAws() && sp.DisplayName == "" {
+				return fmt.Errorf("display_name is required for service principals in Databricks on AWS")
+			}
+			return nil
+		},
+		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			sp, err := spFromData(d)
+			if err != nil {
+				return err
+			}
+			if c.IsAws() && sp.ApplicationID != "" {
+				return fmt.Errorf("application_id is not allowed for service principals in Databricks on AWS")
+			}
+			servicePrincipal, err := NewServicePrincipalsAPI(ctx, c).Create(sp)
 			if err != nil {
 				return err
 			}
@@ -124,18 +114,22 @@ func ResourceServicePrincipal() *schema.Resource {
 			return nil
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			servicePrincipal, err := NewServicePrincipalsAPI(ctx, c).ReadR(d.Id())
+			sp, err := NewServicePrincipalsAPI(ctx, c).read(d.Id())
 			if err != nil {
 				return err
 			}
-			return common.StructToData(servicePrincipal, servicePrincipalSchema, d)
-		},
-		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			var sp ServicePrincipalEntity
-			if err := common.DataToStructPointer(d, servicePrincipalSchema, &sp); err != nil {
+			err = common.StructToData(sp, servicePrincipalSchema, d)
+			if err != nil {
 				return err
 			}
-			return NewServicePrincipalsAPI(ctx, c).UpdateR(d.Id(), sp)
+			return sp.Entitlements.readIntoData(d)
+		},
+		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			sp, err := spFromData(d)
+			if err != nil {
+				return err
+			}
+			return NewServicePrincipalsAPI(ctx, c).Update(d.Id(), sp)
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			return NewServicePrincipalsAPI(ctx, c).Delete(d.Id())

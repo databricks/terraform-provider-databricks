@@ -185,15 +185,12 @@ func TestImportingMounts(t *testing.T) {
 		})
 }
 
-// TODO: don't craft the answers manually, especially complex ones, but instead read them from the JSON files?
-// TODO: add test for outputing import.sh into directory without permissions, like `/bin`
-
 var meAdminFixture = qa.HTTPFixture{
 	Method:       "GET",
 	ReuseRequest: true,
 	Resource:     "/api/2.0/preview/scim/v2/Me",
 	Response: identity.ScimUser{
-		Groups: []identity.GroupsListItem{
+		Groups: []identity.ComplexValue{
 			{
 				Display: "admins",
 			},
@@ -212,7 +209,7 @@ func TestImportingUsersGroupsSecretScopes(t *testing.T) {
 					Resources: []identity.ScimGroup{
 						// TODO: add another user for which there is no filter resut
 						{ID: "a", DisplayName: "admins",
-							Members: []identity.GroupMember{
+							Members: []identity.ComplexValue{
 								{Display: "test@test.com", Value: "123", Ref: "Users/123"},
 								{Display: "Test group", Value: "f", Ref: "Groups/f"},
 							},
@@ -234,7 +231,7 @@ func TestImportingUsersGroupsSecretScopes(t *testing.T) {
 				Method:   "GET",
 				Resource: "/api/2.0/preview/scim/v2/Groups/a",
 				Response: identity.ScimGroup{ID: "a", DisplayName: "admins",
-					Members: []identity.GroupMember{
+					Members: []identity.ComplexValue{
 						{Display: "test@test.com", Value: "123", Ref: "Users/123"},
 						{Display: "Test group", Value: "f", Ref: "Groups/f"},
 					},
@@ -250,7 +247,7 @@ func TestImportingUsersGroupsSecretScopes(t *testing.T) {
 				Method:   "GET",
 				Resource: "/api/2.0/preview/scim/v2/Groups/c",
 				Response: identity.ScimGroup{ID: "c", DisplayName: "test",
-					Groups: []identity.GroupMember{
+					Groups: []identity.ComplexValue{
 						{Display: "admins", Value: "a", Ref: "Groups/a", Type: "direct"},
 					},
 				},
@@ -399,7 +396,7 @@ func TestImportingNoResourcesError(t *testing.T) {
 			ic.services = services
 
 			err := ic.Run()
-			assert.EqualError(t, err, "No resources to import")
+			assert.EqualError(t, err, "no resources to import")
 		})
 }
 
@@ -439,7 +436,7 @@ func TestImportingClusters(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/preview/permissions/clusters/test1",
+				Resource: "/api/2.0/permissions/clusters/test1",
 				Response: getJSONObject("test-data/get-cluster-permissions-test1-response.json"),
 			},
 			{
@@ -477,7 +474,7 @@ func TestImportingClusters(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/preview/permissions/clusters/test2",
+				Resource: "/api/2.0/permissions/clusters/test2",
 				Response: getJSONObject("test-data/get-cluster-permissions-test2-response.json"),
 			},
 			{
@@ -487,7 +484,7 @@ func TestImportingClusters(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/preview/permissions/cluster-policies/123",
+				Resource: "/api/2.0/permissions/cluster-policies/123",
 				Response: getJSONObject("test-data/get-cluster-policy-permissions.json"),
 			},
 			{
@@ -513,7 +510,7 @@ func TestImportingClusters(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/preview/permissions/clusters/awscluster",
+				Resource: "/api/2.0/permissions/clusters/awscluster",
 				Response: getJSONObject("test-data/get-cluster-permissions-awscluster-response.json"),
 			},
 			{
@@ -583,7 +580,7 @@ func TestImportingJobs_JobList(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/preview/permissions/jobs/14",
+				Resource: "/api/2.0/permissions/jobs/14",
 				Response: getJSONObject("test-data/get-job-14-permissions.json"),
 			},
 			{
@@ -606,7 +603,7 @@ func TestImportingJobs_JobList(t *testing.T) {
 			},
 			{
 				Method:       "GET",
-				Resource:     "/api/2.0/preview/permissions/instance-pools/pool1",
+				Resource:     "/api/2.0/permissions/instance-pools/pool1",
 				ReuseRequest: true,
 				Response:     getJSONObject("test-data/get-job-14-permissions.json"),
 			},
@@ -676,10 +673,26 @@ func TestImportingJobs_JobList(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/preview/permissions/cluster-policies/123",
+				Resource: "/api/2.0/permissions/cluster-policies/123",
 				Response: getJSONObject("test-data/get-cluster-policy-permissions.json"),
 			},
-
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/instance-profiles/list",
+				Response: getJSONObject("test-data/list-instance-profiles.json"),
+			},
+			{
+				Method:       "GET",
+				Resource:     "/api/2.0/instance-pools/get?instance_pool_id=pool1",
+				ReuseRequest: true,
+				Response:     getJSONObject("test-data/get-instance-pool1.json"),
+			},
+			{
+				Method:       "GET",
+				Resource:     "/api/2.0/permissions/instance-pools/pool1",
+				ReuseRequest: true,
+				Response:     getJSONObject("test-data/get-job-14-permissions.json"),
+			},
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/jobs/runs/list?completed_only=true&job_id=14&limit=1",
@@ -745,10 +758,10 @@ func TestImportingJobs_JobList(t *testing.T) {
 
 func TestImportingWithError(t *testing.T) {
 	err := Run("-directory", "/bin/sh", "-services", "groups,users")
-	assert.EqualError(t, err, "The path /bin/sh is not a directory")
+	assert.EqualError(t, err, "the path /bin/sh is not a directory")
 
 	err = Run("-directory", "/bin/abcd", "-services", "groups,users", "-prefix", "abc")
-	assert.EqualError(t, err, "Can't create directory /bin/abcd")
+	assert.EqualError(t, err, "can't create directory /bin/abcd")
 }
 
 func TestImportingSecrets(t *testing.T) {
@@ -864,4 +877,50 @@ func TestImportingGlobalInitScripts(t *testing.T) {
 			err := ic.Run()
 			assert.NoError(t, err)
 		})
+}
+
+func TestImportingUser(t *testing.T) {
+	qa.HTTPFixturesApply(t,
+		[]qa.HTTPFixture{
+			{
+				Method:       "GET",
+				ReuseRequest: true,
+				Resource:     "/api/2.0/preview/scim/v2/Users?filter=userName%20eq%20%27me%27",
+				Response: identity.UserList{
+					Resources: []identity.ScimUser{
+						{
+							ID:       "123",
+							UserName: "me",
+							Groups: []identity.ComplexValue{
+								{
+									Value: "abc",
+									Type:  "direct",
+								},
+							},
+						},
+					},
+				},
+			},
+		}, func(ctx context.Context, client *common.DatabricksClient) {
+			ic := newImportContext(client)
+			err := resourcesMap["databricks_user"].Search(ic, &resource{
+				Resource: "databricks_user",
+				Value:    "me",
+			})
+			assert.NoError(t, err)
+
+			d := ic.Resources["databricks_user"].TestResourceData()
+			d.Set("user_name", "me")
+			err = resourcesMap["databricks_user"].Import(ic, &resource{
+				Resource: "databricks_user",
+				Data:     d,
+			})
+			assert.NoError(t, err)
+		})
+}
+
+func TestEitherString(t *testing.T) {
+	assert.Equal(t, "a", eitherString("a", nil))
+	assert.Equal(t, "a", eitherString(nil, "a"))
+	assert.Equal(t, "", eitherString(nil, nil))
 }

@@ -18,17 +18,17 @@ type LogDelivery struct {
 
 // LogDeliveryConfiguration describes log delivery
 type LogDeliveryConfiguration struct {
-	AccountID              string   `json:"account_id"`
-	ConfigID               string   `json:"config_id,omitempty" tf:"computed"`
-	CredentialsID          string   `json:"credentials_id"`
-	StorageConfigurationID string   `json:"storage_configuration_id"`
-	WorkspaceIdsFilter     []string `json:"workspace_ids_filter,omitempty"`
-	ConfigName             string   `json:"config_name,omitempty"`
-	Status                 string   `json:"status,omitempty" tf:"computed"`
-	LogType                string   `json:"log_type"`
-	OutputFormat           string   `json:"output_format"`
-	DeliveryPathPrefix     string   `json:"delivery_path_prefix,omitempty"`
-	DeliveryStartTime      string   `json:"delivery_start_time,omitempty" tf:"computed"`
+	AccountID              string  `json:"account_id"`
+	ConfigID               string  `json:"config_id,omitempty" tf:"computed"`
+	CredentialsID          string  `json:"credentials_id"`
+	StorageConfigurationID string  `json:"storage_configuration_id"`
+	WorkspaceIdsFilter     []int64 `json:"workspace_ids_filter,omitempty"`
+	ConfigName             string  `json:"config_name,omitempty"`
+	Status                 string  `json:"status,omitempty" tf:"computed"`
+	LogType                string  `json:"log_type"`
+	OutputFormat           string  `json:"output_format"`
+	DeliveryPathPrefix     string  `json:"delivery_path_prefix,omitempty"`
+	DeliveryStartTime      string  `json:"delivery_start_time,omitempty" tf:"computed"`
 }
 
 // LogDeliveryAPI ...

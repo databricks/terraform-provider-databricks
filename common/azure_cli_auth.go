@@ -59,13 +59,13 @@ func (rct *refreshableCliToken) RefreshExchangeWithContext(ctx context.Context, 
 }
 
 func (rct *refreshableCliToken) refreshInternal(resource string) (err error) {
-	out, err := exec.Command("az", "account", "get-access-token", "--resource", resource).Output()
+	out, err := exec.Command("az", "account", "get-access-token", "--resource", resource, "--output", "json").Output()
 	if ee, ok := err.(*exec.ExitError); ok {
-		err = fmt.Errorf("Cannot get access token: %s", string(ee.Stderr))
+		err = fmt.Errorf("cannot get access token: %s", string(ee.Stderr))
 		return
 	}
 	if err != nil {
-		err = fmt.Errorf("Cannot get access token: %v", err)
+		err = fmt.Errorf("cannot get access token: %v", err)
 		return
 	}
 	var cliToken cli.Token
@@ -105,12 +105,17 @@ func (aa *AzureAuth) configureWithAzureCLI() (func(r *http.Request) error, error
 	if aa.IsClientSecretSet() {
 		return nil, nil
 	}
+	azureEnvironment, err := aa.getAzureEnvironment()
+	if err != nil {
+		return nil, err
+	}
+	aa.AzureEnvironment = &azureEnvironment
 	// verify that Azure CLI is authenticated
-	_, err := cli.GetTokenFromCLI(AzureDatabricksResourceID)
+	_, err = cli.GetTokenFromCLI(AzureDatabricksResourceID)
 	if err != nil {
 		if err.Error() == "Invoking Azure CLI failed with the following error: " {
-			return nil, fmt.Errorf("Most likely Azure CLI is not installed. " +
-				"See https://docs.microsoft.com/en-us/cli/azure/?view=azure-cli-latest for details.")
+			return nil, fmt.Errorf("most likely Azure CLI is not installed. " +
+				"See https://docs.microsoft.com/en-us/cli/azure/?view=azure-cli-latest for details")
 		}
 		return nil, err
 	}

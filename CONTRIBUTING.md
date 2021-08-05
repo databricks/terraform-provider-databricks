@@ -41,17 +41,16 @@ Most likely, `terraform init -upgrade -verify-plugins=false -lock=false` would b
 
 ## Developing provider
 
-After installing necessary software for building provider from sources, you should install `golangci-lint` and `gotestsum` in order to run `make test`.
+After installing necessary software for building provider from sources, you should install `staticcheck` and `gotestsum` in order to run `make test`.
 
 Make sure you have `$GOPATH/bin` in your `$PATH`:
 ```
 echo "export PATH=\$PATH:$(go env GOPATH)/bin" >> ~/.bash_profile
 ```
 
-Installing `golangci-lint`:
+Installing `staticcheck`:
 ```bash
-curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.27.0
-$(go env GOPATH)/bin/golangci-lint
+go install honnef.co/go/tools/cmd/staticcheck
 ```
 
 Installing `gotestsum`:
@@ -208,7 +207,9 @@ func ResourceExample() *schema.Resource {
 
 *Add the resource to the top-level provider.* Simply add the resource to the provider definition in `provider/provider.go`.
 
-*Write unit tests for your resource.* To write your unit tests, you can make use of `ResourceFixture` and `HTTPFixture` structs defined in the `qa` package. This starts a fake HTTP server, asserting that your resource provdier generates the correct request for a given HCL template body for your resource. An example:
+*Write unit tests for your resource.* To write your unit tests, you can make use of `ResourceFixture` and `HTTPFixture` structs defined in the `qa` package. This starts a fake HTTP server, asserting that your resource provdier generates the correct request for a given HCL template body for your resource. Update tests should have `InstanceState` field in order to test various corner-cases, like `ForceNew` schemas. It's possible to expect fixture to require new resource by specifying `RequiresNew` field.
+
+A simple example:
 
 ```go
 func TestExampleResourceCreate(t *testing.T) {
@@ -298,7 +299,7 @@ func TestPreviewAccPipelineResource_CreatePipeline(t *testing.T) {
 
 ## Linting
 
-Please use makefile for linting. If you run `golangci-lint` by itself it will fail due to different tags containing same functions. 
+Please use makefile for linting. If you run `staticcheck` by itself it will fail due to different tags containing same functions. 
 So please run `make lint` instead.
 
 ## Unit testing resources

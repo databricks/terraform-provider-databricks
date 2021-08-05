@@ -36,7 +36,7 @@ resource "databricks_instance_pool" "smallest_nodes" {
 
 ## Argument Reference
 
-The following arguments are required:
+The following arguments are supported:
 
 * `instance_pool_name` - (Required) (String) The name of the instance pool. This is required for create and edit operations. It must be unique, non-empty, and less than 100 characters.
 * `min_idle_instances` - (Optional) (Integer) The minimum number of idle instances maintained by the pool. This is in addition to any instances in use by active clusters.
@@ -45,8 +45,7 @@ The following arguments are required:
 * `node_type_id` - (Required) (String) The node type for the instances in the pool. All clusters attached to the pool inherit this node type and the pool’s idle instances are allocated based on this type. You can retrieve a list of available node types by using the [List Node Types API](https://docs.databricks.com/dev-tools/api/latest/clusters.html#clusterclusterservicelistnodetypes) call.
 * `custom_tags` - (Optional) (Map) Additional tags for instance pool resources. Databricks tags all pool resources (e.g. AWS & Azure instances and Disk volumes). *Databricks allows at most 43 custom tags.*
 * `enable_elastic_disk` - (Optional) (Bool) Autoscaling Local Storage: when enabled, the instances in the pool dynamically acquire additional disk space when they are running low on disk space.
-
-* `preloaded_spark_versions` - (Optional) (List) A list with the runtime version the pool installs on each instance. Pool clusters that use a preloaded runtime version start faster as they do have to wait for the image to download.  You can retrieve them via [databricks_spark_version](../data-sources/spark-version.md) data source or via  [Runtime Versions API](https://docs.databricks.com/dev-tools/api/latest/clusters.html#clusterclusterservicelistsparkversions) call.
+* `preloaded_spark_versions` - (Optional) (List) A list with at most one runtime version the pool installs on each instance. Pool clusters that use a preloaded runtime version start faster as they do not have to wait for the image to download. You can retrieve them via [databricks_spark_version](../data-sources/spark-version.md) data source or via  [Runtime Versions API](https://docs.databricks.com/dev-tools/api/latest/clusters.html#clusterclusterservicelistsparkversions) call.
 
 ### aws_attributes Configuration Block
 
@@ -83,6 +82,37 @@ For disk_spec make sure to use **ebs_volume_type** only on AWS deployment of Dat
 
   * Premium LRS (SSD): `1 - 1023` GiB
   * Standard LRS (HDD): `1- 1023` GiB
+
+## preloaded_docker_image sub_block
+
+[Databricks Container Services](https://docs.databricks.com/clusters/custom-containers.html) lets you specify a Docker image when you create a cluster.  You need to enable Container Services in *Admin Console /  Advanced* page in the user interface. By enabling this feature, you acknowledge and agree that your usage of this feature is subject to the [applicable additional terms](http://www.databricks.com/product-specific-terms). You can instruct instance pool to pre-download the Docker image onto the instances so when node is acquired for a cluster that requires a custom Docker image the setup process will be faster.
+
+`preloaded_docker_image` configuration block has the following attributes:
+
+* `url` - URL for the Docker image
+* `basic_auth` - (Optional) `basic_auth.username` and `basic_auth.password` for Docker repository. Docker registry credentials are encrypted when they are stored in Databricks internal storage and when they are passed to a registry upon fetching Docker images at cluster launch. However, other authenticated and authorized API users of this workspace can access the username and password.
+
+Example usage with [azurerm_container_registry](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/container_registry) and [docker_registry_image](https://registry.terraform.io/providers/kreuzwerker/docker/latest/docs/resources/registry_image), that you can adapt to your specific use-case:
+
+```hcl
+resource "docker_registry_image" "this" {
+  name = "${azurerm_container_registry.this.login_server}/sample:latest"
+  build {
+    # ...
+  }
+}
+
+resource "databricks_instance_pool" "this" {
+  # ...
+  preloaded_docker_image {
+    url = docker_registry_image.this.name
+    basic_auth {
+      username = azurerm_container_registry.this.admin_username
+      password = azurerm_container_registry.this.admin_password
+    }
+  }
+}
+```
 
 ## Attribute Reference
 

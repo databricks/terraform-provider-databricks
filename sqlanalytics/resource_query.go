@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"log"
 	"reflect"
-	"strconv"
 	"strings"
 
 	"github.com/databrickslabs/terraform-provider-databricks/common"
@@ -24,6 +23,7 @@ type QueryEntity struct {
 	Schedule     *QuerySchedule   `json:"schedule,omitempty"`
 	Tags         []string         `json:"tags,omitempty"`
 	Parameter    []QueryParameter `json:"parameter,omitempty"`
+	RunAsRole    string           `json:"run_as_role,omitempty"`
 }
 
 // QuerySchedule ...
@@ -272,6 +272,13 @@ func (q *QueryEntity) toAPIObject(schema map[string]*schema.Schema, data *schema
 		}
 	}
 
+	if q.RunAsRole != "" {
+		if aq.Options == nil {
+			aq.Options = &api.QueryOptions{}
+		}
+		aq.Options.RunAsRole = q.RunAsRole
+	}
+
 	return &aq, nil
 }
 
@@ -418,6 +425,8 @@ func (q *QueryEntity) fromAPIObject(aq *api.Query, schema map[string]*schema.Sch
 
 			q.Parameter = append(q.Parameter, p)
 		}
+
+		q.RunAsRole = aq.Options.RunAsRole
 	}
 
 	// Transform to ResourceData.
@@ -451,9 +460,9 @@ func (a QueryAPI) Create(q *api.Query) error {
 			return err
 		}
 		// This is a best effort -- don't fail if it doesn't work.
-		err = NewVisualizationAPI(a.context, a.client).Delete(strconv.Itoa(v.ID))
+		err = NewVisualizationAPI(a.context, a.client).Delete(v.ID.String())
 		if err != nil {
-			log.Printf("[WARN] Unable to delete automatically created visualization for query %s (%d)", q.ID, v.ID)
+			log.Printf("[WARN] Unable to delete automatically created visualization for query %s (%s)", q.ID, v.ID)
 		}
 	}
 	q.Visualizations = []json.RawMessage{}
@@ -513,6 +522,8 @@ func ResourceQuery() *schema.Resource {
 				"Friday",
 				"Saturday",
 			}, false)
+
+			m["run_as_role"].ValidateFunc = validation.StringInSlice([]string{"viewer", "owner"}, false)
 			return m
 		})
 

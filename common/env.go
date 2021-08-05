@@ -3,6 +3,7 @@ package common
 import (
 	"log"
 	"os"
+	"strconv"
 	"strings"
 	"sync"
 
@@ -17,13 +18,22 @@ var (
 
 // NewClientFromEnvironment makes very good client for testing purposes
 func NewClientFromEnvironment() *DatabricksClient {
+	debugBytes, err := strconv.Atoi(os.Getenv("DATABRICKS_DEBUG_TRUNCATE_BYTES"))
+	if err != nil {
+		debugBytes = DefaultTruncateBytes
+	}
+	debugHeaders, err := strconv.ParseBool(os.Getenv("DATABRICKS_DEBUG_HEADERS"))
+	if err != nil {
+		debugHeaders = false
+	}
 	client := DatabricksClient{
-		Host:       os.Getenv("DATABRICKS_HOST"),
-		Token:      os.Getenv("DATABRICKS_TOKEN"),
-		Username:   os.Getenv("DATABRICKS_USERNAME"),
-		Password:   os.Getenv("DATABRICKS_PASSWORD"),
-		ConfigFile: os.Getenv("DATABRICKS_CONFIG_FILE"),
-		Profile:    os.Getenv("DATABRICKS_CONFIG_PROFILE"),
+		Host:                 os.Getenv("DATABRICKS_HOST"),
+		Token:                os.Getenv("DATABRICKS_TOKEN"),
+		Username:             os.Getenv("DATABRICKS_USERNAME"),
+		Password:             os.Getenv("DATABRICKS_PASSWORD"),
+		ConfigFile:           os.Getenv("DATABRICKS_CONFIG_FILE"),
+		Profile:              os.Getenv("DATABRICKS_CONFIG_PROFILE"),
+		GoogleServiceAccount: os.Getenv("DATABRICKS_GOOGLE_SERVICE_ACCOUNT"),
 		AzureAuth: AzureAuth{
 			ResourceID:     os.Getenv("DATABRICKS_AZURE_WORKSPACE_RESOURCE_ID"),
 			WorkspaceName:  os.Getenv("DATABRICKS_AZURE_WORKSPACE_NAME"),
@@ -35,8 +45,10 @@ func NewClientFromEnvironment() *DatabricksClient {
 			Environment:    os.Getenv("ARM_ENVIRONMENT"),
 		},
 		RateLimitPerSecond: 10,
+		DebugTruncateBytes: debugBytes,
+		DebugHeaders:       debugHeaders,
 	}
-	err := client.Configure()
+	err = client.Configure()
 	if err != nil {
 		panic(err)
 	}

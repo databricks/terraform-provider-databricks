@@ -41,8 +41,8 @@ func ResourceCluster() *schema.Resource {
 }
 
 func sparkConfDiffSuppressFunc(k, old, new string, d *schema.ResourceData) bool {
-	isPossiblyLegacyConfig := "spark_conf.%" == k && "1" == old && "0" == new
-	isLegacyConfig := "spark_conf.spark.databricks.delta.preview.enabled" == k
+	isPossiblyLegacyConfig := k == "spark_conf.%" && old == "1" && new == "0"
+	isLegacyConfig := k == "spark_conf.spark.databricks.delta.preview.enabled"
 	if isPossiblyLegacyConfig || isLegacyConfig {
 		log.Printf("[DEBUG] Suppressing diff for k=%#v old=%#v new=%#v", k, old, new)
 		return true
@@ -73,9 +73,14 @@ func resourceClusterSchema() map[string]*schema.Schema {
 		s["aws_attributes"].ConflictsWith = []string{"azure_attributes", "gcp_attributes"}
 		s["azure_attributes"].ConflictsWith = []string{"aws_attributes", "gcp_attributes"}
 		s["gcp_attributes"].ConflictsWith = []string{"aws_attributes", "azure_attributes"}
-		s["aws_attributes"].DiffSuppressFunc = makeEmptyBlockSuppressFunc("aws_attributes.#")
-		s["azure_attributes"].DiffSuppressFunc = makeEmptyBlockSuppressFunc("azure_attributes.#")
-		s["gcp_attributes"].DiffSuppressFunc = makeEmptyBlockSuppressFunc("gcp_attributes.#")
+		s["aws_attributes"].DiffSuppressFunc = common.MakeEmptyBlockSuppressFunc("aws_attributes.#")
+		s["azure_attributes"].DiffSuppressFunc = common.MakeEmptyBlockSuppressFunc("azure_attributes.#")
+		s["gcp_attributes"].DiffSuppressFunc = common.MakeEmptyBlockSuppressFunc("gcp_attributes.#")
+
+		s["instance_pool_id"].ConflictsWith = []string{"driver_node_type_id", "node_type_id"}
+		s["driver_instance_pool_id"].ConflictsWith = []string{"driver_node_type_id", "node_type_id"}
+		s["driver_node_type_id"].ConflictsWith = []string{"driver_instance_pool_id", "instance_pool_id"}
+		s["node_type_id"].ConflictsWith = []string{"driver_instance_pool_id", "instance_pool_id"}
 
 		s["is_pinned"] = &schema.Schema{
 			Type:     schema.TypeBool,
@@ -207,7 +212,7 @@ func waitForLibrariesInstalled(
 	libraries LibrariesAPI, clusterInfo ClusterInfo) (result *ClusterLibraryStatuses, err error) {
 	err = resource.RetryContext(libraries.context, 30*time.Minute, func() *resource.RetryError {
 		libsClusterStatus, err := libraries.ClusterStatus(clusterInfo.ClusterID)
-		if ae, ok := err.(common.APIError); ok && ae.IsMissing() {
+		if common.IsMissing(err) {
 			// eventual consistency error
 			return resource.RetryableError(err)
 		}

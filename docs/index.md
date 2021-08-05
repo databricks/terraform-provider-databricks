@@ -29,6 +29,7 @@ Storage
 
 Security
 * Organize [databricks_user](resources/user.md) into [databricks_group](resources/group.md) through [databricks_group_member](resources/group_member.md), also reading [metadata](data-sources/group.md)
+* Create [databricks_service_principal](resources/service_principal.md) with [databricks_obo_token](resources/obo_token.md) to enable even more restricted access control.
 * Manage data access with [databricks_instance_profile](resources/instance_profile.md), which can be assigned through [databricks_group_instance_profile](resources/group_instance_profile.md) and [databricks_user_instance_profile](resources/user_instance_profile.md)
 * Control which networks can access workspace with [databricks_ip_access_list](resources/ip_access_list.md)
 * Generically manage [databricks_permissions](resources/permissions.md)
@@ -41,7 +42,7 @@ Security
 * Use predefined AWS IAM Policy Templates: [databricks_aws_assume_role_policy](data-sources/aws_assume_role_policy.md), [databricks_aws_crossaccount_policy](data-sources/aws_crossaccount_policy.md), [databricks_aws_bucket_policy](data-sources/aws_bucket_policy.md)
 * Configure billing and audit [databricks_mws_log_delivery](resources/mws_log_delivery.md)
 
-SQL Analytics
+Databricks SQL
 * Create [databricks_sql_endpoint](resources/sql_endpoint.md) controlled by [databricks_permissions](resources/permissions.md).
 * Manage [queries](resources/sql_query.md) and their [visualizations](resources/sql_visualization.md).
 * Manage [dashboards](resources/sql_dashboard.md) and their [widgets](resources/sql_widget.md).
@@ -139,7 +140,7 @@ You can use `host` and `token` parameters to supply credentials to the workspace
 
 ``` hcl
 provider "databricks" {
-  host  = "http://abc-cdef-ghi.cloud.databricks.com"
+  host  = "https://abc-cdef-ghi.cloud.databricks.com"
   token = "dapitokenhere"
 }
 ```
@@ -152,13 +153,15 @@ You can use the `username` + `password` attributes to authenticate provider for 
 
 ``` hcl
 provider "databricks" {
-  host = "http://accounts.cloud.databricks.com"
+  host = "https://accounts.cloud.databricks.com"
   username = var.user
   password = var.password
 }
 ```
 
 ## Argument Reference
+
+-> **Note** If you experience technical difficulties with rolling out resources in this example, please make sure that [environment variables](#environment-variables) don't [conflict with other](#empty-provider-block) provider block attributes. When in doubt, please run `TF_LOG=DEBUG terraform apply` to enable [debug mode](https://www.terraform.io/docs/internals/debugging.html) through the [`TF_LOG`](https://www.terraform.io/docs/cli/config/environment-variables.html#tf_log) environment variable. Look specifically for `Explicit and implicit attributes` lines, that should indicate authentication attributes used.
 
 The provider block supports the following arguments:
 
@@ -177,7 +180,7 @@ To work with Azure Databricks workspace, the provider must know its `azure_works
 
 ### Authenticating with Azure Service Principal
 
-!> **Warning** Please note that the azure service principal authentication currently uses a generated Databricks PAT token and not an AAD token for the authentication. Azure Databricks does not yet support AAD tokens for [secret scopes](https://docs.microsoft.com/en-us/azure/databricks/dev-tools/api/latest/secrets#--create-secret-scope). Databricks Labs team will refactor it transparently once that support is available. The only impacted field is `pat_token_duration_seconds`, which will be deprecated and fully supported after AAD support. 
+!> **Warning** Please note that the azure service principal authentication currently (since version 0.3.7) uses the AAD token for the authentication (SPN should have **Contributor** role on Databricks workspace).  You can restore previous functionality (generating the PAT for service principal)  by setting `azure_use_pat_for_spn` to `true` (you can regulate the lifetime of generated PAT with `pat_token_duration_seconds` setting). Azure Databricks does not yet support AAD tokens for [secret scopes](https://docs.microsoft.com/en-us/azure/databricks/dev-tools/api/latest/secrets#--create-secret-scope). Databricks Labs team will refactor it transparently once that support is available. The only impacted field is `pat_token_duration_seconds`, which will be deprecated and fully supported after AAD support. 
 
 ```hcl
 provider "azurerm" {
@@ -274,6 +277,7 @@ The following configuration attributes can be passed via environment variables:
 |         `azure_client_secret` | `DATABRICKS_AZURE_CLIENT_SECRET` or `ARM_CLIENT_SECRET`     |
 |             `azure_client_id` | `DATABRICKS_AZURE_CLIENT_ID` or `ARM_CLIENT_ID`             |
 |             `azure_tenant_id` | `DATABRICKS_AZURE_TENANT_ID` or `ARM_TENANT_ID`             |
+|       `azure_use_pat_for_spn` | `DATABRICKS_AZURE_USE_PAT_FOR_SPN`                          |
 |           `azure_environment` | `ARM_ENVIRONMENT`                                           |
 |        `debug_truncate_bytes` | `DATABRICKS_DEBUG_TRUNCATE_BYTES`                           |
 |               `debug_headers` | `DATABRICKS_DEBUG_HEADERS`                                  |
@@ -300,7 +304,11 @@ provider "databricks" {}
 
 ## Data resources and Authentication is not configured errors
 
-*In Terraform 0.13 and later*, data resources have the same dependency resolution behavior [as defined for managed resources](https://www.terraform.io/docs/language/resources/behavior.html#resource-dependencies). Most data resources make an API call to a workspace. If a workspace doesn't exist yet, `Authentication is not configured for provider` error is raised. To work around this issue and guarantee a proper lazy authentication with data resources, you should add `depends_on = [azurerm_databricks_workspace.this]` or `depends_on = [databricks_mws_workspaces.this]` to the body. This issue doesn't occur if workspace is created *in one module* and resources [within the workspace](guides/workspace-management.md) are created *in another*. We do not recommend using Terraform 0.12 and earlier, if your usage involves data resources.
+*In Terraform 0.13 and later*, data resources have the same dependency resolution behavior [as defined for managed resources](https://www.terraform.io/docs/language/resources/behavior.html#resource-dependencies). Most data resources make an API call to a workspace. If a workspace doesn't exist yet, `authentication is not configured for provider` error is raised. To work around this issue and guarantee a proper lazy authentication with data resources, you should add `depends_on = [azurerm_databricks_workspace.this]` or `depends_on = [databricks_mws_workspaces.this]` to the body. This issue doesn't occur if workspace is created *in one module* and resources [within the workspace](guides/workspace-management.md) are created *in another*. We do not recommend using Terraform 0.12 and earlier, if your usage involves data resources.
+
+## Multiple Provider Configurations
+
+ The most common reason for technical difficulties might be related to missing `alias` attribute in `provider "databricks" {}` blocks or `provider` attribute in `resource "databricks_..." {}` blocks, when using multiple provider configurations. Please make sure to read [`alias`: Multiple Provider Configurations](https://www.terraform.io/docs/language/providers/configuration.html#alias-multiple-provider-configurations) documentation article. 
 
 ## Error while installing: registry does not have a provider
 
@@ -318,7 +326,7 @@ terraform {
   required_providers {
     databricks = {
       source = "databrickslabs/databricks"
-      version = "0.3.3"
+      version = "0.3.7"
     }
   }
 }

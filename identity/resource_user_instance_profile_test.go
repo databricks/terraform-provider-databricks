@@ -29,8 +29,10 @@ func TestResourceUserInstanceProfileCreate(t *testing.T) {
 				Response: ScimUser{
 					Schemas:     []URN{"urn:ietf:params:scim:schemas:core:2.0:User"},
 					DisplayName: "Data Scientists",
-					Roles: []roleListItem{
-						{"arn:aws:iam::999999999999:instance-profile/my-fake-instance-profile"},
+					Roles: []ComplexValue{
+						{
+							Value: "arn:aws:iam::999999999999:instance-profile/my-fake-instance-profile",
+						},
 					},
 					ID: "abc",
 				},
@@ -56,7 +58,7 @@ func TestResourceUserInstanceProfileCreate_Error_BadARN(t *testing.T) {
 		},
 		Create: true,
 	}.Apply(t)
-	assert.EqualError(t, err, "Invalid config supplied. [instance_profile_id] Invalid ARN")
+	assert.EqualError(t, err, "invalid config supplied. [instance_profile_id] Invalid ARN")
 }
 
 func TestResourceUserInstanceProfileCreate_Error(t *testing.T) {
@@ -92,8 +94,10 @@ func TestResourceUserInstanceProfileRead(t *testing.T) {
 				Response: ScimUser{
 					Schemas:     []URN{"urn:ietf:params:scim:schemas:core:2.0:User"},
 					DisplayName: "Data Scientists",
-					Roles: []roleListItem{
-						{"arn:aws:iam::999999999999:instance-profile/my-fake-instance-profile"},
+					Roles: []ComplexValue{
+						{
+							Value: "arn:aws:iam::999999999999:instance-profile/my-fake-instance-profile",
+						},
 					},
 					ID: "abc",
 				},

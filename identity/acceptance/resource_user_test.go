@@ -1,18 +1,13 @@
 package acceptance
 
 import (
-	"context"
 	"os"
 	"testing"
 
-	. "github.com/databrickslabs/terraform-provider-databricks/identity"
-
-	"github.com/databrickslabs/terraform-provider-databricks/common"
 	"github.com/databrickslabs/terraform-provider-databricks/internal/acceptance"
 
 	"github.com/databrickslabs/terraform-provider-databricks/qa"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestAccUserResource(t *testing.T) {
@@ -35,10 +30,6 @@ func TestAccUserResource(t *testing.T) {
 		user_name = "derde+{var.RANDOM}@example.com"
 		display_name = "Derde {var.RANDOM}"
 		allow_instance_pool_create = true
-	}
-	
-	resource "databricks_group" "first" {
-		display_name = "Vierde {var.RANDOM}"
 	}`)
 	acceptance.AccTest(t, resource.TestCase{
 		Steps: []resource.TestStep{
@@ -51,15 +42,6 @@ func TestAccUserResource(t *testing.T) {
 					resource.TestCheckResourceAttr("databricks_user.second", "allow_instance_pool_create", "false"),
 					resource.TestCheckResourceAttr("databricks_user.third", "allow_cluster_create", "false"),
 					resource.TestCheckResourceAttr("databricks_user.third", "allow_instance_pool_create", "true"),
-					func(s *terraform.State) error {
-						r := s.RootModule().Resources
-						client := common.CommonEnvironmentClient()
-						ctx := context.Background()
-						return NewGroupsAPI(ctx, client).Patch(r["databricks_group.first"].Primary.ID, []string{
-							r["databricks_user.first"].Primary.ID,
-							r["databricks_user.second"].Primary.ID,
-						}, nil, GroupMembersPath)
-					},
 				),
 			},
 			{

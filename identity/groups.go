@@ -2,7 +2,6 @@ package identity
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"net/http"
 
@@ -24,31 +23,8 @@ type GroupsAPI struct {
 }
 
 // Create creates a scim group in the Databricks workspace
-func (a GroupsAPI) Create(groupName string, members []string, roles []string, entitlements []string) (group ScimGroup, err error) {
-	scimGroupRequest := struct {
-		Schemas      []URN           `json:"schemas,omitempty"`
-		DisplayName  string          `json:"displayName,omitempty"`
-		Members      []ValueListItem `json:"members,omitempty"`
-		Entitlements []ValueListItem `json:"entitlements,omitempty"`
-		Roles        []ValueListItem `json:"roles,omitempty"`
-	}{}
+func (a GroupsAPI) Create(scimGroupRequest ScimGroup) (group ScimGroup, err error) {
 	scimGroupRequest.Schemas = []URN{GroupSchema}
-	scimGroupRequest.DisplayName = groupName
-
-	scimGroupRequest.Members = []ValueListItem{}
-	for _, member := range members {
-		scimGroupRequest.Members = append(scimGroupRequest.Members, ValueListItem{Value: member})
-	}
-
-	scimGroupRequest.Roles = []ValueListItem{}
-	for _, role := range roles {
-		scimGroupRequest.Roles = append(scimGroupRequest.Roles, ValueListItem{Value: role})
-	}
-
-	scimGroupRequest.Entitlements = []ValueListItem{}
-	for _, entitlement := range entitlements {
-		scimGroupRequest.Entitlements = append(scimGroupRequest.Entitlements, ValueListItem{Value: entitlement})
-	}
 	err = a.client.Scim(a.context, http.MethodPost, "/preview/scim/v2/Groups", scimGroupRequest, &group)
 	return
 }
@@ -73,48 +49,38 @@ func (a GroupsAPI) Filter(filter string) (GroupList, error) {
 	return groups, err
 }
 
-// PatchR ...
-func (a GroupsAPI) PatchR(groupID string, r patchRequest) error {
+func (a GroupsAPI) ReadByDisplayName(displayName string) (group ScimGroup, err error) {
+	groupList, err := a.Filter(fmt.Sprintf("displayName eq '%s'", displayName))
+	if err != nil {
+		return
+	}
+	if len(groupList.Resources) == 0 {
+		err = fmt.Errorf("cannot find group: %s", displayName)
+		return
+	}
+	group = groupList.Resources[0]
+	return
+}
+
+func (a GroupsAPI) Patch(groupID string, r patchRequest) error {
 	return a.client.Scim(a.context, http.MethodPatch, fmt.Sprintf("/preview/scim/v2/Groups/%v", groupID), r, nil)
 }
 
-// Patch applys a patch request for a group given a path attribute
-func (a GroupsAPI) Patch(groupID string, addList []string, removeList []string, path GroupPathType) error {
-	groupPath := fmt.Sprintf("/preview/scim/v2/Groups/%v", groupID)
-
-	var addOperations GroupPatchOperations
-	var removeOperations GroupPatchOperations
-
-	groupPatchRequest := GroupPatchRequest{
-		Schemas:    []URN{PatchOp},
-		Operations: []GroupPatchOperations{},
+func (a GroupsAPI) UpdateNameAndEntitlements(groupID string, name string, e entitlements) error {
+	g, err := a.Read(groupID)
+	if err != nil {
+		return err
 	}
-
-	if addList == nil && removeList == nil {
-		return errors.New("empty members list to add or to remove")
-	}
-
-	if len(addList) > 0 {
-		addOperations = GroupPatchOperations{
-			Op:    "add",
-			Path:  path,
-			Value: []ValueListItem{},
-		}
-		for _, addItem := range addList {
-			addOperations.Value = append(addOperations.Value, ValueListItem{Value: addItem})
-		}
-		groupPatchRequest.Operations = append(groupPatchRequest.Operations, addOperations)
-	}
-
-	for _, removeItem := range removeList {
-		path := fmt.Sprintf("%s[value eq \"%s\"]", string(path), removeItem)
-		removeOperations = GroupPatchOperations{
-			Op:   "remove",
-			Path: GroupPathType(path),
-		}
-		groupPatchRequest.Operations = append(groupPatchRequest.Operations, removeOperations)
-	}
-	return a.client.Scim(a.context, http.MethodPatch, groupPath, groupPatchRequest, nil)
+	return a.client.Scim(a.context, http.MethodPut,
+		fmt.Sprintf("/preview/scim/v2/Groups/%v", groupID),
+		ScimGroup{
+			DisplayName:  name,
+			Entitlements: e,
+			Groups:       g.Groups,
+			Roles:        g.Roles,
+			Members:      g.Members,
+			Schemas:      []URN{GroupSchema},
+		}, nil)
 }
 
 // Delete deletes a group given a group id

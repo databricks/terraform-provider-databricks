@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"strings"
 	"testing"
 
 	"github.com/databrickslabs/terraform-provider-databricks/access"
@@ -60,7 +59,8 @@ func testWithNewSecretScope(t *testing.T, callback func(string, string),
 }
 
 func testMounting(t *testing.T, mp MountPoint, m Mount) {
-	source, err := mp.Mount(m)
+	client := common.CommonEnvironmentClient()
+	source, err := mp.Mount(m, client)
 	assert.Equal(t, m.Source(), source)
 	assert.NoError(t, err)
 	defer func() {
@@ -69,12 +69,6 @@ func testMounting(t *testing.T, mp MountPoint, m Mount) {
 	}()
 	source, err = mp.Source()
 	require.Equalf(t, m.Source(), source, "Error: %v", err)
-}
-
-func TestAccDeleteInvalidMountFails(t *testing.T) {
-	_, mp := mountPointThroughReusedCluster(t)
-	err := mp.Delete()
-	assert.True(t, strings.Contains(err.Error(), "Directory not mounted"), err.Error())
 }
 
 func TestAccSourceOnInvalidMountFails(t *testing.T) {
@@ -86,6 +80,7 @@ func TestAccSourceOnInvalidMountFails(t *testing.T) {
 
 func TestAccInvalidSecretScopeFails(t *testing.T) {
 	_, mp := mountPointThroughReusedCluster(t)
+	client := common.CommonEnvironmentClient()
 	source, err := mp.Mount(AzureADLSGen1Mount{
 		ClientID:        "abc",
 		TenantID:        "bcd",
@@ -94,7 +89,7 @@ func TestAccInvalidSecretScopeFails(t *testing.T) {
 		Directory:       "/",
 		SecretKey:       "key",
 		SecretScope:     "y",
-	})
+	}, client)
 	assert.Equal(t, "", source)
 	qa.AssertErrorStartsWith(t, err, "Secret does not exist with scope: y and key: key")
 }
@@ -152,8 +147,10 @@ func testMountFuncHelper(t *testing.T, mountFunc func(mp MountPoint, mount Mount
 
 type mockMount struct{}
 
-func (t mockMount) Source() string            { return "fake-mount" }
-func (t mockMount) Config() map[string]string { return map[string]string{"fake-key": "fake-value"} }
+func (t mockMount) Source() string { return "fake-mount" }
+func (t mockMount) Config(client *common.DatabricksClient) map[string]string {
+	return map[string]string{"fake-key": "fake-value"}
+}
 
 func TestMountPoint_Mount(t *testing.T) {
 	mount := mockMount{}
@@ -180,7 +177,11 @@ func TestMountPoint_Mount(t *testing.T) {
 		dbutils.notebook.exit(mount_source)
 	`, mountName, expectedMountSource, expectedMountConfig)
 	testMountFuncHelper(t, func(mp MountPoint, mount Mount) (s string, e error) {
-		return mp.Mount(mount)
+		client := common.DatabricksClient{
+			Host:  ".",
+			Token: ".",
+		}
+		return mp.Mount(mount, &client)
 	}, mount, mountName, expectedCommand)
 }
 
@@ -201,7 +202,14 @@ func TestMountPoint_Source(t *testing.T) {
 func TestMountPoint_Delete(t *testing.T) {
 	mountName := "this_mount"
 	expectedCommand := fmt.Sprintf(`
+		found = False
 		mount_point = "/mnt/%s"
+		dbutils.fs.refreshMounts()
+		for mount in dbutils.fs.mounts():
+			if mount.mountPoint == mount_point:
+				found = True
+		if not found:
+			dbutils.notebook.exit("success")
 		dbutils.fs.unmount(mount_point)
 		dbutils.fs.refreshMounts()
 		for mount in dbutils.fs.mounts():
@@ -212,4 +220,92 @@ func TestMountPoint_Delete(t *testing.T) {
 	testMountFuncHelper(t, func(mp MountPoint, mount Mount) (s string, e error) {
 		return expectedCommandResp, mp.Delete()
 	}, nil, mountName, expectedCommand)
+}
+
+func TestDeletedMountClusterRecreates(t *testing.T) {
+	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/clusters/get?cluster_id=abc",
+			Status:   404,
+		},
+		{
+			Method:       "GET",
+			ReuseRequest: true,
+			Resource:     "/api/2.0/clusters/list",
+			Response:     map[string]interface{}{},
+		},
+		{
+			Method:       "GET",
+			ReuseRequest: true,
+			Resource:     "/api/2.0/clusters/spark-versions",
+			Response: compute.SparkVersionsList{
+				SparkVersions: []compute.SparkVersion{
+					{
+						Version:     "7.1.x-cpu-ml-scala2.12",
+						Description: "7.1 ML (includes Apache Spark 3.0.0, Scala 2.12)",
+					},
+				},
+			},
+		},
+		{
+			Method:       "GET",
+			ReuseRequest: true,
+			Resource:     "/api/2.0/clusters/list-node-types",
+			Response: compute.NodeTypeList{
+				NodeTypes: []compute.NodeType{
+					{
+						NodeTypeID:     "Standard_F4s",
+						InstanceTypeID: "Standard_F4s",
+						MemoryMB:       8192,
+						NumCores:       4,
+						NodeInstanceType: &compute.NodeInstanceType{
+							LocalDisks:      1,
+							InstanceTypeID:  "Standard_F4s",
+							LocalDiskSizeGB: 16,
+							LocalNVMeDisks:  0,
+						},
+					},
+				},
+			},
+		},
+		{
+			Method:       "POST",
+			ReuseRequest: true,
+			Resource:     "/api/2.0/clusters/create",
+			ExpectedRequest: compute.Cluster{
+				AutoterminationMinutes: 10,
+				ClusterName:            "terraform-mount",
+				NodeTypeID:             "Standard_F4s",
+				SparkVersion:           "7.3.x-scala2.12",
+				CustomTags: map[string]string{
+					"ResourceClass": "SingleNode",
+				},
+				SparkConf: map[string]string{
+					"spark.databricks.cluster.profile": "singleNode",
+					"spark.master":                     "local[*]",
+				},
+			},
+			Response: compute.ClusterID{
+				ClusterID: "bcd",
+			},
+		},
+		{
+			Method:       "GET",
+			ReuseRequest: true,
+			Resource:     "/api/2.0/clusters/get?cluster_id=bcd",
+			Response: compute.ClusterInfo{
+				ClusterID: "bcd",
+				State:     "RUNNING",
+				SparkConf: map[string]string{
+					"spark.databricks.acl.dfAclsEnabled": "true",
+					"spark.databricks.cluster.profile":   "singleNode",
+				},
+			},
+		},
+	}, func(ctx context.Context, client *common.DatabricksClient) {
+		clusterID, err := getMountingClusterID(ctx, client, "abc")
+		assert.NoError(t, err)
+		assert.Equal(t, "bcd", clusterID)
+	})
 }

@@ -6,6 +6,7 @@ import (
 
 	"github.com/databrickslabs/terraform-provider-databricks/common"
 
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -22,6 +23,7 @@ type CustomerManagedKey struct {
 	AwsKeyInfo           *AwsKeyInfo `json:"aws_key_info"`
 	AccountID            string      `json:"account_id"`
 	CreationTime         int64       `json:"creation_time,omitempty" tf:"computed"`
+	UseCases             []string    `json:"use_cases"`
 }
 
 // NewCustomerManagedKeysAPI creates CustomerManagedKeysAPI instance from provider meta
@@ -103,6 +105,60 @@ func ResourceCustomerManagedKey() *schema.Resource {
 			}
 			return NewCustomerManagedKeysAPI(ctx, c).Delete(accountID, cmkID)
 		},
-		Schema: s,
+		Schema:        s,
+		SchemaVersion: 1,
+		StateUpgraders: []schema.StateUpgrader{
+			{
+				Version: 0,
+				Type:    ResourceCustomerManagedKeyV0(),
+				Upgrade: migrateResourceCustomerManagedKeyV0,
+			},
+		},
 	}.ToResource()
+}
+
+func migrateResourceCustomerManagedKeyV0(ctx context.Context,
+	rawState map[string]interface{},
+	meta interface{}) (map[string]interface{}, error) {
+	rawState["use_cases"] = []string{"MANAGED_SERVICES"}
+	return rawState, nil
+}
+
+func ResourceCustomerManagedKeyV0() cty.Type {
+	return (&schema.Resource{
+		Schema: map[string]*schema.Schema{
+			"account_id": {
+				Type:     schema.TypeString,
+				ForceNew: true,
+			},
+			"customer_managed_key_id": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"creation_time": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
+			"aws_key_info": {
+				Type:     schema.TypeList,
+				ForceNew: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"key_arn": {
+							Type: schema.TypeString,
+						},
+						"key_alias": {
+							Type: schema.TypeString,
+						},
+						"key_region": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
+						},
+					},
+				},
+			},
+		},
+	}).CoreConfigSchema().ImpliedType()
 }

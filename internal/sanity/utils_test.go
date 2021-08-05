@@ -126,13 +126,6 @@ func TestAccMissingResourcesInWorkspace(t *testing.T) {
 			},
 		},
 		{
-			Name: "Users",
-			ReadFunc: func() error {
-				_, err := identity.NewUsersAPI(ctx, client).Read(randStringID)
-				return err
-			},
-		},
-		{
 			Name: "Cluster Policies",
 			ReadFunc: func() error {
 				_, err := compute.NewClusterPoliciesAPI(ctx, client).Get(randStringID)

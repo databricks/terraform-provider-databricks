@@ -1,6 +1,7 @@
 package exporter
 
 import (
+	"crypto/md5"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
@@ -34,8 +35,10 @@ var resourcesMap map[string]importable = map[string]importable{
 	"databricks_dbfs_file": {
 		Service: "storage",
 		Name: func(d *schema.ResourceData) string {
+			fileNameMd5 := fmt.Sprintf("%x", md5.Sum([]byte(d.Id())))
 			s := strings.Split(d.Id(), "/")
-			return s[len(s)-1]
+			name := "_" + s[len(s)-1] + "_" + fileNameMd5
+			return name
 		},
 		Body: func(ic *importContext, body *hclwrite.Body, r *resource) error {
 			dbfsAPI := storage.NewDbfsAPI(ic.Context, ic.Client)
@@ -47,7 +50,8 @@ var resourcesMap map[string]importable = map[string]importable{
 			if err != nil && !os.IsExist(err) {
 				return err
 			}
-			fileName := ic.prefix + path.Base(r.ID)
+			name := ic.Importables["databricks_dbfs_file"].Name(r.Data)
+			fileName := ic.prefix + name
 			local, err := os.Create(fmt.Sprintf("%s/files/%s", ic.Directory, fileName))
 			if err != nil {
 				return err
@@ -87,7 +91,7 @@ var resourcesMap map[string]importable = map[string]importable{
 				ic.Emit(&resource{
 					Resource: "databricks_permissions",
 					ID:       fmt.Sprintf("/instance-pools/%s", r.ID),
-					Name:     ic.Importables["databricks_instance_pool"].Name(r.Data),
+					Name:     "inst_pool_" + ic.Importables["databricks_instance_pool"].Name(r.Data),
 				})
 			}
 			return nil
@@ -115,7 +119,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			if name == "" {
 				return strings.Split(d.Id(), "-")[2]
 			}
-			return name
+			return fmt.Sprintf("%s_%s", name, d.Id())
 		},
 		Depends: []reference{
 			{Path: "aws_attributes.instance_profile_arn", Resource: "databricks_instance_profile"},
@@ -168,7 +172,7 @@ var resourcesMap map[string]importable = map[string]importable{
 				ic.Emit(&resource{
 					Resource: "databricks_permissions",
 					ID:       fmt.Sprintf("/clusters/%s", r.ID),
-					Name:     r.Data.Get("cluster_name").(string),
+					Name:     "cluster_" + ic.Importables["databricks_cluster"].Name(r.Data),
 				})
 			}
 			return ic.importLibraries(r.Data, s)
@@ -177,7 +181,7 @@ var resourcesMap map[string]importable = map[string]importable{
 	"databricks_job": {
 		Service: "jobs",
 		Name: func(d *schema.ResourceData) string {
-			return d.Get("name").(string)
+			return fmt.Sprintf("%s_%s", d.Get("name").(string), d.Id())
 		},
 		Depends: []reference{
 			{Path: "email_notifications.on_failure", Resource: "databricks_user", Match: "user_name"},
@@ -211,7 +215,7 @@ var resourcesMap map[string]importable = map[string]importable{
 				ic.Emit(&resource{
 					Resource: "databricks_permissions",
 					ID:       fmt.Sprintf("/jobs/%s", r.ID),
-					Name:     r.Data.Get("name").(string),
+					Name:     "job_" + ic.Importables["databricks_job"].Name(r.Data),
 				})
 			}
 			if job.SparkPythonTask != nil {
@@ -297,7 +301,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			ic.Emit(&resource{
 				Resource: "databricks_permissions",
 				ID:       fmt.Sprintf("/cluster-policies/%s", r.ID),
-				Name:     r.Data.Get("name").(string),
+				Name:     "clust_policy_" + ic.Importables["databricks_cluster_policy"].Name(r.Data),
 			})
 			var definition map[string]map[string]interface{}
 			err := json.Unmarshal([]byte(r.Data.Get("definition").(string)), &definition)
@@ -307,19 +311,19 @@ var resourcesMap map[string]importable = map[string]importable{
 			for k, policy := range definition {
 				value, vok := policy["value"]
 				defaultValue, dok := policy["defaultValue"]
-				if !vok || !dok {
+				if !vok && !dok {
 					continue
 				}
-				if "aws_attributes.instance_profile_arn" == k {
+				if k == "aws_attributes.instance_profile_arn" {
 					ic.Emit(&resource{
 						Resource: "databricks_instance_profile",
-						ID:       fmt.Sprintf("%s%s", value, defaultValue),
+						ID:       eitherString(value, defaultValue),
 					})
 				}
-				if "instance_pool_id" == k {
+				if k == "instance_pool_id" {
 					ic.Emit(&resource{
 						Resource: "databricks_instance_pool",
-						ID:       fmt.Sprintf("%s%s", value, defaultValue),
+						ID:       eitherString(value, defaultValue),
 					})
 				}
 			}
@@ -402,7 +406,7 @@ var resourcesMap map[string]importable = map[string]importable{
 						Resource: "databricks_group",
 						ID:       parent.Value,
 					})
-					if "direct" == parent.Type {
+					if parent.Type == "direct" {
 						ic.Emit(&resource{
 							Resource: "databricks_group_member",
 							ID:       fmt.Sprintf("%s|%s", parent.Value, g.ID),
@@ -476,7 +480,7 @@ var resourcesMap map[string]importable = map[string]importable{
 				return err
 			}
 			for _, g := range u.Groups {
-				if "direct" != g.Type {
+				if g.Type != "direct" {
 					continue
 				}
 				ic.Emit(&resource{
@@ -505,6 +509,15 @@ var resourcesMap map[string]importable = map[string]importable{
 			{Path: "cluster_policy_id", Resource: "databricks_cluster_policy"},
 			{Path: "access_control.user_name", Resource: "databricks_user", Match: "user_name"},
 			{Path: "access_control.group_name", Resource: "databricks_group", Match: "display_name"},
+		},
+		Ignore: func(ic *importContext, r *resource) bool {
+			var permissions access.PermissionsEntity
+			s := ic.Resources["databricks_permissions"].Schema
+			err := common.DataToStructPointer(r.Data, s, &permissions)
+			if err != nil {
+				return false
+			}
+			return (len(permissions.AccessControlList) == 0)
 		},
 		Import: func(ic *importContext, r *resource) error {
 			var permissions access.PermissionsEntity
@@ -692,7 +705,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			mount := ic.mountMap[r.ID]
 			res := adlsGen2Regex.FindStringSubmatch(mount.URL)
 			if res == nil {
-				return fmt.Errorf("Can't extract ADLSv2 information from string '%s'", mount)
+				return fmt.Errorf("can't extract ADLSv2 information from string '%s'", mount)
 			}
 			containerName := res[2]
 			storageAccountName := res[3]
@@ -760,7 +773,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			mount := ic.mountMap[r.ID]
 			res := adlsGen1Regex.FindStringSubmatch(mount.URL)
 			if res == nil {
-				return fmt.Errorf("Can't extract ADLSv1 information from string '%s'", mount)
+				return fmt.Errorf("can't extract ADLSv1 information from string '%s'", mount)
 			}
 			storageResourceName := res[2]
 			b.SetAttributeValue("storage_resource_name", cty.StringVal(storageResourceName))

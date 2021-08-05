@@ -10,20 +10,38 @@ import (
 
 // ResourceUser manages users within workspace
 func ResourceUser() *schema.Resource {
-	userSchema := common.StructToSchema(UserEntity{}, func(
-		s map[string]*schema.Schema) map[string]*schema.Schema {
-		s["user_name"].ForceNew = true
-		s["active"].Default = true
-		return s
-	})
+	type entity struct {
+		UserName    string `json:"user_name"`
+		DisplayName string `json:"display_name,omitempty" tf:"computed"`
+		Active      bool   `json:"active,omitempty"`
+	}
+	userSchema := common.StructToSchema(entity{},
+		func(m map[string]*schema.Schema) map[string]*schema.Schema {
+			addEntitlementsToSchema(&m)
+			m["user_name"].ForceNew = true
+			m["active"].Default = true
+			return m
+		})
+	scimUserFromData := func(d *schema.ResourceData) (user ScimUser, err error) {
+		var u entity
+		if err = common.DataToStructPointer(d, userSchema, &u); err != nil {
+			return
+		}
+		return ScimUser{
+			UserName:     u.UserName,
+			DisplayName:  u.DisplayName,
+			Active:       u.Active,
+			Entitlements: readEntitlementsFromData(d),
+		}, nil
+	}
 	return common.Resource{
 		Schema: userSchema,
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			var ru UserEntity
-			if err := common.DataToStructPointer(d, userSchema, &ru); err != nil {
+			u, err := scimUserFromData(d)
+			if err != nil {
 				return err
 			}
-			user, err := NewUsersAPI(ctx, c).Create(ru)
+			user, err := NewUsersAPI(ctx, c).Create(u)
 			if err != nil {
 				return err
 			}
@@ -31,18 +49,21 @@ func ResourceUser() *schema.Resource {
 			return nil
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			user, err := NewUsersAPI(ctx, c).Read(d.Id())
+			user, err := NewUsersAPI(ctx, c).read(d.Id())
 			if err != nil {
 				return err
 			}
-			return common.StructToData(user, userSchema, d)
+			d.Set("user_name", user.UserName)
+			d.Set("display_name", user.DisplayName)
+			d.Set("active", user.Active)
+			return user.Entitlements.readIntoData(d)
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			var ru UserEntity
-			if err := common.DataToStructPointer(d, userSchema, &ru); err != nil {
+			u, err := scimUserFromData(d)
+			if err != nil {
 				return err
 			}
-			return NewUsersAPI(ctx, c).Update(d.Id(), ru)
+			return NewUsersAPI(ctx, c).Update(d.Id(), u)
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			return NewUsersAPI(ctx, c).Delete(d.Id())

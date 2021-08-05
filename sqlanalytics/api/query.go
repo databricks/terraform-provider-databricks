@@ -40,6 +40,8 @@ type QuerySchedule struct {
 type QueryOptions struct {
 	Parameters    []interface{}     `json:"-"`
 	RawParameters []json.RawMessage `json:"parameters,omitempty"`
+
+	RunAsRole string `json:"run_as_role,omitempty"`
 }
 
 // MarshalJSON ...

@@ -32,6 +32,7 @@ type providerConfigTest struct {
 	assertToken              string
 	assertHost               string
 	assertAzure              bool
+	usePATForSPN             bool
 }
 
 func (tt providerConfigTest) rawConfig() map[string]interface{} {
@@ -75,6 +76,9 @@ func (tt providerConfigTest) rawConfig() map[string]interface{} {
 	if tt.azureWorkspaceResourceID != "" {
 		rawConfig["azure_workspace_resource_id"] = tt.azureWorkspaceResourceID
 	}
+	if tt.usePATForSPN {
+		rawConfig["azure_use_pat_for_spn"] = true
+	}
 	return rawConfig
 }
 
@@ -82,19 +86,19 @@ func TestProviderConfigurationOptions(t *testing.T) {
 	azResourceID := "/subscriptions/a/resourceGroups/b/providers/Microsoft.Databricks/workspaces/c"
 	tests := []providerConfigTest{
 		{
-			assertError: "Authentication is not configured for provider",
+			assertError: "authentication is not configured for provider",
 		},
 		{
 			env: map[string]string{
 				"DATABRICKS_HOST": "x",
 			},
-			assertError: "Authentication is not configured for provider",
+			assertError: "authentication is not configured for provider",
 		},
 		{
 			env: map[string]string{
 				"DATABRICKS_TOKEN": "x",
 			},
-			assertError: "Host is empty, but is required by token",
+			assertError: "host is empty, but is required by token",
 		},
 		{
 			env: map[string]string{
@@ -117,7 +121,7 @@ func TestProviderConfigurationOptions(t *testing.T) {
 				"DATABRICKS_USERNAME": "x",
 				"DATABRICKS_PASSWORD": "x",
 			},
-			assertError: "Host is empty, but is required by basic_auth",
+			assertError: "host is empty, but is required by basic_auth",
 			assertToken: "x",
 			assertHost:  "https://x",
 		},
@@ -177,7 +181,7 @@ func TestProviderConfigurationOptions(t *testing.T) {
 			env: map[string]string{
 				"CONFIG_FILE": "x",
 			},
-			assertError: "Authentication is not configured for provider",
+			assertError: "authentication is not configured for provider",
 		},
 		{
 			// loading with DEFAULT profile in databrickscfs
@@ -241,7 +245,7 @@ func TestProviderConfigurationOptions(t *testing.T) {
 				"PATH": "whatever",
 				"HOME": "../common/testdata",
 			},
-			assertError: "Most likely Azure CLI is not installed.",
+			assertError: "most likely Azure CLI is not installed.",
 		},
 		{
 			azureWorkspaceResourceID: azResourceID,
@@ -285,9 +289,10 @@ func TestProviderConfigurationOptions(t *testing.T) {
 				"PATH": "../common/testdata",
 				"HOME": "../common/testdata",
 			},
-			assertAzure: true,
-			assertHost:  "",
-			assertToken: "",
+			assertAzure:  true,
+			usePATForSPN: true,
+			assertHost:   "",
+			assertToken:  "",
 		},
 		{
 			// https://github.com/databrickslabs/terraform-provider-databricks/issues/294
@@ -301,9 +306,10 @@ func TestProviderConfigurationOptions(t *testing.T) {
 				"HOME":                "../common/testdata",
 				"PATH":                "../common/testdata",
 			},
-			assertAzure: true,
-			assertHost:  "",
-			assertToken: "",
+			assertAzure:  true,
+			usePATForSPN: true,
+			assertHost:   "",
+			assertToken:  "",
 		},
 		{
 			env: map[string]string{
@@ -346,10 +352,12 @@ func configureProviderAndReturnClient(t *testing.T, tt providerConfigTest) (*com
 		return nil, fmt.Errorf(strings.Join(issues, ", "))
 	}
 	client := p.Meta().(*common.DatabricksClient)
+	client.AzureAuth.UsePATForSPN = tt.usePATForSPN
 	err := client.Authenticate()
 	if err != nil {
 		return nil, err
 	}
+
 	return client, nil
 }
 

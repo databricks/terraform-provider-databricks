@@ -3,6 +3,7 @@ package storage
 import (
 	"fmt"
 
+	"github.com/databrickslabs/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
@@ -24,13 +25,14 @@ func (m AzureADLSGen1Mount) Source() string {
 }
 
 // Config ...
-func (m AzureADLSGen1Mount) Config() map[string]string {
+func (m AzureADLSGen1Mount) Config(client *common.DatabricksClient) map[string]string {
+	aadEndpoint := client.AzureAuth.AzureEnvironment.ActiveDirectoryEndpoint
 	return map[string]string{
 		m.PrefixType + ".oauth2.access.token.provider.type": "ClientCredential",
 
 		m.PrefixType + ".oauth2.client.id":   m.ClientID,
 		m.PrefixType + ".oauth2.credential":  fmt.Sprintf("{secrets/%s/%s}", m.SecretScope, m.SecretKey),
-		m.PrefixType + ".oauth2.refresh.url": fmt.Sprintf("https://login.microsoftonline.com/%s/oauth2/token", m.TenantID),
+		m.PrefixType + ".oauth2.refresh.url": fmt.Sprintf("%s/%s/oauth2/token", aadEndpoint, m.TenantID),
 	}
 }
 

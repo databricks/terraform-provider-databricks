@@ -294,5 +294,5 @@ func TestResourceVPCEndpointCreatePendingAndFails(t *testing.T) {
 		VPCEndpointName:  "a",
 		Region:           "a",
 	})
-	require.EqualError(t, err, "Cannot register x: bad thing")
+	require.EqualError(t, err, "cannot register x: bad thing")
 }

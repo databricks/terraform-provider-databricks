@@ -21,19 +21,21 @@ var (
 
 // SQLEndpoint ...
 type SQLEndpoint struct {
-	ID                 string      `json:"id,omitempty" tf:"computed"`
-	Name               string      `json:"name"`
-	ClusterSize        string      `json:"cluster_size"`
-	AutoStopMinutes    int         `json:"auto_stop_mins,omitempty"`
-	MinNumClusters     int         `json:"min_num_clusters,omitempty"`
-	MaxNumClusters     int         `json:"max_num_clusters,omitempty"`
-	NumClusters        int         `json:"num_clusters,omitempty"`
-	EnablePhoton       bool        `json:"enable_photon,omitempty"`
-	InstanceProfileARN string      `json:"instance_profile_arn,omitempty"`
-	State              string      `json:"state,omitempty" tf:"computed"`
-	JdbcURL            string      `json:"jdbc_url,omitempty" tf:"computed"`
-	OdbcParams         *OdbcParams `json:"odbc_params,omitempty" tf:"computed"`
-	Tags               *Tags       `json:"tags,omitempty"`
+	ID                      string      `json:"id,omitempty" tf:"computed"`
+	Name                    string      `json:"name"`
+	ClusterSize             string      `json:"cluster_size"`
+	AutoStopMinutes         int         `json:"auto_stop_mins,omitempty"`
+	MinNumClusters          int         `json:"min_num_clusters,omitempty"`
+	MaxNumClusters          int         `json:"max_num_clusters,omitempty"`
+	NumClusters             int         `json:"num_clusters,omitempty"`
+	EnablePhoton            bool        `json:"enable_photon,omitempty"`
+	EnableServerlessCompute bool        `json:"enable_serverless_compute,omitempty"`
+	InstanceProfileARN      string      `json:"instance_profile_arn,omitempty"`
+	State                   string      `json:"state,omitempty" tf:"computed"`
+	JdbcURL                 string      `json:"jdbc_url,omitempty" tf:"computed"`
+	OdbcParams              *OdbcParams `json:"odbc_params,omitempty" tf:"computed"`
+	Tags                    *Tags       `json:"tags,omitempty"`
+	SpotInstancePolicy      string      `json:"spot_instance_policy,omitempty"`
 
 	// The data source ID is not part of the endpoint API response.
 	// We manually resolve it by retrieving the list of data sources
@@ -140,7 +142,7 @@ func (a SQLEndpointsAPI) ResolveDataSourceID(endpointID string) (dataSourceID st
 
 	// We assume there is a data source ID for every endpoint.
 	// It is therefore an error if we can't find it.
-	err = fmt.Errorf("Unable to find data source ID for endpoint: %v", endpointID)
+	err = fmt.Errorf("unable to find data source ID for endpoint: %v", endpointID)
 	return
 }
 
@@ -155,9 +157,9 @@ func (a SQLEndpointsAPI) waitForRunning(id string, timeout time.Duration) error 
 			return nil
 		case "DELETED":
 			return resource.NonRetryableError(
-				fmt.Errorf("Endpoint got deleted during creation"))
+				fmt.Errorf("endpoint got deleted during creation"))
 		default:
-			msg := fmt.Errorf("Endpoint %s is %s", id, endpoint.State)
+			msg := fmt.Errorf("endpoint %s is %s", id, endpoint.State)
 			log.Printf("[INFO] %s", msg.Error())
 			return resource.RetryableError(msg)
 		}
@@ -179,11 +181,17 @@ func (a SQLEndpointsAPI) Delete(endpointID string) error {
 func ResourceSQLEndpoint() *schema.Resource {
 	s := common.StructToSchema(SQLEndpoint{}, func(
 		m map[string]*schema.Schema) map[string]*schema.Schema {
+		m["auto_stop_mins"].Default = 120
 		m["cluster_size"].ValidateDiagFunc = validation.ToDiagFunc(
 			validation.StringInSlice(ClusterSizes, false))
 		m["max_num_clusters"].Default = 1
 		m["max_num_clusters"].ValidateDiagFunc = validation.ToDiagFunc(
 			validation.IntBetween(1, MaxNumClusters))
+		m["min_num_clusters"].Default = 1
+		m["num_clusters"].Default = 1
+		m["spot_instance_policy"].Default = "COST_OPTIMIZED"
+		m["enable_photon"].Default = true
+		m["tags"].DiffSuppressFunc = common.MakeEmptyBlockSuppressFunc("tags.#")
 		return m
 	})
 	return common.Resource{

@@ -60,11 +60,12 @@ type pipelineSpec struct {
 	Name                string            `json:"name,omitempty"`
 	Storage             string            `json:"storage,omitempty"`
 	Configuration       map[string]string `json:"configuration,omitempty"`
-	Clusters            []pipelineCluster `json:"clusters,omitempty"`
-	Libraries           []pipelineLibrary `json:"libraries,omitempty"`
+	Clusters            []pipelineCluster `json:"clusters,omitempty" tf:"slice_set,alias:cluster"`
+	Libraries           []pipelineLibrary `json:"libraries,omitempty" tf:"slice_set,alias:library"`
 	Filters             *filters          `json:"filters"`
 	Continuous          bool              `json:"continuous,omitempty"`
 	AllowDuplicateNames bool              `json:"allow_duplicate_names,omitempty"`
+	Target              string            `json:"target,omitempty"`
 }
 
 type createPipelineResponse struct {
@@ -128,7 +129,7 @@ func (a pipelinesAPI) create(s pipelineSpec, timeout time.Duration) (string, err
 		err2 := a.delete(id, timeout)
 		if err2 != nil {
 			log.Printf("[WARN] Unable to delete pipeline %s; this resource needs to be manually cleaned up", id)
-			return "", fmt.Errorf("Multiple errors occurred when creating pipeline. Error while waiting for creation: \"%v\"; error while attempting to clean up failed pipeline: \"%v\"", err, err2)
+			return "", fmt.Errorf("multiple errors occurred when creating pipeline. Error while waiting for creation: \"%v\"; error while attempting to clean up failed pipeline: \"%v\"", err, err2)
 		}
 		log.Printf("[INFO] Successfully cleaned up pipeline %s", id)
 		return "", err
@@ -158,7 +159,7 @@ func (a pipelinesAPI) delete(id string, timeout time.Duration) error {
 		func() *resource.RetryError {
 			i, err := a.read(id)
 			if err != nil {
-				if e, ok := err.(common.APIError); ok && e.IsMissing() {
+				if common.IsMissing(err) {
 					return nil
 				}
 				return resource.NonRetryableError(err)
@@ -181,7 +182,11 @@ func (a pipelinesAPI) waitForState(id string, timeout time.Duration, desiredStat
 				return nil
 			}
 			if state == StateFailed {
-				return resource.NonRetryableError(fmt.Errorf("Pipeline %s has failed", id))
+				return resource.NonRetryableError(fmt.Errorf("pipeline %s has failed", id))
+			}
+			if !i.Spec.Continuous {
+				// continuous pipelines just need a non-FAILED check
+				return nil
 			}
 			message := fmt.Sprintf("Pipeline %s is in state %s, not yet in state %s", id, state, desiredState)
 			log.Printf("[DEBUG] %s", message)
@@ -190,7 +195,7 @@ func (a pipelinesAPI) waitForState(id string, timeout time.Duration, desiredStat
 }
 
 func adjustPipelineResourceSchema(m map[string]*schema.Schema) map[string]*schema.Schema {
-	clusters, _ := m["clusters"].Elem.(*schema.Resource)
+	clusters, _ := m["cluster"].Elem.(*schema.Resource)
 	clustersSchema := clusters.Schema
 	clustersSchema["spark_conf"].DiffSuppressFunc = sparkConfDiffSuppressFunc
 
@@ -203,7 +208,7 @@ func adjustPipelineResourceSchema(m map[string]*schema.Schema) map[string]*schem
 	delete(awsAttributesSchema, "ebs_volume_count")
 	delete(awsAttributesSchema, "ebs_volume_size")
 
-	m["libraries"].MinItems = 1
+	m["library"].MinItems = 1
 
 	return m
 }
@@ -231,6 +236,9 @@ func ResourcePipeline() *schema.Resource {
 			i, err := newPipelinesAPI(ctx, c).read(d.Id())
 			if err != nil {
 				return err
+			}
+			if i.Spec == nil {
+				return fmt.Errorf("pipeline spec is nil for '%v'", i.PipelineID)
 			}
 			return common.StructToData(*i.Spec, pipelineSchema, d)
 		},

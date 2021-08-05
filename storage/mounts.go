@@ -19,7 +19,7 @@ import (
 // Mount exposes generic url & extra config map options
 type Mount interface {
 	Source() string
-	Config() map[string]string
+	Config(client *common.DatabricksClient) map[string]string
 }
 
 // MountPoint is something actionable
@@ -44,7 +44,14 @@ func (mp MountPoint) Source() (string, error) {
 // Delete removes mount from workspace
 func (mp MountPoint) Delete() error {
 	result := mp.exec.Execute(mp.clusterID, "python", fmt.Sprintf(`
+		found = False
 		mount_point = "/mnt/%s"
+		dbutils.fs.refreshMounts()
+		for mount in dbutils.fs.mounts():
+			if mount.mountPoint == mount_point:
+				found = True
+		if not found:
+			dbutils.notebook.exit("success")
 		dbutils.fs.unmount(mount_point)
 		dbutils.fs.refreshMounts()
 		for mount in dbutils.fs.mounts():
@@ -56,8 +63,8 @@ func (mp MountPoint) Delete() error {
 }
 
 // Mount mounts object store on workspace
-func (mp MountPoint) Mount(mo Mount) (source string, err error) {
-	extraConfigs, err := json.Marshal(mo.Config())
+func (mp MountPoint) Mount(mo Mount, client *common.DatabricksClient) (source string, err error) {
+	extraConfigs, err := json.Marshal(mo.Config(client))
 	if err != nil {
 		return
 	}
@@ -107,38 +114,43 @@ func NewMountPoint(executor common.CommandExecutor, name, clusterID string) Moun
 	}
 }
 
+func getOrCreateMountingCluster(clustersAPI compute.ClustersAPI) (string, error) {
+	cluster, err := clustersAPI.GetOrCreateRunningCluster("terraform-mount", compute.Cluster{
+		NumWorkers:  0,
+		ClusterName: "terraform-mount",
+		SparkVersion: clustersAPI.LatestSparkVersionOrDefault(
+			compute.SparkVersionRequest{
+				Latest:          true,
+				LongTermSupport: true,
+			}),
+		NodeTypeID: clustersAPI.GetSmallestNodeType(
+			compute.NodeTypeRequest{
+				LocalDisk: true,
+			}),
+		AutoterminationMinutes: 10,
+		SparkConf: map[string]string{
+			"spark.master":                     "local[*]",
+			"spark.databricks.cluster.profile": "singleNode",
+		},
+		CustomTags: map[string]string{
+			"ResourceClass": "SingleNode",
+		},
+	})
+	if err != nil {
+		return "", err
+	}
+	return cluster.ClusterID, nil
+}
+
 func getMountingClusterID(ctx context.Context, client *common.DatabricksClient, clusterID string) (string, error) {
 	clustersAPI := compute.NewClustersAPI(ctx, client)
 	if clusterID == "" {
-		r := compute.Cluster{
-			NumWorkers:  0,
-			ClusterName: "terraform-mount",
-			SparkVersion: clustersAPI.LatestSparkVersionOrDefault(
-				compute.SparkVersionRequest{
-					Latest:          true,
-					LongTermSupport: true,
-				}),
-			NodeTypeID: clustersAPI.GetSmallestNodeType(
-				compute.NodeTypeRequest{
-					LocalDisk: true,
-				}),
-
-			AutoterminationMinutes: 10,
-			SparkConf: map[string]string{
-				"spark.master":                     "local[*]",
-				"spark.databricks.cluster.profile": "singleNode",
-			},
-			CustomTags: map[string]string{
-				"ResourceClass": "SingleNode",
-			},
-		}
-		cluster, err := clustersAPI.GetOrCreateRunningCluster("terraform-mount", r)
-		if err != nil {
-			return "", err
-		}
-		return cluster.ClusterID, nil
+		return getOrCreateMountingCluster(clustersAPI)
 	}
 	clusterInfo, err := clustersAPI.Get(clusterID)
+	if common.IsMissing(err) {
+		return getOrCreateMountingCluster(clustersAPI)
+	}
 	if err != nil {
 		return "", err
 	}
@@ -190,8 +202,9 @@ func mountCreate(tpl interface{}, r *schema.Resource) func(context.Context, *sch
 		if err != nil {
 			return diag.FromErr(err)
 		}
+		client := m.(*common.DatabricksClient)
 		log.Printf("[INFO] Mounting %s at /mnt/%s", mountConfig.Source(), d.Id())
-		source, err := mountPoint.Mount(mountConfig)
+		source, err := mountPoint.Mount(mountConfig, client)
 		if err != nil {
 			return diag.FromErr(err)
 		}

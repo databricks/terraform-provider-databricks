@@ -50,7 +50,7 @@ resource "databricks_mws_networks" "this" {
   account_id   = var.databricks_account_id
   network_name = "${var.prefix}-network"
   vpc_id       = var.vpc_id
-  subnet_ids = [var.subnet_public, var.subnet_private]
+  subnet_ids = var.subnets_private
   security_group_ids = [var.security_group]
 }
 
@@ -170,21 +170,29 @@ resource "databricks_mws_workspaces" "this" {
 }
 ```
 
+In order to create a [Databricks Workspace that leverages AWS PrivateLink](https://docs.databricks.com/administration-guide/cloud-configurations/aws/privatelink.html) please ensure that you have read and understood the [Enable Private Link](https://docs.databricks.com/administration-guide/cloud-configurations/aws/privatelink.html) documentation and then customise the example above with the relevant examples from [mws_vpc_endpoint](mws_vpc_endpoint.md), [mws_private_access_settings](mws_private_access_settings.md) and [mws_networks](mws_networks.md). 
+
 ## Argument Reference
 
--> **Note** All workspaces would be verified to get into runnable state or cleaned up upon failure.
+-> **Note** All workspaces would be verified to get into runnable state or deleted upon failure. You can only update `credentials_id`, `network_id`, and `storage_customer_managed_key_id` on a running workspace.
 
-The following arguments are available:
+The following arguments are available and cannot be changed after workspace is created:
 
-* `network_id` - (Optional) `network_id` from [networks](mws_networks.md)
 * `account_id` - Account Id that could be found in the bottom left corner of [Accounts Console](https://accounts.cloud.databricks.com/).
-* `credentials_id` - `credentials_id` from [credentials](mws_credentials.md)
-* `customer_managed_key_id` - (Optional) `customer_managed_key_id` from [customer managed keys](mws_customer_managed_keys.md)
-* `deployment_name` - part of URL: `https://<deployment-name>.cloud.databricks.com`
+* `customer_managed_key_id` - (Optional, **Deprecated**, see `managed_services_customer_managed_key_id` and `storage_customer_managed_key_id`) `customer_managed_key_id` from [customer managed keys](mws_customer_managed_keys.md)
+* `managed_services_customer_managed_key_id` - (Optional) `customer_managed_key_id` from [customer managed keys](mws_customer_managed_keys.md) with `use_cases` set to `MANAGED_SERVICES`. This is used to encrypt the workspace's notebook and secret data in the control plane.
+* `deployment_name` - (Optional) part of URL: `https://<deployment-name>.cloud.databricks.com`
 * `workspace_name` - name of the workspace, will appear on UI
 * `aws_region` - AWS region of VPC
 * `storage_configuration_id` - `storage_configuration_id` from [storage configuration](mws_storage_configurations.md)
 * `private_access_settings_id` - (Optional) Canonical unique identifier of [databricks_mws_private_access_settings](mws_private_access_settings.md) in Databricks Account
+
+The following arguments could be modified after the workspace is running:
+
+* `network_id` - (Optional) `network_id` from [networks](mws_networks.md). Modifying [networks on running workspaces](mws_networks.md#modifying-networks-on-running-workspaces) would require three separate `terraform apply` steps.
+* `credentials_id` - `credentials_id` from [credentials](mws_credentials.md)
+* `storage_customer_managed_key_id` - (Optional) `customer_managed_key_id` from [customer managed keys](mws_customer_managed_keys.md) with `use_cases` set to `STORAGE`. This is used to encrypt the DBFS Storage & Cluster EBS Volumes.
+
 
 ## Attribute Reference
 

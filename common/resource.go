@@ -14,6 +14,7 @@ type Resource struct {
 	Read           func(ctx context.Context, d *schema.ResourceData, c *DatabricksClient) error
 	Update         func(ctx context.Context, d *schema.ResourceData, c *DatabricksClient) error
 	Delete         func(ctx context.Context, d *schema.ResourceData, c *DatabricksClient) error
+	CustomizeDiff  func(ctx context.Context, d *schema.ResourceDiff, c interface{}) error
 	StateUpgraders []schema.StateUpgrader
 	Schema         map[string]*schema.Schema
 	SchemaVersion  int
@@ -45,7 +46,7 @@ func (r Resource) ToResource() *schema.Resource {
 	}
 	read := func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 		err := r.Read(ctx, d, m.(*DatabricksClient))
-		if e, ok := err.(APIError); ok && e.IsMissing() {
+		if IsMissing(err) {
 			log.Printf("[INFO] %s[id=%s] is removed on backend",
 				ResourceName.GetOrUnknown(ctx), d.Id())
 			d.SetId("")
@@ -60,6 +61,7 @@ func (r Resource) ToResource() *schema.Resource {
 		Schema:         r.Schema,
 		SchemaVersion:  r.SchemaVersion,
 		StateUpgraders: r.StateUpgraders,
+		CustomizeDiff:  r.CustomizeDiff,
 		CreateContext: func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 			c := m.(*DatabricksClient)
 			err := r.Create(ctx, d, c)
@@ -91,5 +93,16 @@ func (r Resource) ToResource() *schema.Resource {
 			},
 		},
 		Timeouts: r.Timeouts,
+	}
+}
+
+func MakeEmptyBlockSuppressFunc(name string) func(k, old, new string, d *schema.ResourceData) bool {
+	return func(k, old, new string, d *schema.ResourceData) bool {
+		log.Printf("[DEBUG] k='%v', old='%v', new='%v'", k, old, new)
+		if k == name && old == "1" && new == "0" {
+			log.Printf("[DEBUG] Disable removal of empty block")
+			return true
+		}
+		return false
 	}
 }

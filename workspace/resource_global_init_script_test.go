@@ -134,7 +134,7 @@ func TestResourceGlobalInitScriptCreateBigPayload(t *testing.T) {
 		},
 	}.Apply(t)
 	require.Error(t, err, err)
-	assert.Equal(t, "Size of the global init script (131072 bytes) exceeds maximal allowed (65536 bytes)", err.Error())
+	assert.Equal(t, "size of the global init script (131072 bytes) exceeds maximal allowed (65536 bytes)", err.Error())
 }
 
 func TestResourceGlobalInitScriptUpdateBigPayload(t *testing.T) {
@@ -149,7 +149,7 @@ func TestResourceGlobalInitScriptUpdateBigPayload(t *testing.T) {
 		},
 	}.Apply(t)
 	require.Error(t, err, err)
-	assert.Equal(t, "Size of the global init script (131072 bytes) exceeds maximal allowed (65536 bytes)", err.Error())
+	assert.Equal(t, "size of the global init script (131072 bytes) exceeds maximal allowed (65536 bytes)", err.Error())
 }
 
 func TestResourceGlobalInitScriptUpdate(t *testing.T) {

@@ -17,6 +17,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/Azure/go-autorest/autorest/azure"
 	"github.com/databrickslabs/terraform-provider-databricks/common"
 	"github.com/databrickslabs/terraform-provider-databricks/internal"
 
@@ -85,8 +86,10 @@ type ResourceFixture struct {
 	ID          string
 	NonWritable bool
 	Azure       bool
+	Gcp         bool
 	// new resource
-	New bool
+	New       bool
+	AzureAuth *common.AzureAuth
 }
 
 // Apply runs tests from fixture
@@ -101,6 +104,12 @@ func (f ResourceFixture) Apply(t *testing.T) (*schema.ResourceData, error) {
 	}
 	if f.Azure {
 		client.AzureAuth.ResourceID = "/subscriptions/a/resourceGroups/b/providers/Microsoft.Databricks/workspaces/c"
+	}
+	if f.AzureAuth != nil {
+		client.AzureAuth = *f.AzureAuth
+	}
+	if f.Gcp {
+		client.GoogleServiceAccount = "sa@prj.iam.gserviceaccount.com"
 	}
 	if len(f.HCL) > 0 {
 		var out interface{}
@@ -131,6 +140,7 @@ func (f ResourceFixture) Apply(t *testing.T) (*schema.ResourceData, error) {
 	case f.Create:
 		// nolint should be a bigger context-aware refactor
 		whatever = func(d *schema.ResourceData, m interface{}) error {
+			//lint:ignore SA1019 TODO - remove later
 			return pick(f.Resource.Create, f.Resource.CreateContext, d, m)
 		}
 		if f.ID != "" {
@@ -158,7 +168,7 @@ func (f ResourceFixture) Apply(t *testing.T) (*schema.ResourceData, error) {
 			return nil, errors.New("ID must be set for Update")
 		}
 		if f.Resource.UpdateContext == nil && f.Resource.Update == nil {
-			return nil, errors.New("Resource does not support Update")
+			return nil, errors.New("resource does not support Update")
 		}
 		whatever = func(d *schema.ResourceData, m interface{}) error {
 			d.SetId(f.ID)
@@ -177,7 +187,7 @@ func (f ResourceFixture) Apply(t *testing.T) (*schema.ResourceData, error) {
 	if f.State != nil {
 		diags := f.Resource.Validate(resourceConfig)
 		if diags.HasError() {
-			return nil, fmt.Errorf("Invalid config supplied. %s",
+			return nil, fmt.Errorf("invalid config supplied. %s",
 				strings.ReplaceAll(diagsToString(diags), "\"", ""))
 		}
 	}
@@ -190,6 +200,12 @@ func (f ResourceFixture) Apply(t *testing.T) (*schema.ResourceData, error) {
 	// TODO: f.Resource.Data(is) - check why it doesn't work
 	if err != nil {
 		return nil, err
+	}
+	if f.Update {
+		err = f.requiresNew(diff)
+		if err != nil {
+			return nil, err
+		}
 	}
 	resourceData, err := schemaMap.Data(is, diff)
 	if err != nil {
@@ -204,7 +220,7 @@ func (f ResourceFixture) Apply(t *testing.T) (*schema.ResourceData, error) {
 		return resourceData, err
 	}
 	if resourceData.Id() == "" && !f.Removed {
-		return resourceData, fmt.Errorf("Resource is not expected to be removed")
+		return resourceData, fmt.Errorf("resource is not expected to be removed")
 	}
 	newState := resourceData.State()
 	diff, err = schemaMap.Diff(ctx, newState, resourceConfig, nil, client, true)
@@ -212,19 +228,27 @@ func (f ResourceFixture) Apply(t *testing.T) (*schema.ResourceData, error) {
 		return nil, err
 	}
 	if diff == nil || f.InstanceState == nil {
-		return resourceData, err
+		return resourceData, nil
 	}
+	err = f.requiresNew(diff)
+	return resourceData, err
+}
+
+func (f ResourceFixture) requiresNew(diff *terraform.InstanceDiff) error {
 	requireNew := []string{}
 	for k, v := range diff.Attributes {
+		if v.Old == v.New {
+			continue
+		}
 		if v.RequiresNew {
-			log.Printf("[WARN] %s requires new: %#v %#v", k, v.Old, v.New)
+			log.Printf("[WARN] %s requires new: %#v -> %#v", k, v.Old, v.New)
 			requireNew = append(requireNew, k)
 		}
 	}
 	if len(requireNew) > 0 && !f.RequiresNew {
-		err = fmt.Errorf("Changes from backend require new: %s", strings.Join(requireNew, ", "))
+		return fmt.Errorf("changes require new: %s", strings.Join(requireNew, ", "))
 	}
-	return resourceData, err
+	return nil
 }
 
 // ApplyNoError is a convenience method for no-data tests
@@ -403,9 +427,12 @@ func HttpFixtureClient(t *testing.T, fixtures []HTTPFixture) (client *common.Dat
 			t.FailNow()
 		}
 	}))
+	aa := common.AzureAuth{}
+	aa.AzureEnvironment = &azure.PublicCloud
 	client = &common.DatabricksClient{
-		Host:  server.URL,
-		Token: "...",
+		Host:      server.URL,
+		Token:     "...",
+		AzureAuth: aa,
 	}
 	err = client.Configure()
 	return client, server, err
@@ -444,7 +471,7 @@ func environmentTemplate(t *testing.T, template string, otherVars ...map[string]
 		"RANDOM": RandomName("t"),
 	}
 	if len(otherVars) > 1 {
-		return "", errors.New("Cannot have more than one customer variable map")
+		return "", errors.New("cannot have more than one custom variable map")
 	}
 	if len(otherVars) == 1 {
 		for k, v := range otherVars[0] {

@@ -22,14 +22,23 @@ import (
 var (
 	TestingUser      = "ben"
 	TestingAdminUser = "admin"
+	me               = qa.HTTPFixture{
+		ReuseRequest: true,
+		Method:       "GET",
+		Resource:     "/api/2.0/preview/scim/v2/Me",
+		Response: identity.ScimUser{
+			UserName: TestingAdminUser,
+		},
+	}
 )
 
 func TestResourcePermissionsRead(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
+			me,
 			{
 				Method:   http.MethodGet,
-				Resource: "/api/2.0/preview/permissions/clusters/abc",
+				Resource: "/api/2.0/permissions/clusters/abc",
 				Response: ObjectACL{
 					ObjectID:   "/clusters/abc",
 					ObjectType: "cluster",
@@ -55,13 +64,6 @@ func TestResourcePermissionsRead(t *testing.T) {
 					},
 				},
 			},
-			{
-				Method:   http.MethodGet,
-				Resource: "/api/2.0/preview/scim/v2/Me",
-				Response: identity.ScimUser{
-					UserName: TestingAdminUser,
-				},
-			},
 		},
 		Resource: ResourcePermissions(),
 		Read:     true,
@@ -80,6 +82,7 @@ func TestResourcePermissionsRead(t *testing.T) {
 func TestResourcePermissionsRead_SQLA_Asset(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
+			me,
 			{
 				Method:   http.MethodGet,
 				Resource: "/api/2.0/preview/sql/permissions/dashboards/abc",
@@ -96,13 +99,6 @@ func TestResourcePermissionsRead_SQLA_Asset(t *testing.T) {
 							PermissionLevel: "CAN_MANAGE",
 						},
 					},
-				},
-			},
-			{
-				Method:   http.MethodGet,
-				Resource: "/api/2.0/preview/scim/v2/Me",
-				Response: identity.ScimUser{
-					UserName: TestingAdminUser,
 				},
 			},
 		},
@@ -122,9 +118,10 @@ func TestResourcePermissionsRead_SQLA_Asset(t *testing.T) {
 func TestResourcePermissionsRead_NotFound(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
+			me,
 			{
 				Method:   http.MethodGet,
-				Resource: "/api/2.0/preview/permissions/clusters/abc",
+				Resource: "/api/2.0/permissions/clusters/abc",
 				Response: common.APIErrorBody{
 					ErrorCode: "NOT_FOUND",
 					Message:   "Cluster does not exist",
@@ -143,9 +140,10 @@ func TestResourcePermissionsRead_NotFound(t *testing.T) {
 func TestResourcePermissionsRead_some_error(t *testing.T) {
 	_, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
+			me,
 			{
 				Method:   http.MethodGet,
-				Resource: "/api/2.0/preview/permissions/clusters/abc",
+				Resource: "/api/2.0/permissions/clusters/abc",
 				Response: common.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
@@ -165,7 +163,7 @@ func TestResourcePermissionsRead_ErrorOnScimMe(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   http.MethodGet,
-				Resource: "/api/2.0/preview/permissions/clusters/abc",
+				Resource: "/api/2.0/permissions/clusters/abc",
 				Response: ObjectACL{
 					ObjectID:   "/clusters/abc",
 					ObjectType: "clusters",
@@ -211,9 +209,10 @@ func TestResourcePermissionsRead_ErrorOnScimMe(t *testing.T) {
 func TestResourcePermissionsDelete(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
+			me,
 			{
 				Method:   http.MethodGet,
-				Resource: "/api/2.0/preview/permissions/clusters/abc",
+				Resource: "/api/2.0/permissions/clusters/abc",
 				Response: ObjectACL{
 					ObjectID:   "/clusters/abc",
 					ObjectType: "clusters",
@@ -241,7 +240,7 @@ func TestResourcePermissionsDelete(t *testing.T) {
 			},
 			{
 				Method:          http.MethodPut,
-				Resource:        "/api/2.0/preview/permissions/clusters/abc",
+				Resource:        "/api/2.0/permissions/clusters/abc",
 				ExpectedRequest: ObjectACL{},
 			},
 		},
@@ -256,9 +255,10 @@ func TestResourcePermissionsDelete(t *testing.T) {
 func TestResourcePermissionsDelete_error(t *testing.T) {
 	_, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
+			me,
 			{
 				Method:   http.MethodGet,
-				Resource: "/api/2.0/preview/permissions/clusters/abc",
+				Resource: "/api/2.0/permissions/clusters/abc",
 				Response: ObjectACL{
 					ObjectID:   "/clusters/abc",
 					ObjectType: "clusters",
@@ -286,7 +286,7 @@ func TestResourcePermissionsDelete_error(t *testing.T) {
 			},
 			{
 				Method:          http.MethodPut,
-				Resource:        "/api/2.0/preview/permissions/clusters/abc",
+				Resource:        "/api/2.0/permissions/clusters/abc",
 				ExpectedRequest: ObjectACL{},
 				Response: common.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
@@ -304,7 +304,7 @@ func TestResourcePermissionsDelete_error(t *testing.T) {
 
 func TestResourcePermissionsCreate_invalid(t *testing.T) {
 	_, err := qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{},
+		Fixtures: []qa.HTTPFixture{me},
 		Resource: ResourcePermissions(),
 		Create:   true,
 	}.Apply(t)
@@ -312,19 +312,18 @@ func TestResourcePermissionsCreate_invalid(t *testing.T) {
 }
 
 func TestResourcePermissionsCreate_no_access_control(t *testing.T) {
-	_, err := qa.ResourceFixture{
+	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{},
 		Resource: ResourcePermissions(),
 		Create:   true,
 		State: map[string]interface{}{
 			"cluster_id": "abc",
 		},
-	}.Apply(t)
-	qa.AssertErrorStartsWith(t, err, "Invalid config supplied. [access_control] Required attribute is not set")
+	}.ExpectError(t, "invalid config supplied. [access_control] Missing required argument")
 }
 
 func TestResourcePermissionsCreate_conflicting_fields(t *testing.T) {
-	_, err := qa.ResourceFixture{
+	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{},
 		Resource: ResourcePermissions(),
 		Create:   true,
@@ -338,8 +337,7 @@ func TestResourcePermissionsCreate_conflicting_fields(t *testing.T) {
 				},
 			},
 		},
-	}.Apply(t)
-	qa.AssertErrorStartsWith(t, err, "Invalid config supplied. cluster_id: conflicts with notebook_path. notebook_path: conflicts with cluster_id")
+	}.ExpectError(t, "invalid config supplied. [cluster_id] Conflicting configuration arguments. [notebook_path] Conflicting configuration arguments")
 }
 
 func TestResourcePermissionsCreate_AdminsThrowError(t *testing.T) {
@@ -355,28 +353,29 @@ func TestResourcePermissionsCreate_AdminsThrowError(t *testing.T) {
 		}
 		`,
 	}.Apply(t)
-	assert.EqualError(t, err, "Invalid config supplied. [access_control] "+
+	assert.EqualError(t, err, "invalid config supplied. [access_control] "+
 		"It is not possible to restrict any permissions from `admins`.")
 }
 
 func TestResourcePermissionsCreate(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
+			me,
 			{
 				Method:   http.MethodPut,
-				Resource: "/api/2.0/preview/permissions/clusters/abc",
+				Resource: "/api/2.0/permissions/clusters/abc",
 				ExpectedRequest: AccessControlChangeList{
 					AccessControlList: []AccessControlChange{
 						{
 							UserName:        TestingUser,
-							PermissionLevel: "CAN_READ",
+							PermissionLevel: "CAN_ATTACH_TO",
 						},
 					},
 				},
 			},
 			{
 				Method:   http.MethodGet,
-				Resource: "/api/2.0/preview/permissions/clusters/abc",
+				Resource: "/api/2.0/permissions/clusters/abc",
 				Response: ObjectACL{
 					ObjectID:   "/clusters/abc",
 					ObjectType: "cluster",
@@ -385,7 +384,7 @@ func TestResourcePermissionsCreate(t *testing.T) {
 							UserName: TestingUser,
 							AllPermissions: []Permission{
 								{
-									PermissionLevel: "CAN_READ",
+									PermissionLevel: "CAN_ATTACH_TO",
 									Inherited:       false,
 								},
 							},
@@ -402,13 +401,6 @@ func TestResourcePermissionsCreate(t *testing.T) {
 					},
 				},
 			},
-			{
-				Method:   http.MethodGet,
-				Resource: "/api/2.0/preview/scim/v2/Me",
-				Response: identity.ScimUser{
-					UserName: TestingAdminUser,
-				},
-			},
 		},
 		Resource: ResourcePermissions(),
 		State: map[string]interface{}{
@@ -416,7 +408,7 @@ func TestResourcePermissionsCreate(t *testing.T) {
 			"access_control": []interface{}{
 				map[string]interface{}{
 					"user_name":        TestingUser,
-					"permission_level": "CAN_READ",
+					"permission_level": "CAN_ATTACH_TO",
 				},
 			},
 		},
@@ -427,12 +419,13 @@ func TestResourcePermissionsCreate(t *testing.T) {
 	require.Equal(t, 1, len(ac.List()))
 	firstElem := ac.List()[0].(map[string]interface{})
 	assert.Equal(t, TestingUser, firstElem["user_name"])
-	assert.Equal(t, "CAN_READ", firstElem["permission_level"])
+	assert.Equal(t, "CAN_ATTACH_TO", firstElem["permission_level"])
 }
 
 func TestResourcePermissionsCreate_SQLA_Asset(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
+			me,
 			{
 				Method:   http.MethodPost,
 				Resource: "/api/2.0/preview/sql/permissions/dashboards/abc",
@@ -440,7 +433,7 @@ func TestResourcePermissionsCreate_SQLA_Asset(t *testing.T) {
 					AccessControlList: []AccessControlChange{
 						{
 							UserName:        TestingUser,
-							PermissionLevel: "CAN_READ",
+							PermissionLevel: "CAN_RUN",
 						},
 						{
 							UserName:        TestingAdminUser,
@@ -458,21 +451,13 @@ func TestResourcePermissionsCreate_SQLA_Asset(t *testing.T) {
 					AccessControlList: []AccessControl{
 						{
 							UserName:        TestingUser,
-							PermissionLevel: "CAN_READ",
+							PermissionLevel: "CAN_RUN",
 						},
 						{
 							UserName:        TestingAdminUser,
 							PermissionLevel: "CAN_MANAGE",
 						},
 					},
-				},
-			},
-			{
-				Method:       http.MethodGet,
-				ReuseRequest: true,
-				Resource:     "/api/2.0/preview/scim/v2/Me",
-				Response: identity.ScimUser{
-					UserName: TestingAdminUser,
 				},
 			},
 		},
@@ -482,7 +467,7 @@ func TestResourcePermissionsCreate_SQLA_Asset(t *testing.T) {
 			"access_control": []interface{}{
 				map[string]interface{}{
 					"user_name":        TestingUser,
-					"permission_level": "CAN_READ",
+					"permission_level": "CAN_RUN",
 				},
 			},
 		},
@@ -493,12 +478,72 @@ func TestResourcePermissionsCreate_SQLA_Asset(t *testing.T) {
 	require.Equal(t, 1, len(ac.List()))
 	firstElem := ac.List()[0].(map[string]interface{})
 	assert.Equal(t, TestingUser, firstElem["user_name"])
-	assert.Equal(t, "CAN_READ", firstElem["permission_level"])
+	assert.Equal(t, "CAN_RUN", firstElem["permission_level"])
+}
+
+func TestResourcePermissionsCreate_SQLA_Endpoint(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			me,
+			{
+				Method:   http.MethodPatch,
+				Resource: "/api/2.0/permissions/sql/endpoints/abc",
+				ExpectedRequest: AccessControlChangeList{
+					AccessControlList: []AccessControlChange{
+						{
+							UserName:        TestingUser,
+							PermissionLevel: "CAN_USE",
+						},
+						{
+							UserName:        TestingAdminUser,
+							PermissionLevel: "CAN_MANAGE",
+						},
+					},
+				},
+			},
+			{
+				Method:   http.MethodGet,
+				Resource: "/api/2.0/permissions/sql/endpoints/abc",
+				Response: ObjectACL{
+					ObjectID:   "/sql/dashboards/abc",
+					ObjectType: "dashboard",
+					AccessControlList: []AccessControl{
+						{
+							UserName:        TestingUser,
+							PermissionLevel: "CAN_USE",
+						},
+						{
+							UserName:        TestingAdminUser,
+							PermissionLevel: "CAN_MANAGE",
+						},
+					},
+				},
+			},
+		},
+		Resource: ResourcePermissions(),
+		State: map[string]interface{}{
+			"sql_endpoint_id": "abc",
+			"access_control": []interface{}{
+				map[string]interface{}{
+					"user_name":        TestingUser,
+					"permission_level": "CAN_USE",
+				},
+			},
+		},
+		Create: true,
+	}.Apply(t)
+	assert.NoError(t, err, err)
+	ac := d.Get("access_control").(*schema.Set)
+	require.Equal(t, 1, len(ac.List()))
+	firstElem := ac.List()[0].(map[string]interface{})
+	assert.Equal(t, TestingUser, firstElem["user_name"])
+	assert.Equal(t, "CAN_USE", firstElem["permission_level"])
 }
 
 func TestResourcePermissionsCreate_NotebookPath_NotExists(t *testing.T) {
 	_, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
+			me,
 			{
 				Method:   http.MethodGet,
 				Resource: "/api/2.0/workspace/get-status?path=%2FDevelopment%2FInit",
@@ -528,6 +573,7 @@ func TestResourcePermissionsCreate_NotebookPath_NotExists(t *testing.T) {
 func TestResourcePermissionsCreate_NotebookPath(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
+			me,
 			{
 				Method:   http.MethodGet,
 				Resource: "/api/2.0/workspace/get-status?path=%2FDevelopment%2FInit",
@@ -538,19 +584,19 @@ func TestResourcePermissionsCreate_NotebookPath(t *testing.T) {
 			},
 			{
 				Method:   http.MethodPut,
-				Resource: "/api/2.0/preview/permissions/notebooks/988765",
+				Resource: "/api/2.0/permissions/notebooks/988765",
 				ExpectedRequest: AccessControlChangeList{
 					AccessControlList: []AccessControlChange{
 						{
 							UserName:        TestingUser,
-							PermissionLevel: "CAN_USE",
+							PermissionLevel: "CAN_READ",
 						},
 					},
 				},
 			},
 			{
 				Method:   http.MethodGet,
-				Resource: "/api/2.0/preview/permissions/notebooks/988765",
+				Resource: "/api/2.0/permissions/notebooks/988765",
 				Response: ObjectACL{
 					ObjectID:   "/notebooks/988765",
 					ObjectType: "notebook",
@@ -559,7 +605,7 @@ func TestResourcePermissionsCreate_NotebookPath(t *testing.T) {
 							UserName: TestingUser,
 							AllPermissions: []Permission{
 								{
-									PermissionLevel: "CAN_USE",
+									PermissionLevel: "CAN_READ",
 									Inherited:       false,
 								},
 							},
@@ -576,13 +622,6 @@ func TestResourcePermissionsCreate_NotebookPath(t *testing.T) {
 					},
 				},
 			},
-			{
-				Method:   http.MethodGet,
-				Resource: "/api/2.0/preview/scim/v2/Me",
-				Response: identity.ScimUser{
-					UserName: TestingAdminUser,
-				},
-			},
 		},
 		Resource: ResourcePermissions(),
 		State: map[string]interface{}{
@@ -590,7 +629,7 @@ func TestResourcePermissionsCreate_NotebookPath(t *testing.T) {
 			"access_control": []interface{}{
 				map[string]interface{}{
 					"user_name":        TestingUser,
-					"permission_level": "CAN_USE",
+					"permission_level": "CAN_READ",
 				},
 			},
 		},
@@ -602,15 +641,16 @@ func TestResourcePermissionsCreate_NotebookPath(t *testing.T) {
 	require.Equal(t, 1, len(ac.List()))
 	firstElem := ac.List()[0].(map[string]interface{})
 	assert.Equal(t, TestingUser, firstElem["user_name"])
-	assert.Equal(t, "CAN_USE", firstElem["permission_level"])
+	assert.Equal(t, "CAN_READ", firstElem["permission_level"])
 }
 
 func TestResourcePermissionsCreate_error(t *testing.T) {
 	_, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
+			me,
 			{
 				Method:   http.MethodPut,
-				Resource: "/api/2.0/preview/permissions/clusters/abc",
+				Resource: "/api/2.0/permissions/clusters/abc",
 				Response: common.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
@@ -640,9 +680,10 @@ func TestResourcePermissionsCreate_error(t *testing.T) {
 func TestResourcePermissionsUpdate(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
+			me,
 			{
 				Method:   http.MethodGet,
-				Resource: "/api/2.0/preview/permissions/jobs/9",
+				Resource: "/api/2.0/permissions/jobs/9",
 				Response: ObjectACL{
 					ObjectID:   "/jobs/9",
 					ObjectType: "job",
@@ -651,7 +692,7 @@ func TestResourcePermissionsUpdate(t *testing.T) {
 							UserName: TestingUser,
 							AllPermissions: []Permission{
 								{
-									PermissionLevel: "CAN_RUN",
+									PermissionLevel: "CAN_VIEW",
 									Inherited:       false,
 								},
 							},
@@ -669,21 +710,13 @@ func TestResourcePermissionsUpdate(t *testing.T) {
 				},
 			},
 			{
-				Method:       http.MethodGet,
-				ReuseRequest: true,
-				Resource:     "/api/2.0/preview/scim/v2/Me",
-				Response: identity.ScimUser{
-					UserName: TestingAdminUser,
-				},
-			},
-			{
 				Method:   http.MethodPut,
-				Resource: "/api/2.0/preview/permissions/jobs/9",
+				Resource: "/api/2.0/permissions/jobs/9",
 				ExpectedRequest: AccessControlChangeList{
 					AccessControlList: []AccessControlChange{
 						{
 							UserName:        TestingUser,
-							PermissionLevel: "CAN_RUN",
+							PermissionLevel: "CAN_VIEW",
 						},
 						{
 							UserName:        TestingAdminUser,
@@ -693,12 +726,15 @@ func TestResourcePermissionsUpdate(t *testing.T) {
 				},
 			},
 		},
+		InstanceState: map[string]string{
+			"job_id": "9",
+		},
 		HCL: `
 		job_id = 9
 
 		access_control {
 			user_name = "ben"
-			permission_level = "CAN_RUN"
+			permission_level = "CAN_VIEW"
 		}
 		`,
 		Resource: ResourcePermissions(),
@@ -711,13 +747,13 @@ func TestResourcePermissionsUpdate(t *testing.T) {
 	require.Equal(t, 1, len(ac.List()))
 	firstElem := ac.List()[0].(map[string]interface{})
 	assert.Equal(t, TestingUser, firstElem["user_name"])
-	assert.Equal(t, "CAN_RUN", firstElem["permission_level"])
+	assert.Equal(t, "CAN_VIEW", firstElem["permission_level"])
 }
 
 func permissionsTestHelper(t *testing.T,
 	cb func(permissionsAPI PermissionsAPI, user, group string,
 		ef func(string) PermissionsEntity)) {
-	if "" == os.Getenv("CLOUD_ENV") {
+	if os.Getenv("CLOUD_ENV") == "" {
 		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
 	}
 	randomName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
@@ -728,7 +764,7 @@ func permissionsTestHelper(t *testing.T,
 	me, err := usersAPI.Me()
 	require.NoError(t, err)
 
-	user, err := usersAPI.Create(identity.UserEntity{
+	user, err := usersAPI.Create(identity.ScimUser{
 		UserName: fmt.Sprintf("tf-%s@example.com", randomName),
 	})
 	require.NoError(t, err)
@@ -737,7 +773,14 @@ func permissionsTestHelper(t *testing.T,
 	}()
 
 	groupsAPI := identity.NewGroupsAPI(ctx, client)
-	group, err := groupsAPI.Create(fmt.Sprintf("tf-%s", randomName), []string{user.ID}, nil, nil)
+	group, err := groupsAPI.Create(identity.ScimGroup{
+		DisplayName: fmt.Sprintf("tf-%s", randomName),
+		Members: []identity.ComplexValue{
+			{
+				Value: user.ID,
+			},
+		},
+	})
 	require.NoError(t, err)
 	defer func() {
 		assert.NoError(t, groupsAPI.Delete(group.ID))

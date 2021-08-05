@@ -76,7 +76,7 @@ func (a ClustersAPI) Edit(cluster Cluster) (info ClusterInfo, err error) {
 		}
 	case ClusterStateError, ClusterStateUnknown:
 		// we don't know what to do, so return error
-		return info, fmt.Errorf("Unexpected state: %#v", info.StateMessage)
+		return info, fmt.Errorf("unexpected state: %#v", info.StateMessage)
 	}
 	err = a.client.Post(a.context, "/clusters/edit", cluster, nil)
 	if err != nil {
@@ -167,7 +167,7 @@ func (a ClustersAPI) waitForClusterStatus(clusterID string, desired ClusterState
 	// nolint should be a bigger context-aware refactor
 	return result, resource.RetryContext(a.context, a.defaultTimeout(), func() *resource.RetryError {
 		clusterInfo, err := a.Get(clusterID)
-		if ae, ok := err.(common.APIError); ok && ae.IsMissing() {
+		if common.IsMissing(err) {
 			log.Printf("[INFO] Cluster %s not found. Retrying", clusterID)
 			return resource.RetryableError(err)
 		}
@@ -311,7 +311,7 @@ func (a ClustersAPI) GetOrCreateRunningCluster(name string, custom ...Cluster) (
 	defer getOrCreateClusterMutex.Unlock()
 
 	if len(custom) > 1 {
-		err = fmt.Errorf("You can only specify 1 custom cluster conf, not %d", len(custom))
+		err = fmt.Errorf("you can only specify 1 custom cluster conf, not %d", len(custom))
 		return
 	}
 
@@ -363,12 +363,16 @@ func (a ClustersAPI) GetOrCreateRunningCluster(name string, custom ...Cluster) (
 
 // NodeTypeRequest is a wrapper for local filtering of node types
 type NodeTypeRequest struct {
-	MinMemoryGB int32  `json:"min_memory_gb,omitempty"`
-	GBPerCore   int32  `json:"gb_per_core,omitempty"`
-	MinCores    int32  `json:"min_cores,omitempty"`
-	MinGPUs     int32  `json:"min_gpus,omitempty"`
-	LocalDisk   bool   `json:"local_disk,omitempty"`
-	Category    string `json:"category,omitempty"`
+	MinMemoryGB           int32  `json:"min_memory_gb,omitempty"`
+	GBPerCore             int32  `json:"gb_per_core,omitempty"`
+	MinCores              int32  `json:"min_cores,omitempty"`
+	MinGPUs               int32  `json:"min_gpus,omitempty"`
+	LocalDisk             bool   `json:"local_disk,omitempty"`
+	Category              string `json:"category,omitempty"`
+	PhotonWorkerCapable   bool   `json:"photon_worker_capable,omitempty"`
+	PhotonDriverCapable   bool   `json:"photon_driver_capable,omitempty"`
+	IsIOCacheEnabled      bool   `json:"is_io_cache_enabled,omitempty"`
+	SupportPortForwarding bool   `json:"support_port_forwarding,omitempty"`
 }
 
 func defaultSmallestNodeType(a ClustersAPI) string {
@@ -411,6 +415,18 @@ func (a ClustersAPI) GetSmallestNodeType(r NodeTypeRequest) string {
 		if r.Category != "" && nt.Category != r.Category {
 			continue
 		}
+		if r.IsIOCacheEnabled && nt.IsIOCacheEnabled != r.IsIOCacheEnabled {
+			continue
+		}
+		if r.SupportPortForwarding && nt.SupportPortForwarding != r.SupportPortForwarding {
+			continue
+		}
+		if r.PhotonDriverCapable && nt.PhotonDriverCapable != r.PhotonDriverCapable {
+			continue
+		}
+		if r.PhotonWorkerCapable && nt.PhotonWorkerCapable != r.PhotonWorkerCapable {
+			continue
+		}
 		return nt.NodeTypeID
 	}
 	return defaultSmallestNodeType(a)
@@ -446,12 +462,12 @@ func (sparkVersions SparkVersionsList) LatestSparkVersion(req SparkVersionReques
 		}
 	}
 	if len(versions) < 1 {
-		return "", fmt.Errorf("Spark versions query returned no results. Please change your search criteria and try again")
+		return "", fmt.Errorf("spark versions query returned no results. Please change your search criteria and try again")
 	} else if len(versions) > 1 {
 		if req.Latest {
 			sort.Sort(sort.Reverse(sort.StringSlice(versions)))
 		} else {
-			return "", fmt.Errorf("Spark versions query returned multiple results. Please change your search criteria and try again")
+			return "", fmt.Errorf("spark versions query returned multiple results. Please change your search criteria and try again")
 		}
 	}
 

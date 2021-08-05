@@ -248,6 +248,8 @@ type NodeType struct {
 	DisplayOrder          int32                         `json:"display_order,omitempty"`
 	NodeInfo              *ClusterCloudProviderNodeInfo `json:"node_info,omitempty"`
 	NodeInstanceType      *NodeInstanceType             `json:"node_instance_type,omitempty"`
+	PhotonWorkerCapable   bool                          `json:"photon_worker_capable,omitempty"`
+	PhotonDriverCapable   bool                          `json:"photon_driver_capable,omitempty"`
 }
 
 // DockerBasicAuth contains the auth information when fetching containers
@@ -274,8 +276,9 @@ type Cluster struct {
 	EnableLocalDiskEncryption bool       `json:"enable_local_disk_encryption,omitempty"`
 
 	NodeTypeID             string           `json:"node_type_id,omitempty" tf:"group:node_type,computed"`
-	DriverNodeTypeID       string           `json:"driver_node_type_id,omitempty" tf:"conflicts:instance_pool_id,computed"`
+	DriverNodeTypeID       string           `json:"driver_node_type_id,omitempty" tf:"group:node_type,computed"`
 	InstancePoolID         string           `json:"instance_pool_id,omitempty" tf:"group:node_type"`
+	DriverInstancePoolID   string           `json:"driver_instance_pool_id,omitempty" tf:"group:node_type,computed"`
 	PolicyID               string           `json:"policy_id,omitempty"`
 	AwsAttributes          *AwsAttributes   `json:"aws_attributes,omitempty" tf:"conflicts:instance_pool_id"`
 	AzureAttributes        *AzureAttributes `json:"azure_attributes,omitempty" tf:"conflicts:instance_pool_id"`
@@ -327,6 +330,7 @@ type ClusterInfo struct {
 	EnableElasticDisk         bool               `json:"enable_elastic_disk,omitempty"`
 	EnableLocalDiskEncryption bool               `json:"enable_local_disk_encryption,omitempty"`
 	InstancePoolID            string             `json:"instance_pool_id,omitempty"`
+	DriverInstancePoolID      string             `json:"driver_instance_pool_id,omitempty" tf:"computed"`
 	PolicyID                  string             `json:"policy_id,omitempty"`
 	SingleUserName            string             `json:"single_user_name,omitempty"`
 	ClusterSource             Availability       `json:"cluster_source,omitempty"`
@@ -416,6 +420,7 @@ type InstancePool struct {
 	EnableElasticDisk                  bool                         `json:"enable_elastic_disk,omitempty"`
 	DiskSpec                           *InstancePoolDiskSpec        `json:"disk_spec,omitempty"`
 	PreloadedSparkVersions             []string                     `json:"preloaded_spark_versions,omitempty"`
+	PreloadedDockerImages              []DockerImage                `json:"preloaded_docker_images,omitempty" tf:"slice_set,alias:preloaded_docker_image"`
 }
 
 // InstancePoolStats contains the stats on a given pool
@@ -443,6 +448,7 @@ type InstancePoolAndStats struct {
 	PreloadedSparkVersions             []string                     `json:"preloaded_spark_versions,omitempty"`
 	State                              string                       `json:"state,omitempty"`
 	Stats                              *InstancePoolStats           `json:"stats,omitempty"`
+	PreloadedDockerImages              []DockerImage                `json:"preloaded_docker_images,omitempty" tf:"slice_set,alias:preloaded_docker_image"`
 }
 
 // InstancePoolList shows list of instance pools
@@ -569,7 +575,9 @@ func (j Job) ID() string {
 
 // RunParameters ...
 type RunParameters struct {
-	// TODO: if we add job_id, it can be also a request to RunNow
+	// a shortcut field to reuse this type for RunNow
+	JobID int64 `json:"job_id,omitempty"`
+
 	NotebookParams    map[string]string `json:"notebook_params,omitempty"`
 	JarParams         []string          `json:"jar_params,omitempty"`
 	PythonParams      []string          `json:"python_params,omitempty"`

@@ -74,6 +74,7 @@ module "marketing_compute_policy" {
     policy_overrides = {
         // only marketing guys will benefit from delta cache this way
         "spark_conf.spark.databricks.io.cache.enabled": {
+            "type": "fixed",
             "value": "true"
         },
     }

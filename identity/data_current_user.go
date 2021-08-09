@@ -24,6 +24,10 @@ func DataSourceCurrentUser() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"repos": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"alphanumeric": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -37,6 +41,7 @@ func DataSourceCurrentUser() *schema.Resource {
 			}
 			d.Set("user_name", me.UserName)
 			d.Set("home", fmt.Sprintf("/Users/%s", me.UserName))
+			d.Set("repos", fmt.Sprintf("/Repos/%s", me.UserName))
 			splits := strings.Split(me.UserName, "@")
 			norm := nonAlphanumeric.ReplaceAllLiteralString(splits[0], "_")
 			norm = strings.ToLower(norm)

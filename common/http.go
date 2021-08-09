@@ -487,10 +487,10 @@ func (c *DatabricksClient) genericQuery(ctx context.Context, method, requestURL 
 
 func makeRequestBody(method string, requestURL *string, data interface{}, marshalJSON bool) ([]byte, error) {
 	var requestBody []byte
+	if data == nil && (method == "DELETE" || method == "GET") {
+		return requestBody, nil
+	}
 	if method == "GET" {
-		if data == nil {
-			return requestBody, nil
-		}
 		inputVal := reflect.ValueOf(data)
 		inputType := reflect.TypeOf(data)
 		switch inputType.Kind() {

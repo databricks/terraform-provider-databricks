@@ -29,5 +29,6 @@ func TestDataSourceCurrentUser(t *testing.T) {
 	assert.Equal(t, "123", d.Id())
 	assert.Equal(t, d.Get("user_name"), "mr.test@example.com")
 	assert.Equal(t, d.Get("home"), "/Users/mr.test@example.com")
+	assert.Equal(t, d.Get("repos"), "/Repos/mr.test@example.com")
 	assert.Equal(t, d.Get("alphanumeric"), "mr_test")
 }

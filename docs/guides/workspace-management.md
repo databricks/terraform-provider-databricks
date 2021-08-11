@@ -27,7 +27,7 @@ data "databricks_node_type" "smallest" {
 
 ## Part 1: Standard functionality
 
-These resources do not require administrative priviliges. More documentation is available at dedicated pages for [databricks_secret_scope](../resources/secret_scope.md), [databricks_token](../resources/token.md), [databricks_secret](../resources/secret.md), [databricks_notebook](../data-sources/notebook.md), [databricks_job](../resources/job.md), [databricks_cluster](../resources/cluster.md), [databricks_cluster_policy](../resources/cluster_policy.md), [databricks_instance_pool](../resources/instance_pool.md).
+These resources do not require administrative privileges. More documentation is available at dedicated pages for [databricks_secret_scope](../resources/secret_scope.md), [databricks_token](../resources/token.md), [databricks_secret](../resources/secret.md), [databricks_notebook](../data-sources/notebook.md), [databricks_job](../resources/job.md), [databricks_cluster](../resources/cluster.md), [databricks_cluster_policy](../resources/cluster_policy.md), [databricks_instance_pool](../resources/instance_pool.md).
 
 ```hcl
 resource "databricks_secret_scope" "this" {

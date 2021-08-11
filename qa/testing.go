@@ -526,7 +526,7 @@ func FirstKeyValue(t *testing.T, str, key string) string {
 
 // AssertErrorStartsWith ..
 func AssertErrorStartsWith(t *testing.T, err error, message string) bool {
-	return assert.True(t, strings.HasPrefix(err.Error(), message), err.Error())
+	return err != nil && assert.True(t, strings.HasPrefix(err.Error(), message), err.Error())
 }
 
 // TestCreateTempFile  ...

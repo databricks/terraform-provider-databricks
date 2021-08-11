@@ -85,6 +85,7 @@ func DatabricksProvider() *schema.Provider {
 			"databricks_directory":          workspace.ResourceDirectory(),
 			"databricks_global_init_script": workspace.ResourceGlobalInitScript(),
 			"databricks_notebook":           workspace.ResourceNotebook(),
+			"databricks_repo":               workspace.ResourceRepo(),
 			"databricks_workspace_conf":     workspace.ResourceWorkspaceConf(),
 		},
 		Schema: map[string]*schema.Schema{

@@ -267,6 +267,43 @@ resource "databricks_permissions" "folder_usage" {
 }
 ```
 
+## Repos usage
+
+Valid [permission levels](https://docs.databricks.com/security/access-control/workspace-acl.html) for [databricks_repo](repo.md) are: `CAN_READ`, `CAN_RUN`, `CAN_EDIT`, and `CAN_MANAGE`.
+
+```hcl
+resource "databricks_group" "auto" {
+    display_name = "Automation"
+}
+
+resource "databricks_group" "eng" {
+    display_name = "Engineering"
+}
+
+resource "databricks_repo" "this" {
+  url = "https://github.com/user/demo.git"
+}
+
+resource "databricks_permissions" "notebook_usage" {
+    repo_id = databricks_repo.this.id
+
+    access_control {
+        group_name = "users"
+        permission_level = "CAN_READ"
+    }
+
+    access_control {
+        group_name = databricks_group.auto.display_name
+        permission_level = "CAN_RUN"
+    }
+
+    access_control {
+        group_name = databricks_group.eng.display_name
+        permission_level = "CAN_EDIT"
+    }
+}
+```
+
 ## Passwords usage
 
 By default on AWS deployments, all admin users can sign in to Databricks using either SSO or their username and password, and all API users can authenticate to the Databricks REST APIs using their username and password. As an admin, you [can limit](https://docs.databricks.com/administration-guide/users-groups/single-sign-on/index.html#optional-configure-password-access-control) admin users’ and API users’ ability to authenticate with their username and password by configuring `CAN_USE` permissions using password access control.

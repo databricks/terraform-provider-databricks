@@ -43,6 +43,7 @@
 | [databricks_obo_token](docs/resources/obo_token.md)
 | [databricks_permissions](docs/resources/permissions.md)
 | [databricks_pipeline](docs/resources/pipeline.md)
+| [databricks_repo](docs/resources/repo.md)
 | [databricks_secret](docs/resources/secret.md)
 | [databricks_secret_acl](docs/resources/secret_acl.md)
 | [databricks_secret_scope](docs/resources/secret_scope.md)

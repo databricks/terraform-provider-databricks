@@ -877,7 +877,7 @@ var resourcesMap map[string]importable = map[string]importable{
 				if repo.Url != "" {
 					ic.Emit(&resource{
 						Resource: "databricks_repo",
-						ID:       fmt.Sprintf("%d", repo.Id),
+						ID:       fmt.Sprintf("%d", repo.ID),
 					})
 				}
 				log.Printf("[INFO] Scanned %d of %d repos", offset+1, len(repoList))

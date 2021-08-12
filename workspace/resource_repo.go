@@ -8,6 +8,7 @@ import (
 
 	"github.com/databrickslabs/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 // ReposAPI exposes the Repos API
@@ -21,14 +22,19 @@ func NewReposAPI(ctx context.Context, m interface{}) ReposAPI {
 	return ReposAPI{m.(*common.DatabricksClient), ctx}
 }
 
-// ReposResponse provides information about given repository
-type ReposResponse struct {
-	Id           int64  `json:"id"`
+// ReposInformation provides information about given repository
+type ReposInformation struct {
+	ID           int64  `json:"id"`
 	Url          string `json:"url"`
-	Provider     string `json:"provider"`
-	Path         string `json:"path"`
-	Branch       string `json:"branch"`
-	HeadCommitId string `json:"head_commit_id"`
+	Provider     string `json:"provider,omitempty" tf:"computed,alias:git_provider"`
+	Path         string `json:"path,omitempty" tf:"computed"`
+	Branch       string `json:"branch,omitempty" tf:"computed"`
+	HeadCommitID string `json:"head_commit_id,omitempty" tf:"computed,alias:commit_hash"`
+}
+
+// ID returns job id as string
+func (r ReposInformation) RepoID() string {
+	return fmt.Sprintf("%d", r.ID)
 }
 
 type createRequest struct {
@@ -37,8 +43,15 @@ type createRequest struct {
 	Path     string `json:"path,omitempty"`
 }
 
-func (a ReposAPI) Create(r createRequest) (ReposResponse, error) {
-	var resp ReposResponse
+func (a ReposAPI) Create(r createRequest) (ReposInformation, error) {
+	var resp ReposInformation
+	if r.Provider == "" { // trying to infer Git Provider from the URL
+		r.Provider = getProviderFromUrl(r.Url)
+	}
+	if r.Provider == "" {
+		return resp, fmt.Errorf("git_provider isn't specified and we can't detect provider from URL")
+	}
+
 	err := a.client.Post(a.context, "/repos", r, &resp)
 	return resp, err
 }
@@ -48,26 +61,38 @@ func (a ReposAPI) Delete(id string) error {
 }
 
 func (a ReposAPI) Update(id string, r map[string]string) error {
+	if len(r) == 0 {
+		return nil
+	}
+	// TODO: update may change ONE OF (url AND provider (optional)), (path), or (branch OR tag).
+	// for URL/provider force re-create as there are limits on what could be done for changing URL/provider
+	if path, ok := r["path"]; ok {
+		err := a.client.Patch(a.context, fmt.Sprintf("/repos/%s", id), map[string]string{"path": path})
+		if err != nil {
+			return err
+		}
+		delete(r, "path")
+	}
 	return a.client.Patch(a.context, fmt.Sprintf("/repos/%s", id), r)
 }
 
-func (a ReposAPI) Read(id string) (ReposResponse, error) {
-	var resp ReposResponse
+func (a ReposAPI) Read(id string) (ReposInformation, error) {
+	var resp ReposInformation
 	err := a.client.Get(a.context, fmt.Sprintf("/repos/%s", id), nil, &resp)
 	return resp, err
 }
 
 type ReposListResponse struct {
-	NextPageToken string          `json:"next_page_token,omitempty"`
-	Repos         []ReposResponse `json:"repos"`
+	NextPageToken string             `json:"next_page_token,omitempty"`
+	Repos         []ReposInformation `json:"repos"`
 }
 
-func (a ReposAPI) List(prefix string) ([]ReposResponse, error) {
+func (a ReposAPI) List(prefix string) ([]ReposInformation, error) {
 	req := map[string]string{}
 	if prefix != "" {
 		req["path_prefix"] = prefix
 	}
-	reposList := []ReposResponse{}
+	reposList := []ReposInformation{}
 	for {
 		var resp ReposListResponse
 		err := a.client.Get(a.context, "/repos", req, &resp)
@@ -83,7 +108,7 @@ func (a ReposAPI) List(prefix string) ([]ReposResponse, error) {
 	return reposList, nil
 }
 
-func (a ReposAPI) ListAll() ([]ReposResponse, error) {
+func (a ReposAPI) ListAll() ([]ReposInformation, error) {
 	return a.List("")
 }
 
@@ -104,72 +129,48 @@ func getProviderFromUrl(uri string) string {
 }
 
 func ResourceRepo() *schema.Resource {
-	s := map[string]*schema.Schema{
-		"url": {
-			Type:     schema.TypeString,
-			Required: true,
-			ForceNew: true,
-		},
-		"git_provider": {
-			Type:     schema.TypeString,
-			Optional: true,
-			Computed: true,
-			ForceNew: true,
-			DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-				return strings.EqualFold(old, new)
-			},
-		},
-		"path": {
-			Type:     schema.TypeString,
-			Optional: true,
-			Computed: true,
-			ForceNew: true, // TODO: remove after the Update API will support changing the path
-		},
-		"branch": {
-			Type:          schema.TypeString,
-			Optional:      true,
-			Computed:      true,
-			ConflictsWith: []string{"tag"},
-		},
-		"tag": {
+	s := common.StructToSchema(ReposInformation{}, func(s map[string]*schema.Schema) map[string]*schema.Schema {
+		s["url"].ForceNew = true
+		s["url"].ValidateFunc = validation.IsURLWithScheme([]string{"https", "http"})
+		s["git_provider"].ForceNew = true
+		s["git_provider"].DiffSuppressFunc = func(k, old, new string, d *schema.ResourceData) bool {
+			return strings.EqualFold(old, new)
+		}
+		s["path"].ForceNew = true // TODO: remove after the Update API will support changing the path
+		s["branch"].ConflictsWith = []string{"tag"}
+		s["branch"].ValidateFunc = validation.StringIsNotWhiteSpace
+
+		s["tag"] = &schema.Schema{
 			Type:          schema.TypeString,
 			Optional:      true,
 			ConflictsWith: []string{"branch"},
-		},
-		"commit_hash": {
-			Type:     schema.TypeString,
-			Computed: true,
-		},
-	}
+			ValidateFunc:  validation.StringIsNotWhiteSpace,
+		}
+
+		delete(s, "id")
+		return s
+	})
+
 	return common.Resource{
 		Schema:        s,
 		SchemaVersion: 1,
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			reposAPI := NewReposAPI(ctx, c)
-			url := d.Get("url").(string)
-			provider := d.Get("git_provider").(string)
-			if provider == "" { // trying to infer Git Provider from the URL
-				provider = getProviderFromUrl(url)
-			}
-			if provider == "" {
-				return fmt.Errorf("git_provider isn't specified and we can't detect provider from URL")
-			}
-			req := createRequest{Path: d.Get("path").(string), Provider: provider, Url: url}
+			req := createRequest{Path: d.Get("path").(string), Provider: d.Get("git_provider").(string), Url: d.Get("url").(string)}
 			resp, err := reposAPI.Create(req)
 			if err != nil {
 				return err
 			}
-			d.SetId(fmt.Sprintf("%d", resp.Id))
+			d.SetId(resp.RepoID())
 			branch := d.Get("branch").(string)
 			tag := d.Get("tag").(string)
+			updateReq := map[string]string{}
 			if tag != "" {
-				d.Set("branch", "")
-				return reposAPI.Update(d.Id(), map[string]string{"tag": tag})
+				updateReq["tag"] = tag
 			} else if branch != "" && branch != resp.Branch {
-				return reposAPI.Update(d.Id(), map[string]string{"branch": branch})
+				updateReq["branch"] = branch
 			}
-
-			return nil
+			return reposAPI.Update(d.Id(), updateReq)
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			reposAPI := NewReposAPI(ctx, c)
@@ -177,37 +178,22 @@ func ResourceRepo() *schema.Resource {
 			if err != nil {
 				return err
 			}
-			d.SetId(fmt.Sprintf("%d", resp.Id))
-			d.Set("url", resp.Url)
-			d.Set("path", resp.Path)
-			d.Set("git_provider", resp.Provider)
-			d.Set("commit_hash", resp.HeadCommitId)
-			if d.Get("branch").(string) == "" {
-				d.Set("branch", resp.Branch)
-			}
-			return nil
+			return common.StructToData(resp, s, d)
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			// TODO: update may change ONE OF (url AND provider (optional)), (path), or (branch OR tag).
-			// for URL/provider force re-create as there are limits on what could be done for changing URL/provider
 			reposAPI := NewReposAPI(ctx, c)
+			req := map[string]string{}
 			// Not working yet, wait until API is ready
 			// if d.HasChange("path") {
-			// 	err := reposAPI.Update(d.Id(), map[string]string{"path": d.Get("path").(string)})
-			// 	if err != nil {
-			// 		return err
-			// 	}
+			// 	req["path"] = d.Get("path").(string)
 			// }
-			if d.HasChange("branch") || d.HasChange("tag") {
-				branch := d.Get("branch").(string)
-				tag := d.Get("tag").(string)
-				if tag != "" {
-					d.Set("branch", "")
-					return reposAPI.Update(d.Id(), map[string]string{"tag": tag})
-				}
-				return reposAPI.Update(d.Id(), map[string]string{"branch": branch})
+			if d.HasChange("tag") {
+				req["tag"] = d.Get("tag").(string)
+				d.Set("branch", "")
+			} else if d.HasChange("branch") {
+				req["branch"] = d.Get("branch").(string)
 			}
-			return nil
+			return reposAPI.Update(d.Id(), req)
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			return NewReposAPI(ctx, c).Delete(d.Id())

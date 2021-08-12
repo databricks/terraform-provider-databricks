@@ -19,6 +19,7 @@ Compute resources
 * Speedup job & cluster startup with [databricks_instance_pool](resources/instance_pool.md)
 * Customize clusters with [databricks_global_init_script](resources/global_init_script.md)
 * Manage few [databricks_notebook](resources/notebook.md), and even [list them](data-sources/notebook_paths.md)
+* Manage [databricks_repo](resources/repo.md)
 
 Storage
 * Manage JAR, Wheel & Egg libraries through [databricks_dbfs_file](resources/dbfs_file.md)

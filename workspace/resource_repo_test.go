@@ -1,11 +1,13 @@
 package workspace
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/databrickslabs/terraform-provider-databricks/common"
 
@@ -328,4 +330,76 @@ func TestResourceReposUpdateSwitchToBranch(t *testing.T) {
 	}.Apply(t)
 	assert.NoError(t, err, err)
 	assert.Equal(t, "releases", d.Get("branch"))
+}
+
+func TestReposListAll(t *testing.T) {
+	resp := ReposResponse{
+		Id:           121232342,
+		Url:          "https://github.com/user/test.git",
+		Provider:     "gitHub",
+		Path:         "/Repos/user@domain/test",
+		HeadCommitId: "1124323423abc23424",
+		Branch:       "releases",
+	}
+
+	client, server, err := qa.HttpFixtureClient(t, []qa.HTTPFixture{
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/repos?",
+			Response: ReposListResponse{
+				NextPageToken: "12312423442343242343",
+				Repos: []ReposResponse{
+					resp,
+				},
+			},
+		},
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/repos?next_page_token=12312423442343242343",
+			Response: ReposListResponse{
+				Repos: []ReposResponse{
+					resp,
+				},
+			},
+		},
+	})
+	defer server.Close()
+	require.NoError(t, err)
+
+	ctx := context.Background()
+	reposList, err := NewReposAPI(ctx, client).ListAll()
+	require.NoError(t, err)
+	assert.Equal(t, len(reposList), 2)
+	assert.Equal(t, resp.Branch, reposList[1].Branch)
+}
+
+func TestReposListWithPrefix(t *testing.T) {
+	resp := ReposResponse{
+		Id:           121232342,
+		Url:          "https://github.com/user/test.git",
+		Provider:     "gitHub",
+		Path:         "/Repos/user@domain/test",
+		HeadCommitId: "1124323423abc23424",
+		Branch:       "releases",
+	}
+
+	client, server, err := qa.HttpFixtureClient(t, []qa.HTTPFixture{
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/repos?path_prefix=%2FRepos%2Fabc",
+			Response: ReposListResponse{
+				Repos: []ReposResponse{
+					resp,
+				},
+			},
+		},
+	})
+	defer server.Close()
+	require.NoError(t, err)
+
+	ctx := context.Background()
+	reposList, err := NewReposAPI(ctx, client).List("/Repos/abc")
+	require.NoError(t, err)
+	assert.Equal(t, len(reposList), 1)
+	assert.Equal(t, resp.Branch, reposList[0].Branch)
 }

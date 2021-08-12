@@ -1,0 +1,30 @@
+{
+  "access_control_list": [
+    {
+      "all_permissions": [
+        {
+          "inherited": true,
+          "inherited_from_object": [
+            "/directories/167168545015994"
+          ],
+          "permission_level": "CAN_MANAGE"
+        }
+      ],
+      "user_name": "test@test.com"
+    },
+    {
+      "all_permissions": [
+        {
+          "inherited": true,
+          "inherited_from_object": [
+            "/directories/"
+          ],
+          "permission_level": "CAN_MANAGE"
+        }
+      ],
+      "group_name": "admins"
+    }
+  ],
+  "object_id": "/repos/121232342",
+  "object_type": "repo"
+}

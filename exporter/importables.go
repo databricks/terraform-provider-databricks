@@ -817,7 +817,7 @@ var resourcesMap map[string]importable = map[string]importable{
 					Resource: "databricks_global_init_script",
 					ID:       gis.ScriptID,
 				})
-				log.Printf("[INFO] Scanned %d of %d clusters", offset+1, len(globalInitScripts))
+				log.Printf("[INFO] Scanned %d of %d global init scripts", offset+1, len(globalInitScripts))
 			}
 			return nil
 		},
@@ -853,6 +853,59 @@ var resourcesMap map[string]importable = map[string]importable{
 				&hclwrite.Token{Type: hclsyntax.TokenQuotedLit, Bytes: []byte(relativeFile)},
 				&hclwrite.Token{Type: hclsyntax.TokenCQuote, Bytes: []byte{'"'}},
 			})
+			return nil
+		},
+	},
+	"databricks_repo": {
+		Service: "repos",
+		Name: func(d *schema.ResourceData) string {
+			name := d.Get("path").(string)
+			if name == "" {
+				return d.Id()
+			} else {
+				name = strings.TrimPrefix(name, "/")
+			}
+			re := regexp.MustCompile(`[^0-9A-Za-z_]`)
+			return re.ReplaceAllString(name, "_")
+		},
+		List: func(ic *importContext) error {
+			repoList, err := workspace.NewReposAPI(ic.Context, ic.Client).ListAll()
+			if err != nil {
+				return err
+			}
+			for offset, repo := range repoList {
+				if repo.Url != "" {
+					ic.Emit(&resource{
+						Resource: "databricks_repo",
+						ID:       fmt.Sprintf("%d", repo.Id),
+					})
+				}
+				log.Printf("[INFO] Scanned %d of %d repos", offset+1, len(repoList))
+			}
+			return nil
+		},
+		Import: func(ic *importContext, r *resource) error {
+			if ic.meAdmin {
+				ic.Emit(&resource{
+					Resource: "databricks_permissions",
+					ID:       fmt.Sprintf("/repos/%s", r.ID),
+					Name:     "repo_" + ic.Importables["databricks_repo"].Name(r.Data),
+				})
+			}
+			return nil
+		},
+		Body: func(ic *importContext, body *hclwrite.Body, r *resource) error {
+			b := body.AppendNewBlock("resource", []string{r.Resource, r.Name}).Body()
+			b.SetAttributeValue("url", cty.StringVal(r.Data.Get("url").(string)))
+			b.SetAttributeValue("git_provider", cty.StringVal(r.Data.Get("git_provider").(string)))
+			t := r.Data.Get("branch").(string)
+			if t != "" {
+				b.SetAttributeValue("branch", cty.StringVal(t))
+			}
+			t = r.Data.Get("path").(string)
+			if t != "" {
+				b.SetAttributeValue("path", cty.StringVal(t))
+			}
 			return nil
 		},
 	},

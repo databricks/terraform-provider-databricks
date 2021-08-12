@@ -25,7 +25,7 @@ func TestGetProviderFromUrl(t *testing.T) {
 
 func TestResourceRepoRead(t *testing.T) {
 	repoID := 48155820875912
-	repoIdStr := fmt.Sprintf("%d", repoID)
+	repoIDStr := fmt.Sprintf("%d", repoID)
 	url := "https://user@github.com/user/repo.git"
 	provider := "gitHub"
 	branch := "main"
@@ -35,12 +35,12 @@ func TestResourceRepoRead(t *testing.T) {
 			{
 				Method:   http.MethodGet,
 				Resource: fmt.Sprintf("/api/2.0/repos/%d", repoID),
-				Response: ReposResponse{
-					Id:           int64(repoID),
+				Response: ReposInformation{
+					ID:           int64(repoID),
 					Url:          url,
 					Provider:     provider,
 					Branch:       branch,
-					HeadCommitId: "7e0847ede61f07adede22e2bcce6050216489171",
+					HeadCommitID: "7e0847ede61f07adede22e2bcce6050216489171",
 					Path:         path,
 				},
 			},
@@ -48,10 +48,10 @@ func TestResourceRepoRead(t *testing.T) {
 		Resource: ResourceRepo(),
 		Read:     true,
 		New:      true,
-		ID:       repoIdStr,
+		ID:       repoIDStr,
 	}.Apply(t)
 	assert.NoError(t, err, err)
-	assert.Equal(t, repoIdStr, d.Id())
+	assert.Equal(t, repoIDStr, d.Id())
 	assert.Equal(t, path, d.Get("path"))
 	assert.Equal(t, branch, d.Get("branch"))
 	assert.Equal(t, provider, d.Get("git_provider"))
@@ -60,12 +60,12 @@ func TestResourceRepoRead(t *testing.T) {
 }
 
 func TestResourceRepoRead_NotFound(t *testing.T) {
-	repoID := 48155820875912
+	repoID := "48155820875912"
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   http.MethodGet,
-				Resource: fmt.Sprintf("/api/2.0/repos/%d", repoID),
+				Resource: fmt.Sprintf("/api/2.0/repos/%s", repoID),
 				Response: common.APIErrorBody{
 					ErrorCode: "RESOURCE_DOES_NOT_EXIST",
 					Message:   "Repo could not be found",
@@ -76,37 +76,36 @@ func TestResourceRepoRead_NotFound(t *testing.T) {
 		Resource: ResourceRepo(),
 		Read:     true,
 		Removed:  true,
-		ID:       fmt.Sprintf("%d", repoID),
+		ID:       repoID,
 	}.Apply(t)
 }
 
 func TestResourceRepoDelete(t *testing.T) {
-	repoID := 48155820875912
-	repoIdStr := fmt.Sprintf("%d", repoID)
+	repoID := "48155820875912"
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   http.MethodDelete,
-				Resource: fmt.Sprintf("/api/2.0/repos/%d", repoID),
+				Resource: fmt.Sprintf("/api/2.0/repos/%s", repoID),
 				Status:   http.StatusOK,
 			},
 		},
 		Resource: ResourceRepo(),
 		Delete:   true,
-		ID:       repoIdStr,
+		ID:       repoID,
 	}.Apply(t)
 	assert.NoError(t, err, err)
-	assert.Equal(t, repoIdStr, d.Id())
+	assert.Equal(t, repoID, d.Id())
 }
 
 func TestResourceRepoCreateNoBranch(t *testing.T) {
-	resp := ReposResponse{
-		Id:           121232342,
+	resp := ReposInformation{
+		ID:           121232342,
 		Url:          "https://github.com/user/test.git",
 		Provider:     "gitHub",
 		Branch:       "main",
 		Path:         "/Repos/user@domain/test",
-		HeadCommitId: "1124323423abc23424",
+		HeadCommitID: "1124323423abc23424",
 	}
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
@@ -132,21 +131,21 @@ func TestResourceRepoCreateNoBranch(t *testing.T) {
 		Create: true,
 	}.Apply(t)
 	assert.NoError(t, err, err)
-	assert.Equal(t, "121232342", d.Id())
+	assert.Equal(t, resp.RepoID(), d.Id())
 	assert.Equal(t, resp.Branch, d.Get("branch"))
 	assert.Equal(t, resp.Provider, d.Get("git_provider"))
 	assert.Equal(t, resp.Path, d.Get("path"))
-	assert.Equal(t, resp.HeadCommitId, d.Get("commit_hash"))
+	assert.Equal(t, resp.HeadCommitID, d.Get("commit_hash"))
 }
 
 func TestResourceRepoCreateWithBranch(t *testing.T) {
-	resp := ReposResponse{
-		Id:           121232342,
+	resp := ReposInformation{
+		ID:           121232342,
 		Url:          "https://github.com/user/test.git",
 		Provider:     "gitHub",
 		Branch:       "main",
 		Path:         "/Repos/user@domain/test",
-		HeadCommitId: "1124323423abc23424",
+		HeadCommitID: "1124323423abc23424",
 	}
 	respPatch := resp
 	respPatch.Branch = "releases"
@@ -181,20 +180,20 @@ func TestResourceRepoCreateWithBranch(t *testing.T) {
 		Create: true,
 	}.Apply(t)
 	assert.NoError(t, err, err)
-	assert.Equal(t, "121232342", d.Id())
+	assert.Equal(t, resp.RepoID(), d.Id())
 	assert.Equal(t, respPatch.Branch, d.Get("branch"))
 	assert.Equal(t, resp.Provider, d.Get("git_provider"))
 	assert.Equal(t, resp.Path, d.Get("path"))
 }
 
 func TestResourceRepoCreateWithTag(t *testing.T) {
-	resp := ReposResponse{
-		Id:           121232342,
+	resp := ReposInformation{
+		ID:           121232342,
 		Url:          "https://github.com/user/test.git",
 		Provider:     "gitHub",
 		Branch:       "main",
 		Path:         "/Repos/user@domain/test",
-		HeadCommitId: "1124323423abc23424",
+		HeadCommitID: "1124323423abc23424",
 	}
 	respPatch := resp
 	respPatch.Branch = ""
@@ -229,7 +228,7 @@ func TestResourceRepoCreateWithTag(t *testing.T) {
 		Create: true,
 	}.Apply(t)
 	assert.NoError(t, err, err)
-	assert.Equal(t, "121232342", d.Id())
+	assert.Equal(t, resp.RepoID(), d.Id())
 	assert.Equal(t, respPatch.Branch, d.Get("branch"))
 	assert.Equal(t, resp.Provider, d.Get("git_provider"))
 	assert.Equal(t, resp.Path, d.Get("path"))
@@ -247,12 +246,12 @@ func TestResourceRepoCreateError(t *testing.T) {
 }
 
 func TestResourceReposUpdateSwitchToTag(t *testing.T) {
-	resp := ReposResponse{
-		Id:           121232342,
+	resp := ReposInformation{
+		ID:           121232342,
 		Url:          "https://github.com/user/test.git",
 		Provider:     "gitHub",
 		Path:         "/Repos/user@domain/test",
-		HeadCommitId: "1124323423abc23424",
+		HeadCommitID: "1124323423abc23424",
 	}
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
@@ -290,12 +289,12 @@ func TestResourceReposUpdateSwitchToTag(t *testing.T) {
 }
 
 func TestResourceReposUpdateSwitchToBranch(t *testing.T) {
-	resp := ReposResponse{
-		Id:           121232342,
+	resp := ReposInformation{
+		ID:           121232342,
 		Url:          "https://github.com/user/test.git",
 		Provider:     "gitHub",
 		Path:         "/Repos/user@domain/test",
-		HeadCommitId: "1124323423abc23424",
+		HeadCommitID: "1124323423abc23424",
 		Branch:       "releases",
 	}
 	d, err := qa.ResourceFixture{
@@ -333,12 +332,12 @@ func TestResourceReposUpdateSwitchToBranch(t *testing.T) {
 }
 
 func TestReposListAll(t *testing.T) {
-	resp := ReposResponse{
-		Id:           121232342,
+	resp := ReposInformation{
+		ID:           121232342,
 		Url:          "https://github.com/user/test.git",
 		Provider:     "gitHub",
 		Path:         "/Repos/user@domain/test",
-		HeadCommitId: "1124323423abc23424",
+		HeadCommitID: "1124323423abc23424",
 		Branch:       "releases",
 	}
 
@@ -348,7 +347,7 @@ func TestReposListAll(t *testing.T) {
 			Resource: "/api/2.0/repos?",
 			Response: ReposListResponse{
 				NextPageToken: "12312423442343242343",
-				Repos: []ReposResponse{
+				Repos: []ReposInformation{
 					resp,
 				},
 			},
@@ -357,7 +356,7 @@ func TestReposListAll(t *testing.T) {
 			Method:   "GET",
 			Resource: "/api/2.0/repos?next_page_token=12312423442343242343",
 			Response: ReposListResponse{
-				Repos: []ReposResponse{
+				Repos: []ReposInformation{
 					resp,
 				},
 			},
@@ -374,12 +373,12 @@ func TestReposListAll(t *testing.T) {
 }
 
 func TestReposListWithPrefix(t *testing.T) {
-	resp := ReposResponse{
-		Id:           121232342,
+	resp := ReposInformation{
+		ID:           121232342,
 		Url:          "https://github.com/user/test.git",
 		Provider:     "gitHub",
 		Path:         "/Repos/user@domain/test",
-		HeadCommitId: "1124323423abc23424",
+		HeadCommitID: "1124323423abc23424",
 		Branch:       "releases",
 	}
 
@@ -388,7 +387,7 @@ func TestReposListWithPrefix(t *testing.T) {
 			Method:   "GET",
 			Resource: "/api/2.0/repos?path_prefix=%2FRepos%2Fabc",
 			Response: ReposListResponse{
-				Repos: []ReposResponse{
+				Repos: []ReposInformation{
 					resp,
 				},
 			},

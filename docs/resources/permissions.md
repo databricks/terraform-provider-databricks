@@ -284,7 +284,7 @@ resource "databricks_repo" "this" {
   url = "https://github.com/user/demo.git"
 }
 
-resource "databricks_permissions" "notebook_usage" {
+resource "databricks_permissions" "repo_usage" {
     repo_id = databricks_repo.this.id
 
     access_control {

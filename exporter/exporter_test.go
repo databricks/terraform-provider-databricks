@@ -940,12 +940,12 @@ func TestEitherString(t *testing.T) {
 }
 
 func TestImportingRepos(t *testing.T) {
-	resp := workspace.ReposResponse{
-		Id:           121232342,
+	resp := workspace.ReposInformation{
+		ID:           121232342,
 		Url:          "https://github.com/user/test.git",
 		Provider:     "gitHub",
 		Path:         "/Repos/user@domain/test",
-		HeadCommitId: "1124323423abc23424",
+		HeadCommitID: "1124323423abc23424",
 		Branch:       "releases",
 	}
 
@@ -956,7 +956,7 @@ func TestImportingRepos(t *testing.T) {
 				Method:   "GET",
 				Resource: "/api/2.0/repos?",
 				Response: workspace.ReposListResponse{
-					Repos: []workspace.ReposResponse{
+					Repos: []workspace.ReposInformation{
 						resp,
 					},
 				},

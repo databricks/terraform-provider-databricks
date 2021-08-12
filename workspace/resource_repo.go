@@ -57,6 +57,36 @@ func (a ReposAPI) Read(id string) (ReposResponse, error) {
 	return resp, err
 }
 
+type ReposListResponse struct {
+	NextPageToken string          `json:"next_page_token,omitempty"`
+	Repos         []ReposResponse `json:"repos"`
+}
+
+func (a ReposAPI) List(prefix string) ([]ReposResponse, error) {
+	req := map[string]string{}
+	if prefix != "" {
+		req["path_prefix"] = prefix
+	}
+	reposList := []ReposResponse{}
+	for {
+		var resp ReposListResponse
+		err := a.client.Get(a.context, "/repos", req, &resp)
+		if err != nil {
+			return nil, err
+		}
+		reposList = append(reposList, resp.Repos...)
+		if resp.NextPageToken == "" {
+			break
+		}
+		req["next_page_token"] = resp.NextPageToken
+	}
+	return reposList, nil
+}
+
+func (a ReposAPI) ListAll() ([]ReposResponse, error) {
+	return a.List("")
+}
+
 var gitProvidersMap = map[string]string{
 	"github.com":    "gitHub",
 	"dev.azure.com": "azureDevOpsServices",

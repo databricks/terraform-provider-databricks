@@ -14,6 +14,7 @@ import (
 	"github.com/databrickslabs/terraform-provider-databricks/compute"
 	"github.com/databrickslabs/terraform-provider-databricks/identity"
 	"github.com/databrickslabs/terraform-provider-databricks/qa"
+	"github.com/databrickslabs/terraform-provider-databricks/workspace"
 	"github.com/hashicorp/hcl/v2/hclwrite"
 
 	"github.com/stretchr/testify/assert"
@@ -198,10 +199,18 @@ var meAdminFixture = qa.HTTPFixture{
 	},
 }
 
+var repoListFixture = qa.HTTPFixture{
+	Method:       "GET",
+	ReuseRequest: true,
+	Resource:     "/api/2.0/repos?",
+	Response:     workspace.ReposListResponse{},
+}
+
 func TestImportingUsersGroupsSecretScopes(t *testing.T) {
 	qa.HTTPFixturesApply(t,
 		[]qa.HTTPFixture{
 			meAdminFixture,
+			repoListFixture,
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/preview/scim/v2/Groups?",
@@ -354,6 +363,7 @@ func TestImportingNoResourcesError(t *testing.T) {
 	qa.HTTPFixturesApply(t,
 		[]qa.HTTPFixture{
 			meAdminFixture,
+			repoListFixture,
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/preview/scim/v2/Groups?",
@@ -404,6 +414,7 @@ func TestImportingClusters(t *testing.T) {
 	qa.HTTPFixturesApply(t,
 		[]qa.HTTPFixture{
 			meAdminFixture,
+			repoListFixture,
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/preview/scim/v2/Groups?",
@@ -552,6 +563,7 @@ func TestImportingJobs_JobList(t *testing.T) {
 	qa.HTTPFixturesApply(t,
 		[]qa.HTTPFixture{
 			meAdminFixture,
+			repoListFixture,
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/jobs/list",
@@ -768,6 +780,7 @@ func TestImportingSecrets(t *testing.T) {
 	qa.HTTPFixturesApply(t,
 		[]qa.HTTPFixture{
 			meAdminFixture,
+			repoListFixture,
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/preview/scim/v2/Groups?",
@@ -845,6 +858,7 @@ func TestImportingGlobalInitScripts(t *testing.T) {
 	qa.HTTPFixturesApply(t,
 		[]qa.HTTPFixture{
 			meAdminFixture,
+			repoListFixture,
 			{
 				Method:       "GET",
 				Resource:     "/api/2.0/global-init-scripts",
@@ -923,4 +937,51 @@ func TestEitherString(t *testing.T) {
 	assert.Equal(t, "a", eitherString("a", nil))
 	assert.Equal(t, "a", eitherString(nil, "a"))
 	assert.Equal(t, "", eitherString(nil, nil))
+}
+
+func TestImportingRepos(t *testing.T) {
+	resp := workspace.ReposResponse{
+		Id:           121232342,
+		Url:          "https://github.com/user/test.git",
+		Provider:     "gitHub",
+		Path:         "/Repos/user@domain/test",
+		HeadCommitId: "1124323423abc23424",
+		Branch:       "releases",
+	}
+
+	qa.HTTPFixturesApply(t,
+		[]qa.HTTPFixture{
+			meAdminFixture,
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/repos?",
+				Response: workspace.ReposListResponse{
+					Repos: []workspace.ReposResponse{
+						resp,
+					},
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/repos/121232342",
+				Response: resp,
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/permissions/repos/121232342",
+				Response: getJSONObject("test-data/get-repo-permissions.json"),
+			},
+		},
+		func(ctx context.Context, client *common.DatabricksClient) {
+			tmpDir := fmt.Sprintf("/tmp/tf-%s", qa.RandomName())
+			defer os.RemoveAll(tmpDir)
+
+			ic := newImportContext(client)
+			ic.Directory = tmpDir
+			ic.listing = "repos"
+			ic.services = "repos,access"
+
+			err := ic.Run()
+			assert.NoError(t, err)
+		})
 }

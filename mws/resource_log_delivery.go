@@ -77,6 +77,7 @@ func ResourceLogDelivery() *schema.Resource {
 				k, old, new string, d *schema.ResourceData) bool {
 				return false
 			}
+			s["delivery_start_time"].ForceNew = true
 			return s
 		})
 	return common.Resource{

@@ -58,31 +58,29 @@ func (rct *refreshableCliToken) RefreshExchangeWithContext(ctx context.Context, 
 	return rct.refreshInternal(rct.resource)
 }
 
-func (rct *refreshableCliToken) refreshInternal(resource string) (err error) {
+func (rct *refreshableCliToken) refreshInternal(resource string) error {
 	out, err := exec.Command("az", "account", "get-access-token", "--resource", resource, "--output", "json").Output()
 	if ee, ok := err.(*exec.ExitError); ok {
-		err = fmt.Errorf("cannot get access token: %s", string(ee.Stderr))
-		return
+		return fmt.Errorf("cannot get access token: %s", string(ee.Stderr))
 	}
 	if err != nil {
-		err = fmt.Errorf("cannot get access token: %v", err)
-		return
+		return fmt.Errorf("cannot get access token: %v", err)
 	}
 	var cliToken cli.Token
 	err = json.Unmarshal(out, &cliToken)
 	if err != nil {
-		return
+		return fmt.Errorf("cannot unmarshal CLI result: %w", err)
 	}
 	token, err := cliToken.ToADALToken()
 	if err != nil {
-		return err
+		return fmt.Errorf("cannot convert to ADAL token: %w", err)
 	}
 	log.Printf("[INFO] Refreshed OAuth token for %s from Azure CLI, which expires on %s", resource, cliToken.ExpiresOn)
 	rct.token = &token
-	return
+	return nil
 }
 
-func (aa *AzureAuth) cliAuthorizer(resource string) (autorest.Authorizer, error) {
+func (aa *DatabricksClient) cliAuthorizer(resource string) (autorest.Authorizer, error) {
 	rct := refreshableCliToken{
 		lock:           &sync.RWMutex{},
 		resource:       resource,
@@ -90,24 +88,21 @@ func (aa *AzureAuth) cliAuthorizer(resource string) (autorest.Authorizer, error)
 	}
 	err := rct.refreshInternal(resource)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("cannot refresh: %w", err)
 	}
 	return autorest.NewBearerAuthorizer(&rct), nil
 }
 
-func (aa *AzureAuth) configureWithAzureCLI() (func(r *http.Request) error, error) {
-	if aa.databricksClient == nil {
+func (aa *DatabricksClient) configureWithAzureCLI() (func(r *http.Request) error, error) {
+	if !aa.IsAzure() {
 		return nil, nil
 	}
-	if !aa.databricksClient.IsAzure() {
-		return nil, nil
-	}
-	if aa.IsClientSecretSet() {
+	if aa.IsAzureClientSecretSet() {
 		return nil, nil
 	}
 	azureEnvironment, err := aa.getAzureEnvironment()
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("cannot get environment: %w", err)
 	}
 	aa.AzureEnvironment = &azureEnvironment
 	// verify that Azure CLI is authenticated
@@ -119,7 +114,7 @@ func (aa *AzureAuth) configureWithAzureCLI() (func(r *http.Request) error, error
 		}
 		return nil, err
 	}
-	if aa.UsePATForCLI {
+	if aa.AzureUsePATForCLI {
 		log.Printf("[INFO] Using Azure CLI authentication with session-generated PAT")
 		return func(r *http.Request) error {
 			pat, err := aa.acquirePAT(r.Context(), aa.cliAuthorizer)

@@ -331,8 +331,8 @@ func TestKVDiffFuncSPN(t *testing.T) {
 				resource_id = "bcd"
 				dns_name = "def"
 			}`,
-		AzureAuth: &common.AzureAuth{ClientID: "123", ClientSecret: "123", TenantID: "123",
-			ResourceID: "/subscriptions/a/resourceGroups/b/providers/Microsoft.Databricks/workspaces/c"},
-		Create: true,
+		Azure:    true,
+		AzureSPN: true,
+		Create:   true,
 	}.ExpectError(t, "you can't set up Azure KeyVault-based secret scope via Service Principal")
 }

@@ -37,11 +37,9 @@ func TestAzureCliAuth(t *testing.T) {
 	defer server.Close()
 
 	client := DatabricksClient{
-		Host: server.URL,
-		AzureAuth: AzureAuth{
-			ResourceID: "/subscriptions/a/resourceGroups/b/providers/Microsoft.Databricks/workspaces/c",
-		},
-		InsecureSkipVerify: true,
+		Host:                      server.URL,
+		AzureDatabricksResourceID: "/subscriptions/a/resourceGroups/b/providers/Microsoft.Databricks/workspaces/c",
+		InsecureSkipVerify:        true,
 	}
 	err := client.Configure()
 	assert.NoError(t, err)
@@ -150,7 +148,7 @@ func TestInternalRefresh_Corrupt(t *testing.T) {
 		lock: &sync.RWMutex{},
 	}
 	err := rct.refreshInternal("a")
-	assert.EqualError(t, err, "invalid character 'a' looking for beginning of object key string")
+	assert.EqualError(t, err, "cannot unmarshal CLI result: invalid character 'a' looking for beginning of object key string")
 }
 
 func TestInternalRefresh_CorruptExpire(t *testing.T) {
@@ -166,16 +164,16 @@ func TestInternalRefresh_CorruptExpire(t *testing.T) {
 	}
 	err := rct.refreshInternal("a")
 	require.Error(t, err)
-	assert.True(t, strings.HasPrefix(err.Error(), "Error parsing Token Expiration Date"),
+	assert.True(t, strings.HasPrefix(err.Error(), "cannot convert to ADAL token: Error parsing Token Expiration Date"),
 		"Actual message: %s", err.Error())
 }
 
 func TestConfigureWithAzureCLI_SP(t *testing.T) {
-	aa := AzureAuth{
-		ClientID:     "a",
-		ClientSecret: "b",
-		TenantID:     "c",
-		ResourceID:   "/subscriptions/a/resourceGroups/b/providers/Microsoft.Databricks/workspaces/c",
+	aa := DatabricksClient{
+		AzureClientID:             "a",
+		AzureClientSecret:         "b",
+		AzureTenantID:             "c",
+		AzureDatabricksResourceID: "/subscriptions/a/resourceGroups/b/providers/Microsoft.Databricks/workspaces/c",
 	}
 	auth, err := aa.configureWithAzureCLI()
 	assert.NoError(t, err)
@@ -192,10 +190,10 @@ func TestConfigureWithAzureCLI(t *testing.T) {
 	}`)
 	defer server.Close()
 
-	client.AzureAuth.ResourceID = "/subscriptions/a/resourceGroups/b/providers/Microsoft.Databricks/workspaces/c"
-	client.AzureAuth.UsePATForCLI = true
+	client.AzureDatabricksResourceID = "/subscriptions/a/resourceGroups/b/providers/Microsoft.Databricks/workspaces/c"
+	client.AzureUsePATForCLI = true
 
-	auth, err := client.AzureAuth.configureWithAzureCLI()
+	auth, err := client.configureWithAzureCLI()
 	assert.NoError(t, err)
 
 	err = auth(httptest.NewRequest("GET", "/clusters/list", http.NoBody))
@@ -212,10 +210,10 @@ func TestConfigureWithAzureCLI_Error(t *testing.T) {
 	}`)
 	defer server.Close()
 
-	client.AzureAuth.ResourceID = "/subscriptions/a/resourceGroups/b/providers/Microsoft.Databricks/workspaces/c"
-	client.AzureAuth.UsePATForCLI = true
+	client.AzureDatabricksResourceID = "/subscriptions/a/resourceGroups/b/providers/Microsoft.Databricks/workspaces/c"
+	client.AzureUsePATForCLI = true
 
-	auth, err := client.AzureAuth.configureWithAzureCLI()
+	auth, err := client.configureWithAzureCLI()
 	assert.NoError(t, err)
 
 	err = auth(httptest.NewRequest("GET", "/clusters/list", http.NoBody))
@@ -234,10 +232,10 @@ func TestConfigureWithAzureCLI_NotInstalled(t *testing.T) {
 	}`)
 	defer server.Close()
 
-	client.AzureAuth.ResourceID = "/subscriptions/a/resourceGroups/b/providers/Microsoft.Databricks/workspaces/c"
-	client.AzureAuth.UsePATForCLI = true
+	client.AzureDatabricksResourceID = "/subscriptions/a/resourceGroups/b/providers/Microsoft.Databricks/workspaces/c"
+	client.AzureUsePATForCLI = true
 
-	_, err := client.AzureAuth.configureWithAzureCLI()
+	_, err := client.configureWithAzureCLI()
 	require.Error(t, err)
 	assert.True(t, strings.HasPrefix(err.Error(), "most likely Azure CLI is not installed"),
 		"Actual message: %s", err.Error())
@@ -246,9 +244,8 @@ func TestConfigureWithAzureCLI_NotInstalled(t *testing.T) {
 func TestCliAuthorizer_Error(t *testing.T) {
 	defer CleanupEnvironment()()
 	os.Setenv("PATH", "whatever")
-	aa := AzureAuth{}
+	aa := DatabricksClient{}
 	_, err := aa.cliAuthorizer("x")
 	require.Error(t, err)
-	assert.True(t, strings.HasPrefix(err.Error(), `cannot get access token: exec: "az"`),
-		"Actual message: %s", err.Error())
+	require.EqualError(t, err, "cannot refresh: cannot get access token: exec: \"az\": executable file not found in $PATH")
 }

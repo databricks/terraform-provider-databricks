@@ -19,31 +19,6 @@ import (
 	"github.com/databrickslabs/terraform-provider-databricks/workspace"
 )
 
-type ConfigOption struct {
-	Kind string
-	Name string
-	Sensitive bool
-	EnvVars []string
-}
-
-var configOptions = []ConfigOption{
-	{"direct", "host", false, []string{"DATABRICKS_HOST"}}, // aws, azure, gcp
-	{"host", "token", true, []string{"DATABRICKS_TOKEN"}},
-	{"host", "username", false, []string{"DATABRICKS_USERNAME"}},
-	{"host", "password", true, []string{"DATABRICKS_PASSWORD"}},
-	{"direct", "config_file", false, []string{"DATABRICKS_CONFIG_FILE"}},
-	{"config_file", "profile", false, []string{"DATABRICKS_CONFIG_PROFILE"}},
-	{"direct", "azure_workspace_resource_id", false, []string{"DATABRICKS_AZURE_WORKSPACE_RESOURCE_ID", "AZURE_DATABRICKS_WORKSPACE_RESOURCE_ID"}},
-	{"direct", "azure_subscription_id", false, []string{"DATABRICKS_AZURE_SUBSCRIPTION_ID", "ARM_SUBSCRIPTION_ID"}},
-	{"direct", "azure_resource_group", false, []string{"DATABRICKS_AZURE_RESOURCE_GROUP"}},
-	{"direct", "azure_workspace_name", false, []string{"DATABRICKS_AZURE_WORKSPACE_NAME"}},
-	{"direct", "azure_client_id", false, []string{"DATABRICKS_AZURE_CLIENT_ID", "ARM_CLIENT_ID"}},
-	{"direct", "azure_client_secret", true, []string{"DATABRICKS_AZURE_CLIENT_SECRET", "ARM_CLIENT_SECRET"}},
-	{"direct", "azure_tenant_id", false, []string{"DATABRICKS_AZURE_TENANT_ID", "ARM_TENANT_ID"}},
-	{"direct", "azure_environment", false, []string{"ARM_ENVIRONMENT"}},
-	{"direct", "google_service_account", false, []string{"DATABRICKS_GOOGLE_SERVICE_ACCOUNT"}},
-}
-
 // DatabricksProvider returns the entire terraform provider object
 func DatabricksProvider() *schema.Provider {
 	p := &schema.Provider{
@@ -340,34 +315,34 @@ func configureDatabricksClient(ctx context.Context, d *schema.ResourceData) (int
 	}
 	if v, ok := d.GetOk("azure_workspace_resource_id"); ok {
 		authsUsed["azure"] = true
-		pc.AzureAuth.ResourceID = v.(string)
+		pc.AzureDatabricksResourceID = v.(string)
 	}
 	if v, ok := d.GetOk("azure_workspace_name"); ok {
 		authsUsed["azure"] = true
-		pc.AzureAuth.WorkspaceName = v.(string)
+		pc.AzureWorkspaceName = v.(string)
 	}
 	if v, ok := d.GetOk("azure_resource_group"); ok {
 		authsUsed["azure"] = true
-		pc.AzureAuth.ResourceGroup = v.(string)
+		pc.AzureResourceGroup = v.(string)
 	}
 	if v, ok := d.GetOk("azure_subscription_id"); ok {
 		authsUsed["azure"] = true
-		pc.AzureAuth.SubscriptionID = v.(string)
+		pc.AzureSubscriptionID = v.(string)
 	}
 	if v, ok := d.GetOk("azure_client_secret"); ok {
 		authsUsed["azure"] = true
-		pc.AzureAuth.ClientSecret = v.(string)
+		pc.AzureClientSecret = v.(string)
 	}
 	if v, ok := d.GetOk("azure_client_id"); ok {
 		authsUsed["azure"] = true
-		pc.AzureAuth.ClientID = v.(string)
+		pc.AzureClientID = v.(string)
 	}
 	if v, ok := d.GetOk("azure_tenant_id"); ok {
 		authsUsed["azure"] = true
-		pc.AzureAuth.TenantID = v.(string)
+		pc.AzureTenantID = v.(string)
 	}
 	if v, ok := d.GetOk("azure_pat_token_duration_seconds"); ok {
-		pc.AzureAuth.PATTokenDurationSeconds = v.(string)
+		pc.AzurePATTokenDurationSeconds = v.(string)
 	}
 	if v, ok := d.GetOk("skip_verify"); ok {
 		pc.InsecureSkipVerify = v.(bool)
@@ -382,13 +357,13 @@ func configureDatabricksClient(ctx context.Context, d *schema.ResourceData) (int
 		pc.DebugHeaders = v.(bool)
 	}
 	if v, ok := d.GetOk("azure_use_pat_for_cli"); ok {
-		pc.AzureAuth.UsePATForCLI = v.(bool)
+		pc.AzureUsePATForCLI = v.(bool)
 	}
 	if v, ok := d.GetOk("azure_use_pat_for_spn"); ok {
-		pc.AzureAuth.UsePATForSPN = v.(bool)
+		pc.AzureUsePATForSPN = v.(bool)
 	}
 	if v, ok := d.GetOk("azure_environment"); ok {
-		pc.AzureAuth.Environment = v.(string)
+		pc.AzurermEnvironment = v.(string)
 	}
 	if v, ok := d.GetOk("google_service_account"); ok {
 		authsUsed["google"] = true

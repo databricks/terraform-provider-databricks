@@ -15,15 +15,15 @@ import (
 
 func TestAzureAccADLSv2Mount(t *testing.T) {
 	client, mp := mountPointThroughReusedCluster(t)
-	if !client.AzureAuth.IsClientSecretSet() {
+	if !client.IsAzureClientSecretSet() {
 		t.Skip("Test is meant only for client-secret conf Azure")
 	}
 	storageAccountName := qa.GetEnvOrSkipTest(t, "TEST_STORAGE_V2_ACCOUNT")
 	container := qa.GetEnvOrSkipTest(t, "TEST_STORAGE_V2_ABFSS")
 	testWithNewSecretScope(t, func(scope, key string) {
 		testMounting(t, mp, AzureADLSGen2Mount{
-			ClientID:             client.AzureAuth.ClientID,
-			TenantID:             client.AzureAuth.TenantID,
+			ClientID:             client.AzureClientID,
+			TenantID:             client.AzureTenantID,
 			StorageAccountName:   storageAccountName,
 			ContainerName:        container,
 			SecretScope:          scope,
@@ -31,7 +31,7 @@ func TestAzureAccADLSv2Mount(t *testing.T) {
 			InitializeFileSystem: true,
 			Directory:            "/",
 		})
-	}, client, mp.name, client.AzureAuth.ClientSecret)
+	}, client, mp.name, client.AzureClientSecret)
 }
 
 func TestResourceAdlsGen2Mount_Create(t *testing.T) {

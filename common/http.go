@@ -29,6 +29,7 @@ var (
 		"ClusterNotReadyException",
 		"connection reset by peer",
 		"connection refused",
+		"Unexpected error",
 		"i/o timeout",
 	}
 )

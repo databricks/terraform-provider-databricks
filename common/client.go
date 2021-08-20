@@ -45,20 +45,43 @@ type DatabricksClient struct {
 	RateLimitPerSecond int
 
 	GoogleServiceAccount string
+
+	// options used to enable unit testing mode for OIDC
 	googleAuthOptions    []option.ClientOption
 
+	// Context used during provider initialisation, 
+	// mostly for OAuth-based validation.
 	InitContext context.Context
 
-	authMutex      sync.Mutex
-	rateLimiter    *rate.Limiter
-	Provider       *schema.Provider
-	httpClient     *retryablehttp.Client
-	authVisitor    func(r *http.Request) error
+	// Mutex used by Authenticate method to guard `authVisitor`, which
+	// has to be lazily created on the first request to Databricks API.
+	// It is done because databricks host and token may often be available
+	// only in the middle of Terraform DAG execution.
+	authMutex sync.Mutex
+
+	// HTTP request interceptor, that assigns Authorization header
+	authVisitor func(r *http.Request) error
+
+	// Databricks REST API rate limiter
+	rateLimiter *rate.Limiter
+
+	// Terraform provider instance to include Terraform binary version in
+	// User-Agent header
+	Provider *schema.Provider
+
+	// retryalble HTTP client
+	httpClient *retryablehttp.Client
+
+	// configuration attributes that were used to initialise client.
+	configAttributesUsed []string
+
+	// callback used to create API1.2 call wrapper, which simplifies unit tessting
 	commandFactory func(context.Context, *DatabricksClient) CommandExecutor
 }
 
-// Configure client to work
-func (c *DatabricksClient) Configure() error {
+// Configure client to work, optionally specifying configuration attributes used
+func (c *DatabricksClient) Configure(attrsUsed ...string) error {
+	c.configAttributesUsed = attrsUsed
 	c.configureHTTPCLient()
 	c.AzureAuth.databricksClient = c
 	if c.DebugTruncateBytes == 0 {
@@ -97,15 +120,13 @@ func (c *DatabricksClient) Authenticate() error {
 		c.fixHost()
 		return nil
 	}
-	return fmt.Errorf("authentication is not configured for provider. Please configure it\n" +
-		"through one of the following options:\n" +
-		"1. DATABRICKS_HOST + DATABRICKS_TOKEN environment variables.\n" +
-		"2. host + token provider arguments.\n" +
-		"3. azure_databricks_workspace_id + AZ CLI authentication.\n" +
-		"4. azure_databricks_workspace_id + azure_client_id + azure_client_secret + azure_tenant_id " +
-		"for Azure Service Principal authentication.\n" +
-		"5. Run `databricks configure --token` that will create ~/.databrickscfg file.\n\n" +
-		"Please check https://registry.terraform.io/providers/databrickslabs/databricks/latest/docs#authentication for details")
+	info := ""
+	if len(c.configAttributesUsed) > 0 {
+		info = fmt.Sprintf("Implicit and explicit ")
+	}
+
+	docUrl := "https://registry.terraform.io/providers/databrickslabs/databricks/latest/docs#authentication"
+	return fmt.Errorf("authentication is not configured for provider. %sPlease check %s for details", info, docUrl)
 }
 
 func (c *DatabricksClient) fixHost() {

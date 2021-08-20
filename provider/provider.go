@@ -19,6 +19,31 @@ import (
 	"github.com/databrickslabs/terraform-provider-databricks/workspace"
 )
 
+type ConfigOption struct {
+	Kind string
+	Name string
+	Sensitive bool
+	EnvVars []string
+}
+
+var configOptions = []ConfigOption{
+	{"direct", "host", false, []string{"DATABRICKS_HOST"}}, // aws, azure, gcp
+	{"host", "token", true, []string{"DATABRICKS_TOKEN"}},
+	{"host", "username", false, []string{"DATABRICKS_USERNAME"}},
+	{"host", "password", true, []string{"DATABRICKS_PASSWORD"}},
+	{"direct", "config_file", false, []string{"DATABRICKS_CONFIG_FILE"}},
+	{"config_file", "profile", false, []string{"DATABRICKS_CONFIG_PROFILE"}},
+	{"direct", "azure_workspace_resource_id", false, []string{"DATABRICKS_AZURE_WORKSPACE_RESOURCE_ID", "AZURE_DATABRICKS_WORKSPACE_RESOURCE_ID"}},
+	{"direct", "azure_subscription_id", false, []string{"DATABRICKS_AZURE_SUBSCRIPTION_ID", "ARM_SUBSCRIPTION_ID"}},
+	{"direct", "azure_resource_group", false, []string{"DATABRICKS_AZURE_RESOURCE_GROUP"}},
+	{"direct", "azure_workspace_name", false, []string{"DATABRICKS_AZURE_WORKSPACE_NAME"}},
+	{"direct", "azure_client_id", false, []string{"DATABRICKS_AZURE_CLIENT_ID", "ARM_CLIENT_ID"}},
+	{"direct", "azure_client_secret", true, []string{"DATABRICKS_AZURE_CLIENT_SECRET", "ARM_CLIENT_SECRET"}},
+	{"direct", "azure_tenant_id", false, []string{"DATABRICKS_AZURE_TENANT_ID", "ARM_TENANT_ID"}},
+	{"direct", "azure_environment", false, []string{"ARM_ENVIRONMENT"}},
+	{"direct", "google_service_account", false, []string{"DATABRICKS_GOOGLE_SERVICE_ACCOUNT"}},
+}
+
 // DatabricksProvider returns the entire terraform provider object
 func DatabricksProvider() *schema.Provider {
 	p := &schema.Provider{
@@ -380,7 +405,7 @@ func configureDatabricksClient(ctx context.Context, d *schema.ResourceData) (int
 		return nil, diag.Errorf("More than one authorization method configured: %s",
 			strings.Join(authorizationMethodsUsed, " and "))
 	}
-	if err := pc.Configure(); err != nil {
+	if err := pc.Configure(attrsUsed...); err != nil {
 		return nil, diag.FromErr(err)
 	}
 	pc.WithCommandExecutor(func(ctx context.Context, client *common.DatabricksClient) common.CommandExecutor {

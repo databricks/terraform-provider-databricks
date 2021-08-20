@@ -15,6 +15,8 @@ import (
 	"golang.org/x/time/rate"
 	"google.golang.org/api/option"
 
+	"github.com/Azure/go-autorest/autorest"
+	"github.com/Azure/go-autorest/autorest/azure"
 	"github.com/hashicorp/go-retryablehttp"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/mitchellh/go-homedir"
@@ -28,28 +30,49 @@ const (
 	DefaultHTTPTimeoutSeconds = 60
 )
 
-// DatabricksClient is the client struct that contains clients for all the services available on Databricks
 type DatabricksClient struct {
-	Host               string
-	Token              string
-	Username           string
-	Password           string
-	Profile            string
-	ConfigFile         string
-	AccountID          string
-	AzureAuth          AzureAuth
+	Host       string
+	Token      string
+	Username   string
+	Password   string
+	Profile    string
+	ConfigFile string
+	AccountID  string
+
+	GoogleServiceAccount string
+
+	AzureWorkspaceName        string
+	AzureResourceGroup        string
+	AzureSubscriptionID       string
+	AzureDatabricksResourceID string
+	AzureClientSecret         string
+	AzureClientID             string
+	AzureTenantID             string
+	AzurermEnvironment        string
+
+	// temporary workaround to use PAT tokens instead of AAD tokens
+	AzurePATTokenDurationSeconds string
+	AzureUsePATForCLI            bool
+	AzureUsePATForSPN            bool
+
+	AzureEnvironment *azure.Environment
+
 	InsecureSkipVerify bool
 	HTTPTimeoutSeconds int
 	DebugTruncateBytes int
 	DebugHeaders       bool
 	RateLimitPerSecond int
 
-	GoogleServiceAccount string
+	// OAuth token refreshers for Azure to be used within `authVisitor`
+	azureAuthorizer autorest.Authorizer
+
+	// session temporary PAT token if `UsePATForSPN` or `UsePATForCLI` are true
+	temporaryPat *tokenResponse
 
 	// options used to enable unit testing mode for OIDC
-	googleAuthOptions    []option.ClientOption
+	googleAuthOptions []option.ClientOption
 
-	// Context used during provider initialisation, 
+	// Context used during provider initialisation,
 	// mostly for OAuth-based validation.
 	InitContext context.Context
 
@@ -79,11 +102,35 @@ type DatabricksClient struct {
 	commandFactory func(context.Context, *DatabricksClient) CommandExecutor
 }
 
+type ConfigOption struct {
+	Kind      string
+	Name      string
+	Sensitive bool
+	EnvVars   []string
+}
+
+var configOptions = []ConfigOption{
+	{"direct", "host", false, []string{"DATABRICKS_HOST"}}, // aws, azure, gcp
+	{"host", "token", true, []string{"DATABRICKS_TOKEN"}},
+	{"host", "username", false, []string{"DATABRICKS_USERNAME"}},
+	{"host", "password", true, []string{"DATABRICKS_PASSWORD"}},
+	{"direct", "config_file", false, []string{"DATABRICKS_CONFIG_FILE"}},
+	{"config_file", "profile", false, []string{"DATABRICKS_CONFIG_PROFILE"}},
+	{"direct", "azure_workspace_resource_id", false, []string{"DATABRICKS_AZURE_WORKSPACE_RESOURCE_ID", "AZURE_DATABRICKS_WORKSPACE_RESOURCE_ID"}},
+	{"direct", "azure_subscription_id", false, []string{"DATABRICKS_AZURE_SUBSCRIPTION_ID", "ARM_SUBSCRIPTION_ID"}},
+	{"direct", "azure_resource_group", false, []string{"DATABRICKS_AZURE_RESOURCE_GROUP"}},
+	{"direct", "azure_workspace_name", false, []string{"DATABRICKS_AZURE_WORKSPACE_NAME"}},
+	{"direct", "azure_client_id", false, []string{"DATABRICKS_AZURE_CLIENT_ID", "ARM_CLIENT_ID"}},
+	{"direct", "azure_client_secret", true, []string{"DATABRICKS_AZURE_CLIENT_SECRET", "ARM_CLIENT_SECRET"}},
+	{"direct", "azure_tenant_id", false, []string{"DATABRICKS_AZURE_TENANT_ID", "ARM_TENANT_ID"}},
+	{"direct", "azure_environment", false, []string{"ARM_ENVIRONMENT"}},
+	{"direct", "google_service_account", false, []string{"DATABRICKS_GOOGLE_SERVICE_ACCOUNT"}},
+}
+
 // Configure client to work, optionally specifying configuration attributes used
 func (c *DatabricksClient) Configure(attrsUsed ...string) error {
 	c.configAttributesUsed = attrsUsed
 	c.configureHTTPCLient()
-	c.AzureAuth.databricksClient = c
 	if c.DebugTruncateBytes == 0 {
 		c.DebugTruncateBytes = DefaultTruncateBytes
 	}
@@ -102,8 +149,8 @@ func (c *DatabricksClient) Authenticate() error {
 	}
 	authorizers := []func() (func(r *http.Request) error, error){
 		c.configureAuthWithDirectParams,
-		c.AzureAuth.configureWithClientSecret,
-		c.AzureAuth.configureWithAzureCLI,
+		c.configureWithClientSecret,
+		c.configureWithAzureCLI,
 		c.configureWithGoogleForAccountsAPI,
 		c.configureWithGoogleForWorkspace,
 		c.configureFromDatabricksCfg,
@@ -111,7 +158,7 @@ func (c *DatabricksClient) Authenticate() error {
 	for _, authProvider := range authorizers {
 		authorizer, err := authProvider()
 		if err != nil {
-			return err
+			return fmt.Errorf("cannot configure auth: %w", err)
 		}
 		if authorizer == nil {
 			continue
@@ -122,9 +169,9 @@ func (c *DatabricksClient) Authenticate() error {
 	}
 	info := ""
 	if len(c.configAttributesUsed) > 0 {
-		info = fmt.Sprintf("Implicit and explicit ")
+		// TODO: add env vars
+		info = fmt.Sprintf("Attributes used: %s - %d", strings.Join(c.configAttributesUsed, ", "), len(configOptions))
 	}
-
 	docUrl := "https://registry.terraform.io/providers/databrickslabs/databricks/latest/docs#authentication"
 	return fmt.Errorf("authentication is not configured for provider. %sPlease check %s for details", info, docUrl)
 }
@@ -166,7 +213,7 @@ func (c *DatabricksClient) configureFromDatabricksCfg() (func(r *http.Request) e
 	}
 	configFile, err := homedir.Expand(configFile)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("cannot find homedir: %w", err)
 	}
 	_, err = os.Stat(configFile)
 	if os.IsNotExist(err) {
@@ -176,7 +223,7 @@ func (c *DatabricksClient) configureFromDatabricksCfg() (func(r *http.Request) e
 	}
 	cfg, err := ini.Load(configFile)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("cannot parse config file: %w", err)
 	}
 	if c.Profile == "" {
 		log.Printf("[INFO] Using DEFAULT profile from %s", configFile)
@@ -267,7 +314,7 @@ func (c *DatabricksClient) configureHTTPCLient() {
 
 // IsAzure returns true if client is configured for Azure Databricks - either by using AAD auth or with host+token combination
 func (c *DatabricksClient) IsAzure() bool {
-	return c.AzureAuth.resourceID() != "" || strings.Contains(c.Host, ".azuredatabricks.net")
+	return c.resourceID() != "" || strings.Contains(c.Host, ".azuredatabricks.net")
 }
 
 // IsAws returns true if client is configured for AWS

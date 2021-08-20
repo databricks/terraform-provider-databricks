@@ -98,7 +98,7 @@ func TestProviderConfigurationOptions(t *testing.T) {
 			env: map[string]string{
 				"DATABRICKS_TOKEN": "x",
 			},
-			assertError: "host is empty, but is required by token",
+			assertError: "cannot configure auth: host is empty, but is required by token",
 		},
 		{
 			env: map[string]string{
@@ -121,7 +121,7 @@ func TestProviderConfigurationOptions(t *testing.T) {
 				"DATABRICKS_USERNAME": "x",
 				"DATABRICKS_PASSWORD": "x",
 			},
-			assertError: "host is empty, but is required by basic_auth",
+			assertError: "cannot configure auth: host is empty, but is required by basic_auth",
 			assertToken: "x",
 			assertHost:  "https://x",
 		},
@@ -197,7 +197,7 @@ func TestProviderConfigurationOptions(t *testing.T) {
 				"HOME":                      "../common/testdata",
 				"DATABRICKS_CONFIG_PROFILE": "nohost",
 			},
-			assertError: "config file ../common/testdata/.databrickscfg is corrupt: cannot find host in nohost profile",
+			assertError: "cannot configure auth: config file ../common/testdata/.databrickscfg is corrupt: cannot find host in nohost profile",
 		},
 		{
 			env: map[string]string{
@@ -236,7 +236,7 @@ func TestProviderConfigurationOptions(t *testing.T) {
 				"HOME": "../common/testdata",
 				"FAIL": "yes",
 			},
-			assertError: "Invoking Azure CLI failed with the following error: This is just a failing script.",
+			assertError: "cannot configure auth: Invoking Azure CLI failed with the following error: This is just a failing script.",
 		},
 		{
 			// `az` not installed, which is expected for deployers on other clouds...
@@ -245,7 +245,7 @@ func TestProviderConfigurationOptions(t *testing.T) {
 				"PATH": "whatever",
 				"HOME": "../common/testdata",
 			},
-			assertError: "most likely Azure CLI is not installed.",
+			assertError: "cannot configure auth: most likely Azure CLI is not installed.",
 		},
 		{
 			azureWorkspaceResourceID: azResourceID,
@@ -315,7 +315,7 @@ func TestProviderConfigurationOptions(t *testing.T) {
 			env: map[string]string{
 				"HOME": "../common/testdata/corrupt",
 			},
-			assertError: "../common/testdata/corrupt/.databrickscfg has no DEFAULT profile configured",
+			assertError: "cannot configure auth: ../common/testdata/corrupt/.databrickscfg has no DEFAULT profile configured",
 		},
 	}
 	for _, tt := range tests {
@@ -352,7 +352,7 @@ func configureProviderAndReturnClient(t *testing.T, tt providerConfigTest) (*com
 		return nil, fmt.Errorf(strings.Join(issues, ", "))
 	}
 	client := p.Meta().(*common.DatabricksClient)
-	client.AzureAuth.UsePATForSPN = tt.usePATForSPN
+	client.AzureUsePATForSPN = tt.usePATForSPN
 	err := client.Authenticate()
 	if err != nil {
 		return nil, err

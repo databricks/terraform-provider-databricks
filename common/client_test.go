@@ -34,7 +34,7 @@ func TestDatabricksClientConfigure_BasicAuth_NoHost(t *testing.T) {
 		Password: "bar",
 	})
 
-	AssertErrorStartsWith(t, err, "host is empty, but is required by basic_auth")
+	AssertErrorStartsWith(t, err, "cannot configure auth: host is empty, but is required by basic_auth")
 	assert.Equal(t, "Zm9vOmJhcg==", dc.Token)
 }
 
@@ -65,7 +65,7 @@ func TestDatabricksClientConfigure_Token_NoHost(t *testing.T) {
 		Token: "dapi345678",
 	})
 
-	AssertErrorStartsWith(t, err, "host is empty, but is required by token")
+	AssertErrorStartsWith(t, err, "cannot configure auth: host is empty, but is required by token")
 	assert.Equal(t, "dapi345678", dc.Token)
 }
 

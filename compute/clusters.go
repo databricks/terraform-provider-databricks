@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"regexp"
 	"sort"
 	"strings"
 	"sync"
@@ -11,6 +12,8 @@ import (
 
 	"github.com/databrickslabs/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+
+	"golang.org/x/mod/semver"
 )
 
 func (a ClustersAPI) defaultTimeout() time.Duration {
@@ -439,6 +442,31 @@ func (a ClustersAPI) ListSparkVersions() (SparkVersionsList, error) {
 	return sparkVersions, err
 }
 
+type sparkVersionsType []string
+
+func (s sparkVersionsType) Len() int {
+	return len(s)
+}
+func (s sparkVersionsType) Swap(i, j int) {
+	s[i], s[j] = s[j], s[i]
+}
+
+var (
+	dbrVersionRegex = regexp.MustCompile(`^(\d+\.\d+)\.x-.*`)
+)
+
+func extractDbrVersions(s string) string {
+	m := dbrVersionRegex.FindStringSubmatch(s)
+	if len(m) > 1 {
+		return m[1]
+	}
+	return s
+}
+
+func (s sparkVersionsType) Less(i, j int) bool {
+	return semver.Compare("v"+extractDbrVersions(s[i]), "v"+extractDbrVersions(s[j])) > 0
+}
+
 // LatestSparkVersion returns latest version matching the request parameters
 func (sparkVersions SparkVersionsList) LatestSparkVersion(req SparkVersionRequest) (string, error) {
 	var versions []string
@@ -449,9 +477,10 @@ func (sparkVersions SparkVersionsList) LatestSparkVersion(req SparkVersionReques
 				(strings.Contains(version.Version, "-ml-") == req.ML) &&
 				(strings.Contains(version.Version, "-hls-") == req.Genomics) &&
 				(strings.Contains(version.Version, "-gpu-") == req.GPU) &&
+				(strings.Contains(version.Version, "-photon-") == req.Photon) &&
 				(strings.Contains(version.Description, "Beta") == req.Beta))
 			if matches && req.LongTermSupport {
-				matches = (matches && strings.Contains(version.Description, "LTS"))
+				matches = (matches && (strings.Contains(version.Description, "LTS") || strings.Contains(version.Version, "-esr-")))
 			}
 			if matches && len(req.SparkVersion) > 0 {
 				matches = (matches && strings.Contains(version.Description, "Apache Spark "+req.SparkVersion))
@@ -465,7 +494,7 @@ func (sparkVersions SparkVersionsList) LatestSparkVersion(req SparkVersionReques
 		return "", fmt.Errorf("spark versions query returned no results. Please change your search criteria and try again")
 	} else if len(versions) > 1 {
 		if req.Latest {
-			sort.Sort(sort.Reverse(sort.StringSlice(versions)))
+			sort.Sort(sparkVersionsType(versions))
 		} else {
 			return "", fmt.Errorf("spark versions query returned multiple results. Please change your search criteria and try again")
 		}

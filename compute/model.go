@@ -760,4 +760,5 @@ type SparkVersionRequest struct {
 	GPU             bool   `json:"gpu,omitempty" tf:"optional,default:false"`
 	Scala           string `json:"scala,omitempty" tf:"optional,default:2.12"`
 	SparkVersion    string `json:"spark_version,omitempty" tf:"optional,default:"`
+	Photon          bool   `json:"photon,omitempty" tf:"optional,default:false"`
 }

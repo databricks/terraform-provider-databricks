@@ -415,7 +415,7 @@ func (a ClustersAPI) GetSmallestNodeType(r NodeTypeRequest) string {
 				nt.NodeInstanceType.LocalNVMeDisks < 1) {
 			continue
 		}
-		if r.Category != "" && nt.Category != r.Category {
+		if r.Category != "" && !strings.EqualFold(nt.Category, r.Category) {
 			continue
 		}
 		if r.IsIOCacheEnabled && nt.IsIOCacheEnabled != r.IsIOCacheEnabled {

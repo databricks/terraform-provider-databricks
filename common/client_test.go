@@ -156,3 +156,21 @@ func TestDatabricksClient_FormatURL(t *testing.T) {
 	client := DatabricksClient{Host: "https://some.host"}
 	assert.Equal(t, "https://some.host/#job/123", client.FormatURL("#job/123"))
 }
+
+func TestClientAttributes(t *testing.T) {
+	ca := ClientAttributes()
+	assert.Len(t, ca, 24)
+}
+
+func TestEnvVarsUsed(t *testing.T) {
+	ResetCommonEnvironmentClient()
+	defer CleanupEnvironment()()
+	os.Setenv("SUPER_SECRET", ".")
+	os.Setenv("DATABRICKS_HOST", ".")
+	os.Setenv("ARM_SUBSCRIPTION_ID", ".")
+	os.Setenv("DATABRICKS_ACCOUNT_ID", ".")
+	os.Setenv("DATABRICKS_GOOGLE_SERVICE_ACCOUNT", ".")
+
+	names := envVariablesUsed()
+	assert.Equal(t, "DATABRICKS_HOST, DATABRICKS_ACCOUNT_ID, DATABRICKS_GOOGLE_SERVICE_ACCOUNT, ARM_SUBSCRIPTION_ID", names)
+}

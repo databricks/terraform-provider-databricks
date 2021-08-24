@@ -34,7 +34,7 @@ func TestDatabricksClientConfigure_BasicAuth_NoHost(t *testing.T) {
 		Password: "bar",
 	})
 
-	AssertErrorStartsWith(t, err, "host is empty, but is required by basic_auth")
+	AssertErrorStartsWith(t, err, "cannot configure auth: host is empty, but is required by basic_auth")
 	assert.Equal(t, "Zm9vOmJhcg==", dc.Token)
 }
 
@@ -65,7 +65,7 @@ func TestDatabricksClientConfigure_Token_NoHost(t *testing.T) {
 		Token: "dapi345678",
 	})
 
-	AssertErrorStartsWith(t, err, "host is empty, but is required by token")
+	AssertErrorStartsWith(t, err, "cannot configure auth: host is empty, but is required by token")
 	assert.Equal(t, "dapi345678", dc.Token)
 }
 
@@ -155,4 +155,22 @@ func TestDatabricksClientConfigure_InvalidConfigFilePath(t *testing.T) {
 func TestDatabricksClient_FormatURL(t *testing.T) {
 	client := DatabricksClient{Host: "https://some.host"}
 	assert.Equal(t, "https://some.host/#job/123", client.FormatURL("#job/123"))
+}
+
+func TestClientAttributes(t *testing.T) {
+	ca := ClientAttributes()
+	assert.Len(t, ca, 24)
+}
+
+func TestEnvVarsUsed(t *testing.T) {
+	ResetCommonEnvironmentClient()
+	defer CleanupEnvironment()()
+	os.Setenv("SUPER_SECRET", ".")
+	os.Setenv("DATABRICKS_HOST", ".")
+	os.Setenv("ARM_SUBSCRIPTION_ID", ".")
+	os.Setenv("DATABRICKS_ACCOUNT_ID", ".")
+	os.Setenv("DATABRICKS_GOOGLE_SERVICE_ACCOUNT", ".")
+
+	names := envVariablesUsed()
+	assert.Equal(t, "DATABRICKS_HOST, DATABRICKS_ACCOUNT_ID, DATABRICKS_GOOGLE_SERVICE_ACCOUNT, ARM_SUBSCRIPTION_ID", names)
 }

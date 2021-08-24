@@ -2,7 +2,9 @@ package provider
 
 import (
 	"context"
+	"fmt"
 	"log"
+	"reflect"
 	"sort"
 	"strings"
 
@@ -88,173 +90,7 @@ func DatabricksProvider() *schema.Provider {
 			"databricks_repo":               workspace.ResourceRepo(),
 			"databricks_workspace_conf":     workspace.ResourceWorkspaceConf(),
 		},
-		Schema: map[string]*schema.Schema{
-			"host": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				DefaultFunc: schema.EnvDefaultFunc("DATABRICKS_HOST", nil),
-				ConflictsWith: []string{
-					"config_file",
-				},
-			},
-			"token": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Sensitive:   true,
-				DefaultFunc: schema.EnvDefaultFunc("DATABRICKS_TOKEN", nil),
-				ConflictsWith: []string{
-					"username",
-					"password",
-					"config_file",
-					"profile",
-				},
-			},
-			"username": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				DefaultFunc: schema.EnvDefaultFunc("DATABRICKS_USERNAME", nil),
-				ConflictsWith: []string{
-					"token",
-				},
-			},
-			"password": {
-				Type:        schema.TypeString,
-				Sensitive:   true,
-				Optional:    true,
-				DefaultFunc: schema.EnvDefaultFunc("DATABRICKS_PASSWORD", nil),
-				ConflictsWith: []string{
-					"token",
-				},
-			},
-			"config_file": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				DefaultFunc: schema.EnvDefaultFunc("DATABRICKS_CONFIG_FILE", nil),
-				Description: "Location of the Databricks CLI credentials file, that is created\n" +
-					"by `databricks configure --token` command. By default, it is located\n" +
-					"in ~/.databrickscfg. Check  https://docs.databricks.com/dev-tools/cli/index.html#set-up-authentication for docs. Config\n" +
-					"file credentials will only be used when host/token are not provided.",
-				ConflictsWith: []string{
-					"token",
-					"host",
-				},
-			},
-			"profile": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				DefaultFunc: schema.EnvDefaultFunc("DATABRICKS_CONFIG_PROFILE", nil),
-				Description: "Connection profile specified within ~/.databrickscfg. Please check\n" +
-					"https://docs.databricks.com/dev-tools/cli/index.html#connection-profiles for documentation.",
-				ConflictsWith: []string{
-					"token",
-				},
-			},
-			"azure_workspace_resource_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-				DefaultFunc: schema.MultiEnvDefaultFunc([]string{
-					"DATABRICKS_AZURE_WORKSPACE_RESOURCE_ID",
-					"AZURE_DATABRICKS_WORKSPACE_RESOURCE_ID"}, nil),
-				ConflictsWith: []string{
-					"azure_workspace_name",
-				},
-			},
-			"azure_workspace_name": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				DefaultFunc:   schema.EnvDefaultFunc("DATABRICKS_AZURE_WORKSPACE_NAME", nil),
-				ConflictsWith: []string{"azure_workspace_resource_id"},
-			},
-			"azure_resource_group": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				DefaultFunc: schema.EnvDefaultFunc("DATABRICKS_AZURE_RESOURCE_GROUP", nil),
-			},
-			"azure_subscription_id": {
-				Type:      schema.TypeString,
-				Optional:  true,
-				Sensitive: true,
-				DefaultFunc: schema.MultiEnvDefaultFunc([]string{
-					"DATABRICKS_AZURE_SUBSCRIPTION_ID",
-					"ARM_SUBSCRIPTION_ID"}, nil),
-			},
-			"azure_client_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-				DefaultFunc: schema.MultiEnvDefaultFunc([]string{
-					"DATABRICKS_AZURE_CLIENT_ID",
-					"ARM_CLIENT_ID"}, nil),
-			},
-			"azure_client_secret": {
-				Type:      schema.TypeString,
-				Optional:  true,
-				Sensitive: true,
-				DefaultFunc: schema.MultiEnvDefaultFunc([]string{
-					"DATABRICKS_AZURE_CLIENT_SECRET",
-					"ARM_CLIENT_SECRET"}, nil),
-			},
-			"azure_tenant_id": {
-				Type:      schema.TypeString,
-				Optional:  true,
-				Sensitive: true,
-				DefaultFunc: schema.MultiEnvDefaultFunc([]string{
-					"DATABRICKS_AZURE_TENANT_ID",
-					"ARM_TENANT_ID"}, nil),
-			},
-			"azure_pat_token_duration_seconds": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "Currently secret scopes are not accessible via AAD tokens so we will need to create a PAT token",
-				Default:     "3600",
-			},
-			"azure_use_pat_for_cli": {
-				Type:        schema.TypeBool,
-				Optional:    true,
-				Default:     false,
-				Description: "Create ephemeral PAT tokens also for AZ CLI authenticated requests",
-			},
-			"azure_use_pat_for_spn": {
-				Type:        schema.TypeBool,
-				Optional:    true,
-				Default:     false,
-				Description: "Create ephemeral PAT tokens instead of AAD tokens for SPN",
-				DefaultFunc: schema.EnvDefaultFunc("DATABRICKS_AZURE_USE_PAT_FOR_SPN", false),
-			},
-			"azure_environment": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				DefaultFunc: schema.EnvDefaultFunc("ARM_ENVIRONMENT", "public"),
-			},
-			"google_service_account": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				DefaultFunc: schema.EnvDefaultFunc("DATABRICKS_GOOGLE_SERVICE_ACCOUNT", nil),
-			},
-			"skip_verify": {
-				Type:        schema.TypeBool,
-				Description: "Skip SSL certificate verification for HTTP calls. Use at your own risk.",
-				Optional:    true,
-				Default:     false,
-			},
-			"debug_truncate_bytes": {
-				Optional:    true,
-				Type:        schema.TypeInt,
-				Description: "Truncate JSON fields in JSON above this limit. Default is 96. Visible only when TF_LOG=DEBUG is set",
-				DefaultFunc: schema.EnvDefaultFunc("DATABRICKS_DEBUG_TRUNCATE_BYTES", common.DefaultTruncateBytes),
-			},
-			"debug_headers": {
-				Optional:    true,
-				Type:        schema.TypeBool,
-				Description: "Debug HTTP headers of requests made by the provider. Default is false. Visible only when TF_LOG=DEBUG is set",
-				DefaultFunc: schema.EnvDefaultFunc("DATABRICKS_DEBUG_HEADERS", false),
-			},
-			"rate_limit": {
-				Optional:    true,
-				Type:        schema.TypeInt,
-				Description: "Maximum number of requests per second made to Databricks REST API by Terraform.",
-				DefaultFunc: schema.EnvDefaultFunc("DATABRICKS_RATE_LIMIT", common.DefaultRateLimitPerSecond),
-			},
-		},
+		Schema: providerSchema(),
 	}
 	p.ConfigureContextFunc = func(ctx context.Context, d *schema.ResourceData) (interface{}, diag.Diagnostics) {
 		ctx = context.WithValue(ctx, common.Provider, p)
@@ -264,111 +100,73 @@ func DatabricksProvider() *schema.Provider {
 	return p
 }
 
+func providerSchema() map[string]*schema.Schema {
+	kindMap := map[reflect.Kind]schema.ValueType{
+		reflect.String: schema.TypeString,
+		reflect.Bool:   schema.TypeBool,
+		reflect.Int:    schema.TypeInt,
+		// other values will immediately fail unit tests
+	}
+	ps := map[string]*schema.Schema{}
+	attrs := common.ClientAttributes() // TODO: pass by argument
+	for _, attr := range attrs {
+		fieldSchema := &schema.Schema{
+			Type:     kindMap[attr.Kind],
+			Optional: true,
+		}
+		ps[attr.Name] = fieldSchema
+		if len(attr.EnvVars) > 0 {
+			fieldSchema.DefaultFunc = schema.MultiEnvDefaultFunc(attr.EnvVars, nil)
+		}
+	}
+
+	ps["token"].Sensitive = true
+	ps["azure_client_secret"].Sensitive = true
+
+	azCoordinatesDeprecation := "`%s` is deprecated and would be removed in v0.4.0. Please rewrite provider configuration " +
+		"with `host = data.azurerm_databricks_workspace.example.workspace_url` to achieve the same effect. Please check " +
+		"https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/databricks_workspace#workspace_url for details"
+	ps["azure_workspace_name"].Deprecated = fmt.Sprintf(azCoordinatesDeprecation, "azure_workspace_name")
+	ps["azure_resource_group"].Deprecated = fmt.Sprintf(azCoordinatesDeprecation, "azure_resource_group")
+	ps["azure_subscription_id"].Deprecated = fmt.Sprintf(azCoordinatesDeprecation, "azure_subscription_id")
+	ps["azure_workspace_resource_id"].Deprecated = fmt.Sprintf(azCoordinatesDeprecation, "azure_workspace_resource_id")
+
+	patWorkaroundDeprecation := "Provider will fully switch to AAD token authentication in the near future"
+	ps["azure_use_pat_for_spn"].Deprecated = patWorkaroundDeprecation
+	ps["azure_use_pat_for_cli"].Deprecated = patWorkaroundDeprecation
+	ps["azure_pat_token_duration_seconds"].Deprecated = patWorkaroundDeprecation
+
+	ps["rate_limit"].DefaultFunc = schema.EnvDefaultFunc("DATABRICKS_RATE_LIMIT",
+		common.DefaultRateLimitPerSecond)
+	ps["debug_truncate_bytes"].DefaultFunc = schema.EnvDefaultFunc("DATABRICKS_DEBUG_TRUNCATE_BYTES",
+		common.DefaultTruncateBytes)
+	return ps
+}
+
 func configureDatabricksClient(ctx context.Context, d *schema.ResourceData) (interface{}, diag.Diagnostics) {
 	prov := ctx.Value(common.Provider).(*schema.Provider)
 	pc := common.DatabricksClient{
 		Provider: prov,
 	}
 	attrsUsed := []string{}
-	for attr, schm := range prov.Schema {
-		if schm.Type != schema.TypeString {
-			continue
-		}
-		if attr == "azure_pat_token_duration_seconds" {
-			continue
-		}
-		if value, ok := d.GetOk(attr); ok {
-			if value.(string) == "" {
-				continue
+	authsUsed := map[string]bool{}
+	attrs := common.ClientAttributes() // todo: pass by argument
+	for _, attr := range attrs {
+		if value, ok := d.GetOk(attr.Name); ok {
+			err := attr.Set(&pc, value)
+			if err != nil {
+				return nil, diag.FromErr(err)
 			}
-			if attr == "azure_environment" && value.(string) == "public" {
-				continue
+			if attr.Kind == reflect.String {
+				attrsUsed = append(attrsUsed, attr.Name)
 			}
-			attrsUsed = append(attrsUsed, attr)
+			if attr.Auth != "" {
+				authsUsed[attr.Auth] = true
+			}
 		}
 	}
 	sort.Strings(attrsUsed)
 	log.Printf("[INFO] Explicit and implicit attributes: %s", strings.Join(attrsUsed, ", "))
-	authsUsed := map[string]bool{}
-	if host, ok := d.GetOk("host"); ok {
-		pc.Host = host.(string)
-	}
-	if token, ok := d.GetOk("token"); ok {
-		authsUsed["token"] = true
-		pc.Token = token.(string)
-	}
-	if v, ok := d.GetOk("username"); ok {
-		authsUsed["password"] = true
-		pc.Username = v.(string)
-	}
-	if v, ok := d.GetOk("password"); ok {
-		authsUsed["password"] = true
-		pc.Password = v.(string)
-	}
-	if v, ok := d.GetOk("profile"); ok {
-		authsUsed["config profile"] = true
-		pc.Profile = v.(string)
-	}
-	if v, ok := d.GetOk("config_file"); ok {
-		authsUsed["config profile"] = true
-		pc.ConfigFile = v.(string)
-	}
-	if v, ok := d.GetOk("azure_workspace_resource_id"); ok {
-		authsUsed["azure"] = true
-		pc.AzureDatabricksResourceID = v.(string)
-	}
-	if v, ok := d.GetOk("azure_workspace_name"); ok {
-		authsUsed["azure"] = true
-		pc.AzureWorkspaceName = v.(string)
-	}
-	if v, ok := d.GetOk("azure_resource_group"); ok {
-		authsUsed["azure"] = true
-		pc.AzureResourceGroup = v.(string)
-	}
-	if v, ok := d.GetOk("azure_subscription_id"); ok {
-		authsUsed["azure"] = true
-		pc.AzureSubscriptionID = v.(string)
-	}
-	if v, ok := d.GetOk("azure_client_secret"); ok {
-		authsUsed["azure"] = true
-		pc.AzureClientSecret = v.(string)
-	}
-	if v, ok := d.GetOk("azure_client_id"); ok {
-		authsUsed["azure"] = true
-		pc.AzureClientID = v.(string)
-	}
-	if v, ok := d.GetOk("azure_tenant_id"); ok {
-		authsUsed["azure"] = true
-		pc.AzureTenantID = v.(string)
-	}
-	if v, ok := d.GetOk("azure_pat_token_duration_seconds"); ok {
-		pc.AzurePATTokenDurationSeconds = v.(string)
-	}
-	if v, ok := d.GetOk("skip_verify"); ok {
-		pc.InsecureSkipVerify = v.(bool)
-	}
-	if v, ok := d.GetOk("debug_truncate_bytes"); ok {
-		pc.DebugTruncateBytes = v.(int)
-	}
-	if v, ok := d.GetOk("rate_limit"); ok {
-		pc.RateLimitPerSecond = v.(int)
-	}
-	if v, ok := d.GetOk("debug_headers"); ok {
-		pc.DebugHeaders = v.(bool)
-	}
-	if v, ok := d.GetOk("azure_use_pat_for_cli"); ok {
-		pc.AzureUsePATForCLI = v.(bool)
-	}
-	if v, ok := d.GetOk("azure_use_pat_for_spn"); ok {
-		pc.AzureUsePATForSPN = v.(bool)
-	}
-	if v, ok := d.GetOk("azure_environment"); ok {
-		pc.AzurermEnvironment = v.(string)
-	}
-	if v, ok := d.GetOk("google_service_account"); ok {
-		authsUsed["google"] = true
-		pc.GoogleServiceAccount = v.(string)
-	}
 	authorizationMethodsUsed := []string{}
 	for name, used := range authsUsed {
 		if used {

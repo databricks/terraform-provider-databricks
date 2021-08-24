@@ -82,6 +82,6 @@ In [the next step](workspace-management.md), please use the [special configurati
 
 ```hcl
 provider "databricks" {
-  azure_workspace_resource_id = azurerm_databricks_workspace.this.id
+  host = azurerm_databricks_workspace.this.workspace_url
 }
 ```

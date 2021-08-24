@@ -16,8 +16,8 @@ import (
 
 // VisualizationEntity defines the parameters that can be set in the resource.
 type VisualizationEntity struct {
-	QueryID         string `json:"query_id"`
-	VisualizationID string `json:"visualization_id,omitempty" tf:"computed"`
+	QueryID         string `json:"query_id" tf:"force_new"`
+	VisualizationID string `json:"visualization_id,omitempty" tf:"computed,force_new"`
 
 	Type        string `json:"type"`
 	Name        string `json:"name"`
@@ -147,10 +147,6 @@ func ResourceVisualization() *schema.Resource {
 				}
 				return bytes.Equal(oldp, newp)
 			}
-
-			// Changing part of the composite ID forces recreate.
-			m["query_id"].ForceNew = true
-			m["visualization_id"].ForceNew = true
 
 			return m
 		})

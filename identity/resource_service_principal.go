@@ -59,14 +59,13 @@ func (a ServicePrincipalsAPI) Delete(servicePrincipalID string) error {
 // ResourceServicePrincipal manages service principals within workspace
 func ResourceServicePrincipal() *schema.Resource {
 	type entity struct {
-		ApplicationID string `json:"application_id,omitempty" tf:"computed"`
+		ApplicationID string `json:"application_id,omitempty" tf:"computed,force_new"`
 		DisplayName   string `json:"display_name,omitempty" tf:"computed"`
 		Active        bool   `json:"active,omitempty"`
 	}
 	servicePrincipalSchema := common.StructToSchema(entity{},
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
 			addEntitlementsToSchema(&m)
-			m["application_id"].ForceNew = true
 			m["active"].Default = true
 			return m
 		})

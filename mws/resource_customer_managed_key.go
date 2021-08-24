@@ -20,8 +20,8 @@ type AwsKeyInfo struct {
 // CustomerManagedKey contains key information and metadata for BYOK for E2
 type CustomerManagedKey struct {
 	CustomerManagedKeyID string      `json:"customer_managed_key_id,omitempty" tf:"computed"`
-	AwsKeyInfo           *AwsKeyInfo `json:"aws_key_info"`
-	AccountID            string      `json:"account_id"`
+	AwsKeyInfo           *AwsKeyInfo `json:"aws_key_info" tf:"force_new"`
+	AccountID            string      `json:"account_id" tf:"force_new"`
 	CreationTime         int64       `json:"creation_time,omitempty" tf:"computed"`
 	UseCases             []string    `json:"use_cases"`
 }
@@ -66,12 +66,7 @@ func (a CustomerManagedKeysAPI) List(accountID string) (kl []CustomerManagedKey,
 
 // ResourceCustomerManagedKey ...
 func ResourceCustomerManagedKey() *schema.Resource {
-	s := common.StructToSchema(CustomerManagedKey{},
-		func(s map[string]*schema.Schema) map[string]*schema.Schema {
-			s["aws_key_info"].ForceNew = true
-			s["account_id"].ForceNew = true
-			return s
-		})
+	s := common.StructToSchema(CustomerManagedKey{}, nil)
 	p := common.NewPairSeparatedID("account_id", "customer_managed_key_id", "/")
 	return common.Resource{
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {

@@ -15,8 +15,8 @@ import (
 
 // WidgetEntity defines the parameters that can be set in the resource.
 type WidgetEntity struct {
-	DashboardID string `json:"dashboard_id"`
-	WidgetID    string `json:"widget_id,omitempty" tf:"computed"`
+	DashboardID string `json:"dashboard_id" tf:"force_new"`
+	WidgetID    string `json:"widget_id,omitempty" tf:"computed,force_new"`
 
 	Text            string `json:"text,omitempty"`
 	VisualizationID string `json:"visualization_id,omitempty"`
@@ -263,10 +263,6 @@ func ResourceWidget() *schema.Resource {
 			m["visualization_id"].DiffSuppressFunc = func(_, old, new string, d *schema.ResourceData) bool {
 				return extractVisualizationID(old) == extractVisualizationID(new)
 			}
-
-			// Changing part of the composite ID forces recreate.
-			m["dashboard_id"].ForceNew = true
-			m["widget_id"].ForceNew = true
 
 			return m
 		})

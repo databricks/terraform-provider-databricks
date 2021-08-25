@@ -28,7 +28,7 @@ type LogDeliveryConfiguration struct {
 	LogType                string  `json:"log_type"`
 	OutputFormat           string  `json:"output_format"`
 	DeliveryPathPrefix     string  `json:"delivery_path_prefix,omitempty"`
-	DeliveryStartTime      string  `json:"delivery_start_time,omitempty" tf:"computed"`
+	DeliveryStartTime      string  `json:"delivery_start_time,omitempty" tf:"computed,force_new"`
 }
 
 // LogDeliveryAPI ...
@@ -77,7 +77,6 @@ func ResourceLogDelivery() *schema.Resource {
 				k, old, new string, d *schema.ResourceData) bool {
 				return false
 			}
-			s["delivery_start_time"].ForceNew = true
 			return s
 		})
 	return common.Resource{

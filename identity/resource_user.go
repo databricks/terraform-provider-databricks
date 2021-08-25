@@ -11,14 +11,13 @@ import (
 // ResourceUser manages users within workspace
 func ResourceUser() *schema.Resource {
 	type entity struct {
-		UserName    string `json:"user_name"`
+		UserName    string `json:"user_name" tf:"force_new"`
 		DisplayName string `json:"display_name,omitempty" tf:"computed"`
 		Active      bool   `json:"active,omitempty"`
 	}
 	userSchema := common.StructToSchema(entity{},
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
 			addEntitlementsToSchema(&m)
-			m["user_name"].ForceNew = true
 			m["active"].Default = true
 			return m
 		})

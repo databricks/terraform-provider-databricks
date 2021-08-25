@@ -26,7 +26,7 @@ func (m AzureADLSGen1Mount) Source() string {
 
 // Config ...
 func (m AzureADLSGen1Mount) Config(client *common.DatabricksClient) map[string]string {
-	aadEndpoint := client.AzureAuth.AzureEnvironment.ActiveDirectoryEndpoint
+	aadEndpoint := client.AzureEnvironment.ActiveDirectoryEndpoint
 	return map[string]string{
 		m.PrefixType + ".oauth2.access.token.provider.type": "ClientCredential",
 

@@ -109,3 +109,56 @@ func TestNodeType(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, "Random_03", d.Id())
 }
+
+func TestNodeTypeCategory(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:       "GET",
+				ReuseRequest: true,
+				Resource:     "/api/2.0/clusters/list-node-types",
+				Response: NodeTypeList{
+					[]NodeType{
+						{
+							NodeTypeID:     "Random_05",
+							InstanceTypeID: "Random_05",
+							MemoryMB:       1024,
+							NumCores:       32,
+							NodeInstanceType: &NodeInstanceType{
+								LocalDisks:      3,
+								LocalDiskSizeGB: 100,
+							},
+						},
+						{
+							NodeTypeID:     "Random_01",
+							InstanceTypeID: "Random_01",
+							MemoryMB:       8192,
+							NumCores:       8,
+							NodeInstanceType: &NodeInstanceType{
+								InstanceTypeID: "_",
+							},
+							Category: "Memory Optimized",
+						},
+						{
+							NodeTypeID:     "Random_02",
+							InstanceTypeID: "Random_02",
+							MemoryMB:       8192,
+							NumCores:       8,
+							NumGPUs:        2,
+							Category:       "Storage Optimized",
+						},
+					},
+				},
+			},
+		},
+		Read:        true,
+		Resource:    DataSourceNodeType(),
+		NonWritable: true,
+		State: map[string]interface{}{
+			"category": "Storage optimized",
+		},
+		ID: ".",
+	}.Apply(t)
+	assert.NoError(t, err)
+	assert.Equal(t, "Random_02", d.Id())
+}

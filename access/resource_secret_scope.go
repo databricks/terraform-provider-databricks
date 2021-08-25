@@ -30,10 +30,10 @@ type SecretScopeList struct {
 
 // SecretScope is a struct that encapsulates the secret scope
 type SecretScope struct {
-	Name                   string            `json:"name"`
+	Name                   string            `json:"name" tf:"force_new"`
 	BackendType            string            `json:"backend_type,omitempty" tf:"computed"`
-	InitialManagePrincipal string            `json:"initial_manage_principal,omitempty"`
-	KeyvaultMetadata       *KeyvaultMetadata `json:"keyvault_metadata,omitempty"`
+	InitialManagePrincipal string            `json:"initial_manage_principal,omitempty" tf:"force_new"`
+	KeyvaultMetadata       *KeyvaultMetadata `json:"keyvault_metadata,omitempty" tf:"force_new"`
 }
 
 // KeyvaultMetadata Azure Key Vault metadata wrapper
@@ -66,7 +66,7 @@ func (a SecretScopesAPI) Create(s SecretScope) error {
 			//lint:ignore ST1005 Azure is a valid capitalized string
 			return fmt.Errorf("Azure KeyVault is not available")
 		}
-		if a.client.AzureAuth.IsClientSecretSet() {
+		if a.client.IsAzureClientSecretSet() {
 			//lint:ignore ST1005 Azure is a valid capitalized string
 			return fmt.Errorf("Azure KeyVault cannot yet be configured for Service Principal authorization")
 		}
@@ -123,7 +123,7 @@ func kvDiffFunc(ctx context.Context, diff *schema.ResourceDiff, v interface{}) e
 		return nil
 	}
 	client := v.(*common.DatabricksClient)
-	if client.IsAzure() && client.AzureAuth.IsClientSecretSet() {
+	if client.IsAzure() && client.IsAzureClientSecretSet() {
 		return fmt.Errorf("you can't set up Azure KeyVault-based secret scope via Service Principal")
 	}
 	return nil
@@ -133,11 +133,8 @@ func kvDiffFunc(ctx context.Context, diff *schema.ResourceDiff, v interface{}) e
 func ResourceSecretScope() *schema.Resource {
 	s := common.StructToSchema(SecretScope{}, func(s map[string]*schema.Schema) map[string]*schema.Schema {
 		// TODO: DiffSuppressFunc for initial_manage_principal & importing
-		s["name"].ForceNew = true
 		// nolint
 		s["name"].ValidateFunc = validScope
-		s["initial_manage_principal"].ForceNew = true
-		s["keyvault_metadata"].ForceNew = true
 
 		return s
 	})

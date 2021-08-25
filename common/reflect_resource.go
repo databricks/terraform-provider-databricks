@@ -85,8 +85,22 @@ func handleOptional(typeField reflect.StructField, schema *schema.Schema) {
 }
 
 func handleComputed(typeField reflect.StructField, schema *schema.Schema) {
-	if strings.Contains(typeField.Tag.Get("tf"), "computed") {
-		schema.Computed = true
+	tfTags := strings.Split(typeField.Tag.Get("tf"), ",")
+	for _, tag := range tfTags {
+		if tag == "computed" {
+			schema.Computed = true
+			break
+		}
+	}
+}
+
+func handleForceNew(typeField reflect.StructField, schema *schema.Schema) {
+	tfTags := strings.Split(typeField.Tag.Get("tf"), ",")
+	for _, tag := range tfTags {
+		if tag == "force_new" {
+			schema.ForceNew = true
+			break
+		}
 	}
 }
 
@@ -149,6 +163,7 @@ func typeToSchema(v reflect.Value, t reflect.Type) map[string]*schema.Schema {
 		}
 		handleOptional(typeField, scm[fieldName])
 		handleComputed(typeField, scm[fieldName])
+		handleForceNew(typeField, scm[fieldName])
 		switch typeField.Type.Kind() {
 		case reflect.Int, reflect.Int32, reflect.Int64:
 			scm[fieldName].Type = schema.TypeInt

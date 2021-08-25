@@ -11,6 +11,8 @@ Generates `*.tf` files for Databricks resources as well as `import.sh` to run im
 
 ## Example Usage
 
+After downloading the [latest released binary](https://github.com/databrickslabs/terraform-provider-databricks/releases), unpack it and place it in the same folder. In fact, you may have already downloaded this binary - check `.terraform` folder of any state directory, where you've used `databricks` provider. It could also be in your plugin cache `~/.terraform.d/plugins/registry.terraform.io/databrickslabs/databricks/*/*/terraform-provider-databricks`.
+
 ```bash
 export DATABRICKS_HOST=...
 export DATABRICKS_TOKEN=...

@@ -3,6 +3,7 @@ package common
 import (
 	"log"
 	"os"
+	"reflect"
 	"strconv"
 	"strings"
 	"sync"
@@ -18,37 +19,38 @@ var (
 
 // NewClientFromEnvironment makes very good client for testing purposes
 func NewClientFromEnvironment() *DatabricksClient {
-	debugBytes, err := strconv.Atoi(os.Getenv("DATABRICKS_DEBUG_TRUNCATE_BYTES"))
-	if err != nil {
-		debugBytes = DefaultTruncateBytes
+	client := DatabricksClient{}
+	for _, attr := range ClientAttributes() {
+		found := false
+		var value interface{}
+		for _, envName := range attr.EnvVars {
+			v := os.Getenv(envName)
+			if v == "" {
+				continue
+			}
+			switch attr.Kind {
+			case reflect.String:
+				value = v
+				found = true
+			case reflect.Bool:
+				if vv, err := strconv.ParseBool(v); err == nil {
+					value = vv
+					found = true
+				}
+			case reflect.Int:
+				if vv, err := strconv.Atoi(v); err == nil {
+					value = vv
+					found = true
+				}
+			default:
+				continue
+			}
+		}
+		if found {
+			attr.Set(&client, value)
+		}
 	}
-	debugHeaders, err := strconv.ParseBool(os.Getenv("DATABRICKS_DEBUG_HEADERS"))
-	if err != nil {
-		debugHeaders = false
-	}
-	client := DatabricksClient{
-		Host:                 os.Getenv("DATABRICKS_HOST"),
-		Token:                os.Getenv("DATABRICKS_TOKEN"),
-		Username:             os.Getenv("DATABRICKS_USERNAME"),
-		Password:             os.Getenv("DATABRICKS_PASSWORD"),
-		ConfigFile:           os.Getenv("DATABRICKS_CONFIG_FILE"),
-		Profile:              os.Getenv("DATABRICKS_CONFIG_PROFILE"),
-		GoogleServiceAccount: os.Getenv("DATABRICKS_GOOGLE_SERVICE_ACCOUNT"),
-		AzureAuth: AzureAuth{
-			ResourceID:     os.Getenv("DATABRICKS_AZURE_WORKSPACE_RESOURCE_ID"),
-			WorkspaceName:  os.Getenv("DATABRICKS_AZURE_WORKSPACE_NAME"),
-			ResourceGroup:  os.Getenv("DATABRICKS_AZURE_RESOURCE_GROUP"),
-			SubscriptionID: os.Getenv("ARM_SUBSCRIPTION_ID"),
-			ClientID:       os.Getenv("ARM_CLIENT_ID"),
-			ClientSecret:   os.Getenv("ARM_CLIENT_SECRET"),
-			TenantID:       os.Getenv("ARM_TENANT_ID"),
-			Environment:    os.Getenv("ARM_ENVIRONMENT"),
-		},
-		RateLimitPerSecond: 10,
-		DebugTruncateBytes: debugBytes,
-		DebugHeaders:       debugHeaders,
-	}
-	err = client.Configure()
+	err := client.Configure()
 	if err != nil {
 		panic(err)
 	}

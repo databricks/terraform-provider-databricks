@@ -15,7 +15,7 @@ func TestAzureAccAdlsGen1Mount_correctly_mounts(t *testing.T) {
 	if _, ok := os.LookupEnv("CLOUD_ENV"); !ok {
 		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
 	}
-	if !common.CommonEnvironmentClient().AzureAuth.IsClientSecretSet() {
+	if !common.CommonEnvironmentClient().IsAzureClientSecretSet() {
 		t.Skip("Test is meant only for client-secret conf Azure")
 	}
 	acceptance.AccTest(t, resource.TestCase{

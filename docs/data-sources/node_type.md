@@ -45,12 +45,14 @@ Data source allows you to pick groups by the following attributes
 * `min_cores` - (Optional) Minimum number of CPU cores available on instance. Defaults to *0*.
 * `min_gpus` - (Optional) Minimum number of GPU's attached to instance. Defaults to *0*.
 * `local_disk` - (Optional) Pick only nodes with local storage. Defaults to *false*.
-* `category` - (Optional) Node category, which can be one of:
-  * `General Purpose`
-  * `Memory Optimized`
-  * `Storage Optimized`
-  * `Compute Optimized`
-  * `GPU`
+* `category` - (Optional, case insensitive string) Node category, which can be one of (depending on the cloud environment, could be checked with `databricks clusters list-node-types|jq '.node_types[]|.category'|sort |uniq`):
+  * `General Purpose` (all clouds)
+  * `General Purpose (HDD)` (Azure)
+  * `Compute Optimized` (all clouds)
+  * `Memory Optimized` (all clouds)
+  * `Memory Optimized (Remote HDD)` (Azure)
+  * `Storage Optimized` (AWS, Azure)
+  * `GPU Accelerated` (AWS, Azure)
 * `photon_worker_capable` - (Optional) Pick only nodes that can run Photon workers. Defaults to *false*.
 * `photon_driver_capable` - (Optional) Pick only nodes that can run Photon driver. Defaults to *false*.
 * `is_io_cache_enabled` - (Optional) . Pick only nodes that have IO Cache. Defaults to *false*.

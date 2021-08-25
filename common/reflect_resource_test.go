@@ -48,6 +48,7 @@ type testStruct struct {
 	NonOptional    string            `json:"non_optional"`
 	String         string            `json:"string,omitempty"`
 	ComputedField  string            `json:"computed_field,omitempty" tf:"some_random_tag,computed"`
+	ForceNewField  string            `json:"force_new_field,omitempty" tf:"force_new"`
 	MapField       map[string]string `json:"map_field,omitempty"`
 	SliceSetStruct []testSliceItem   `json:"slice_set_struct,omitempty" tf:"slice_set"`
 	SliceSetString []string          `json:"slice_set_string,omitempty" tf:"slice_set"`
@@ -61,16 +62,18 @@ type testStruct struct {
 
 var scm = StructToSchema(testStruct{}, nil)
 
-var testStructFields = []string{"integer", "float", "non_optional", "string", "computed_field", "map_field",
+var testStructFields = []string{"integer", "float", "non_optional", "string", "computed_field", "force_new_field", "map_field",
 	"slice_set_struct", "slice_set_string", "ptr_item", "string_slice", "bool", "int_slice", "float_slice",
 	"bool_slice"}
 
-var testStructOptionalFields = []string{"integer", "float", "string", "computed_field", "map_field", "slice_set_struct",
+var testStructOptionalFields = []string{"integer", "float", "string", "computed_field", "force_new_field", "map_field", "slice_set_struct",
 	"ptr_item", "slice_set_string", "bool", "int_slice", "float_slice", "bool_slice"}
 
 var testStructRequiredFields = []string{"non_optional"}
 
 var testStructComputedFields = []string{"computed_field"}
+
+var testStructForceNewFields = []string{"force_new_field"}
 
 var testStructPtrFields = []string{"ptr_item"}
 
@@ -87,6 +90,7 @@ func TestStructToSchema_type(t *testing.T) {
 		"non_optional":     schema.TypeString,
 		"string":           schema.TypeString,
 		"computed_field":   schema.TypeString,
+		"force_new_field":  schema.TypeString,
 		"slice_set_struct": schema.TypeSet,
 		"map_field":        schema.TypeMap,
 		"slice_set_string": schema.TypeSet,
@@ -146,6 +150,14 @@ func TestStructToSchema_computed_values_set(t *testing.T) {
 		requiredField, ok := scm[field]
 		assert.Truef(t, ok, "%s key not found", field)
 		assert.Truef(t, requiredField.Computed, "computed should be set to true in field: %s", field)
+	}
+}
+
+func TestStructToSchema_forced_new_values_set(t *testing.T) {
+	for _, field := range testStructForceNewFields {
+		requiredField, ok := scm[field]
+		assert.Truef(t, ok, "%s key not found", field)
+		assert.Truef(t, requiredField.ForceNew, "force_new should be set to true in field: %s", field)
 	}
 }
 

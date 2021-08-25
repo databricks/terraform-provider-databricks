@@ -25,9 +25,9 @@ func NewReposAPI(ctx context.Context, m interface{}) ReposAPI {
 // ReposInformation provides information about given repository
 type ReposInformation struct {
 	ID           int64  `json:"id"`
-	Url          string `json:"url"`
-	Provider     string `json:"provider,omitempty" tf:"computed,alias:git_provider"`
-	Path         string `json:"path,omitempty" tf:"computed"`
+	Url          string `json:"url" tf:"force_new"`
+	Provider     string `json:"provider,omitempty" tf:"computed,alias:git_provider,force_new"`
+	Path         string `json:"path,omitempty" tf:"computed,force_new"` // TODO: remove force_new after the Update API will support changing the path
 	Branch       string `json:"branch,omitempty" tf:"computed"`
 	HeadCommitID string `json:"head_commit_id,omitempty" tf:"computed,alias:commit_hash"`
 }
@@ -130,13 +130,10 @@ func getProviderFromUrl(uri string) string {
 
 func ResourceRepo() *schema.Resource {
 	s := common.StructToSchema(ReposInformation{}, func(s map[string]*schema.Schema) map[string]*schema.Schema {
-		s["url"].ForceNew = true
 		s["url"].ValidateFunc = validation.IsURLWithScheme([]string{"https", "http"})
-		s["git_provider"].ForceNew = true
 		s["git_provider"].DiffSuppressFunc = func(k, old, new string, d *schema.ResourceData) bool {
 			return strings.EqualFold(old, new)
 		}
-		s["path"].ForceNew = true // TODO: remove after the Update API will support changing the path
 		s["branch"].ConflictsWith = []string{"tag"}
 		s["branch"].ValidateFunc = validation.StringIsNotWhiteSpace
 

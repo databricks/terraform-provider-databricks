@@ -16,12 +16,12 @@ import (
 
 // SqlPermissions defines table access control
 type SqlPermissions struct {
-	Table                string                `json:"table,omitempty"`
-	View                 string                `json:"view,omitempty"`
-	Database             string                `json:"database,omitempty"`
-	Catalog              bool                  `json:"catalog,omitempty"`
-	AnyFile              bool                  `json:"any_file,omitempty"`
-	AnonymousFunction    bool                  `json:"anonymous_function,omitempty"`
+	Table                string                `json:"table,omitempty" tf:"force_new"`
+	View                 string                `json:"view,omitempty" tf:"force_new"`
+	Database             string                `json:"database,omitempty" tf:"force_new"`
+	Catalog              bool                  `json:"catalog,omitempty" tf:"force_new"`
+	AnyFile              bool                  `json:"any_file,omitempty" tf:"force_new"`
+	AnonymousFunction    bool                  `json:"anonymous_function,omitempty" tf:"force_new"`
 	ClusterID            string                `json:"cluster_id,omitempty" tf:"computed"`
 	PrivilegeAssignments []PrivilegeAssignment `json:"privilege_assignments,omitempty" tf:"slice_set"`
 
@@ -306,8 +306,6 @@ func ResourceSqlPermissions() *schema.Resource {
 	s := common.StructToSchema(SqlPermissions{}, func(s map[string]*schema.Schema) map[string]*schema.Schema {
 		alof := []string{"database", "table", "view", "catalog", "any_file", "anonymous_function"}
 		for _, field := range alof {
-			s[field].ForceNew = true
-			s[field].Optional = true
 			s[field].AtLeastOneOf = alof
 		}
 		s["database"].DiffSuppressFunc = func(k, old, new string, d *schema.ResourceData) bool {

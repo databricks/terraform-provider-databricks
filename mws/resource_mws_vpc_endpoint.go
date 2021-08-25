@@ -77,7 +77,6 @@ func ResourceVPCEndpoint() *schema.Resource {
 	s := common.StructToSchema(VPCEndpoint{}, func(s map[string]*schema.Schema) map[string]*schema.Schema {
 		// nolint
 		s["vpc_endpoint_name"].ValidateFunc = validation.StringLenBetween(4, 256)
-		// s["aws_account_id"].ForceNew = false
 		return s
 	})
 	p := common.NewPairSeparatedID("account_id", "vpc_endpoint_id", "/")

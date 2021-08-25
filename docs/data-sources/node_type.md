@@ -46,10 +46,10 @@ Data source allows you to pick groups by the following attributes
 * `min_gpus` - (Optional) Minimum number of GPU's attached to instance. Defaults to *0*.
 * `local_disk` - (Optional) Pick only nodes with local storage. Defaults to *false*.
 * `category` - (Optional) Node category, which can be one of:
-  * `General purpose`
-  * `Memory optimized`
-  * `Storage optimized`
-  * `Compute optimized`
+  * `General Purpose`
+  * `Memory Optimized`
+  * `Storage Optimized`
+  * `Compute Optimized`
   * `GPU`
 * `photon_worker_capable` - (Optional) Pick only nodes that can run Photon workers. Defaults to *false*.
 * `photon_driver_capable` - (Optional) Pick only nodes that can run Photon driver. Defaults to *false*.

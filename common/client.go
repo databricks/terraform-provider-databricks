@@ -8,6 +8,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"reflect"
 	"strings"
 	"sync"
 	"time"
@@ -15,6 +16,8 @@ import (
 	"golang.org/x/time/rate"
 	"google.golang.org/api/option"
 
+	"github.com/Azure/go-autorest/autorest"
+	"github.com/Azure/go-autorest/autorest/azure"
 	"github.com/hashicorp/go-retryablehttp"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/mitchellh/go-homedir"
@@ -28,46 +31,183 @@ const (
 	DefaultHTTPTimeoutSeconds = 60
 )
 
-// DatabricksClient is the client struct that contains clients for all the services available on Databricks
+// DatabricksClient holds properties needed for authentication and HTTP client setup
+// fields with `name` struct tags become Terraform provider attributes. `env` struct tag
+// can hold one or more coma-separated env variable names to find value, if not specified
+// directly. `auth` struct tag describes the type of conflicting authentication used.
 type DatabricksClient struct {
-	Host               string
-	Token              string
-	Username           string
-	Password           string
-	Profile            string
-	ConfigFile         string
-	AccountID          string
-	AzureAuth          AzureAuth
-	InsecureSkipVerify bool
-	HTTPTimeoutSeconds int
-	DebugTruncateBytes int
-	DebugHeaders       bool
-	RateLimitPerSecond int
+	Host     string `name:"host" env:"DATABRICKS_HOST"`
+	Token    string `name:"token" env:"DATABRICKS_TOKEN" auth:"token"`
+	Username string `name:"username" env:"DATABRICKS_USERNAME" auth:"password"`
+	Password string `name:"password" env:"DATABRICKS_PASSWORD" auth:"password"`
 
-	GoogleServiceAccount string
-	googleAuthOptions    []option.ClientOption
+	// Databricks Account ID for Accounts API. This field is used in dependencies.
+	AccountID string `name:"account_id" env:"DATABRICKS_ACCOUNT_ID"`
 
+	// Connection profile specified within ~/.databrickscfg.
+	Profile string `name:"profile" env:"DATABRICKS_CONFIG_PROFILE" auth:"config profile"`
+
+	// Location of the Databricks CLI credentials file, that is created
+	// by `databricks configure --token` command. By default, it is located
+	// in ~/.databrickscfg.
+	ConfigFile string `name:"config_file" env:"DATABRICKS_CONFIG_FILE"`
+
+	GoogleServiceAccount string `name:"google_service_account" env:"DATABRICKS_GOOGLE_SERVICE_ACCOUNT" auth:"google"`
+
+	// Deprecated in favor of host - to be removed in v0.4.0
+	AzureWorkspaceName string `name:"azure_workspace_name" env:"DATABRICKS_AZURE_WORKSPACE_NAME" auth:"azure"`
+	// Deprecated in favor of host - to be removed in v0.4.0
+	AzureResourceGroup string `name:"azure_resource_group" env:"DATABRICKS_AZURE_RESOURCE_GROUP" auth:"azure"`
+	// Deprecated in favor of host - to be removed in v0.4.0
+	AzureSubscriptionID string `name:"azure_subscription_id" env:"DATABRICKS_AZURE_SUBSCRIPTION_ID,ARM_SUBSCRIPTION_ID" auth:"azure"`
+	// Deprecated in favor of host - to be removed in v0.4.0
+	AzureDatabricksResourceID string `name:"azure_workspace_resource_id" env:"DATABRICKS_AZURE_WORKSPACE_RESOURCE_ID,AZURE_DATABRICKS_WORKSPACE_RESOURCE_ID" auth:"azure"`
+	// Deprecated - to be removed in v0.4.0
+	AzurePATTokenDurationSeconds string `name:"azure_pat_token_duration_seconds"`
+	// Deprecated - to be removed in v0.4.0
+	AzureUsePATForCLI bool `name:"azure_use_pat_for_cli"`
+	// Deprecated - to be removed in v0.4.0
+	AzureUsePATForSPN bool `name:"azure_use_pat_for_spn"`
+
+	AzureClientSecret  string `name:"azure_client_secret" env:"DATABRICKS_AZURE_CLIENT_SECRET,ARM_CLIENT_SECRET" auth:"azure"`
+	AzureClientID      string `name:"azure_client_id" env:"DATABRICKS_AZURE_CLIENT_ID,ARM_CLIENT_ID" auth:"azure"`
+	AzureTenantID      string `name:"azure_tenant_id" env:"DATABRICKS_AZURE_TENANT_ID,ARM_TENANT_ID" auth:"azure"`
+	AzurermEnvironment string `name:"azure_environment" env:"ARM_ENVIRONMENT"`
+
+	// Azure Enviroment endpoints
+	AzureEnvironment *azure.Environment
+
+	// Skip SSL certificate verification for HTTP calls.
+	// Use at your own risk or for unit testing purposes.
+	InsecureSkipVerify bool `name:"skip_verify"`
+	HTTPTimeoutSeconds int  `name:"http_timeout_seconds"`
+
+	// Truncate JSON fields in JSON above this limit. Default is 96.
+	DebugTruncateBytes int `name:"debug_truncate_bytes" env:"DATABRICKS_DEBUG_TRUNCATE_BYTES"`
+
+	// Debug HTTP headers of requests made by the provider. Default is false.
+	DebugHeaders bool `name:"debug_headers" env:"DATABRICKS_DEBUG_HEADERS"`
+
+	// Maximum number of requests per second made to Databricks REST API.
+	RateLimitPerSecond int `name:"rate_limit" env:"DATABRICKS_RATE_LIMIT"`
+
+	// OAuth token refreshers for Azure to be used within `authVisitor`
+	azureAuthorizer autorest.Authorizer
+
+	// Deprecated. Session temporary PAT token if `UsePATForSPN` or `UsePATForCLI` are true
+	temporaryPat *tokenResponse
+
+	// options used to enable unit testing mode for OIDC
+	googleAuthOptions []option.ClientOption
+
+	// Context used during provider initialisation,
+	// mostly for OAuth-based validation.
 	InitContext context.Context
 
-	authMutex      sync.Mutex
-	rateLimiter    *rate.Limiter
-	Provider       *schema.Provider
-	httpClient     *retryablehttp.Client
-	authVisitor    func(r *http.Request) error
+	// Mutex used by Authenticate method to guard `authVisitor`, which
+	// has to be lazily created on the first request to Databricks API.
+	// It is done because databricks host and token may often be available
+	// only in the middle of Terraform DAG execution.
+	authMutex sync.Mutex
+
+	// HTTP request interceptor, that assigns Authorization header
+	authVisitor func(r *http.Request) error
+
+	// Databricks REST API rate limiter
+	rateLimiter *rate.Limiter
+
+	// Terraform provider instance to include Terraform binary version in
+	// User-Agent header
+	Provider *schema.Provider
+
+	// retryalble HTTP client
+	httpClient *retryablehttp.Client
+
+	// configuration attributes that were used to initialise client.
+	configAttributesUsed []string
+
+	// callback used to create API1.2 call wrapper, which simplifies unit tessting
 	commandFactory func(context.Context, *DatabricksClient) CommandExecutor
 }
 
-// Configure client to work
-func (c *DatabricksClient) Configure() error {
+type ConfigAttribute struct {
+	Name    string
+	Kind    reflect.Kind
+	EnvVars []string
+	Auth    string
+	num     int
+}
+
+func (ca *ConfigAttribute) Set(client *DatabricksClient, i interface{}) error {
+	rv := reflect.ValueOf(client)
+	field := rv.Elem().Field(ca.num)
+	switch ca.Kind {
+	case reflect.String:
+		field.SetString(i.(string))
+	case reflect.Bool:
+		field.SetBool(i.(bool))
+	case reflect.Int:
+		field.SetInt(int64(i.(int)))
+	default:
+		// must extensively test with providerFixture to avoid this one
+		return fmt.Errorf("cannot set %s of unknown type %s", ca.Name, reflectKind(ca.Kind))
+	}
+	return nil
+}
+
+// ClientAttributes returns meta-representation of DatabricksClient configuration options
+func ClientAttributes() (attrs []ConfigAttribute) {
+	t := reflect.TypeOf(DatabricksClient{})
+	for i := 0; i < t.NumField(); i++ {
+		field := t.Field(i)
+		nameTag := field.Tag.Get("name")
+		if nameTag == "" {
+			continue
+		}
+		attr := ConfigAttribute{
+			Name: nameTag,
+			Auth: field.Tag.Get("auth"),
+			Kind: field.Type.Kind(),
+			num:  i,
+		}
+		envTag := field.Tag.Get("env")
+		if envTag != "" {
+			attr.EnvVars = strings.Split(envTag, ",")
+		}
+		attrs = append(attrs, attr)
+	}
+	return
+}
+
+// envVariablesUsed returns coma-separated list of the used relevant variable names
+func envVariablesUsed() string {
+	names := []string{}
+	for _, attr := range ClientAttributes() {
+		if len(attr.EnvVars) == 0 {
+			continue
+		}
+		for _, envVar := range attr.EnvVars {
+			value := os.Getenv(envVar)
+			if value == "" {
+				continue
+			}
+			names = append(names, envVar)
+		}
+	}
+	return strings.Join(names, ", ")
+}
+
+// Configure client to work, optionally specifying configuration attributes used
+func (c *DatabricksClient) Configure(attrsUsed ...string) error {
+	c.configAttributesUsed = attrsUsed
 	c.configureHTTPCLient()
-	c.AzureAuth.databricksClient = c
 	if c.DebugTruncateBytes == 0 {
 		c.DebugTruncateBytes = DefaultTruncateBytes
 	}
 	return nil
 }
 
-// Authenticate authenticates across providers or returns error
+// Authenticate lazily authenticates across authorizers or returns error
 func (c *DatabricksClient) Authenticate() error {
 	if c.authVisitor != nil {
 		return nil
@@ -79,8 +219,8 @@ func (c *DatabricksClient) Authenticate() error {
 	}
 	authorizers := []func() (func(r *http.Request) error, error){
 		c.configureAuthWithDirectParams,
-		c.AzureAuth.configureWithClientSecret,
-		c.AzureAuth.configureWithAzureCLI,
+		c.configureWithClientSecret,
+		c.configureWithAzureCLI,
 		c.configureWithGoogleForAccountsAPI,
 		c.configureWithGoogleForWorkspace,
 		c.configureFromDatabricksCfg,
@@ -88,7 +228,7 @@ func (c *DatabricksClient) Authenticate() error {
 	for _, authProvider := range authorizers {
 		authorizer, err := authProvider()
 		if err != nil {
-			return err
+			return c.niceError(fmt.Sprintf("cannot configure auth: %s", err))
 		}
 		if authorizer == nil {
 			continue
@@ -97,15 +237,20 @@ func (c *DatabricksClient) Authenticate() error {
 		c.fixHost()
 		return nil
 	}
-	return fmt.Errorf("authentication is not configured for provider. Please configure it\n" +
-		"through one of the following options:\n" +
-		"1. DATABRICKS_HOST + DATABRICKS_TOKEN environment variables.\n" +
-		"2. host + token provider arguments.\n" +
-		"3. azure_databricks_workspace_id + AZ CLI authentication.\n" +
-		"4. azure_databricks_workspace_id + azure_client_id + azure_client_secret + azure_tenant_id " +
-		"for Azure Service Principal authentication.\n" +
-		"5. Run `databricks configure --token` that will create ~/.databrickscfg file.\n\n" +
-		"Please check https://registry.terraform.io/providers/databrickslabs/databricks/latest/docs#authentication for details")
+	return c.niceError("authentication is not configured for provider.")
+}
+
+func (c *DatabricksClient) niceError(message string) error {
+	info := ""
+	if len(c.configAttributesUsed) > 0 {
+		info = fmt.Sprintf(" Attributes used: %s", strings.Join(c.configAttributesUsed, ", "))
+		envVars := envVariablesUsed()
+		if envVars != "" {
+			info = fmt.Sprintf("%s. Environment variables used: %s", info, envVars)
+		}
+	}
+	docUrl := "https://registry.terraform.io/providers/databrickslabs/databricks/latest/docs#authentication"
+	return fmt.Errorf("%s%s Please check %s for details", message, info, docUrl)
 }
 
 func (c *DatabricksClient) fixHost() {
@@ -145,7 +290,7 @@ func (c *DatabricksClient) configureFromDatabricksCfg() (func(r *http.Request) e
 	}
 	configFile, err := homedir.Expand(configFile)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("cannot find homedir: %w", err)
 	}
 	_, err = os.Stat(configFile)
 	if os.IsNotExist(err) {
@@ -155,7 +300,7 @@ func (c *DatabricksClient) configureFromDatabricksCfg() (func(r *http.Request) e
 	}
 	cfg, err := ini.Load(configFile)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("cannot parse config file: %w", err)
 	}
 	if c.Profile == "" {
 		log.Printf("[INFO] Using DEFAULT profile from %s", configFile)
@@ -246,7 +391,7 @@ func (c *DatabricksClient) configureHTTPCLient() {
 
 // IsAzure returns true if client is configured for Azure Databricks - either by using AAD auth or with host+token combination
 func (c *DatabricksClient) IsAzure() bool {
-	return c.AzureAuth.resourceID() != "" || strings.Contains(c.Host, ".azuredatabricks.net")
+	return c.resourceID() != "" || strings.Contains(c.Host, ".azuredatabricks.net")
 }
 
 // IsAws returns true if client is configured for AWS

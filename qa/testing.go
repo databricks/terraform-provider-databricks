@@ -86,10 +86,10 @@ type ResourceFixture struct {
 	ID          string
 	NonWritable bool
 	Azure       bool
+	AzureSPN    bool
 	Gcp         bool
 	// new resource
-	New       bool
-	AzureAuth *common.AzureAuth
+	New bool
 }
 
 // Apply runs tests from fixture
@@ -103,10 +103,12 @@ func (f ResourceFixture) Apply(t *testing.T) (*schema.ResourceData, error) {
 		client.WithCommandMock(f.CommandMock)
 	}
 	if f.Azure {
-		client.AzureAuth.ResourceID = "/subscriptions/a/resourceGroups/b/providers/Microsoft.Databricks/workspaces/c"
+		client.AzureDatabricksResourceID = "/subscriptions/a/resourceGroups/b/providers/Microsoft.Databricks/workspaces/c"
 	}
-	if f.AzureAuth != nil {
-		client.AzureAuth = *f.AzureAuth
+	if f.AzureSPN {
+		client.AzureClientID = "a"
+		client.AzureClientSecret = "b"
+		client.AzureTenantID = "c"
 	}
 	if f.Gcp {
 		client.GoogleServiceAccount = "sa@prj.iam.gserviceaccount.com"
@@ -427,12 +429,10 @@ func HttpFixtureClient(t *testing.T, fixtures []HTTPFixture) (client *common.Dat
 			t.FailNow()
 		}
 	}))
-	aa := common.AzureAuth{}
-	aa.AzureEnvironment = &azure.PublicCloud
 	client = &common.DatabricksClient{
-		Host:      server.URL,
-		Token:     "...",
-		AzureAuth: aa,
+		Host:             server.URL,
+		Token:            "...",
+		AzureEnvironment: &azure.PublicCloud,
 	}
 	err = client.Configure()
 	return client, server, err

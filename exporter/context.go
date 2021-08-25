@@ -85,7 +85,9 @@ func newImportContext(c *common.DatabricksClient) *importContext {
 	p := provider.DatabricksProvider()
 	p.TerraformVersion = "exporter"
 	p.SetMeta(c)
+	c.Provider = p
 	ctx := context.WithValue(context.Background(), common.Provider, p)
+	ctx = context.WithValue(ctx, common.ResourceName, "exporter")
 	c.WithCommandExecutor(func(
 		ctx context.Context,
 		c *common.DatabricksClient) common.CommandExecutor {
@@ -428,17 +430,11 @@ func (ic *importContext) Emit(r *resource) {
 			ID:         r.ID,
 		})
 		r.Data.MarkNewResource()
-
-		if pr.Read != nil {
-			if err := pr.Read(r.Data, ic.Client); err != nil {
-				log.Printf("[ERROR] Error reading %s#%s: %v", r.Resource, r.ID, err)
-				return
-			}
-		} else {
-			if dia := pr.ReadContext(context.Background(), r.Data, ic.Client); dia != nil {
-				log.Printf("[ERROR] Error reading %s#%s: %v", r.Resource, r.ID, dia)
-				return
-			}
+		resource := strings.ReplaceAll(r.Resource, "databricks_", "")
+		ctx := context.WithValue(ic.Context, common.ResourceName, resource)
+		if dia := pr.ReadContext(ctx, r.Data, ic.Client); dia != nil {
+			log.Printf("[ERROR] Error reading %s#%s: %v", r.Resource, r.ID, dia)
+			return
 		}
 		if r.Data.Id() == "" {
 			r.Data.SetId(r.ID)

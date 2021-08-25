@@ -254,14 +254,14 @@ type NodeType struct {
 
 // DockerBasicAuth contains the auth information when fetching containers
 type DockerBasicAuth struct {
-	Username string `json:"username"`
-	Password string `json:"password"`
+	Username string `json:"username" tf:"force_new"`
+	Password string `json:"password" tf:"force_new"`
 }
 
 // DockerImage contains the image url and the auth for DCS
 type DockerImage struct {
-	URL       string           `json:"url"`
-	BasicAuth *DockerBasicAuth `json:"basic_auth,omitempty"`
+	URL       string           `json:"url" tf:"force_new"`
+	BasicAuth *DockerBasicAuth `json:"basic_auth,omitempty" tf:"force_new"`
 }
 
 // Cluster contains the information when trying to submit api calls or editing a cluster
@@ -295,7 +295,7 @@ type Cluster struct {
 	DockerImage    *DockerImage            `json:"docker_image,omitempty"`
 
 	SingleUserName   string `json:"single_user_name,omitempty"`
-	IdempotencyToken string `json:"idempotency_token,omitempty"`
+	IdempotencyToken string `json:"idempotency_token,omitempty" tf:"force_new"`
 }
 
 // ClusterList shows existing clusters
@@ -381,22 +381,22 @@ type Command struct {
 
 // InstancePoolAwsAttributes contains aws attributes for AWS Databricks deployments for instance pools
 type InstancePoolAwsAttributes struct {
-	Availability        Availability `json:"availability,omitempty"`
-	ZoneID              string       `json:"zone_id,omitempty" tf:"computed"`
-	SpotBidPricePercent int32        `json:"spot_bid_price_percent,omitempty"`
+	Availability        Availability `json:"availability,omitempty" tf:"force_new"`
+	ZoneID              string       `json:"zone_id,omitempty" tf:"computed,force_new"`
+	SpotBidPricePercent int32        `json:"spot_bid_price_percent,omitempty" tf:"force_new"`
 }
 
 // InstancePoolAzureAttributes contains aws attributes for Azure Databricks deployments for instance pools
 // https://docs.microsoft.com/en-us/azure/databricks/dev-tools/api/latest/instance-pools#clusterinstancepoolazureattributes
 type InstancePoolAzureAttributes struct {
-	Availability    Availability `json:"availability,omitempty"`
-	SpotBidMaxPrice float64      `json:"spot_bid_max_price,omitempty"`
+	Availability    Availability `json:"availability,omitempty" tf:"force_new"`
+	SpotBidMaxPrice float64      `json:"spot_bid_max_price,omitempty" tf:"force_new"`
 }
 
 // InstancePoolDiskType contains disk type information for each of the different cloud service providers
 type InstancePoolDiskType struct {
-	AzureDiskVolumeType string `json:"azure_disk_volume_type,omitempty"`
-	EbsVolumeType       string `json:"ebs_volume_type,omitempty"`
+	AzureDiskVolumeType string `json:"azure_disk_volume_type,omitempty" tf:"force_new"`
+	EbsVolumeType       string `json:"ebs_volume_type,omitempty" tf:"force_new"`
 }
 
 // InstancePoolDiskSpec contains disk size, type and count information for the pool
@@ -413,14 +413,14 @@ type InstancePool struct {
 	MinIdleInstances                   int32                        `json:"min_idle_instances,omitempty"`
 	MaxCapacity                        int32                        `json:"max_capacity,omitempty"`
 	IdleInstanceAutoTerminationMinutes int32                        `json:"idle_instance_autotermination_minutes"`
-	AwsAttributes                      *InstancePoolAwsAttributes   `json:"aws_attributes,omitempty"`
-	AzureAttributes                    *InstancePoolAzureAttributes `json:"azure_attributes,omitempty"`
-	NodeTypeID                         string                       `json:"node_type_id"`
-	CustomTags                         map[string]string            `json:"custom_tags,omitempty"`
-	EnableElasticDisk                  bool                         `json:"enable_elastic_disk,omitempty"`
-	DiskSpec                           *InstancePoolDiskSpec        `json:"disk_spec,omitempty"`
-	PreloadedSparkVersions             []string                     `json:"preloaded_spark_versions,omitempty"`
-	PreloadedDockerImages              []DockerImage                `json:"preloaded_docker_images,omitempty" tf:"slice_set,alias:preloaded_docker_image"`
+	AwsAttributes                      *InstancePoolAwsAttributes   `json:"aws_attributes,omitempty" tf:"force_new"`
+	AzureAttributes                    *InstancePoolAzureAttributes `json:"azure_attributes,omitempty" tf:"force_new"`
+	NodeTypeID                         string                       `json:"node_type_id" tf:"force_new"`
+	CustomTags                         map[string]string            `json:"custom_tags,omitempty" tf:"force_new"`
+	EnableElasticDisk                  bool                         `json:"enable_elastic_disk,omitempty" tf:"force_new"`
+	DiskSpec                           *InstancePoolDiskSpec        `json:"disk_spec,omitempty" tf:"force_new"`
+	PreloadedSparkVersions             []string                     `json:"preloaded_spark_versions,omitempty" tf:"force_new"`
+	PreloadedDockerImages              []DockerImage                `json:"preloaded_docker_images,omitempty" tf:"force_new,slice_set,alias:preloaded_docker_image"`
 }
 
 // InstancePoolStats contains the stats on a given pool

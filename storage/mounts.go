@@ -129,7 +129,7 @@ func getOrCreateMountingCluster(clustersAPI compute.ClustersAPI) (string, error)
 			compute.NodeTypeRequest{
 				LocalDisk: true,
 			}),
-		AutoterminationMinutes: 30,
+		AutoterminationMinutes: 10,
 		SparkConf: map[string]string{
 			"spark.master":                     "local[*]",
 			"spark.databricks.cluster.profile": "singleNode",

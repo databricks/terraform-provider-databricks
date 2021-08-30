@@ -91,11 +91,6 @@ func (aa *DatabricksClient) configureWithAzureClientSecret(ctx context.Context) 
 	if !aa.IsAzureClientSecretSet() {
 		return nil, nil
 	}
-	azureEnvironment, err := aa.getAzureEnvironment()
-	if err != nil {
-		return nil, fmt.Errorf("cannot get azure environment: %w", err)
-	}
-	aa.AzureEnvironment = &azureEnvironment
 	log.Printf("[INFO] Using Azure Service Principal client secret authentication")
 	if aa.AzureUsePATForSPN {
 		log.Printf("[INFO] Generating PAT token Azure Service Principal client secret authentication")
@@ -120,11 +115,6 @@ func (aa *DatabricksClient) configureWithAzureManagedIdentity(ctx context.Contex
 	if !adal.MSIAvailable(ctx, aa.httpClient.HTTPClient) {
 		return nil, nil
 	}
-	azureEnvironment, err := aa.getAzureEnvironment()
-	if err != nil {
-		return nil, fmt.Errorf("cannot get azure environment: %w", err)
-	}
-	aa.AzureEnvironment = &azureEnvironment
 	log.Printf("[INFO] Using Azure Managed Identity authentication")
 	return aa.simpleAADRequestVisitor(ctx, func(resource string) (autorest.Authorizer, error) {
 		return auth.MSIConfig{
@@ -163,7 +153,12 @@ func (aa *DatabricksClient) simpleAADRequestVisitor(
 	ctx context.Context,
 	authorizerFactory func(resource string) (autorest.Authorizer, error),
 	visitors ...func(r *http.Request, ma autorest.Authorizer) error) (func(r *http.Request) error, error) {
-	managementAuthorizer, err := authorizerFactory(aa.AzureEnvironment.ServiceManagementEndpoint)
+	azureEnvironment, err := aa.getAzureEnvironment()
+	if err != nil {
+		return nil, fmt.Errorf("cannot get azure environment: %w", err)
+	}
+	aa.AzureEnvironment = &azureEnvironment
+	managementAuthorizer, err := authorizerFactory(azureEnvironment.ServiceManagementEndpoint)
 	if err != nil {
 		return nil, fmt.Errorf("cannot authorize management: %w", err)
 	}
@@ -205,7 +200,12 @@ func (aa *DatabricksClient) acquirePAT(
 	if aa.temporaryPat != nil {
 		return aa.temporaryPat, nil
 	}
-	management, err := factory(aa.AzureEnvironment.ServiceManagementEndpoint)
+	azureEnvironment, err := aa.getAzureEnvironment()
+	if err != nil {
+		return nil, fmt.Errorf("cannot get azure environment: %w", err)
+	}
+	aa.AzureEnvironment = &azureEnvironment
+	management, err := factory(azureEnvironment.ServiceManagementEndpoint)
 	if err != nil {
 		return nil, err
 	}

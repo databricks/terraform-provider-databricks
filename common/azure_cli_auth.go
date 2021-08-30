@@ -100,13 +100,8 @@ func (aa *DatabricksClient) configureWithAzureCLI(ctx context.Context) (func(*ht
 	if aa.IsAzureClientSecretSet() {
 		return nil, nil
 	}
-	azureEnvironment, err := aa.getAzureEnvironment()
-	if err != nil {
-		return nil, fmt.Errorf("cannot get environment: %w", err)
-	}
-	aa.AzureEnvironment = &azureEnvironment
 	// verify that Azure CLI is authenticated
-	_, err = cli.GetTokenFromCLI(AzureDatabricksResourceID)
+	_, err := cli.GetTokenFromCLI(AzureDatabricksResourceID)
 	if err != nil {
 		if err.Error() == "Invoking Azure CLI failed with the following error: " {
 			return nil, fmt.Errorf("most likely Azure CLI is not installed. " +

@@ -1,6 +1,7 @@
 package common
 
 import (
+	"context"
 	"net/http/httptest"
 	"testing"
 
@@ -21,7 +22,7 @@ func TestGoogleOIDC(t *testing.T) {
 	}
 	client.configureHTTPCLient()
 
-	_, err := client.getGoogleOIDCSource()
+	_, err := client.getGoogleOIDCSource(context.Background())
 	require.NoError(t, err)
 }
 
@@ -33,11 +34,11 @@ func TestConfigureWithGoogleForAccountsAPI(t *testing.T) {
 	}
 	client.configureHTTPCLient()
 
-	_, err := client.configureWithGoogleForAccountsAPI()
+	_, err := client.configureWithGoogleForAccountsAPI(context.Background())
 	assert.Error(t, err)
 
 	client.googleAuthOptions = []option.ClientOption{option.WithoutAuthentication()}
-	a, err := client.configureWithGoogleForAccountsAPI()
+	a, err := client.configureWithGoogleForAccountsAPI(context.Background())
 	require.NoError(t, err)
 	assert.NotNil(t, a)
 }
@@ -50,11 +51,11 @@ func TestConfigureWithGoogleForWorkspace(t *testing.T) {
 	}
 	client.configureHTTPCLient()
 
-	_, err := client.configureWithGoogleForWorkspace()
+	_, err := client.configureWithGoogleForWorkspace(context.Background())
 	assert.Error(t, err)
 
 	client.googleAuthOptions = []option.ClientOption{option.WithoutAuthentication()}
-	a, err := client.configureWithGoogleForWorkspace()
+	a, err := client.configureWithGoogleForWorkspace(context.Background())
 	require.NoError(t, err)
 	assert.NotNil(t, a)
 }

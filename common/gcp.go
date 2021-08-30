@@ -1,6 +1,7 @@
 package common
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 
@@ -8,9 +9,9 @@ import (
 	"google.golang.org/api/impersonate"
 )
 
-func (c *DatabricksClient) getGoogleOIDCSource() (oauth2.TokenSource, error) {
+func (c *DatabricksClient) getGoogleOIDCSource(ctx context.Context) (oauth2.TokenSource, error) {
 	// source for generateIdToken
-	ts, err := impersonate.IDTokenSource(c.InitContext, impersonate.IDTokenConfig{
+	ts, err := impersonate.IDTokenSource(ctx, impersonate.IDTokenConfig{
 		Audience:        c.Host,
 		TargetPrincipal: c.GoogleServiceAccount,
 		IncludeEmail:    true,
@@ -24,16 +25,16 @@ func (c *DatabricksClient) getGoogleOIDCSource() (oauth2.TokenSource, error) {
 	return ts, nil
 }
 
-func (c *DatabricksClient) configureWithGoogleForAccountsAPI() (func(r *http.Request) error, error) {
+func (c *DatabricksClient) configureWithGoogleForAccountsAPI(ctx context.Context) (func(*http.Request) error, error) {
 	if c.GoogleServiceAccount == "" || !c.IsGcp() || !c.isAccountsClient() {
 		return nil, nil
 	}
-	oidcSource, err := c.getGoogleOIDCSource()
+	oidcSource, err := c.getGoogleOIDCSource(ctx)
 	if err != nil {
 		return nil, err
 	}
 	// source for generateAccessToken
-	platformSource, err := impersonate.CredentialsTokenSource(c.InitContext, impersonate.CredentialsConfig{
+	platformSource, err := impersonate.CredentialsTokenSource(ctx, impersonate.CredentialsConfig{
 		TargetPrincipal: c.GoogleServiceAccount,
 		Scopes: []string{
 			"https://www.googleapis.com/auth/cloud-platform",
@@ -63,11 +64,11 @@ func newOidcAuthorizerForAccountsAPI(oidcSource oauth2.TokenSource,
 	}
 }
 
-func (c *DatabricksClient) configureWithGoogleForWorkspace() (func(r *http.Request) error, error) {
+func (c *DatabricksClient) configureWithGoogleForWorkspace(ctx context.Context) (func(r *http.Request) error, error) {
 	if c.GoogleServiceAccount == "" || !c.IsGcp() || c.isAccountsClient() {
 		return nil, nil
 	}
-	oidcSource, err := c.getGoogleOIDCSource()
+	oidcSource, err := c.getGoogleOIDCSource(ctx)
 	if err != nil {
 		return nil, err
 	}

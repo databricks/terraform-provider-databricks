@@ -84,7 +84,7 @@ func (aa *DatabricksClient) IsAzureClientSecretSet() bool {
 	return aa.AzureClientID != "" && aa.AzureClientSecret != "" && aa.AzureTenantID != ""
 }
 
-func (aa *DatabricksClient) configureWithClientSecret() (func(r *http.Request) error, error) {
+func (aa *DatabricksClient) configureWithClientSecret(ctx context.Context) (func(*http.Request) error, error) {
 	if !aa.IsAzure() {
 		return nil, nil
 	}
@@ -110,11 +110,13 @@ func (aa *DatabricksClient) configureWithClientSecret() (func(r *http.Request) e
 	}
 
 	log.Printf("[INFO] Generating AAD token for Azure Service Principal")
-	return aa.simpleAADRequestVisitor(aa.InitContext, aa.getClientSecretAuthorizer, aa.addSpManagementTokenVisitor)
+	return aa.simpleAADRequestVisitor(ctx, aa.getClientSecretAuthorizer, aa.addSpManagementTokenVisitor)
 }
 
-func (aa *DatabricksClient) configureWithManagedIdentity() (func(r *http.Request) error, error) {
-	ctx := context.TODO()
+func (aa *DatabricksClient) configureWithManagedIdentity(ctx context.Context) (func(*http.Request) error, error) {
+	if !aa.IsAzure() {
+		return nil, nil
+	}
 	if !adal.MSIAvailable(ctx, aa.httpClient.HTTPClient) {
 		return nil, nil
 	}

@@ -93,7 +93,7 @@ func (aa *DatabricksClient) cliAuthorizer(resource string) (autorest.Authorizer,
 	return autorest.NewBearerAuthorizer(&rct), nil
 }
 
-func (aa *DatabricksClient) configureWithAzureCLI() (func(r *http.Request) error, error) {
+func (aa *DatabricksClient) configureWithAzureCLI(ctx context.Context) (func(*http.Request) error, error) {
 	if !aa.IsAzure() {
 		return nil, nil
 	}
@@ -126,5 +126,5 @@ func (aa *DatabricksClient) configureWithAzureCLI() (func(r *http.Request) error
 		}, nil
 	}
 	log.Printf("[INFO] Using Azure CLI authentication with AAD tokens")
-	return aa.simpleAADRequestVisitor(context.TODO(), aa.cliAuthorizer)
+	return aa.simpleAADRequestVisitor(ctx, aa.cliAuthorizer)
 }

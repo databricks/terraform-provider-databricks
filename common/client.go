@@ -100,10 +100,6 @@ type DatabricksClient struct {
 	// options used to enable unit testing mode for OIDC
 	googleAuthOptions []option.ClientOption
 
-	// Context used during provider initialisation,
-	// mostly for OAuth-based validation.
-	InitContext context.Context
-
 	// Mutex used by Authenticate method to guard `authVisitor`, which
 	// has to be lazily created on the first request to Databricks API.
 	// It is done because databricks host and token may often be available
@@ -208,8 +204,7 @@ func (c *DatabricksClient) Configure(attrsUsed ...string) error {
 }
 
 // Authenticate lazily authenticates across authorizers or returns error
-func (c *DatabricksClient) Authenticate() error {
-	// TODO: add context
+func (c *DatabricksClient) Authenticate(ctx context.Context) error {
 	if c.authVisitor != nil {
 		return nil
 	}
@@ -218,7 +213,7 @@ func (c *DatabricksClient) Authenticate() error {
 	if c.authVisitor != nil {
 		return nil
 	}
-	authorizers := []func() (func(r *http.Request) error, error){
+	authorizers := []func(context.Context) (func(*http.Request) error, error){
 		c.configureAuthWithDirectParams,
 		c.configureWithClientSecret,
 		c.configureWithManagedIdentity,
@@ -228,7 +223,7 @@ func (c *DatabricksClient) Authenticate() error {
 		c.configureFromDatabricksCfg,
 	}
 	for _, authProvider := range authorizers {
-		authorizer, err := authProvider()
+		authorizer, err := authProvider(ctx)
 		if err != nil {
 			return c.niceError(fmt.Sprintf("cannot configure auth: %s", err))
 		}
@@ -263,7 +258,7 @@ func (c *DatabricksClient) fixHost() {
 	}
 }
 
-func (c *DatabricksClient) configureAuthWithDirectParams() (func(r *http.Request) error, error) {
+func (c *DatabricksClient) configureAuthWithDirectParams(ctx context.Context) (func(*http.Request) error, error) {
 	authType := "Bearer"
 	var needsHostBecause string
 	if c.Username != "" && c.Password != "" {
@@ -285,7 +280,7 @@ func (c *DatabricksClient) configureAuthWithDirectParams() (func(r *http.Request
 	return c.authorizer(authType, c.Token), nil
 }
 
-func (c *DatabricksClient) configureFromDatabricksCfg() (func(r *http.Request) error, error) {
+func (c *DatabricksClient) configureFromDatabricksCfg(ctx context.Context) (func(r *http.Request) error, error) {
 	configFile := c.ConfigFile
 	if configFile == "" {
 		configFile = "~/.databrickscfg"
@@ -353,9 +348,6 @@ func (c *DatabricksClient) configureHTTPCLient() {
 	}
 	if c.RateLimitPerSecond == 0 {
 		c.RateLimitPerSecond = DefaultRateLimitPerSecond
-	}
-	if c.InitContext == nil {
-		c.InitContext = context.Background()
 	}
 	c.rateLimiter = rate.NewLimiter(rate.Limit(c.RateLimitPerSecond), 1)
 	// Set up a retryable HTTP Client to handle cases where the service returns

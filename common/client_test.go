@@ -1,6 +1,7 @@
 package common
 
 import (
+	"context"
 	"os"
 	"strings"
 	"testing"
@@ -17,7 +18,7 @@ func configureAndAuthenticate(dc *DatabricksClient) (*DatabricksClient, error) {
 	if err != nil {
 		return dc, err
 	}
-	return dc, dc.Authenticate()
+	return dc, dc.Authenticate(context.Background())
 }
 
 func TestDatabricksClientConfigure_Nothing(t *testing.T) {

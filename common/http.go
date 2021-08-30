@@ -355,7 +355,7 @@ func (c *DatabricksClient) OldAPI(ctx context.Context, method, path string, requ
 
 func (c *DatabricksClient) authenticatedQuery(ctx context.Context, method, requestURL string,
 	data interface{}, visitors ...func(*http.Request) error) (body []byte, err error) {
-	err = c.Authenticate()
+	err = c.Authenticate(ctx)
 	if err != nil {
 		return
 	}

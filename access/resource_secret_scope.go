@@ -59,7 +59,7 @@ func (a SecretScopesAPI) Create(s SecretScope) error {
 		BackendType:            "DATABRICKS",
 	}
 	if s.KeyvaultMetadata != nil {
-		if err := a.client.Authenticate(); err != nil {
+		if err := a.client.Authenticate(a.context); err != nil {
 			return err
 		}
 		if !a.client.IsAzure() {

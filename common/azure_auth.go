@@ -120,6 +120,11 @@ func (aa *DatabricksClient) configureWithManagedIdentity(ctx context.Context) (f
 	if !adal.MSIAvailable(ctx, aa.httpClient.HTTPClient) {
 		return nil, nil
 	}
+	azureEnvironment, err := aa.getAzureEnvironment()
+	if err != nil {
+		return nil, fmt.Errorf("cannot get azure environment: %w", err)
+	}
+	aa.AzureEnvironment = &azureEnvironment
 	log.Printf("[INFO] Using Azure Managed Identity authentication")
 	return aa.simpleAADRequestVisitor(ctx, func(resource string) (autorest.Authorizer, error) {
 		return auth.MSIConfig{

@@ -84,7 +84,7 @@ func (aa *DatabricksClient) IsAzureClientSecretSet() bool {
 	return aa.AzureClientID != "" && aa.AzureClientSecret != "" && aa.AzureTenantID != ""
 }
 
-func (aa *DatabricksClient) configureWithClientSecret(ctx context.Context) (func(*http.Request) error, error) {
+func (aa *DatabricksClient) configureWithAzureClientSecret(ctx context.Context) (func(*http.Request) error, error) {
 	if !aa.IsAzure() {
 		return nil, nil
 	}
@@ -113,7 +113,7 @@ func (aa *DatabricksClient) configureWithClientSecret(ctx context.Context) (func
 	return aa.simpleAADRequestVisitor(ctx, aa.getClientSecretAuthorizer, aa.addSpManagementTokenVisitor)
 }
 
-func (aa *DatabricksClient) configureWithManagedIdentity(ctx context.Context) (func(*http.Request) error, error) {
+func (aa *DatabricksClient) configureWithAzureManagedIdentity(ctx context.Context) (func(*http.Request) error, error) {
 	if !aa.IsAzure() {
 		return nil, nil
 	}

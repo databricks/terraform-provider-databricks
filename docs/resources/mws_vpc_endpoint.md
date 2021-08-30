@@ -112,7 +112,7 @@ resource "aws_vpc_endpoint" "relay" {
 }
 ```
 
-Typically the next steps after this would be to create a [databricks_mws_private_access_settings](databricks_mws_private_access_settings.md) and [databricks_mws_networks](mws_networks.md) configuration, before passing the `databricks_mws_private_access_settings.pas.private_access_settings_id` and `databricks_mws_networks.this.network_id` into a [databricks_mws_workspaces](databricks_mws_workspaces.md) resource:
+Typically the next steps after this would be to create a [databricks_mws_private_access_settings](mws_private_access_settings.md) and [databricks_mws_networks](mws_networks.md) configuration, before passing the `databricks_mws_private_access_settings.pas.private_access_settings_id` and `databricks_mws_networks.this.network_id` into a [databricks_mws_workspaces](mws_workspaces.md) resource:
 
 ```hcl
 resource "databricks_mws_workspaces" "this" {

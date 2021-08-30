@@ -214,14 +214,15 @@ func (c *DatabricksClient) Authenticate(ctx context.Context) error {
 		return nil
 	}
 	authorizers := []func(context.Context) (func(*http.Request) error, error){
-		c.configureAuthWithDirectParams,
-		c.configureWithClientSecret,
-		c.configureWithManagedIdentity,
+		c.configureWithDirectParams,
+		c.configureWithAzureClientSecret,
 		c.configureWithAzureCLI,
+		c.configureWithAzureManagedIdentity,
 		c.configureWithGoogleForAccountsAPI,
 		c.configureWithGoogleForWorkspace,
-		c.configureFromDatabricksCfg,
+		c.configureWithDatabricksCfg,
 	}
+	// try configuring authentication with different methods
 	for _, authProvider := range authorizers {
 		authorizer, err := authProvider(ctx)
 		if err != nil {
@@ -258,7 +259,7 @@ func (c *DatabricksClient) fixHost() {
 	}
 }
 
-func (c *DatabricksClient) configureAuthWithDirectParams(ctx context.Context) (func(*http.Request) error, error) {
+func (c *DatabricksClient) configureWithDirectParams(ctx context.Context) (func(*http.Request) error, error) {
 	authType := "Bearer"
 	var needsHostBecause string
 	if c.Username != "" && c.Password != "" {
@@ -280,7 +281,7 @@ func (c *DatabricksClient) configureAuthWithDirectParams(ctx context.Context) (f
 	return c.authorizer(authType, c.Token), nil
 }
 
-func (c *DatabricksClient) configureFromDatabricksCfg(ctx context.Context) (func(r *http.Request) error, error) {
+func (c *DatabricksClient) configureWithDatabricksCfg(ctx context.Context) (func(r *http.Request) error, error) {
 	configFile := c.ConfigFile
 	if configFile == "" {
 		configFile = "~/.databrickscfg"

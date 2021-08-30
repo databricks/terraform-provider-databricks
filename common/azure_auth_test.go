@@ -183,12 +183,12 @@ func TestDatabricksClient_ensureWorkspaceURL(t *testing.T) {
 func TestDatabricksClient_configureWithClientSecretPAT(t *testing.T) {
 	client := DatabricksClient{InsecureSkipVerify: true}
 	ctx := context.Background()
-	auth, err := client.configureWithClientSecret(ctx)
+	auth, err := client.configureWithAzureClientSecret(ctx)
 	assert.Nil(t, auth)
 	assert.NoError(t, err)
 
 	client.AzureDatabricksResourceID = "/subscriptions/a/resourceGroups/b/providers/Microsoft.Databricks/workspaces/c"
-	auth, err = client.configureWithClientSecret(ctx)
+	auth, err = client.configureWithAzureClientSecret(ctx)
 	assert.Nil(t, auth)
 	assert.NoError(t, err)
 
@@ -246,7 +246,7 @@ func TestDatabricksClient_configureWithClientSecretPAT(t *testing.T) {
 	client.AzureEnvironment = &azure.Environment{
 		ResourceManagerEndpoint: fmt.Sprintf("%s/", server.URL),
 	}
-	auth, err = client.configureWithClientSecret(ctx)
+	auth, err = client.configureWithAzureClientSecret(ctx)
 	assert.NotNil(t, auth)
 	assert.NoError(t, err)
 
@@ -309,7 +309,7 @@ func TestDatabricksClient_configureWithClientSecretAAD(t *testing.T) {
 	}
 	client.configureHTTPCLient()
 	ctx := context.Background()
-	auth, err := client.configureWithClientSecret(ctx)
+	auth, err := client.configureWithAzureClientSecret(ctx)
 	assert.NoError(t, err)
 
 	client.authVisitor = auth

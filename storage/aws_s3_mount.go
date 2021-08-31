@@ -124,23 +124,10 @@ func GetOrCreateMountingClusterWithInstanceProfile(
 	}
 	instanceProfileParts := strings.Split(arnSections[5], "/")
 	clusterName := fmt.Sprintf("terraform-mount-%s", strings.Join(instanceProfileParts[1:], "-"))
-	// TODO: use SingleNode cluster?
-	return clustersAPI.GetOrCreateRunningCluster(clusterName, compute.Cluster{
-		NumWorkers:  1,
-		ClusterName: clusterName,
-		SparkVersion: clustersAPI.LatestSparkVersionOrDefault(
-			compute.SparkVersionRequest{
-				Latest:          true,
-				LongTermSupport: true,
-			}),
-		NodeTypeID: clustersAPI.GetSmallestNodeType(
-			compute.NodeTypeRequest{
-				LocalDisk: true,
-			}),
-		AutoterminationMinutes: 10,
-		AwsAttributes: &compute.AwsAttributes{
-			InstanceProfileArn: instanceProfile,
-			Availability:       "SPOT",
-		},
-	})
+	cluster := getCommonClusterObject(clustersAPI, clusterName)
+	cluster.AwsAttributes = &compute.AwsAttributes{
+		InstanceProfileArn: instanceProfile,
+		Availability:       "SPOT",
+	}
+	return clustersAPI.GetOrCreateRunningCluster(clusterName, cluster)
 }

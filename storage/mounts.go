@@ -116,10 +116,10 @@ func NewMountPoint(executor common.CommandExecutor, name, clusterID string) Moun
 	}
 }
 
-func getOrCreateMountingCluster(clustersAPI compute.ClustersAPI) (string, error) {
-	cluster, err := clustersAPI.GetOrCreateRunningCluster("terraform-mount", compute.Cluster{
+func getCommonClusterObject(clustersAPI compute.ClustersAPI, clusterName string) compute.Cluster {
+	return compute.Cluster{
 		NumWorkers:  0,
-		ClusterName: "terraform-mount",
+		ClusterName: clusterName,
 		SparkVersion: clustersAPI.LatestSparkVersionOrDefault(
 			compute.SparkVersionRequest{
 				Latest:          true,
@@ -138,7 +138,11 @@ func getOrCreateMountingCluster(clustersAPI compute.ClustersAPI) (string, error)
 		CustomTags: map[string]string{
 			"ResourceClass": "SingleNode",
 		},
-	})
+	}
+}
+
+func getOrCreateMountingCluster(clustersAPI compute.ClustersAPI) (string, error) {
+	cluster, err := clustersAPI.GetOrCreateRunningCluster("terraform-mount", getCommonClusterObject(clustersAPI, "terraform-mount"))
 	if err != nil {
 		return "", err
 	}

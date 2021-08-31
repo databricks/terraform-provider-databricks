@@ -91,9 +91,13 @@ func (a TokensAPI) Read(tokenID string) (TokenInfo, error) {
 
 // Delete will delete the token given a token id
 func (a TokensAPI) Delete(tokenID string) error {
-	return a.client.Post(a.context, "/token/delete", map[string]string{
+	err := a.client.Post(a.context, "/token/delete", map[string]string{
 		"token_id": tokenID,
 	}, nil)
+	if common.IsMissing(err) {
+		return nil
+	}
+	return err
 }
 
 // ResourceToken refreshes token in case it's expired

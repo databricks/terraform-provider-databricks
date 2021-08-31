@@ -218,6 +218,23 @@ func TestResourceTokenDelete(t *testing.T) {
 	assert.Equal(t, "abc", d.Id())
 }
 
+func TestResourceTokenDelete_NotFoundNoError(t *testing.T) {
+	_, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/token/delete",
+				Response: common.NotFound("RESOURCE_DOES_NOT_EXIST"), // per documentation this is the error response
+				Status: 404,
+			},
+		},
+		Resource: ResourceToken(),
+		Delete:   true,
+		ID:       "abc",
+	}.Apply(t)
+	assert.NoError(t, err, err)
+}
+
 func TestResourceTokenDelete_Error(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{

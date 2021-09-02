@@ -3,6 +3,8 @@
 ## 0.3.8
 
 * Added `databricks_repo` resource to manage [Databricks Repos](https://docs.databricks.com/repos.html) ([#771](https://github.com/databrickslabs/terraform-provider-databricks/pull/771))
+* Already deleted `databricks_token` don't fail the apply ([#808](https://github.com/databrickslabs/terraform-provider-databricks/pull/808))
+* Multiple documentation improvements
 
 **Deprecations**
 * `azure_workspace_name`, `azure_resource_group`, `azure_subscription_id`, and `azure_workspace_resource_id` are deprecated and would be removed in v0.4.0. Please rewrite provider configuration with `host = data.azurerm_databricks_workspace.example.workspace_url` to achieve the same effect. Please check [azurerm_databricks_workspace](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/databricks_workspace#workspace_url) resource documentation for details.
@@ -10,6 +12,17 @@
 * `DATABRICKS_AZURE_CLIENT_SECRET` environment variable is deprecated in favor of just using `ARM_CLIENT_SECRET`.
 * `DATABRICKS_AZURE_CLIENT_ID` environment variable is deprecated in favor of just using `ARM_CLIENT_ID`.
 * `DATABRICKS_AZURE_TENANT_ID` environment variable is deprecated in favor of just using `ARM_TENANT_ID`.
+
+Updated dependency versions:
+
+* Bump github.com/Azure/go-autorest/autorest from 0.11.19 to 0.11.20
+* Bump github.com/hashicorp/terraform-plugin-sdk/v2 from 2.7.0 to 2.7.1
+* Bump github.com/zclconf/go-cty from 1.9.0 to 1.9.1
+* Bump google.golang.org/api from 0.52.0 to 0.56.0
+* Bump github.com/Azure/go-autorest/autorest/azure/cli from 0.4.2 to 0.4.3
+* Bump github.com/Azure/go-autorest/autorest/adal from 0.9.14 to 0.9.15
+* Bump golang.org/x/mod from 0.4.2 to 0.5.0
+* Bump github.com/aws/aws-sdk-go from 1.40.19 to 1.40.35
 
 ## 0.3.7
 

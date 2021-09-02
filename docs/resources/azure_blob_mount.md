@@ -3,6 +3,8 @@ subcategory: "Azure"
 ---
 # databricks_azure_blob_mount Resource
 
+-> **Warning** This resource is deprecated by [databricks_mount resource](mount.md) and will be removed in v0.4.0!
+
 -> **Note** This resource has an evolving API, which may change in future versions of the provider.
 
 This resource will mount your Azure Blob Storage bucket on `dbfs:/mnt/yourname`. It is important to understand that this will start up the [cluster](cluster.md) if the cluster is terminated. The read and refresh terraform command will require a cluster and may take some time to validate the mount. If cluster_id is not specified, it will create the smallest possible cluster called `terraform-mount` for the shortest possible amount of time. This resource will help you create, get and delete an azure blob storage mount using SAS token or storage account access keys.

@@ -10,12 +10,12 @@ import (
 
 // AzureBlobMount describes the object for a azure blob storage mount - a.k.a. NativeAzureFileSystem
 type AzureBlobMount struct {
-	ContainerName      string `json:"container_name"`
-	StorageAccountName string `json:"storage_account_name"`
-	Directory          string `json:"directory"`
-	AuthType           string `json:"auth_type"`
-	SecretScope        string `json:"token_secret_scope"`
-	SecretKey          string `json:"token_secret_key"`
+	ContainerName      string `json:"container_name" tf:"force_new"`
+	StorageAccountName string `json:"storage_account_name" tf:"force_new"`
+	Directory          string `json:"directory,omitempty" tf:"force_new"`
+	AuthType           string `json:"auth_type" tf:"force_new"`
+	SecretScope        string `json:"token_secret_scope" tf:"force_new"`
+	SecretKey          string `json:"token_secret_key" tf:"force_new"`
 }
 
 // Source ...

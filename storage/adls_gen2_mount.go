@@ -9,14 +9,14 @@ import (
 
 // AzureADLSGen2Mount describes the object for a azure datalake gen 2 storage mount
 type AzureADLSGen2Mount struct {
-	ContainerName        string `json:"container_name"`
-	StorageAccountName   string `json:"storage_account_name"`
-	Directory            string `json:"directory,omitempty"`
-	ClientID             string `json:"client_id"`
-	TenantID             string `json:"tenant_id"`
-	SecretScope          string `json:"client_secret_scope"`
-	SecretKey            string `json:"client_secret_key"`
-	InitializeFileSystem bool   `json:"initialize_file_system"`
+	ContainerName        string `json:"container_name" tf:"force_new"`
+	StorageAccountName   string `json:"storage_account_name" tf:"force_new"`
+	Directory            string `json:"directory,omitempty" tf:"force_new"`
+	ClientID             string `json:"client_id" tf:"force_new"`
+	TenantID             string `json:"tenant_id" tf:"force_new"`
+	SecretScope          string `json:"client_secret_scope" tf:"force_new"`
+	SecretKey            string `json:"client_secret_key" tf:"force_new"`
+	InitializeFileSystem bool   `json:"initialize_file_system" tf:"force_new"`
 }
 
 // Source returns ABFSS URI backing the mount

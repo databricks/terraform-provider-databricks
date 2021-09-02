@@ -13,8 +13,8 @@ import (
 
 // AWSIamMount describes the object for a aws mount using iam role
 type AWSIamMount struct {
-	S3BucketName    string `json:"s3_bucket_name"`
-	InstanceProfile string `json:"instance_profile,omitempty"`
+	S3BucketName    string `json:"s3_bucket_name" tf:"force_new"`
+	InstanceProfile string `json:"instance_profile,omitempty" tf:"force_new"`
 }
 
 // Source ...

@@ -48,13 +48,13 @@ func (m GCSMount) Config(client *common.DatabricksClient) map[string]string {
 type GenericMount struct {
 	URI     string              `json:"uri,omitempty" tf:"force_new"`
 	Options map[string]string   `json:"extra_configs,omitempty" tf:"force_new"`
-	Abfss   *AzureADLSGen2Mount `json:"abfss,omitempty"`
-	S3      *S3IamMount         `json:"s3,omitempty"`
-	Adl     *AzureADLSGen1Mount `json:"adl,omitempty"`
-	Wasbs   *AzureBlobMount     `json:"wasbs,omitempty"`
-	Gcs     *GCSMount           `json:"gcs,omitempty"`
+	Abfss   *AzureADLSGen2Mount `json:"abfss,omitempty" tf:"force_new"`
+	S3      *S3IamMount         `json:"s3,omitempty" tf:"force_new"`
+	Adl     *AzureADLSGen1Mount `json:"adl,omitempty" tf:"force_new"`
+	Wasbs   *AzureBlobMount     `json:"wasbs,omitempty" tf:"force_new"`
+	Gcs     *GCSMount           `json:"gcs,omitempty" tf:"force_new"`
 
-	ClusterID string `json:"cluster_id,omitempty" tf:"computed"`
+	ClusterID string `json:"cluster_id,omitempty" tf:"computed,force_new"`
 	MountName string `json:"mount_name" tf:"force_new"`
 }
 
@@ -63,7 +63,7 @@ func (m GenericMount) Source() string {
 	if m.Abfss != nil {
 		return m.Abfss.Source()
 	} else if m.Adl != nil {
-		m.Adl.Source()
+		return m.Adl.Source()
 	} else if m.Wasbs != nil {
 		return m.Wasbs.Source()
 	} else if m.S3 != nil {
@@ -79,7 +79,7 @@ func (m GenericMount) Config(client *common.DatabricksClient) map[string]string 
 	if m.Abfss != nil {
 		return m.Abfss.Config(client)
 	} else if m.Adl != nil {
-		m.Adl.Config(client)
+		return m.Adl.Config(client)
 	} else if m.Wasbs != nil {
 		return m.Wasbs.Config(client)
 	} else if m.S3 != nil {
@@ -88,15 +88,6 @@ func (m GenericMount) Config(client *common.DatabricksClient) map[string]string 
 		return m.Gcs.Config(client)
 	}
 	return m.Options
-}
-
-func extractFieldNames(elem interface{}) []string {
-	m := elem.(*schema.Resource)
-	keys := make([]string, 0, len(m.Schema))
-	for k := range m.Schema {
-		keys = append(keys, k)
-	}
-	return keys
 }
 
 func preprocessS3MountGeneric(ctx context.Context, s map[string]*schema.Schema, d *schema.ResourceData, m interface{}) error {
@@ -205,13 +196,6 @@ func ResourceDatabricksMount() *schema.Resource {
 		// TODO: remove this when depricating other mount types (will require to add `force_new` annotation to structs as well)
 		for _, nm := range blocks {
 			s[nm].DiffSuppressFunc = common.MakeEmptyBlockSuppressFunc(nm)
-			s[nm].ForceNew = true
-			for _, field := range extractFieldNames(s[nm].Elem) {
-				p, err := common.SchemaPath(s, nm, field)
-				if err == nil {
-					p.ForceNew = true
-				}
-			}
 		}
 		// TODO: We need to have a validation function that will check that source isn't empty if other blocks aren't specified
 

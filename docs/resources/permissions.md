@@ -6,6 +6,8 @@ subcategory: "Security"
 
 This resource allows you to generically manage permissions for other resources in Databricks workspace. It would guarantee, that only _admins_, _authenticated principal_ and those declared within `access_control` blocks would have specified access. It is not possible to remove management rights from _admins_ group.
 
+-> **Note** It is not possible to lower permissions for `admins` or your own user anywhere from `CAN_MANAGE` level, so Databricks Terraform Provider [removes](https://github.com/databrickslabs/terraform-provider-databricks/blob/master/access/resource_permissions.go#L261-L271) those `access_control` blocks automatically. 
+
 ## Cluster usage
 
 It's possible to separate [cluster access control](https://docs.databricks.com/security/access-control/cluster-acl.html) to three different permission levels: `CAN_ATTACH_TO`, `CAN_RESTART` and `CAN_MANAGE`:
@@ -514,6 +516,8 @@ access_control {
 ```
 
 Attributes are:
+
+-> **Note** It is not possible to lower permissions for `admins` or your own user anywhere from `CAN_MANAGE` level, so Databricks Terraform Provider [removes](https://github.com/databrickslabs/terraform-provider-databricks/blob/master/access/resource_permissions.go#L261-L271) those `access_control` blocks automatically. 
 
 - `permission_level` - (Required) permission level according to specific resource. See examples above for the reference.
 - `user_name` - (Optional) name of the [user](user.md), which should be used if group name is not used

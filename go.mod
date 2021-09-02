@@ -20,8 +20,8 @@ require (
 	github.com/stretchr/testify v1.7.0
 	github.com/zclconf/go-cty v1.9.0
 	golang.org/x/mod v0.5.0
-	golang.org/x/oauth2 v0.0.0-20210628180205-a41e5a781914
+	golang.org/x/oauth2 v0.0.0-20210819190943-2bc19b11175f
 	golang.org/x/time v0.0.0-20210723032227-1f47c861a9ac
-	google.golang.org/api v0.52.0
+	google.golang.org/api v0.56.0
 	gopkg.in/ini.v1 v1.62.0
 )

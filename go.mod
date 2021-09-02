@@ -4,7 +4,7 @@ go 1.16
 
 require (
 	github.com/Azure/go-autorest/autorest v0.11.19
-	github.com/Azure/go-autorest/autorest/adal v0.9.14
+	github.com/Azure/go-autorest/autorest/adal v0.9.15
 	github.com/Azure/go-autorest/autorest/azure/auth v0.5.8
 	github.com/Azure/go-autorest/autorest/azure/cli v0.4.2
 	github.com/aws/aws-sdk-go v1.40.35

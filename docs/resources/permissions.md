@@ -151,7 +151,7 @@ resource "databricks_group" "eng" {
     display_name = "Engineering"
 }
 
-resource "databricks_service_principal" "main" {
+resource "databricks_service_principal" "aws_principal" {
   display_name = "main"
 }
 
@@ -190,7 +190,7 @@ resource "databricks_permissions" "job_usage" {
     }
     
     access_control {
-        service_principal_name = databricks_service_principal.main.application_id
+        service_principal_name = databricks_service_principal.aws_principal.application_id
         permission_level = "IS_OWNER"
     }
 }

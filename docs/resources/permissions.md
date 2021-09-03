@@ -151,6 +151,10 @@ resource "databricks_group" "eng" {
     display_name = "Engineering"
 }
 
+resource "databricks_service_principal" "main" {
+  display_name = "main"
+}
+
 resource "databricks_job" "this" {
     name = "Featurization"
     max_concurrent_runs = 1
@@ -183,6 +187,11 @@ resource "databricks_permissions" "job_usage" {
     access_control {
         group_name = databricks_group.eng.display_name
         permission_level = "CAN_MANAGE"
+    }
+    
+    access_control {
+        service_principal_name = databricks_service_principal.main.application_id
+        permission_level = "IS_OWNER"
     }
 }
 ```

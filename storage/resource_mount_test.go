@@ -494,7 +494,7 @@ func TestAzureAccADLSv2MountGeneric(t *testing.T) {
 	storageAccountName := qa.GetEnvOrSkipTest(t, "TEST_STORAGE_V2_ACCOUNT")
 	container := qa.GetEnvOrSkipTest(t, "TEST_STORAGE_V2_ABFSS")
 	testWithNewSecretScope(t, func(scope, key string) {
-		testMounting(t, mp, GenericMount{Abfss: &AzureADLSGen2Mount{
+		testMounting(t, mp, GenericMount{Abfs: &AzureADLSGen2Mount{
 			ClientID:             client.AzureClientID,
 			TenantID:             client.AzureTenantID,
 			StorageAccountName:   storageAccountName,
@@ -537,7 +537,7 @@ func TestResourceAdlsGen2MountGeneric_Create(t *testing.T) {
 		State: map[string]interface{}{
 			"cluster_id": "this_cluster",
 			"mount_name": "this_mount",
-			"abfss": []interface{}{map[string]interface{}{
+			"abfs": []interface{}{map[string]interface{}{
 				"storage_account_name":   "test-adls-gen2",
 				"container_name":         "e",
 				"tenant_id":              "a",
@@ -591,7 +591,7 @@ func TestResourceAzureBlobMountCreateGeneric(t *testing.T) {
 		State: map[string]interface{}{
 			"cluster_id": "b",
 			"mount_name": "e",
-			"wasbs": []interface{}{map[string]interface{}{
+			"wasb": []interface{}{map[string]interface{}{
 				"auth_type":            "ACCESS_KEY",
 				"storage_account_name": "f",
 				"token_secret_key":     "g",
@@ -628,7 +628,7 @@ func TestResourceAzureBlobMountCreateGeneric_Error(t *testing.T) {
 		State: map[string]interface{}{
 			"cluster_id": "b",
 			"mount_name": "e",
-			"wasbs": []interface{}{map[string]interface{}{
+			"wasb": []interface{}{map[string]interface{}{
 				"container_name":       "c",
 				"auth_type":            "ACCESS_KEY",
 				"directory":            "/d",
@@ -668,7 +668,7 @@ func TestResourceAzureBlobMountGeneric_Read(t *testing.T) {
 		State: map[string]interface{}{
 			"cluster_id": "b",
 			"mount_name": "e",
-			"wasbs": []interface{}{map[string]interface{}{
+			"wasb": []interface{}{map[string]interface{}{
 				"auth_type":            "ACCESS_KEY",
 				"container_name":       "c",
 				"directory":            "/d",
@@ -708,7 +708,7 @@ func TestResourceAzureBlobMountGenericRead_NotFound(t *testing.T) {
 		State: map[string]interface{}{
 			"cluster_id": "b",
 			"mount_name": "e",
-			"wasbs": []interface{}{map[string]interface{}{
+			"wasb": []interface{}{map[string]interface{}{
 				"auth_type":            "ACCESS_KEY",
 				"container_name":       "c",
 				"directory":            "/d",
@@ -746,7 +746,7 @@ func TestResourceAzureBlobMountGenericRead_Error(t *testing.T) {
 		State: map[string]interface{}{
 			"cluster_id": "b",
 			"mount_name": "e",
-			"wasbs": []interface{}{map[string]interface{}{
+			"wasb": []interface{}{map[string]interface{}{
 				"auth_type":            "ACCESS_KEY",
 				"container_name":       "c",
 				"directory":            "/d",
@@ -787,7 +787,7 @@ func TestResourceAzureBlobMountGenericDelete(t *testing.T) {
 		State: map[string]interface{}{
 			"cluster_id": "b",
 			"mount_name": "e",
-			"wasbs": []interface{}{map[string]interface{}{
+			"wasb": []interface{}{map[string]interface{}{
 				"auth_type":            "ACCESS_KEY",
 				"container_name":       "c",
 				"directory":            "/d",
@@ -810,7 +810,7 @@ func TestAzureAccBlobMountGeneric(t *testing.T) {
 	accountKey := qa.GetEnvOrSkipTest(t, "TEST_STORAGE_V2_KEY")
 	container := qa.GetEnvOrSkipTest(t, "TEST_STORAGE_V2_WASBS")
 	testWithNewSecretScope(t, func(scope, key string) {
-		testMounting(t, mp, GenericMount{Wasbs: &AzureBlobMount{
+		testMounting(t, mp, GenericMount{Wasb: &AzureBlobMount{
 			StorageAccountName: storageAccountName,
 			ContainerName:      container,
 			SecretScope:        scope,
@@ -857,7 +857,7 @@ func TestResourceGcsMountGenericCreate_WithCluster(t *testing.T) {
 		State: map[string]interface{}{
 			"cluster_id": "this_cluster",
 			"mount_name": "this_mount",
-			"gcs": []interface{}{map[string]interface{}{
+			"gs": []interface{}{map[string]interface{}{
 				"bucket_name": testS3BucketName,
 			}},
 		},
@@ -960,7 +960,7 @@ func TestResourceGcsMountGenericCreate_WithServiceAccount(t *testing.T) {
 		},
 		State: map[string]interface{}{
 			"mount_name": "this_mount",
-			"gcs": []interface{}{map[string]interface{}{
+			"gs": []interface{}{map[string]interface{}{
 				"bucket_name":     testS3BucketName,
 				"service_account": google_account,
 			}},
@@ -978,7 +978,7 @@ func TestResourceGcsMountGenericCreate_nothing_specified(t *testing.T) {
 		Resource: ResourceDatabricksMount(),
 		State: map[string]interface{}{
 			"mount_name": "this_mount",
-			"gcs": []interface{}{map[string]interface{}{
+			"gs": []interface{}{map[string]interface{}{
 				"bucket_name": testS3BucketName,
 			}},
 		},
@@ -994,7 +994,7 @@ func TestResourceGcsMountGenericCreate_nothing_specified(t *testing.T) {
 // 	accountKey := qa.GetEnvOrSkipTest(t, "TEST_STORAGE_V2_KEY")
 // 	container := qa.GetEnvOrSkipTest(t, "TEST_STORAGE_V2_WASBS")
 // 	testWithNewSecretScope(t, func(scope, key string) {
-// 		testMounting(t, mp, GenericMount{Wasbs: &AzureBlobMount{
+// 		testMounting(t, mp, GenericMount{Wasb: &AzureBlobMount{
 // 			StorageAccountName: storageAccountName,
 // 			ContainerName:      container,
 // 			SecretScope:        scope,

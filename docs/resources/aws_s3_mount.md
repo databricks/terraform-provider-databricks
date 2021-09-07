@@ -3,7 +3,7 @@ subcategory: "AWS"
 ---
 # databricks_aws_s3_mount Resource
 
--> **Warning** This resource is deprecated by [databricks_mount resource](mount.md) and will be removed in v0.4.0!
+-> **Warning** This resource is deprecated by [databricks_mount resource](mount.md) and will be removed in the future versions!
 
 -> **Note** This resource has an evolving API, which may change in future versions of the provider.
 

@@ -10,10 +10,10 @@ This resource will mount your cloud storage account on `dbfs:/mnt/yourname`. Rig
 This resource provides two ways of mounting a storage account:
 1. Use a storage-specific configuration block - this could be used for the most cases, as it will fill most of necessary details. Currently we support following configuration blocks:
   * `s3` - to mount AWS S3
-  * `gcs` - to mount Google Cloud Storage
-  * `abfss` - to mount ADLS Gen2
-  * `adl` - to  mount ADLS Gen1
-  * `wasbs`  - to mount Azure Blob Storage
+  * `gs` - to mount Google Cloud Storage
+  * `abfs` - to mount ADLS Gen2 using [Azure Blob Filesystem (ABFS) driver](https://hadoop.apache.org/docs/current/hadoop-azure/index.html)
+  * `adl` - to  mount ADLS Gen1 using [Azure Data Lake (ADL) driver](https://hadoop.apache.org/docs/current/hadoop-azure-datalake/index.html)
+  * `wasb`  - to mount Azure Blob Storage using [Windows Azure Storage Blob (WASB) driver](https://hadoop.apache.org/docs/current/hadoop-azure/index.html)
 1. Use generic arguments - you have a responsibility for providing all necessary parameters that are required to mount specific storage. This is most flexible option
 
 
@@ -35,9 +35,9 @@ This block allows to specify parameters for mounting of the ADLS Gen2. The follo
 * `bucket_name` - (Required) (String) S3 bucket name to be mounted.
 
 
-## abfss block
+## abfs block
 
-This block allows to specify parameters for mounting of the ADLS Gen2. The following arguments are required inside the `abfss` block:
+This block allows to specify parameters for mounting of the ADLS Gen2. The following arguments are required inside the `abfs` block:
 
 * `client_id` - (Required) (String) This is the client_id (Application Object ID) for the enterprise application for the service principal. 
 * `tenant_id` - (Required) (String) This is your azure directory tenant id. This is required for creating the mount.
@@ -49,9 +49,9 @@ This block allows to specify parameters for mounting of the ADLS Gen2. The follo
 * `initialize_file_system` - (Required) (Bool) either or not initialize FS for the first use
 
 
-## gcs block
+## gs block
 
-This block allows to specify parameters for mounting of the Google Cloud Storage. The following arguments are required inside the `gcs` block:
+This block allows to specify parameters for mounting of the Google Cloud Storage. The following arguments are required inside the `gs` block:
 
 * `service_account` - (Optional) (String) email of registered [Google Service Account](https://docs.gcp.databricks.com/data/data-sources/google/gcs.html#step-1-set-up-google-cloud-service-account-using-google-cloud-console) for data access.  If it's not specified, then the `cluster_id` should be provided, and cluster should have Google service account attached to it. 
 * `bucket_name` - (Required) (String) GCS bucket name to be mounted.
@@ -70,11 +70,11 @@ This block allows to specify parameters for mounting of the ADLS Gen1. The follo
 * `spark_conf_prefix` - (Optional) (String) This is the spark configuration prefix for adls gen 1 mount. The options are `fs.adl`, `dfs.adls`. Use `fs.adl` for runtime 6.0 and above for the clusters. Otherwise use `dfs.adls`. The default value is: `fs.adl`.
 * `directory` - (Computed) (String) This is optional if you don't want to add an additional directory that you wish to mount. This must start with a "/".
 
-## wasbs block
+## wasb block
 
-This block allows to specify parameters for mounting of the Azure Blob Storage. The following arguments are required inside the `wasbs` block:
+This block allows to specify parameters for mounting of the Azure Blob Storage. The following arguments are required inside the `wasb` block:
 
-* `auth_type` - (Required) (String) This is the auth type for blob storage. This can either be SAS tokens or account access keys (`ACCESS_KEY`).
+* `auth_type` - (Required) (String) This is the auth type for blob storage. This can either be SAS tokens (`SAS`) or account access keys (`ACCESS_KEY`).
 * `token_secret_scope` - (Required) (String) This is the secret scope in which your auth type token is stored.
 * `token_secret_key` - (Required) (String) This is the secret key in which your auth type token is stored.
 * `container_name` - (Required) (String) The container in which the data is. This is what you are trying to mount.
@@ -88,7 +88,7 @@ This block allows to specify parameters for mounting of the Azure Blob Storage. 
 
 ```hcl
 // now you can do `%fs ls /mnt/experiments` in notebooks
-resource "databricks_aws_s3_mount" "this" {
+resource "databricks_mount" "this" {
     mount_name = "experiments"
     s3 {
       instance_profile = databricks_instance_profile.ds.id
@@ -136,9 +136,9 @@ resource "azurerm_storage_container" "this" {
   container_access_type = "private"
 }
 
-resource "databricks_azure_adls_gen2_mount" "marketing" {
+resource "databricks_mount" "marketing" {
     mount_name             = "marketing"
-    abfss {
+    abfs {
       container_name         = azurerm_storage_container.this.name
       storage_account_name   = azurerm_storage_account.this.name
       tenant_id              = data.azurerm_client_config.current.tenant_id
@@ -153,7 +153,7 @@ resource "databricks_azure_adls_gen2_mount" "marketing" {
 ### Creating mount for ADLS Gen1
 
 ```hcl
-resource "databricks_azure_adls_gen1_mount" "mount" {
+resource "databricks_mount" "mount" {
     mount_name           = "{var.RANDOM}"
     adl {
       storage_resource_name = "{env.TEST_STORAGE_ACCOUNT_NAME}"
@@ -196,9 +196,9 @@ resource "databricks_secret" "storage_key" {
     scope        = databricks_secret_scope.terraform.name
 }
 
-resource "databricks_azure_blob_mount" "marketing" {
+resource "databricks_mount" "marketing" {
     mount_name           = "marketing"
-    wasbs {
+    wasb {
       container_name       = azurerm_storage_container.marketing.name
       storage_account_name = azurerm_storage_account.blobaccount.name
       auth_type            = "ACCESS_KEY"
@@ -211,9 +211,9 @@ resource "databricks_azure_blob_mount" "marketing" {
 ## Creating mount for Google Cloud Storage
 
 ```hcl
-resource "databricks_mount" "this_gcs" {
-  mount_name = "gcs-mount"
-  gcs {
+resource "databricks_mount" "this_gs" {
+  mount_name = "gs-mount"
+  gs {
     service_account = "acc@company.iam.gserviceaccount.com"
     bucket_name = "mybucket"
   }

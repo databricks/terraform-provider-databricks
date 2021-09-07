@@ -28,19 +28,19 @@ func (m S3IamMount) Config(client *common.DatabricksClient) map[string]string {
 	return make(map[string]string) // return empty map so nil map does not marshal to null
 }
 
-// GCSMount describes the object for a GCS mount using google service account
-type GCSMount struct {
+// GSMount describes the object for a GS mount using google service account
+type GSMount struct {
 	BucketName     string `json:"bucket_name" tf:"force_new"`
 	ServiceAccount string `json:"service_account,omitempty" tf:"force_new"`
 }
 
 // Source ...
-func (m GCSMount) Source() string {
+func (m GSMount) Source() string {
 	return fmt.Sprintf("gs://%s", m.BucketName)
 }
 
 // Config ...
-func (m GCSMount) Config(client *common.DatabricksClient) map[string]string {
+func (m GSMount) Config(client *common.DatabricksClient) map[string]string {
 	return make(map[string]string) // return empty map so nil map does not marshal to null
 }
 
@@ -48,11 +48,11 @@ func (m GCSMount) Config(client *common.DatabricksClient) map[string]string {
 type GenericMount struct {
 	URI     string              `json:"uri,omitempty" tf:"force_new"`
 	Options map[string]string   `json:"extra_configs,omitempty" tf:"force_new"`
-	Abfss   *AzureADLSGen2Mount `json:"abfss,omitempty" tf:"force_new"`
+	Abfs    *AzureADLSGen2Mount `json:"abfs,omitempty" tf:"force_new"`
 	S3      *S3IamMount         `json:"s3,omitempty" tf:"force_new"`
 	Adl     *AzureADLSGen1Mount `json:"adl,omitempty" tf:"force_new"`
-	Wasbs   *AzureBlobMount     `json:"wasbs,omitempty" tf:"force_new"`
-	Gcs     *GCSMount           `json:"gcs,omitempty" tf:"force_new"`
+	Wasb    *AzureBlobMount     `json:"wasb,omitempty" tf:"force_new"`
+	Gs      *GSMount            `json:"gs,omitempty" tf:"force_new"`
 
 	ClusterID string `json:"cluster_id,omitempty" tf:"computed,force_new"`
 	MountName string `json:"mount_name" tf:"force_new"`
@@ -60,32 +60,32 @@ type GenericMount struct {
 
 // Source returns URI backing the mount
 func (m GenericMount) Source() string {
-	if m.Abfss != nil {
-		return m.Abfss.Source()
+	if m.Abfs != nil {
+		return m.Abfs.Source()
 	} else if m.Adl != nil {
 		return m.Adl.Source()
-	} else if m.Wasbs != nil {
-		return m.Wasbs.Source()
+	} else if m.Wasb != nil {
+		return m.Wasb.Source()
 	} else if m.S3 != nil {
 		return m.S3.Source()
-	} else if m.Gcs != nil {
-		return m.Gcs.Source()
+	} else if m.Gs != nil {
+		return m.Gs.Source()
 	}
 	return m.URI
 }
 
 // Config returns mount configurations
 func (m GenericMount) Config(client *common.DatabricksClient) map[string]string {
-	if m.Abfss != nil {
-		return m.Abfss.Config(client)
+	if m.Abfs != nil {
+		return m.Abfs.Config(client)
 	} else if m.Adl != nil {
 		return m.Adl.Config(client)
-	} else if m.Wasbs != nil {
-		return m.Wasbs.Config(client)
+	} else if m.Wasb != nil {
+		return m.Wasb.Config(client)
 	} else if m.S3 != nil {
 		return m.S3.Config(client)
-	} else if m.Gcs != nil {
-		return m.Gcs.Config(client)
+	} else if m.Gs != nil {
+		return m.Gs.Config(client)
 	}
 	return m.Options
 }
@@ -129,18 +129,18 @@ func preprocessS3MountGeneric(ctx context.Context, s map[string]*schema.Schema, 
 	return nil
 }
 
-func preprocessGcsMount(ctx context.Context, s map[string]*schema.Schema, d *schema.ResourceData, m interface{}) error {
+func preprocessGsMount(ctx context.Context, s map[string]*schema.Schema, d *schema.ResourceData, m interface{}) error {
 	var gm GenericMount
 	if err := common.DataToStructPointer(d, s, &gm); err != nil {
 		return err
 	}
-	if !(strings.HasPrefix(gm.URI, "gs://") || gm.Gcs != nil) {
+	if !(strings.HasPrefix(gm.URI, "gs://") || gm.Gs != nil) {
 		return nil
 	}
 	clusterID := gm.ClusterID
 	serviceAccount := ""
-	if gm.Gcs != nil {
-		serviceAccount = gm.Gcs.ServiceAccount
+	if gm.Gs != nil {
+		serviceAccount = gm.Gs.ServiceAccount
 	}
 	if clusterID == "" && serviceAccount == "" {
 		return fmt.Errorf("either cluster_id or service_account must be specified to mount GCS bucket")
@@ -186,14 +186,14 @@ func ResourceDatabricksMount() *schema.Resource {
 			Computed: true,
 		}
 
-		s["uri"].ConflictsWith = []string{"abfss", "wasbs", "s3", "adl", "gcs"}
-		s["extra_configs"].ConflictsWith = []string{"abfss", "wasbs", "s3", "adl", "gcs"}
-		s["abfss"].ConflictsWith = []string{"uri", "extra_configs", "wasbs", "s3", "adl", "gcs"}
-		s["wasbs"].ConflictsWith = []string{"uri", "extra_configs", "abfss", "s3", "adl", "gcs"}
-		s["s3"].ConflictsWith = []string{"uri", "extra_configs", "wasbs", "abfss", "adl", "gcs"}
-		s["adl"].ConflictsWith = []string{"uri", "extra_configs", "wasbs", "s3", "abfss", "gcs"}
-		blocks := []string{"abfss", "wasbs", "s3", "adl", "gcs"}
-		// TODO: remove this when depricating other mount types (will require to add `force_new` annotation to structs as well)
+		s["uri"].ConflictsWith = []string{"abfs", "wasb", "s3", "adl", "gs"}
+		s["extra_configs"].ConflictsWith = []string{"abfs", "wasb", "s3", "adl", "gs"}
+		s["abfs"].ConflictsWith = []string{"uri", "extra_configs", "wasb", "s3", "adl", "gs"}
+		s["wasb"].ConflictsWith = []string{"uri", "extra_configs", "abfs", "s3", "adl", "gs"}
+		s["s3"].ConflictsWith = []string{"uri", "extra_configs", "wasb", "abfs", "adl", "gs"}
+		s["adl"].ConflictsWith = []string{"uri", "extra_configs", "wasb", "s3", "abfs", "gs"}
+		s["gs"].ConflictsWith = []string{"uri", "extra_configs", "wasb", "s3", "abfs", "adl"}
+		blocks := []string{"abfs", "wasb", "s3", "adl", "gs"}
 		for _, nm := range blocks {
 			s[nm].DiffSuppressFunc = common.MakeEmptyBlockSuppressFunc(nm)
 		}
@@ -208,7 +208,7 @@ func ResourceDatabricksMount() *schema.Resource {
 		if err := preprocessS3MountGeneric(ctx, scm, d, m); err != nil {
 			return diag.FromErr(err)
 		}
-		if err := preprocessGcsMount(ctx, scm, d, m); err != nil {
+		if err := preprocessGsMount(ctx, scm, d, m); err != nil {
 			return diag.FromErr(err)
 		}
 		return mountCreate(tpl, r)(ctx, d, m)
@@ -217,7 +217,7 @@ func ResourceDatabricksMount() *schema.Resource {
 		if err := preprocessS3MountGeneric(ctx, scm, d, m); err != nil {
 			return diag.FromErr(err)
 		}
-		if err := preprocessGcsMount(ctx, scm, d, m); err != nil {
+		if err := preprocessGsMount(ctx, scm, d, m); err != nil {
 			return diag.FromErr(err)
 		}
 		return mountRead(tpl, r)(ctx, d, m)
@@ -226,7 +226,7 @@ func ResourceDatabricksMount() *schema.Resource {
 		if err := preprocessS3MountGeneric(ctx, scm, d, m); err != nil {
 			return diag.FromErr(err)
 		}
-		if err := preprocessGcsMount(ctx, scm, d, m); err != nil {
+		if err := preprocessGsMount(ctx, scm, d, m); err != nil {
 			return diag.FromErr(err)
 		}
 		return mountDelete(tpl, r)(ctx, d, m)

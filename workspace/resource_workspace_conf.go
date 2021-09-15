@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"strconv"
 	"strings"
 
 	"github.com/databrickslabs/terraform-provider-databricks/common"
@@ -52,23 +53,29 @@ func ResourceWorkspaceConf() *schema.Resource {
 		if !okNew || !okOld {
 			return fmt.Errorf("internal type casting error")
 		}
-		log.Printf("[DEBUG] Old worspace config: %v, new: %v", old, new)
+		log.Printf("[DEBUG] Old workspace config: %v, new: %v", old, new)
 		patch := map[string]interface{}{}
 		for k, v := range new {
 			patch[k] = v
 		}
-		for k := range old {
+		for k, v := range old {
 			_, keep := new[k]
 			if keep {
 				continue
 			}
 			log.Printf("[DEBUG] Erasing configuration of %s", k)
-			if strings.HasPrefix(k, "enable") ||
-				strings.HasPrefix(k, "enforce") ||
-				strings.HasSuffix(k, "Enabled") {
-				patch[k] = "false"
-			} else {
+			switch r := v.(type) {
+			default:
 				patch[k] = ""
+			case string:
+				_, err := strconv.ParseBool(r)
+				if err != nil {
+					patch[k] = ""
+				} else {
+					patch[k] = "false"
+				}
+			case bool:
+				patch[k] = "false"
 			}
 		}
 		err := wsConfAPI.Update(patch)
@@ -94,13 +101,19 @@ func ResourceWorkspaceConf() *schema.Resource {
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			config := d.Get("custom_config").(map[string]interface{})
-			for k := range config {
-				if strings.HasPrefix(k, "enable") ||
-					strings.HasPrefix(k, "enforce") ||
-					strings.HasSuffix(k, "Enabled") {
-					config[k] = "false"
-				} else {
+			for k, v := range config {
+				switch r := v.(type) {
+				default:
 					config[k] = ""
+				case string:
+					_, err := strconv.ParseBool(r)
+					if err != nil {
+						config[k] = ""
+					} else {
+						config[k] = "false"
+					}
+				case bool:
+					config[k] = "false"
 				}
 			}
 			wsConfAPI := NewWorkspaceConfAPI(ctx, c)

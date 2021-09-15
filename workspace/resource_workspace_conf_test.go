@@ -73,15 +73,25 @@ func TestWorkspaceConfUpdate(t *testing.T) {
 				Resource: "/api/2.0/workspace-conf",
 				ExpectedRequest: map[string]string{
 					"enableIpAccessLists": "true",
+					"enforceSomething":    "1",
 					"enableSomething":     "false",
 					"someProperty":        "",
 				},
 			},
 			{
 				Method:   http.MethodGet,
-				Resource: "/api/2.0/workspace-conf?keys=enableIpAccessLists",
+				Resource: "/api/2.0/workspace-conf?keys=enableIpAccessLists%2CenforceSomething",
 				Response: map[string]string{
 					"enableIpAccessLists": "true",
+					"enforceSomething":    "true",
+				},
+			},
+			{
+				Method:   http.MethodGet,
+				Resource: "/api/2.0/workspace-conf?keys=enforceSomething%2CenableIpAccessLists",
+				Response: map[string]string{
+					"enableIpAccessLists": "true",
+					"enforceSomething":    "true",
 				},
 			},
 		},
@@ -92,6 +102,7 @@ func TestWorkspaceConfUpdate(t *testing.T) {
 		},
 		HCL: `custom_config {
 			enableIpAccessLists = "true"
+			enforceSomething = true
 		}`,
 		Update: true,
 		ID:     "_",
@@ -179,7 +190,7 @@ func TestWorkspaceConfDelete(t *testing.T) {
 			},
 		},
 		HCL: `custom_config {
-			enableSomething = "true"
+			enableSomething = true
 			enforceSomethingElse = "true"
 			enableFancyThing = "false"
 			someProperty = "thing"

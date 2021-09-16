@@ -31,6 +31,8 @@ type Widget struct {
 type WidgetOptions struct {
 	ParameterMapping map[string]WidgetParameterMapping `json:"parameterMappings"`
 	Position         *WidgetPosition                   `json:"position,omitempty"`
+	Title            string                            `json:"title,omitempty"`
+	Description      string                            `json:"description,omitempty"`
 }
 
 // WidgetPosition ...

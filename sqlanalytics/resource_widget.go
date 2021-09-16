@@ -18,6 +18,9 @@ type WidgetEntity struct {
 	DashboardID string `json:"dashboard_id" tf:"force_new"`
 	WidgetID    string `json:"widget_id,omitempty" tf:"computed,force_new"`
 
+	Title       string `json:"title,omitempty"`
+	Description string `json:"description,omitempty"`
+
 	Text            string `json:"text,omitempty"`
 	VisualizationID string `json:"visualization_id,omitempty"`
 
@@ -77,6 +80,8 @@ func (w *WidgetEntity) toAPIObject(schema map[string]*schema.Schema, data *schem
 	}
 
 	aw.DashboardID = w.DashboardID
+	aw.Options.Title = w.Title
+	aw.Options.Description = w.Description
 
 	// The visualization ID is a string for the Terraform resource and an integer in the API.
 	if w.VisualizationID != "" {
@@ -125,6 +130,8 @@ func (w *WidgetEntity) fromAPIObject(aw *api.Widget, schema map[string]*schema.S
 	// Copy from API object.
 	w.DashboardID = aw.DashboardID
 	w.WidgetID = aw.ID.String()
+	w.Title = aw.Options.Title
+	w.Description = aw.Options.Description
 
 	if aw.VisualizationID != nil {
 		w.VisualizationID = fmt.Sprint(*aw.VisualizationID)

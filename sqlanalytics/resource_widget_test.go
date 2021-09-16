@@ -21,10 +21,18 @@ func TestWidgetCreateWithVisualization(t *testing.T) {
 				ExpectedRequest: api.Widget{
 					DashboardID:     "some-uuid",
 					VisualizationID: &i678,
+					Options: api.WidgetOptions{
+						Title:       "title",
+						Description: "description",
+					},
 				},
 				Response: api.Widget{
 					ID:          "12345",
 					DashboardID: "some-uuid",
+					Options: api.WidgetOptions{
+						Title:       "title",
+						Description: "description",
+					},
 				},
 			},
 			{
@@ -42,7 +50,11 @@ func TestWidgetCreateWithVisualization(t *testing.T) {
 						json.RawMessage(`
 							{
 								"id": "12345",
-								"visualization_id": 678
+								"visualization_id": 678,
+								"options": {
+									"title": "title",
+									"description": "description"
+								}
 							}
 						`),
 						json.RawMessage(`
@@ -60,6 +72,9 @@ func TestWidgetCreateWithVisualization(t *testing.T) {
 		HCL: `
 			dashboard_id     = "some-uuid"
 			visualization_id = "678"
+
+			title       = "title"
+			description = "description"
 		`,
 	}.Apply(t)
 
@@ -68,6 +83,8 @@ func TestWidgetCreateWithVisualization(t *testing.T) {
 	assert.Equal(t, "some-uuid", d.Get("dashboard_id"))
 	assert.Equal(t, "12345", d.Get("widget_id"))
 	assert.Equal(t, "678", d.Get("visualization_id"))
+	assert.Equal(t, "title", d.Get("title"))
+	assert.Equal(t, "description", d.Get("description"))
 }
 
 func TestWidgetCreateWithVisualizationByResourceID(t *testing.T) {

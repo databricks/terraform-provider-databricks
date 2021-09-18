@@ -15,6 +15,7 @@ import (
 // AWSIamMount describes the object for a aws mount using iam role
 type AWSIamMount struct {
 	S3BucketName string `json:"s3_bucket_name"`
+    ExtraConfigs map[string]string `json:"extra_configs"`
 }
 
 // Source ...
@@ -24,7 +25,10 @@ func (m AWSIamMount) Source() string {
 
 // Config ...
 func (m AWSIamMount) Config(client *common.DatabricksClient) map[string]string {
-	return make(map[string]string) // return empty map so nil map does not marshal to null
+     if m.ExtraConfigs == nil {
+            return make(map[string]string)
+    }
+    return m.ExtraConfigs
 }
 
 // ResourceAWSS3Mount ...
@@ -58,6 +62,13 @@ func ResourceAWSS3Mount() *schema.Resource {
 				Optional: true,
 				ForceNew: true,
 			},
+           "extra_configs": {
+                Type:     schema.TypeMap,
+                Optional: true,
+                ForceNew: true,
+                Default:  make(map[string]interface{}),
+           },
+
 		},
 		SchemaVersion: 2,
 		Importer: &schema.ResourceImporter{

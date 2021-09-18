@@ -42,8 +42,8 @@ func TestResourceAwsS3MountCreate(t *testing.T) {
 			t.Logf("Received command:\n%s", trunc)
 			if strings.HasPrefix(trunc, "def safe_mount") {
 				assert.Contains(t, trunc, testS3BucketPath) // bucketname
-				assert.Contains(t, trunc, `{}`)             // empty brackets for empty config
-			}
+			    assert.Contains(t, trunc, `{"fs.s3a.acl.default":"BucketOwnerFullControl"}`)             // empty brackets for empty config
+            }
 			assert.Contains(t, trunc, "/mnt/this_mount")
 			return common.CommandResults{
 				ResultType: "text",
@@ -54,6 +54,7 @@ func TestResourceAwsS3MountCreate(t *testing.T) {
 			"cluster_id":     "this_cluster",
 			"mount_name":     "this_mount",
 			"s3_bucket_name": testS3BucketName,
+            "extra_configs": map[string]interface{}{"fs.s3a.acl.default":"BucketOwnerFullControl"},
 		},
 		Create: true,
 	}.Apply(t)

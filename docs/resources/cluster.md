@@ -145,7 +145,7 @@ esource "databricks_cluster" "cluster_with_table_access_control" {
   custom_tags = {
     "ResourceClass" = "Serverless"
   }
-}  
+}
 ```
 
 
@@ -267,6 +267,8 @@ init_scripts {
   }
 }
 ```
+
+Take note that this can only be specified for clusters with [custom Docker containers](https://docs.databricks.com/clusters/custom-containers.html).
 
 ## aws_attributes
 

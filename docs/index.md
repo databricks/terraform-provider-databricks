@@ -104,7 +104,7 @@ There are currently three supported methods to [authenticate](https://docs.datab
 
 * [PAT Tokens](https://docs.databricks.com/dev-tools/api/latest/authentication.html)
 * Username and password pair
-* Azure Active Directory Tokens via [Azure CLI](#authenticating-with-azure-cli) or [Service Principals](#authenticating-with-azure-service-principal)
+* Azure Active Directory Tokens via [Azure CLI](#authenticating-with-azure-cli), [Service Principals](#authenticating-with-azure-service-principal), or [Managed Service Identities](#authenticating-with-azure-msi)
 
 ### Authenticating with Databricks CLI credentials
 
@@ -177,7 +177,46 @@ Alternatively, you can provide this value as an environment variable `DATABRICKS
 
 ## Special configurations for Azure
 
-The provider works with [Azure CLI authentication](https://docs.microsoft.com/en-us/cli/azure/authenticate-azure-cli?view=azure-cli-latest) to facilitate local development workflows, though for automated scenarios a service principal auth is necessary (and specification of `azure_client_id`, `azure_client_secret` and `azure_tenant_id` parameters).
+The provider works with [Azure CLI authentication](https://docs.microsoft.com/en-us/cli/azure/authenticate-azure-cli?view=azure-cli-latest) to facilitate local development workflows, though for automated scenarios a service principal auth is necessary (and specification of `azure_use_msi`, `azure_client_id`, `azure_client_secret` and `azure_tenant_id` parameters).
+
+### Authenticating with Azure MSI
+
+Since v0.3.8, it's possible to leverage [Azure Managed Service Identity](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/guides/managed_service_identity) authentication, which is using the same environment variables as `azurerm` provider. Both `SystemAssigned` and `UserAssigned` identities work, as long as they have `Contributor` role on subscription level and created the workspace resource, or directly added to workspace through [databricks_service_principal](resources/service_principal.md).
+
+```hcl
+provider "databricks" {
+  host = data.azurerm_databricks_workspace.this.workspace_url
+  
+  # ARM_USE_MSI environment variable is recommended
+  azure_use_msi = true 
+}
+```
+
+### Authenticating with Azure CLI
+
+It's possible to use [Azure CLI](https://docs.microsoft.com/cli/azure/) authentication, where the provider would rely on access token cached by `az login` command so that local development scenarios are possible. Technically, the provider will call `az account get-access-token` each time before an access token is about to expire.
+
+```hcl
+provider "azurerm" {
+  features {}
+}
+
+resource "azurerm_databricks_workspace" "this" {
+  location                      = "centralus"
+  name                          = "my-workspace-name"
+  resource_group_name           = var.resource_group
+  sku                           = "premium"
+}
+
+provider "databricks" {
+  host = azurerm_databricks_workspace.this.workspace_url
+}
+
+resource "databricks_user" "my-user" {
+  user_name     = "test-user@databricks.com"
+  display_name  = "Test User"
+}
+```
 
 ### Authenticating with Azure Service Principal
 
@@ -210,32 +249,6 @@ resource "databricks_user" "my-user" {
 }
 ```
 
-### Authenticating with Azure CLI
-
-It's possible to use [Azure CLI](https://docs.microsoft.com/cli/azure/) authentication, where the provider would rely on access token cached by `az login` command so that local development scenarios are possible. Technically, the provider will call `az account get-access-token` each time before an access token is about to expire.
-
-```hcl
-provider "azurerm" {
-  features {}
-}
-
-resource "azurerm_databricks_workspace" "this" {
-  location                      = "centralus"
-  name                          = "my-workspace-name"
-  resource_group_name           = var.resource_group
-  sku                           = "premium"
-}
-
-provider "databricks" {
-  host = azurerm_databricks_workspace.this.workspace_url
-}
-
-resource "databricks_user" "my-user" {
-  user_name     = "test-user@databricks.com"
-  display_name  = "Test User"
-}
-```
-
 * `azure_workspace_resource_id` - (optional) `id` attribute of [azurerm_databricks_workspace](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/databricks_workspace) resource. Combination of subscription id, resource group name, and workspace name. **This field is deprecated since v0.3.8 in favor of `host = azurerm_databricks_workspace.this.workspace_url`.**
 * `azure_workspace_name` - (optional) This is the name of your Azure Databricks Workspace. Alternatively, you can provide this value as an environment variable `DATABRICKS_AZURE_WORKSPACE_NAME`. Not needed with `azure_workspace_resource_id` is set. **Deprecated since v0.3.8**.
 * `azure_resource_group` - (optional) This is the resource group in which your Azure Databricks Workspace resides. Alternatively, you can provide this value as an environment variable `DATABRICKS_AZURE_RESOURCE_GROUP`. Not needed with `azure_workspace_resource_id` is set. **Deprecated since v0.3.8**.
@@ -245,6 +258,7 @@ resource "databricks_user" "my-user" {
 * `azure_tenant_id` - (optional) This is the Azure Active Directory Tenant id in which the Enterprise Application (Service Principal) 
 resides. Alternatively, you can provide this value as an environment variable `DATABRICKS_AZURE_TENANT_ID` or `ARM_TENANT_ID`.
 * `azure_environment` - (optional) This is the Azure Environment which defaults to the `public` cloud. Other options are `german`, `china` and `usgovernment`. Alternatively, you can provide this value as an environment variable `ARM_ENVIRONMENT`.
+* `azure_use_msi` - (optional) Use [Azure Managed Service Identity](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/guides/managed_service_identity) authentication. Alternatively, you can provide this value as an environment variable `ARM_USE_MSI`.
 * `pat_token_duration_seconds` - The current implementation of the azure auth via sp requires the provider to create a temporary personal access token within Databricks. The current AAD implementation does not cover all the APIs for Authentication. This field determines the duration in which that temporary PAT token is alive. It is measured in seconds and will default to `3600` seconds.  **Deprecated since v0.3.8**.
 
 There are multiple environment variable options, the `DATABRICKS_AZURE_*` environment variables take precedence, and the `ARM_*` environment variables provide a way to share authentication configuration using the `databricks` provider alongside the `azurerm` provider.
@@ -274,6 +288,7 @@ The following configuration attributes can be passed via environment variables:
 |         `azure_client_secret` | `ARM_CLIENT_SECRET`               |
 |             `azure_client_id` | `ARM_CLIENT_ID`                   |
 |             `azure_tenant_id` | `ARM_TENANT_ID`                   |
+|               `azure_use_msi` | `ARM_USE_MSI`                     |
 |           `azure_environment` | `ARM_ENVIRONMENT`                 |
 |        `debug_truncate_bytes` | `DATABRICKS_DEBUG_TRUNCATE_BYTES` |
 |               `debug_headers` | `DATABRICKS_DEBUG_HEADERS`        |
@@ -293,10 +308,11 @@ provider "databricks" {}
 3. Will check for the presence of `host` + `token` pair, continue trying otherwise.
 4. Will check for `host` + `username` + `password` presence, continue trying otherwise.
 5. Will check for Azure workspace ID, `azure_client_secret` + `azure_client_id` + `azure_tenant_id` presence, continue trying otherwise.
-6. Will check for Azure workspace ID presence, and if `AZ CLI` returns an access token, continue trying otherwise.
-7. Will check for the `~/.databrickscfg` file in the home directory, will fail otherwise.
-8. Will check for `profile` presence and try picking from that file will fail otherwise.
-9. Will check for `host` and `token` or `username`+`password` combination, will fail if nothing of these exist.
+6. Will check for availability of Azure MSI, if enabled via `azure_use_msi`, continue trying otherwise.
+7. Will check for Azure workspace ID presence, and if `AZ CLI` returns an access token, continue trying otherwise.
+8. Will check for the `~/.databrickscfg` file in the home directory, will fail otherwise.
+9. Will check for `profile` presence and try picking from that file will fail otherwise.
+10. Will check for `host` and `token` or `username`+`password` combination, will fail if nothing of these exist.
 
 ## Data resources and Authentication is not configured errors
 

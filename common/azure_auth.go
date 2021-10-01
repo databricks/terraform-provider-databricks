@@ -112,8 +112,11 @@ func (aa *DatabricksClient) configureWithAzureManagedIdentity(ctx context.Contex
 	if !aa.IsAzure() {
 		return nil, nil
 	}
-	if !adal.MSIAvailable(ctx, aa.httpClient.HTTPClient) {
+	if !aa.AzureUseMSI {
 		return nil, nil
+	}
+	if !adal.MSIAvailable(ctx, aa.httpClient.HTTPClient) {
+		return nil, fmt.Errorf("managed identity is not available")
 	}
 	log.Printf("[INFO] Using Azure Managed Identity authentication")
 	return aa.simpleAADRequestVisitor(ctx, func(resource string) (autorest.Authorizer, error) {

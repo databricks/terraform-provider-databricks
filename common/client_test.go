@@ -160,7 +160,7 @@ func TestDatabricksClient_FormatURL(t *testing.T) {
 
 func TestClientAttributes(t *testing.T) {
 	ca := ClientAttributes()
-	assert.Len(t, ca, 24)
+	assert.Len(t, ca, 25)
 }
 
 func TestEnvVarsUsed(t *testing.T) {

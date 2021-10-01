@@ -69,6 +69,9 @@ type DatabricksClient struct {
 	// Deprecated - to be removed in v0.4.0
 	AzureUsePATForSPN bool `name:"azure_use_pat_for_spn"`
 
+	// Use Azure Managed Service Identity authentication
+	AzureUseMSI bool `name:"azure_use_msi" env:"ARM_USE_MSI" auth:"azure"`
+
 	AzureClientSecret  string `name:"azure_client_secret" env:"DATABRICKS_AZURE_CLIENT_SECRET,ARM_CLIENT_SECRET" auth:"azure"`
 	AzureClientID      string `name:"azure_client_id" env:"DATABRICKS_AZURE_CLIENT_ID,ARM_CLIENT_ID" auth:"azure"`
 	AzureTenantID      string `name:"azure_tenant_id" env:"DATABRICKS_AZURE_TENANT_ID,ARM_TENANT_ID" auth:"azure"`
@@ -216,8 +219,8 @@ func (c *DatabricksClient) Authenticate(ctx context.Context) error {
 	authorizers := []func(context.Context) (func(*http.Request) error, error){
 		c.configureWithDirectParams,
 		c.configureWithAzureClientSecret,
-		c.configureWithAzureCLI,
 		c.configureWithAzureManagedIdentity,
+		c.configureWithAzureCLI,
 		c.configureWithGoogleForAccountsAPI,
 		c.configureWithGoogleForWorkspace,
 		c.configureWithDatabricksCfg,
@@ -241,6 +244,7 @@ func (c *DatabricksClient) Authenticate(ctx context.Context) error {
 func (c *DatabricksClient) niceError(message string) error {
 	info := ""
 	if len(c.configAttributesUsed) > 0 {
+		// TODO: first show env vars and filter out the attrs after
 		info = fmt.Sprintf(" Attributes used: %s", strings.Join(c.configAttributesUsed, ", "))
 		envVars := envVariablesUsed()
 		if envVars != "" {
@@ -386,7 +390,7 @@ func (c *DatabricksClient) configureHTTPCLient() {
 
 // IsAzure returns true if client is configured for Azure Databricks - either by using AAD auth or with host+token combination
 func (c *DatabricksClient) IsAzure() bool {
-	return c.resourceID() != "" || strings.Contains(c.Host, ".azuredatabricks.net")
+	return c.resourceID() != "" || strings.Contains(c.Host, ".azuredatabricks.net") || c.AzureUseMSI
 }
 
 // IsAws returns true if client is configured for AWS

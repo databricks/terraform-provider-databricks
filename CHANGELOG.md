@@ -3,6 +3,7 @@
 ## 0.3.8
 
 * Added `databricks_repo` resource to manage [Databricks Repos](https://docs.databricks.com/repos.html) ([#771](https://github.com/databrickslabs/terraform-provider-databricks/pull/771))
+* Added support for Azure MSI authentication ([#743](https://github.com/databrickslabs/terraform-provider-databricks/pull/743))
 * Already deleted `databricks_token` don't fail the apply ([#808](https://github.com/databrickslabs/terraform-provider-databricks/pull/808))
 * Multiple documentation improvements
 

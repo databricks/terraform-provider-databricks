@@ -284,6 +284,7 @@ func TestDeletedMountClusterRecreates(t *testing.T) {
 				SparkConf: map[string]string{
 					"spark.databricks.cluster.profile": "singleNode",
 					"spark.master":                     "local[*]",
+					"spark.scheduler.mode":             "FIFO",
 				},
 			},
 			Response: compute.ClusterID{
@@ -300,6 +301,7 @@ func TestDeletedMountClusterRecreates(t *testing.T) {
 				SparkConf: map[string]string{
 					"spark.databricks.acl.dfAclsEnabled": "true",
 					"spark.databricks.cluster.profile":   "singleNode",
+					"spark.scheduler.mode":               "FIFO",
 				},
 			},
 		},

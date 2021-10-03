@@ -1,6 +1,7 @@
 package common
 
 import (
+	"context"
 	"os"
 	"strings"
 	"testing"
@@ -17,7 +18,7 @@ func configureAndAuthenticate(dc *DatabricksClient) (*DatabricksClient, error) {
 	if err != nil {
 		return dc, err
 	}
-	return dc, dc.Authenticate()
+	return dc, dc.Authenticate(context.Background())
 }
 
 func TestDatabricksClientConfigure_Nothing(t *testing.T) {
@@ -159,7 +160,7 @@ func TestDatabricksClient_FormatURL(t *testing.T) {
 
 func TestClientAttributes(t *testing.T) {
 	ca := ClientAttributes()
-	assert.Len(t, ca, 24)
+	assert.Len(t, ca, 25)
 }
 
 func TestEnvVarsUsed(t *testing.T) {

@@ -90,6 +90,7 @@ func ResourceServicePrincipal() *schema.Resource {
 			}
 			client := c.(*common.DatabricksClient)
 			if client.IsAzure() && sp.ApplicationID == "" {
+				// TODO: verify cases for non-existing resources
 				return fmt.Errorf("application_id is required for service principals in Azure Databricks")
 			}
 			if client.IsAws() && sp.DisplayName == "" {

@@ -417,7 +417,8 @@ func configureProviderAndReturnClient(t *testing.T, tt providerFixture) (*common
 		os.Setenv(k, v)
 	}
 	p := DatabricksProvider()
-	diags := p.Configure(context.Background(), terraform.NewResourceConfigRaw(tt.rawConfig()))
+	ctx := context.Background()
+	diags := p.Configure(ctx, terraform.NewResourceConfigRaw(tt.rawConfig()))
 	if len(diags) > 0 {
 		issues := []string{}
 		for _, d := range diags {
@@ -427,7 +428,7 @@ func configureProviderAndReturnClient(t *testing.T, tt providerFixture) (*common
 	}
 	client := p.Meta().(*common.DatabricksClient)
 	client.AzureUsePATForSPN = tt.usePATForSPN
-	err := client.Authenticate()
+	err := client.Authenticate(ctx)
 	if err != nil {
 		return nil, err
 	}

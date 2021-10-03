@@ -84,18 +84,13 @@ func (aa *DatabricksClient) IsAzureClientSecretSet() bool {
 	return aa.AzureClientID != "" && aa.AzureClientSecret != "" && aa.AzureTenantID != ""
 }
 
-func (aa *DatabricksClient) configureWithClientSecret() (func(r *http.Request) error, error) {
+func (aa *DatabricksClient) configureWithAzureClientSecret(ctx context.Context) (func(*http.Request) error, error) {
 	if !aa.IsAzure() {
 		return nil, nil
 	}
 	if !aa.IsAzureClientSecretSet() {
 		return nil, nil
 	}
-	azureEnvironment, err := aa.getAzureEnvironment()
-	if err != nil {
-		return nil, fmt.Errorf("cannot get azure environment: %w", err)
-	}
-	aa.AzureEnvironment = &azureEnvironment
 	log.Printf("[INFO] Using Azure Service Principal client secret authentication")
 	if aa.AzureUsePATForSPN {
 		log.Printf("[INFO] Generating PAT token Azure Service Principal client secret authentication")
@@ -110,7 +105,25 @@ func (aa *DatabricksClient) configureWithClientSecret() (func(r *http.Request) e
 	}
 
 	log.Printf("[INFO] Generating AAD token for Azure Service Principal")
-	return aa.simpleAADRequestVisitor(aa.InitContext, aa.getClientSecretAuthorizer, aa.addSpManagementTokenVisitor)
+	return aa.simpleAADRequestVisitor(ctx, aa.getClientSecretAuthorizer, aa.addSpManagementTokenVisitor)
+}
+
+func (aa *DatabricksClient) configureWithAzureManagedIdentity(ctx context.Context) (func(*http.Request) error, error) {
+	if !aa.IsAzure() {
+		return nil, nil
+	}
+	if !aa.AzureUseMSI {
+		return nil, nil
+	}
+	if !adal.MSIAvailable(ctx, aa.httpClient.HTTPClient) {
+		return nil, fmt.Errorf("managed identity is not available")
+	}
+	log.Printf("[INFO] Using Azure Managed Identity authentication")
+	return aa.simpleAADRequestVisitor(ctx, func(resource string) (autorest.Authorizer, error) {
+		return auth.MSIConfig{
+			Resource: resource,
+		}.Authorizer()
+	}, aa.addSpManagementTokenVisitor)
 }
 
 func (aa *DatabricksClient) addSpManagementTokenVisitor(r *http.Request, management autorest.Authorizer) error {
@@ -143,7 +156,12 @@ func (aa *DatabricksClient) simpleAADRequestVisitor(
 	ctx context.Context,
 	authorizerFactory func(resource string) (autorest.Authorizer, error),
 	visitors ...func(r *http.Request, ma autorest.Authorizer) error) (func(r *http.Request) error, error) {
-	managementAuthorizer, err := authorizerFactory(aa.AzureEnvironment.ServiceManagementEndpoint)
+	azureEnvironment, err := aa.getAzureEnvironment()
+	if err != nil {
+		return nil, fmt.Errorf("cannot get azure environment: %w", err)
+	}
+	aa.AzureEnvironment = &azureEnvironment
+	managementAuthorizer, err := authorizerFactory(azureEnvironment.ServiceManagementEndpoint)
 	if err != nil {
 		return nil, fmt.Errorf("cannot authorize management: %w", err)
 	}
@@ -185,7 +203,12 @@ func (aa *DatabricksClient) acquirePAT(
 	if aa.temporaryPat != nil {
 		return aa.temporaryPat, nil
 	}
-	management, err := factory(aa.AzureEnvironment.ServiceManagementEndpoint)
+	azureEnvironment, err := aa.getAzureEnvironment()
+	if err != nil {
+		return nil, fmt.Errorf("cannot get azure environment: %w", err)
+	}
+	aa.AzureEnvironment = &azureEnvironment
+	management, err := factory(azureEnvironment.ServiceManagementEndpoint)
 	if err != nil {
 		return nil, err
 	}

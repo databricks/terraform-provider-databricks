@@ -93,20 +93,15 @@ func (aa *DatabricksClient) cliAuthorizer(resource string) (autorest.Authorizer,
 	return autorest.NewBearerAuthorizer(&rct), nil
 }
 
-func (aa *DatabricksClient) configureWithAzureCLI() (func(r *http.Request) error, error) {
+func (aa *DatabricksClient) configureWithAzureCLI(ctx context.Context) (func(*http.Request) error, error) {
 	if !aa.IsAzure() {
 		return nil, nil
 	}
 	if aa.IsAzureClientSecretSet() {
 		return nil, nil
 	}
-	azureEnvironment, err := aa.getAzureEnvironment()
-	if err != nil {
-		return nil, fmt.Errorf("cannot get environment: %w", err)
-	}
-	aa.AzureEnvironment = &azureEnvironment
 	// verify that Azure CLI is authenticated
-	_, err = cli.GetTokenFromCLI(AzureDatabricksResourceID)
+	_, err := cli.GetTokenFromCLI(AzureDatabricksResourceID)
 	if err != nil {
 		if err.Error() == "Invoking Azure CLI failed with the following error: " {
 			return nil, fmt.Errorf("most likely Azure CLI is not installed. " +
@@ -126,5 +121,5 @@ func (aa *DatabricksClient) configureWithAzureCLI() (func(r *http.Request) error
 		}, nil
 	}
 	log.Printf("[INFO] Using Azure CLI authentication with AAD tokens")
-	return aa.simpleAADRequestVisitor(context.TODO(), aa.cliAuthorizer)
+	return aa.simpleAADRequestVisitor(ctx, aa.cliAuthorizer)
 }

@@ -119,7 +119,7 @@ func TestConfig_TokenEnv(t *testing.T) {
 		env: map[string]string{
 			"DATABRICKS_TOKEN": "x",
 		},
-		assertError: "cannot configure auth: host is empty, but is required by token",
+		assertError: "cannot configure direct auth: host is empty, but is required by token. Environment variables used: DATABRICKS_TOKEN",
 	}.apply(t)
 }
 
@@ -151,7 +151,9 @@ func TestConfig_UserPasswordEnv(t *testing.T) {
 			"DATABRICKS_USERNAME": "x",
 			"DATABRICKS_PASSWORD": "x",
 		},
-		assertError: "cannot configure auth: host is empty, but is required by basic_auth",
+		assertError: "cannot configure direct auth: host is empty, but is required by basic_auth. " +
+			"Environment variables used: DATABRICKS_USERNAME, DATABRICKS_PASSWORD. " +
+			"Please check https://registry.terraform.io/providers/databrickslabs/databricks/latest/docs#authentication for details",
 		assertToken: "x",
 		assertHost:  "https://x",
 	}.apply(t)
@@ -254,7 +256,7 @@ func TestConfig_PatFromDatabricksCfg_NohostProfile(t *testing.T) {
 			"HOME":                      "../common/testdata",
 			"DATABRICKS_CONFIG_PROFILE": "nohost",
 		},
-		assertError: "cannot configure auth: config file ../common/testdata/.databrickscfg is corrupt: cannot find host in nohost profile",
+		assertError: "cannot configure Databricks CLI auth: config file ../common/testdata/.databrickscfg is corrupt: cannot find host in nohost profile",
 	}.apply(t)
 }
 
@@ -307,7 +309,7 @@ func TestConfig_AzureCliHost_Fail(t *testing.T) {
 			"HOME": "../common/testdata",
 			"FAIL": "yes",
 		},
-		assertError: "cannot configure auth: Invoking Azure CLI failed with the following error: This is just a failing script.",
+		assertError: "cannot configure Azure CLI auth: Invoking Azure CLI failed with the following error: This is just a failing script.",
 	}.apply(t)
 }
 
@@ -319,7 +321,7 @@ func TestConfig_AzureCliHost_AzNotInstalled(t *testing.T) {
 			"PATH": "whatever",
 			"HOME": "../common/testdata",
 		},
-		assertError: "cannot configure auth: most likely Azure CLI is not installed.",
+		assertError: "cannot configure Azure CLI auth: most likely Azure CLI is not installed.",
 	}.apply(t)
 }
 
@@ -407,7 +409,7 @@ func TestConfig_CorruptConfig(t *testing.T) {
 		env: map[string]string{
 			"HOME": "../common/testdata/corrupt",
 		},
-		assertError: "cannot configure auth: ../common/testdata/corrupt/.databrickscfg has no DEFAULT profile configured",
+		assertError: "cannot configure Databricks CLI auth: ../common/testdata/corrupt/.databrickscfg has no DEFAULT profile configured",
 	}.apply(t)
 }
 

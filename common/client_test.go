@@ -35,7 +35,7 @@ func TestDatabricksClientConfigure_BasicAuth_NoHost(t *testing.T) {
 		Password: "bar",
 	})
 
-	AssertErrorStartsWith(t, err, "cannot configure auth: host is empty, but is required by basic_auth")
+	AssertErrorStartsWith(t, err, "cannot configure direct auth: host is empty, but is required by basic_auth")
 	assert.Equal(t, "Zm9vOmJhcg==", dc.Token)
 }
 
@@ -66,7 +66,7 @@ func TestDatabricksClientConfigure_Token_NoHost(t *testing.T) {
 		Token: "dapi345678",
 	})
 
-	AssertErrorStartsWith(t, err, "cannot configure auth: host is empty, but is required by token")
+	AssertErrorStartsWith(t, err, "cannot configure direct auth: host is empty, but is required by token")
 	assert.Equal(t, "dapi345678", dc.Token)
 }
 
@@ -144,15 +144,6 @@ func TestDatabricksClientConfigure_InvalidConfigFilePath(t *testing.T) {
 	assert.Error(t, err)
 }
 
-// func TestDatabricksClientConfigure_InvalidHome(t *testing.T) {
-// 	defer CleanupEnvironment()()
-// 	os.Setenv("HOME", "whatever")
-// 	_, err := configureAndAuthenticate(&DatabricksClient{
-// 		Profile: "invalidhost",
-// 	})
-// 	assert.EqualError(t, err, ".")
-// }
-
 func TestDatabricksClient_FormatURL(t *testing.T) {
 	client := DatabricksClient{Host: "https://some.host"}
 	assert.Equal(t, "https://some.host/#job/123", client.FormatURL("#job/123"))
@@ -163,15 +154,31 @@ func TestClientAttributes(t *testing.T) {
 	assert.Len(t, ca, 25)
 }
 
-func TestEnvVarsUsed(t *testing.T) {
-	ResetCommonEnvironmentClient()
+func TestDatabricksClient_Authenticate(t *testing.T) {
 	defer CleanupEnvironment()()
-	os.Setenv("SUPER_SECRET", ".")
-	os.Setenv("DATABRICKS_HOST", ".")
-	os.Setenv("ARM_SUBSCRIPTION_ID", ".")
-	os.Setenv("DATABRICKS_ACCOUNT_ID", ".")
-	os.Setenv("DATABRICKS_GOOGLE_SERVICE_ACCOUNT", ".")
+	dc := DatabricksClient{}
+	err := dc.Configure("account_id", "username", "password")
+	os.Setenv("DATABRICKS_PASSWORD", ".")
+	assert.NoError(t, err)
+	err = dc.Authenticate(context.WithValue(context.Background(), IsData, "yes"))
+	assert.EqualError(t, err, "workspace is most likely not created yet, because the `host` is empty. "+
+		"Please add `depends_on = [databricks_mws_workspaces.this]` or `depends_on = [azurerm_databricks"+
+		"_workspace.this]` to every data resource. See https://www.terraform.io/docs/language/resources/behavior.html more info. "+
+		"Attributes used: account_id, username. Environment variables used: DATABRICKS_PASSWORD. "+
+		"Please check https://registry.terraform.io/providers/databrickslabs/databricks/latest/docs#authentication for details")
+}
 
-	names := envVariablesUsed()
-	assert.Equal(t, "DATABRICKS_HOST, DATABRICKS_ACCOUNT_ID, DATABRICKS_GOOGLE_SERVICE_ACCOUNT, ARM_SUBSCRIPTION_ID", names)
+func TestDatabricksClient_AuthenticateAzure(t *testing.T) {
+	defer CleanupEnvironment()()
+	os.Setenv("ARM_CLIENT_SECRET", ".")
+	os.Setenv("ARM_CLIENT_ID", ".")
+	dc := DatabricksClient{}
+	err := dc.Configure("azure_client_id", "azure_client_secret")
+	assert.NoError(t, err)
+	err = dc.Authenticate(context.WithValue(context.Background(), IsData, "yes"))
+	assert.EqualError(t, err, "workspace is most likely not created yet, because the `host` is empty. "+
+		"Please add `depends_on = [databricks_mws_workspaces.this]` or `depends_on = [azurerm_databricks"+
+		"_workspace.this]` to every data resource. See https://www.terraform.io/docs/language/resources/"+
+		"behavior.html more info. Environment variables used: ARM_CLIENT_SECRET, ARM_CLIENT_ID. "+
+		"Please check https://registry.terraform.io/providers/databrickslabs/databricks/latest/docs#authentication for details")
 }

@@ -178,24 +178,6 @@ func ClientAttributes() (attrs []ConfigAttribute) {
 	return
 }
 
-// envVariablesUsed returns coma-separated list of the used relevant variable names
-func envVariablesUsed() string {
-	names := []string{}
-	for _, attr := range ClientAttributes() {
-		if len(attr.EnvVars) == 0 {
-			continue
-		}
-		for _, envVar := range attr.EnvVars {
-			value := os.Getenv(envVar)
-			if value == "" {
-				continue
-			}
-			names = append(names, envVar)
-		}
-	}
-	return strings.Join(names, ", ")
-}
-
 // Configure client to work, optionally specifying configuration attributes used
 func (c *DatabricksClient) Configure(attrsUsed ...string) error {
 	c.configAttributesUsed = attrsUsed
@@ -224,20 +206,24 @@ func (c *DatabricksClient) Authenticate(ctx context.Context) error {
 	if c.authVisitor != nil {
 		return nil
 	}
-	authorizers := []func(context.Context) (func(*http.Request) error, error){
-		c.configureWithDirectParams,
-		c.configureWithAzureClientSecret,
-		c.configureWithAzureManagedIdentity,
-		c.configureWithAzureCLI,
-		c.configureWithGoogleForAccountsAPI,
-		c.configureWithGoogleForWorkspace,
-		c.configureWithDatabricksCfg,
+	type auth struct {
+		configure func(context.Context) (func(*http.Request) error, error)
+		name      string
+	}
+	providers := []auth{
+		{c.configureWithDirectParams, "direct"},
+		{c.configureWithAzureClientSecret, "Azure Service Principal"},
+		{c.configureWithAzureManagedIdentity, "Azure MSI"},
+		{c.configureWithAzureCLI, "Azure CLI"},
+		{c.configureWithGoogleForAccountsAPI, "Databricks Account on GCP"},
+		{c.configureWithGoogleForWorkspace, "Databricks on GCP"},
+		{c.configureWithDatabricksCfg, "Databricks CLI"},
 	}
 	// try configuring authentication with different methods
-	for _, authProvider := range authorizers {
-		authorizer, err := authProvider(ctx)
+	for _, auth := range providers {
+		authorizer, err := auth.configure(ctx)
 		if err != nil {
-			return c.niceError(fmt.Sprintf("cannot configure auth: %s", err))
+			return c.niceAuthError(fmt.Sprintf("cannot configure %s auth: %s", auth.name, err))
 		}
 		if authorizer == nil {
 			continue
@@ -246,21 +232,51 @@ func (c *DatabricksClient) Authenticate(ctx context.Context) error {
 		c.fixHost()
 		return nil
 	}
-	return c.niceError("authentication is not configured for provider.")
+	if c.Host == "" && IsData.GetOrUnknown(ctx) == "yes" {
+		return c.niceAuthError("workspace is most likely not created yet, because the `host` " +
+			"is empty. Please add `depends_on = [databricks_mws_workspaces.this]` or " +
+			"`depends_on = [azurerm_databricks_workspace.this]` to every data resource. See " +
+			"https://www.terraform.io/docs/language/resources/behavior.html more info")
+	}
+	return c.niceAuthError("authentication is not configured for provider.")
 }
 
-func (c *DatabricksClient) niceError(message string) error {
+func (c *DatabricksClient) niceAuthError(message string) error {
 	info := ""
 	if len(c.configAttributesUsed) > 0 {
-		// TODO: first show env vars and filter out the attrs after
-		info = fmt.Sprintf(" Attributes used: %s", strings.Join(c.configAttributesUsed, ", "))
-		envVars := envVariablesUsed()
-		if envVars != "" {
-			info = fmt.Sprintf("%s. Environment variables used: %s", info, envVars)
+		envs := []string{}
+		attrs := []string{}
+		usedAsEnv := map[string]bool{}
+		for _, attr := range ClientAttributes() {
+			if len(attr.EnvVars) == 0 {
+				continue
+			}
+			for _, envVar := range attr.EnvVars {
+				value := os.Getenv(envVar)
+				if value == "" {
+					continue
+				}
+				usedAsEnv[attr.Name] = true
+				envs = append(envs, envVar)
+			}
 		}
+		for _, attr := range c.configAttributesUsed {
+			if usedAsEnv[attr] {
+				continue
+			}
+			attrs = append(attrs, attr)
+		}
+		infos := []string{}
+		if len(attrs) > 0 {
+			infos = append(infos, fmt.Sprintf("Attributes used: %s", strings.Join(attrs, ", ")))
+		}
+		if len(envs) > 0 {
+			infos = append(infos, fmt.Sprintf("Environment variables used: %s", strings.Join(envs, ", ")))
+		}
+		info = ". " + strings.Join(infos, ". ")
 	}
 	docUrl := "https://registry.terraform.io/providers/databrickslabs/databricks/latest/docs#authentication"
-	return fmt.Errorf("%s%s Please check %s for details", message, info, docUrl)
+	return fmt.Errorf("%s%s. Please check %s for details", message, info, docUrl)
 }
 
 func (c *DatabricksClient) fixHost() {

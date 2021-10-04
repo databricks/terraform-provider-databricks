@@ -156,12 +156,7 @@ func (aa *DatabricksClient) simpleAADRequestVisitor(
 	ctx context.Context,
 	authorizerFactory func(resource string) (autorest.Authorizer, error),
 	visitors ...func(r *http.Request, ma autorest.Authorizer) error) (func(r *http.Request) error, error) {
-	azureEnvironment, err := aa.getAzureEnvironment()
-	if err != nil {
-		return nil, fmt.Errorf("cannot get azure environment: %w", err)
-	}
-	aa.AzureEnvironment = &azureEnvironment
-	managementAuthorizer, err := authorizerFactory(azureEnvironment.ServiceManagementEndpoint)
+	managementAuthorizer, err := authorizerFactory(aa.AzureEnvironment.ServiceManagementEndpoint)
 	if err != nil {
 		return nil, fmt.Errorf("cannot authorize management: %w", err)
 	}
@@ -203,12 +198,7 @@ func (aa *DatabricksClient) acquirePAT(
 	if aa.temporaryPat != nil {
 		return aa.temporaryPat, nil
 	}
-	azureEnvironment, err := aa.getAzureEnvironment()
-	if err != nil {
-		return nil, fmt.Errorf("cannot get azure environment: %w", err)
-	}
-	aa.AzureEnvironment = &azureEnvironment
-	management, err := factory(azureEnvironment.ServiceManagementEndpoint)
+	management, err := factory(aa.AzureEnvironment.ServiceManagementEndpoint)
 	if err != nil {
 		return nil, err
 	}
@@ -274,13 +264,9 @@ func (aa *DatabricksClient) ensureWorkspaceURL(ctx context.Context,
 	if resourceID == "" {
 		return fmt.Errorf("somehow resource id is not set")
 	}
-	env, err := aa.getAzureEnvironment()
-	if err != nil {
-		return maybeExtendAuthzError(err)
-	}
 	log.Println("[DEBUG] Getting Workspace ID via management token.")
 	// All azure endpoints typically end with a trailing slash removing it because resourceID starts with slash
-	managementResourceURL := strings.TrimSuffix(env.ResourceManagerEndpoint, "/") + resourceID
+	managementResourceURL := strings.TrimSuffix(aa.AzureEnvironment.ResourceManagerEndpoint, "/") + resourceID
 	var workspace azureDatabricksWorkspace
 	resp, err := aa.genericQuery(ctx, http.MethodGet,
 		managementResourceURL,

@@ -6,6 +6,7 @@
 * Added support for Azure MSI authentication ([#743](https://github.com/databrickslabs/terraform-provider-databricks/pull/743))
 * Already deleted `databricks_token` don't fail the apply ([#808](https://github.com/databrickslabs/terraform-provider-databricks/pull/808))
 * Default `terraform-mount` clusters created for mounting for `databricks_aws_s3_mount`, `databricks_azure_adls_gen1_mount`, `databricks_azure_adls_gen2_mount`, and `databricks_azure_blob_mount` have now `spark.scheduler.mode` as `FIFO` ([#828](https://github.com/databrickslabs/terraform-provider-databricks/pull/828))
+* Fixed crash when using non-Azure authentication to mount Azure resources ([#831](https://github.com/databrickslabs/terraform-provider-databricks/issues/831))
 * Multiple documentation improvements
 
 **Deprecations**

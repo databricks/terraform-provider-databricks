@@ -203,6 +203,14 @@ func (c *DatabricksClient) Configure(attrsUsed ...string) error {
 	if c.DebugTruncateBytes == 0 {
 		c.DebugTruncateBytes = DefaultTruncateBytes
 	}
+	// AzureEnvironment could be used in the different contexts, not only for Auzre Authentication
+	// lack of this lead to crash (see issue #831)
+	azureEnvironment, err := c.getAzureEnvironment()
+	if err != nil {
+		return fmt.Errorf("cannot get azure environment: %w", err)
+	}
+	c.AzureEnvironment = &azureEnvironment
+
 	return nil
 }
 

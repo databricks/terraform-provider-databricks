@@ -5,6 +5,7 @@
 * Added `databricks_repo` resource to manage [Databricks Repos](https://docs.databricks.com/repos.html) ([#771](https://github.com/databrickslabs/terraform-provider-databricks/pull/771))
 * Added support for Azure MSI authentication ([#743](https://github.com/databrickslabs/terraform-provider-databricks/pull/743))
 * Already deleted `databricks_token` don't fail the apply ([#808](https://github.com/databrickslabs/terraform-provider-databricks/pull/808))
+* Default `terraform-mount` clusters created for mounting for `databricks_aws_s3_mount`, `databricks_azure_adls_gen1_mount`, `databricks_azure_adls_gen2_mount`, and `databricks_azure_blob_mount` have now `spark.scheduler.mode` as `FIFO` ([#828](https://github.com/databrickslabs/terraform-provider-databricks/pull/828))
 * Multiple documentation improvements
 
 **Deprecations**
@@ -16,14 +17,15 @@
 
 Updated dependency versions:
 
-* Bump github.com/Azure/go-autorest/autorest from 0.11.19 to 0.11.20
-* Bump github.com/hashicorp/terraform-plugin-sdk/v2 from 2.7.0 to 2.7.1
-* Bump github.com/zclconf/go-cty from 1.9.0 to 1.9.1
-* Bump google.golang.org/api from 0.52.0 to 0.56.0
+* Bump github.com/aws/aws-sdk-go from 1.40.19 to 1.40.54
+* Bump github.com/Azure/go-autorest/autorest from 0.11.19 to 0.11.21
 * Bump github.com/Azure/go-autorest/autorest/azure/cli from 0.4.2 to 0.4.3
-* Bump github.com/Azure/go-autorest/autorest/adal from 0.9.14 to 0.9.15
-* Bump golang.org/x/mod from 0.4.2 to 0.5.0
-* Bump github.com/aws/aws-sdk-go from 1.40.19 to 1.40.35
+* Bump github.com/Azure/go-autorest/autorest/adal from 0.9.14 to 0.9.16
+* Bump github.com/hashicorp/terraform-plugin-sdk/v2 from 2.7.0 to 2.8.0
+* Bump github.com/zclconf/go-cty from 1.9.0 to 1.9.1
+* Bump golang.org/x/mod from 0.4.2 to 0.5.1
+* Bump google.golang.org/api from 0.52.0 to 0.58.0
+* Bump gopkg.in/ini.v1 from 1.62.0 to 1.63.2
 
 ## 0.3.7
 

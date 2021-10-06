@@ -250,6 +250,17 @@ func hasClusterConfigChanged(d *schema.ResourceData) bool {
 	return false
 }
 
+// https://github.com/databrickslabs/terraform-provider-databricks/issues/824
+func fixInstancePoolChangeIfAny(d *schema.ResourceData, cluster *Cluster) {
+	oldInstancePool, newInstancePool := d.GetChange("instance_pool_id")
+	oldDriverPool, newDriverPool := d.GetChange("driver_instance_pool_id")
+	if oldInstancePool != newInstancePool &&
+	   oldDriverPool == oldInstancePool && 
+	   oldDriverPool == newDriverPool {
+		cluster.DriverInstancePoolID = cluster.InstancePoolID
+	}
+}
+
 func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 	clusters := NewClustersAPI(ctx, c)
 	clusterID := d.Id()
@@ -266,6 +277,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, c *commo
 			return err
 		}
 		modifyClusterRequest(&cluster)
+		fixInstancePoolChangeIfAny(d, &cluster)
 		clusterInfo, err = clusters.Edit(cluster)
 		if err != nil {
 			return err

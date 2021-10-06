@@ -174,6 +174,7 @@ Alternatively, you can provide this value as an environment variable `DATABRICKS
 * `config_file` - (optional) Location of the Databricks CLI credentials file created by `databricks configure --token` command (~/.databrickscfg by default). Check [Databricks CLI documentation](https://docs.databricks.com/dev-tools/cli/index.html#set-up-authentication) for more details. The provider uses configuration file credentials when you don't specify host/token/username/password/azure attributes. Alternatively, you can provide this value as an environment variable `DATABRICKS_CONFIG_FILE`. This field defaults to `~/.databrickscfg`. 
 * `profile` - (optional) Connection profile specified within ~/.databrickscfg. Please check [connection profiles section](https://docs.databricks.com/dev-tools/cli/index.html#connection-profiles) for more details. This field defaults to 
 `DEFAULT`.
+* `account_id` - (optional) Account Id that could be found in the bottom left corner of [Accounts Console](https://accounts.cloud.databricks.com/). Alternatively, you can provide this value as an environment variable `DATABRICKS_ACCOUNT_ID`. Only has effect when `host = "https://accounts.cloud.databricks.com/"` and currently used to provision account admins via [databricks_user](resources/user.md). In the future releases of the provider this property will also be used specify account for `databricks_mws_*` resources as well.
 
 ## Special configurations for Azure
 
@@ -283,6 +284,7 @@ The following configuration attributes can be passed via environment variables:
 |                       `token` | `DATABRICKS_TOKEN`                |
 |                    `username` | `DATABRICKS_USERNAME`             |
 |                    `password` | `DATABRICKS_PASSWORD`             |
+|                  `account_id` | `DATABRICKS_ACCOUNT_ID`           |
 |                 `config_file` | `DATABRICKS_CONFIG_FILE`          |
 |                     `profile` | `DATABRICKS_CONFIG_PROFILE`       |
 |         `azure_client_secret` | `ARM_CLIENT_SECRET`               |

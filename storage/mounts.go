@@ -131,7 +131,7 @@ func getOrCreateMountingCluster(clustersAPI compute.ClustersAPI) (string, error)
 		SparkConf: map[string]string{
 			"spark.master":                     "local[*]",
 			"spark.databricks.cluster.profile": "singleNode",
-			"spark.scheduler.mode": "FIFO",
+			"spark.scheduler.mode":             "FIFO",
 		},
 		CustomTags: map[string]string{
 			"ResourceClass": "SingleNode",

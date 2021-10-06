@@ -124,7 +124,7 @@ func providerSchema() map[string]*schema.Schema {
 	ps["azure_client_secret"].Sensitive = true
 
 	azCoordinatesDeprecation := "`%s` is deprecated and would be removed in v0.4.0. Please rewrite provider configuration " +
-		"with `host = data.azurerm_databricks_workspace.example.workspace_url` to achieve the same effect. " + 
+		"with `host = data.azurerm_databricks_workspace.example.workspace_url` to achieve the same effect. " +
 		"ARM_* environment variables would continue to be used as they're used by `azurerm` provider. See " +
 		"https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/databricks_workspace#workspace_url for details"
 	ps["azure_workspace_name"].Deprecated = fmt.Sprintf(azCoordinatesDeprecation, "azure_workspace_name")

@@ -255,8 +255,8 @@ func fixInstancePoolChangeIfAny(d *schema.ResourceData, cluster *Cluster) {
 	oldInstancePool, newInstancePool := d.GetChange("instance_pool_id")
 	oldDriverPool, newDriverPool := d.GetChange("driver_instance_pool_id")
 	if oldInstancePool != newInstancePool &&
-	   oldDriverPool == oldInstancePool && 
-	   oldDriverPool == newDriverPool {
+		oldDriverPool == oldInstancePool &&
+		oldDriverPool == newDriverPool {
 		cluster.DriverInstancePoolID = cluster.InstancePoolID
 	}
 }

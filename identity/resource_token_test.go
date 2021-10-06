@@ -225,7 +225,7 @@ func TestResourceTokenDelete_NotFoundNoError(t *testing.T) {
 				Method:   "POST",
 				Resource: "/api/2.0/token/delete",
 				Response: common.NotFound("RESOURCE_DOES_NOT_EXIST"), // per documentation this is the error response
-				Status: 404,
+				Status:   404,
 			},
 		},
 		Resource: ResourceToken(),

@@ -336,6 +336,10 @@ func (c *DatabricksClient) api12(r *http.Request) error {
 func (c *DatabricksClient) Scim(ctx context.Context, method, path string, request interface{}, response interface{}) error {
 	body, err := c.authenticatedQuery(ctx, method, path, request, c.api2, func(r *http.Request) error {
 		r.Header.Set("Content-Type", "application/scim+json")
+		if c.isAccountsClient() && c.AccountID != "" {
+			// until `/preview` is there for workspace scim
+			r.URL.Path = strings.ReplaceAll(path, "/preview", fmt.Sprintf("/api/2.0/accounts/%s", c.AccountID))
+		}
 		return nil
 	})
 	if err != nil {

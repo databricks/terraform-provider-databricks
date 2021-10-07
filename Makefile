@@ -58,13 +58,17 @@ test-mws: install
 	@echo "✓ Running acceptance Tests for Multiple Workspace APIs on AWS..."
 	@/bin/bash scripts/run.sh mws '^TestMwsAcc' --debug --tee
 
-test-gcp-accounts: install
-	@echo "✓ Running acceptance Tests for Multiple Workspace APIs on GCP..."
-	@/bin/bash scripts/run.sh gcp-accounts '^TestGcpAcc' --debug --tee
-
 test-awsmt: install
 	@echo "✓ Running Terraform Acceptance Tests for AWS MT..."
 	@/bin/bash scripts/run.sh awsmt '^(TestAcc|TestAwsAcc)' --debug --tee
+
+test-gcp-accounts: install
+	@echo "✓ Running acceptance Tests for Multiple Workspace APIs on GCP..."
+	@/bin/bash scripts/run.sh gcp-accounts '^TestGcpaAcc' --debug --tee
+
+test-gcp: install
+	@echo "✓ Running acceptance Tests for GCP..."
+	@/bin/bash scripts/run.sh gcp '^(TestAcc|TestGcpAcc)' --debug --tee
 
 test-preview: install
 	@echo "✓ Running acceptance Tests for Preview features..."

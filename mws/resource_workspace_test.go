@@ -27,7 +27,7 @@ func TestMwsAccWorkspace(t *testing.T) {
 	t.Log(workspaceList)
 }
 
-func TestGcpAccWorkspace(t *testing.T) {
+func TestGcpaAccWorkspace(t *testing.T) {
 	acctID := qa.GetEnvOrSkipTest(t, "DATABRICKS_ACCOUNT_ID")
 	client := common.CommonEnvironmentClient()
 	workspacesAPI := NewWorkspacesAPI(context.Background(), client)

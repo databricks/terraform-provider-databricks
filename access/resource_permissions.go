@@ -368,8 +368,13 @@ func ResourcePermissions() *schema.Resource {
 	}
 	return &schema.Resource{
 		Schema: s,
-		CustomizeDiff: func(ctx context.Context, diff *schema.ResourceDiff, m interface{}) error {
-			me, err := identity.NewUsersAPI(ctx, m).Me()
+		CustomizeDiff: func(ctx context.Context, diff *schema.ResourceDiff, c interface{}) error {
+			client := c.(*common.DatabricksClient)
+			if client.Host == "" {
+				log.Printf("[WARN] cannot validate permission levels, because host is not known yet")
+				return nil
+			}
+			me, err := identity.NewUsersAPI(ctx, client).Me()
 			if err != nil {
 				return err
 			}

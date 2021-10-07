@@ -9,6 +9,7 @@
 * Default `terraform-mount` clusters created for mounting for `databricks_aws_s3_mount`, `databricks_azure_adls_gen1_mount`, `databricks_azure_adls_gen2_mount`, and `databricks_azure_blob_mount` have now `spark.scheduler.mode` as `FIFO` ([#828](https://github.com/databrickslabs/terraform-provider-databricks/pull/828))
 * Fixed crash when using non-Azure authentication to mount Azure resources ([#831](https://github.com/databrickslabs/terraform-provider-databricks/issues/831))
 * Fixed replacement of `instance_pool_id` in `databricks_cluster`, when `driver_instance_pool_id` was not explicitly specified ([#824](https://github.com/databrickslabs/terraform-provider-databricks/issues/824))
+* Ingorning diff customization for permissions resource, so that new workspace deployments won't fail without explicit dependency on a workspace resource
 * Multiple documentation improvements
 
 **Deprecations**

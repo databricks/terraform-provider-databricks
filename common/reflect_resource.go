@@ -69,7 +69,7 @@ func SchemaPath(s map[string]*schema.Schema, path ...string) (*schema.Schema, er
 // StructToSchema makes schema from a struct type & applies customizations from callback given
 func StructToSchema(v interface{}, customize func(map[string]*schema.Schema) map[string]*schema.Schema) map[string]*schema.Schema {
 	rv := reflect.ValueOf(v)
-	scm := typeToSchema(rv, rv.Type())
+	scm := typeToSchema(rv, rv.Type(), []string{})
 	if customize != nil {
 		scm = customize(scm)
 	}
@@ -128,7 +128,9 @@ func chooseFieldName(typeField reflect.StructField) string {
 	return strings.Split(jsonTag, ",")[0]
 }
 
-func typeToSchema(v reflect.Value, t reflect.Type) map[string]*schema.Schema {
+// typeToSchema converts struct into terraform schema. `path` is used for block suppressions
+// special path element `"0"` is used to denote either arrays or sets of elements
+func typeToSchema(v reflect.Value, t reflect.Type, path []string) map[string]*schema.Schema {
 	scm := map[string]*schema.Schema{}
 	rk := v.Kind()
 	if rk != reflect.Struct {
@@ -180,8 +182,14 @@ func typeToSchema(v reflect.Value, t reflect.Type) map[string]*schema.Schema {
 			scm[fieldName].Type = schema.TypeList
 			elem := typeField.Type.Elem()
 			sv := reflect.New(elem).Elem()
+			if strings.Contains(tfTag, "suppress_diff") {
+				// TODO: we may also suppress count diffs on all json:"..,omitempty" (101 occurences)
+				// find . -type f -name '*.go' -not -path "vendor/*" | xargs grep ',omitempty' | grep '*'
+				blockCount := strings.Join(append(path, "#"), ".")
+				scm[fieldName].DiffSuppressFunc = makeEmptyBlockSuppressFunc(blockCount)
+			}
 			scm[fieldName].Elem = &schema.Resource{
-				Schema: typeToSchema(sv, elem),
+				Schema: typeToSchema(sv, elem, append(path, fieldName, "0")),
 			}
 		case reflect.Slice:
 			ft := schema.TypeList
@@ -202,7 +210,7 @@ func typeToSchema(v reflect.Value, t reflect.Type) map[string]*schema.Schema {
 			case reflect.Struct:
 				sv := reflect.New(elem).Elem()
 				scm[fieldName].Elem = &schema.Resource{
-					Schema: typeToSchema(sv, elem),
+					Schema: typeToSchema(sv, elem, append(path, fieldName, "0")),
 				}
 			}
 		default:

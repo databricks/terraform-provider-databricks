@@ -34,7 +34,7 @@ type SQLEndpoint struct {
 	State                   string      `json:"state,omitempty" tf:"computed"`
 	JdbcURL                 string      `json:"jdbc_url,omitempty" tf:"computed"`
 	OdbcParams              *OdbcParams `json:"odbc_params,omitempty" tf:"computed"`
-	Tags                    *Tags       `json:"tags,omitempty"`
+	Tags                    *Tags       `json:"tags,omitempty" tf:"suppress_diff"`
 	SpotInstancePolicy      string      `json:"spot_instance_policy,omitempty"`
 
 	// The data source ID is not part of the endpoint API response.
@@ -191,7 +191,6 @@ func ResourceSQLEndpoint() *schema.Resource {
 		m["num_clusters"].Default = 1
 		m["spot_instance_policy"].Default = "COST_OPTIMIZED"
 		m["enable_photon"].Default = true
-		m["tags"].DiffSuppressFunc = common.MakeEmptyBlockSuppressFunc("tags.#")
 		return m
 	})
 	return common.Resource{

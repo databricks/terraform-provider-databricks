@@ -12,6 +12,8 @@ var (
 	Current contextKey = 3
 	// If current resource is data
 	IsData contextKey = 4
+	// apiVersion
+	Api contextKey = 5
 )
 
 type contextKey int

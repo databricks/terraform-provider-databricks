@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -17,7 +18,11 @@ import (
 
 // NewJobsAPI creates JobsAPI instance from provider meta
 func NewJobsAPI(ctx context.Context, m interface{}) JobsAPI {
-	return JobsAPI{m.(*common.DatabricksClient), ctx}
+	client := m.(*common.DatabricksClient)
+	if client.UseMutiltaskJobs {
+		ctx = context.WithValue(ctx, common.Api, common.API_2_1)
+	}
+	return JobsAPI{client, ctx}
 }
 
 // JobsAPI exposes the Jobs API
@@ -188,39 +193,36 @@ func wrapMissingJobError(err error, id string) error {
 	return err
 }
 
+func jobSettingsSchema(s *map[string]*schema.Schema, prefix string) {
+	if p, err := common.SchemaPath(*s, "new_cluster", "num_workers"); err == nil {
+		p.Optional = true
+		p.Default = 0
+		p.Type = schema.TypeInt
+		p.ValidateDiagFunc = validation.ToDiagFunc(validation.IntAtLeast(0))
+		p.Required = false
+	}
+	if v, err := common.SchemaPath(*s, "new_cluster", "spark_conf"); err == nil {
+		reSize := common.MustCompileKeyRE(prefix + "new_cluster.0.spark_conf.%")
+		reConf := common.MustCompileKeyRE(prefix + "new_cluster.0.spark_conf.spark.databricks.delta.preview.enabled")
+		v.DiffSuppressFunc = func(k, old, new string, d *schema.ResourceData) bool {
+			isPossiblyLegacyConfig := reSize.Match([]byte(k)) && old == "1" && new == "0"
+			isLegacyConfig := reConf.Match([]byte(k))
+			if isPossiblyLegacyConfig || isLegacyConfig {
+				log.Printf("[DEBUG] Suppressing diff for k=%#v old=%#v new=%#v", k, old, new)
+				return true
+			}
+			return false
+		}
+	}
+}
+
 var jobSchema = common.StructToSchema(JobSettings{},
 	func(s map[string]*schema.Schema) map[string]*schema.Schema {
-		if p, err := common.SchemaPath(s, "new_cluster", "num_workers"); err == nil {
-			p.Optional = true
-			p.Default = 0
-			p.Type = schema.TypeInt
-			p.ValidateDiagFunc = validation.ToDiagFunc(validation.IntAtLeast(0))
-			p.Required = false
-		}
+		jobSettingsSchema(&s, "")
+		jobSettingsSchema(&s["task"].Elem.(*schema.Resource).Schema, "task.0.")
 		if p, err := common.SchemaPath(s, "schedule", "pause_status"); err == nil {
 			p.ValidateFunc = validation.StringInSlice([]string{"PAUSED", "UNPAUSED"}, false)
 		}
-		if v, err := common.SchemaPath(s, "new_cluster", "spark_conf"); err == nil {
-			v.DiffSuppressFunc = func(k, old, new string, d *schema.ResourceData) bool {
-				isPossiblyLegacyConfig := k == "new_cluster.0.spark_conf.%" && old == "1" && new == "0"
-				isLegacyConfig := k == "new_cluster.0.spark_conf.spark.databricks.delta.preview.enabled"
-				if isPossiblyLegacyConfig || isLegacyConfig {
-					log.Printf("[DEBUG] Suppressing diff for k=%#v old=%#v new=%#v", k, old, new)
-					return true
-				}
-				return false
-			}
-		}
-		if v, err := common.SchemaPath(s, "new_cluster", "aws_attributes"); err == nil {
-			v.DiffSuppressFunc = common.MakeEmptyBlockSuppressFunc("new_cluster.0.aws_attributes.#")
-		}
-		if v, err := common.SchemaPath(s, "new_cluster", "azure_attributes"); err == nil {
-			v.DiffSuppressFunc = common.MakeEmptyBlockSuppressFunc("new_cluster.0.azure_attributes.#")
-		}
-		if v, err := common.SchemaPath(s, "new_cluster", "gcp_attributes"); err == nil {
-			v.DiffSuppressFunc = common.MakeEmptyBlockSuppressFunc("new_cluster.0.gcp_attributes.#")
-		}
-		s["email_notifications"].DiffSuppressFunc = common.MakeEmptyBlockSuppressFunc("email_notifications.#")
 		s["max_concurrent_runs"].ValidateDiagFunc = validation.ToDiagFunc(validation.IntAtLeast(1))
 		s["max_concurrent_runs"].Default = 1
 		s["url"] = &schema.Schema{
@@ -244,11 +246,30 @@ func ResourceJob() *schema.Resource {
 			Create: schema.DefaultTimeout(DefaultProvisionTimeout),
 			Update: schema.DefaultTimeout(DefaultProvisionTimeout),
 		},
-		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, c interface{}) error {
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, m interface{}) error {
+			var js JobSettings
+			err := common.DiffToStructPointer(d, jobSchema, &js)
+			if err != nil {
+				return err
+			}
 			alwaysRunning := d.Get("always_running").(bool)
-			maxConcurrentRuns := d.Get("max_concurrent_runs").(int)
-			if alwaysRunning && maxConcurrentRuns > 1 {
+			if alwaysRunning && js.MaxConcurrentRuns > 1 {
 				return fmt.Errorf("`always_running` must be specified only with `max_concurrent_runs = 1`")
+			}
+			c := m.(*common.DatabricksClient)
+			if c.UseMutiltaskJobs {
+				for _, task := range js.Tasks {
+					err = validateClusterDefinition(*task.NewCluster)
+					if err != nil {
+						return fmt.Errorf("task %s invalid: %w", task.TaskKey, err)
+					}
+				}
+			}
+			if js.NewCluster != nil {
+				err = validateClusterDefinition(*js.NewCluster)
+				if err != nil {
+					return fmt.Errorf("invalid job cluster: %w", err)
+				}
 			}
 			return nil
 		},
@@ -258,11 +279,9 @@ func ResourceJob() *schema.Resource {
 			if err != nil {
 				return err
 			}
-			if js.NewCluster != nil {
-				if err = validateClusterDefinition(*js.NewCluster); err != nil {
-					return err
-				}
-			}
+			sort.Slice(js.Tasks, func(i, j int) bool {
+				return js.Tasks[i].TaskKey < js.Tasks[j].TaskKey
+			})
 			jobsAPI := NewJobsAPI(ctx, c)
 			job, err := jobsAPI.Create(js)
 			if err != nil {
@@ -270,6 +289,7 @@ func ResourceJob() *schema.Resource {
 			}
 			d.SetId(job.ID())
 			if d.Get("always_running").(bool) {
+				// TODO: test this with c.UseMutiltaskJobs
 				return jobsAPI.Start(job.JobID, d.Timeout(schema.TimeoutCreate))
 			}
 			return nil
@@ -279,6 +299,9 @@ func ResourceJob() *schema.Resource {
 			if err != nil {
 				return err
 			}
+			sort.Slice(job.Settings.Tasks, func(i, j int) bool {
+				return job.Settings.Tasks[i].TaskKey < job.Settings.Tasks[j].TaskKey
+			})
 			d.Set("url", c.FormatURL("#job/", d.Id()))
 			return common.StructToData(*job.Settings, jobSchema, d)
 		},
@@ -288,18 +311,13 @@ func ResourceJob() *schema.Resource {
 			if err != nil {
 				return err
 			}
-			if js.NewCluster != nil {
-				err = validateClusterDefinition(*js.NewCluster)
-				if err != nil {
-					return err
-				}
-			}
 			jobsAPI := NewJobsAPI(ctx, c)
 			err = jobsAPI.Update(d.Id(), js)
 			if err != nil {
 				return err
 			}
 			if d.Get("always_running").(bool) {
+				// TODO: test this with c.UseMutiltaskJobs
 				return jobsAPI.Restart(d.Id(), d.Timeout(schema.TimeoutUpdate))
 			}
 			return nil

@@ -3,6 +3,8 @@ package common
 import (
 	"context"
 	"log"
+	"regexp"
+	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -96,10 +98,18 @@ func (r Resource) ToResource() *schema.Resource {
 	}
 }
 
-func MakeEmptyBlockSuppressFunc(name string) func(k, old, new string, d *schema.ResourceData) bool {
+func MustCompileKeyRE(name string) *regexp.Regexp {
+	regexFromName := strings.ReplaceAll(name, ".", "\\.")
+	regexFromName = strings.ReplaceAll(regexFromName, ".0", ".\\d+")
+	return regexp.MustCompile(regexFromName)
+}
+
+func makeEmptyBlockSuppressFunc(name string) func(k, old, new string, d *schema.ResourceData) bool {
+	// TODO: move to TF field tag
+	re := MustCompileKeyRE(name)
 	return func(k, old, new string, d *schema.ResourceData) bool {
-		log.Printf("[DEBUG] k='%v', old='%v', new='%v'", k, old, new)
-		if k == name && old == "1" && new == "0" {
+		log.Printf("[DEBUG] name=%s k='%v', old='%v', new='%v'", name, k, old, new)
+		if re.Match([]byte(name)) && old == "1" && new == "0" {
 			log.Printf("[DEBUG] Disable removal of empty block")
 			return true
 		}

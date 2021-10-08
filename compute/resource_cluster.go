@@ -72,10 +72,6 @@ func resourceClusterSchema() map[string]*schema.Schema {
 		s["aws_attributes"].ConflictsWith = []string{"azure_attributes", "gcp_attributes"}
 		s["azure_attributes"].ConflictsWith = []string{"aws_attributes", "gcp_attributes"}
 		s["gcp_attributes"].ConflictsWith = []string{"aws_attributes", "azure_attributes"}
-		s["aws_attributes"].DiffSuppressFunc = common.MakeEmptyBlockSuppressFunc("aws_attributes.#")
-		s["azure_attributes"].DiffSuppressFunc = common.MakeEmptyBlockSuppressFunc("azure_attributes.#")
-		s["gcp_attributes"].DiffSuppressFunc = common.MakeEmptyBlockSuppressFunc("gcp_attributes.#")
-
 		s["instance_pool_id"].ConflictsWith = []string{"driver_node_type_id", "node_type_id"}
 		s["driver_instance_pool_id"].ConflictsWith = []string{"driver_node_type_id", "node_type_id"}
 		s["driver_node_type_id"].ConflictsWith = []string{"driver_instance_pool_id", "instance_pool_id"}
@@ -115,6 +111,7 @@ func resourceClusterSchema() map[string]*schema.Schema {
 }
 
 func validateClusterDefinition(cluster Cluster) error {
+	// TODO: rewrite with CustomizeDiff
 	if cluster.NumWorkers > 0 || cluster.Autoscale != nil {
 		return nil
 	}

@@ -59,8 +59,6 @@ func ResourceInstancePool() *schema.Resource {
 		s["enable_elastic_disk"].Default = true
 		s["aws_attributes"].ConflictsWith = []string{"azure_attributes"}
 		s["azure_attributes"].ConflictsWith = []string{"aws_attributes"}
-		s["aws_attributes"].DiffSuppressFunc = common.MakeEmptyBlockSuppressFunc("aws_attributes.#")
-		s["azure_attributes"].DiffSuppressFunc = common.MakeEmptyBlockSuppressFunc("azure_attributes.#")
 		if v, err := common.SchemaPath(s, "aws_attributes", "availability"); err == nil {
 			v.Default = AwsAvailabilitySpot
 			v.ValidateFunc = validation.StringInSlice([]string{

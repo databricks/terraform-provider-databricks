@@ -51,7 +51,7 @@ func TestAwsAccJobsCreate(t *testing.T) {
 				},
 			},
 		},
-		EmailNotifications: &JobEmailNotifications{
+		EmailNotifications: &EmailNotifications{
 			OnStart:   []string{},
 			OnSuccess: []string{},
 			OnFailure: []string{},

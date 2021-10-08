@@ -244,7 +244,7 @@ func (c *DatabricksClient) checkHTTPRetry(ctx context.Context, resp *http.Respon
 
 // Get on path
 func (c *DatabricksClient) Get(ctx context.Context, path string, request interface{}, response interface{}) error {
-	body, err := c.authenticatedQuery(ctx, http.MethodGet, path, request, c.api2)
+	body, err := c.authenticatedQuery(ctx, http.MethodGet, path, request, c.completeUrl)
 	if err != nil {
 		return err
 	}
@@ -253,7 +253,7 @@ func (c *DatabricksClient) Get(ctx context.Context, path string, request interfa
 
 // Post on path
 func (c *DatabricksClient) Post(ctx context.Context, path string, request interface{}, response interface{}) error {
-	body, err := c.authenticatedQuery(ctx, http.MethodPost, path, request, c.api2)
+	body, err := c.authenticatedQuery(ctx, http.MethodPost, path, request, c.completeUrl)
 	if err != nil {
 		return err
 	}
@@ -262,19 +262,19 @@ func (c *DatabricksClient) Post(ctx context.Context, path string, request interf
 
 // Delete on path
 func (c *DatabricksClient) Delete(ctx context.Context, path string, request interface{}) error {
-	_, err := c.authenticatedQuery(ctx, http.MethodDelete, path, request, c.api2)
+	_, err := c.authenticatedQuery(ctx, http.MethodDelete, path, request, c.completeUrl)
 	return err
 }
 
 // Patch on path
 func (c *DatabricksClient) Patch(ctx context.Context, path string, request interface{}) error {
-	_, err := c.authenticatedQuery(ctx, http.MethodPatch, path, request, c.api2)
+	_, err := c.authenticatedQuery(ctx, http.MethodPatch, path, request, c.completeUrl)
 	return err
 }
 
 // Put on path
 func (c *DatabricksClient) Put(ctx context.Context, path string, request interface{}) error {
-	_, err := c.authenticatedQuery(ctx, http.MethodPut, path, request, c.api2)
+	_, err := c.authenticatedQuery(ctx, http.MethodPut, path, request, c.completeUrl)
 	return err
 }
 
@@ -298,28 +298,26 @@ func (c *DatabricksClient) unmarshall(path string, body []byte, response interfa
 	}
 }
 
-func (c *DatabricksClient) api2(r *http.Request) error {
+type ApiVersion string
+
+const (
+	API_1_2 ApiVersion = "1.2"
+	API_2_0 ApiVersion = "2.0"
+	API_2_1 ApiVersion = "2.1"
+)
+
+func (c *DatabricksClient) completeUrl(r *http.Request) error {
 	if r.URL == nil {
 		return fmt.Errorf("no URL found in request")
 	}
-	r.URL.Path = fmt.Sprintf("/api/2.0%s", r.URL.Path)
-	r.Header.Set("Content-Type", "application/json")
 
-	url, err := url.Parse(c.Host)
-	if err != nil {
-		return err
+	ctx := r.Context()
+	av, ok := ctx.Value(Api).(ApiVersion)
+	if !ok {
+		av = API_2_0
 	}
-	r.URL.Host = url.Host
-	r.URL.Scheme = url.Scheme
 
-	return nil
-}
-
-func (c *DatabricksClient) api12(r *http.Request) error {
-	if r.URL == nil {
-		return fmt.Errorf("no URL found in request")
-	}
-	r.URL.Path = fmt.Sprintf("/api/1.2%s", r.URL.Path)
+	r.URL.Path = fmt.Sprintf("/api/%s%s", av, r.URL.Path)
 	r.Header.Set("Content-Type", "application/json")
 
 	url, err := url.Parse(c.Host)
@@ -334,7 +332,7 @@ func (c *DatabricksClient) api12(r *http.Request) error {
 
 // Scim sets SCIM headers
 func (c *DatabricksClient) Scim(ctx context.Context, method, path string, request interface{}, response interface{}) error {
-	body, err := c.authenticatedQuery(ctx, method, path, request, c.api2, func(r *http.Request) error {
+	body, err := c.authenticatedQuery(ctx, method, path, request, c.completeUrl, func(r *http.Request) error {
 		r.Header.Set("Content-Type", "application/scim+json")
 		if c.isAccountsClient() && c.AccountID != "" {
 			// until `/preview` is there for workspace scim
@@ -342,15 +340,6 @@ func (c *DatabricksClient) Scim(ctx context.Context, method, path string, reques
 		}
 		return nil
 	})
-	if err != nil {
-		return err
-	}
-	return c.unmarshall(path, body, &response)
-}
-
-// OldAPI performs call on context api
-func (c *DatabricksClient) OldAPI(ctx context.Context, method, path string, request interface{}, response interface{}) error {
-	body, err := c.authenticatedQuery(ctx, method, path, request, c.api12)
 	if err != nil {
 		return err
 	}

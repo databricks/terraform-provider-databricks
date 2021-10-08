@@ -288,12 +288,12 @@ func TestUnmarshall(t *testing.T) {
 
 func TestAPI2(t *testing.T) {
 	ws := DatabricksClient{Host: "ht_tp://example.com/"}
-	err := ws.api2(&http.Request{})
+	err := ws.completeUrl(&http.Request{})
 	require.Error(t, err)
 	assert.True(t, strings.HasPrefix(err.Error(), "no URL found in request"),
 		"Actual message: %s", err.Error())
 
-	err = ws.api2(&http.Request{
+	err = ws.completeUrl(&http.Request{
 		Header: http.Header{},
 		URL: &url.URL{
 			Path: "/x/y/x",
@@ -311,15 +311,6 @@ func TestScim(t *testing.T) {
 
 	var resp map[string]string
 	err := ws.Scim(context.Background(), "GET", "/imaginary/endpoint", nil, &resp)
-	require.NoError(t, err)
-}
-
-func TestOldAPI(t *testing.T) {
-	ws, server := singleRequestServer(t, "GET", "/api/1.2/imaginary/endpoint", `{"a": "b"}`)
-	defer server.Close()
-
-	var resp map[string]string
-	err := ws.OldAPI(context.Background(), "GET", "/imaginary/endpoint", nil, &resp)
 	require.NoError(t, err)
 }
 

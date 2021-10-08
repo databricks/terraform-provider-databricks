@@ -16,7 +16,7 @@ import (
 func NewCommandsAPI(ctx context.Context, m interface{}) CommandsAPI {
 	return CommandsAPI{
 		client:  m.(*common.DatabricksClient),
-		context: ctx,
+		context: context.WithValue(ctx, common.Api, common.API_1_2),
 	}
 }
 
@@ -29,7 +29,9 @@ type CommandsAPI struct {
 // Execute creates a spark context and executes a command and then closes context
 // Any leading whitespace is trimmed
 func (a CommandsAPI) Execute(clusterID, language, commandStr string) common.CommandResults {
-	cluster, err := NewClustersAPI(a.context, a.client).Get(clusterID)
+	// this is the place, where API version propagation through context looks strange
+	ctx := context.WithValue(a.context, common.Api, common.API_2_0)
+	cluster, err := NewClustersAPI(ctx, a.client).Get(clusterID)
 	if err != nil {
 		return common.CommandResults{
 			ResultType: "error",
@@ -107,7 +109,7 @@ type genericCommandRequest struct {
 
 func (a CommandsAPI) createCommand(contextID, clusterID, language, commandStr string) (string, error) {
 	var command Command
-	err := a.client.OldAPI(a.context, "POST", "/commands/execute", genericCommandRequest{
+	err := a.client.Post(a.context, "/commands/execute", genericCommandRequest{
 		Language:  language,
 		ClusterID: clusterID,
 		ContextID: contextID,
@@ -118,7 +120,7 @@ func (a CommandsAPI) createCommand(contextID, clusterID, language, commandStr st
 
 func (a CommandsAPI) getCommand(commandID, contextID, clusterID string) (Command, error) {
 	var commandResp Command
-	err := a.client.OldAPI(a.context, "GET", "/commands/status", genericCommandRequest{
+	err := a.client.Get(a.context, "/commands/status", genericCommandRequest{
 		CommandID: commandID,
 		ContextID: contextID,
 		ClusterID: clusterID,
@@ -127,7 +129,7 @@ func (a CommandsAPI) getCommand(commandID, contextID, clusterID string) (Command
 }
 
 func (a CommandsAPI) deleteContext(contextID, clusterID string) error {
-	return a.client.OldAPI(a.context, "POST", "/contexts/destroy", genericCommandRequest{
+	return a.client.Post(a.context, "/contexts/destroy", genericCommandRequest{
 		ContextID: contextID,
 		ClusterID: clusterID,
 	}, nil)
@@ -135,7 +137,7 @@ func (a CommandsAPI) deleteContext(contextID, clusterID string) error {
 
 func (a CommandsAPI) getContext(contextID, clusterID string) (string, error) {
 	var contextStatus Command // internal hack, yes
-	err := a.client.OldAPI(a.context, "GET", "/contexts/status", genericCommandRequest{
+	err := a.client.Get(a.context, "/contexts/status", genericCommandRequest{
 		ContextID: contextID,
 		ClusterID: clusterID,
 	}, &contextStatus)
@@ -144,7 +146,7 @@ func (a CommandsAPI) getContext(contextID, clusterID string) (string, error) {
 
 func (a CommandsAPI) createContext(language, clusterID string) (string, error) {
 	var context Command // internal hack, yes
-	err := a.client.OldAPI(a.context, "POST", "/contexts/create", genericCommandRequest{
+	err := a.client.Post(a.context, "/contexts/create", genericCommandRequest{
 		Language:  language,
 		ClusterID: clusterID,
 	}, &context)

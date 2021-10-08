@@ -280,9 +280,9 @@ type Cluster struct {
 	InstancePoolID         string           `json:"instance_pool_id,omitempty" tf:"group:node_type"`
 	DriverInstancePoolID   string           `json:"driver_instance_pool_id,omitempty" tf:"group:node_type,computed"`
 	PolicyID               string           `json:"policy_id,omitempty"`
-	AwsAttributes          *AwsAttributes   `json:"aws_attributes,omitempty" tf:"conflicts:instance_pool_id"`
-	AzureAttributes        *AzureAttributes `json:"azure_attributes,omitempty" tf:"conflicts:instance_pool_id"`
-	GcpAttributes          *GcpAttributes   `json:"gcp_attributes,omitempty" tf:"conflicts:instance_pool_id"`
+	AwsAttributes          *AwsAttributes   `json:"aws_attributes,omitempty" tf:"conflicts:instance_pool_id,suppress_diff"`
+	AzureAttributes        *AzureAttributes `json:"azure_attributes,omitempty" tf:"conflicts:instance_pool_id,suppress_diff"`
+	GcpAttributes          *GcpAttributes   `json:"gcp_attributes,omitempty" tf:"conflicts:instance_pool_id,suppress_diff"`
 	AutoterminationMinutes int32            `json:"autotermination_minutes,omitempty"`
 
 	SparkConf    map[string]string `json:"spark_conf,omitempty"`
@@ -413,8 +413,8 @@ type InstancePool struct {
 	MinIdleInstances                   int32                        `json:"min_idle_instances,omitempty"`
 	MaxCapacity                        int32                        `json:"max_capacity,omitempty"`
 	IdleInstanceAutoTerminationMinutes int32                        `json:"idle_instance_autotermination_minutes"`
-	AwsAttributes                      *InstancePoolAwsAttributes   `json:"aws_attributes,omitempty" tf:"force_new"`
-	AzureAttributes                    *InstancePoolAzureAttributes `json:"azure_attributes,omitempty" tf:"force_new"`
+	AwsAttributes                      *InstancePoolAwsAttributes   `json:"aws_attributes,omitempty" tf:"force_new,suppress_diff"`
+	AzureAttributes                    *InstancePoolAzureAttributes `json:"azure_attributes,omitempty" tf:"force_new,suppress_diff"`
 	NodeTypeID                         string                       `json:"node_type_id" tf:"force_new"`
 	CustomTags                         map[string]string            `json:"custom_tags,omitempty" tf:"force_new"`
 	EnableElasticDisk                  bool                         `json:"enable_elastic_disk,omitempty" tf:"force_new"`
@@ -517,8 +517,8 @@ type SparkSubmitTask struct {
 	Parameters []string `json:"parameters,omitempty"`
 }
 
-// JobEmailNotifications contains the information for email notifications after job completion
-type JobEmailNotifications struct {
+// EmailNotifications contains the information for email notifications after job completion
+type EmailNotifications struct {
 	OnStart               []string `json:"on_start,omitempty"`
 	OnSuccess             []string `json:"on_success,omitempty"`
 	OnFailure             []string `json:"on_failure,omitempty"`
@@ -532,27 +532,55 @@ type CronSchedule struct {
 	PauseStatus          string `json:"pause_status,omitempty" tf:"computed"`
 }
 
+type TaskDependency struct {
+	TaskKey string `json:"task_key,omitempty"`
+}
+
+type JobTaskSettings struct {
+	TaskKey     string           `json:"task_key,omitempty"`
+	Description string           `json:"description,omitempty"`
+	DependsOn   []TaskDependency `json:"depends_on,omitempty"`
+
+	// TODO: add PipelineTask, PythonWheelTask
+	ExistingClusterID      string              `json:"existing_cluster_id,omitempty" tf:"group:cluster_type"`
+	NewCluster             *Cluster            `json:"new_cluster,omitempty" tf:"group:cluster_type"`
+	Libraries              []Library           `json:"libraries,omitempty" tf:"slice_set,alias:library"`
+	NotebookTask           *NotebookTask       `json:"notebook_task,omitempty" tf:"group:task_type"`
+	SparkJarTask           *SparkJarTask       `json:"spark_jar_task,omitempty" tf:"group:task_type"`
+	SparkPythonTask        *SparkPythonTask    `json:"spark_python_task,omitempty" tf:"group:task_type"`
+	SparkSubmitTask        *SparkSubmitTask    `json:"spark_submit_task,omitempty" tf:"group:task_type"`
+	EmailNotifications     *EmailNotifications `json:"email_notifications,omitempty" tf:"suppress_diff"`
+	TimeoutSeconds         int32               `json:"timeout_seconds,omitempty"`
+	MaxRetries             int32               `json:"max_retries,omitempty"`
+	MinRetryIntervalMillis int32               `json:"min_retry_interval_millis,omitempty"`
+	RetryOnTimeout         bool                `json:"retry_on_timeout,omitempty"`
+}
+
 // JobSettings contains the information for configuring a job on databricks
 type JobSettings struct {
 	Name string `json:"name,omitempty" tf:"default:Untitled"`
 
-	ExistingClusterID string   `json:"existing_cluster_id,omitempty" tf:"group:cluster_type"`
-	NewCluster        *Cluster `json:"new_cluster,omitempty" tf:"group:cluster_type"`
+	// BEGIN Jobs API 2.0
+	ExistingClusterID      string           `json:"existing_cluster_id,omitempty" tf:"group:cluster_type"`
+	NewCluster             *Cluster         `json:"new_cluster,omitempty" tf:"group:cluster_type"`
+	NotebookTask           *NotebookTask    `json:"notebook_task,omitempty" tf:"group:task_type"`
+	SparkJarTask           *SparkJarTask    `json:"spark_jar_task,omitempty" tf:"group:task_type"`
+	SparkPythonTask        *SparkPythonTask `json:"spark_python_task,omitempty" tf:"group:task_type"`
+	SparkSubmitTask        *SparkSubmitTask `json:"spark_submit_task,omitempty" tf:"group:task_type"`
+	Libraries              []Library        `json:"libraries,omitempty" tf:"slice_set,alias:library"`
+	TimeoutSeconds         int32            `json:"timeout_seconds,omitempty"`
+	MaxRetries             int32            `json:"max_retries,omitempty"`
+	MinRetryIntervalMillis int32            `json:"min_retry_interval_millis,omitempty"`
+	RetryOnTimeout         bool             `json:"retry_on_timeout,omitempty"`
+	// END Jobs API 2.0
 
-	NotebookTask    *NotebookTask    `json:"notebook_task,omitempty" tf:"group:task_type"`
-	SparkJarTask    *SparkJarTask    `json:"spark_jar_task,omitempty" tf:"group:task_type"`
-	SparkPythonTask *SparkPythonTask `json:"spark_python_task,omitempty" tf:"group:task_type"`
-	SparkSubmitTask *SparkSubmitTask `json:"spark_submit_task,omitempty" tf:"group:task_type"`
+	// BEGIN Jobs API 2.1
+	Tasks []JobTaskSettings `json:"tasks,omitempty" tf:"alias:task"`
+	// END Jobs API 2.1
 
-	Libraries              []Library     `json:"libraries,omitempty" tf:"slice_set,alias:library"`
-	TimeoutSeconds         int32         `json:"timeout_seconds,omitempty"`
-	MaxRetries             int32         `json:"max_retries,omitempty"`
-	MinRetryIntervalMillis int32         `json:"min_retry_interval_millis,omitempty"`
-	RetryOnTimeout         bool          `json:"retry_on_timeout,omitempty"`
-	Schedule               *CronSchedule `json:"schedule,omitempty"`
-	MaxConcurrentRuns      int32         `json:"max_concurrent_runs,omitempty"`
-
-	EmailNotifications *JobEmailNotifications `json:"email_notifications,omitempty"`
+	Schedule           *CronSchedule       `json:"schedule,omitempty"`
+	MaxConcurrentRuns  int32               `json:"max_concurrent_runs,omitempty"`
+	EmailNotifications *EmailNotifications `json:"email_notifications,omitempty" tf:"suppress_diff"`
 }
 
 // JobList ...

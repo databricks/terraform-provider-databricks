@@ -94,6 +94,9 @@ type DatabricksClient struct {
 	// Maximum number of requests per second made to Databricks REST API.
 	RateLimitPerSecond int `name:"rate_limit" env:"DATABRICKS_RATE_LIMIT"`
 
+	// Use multitask jobs
+	UseMutiltaskJobs bool `name:"use_multitask_jobs"`
+
 	// OAuth token refreshers for Azure to be used within `authVisitor`
 	azureAuthorizer autorest.Authorizer
 

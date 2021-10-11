@@ -1,5 +1,13 @@
 # Version changelog
 
+## 0.3.9
+
+* Fixed provider crash for new terraform states related to bug [#813](https://github.com/hashicorp/terraform-plugin-sdk/issues/813) in Terraform SDK v2.8.0 ([#854](https://github.com/databrickslabs/terraform-provider-databricks/issues/854))
+
+Updated dependency versions:
+
+* Reverted github.com/hashicorp/terraform-plugin-sdk/v2 from 2.8.0 to 2.7.0
+
 ## 0.3.8
 
 * Added `databricks_repo` resource to manage [Databricks Repos](https://docs.databricks.com/repos.html) ([#771](https://github.com/databrickslabs/terraform-provider-databricks/pull/771))

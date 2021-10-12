@@ -273,7 +273,7 @@ type Cluster struct {
 	NumWorkers                int32      `json:"num_workers" tf:"group:size"`
 	Autoscale                 *AutoScale `json:"autoscale,omitempty" tf:"group:size"`
 	EnableElasticDisk         bool       `json:"enable_elastic_disk,omitempty" tf:"computed"`
-	EnableLocalDiskEncryption bool       `json:"enable_local_disk_encryption,omitempty"`
+	EnableLocalDiskEncryption bool       `json:"enable_local_disk_encryption,omitempty" tf:"computed"`
 
 	NodeTypeID             string           `json:"node_type_id,omitempty" tf:"group:node_type,computed"`
 	DriverNodeTypeID       string           `json:"driver_node_type_id,omitempty" tf:"group:node_type,computed"`
@@ -553,7 +553,7 @@ type JobTaskSettings struct {
 	TimeoutSeconds         int32               `json:"timeout_seconds,omitempty"`
 	MaxRetries             int32               `json:"max_retries,omitempty"`
 	MinRetryIntervalMillis int32               `json:"min_retry_interval_millis,omitempty"`
-	RetryOnTimeout         bool                `json:"retry_on_timeout,omitempty"`
+	RetryOnTimeout         bool                `json:"retry_on_timeout,omitempty" tf:"computed"`
 }
 
 // JobSettings contains the information for configuring a job on databricks
@@ -575,12 +575,17 @@ type JobSettings struct {
 	// END Jobs API 2.0
 
 	// BEGIN Jobs API 2.1
-	Tasks []JobTaskSettings `json:"tasks,omitempty" tf:"alias:task"`
+	Tasks  []JobTaskSettings `json:"tasks,omitempty" tf:"alias:task"`
+	Format string            `json:"format,omitempty" tf:"computed"`
 	// END Jobs API 2.1
 
 	Schedule           *CronSchedule       `json:"schedule,omitempty"`
 	MaxConcurrentRuns  int32               `json:"max_concurrent_runs,omitempty"`
 	EmailNotifications *EmailNotifications `json:"email_notifications,omitempty" tf:"suppress_diff"`
+}
+
+func (js *JobSettings) isMultiTask() bool {
+	return js.Format == "MULTI_TASK" || len(js.Tasks) > 0
 }
 
 // JobList ...

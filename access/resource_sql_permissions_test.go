@@ -431,5 +431,5 @@ func TestResourceSqlPermissions_Delete(t *testing.T) {
 }
 
 func TestResourceSqlPermissions_CornerCases(t *testing.T) {
-	qa.ResourceCornerCases(t, ResourceSqlPermissions(), "database/foo")
+	qa.ResourceCornerCases(t, ResourceSqlPermissions(), qa.CornerCaseID("database/foo"))
 }

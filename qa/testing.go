@@ -265,8 +265,29 @@ func (f ResourceFixture) ExpectError(t *testing.T, msg string) {
 	assert.EqualError(t, err, msg)
 }
 
+type CornerCase struct {
+	part  string
+	value string
+}
+
+func CornerCaseID(id string) CornerCase {
+	return CornerCase{"id", id}
+}
+
+func CornerCaseExpectError(msg string) CornerCase {
+	return CornerCase{"expect_error", msg}
+}
+
+func CornerCaseSkipCRUD(method string) CornerCase {
+	return CornerCase{"skip_crud", method}
+}
+
 // ResourceCornerCases checks for corner cases of error handling. Optional field name used to create error
-func ResourceCornerCases(t *testing.T, resource *schema.Resource, id ...string) {
+func ResourceCornerCases(t *testing.T, resource *schema.Resource, cc ...CornerCase) {
+	config := map[string]string{
+		"id":           "x",
+		"expect_error": "I'm a teapot",
+	}
 	teapot := "I'm a teapot"
 	m := map[string]func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics{
 		"create": resource.CreateContext,
@@ -274,9 +295,11 @@ func ResourceCornerCases(t *testing.T, resource *schema.Resource, id ...string) 
 		"update": resource.UpdateContext,
 		"delete": resource.DeleteContext,
 	}
-	fakeID := "x"
-	if len(id) > 0 {
-		fakeID = id[0]
+	for _, corner := range cc {
+		if corner.part == "skip_crud" {
+			delete(m, corner.value)
+		}
+		config[corner.part] = corner.value
 	}
 	HTTPFixturesApply(t, []HTTPFixture{
 		{
@@ -291,14 +314,14 @@ func ResourceCornerCases(t *testing.T, resource *schema.Resource, id ...string) 
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		validData := resource.TestResourceData()
-		validData.SetId(fakeID)
+		validData.SetId(config["id"])
 		for n, v := range m {
 			if v == nil {
 				continue
 			}
 			diags := v(ctx, validData, client)
 			if assert.Len(t, diags, 1) {
-				assert.Equalf(t, diags[0].Summary, teapot,
+				assert.Equalf(t, diags[0].Summary, config["expect_error"],
 					"%s didn't handle correct error on valid data", n)
 			}
 		}

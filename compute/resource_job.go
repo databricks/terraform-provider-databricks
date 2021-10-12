@@ -266,6 +266,9 @@ func ResourceJob() *schema.Resource {
 				return fmt.Errorf("`always_running` must be specified only with `max_concurrent_runs = 1`")
 			}
 			for _, task := range js.Tasks {
+				if task.NewCluster == nil {
+					continue
+				}
 				err = validateClusterDefinition(*task.NewCluster)
 				if err != nil {
 					return fmt.Errorf("task %s invalid: %w", task.TaskKey, err)

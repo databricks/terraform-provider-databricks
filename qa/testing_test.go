@@ -281,3 +281,32 @@ func TestDiagsToString(t *testing.T) {
 		},
 	}))
 }
+
+func TestResourceCornerCases(t *testing.T) {
+	type dummy struct{}
+	x := map[string]string{
+		"foo": "bar",
+	}
+	ResourceCornerCases(t, common.Resource{
+		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			var b dummy
+			return c.Post(ctx, "/dummy", x, &b)
+		},
+		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			var b dummy
+			return c.Get(ctx, "/dummy", x, &b)
+		},
+		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			return c.Put(ctx, "/dummy", x)
+		},
+		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			return c.Delete(ctx, "/dummy", x)
+		},
+		Schema: map[string]*schema.Schema{
+			"foo": {
+				Type:     schema.TypeInt,
+				Required: true,
+			},
+		},
+	}.ToResource(), "x")
+}

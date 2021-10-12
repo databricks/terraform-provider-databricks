@@ -132,6 +132,7 @@ func TestResourceJobCreate_MultiTask(t *testing.T) {
 							NewCluster: &Cluster{
 								SparkVersion: "a",
 								NodeTypeID:   "b",
+								NumWorkers:   1,
 								AzureAttributes: &AzureAttributes{
 									SpotBidMaxPrice: 0.99,
 								},
@@ -152,7 +153,16 @@ func TestResourceJobCreate_MultiTask(t *testing.T) {
 				Resource: "/api/2.1/jobs/get?job_id=789",
 				Response: Job{
 					// good enough for mock
-					Settings: &JobSettings{},
+					Settings: &JobSettings{
+						Tasks: []JobTaskSettings{
+							{
+								TaskKey: "b",
+							},
+							{
+								TaskKey: "a",
+							},
+						},
+					},
 				},
 			},
 		},
@@ -181,6 +191,7 @@ func TestResourceJobCreate_MultiTask(t *testing.T) {
 			new_cluster {
 				spark_version = "a"
 				node_type_id = "b"
+				num_workers = 1
 				azure_attributes {
 					spot_bid_max_price = 0.99
 				}
@@ -997,8 +1008,29 @@ func TestResourceJobDelete_Error(t *testing.T) {
 	assert.Equal(t, "789", d.Id())
 }
 
+func TestJobsAPIList(t *testing.T) {
+	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/jobs/list",
+			Response: JobList{
+				Jobs: []Job{
+					{
+						JobID: 1,
+					},
+				},
+			},
+		},
+	}, func(ctx context.Context, client *common.DatabricksClient) {
+		a := NewJobsAPI(ctx, client)
+		l, err := a.List()
+		require.NoError(t, err)
+		assert.Len(t, l.Jobs, 1)
+	})
+}
+
 func TestJobsAPIRunsList(t *testing.T) {
-	c, s, err := qa.HttpFixtureClient(t, []qa.HTTPFixture{
+	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
 		{
 			Method:   "GET",
 			Resource: "/api/2.0/jobs/runs/list?completed_only=true&job_id=234&limit=1",
@@ -1013,17 +1045,15 @@ func TestJobsAPIRunsList(t *testing.T) {
 				},
 			},
 		},
+	}, func(ctx context.Context, client *common.DatabricksClient) {
+		a := NewJobsAPI(ctx, client)
+		l, err := a.RunsList(JobRunsListRequest{
+			JobID:         234,
+			CompletedOnly: true,
+			Limit:         1,
+			Offset:        0,
+		})
+		require.NoError(t, err)
+		assert.Len(t, l.Runs, 1)
 	})
-	require.NoError(t, err)
-	defer s.Close()
-
-	a := NewJobsAPI(context.Background(), c)
-	l, err := a.RunsList(JobRunsListRequest{
-		JobID:         234,
-		CompletedOnly: true,
-		Limit:         1,
-		Offset:        0,
-	})
-	require.NoError(t, err)
-	assert.Len(t, l.Runs, 1)
 }

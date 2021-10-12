@@ -308,5 +308,5 @@ func TestResourceCornerCases(t *testing.T) {
 				Required: true,
 			},
 		},
-	}.ToResource(), "x")
+	}.ToResource(), CornerCaseID("x"))
 }

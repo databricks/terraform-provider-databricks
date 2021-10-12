@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/databrickslabs/terraform-provider-databricks/common"
-
 	"github.com/databrickslabs/terraform-provider-databricks/qa"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -457,42 +456,6 @@ func TestResourceJobCreateSingleNode_Fail(t *testing.T) {
 	require.Equal(t, true, strings.Contains(err.Error(), "NumWorkers could be 0 only for SingleNode clusters"))
 }
 
-func TestResourceJobCreate_Error(t *testing.T) {
-	d, err := qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   "POST",
-				Resource: "/api/2.0/jobs/create",
-				Response: common.APIErrorBody{
-					ErrorCode: "INVALID_REQUEST",
-					Message:   "Internal error happened",
-				},
-				Status: 400,
-			},
-		},
-		Resource: ResourceJob(),
-		HCL: `existing_cluster_id = "abc"
-		max_concurrent_runs = 1
-		max_retries = 3
-		min_retry_interval_millis = 5000
-		name = "Featurizer"
-		retry_on_timeout = true
-
-		spark_jar_task {
-			main_class_name = "com.labs.BarMain"
-		}
-		library {
-			jar = "dbfs://aa/bb/cc.jar"
-		}
-		library {
-			jar = "dbfs://ff/gg/hh.jar"
-		}`,
-		Create: true,
-	}.Apply(t)
-	qa.AssertErrorStartsWith(t, err, "Internal error happened")
-	assert.Equal(t, "", d.Id(), "Id should be empty for error creates")
-}
-
 func TestResourceJobRead(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
@@ -674,6 +637,62 @@ func TestResourceJobUpdate(t *testing.T) {
 	assert.NoError(t, err, err)
 	assert.Equal(t, "789", d.Id(), "Id should be the same as in reading")
 	assert.Equal(t, "Featurizer New", d.Get("name"))
+}
+
+func TestResourceJobUpdate_Tasks(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.1/jobs/reset",
+				ExpectedRequest: UpdateJobRequest{
+					JobID: 789,
+					NewSettings: &JobSettings{
+						Name: "Featurizer New",
+						Tasks: []JobTaskSettings{
+							{
+								ExistingClusterID: "abc",
+								SparkJarTask: &SparkJarTask{
+									MainClassName: "com.labs.BarMain",
+								},
+							},
+						},
+						MaxConcurrentRuns: 1,
+					},
+				},
+				Response: Job{
+					JobID: 789,
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/jobs/get?job_id=789",
+				Response: Job{
+					Settings: &JobSettings{
+						Tasks: []JobTaskSettings{
+							{
+								ExistingClusterID: "abc",
+								SparkJarTask: &SparkJarTask{
+									MainClassName: "com.labs.BarMain",
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		ID:       "789",
+		Update:   true,
+		Resource: ResourceJob(),
+		HCL: `
+		name = "Featurizer New"
+		task {
+			existing_cluster_id = "abc"
+			spark_jar_task {
+				main_class_name = "com.labs.BarMain"
+			}
+		}`,
+	}.ApplyNoError(t)
 }
 
 func TestResourceJobUpdate_Restart(t *testing.T) {
@@ -905,44 +924,6 @@ func TestJobRestarts(t *testing.T) {
 	})
 }
 
-func TestResourceJobUpdate_Error(t *testing.T) {
-	d, err := qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   "POST",
-				Resource: "/api/2.0/jobs/reset",
-				Response: common.APIErrorBody{
-					ErrorCode: "INVALID_REQUEST",
-					Message:   "Internal error happened",
-				},
-				Status: 400,
-			},
-		},
-		ID:       "789",
-		Update:   true,
-		Resource: ResourceJob(),
-		HCL: `existing_cluster_id = "abc"
-		max_concurrent_runs = 1
-		max_retries = 3
-		min_retry_interval_millis = 5000
-		name = "Featurizer New"
-		retry_on_timeout = true
-
-		spark_jar_task {
-			main_class_name = "com.labs.BarMain"
-			parameters = ["--cleanup", "full"]
-		}
-		library {
-			jar = "dbfs://aa/bb/cc.jar"
-		}
-		library {
-			jar = "dbfs://ff/gg/hh.jar"
-		}`,
-	}.Apply(t)
-	qa.AssertErrorStartsWith(t, err, "Internal error happened")
-	assert.Equal(t, "789", d.Id())
-}
-
 func TestResourceJobDelete(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
@@ -985,27 +966,6 @@ func TestResourceJobUpdate_FailNumWorkersZero(t *testing.T) {
 	}.Apply(t)
 	assert.Error(t, err, err)
 	require.Equal(t, true, strings.Contains(err.Error(), "NumWorkers could be 0 only for SingleNode clusters"))
-}
-
-func TestResourceJobDelete_Error(t *testing.T) {
-	d, err := qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   "POST",
-				Resource: "/api/2.0/jobs/delete",
-				Response: common.APIErrorBody{
-					ErrorCode: "INVALID_REQUEST",
-					Message:   "Internal error happened",
-				},
-				Status: 400,
-			},
-		},
-		ID:       "789",
-		Delete:   true,
-		Resource: ResourceJob(),
-	}.Apply(t)
-	qa.AssertErrorStartsWith(t, err, "Internal error happened")
-	assert.Equal(t, "789", d.Id())
 }
 
 func TestJobsAPIList(t *testing.T) {
@@ -1056,4 +1016,22 @@ func TestJobsAPIRunsList(t *testing.T) {
 		require.NoError(t, err)
 		assert.Len(t, l.Runs, 1)
 	})
+}
+
+func TestJobResourceCornerCases_HTTP(t *testing.T) {
+	qa.ResourceCornerCases(t, ResourceJob(), qa.CornerCaseID("10"))
+}
+
+func TestJobResourceCornerCases_WrongID(t *testing.T) {
+	qa.ResourceCornerCases(t, ResourceJob(),
+		qa.CornerCaseID("x"),
+		qa.CornerCaseSkipCRUD("create"),
+		qa.CornerCaseExpectError(`strconv.ParseInt: parsing "x": invalid syntax`))
+}
+
+func TestJobResource_SparkConfDiffSuppress(t *testing.T) {
+	jr := ResourceJob()
+	scs := common.MustSchemaPath(jr.Schema, "new_cluster", "spark_conf")
+	assert.True(t, scs.DiffSuppressFunc("new_cluster.0.spark_conf.%", "1", "0", nil))
+	assert.False(t, scs.DiffSuppressFunc("new_cluster.0.spark_conf.%", "1", "1", nil))
 }

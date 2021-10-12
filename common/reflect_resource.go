@@ -66,6 +66,14 @@ func SchemaPath(s map[string]*schema.Schema, path ...string) (*schema.Schema, er
 	return nil, fmt.Errorf("%v does not compute", path)
 }
 
+func MustSchemaPath(s map[string]*schema.Schema, path ...string) *schema.Schema {
+	sch, err := SchemaPath(s, path...)
+	if err != nil {
+		panic(err)
+	}
+	return sch
+}
+
 // StructToSchema makes schema from a struct type & applies customizations from callback given
 func StructToSchema(v interface{}, customize func(map[string]*schema.Schema) map[string]*schema.Schema) map[string]*schema.Schema {
 	rv := reflect.ValueOf(v)

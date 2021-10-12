@@ -56,12 +56,16 @@ func TestUpdate(t *testing.T) {
 		},
 	}.ToResource()
 
+	client := &DatabricksClient{}
+	ctx := context.Background()
 	d := r.TestResourceData()
-	datas, err := r.Importer.StateContext(
-		context.Background(), d,
-		&DatabricksClient{})
+	datas, err := r.Importer.StateContext(ctx, d, client)
 	require.NoError(t, err)
 	assert.Len(t, datas, 1)
 	assert.False(t, r.Schema["foo"].ForceNew)
 	assert.Equal(t, "", d.Id())
+
+	diags := r.UpdateContext(ctx, d, client)
+	assert.True(t, diags.HasError())
+	assert.Equal(t, "nope", diags[0].Summary)
 }

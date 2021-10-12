@@ -183,7 +183,7 @@ func typeToSchema(v reflect.Value, t reflect.Type, path []string) map[string]*sc
 			elem := typeField.Type.Elem()
 			sv := reflect.New(elem).Elem()
 			if strings.Contains(tfTag, "suppress_diff") {
-				// TODO: we may also suppress count diffs on all json:"..,omitempty" (101 occurences)
+				// TODO: we may also suppress count diffs on all json:"..,omitempty" without tf:"force_new"
 				// find . -type f -name '*.go' -not -path "vendor/*" | xargs grep ',omitempty' | grep '*'
 				blockCount := strings.Join(append(path, fieldName, "#"), ".")
 				scm[fieldName].DiffSuppressFunc = makeEmptyBlockSuppressFunc(blockCount)

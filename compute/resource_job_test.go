@@ -106,6 +106,95 @@ func TestResourceJobCreate(t *testing.T) {
 	assert.Equal(t, "789", d.Id())
 }
 
+func TestResourceJobCreate_MultiTask(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.1/jobs/create",
+				ExpectedRequest: JobSettings{
+					Name: "Featurizer",
+					Tasks: []JobTaskSettings{
+						{
+							TaskKey:           "a",
+							ExistingClusterID: "abc",
+							Libraries: []Library{
+								{
+									Jar: "dbfs://aa/bb/cc.jar",
+								},
+							},
+							SparkJarTask: &SparkJarTask{
+								MainClassName: "com.labs.BarMain",
+							},
+						},
+						{
+							TaskKey: "b",
+							NewCluster: &Cluster{
+								SparkVersion: "a",
+								NodeTypeID:   "b",
+								AzureAttributes: &AzureAttributes{
+									SpotBidMaxPrice: 0.99,
+								},
+							},
+							NotebookTask: &NotebookTask{
+								NotebookPath: "/Stuff",
+							},
+						},
+					},
+					MaxConcurrentRuns: 1,
+				},
+				Response: Job{
+					JobID: 789,
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/jobs/get?job_id=789",
+				Response: Job{
+					// good enough for mock
+					Settings: &JobSettings{},
+				},
+			},
+		},
+		Create:   true,
+		Resource: ResourceJob(),
+		HCL: `
+		name = "Featurizer"
+		
+		task {
+			task_key = "a"
+
+			existing_cluster_id = "abc"
+
+			spark_jar_task {
+				main_class_name = "com.labs.BarMain"
+			}
+
+			library {
+				jar = "dbfs://aa/bb/cc.jar"
+			}
+		}
+
+		task {
+			task_key = "b"
+
+			new_cluster {
+				spark_version = "a"
+				node_type_id = "b"
+				azure_attributes {
+					spot_bid_max_price = 0.99
+				}
+			}
+
+			notebook_task {
+				notebook_path = "/Stuff"
+			}
+		}`,
+	}.Apply(t)
+	assert.NoError(t, err, err)
+	assert.Equal(t, "789", d.Id())
+}
+
 func TestResourceJobCreate_AlwaysRunning(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{

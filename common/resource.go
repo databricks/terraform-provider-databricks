@@ -105,12 +105,11 @@ func MustCompileKeyRE(name string) *regexp.Regexp {
 }
 
 func makeEmptyBlockSuppressFunc(name string) func(k, old, new string, d *schema.ResourceData) bool {
-	// TODO: move to TF field tag
 	re := MustCompileKeyRE(name)
 	return func(k, old, new string, d *schema.ResourceData) bool {
 		log.Printf("[DEBUG] name=%s k='%v', old='%v', new='%v'", name, k, old, new)
 		if re.Match([]byte(name)) && old == "1" && new == "0" {
-			log.Printf("[DEBUG] Disable removal of empty block")
+			log.Printf("[DEBUG] Suppressing diff for name=%s k=%#v old=%#v new=%#v", name, k, old, new)
 			return true
 		}
 		return false

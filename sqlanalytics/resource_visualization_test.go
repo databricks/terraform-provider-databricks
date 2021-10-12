@@ -274,5 +274,5 @@ func TestVisualizationDelete(t *testing.T) {
 }
 
 func TestResourceVisualizationCornerCases(t *testing.T) {
-	qa.ResourceCornerCases(t, ResourceVisualization(), "foo/bar")
+	qa.ResourceCornerCases(t, ResourceVisualization(), qa.CornerCaseID("foo/bar"))
 }

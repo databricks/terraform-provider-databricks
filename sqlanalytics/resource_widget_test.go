@@ -652,5 +652,5 @@ func TestWidgetDelete(t *testing.T) {
 }
 
 func TestResourceWidgetCornerCases(t *testing.T) {
-	qa.ResourceCornerCases(t, ResourceWidget(), "foo/bar")
+	qa.ResourceCornerCases(t, ResourceWidget(), qa.CornerCaseID("foo/bar"))
 }

@@ -47,6 +47,48 @@ output "job_url" {
 }
 ```
 
+## Jobs with Multiple Tasks
+
+-> **Note** In terraform configuration, you must define tasks in alphabetical order of their `task_key` arguments, so that you get consistent and readable diff. Whenever tasks are added or removed, or `task_key` is renamed, you'll observe a change in the majority of tasks. It's related to the fact that the current version of the provider treats `task` blocks as an ordered list. Alternatively, `task` block could have been an unordered set, though end-users would see the entire block replaced upon a change in single property of the task.
+
+It is possible to create jobs with multiple tasks using the `task` blocks:
+
+```hcl
+resource "databricks_job" "this" {
+  name = "Job with multiple tasks"
+
+  task {
+    task_key = "a"
+
+    new_cluster {
+      num_workers   = 1
+      spark_version = data.databricks_spark_version.latest.id
+      node_type_id  = data.databricks_node_type.smallest.id
+    }
+
+    notebook_task {
+      notebook_path = databricks_notebook.this.path
+    }
+  }
+
+  task {
+    task_key = "b"
+
+    depends_on {
+      task_key = "a"
+    }
+
+    existing_cluster_id = databricks_cluster.shared.id
+
+    spark_jar_task {
+      main_class_name = "com.acme.data.Main"
+    }
+  }
+}
+```
+
+Every `task` block can have almos all available arguments with the addition of `task_key` attribute and `depends_on` blocks to define cross-task dependencies.
+
 ## Argument Reference
 
 The following arguments are required:

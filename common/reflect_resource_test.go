@@ -194,7 +194,7 @@ type Dummy struct {
 	Unique      []Address         `json:"unique,omitempty" tf:"slice_set"`
 	Things      []string          `json:"things,omitempty" tf:"slice_set"`
 	Tags        map[string]string `json:"tags,omitempty" tf:"max_items:5"`
-	Home        *Address          `json:"home,omitempty" tf:"group:v"`
+	Home        *Address          `json:"home,omitempty" tf:"group:v,suppress_diff"`
 	House       *Address          `json:"house,omitempty" tf:"group:v"`
 }
 
@@ -367,6 +367,10 @@ func TestStructToData(t *testing.T) {
 	assert.Equal(t, "something", d.Get("description"))
 	assert.Equal(t, false, d.Get("enabled"))
 	assert.Equal(t, 2, d.Get("addresses.#"))
+
+	assert.NotNil(t, s["home"].DiffSuppressFunc)
+	assert.True(t, s["home"].DiffSuppressFunc("home.#", "1", "0", d))
+	assert.False(t, s["home"].DiffSuppressFunc("home.#", "1", "1", d))
 
 	{
 		//lint:ignore SA1019 Empty optional string should not be set.

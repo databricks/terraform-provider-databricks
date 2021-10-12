@@ -451,7 +451,7 @@ func (c *DatabricksClient) genericQuery(ctx context.Context, method, requestURL 
 			headers += "\n"
 		}
 	}
-	log.Printf("[DEBUG] %s %s %s%v", method, requestURL, headers, c.redactedDump(requestBody)) // lgtm[go/clear-text-logging]
+	log.Printf("[DEBUG] %s %s %s%v", method, request.URL.Path, headers, c.redactedDump(requestBody)) // lgtm[go/clear-text-logging]
 
 	r, err := retryablehttp.FromRequest(request)
 	if err != nil {
@@ -475,7 +475,7 @@ func (c *DatabricksClient) genericQuery(ctx context.Context, method, requestURL 
 	if err != nil {
 		return nil, err
 	}
-	log.Printf("[DEBUG] %s %v <- %s %s", resp.Status, c.redactedDump(body), method, requestURL)
+	log.Printf("[DEBUG] %s %v <- %s %s", resp.Status, c.redactedDump(body), method, request.URL.Path)
 	return body, nil
 }
 

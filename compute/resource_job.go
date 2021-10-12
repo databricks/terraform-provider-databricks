@@ -19,9 +19,6 @@ import (
 // NewJobsAPI creates JobsAPI instance from provider meta
 func NewJobsAPI(ctx context.Context, m interface{}) JobsAPI {
 	client := m.(*common.DatabricksClient)
-	if client.UseMutiltaskJobs {
-		ctx = context.WithValue(ctx, common.Api, common.API_2_1)
-	}
 	return JobsAPI{client, ctx}
 }
 
@@ -239,6 +236,18 @@ var jobSchema = common.StructToSchema(JobSettings{},
 
 // ResourceJob ...
 func ResourceJob() *schema.Resource {
+	getReadCtx := func(ctx context.Context, d *schema.ResourceData) context.Context {
+		var js JobSettings
+		err := common.DataToStructPointer(d, jobSchema, &js)
+		if err != nil {
+			log.Printf("[INFO] no job resource data available. Returning default context")
+			return ctx
+		}
+		if js.isMultiTask() {
+			return context.WithValue(ctx, common.Api, common.API_2_1)
+		}
+		return ctx
+	}
 	return common.Resource{
 		Schema:        jobSchema,
 		SchemaVersion: 2,
@@ -256,13 +265,10 @@ func ResourceJob() *schema.Resource {
 			if alwaysRunning && js.MaxConcurrentRuns > 1 {
 				return fmt.Errorf("`always_running` must be specified only with `max_concurrent_runs = 1`")
 			}
-			c := m.(*common.DatabricksClient)
-			if c.UseMutiltaskJobs {
-				for _, task := range js.Tasks {
-					err = validateClusterDefinition(*task.NewCluster)
-					if err != nil {
-						return fmt.Errorf("task %s invalid: %w", task.TaskKey, err)
-					}
+			for _, task := range js.Tasks {
+				err = validateClusterDefinition(*task.NewCluster)
+				if err != nil {
+					return fmt.Errorf("task %s invalid: %w", task.TaskKey, err)
 				}
 			}
 			if js.NewCluster != nil {
@@ -282,6 +288,9 @@ func ResourceJob() *schema.Resource {
 			sort.Slice(js.Tasks, func(i, j int) bool {
 				return js.Tasks[i].TaskKey < js.Tasks[j].TaskKey
 			})
+			if js.isMultiTask() {
+				ctx = context.WithValue(ctx, common.Api, common.API_2_1)
+			}
 			jobsAPI := NewJobsAPI(ctx, c)
 			job, err := jobsAPI.Create(js)
 			if err != nil {
@@ -289,12 +298,12 @@ func ResourceJob() *schema.Resource {
 			}
 			d.SetId(job.ID())
 			if d.Get("always_running").(bool) {
-				// TODO: test this with c.UseMutiltaskJobs
 				return jobsAPI.Start(job.JobID, d.Timeout(schema.TimeoutCreate))
 			}
 			return nil
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			ctx = getReadCtx(ctx, d)
 			job, err := NewJobsAPI(ctx, c).Read(d.Id())
 			if err != nil {
 				return err
@@ -311,18 +320,21 @@ func ResourceJob() *schema.Resource {
 			if err != nil {
 				return err
 			}
+			if js.isMultiTask() {
+				ctx = context.WithValue(ctx, common.Api, common.API_2_1)
+			}
 			jobsAPI := NewJobsAPI(ctx, c)
 			err = jobsAPI.Update(d.Id(), js)
 			if err != nil {
 				return err
 			}
 			if d.Get("always_running").(bool) {
-				// TODO: test this with c.UseMutiltaskJobs
 				return jobsAPI.Restart(d.Id(), d.Timeout(schema.TimeoutUpdate))
 			}
 			return nil
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			ctx = getReadCtx(ctx, d)
 			return NewJobsAPI(ctx, c).Delete(d.Id())
 		},
 	}.ToResource()

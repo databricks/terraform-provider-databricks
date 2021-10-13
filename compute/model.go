@@ -588,6 +588,12 @@ func (js *JobSettings) isMultiTask() bool {
 	return js.Format == "MULTI_TASK" || len(js.Tasks) > 0
 }
 
+func (js *JobSettings) sortTasksByKey() {
+	sort.Slice(js.Tasks, func(i, j int) bool {
+		return js.Tasks[i].TaskKey < js.Tasks[j].TaskKey
+	})
+}
+
 // JobList ...
 type JobList struct {
 	Jobs []Job `json:"jobs"`

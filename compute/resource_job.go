@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -131,6 +130,7 @@ func (a JobsAPI) Restart(id string, timeout time.Duration) error {
 // Create creates a job on the workspace given the job settings
 func (a JobsAPI) Create(jobSettings JobSettings) (Job, error) {
 	var job Job
+	jobSettings.sortTasksByKey()
 	err := a.client.Post(a.context, "/jobs/create", jobSettings, &job)
 	return job, err
 }
@@ -156,6 +156,9 @@ func (a JobsAPI) Read(id string) (job Job, err error) {
 	err = wrapMissingJobError(a.client.Get(a.context, "/jobs/get", map[string]int64{
 		"job_id": jobID,
 	}, &job), id)
+	if job.Settings != nil {
+		job.Settings.sortTasksByKey()
+	}
 	return
 }
 
@@ -288,9 +291,6 @@ func ResourceJob() *schema.Resource {
 			if err != nil {
 				return err
 			}
-			sort.Slice(js.Tasks, func(i, j int) bool {
-				return js.Tasks[i].TaskKey < js.Tasks[j].TaskKey
-			})
 			if js.isMultiTask() {
 				ctx = context.WithValue(ctx, common.Api, common.API_2_1)
 			}
@@ -311,9 +311,6 @@ func ResourceJob() *schema.Resource {
 			if err != nil {
 				return err
 			}
-			sort.Slice(job.Settings.Tasks, func(i, j int) bool {
-				return job.Settings.Tasks[i].TaskKey < job.Settings.Tasks[j].TaskKey
-			})
 			d.Set("url", c.FormatURL("#job/", d.Id()))
 			return common.StructToData(*job.Settings, jobSchema, d)
 		},

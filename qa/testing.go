@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"math/rand"
 	"net/http"
@@ -92,6 +91,57 @@ type ResourceFixture struct {
 	New bool
 }
 
+// wrapper type for calling resource methords
+type resourceCRUD func(context.Context, *schema.ResourceData, interface{}) diag.Diagnostics
+
+func (cb resourceCRUD) before(before func(d *schema.ResourceData)) resourceCRUD {
+	return func(ctx context.Context, d *schema.ResourceData, i interface{}) diag.Diagnostics {
+		before(d)
+		return cb(ctx, d, i)
+	}
+}
+
+func (cb resourceCRUD) withId(id string) resourceCRUD {
+	return cb.before(func(d *schema.ResourceData) {
+		d.SetId(id)
+	})
+}
+
+func (f ResourceFixture) prepareExecution() (resourceCRUD, error) {
+	switch {
+	case f.Create:
+		if f.ID != "" {
+			return nil, fmt.Errorf("ID is not available for Create")
+		}
+		return resourceCRUD(f.Resource.CreateContext), nil
+	case f.Read:
+		if f.ID == "" {
+			return nil, fmt.Errorf("ID must be set for Read")
+		}
+		preRead := f.State
+		f.State = nil
+		return resourceCRUD(f.Resource.ReadContext).before(func(d *schema.ResourceData) {
+			if f.New {
+				d.MarkNewResource()
+			}
+			for k, v := range preRead {
+				d.Set(k, v)
+			}
+		}).withId(f.ID), nil
+	case f.Update:
+		if f.ID == "" {
+			return nil, fmt.Errorf("ID must be set for Update")
+		}
+		return resourceCRUD(f.Resource.UpdateContext).withId(f.ID), nil
+	case f.Delete:
+		if f.ID == "" {
+			return nil, fmt.Errorf("ID must be set for Delete")
+		}
+		return resourceCRUD(f.Resource.DeleteContext).withId(f.ID), nil
+	}
+	return nil, fmt.Errorf("no `Create|Read|Update|Delete: true` specificed")
+}
+
 // Apply runs tests from fixture
 func (f ResourceFixture) Apply(t *testing.T) (*schema.ResourceData, error) {
 	client, server, err := HttpFixtureClient(t, f.Fixtures)
@@ -122,70 +172,11 @@ func (f ResourceFixture) Apply(t *testing.T) (*schema.ResourceData, error) {
 		}
 		f.State = fixHCL(out).(map[string]interface{})
 	}
-	var whatever func(d *schema.ResourceData, c interface{}) error
-	pick := func(
-		a func(*schema.ResourceData, interface{}) error,
-		b func(context.Context, *schema.ResourceData, interface{}) diag.Diagnostics,
-		d *schema.ResourceData, m interface{}) error {
-		if b != nil {
-			ctx := context.Background()
-			diags := b(ctx, d, m)
-			if diags != nil {
-				return fmt.Errorf(diagsToString(diags))
-			}
-			return nil
-		}
-		return a(d, m)
-	}
 	resourceConfig := terraform.NewResourceConfigRaw(f.State)
-	switch {
-	case f.Create:
-		// nolint should be a bigger context-aware refactor
-		whatever = func(d *schema.ResourceData, m interface{}) error {
-			//lint:ignore SA1019 TODO - remove later
-			return pick(f.Resource.Create, f.Resource.CreateContext, d, m)
-		}
-		if f.ID != "" {
-			return nil, errors.New("ID is not available for Create")
-		}
-	case f.Read:
-		if f.ID == "" {
-			return nil, errors.New("ID must be set for Read")
-		}
-		preRead := f.State
-		f.State = nil
-		whatever = func(d *schema.ResourceData, m interface{}) error {
-			d.SetId(f.ID)
-			if f.New {
-				d.MarkNewResource()
-			}
-			for k, v := range preRead {
-				err = d.Set(k, v)
-				assert.NoError(t, err)
-			}
-			return pick(f.Resource.Read, f.Resource.ReadContext, d, m)
-		}
-	case f.Update:
-		if f.ID == "" {
-			return nil, errors.New("ID must be set for Update")
-		}
-		if f.Resource.UpdateContext == nil && f.Resource.Update == nil {
-			return nil, errors.New("resource does not support Update")
-		}
-		whatever = func(d *schema.ResourceData, m interface{}) error {
-			d.SetId(f.ID)
-			return pick(f.Resource.Update, f.Resource.UpdateContext, d, m)
-		}
-	case f.Delete:
-		if f.ID == "" {
-			return nil, errors.New("ID must be set for Delete")
-		}
-		whatever = func(d *schema.ResourceData, m interface{}) error {
-			d.SetId(f.ID)
-			return pick(f.Resource.Delete, f.Resource.DeleteContext, d, m)
-		}
+	execute, err := f.prepareExecution()
+	if err != nil {
+		return nil, err
 	}
-
 	if f.State != nil {
 		diags := f.Resource.Validate(resourceConfig)
 		if diags.HasError() {
@@ -217,9 +208,12 @@ func (f ResourceFixture) Apply(t *testing.T) (*schema.ResourceData, error) {
 	if err != nil {
 		return nil, err
 	}
-	err = whatever(resourceData, client)
-	if err != nil {
-		return resourceData, err
+	if execute != nil {
+		// this is a bit strange, but we'll fix it later
+		diags := execute(ctx, resourceData, client)
+		if diags != nil {
+			return resourceData, fmt.Errorf(diagsToString(diags))
+		}
 	}
 	if resourceData.Id() == "" && !f.Removed {
 		return resourceData, fmt.Errorf("resource is not expected to be removed")
@@ -542,7 +536,7 @@ func FirstKeyValue(t *testing.T, str, key string) string {
 	r := regexp.MustCompile(key + `\s+=\s+"([^"]*)"`)
 	match := r.FindStringSubmatch(str)
 	if len(match) != 2 {
-		t.Fatalf("Cannot fin	d %s in given string", key)
+		t.Fatalf("Cannot find %s in given string", key)
 	}
 	return match[1]
 }
@@ -550,23 +544,6 @@ func FirstKeyValue(t *testing.T, str, key string) string {
 // AssertErrorStartsWith ..
 func AssertErrorStartsWith(t *testing.T, err error, message string) bool {
 	return err != nil && assert.True(t, strings.HasPrefix(err.Error(), message), err.Error())
-}
-
-// TestCreateTempFile  ...
-func TestCreateTempFile(t *testing.T, data string) string {
-	tmpFile, err := ioutil.TempFile("", "tf-test-create-dbfs-file")
-	if err != nil {
-		t.Fatal(err)
-	}
-	filename := tmpFile.Name()
-
-	err = ioutil.WriteFile(filename, []byte(data), 0644)
-	if err != nil {
-		os.Remove(filename)
-		t.Fatal(err)
-	}
-
-	return filename
 }
 
 // GetEnvOrSkipTest proceeds with test only with that env variable

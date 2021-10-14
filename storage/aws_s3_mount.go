@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/databrickslabs/terraform-provider-databricks/common"
 	"github.com/databrickslabs/terraform-provider-databricks/compute"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -117,11 +116,12 @@ func preprocessS3Mount(ctx context.Context, d *schema.ResourceData, m interface{
 // GetOrCreateMountingClusterWithInstanceProfile ...
 func GetOrCreateMountingClusterWithInstanceProfile(
 	clustersAPI compute.ClustersAPI, instanceProfile string) (i compute.ClusterInfo, err error) {
-	ia, err := arn.Parse(instanceProfile)
-	if err != nil {
-		return i, err
+	arnSections := strings.SplitN(instanceProfile, ":", 6)
+	if len(arnSections) != 6 {
+		err = fmt.Errorf("invalid arn: %s", instanceProfile)
+		return
 	}
-	instanceProfileParts := strings.Split(ia.Resource, "/")
+	instanceProfileParts := strings.Split(arnSections[5], "/")
 	clusterName := fmt.Sprintf("terraform-mount-%s", strings.Join(instanceProfileParts[1:], "-"))
 	return clustersAPI.GetOrCreateRunningCluster(clusterName, compute.Cluster{
 		NumWorkers:  1,

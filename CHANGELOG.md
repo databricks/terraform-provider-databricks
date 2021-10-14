@@ -4,6 +4,8 @@
 
 * Added initial support for multiple task orchestration in `databricks_job` [#853](https://github.com/databrickslabs/terraform-provider-databricks/pull/853)
 * Fixed provider crash for new terraform states related to bug [#813](https://github.com/hashicorp/terraform-plugin-sdk/issues/813) in Terraform SDK v2.8.0 ([#854](https://github.com/databrickslabs/terraform-provider-databricks/issues/854))
+* Re-added `skip_validation` to `databricks_instance_profile` resource [#762](https://github.com/databrickslabs/terraform-provider-databricks/issues/762)
+* Removed direct dependency on `aws-sdk-go`.
 
 Updated dependency versions:
 

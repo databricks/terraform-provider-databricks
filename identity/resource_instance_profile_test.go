@@ -212,7 +212,7 @@ func TestAwsAccInstanceProfilesSkippingValidation(t *testing.T) {
 	instanceProfilesAPI.Synchronized(arn, func() bool {
 		err := instanceProfilesAPI.Create(InstanceProfileInfo{
 			InstanceProfileArn: arn,
-			SkipValdation:      true,
+			SkipValidation:     true,
 		})
 		if err != nil {
 			return false

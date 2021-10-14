@@ -21,6 +21,7 @@ import (
 type InstanceProfileInfo struct {
 	InstanceProfileArn    string `json:"instance_profile_arn,omitempty"`
 	IsMetaInstanceProfile bool   `json:"is_meta_instance_profile,omitempty"`
+	SkipValidation        bool   `json:"skip_validation,omitempty"`
 }
 
 // InstanceProfileList ...

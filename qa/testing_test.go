@@ -13,6 +13,11 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func TestRandomEmail(t *testing.T) {
+	email := RandomEmail()
+	assert.NotEmpty(t, email)
+}
+
 func TestRandomLongName(t *testing.T) {
 	n := RandomLongName()
 	assert.Equal(t, 37, len(n))
@@ -100,10 +105,10 @@ var noopResource = &schema.Resource{
 			Required: true,
 		},
 	},
-	Read:   schema.Noop,
-	Create: schema.Noop,
-	Update: schema.Noop,
-	Delete: schema.Noop,
+	ReadContext:   schema.NoopContext,
+	CreateContext: schema.NoopContext,
+	UpdateContext: schema.NoopContext,
+	DeleteContext: schema.NoopContext,
 }
 
 var noopContextResource = &schema.Resource{
@@ -129,12 +134,17 @@ var noopContextResource = &schema.Resource{
 }
 
 func TestResourceFixture_ID(t *testing.T) {
+	_, err := ResourceFixture{}.prepareExecution()
+	assert.EqualError(t, err, "no `Create|Read|Update|Delete: true` specificed")
+
 	f := ResourceFixture{
 		Resource: noopResource,
 		Read:     true,
+		AzureSPN: true,
+		Gcp:      true,
 		HCL:      `dummy = true`,
 	}
-	_, err := f.Apply(t)
+	_, err = f.Apply(t)
 	assert.EqualError(t, err, "ID must be set for Read")
 
 	f.Read = false
@@ -159,10 +169,11 @@ func TestResourceFixture_ID(t *testing.T) {
 	f.Removed = true
 	_, err = f.Apply(t)
 	assert.NoError(t, err)
+	f.ApplyNoError(t)
 }
 
 func TestResourceFixture_Apply(t *testing.T) {
-	d, err := ResourceFixture{
+	ResourceFixture{
 		CommandMock: func(commandStr string) common.CommandResults {
 			return common.CommandResults{
 				ResultType: "text",
@@ -175,9 +186,7 @@ func TestResourceFixture_Apply(t *testing.T) {
 		New:      true,
 		Read:     true,
 		HCL:      `dummy = true`,
-	}.Apply(t)
-	assert.NoError(t, err)
-	assert.Equal(t, true, d.Get("dummy"))
+	}.ApplyNoError(t)
 }
 
 func TestResourceFixture_ApplyDelete(t *testing.T) {
@@ -218,7 +227,7 @@ func TestResourceFixture_InstanceState(t *testing.T) {
 }
 
 func TestResourceFixture_Apply_Fail(t *testing.T) {
-	_, err := ResourceFixture{
+	ResourceFixture{
 		CommandMock: func(commandStr string) common.CommandResults {
 			return common.CommandResults{
 				ResultType: "text",
@@ -231,13 +240,7 @@ func TestResourceFixture_Apply_Fail(t *testing.T) {
 			"dummy": true,
 			"check": false,
 		},
-	}.Apply(t)
-	assert.EqualError(t, err, "invalid config supplied. [check] Invalid or unknown key")
-}
-
-func TestTestCreateTempFile(t *testing.T) {
-	a := TestCreateTempFile(t, "abc")
-	assert.FileExists(t, a)
+	}.ExpectError(t, "invalid config supplied. [check] Invalid or unknown key")
 }
 
 func TestUnionFixturesLists(t *testing.T) {
@@ -262,6 +265,10 @@ func TestFixHCL_CornerCase(t *testing.T) {
 func TestGetEnvOrSkipTest(t *testing.T) {
 	u := GetEnvOrSkipTest(t, "HOME")
 	assert.NotEmpty(t, u)
+}
+
+func TestGetEnvOrSkipTest_Skip(t *testing.T) {
+	GetEnvOrSkipTest(t, "")
 }
 
 func TestDiagsToString(t *testing.T) {
@@ -308,5 +315,12 @@ func TestResourceCornerCases(t *testing.T) {
 				Required: true,
 			},
 		},
-	}.ToResource(), CornerCaseID("x"))
+	}.ToResource(),
+		CornerCaseID("x"),
+		CornerCaseExpectError("I'm a teapot"),
+		CornerCaseSkipCRUD("head"))
+}
+
+func TestAssertErrorStartsWith(t *testing.T) {
+	AssertErrorStartsWith(t, fmt.Errorf("abc"), "a")
 }

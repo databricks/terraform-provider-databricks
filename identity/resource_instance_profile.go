@@ -43,8 +43,12 @@ type InstanceProfilesAPI struct {
 }
 
 // Create creates an instance profile record on Databricks
-func (a InstanceProfilesAPI) Create(ipi InstanceProfileInfo) error {
-	return a.client.Post(a.context, "/instance-profiles/add", ipi, nil)
+func (a InstanceProfilesAPI) Create(ipi InstanceProfileInfo, skipValidation bool) error {
+	return a.client.Post(a.context, "/instance-profiles/add", map[string]interface{}{
+		"instance_profile_arn":     ipi.InstanceProfileArn,
+		"is_meta_instance_profile": ipi.IsMetaInstanceProfile,
+		"skip_validation":          skipValidation,
+	}, nil)
 }
 
 // Read returns the ARN back if it exists on the Databricks workspace
@@ -154,7 +158,7 @@ func ResourceInstanceProfile() *schema.Resource {
 			if err := common.DataToStructPointer(d, instanceProfileSchema, &profile); err != nil {
 				return err
 			}
-			if err := NewInstanceProfilesAPI(ctx, c).Create(profile); err != nil {
+			if err := NewInstanceProfilesAPI(ctx, c).Create(profile, d.Get("skip_validation").(bool)); err != nil {
 				return err
 			}
 			d.SetId(profile.InstanceProfileArn)

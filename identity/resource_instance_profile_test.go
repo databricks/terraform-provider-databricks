@@ -188,7 +188,31 @@ func TestAwsAccInstanceProfiles(t *testing.T) {
 	instanceProfilesAPI.Synchronized(arn, func() bool {
 		err := instanceProfilesAPI.Create(InstanceProfileInfo{
 			InstanceProfileArn: arn,
-		})
+		}, false)
+		if err != nil {
+			return false
+		}
+		defer func() {
+			err := instanceProfilesAPI.Delete(arn)
+			assert.NoError(t, err, err)
+		}()
+
+		arnSearch, err := instanceProfilesAPI.Read(arn)
+		assert.NoError(t, err, err)
+		assert.True(t, len(arnSearch.InstanceProfileArn) > 0)
+		return true
+	})
+}
+
+func TestAwsAccInstanceProfilesSkippingValidation(t *testing.T) {
+	arn := qa.GetEnvOrSkipTest(t, "TEST_EC2_INSTANCE_PROFILE")
+	client := common.NewClientFromEnvironment()
+	ctx := context.WithValue(context.Background(), common.Current, t.Name())
+	instanceProfilesAPI := NewInstanceProfilesAPI(ctx, client)
+	instanceProfilesAPI.Synchronized(arn, func() bool {
+		err := instanceProfilesAPI.Create(InstanceProfileInfo{
+			InstanceProfileArn: arn,
+		}, true)
 		if err != nil {
 			return false
 		}

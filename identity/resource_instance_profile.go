@@ -8,7 +8,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/databrickslabs/terraform-provider-databricks/common"
 
 	"github.com/hashicorp/go-cty/cty"
@@ -21,7 +20,7 @@ import (
 type InstanceProfileInfo struct {
 	InstanceProfileArn    string `json:"instance_profile_arn,omitempty"`
 	IsMetaInstanceProfile bool   `json:"is_meta_instance_profile,omitempty"`
-	SkipValidation        bool   `json:"skip_validation,omitempty"`
+	SkipValidation        bool   `json:"skip_validation,omitempty" tf:"computed"`
 }
 
 // InstanceProfileList ...
@@ -179,17 +178,26 @@ func ValidInstanceProfile(v interface{}, c cty.Path) diag.Diagnostics {
 			},
 		}
 	}
-	instanceProfileArn, err := arn.Parse(s)
-	if err != nil {
+	if !strings.HasPrefix(s, "arn:") {
 		return diag.Diagnostics{
 			diag.Diagnostic{
 				AttributePath: c,
 				Summary:       "Invalid ARN",
-				Detail:        err.Error(),
+				Detail:        "Invalid prefix",
 			},
 		}
 	}
-	if !strings.HasPrefix(instanceProfileArn.Resource, "instance-profile") {
+	arnSections := strings.SplitN(s, ":", 6)
+	if len(arnSections) != 6 {
+		return diag.Diagnostics{
+			diag.Diagnostic{
+				AttributePath: c,
+				Summary:       "Invalid ARN",
+				Detail:        "Incorrect number of sections",
+			},
+		}
+	}
+	if !strings.HasPrefix(arnSections[5], "instance-profile") {
 		return diag.Diagnostics{
 			diag.Diagnostic{
 				AttributePath: c,

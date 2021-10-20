@@ -517,6 +517,11 @@ type SparkSubmitTask struct {
 	Parameters []string `json:"parameters,omitempty"`
 }
 
+// PipelineTask contains the information for pipeline jobs
+type PipelineTask struct {
+	PipelineId string `json:"pipeline_id"`
+}
+
 // EmailNotifications contains the information for email notifications after job completion
 type EmailNotifications struct {
 	OnStart               []string `json:"on_start,omitempty"`
@@ -549,6 +554,7 @@ type JobTaskSettings struct {
 	SparkJarTask           *SparkJarTask       `json:"spark_jar_task,omitempty" tf:"group:task_type"`
 	SparkPythonTask        *SparkPythonTask    `json:"spark_python_task,omitempty" tf:"group:task_type"`
 	SparkSubmitTask        *SparkSubmitTask    `json:"spark_submit_task,omitempty" tf:"group:task_type"`
+	PipelineTask           *PipelineTask       `json:"pipeline_task,omitempty" tf:"group:task_type"`
 	EmailNotifications     *EmailNotifications `json:"email_notifications,omitempty" tf:"suppress_diff"`
 	TimeoutSeconds         int32               `json:"timeout_seconds,omitempty"`
 	MaxRetries             int32               `json:"max_retries,omitempty"`

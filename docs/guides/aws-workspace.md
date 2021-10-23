@@ -127,8 +127,10 @@ module "vpc" {
 
   enable_dns_hostnames = true
   enable_nat_gateway   = true
+  single_nat_gateway   = true
   create_igw           = true
 
+  public_subnets  = [cidrsubnet(var.cidr_block, 3, 0)]
   private_subnets = [cidrsubnet(var.cidr_block, 3, 1),
                      cidrsubnet(var.cidr_block, 3, 2)]
 

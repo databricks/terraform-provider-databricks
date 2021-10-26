@@ -517,6 +517,14 @@ type SparkSubmitTask struct {
 	Parameters []string `json:"parameters,omitempty"`
 }
 
+// PythonWheelTask contains the information for python wheel jobs
+type PythonWheelTask struct {
+    EntryPoint    string   `json:"entry_point,omitempty"`
+    PackageName   string   `json:"package_name,omitempty"`
+    Parameters    []string `json:"parameters,omitempty"`
+    NamedParameters map[string]string `json:"named_parameters,omitempty"`
+}
+
 // EmailNotifications contains the information for email notifications after job completion
 type EmailNotifications struct {
 	OnStart               []string `json:"on_start,omitempty"`
@@ -567,6 +575,7 @@ type JobSettings struct {
 	SparkJarTask           *SparkJarTask    `json:"spark_jar_task,omitempty" tf:"group:task_type"`
 	SparkPythonTask        *SparkPythonTask `json:"spark_python_task,omitempty" tf:"group:task_type"`
 	SparkSubmitTask        *SparkSubmitTask `json:"spark_submit_task,omitempty" tf:"group:task_type"`
+	PythonWheelTask        *PythonWheelTask `json:"python_wheel_task,omitempty" tf:"group:task_type"`
 	Libraries              []Library        `json:"libraries,omitempty" tf:"slice_set,alias:library"`
 	TimeoutSeconds         int32            `json:"timeout_seconds,omitempty"`
 	MaxRetries             int32            `json:"max_retries,omitempty"`

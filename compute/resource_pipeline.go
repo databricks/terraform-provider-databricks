@@ -209,6 +209,10 @@ func adjustPipelineResourceSchema(m map[string]*schema.Schema) map[string]*schem
 	delete(awsAttributesSchema, "ebs_volume_size")
 
 	m["library"].MinItems = 1
+	m["url"] = &schema.Schema{
+		Type:     schema.TypeString,
+		Computed: true,
+	}
 
 	return m
 }
@@ -230,6 +234,7 @@ func ResourcePipeline() *schema.Resource {
 				return err
 			}
 			d.SetId(id)
+			d.Set("url", c.FormatURL("#joblist/pipelines/", d.Id()))
 			return nil
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {

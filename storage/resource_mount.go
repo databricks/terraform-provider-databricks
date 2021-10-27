@@ -24,10 +24,6 @@ func ResourceDatabricksMount() *schema.Resource {
 		s["s3"].ConflictsWith = []string{"uri", "extra_configs", "wasb", "abfs", "adl", "gs"}
 		s["adl"].ConflictsWith = []string{"uri", "extra_configs", "wasb", "s3", "abfs", "gs"}
 		s["gs"].ConflictsWith = []string{"uri", "extra_configs", "wasb", "s3", "abfs", "adl"}
-		blocks := []string{"abfs", "wasb", "s3", "adl", "gs"}
-		for _, nm := range blocks {
-			s[nm].DiffSuppressFunc = common.MakeEmptyBlockSuppressFunc(nm)
-		}
 		// TODO: We need to have a validation function that will check that source isn't empty if other blocks aren't specified
 
 		return s

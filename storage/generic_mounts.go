@@ -16,11 +16,11 @@ import (
 type GenericMount struct {
 	URI     string                     `json:"uri,omitempty" tf:"force_new"`
 	Options map[string]string          `json:"extra_configs,omitempty" tf:"force_new"`
-	Abfs    *AzureADLSGen2MountGeneric `json:"abfs,omitempty" tf:"force_new"`
-	S3      *S3IamMount                `json:"s3,omitempty" tf:"force_new"`
-	Adl     *AzureADLSGen1MountGeneric `json:"adl,omitempty" tf:"force_new"`
-	Wasb    *AzureBlobMountGeneric     `json:"wasb,omitempty" tf:"force_new"`
-	Gs      *GSMount                   `json:"gs,omitempty" tf:"force_new"`
+	Abfs    *AzureADLSGen2MountGeneric `json:"abfs,omitempty" tf:"force_new,suppress_diff"`
+	S3      *S3IamMount                `json:"s3,omitempty" tf:"force_new,suppress_diff"`
+	Adl     *AzureADLSGen1MountGeneric `json:"adl,omitempty" tf:"force_new,suppress_diff"`
+	Wasb    *AzureBlobMountGeneric     `json:"wasb,omitempty" tf:"force_new,suppress_diff"`
+	Gs      *GSMount                   `json:"gs,omitempty" tf:"force_new,suppress_diff"`
 
 	ClusterID      string `json:"cluster_id,omitempty" tf:"computed,force_new"`
 	MountName      string `json:"mount_name,omitempty" tf:"computed,force_new"`

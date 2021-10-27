@@ -224,7 +224,7 @@ func TestResourceAwsS3MountGenericCreate_invalid_arn(t *testing.T) {
 		},
 		Create: true,
 	}.Apply(t)
-	require.EqualError(t, err, "arn: invalid prefix")
+	require.EqualError(t, err, "invalid arn: this_mount")
 }
 
 func TestResourceAwsS3MountGenericRead(t *testing.T) {

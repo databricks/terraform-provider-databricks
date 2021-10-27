@@ -10,18 +10,26 @@ import (
 
 // AzureBlobMount describes the object for a azure blob storage mount - a.k.a. NativeAzureFileSystem
 type AzureBlobMount struct {
-	ContainerName      string `json:"container_name" tf:"force_new"`
-	StorageAccountName string `json:"storage_account_name" tf:"force_new"`
-	Directory          string `json:"directory,omitempty" tf:"force_new"`
-	AuthType           string `json:"auth_type" tf:"force_new"`
-	SecretScope        string `json:"token_secret_scope" tf:"force_new"`
-	SecretKey          string `json:"token_secret_key" tf:"force_new"`
+	ContainerName      string `json:"container_name"`
+	StorageAccountName string `json:"storage_account_name"`
+	Directory          string `json:"directory"`
+	AuthType           string `json:"auth_type"`
+	SecretScope        string `json:"token_secret_scope"`
+	SecretKey          string `json:"token_secret_key"`
 }
 
 // Source ...
 func (m AzureBlobMount) Source() string {
 	return fmt.Sprintf("wasbs://%[1]s@%[2]s.blob.core.windows.net%[3]s",
 		m.ContainerName, m.StorageAccountName, m.Directory)
+}
+
+func (m AzureBlobMount) Name() string {
+	return fmt.Sprintf("%s-%s", m.StorageAccountName, m.ContainerName)
+}
+
+func (m AzureBlobMount) ValidateAndApplyDefaults(d *schema.ResourceData, client *common.DatabricksClient) error {
+	return nil
 }
 
 // Config ...

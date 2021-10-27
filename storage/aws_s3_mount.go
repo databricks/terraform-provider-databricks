@@ -13,13 +13,21 @@ import (
 
 // AWSIamMount describes the object for a aws mount using iam role
 type AWSIamMount struct {
-	S3BucketName    string `json:"s3_bucket_name" tf:"force_new"`
-	InstanceProfile string `json:"instance_profile,omitempty" tf:"force_new"`
+	S3BucketName string `json:"s3_bucket_name"`
 }
 
 // Source ...
 func (m AWSIamMount) Source() string {
 	return fmt.Sprintf("s3a://%s", m.S3BucketName)
+}
+
+// Name ...
+func (m AWSIamMount) Name() string {
+	return m.S3BucketName
+}
+
+func (m AWSIamMount) ValidateAndApplyDefaults(d *schema.ResourceData, client *common.DatabricksClient) error {
+	return nil
 }
 
 // Config ...

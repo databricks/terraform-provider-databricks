@@ -10,18 +10,26 @@ import (
 
 // AzureADLSGen1Mount describes the object for a azure datalake gen 1 storage mount
 type AzureADLSGen1Mount struct {
-	StorageResource string `json:"storage_resource_name" tf:"force_new"`
-	Directory       string `json:"directory,omitempty" tf:"force_new"`
-	PrefixType      string `json:"spark_conf_prefix,omitempty" tf:"default:fs.adl,force_new"`
-	ClientID        string `json:"client_id" tf:"force_new"`
-	TenantID        string `json:"tenant_id" tf:"force_new"`
-	SecretScope     string `json:"client_secret_scope" tf:"force_new"`
-	SecretKey       string `json:"client_secret_key" tf:"force_new"`
+	StorageResource string `json:"storage_resource_name"`
+	Directory       string `json:"directory,omitempty"`
+	PrefixType      string `json:"spark_conf_prefix"`
+	ClientID        string `json:"client_id"`
+	TenantID        string `json:"tenant_id"`
+	SecretScope     string `json:"client_secret_scope"`
+	SecretKey       string `json:"client_secret_key"`
 }
 
 // Source ...
 func (m AzureADLSGen1Mount) Source() string {
 	return fmt.Sprintf("adl://%s.azuredatalakestore.net%s", m.StorageResource, m.Directory)
+}
+
+func (m AzureADLSGen1Mount) Name() string {
+	return m.StorageResource
+}
+
+func (m AzureADLSGen1Mount) ValidateAndApplyDefaults(d *schema.ResourceData, client *common.DatabricksClient) error {
+	return nil
 }
 
 // Config ...

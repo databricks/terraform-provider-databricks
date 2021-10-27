@@ -124,11 +124,12 @@ func TestResourceAwsS3MountGenericCreate_WithInstanceProfile(t *testing.T) {
 								Availability:       "SPOT",
 							},
 							AutoterminationMinutes: 10,
-							SparkConf:              map[string]string{"spark.databricks.cluster.profile": "singleNode", "spark.master": "local[*]"},
-							CustomTags:             map[string]string{"ResourceClass": "SingleNode"},
-							ClusterName:            clusterName,
-							SparkVersion:           "7.3.x-scala2.12",
-							NumWorkers:             0,
+							SparkConf: map[string]string{"spark.databricks.cluster.profile": "singleNode",
+								"spark.master": "local[*]", "spark.scheduler.mode": "FIFO"},
+							CustomTags:   map[string]string{"ResourceClass": "SingleNode"},
+							ClusterName:  clusterName,
+							SparkVersion: "7.3.x-scala2.12",
+							NumWorkers:   0,
 						},
 					},
 				},
@@ -156,11 +157,12 @@ func TestResourceAwsS3MountGenericCreate_WithInstanceProfile(t *testing.T) {
 						Availability:       "SPOT",
 					},
 					AutoterminationMinutes: 10,
-					SparkConf:              map[string]string{"spark.databricks.cluster.profile": "singleNode", "spark.master": "local[*]"},
-					CustomTags:             map[string]string{"ResourceClass": "SingleNode"},
-					ClusterName:            clusterName,
-					SparkVersion:           "7.3.x-scala2.12",
-					NumWorkers:             0,
+					SparkConf: map[string]string{"spark.databricks.cluster.profile": "singleNode",
+						"spark.master": "local[*]", "spark.scheduler.mode": "FIFO"},
+					CustomTags:   map[string]string{"ResourceClass": "SingleNode"},
+					ClusterName:  clusterName,
+					SparkVersion: "7.3.x-scala2.12",
+					NumWorkers:   0,
 				},
 				Response: compute.ClusterID{
 					ClusterID: "abcd",
@@ -427,7 +429,7 @@ func TestAzureAccADLSv1MountGeneric(t *testing.T) {
 	storageResource := qa.GetEnvOrSkipTest(t, "TEST_DATA_LAKE_STORE_NAME")
 	testWithNewSecretScope(t, func(scope, key string) {
 		testMounting(t, mp,
-			GenericMount{Adl: &AzureADLSGen1Mount{
+			GenericMount{Adl: &AzureADLSGen1MountGeneric{
 				ClientID:        client.AzureClientID,
 				TenantID:        client.AzureTenantID,
 				PrefixType:      "dfs.adls",
@@ -494,7 +496,7 @@ func TestAzureAccADLSv2MountGeneric(t *testing.T) {
 	storageAccountName := qa.GetEnvOrSkipTest(t, "TEST_STORAGE_V2_ACCOUNT")
 	container := qa.GetEnvOrSkipTest(t, "TEST_STORAGE_V2_ABFSS")
 	testWithNewSecretScope(t, func(scope, key string) {
-		testMounting(t, mp, GenericMount{Abfs: &AzureADLSGen2Mount{
+		testMounting(t, mp, GenericMount{Abfs: &AzureADLSGen2MountGeneric{
 			ClientID:             client.AzureClientID,
 			TenantID:             client.AzureTenantID,
 			StorageAccountName:   storageAccountName,
@@ -810,7 +812,7 @@ func TestAzureAccBlobMountGeneric(t *testing.T) {
 	accountKey := qa.GetEnvOrSkipTest(t, "TEST_STORAGE_V2_KEY")
 	container := qa.GetEnvOrSkipTest(t, "TEST_STORAGE_V2_WASBS")
 	testWithNewSecretScope(t, func(scope, key string) {
-		testMounting(t, mp, GenericMount{Wasb: &AzureBlobMount{
+		testMounting(t, mp, GenericMount{Wasb: &AzureBlobMountGeneric{
 			StorageAccountName: storageAccountName,
 			ContainerName:      container,
 			SecretScope:        scope,
@@ -902,11 +904,12 @@ func TestResourceGcsMountGenericCreate_WithServiceAccount(t *testing.T) {
 								GoogleServiceAccount: google_account,
 							},
 							AutoterminationMinutes: 10,
-							SparkConf:              map[string]string{"spark.databricks.cluster.profile": "singleNode", "spark.master": "local[*]"},
-							CustomTags:             map[string]string{"ResourceClass": "SingleNode"},
-							ClusterName:            clusterName,
-							SparkVersion:           "7.3.x-scala2.12",
-							NumWorkers:             0,
+							SparkConf: map[string]string{"spark.databricks.cluster.profile": "singleNode",
+								"spark.master": "local[*]", "spark.scheduler.mode": "FIFO"},
+							CustomTags:   map[string]string{"ResourceClass": "SingleNode"},
+							ClusterName:  clusterName,
+							SparkVersion: "7.3.x-scala2.12",
+							NumWorkers:   0,
 						},
 					},
 				},
@@ -933,11 +936,12 @@ func TestResourceGcsMountGenericCreate_WithServiceAccount(t *testing.T) {
 						GoogleServiceAccount: "acc@acc-dbx.iam.gserviceaccount.com",
 					},
 					AutoterminationMinutes: 10,
-					SparkConf:              map[string]string{"spark.databricks.cluster.profile": "singleNode", "spark.master": "local[*]"},
-					CustomTags:             map[string]string{"ResourceClass": "SingleNode"},
-					ClusterName:            clusterName,
-					SparkVersion:           "7.3.x-scala2.12",
-					NumWorkers:             0,
+					SparkConf: map[string]string{"spark.databricks.cluster.profile": "singleNode",
+						"spark.master": "local[*]", "spark.scheduler.mode": "FIFO"},
+					CustomTags:   map[string]string{"ResourceClass": "SingleNode"},
+					ClusterName:  clusterName,
+					SparkVersion: "7.3.x-scala2.12",
+					NumWorkers:   0,
 				},
 				Response: compute.ClusterID{
 					ClusterID: "abcd",

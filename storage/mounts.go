@@ -20,13 +20,17 @@ import (
 type Mount interface {
 	Source() string
 	Config(client *common.DatabricksClient) map[string]string
+
+	Name() string
+	ValidateAndApplyDefaults(d *schema.ResourceData, client *common.DatabricksClient) error
 }
 
 // MountPoint is something actionable
 type MountPoint struct {
-	exec      common.CommandExecutor
-	clusterID string
-	name      string
+	exec           common.CommandExecutor
+	clusterID      string
+	name           string
+	encryptionType string
 }
 
 // Source returns mountpoint source
@@ -73,12 +77,12 @@ func (mp MountPoint) Mount(mo Mount, client *common.DatabricksClient) (source st
 	sparkConfRe := regexp.MustCompile(`"\{\{sparkconf/([^\}]+)\}\}"`)
 	extraConfigs = sparkConfRe.ReplaceAll(extraConfigs, []byte(`spark.conf.get("$1")`))
 	command := fmt.Sprintf(`
-		def safe_mount(mount_point, mount_source, configs):
+		def safe_mount(mount_point, mount_source, configs, encryptionType):
 			for mount in dbutils.fs.mounts():
 				if mount.mountPoint == mount_point and mount.source == mount_source:
 					return
 			try:
-				dbutils.fs.mount(mount_source, mount_point, extra_configs=configs)
+				dbutils.fs.mount(mount_source, mount_point, extra_configs=configs, encryptionType=encryption)
 				dbutils.fs.refreshMounts()
 				dbutils.fs.ls(mount_point)
 				return mount_source
@@ -88,9 +92,9 @@ func (mp MountPoint) Mount(mo Mount, client *common.DatabricksClient) (source st
 				except Exception as e2:
 					print("Failed to unmount", e2)
 				raise e
-		mount_source = safe_mount("/mnt/%s", "%v", %s)
+		mount_source = safe_mount("/mnt/%s", "%v", %s, "%s")
 		dbutils.notebook.exit(mount_source)
-	`, mp.name, mo.Source(), extraConfigs)
+	`, mp.name, mo.Source(), extraConfigs, mp.encryptionType)
 	result := mp.exec.Execute(mp.clusterID, "python", command)
 	return result.Text(), result.Err()
 }
@@ -198,6 +202,10 @@ func mountCluster(ctx context.Context, tpl interface{}, d *schema.ResourceData,
 	name := d.Get("mount_name").(string)
 	mountPoint.name = name
 	d.SetId(name)
+
+	if v := d.Get("encryption_type"); v != nil {
+		mountPoint.encryptionType = v.(string)
+	}
 
 	return mountConfig, mountPoint, nil
 }

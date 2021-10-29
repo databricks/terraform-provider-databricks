@@ -166,12 +166,14 @@ type VPCEndpoint struct {
 
 // PrivateAccessSettings (PAS) is the object that contains all the information for creating an PrivateAccessSettings (PAS)
 type PrivateAccessSettings struct {
-	AccountID           string `json:"account_id,omitempty"`
-	PasID               string `json:"private_access_settings_id,omitempty" tf:"computed"`
-	PasName             string `json:"private_access_settings_name"`
-	Region              string `json:"region"`
-	Status              string `json:"status,omitempty" tf:"computed"`
-	PublicAccessEnabled bool   `json:"public_access_enabled,omitempty"`
+	AccountID             string   `json:"account_id,omitempty"`
+	PasID                 string   `json:"private_access_settings_id,omitempty" tf:"computed"`
+	PasName               string   `json:"private_access_settings_name"`
+	Region                string   `json:"region"`
+	Status                string   `json:"status,omitempty" tf:"computed"`
+	PublicAccessEnabled   bool     `json:"public_access_enabled,omitempty"`
+	PrivateAccessLevel    string   `json:"private_access_level,omitempty" tf:"default:ACCOUNT"`
+	AllowedVpcEndpointIDS []string `json:"allowed_vpc_endpoint_ids,omitempty"`
 }
 
 type externalCustomerInfo struct {

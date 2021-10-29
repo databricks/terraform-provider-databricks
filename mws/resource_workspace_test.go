@@ -904,15 +904,15 @@ func TestListWorkspaces(t *testing.T) {
 }
 
 func TestWorkspace_WaitForResolve_Failure(t *testing.T) {
-	qa.HTTPFixturesApply(t, []qa.HTTPFixture{}, 
+	qa.HTTPFixturesApply(t, []qa.HTTPFixture{},
 		func(ctx context.Context, client *common.DatabricksClient) {
-		a := NewWorkspacesAPI(ctx, client)
-		rerr := a.verifyWorkspaceReachable(Workspace{
-			WorkspaceURL: "https://900150983cd24fb0.cloud.databricks.com",
+			a := NewWorkspacesAPI(ctx, client)
+			rerr := a.verifyWorkspaceReachable(Workspace{
+				WorkspaceURL: "https://900150983cd24fb0.cloud.databricks.com",
+			})
+			assert.NotNil(t, rerr)
+			assert.True(t, rerr.Retryable)
 		})
-		assert.NotNil(t, rerr)
-		assert.True(t, rerr.Retryable)
-	})
 }
 
 func TestWorkspace_WaitForResolve(t *testing.T) {

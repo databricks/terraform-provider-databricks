@@ -49,9 +49,10 @@ func TestResourcePASCreate(t *testing.T) {
 				Method:   "POST",
 				Resource: "/api/2.0/accounts/abc/private-access-settings",
 				ExpectedRequest: PrivateAccessSettings{
-					AccountID: "abc",
-					Region:    "ar",
-					PasName:   "pas_name",
+					AccountID:          "abc",
+					Region:             "ar",
+					PasName:            "pas_name",
+					PrivateAccessLevel: "ANY",
 				},
 				Response: PrivateAccessSettings{
 					PasID: "pas_id",
@@ -171,6 +172,48 @@ func TestResourcePAS_Error(t *testing.T) {
 	}.Apply(t)
 	qa.AssertErrorStartsWith(t, err, "Internal error happened")
 	assert.Equal(t, "abc/pas_id", d.Id(), "Id should not be empty for error reads")
+}
+
+func TestResourcePAS_Update(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "PUT",
+				Resource: "/api/2.0/accounts/abc/private-access-settings/pas_id",
+				ExpectedRequest: PrivateAccessSettings{
+					Region:                "eu-west-1",
+					PublicAccessEnabled:   true,
+					PrivateAccessLevel:    "ENDPOINT",
+					AccountID:             "abc",
+					PasID:                 "pas_id",
+					PasName:               "pas_name",
+					AllowedVpcEndpointIDS: []string{"a", "b"},
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/accounts/abc/private-access-settings/pas_id",
+				Response: PrivateAccessSettings{
+					Region:              "eu-west-1",
+					PublicAccessEnabled: true,
+					AccountID:           "abc",
+					PasID:               "pas_id",
+					PasName:             "pas_name",
+				},
+			},
+		},
+		Resource: ResourcePrivateAccessSettings(),
+		Update:   true,
+		ID:       "abc/pas_id",
+		HCL: `
+		account_id = "abc"
+		private_access_settings_name = "pas_name"
+		public_access_enabled = true
+		region = "eu-west-1"
+		private_access_level = "ENDPOINT"
+		allowed_vpc_endpoint_ids = ["a", "b"]
+		`,
+	}.ApplyNoError(t)
 }
 
 func TestResourcePASDelete(t *testing.T) {

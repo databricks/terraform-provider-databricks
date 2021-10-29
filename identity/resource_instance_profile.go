@@ -138,6 +138,12 @@ func ResourceInstanceProfile() *schema.Resource {
 	instanceProfileSchema := common.StructToSchema(InstanceProfileInfo{},
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
 			m["instance_profile_arn"].ValidateDiagFunc = ValidInstanceProfile
+			m["skip_validation"].DiffSuppressFunc = func(k, old, new string, d *schema.ResourceData) bool {
+				if old == "false" && new == "true" {
+					return true
+				}
+				return false
+			}
 			return m
 		})
 	return common.Resource{

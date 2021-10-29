@@ -904,27 +904,14 @@ func TestListWorkspaces(t *testing.T) {
 }
 
 func TestWorkspace_WaitForResolve_Failure(t *testing.T) {
-	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
-		{
-			Method:       "GET",
-			Resource:     "/api/2.0/accounts/abc/workspaces/1234",
-			ReuseRequest: true,
-			Response: Workspace{
-				AccountID:       "abc",
-				WorkspaceID:     1234,
-				WorkspaceStatus: "RUNNING",
-				WorkspaceURL:    "https://foo-bar-baz.cloud.databricks.com",
-			},
-		},
-	}, func(ctx context.Context, client *common.DatabricksClient) {
+	qa.HTTPFixturesApply(t, []qa.HTTPFixture{}, 
+		func(ctx context.Context, client *common.DatabricksClient) {
 		a := NewWorkspacesAPI(ctx, client)
-		err := a.WaitForRunning(Workspace{
-			AccountID:   "abc",
-			WorkspaceID: 1234,
-		}, 1*time.Second)
-		assert.EqualError(t, err, "workspace https://foo-bar-baz.cloud.databricks.com is not yet reachable:"+
-			" Get \"https://foo-bar-baz.cloud.databricks.com/api/2.0/token/list\": "+
-			"dial tcp: lookup foo-bar-baz.cloud.databricks.com: no such host")
+		rerr := a.verifyWorkspaceReachable(Workspace{
+			WorkspaceURL: "https://900150983cd24fb0.cloud.databricks.com",
+		})
+		assert.NotNil(t, rerr)
+		assert.True(t, rerr.Retryable)
 	})
 }
 

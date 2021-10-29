@@ -52,16 +52,6 @@ func (a WorkspacesAPI) Create(ws *Workspace, timeout time.Duration) error {
 	return nil
 }
 
-func dial(hostAndPort, url string, timeout time.Duration) *resource.RetryError {
-	conn, err := net.DialTimeout("tcp", hostAndPort, timeout)
-	if err != nil {
-		return resource.RetryableError(err)
-	}
-	log.Printf("[INFO] Workspace %s is ready to use", url)
-	defer conn.Close()
-	return nil
-}
-
 // generateWorkspaceHostname computes the hostname for the specified workspace,
 // given the account console hostname.
 func generateWorkspaceHostname(client *common.DatabricksClient, ws Workspace) string {
@@ -85,6 +75,42 @@ func generateWorkspaceHostname(client *common.DatabricksClient, ws Workspace) st
 	return strings.Join(chunks, ".")
 }
 
+func (a WorkspacesAPI) verifyWorkspaceReachable(ws Workspace) *resource.RetryError {
+	ctx, cancel := context.WithTimeout(a.context, 10*time.Second)
+	defer cancel()
+	// wait for DNS caches to refresh, as sometimes we cannot make
+	// API calls to new workspaces immediately after it's created
+	wsClient := a.client.ClientForHost(ws.WorkspaceURL)
+	// make a request to Tokens API, just to verify there are no errors
+	var response map[string]interface{}
+	err := wsClient.Get(ctx, "/token/list", nil, &response)
+	if apiError, ok := err.(common.APIError); ok {
+		err = fmt.Errorf("workspace %s is not yet reachable: %s",
+			ws.WorkspaceURL, apiError)
+		log.Printf("[INFO] %s", err)
+		// expected to retry on: dial tcp: lookup XXX: no such host
+		return resource.RetryableError(err)
+	}
+	return nil
+}
+
+func (a WorkspacesAPI) explainWorkspaceFailure(ws Workspace) error {
+	if ws.NetworkID == "" {
+		return fmt.Errorf(ws.WorkspaceStatusMessage)
+	}
+	network, nerr := NewNetworksAPI(a.context, a.client).Read(ws.AccountID, ws.NetworkID)
+	if nerr != nil {
+		return fmt.Errorf("failed to start workspace. Cannot read network: %s", nerr)
+	}
+	var strBuffer bytes.Buffer
+	for _, networkHealth := range network.ErrorMessages {
+		strBuffer.WriteString(fmt.Sprintf("error: %s;error_msg: %s;",
+			networkHealth.ErrorType, networkHealth.ErrorMessage))
+	}
+	return fmt.Errorf("Workspace failed to create: %v, network error message: %v",
+		ws.WorkspaceStatusMessage, strBuffer.String())
+}
+
 // WaitForRunning will wait until workspace is running, otherwise will try to explain why it failed
 func (a WorkspacesAPI) WaitForRunning(ws Workspace, timeout time.Duration) error {
 	return resource.RetryContext(a.context, timeout, func() *resource.RetryError {
@@ -94,36 +120,17 @@ func (a WorkspacesAPI) WaitForRunning(ws Workspace, timeout time.Duration) error
 		}
 		switch workspace.WorkspaceStatus {
 		case WorkspaceStatusRunning:
-			// wait for DNS caches to refresh, as sometimes we cannot make
-			// API calls to new workspaces immediately after it's created
-			host := generateWorkspaceHostname(a.client, ws)
-			hostAndPort := fmt.Sprintf("%s:443", host)
-			url := fmt.Sprintf("https://%s", host)
 			log.Printf("[INFO] Workspace is now running")
-			if strings.Contains(workspace.DeploymentName, "900150983cd24fb0") {
+			if strings.Contains(ws.DeploymentName, "900150983cd24fb0") {
 				// nobody would probably name workspace as 900150983cd24fb0,
 				// so we'll use it as unit testing shim
 				return nil
 			}
-			return dial(hostAndPort, url, 10*time.Second)
+			return a.verifyWorkspaceReachable(workspace)
 		case WorkspaceStatusCanceled, WorkspaceStatusFailed:
 			log.Printf("[ERROR] Cannot start workspace: %s", workspace.WorkspaceStatusMessage)
-			if workspace.NetworkID == "" {
-				return resource.NonRetryableError(fmt.Errorf(workspace.WorkspaceStatusMessage))
-			}
-			network, nerr := NewNetworksAPI(a.context, a.client).Read(ws.AccountID, ws.NetworkID)
-			if nerr != nil {
-				return resource.NonRetryableError(fmt.Errorf(
-					"failed to start workspace. Cannot read network: %s", nerr))
-			}
-			var strBuffer bytes.Buffer
-			for _, networkHealth := range network.ErrorMessages {
-				strBuffer.WriteString(fmt.Sprintf("error: %s;error_msg: %s;",
-					networkHealth.ErrorType, networkHealth.ErrorMessage))
-			}
-			return resource.NonRetryableError(fmt.Errorf(
-				"Workspace failed to create: %v, network error message: %v",
-				workspace.WorkspaceStatusMessage, strBuffer.String()))
+			err = a.explainWorkspaceFailure(workspace)
+			return resource.NonRetryableError(err)
 		default:
 			log.Printf("[INFO] Workspace %s is %s: %s", workspace.DeploymentName,
 				workspace.WorkspaceStatus, workspace.WorkspaceStatusMessage)
@@ -162,6 +169,11 @@ func (a WorkspacesAPI) Read(mwsAcctID, workspaceID string) (Workspace, error) {
 	var mwsWorkspace Workspace
 	workspacesAPIPath := fmt.Sprintf("/accounts/%s/workspaces/%s", mwsAcctID, workspaceID)
 	err := a.client.Get(a.context, workspacesAPIPath, nil, &mwsWorkspace)
+	if err == nil && mwsWorkspace.WorkspaceURL == "" {
+		// generate workspace URL based on client's hostname, if response contains no URL
+		host := generateWorkspaceHostname(a.client, mwsWorkspace)
+		mwsWorkspace.WorkspaceURL = fmt.Sprintf("https://%s", host)
+	}
 	return mwsWorkspace, err
 }
 
@@ -296,7 +308,6 @@ func ResourceWorkspace() *schema.Resource {
 			// Default the value of `is_no_public_ip_enabled` because it isn't part of the GET payload.
 			// The field is only used on creation and we therefore suppress all diffs.
 			workspace.IsNoPublicIPEnabled = true
-			workspace.WorkspaceURL = fmt.Sprintf("https://%s", generateWorkspaceHostname(c, workspace))
 			if err = common.StructToData(workspace, workspaceSchema, d); err != nil {
 				return err
 			}

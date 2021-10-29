@@ -35,6 +35,11 @@ func (a PrivateAccessSettingsAPI) Read(mwsAcctID, pasID string) (PrivateAccessSe
 	return pas, err
 }
 
+func (a PrivateAccessSettingsAPI) Update(pas *PrivateAccessSettings) error {
+	pasAPIPath := fmt.Sprintf("/accounts/%s/private-access-settings/%s", pas.AccountID, pas.PasID)
+	return a.client.Put(a.context, pasAPIPath, pas)
+}
+
 // Delete deletes the PAS object given a pas id
 func (a PrivateAccessSettingsAPI) Delete(mwsAcctID, pasID string) error {
 	pasAPIPath := fmt.Sprintf("/accounts/%s/private-access-settings/%s", mwsAcctID, pasID)
@@ -84,6 +89,18 @@ func ResourcePrivateAccessSettings() *schema.Resource {
 				return err
 			}
 			return common.StructToData(pas, s, d)
+		},
+		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			_, pasID, err := p.Unpack(d)
+			if err != nil {
+				return err
+			}
+			var pas PrivateAccessSettings
+			if err := common.DataToStructPointer(d, s, &pas); err != nil {
+				return err
+			}
+			pas.PasID = pasID
+			return NewPrivateAccessSettingsAPI(ctx, c).Update(&pas)
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			accountID, pasID, err := p.Unpack(d)

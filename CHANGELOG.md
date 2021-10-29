@@ -1,5 +1,9 @@
 # Version changelog
 
+## 0.3.10
+
+* Added `private_access_level` and `allowed_vpc_endpoint_ids` to `databricks_mws_private_access_settings` resource, which is also now updatable ([#867](https://github.com/databrickslabs/terraform-provider-databricks/issues/867)).
+
 ## 0.3.9
 
 * Added initial support for multiple task orchestration in `databricks_job` [#853](https://github.com/databrickslabs/terraform-provider-databricks/pull/853)

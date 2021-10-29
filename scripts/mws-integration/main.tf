@@ -15,6 +15,7 @@ locals {
   // dltp - databricks labs terraform provider
   prefix = "dltp${random_string.naming.result}"
   region = data.external.env.result.TEST_REGION
+  cidr = data.external.env.result.TEST_CIDR
   tags = {
     Environment = "Testing"
     Owner       = data.external.env.result.OWNER
@@ -58,21 +59,94 @@ resource "aws_iam_role_policy" "test_policy" {
   policy = data.databricks_aws_crossaccount_policy.this.json
 }
 
-module "aws_common" {
-  source     = "../modules/aws-mws-common"
-  cidr_block = data.external.env.result.TEST_CIDR
-  region     = local.region
-  prefix     = local.prefix
-  tags       = local.tags
+data "aws_availability_zones" "available" {}
+
+module "vpc" {
+  source  = "terraform-aws-modules/vpc/aws"
+  version = "3.2.0"
+
+  name = local.prefix
+  cidr = data.external.env.result.TEST_CIDR
+  azs  = data.aws_availability_zones.available.names
+  tags = local.tags
+
+  enable_dns_hostnames = true
+  enable_nat_gateway   = true
+  single_nat_gateway   = true
+  create_igw           = true
+
+  public_subnets  = [cidrsubnet(local.cidr, 3, 0)]
+  private_subnets = [cidrsubnet(local.cidr, 3, 1),
+                     cidrsubnet(local.cidr, 3, 2)]
+
+  manage_default_security_group = true
+  default_security_group_name = "${local.prefix}-sg"
+
+  default_security_group_egress = [{
+    cidr_blocks = "0.0.0.0/0"
+  }]
+
+  default_security_group_ingress = [{
+    description = "Allow all internal TCP and UDP"
+    self        = true
+  }]
+}
+
+module "vpc_endpoints" {
+  source = "terraform-aws-modules/vpc/aws//modules/vpc-endpoints"
+  version = "3.2.0"
+
+  vpc_id             = module.vpc.vpc_id
+  security_group_ids = [module.vpc.default_security_group_id]
+
+  endpoints = {
+    s3 = {
+      service         = "s3"
+      service_type    = "Gateway"
+      route_table_ids = flatten([
+        module.vpc.private_route_table_ids, 
+        module.vpc.public_route_table_ids])
+      tags            = {
+        Name = "${local.prefix}-s3-vpc-endpoint"
+      }
+    },
+    sts = {
+      service             = "sts"
+      private_dns_enabled = true
+      subnet_ids          = module.vpc.private_subnets
+      tags                = {
+        Name = "${local.prefix}-sts-vpc-endpoint"
+      }
+    },
+  }
+  tags = local.tags
+}
+
+resource "aws_s3_bucket" "root_storage_bucket" {
+  bucket = "${local.prefix}-root-bucket"
+  acl    = "private"
+  versioning {
+    enabled = false
+  }
+  force_destroy = true
+  tags = merge(local.tags, {
+    Name = "${local.prefix}-root-bucket"
+  })
+}
+
+resource "aws_s3_bucket_public_access_block" "root_storage_bucket" {
+  bucket             = aws_s3_bucket.root_storage_bucket.id
+  ignore_public_acls = true
+  depends_on         = [aws_s3_bucket.root_storage_bucket]
 }
 
 data "databricks_aws_bucket_policy" "this" {
-  bucket = module.aws_common.root_bucket
+  bucket = aws_s3_bucket.root_storage_bucket.bucket
 }
 
 resource "aws_s3_bucket_policy" "root_bucket_policy" {
-  bucket     = module.aws_common.root_bucket
-  policy     = data.databricks_aws_bucket_policy.this.json
+  bucket = aws_s3_bucket.root_storage_bucket.id
+  policy = data.databricks_aws_bucket_policy.this.json
 }
 
 resource "aws_s3_bucket" "logdelivery" {
@@ -122,10 +196,10 @@ resource "aws_s3_bucket_policy" "logdelivery" {
 
 resource "aws_vpc_endpoint" "relay" {
   service_name       = local.pl_dataplane_to_controlplane[local.region]
-  vpc_id             = module.aws_common.vpc_id
+  vpc_id             = module.vpc.vpc_id
   vpc_endpoint_type  = "Interface"
-  security_group_ids = [module.aws_common.security_group]
-  subnet_ids         = [module.aws_common.subnet_private]
+  security_group_ids = [module.vpc.default_security_group_id]
+  subnet_ids         = module.vpc.private_subnets
 }
 
 output "test_relay_vpc_endpoint" {
@@ -134,10 +208,32 @@ output "test_relay_vpc_endpoint" {
 
 resource "aws_vpc_endpoint" "rest_api" {
   service_name       = local.pl_dataplane_to_controlplane[local.region]
-  vpc_id             = module.aws_common.vpc_id
+  vpc_id             = module.vpc.vpc_id
   vpc_endpoint_type  = "Interface"
-  security_group_ids = [module.aws_common.security_group]
-  subnet_ids         = [module.aws_common.subnet_private]
+  security_group_ids = [module.vpc.default_security_group_id]
+  subnet_ids         = module.vpc.private_subnets
+}
+
+variable "databricks_aws_account_id" {
+  default = "414351767826"
+}
+
+resource "aws_kms_key" "customer_managed_key" {
+}
+
+resource "aws_kms_grant" "databricks-grant" {
+  name              = "databricks-grant"
+  key_id            = aws_kms_key.customer_managed_key.key_id
+  grantee_principal = "arn:aws:iam::${var.databricks_aws_account_id}:root"
+
+  operations = ["Encrypt", "Decrypt", "DescribeKey", 
+    "GenerateDataKey", "ReEncryptFrom", "ReEncryptTo", 
+    "GenerateDataKeyWithoutPlaintext"]
+}
+
+resource "aws_kms_alias" "customer_managed_key_alias" {
+  name          = "alias/${local.prefix}-customer-key-alias"
+  target_key_id = aws_kms_key.customer_managed_key.key_id
 }
 
 data "aws_caller_identity" "current" {}
@@ -156,7 +252,7 @@ output "cloud_env" {
 }
 
 output "test_root_bucket" {
-  value = module.aws_common.root_bucket
+  value = aws_s3_bucket.root_storage_bucket.bucket
 }
 
 output "test_crossaccount_arn" {
@@ -164,27 +260,31 @@ output "test_crossaccount_arn" {
 }
 
 output "test_vpc_id" {
-  value = module.aws_common.vpc_id
+  value = module.vpc.vpc_id
 }
 
 output "test_subnet_public" {
-  value = module.aws_common.subnet_public
+  value = module.vpc.public_subnets[0]
 }
 
 output "test_subnet_private" {
-  value = module.aws_common.subnet_private
+  value = module.vpc.private_subnets[0]
+}
+
+output "test_subnet_private2" {
+  value = module.vpc.private_subnets[1]
 }
 
 output "test_security_group" {
-  value = module.aws_common.security_group
+  value = module.vpc.default_security_group_id
 }
 
 output "test_kms_key_arn" {
-  value = module.aws_common.kms_key_arn
+  value = aws_kms_key.customer_managed_key.arn
 }
 
 output "test_kms_key_alias" {
-  value = module.aws_common.kms_key_alias
+  value = aws_kms_alias.customer_managed_key_alias.name
 }
 
 output "test_prefix" {

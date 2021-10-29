@@ -3,9 +3,6 @@ package mws
 import (
 	"context"
 	"fmt"
-	"net/http"
-	"net/http/httptest"
-	"strings"
 	"testing"
 	"time"
 
@@ -906,13 +903,60 @@ func TestListWorkspaces(t *testing.T) {
 	assert.Len(t, l, 0)
 }
 
-func TestDial(t *testing.T) {
-	err := dial("127.0.0.1:32456", "localhost", 50*time.Millisecond)
-	assert.NotNil(t, err)
-	assert.Equal(t, err.Err.Error(), "dial tcp 127.0.0.1:32456: connect: connection refused")
+func TestWorkspace_WaitForResolve_Failure(t *testing.T) {
+	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
+		{
+			Method:       "GET",
+			Resource:     "/api/2.0/accounts/abc/workspaces/1234",
+			ReuseRequest: true,
+			Response: Workspace{
+				AccountID:       "abc",
+				WorkspaceID:     1234,
+				WorkspaceStatus: "RUNNING",
+				WorkspaceURL:    "https://foo-bar-baz.cloud.databricks.com",
+			},
+		},
+	}, func(ctx context.Context, client *common.DatabricksClient) {
+		a := NewWorkspacesAPI(ctx, client)
+		err := a.WaitForRunning(Workspace{
+			AccountID:   "abc",
+			WorkspaceID: 1234,
+		}, 1*time.Second)
+		assert.EqualError(t, err, "workspace https://foo-bar-baz.cloud.databricks.com is not yet reachable:"+
+			" Get \"https://foo-bar-baz.cloud.databricks.com/api/2.0/token/list\": "+
+			"dial tcp: lookup foo-bar-baz.cloud.databricks.com: no such host")
+	})
+}
 
-	s := httptest.NewServer(http.HandlerFunc(http.NotFound))
-	defer s.Close()
-	err = dial(strings.ReplaceAll(s.URL, "http://", ""), s.URL, 500*time.Millisecond)
-	assert.Nil(t, err)
+func TestWorkspace_WaitForResolve(t *testing.T) {
+	// outer HTTP server is used for inner request for "just created" workspace
+	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/token/list",
+			Response: `{}`, // we just need a JSON for this
+		},
+	}, func(ctx context.Context, wsClient *common.DatabricksClient) {
+		// inner HTTP server is used for outer request for Accounts API
+		qa.HTTPFixturesApply(t, []qa.HTTPFixture{
+			{
+				Method:       "GET",
+				Resource:     "/api/2.0/accounts/abc/workspaces/1234",
+				ReuseRequest: true,
+				Response: Workspace{
+					AccountID:       "abc",
+					WorkspaceID:     1234,
+					WorkspaceStatus: "RUNNING",
+					WorkspaceURL:    wsClient.Host,
+				},
+			},
+		}, func(ctx context.Context, client *common.DatabricksClient) {
+			a := NewWorkspacesAPI(ctx, client)
+			err := a.WaitForRunning(Workspace{
+				AccountID:   "abc",
+				WorkspaceID: 1234,
+			}, 1*time.Second)
+			assert.NoError(t, err)
+		})
+	})
 }

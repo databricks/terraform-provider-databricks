@@ -220,7 +220,11 @@ func (c *DatabricksClient) parseError(resp *http.Response) APIError {
 // checkHTTPRetry inspects HTTP errors from the Databricks API for known transient errors on Workspace creation
 func (c *DatabricksClient) checkHTTPRetry(ctx context.Context, resp *http.Response, err error) (bool, error) {
 	if ue, ok := err.(*url.Error); ok {
-		apiError := APIError{ErrorCode: "IO_ERROR", Message: ue.Error()}
+		apiError := APIError{
+			ErrorCode:  "IO_ERROR",
+			StatusCode: 523,
+			Message:    ue.Error(),
+		}
 		return apiError.IsRetriable(), apiError
 	}
 	if resp == nil {

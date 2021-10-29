@@ -436,3 +436,29 @@ func (c *DatabricksClient) FormatURL(strs ...string) string {
 	data := append([]string{host}, strs...)
 	return strings.Join(data, "")
 }
+
+// ClientForHost creates a new DatabricksClient instance with the same auth parameters,
+// but for the given host. Authentication has to be reinitialized, as Google OIDC has
+// different authorizers, depending if it's workspace or Accounts API we're talking to.
+func (c *DatabricksClient) ClientForHost(url string) *DatabricksClient {
+	return &DatabricksClient{
+		Host:                 url,
+		Username:             c.Username,
+		Password:             c.Password,
+		Token:                c.Token,
+		Profile:              c.Profile,
+		ConfigFile:           c.ConfigFile,
+		GoogleServiceAccount: c.GoogleServiceAccount,
+		AzurermEnvironment:   c.AzurermEnvironment,
+		InsecureSkipVerify:   c.InsecureSkipVerify,
+		HTTPTimeoutSeconds:   c.HTTPTimeoutSeconds,
+		DebugTruncateBytes:   c.DebugTruncateBytes,
+		DebugHeaders:         c.DebugHeaders,
+		RateLimitPerSecond:   c.RateLimitPerSecond,
+		Provider:             c.Provider,
+		rateLimiter:          c.rateLimiter,
+		httpClient:           c.httpClient,
+		configAttributesUsed: c.configAttributesUsed,
+		commandFactory:       c.commandFactory,
+	}
+}

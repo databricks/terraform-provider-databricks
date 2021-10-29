@@ -38,8 +38,8 @@ func TestMwsAccWorkspaces(t *testing.T) {
 				network_name = "network-ws-{var.RANDOM}"
 				vpc_id       = "{env.TEST_VPC_ID}"
 				subnet_ids   = [
-					"{env.TEST_SUBNET_PUBLIC}",
 					"{env.TEST_SUBNET_PRIVATE}",
+					"{env.TEST_SUBNET_PRIVATE2}",
 				]
 				security_group_ids = [
 					"{env.TEST_SECURITY_GROUP}",

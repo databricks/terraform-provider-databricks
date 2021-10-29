@@ -4,6 +4,14 @@
 
 * Added `private_access_level` and `allowed_vpc_endpoint_ids` to `databricks_mws_private_access_settings` resource, which is also now updatable ([#867](https://github.com/databrickslabs/terraform-provider-databricks/issues/867)).
 * Fixed missing diff skip for `skip_validation` in `databricks_instance_profile` ([#860](https://github.com/databrickslabs/terraform-provider-databricks/issues/860)).
+* Added support for `pipeline_task` ([871](https://github.com/databrickslabs/terraform-provider-databricks/pull/871)) and `python_wheel_task` ([#872](https://github.com/databrickslabs/terraform-provider-databricks/pull/872)) to `databricks_job`.
+* Improved enterprise HTTPS proxy support for creating workspaces in PrivateLink environments ([#882](https://github.com/databrickslabs/terraform-provider-databricks/pull/882)).
+* Added `hostname` attribute to `odbc_params` in `databricks_sql_endpoint` ([#868](https://github.com/databrickslabs/terraform-provider-databricks/issues/868)).
+* Improved documentation ([#858](https://github.com/databrickslabs/terraform-provider-databricks/pull/858), [#870](https://github.com/databrickslabs/terraform-provider-databricks/pull/870)).
+
+Updated dependency versions:
+
+* Bumped google.golang.org/api from 0.58.0 to 0.59.0
 
 ## 0.3.9
 

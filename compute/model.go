@@ -523,6 +523,7 @@ type PythonWheelTask struct {
     PackageName     string            `json:"package_name,omitempty"`
     Parameters      []string          `json:"parameters,omitempty"`
     NamedParameters map[string]string `json:"named_parameters,omitempty"`
+}
 
 // PipelineTask contains the information for pipeline jobs
 type PipelineTask struct {

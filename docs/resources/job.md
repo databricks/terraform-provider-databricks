@@ -137,6 +137,13 @@ You can invoke Spark submit tasks only on new clusters. **In the `new_cluster` s
 
 * `pipeline_id` - (Required) The pipeline's unique ID.
 
+### python_wheel_task Configuration Block
+
+* `entry_point` - (Optional) Python function as entry point for the task
+* `package_name` - (Optional) Name of Python package
+* `parameters` - (Optional) Parameters for the task
+* `named_parameters` - (Optional) Named parameters for the task
+
 ### email_notifications Configuration Block
 
 * `on_failure` - (Optional) (List) list of emails to notify on failure

@@ -519,10 +519,14 @@ type SparkSubmitTask struct {
 
 // PythonWheelTask contains the information for python wheel jobs
 type PythonWheelTask struct {
-    EntryPoint    string   `json:"entry_point,omitempty"`
-    PackageName   string   `json:"package_name,omitempty"`
-    Parameters    []string `json:"parameters,omitempty"`
+    EntryPoint      string            `json:"entry_point,omitempty"`
+    PackageName     string            `json:"package_name,omitempty"`
+    Parameters      []string          `json:"parameters,omitempty"`
     NamedParameters map[string]string `json:"named_parameters,omitempty"`
+
+// PipelineTask contains the information for pipeline jobs
+type PipelineTask struct {
+	PipelineID string `json:"pipeline_id"`
 }
 
 // EmailNotifications contains the information for email notifications after job completion
@@ -549,7 +553,6 @@ type JobTaskSettings struct {
 	Description string           `json:"description,omitempty"`
 	DependsOn   []TaskDependency `json:"depends_on,omitempty"`
 
-	// TODO: add PipelineTask, PythonWheelTask
 	ExistingClusterID      string              `json:"existing_cluster_id,omitempty" tf:"group:cluster_type"`
 	NewCluster             *Cluster            `json:"new_cluster,omitempty" tf:"group:cluster_type"`
 	Libraries              []Library           `json:"libraries,omitempty" tf:"slice_set,alias:library"`
@@ -557,6 +560,8 @@ type JobTaskSettings struct {
 	SparkJarTask           *SparkJarTask       `json:"spark_jar_task,omitempty" tf:"group:task_type"`
 	SparkPythonTask        *SparkPythonTask    `json:"spark_python_task,omitempty" tf:"group:task_type"`
 	SparkSubmitTask        *SparkSubmitTask    `json:"spark_submit_task,omitempty" tf:"group:task_type"`
+	PipelineTask           *PipelineTask       `json:"pipeline_task,omitempty" tf:"group:task_type"`
+  PythonWheelTask        *PythonWheelTask    `json:"python_wheel_task,omitempty" tf:"group:task_type"`
 	EmailNotifications     *EmailNotifications `json:"email_notifications,omitempty" tf:"suppress_diff"`
 	TimeoutSeconds         int32               `json:"timeout_seconds,omitempty"`
 	MaxRetries             int32               `json:"max_retries,omitempty"`
@@ -575,8 +580,9 @@ type JobSettings struct {
 	SparkJarTask           *SparkJarTask    `json:"spark_jar_task,omitempty" tf:"group:task_type"`
 	SparkPythonTask        *SparkPythonTask `json:"spark_python_task,omitempty" tf:"group:task_type"`
 	SparkSubmitTask        *SparkSubmitTask `json:"spark_submit_task,omitempty" tf:"group:task_type"`
+	PipelineTask           *PipelineTask    `json:"pipeline_task,omitempty" tf:"group:task_type"`
 	PythonWheelTask        *PythonWheelTask `json:"python_wheel_task,omitempty" tf:"group:task_type"`
-	Libraries              []Library        `json:"libraries,omitempty" tf:"slice_set,alias:library"`
+  Libraries              []Library        `json:"libraries,omitempty" tf:"slice_set,alias:library"`
 	TimeoutSeconds         int32            `json:"timeout_seconds,omitempty"`
 	MaxRetries             int32            `json:"max_retries,omitempty"`
 	MinRetryIntervalMillis int32            `json:"min_retry_interval_millis,omitempty"`

@@ -8,6 +8,26 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
+func preprocessResourceData(ctx context.Context, d *schema.ResourceData, scm map[string]*schema.Schema, m interface{}) error {
+	var gm GenericMount
+	if err := common.DataToStructPointer(d, scm, &gm); err != nil {
+		return err
+	}
+	if err := gm.ValidateAndApplyDefaults(d, m.(*common.DatabricksClient)); err != nil {
+		return err
+	}
+	if err := common.StructToData(gm, scm, d); err != nil {
+		return err
+	}
+	if err := preprocessS3MountGeneric(ctx, scm, d, m); err != nil {
+		return err
+	}
+	if err := preprocessGsMount(ctx, scm, d, m); err != nil {
+		return err
+	}
+	return nil
+}
+
 // ResourceDatabricksMount mounts using given configuration
 func ResourceDatabricksMount() *schema.Resource {
 	tpl := GenericMount{}
@@ -31,36 +51,19 @@ func ResourceDatabricksMount() *schema.Resource {
 
 	r := commonMountResource(tpl, scm)
 	r.CreateContext = func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-		// TODO: convert data into struct here & pass instead of converting in function itself? it would be required for GS & others
-		var gm GenericMount
-		if err := common.DataToStructPointer(d, scm, &gm); err != nil {
-			return diag.FromErr(err)
-		}
-		if err := gm.ValidateAndApplyDefaults(d, m.(*common.DatabricksClient)); err != nil {
-			return diag.FromErr(err)
-		}
-		if err := preprocessS3MountGeneric(ctx, scm, d, m); err != nil {
-			return diag.FromErr(err)
-		}
-		if err := preprocessGsMount(ctx, scm, d, m); err != nil {
+		if err := preprocessResourceData(ctx, d, scm, m); err != nil {
 			return diag.FromErr(err)
 		}
 		return mountCreate(tpl, r)(ctx, d, m)
 	}
 	r.ReadContext = func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-		if err := preprocessS3MountGeneric(ctx, scm, d, m); err != nil {
-			return diag.FromErr(err)
-		}
-		if err := preprocessGsMount(ctx, scm, d, m); err != nil {
+		if err := preprocessResourceData(ctx, d, scm, m); err != nil {
 			return diag.FromErr(err)
 		}
 		return mountRead(tpl, r)(ctx, d, m)
 	}
 	r.DeleteContext = func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-		if err := preprocessS3MountGeneric(ctx, scm, d, m); err != nil {
-			return diag.FromErr(err)
-		}
-		if err := preprocessGsMount(ctx, scm, d, m); err != nil {
+		if err := preprocessResourceData(ctx, d, scm, m); err != nil {
 			return diag.FromErr(err)
 		}
 		return mountDelete(tpl, r)(ctx, d, m)

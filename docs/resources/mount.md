@@ -20,7 +20,7 @@ This resource provides two ways of mounting a storage account:
 ## Common arguments
 
 * `cluster_id` - (Optional, String) Cluster to use for mounting. If no cluster is specified, a new cluster will be created and will mount the bucket for all of the clusters in this workspace. If the cluster is not running - it's going to be started, so be aware to set auto-termination rules on it.
-* `mount_name` - (Optional, String) Name, under which mount will be accessible in `dbfs:/mnt/<MOUNT_NAME>`. If not specified, provider will try to infer it from the bucket name, storage account name, etc. 
+* `name` - (Optional, String) Name, under which mount will be accessible in `dbfs:/mnt/<MOUNT_NAME>`. If not specified, provider will try to infer it from the bucket name, storage account name, etc. 
 * `uri` - (Optional, String) the URI for accessing specific storage (`s3a://....`, `abfss://....`, `gs://....`, etc.)
 * `extra_configs` - (Optional, String map) configuration parameters that are necessary for mounting of specific storage
 * `resource_id` - (Optional, String) 

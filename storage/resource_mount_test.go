@@ -5,6 +5,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/Azure/go-autorest/autorest/azure"
 	"github.com/databrickslabs/terraform-provider-databricks/common"
 	"github.com/databrickslabs/terraform-provider-databricks/compute"
 	"github.com/databrickslabs/terraform-provider-databricks/identity"
@@ -76,7 +77,7 @@ func TestResourceAwsS3MountGenericCreate(t *testing.T) {
 		},
 		State: map[string]interface{}{
 			"cluster_id": "this_cluster",
-			"mount_name": "this_mount",
+			"name":       "this_mount",
 			"s3": []interface{}{map[string]interface{}{
 				"bucket_name": testS3BucketName,
 			}},
@@ -85,6 +86,48 @@ func TestResourceAwsS3MountGenericCreate(t *testing.T) {
 	}.Apply(t)
 	require.NoError(t, err, err)
 	assert.Equal(t, "this_mount", d.Id())
+	assert.Equal(t, testS3BucketPath, d.Get("source"))
+}
+
+func TestResourceAwsS3MountGenericCreate_NoName(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:       "GET",
+				ReuseRequest: true,
+				Resource:     "/api/2.0/clusters/get?cluster_id=this_cluster",
+				Response: compute.ClusterInfo{
+					State: compute.ClusterStateRunning,
+					AwsAttributes: &compute.AwsAttributes{
+						InstanceProfileArn: "abc",
+					},
+				},
+			},
+		},
+		Resource: ResourceDatabricksMount(),
+		CommandMock: func(commandStr string) common.CommandResults {
+			trunc := internal.TrimLeadingWhitespace(commandStr)
+			t.Logf("Received command:\n%s", trunc)
+			if strings.HasPrefix(trunc, "def safe_mount") {
+				assert.Contains(t, trunc, testS3BucketPath) // bucketname
+				assert.Contains(t, trunc, `{}`)             // empty brackets for empty config
+			}
+			assert.Contains(t, trunc, "/mnt/"+testS3BucketName)
+			return common.CommandResults{
+				ResultType: "text",
+				Data:       testS3BucketPath,
+			}
+		},
+		State: map[string]interface{}{
+			"cluster_id": "this_cluster",
+			"s3": []interface{}{map[string]interface{}{
+				"bucket_name": testS3BucketName,
+			}},
+		},
+		Create: true,
+	}.Apply(t)
+	require.NoError(t, err, err)
+	assert.Equal(t, testS3BucketName, d.Id())
 	assert.Equal(t, testS3BucketPath, d.Get("source"))
 }
 
@@ -184,7 +227,7 @@ func TestResourceAwsS3MountGenericCreate_WithInstanceProfile(t *testing.T) {
 			}
 		},
 		State: map[string]interface{}{
-			"mount_name": "this_mount",
+			"name": "this_mount",
 			"s3": []interface{}{map[string]interface{}{
 				"bucket_name":      testS3BucketName,
 				"instance_profile": instance_profile,
@@ -202,7 +245,7 @@ func TestResourceAwsS3MountGenericCreate_nothing_specified(t *testing.T) {
 	_, err := qa.ResourceFixture{
 		Resource: ResourceDatabricksMount(),
 		State: map[string]interface{}{
-			"mount_name": "this_mount",
+			"name": "this_mount",
 			"s3": []interface{}{map[string]interface{}{
 				"bucket_name": testS3BucketName,
 			}},
@@ -216,7 +259,7 @@ func TestResourceAwsS3MountGenericCreate_invalid_arn(t *testing.T) {
 	_, err := qa.ResourceFixture{
 		Resource: ResourceDatabricksMount(),
 		State: map[string]interface{}{
-			"mount_name": "this_mount",
+			"name": "this_mount",
 			"s3": []interface{}{map[string]interface{}{
 				"bucket_name":      testS3BucketName,
 				"instance_profile": "this_mount",
@@ -255,7 +298,7 @@ func TestResourceAwsS3MountGenericRead(t *testing.T) {
 		},
 		State: map[string]interface{}{
 			"cluster_id": "this_cluster",
-			"mount_name": "this_mount",
+			"name":       "this_mount",
 			"s3": []interface{}{map[string]interface{}{
 				"bucket_name": testS3BucketName,
 			}},
@@ -294,7 +337,7 @@ func TestResourceAwsS3MountGenericRead_NotFound(t *testing.T) {
 		},
 		State: map[string]interface{}{
 			"cluster_id": "this_cluster",
-			"mount_name": "this_mount",
+			"name":       "this_mount",
 			"s3": []interface{}{map[string]interface{}{
 				"bucket_name": testS3BucketName,
 			}},
@@ -331,7 +374,7 @@ func TestResourceAwsS3MountGenericRead_Error(t *testing.T) {
 		},
 		State: map[string]interface{}{
 			"cluster_id": "this_cluster",
-			"mount_name": "this_mount",
+			"name":       "this_mount",
 			"s3": []interface{}{map[string]interface{}{
 				"bucket_name": testS3BucketName,
 			}},
@@ -372,7 +415,7 @@ func TestResourceAwsS3MountDeleteGeneric(t *testing.T) {
 		},
 		State: map[string]interface{}{
 			"cluster_id": "this_cluster",
-			"mount_name": "this_mount",
+			"name":       "this_mount",
 			"s3": []interface{}{map[string]interface{}{
 				"bucket_name": testS3BucketName,
 			}},
@@ -469,7 +512,7 @@ func TestResourceAdlsGen1MountGeneric_Create(t *testing.T) {
 		},
 		State: map[string]interface{}{
 			"cluster_id": "this_cluster",
-			"mount_name": "this_mount",
+			"name":       "this_mount",
 			"adl": []interface{}{map[string]interface{}{
 				"storage_resource_name": "test-adls",
 				"tenant_id":             "a",
@@ -483,7 +526,49 @@ func TestResourceAdlsGen1MountGeneric_Create(t *testing.T) {
 	}.Apply(t)
 	require.NoError(t, err, err)
 	assert.Equal(t, "this_mount", d.Id())
-	assert.Equal(t, testS3BucketPath, d.Get("source"))
+}
+
+func TestResourceAdlsGen1MountGeneric_Create_ResourceID(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:       "GET",
+				ReuseRequest: true,
+				Resource:     "/api/2.0/clusters/get?cluster_id=this_cluster",
+				Response: compute.ClusterInfo{
+					State: compute.ClusterStateRunning,
+				},
+			},
+		},
+		Resource: ResourceDatabricksMount(),
+		CommandMock: func(commandStr string) common.CommandResults {
+			trunc := internal.TrimLeadingWhitespace(commandStr)
+			t.Logf("Received command:\n%s", trunc)
+			if strings.HasPrefix(trunc, "def safe_mount") {
+				assert.Contains(t, trunc, "adl://gen1.azuredatalakestore.net")
+				assert.Contains(t, trunc, `"fs.adl.oauth2.credential":dbutils.secrets.get("c", "d")`)
+			}
+			assert.Contains(t, trunc, "/mnt/gen1")
+			return common.CommandResults{
+				ResultType: "text",
+				Data:       testS3BucketPath,
+			}
+		},
+		State: map[string]interface{}{
+			"cluster_id":  "this_cluster",
+			"resource_id": "/subscriptions/123/resourceGroups/some-rg/providers/Microsoft.DataLakeStore/accounts/gen1",
+			"adl": []interface{}{map[string]interface{}{
+				"tenant_id":           "a",
+				"client_id":           "b",
+				"client_secret_scope": "c",
+				"client_secret_key":   "d",
+				"spark_conf_prefix":   "fs.adl",
+			}},
+		},
+		Create: true,
+	}.Apply(t)
+	require.NoError(t, err, err)
+	assert.Equal(t, "gen1", d.Id())
 }
 
 // ============================== ADLS Gen2 Tests ==============================
@@ -538,7 +623,7 @@ func TestResourceAdlsGen2MountGeneric_Create(t *testing.T) {
 		},
 		State: map[string]interface{}{
 			"cluster_id": "this_cluster",
-			"mount_name": "this_mount",
+			"name":       "this_mount",
 			"abfs": []interface{}{map[string]interface{}{
 				"storage_account_name":   "test-adls-gen2",
 				"container_name":         "e",
@@ -552,6 +637,49 @@ func TestResourceAdlsGen2MountGeneric_Create(t *testing.T) {
 	}.Apply(t)
 	require.NoError(t, err, err)
 	assert.Equal(t, "this_mount", d.Id())
+	assert.Equal(t, "abfss://e@test-adls-gen2.dfs.core.windows.net", d.Get("source"))
+}
+
+func TestResourceAdlsGen2MountGeneric_Create_ResourceID(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:       "GET",
+				ReuseRequest: true,
+				Resource:     "/api/2.0/clusters/get?cluster_id=this_cluster",
+				Response: compute.ClusterInfo{
+					State: compute.ClusterStateRunning,
+				},
+			},
+		},
+		Resource: ResourceDatabricksMount(),
+		CommandMock: func(commandStr string) common.CommandResults {
+			trunc := internal.TrimLeadingWhitespace(commandStr)
+			t.Logf("Received command:\n%s", trunc)
+			if strings.HasPrefix(trunc, "def safe_mount") {
+				assert.Contains(t, trunc, "abfss://e@test-adls-gen2.dfs.core.windows.net")
+				assert.Contains(t, trunc, `"fs.azure.account.oauth2.client.secret":dbutils.secrets.get("c", "d")`)
+			}
+			assert.Contains(t, trunc, "/mnt/e")
+			return common.CommandResults{
+				ResultType: "text",
+				Data:       "abfss://e@test-adls-gen2.dfs.core.windows.net",
+			}
+		},
+		State: map[string]interface{}{
+			"cluster_id":  "this_cluster",
+			"resource_id": "/subscriptions/123/resourceGroups/some-rg/providers/Microsoft.Storage/storageAccounts/test-adls-gen2/blobServices/default/containers/e",
+			"abfs": []interface{}{map[string]interface{}{
+				"tenant_id":              "a",
+				"client_id":              "b",
+				"client_secret_scope":    "c",
+				"client_secret_key":      "d",
+				"initialize_file_system": true,
+			}}},
+		Create: true,
+	}.Apply(t)
+	require.NoError(t, err, err)
+	assert.Equal(t, "e", d.Id())
 	assert.Equal(t, "abfss://e@test-adls-gen2.dfs.core.windows.net", d.Get("source"))
 }
 
@@ -592,7 +720,7 @@ func TestResourceAzureBlobMountCreateGeneric(t *testing.T) {
 		},
 		State: map[string]interface{}{
 			"cluster_id": "b",
-			"mount_name": "e",
+			"name":       "e",
 			"wasb": []interface{}{map[string]interface{}{
 				"auth_type":            "ACCESS_KEY",
 				"storage_account_name": "f",
@@ -606,6 +734,56 @@ func TestResourceAzureBlobMountCreateGeneric(t *testing.T) {
 	}.Apply(t)
 	require.NoError(t, err, err) // TODO: global search-replace for NoError
 	assert.Equal(t, "e", d.Id())
+	assert.Equal(t, "wasbs://c@f.blob.core.windows.net/d", d.Get("source"))
+}
+
+func TestResourceAzureBlobMountCreateGeneric_Resource_ID(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/clusters/get?cluster_id=b",
+				Response: compute.ClusterInfo{
+					State: compute.ClusterStateRunning,
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/clusters/get?cluster_id=b",
+				Response: compute.ClusterInfo{
+					State: compute.ClusterStateRunning,
+				},
+			},
+		},
+		Resource: ResourceDatabricksMount(),
+		CommandMock: func(commandStr string) common.CommandResults {
+			trunc := internal.TrimLeadingWhitespace(commandStr)
+			t.Logf("Received command:\n%s", trunc)
+
+			if strings.HasPrefix(trunc, "def safe_mount") {
+				assert.Contains(t, trunc, "wasbs://c@f.blob.core.windows.net/d")
+				assert.Contains(t, trunc, `"fs.azure.account.key.f.blob.core.windows.net":dbutils.secrets.get("h", "g")`)
+			}
+			assert.Contains(t, trunc, "/mnt/c")
+			return common.CommandResults{
+				ResultType: "text",
+				Data:       "wasbs://c@f.blob.core.windows.net/d",
+			}
+		},
+		State: map[string]interface{}{
+			"cluster_id":  "b",
+			"resource_id": "/subscriptions/123/resourceGroups/some-rg/providers/Microsoft.Storage/storageAccounts/f/blobServices/default/containers/c",
+			"wasb": []interface{}{map[string]interface{}{
+				"auth_type":          "ACCESS_KEY",
+				"token_secret_key":   "g",
+				"token_secret_scope": "h",
+				"directory":          "/d",
+			},
+			}},
+		Create: true,
+	}.Apply(t)
+	require.NoError(t, err, err) // TODO: global search-replace for NoError
+	assert.Equal(t, "c", d.Id())
 	assert.Equal(t, "wasbs://c@f.blob.core.windows.net/d", d.Get("source"))
 }
 
@@ -629,7 +807,7 @@ func TestResourceAzureBlobMountCreateGeneric_Error(t *testing.T) {
 		},
 		State: map[string]interface{}{
 			"cluster_id": "b",
-			"mount_name": "e",
+			"name":       "e",
 			"wasb": []interface{}{map[string]interface{}{
 				"container_name":       "c",
 				"auth_type":            "ACCESS_KEY",
@@ -642,6 +820,39 @@ func TestResourceAzureBlobMountCreateGeneric_Error(t *testing.T) {
 	}.Apply(t)
 	require.EqualError(t, err, "Some error")
 	assert.Equal(t, "e", d.Id())
+	assert.Equal(t, "", d.Get("source"))
+}
+
+func TestResourceAzureBlobMountCreateGeneric_Error_NoResourceID(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/clusters/get?cluster_id=b",
+				Response: compute.ClusterInfo{
+					State: compute.ClusterStateRunning,
+				},
+			},
+		},
+		Resource: ResourceDatabricksMount(),
+		CommandMock: func(commandStr string) common.CommandResults {
+			return common.CommandResults{
+				ResultType: "error",
+				Summary:    "Some error",
+			}
+		},
+		State: map[string]interface{}{
+			"cluster_id": "b",
+			"name":       "e",
+			"wasb": []interface{}{map[string]interface{}{
+				"auth_type":          "ACCESS_KEY",
+				"directory":          "/d",
+				"token_secret_key":   "g",
+				"token_secret_scope": "h",
+			}}},
+		Create: true,
+	}.Apply(t)
+	require.EqualError(t, err, "container_name or storage_account_name are empty, and resource_id or uri aren't specified")
 	assert.Equal(t, "", d.Get("source"))
 }
 
@@ -669,7 +880,7 @@ func TestResourceAzureBlobMountGeneric_Read(t *testing.T) {
 		},
 		State: map[string]interface{}{
 			"cluster_id": "b",
-			"mount_name": "e",
+			"name":       "e",
 			"wasb": []interface{}{map[string]interface{}{
 				"auth_type":            "ACCESS_KEY",
 				"container_name":       "c",
@@ -709,7 +920,7 @@ func TestResourceAzureBlobMountGenericRead_NotFound(t *testing.T) {
 		},
 		State: map[string]interface{}{
 			"cluster_id": "b",
-			"mount_name": "e",
+			"name":       "e",
 			"wasb": []interface{}{map[string]interface{}{
 				"auth_type":            "ACCESS_KEY",
 				"container_name":       "c",
@@ -747,7 +958,7 @@ func TestResourceAzureBlobMountGenericRead_Error(t *testing.T) {
 		},
 		State: map[string]interface{}{
 			"cluster_id": "b",
-			"mount_name": "e",
+			"name":       "e",
 			"wasb": []interface{}{map[string]interface{}{
 				"auth_type":            "ACCESS_KEY",
 				"container_name":       "c",
@@ -788,7 +999,7 @@ func TestResourceAzureBlobMountGenericDelete(t *testing.T) {
 		},
 		State: map[string]interface{}{
 			"cluster_id": "b",
-			"mount_name": "e",
+			"name":       "e",
 			"wasb": []interface{}{map[string]interface{}{
 				"auth_type":            "ACCESS_KEY",
 				"container_name":       "c",
@@ -858,7 +1069,7 @@ func TestResourceGcsMountGenericCreate_WithCluster(t *testing.T) {
 		},
 		State: map[string]interface{}{
 			"cluster_id": "this_cluster",
-			"mount_name": "this_mount",
+			"name":       "this_mount",
 			"gs": []interface{}{map[string]interface{}{
 				"bucket_name": testS3BucketName,
 			}},
@@ -867,6 +1078,49 @@ func TestResourceGcsMountGenericCreate_WithCluster(t *testing.T) {
 	}.Apply(t)
 	require.NoError(t, err, err)
 	assert.Equal(t, "this_mount", d.Id())
+	assert.Equal(t, testGcsBucketPath, d.Get("source"))
+}
+
+func TestResourceGcsMountGenericCreate_WithCluster_NoName(t *testing.T) {
+	google_account := "acc@acc-dbx.iam.gserviceaccount.com"
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:       "GET",
+				ReuseRequest: true,
+				Resource:     "/api/2.0/clusters/get?cluster_id=this_cluster",
+				Response: compute.ClusterInfo{
+					State: compute.ClusterStateRunning,
+					GcpAttributes: &compute.GcpAttributes{
+						GoogleServiceAccount: google_account,
+					},
+				},
+			},
+		},
+		Resource: ResourceDatabricksMount(),
+		CommandMock: func(commandStr string) common.CommandResults {
+			trunc := internal.TrimLeadingWhitespace(commandStr)
+			t.Logf("Received command:\n%s", trunc)
+			if strings.HasPrefix(trunc, "def safe_mount") {
+				assert.Contains(t, trunc, testGcsBucketPath) // bucketname
+				assert.Contains(t, trunc, `{}`)              // empty brackets for empty config
+			}
+			assert.Contains(t, trunc, "/mnt/"+testS3BucketName)
+			return common.CommandResults{
+				ResultType: "text",
+				Data:       testGcsBucketPath,
+			}
+		},
+		State: map[string]interface{}{
+			"cluster_id": "this_cluster",
+			"gs": []interface{}{map[string]interface{}{
+				"bucket_name": testS3BucketName,
+			}},
+		},
+		Create: true,
+	}.Apply(t)
+	require.NoError(t, err, err)
+	assert.Equal(t, testS3BucketName, d.Id())
 	assert.Equal(t, testGcsBucketPath, d.Get("source"))
 }
 
@@ -963,7 +1217,7 @@ func TestResourceGcsMountGenericCreate_WithServiceAccount(t *testing.T) {
 			}
 		},
 		State: map[string]interface{}{
-			"mount_name": "this_mount",
+			"name": "this_mount",
 			"gs": []interface{}{map[string]interface{}{
 				"bucket_name":     testS3BucketName,
 				"service_account": google_account,
@@ -981,7 +1235,7 @@ func TestResourceGcsMountGenericCreate_nothing_specified(t *testing.T) {
 	_, err := qa.ResourceFixture{
 		Resource: ResourceDatabricksMount(),
 		State: map[string]interface{}{
-			"mount_name": "this_mount",
+			"name": "this_mount",
 			"gs": []interface{}{map[string]interface{}{
 				"bucket_name": testS3BucketName,
 			}},
@@ -1039,7 +1293,7 @@ func TestResourceMountGenericCreate_WithUriAndOpts(t *testing.T) {
 		},
 		State: map[string]interface{}{
 			"cluster_id": "this_cluster",
-			"mount_name": "this_mount",
+			"name":       "this_mount",
 			"uri":        abfssPath,
 			"extra_configs": map[string]interface{}{
 				"fs.azure.account.auth.type": "CustomAccessToken",
@@ -1050,4 +1304,17 @@ func TestResourceMountGenericCreate_WithUriAndOpts(t *testing.T) {
 	require.NoError(t, err, err)
 	assert.Equal(t, "this_mount", d.Id())
 	assert.Equal(t, abfssPath, d.Get("source"))
+}
+
+func TestARMParsing(t *testing.T) {
+	acc, container, err := parseStorageContainerId("/subscriptions/5363c143-2af7-4fb5-8a9d-ab1b2c8e756e/resourceGroups/test-rg/providers/Microsoft.Storage/storageAccounts/lrs-acc/blobServices/default/containers/test")
+	require.NoError(t, err, err)
+	assert.Equal(t, acc, "lrs-acc")
+	assert.Equal(t, container, "test")
+}
+
+func TestARMParsing2(t *testing.T) {
+	res, err := azure.ParseResourceID("/subscriptions/6369c148-f8a9-4fb5-8a9d-ac1b2c8e756e/resourceGroups/alexott-rg/providers/Microsoft.DataLakeStore/accounts/aottgen1")
+	require.NoError(t, err, err)
+	assert.Equal(t, res.ResourceName, "aottgen1")
 }

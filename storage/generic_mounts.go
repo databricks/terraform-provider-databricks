@@ -4,9 +4,11 @@ import (
 	"context"
 	"crypto/md5"
 	"fmt"
-	"net/url"
+	"log"
+	"regexp"
 	"strings"
 
+	"github.com/Azure/go-autorest/autorest/azure"
 	"github.com/databrickslabs/terraform-provider-databricks/common"
 	"github.com/databrickslabs/terraform-provider-databricks/compute"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -23,7 +25,7 @@ type GenericMount struct {
 	Gs      *GSMount                   `json:"gs,omitempty" tf:"force_new,suppress_diff"`
 
 	ClusterID      string `json:"cluster_id,omitempty" tf:"computed,force_new"`
-	MountName      string `json:"mount_name,omitempty" tf:"computed,force_new"`
+	MountName      string `json:"name,omitempty" tf:"computed,force_new"`
 	ResourceID     string `json:"resource_id,omitempty" tf:"force_new"`
 	EncryptionType string `json:"encryption_type,omitempty" tf:"force_new"`
 }
@@ -75,8 +77,8 @@ func (m GenericMount) ValidateAndApplyDefaults(d *schema.ResourceData, client *c
 	if block := m.getBlock(); block != nil {
 		return block.ValidateAndApplyDefaults(d, client)
 	}
-	if _, ok := d.GetOk("mount_name"); !ok {
-		return fmt.Errorf("value of mount_name is not specified or empty")
+	if _, ok := d.GetOk("name"); !ok {
+		return fmt.Errorf("value of name is not specified or empty")
 	}
 	if _, ok := d.GetOk("uri"); !ok {
 		return fmt.Errorf("value of uri is not specified or empty")
@@ -102,37 +104,21 @@ func (m GSMount) Name() string {
 }
 
 func (m GSMount) ValidateAndApplyDefaults(d *schema.ResourceData, client *common.DatabricksClient) error {
-	nm := d.Get("mount_name").(string)
+	nm := d.Get("name").(string)
 	if nm != "" {
 		return nil
 	}
 	nm = m.Name()
 	if nm != "" {
-		d.Set("mount_name", nm)
+		d.Set("name", nm)
 		return nil
 	}
 	nm = d.Get("resource_id").(string)
 	if nm != "" {
-		d.Set("mount_name", nm)
+		d.Set("name", nm)
 		return nil
 	}
-	uri := d.Get("uri").(string)
-	if uri == "" {
-		return fmt.Errorf("mount_name isn't specified, and no other data to infer it (bucket_name, uri or resource_id)")
-	}
-	u, err := url.Parse(uri)
-	if err != nil {
-		return fmt.Errorf("can't parse GCS URI")
-	}
-	if u.Scheme != "gs" {
-		return fmt.Errorf("unsupported schema for GCS URI: %s", u.Scheme)
-	}
-	if u.Host == "" {
-		return fmt.Errorf("no bucket name specified in URI")
-	}
-	d.Set("mount_name", u.Host)
-
-	return nil
+	return fmt.Errorf("'name' is not detected & it's impossible to infer it")
 }
 
 // Config ...
@@ -213,37 +199,21 @@ func (m S3IamMount) Config(client *common.DatabricksClient) map[string]string {
 }
 
 func (m S3IamMount) ValidateAndApplyDefaults(d *schema.ResourceData, client *common.DatabricksClient) error {
-	nm := d.Get("mount_name").(string)
+	nm := d.Get("name").(string)
 	if nm != "" {
 		return nil
 	}
 	nm = m.Name()
 	if nm != "" {
-		d.Set("mount_name", nm)
+		d.Set("name", nm)
 		return nil
 	}
 	nm = d.Get("resource_id").(string)
 	if nm != "" {
-		d.Set("mount_name", nm)
+		d.Set("name", nm)
 		return nil
 	}
-	uri := d.Get("uri").(string)
-	if uri == "" {
-		return fmt.Errorf("mount_name isn't specified, and no other data to infer it (bucket_name, uri or resource_id)")
-	}
-	u, err := url.Parse(uri)
-	if err != nil {
-		return fmt.Errorf("can't parse S3 URI")
-	}
-	if u.Scheme != "s3" && u.Scheme != "s3a" {
-		return fmt.Errorf("unsupported schema for S3 URI: %s", u.Scheme)
-	}
-	if u.Host == "" {
-		return fmt.Errorf("no bucket name specified in URI")
-	}
-	d.Set("mount_name", u.Host)
-
-	return nil
+	return fmt.Errorf("'name' is not detected & it's impossible to infer it")
 }
 
 func preprocessS3MountGeneric(ctx context.Context, s map[string]*schema.Schema, d *schema.ResourceData, m interface{}) error {
@@ -288,6 +258,27 @@ func preprocessS3MountGeneric(ctx context.Context, s map[string]*schema.Schema, 
 
 // --------------- Generic ADLSgen2
 
+func parseStorageContainerId(rid string) (string, string, error) {
+	const containerRegex = `(?i)subscriptions/([^/]+)/resourceGroups/([^/]+)/providers/Microsoft.Storage/storageAccounts/([^/]+)/blobServices/default/containers/(.+)`
+	containerPattern := regexp.MustCompile(containerRegex)
+	match := containerPattern.FindStringSubmatch(rid)
+
+	if len(match) == 0 {
+		return "", "", fmt.Errorf("parsing failed for %s. Invalid container resource Id format", rid)
+	}
+
+	return match[3], match[4], nil
+}
+
+func getContainerDefaults(d *schema.ResourceData, allowed_schemas []string, suffix string) (string, string, error) {
+	rid := d.Get("resource_id").(string)
+	if rid != "" {
+		acc, cont, err := parseStorageContainerId(rid)
+		return acc, cont, err
+	}
+	return "", "", fmt.Errorf("container_name or storage_account_name are empty, and resource_id or uri aren't specified")
+}
+
 // AzureADLSGen2Mount describes the object for a azure datalake gen 2 storage mount
 type AzureADLSGen2MountGeneric struct {
 	ContainerName        string `json:"container_name,omitempty" tf:"computed,force_new"`
@@ -301,21 +292,37 @@ type AzureADLSGen2MountGeneric struct {
 }
 
 // Source returns ABFSS URI backing the mount
-func (m AzureADLSGen2MountGeneric) Source() string {
+func (m *AzureADLSGen2MountGeneric) Source() string {
 	return fmt.Sprintf("abfss://%s@%s.dfs.core.windows.net%s",
 		m.ContainerName, m.StorageAccountName, m.Directory)
 }
 
-func (m AzureADLSGen2MountGeneric) Name() string {
+func (m *AzureADLSGen2MountGeneric) Name() string {
 	return fmt.Sprintf("%s-%s", m.StorageAccountName, m.ContainerName)
 }
 
-func (m AzureADLSGen2MountGeneric) ValidateAndApplyDefaults(d *schema.ResourceData, client *common.DatabricksClient) error {
+func (m *AzureADLSGen2MountGeneric) ValidateAndApplyDefaults(d *schema.ResourceData, client *common.DatabricksClient) error {
+	if m.ContainerName == "" || m.StorageAccountName == "" {
+		acc, cont, err := getContainerDefaults(d, []string{"abfs", "abfss"}, "dfs.core.windows.net")
+		if err != nil {
+			return err
+		}
+		m.ContainerName = cont
+		m.StorageAccountName = acc
+	}
+	nm := d.Get("name").(string)
+	if nm == "" {
+		d.Set("name", m.ContainerName)
+	}
+	tenant_id := d.Get("tenant_id")
+	if tenant_id == "" { // TODO:
+		return fmt.Errorf("tenant_id isn't provided & we can't detect it")
+	}
 	return nil
 }
 
 // Config returns mount configurations
-func (m AzureADLSGen2MountGeneric) Config(client *common.DatabricksClient) map[string]string {
+func (m *AzureADLSGen2MountGeneric) Config(client *common.DatabricksClient) map[string]string {
 	aadEndpoint := client.AzureEnvironment.ActiveDirectoryEndpoint
 	return map[string]string{
 		"fs.azure.account.auth.type":                          "OAuth",
@@ -341,20 +348,45 @@ type AzureADLSGen1MountGeneric struct {
 }
 
 // Source ...
-func (m AzureADLSGen1MountGeneric) Source() string {
+func (m *AzureADLSGen1MountGeneric) Source() string {
 	return fmt.Sprintf("adl://%s.azuredatalakestore.net%s", m.StorageResource, m.Directory)
 }
 
-func (m AzureADLSGen1MountGeneric) Name() string {
+func (m *AzureADLSGen1MountGeneric) Name() string {
 	return m.StorageResource
 }
 
-func (m AzureADLSGen1MountGeneric) ValidateAndApplyDefaults(d *schema.ResourceData, client *common.DatabricksClient) error {
+func (m *AzureADLSGen1MountGeneric) ValidateAndApplyDefaults(d *schema.ResourceData, client *common.DatabricksClient) error {
+	rid := d.Get("resource_id").(string)
+	if m.StorageResource == "" {
+		if rid != "" {
+			res, err := azure.ParseResourceID(rid)
+			if err != nil {
+				return err
+			}
+			if res.ResourceType != "accounts" || res.Provider != "Microsoft.DataLakeStore" {
+				return fmt.Errorf("incorrect resource type or provider in resource_id: %s", rid)
+			}
+			log.Printf("[DEBUG] ResourceName: '%s'", res.ResourceName)
+			m.StorageResource = res.ResourceName
+		} else {
+			return fmt.Errorf("storage_resource_name is empty, and resource_id or uri aren't specified")
+		}
+	}
+	nm := d.Get("name").(string)
+	if nm == "" {
+		d.Set("name", m.StorageResource)
+	}
+	tenant_id := d.Get("tenant_id")
+	if tenant_id == "" { // TODO:
+		return fmt.Errorf("tenant_id isn't provided & we can't detect it")
+	}
+
 	return nil
 }
 
 // Config ...
-func (m AzureADLSGen1MountGeneric) Config(client *common.DatabricksClient) map[string]string {
+func (m *AzureADLSGen1MountGeneric) Config(client *common.DatabricksClient) map[string]string {
 	aadEndpoint := client.AzureEnvironment.ActiveDirectoryEndpoint
 	return map[string]string{
 		m.PrefixType + ".oauth2.access.token.provider.type": "ClientCredential",
@@ -378,21 +410,34 @@ type AzureBlobMountGeneric struct {
 }
 
 // Source ...
-func (m AzureBlobMountGeneric) Source() string {
+func (m *AzureBlobMountGeneric) Source() string {
 	return fmt.Sprintf("wasbs://%[1]s@%[2]s.blob.core.windows.net%[3]s",
 		m.ContainerName, m.StorageAccountName, m.Directory)
 }
 
-func (m AzureBlobMountGeneric) Name() string {
+func (m *AzureBlobMountGeneric) Name() string {
 	return fmt.Sprintf("%s-%s", m.StorageAccountName, m.ContainerName)
 }
 
-func (m AzureBlobMountGeneric) ValidateAndApplyDefaults(d *schema.ResourceData, client *common.DatabricksClient) error {
+func (m *AzureBlobMountGeneric) ValidateAndApplyDefaults(d *schema.ResourceData, client *common.DatabricksClient) error {
+	if m.ContainerName == "" || m.StorageAccountName == "" {
+		acc, cont, err := getContainerDefaults(d, []string{"wasb", "wasbs"}, "blob.core.windows.net")
+		if err != nil {
+			return err
+		}
+		m.ContainerName = cont
+		m.StorageAccountName = acc
+	}
+	nm := d.Get("name").(string)
+	if nm == "" {
+		d.Set("name", m.ContainerName)
+	}
+
 	return nil
 }
 
 // Config ...
-func (m AzureBlobMountGeneric) Config(client *common.DatabricksClient) map[string]string {
+func (m *AzureBlobMountGeneric) Config(client *common.DatabricksClient) map[string]string {
 	var confKey string
 	if m.AuthType == "SAS" {
 		confKey = fmt.Sprintf("fs.azure.sas.%s.%s.blob.core.windows.net", m.ContainerName, m.StorageAccountName)

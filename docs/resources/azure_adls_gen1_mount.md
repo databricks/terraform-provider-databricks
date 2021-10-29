@@ -3,7 +3,7 @@ subcategory: "Azure"
 ---
 # databricks_azure_adls_gen1_mount Resource
 
--> **Warning** This resource is deprecated by [databricks_mount resource](mount.md) and will be removed in the future versions!
+-> **Warning** This resource is deprecated by [databricks_mount](mount.md) and will be removed in the future versions!
 
 -> **Note** This resource has an evolving API, which may change in future versions of the provider.
 

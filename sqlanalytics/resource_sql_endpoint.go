@@ -43,12 +43,16 @@ type SQLEndpoint struct {
 	DataSourceID string `json:"data_source_id,omitempty" tf:"computed"`
 }
 
-// OdbcParams ...
+// OdbcParams hold information required to submit SQL commands to the SQL endpoint using ODBC.
 type OdbcParams struct {
-	Host     string `json:"host"`
+	Hostname string `json:"hostname,omitempty"`
 	Path     string `json:"path"`
 	Protocol string `json:"protocol"`
 	Port     int32  `json:"port"`
+
+	// TODO: eventually remove this column,
+	// as it doesn't seem to be populated
+	Host string `json:"host,omitempty"`
 }
 
 // Tags ...

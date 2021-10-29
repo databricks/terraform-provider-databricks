@@ -49,9 +49,9 @@ func TestResourcePASCreate(t *testing.T) {
 				Method:   "POST",
 				Resource: "/api/2.0/accounts/abc/private-access-settings",
 				ExpectedRequest: PrivateAccessSettings{
-					AccountID: "abc",
-					Region:    "ar",
-					PasName:   "pas_name",
+					AccountID:          "abc",
+					Region:             "ar",
+					PasName:            "pas_name",
 					PrivateAccessLevel: "ACCOUNT",
 				},
 				Response: PrivateAccessSettings{
@@ -180,25 +180,25 @@ func TestResourcePAS_Update(t *testing.T) {
 			{
 				Method:   "PUT",
 				Resource: "/api/2.0/accounts/abc/private-access-settings/pas_id",
-				ExpectedRequest: PrivateAccessSettings {
-					Region: "eu-west-1",
-					PublicAccessEnabled: true,
-					PrivateAccessLevel: "ENDPOINT",
-					AccountID: "abc",
-					PasID: "pas_id",
-					PasName: "pas_name",
+				ExpectedRequest: PrivateAccessSettings{
+					Region:                "eu-west-1",
+					PublicAccessEnabled:   true,
+					PrivateAccessLevel:    "ENDPOINT",
+					AccountID:             "abc",
+					PasID:                 "pas_id",
+					PasName:               "pas_name",
 					AllowedVpcEndpointIDS: []string{"a", "b"},
 				},
 			},
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/accounts/abc/private-access-settings/pas_id",
-				Response: PrivateAccessSettings {
-					Region: "eu-west-1",
+				Response: PrivateAccessSettings{
+					Region:              "eu-west-1",
 					PublicAccessEnabled: true,
-					AccountID: "abc",
-					PasID: "pas_id",
-					PasName: "pas_name",
+					AccountID:           "abc",
+					PasID:               "pas_id",
+					PasName:             "pas_name",
 				},
 			},
 		},

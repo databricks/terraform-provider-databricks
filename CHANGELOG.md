@@ -3,6 +3,7 @@
 ## 0.3.10
 
 * Added `private_access_level` and `allowed_vpc_endpoint_ids` to `databricks_mws_private_access_settings` resource, which is also now updatable ([#867](https://github.com/databrickslabs/terraform-provider-databricks/issues/867)).
+* Whenever `databricks_instance_profile` is created with `skip_validation = true`, create any changes to the field after resource is created won't have any effect ([#860](https://github.com/databrickslabs/terraform-provider-databricks/issues/860)).
 
 ## 0.3.9
 

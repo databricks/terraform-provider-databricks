@@ -294,7 +294,6 @@ func (c *DatabricksClient) configureWithDirectParams(ctx context.Context) (func(
 		authType = "Basic"
 		needsHostBecause = "basic_auth"
 		c.Token = c.encodeBasicAuth(c.Username, c.Password)
-		c.Password = ""
 		log.Printf("[INFO] Using basic auth for user '%s'", c.Username)
 	} else if c.Token != "" {
 		needsHostBecause = "token"

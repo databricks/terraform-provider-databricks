@@ -9,11 +9,11 @@ This resource will mount your cloud storage account on `dbfs:/mnt/yourname`. Rig
 
 This resource provides two ways of mounting a storage account:
 1. Use a storage-specific configuration block - this could be used for the most cases, as it will fill most of the necessary details. Currently we support following configuration blocks:
-  * `s3` - to mount AWS S3
-  * `gs` - to mount Google Cloud Storage
-  * `abfs` - to mount ADLS Gen2 using [Azure Blob Filesystem (ABFS) driver](https://hadoop.apache.org/docs/current/hadoop-azure/index.html)
-  * `adl` - to  mount ADLS Gen1 using [Azure Data Lake (ADL) driver](https://hadoop.apache.org/docs/current/hadoop-azure-datalake/index.html)
-  * `wasb`  - to mount Azure Blob Storage using [Windows Azure Storage Blob (WASB) driver](https://hadoop.apache.org/docs/current/hadoop-azure/index.html)
+  * `s3` - to [mount AWS S3](https://docs.databricks.com/data/data-sources/aws/amazon-s3.html)
+  * `gs` - to [mount Google Cloud Storage](https://docs.gcp.databricks.com/data/data-sources/google/gcs.html)
+  * `abfs` - to [mount ADLS Gen2](https://docs.microsoft.com/en-us/azure/databricks/data/data-sources/azure/adls-gen2/) using Azure Blob Filesystem (ABFS) driver
+  * `adl` - to [mount ADLS Gen1](https://docs.microsoft.com/en-us/azure/databricks/data/data-sources/azure/azure-datalake) using Azure Data Lake (ADL) driver
+  * `wasb`  - to [mount Azure Blob Storage](https://docs.microsoft.com/en-us/azure/databricks/data/data-sources/azure/azure-storage) using Windows Azure Storage Blob (WASB) driver
 1. Use generic arguments - you have a responsibility for providing all necessary parameters that are required to mount specific storage. This is most flexible option
 
 
@@ -26,8 +26,8 @@ This resource provides two ways of mounting a storage account:
   * storage resource name for ADLS Gen1
 * `uri` - (Optional, String) the URI for accessing specific storage (`s3a://....`, `abfss://....`, `gs://....`, etc.)
 * `extra_configs` - (Optional, String map) configuration parameters that are necessary for mounting of specific storage
-* `resource_id` - (Optional, String) 
-* `encryption_type` - (Optional, String) 
+* `resource_id` - (Optional, String) resource ID for given storage account. Could be used to fill defaults, such as storage account & container names on Azure.
+* `encryption_type` - (Optional, String) encryption type. Currently used only for [AWS S3 mounts](https://docs.databricks.com/data/data-sources/aws/amazon-s3.html#encrypt-data-in-s3-buckets)
 
 ### Example mounting ADLS Gen2 using uri and extra_configs
 
@@ -123,7 +123,7 @@ variable "container" {
 }
 
 resource "databricks_mount" "passthrough" {
-  mount_name = "passthrough-test"
+  name = "passthrough-test"
   cluster_id = databricks_cluster.shared_passthrough.id
   
   uri = "abfss://${var.container}@${var.storage_acc}.dfs.core.windows.net"
@@ -146,7 +146,7 @@ This block allows specifying parameters for mounting of the ADLS Gen2. The follo
 ```hcl
 // now you can do `%fs ls /mnt/experiments` in notebooks
 resource "databricks_mount" "this" {
-    mount_name = "experiments"
+    name = "experiments"
     s3 {
       instance_profile = databricks_instance_profile.ds.id
       bucket_name = aws_s3_bucket.this.bucket
@@ -159,7 +159,7 @@ resource "databricks_mount" "this" {
 This block allows specifying parameters for mounting of the ADLS Gen2. The following arguments are required inside the `abfs` block:
 
 * `client_id` - (Required) (String) This is the client_id (Application Object ID) for the enterprise application for the service principal. 
-* `tenant_id` - (Required) (String) This is your azure directory tenant id. This is required for creating the mount.
+* `tenant_id` - (Optional) (String) This is your azure directory tenant id. It is required for creating the mount. (Could be omitted if Azure authentication is used, and we can extract `tenant_id` from it).
 * `client_secret_key` - (Required) (String) This is the secret key in which your service principal/enterprise app client secret will be stored.
 * `client_secret_scope` - (Required) (String) This is the secret scope in which your service principal/enterprise app client secret will be stored.
 * `container_name` - (Required) (String) ADLS gen2 container name. (Could be omitted if `resource_id` is provided)
@@ -207,7 +207,7 @@ resource "azurerm_storage_container" "this" {
 }
 
 resource "databricks_mount" "marketing" {
-    mount_name             = "marketing"
+    name             = "marketing"
     abfs {
       container_name         = azurerm_storage_container.this.name
       storage_account_name   = azurerm_storage_account.this.name
@@ -231,7 +231,7 @@ This block allows specifying parameters for mounting of the Google Cloud Storage
 
 ```hcl
 resource "databricks_mount" "this_gs" {
-  mount_name = "gs-mount"
+  name = "gs-mount"
   gs {
     service_account = "acc@company.iam.gserviceaccount.com"
     bucket_name = "mybucket"
@@ -244,7 +244,7 @@ resource "databricks_mount" "this_gs" {
 This block allows specifying parameters for mounting of the ADLS Gen1. The following arguments are required inside the `adl` block:
 
 * `client_id` - (Required) (String) This is the client_id for the enterprise application for the service principal. 
-* `tenant_id` - (Required) (String) This is your azure directory tenant id. This is required for creating the mount.
+* `tenant_id` - (Optional) (String) This is your azure directory tenant id. It is required for creating the mount. (Could be omitted if Azure authentication is used, and we can extract `tenant_id` from it)
 * `client_secret_key` - (Required) (String) This is the secret key in which your service principal/enterprise app client secret will be stored.
 * `client_secret_scope` - (Required) (String) This is the secret scope in which your service principal/enterprise app client secret will be stored.
 
@@ -256,7 +256,7 @@ This block allows specifying parameters for mounting of the ADLS Gen1. The follo
 
 ```hcl
 resource "databricks_mount" "mount" {
-    mount_name           = "{var.RANDOM}"
+    name           = "{var.RANDOM}"
     adl {
       storage_resource_name = "{env.TEST_STORAGE_ACCOUNT_NAME}"
       tenant_id              = data.azurerm_client_config.current.tenant_id
@@ -309,7 +309,7 @@ resource "databricks_secret" "storage_key" {
 }
 
 resource "databricks_mount" "marketing" {
-    mount_name           = "marketing"
+    name           = "marketing"
     wasb {
       container_name       = azurerm_storage_container.marketing.name
       storage_account_name = azurerm_storage_account.blobaccount.name
@@ -319,6 +319,13 @@ resource "databricks_mount" "marketing" {
     }
 }
 ```
+
+## Migration from other mount resources
+
+Migration from the specific mount resource is straightforward:
+* rename `mount_name` to `name`
+* wrap storage-specific settings (`container_name`, ...) into corresponding block (`adl`, `abfs`, `s3`, `wasbs`)
+* for S3 mounts, rename `s3_bucket_name` to `bucket_name`
 
 ## Attribute Reference
 

@@ -683,6 +683,100 @@ func TestResourceAdlsGen2MountGeneric_Create_ResourceID(t *testing.T) {
 	assert.Equal(t, "abfss://e@test-adls-gen2.dfs.core.windows.net", d.Get("source"))
 }
 
+func TestResourceAdlsGen2MountGeneric_Create_NoTenantID_SPN(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:       "GET",
+				ReuseRequest: true,
+				Resource:     "/api/2.0/clusters/get?cluster_id=this_cluster",
+				Response: compute.ClusterInfo{
+					State: compute.ClusterStateRunning,
+				},
+			},
+		},
+		Resource: ResourceDatabricksMount(),
+		CommandMock: func(commandStr string) common.CommandResults {
+			trunc := internal.TrimLeadingWhitespace(commandStr)
+			t.Logf("Received command:\n%s", trunc)
+			if strings.HasPrefix(trunc, "def safe_mount") {
+				assert.Contains(t, trunc, "abfss://e@test-adls-gen2.dfs.core.windows.net")
+				assert.Contains(t, trunc, `"fs.azure.account.oauth2.client.secret":dbutils.secrets.get("c", "d")`)
+				assert.Contains(t, trunc, "https://login.microsoftonline.com/c/oauth2/token")
+			}
+			assert.Contains(t, trunc, "/mnt/this_mount")
+			return common.CommandResults{
+				ResultType: "text",
+				Data:       "abfss://e@test-adls-gen2.dfs.core.windows.net",
+			}
+		},
+		AzureSPN: true,
+		State: map[string]interface{}{
+			"cluster_id": "this_cluster",
+			"name":       "this_mount",
+			"abfs": []interface{}{map[string]interface{}{
+				"storage_account_name":   "test-adls-gen2",
+				"container_name":         "e",
+				"client_id":              "b",
+				"client_secret_scope":    "c",
+				"client_secret_key":      "d",
+				"initialize_file_system": true,
+			}}},
+		Create: true,
+	}.Apply(t)
+	require.NoError(t, err, err)
+	assert.Equal(t, "this_mount", d.Id())
+	assert.Equal(t, "abfss://e@test-adls-gen2.dfs.core.windows.net", d.Get("source"))
+}
+
+func TestResourceAdlsGen2MountGeneric_Create_NoTenantID_CLI(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:       "GET",
+				ReuseRequest: true,
+				Resource:     "/api/2.0/clusters/get?cluster_id=this_cluster",
+				Response: compute.ClusterInfo{
+					State: compute.ClusterStateRunning,
+				},
+			},
+		},
+		Resource: ResourceDatabricksMount(),
+		CommandMock: func(commandStr string) common.CommandResults {
+			trunc := internal.TrimLeadingWhitespace(commandStr)
+			t.Logf("Received command:\n%s", trunc)
+			if strings.HasPrefix(trunc, "def safe_mount") {
+				assert.Contains(t, trunc, "abfss://e@test-adls-gen2.dfs.core.windows.net")
+				assert.Contains(t, trunc, `"fs.azure.account.oauth2.client.secret":dbutils.secrets.get("c", "d")`)
+				assert.Contains(t, trunc, "https://login.microsoftonline.com/abc/oauth2/token")
+			}
+			assert.Contains(t, trunc, "/mnt/this_mount")
+			return common.CommandResults{
+				ResultType: "text",
+				Data:       "abfss://e@test-adls-gen2.dfs.core.windows.net",
+			}
+		},
+		Azure: true,
+		// sample JWT token for testing
+		Token: "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJPbmxpbmUgSldUIEJ1aWxkZXIiLCJpYXQiOjE2MzU2OTU4MzksImV4cCI6MTY2NzIzMTgzOSwiYXVkIjoid3d3LmV4YW1wbGUuY29tIiwic3ViIjoianJvY2tldEBleGFtcGxlLmNvbSIsInRpZCI6ImFiYyJ9._G1DrR4DspidISpsra8UnecV_FV4zMlJDtSNzaS0UxI",
+		State: map[string]interface{}{
+			"cluster_id": "this_cluster",
+			"name":       "this_mount",
+			"abfs": []interface{}{map[string]interface{}{
+				"storage_account_name":   "test-adls-gen2",
+				"container_name":         "e",
+				"client_id":              "b",
+				"client_secret_scope":    "c",
+				"client_secret_key":      "d",
+				"initialize_file_system": true,
+			}}},
+		Create: true,
+	}.Apply(t)
+	require.NoError(t, err, err)
+	assert.Equal(t, "this_mount", d.Id())
+	assert.Equal(t, "abfss://e@test-adls-gen2.dfs.core.windows.net", d.Get("source"))
+}
+
 // ============================== Azure Blob Storage Tests ==============================
 
 func TestResourceAzureBlobMountCreateGeneric(t *testing.T) {

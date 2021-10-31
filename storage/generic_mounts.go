@@ -113,11 +113,6 @@ func (m GSMount) ValidateAndApplyDefaults(d *schema.ResourceData, client *common
 		d.Set("name", nm)
 		return nil
 	}
-	nm = d.Get("resource_id").(string)
-	if nm != "" {
-		d.Set("name", nm)
-		return nil
-	}
 	return fmt.Errorf("'name' is not detected & it's impossible to infer it")
 }
 
@@ -208,11 +203,6 @@ func (m S3IamMount) ValidateAndApplyDefaults(d *schema.ResourceData, client *com
 		d.Set("name", nm)
 		return nil
 	}
-	nm = d.Get("resource_id").(string)
-	if nm != "" {
-		d.Set("name", nm)
-		return nil
-	}
 	return fmt.Errorf("'name' is not detected & it's impossible to infer it")
 }
 
@@ -279,12 +269,28 @@ func getContainerDefaults(d *schema.ResourceData, allowed_schemas []string, suff
 	return "", "", fmt.Errorf("container_name or storage_account_name are empty, and resource_id or uri aren't specified")
 }
 
+func getTenantID(client *common.DatabricksClient) (string, error) {
+	if client.AzureTenantID != "" {
+		return client.AzureTenantID, nil
+	}
+	v, err := client.GetAzureJwtProperty("tid")
+	if err != nil {
+		return "", err
+	}
+	tid := v.(string)
+	if tid != "" {
+		return tid, nil
+	}
+
+	return "", fmt.Errorf("tenant_id isn't provided & we can't detect it")
+}
+
 // AzureADLSGen2Mount describes the object for a azure datalake gen 2 storage mount
 type AzureADLSGen2MountGeneric struct {
 	ContainerName        string `json:"container_name,omitempty" tf:"computed,force_new"`
 	StorageAccountName   string `json:"storage_account_name,omitempty" tf:"computed,force_new"`
 	Directory            string `json:"directory,omitempty" tf:"force_new"`
-	ClientID             string `json:"client_id,omitempty" tf:"computed,force_new"`
+	ClientID             string `json:"client_id" tf:"force_new"`
 	TenantID             string `json:"tenant_id,omitempty" tf:"computed,force_new"`
 	SecretScope          string `json:"client_secret_scope" tf:"force_new"`
 	SecretKey            string `json:"client_secret_key" tf:"force_new"`
@@ -314,9 +320,13 @@ func (m *AzureADLSGen2MountGeneric) ValidateAndApplyDefaults(d *schema.ResourceD
 	if nm == "" {
 		d.Set("name", m.ContainerName)
 	}
-	tenant_id := d.Get("tenant_id")
-	if tenant_id == "" { // TODO:
-		return fmt.Errorf("tenant_id isn't provided & we can't detect it")
+	if m.TenantID == "" {
+		tenant_id, err := getTenantID(client)
+		if err != nil {
+			return fmt.Errorf("tenant_id is not defined, and we can't extract it: %w", err)
+		}
+		log.Printf("[DEBUG] Got tenant_id: %s", tenant_id)
+		m.TenantID = tenant_id
 	}
 	return nil
 }
@@ -329,7 +339,7 @@ func (m *AzureADLSGen2MountGeneric) Config(client *common.DatabricksClient) map[
 		"fs.azure.account.oauth.provider.type":                "org.apache.hadoop.fs.azurebfs.oauth2.ClientCredsTokenProvider",
 		"fs.azure.account.oauth2.client.id":                   m.ClientID,
 		"fs.azure.account.oauth2.client.secret":               fmt.Sprintf("{{secrets/%s/%s}}", m.SecretScope, m.SecretKey),
-		"fs.azure.account.oauth2.client.endpoint":             fmt.Sprintf("%s/%s/oauth2/token", aadEndpoint, m.TenantID),
+		"fs.azure.account.oauth2.client.endpoint":             fmt.Sprintf("%s%s/oauth2/token", aadEndpoint, m.TenantID),
 		"fs.azure.createRemoteFileSystemDuringInitialization": fmt.Sprintf("%t", m.InitializeFileSystem),
 	}
 }
@@ -341,7 +351,7 @@ type AzureADLSGen1MountGeneric struct {
 	StorageResource string `json:"storage_resource_name,omitempty" tf:"computed,force_new"`
 	Directory       string `json:"directory,omitempty" tf:"force_new"`
 	PrefixType      string `json:"spark_conf_prefix,omitempty" tf:"default:fs.adl,force_new"`
-	ClientID        string `json:"client_id,omitempty" tf:"computed,force_new"`
+	ClientID        string `json:"client_id" tf:"force_new"`
 	TenantID        string `json:"tenant_id,omitempty" tf:"computed,force_new"`
 	SecretScope     string `json:"client_secret_scope" tf:"force_new"`
 	SecretKey       string `json:"client_secret_key" tf:"force_new"`
@@ -367,7 +377,6 @@ func (m *AzureADLSGen1MountGeneric) ValidateAndApplyDefaults(d *schema.ResourceD
 			if res.ResourceType != "accounts" || res.Provider != "Microsoft.DataLakeStore" {
 				return fmt.Errorf("incorrect resource type or provider in resource_id: %s", rid)
 			}
-			log.Printf("[DEBUG] ResourceName: '%s'", res.ResourceName)
 			m.StorageResource = res.ResourceName
 		} else {
 			return fmt.Errorf("storage_resource_name is empty, and resource_id or uri aren't specified")
@@ -377,11 +386,13 @@ func (m *AzureADLSGen1MountGeneric) ValidateAndApplyDefaults(d *schema.ResourceD
 	if nm == "" {
 		d.Set("name", m.StorageResource)
 	}
-	tenant_id := d.Get("tenant_id")
-	if tenant_id == "" { // TODO:
-		return fmt.Errorf("tenant_id isn't provided & we can't detect it")
+	if m.TenantID == "" {
+		tenant_id, err := getTenantID(client)
+		if err != nil {
+			return fmt.Errorf("tenant_id is not defined, and we can't extract it: %w", err)
+		}
+		m.TenantID = tenant_id
 	}
-
 	return nil
 }
 
@@ -393,7 +404,7 @@ func (m *AzureADLSGen1MountGeneric) Config(client *common.DatabricksClient) map[
 
 		m.PrefixType + ".oauth2.client.id":   m.ClientID,
 		m.PrefixType + ".oauth2.credential":  fmt.Sprintf("{{secrets/%s/%s}}", m.SecretScope, m.SecretKey),
-		m.PrefixType + ".oauth2.refresh.url": fmt.Sprintf("%s/%s/oauth2/token", aadEndpoint, m.TenantID),
+		m.PrefixType + ".oauth2.refresh.url": fmt.Sprintf("%s%s/oauth2/token", aadEndpoint, m.TenantID),
 	}
 }
 

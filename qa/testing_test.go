@@ -189,6 +189,24 @@ func TestResourceFixture_Apply(t *testing.T) {
 	}.ApplyNoError(t)
 }
 
+func TestResourceFixture_Apply_Token(t *testing.T) {
+	ResourceFixture{
+		CommandMock: func(commandStr string) common.CommandResults {
+			return common.CommandResults{
+				ResultType: "text",
+				Data:       "yes",
+			}
+		},
+		Azure:    true,
+		Resource: noopResource,
+		ID:       "x",
+		New:      true,
+		Read:     true,
+		HCL:      `dummy = true`,
+		Token:    "test",
+	}.ApplyNoError(t)
+}
+
 func TestResourceFixture_ApplyDelete(t *testing.T) {
 	d, err := ResourceFixture{
 		CommandMock: func(commandStr string) common.CommandResults {

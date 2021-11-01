@@ -64,28 +64,27 @@ func (aa *DatabricksClient) GetAzureJwtProperty(key string) (interface{}, error)
 	header := request.Header.Get("Authorization")
 	var stoken string
 	if len(header) > 0 && strings.HasPrefix(string(header), "Bearer ") {
-		log.Printf("Got Bearer token")
+		log.Printf("[DEBUG] Got Bearer token")
 		stoken = strings.TrimSpace(strings.TrimPrefix(string(header), "Bearer "))
-		if strings.HasPrefix(stoken, "dapi") {
-			return nil, fmt.Errorf("can't use Databricks PAT")
-		}
 	}
 
-	if stoken != "" {
-		parser := jwt.Parser{SkipClaimsValidation: true}
-		token, _, err := parser.ParseUnverified(stoken, jwt.MapClaims{})
-		if err != nil {
-			return nil, err
-		}
-		claims := token.Claims.(jwt.MapClaims)
-		for k, v := range claims {
-			if k == key {
-				return v, nil
-			}
-		}
+	if stoken == "" {
+		return nil, fmt.Errorf("can't obtain Azure JWT token")
+	}
+	if strings.HasPrefix(stoken, "dapi") {
+		return nil, fmt.Errorf("can't use Databricks PAT")
+	}
+	parser := jwt.Parser{SkipClaimsValidation: true}
+	token, _, err := parser.ParseUnverified(stoken, jwt.MapClaims{})
+	if err != nil {
+		return nil, err
+	}
+	claims := token.Claims.(jwt.MapClaims)
+	v, ok := claims[key]
+	if !ok {
 		return nil, fmt.Errorf("can't find field '%s' in parsed JWT", key)
 	}
-	return nil, fmt.Errorf("can't obtain Azure JWT token")
+	return v, nil
 }
 
 func (aa *DatabricksClient) getAzureEnvironment() (azure.Environment, error) {

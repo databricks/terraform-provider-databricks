@@ -5,13 +5,16 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/Azure/go-autorest/autorest/azure"
 	"github.com/databrickslabs/terraform-provider-databricks/common"
 	"github.com/databrickslabs/terraform-provider-databricks/compute"
 	"github.com/databrickslabs/terraform-provider-databricks/identity"
 	"github.com/databrickslabs/terraform-provider-databricks/internal"
-
 	"github.com/databrickslabs/terraform-provider-databricks/qa"
+
+	"github.com/Azure/go-autorest/autorest/azure"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -44,6 +47,26 @@ var nodeListResponse = compute.NodeTypeList{
 			},
 		},
 	},
+}
+
+func TestS3MountDefaults(t *testing.T) {
+	s := ResourceDatabricksMountSchema()
+	d := schema.TestResourceDataRaw(t, s, map[string]interface{}{})
+	client, server, err := qa.HttpFixtureClient(t, []qa.HTTPFixture{})
+	defer server.Close()
+	require.NoError(t, err, err)
+
+	err = S3IamMount{}.ValidateAndApplyDefaults(d, client)
+	qa.AssertErrorStartsWith(t, err, "'name' is not detected & it's impossible to infer it")
+
+	d = schema.TestResourceDataRaw(t, s, map[string]interface{}{"name": "test"})
+	err = S3IamMount{}.ValidateAndApplyDefaults(d, client)
+	require.NoError(t, err, err)
+	assert.Equal(t, d.Get("name").(string), "test")
+	d = schema.TestResourceDataRaw(t, s, map[string]interface{}{})
+	err = S3IamMount{BucketName: "abc"}.ValidateAndApplyDefaults(d, client)
+	require.NoError(t, err, err)
+	assert.Equal(t, d.Get("name").(string), "abc")
 }
 
 func TestResourceAwsS3MountGenericCreate(t *testing.T) {
@@ -571,6 +594,82 @@ func TestResourceAdlsGen1MountGeneric_Create_ResourceID(t *testing.T) {
 	assert.Equal(t, "gen1", d.Id())
 }
 
+func TestResourceAdlsGen1MountGeneric_Create_ResourceID_Error1(t *testing.T) {
+	_, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{},
+		Resource: ResourceDatabricksMount(),
+		State: map[string]interface{}{
+			"resource_id": "/subscriptions/123/resourceGroups/some-rg/providers/Microsoft.DataLakeStore/acc/gen1",
+			"adl": []interface{}{map[string]interface{}{
+				"tenant_id":           "a",
+				"client_id":           "b",
+				"client_secret_scope": "c",
+				"client_secret_key":   "d",
+				"spark_conf_prefix":   "fs.adl",
+			}},
+		},
+		Create: true,
+	}.Apply(t)
+	qa.AssertErrorStartsWith(t, err, "incorrect resource type or provider in resource_id:")
+}
+
+func TestResourceAdlsGen1MountGeneric_Create_ResourceID_Error2(t *testing.T) {
+	_, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{},
+		Resource: ResourceDatabricksMount(),
+		State: map[string]interface{}{
+			"adl": []interface{}{map[string]interface{}{
+				"tenant_id":           "a",
+				"client_id":           "b",
+				"client_secret_scope": "c",
+				"client_secret_key":   "d",
+				"spark_conf_prefix":   "fs.adl",
+			}},
+		},
+		Create: true,
+	}.Apply(t)
+	qa.AssertErrorStartsWith(t, err, "storage_resource_name is empty, and resource_id or uri aren't specified")
+}
+
+func TestResourceAdlsGen1MountGeneric_Create_NoTenantID_Error(t *testing.T) {
+	_, err := qa.ResourceFixture{
+		Resource: ResourceDatabricksMount(),
+		Azure:    true,
+		State: map[string]interface{}{
+			"resource_id": "/subscriptions/123/resourceGroups/some-rg/providers/Microsoft.DataLakeStore/accounts/gen1",
+			"cluster_id":  "this_cluster",
+			"name":        "this_mount",
+			"adl": []interface{}{map[string]interface{}{
+				"client_id":           "b",
+				"client_secret_scope": "c",
+				"client_secret_key":   "d",
+				"spark_conf_prefix":   "fs.adl",
+			}}},
+		Create: true,
+	}.Apply(t)
+	qa.AssertErrorStartsWith(t, err, "tenant_id is not defined, and we can't extract it: token contains an invalid number of segments")
+}
+
+func TestResourceAdlsGen1MountGeneric_Create_NoTenantID_Error_EmptyTenant(t *testing.T) {
+	_, err := qa.ResourceFixture{
+		Resource: ResourceDatabricksMount(),
+		Token:    "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJPbmxpbmUgSldUIEJ1aWxkZXIiLCJpYXQiOjE2MzU3ODQxNTYsImV4cCI6MTY2NzMyMDE1NiwiYXVkIjoid3d3LmV4YW1wbGUuY29tIiwic3ViIjoianJvY2tldEBleGFtcGxlLmNvbSIsInRpZCI6IiAgIn0.faxuGAFghVxa1epYnovOxoQrzju7-z_EJj3oZtwIxdk",
+		Azure:    true,
+		State: map[string]interface{}{
+			"resource_id": "/subscriptions/123/resourceGroups/some-rg/providers/Microsoft.DataLakeStore/accounts/gen1",
+			"cluster_id":  "this_cluster",
+			"name":        "this_mount",
+			"adl": []interface{}{map[string]interface{}{
+				"client_id":           "b",
+				"client_secret_scope": "c",
+				"client_secret_key":   "d",
+				"spark_conf_prefix":   "fs.adl",
+			}}},
+		Create: true,
+	}.Apply(t)
+	qa.AssertErrorStartsWith(t, err, "tenant_id is not defined, and we can't extract it: tenant_id isn't provided & we can't detect it")
+}
+
 // ============================== ADLS Gen2 Tests ==============================
 
 func TestAzureAccADLSv2MountGeneric(t *testing.T) {
@@ -777,6 +876,45 @@ func TestResourceAdlsGen2MountGeneric_Create_NoTenantID_CLI(t *testing.T) {
 	assert.Equal(t, "abfss://e@test-adls-gen2.dfs.core.windows.net", d.Get("source"))
 }
 
+func TestResourceAdlsGen2MountGeneric_Create_NoTenantID_Error(t *testing.T) {
+	_, err := qa.ResourceFixture{
+		Resource: ResourceDatabricksMount(),
+		Azure:    true,
+		State: map[string]interface{}{
+			"name": "this_mount",
+			"abfs": []interface{}{map[string]interface{}{
+				"storage_account_name":   "test-adls-gen2",
+				"container_name":         "e",
+				"client_id":              "b",
+				"client_secret_scope":    "c",
+				"client_secret_key":      "d",
+				"initialize_file_system": true,
+			}}},
+		Create: true,
+	}.Apply(t)
+	qa.AssertErrorStartsWith(t, err, "tenant_id is not defined, and we can't extract it: token contains an invalid number of segments")
+}
+
+func TestResourceAdlsGen2MountGeneric_Create_NoTenantID_Error_EmptyTenant(t *testing.T) {
+	_, err := qa.ResourceFixture{
+		Resource: ResourceDatabricksMount(),
+		Token:    "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJPbmxpbmUgSldUIEJ1aWxkZXIiLCJpYXQiOjE2MzU3ODQxNTYsImV4cCI6MTY2NzMyMDE1NiwiYXVkIjoid3d3LmV4YW1wbGUuY29tIiwic3ViIjoianJvY2tldEBleGFtcGxlLmNvbSIsInRpZCI6IiAgIn0.faxuGAFghVxa1epYnovOxoQrzju7-z_EJj3oZtwIxdk",
+		Azure:    true,
+		State: map[string]interface{}{
+			"name": "this_mount",
+			"abfs": []interface{}{map[string]interface{}{
+				"storage_account_name":   "test-adls-gen2",
+				"container_name":         "e",
+				"client_id":              "b",
+				"client_secret_scope":    "c",
+				"client_secret_key":      "d",
+				"initialize_file_system": true,
+			}}},
+		Create: true,
+	}.Apply(t)
+	qa.AssertErrorStartsWith(t, err, "tenant_id is not defined, and we can't extract it: tenant_id isn't provided & we can't detect it")
+}
+
 // ============================== Azure Blob Storage Tests ==============================
 
 func TestResourceAzureBlobMountCreateGeneric(t *testing.T) {
@@ -788,13 +926,7 @@ func TestResourceAzureBlobMountCreateGeneric(t *testing.T) {
 				Response: compute.ClusterInfo{
 					State: compute.ClusterStateRunning,
 				},
-			},
-			{
-				Method:   "GET",
-				Resource: "/api/2.0/clusters/get?cluster_id=b",
-				Response: compute.ClusterInfo{
-					State: compute.ClusterStateRunning,
-				},
+				ReuseRequest: true,
 			},
 		},
 		Resource: ResourceDatabricksMount(),
@@ -831,6 +963,52 @@ func TestResourceAzureBlobMountCreateGeneric(t *testing.T) {
 	assert.Equal(t, "wasbs://c@f.blob.core.windows.net/d", d.Get("source"))
 }
 
+func TestResourceAzureBlobMountCreateGeneric_SAS(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/clusters/get?cluster_id=b",
+				Response: compute.ClusterInfo{
+					State: compute.ClusterStateRunning,
+				},
+				ReuseRequest: true,
+			},
+		},
+		Resource: ResourceDatabricksMount(),
+		CommandMock: func(commandStr string) common.CommandResults {
+			trunc := internal.TrimLeadingWhitespace(commandStr)
+			t.Logf("Received command:\n%s", trunc)
+
+			if strings.HasPrefix(trunc, "def safe_mount") {
+				assert.Contains(t, trunc, "wasbs://c@f.blob.core.windows.net/d")
+				assert.Contains(t, trunc, `"fs.azure.sas.c.f.blob.core.windows.net":dbutils.secrets.get("h", "g")`)
+			}
+			assert.Contains(t, trunc, "/mnt/e")
+			return common.CommandResults{
+				ResultType: "text",
+				Data:       "wasbs://c@f.blob.core.windows.net/d",
+			}
+		},
+		State: map[string]interface{}{
+			"cluster_id": "b",
+			"name":       "e",
+			"wasb": []interface{}{map[string]interface{}{
+				"auth_type":            "SAS",
+				"storage_account_name": "f",
+				"token_secret_key":     "g",
+				"token_secret_scope":   "h",
+				"container_name":       "c",
+				"directory":            "/d",
+			},
+			}},
+		Create: true,
+	}.Apply(t)
+	require.NoError(t, err, err) // TODO: global search-replace for NoError
+	assert.Equal(t, "e", d.Id())
+	assert.Equal(t, "wasbs://c@f.blob.core.windows.net/d", d.Get("source"))
+}
+
 func TestResourceAzureBlobMountCreateGeneric_Resource_ID(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
@@ -840,13 +1018,7 @@ func TestResourceAzureBlobMountCreateGeneric_Resource_ID(t *testing.T) {
 				Response: compute.ClusterInfo{
 					State: compute.ClusterStateRunning,
 				},
-			},
-			{
-				Method:   "GET",
-				Resource: "/api/2.0/clusters/get?cluster_id=b",
-				Response: compute.ClusterInfo{
-					State: compute.ClusterStateRunning,
-				},
+				ReuseRequest: true,
 			},
 		},
 		Resource: ResourceDatabricksMount(),
@@ -879,6 +1051,24 @@ func TestResourceAzureBlobMountCreateGeneric_Resource_ID(t *testing.T) {
 	require.NoError(t, err, err) // TODO: global search-replace for NoError
 	assert.Equal(t, "c", d.Id())
 	assert.Equal(t, "wasbs://c@f.blob.core.windows.net/d", d.Get("source"))
+}
+
+func TestResourceAzureBlobMountCreateGeneric_Resource_ID_Error(t *testing.T) {
+	_, err := qa.ResourceFixture{
+		Resource: ResourceDatabricksMount(),
+		State: map[string]interface{}{
+			"cluster_id":  "b",
+			"resource_id": "abc",
+			"wasb": []interface{}{map[string]interface{}{
+				"auth_type":          "ACCESS_KEY",
+				"token_secret_key":   "g",
+				"token_secret_scope": "h",
+				"directory":          "/d",
+			},
+			}},
+		Create: true,
+	}.Apply(t)
+	qa.AssertErrorStartsWith(t, err, "parsing failed for abc. Invalid container resource Id format")
 }
 
 func TestResourceAzureBlobMountCreateGeneric_Error(t *testing.T) {
@@ -1130,6 +1320,26 @@ func TestAzureAccBlobMountGeneric(t *testing.T) {
 // ============================== Google Cloud Storage Tests ==============================
 
 const testGcsBucketPath = "gs://" + testS3BucketName
+
+func TestGSMountDefaults(t *testing.T) {
+	s := ResourceDatabricksMountSchema()
+	d := schema.TestResourceDataRaw(t, s, map[string]interface{}{})
+	client, server, err := qa.HttpFixtureClient(t, []qa.HTTPFixture{})
+	defer server.Close()
+	require.NoError(t, err, err)
+
+	err = GSMount{}.ValidateAndApplyDefaults(d, client)
+	qa.AssertErrorStartsWith(t, err, "'name' is not detected & it's impossible to infer it")
+
+	d = schema.TestResourceDataRaw(t, s, map[string]interface{}{"name": "test"})
+	err = GSMount{}.ValidateAndApplyDefaults(d, client)
+	require.NoError(t, err, err)
+	assert.Equal(t, d.Get("name").(string), "test")
+	d = schema.TestResourceDataRaw(t, s, map[string]interface{}{})
+	err = GSMount{BucketName: "abc"}.ValidateAndApplyDefaults(d, client)
+	require.NoError(t, err, err)
+	assert.Equal(t, d.Get("name").(string), "abc")
+}
 
 func TestResourceGcsMountGenericCreate_WithCluster(t *testing.T) {
 	google_account := "acc@acc-dbx.iam.gserviceaccount.com"
@@ -1400,6 +1610,19 @@ func TestResourceMountGenericCreate_WithUriAndOpts(t *testing.T) {
 	assert.Equal(t, abfssPath, d.Get("source"))
 }
 
+func TestNames(t *testing.T) {
+	mount_name := "abc"
+	gm := GenericMount{MountName: mount_name}
+	assert.Equal(t, gm.Name(), mount_name)
+	assert.Equal(t, GenericMount{}.Name(), "")
+	gm = GenericMount{Abfs: &AzureADLSGen2MountGeneric{ContainerName: mount_name}}
+	assert.Equal(t, gm.Name(), mount_name)
+	gm = GenericMount{Wasb: &AzureBlobMountGeneric{ContainerName: mount_name}}
+	assert.Equal(t, gm.Name(), mount_name)
+	gm = GenericMount{Adl: &AzureADLSGen1MountGeneric{StorageResource: mount_name}}
+	assert.Equal(t, gm.Name(), mount_name)
+}
+
 func TestARMParsing(t *testing.T) {
 	acc, container, err := parseStorageContainerId("/subscriptions/5363c143-2af7-4fb5-8a9d-ab1b2c8e756e/resourceGroups/test-rg/providers/Microsoft.Storage/storageAccounts/lrs-acc/blobServices/default/containers/test")
 	require.NoError(t, err, err)
@@ -1407,8 +1630,36 @@ func TestARMParsing(t *testing.T) {
 	assert.Equal(t, container, "test")
 }
 
+func TestARMParsingError(t *testing.T) {
+	_, _, err := parseStorageContainerId("abc")
+	qa.AssertErrorStartsWith(t, err, "parsing failed for ")
+}
+
 func TestARMParsing2(t *testing.T) {
 	res, err := azure.ParseResourceID("/subscriptions/6369c148-f8a9-4fb5-8a9d-ac1b2c8e756e/resourceGroups/alexott-rg/providers/Microsoft.DataLakeStore/accounts/aottgen1")
 	require.NoError(t, err, err)
 	assert.Equal(t, res.ResourceName, "aottgen1")
+}
+
+func TestGenericMountDefaults(t *testing.T) {
+	s := ResourceDatabricksMountSchema()
+	d := schema.TestResourceDataRaw(t, s, map[string]interface{}{})
+	client, server, err := qa.HttpFixtureClient(t, []qa.HTTPFixture{})
+	defer server.Close()
+	require.NoError(t, err, err)
+
+	gm := GenericMount{MountName: "test"}
+	err = common.StructToData(gm, s, d)
+	require.NoError(t, err, err)
+	err = gm.ValidateAndApplyDefaults(d, client)
+	qa.AssertErrorStartsWith(t, err, "value of uri is not specified or empty")
+
+	d = schema.TestResourceDataRaw(t, s, map[string]interface{}{"uri": "s3://abc/"})
+	err = gm.ValidateAndApplyDefaults(d, client)
+	qa.AssertErrorStartsWith(t, err, "value of name is not specified or empty")
+
+	gm = GenericMount{Abfs: &AzureADLSGen2MountGeneric{}}
+	d = schema.TestResourceDataRaw(t, s, map[string]interface{}{"abfs": map[string]interface{}{}})
+	err = gm.ValidateAndApplyDefaults(d, client)
+	qa.AssertErrorStartsWith(t, err, "container_name or storage_account_name are empty, and resource_id or uri aren't specified")
 }

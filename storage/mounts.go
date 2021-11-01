@@ -94,7 +94,7 @@ func (mp MountPoint) Mount(mo Mount, client *common.DatabricksClient) (source st
 				raise e
 		mount_source = safe_mount("/mnt/%s", "%v", %s, "%s")
 		dbutils.notebook.exit(mount_source)
-	`, mp.name, mo.Source(), extraConfigs, mp.encryptionType) // lgtm [go/unsafe-quoting]
+	`, mp.name, mo.Source(), extraConfigs, mp.encryptionType) // lgtm[go/unsafe-quoting]
 	result := mp.exec.Execute(mp.clusterID, "python", command)
 	return result.Text(), result.Err()
 }

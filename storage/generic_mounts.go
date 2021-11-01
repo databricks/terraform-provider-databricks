@@ -126,7 +126,6 @@ func preprocessGsMount(ctx context.Context, s map[string]*schema.Schema, d *sche
 	if err := common.DataToStructPointer(d, s, &gm); err != nil {
 		return err
 	}
-	// TODO: move into Validate function
 	if !(strings.HasPrefix(gm.URI, "gs://") || gm.Gs != nil) {
 		return nil
 	}
@@ -134,9 +133,6 @@ func preprocessGsMount(ctx context.Context, s map[string]*schema.Schema, d *sche
 	serviceAccount := ""
 	if gm.Gs != nil {
 		serviceAccount = gm.Gs.ServiceAccount
-	}
-	if clusterID == "" && serviceAccount == "" {
-		return fmt.Errorf("either cluster_id or service_account must be specified to mount GCS bucket")
 	}
 	clustersAPI := compute.NewClustersAPI(ctx, m)
 	if clusterID != "" {
@@ -150,13 +146,14 @@ func preprocessGsMount(ctx context.Context, s map[string]*schema.Schema, d *sche
 		if len(clusterInfo.GcpAttributes.GoogleServiceAccount) == 0 {
 			return fmt.Errorf("cluster %s must have GCP service account attached", clusterID)
 		}
-	}
-	if serviceAccount != "" {
+	} else if serviceAccount != "" {
 		cluster, err := GetOrCreateMountingClusterWithGcpServiceAccount(clustersAPI, serviceAccount)
 		if err != nil {
 			return err
 		}
 		return d.Set("cluster_id", cluster.ClusterID)
+	} else {
+		return fmt.Errorf("either cluster_id or service_account must be specified to mount GCS bucket")
 	}
 	return nil
 }
@@ -277,7 +274,7 @@ func getTenantID(client *common.DatabricksClient) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	tid := v.(string)
+	tid := strings.TrimSpace(v.(string))
 	if tid != "" {
 		return tid, nil
 	}
@@ -304,7 +301,7 @@ func (m *AzureADLSGen2MountGeneric) Source() string {
 }
 
 func (m *AzureADLSGen2MountGeneric) Name() string {
-	return fmt.Sprintf("%s-%s", m.StorageAccountName, m.ContainerName)
+	return m.ContainerName
 }
 
 func (m *AzureADLSGen2MountGeneric) ValidateAndApplyDefaults(d *schema.ResourceData, client *common.DatabricksClient) error {
@@ -318,7 +315,7 @@ func (m *AzureADLSGen2MountGeneric) ValidateAndApplyDefaults(d *schema.ResourceD
 	}
 	nm := d.Get("name").(string)
 	if nm == "" {
-		d.Set("name", m.ContainerName)
+		d.Set("name", m.Name())
 	}
 	if m.TenantID == "" {
 		tenant_id, err := getTenantID(client)
@@ -384,7 +381,7 @@ func (m *AzureADLSGen1MountGeneric) ValidateAndApplyDefaults(d *schema.ResourceD
 	}
 	nm := d.Get("name").(string)
 	if nm == "" {
-		d.Set("name", m.StorageResource)
+		d.Set("name", m.Name())
 	}
 	if m.TenantID == "" {
 		tenant_id, err := getTenantID(client)
@@ -427,7 +424,7 @@ func (m *AzureBlobMountGeneric) Source() string {
 }
 
 func (m *AzureBlobMountGeneric) Name() string {
-	return fmt.Sprintf("%s-%s", m.StorageAccountName, m.ContainerName)
+	return m.ContainerName
 }
 
 func (m *AzureBlobMountGeneric) ValidateAndApplyDefaults(d *schema.ResourceData, client *common.DatabricksClient) error {
@@ -441,7 +438,7 @@ func (m *AzureBlobMountGeneric) ValidateAndApplyDefaults(d *schema.ResourceData,
 	}
 	nm := d.Get("name").(string)
 	if nm == "" {
-		d.Set("name", m.ContainerName)
+		d.Set("name", m.Name())
 	}
 
 	return nil

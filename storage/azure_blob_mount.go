@@ -25,7 +25,7 @@ func (m AzureBlobMount) Source() string {
 }
 
 func (m AzureBlobMount) Name() string {
-	return fmt.Sprintf("%s-%s", m.StorageAccountName, m.ContainerName)
+	return m.ContainerName
 }
 
 func (m AzureBlobMount) ValidateAndApplyDefaults(d *schema.ResourceData, client *common.DatabricksClient) error {

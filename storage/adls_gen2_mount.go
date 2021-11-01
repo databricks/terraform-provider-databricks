@@ -26,7 +26,7 @@ func (m AzureADLSGen2Mount) Source() string {
 }
 
 func (m AzureADLSGen2Mount) Name() string {
-	return fmt.Sprintf("%s-%s", m.StorageAccountName, m.ContainerName)
+	return m.ContainerName
 }
 
 func (m AzureADLSGen2Mount) ValidateAndApplyDefaults(d *schema.ResourceData, client *common.DatabricksClient) error {

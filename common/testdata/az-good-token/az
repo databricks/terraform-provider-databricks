@@ -1,0 +1,28 @@
+#!/bin/bash
+
+if [ "yes" == "$FAIL" ]; then 
+    >&2 /bin/echo "This is just a failing script."
+    exit 1
+fi
+
+if [ "corrupt" == "$FAIL" ]; then 
+    /bin/echo "{accessToken: ..corrupt"
+    exit
+fi
+
+# Macos
+EXP="$(/bin/date -v+${EXPIRE:=10S} +'%F %T' 2>/dev/null)"
+if [ "" = "${EXP}" ]; then
+  # Linux
+  EXPIRE=$(/bin/echo $EXPIRE | /bin/sed 's/S/seconds/')
+  EXPIRE=$(/bin/echo $EXPIRE | /bin/sed 's/M/minutes/')
+  EXP=$(/bin/date --date=+${EXPIRE:=10seconds} +'%FT%TZ')
+fi
+
+/bin/echo "{
+  \"accessToken\": \"eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJPbmxpbmUgSldUIEJ1aWxkZXIiLCJpYXQiOjE2MzU2OTU4MzksImV4cCI6MTY2NzIzMTgzOSwiYXVkIjoid3d3LmV4YW1wbGUuY29tIiwic3ViIjoianJvY2tldEBleGFtcGxlLmNvbSIsInRpZCI6ImFiYyJ9._G1DrR4DspidISpsra8UnecV_FV4zMlJDtSNzaS0UxI\",
+  \"expiresOn\": \"${EXP}\",
+  \"subscription\": \"aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee\",
+  \"tenant\": \"aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee\",
+  \"tokenType\": \"Bearer\"
+}"

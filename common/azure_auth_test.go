@@ -13,6 +13,7 @@ import (
 	"github.com/Azure/go-autorest/autorest"
 	"github.com/Azure/go-autorest/autorest/adal"
 	"github.com/Azure/go-autorest/autorest/azure"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -394,4 +395,127 @@ func TestMaybeExtendError(t *testing.T) {
 	err = APIError{StatusCode: 403}
 	err2 = maybeExtendAuthzError(err)
 	assert.True(t, strings.HasPrefix(err2.Error(), msg), err2.Error())
+}
+
+func TestGetJWTProperty_AzureCLI_SP(t *testing.T) {
+	defer CleanupEnvironment()()
+	os.Setenv("PATH", "testdata:/bin")
+
+	aa := DatabricksClient{
+		AzureClientID:             "a",
+		AzureClientSecret:         "b",
+		AzureTenantID:             "c",
+		AzureDatabricksResourceID: "/subscriptions/a/resourceGroups/b/providers/Microsoft.Databricks/workspaces/c",
+	}
+	tid, err := aa.GetAzureJwtProperty("tid")
+	assert.NoError(t, err)
+	assert.Equal(t, "c", tid)
+}
+
+func TestGetJWTProperty_NonAzure(t *testing.T) {
+	defer CleanupEnvironment()()
+	os.Setenv("PATH", "testdata:/bin")
+
+	aa := DatabricksClient{
+		Host:  "https://abc.cloud.databricks.com",
+		Token: "abc",
+	}
+	_, err := aa.GetAzureJwtProperty("tid")
+	require.EqualError(t, err, "can't get Azure JWT token in non-Azure environment")
+}
+
+func TestGetJWTProperty_AzureCli_Error(t *testing.T) {
+	defer CleanupEnvironment()()
+	os.Setenv("PATH", "testdata:/bin")
+
+	// token without expiry in this case
+	client, server := singleRequestServer(t, "POST", "/api/2.0/token/create", `{
+		"token_value": "abc"
+	}`)
+	defer server.Close()
+
+	client.AzureDatabricksResourceID = "/subscriptions/a/resourceGroups/b/providers/Microsoft.Databricks/workspaces/c"
+
+	_, err := client.GetAzureJwtProperty("tid")
+	require.EqualError(t, err, "unexpected end of JSON input")
+}
+
+func setupJwtTestClient() (*httptest.Server, *DatabricksClient) {
+	client := DatabricksClient{InsecureSkipVerify: true,
+		AzureDatabricksResourceID: "/subscriptions/a/resourceGroups/b/providers/Microsoft.Databricks/workspaces/c",
+		Host:                      "https://adb-1232.azuredatabricks.net",
+	}
+	ctx := context.Background()
+
+	server := httptest.NewUnstartedServer(http.HandlerFunc(
+		func(rw http.ResponseWriter, req *http.Request) {
+		}))
+	server.StartTLS()
+
+	// resource management endpoints end with a trailing slash in url
+	client.AzureEnvironment = &azure.Environment{
+		ResourceManagerEndpoint: fmt.Sprintf("%s/", server.URL),
+	}
+	auth, err := client.configureWithAzureCLI(ctx)
+	if err != nil || auth == nil {
+		return nil, nil
+	}
+
+	client.authVisitor = auth
+	client.configureHTTPCLient()
+
+	return server, &client
+}
+
+func TestGetJWTProperty_AzureCli(t *testing.T) {
+	defer CleanupEnvironment()()
+	os.Setenv("PATH", "testdata/az-good-token:/bin")
+
+	srv, client := setupJwtTestClient()
+	assert.NotNil(t, srv)
+	defer srv.Close()
+	assert.NotNil(t, client)
+
+	tid, err := client.GetAzureJwtProperty("tid")
+	require.NoError(t, err)
+	assert.Equal(t, "abc", tid.(string))
+}
+
+func TestGetJWTProperty_AzureCli_Error_DB_PAT(t *testing.T) {
+	defer CleanupEnvironment()()
+	os.Setenv("PATH", "testdata/az-bad-token1:/bin")
+
+	srv, client := setupJwtTestClient()
+	assert.NotNil(t, srv)
+	defer srv.Close()
+	assert.NotNil(t, client)
+
+	_, err := client.GetAzureJwtProperty("tid")
+	require.EqualError(t, err, "can't use Databricks PAT")
+}
+
+func TestGetJWTProperty_AzureCli_Error_No_TenantID(t *testing.T) {
+	defer CleanupEnvironment()()
+	os.Setenv("PATH", "testdata/az-bad-token2:/bin")
+
+	srv, client := setupJwtTestClient()
+	assert.NotNil(t, srv)
+	defer srv.Close()
+	assert.NotNil(t, client)
+
+	_, err := client.GetAzureJwtProperty("tid")
+	require.EqualError(t, err, "can't find field 'tid' in parsed JWT")
+}
+
+func TestGetJWTProperty_AzureCli_Error_EmptyToken(t *testing.T) {
+	defer CleanupEnvironment()()
+	os.Setenv("PATH", "testdata/az-bad-token3:/bin")
+
+	srv, client := setupJwtTestClient()
+	assert.NotNil(t, srv)
+	defer srv.Close()
+	assert.NotNil(t, client)
+
+	_, err := client.GetAzureJwtProperty("tid")
+	require.EqualError(t, err, "can't obtain Azure JWT token")
 }

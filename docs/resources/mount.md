@@ -169,6 +169,8 @@ This block allows specifying parameters for mounting of the ADLS Gen2. The follo
 
 ### Creating mount for ADLS Gen2 using abfs block
 
+In this example, we're using Azure authentication, so we can omit some parameters (`tenant_id`, `storage_account_name`, and `container_name`) that will be detected automatically.
+
 ```hcl
 resource "databricks_secret_scope" "terraform" {
     name                     = "application"
@@ -179,9 +181,6 @@ resource "databricks_secret" "service_principal_key" {
     key          = "service_principal_key"
     string_value = "${var.ARM_CLIENT_SECRET}"
     scope        = databricks_secret_scope.terraform.name
-}
-
-data "azurerm_client_config" "current" {
 }
 
 resource "azurerm_storage_account" "this" {
@@ -208,10 +207,8 @@ resource "azurerm_storage_container" "this" {
 
 resource "databricks_mount" "marketing" {
     name             = "marketing"
+    resource_id      = azurerm_storage_container.this.id
     abfs {
-      container_name         = azurerm_storage_container.this.name
-      storage_account_name   = azurerm_storage_account.this.name
-      tenant_id              = data.azurerm_client_config.current.tenant_id
       client_id              = data.azurerm_client_config.current.client_id
       client_secret_scope    = databricks_secret_scope.terraform.name
       client_secret_key      = databricks_secret.service_principal_key.key

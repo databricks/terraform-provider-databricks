@@ -28,8 +28,7 @@ func preprocessResourceData(ctx context.Context, d *schema.ResourceData, scm map
 	return nil
 }
 
-// ResourceDatabricksMount mounts using given configuration
-func ResourceDatabricksMount() *schema.Resource {
+func ResourceDatabricksMountSchema() map[string]*schema.Schema {
 	tpl := GenericMount{}
 	scm := common.StructToSchema(tpl, func(s map[string]*schema.Schema) map[string]*schema.Schema {
 		s["source"] = &schema.Schema{
@@ -48,6 +47,13 @@ func ResourceDatabricksMount() *schema.Resource {
 
 		return s
 	})
+	return scm
+}
+
+// ResourceDatabricksMount mounts using given configuration
+func ResourceDatabricksMount() *schema.Resource {
+	tpl := GenericMount{}
+	scm := ResourceDatabricksMountSchema()
 
 	r := commonMountResource(tpl, scm)
 	r.CreateContext = func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {

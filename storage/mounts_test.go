@@ -316,3 +316,23 @@ func TestDeletedMountClusterRecreates(t *testing.T) {
 		assert.Equal(t, "bcd", clusterID)
 	})
 }
+
+func TestOldMountImplementations(t *testing.T) {
+	n := "test"
+	m1 := AzureADLSGen2Mount{ContainerName: n}
+	assert.Equal(t, m1.Name(), n)
+	assert.Nil(t, m1.ValidateAndApplyDefaults(nil, nil))
+
+	m2 := AzureBlobMount{ContainerName: n}
+	assert.Equal(t, m2.Name(), n)
+	assert.Nil(t, m2.ValidateAndApplyDefaults(nil, nil))
+
+	m3 := AzureADLSGen1Mount{StorageResource: n}
+	assert.Equal(t, m3.Name(), n)
+	assert.Nil(t, m3.ValidateAndApplyDefaults(nil, nil))
+
+	m4 := AWSIamMount{S3BucketName: n}
+	assert.Equal(t, m4.Name(), n)
+	assert.Nil(t, m4.ValidateAndApplyDefaults(nil, nil))
+
+}

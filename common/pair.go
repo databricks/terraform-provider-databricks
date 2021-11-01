@@ -71,7 +71,7 @@ func (p *Pair) Unpack(d *schema.ResourceData) (string, string, error) {
 
 // Pack data attributes to ID
 func (p *Pair) Pack(d *schema.ResourceData) {
-	d.SetId(fmt.Sprintf("%s%s%v", d.Get(p.left), p.separator, d.Get(p.right)))
+	d.SetId(fmt.Sprintf("%v%s%v", d.Get(p.left), p.separator, d.Get(p.right)))
 }
 
 // BindResource defines resource with simplified functions

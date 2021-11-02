@@ -402,10 +402,10 @@ func TestGetJWTProperty_AzureCLI_SP(t *testing.T) {
 	os.Setenv("PATH", "testdata:/bin")
 
 	aa := DatabricksClient{
-		AzureClientID:             "a",
-		AzureClientSecret:         "b",
-		AzureTenantID:             "c",
-		AzureDatabricksResourceID: "/subscriptions/a/resourceGroups/b/providers/Microsoft.Databricks/workspaces/c",
+		AzureClientID:     "a",
+		AzureClientSecret: "b",
+		AzureTenantID:     "c",
+		Host:              "https://adb-1232.azuredatabricks.net",
 	}
 	tid, err := aa.GetAzureJwtProperty("tid")
 	assert.NoError(t, err)
@@ -434,7 +434,7 @@ func TestGetJWTProperty_AzureCli_Error(t *testing.T) {
 	}`)
 	defer server.Close()
 
-	client.AzureDatabricksResourceID = "/subscriptions/a/resourceGroups/b/providers/Microsoft.Databricks/workspaces/c"
+	client.Host = "https://adb-1232.azuredatabricks.net"
 
 	_, err := client.GetAzureJwtProperty("tid")
 	require.EqualError(t, err, "unexpected end of JSON input")
@@ -442,8 +442,7 @@ func TestGetJWTProperty_AzureCli_Error(t *testing.T) {
 
 func setupJwtTestClient() (*httptest.Server, *DatabricksClient) {
 	client := DatabricksClient{InsecureSkipVerify: true,
-		AzureDatabricksResourceID: "/subscriptions/a/resourceGroups/b/providers/Microsoft.Databricks/workspaces/c",
-		Host:                      "https://adb-1232.azuredatabricks.net",
+		Host: "https://adb-1232.azuredatabricks.net",
 	}
 	ctx := context.Background()
 
@@ -469,7 +468,8 @@ func setupJwtTestClient() (*httptest.Server, *DatabricksClient) {
 
 func TestGetJWTProperty_AzureCli(t *testing.T) {
 	defer CleanupEnvironment()()
-	os.Setenv("PATH", "testdata/az-good-token:/bin")
+	os.Setenv("PATH", "testdata:/bin")
+	os.Setenv("TF_AAD_TOKEN", "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJPbmxpbmUgSldUIEJ1aWxkZXIiLCJpYXQiOjE2MzU2OTU4MzksImV4cCI6MTY2NzIzMTgzOSwiYXVkIjoid3d3LmV4YW1wbGUuY29tIiwic3ViIjoianJvY2tldEBleGFtcGxlLmNvbSIsInRpZCI6ImFiYyJ9._G1DrR4DspidISpsra8UnecV_FV4zMlJDtSNzaS0UxI")
 
 	srv, client := setupJwtTestClient()
 	assert.NotNil(t, srv)
@@ -483,7 +483,8 @@ func TestGetJWTProperty_AzureCli(t *testing.T) {
 
 func TestGetJWTProperty_AzureCli_Error_DB_PAT(t *testing.T) {
 	defer CleanupEnvironment()()
-	os.Setenv("PATH", "testdata/az-bad-token1:/bin")
+	os.Setenv("PATH", "testdata:/bin")
+	os.Setenv("TF_AAD_TOKEN", "dapi123")
 
 	srv, client := setupJwtTestClient()
 	assert.NotNil(t, srv)
@@ -496,7 +497,8 @@ func TestGetJWTProperty_AzureCli_Error_DB_PAT(t *testing.T) {
 
 func TestGetJWTProperty_AzureCli_Error_No_TenantID(t *testing.T) {
 	defer CleanupEnvironment()()
-	os.Setenv("PATH", "testdata/az-bad-token2:/bin")
+	os.Setenv("PATH", "testdata:/bin")
+	os.Setenv("TF_AAD_TOKEN", "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJPbmxpbmUgSldUIEJ1aWxkZXIiLCJpYXQiOjE2MzU3OTMwOTksImV4cCI6MTY2NzMyOTA5OSwiYXVkIjoid3d3LmV4YW1wbGUuY29tIiwic3ViIjoianJvY2tldEBleGFtcGxlLmNvbSJ9.bWKxWSNburEQPGx71pxO1xTa8cuGue5PeXn407voUMI")
 
 	srv, client := setupJwtTestClient()
 	assert.NotNil(t, srv)
@@ -509,7 +511,8 @@ func TestGetJWTProperty_AzureCli_Error_No_TenantID(t *testing.T) {
 
 func TestGetJWTProperty_AzureCli_Error_EmptyToken(t *testing.T) {
 	defer CleanupEnvironment()()
-	os.Setenv("PATH", "testdata/az-bad-token3:/bin")
+	os.Setenv("PATH", "testdata:/bin")
+	os.Setenv("TF_AAD_TOKEN", "   ")
 
 	srv, client := setupJwtTestClient()
 	assert.NotNil(t, srv)

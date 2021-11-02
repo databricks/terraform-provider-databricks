@@ -13,6 +13,7 @@ func ResourceGroup() *schema.Resource {
 		"display_name": {
 			Type:     schema.TypeString,
 			Required: true,
+			ForceNew: true,
 		},
 		"url": {
 			Type:     schema.TypeString,

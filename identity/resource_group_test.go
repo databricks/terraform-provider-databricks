@@ -278,6 +278,7 @@ func TestResourceGroupUpdate(t *testing.T) {
 		allow_cluster_create = true
 		allow_sql_analytics_access = true
 		`,
+		RequiresNew: true,
 		Update: true,
 		ID:     "abc",
 	}.Apply(t)
@@ -308,6 +309,7 @@ func TestResourceGroupUpdate_Error(t *testing.T) {
 			"allow_instance_pool_create": true,
 		},
 		Update: true,
+		RequiresNew: true,
 		ID:     "abc",
 	}.ExpectError(t, "Internal error happened")
 }

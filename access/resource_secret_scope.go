@@ -110,7 +110,7 @@ func (a SecretScopesAPI) Read(scopeName string) (SecretScope, error) {
 	}
 }
 
-var validScope = validation.StringMatch(regexp.MustCompile(`^[\w\.@_-]{1,128}$`),
+var validScope = validation.StringMatch(regexp.MustCompile(`^[\w\.@_/-]{1,128}$`),
 	"Must consist of alphanumeric characters, dashes, underscores, and periods, "+
 		"and may not exceed 128 characters.")
 

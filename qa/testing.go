@@ -87,6 +87,7 @@ type ResourceFixture struct {
 	Azure       bool
 	AzureSPN    bool
 	Gcp         bool
+	Token       string
 	// new resource
 	New bool
 }
@@ -144,7 +145,11 @@ func (f ResourceFixture) prepareExecution() (resourceCRUD, error) {
 
 // Apply runs tests from fixture
 func (f ResourceFixture) Apply(t *testing.T) (*schema.ResourceData, error) {
-	client, server, err := HttpFixtureClient(t, f.Fixtures)
+	token := "..."
+	if f.Token != "" {
+		token = f.Token
+	}
+	client, server, err := HttpFixtureClientWithToken(t, f.Fixtures, token)
 	defer server.Close()
 	if err != nil {
 		return nil, err
@@ -366,6 +371,11 @@ func UnionFixturesLists(fixturesLists ...[]HTTPFixture) (fixtureList []HTTPFixtu
 
 // HttpFixtureClient creates client for emulated HTTP server
 func HttpFixtureClient(t *testing.T, fixtures []HTTPFixture) (client *common.DatabricksClient, server *httptest.Server, err error) {
+	return HttpFixtureClientWithToken(t, fixtures, "...")
+}
+
+// HttpFixtureClientWithToken creates client for emulated HTTP server
+func HttpFixtureClientWithToken(t *testing.T, fixtures []HTTPFixture, token string) (client *common.DatabricksClient, server *httptest.Server, err error) {
 	server = httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
 		found := false
 		for i, fixture := range fixtures {
@@ -448,7 +458,7 @@ func HttpFixtureClient(t *testing.T, fixtures []HTTPFixture) (client *common.Dat
 	}))
 	client = &common.DatabricksClient{
 		Host:             server.URL,
-		Token:            "...",
+		Token:            token,
 		AzureEnvironment: &azure.PublicCloud,
 	}
 	err = client.Configure()

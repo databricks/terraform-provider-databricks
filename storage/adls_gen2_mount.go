@@ -25,6 +25,14 @@ func (m AzureADLSGen2Mount) Source() string {
 		m.ContainerName, m.StorageAccountName, m.Directory)
 }
 
+func (m AzureADLSGen2Mount) Name() string {
+	return m.ContainerName
+}
+
+func (m AzureADLSGen2Mount) ValidateAndApplyDefaults(d *schema.ResourceData, client *common.DatabricksClient) error {
+	return nil
+}
+
 // Config returns mount configurations
 func (m AzureADLSGen2Mount) Config(client *common.DatabricksClient) map[string]string {
 	aadEndpoint := client.AzureEnvironment.ActiveDirectoryEndpoint
@@ -32,7 +40,7 @@ func (m AzureADLSGen2Mount) Config(client *common.DatabricksClient) map[string]s
 		"fs.azure.account.auth.type":                          "OAuth",
 		"fs.azure.account.oauth.provider.type":                "org.apache.hadoop.fs.azurebfs.oauth2.ClientCredsTokenProvider",
 		"fs.azure.account.oauth2.client.id":                   m.ClientID,
-		"fs.azure.account.oauth2.client.secret":               fmt.Sprintf("{secrets/%s/%s}", m.SecretScope, m.SecretKey),
+		"fs.azure.account.oauth2.client.secret":               fmt.Sprintf("{{secrets/%s/%s}}", m.SecretScope, m.SecretKey),
 		"fs.azure.account.oauth2.client.endpoint":             fmt.Sprintf("%s/%s/oauth2/token", aadEndpoint, m.TenantID),
 		"fs.azure.createRemoteFileSystemDuringInitialization": fmt.Sprintf("%t", m.InitializeFileSystem),
 	}

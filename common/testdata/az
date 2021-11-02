@@ -12,15 +12,19 @@ fi
 
 # Macos
 EXP="$(/bin/date -v+${EXPIRE:=10S} +'%F %T' 2>/dev/null)"
-if [ "" = "${EXP}" ]; then
+if [ -z "${EXP}" ]; then
   # Linux
   EXPIRE=$(/bin/echo $EXPIRE | /bin/sed 's/S/seconds/')
   EXPIRE=$(/bin/echo $EXPIRE | /bin/sed 's/M/minutes/')
   EXP=$(/bin/date --date=+${EXPIRE:=10seconds} +'%FT%TZ')
 fi
 
+if [ -z "${TF_AAD_TOKEN}" ]; then
+    TF_AAD_TOKEN="..."
+fi
+
 /bin/echo "{
-  \"accessToken\": \"...\",
+  \"accessToken\": \"${TF_AAD_TOKEN}\",
   \"expiresOn\": \"${EXP}\",
   \"subscription\": \"aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee\",
   \"tenant\": \"aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee\",

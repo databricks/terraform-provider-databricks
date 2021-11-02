@@ -14,6 +14,7 @@ import (
 	"github.com/Azure/go-autorest/autorest/adal"
 	"github.com/Azure/go-autorest/autorest/azure"
 	"github.com/Azure/go-autorest/autorest/azure/auth"
+	"github.com/golang-jwt/jwt/v4"
 )
 
 // List of management information
@@ -37,6 +38,53 @@ type tokenInfo struct {
 	CreationTime int64  `json:"creation_time,omitempty"`
 	ExpiryTime   int64  `json:"expiry_time,omitempty"`
 	Comment      string `json:"comment,omitempty"`
+}
+
+//
+func (aa *DatabricksClient) GetAzureJwtProperty(key string) (interface{}, error) {
+	if !aa.IsAzure() {
+		return "", fmt.Errorf("can't get Azure JWT token in non-Azure environment")
+	}
+	if key == "tid" && aa.AzureTenantID != "" {
+		return aa.AzureTenantID, nil
+	}
+	err := aa.Authenticate(context.TODO())
+	if err != nil {
+		return nil, err
+	}
+
+	request, err := http.NewRequest("GET", aa.Host, nil)
+	if err != nil {
+		return nil, err
+	}
+	if err = aa.authVisitor(request); err != nil {
+		return nil, err
+	}
+
+	header := request.Header.Get("Authorization")
+	var stoken string
+	if len(header) > 0 && strings.HasPrefix(string(header), "Bearer ") {
+		log.Printf("[DEBUG] Got Bearer token")
+		stoken = strings.TrimSpace(strings.TrimPrefix(string(header), "Bearer "))
+	}
+
+	if stoken == "" {
+		return nil, fmt.Errorf("can't obtain Azure JWT token")
+	}
+	if strings.HasPrefix(stoken, "dapi") {
+		return nil, fmt.Errorf("can't use Databricks PAT")
+	}
+	parser := jwt.Parser{SkipClaimsValidation: true}
+	token, _, err := parser.ParseUnverified(stoken, jwt.MapClaims{})
+	if err != nil {
+		return nil, err
+	}
+	claims := token.Claims.(jwt.MapClaims)
+	v, ok := claims[key]
+	if !ok {
+		return nil, fmt.Errorf("can't find field '%s' in parsed JWT", key)
+	}
+	return v, nil
 }
 
 func (aa *DatabricksClient) getAzureEnvironment() (azure.Environment, error) {

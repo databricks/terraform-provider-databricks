@@ -24,6 +24,14 @@ func (m AzureADLSGen1Mount) Source() string {
 	return fmt.Sprintf("adl://%s.azuredatalakestore.net%s", m.StorageResource, m.Directory)
 }
 
+func (m AzureADLSGen1Mount) Name() string {
+	return m.StorageResource
+}
+
+func (m AzureADLSGen1Mount) ValidateAndApplyDefaults(d *schema.ResourceData, client *common.DatabricksClient) error {
+	return nil
+}
+
 // Config ...
 func (m AzureADLSGen1Mount) Config(client *common.DatabricksClient) map[string]string {
 	aadEndpoint := client.AzureEnvironment.ActiveDirectoryEndpoint
@@ -31,7 +39,7 @@ func (m AzureADLSGen1Mount) Config(client *common.DatabricksClient) map[string]s
 		m.PrefixType + ".oauth2.access.token.provider.type": "ClientCredential",
 
 		m.PrefixType + ".oauth2.client.id":   m.ClientID,
-		m.PrefixType + ".oauth2.credential":  fmt.Sprintf("{secrets/%s/%s}", m.SecretScope, m.SecretKey),
+		m.PrefixType + ".oauth2.credential":  fmt.Sprintf("{{secrets/%s/%s}}", m.SecretScope, m.SecretKey),
 		m.PrefixType + ".oauth2.refresh.url": fmt.Sprintf("%s/%s/oauth2/token", aadEndpoint, m.TenantID),
 	}
 }

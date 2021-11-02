@@ -20,13 +20,17 @@ import (
 type Mount interface {
 	Source() string
 	Config(client *common.DatabricksClient) map[string]string
+
+	Name() string
+	ValidateAndApplyDefaults(d *schema.ResourceData, client *common.DatabricksClient) error
 }
 
 // MountPoint is something actionable
 type MountPoint struct {
-	exec      common.CommandExecutor
-	clusterID string
-	name      string
+	exec           common.CommandExecutor
+	clusterID      string
+	name           string
+	encryptionType string
 }
 
 // Source returns mountpoint source
@@ -68,15 +72,17 @@ func (mp MountPoint) Mount(mo Mount, client *common.DatabricksClient) (source st
 	if err != nil {
 		return
 	}
-	b := regexp.MustCompile(`"\{secrets/([^/]+)/([^\}]+)\}"`)
-	extraConfigs = b.ReplaceAll(extraConfigs, []byte(`dbutils.secrets.get("$1", "$2")`))
+	secretsRe := regexp.MustCompile(`"\{\{secrets/([^/]+)/([^\}]+)\}\}"`)
+	extraConfigs = secretsRe.ReplaceAll(extraConfigs, []byte(`dbutils.secrets.get("$1", "$2")`))
+	sparkConfRe := regexp.MustCompile(`"\{\{sparkconf/([^\}]+)\}\}"`)
+	extraConfigs = sparkConfRe.ReplaceAll(extraConfigs, []byte(`spark.conf.get("$1")`))
 	command := fmt.Sprintf(`
-		def safe_mount(mount_point, mount_source, configs):
+		def safe_mount(mount_point, mount_source, configs, encryptionType):
 			for mount in dbutils.fs.mounts():
 				if mount.mountPoint == mount_point and mount.source == mount_source:
 					return
 			try:
-				dbutils.fs.mount(mount_source, mount_point, extra_configs=configs)
+				dbutils.fs.mount(mount_source, mount_point, extra_configs=configs, encryption_type=encryptionType)
 				dbutils.fs.refreshMounts()
 				dbutils.fs.ls(mount_point)
 				return mount_source
@@ -86,9 +92,9 @@ func (mp MountPoint) Mount(mo Mount, client *common.DatabricksClient) (source st
 				except Exception as e2:
 					print("Failed to unmount", e2)
 				raise e
-		mount_source = safe_mount("/mnt/%s", "%v", %s)
+		mount_source = safe_mount("/mnt/%s", "%v", %s, "%s")
 		dbutils.notebook.exit(mount_source)
-	`, mp.name, mo.Source(), extraConfigs)
+	`, mp.name, mo.Source(), extraConfigs, mp.encryptionType) // lgtm[go/unsafe-quoting]
 	result := mp.exec.Execute(mp.clusterID, "python", command)
 	return result.Text(), result.Err()
 }
@@ -114,10 +120,10 @@ func NewMountPoint(executor common.CommandExecutor, name, clusterID string) Moun
 	}
 }
 
-func getOrCreateMountingCluster(clustersAPI compute.ClustersAPI) (string, error) {
-	cluster, err := clustersAPI.GetOrCreateRunningCluster("terraform-mount", compute.Cluster{
+func getCommonClusterObject(clustersAPI compute.ClustersAPI, clusterName string) compute.Cluster {
+	return compute.Cluster{
 		NumWorkers:  0,
-		ClusterName: "terraform-mount",
+		ClusterName: clusterName,
 		SparkVersion: clustersAPI.LatestSparkVersionOrDefault(
 			compute.SparkVersionRequest{
 				Latest:          true,
@@ -136,7 +142,11 @@ func getOrCreateMountingCluster(clustersAPI compute.ClustersAPI) (string, error)
 		CustomTags: map[string]string{
 			"ResourceClass": "SingleNode",
 		},
-	})
+	}
+}
+
+func getOrCreateMountingCluster(clustersAPI compute.ClustersAPI) (string, error) {
+	cluster, err := clustersAPI.GetOrCreateRunningCluster("terraform-mount", getCommonClusterObject(clustersAPI, "terraform-mount"))
 	if err != nil {
 		return "", err
 	}
@@ -189,9 +199,19 @@ func mountCluster(ctx context.Context, tpl interface{}, d *schema.ResourceData,
 	mountInterface := mountReflectValue.Interface()
 	mountConfig = mountInterface.(Mount)
 
-	name := d.Get("mount_name").(string)
-	mountPoint.name = name
-	d.SetId(name)
+	if name, ok := d.GetOk("mount_name"); ok && name.(string) != "" {
+		mountPoint.name = name.(string)
+	} else if name, ok := d.GetOk("name"); ok && name.(string) != "" {
+		mountPoint.name = name.(string)
+	} else {
+		return mountConfig, mountPoint, fmt.Errorf("nor 'mount_name' or 'name' are set")
+	}
+
+	d.SetId(mountPoint.name)
+
+	if v := d.Get("encryption_type"); v != nil {
+		mountPoint.encryptionType = v.(string)
+	}
 
 	return mountConfig, mountPoint, nil
 }

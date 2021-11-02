@@ -13,6 +13,7 @@ import (
 	"github.com/databrickslabs/terraform-provider-databricks/qa"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
 	"github.com/databrickslabs/terraform-provider-databricks/common"
 	"github.com/stretchr/testify/assert"
@@ -148,8 +149,12 @@ func testMountFuncHelper(t *testing.T, mountFunc func(mp MountPoint, mount Mount
 type mockMount struct{}
 
 func (t mockMount) Source() string { return "fake-mount" }
+func (t mockMount) Name() string   { return "fake-mount" }
 func (t mockMount) Config(client *common.DatabricksClient) map[string]string {
 	return map[string]string{"fake-key": "fake-value"}
+}
+func (m mockMount) ValidateAndApplyDefaults(d *schema.ResourceData, client *common.DatabricksClient) error {
+	return nil
 }
 
 func TestMountPoint_Mount(t *testing.T) {
@@ -158,12 +163,12 @@ func TestMountPoint_Mount(t *testing.T) {
 	expectedMountConfig := `{"fake-key":"fake-value"}`
 	mountName := "this_mount"
 	expectedCommand := fmt.Sprintf(`
-		def safe_mount(mount_point, mount_source, configs):
+		def safe_mount(mount_point, mount_source, configs, encryptionType):
 			for mount in dbutils.fs.mounts():
 				if mount.mountPoint == mount_point and mount.source == mount_source:
 					return
 			try:
-				dbutils.fs.mount(mount_source, mount_point, extra_configs=configs)
+				dbutils.fs.mount(mount_source, mount_point, extra_configs=configs, encryption_type=encryptionType)
 				dbutils.fs.refreshMounts()
 				dbutils.fs.ls(mount_point)
 				return mount_source
@@ -173,7 +178,7 @@ func TestMountPoint_Mount(t *testing.T) {
 				except Exception as e2:
 					print("Failed to unmount", e2)
 				raise e
-		mount_source = safe_mount("/mnt/%s", %q, %s)
+		mount_source = safe_mount("/mnt/%s", %q, %s, "")
 		dbutils.notebook.exit(mount_source)
 	`, mountName, expectedMountSource, expectedMountConfig)
 	testMountFuncHelper(t, func(mp MountPoint, mount Mount) (s string, e error) {
@@ -310,4 +315,24 @@ func TestDeletedMountClusterRecreates(t *testing.T) {
 		assert.NoError(t, err)
 		assert.Equal(t, "bcd", clusterID)
 	})
+}
+
+func TestOldMountImplementations(t *testing.T) {
+	n := "test"
+	m1 := AzureADLSGen2Mount{ContainerName: n}
+	assert.Equal(t, m1.Name(), n)
+	assert.Nil(t, m1.ValidateAndApplyDefaults(nil, nil))
+
+	m2 := AzureBlobMount{ContainerName: n}
+	assert.Equal(t, m2.Name(), n)
+	assert.Nil(t, m2.ValidateAndApplyDefaults(nil, nil))
+
+	m3 := AzureADLSGen1Mount{StorageResource: n}
+	assert.Equal(t, m3.Name(), n)
+	assert.Nil(t, m3.ValidateAndApplyDefaults(nil, nil))
+
+	m4 := AWSIamMount{S3BucketName: n}
+	assert.Equal(t, m4.Name(), n)
+	assert.Nil(t, m4.ValidateAndApplyDefaults(nil, nil))
+
 }

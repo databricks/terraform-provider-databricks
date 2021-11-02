@@ -21,6 +21,15 @@ func (m AWSIamMount) Source() string {
 	return fmt.Sprintf("s3a://%s", m.S3BucketName)
 }
 
+// Name ...
+func (m AWSIamMount) Name() string {
+	return m.S3BucketName
+}
+
+func (m AWSIamMount) ValidateAndApplyDefaults(d *schema.ResourceData, client *common.DatabricksClient) error {
+	return nil
+}
+
 // Config ...
 func (m AWSIamMount) Config(client *common.DatabricksClient) map[string]string {
 	return make(map[string]string) // return empty map so nil map does not marshal to null
@@ -123,22 +132,10 @@ func GetOrCreateMountingClusterWithInstanceProfile(
 	}
 	instanceProfileParts := strings.Split(arnSections[5], "/")
 	clusterName := fmt.Sprintf("terraform-mount-%s", strings.Join(instanceProfileParts[1:], "-"))
-	return clustersAPI.GetOrCreateRunningCluster(clusterName, compute.Cluster{
-		NumWorkers:  1,
-		ClusterName: clusterName,
-		SparkVersion: clustersAPI.LatestSparkVersionOrDefault(
-			compute.SparkVersionRequest{
-				Latest:          true,
-				LongTermSupport: true,
-			}),
-		NodeTypeID: clustersAPI.GetSmallestNodeType(
-			compute.NodeTypeRequest{
-				LocalDisk: true,
-			}),
-		AutoterminationMinutes: 10,
-		AwsAttributes: &compute.AwsAttributes{
-			InstanceProfileArn: instanceProfile,
-			Availability:       "SPOT",
-		},
-	})
+	cluster := getCommonClusterObject(clustersAPI, clusterName)
+	cluster.AwsAttributes = &compute.AwsAttributes{
+		InstanceProfileArn: instanceProfile,
+		Availability:       "SPOT",
+	}
+	return clustersAPI.GetOrCreateRunningCluster(clusterName, cluster)
 }

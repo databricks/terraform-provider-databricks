@@ -22,13 +22,7 @@ func TestResourceAzureBlobMountCreate(t *testing.T) {
 				Response: compute.ClusterInfo{
 					State: compute.ClusterStateRunning,
 				},
-			},
-			{
-				Method:   "GET",
-				Resource: "/api/2.0/clusters/get?cluster_id=b",
-				Response: compute.ClusterInfo{
-					State: compute.ClusterStateRunning,
-				},
+				ReuseRequest: true,
 			},
 		},
 		Resource: ResourceAzureBlobMount(),

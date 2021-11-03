@@ -138,6 +138,93 @@ func TestResourceRepoCreateNoBranch(t *testing.T) {
 	assert.Equal(t, resp.HeadCommitID, d.Get("commit_hash"))
 }
 
+func TestResourceRepoCreateCustomDirectory(t *testing.T) {
+	resp := ReposInformation{
+		ID:           121232342,
+		Url:          "https://github.com/user/test.git",
+		Provider:     "gitHub",
+		Branch:       "main",
+		Path:         "/Repos/user@domain/test",
+		HeadCommitID: "1124323423abc23424",
+	}
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/repos",
+				ExpectedRequest: createRequest{
+					Url:      "https://github.com/user/test.git",
+					Provider: "gitHub",
+					Path:     "/Repos/Production/test/",
+				},
+				Response: resp,
+			},
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/workspace/mkdirs",
+				ExpectedRequest: map[string]string{
+					"path": "/Repos/Production",
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/repos/121232342",
+				Response: resp,
+			},
+		},
+		Resource: ResourceRepo(),
+		State: map[string]interface{}{
+			"url":  "https://github.com/user/test.git",
+			"path": "/Repos/Production/test/",
+		},
+		Create: true,
+	}.Apply(t)
+	assert.NoError(t, err, err)
+	assert.Equal(t, resp.RepoID(), d.Id())
+	assert.Equal(t, resp.Branch, d.Get("branch"))
+	assert.Equal(t, resp.Provider, d.Get("git_provider"))
+	assert.Equal(t, resp.Path, d.Get("path"))
+	assert.Equal(t, resp.HeadCommitID, d.Get("commit_hash"))
+}
+
+func TestResourceRepoCreateCustomDirectoryError(t *testing.T) {
+	_, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/workspace/mkdirs",
+				ExpectedRequest: map[string]string{
+					"path": "/Repos/Production",
+				},
+				Response: common.APIErrorBody{
+					ErrorCode: "INVALID_REQUEST",
+					Message:   "Internal error happened",
+				},
+				Status: 400,
+			},
+		},
+		Resource: ResourceRepo(),
+		State: map[string]interface{}{
+			"url":  "https://github.com/user/test.git",
+			"path": "/Repos/Production/test/",
+		},
+		Create: true,
+	}.Apply(t)
+	qa.AssertErrorStartsWith(t, err, "Internal error happened")
+}
+
+func TestResourceRepoCreateCustomDirectoryWrongLocation(t *testing.T) {
+	_, err := qa.ResourceFixture{
+		Resource: ResourceRepo(),
+		State: map[string]interface{}{
+			"url":  "https://github.com/user/test.git",
+			"path": "/NotRepos/Production/test/",
+		},
+		Create: true,
+	}.Apply(t)
+	qa.AssertErrorStartsWith(t, err, "path should start with /Repos/")
+}
+
 func TestResourceRepoCreateWithBranch(t *testing.T) {
 	resp := ReposInformation{
 		ID:           121232342,

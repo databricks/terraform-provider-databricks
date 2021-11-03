@@ -79,11 +79,12 @@ func DatabricksProvider() *schema.Provider {
 			"databricks_dbfs_file":             storage.ResourceDBFSFile(),
 			"databricks_mount":                 storage.ResourceDatabricksMount(),
 
-			"databricks_sql_dashboard":     sqlanalytics.ResourceDashboard(),
-			"databricks_sql_endpoint":      sqlanalytics.ResourceSQLEndpoint(),
-			"databricks_sql_query":         sqlanalytics.ResourceQuery(),
-			"databricks_sql_visualization": sqlanalytics.ResourceVisualization(),
-			"databricks_sql_widget":        sqlanalytics.ResourceWidget(),
+			"databricks_sql_dashboard":              sqlanalytics.ResourceDashboard(),
+			"databricks_sql_endpoint":               sqlanalytics.ResourceSQLEndpoint(),
+			"databricks_sql_endpoint_global_config": sqlanalytics.ResourceSQLEndpointGlobalConfig(),
+			"databricks_sql_query":                  sqlanalytics.ResourceQuery(),
+			"databricks_sql_visualization":          sqlanalytics.ResourceVisualization(),
+			"databricks_sql_widget":                 sqlanalytics.ResourceWidget(),
 
 			"databricks_directory":          workspace.ResourceDirectory(),
 			"databricks_global_init_script": workspace.ResourceGlobalInitScript(),

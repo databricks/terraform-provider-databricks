@@ -26,7 +26,7 @@ func (c *DatabricksClient) getGoogleOIDCSource(ctx context.Context) (oauth2.Toke
 }
 
 func (c *DatabricksClient) configureWithGoogleForAccountsAPI(ctx context.Context) (func(*http.Request) error, error) {
-	if c.GoogleServiceAccount == "" || !c.IsGcp() || !c.isAccountsClient() {
+	if c.GoogleServiceAccount == "" || !c.IsGcpNoInit() || !c.isAccountsClient() {
 		return nil, nil
 	}
 	oidcSource, err := c.getGoogleOIDCSource(ctx)
@@ -65,7 +65,7 @@ func newOidcAuthorizerForAccountsAPI(oidcSource oauth2.TokenSource,
 }
 
 func (c *DatabricksClient) configureWithGoogleForWorkspace(ctx context.Context) (func(r *http.Request) error, error) {
-	if c.GoogleServiceAccount == "" || !c.IsGcp() || c.isAccountsClient() {
+	if c.GoogleServiceAccount == "" || !c.IsGcpNoInit() || c.isAccountsClient() {
 		return nil, nil
 	}
 	oidcSource, err := c.getGoogleOIDCSource(ctx)

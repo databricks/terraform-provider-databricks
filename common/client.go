@@ -411,9 +411,26 @@ func (c *DatabricksClient) configureHTTPCLient() {
 	}
 }
 
+func (c *DatabricksClient) GetHost() string {
+	if c.Host == "" {
+		log.Printf("Going to authenticate in Host")
+		err := c.Authenticate(context.TODO())
+		log.Printf("Authenticated in Host")
+		if err != nil {
+			panic(err)
+		}
+	}
+	return c.Host
+}
+
+// IsAzureNoInit returns true if client is configured for GCP, but without forcing the authentication (should be used inside 'common' package)
+func (c *DatabricksClient) IsAzureNoInit() bool {
+	return c.resourceID() != "" || c.AzureUseMSI || strings.Contains(c.Host, ".azuredatabricks.net")
+}
+
 // IsAzure returns true if client is configured for Azure Databricks - either by using AAD auth or with host+token combination
 func (c *DatabricksClient) IsAzure() bool {
-	return c.resourceID() != "" || strings.Contains(c.Host, ".azuredatabricks.net") || c.AzureUseMSI
+	return c.resourceID() != "" || c.AzureUseMSI || strings.Contains(c.GetHost(), ".azuredatabricks.net")
 }
 
 // IsAws returns true if client is configured for AWS
@@ -421,9 +438,14 @@ func (c *DatabricksClient) IsAws() bool {
 	return !c.IsAzure() && !c.IsGcp()
 }
 
+// IsGcpNoInit returns true if client is configured for GCP, but without forcing the authentication (should be used inside 'common' package)
+func (c *DatabricksClient) IsGcpNoInit() bool {
+	return c.GoogleServiceAccount != "" || strings.Contains(c.Host, ".gcp.databricks.com")
+}
+
 // IsGcp returns true if client is configured for GCP
 func (c *DatabricksClient) IsGcp() bool {
-	return c.GoogleServiceAccount != "" || strings.Contains(c.Host, ".gcp.databricks.com")
+	return c.GoogleServiceAccount != "" || strings.Contains(c.GetHost(), ".gcp.databricks.com")
 }
 
 // FormatURL creates URL from the client Host and additional strings

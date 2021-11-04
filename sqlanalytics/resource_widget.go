@@ -22,7 +22,7 @@ type WidgetEntity struct {
 	Description string `json:"description,omitempty"`
 
 	Text            string `json:"text,omitempty"`
-	VisualizationID string `json:"visualization_id,omitempty"`
+	VisualizationID string `json:"visualization_id,omitempty" tf:"force_new"`
 
 	Position  *WidgetPosition   `json:"position,omitempty"`
 	Parameter []WidgetParameter `json:"parameter,omitempty" tf:"slice_set"`

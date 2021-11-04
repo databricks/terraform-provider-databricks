@@ -174,6 +174,38 @@ func TestResourceSecretACLCreate(t *testing.T) {
 	assert.Equal(t, "global|||something", d.Id())
 }
 
+func TestResourceSecretACLCreate_ScopeWithSlash(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/secrets/acls/put",
+				ExpectedRequest: SecretACLRequest{
+					Principal:  "something",
+					Permission: "CAN_MANAGE",
+					Scope:      "myapplication/branch",
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/secrets/acls/get?principal=something&scope=myapplication%2Fbranch",
+				Response: ACLItem{
+					Permission: "CAN_MANAGE",
+				},
+			},
+		},
+		Resource: ResourceSecretACL(),
+		State: map[string]interface{}{
+			"permission": "CAN_MANAGE",
+			"principal":  "something",
+			"scope":      "myapplication/branch",
+		},
+		Create: true,
+	}.Apply(t)
+	assert.NoError(t, err, err)
+	assert.Equal(t, "myapplication/branch|||something", d.Id())
+}
+
 func TestResourceSecretACLCreate_Error(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{

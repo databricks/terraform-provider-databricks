@@ -94,7 +94,7 @@ func (aa *DatabricksClient) cliAuthorizer(resource string) (autorest.Authorizer,
 }
 
 func (aa *DatabricksClient) configureWithAzureCLI(ctx context.Context) (func(*http.Request) error, error) {
-	if !aa.IsAzureNoInit() {
+	if !aa.IsAzure() {
 		return nil, nil
 	}
 	if aa.IsAzureClientSecretSet() {

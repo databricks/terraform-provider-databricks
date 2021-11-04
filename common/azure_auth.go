@@ -42,7 +42,7 @@ type tokenInfo struct {
 
 //
 func (aa *DatabricksClient) GetAzureJwtProperty(key string) (interface{}, error) {
-	if !aa.IsAzureNoInit() {
+	if !aa.IsAzure() {
 		return "", fmt.Errorf("can't get Azure JWT token in non-Azure environment")
 	}
 	if key == "tid" && aa.AzureTenantID != "" {
@@ -133,7 +133,7 @@ func (aa *DatabricksClient) IsAzureClientSecretSet() bool {
 }
 
 func (aa *DatabricksClient) configureWithAzureClientSecret(ctx context.Context) (func(*http.Request) error, error) {
-	if !aa.IsAzureNoInit() {
+	if !aa.IsAzure() {
 		return nil, nil
 	}
 	if !aa.IsAzureClientSecretSet() {
@@ -157,7 +157,7 @@ func (aa *DatabricksClient) configureWithAzureClientSecret(ctx context.Context) 
 }
 
 func (aa *DatabricksClient) configureWithAzureManagedIdentity(ctx context.Context) (func(*http.Request) error, error) {
-	if !aa.IsAzureNoInit() {
+	if !aa.IsAzure() {
 		return nil, nil
 	}
 	if !aa.AzureUseMSI {

@@ -182,3 +182,21 @@ func TestDatabricksClient_AuthenticateAzure(t *testing.T) {
 		"behavior.html more info. Environment variables used: ARM_CLIENT_SECRET, ARM_CLIENT_ID. "+
 		"Please check https://registry.terraform.io/providers/databrickslabs/databricks/latest/docs#authentication for details")
 }
+
+func TestDatabricksIsGcp(t *testing.T) {
+	dc, err := configureAndAuthenticate(&DatabricksClient{
+		Host:  "https://demo.gcp.databricks.com/",
+		Token: "dapi123",
+	})
+	assert.NoError(t, err)
+	assert.Equal(t, true, dc.IsGcp())
+}
+
+func TestIsAzure_Error(t *testing.T) {
+	dc := &DatabricksClient{
+		Token:      "connfigured",
+		ConfigFile: "testdata/.databrickscfg",
+		Profile:    "notoken",
+	}
+	assert.Equal(t, false, dc.IsAzure())
+}

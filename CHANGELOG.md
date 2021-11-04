@@ -1,5 +1,11 @@
 # Version changelog
 
+## 0.3.11
+
+* Added `databricks_sql_global_config` resource to provide global configuration for SQL Endpoints ([#855](https://github.com/databrickslabs/terraform-provider-databricks/issues/855))
+* Added `databricks_mount` resource to mount arbitrary cloud storage ([#497](https://github.com/databrickslabs/terraform-provider-databricks/issues/497))
+* Improved implementation of `databricks_repo` by creating the parent folder structure ([#895](https://github.com/databrickslabs/terraform-provider-databricks/pull/895))
+
 ## 0.3.10
 
 * Added `private_access_level` and `allowed_vpc_endpoint_ids` to `databricks_mws_private_access_settings` resource, which is also now updatable ([#867](https://github.com/databrickslabs/terraform-provider-databricks/issues/867)).

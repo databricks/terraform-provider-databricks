@@ -50,6 +50,7 @@
 | [databricks_spark_version](docs/data-sources/spark_version.md) data
 | [databricks_sql_dashboard](docs/resources/sql_dashboard.md)
 | [databricks_sql_endpoint](docs/resources/sql_endpoint.md)
+| [databricks_sql_global_config](docs/resources/sql_global_config.md)
 | [databricks_sql_permissions](docs/resources/sql_permissions.md)
 | [databricks_sql_query](docs/resources/sql_query.md)
 | [databricks_sql_visualization](docs/resources/sql_visualization.md)

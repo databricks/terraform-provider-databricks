@@ -279,8 +279,8 @@ func TestResourceGroupUpdate(t *testing.T) {
 		allow_sql_analytics_access = true
 		`,
 		RequiresNew: true,
-		Update: true,
-		ID:     "abc",
+		Update:      true,
+		ID:          "abc",
 	}.Apply(t)
 	assert.NoError(t, err, err)
 	assert.Equal(t, "abc", d.Id(), "Id should be the same as in reading")
@@ -308,9 +308,9 @@ func TestResourceGroupUpdate_Error(t *testing.T) {
 			"display_name":               "Data Ninjas",
 			"allow_instance_pool_create": true,
 		},
-		Update: true,
+		Update:      true,
 		RequiresNew: true,
-		ID:     "abc",
+		ID:          "abc",
 	}.ExpectError(t, "Internal error happened")
 }
 

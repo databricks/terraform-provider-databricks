@@ -81,6 +81,7 @@ func DatabricksProvider() *schema.Provider {
 
 			"databricks_sql_dashboard":     sqlanalytics.ResourceDashboard(),
 			"databricks_sql_endpoint":      sqlanalytics.ResourceSQLEndpoint(),
+			"databricks_sql_global_config": sqlanalytics.ResourceSQLGlobalConfig(),
 			"databricks_sql_query":         sqlanalytics.ResourceQuery(),
 			"databricks_sql_visualization": sqlanalytics.ResourceVisualization(),
 			"databricks_sql_widget":        sqlanalytics.ResourceWidget(),

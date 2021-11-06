@@ -11,7 +11,7 @@ func TestPreviewAccSQLEndpoint(t *testing.T) {
 		{
 			Template: `resource "databricks_sql_endpoint" "this" {
 				name = "tf-{var.RANDOM}"
-				cluster_size = "Small"
+				cluster_size = "XX-Small"
 				max_num_clusters = 1
 			}`,
 		},

@@ -413,7 +413,7 @@ func (c *DatabricksClient) configureHTTPCLient() {
 
 // IsAzure returns true if client is configured for Azure Databricks - either by using AAD auth or with host+token combination
 func (c *DatabricksClient) IsAzure() bool {
-	return c.resourceID() != "" || strings.Contains(c.Host, ".azuredatabricks.net") || c.AzureUseMSI
+	return c.resourceID() != "" || c.AzureClientID != "" || c.AzureUseMSI || strings.Contains(c.Host, ".azuredatabricks.net")
 }
 
 // IsAws returns true if client is configured for AWS

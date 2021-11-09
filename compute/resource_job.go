@@ -101,7 +101,7 @@ func (a JobsAPI) Start(jobID int64, timeout time.Duration) error {
 }
 
 func (a JobsAPI) Restart(id string, timeout time.Duration) error {
-	jobID, err := strconv.ParseInt(id, 10, 32)
+	jobID, err := strconv.ParseInt(id, 10, 64)
 	if err != nil {
 		return err
 	}
@@ -137,7 +137,7 @@ func (a JobsAPI) Create(jobSettings JobSettings) (Job, error) {
 
 // Update updates a job given the id and a new set of job settings
 func (a JobsAPI) Update(id string, jobSettings JobSettings) error {
-	jobID, err := strconv.ParseInt(id, 10, 32)
+	jobID, err := strconv.ParseInt(id, 10, 64)
 	if err != nil {
 		return err
 	}
@@ -149,7 +149,7 @@ func (a JobsAPI) Update(id string, jobSettings JobSettings) error {
 
 // Read returns the job object with all the attributes
 func (a JobsAPI) Read(id string) (job Job, err error) {
-	jobID, err := strconv.ParseInt(id, 10, 32)
+	jobID, err := strconv.ParseInt(id, 10, 64)
 	if err != nil {
 		return
 	}
@@ -164,7 +164,7 @@ func (a JobsAPI) Read(id string) (job Job, err error) {
 
 // Delete deletes the job given a job id
 func (a JobsAPI) Delete(id string) error {
-	jobID, err := strconv.ParseInt(id, 10, 32)
+	jobID, err := strconv.ParseInt(id, 10, 64)
 	if err != nil {
 		return err
 	}

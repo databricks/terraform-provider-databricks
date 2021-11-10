@@ -100,7 +100,14 @@ func (mp MountPoint) Mount(mo Mount, client *common.DatabricksClient) (source st
 }
 
 func commonMountResource(tpl Mount, s map[string]*schema.Schema) *schema.Resource {
-	resource := &schema.Resource{Schema: s, SchemaVersion: 2}
+	resource := &schema.Resource{
+		DeprecationMessage: "Resource is deprecated and will be removed in further versions. " +
+			"Please rewrite configuration using `databricks_mount` resource. More info at " +
+			"https://registry.terraform.io/providers/databrickslabs/databricks/latest/docs/" +
+			"resources/mount#migration-from-other-mount-resources",
+		SchemaVersion: 2,
+		Schema:        s,
+	}
 	// nolint should be a bigger context-aware refactor
 	resource.CreateContext = mountCreate(tpl, resource)
 	resource.ReadContext = mountRead(tpl, resource)

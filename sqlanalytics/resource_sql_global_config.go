@@ -14,7 +14,7 @@ type ConfPair struct {
 	Value string `json:"value"`
 }
 
-// GlobalConfig ...
+// GlobalConfig used to generate Terraform resource schema and bind to resource data
 type GlobalConfig struct {
 	SecurityPolicy          string            `json:"security_policy,omitempty" tf:"default:DATA_ACCESS_CONTROL"`
 	DataAccessConfig        map[string]string `json:"data_access_config,omitempty"`
@@ -22,7 +22,7 @@ type GlobalConfig struct {
 	EnableServerlessCompute bool              `json:"enable_serverless_compute,omitempty" tf:"default:false"`
 }
 
-// GlobalConfigForRead ...
+// GlobalConfigForRead used to talk to REST API
 type GlobalConfigForRead struct {
 	SecurityPolicy          string     `json:"security_policy"`
 	DataAccessConfig        []ConfPair `json:"data_access_config"`
@@ -30,18 +30,15 @@ type GlobalConfigForRead struct {
 	EnableServerlessCompute bool       `json:"enable_serverless_compute,omitempty"`
 }
 
-// NewSqlGlobalConfigAPI ...
 func NewSqlGlobalConfigAPI(ctx context.Context, m interface{}) globalConfigAPI {
 	return globalConfigAPI{m.(*common.DatabricksClient), ctx}
 }
 
-// sAPI ...
 type globalConfigAPI struct {
 	client  *common.DatabricksClient
 	context context.Context
 }
 
-// Set ...
 func (a globalConfigAPI) Set(gc GlobalConfig) error {
 	data := map[string]interface{}{
 		"security_policy":           gc.SecurityPolicy,
@@ -84,15 +81,13 @@ func (a globalConfigAPI) Get() (GlobalConfig, error) {
 	return gc, nil
 }
 
-// ResourceSQLGlobalConfig ...
 func ResourceSQLGlobalConfig() *schema.Resource {
 	s := common.StructToSchema(GlobalConfig{}, func(
 		m map[string]*schema.Schema) map[string]*schema.Schema {
 		m["instance_profile_arn"].Default = ""
 		return m
 	})
-
-	set_func := func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+	setGlobalConfig := func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 		var gc GlobalConfig
 		if err := common.DataToStructPointer(d, s, &gc); err != nil {
 			return err
@@ -103,9 +98,8 @@ func ResourceSQLGlobalConfig() *schema.Resource {
 		d.SetId("global")
 		return nil
 	}
-
 	return common.Resource{
-		Create: set_func,
+		Create: setGlobalConfig,
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			gc, err := NewSqlGlobalConfigAPI(ctx, c).Get()
 			if err != nil {
@@ -114,7 +108,7 @@ func ResourceSQLGlobalConfig() *schema.Resource {
 			err = common.StructToData(gc, s, d)
 			return err
 		},
-		Update: set_func,
+		Update: setGlobalConfig,
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			return NewSqlGlobalConfigAPI(ctx, c).Set(GlobalConfig{SecurityPolicy: "DATA_ACCESS_CONTROL"})
 		},

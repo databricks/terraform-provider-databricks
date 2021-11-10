@@ -5,6 +5,16 @@
 * Added `databricks_sql_global_config` resource to provide global configuration for SQL Endpoints ([#855](https://github.com/databrickslabs/terraform-provider-databricks/issues/855))
 * Added `databricks_mount` resource to mount arbitrary cloud storage ([#497](https://github.com/databrickslabs/terraform-provider-databricks/issues/497))
 * Improved implementation of `databricks_repo` by creating the parent folder structure ([#895](https://github.com/databrickslabs/terraform-provider-databricks/pull/895))
+* Fixed `databricks_job` error related [to randomized job IDs](https://docs.databricks.com/release-notes/product/2021/august.html#jobs-service-stability-and-scalability-improvements) ([#901](https://github.com/databrickslabs/terraform-provider-databricks/issues/901))
+* Replace `databricks_group` on name change ([#890](https://github.com/databrickslabs/terraform-provider-databricks/pull/890))
+* Names of scopes in `databricks_secret_scope` can have `/` characters in them ([#892](https://github.com/databrickslabs/terraform-provider-databricks/pull/892))
+
+**Deprecations**
+* `databricks_aws_s3_mount`, `databricks_azure_adls_gen1_mount`, `databricks_azure_adls_gen2_mount`, and `databricks_azure_blob_mount` are deprecated in favor of `databricks_mount`.
+
+Updated dependency versions:
+
+* Bump google.golang.org/api from 0.59.0 to 0.60.0
 
 ## 0.3.10
 

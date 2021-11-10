@@ -46,7 +46,7 @@ func (m AzureADLSGen1Mount) Config(client *common.DatabricksClient) map[string]s
 
 // ResourceAzureAdlsGen1Mount creates the resource
 func ResourceAzureAdlsGen1Mount() *schema.Resource {
-	return commonMountResource(AzureADLSGen1Mount{}, map[string]*schema.Schema{
+	return deprecatedMountTesource(commonMountResource(AzureADLSGen1Mount{}, map[string]*schema.Schema{
 		"cluster_id": {
 			Type:     schema.TypeString,
 			Optional: true,
@@ -106,5 +106,5 @@ func ResourceAzureAdlsGen1Mount() *schema.Resource {
 			Required: true,
 			ForceNew: true,
 		},
-	})
+	}))
 }

@@ -39,6 +39,10 @@ func (m AWSIamMount) Config(client *common.DatabricksClient) map[string]string {
 func ResourceAWSS3Mount() *schema.Resource {
 	tpl := AWSIamMount{}
 	r := &schema.Resource{
+		DeprecationMessage: "Resource is deprecated and will be removed in further versions. " +
+			"Please rewrite configuration using `databricks_mount` resource. More info at " +
+			"https://registry.terraform.io/providers/databrickslabs/databricks/latest/docs/" +
+			"resources/mount#migration-from-other-mount-resources",
 		Schema: map[string]*schema.Schema{
 			"cluster_id": {
 				Type:     schema.TypeString,

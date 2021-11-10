@@ -18,7 +18,7 @@ func NewCatalogsAPI(ctx context.Context, m interface{}) CatalogsAPI {
 }
 
 type CatalogInfo struct {
-	Name        string            `json:"name"`
+	Name        string            `json:"name" tf:"force_new"`
 	Comment     string            `json:"comment,omitempty"`
 	Properties  map[string]string `json:"properties,omitempty"`
 	Owner       string            `json:"owner,omitempty" tf:"computed"`
@@ -43,15 +43,15 @@ func (a CatalogsAPI) deleteCatalog(name string) error {
 }
 
 func ResourceCatalog() *schema.Resource {
-	s := common.StructToSchema(CatalogInfo{},
+	catalogSchema := common.StructToSchema(CatalogInfo{},
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
 			return m
 		})
 	return common.Resource{
-		Schema: s,
+		Schema: catalogSchema,
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var ci CatalogInfo
-			if err := common.DataToStructPointer(d, s, &ci); err != nil {
+			if err := common.DataToStructPointer(d, catalogSchema, &ci); err != nil {
 				return err
 			}
 			if err := NewCatalogsAPI(ctx, c).createCatalog(&ci); err != nil {
@@ -68,11 +68,11 @@ func ResourceCatalog() *schema.Resource {
 			if err != nil {
 				return err
 			}
-			return common.StructToData(ci, s, d)
+			return common.StructToData(ci, catalogSchema, d)
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var ci CatalogInfo
-			if err := common.DataToStructPointer(d, s, &ci); err != nil {
+			if err := common.DataToStructPointer(d, catalogSchema, &ci); err != nil {
 				return err
 			}
 			return NewCatalogsAPI(ctx, c).updateCatalog(ci)

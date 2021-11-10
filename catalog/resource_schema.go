@@ -17,7 +17,7 @@ func NewSchemasAPI(ctx context.Context, m interface{}) SchemasAPI {
 }
 
 type SchemaInfo struct {
-	Name        string            `json:"name"`
+	Name        string            `json:"name" tf:"force_new"`
 	CatalogName string            `json:"catalog_name"`
 	Comment     string            `json:"comment,omitempty"`
 	Properties  map[string]string `json:"properties,omitempty"`

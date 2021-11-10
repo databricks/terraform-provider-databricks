@@ -19,7 +19,7 @@ func TestMetastoreAssignment_Create(t *testing.T) {
 				ExpectedRequest: MetastoreAssignment{
 					WorkspaceID:        123,
 					MetastoreID:        "a",
-					DefaultCatalogName: "b",
+					//DefaultCatalogName: "b",
 				},
 			},
 		},

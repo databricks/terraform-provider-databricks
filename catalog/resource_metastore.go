@@ -26,10 +26,10 @@ type MetastoreInfo struct {
 	WorkspaceIDs              []int64 `json:"workspace_ids,omitempty" tf:"computed"`
 }
 
-func (a MetastoresAPI) listMetastores() (mis []MetastoreInfo, err error) {
-	err = a.client.Get(a.context, "/unity-catalog/metastores", nil, &mis)
-	return
-}
+// func (a MetastoresAPI) listMetastores() (mis []MetastoreInfo, err error) {
+// 	err = a.client.Get(a.context, "/unity-catalog/metastores", nil, &mis)
+// 	return
+// }
 
 func (a MetastoresAPI) createMetastore(mi *MetastoreInfo) error {
 	return a.client.Post(a.context, "/unity-catalog/metastores", mi, mi)

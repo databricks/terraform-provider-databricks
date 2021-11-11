@@ -59,8 +59,8 @@ github.com/Azure/go-autorest/autorest/adal v0.9.17/go.mod h1:XVVeme+LZwABT8K5Lc3
 github.com/Azure/go-autorest/autorest/azure/auth v0.5.9 h1:Y2CgdzitFDsdMwYMzf9LIZWrrTFysqbRc7b94XVVJ78=
 github.com/Azure/go-autorest/autorest/azure/auth v0.5.9/go.mod h1:hg3/1yw0Bq87O3KvvnJoAh34/0zbP7SFizX/qN5JvjU=
 github.com/Azure/go-autorest/autorest/azure/cli v0.4.2/go.mod h1:7qkJkT+j6b+hIpzMOwPChJhTqS8VbsqqgULzMNRugoM=
-github.com/Azure/go-autorest/autorest/azure/cli v0.4.3 h1:DOhB+nXkF7LN0JfBGB5YtCF6QLK8mLe4psaHF7ZQEKM=
-github.com/Azure/go-autorest/autorest/azure/cli v0.4.3/go.mod h1:yAQ2b6eP/CmLPnmLvxtT1ALIY3OR1oFcCqVBi8vHiTc=
+github.com/Azure/go-autorest/autorest/azure/cli v0.4.4 h1:iuooz5cZL6VRcO7DVSFYxRcouqn6bFVE/e77Wts50Zk=
+github.com/Azure/go-autorest/autorest/azure/cli v0.4.4/go.mod h1:yAQ2b6eP/CmLPnmLvxtT1ALIY3OR1oFcCqVBi8vHiTc=
 github.com/Azure/go-autorest/autorest/date v0.3.0 h1:7gUk1U5M/CQbp9WoqinNzJar+8KY+LPI6wiWrP/myHw=
 github.com/Azure/go-autorest/autorest/date v0.3.0/go.mod h1:BI0uouVdmngYNUzGWeSYnokU+TrmwEsOqdt8Y6sso74=
 github.com/Azure/go-autorest/autorest/mocks v0.4.1 h1:K0laFcLE6VLTOwNgSxaGbUcLPuGXlNkbVvq4cW4nIHk=

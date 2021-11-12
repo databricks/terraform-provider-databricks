@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/url"
-	"path/filepath"
+	"path"
 	"strings"
 
 	"github.com/databrickslabs/terraform-provider-databricks/common"
@@ -60,7 +60,7 @@ func (a ReposAPI) Create(r createRequest) (ReposInformation, error) {
 		if strings.HasSuffix(r.Path, "/") {
 			p = strings.TrimSuffix(r.Path, "/")
 		}
-		p = filepath.Dir(p)
+		p = path.Dir(p)
 		if err := NewNotebooksAPI(a.context, a.client).Mkdirs(p); err != nil {
 			return resp, err
 		}

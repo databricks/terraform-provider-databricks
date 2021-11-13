@@ -7,26 +7,29 @@ import (
 	"testing"
 
 	"github.com/databrickslabs/terraform-provider-databricks/common"
-	"github.com/databrickslabs/terraform-provider-databricks/compute"
 	"github.com/databrickslabs/terraform-provider-databricks/internal/acceptance"
+	"github.com/databrickslabs/terraform-provider-databricks/internal/compute"
+	"github.com/databrickslabs/terraform-provider-databricks/storage"
 
 	"github.com/databrickslabs/terraform-provider-databricks/qa"
-	. "github.com/databrickslabs/terraform-provider-databricks/storage"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/stretchr/testify/assert"
 )
 
-func mountResourceCheck(name string,
-	cb func(*common.DatabricksClient, MountPoint) error) resource.TestCheckFunc {
-	return acceptance.ResourceCheck(name,
-		func(ctx context.Context, client *common.DatabricksClient, id string) error {
-			client.WithCommandExecutor(func(ctx context.Context, client *common.DatabricksClient) common.CommandExecutor {
-				return compute.NewCommandsAPI(ctx, client)
-			})
-			clusterInfo := compute.NewTinyClusterInCommonPoolPossiblyReused()
-			mp := NewMountPoint(client.CommandExecutor(context.Background()), id, clusterInfo.ClusterID)
-			return cb(client, mp)
+func TestAzureAccBlobMount(t *testing.T) {
+	client, mp := mountPointThroughReusedCluster(t)
+	storageAccountName := qa.GetEnvOrSkipTest(t, "TEST_STORAGE_V2_ACCOUNT")
+	accountKey := qa.GetEnvOrSkipTest(t, "TEST_STORAGE_V2_KEY")
+	container := qa.GetEnvOrSkipTest(t, "TEST_STORAGE_V2_WASBS")
+	testWithNewSecretScope(t, func(scope, key string) {
+		testMounting(t, mp, storage.AzureBlobMount{
+			StorageAccountName: storageAccountName,
+			ContainerName:      container,
+			SecretScope:        scope,
+			SecretKey:          key,
+			Directory:          "/",
 		})
+	}, client, mp.Name, accountKey)
 }
 
 func TestAzureAccBlobMount_correctly_mounts(t *testing.T) {
@@ -56,7 +59,7 @@ func TestAzureAccBlobMount_correctly_mounts(t *testing.T) {
 			{
 				Config: config,
 				Check: mountResourceCheck("databricks_azure_blob_mount.mount",
-					func(client *common.DatabricksClient, mp MountPoint) error {
+					func(client *common.DatabricksClient, mp storage.MountPoint) error {
 						source, err := mp.Source()
 						assert.NoError(t, err)
 						assert.Equal(t, fmt.Sprintf(
@@ -70,7 +73,7 @@ func TestAzureAccBlobMount_correctly_mounts(t *testing.T) {
 				PreConfig: func() {
 					client := compute.CommonEnvironmentClientWithRealCommandExecutor()
 					clusterInfo := compute.NewTinyClusterInCommonPoolPossiblyReused()
-					mp := NewMountPoint(client.CommandExecutor(context.Background()),
+					mp := storage.NewMountPoint(client.CommandExecutor(context.Background()),
 						qa.FirstKeyValue(t, config, "mount_name"),
 						clusterInfo.ClusterID)
 					err := mp.Delete()

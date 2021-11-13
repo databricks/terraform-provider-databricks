@@ -1,13 +1,11 @@
 package storage
 
 import (
-	"context"
 	"strings"
 	"testing"
 
+	"github.com/databrickslabs/terraform-provider-databricks/clusters"
 	"github.com/databrickslabs/terraform-provider-databricks/common"
-	"github.com/databrickslabs/terraform-provider-databricks/compute"
-	"github.com/databrickslabs/terraform-provider-databricks/identity"
 	"github.com/databrickslabs/terraform-provider-databricks/internal"
 	"github.com/databrickslabs/terraform-provider-databricks/qa"
 
@@ -24,8 +22,8 @@ import (
 // Test interface compliance via compile time error
 var _ Mount = (*S3IamMount)(nil)
 
-var sparkVersionsResponse = compute.SparkVersionsList{
-	SparkVersions: []compute.SparkVersion{
+var sparkVersionsResponse = clusters.SparkVersionsList{
+	SparkVersions: []clusters.SparkVersion{
 		{
 			Version:     "7.3.x-scala2.12",
 			Description: "7.3 LTS (includes Apache Spark 3.0.1, Scala 2.12)",
@@ -33,14 +31,14 @@ var sparkVersionsResponse = compute.SparkVersionsList{
 	},
 }
 
-var nodeListResponse = compute.NodeTypeList{
-	NodeTypes: []compute.NodeType{
+var nodeListResponse = clusters.NodeTypeList{
+	NodeTypes: []clusters.NodeType{
 		{
 			NodeTypeID:     "Standard_F4s",
 			InstanceTypeID: "Standard_F4s",
 			MemoryMB:       8192,
 			NumCores:       4,
-			NodeInstanceType: &compute.NodeInstanceType{
+			NodeInstanceType: &clusters.NodeInstanceType{
 				LocalDisks:      1,
 				LocalDiskSizeGB: 16,
 				LocalNVMeDisks:  0,
@@ -76,9 +74,9 @@ func TestResourceAwsS3MountGenericCreate(t *testing.T) {
 				Method:       "GET",
 				ReuseRequest: true,
 				Resource:     "/api/2.0/clusters/get?cluster_id=this_cluster",
-				Response: compute.ClusterInfo{
-					State: compute.ClusterStateRunning,
-					AwsAttributes: &compute.AwsAttributes{
+				Response: clusters.ClusterInfo{
+					State: clusters.ClusterStateRunning,
+					AwsAttributes: &clusters.AwsAttributes{
 						InstanceProfileArn: "abc",
 					},
 				},
@@ -119,9 +117,9 @@ func TestResourceAwsS3MountGenericCreate_NoName(t *testing.T) {
 				Method:       "GET",
 				ReuseRequest: true,
 				Resource:     "/api/2.0/clusters/get?cluster_id=this_cluster",
-				Response: compute.ClusterInfo{
-					State: compute.ClusterStateRunning,
-					AwsAttributes: &compute.AwsAttributes{
+				Response: clusters.ClusterInfo{
+					State: clusters.ClusterStateRunning,
+					AwsAttributes: &clusters.AwsAttributes{
 						InstanceProfileArn: "abc",
 					},
 				},
@@ -163,10 +161,10 @@ func TestResourceAwsS3MountGenericCreate_WithInstanceProfile(t *testing.T) {
 				Method:       "GET",
 				ReuseRequest: true,
 				Resource:     "/api/2.0/clusters/get?cluster_id=abcd",
-				Response: compute.ClusterInfo{
+				Response: clusters.ClusterInfo{
 					ClusterID: "abcd",
-					State:     compute.ClusterStateRunning,
-					AwsAttributes: &compute.AwsAttributes{
+					State:     clusters.ClusterStateRunning,
+					AwsAttributes: &clusters.AwsAttributes{
 						InstanceProfileArn: instance_profile,
 						Availability:       "SPOT",
 					},
@@ -180,12 +178,12 @@ func TestResourceAwsS3MountGenericCreate_WithInstanceProfile(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/clusters/list",
-				Response: compute.ClusterList{
-					Clusters: []compute.ClusterInfo{
+				Response: clusters.ClusterList{
+					Clusters: []clusters.ClusterInfo{
 						{
 							ClusterID: "abcd",
-							State:     compute.ClusterStateRunning,
-							AwsAttributes: &compute.AwsAttributes{
+							State:     clusters.ClusterStateRunning,
+							AwsAttributes: &clusters.AwsAttributes{
 								InstanceProfileArn: instance_profile,
 								Availability:       "SPOT",
 							},
@@ -216,9 +214,9 @@ func TestResourceAwsS3MountGenericCreate_WithInstanceProfile(t *testing.T) {
 				Method:       "POST",
 				Resource:     "/api/2.0/clusters/create",
 				ReuseRequest: true,
-				ExpectedRequest: compute.Cluster{
+				ExpectedRequest: clusters.Cluster{
 					NodeTypeID: "Standard_F4s",
-					AwsAttributes: &compute.AwsAttributes{
+					AwsAttributes: &clusters.AwsAttributes{
 						InstanceProfileArn: instance_profile,
 						Availability:       "SPOT",
 					},
@@ -230,7 +228,7 @@ func TestResourceAwsS3MountGenericCreate_WithInstanceProfile(t *testing.T) {
 					SparkVersion: "7.3.x-scala2.12",
 					NumWorkers:   0,
 				},
-				Response: compute.ClusterID{
+				Response: clusters.ClusterID{
 					ClusterID: "abcd",
 				},
 			},
@@ -300,9 +298,9 @@ func TestResourceAwsS3MountGenericRead(t *testing.T) {
 				Method:       "GET",
 				ReuseRequest: true,
 				Resource:     "/api/2.0/clusters/get?cluster_id=this_cluster",
-				Response: compute.ClusterInfo{
-					State: compute.ClusterStateRunning,
-					AwsAttributes: &compute.AwsAttributes{
+				Response: clusters.ClusterInfo{
+					State: clusters.ClusterStateRunning,
+					AwsAttributes: &clusters.AwsAttributes{
 						InstanceProfileArn: "abc",
 					},
 				},
@@ -341,9 +339,9 @@ func TestResourceAwsS3MountGenericRead_NotFound(t *testing.T) {
 				Method:       "GET",
 				ReuseRequest: true,
 				Resource:     "/api/2.0/clusters/get?cluster_id=this_cluster",
-				Response: compute.ClusterInfo{
-					State: compute.ClusterStateRunning,
-					AwsAttributes: &compute.AwsAttributes{
+				Response: clusters.ClusterInfo{
+					State: clusters.ClusterStateRunning,
+					AwsAttributes: &clusters.AwsAttributes{
 						InstanceProfileArn: "abc",
 					},
 				},
@@ -378,9 +376,9 @@ func TestResourceAwsS3MountGenericRead_Error(t *testing.T) {
 				Method:       "GET",
 				ReuseRequest: true,
 				Resource:     "/api/2.0/clusters/get?cluster_id=this_cluster",
-				Response: compute.ClusterInfo{
-					State: compute.ClusterStateRunning,
-					AwsAttributes: &compute.AwsAttributes{
+				Response: clusters.ClusterInfo{
+					State: clusters.ClusterStateRunning,
+					AwsAttributes: &clusters.AwsAttributes{
 						InstanceProfileArn: "abc",
 					},
 				},
@@ -417,9 +415,9 @@ func TestResourceAwsS3MountDeleteGeneric(t *testing.T) {
 				Method:       "GET",
 				ReuseRequest: true,
 				Resource:     "/api/2.0/clusters/get?cluster_id=this_cluster",
-				Response: compute.ClusterInfo{
-					State: compute.ClusterStateRunning,
-					AwsAttributes: &compute.AwsAttributes{
+				Response: clusters.ClusterInfo{
+					State: clusters.ClusterStateRunning,
+					AwsAttributes: &clusters.AwsAttributes{
 						InstanceProfileArn: "abc",
 					},
 				},
@@ -451,61 +449,7 @@ func TestResourceAwsS3MountDeleteGeneric(t *testing.T) {
 	assert.Equal(t, "", d.Get("source"))
 }
 
-func TestAwsAccS3MountGeneric(t *testing.T) {
-	client := common.NewClientFromEnvironment()
-	instanceProfile := qa.GetEnvOrSkipTest(t, "TEST_EC2_INSTANCE_PROFILE")
-	ctx := context.WithValue(context.Background(), common.Current, t.Name())
-	instanceProfilesAPI := identity.NewInstanceProfilesAPI(ctx, client)
-	instanceProfilesAPI.Synchronized(instanceProfile, func() bool {
-		if err := instanceProfilesAPI.Create(identity.InstanceProfileInfo{
-			InstanceProfileArn: instanceProfile,
-		}); err != nil {
-			return false
-		}
-		bucket := qa.GetEnvOrSkipTest(t, "TEST_S3_BUCKET")
-		client := compute.CommonEnvironmentClientWithRealCommandExecutor()
-		clustersAPI := compute.NewClustersAPI(ctx, client)
-		clusterInfo, err := GetOrCreateMountingClusterWithInstanceProfile(
-			clustersAPI, instanceProfile)
-		require.NoError(t, err)
-		defer func() {
-			err = clustersAPI.PermanentDelete(clusterInfo.ClusterID)
-			assert.NoError(t, err)
-			err = instanceProfilesAPI.Delete(instanceProfile)
-			assert.NoError(t, err)
-		}()
-		testMounting(t, MountPoint{
-			exec:      client.CommandExecutor(ctx),
-			clusterID: clusterInfo.ClusterID,
-			name:      qa.RandomName("t"),
-		}, GenericMount{
-			S3: &S3IamMount{BucketName: bucket},
-		})
-		return true
-	})
-}
-
 // ============================== ADLS Gen1 Tests ==============================
-
-func TestAzureAccADLSv1MountGeneric(t *testing.T) {
-	client, mp := mountPointThroughReusedCluster(t)
-	if !client.IsAzureClientSecretSet() {
-		t.Skip("Test is meant only for client-secret conf Azure")
-	}
-	storageResource := qa.GetEnvOrSkipTest(t, "TEST_DATA_LAKE_STORE_NAME")
-	testWithNewSecretScope(t, func(scope, key string) {
-		testMounting(t, mp,
-			GenericMount{Adl: &AzureADLSGen1MountGeneric{
-				ClientID:        client.AzureClientID,
-				TenantID:        client.AzureTenantID,
-				PrefixType:      "dfs.adls",
-				StorageResource: storageResource,
-				Directory:       "/",
-				SecretScope:     scope,
-				SecretKey:       key,
-			}})
-	}, client, mp.name, client.AzureClientSecret)
-}
 
 func TestResourceAdlsGen1MountGeneric_Create(t *testing.T) {
 	d, err := qa.ResourceFixture{
@@ -514,8 +458,8 @@ func TestResourceAdlsGen1MountGeneric_Create(t *testing.T) {
 				Method:       "GET",
 				ReuseRequest: true,
 				Resource:     "/api/2.0/clusters/get?cluster_id=this_cluster",
-				Response: compute.ClusterInfo{
-					State: compute.ClusterStateRunning,
+				Response: clusters.ClusterInfo{
+					State: clusters.ClusterStateRunning,
 				},
 			},
 		},
@@ -558,8 +502,8 @@ func TestResourceAdlsGen1MountGeneric_Create_ResourceID(t *testing.T) {
 				Method:       "GET",
 				ReuseRequest: true,
 				Resource:     "/api/2.0/clusters/get?cluster_id=this_cluster",
-				Response: compute.ClusterInfo{
-					State: compute.ClusterStateRunning,
+				Response: clusters.ClusterInfo{
+					State: clusters.ClusterStateRunning,
 				},
 			},
 		},
@@ -672,28 +616,6 @@ func TestResourceAdlsGen1MountGeneric_Create_NoTenantID_Error_EmptyTenant(t *tes
 
 // ============================== ADLS Gen2 Tests ==============================
 
-func TestAzureAccADLSv2MountGeneric(t *testing.T) {
-	client, mp := mountPointThroughReusedCluster(t)
-	if !client.IsAzureClientSecretSet() {
-		t.Skip("Test is meant only for client-secret conf Azure")
-	}
-	storageAccountName := qa.GetEnvOrSkipTest(t, "TEST_STORAGE_V2_ACCOUNT")
-	container := qa.GetEnvOrSkipTest(t, "TEST_STORAGE_V2_ABFSS")
-	testWithNewSecretScope(t, func(scope, key string) {
-		testMounting(t, mp, GenericMount{Abfs: &AzureADLSGen2MountGeneric{
-			ClientID:             client.AzureClientID,
-			TenantID:             client.AzureTenantID,
-			StorageAccountName:   storageAccountName,
-			ContainerName:        container,
-			SecretScope:          scope,
-			SecretKey:            key,
-			InitializeFileSystem: true,
-			Directory:            "/",
-		},
-		})
-	}, client, mp.name, client.AzureClientSecret)
-}
-
 func TestResourceAdlsGen2MountGeneric_Create(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
@@ -701,8 +623,8 @@ func TestResourceAdlsGen2MountGeneric_Create(t *testing.T) {
 				Method:       "GET",
 				ReuseRequest: true,
 				Resource:     "/api/2.0/clusters/get?cluster_id=this_cluster",
-				Response: compute.ClusterInfo{
-					State: compute.ClusterStateRunning,
+				Response: clusters.ClusterInfo{
+					State: clusters.ClusterStateRunning,
 				},
 			},
 		},
@@ -746,8 +668,8 @@ func TestResourceAdlsGen2MountGeneric_Create_ResourceID(t *testing.T) {
 				Method:       "GET",
 				ReuseRequest: true,
 				Resource:     "/api/2.0/clusters/get?cluster_id=this_cluster",
-				Response: compute.ClusterInfo{
-					State: compute.ClusterStateRunning,
+				Response: clusters.ClusterInfo{
+					State: clusters.ClusterStateRunning,
 				},
 			},
 		},
@@ -789,8 +711,8 @@ func TestResourceAdlsGen2MountGeneric_Create_NoTenantID_SPN(t *testing.T) {
 				Method:       "GET",
 				ReuseRequest: true,
 				Resource:     "/api/2.0/clusters/get?cluster_id=this_cluster",
-				Response: compute.ClusterInfo{
-					State: compute.ClusterStateRunning,
+				Response: clusters.ClusterInfo{
+					State: clusters.ClusterStateRunning,
 				},
 			},
 		},
@@ -835,8 +757,8 @@ func TestResourceAdlsGen2MountGeneric_Create_NoTenantID_CLI(t *testing.T) {
 				Method:       "GET",
 				ReuseRequest: true,
 				Resource:     "/api/2.0/clusters/get?cluster_id=this_cluster",
-				Response: compute.ClusterInfo{
-					State: compute.ClusterStateRunning,
+				Response: clusters.ClusterInfo{
+					State: clusters.ClusterStateRunning,
 				},
 			},
 		},
@@ -923,8 +845,8 @@ func TestResourceAzureBlobMountCreateGeneric(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/clusters/get?cluster_id=b",
-				Response: compute.ClusterInfo{
-					State: compute.ClusterStateRunning,
+				Response: clusters.ClusterInfo{
+					State: clusters.ClusterStateRunning,
 				},
 				ReuseRequest: true,
 			},
@@ -969,8 +891,8 @@ func TestResourceAzureBlobMountCreateGeneric_SAS(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/clusters/get?cluster_id=b",
-				Response: compute.ClusterInfo{
-					State: compute.ClusterStateRunning,
+				Response: clusters.ClusterInfo{
+					State: clusters.ClusterStateRunning,
 				},
 				ReuseRequest: true,
 			},
@@ -1015,8 +937,8 @@ func TestResourceAzureBlobMountCreateGeneric_Resource_ID(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/clusters/get?cluster_id=b",
-				Response: compute.ClusterInfo{
-					State: compute.ClusterStateRunning,
+				Response: clusters.ClusterInfo{
+					State: clusters.ClusterStateRunning,
 				},
 				ReuseRequest: true,
 			},
@@ -1077,8 +999,8 @@ func TestResourceAzureBlobMountCreateGeneric_Error(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/clusters/get?cluster_id=b",
-				Response: compute.ClusterInfo{
-					State: compute.ClusterStateRunning,
+				Response: clusters.ClusterInfo{
+					State: clusters.ClusterStateRunning,
 				},
 			},
 		},
@@ -1113,8 +1035,8 @@ func TestResourceAzureBlobMountCreateGeneric_Error_NoResourceID(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/clusters/get?cluster_id=b",
-				Response: compute.ClusterInfo{
-					State: compute.ClusterStateRunning,
+				Response: clusters.ClusterInfo{
+					State: clusters.ClusterStateRunning,
 				},
 			},
 		},
@@ -1146,8 +1068,8 @@ func TestResourceAzureBlobMountGeneric_Read(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/clusters/get?cluster_id=b",
-				Response: compute.ClusterInfo{
-					State: compute.ClusterStateRunning,
+				Response: clusters.ClusterInfo{
+					State: clusters.ClusterStateRunning,
 				},
 			},
 		},
@@ -1188,8 +1110,8 @@ func TestResourceAzureBlobMountGenericRead_NotFound(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/clusters/get?cluster_id=b",
-				Response: compute.ClusterInfo{
-					State: compute.ClusterStateRunning,
+				Response: clusters.ClusterInfo{
+					State: clusters.ClusterStateRunning,
 				},
 			},
 		},
@@ -1226,8 +1148,8 @@ func TestResourceAzureBlobMountGenericRead_Error(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/clusters/get?cluster_id=b",
-				Response: compute.ClusterInfo{
-					State: compute.ClusterStateRunning,
+				Response: clusters.ClusterInfo{
+					State: clusters.ClusterStateRunning,
 				},
 			},
 		},
@@ -1266,8 +1188,8 @@ func TestResourceAzureBlobMountGenericDelete(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/clusters/get?cluster_id=b",
-				Response: compute.ClusterInfo{
-					State: compute.ClusterStateRunning,
+				Response: clusters.ClusterInfo{
+					State: clusters.ClusterStateRunning,
 				},
 			},
 		},
@@ -1299,22 +1221,6 @@ func TestResourceAzureBlobMountGenericDelete(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, "e", d.Id())
 	assert.Equal(t, "", d.Get("source"))
-}
-
-func TestAzureAccBlobMountGeneric(t *testing.T) {
-	client, mp := mountPointThroughReusedCluster(t)
-	storageAccountName := qa.GetEnvOrSkipTest(t, "TEST_STORAGE_V2_ACCOUNT")
-	accountKey := qa.GetEnvOrSkipTest(t, "TEST_STORAGE_V2_KEY")
-	container := qa.GetEnvOrSkipTest(t, "TEST_STORAGE_V2_WASBS")
-	testWithNewSecretScope(t, func(scope, key string) {
-		testMounting(t, mp, GenericMount{Wasb: &AzureBlobMountGeneric{
-			StorageAccountName: storageAccountName,
-			ContainerName:      container,
-			SecretScope:        scope,
-			SecretKey:          key,
-			Directory:          "/",
-		}})
-	}, client, mp.name, accountKey)
 }
 
 // ============================== Google Cloud Storage Tests ==============================
@@ -1349,9 +1255,9 @@ func TestResourceGcsMountGenericCreate_WithCluster(t *testing.T) {
 				Method:       "GET",
 				ReuseRequest: true,
 				Resource:     "/api/2.0/clusters/get?cluster_id=this_cluster",
-				Response: compute.ClusterInfo{
-					State: compute.ClusterStateRunning,
-					GcpAttributes: &compute.GcpAttributes{
+				Response: clusters.ClusterInfo{
+					State: clusters.ClusterStateRunning,
+					GcpAttributes: &clusters.GcpAttributes{
 						GoogleServiceAccount: google_account,
 					},
 				},
@@ -1393,9 +1299,9 @@ func TestResourceGcsMountGenericCreate_WithCluster_NoName(t *testing.T) {
 				Method:       "GET",
 				ReuseRequest: true,
 				Resource:     "/api/2.0/clusters/get?cluster_id=this_cluster",
-				Response: compute.ClusterInfo{
-					State: compute.ClusterStateRunning,
-					GcpAttributes: &compute.GcpAttributes{
+				Response: clusters.ClusterInfo{
+					State: clusters.ClusterStateRunning,
+					GcpAttributes: &clusters.GcpAttributes{
 						GoogleServiceAccount: google_account,
 					},
 				},
@@ -1429,7 +1335,7 @@ func TestResourceGcsMountGenericCreate_WithCluster_NoName(t *testing.T) {
 }
 
 func TestResourceGcsMountGenericCreate_WithServiceAccount(t *testing.T) {
-	google_account := "acc@acc-dbx.iam.gserviceaccount.com"
+	googleAccount := "acc@acc-dbx.iam.gserviceaccount.com"
 	clusterName := "terraform-mount-gcs-bcb24f32098efa4172f435adbed2dae2"
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
@@ -1437,11 +1343,11 @@ func TestResourceGcsMountGenericCreate_WithServiceAccount(t *testing.T) {
 				Method:       "GET",
 				ReuseRequest: true,
 				Resource:     "/api/2.0/clusters/get?cluster_id=abcd",
-				Response: compute.ClusterInfo{
+				Response: clusters.ClusterInfo{
 					ClusterID: "abcd",
-					State:     compute.ClusterStateRunning,
-					GcpAttributes: &compute.GcpAttributes{
-						GoogleServiceAccount: google_account,
+					State:     clusters.ClusterStateRunning,
+					GcpAttributes: &clusters.GcpAttributes{
+						GoogleServiceAccount: googleAccount,
 					},
 				},
 			},
@@ -1453,13 +1359,13 @@ func TestResourceGcsMountGenericCreate_WithServiceAccount(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/clusters/list",
-				Response: compute.ClusterList{
-					Clusters: []compute.ClusterInfo{
+				Response: clusters.ClusterList{
+					Clusters: []clusters.ClusterInfo{
 						{
 							ClusterID: "abcd",
-							State:     compute.ClusterStateRunning,
-							GcpAttributes: &compute.GcpAttributes{
-								GoogleServiceAccount: google_account,
+							State:     clusters.ClusterStateRunning,
+							GcpAttributes: &clusters.GcpAttributes{
+								GoogleServiceAccount: googleAccount,
 							},
 							AutoterminationMinutes: 10,
 							SparkConf: map[string]string{"spark.databricks.cluster.profile": "singleNode",
@@ -1488,9 +1394,9 @@ func TestResourceGcsMountGenericCreate_WithServiceAccount(t *testing.T) {
 				Method:       "POST",
 				Resource:     "/api/2.0/clusters/create",
 				ReuseRequest: true,
-				ExpectedRequest: compute.Cluster{
+				ExpectedRequest: clusters.Cluster{
 					NodeTypeID: "Standard_F4s",
-					GcpAttributes: &compute.GcpAttributes{
+					GcpAttributes: &clusters.GcpAttributes{
 						GoogleServiceAccount: "acc@acc-dbx.iam.gserviceaccount.com",
 					},
 					AutoterminationMinutes: 10,
@@ -1501,7 +1407,7 @@ func TestResourceGcsMountGenericCreate_WithServiceAccount(t *testing.T) {
 					SparkVersion: "7.3.x-scala2.12",
 					NumWorkers:   0,
 				},
-				Response: compute.ClusterID{
+				Response: clusters.ClusterID{
 					ClusterID: "abcd",
 				},
 			},
@@ -1524,7 +1430,7 @@ func TestResourceGcsMountGenericCreate_WithServiceAccount(t *testing.T) {
 			"name": "this_mount",
 			"gs": []interface{}{map[string]interface{}{
 				"bucket_name":     testS3BucketName,
-				"service_account": google_account,
+				"service_account": googleAccount,
 			}},
 		},
 		Create: true,
@@ -1549,23 +1455,6 @@ func TestResourceGcsMountGenericCreate_nothing_specified(t *testing.T) {
 	require.EqualError(t, err, "either cluster_id or service_account must be specified to mount GCS bucket")
 }
 
-// TODO: implement it
-// func TestGcpAccGcsMount(t *testing.T) {
-// 	client, mp := mountPointThroughReusedCluster(t)
-// 	storageAccountName := qa.GetEnvOrSkipTest(t, "TEST_STORAGE_V2_ACCOUNT")
-// 	accountKey := qa.GetEnvOrSkipTest(t, "TEST_STORAGE_V2_KEY")
-// 	container := qa.GetEnvOrSkipTest(t, "TEST_STORAGE_V2_WASBS")
-// 	testWithNewSecretScope(t, func(scope, key string) {
-// 		testMounting(t, mp, GenericMount{Wasb: &AzureBlobMount{
-// 			StorageAccountName: storageAccountName,
-// 			ContainerName:      container,
-// 			SecretScope:        scope,
-// 			SecretKey:          key,
-// 			Directory:          "/",
-// 		}})
-// 	}, client, mp.name, accountKey)
-// }
-
 // ============================== Tests for Generic Configuration options ==============================
 
 func TestResourceMountGenericCreate_WithUriAndOpts(t *testing.T) {
@@ -1576,8 +1465,8 @@ func TestResourceMountGenericCreate_WithUriAndOpts(t *testing.T) {
 				Method:       "GET",
 				ReuseRequest: true,
 				Resource:     "/api/2.0/clusters/get?cluster_id=this_cluster",
-				Response: compute.ClusterInfo{
-					State: compute.ClusterStateRunning,
+				Response: clusters.ClusterInfo{
+					State: clusters.ClusterStateRunning,
 				},
 			},
 		},

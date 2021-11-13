@@ -6,15 +6,16 @@ import (
 	"log"
 	"strings"
 
+	"github.com/databrickslabs/terraform-provider-databricks/clusters"
 	"github.com/databrickslabs/terraform-provider-databricks/common"
-	"github.com/databrickslabs/terraform-provider-databricks/compute"
 	"github.com/databrickslabs/terraform-provider-databricks/identity"
+	"github.com/databrickslabs/terraform-provider-databricks/libraries"
 	"github.com/databrickslabs/terraform-provider-databricks/storage"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-func (ic *importContext) importCluster(c *compute.Cluster) error {
+func (ic *importContext) importCluster(c *clusters.Cluster) error {
 	if c == nil {
 		return nil
 	}
@@ -48,7 +49,7 @@ func (ic *importContext) importCluster(c *compute.Cluster) error {
 }
 
 func (ic *importContext) importLibraries(d *schema.ResourceData, s map[string]*schema.Schema) error {
-	var cll compute.ClusterLibraryList
+	var cll libraries.ClusterLibraryList
 	err := common.DataToStructPointer(d, s, &cll)
 	if err != nil {
 		return err
@@ -129,7 +130,7 @@ func (ic *importContext) refreshMounts() error {
 		return nil
 	}
 	commandAPI := ic.Client.CommandExecutor(ic.Context)
-	clustersAPI := compute.NewClustersAPI(ic.Context, ic.Client)
+	clustersAPI := clusters.NewClustersAPI(ic.Context, ic.Client)
 	cluster, err := clustersAPI.GetOrCreateRunningCluster("terraform-mount")
 	if err != nil {
 		return err

@@ -9,8 +9,8 @@ import (
 	"strings"
 
 	"github.com/databrickslabs/terraform-provider-databricks/common"
-	"github.com/databrickslabs/terraform-provider-databricks/compute"
 	"github.com/databrickslabs/terraform-provider-databricks/identity"
+	"github.com/databrickslabs/terraform-provider-databricks/jobs"
 
 	"github.com/databrickslabs/terraform-provider-databricks/workspace"
 	"github.com/hashicorp/go-cty/cty"
@@ -190,7 +190,7 @@ func (a PermissionsAPI) Delete(objectID string) error {
 		}
 	}
 	if strings.HasPrefix(objectID, "/jobs") {
-		job, err := compute.NewJobsAPI(a.context, a.client).Read(strings.ReplaceAll(objectID, "/jobs/", ""))
+		job, err := jobs.NewJobsAPI(a.context, a.client).Read(strings.ReplaceAll(objectID, "/jobs/", ""))
 		if err != nil {
 			return err
 		}

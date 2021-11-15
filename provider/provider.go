@@ -15,6 +15,7 @@ import (
 	"github.com/databrickslabs/terraform-provider-databricks/common"
 	"github.com/databrickslabs/terraform-provider-databricks/compute"
 	"github.com/databrickslabs/terraform-provider-databricks/identity"
+	"github.com/databrickslabs/terraform-provider-databricks/mlflow"
 	"github.com/databrickslabs/terraform-provider-databricks/mws"
 	"github.com/databrickslabs/terraform-provider-databricks/sqlanalytics"
 	"github.com/databrickslabs/terraform-provider-databricks/storage"
@@ -90,6 +91,9 @@ func DatabricksProvider() *schema.Provider {
 			"databricks_notebook":           workspace.ResourceNotebook(),
 			"databricks_repo":               workspace.ResourceRepo(),
 			"databricks_workspace_conf":     workspace.ResourceWorkspaceConf(),
+
+			"databricks_mlflow_experiment": mlflow.ResourceMLFlowExperiment(),
+			"databricks_mlflow_model":      mlflow.ResourceMLFlowModel(),
 		},
 		Schema: providerSchema(),
 	}

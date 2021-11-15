@@ -373,8 +373,8 @@ func (cluster Cluster) Validate() error {
 	return fmt.Errorf("NumWorkers could be 0 only for SingleNode clusters. See https://docs.databricks.com/clusters/single-node.html for more details")
 }
 
-// ModifyRequest helps remove all request fields that should not be submitted when instance pool is selected.
-func (cluster *Cluster) ModifyRequest() {
+// ModifyRequestOnInstancePool helps remove all request fields that should not be submitted when instance pool is selected.
+func (cluster *Cluster) ModifyRequestOnInstancePool() {
 	// Instance profile id does not exist or not set
 	if cluster.InstancePoolID == "" {
 		return

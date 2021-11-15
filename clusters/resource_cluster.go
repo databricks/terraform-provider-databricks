@@ -5,9 +5,8 @@ import (
 	"log"
 	"time"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
 	"github.com/databrickslabs/terraform-provider-databricks/common"
 	"github.com/databrickslabs/terraform-provider-databricks/libraries"
@@ -51,9 +50,13 @@ func SparkConfDiffSuppressFunc(k, old, new string, d *schema.ResourceData) bool 
 func resourceClusterSchema() map[string]*schema.Schema {
 	return common.StructToSchema(Cluster{}, func(s map[string]*schema.Schema) map[string]*schema.Schema {
 		s["spark_conf"].DiffSuppressFunc = SparkConfDiffSuppressFunc
-		// adds `libraries` configuration block
+		// adds `library` configuration block
 		s["library"] = common.StructToSchema(libraries.ClusterLibraryList{},
 			func(ss map[string]*schema.Schema) map[string]*schema.Schema {
+				ss["library"].Set = func(i interface{}) int {
+					lib := libraries.NewLibraryFromInstanceState(i)
+					return schema.HashString(lib.String())
+				}
 				return ss
 			})["library"]
 
@@ -118,7 +121,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, c *commo
 	if err = cluster.Validate(); err != nil {
 		return err
 	}
-	cluster.ModifyRequest()
+	cluster.ModifyRequestOnInstancePool()
 	clusterInfo, err := clusters.Create(cluster)
 	if err != nil {
 		return err
@@ -229,7 +232,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, c *commo
 		if err = cluster.Validate(); err != nil {
 			return err
 		}
-		cluster.ModifyRequest()
+		cluster.ModifyRequestOnInstancePool()
 		fixInstancePoolChangeIfAny(d, &cluster)
 		clusterInfo, err = clusters.Edit(cluster)
 		if err != nil {

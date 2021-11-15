@@ -38,23 +38,26 @@ func (a LibrariesAPI) Uninstall(req ClusterLibraryList) error {
 
 // ClusterStatus returns library status in cluster
 func (a LibrariesAPI) ClusterStatus(clusterID string) (cls ClusterLibraryStatuses, err error) {
-	err = a.client.Get(a.context, "/libraries/cluster-status", ClusterID{ClusterID: clusterID}, &cls)
+	err = a.client.Get(a.context, "/libraries/cluster-status", ClusterID{
+		ClusterID: clusterID,
+	}, &cls)
 	return
 }
 
-func (a LibrariesAPI) UpdateLibraries(clusterID string, libsToInstall, libsToUninstall ClusterLibraryList) error {
-	if len(libsToUninstall.Libraries) > 0 {
-		err := a.Uninstall(libsToUninstall)
+func (a LibrariesAPI) UpdateLibraries(clusterID string, add, remove ClusterLibraryList) error {
+	if len(remove.Libraries) > 0 {
+		err := a.Uninstall(remove)
 		if err != nil {
 			return err
 		}
 	}
-	if len(libsToInstall.Libraries) > 0 {
-		err := a.Install(libsToInstall)
+	if len(add.Libraries) > 0 {
+		err := a.Install(add)
 		if err != nil {
 			return err
 		}
 	}
+	// TODO: propagate timeout to method signature
 	_, err := a.WaitForLibrariesInstalled(clusterID, 30*time.Minute)
 	return err
 }
@@ -113,54 +116,94 @@ type Cran struct {
 	Repo    string `json:"repo,omitempty"`
 }
 
+// NewLibraryFromInstanceState returns library from instance state for
+// custom schema hash function. The thing is that for sets of types with
+// optional subtypes resource.SerializeResourceForHash doesn't seem to
+// predictably give consistent hashcode - that's why AWS launched
+// TestAccClusterLibraryList is flaky. As an alternative, i tried reflect
+// resource, but init of everything takes way more lines of code, than
+// this thing. And this function is readable enough.
+func NewLibraryFromInstanceState(i interface{}) (lib Library) {
+	raw := i.(map[string]interface{})
+	// set field value to "default value", if there's no raw map value
+	lib.Jar, _ = raw["jar"].(string)
+	lib.Egg, _ = raw["egg"].(string)
+	lib.Whl, _ = raw["whl"].(string)
+	// remember - nested blocks are lists for terraform
+	pypiList, ok := raw["pypi"].([]interface{})
+	if ok && len(pypiList) == 1 {
+		lib.Pypi = &PyPi{}
+		pypi := pypiList[0].(map[string]interface{})
+		lib.Pypi.Package, _ = pypi["package"].(string)
+		lib.Pypi.Repo, _ = pypi["repo"].(string)
+	}
+	mavenList, ok := raw["maven"].([]interface{})
+	if ok && len(mavenList) == 1 {
+		lib.Maven = &Maven{}
+		maven := mavenList[0].(map[string]interface{})
+		lib.Maven.Coordinates, _ = maven["coordinates"].(string)
+		lib.Maven.Repo, _ = maven["repo"].(string)
+	}
+	cranList, ok := raw["cran"].([]interface{})
+	if ok && len(cranList) == 1 {
+		lib.Cran = &Cran{}
+		cran := cranList[0].(map[string]interface{})
+		lib.Cran.Package, _ = cran["package"].(string)
+		lib.Cran.Repo, _ = cran["repo"].(string)
+	}
+	return lib
+}
+
 // Library is a construct that contains information of the location of the library and how to download it
 type Library struct { // TODO: discuss if we can make a dedicated entity just for terraform...
-	Jar string `json:"jar,omitempty" tf:"group:lib"`
-	Egg string `json:"egg,omitempty" tf:"group:lib"`
-	// TODO: add name validation for wheel libraries.
+	Jar   string `json:"jar,omitempty" tf:"group:lib"`
+	Egg   string `json:"egg,omitempty" tf:"group:lib"`
 	Whl   string `json:"whl,omitempty" tf:"group:lib"`
 	Pypi  *PyPi  `json:"pypi,omitempty" tf:"group:lib"`
 	Maven *Maven `json:"maven,omitempty" tf:"group:lib"`
 	Cran  *Cran  `json:"cran,omitempty" tf:"group:lib"`
 }
 
-// TypeAndKey can be used for computing differences
-func (library Library) TypeAndKey() (string, string) {
-	switch {
-	case len(library.Whl) > 0:
-		return "library_whl", library.Whl
-	case len(library.Egg) > 0:
-		return "library_egg", library.Egg
-	case len(library.Jar) > 0:
-		return "library_jar", library.Jar
-	case library.Pypi != nil && len(library.Pypi.Package) > 0:
-		return "library_pypi", library.Pypi.Package + library.Pypi.Repo
-	case library.Maven != nil && len(library.Maven.Coordinates) > 0:
-		return "library_maven", library.Maven.Coordinates + library.Maven.Repo + strings.Join(library.Maven.Exclusions, "")
-	case library.Cran != nil && len(library.Cran.Package) > 0:
-		return "library_cran", library.Cran.Package + library.Cran.Repo
+func (library Library) String() string {
+	if library.Whl != "" {
+		return fmt.Sprintf("whl:%s", library.Whl)
 	}
-	return "", ""
+	if library.Jar != "" {
+		return fmt.Sprintf("jar:%s", library.Jar)
+	}
+	if library.Pypi != nil && library.Pypi.Package != "" {
+		return fmt.Sprintf("pypi:%s%s", library.Pypi.Repo, library.Pypi.Package)
+	}
+	if library.Maven != nil && library.Maven.Coordinates != "" {
+		mvn := library.Maven
+		return fmt.Sprintf("mvn:%s%s%s", mvn.Repo, mvn.Coordinates,
+			strings.Join(mvn.Exclusions, ""))
+	}
+	if library.Egg != "" {
+		return fmt.Sprintf("egg:%s", library.Egg)
+	}
+	if library.Cran != nil && library.Cran.Package != "" {
+		return fmt.Sprintf("cran:%s%s", library.Cran.Repo, library.Cran.Package)
+	}
+	return "unknown"
 }
 
 // ClusterLibraryList is request body for install and uninstall
 type ClusterLibraryList struct {
 	ClusterID string    `json:"cluster_id,omitempty" url:"cluster_id,omitempty"`
-	Libraries []Library `json:"libraries,omitempty" url:"libraries,omitempty" tf:"slice_set,alias:library"`
+	Libraries []Library `json:"libraries,omitempty" tf:"slice_set,alias:library"`
 }
 
 // Diff returns install/uninstall lists given a cluster lib status
 func (cll *ClusterLibraryList) Diff(cls ClusterLibraryStatuses) (ClusterLibraryList, ClusterLibraryList) {
 	inConfig := map[string]Library{}
 	for _, lib := range cll.Libraries {
-		_, key := lib.TypeAndKey()
-		inConfig[key] = lib
+		inConfig[lib.String()] = lib
 	}
 	inState := map[string]Library{}
 	for _, status := range cls.LibraryStatuses {
 		lib := *status.Library
-		_, key := lib.TypeAndKey()
-		inState[key] = lib
+		inState[lib.String()] = lib
 	}
 	toInstall := ClusterLibraryList{ClusterID: cll.ClusterID}
 	toUninstall := ClusterLibraryList{ClusterID: cll.ClusterID}
@@ -178,7 +221,23 @@ func (cll *ClusterLibraryList) Diff(cls ClusterLibraryStatuses) (ClusterLibraryL
 		}
 		toUninstall.Libraries = append(toUninstall.Libraries, lib)
 	}
+	toInstall.Sort()
+	toUninstall.Sort()
 	return toInstall, toUninstall
+}
+
+func (cll *ClusterLibraryList) Sort() {
+	sort.Slice(cll.Libraries, func(i, j int) bool {
+		return cll.Libraries[i].String() < cll.Libraries[j].String()
+	})
+}
+
+func (cll *ClusterLibraryList) String() string {
+	libs := make([]string, len(cll.Libraries))
+	for i, lib := range cll.Libraries {
+		libs[i] = lib.String()
+	}
+	return fmt.Sprintf("%s/%s", cll.ClusterID, strings.Join(libs, ","))
 }
 
 // LibraryStatus is the status on a given cluster when using the libraries status api
@@ -204,11 +263,7 @@ func (cls ClusterLibraryStatuses) ToLibraryList() ClusterLibraryList {
 	for _, lib := range cls.LibraryStatuses {
 		cll.Libraries = append(cll.Libraries, *lib.Library)
 	}
-	sort.Slice(cll.Libraries, func(i, j int) bool {
-		a, b := cll.Libraries[i].TypeAndKey()
-		c, d := cll.Libraries[j].TypeAndKey()
-		return a+b < c+d
-	})
+	cll.Sort()
 	return cll
 }
 
@@ -243,10 +298,9 @@ func (cls ClusterLibraryStatuses) IsRetryNeeded() (bool, error) {
 		// The library has been marked for removal. Libraries can be removed only when clusters are restarted.
 		case "UNINSTALL_ON_RESTART":
 			ready++
-			//Some step in installation failed. More information can be found in the messages field.
+		//Some step in installation failed. More information can be found in the messages field.
 		case "FAILED":
-			libraryType, key := lib.Library.TypeAndKey()
-			errors = append(errors, fmt.Sprintf("%s[%s] failed: %s", libraryType, key, strings.Join(lib.Messages, ", ")))
+			errors = append(errors, fmt.Sprintf("%s failed: %s", lib.Library, strings.Join(lib.Messages, ", ")))
 			continue
 		}
 	}

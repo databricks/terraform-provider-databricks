@@ -215,12 +215,16 @@ func TestResourceClusterCreate_WithLibraries(t *testing.T) {
 					ClusterID: "abc",
 					Libraries: []libraries.Library{
 						{
-							Pypi: &libraries.PyPi{
-								Package: "seaborn==1.2.4",
+							Jar: "dbfs://foo.jar",
+						},
+						{
+							Cran: &libraries.Cran{
+								Package: "rkeops",
+								Repo:    "internal",
 							},
 						},
 						{
-							Whl: "dbfs://baz.whl",
+							Egg: "dbfs://bar.egg",
 						},
 						{
 							Maven: &libraries.Maven{
@@ -230,16 +234,12 @@ func TestResourceClusterCreate_WithLibraries(t *testing.T) {
 							},
 						},
 						{
-							Egg: "dbfs://bar.egg",
-						},
-						{
-							Jar: "dbfs://foo.jar",
-						},
-						{
-							Cran: &libraries.Cran{
-								Package: "rkeops",
-								Repo:    "internal",
+							Pypi: &libraries.PyPi{
+								Package: "seaborn==1.2.4",
 							},
+						},
+						{
+							Whl: "dbfs://baz.whl",
 						},
 					},
 				},
@@ -447,7 +447,7 @@ func TestResourceClusterRead(t *testing.T) {
 	assert.Equal(t, "Shared Autoscaling", d.Get("cluster_name"))
 	assert.Equal(t, "i3.xlarge", d.Get("node_type_id"))
 	assert.Equal(t, 4, d.Get("autoscale.0.max_workers"))
-	assert.Equal(t, "requests", d.Get("library.754562683.pypi.0.package"))
+	assert.Equal(t, "requests", d.Get("library.2047590238.pypi.0.package"))
 	assert.Equal(t, "RUNNING", d.Get("state"))
 	assert.Equal(t, false, d.Get("is_pinned"))
 
@@ -1067,7 +1067,7 @@ func TestModifyClusterRequestAws(t *testing.T) {
 		NodeTypeID:        "d",
 		DriverNodeTypeID:  "e",
 	}
-	c.ModifyRequest()
+	c.ModifyRequestOnInstancePool()
 	assert.Equal(t, "", c.AwsAttributes.ZoneID)
 	assert.Equal(t, "", c.NodeTypeID)
 	assert.Equal(t, "", c.DriverNodeTypeID)
@@ -1084,7 +1084,7 @@ func TestModifyClusterRequestAzure(t *testing.T) {
 		NodeTypeID:        "d",
 		DriverNodeTypeID:  "e",
 	}
-	c.ModifyRequest()
+	c.ModifyRequestOnInstancePool()
 	assert.Nil(t, c.AzureAttributes)
 	assert.Equal(t, "", c.NodeTypeID)
 	assert.Equal(t, "", c.DriverNodeTypeID)
@@ -1101,7 +1101,7 @@ func TestModifyClusterRequestGcp(t *testing.T) {
 		NodeTypeID:        "d",
 		DriverNodeTypeID:  "e",
 	}
-	c.ModifyRequest()
+	c.ModifyRequestOnInstancePool()
 	assert.Equal(t, false, c.GcpAttributes.UsePreemptibleExecutors)
 	assert.Equal(t, "", c.NodeTypeID)
 	assert.Equal(t, "", c.DriverNodeTypeID)

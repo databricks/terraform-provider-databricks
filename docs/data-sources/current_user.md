@@ -60,4 +60,5 @@ Data source exposes the following attributes:
 * `id` -  The id of the calling user.
 * `user_name` - Name of the [user](../resources/user.md), e.g. `mr.foo@example.com`.
 * `home` - Home folder of the [user](../resources/user.md), e.g. `/Users/mr.foo@example.com`.
+* `repos` - Personal Repos location of the [user](../resources/user.md), e.g. `/Repos/mr.foo@example.com`.
 * `alphanumeric` - Alphanumeric representation of user local name. e.g. `mr_foo`.

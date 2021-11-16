@@ -92,8 +92,8 @@ func DatabricksProvider() *schema.Provider {
 			"databricks_repo":               workspace.ResourceRepo(),
 			"databricks_workspace_conf":     workspace.ResourceWorkspaceConf(),
 
-			"databricks_mlflow_experiment": mlflow.ResourceMLFlowExperiment(),
-			"databricks_mlflow_model":      mlflow.ResourceMLFlowModel(),
+			//"databricks_mlflow_experiment": mlflow.ResourceMLFlowExperiment(),
+			"databricks_mlflow_model": mlflow.ResourceMLFlowModel(),
 		},
 		Schema: providerSchema(),
 	}

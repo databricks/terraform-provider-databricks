@@ -18,12 +18,12 @@ type MLFLowModel struct {
 // MLFlowModelAPI defines the response object from the API
 type MLFLowModelAPI struct {
 	Name                 string   `json:"name"`
-	CreationTimestamp    int64    `json:"creation_timestamp"`
-	LastUpdatedTimestamp int64    `json:"last_updated_timestamp"`
-	UserID               string   `json:"user_id"`
-	latest_versions      []string `json:"latest_versions"`
-	Description          string   `json:"description"`
-	Tags                 []string `json:"tags"`
+	CreationTimestamp    int64    `json:"creation_timestamp,omitempty"`
+	LastUpdatedTimestamp int64    `json:"last_updated_timestamp,omitempty"`
+	UserID               string   `json:"user_id,omitempty"`
+	LatestVersions       []string `json:"latest_versions,omitempty"`
+	Description          string   `json:"description,omitempty"`
+	Tags                 []string `json:"tags,omitempty"`
 }
 
 func (d *MLFLowModel) toAPIObject(schema map[string]*schema.Schema, data *schema.ResourceData) (*MLFLowModelAPI, error) {
@@ -59,23 +59,23 @@ func (d *MLFLowModel) fromAPIObject(ad *MLFLowModelAPI, schema map[string]*schem
 }
 
 // NewMLFlowAPI ...
-func NewMLFlowAPI(ctx context.Context, m interface{}) MLFlowAPI {
-	return MLFlowAPI{m.(*common.DatabricksClient), ctx}
+func NewMLFlowAPI(ctx context.Context, m interface{}) MLFlowModelAPI {
+	return MLFlowModelAPI{m.(*common.DatabricksClient), ctx}
 }
 
-// MLFlowAPI ...
-type MLFlowAPI struct {
+// MLFlowModelAPI ...
+type MLFlowModelAPI struct {
 	client  *common.DatabricksClient
 	context context.Context
 }
 
 // Create ...
-func (a MLFlowAPI) Create(d *MLFLowModelAPI) error {
+func (a MLFlowModelAPI) Create(d *MLFLowModelAPI) error {
 	return a.client.Post(a.context, "/mlflow/registered-models/create", d, &d)
 }
 
 // Read ...
-func (a MLFlowAPI) Read(modelName string) (*MLFLowModelAPI, error) {
+func (a MLFlowModelAPI) Read(modelName string) (*MLFLowModelAPI, error) {
 	var d MLFLowModelAPI
 	// need to figure out how to send param
 	err := a.client.Get(a.context, fmt.Sprintf("/mlflow/registered-models/get?name=%s", modelName), nil, &d)
@@ -87,13 +87,14 @@ func (a MLFlowAPI) Read(modelName string) (*MLFLowModelAPI, error) {
 }
 
 // Update ...
-func (a MLFlowAPI) Update(modelName string, d *MLFLowModelAPI) error {
+func (a MLFlowModelAPI) Update(modelName string, d *MLFLowModelAPI) error {
 	return a.client.Patch(a.context, fmt.Sprintf("/mlflow/registered-models/update/%s", modelName), d)
 }
 
 // Delete ...
-func (a MLFlowAPI) Delete(modelName string) error {
-	return a.client.Delete(a.context, fmt.Sprintf("/mlflow/registered-models/delete?name=%s", modelName), nil)
+//func (a MLFlowModelAPI) Delete(modelName string, d *MLFLowModelAPI) error {
+func (a MLFlowModelAPI) Delete(d *MLFLowModelAPI) error {
+	return a.client.Delete(a.context, fmt.Sprintf("/mlflow/registered-models/delete"), d)
 }
 
 // ResourceDashboard ...
@@ -141,7 +142,14 @@ func ResourceMLFlowModel() *schema.Resource {
 			return NewMLFlowAPI(ctx, c).Update(data.Id(), ad)
 		},
 		Delete: func(ctx context.Context, data *schema.ResourceData, c *common.DatabricksClient) error {
-			return NewMLFlowAPI(ctx, c).Delete(data.Id())
+			//return NewMLFlowAPI(ctx, c).Delete(data.Id())
+			var d MLFLowModel
+			ad, err := d.toAPIObject(s, data)
+			if err != nil {
+				return err
+			}
+			return NewMLFlowAPI(ctx, c).Delete(ad)
+
 		},
 		Schema: s,
 	}.ToResource()

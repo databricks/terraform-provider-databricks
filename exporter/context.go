@@ -12,8 +12,8 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/databrickslabs/terraform-provider-databricks/commands"
 	"github.com/databrickslabs/terraform-provider-databricks/common"
-	"github.com/databrickslabs/terraform-provider-databricks/compute"
 	"github.com/databrickslabs/terraform-provider-databricks/identity"
 	"github.com/databrickslabs/terraform-provider-databricks/provider"
 
@@ -91,7 +91,7 @@ func newImportContext(c *common.DatabricksClient) *importContext {
 	c.WithCommandExecutor(func(
 		ctx context.Context,
 		c *common.DatabricksClient) common.CommandExecutor {
-		return compute.NewCommandsAPI(ctx, c)
+		return commands.NewCommandsAPI(ctx, c)
 	})
 	return &importContext{
 		Client:      c,

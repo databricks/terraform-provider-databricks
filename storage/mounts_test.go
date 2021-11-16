@@ -3,97 +3,18 @@ package storage
 import (
 	"context"
 	"fmt"
-	"os"
 	"testing"
 
-	"github.com/databrickslabs/terraform-provider-databricks/access"
-	"github.com/databrickslabs/terraform-provider-databricks/compute"
+	"github.com/databrickslabs/terraform-provider-databricks/clusters"
 	"github.com/databrickslabs/terraform-provider-databricks/internal"
 
 	"github.com/databrickslabs/terraform-provider-databricks/qa"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
 	"github.com/databrickslabs/terraform-provider-databricks/common"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
-
-func mountPointThroughReusedCluster(t *testing.T) (*common.DatabricksClient, MountPoint) {
-	if _, ok := os.LookupEnv("CLOUD_ENV"); !ok {
-		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
-	}
-	ctx := context.Background()
-	client := common.CommonEnvironmentClient()
-	clusterInfo := compute.NewTinyClusterInCommonPoolPossiblyReused()
-	randomName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
-	return client, MountPoint{
-		exec:      client.CommandExecutor(ctx),
-		clusterID: clusterInfo.ClusterID,
-		name:      randomName,
-	}
-}
-
-func testWithNewSecretScope(t *testing.T, callback func(string, string),
-	client *common.DatabricksClient, suffix, secret string) {
-	randomScope := "test" + suffix
-	randomKey := "key" + suffix
-
-	ctx := context.Background()
-	secretScopes := access.NewSecretScopesAPI(ctx, client)
-	err := secretScopes.Create(access.SecretScope{
-		Name:                   randomScope,
-		InitialManagePrincipal: "users",
-	})
-	require.NoError(t, err)
-	defer func() {
-		err = secretScopes.Delete(randomScope)
-		assert.NoError(t, err)
-	}()
-
-	secrets := access.NewSecretsAPI(ctx, client)
-	err = secrets.Create(secret, randomScope, randomKey)
-	require.NoError(t, err)
-
-	callback(randomScope, randomKey)
-}
-
-func testMounting(t *testing.T, mp MountPoint, m Mount) {
-	client := common.CommonEnvironmentClient()
-	source, err := mp.Mount(m, client)
-	assert.Equal(t, m.Source(), source)
-	assert.NoError(t, err)
-	defer func() {
-		err = mp.Delete()
-		assert.NoError(t, err)
-	}()
-	source, err = mp.Source()
-	require.Equalf(t, m.Source(), source, "Error: %v", err)
-}
-
-func TestAccSourceOnInvalidMountFails(t *testing.T) {
-	_, mp := mountPointThroughReusedCluster(t)
-	source, err := mp.Source()
-	assert.Equal(t, "", source)
-	qa.AssertErrorStartsWith(t, err, "Mount not found")
-}
-
-func TestAccInvalidSecretScopeFails(t *testing.T) {
-	_, mp := mountPointThroughReusedCluster(t)
-	client := common.CommonEnvironmentClient()
-	source, err := mp.Mount(AzureADLSGen1Mount{
-		ClientID:        "abc",
-		TenantID:        "bcd",
-		PrefixType:      "dfs.adls",
-		StorageResource: "def",
-		Directory:       "/",
-		SecretKey:       "key",
-		SecretScope:     "y",
-	}, client)
-	assert.Equal(t, "", source)
-	qa.AssertErrorStartsWith(t, err, "Secret does not exist with scope: y and key: key")
-}
 
 func TestValidateMountDirectory(t *testing.T) {
 	testCases := []struct {
@@ -135,9 +56,9 @@ func testMountFuncHelper(t *testing.T, mountFunc func(mp MountPoint, mount Mount
 
 	ctx := context.Background()
 	mp := MountPoint{
-		exec:      c.CommandExecutor(ctx),
-		clusterID: "random_cluster_id",
-		name:      mountName,
+		Exec:      c.CommandExecutor(ctx),
+		ClusterID: "random_cluster_id",
+		Name:      mountName,
 	}
 
 	resp, err := mountFunc(mp, mount)
@@ -244,8 +165,8 @@ func TestDeletedMountClusterRecreates(t *testing.T) {
 			Method:       "GET",
 			ReuseRequest: true,
 			Resource:     "/api/2.0/clusters/spark-versions",
-			Response: compute.SparkVersionsList{
-				SparkVersions: []compute.SparkVersion{
+			Response: clusters.SparkVersionsList{
+				SparkVersions: []clusters.SparkVersion{
 					{
 						Version:     "7.1.x-cpu-ml-scala2.12",
 						Description: "7.1 ML (includes Apache Spark 3.0.0, Scala 2.12)",
@@ -257,14 +178,14 @@ func TestDeletedMountClusterRecreates(t *testing.T) {
 			Method:       "GET",
 			ReuseRequest: true,
 			Resource:     "/api/2.0/clusters/list-node-types",
-			Response: compute.NodeTypeList{
-				NodeTypes: []compute.NodeType{
+			Response: clusters.NodeTypeList{
+				NodeTypes: []clusters.NodeType{
 					{
 						NodeTypeID:     "Standard_F4s",
 						InstanceTypeID: "Standard_F4s",
 						MemoryMB:       8192,
 						NumCores:       4,
-						NodeInstanceType: &compute.NodeInstanceType{
+						NodeInstanceType: &clusters.NodeInstanceType{
 							LocalDisks:      1,
 							InstanceTypeID:  "Standard_F4s",
 							LocalDiskSizeGB: 16,
@@ -278,7 +199,7 @@ func TestDeletedMountClusterRecreates(t *testing.T) {
 			Method:       "POST",
 			ReuseRequest: true,
 			Resource:     "/api/2.0/clusters/create",
-			ExpectedRequest: compute.Cluster{
+			ExpectedRequest: clusters.Cluster{
 				AutoterminationMinutes: 10,
 				ClusterName:            "terraform-mount",
 				NodeTypeID:             "Standard_F4s",
@@ -292,7 +213,7 @@ func TestDeletedMountClusterRecreates(t *testing.T) {
 					"spark.scheduler.mode":             "FIFO",
 				},
 			},
-			Response: compute.ClusterID{
+			Response: clusters.ClusterID{
 				ClusterID: "bcd",
 			},
 		},
@@ -300,7 +221,7 @@ func TestDeletedMountClusterRecreates(t *testing.T) {
 			Method:       "GET",
 			ReuseRequest: true,
 			Resource:     "/api/2.0/clusters/get?cluster_id=bcd",
-			Response: compute.ClusterInfo{
+			Response: clusters.ClusterInfo{
 				ClusterID: "bcd",
 				State:     "RUNNING",
 				SparkConf: map[string]string{

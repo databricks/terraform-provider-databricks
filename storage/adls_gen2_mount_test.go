@@ -4,35 +4,14 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/databrickslabs/terraform-provider-databricks/clusters"
 	"github.com/databrickslabs/terraform-provider-databricks/common"
-	"github.com/databrickslabs/terraform-provider-databricks/compute"
 	"github.com/databrickslabs/terraform-provider-databricks/internal"
 
 	"github.com/databrickslabs/terraform-provider-databricks/qa"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
-
-func TestAzureAccADLSv2Mount(t *testing.T) {
-	client, mp := mountPointThroughReusedCluster(t)
-	if !client.IsAzureClientSecretSet() {
-		t.Skip("Test is meant only for client-secret conf Azure")
-	}
-	storageAccountName := qa.GetEnvOrSkipTest(t, "TEST_STORAGE_V2_ACCOUNT")
-	container := qa.GetEnvOrSkipTest(t, "TEST_STORAGE_V2_ABFSS")
-	testWithNewSecretScope(t, func(scope, key string) {
-		testMounting(t, mp, AzureADLSGen2Mount{
-			ClientID:             client.AzureClientID,
-			TenantID:             client.AzureTenantID,
-			StorageAccountName:   storageAccountName,
-			ContainerName:        container,
-			SecretScope:          scope,
-			SecretKey:            key,
-			InitializeFileSystem: true,
-			Directory:            "/",
-		})
-	}, client, mp.name, client.AzureClientSecret)
-}
 
 func TestResourceAdlsGen2Mount_Create(t *testing.T) {
 	d, err := qa.ResourceFixture{
@@ -41,8 +20,8 @@ func TestResourceAdlsGen2Mount_Create(t *testing.T) {
 				Method:       "GET",
 				ReuseRequest: true,
 				Resource:     "/api/2.0/clusters/get?cluster_id=this_cluster",
-				Response: compute.ClusterInfo{
-					State: compute.ClusterStateRunning,
+				Response: clusters.ClusterInfo{
+					State: clusters.ClusterStateRunning,
 				},
 			},
 		},

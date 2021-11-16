@@ -6,8 +6,8 @@ import (
 	"log"
 	"strings"
 
+	"github.com/databrickslabs/terraform-provider-databricks/clusters"
 	"github.com/databrickslabs/terraform-provider-databricks/common"
-	"github.com/databrickslabs/terraform-provider-databricks/compute"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -225,7 +225,7 @@ func (ta *SqlPermissions) apply(qb func(objType, key string) string) error {
 }
 
 func (ta *SqlPermissions) initCluster(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) (err error) {
-	clustersAPI := compute.NewClustersAPI(ctx, c)
+	clustersAPI := clusters.NewClustersAPI(ctx, c)
 	if ci, ok := d.GetOk("cluster_id"); ok {
 		ta.ClusterID = ci.(string)
 	} else {
@@ -255,13 +255,13 @@ func (ta *SqlPermissions) initCluster(ctx context.Context, d *schema.ResourceDat
 	return nil
 }
 
-func (ta *SqlPermissions) getOrCreateCluster(clustersAPI compute.ClustersAPI) (string, error) {
-	sparkVersion := clustersAPI.LatestSparkVersionOrDefault(compute.SparkVersionRequest{
+func (ta *SqlPermissions) getOrCreateCluster(clustersAPI clusters.ClustersAPI) (string, error) {
+	sparkVersion := clustersAPI.LatestSparkVersionOrDefault(clusters.SparkVersionRequest{
 		Latest: true,
 	})
-	nodeType := clustersAPI.GetSmallestNodeType(compute.NodeTypeRequest{LocalDisk: true})
+	nodeType := clustersAPI.GetSmallestNodeType(clusters.NodeTypeRequest{LocalDisk: true})
 	aclCluster, err := clustersAPI.GetOrCreateRunningCluster(
-		"terraform-table-acl", compute.Cluster{
+		"terraform-table-acl", clusters.Cluster{
 			ClusterName:            "terraform-table-acl",
 			SparkVersion:           sparkVersion,
 			NodeTypeID:             nodeType,

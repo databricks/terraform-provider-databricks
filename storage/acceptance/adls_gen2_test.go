@@ -6,6 +6,7 @@ import (
 
 	"github.com/databrickslabs/terraform-provider-databricks/common"
 	"github.com/databrickslabs/terraform-provider-databricks/internal/acceptance"
+	"github.com/databrickslabs/terraform-provider-databricks/storage"
 
 	"github.com/databrickslabs/terraform-provider-databricks/qa"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -44,4 +45,25 @@ func TestAzureAccAdlsGen2Mount_correctly_mounts(t *testing.T) {
 			},
 		},
 	})
+}
+
+func TestAzureAccADLSv2Mount(t *testing.T) {
+	client, mp := mountPointThroughReusedCluster(t)
+	if !client.IsAzureClientSecretSet() {
+		t.Skip("Test is meant only for client-secret conf Azure")
+	}
+	storageAccountName := qa.GetEnvOrSkipTest(t, "TEST_STORAGE_V2_ACCOUNT")
+	container := qa.GetEnvOrSkipTest(t, "TEST_STORAGE_V2_ABFSS")
+	testWithNewSecretScope(t, func(scope, key string) {
+		testMounting(t, mp, storage.AzureADLSGen2Mount{
+			ClientID:             client.AzureClientID,
+			TenantID:             client.AzureTenantID,
+			StorageAccountName:   storageAccountName,
+			ContainerName:        container,
+			SecretScope:          scope,
+			SecretKey:            key,
+			InitializeFileSystem: true,
+			Directory:            "/",
+		})
+	}, client, mp.Name, client.AzureClientSecret)
 }

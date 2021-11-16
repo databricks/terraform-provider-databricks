@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/databrickslabs/terraform-provider-databricks/clusters"
 	"github.com/databrickslabs/terraform-provider-databricks/common"
-	"github.com/databrickslabs/terraform-provider-databricks/compute"
 	"github.com/databrickslabs/terraform-provider-databricks/qa"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -168,8 +168,8 @@ var createHighConcurrencyCluster = []qa.HTTPFixture{
 		Method:       "GET",
 		ReuseRequest: true,
 		Resource:     "/api/2.0/clusters/spark-versions",
-		Response: compute.SparkVersionsList{
-			SparkVersions: []compute.SparkVersion{
+		Response: clusters.SparkVersionsList{
+			SparkVersions: []clusters.SparkVersion{
 				{
 					Version:     "7.1.x-cpu-ml-scala2.12",
 					Description: "7.1 ML (includes Apache Spark 3.0.0, Scala 2.12)",
@@ -181,14 +181,14 @@ var createHighConcurrencyCluster = []qa.HTTPFixture{
 		Method:       "GET",
 		ReuseRequest: true,
 		Resource:     "/api/2.0/clusters/list-node-types",
-		Response: compute.NodeTypeList{
-			NodeTypes: []compute.NodeType{
+		Response: clusters.NodeTypeList{
+			NodeTypes: []clusters.NodeType{
 				{
 					NodeTypeID:     "Standard_F4s",
 					InstanceTypeID: "Standard_F4s",
 					MemoryMB:       8192,
 					NumCores:       4,
-					NodeInstanceType: &compute.NodeInstanceType{
+					NodeInstanceType: &clusters.NodeInstanceType{
 						LocalDisks:      1,
 						InstanceTypeID:  "Standard_F4s",
 						LocalDiskSizeGB: 16,
@@ -202,7 +202,7 @@ var createHighConcurrencyCluster = []qa.HTTPFixture{
 		Method:       "POST",
 		ReuseRequest: true,
 		Resource:     "/api/2.0/clusters/create",
-		ExpectedRequest: compute.Cluster{
+		ExpectedRequest: clusters.Cluster{
 			AutoterminationMinutes: 10,
 			ClusterName:            "terraform-table-acl",
 			NodeTypeID:             "Standard_F4s",
@@ -217,7 +217,7 @@ var createHighConcurrencyCluster = []qa.HTTPFixture{
 				"spark.master":                           "local[*]",
 			},
 		},
-		Response: compute.ClusterID{
+		Response: clusters.ClusterID{
 			ClusterID: "bcd",
 		},
 	},
@@ -225,7 +225,7 @@ var createHighConcurrencyCluster = []qa.HTTPFixture{
 		Method:       "GET",
 		ReuseRequest: true,
 		Resource:     "/api/2.0/clusters/get?cluster_id=bcd",
-		Response: compute.ClusterInfo{
+		Response: clusters.ClusterInfo{
 			ClusterID: "bcd",
 			State:     "RUNNING",
 			SparkConf: map[string]string{
@@ -267,13 +267,13 @@ func TestResourceSqlPermissions_Read_Error(t *testing.T) {
 
 func TestResourceSqlPermissions_Read_ErrorCommand(t *testing.T) {
 	qa.ResourceFixture{
-		CommandMock: failedCommand("does not compute").toCommandMock(),
+		CommandMock: failedCommand("does not clusters").toCommandMock(),
 		Fixtures:    createHighConcurrencyCluster,
 		Resource:    ResourceSqlPermissions(),
 		ID:          "database/foo",
 		Read:        true,
 		New:         true,
-	}.ExpectError(t, "cannot read current grants: does not compute")
+	}.ExpectError(t, "cannot read current grants: does not clusters")
 }
 
 func TestResourceSqlPermissions_Create(t *testing.T) {

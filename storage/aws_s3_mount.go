@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/databrickslabs/terraform-provider-databricks/clusters"
 	"github.com/databrickslabs/terraform-provider-databricks/common"
-	"github.com/databrickslabs/terraform-provider-databricks/compute"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -103,7 +103,7 @@ func preprocessS3Mount(ctx context.Context, d *schema.ResourceData, m interface{
 	if clusterID == "" && instanceProfile == "" {
 		return fmt.Errorf("either cluster_id or instance_profile must be specified")
 	}
-	clustersAPI := compute.NewClustersAPI(ctx, m)
+	clustersAPI := clusters.NewClustersAPI(ctx, m)
 	if clusterID != "" {
 		clusterInfo, err := clustersAPI.Get(clusterID)
 		if err != nil {
@@ -128,7 +128,7 @@ func preprocessS3Mount(ctx context.Context, d *schema.ResourceData, m interface{
 
 // GetOrCreateMountingClusterWithInstanceProfile ...
 func GetOrCreateMountingClusterWithInstanceProfile(
-	clustersAPI compute.ClustersAPI, instanceProfile string) (i compute.ClusterInfo, err error) {
+	clustersAPI clusters.ClustersAPI, instanceProfile string) (i clusters.ClusterInfo, err error) {
 	arnSections := strings.SplitN(instanceProfile, ":", 6)
 	if len(arnSections) != 6 {
 		err = fmt.Errorf("invalid arn: %s", instanceProfile)
@@ -137,7 +137,7 @@ func GetOrCreateMountingClusterWithInstanceProfile(
 	instanceProfileParts := strings.Split(arnSections[5], "/")
 	clusterName := fmt.Sprintf("terraform-mount-%s", strings.Join(instanceProfileParts[1:], "-"))
 	cluster := getCommonClusterObject(clustersAPI, clusterName)
-	cluster.AwsAttributes = &compute.AwsAttributes{
+	cluster.AwsAttributes = &clusters.AwsAttributes{
 		InstanceProfileArn: instanceProfile,
 		Availability:       "SPOT",
 	}

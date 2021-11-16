@@ -32,7 +32,6 @@ type providerFixture struct {
 	assertToken              string
 	assertHost               string
 	assertAzure              bool
-	usePATForSPN             bool
 }
 
 func (tt providerFixture) rawConfig() map[string]interface{} {
@@ -75,9 +74,6 @@ func (tt providerFixture) rawConfig() map[string]interface{} {
 	}
 	if tt.azureWorkspaceResourceID != "" {
 		rawConfig["azure_workspace_resource_id"] = tt.azureWorkspaceResourceID
-	}
-	if tt.usePATForSPN {
-		rawConfig["azure_use_pat_for_spn"] = true
 	}
 	return rawConfig
 }
@@ -377,10 +373,9 @@ func TestConfig_AzureResourceIDViaSpn(t *testing.T) {
 			"PATH": "../common/testdata",
 			"HOME": "../common/testdata",
 		},
-		assertAzure:  true,
-		usePATForSPN: true,
-		assertHost:   "",
-		assertToken:  "",
+		assertAzure: true,
+		assertHost:  "",
+		assertToken: "",
 	}.apply(t)
 }
 
@@ -397,10 +392,9 @@ func TestConfig_Bug294(t *testing.T) {
 			"HOME":                "../common/testdata",
 			"PATH":                "../common/testdata",
 		},
-		assertAzure:  true,
-		usePATForSPN: true,
-		assertHost:   "",
-		assertToken:  "",
+		assertAzure: true,
+		assertHost:  "",
+		assertToken: "",
 	}.apply(t)
 }
 
@@ -429,7 +423,6 @@ func configureProviderAndReturnClient(t *testing.T, tt providerFixture) (*common
 		return nil, fmt.Errorf(strings.Join(issues, ", "))
 	}
 	client := p.Meta().(*common.DatabricksClient)
-	client.AzureUsePATForSPN = tt.usePATForSPN
 	err := client.Authenticate(ctx)
 	if err != nil {
 		return nil, err

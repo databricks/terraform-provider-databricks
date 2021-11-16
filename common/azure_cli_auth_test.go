@@ -37,9 +37,8 @@ func TestAzureCliAuth(t *testing.T) {
 	defer server.Close()
 
 	client := DatabricksClient{
-		Host:                      server.URL,
-		AzureDatabricksResourceID: "/subscriptions/a/resourceGroups/b/providers/Microsoft.Databricks/workspaces/c",
-		InsecureSkipVerify:        true,
+		Host:               server.URL,
+		InsecureSkipVerify: true,
 	}
 	err := client.Configure()
 	assert.NoError(t, err)
@@ -170,10 +169,9 @@ func TestInternalRefresh_CorruptExpire(t *testing.T) {
 
 func TestConfigureWithAzureCLI_SP(t *testing.T) {
 	aa := DatabricksClient{
-		AzureClientID:             "a",
-		AzureClientSecret:         "b",
-		AzureTenantID:             "c",
-		AzureDatabricksResourceID: "/subscriptions/a/resourceGroups/b/providers/Microsoft.Databricks/workspaces/c",
+		AzureClientID:     "a",
+		AzureClientSecret: "b",
+		AzureTenantID:     "c",
 	}
 	ctx := context.Background()
 	auth, err := aa.configureWithAzureCLI(ctx)
@@ -191,9 +189,6 @@ func TestConfigureWithAzureCLI(t *testing.T) {
 	}`)
 	defer server.Close()
 
-	client.AzureDatabricksResourceID = "/subscriptions/a/resourceGroups/b/providers/Microsoft.Databricks/workspaces/c"
-	client.AzureUsePATForCLI = true
-
 	auth, err := client.configureWithAzureCLI(context.Background())
 	assert.NoError(t, err)
 
@@ -210,9 +205,6 @@ func TestConfigureWithAzureCLI_Error(t *testing.T) {
 		token_value": corrupt
 	}`)
 	defer server.Close()
-
-	client.AzureDatabricksResourceID = "/subscriptions/a/resourceGroups/b/providers/Microsoft.Databricks/workspaces/c"
-	client.AzureUsePATForCLI = true
 
 	auth, err := client.configureWithAzureCLI(context.Background())
 	assert.NoError(t, err)
@@ -232,9 +224,6 @@ func TestConfigureWithAzureCLI_NotInstalled(t *testing.T) {
 		"token_value": "abc"
 	}`)
 	defer server.Close()
-
-	client.AzureDatabricksResourceID = "/subscriptions/a/resourceGroups/b/providers/Microsoft.Databricks/workspaces/c"
-	client.AzureUsePATForCLI = true
 
 	_, err := client.configureWithAzureCLI(context.Background())
 	require.Error(t, err)

@@ -15,7 +15,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestGetOrCreateRunningCluster_AzureAuth(t *testing.T) {
+func TestGetOrCreateRunningCluster(t *testing.T) {
 	client, server, err := qa.HttpFixtureClient(t, []qa.HTTPFixture{
 		{
 			Method:   "GET",
@@ -105,7 +105,7 @@ func TestGetOrCreateRunningCluster_AzureAuth(t *testing.T) {
 	defer server.Close()
 	require.NoError(t, err)
 
-	client.AzureDatabricksResourceID = "/subscriptions/a/resourceGroups/b/providers/Microsoft.Databricks/workspaces/c"
+	client.AzureUseMSI = true
 
 	ctx := context.Background()
 	clusterInfo, err := NewClustersAPI(ctx, client).GetOrCreateRunningCluster("mount")
@@ -158,8 +158,6 @@ func TestGetOrCreateRunningCluster_Existing_AzureAuth(t *testing.T) {
 	defer server.Close()
 	require.NoError(t, err)
 
-	client.AzureDatabricksResourceID = "/a/b/c"
-
 	ctx := context.Background()
 	clusterInfo, err := NewClustersAPI(ctx, client).GetOrCreateRunningCluster("mount")
 	require.NoError(t, err)
@@ -187,8 +185,6 @@ func TestWaitForClusterStatus_RetryOnNotFound(t *testing.T) {
 	})
 	defer server.Close()
 	require.NoError(t, err)
-
-	client.AzureDatabricksResourceID = "/a/b/c"
 
 	ctx := context.Background()
 	clusterInfo, err := NewClustersAPI(ctx, client).waitForClusterStatus("abc", ClusterStateRunning)
@@ -232,8 +228,6 @@ func TestWaitForClusterStatus_NotReachable(t *testing.T) {
 	})
 	defer server.Close()
 	require.NoError(t, err)
-
-	client.AzureDatabricksResourceID = "/a/b/c"
 
 	ctx := context.Background()
 	_, err = NewClustersAPI(ctx, client).waitForClusterStatus("abc", ClusterStateRunning)

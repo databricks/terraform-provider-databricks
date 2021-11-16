@@ -191,6 +191,7 @@ func TestConfigureWithAzureCLI(t *testing.T) {
 
 	auth, err := client.configureWithAzureCLI(context.Background())
 	assert.NoError(t, err)
+	require.NotNil(t, auth)
 
 	err = auth(httptest.NewRequest("GET", "/clusters/list", http.NoBody))
 	assert.NoError(t, err)
@@ -208,6 +209,7 @@ func TestConfigureWithAzureCLI_Error(t *testing.T) {
 
 	auth, err := client.configureWithAzureCLI(context.Background())
 	assert.NoError(t, err)
+	require.NotNil(t, auth)
 
 	err = auth(httptest.NewRequest("GET", "/clusters/list", http.NoBody))
 	assert.Error(t, err)

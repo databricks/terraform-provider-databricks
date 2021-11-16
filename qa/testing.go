@@ -154,11 +154,19 @@ func (f ResourceFixture) Apply(t *testing.T) (*schema.ResourceData, error) {
 	if err != nil {
 		return nil, err
 	}
-	if f.CommandMock != nil {
-		client.WithCommandMock(f.CommandMock)
+	if f.CommandMock == nil {
+		f.CommandMock = func(commandStr string) common.CommandResults {
+			return common.CommandResults{
+				ResultType: "error",
+				Summary:    "NOT_MOCKED",
+			}
+		}
 	}
-	if f.Azure {
-		client.AzureDatabricksResourceID = "/subscriptions/a/resourceGroups/b/providers/Microsoft.Databricks/workspaces/c"
+	client.WithCommandMock(f.CommandMock)
+	if f.Azure { // todo: add shim to "IsAzure"
+		client.AzureClientID = "a"
+		client.AzureClientSecret = "b"
+		client.AzureTenantID = "c"
 	}
 	if f.AzureSPN {
 		client.AzureClientID = "a"

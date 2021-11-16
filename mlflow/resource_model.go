@@ -26,6 +26,10 @@ type MLFLowModelAPI struct {
 	Tags                 []string `json:"tags,omitempty"`
 }
 
+type MLFlowRegisteredModel struct {
+	RegisteredModel MLFLowModelAPI `json:"registered_model"`
+}
+
 func (d *MLFLowModel) toAPIObject(schema map[string]*schema.Schema, data *schema.ResourceData) (*MLFLowModelAPI, error) {
 	// Extract from ResourceData.
 	if err := common.DataToStructPointer(data, schema, d); err != nil {
@@ -55,6 +59,7 @@ func (d *MLFLowModel) fromAPIObject(ad *MLFLowModelAPI, schema map[string]*schem
 	// Ideally, the reflection code also sets empty values, but we'd risk
 	// clobbering values we actually want to keep around in existing code.
 	data.Set("tags", ad.Tags)
+	data.Set("name", ad.Name)
 	return nil
 }
 
@@ -76,14 +81,15 @@ func (a MLFlowModelAPI) Create(d *MLFLowModelAPI) error {
 
 // Read ...
 func (a MLFlowModelAPI) Read(modelName string) (*MLFLowModelAPI, error) {
-	var d MLFLowModelAPI
+	//var d MLFLowModelAPI
+	var d MLFlowRegisteredModel
 	// need to figure out how to send param
 	err := a.client.Get(a.context, fmt.Sprintf("/mlflow/registered-models/get?name=%s", modelName), nil, &d)
 	if err != nil {
 		return nil, err
 	}
 
-	return &d, nil
+	return &d.RegisteredModel, nil
 }
 
 // Update ...
@@ -121,6 +127,7 @@ func ResourceMLFlowModel() *schema.Resource {
 			// No need to set anything because the resource is going to be
 			// read immediately after being created.
 			data.SetId(ad.Name)
+			data.Set("name", ad.Name)
 			return nil
 		},
 		Read: func(ctx context.Context, data *schema.ResourceData, c *common.DatabricksClient) error {

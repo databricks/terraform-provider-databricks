@@ -40,7 +40,7 @@ func (d *MLFLowExperiment) toAPIObject(schema map[string]*schema.Schema, data *s
 	var ad MLFLowExperimentAPI
 	ad.Name = d.Name
 	ad.ExperimentId = data.Id()
-	ad.Tags = append([]Tag{}, ad.Tags...)
+	ad.Tags = d.Tags
 
 	return &ad, nil
 }
@@ -48,7 +48,7 @@ func (d *MLFLowExperiment) toAPIObject(schema map[string]*schema.Schema, data *s
 func (d *MLFLowExperiment) fromAPIObject(ad *MLFLowExperimentAPI, schema map[string]*schema.Schema, data *schema.ResourceData) error {
 	// Copy from API object.
 	d.Name = ad.Name
-	d.Tags = append([]Tag{}, ad.Tags...)
+	d.Tags = ad.Tags
 
 	// Pass to ResourceData.
 	if err := common.StructToData(*d, schema, data); err != nil {
@@ -61,6 +61,8 @@ func (d *MLFLowExperiment) fromAPIObject(ad *MLFLowExperimentAPI, schema map[str
 	// clobbering values we actually want to keep around in existing code.
 	data.Set("tags", ad.Tags)
 	data.Set("name", ad.Name)
+	data.Set("experiment_id", ad.ExperimentId)
+	data.SetId(ad.ExperimentId)
 
 	return nil
 }

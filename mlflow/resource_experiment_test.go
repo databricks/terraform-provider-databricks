@@ -91,11 +91,10 @@ func TestMLFlowExperimentRead(t *testing.T) {
 }
 
 func TestMLFlowExperimentUpdate(t *testing.T) {
-	resPost :=
-		MLFlowExperimentAPI{
-			ExperimentId: "123456790123456",
-			Name:         "123",
-		}
+	resPost := MLFlowExperimentAPI{
+		ExperimentId: "123456790123456",
+		Name:         "123",
+	}
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{

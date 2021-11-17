@@ -1,0 +1,160 @@
+package mlflow
+
+import (
+	"context"
+	"fmt"
+
+	"github.com/databrickslabs/terraform-provider-databricks/common"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+)
+
+// MLFLowExperiment defines the parameters that can be set in the resource.
+type MLFLowExperiment struct {
+	Name        string `json:"name"`
+	Tags        []Tag  `json:"tags,omitempty"`
+	Description string `json:"description,omitempty"`
+}
+
+// MLFLowExperimentAPI defines the response object from the API
+type MLFLowExperimentAPI struct {
+	ExperimentId     string `json:"experiment_id"`
+	Name             string `json:"name"`
+	ArtifactLocation string `json:"artifact_location,omitempty"`
+	LifecycleStage   string `json:"lifecycle_stage,omitempty"`
+	LastUpdateTime   int64  `json:"last_update_time,omitempty"`
+	CreationTime     int64  `json:"creation_time,omitempty"`
+	Tags             []Tag  `json:"tags,omitempty"`
+}
+
+type MLFLowExperimentsAPI struct {
+	Experiment MLFLowExperimentAPI `json:"experiment"`
+}
+
+func (d *MLFLowExperiment) toAPIObject(schema map[string]*schema.Schema, data *schema.ResourceData) (*MLFLowExperimentAPI, error) {
+	// Extract from ResourceData.
+	if err := common.DataToStructPointer(data, schema, d); err != nil {
+		return nil, err
+	}
+
+	// Copy to API object.
+	var ad MLFLowExperimentAPI
+	ad.Name = d.Name
+	ad.ExperimentId = data.Id()
+	ad.Tags = append([]Tag{}, ad.Tags...)
+
+	return &ad, nil
+}
+
+func (d *MLFLowExperiment) fromAPIObject(ad *MLFLowExperimentAPI, schema map[string]*schema.Schema, data *schema.ResourceData) error {
+	// Copy from API object.
+	d.Name = ad.Name
+	d.Tags = append([]Tag{}, ad.Tags...)
+
+	// Pass to ResourceData.
+	if err := common.StructToData(*d, schema, data); err != nil {
+		return err
+	}
+
+	// Overwrite `tags` in case they're empty on the server side.
+	// This would have been skipped by `common.StructToData` because of slice emptiness.
+	// Ideally, the reflection code also sets empty values, but we'd risk
+	// clobbering values we actually want to keep around in existing code.
+	data.Set("tags", ad.Tags)
+	data.Set("name", ad.Name)
+
+	return nil
+}
+
+// NewMLFlowExperimentAPI ...
+func NewMLFlowExperimentAPI(ctx context.Context, m interface{}) MLFlowExpAPI {
+	return MLFlowExpAPI{m.(*common.DatabricksClient), ctx}
+}
+
+// MLFlowExpAPI ...
+type MLFlowExpAPI struct {
+	client  *common.DatabricksClient
+	context context.Context
+}
+
+// Create ...
+func (a MLFlowExpAPI) Create(d *MLFLowExperimentAPI) error {
+	return a.client.Post(a.context, "/mlflow/experiments/create", d, &d)
+}
+
+// Read ...
+func (a MLFlowExpAPI) Read(experimentId string) (*MLFLowExperimentAPI, error) {
+	var d MLFLowExperimentsAPI
+	err := a.client.Get(a.context, fmt.Sprintf("/mlflow/experiments/get?experiment_id=%s", experimentId), nil, &d)
+	if err != nil {
+		return nil, err
+	}
+	return &d.Experiment, nil
+}
+
+// Update ...
+func (a MLFlowExpAPI) Update(experimentId string, d *MLFLowExperimentAPI) error {
+	return a.client.Post(a.context, fmt.Sprintf("/mlflow/experiments/update?experiment_id=%s", experimentId), d, &d)
+}
+
+// Delete ...
+func (a MLFlowExpAPI) Delete(d *MLFLowExperimentAPI) error {
+	return a.client.Post(a.context, "/mlflow/experiments/delete", d, &d)
+}
+
+///func ResourceMLFlowExperiment() {}
+func ResourceMLFlowExperiment() *schema.Resource {
+	s := common.StructToSchema(
+		MLFLowExperiment{},
+		func(m map[string]*schema.Schema) map[string]*schema.Schema {
+			return m
+		})
+
+	return common.Resource{
+		Create: func(ctx context.Context, data *schema.ResourceData, c *common.DatabricksClient) error {
+			var d MLFLowExperiment
+			ad, err := d.toAPIObject(s, data)
+			if err != nil {
+				return err
+			}
+
+			err = NewMLFlowExperimentAPI(ctx, c).Create(ad)
+			if err != nil {
+				return err
+			}
+
+			// No need to set anything because the resource is going to be
+			// read immediately after being created.
+			data.SetId(ad.ExperimentId)
+			data.Set("name", ad.Name)
+
+			return nil
+		},
+		Read: func(ctx context.Context, data *schema.ResourceData, c *common.DatabricksClient) error {
+			ad, err := NewMLFlowExperimentAPI(ctx, c).Read(data.Id())
+			if err != nil {
+				return err
+			}
+
+			var d MLFLowExperiment
+			return d.fromAPIObject(ad, s, data)
+		},
+		Update: func(ctx context.Context, data *schema.ResourceData, c *common.DatabricksClient) error {
+			var d MLFLowExperiment
+			ad, err := d.toAPIObject(s, data)
+			if err != nil {
+				return err
+			}
+
+			return NewMLFlowExperimentAPI(ctx, c).Update(data.Id(), ad)
+		},
+		Delete: func(ctx context.Context, data *schema.ResourceData, c *common.DatabricksClient) error {
+			var d MLFLowExperiment
+			ad, err := d.toAPIObject(s, data)
+			if err != nil {
+				return err
+			}
+			return NewMLFlowExperimentAPI(ctx, c).Delete(ad)
+		},
+		Schema: s,
+	}.ToResource()
+}

@@ -8,15 +8,15 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-// MLFLowExperiment defines the parameters that can be set in the resource.
-type MLFLowExperiment struct {
+// MLFlowExperiment defines the parameters that can be set in the resource.
+type MLFlowExperiment struct {
 	Name        string `json:"name"`
-	Tags        []Tag  `json:"tags,omitempty"`
+	Tags        []Tag  `json:"tags,omitempty" tf:"force_new"`
 	Description string `json:"description,omitempty"`
 }
 
-// MLFLowExperimentAPI defines the response object from the API
-type MLFLowExperimentAPI struct {
+// MLFlowExperimentAPI defines the response object from the API
+type MLFlowExperimentAPI struct {
 	ExperimentId     string `json:"experiment_id"`
 	Name             string `json:"name"`
 	ArtifactLocation string `json:"artifact_location,omitempty"`
@@ -26,18 +26,23 @@ type MLFLowExperimentAPI struct {
 	Tags             []Tag  `json:"tags,omitempty"`
 }
 
-type MLFLowExperimentsAPI struct {
-	Experiment MLFLowExperimentAPI `json:"experiment"`
+type MLFlowExperimentUpdateAPI struct {
+	ExperimentId string `json:"experiment_id"`
+	NewName      string `json:"new_name"`
 }
 
-func (d *MLFLowExperiment) toAPIObject(schema map[string]*schema.Schema, data *schema.ResourceData) (*MLFLowExperimentAPI, error) {
+type MLFlowExperimentsAPI struct {
+	Experiment MLFlowExperimentAPI `json:"experiment"`
+}
+
+func (d *MLFlowExperiment) toAPIObject(schema map[string]*schema.Schema, data *schema.ResourceData) (*MLFlowExperimentAPI, error) {
 	// Extract from ResourceData.
 	if err := common.DataToStructPointer(data, schema, d); err != nil {
 		return nil, err
 	}
 
 	// Copy to API object.
-	var ad MLFLowExperimentAPI
+	var ad MLFlowExperimentAPI
 	ad.Name = d.Name
 	ad.ExperimentId = data.Id()
 	ad.Tags = d.Tags
@@ -45,7 +50,7 @@ func (d *MLFLowExperiment) toAPIObject(schema map[string]*schema.Schema, data *s
 	return &ad, nil
 }
 
-func (d *MLFLowExperiment) fromAPIObject(ad *MLFLowExperimentAPI, schema map[string]*schema.Schema, data *schema.ResourceData) error {
+func (d *MLFlowExperiment) fromAPIObject(ad *MLFlowExperimentAPI, schema map[string]*schema.Schema, data *schema.ResourceData) error {
 	// Copy from API object.
 	d.Name = ad.Name
 	d.Tags = ad.Tags
@@ -61,7 +66,6 @@ func (d *MLFLowExperiment) fromAPIObject(ad *MLFLowExperimentAPI, schema map[str
 	// clobbering values we actually want to keep around in existing code.
 	data.Set("tags", ad.Tags)
 	data.Set("name", ad.Name)
-	data.Set("experiment_id", ad.ExperimentId)
 	data.SetId(ad.ExperimentId)
 
 	return nil
@@ -79,13 +83,13 @@ type MLFlowExpAPI struct {
 }
 
 // Create ...
-func (a MLFlowExpAPI) Create(d *MLFLowExperimentAPI) error {
+func (a MLFlowExpAPI) Create(d *MLFlowExperimentAPI) error {
 	return a.client.Post(a.context, "/mlflow/experiments/create", d, &d)
 }
 
 // Read ...
-func (a MLFlowExpAPI) Read(experimentId string) (*MLFLowExperimentAPI, error) {
-	var d MLFLowExperimentsAPI
+func (a MLFlowExpAPI) Read(experimentId string) (*MLFlowExperimentAPI, error) {
+	var d MLFlowExperimentsAPI
 	err := a.client.Get(a.context, fmt.Sprintf("/mlflow/experiments/get?experiment_id=%s", experimentId), nil, &d)
 	if err != nil {
 		return nil, err
@@ -94,26 +98,26 @@ func (a MLFlowExpAPI) Read(experimentId string) (*MLFLowExperimentAPI, error) {
 }
 
 // Update ...
-func (a MLFlowExpAPI) Update(experimentId string, d *MLFLowExperimentAPI) error {
-	return a.client.Post(a.context, fmt.Sprintf("/mlflow/experiments/update?experiment_id=%s", experimentId), d, &d)
+func (a MLFlowExpAPI) Update(d *MLFlowExperimentUpdateAPI) error {
+	return a.client.Post(a.context, "/mlflow/experiments/update", d, &d)
 }
 
 // Delete ...
-func (a MLFlowExpAPI) Delete(d *MLFLowExperimentAPI) error {
+func (a MLFlowExpAPI) Delete(d *MLFlowExperimentAPI) error {
 	return a.client.Post(a.context, "/mlflow/experiments/delete", d, &d)
 }
 
 ///func ResourceMLFlowExperiment() {}
 func ResourceMLFlowExperiment() *schema.Resource {
 	s := common.StructToSchema(
-		MLFLowExperiment{},
+		MLFlowExperiment{},
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
 			return m
 		})
 
 	return common.Resource{
 		Create: func(ctx context.Context, data *schema.ResourceData, c *common.DatabricksClient) error {
-			var d MLFLowExperiment
+			var d MLFlowExperiment
 			ad, err := d.toAPIObject(s, data)
 			if err != nil {
 				return err
@@ -137,20 +141,23 @@ func ResourceMLFlowExperiment() *schema.Resource {
 				return err
 			}
 
-			var d MLFLowExperiment
+			var d MLFlowExperiment
 			return d.fromAPIObject(ad, s, data)
 		},
 		Update: func(ctx context.Context, data *schema.ResourceData, c *common.DatabricksClient) error {
-			var d MLFLowExperiment
+			var d MLFlowExperiment
 			ad, err := d.toAPIObject(s, data)
 			if err != nil {
 				return err
 			}
-
-			return NewMLFlowExperimentAPI(ctx, c).Update(data.Id(), ad)
+			updateDoc := MLFlowExperimentUpdateAPI{
+				ExperimentId: ad.ExperimentId,
+				NewName:      ad.Name,
+			}
+			return NewMLFlowExperimentAPI(ctx, c).Update(&updateDoc)
 		},
 		Delete: func(ctx context.Context, data *schema.ResourceData, c *common.DatabricksClient) error {
-			var d MLFLowExperiment
+			var d MLFlowExperiment
 			ad, err := d.toAPIObject(s, data)
 			if err != nil {
 				return err

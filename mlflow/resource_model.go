@@ -46,6 +46,7 @@ func (d *MLFLowModel) toAPIObject(schema map[string]*schema.Schema, data *schema
 	var ad MLFLowModelAPI
 	ad.Name = d.Name
 	ad.Tags = d.Tags
+	ad.Description = d.Description
 
 	return &ad, nil
 }
@@ -54,18 +55,13 @@ func (d *MLFLowModel) fromAPIObject(ad *MLFLowModelAPI, schema map[string]*schem
 	// Copy from API object.
 	d.Name = ad.Name
 	d.Tags = ad.Tags
+	d.Description = ad.Description
 
 	// Pass to ResourceData.
 	if err := common.StructToData(*d, schema, data); err != nil {
 		return err
 	}
 
-	// Overwrite `tags` in case they're empty on the server side.
-	// This would have been skipped by `common.StructToData` because of slice emptiness.
-	// Ideally, the reflection code also sets empty values, but we'd risk
-	// clobbering values we actually want to keep around in existing code.
-	// data.Set("tags", ad.Tags)
-	//data.Set("name", ad.Name)
 	return nil
 }
 
@@ -99,8 +95,8 @@ func (a MLFlowModelAPI) Read(modelName string) (*MLFLowModelAPI, error) {
 }
 
 // Update ...
-func (a MLFlowModelAPI) Update(modelName string, d *MLFLowModelAPI) error {
-	return a.client.Patch(a.context, fmt.Sprintf("/mlflow/registered-models/update/%s", modelName), d)
+func (a MLFlowModelAPI) Update(d *MLFLowModelAPI) error {
+	return a.client.Patch(a.context, "/mlflow/registered-models/update", d)
 }
 
 // Delete ...
@@ -150,10 +146,9 @@ func ResourceMLFlowModel() *schema.Resource {
 				return err
 			}
 
-			return NewMLFlowAPI(ctx, c).Update(data.Id(), ad)
+			return NewMLFlowAPI(ctx, c).Update(ad)
 		},
 		Delete: func(ctx context.Context, data *schema.ResourceData, c *common.DatabricksClient) error {
-			//return NewMLFlowAPI(ctx, c).Delete(data.Id())
 			var d MLFLowModel
 			ad, err := d.toAPIObject(s, data)
 			if err != nil {

@@ -61,7 +61,9 @@ func TestMLFlowModelCreate(t *testing.T) {
 
 	assert.NoError(t, err, err)
 	assert.Equal(t, "xyz", d.Id(), "Resource ID should not be empty")
-	assert.Equal(t, "xyz", d.Get("name"))
+	assert.Equal(t, "xyz", d.Get("name"), "Name should be set")
+	assert.Equal(t, d.Get("name"), d.Id(), "Name and Id should match")
+
 }
 
 func TestMLFlowModelRead(t *testing.T) {
@@ -90,40 +92,52 @@ func TestMLFlowModelRead(t *testing.T) {
 	assert.Equal(t, "xyz", d.Id(), "Resource ID should not be empty")
 }
 
-// func TestDashboardUpdate(t *testing.T) {
-// 	d, err := qa.ResourceFixture{
-// 		Fixtures: []qa.HTTPFixture{
-// 			{
-// 				Method:   "POST",
-// 				Resource: "/api/2.0/preview/sql/dashboards/xyz",
-// 				Response: api.Dashboard{
-// 					ID:   "xyz",
-// 					Name: "Dashboard renamed",
-// 					Tags: []string{"t2", "t3"},
-// 				},
-// 			},
-// 			{
-// 				Method:   "GET",
-// 				Resource: "/api/2.0/preview/sql/dashboards/xyz",
-// 				Response: api.Dashboard{
-// 					ID:   "xyz",
-// 					Name: "Dashboard renamed",
-// 					Tags: []string{"t2", "t3"},
-// 				},
-// 			},
-// 		},
-// 		Resource: ResourceDashboard(),
-// 		Update:   true,
-// 		ID:       "xyz",
-// 		State: map[string]interface{}{
-// 			"name": "Dashboard renamed",
-// 			"tags": []interface{}{"t2", "t3"},
-// 		},
-// 	}.Apply(t)
+func TestMLFlowModelUpdate(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "PATCH",
+				Resource: "/api/2.0/mlflow/registered-models/update",
+				Response: MLFlowRegisteredModelAPI{
+					MLFLowModelAPI{
+						Name:        "xyz",
+						Description: "thedescription",
+						Tags: []Tag{
+							{"key1", "value1"},
+							{"key2", "value2"},
+						},
+					},
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/mlflow/registered-models/get?name=xyz",
+				Response: MLFlowRegisteredModelAPI{
+					MLFLowModelAPI{
+						Name:        "xyz",
+						Description: "updateddescription",
+						Tags: []Tag{
+							{"key1", "value1"},
+							{"key2", "value2"},
+						},
+					},
+				},
+			},
+		},
+		Resource: ResourceMLFlowModel(),
+		Update:   true,
+		ID:       "xyz",
+		HCL: `
+		name = "xyz"
+		description = "updateddescription"
+		`,
+	}.Apply(t)
 
-// 	assert.NoError(t, err, err)
-// 	assert.Equal(t, "xyz", d.Id(), "Resource ID should not be empty")
-// }
+	assert.NoError(t, err, err)
+	assert.Equal(t, "xyz", d.Id(), "Resource ID should not be empty")
+	assert.Equal(t, "updateddescription", d.Get("description"), "Description should be updated")
+
+}
 
 func TestDashboardDelete(t *testing.T) {
 	d, err := qa.ResourceFixture{

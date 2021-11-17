@@ -48,6 +48,10 @@ Databricks SQL
 * Manage [queries](resources/sql_query.md) and their [visualizations](resources/sql_visualization.md).
 * Manage [dashboards](resources/sql_dashboard.md) and their [widgets](resources/sql_widget.md).
 
+MLFlow
+* Create [MLFlow models](resources/mlflow_models.md).
+* Create [MLFlow experiments](resources/mlflow_experiments.md).
+
 ## Example Usage
 
 ```hcl

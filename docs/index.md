@@ -250,18 +250,14 @@ resource "databricks_user" "my-user" {
 ```
 
 * `azure_workspace_resource_id` - (optional) `id` attribute of [azurerm_databricks_workspace](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/databricks_workspace) resource. Combination of subscription id, resource group name, and workspace name.
-* `azure_workspace_name` - (optional) This is the name of your Azure Databricks Workspace. Alternatively, you can provide this value as an environment variable `DATABRICKS_AZURE_WORKSPACE_NAME`. Not needed with `azure_workspace_resource_id` is set. **Deprecated since v0.3.8**.
-* `azure_resource_group` - (optional) This is the resource group in which your Azure Databricks Workspace resides. Alternatively, you can provide this value as an environment variable `DATABRICKS_AZURE_RESOURCE_GROUP`. Not needed with `azure_workspace_resource_id` is set. **Deprecated since v0.3.8**.
-* `azure_subscription_id` - (optional) This is the Azure Subscription id in which your Azure Databricks Workspace resides. Alternatively you can provide this value as an environment variable `DATABRICKS_AZURE_SUBSCRIPTION_ID` or `ARM_SUBSCRIPTION_ID`. Not needed with `azure_workspace_resource_id` is set. **Deprecated since v0.3.8**.
 * `azure_client_secret` - (optional) This is the Azure Enterprise Application (Service principal) client secret. This service principal requires contributor access to your Azure Databricks deployment. Alternatively, you can provide this value as an environment variable `ARM_CLIENT_SECRET`.
 * `azure_client_id` - (optional) This is the Azure Enterprise Application (Service principal) client id. This service principal requires contributor access to your Azure Databricks deployment. Alternatively, you can provide this value as an environment variable `ARM_CLIENT_ID`.
 * `azure_tenant_id` - (optional) This is the Azure Active Directory Tenant id in which the Enterprise Application (Service Principal) 
 resides. Alternatively, you can provide this value as an environment variable `ARM_TENANT_ID`.
 * `azure_environment` - (optional) This is the Azure Environment which defaults to the `public` cloud. Other options are `german`, `china` and `usgovernment`. Alternatively, you can provide this value as an environment variable `ARM_ENVIRONMENT`.
 * `azure_use_msi` - (optional) Use [Azure Managed Service Identity](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/guides/managed_service_identity) authentication. Alternatively, you can provide this value as an environment variable `ARM_USE_MSI`.
-* `pat_token_duration_seconds` - The current implementation of the azure auth via sp requires the provider to create a temporary personal access token within Databricks. The current AAD implementation does not cover all the APIs for Authentication. This field determines the duration in which that temporary PAT token is alive. It is measured in seconds and will default to `3600` seconds.  **Deprecated since v0.3.8**.
 
-There are multiple environment variable options, the `DATABRICKS_AZURE_*` environment variables take precedence, and the `ARM_*` environment variables provide a way to share authentication configuration using the `databricks` provider alongside the `azurerm` provider.
+There are `ARM_*` environment variables provide a way to share authentication configuration using the `databricks` provider alongside the [`azurerm` provider](https://registry.terraform.io/providers/hashicorp/azurerm/latest).
 
 ## Miscellaneous configuration parameters
 

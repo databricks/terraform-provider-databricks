@@ -54,17 +54,8 @@ type DatabricksClient struct {
 
 	GoogleServiceAccount string `name:"google_service_account" env:"DATABRICKS_GOOGLE_SERVICE_ACCOUNT" auth:"google"`
 
-	// Deprecated in favor of host - to be removed in v0.4.0
-	AzureWorkspaceName string `name:"azure_workspace_name" env:"DATABRICKS_AZURE_WORKSPACE_NAME" auth:"azure"`
-	// Deprecated in favor of host - to be removed in v0.4.0
-	AzureResourceGroup string `name:"azure_resource_group" env:"DATABRICKS_AZURE_RESOURCE_GROUP" auth:"azure"`
-	// Deprecated in favor of host - to be removed in v0.4.0
-	AzureSubscriptionID string `name:"azure_subscription_id" env:"DATABRICKS_AZURE_SUBSCRIPTION_ID,ARM_SUBSCRIPTION_ID" auth:"azure"`
-	// Deprecated in favor of host - to be removed in v0.4.0
-	AzureDatabricksResourceID string `name:"azure_workspace_resource_id" env:"DATABRICKS_AZURE_WORKSPACE_RESOURCE_ID" auth:"azure"`
-	// Use Azure Managed Service Identity authentication
-	AzureUseMSI bool `name:"azure_use_msi" env:"ARM_USE_MSI" auth:"azure"`
-
+	AzureResourceID    string `name:"azure_workspace_resource_id" env:"DATABRICKS_AZURE_RESOURCE_ID" auth:"azure"`
+	AzureUseMSI        bool   `name:"azure_use_msi" env:"ARM_USE_MSI" auth:"azure"`
 	AzureClientSecret  string `name:"azure_client_secret" env:"ARM_CLIENT_SECRET" auth:"azure"`
 	AzureClientID      string `name:"azure_client_id" env:"ARM_CLIENT_ID" auth:"azure"`
 	AzureTenantID      string `name:"azure_tenant_id" env:"ARM_TENANT_ID" auth:"azure"`
@@ -403,7 +394,7 @@ func (c *DatabricksClient) configureHTTPCLient() {
 
 // IsAzure returns true if client is configured for Azure Databricks - either by using AAD auth or with host+token combination
 func (c *DatabricksClient) IsAzure() bool {
-	return c.resourceID() != "" || c.AzureClientID != "" || c.AzureUseMSI || strings.Contains(c.Host, ".azuredatabricks.net")
+	return c.AzureResourceID != "" || c.AzureClientID != "" || c.AzureUseMSI || strings.Contains(c.Host, ".azuredatabricks.net")
 }
 
 // IsAws returns true if client is configured for AWS

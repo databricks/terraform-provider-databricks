@@ -18,28 +18,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestDatabricksClient_resourceID(t *testing.T) {
-	aa := DatabricksClient{}
-	assert.Equal(t, "", aa.resourceID())
-
-	aa.AzureDatabricksResourceID = "/subscriptions/a/resourceGroups/b"
-	assert.Equal(t, "", aa.resourceID())
-
-	aa.AzureDatabricksResourceID = "/subscriptions/a/resourceGroups/b/providers/Microsoft.Databricks/workspaces/c"
-	assert.Equal(t, "/subscriptions/a/resourceGroups/b/providers/Microsoft.Databricks/workspaces/c", aa.resourceID())
-	assert.Equal(t, "a", aa.AzureSubscriptionID)
-	assert.Equal(t, "b", aa.AzureResourceGroup)
-	assert.Equal(t, "c", aa.AzureWorkspaceName)
-
-	aa = DatabricksClient{}
-	aa.AzureSubscriptionID = "a"
-	assert.Equal(t, "", aa.resourceID())
-	aa.AzureResourceGroup = "b"
-	assert.Equal(t, "", aa.resourceID())
-	aa.AzureWorkspaceName = "c"
-	assert.Equal(t, "/subscriptions/a/resourceGroups/b/providers/Microsoft.Databricks/workspaces/c", aa.resourceID())
-}
-
 func TestAddSpManagementTokenVisitor(t *testing.T) {
 	aa := DatabricksClient{}
 	r := httptest.NewRequest("GET", "/a/b/c", http.NoBody)
@@ -87,14 +65,14 @@ func TestGetClientSecretAuthorizer(t *testing.T) {
 	env, err := aa.getAzureEnvironment()
 	require.NoError(t, err)
 	aa.AzureEnvironment = &env
-	auth, err := aa.getClientSecretAuthorizer(AzureDatabricksResourceID)
+	auth, err := aa.getClientSecretAuthorizer(armDatabricksResourceID)
 	require.Nil(t, auth)
 	require.EqualError(t, err, "parameter 'clientID' cannot be empty")
 
 	aa.AzureTenantID = "a"
 	aa.AzureClientID = "b"
 	aa.AzureClientSecret = "c"
-	auth, err = aa.getClientSecretAuthorizer(AzureDatabricksResourceID)
+	auth, err = aa.getClientSecretAuthorizer(armDatabricksResourceID)
 	require.NotNil(t, auth)
 	require.NoError(t, err)
 }
@@ -135,7 +113,7 @@ func TestDatabricksClient_ensureWorkspaceURL(t *testing.T) {
 	serverURL = server.URL
 	defer server.Close()
 
-	aa.AzureDatabricksResourceID = "/subscriptions/a/resourceGroups/b/providers/Microsoft.Databricks/workspaces/c"
+	aa.AzureResourceID = "/subscriptions/a/resourceGroups/b/providers/Microsoft.Databricks/workspaces/c"
 	// resource management endpoints end with a trailing slash in url
 	aa.AzureEnvironment = &azure.Environment{
 		ResourceManagerEndpoint: fmt.Sprintf("%s/", server.URL),
@@ -158,7 +136,7 @@ func TestDatabricksClient_ensureWorkspaceURL(t *testing.T) {
 
 func TestDatabricksClient_configureWithClientSecretAAD(t *testing.T) {
 	client := DatabricksClient{InsecureSkipVerify: true}
-	client.AzureDatabricksResourceID = "/subscriptions/a/resourceGroups/b/providers/Microsoft.Databricks/workspaces/c"
+	client.AzureResourceID = "/subscriptions/a/resourceGroups/b/providers/Microsoft.Databricks/workspaces/c"
 
 	token := &adal.Token{
 		AccessToken: "TestToken",
@@ -180,7 +158,7 @@ func TestDatabricksClient_configureWithClientSecretAAD(t *testing.T) {
 			if req.RequestURI == "/api/2.0/clusters/list-zones" {
 				assert.Equal(t, token.AccessToken, req.Header.Get("X-Databricks-Azure-SP-Management-Token"))
 				assert.Equal(t, "Bearer "+token.AccessToken, req.Header.Get("Authorization"))
-				assert.Equal(t, client.AzureDatabricksResourceID, req.Header.Get("X-Databricks-Azure-Workspace-Resource-Id"))
+				assert.Equal(t, client.AzureResourceID, req.Header.Get("X-Databricks-Azure-Workspace-Resource-Id"))
 				_, err := rw.Write([]byte(`{"zones": ["a", "b", "c"]}`))
 				assert.NoError(t, err)
 				return

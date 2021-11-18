@@ -64,9 +64,7 @@ type DatabricksClient struct {
 	AzureDatabricksResourceID string `name:"azure_workspace_resource_id" env:"DATABRICKS_AZURE_WORKSPACE_RESOURCE_ID,AZURE_DATABRICKS_WORKSPACE_RESOURCE_ID" auth:"azure"`
 	// Deprecated - to be removed in v0.4.0
 	AzurePATTokenDurationSeconds string `name:"azure_pat_token_duration_seconds"`
-	// Deprecated - to be removed in v0.4.0
-	AzureUsePATForCLI bool `name:"azure_use_pat_for_cli"`
-	
+
 	// Use Azure Managed Service Identity authentication
 	AzureUseMSI bool `name:"azure_use_msi" env:"ARM_USE_MSI" auth:"azure"`
 

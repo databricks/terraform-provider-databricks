@@ -32,27 +32,6 @@ func (d *Experiment) toAPIObject(schema map[string]*schema.Schema, data *schema.
 	return &ad, nil
 }
 
-func (d *Experiment) fromAPIObject(ad *api.Experiment, schema map[string]*schema.Schema, data *schema.ResourceData) error {
-	// Copy from API object.
-	d.Name = ad.Name
-	d.Tags = ad.Tags
-
-	// Pass to ResourceData.
-	if err := common.StructToData(*d, schema, data); err != nil {
-		return err
-	}
-
-	// Overwrite `tags` in case they're empty on the server side.
-	// This would have been skipped by `common.StructToData` because of slice emptiness.
-	// Ideally, the reflection code also sets empty values, but we'd risk
-	// clobbering values we actually want to keep around in existing code.
-	data.Set("tags", ad.Tags)
-	data.Set("name", ad.Name)
-	data.SetId(ad.ExperimentId)
-
-	return nil
-}
-
 ///func ResourceMLFlowExperiment() {}
 func ResourceMLFlowExperiment() *schema.Resource {
 	s := common.StructToSchema(
@@ -82,13 +61,20 @@ func ResourceMLFlowExperiment() *schema.Resource {
 			return nil
 		},
 		Read: func(ctx context.Context, data *schema.ResourceData, c *common.DatabricksClient) error {
+			var d Experiment
 			ad, err := api.NewExperimentAPI(ctx, c).Read(data.Id())
 			if err != nil {
 				return err
 			}
 
-			var d Experiment
-			return d.fromAPIObject(ad, s, data)
+			if err := common.StructToData(d, s, data); err != nil {
+				return err
+			}
+
+			data.Set("tags", ad.Tags)
+			data.Set("name", ad.Name)
+			data.SetId(ad.ExperimentId)
+			return nil
 		},
 		Update: func(ctx context.Context, data *schema.ResourceData, c *common.DatabricksClient) error {
 			var d Experiment

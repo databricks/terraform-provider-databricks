@@ -30,20 +30,6 @@ func (d *Model) toAPIObject(schema map[string]*schema.Schema, data *schema.Resou
 	return &ad, nil
 }
 
-func (d *Model) fromAPIObject(ad *api.Model, schema map[string]*schema.Schema, data *schema.ResourceData) error {
-	// Copy from API object.
-	d.Name = ad.Name
-	d.Tags = ad.Tags
-	d.Description = ad.Description
-
-	// Pass to ResourceData.
-	if err := common.StructToData(*d, schema, data); err != nil {
-		return err
-	}
-
-	return nil
-}
-
 // ResourceDashboard ...
 func ResourceMLFlowModel() *schema.Resource {
 	s := common.StructToSchema(
@@ -71,13 +57,20 @@ func ResourceMLFlowModel() *schema.Resource {
 			return nil
 		},
 		Read: func(ctx context.Context, data *schema.ResourceData, c *common.DatabricksClient) error {
+			var d Model
 			ad, err := api.NewModelAPI(ctx, c).Read(data.Id())
 			if err != nil {
 				return err
 			}
 
-			var d Model
-			return d.fromAPIObject(ad, s, data)
+			if err := common.StructToData(d, s, data); err != nil {
+				return err
+			}
+			data.Set("tags", ad.Tags)
+			data.Set("name", ad.Name)
+			data.Set("description", ad.Description)
+
+			return nil
 		},
 		Update: func(ctx context.Context, data *schema.ResourceData, c *common.DatabricksClient) error {
 			var d Model

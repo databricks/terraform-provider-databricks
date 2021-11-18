@@ -32,7 +32,6 @@ type providerFixture struct {
 	assertToken              string
 	assertHost               string
 	assertAzure              bool
-	usePATForSPN             bool
 }
 
 func (tt providerFixture) rawConfig() map[string]interface{} {
@@ -75,9 +74,6 @@ func (tt providerFixture) rawConfig() map[string]interface{} {
 	}
 	if tt.azureWorkspaceResourceID != "" {
 		rawConfig["azure_workspace_resource_id"] = tt.azureWorkspaceResourceID
-	}
-	if tt.usePATForSPN {
-		rawConfig["azure_use_pat_for_spn"] = true
 	}
 	return rawConfig
 }
@@ -367,43 +363,6 @@ func TestConfig_AzureAndPasswordConflict(t *testing.T) {
 	}.apply(t)
 }
 
-func TestConfig_AzureResourceIDViaSpn(t *testing.T) {
-	providerFixture{
-		azureWorkspaceResourceID: azResourceID,
-		azureClientID:            "x",
-		azureClientSecret:        "y",
-		azureTenantID:            "z",
-		env: map[string]string{
-			"PATH": "../common/testdata",
-			"HOME": "../common/testdata",
-		},
-		assertAzure:  true,
-		usePATForSPN: true,
-		assertHost:   "",
-		assertToken:  "",
-	}.apply(t)
-}
-
-func TestConfig_Bug294(t *testing.T) {
-	providerFixture{
-		// https://github.com/databrickslabs/terraform-provider-databricks/issues/294
-		azureResourceGroup: "b",
-		azureWorkspaceName: "c",
-		env: map[string]string{
-			"ARM_CLIENT_ID":       "x",
-			"ARM_CLIENT_SECRET":   "y",
-			"ARM_SUBSCRIPTION_ID": "q",
-			"ARM_TENANT_ID":       "z",
-			"HOME":                "../common/testdata",
-			"PATH":                "../common/testdata",
-		},
-		assertAzure:  true,
-		usePATForSPN: true,
-		assertHost:   "",
-		assertToken:  "",
-	}.apply(t)
-}
-
 func TestConfig_CorruptConfig(t *testing.T) {
 	providerFixture{
 		env: map[string]string{
@@ -429,7 +388,6 @@ func configureProviderAndReturnClient(t *testing.T, tt providerFixture) (*common
 		return nil, fmt.Errorf(strings.Join(issues, ", "))
 	}
 	client := p.Meta().(*common.DatabricksClient)
-	client.AzureUsePATForSPN = tt.usePATForSPN
 	err := client.Authenticate(ctx)
 	if err != nil {
 		return nil, err

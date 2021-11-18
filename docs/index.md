@@ -8,7 +8,7 @@ description: |-
 
 # Databricks Provider
 
-Use the Databricks Terraform provider to interact with almost all of [Databricks](http://databricks.com/) resources. If you're new to Databricks, please follow guide to create a workspace on [Azure](guides/azure-workspace.md) or [AWS](guides/aws-workspace.md) and then this [workspace management](guides/workspace-management.md) tutorial. If you're migrating from version *0.2.x*, please follow [this guide](guides/migration-0.3.x.md). Changelog is available [on GitHub](https://github.com/databrickslabs/terraform-provider-databricks/blob/master/CHANGELOG.md).
+Use the Databricks Terraform provider to interact with almost all of [Databricks](http://databricks.com/) resources. If you're new to Databricks, please follow guide to create a workspace on [Azure](guides/azure-workspace.md) or [AWS](guides/aws-workspace.md) and then this [workspace management](guides/workspace-management.md) tutorial. If you're migrating from version *0.3.x*, please follow [this guide](guides/migration-0.4.x.md). Changelog is available [on GitHub](https://github.com/databrickslabs/terraform-provider-databricks/blob/master/CHANGELOG.md).
 
 ![Resources](https://github.com/databrickslabs/terraform-provider-databricks/raw/master/docs/resources.png)
 
@@ -221,8 +221,6 @@ resource "databricks_user" "my-user" {
 ```
 
 ### Authenticating with Azure Service Principal
-
-!> **Warning** Please note that the azure service principal authentication currently (since v0.3.7) uses the AAD token for the authentication (SPN should have **Contributor** role on Databricks workspace).  You can restore previous functionality (generating the PAT for service principal)  by setting `azure_use_pat_for_spn` to `true` (you can regulate the lifetime of generated PAT with `pat_token_duration_seconds` setting). Azure Databricks does not yet support AAD tokens for [secret scopes](https://docs.microsoft.com/en-us/azure/databricks/dev-tools/api/latest/secrets#--create-secret-scope). Databricks Labs team will refactor it transparently once that support is available. The only impacted field is `pat_token_duration_seconds`, which will be deprecated and fully supported after AAD support. 
 
 ```hcl
 provider "azurerm" {

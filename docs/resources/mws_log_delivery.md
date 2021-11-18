@@ -56,18 +56,21 @@ resource "aws_s3_bucket_policy" "logdelivery" {
 }
 
 resource "databricks_mws_credentials" "log_writer" {
+    provider         = databricks.mws
     account_id       = var.databricks_account_id
     credentials_name = "Usage Delivery"
     role_arn         = aws_iam_role.logdelivery.arn
 }
 
 resource "databricks_mws_storage_configurations" "log_bucket" {
+    provider                   = databricks.mws
     account_id                 = var.databricks_account_id
     storage_configuration_name = "Usage Logs"
     bucket_name                = aws_s3_bucket.logdelivery.bucket
 }
 
 resource "databricks_mws_log_delivery" "usage_logs" {
+    provider   = databricks.mws
     account_id = var.databricks_account_id
     credentials_id = databricks_mws_credentials.log_writer.credentials_id
     storage_configuration_id = databricks_mws_storage_configurations.log_bucket.storage_configuration_id
@@ -78,6 +81,7 @@ resource "databricks_mws_log_delivery" "usage_logs" {
 }
 
 resource "databricks_mws_log_delivery" "audit_logs" {
+    provider   = databricks.mws
     account_id = var.databricks_account_id
     credentials_id = databricks_mws_credentials.log_writer.credentials_id
     storage_configuration_id = databricks_mws_storage_configurations.log_bucket.storage_configuration_id
@@ -90,12 +94,13 @@ resource "databricks_mws_log_delivery" "audit_logs" {
 
 ## Billable Usage
 
-CSV files are delivered to `<delivery_path_prefix>/billable-usage/csv/` and are named `workspaceId=<workspace-id>-usageMonth=<month>.csv`, which are delivered daily by overwriting the month's CSV file for each workspace. Format of CSV file, as well as some usage examples, can be found [here](https://docs.databricks.com/administration-guide/account-settings/usage.html#download-usage-as-a-csv-file). 
+CSV files are delivered to `<delivery_path_prefix>/billable-usage/csv/` and are named `workspaceId=<workspace-id>-usageMonth=<month>.csv`, which are delivered daily by overwriting the month's CSV file for each workspace. Format of CSV file, as well as some usage examples, can be found [here](https://docs.databricks.com/administration-guide/account-settings/usage.html#download-usage-as-a-csv-file).
 
 Common processing scenario is to apply [cost allocation tags](https://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/cost-alloc-tags.html), that could be enforced by setting [custom_tags](cluster.md#custom_tags) on a cluster or through [cluster policy](cluster_policy.md). Report contains `clusterId` field, that could be joined with data from AWS [cost and usage reports](https://docs.aws.amazon.com/cur/latest/userguide/cur-create.html), that can be joined with `user:ClusterId` tag from AWS usage report.
 
 ```hcl
 resource "databricks_mws_log_delivery" "usage_logs" {
+    provider   = databricks.mws
     account_id = var.databricks_account_id
     credentials_id = databricks_mws_credentials.log_writer.credentials_id
     storage_configuration_id = databricks_mws_storage_configurations.log_bucket.storage_configuration_id
@@ -112,6 +117,7 @@ JSON files with [static schema](https://docs.databricks.com/administration-guide
 
 ```hcl
 resource "databricks_mws_log_delivery" "audit_logs" {
+    provider   = databricks.mws
     account_id = var.databricks_account_id
     credentials_id = databricks_mws_credentials.log_writer.credentials_id
     storage_configuration_id = databricks_mws_storage_configurations.log_bucket.storage_configuration_id

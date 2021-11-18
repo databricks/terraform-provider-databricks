@@ -54,27 +54,11 @@ type DatabricksClient struct {
 
 	GoogleServiceAccount string `name:"google_service_account" env:"DATABRICKS_GOOGLE_SERVICE_ACCOUNT" auth:"google"`
 
-	// Deprecated in favor of host - to be removed in v0.4.0
-	AzureWorkspaceName string `name:"azure_workspace_name" env:"DATABRICKS_AZURE_WORKSPACE_NAME" auth:"azure"`
-	// Deprecated in favor of host - to be removed in v0.4.0
-	AzureResourceGroup string `name:"azure_resource_group" env:"DATABRICKS_AZURE_RESOURCE_GROUP" auth:"azure"`
-	// Deprecated in favor of host - to be removed in v0.4.0
-	AzureSubscriptionID string `name:"azure_subscription_id" env:"DATABRICKS_AZURE_SUBSCRIPTION_ID,ARM_SUBSCRIPTION_ID" auth:"azure"`
-	// Deprecated in favor of host - to be removed in v0.4.0
-	AzureDatabricksResourceID string `name:"azure_workspace_resource_id" env:"DATABRICKS_AZURE_WORKSPACE_RESOURCE_ID,AZURE_DATABRICKS_WORKSPACE_RESOURCE_ID" auth:"azure"`
-	// Deprecated - to be removed in v0.4.0
-	AzurePATTokenDurationSeconds string `name:"azure_pat_token_duration_seconds"`
-	// Deprecated - to be removed in v0.4.0
-	AzureUsePATForCLI bool `name:"azure_use_pat_for_cli"`
-	// Deprecated - to be removed in v0.4.0
-	AzureUsePATForSPN bool `name:"azure_use_pat_for_spn"`
-
-	// Use Azure Managed Service Identity authentication
-	AzureUseMSI bool `name:"azure_use_msi" env:"ARM_USE_MSI" auth:"azure"`
-
-	AzureClientSecret  string `name:"azure_client_secret" env:"DATABRICKS_AZURE_CLIENT_SECRET,ARM_CLIENT_SECRET" auth:"azure"`
-	AzureClientID      string `name:"azure_client_id" env:"DATABRICKS_AZURE_CLIENT_ID,ARM_CLIENT_ID" auth:"azure"`
-	AzureTenantID      string `name:"azure_tenant_id" env:"DATABRICKS_AZURE_TENANT_ID,ARM_TENANT_ID" auth:"azure"`
+	AzureResourceID    string `name:"azure_workspace_resource_id" env:"DATABRICKS_AZURE_RESOURCE_ID" auth:"azure"`
+	AzureUseMSI        bool   `name:"azure_use_msi" env:"ARM_USE_MSI" auth:"azure"`
+	AzureClientSecret  string `name:"azure_client_secret" env:"ARM_CLIENT_SECRET" auth:"azure"`
+	AzureClientID      string `name:"azure_client_id" env:"ARM_CLIENT_ID" auth:"azure"`
+	AzureTenantID      string `name:"azure_tenant_id" env:"ARM_TENANT_ID" auth:"azure"`
 	AzurermEnvironment string `name:"azure_environment" env:"ARM_ENVIRONMENT"`
 
 	// Azure Enviroment endpoints
@@ -96,9 +80,6 @@ type DatabricksClient struct {
 
 	// OAuth token refreshers for Azure to be used within `authVisitor`
 	azureAuthorizer autorest.Authorizer
-
-	// Deprecated. Session temporary PAT token if `UsePATForSPN` or `UsePATForCLI` are true
-	temporaryPat *tokenResponse
 
 	// options used to enable unit testing mode for OIDC
 	googleAuthOptions []option.ClientOption
@@ -413,7 +394,7 @@ func (c *DatabricksClient) configureHTTPCLient() {
 
 // IsAzure returns true if client is configured for Azure Databricks - either by using AAD auth or with host+token combination
 func (c *DatabricksClient) IsAzure() bool {
-	return c.resourceID() != "" || c.AzureClientID != "" || c.AzureUseMSI || strings.Contains(c.Host, ".azuredatabricks.net")
+	return c.AzureResourceID != "" || c.AzureClientID != "" || c.AzureUseMSI || strings.Contains(c.Host, ".azuredatabricks.net")
 }
 
 // IsAws returns true if client is configured for AWS

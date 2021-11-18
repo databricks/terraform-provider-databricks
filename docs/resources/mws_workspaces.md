@@ -182,7 +182,6 @@ In order to create a [Databricks Workspace that leverages AWS PrivateLink](https
 The following arguments are available and cannot be changed after workspace is created:
 
 * `account_id` - Account Id that could be found in the bottom left corner of [Accounts Console](https://accounts.cloud.databricks.com/).
-* `customer_managed_key_id` - (Optional, **Deprecated**, see `managed_services_customer_managed_key_id` and `storage_customer_managed_key_id`) `customer_managed_key_id` from [customer managed keys](mws_customer_managed_keys.md)
 * `managed_services_customer_managed_key_id` - (Optional) `customer_managed_key_id` from [customer managed keys](mws_customer_managed_keys.md) with `use_cases` set to `MANAGED_SERVICES`. This is used to encrypt the workspace's notebook and secret data in the control plane.
 * `deployment_name` - (Optional) part of URL: `https://<deployment-name>.cloud.databricks.com`
 * `workspace_name` - name of the workspace, will appear on UI

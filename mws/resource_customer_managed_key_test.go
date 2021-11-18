@@ -188,7 +188,6 @@ func TestResourceCustomerManagedKeyRead(t *testing.T) {
 	assert.Equal(t, []interface{}{"MANAGED_SERVICES"}, d.Get("use_cases"))
 	assert.Equal(t, "abc", d.Get("account_id"))
 	assert.Equal(t, 123, d.Get("creation_time"))
-	assert.Equal(t, "cmkid", d.Get("customer_managed_key_id"))
 }
 
 func TestResourceCustomerManagedKeyRead_NotFound(t *testing.T) {

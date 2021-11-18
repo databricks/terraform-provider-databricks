@@ -101,24 +101,13 @@ func (aa *DatabricksClient) configureWithAzureCLI(ctx context.Context) (func(*ht
 		return nil, nil
 	}
 	// verify that Azure CLI is authenticated
-	_, err := cli.GetTokenFromCLI(AzureDatabricksResourceID)
+	_, err := cli.GetTokenFromCLI(armDatabricksResourceID)
 	if err != nil {
 		if err.Error() == "Invoking Azure CLI failed with the following error: " {
 			return nil, fmt.Errorf("most likely Azure CLI is not installed. " +
 				"See https://docs.microsoft.com/en-us/cli/azure/?view=azure-cli-latest for details")
 		}
 		return nil, err
-	}
-	if aa.AzureUsePATForCLI {
-		log.Printf("[INFO] Using Azure CLI authentication with session-generated PAT")
-		return func(r *http.Request) error {
-			pat, err := aa.acquirePAT(r.Context(), aa.cliAuthorizer)
-			if err != nil {
-				return err
-			}
-			r.Header.Set("Authorization", fmt.Sprintf("Bearer %s", pat.TokenValue))
-			return nil
-		}, nil
 	}
 	log.Printf("[INFO] Using Azure CLI authentication with AAD tokens")
 	return aa.simpleAADRequestVisitor(ctx, aa.cliAuthorizer)

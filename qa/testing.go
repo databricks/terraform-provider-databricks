@@ -158,7 +158,7 @@ func (f ResourceFixture) Apply(t *testing.T) (*schema.ResourceData, error) {
 		client.WithCommandMock(f.CommandMock)
 	}
 	if f.Azure {
-		client.AzureDatabricksResourceID = "/subscriptions/a/resourceGroups/b/providers/Microsoft.Databricks/workspaces/c"
+		client.AzureResourceID = "/subscriptions/a/resourceGroups/b/providers/Microsoft.Databricks/workspaces/c"
 	}
 	if f.AzureSPN {
 		client.AzureClientID = "a"

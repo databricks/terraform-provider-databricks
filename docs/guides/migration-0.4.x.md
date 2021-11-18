@@ -7,4 +7,4 @@ Certain resources undergone changes in order to improve long-term maintainabilit
 
 ## provider
 
-* Remove `azure_use_pat_for_spn`, `azure_use_pat_for_cli` attributes
+* Remove `azure_use_pat_for_spn`, `azure_use_pat_for_cli`, `azure_pat_token_duration_seconds` attributes

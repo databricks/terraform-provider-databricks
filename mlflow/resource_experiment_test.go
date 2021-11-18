@@ -3,6 +3,7 @@ package mlflow
 import (
 	"testing"
 
+	"github.com/databrickslabs/terraform-provider-databricks/mlflow/api"
 	"github.com/databrickslabs/terraform-provider-databricks/qa"
 	"github.com/stretchr/testify/assert"
 )
@@ -13,17 +14,17 @@ func TestMLFlowExperimentCreate(t *testing.T) {
 			{
 				Method:   "POST",
 				Resource: "/api/2.0/mlflow/experiments/create",
-				ExpectedRequest: MLFlowExperimentAPI{
+				ExpectedRequest: api.Experiment{
 					Name: "xyz",
-					Tags: []Tag{
+					Tags: []api.Tag{
 						{"key1", "value1"},
 						{"key2", "value2"},
 					},
 				},
-				Response: MLFlowExperimentAPI{
+				Response: api.Experiment{
 					ExperimentId: "123456790123456",
 					Name:         "xyz",
-					Tags: []Tag{
+					Tags: []api.Tag{
 						{"key1", "value1"},
 						{"key2", "value2"},
 					},
@@ -32,11 +33,11 @@ func TestMLFlowExperimentCreate(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/mlflow/experiments/get?experiment_id=123456790123456",
-				Response: MLFlowExperimentsAPI{
-					MLFlowExperimentAPI{
+				Response: api.Experiments{
+					api.Experiment{
 						ExperimentId: "123456790123456",
 						Name:         "xyz",
-						Tags: []Tag{
+						Tags: []api.Tag{
 							{"key1", "value1"},
 							{"key2", "value2"},
 						},
@@ -69,11 +70,11 @@ func TestMLFlowExperimentRead(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/mlflow/experiments/get?experiment_id=123456790123456",
-				Response: MLFlowExperimentsAPI{
-					MLFlowExperimentAPI{
+				Response: api.Experiments{
+					api.Experiment{
 						ExperimentId: "123456790123456",
 						Name:         "xyz",
-						Tags: []Tag{
+						Tags: []api.Tag{
 							{"key1", "value1"},
 							{"key2", "value2"},
 						},
@@ -91,7 +92,7 @@ func TestMLFlowExperimentRead(t *testing.T) {
 }
 
 func TestMLFlowExperimentUpdate(t *testing.T) {
-	resPost := MLFlowExperimentAPI{
+	resPost := api.Experiment{
 		ExperimentId: "123456790123456",
 		Name:         "123",
 	}
@@ -100,8 +101,8 @@ func TestMLFlowExperimentUpdate(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/mlflow/experiments/get?experiment_id=123456790123456",
-				Response: MLFlowExperimentsAPI{
-					MLFlowExperimentAPI{
+				Response: api.Experiments{
+					api.Experiment{
 						ExperimentId: resPost.ExperimentId,
 						Name:         resPost.Name,
 					},
@@ -127,10 +128,10 @@ func TestMLFlowExperimentUpdate(t *testing.T) {
 }
 
 func TestMLFlowExperimentUpdateTagsNeedsRecreate(t *testing.T) {
-	resPost := MLFlowExperimentAPI{
+	resPost := api.Experiment{
 		ExperimentId: "123456790123456",
 		Name:         "123",
-		Tags: []Tag{
+		Tags: []api.Tag{
 			{"key1", "value1"},
 		},
 	}
@@ -139,11 +140,11 @@ func TestMLFlowExperimentUpdateTagsNeedsRecreate(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/mlflow/experiments/get?experiment_id=123456790123456",
-				Response: MLFlowExperimentsAPI{
-					MLFlowExperimentAPI{
+				Response: api.Experiments{
+					api.Experiment{
 						ExperimentId: resPost.ExperimentId,
 						Name:         resPost.Name,
-						Tags: []Tag{
+						Tags: []api.Tag{
 							{"key1", "value1"},
 						},
 					},
@@ -177,7 +178,7 @@ func TestMLFlowExperimentDelete(t *testing.T) {
 			{
 				Method:   "POST",
 				Resource: "/api/2.0/mlflow/experiments/delete",
-				ExpectedRequest: MLFlowExperimentAPI{
+				ExpectedRequest: api.Experiment{
 					ExperimentId: "123456790123456",
 					Name:         "xyz",
 				},

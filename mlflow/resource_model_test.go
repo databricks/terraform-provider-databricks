@@ -3,6 +3,7 @@ package mlflow
 import (
 	"testing"
 
+	"github.com/databrickslabs/terraform-provider-databricks/mlflow/api"
 	"github.com/databrickslabs/terraform-provider-databricks/qa"
 	"github.com/stretchr/testify/assert"
 )
@@ -13,17 +14,17 @@ func TestMLFlowModelCreate(t *testing.T) {
 			{
 				Method:   "POST",
 				Resource: "/api/2.0/mlflow/registered-models/create",
-				ExpectedRequest: MLFLowModelAPI{
+				ExpectedRequest: api.Model{
 					Name: "xyz",
-					Tags: []Tag{
+					Tags: []api.Tag{
 						{"key1", "value1"},
 						{"key2", "value2"},
 					},
 				},
-				Response: MLFlowRegisteredModelAPI{
-					MLFLowModelAPI{
+				Response: api.RegisteredModel{
+					api.Model{
 						Name: "xyz",
-						Tags: []Tag{
+						Tags: []api.Tag{
 							{"key1", "value1"},
 							{"key2", "value2"},
 						},
@@ -33,10 +34,10 @@ func TestMLFlowModelCreate(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/mlflow/registered-models/get?name=xyz",
-				Response: MLFlowRegisteredModelAPI{
-					MLFLowModelAPI{
+				Response: api.RegisteredModel{
+					api.Model{
 						Name: "xyz",
-						Tags: []Tag{
+						Tags: []api.Tag{
 							{"key1", "value1"},
 							{"key2", "value2"},
 						},
@@ -72,10 +73,10 @@ func TestMLFlowModelRead(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/mlflow/registered-models/get?name=xyz",
-				Response: MLFlowRegisteredModelAPI{
-					MLFLowModelAPI{
+				Response: api.RegisteredModel{
+					api.Model{
 						Name: "xyz",
-						Tags: []Tag{
+						Tags: []api.Tag{
 							{"key1", "value1"},
 							{"key2", "value2"},
 						},
@@ -98,11 +99,11 @@ func TestMLFlowModelUpdate(t *testing.T) {
 			{
 				Method:   "PATCH",
 				Resource: "/api/2.0/mlflow/registered-models/update",
-				Response: MLFlowRegisteredModelAPI{
-					MLFLowModelAPI{
+				Response: api.RegisteredModel{
+					api.Model{
 						Name:        "xyz",
 						Description: "thedescription",
-						Tags: []Tag{
+						Tags: []api.Tag{
 							{"key1", "value1"},
 							{"key2", "value2"},
 						},
@@ -112,11 +113,11 @@ func TestMLFlowModelUpdate(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/mlflow/registered-models/get?name=xyz",
-				Response: MLFlowRegisteredModelAPI{
-					MLFLowModelAPI{
+				Response: api.RegisteredModel{
+					api.Model{
 						Name:        "xyz",
 						Description: "updateddescription",
-						Tags: []Tag{
+						Tags: []api.Tag{
 							{"key1", "value1"},
 							{"key2", "value2"},
 						},
@@ -145,7 +146,7 @@ func TestDashboardDelete(t *testing.T) {
 			{
 				Method:   "DELETE",
 				Resource: "/api/2.0/mlflow/registered-models/delete",
-				ExpectedRequest: MLFLowModelAPI{
+				ExpectedRequest: api.Model{
 					Name: "xyz",
 				},
 			},

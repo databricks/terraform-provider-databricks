@@ -11,16 +11,17 @@ func TestAccMLflowExperiment(t *testing.T) {
 		{
 			Template: `
 				resource "databricks_mlflow_experiment" "e1" {
-					name = "tf-{var.RANDOM}"
+					name = "/Shared/tf-{var.RANDOM}"
+					artifact_location = "dbfs:/tmp/tf-{var.RANDOM}"
 					description = "tf-{var.RANDOM} description"
 					
 					tags {
-					  key   = "key-{var.RANDOM}"
-					  value = "{var.RANDOM}"
+					  key   = "k1-{var.RANDOM}"
+					  value = "v1-{var.RANDOM}"
 					}
 					tags {
-					  key   = "key-{var.RANDOM}"
-					  value = "{var.RANDOM}"
+					  key   = "k2-{var.RANDOM}"
+					  value = "v2-{var.RANDOM}"
 					}
 				}
 			`,

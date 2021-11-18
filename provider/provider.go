@@ -134,7 +134,6 @@ func providerSchema() map[string]*schema.Schema {
 	ps["azure_workspace_resource_id"].Deprecated = fmt.Sprintf(azCoordinatesDeprecation, "azure_workspace_resource_id")
 
 	patWorkaroundDeprecation := "Provider will fully switch to AAD token authentication in the near future"
-	ps["azure_use_pat_for_spn"].Deprecated = patWorkaroundDeprecation
 	ps["azure_use_pat_for_cli"].Deprecated = patWorkaroundDeprecation
 	ps["azure_pat_token_duration_seconds"].Deprecated = patWorkaroundDeprecation
 

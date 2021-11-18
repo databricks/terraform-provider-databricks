@@ -1,5 +1,11 @@
 # Version changelog
 
+## 0.4.0
+
+**Behavior changes**
+
+* Removed deprecated `azure_use_pat_for_spn` provider property
+
 ## 0.3.11
 
 * Added `databricks_sql_global_config` resource to provide global configuration for SQL Endpoints ([#855](https://github.com/databrickslabs/terraform-provider-databricks/issues/855))

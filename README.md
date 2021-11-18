@@ -5,7 +5,7 @@
 [AWS](docs/guides/aws-workspace.md) tutorial
 | [Azure](docs/guides/azure-workspace.md) tutorial
 | [End-to-end](docs/guides/workspace-management.md) tutorial
-| Migration from [0.2.x to 0.3.x](docs/guides/migration-0.3.x.md)
+| Migration from [0.3.x to 0.4.x](docs/guides/migration-0.4.x.md)
 | [Changelog](CHANGELOG.md)
 | [Authentication](docs/index.md)
 | [databricks_aws_s3_mount](docs/resources/aws_s3_mount.md)

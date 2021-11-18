@@ -139,19 +139,6 @@ func (aa *DatabricksClient) configureWithAzureClientSecret(ctx context.Context) 
 	if !aa.IsAzureClientSecretSet() {
 		return nil, nil
 	}
-	log.Printf("[INFO] Using Azure Service Principal client secret authentication")
-	if aa.AzureUsePATForSPN {
-		log.Printf("[INFO] Generating PAT token Azure Service Principal client secret authentication")
-		return func(r *http.Request) error {
-			pat, err := aa.acquirePAT(r.Context(), aa.getClientSecretAuthorizer, aa.addSpManagementTokenVisitor)
-			if err != nil {
-				return fmt.Errorf("cannot acquire PAT: %w", err)
-			}
-			r.Header.Set("Authorization", fmt.Sprintf("Bearer %s", pat.TokenValue))
-			return nil
-		}, nil
-	}
-
 	log.Printf("[INFO] Generating AAD token for Azure Service Principal")
 	return aa.simpleAADRequestVisitor(ctx, aa.getClientSecretAuthorizer, aa.addSpManagementTokenVisitor)
 }

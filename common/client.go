@@ -61,13 +61,13 @@ type DatabricksClient struct {
 	// Deprecated in favor of host - to be removed in v0.4.0
 	AzureSubscriptionID string `name:"azure_subscription_id" env:"DATABRICKS_AZURE_SUBSCRIPTION_ID,ARM_SUBSCRIPTION_ID" auth:"azure"`
 	// Deprecated in favor of host - to be removed in v0.4.0
-	AzureDatabricksResourceID string `name:"azure_workspace_resource_id" env:"DATABRICKS_AZURE_WORKSPACE_RESOURCE_ID,AZURE_DATABRICKS_WORKSPACE_RESOURCE_ID" auth:"azure"`
+	AzureDatabricksResourceID string `name:"azure_workspace_resource_id" env:"DATABRICKS_AZURE_WORKSPACE_RESOURCE_ID" auth:"azure"`
 	// Use Azure Managed Service Identity authentication
 	AzureUseMSI bool `name:"azure_use_msi" env:"ARM_USE_MSI" auth:"azure"`
 
-	AzureClientSecret  string `name:"azure_client_secret" env:"DATABRICKS_AZURE_CLIENT_SECRET,ARM_CLIENT_SECRET" auth:"azure"`
-	AzureClientID      string `name:"azure_client_id" env:"DATABRICKS_AZURE_CLIENT_ID,ARM_CLIENT_ID" auth:"azure"`
-	AzureTenantID      string `name:"azure_tenant_id" env:"DATABRICKS_AZURE_TENANT_ID,ARM_TENANT_ID" auth:"azure"`
+	AzureClientSecret  string `name:"azure_client_secret" env:"ARM_CLIENT_SECRET" auth:"azure"`
+	AzureClientID      string `name:"azure_client_id" env:"ARM_CLIENT_ID" auth:"azure"`
+	AzureTenantID      string `name:"azure_tenant_id" env:"ARM_TENANT_ID" auth:"azure"`
 	AzurermEnvironment string `name:"azure_environment" env:"ARM_ENVIRONMENT"`
 
 	// Azure Enviroment endpoints

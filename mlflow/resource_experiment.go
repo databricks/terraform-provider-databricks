@@ -24,7 +24,7 @@ type MLFlowExperimentAPI struct {
 	LifecycleStage   string `json:"lifecycle_stage,omitempty"`
 	LastUpdateTime   int64  `json:"last_update_time,omitempty"`
 	CreationTime     int64  `json:"creation_time,omitempty"`
-	Tags             []Tag  `json:"tags,omitempty" tf:"force_new"`
+	Tags             []Tag  `json:"tags,omitempty"`
 }
 
 type MLFlowExperimentUpdateAPI struct {

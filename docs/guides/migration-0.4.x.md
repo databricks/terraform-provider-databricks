@@ -7,4 +7,4 @@ Certain resources undergone changes in order to improve long-term maintainabilit
 
 ## provider
 
-* Remove `azure_use_pat_for_spn` attribute
+* Remove `azure_use_pat_for_spn`, `azure_use_pat_for_cli` attributes

@@ -109,17 +109,6 @@ func (aa *DatabricksClient) configureWithAzureCLI(ctx context.Context) (func(*ht
 		}
 		return nil, err
 	}
-	if aa.AzureUsePATForCLI {
-		log.Printf("[INFO] Using Azure CLI authentication with session-generated PAT")
-		return func(r *http.Request) error {
-			pat, err := aa.acquirePAT(r.Context(), aa.cliAuthorizer)
-			if err != nil {
-				return err
-			}
-			r.Header.Set("Authorization", fmt.Sprintf("Bearer %s", pat.TokenValue))
-			return nil
-		}, nil
-	}
 	log.Printf("[INFO] Using Azure CLI authentication with AAD tokens")
 	return aa.simpleAADRequestVisitor(ctx, aa.cliAuthorizer)
 }

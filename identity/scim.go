@@ -98,6 +98,7 @@ type ScimGroup struct {
 	Groups       []ComplexValue `json:"groups,omitempty"`
 	Roles        []ComplexValue `json:"roles,omitempty"`
 	Entitlements entitlements   `json:"entitlements,omitempty"`
+	ExternalID   string         `json:"externalId,omitempty"`
 }
 
 // GroupList contains a list of groups fetched from a list api call from SCIM api
@@ -128,6 +129,7 @@ type ScimUser struct {
 	Name          map[string]string `json:"name,omitempty"`
 	Roles         []ComplexValue    `json:"roles,omitempty"`
 	Entitlements  entitlements      `json:"entitlements,omitempty"`
+	ExternalID    string            `json:"externalId,omitempty"`
 }
 
 // UserList contains a list of Users fetched from a list api call from SCIM api

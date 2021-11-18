@@ -58,6 +58,7 @@ output "job_url" {
 Data source exposes the following attributes:
 
 * `id` -  The id of the calling user.
+* `external_id` - ID of the user in an external identity provider.
 * `user_name` - Name of the [user](../resources/user.md), e.g. `mr.foo@example.com`.
 * `home` - Home folder of the [user](../resources/user.md), e.g. `/Users/mr.foo@example.com`.
 * `repos` - Personal Repos location of the [user](../resources/user.md), e.g. `/Repos/mr.foo@example.com`.

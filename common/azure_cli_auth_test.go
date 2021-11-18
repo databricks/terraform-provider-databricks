@@ -37,9 +37,9 @@ func TestAzureCliAuth(t *testing.T) {
 	defer server.Close()
 
 	client := DatabricksClient{
-		Host:                      server.URL,
-		AzureDatabricksResourceID: "/subscriptions/a/resourceGroups/b/providers/Microsoft.Databricks/workspaces/c",
-		InsecureSkipVerify:        true,
+		Host:               server.URL,
+		AzureResourceID:    "/subscriptions/a/resourceGroups/b/providers/Microsoft.Databricks/workspaces/c",
+		InsecureSkipVerify: true,
 	}
 	err := client.Configure()
 	assert.NoError(t, err)
@@ -170,10 +170,10 @@ func TestInternalRefresh_CorruptExpire(t *testing.T) {
 
 func TestConfigureWithAzureCLI_SP(t *testing.T) {
 	aa := DatabricksClient{
-		AzureClientID:             "a",
-		AzureClientSecret:         "b",
-		AzureTenantID:             "c",
-		AzureDatabricksResourceID: "/subscriptions/a/resourceGroups/b/providers/Microsoft.Databricks/workspaces/c",
+		AzureClientID:     "a",
+		AzureClientSecret: "b",
+		AzureTenantID:     "c",
+		AzureResourceID:   "/subscriptions/a/resourceGroups/b/providers/Microsoft.Databricks/workspaces/c",
 	}
 	ctx := context.Background()
 	auth, err := aa.configureWithAzureCLI(ctx)

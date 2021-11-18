@@ -17,7 +17,7 @@ import (
 )
 
 // List of management information
-const AzureDatabricksResourceID string = "2ff814a6-3304-4ab8-85cb-cd0e6f879c1d"
+const armDatabricksResourceID string = "2ff814a6-3304-4ab8-85cb-cd0e6f879c1d"
 
 //
 func (aa *DatabricksClient) GetAzureJwtProperty(key string) (interface{}, error) {
@@ -76,34 +76,6 @@ func (aa *DatabricksClient) getAzureEnvironment() (azure.Environment, error) {
 	}
 	envName := fmt.Sprintf("AZURE%sCLOUD", strings.ToUpper(aa.AzurermEnvironment))
 	return azure.EnvironmentFromName(envName)
-}
-
-func (aa *DatabricksClient) resourceID() string {
-	if aa.AzureDatabricksResourceID != "" {
-		if aa.AzureSubscriptionID == "" || aa.AzureResourceGroup == "" {
-			res, err := azure.ParseResourceID(aa.AzureDatabricksResourceID)
-			if err != nil {
-				log.Printf("[ERROR] %s", err)
-				return ""
-			}
-			aa.AzureSubscriptionID = res.SubscriptionID
-			aa.AzureResourceGroup = res.ResourceGroup
-			aa.AzureWorkspaceName = res.ResourceName
-		}
-		return aa.AzureDatabricksResourceID
-	}
-	if aa.AzureSubscriptionID == "" || aa.AzureResourceGroup == "" || aa.AzureWorkspaceName == "" {
-		return ""
-	}
-	r := azure.Resource{
-		SubscriptionID: aa.AzureSubscriptionID,
-		ResourceGroup:  aa.AzureResourceGroup,
-		Provider:       "Microsoft.Databricks",
-		ResourceType:   "workspaces",
-		ResourceName:   aa.AzureWorkspaceName,
-	}
-	aa.AzureDatabricksResourceID = r.String()
-	return aa.AzureDatabricksResourceID
 }
 
 // IsAzureClientSecretSet returns true if client id/secret and tenand id are supplied
@@ -178,7 +150,7 @@ func (aa *DatabricksClient) simpleAADRequestVisitor(
 	if err != nil {
 		return nil, fmt.Errorf("cannot get workspace: %w", err)
 	}
-	platformAuthorizer, err := authorizerFactory(AzureDatabricksResourceID)
+	platformAuthorizer, err := authorizerFactory(armDatabricksResourceID)
 	if err != nil {
 		return nil, fmt.Errorf("cannot authorize databricks: %w", err)
 	}
@@ -189,9 +161,8 @@ func (aa *DatabricksClient) simpleAADRequestVisitor(
 				return err
 			}
 		}
-		resourceID := aa.resourceID()
-		if resourceID != "" {
-			r.Header.Set("X-Databricks-Azure-Workspace-Resource-Id", resourceID)
+		if aa.AzureResourceID != "" {
+			r.Header.Set("X-Databricks-Azure-Workspace-Resource-Id", aa.AzureResourceID)
 		}
 		_, err = autorest.Prepare(r, platformAuthorizer.WithAuthorization())
 		if err != nil {
@@ -216,7 +187,7 @@ func (aa *DatabricksClient) ensureWorkspaceURL(ctx context.Context,
 	if aa.Host != "" {
 		return nil
 	}
-	resourceID := aa.resourceID()
+	resourceID := aa.AzureResourceID
 	if resourceID == "" {
 		return fmt.Errorf("somehow resource id is not set")
 	}
@@ -250,7 +221,7 @@ func (aa *DatabricksClient) getClientSecretAuthorizer(resource string) (autorest
 	if aa.azureAuthorizer != nil {
 		return aa.azureAuthorizer, nil
 	}
-	if resource != AzureDatabricksResourceID {
+	if resource != armDatabricksResourceID {
 		es := auth.EnvironmentSettings{
 			Values: map[string]string{
 				auth.ClientID:     aa.AzureClientID,
@@ -273,7 +244,7 @@ func (aa *DatabricksClient) getClientSecretAuthorizer(resource string) (autorest
 		*platformTokenOAuthCfg,
 		aa.AzureClientID,
 		aa.AzureClientSecret,
-		AzureDatabricksResourceID)
+		armDatabricksResourceID)
 	if err != nil {
 		return nil, maybeExtendAuthzError(err)
 	}

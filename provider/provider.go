@@ -2,7 +2,6 @@ package provider
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"reflect"
 	"sort"
@@ -120,19 +119,8 @@ func providerSchema() map[string]*schema.Schema {
 			fieldSchema.DefaultFunc = schema.MultiEnvDefaultFunc(attr.EnvVars, nil)
 		}
 	}
-
 	ps["token"].Sensitive = true
 	ps["azure_client_secret"].Sensitive = true
-
-	azCoordinatesDeprecation := "`%s` is deprecated and would be removed in v0.4.0. Please rewrite provider configuration " +
-		"with `host = data.azurerm_databricks_workspace.example.workspace_url` to achieve the same effect. " +
-		"ARM_* environment variables would continue to be used as they're used by `azurerm` provider. See " +
-		"https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/databricks_workspace#workspace_url for details"
-	ps["azure_workspace_name"].Deprecated = fmt.Sprintf(azCoordinatesDeprecation, "azure_workspace_name")
-	ps["azure_resource_group"].Deprecated = fmt.Sprintf(azCoordinatesDeprecation, "azure_resource_group")
-	ps["azure_subscription_id"].Deprecated = fmt.Sprintf(azCoordinatesDeprecation, "azure_subscription_id")
-	ps["azure_workspace_resource_id"].Deprecated = fmt.Sprintf(azCoordinatesDeprecation, "azure_workspace_resource_id")
-
 	ps["rate_limit"].DefaultFunc = schema.EnvDefaultFunc("DATABRICKS_RATE_LIMIT",
 		common.DefaultRateLimitPerSecond)
 	ps["debug_truncate_bytes"].DefaultFunc = schema.EnvDefaultFunc("DATABRICKS_DEBUG_TRUNCATE_BYTES",

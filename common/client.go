@@ -62,9 +62,6 @@ type DatabricksClient struct {
 	AzureSubscriptionID string `name:"azure_subscription_id" env:"DATABRICKS_AZURE_SUBSCRIPTION_ID,ARM_SUBSCRIPTION_ID" auth:"azure"`
 	// Deprecated in favor of host - to be removed in v0.4.0
 	AzureDatabricksResourceID string `name:"azure_workspace_resource_id" env:"DATABRICKS_AZURE_WORKSPACE_RESOURCE_ID,AZURE_DATABRICKS_WORKSPACE_RESOURCE_ID" auth:"azure"`
-	// Deprecated - to be removed in v0.4.0
-	AzurePATTokenDurationSeconds string `name:"azure_pat_token_duration_seconds"`
-
 	// Use Azure Managed Service Identity authentication
 	AzureUseMSI bool `name:"azure_use_msi" env:"ARM_USE_MSI" auth:"azure"`
 
@@ -92,9 +89,6 @@ type DatabricksClient struct {
 
 	// OAuth token refreshers for Azure to be used within `authVisitor`
 	azureAuthorizer autorest.Authorizer
-
-	// Deprecated. Session temporary PAT token if `UsePATForSPN` or `UsePATForCLI` are true
-	temporaryPat *tokenResponse
 
 	// options used to enable unit testing mode for OIDC
 	googleAuthOptions []option.ClientOption

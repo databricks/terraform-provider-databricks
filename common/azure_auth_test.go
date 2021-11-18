@@ -109,31 +109,6 @@ func TestEnsureWorkspaceURL_CornerCases(t *testing.T) {
 	assert.EqualError(t, err, "somehow resource id is not set")
 }
 
-func TestAcquirePAT_CornerCases(t *testing.T) {
-	aa := DatabricksClient{}
-	env, err := aa.getAzureEnvironment()
-	require.NoError(t, err)
-	aa.AzureEnvironment = &env
-	_, err = aa.acquirePAT(context.Background(), func(resource string) (autorest.Authorizer, error) {
-		return &autorest.BearerAuthorizer{}, fmt.Errorf("test")
-	})
-	assert.EqualError(t, err, "test")
-
-	_, err = aa.acquirePAT(context.Background(), func(resource string) (autorest.Authorizer, error) {
-		return &autorest.BearerAuthorizer{}, nil
-	})
-	assert.EqualError(t, err, "somehow resource id is not set")
-
-	aa.temporaryPat = &tokenResponse{
-		TokenValue: "...",
-	}
-	auth, rre := aa.acquirePAT(context.Background(), func(resource string) (autorest.Authorizer, error) {
-		return &autorest.BearerAuthorizer{}, nil
-	})
-	assert.NoError(t, rre)
-	assert.Equal(t, "...", auth.TokenValue)
-}
-
 func TestDatabricksClient_ensureWorkspaceURL(t *testing.T) {
 	aa := DatabricksClient{InsecureSkipVerify: true}
 	aa.configureHTTPCLient()

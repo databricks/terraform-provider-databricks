@@ -4,7 +4,7 @@
 
 **Behavior changes**
 
-* Removed deprecated `azure_use_pat_for_spn`, `azure_use_pat_for_cli` provider attributes
+* Removed deprecated `azure_use_pat_for_spn`, `azure_use_pat_for_cli`, `azure_pat_token_duration_seconds` provider attributes
 
 ## 0.3.11
 

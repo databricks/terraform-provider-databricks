@@ -3,7 +3,7 @@ subcategory: "AWS"
 ---
 # databricks_instance_profile Resource
 
-This resource allows you to register or unregister EC2 instance profiles that users can launch [databricks_cluster](cluster.md) and access data, like [databricks_aws_s3_mount](aws_s3_mount.md). The following example demonstrates how to create an instance profile and create a cluster with it. When creating new `databricks_instance_profile`, Databricks validates that it has sufficient permissions to launch instances with the instance profile. This validation uses AWS dry-run mode for the [AWS EC2 RunInstances API](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_RunInstances.html).
+This resource allows you to register or unregister EC2 instance profiles that users can launch [databricks_cluster](cluster.md) and access data, like [databricks_mount](mount.md). The following example demonstrates how to create an instance profile and create a cluster with it. When creating new `databricks_instance_profile`, Databricks validates that it has sufficient permissions to launch instances with the instance profile. This validation uses AWS dry-run mode for the [AWS EC2 RunInstances API](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_RunInstances.html).
 
 ```hcl
 variable "crossaccount_role_name" {

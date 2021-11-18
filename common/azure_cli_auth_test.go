@@ -181,67 +181,6 @@ func TestConfigureWithAzureCLI_SP(t *testing.T) {
 	assert.Nil(t, auth)
 }
 
-func TestConfigureWithAzureCLI(t *testing.T) {
-	defer CleanupEnvironment()()
-	os.Setenv("PATH", "testdata:/bin")
-
-	// token without expiry in this case
-	client, server := singleRequestServer(t, "POST", "/api/2.0/token/create", `{
-		"token_value": "abc"
-	}`)
-	defer server.Close()
-
-	client.AzureDatabricksResourceID = "/subscriptions/a/resourceGroups/b/providers/Microsoft.Databricks/workspaces/c"
-	client.AzureUsePATForCLI = true
-
-	auth, err := client.configureWithAzureCLI(context.Background())
-	assert.NoError(t, err)
-
-	err = auth(httptest.NewRequest("GET", "/clusters/list", http.NoBody))
-	assert.NoError(t, err)
-}
-
-func TestConfigureWithAzureCLI_Error(t *testing.T) {
-	defer CleanupEnvironment()()
-	os.Setenv("PATH", "testdata:/bin")
-
-	// token without expiry in this case
-	client, server := singleRequestServer(t, "POST", "/api/2.0/token/create", `{
-		token_value": corrupt
-	}`)
-	defer server.Close()
-
-	client.AzureDatabricksResourceID = "/subscriptions/a/resourceGroups/b/providers/Microsoft.Databricks/workspaces/c"
-	client.AzureUsePATForCLI = true
-
-	auth, err := client.configureWithAzureCLI(context.Background())
-	assert.NoError(t, err)
-
-	err = auth(httptest.NewRequest("GET", "/clusters/list", http.NoBody))
-	assert.Error(t, err)
-	assert.True(t, strings.HasPrefix(err.Error(), "Invalid JSON received"),
-		"Actual message: %s", err.Error())
-}
-
-func TestConfigureWithAzureCLI_NotInstalled(t *testing.T) {
-	defer CleanupEnvironment()()
-	os.Setenv("PATH", "whatever")
-
-	// token without expiry in this case
-	client, server := singleRequestServer(t, "POST", "/api/2.0/token/create", `{
-		"token_value": "abc"
-	}`)
-	defer server.Close()
-
-	client.AzureDatabricksResourceID = "/subscriptions/a/resourceGroups/b/providers/Microsoft.Databricks/workspaces/c"
-	client.AzureUsePATForCLI = true
-
-	_, err := client.configureWithAzureCLI(context.Background())
-	require.Error(t, err)
-	assert.True(t, strings.HasPrefix(err.Error(), "most likely Azure CLI is not installed"),
-		"Actual message: %s", err.Error())
-}
-
 func TestCliAuthorizer_Error(t *testing.T) {
 	defer CleanupEnvironment()()
 	os.Setenv("PATH", "whatever")

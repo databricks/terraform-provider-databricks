@@ -133,9 +133,6 @@ func providerSchema() map[string]*schema.Schema {
 	ps["azure_subscription_id"].Deprecated = fmt.Sprintf(azCoordinatesDeprecation, "azure_subscription_id")
 	ps["azure_workspace_resource_id"].Deprecated = fmt.Sprintf(azCoordinatesDeprecation, "azure_workspace_resource_id")
 
-	patWorkaroundDeprecation := "Provider will fully switch to AAD token authentication in the near future"
-	ps["azure_pat_token_duration_seconds"].Deprecated = patWorkaroundDeprecation
-
 	ps["rate_limit"].DefaultFunc = schema.EnvDefaultFunc("DATABRICKS_RATE_LIMIT",
 		common.DefaultRateLimitPerSecond)
 	ps["debug_truncate_bytes"].DefaultFunc = schema.EnvDefaultFunc("DATABRICKS_DEBUG_TRUNCATE_BYTES",

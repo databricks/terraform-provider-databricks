@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"strconv"
 	"strings"
 	"time"
 
@@ -18,27 +17,7 @@ import (
 )
 
 // List of management information
-const (
-	AzureDatabricksResourceID string = "2ff814a6-3304-4ab8-85cb-cd0e6f879c1d"
-)
-
-type tokenRequest struct {
-	LifetimeSeconds int64  `json:"lifetime_seconds,omitempty"`
-	Comment         string `json:"comment,omitempty"`
-}
-
-type tokenResponse struct {
-	TokenValue string     `json:"token_value,omitempty"`
-	TokenInfo  *tokenInfo `json:"token_info,omitempty"`
-}
-
-// tokenInfo is a struct that contains metadata about a given token
-type tokenInfo struct {
-	TokenID      string `json:"token_id,omitempty"`
-	CreationTime int64  `json:"creation_time,omitempty"`
-	ExpiryTime   int64  `json:"expiry_time,omitempty"`
-	Comment      string `json:"comment,omitempty"`
-}
+const AzureDatabricksResourceID string = "2ff814a6-3304-4ab8-85cb-cd0e6f879c1d"
 
 //
 func (aa *DatabricksClient) GetAzureJwtProperty(key string) (interface{}, error) {
@@ -222,64 +201,6 @@ func (aa *DatabricksClient) simpleAADRequestVisitor(
 	}, nil
 }
 
-func (aa *DatabricksClient) acquirePAT(
-	ctx context.Context,
-	factory func(resource string) (autorest.Authorizer, error),
-	visitors ...func(r *http.Request, ma autorest.Authorizer) error) (*tokenResponse, error) {
-	if aa.temporaryPat != nil {
-		// todo: add IsExpired
-		return aa.temporaryPat, nil
-	}
-	if aa.temporaryPat != nil {
-		return aa.temporaryPat, nil
-	}
-	management, err := factory(aa.AzureEnvironment.ServiceManagementEndpoint)
-	if err != nil {
-		return nil, err
-	}
-	err = aa.ensureWorkspaceURL(ctx, management)
-	if err != nil {
-		return nil, err
-	}
-	token, err := aa.createPAT(ctx, func(r *http.Request) error {
-		if len(visitors) > 0 {
-			err = visitors[0](r, management)
-			if err != nil {
-				return err
-			}
-		}
-		platform, err := factory(AzureDatabricksResourceID)
-		if err != nil {
-			return err
-		}
-		resourceID := aa.resourceID()
-		if resourceID != "" {
-			r.Header.Set("X-Databricks-Azure-Workspace-Resource-Id", resourceID)
-		}
-		_, err = autorest.Prepare(r, platform.WithAuthorization())
-		if err != nil {
-			return err
-		}
-		return nil
-	})
-	if err != nil {
-		return nil, err
-	}
-	aa.temporaryPat = &token
-	return aa.temporaryPat, nil
-}
-
-func (aa *DatabricksClient) patRequest() tokenRequest {
-	seconds, err := strconv.ParseInt(aa.AzurePATTokenDurationSeconds, 10, 64)
-	if err != nil {
-		seconds = 60 * 60
-	}
-	return tokenRequest{
-		LifetimeSeconds: seconds,
-		Comment:         "Secret made via Terraform",
-	}
-}
-
 func maybeExtendAuthzError(err error) error {
 	fmtString := "Azure authorization error. Does your SPN have Contributor access to Databricks workspace? %v"
 	if e, ok := err.(APIError); ok && e.StatusCode == 403 {
@@ -323,19 +244,6 @@ func (aa *DatabricksClient) ensureWorkspaceURL(ctx context.Context,
 	}
 	aa.Host = fmt.Sprintf("https://%s/", workspace.Properties.WorkspaceURL)
 	return nil
-}
-
-func (aa *DatabricksClient) createPAT(ctx context.Context,
-	interceptor func(r *http.Request) error) (tr tokenResponse, err error) {
-	log.Println("[DEBUG] Creating workspace token")
-	url := fmt.Sprintf("%sapi/2.0/token/create", aa.Host)
-	body, err := aa.genericQuery(ctx,
-		http.MethodPost, url, aa.patRequest(), interceptor)
-	if err != nil {
-		return
-	}
-	err = aa.unmarshall("/api/2.0/token/create", body, &tr)
-	return
 }
 
 func (aa *DatabricksClient) getClientSecretAuthorizer(resource string) (autorest.Authorizer, error) {

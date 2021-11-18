@@ -10,9 +10,10 @@ import (
 
 // MLFlowExperiment defines the parameters that can be set in the resource.
 type MLFlowExperiment struct {
-	Name        string `json:"name"`
-	Tags        []Tag  `json:"tags,omitempty" tf:"force_new"`
-	Description string `json:"description,omitempty"`
+	Name             string `json:"name"`
+	ArtifactLocation string `json:"artifact_location,omitempty"`
+	Tags             []Tag  `json:"tags,omitempty" tf:"force_new"`
+	Description      string `json:"description,omitempty"`
 }
 
 // MLFlowExperimentAPI defines the response object from the API
@@ -23,7 +24,7 @@ type MLFlowExperimentAPI struct {
 	LifecycleStage   string `json:"lifecycle_stage,omitempty"`
 	LastUpdateTime   int64  `json:"last_update_time,omitempty"`
 	CreationTime     int64  `json:"creation_time,omitempty"`
-	Tags             []Tag  `json:"tags,omitempty"`
+	Tags             []Tag  `json:"tags,omitempty" tf:"force_new"`
 }
 
 type MLFlowExperimentUpdateAPI struct {
@@ -46,6 +47,7 @@ func (d *MLFlowExperiment) toAPIObject(schema map[string]*schema.Schema, data *s
 	ad.Name = d.Name
 	ad.ExperimentId = data.Id()
 	ad.Tags = d.Tags
+	ad.ArtifactLocation = d.ArtifactLocation
 
 	return &ad, nil
 }

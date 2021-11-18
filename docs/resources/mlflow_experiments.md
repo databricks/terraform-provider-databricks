@@ -9,8 +9,8 @@ This resource allows you to create MLflow experiments in Databricks.
 
 ```hcl
 resource "databricks_mlflow_experiment" "test" {
-  name = "My MLflow Experiment"
-
+  name = "/Users/myuserid/my-experiment"
+  artifact_location = "dbfs:/tmp/my-experiment"
   description = "My MLflow experiment description"
 
   tags {
@@ -28,6 +28,7 @@ resource "databricks_mlflow_experiment" "test" {
 
 The following arguments are supported:
 
-* `name` - (Required) Name of MLflow experiment.
+* `name` - (Required) Name of MLflow experiment. It must be an absolute path within the Databricks workspace, e.g. '/Users/\<some-username\>/my-experiment'. For more information about changes to experiment naming conventions, see 'https://docs.databricks.com/applications/mlflow/experiments.html#experiment-migration'.
+* `artifact_location` - Path to dbfs:/ or s3:// artificate location of the MLflow experiment.
 * `description` - The description of the MLflow experiment.
 * `tags` - Tags for the MLflow experiment.

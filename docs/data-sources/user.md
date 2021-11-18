@@ -39,6 +39,7 @@ Data source allows you to pick groups by the following attributes
 Data source exposes the following attributes:
 
 - `id` - The id of the user.
+- `external_id` - ID of the user in an external identity provider.
 - `user_name` - Name of the [user](../resources/user.md), e.g. `mr.foo@example.com`.
 - `display_name` - Display name of the [user](../resources/user.md), e.g. `Mr Foo`.
 - `home` - Home folder of the [user](../resources/user.md), e.g. `/Users/mr.foo@example.com`.

@@ -56,21 +56,18 @@ resource "aws_s3_bucket_policy" "logdelivery" {
 }
 
 resource "databricks_mws_credentials" "log_writer" {
-    provider         = databricks.mws
     account_id       = var.databricks_account_id
     credentials_name = "Usage Delivery"
     role_arn         = aws_iam_role.logdelivery.arn
 }
 
 resource "databricks_mws_storage_configurations" "log_bucket" {
-    provider                   = databricks.mws
     account_id                 = var.databricks_account_id
     storage_configuration_name = "Usage Logs"
     bucket_name                = aws_s3_bucket.logdelivery.bucket
 }
 
 resource "databricks_mws_log_delivery" "usage_logs" {
-    provider   = databricks.mws
     account_id = var.databricks_account_id
     credentials_id = databricks_mws_credentials.log_writer.credentials_id
     storage_configuration_id = databricks_mws_storage_configurations.log_bucket.storage_configuration_id
@@ -81,7 +78,6 @@ resource "databricks_mws_log_delivery" "usage_logs" {
 }
 
 resource "databricks_mws_log_delivery" "audit_logs" {
-    provider   = databricks.mws
     account_id = var.databricks_account_id
     credentials_id = databricks_mws_credentials.log_writer.credentials_id
     storage_configuration_id = databricks_mws_storage_configurations.log_bucket.storage_configuration_id
@@ -100,7 +96,6 @@ Common processing scenario is to apply [cost allocation tags](https://docs.aws.a
 
 ```hcl
 resource "databricks_mws_log_delivery" "usage_logs" {
-    provider   = databricks.mws
     account_id = var.databricks_account_id
     credentials_id = databricks_mws_credentials.log_writer.credentials_id
     storage_configuration_id = databricks_mws_storage_configurations.log_bucket.storage_configuration_id
@@ -117,7 +112,6 @@ JSON files with [static schema](https://docs.databricks.com/administration-guide
 
 ```hcl
 resource "databricks_mws_log_delivery" "audit_logs" {
-    provider   = databricks.mws
     account_id = var.databricks_account_id
     credentials_id = databricks_mws_credentials.log_writer.credentials_id
     storage_configuration_id = databricks_mws_storage_configurations.log_bucket.storage_configuration_id

@@ -64,7 +64,6 @@ resource "aws_kms_alias" "managed_services_customer_managed_key_alias" {
 }
 
 resource "databricks_mws_customer_managed_keys" "managed_services" {
-    provider     = databricks.mws
     account_id   = var.databricks_account_id
     aws_key_info {
         key_arn   = aws_kms_key.managed_services_customer_managed_key.arn
@@ -165,7 +164,6 @@ resource "aws_kms_alias" "storage_customer_managed_key_alias" {
 }
 
 resource "databricks_mws_customer_managed_keys" "storage" {
-    provider     = databricks.mws
     account_id   = var.databricks_account_id
     aws_key_info {
         key_arn   = aws_kms_key.storage_customer_managed_key.arn

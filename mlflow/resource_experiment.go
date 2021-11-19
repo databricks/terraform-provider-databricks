@@ -11,7 +11,6 @@ import (
 // Experiment defines the parameters that can be set in the resource.
 type Experiment struct {
 	Name             string    `json:"name"`
-	Tags             []api.Tag `json:"tags,omitempty" tf:"force_new"`
 	ArtifactLocation string    `json:"artifact_location,omitempty" tf:"force_new"`
 	Description      string    `json:"description,omitempty"`
 }
@@ -47,7 +46,6 @@ func ResourceMLFlowExperiment() *schema.Resource {
 				return err
 			}
 
-			data.Set("tags", ad.Tags)
 			data.Set("name", ad.Name)
 			data.SetId(ad.ExperimentId)
 			return nil

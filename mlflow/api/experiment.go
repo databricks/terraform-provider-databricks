@@ -15,7 +15,6 @@ type Experiment struct {
 	LifecycleStage   string `json:"lifecycle_stage,omitempty"`
 	LastUpdateTime   int64  `json:"last_update_time,omitempty"`
 	CreationTime     int64  `json:"creation_time,omitempty"`
-	Tags             []Tag  `json:"tags,omitempty"`
 }
 
 type ExperimentUpdate struct {

@@ -4,7 +4,7 @@ page_title: "Provisioning AWS Databricks E2"
 
 # Provisioning AWS Databricks E2
 
-You can provision multiple Databricks workspaces with Terraform. 
+You can provision multiple Databricks workspaces with Terraform.
 
 ![Simplest multiworkspace](https://github.com/databrickslabs/terraform-provider-databricks/raw/master/docs/simplest-multiworkspace.png)
 
@@ -45,9 +45,9 @@ Before [managing workspace](workspace-management.md), you have to create:
   - [Root bucket](#root-bucket)
   - [Cross-account role](#cross-account-iam-role)
   - [Databricks E2 workspace](#databricks-e2-workspace)
-  - [Host and Token outputs](#provider-configuration) 
+  - [Host and Token outputs](#provider-configuration)
 
-> Initializing provider with `alias = "mws"` and using `provider = databricks.mws` for all `databricks_mws_*` resources. We require all `databricks_mws_*` resources to be created within it's own dedicated terraform module of your environment. Usually this module creates VPC and IAM roles as well.
+> Initialize provider with `alias = "mws"` and use `provider = databricks.mws` for all `databricks_mws_*` resources. We require all `databricks_mws_*` resources to be created within its own dedicated terraform module of your environment. Usually this module creates VPC and IAM roles as well.
 
 ```hcl
 terraform {
@@ -59,7 +59,7 @@ terraform {
     aws = {
       source = "hashicorp/aws"
       version = "3.49.0"
-    }    
+    }
   }
 }
 
@@ -159,7 +159,7 @@ module "vpc_endpoints" {
       service         = "s3"
       service_type    = "Gateway"
       route_table_ids = flatten([
-        module.vpc.private_route_table_ids, 
+        module.vpc.private_route_table_ids,
         module.vpc.public_route_table_ids])
       tags            = {
         Name = "${local.prefix}-s3-vpc-endpoint"
@@ -180,7 +180,7 @@ module "vpc_endpoints" {
       tags                = {
         Name = "${local.prefix}-kinesis-vpc-endpoint"
       }
-    },    
+    },
   }
 
   tags = var.tags
@@ -239,11 +239,11 @@ resource "databricks_mws_storage_configurations" "this" {
 
 ## Databricks E2 Workspace
 
-Once  [VPC](#vpc), [cross-account role](#cross-account-iam-role), and [root bucket](#root-bucket) are setup, you can create Databricks AWS E2 workspace through [databricks_mws_workspaces](../resources/mws_workspaces.md) resource. 
+Once  [VPC](#vpc), [cross-account role](#cross-account-iam-role), and [root bucket](#root-bucket) are setup, you can create Databricks AWS E2 workspace through [databricks_mws_workspaces](../resources/mws_workspaces.md) resource.
 
 Code that creates workspaces and code that [manages workspaces](workspace-management.md) must be in separate terraform modules to avoid common confusion between `provider = databricks.mws` and `provider = databricks.created_workspace`. This is why we specify `databricks_host` and `databricks_token` outputs, that have to be used in the latter modules.
 
--> **Note** If you experience technical difficulties with rolling out resources in this example, please make sure that [environment variables](../index.md#environment-variables) don't [conflict with other](../index.md#empty-provider-block) provider block attributes. When in doubt, please run `TF_LOG=DEBUG terraform apply` to enable [debug mode](https://www.terraform.io/docs/internals/debugging.html) through the [`TF_LOG`](https://www.terraform.io/docs/cli/config/environment-variables.html#tf_log) environment variable. Look specifically for `Explicit and implicit attributes` lines, that should indicate authentication attributes used. The other common reason for technical difficulties might be related to missing `alias` attribute in `provider "databricks" {}` blocks or `provider` attribute in `resource "databricks_..." {}` blocks. Please make sure to read [`alias`: Multiple Provider Configurations](https://www.terraform.io/docs/language/providers/configuration.html#alias-multiple-provider-configurations) documentation article. 
+-> **Note** If you experience technical difficulties with rolling out resources in this example, please make sure that [environment variables](../index.md#environment-variables) don't [conflict with other](../index.md#empty-provider-block) provider block attributes. When in doubt, please run `TF_LOG=DEBUG terraform apply` to enable [debug mode](https://www.terraform.io/docs/internals/debugging.html) through the [`TF_LOG`](https://www.terraform.io/docs/cli/config/environment-variables.html#tf_log) environment variable. Look specifically for `Explicit and implicit attributes` lines, that should indicate authentication attributes used. The other common reason for technical difficulties might be related to missing `alias` attribute in `provider "databricks" {}` blocks or `provider` attribute in `resource "databricks_..." {}` blocks. Please make sure to read [`alias`: Multiple Provider Configurations](https://www.terraform.io/docs/language/providers/configuration.html#alias-multiple-provider-configurations) documentation article.
 
 ```hcl
 resource "databricks_mws_workspaces" "this" {

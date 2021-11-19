@@ -3,8 +3,6 @@ subcategory: "Storage"
 ---
 # databricks_mount Resource
 
--> **Note** This resource has an evolving API, which may change in future versions of the provider.
-
 This resource will mount your cloud storage account on `dbfs:/mnt/yourname`. Right now it supports mounting AWS S3, Azure (Blob Storage, ADLS Gen1 & Gen2), Google Cloud Storage.  It is important to understand that this will start up the [cluster](cluster.md) if the cluster is terminated. The read and refresh terraform command will require a cluster and may take some time to validate the mount. If `cluster_id` is not specified, it will create the smallest possible cluster with name equal to or starting with `terraform-mount` for the shortest possible amount of time.
 
 This resource provides two ways of mounting a storage account:
@@ -21,9 +19,9 @@ This resource provides two ways of mounting a storage account:
 
 * `cluster_id` - (Optional, String) Cluster to use for mounting. If no cluster is specified, a new cluster will be created and will mount the bucket for all of the clusters in this workspace. If the cluster is not running - it's going to be started, so be aware to set auto-termination rules on it.
 * `name` - (Optional, String) Name, under which mount will be accessible in `dbfs:/mnt/<MOUNT_NAME>`. If not specified, provider will try to infer it from depending on the resource type:
-  * bucket name for AWS S3 and Google Cloud Storage
-  * container name for ADLS Gen2 and Azure Blob Storage
-  * storage resource name for ADLS Gen1
+  * `bucket_name` for AWS S3 and Google Cloud Storage
+  * `container_name` for ADLS Gen2 and Azure Blob Storage
+  * `storage_resource_name` for ADLS Gen1
 * `uri` - (Optional, String) the URI for accessing specific storage (`s3a://....`, `abfss://....`, `gs://....`, etc.)
 * `extra_configs` - (Optional, String map) configuration parameters that are necessary for mounting of specific storage
 * `resource_id` - (Optional, String) resource ID for given storage account. Could be used to fill defaults, such as storage account & container names on Azure.
@@ -33,8 +31,8 @@ This resource provides two ways of mounting a storage account:
 
 ```hcl
 locals {
-  tenant_id = "8f35a392-f2ae-4280-9796-f1864a10eeec"
-  client_id = "d1b2a25b-86c4-451a-a0eb-0808be121957"
+  tenant_id = "00000000-1111-2222-3333-444444444444"
+  client_id = "55555555-6666-7777-8888-999999999999"
   secret_scope = "some-kv"
   secret_key = "some-sp-secret"
   container = "test"
@@ -82,9 +80,8 @@ data "azurerm_databricks_workspace" "this" {
 
 # it works only with AAD token!
 provider "databricks" {
-  azure_workspace_resource_id = data.azurerm_databricks_workspace.this.id
+  host = data.azurerm_databricks_workspace.this.workspace_url
 }
-
 
 data "databricks_node_type" "smallest" {
   local_disk = true

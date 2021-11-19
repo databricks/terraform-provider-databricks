@@ -6,9 +6,10 @@ import (
 	"os"
 	"testing"
 
+	"github.com/databrickslabs/terraform-provider-databricks/commands"
 	"github.com/databrickslabs/terraform-provider-databricks/common"
-	"github.com/databrickslabs/terraform-provider-databricks/compute"
 	"github.com/databrickslabs/terraform-provider-databricks/internal/acceptance"
+	"github.com/databrickslabs/terraform-provider-databricks/internal/compute"
 	"github.com/databrickslabs/terraform-provider-databricks/qa"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -23,7 +24,7 @@ func TestAccTableACL(t *testing.T) {
 	client := common.CommonEnvironmentClient()
 	client.WithCommandExecutor(func(ctx context.Context,
 		dc *common.DatabricksClient) common.CommandExecutor {
-		return compute.NewCommandsAPI(ctx, dc)
+		return commands.NewCommandsAPI(ctx, dc)
 	})
 
 	shell := client.CommandExecutor(context.Background())

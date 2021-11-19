@@ -1,13 +1,11 @@
 package storage
 
 import (
-	"context"
 	"strings"
 	"testing"
 
+	"github.com/databrickslabs/terraform-provider-databricks/clusters"
 	"github.com/databrickslabs/terraform-provider-databricks/common"
-	"github.com/databrickslabs/terraform-provider-databricks/compute"
-	"github.com/databrickslabs/terraform-provider-databricks/identity"
 	"github.com/databrickslabs/terraform-provider-databricks/internal"
 
 	"github.com/databrickslabs/terraform-provider-databricks/qa"
@@ -28,9 +26,9 @@ func TestResourceAwsS3MountCreate(t *testing.T) {
 				Method:       "GET",
 				ReuseRequest: true,
 				Resource:     "/api/2.0/clusters/get?cluster_id=this_cluster",
-				Response: compute.ClusterInfo{
-					State: compute.ClusterStateRunning,
-					AwsAttributes: &compute.AwsAttributes{
+				Response: clusters.ClusterInfo{
+					State: clusters.ClusterStateRunning,
+					AwsAttributes: &clusters.AwsAttributes{
 						InstanceProfileArn: "abc",
 					},
 				},
@@ -94,9 +92,9 @@ func TestResourceAwsS3MountRead(t *testing.T) {
 				Method:       "GET",
 				ReuseRequest: true,
 				Resource:     "/api/2.0/clusters/get?cluster_id=this_cluster",
-				Response: compute.ClusterInfo{
-					State: compute.ClusterStateRunning,
-					AwsAttributes: &compute.AwsAttributes{
+				Response: clusters.ClusterInfo{
+					State: clusters.ClusterStateRunning,
+					AwsAttributes: &clusters.AwsAttributes{
 						InstanceProfileArn: "abc",
 					},
 				},
@@ -133,9 +131,9 @@ func TestResourceAwsS3MountRead_NotFound(t *testing.T) {
 				Method:       "GET",
 				ReuseRequest: true,
 				Resource:     "/api/2.0/clusters/get?cluster_id=this_cluster",
-				Response: compute.ClusterInfo{
-					State: compute.ClusterStateRunning,
-					AwsAttributes: &compute.AwsAttributes{
+				Response: clusters.ClusterInfo{
+					State: clusters.ClusterStateRunning,
+					AwsAttributes: &clusters.AwsAttributes{
 						InstanceProfileArn: "abc",
 					},
 				},
@@ -168,9 +166,9 @@ func TestResourceAwsS3MountRead_Error(t *testing.T) {
 				Method:       "GET",
 				ReuseRequest: true,
 				Resource:     "/api/2.0/clusters/get?cluster_id=this_cluster",
-				Response: compute.ClusterInfo{
-					State: compute.ClusterStateRunning,
-					AwsAttributes: &compute.AwsAttributes{
+				Response: clusters.ClusterInfo{
+					State: clusters.ClusterStateRunning,
+					AwsAttributes: &clusters.AwsAttributes{
 						InstanceProfileArn: "abc",
 					},
 				},
@@ -205,9 +203,9 @@ func TestResourceAwsS3MountDelete(t *testing.T) {
 				Method:       "GET",
 				ReuseRequest: true,
 				Resource:     "/api/2.0/clusters/get?cluster_id=this_cluster",
-				Response: compute.ClusterInfo{
-					State: compute.ClusterStateRunning,
-					AwsAttributes: &compute.AwsAttributes{
+				Response: clusters.ClusterInfo{
+					State: clusters.ClusterStateRunning,
+					AwsAttributes: &clusters.AwsAttributes{
 						InstanceProfileArn: "abc",
 					},
 				},
@@ -235,38 +233,4 @@ func TestResourceAwsS3MountDelete(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, "this_mount", d.Id())
 	assert.Equal(t, "", d.Get("source"))
-}
-
-func TestAwsAccS3Mount(t *testing.T) {
-	client := common.NewClientFromEnvironment()
-	instanceProfile := qa.GetEnvOrSkipTest(t, "TEST_EC2_INSTANCE_PROFILE")
-	ctx := context.WithValue(context.Background(), common.Current, t.Name())
-	instanceProfilesAPI := identity.NewInstanceProfilesAPI(ctx, client)
-	instanceProfilesAPI.Synchronized(instanceProfile, func() bool {
-		if err := instanceProfilesAPI.Create(identity.InstanceProfileInfo{
-			InstanceProfileArn: instanceProfile,
-		}); err != nil {
-			return false
-		}
-		bucket := qa.GetEnvOrSkipTest(t, "TEST_S3_BUCKET")
-		client := compute.CommonEnvironmentClientWithRealCommandExecutor()
-		clustersAPI := compute.NewClustersAPI(ctx, client)
-		clusterInfo, err := GetOrCreateMountingClusterWithInstanceProfile(
-			clustersAPI, instanceProfile)
-		require.NoError(t, err)
-		defer func() {
-			err = clustersAPI.PermanentDelete(clusterInfo.ClusterID)
-			assert.NoError(t, err)
-			err = instanceProfilesAPI.Delete(instanceProfile)
-			assert.NoError(t, err)
-		}()
-		testMounting(t, MountPoint{
-			exec:      client.CommandExecutor(ctx),
-			clusterID: clusterInfo.ClusterID,
-			name:      qa.RandomName("t"),
-		}, AWSIamMount{
-			S3BucketName: bucket,
-		})
-		return true
-	})
 }

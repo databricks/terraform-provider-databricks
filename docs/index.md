@@ -8,7 +8,7 @@ description: |-
 
 # Databricks Provider
 
-Use the Databricks Terraform provider to interact with almost all of [Databricks](http://databricks.com/) resources. If you're new to Databricks, please follow guide to create a workspace on [Azure](guides/azure-workspace.md) or [AWS](guides/aws-workspace.md) and then this [workspace management](guides/workspace-management.md) tutorial. If you're migrating from version *0.2.x*, please follow [this guide](guides/migration-0.3.x.md). Changelog is available [on GitHub](https://github.com/databrickslabs/terraform-provider-databricks/blob/master/CHANGELOG.md).
+Use the Databricks Terraform provider to interact with almost all of [Databricks](http://databricks.com/) resources. If you're new to Databricks, please follow guide to create a workspace on [Azure](guides/azure-workspace.md) or [AWS](guides/aws-workspace.md) and then this [workspace management](guides/workspace-management.md) tutorial. If you're migrating from version *0.3.x*, please follow [this guide](guides/migration-0.4.x.md). Changelog is available [on GitHub](https://github.com/databrickslabs/terraform-provider-databricks/blob/master/CHANGELOG.md).
 
 ![Resources](https://github.com/databrickslabs/terraform-provider-databricks/raw/master/docs/resources.png)
 
@@ -25,8 +25,7 @@ Storage
 * Manage JAR, Wheel & Egg libraries through [databricks_dbfs_file](resources/dbfs_file.md)
 * List entries on DBFS with [databricks_dbfs_file_paths](data-sources/dbfs_file_paths.md) data source
 * Get contents of small files with [databricks_dbfs_file](data-sources/dbfs_file.md) data source
-* Mount your AWS storage using [databricks_aws_s3_mount](resources/aws_s3_mount.md)
-* Mount your Azure storage using [databricks_azure_adls_gen1_mount](resources/azure_adls_gen1_mount.md), [databricks_azure_adls_gen2_mount](resources/azure_adls_gen2_mount.md), [databricks_azure_blob_mount](resources/azure_blob_mount.md)
+* Mount storage with [databricks_mount](resources/mount.md) resource
 
 Security
 * Organize [databricks_user](resources/user.md) into [databricks_group](resources/group.md) through [databricks_group_member](resources/group_member.md), also reading [metadata](data-sources/group.md)
@@ -47,6 +46,7 @@ Databricks SQL
 * Create [databricks_sql_endpoint](resources/sql_endpoint.md) controlled by [databricks_permissions](resources/permissions.md).
 * Manage [queries](resources/sql_query.md) and their [visualizations](resources/sql_visualization.md).
 * Manage [dashboards](resources/sql_dashboard.md) and their [widgets](resources/sql_widget.md).
+* Provide [global configuration for all SQL Endpoints](docs/resources/sql_global_config.md)
 
 MLFlow
 * Create [MLFlow models](resources/mlflow_model.md).
@@ -225,8 +225,6 @@ resource "databricks_user" "my-user" {
 
 ### Authenticating with Azure Service Principal
 
-!> **Warning** Please note that the azure service principal authentication currently (since v0.3.7) uses the AAD token for the authentication (SPN should have **Contributor** role on Databricks workspace).  You can restore previous functionality (generating the PAT for service principal)  by setting `azure_use_pat_for_spn` to `true` (you can regulate the lifetime of generated PAT with `pat_token_duration_seconds` setting). Azure Databricks does not yet support AAD tokens for [secret scopes](https://docs.microsoft.com/en-us/azure/databricks/dev-tools/api/latest/secrets#--create-secret-scope). Databricks Labs team will refactor it transparently once that support is available. The only impacted field is `pat_token_duration_seconds`, which will be deprecated and fully supported after AAD support. 
-
 ```hcl
 provider "azurerm" {
   client_id         = var.client_id
@@ -254,19 +252,15 @@ resource "databricks_user" "my-user" {
 }
 ```
 
-* `azure_workspace_resource_id` - (optional) `id` attribute of [azurerm_databricks_workspace](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/databricks_workspace) resource. Combination of subscription id, resource group name, and workspace name. **This field is deprecated since v0.3.8 in favor of `host = azurerm_databricks_workspace.this.workspace_url`.**
-* `azure_workspace_name` - (optional) This is the name of your Azure Databricks Workspace. Alternatively, you can provide this value as an environment variable `DATABRICKS_AZURE_WORKSPACE_NAME`. Not needed with `azure_workspace_resource_id` is set. **Deprecated since v0.3.8**.
-* `azure_resource_group` - (optional) This is the resource group in which your Azure Databricks Workspace resides. Alternatively, you can provide this value as an environment variable `DATABRICKS_AZURE_RESOURCE_GROUP`. Not needed with `azure_workspace_resource_id` is set. **Deprecated since v0.3.8**.
-* `azure_subscription_id` - (optional) This is the Azure Subscription id in which your Azure Databricks Workspace resides. Alternatively you can provide this value as an environment variable `DATABRICKS_AZURE_SUBSCRIPTION_ID` or `ARM_SUBSCRIPTION_ID`. Not needed with `azure_workspace_resource_id` is set. **Deprecated since v0.3.8**.
-* `azure_client_secret` - (optional) This is the Azure Enterprise Application (Service principal) client secret. This service principal requires contributor access to your Azure Databricks deployment. Alternatively, you can provide this value as an environment variable `DATABRICKS_AZURE_CLIENT_SECRET` or `ARM_CLIENT_SECRET`.
-* `azure_client_id` - (optional) This is the Azure Enterprise Application (Service principal) client id. This service principal requires contributor access to your Azure Databricks deployment. Alternatively, you can provide this value as an environment variable `DATABRICKS_AZURE_CLIENT_ID` or `ARM_CLIENT_ID`.
+* `azure_workspace_resource_id` - (optional) `id` attribute of [azurerm_databricks_workspace](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/databricks_workspace) resource. Combination of subscription id, resource group name, and workspace name.
+* `azure_client_secret` - (optional) This is the Azure Enterprise Application (Service principal) client secret. This service principal requires contributor access to your Azure Databricks deployment. Alternatively, you can provide this value as an environment variable `ARM_CLIENT_SECRET`.
+* `azure_client_id` - (optional) This is the Azure Enterprise Application (Service principal) client id. This service principal requires contributor access to your Azure Databricks deployment. Alternatively, you can provide this value as an environment variable `ARM_CLIENT_ID`.
 * `azure_tenant_id` - (optional) This is the Azure Active Directory Tenant id in which the Enterprise Application (Service Principal) 
-resides. Alternatively, you can provide this value as an environment variable `DATABRICKS_AZURE_TENANT_ID` or `ARM_TENANT_ID`.
+resides. Alternatively, you can provide this value as an environment variable `ARM_TENANT_ID`.
 * `azure_environment` - (optional) This is the Azure Environment which defaults to the `public` cloud. Other options are `german`, `china` and `usgovernment`. Alternatively, you can provide this value as an environment variable `ARM_ENVIRONMENT`.
 * `azure_use_msi` - (optional) Use [Azure Managed Service Identity](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/guides/managed_service_identity) authentication. Alternatively, you can provide this value as an environment variable `ARM_USE_MSI`.
-* `pat_token_duration_seconds` - The current implementation of the azure auth via sp requires the provider to create a temporary personal access token within Databricks. The current AAD implementation does not cover all the APIs for Authentication. This field determines the duration in which that temporary PAT token is alive. It is measured in seconds and will default to `3600` seconds.  **Deprecated since v0.3.8**.
 
-There are multiple environment variable options, the `DATABRICKS_AZURE_*` environment variables take precedence, and the `ARM_*` environment variables provide a way to share authentication configuration using the `databricks` provider alongside the `azurerm` provider.
+There are `ARM_*` environment variables provide a way to share authentication configuration using the `databricks` provider alongside the [`azurerm` provider](https://registry.terraform.io/providers/hashicorp/azurerm/latest).
 
 ## Miscellaneous configuration parameters
 
@@ -344,7 +338,7 @@ terraform {
   required_providers {
     databricks = {
       source = "databrickslabs/databricks"
-      version = "0.3.10"
+      version = "0.3.11"
     }
   }
 }

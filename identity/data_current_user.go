@@ -32,6 +32,10 @@ func DataSourceCurrentUser() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"external_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
 		ReadContext: func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 			usersAPI := NewUsersAPI(ctx, m)
@@ -42,6 +46,7 @@ func DataSourceCurrentUser() *schema.Resource {
 			d.Set("user_name", me.UserName)
 			d.Set("home", fmt.Sprintf("/Users/%s", me.UserName))
 			d.Set("repos", fmt.Sprintf("/Repos/%s", me.UserName))
+			d.Set("external_id", me.ExternalID)
 			splits := strings.Split(me.UserName, "@")
 			norm := nonAlphanumeric.ReplaceAllLiteralString(splits[0], "_")
 			norm = strings.ToLower(norm)

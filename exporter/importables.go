@@ -13,8 +13,9 @@ import (
 	"time"
 
 	"github.com/databrickslabs/terraform-provider-databricks/access"
+	"github.com/databrickslabs/terraform-provider-databricks/clusters"
 	"github.com/databrickslabs/terraform-provider-databricks/common"
-	"github.com/databrickslabs/terraform-provider-databricks/compute"
+	"github.com/databrickslabs/terraform-provider-databricks/jobs"
 	"github.com/databrickslabs/terraform-provider-databricks/workspace"
 
 	"github.com/databrickslabs/terraform-provider-databricks/storage"
@@ -130,7 +131,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			{Path: "library.egg", Resource: "databricks_dbfs_file", Match: "dbfs_path"},
 		},
 		List: func(ic *importContext) error {
-			clusters, err := compute.NewClustersAPI(ic.Context, ic.Client).List()
+			clusters, err := clusters.NewClustersAPI(ic.Context, ic.Client).List()
 			if err != nil {
 				return err
 			}
@@ -160,7 +161,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			return nil
 		},
 		Import: func(ic *importContext, r *resource) error {
-			var c compute.Cluster
+			var c clusters.Cluster
 			s := ic.Resources["databricks_cluster"].Schema
 			if err := common.DataToStructPointer(r.Data, s, &c); err != nil {
 				return err
@@ -199,7 +200,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			{Path: "spark_jar_task.jar_uri", Resource: "databricks_dbfs_file", Match: "dbfs_path"},
 		},
 		Import: func(ic *importContext, r *resource) error {
-			var job compute.JobSettings
+			var job jobs.JobSettings
 			s := ic.Resources["databricks_job"].Schema
 			if err := common.DataToStructPointer(r.Data, s, &job); err != nil {
 				return err
@@ -251,7 +252,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			return ic.importLibraries(r.Data, s)
 		},
 		List: func(ic *importContext) error {
-			a := compute.NewJobsAPI(ic.Context, ic.Client)
+			a := jobs.NewJobsAPI(ic.Context, ic.Client)
 			nowSeconds := time.Now().Unix()
 			starterAfter := (nowSeconds - (ic.lastActiveDays * 24 * 60 * 60)) * 1000
 			if l, err := a.List(); err == nil {
@@ -261,7 +262,7 @@ var resourcesMap map[string]importable = map[string]importable{
 						continue
 					}
 					if ic.lastActiveDays != 3650 {
-						rl, err := a.RunsList(compute.JobRunsListRequest{
+						rl, err := a.RunsList(jobs.JobRunsListRequest{
 							JobID:         job.JobID,
 							CompletedOnly: true,
 							Limit:         1,

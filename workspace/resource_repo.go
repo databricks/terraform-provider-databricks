@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/url"
+	"path"
 	"strings"
 
 	"github.com/databrickslabs/terraform-provider-databricks/common"
@@ -50,6 +51,19 @@ func (a ReposAPI) Create(r createRequest) (ReposInformation, error) {
 	}
 	if r.Provider == "" {
 		return resp, fmt.Errorf("git_provider isn't specified and we can't detect provider from URL")
+	}
+	if r.Path != "" {
+		if !strings.HasPrefix(r.Path, "/Repos/") {
+			return resp, fmt.Errorf("path should start with /Repos/")
+		}
+		p := r.Path
+		if strings.HasSuffix(r.Path, "/") {
+			p = strings.TrimSuffix(r.Path, "/")
+		}
+		p = path.Dir(p)
+		if err := NewNotebooksAPI(a.context, a.client).Mkdirs(p); err != nil {
+			return resp, err
+		}
 	}
 
 	err := a.client.Post(a.context, "/repos", r, &resp)

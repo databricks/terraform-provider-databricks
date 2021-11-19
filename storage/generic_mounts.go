@@ -9,8 +9,8 @@ import (
 	"strings"
 
 	"github.com/Azure/go-autorest/autorest/azure"
+	"github.com/databrickslabs/terraform-provider-databricks/clusters"
 	"github.com/databrickslabs/terraform-provider-databricks/common"
-	"github.com/databrickslabs/terraform-provider-databricks/compute"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -134,7 +134,7 @@ func preprocessGsMount(ctx context.Context, s map[string]*schema.Schema, d *sche
 	if gm.Gs != nil {
 		serviceAccount = gm.Gs.ServiceAccount
 	}
-	clustersAPI := compute.NewClustersAPI(ctx, m)
+	clustersAPI := clusters.NewClustersAPI(ctx, m)
 	if clusterID != "" {
 		clusterInfo, err := clustersAPI.Get(clusterID)
 		if err != nil {
@@ -160,10 +160,10 @@ func preprocessGsMount(ctx context.Context, s map[string]*schema.Schema, d *sche
 
 // GetOrCreateMountingClusterWithGcpServiceAccount ...
 func GetOrCreateMountingClusterWithGcpServiceAccount(
-	clustersAPI compute.ClustersAPI, serviceAccount string) (i compute.ClusterInfo, err error) {
+	clustersAPI clusters.ClustersAPI, serviceAccount string) (i clusters.ClusterInfo, err error) {
 	clusterName := fmt.Sprintf("terraform-mount-gcs-%x", md5.Sum([]byte(serviceAccount)))
 	cluster := getCommonClusterObject(clustersAPI, clusterName)
-	cluster.GcpAttributes = &compute.GcpAttributes{GoogleServiceAccount: serviceAccount}
+	cluster.GcpAttributes = &clusters.GcpAttributes{GoogleServiceAccount: serviceAccount}
 	return clustersAPI.GetOrCreateRunningCluster(clusterName, cluster)
 }
 
@@ -220,7 +220,7 @@ func preprocessS3MountGeneric(ctx context.Context, s map[string]*schema.Schema, 
 	if clusterID == "" && instanceProfile == "" {
 		return fmt.Errorf("either cluster_id or instance_profile must be specified to mount S3 bucket")
 	}
-	clustersAPI := compute.NewClustersAPI(ctx, m)
+	clustersAPI := clusters.NewClustersAPI(ctx, m)
 	if clusterID != "" {
 		clusterInfo, err := clustersAPI.Get(clusterID)
 		if err != nil {

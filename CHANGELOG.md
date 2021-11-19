@@ -1,5 +1,32 @@
 # Version changelog
 
+## 0.4.0
+
+**Behavior changes**
+
+* Removed deprecated `azure_use_pat_for_spn`, `azure_use_pat_for_cli`, `azure_pat_token_duration_seconds` provider attributes.
+* Removed deprecated `azure_workspace_name`, `azure_resource_group`, `azure_subscription_id` in favor of just using `azure_workspace_resource_id`.
+* Renamed `DATABRICKS_AZURE_WORKSPACE_RESOURCE_ID` environment variable to `DATABRICKS_AZURE_RESOURCE_ID`.
+* `DATABRICKS_AZURE_CLIENT_SECRET` environment variable is no longer having any effect in favor of just using `ARM_CLIENT_SECRET`.
+* `DATABRICKS_AZURE_CLIENT_ID` environment variable is no longer having any effect in favor of just using `ARM_CLIENT_ID`.
+* `DATABRICKS_AZURE_TENANT_ID` environment variable is no longer having any effect in favor of just using `ARM_TENANT_ID`.
+
+## 0.3.11
+
+* Added `databricks_sql_global_config` resource to provide global configuration for SQL Endpoints ([#855](https://github.com/databrickslabs/terraform-provider-databricks/issues/855))
+* Added `databricks_mount` resource to mount arbitrary cloud storage ([#497](https://github.com/databrickslabs/terraform-provider-databricks/issues/497))
+* Improved implementation of `databricks_repo` by creating the parent folder structure ([#895](https://github.com/databrickslabs/terraform-provider-databricks/pull/895))
+* Fixed `databricks_job` error related [to randomized job IDs](https://docs.databricks.com/release-notes/product/2021/august.html#jobs-service-stability-and-scalability-improvements) ([#901](https://github.com/databrickslabs/terraform-provider-databricks/issues/901))
+* Replace `databricks_group` on name change ([#890](https://github.com/databrickslabs/terraform-provider-databricks/pull/890))
+* Names of scopes in `databricks_secret_scope` can have `/` characters in them ([#892](https://github.com/databrickslabs/terraform-provider-databricks/pull/892))
+
+**Deprecations**
+* `databricks_aws_s3_mount`, `databricks_azure_adls_gen1_mount`, `databricks_azure_adls_gen2_mount`, and `databricks_azure_blob_mount` are deprecated in favor of `databricks_mount`.
+
+Updated dependency versions:
+
+* Bump google.golang.org/api from 0.59.0 to 0.60.0
+
 ## 0.3.10
 
 * Added `private_access_level` and `allowed_vpc_endpoint_ids` to `databricks_mws_private_access_settings` resource, which is also now updatable ([#867](https://github.com/databrickslabs/terraform-provider-databricks/issues/867)).

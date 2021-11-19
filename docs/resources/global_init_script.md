@@ -39,7 +39,7 @@ The size of a global init script source code must not exceed 64Kb. The following
 * `source` - Path to script's source code on local filesystem. Conflicts with `content_base64`
 * `content_base64` - The base64-encoded source code global init script. Conflicts with `source`. Use of `content_base64` is discouraged, as it's increasing memory footprint of Terraform state and should only be used in exceptional circumstances
 * `enabled` (bool, optional default: `false`) specifies if the script is enabled for execution, or not
-
+* `position` (integer, optional default: `null`) - the position of a global init script, where `0` represents the first global init script to run, `1` is the second global init script to run, and so on. When omitted, the script gets the last position.
 
 ## Attribute Reference
 

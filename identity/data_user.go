@@ -43,11 +43,19 @@ func DataSourceUser() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"repos": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"display_name": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"alphanumeric": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"external_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -61,6 +69,8 @@ func DataSourceUser() *schema.Resource {
 			d.Set("user_name", user.UserName)
 			d.Set("display_name", user.DisplayName)
 			d.Set("home", fmt.Sprintf("/Users/%s", user.UserName))
+			d.Set("repos", fmt.Sprintf("/Repos/%s", user.UserName))
+			d.Set("external_id", user.ExternalID)
 			splits := strings.Split(user.UserName, "@")
 			norm := nonAlphanumeric.ReplaceAllLiteralString(splits[0], "_")
 			norm = strings.ToLower(norm)

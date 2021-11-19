@@ -14,25 +14,21 @@ import (
 )
 
 type providerFixture struct {
-	host                     string
-	token                    string
-	username                 string
-	password                 string
-	configFile               string
-	profile                  string
-	azureClientID            string
-	azureClientSecret        string
-	azureTenantID            string
-	azureResourceGroup       string
-	azureWorkspaceName       string
-	azureSubscriptionID      string
-	azureWorkspaceResourceID string
-	env                      map[string]string
-	assertError              string
-	assertToken              string
-	assertHost               string
-	assertAzure              bool
-	usePATForSPN             bool
+	host              string
+	token             string
+	username          string
+	password          string
+	configFile        string
+	profile           string
+	azureClientID     string
+	azureClientSecret string
+	azureTenantID     string
+	azureResourceID   string
+	env               map[string]string
+	assertError       string
+	assertToken       string
+	assertHost        string
+	assertAzure       bool
 }
 
 func (tt providerFixture) rawConfig() map[string]interface{} {
@@ -64,20 +60,8 @@ func (tt providerFixture) rawConfig() map[string]interface{} {
 	if tt.azureTenantID != "" {
 		rawConfig["azure_tenant_id"] = tt.azureTenantID
 	}
-	if tt.azureResourceGroup != "" {
-		rawConfig["azure_resource_group"] = tt.azureResourceGroup
-	}
-	if tt.azureWorkspaceName != "" {
-		rawConfig["azure_workspace_name"] = tt.azureWorkspaceName
-	}
-	if tt.azureSubscriptionID != "" {
-		rawConfig["azure_subscription_id"] = tt.azureSubscriptionID
-	}
-	if tt.azureWorkspaceResourceID != "" {
-		rawConfig["azure_workspace_resource_id"] = tt.azureWorkspaceResourceID
-	}
-	if tt.usePATForSPN {
-		rawConfig["azure_use_pat_for_spn"] = true
+	if tt.azureResourceID != "" {
+		rawConfig["azure_workspace_resource_id"] = tt.azureResourceID
 	}
 	return rawConfig
 }
@@ -287,8 +271,8 @@ var azResourceID = "/subscriptions/a/resourceGroups/b/providers/Microsoft.Databr
 func TestConfig_AzureCliHost(t *testing.T) {
 	providerFixture{
 		// this test will skip ensureWorkspaceUrl
-		host:                     "x",
-		azureWorkspaceResourceID: azResourceID,
+		host:            "x",
+		azureResourceID: azResourceID,
 		env: map[string]string{
 			// // these may fail on windows. use docker container for testing.
 			"PATH": "../common/testdata",
@@ -302,7 +286,7 @@ func TestConfig_AzureCliHost(t *testing.T) {
 
 func TestConfig_AzureCliHost_Fail(t *testing.T) {
 	providerFixture{
-		azureWorkspaceResourceID: azResourceID,
+		azureResourceID: azResourceID,
 		env: map[string]string{
 			// these may fail on windows. use docker container for testing.
 			"PATH": "../common/testdata",
@@ -316,7 +300,7 @@ func TestConfig_AzureCliHost_Fail(t *testing.T) {
 func TestConfig_AzureCliHost_AzNotInstalled(t *testing.T) {
 	providerFixture{
 		// `az` not installed, which is expected for deployers on other clouds...
-		azureWorkspaceResourceID: azResourceID,
+		azureResourceID: azResourceID,
 		env: map[string]string{
 			"PATH": "whatever",
 			"HOME": "../common/testdata",
@@ -327,8 +311,8 @@ func TestConfig_AzureCliHost_AzNotInstalled(t *testing.T) {
 
 func TestConfig_AzureCliHost_PatConflict(t *testing.T) {
 	providerFixture{
-		azureWorkspaceResourceID: azResourceID,
-		token:                    "x",
+		azureResourceID: azResourceID,
+		token:           "x",
 		env: map[string]string{
 			// these may fail on windows. use docker container for testing.
 			"PATH": "../common/testdata",
@@ -341,8 +325,8 @@ func TestConfig_AzureCliHost_PatConflict(t *testing.T) {
 func TestConfig_AzureCliHostAndResourceID(t *testing.T) {
 	providerFixture{
 		// omit request to management endpoint to get workspace properties
-		azureWorkspaceResourceID: azResourceID,
-		host:                     "x",
+		azureResourceID: azResourceID,
+		host:            "x",
 		env: map[string]string{
 			// these may fail on windows. use docker container for testing.
 			"PATH": "../common/testdata",
@@ -355,8 +339,8 @@ func TestConfig_AzureCliHostAndResourceID(t *testing.T) {
 
 func TestConfig_AzureAndPasswordConflict(t *testing.T) {
 	providerFixture{
-		host:                     "x",
-		azureWorkspaceResourceID: azResourceID,
+		host:            "x",
+		azureResourceID: azResourceID,
 		env: map[string]string{
 			// these may fail on windows. use docker container for testing.
 			"PATH":                "../common/testdata",
@@ -364,43 +348,6 @@ func TestConfig_AzureAndPasswordConflict(t *testing.T) {
 			"DATABRICKS_USERNAME": "x",
 		},
 		assertError: "More than one authorization method configured: azure and password",
-	}.apply(t)
-}
-
-func TestConfig_AzureResourceIDViaSpn(t *testing.T) {
-	providerFixture{
-		azureWorkspaceResourceID: azResourceID,
-		azureClientID:            "x",
-		azureClientSecret:        "y",
-		azureTenantID:            "z",
-		env: map[string]string{
-			"PATH": "../common/testdata",
-			"HOME": "../common/testdata",
-		},
-		assertAzure:  true,
-		usePATForSPN: true,
-		assertHost:   "",
-		assertToken:  "",
-	}.apply(t)
-}
-
-func TestConfig_Bug294(t *testing.T) {
-	providerFixture{
-		// https://github.com/databrickslabs/terraform-provider-databricks/issues/294
-		azureResourceGroup: "b",
-		azureWorkspaceName: "c",
-		env: map[string]string{
-			"ARM_CLIENT_ID":       "x",
-			"ARM_CLIENT_SECRET":   "y",
-			"ARM_SUBSCRIPTION_ID": "q",
-			"ARM_TENANT_ID":       "z",
-			"HOME":                "../common/testdata",
-			"PATH":                "../common/testdata",
-		},
-		assertAzure:  true,
-		usePATForSPN: true,
-		assertHost:   "",
-		assertToken:  "",
 	}.apply(t)
 }
 
@@ -429,7 +376,6 @@ func configureProviderAndReturnClient(t *testing.T, tt providerFixture) (*common
 		return nil, fmt.Errorf(strings.Join(issues, ", "))
 	}
 	client := p.Meta().(*common.DatabricksClient)
-	client.AzureUsePATForSPN = tt.usePATForSPN
 	err := client.Authenticate(ctx)
 	if err != nil {
 		return nil, err

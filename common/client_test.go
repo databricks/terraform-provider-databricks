@@ -151,7 +151,7 @@ func TestDatabricksClient_FormatURL(t *testing.T) {
 
 func TestClientAttributes(t *testing.T) {
 	ca := ClientAttributes()
-	assert.Len(t, ca, 25)
+	assert.Len(t, ca, 19)
 }
 
 func TestDatabricksClient_Authenticate(t *testing.T) {
@@ -181,4 +181,22 @@ func TestDatabricksClient_AuthenticateAzure(t *testing.T) {
 		"_workspace.this]` to every data resource. See https://www.terraform.io/docs/language/resources/"+
 		"behavior.html more info. Environment variables used: ARM_CLIENT_SECRET, ARM_CLIENT_ID. "+
 		"Please check https://registry.terraform.io/providers/databrickslabs/databricks/latest/docs#authentication for details")
+}
+
+func TestDatabricksIsGcp(t *testing.T) {
+	dc, err := configureAndAuthenticate(&DatabricksClient{
+		Host:  "https://demo.gcp.databricks.com/",
+		Token: "dapi123",
+	})
+	assert.NoError(t, err)
+	assert.Equal(t, true, dc.IsGcp())
+}
+
+func TestIsAzure_Error(t *testing.T) {
+	dc := &DatabricksClient{
+		Token:      "connfigured",
+		ConfigFile: "testdata/.databrickscfg",
+		Profile:    "notoken",
+	}
+	assert.Equal(t, false, dc.IsAzure())
 }

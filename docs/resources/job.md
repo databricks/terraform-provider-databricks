@@ -151,6 +151,12 @@ You can invoke Spark submit tasks only on new clusters. **In the `new_cluster` s
 * `on_start` - (Optional) (List) list of emails to notify on failure
 * `on_success` - (Optional) (List) list of emails to notify on failure
 
+### Exported attributes
+
+In addition to all arguments above, the following attributes are exported:
+
+* `url` - URL of the job on the given workspace
+
 ## Access Control
 
 By default, all users can create and modify jobs unless an administrator [enables jobs access control](https://docs.databricks.com/administration-guide/access-control/jobs-acl.html). With jobs access control, individual permissions determine a user’s abilities. 

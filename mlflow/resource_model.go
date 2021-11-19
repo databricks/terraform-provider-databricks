@@ -45,9 +45,9 @@ func ResourceMLFlowModel() *schema.Resource {
 			}
 
 			if err := common.StructToData(d, s, data); err != nil {
+
 				return err
 			}
-			data.Set("tags", ad.Tags)
 			data.Set("name", ad.Name)
 			data.Set("description", ad.Description)
 

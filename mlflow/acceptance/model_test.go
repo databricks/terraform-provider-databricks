@@ -18,10 +18,6 @@ func TestAccMLflowModel(t *testing.T) {
 					  key   = "key-{var.RANDOM}"
 					  value = "{var.RANDOM}"
 					}
-					tags {
-					  key   = "key-{var.RANDOM}"
-					  value = "{var.RANDOM}"
-					}
 				}
 			`,
 		},

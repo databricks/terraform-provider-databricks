@@ -19,6 +19,6 @@ resource "databricks_mlflow_experiment" "test" {
 
 The following arguments are supported:
 
-* `name` - (Required) Name of MLflow experiment. It must be an absolute path within the Databricks workspace, e.g. `/Users/<some-username>/my-experiment`. For more information about changes to experiment naming conventions, see https://docs.databricks.com/applications/mlflow/experiments.html#experiment-migration.
-* `artifact_location` - Path to dbfs:/ or s3:// artificate location of the MLflow experiment.
+* `name` - (Required) Name of MLflow experiment. It must be an absolute path within the Databricks workspace, e.g. `/Users/<some-username>/my-experiment`. For more information about changes to experiment naming conventions, see [mlflow docs](https://docs.databricks.com/applications/mlflow/experiments.html#experiment-migration).
+* `artifact_location` - Path to dbfs:/ or s3:// artifact location of the MLflow experiment.
 * `description` - The description of the MLflow experiment.

@@ -10,10 +10,10 @@ import (
 // MLFlowModelAPI defines the response object from the API
 type Model struct {
 	Name                 string   `json:"name"`
-	CreationTimestamp    int64    `json:"creation_timestamp,omitempty"`
-	LastUpdatedTimestamp int64    `json:"last_updated_timestamp,omitempty"`
-	UserID               string   `json:"user_id,omitempty"`
-	LatestVersions       []string `json:"latest_versions,omitempty"`
+	CreationTimestamp    int64    `json:"creation_timestamp,omitempty" tf:"computed"`
+	LastUpdatedTimestamp int64    `json:"last_updated_timestamp,omitempty" tf:"computed"`
+	UserID               string   `json:"user_id,omitempty" tf:"computed"`
+	LatestVersions       []string `json:"latest_versions,omitempty" tf:"computed"`
 	Description          string   `json:"description,omitempty"`
 	Tags                 []Tag    `json:"tags,omitempty"`
 }
@@ -40,9 +40,7 @@ func (a ModelAPI) Create(d *Model) error {
 
 // Read ...
 func (a ModelAPI) Read(modelName string) (*Model, error) {
-	//var d MLFLowModelAPI
 	var d RegisteredModel
-	// need to figure out how to send param
 	err := a.client.Get(a.context, fmt.Sprintf("/mlflow/registered-models/get?name=%s", modelName), nil, &d)
 	if err != nil {
 		return nil, err

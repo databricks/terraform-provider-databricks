@@ -49,8 +49,8 @@ Databricks SQL
 * Manage [dashboards](resources/sql_dashboard.md) and their [widgets](resources/sql_widget.md).
 
 MLFlow
-* Create [MLFlow models](resources/mlflow_models.md).
-* Create [MLFlow experiments](resources/mlflow_experiments.md).
+* Create [MLFlow models](resources/mlflow_model.md).
+* Create [MLFlow experiments](resources/mlflow_experiment.md).
 
 ## Example Usage
 

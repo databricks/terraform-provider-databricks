@@ -4,8 +4,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/databrickslabs/terraform-provider-databricks/clusters"
 	"github.com/databrickslabs/terraform-provider-databricks/common"
-	"github.com/databrickslabs/terraform-provider-databricks/compute"
 	"github.com/databrickslabs/terraform-provider-databricks/internal"
 
 	"github.com/databrickslabs/terraform-provider-databricks/qa"
@@ -19,8 +19,8 @@ func TestResourceAzureBlobMountCreate(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/clusters/get?cluster_id=b",
-				Response: compute.ClusterInfo{
-					State: compute.ClusterStateRunning,
+				Response: clusters.ClusterInfo{
+					State: clusters.ClusterStateRunning,
 				},
 				ReuseRequest: true,
 			},
@@ -63,8 +63,8 @@ func TestResourceAzureBlobMountCreate_Error(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/clusters/get?cluster_id=b",
-				Response: compute.ClusterInfo{
-					State: compute.ClusterStateRunning,
+				Response: clusters.ClusterInfo{
+					State: clusters.ClusterStateRunning,
 				},
 			},
 		},
@@ -98,8 +98,8 @@ func TestResourceAzureBlobMountRead(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/clusters/get?cluster_id=b",
-				Response: compute.ClusterInfo{
-					State: compute.ClusterStateRunning,
+				Response: clusters.ClusterInfo{
+					State: clusters.ClusterStateRunning,
 				},
 			},
 		},
@@ -138,8 +138,8 @@ func TestResourceAzureBlobMountRead_NotFound(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/clusters/get?cluster_id=b",
-				Response: compute.ClusterInfo{
-					State: compute.ClusterStateRunning,
+				Response: clusters.ClusterInfo{
+					State: clusters.ClusterStateRunning,
 				},
 			},
 		},
@@ -174,8 +174,8 @@ func TestResourceAzureBlobMountRead_Error(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/clusters/get?cluster_id=b",
-				Response: compute.ClusterInfo{
-					State: compute.ClusterStateRunning,
+				Response: clusters.ClusterInfo{
+					State: clusters.ClusterStateRunning,
 				},
 			},
 		},
@@ -212,8 +212,8 @@ func TestResourceAzureBlobMountDelete(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/clusters/get?cluster_id=b",
-				Response: compute.ClusterInfo{
-					State: compute.ClusterStateRunning,
+				Response: clusters.ClusterInfo{
+					State: clusters.ClusterStateRunning,
 				},
 			},
 		},
@@ -243,20 +243,4 @@ func TestResourceAzureBlobMountDelete(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, "e", d.Id())
 	assert.Equal(t, "", d.Get("source"))
-}
-
-func TestAzureAccBlobMount(t *testing.T) {
-	client, mp := mountPointThroughReusedCluster(t)
-	storageAccountName := qa.GetEnvOrSkipTest(t, "TEST_STORAGE_V2_ACCOUNT")
-	accountKey := qa.GetEnvOrSkipTest(t, "TEST_STORAGE_V2_KEY")
-	container := qa.GetEnvOrSkipTest(t, "TEST_STORAGE_V2_WASBS")
-	testWithNewSecretScope(t, func(scope, key string) {
-		testMounting(t, mp, AzureBlobMount{
-			StorageAccountName: storageAccountName,
-			ContainerName:      container,
-			SecretScope:        scope,
-			SecretKey:          key,
-			Directory:          "/",
-		})
-	}, client, mp.name, accountKey)
 }

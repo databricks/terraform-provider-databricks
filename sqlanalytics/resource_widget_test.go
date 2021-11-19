@@ -558,7 +558,7 @@ func TestWidgetReadNotFound(t *testing.T) {
 }
 
 func TestWidgetUpdate(t *testing.T) {
-	sText := "text"
+	sText := "new text"
 
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
@@ -589,12 +589,12 @@ func TestWidgetUpdate(t *testing.T) {
 						json.RawMessage(`
 							{
 								"id": "12345",
-								"text": "text"
+								"text": "new text"
 							}
 						`),
 						json.RawMessage(`
 							{
-								"id": "12345",
+								"id": "12346",
 								"visualization_id": null
 							}
 						`),
@@ -606,12 +606,12 @@ func TestWidgetUpdate(t *testing.T) {
 		Update:   true,
 		ID:       "some-uuid/12345",
 		InstanceState: map[string]string{
-			"dashboard_id":     "some-uuid",
-			"visualization_id": "678",
+			"dashboard_id": "some-uuid",
+			"text":         "previous text",
 		},
 		HCL: `
 			dashboard_id = "some-uuid"
-			text         = "text"
+			text         = "new text"
 		`,
 	}.Apply(t)
 
@@ -620,17 +620,11 @@ func TestWidgetUpdate(t *testing.T) {
 	assert.Equal(t, "some-uuid", d.Get("dashboard_id"))
 	assert.Equal(t, "12345", d.Get("widget_id"))
 
-	// Test that visualization_id is now unset (see instance state).
-	{
-		_, ok := d.GetOk("visualization_id")
-		assert.False(t, ok, "visualization_id should not be set")
-	}
-
 	// Test that text is now set.
 	{
 		v, ok := d.GetOk("text")
 		assert.True(t, ok, "text should be set")
-		assert.Equal(t, "text", v)
+		assert.Equal(t, "new text", v)
 	}
 }
 

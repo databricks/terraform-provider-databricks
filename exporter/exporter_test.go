@@ -10,9 +10,13 @@ import (
 	"time"
 
 	"github.com/databrickslabs/terraform-provider-databricks/access"
+	"github.com/databrickslabs/terraform-provider-databricks/clusters"
+	"github.com/databrickslabs/terraform-provider-databricks/commands"
 	"github.com/databrickslabs/terraform-provider-databricks/common"
-	"github.com/databrickslabs/terraform-provider-databricks/compute"
 	"github.com/databrickslabs/terraform-provider-databricks/identity"
+	"github.com/databrickslabs/terraform-provider-databricks/jobs"
+	"github.com/databrickslabs/terraform-provider-databricks/libraries"
+	"github.com/databrickslabs/terraform-provider-databricks/policies"
 	"github.com/databrickslabs/terraform-provider-databricks/qa"
 	"github.com/databrickslabs/terraform-provider-databricks/workspace"
 	"github.com/hashicorp/hcl/v2/hclwrite"
@@ -44,8 +48,8 @@ func TestImportingMounts(t *testing.T) {
 				Method:       "GET",
 				ReuseRequest: true,
 				Resource:     "/api/2.0/clusters/list",
-				Response: compute.ClusterList{
-					Clusters: []compute.ClusterInfo{
+				Response: clusters.ClusterList{
+					Clusters: []clusters.ClusterInfo{
 						{
 							ClusterName: "terraform-mount",
 							ClusterID:   "mount",
@@ -61,7 +65,7 @@ func TestImportingMounts(t *testing.T) {
 				Method:       "GET",
 				ReuseRequest: true,
 				Resource:     "/api/2.0/clusters/get?cluster_id=mount",
-				Response: compute.ClusterInfo{
+				Response: clusters.ClusterInfo{
 					State:       "RUNNING",
 					ClusterID:   "mount",
 					ClusterName: "dummy",
@@ -71,7 +75,7 @@ func TestImportingMounts(t *testing.T) {
 				Method:       "POST",
 				ReuseRequest: true,
 				Resource:     "/api/1.2/contexts/create",
-				Response: compute.Command{
+				Response: commands.Command{
 					ID: "context",
 				},
 			},
@@ -79,7 +83,7 @@ func TestImportingMounts(t *testing.T) {
 				Method:       "GET",
 				ReuseRequest: true,
 				Resource:     "/api/1.2/contexts/status?clusterId=mount&contextId=context",
-				Response: compute.Command{
+				Response: commands.Command{
 					Status: "Running",
 				},
 			},
@@ -87,7 +91,7 @@ func TestImportingMounts(t *testing.T) {
 				Method:       "POST",
 				ReuseRequest: true,
 				Resource:     "/api/1.2/commands/execute",
-				Response: compute.Command{
+				Response: commands.Command{
 					ID: "run",
 				},
 			},
@@ -95,7 +99,7 @@ func TestImportingMounts(t *testing.T) {
 				Method:       "GET",
 				ReuseRequest: true,
 				Resource:     "/api/1.2/commands/status?clusterId=mount&commandId=run&contextId=context",
-				Response: compute.Command{
+				Response: commands.Command{
 					Status: "Finished",
 					Results: &common.CommandResults{
 						ResultType: "text",
@@ -125,8 +129,8 @@ func TestImportingMounts(t *testing.T) {
 				Method:       "GET",
 				ReuseRequest: true,
 				Resource:     "/api/2.0/clusters/spark-versions",
-				Response: compute.SparkVersionsList{
-					SparkVersions: []compute.SparkVersion{
+				Response: clusters.SparkVersionsList{
+					SparkVersions: []clusters.SparkVersion{
 						{
 							Version: "Foo LTS",
 						},
@@ -137,8 +141,8 @@ func TestImportingMounts(t *testing.T) {
 				Method:       "GET",
 				ReuseRequest: true,
 				Resource:     "/api/2.0/clusters/list-node-types",
-				Response: compute.NodeTypeList{
-					NodeTypes: []compute.NodeType{
+				Response: clusters.NodeTypeList{
+					NodeTypes: []clusters.NodeType{
 						{
 							NodeTypeID: "m5d.large",
 						},
@@ -149,16 +153,16 @@ func TestImportingMounts(t *testing.T) {
 				Method:       "POST",
 				ReuseRequest: true,
 				Resource:     "/api/2.0/clusters/events",
-				Response: compute.EventsResponse{
-					Events: []compute.ClusterEvent{},
+				Response: clusters.EventsResponse{
+					Events: []clusters.ClusterEvent{},
 				},
 			},
 			{
 				Method:       "GET",
 				ReuseRequest: true,
 				Resource:     "/api/2.0/libraries/cluster-status?cluster_id=mount",
-				Response: compute.ClusterLibraryList{
-					Libraries: []compute.Library{},
+				Response: libraries.ClusterLibraryList{
+					Libraries: []libraries.Library{},
 				},
 			},
 		}, func(ctx context.Context, client *common.DatabricksClient) {
@@ -287,12 +291,12 @@ func TestImportingUsersGroupsSecretScopes(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/jobs/list",
-				Response: compute.JobList{},
+				Response: jobs.JobList{},
 			},
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/clusters/list",
-				Response: compute.ClusterList{},
+				Response: clusters.ClusterList{},
 			},
 			{
 				Method:       "GET",
@@ -380,12 +384,12 @@ func TestImportingNoResourcesError(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/jobs/list",
-				Response: compute.JobList{},
+				Response: jobs.JobList{},
 			},
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/clusters/list",
-				Response: compute.ClusterList{},
+				Response: clusters.ClusterList{},
 			},
 			{
 				Method:       "GET",
@@ -423,7 +427,7 @@ func TestImportingClusters(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/jobs/list",
-				Response: compute.JobList{},
+				Response: jobs.JobList{},
 			},
 			{
 				Method:   "GET",
@@ -438,7 +442,7 @@ func TestImportingClusters(t *testing.T) {
 			{
 				Method:   "POST",
 				Resource: "/api/2.0/clusters/events",
-				Response: compute.EventDetails{},
+				Response: clusters.EventDetails{},
 			},
 			{
 				Method:   "GET",
@@ -470,13 +474,13 @@ func TestImportingClusters(t *testing.T) {
 			{
 				Method:   "POST",
 				Resource: "/api/2.0/clusters/events",
-				ExpectedRequest: compute.EventsRequest{
+				ExpectedRequest: clusters.EventsRequest{
 					ClusterID:  "test2",
 					Order:      "DESC",
-					EventTypes: []compute.ClusterEventType{"PINNED", "UNPINNED"},
+					EventTypes: []clusters.ClusterEventType{"PINNED", "UNPINNED"},
 					Limit:      1,
 				},
-				Response: compute.EventDetails{},
+				Response: clusters.EventDetails{},
 			},
 			{
 				Method:   "GET",
@@ -506,13 +510,13 @@ func TestImportingClusters(t *testing.T) {
 			{
 				Method:   "POST",
 				Resource: "/api/2.0/clusters/events",
-				ExpectedRequest: compute.EventsRequest{
+				ExpectedRequest: clusters.EventsRequest{
 					ClusterID:  "awscluster",
 					Order:      "DESC",
-					EventTypes: []compute.ClusterEventType{"PINNED", "UNPINNED"},
+					EventTypes: []clusters.ClusterEventType{"PINNED", "UNPINNED"},
 					Limit:      1,
 				},
-				Response: compute.EventDetails{},
+				Response: clusters.EventDetails{},
 			},
 			{
 				Method:   "GET",
@@ -553,8 +557,8 @@ func TestImportingClusters(t *testing.T) {
 
 func TestImportingJobs_JobList(t *testing.T) {
 	nowSeconds := time.Now().Unix()
-	jobRuns := compute.JobRunsList{
-		Runs: []compute.JobRun{
+	jobRuns := jobs.JobRunsList{
+		Runs: []jobs.JobRun{
 			{
 				StartTime: nowSeconds * 1000,
 			},
@@ -567,23 +571,23 @@ func TestImportingJobs_JobList(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/jobs/list",
-				Response: compute.JobList{
-					Jobs: []compute.Job{
+				Response: jobs.JobList{
+					Jobs: []jobs.Job{
 						{
 							JobID: 14,
-							Settings: &compute.JobSettings{
+							Settings: &jobs.JobSettings{
 								Name: "Demo job",
 							},
 						},
 						{
 							JobID: 15,
-							Settings: &compute.JobSettings{
+							Settings: &jobs.JobSettings{
 								Name: "Demo job",
 							},
 						},
 						{
 							JobID: 16,
-							Settings: &compute.JobSettings{
+							Settings: &jobs.JobSettings{
 								Name: "Demo job",
 							},
 						},
@@ -622,25 +626,25 @@ func TestImportingJobs_JobList(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/jobs/get?job_id=14",
-				Response: compute.Job{
+				Response: jobs.Job{
 					JobID: 14,
-					Settings: &compute.JobSettings{
+					Settings: &jobs.JobSettings{
 						RetryOnTimeout: true,
-						Libraries: []compute.Library{
+						Libraries: []libraries.Library{
 							{Jar: "dbfs:/FileStore/jars/test.jar"},
 						},
 						Name: "Dummy",
-						NewCluster: &compute.Cluster{
+						NewCluster: &clusters.Cluster{
 							InstancePoolID: "pool1",
 							NumWorkers:     2,
 							SparkVersion:   "6.4.x-scala2.11",
 							PolicyID:       "123",
 						},
-						SparkJarTask: &compute.SparkJarTask{
+						SparkJarTask: &jobs.SparkJarTask{
 							JarURI:        "dbfs:/FileStore/jars/test.jar",
 							MainClassName: "com.databricks.examples.ProjectDriver",
 						},
-						SparkPythonTask: &compute.SparkPythonTask{
+						SparkPythonTask: &jobs.SparkPythonTask{
 							// this makes no sense for prod, but does for tests ;-)
 							PythonFile: "/foo/bar.py",
 							Parameters: []string{
@@ -654,7 +658,7 @@ func TestImportingJobs_JobList(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/policies/clusters/get?policy_id=123",
-				Response: compute.ClusterPolicy{
+				Response: policies.ClusterPolicy{
 					PolicyID: "123",
 					Name:     "dummy",
 					Definition: `{
@@ -713,15 +717,15 @@ func TestImportingJobs_JobList(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/jobs/runs/list?completed_only=true&job_id=15&limit=1",
-				Response: compute.JobRunsList{
-					Runs: []compute.JobRun{},
+				Response: jobs.JobRunsList{
+					Runs: []jobs.JobRun{},
 				},
 			},
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/jobs/runs/list?completed_only=true&job_id=16&limit=1",
-				Response: compute.JobRunsList{
-					Runs: []compute.JobRun{
+				Response: jobs.JobRunsList{
+					Runs: []jobs.JobRun{
 						{
 							StartTime: 0,
 						},
@@ -731,7 +735,7 @@ func TestImportingJobs_JobList(t *testing.T) {
 		},
 		func(ctx context.Context, client *common.DatabricksClient) {
 			ic := newImportContext(client)
-			ic.services = "jobs,access,storage,compute"
+			ic.services = "jobs,access,storage,clusters"
 			ic.listing = "jobs"
 			ic.mounts = true
 			ic.meAdmin = true
@@ -789,12 +793,12 @@ func TestImportingSecrets(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/jobs/list",
-				Response: compute.JobList{},
+				Response: jobs.JobList{},
 			},
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/clusters/list",
-				Response: compute.ClusterList{},
+				Response: clusters.ClusterList{},
 			},
 			{
 				Method:       "GET",

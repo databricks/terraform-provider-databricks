@@ -47,7 +47,7 @@ func (m AzureBlobMount) Config(client *common.DatabricksClient) map[string]strin
 
 // ResourceAzureBlobMount creates the resource
 func ResourceAzureBlobMount() *schema.Resource {
-	return commonMountResource(AzureBlobMount{}, map[string]*schema.Schema{
+	return deprecatedMountTesource(commonMountResource(AzureBlobMount{}, map[string]*schema.Schema{
 		"cluster_id": {
 			Type:     schema.TypeString,
 			Optional: true,
@@ -97,5 +97,5 @@ func ResourceAzureBlobMount() *schema.Resource {
 			Sensitive: true,
 			ForceNew:  true,
 		},
-	})
+	}))
 }

@@ -14,6 +14,7 @@ func ResourceUser() *schema.Resource {
 		UserName    string `json:"user_name" tf:"force_new"`
 		DisplayName string `json:"display_name,omitempty" tf:"computed"`
 		Active      bool   `json:"active,omitempty"`
+		ExternalID  string `json:"external_id,omitempty"`
 	}
 	userSchema := common.StructToSchema(entity{},
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
@@ -31,6 +32,7 @@ func ResourceUser() *schema.Resource {
 			DisplayName:  u.DisplayName,
 			Active:       u.Active,
 			Entitlements: readEntitlementsFromData(d),
+			ExternalID:   u.ExternalID,
 		}, nil
 	}
 	return common.Resource{
@@ -55,6 +57,7 @@ func ResourceUser() *schema.Resource {
 			d.Set("user_name", user.UserName)
 			d.Set("display_name", user.DisplayName)
 			d.Set("active", user.Active)
+			d.Set("external_id", user.ExternalID)
 			return user.Entitlements.readIntoData(d)
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {

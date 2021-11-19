@@ -10,24 +10,9 @@ import (
 
 // MLFlowModel defines the parameters that can be set in the resource.
 type Model struct {
-	Name        string    `json:"name"`
+	Name        string    `json:"name" tf:"force_new"`
 	Tags        []api.Tag `json:"tags,omitempty" tf:"force_new"`
 	Description string    `json:"description,omitempty"`
-}
-
-func (d *Model) toAPIObject(schema map[string]*schema.Schema, data *schema.ResourceData) (*api.Model, error) {
-	// Extract from ResourceData.
-	if err := common.DataToStructPointer(data, schema, d); err != nil {
-		return nil, err
-	}
-
-	// Copy to API object.
-	var ad api.Model
-	ad.Name = d.Name
-	ad.Tags = d.Tags
-	ad.Description = d.Description
-
-	return &ad, nil
 }
 
 // ResourceDashboard ...
@@ -40,17 +25,13 @@ func ResourceMLFlowModel() *schema.Resource {
 
 	return common.Resource{
 		Create: func(ctx context.Context, data *schema.ResourceData, c *common.DatabricksClient) error {
-			var d Model
-			ad, err := d.toAPIObject(s, data)
-			if err != nil {
+			var ad api.Model
+			if err := common.DataToStructPointer(data, s, &ad); err != nil {
+				return nil
+			}
+			if err := api.NewModelAPI(ctx, c).Create(&ad); err != nil {
 				return err
 			}
-
-			err = api.NewModelAPI(ctx, c).Create(ad)
-			if err != nil {
-				return err
-			}
-
 			// No need to set anything because the resource is going to be
 			// read immediately after being created.
 			data.SetId(ad.Name)
@@ -73,21 +54,19 @@ func ResourceMLFlowModel() *schema.Resource {
 			return nil
 		},
 		Update: func(ctx context.Context, data *schema.ResourceData, c *common.DatabricksClient) error {
-			var d Model
-			ad, err := d.toAPIObject(s, data)
-			if err != nil {
-				return err
+			var ad api.Model
+			if err := common.DataToStructPointer(data, s, &ad); err != nil {
+				return nil
 			}
 
-			return api.NewModelAPI(ctx, c).Update(ad)
+			return api.NewModelAPI(ctx, c).Update(&ad)
 		},
 		Delete: func(ctx context.Context, data *schema.ResourceData, c *common.DatabricksClient) error {
-			var d Model
-			ad, err := d.toAPIObject(s, data)
-			if err != nil {
-				return err
+			var ad api.Model
+			if err := common.DataToStructPointer(data, s, &ad); err != nil {
+				return nil
 			}
-			return api.NewModelAPI(ctx, c).Delete(ad)
+			return api.NewModelAPI(ctx, c).Delete(&ad)
 		},
 		Schema: s,
 	}.ToResource()

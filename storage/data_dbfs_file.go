@@ -18,7 +18,6 @@ func DataSourceDBFSFile() *schema.Resource {
 			if err != nil {
 				return diag.FromErr(err)
 			}
-			// TODO: DEPRECATE/ make default
 			if limitFileSize && fileInfo.FileSize > 4e6 {
 				return diag.Errorf("Size of %s is too large: %d bytes",
 					fileInfo.Path, fileInfo.FileSize)
@@ -40,10 +39,9 @@ func DataSourceDBFSFile() *schema.Resource {
 				ForceNew: true,
 			},
 			"limit_file_size": {
-				Deprecated: "Would become client property",
-				Type:       schema.TypeBool,
-				Required:   true,
-				ForceNew:   true,
+				Type:     schema.TypeBool,
+				Required: true,
+				ForceNew: true,
 			},
 			"content": {
 				Type:     schema.TypeString,
@@ -51,9 +49,8 @@ func DataSourceDBFSFile() *schema.Resource {
 				ForceNew: true,
 			},
 			"file_size": {
-				Deprecated: "Rename to size?...",
-				Type:       schema.TypeInt,
-				Computed:   true,
+				Type:     schema.TypeInt,
+				Computed: true,
 			},
 		},
 	}

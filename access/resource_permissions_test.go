@@ -7,9 +7,13 @@ import (
 	"os"
 	"testing"
 
+	"github.com/databrickslabs/terraform-provider-databricks/clusters"
 	"github.com/databrickslabs/terraform-provider-databricks/common"
-	"github.com/databrickslabs/terraform-provider-databricks/compute"
 	"github.com/databrickslabs/terraform-provider-databricks/identity"
+	"github.com/databrickslabs/terraform-provider-databricks/internal/compute"
+	"github.com/databrickslabs/terraform-provider-databricks/jobs"
+	"github.com/databrickslabs/terraform-provider-databricks/policies"
+	"github.com/databrickslabs/terraform-provider-databricks/pools"
 
 	"github.com/databrickslabs/terraform-provider-databricks/qa"
 	"github.com/databrickslabs/terraform-provider-databricks/workspace"
@@ -800,12 +804,12 @@ func permissionsTestHelper(t *testing.T,
 func TestAccPermissionsClusterPolicy(t *testing.T) {
 	permissionsTestHelper(t, func(permissionsAPI PermissionsAPI, user, group string,
 		ef func(string) PermissionsEntity) {
-		policy := compute.ClusterPolicy{
+		policy := policies.ClusterPolicy{
 			Name:       group,
 			Definition: "{}",
 		}
 		ctx := context.Background()
-		policiesAPI := compute.NewClusterPoliciesAPI(ctx, permissionsAPI.client)
+		policiesAPI := policies.NewClusterPoliciesAPI(ctx, permissionsAPI.client)
 		require.NoError(t, policiesAPI.Create(&policy))
 		defer func() {
 			assert.NoError(t, policiesAPI.Delete(policy.PolicyID))
@@ -837,13 +841,13 @@ func TestAccPermissionsClusterPolicy(t *testing.T) {
 func TestAccPermissionsInstancePool(t *testing.T) {
 	permissionsTestHelper(t, func(permissionsAPI PermissionsAPI, user, group string,
 		ef func(string) PermissionsEntity) {
-		poolsAPI := compute.NewInstancePoolsAPI(context.Background(), permissionsAPI.client)
+		poolsAPI := pools.NewInstancePoolsAPI(context.Background(), permissionsAPI.client)
 		ctx := context.Background()
-		ips, err := poolsAPI.Create(compute.InstancePool{
+		ips, err := poolsAPI.Create(pools.InstancePool{
 			InstancePoolName: group,
-			NodeTypeID: compute.NewClustersAPI(
+			NodeTypeID: clusters.NewClustersAPI(
 				ctx, permissionsAPI.client).GetSmallestNodeType(
-				compute.NodeTypeRequest{
+				clusters.NodeTypeRequest{
 					LocalDisk: true,
 				}),
 		})
@@ -879,7 +883,7 @@ func TestAccPermissionsClusters(t *testing.T) {
 	permissionsTestHelper(t, func(permissionsAPI PermissionsAPI, user, group string,
 		ef func(string) PermissionsEntity) {
 		ctx := context.Background()
-		clustersAPI := compute.NewClustersAPI(ctx, permissionsAPI.client)
+		clustersAPI := clusters.NewClustersAPI(ctx, permissionsAPI.client)
 		clusterInfo, err := compute.NewTinyClusterInCommonPool()
 		require.NoError(t, err)
 		defer func() {
@@ -939,18 +943,18 @@ func TestAccPermissionsJobs(t *testing.T) {
 	permissionsTestHelper(t, func(permissionsAPI PermissionsAPI, user, group string,
 		ef func(string) PermissionsEntity) {
 		ctx := context.Background()
-		jobsAPI := compute.NewJobsAPI(ctx, permissionsAPI.client)
-		job, err := jobsAPI.Create(compute.JobSettings{
-			NewCluster: &compute.Cluster{
+		jobsAPI := jobs.NewJobsAPI(ctx, permissionsAPI.client)
+		job, err := jobsAPI.Create(jobs.JobSettings{
+			NewCluster: &clusters.Cluster{
 				NumWorkers:   2,
 				SparkVersion: "6.4.x-scala2.11",
-				NodeTypeID: compute.NewClustersAPI(
+				NodeTypeID: clusters.NewClustersAPI(
 					ctx, permissionsAPI.client).GetSmallestNodeType(
-					compute.NodeTypeRequest{
+					clusters.NodeTypeRequest{
 						LocalDisk: true,
 					}),
 			},
-			NotebookTask: &compute.NotebookTask{
+			NotebookTask: &jobs.NotebookTask{
 				NotebookPath: "/Production/Featurize",
 			},
 			Name: group,

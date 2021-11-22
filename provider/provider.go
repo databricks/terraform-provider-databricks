@@ -2,7 +2,6 @@ package provider
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"reflect"
 	"sort"
@@ -12,10 +11,15 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
 	"github.com/databrickslabs/terraform-provider-databricks/access"
+	"github.com/databrickslabs/terraform-provider-databricks/clusters"
+	"github.com/databrickslabs/terraform-provider-databricks/commands"
 	"github.com/databrickslabs/terraform-provider-databricks/common"
-	"github.com/databrickslabs/terraform-provider-databricks/compute"
 	"github.com/databrickslabs/terraform-provider-databricks/identity"
+	"github.com/databrickslabs/terraform-provider-databricks/jobs"
 	"github.com/databrickslabs/terraform-provider-databricks/mws"
+	"github.com/databrickslabs/terraform-provider-databricks/pipelines"
+	"github.com/databrickslabs/terraform-provider-databricks/policies"
+	"github.com/databrickslabs/terraform-provider-databricks/pools"
 	"github.com/databrickslabs/terraform-provider-databricks/sqlanalytics"
 	"github.com/databrickslabs/terraform-provider-databricks/storage"
 	"github.com/databrickslabs/terraform-provider-databricks/workspace"
@@ -24,7 +28,7 @@ import (
 // DatabricksProvider returns the entire terraform provider object
 func DatabricksProvider() *schema.Provider {
 	p := &schema.Provider{
-		DataSourcesMap: map[string]*schema.Resource{
+		DataSourcesMap: map[string]*schema.Resource{ // must be in alphabetical order
 			"databricks_aws_crossaccount_policy": access.DataAwsCrossAccountPolicy(),
 			"databricks_aws_assume_role_policy":  access.DataAwsAssumeRolePolicy(),
 			"databricks_aws_bucket_policy":       access.DataAwsBucketPolicy(),
@@ -32,37 +36,31 @@ func DatabricksProvider() *schema.Provider {
 			"databricks_dbfs_file":               storage.DataSourceDBFSFile(),
 			"databricks_dbfs_file_paths":         storage.DataSourceDBFSFilePaths(),
 			"databricks_group":                   identity.DataSourceGroup(),
-			"databricks_node_type":               compute.DataSourceNodeType(),
+			"databricks_node_type":               clusters.DataSourceNodeType(),
 			"databricks_notebook":                workspace.DataSourceNotebook(),
 			"databricks_notebook_paths":          workspace.DataSourceNotebookPaths(),
-			"databricks_spark_version":           compute.DataSourceSparkVersion(),
+			"databricks_spark_version":           clusters.DataSourceSparkVersion(),
 			"databricks_user":                    identity.DataSourceUser(),
-			"databricks_zones":                   compute.DataSourceClusterZones(),
+			"databricks_zones":                   clusters.DataSourceClusterZones(),
 		},
-		ResourcesMap: map[string]*schema.Resource{
-			"databricks_secret":          access.ResourceSecret(),
-			"databricks_secret_scope":    access.ResourceSecretScope(),
-			"databricks_secret_acl":      access.ResourceSecretACL(),
-			"databricks_permissions":     access.ResourcePermissions(),
-			"databricks_sql_permissions": access.ResourceSqlPermissions(),
-			"databricks_ip_access_list":  access.ResourceIPAccessList(),
-
-			"databricks_cluster":        compute.ResourceCluster(),
-			"databricks_cluster_policy": compute.ResourceClusterPolicy(),
-			"databricks_instance_pool":  compute.ResourceInstancePool(),
-			"databricks_job":            compute.ResourceJob(),
-			"databricks_pipeline":       compute.ResourcePipeline(),
-
-			"databricks_group":                  identity.ResourceGroup(),
-			"databricks_group_instance_profile": identity.ResourceGroupInstanceProfile(),
-			"databricks_user_instance_profile":  identity.ResourceUserInstanceProfile(),
-			"databricks_instance_profile":       identity.ResourceInstanceProfile(),
-			"databricks_group_member":           identity.ResourceGroupMember(),
-			"databricks_obo_token":              identity.ResourceOboToken(),
-			"databricks_token":                  identity.ResourceToken(),
-			"databricks_user":                   identity.ResourceUser(),
-			"databricks_service_principal":      identity.ResourceServicePrincipal(),
-
+		ResourcesMap: map[string]*schema.Resource{ // must be in alphabetical order
+			"databricks_aws_s3_mount":                storage.ResourceAWSS3Mount(),
+			"databricks_azure_adls_gen1_mount":       storage.ResourceAzureAdlsGen1Mount(),
+			"databricks_azure_adls_gen2_mount":       storage.ResourceAzureAdlsGen2Mount(),
+			"databricks_azure_blob_mount":            storage.ResourceAzureBlobMount(),
+			"databricks_cluster":                     clusters.ResourceCluster(),
+			"databricks_cluster_policy":              policies.ResourceClusterPolicy(),
+			"databricks_dbfs_file":                   storage.ResourceDBFSFile(),
+			"databricks_directory":                   workspace.ResourceDirectory(),
+			"databricks_global_init_script":          workspace.ResourceGlobalInitScript(),
+			"databricks_group":                       identity.ResourceGroup(),
+			"databricks_group_instance_profile":      identity.ResourceGroupInstanceProfile(),
+			"databricks_group_member":                identity.ResourceGroupMember(),
+			"databricks_instance_pool":               pools.ResourceInstancePool(),
+			"databricks_instance_profile":            identity.ResourceInstanceProfile(),
+			"databricks_ip_access_list":              access.ResourceIPAccessList(),
+			"databricks_job":                         jobs.ResourceJob(),
+			"databricks_mount":                       storage.ResourceDatabricksMount(),
 			"databricks_mws_customer_managed_keys":   mws.ResourceCustomerManagedKey(),
 			"databricks_mws_credentials":             mws.ResourceCredentials(),
 			"databricks_mws_log_delivery":            mws.ResourceLogDelivery(),
@@ -71,26 +69,26 @@ func DatabricksProvider() *schema.Provider {
 			"databricks_mws_storage_configurations":  mws.ResourceStorageConfiguration(),
 			"databricks_mws_vpc_endpoint":            mws.ResourceVPCEndpoint(),
 			"databricks_mws_workspaces":              mws.ResourceWorkspace(),
-
-			"databricks_aws_s3_mount":          storage.ResourceAWSS3Mount(),
-			"databricks_azure_adls_gen1_mount": storage.ResourceAzureAdlsGen1Mount(),
-			"databricks_azure_adls_gen2_mount": storage.ResourceAzureAdlsGen2Mount(),
-			"databricks_azure_blob_mount":      storage.ResourceAzureBlobMount(),
-			"databricks_dbfs_file":             storage.ResourceDBFSFile(),
-			"databricks_mount":                 storage.ResourceDatabricksMount(),
-
-			"databricks_sql_dashboard":     sqlanalytics.ResourceDashboard(),
-			"databricks_sql_endpoint":      sqlanalytics.ResourceSQLEndpoint(),
-			"databricks_sql_global_config": sqlanalytics.ResourceSQLGlobalConfig(),
-			"databricks_sql_query":         sqlanalytics.ResourceQuery(),
-			"databricks_sql_visualization": sqlanalytics.ResourceVisualization(),
-			"databricks_sql_widget":        sqlanalytics.ResourceWidget(),
-
-			"databricks_directory":          workspace.ResourceDirectory(),
-			"databricks_global_init_script": workspace.ResourceGlobalInitScript(),
-			"databricks_notebook":           workspace.ResourceNotebook(),
-			"databricks_repo":               workspace.ResourceRepo(),
-			"databricks_workspace_conf":     workspace.ResourceWorkspaceConf(),
+			"databricks_notebook":                    workspace.ResourceNotebook(),
+			"databricks_obo_token":                   identity.ResourceOboToken(),
+			"databricks_permissions":                 access.ResourcePermissions(),
+			"databricks_pipeline":                    pipelines.ResourcePipeline(),
+			"databricks_repo":                        workspace.ResourceRepo(),
+			"databricks_secret":                      access.ResourceSecret(),
+			"databricks_secret_scope":                access.ResourceSecretScope(),
+			"databricks_secret_acl":                  access.ResourceSecretACL(),
+			"databricks_service_principal":           identity.ResourceServicePrincipal(),
+			"databricks_sql_dashboard":               sqlanalytics.ResourceDashboard(),
+			"databricks_sql_endpoint":                sqlanalytics.ResourceSQLEndpoint(),
+			"databricks_sql_global_config":           sqlanalytics.ResourceSQLGlobalConfig(),
+			"databricks_sql_permissions":             access.ResourceSqlPermissions(),
+			"databricks_sql_query":                   sqlanalytics.ResourceQuery(),
+			"databricks_sql_visualization":           sqlanalytics.ResourceVisualization(),
+			"databricks_sql_widget":                  sqlanalytics.ResourceWidget(),
+			"databricks_token":                       identity.ResourceToken(),
+			"databricks_user":                        identity.ResourceUser(),
+			"databricks_user_instance_profile":       identity.ResourceUserInstanceProfile(),
+			"databricks_workspace_conf":              workspace.ResourceWorkspaceConf(),
 		},
 		Schema: providerSchema(),
 	}
@@ -121,24 +119,8 @@ func providerSchema() map[string]*schema.Schema {
 			fieldSchema.DefaultFunc = schema.MultiEnvDefaultFunc(attr.EnvVars, nil)
 		}
 	}
-
 	ps["token"].Sensitive = true
 	ps["azure_client_secret"].Sensitive = true
-
-	azCoordinatesDeprecation := "`%s` is deprecated and would be removed in v0.4.0. Please rewrite provider configuration " +
-		"with `host = data.azurerm_databricks_workspace.example.workspace_url` to achieve the same effect. " +
-		"ARM_* environment variables would continue to be used as they're used by `azurerm` provider. See " +
-		"https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/databricks_workspace#workspace_url for details"
-	ps["azure_workspace_name"].Deprecated = fmt.Sprintf(azCoordinatesDeprecation, "azure_workspace_name")
-	ps["azure_resource_group"].Deprecated = fmt.Sprintf(azCoordinatesDeprecation, "azure_resource_group")
-	ps["azure_subscription_id"].Deprecated = fmt.Sprintf(azCoordinatesDeprecation, "azure_subscription_id")
-	ps["azure_workspace_resource_id"].Deprecated = fmt.Sprintf(azCoordinatesDeprecation, "azure_workspace_resource_id")
-
-	patWorkaroundDeprecation := "Provider will fully switch to AAD token authentication in the near future"
-	ps["azure_use_pat_for_spn"].Deprecated = patWorkaroundDeprecation
-	ps["azure_use_pat_for_cli"].Deprecated = patWorkaroundDeprecation
-	ps["azure_pat_token_duration_seconds"].Deprecated = patWorkaroundDeprecation
-
 	ps["rate_limit"].DefaultFunc = schema.EnvDefaultFunc("DATABRICKS_RATE_LIMIT",
 		common.DefaultRateLimitPerSecond)
 	ps["debug_truncate_bytes"].DefaultFunc = schema.EnvDefaultFunc("DATABRICKS_DEBUG_TRUNCATE_BYTES",
@@ -185,7 +167,7 @@ func configureDatabricksClient(ctx context.Context, d *schema.ResourceData) (int
 		return nil, diag.FromErr(err)
 	}
 	pc.WithCommandExecutor(func(ctx context.Context, client *common.DatabricksClient) common.CommandExecutor {
-		return compute.NewCommandsAPI(ctx, client)
+		return commands.NewCommandsAPI(ctx, client)
 	})
 	return &pc, nil
 }

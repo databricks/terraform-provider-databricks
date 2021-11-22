@@ -5,16 +5,12 @@
 [AWS](docs/guides/aws-workspace.md) tutorial
 | [Azure](docs/guides/azure-workspace.md) tutorial
 | [End-to-end](docs/guides/workspace-management.md) tutorial
-| Migration from [0.2.x to 0.3.x](docs/guides/migration-0.3.x.md)
+| Migration from [0.3.x to 0.4.x](docs/guides/migration-0.4.x.md)
 | [Changelog](CHANGELOG.md)
 | [Authentication](docs/index.md)
-| [databricks_aws_s3_mount](docs/resources/aws_s3_mount.md)
 | [databricks_aws_assume_role_policy](docs/data-sources/aws_assume_role_policy.md) data
 | [databricks_aws_bucket_policy](docs/data-sources/aws_bucket_policy.md) data
 | [databricks_aws_crossaccount_policy](docs/data-sources/aws_crossaccount_policy.md) data
-| [databricks_azure_adls_gen1_mount](docs/resources/azure_adls_gen1_mount.md)
-| [databricks_azure_adls_gen2_mount](docs/resources/azure_adls_gen2_mount.md)
-| [databricks_azure_blob_mount](docs/resources/azure_blob_mount.md)
 | [databricks_cluster](docs/resources/cluster.md)
 | [databricks_cluster_policy](docs/resources/cluster_policy.md)
 | [databricks_current_user](docs/data-sources/current_user.md)
@@ -70,7 +66,7 @@ terraform {
   required_providers {
     databricks = {
       source = "databrickslabs/databricks"
-      version = "0.3.10"
+      version = "0.3.11"
     }
   }
 }

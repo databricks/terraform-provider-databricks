@@ -19,6 +19,11 @@ func ResourceGroup() *schema.Resource {
 			Type:     schema.TypeString,
 			Computed: true,
 		},
+		"external_id": {
+			Type:     schema.TypeString,
+			Optional: true,
+			ForceNew: true,
+		},
 	}
 	addEntitlementsToSchema(&groupSchema)
 	return common.Resource{
@@ -27,6 +32,7 @@ func ResourceGroup() *schema.Resource {
 			group, err := NewGroupsAPI(ctx, c).Create(ScimGroup{
 				DisplayName:  groupName,
 				Entitlements: readEntitlementsFromData(d),
+				ExternalID:   d.Get("external_id").(string),
 			})
 			if err != nil {
 				return err
@@ -40,12 +46,14 @@ func ResourceGroup() *schema.Resource {
 				return err
 			}
 			d.Set("display_name", group.DisplayName)
+			d.Set("external_id", group.ExternalID)
 			d.Set("url", c.FormatURL("#setting/accounts/groups/", d.Id()))
 			return group.Entitlements.readIntoData(d)
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			groupName := d.Get("display_name").(string)
-			return NewGroupsAPI(ctx, c).UpdateNameAndEntitlements(d.Id(), groupName, readEntitlementsFromData(d))
+			return NewGroupsAPI(ctx, c).UpdateNameAndEntitlements(d.Id(), groupName,
+				d.Get("external_id").(string), readEntitlementsFromData(d))
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			return NewGroupsAPI(ctx, c).Delete(d.Id())

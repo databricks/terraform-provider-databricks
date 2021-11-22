@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"testing"
 
-	. "github.com/databrickslabs/terraform-provider-databricks/access"
 	"github.com/databrickslabs/terraform-provider-databricks/common"
+	"github.com/databrickslabs/terraform-provider-databricks/permissions"
 
 	"github.com/databrickslabs/terraform-provider-databricks/internal/acceptance"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
@@ -40,7 +40,7 @@ func TestAccDatabricksPermissionsResourceFullLifecycle(t *testing.T) {
 						"object_type", "notebook"),
 					acceptance.ResourceCheck("databricks_permissions.dummy",
 						func(ctx context.Context, client *common.DatabricksClient, id string) error {
-							permissions, err := NewPermissionsAPI(ctx, client).Read(id)
+							permissions, err := permissions.NewPermissionsAPI(ctx, client).Read(id)
 							if err != nil {
 								return err
 							}
@@ -75,7 +75,7 @@ func TestAccDatabricksPermissionsResourceFullLifecycle(t *testing.T) {
 				}`, randomName),
 				Check: acceptance.ResourceCheck("databricks_permissions.dummy",
 					func(ctx context.Context, client *common.DatabricksClient, id string) error {
-						permissions, err := NewPermissionsAPI(ctx, client).Read(id)
+						permissions, err := permissions.NewPermissionsAPI(ctx, client).Read(id)
 						if err != nil {
 							return err
 						}

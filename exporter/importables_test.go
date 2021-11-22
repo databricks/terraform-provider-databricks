@@ -7,6 +7,7 @@ import (
 	"github.com/databrickslabs/terraform-provider-databricks/access"
 	"github.com/databrickslabs/terraform-provider-databricks/common"
 	"github.com/databrickslabs/terraform-provider-databricks/identity"
+	"github.com/databrickslabs/terraform-provider-databricks/permissions"
 	"github.com/databrickslabs/terraform-provider-databricks/policies"
 	"github.com/databrickslabs/terraform-provider-databricks/pools"
 	"github.com/databrickslabs/terraform-provider-databricks/provider"
@@ -119,7 +120,7 @@ func TestGroup(t *testing.T) {
 }
 
 func TestPermissions(t *testing.T) {
-	p := access.ResourcePermissions()
+	p := permissions.ResourcePermissions()
 	d := p.TestResourceData()
 	d.SetId("abc")
 	ic := importContextForTest()
@@ -127,8 +128,8 @@ func TestPermissions(t *testing.T) {
 	assert.Equal(t, "abc", name)
 
 	d.MarkNewResource()
-	err := common.StructToData(access.PermissionsEntity{
-		AccessControlList: []access.AccessControlChange{
+	err := common.StructToData(permissions.PermissionsEntity{
+		AccessControlList: []permissions.AccessControlChange{
 			{
 				UserName: "a",
 			},

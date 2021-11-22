@@ -6,7 +6,7 @@ page_title: "Provisioning AWS Databricks E2 with a Hub & Spoke firewall for data
 
 You can provision multiple Databricks workspaces with Terraform and where many Databricks workspaces are deployed, we recommend a hub and spoke topology reference architecture, powered by AWS Transit Gateway. The hub will consist of a central inspection and egress virtual private cloud (VPC), while the Spoke VPC houses federated Databricks workspaces for different business units or segregated teams. In this way, you create your own version of a centralized deployment model for your egress architecture, as is recommended for large enterprises. For more information please visit [Data Exfiltration Protection With Databricks on AWS](https://databricks.com/blog/2021/02/02/data-exfiltration-protection-with-databricks-on-aws.html).
 
-![Data Exfiltration](https://databricks.com/wp-content/uploads/2021/02/aws-exfiltration-replace-1.jpg)
+![Data Exfiltration](../images/aws-exfiltration-replace-1.png)
 
 ## Provider initialization for E2 workspaces
 
@@ -21,12 +21,6 @@ variable "tags" {
   default = {}
 }
 
-resource "random_string" "naming" {
-  special = false
-  upper   = false
-  length  = 6
-}
-        
 variable "spoke_cidr_block" {
   default = "10.173.0.0/16"
 }
@@ -64,7 +58,8 @@ locals {
 
 Before [managing workspace](workspace-management.md), you have to create:
   - [VPC](#vpc)
-  - [AWS Firewall](#aws-firewall)
+  - [AWS Transit Gateway](#aws-transit-gateway)
+  - [AWS Network Firewall](#aws-network-firewall)
   - [Root bucket](aws-workspace.md#root-bucket)
   - [Cross-account role](aws-workspace.md#cross-account-iam-role)
   - [Databricks E2 workspace](aws-workspace.md#databricks-e2-workspace)
@@ -77,7 +72,7 @@ terraform {
   required_providers {
     databricks = {
       source  = "databrickslabs/databricks"
-      version = "0.3.9"
+      version = "0.3.11"
     }
     aws = {
       source = "hashicorp/aws"
@@ -99,42 +94,15 @@ provider "databricks" {
 }
 ```
 
-## Cross-account IAM Role
-
-Cross-account IAM role is registered with [databricks_mws_credentials](../resources/mws_credentials.md) resource.
-
-```hcl
-data "databricks_aws_assume_role_policy" "this" {
-  external_id = var.databricks_account_id
-}
-
-resource "aws_iam_role" "cross_account_role" {
-  name               = "${local.prefix}-crossaccount"
-  assume_role_policy = data.databricks_aws_assume_role_policy.this.json
-  tags               = var.tags
-}
-
-data "databricks_aws_crossaccount_policy" "this" {
-}
-
-resource "aws_iam_role_policy" "this" {
-  name   = "${local.prefix}-policy"
-  role   = aws_iam_role.cross_account_role.id
-  policy = data.databricks_aws_crossaccount_policy.this.json
-}
-
-resource "databricks_mws_credentials" "this" {
-  provider         = databricks.mws
-  account_id       = var.databricks_account_id
-  role_arn         = aws_iam_role.cross_account_role.arn
-  credentials_name = "${local.prefix}-creds"
-  depends_on       = [aws_iam_role_policy.this]
-}
-```
-
 ## VPC
 
-The very first step is VPC creation with necessary firewall rules. Please consult [main documetation page](https://docs.databricks.com/administration-guide/cloud-configurations/aws/customer-managed-vpc.html) for **the most complete and up-to-date details on networking**. AWS VPC is registered as [databricks_mws_networks](../resources/mws_networks.md) resource. 
+The very first step is Hub & Spoke VPC creation. Please consult [main documentation page](https://docs.databricks.com/administration-guide/cloud-configurations/aws/customer-managed-vpc.html) for **the most complete and up-to-date details on networking**. AWS VPC is registered as [databricks_mws_networks](../resources/mws_networks.md) resource. 
+
+### Spoke VPC for Databricks Workspace
+
+First step is to create Spoke VPC which houses federated Databricks workspaces for different business units or segregated teams.
+
+![SpokeVPC](../images/aws-e2-firewall-spoke-vpc.png)
 
 ```hcl
 data "aws_availability_zones" "available" {}
@@ -193,13 +161,32 @@ resource "aws_route_table_association" "spoke_db_private_rta" {
   subnet_id      = element(aws_subnet.spoke_db_private_subnet.*.id, count.index)
   route_table_id = aws_route_table.spoke_db_private_rt.id
 }
+```
+### Security Group for Spoke
 
+Databricks must have access to at least one AWS security group and no more than five security groups. You can reuse existing security groups rather than create new ones.
+Security groups must have the following rules:
+
+***Egress (outbound):***
+
+* Allow all TCP and UDP access to the workspace security group (for internal traffic)
+* Allow TCP access to 0.0.0.0/0 for these ports:
+  * 443: for Databricks infrastructure, cloud data sources, and library repositories
+  * 3306: for the metastore
+  * 6666: only required if you use PrivateLink
+
+***Ingress (inbound):***:
+
+* Allow TCP on all ports when traffic source uses the same security group
+* Allow UDP on all ports when traffic source uses the same security group
+
+```hcl
 /* VPC's Default Security Group */
-resource "aws_security_group" "default_sg" {
-  name        = "${local.prefix}-default-sg"
+resource "aws_security_group" "default_spoke_sg" {
+  name        = "${local.prefix}-default_spoke_sg"
   description = "Default security group to allow inbound/outbound from the VPC"
-  vpc_id      = aws_vpc.db_vpc.id
-  depends_on  = [aws_vpc.db_vpc]
+  vpc_id      = aws_vpc.spoke_vpc.id
+  depends_on  = [aws_vpc.spoke_vpc]
 
   dynamic "ingress" {
     for_each = local.sg_ingress_protocol
@@ -231,9 +218,7 @@ resource "aws_security_group" "default_sg" {
     }
   }
 
-  tags = {
-    Environment = var.environment
-  }
+  tags = var.tags
 }
 
 resource "databricks_mws_networks" "this" {
@@ -244,8 +229,60 @@ resource "databricks_mws_networks" "this" {
   subnet_ids         = aws_subnet.spoke_db_private_subnet[*].id
   vpc_id             = aws_vpc.spoke_vpc.id
 }
+```
+### VPC Endpoint for Spoke VPC
 
-// Hub VPC
+For STS, S3 and Kinesis, it's important to create VPC gateway or interface endpoints such that the relevant in-region traffic from clusters could transit over the secure AWS backbone rather than the public network, for more direct connections and reduced cost compared to AWS global endpoints.
+
+```hcl
+/* Create VPC Endpoint */
+module "vpc_endpoints" {
+  source  = "terraform-aws-modules/vpc/aws//modules/vpc-endpoints"
+  version = "3.2.0"
+
+  vpc_id             = aws_vpc.spoke_vpc.id
+  security_group_ids = [aws_security_group.default_spoke_sg.id]
+
+  endpoints = {
+    s3 = {
+      service         = "s3"
+      service_type    = "Gateway"
+      route_table_ids = flatten([
+        aws_route_table.spoke_db_private_rt.id
+      ])
+      tags            = {
+        Name = "${local.prefix}-s3-vpc-endpoint"
+      }
+    },
+    sts = {
+      service             = "sts"
+      private_dns_enabled = true
+      subnet_ids          = aws_subnet.spoke_db_private_subnet[*].id
+      tags = {
+        Name = "${local.prefix}-sts-vpc-endpoint"
+      }
+    },
+    kinesis-streams = {
+      service             = "kinesis-streams"
+      private_dns_enabled = true
+      subnet_ids          = aws_subnet.spoke_db_private_subnet[*].id
+      tags = {
+        Name = "${local.prefix}-kinesis-vpc-endpoint"
+      }
+    },
+
+  }
+
+  tags = var.tags
+}
+```
+
+### Hub VPC
+The hub will consist of a central inspection and egress virtual private cloud (VPC). We're going to create a central inspection/egress VPC, which once we’ve finished should look like this:
+
+![HubVPC](../images/aws-e2-firewall-hub-vpc.png)
+
+```hcl
 /* Create VPC */
 resource "aws_vpc" "hub_vpc" {
   cidr_block           = var.hub_cidr_block
@@ -315,7 +352,11 @@ resource "aws_nat_gateway" "hub_nat" {
     Name = "${local.prefix}-hub-nat"
   })
 }
+```
+### Route Tables for Hub
+Next, we're going to create route tables for Hub VPC subnets, NAT gateway, Internet Gateway and add some routes.
 
+```hcl
 /* Routing table for hub private subnet */
 resource "aws_route_table" "hub_tgw_private_rt" {
   vpc_id = aws_vpc.hub_vpc.id
@@ -390,76 +431,99 @@ resource "aws_main_route_table_association" "set-worker-default-rt-assoc" {
   vpc_id         = aws_vpc.hub_vpc.id
   route_table_id = aws_route_table.hub_firewall_rt.id
 }
+```
 
-/* VPC's Default Security Group */
-resource "aws_security_group" "default_hub_sg" {
-  name        = "${local.prefix}-default-hub-sg"
-  description = "Default security group to allow inbound/outbound from the VPC"
-  vpc_id      = aws_vpc.hub_vpc.id
-  depends_on  = [aws_vpc.hub_vpc]
+## AWS Transit Gateway
+Now that our spoke and inspection/egress VPCs are ready to go, all you need to do is link them all together, and AWS Transit Gateway is the perfect solution for that.
+First, we're going to create a Transit Gateway and link our Databricks data plane via TGW subnets.
+All of the logic that determines what routes where via a Transit Gateway is encapsulated within Transit Gateway Route Tables. We’re going to create some TGW routes tables for our Hub & Spoke networks.
 
-  ingress {
-    from_port = "0"
-    to_port   = "0"
-    protocol  = "-1"
-    self      = true
-  }
+![TransitGateway](../images/aws-e2-firewall-tgw.png)
 
-  egress {
-    from_port   = "0"
-    to_port     = "0"
-    cidr_blocks = ["0.0.0.0/0"]
-    protocol    = "-1"
-    self        = false
-  }
-  tags = var.tags
+```hcl
+//Create transit gateway
+resource "aws_ec2_transit_gateway" "tgw" {
+  description                     = "Transit Gateway for Hub/Spoke"
+  auto_accept_shared_attachments  = "enable"
+  default_route_table_association = "enable"
+  default_route_table_propagation = "enable"
+  tags = merge(var.tags, {
+    Name = "${local.prefix}-tgw"
+  })
 }
 
-/* Create VPC Endpoint */
-module "vpc_endpoints" {
-  source  = "terraform-aws-modules/vpc/aws//modules/vpc-endpoints"
-  version = "3.2.0"
+# Attach Transit VPC to Transit Gateway
+resource "aws_ec2_transit_gateway_vpc_attachment" "hub" {
+  subnet_ids         = aws_subnet.hub_tgw_private_subnet[*].id
+  transit_gateway_id = aws_ec2_transit_gateway.tgw.id
+  vpc_id             = aws_vpc.hub_vpc.id
+  dns_support        = "enable"
 
+  transit_gateway_default_route_table_association = true
+  transit_gateway_default_route_table_propagation = true
+  tags = merge(var.tags, {
+    Name = "${local.prefix}-hub"
+    Purpose     = "Transit Gateway Attachment - Hub VPC"
+  })
+}
+
+//# Attach Spoke VPC to Transit Gateway
+resource "aws_ec2_transit_gateway_vpc_attachment" "spoke" {
+  subnet_ids         = aws_subnet.spoke_tgw_private_subnet[*].id
+  transit_gateway_id = aws_ec2_transit_gateway.tgw.id
   vpc_id             = aws_vpc.spoke_vpc.id
-  security_group_ids = [aws_security_group.default_spoke_sg.id]
+  dns_support        = "enable"
 
-  endpoints = {
-    s3 = {
-      service         = "s3"
-      service_type    = "Gateway"
-      route_table_ids = flatten([
-        aws_route_table.spoke_db_private_rt.id
-      ])
-      tags            = {
-        Name = "${local.prefix}-s3-vpc-endpoint"
-      }
-    },
-    sts = {
-      service             = "sts"
-      private_dns_enabled = true
-      subnet_ids          = aws_subnet.spoke_db_private_subnet[*].id
-      tags = {
-        Name = "${local.prefix}-sts-vpc-endpoint"
-      }
-    },
-    kinesis-streams = {
-      service             = "kinesis-streams"
-      private_dns_enabled = true
-      subnet_ids          = aws_subnet.spoke_db_private_subnet[*].id
-      tags = {
-        Name = "${local.prefix}-kinesis-vpc-endpoint"
-      }
-    },
+  transit_gateway_default_route_table_association = true
+  transit_gateway_default_route_table_propagation = true
+  tags = merge(var.tags, {
+    Name = "${local.prefix}-spoke"
+    Purpose     = "Transit Gateway Attachment - Spoke VPC"
+  })
+}
 
-  }
+```
+### Route Table Configurations for Transit Gateway
+The Transit Gateway should be set up and ready to go, now all that needs to be done is update the route tables in each of the subnets so that traffic flows through it.
+```hcl
+# Create Route to Internet
+resource "aws_ec2_transit_gateway_route" "spoke_to_hub" {
+  destination_cidr_block         = "0.0.0.0/0"
+  transit_gateway_attachment_id  = aws_ec2_transit_gateway_vpc_attachment.hub.id
+  transit_gateway_route_table_id = aws_ec2_transit_gateway.tgw.association_default_route_table_id
+}
 
-  tags = var.tags
+# Add route for spoke db to tgw
+resource "aws_route" "spoke_db_to_tgw" {
+  route_table_id         = aws_route_table.spoke_db_private_rt.id
+  destination_cidr_block = "0.0.0.0/0"
+  transit_gateway_id     = aws_ec2_transit_gateway.tgw.id
+  depends_on             = [aws_vpc.spoke_vpc, aws_vpc.hub_vpc]
+}
+
+resource "aws_route" "hub_tgw_private_subnet_to_tgw" {
+  route_table_id         = aws_route_table.hub_tgw_private_rt.id
+  destination_cidr_block = var.spoke_cidr_block
+  transit_gateway_id     = aws_ec2_transit_gateway.tgw.id
+  depends_on             = [aws_vpc.spoke_vpc, aws_vpc.hub_vpc]
+}
+
+resource "aws_route" "hub_nat_to_tgw" {
+  route_table_id         = aws_route_table.hub_nat_public_rt.id
+  destination_cidr_block = var.spoke_cidr_block
+  transit_gateway_id     = aws_ec2_transit_gateway.tgw.id
+  depends_on             = [aws_vpc.spoke_vpc, aws_vpc.hub_vpc]
 }
 ```
-## AWS Firewall
 
-Once [VPC](#vpc) is ready, create AWS Firewall for your VPC that restricts outbound http/s traffic to an approved set of Fully Qualified Domain Names (FQDNs).
+## AWS Network Firewall 
+Once [VPC](#vpc) is ready, we're going to create AWS Network Firewall for your VPC that restricts outbound http/s traffic to an approved set of Fully Qualified Domain Names (FQDNs).
 
+![AWS Network Firewall](../images/aws-e2-firewall-config.png)
+
+### AWS Firewall Rule Groups
+
+First we're going to create a Firewall Rule group for accessing hive metastore and public repositories.
 ```hcl
 /*Firewall Rule group for accessing hive metastore and public repositories*/
 resource "aws_networkfirewall_rule_group" "databricks_fqdns_rg" {
@@ -484,6 +548,16 @@ resource "aws_networkfirewall_rule_group" "databricks_fqdns_rg" {
     }
   }
   tags = var.tags
+}
+
+```
+
+As next step, we're going to create Firewall Rule group that allows control plane traffic from the VPC.
+
+```hcl
+locals {
+  protocols               = ["ICMP", "FTP", "SSH"]
+  protocols_control_plane = ["TCP"]
 }
 
 resource "aws_networkfirewall_rule_group" "allow_db_cpl_protocols_rg" {
@@ -523,6 +597,10 @@ resource "aws_networkfirewall_rule_group" "allow_db_cpl_protocols_rg" {
   tags = var.tags
 }
 
+```
+Next, we're going to create basic deny rules to cater for common firewall scenarios such as preventing the use of protocols like SSH/SFTP, FTP and ICMP.
+
+```hcl
 /* Firewall Rule group for dropping ICMP, FTP, SSH*/
 resource "aws_networkfirewall_rule_group" "deny_protocols_rg" {
   capacity    = 100
@@ -561,13 +639,12 @@ resource "aws_networkfirewall_rule_group" "deny_protocols_rg" {
 
   tags = var.tags
 }
+```
 
-locals {
-  protocols               = ["ICMP", "FTP", "SSH"]
-  protocols_control_plane = ["TCP"]
-}
+### AWS Network Firewall Policy
+Now we can create AWS Firewall Policy and include stateful firewall rule groups created in previous steps. 
 
-/* Firewall Policy */
+```hcl
 resource "aws_networkfirewall_firewall_policy" "egress_policy" {
   name = "${local.prefix}-egress-policy"
   firewall_policy {
@@ -585,7 +662,11 @@ resource "aws_networkfirewall_firewall_policy" "egress_policy" {
   }
   tags = var.tags
 }
+```
 
+### AWS Firewall 
+Next step is to create AWS Network Firewall with Firewall Policy we defined in previous step.
+```hcl
 /* Create Firewall*/
 resource "aws_networkfirewall_firewall" "exfiltration_firewall" {
   name                = "${local.prefix}-fw"
@@ -612,6 +693,10 @@ data "aws_vpc_endpoint" "firewall" {
   depends_on = [aws_networkfirewall_firewall.exfiltration_firewall]
 }
 
+```
+
+Finally, AWS Network Firewall is now deployed and configured, all you need to do now is route traffic to it.
+```hcl
 /* Add Route from Nat Gateway to Firewall */
 resource "aws_route" "db_nat_firewall" {
   route_table_id         = aws_route_table.hub_nat_public_rt.id
@@ -627,3 +712,6 @@ resource "aws_route" "db_igw_nat_firewall" {
   vpc_endpoint_id        = data.aws_vpc_endpoint.firewall.id
 }
 ```
+
+##Troubleshooting
+If the Databricks clusters cannot reach DBFS or VPC endpoints do not work as intended, for example if your data sources are inaccessible or if the traffic is bypassing the endpoints please visit [Troubleshoot regional endpoints](https://docs.databricks.com/administration-guide/cloud-configurations/aws/customer-managed-vpc.html#troubleshoot-regional-endpoints)

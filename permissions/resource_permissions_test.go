@@ -1,23 +1,16 @@
-package access
+package permissions
 
 import (
 	"context"
-	"fmt"
 	"net/http"
-	"os"
 	"testing"
 
-	"github.com/databrickslabs/terraform-provider-databricks/clusters"
 	"github.com/databrickslabs/terraform-provider-databricks/common"
 	"github.com/databrickslabs/terraform-provider-databricks/identity"
-	"github.com/databrickslabs/terraform-provider-databricks/internal/compute"
 	"github.com/databrickslabs/terraform-provider-databricks/jobs"
-	"github.com/databrickslabs/terraform-provider-databricks/policies"
-	"github.com/databrickslabs/terraform-provider-databricks/pools"
 
 	"github.com/databrickslabs/terraform-provider-databricks/qa"
 	"github.com/databrickslabs/terraform-provider-databricks/workspace"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -35,6 +28,28 @@ var (
 		},
 	}
 )
+
+func TestAccessControlChangeString(t *testing.T) {
+	assert.Equal(t, "me CAN_READ", AccessControlChange{
+		UserName:        "me",
+		PermissionLevel: "CAN_READ",
+	}.String())
+}
+
+func TestAccessControlString(t *testing.T) {
+	assert.Equal(t, "me[CAN_READ (from [parent]) CAN_MANAGE]", AccessControl{
+		UserName: "me",
+		AllPermissions: []Permission{
+			{
+				InheritedFromObject: []string{"parent"},
+				PermissionLevel:     "CAN_READ",
+			},
+			{
+				PermissionLevel: "CAN_MANAGE",
+			},
+		},
+	}.String())
+}
 
 func TestResourcePermissionsRead(t *testing.T) {
 	d, err := qa.ResourceFixture{
@@ -119,6 +134,7 @@ func TestResourcePermissionsRead_SQLA_Asset(t *testing.T) {
 	assert.Equal(t, TestingUser, firstElem["user_name"])
 	assert.Equal(t, "CAN_READ", firstElem["permission_level"])
 }
+
 func TestResourcePermissionsRead_NotFound(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
@@ -754,300 +770,144 @@ func TestResourcePermissionsUpdate(t *testing.T) {
 	assert.Equal(t, "CAN_VIEW", firstElem["permission_level"])
 }
 
-func permissionsTestHelper(t *testing.T,
-	cb func(permissionsAPI PermissionsAPI, user, group string,
-		ef func(string) PermissionsEntity)) {
-	if os.Getenv("CLOUD_ENV") == "" {
-		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
-	}
-	randomName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
-	client := common.NewClientFromEnvironment()
-
-	ctx := context.Background()
-	usersAPI := identity.NewUsersAPI(ctx, client)
-	me, err := usersAPI.Me()
-	require.NoError(t, err)
-
-	user, err := usersAPI.Create(identity.ScimUser{
-		UserName: fmt.Sprintf("tf-%s@example.com", randomName),
-	})
-	require.NoError(t, err)
-	defer func() {
-		assert.NoError(t, usersAPI.Delete(user.ID))
-	}()
-
-	groupsAPI := identity.NewGroupsAPI(ctx, client)
-	group, err := groupsAPI.Create(identity.ScimGroup{
-		DisplayName: fmt.Sprintf("tf-%s", randomName),
-		Members: []identity.ComplexValue{
-			{
-				Value: user.ID,
+func TestResourcePermissionsUpdateTokensAlwaysThereForAdmins(t *testing.T) {
+	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
+		{
+			Method:   "PUT",
+			Resource: "/api/2.0/permissions/authorization/tokens",
+			ExpectedRequest: AccessControlChangeList{
+				AccessControlList: []AccessControlChange{
+					{
+						UserName:        "me",
+						PermissionLevel: "CAN_MANAGE",
+					},
+					{
+						GroupName:       "admins",
+						PermissionLevel: "CAN_MANAGE",
+					},
+				},
 			},
 		},
-	})
-	require.NoError(t, err)
-	defer func() {
-		assert.NoError(t, groupsAPI.Delete(group.ID))
-	}()
-
-	permissionsAPI := NewPermissionsAPI(ctx, client)
-	cb(permissionsAPI, user.UserName, group.DisplayName, func(id string) PermissionsEntity {
-		d := ResourcePermissions().TestResourceData()
-		objectACL, err := permissionsAPI.Read(id)
-		require.NoError(t, err)
-		entity, err := objectACL.ToPermissionsEntity(context.Background(), d, me.UserName)
-		require.NoError(t, err)
-		return entity
+	}, func(ctx context.Context, client *common.DatabricksClient) {
+		p := NewPermissionsAPI(ctx, client)
+		err := p.Update("/authorization/tokens", AccessControlChangeList{
+			AccessControlList: []AccessControlChange{
+				{
+					UserName:        "me",
+					PermissionLevel: "CAN_MANAGE",
+				},
+			},
+		})
+		assert.NoError(t, err)
 	})
 }
 
-func TestAccPermissionsClusterPolicy(t *testing.T) {
-	permissionsTestHelper(t, func(permissionsAPI PermissionsAPI, user, group string,
-		ef func(string) PermissionsEntity) {
-		policy := policies.ClusterPolicy{
-			Name:       group,
-			Definition: "{}",
+func TestShouldKeepAdminsOnAnythingExceptPasswordsAndAssignsOwnerForJob(t *testing.T) {
+	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/permissions/jobs/123",
+			Response: ObjectACL{
+				ObjectID:   "/jobs/123",
+				ObjectType: "job",
+				AccessControlList: []AccessControl{
+					{
+						GroupName: "admins",
+						AllPermissions: []Permission{
+							{
+								PermissionLevel: "CAN_DO_EVERYTHING",
+								Inherited:       true,
+							},
+							{
+								PermissionLevel: "CAN_MANAGE",
+								Inherited:       false,
+							},
+						},
+					},
+				},
+			},
+		},
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/jobs/get?job_id=123",
+			Response: jobs.Job{
+				CreatorUserName: "creator@example.com",
+			},
+		},
+		{
+			Method:   "PUT",
+			Resource: "/api/2.0/permissions/jobs/123",
+			ExpectedRequest: ObjectACL{
+				AccessControlList: []AccessControl{
+					{
+						GroupName:       "admins",
+						PermissionLevel: "CAN_MANAGE",
+					},
+					{
+						UserName:        "creator@example.com",
+						PermissionLevel: "IS_OWNER",
+					},
+				},
+			},
+		},
+	}, func(ctx context.Context, client *common.DatabricksClient) {
+		p := NewPermissionsAPI(ctx, client)
+		err := p.Delete("/jobs/123")
+		assert.NoError(t, err)
+	})
+}
+
+func TestCustomizeDiffNoHostYet(t *testing.T) {
+	assert.Nil(t, ResourcePermissions().CustomizeDiff(context.TODO(), nil, &common.DatabricksClient{}))
+}
+
+func TestPathPermissionsResourceIDFields(t *testing.T) {
+	var m permissionsIDFieldMapping
+	for _, x := range permissionsResourceIDFields() {
+		if x.field == "notebook_path" {
+			m = x
 		}
-		ctx := context.Background()
-		policiesAPI := policies.NewClusterPoliciesAPI(ctx, permissionsAPI.client)
-		require.NoError(t, policiesAPI.Create(&policy))
-		defer func() {
-			assert.NoError(t, policiesAPI.Delete(policy.PolicyID))
-		}()
-
-		objectID := fmt.Sprintf("/cluster-policies/%s", policy.PolicyID)
-		require.NoError(t, permissionsAPI.Update(objectID, AccessControlChangeList{
-			AccessControlList: []AccessControlChange{
-				{
-					UserName:        user,
-					PermissionLevel: "CAN_USE",
-				},
-				{
-					GroupName:       group,
-					PermissionLevel: "CAN_USE",
-				},
-			},
-		}))
-		entity := ef(objectID)
-		assert.Equal(t, "cluster-policy", entity.ObjectType)
-		assert.Len(t, entity.AccessControlList, 2)
-
-		require.NoError(t, permissionsAPI.Delete(objectID))
-		entity = ef(objectID)
-		assert.Len(t, entity.AccessControlList, 0)
-	})
+	}
+	_, err := m.idRetriever(context.Background(), &common.DatabricksClient{
+		Host:  "localhost",
+		Token: "x",
+	}, "x")
+	assert.EqualError(t, err, "Cannot load path x: DatabricksClient is not configured")
 }
 
-func TestAccPermissionsInstancePool(t *testing.T) {
-	permissionsTestHelper(t, func(permissionsAPI PermissionsAPI, user, group string,
-		ef func(string) PermissionsEntity) {
-		poolsAPI := pools.NewInstancePoolsAPI(context.Background(), permissionsAPI.client)
-		ctx := context.Background()
-		ips, err := poolsAPI.Create(pools.InstancePool{
-			InstancePoolName: group,
-			NodeTypeID: clusters.NewClustersAPI(
-				ctx, permissionsAPI.client).GetSmallestNodeType(
-				clusters.NodeTypeRequest{
-					LocalDisk: true,
-				}),
-		})
-		require.NoError(t, err)
-		defer func() {
-			assert.NoError(t, poolsAPI.Delete(ips.InstancePoolID))
-		}()
-
-		objectID := fmt.Sprintf("/instance-pools/%s", ips.InstancePoolID)
-		require.NoError(t, permissionsAPI.Update(objectID, AccessControlChangeList{
-			AccessControlList: []AccessControlChange{
-				{
-					UserName:        user,
-					PermissionLevel: "CAN_MANAGE",
-				},
-				{
-					GroupName:       group,
-					PermissionLevel: "CAN_ATTACH_TO",
-				},
+func TestObjectACLToPermissionsEntityCornerCases(t *testing.T) {
+	_, err := (&ObjectACL{
+		ObjectType: "bananas",
+		AccessControlList: []AccessControl{
+			{
+				GroupName: "admins",
 			},
-		}))
-		entity := ef(objectID)
-		assert.Equal(t, "instance-pool", entity.ObjectType)
-		assert.Len(t, entity.AccessControlList, 2)
-
-		require.NoError(t, permissionsAPI.Delete(objectID))
-		entity = ef(objectID)
-		assert.Len(t, entity.AccessControlList, 0)
-	})
+		},
+	}).ToPermissionsEntity(ResourcePermissions().TestResourceData(), "me")
+	assert.EqualError(t, err, "unknown object type bananas")
 }
 
-func TestAccPermissionsClusters(t *testing.T) {
-	permissionsTestHelper(t, func(permissionsAPI PermissionsAPI, user, group string,
-		ef func(string) PermissionsEntity) {
-		ctx := context.Background()
-		clustersAPI := clusters.NewClustersAPI(ctx, permissionsAPI.client)
-		clusterInfo, err := compute.NewTinyClusterInCommonPool()
-		require.NoError(t, err)
-		defer func() {
-			assert.NoError(t, clustersAPI.PermanentDelete(clusterInfo.ClusterID))
-		}()
-
-		objectID := fmt.Sprintf("/clusters/%s", clusterInfo.ClusterID)
-		require.NoError(t, permissionsAPI.Update(objectID, AccessControlChangeList{
-			AccessControlList: []AccessControlChange{
-				{
-					UserName:        user,
-					PermissionLevel: "CAN_RESTART",
-				},
-				{
-					GroupName:       group,
-					PermissionLevel: "CAN_ATTACH_TO",
-				},
-			},
-		}))
-		entity := ef(objectID)
-		assert.Equal(t, "cluster", entity.ObjectType)
-		assert.Len(t, entity.AccessControlList, 2)
-
-		require.NoError(t, permissionsAPI.Delete(objectID))
-		entity = ef(objectID)
-		assert.Len(t, entity.AccessControlList, 0)
-	})
+func TestAccessControlToAccessControlChange(t *testing.T) {
+	_, res := AccessControl{}.toAccessControlChange()
+	assert.False(t, res)
 }
 
-func TestAccPermissionsTokens(t *testing.T) {
-	permissionsTestHelper(t, func(permissionsAPI PermissionsAPI, user, group string,
-		ef func(string) PermissionsEntity) {
-		objectID := "/authorization/tokens"
-		require.NoError(t, permissionsAPI.Update(objectID, AccessControlChangeList{
-			AccessControlList: []AccessControlChange{
-				{
-					UserName:        user,
-					PermissionLevel: "CAN_USE",
-				},
-				{
-					GroupName:       group,
-					PermissionLevel: "CAN_USE",
-				},
-			},
-		}))
-		entity := ef(objectID)
-		assert.Equal(t, "tokens", entity.ObjectType)
-		assert.Len(t, entity.AccessControlList, 2)
-
-		require.NoError(t, permissionsAPI.Delete(objectID))
-		entity = ef(objectID)
-		assert.Len(t, entity.AccessControlList, 0)
-	})
+func TestCornerCases(t *testing.T) {
+	qa.ResourceCornerCases(t, ResourcePermissions(), qa.CornerCaseSkipCRUD("create"))
 }
 
-func TestAccPermissionsJobs(t *testing.T) {
-	permissionsTestHelper(t, func(permissionsAPI PermissionsAPI, user, group string,
-		ef func(string) PermissionsEntity) {
-		ctx := context.Background()
-		jobsAPI := jobs.NewJobsAPI(ctx, permissionsAPI.client)
-		job, err := jobsAPI.Create(jobs.JobSettings{
-			NewCluster: &clusters.Cluster{
-				NumWorkers:   2,
-				SparkVersion: "6.4.x-scala2.11",
-				NodeTypeID: clusters.NewClustersAPI(
-					ctx, permissionsAPI.client).GetSmallestNodeType(
-					clusters.NodeTypeRequest{
-						LocalDisk: true,
-					}),
-			},
-			NotebookTask: &jobs.NotebookTask{
-				NotebookPath: "/Production/Featurize",
-			},
-			Name: group,
-		})
-		require.NoError(t, err)
-		defer func() {
-			assert.NoError(t, jobsAPI.Delete(job.ID()))
-		}()
-
-		objectID := fmt.Sprintf("/jobs/%s", job.ID())
-		require.NoError(t, permissionsAPI.Update(objectID, AccessControlChangeList{
-			AccessControlList: []AccessControlChange{
-				{
-					UserName:        user,
-					PermissionLevel: "IS_OWNER",
-				},
-				{
-					GroupName:       group,
-					PermissionLevel: "CAN_MANAGE_RUN",
-				},
-			},
-		}))
-		entity := ef(objectID)
-		assert.Equal(t, "job", entity.ObjectType)
-		assert.Len(t, entity.AccessControlList, 2)
-
-		require.NoError(t, permissionsAPI.Delete(objectID))
-		entity = ef(objectID)
-		assert.Len(t, entity.AccessControlList, 0)
-	})
-}
-
-func TestAccPermissionsNotebooks(t *testing.T) {
-	permissionsTestHelper(t, func(permissionsAPI PermissionsAPI, user, group string,
-		ef func(string) PermissionsEntity) {
-		workspaceAPI := workspace.NewNotebooksAPI(context.Background(), permissionsAPI.client)
-
-		notebookDir := fmt.Sprintf("/Testing/%s/something", group)
-		err := workspaceAPI.Mkdirs(notebookDir)
-		require.NoError(t, err)
-
-		notebookPath := fmt.Sprintf("%s/Dummy", notebookDir)
-
-		err = workspaceAPI.Create(workspace.ImportRequest{
-			Path:      notebookPath,
-			Content:   "MSsx",
-			Format:    "SOURCE",
-			Language:  "PYTHON",
-			Overwrite: true,
-		})
-		require.NoError(t, err)
-		defer func() {
-			assert.NoError(t, workspaceAPI.Delete(notebookDir, true))
-		}()
-
-		folder, err := workspaceAPI.Read(fmt.Sprintf("/Testing/%s", group))
-		require.NoError(t, err)
-
-		directoryID := fmt.Sprintf("/directories/%d", folder.ObjectID)
-		require.NoError(t, permissionsAPI.Update(directoryID, AccessControlChangeList{
-			AccessControlList: []AccessControlChange{
-				{
-					GroupName:       "users",
-					PermissionLevel: "CAN_READ",
-				},
-			},
-		}))
-		entity := ef(directoryID)
-		assert.Equal(t, "directory", entity.ObjectType)
-		assert.Len(t, entity.AccessControlList, 1)
-
-		notebook, err := workspaceAPI.Read(notebookPath)
-		require.NoError(t, err)
-		notebookID := fmt.Sprintf("/notebooks/%d", notebook.ObjectID)
-		require.NoError(t, permissionsAPI.Update(notebookID, AccessControlChangeList{
-			AccessControlList: []AccessControlChange{
-				{
-					UserName:        user,
-					PermissionLevel: "CAN_MANAGE",
-				},
-				{
-					GroupName:       group,
-					PermissionLevel: "CAN_EDIT",
-				},
-			},
-		}))
-
-		entity = ef(notebookID)
-		assert.Equal(t, "notebook", entity.ObjectType)
-		assert.Len(t, entity.AccessControlList, 2)
-
-		require.NoError(t, permissionsAPI.Delete(directoryID))
-		entity = ef(directoryID)
-		assert.Len(t, entity.AccessControlList, 0)
+func TestDeleteMissing(t *testing.T) {
+	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
+		{
+			MatchAny: true,
+			Status:   404,
+			Response: common.NotFound("missing"),
+		},
+	}, func(ctx context.Context, client *common.DatabricksClient) {
+		p := ResourcePermissions()
+		d := p.TestResourceData()
+		d.SetId("x")
+		diags := p.DeleteContext(ctx, d, client)
+		assert.Nil(t, diags)
 	})
 }

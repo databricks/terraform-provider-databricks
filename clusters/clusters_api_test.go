@@ -1065,16 +1065,15 @@ func TestListNodeTypes(t *testing.T) {
 
 	ctx := context.Background()
 	api := NewClustersAPI(ctx, client)
-	nodeType := api.GetSmallestNodeType(NodeTypeRequest{SupportPortForwarding: true})
-	assert.Equal(t, nodeType, defaultSmallestNodeType(api))
-	nodeType = api.GetSmallestNodeType(NodeTypeRequest{PhotonWorkerCapable: true})
-	assert.Equal(t, nodeType, defaultSmallestNodeType(api))
-	nodeType = api.GetSmallestNodeType(NodeTypeRequest{PhotonDriverCapable: true})
-	assert.Equal(t, nodeType, defaultSmallestNodeType(api))
-	nodeType = api.GetSmallestNodeType(NodeTypeRequest{IsIOCacheEnabled: true})
-	assert.Equal(t, nodeType, defaultSmallestNodeType(api))
-	nodeType = api.GetSmallestNodeType(NodeTypeRequest{Category: "Storage Optimized"})
-	assert.Equal(t, nodeType, defaultSmallestNodeType(api))
+	assert.Equal(t, api.GetSmallestNodeType(NodeTypeRequest{SupportPortForwarding: true}), api.defaultSmallestNodeType())
+	assert.Equal(t, api.GetSmallestNodeType(NodeTypeRequest{PhotonWorkerCapable: true}), api.defaultSmallestNodeType())
+	assert.Equal(t, api.GetSmallestNodeType(NodeTypeRequest{PhotonDriverCapable: true}), api.defaultSmallestNodeType())
+	assert.Equal(t, api.GetSmallestNodeType(NodeTypeRequest{IsIOCacheEnabled: true}), api.defaultSmallestNodeType())
+	assert.Equal(t, api.GetSmallestNodeType(NodeTypeRequest{Category: "Storage Optimized"}), api.defaultSmallestNodeType())
+	assert.Equal(t, api.GetSmallestNodeType(NodeTypeRequest{MinMemoryGB: 100500}), api.defaultSmallestNodeType())
+	assert.Equal(t, api.GetSmallestNodeType(NodeTypeRequest{GBPerCore: 100500}), api.defaultSmallestNodeType())
+	assert.Equal(t, api.GetSmallestNodeType(NodeTypeRequest{MinCores: 100500}), api.defaultSmallestNodeType())
+	assert.Equal(t, api.GetSmallestNodeType(NodeTypeRequest{LocalDisk: true}), "Standard_F4s")
 }
 
 func TestClusterState_CanReach(t *testing.T) {

@@ -99,7 +99,7 @@ type NodeType struct {
 	PhotonDriverCapable   bool                          `json:"photon_driver_capable,omitempty"`
 }
 
-func defaultSmallestNodeType(a ClustersAPI) string {
+func (a ClustersAPI) defaultSmallestNodeType() string {
 	if a.client.IsAzure() {
 		return "Standard_D3_v2"
 	} else if a.client.IsGcp() {
@@ -120,7 +120,7 @@ func (a ClustersAPI) GetSmallestNodeType(r NodeTypeRequest) string {
 	// error is explicitly ingored here, because Azure returns
 	// apparently too big of a JSON for Go to parse
 	if len(list.NodeTypes) == 0 {
-		return defaultSmallestNodeType(a)
+		return a.defaultSmallestNodeType()
 	}
 	list.Sort()
 	for _, nt := range list.NodeTypes {
@@ -159,7 +159,7 @@ func (a ClustersAPI) GetSmallestNodeType(r NodeTypeRequest) string {
 		}
 		return nt.NodeTypeID
 	}
-	return defaultSmallestNodeType(a)
+	return a.defaultSmallestNodeType()
 }
 
 // DataSourceNodeType returns smallest node depedning on the cloud

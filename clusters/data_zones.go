@@ -16,12 +16,8 @@ func DataSourceClusterZones() *schema.Resource {
 				return diag.FromErr(err)
 			}
 			d.SetId(zonesInfo.DefaultZone)
-			if err = d.Set("default_zone", zonesInfo.DefaultZone); err != nil {
-				return diag.FromErr(err)
-			}
-			if err = d.Set("zones", zonesInfo.Zones); err != nil {
-				return diag.FromErr(err)
-			}
+			d.Set("default_zone", zonesInfo.DefaultZone)
+			d.Set("zones", zonesInfo.Zones)
 			return nil
 		},
 		Schema: map[string]*schema.Schema{

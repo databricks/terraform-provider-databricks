@@ -1213,3 +1213,10 @@ func TestFailureOfPermanentDeleteOnCreateFailure(t *testing.T) {
 		assert.EqualError(t, err, "missing")
 	})
 }
+
+func TestWrapMissingClusterError(t *testing.T) {
+	assert.EqualError(t, wrapMissingClusterError(fmt.Errorf("x"), "abc"), "x")
+	assert.EqualError(t, wrapMissingClusterError(common.APIError{
+		Message: "Cluster abc does not exist",
+	}, "abc"), "Cluster abc does not exist")
+}

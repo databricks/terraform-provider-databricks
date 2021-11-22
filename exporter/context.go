@@ -63,6 +63,7 @@ type importContext struct {
 	allGroups   []identity.ScimGroup
 	mountMap    map[string]mount
 	variables   map[string]string
+	testEmits   map[string]bool
 
 	debug               bool
 	mounts              bool
@@ -391,6 +392,11 @@ func (ic *importContext) Emit(r *resource) {
 	}
 	if ic.Has(r) {
 		log.Printf("[DEBUG] %s already imported", r)
+		return
+	}
+	if ic.testEmits != nil {
+		log.Printf("[INFO] %s is emitted in test mode", r)
+		ic.testEmits[r.String()] = true
 		return
 	}
 	ic.importing[r.String()] = true

@@ -16,6 +16,7 @@ import (
 	"github.com/databrickslabs/terraform-provider-databricks/clusters"
 	"github.com/databrickslabs/terraform-provider-databricks/common"
 	"github.com/databrickslabs/terraform-provider-databricks/jobs"
+	"github.com/databrickslabs/terraform-provider-databricks/permissions"
 	"github.com/databrickslabs/terraform-provider-databricks/workspace"
 
 	"github.com/databrickslabs/terraform-provider-databricks/storage"
@@ -512,7 +513,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			{Path: "access_control.group_name", Resource: "databricks_group", Match: "display_name"},
 		},
 		Ignore: func(ic *importContext, r *resource) bool {
-			var permissions access.PermissionsEntity
+			var permissions permissions.PermissionsEntity
 			s := ic.Resources["databricks_permissions"].Schema
 			err := common.DataToStructPointer(r.Data, s, &permissions)
 			if err != nil {
@@ -521,7 +522,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			return (len(permissions.AccessControlList) == 0)
 		},
 		Import: func(ic *importContext, r *resource) error {
-			var permissions access.PermissionsEntity
+			var permissions permissions.PermissionsEntity
 			s := ic.Resources["databricks_permissions"].Schema
 			err := common.DataToStructPointer(r.Data, s, &permissions)
 			if err != nil {

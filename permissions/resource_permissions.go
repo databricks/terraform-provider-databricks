@@ -1,4 +1,4 @@
-package access
+package permissions
 
 import (
 	"context"
@@ -214,15 +214,15 @@ type permissionsIDFieldMapping struct {
 
 	allowedPermissionLevels []string
 
-	idRetriever func(client *common.DatabricksClient, id string) (string, error)
+	idRetriever func(ctx context.Context, client *common.DatabricksClient, id string) (string, error)
 }
 
 // PermissionsResourceIDFields shows mapping of id columns to resource types
-func permissionsResourceIDFields(ctx context.Context) []permissionsIDFieldMapping {
-	SIMPLE := func(client *common.DatabricksClient, id string) (string, error) {
+func permissionsResourceIDFields() []permissionsIDFieldMapping {
+	SIMPLE := func(ctx context.Context, client *common.DatabricksClient, id string) (string, error) {
 		return id, nil
 	}
-	PATH := func(client *common.DatabricksClient, path string) (string, error) {
+	PATH := func(ctx context.Context, client *common.DatabricksClient, path string) (string, error) {
 		info, err := workspace.NewNotebooksAPI(ctx, client).Read(path)
 		if err != nil {
 			return "", errors.Wrapf(err, "Cannot load path %s", path)
@@ -254,8 +254,7 @@ type PermissionsEntity struct {
 	AccessControlList []AccessControlChange `json:"access_control" tf:"slice_set"`
 }
 
-// ToPermissionsEntity ..
-func (oa *ObjectACL) ToPermissionsEntity(ctx context.Context, d *schema.ResourceData, me string) (PermissionsEntity, error) {
+func (oa *ObjectACL) ToPermissionsEntity(d *schema.ResourceData, me string) (PermissionsEntity, error) {
 	entity := PermissionsEntity{}
 	for _, accessControl := range oa.AccessControlList {
 		if accessControl.GroupName == "admins" && d.Id() != "/authorization/passwords" {
@@ -270,7 +269,7 @@ func (oa *ObjectACL) ToPermissionsEntity(ctx context.Context, d *schema.Resource
 			entity.AccessControlList = append(entity.AccessControlList, change)
 		}
 	}
-	for _, mapping := range permissionsResourceIDFields(ctx) {
+	for _, mapping := range permissionsResourceIDFields() {
 		if mapping.objectType != oa.ObjectType {
 			continue
 		}
@@ -302,14 +301,13 @@ func stringInSlice(a string, list []string) bool {
 // ResourcePermissions definition
 func ResourcePermissions() *schema.Resource {
 	s := common.StructToSchema(PermissionsEntity{}, func(s map[string]*schema.Schema) map[string]*schema.Schema {
-		ctx := context.Background()
-		for _, mapping := range permissionsResourceIDFields(ctx) {
+		for _, mapping := range permissionsResourceIDFields() {
 			s[mapping.field] = &schema.Schema{
 				ForceNew: true,
 				Type:     schema.TypeString,
 				Optional: true,
 			}
-			for _, m := range permissionsResourceIDFields(ctx) {
+			for _, m := range permissionsResourceIDFields() {
 				if m.field == mapping.field {
 					continue
 				}
@@ -351,7 +349,7 @@ func ResourcePermissions() *schema.Resource {
 		if err != nil {
 			return diag.FromErr(err)
 		}
-		entity, err := objectACL.ToPermissionsEntity(ctx, d, me.UserName)
+		entity, err := objectACL.ToPermissionsEntity(d, me.UserName)
 		if err != nil {
 			return diag.FromErr(err)
 		}
@@ -379,7 +377,7 @@ func ResourcePermissions() *schema.Resource {
 				return err
 			}
 			// Plan time validation for object permission levels
-			for _, mapping := range permissionsResourceIDFields(ctx) {
+			for _, mapping := range permissionsResourceIDFields() {
 				if _, ok := diff.GetOk(mapping.field); !ok {
 					continue
 				}
@@ -404,9 +402,9 @@ func ResourcePermissions() *schema.Resource {
 			if err != nil {
 				return diag.FromErr(err)
 			}
-			for _, mapping := range permissionsResourceIDFields(ctx) {
+			for _, mapping := range permissionsResourceIDFields() {
 				if v, ok := d.GetOk(mapping.field); ok {
-					id, err := mapping.idRetriever(m.(*common.DatabricksClient), v.(string))
+					id, err := mapping.idRetriever(ctx, m.(*common.DatabricksClient), v.(string))
 					if err != nil {
 						return diag.FromErr(err)
 					}

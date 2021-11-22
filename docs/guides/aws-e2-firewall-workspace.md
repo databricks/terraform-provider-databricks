@@ -552,5 +552,5 @@ resource "aws_route" "db_igw_nat_firewall" {
 ```
 
 
-##Troubleshooting
+## Troubleshooting
 If the Databricks clusters cannot reach DBFS or VPC endpoints do not work as intended, for example if your data sources are inaccessible or if the traffic is bypassing the endpoints please visit [Troubleshoot regional endpoints](https://docs.databricks.com/administration-guide/cloud-configurations/aws/customer-managed-vpc.html#troubleshoot-regional-endpoints)

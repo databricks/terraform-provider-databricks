@@ -1,7 +1,9 @@
 package compute
 
 import (
+	"context"
 	"os"
+	"sync"
 	"testing"
 
 	"github.com/databrickslabs/terraform-provider-databricks/clusters"
@@ -13,34 +15,96 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func TestCommonInstancePoolID_Existing(t *testing.T) {
+	defer common.CleanupEnvironment()()
+	common.ResetCommonEnvironmentClient()
+	oncePool = sync.Once{}
+	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/instance-pools/list",
+			Response: pools.InstancePoolList{
+				InstancePools: []pools.InstancePoolAndStats{
+					{
+						InstancePoolID:   "abc",
+						InstancePoolName: "Terraform Integration Test by test",
+					},
+				},
+			},
+		},
+	}, func(ctx context.Context, client *common.DatabricksClient) {
+		os.Setenv("DATABRICKS_HOST", client.Host)
+		os.Setenv("DATABRICKS_TOKEN", client.Token)
+		os.Setenv("USER", "test")
+
+		id := CommonInstancePoolID()
+		assert.Equal(t, "abc", id)
+	})
+}
+
+func TestCommonInstancePoolID_Panic(t *testing.T) {
+	defer common.CleanupEnvironment()()
+	defer func() { recover() }()
+	common.ResetCommonEnvironmentClient()
+	oncePool = sync.Once{}
+	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/instance-pools/list",
+			Status:   404,
+		},
+	}, func(ctx context.Context, client *common.DatabricksClient) {
+		os.Setenv("DATABRICKS_HOST", client.Host)
+		os.Setenv("DATABRICKS_TOKEN", client.Token)
+
+		CommonInstancePoolID()
+	})
+}
+
+var sparkVersions = clusters.SparkVersionsList{
+	SparkVersions: []clusters.SparkVersion{
+		{
+			Version:     "7.1.x-cpu-ml-scala2.12",
+			Description: "7.1 ML (includes Apache Spark 3.0.0, Scala 2.12)",
+		},
+		{
+			Version:     "apache-spark-2.4.x-scala2.11",
+			Description: "Light 2.4 (includes Apache Spark 2.4, Scala 2.11)",
+		},
+		{
+			Version:     "7.3.x-scala2.12",
+			Description: "7.3 LTS (includes Apache Spark 3.0.1, Scala 2.12)",
+		},
+		{
+			Version:     "6.4.x-scala2.11",
+			Description: "6.4 (includes Apache Spark 2.4.5, Scala 2.11)",
+		},
+	},
+}
+
+var nodeTypes = clusters.NodeTypeList{
+	NodeTypes: []clusters.NodeType{
+		{
+			NodeTypeID:     "m4.large",
+			InstanceTypeID: "m4.large",
+			NodeInstanceType: &clusters.NodeInstanceType{
+				LocalDisks:     1,
+				InstanceTypeID: "m4.large",
+			},
+		},
+	},
+}
+
 func TestNewTinyClusterInCommonPoolPossiblyReused(t *testing.T) {
 	defer common.CleanupEnvironment()()
 	common.ResetCommonEnvironmentClient()
+	oncePool = sync.Once{}
 	client, server, err := qa.HttpFixtureClient(t, []qa.HTTPFixture{
 		{
 			Method:       "GET",
 			ReuseRequest: true,
 			Resource:     "/api/2.0/clusters/spark-versions",
-			Response: clusters.SparkVersionsList{
-				SparkVersions: []clusters.SparkVersion{
-					{
-						Version:     "7.1.x-cpu-ml-scala2.12",
-						Description: "7.1 ML (includes Apache Spark 3.0.0, Scala 2.12)",
-					},
-					{
-						Version:     "apache-spark-2.4.x-scala2.11",
-						Description: "Light 2.4 (includes Apache Spark 2.4, Scala 2.11)",
-					},
-					{
-						Version:     "7.3.x-scala2.12",
-						Description: "7.3 LTS (includes Apache Spark 3.0.1, Scala 2.12)",
-					},
-					{
-						Version:     "6.4.x-scala2.11",
-						Description: "6.4 (includes Apache Spark 2.4.5, Scala 2.11)",
-					},
-				},
-			},
+			Response:     sparkVersions,
 		},
 		{
 			Method:   "GET",
@@ -75,18 +139,7 @@ func TestNewTinyClusterInCommonPoolPossiblyReused(t *testing.T) {
 			Method:       "GET",
 			ReuseRequest: true,
 			Resource:     "/api/2.0/clusters/list-node-types",
-			Response: clusters.NodeTypeList{
-				NodeTypes: []clusters.NodeType{
-					{
-						NodeTypeID:     "m4.large",
-						InstanceTypeID: "m4.large",
-						NodeInstanceType: &clusters.NodeInstanceType{
-							LocalDisks:     1,
-							InstanceTypeID: "m4.large",
-						},
-					},
-				},
-			},
+			Response:     nodeTypes,
 		},
 		{
 			Method:   "POST",
@@ -120,31 +173,13 @@ func TestNewTinyClusterInCommonPoolPossiblyReused(t *testing.T) {
 func TestNewTinyClusterInCommonPool(t *testing.T) {
 	defer common.CleanupEnvironment()()
 	common.ResetCommonEnvironmentClient()
+	oncePool = sync.Once{}
 	client, server, err := qa.HttpFixtureClient(t, []qa.HTTPFixture{
 		{
 			Method:       "GET",
 			ReuseRequest: true,
 			Resource:     "/api/2.0/clusters/spark-versions",
-			Response: clusters.SparkVersionsList{
-				SparkVersions: []clusters.SparkVersion{
-					{
-						Version:     "7.1.x-cpu-ml-scala2.12",
-						Description: "7.1 ML (includes Apache Spark 3.0.0, Scala 2.12)",
-					},
-					{
-						Version:     "apache-spark-2.4.x-scala2.11",
-						Description: "Light 2.4 (includes Apache Spark 2.4, Scala 2.11)",
-					},
-					{
-						Version:     "7.3.x-scala2.12",
-						Description: "7.3 LTS (includes Apache Spark 3.0.1, Scala 2.12)",
-					},
-					{
-						Version:     "6.4.x-scala2.11",
-						Description: "6.4 (includes Apache Spark 2.4.5, Scala 2.11)",
-					},
-				},
-			},
+			Response:     sparkVersions,
 		},
 		{
 			Method:   "GET",
@@ -183,4 +218,7 @@ func TestNewTinyClusterInCommonPool(t *testing.T) {
 	c, err := NewTinyClusterInCommonPool()
 	require.NoError(t, err)
 	assert.NotNil(t, c)
+
+	client = CommonEnvironmentClientWithRealCommandExecutor()
+	client.CommandExecutor(context.Background())
 }

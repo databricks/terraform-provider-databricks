@@ -1162,3 +1162,54 @@ func TestClusterState_CanReach(t *testing.T) {
 		})
 	}
 }
+
+func TestFailureOfPermanentDeleteOnCreateFailure(t *testing.T) {
+	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
+		{
+			Method:   "POST",
+			Resource: "/api/2.0/clusters/create",
+			Response: Cluster{
+				ClusterID: "abc",
+			},
+		},
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/clusters/get?cluster_id=abc",
+			Status:   418,
+			Response: common.APIError{
+				ErrorCode: "TEST",
+				Message:   "nothing",
+			},
+		},
+		{
+			Method:   "POST",
+			Resource: "/api/2.0/clusters/delete",
+		},
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/clusters/get?cluster_id=abc",
+			Response: ClusterInfo{
+				State: ClusterStateTerminated,
+			},
+		},
+		{
+			Method:   "POST",
+			Resource: "/api/2.0/clusters/permanent-delete",
+			Status:   418,
+			Response: common.APIError{
+				ErrorCode: "TEST",
+				Message:   "You should unpin the cluster first",
+			},
+		},
+		{
+			Method:   "POST",
+			Resource: "/api/2.0/clusters/unpin",
+			Status:   418,
+			Response: common.NotFound("missing"),
+		},
+	}, func(ctx context.Context, client *common.DatabricksClient) {
+		a := NewClustersAPI(ctx, client)
+		_, err := a.Create(Cluster{})
+		assert.EqualError(t, err, "missing")
+	})
+}

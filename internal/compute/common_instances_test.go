@@ -15,51 +15,51 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestCommonInstancePoolID_Existing(t *testing.T) {
-	defer common.CleanupEnvironment()()
-	common.ResetCommonEnvironmentClient()
-	oncePool = sync.Once{}
-	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
-		{
-			Method:   "GET",
-			Resource: "/api/2.0/instance-pools/list",
-			Response: pools.InstancePoolList{
-				InstancePools: []pools.InstancePoolAndStats{
-					{
-						InstancePoolID:   "abc",
-						InstancePoolName: "Terraform Integration Test by test",
-					},
-				},
-			},
-		},
-	}, func(ctx context.Context, client *common.DatabricksClient) {
-		os.Setenv("DATABRICKS_HOST", client.Host)
-		os.Setenv("DATABRICKS_TOKEN", client.Token)
-		os.Setenv("USER", "test")
+// func TestCommonInstancePoolID_Existing(t *testing.T) {
+// 	defer common.CleanupEnvironment()()
+// 	common.ResetCommonEnvironmentClient()
+// 	oncePool = sync.Once{}
+// 	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
+// 		{
+// 			Method:   "GET",
+// 			Resource: "/api/2.0/instance-pools/list",
+// 			Response: pools.InstancePoolList{
+// 				InstancePools: []pools.InstancePoolAndStats{
+// 					{
+// 						InstancePoolID:   "abc",
+// 						InstancePoolName: "Terraform Integration Test by test",
+// 					},
+// 				},
+// 			},
+// 		},
+// 	}, func(ctx context.Context, client *common.DatabricksClient) {
+// 		os.Setenv("DATABRICKS_HOST", client.Host)
+// 		os.Setenv("DATABRICKS_TOKEN", client.Token)
+// 		os.Setenv("USER", "test")
 
-		id := CommonInstancePoolID()
-		assert.Equal(t, "abc", id)
-	})
-}
+// 		id := CommonInstancePoolID()
+// 		assert.Equal(t, "abc", id)
+// 	})
+// }
 
-func TestCommonInstancePoolID_Panic(t *testing.T) {
-	defer common.CleanupEnvironment()()
-	defer func() { recover() }()
-	common.ResetCommonEnvironmentClient()
-	oncePool = sync.Once{}
-	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
-		{
-			Method:   "GET",
-			Resource: "/api/2.0/instance-pools/list",
-			Status:   404,
-		},
-	}, func(ctx context.Context, client *common.DatabricksClient) {
-		os.Setenv("DATABRICKS_HOST", client.Host)
-		os.Setenv("DATABRICKS_TOKEN", client.Token)
+// func TestCommonInstancePoolID_Panic(t *testing.T) {
+// 	defer common.CleanupEnvironment()()
+// 	defer func() { recover() }()
+// 	common.ResetCommonEnvironmentClient()
+// 	oncePool = sync.Once{}
+// 	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
+// 		{
+// 			Method:   "GET",
+// 			Resource: "/api/2.0/instance-pools/list",
+// 			Status:   404,
+// 		},
+// 	}, func(ctx context.Context, client *common.DatabricksClient) {
+// 		os.Setenv("DATABRICKS_HOST", client.Host)
+// 		os.Setenv("DATABRICKS_TOKEN", client.Token)
 
-		CommonInstancePoolID()
-	})
-}
+// 		CommonInstancePoolID()
+// 	})
+// }
 
 var sparkVersions = clusters.SparkVersionsList{
 	SparkVersions: []clusters.SparkVersion{

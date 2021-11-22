@@ -279,6 +279,7 @@ module "vpc_endpoints" {
 
 ### Hub VPC
 The hub will consist of a central inspection and egress virtual private cloud (VPC). We're going to create a central inspection/egress VPC, which once we’ve finished should look like this:
+
 ![HubVPC](../images/aws-e2-firewall-hub-vpc.png)
 
 ```hcl

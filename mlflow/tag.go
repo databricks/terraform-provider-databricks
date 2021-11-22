@@ -1,4 +1,4 @@
-package api
+package mlflow
 
 // Tag ...
 type Tag struct {

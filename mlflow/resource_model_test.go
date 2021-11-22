@@ -3,22 +3,21 @@ package mlflow
 import (
 	"testing"
 
-	"github.com/databrickslabs/terraform-provider-databricks/mlflow/api"
 	"github.com/databrickslabs/terraform-provider-databricks/qa"
 	"github.com/stretchr/testify/assert"
 )
 
-func m() api.Model {
-	return api.Model{
+func m() ModelDto {
+	return ModelDto{
 		Name: "xyz",
-		Tags: []api.Tag{
+		Tags: []Tag{
 			{Key: "key1", Value: "value1"},
 			{Key: "key2", Value: "value2"},
 		},
 	}
 }
 
-func TestMLFlowModelCreate(t *testing.T) {
+func TestModelCreate(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
@@ -30,7 +29,7 @@ func TestMLFlowModelCreate(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/mlflow/registered-models/get?name=xyz",
-				Response: api.RegisteredModel{
+				Response: RegisteredModelDto{
 					RegisteredModel: m(),
 				},
 			},
@@ -56,13 +55,42 @@ func TestMLFlowModelCreate(t *testing.T) {
 	assert.Equal(t, d.Get("name"), d.Id(), "Name and Id should match")
 }
 
-func TestMLFlowModelRead(t *testing.T) {
+func TestModelCreatePostError(t *testing.T) {
+	_, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:          "POST",
+				Resource:        "/api/2.0/mlflow/registered-models/create",
+				ExpectedRequest: m(),
+				Response:        m(),
+				Status:          400,
+			},
+		},
+		Resource: ResourceMLFlowModel(),
+		Create:   true,
+		HCL: `
+		name = "xyz"
+		tags {
+				key = "key1"
+				value = "value1"
+		    }
+		tags {
+				key = "key2"
+				value = "value2"
+			  }
+		`,
+	}.Apply(t)
+
+	assert.Error(t, err, err)
+}
+
+func TestModelRead(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/mlflow/registered-models/get?name=xyz",
-				Response: api.RegisteredModel{
+				Response: RegisteredModelDto{
 					RegisteredModel: m(),
 				},
 			},
@@ -76,7 +104,27 @@ func TestMLFlowModelRead(t *testing.T) {
 	assert.Equal(t, "xyz", d.Id(), "Resource ID should not be empty")
 }
 
-func TestMLFlowModelUpdate(t *testing.T) {
+func TestModelReadGetError(t *testing.T) {
+	_, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/mlflow/registered-models/get?name=xyz",
+				Response: RegisteredModelDto{
+					RegisteredModel: m(),
+				},
+				Status: 400,
+			},
+		},
+		Resource: ResourceMLFlowModel(),
+		Read:     true,
+		ID:       "xyz",
+	}.Apply(t)
+
+	assert.Error(t, err, err)
+}
+
+func TestModelUpdate(t *testing.T) {
 	pm := m()
 	pm.Description = "thedescription"
 	gm := m()
@@ -91,7 +139,7 @@ func TestMLFlowModelUpdate(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/mlflow/registered-models/get?name=xyz",
-				Response: api.RegisteredModel{
+				Response: RegisteredModelDto{
 					RegisteredModel: gm,
 				},
 			},
@@ -114,13 +162,43 @@ func TestMLFlowModelUpdate(t *testing.T) {
 	assert.Equal(t, "updateddescription", d.Get("description"), "Description should be updated")
 }
 
-func TestDashboardDelete(t *testing.T) {
+func TestModelUpdatePatchError(t *testing.T) {
+	pm := m()
+	pm.Description = "thedescription"
+	gm := m()
+	gm.Description = "updateddescription"
+	_, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "PATCH",
+				Resource: "/api/2.0/mlflow/registered-models/update",
+				Response: pm,
+				Status:   400,
+			},
+		},
+		Resource:    ResourceMLFlowModel(),
+		Update:      true,
+		RequiresNew: true,
+		ID:          "xyz",
+		State: map[string]interface{}{
+			"name": "xyz",
+		},
+		HCL: `
+		name = "xyz"
+		description = "updateddescription"
+		`,
+	}.Apply(t)
+
+	assert.Error(t, err, err)
+}
+
+func TestModelDelete(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "DELETE",
 				Resource: "/api/2.0/mlflow/registered-models/delete",
-				ExpectedRequest: api.Model{
+				ExpectedRequest: ModelDto{
 					Name: "xyz",
 				},
 			},
@@ -135,4 +213,27 @@ func TestDashboardDelete(t *testing.T) {
 
 	assert.NoError(t, err, err)
 	assert.Equal(t, "xyz", d.Id(), "Resource ID should not be empty")
+}
+
+func TestModelDeleteError(t *testing.T) {
+	_, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "DELETE",
+				Resource: "/api/2.0/mlflow/registered-models/delete",
+				ExpectedRequest: ModelDto{
+					Name: "xyz",
+				},
+				Status: 400,
+			},
+		},
+		Resource: ResourceMLFlowModel(),
+		Delete:   true,
+		ID:       "xyz",
+		HCL: `
+		name = "xyz"
+		`,
+	}.Apply(t)
+
+	assert.Error(t, err, err)
 }

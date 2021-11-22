@@ -3,18 +3,17 @@ package mlflow
 import (
 	"testing"
 
-	"github.com/databrickslabs/terraform-provider-databricks/mlflow/api"
 	"github.com/databrickslabs/terraform-provider-databricks/qa"
 	"github.com/stretchr/testify/assert"
 )
 
-func e() api.Experiment {
-	return api.Experiment{
+func e() ExperimentDto {
+	return ExperimentDto{
 		Name: "xyz",
 	}
 }
 
-func TestMLFlowExperimentCreate(t *testing.T) {
+func TestExperimentCreate(t *testing.T) {
 	re := e()
 	re.ExperimentId = "123456790123456"
 	d, err := qa.ResourceFixture{
@@ -28,7 +27,7 @@ func TestMLFlowExperimentCreate(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/mlflow/experiments/get?experiment_id=123456790123456",
-				Response: api.Experiments{
+				Response: ExperimentsDto{
 					Experiment: re,
 				},
 			},
@@ -44,7 +43,61 @@ func TestMLFlowExperimentCreate(t *testing.T) {
 	assert.Equal(t, re.ExperimentId, d.Id(), "Resource ID should not be empty")
 	assert.Equal(t, re.Name, d.Get("name"), "Experiment name should be set")
 }
-func TestMLFlowExperimentRead(t *testing.T) {
+
+func TestExperimentCreatePostError(t *testing.T) {
+	re := e()
+	re.ExperimentId = "123456790123456"
+	_, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:          "POST",
+				Resource:        "/api/2.0/mlflow/experiments/create",
+				ExpectedRequest: e(),
+				Response:        re,
+				Status:          400,
+			},
+		},
+		Resource: ResourceMLFlowExperiment(),
+		Create:   true,
+		HCL: `
+		name = "xyz"
+		`,
+	}.Apply(t)
+
+	assert.Error(t, err, err)
+}
+
+func TestExperimentCreateGetError(t *testing.T) {
+	re := e()
+	re.ExperimentId = "123456790123456"
+	_, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:          "POST",
+				Resource:        "/api/2.0/mlflow/experiments/create",
+				ExpectedRequest: e(),
+				Response:        re,
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/mlflow/experiments/get?experiment_id=123456790123456",
+				Response: ExperimentsDto{
+					Experiment: re,
+				},
+				Status: 400,
+			},
+		},
+		Resource: ResourceMLFlowExperiment(),
+		Create:   true,
+		HCL: `
+		name = "xyz"
+		`,
+	}.Apply(t)
+
+	assert.Error(t, err, err)
+}
+
+func TestExperimentRead(t *testing.T) {
 	re := e()
 	re.ExperimentId = "123456790123456"
 	d, err := qa.ResourceFixture{
@@ -52,7 +105,7 @@ func TestMLFlowExperimentRead(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/mlflow/experiments/get?experiment_id=123456790123456",
-				Response: api.Experiments{
+				Response: ExperimentsDto{
 					Experiment: re,
 				},
 			},
@@ -66,8 +119,30 @@ func TestMLFlowExperimentRead(t *testing.T) {
 	assert.Equal(t, re.ExperimentId, d.Id(), "Resource ID should not be empty")
 }
 
-func TestMLFlowExperimentUpdate(t *testing.T) {
-	resPost := api.Experiment{
+func TestExperimentReadGetError(t *testing.T) {
+	re := e()
+	re.ExperimentId = "123456790123456"
+	_, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/mlflow/experiments/get?experiment_id=123456790123456",
+				Response: ExperimentsDto{
+					Experiment: re,
+				},
+				Status: 400,
+			},
+		},
+		Resource: ResourceMLFlowExperiment(),
+		Read:     true,
+		ID:       re.ExperimentId,
+	}.Apply(t)
+
+	assert.Error(t, err, err)
+}
+
+func TestExperimentUpdate(t *testing.T) {
+	resPost := ExperimentDto{
 		ExperimentId: "123456790123456",
 		Name:         "123",
 	}
@@ -76,7 +151,7 @@ func TestMLFlowExperimentUpdate(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/mlflow/experiments/get?experiment_id=123456790123456",
-				Response: api.Experiments{
+				Response: ExperimentsDto{
 					Experiment: resPost,
 				},
 			},
@@ -99,8 +174,33 @@ func TestMLFlowExperimentUpdate(t *testing.T) {
 	assert.Equal(t, resPost.Name, d.Get("name"), "Name should be updated")
 }
 
-func TestMLFlowExperimentDelete(t *testing.T) {
-	r := api.Experiment{
+func TestExperimentUpdatePostError(t *testing.T) {
+	resPost := ExperimentDto{
+		ExperimentId: "123456790123456",
+		Name:         "123",
+	}
+	_, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/mlflow/experiments/update",
+				Response: resPost,
+				Status:   400,
+			},
+		},
+		Resource: ResourceMLFlowExperiment(),
+		Update:   true,
+		ID:       resPost.ExperimentId,
+		HCL: `
+		name = "123"
+		`,
+	}.Apply(t)
+
+	assert.Error(t, err, err)
+}
+
+func TestExperimentDelete(t *testing.T) {
+	r := ExperimentDto{
 		ExperimentId: "123456790123456",
 	}
 	d, err := qa.ResourceFixture{
@@ -121,4 +221,28 @@ func TestMLFlowExperimentDelete(t *testing.T) {
 
 	assert.NoError(t, err, err)
 	assert.Equal(t, r.ExperimentId, d.Id(), "Resource ID should not be empty")
+}
+
+func TestExperimentDeleteError(t *testing.T) {
+	r := ExperimentDto{
+		ExperimentId: "123456790123456",
+	}
+	_, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:          "POST",
+				Resource:        "/api/2.0/mlflow/experiments/delete",
+				ExpectedRequest: r,
+				Status:          400,
+			},
+		},
+		Resource: ResourceMLFlowExperiment(),
+		Delete:   true,
+		ID:       r.ExperimentId,
+		HCL: `
+		name = "xyz"
+		`,
+	}.Apply(t)
+
+	assert.Error(t, err, err)
 }

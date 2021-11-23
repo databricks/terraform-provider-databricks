@@ -7,8 +7,8 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func e() ExperimentDto {
-	return ExperimentDto{
+func e() Experiment {
+	return Experiment{
 		Name: "xyz",
 	}
 }
@@ -27,7 +27,7 @@ func TestExperimentCreate(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/mlflow/experiments/get?experiment_id=123456790123456",
-				Response: ExperimentsDto{
+				Response: experimentWrapper{
 					Experiment: re,
 				},
 			},
@@ -81,7 +81,7 @@ func TestExperimentCreateGetError(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/mlflow/experiments/get?experiment_id=123456790123456",
-				Response: ExperimentsDto{
+				Response: experimentWrapper{
 					Experiment: re,
 				},
 				Status: 400,
@@ -105,7 +105,7 @@ func TestExperimentRead(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/mlflow/experiments/get?experiment_id=123456790123456",
-				Response: ExperimentsDto{
+				Response: experimentWrapper{
 					Experiment: re,
 				},
 			},
@@ -127,7 +127,7 @@ func TestExperimentReadGetError(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/mlflow/experiments/get?experiment_id=123456790123456",
-				Response: ExperimentsDto{
+				Response: experimentWrapper{
 					Experiment: re,
 				},
 				Status: 400,
@@ -142,7 +142,7 @@ func TestExperimentReadGetError(t *testing.T) {
 }
 
 func TestExperimentUpdate(t *testing.T) {
-	resPost := ExperimentDto{
+	resPost := Experiment{
 		ExperimentId: "123456790123456",
 		Name:         "123",
 	}
@@ -151,7 +151,7 @@ func TestExperimentUpdate(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/mlflow/experiments/get?experiment_id=123456790123456",
-				Response: ExperimentsDto{
+				Response: experimentWrapper{
 					Experiment: resPost,
 				},
 			},
@@ -175,7 +175,7 @@ func TestExperimentUpdate(t *testing.T) {
 }
 
 func TestExperimentUpdatePostError(t *testing.T) {
-	resPost := ExperimentDto{
+	resPost := Experiment{
 		ExperimentId: "123456790123456",
 		Name:         "123",
 	}
@@ -200,7 +200,7 @@ func TestExperimentUpdatePostError(t *testing.T) {
 }
 
 func TestExperimentDelete(t *testing.T) {
-	r := ExperimentDto{
+	r := Experiment{
 		ExperimentId: "123456790123456",
 	}
 	d, err := qa.ResourceFixture{
@@ -224,7 +224,7 @@ func TestExperimentDelete(t *testing.T) {
 }
 
 func TestExperimentDeleteError(t *testing.T) {
-	r := ExperimentDto{
+	r := Experiment{
 		ExperimentId: "123456790123456",
 	}
 	_, err := qa.ResourceFixture{

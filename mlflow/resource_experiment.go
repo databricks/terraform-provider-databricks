@@ -2,58 +2,53 @@ package mlflow
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/databrickslabs/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-// Experiment defines the parameters that can be set in the resource.
+// Experiment defines the response object from the API
 type Experiment struct {
 	Name             string `json:"name"`
-	ArtifactLocation string `json:"artifact_location,omitempty" tf:"force_new"`
 	Description      string `json:"description,omitempty"`
+	ExperimentId     string `json:"experiment_id,omitempty" tf:"computed"`
+	ArtifactLocation string `json:"artifact_location,omitempty" tf:"force_new"`
+	LifecycleStage   string `json:"lifecycle_stage,omitempty" tf:"computed"`
+	LastUpdateTime   int64  `json:"last_update_time,omitempty" tf:"computed"`
+	CreationTime     int64  `json:"creation_time,omitempty" tf:"computed"`
 }
 
-// ExperimentDto defines the response object from the API
-type ExperimentDto struct {
-	ExperimentId     string `json:"experiment_id"`
-	Name             string `json:"name"`
-	ArtifactLocation string `json:"artifact_location,omitempty"`
-	LifecycleStage   string `json:"lifecycle_stage,omitempty"`
-	LastUpdateTime   int64  `json:"last_update_time,omitempty"`
-	CreationTime     int64  `json:"creation_time,omitempty"`
-}
-
-type ExperimentUpdateDto struct {
+type experimentUpdate struct {
 	ExperimentId string `json:"experiment_id"`
 	NewName      string `json:"new_name"`
 }
 
-type ExperimentsDto struct {
-	Experiment ExperimentDto `json:"experiment"`
+type experimentWrapper struct {
+	Experiment Experiment `json:"experiment"`
 }
 
-// ExperimentAPI ...
-type ExperimentAPI struct {
+// ExperimentsAPI ...
+type ExperimentsAPI struct {
 	client  *common.DatabricksClient
 	context context.Context
 }
 
-// NewExperimentAPI ...
-func NewExperimentAPI(ctx context.Context, m interface{}) ExperimentAPI {
-	return ExperimentAPI{m.(*common.DatabricksClient), ctx}
+// NewExperimentsAPI ...
+func NewExperimentsAPI(ctx context.Context, m interface{}) ExperimentsAPI {
+	return ExperimentsAPI{m.(*common.DatabricksClient), ctx}
 }
 
 // Create ...
-func (a ExperimentAPI) Create(d *ExperimentDto) error {
+func (a ExperimentsAPI) Create(d *Experiment) error {
 	return a.client.Post(a.context, "/mlflow/experiments/create", d, &d)
 }
 
 // Read ...
-func (a ExperimentAPI) Read(experimentId string) (*ExperimentDto, error) {
-	var d ExperimentsDto
-	err := a.client.Get(a.context, fmt.Sprintf("/mlflow/experiments/get?experiment_id=%s", experimentId), nil, &d)
+func (a ExperimentsAPI) Read(experimentId string) (*Experiment, error) {
+	var d experimentWrapper
+	err := a.client.Get(a.context, "/mlflow/experiments/get", map[string]string{
+		"experiment_id": experimentId,
+	}, &d)
 	if err != nil {
 		return nil, err
 	}
@@ -61,16 +56,15 @@ func (a ExperimentAPI) Read(experimentId string) (*ExperimentDto, error) {
 }
 
 // Update ...
-func (a ExperimentAPI) Update(d *ExperimentUpdateDto) error {
-	return a.client.Post(a.context, "/mlflow/experiments/update", d, &d)
+func (a ExperimentsAPI) Update(e *experimentUpdate) error {
+	return a.client.Post(a.context, "/mlflow/experiments/update", e, &e)
 }
 
 // Delete ...
-func (a ExperimentAPI) Delete(d *ExperimentDto) error {
-	return a.client.Post(a.context, "/mlflow/experiments/delete", d, &d)
+func (a ExperimentsAPI) Delete(e *Experiment) error {
+	return a.client.Post(a.context, "/mlflow/experiments/delete", e, &e)
 }
 
-///func ResourceMLFlowExperiment() {}
 func ResourceMLFlowExperiment() *schema.Resource {
 	s := common.StructToSchema(
 		Experiment{},
@@ -79,43 +73,35 @@ func ResourceMLFlowExperiment() *schema.Resource {
 		})
 
 	return common.Resource{
-		Create: func(ctx context.Context, data *schema.ResourceData, c *common.DatabricksClient) error {
-			var ad ExperimentDto
-			if err := common.DataToStructPointer(data, s, &ad); err != nil {
+		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			var e Experiment
+			if err := common.DataToStructPointer(d, s, &e); err != nil {
 				return err
 			}
-			if err := NewExperimentAPI(ctx, c).Create(&ad); err != nil {
+			if err := NewExperimentsAPI(ctx, c).Create(&e); err != nil {
 				return err
 			}
-			data.SetId(ad.ExperimentId)
+			d.SetId(e.ExperimentId)
 			return nil
 		},
-		Read: func(ctx context.Context, data *schema.ResourceData, c *common.DatabricksClient) error {
-			var d Experiment
-			ad, err := NewExperimentAPI(ctx, c).Read(data.Id())
+		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			e, err := NewExperimentsAPI(ctx, c).Read(d.Id())
 			if err != nil {
 				return err
 			}
-
-			if err := common.StructToData(d, s, data); err != nil {
+			return common.StructToData(*e, s, d)
+		},
+		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			var e Experiment
+			if err := common.DataToStructPointer(d, s, &e); err != nil {
 				return err
 			}
-
-			data.Set("name", ad.Name)
-			data.SetId(ad.ExperimentId)
-			return nil
+			updateDoc := experimentUpdate{ExperimentId: d.Id(), NewName: e.Name}
+			return NewExperimentsAPI(ctx, c).Update(&updateDoc)
 		},
-		Update: func(ctx context.Context, data *schema.ResourceData, c *common.DatabricksClient) error {
-			var ad ExperimentDto
-			if err := common.DataToStructPointer(data, s, &ad); err != nil {
-				return err
-			}
-			updateDoc := ExperimentUpdateDto{ExperimentId: data.Id(), NewName: ad.Name}
-			return NewExperimentAPI(ctx, c).Update(&updateDoc)
-		},
-		Delete: func(ctx context.Context, data *schema.ResourceData, c *common.DatabricksClient) error {
-			ad := ExperimentDto{ExperimentId: data.Id()}
-			return NewExperimentAPI(ctx, c).Delete(&ad)
+		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			e := Experiment{ExperimentId: d.Id()}
+			return NewExperimentsAPI(ctx, c).Delete(&e)
 		},
 		StateUpgraders: []schema.StateUpgrader{},
 		Schema:         s,

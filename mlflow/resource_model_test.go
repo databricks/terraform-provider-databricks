@@ -7,8 +7,8 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func m() ModelDto {
-	return ModelDto{
+func m() Model {
+	return Model{
 		Name: "xyz",
 		Tags: []Tag{
 			{Key: "key1", Value: "value1"},
@@ -29,7 +29,7 @@ func TestModelCreate(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/mlflow/registered-models/get?name=xyz",
-				Response: RegisteredModelDto{
+				Response: registeredModel{
 					RegisteredModel: m(),
 				},
 			},
@@ -90,7 +90,7 @@ func TestModelRead(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/mlflow/registered-models/get?name=xyz",
-				Response: RegisteredModelDto{
+				Response: registeredModel{
 					RegisteredModel: m(),
 				},
 			},
@@ -110,7 +110,7 @@ func TestModelReadGetError(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/mlflow/registered-models/get?name=xyz",
-				Response: RegisteredModelDto{
+				Response: registeredModel{
 					RegisteredModel: m(),
 				},
 				Status: 400,
@@ -139,7 +139,7 @@ func TestModelUpdate(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/mlflow/registered-models/get?name=xyz",
-				Response: RegisteredModelDto{
+				Response: registeredModel{
 					RegisteredModel: gm,
 				},
 			},
@@ -198,7 +198,7 @@ func TestModelDelete(t *testing.T) {
 			{
 				Method:   "DELETE",
 				Resource: "/api/2.0/mlflow/registered-models/delete",
-				ExpectedRequest: ModelDto{
+				ExpectedRequest: Model{
 					Name: "xyz",
 				},
 			},
@@ -221,7 +221,7 @@ func TestModelDeleteError(t *testing.T) {
 			{
 				Method:   "DELETE",
 				Resource: "/api/2.0/mlflow/registered-models/delete",
-				ExpectedRequest: ModelDto{
+				ExpectedRequest: Model{
 					Name: "xyz",
 				},
 				Status: 400,

@@ -6,7 +6,7 @@ page_title: "Provisioning AWS Databricks E2 with a Hub & Spoke firewall for data
 
 You can provision multiple Databricks workspaces with Terraform and where many Databricks workspaces are deployed, we recommend a hub and spoke topology reference architecture, powered by AWS Transit Gateway. The hub will consist of a central inspection and egress virtual private cloud (VPC), while the Spoke VPC houses federated Databricks workspaces for different business units or segregated teams. In this way, you create your own version of a centralized deployment model for your egress architecture, as is recommended for large enterprises. For more information please visit [Data Exfiltration Protection With Databricks on AWS](https://databricks.com/blog/2021/02/02/data-exfiltration-protection-with-databricks-on-aws.html).
 
-![Data Exfiltration](../images/aws-exfiltration-replace-1.png)
+![Data Exfiltration](https://raw.githubusercontent.com/databrickslabs/terraform-provider-databricks/master/docs/images/aws-exfiltration-replace-1.png)
 
 ## Provider initialization for E2 workspaces
 
@@ -102,7 +102,7 @@ The very first step is Hub & Spoke VPC creation. Please consult [main documentat
 
 First step is to create Spoke VPC which houses federated Databricks workspaces for different business units or segregated teams.
 
-![SpokeVPC](../images/aws-e2-firewall-spoke-vpc.png)
+![SpokeVPC](https://raw.githubusercontent.com/databrickslabs/terraform-provider-databricks/master/docs/images/aws-e2-firewall-spoke-vpc.png)
 
 ```hcl
 data "aws_availability_zones" "available" {}
@@ -280,7 +280,7 @@ module "vpc_endpoints" {
 ### Hub VPC
 The hub will consist of a central inspection and egress virtual private cloud (VPC). We're going to create a central inspection/egress VPC, which once we’ve finished should look like this:
 
-![HubVPC](../images/aws-e2-firewall-hub-vpc.png)
+![HubVPC](https://raw.githubusercontent.com/databrickslabs/terraform-provider-databricks/master/docs/images/aws-e2-firewall-hub-vpc.png)
 
 ```hcl
 /* Create VPC */
@@ -438,7 +438,7 @@ Now that our spoke and inspection/egress VPCs are ready to go, all you need to d
 First, we're going to create a Transit Gateway and link our Databricks data plane via TGW subnets.
 All of the logic that determines what routes where via a Transit Gateway is encapsulated within Transit Gateway Route Tables. We’re going to create some TGW routes tables for our Hub & Spoke networks.
 
-![TransitGateway](../images/aws-e2-firewall-tgw.png)
+![TransitGateway](https://raw.githubusercontent.com/databrickslabs/terraform-provider-databricks/master/docs/images/aws-e2-firewall-tgw.png)
 
 ```hcl
 //Create transit gateway
@@ -519,7 +519,7 @@ resource "aws_route" "hub_nat_to_tgw" {
 ## AWS Network Firewall 
 Once [VPC](#vpc) is ready, we're going to create AWS Network Firewall for your VPC that restricts outbound http/s traffic to an approved set of Fully Qualified Domain Names (FQDNs).
 
-![AWS Network Firewall](../images/aws-e2-firewall-config.png)
+![AWS Network Firewall](https://raw.githubusercontent.com/databrickslabs/terraform-provider-databricks/master/docs/images/aws-e2-firewall-config.png)
 
 ### AWS Firewall Rule Groups
 

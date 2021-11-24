@@ -1065,16 +1065,15 @@ func TestListNodeTypes(t *testing.T) {
 
 	ctx := context.Background()
 	api := NewClustersAPI(ctx, client)
-	nodeType := api.GetSmallestNodeType(NodeTypeRequest{SupportPortForwarding: true})
-	assert.Equal(t, nodeType, defaultSmallestNodeType(api))
-	nodeType = api.GetSmallestNodeType(NodeTypeRequest{PhotonWorkerCapable: true})
-	assert.Equal(t, nodeType, defaultSmallestNodeType(api))
-	nodeType = api.GetSmallestNodeType(NodeTypeRequest{PhotonDriverCapable: true})
-	assert.Equal(t, nodeType, defaultSmallestNodeType(api))
-	nodeType = api.GetSmallestNodeType(NodeTypeRequest{IsIOCacheEnabled: true})
-	assert.Equal(t, nodeType, defaultSmallestNodeType(api))
-	nodeType = api.GetSmallestNodeType(NodeTypeRequest{Category: "Storage Optimized"})
-	assert.Equal(t, nodeType, defaultSmallestNodeType(api))
+	assert.Equal(t, api.GetSmallestNodeType(NodeTypeRequest{SupportPortForwarding: true}), api.defaultSmallestNodeType())
+	assert.Equal(t, api.GetSmallestNodeType(NodeTypeRequest{PhotonWorkerCapable: true}), api.defaultSmallestNodeType())
+	assert.Equal(t, api.GetSmallestNodeType(NodeTypeRequest{PhotonDriverCapable: true}), api.defaultSmallestNodeType())
+	assert.Equal(t, api.GetSmallestNodeType(NodeTypeRequest{IsIOCacheEnabled: true}), api.defaultSmallestNodeType())
+	assert.Equal(t, api.GetSmallestNodeType(NodeTypeRequest{Category: "Storage Optimized"}), api.defaultSmallestNodeType())
+	assert.Equal(t, api.GetSmallestNodeType(NodeTypeRequest{MinMemoryGB: 100500}), api.defaultSmallestNodeType())
+	assert.Equal(t, api.GetSmallestNodeType(NodeTypeRequest{GBPerCore: 100500}), api.defaultSmallestNodeType())
+	assert.Equal(t, api.GetSmallestNodeType(NodeTypeRequest{MinCores: 100500}), api.defaultSmallestNodeType())
+	assert.Equal(t, api.GetSmallestNodeType(NodeTypeRequest{LocalDisk: true}), "Standard_F4s")
 }
 
 func TestClusterState_CanReach(t *testing.T) {
@@ -1162,4 +1161,62 @@ func TestClusterState_CanReach(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestFailureOfPermanentDeleteOnCreateFailure(t *testing.T) {
+	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
+		{
+			Method:   "POST",
+			Resource: "/api/2.0/clusters/create",
+			Response: Cluster{
+				ClusterID: "abc",
+			},
+		},
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/clusters/get?cluster_id=abc",
+			Status:   418,
+			Response: common.APIError{
+				ErrorCode: "TEST",
+				Message:   "nothing",
+			},
+		},
+		{
+			Method:   "POST",
+			Resource: "/api/2.0/clusters/delete",
+		},
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/clusters/get?cluster_id=abc",
+			Response: ClusterInfo{
+				State: ClusterStateTerminated,
+			},
+		},
+		{
+			Method:   "POST",
+			Resource: "/api/2.0/clusters/permanent-delete",
+			Status:   418,
+			Response: common.APIError{
+				ErrorCode: "TEST",
+				Message:   "You should unpin the cluster first",
+			},
+		},
+		{
+			Method:   "POST",
+			Resource: "/api/2.0/clusters/unpin",
+			Status:   418,
+			Response: common.NotFound("missing"),
+		},
+	}, func(ctx context.Context, client *common.DatabricksClient) {
+		a := NewClustersAPI(ctx, client)
+		_, err := a.Create(Cluster{})
+		assert.EqualError(t, err, "missing")
+	})
+}
+
+func TestWrapMissingClusterError(t *testing.T) {
+	assert.EqualError(t, wrapMissingClusterError(fmt.Errorf("x"), "abc"), "x")
+	assert.EqualError(t, wrapMissingClusterError(common.APIError{
+		Message: "Cluster abc does not exist",
+	}, "abc"), "Cluster abc does not exist")
 }

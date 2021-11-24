@@ -18,6 +18,7 @@ import (
 	"github.com/databrickslabs/terraform-provider-databricks/mlflow"
 	"github.com/databrickslabs/terraform-provider-databricks/jobs"
 	"github.com/databrickslabs/terraform-provider-databricks/mws"
+	"github.com/databrickslabs/terraform-provider-databricks/permissions"
 	"github.com/databrickslabs/terraform-provider-databricks/pipelines"
 	"github.com/databrickslabs/terraform-provider-databricks/policies"
 	"github.com/databrickslabs/terraform-provider-databricks/pools"
@@ -74,7 +75,7 @@ func DatabricksProvider() *schema.Provider {
 			"databricks_mws_workspaces":              mws.ResourceWorkspace(),
 			"databricks_notebook":                    workspace.ResourceNotebook(),
 			"databricks_obo_token":                   identity.ResourceOboToken(),
-			"databricks_permissions":                 access.ResourcePermissions(),
+			"databricks_permissions":                 permissions.ResourcePermissions(),
 			"databricks_pipeline":                    pipelines.ResourcePipeline(),
 			"databricks_repo":                        workspace.ResourceRepo(),
 			"databricks_secret":                      access.ResourceSecret(),

@@ -3,6 +3,7 @@ package clusters
 import (
 	"testing"
 
+	"github.com/databrickslabs/terraform-provider-databricks/common"
 	"github.com/databrickslabs/terraform-provider-databricks/qa"
 	"github.com/stretchr/testify/assert"
 )
@@ -161,4 +162,18 @@ func TestNodeTypeCategory(t *testing.T) {
 	}.Apply(t)
 	assert.NoError(t, err)
 	assert.Equal(t, "Random_02", d.Id())
+}
+
+func TestSmallestNodeTypeClouds(t *testing.T) {
+	assert.Equal(t, "Standard_D3_v2", ClustersAPI{
+		client: &common.DatabricksClient{
+			Host: "foo.azuredatabricks.net",
+		},
+	}.defaultSmallestNodeType())
+
+	assert.Equal(t, "n1-standard-4", ClustersAPI{
+		client: &common.DatabricksClient{
+			Host: "foo.gcp.databricks.com",
+		},
+	}.defaultSmallestNodeType())
 }

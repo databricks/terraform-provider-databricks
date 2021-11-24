@@ -584,11 +584,6 @@ func (a ClustersAPI) StartAndGetInfo(clusterID string) (ClusterInfo, error) {
 	return a.waitForClusterStatus(clusterID, ClusterStateRunning)
 }
 
-// Restart restart a Spark cluster given its ID. If the cluster is not in a RUNNING state, nothing will happen.
-func (a ClustersAPI) Restart(clusterID string) error {
-	return a.client.Post(a.context, "/clusters/restart", ClusterID{ClusterID: clusterID}, nil)
-}
-
 func wrapMissingClusterError(err error, id string) error {
 	if err == nil {
 		return nil

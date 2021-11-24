@@ -15,6 +15,7 @@ import (
 	"github.com/databrickslabs/terraform-provider-databricks/commands"
 	"github.com/databrickslabs/terraform-provider-databricks/common"
 	"github.com/databrickslabs/terraform-provider-databricks/identity"
+	"github.com/databrickslabs/terraform-provider-databricks/mlflow"
 	"github.com/databrickslabs/terraform-provider-databricks/jobs"
 	"github.com/databrickslabs/terraform-provider-databricks/mws"
 	"github.com/databrickslabs/terraform-provider-databricks/permissions"
@@ -61,6 +62,8 @@ func DatabricksProvider() *schema.Provider {
 			"databricks_instance_profile":            identity.ResourceInstanceProfile(),
 			"databricks_ip_access_list":              access.ResourceIPAccessList(),
 			"databricks_job":                         jobs.ResourceJob(),
+ 			"databricks_mlflow_experiment":           mlflow.ResourceMLFlowExperiment(),
+			"databricks_mlflow_model":                mlflow.ResourceMLFlowModel(),
 			"databricks_mount":                       storage.ResourceDatabricksMount(),
 			"databricks_mws_customer_managed_keys":   mws.ResourceCustomerManagedKey(),
 			"databricks_mws_credentials":             mws.ResourceCredentials(),

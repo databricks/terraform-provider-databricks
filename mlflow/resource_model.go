@@ -68,7 +68,6 @@ func (a ModelsAPI) Delete(m *Model) error {
 	return a.client.Delete(a.context, "/mlflow/registered-models/delete", m)
 }
 
-// ResourceDashboard ...
 func ResourceMLFlowModel() *schema.Resource {
 	s := common.StructToSchema(
 		Model{},

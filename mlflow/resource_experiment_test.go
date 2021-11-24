@@ -200,8 +200,8 @@ func TestExperimentUpdatePostError(t *testing.T) {
 }
 
 func TestExperimentDelete(t *testing.T) {
-	r := Experiment{
-		ExperimentId: "123456790123456",
+	r := map[string]string{
+		"experiment_id": "123456790123456",
 	}
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
@@ -213,19 +213,19 @@ func TestExperimentDelete(t *testing.T) {
 		},
 		Resource: ResourceMLFlowExperiment(),
 		Delete:   true,
-		ID:       r.ExperimentId,
+		ID:       r["experiment_id"],
 		HCL: `
 		name = "xyz"
 		`,
 	}.Apply(t)
 
 	assert.NoError(t, err, err)
-	assert.Equal(t, r.ExperimentId, d.Id(), "Resource ID should not be empty")
+	assert.Equal(t, r["experiment_id"], d.Id(), "Resource ID should not be empty")
 }
 
 func TestExperimentDeleteError(t *testing.T) {
-	r := Experiment{
-		ExperimentId: "123456790123456",
+	r := map[string]string{
+		"experiment_id": "123456790123456",
 	}
 	_, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
@@ -238,7 +238,7 @@ func TestExperimentDeleteError(t *testing.T) {
 		},
 		Resource: ResourceMLFlowExperiment(),
 		Delete:   true,
-		ID:       r.ExperimentId,
+		ID:       r["experiment_id"],
 		HCL: `
 		name = "xyz"
 		`,

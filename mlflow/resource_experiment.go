@@ -61,8 +61,10 @@ func (a ExperimentsAPI) Update(e *experimentUpdate) error {
 }
 
 // Delete ...
-func (a ExperimentsAPI) Delete(e *Experiment) error {
-	return a.client.Post(a.context, "/mlflow/experiments/delete", e, &e)
+func (a ExperimentsAPI) Delete(id string) error {
+	return a.client.Post(a.context, "/mlflow/experiments/delete", map[string]string{
+		"experiment_id": id,
+	}, nil)
 }
 
 func ResourceMLFlowExperiment() *schema.Resource {
@@ -100,8 +102,7 @@ func ResourceMLFlowExperiment() *schema.Resource {
 			return NewExperimentsAPI(ctx, c).Update(&updateDoc)
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			e := Experiment{ExperimentId: d.Id()}
-			return NewExperimentsAPI(ctx, c).Delete(&e)
+			return NewExperimentsAPI(ctx, c).Delete(d.Id())
 		},
 		StateUpgraders: []schema.StateUpgrader{},
 		Schema:         s,

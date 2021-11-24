@@ -48,6 +48,10 @@ Databricks SQL
 * Manage [dashboards](resources/sql_dashboard.md) and their [widgets](resources/sql_widget.md).
 * Provide [global configuration for all SQL Endpoints](docs/resources/sql_global_config.md)
 
+MLFlow
+* Create [MLFlow models](resources/mlflow_model.md).
+* Create [MLFlow experiments](resources/mlflow_experiment.md).
+
 ## Example Usage
 
 ```hcl

@@ -36,9 +36,32 @@ resource "random_string" "naming" {
   upper   = false
   length  = 6
 }
+variable "whitelisted_urls" {
+  default = [".pypi.org", ".pythonhosted.org", ".cran.r-project.org"]
+}
+
+variable "db_web_app" {
+  default = "frankfurt.cloud.databricks.com"
+}
+
+variable "db_tunnel" {
+  default = "tunnel.eu-central-1.cloud.databricks.com"
+}
+
+variable "db_rds" {
+  default = "mdv2llxgl8lou0.ceptxxgorjrc.eu-central-1.rds.amazonaws.com"
+}
+
+variable "db_control_plane" {
+  default = "18.159.44.32/28"
+}
+
+variable "prefix" {
+  default = "demo"
+}
 
 locals {
-  prefix                           = "demo${random_string.naming.result}"
+  prefix                           = "${var.prefix}${random_string.naming.result}"
   spoke_db_private_subnets_cidr    = [cidrsubnet(var.spoke_cidr_block, 3, 0), cidrsubnet(var.spoke_cidr_block, 3, 1)]
   spoke_tgw_private_subnets_cidr   = [cidrsubnet(var.spoke_cidr_block, 3, 2), cidrsubnet(var.spoke_cidr_block, 3, 3)]
   hub_tgw_private_subnets_cidr     = [cidrsubnet(var.hub_cidr_block, 3, 0)]
@@ -47,12 +70,8 @@ locals {
   sg_egress_ports                  = [443, 3306, 6666]
   sg_ingress_protocol              = ["tcp", "udp"]
   sg_egress_protocol               = ["tcp", "udp"]
-  whitelisted_urls                 = [".pypi.org", ".pythonhosted.org", ".cran.r-project.org"]
-  db_web_app                       = "frankfurt.cloud.databricks.com"
-  db_tunnel                        = "tunnel.eu-central-1.cloud.databricks.com"
-  db_rds                           = "mdv2llxgl8lou0.ceptxxgorjrc.eu-central-1.rds.amazonaws.com"
-  db_control_plane                 = "18.159.44.32/28"
   availability_zones               = ["${var.region}a", "${var.region}b"]
+  db_root_bucket                   = "${var.prefix}${random_string.naming.result}-rootbucket.s3.amazonaws.com"
 }
 ```
 
@@ -220,7 +239,12 @@ resource "aws_security_group" "default_spoke_sg" {
 
   tags = var.tags
 }
+```
 
+### Register AWS VPC as the databricks_mws_networks resource 
+Now, we configure VPC & subnets for new workspaces within AWS.
+
+```hcl
 resource "databricks_mws_networks" "this" {
   provider           = databricks.mws
   account_id         = var.databricks_account_id
@@ -238,7 +262,7 @@ For STS, S3 and Kinesis, it's important to create VPC gateway or interface endpo
 /* Create VPC Endpoint */
 module "vpc_endpoints" {
   source  = "terraform-aws-modules/vpc/aws//modules/vpc-endpoints"
-  version = "3.2.0"
+  version = "3.11.0"
 
   vpc_id             = aws_vpc.spoke_vpc.id
   security_group_ids = [aws_security_group.default_spoke_sg.id]
@@ -535,7 +559,7 @@ resource "aws_networkfirewall_rule_group" "databricks_fqdns_rg" {
       rules_source_list {
         generated_rules_type = "ALLOWLIST"
         target_types         = ["TLS_SNI", "HTTP_HOST"]
-        targets              = concat([local.db_web_app, local.db_tunnel, local.db_rds], local.whitelisted_urls)
+        targets              = concat([var.db_web_app, var.db_tunnel, var.db_rds,local.db_root_bucket], var.whitelisted_urls)
       }
     }
     rule_variables {
@@ -580,7 +604,7 @@ resource "aws_networkfirewall_rule_group" "allow_db_cpl_protocols_rg" {
         content {
           action = "PASS"
           header {
-            destination      = local.db_control_plane
+            destination      = var.db_control_plane
             destination_port = "443"
             protocol         = stateful_rule.value
             direction        = "ANY"

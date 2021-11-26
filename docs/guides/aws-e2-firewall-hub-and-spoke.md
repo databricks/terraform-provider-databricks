@@ -6,7 +6,7 @@ page_title: "Provisioning AWS Databricks E2 with a Hub & Spoke firewall for data
 
 You can provision multiple Databricks workspaces with Terraform and where many Databricks workspaces are deployed, we recommend a hub and spoke topology reference architecture, powered by AWS Transit Gateway. The hub will consist of a central inspection and egress virtual private cloud (VPC), while the Spoke VPC houses federated Databricks workspaces for different business units or segregated teams. In this way, you create your own version of a centralized deployment model for your egress architecture, as is recommended for large enterprises. For more information please visit [Data Exfiltration Protection With Databricks on AWS](https://databricks.com/blog/2021/02/02/data-exfiltration-protection-with-databricks-on-aws.html).
 
-![Data Exfiltration](../images/aws-exfiltration-replace-1.png)
+![Data Exfiltration](https://raw.githubusercontent.com/databrickslabs/terraform-provider-databricks/master/docs/images/aws-exfiltration-replace-1.png)
 
 ## Provider initialization for E2 workspaces
 
@@ -36,9 +36,32 @@ resource "random_string" "naming" {
   upper   = false
   length  = 6
 }
+variable "whitelisted_urls" {
+  default = [".pypi.org", ".pythonhosted.org", ".cran.r-project.org"]
+}
+
+variable "db_web_app" {
+  default = "frankfurt.cloud.databricks.com"
+}
+
+variable "db_tunnel" {
+  default = "tunnel.eu-central-1.cloud.databricks.com"
+}
+
+variable "db_rds" {
+  default = "mdv2llxgl8lou0.ceptxxgorjrc.eu-central-1.rds.amazonaws.com"
+}
+
+variable "db_control_plane" {
+  default = "18.159.44.32/28"
+}
+
+variable "prefix" {
+  default = "demo"
+}
 
 locals {
-  prefix                           = "demo${random_string.naming.result}"
+  prefix                           = "${var.prefix}${random_string.naming.result}"
   spoke_db_private_subnets_cidr    = [cidrsubnet(var.spoke_cidr_block, 3, 0), cidrsubnet(var.spoke_cidr_block, 3, 1)]
   spoke_tgw_private_subnets_cidr   = [cidrsubnet(var.spoke_cidr_block, 3, 2), cidrsubnet(var.spoke_cidr_block, 3, 3)]
   hub_tgw_private_subnets_cidr     = [cidrsubnet(var.hub_cidr_block, 3, 0)]
@@ -47,12 +70,8 @@ locals {
   sg_egress_ports                  = [443, 3306, 6666]
   sg_ingress_protocol              = ["tcp", "udp"]
   sg_egress_protocol               = ["tcp", "udp"]
-  whitelisted_urls                 = [".pypi.org", ".pythonhosted.org", ".cran.r-project.org"]
-  db_web_app                       = "frankfurt.cloud.databricks.com"
-  db_tunnel                        = "tunnel.eu-central-1.cloud.databricks.com"
-  db_rds                           = "mdv2llxgl8lou0.ceptxxgorjrc.eu-central-1.rds.amazonaws.com"
-  db_control_plane                 = "18.159.44.32/28"
   availability_zones               = ["${var.region}a", "${var.region}b"]
+  db_root_bucket                   = "${var.prefix}${random_string.naming.result}-rootbucket.s3.amazonaws.com"
 }
 ```
 
@@ -102,7 +121,7 @@ The very first step is Hub & Spoke VPC creation. Please consult [main documentat
 
 First step is to create Spoke VPC which houses federated Databricks workspaces for different business units or segregated teams.
 
-![SpokeVPC](../images/aws-e2-firewall-spoke-vpc.png)
+![SpokeVPC](https://raw.githubusercontent.com/databrickslabs/terraform-provider-databricks/master/docs/images/aws-e2-firewall-spoke-vpc.png)
 
 ```hcl
 data "aws_availability_zones" "available" {}
@@ -220,7 +239,12 @@ resource "aws_security_group" "default_spoke_sg" {
 
   tags = var.tags
 }
+```
 
+### Register AWS VPC as the databricks_mws_networks resource 
+Now, we configure VPC & subnets for new workspaces within AWS.
+
+```hcl
 resource "databricks_mws_networks" "this" {
   provider           = databricks.mws
   account_id         = var.databricks_account_id
@@ -238,7 +262,7 @@ For STS, S3 and Kinesis, it's important to create VPC gateway or interface endpo
 /* Create VPC Endpoint */
 module "vpc_endpoints" {
   source  = "terraform-aws-modules/vpc/aws//modules/vpc-endpoints"
-  version = "3.2.0"
+  version = "3.11.0"
 
   vpc_id             = aws_vpc.spoke_vpc.id
   security_group_ids = [aws_security_group.default_spoke_sg.id]
@@ -280,7 +304,7 @@ module "vpc_endpoints" {
 ### Hub VPC
 The hub will consist of a central inspection and egress virtual private cloud (VPC). We're going to create a central inspection/egress VPC, which once we’ve finished should look like this:
 
-![HubVPC](../images/aws-e2-firewall-hub-vpc.png)
+![HubVPC](https://raw.githubusercontent.com/databrickslabs/terraform-provider-databricks/master/docs/images/aws-e2-firewall-hub-vpc.png)
 
 ```hcl
 /* Create VPC */
@@ -438,7 +462,7 @@ Now that our spoke and inspection/egress VPCs are ready to go, all you need to d
 First, we're going to create a Transit Gateway and link our Databricks data plane via TGW subnets.
 All of the logic that determines what routes where via a Transit Gateway is encapsulated within Transit Gateway Route Tables. We’re going to create some TGW routes tables for our Hub & Spoke networks.
 
-![TransitGateway](../images/aws-e2-firewall-tgw.png)
+![TransitGateway](https://raw.githubusercontent.com/databrickslabs/terraform-provider-databricks/master/docs/images/aws-e2-firewall-tgw.png)
 
 ```hcl
 //Create transit gateway
@@ -519,7 +543,7 @@ resource "aws_route" "hub_nat_to_tgw" {
 ## AWS Network Firewall 
 Once [VPC](#vpc) is ready, we're going to create AWS Network Firewall for your VPC that restricts outbound http/s traffic to an approved set of Fully Qualified Domain Names (FQDNs).
 
-![AWS Network Firewall](../images/aws-e2-firewall-config.png)
+![AWS Network Firewall](https://raw.githubusercontent.com/databrickslabs/terraform-provider-databricks/master/docs/images/aws-e2-firewall-config.png)
 
 ### AWS Firewall Rule Groups
 
@@ -535,7 +559,7 @@ resource "aws_networkfirewall_rule_group" "databricks_fqdns_rg" {
       rules_source_list {
         generated_rules_type = "ALLOWLIST"
         target_types         = ["TLS_SNI", "HTTP_HOST"]
-        targets              = concat([local.db_web_app, local.db_tunnel, local.db_rds], local.whitelisted_urls)
+        targets              = concat([var.db_web_app, var.db_tunnel, var.db_rds,local.db_root_bucket], var.whitelisted_urls)
       }
     }
     rule_variables {
@@ -580,7 +604,7 @@ resource "aws_networkfirewall_rule_group" "allow_db_cpl_protocols_rg" {
         content {
           action = "PASS"
           header {
-            destination      = local.db_control_plane
+            destination      = var.db_control_plane
             destination_port = "443"
             protocol         = stateful_rule.value
             direction        = "ANY"

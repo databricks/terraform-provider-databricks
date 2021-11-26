@@ -8,7 +8,7 @@ You can provision multiple Databricks workspaces with Terraform. This example sh
 
 For more information please visit [Data Exfiltration Protection With Databricks on AWS](https://databricks.com/blog/2021/02/02/data-exfiltration-protection-with-databricks-on-aws.html).
 
-![Data Exfiltration_Workspace](../images/aws-e2-firewall-workspace.png)
+![Data Exfiltration_Workspace](https://raw.githubusercontent.com/databrickslabs/terraform-provider-databricks/master/docs/images/aws-e2-firewall-workspace.png)
 
 ## Provider initialization for E2 workspaces
 
@@ -37,20 +37,40 @@ resource "random_string" "naming" {
   length  = 6
 }
 
+variable "whitelisted_urls" {
+  default = [".pypi.org", ".pythonhosted.org", ".cran.r-project.org"]
+}
+
+variable "db_web_app" {
+  default = "london.cloud.databricks.com"
+}
+
+variable "db_tunnel" {
+  default = "tunnel.eu-west-2.cloud.databricks.com"
+}
+
+variable "db_rds" {
+  default = "mdio2468d9025m.c6fvhwk6cqca.eu-west-2.rds.amazonaws.com"
+}
+
+variable "db_control_plane" {
+  default = "18.134.65.240/28"
+}
+
+variable "prefix" {
+  default = "demo"
+}
+
 locals {
-  prefix = "demo${random_string.naming.result}"
+  prefix                       = "${var.prefix}${random_string.naming.result}"
   private_subnets_cidr         = [cidrsubnet(var.cidr_block, 3, 0), cidrsubnet(var.cidr_block, 3, 1)]
-  nat_public_subnets_cidr      = [cidrsubnet(var.cidr_block, 3, 2),cidrsubnet(var.cidr_block, 3, 3)]
+  nat_public_subnets_cidr      = [cidrsubnet(var.cidr_block, 3, 2), cidrsubnet(var.cidr_block, 3, 3)]
   firewall_public_subnets_cidr = [cidrsubnet(var.cidr_block, 3, 4)]
   sg_egress_ports              = [443, 3306, 6666]
   sg_ingress_protocol          = ["tcp", "udp"]
   sg_egress_protocol           = ["tcp", "udp"]
   availability_zones           = ["${var.region}a", "${var.region}b"]
-  whitelisted_urls             = [".pypi.org", ".pythonhosted.org", ".cran.r-project.org"]
-  db_web_app = "london.cloud.databricks.com"
-  db_tunnel = "tunnel.eu-west-2.cloud.databricks.com"
-  db_rds = "mdio2468d9025m.c6fvhwk6cqca.eu-west-2.rds.amazonaws.com"
-  db_control_plane = "18.134.65.240/28"
+  db_root_bucket               = "${var.prefix}${random_string.naming.result}-rootbucket.s3.amazonaws.com"
 }
 ```
 
@@ -225,7 +245,11 @@ resource "aws_security_group" "default_sg" {
 
   tags = var.tags
 }
+```
 
+### Register AWS VPC as the databricks_mws_networks resource 
+Now, we configure VPC & subnets for new workspaces within AWS.
+```hcl
 resource "databricks_mws_networks" "this" {
   provider           = databricks.mws
   account_id         = var.databricks_account_id
@@ -320,7 +344,7 @@ For STS, S3 and Kinesis, it's important to create VPC gateway or interface endpo
 ```hcl
 module "vpc_endpoints" {
   source  = "terraform-aws-modules/vpc/aws//modules/vpc-endpoints"
-  version = "3.2.0"
+  version = "3.11.0"
 
   vpc_id             = aws_vpc.db_vpc.id
   security_group_ids = [aws_security_group.default_sg.id]
@@ -335,7 +359,7 @@ module "vpc_endpoints" {
       tags            = {
         Name = "${local.prefix}-s3-vpc-endpoint"
       }
-    }
+    },
     sts = {
       service             = "sts"
       private_dns_enabled = true
@@ -357,6 +381,7 @@ module "vpc_endpoints" {
 
   tags = var.tags
 }
+
 ```
 
 ## AWS Network Firewall
@@ -376,7 +401,7 @@ resource "aws_networkfirewall_rule_group" "databricks_fqdns_rg" {
       rules_source_list {
         generated_rules_type = "ALLOWLIST"
         target_types         = ["TLS_SNI", "HTTP_HOST"]
-        targets              = concat([local.db_web_app, local.db_tunnel, local.db_rds], local.whitelisted_urls)
+        targets              = concat([var.db_web_app, var.db_tunnel, var.db_rds,local.db_root_bucket], var.whitelisted_urls)
       }
     }
     rule_variables {
@@ -415,7 +440,7 @@ resource "aws_networkfirewall_rule_group" "allow_db_cpl_protocols_rg" {
         content {
           action = "PASS"
           header {
-            destination      = local.db_control_plane
+            destination      = var.db_control_plane
             destination_port = "443"
             protocol         = stateful_rule.value
             direction        = "ANY"

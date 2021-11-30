@@ -858,7 +858,7 @@ func TestResourceClusterUpdate_Error(t *testing.T) {
 	assert.Equal(t, "abc", d.Id())
 }
 
-func TestResourceClusterUpdate_AutoAzNoChange(t *testing.T) {
+func TestResourceClusterUpdate_AutoAz(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{

@@ -200,6 +200,7 @@ func adjustPipelineResourceSchema(m map[string]*schema.Schema) map[string]*schem
 	cluster, _ := m["cluster"].Elem.(*schema.Resource)
 	clustersSchema := cluster.Schema
 	clustersSchema["spark_conf"].DiffSuppressFunc = clusters.SparkConfDiffSuppressFunc
+	clustersSchema["aws_attributes"].DiffSuppressFunc = clusters.AwsAttribsDiffSuppressFunc
 
 	awsAttributes, _ := clustersSchema["aws_attributes"].Elem.(*schema.Resource)
 	awsAttributesSchema := awsAttributes.Schema

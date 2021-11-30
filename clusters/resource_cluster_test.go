@@ -858,6 +858,101 @@ func TestResourceClusterUpdate_Error(t *testing.T) {
 	assert.Equal(t, "abc", d.Id())
 }
 
+func TestResourceClusterUpdate_AutoAz(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:       "GET",
+				Resource:     "/api/2.0/clusters/get?cluster_id=abc",
+				ReuseRequest: true,
+				Response: ClusterInfo{
+					ClusterID:              "abc",
+					NumWorkers:             100,
+					ClusterName:            "Shared Autoscaling",
+					SparkVersion:           "7.1-scala12",
+					NodeTypeID:             "i3.xlarge",
+					AutoterminationMinutes: 15,
+					State:                  ClusterStateRunning,
+					AwsAttributes: &AwsAttributes{
+						Availability:  "SPOT",
+						FirstOnDemand: 1,
+						ZoneID:        "us-west-2a",
+					},
+				},
+			},
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/clusters/events",
+				ExpectedRequest: EventsRequest{
+					ClusterID:  "abc",
+					Limit:      1,
+					Order:      SortDescending,
+					EventTypes: []ClusterEventType{EvTypePinned, EvTypeUnpinned},
+				},
+				Response: EventsResponse{
+					Events:     []ClusterEvent{},
+					TotalCount: 0,
+				},
+			},
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/clusters/start",
+				ExpectedRequest: ClusterID{
+					ClusterID: "abc",
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/libraries/cluster-status?cluster_id=abc",
+				Response: libraries.ClusterLibraryStatuses{
+					LibraryStatuses: []libraries.LibraryStatus{},
+				},
+			},
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/clusters/edit",
+				ExpectedRequest: Cluster{
+					AutoterminationMinutes: 15,
+					ClusterID:              "abc",
+					NumWorkers:             100,
+					ClusterName:            "Shared Autoscaling",
+					SparkVersion:           "7.1-scala12",
+					NodeTypeID:             "i3.xlarge",
+					AwsAttributes: &AwsAttributes{
+						Availability:  "SPOT",
+						FirstOnDemand: 1,
+						ZoneID:        "auto",
+					},
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/libraries/cluster-status?cluster_id=abc",
+				Response: libraries.ClusterLibraryStatuses{
+					LibraryStatuses: []libraries.LibraryStatus{},
+				},
+			},
+		},
+		ID:       "abc",
+		Update:   true,
+		Resource: ResourceCluster(),
+		HCL: `
+		autotermination_minutes = 15
+		cluster_name = "Shared Autoscaling"
+		spark_version = "7.1-scala12"
+		node_type_id = "i3.xlarge"
+		num_workers = 100,
+		aws_attributes {
+			availability            = "SPOT"
+			zone_id                 = "auto"
+			first_on_demand         = 1
+		}
+		`,
+	}.Apply(t)
+	assert.NoError(t, err, err)
+	assert.Equal(t, "abc", d.Id(), "Id should be the same as in reading")
+}
+
 func TestResourceClusterDelete(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{

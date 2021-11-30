@@ -47,9 +47,18 @@ func SparkConfDiffSuppressFunc(k, old, new string, d *schema.ResourceData) bool 
 	return false
 }
 
+func AwsAttribsDiffSuppressFunc(k, old, new string, d *schema.ResourceData) bool {
+	if k == "aws_attributes.0.zone_id" && old != "" && new == "auto" {
+		log.Printf("[DEBUG] Suppressing diff for k=%#v old=%#v new=%#v", k, old, new)
+		return true
+	}
+	return false
+}
+
 func resourceClusterSchema() map[string]*schema.Schema {
 	return common.StructToSchema(Cluster{}, func(s map[string]*schema.Schema) map[string]*schema.Schema {
 		s["spark_conf"].DiffSuppressFunc = SparkConfDiffSuppressFunc
+		s["aws_attributes"].DiffSuppressFunc = AwsAttribsDiffSuppressFunc
 		// adds `library` configuration block
 		s["library"] = common.StructToSchema(libraries.ClusterLibraryList{},
 			func(ss map[string]*schema.Schema) map[string]*schema.Schema {

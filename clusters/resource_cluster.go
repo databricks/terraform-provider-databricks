@@ -3,7 +3,6 @@ package clusters
 import (
 	"context"
 	"log"
-	"strings"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -49,8 +48,7 @@ func SparkConfDiffSuppressFunc(k, old, new string, d *schema.ResourceData) bool 
 }
 
 func AwsAttribsDiffSuppressFunc(k, old, new string, d *schema.ResourceData) bool {
-	if strings.HasPrefix(k, "aws_attributes.") &&
-		strings.HasSuffix(k, ".zone_id") && new == "auto" {
+	if k == "aws_attributes.0.zone_id" && old != "" && new == "auto" {
 		log.Printf("[DEBUG] Suppressing diff for k=%#v old=%#v new=%#v", k, old, new)
 		return true
 	}

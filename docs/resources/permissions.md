@@ -511,6 +511,8 @@ Exactly one of the following attributes is required:
 - `directory_path` - path of directory
 - `notebook_id` - ID of [notebook](notebook.md) within workspace
 - `notebook_path` - path of notebook
+- `repo_id` - [repo](repo.md) id
+- `repo_path` - path of databricks repo directory(`/Repos/<username>/...`)
 - `cluster_policy_id` - [cluster policy](cluster_policy.md) id
 - `instance_pool_id` - [instance pool](instance_pool.md) id
 - `authorization` - either [`tokens`](https://docs.databricks.com/administration-guide/access-control/tokens.html) or [`passwords`](https://docs.databricks.com/administration-guide/users-groups/single-sign-on/index.html#configure-password-permission).

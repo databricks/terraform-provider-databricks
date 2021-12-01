@@ -86,3 +86,47 @@ func TestAccDatabricksPermissionsResourceFullLifecycle(t *testing.T) {
 		},
 	})
 }
+
+func TestAccDatabricksReposPermissionsResourceFullLifecycle(t *testing.T) {
+	randomName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
+	acceptance.AccTest(t, resource.TestCase{
+		Steps: []resource.TestStep{
+			{
+				Config: fmt.Sprintf(`
+				resource "databricks_repo" "this" {
+					url = "https://github.com/databrickslabs/tempo.git"
+				}
+				resource "databricks_group" "first" {
+					display_name = "First %[1]s"
+				}
+				resource "databricks_group" "second" {
+					display_name = "Second %[1]s"
+				}
+				resource "databricks_permissions" "dummy" {
+					repo_path = databricks_repo.this.path
+					access_control {
+						group_name = databricks_group.first.display_name
+						permission_level = "CAN_MANAGE"
+					}
+					access_control {
+						group_name = databricks_group.second.display_name
+						permission_level = "CAN_RUN"
+					}
+				}`, randomName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("databricks_permissions.dummy",
+						"object_type", "repo"),
+					acceptance.ResourceCheck("databricks_permissions.dummy",
+						func(ctx context.Context, client *common.DatabricksClient, id string) error {
+							permissions, err := permissions.NewPermissionsAPI(ctx, client).Read(id)
+							if err != nil {
+								return err
+							}
+							assert.Len(t, permissions.AccessControlList, 4)
+							return nil
+						}),
+				),
+			},
+		},
+	})
+}

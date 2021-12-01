@@ -10,6 +10,7 @@
 * `DATABRICKS_AZURE_CLIENT_SECRET` environment variable is no longer having any effect in favor of just using `ARM_CLIENT_SECRET`.
 * `DATABRICKS_AZURE_CLIENT_ID` environment variable is no longer having any effect in favor of just using `ARM_CLIENT_ID`.
 * `DATABRICKS_AZURE_TENANT_ID` environment variable is no longer having any effect in favor of just using `ARM_TENANT_ID`.
+* Added support for `repo_path` to `databricks_permissions` resource ([#875](https://github.com/databrickslabs/terraform-provider-databricks/issues/875)).
 
 ## 0.3.11
 

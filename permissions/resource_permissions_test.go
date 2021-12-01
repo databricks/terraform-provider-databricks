@@ -911,3 +911,86 @@ func TestDeleteMissing(t *testing.T) {
 		assert.Nil(t, diags)
 	})
 }
+
+func TestResourcePermissionsCreate_RepoPath(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			me,
+			{
+				Method:   http.MethodGet,
+				Resource: "/api/2.0/workspace/get-status?path=%2FRepos%2FDevelopment%2FInit",
+				Response: workspace.ObjectStatus{
+					ObjectID:   988765,
+					ObjectType: "repo",
+				},
+			},
+			{
+				Method:   http.MethodPut,
+				Resource: "/api/2.0/permissions/repos/988765",
+				ExpectedRequest: AccessControlChangeList{
+					AccessControlList: []AccessControlChange{
+						{
+							UserName:        TestingUser,
+							PermissionLevel: "CAN_READ",
+						},
+					},
+				},
+			},
+			{
+				Method:   http.MethodGet,
+				Resource: "/api/2.0/permissions/repos/988765",
+				Response: ObjectACL{
+					ObjectID:   "/repos/988765",
+					ObjectType: "repo",
+					AccessControlList: []AccessControl{
+						{
+							UserName: TestingUser,
+							AllPermissions: []Permission{
+								{
+									PermissionLevel: "CAN_READ",
+									Inherited:       false,
+								},
+							},
+						},
+						{
+							UserName: TestingAdminUser,
+							AllPermissions: []Permission{
+								{
+									PermissionLevel: "CAN_RUN",
+									Inherited:       false,
+								},
+							},
+						},
+						{
+							UserName: TestingAdminUser,
+							AllPermissions: []Permission{
+								{
+									PermissionLevel: "CAN_MANAGE",
+									Inherited:       false,
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		Resource: ResourcePermissions(),
+		State: map[string]interface{}{
+			"repo_path": "/Repos/Development/Init",
+			"access_control": []interface{}{
+				map[string]interface{}{
+					"user_name":        TestingUser,
+					"permission_level": "CAN_READ",
+				},
+			},
+		},
+		Create: true,
+	}.Apply(t)
+
+	assert.NoError(t, err, err)
+	ac := d.Get("access_control").(*schema.Set)
+	require.Equal(t, 1, len(ac.List()))
+	firstElem := ac.List()[0].(map[string]interface{})
+	assert.Equal(t, TestingUser, firstElem["user_name"])
+	assert.Equal(t, "CAN_READ", firstElem["permission_level"])
+}

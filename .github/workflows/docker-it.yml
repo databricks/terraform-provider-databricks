@@ -8,7 +8,7 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: terraform-provider-it
+  IMAGE_NAME: databrickslabs/terraform-provider-it
 
 jobs:
   build-and-push-image:

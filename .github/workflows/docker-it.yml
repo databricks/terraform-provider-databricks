@@ -11,7 +11,7 @@ env:
   IMAGE_NAME: databrickslabs/terraform-provider-it
 
 jobs:
-  build-and-push-image:
+  docker-it:
     runs-on: ubuntu-latest
     permissions:
       contents: read

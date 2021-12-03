@@ -8,8 +8,10 @@ import (
 
 	"github.com/databrickslabs/terraform-provider-databricks/clusters"
 	"github.com/databrickslabs/terraform-provider-databricks/common"
+	"github.com/databrickslabs/terraform-provider-databricks/internal/compute"
 	"github.com/databrickslabs/terraform-provider-databricks/qa"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestAccListClustersIntegration(t *testing.T) {
@@ -24,16 +26,19 @@ func TestAccListClustersIntegration(t *testing.T) {
 	randomName := qa.RandomName()
 
 	cluster := clusters.Cluster{
-		NumWorkers:   1,
-		ClusterName:  "Terraform Integration Test " + randomName,
-		SparkVersion: clustersAPI.LatestSparkVersionOrDefault(clusters.SparkVersionRequest{Latest: true, LongTermSupport: true}),
-		// TODO: instance pools package
-		// InstancePoolID:         CommonInstancePoolID(),
+		NumWorkers:             1,
+		ClusterName:            "Terraform Integration Test " + randomName,
+		SparkVersion:           clustersAPI.LatestSparkVersionOrDefault(
+			clusters.SparkVersionRequest{
+				Latest: true, 
+				LongTermSupport: true,
+			}),
+		InstancePoolID:         compute.CommonInstancePoolID(),
 		IdempotencyToken:       "acc-list-" + randomName,
 		AutoterminationMinutes: 15,
 	}
 	clusterReadInfo, err := clustersAPI.Create(cluster)
-	assert.NoError(t, err, err)
+	require.NoError(t, err, err)
 	assert.True(t, clusterReadInfo.NumWorkers == cluster.NumWorkers)
 	assert.True(t, clusterReadInfo.ClusterName == cluster.ClusterName)
 	assert.True(t, reflect.DeepEqual(clusterReadInfo.SparkEnvVars, cluster.SparkEnvVars))

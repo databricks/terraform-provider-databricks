@@ -12,9 +12,9 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestAzureAccSP(t *testing.T) {
+func TestAccServicePrincipalOnAzure(t *testing.T) {
 	if cloud, ok := os.LookupEnv("CLOUD_ENV"); !ok || cloud != "azure" {
-		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
+		t.Skip("Test will only run with CLOUD_ENV=azure")
 	}
 
 	client := common.NewClientFromEnvironment()

@@ -108,7 +108,7 @@ resource "local_file" "function" {
         "name" : "nightly",
         "type" : "timerTrigger",
         "direction" : "in",
-        "schedule" : "0 20 10 * * 1-5"
+        "schedule" : "0 50 10 * * 1-5"
       }
     ]
   })

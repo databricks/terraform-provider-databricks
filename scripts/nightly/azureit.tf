@@ -108,7 +108,7 @@ resource "local_file" "function" {
         "name" : "nightly",
         "type" : "timerTrigger",
         "direction" : "in",
-        "schedule" : "0 50 10 * * 1-5"
+        "schedule" : "0 15 11-17 * * 1-5"
       }
     ]
   })
@@ -128,7 +128,7 @@ resource "local_file" "host" {
       "id" : "Microsoft.Azure.Functions.ExtensionBundle",
       "version" : "[2.*, 3.0.0)"
     },
-    "functionTimeout" : "00:00:30",
+    "functionTimeout" : "00:00:10",
     "healthMonitor" : {
       "enabled" : false
     },

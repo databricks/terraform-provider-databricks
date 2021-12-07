@@ -94,7 +94,7 @@ func TestAzureAccADLSv2MountGeneric(t *testing.T) {
 	}, client, mp.Name, client.AzureClientSecret)
 }
 
-func TestAzureAccBlobMountGeneric(t *testing.T) {
+func TestAccAzureBlobMountGeneric(t *testing.T) {
 	client, mp := mountPointThroughReusedCluster(t)
 	storageAccountName := qa.GetEnvOrSkipTest(t, "TEST_STORAGE_V2_ACCOUNT")
 	accountKey := qa.GetEnvOrSkipTest(t, "TEST_STORAGE_V2_KEY")

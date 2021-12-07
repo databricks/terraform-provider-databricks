@@ -54,7 +54,6 @@ func (a ModelsAPI) Read(name string) (*Model, error) {
 	if err != nil {
 		return nil, err
 	}
-
 	return &m.RegisteredModel, nil
 }
 
@@ -72,6 +71,7 @@ func ResourceMLFlowModel() *schema.Resource {
 	s := common.StructToSchema(
 		Model{},
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
+			delete(m, "latest_versions")
 			return m
 		})
 

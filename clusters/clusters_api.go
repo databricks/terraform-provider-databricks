@@ -330,7 +330,7 @@ type Cluster struct {
 	ClusterID   string `json:"cluster_id,omitempty"`
 	ClusterName string `json:"cluster_name,omitempty"`
 
-	SparkVersion              string     `json:"spark_version"` // TODO: perhaps make a default
+	SparkVersion              string     `json:"spark_version"`
 	NumWorkers                int32      `json:"num_workers" tf:"group:size"`
 	Autoscale                 *AutoScale `json:"autoscale,omitempty" tf:"group:size"`
 	EnableElasticDisk         bool       `json:"enable_elastic_disk,omitempty" tf:"computed"`
@@ -351,7 +351,7 @@ type Cluster struct {
 	CustomTags   map[string]string `json:"custom_tags,omitempty"`
 
 	SSHPublicKeys  []string                `json:"ssh_public_keys,omitempty" tf:"max_items:10"`
-	InitScripts    []InitScriptStorageInfo `json:"init_scripts,omitempty" tf:"max_items:10"` // TODO: tf:alias
+	InitScripts    []InitScriptStorageInfo `json:"init_scripts,omitempty" tf:"max_items:10"`
 	ClusterLogConf *StorageInfo            `json:"cluster_log_conf,omitempty"`
 	DockerImage    *DockerImage            `json:"docker_image,omitempty"`
 

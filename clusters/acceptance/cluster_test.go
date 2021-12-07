@@ -48,7 +48,6 @@ func TestAccClusterResource_CreateClusterWithLibraries(t *testing.T) {
 						coordinates = "com.microsoft.azure:azure-eventhubs-spark_2.11:2.3.7"
 					}
 				}
-				{var.AWS_ATTRIBUTES}
 			}`,
 		},
 	})
@@ -73,7 +72,6 @@ func TestAccClusterResource_CreateSingleNodeCluster(t *testing.T) {
 				custom_tags = {
 					"ResourceClass" = "SingleNode"
 				}
-				{var.AWS_ATTRIBUTES}
 			}`,
 		},
 	})

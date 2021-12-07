@@ -19,7 +19,6 @@ const (
 
 // ResourceGlobalInitScript manages notebooks
 func ResourceGlobalInitScript() *schema.Resource {
-	// TODO: move this into a common piece, in the file_resource, and merge with "path" entry
 	extra := map[string]*schema.Schema{
 		"enabled": {
 			Type:     schema.TypeBool,

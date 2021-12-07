@@ -304,7 +304,7 @@ func TestResourceSecretScopeDelete_Error(t *testing.T) {
 }
 
 func TestKVDiffFuncNil(t *testing.T) {
-	err := kvDiffFunc(context.TODO(), nil, common.DatabricksClient{Host: ""})
+	err := kvDiffFunc(context.Background(), nil, common.DatabricksClient{Host: ""})
 	assert.Nil(t, err)
 }
 

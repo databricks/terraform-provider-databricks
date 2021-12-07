@@ -585,24 +585,6 @@ func TestAwsAccSmallestNodeType(t *testing.T) {
 	assert.Equal(t, "m5d.large", nodeType)
 }
 
-func TestAzureAccNodeTypes(t *testing.T) {
-	cloudEnv := os.Getenv("CLOUD_ENV")
-	if cloudEnv == "" {
-		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
-	}
-
-	ctx := context.Background()
-	clustersAPI := NewClustersAPI(ctx, common.CommonEnvironmentClient())
-	m := map[string]NodeTypeRequest{
-		"Standard_E4s_v4":  {},
-		"Standard_E32s_v4": {MinCores: 32, GBPerCore: 8},
-	}
-
-	for k, v := range m {
-		assert.Equal(t, k, clustersAPI.GetSmallestNodeType(v))
-	}
-}
-
 func TestEventsSinglePage(t *testing.T) {
 	client, server, err := qa.HttpFixtureClient(t, []qa.HTTPFixture{
 		{

@@ -91,7 +91,7 @@ func TestAwsAccJobsCreate(t *testing.T) {
 	assert.True(t, job.Settings.NewCluster.SparkVersion == newSparkVersion, "Something is wrong with spark version")
 }
 
-func TestPreviewAccJobTasks(t *testing.T) {
+func TestAccJobTasks(t *testing.T) {
 	acceptance.Test(t, []acceptance.Step{
 		{
 			Template: `

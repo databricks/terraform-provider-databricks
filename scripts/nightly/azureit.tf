@@ -68,8 +68,8 @@ data "azurerm_storage_account_blob_container_sas" "this" {
   connection_string = azurerm_storage_account.this.primary_connection_string
   container_name    = azurerm_storage_container.wasbs.name
   https_only        = true
-  start = "2020-02-01"
-  expiry = "2021-12-31"
+  start             = "2020-02-01"
+  expiry            = "2021-12-31"
   permissions {
     read   = true
     add    = true
@@ -77,49 +77,6 @@ data "azurerm_storage_account_blob_container_sas" "this" {
     write  = true
     delete = true
     list   = true
-  }
-}
-
-resource "azurerm_container_group" "this" {
-  name                = "${local.prefix}-run"
-  location            = azurerm_resource_group.this.location
-  resource_group_name = azurerm_resource_group.this.name
-  tags                = azurerm_resource_group.this.tags
-
-  os_type            = "Linux"
-  restart_policy     = "Never"
-  ip_address_type    = "Private"
-  network_profile_id = azurerm_network_profile.this.id
-
-  identity {
-    type         = "UserAssigned"
-    identity_ids = [azurerm_user_assigned_identity.this.id]
-  }
-
-  container {
-    name   = "acceptance"
-    image  = "ghcr.io/databrickslabs/terraform-provider-it:pr-943"
-    cpu    = "2"
-    memory = "2"
-    environment_variables = {
-      TEST_FILTER                  = "^(TestAcc|TestAzureAcc)"
-      CLOUD_ENV                    = "azure"
-      ARM_USE_MSI                  = "true"
-      DATABRICKS_AZURE_RESOURCE_ID = azurerm_databricks_workspace.this.id
-      TEST_STORAGE_V2_ABFSS = azurerm_storage_container.abfss.name
-      TEST_STORAGE_V2_ACCOUNT = azurerm_storage_account.this.name
-      TEST_STORAGE_V2_WASBS = azurerm_storage_container.wasbs.name
-    }
-
-    secure_environment_variables = {
-      TEST_STORAGE_V2_KEY = azurerm_storage_account.this.primary_access_key
-      TEST_STORAGE_V2_WASBS_SAS = data.azurerm_storage_account_blob_container_sas.this.sas
-    }
-
-    ports {
-      port     = 443
-      protocol = "TCP"
-    }
   }
 }
 
@@ -136,11 +93,22 @@ resource "local_file" "function" {
   filename = "${local.target}/TriggerStart/function.json"
   content = jsonencode({
     "bindings" : [
+      # {
+      #   "type" : "httpTrigger",
+      #   "name" : "req",
+      #   "direction" : "in",
+      #   "methods" : ["post"]
+      # },
+      # {
+      #   "type" : "http",
+      #   "name" : "res",
+      #   "direction" : "out"
+      # },
       {
         "name" : "nightly",
         "type" : "timerTrigger",
         "direction" : "in",
-        "schedule" : "0 0 10 * * 1-5"
+        "schedule" : "0 20 10 * * 1-5"
       }
     ]
   })
@@ -194,7 +162,7 @@ resource "azurerm_storage_blob" "azureit" {
 }
 
 resource "azurerm_app_service_plan" "azureit" {
-  name                = "${azurerm_resource_group.this.name}-splan"
+  name                = "${local.prefix}-splan"
   resource_group_name = azurerm_resource_group.this.name
   location            = azurerm_resource_group.this.location
   tags                = azurerm_resource_group.this.tags
@@ -226,7 +194,7 @@ data "azurerm_storage_account_blob_container_sas" "read" {
 }
 
 resource "azurerm_function_app" "azureit" {
-  name                       = "${azurerm_resource_group.this.name}-azureit"
+  name                       = "${local.prefix}-azureit"
   resource_group_name        = azurerm_resource_group.this.name
   location                   = azurerm_resource_group.this.location
   tags                       = azurerm_resource_group.this.tags
@@ -256,9 +224,51 @@ resource "azurerm_function_app" "azureit" {
     use_32_bit_worker_process   = false
     scm_use_main_ip_restriction = true
     ip_restriction {
-      service_tag = "AzureCloud"
-      action      = "Allow"
-      // TODO: virtual_network_subnet_id
+      action = "Allow"
+      virtual_network_subnet_id = azurerm_subnet.this.id
+    }
+  }
+}
+
+resource "azurerm_container_group" "this" {
+  name                = "${local.prefix}-run"
+  location            = azurerm_resource_group.this.location
+  resource_group_name = azurerm_resource_group.this.name
+  tags                = azurerm_resource_group.this.tags
+
+  os_type            = "Linux"
+  restart_policy     = "Never"
+  ip_address_type    = "Private"
+  network_profile_id = azurerm_network_profile.this.id
+
+  identity {
+    type         = "UserAssigned"
+    identity_ids = [azurerm_user_assigned_identity.this.id]
+  }
+
+  container {
+    name   = "acceptance"
+    image  = "ghcr.io/databrickslabs/terraform-provider-it:pr-943"
+    cpu    = "2"
+    memory = "2"
+    environment_variables = {
+      TEST_FILTER                  = "'^(TestAcc|TestAzureAcc)'"
+      CLOUD_ENV                    = "azure"
+      ARM_USE_MSI                  = "true"
+      DATABRICKS_AZURE_RESOURCE_ID = azurerm_databricks_workspace.this.id
+      TEST_STORAGE_V2_ABFSS        = azurerm_storage_container.abfss.name
+      TEST_STORAGE_V2_ACCOUNT      = azurerm_storage_account.this.name
+      TEST_STORAGE_V2_WASBS        = azurerm_storage_container.wasbs.name
+    }
+
+    secure_environment_variables = {
+      TEST_STORAGE_V2_KEY       = azurerm_storage_account.this.primary_access_key
+      TEST_STORAGE_V2_WASBS_SAS = data.azurerm_storage_account_blob_container_sas.this.sas
+    }
+
+    ports {
+      port     = 443
+      protocol = "TCP"
     }
   }
 }

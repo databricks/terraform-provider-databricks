@@ -7,7 +7,9 @@ import (
 )
 
 func TestMetastoreAssignmentCornerCases(t *testing.T) {
-	qa.ResourceCornerCases(t, ResourceMetastoreAssignment(), qa.CornerCaseID("1000200030004|aaaaaa-bb-cc"))
+	qa.ResourceCornerCases(t, ResourceMetastoreAssignment(),
+		qa.CornerCaseID("1000200030004|aaaaaa-bb-cc"),
+		qa.CornerCaseSkipCRUD("read"))
 }
 
 func TestMetastoreAssignment_Create(t *testing.T) {
@@ -17,8 +19,8 @@ func TestMetastoreAssignment_Create(t *testing.T) {
 				Method:   "PUT",
 				Resource: "/api/2.0/unity-catalog/workspaces/123/metastore",
 				ExpectedRequest: MetastoreAssignment{
-					WorkspaceID:        123,
-					MetastoreID:        "a",
+					WorkspaceID: 123,
+					MetastoreID: "a",
 					//DefaultCatalogName: "b",
 				},
 			},
@@ -28,6 +30,6 @@ func TestMetastoreAssignment_Create(t *testing.T) {
 		HCL: `
 		workspace_id = 123
 		metastore_id = "a"
-		default_catalog_name = "b"`,
+		`,
 	}.ApplyNoError(t)
 }

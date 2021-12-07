@@ -18,8 +18,9 @@ func NewMetastoreAssignmentAPI(ctx context.Context, m interface{}) MetastoreAssi
 }
 
 type MetastoreAssignment struct {
-	WorkspaceID        int64  `json:"workspace_id"`
-	MetastoreID        string `json:"metastore_id"`
+	WorkspaceID int64  `json:"workspace_id"`
+	MetastoreID string `json:"metastore_id"`
+	// there's also DefaultCatalogName
 }
 
 func (a MetastoreAssignmentAPI) createMetastoreAssignment(ma MetastoreAssignment) error {

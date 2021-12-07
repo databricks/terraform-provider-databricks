@@ -39,6 +39,7 @@ func (a CatalogsAPI) updateCatalog(ci CatalogInfo) error {
 }
 
 func (a CatalogsAPI) deleteCatalog(name string) error {
+	// TODO: force_destroy attribute
 	return a.client.Delete(a.context, "/unity-catalog/catalogs/"+name+"?force=true", nil)
 }
 

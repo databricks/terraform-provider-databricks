@@ -74,4 +74,7 @@ test-preview: install
 	@echo "✓ Running acceptance Tests for Preview features..."
 	@/bin/bash scripts/run.sh preview '^TestPreviewAcc' --debug --tee
 
+docker-it:
+	docker build -t databricks-terrafrom/test -f scripts/Dockerfile .
+
 .PHONY: build fmt python-setup docs vendor build fmt coverage test lint

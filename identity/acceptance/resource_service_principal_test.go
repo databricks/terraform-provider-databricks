@@ -1,12 +1,16 @@
 package acceptance
 
 import (
+	"os"
 	"testing"
 
 	"github.com/databrickslabs/terraform-provider-databricks/internal/acceptance"
 )
 
-func TestAzureAccServicePrincipalResource(t *testing.T) {
+func TestAccServicePrincipalResourceOnAzure(t *testing.T) {
+	if cloud, ok := os.LookupEnv("CLOUD_ENV"); !ok || cloud != "azure" {
+		t.Skip("Test is only for CLOUD_ENV=azure")
+	}
 	acceptance.Test(t, []acceptance.Step{
 		{
 			Template: `resource "databricks_service_principal" "this" {
@@ -17,7 +21,10 @@ func TestAzureAccServicePrincipalResource(t *testing.T) {
 	})
 }
 
-func TestAwsAccServicePrincipalResource(t *testing.T) {
+func TestAccServicePrincipalResourceOnAws(t *testing.T) {
+	if cloud, ok := os.LookupEnv("CLOUD_ENV"); !ok || cloud != "AWS" {
+		t.Skip("Test is only for CLOUD_ENV=AWS")
+	}
 	acceptance.Test(t, []acceptance.Step{
 		{
 			Template: `resource "databricks_service_principal" "this" {

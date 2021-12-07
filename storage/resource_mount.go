@@ -13,6 +13,7 @@ func preprocessResourceData(ctx context.Context, d *schema.ResourceData, scm map
 	if err := common.DataToStructPointer(d, scm, &gm); err != nil {
 		return err
 	}
+	// TODO: propagate ctx all the way down to GetAzureJwtProperty()
 	if err := gm.ValidateAndApplyDefaults(d, m.(*common.DatabricksClient)); err != nil {
 		return err
 	}

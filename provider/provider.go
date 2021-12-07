@@ -66,6 +66,7 @@ func DatabricksProvider() *schema.Provider {
 			"databricks_job":                         jobs.ResourceJob(),
 			"databricks_metastore":                   catalog.ResourceMetastore(),
 			"databricks_metastore_assignment":        catalog.ResourceMetastoreAssignment(),
+			"databricks_metastore_data_access":       catalog.ResourceDataAccessConfiguration(),
 			"databricks_mlflow_experiment":           mlflow.ResourceMLFlowExperiment(),
 			"databricks_mlflow_model":                mlflow.ResourceMLFlowModel(),
 			"databricks_mount":                       storage.ResourceDatabricksMount(),

@@ -28,9 +28,15 @@ func TestCreateMetastore(t *testing.T) {
 				Method:   "GET",
 				Resource: "/api/2.0/unity-catalog/metastores/abc",
 				Response: MetastoreInfo{
-					// TODO: verify if this backend issue persists
 					StorageRoot: "s3://b/abc",
 					Name:        "a",
+				},
+			},
+			{
+				Method:   "PATCH",
+				Resource: "/api/2.0/unity-catalog/metastores/abc",
+				ExpectedRequest: map[string]interface{}{
+					"owner": "administrators",
 				},
 			},
 		},
@@ -39,6 +45,7 @@ func TestCreateMetastore(t *testing.T) {
 		HCL: `
 		name = "a"
 		storage_root = "s3://b"
+		owner = "administrators"
 		`,
 	}.ApplyNoError(t)
 }

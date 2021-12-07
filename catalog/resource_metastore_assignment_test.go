@@ -19,9 +19,9 @@ func TestMetastoreAssignment_Create(t *testing.T) {
 				Method:   "PUT",
 				Resource: "/api/2.0/unity-catalog/workspaces/123/metastore",
 				ExpectedRequest: MetastoreAssignment{
-					WorkspaceID: 123,
-					MetastoreID: "a",
-					//DefaultCatalogName: "b",
+					WorkspaceID:        123,
+					MetastoreID:        "a",
+					DefaultCatalogName: "main",
 				},
 			},
 		},

@@ -51,7 +51,7 @@ The following arguments are available:
 * `external_id` - (Optional) ID of the user in an external identity provider.
 * `allow_cluster_create` -  (Optional) Allow the user to have [cluster](cluster.md) create privileges. Defaults to false. More fine grained permissions could be assigned with [databricks_permissions](permissions.md#Cluster-usage) and `cluster_id` argument. Everyone without `allow_cluster_create` argument set, but with [permission to use](permissions.md#Cluster-Policy-usage) Cluster Policy would be able to create clusters, but within boundaries of that specific policy.
 * `allow_instance_pool_create` -  (Optional) Allow the user to have [instance pool](instance_pool.md) create privileges. Defaults to false. More fine grained permissions could be assigned with [databricks_permissions](permissions.md#Instance-Pool-usage) and [instance_pool_id](permissions.md#instance_pool_id) argument.
-* `allow_sql_analytics_access` - (Optional) This is a field to allow the group to have access to [Databricks SQL](https://databricks.com/product/sql-analytics) feature through [databricks_sql_endpoint](sql_endpoint.md).
+* `databricks_sql_access` - (Optional) This is a field to allow the group to have access to [Databricks SQL](https://databricks.com/product/databricks-sql) feature in User Interface and through [databricks_sql_endpoint](sql_endpoint.md).
 * `active` - (Optional) Either user is active or not. True by default, but can be set to false in case of user deactivation with preserving user assets.
 
 ## Attribute Reference

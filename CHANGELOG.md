@@ -2,16 +2,31 @@
 
 ## 0.4.0
 
+* Added `databricks_mlflow_model` and `databricks_mlflow_experiment` resources ([#931](https://github.com/databrickslabs/terraform-provider-databricks/pull/931)) 
 * Added support for `repo_path` to `databricks_permissions` resource ([#875](https://github.com/databrickslabs/terraform-provider-databricks/issues/875)).
+* Added `external_id` to `databricks_user` and `databricks_group` ([#927](https://github.com/databrickslabs/terraform-provider-databricks/pull/927)).
+* Fixed `databricks_repo` creation corner cases on MS Windows OS ([#911](https://github.com/databrickslabs/terraform-provider-databricks/issues/911)).
+* Fixed configuration drift for `databricks_cluster`.`aws_attributes`.`zone_id` with `auto`, which resulted in unwanted cluster restarts ([#937](https://github.com/databrickslabs/terraform-provider-databricks/pull/937)).
+* Added new experimental resources, increased test coverage, and automated integration testing infrastructure.
+* Multiple documentation improvements and new guides.
 
 **Behavior changes**
 
+* Renamed `allow_sql_analytics_access` to `databricks_sql_access` in `databricks_user`, `databricks_group`, and `databricks_service_principal` resources.
 * Removed deprecated `azure_use_pat_for_spn`, `azure_use_pat_for_cli`, `azure_pat_token_duration_seconds` provider attributes.
 * Removed deprecated `azure_workspace_name`, `azure_resource_group`, `azure_subscription_id` in favor of just using `azure_workspace_resource_id`.
 * Renamed `DATABRICKS_AZURE_WORKSPACE_RESOURCE_ID` environment variable to `DATABRICKS_AZURE_RESOURCE_ID`.
 * `DATABRICKS_AZURE_CLIENT_SECRET` environment variable is no longer having any effect in favor of just using `ARM_CLIENT_SECRET`.
 * `DATABRICKS_AZURE_CLIENT_ID` environment variable is no longer having any effect in favor of just using `ARM_CLIENT_ID`.
 * `DATABRICKS_AZURE_TENANT_ID` environment variable is no longer having any effect in favor of just using `ARM_TENANT_ID`.
+
+Updated dependency versions:
+
+* Bump github.com/hashicorp/terraform-plugin-sdk/v2 from 2.7.1 to 2.9.0
+* Bump github.com/Azure/go-autorest/autorest/adal from 0.9.16 to 0.9.17
+* Bump github.com/golang-jwt/jwt/v4 from 4.0.0 to 4.1.0
+* Bump github.com/zclconf/go-cty from 1.9.1 to 1.10.0
+* Bump github.com/Azure/go-autorest/autorest from 0.11.21 to 0.11.22
 
 ## 0.3.11
 

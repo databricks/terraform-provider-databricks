@@ -17,3 +17,7 @@ Certain resources undergone changes in order to improve long-term maintainabilit
 ## databricks_mount
 
 * Rewrite deprecated `databricks_aws_s3_mount`, `databricks_azure_adls_gen1_mount`, `databricks_azure_adls_gen2_mount`, and `databricks_azure_blob_mount` resources into `databricks_mount`.
+
+## databricks_user and databricks_group
+
+* Globally rename `allow_sql_analytics_access` to `databricks_sql_access` field to allow users and groups access to Databricks SQL

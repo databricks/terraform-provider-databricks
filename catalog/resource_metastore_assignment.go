@@ -18,7 +18,7 @@ func NewMetastoreAssignmentAPI(ctx context.Context, m interface{}) MetastoreAssi
 }
 
 type MetastoreAssignment struct {
-	WorkspaceID        int64  `json:"workspace_id"`
+	WorkspaceID        int64  `json:"workspace_id" tf:"force_new"`
 	MetastoreID        string `json:"metastore_id"`
 	DefaultCatalogName string `json:"default_catalog_name,omitempty" tf:"default:main"`
 }
@@ -41,7 +41,6 @@ func (a MetastoreAssignmentAPI) clearMetastoreAssignment(workspaceID string) err
 func ResourceMetastoreAssignment() *schema.Resource {
 	s := common.StructToSchema(MetastoreAssignment{},
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
-			m["workspace_id"].ForceNew = true // because workspace_id is path param
 			return m
 		})
 	pi := common.NewPairID("workspace_id", "metastore_id")

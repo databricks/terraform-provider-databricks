@@ -20,7 +20,7 @@ func NewMetastoresAPI(ctx context.Context, m interface{}) MetastoresAPI {
 
 type MetastoreInfo struct {
 	Name         string  `json:"name"`
-	StorageRoot  string  `json:"storage_root"`
+	StorageRoot  string  `json:"storage_root" tf:"force_new"`
 	DefaultDacID string  `json:"default_data_access_config_id,omitempty"`
 	Owner        string  `json:"owner,omitempty" tf:"computed"`
 	MetastoreID  string  `json:"metastore_id,omitempty" tf:"computed"`
@@ -66,7 +66,6 @@ func ResourceMetastore() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 			}
-			m["storage_root"].ForceNew = true
 			m["storage_root"].DiffSuppressFunc = func(k, old, new string, d *schema.ResourceData) bool {
 				if strings.HasPrefix(old, new) {
 					log.Printf("[DEBUG] Ignoring configuration drift from %s to %s", old, new)

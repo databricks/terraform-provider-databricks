@@ -6,9 +6,9 @@ import (
 	"os"
 	"testing"
 
-	. "github.com/databrickslabs/terraform-provider-databricks/access"
 	"github.com/databrickslabs/terraform-provider-databricks/identity"
 	"github.com/databrickslabs/terraform-provider-databricks/qa"
+	"github.com/databrickslabs/terraform-provider-databricks/secrets"
 
 	"github.com/databrickslabs/terraform-provider-databricks/common"
 	"github.com/databrickslabs/terraform-provider-databricks/internal/acceptance"
@@ -24,7 +24,7 @@ func TestAccRemoveScopes(t *testing.T) {
 		t.Skip("Cleaning up tests only from IDE")
 	}
 	client := common.CommonEnvironmentClient()
-	scopesAPI := NewSecretScopesAPI(context.Background(), client)
+	scopesAPI := secrets.NewSecretScopesAPI(context.Background(), client)
 	scopeList, err := scopesAPI.List()
 	require.NoError(t, err)
 	for _, scope := range scopeList {
@@ -40,12 +40,12 @@ func TestAzureAccKeyVaultSimple(t *testing.T) {
 	if client.IsAzureClientSecretSet() {
 		t.Skip("AKV scopes don't work for SP auth yet")
 	}
-	scopesAPI := NewSecretScopesAPI(context.Background(), client)
+	scopesAPI := secrets.NewSecretScopesAPI(context.Background(), client)
 	name := qa.RandomName("tf-scope-")
 
-	err := scopesAPI.Create(SecretScope{
+	err := scopesAPI.Create(secrets.SecretScope{
 		Name: name,
-		KeyvaultMetadata: &KeyvaultMetadata{
+		KeyvaultMetadata: &secrets.KeyvaultMetadata{
 			ResourceID: resourceID,
 			DNSName:    DNSName,
 		},
@@ -68,16 +68,16 @@ func TestAccInitialManagePrincipals(t *testing.T) {
 	}
 	ctx := context.Background()
 	client := common.CommonEnvironmentClient()
-	scopesAPI := NewSecretScopesAPI(context.Background(), client)
+	scopesAPI := secrets.NewSecretScopesAPI(context.Background(), client)
 
 	scope := fmt.Sprintf("tf-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
-	err := scopesAPI.Create(SecretScope{Name: scope})
+	err := scopesAPI.Create(secrets.SecretScope{Name: scope})
 	require.NoError(t, err)
 	defer func() {
 		assert.NoError(t, scopesAPI.Delete(scope))
 	}()
 
-	secretACLAPI := NewSecretAclsAPI(ctx, client)
+	secretACLAPI := secrets.NewSecretAclsAPI(ctx, client)
 	acls, err := secretACLAPI.List(scope)
 	require.NoError(t, err)
 
@@ -94,10 +94,10 @@ func TestAccInitialManagePrincipalsGroup(t *testing.T) {
 	}
 	client := common.CommonEnvironmentClient()
 	ctx := context.Background()
-	scopesAPI := NewSecretScopesAPI(ctx, client)
+	scopesAPI := secrets.NewSecretScopesAPI(ctx, client)
 
 	scope := fmt.Sprintf("tf-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
-	err := scopesAPI.Create(SecretScope{
+	err := scopesAPI.Create(secrets.SecretScope{
 		Name:                   scope,
 		InitialManagePrincipal: "users",
 	})
@@ -106,7 +106,7 @@ func TestAccInitialManagePrincipalsGroup(t *testing.T) {
 		assert.NoError(t, scopesAPI.Delete(scope))
 	}()
 
-	secretACLAPI := NewSecretAclsAPI(ctx, client)
+	secretACLAPI := secrets.NewSecretAclsAPI(ctx, client)
 	acls, err := secretACLAPI.List(scope)
 	require.NoError(t, err)
 	assert.Equal(t, 1, len(acls))
@@ -131,7 +131,7 @@ func TestAccSecretScopeResource(t *testing.T) {
 					resource.TestCheckResourceAttr("databricks_secret_scope.my_scope", "backend_type", "DATABRICKS"),
 					acceptance.ResourceCheck("databricks_secret_scope.my_scope",
 						func(ctx context.Context, client *common.DatabricksClient, id string) error {
-							secretACLAPI := NewSecretAclsAPI(ctx, client)
+							secretACLAPI := secrets.NewSecretAclsAPI(ctx, client)
 							acls, err := secretACLAPI.List(id)
 							require.NoError(t, err)
 
@@ -147,7 +147,7 @@ func TestAccSecretScopeResource(t *testing.T) {
 			{
 				PreConfig: func() {
 					client := common.CommonEnvironmentClient()
-					err := NewSecretScopesAPI(context.Background(), client).Delete(scope)
+					err := secrets.NewSecretScopesAPI(context.Background(), client).Delete(scope)
 					assert.NoError(t, err, err)
 				},
 				Config: fmt.Sprintf(`

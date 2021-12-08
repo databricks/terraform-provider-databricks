@@ -30,8 +30,8 @@ func TestCreateDac(t *testing.T) {
 			{
 				Method:   "PATCH",
 				Resource: "/api/2.0/unity-catalog/metastores/abc",
-				ExpectedRequest: map[string]interface {}{
-					"default_data_access_config_id":"efg",
+				ExpectedRequest: map[string]interface{}{
+					"default_data_access_config_id": "efg",
 				},
 			},
 			{
@@ -47,7 +47,7 @@ func TestCreateDac(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/unity-catalog/metastores/abc",
-				Response: MetastoreInfo {
+				Response: MetastoreInfo{
 					DefaultDacID: "efg",
 				},
 			},

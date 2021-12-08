@@ -9,7 +9,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/databrickslabs/terraform-provider-databricks/access"
 	"github.com/databrickslabs/terraform-provider-databricks/clusters"
 	"github.com/databrickslabs/terraform-provider-databricks/commands"
 	"github.com/databrickslabs/terraform-provider-databricks/common"
@@ -18,6 +17,7 @@ import (
 	"github.com/databrickslabs/terraform-provider-databricks/libraries"
 	"github.com/databrickslabs/terraform-provider-databricks/policies"
 	"github.com/databrickslabs/terraform-provider-databricks/qa"
+	"github.com/databrickslabs/terraform-provider-databricks/secrets"
 	"github.com/databrickslabs/terraform-provider-databricks/workspace"
 	"github.com/hashicorp/hcl/v2/hclwrite"
 
@@ -302,8 +302,8 @@ func TestImportingUsersGroupsSecretScopes(t *testing.T) {
 				Method:       "GET",
 				Resource:     "/api/2.0/secrets/scopes/list",
 				ReuseRequest: true,
-				Response: access.SecretScopeList{
-					Scopes: []access.SecretScope{
+				Response: secrets.SecretScopeList{
+					Scopes: []secrets.SecretScope{
 						{Name: "a"},
 					},
 				},
@@ -312,8 +312,8 @@ func TestImportingUsersGroupsSecretScopes(t *testing.T) {
 				Method:       "GET",
 				Resource:     "/api/2.0/secrets/list?scope=a",
 				ReuseRequest: true,
-				Response: access.SecretsList{
-					Secrets: []access.SecretMetadata{
+				Response: secrets.SecretsList{
+					Secrets: []secrets.SecretMetadata{
 						{Key: "b"},
 					},
 				},
@@ -321,8 +321,8 @@ func TestImportingUsersGroupsSecretScopes(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/secrets/acls/list?scope=a",
-				Response: access.SecretScopeACL{
-					Items: []access.ACLItem{
+				Response: secrets.SecretScopeACL{
+					Items: []secrets.ACLItem{
 						{Permission: "MANAGE", Principal: "test"},
 						{Permission: "READ", Principal: "users"},
 					},
@@ -331,8 +331,8 @@ func TestImportingUsersGroupsSecretScopes(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/secrets/acls/list?scope=a",
-				Response: access.SecretScopeACL{
-					Items: []access.ACLItem{
+				Response: secrets.SecretScopeACL{
+					Items: []secrets.ACLItem{
 						{Permission: "MANAGE", Principal: "test"},
 						{Permission: "READ", Principal: "users"},
 					},
@@ -341,12 +341,12 @@ func TestImportingUsersGroupsSecretScopes(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/secrets/acls/get?principal=test&scope=a",
-				Response: access.ACLItem{Permission: "MANAGE", Principal: "test"},
+				Response: secrets.ACLItem{Permission: "MANAGE", Principal: "test"},
 			},
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/secrets/acls/get?principal=users&scope=a",
-				Response: access.ACLItem{Permission: "READ", Principal: "users"},
+				Response: secrets.ACLItem{Permission: "READ", Principal: "users"},
 			},
 		}, func(ctx context.Context, client *common.DatabricksClient) {
 			tmpDir := fmt.Sprintf("/tmp/tf-%s", qa.RandomName())
@@ -395,8 +395,8 @@ func TestImportingNoResourcesError(t *testing.T) {
 				Method:       "GET",
 				Resource:     "/api/2.0/secrets/scopes/list",
 				ReuseRequest: true,
-				Response: access.SecretScopeList{
-					Scopes: []access.SecretScope{},
+				Response: secrets.SecretScopeList{
+					Scopes: []secrets.SecretScope{},
 				},
 			},
 		}, func(ctx context.Context, client *common.DatabricksClient) {

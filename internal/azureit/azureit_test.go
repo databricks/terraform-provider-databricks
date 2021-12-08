@@ -29,7 +29,7 @@ func TestStart(t *testing.T) {
 		os.Setenv("ACI_CONTAINER_GROUP", "")
 		triggerStart(responseWriter, nil)
 		assert.Equal(t, "400 Bad Request", responseWriter.Result().Status)
-		
+
 		responseWriter = httptest.NewRecorder()
 		os.Setenv("ACI_CONTAINER_GROUP", "/abc")
 		triggerStart(responseWriter, nil)

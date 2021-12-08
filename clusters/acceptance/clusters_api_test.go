@@ -26,11 +26,11 @@ func TestAccListClustersIntegration(t *testing.T) {
 	randomName := qa.RandomName()
 
 	cluster := clusters.Cluster{
-		NumWorkers:             1,
-		ClusterName:            "Terraform Integration Test " + randomName,
-		SparkVersion:           clustersAPI.LatestSparkVersionOrDefault(
+		NumWorkers:  1,
+		ClusterName: "Terraform Integration Test " + randomName,
+		SparkVersion: clustersAPI.LatestSparkVersionOrDefault(
 			clusters.SparkVersionRequest{
-				Latest: true, 
+				Latest:          true,
 				LongTermSupport: true,
 			}),
 		InstancePoolID:         compute.CommonInstancePoolID(),

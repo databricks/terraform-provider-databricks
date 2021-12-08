@@ -5,12 +5,12 @@ import (
 	"os"
 	"testing"
 
-	"github.com/databrickslabs/terraform-provider-databricks/access"
 	"github.com/databrickslabs/terraform-provider-databricks/commands"
 	"github.com/databrickslabs/terraform-provider-databricks/common"
 	"github.com/databrickslabs/terraform-provider-databricks/internal/acceptance"
 	"github.com/databrickslabs/terraform-provider-databricks/internal/compute"
 	"github.com/databrickslabs/terraform-provider-databricks/qa"
+	"github.com/databrickslabs/terraform-provider-databricks/secrets"
 	"github.com/databrickslabs/terraform-provider-databricks/storage"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -65,8 +65,8 @@ func testWithNewSecretScope(t *testing.T, callback func(string, string),
 	randomKey := "key" + suffix
 
 	ctx := context.Background()
-	secretScopes := access.NewSecretScopesAPI(ctx, client)
-	err := secretScopes.Create(access.SecretScope{
+	secretScopes := secrets.NewSecretScopesAPI(ctx, client)
+	err := secretScopes.Create(secrets.SecretScope{
 		Name:                   randomScope,
 		InitialManagePrincipal: "users",
 	})
@@ -76,7 +76,7 @@ func testWithNewSecretScope(t *testing.T, callback func(string, string),
 		assert.NoError(t, err)
 	}()
 
-	secrets := access.NewSecretsAPI(ctx, client)
+	secrets := secrets.NewSecretsAPI(ctx, client)
 	err = secrets.Create(secret, randomScope, randomKey)
 	require.NoError(t, err)
 

@@ -6,8 +6,8 @@ import (
 	"testing"
 
 	"github.com/databrickslabs/terraform-provider-databricks/common"
-	"github.com/databrickslabs/terraform-provider-databricks/identity"
 	"github.com/databrickslabs/terraform-provider-databricks/jobs"
+	"github.com/databrickslabs/terraform-provider-databricks/scim"
 
 	"github.com/databrickslabs/terraform-provider-databricks/qa"
 	"github.com/databrickslabs/terraform-provider-databricks/workspace"
@@ -23,7 +23,7 @@ var (
 		ReuseRequest: true,
 		Method:       "GET",
 		Resource:     "/api/2.0/preview/scim/v2/Me",
-		Response: identity.ScimUser{
+		Response: scim.User{
 			UserName: TestingAdminUser,
 		},
 	}

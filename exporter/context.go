@@ -14,8 +14,8 @@ import (
 
 	"github.com/databrickslabs/terraform-provider-databricks/commands"
 	"github.com/databrickslabs/terraform-provider-databricks/common"
-	"github.com/databrickslabs/terraform-provider-databricks/identity"
 	"github.com/databrickslabs/terraform-provider-databricks/provider"
+	"github.com/databrickslabs/terraform-provider-databricks/scim"
 
 	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/hclsyntax"
@@ -59,8 +59,8 @@ type importContext struct {
 	importing   map[string]bool
 	nameFixes   []regexFix
 	hclFixes    []regexFix
-	allUsers    []identity.ScimUser
-	allGroups   []identity.ScimGroup
+	allUsers    []scim.User
+	allGroups   []scim.Group
 	mountMap    map[string]mount
 	variables   map[string]string
 	testEmits   map[string]bool
@@ -114,7 +114,7 @@ func newImportContext(c *common.DatabricksClient) *importContext {
 		},
 		hclFixes: []regexFix{ // Be careful with that! it may break working code
 		},
-		allUsers:  []identity.ScimUser{},
+		allUsers:  []scim.User{},
 		variables: map[string]string{},
 	}
 }
@@ -135,7 +135,7 @@ func (ic *importContext) Run() error {
 	} else if !info.IsDir() {
 		return fmt.Errorf("the path %s is not a directory", ic.Directory)
 	}
-	usersAPI := identity.NewUsersAPI(ic.Context, ic.Client)
+	usersAPI := scim.NewUsersAPI(ic.Context, ic.Client)
 	me, err := usersAPI.Me()
 	if err != nil {
 		return err

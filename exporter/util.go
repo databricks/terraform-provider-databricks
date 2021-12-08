@@ -6,10 +6,11 @@ import (
 	"log"
 	"strings"
 
+	"github.com/databrickslabs/terraform-provider-databricks/aws"
 	"github.com/databrickslabs/terraform-provider-databricks/clusters"
 	"github.com/databrickslabs/terraform-provider-databricks/common"
-	"github.com/databrickslabs/terraform-provider-databricks/identity"
 	"github.com/databrickslabs/terraform-provider-databricks/libraries"
+	"github.com/databrickslabs/terraform-provider-databricks/scim"
 	"github.com/databrickslabs/terraform-provider-databricks/storage"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -65,7 +66,7 @@ func (ic *importContext) importLibraries(d *schema.ResourceData, s map[string]*s
 func (ic *importContext) cacheGroups() error {
 	if len(ic.allGroups) == 0 {
 		log.Printf("[INFO] Caching groups in memory ...")
-		groupsAPI := identity.NewGroupsAPI(ic.Context, ic.Client)
+		groupsAPI := scim.NewGroupsAPI(ic.Context, ic.Client)
 		g, err := groupsAPI.Filter("")
 		if err != nil {
 			return err
@@ -91,8 +92,8 @@ func (ic *importContext) cacheGroups() error {
 // 	return nil
 // }
 
-func (ic *importContext) findUserByName(name string) (u identity.ScimUser, err error) {
-	a := identity.NewUsersAPI(ic.Context, ic.Client)
+func (ic *importContext) findUserByName(name string) (u scim.User, err error) {
+	a := scim.NewUsersAPI(ic.Context, ic.Client)
 	users, err := a.Filter(fmt.Sprintf("userName eq '%s'", name))
 	if err != nil {
 		return
@@ -151,7 +152,7 @@ func (ic *importContext) refreshMounts() error {
 		}
 	}
 	if ic.Client.IsAws() {
-		profiles, err := identity.NewInstanceProfilesAPI(ic.Context, ic.Client).List()
+		profiles, err := aws.NewInstanceProfilesAPI(ic.Context, ic.Client).List()
 		if err != nil {
 			return err
 		}

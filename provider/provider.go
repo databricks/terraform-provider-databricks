@@ -11,11 +11,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
 	"github.com/databrickslabs/terraform-provider-databricks/access"
+	"github.com/databrickslabs/terraform-provider-databricks/aws"
 	"github.com/databrickslabs/terraform-provider-databricks/catalog"
 	"github.com/databrickslabs/terraform-provider-databricks/clusters"
 	"github.com/databrickslabs/terraform-provider-databricks/commands"
 	"github.com/databrickslabs/terraform-provider-databricks/common"
-	"github.com/databrickslabs/terraform-provider-databricks/identity"
 	"github.com/databrickslabs/terraform-provider-databricks/jobs"
 	"github.com/databrickslabs/terraform-provider-databricks/mlflow"
 	"github.com/databrickslabs/terraform-provider-databricks/mws"
@@ -23,9 +23,11 @@ import (
 	"github.com/databrickslabs/terraform-provider-databricks/pipelines"
 	"github.com/databrickslabs/terraform-provider-databricks/policies"
 	"github.com/databrickslabs/terraform-provider-databricks/pools"
+	"github.com/databrickslabs/terraform-provider-databricks/scim"
 	"github.com/databrickslabs/terraform-provider-databricks/secrets"
 	"github.com/databrickslabs/terraform-provider-databricks/sqlanalytics"
 	"github.com/databrickslabs/terraform-provider-databricks/storage"
+	"github.com/databrickslabs/terraform-provider-databricks/tokens"
 	"github.com/databrickslabs/terraform-provider-databricks/workspace"
 )
 
@@ -33,18 +35,18 @@ import (
 func DatabricksProvider() *schema.Provider {
 	p := &schema.Provider{
 		DataSourcesMap: map[string]*schema.Resource{ // must be in alphabetical order
-			"databricks_aws_crossaccount_policy": access.DataAwsCrossAccountPolicy(),
-			"databricks_aws_assume_role_policy":  access.DataAwsAssumeRolePolicy(),
-			"databricks_aws_bucket_policy":       access.DataAwsBucketPolicy(),
-			"databricks_current_user":            identity.DataSourceCurrentUser(),
+			"databricks_aws_crossaccount_policy": aws.DataAwsCrossAccountPolicy(),
+			"databricks_aws_assume_role_policy":  aws.DataAwsAssumeRolePolicy(),
+			"databricks_aws_bucket_policy":       aws.DataAwsBucketPolicy(),
+			"databricks_current_user":            scim.DataSourceCurrentUser(),
 			"databricks_dbfs_file":               storage.DataSourceDBFSFile(),
 			"databricks_dbfs_file_paths":         storage.DataSourceDBFSFilePaths(),
-			"databricks_group":                   identity.DataSourceGroup(),
+			"databricks_group":                   scim.DataSourceGroup(),
 			"databricks_node_type":               clusters.DataSourceNodeType(),
 			"databricks_notebook":                workspace.DataSourceNotebook(),
 			"databricks_notebook_paths":          workspace.DataSourceNotebookPaths(),
 			"databricks_spark_version":           clusters.DataSourceSparkVersion(),
-			"databricks_user":                    identity.DataSourceUser(),
+			"databricks_user":                    scim.DataSourceUser(),
 			"databricks_zones":                   clusters.DataSourceClusterZones(),
 		},
 		ResourcesMap: map[string]*schema.Resource{ // must be in alphabetical order
@@ -58,11 +60,11 @@ func DatabricksProvider() *schema.Provider {
 			"databricks_dbfs_file":                   storage.ResourceDBFSFile(),
 			"databricks_directory":                   workspace.ResourceDirectory(),
 			"databricks_global_init_script":          workspace.ResourceGlobalInitScript(),
-			"databricks_group":                       identity.ResourceGroup(),
-			"databricks_group_instance_profile":      identity.ResourceGroupInstanceProfile(),
-			"databricks_group_member":                identity.ResourceGroupMember(),
+			"databricks_group":                       scim.ResourceGroup(),
+			"databricks_group_instance_profile":      aws.ResourceGroupInstanceProfile(),
+			"databricks_group_member":                scim.ResourceGroupMember(),
 			"databricks_instance_pool":               pools.ResourceInstancePool(),
-			"databricks_instance_profile":            identity.ResourceInstanceProfile(),
+			"databricks_instance_profile":            aws.ResourceInstanceProfile(),
 			"databricks_ip_access_list":              access.ResourceIPAccessList(),
 			"databricks_job":                         jobs.ResourceJob(),
 			"databricks_metastore":                   catalog.ResourceMetastore(),
@@ -80,7 +82,7 @@ func DatabricksProvider() *schema.Provider {
 			"databricks_mws_vpc_endpoint":            mws.ResourceVPCEndpoint(),
 			"databricks_mws_workspaces":              mws.ResourceWorkspace(),
 			"databricks_notebook":                    workspace.ResourceNotebook(),
-			"databricks_obo_token":                   identity.ResourceOboToken(),
+			"databricks_obo_token":                   tokens.ResourceOboToken(),
 			"databricks_permissions":                 permissions.ResourcePermissions(),
 			"databricks_pipeline":                    pipelines.ResourcePipeline(),
 			"databricks_repo":                        workspace.ResourceRepo(),
@@ -88,7 +90,7 @@ func DatabricksProvider() *schema.Provider {
 			"databricks_secret":                      secrets.ResourceSecret(),
 			"databricks_secret_scope":                secrets.ResourceSecretScope(),
 			"databricks_secret_acl":                  secrets.ResourceSecretACL(),
-			"databricks_service_principal":           identity.ResourceServicePrincipal(),
+			"databricks_service_principal":           scim.ResourceServicePrincipal(),
 			"databricks_sql_dashboard":               sqlanalytics.ResourceDashboard(),
 			"databricks_sql_endpoint":                sqlanalytics.ResourceSQLEndpoint(),
 			"databricks_sql_global_config":           sqlanalytics.ResourceSQLGlobalConfig(),
@@ -96,9 +98,9 @@ func DatabricksProvider() *schema.Provider {
 			"databricks_sql_query":                   sqlanalytics.ResourceQuery(),
 			"databricks_sql_visualization":           sqlanalytics.ResourceVisualization(),
 			"databricks_sql_widget":                  sqlanalytics.ResourceWidget(),
-			"databricks_token":                       identity.ResourceToken(),
-			"databricks_user":                        identity.ResourceUser(),
-			"databricks_user_instance_profile":       identity.ResourceUserInstanceProfile(),
+			"databricks_token":                       tokens.ResourceToken(),
+			"databricks_user":                        scim.ResourceUser(),
+			"databricks_user_instance_profile":       aws.ResourceUserInstanceProfile(),
 			"databricks_workspace_conf":              workspace.ResourceWorkspaceConf(),
 		},
 		Schema: providerSchema(),

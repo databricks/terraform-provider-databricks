@@ -9,14 +9,15 @@ import (
 	"testing"
 	"time"
 
+	"github.com/databrickslabs/terraform-provider-databricks/aws"
 	"github.com/databrickslabs/terraform-provider-databricks/clusters"
 	"github.com/databrickslabs/terraform-provider-databricks/commands"
 	"github.com/databrickslabs/terraform-provider-databricks/common"
-	"github.com/databrickslabs/terraform-provider-databricks/identity"
 	"github.com/databrickslabs/terraform-provider-databricks/jobs"
 	"github.com/databrickslabs/terraform-provider-databricks/libraries"
 	"github.com/databrickslabs/terraform-provider-databricks/policies"
 	"github.com/databrickslabs/terraform-provider-databricks/qa"
+	"github.com/databrickslabs/terraform-provider-databricks/scim"
 	"github.com/databrickslabs/terraform-provider-databricks/secrets"
 	"github.com/databrickslabs/terraform-provider-databricks/workspace"
 	"github.com/hashicorp/hcl/v2/hclwrite"
@@ -42,7 +43,7 @@ func TestImportingMounts(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/preview/scim/v2/Me",
-				Response: identity.ScimUser{},
+				Response: scim.User{},
 			},
 			{
 				Method:       "GET",
@@ -117,8 +118,8 @@ func TestImportingMounts(t *testing.T) {
 				Method:       "GET",
 				ReuseRequest: true,
 				Resource:     "/api/2.0/instance-profiles/list",
-				Response: identity.InstanceProfileList{
-					InstanceProfiles: []identity.InstanceProfileInfo{
+				Response: aws.InstanceProfileList{
+					InstanceProfiles: []aws.InstanceProfileInfo{
 						{
 							InstanceProfileArn: "arn:aws:iam::12345:instance-profile/shard-s3-access",
 						},
@@ -194,8 +195,8 @@ var meAdminFixture = qa.HTTPFixture{
 	Method:       "GET",
 	ReuseRequest: true,
 	Resource:     "/api/2.0/preview/scim/v2/Me",
-	Response: identity.ScimUser{
-		Groups: []identity.ComplexValue{
+	Response: scim.User{
+		Groups: []scim.ComplexValue{
 			{
 				Display: "admins",
 			},
@@ -218,11 +219,11 @@ func TestImportingUsersGroupsSecretScopes(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/preview/scim/v2/Groups?",
-				Response: identity.GroupList{
-					Resources: []identity.ScimGroup{
+				Response: scim.GroupList{
+					Resources: []scim.Group{
 						// TODO: add another user for which there is no filter resut
 						{ID: "a", DisplayName: "admins",
-							Members: []identity.ComplexValue{
+							Members: []scim.ComplexValue{
 								{Display: "test@test.com", Value: "123", Ref: "Users/123"},
 								{Display: "Test group", Value: "f", Ref: "Groups/f"},
 							},
@@ -243,8 +244,8 @@ func TestImportingUsersGroupsSecretScopes(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/preview/scim/v2/Groups/a",
-				Response: identity.ScimGroup{ID: "a", DisplayName: "admins",
-					Members: []identity.ComplexValue{
+				Response: scim.Group{ID: "a", DisplayName: "admins",
+					Members: []scim.ComplexValue{
 						{Display: "test@test.com", Value: "123", Ref: "Users/123"},
 						{Display: "Test group", Value: "f", Ref: "Groups/f"},
 					},
@@ -254,13 +255,13 @@ func TestImportingUsersGroupsSecretScopes(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/preview/scim/v2/Groups/b",
-				Response: identity.ScimGroup{ID: "b", DisplayName: "users"},
+				Response: scim.Group{ID: "b", DisplayName: "users"},
 			},
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/preview/scim/v2/Groups/c",
-				Response: identity.ScimGroup{ID: "c", DisplayName: "test",
-					Groups: []identity.ComplexValue{
+				Response: scim.Group{ID: "c", DisplayName: "test",
+					Groups: []scim.ComplexValue{
 						{Display: "admins", Value: "a", Ref: "Groups/a", Type: "direct"},
 					},
 				},
@@ -268,19 +269,19 @@ func TestImportingUsersGroupsSecretScopes(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/preview/scim/v2/Groups/f",
-				Response: identity.ScimGroup{ID: "f", DisplayName: "nested"},
+				Response: scim.Group{ID: "f", DisplayName: "nested"},
 			},
 			// TODO: add groups to the output
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/preview/scim/v2/Users/123",
-				Response: identity.ScimUser{ID: "123", DisplayName: "test@test.com", UserName: "test@test.com"},
+				Response: scim.User{ID: "123", DisplayName: "test@test.com", UserName: "test@test.com"},
 			},
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/preview/scim/v2/Users?filter=userName%20eq%20%27test%40test.com%27",
-				Response: identity.UserList{
-					Resources: []identity.ScimUser{
+				Response: scim.UserList{
+					Resources: []scim.User{
 						{ID: "123", DisplayName: "test@test.com", UserName: "test@test.com"},
 					},
 					StartIndex:   1,
@@ -371,7 +372,7 @@ func TestImportingNoResourcesError(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/preview/scim/v2/Groups?",
-				Response: identity.GroupList{Resources: []identity.ScimGroup{}},
+				Response: scim.GroupList{Resources: []scim.Group{}},
 			},
 			{
 				Method:       "GET",
@@ -422,7 +423,7 @@ func TestImportingClusters(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/preview/scim/v2/Groups?",
-				Response: identity.GroupList{Resources: []identity.ScimGroup{}},
+				Response: scim.GroupList{Resources: []scim.Group{}},
 			},
 			{
 				Method:   "GET",
@@ -537,7 +538,7 @@ func TestImportingClusters(t *testing.T) {
 				Method:       "GET",
 				Resource:     "/api/2.0/preview/scim/v2/Me",
 				ReuseRequest: true,
-				Response:     identity.ScimUser{ID: "a", DisplayName: "test@test.com"},
+				Response:     scim.User{ID: "a", DisplayName: "test@test.com"},
 			},
 		},
 		func(ctx context.Context, client *common.DatabricksClient) {
@@ -679,8 +680,8 @@ func TestImportingJobs_JobList(t *testing.T) {
 				Method:       "GET",
 				ReuseRequest: true,
 				Resource:     "/api/2.0/instance-profiles/list",
-				Response: identity.InstanceProfileList{
-					InstanceProfiles: []identity.InstanceProfileInfo{
+				Response: aws.InstanceProfileList{
+					InstanceProfiles: []aws.InstanceProfileInfo{
 						{
 							InstanceProfileArn: "arn:aws:iam::12345:instance-profile/shard-s3-access",
 						},
@@ -788,7 +789,7 @@ func TestImportingSecrets(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/preview/scim/v2/Groups?",
-				Response: identity.GroupList{Resources: []identity.ScimGroup{}},
+				Response: scim.GroupList{Resources: []scim.Group{}},
 			},
 			{
 				Method:   "GET",
@@ -904,12 +905,12 @@ func TestImportingUser(t *testing.T) {
 				Method:       "GET",
 				ReuseRequest: true,
 				Resource:     "/api/2.0/preview/scim/v2/Users?filter=userName%20eq%20%27me%27",
-				Response: identity.UserList{
-					Resources: []identity.ScimUser{
+				Response: scim.UserList{
+					Resources: []scim.User{
 						{
 							ID:       "123",
 							UserName: "me",
-							Groups: []identity.ComplexValue{
+							Groups: []scim.ComplexValue{
 								{
 									Value: "abc",
 									Type:  "direct",

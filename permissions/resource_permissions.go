@@ -9,8 +9,8 @@ import (
 	"strings"
 
 	"github.com/databrickslabs/terraform-provider-databricks/common"
-	"github.com/databrickslabs/terraform-provider-databricks/identity"
 	"github.com/databrickslabs/terraform-provider-databricks/jobs"
+	"github.com/databrickslabs/terraform-provider-databricks/scim"
 
 	"github.com/databrickslabs/terraform-provider-databricks/workspace"
 	"github.com/hashicorp/go-cty/cty"
@@ -123,7 +123,7 @@ func urlPathForObjectID(objectID string) string {
 func (a PermissionsAPI) put(objectID string, objectACL AccessControlChangeList) error {
 	if strings.HasPrefix(objectID, "/sql/") {
 		// SQLA entities always have `CAN_MANAGE` permission for the calling user.
-		me, err := identity.NewUsersAPI(a.context, a.client).Me()
+		me, err := scim.NewUsersAPI(a.context, a.client).Me()
 		if err != nil {
 			return err
 		}
@@ -160,7 +160,7 @@ func (a PermissionsAPI) Update(objectID string, objectACL AccessControlChangeLis
 			}
 		}
 		if owners == 0 {
-			me, err := identity.NewUsersAPI(a.context, a.client).Me()
+			me, err := scim.NewUsersAPI(a.context, a.client).Me()
 			if err != nil {
 				return err
 			}
@@ -346,7 +346,7 @@ func ResourcePermissions() *schema.Resource {
 		if err != nil {
 			return diag.FromErr(err)
 		}
-		me, err := identity.NewUsersAPI(ctx, m).Me()
+		me, err := scim.NewUsersAPI(ctx, m).Me()
 		if err != nil {
 			return diag.FromErr(err)
 		}
@@ -373,7 +373,7 @@ func ResourcePermissions() *schema.Resource {
 				log.Printf("[WARN] cannot validate permission levels, because host is not known yet")
 				return nil
 			}
-			me, err := identity.NewUsersAPI(ctx, client).Me()
+			me, err := scim.NewUsersAPI(ctx, client).Me()
 			if err != nil {
 				return err
 			}

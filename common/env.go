@@ -1,7 +1,6 @@
 package common
 
 import (
-	"log"
 	"os"
 	"reflect"
 	"strconv"
@@ -84,14 +83,8 @@ func CleanupEnvironment() func() {
 	oldPath := os.Getenv("PATH")
 	pwd := os.Getenv("PWD")
 	os.Clearenv()
-	err := os.Setenv("PATH", oldPath)
-	if err != nil {
-		log.Printf("[WARN] Cannot bring back PATH: %v", err)
-	}
-	err = os.Setenv("HOME", pwd)
-	if err != nil {
-		log.Printf("[WARN] Cannot set HOME to old PWD: %v", err)
-	}
+	os.Setenv("PATH", oldPath)
+	os.Setenv("HOME", pwd)
 	homedir.DisableCache = true
 	// and return restore function
 	return func() {

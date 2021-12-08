@@ -11,12 +11,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
 	"github.com/databrickslabs/terraform-provider-databricks/access"
+	"github.com/databrickslabs/terraform-provider-databricks/catalog"
 	"github.com/databrickslabs/terraform-provider-databricks/clusters"
 	"github.com/databrickslabs/terraform-provider-databricks/commands"
 	"github.com/databrickslabs/terraform-provider-databricks/common"
 	"github.com/databrickslabs/terraform-provider-databricks/identity"
-	"github.com/databrickslabs/terraform-provider-databricks/mlflow"
 	"github.com/databrickslabs/terraform-provider-databricks/jobs"
+	"github.com/databrickslabs/terraform-provider-databricks/mlflow"
 	"github.com/databrickslabs/terraform-provider-databricks/mws"
 	"github.com/databrickslabs/terraform-provider-databricks/permissions"
 	"github.com/databrickslabs/terraform-provider-databricks/pipelines"
@@ -50,6 +51,7 @@ func DatabricksProvider() *schema.Provider {
 			"databricks_azure_adls_gen1_mount":       storage.ResourceAzureAdlsGen1Mount(),
 			"databricks_azure_adls_gen2_mount":       storage.ResourceAzureAdlsGen2Mount(),
 			"databricks_azure_blob_mount":            storage.ResourceAzureBlobMount(),
+			"databricks_catalog":                     catalog.ResourceCatalog(),
 			"databricks_cluster":                     clusters.ResourceCluster(),
 			"databricks_cluster_policy":              policies.ResourceClusterPolicy(),
 			"databricks_dbfs_file":                   storage.ResourceDBFSFile(),
@@ -62,7 +64,10 @@ func DatabricksProvider() *schema.Provider {
 			"databricks_instance_profile":            identity.ResourceInstanceProfile(),
 			"databricks_ip_access_list":              access.ResourceIPAccessList(),
 			"databricks_job":                         jobs.ResourceJob(),
- 			"databricks_mlflow_experiment":           mlflow.ResourceMLFlowExperiment(),
+			"databricks_metastore":                   catalog.ResourceMetastore(),
+			"databricks_metastore_assignment":        catalog.ResourceMetastoreAssignment(),
+			"databricks_metastore_data_access":       catalog.ResourceDataAccessConfiguration(),
+			"databricks_mlflow_experiment":           mlflow.ResourceMLFlowExperiment(),
 			"databricks_mlflow_model":                mlflow.ResourceMLFlowModel(),
 			"databricks_mount":                       storage.ResourceDatabricksMount(),
 			"databricks_mws_customer_managed_keys":   mws.ResourceCustomerManagedKey(),
@@ -78,6 +83,7 @@ func DatabricksProvider() *schema.Provider {
 			"databricks_permissions":                 permissions.ResourcePermissions(),
 			"databricks_pipeline":                    pipelines.ResourcePipeline(),
 			"databricks_repo":                        workspace.ResourceRepo(),
+			"databricks_schema":                      catalog.ResourceSchema(),
 			"databricks_secret":                      access.ResourceSecret(),
 			"databricks_secret_scope":                access.ResourceSecretScope(),
 			"databricks_secret_acl":                  access.ResourceSecretACL(),

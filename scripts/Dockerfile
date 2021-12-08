@@ -1,12 +1,11 @@
-ARG TERRAFORM_VERSION=0.12.29
-
-FROM hashicorp/terraform:${TERRAFORM_VERSION}
+FROM hashicorp/terraform:latest
 RUN apk add jq \ 
     && apk add bash \
     && apk add go \
     && apk add python3 \
     && apk add make \
-    && go get gotest.tools/gotestsum
+    && go get gotest.tools/gotestsum \
+    && go get honnef.co/go/tools/cmd/staticcheck
 
 RUN mkdir /src \
     && ln -s /root/go/bin/gotestsum /bin/gotestsum \
@@ -15,4 +14,6 @@ RUN mkdir /src \
 WORKDIR /src
 COPY . .
 
-ENTRYPOINT [ "/src/scripts/run.sh" ]
+RUN make install
+
+ENTRYPOINT [ "/src/scripts/it.sh" ]

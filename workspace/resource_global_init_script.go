@@ -19,7 +19,6 @@ const (
 
 // ResourceGlobalInitScript manages notebooks
 func ResourceGlobalInitScript() *schema.Resource {
-	// TODO: move this into a common piece, in the file_resource, and merge with "path" entry
 	extra := map[string]*schema.Schema{
 		"enabled": {
 			Type:     schema.TypeBool,
@@ -95,7 +94,6 @@ func ResourceGlobalInitScript() *schema.Resource {
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			return NewGlobalInitScriptsAPI(ctx, c).Delete(d.Id())
 		},
-		StateUpgraders: []schema.StateUpgrader{},
 		Schema:         s,
 		SchemaVersion:  1,
 		Timeouts:       &schema.ResourceTimeout{},

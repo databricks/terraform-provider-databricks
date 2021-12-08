@@ -880,7 +880,7 @@ func TestResourceAzureBlobMountCreateGeneric(t *testing.T) {
 			}},
 		Create: true,
 	}.Apply(t)
-	require.NoError(t, err, err) // TODO: global search-replace for NoError
+	require.NoError(t, err, err)
 	assert.Equal(t, "e", d.Id())
 	assert.Equal(t, "wasbs://c@f.blob.core.windows.net/d", d.Get("source"))
 }
@@ -926,7 +926,7 @@ func TestResourceAzureBlobMountCreateGeneric_SAS(t *testing.T) {
 			}},
 		Create: true,
 	}.Apply(t)
-	require.NoError(t, err, err) // TODO: global search-replace for NoError
+	require.NoError(t, err, err)
 	assert.Equal(t, "e", d.Id())
 	assert.Equal(t, "wasbs://c@f.blob.core.windows.net/d", d.Get("source"))
 }
@@ -970,7 +970,7 @@ func TestResourceAzureBlobMountCreateGeneric_Resource_ID(t *testing.T) {
 			}},
 		Create: true,
 	}.Apply(t)
-	require.NoError(t, err, err) // TODO: global search-replace for NoError
+	require.NoError(t, err, err)
 	assert.Equal(t, "c", d.Id())
 	assert.Equal(t, "wasbs://c@f.blob.core.windows.net/d", d.Get("source"))
 }

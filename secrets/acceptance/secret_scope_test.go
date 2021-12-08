@@ -6,8 +6,8 @@ import (
 	"os"
 	"testing"
 
-	"github.com/databrickslabs/terraform-provider-databricks/identity"
 	"github.com/databrickslabs/terraform-provider-databricks/qa"
+	"github.com/databrickslabs/terraform-provider-databricks/scim"
 	"github.com/databrickslabs/terraform-provider-databricks/secrets"
 
 	"github.com/databrickslabs/terraform-provider-databricks/common"
@@ -81,7 +81,7 @@ func TestAccInitialManagePrincipals(t *testing.T) {
 	acls, err := secretACLAPI.List(scope)
 	require.NoError(t, err)
 
-	usersAPI := identity.NewUsersAPI(ctx, client)
+	usersAPI := scim.NewUsersAPI(ctx, client)
 	me, err := usersAPI.Me()
 	require.NoError(t, err)
 	assert.Equal(t, 1, len(acls))
@@ -135,7 +135,7 @@ func TestAccSecretScopeResource(t *testing.T) {
 							acls, err := secretACLAPI.List(id)
 							require.NoError(t, err)
 
-							usersAPI := identity.NewUsersAPI(ctx, client)
+							usersAPI := scim.NewUsersAPI(ctx, client)
 							me, err := usersAPI.Me()
 							require.NoError(t, err)
 							assert.Equal(t, 1, len(acls))

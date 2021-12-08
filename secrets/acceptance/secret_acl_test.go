@@ -5,7 +5,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/databrickslabs/terraform-provider-databricks/identity"
+	"github.com/databrickslabs/terraform-provider-databricks/scim"
 	"github.com/databrickslabs/terraform-provider-databricks/secrets"
 
 	"github.com/databrickslabs/terraform-provider-databricks/common"
@@ -40,7 +40,7 @@ func TestAccSecretAclResource(t *testing.T) {
 					client := common.CommonEnvironmentClient()
 
 					ctx := context.Background()
-					usersAPI := identity.NewUsersAPI(ctx, client)
+					usersAPI := scim.NewUsersAPI(ctx, client)
 					me, err := usersAPI.Me()
 					require.NoError(t, err)
 

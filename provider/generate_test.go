@@ -252,9 +252,6 @@ func TestGenerateTestCodeStubs(t *testing.T) {
 		}
 		stub.Creates(t)
 		stub.Reads(t)
-		if resource.Update != nil {
-			stub.Updates(t)
-		}
 		stub.Deletes(t)
 	}
 }

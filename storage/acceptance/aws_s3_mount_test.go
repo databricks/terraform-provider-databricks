@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/databrickslabs/terraform-provider-databricks/aws"
 	"github.com/databrickslabs/terraform-provider-databricks/clusters"
 	"github.com/databrickslabs/terraform-provider-databricks/common"
-	"github.com/databrickslabs/terraform-provider-databricks/identity"
 	"github.com/databrickslabs/terraform-provider-databricks/internal/acceptance"
 	"github.com/databrickslabs/terraform-provider-databricks/internal/compute"
 	"github.com/databrickslabs/terraform-provider-databricks/qa"
@@ -38,7 +38,7 @@ func TestAwsAccS3IamMount_WithCluster(t *testing.T) {
 	client := common.NewClientFromEnvironment()
 	arn := qa.GetEnvOrSkipTest(t, "TEST_EC2_INSTANCE_PROFILE")
 	ctx := context.WithValue(context.Background(), common.Current, t.Name())
-	instanceProfilesAPI := identity.NewInstanceProfilesAPI(ctx, client)
+	instanceProfilesAPI := aws.NewInstanceProfilesAPI(ctx, client)
 	instanceProfilesAPI.Synchronized(arn, func() bool {
 		if instanceProfilesAPI.IsRegistered(arn) {
 			return false
@@ -87,7 +87,7 @@ func TestAwsAccS3IamMount_NoClusterGiven(t *testing.T) {
 	client := common.NewClientFromEnvironment()
 	arn := qa.GetEnvOrSkipTest(t, "TEST_EC2_INSTANCE_PROFILE")
 	ctx := context.WithValue(context.Background(), common.Current, t.Name())
-	instanceProfilesAPI := identity.NewInstanceProfilesAPI(ctx, client)
+	instanceProfilesAPI := aws.NewInstanceProfilesAPI(ctx, client)
 	instanceProfilesAPI.Synchronized(arn, func() bool {
 		config := qa.EnvironmentTemplate(t, `
 		resource "databricks_instance_profile" "this" {
@@ -142,9 +142,9 @@ func TestAwsAccS3Mount(t *testing.T) {
 	client := common.NewClientFromEnvironment()
 	instanceProfile := qa.GetEnvOrSkipTest(t, "TEST_EC2_INSTANCE_PROFILE")
 	ctx := context.WithValue(context.Background(), common.Current, t.Name())
-	instanceProfilesAPI := identity.NewInstanceProfilesAPI(ctx, client)
+	instanceProfilesAPI := aws.NewInstanceProfilesAPI(ctx, client)
 	instanceProfilesAPI.Synchronized(instanceProfile, func() bool {
-		if err := instanceProfilesAPI.Create(identity.InstanceProfileInfo{
+		if err := instanceProfilesAPI.Create(aws.InstanceProfileInfo{
 			InstanceProfileArn: instanceProfile,
 		}); err != nil {
 			return false

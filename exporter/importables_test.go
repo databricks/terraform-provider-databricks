@@ -5,11 +5,11 @@ import (
 	"testing"
 
 	"github.com/databrickslabs/terraform-provider-databricks/common"
-	"github.com/databrickslabs/terraform-provider-databricks/identity"
 	"github.com/databrickslabs/terraform-provider-databricks/permissions"
 	"github.com/databrickslabs/terraform-provider-databricks/policies"
 	"github.com/databrickslabs/terraform-provider-databricks/pools"
 	"github.com/databrickslabs/terraform-provider-databricks/provider"
+	"github.com/databrickslabs/terraform-provider-databricks/scim"
 	"github.com/databrickslabs/terraform-provider-databricks/secrets"
 	"github.com/stretchr/testify/assert"
 )
@@ -71,16 +71,16 @@ func TestClusterPolicy(t *testing.T) {
 
 func TestGroup(t *testing.T) {
 	ic := importContextForTest()
-	ic.allGroups = []identity.ScimGroup{
+	ic.allGroups = []scim.Group{
 		{
 			DisplayName: "foo",
 			ID:          "123",
-			Roles: []identity.ComplexValue{
+			Roles: []scim.ComplexValue{
 				{
 					Value: "abc",
 				},
 			},
-			Members: []identity.ComplexValue{
+			Members: []scim.ComplexValue{
 				// this is just for log line printing
 				{Value: "a001"},
 				{Value: "a002"},
@@ -94,7 +94,7 @@ func TestGroup(t *testing.T) {
 				{Value: "a010"},
 				{Value: "a011"},
 			},
-			Groups: []identity.ComplexValue{
+			Groups: []scim.ComplexValue{
 				{
 					Value: "parent-group",
 					Type:  "direct",

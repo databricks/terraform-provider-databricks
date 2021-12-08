@@ -4,9 +4,9 @@ import (
 	"context"
 	"testing"
 
+	"github.com/databrickslabs/terraform-provider-databricks/aws"
 	"github.com/databrickslabs/terraform-provider-databricks/clusters"
 	"github.com/databrickslabs/terraform-provider-databricks/common"
-	"github.com/databrickslabs/terraform-provider-databricks/identity"
 	"github.com/databrickslabs/terraform-provider-databricks/internal/compute"
 	"github.com/databrickslabs/terraform-provider-databricks/qa"
 	"github.com/databrickslabs/terraform-provider-databricks/storage"
@@ -18,9 +18,9 @@ func TestAwsAccS3MountGeneric(t *testing.T) {
 	client := common.NewClientFromEnvironment()
 	instanceProfile := qa.GetEnvOrSkipTest(t, "TEST_EC2_INSTANCE_PROFILE")
 	ctx := context.WithValue(context.Background(), common.Current, t.Name())
-	instanceProfilesAPI := identity.NewInstanceProfilesAPI(ctx, client)
+	instanceProfilesAPI := aws.NewInstanceProfilesAPI(ctx, client)
 	instanceProfilesAPI.Synchronized(instanceProfile, func() bool {
-		if err := instanceProfilesAPI.Create(identity.InstanceProfileInfo{
+		if err := instanceProfilesAPI.Create(aws.InstanceProfileInfo{
 			InstanceProfileArn: instanceProfile,
 		}); err != nil {
 			return false

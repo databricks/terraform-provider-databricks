@@ -8,12 +8,12 @@ import (
 
 	"github.com/databrickslabs/terraform-provider-databricks/clusters"
 	"github.com/databrickslabs/terraform-provider-databricks/common"
-	"github.com/databrickslabs/terraform-provider-databricks/identity"
 	"github.com/databrickslabs/terraform-provider-databricks/internal/compute"
 	"github.com/databrickslabs/terraform-provider-databricks/jobs"
 	"github.com/databrickslabs/terraform-provider-databricks/permissions"
 	"github.com/databrickslabs/terraform-provider-databricks/policies"
 	"github.com/databrickslabs/terraform-provider-databricks/pools"
+	"github.com/databrickslabs/terraform-provider-databricks/scim"
 	"github.com/databrickslabs/terraform-provider-databricks/workspace"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/stretchr/testify/assert"
@@ -30,11 +30,11 @@ func permissionsTestHelper(t *testing.T,
 	client := common.NewClientFromEnvironment()
 
 	ctx := context.Background()
-	usersAPI := identity.NewUsersAPI(ctx, client)
+	usersAPI := scim.NewUsersAPI(ctx, client)
 	me, err := usersAPI.Me()
 	require.NoError(t, err)
 
-	user, err := usersAPI.Create(identity.ScimUser{
+	user, err := usersAPI.Create(scim.User{
 		UserName: fmt.Sprintf("tf-%s@example.com", randomName),
 	})
 	require.NoError(t, err)
@@ -42,10 +42,10 @@ func permissionsTestHelper(t *testing.T,
 		assert.NoError(t, usersAPI.Delete(user.ID))
 	}()
 
-	groupsAPI := identity.NewGroupsAPI(ctx, client)
-	group, err := groupsAPI.Create(identity.ScimGroup{
+	groupsAPI := scim.NewGroupsAPI(ctx, client)
+	group, err := groupsAPI.Create(scim.Group{
 		DisplayName: fmt.Sprintf("tf-%s", randomName),
-		Members: []identity.ComplexValue{
+		Members: []scim.ComplexValue{
 			{
 				Value: user.ID,
 			},

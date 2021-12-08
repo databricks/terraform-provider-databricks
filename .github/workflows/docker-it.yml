@@ -1,8 +1,6 @@
-name: Docker image for integration tests
+name: Image for integration tests
 
 on:
-  pull_request:
-    types: [opened, synchronize]
   push:
     branches: [master]
 

@@ -248,7 +248,7 @@ resource "azurerm_container_group" "this" {
 
   container {
     name   = "acceptance"
-    image  = "ghcr.io/databrickslabs/terraform-provider-it:pr-943"
+    image  = "ghcr.io/databrickslabs/terraform-provider-it:master"
     cpu    = "2"
     memory = "2"
     environment_variables = {

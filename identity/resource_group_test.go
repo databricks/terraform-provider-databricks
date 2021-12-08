@@ -60,7 +60,7 @@ func TestResourceGroupCreate(t *testing.T) {
 		display_name = "Data Scientists"
 		allow_instance_pool_create = true
 		allow_cluster_create = true
-		allow_sql_analytics_access = true
+		databricks_sql_access = true
 		`,
 		Create: true,
 	}.Apply(t)
@@ -69,7 +69,7 @@ func TestResourceGroupCreate(t *testing.T) {
 	assert.Equal(t, "Data Scientists", d.Get("display_name"))
 	assert.Equal(t, true, d.Get("allow_cluster_create"))
 	assert.Equal(t, true, d.Get("allow_instance_pool_create"))
-	assert.Equal(t, true, d.Get("allow_sql_analytics_access"))
+	assert.Equal(t, true, d.Get("databricks_sql_access"))
 }
 
 func TestResourceGroupCreate_Error(t *testing.T) {
@@ -125,7 +125,7 @@ func TestResourceGroupRead(t *testing.T) {
 	assert.Equal(t, "abc", d.Id(), "Id should not be empty")
 	assert.Equal(t, true, d.Get("allow_cluster_create"))
 	assert.Equal(t, true, d.Get("allow_instance_pool_create"))
-	assert.Equal(t, true, d.Get("allow_sql_analytics_access"))
+	assert.Equal(t, true, d.Get("databricks_sql_access"))
 	assert.Equal(t, "Data Scientists", d.Get("display_name"))
 }
 
@@ -150,7 +150,7 @@ func TestResourceGroupRead_NoEntitlements(t *testing.T) {
 	assert.Equal(t, "abc", d.Id(), "Id should not be empty")
 	assert.Equal(t, false, d.Get("allow_cluster_create"))
 	assert.Equal(t, false, d.Get("allow_instance_pool_create"))
-	assert.Equal(t, false, d.Get("allow_sql_analytics_access"))
+	assert.Equal(t, false, d.Get("databricks_sql_access"))
 	assert.Equal(t, "Data Scientists", d.Get("display_name"))
 }
 
@@ -276,7 +276,7 @@ func TestResourceGroupUpdate(t *testing.T) {
 		display_name = "Data Ninjas"
 		allow_instance_pool_create = true
 		allow_cluster_create = true
-		allow_sql_analytics_access = true
+		databricks_sql_access = true
 		`,
 		RequiresNew: true,
 		Update:      true,
@@ -287,7 +287,7 @@ func TestResourceGroupUpdate(t *testing.T) {
 	assert.Equal(t, "Data Ninjas", d.Get("display_name"))
 	assert.Equal(t, true, d.Get("allow_cluster_create"))
 	assert.Equal(t, true, d.Get("allow_instance_pool_create"))
-	assert.Equal(t, true, d.Get("allow_sql_analytics_access"))
+	assert.Equal(t, true, d.Get("databricks_sql_access"))
 }
 
 func TestResourceGroupUpdate_Error(t *testing.T) {

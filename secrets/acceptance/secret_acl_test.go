@@ -5,8 +5,8 @@ import (
 	"os"
 	"testing"
 
-	. "github.com/databrickslabs/terraform-provider-databricks/access"
 	"github.com/databrickslabs/terraform-provider-databricks/identity"
+	"github.com/databrickslabs/terraform-provider-databricks/secrets"
 
 	"github.com/databrickslabs/terraform-provider-databricks/common"
 	"github.com/databrickslabs/terraform-provider-databricks/internal/acceptance"
@@ -44,7 +44,7 @@ func TestAccSecretAclResource(t *testing.T) {
 					me, err := usersAPI.Me()
 					require.NoError(t, err)
 
-					secretACLAPI := NewSecretAclsAPI(ctx, client)
+					secretACLAPI := secrets.NewSecretAclsAPI(ctx, client)
 					scope := s.RootModule().Resources["databricks_secret_scope.app"].Primary.ID
 					acls, err := secretACLAPI.List(scope)
 					require.NoError(t, err)
@@ -81,7 +81,7 @@ func TestAccSecretAclResourceDefaultPrincipal(t *testing.T) {
 					}`),
 				Check: acceptance.ResourceCheck("databricks_secret_scope.app",
 					func(ctx context.Context, client *common.DatabricksClient, id string) error {
-						secretACLAPI := NewSecretAclsAPI(ctx, client)
+						secretACLAPI := secrets.NewSecretAclsAPI(ctx, client)
 						acls, err := secretACLAPI.List(id)
 						require.NoError(t, err)
 						assert.Equal(t, 1, len(acls))

@@ -12,11 +12,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/databrickslabs/terraform-provider-databricks/access"
 	"github.com/databrickslabs/terraform-provider-databricks/clusters"
 	"github.com/databrickslabs/terraform-provider-databricks/common"
 	"github.com/databrickslabs/terraform-provider-databricks/jobs"
 	"github.com/databrickslabs/terraform-provider-databricks/permissions"
+	"github.com/databrickslabs/terraform-provider-databricks/secrets"
 	"github.com/databrickslabs/terraform-provider-databricks/workspace"
 
 	"github.com/databrickslabs/terraform-provider-databricks/storage"
@@ -549,7 +549,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			return d.Get("name").(string)
 		},
 		List: func(ic *importContext) error {
-			ssAPI := access.NewSecretScopesAPI(ic.Context, ic.Client)
+			ssAPI := secrets.NewSecretScopesAPI(ic.Context, ic.Client)
 			if scopes, err := ssAPI.List(); err == nil {
 				for i, scope := range scopes {
 					if !ic.MatchesName(scope.Name) {
@@ -569,7 +569,7 @@ var resourcesMap map[string]importable = map[string]importable{
 		Import: func(ic *importContext, r *resource) error {
 			backendType, _ := r.Data.GetOk("backend_type")
 			if backendType != "AZURE_KEYVAULT" {
-				if l, err := access.NewSecretsAPI(ic.Context, ic.Client).List(r.ID); err == nil {
+				if l, err := secrets.NewSecretsAPI(ic.Context, ic.Client).List(r.ID); err == nil {
 					for _, secret := range l {
 						ic.Emit(&resource{
 							Resource: "databricks_secret",
@@ -578,7 +578,7 @@ var resourcesMap map[string]importable = map[string]importable{
 					}
 				}
 			}
-			if l, err := access.NewSecretAclsAPI(ic.Context, ic.Client).List(r.ID); err == nil {
+			if l, err := secrets.NewSecretAclsAPI(ic.Context, ic.Client).List(r.ID); err == nil {
 				for _, acl := range l {
 					ic.Emit(&resource{
 						Resource: "databricks_secret_acl",

@@ -94,8 +94,8 @@ func ResourceGlobalInitScript() *schema.Resource {
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			return NewGlobalInitScriptsAPI(ctx, c).Delete(d.Id())
 		},
-		Schema:         s,
-		SchemaVersion:  1,
-		Timeouts:       &schema.ResourceTimeout{},
+		Schema:        s,
+		SchemaVersion: 1,
+		Timeouts:      &schema.ResourceTimeout{},
 	}.ToResource()
 }

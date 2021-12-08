@@ -4,13 +4,13 @@ import (
 	"encoding/json"
 	"testing"
 
-	"github.com/databrickslabs/terraform-provider-databricks/access"
 	"github.com/databrickslabs/terraform-provider-databricks/common"
 	"github.com/databrickslabs/terraform-provider-databricks/identity"
 	"github.com/databrickslabs/terraform-provider-databricks/permissions"
 	"github.com/databrickslabs/terraform-provider-databricks/policies"
 	"github.com/databrickslabs/terraform-provider-databricks/pools"
 	"github.com/databrickslabs/terraform-provider-databricks/provider"
+	"github.com/databrickslabs/terraform-provider-databricks/secrets"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -150,7 +150,7 @@ func TestPermissions(t *testing.T) {
 }
 
 func TestSecretScope(t *testing.T) {
-	d := access.ResourceSecretScope().TestResourceData()
+	d := secrets.ResourceSecretScope().TestResourceData()
 	d.Set("name", "abc")
 	ic := importContextForTest()
 	name := ic.Importables["databricks_secret_scope"].Name(d)

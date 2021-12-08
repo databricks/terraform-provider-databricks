@@ -23,6 +23,7 @@ import (
 	"github.com/databrickslabs/terraform-provider-databricks/pipelines"
 	"github.com/databrickslabs/terraform-provider-databricks/policies"
 	"github.com/databrickslabs/terraform-provider-databricks/pools"
+	"github.com/databrickslabs/terraform-provider-databricks/secrets"
 	"github.com/databrickslabs/terraform-provider-databricks/sqlanalytics"
 	"github.com/databrickslabs/terraform-provider-databricks/storage"
 	"github.com/databrickslabs/terraform-provider-databricks/workspace"
@@ -84,9 +85,9 @@ func DatabricksProvider() *schema.Provider {
 			"databricks_pipeline":                    pipelines.ResourcePipeline(),
 			"databricks_repo":                        workspace.ResourceRepo(),
 			"databricks_schema":                      catalog.ResourceSchema(),
-			"databricks_secret":                      access.ResourceSecret(),
-			"databricks_secret_scope":                access.ResourceSecretScope(),
-			"databricks_secret_acl":                  access.ResourceSecretACL(),
+			"databricks_secret":                      secrets.ResourceSecret(),
+			"databricks_secret_scope":                secrets.ResourceSecretScope(),
+			"databricks_secret_acl":                  secrets.ResourceSecretACL(),
 			"databricks_service_principal":           identity.ResourceServicePrincipal(),
 			"databricks_sql_dashboard":               sqlanalytics.ResourceDashboard(),
 			"databricks_sql_endpoint":                sqlanalytics.ResourceSQLEndpoint(),

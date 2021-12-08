@@ -108,7 +108,7 @@ func TestAccPermissionsClusterPolicy(t *testing.T) {
 func TestAccPermissionsInstancePool(t *testing.T) {
 	permissionsTestHelper(t, func(permissionsAPI permissions.PermissionsAPI, user, group string,
 		ef func(string) permissions.PermissionsEntity) {
-			client := common.NewClientFromEnvironment()
+		client := common.NewClientFromEnvironment()
 		poolsAPI := pools.NewInstancePoolsAPI(context.Background(), client)
 		ctx := context.Background()
 		ips, err := poolsAPI.Create(pools.InstancePool{
@@ -258,7 +258,7 @@ func TestAccPermissionsJobs(t *testing.T) {
 func TestAccPermissionsNotebooks(t *testing.T) {
 	permissionsTestHelper(t, func(permissionsAPI permissions.PermissionsAPI, user, group string,
 		ef func(string) permissions.PermissionsEntity) {
-			client := common.NewClientFromEnvironment()
+		client := common.NewClientFromEnvironment()
 		workspaceAPI := workspace.NewNotebooksAPI(context.Background(), client)
 
 		notebookDir := fmt.Sprintf("/Testing/%s/something", group)

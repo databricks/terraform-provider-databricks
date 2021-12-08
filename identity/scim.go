@@ -41,7 +41,7 @@ func (cv complexValues) HasValue(value string) bool {
 var entitlementMapping = map[string]string{
 	"allow-cluster-create":       "allow_cluster_create",
 	"allow-instance-pool-create": "allow_instance_pool_create",
-	"databricks-sql-access":      "allow_sql_analytics_access", // TODO: state change
+	"databricks-sql-access":      "databricks_sql_access",
 	"workspace-access":           "workspace_access",
 }
 

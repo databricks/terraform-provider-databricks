@@ -5,7 +5,7 @@ subcategory: "Databricks SQL"
 
 -> **Public Preview** This feature is in [Public Preview](https://docs.databricks.com/release-notes/release-types.html).
 
-To manage [SQLA resources](https://docs.databricks.com/sql/get-started/concepts.html) you must have `allow_sql_analytics_access` on your [databricks_group](group.md#allow_sql_analytics_access) or [databricks_user](user.md#allow_sql_analytics_access).
+To manage [SQLA resources](https://docs.databricks.com/sql/get-started/concepts.html) you must have `databricks_sql_access` on your [databricks_group](group.md#databricks_sql_access) or [databricks_user](user.md#databricks_sql_access).
 
 **Note:** documentation for this resource is a work in progress.
 

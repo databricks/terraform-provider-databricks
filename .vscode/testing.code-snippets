@@ -15,5 +15,14 @@
 			"assert.Len(t, $1, $2)"
 		],
 		"description": "Assert len"
-	}
+	},
+	"Method with single error result": {
+		"prefix": "me",
+		"body": [
+		  "func (a $1) $2() error {",
+		  "    return nil",
+		  "}"
+		],
+		"description": "Method with single error result"
+	  }
 }

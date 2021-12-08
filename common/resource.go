@@ -2,6 +2,7 @@ package common
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"regexp"
 	"strings"
@@ -23,6 +24,15 @@ type Resource struct {
 	Timeouts       *schema.ResourceTimeout
 }
 
+func nicerError(ctx context.Context, err error, action string) error {
+	name := ResourceName.GetOrUnknown(ctx)
+	if name == "unknown" {
+		return err
+	}
+	return fmt.Errorf("cannot %s %s: %w", action,
+		strings.ReplaceAll(name, "_", " "), err)
+}
+
 // ToResource converts to Terraform resource definition
 func (r Resource) ToResource() *schema.Resource {
 	var update func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics
@@ -30,9 +40,11 @@ func (r Resource) ToResource() *schema.Resource {
 		update = func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 			c := m.(*DatabricksClient)
 			if err := r.Update(ctx, d, c); err != nil {
+				err = nicerError(ctx, err, "update")
 				return diag.FromErr(err)
 			}
 			if err := r.Read(ctx, d, c); err != nil {
+				err = nicerError(ctx, err, "read")
 				return diag.FromErr(err)
 			}
 			return nil
@@ -55,6 +67,7 @@ func (r Resource) ToResource() *schema.Resource {
 			return nil
 		}
 		if err != nil {
+			err = nicerError(ctx, err, "read")
 			return diag.FromErr(err)
 		}
 		return nil
@@ -68,9 +81,11 @@ func (r Resource) ToResource() *schema.Resource {
 			c := m.(*DatabricksClient)
 			err := r.Create(ctx, d, c)
 			if err != nil {
+				err = nicerError(ctx, err, "create")
 				return diag.FromErr(err)
 			}
 			if err = r.Read(ctx, d, c); err != nil {
+				err = nicerError(ctx, err, "read")
 				return diag.FromErr(err)
 			}
 			return nil
@@ -79,6 +94,7 @@ func (r Resource) ToResource() *schema.Resource {
 		UpdateContext: update,
 		DeleteContext: func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 			if err := r.Delete(ctx, d, m.(*DatabricksClient)); err != nil {
+				err = nicerError(ctx, err, "delete")
 				return diag.FromErr(err)
 			}
 			return nil

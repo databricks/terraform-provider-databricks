@@ -108,7 +108,7 @@ resource "local_file" "function" {
         "name" : "nightly",
         "type" : "timerTrigger",
         "direction" : "in",
-        "schedule" : "0 15 11-17 * * 1-5"
+        "schedule" : "35 11-17 * * 1-5"
       }
     ]
   })
@@ -224,7 +224,7 @@ resource "azurerm_function_app" "azureit" {
     use_32_bit_worker_process   = false
     scm_use_main_ip_restriction = true
     ip_restriction {
-      action = "Allow"
+      action                    = "Allow"
       virtual_network_subnet_id = azurerm_subnet.this.id
     }
   }
@@ -252,7 +252,7 @@ resource "azurerm_container_group" "this" {
     cpu    = "2"
     memory = "2"
     environment_variables = {
-      TEST_FILTER                  = "'^(TestAcc|TestAzureAcc)'"
+      TEST_FILTER                  = "TestAcc"
       CLOUD_ENV                    = "azure"
       ARM_USE_MSI                  = "true"
       DATABRICKS_AZURE_RESOURCE_ID = azurerm_databricks_workspace.this.id

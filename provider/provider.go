@@ -60,6 +60,7 @@ func DatabricksProvider() *schema.Provider {
 			"databricks_dbfs_file":                   storage.ResourceDBFSFile(),
 			"databricks_directory":                   workspace.ResourceDirectory(),
 			"databricks_global_init_script":          workspace.ResourceGlobalInitScript(),
+			"databricks_grants":                      catalog.ResourceGrants(),
 			"databricks_group":                       scim.ResourceGroup(),
 			"databricks_group_instance_profile":      aws.ResourceGroupInstanceProfile(),
 			"databricks_group_member":                scim.ResourceGroupMember(),

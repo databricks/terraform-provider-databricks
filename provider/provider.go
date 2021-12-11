@@ -38,6 +38,7 @@ func DatabricksProvider() *schema.Provider {
 			"databricks_aws_crossaccount_policy": aws.DataAwsCrossAccountPolicy(),
 			"databricks_aws_assume_role_policy":  aws.DataAwsAssumeRolePolicy(),
 			"databricks_aws_bucket_policy":       aws.DataAwsBucketPolicy(),
+			"databricks_clusters":                clusters.DataSourceClusters(),
 			"databricks_current_user":            scim.DataSourceCurrentUser(),
 			"databricks_dbfs_file":               storage.DataSourceDBFSFile(),
 			"databricks_dbfs_file_paths":         storage.DataSourceDBFSFilePaths(),

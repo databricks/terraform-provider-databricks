@@ -1202,3 +1202,41 @@ func TestModifyClusterRequestGcp(t *testing.T) {
 	assert.Equal(t, "", c.DriverNodeTypeID)
 	assert.Equal(t, false, c.EnableElasticDisk)
 }
+
+// https://github.com/databrickslabs/terraform-provider-databricks/issues/952
+func TestReadOnStoppedClusterWithLibrariesDoesNotFail(t *testing.T) {
+	qa.ResourceFixture{
+		Resource: ResourceCluster(),
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/clusters/get?cluster_id=foo",				
+				Response: ClusterInfo {
+					State: ClusterStateTerminated,
+				},
+			},
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/clusters/events",
+			},
+			{
+				Method:   "GET",
+				ReuseRequest: true,
+				Resource: "/api/2.0/libraries/cluster-status?cluster_id=foo",	
+				Response: libraries.ClusterLibraryStatuses {
+					ClusterID: "foo",
+					LibraryStatuses: []libraries.LibraryStatus{
+						{
+							Status: "PENDING",
+							Library: &libraries.Library{
+								Jar: "foo.bar",
+							},
+						},
+					},
+				},
+			},
+		},
+		Read: true,
+		ID: "foo",
+	}.ApplyNoError(t)
+}

@@ -3,6 +3,7 @@ package libraries
 import (
 	"context"
 	"fmt"
+	"log"
 	"sort"
 	"strings"
 	"time"
@@ -44,7 +45,7 @@ func (a LibrariesAPI) ClusterStatus(clusterID string) (cls ClusterLibraryStatuse
 	return
 }
 
-func (a LibrariesAPI) UpdateLibraries(clusterID string, add, remove ClusterLibraryList) error {
+func (a LibrariesAPI) UpdateLibraries(clusterID string, add, remove ClusterLibraryList, isActive bool) error {
 	if len(remove.Libraries) > 0 {
 		err := a.Uninstall(remove)
 		if err != nil {
@@ -58,11 +59,12 @@ func (a LibrariesAPI) UpdateLibraries(clusterID string, add, remove ClusterLibra
 		}
 	}
 	// TODO: propagate timeout to method signature
-	_, err := a.WaitForLibrariesInstalled(clusterID, 30*time.Minute)
+	_, err := a.WaitForLibrariesInstalled(clusterID, 30*time.Minute, isActive)
 	return err
 }
 
-func (a LibrariesAPI) WaitForLibrariesInstalled(clusterID string, timeout time.Duration) (result *ClusterLibraryStatuses, err error) {
+func (a LibrariesAPI) WaitForLibrariesInstalled(clusterID string, timeout time.Duration, 
+	isActive bool) (result *ClusterLibraryStatuses, err error) {
 	err = resource.RetryContext(a.context, timeout, func() *resource.RetryError {
 		libsClusterStatus, err := a.ClusterStatus(clusterID)
 		if common.IsMissing(err) {
@@ -72,13 +74,12 @@ func (a LibrariesAPI) WaitForLibrariesInstalled(clusterID string, timeout time.D
 		if err != nil {
 			return resource.NonRetryableError(err)
 		}
-		// TODO: bring it back
-		// if !clusterInfo.IsRunningOrResizing() {
-		// 	log.Printf("[INFO] Cluster %#v (%s) is currently not running, so just returning list of %d libraries",
-		// 		clusterInfo.ClusterName, clusterID, len(libsClusterStatus.LibraryStatuses))
-		// 	result = &libsClusterStatus
-		// 	return nil
-		// }
+		if !isActive {
+			log.Printf("[INFO] Cluster %s is currently not running, so just returning list of %d libraries",
+				clusterID, len(libsClusterStatus.LibraryStatuses))
+			result = &libsClusterStatus
+			return nil
+		}
 		retry, err := libsClusterStatus.IsRetryNeeded()
 		if retry {
 			return resource.RetryableError(err)

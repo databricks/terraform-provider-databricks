@@ -155,7 +155,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, c *commo
 		}
 		// TODO: share the remainder of timeout from clusters.Create
 		timeout := d.Timeout(schema.TimeoutCreate)
-		_, err := libs.WaitForLibrariesInstalled(d.Id(), timeout)
+		_, err := libs.WaitForLibrariesInstalled(d.Id(), timeout, clusterInfo.IsRunningOrResizing())
 		if err != nil {
 			return err
 		}
@@ -195,7 +195,8 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, c *common.
 	}
 	d.Set("url", c.FormatURL("#setting/clusters/", d.Id(), "/configuration"))
 	librariesAPI := libraries.NewLibrariesAPI(ctx, c)
-	libsClusterStatus, err := librariesAPI.WaitForLibrariesInstalled(d.Id(), d.Timeout(schema.TimeoutRead))
+	libsClusterStatus, err := librariesAPI.WaitForLibrariesInstalled(d.Id(), 
+		d.Timeout(schema.TimeoutRead), clusterInfo.IsRunningOrResizing())
 	if err != nil {
 		return err
 	}
@@ -283,7 +284,10 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, c *commo
 				return err
 			}
 		}
-		if err = librariesAPI.UpdateLibraries(clusterID, libsToInstall, libsToUninstall); err != nil {
+		// clusters.StartAndGetInfo() always returns a running cluster 
+		// or errors out, so we just know the cluster is active.
+		err = librariesAPI.UpdateLibraries(clusterID, libsToInstall, libsToUninstall, true)
+		if err != nil {
 			return err
 		}
 		if clusterInfo.State == ClusterStateTerminated {

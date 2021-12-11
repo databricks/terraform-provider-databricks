@@ -12,6 +12,7 @@
 | [databricks_aws_bucket_policy](docs/data-sources/aws_bucket_policy.md) data
 | [databricks_aws_crossaccount_policy](docs/data-sources/aws_crossaccount_policy.md) data
 | [databricks_cluster](docs/resources/cluster.md)
+| [databricks_clusters](docs/data-sources/clusters.md) data
 | [databricks_cluster_policy](docs/resources/cluster_policy.md)
 | [databricks_current_user](docs/data-sources/current_user.md)
 | [databricks_dbfs_file](docs/resources/dbfs_file.md)

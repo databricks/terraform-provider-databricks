@@ -3,6 +3,7 @@
 ## 0.4.1
 
 * Fixed refresh of `library` blocks on a stopped `databricks_cluster` ([#952](https://github.com/databrickslabs/terraform-provider-databricks/issues/952))
+* Added `databricks_clusters` data resource to list all clusters in the workspace.
 
 ## 0.4.0
 

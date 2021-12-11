@@ -59,28 +59,61 @@ func TestWaitForLibrariesInstalled(t *testing.T) {
 							Whl: "b.whl",
 						},
 					},
+					{
+						Status: "INSTALLED",
+						Library: &Library{
+							Jar: "a.jar",
+						},
+					},
+				},
+			},
+		},
+		{
+			Method:   "POST",
+			Resource: "/api/2.0/libraries/uninstall",
+			ExpectedRequest: ClusterLibraryList{
+				ClusterID: "failed-wheel",
+				Libraries: []Library{
+					{
+						Whl: "b.whl",
+					},
 				},
 			},
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		libs := NewLibrariesAPI(ctx, client)
-		_, err := libs.WaitForLibrariesInstalled("missing", 50*time.Millisecond, true)
+		_, err := libs.WaitForLibrariesInstalled(Wait{
+			"missing", 50 * time.Millisecond, true, false,
+		})
 		assert.EqualError(t, err, "missing")
 
-		_, err = libs.WaitForLibrariesInstalled("error", 50*time.Millisecond, true)
+		_, err = libs.WaitForLibrariesInstalled(Wait{
+			"error", 50 * time.Millisecond, true, false,
+		})
 		assert.EqualError(t, err, "internal error")
 
 		// cluster is not running
-		_, err = libs.WaitForLibrariesInstalled("still-installing", 50*time.Millisecond, false)
+		_, err = libs.WaitForLibrariesInstalled(Wait{
+			"still-installing", 50 * time.Millisecond, false, false,
+		})
 		assert.NoError(t, err)
 
 		// cluster is running
-		_, err = libs.WaitForLibrariesInstalled("still-installing", 50*time.Millisecond, true)
+		_, err = libs.WaitForLibrariesInstalled(Wait{
+			"still-installing", 50 * time.Millisecond, true, false,
+		})
 		assert.EqualError(t, err, "0 libraries are ready, but there are still 1 pending")
 
-		_, err = libs.WaitForLibrariesInstalled("failed-wheel", 50*time.Millisecond, true)
+		_, err = libs.WaitForLibrariesInstalled(Wait{
+			"failed-wheel", 50 * time.Millisecond, true, false,
+		})
 		assert.EqualError(t, err, "whl:b.whl failed: does not compute")
 
+		// uninstall b.whl and continue executing
+		_, err = libs.WaitForLibrariesInstalled(Wait{
+			"failed-wheel", 50 * time.Millisecond, true, true,
+		})
+		assert.NoError(t, err, "library should have been uninstalled and work proceeded")
 	})
 }
 
@@ -127,7 +160,7 @@ func TestClusterLibraryStatuses_UpdateLibraries(t *testing.T) {
 					Jar: "remove.jar",
 				},
 			},
-		}, true)
+		}, 1*time.Second)
 		assert.NoError(t, err)
 	})
 }
@@ -203,11 +236,11 @@ func TestClusterLibraryStatuses_NoNeedAllClusters(t *testing.T) {
 		ClusterID: "abc",
 		LibraryStatuses: []LibraryStatus{
 			{
-				IsLibraryInstalledOnAllClusters: true,
-				Status:                          "INSTALLING",
+				IsGlobal: true,
+				Status:   "INSTALLING",
 			},
 		},
-	}.IsRetryNeeded()
+	}.IsRetryNeeded(false)
 	require.NoError(t, err)
 	assert.False(t, need)
 }
@@ -229,7 +262,7 @@ func TestClusterLibraryStatuses_RetryingCodes(t *testing.T) {
 				Status: "INSTALLING",
 			},
 		},
-	}.IsRetryNeeded()
+	}.IsRetryNeeded(false)
 	require.Error(t, err)
 	assert.Equal(t, "0 libraries are ready, but there are still 4 pending", err.Error())
 	assert.True(t, need)
@@ -249,7 +282,7 @@ func TestClusterLibraryStatuses_ReadyStatuses(t *testing.T) {
 				Status: "UNINSTALL_ON_RESTART",
 			},
 		},
-	}.IsRetryNeeded()
+	}.IsRetryNeeded(false)
 	require.NoError(t, err)
 	assert.False(t, need)
 }
@@ -284,7 +317,7 @@ func TestClusterLibraryStatuses_Errors(t *testing.T) {
 				Messages: []string{"b"},
 			},
 		},
-	}.IsRetryNeeded()
+	}.IsRetryNeeded(false)
 	require.Error(t, err)
 	assert.Equal(t, "whl:a failed: b\nmvn:a.b.c failed: b\ncran:a failed: b", err.Error())
 	assert.False(t, need)

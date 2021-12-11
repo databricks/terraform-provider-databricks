@@ -122,6 +122,8 @@ func resourceClusterSchema() map[string]*schema.Schema {
 
 func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 	var cluster Cluster
+	start := time.Now()
+	timeout := d.Timeout(schema.TimeoutCreate)
 	clusters := NewClustersAPI(ctx, c)
 	err := common.DataToStructPointer(d, clusterSchema, &cluster)
 	if err != nil {
@@ -131,6 +133,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, c *commo
 		return err
 	}
 	cluster.ModifyRequestOnInstancePool()
+	// TODO: propagate d.Timeout(schema.TimeoutCreate)
 	clusterInfo, err := clusters.Create(cluster)
 	if err != nil {
 		return err
@@ -153,9 +156,12 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, c *commo
 		if err = libs.Install(libraryList); err != nil {
 			return err
 		}
-		// TODO: share the remainder of timeout from clusters.Create
-		timeout := d.Timeout(schema.TimeoutCreate)
-		_, err := libs.WaitForLibrariesInstalled(d.Id(), timeout, clusterInfo.IsRunningOrResizing())
+		_, err := libs.WaitForLibrariesInstalled(libraries.Wait{
+			ClusterID: d.Id(),
+			Timeout:   timeout - time.Since(start),
+			IsRunning: clusterInfo.IsRunningOrResizing(),
+			IsRefresh: false,
+		})
 		if err != nil {
 			return err
 		}
@@ -195,8 +201,12 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, c *common.
 	}
 	d.Set("url", c.FormatURL("#setting/clusters/", d.Id(), "/configuration"))
 	librariesAPI := libraries.NewLibrariesAPI(ctx, c)
-	libsClusterStatus, err := librariesAPI.WaitForLibrariesInstalled(d.Id(), 
-		d.Timeout(schema.TimeoutRead), clusterInfo.IsRunningOrResizing())
+	libsClusterStatus, err := librariesAPI.WaitForLibrariesInstalled(libraries.Wait{
+		ClusterID: d.Id(),
+		Timeout:   d.Timeout(schema.TimeoutRead),
+		IsRunning: clusterInfo.IsRunningOrResizing(),
+		IsRefresh: true,
+	})
 	if err != nil {
 		return err
 	}
@@ -284,9 +294,10 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, c *commo
 				return err
 			}
 		}
-		// clusters.StartAndGetInfo() always returns a running cluster 
+		// clusters.StartAndGetInfo() always returns a running cluster
 		// or errors out, so we just know the cluster is active.
-		err = librariesAPI.UpdateLibraries(clusterID, libsToInstall, libsToUninstall, true)
+		err = librariesAPI.UpdateLibraries(clusterID, libsToInstall, libsToUninstall,
+			d.Timeout(schema.TimeoutUpdate))
 		if err != nil {
 			return err
 		}

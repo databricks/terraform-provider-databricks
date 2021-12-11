@@ -1,5 +1,9 @@
 # Version changelog
 
+## 0.4.1
+
+* Fixed refresh of `library` blocks on a stopped `databricks_cluster` ([#952](https://github.com/databrickslabs/terraform-provider-databricks/issues/952))
+
 ## 0.4.0
 
 * Added `databricks_mlflow_model` and `databricks_mlflow_experiment` resources ([#931](https://github.com/databrickslabs/terraform-provider-databricks/pull/931)) 

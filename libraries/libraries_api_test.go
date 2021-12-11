@@ -37,7 +37,7 @@ func TestWaitForLibrariesInstalled(t *testing.T) {
 				ClusterID: "still-installing",
 				LibraryStatuses: []LibraryStatus{
 					{
-						Status: "INSTALLING",
+						Status: "PENDING",
 						Library: &Library{
 							Jar: "a.jar",
 						},
@@ -64,16 +64,21 @@ func TestWaitForLibrariesInstalled(t *testing.T) {
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		libs := NewLibrariesAPI(ctx, client)
-		_, err := libs.WaitForLibrariesInstalled("missing", 50*time.Millisecond)
+		_, err := libs.WaitForLibrariesInstalled("missing", 50*time.Millisecond, true)
 		assert.EqualError(t, err, "missing")
 
-		_, err = libs.WaitForLibrariesInstalled("error", 50*time.Millisecond)
+		_, err = libs.WaitForLibrariesInstalled("error", 50*time.Millisecond, true)
 		assert.EqualError(t, err, "internal error")
 
-		_, err = libs.WaitForLibrariesInstalled("still-installing", 50*time.Millisecond)
+		// cluster is not running
+		_, err = libs.WaitForLibrariesInstalled("still-installing", 50*time.Millisecond, false)
+		assert.NoError(t, err)
+
+		// cluster is running
+		_, err = libs.WaitForLibrariesInstalled("still-installing", 50*time.Millisecond, true)
 		assert.EqualError(t, err, "0 libraries are ready, but there are still 1 pending")
 
-		_, err = libs.WaitForLibrariesInstalled("failed-wheel", 50*time.Millisecond)
+		_, err = libs.WaitForLibrariesInstalled("failed-wheel", 50*time.Millisecond, true)
 		assert.EqualError(t, err, "whl:b.whl failed: does not compute")
 
 	})
@@ -122,7 +127,7 @@ func TestClusterLibraryStatuses_UpdateLibraries(t *testing.T) {
 					Jar: "remove.jar",
 				},
 			},
-		})
+		}, true)
 		assert.NoError(t, err)
 	})
 }

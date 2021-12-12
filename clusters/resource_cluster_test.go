@@ -1210,8 +1210,8 @@ func TestReadOnStoppedClusterWithLibrariesDoesNotFail(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/clusters/get?cluster_id=foo",				
-				Response: ClusterInfo {
+				Resource: "/api/2.0/clusters/get?cluster_id=foo",
+				Response: ClusterInfo{
 					State: ClusterStateTerminated,
 				},
 			},
@@ -1220,10 +1220,10 @@ func TestReadOnStoppedClusterWithLibrariesDoesNotFail(t *testing.T) {
 				Resource: "/api/2.0/clusters/events",
 			},
 			{
-				Method:   "GET",
+				Method:       "GET",
 				ReuseRequest: true,
-				Resource: "/api/2.0/libraries/cluster-status?cluster_id=foo",	
-				Response: libraries.ClusterLibraryStatuses {
+				Resource:     "/api/2.0/libraries/cluster-status?cluster_id=foo",
+				Response: libraries.ClusterLibraryStatuses{
 					ClusterID: "foo",
 					LibraryStatuses: []libraries.LibraryStatus{
 						{
@@ -1237,6 +1237,62 @@ func TestReadOnStoppedClusterWithLibrariesDoesNotFail(t *testing.T) {
 			},
 		},
 		Read: true,
-		ID: "foo",
+		ID:   "foo",
+	}.ApplyNoError(t)
+}
+
+// https://github.com/databrickslabs/terraform-provider-databricks/issues/599
+func TestRefreshOnRunningClusterWithFailedLibraryUninstallsIt(t *testing.T) {
+	qa.ResourceFixture{
+		Resource: ResourceCluster(),
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/clusters/get?cluster_id=foo",
+				Response: ClusterInfo{
+					State: ClusterStateRunning,
+				},
+			},
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/clusters/events",
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/libraries/cluster-status?cluster_id=foo",
+				Response: libraries.ClusterLibraryStatuses{
+					ClusterID: "foo",
+					LibraryStatuses: []libraries.LibraryStatus{
+						{
+							Status:   "FAILED",
+							Messages: []string{"fails for the test"},
+							Library: &libraries.Library{
+								Jar: "foo.bar",
+							},
+						},
+						{
+							Status: "INSTALLED",
+							Library: &libraries.Library{
+								Whl: "bar.whl",
+							},
+						},
+					},
+				},
+			},
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/libraries/uninstall",
+				ExpectedRequest: libraries.ClusterLibraryList{
+					ClusterID: "foo",
+					Libraries: []libraries.Library{
+						{
+							Jar: "foo.bar",
+						},
+					},
+				},
+			},
+		},
+		Read: true,
+		ID:   "foo",
 	}.ApplyNoError(t)
 }

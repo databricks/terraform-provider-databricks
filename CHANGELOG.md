@@ -2,8 +2,10 @@
 
 ## 0.4.1
 
-* Fixed refresh of `library` blocks on a stopped `databricks_cluster` ([#952](https://github.com/databrickslabs/terraform-provider-databricks/issues/952))
-* Added `databricks_clusters` data resource to list all clusters in the workspace.
+* Fixed refresh of `library` blocks on a stopped `databricks_cluster` ([#952](https://github.com/databrickslabs/terraform-provider-databricks/issues/952)).
+* Added `databricks_clusters` data resource to list all clusters in the workspace ([#955](https://github.com/databrickslabs/terraform-provider-databricks/pull/955)).
+* Whenever a library fails to get installed on a running `databricks_cluster`, we now automatically remove this library, so that the clean state of managed libraries is properly maintained. Without this fix users had to manually go to Clusters UI and remove library from a cluster, where it failed to install. Libraries add up to CREATE and UPDATE timeouts of `databricks_cluster` resource. ([#599](https://github.com/databrickslabs/terraform-provider-databricks/issues/599)).
+* Added new experimental resources and increased test coverage.
 
 ## 0.4.0
 

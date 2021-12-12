@@ -45,7 +45,14 @@ func (a LibrariesAPI) ClusterStatus(clusterID string) (cls ClusterLibraryStatuse
 	return
 }
 
-func (a LibrariesAPI) UpdateLibraries(clusterID string, add, remove ClusterLibraryList, isActive bool) error {
+type Wait struct {
+	ClusterID string
+	Timeout   time.Duration
+	IsRunning bool
+	IsRefresh bool
+}
+
+func (a LibrariesAPI) UpdateLibraries(clusterID string, add, remove ClusterLibraryList, timeout time.Duration) error {
 	if len(remove.Libraries) > 0 {
 		err := a.Uninstall(remove)
 		if err != nil {
@@ -58,15 +65,19 @@ func (a LibrariesAPI) UpdateLibraries(clusterID string, add, remove ClusterLibra
 			return err
 		}
 	}
-	// TODO: propagate timeout to method signature
-	_, err := a.WaitForLibrariesInstalled(clusterID, 30*time.Minute, isActive)
+	_, err := a.WaitForLibrariesInstalled(Wait{
+		ClusterID: clusterID,
+		Timeout:   timeout,
+		IsRunning: true,
+		IsRefresh: false,
+	})
 	return err
 }
 
-func (a LibrariesAPI) WaitForLibrariesInstalled(clusterID string, timeout time.Duration, 
-	isActive bool) (result *ClusterLibraryStatuses, err error) {
-	err = resource.RetryContext(a.context, timeout, func() *resource.RetryError {
-		libsClusterStatus, err := a.ClusterStatus(clusterID)
+// clusterID string, timeout time.Duration, isActive bool, refresh bool
+func (a LibrariesAPI) WaitForLibrariesInstalled(wait Wait) (result *ClusterLibraryStatuses, err error) {
+	err = resource.RetryContext(a.context, wait.Timeout, func() *resource.RetryError {
+		libsClusterStatus, err := a.ClusterStatus(wait.ClusterID)
 		if common.IsMissing(err) {
 			// eventual consistency error
 			return resource.RetryableError(err)
@@ -74,13 +85,13 @@ func (a LibrariesAPI) WaitForLibrariesInstalled(clusterID string, timeout time.D
 		if err != nil {
 			return resource.NonRetryableError(err)
 		}
-		if !isActive {
+		if !wait.IsRunning {
 			log.Printf("[INFO] Cluster %s is currently not running, so just returning list of %d libraries",
-				clusterID, len(libsClusterStatus.LibraryStatuses))
+				wait.ClusterID, len(libsClusterStatus.LibraryStatuses))
 			result = &libsClusterStatus
 			return nil
 		}
-		retry, err := libsClusterStatus.IsRetryNeeded()
+		retry, err := libsClusterStatus.IsRetryNeeded(wait.IsRefresh)
 		if retry {
 			return resource.RetryableError(err)
 		}
@@ -90,6 +101,33 @@ func (a LibrariesAPI) WaitForLibrariesInstalled(clusterID string, timeout time.D
 		result = &libsClusterStatus
 		return nil
 	})
+	if err != nil {
+		return
+	}
+	if wait.IsRunning {
+		installed := []LibraryStatus{}
+		cleanup := ClusterLibraryList{
+			ClusterID: wait.ClusterID,
+			Libraries: []Library{},
+		}
+		// cleanup libraries that failed to install
+		for _, v := range result.LibraryStatuses {
+			if v.Status == "FAILED" {
+				log.Printf("[WARN] Removing failed library %s from %s", v.Library, wait.ClusterID)
+				cleanup.Libraries = append(cleanup.Libraries, *v.Library)
+				continue
+			}
+			installed = append(installed, v)
+		}
+		// and result contains only the libraries that were successfully installed
+		result.LibraryStatuses = installed
+		if len(cleanup.Libraries) > 0 {
+			err = a.Uninstall(cleanup)
+			if err != nil {
+				err = fmt.Errorf("cannot cleanup libraries: %w", err)
+			}
+		}
+	}
 	return
 }
 
@@ -243,10 +281,10 @@ func (cll *ClusterLibraryList) String() string {
 
 // LibraryStatus is the status on a given cluster when using the libraries status api
 type LibraryStatus struct {
-	Library                         *Library `json:"library,omitempty"`
-	Status                          string   `json:"status,omitempty"`
-	IsLibraryInstalledOnAllClusters bool     `json:"is_library_for_all_clusters,omitempty"`
-	Messages                        []string `json:"messages,omitempty"`
+	Library  *Library `json:"library,omitempty"`
+	Status   string   `json:"status,omitempty"`
+	IsGlobal bool     `json:"is_library_for_all_clusters,omitempty"`
+	Messages []string `json:"messages,omitempty"`
 }
 
 // ClusterLibraryStatuses  A status will be available for all libraries installed on the cluster via the API or
@@ -271,12 +309,12 @@ func (cls ClusterLibraryStatuses) ToLibraryList() ClusterLibraryList {
 // IsRetryNeeded returns first bool if there needs to be retry.
 // If there needs to be retry, error message will explain why.
 // If retry does not need to happen and error is not nil - it failed.
-func (cls ClusterLibraryStatuses) IsRetryNeeded() (bool, error) {
+func (cls ClusterLibraryStatuses) IsRetryNeeded(refresh bool) (bool, error) {
 	pending := 0
 	ready := 0
 	errors := []string{}
 	for _, lib := range cls.LibraryStatuses {
-		if lib.IsLibraryInstalledOnAllClusters {
+		if lib.IsGlobal {
 			continue
 		}
 		switch lib.Status {
@@ -301,6 +339,10 @@ func (cls ClusterLibraryStatuses) IsRetryNeeded() (bool, error) {
 			ready++
 		//Some step in installation failed. More information can be found in the messages field.
 		case "FAILED":
+			if refresh {
+				// we're reading library list on a running cluster and some of the libs failed to install
+				continue
+			}
 			errors = append(errors, fmt.Sprintf("%s failed: %s", lib.Library, strings.Join(lib.Messages, ", ")))
 			continue
 		}

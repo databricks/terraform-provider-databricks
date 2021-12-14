@@ -112,6 +112,16 @@ func handleForceNew(typeField reflect.StructField, schema *schema.Schema) {
 	}
 }
 
+func handleSensitive(typeField reflect.StructField, schema *schema.Schema) {
+	tfTags := strings.Split(typeField.Tag.Get("tf"), ",")
+	for _, tag := range tfTags {
+		if tag == "sensitive" {
+			schema.ForceNew = true
+			break
+		}
+	}
+}
+
 func getAlias(typeField reflect.StructField) string {
 	tfTags := strings.Split(typeField.Tag.Get("tf"), ",")
 	for _, tag := range tfTags {
@@ -174,6 +184,7 @@ func typeToSchema(v reflect.Value, t reflect.Type, path []string) map[string]*sc
 		handleOptional(typeField, scm[fieldName])
 		handleComputed(typeField, scm[fieldName])
 		handleForceNew(typeField, scm[fieldName])
+		handleSensitive(typeField, scm[fieldName])
 		switch typeField.Type.Kind() {
 		case reflect.Int, reflect.Int32, reflect.Int64:
 			scm[fieldName].Type = schema.TypeInt

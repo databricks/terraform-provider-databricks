@@ -37,7 +37,7 @@ type GlobalInitScriptInfo struct {
 type GlobalInitScriptPayload struct {
 	Name          string `json:"name"`
 	Position      int32  `json:"position"`
-	Enabled       bool   `json:"enabled,omitempty"`
+	Enabled       bool   `json:"enabled"`
 	ContentBase64 string `json:"script"`
 }
 

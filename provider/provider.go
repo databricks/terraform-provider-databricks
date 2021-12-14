@@ -128,14 +128,13 @@ func providerSchema() map[string]*schema.Schema {
 		fieldSchema := &schema.Schema{
 			Type:     kindMap[attr.Kind],
 			Optional: true,
+			Sensitive: attr.Sensitive,
 		}
 		ps[attr.Name] = fieldSchema
 		if len(attr.EnvVars) > 0 {
 			fieldSchema.DefaultFunc = schema.MultiEnvDefaultFunc(attr.EnvVars, nil)
 		}
 	}
-	ps["token"].Sensitive = true
-	ps["azure_client_secret"].Sensitive = true
 	ps["rate_limit"].DefaultFunc = schema.EnvDefaultFunc("DATABRICKS_RATE_LIMIT",
 		common.DefaultRateLimitPerSecond)
 	ps["debug_truncate_bytes"].DefaultFunc = schema.EnvDefaultFunc("DATABRICKS_DEBUG_TRUNCATE_BYTES",

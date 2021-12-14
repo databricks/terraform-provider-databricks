@@ -80,10 +80,13 @@ func (a WorkspacesAPI) verifyWorkspaceReachable(ws Workspace) *resource.RetryErr
 	defer cancel()
 	// wait for DNS caches to refresh, as sometimes we cannot make
 	// API calls to new workspaces immediately after it's created
-	wsClient := a.client.ClientForHost(ws.WorkspaceURL)
+	wsClient, err := a.client.ClientForHost(a.context, ws.WorkspaceURL)
+	if err != nil {
+		return resource.NonRetryableError(err)
+	}
 	// make a request to Tokens API, just to verify there are no errors
 	var response map[string]interface{}
-	err := wsClient.Get(ctx, "/token/list", nil, &response)
+	err = wsClient.Get(ctx, "/token/list", nil, &response)
 	if apiError, ok := err.(common.APIError); ok {
 		err = fmt.Errorf("workspace %s is not yet reachable: %s",
 			ws.WorkspaceURL, apiError)

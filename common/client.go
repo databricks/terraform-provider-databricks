@@ -37,9 +37,9 @@ const (
 // directly. `auth` struct tag describes the type of conflicting authentication used.
 type DatabricksClient struct {
 	Host     string `name:"host" env:"DATABRICKS_HOST"`
-	Token    string `name:"token" env:"DATABRICKS_TOKEN" auth:"token"`
+	Token    string `name:"token" env:"DATABRICKS_TOKEN" auth:"token,sensitive"`
 	Username string `name:"username" env:"DATABRICKS_USERNAME" auth:"password"`
-	Password string `name:"password" env:"DATABRICKS_PASSWORD" auth:"password"`
+	Password string `name:"password" env:"DATABRICKS_PASSWORD" auth:"password,sensitive"`
 
 	// Databricks Account ID for Accounts API. This field is used in dependencies.
 	AccountID string `name:"account_id" env:"DATABRICKS_ACCOUNT_ID"`
@@ -56,7 +56,7 @@ type DatabricksClient struct {
 
 	AzureResourceID    string `name:"azure_workspace_resource_id" env:"DATABRICKS_AZURE_RESOURCE_ID" auth:"azure"`
 	AzureUseMSI        bool   `name:"azure_use_msi" env:"ARM_USE_MSI" auth:"azure"`
-	AzureClientSecret  string `name:"azure_client_secret" env:"ARM_CLIENT_SECRET" auth:"azure"`
+	AzureClientSecret  string `name:"azure_client_secret" env:"ARM_CLIENT_SECRET" auth:"azure,sensitive"`
 	AzureClientID      string `name:"azure_client_id" env:"ARM_CLIENT_ID" auth:"azure"`
 	AzureTenantID      string `name:"azure_tenant_id" env:"ARM_TENANT_ID" auth:"azure"`
 	AzurermEnvironment string `name:"azure_environment" env:"ARM_ENVIRONMENT"`
@@ -66,17 +66,17 @@ type DatabricksClient struct {
 
 	// Skip SSL certificate verification for HTTP calls.
 	// Use at your own risk or for unit testing purposes.
-	InsecureSkipVerify bool `name:"skip_verify"`
-	HTTPTimeoutSeconds int  `name:"http_timeout_seconds"`
+	InsecureSkipVerify bool `name:"skip_verify" auth:"-"`
+	HTTPTimeoutSeconds int  `name:"http_timeout_seconds" auth:"-"`
 
 	// Truncate JSON fields in JSON above this limit. Default is 96.
-	DebugTruncateBytes int `name:"debug_truncate_bytes" env:"DATABRICKS_DEBUG_TRUNCATE_BYTES"`
+	DebugTruncateBytes int `name:"debug_truncate_bytes" env:"DATABRICKS_DEBUG_TRUNCATE_BYTES" auth:"-"`
 
 	// Debug HTTP headers of requests made by the provider. Default is false.
-	DebugHeaders bool `name:"debug_headers" env:"DATABRICKS_DEBUG_HEADERS"`
+	DebugHeaders bool `name:"debug_headers" env:"DATABRICKS_DEBUG_HEADERS" auth:"-"`
 
 	// Maximum number of requests per second made to Databricks REST API.
-	RateLimitPerSecond int `name:"rate_limit" env:"DATABRICKS_RATE_LIMIT"`
+	RateLimitPerSecond int `name:"rate_limit" env:"DATABRICKS_RATE_LIMIT" auth:"-"`
 
 	// OAuth token refreshers for Azure to be used within `authVisitor`
 	azureAuthorizer autorest.Authorizer
@@ -111,11 +111,13 @@ type DatabricksClient struct {
 }
 
 type ConfigAttribute struct {
-	Name    string
-	Kind    reflect.Kind
-	EnvVars []string
-	Auth    string
-	num     int
+	Name      string
+	Kind      reflect.Kind
+	EnvVars   []string
+	Auth      string
+	Sensitive bool
+	Internal  bool
+	num       int
 }
 
 func (ca *ConfigAttribute) Set(client *DatabricksClient, i interface{}) error {
@@ -135,6 +137,12 @@ func (ca *ConfigAttribute) Set(client *DatabricksClient, i interface{}) error {
 	return nil
 }
 
+func (ca *ConfigAttribute) GetString(client *DatabricksClient) string {
+	rv := reflect.ValueOf(client)
+	field := rv.Elem().Field(ca.num)
+	return fmt.Sprintf("%v", field.Interface())
+}
+
 // ClientAttributes returns meta-representation of DatabricksClient configuration options
 func ClientAttributes() (attrs []ConfigAttribute) {
 	t := reflect.TypeOf(DatabricksClient{})
@@ -144,11 +152,26 @@ func ClientAttributes() (attrs []ConfigAttribute) {
 		if nameTag == "" {
 			continue
 		}
+		sensitive := false
+		auth := field.Tag.Get("auth")
+		authSplit := strings.Split(auth, ",")
+		if len(authSplit) == 2 {
+			auth = authSplit[0]
+			sensitive = authSplit[1] == "sensitive"
+		}
+		// internal config fields are skipped in debugging
+		internal := false
+		if auth == "-" {
+			auth = ""
+			internal = true
+		}
 		attr := ConfigAttribute{
-			Name: nameTag,
-			Auth: field.Tag.Get("auth"),
-			Kind: field.Type.Kind(),
-			num:  i,
+			Name:      nameTag,
+			Auth:      auth,
+			Kind:      field.Type.Kind(),
+			Sensitive: sensitive,
+			Internal:  internal,
+			num:       i,
 		}
 		envTag := field.Tag.Get("env")
 		if envTag != "" {
@@ -175,6 +198,24 @@ func (c *DatabricksClient) Configure(attrsUsed ...string) error {
 	c.AzureEnvironment = &azureEnvironment
 
 	return nil
+}
+
+func (c *DatabricksClient) configDebugString() string {
+	debug := []string{}
+	for _, attr := range ClientAttributes() {
+		if attr.Internal && !c.DebugHeaders {
+			continue
+		}
+		value := attr.GetString(c)
+		if value == "" {
+			continue
+		}
+		if attr.Sensitive {
+			value = "***REDACTED***"
+		}
+		debug = append(debug, fmt.Sprintf("%s=%v", attr.Name, value))
+	}
+	return strings.Join(debug, ", ")
 }
 
 // Authenticate lazily authenticates across authorizers or returns error
@@ -209,6 +250,7 @@ func (c *DatabricksClient) Authenticate(ctx context.Context) error {
 		if authorizer == nil {
 			continue
 		}
+		log.Printf("[INFO] Configured %s auth: %s", auth.name, c.configDebugString()) // lgtm[go/clear-text-logging]
 		c.authVisitor = authorizer
 		c.fixHost()
 		return nil
@@ -322,21 +364,23 @@ func (c *DatabricksClient) configureWithDatabricksCfg(ctx context.Context) (func
 		return nil, fmt.Errorf("config file %s is corrupt: cannot find host in %s profile",
 			configFile, c.Profile)
 	}
+	token := ""
 	authType := "Bearer"
 	if dbcli.HasKey("username") && dbcli.HasKey("password") {
-		username := dbcli.Key("username").String()
-		password := dbcli.Key("password").String()
-		c.Token = c.encodeBasicAuth(username, password)
+		c.Username = dbcli.Key("username").String()
+		c.Password = dbcli.Key("password").String()
+		token = c.encodeBasicAuth(c.Username, c.Password)
 		authType = "Basic"
 	} else {
 		c.Token = dbcli.Key("token").String()
+		token = c.Token
 	}
-	if c.Token == "" {
+	if token == "" {
 		return nil, fmt.Errorf("config file %s is corrupt: cannot find token in %s profile",
 			configFile, c.Profile)
 	}
 	log.Printf("[INFO] Using %s authentication from ~/.databrickscfg", authType)
-	return c.authorizer(authType, c.Token), nil
+	return c.authorizer(authType, token), nil
 }
 
 func (c *DatabricksClient) authorizer(authType, token string) func(r *http.Request) error {
@@ -420,14 +464,19 @@ func (c *DatabricksClient) FormatURL(strs ...string) string {
 // ClientForHost creates a new DatabricksClient instance with the same auth parameters,
 // but for the given host. Authentication has to be reinitialized, as Google OIDC has
 // different authorizers, depending if it's workspace or Accounts API we're talking to.
-func (c *DatabricksClient) ClientForHost(url string) *DatabricksClient {
+func (c *DatabricksClient) ClientForHost(ctx context.Context, url string) (*DatabricksClient, error) {
+	log.Printf("[INFO] Creating client for host %s based on %s", url, c.configDebugString()) // lgtm[go/clear-text-logging]
+	// Ensure that client is authenticated
+	err := c.Authenticate(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("cannot authenticate parent client: %w", err)
+	}
+	// copy all client configuration options except Databricks CLI profile
 	return &DatabricksClient{
 		Host:                 url,
 		Username:             c.Username,
 		Password:             c.Password,
 		Token:                c.Token,
-		Profile:              c.Profile,
-		ConfigFile:           c.ConfigFile,
 		GoogleServiceAccount: c.GoogleServiceAccount,
 		AzurermEnvironment:   c.AzurermEnvironment,
 		InsecureSkipVerify:   c.InsecureSkipVerify,
@@ -440,5 +489,5 @@ func (c *DatabricksClient) ClientForHost(url string) *DatabricksClient {
 		httpClient:           c.httpClient,
 		configAttributesUsed: c.configAttributesUsed,
 		commandFactory:       c.commandFactory,
-	}
+	}, nil
 }

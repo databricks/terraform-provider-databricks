@@ -10,6 +10,10 @@ provider "aws" {
   region = local.region
 }
 
+output "aws_region" {
+  value = local.region
+}
+
 // initialize provider in "MWS" mode to provision new workspace
 provider "databricks" {
   alias = "mws"
@@ -19,6 +23,10 @@ provider "databricks" {
 data "databricks_aws_assume_role_policy" "this" {
   provider    = databricks.mws
   external_id = local.account_id
+}
+
+output "databricks_account_id" {
+  value = local.account_id
 }
 
 resource "aws_iam_role" "cross_account_role" {
@@ -47,6 +55,10 @@ resource "databricks_mws_credentials" "this" {
 
   // not explicitly needed by this, but to make sure a smooth deployment
   depends_on = [aws_iam_role_policy.this]
+}
+
+output "aws_crossaccount_role" {
+  value = aws_iam_role.cross_account_role.arn
 }
 
 resource "aws_s3_bucket" "root_storage_bucket" {
@@ -82,6 +94,10 @@ resource "databricks_mws_storage_configurations" "this" {
   account_id                 = local.account_id
   bucket_name                = aws_s3_bucket.root_storage_bucket.bucket
   storage_configuration_name = "${local.prefix}-cx-terraform-it"
+}
+
+output "aws_bucket" {
+  value = aws_s3_bucket.root_storage_bucket.bucket
 }
 
 // register VPC
@@ -125,6 +141,26 @@ resource "databricks_mws_networks" "this" {
   security_group_ids = [module.vpc.default_security_group_id]
   subnet_ids         = module.vpc.private_subnets
   vpc_id             = module.vpc.vpc_id
+}
+
+output "aws_vpc_id" {
+  value = module.vpc.vpc_id
+}
+
+output "aws_vpc_cidr" {
+  value = local.cidr_block
+}
+
+output "aws_security_group_ids" {
+  value = [module.vpc.default_security_group_id]
+}
+
+output "databricks_credentials_id" {
+  value = databricks_mws_credentials.this.credentials_id
+}
+
+output "databricks_storage_configuration_id" {
+  value = databricks_mws_storage_configurations.this.storage_configuration_id
 }
 
 // create workspace in given VPC with DBFS on root bucket

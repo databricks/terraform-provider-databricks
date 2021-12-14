@@ -6,6 +6,10 @@ locals {
   tags       = azurerm_resource_group.this.tags
 }
 
+output "tags" {
+  value = local.tags
+}
+
 data "external" "env" {
   program = ["python", "-c", "import sys,os,json;json.dump(dict(os.environ), sys.stdout)"]
 }

@@ -47,7 +47,7 @@ type testStruct struct {
 	Bool           bool              `json:"bool,omitempty"`
 	NonOptional    string            `json:"non_optional"`
 	String         string            `json:"string,omitempty"`
-	ComputedField  string            `json:"computed_field,omitempty" tf:"some_random_tag,computed"`
+	ComputedField  string            `json:"computed_field,omitempty" tf:"some_random_tag,computed,sensitive"`
 	ForceNewField  string            `json:"force_new_field,omitempty" tf:"force_new"`
 	MapField       map[string]string `json:"map_field,omitempty"`
 	SliceSetStruct []testSliceItem   `json:"slice_set_struct,omitempty" tf:"slice_set"`

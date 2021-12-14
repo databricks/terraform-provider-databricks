@@ -250,7 +250,7 @@ func (c *DatabricksClient) Authenticate(ctx context.Context) error {
 		if authorizer == nil {
 			continue
 		}
-		log.Printf("[INFO] Configured %s auth: %s", auth.name, c.configDebugString())
+		log.Printf("[INFO] Configured %s auth: %s", auth.name, c.configDebugString()) // lgtm[go/clear-text-logging]
 		c.authVisitor = authorizer
 		c.fixHost()
 		return nil
@@ -465,7 +465,7 @@ func (c *DatabricksClient) FormatURL(strs ...string) string {
 // but for the given host. Authentication has to be reinitialized, as Google OIDC has
 // different authorizers, depending if it's workspace or Accounts API we're talking to.
 func (c *DatabricksClient) ClientForHost(ctx context.Context, url string) (*DatabricksClient, error) {
-	log.Printf("[INFO] Creating client for host %s based on %s", url, c.configDebugString())
+	log.Printf("[INFO] Creating client for host %s based on %s", url, c.configDebugString()) // lgtm[go/clear-text-logging]
 	// Ensure that client is authenticated
 	err := c.Authenticate(ctx)
 	if err != nil {

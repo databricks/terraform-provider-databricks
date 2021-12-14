@@ -448,6 +448,7 @@ func (c *DatabricksClient) genericQuery(ctx context.Context, method, requestURL 
 	}
 	headers := ""
 	if c.DebugHeaders {
+		headers += fmt.Sprintf("\n * Host: %s", c.Host)
 		for k, v := range request.Header {
 			headers += fmt.Sprintf("\n * %s: %s", k, onlyNBytes(strings.Join(v, ""), c.DebugTruncateBytes))
 		}

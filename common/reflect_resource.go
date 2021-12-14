@@ -116,7 +116,7 @@ func handleSensitive(typeField reflect.StructField, schema *schema.Schema) {
 	tfTags := strings.Split(typeField.Tag.Get("tf"), ",")
 	for _, tag := range tfTags {
 		if tag == "sensitive" {
-			schema.ForceNew = true
+			schema.Sensitive = true
 			break
 		}
 	}

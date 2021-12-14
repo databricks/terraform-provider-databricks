@@ -28,6 +28,7 @@ var (
 		"Unknown worker environment",
 		"ClusterNotReadyException",
 		"connection reset by peer",
+		"TLS handshake timeout",
 		"connection refused",
 		"Unexpected error",
 		"i/o timeout",

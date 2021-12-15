@@ -67,8 +67,6 @@ resource "databricks_job" "this" {
   notebook_task {
     notebook_path = databricks_notebook.this.path
   }
-
-  email_notifications {}
 }
 
 resource "databricks_cluster" "this" {

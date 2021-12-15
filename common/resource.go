@@ -57,12 +57,11 @@ func (r Resource) ToResource() *schema.Resource {
 		for {
 			head := queue[0]
 			queue = queue[1:]
-			for k, v := range head.Schema {
+			for _, v := range head.Schema {
 				if v.Computed {
 					continue
 				}
 				if nested, ok := v.Elem.(*schema.Resource); ok {
-					log.Printf("[DEBUG] %s is a nested block", k)
 					queue = append(queue, nested)
 				}
 				v.ForceNew = true
@@ -137,9 +136,8 @@ func MustCompileKeyRE(name string) *regexp.Regexp {
 func makeEmptyBlockSuppressFunc(name string) func(k, old, new string, d *schema.ResourceData) bool {
 	re := MustCompileKeyRE(name)
 	return func(k, old, new string, d *schema.ResourceData) bool {
-		log.Printf("[DEBUG] name=%s k='%v', old='%v', new='%v'", name, k, old, new)
 		if re.Match([]byte(name)) && old == "1" && new == "0" {
-			log.Printf("[DEBUG] Suppressing diff for name=%s k=%#v old=%#v new=%#v", name, k, old, new)
+			log.Printf("[DEBUG] Suppressing diff for name=%s k=%#v patform=%#v config=%#v", name, k, old, new)
 			return true
 		}
 		return false

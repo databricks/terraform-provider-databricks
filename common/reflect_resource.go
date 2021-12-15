@@ -146,6 +146,16 @@ func chooseFieldName(typeField reflect.StructField) string {
 	return strings.Split(jsonTag, ",")[0]
 }
 
+func diffSuppressor(zero string) func(k, old, new string, d *schema.ResourceData) bool {
+	return func(k, old, new string, d *schema.ResourceData) bool {
+		if new == zero && old != zero {
+			log.Printf("[DEBUG] Suppressing diff for %v: platform=%#v config=%#v", k, old, new)
+			return true
+		}
+		return false
+	}
+}
+
 // typeToSchema converts struct into terraform schema. `path` is used for block suppressions
 // special path element `"0"` is used to denote either arrays or sets of elements
 func typeToSchema(v reflect.Value, t reflect.Type, path []string) map[string]*schema.Schema {
@@ -201,14 +211,17 @@ func typeToSchema(v reflect.Value, t reflect.Type, path []string) map[string]*sc
 			scm[fieldName].Type = schema.TypeList
 			elem := typeField.Type.Elem()
 			sv := reflect.New(elem).Elem()
+			nestedSchema := typeToSchema(sv, elem, append(path, fieldName, "0"))
 			if strings.Contains(tfTag, "suppress_diff") {
-				// TODO: we may also suppress count diffs on all json:"..,omitempty" without tf:"force_new"
-				// find . -type f -name '*.go' -not -path "vendor/*" | xargs grep ',omitempty' | grep '*'
 				blockCount := strings.Join(append(path, fieldName, "#"), ".")
 				scm[fieldName].DiffSuppressFunc = makeEmptyBlockSuppressFunc(blockCount)
+				for _, v := range nestedSchema {
+					// to those relatively new to GoLang: we must explicitly pass down v by copy
+					v.DiffSuppressFunc = diffSuppressor(fmt.Sprintf("%v", v.Type.Zero()))
+				}
 			}
 			scm[fieldName].Elem = &schema.Resource{
-				Schema: typeToSchema(sv, elem, append(path, fieldName, "0")),
+				Schema: nestedSchema,
 			}
 		case reflect.Slice:
 			ft := schema.TypeList

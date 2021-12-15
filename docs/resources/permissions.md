@@ -158,7 +158,6 @@ resource "databricks_service_principal" "aws_principal" {
 resource "databricks_job" "this" {
     name = "Featurization"
     max_concurrent_runs = 1
-    email_notifications {}
 
     new_cluster  {
         num_workers   = 300

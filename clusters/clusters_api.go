@@ -130,29 +130,29 @@ type ZonesInfo struct {
 // AwsAttributes encapsulates the aws attributes for aws based clusters
 // https://docs.databricks.com/dev-tools/api/latest/clusters.html#clusterclusterattributes
 type AwsAttributes struct {
-	FirstOnDemand       int32         `json:"first_on_demand,omitempty" tf:"computed"`
-	Availability        Availability  `json:"availability,omitempty" tf:"computed"`
-	ZoneID              string        `json:"zone_id,omitempty" tf:"computed"`
+	FirstOnDemand       int32         `json:"first_on_demand,omitempty"`
+	Availability        Availability  `json:"availability,omitempty"`
+	ZoneID              string        `json:"zone_id,omitempty"`
 	InstanceProfileArn  string        `json:"instance_profile_arn,omitempty"`
-	SpotBidPricePercent int32         `json:"spot_bid_price_percent,omitempty" tf:"computed"`
-	EbsVolumeType       EbsVolumeType `json:"ebs_volume_type,omitempty" tf:"computed"`
-	EbsVolumeCount      int32         `json:"ebs_volume_count,omitempty" tf:"computed"`
-	EbsVolumeSize       int32         `json:"ebs_volume_size,omitempty" tf:"computed"`
+	SpotBidPricePercent int32         `json:"spot_bid_price_percent,omitempty"`
+	EbsVolumeType       EbsVolumeType `json:"ebs_volume_type,omitempty"`
+	EbsVolumeCount      int32         `json:"ebs_volume_count,omitempty"`
+	EbsVolumeSize       int32         `json:"ebs_volume_size,omitempty"`
 }
 
 // AzureAttributes encapsulates the Azure attributes for Azure based clusters
 // https://docs.microsoft.com/en-us/azure/databricks/dev-tools/api/latest/clusters#clusterazureattributes
 type AzureAttributes struct {
-	FirstOnDemand   int32        `json:"first_on_demand,omitempty" tf:"computed"`
-	Availability    Availability `json:"availability,omitempty" tf:"computed"`
-	SpotBidMaxPrice float64      `json:"spot_bid_max_price,omitempty" tf:"computed"`
+	FirstOnDemand   int32        `json:"first_on_demand,omitempty"`
+	Availability    Availability `json:"availability,omitempty"`
+	SpotBidMaxPrice float64      `json:"spot_bid_max_price,omitempty"`
 }
 
 // GcpAttributes encapsultes GCP specific attributes
 // https://docs.gcp.databricks.com/dev-tools/api/latest/clusters.html#clustergcpattributes
 type GcpAttributes struct {
-	UsePreemptibleExecutors bool   `json:"use_preemptible_executors,omitempty" tf:"computed"`
-	GoogleServiceAccount    string `json:"google_service_account,omitempty" tf:"computed"`
+	UsePreemptibleExecutors bool   `json:"use_preemptible_executors,omitempty"`
+	GoogleServiceAccount    string `json:"google_service_account,omitempty"`
 }
 
 // DbfsStorageInfo contains the destination string for DBFS

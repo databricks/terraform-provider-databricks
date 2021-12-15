@@ -5,7 +5,7 @@ subcategory: "Compute"
 
 Installs a library on [databricks_cluster](cluster.md). Each different type of library has a slightly different syntax. It's possible to set only one type of library within one resource. Otherwise, the plan will fail with an error. 
 
--> **Note** `databricks_library` resource would always start the associated cluster if it's not running, so make sure to have auto-termination configured. It's not possible to atomically change the version of the same library without cluster restart.
+-> **Note** `databricks_library` resource would always start the associated cluster if it's not running, so make sure to have auto-termination configured. It's not possible to atomically change the version of the same library without cluster restart. Libraries are fully removed from the cluster only after restart.
 
 ## Installing library on all clusters
 
@@ -26,8 +26,6 @@ resource "databricks_library" "cli" {
 
 ## Java/Scala JAR
 
-Installing JAR artifacts on a cluster. Location can be anything, that is DBFS or mounted object store (s3, adls, ...)
-
 ```hcl
 resource "databricks_dbfs_file" "app" {
   source = "${path.module}/app-0.0.1.jar"
@@ -42,22 +40,20 @@ resource "databricks_library" "app" {
 
 ## Java/Scala Maven
 
-Installing artifacts from Maven repository. You can also optionally specify a `repo` parameter for custom Maven-style repository, that should be accessible without any authentication for the network that cluster runs in. It can even be properly configured [maven s3 wagon](https://github.com/seahen/maven-s3-wagon), [AWS CodeArtifact](https://aws.amazon.com/codeartifact/) or [Azure Artifacts](https://azure.microsoft.com/en-us/services/devops/artifacts/).
+Installing artifacts from Maven repository. You can also optionally specify a `repo` parameter for custom Maven-style repository, that should be accessible without any authentication. Maven libraries are resolved in Databricks Control Plane, so repo should be accessible from it. It can even be properly configured [maven s3 wagon](https://github.com/seahen/maven-s3-wagon), [AWS CodeArtifact](https://aws.amazon.com/codeartifact/) or [Azure Artifacts](https://azure.microsoft.com/en-us/services/devops/artifacts/).
 
 ```hcl
 resource "databricks_library" "deequ" {
   cluster_id = databricks_cluster.this.id
   maven {
     coordinates = "com.amazon.deequ:deequ:1.0.4"
-    // exlusions block is optional
+    // exclusions block is optional
     exclusions = ["org.apache.avro:avro"]
   }
 }
 ```
 
 ## Python Wheel
-
-Installing Python Wheel artifacts. Location can be anything, that is DBFS or mounted object store (s3, adls, ...)
 
 ```hcl
 resource "databricks_dbfs_file" "app" {
@@ -89,7 +85,6 @@ resource "databricks_library" "fbprophet" {
 
 ## Python EGG
 
-Installing Python EGG artifacts. Location can be anything, that is DBFS or mounted object store (s3, adls, ...)
 ```hcl
 resource "databricks_dbfs_file" "app" {
   source = "${path.module}/foo.egg"
@@ -105,6 +100,7 @@ resource "databricks_library" "app" {
 ## R CRan
 
 Installing artifacts from CRan. You can also optionally specify a `repo` parameter for a custom cran mirror.
+
 ```hcl
 resource "databricks_library" "rkeops" {
   cluster_id = databricks_cluster.this.id

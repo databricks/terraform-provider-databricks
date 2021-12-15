@@ -18,6 +18,13 @@ func ResourceLibrary() *schema.Resource {
 		}
 		return m
 	})
+	parseId := func(id string) (string, string) {
+		split := strings.SplitN(id, "/", 2)
+		if len(split) != 2 {
+			return "unknown", "unknown"
+		}
+		return split[0], split[1]
+	}
 	return common.Resource{
 		Schema: s,
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
@@ -51,11 +58,7 @@ func ResourceLibrary() *schema.Resource {
 			return nil
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			split := strings.SplitN(d.Id(), "/", 2)
-			if len(split) != 2 {
-				split = []string{"unknown", "unknown"}
-			}
-			clusterID, libraryRep := split[0], split[1]
+			clusterID, libraryRep := parseId(d.Id())
 			cll, err := libraries.NewLibrariesAPI(ctx, c).WaitForLibrariesInstalled(libraries.Wait{
 				ClusterID: clusterID,
 				Timeout:   d.Timeout(schema.TimeoutRead),
@@ -74,11 +77,7 @@ func ResourceLibrary() *schema.Resource {
 			return common.NotFound(fmt.Sprintf("cannot find %s on %s", libraryRep, clusterID))
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			split := strings.SplitN(d.Id(), "/", 2)
-			if len(split) != 2 {
-				split = []string{"unknown", "unknown"}
-			}
-			clusterID, libraryRep := split[0], split[1]
+			clusterID, libraryRep := parseId(d.Id())
 			err := NewClustersAPI(ctx, c).Start(clusterID)
 			if err != nil {
 				return err

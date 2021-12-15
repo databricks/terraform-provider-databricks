@@ -3,8 +3,6 @@ subcategory: "Databricks SQL"
 ---
 # databricks_sql_global_config Resource
 
--> **Public Preview** This feature is in [Public Preview](https://docs.databricks.com/release-notes/release-types.html).
-
 This resource configures the security policy, [databricks_instance_profile](instance_profile.md), and data access properties for all [databricks_sql_endpoint](sql_endpoint.md) of workspace. *Please note that changing parameters of this resources will restart all running [databricks_sql_endpoint](sql_endpoint.md).*  To use this resource you need to be an administrator.
 
 ## Example usage

@@ -51,11 +51,25 @@ func (r Resource) ToResource() *schema.Resource {
 		}
 	} else {
 		// set ForceNew to all attributes with CRD
-		for _, v := range r.Schema {
-			if v.Computed {
-				continue
+		queue := []*schema.Resource{
+			{Schema: r.Schema},
+		}
+		for {
+			head := queue[0]
+			queue = queue[1:]
+			for k, v := range head.Schema {
+				if v.Computed {
+					continue
+				}
+				if nested, ok := v.Elem.(*schema.Resource); ok {
+					log.Printf("[DEBUG] %s is a nested block", k)
+					queue = append(queue, nested)
+				}
+				v.ForceNew = true
 			}
-			v.ForceNew = true
+			if len(queue) == 0 {
+				break
+			}
 		}
 	}
 	read := func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {

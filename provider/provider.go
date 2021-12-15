@@ -69,6 +69,7 @@ func DatabricksProvider() *schema.Provider {
 			"databricks_instance_profile":            aws.ResourceInstanceProfile(),
 			"databricks_ip_access_list":              access.ResourceIPAccessList(),
 			"databricks_job":                         jobs.ResourceJob(),
+			"databricks_library":                     clusters.ResourceLibrary(),
 			"databricks_metastore":                   catalog.ResourceMetastore(),
 			"databricks_metastore_assignment":        catalog.ResourceMetastoreAssignment(),
 			"databricks_metastore_data_access":       catalog.ResourceDataAccessConfiguration(),

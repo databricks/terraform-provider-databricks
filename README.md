@@ -27,6 +27,7 @@
 | [databricks_instance_profile](docs/resources/instance_profile.md)
 | [databricks_ip_access_list](docs/resources/ip_access_list.md)
 | [databricks_job](docs/resources/job.md)
+| [databricks_library](docs/resources/library.md)
 | [databricks_mlflow_model](docs/resources/mlflow_model.md)
 | [databricks_mlflow_experiment](docs/resources/mlflow_experiment.md)
 | [databricks_mws_credentials](docs/resources/mws_credentials.md)

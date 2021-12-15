@@ -153,6 +153,8 @@ esource "databricks_cluster" "cluster_with_table_access_control" {
 
 To install libraries, one must specify each library in a separate configuration block. Each different type of library has a slightly different syntax. It's possible to set only one type of library within one config block. Otherwise, the plan will fail with an error.
 
+-> **Note** Please consider using [databricks_library](library.md) resource for a more flexible setup.
+
 Installing JAR artifacts on a cluster. Location can be anything, that is DBFS or mounted object store (s3, adls, ...)
 ```hcl
 library {

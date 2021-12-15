@@ -6,12 +6,13 @@ import (
 
 	"github.com/databrickslabs/terraform-provider-databricks/common"
 	"github.com/databrickslabs/terraform-provider-databricks/qa"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func TestClustersDataSource(t *testing.T) {
-	d, err := qa.ResourceFixture{
+	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
@@ -33,9 +34,7 @@ func TestClustersDataSource(t *testing.T) {
 		NonWritable: true,
 		Read:        true,
 		ID:          "_",
-	}.Apply(t)
-	require.NoError(t, err)
-	assert.Equal(t, []interface{}{"a", "b"}, d.Get("ids"))
+	}.ApplyNoError(t)
 }
 
 func TestClustersDataSourceContainsName(t *testing.T) {
@@ -65,7 +64,9 @@ func TestClustersDataSourceContainsName(t *testing.T) {
 		HCL:         `cluster_name_contains = "this"`,
 	}.Apply(t)
 	require.NoError(t, err)
-	assert.Equal(t, []interface{}{"b"}, d.Get("ids"))
+	ids := d.Get("ids").(*schema.Set)
+	assert.True(t, ids.Contains("b"))
+	assert.Equal(t, 1, ids.Len())
 }
 
 func TestClustersDataSourceErrorsOut(t *testing.T) {

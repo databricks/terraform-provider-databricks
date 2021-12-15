@@ -2,7 +2,6 @@ package clusters
 
 import (
 	"context"
-	"sort"
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -16,16 +15,15 @@ func DataSourceClusters() *schema.Resource {
 			if err != nil {
 				return diag.FromErr(err)
 			}
-			ids := []string{}
+			ids := schema.NewSet(schema.HashString, []interface{}{})
 			name_contains := strings.ToLower(d.Get("cluster_name_contains").(string))
 			for _, v := range clusters {
 				match_name := strings.Contains(strings.ToLower(v.ClusterName), name_contains)
 				if name_contains != "" && !match_name {
 					continue
 				}
-				ids = append(ids, v.ClusterID)
+				ids.Add(v.ClusterID)
 			}
-			sort.Strings(ids)
 			d.Set("ids", ids)
 			d.SetId("_")
 			return nil
@@ -33,7 +31,7 @@ func DataSourceClusters() *schema.Resource {
 		Schema: map[string]*schema.Schema{
 			"ids": {
 				Computed: true,
-				Type:     schema.TypeList,
+				Type:     schema.TypeSet,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},

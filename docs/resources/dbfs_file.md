@@ -29,6 +29,24 @@ resource "databricks_dbfs_file" "this" {
 }
 ```
 
+Install [databricks_library](library.md) on all [databricks_clusters](../data-sources/clusters.md):
+
+```hcl
+data "databricks_clusters" "all" {
+}
+
+resource "databricks_dbfs_file" "app" {
+  source = "${path.module}/baz.whl"
+  path = "/FileStore/baz.whl"
+}
+
+resource "databricks_library" "app" {
+  for_each = data.databricks_clusters.all.ids
+  cluster_id = each.key
+  whl = databricks_dbfs_file.app.dbfs_path
+}
+```
+
 ## Argument Reference
 
 -> **Note** DBFS files would only be changed, if Terraform stage did change. This means that any manual changes to managed file won't be overwritten by Terraform, if there's no local change. 

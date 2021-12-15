@@ -174,22 +174,8 @@ resource "databricks_mws_workspaces" "this" {
   credentials_id           = databricks_mws_credentials.this.credentials_id
   storage_configuration_id = databricks_mws_storage_configurations.this.storage_configuration_id
   network_id               = databricks_mws_networks.this.network_id
-}
 
-// initialize provider in normal mode
-provider "databricks" {
-  // in normal scenario you won't have to give providers aliases
-  alias = "created_workspace"
-
-  host = databricks_mws_workspaces.this.workspace_url
-}
-
-// create PAT token to provision entities within workspace
-resource "databricks_token" "pat" {
-  provider = databricks.created_workspace
-  comment  = "Terraform Provisioning"
-  // 1 day token
-  lifetime_seconds = 60 * 60 * 24 * 7
+  token {}
 }
 
 // create bucket for mounting
@@ -283,7 +269,7 @@ resource "azurerm_container_group" "aws" {
     }
 
     secure_environment_variables = {
-      DATABRICKS_TOKEN = databricks_token.pat.token_value
+      DATABRICKS_TOKEN = databricks_mws_workspaces.this.token[0].token_value
     }
 
     ports {

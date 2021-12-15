@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/databrickslabs/terraform-provider-databricks/common"
+	"github.com/databrickslabs/terraform-provider-databricks/tokens"
 
 	"github.com/databrickslabs/terraform-provider-databricks/qa"
 	"github.com/stretchr/testify/assert"
@@ -945,5 +946,289 @@ func TestWorkspace_WaitForResolve(t *testing.T) {
 			}, 1*time.Second)
 			assert.NoError(t, err)
 		})
+	})
+}
+
+func updateWorkspaceTokenFixture(t *testing.T, fixtures []qa.HTTPFixture, state map[string]string, hcl string) {
+	accountsAPI := []qa.HTTPFixture{
+		{
+			Method:   "PATCH",
+			Resource: "/api/2.0/accounts/c/workspaces/0",
+		},
+		{
+			Method:       "GET",
+			ReuseRequest: true,
+			Resource:     "/api/2.0/accounts/c/workspaces/0",
+		},
+	}
+	tokensAPI := []qa.HTTPFixture{
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/token/list",
+			Response: `{}`, // we just need a JSON for this
+		},
+	}
+	tokensAPI = append(tokensAPI, fixtures...)
+	// outer HTTP server is used for inner request for "just created" workspace
+	qa.HTTPFixturesApply(t, tokensAPI, func(ctx context.Context, wsClient *common.DatabricksClient) {
+		// a bit hacky, but the whole thing is more readable
+		accountsAPI[1].Response = Workspace{
+			WorkspaceStatus: "RUNNING",
+			WorkspaceURL:    wsClient.Host,
+		}
+		state["workspace_url"] = wsClient.Host
+		state["workspace_name"] = "b"
+		state["account_id"] = "c"
+		state["is_no_public_ip_enabled"] = "false"
+		qa.ResourceFixture{
+			Fixtures:      accountsAPI,
+			Resource:      ResourceWorkspace(),
+			InstanceState: state,
+			Update:        true,
+			ID:            "a",
+			HCL: hcl + `
+			workspace_name = "b"
+			account_id = "c"`,
+		}.Apply(t)
+	})
+}
+
+func TestUpdateWorkspace_AddToken(t *testing.T) {
+	updateWorkspaceTokenFixture(t, []qa.HTTPFixture{
+		{
+			Method:   "POST",
+			Resource: "/api/2.0/token/create",
+			ExpectedRequest: Token{
+				LifetimeSeconds: 2.592e+06,
+				Comment:         "Terraform PAT",
+			},
+			Response: tokens.TokenResponse{
+				TokenValue: "sensitive",
+				TokenInfo: &tokens.TokenInfo{
+					TokenID: "abcdef",
+				},
+			},
+		},
+	}, map[string]string{
+		// no token in state
+	}, `token {}`)
+}
+
+func TestUpdateWorkspace_DeleteToken(t *testing.T) {
+	updateWorkspaceTokenFixture(t, []qa.HTTPFixture{
+		{
+			Method:   "POST",
+			Resource: "/api/2.0/token/delete",
+			ExpectedRequest: map[string]interface{}{
+				"token_id": "abcdef",
+			},
+		},
+	}, map[string]string{
+		"token.#":                  "1",
+		"token.0.comment":          "Terraform PAT",
+		"token.0.lifetime_seconds": "2592000",
+		"token.0.token_id":         "abcdef",
+		"token.0.token_value":      "sensitive",
+	}, ``)
+}
+
+func TestUpdateWorkspace_ReplaceToken(t *testing.T) {
+	updateWorkspaceTokenFixture(t, []qa.HTTPFixture{
+		{
+			Method:   "POST",
+			Resource: "/api/2.0/token/delete",
+			ExpectedRequest: map[string]interface{}{
+				"token_id": "abcdef",
+			},
+		},
+		{
+			Method:   "POST",
+			Resource: "/api/2.0/token/create",
+			ExpectedRequest: Token{
+				LifetimeSeconds: 2.592e+06,
+				Comment:         "I am Batman!",
+			},
+			Response: tokens.TokenResponse{
+				TokenValue: "new-value",
+				TokenInfo: &tokens.TokenInfo{
+					TokenID: "new-id",
+				},
+			},
+		},
+	}, map[string]string{
+		"token.#":                  "1",
+		"token.0.comment":          "Terraform PAT",
+		"token.0.lifetime_seconds": "2592000",
+		"token.0.token_id":         "abcdef",
+		"token.0.token_value":      "sensitive",
+	}, `token { 
+		comment = "I am Batman!"
+	}`)
+}
+
+func TestEnsureTokenExists(t *testing.T) {
+	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/token/list",
+			Response: `{}`, // we just need a JSON for this
+		},
+		{
+			Method:   "POST",
+			Resource: "/api/2.0/token/create",
+			ExpectedRequest: Token{
+				LifetimeSeconds: 3600,
+				Comment:         "test",
+			},
+			Response: tokens.TokenResponse{
+				TokenValue: "new-value",
+				TokenInfo: &tokens.TokenInfo{
+					TokenID: "new-id",
+				},
+			},
+		},
+	}, func(ctx context.Context, client *common.DatabricksClient) {
+		r := ResourceWorkspace()
+		d := r.TestResourceData()
+		d.Set("workspace_url", client.Host)
+		d.Set("token", []interface{}{
+			map[string]interface{}{
+				"lifetime_seconds": 3600,
+				"comment":          "test",
+				"token_id":         "abcdef",
+			},
+		})
+		wsApi := NewWorkspacesAPI(context.Background(), client)
+		err := EnsureTokenExistsIfNeeded(wsApi, r.Schema, d)
+		assert.NoError(t, err)
+	})
+}
+
+func TestEnsureTokenExists_NoRecreate(t *testing.T) {
+	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/token/list",
+			Response: tokens.TokenList{
+				TokenInfos: []tokens.TokenInfo{
+					{
+						TokenID: "old-id",
+					},
+				},
+			},
+		},
+	}, func(ctx context.Context, client *common.DatabricksClient) {
+		r := ResourceWorkspace()
+		d := r.TestResourceData()
+		d.Set("workspace_url", client.Host)
+		d.Set("token", []interface{}{
+			map[string]interface{}{
+				"lifetime_seconds": 3600,
+				"comment":          "test",
+				"token_id":         "old-id",
+			},
+		})
+		wsApi := NewWorkspacesAPI(context.Background(), client)
+		err := EnsureTokenExistsIfNeeded(wsApi, r.Schema, d)
+		assert.NoError(t, err)
+	})
+}
+
+func TestWorkspaceTokenWrongAuthCornerCase(t *testing.T) {
+	defer common.CleanupEnvironment()()
+	client := &common.DatabricksClient{}
+	r := ResourceWorkspace()
+	d := r.TestResourceData()
+	d.Set("workspace_url", client.Host)
+	d.Set("token", []interface{}{
+		map[string]interface{}{
+			"lifetime_seconds": 3600,
+			"comment":          "test",
+			"token_id":         "old-id",
+		},
+	})
+
+	wsApi := NewWorkspacesAPI(context.Background(), client)
+
+	noAuth := "cannot authenticate parent client: authentication is not configured " +
+		"for provider.. Please check https://registry.terraform.io/providers/" +
+		"databrickslabs/databricks/latest/docs#authentication for details"
+	assert.EqualError(t, CreateTokenIfNeeded(wsApi, r.Schema, d), noAuth, "create")
+	assert.EqualError(t, EnsureTokenExistsIfNeeded(wsApi, r.Schema, d), noAuth, "ensure")
+	assert.EqualError(t, removeTokenIfNeeded(wsApi, r.Schema, "x", d), noAuth, "remove")
+
+}
+
+func TestWorkspaceTokenHttpCornerCases(t *testing.T) {
+	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
+		{
+			MatchAny:     true,
+			ReuseRequest: true,
+			Status:       418,
+			Response: common.APIError{
+				ErrorCode:  "NONSENSE",
+				StatusCode: 418,
+				Message:    "I'm a teapot",
+			},
+		},
+	}, func(ctx context.Context, client *common.DatabricksClient) {
+		wsApi := NewWorkspacesAPI(context.Background(), client)
+		r := ResourceWorkspace()
+		d := r.TestResourceData()
+		d.Set("workspace_url", client.Host)
+		d.Set("token", []interface{}{
+			map[string]interface{}{
+				"lifetime_seconds": 3600,
+				"comment":          "test",
+				"token_id":         "old-id",
+			},
+		})
+		for msg, err := range map[string]error{
+			"cannot create token: I'm a teapot": CreateTokenIfNeeded(wsApi, r.Schema, d),
+			"cannot read token: I'm a teapot":   EnsureTokenExistsIfNeeded(wsApi, r.Schema, d),
+			"cannot remove token: I'm a teapot": removeTokenIfNeeded(wsApi, r.Schema, "x", d),
+		} {
+			assert.EqualError(t, err, msg)
+		}
+	})
+}
+
+func TestGenerateWorkspaceHostname_CornerCases(t *testing.T) {
+	assert.Equal(t, "fallback.cloud.databricks.com",
+		generateWorkspaceHostname(&common.DatabricksClient{
+			Host: "$%^&*",
+		}, Workspace{
+			DeploymentName: "fallback",
+		}))
+	assert.Equal(t, "stuff.is.exaple.com",
+		generateWorkspaceHostname(&common.DatabricksClient{
+			Host: "https://this.is.exaple.com",
+		}, Workspace{
+			DeploymentName: "stuff",
+		}))
+}
+
+func TestExplainWorkspaceFailureCornerCase(t *testing.T) {
+	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
+		{
+			MatchAny:     true,
+			ReuseRequest: true,
+			Status:       418,
+			Response: common.APIError{
+				ErrorCode:  "NONSENSE",
+				StatusCode: 418,
+				Message:    "🐜",
+			},
+		},
+	}, func(ctx context.Context, client *common.DatabricksClient) {
+		wsApi := NewWorkspacesAPI(context.Background(), client)
+
+		assert.EqualError(t, wsApi.explainWorkspaceFailure(Workspace{
+			WorkspaceStatusMessage: "🔥",
+		}), "🔥")
+
+		assert.EqualError(t, wsApi.explainWorkspaceFailure(Workspace{
+			NetworkID: "abc",
+		}), "failed to start workspace. Cannot read network: 🐜")
 	})
 }

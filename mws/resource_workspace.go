@@ -126,7 +126,8 @@ func (w *Workspace) MarshalJSON() ([]byte, error) {
 	return json.Marshal(workspaceCreationRequest)
 }
 
-// Create creates the workspace creation process
+// Create deploys the workspace and waits till it's properly running.
+// In case of error, it removes the failed deployment and returns the message
 func (a WorkspacesAPI) Create(ws *Workspace, timeout time.Duration) error {
 	if a.client.IsGcp() {
 		ws.Cloud = "gcp"
@@ -274,8 +275,8 @@ func (a WorkspacesAPI) Read(mwsAcctID, workspaceID string) (Workspace, error) {
 	return mwsWorkspace, err
 }
 
-// Delete will delete the configuration for the workspace given a workspace id and will not block. A follow up email
-// will be sent when the workspace is fully deleted.
+// Delete will delete the configuration for the workspace given a workspace id
+// and wait till it's properly removed
 func (a WorkspacesAPI) Delete(mwsAcctID, workspaceID string) error {
 	workspacesAPIPath := fmt.Sprintf("/accounts/%s/workspaces/%s", mwsAcctID, workspaceID)
 	err := a.client.Delete(a.context, workspacesAPIPath, nil)
@@ -309,8 +310,8 @@ func (a WorkspacesAPI) List(mwsAcctID string) ([]Workspace, error) {
 type Token struct {
 	LifetimeSeconds int32  `json:"lifetime_seconds,omitempty" tf:"default:2592000"`
 	Comment         string `json:"comment,omitempty" tf:"default:Terraform PAT"`
-	TokenID         string `json:"token_id,omitempty" tf:"computed,sensitive"`
-	TokenValue      string `json:"token_value,omitempty" tf:"computed"`
+	TokenID         string `json:"token_id,omitempty" tf:"computed"`
+	TokenValue      string `json:"token_value,omitempty" tf:"computed,sensitive"`
 }
 
 // ephemeral entity to use with StructToData()
@@ -319,102 +320,152 @@ type WorkspaceToken struct {
 	Token        *Token `json:"token,omitempty"`
 }
 
-func (a WorkspacesAPI) CreateToken(ws *WorkspaceToken) error {
-	if ws.Token == nil {
-		return fmt.Errorf("no token metadata")
-	}
-	client, err := a.client.ClientForHost(a.context, ws.WorkspaceURL)
+func CreateTokenIfNeeded(workspacesAPI WorkspacesAPI,
+	workspaceSchema map[string]*schema.Schema, d *schema.ResourceData) error {
+	var wsToken WorkspaceToken
+	err := common.DataToStructPointer(d, workspaceSchema, &wsToken)
 	if err != nil {
 		return err
 	}
-	tokensAPI := tokens.NewTokensAPI(a.context, client)
-	lifetime := time.Duration(ws.Token.LifetimeSeconds) * time.Second
-	token, err := tokensAPI.Create(lifetime, ws.Token.Comment)
+	if wsToken.Token == nil {
+		return nil
+	}
+	client, err := workspacesAPI.client.ClientForHost(workspacesAPI.context, wsToken.WorkspaceURL)
 	if err != nil {
 		return err
 	}
-	ws.Token.TokenID = token.TokenInfo.TokenID
-	ws.Token.TokenValue = token.TokenValue
-	return err
+	tokensAPI := tokens.NewTokensAPI(workspacesAPI.context, client)
+	lifetime := time.Duration(wsToken.Token.LifetimeSeconds) * time.Second
+	token, err := tokensAPI.Create(lifetime, wsToken.Token.Comment)
+	if err != nil {
+		return fmt.Errorf("cannot create token: %w", err)
+	}
+	wsToken.Token.TokenID = token.TokenInfo.TokenID
+	wsToken.Token.TokenValue = token.TokenValue
+	return common.StructToData(wsToken, workspaceSchema, d)
 }
 
-func (a WorkspacesAPI) EnsureTokenExists(ws *WorkspaceToken) error {
-	if ws.Token == nil {
-		return fmt.Errorf("no token metadata")
+func EnsureTokenExistsIfNeeded(a WorkspacesAPI,
+	workspaceSchema map[string]*schema.Schema, d *schema.ResourceData) error {
+	var wsToken WorkspaceToken
+	err := common.DataToStructPointer(d, workspaceSchema, &wsToken)
+	if err != nil {
+		return err
 	}
-	client, err := a.client.ClientForHost(a.context, ws.WorkspaceURL)
+	if wsToken.Token == nil {
+		return nil
+	}
+	client, err := a.client.ClientForHost(a.context, wsToken.WorkspaceURL)
 	if err != nil {
 		return err
 	}
 	tokensAPI := tokens.NewTokensAPI(a.context, client)
-	_, err = tokensAPI.Read(ws.Token.TokenID)
+	_, err = tokensAPI.Read(wsToken.Token.TokenID)
 	if common.IsMissing(err) {
-		return a.CreateToken(ws)
+		return CreateTokenIfNeeded(a, workspaceSchema, d)
 	}
-	return err
+	if err != nil {
+		return fmt.Errorf("cannot read token: %w", err)
+	}
+	return nil
 }
 
-func (a WorkspacesAPI) DeleteToken(ws *WorkspaceToken) error {
-	if ws.Token == nil {
-		return fmt.Errorf("no token metadata")
-	}
-	client, err := a.client.ClientForHost(a.context, ws.WorkspaceURL)
+func removeTokenIfNeeded(a WorkspacesAPI,
+	workspaceSchema map[string]*schema.Schema, tokenID string, d *schema.ResourceData) error {
+	client, err := a.client.ClientForHost(a.context, d.Get("workspace_url").(string))
 	if err != nil {
 		return err
 	}
 	tokensAPI := tokens.NewTokensAPI(a.context, client)
-	return tokensAPI.Delete(ws.Token.TokenID)
+	err = tokensAPI.Delete(tokenID)
+	if err != nil {
+		return fmt.Errorf("cannot remove token: %w", err)
+	}
+	return d.Set("token", nil)
+}
+
+func UpdateTokenIfNeeded(workspacesAPI WorkspacesAPI,
+	workspaceSchema map[string]*schema.Schema, d *schema.ResourceData) error {
+	o, n := d.GetChange("token")
+	old, new := o.([]interface{}), n.([]interface{})
+	if d.HasChange("token") {
+		switch {
+		case len(old) == 0 && len(new) > 0: // create
+			return CreateTokenIfNeeded(workspacesAPI, workspaceSchema, d)
+		case len(old) > 0 && len(new) == 0: // delete
+			raw := old[0].(map[string]interface{})
+			return removeTokenIfNeeded(workspacesAPI, workspaceSchema,
+				raw["token_id"].(string), d)
+		case len(old) > 0 && len(new) > 0: // delete & create
+			rawOld := old[0].(map[string]interface{})
+			err := removeTokenIfNeeded(workspacesAPI, workspaceSchema,
+				rawOld["token_id"].(string), d)
+			if err != nil {
+				return err
+			}
+			rawNew := new[0].(map[string]interface{})
+			d.Set("token", []interface{}{
+				map[string]interface{}{
+					"lifetime_seconds": rawNew["lifetime_seconds"],
+					"comment":          rawNew["comment"],
+				},
+			})
+			return CreateTokenIfNeeded(workspacesAPI, workspaceSchema, d)
+		}
+	}
+	return nil
 }
 
 // ResourceWorkspace manages E2 workspaces
 func ResourceWorkspace() *schema.Resource {
-	workspaceSchema := common.StructToSchema(Workspace{}, func(s map[string]*schema.Schema) map[string]*schema.Schema {
-		for name, fieldSchema := range s {
-			if fieldSchema.Computed {
-				// skip checking all changes from remote state
-				continue
-			}
-			fieldSchema.ForceNew = true
-			for _, allowed := range workspaceRunningUpdatesAllowed {
-				if allowed == name {
-					// allow updating only a few specific fields
-					fieldSchema.ForceNew = false
-					break
+	workspaceSchema := common.StructToSchema(Workspace{},
+		func(s map[string]*schema.Schema) map[string]*schema.Schema {
+			for name, fieldSchema := range s {
+				if fieldSchema.Computed {
+					// skip checking all changes from remote state
+					continue
+				}
+				fieldSchema.ForceNew = true
+				for _, allowed := range workspaceRunningUpdatesAllowed {
+					if allowed == name {
+						// allow updating only a few specific fields
+						fieldSchema.ForceNew = false
+						break
+					}
 				}
 			}
-		}
-		s["account_id"].Sensitive = true
-		s["deployment_name"].DiffSuppressFunc = func(k, old, new string, d *schema.ResourceData) bool {
-			if old == "" && new != "" {
-				return false
+			s["account_id"].Sensitive = true
+			s["deployment_name"].DiffSuppressFunc = func(k, old, new string, d *schema.ResourceData) bool {
+				if old == "" && new != "" {
+					return false
+				}
+				// Most of E2 accounts require a prefix and API returns it.
+				// This is certainly a hack to get things working for Terraform operating model.
+				// https://github.com/databrickslabs/terraform-provider-databricks/issues/382
+				return !strings.HasSuffix(new, old)
 			}
-			// Most of E2 accounts require a prefix and API returns it.
-			// This is certainly a hack to get things working for Terraform operating model.
-			// https://github.com/databrickslabs/terraform-provider-databricks/issues/382
-			return !strings.HasSuffix(new, old)
-		}
-		// It cannot be marked as `omitempty` in the struct annotation because Go's JON marshaller
-		// skips booleans set to `false` if set. Thus, we mark it optional here.
-		s["is_no_public_ip_enabled"].Optional = true
-		s["is_no_public_ip_enabled"].Required = false
-		// The API defaults this field to `true`. Apply the same behavior here.
-		s["is_no_public_ip_enabled"].Default = true
-		// The value of `is_no_public_ip_enabled` isn't part of the GET payload.
-		// Keep diff when creating (i.e. `old` == ""), suppress diff otherwise.
-		s["is_no_public_ip_enabled"].DiffSuppressFunc = func(k, old, new string, d *schema.ResourceData) bool {
-			return old != ""
-		}
-		s["customer_managed_key_id"].Deprecated = "Use managed_services_customer_managed_key_id instead"
-		s["customer_managed_key_id"].ConflictsWith = []string{"managed_services_customer_managed_key_id", "storage_customer_managed_key_id"}
-		s["managed_services_customer_managed_key_id"].ConflictsWith = []string{"customer_managed_key_id"}
-		s["storage_customer_managed_key_id"].ConflictsWith = []string{"customer_managed_key_id"}
-		// manage workspace-specific PAT token
-		s["token"] = common.StructToSchema(WorkspaceToken{},
-			func(m map[string]*schema.Schema) map[string]*schema.Schema {
-				return m
-			})["token"]
-		return s
-	})
+			// It cannot be marked as `omitempty` in the struct annotation because Go's JON marshaller
+			// skips booleans set to `false` if set. Thus, we mark it optional here.
+			s["is_no_public_ip_enabled"].Optional = true
+			s["is_no_public_ip_enabled"].Required = false
+			// The API defaults this field to `true`. Apply the same behavior here.
+			s["is_no_public_ip_enabled"].Default = true
+			// The value of `is_no_public_ip_enabled` isn't part of the GET payload.
+			// Keep diff when creating (i.e. `old` == ""), suppress diff otherwise.
+			s["is_no_public_ip_enabled"].DiffSuppressFunc = func(k, old, new string, d *schema.ResourceData) bool {
+				return old != ""
+			}
+			s["customer_managed_key_id"].Deprecated = "Use managed_services_customer_managed_key_id instead"
+			s["customer_managed_key_id"].ConflictsWith = []string{"managed_services_customer_managed_key_id", "storage_customer_managed_key_id"}
+			s["managed_services_customer_managed_key_id"].ConflictsWith = []string{"customer_managed_key_id"}
+			s["storage_customer_managed_key_id"].ConflictsWith = []string{"customer_managed_key_id"}
+			// manage workspace-specific PAT token
+			s["token"] = common.StructToSchema(WorkspaceToken{},
+				func(m map[string]*schema.Schema) map[string]*schema.Schema {
+					return m
+				})["token"]
+			return s
+		})
 	p := common.NewPairSeparatedID("account_id", "workspace_id", "/").Schema(
 		func(_ map[string]*schema.Schema) map[string]*schema.Schema {
 			return workspaceSchema
@@ -429,48 +480,6 @@ func ResourceWorkspace() *schema.Resource {
 			}
 		}
 		return nil
-	}
-	createTokenIfNeeded := func(workspacesAPI WorkspacesAPI, d *schema.ResourceData) error {
-		var wsToken WorkspaceToken
-		err := common.DataToStructPointer(d, workspaceSchema, &wsToken)
-		if err != nil {
-			return err
-		}
-		if wsToken.Token == nil {
-			return nil
-		}
-		err = workspacesAPI.CreateToken(&wsToken)
-		if err != nil {
-			return err
-		}
-		return common.StructToData(wsToken, workspaceSchema, d)
-	}
-	ensureTokenExists := func(workspacesAPI WorkspacesAPI, d *schema.ResourceData) error {
-		var wsToken WorkspaceToken
-		err := common.DataToStructPointer(d, workspaceSchema, &wsToken)
-		if err != nil {
-			return err
-		}
-		if wsToken.Token == nil {
-			return nil
-		}
-		err = workspacesAPI.EnsureTokenExists(&wsToken)
-		if err != nil {
-			return err
-		}
-		return common.StructToData(wsToken, workspaceSchema, d)
-	}
-	removeTokenIfNeeded := func(workspacesAPI WorkspacesAPI, tokenID string, d *schema.ResourceData) error {
-		client, err := workspacesAPI.client.ClientForHost(workspacesAPI.context, d.Get("workspace_url").(string))
-		if err != nil {
-			return err
-		}
-		tokensAPI := tokens.NewTokensAPI(workspacesAPI.context, client)
-		err = tokensAPI.Delete(tokenID)
-		if err != nil {
-			return err
-		}
-		return d.Set("token", nil)
 	}
 	return common.Resource{
 		Schema:        workspaceSchema,
@@ -497,7 +506,7 @@ func ResourceWorkspace() *schema.Resource {
 			}
 			d.Set("workspace_id", workspace.WorkspaceID)
 			p.Pack(d)
-			return createTokenIfNeeded(workspacesAPI, d)
+			return CreateTokenIfNeeded(workspacesAPI, workspaceSchema, d)
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			accountID, workspaceID, err := p.Unpack(d)
@@ -519,44 +528,9 @@ func ResourceWorkspace() *schema.Resource {
 			if err != nil {
 				return err
 			}
-			return ensureTokenExists(workspacesAPI, d)
+			return EnsureTokenExistsIfNeeded(workspacesAPI, workspaceSchema, d)
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			workspacesAPI := NewWorkspacesAPI(ctx, c)
-			o, n := d.GetChange("token")
-			old, new := o.([]interface{}), n.([]interface{})
-			if d.HasChange("token") {
-				switch {
-				case len(old) == 0 && len(new) > 0: // create
-					err := createTokenIfNeeded(workspacesAPI, d)
-					if err != nil {
-						return err
-					}
-				case len(old) > 0 && len(new) == 0: // delete
-					raw := old[0].(map[string]interface{})
-					err := removeTokenIfNeeded(workspacesAPI, raw["token_id"].(string), d)
-					if err != nil {
-						return err
-					}
-				case len(old) > 0 && len(new) > 0: // delete & create
-					rawOld := old[0].(map[string]interface{})
-					err := removeTokenIfNeeded(workspacesAPI, rawOld["token_id"].(string), d)
-					if err != nil {
-						return err
-					}
-					rawNew := new[0].(map[string]interface{})
-					d.Set("token", []interface{}{
-						map[string]interface{}{
-							"lifetime_seconds": rawNew["lifetime_seconds"],
-							"comment":          rawNew["comment"],
-						},
-					})
-					err = createTokenIfNeeded(workspacesAPI, d)
-					if err != nil {
-						return err
-					}
-				}
-			}
 			var workspace Workspace
 			if err := common.DataToStructPointer(d, workspaceSchema, &workspace); err != nil {
 				return err
@@ -566,7 +540,12 @@ func ResourceWorkspace() *schema.Resource {
 				workspace.ManagedServicesCustomerManagedKeyID = workspace.CustomerManagedKeyID
 				workspace.CustomerManagedKeyID = ""
 			}
-			return workspacesAPI.UpdateRunning(workspace, d.Timeout(schema.TimeoutUpdate))
+			workspacesAPI := NewWorkspacesAPI(ctx, c)
+			err := workspacesAPI.UpdateRunning(workspace, d.Timeout(schema.TimeoutUpdate))
+			if err != nil {
+				return err
+			}
+			return UpdateTokenIfNeeded(workspacesAPI, workspaceSchema, d)
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			accountID, workspaceID, err := p.Unpack(d)

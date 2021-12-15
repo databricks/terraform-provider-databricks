@@ -214,8 +214,8 @@ func TestGrantCreate(t *testing.T) {
 func TestGrantReadMalformedId(t *testing.T) {
 	qa.ResourceFixture{
 		Resource: ResourceGrants(),
-		ID: "foo.bar",
-		Read: true,
+		ID:       "foo.bar",
+		Read:     true,
 		HCL: `
 		table = "foo"
 		grant {

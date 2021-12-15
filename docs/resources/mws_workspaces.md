@@ -201,6 +201,9 @@ The following arguments are available and cannot be changed after workspace is c
 
 You can specify a `token` block in the body of workspace resource, so that Terraform manages the refresh of PAT token for the deployment user. The other option is to create [databricks_obo_token](obo_token.md), though it requires Premium or Enterprise plan enabled as well as more complex setup. Token block exposes `token_value`, that holds sensitive PAT token and optionally it can accept two arugments:
 
+-> **Note** Tokens managed by `token {}` block are recreated when expired.
+
+
 * `comment` - (Optional) Comment, that will appear in "User Settings / Access Tokens" page on Workspace UI. By default it's "Terraform PAT".
 * `lifetime_seconds` - (Optional) Token expiry lifetime. By default its 2592000 (30 days).
 

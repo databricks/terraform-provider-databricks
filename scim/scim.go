@@ -103,10 +103,10 @@ type Group struct {
 
 // GroupList contains a list of groups fetched from a list api call from SCIM api
 type GroupList struct {
-	TotalResults int32       `json:"totalResults,omitempty"`
-	StartIndex   int32       `json:"startIndex,omitempty"`
-	ItemsPerPage int32       `json:"itemsPerPage,omitempty"`
-	Schemas      []URN       `json:"schemas,omitempty"`
+	TotalResults int32   `json:"totalResults,omitempty"`
+	StartIndex   int32   `json:"startIndex,omitempty"`
+	ItemsPerPage int32   `json:"itemsPerPage,omitempty"`
+	Schemas      []URN   `json:"schemas,omitempty"`
 	Resources    []Group `json:"resources,omitempty"`
 }
 
@@ -134,10 +134,10 @@ type User struct {
 
 // UserList contains a list of Users fetched from a list api call from SCIM api
 type UserList struct {
-	TotalResults int32      `json:"totalResults,omitempty"`
-	StartIndex   int32      `json:"startIndex,omitempty"`
-	ItemsPerPage int32      `json:"itemsPerPage,omitempty"`
-	Schemas      []URN      `json:"schemas,omitempty"`
+	TotalResults int32  `json:"totalResults,omitempty"`
+	StartIndex   int32  `json:"startIndex,omitempty"`
+	ItemsPerPage int32  `json:"itemsPerPage,omitempty"`
+	Schemas      []URN  `json:"schemas,omitempty"`
 	Resources    []User `json:"resources,omitempty"`
 }
 

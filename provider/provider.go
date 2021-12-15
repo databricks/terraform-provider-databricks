@@ -127,8 +127,8 @@ func providerSchema() map[string]*schema.Schema {
 	attrs := common.ClientAttributes() // TODO: pass by argument
 	for _, attr := range attrs {
 		fieldSchema := &schema.Schema{
-			Type:     kindMap[attr.Kind],
-			Optional: true,
+			Type:      kindMap[attr.Kind],
+			Optional:  true,
 			Sensitive: attr.Sensitive,
 		}
 		ps[attr.Name] = fieldSchema

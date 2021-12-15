@@ -24,5 +24,14 @@
 		  "}"
 		],
 		"description": "Method with single error result"
-	  }
+	  },
+	"if err != nil return err": {
+		"prefix": "ife",
+		"body": [
+			"if err != nil {",
+			"    return err",
+			"}"
+		],
+		"description": "if err != nil return err"
+	}
 }

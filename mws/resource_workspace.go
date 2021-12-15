@@ -3,6 +3,7 @@ package mws
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"log"
 	"net"
@@ -11,6 +12,7 @@ import (
 	"time"
 
 	"github.com/databrickslabs/terraform-provider-databricks/common"
+	"github.com/databrickslabs/terraform-provider-databricks/tokens"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -32,7 +34,100 @@ type WorkspacesAPI struct {
 	context context.Context
 }
 
-// Create creates the workspace creation process
+// List of workspace statuses for provisioning the workspace
+const (
+	WorkspaceStatusNotProvisioned = "NOT_PROVISIONED"
+	WorkspaceStatusProvisioning   = "PROVISIONING"
+	WorkspaceStatusRunning        = "RUNNING"
+	WorkspaceStatusFailed         = "FAILED"
+	WorkspaceStatusCanceled       = "CANCELLED"
+)
+
+// WorkspaceStatusesNonRunnable is a list of statuses in which the workspace is not runnable
+var WorkspaceStatusesNonRunnable = []string{WorkspaceStatusCanceled, WorkspaceStatusFailed}
+
+type GCP struct {
+	ProjectID string `json:"project_id"`
+}
+
+type CloudResourceBucket struct {
+	GCP *GCP `json:"gcp"`
+}
+
+type GCPManagedNetworkConfig struct {
+	SubnetCIDR               string `json:"subnet_cidr"`
+	GKEClusterPodIPRange     string `json:"gke_cluster_pod_ip_range"`
+	GKEClusterServiceIPRange string `json:"gke_cluster_service_ip_range"`
+}
+
+type GCPCommonNetworkConfig struct {
+	GKEConnectivityType     string `json:"gke_connectivity_type"`
+	GKEClusterMasterIPRange string `json:"gke_cluster_master_ip_range"`
+}
+
+type GCPNetwork struct {
+	GCPManagedNetworkConfig *GCPManagedNetworkConfig `json:"gcp_managed_network_config"`
+	GCPCommonNetworkConfig  *GCPCommonNetworkConfig  `json:"gcp_common_network_config"`
+}
+
+type externalCustomerInfo struct {
+	CustomerName              string `json:"customer_name"`
+	AuthoritativeUserEmail    string `json:"authoritative_user_email"`
+	AuthoritativeUserFullName string `json:"authoritative_user_full_name"`
+}
+
+// Workspace is the object that contains all the information for deploying a workspace
+type Workspace struct {
+	AccountID                           string                `json:"account_id"`
+	WorkspaceName                       string                `json:"workspace_name"`
+	DeploymentName                      string                `json:"deployment_name,omitempty"`
+	AwsRegion                           string                `json:"aws_region,omitempty"`               // required for AWS, not allowed for GCP
+	CredentialsID                       string                `json:"credentials_id,omitempty"`           // required for AWS, not allowed for GCP
+	CustomerManagedKeyID                string                `json:"customer_managed_key_id,omitempty"`  // just for compatibility, will be removed
+	StorageConfigurationID              string                `json:"storage_configuration_id,omitempty"` // required for AWS, not allowed for GCP
+	ManagedServicesCustomerManagedKeyID string                `json:"managed_services_customer_managed_key_id,omitempty"`
+	StorageCustomerManagedKeyID         string                `json:"storage_customer_managed_key_id,omitempty"`
+	PricingTier                         string                `json:"pricing_tier,omitempty" tf:"computed"`
+	PrivateAccessSettingsID             string                `json:"private_access_settings_id,omitempty"`
+	NetworkID                           string                `json:"network_id,omitempty"`
+	IsNoPublicIPEnabled                 bool                  `json:"is_no_public_ip_enabled"`
+	WorkspaceID                         int64                 `json:"workspace_id,omitempty" tf:"computed"`
+	WorkspaceURL                        string                `json:"workspace_url,omitempty" tf:"computed"`
+	WorkspaceStatus                     string                `json:"workspace_status,omitempty" tf:"computed"`
+	WorkspaceStatusMessage              string                `json:"workspace_status_message,omitempty" tf:"computed"`
+	CreationTime                        int64                 `json:"creation_time,omitempty" tf:"computed"`
+	ExternalCustomerInfo                *externalCustomerInfo `json:"external_customer_info,omitempty"`
+	CloudResourceBucket                 *CloudResourceBucket  `json:"cloud_resource_bucket,omitempty"`
+	Network                             *GCPNetwork           `json:"network,omitempty"`
+	Cloud                               string                `json:"cloud,omitempty" tf:"computed"`
+	Location                            string                `json:"location,omitempty"`
+}
+
+// this type alias hack is required for Marshaller to work without an infinite loop
+type aWorkspace Workspace
+
+// MarshalJSON is required to overcome the limitations of `omitempty` usage with reflect_resource.go
+// for workspace creation in Accounts API for AWS and GCP. It exits early on AWS and picks only
+// the relevant fields for GCP.
+func (w *Workspace) MarshalJSON() ([]byte, error) {
+	if w.Cloud != "gcp" {
+		return json.Marshal(aWorkspace(*w))
+	}
+	workspaceCreationRequest := map[string]interface{}{
+		"account_id":            w.AccountID,
+		"cloud":                 w.Cloud,
+		"cloud_resource_bucket": w.CloudResourceBucket,
+		"location":              w.Location,
+		"workspace_name":        w.WorkspaceName,
+	}
+	if w.Network != nil {
+		workspaceCreationRequest["network"] = w.Network
+	}
+	return json.Marshal(workspaceCreationRequest)
+}
+
+// Create deploys the workspace and waits till it's properly running.
+// In case of error, it removes the failed deployment and returns the message
 func (a WorkspacesAPI) Create(ws *Workspace, timeout time.Duration) error {
 	if a.client.IsGcp() {
 		ws.Cloud = "gcp"
@@ -180,8 +275,8 @@ func (a WorkspacesAPI) Read(mwsAcctID, workspaceID string) (Workspace, error) {
 	return mwsWorkspace, err
 }
 
-// Delete will delete the configuration for the workspace given a workspace id and will not block. A follow up email
-// will be sent when the workspace is fully deleted.
+// Delete will delete the configuration for the workspace given a workspace id
+// and wait till it's properly removed
 func (a WorkspacesAPI) Delete(mwsAcctID, workspaceID string) error {
 	workspacesAPIPath := fmt.Sprintf("/accounts/%s/workspaces/%s", mwsAcctID, workspaceID)
 	err := a.client.Delete(a.context, workspacesAPIPath, nil)
@@ -212,50 +307,165 @@ func (a WorkspacesAPI) List(mwsAcctID string) ([]Workspace, error) {
 	return mwsWorkspacesList, err
 }
 
+type Token struct {
+	LifetimeSeconds int32  `json:"lifetime_seconds,omitempty" tf:"default:2592000"`
+	Comment         string `json:"comment,omitempty" tf:"default:Terraform PAT"`
+	TokenID         string `json:"token_id,omitempty" tf:"computed"`
+	TokenValue      string `json:"token_value,omitempty" tf:"computed,sensitive"`
+}
+
+// ephemeral entity to use with StructToData()
+type WorkspaceToken struct {
+	WorkspaceURL string `json:"workspace_url,omitempty"`
+	Token        *Token `json:"token,omitempty"`
+}
+
+func CreateTokenIfNeeded(workspacesAPI WorkspacesAPI,
+	workspaceSchema map[string]*schema.Schema, d *schema.ResourceData) error {
+	var wsToken WorkspaceToken
+	err := common.DataToStructPointer(d, workspaceSchema, &wsToken)
+	if err != nil {
+		return err
+	}
+	if wsToken.Token == nil {
+		return nil
+	}
+	client, err := workspacesAPI.client.ClientForHost(workspacesAPI.context, wsToken.WorkspaceURL)
+	if err != nil {
+		return err
+	}
+	tokensAPI := tokens.NewTokensAPI(workspacesAPI.context, client)
+	lifetime := time.Duration(wsToken.Token.LifetimeSeconds) * time.Second
+	token, err := tokensAPI.Create(lifetime, wsToken.Token.Comment)
+	if err != nil {
+		return fmt.Errorf("cannot create token: %w", err)
+	}
+	wsToken.Token.TokenID = token.TokenInfo.TokenID
+	wsToken.Token.TokenValue = token.TokenValue
+	return common.StructToData(wsToken, workspaceSchema, d)
+}
+
+func EnsureTokenExistsIfNeeded(a WorkspacesAPI,
+	workspaceSchema map[string]*schema.Schema, d *schema.ResourceData) error {
+	var wsToken WorkspaceToken
+	err := common.DataToStructPointer(d, workspaceSchema, &wsToken)
+	if err != nil {
+		return err
+	}
+	if wsToken.Token == nil {
+		return nil
+	}
+	client, err := a.client.ClientForHost(a.context, wsToken.WorkspaceURL)
+	if err != nil {
+		return err
+	}
+	tokensAPI := tokens.NewTokensAPI(a.context, client)
+	_, err = tokensAPI.Read(wsToken.Token.TokenID)
+	if common.IsMissing(err) {
+		return CreateTokenIfNeeded(a, workspaceSchema, d)
+	}
+	if err != nil {
+		return fmt.Errorf("cannot read token: %w", err)
+	}
+	return nil
+}
+
+func removeTokenIfNeeded(a WorkspacesAPI,
+	workspaceSchema map[string]*schema.Schema, tokenID string, d *schema.ResourceData) error {
+	client, err := a.client.ClientForHost(a.context, d.Get("workspace_url").(string))
+	if err != nil {
+		return err
+	}
+	tokensAPI := tokens.NewTokensAPI(a.context, client)
+	err = tokensAPI.Delete(tokenID)
+	if err != nil {
+		return fmt.Errorf("cannot remove token: %w", err)
+	}
+	return d.Set("token", nil)
+}
+
+func UpdateTokenIfNeeded(workspacesAPI WorkspacesAPI,
+	workspaceSchema map[string]*schema.Schema, d *schema.ResourceData) error {
+	o, n := d.GetChange("token")
+	old, new := o.([]interface{}), n.([]interface{})
+	if d.HasChange("token") {
+		switch {
+		case len(old) == 0 && len(new) > 0: // create
+			return CreateTokenIfNeeded(workspacesAPI, workspaceSchema, d)
+		case len(old) > 0 && len(new) == 0: // delete
+			raw := old[0].(map[string]interface{})
+			return removeTokenIfNeeded(workspacesAPI, workspaceSchema,
+				raw["token_id"].(string), d)
+		case len(old) > 0 && len(new) > 0: // delete & create
+			rawOld := old[0].(map[string]interface{})
+			err := removeTokenIfNeeded(workspacesAPI, workspaceSchema,
+				rawOld["token_id"].(string), d)
+			if err != nil {
+				return err
+			}
+			rawNew := new[0].(map[string]interface{})
+			d.Set("token", []interface{}{
+				map[string]interface{}{
+					"lifetime_seconds": rawNew["lifetime_seconds"],
+					"comment":          rawNew["comment"],
+				},
+			})
+			return CreateTokenIfNeeded(workspacesAPI, workspaceSchema, d)
+		}
+	}
+	return nil
+}
+
 // ResourceWorkspace manages E2 workspaces
 func ResourceWorkspace() *schema.Resource {
-	workspaceSchema := common.StructToSchema(Workspace{}, func(s map[string]*schema.Schema) map[string]*schema.Schema {
-		for name, fieldSchema := range s {
-			if fieldSchema.Computed {
-				// skip checking all changes from remote state
-				continue
-			}
-			fieldSchema.ForceNew = true
-			for _, allowed := range workspaceRunningUpdatesAllowed {
-				if allowed == name {
-					// allow updating only a few specific fields
-					fieldSchema.ForceNew = false
-					break
+	workspaceSchema := common.StructToSchema(Workspace{},
+		func(s map[string]*schema.Schema) map[string]*schema.Schema {
+			for name, fieldSchema := range s {
+				if fieldSchema.Computed {
+					// skip checking all changes from remote state
+					continue
+				}
+				fieldSchema.ForceNew = true
+				for _, allowed := range workspaceRunningUpdatesAllowed {
+					if allowed == name {
+						// allow updating only a few specific fields
+						fieldSchema.ForceNew = false
+						break
+					}
 				}
 			}
-		}
-		s["account_id"].Sensitive = true
-		s["deployment_name"].DiffSuppressFunc = func(k, old, new string, d *schema.ResourceData) bool {
-			if old == "" && new != "" {
-				return false
+			s["account_id"].Sensitive = true
+			s["deployment_name"].DiffSuppressFunc = func(k, old, new string, d *schema.ResourceData) bool {
+				if old == "" && new != "" {
+					return false
+				}
+				// Most of E2 accounts require a prefix and API returns it.
+				// This is certainly a hack to get things working for Terraform operating model.
+				// https://github.com/databrickslabs/terraform-provider-databricks/issues/382
+				return !strings.HasSuffix(new, old)
 			}
-			// Most of E2 accounts require a prefix and API returns it.
-			// This is certainly a hack to get things working for Terraform operating model.
-			// https://github.com/databrickslabs/terraform-provider-databricks/issues/382
-			return !strings.HasSuffix(new, old)
-		}
-		// It cannot be marked as `omitempty` in the struct annotation because Go's JON marshaller
-		// skips booleans set to `false` if set. Thus, we mark it optional here.
-		s["is_no_public_ip_enabled"].Optional = true
-		s["is_no_public_ip_enabled"].Required = false
-		// The API defaults this field to `true`. Apply the same behavior here.
-		s["is_no_public_ip_enabled"].Default = true
-		// The value of `is_no_public_ip_enabled` isn't part of the GET payload.
-		// Keep diff when creating (i.e. `old` == ""), suppress diff otherwise.
-		s["is_no_public_ip_enabled"].DiffSuppressFunc = func(k, old, new string, d *schema.ResourceData) bool {
-			return old != ""
-		}
-		s["customer_managed_key_id"].Deprecated = "Use managed_services_customer_managed_key_id instead"
-		s["customer_managed_key_id"].ConflictsWith = []string{"managed_services_customer_managed_key_id", "storage_customer_managed_key_id"}
-		s["managed_services_customer_managed_key_id"].ConflictsWith = []string{"customer_managed_key_id"}
-		s["storage_customer_managed_key_id"].ConflictsWith = []string{"customer_managed_key_id"}
-		return s
-	})
+			// It cannot be marked as `omitempty` in the struct annotation because Go's JON marshaller
+			// skips booleans set to `false` if set. Thus, we mark it optional here.
+			s["is_no_public_ip_enabled"].Optional = true
+			s["is_no_public_ip_enabled"].Required = false
+			// The API defaults this field to `true`. Apply the same behavior here.
+			s["is_no_public_ip_enabled"].Default = true
+			// The value of `is_no_public_ip_enabled` isn't part of the GET payload.
+			// Keep diff when creating (i.e. `old` == ""), suppress diff otherwise.
+			s["is_no_public_ip_enabled"].DiffSuppressFunc = func(k, old, new string, d *schema.ResourceData) bool {
+				return old != ""
+			}
+			s["customer_managed_key_id"].Deprecated = "Use managed_services_customer_managed_key_id instead"
+			s["customer_managed_key_id"].ConflictsWith = []string{"managed_services_customer_managed_key_id", "storage_customer_managed_key_id"}
+			s["managed_services_customer_managed_key_id"].ConflictsWith = []string{"customer_managed_key_id"}
+			s["storage_customer_managed_key_id"].ConflictsWith = []string{"customer_managed_key_id"}
+			// manage workspace-specific PAT token
+			s["token"] = common.StructToSchema(WorkspaceToken{},
+				func(m map[string]*schema.Schema) map[string]*schema.Schema {
+					return m
+				})["token"]
+			return s
+		})
 	p := common.NewPairSeparatedID("account_id", "workspace_id", "/").Schema(
 		func(_ map[string]*schema.Schema) map[string]*schema.Schema {
 			return workspaceSchema
@@ -296,7 +506,7 @@ func ResourceWorkspace() *schema.Resource {
 			}
 			d.Set("workspace_id", workspace.WorkspaceID)
 			p.Pack(d)
-			return nil
+			return CreateTokenIfNeeded(workspacesAPI, workspaceSchema, d)
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			accountID, workspaceID, err := p.Unpack(d)
@@ -314,11 +524,14 @@ func ResourceWorkspace() *schema.Resource {
 			if err = common.StructToData(workspace, workspaceSchema, d); err != nil {
 				return err
 			}
-			return workspacesAPI.WaitForRunning(workspace, d.Timeout(schema.TimeoutRead))
+			err = workspacesAPI.WaitForRunning(workspace, d.Timeout(schema.TimeoutRead))
+			if err != nil {
+				return err
+			}
+			return EnsureTokenExistsIfNeeded(workspacesAPI, workspaceSchema, d)
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var workspace Workspace
-			workspacesAPI := NewWorkspacesAPI(ctx, c)
 			if err := common.DataToStructPointer(d, workspaceSchema, &workspace); err != nil {
 				return err
 			}
@@ -327,7 +540,12 @@ func ResourceWorkspace() *schema.Resource {
 				workspace.ManagedServicesCustomerManagedKeyID = workspace.CustomerManagedKeyID
 				workspace.CustomerManagedKeyID = ""
 			}
-			return workspacesAPI.UpdateRunning(workspace, d.Timeout(schema.TimeoutUpdate))
+			workspacesAPI := NewWorkspacesAPI(ctx, c)
+			err := workspacesAPI.UpdateRunning(workspace, d.Timeout(schema.TimeoutUpdate))
+			if err != nil {
+				return err
+			}
+			return UpdateTokenIfNeeded(workspacesAPI, workspaceSchema, d)
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			accountID, workspaceID, err := p.Unpack(d)

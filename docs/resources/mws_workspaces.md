@@ -7,6 +7,15 @@ subcategory: "AWS"
 
 This resource allows you to set up [workspaces in E2 architecture on AWS](https://docs.databricks.com/getting-started/overview.html#e2-architecture-1). Please follow this [complete runnable example](../guides/aws-workspace.md) with new VPC and new workspace setup.
 
+-> **Note** Initialize provider with `alias = "mws"` and use `provider = databricks.mws` for all `databricks_mws_*` resources. We require all `databricks_mws_*` resources to be created within its own dedicated terraform module of your environment. Usually this module creates VPC and IAM roles as well. Code that creates workspaces and code that [manages workspaces](../guides/workspace-management.md) must be in separate terraform modules to avoid common confusion between `provider = databricks.mws` and `provider = databricks.created_workspace`. This is why we specify `databricks_host` and `databricks_token` outputs, that have to be used in the latter modules:
+
+```hcl
+provider "databricks" {
+  host = module.ai.databricks_host
+  token = module.ai.databricks_token
+}
+```
+
 ## Example Usage
 
 ![Simplest multiworkspace](https://github.com/databrickslabs/terraform-provider-databricks/raw/master/docs/simplest-multiworkspace.png)
@@ -65,21 +74,13 @@ resource "databricks_mws_workspaces" "this" {
   credentials_id            = databricks_mws_credentials.this.credentials_id
   storage_configuration_id  = databricks_mws_storage_configurations.this.storage_configuration_id
   network_id                = databricks_mws_networks.this.network_id
+
+  token {}
 }
 
-provider "databricks" {
-  // in normal scenario you won't have to give providers aliases
-  alias = "created_workspace"
-
-  host  = databricks_mws_workspaces.this.workspace_url
-}
-
-// create PAT token to provision entities within workspace
-resource "databricks_token" "pat" {
-  provider = databricks.created_workspace
-  comment  = "Terraform Provisioning"
-  // 1 day token
-  lifetime_seconds = 86400
+output "databricks_token" {
+  value     = databricks_mws_workspaces.this.token[0].token_value
+  sensitive = true
 }
 ```
 
@@ -170,6 +171,13 @@ resource "databricks_mws_workspaces" "this" {
 
   credentials_id            = databricks_mws_credentials.this.credentials_id
   storage_configuration_id  = databricks_mws_storage_configurations.this.storage_configuration_id
+  
+  token {}
+}
+
+output "databricks_token" {
+  value     = databricks_mws_workspaces.this.token[0].token_value
+  sensitive = true
 }
 ```
 
@@ -188,6 +196,16 @@ The following arguments are available and cannot be changed after workspace is c
 * `aws_region` - AWS region of VPC
 * `storage_configuration_id` - `storage_configuration_id` from [storage configuration](mws_storage_configurations.md)
 * `private_access_settings_id` - (Optional) Canonical unique identifier of [databricks_mws_private_access_settings](mws_private_access_settings.md) in Databricks Account
+
+## token block
+
+You can specify a `token` block in the body of workspace resource, so that Terraform manages the refresh of PAT token for the deployment user. The other option is to create [databricks_obo_token](obo_token.md), though it requires Premium or Enterprise plan enabled as well as more complex setup. Token block exposes `token_value`, that holds sensitive PAT token and optionally it can accept two arugments:
+
+-> **Note** Tokens managed by `token {}` block are recreated when expired.
+
+
+* `comment` - (Optional) Comment, that will appear in "User Settings / Access Tokens" page on Workspace UI. By default it's "Terraform PAT".
+* `lifetime_seconds` - (Optional) Token expiry lifetime. By default its 2592000 (30 days).
 
 The following arguments could be modified after the workspace is running:
 

@@ -355,6 +355,7 @@ type Cluster struct {
 	ClusterLogConf *StorageInfo            `json:"cluster_log_conf,omitempty"`
 	DockerImage    *DockerImage            `json:"docker_image,omitempty"`
 
+	DataSecurityMode string `json:"data_security_mode,omitempty"`
 	SingleUserName   string `json:"single_user_name,omitempty"`
 	IdempotencyToken string `json:"idempotency_token,omitempty" tf:"force_new"`
 }
@@ -448,6 +449,7 @@ type ClusterInfo struct {
 	DefaultTags               map[string]string  `json:"default_tags"`
 	ClusterLogStatus          *LogSyncStatus     `json:"cluster_log_status,omitempty"`
 	TerminationReason         *TerminationReason `json:"termination_reason,omitempty"`
+	DataSecurityMode          string             `json:"data_security_mode,omitempty"`
 }
 
 // IsRunningOrResizing returns true if cluster is running or resizing

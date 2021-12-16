@@ -2,12 +2,26 @@
 
 ## 0.4.1
 
-* Fixed refresh of `library` blocks on a stopped `databricks_cluster` ([#952](https://github.com/databrickslabs/terraform-provider-databricks/issues/952)).
-* Added `databricks_clusters` data resource to list all clusters in the workspace ([#955](https://github.com/databrickslabs/terraform-provider-databricks/pull/955)).
 * Added `databricks_library` resource to install library on `databricks_cluster` ([#904](https://github.com/databrickslabs/terraform-provider-databricks/pull/904)).
+* Added `databricks_clusters` data resource to list all clusters in the workspace, which might be used to install `databricks_library` on all clusters ([#955](https://github.com/databrickslabs/terraform-provider-databricks/pull/955)).
+* Fixed refresh of `library` blocks on a stopped `databricks_cluster` ([#952](https://github.com/databrickslabs/terraform-provider-databricks/issues/952)).
 * Whenever a library fails to get installed on a running `databricks_cluster`, we now automatically remove this library, so that the clean state of managed libraries is properly maintained. Without this fix users had to manually go to Clusters UI and remove library from a cluster, where it failed to install. Libraries add up to CREATE and UPDATE timeouts of `databricks_cluster` resource. ([#599](https://github.com/databrickslabs/terraform-provider-databricks/issues/599)).
 * Added `token` block to `databricks_mws_workspaces` to avoid unnecessary provider aliasing ([#957](https://github.com/databrickslabs/terraform-provider-databricks/issues/957)).
+* Fixed disabling `databricks_global_init_script` ([#958](https://github.com/databrickslabs/terraform-provider-databricks/issues/958)).
+* Fixed configuration drift issues with `aws_attributes`, `azure_attributes`, `gcp_attributes`, and `email_notifications` configuration blocks in `databricks_cluster`, `databricks_job`, and `databricks_instance_pool` resources ([#981](https://github.com/databrickslabs/terraform-provider-databricks/pull/981)).
+* Improved Databricks CLI auth by eagerly resolving `host`, `username`, `password`, and `token` from the specified `profile`. Added explicit logging of auth parameters in debug logs ([#965](https://github.com/databrickslabs/terraform-provider-databricks/pull/965)).
+* TLS timeouts, which may occur during Azure MSI auth, are no longer failing API requests and retried within a normal policy ([#966](https://github.com/databrickslabs/terraform-provider-databricks/pull/966)).
+* `debug_headers` provider conf is also logging the `Host` header to help troubleshooting auth issues ([#964](https://github.com/databrickslabs/terraform-provider-databricks/pull/964)).
 * Added new experimental resources and increased test coverage.
+
+Updated dependency versions:
+
+* Bump github.com/golang-jwt/jwt/v4 from 4.1.0 to 4.2.0
+* Bump google.golang.org/api from 0.60.0 to 0.63.0
+* Bump github.com/Azure/go-autorest/autorest from 0.11.22 to 0.11.23
+* Bump github.com/Azure/go-autorest/autorest/azure/auth from 0.5.9 to 0.5.10
+* Bump gopkg.in/ini.v1 from 1.66.0 to 1.66.2
+* Bump github.com/hashicorp/terraform-plugin-sdk/v2 from 2.9.0 to 2.10.0
 
 ## 0.4.0
 

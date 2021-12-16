@@ -2,8 +2,7 @@
 layout: "databricks"
 page_title: "Provider: Databricks"
 sidebar_current: "docs-databricks-index"
-description: |-
-  Terraform provider databricks.
+description: Terraform provider for the Databricks Lakehouse platform
 ---
 
 # Databricks Provider
@@ -336,7 +335,7 @@ terraform {
   required_providers {
     databricks = {
       source = "databrickslabs/databricks"
-      version = "0.4.0"
+      version = "0.4.1"
     }
   }
 }

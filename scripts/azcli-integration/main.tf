@@ -84,7 +84,7 @@ output "test_key_vault_secret_value" {
   sensitive = true
 }
 
-output "databricks_azure_workspace_resource_id" {
+output "databricks_azure_resource_id" {
   value = module.this.databricks_azure_workspace_resource_id
 }
 

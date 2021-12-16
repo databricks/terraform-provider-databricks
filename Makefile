@@ -48,7 +48,7 @@ vendor:
 
 test-azcli: install
 	@echo "✓ Running Terraform Acceptance Tests for Azure..."
-	@/bin/bash scripts/run.sh azcli '^(TestAcc|TestAzureAcc)' --debug --tee
+	@/bin/bash scripts/run.sh azcli '^TestAzureAcc' --debug --tee
 
 test-azsp: install
 	@echo "✓ Running Terraform Acceptance Tests for Azure..."

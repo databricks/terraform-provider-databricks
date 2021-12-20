@@ -45,13 +45,13 @@ type ObjectStatus struct {
 	Language   string `json:"language,omitempty"`
 }
 
-// NotebookContent contains the base64 content of the notebook
-type NotebookContent struct {
+// ExportPath contains the base64 content of the notebook
+type ExportPath struct {
 	Content string `json:"content,omitempty"`
 }
 
-// ImportRequest contains the payload to import a notebook
-type ImportRequest struct {
+// ImportPath contains the payload to import a notebook
+type ImportPath struct {
 	Content   string `json:"content"`
 	Path      string `json:"path"`
 	Language  string `json:"language,omitempty"`
@@ -59,8 +59,8 @@ type ImportRequest struct {
 	Overwrite bool   `json:"overwrite,omitempty"`
 }
 
-// NotebookDeleteRequest contains the payload to delete a notebook
-type NotebookDeleteRequest struct {
+// DeletePath contains the payload to delete a notebook
+type DeletePath struct {
 	Path      string `json:"path,omitempty"`
 	Recursive bool   `json:"recursive,omitempty"`
 }
@@ -83,7 +83,7 @@ type NotebooksAPI struct {
 var mtx = &sync.Mutex{}
 
 // Create creates a notebook given the content and path
-func (a NotebooksAPI) Create(r ImportRequest) error {
+func (a NotebooksAPI) Create(r ImportPath) error {
 	mtx.Lock()
 	defer mtx.Unlock()
 	return a.client.Post(a.context, "/workspace/import", r, nil)
@@ -105,7 +105,7 @@ type workspacePathRequest struct {
 
 // Export returns the notebook content as a base64 string
 func (a NotebooksAPI) Export(path string, format string) (string, error) {
-	var notebookContent NotebookContent
+	var notebookContent ExportPath
 	err := a.client.Get(a.context, "/workspace/export", workspacePathRequest{
 		Format: format,
 		Path:   path,
@@ -174,7 +174,7 @@ func (a NotebooksAPI) list(path string) ([]ObjectStatus, error) {
 func (a NotebooksAPI) Delete(path string, recursive bool) error {
 	mtx.Lock()
 	defer mtx.Unlock()
-	return a.client.Post(a.context, "/workspace/delete", NotebookDeleteRequest{
+	return a.client.Post(a.context, "/workspace/delete", DeletePath{
 		Path:      path,
 		Recursive: recursive,
 	}, nil)
@@ -245,7 +245,7 @@ func ResourceNotebook() *schema.Resource {
 					return err
 				}
 			}
-			createNotebook := ImportRequest{
+			createNotebook := ImportPath{
 				Content:   base64.StdEncoding.EncodeToString(content),
 				Language:  d.Get("language").(string),
 				Format:    d.Get("format").(string),
@@ -284,26 +284,26 @@ func ResourceNotebook() *schema.Resource {
 			if err != nil {
 				return err
 			}
-			err = notebooksAPI.Create(ImportRequest{
-				Content:   base64.StdEncoding.EncodeToString(content),
-				Language:  d.Get("language").(string),
-				Format:    d.Get("format").(string),
-				Overwrite: true,
-				Path:      d.Id(),
-			})
-			// INVALID_PARAMETER_VALUE: Overwrite cannot be used for source format when importing a folder
-			if err != nil && strings.Contains(err.Error(), "Overwrite cannot be used") {
+			format := d.Get("format").(string)
+			if format == "DBC" {
+				// Overwrite cannot be used for source format when importing a folder
 				err = notebooksAPI.Delete(d.Id(), true)
 				if err != nil {
 					return err
 				}
-				return notebooksAPI.Create(ImportRequest{
+				return notebooksAPI.Create(ImportPath{
 					Content: base64.StdEncoding.EncodeToString(content),
-					Format:  "DBC",
+					Format:  format,
 					Path:    d.Id(),
 				})
 			}
-			return err
+			return notebooksAPI.Create(ImportPath{
+				Content:   base64.StdEncoding.EncodeToString(content),
+				Language:  d.Get("language").(string),
+				Format:    format,
+				Overwrite: true,
+				Path:      d.Id(),
+			})
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			return NewNotebooksAPI(ctx, c).Delete(d.Id(), true)

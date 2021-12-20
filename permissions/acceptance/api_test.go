@@ -267,7 +267,7 @@ func TestAccPermissionsNotebooks(t *testing.T) {
 
 		notebookPath := fmt.Sprintf("%s/Dummy", notebookDir)
 
-		err = workspaceAPI.Create(workspace.ImportRequest{
+		err = workspaceAPI.Create(workspace.ImportPath{
 			Path:      notebookPath,
 			Content:   "MSsx",
 			Format:    "SOURCE",

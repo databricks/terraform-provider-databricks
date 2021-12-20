@@ -24,7 +24,7 @@ func TestDataSourceNotebook(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/workspace/export?format=SOURCE&path=%2Fa%2Fb%2Fc",
-				Response: NotebookContent{
+				Response: ExportPath{
 					Content: "SGVsbG8gd29ybGQK",
 				},
 			},

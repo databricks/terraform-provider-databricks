@@ -1,5 +1,9 @@
 # Version changelog
 
+## 0.4.2
+
+* Added `DBC` format support for `databricks_notebook` ([#989](https://github.com/databrickslabs/terraform-provider-databricks/pull/989)). 
+
 ## 0.4.1
 
 * Added `databricks_library` resource to install library on `databricks_cluster` ([#904](https://github.com/databrickslabs/terraform-provider-databricks/pull/904)).

@@ -11,6 +11,7 @@ import (
 
 func TestReflectKind(t *testing.T) {
 	assert.Equal(t, "Bool", reflectKind(1))
+	assert.Equal(t, "other", reflectKind(29))
 }
 
 func TestSchemaPath(t *testing.T) {
@@ -24,6 +25,13 @@ func TestSchemaPath(t *testing.T) {
 		"foo": {},
 	}, "foo", "x")
 	assert.EqualError(t, err, "foo is not nested resource")
+}
+
+func TestMustSchemaPath(t *testing.T) {
+	x := MustSchemaPath(map[string]*schema.Schema{
+		"foo": {},
+	}, "foo")
+	assert.NotNil(t, x)
 }
 
 func TestChooseFieldName(t *testing.T) {
@@ -58,6 +66,7 @@ type testStruct struct {
 	FloatSlice     []float64         `json:"float_slice,omitempty"`
 	BoolSlice      []bool            `json:"bool_slice,omitempty"`
 	Hidden         string            `json:"-"`
+	Hidden2        string
 }
 
 var scm = StructToSchema(testStruct{}, nil)
@@ -402,4 +411,99 @@ func TestStructToData(t *testing.T) {
 
 	err = DataToStructPointer(d, s, &dummyCopy)
 	assert.NoError(t, err)
+}
+
+func TestDiffSuppressor(t *testing.T) {
+	dsf := diffSuppressor("")
+	d := schema.TestResourceDataRaw(t, map[string]*schema.Schema{
+		"foo": {
+			Type:     schema.TypeBool,
+			Optional: true,
+		},
+	}, map[string]interface{}{})
+	// no suppress
+	assert.False(t, dsf("", "old", "new", d))
+	// suppress
+	assert.True(t, dsf("", "old", "", d))
+}
+
+func TestTypeToSchemaNoStruct(t *testing.T) {
+	defer func() {
+		p := recover()
+		assert.Equal(t,
+			"Schema value of Struct is expected, but got Int: 1",
+			fmt.Sprintf("%s", p))
+	}()
+	v := reflect.ValueOf(1)
+	typeToSchema(v, v.Type(), []string{})
+}
+
+func TestTypeToSchemaUnsupported(t *testing.T) {
+	defer func() {
+		p := recover()
+		assert.Equal(t, "unknown type for new: Chan",
+			fmt.Sprintf("%s", p))
+	}()
+	type nonsense struct {
+		New chan int `json:"new"`
+	}
+	v := reflect.ValueOf(nonsense{})
+	typeToSchema(v, v.Type(), []string{})
+}
+
+type data map[string]interface{}
+
+func (a data) GetOk(key string) (interface{}, bool) {
+	v, ok := a[key]
+	return v, ok
+}
+
+func TestDiffToStructPointer(t *testing.T) {
+	type Nonsense struct {
+		New int `json:"new,omitempty"`
+	}
+	s := schema.InternalMap(map[string]*schema.Schema{
+		"new": {
+			Type:     schema.TypeInt,
+			Optional: true,
+		},
+	})
+	err := DiffToStructPointer(data{"new": "3"}, s, Nonsense{})
+	assert.EqualError(t, err, "pointer is expected, but got Struct: common.Nonsense{New:0}")
+
+	var n Nonsense
+	err = DiffToStructPointer(data{"new": 3}, s, &n)
+	assert.NoError(t, err)
+	assert.Equal(t, 3, n.New)
+}
+
+func TestReadListFromData(t *testing.T) {
+	err := readListFromData([]string{}, data{}, []interface{}{}, nil, nil, nil)
+	assert.NoError(t, err)
+
+	x := reflect.ValueOf(0)
+	err = readListFromData([]string{}, data{}, []interface{}{1}, &x, nil, nil)
+	assert.EqualError(t, err, "[[1]] unknown collection field")
+}
+
+func TestReadReflectValueFromDataCornerCases(t *testing.T) {
+	type Nonsense struct {
+		New     float64 `json:"new,omitempty"`
+		Invalid int     `json:"invalid"`
+	}
+	s := schema.InternalMap(map[string]*schema.Schema{
+		"new": {
+			Type:     schema.TypeFloat,
+			Optional: true,
+		},
+		"invalid": {
+			Type:     schema.TypeInvalid,
+			Required: true,
+		},
+	})
+	var n Nonsense
+	v := reflect.ValueOf(&n)
+	rv := v.Elem()
+	err := readReflectValueFromData([]string{}, data{"new": 0.123, "invalid": 1}, rv, s)
+	assert.EqualError(t, err, "invalid: invalid[1] unsupported field type")
 }

@@ -47,7 +47,7 @@ func TestResourceDirectoryDelete(t *testing.T) {
 				Method:          http.MethodPost,
 				Resource:        "/api/2.0/workspace/delete",
 				Status:          http.StatusOK,
-				ExpectedRequest: NotebookDeleteRequest{Path: path, Recursive: delete_recursive},
+				ExpectedRequest: DeletePath{Path: path, Recursive: delete_recursive},
 			},
 		},
 		Resource: ResourceDirectory(),
@@ -172,7 +172,7 @@ func TestResourceDirectoryDelete_Error(t *testing.T) {
 			{
 				Method:          "POST",
 				Resource:        "/api/2.0/workspace/delete",
-				ExpectedRequest: NotebookDeleteRequest{Path: path, Recursive: false},
+				ExpectedRequest: DeletePath{Path: path, Recursive: false},
 				Response: common.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",

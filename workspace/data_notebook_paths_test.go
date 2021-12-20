@@ -4,12 +4,10 @@ import (
 	"testing"
 
 	"github.com/databrickslabs/terraform-provider-databricks/qa"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 func TestDataSourceNotebookPaths(t *testing.T) {
-	d, err := qa.ResourceFixture{
+	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
@@ -53,7 +51,40 @@ func TestDataSourceNotebookPaths(t *testing.T) {
 			"path":      "/a/b/c",
 			"recursive": true,
 		},
-	}.Apply(t)
-	require.NoError(t, err)
-	assert.Equal(t, "/a/b/c", d.Id())
+	}.ApplyNoError(t)
+}
+
+func TestDataSourceNotebookPaths_NoRecursive(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/workspace/list?path=%2Fa%2Fb%2Fc",
+				Response: objectList{
+					Objects: []ObjectStatus{
+						{
+							ObjectID:   988,
+							ObjectType: Notebook,
+							Language:   Python,
+							Path:       "/a/b/c/d/e",
+						},
+						{
+							ObjectID:   989,
+							ObjectType: Notebook,
+							Language:   SQL,
+							Path:       "/a/b/c/d/f",
+						},
+					},
+				},
+			},
+		},
+		Read:        true,
+		NonWritable: true,
+		Resource:    DataSourceNotebookPaths(),
+		ID:          ".",
+		State: map[string]interface{}{
+			"path":      "/a/b/c",
+			"recursive": false,
+		},
+	}.ApplyNoError(t)
 }

@@ -44,7 +44,6 @@ func ReadContent(d *schema.ResourceData) (content []byte, err error) {
 	if err != nil {
 		return
 	}
-	// TODO: file size
 	d.Set("md5", fmt.Sprintf("%x", md5.Sum(content)))
 	log.Printf("[INFO] Setting file content hash to %s", d.Get("md5"))
 	return

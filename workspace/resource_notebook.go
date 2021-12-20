@@ -13,54 +13,45 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
-// Language is a custom type for language types in Databricks notebooks
-type Language string
-
-// ObjectType is a custom type for object types in Databricks workspaces
-type ObjectType string
-
-// ExportFormat is a custom type for formats in which you can export Databricks workspace components
-type ExportFormat string
-
 // ...
 const (
-	Source  ExportFormat = "SOURCE"
-	HTML    ExportFormat = "HTML"
-	Jupyter ExportFormat = "JUPYTER"
-	DBC     ExportFormat = "DBC"
-
-	Scala  Language = "SCALA"
-	Python Language = "PYTHON"
-	SQL    Language = "SQL"
-	R      Language = "R"
-
-	Notebook      ObjectType = "NOTEBOOK"
-	Directory     ObjectType = "DIRECTORY"
-	LibraryObject ObjectType = "LIBRARY"
+	Notebook  string = "NOTEBOOK"
+	Directory string = "DIRECTORY"
+	Scala     string = "SCALA"
+	Python    string = "PYTHON"
+	SQL       string = "SQL"
+	R         string = "R"
 )
 
-var extMap = map[string]string{
-	".scala": "SCALA",
-	".py":    "PYTHON",
-	".sql":   "SQL",
-	".r":     "R",
+type notebookLanguageFormat struct {
+	Language  string
+	Format    string
+	Overwrite bool
+}
+
+var extMap = map[string]notebookLanguageFormat{
+	".scala": {"SCALA", "SOURCE", true},
+	".py":    {"PYTHON", "SOURCE", true},
+	".sql":   {"SQL", "SOURCE", true},
+	".r":     {"R", "SOURCE", true},
+	".dbc":   {"", "DBC", false},
 }
 
 // ObjectStatus contains information when doing a get request or list request on the workspace api
 type ObjectStatus struct {
-	ObjectID   int64      `json:"object_id,omitempty" tf:"computed"`
-	ObjectType ObjectType `json:"object_type,omitempty" tf:"computed"`
-	Path       string     `json:"path"`
-	Language   Language   `json:"language,omitempty"`
+	ObjectID   int64  `json:"object_id,omitempty" tf:"computed"`
+	ObjectType string `json:"object_type,omitempty" tf:"computed"`
+	Path       string `json:"path"`
+	Language   string `json:"language,omitempty"`
 }
 
-// NotebookContent contains the base64 content of the notebook
-type NotebookContent struct {
+// ExportPath contains the base64 content of the notebook
+type ExportPath struct {
 	Content string `json:"content,omitempty"`
 }
 
-// ImportRequest contains the payload to import a notebook
-type ImportRequest struct {
+// ImportPath contains the payload to import a notebook
+type ImportPath struct {
 	Content   string `json:"content"`
 	Path      string `json:"path"`
 	Language  string `json:"language,omitempty"`
@@ -68,8 +59,8 @@ type ImportRequest struct {
 	Overwrite bool   `json:"overwrite,omitempty"`
 }
 
-// NotebookDeleteRequest contains the payload to delete a notebook
-type NotebookDeleteRequest struct {
+// DeletePath contains the payload to delete a notebook
+type DeletePath struct {
 	Path      string `json:"path,omitempty"`
 	Recursive bool   `json:"recursive,omitempty"`
 }
@@ -92,7 +83,7 @@ type NotebooksAPI struct {
 var mtx = &sync.Mutex{}
 
 // Create creates a notebook given the content and path
-func (a NotebooksAPI) Create(r ImportRequest) error {
+func (a NotebooksAPI) Create(r ImportPath) error {
 	mtx.Lock()
 	defer mtx.Unlock()
 	return a.client.Post(a.context, "/workspace/import", r, nil)
@@ -108,13 +99,13 @@ func (a NotebooksAPI) Read(path string) (ObjectStatus, error) {
 }
 
 type workspacePathRequest struct {
-	Format ExportFormat `url:"format,omitempty"`
-	Path   string       `url:"path,omitempty"`
+	Format string `url:"format,omitempty"`
+	Path   string `url:"path,omitempty"`
 }
 
 // Export returns the notebook content as a base64 string
-func (a NotebooksAPI) Export(path string, format ExportFormat) (string, error) {
-	var notebookContent NotebookContent
+func (a NotebooksAPI) Export(path string, format string) (string, error) {
+	var notebookContent ExportPath
 	err := a.client.Get(a.context, "/workspace/export", workspacePathRequest{
 		Format: format,
 		Path:   path,
@@ -183,7 +174,7 @@ func (a NotebooksAPI) list(path string) ([]ObjectStatus, error) {
 func (a NotebooksAPI) Delete(path string, recursive bool) error {
 	mtx.Lock()
 	defer mtx.Unlock()
-	return a.client.Post(a.context, "/workspace/delete", NotebookDeleteRequest{
+	return a.client.Post(a.context, "/workspace/delete", DeletePath{
 		Path:      path,
 		Recursive: recursive,
 	}, nil)
@@ -196,32 +187,44 @@ func ResourceNotebook() *schema.Resource {
 			Type:     schema.TypeString,
 			Optional: true,
 			ValidateFunc: validation.StringInSlice([]string{
-				string(Scala),
-				string(Python),
-				string(R),
-				string(SQL),
+				Scala,
+				Python,
+				R,
+				SQL,
 			}, false),
 			DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 				source := d.Get("source").(string)
 				if source == "" {
 					return false
 				}
-				return old == extMap[strings.ToLower(filepath.Ext(source))]
+				ext := strings.ToLower(filepath.Ext(source))
+				return old == extMap[ext].Language
 			},
+		},
+		"format": {
+			Type:     schema.TypeString,
+			Optional: true,
+			Default:  "SOURCE",
+			ValidateFunc: validation.StringInSlice([]string{
+				"SOURCE",
+				"DBC",
+			}, false),
 		},
 		"url": {
 			Type:     schema.TypeString,
 			Computed: true,
 		},
 		"object_type": {
-			Type:     schema.TypeString,
-			Optional: true,
-			Computed: true,
+			Type:       schema.TypeString,
+			Optional:   true,
+			Computed:   true,
+			Deprecated: "Always is a notebook",
 		},
 		"object_id": {
-			Type:     schema.TypeInt,
-			Optional: true,
-			Computed: true,
+			Type:       schema.TypeInt,
+			Optional:   true,
+			Computed:   true,
+			Deprecated: "Use id argument to retrieve object id",
 		},
 	})
 	s["content_base64"].RequiredWith = []string{"language"}
@@ -239,22 +242,28 @@ func ResourceNotebook() *schema.Resource {
 			if parent != "/" {
 				err = notebooksAPI.Mkdirs(parent)
 				if err != nil {
-					// TODO: handle RESOURCE_ALREADY_EXISTS
 					return err
 				}
 			}
-			lang := d.Get("language").(string)
-			if lang == "" {
-				// TODO: check what happens with empty source
-				lang = extMap[strings.ToLower(filepath.Ext(d.Get("source").(string)))]
-			}
-			if err = notebooksAPI.Create(ImportRequest{
+			createNotebook := ImportPath{
 				Content:   base64.StdEncoding.EncodeToString(content),
-				Language:  lang,
-				Format:    "SOURCE",
-				Overwrite: true,
+				Language:  d.Get("language").(string),
+				Format:    d.Get("format").(string),
 				Path:      path,
-			}); err != nil {
+				Overwrite: true,
+			}
+			if createNotebook.Language == "" {
+				// TODO: check what happens with empty source
+				ext := strings.ToLower(filepath.Ext(d.Get("source").(string)))
+				createNotebook.Language = extMap[ext].Language
+				createNotebook.Format = extMap[ext].Format
+				// Overwrite cannot be used for Dbc format
+				createNotebook.Overwrite = extMap[ext].Overwrite
+				// by default it's SOURCE, but for DBC we have to change it
+				d.Set("format", createNotebook.Format)
+			}
+			err = notebooksAPI.Create(createNotebook)
+			if err != nil {
 				return err
 			}
 			d.SetId(path)
@@ -275,10 +284,23 @@ func ResourceNotebook() *schema.Resource {
 			if err != nil {
 				return err
 			}
-			return notebooksAPI.Create(ImportRequest{
+			format := d.Get("format").(string)
+			if format == "DBC" {
+				// Overwrite cannot be used for source format when importing a folder
+				err = notebooksAPI.Delete(d.Id(), true)
+				if err != nil {
+					return err
+				}
+				return notebooksAPI.Create(ImportPath{
+					Content: base64.StdEncoding.EncodeToString(content),
+					Format:  format,
+					Path:    d.Id(),
+				})
+			}
+			return notebooksAPI.Create(ImportPath{
 				Content:   base64.StdEncoding.EncodeToString(content),
 				Language:  d.Get("language").(string),
-				Format:    "SOURCE",
+				Format:    format,
 				Overwrite: true,
 				Path:      d.Id(),
 			})

@@ -32,7 +32,16 @@ resource "databricks_notebook" "notebook" {
   language = "PYTHON"
 }
 ```
-    
+
+You can also manage [Databricks Archives](https://docs.databricks.com/notebooks/notebooks-manage.html#databricks-archive) to import the whole folders of notebooks statically. Whenever you update `.dbc` file, terraform-managed notebook folder is removed and replaced with contents of the new `.dbc` file. You are strongly advised to use `.dbc` format only with `source` attribute of the resource:
+
+```hcl
+resource "databricks_notebook" "lesson" {
+  source = "${path.module}/IntroNotebooks.dbc"
+  path = "/Shared/Intro" 
+}
+```
+
 ## Argument Reference
 
 -> **Note** Notebook on Databricks workspace would only be changed, if Terraform stage did change. This means that any manual changes to managed notebook won't be overwritten by Terraform, if there's no local change to notebook sources. Notebooks are identified by their path, so changing notebook's name manually on the workspace and then applying Terraform state would result in creation of notebook from Terraform state.

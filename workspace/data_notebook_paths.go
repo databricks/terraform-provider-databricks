@@ -18,12 +18,6 @@ func DataSourceNotebookPaths() *schema.Resource {
 				return diag.FromErr(err)
 			}
 			d.SetId(path)
-			if err = d.Set("recursive", recursive); err != nil {
-				return diag.FromErr(err)
-			}
-			if err = d.Set("path", path); err != nil {
-				return diag.FromErr(err)
-			}
 			var notebookPathList []map[string]string
 			for _, v := range notebookList {
 				notebookPathMap := map[string]string{}

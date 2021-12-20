@@ -47,7 +47,7 @@ func TestResourceNotebookDelete(t *testing.T) {
 				Method:          http.MethodPost,
 				Resource:        "/api/2.0/workspace/delete",
 				Status:          http.StatusOK,
-				ExpectedRequest: NotebookDeleteRequest{Path: path, Recursive: true},
+				ExpectedRequest: DeletePath{Path: path, Recursive: true},
 			},
 		},
 		Resource: ResourceNotebook(),
@@ -112,7 +112,7 @@ func TestResourceNotebookCreate(t *testing.T) {
 			{
 				Method:   http.MethodPost,
 				Resource: "/api/2.0/workspace/import",
-				ExpectedRequest: ImportRequest{
+				ExpectedRequest: ImportPath{
 					Content:   "YWJjCg==",
 					Path:      "/foo/path.py",
 					Language:  "PYTHON",
@@ -123,7 +123,7 @@ func TestResourceNotebookCreate(t *testing.T) {
 			{
 				Method:   http.MethodGet,
 				Resource: "/api/2.0/workspace/export?format=SOURCE&path=%2Ffoo%2Fpath.py",
-				Response: NotebookContent{
+				Response: ExportPath{
 					Content: "YWJjCg==",
 				},
 			},
@@ -156,7 +156,7 @@ func TestResourceNotebookCreateSource(t *testing.T) {
 			{
 				Method:   http.MethodPost,
 				Resource: "/api/2.0/workspace/import",
-				ExpectedRequest: ImportRequest{
+				ExpectedRequest: ImportPath{
 					Content: "LS0gRGF0YWJyaWNrcyBub3RlYm9vayBzb3VyY2UKU0VMRUNUIDEwKjIwC" +
 						"gotLSBDT01NQU5EIC0tLS0tLS0tLS0KClNFTEVDVCAyMCoxMDAKCi0tIE" +
 						"NPTU1BTkQgLS0tLS0tLS0tLQoKCg==",
@@ -240,7 +240,7 @@ func TestResourceNotebookUpdate(t *testing.T) {
 			{
 				Method:   "POST",
 				Resource: "/api/2.0/workspace/import",
-				ExpectedRequest: ImportRequest{
+				ExpectedRequest: ImportPath{
 					Format:    "SOURCE",
 					Overwrite: true,
 					Content:   "YWJjCg==",
@@ -269,4 +269,57 @@ func TestResourceNotebookUpdate(t *testing.T) {
 		RequiresNew: true,
 		Update:      true,
 	}.ApplyNoError(t)
+}
+
+func TestResourceNotebookUpdate_DBC(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/workspace/delete",
+				ExpectedRequest: DeletePath{
+					Recursive: true,
+					Path:      "abc",
+				},
+			},
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/workspace/import",
+				ExpectedRequest: ImportPath{
+					Format:  "DBC",
+					Content: "YWJjCg==",
+					Path:    "abc",
+				},
+			},
+			{
+				Method:   http.MethodGet,
+				Resource: "/api/2.0/workspace/get-status?path=abc",
+				Response: ObjectStatus{
+					ObjectID:   4567,
+					ObjectType: Directory,
+					Path:       "abc",
+				},
+			},
+		},
+		Resource: ResourceNotebook(),
+		State: map[string]interface{}{
+			"content_base64": "YWJjCg==",
+
+			// technically language is not needed, but makes the test simpler
+			"language": "PYTHON",
+			"format":   "DBC",
+			"path":     "/path.py",
+		},
+		ID:          "abc",
+		RequiresNew: true,
+		Update:      true,
+	}.ApplyNoError(t)
+}
+
+func TestNotebookLanguageSuppressSourceDiff(t *testing.T) {
+	r := ResourceNotebook()
+	d := r.TestResourceData()
+	d.Set("source", "this.PY")
+	suppress := r.Schema["language"].DiffSuppressFunc
+	assert.True(t, suppress("language", Python, Python, d))
 }

@@ -22,9 +22,9 @@ func DataSourceNotebook() *schema.Resource {
 			Required: true,
 			ForceNew: true,
 			ValidateFunc: validation.StringInSlice([]string{
-				string(DBC),
-				string(Source),
-				string(HTML),
+				"DBC",
+				"SOURCE",
+				"HTML",
 			}, false),
 		},
 		"content": {
@@ -53,7 +53,7 @@ func DataSourceNotebook() *schema.Resource {
 			notebooksAPI := NewNotebooksAPI(ctx, m)
 			path := d.Get("path").(string)
 			format := d.Get("format").(string)
-			notebookContent, err := notebooksAPI.Export(path, ExportFormat(format))
+			notebookContent, err := notebooksAPI.Export(path, format)
 			if err != nil {
 				return diag.FromErr(err)
 			}

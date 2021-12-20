@@ -31,7 +31,6 @@ func (aa *DatabricksClient) GetAzureJwtProperty(key string) (interface{}, error)
 	if err != nil {
 		return nil, err
 	}
-
 	request, err := http.NewRequest("GET", aa.Host, nil)
 	if err != nil {
 		return nil, err
@@ -39,14 +38,12 @@ func (aa *DatabricksClient) GetAzureJwtProperty(key string) (interface{}, error)
 	if err = aa.authVisitor(request); err != nil {
 		return nil, err
 	}
-
 	header := request.Header.Get("Authorization")
 	var stoken string
 	if len(header) > 0 && strings.HasPrefix(string(header), "Bearer ") {
 		log.Printf("[DEBUG] Got Bearer token")
 		stoken = strings.TrimSpace(strings.TrimPrefix(string(header), "Bearer "))
 	}
-
 	if stoken == "" {
 		return nil, fmt.Errorf("can't obtain Azure JWT token")
 	}
@@ -94,6 +91,9 @@ func (aa *DatabricksClient) configureWithAzureClientSecret(ctx context.Context) 
 	return aa.simpleAADRequestVisitor(ctx, aa.getClientSecretAuthorizer, aa.addSpManagementTokenVisitor)
 }
 
+// variable, so that we can mock it in tests
+var msiAvailabilityChecker = adal.MSIAvailable
+
 func (aa *DatabricksClient) configureWithAzureManagedIdentity(ctx context.Context) (func(*http.Request) error, error) {
 	if !aa.IsAzure() {
 		return nil, nil
@@ -101,7 +101,7 @@ func (aa *DatabricksClient) configureWithAzureManagedIdentity(ctx context.Contex
 	if !aa.AzureUseMSI {
 		return nil, nil
 	}
-	if !adal.MSIAvailable(ctx, aa.httpClient.HTTPClient) {
+	if !msiAvailabilityChecker(ctx, aa.httpClient.HTTPClient) {
 		return nil, fmt.Errorf("managed identity is not available")
 	}
 	log.Printf("[INFO] Using Azure Managed Identity authentication")
@@ -122,15 +122,11 @@ func (aa *DatabricksClient) addSpManagementTokenVisitor(r *http.Request, managem
 	if tokenProvider == nil {
 		return fmt.Errorf("token provider is nil")
 	}
-	var err error
-	switch rf := tokenProvider.(type) {
-	case adal.RefresherWithContext:
-		err = rf.EnsureFreshWithContext(r.Context())
-	case adal.Refresher:
-		err = rf.EnsureFresh()
-	}
-	if err != nil {
-		return fmt.Errorf("cannot refresh AAD token: %w", err)
+	if rf, ok := tokenProvider.(adal.RefresherWithContext); ok {
+		err := rf.EnsureFreshWithContext(r.Context())
+		if err != nil {
+			return fmt.Errorf("cannot refresh AAD token: %w", err)
+		}
 	}
 	accessToken := tokenProvider.OAuthToken()
 	r.Header.Set("X-Databricks-Azure-SP-Management-Token", accessToken)

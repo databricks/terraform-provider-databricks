@@ -200,3 +200,77 @@ func TestIsAzure_Error(t *testing.T) {
 	}
 	assert.Equal(t, false, dc.IsAzure())
 }
+
+func TestClientForHost(t *testing.T) {
+	dc, err := configureAndAuthenticate(&DatabricksClient{
+		Host:     "https://accounts.cloud.databricks.com/",
+		Username: "abc",
+		Password: "bcd",
+	})
+	assert.NoError(t, err)
+	assert.True(t, dc.IsAws())
+	cc, err := dc.ClientForHost(context.Background(), "https://e2-workspace.cloud.databricks.com/")
+	assert.NoError(t, err)
+	assert.Equal(t, dc.Username, cc.Username)
+	assert.Equal(t, dc.Password, cc.Password)
+	assert.NotEqual(t, dc.Host, cc.Host)
+}
+
+func TestClientForHostAuthError(t *testing.T) {
+	c := &DatabricksClient{
+		Token:      "connfigured",
+		ConfigFile: "testdata/.databrickscfg",
+		Profile:    "notoken",
+	}
+	_, err := c.ClientForHost(context.Background(), "https://e2-workspace.cloud.databricks.com/")
+	AssertErrorStartsWith(t, err, "cannot authenticate parent client: cannot configure direct auth")
+}
+
+func TestDatabricksCliCouldNotFindHomeDir(t *testing.T) {
+	_, err := (&DatabricksClient{
+		ConfigFile: "~.databrickscfg",
+	}).configureWithDatabricksCfg(context.Background())
+	assert.EqualError(t, err, "cannot find homedir: cannot expand user-specific home dir")
+}
+
+func TestDatabricksCliCouldNotParseIni(t *testing.T) {
+	_, err := (&DatabricksClient{
+		ConfigFile: "testdata/az",
+	}).configureWithDatabricksCfg(context.Background())
+	AssertErrorStartsWith(t, err, "cannot parse config file: key-value delimiter not found")
+}
+
+func TestDatabricksCliWrongProfile(t *testing.T) {
+	_, err := (&DatabricksClient{
+		ConfigFile: "testdata/.databrickscfg",
+		Profile:    "🤣",
+	}).configureWithDatabricksCfg(context.Background())
+	assert.EqualError(t, err, "testdata/.databrickscfg has no 🤣 profile configured")
+}
+
+func TestDatabricksNoHost(t *testing.T) {
+	_, err := (&DatabricksClient{
+		ConfigFile: "testdata/corrupt/.databrickscfg",
+		Profile:    "nohost",
+	}).configureWithDatabricksCfg(context.Background())
+	assert.EqualError(t, err, "config file testdata/corrupt/.databrickscfg is corrupt: cannot find host in nohost profile")
+}
+
+func TestDatabricksNoToken(t *testing.T) {
+	_, err := (&DatabricksClient{
+		ConfigFile: "testdata/corrupt/.databrickscfg",
+		Profile:    "notoken",
+	}).configureWithDatabricksCfg(context.Background())
+	assert.EqualError(t, err, "config file testdata/corrupt/.databrickscfg is corrupt: cannot find token in notoken profile")
+}
+
+func TestDatabricksBasicAuth(t *testing.T) {
+	c := &DatabricksClient{
+		ConfigFile: "testdata/.databrickscfg",
+		Profile:    "basic",
+	}
+	_, err := c.configureWithDatabricksCfg(context.Background())
+	assert.NoError(t, err)
+	assert.Equal(t, "abc", c.Username)
+	assert.Equal(t, "bcd", c.Password)
+}

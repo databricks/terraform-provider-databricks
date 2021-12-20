@@ -13,6 +13,8 @@ import (
 	"github.com/Azure/go-autorest/autorest"
 	"github.com/Azure/go-autorest/autorest/adal"
 	"github.com/Azure/go-autorest/autorest/azure"
+	"github.com/golang-jwt/jwt/v4"
+	"github.com/hashicorp/go-retryablehttp"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -73,6 +75,10 @@ func TestGetClientSecretAuthorizer(t *testing.T) {
 	aa.AzureClientID = "b"
 	aa.AzureClientSecret = "c"
 	auth, err = aa.getClientSecretAuthorizer(armDatabricksResourceID)
+	require.NotNil(t, auth)
+	require.NoError(t, err)
+
+	auth, err = aa.getClientSecretAuthorizer(env.ServiceManagementEndpoint)
 	require.NotNil(t, auth)
 	require.NoError(t, err)
 }
@@ -335,10 +341,19 @@ func setupJwtTestClient() (*httptest.Server, *DatabricksClient) {
 	return server, &client
 }
 
+func newTestJwt(t *testing.T, claims jwt.MapClaims) string {
+	token := jwt.NewWithClaims(jwt.GetSigningMethod("HS256"), claims)
+	result, err := token.SignedString([]byte("_"))
+	assert.NoError(t, err)
+	return result
+}
+
 func TestGetJWTProperty_AzureCli(t *testing.T) {
 	defer CleanupEnvironment()()
 	os.Setenv("PATH", "testdata:/bin")
-	os.Setenv("TF_AAD_TOKEN", "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJPbmxpbmUgSldUIEJ1aWxkZXIiLCJpYXQiOjE2MzU2OTU4MzksImV4cCI6MTY2NzIzMTgzOSwiYXVkIjoid3d3LmV4YW1wbGUuY29tIiwic3ViIjoianJvY2tldEBleGFtcGxlLmNvbSIsInRpZCI6ImFiYyJ9._G1DrR4DspidISpsra8UnecV_FV4zMlJDtSNzaS0UxI")
+	os.Setenv("TF_AAD_TOKEN", newTestJwt(t, jwt.MapClaims{
+		"tid": "some-tenant",
+	}))
 
 	srv, client := setupJwtTestClient()
 	assert.NotNil(t, srv)
@@ -347,7 +362,54 @@ func TestGetJWTProperty_AzureCli(t *testing.T) {
 
 	tid, err := client.GetAzureJwtProperty("tid")
 	require.NoError(t, err)
-	assert.Equal(t, "abc", tid.(string))
+	assert.Equal(t, "some-tenant", tid.(string))
+}
+
+func TestGetJWTProperty_Authenticate_Fail(t *testing.T) {
+	defer CleanupEnvironment()()
+	os.Setenv("PATH", "testdata:/bin")
+	os.Setenv("FAIL", "yes")
+
+	client := &DatabricksClient{
+		Host: "https://adb-1232.azuredatabricks.net",
+	}
+	_, err := client.GetAzureJwtProperty("tid")
+	require.EqualError(t, err, "cannot configure Azure CLI auth: "+
+		"Invoking Azure CLI failed with the following error: "+
+		"This is just a failing script.\n. "+
+		"Please check https://registry.terraform.io/providers/"+
+		"databrickslabs/databricks/latest/docs#authentication for details")
+}
+
+func TestGetJWTProperty_makeGetRequest_Fail(t *testing.T) {
+	defer CleanupEnvironment()()
+	os.Setenv("PATH", "testdata:/bin")
+	os.Setenv("TF_AAD_TOKEN", newTestJwt(t, jwt.MapClaims{
+		"tid": "some-tenant",
+	}))
+
+	srv, client := setupJwtTestClient()
+	assert.NotNil(t, srv)
+	defer srv.Close()
+	assert.NotNil(t, client)
+	client.Host = "%🙀.azuredatabricks.net"
+
+	_, err := client.GetAzureJwtProperty("tid")
+	require.EqualError(t, err, `parse "%🙀.azuredatabricks.net": invalid URL escape "%\xf0\x9f"`)
+}
+
+func TestGetJWTProperty_authVisitor_Fail(t *testing.T) {
+	defer CleanupEnvironment()()
+	os.Setenv("PATH", "testdata:/bin")
+
+	client := &DatabricksClient{
+		Host: "https://adb-1232.azuredatabricks.net",
+		authVisitor: func(r *http.Request) error {
+			return fmt.Errorf("fails for the test")
+		},
+	}
+	_, err := client.GetAzureJwtProperty("tid")
+	require.EqualError(t, err, "fails for the test")
 }
 
 func TestGetJWTProperty_AzureCli_Error_DB_PAT(t *testing.T) {
@@ -367,7 +429,9 @@ func TestGetJWTProperty_AzureCli_Error_DB_PAT(t *testing.T) {
 func TestGetJWTProperty_AzureCli_Error_No_TenantID(t *testing.T) {
 	defer CleanupEnvironment()()
 	os.Setenv("PATH", "testdata:/bin")
-	os.Setenv("TF_AAD_TOKEN", "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJPbmxpbmUgSldUIEJ1aWxkZXIiLCJpYXQiOjE2MzU3OTMwOTksImV4cCI6MTY2NzMyOTA5OSwiYXVkIjoid3d3LmV4YW1wbGUuY29tIiwic3ViIjoianJvY2tldEBleGFtcGxlLmNvbSJ9.bWKxWSNburEQPGx71pxO1xTa8cuGue5PeXn407voUMI")
+	os.Setenv("TF_AAD_TOKEN", newTestJwt(t, jwt.MapClaims{
+		"something": "else",
+	}))
 
 	srv, client := setupJwtTestClient()
 	assert.NotNil(t, srv)
@@ -390,4 +454,84 @@ func TestGetJWTProperty_AzureCli_Error_EmptyToken(t *testing.T) {
 
 	_, err := client.GetAzureJwtProperty("tid")
 	require.EqualError(t, err, "can't obtain Azure JWT token")
+}
+
+func TestNoMsiAvailable(t *testing.T) {
+	msiAvailabilityChecker = func(ctx context.Context, s adal.Sender) bool {
+		// without this shim test will fail on GitHub, as it runs on Azure
+		return false
+	}
+	_, err := (&DatabricksClient{
+		AzureResourceID: "/a/b/c",
+		AzureUseMSI:     true,
+		httpClient: &retryablehttp.Client{
+			HTTPClient: http.DefaultClient,
+			RetryMax:   0,
+			CheckRetry: func(ctx context.Context, resp *http.Response, err error) (bool, error) {
+				return false, err
+			},
+		},
+	}).configureWithAzureManagedIdentity(context.Background())
+	assert.EqualError(t, err, "managed identity is not available")
+}
+
+func TestMsiWorks(t *testing.T) {
+	msiAvailabilityChecker = func(ctx context.Context, s adal.Sender) bool {
+		return true
+	}
+	auth, err := (&DatabricksClient{
+		AzureResourceID: "/a/b/c",
+		AzureUseMSI:     true,
+		Host:            "abc.azuredatabricks.net",
+		AzureEnvironment: &azure.Environment{
+			ResourceManagerEndpoint:   fmt.Sprintf("%s/", "http://localhost"),
+			ServiceManagementEndpoint: "sm",
+		},
+		httpClient: &retryablehttp.Client{
+			HTTPClient: http.DefaultClient,
+			RetryMax:   0,
+		},
+	}).configureWithAzureManagedIdentity(context.Background())
+	assert.NoError(t, err)
+	assert.NotNil(t, auth)
+}
+
+func TestSimpleAADRequestVisitor_FailManagement(t *testing.T) {
+	_, err := (&DatabricksClient{
+		AzureEnvironment: &azure.Environment{
+			ServiceManagementEndpoint: "x",
+		},
+	}).simpleAADRequestVisitor(context.Background(),
+		func(resource string) (autorest.Authorizer, error) {
+			return nil, fmt.Errorf("🤨")
+		})
+	assert.EqualError(t, err, "cannot authorize management: 🤨")
+}
+
+func TestSimpleAADRequestVisitor_FailWorkspaceUrl(t *testing.T) {
+	_, err := (&DatabricksClient{
+		AzureEnvironment: &azure.Environment{
+			ServiceManagementEndpoint: "x",
+		},
+	}).simpleAADRequestVisitor(context.Background(),
+		func(resource string) (autorest.Authorizer, error) {
+			return autorest.NullAuthorizer{}, nil
+		})
+	assert.EqualError(t, err, "cannot get workspace: somehow resource id is not set")
+}
+
+func TestSimpleAADRequestVisitor_FailPlatformAuth(t *testing.T) {
+	_, err := (&DatabricksClient{
+		Host: "abc.azuredatabricks.net",
+		AzureEnvironment: &azure.Environment{
+			ServiceManagementEndpoint: "x",
+		},
+	}).simpleAADRequestVisitor(context.Background(),
+		func(resource string) (autorest.Authorizer, error) {
+			if resource == armDatabricksResourceID {
+				return nil, fmt.Errorf("🤨")
+			}
+			return autorest.NullAuthorizer{}, nil
+		})
+	assert.EqualError(t, err, "cannot authorize databricks: 🤨")
 }

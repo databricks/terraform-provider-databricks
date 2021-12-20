@@ -388,13 +388,10 @@ func StructToData(result interface{}, s map[string]*schema.Schema, d *schema.Res
 		case schema.TypeList, schema.TypeSet:
 			es, ok := fieldSchema.Elem.(*schema.Schema)
 			if ok {
-				switch es.Type {
-				case schema.TypeString, schema.TypeInt, schema.TypeFloat, schema.TypeBool:
-					return d.Set(fieldPath, fieldValue)
-				default:
-					return fmt.Errorf("%s[%v] unsupported schema detected",
-						fieldPath, fieldValue)
-				}
+				log.Printf("[TRACE] Set %s %s %v", es.Type, fieldPath, fieldValue)
+				// here we rely on Terraform SDK to perform
+				// validation, so we don't to it twice
+				return d.Set(fieldPath, fieldValue)
 			}
 			nv, err := collectionToMaps(fieldValue, fieldSchema)
 			if err != nil {

@@ -205,6 +205,7 @@ type Dummy struct {
 	Tags        map[string]string `json:"tags,omitempty" tf:"max_items:5"`
 	Home        *Address          `json:"home,omitempty" tf:"group:v,suppress_diff"`
 	House       *Address          `json:"house,omitempty" tf:"group:v"`
+	Other       *Address          `json:"other,omitempty"`
 }
 
 func TestStructToDataAndBack(t *testing.T) {
@@ -238,6 +239,9 @@ func TestStructToDataAndBack(t *testing.T) {
 	var r testStruct
 	err = DataToStructPointer(d, scm, &r)
 	assert.NoError(t, err)
+
+	err = DataToStructPointer(d, scm, 1)
+	assert.EqualError(t, err, "pointer is expected, but got Int: 1")
 }
 
 func TestSetPrimitiveOfKind(t *testing.T) {
@@ -506,4 +510,55 @@ func TestReadReflectValueFromDataCornerCases(t *testing.T) {
 	rv := v.Elem()
 	err := readReflectValueFromData([]string{}, data{"new": 0.123, "invalid": 1}, rv, s)
 	assert.EqualError(t, err, "invalid: invalid[1] unsupported field type")
+}
+
+func TestStructToData_CornerCases(t *testing.T) {
+	type Nonsense struct {
+		WillBeIgnored int       `json:"will_be_ignored,omitempty"`
+		Ints          []int     `json:"ints"`
+		Addresses     []Address `json:"addrs"`
+	}
+	s := schema.InternalMap(map[string]*schema.Schema{
+		"will_be_ignored": {
+			Type:     schema.TypeInt,
+			Optional: true,
+		},
+		"ints": {
+			Type:     schema.TypeList,
+			Required: true,
+			Elem: &schema.Schema{
+				Type: schema.TypeInt,
+			},
+		},
+		"addrs": {
+			Type:     schema.TypeList,
+			Required: true,
+			Elem: &schema.Resource{
+				Schema: map[string]*schema.Schema{
+					"line": {
+						Type:     schema.TypeString,
+						Required: true,
+					},
+				},
+			},
+		},
+	})
+	d := schema.TestResourceDataRaw(t, s, map[string]interface{}{})
+	d.Set("ints", []int{1})
+	d.Set("addrs", []interface{}{
+		map[string]interface{}{
+			"line": "a",
+		},
+	})
+	err := StructToData(Nonsense{
+		WillBeIgnored: 1,
+		Ints:          []int{},
+		Addresses:     []Address{},
+	}, s, d)
+	assert.NoError(t, err)
+}
+
+func TestDataToReflectValueBypass(t *testing.T) {
+	err := DataToReflectValue(nil, &schema.Resource{Schema: map[string]*schema.Schema{}}, reflect.ValueOf(0))
+	assert.EqualError(t, err, "value of Struct is expected, but got Int: 0")
 }

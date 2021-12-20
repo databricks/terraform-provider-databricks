@@ -388,13 +388,10 @@ func StructToData(result interface{}, s map[string]*schema.Schema, d *schema.Res
 		case schema.TypeList, schema.TypeSet:
 			es, ok := fieldSchema.Elem.(*schema.Schema)
 			if ok {
-				switch es.Type {
-				case schema.TypeString, schema.TypeInt, schema.TypeFloat, schema.TypeBool:
-					return d.Set(fieldPath, fieldValue)
-				default:
-					return fmt.Errorf("%s[%v] unsupported schema detected",
-						fieldPath, fieldValue)
-				}
+				log.Printf("[TRACE] Set %s %s %v", es.Type, fieldPath, fieldValue)
+				// here we rely on Terraform SDK to perform
+				// validation, so we don't to it twice
+				return d.Set(fieldPath, fieldValue)
 			}
 			nv, err := collectionToMaps(fieldValue, fieldSchema)
 			if err != nil {
@@ -412,8 +409,15 @@ func StructToData(result interface{}, s map[string]*schema.Schema, d *schema.Res
 	})
 }
 
+// attributeGetter is a generalization between schema.ResourceDiff & schema.ResourceData
+// to those who'll be reading this code and would know public equivalent interface from
+// TF SDK - feel free to replace the usages of this interface in a PR.
+type attributeGetter interface {
+	GetOk(key string) (interface{}, bool)
+}
+
 // DiffToStructPointer reads resource diff with given schema onto result pointer
-func DiffToStructPointer(d *schema.ResourceDiff, scm map[string]*schema.Schema, result interface{}) error {
+func DiffToStructPointer(d attributeGetter, scm map[string]*schema.Schema, result interface{}) error {
 	rv := reflect.ValueOf(result)
 	rk := rv.Kind()
 	if rk != reflect.Ptr {
@@ -432,13 +436,6 @@ func DataToStructPointer(d *schema.ResourceData, scm map[string]*schema.Schema, 
 	}
 	rv = rv.Elem()
 	return readReflectValueFromData([]string{}, d, rv, scm)
-}
-
-// attributeGetter is a generalization between schema.ResourceDiff & schema.ResourceData
-// to those who'll be reading this code and would know public equivalent interface from
-// TF SDK - feel free to replace the usages of this interface in a PR.
-type attributeGetter interface {
-	GetOk(key string) (interface{}, bool)
 }
 
 // DataToReflectValue reads reflect value from data
@@ -483,20 +480,16 @@ func readReflectValueFromData(path []string, d attributeGetter,
 				valueField.SetMapIndex(reflect.ValueOf(key), vrv)
 			}
 		case schema.TypeSet:
-			rawSet, ok := raw.(*schema.Set)
-			if !ok {
-				return fmt.Errorf("%s[%v] is not set", fieldPath, raw)
-			}
+			// here we rely on Terraform SDK to perform validation, so we don't to it twice
+			rawSet := raw.(*schema.Set)
 			rawList := rawSet.List()
 			return readListFromData(path, d, rawList, valueField,
 				fieldSchema, func(i int) string {
 					return strconv.Itoa(rawSet.F(rawList[i]))
 				})
 		case schema.TypeList:
-			rawList, ok := raw.([]interface{})
-			if !ok {
-				return fmt.Errorf("%s[%v] is not list", fieldPath, raw)
-			}
+			// here we rely on Terraform SDK to perform validation, so we don't to it twice
+			rawList := raw.([]interface{})
 			return readListFromData(path, d, rawList, valueField, fieldSchema, strconv.Itoa)
 		default:
 			return fmt.Errorf("%s[%v] unsupported field type", fieldPath, raw)
@@ -561,10 +554,8 @@ func readListFromData(path []string, d attributeGetter,
 		vpointer := reflect.New(valueField.Type().Elem())
 		valueField.Set(vpointer)
 		ve := vpointer.Elem()
-		nestedResource, ok := fieldSchema.Elem.(*schema.Resource)
-		if !ok {
-			return fmt.Errorf("%s[%v] is not a resource", fieldPath, rawList[0])
-		}
+		// here we rely on Terraform SDK to perform validation, so we don't to it twice
+		nestedResource := fieldSchema.Elem.(*schema.Resource)
 		nestedPath := append(path, offsetConverter(0))
 		return readReflectValueFromData(nestedPath, d, ve, nestedResource.Schema)
 	case reflect.Slice:
@@ -575,10 +566,8 @@ func readListFromData(path []string, d attributeGetter,
 			item := newSlice.Index(i)
 			switch k {
 			case reflect.Struct:
-				nestedResource, ok := fieldSchema.Elem.(*schema.Resource)
-				if !ok {
-					return fmt.Errorf("%s[%v] is not a resource", fieldPath, elem)
-				}
+				// here we rely on Terraform SDK to perform validation, so we don't to it twice
+				nestedResource := fieldSchema.Elem.(*schema.Resource)
 				nestedPath := append(path, offsetConverter(i))
 				vpointer := reflect.New(valueField.Type().Elem())
 				ve := vpointer.Elem()

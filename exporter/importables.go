@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
-	"os"
 	"path"
 	"regexp"
 	"strings"
@@ -44,22 +43,13 @@ var resourcesMap map[string]importable = map[string]importable{
 		},
 		Body: func(ic *importContext, body *hclwrite.Body, r *resource) error {
 			dbfsAPI := storage.NewDbfsAPI(ic.Context, ic.Client)
-			fileBytes, err := dbfsAPI.Read(r.ID)
+			content, err := dbfsAPI.Read(r.ID)
 			if err != nil {
-				return err
-			}
-			err = os.MkdirAll(fmt.Sprintf("%s/files", ic.Directory), 0755)
-			if err != nil && !os.IsExist(err) {
 				return err
 			}
 			name := ic.Importables["databricks_dbfs_file"].Name(r.Data)
-			fileName := ic.prefix + name
-			local, err := os.Create(fmt.Sprintf("%s/files/%s", ic.Directory, fileName))
-			if err != nil {
-				return err
-			}
-			defer local.Close()
-			_, err = local.Write(fileBytes)
+			fileName, err := ic.createFile(name, content)
+			log.Printf("Creating %s for %s", fileName, r)
 			if err != nil {
 				return err
 			}
@@ -79,14 +69,10 @@ var resourcesMap map[string]importable = map[string]importable{
 		Service: "compute",
 		Name: func(d *schema.ResourceData) string {
 			raw, ok := d.GetOk("instance_pool_name")
-			if !ok {
+			if !ok || raw.(string) == "" {
 				return strings.Split(d.Id(), "-")[2]
 			}
-			name := raw.(string)
-			if name == "" {
-				return strings.Split(d.Id(), "-")[2]
-			}
-			return name
+			return raw.(string)
 		},
 		Import: func(ic *importContext, r *resource) error {
 			if ic.meAdmin {
@@ -147,6 +133,7 @@ var resourcesMap map[string]importable = map[string]importable{
 					continue
 				}
 				if !ic.MatchesName(c.ClusterName) {
+					log.Printf("[INFO] Skipping %s because it doesn't match %s", c.ClusterName, ic.match)
 					continue
 				}
 				if c.LastActivityTime < time.Now().Unix()-lastActiveMs {
@@ -164,12 +151,8 @@ var resourcesMap map[string]importable = map[string]importable{
 		Import: func(ic *importContext, r *resource) error {
 			var c clusters.Cluster
 			s := ic.Resources["databricks_cluster"].Schema
-			if err := common.DataToStructPointer(r.Data, s, &c); err != nil {
-				return err
-			}
-			if err := ic.importCluster(&c); err != nil {
-				return err
-			}
+			common.DataToStructPointer(r.Data, s, &c)
+			ic.importCluster(&c)
 			if ic.meAdmin {
 				ic.Emit(&resource{
 					Resource: "databricks_permissions",
@@ -203,12 +186,8 @@ var resourcesMap map[string]importable = map[string]importable{
 		Import: func(ic *importContext, r *resource) error {
 			var job jobs.JobSettings
 			s := ic.Resources["databricks_job"].Schema
-			if err := common.DataToStructPointer(r.Data, s, &job); err != nil {
-				return err
-			}
-			if err := ic.importCluster(job.NewCluster); err != nil {
-				return err
-			}
+			common.DataToStructPointer(r.Data, s, &job)
+			ic.importCluster(job.NewCluster)
 			ic.Emit(&resource{
 				Resource: "databricks_cluster",
 				ID:       job.ExistingClusterID,
@@ -253,43 +232,8 @@ var resourcesMap map[string]importable = map[string]importable{
 			return ic.importLibraries(r.Data, s)
 		},
 		List: func(ic *importContext) error {
-			a := jobs.NewJobsAPI(ic.Context, ic.Client)
-			nowSeconds := time.Now().Unix()
-			starterAfter := (nowSeconds - (ic.lastActiveDays * 24 * 60 * 60)) * 1000
-			if l, err := a.List(); err == nil {
-				i := 0
-				for _, job := range l.Jobs {
-					if !ic.MatchesName(job.Settings.Name) {
-						continue
-					}
-					if ic.lastActiveDays != 3650 {
-						rl, err := a.RunsList(jobs.JobRunsListRequest{
-							JobID:         job.JobID,
-							CompletedOnly: true,
-							Limit:         1,
-						})
-						if err != nil {
-							log.Printf("[WARN] Failed to get runs: %s", err)
-							continue
-						}
-						if len(rl.Runs) == 0 {
-							log.Printf("[INFO] Job %#v (%d) did never run. Skipping", job.Settings.Name, job.JobID)
-							continue
-						}
-						if rl.Runs[0].StartTime < starterAfter {
-							log.Printf("[INFO] Job %#v (%d) didn't run for %d days. Skipping",
-								job.Settings.Name, job.JobID,
-								(nowSeconds*1000-rl.Runs[0].StartTime)/24*60*60/1000)
-							continue
-						}
-					}
-					ic.Emit(&resource{
-						Resource: "databricks_job",
-						ID:       job.ID(),
-					})
-					i++
-					log.Printf("[INFO] Imported %d of total %d jobs", i, len(l.Jobs))
-				}
+			if l, err := jobs.NewJobsAPI(ic.Context, ic.Client).List(); err == nil {
+				ic.importJobs(l)
 			}
 			return nil
 		},
@@ -345,6 +289,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			}
 			for _, g := range ic.allGroups {
 				if !ic.MatchesName(g.DisplayName) {
+					log.Printf("[INFO] Group %s doesn't match %s filter", g.DisplayName, ic.match)
 					continue
 				}
 				ic.Emit(&resource{
@@ -477,12 +422,14 @@ var resourcesMap map[string]importable = map[string]importable{
 			return nil
 		},
 		Import: func(ic *importContext, r *resource) error {
-			u, err := ic.findUserByName(r.Data.Get("user_name").(string))
+			username := r.Data.Get("user_name").(string)
+			u, err := ic.findUserByName(username)
 			if err != nil {
 				return err
 			}
 			for _, g := range u.Groups {
 				if g.Type != "direct" {
+					log.Printf("Skipping non-direct group %s/%s for user %s", g.Value, g.Display, username)
 					continue
 				}
 				ic.Emit(&resource{
@@ -515,19 +462,13 @@ var resourcesMap map[string]importable = map[string]importable{
 		Ignore: func(ic *importContext, r *resource) bool {
 			var permissions permissions.PermissionsEntity
 			s := ic.Resources["databricks_permissions"].Schema
-			err := common.DataToStructPointer(r.Data, s, &permissions)
-			if err != nil {
-				return false
-			}
+			common.DataToStructPointer(r.Data, s, &permissions)
 			return (len(permissions.AccessControlList) == 0)
 		},
 		Import: func(ic *importContext, r *resource) error {
 			var permissions permissions.PermissionsEntity
 			s := ic.Resources["databricks_permissions"].Schema
-			err := common.DataToStructPointer(r.Data, s, &permissions)
-			if err != nil {
-				return err
-			}
+			common.DataToStructPointer(r.Data, s, &permissions)
 			for _, ac := range permissions.AccessControlList {
 				ic.Emit(&resource{
 					Resource:  "databricks_user",
@@ -553,6 +494,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			if scopes, err := ssAPI.List(); err == nil {
 				for i, scope := range scopes {
 					if !ic.MatchesName(scope.Name) {
+						log.Printf("[INFO] Secret scope %s doesn't match %s filter", scope.Name, ic.match)
 						continue
 					}
 					ic.Emit(&resource{
@@ -828,25 +770,16 @@ var resourcesMap map[string]importable = map[string]importable{
 			if err != nil {
 				return err
 			}
-			err = os.Mkdir(fmt.Sprintf("%s/files", ic.Directory), 0755)
-			if err != nil && !os.IsExist(err) {
-				return err
-			}
-			fileName := path.Base(r.Name)
-			local, err := os.Create(fmt.Sprintf("%s/files/gis-%s", ic.Directory, fileName))
+			content, err := base64.StdEncoding.DecodeString(gis.ContentBase64)
 			if err != nil {
 				return err
 			}
-			defer local.Close()
-			fileBytes, err := base64.StdEncoding.DecodeString(gis.ContentBase64)
+			fileName, err := ic.createFile(path.Base(r.Name), content)
+			log.Printf("Creating %s for %s", fileName, r)
 			if err != nil {
 				return err
 			}
-			_, err = local.Write(fileBytes)
-			if err != nil {
-				return err
-			}
-			relativeFile := fmt.Sprintf("${path.module}/files/gis-%s", fileName)
+			relativeFile := fmt.Sprintf("${path.module}/files/%s", fileName)
 			b := body.AppendNewBlock("resource", []string{r.Resource, r.Name}).Body()
 			b.SetAttributeValue("name", cty.StringVal(gis.Name))
 			b.SetAttributeValue("enabled", cty.BoolVal(gis.Enabled))

@@ -33,5 +33,26 @@
 			"}"
 		],
 		"description": "if err != nil return err"
+	},
+	"assert.EqualError": {
+		"prefix": "aee",
+		"body": [
+		  "assert.EqualError(t, err, \"..\")"
+		],
+		"description": "assert.EqualError"
+	},
+	"assert.Equal": {
+		"prefix": "ae",
+		"body": [
+		  "assert.Equal(t, \"..\", $1)"
+		],
+		"description": "assert.Equal"
+	},
+	"assert.NoError": {
+		"prefix": "anoe",
+		"body": [
+		  "assert.NoError(t, err)"
+		],
+		"description": "assert.NoError"
 	}
 }

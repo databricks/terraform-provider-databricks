@@ -4,11 +4,14 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"os"
 	"strings"
+	"time"
 
 	"github.com/databrickslabs/terraform-provider-databricks/aws"
 	"github.com/databrickslabs/terraform-provider-databricks/clusters"
 	"github.com/databrickslabs/terraform-provider-databricks/common"
+	"github.com/databrickslabs/terraform-provider-databricks/jobs"
 	"github.com/databrickslabs/terraform-provider-databricks/libraries"
 	"github.com/databrickslabs/terraform-provider-databricks/scim"
 	"github.com/databrickslabs/terraform-provider-databricks/storage"
@@ -16,9 +19,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-func (ic *importContext) importCluster(c *clusters.Cluster) error {
+func (ic *importContext) importCluster(c *clusters.Cluster) {
 	if c == nil {
-		return nil
+		return
 	}
 	for _, is := range c.InitScripts {
 		if is.Dbfs != nil {
@@ -46,15 +49,11 @@ func (ic *importContext) importCluster(c *clusters.Cluster) error {
 			ID:       c.PolicyID,
 		})
 	}
-	return nil
 }
 
 func (ic *importContext) importLibraries(d *schema.ResourceData, s map[string]*schema.Schema) error {
 	var cll libraries.ClusterLibraryList
-	err := common.DataToStructPointer(d, s, &cll)
-	if err != nil {
-		return err
-	}
+	common.DataToStructPointer(d, s, &cll)
 	for _, lib := range cll.Libraries {
 		ic.emitIfDbfsFile(lib.Whl)
 		ic.emitIfDbfsFile(lib.Jar)
@@ -77,21 +76,6 @@ func (ic *importContext) cacheGroups() error {
 	return nil
 }
 
-// func (ic *importContext) cacheUsers() error {
-// 	if len(ic.allUsers) == 0 {
-// 		// workspace has at least one user, always.
-// 		log.Printf("[INFO] Fetching users into in-memory cache")
-// 		usersAPI := identity.NewUsersAPI(ic.Client)
-// 		users, err := usersAPI.Filter("active eq true")
-// 		if err != nil {
-// 			return err
-// 		}
-// 		ic.allUsers = users
-// 		log.Printf("[INFO] Cached %d users", len(users))
-// 	}
-// 	return nil
-// }
-
 func (ic *importContext) findUserByName(name string) (u scim.User, err error) {
 	a := scim.NewUsersAPI(ic.Context, ic.Client)
 	users, err := a.Filter(fmt.Sprintf("userName eq '%s'", name))
@@ -104,17 +88,6 @@ func (ic *importContext) findUserByName(name string) (u scim.User, err error) {
 	}
 	u = users[0]
 	return
-	// if err := ic.cacheUsers(); err != nil {
-	// 	return
-	// }
-	// for _, _u := range ic.allUsers {
-	// 	if _u.UserName == name {
-	// 		u = _u
-	// 		return
-	// 	}
-	// }
-	// err = fmt.Errorf("User %s not found", name)
-	// return
 }
 
 func (ic *importContext) emitIfDbfsFile(path string) {
@@ -167,24 +140,27 @@ func (ic *importContext) refreshMounts() error {
 			if err != nil {
 				return err
 			}
-			i := 0
-			for k, v := range profileMountMap {
-				if _, has := ic.mountMap[k]; has {
-					continue
-				}
-				i++
-				ic.mountMap[k] = mount{
-					URL:             v,
-					InstanceProfile: instanceProfile.InstanceProfileArn,
-				}
-			}
-			if i > 0 {
-				log.Printf("[INFO] Found %d mounts accessible by %s",
-					len(profileMountMap), instanceProfile.InstanceProfileArn)
-			}
+			ic.addAwsMounts(instanceProfile.InstanceProfileArn, profileMountMap)
 		}
 	}
 	return nil
+}
+
+func (ic *importContext) addAwsMounts(arn string, profileMountMap map[string]string) {
+	i := 0
+	for k, v := range profileMountMap {
+		if _, has := ic.mountMap[k]; has {
+			continue
+		}
+		i++
+		ic.mountMap[k] = mount{
+			URL:             v,
+			InstanceProfile: arn,
+		}
+	}
+	if i > 0 {
+		log.Printf("[INFO] Found %d mounts accessible by %s", len(profileMountMap), arn)
+	}
 }
 
 var getReadableMountsCommand = `
@@ -241,4 +217,64 @@ func eitherString(a interface{}, b interface{}) string {
 		return b.(string)
 	}
 	return ""
+}
+
+func (ic *importContext) importJobs(l jobs.JobList) {
+	nowSeconds := time.Now().Unix()
+	a := jobs.NewJobsAPI(ic.Context, ic.Client)
+	starterAfter := (nowSeconds - (ic.lastActiveDays * 24 * 60 * 60)) * 1000
+	i := 0
+	for _, job := range l.Jobs {
+		if !ic.MatchesName(job.Settings.Name) {
+			log.Printf("[INFO] Job name %s doesn't match selection %s", job.Settings.Name, ic.match)
+			continue
+		}
+		if ic.lastActiveDays != 3650 {
+			rl, err := a.RunsList(jobs.JobRunsListRequest{
+				JobID:         job.JobID,
+				CompletedOnly: true,
+				Limit:         1,
+			})
+			if err != nil {
+				log.Printf("[WARN] Failed to get runs: %s", err)
+				continue
+			}
+			if len(rl.Runs) == 0 {
+				log.Printf("[INFO] Job %#v (%d) did never run. Skipping", job.Settings.Name, job.JobID)
+				continue
+			}
+			if rl.Runs[0].StartTime < starterAfter {
+				log.Printf("[INFO] Job %#v (%d) didn't run for %d days. Skipping",
+					job.Settings.Name, job.JobID,
+					(nowSeconds*1000-rl.Runs[0].StartTime)/24*60*60/1000)
+				continue
+			}
+		}
+		ic.Emit(&resource{
+			Resource: "databricks_job",
+			ID:       job.ID(),
+		})
+		i++
+		log.Printf("[INFO] Imported %d of total %d jobs", i, len(l.Jobs))
+	}
+}
+
+// returns created file name in "files" directory for the export and error if any
+func (ic *importContext) createFile(name string, content []byte) (string, error) {
+	err := os.MkdirAll(fmt.Sprintf("%s/files", ic.Directory), 0755)
+	if err != nil && !os.IsExist(err) {
+		return "", err
+	}
+	fileName := ic.prefix + name
+	localFileName := fmt.Sprintf("%s/files/%s", ic.Directory, fileName)
+	local, err := os.Create(localFileName)
+	if err != nil {
+		return "", err
+	}
+	defer local.Close()
+	_, err = local.Write(content)
+	if err != nil {
+		return "", err
+	}
+	return fileName, nil
 }

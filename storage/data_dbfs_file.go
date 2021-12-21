@@ -2,6 +2,7 @@ package storage
 
 import (
 	"context"
+	"fmt"	
 	"encoding/base64"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -28,6 +29,7 @@ func DataSourceDBFSFile() *schema.Resource {
 			}
 			d.SetId(fileInfo.Path)
 			d.Set("path", fileInfo.Path)
+			d.Set("dbfs_path", fmt.Sprint("dbfs:", fileInfo.Path))			
 			d.Set("file_size", fileInfo.FileSize)
 			content, err := dbfsAPI.Read(fileInfo.Path)
 			if err != nil {
@@ -54,6 +56,10 @@ func DataSourceDBFSFile() *schema.Resource {
 			},
 			"file_size": {
 				Type:     schema.TypeInt,
+				Computed: true,
+			},
+			"dbfs_path": {
+				Type:     schema.TypeString,
 				Computed: true,
 			},
 		},

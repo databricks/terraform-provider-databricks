@@ -134,14 +134,6 @@ func (a DbfsAPI) list(path string) ([]FileInfo, error) {
 	return dbfsList.Files, err
 }
 
-// Move moves the file between DBFS locations via DBFS api
-func (a DbfsAPI) Move(src string, tgt string) error {
-	return a.client.Post(a.context, "/dbfs/move", map[string]string{
-		"source_path":      src,
-		"destination_path": tgt,
-	}, nil)
-}
-
 // Delete deletes a file in DBFS via API
 func (a DbfsAPI) Delete(path string, recursive bool) error {
 	return a.client.Post(a.context, "/dbfs/delete", dbfsRequest{
@@ -202,11 +194,4 @@ func (a DbfsAPI) Status(path string) (f FileInfo, err error) {
 		"path": path,
 	}, &f)
 	return
-}
-
-// Mkdirs makes the directories in DBFS include the parent paths
-func (a DbfsAPI) Mkdirs(path string) error {
-	return a.client.Post(a.context, "/dbfs/mkdirs", map[string]interface{}{
-		"path": path,
-	}, nil)
 }

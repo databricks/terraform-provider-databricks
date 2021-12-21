@@ -27,7 +27,6 @@ func TestAccCreateFile(t *testing.T) {
 
 	randomName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
 	dir := "/client-test/" + randomName
-	dir2 := dir + "/dir2/"
 	path := dir + "/randomfile"
 	path2 := dir + "/dir2/randomfile"
 	path3 := dir + "/dir2/randomfile2"
@@ -36,13 +35,8 @@ func TestAccCreateFile(t *testing.T) {
 	client := common.NewClientFromEnvironment()
 
 	dbfsAPI := NewDbfsAPI(context.Background(), client)
-	err := dbfsAPI.Mkdirs(dir)
-	assert.NoError(t, err, err)
 
-	err = dbfsAPI.Mkdirs(dir2)
-	assert.NoError(t, err, err)
-
-	err = dbfsAPI.Create(path, randomStr, true)
+	err := dbfsAPI.Create(path, randomStr, true)
 	assert.NoError(t, err, err)
 
 	err = dbfsAPI.Create(path2, randomStr, true)

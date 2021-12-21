@@ -199,7 +199,8 @@ func TestDbfsFileCornerCases_WriteWrongDir(t *testing.T) {
 		ic.Client = client
 		ic.Context = ctx
 		err := resourcesMap["databricks_dbfs_file"].Body(ic, nil, &resource{
-			ID: "a",
+			ID:   "a",
+			Data: storage.ResourceDBFSFile().TestResourceData(),
 		})
 		assert.NotNil(t, err) // mustn't match direct OS error
 	})
@@ -535,9 +536,9 @@ func TestGlobalInitScriptsErrors(t *testing.T) {
 	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
 		{
 			ReuseRequest: true,
-			MatchAny: true,
-			Status:   404,
-			Response: common.NotFound("nope"),
+			MatchAny:     true,
+			Status:       404,
+			Response:     common.NotFound("nope"),
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		ic := importContextForTest()
@@ -549,6 +550,63 @@ func TestGlobalInitScriptsErrors(t *testing.T) {
 		err = resourcesMap["databricks_global_init_script"].Body(ic, nil, &resource{
 			ID: "abc",
 		})
+		assert.EqualError(t, err, "nope")
+	})
+}
+
+func TestGlobalInitScriptsBodyErrors(t *testing.T) {
+	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/global-init-scripts/sad-emoji",
+			Response: workspace.GlobalInitScriptInfo{
+				Name:          "x.sh",
+				ContentBase64: "🥺",
+			},
+		},
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/global-init-scripts/second",
+			Response: workspace.GlobalInitScriptInfo{
+				Name:          "x.sh",
+				ContentBase64: "YWJj",
+			},
+		},
+	}, func(ctx context.Context, client *common.DatabricksClient) {
+		ic := importContextForTest()
+		ic.Client = client
+		ic.Context = ctx
+		err := resourcesMap["databricks_global_init_script"].Body(ic, nil, &resource{
+			ID: "sad-emoji",
+		})
+		assert.EqualError(t, err, "illegal base64 data at input byte 0")
+
+		err = resourcesMap["databricks_global_init_script"].Body(ic, nil, &resource{
+			ID: "second",
+		})
+		assert.NotNil(t, err) // no exact match because of OS diffs
+	})
+}
+
+func TestRepoIdForName(t *testing.T) {
+	d := workspace.ResourceRepo().TestResourceData()
+	d.SetId("x")
+	assert.Equal(t, "x", resourcesMap["databricks_repo"].Name(d))
+}
+
+func TestRepoListFails(t *testing.T) {
+	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
+		{
+			ReuseRequest: true,
+			MatchAny:     true,
+			Status:       404,
+			Response:     common.NotFound("nope"),
+		},
+	}, func(ctx context.Context, client *common.DatabricksClient) {
+		ic := importContextForTest()
+		ic.Client = client
+		ic.Context = ctx
+		err := resourcesMap["databricks_repo"].List(ic)
 		assert.EqualError(t, err, "nope")
 	})
 }

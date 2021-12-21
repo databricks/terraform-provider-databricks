@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
-	"os"
 	"path"
 	"regexp"
 	"strings"
@@ -44,24 +43,13 @@ var resourcesMap map[string]importable = map[string]importable{
 		},
 		Body: func(ic *importContext, body *hclwrite.Body, r *resource) error {
 			dbfsAPI := storage.NewDbfsAPI(ic.Context, ic.Client)
-			fileBytes, err := dbfsAPI.Read(r.ID)
+			content, err := dbfsAPI.Read(r.ID)
 			if err != nil {
-				return err
-			}
-			err = os.MkdirAll(fmt.Sprintf("%s/files", ic.Directory), 0755)
-			if err != nil && !os.IsExist(err) {
 				return err
 			}
 			name := ic.Importables["databricks_dbfs_file"].Name(r.Data)
-			fileName := ic.prefix + name
-			localFileName := fmt.Sprintf("%s/files/%s", ic.Directory, fileName)
-			log.Printf("Creating %s for %s", localFileName, r.ID)
-			local, err := os.Create(localFileName)
-			if err != nil {
-				return err
-			}
-			defer local.Close()
-			_, err = local.Write(fileBytes)
+			fileName, err := ic.createFile(name, content)
+			log.Printf("Creating %s for %s", fileName, r)
 			if err != nil {
 				return err
 			}
@@ -782,25 +770,16 @@ var resourcesMap map[string]importable = map[string]importable{
 			if err != nil {
 				return err
 			}
-			err = os.Mkdir(fmt.Sprintf("%s/files", ic.Directory), 0755)
-			if err != nil && !os.IsExist(err) {
-				return err
-			}
-			fileName := path.Base(r.Name)
-			local, err := os.Create(fmt.Sprintf("%s/files/gis-%s", ic.Directory, fileName))
+			content, err := base64.StdEncoding.DecodeString(gis.ContentBase64)
 			if err != nil {
 				return err
 			}
-			defer local.Close()
-			fileBytes, err := base64.StdEncoding.DecodeString(gis.ContentBase64)
+			fileName, err := ic.createFile(path.Base(r.Name), content)
+			log.Printf("Creating %s for %s", fileName, r)
 			if err != nil {
 				return err
 			}
-			_, err = local.Write(fileBytes)
-			if err != nil {
-				return err
-			}
-			relativeFile := fmt.Sprintf("${path.module}/files/gis-%s", fileName)
+			relativeFile := fmt.Sprintf("${path.module}/files/%s", fileName)
 			b := body.AppendNewBlock("resource", []string{r.Resource, r.Name}).Body()
 			b.SetAttributeValue("name", cty.StringVal(gis.Name))
 			b.SetAttributeValue("enabled", cty.BoolVal(gis.Enabled))

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"os"
 	"strings"
 	"time"
 
@@ -256,4 +257,24 @@ func (ic *importContext) importJobs(l jobs.JobList) {
 		i++
 		log.Printf("[INFO] Imported %d of total %d jobs", i, len(l.Jobs))
 	}
+}
+
+// returns created file name in "files" directory for the export and error if any
+func (ic *importContext) createFile(name string, content []byte) (string, error) {
+	err := os.MkdirAll(fmt.Sprintf("%s/files", ic.Directory), 0755)
+	if err != nil && !os.IsExist(err) {
+		return "", err
+	}
+	fileName := ic.prefix + name
+	localFileName := fmt.Sprintf("%s/files/%s", ic.Directory, fileName)
+	local, err := os.Create(localFileName)
+	if err != nil {
+		return "", err
+	}
+	defer local.Close()
+	_, err = local.Write(content)
+	if err != nil {
+		return "", err
+	}
+	return fileName, nil
 }

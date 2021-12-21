@@ -301,6 +301,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			}
 			for _, g := range ic.allGroups {
 				if !ic.MatchesName(g.DisplayName) {
+					log.Printf("[INFO] Group %s doesn't match %s filter", g.DisplayName, ic.match)
 					continue
 				}
 				ic.Emit(&resource{

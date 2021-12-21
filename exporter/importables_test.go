@@ -286,7 +286,7 @@ func TestClusterList_NoNameMatch(t *testing.T) {
 		ic.match = "bcd"
 		err := resourcesMap["databricks_cluster"].List(ic)
 		assert.NoError(t, err)
-		assert.Equal(t, 0, len(ic.importing))
+		assert.Equal(t, 0, len(ic.testEmits))
 	})
 }
 
@@ -302,7 +302,7 @@ func TestJobListNoNameMatch(t *testing.T) {
 			},
 		},
 	})
-	assert.Equal(t, 0, len(ic.importing))
+	assert.Equal(t, 0, len(ic.testEmits))
 }
 
 func TestJobList_FailGetRuns(t *testing.T) {
@@ -327,6 +327,88 @@ func TestJobList_FailGetRuns(t *testing.T) {
 				},
 			},
 		})
-		assert.Equal(t, 0, len(ic.importing))
+		assert.Equal(t, 0, len(ic.testEmits))
 	})
+}
+
+func TestClusterPolicyWrongDef(t *testing.T) {
+	d := policies.ResourceClusterPolicy().TestResourceData()
+	d.Set("name", "abc")
+	d.Set("definition", "..")
+	ic := importContextForTest()
+	err := resourcesMap["databricks_cluster_policy"].Import(ic, &resource{
+		ID:   "x",
+		Data: d,
+	})
+	assert.EqualError(t, err, "invalid character '.' looking for beginning of value")
+}
+
+func TestClusterPolicyNoValues(t *testing.T) {
+	d := policies.ResourceClusterPolicy().TestResourceData()
+	d.Set("name", "abc")
+	d.Set("definition", `{"foo": {}}`)
+	ic := importContextForTest()
+	err := resourcesMap["databricks_cluster_policy"].Import(ic, &resource{
+		ID:   "x",
+		Data: d,
+	})
+	assert.NoError(t, err)
+	assert.Equal(t, 1, len(ic.testEmits))
+}
+
+func TestGroupCacheError(t *testing.T) {
+	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
+		{
+			ReuseRequest: true,
+			Method:   "GET",
+			Resource: "/api/2.0/preview/scim/v2/Groups?",
+			Status:   404,
+			Response: common.NotFound("nope"),
+		},
+	}, func(ctx context.Context, client *common.DatabricksClient) {
+		ic := importContextForTest()
+		ic.Client = client
+		ic.Context = ctx
+		err := resourcesMap["databricks_group"].List(ic)
+		assert.EqualError(t, err, "nope")
+
+		err = resourcesMap["databricks_group"].Search(ic, &resource{
+			ID: "nonsense",
+		})
+		assert.EqualError(t, err, "nope")
+
+		err = resourcesMap["databricks_group"].Import(ic, &resource{
+			ID: "nonsense",
+		})
+		assert.EqualError(t, err, "nope")
+	})
+}
+
+func TestGroupListNoNameMatch(t *testing.T) {
+	ic := importContextForTest()
+	ic.match = "bcd"
+	ic.allGroups = []scim.Group{
+		{
+			DisplayName: "abc",
+		},
+	}
+	err := resourcesMap["databricks_group"].List(ic)
+	assert.NoError(t, err)
+	assert.Equal(t, 0, len(ic.testEmits))
+}
+
+func TestGroupSearchNoMatch(t *testing.T) {
+	ic := importContextForTest()
+	ic.allGroups = []scim.Group{
+		{
+			DisplayName: "abc",
+		},
+	}
+	r := &resource{
+		Attribute: "display_name",
+		Value: "dbc",
+	}
+	err := resourcesMap["databricks_group"].Search(ic, r)
+	assert.NoError(t, err)
+	assert.Equal(t, "", r.ID)
 }

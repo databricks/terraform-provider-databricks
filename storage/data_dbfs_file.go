@@ -12,15 +12,19 @@ import (
 func DataSourceDBFSFile() *schema.Resource {
 	return &schema.Resource{
 		ReadContext: func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-			limitFileSize := d.Get("limit_file_size").(bool)
+			limitFileSize := d.Get("limit_file_size").(int)
 			dbfsAPI := NewDbfsAPI(ctx, m)
 			fileInfo, err := dbfsAPI.Status(d.Get("path").(string))
 			if err != nil {
 				return diag.FromErr(err)
 			}
-			if limitFileSize && fileInfo.FileSize > 4e6 {
+			if fileInfo.FileSize > 4e6 {
 				return diag.Errorf("Size of %s is too large: %d bytes",
 					fileInfo.Path, fileInfo.FileSize)
+			}
+			if fileInfo.FileSize <= limitFileSize {
+				return diag.Errorf("Size of %s (%d bytes) is under limit_file_size limit (%d bytes)",
+					fileInfo.Path, fileInfo.FileSize, limitFileSize)
 			}
 			d.SetId(fileInfo.Path)
 			d.Set("path", fileInfo.Path)
@@ -39,7 +43,7 @@ func DataSourceDBFSFile() *schema.Resource {
 				ForceNew: true,
 			},
 			"limit_file_size": {
-				Type:     schema.TypeBool,
+				Type:     schema.TypeInt,
 				Required: true,
 				ForceNew: true,
 			},

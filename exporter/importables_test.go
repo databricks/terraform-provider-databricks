@@ -18,6 +18,7 @@ import (
 	"github.com/databrickslabs/terraform-provider-databricks/scim"
 	"github.com/databrickslabs/terraform-provider-databricks/secrets"
 	"github.com/databrickslabs/terraform-provider-databricks/storage"
+	"github.com/databrickslabs/terraform-provider-databricks/workspace"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -360,10 +361,10 @@ func TestGroupCacheError(t *testing.T) {
 	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
 		{
 			ReuseRequest: true,
-			Method:   "GET",
-			Resource: "/api/2.0/preview/scim/v2/Groups?",
-			Status:   404,
-			Response: common.NotFound("nope"),
+			Method:       "GET",
+			Resource:     "/api/2.0/preview/scim/v2/Groups?",
+			Status:       404,
+			Response:     common.NotFound("nope"),
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		ic := importContextForTest()
@@ -406,9 +407,148 @@ func TestGroupSearchNoMatch(t *testing.T) {
 	}
 	r := &resource{
 		Attribute: "display_name",
-		Value: "dbc",
+		Value:     "dbc",
 	}
 	err := resourcesMap["databricks_group"].Search(ic, r)
 	assert.NoError(t, err)
 	assert.Equal(t, "", r.ID)
+}
+
+func TestUserSearchFails(t *testing.T) {
+	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
+		{
+			ReuseRequest: true,
+			Method:       "GET",
+			Resource:     "/api/2.0/preview/scim/v2/Users?filter=userName%20eq%20%27dbc%27",
+			Status:       404,
+			Response:     common.NotFound("nope"),
+		},
+	}, func(ctx context.Context, client *common.DatabricksClient) {
+		ic := importContextForTest()
+		ic.Client = client
+		ic.Context = ctx
+
+		d := scim.ResourceUser().TestResourceData()
+		d.Set("user_name", "dbc")
+		r := &resource{
+			Attribute: "display_name",
+			Value:     "dbc",
+			Data:      d,
+		}
+		err := resourcesMap["databricks_user"].Search(ic, r)
+		assert.EqualError(t, err, "nope")
+
+		err = resourcesMap["databricks_user"].Import(ic, r)
+		assert.EqualError(t, err, "nope")
+	})
+}
+
+func TestUserImportSkipNonDirectGroups(t *testing.T) {
+	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
+		{
+			ReuseRequest: true,
+			Method:       "GET",
+			Resource:     "/api/2.0/preview/scim/v2/Users?filter=userName%20eq%20%27dbc%27",
+			Response: scim.UserList{
+				Resources: []scim.User{
+					{
+						Groups: []scim.ComplexValue{
+							{
+								Display: "x",
+								Value:   "y",
+							},
+						},
+					},
+				},
+			},
+		},
+	}, func(ctx context.Context, client *common.DatabricksClient) {
+		ic := importContextForTest()
+		ic.Client = client
+		ic.Context = ctx
+
+		d := scim.ResourceUser().TestResourceData()
+		d.Set("user_name", "dbc")
+		r := &resource{
+			Attribute: "display_name",
+			Value:     "dbc",
+			Data:      d,
+		}
+		err := resourcesMap["databricks_user"].Import(ic, r)
+		assert.NoError(t, err)
+		assert.Equal(t, 0, len(ic.testEmits))
+	})
+}
+
+func TestSecretScopeListNoNameMatch(t *testing.T) {
+	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/secrets/scopes/list",
+
+			Response: secrets.SecretScopeList{
+				Scopes: []secrets.SecretScope{
+					{
+						Name: "abc",
+					},
+				},
+			},
+		},
+	}, func(ctx context.Context, client *common.DatabricksClient) {
+		ic := importContextForTest()
+		ic.Client = client
+		ic.Context = ctx
+		ic.match = "bcd"
+		err := resourcesMap["databricks_secret_scope"].List(ic)
+		assert.NoError(t, err)
+		assert.Equal(t, 0, len(ic.testEmits))
+	})
+}
+
+func TestAwsS3MountProfile(t *testing.T) {
+	ic := importContextForTest()
+	ic.mounts = true
+	ic.match = "abc"
+	ic.mountMap = map[string]mount{}
+	ic.mountMap["/mnt/abc"] = mount{
+		URL:             "s3a://abc",
+		InstanceProfile: "bcd",
+	}
+	ic.mountMap["/mnt/def"] = mount{
+		URL:             "s3a://def",
+		InstanceProfile: "bcd",
+	}
+	err := resourcesMap["databricks_aws_s3_mount"].List(ic)
+	assert.NoError(t, err)
+	assert.Len(t, ic.testEmits, 2)
+	assert.True(t, ic.testEmits["databricks_instance_profile[<unknown>] (id: bcd)"])
+	assert.True(t, ic.testEmits["databricks_aws_s3_mount[<unknown>] (id: /mnt/abc)"])
+}
+
+func TestGlobalInitScriptNameFromId(t *testing.T) {
+	d := workspace.ResourceGlobalInitScript().TestResourceData()
+	d.SetId("abc")
+	assert.Equal(t, "abc", resourcesMap["databricks_global_init_script"].Name(d))
+}
+
+func TestGlobalInitScriptsErrors(t *testing.T) {
+	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
+		{
+			ReuseRequest: true,
+			MatchAny: true,
+			Status:   404,
+			Response: common.NotFound("nope"),
+		},
+	}, func(ctx context.Context, client *common.DatabricksClient) {
+		ic := importContextForTest()
+		ic.Client = client
+		ic.Context = ctx
+		err := resourcesMap["databricks_global_init_script"].List(ic)
+		assert.EqualError(t, err, "nope")
+
+		err = resourcesMap["databricks_global_init_script"].Body(ic, nil, &resource{
+			ID: "abc",
+		})
+		assert.EqualError(t, err, "nope")
+	})
 }

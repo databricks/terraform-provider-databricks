@@ -434,12 +434,14 @@ var resourcesMap map[string]importable = map[string]importable{
 			return nil
 		},
 		Import: func(ic *importContext, r *resource) error {
-			u, err := ic.findUserByName(r.Data.Get("user_name").(string))
+			username := r.Data.Get("user_name").(string)
+			u, err := ic.findUserByName(username)
 			if err != nil {
 				return err
 			}
 			for _, g := range u.Groups {
 				if g.Type != "direct" {
+					log.Printf("Skipping non-direct group %s/%s for user %s", g.Value, g.Display, username)
 					continue
 				}
 				ic.Emit(&resource{
@@ -472,19 +474,13 @@ var resourcesMap map[string]importable = map[string]importable{
 		Ignore: func(ic *importContext, r *resource) bool {
 			var permissions permissions.PermissionsEntity
 			s := ic.Resources["databricks_permissions"].Schema
-			err := common.DataToStructPointer(r.Data, s, &permissions)
-			if err != nil {
-				return false
-			}
+			common.DataToStructPointer(r.Data, s, &permissions)
 			return (len(permissions.AccessControlList) == 0)
 		},
 		Import: func(ic *importContext, r *resource) error {
 			var permissions permissions.PermissionsEntity
 			s := ic.Resources["databricks_permissions"].Schema
-			err := common.DataToStructPointer(r.Data, s, &permissions)
-			if err != nil {
-				return err
-			}
+			common.DataToStructPointer(r.Data, s, &permissions)
 			for _, ac := range permissions.AccessControlList {
 				ic.Emit(&resource{
 					Resource:  "databricks_user",
@@ -510,6 +506,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			if scopes, err := ssAPI.List(); err == nil {
 				for i, scope := range scopes {
 					if !ic.MatchesName(scope.Name) {
+						log.Printf("[INFO] Secret scope %s doesn't match %s filter", scope.Name, ic.match)
 						continue
 					}
 					ic.Emit(&resource{

@@ -123,9 +123,7 @@ func (m GSMount) Config(client *common.DatabricksClient) map[string]string {
 
 func preprocessGsMount(ctx context.Context, s map[string]*schema.Schema, d *schema.ResourceData, m interface{}) error {
 	var gm GenericMount
-	if err := common.DataToStructPointer(d, s, &gm); err != nil {
-		return err
-	}
+	common.DataToStructPointer(d, s, &gm)
 	if !(strings.HasPrefix(gm.URI, "gs://") || gm.Gs != nil) {
 		return nil
 	}
@@ -205,9 +203,7 @@ func (m S3IamMount) ValidateAndApplyDefaults(d *schema.ResourceData, client *com
 
 func preprocessS3MountGeneric(ctx context.Context, s map[string]*schema.Schema, d *schema.ResourceData, m interface{}) error {
 	var gm GenericMount
-	if err := common.DataToStructPointer(d, s, &gm); err != nil {
-		return err
-	}
+	common.DataToStructPointer(d, s, &gm)
 	// TODO: move into Validate function
 	if !(strings.HasPrefix(gm.URI, "s3://") || strings.HasPrefix(gm.URI, "s3a://") || gm.S3 != nil) {
 		return nil

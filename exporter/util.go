@@ -53,10 +53,7 @@ func (ic *importContext) importCluster(c *clusters.Cluster) {
 
 func (ic *importContext) importLibraries(d *schema.ResourceData, s map[string]*schema.Schema) error {
 	var cll libraries.ClusterLibraryList
-	err := common.DataToStructPointer(d, s, &cll)
-	if err != nil {
-		return err
-	}
+	common.DataToStructPointer(d, s, &cll)
 	for _, lib := range cll.Libraries {
 		ic.emitIfDbfsFile(lib.Whl)
 		ic.emitIfDbfsFile(lib.Jar)
@@ -143,24 +140,27 @@ func (ic *importContext) refreshMounts() error {
 			if err != nil {
 				return err
 			}
-			i := 0
-			for k, v := range profileMountMap {
-				if _, has := ic.mountMap[k]; has {
-					continue
-				}
-				i++
-				ic.mountMap[k] = mount{
-					URL:             v,
-					InstanceProfile: instanceProfile.InstanceProfileArn,
-				}
-			}
-			if i > 0 {
-				log.Printf("[INFO] Found %d mounts accessible by %s",
-					len(profileMountMap), instanceProfile.InstanceProfileArn)
-			}
+			ic.addAwsMounts(instanceProfile.InstanceProfileArn, profileMountMap)
 		}
 	}
 	return nil
+}
+
+func (ic *importContext) addAwsMounts(arn string, profileMountMap map[string]string) {
+	i := 0
+	for k, v := range profileMountMap {
+		if _, has := ic.mountMap[k]; has {
+			continue
+		}
+		i++
+		ic.mountMap[k] = mount{
+			URL:             v,
+			InstanceProfile: arn,
+		}
+	}
+	if i > 0 {
+		log.Printf("[INFO] Found %d mounts accessible by %s", len(profileMountMap), arn)
+	}
 }
 
 var getReadableMountsCommand = `

@@ -16,9 +16,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-func (ic *importContext) importCluster(c *clusters.Cluster) error {
+func (ic *importContext) importCluster(c *clusters.Cluster) {
 	if c == nil {
-		return nil
+		return
 	}
 	for _, is := range c.InitScripts {
 		if is.Dbfs != nil {
@@ -46,7 +46,6 @@ func (ic *importContext) importCluster(c *clusters.Cluster) error {
 			ID:       c.PolicyID,
 		})
 	}
-	return nil
 }
 
 func (ic *importContext) importLibraries(d *schema.ResourceData, s map[string]*schema.Schema) error {

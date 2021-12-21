@@ -54,7 +54,9 @@ var resourcesMap map[string]importable = map[string]importable{
 			}
 			name := ic.Importables["databricks_dbfs_file"].Name(r.Data)
 			fileName := ic.prefix + name
-			local, err := os.Create(fmt.Sprintf("%s/files/%s", ic.Directory, fileName))
+			localFileName := fmt.Sprintf("%s/files/%s", ic.Directory, fileName)
+			log.Printf("Creating %s for %s", localFileName, r.ID)
+			local, err := os.Create(localFileName)
 			if err != nil {
 				return err
 			}
@@ -79,14 +81,10 @@ var resourcesMap map[string]importable = map[string]importable{
 		Service: "compute",
 		Name: func(d *schema.ResourceData) string {
 			raw, ok := d.GetOk("instance_pool_name")
-			if !ok {
+			if !ok || raw.(string) == "" {
 				return strings.Split(d.Id(), "-")[2]
 			}
-			name := raw.(string)
-			if name == "" {
-				return strings.Split(d.Id(), "-")[2]
-			}
-			return name
+			return raw.(string)
 		},
 		Import: func(ic *importContext, r *resource) error {
 			if ic.meAdmin {
@@ -147,6 +145,7 @@ var resourcesMap map[string]importable = map[string]importable{
 					continue
 				}
 				if !ic.MatchesName(c.ClusterName) {
+					log.Printf("[INFO] Skipping %s because it doesn't match %s", c.ClusterName, ic.match)
 					continue
 				}
 				if c.LastActivityTime < time.Now().Unix()-lastActiveMs {
@@ -164,12 +163,8 @@ var resourcesMap map[string]importable = map[string]importable{
 		Import: func(ic *importContext, r *resource) error {
 			var c clusters.Cluster
 			s := ic.Resources["databricks_cluster"].Schema
-			if err := common.DataToStructPointer(r.Data, s, &c); err != nil {
-				return err
-			}
-			if err := ic.importCluster(&c); err != nil {
-				return err
-			}
+			common.DataToStructPointer(r.Data, s, &c)
+			ic.importCluster(&c)
 			if ic.meAdmin {
 				ic.Emit(&resource{
 					Resource: "databricks_permissions",
@@ -203,12 +198,8 @@ var resourcesMap map[string]importable = map[string]importable{
 		Import: func(ic *importContext, r *resource) error {
 			var job jobs.JobSettings
 			s := ic.Resources["databricks_job"].Schema
-			if err := common.DataToStructPointer(r.Data, s, &job); err != nil {
-				return err
-			}
-			if err := ic.importCluster(job.NewCluster); err != nil {
-				return err
-			}
+			common.DataToStructPointer(r.Data, s, &job)
+			ic.importCluster(job.NewCluster)
 			ic.Emit(&resource{
 				Resource: "databricks_cluster",
 				ID:       job.ExistingClusterID,

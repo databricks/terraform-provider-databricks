@@ -1,16 +1,22 @@
 package exporter
 
 import (
+	"context"
 	"encoding/json"
+	"fmt"
+	"os"
 	"testing"
 
+	"github.com/databrickslabs/terraform-provider-databricks/clusters"
 	"github.com/databrickslabs/terraform-provider-databricks/common"
 	"github.com/databrickslabs/terraform-provider-databricks/permissions"
 	"github.com/databrickslabs/terraform-provider-databricks/policies"
 	"github.com/databrickslabs/terraform-provider-databricks/pools"
 	"github.com/databrickslabs/terraform-provider-databricks/provider"
+	"github.com/databrickslabs/terraform-provider-databricks/qa"
 	"github.com/databrickslabs/terraform-provider-databricks/scim"
 	"github.com/databrickslabs/terraform-provider-databricks/secrets"
+	"github.com/databrickslabs/terraform-provider-databricks/storage"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -155,4 +161,130 @@ func TestSecretScope(t *testing.T) {
 	ic := importContextForTest()
 	name := ic.Importables["databricks_secret_scope"].Name(d)
 	assert.Equal(t, "abc", name)
+}
+
+func TestDbfsFileCornerCases_ReadFail(t *testing.T) {
+	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/dbfs/read?length=1000000&path=a",
+			Status:   404,
+			Response: common.NotFound("nope"),
+		},
+	}, func(ctx context.Context, client *common.DatabricksClient) {
+		ic := importContextForTest()
+		ic.Client = client
+		ic.Context = ctx
+		err := resourcesMap["databricks_dbfs_file"].Body(ic, nil, &resource{
+			ID: "a",
+		})
+		assert.EqualError(t, err, "nope")
+	})
+}
+
+func TestDbfsFileCornerCases_WriteWrongDir(t *testing.T) {
+	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/dbfs/read?length=1000000&path=a",
+			Response: storage.ReadResponse{
+				Data:      "YWJj",
+				BytesRead: 3,
+			},
+		},
+	}, func(ctx context.Context, client *common.DatabricksClient) {
+		ic := importContextForTest()
+		ic.Client = client
+		ic.Context = ctx
+		err := resourcesMap["databricks_dbfs_file"].Body(ic, nil, &resource{
+			ID: "a",
+		})
+		assert.EqualError(t, err, "mkdir /files: read-only file system")
+	})
+}
+
+func TestDbfsFileCornerCases_WriteFileExists(t *testing.T) {
+	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/dbfs/read?length=1000000&path=a",
+			Response: storage.ReadResponse{
+				Data:      "YWJj",
+				BytesRead: 3,
+			},
+		},
+	}, func(ctx context.Context, client *common.DatabricksClient) {
+		ic := importContextForTest()
+		ic.Client = client
+		ic.Context = ctx
+		ic.Directory = fmt.Sprintf("/tmp/tf-%s", qa.RandomName())
+		defer os.RemoveAll(ic.Directory)
+
+		dstFile := fmt.Sprintf("%s/files/_abc_900150983cd24fb0d6963f7d28e17f72", ic.Directory)
+		err := os.MkdirAll(dstFile, 0755)
+		assert.NoError(t, err)
+
+		d := storage.ResourceDBFSFile().TestResourceData()
+		d.SetId("abc")
+
+		err = resourcesMap["databricks_dbfs_file"].Body(ic, nil, &resource{
+			ID:   "a",
+			Data: d,
+		})
+		assert.Equal(t, err.Error(), fmt.Sprintf("open %s: is a directory", dstFile))
+	})
+}
+
+func TestInstancePoolNameFromID(t *testing.T) {
+	d := pools.ResourceInstancePool().TestResourceData()
+	d.SetId("a-b-c")
+	d.Set("instance_pool_name", "")
+	assert.Equal(t, "c", resourcesMap["databricks_instance_pool"].Name(d))
+}
+
+func TestClusterNameFromID(t *testing.T) {
+	d := clusters.ResourceCluster().TestResourceData()
+	d.SetId("a-b-c")
+	assert.Equal(t, "c", resourcesMap["databricks_cluster"].Name(d))
+}
+
+func TestClusterListFails(t *testing.T) {
+	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/clusters/list",
+			Status:   404,
+			Response: common.NotFound("nope"),
+		},
+	}, func(ctx context.Context, client *common.DatabricksClient) {
+		ic := importContextForTest()
+		ic.Client = client
+		ic.Context = ctx
+		err := resourcesMap["databricks_cluster"].List(ic)
+		assert.EqualError(t, err, "nope")
+	})
+}
+
+func TestClusterList_NoNameMatch(t *testing.T) {
+	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/clusters/list",
+			Response: clusters.ClusterList{
+				Clusters: []clusters.ClusterInfo{
+					{
+						ClusterName: "abc",
+					},
+				},
+			},
+		},
+	}, func(ctx context.Context, client *common.DatabricksClient) {
+		ic := importContextForTest()
+		ic.Client = client
+		ic.Context = ctx
+		ic.match = "bcd"
+		err := resourcesMap["databricks_cluster"].List(ic)
+		assert.NoError(t, err)
+		assert.Equal(t, 0, len(ic.importing))
+	})
 }

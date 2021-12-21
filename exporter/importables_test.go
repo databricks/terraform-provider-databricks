@@ -9,6 +9,7 @@ import (
 
 	"github.com/databrickslabs/terraform-provider-databricks/clusters"
 	"github.com/databrickslabs/terraform-provider-databricks/common"
+	"github.com/databrickslabs/terraform-provider-databricks/jobs"
 	"github.com/databrickslabs/terraform-provider-databricks/permissions"
 	"github.com/databrickslabs/terraform-provider-databricks/policies"
 	"github.com/databrickslabs/terraform-provider-databricks/pools"
@@ -199,7 +200,7 @@ func TestDbfsFileCornerCases_WriteWrongDir(t *testing.T) {
 		err := resourcesMap["databricks_dbfs_file"].Body(ic, nil, &resource{
 			ID: "a",
 		})
-		assert.EqualError(t, err, "mkdir /files: read-only file system")
+		assert.NotNil(t, err) // mustn't match direct OS error
 	})
 }
 
@@ -285,6 +286,47 @@ func TestClusterList_NoNameMatch(t *testing.T) {
 		ic.match = "bcd"
 		err := resourcesMap["databricks_cluster"].List(ic)
 		assert.NoError(t, err)
+		assert.Equal(t, 0, len(ic.importing))
+	})
+}
+
+func TestJobListNoNameMatch(t *testing.T) {
+	ic := importContextForTest()
+	ic.match = "bcd"
+	ic.importJobs(jobs.JobList{
+		Jobs: []jobs.Job{
+			{
+				Settings: &jobs.JobSettings{
+					Name: "abc",
+				},
+			},
+		},
+	})
+	assert.Equal(t, 0, len(ic.importing))
+}
+
+func TestJobList_FailGetRuns(t *testing.T) {
+	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/jobs/runs/list?completed_only=true&job_id=1&limit=1",
+			Status:   404,
+			Response: common.NotFound("nope"),
+		},
+	}, func(ctx context.Context, client *common.DatabricksClient) {
+		ic := importContextForTest()
+		ic.Client = client
+		ic.Context = ctx
+		ic.importJobs(jobs.JobList{
+			Jobs: []jobs.Job{
+				{
+					JobID: 1,
+					Settings: &jobs.JobSettings{
+						Name: "abc",
+					},
+				},
+			},
+		})
 		assert.Equal(t, 0, len(ic.importing))
 	})
 }

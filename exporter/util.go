@@ -5,10 +5,12 @@ import (
 	"fmt"
 	"log"
 	"strings"
+	"time"
 
 	"github.com/databrickslabs/terraform-provider-databricks/aws"
 	"github.com/databrickslabs/terraform-provider-databricks/clusters"
 	"github.com/databrickslabs/terraform-provider-databricks/common"
+	"github.com/databrickslabs/terraform-provider-databricks/jobs"
 	"github.com/databrickslabs/terraform-provider-databricks/libraries"
 	"github.com/databrickslabs/terraform-provider-databricks/scim"
 	"github.com/databrickslabs/terraform-provider-databricks/storage"
@@ -240,4 +242,44 @@ func eitherString(a interface{}, b interface{}) string {
 		return b.(string)
 	}
 	return ""
+}
+
+func (ic *importContext) importJobs(l jobs.JobList) {
+	nowSeconds := time.Now().Unix()
+	a := jobs.NewJobsAPI(ic.Context, ic.Client)
+	starterAfter := (nowSeconds - (ic.lastActiveDays * 24 * 60 * 60)) * 1000
+	i := 0
+	for _, job := range l.Jobs {
+		if !ic.MatchesName(job.Settings.Name) {
+			log.Printf("[INFO] Job name %s doesn't match selection %s", job.Settings.Name, ic.match)
+			continue
+		}
+		if ic.lastActiveDays != 3650 {
+			rl, err := a.RunsList(jobs.JobRunsListRequest{
+				JobID:         job.JobID,
+				CompletedOnly: true,
+				Limit:         1,
+			})
+			if err != nil {
+				log.Printf("[WARN] Failed to get runs: %s", err)
+				continue
+			}
+			if len(rl.Runs) == 0 {
+				log.Printf("[INFO] Job %#v (%d) did never run. Skipping", job.Settings.Name, job.JobID)
+				continue
+			}
+			if rl.Runs[0].StartTime < starterAfter {
+				log.Printf("[INFO] Job %#v (%d) didn't run for %d days. Skipping",
+					job.Settings.Name, job.JobID,
+					(nowSeconds*1000-rl.Runs[0].StartTime)/24*60*60/1000)
+				continue
+			}
+		}
+		ic.Emit(&resource{
+			Resource: "databricks_job",
+			ID:       job.ID(),
+		})
+		i++
+		log.Printf("[INFO] Imported %d of total %d jobs", i, len(l.Jobs))
+	}
 }

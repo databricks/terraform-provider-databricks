@@ -244,43 +244,8 @@ var resourcesMap map[string]importable = map[string]importable{
 			return ic.importLibraries(r.Data, s)
 		},
 		List: func(ic *importContext) error {
-			a := jobs.NewJobsAPI(ic.Context, ic.Client)
-			nowSeconds := time.Now().Unix()
-			starterAfter := (nowSeconds - (ic.lastActiveDays * 24 * 60 * 60)) * 1000
-			if l, err := a.List(); err == nil {
-				i := 0
-				for _, job := range l.Jobs {
-					if !ic.MatchesName(job.Settings.Name) {
-						continue
-					}
-					if ic.lastActiveDays != 3650 {
-						rl, err := a.RunsList(jobs.JobRunsListRequest{
-							JobID:         job.JobID,
-							CompletedOnly: true,
-							Limit:         1,
-						})
-						if err != nil {
-							log.Printf("[WARN] Failed to get runs: %s", err)
-							continue
-						}
-						if len(rl.Runs) == 0 {
-							log.Printf("[INFO] Job %#v (%d) did never run. Skipping", job.Settings.Name, job.JobID)
-							continue
-						}
-						if rl.Runs[0].StartTime < starterAfter {
-							log.Printf("[INFO] Job %#v (%d) didn't run for %d days. Skipping",
-								job.Settings.Name, job.JobID,
-								(nowSeconds*1000-rl.Runs[0].StartTime)/24*60*60/1000)
-							continue
-						}
-					}
-					ic.Emit(&resource{
-						Resource: "databricks_job",
-						ID:       job.ID(),
-					})
-					i++
-					log.Printf("[INFO] Imported %d of total %d jobs", i, len(l.Jobs))
-				}
+			if l, err := jobs.NewJobsAPI(ic.Context, ic.Client).List(); err == nil {
+				ic.importJobs(l)
 			}
 			return nil
 		},

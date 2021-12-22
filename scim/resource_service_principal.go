@@ -85,9 +85,7 @@ func ResourceServicePrincipal() *schema.Resource {
 		Schema: servicePrincipalSchema,
 		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, c interface{}) error {
 			var sp entity
-			if err := common.DiffToStructPointer(d, servicePrincipalSchema, &sp); err != nil {
-				return err
-			}
+			common.DiffToStructPointer(d, servicePrincipalSchema, &sp)
 			client := c.(*common.DatabricksClient)
 			if client.IsAzure() && sp.ApplicationID == "" {
 				// TODO: verify cases for non-existing resources

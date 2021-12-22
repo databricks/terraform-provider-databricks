@@ -33,17 +33,37 @@ func nicerError(ctx context.Context, err error, action string) error {
 		strings.ReplaceAll(name, "_", " "), err)
 }
 
+func recoverable(cb func(
+	ctx context.Context, d *schema.ResourceData, c *DatabricksClient) error) func(
+		ctx context.Context, d *schema.ResourceData, c *DatabricksClient) error {
+	return func(ctx context.Context, d *schema.ResourceData, c *DatabricksClient) (err error) {
+		defer func() {
+			// this is deliberate decision to convert a panic into error, 
+			// so that any unforeseen bug would we visible to end-user 
+			// as an error and not a provider crash, which is way less 
+			// of pleasant experience.
+			if panic := recover(); panic != nil {
+				err = fmt.Errorf("recovered: %v", panic)
+			}
+		}()
+		err = cb(ctx, d, c)
+		return
+	}
+}
+
 // ToResource converts to Terraform resource definition
 func (r Resource) ToResource() *schema.Resource {
-	var update func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics
+	var update func(ctx context.Context, d *schema.ResourceData, 
+		m interface{}) diag.Diagnostics
 	if r.Update != nil {
-		update = func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+		update = func(ctx context.Context, d *schema.ResourceData, 
+			m interface{}) diag.Diagnostics {
 			c := m.(*DatabricksClient)
-			if err := r.Update(ctx, d, c); err != nil {
+			if err := recoverable(r.Update)(ctx, d, c); err != nil {
 				err = nicerError(ctx, err, "update")
 				return diag.FromErr(err)
 			}
-			if err := r.Read(ctx, d, c); err != nil {
+			if err := recoverable(r.Read)(ctx, d, c); err != nil {
 				err = nicerError(ctx, err, "read")
 				return diag.FromErr(err)
 			}
@@ -71,8 +91,9 @@ func (r Resource) ToResource() *schema.Resource {
 			}
 		}
 	}
-	read := func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-		err := r.Read(ctx, d, m.(*DatabricksClient))
+	read := func(ctx context.Context, d *schema.ResourceData, 
+		m interface{}) diag.Diagnostics {
+		err := recoverable(r.Read)(ctx, d, m.(*DatabricksClient))
 		if IsMissing(err) {
 			log.Printf("[INFO] %s[id=%s] is removed on backend",
 				ResourceName.GetOrUnknown(ctx), d.Id())
@@ -90,14 +111,15 @@ func (r Resource) ToResource() *schema.Resource {
 		SchemaVersion:  r.SchemaVersion,
 		StateUpgraders: r.StateUpgraders,
 		CustomizeDiff:  r.CustomizeDiff,
-		CreateContext: func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+		CreateContext: func(ctx context.Context, d *schema.ResourceData, 
+			m interface{}) diag.Diagnostics {
 			c := m.(*DatabricksClient)
-			err := r.Create(ctx, d, c)
+			err := recoverable(r.Create)(ctx, d, c)
 			if err != nil {
 				err = nicerError(ctx, err, "create")
 				return diag.FromErr(err)
 			}
-			if err = r.Read(ctx, d, c); err != nil {
+			if err = recoverable(r.Read)(ctx, d, c); err != nil {
 				err = nicerError(ctx, err, "read")
 				return diag.FromErr(err)
 			}
@@ -105,15 +127,17 @@ func (r Resource) ToResource() *schema.Resource {
 		},
 		ReadContext:   read,
 		UpdateContext: update,
-		DeleteContext: func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-			if err := r.Delete(ctx, d, m.(*DatabricksClient)); err != nil {
+		DeleteContext: func(ctx context.Context, d *schema.ResourceData, 
+			m interface{}) diag.Diagnostics {
+			if err := recoverable(r.Delete)(ctx, d, m.(*DatabricksClient)); err != nil {
 				err = nicerError(ctx, err, "delete")
 				return diag.FromErr(err)
 			}
 			return nil
 		},
 		Importer: &schema.ResourceImporter{
-			StateContext: func(ctx context.Context, d *schema.ResourceData, m interface{}) (data []*schema.ResourceData, e error) {
+			StateContext: func(ctx context.Context, d *schema.ResourceData, 
+				m interface{}) (data []*schema.ResourceData, e error) {
 				d.MarkNewResource()
 				diags := read(ctx, d, m)
 				var err error

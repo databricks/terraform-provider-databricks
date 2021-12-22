@@ -342,7 +342,8 @@ func ResourceSqlPermissions() *schema.Resource {
 				// reflect resource is skipping empty privilege_assignments
 				d.Set("privilege_assignments", []interface{}{})
 			}
-			return common.StructToData(ta, s, d)
+			common.StructToData(ta, s, d)
+			return nil
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			ta, err := tableAclForUpdate(ctx, d, s, c)

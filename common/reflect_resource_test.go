@@ -462,6 +462,25 @@ func (a data) GetOk(key string) (interface{}, bool) {
 	return v, ok
 }
 
+
+func TestDiffToStructPointerPanic(t *testing.T) {
+	type Nonsense struct {
+		New int `json:"new,omitempty"`
+	}
+	s := schema.InternalMap(map[string]*schema.Schema{
+		"new": {
+			Type:     schema.TypeInt,
+			Optional: true,
+		},
+	})
+	defer func(){
+		p := recover()
+		err := p.(error)
+		assert.EqualError(t, err, "pointer is expected, but got Struct: common.Nonsense{New:0}")
+	}()
+	DiffToStructPointer(data{"new": "3"}, s, Nonsense{})
+}
+
 func TestDiffToStructPointer(t *testing.T) {
 	type Nonsense struct {
 		New int `json:"new,omitempty"`
@@ -472,12 +491,8 @@ func TestDiffToStructPointer(t *testing.T) {
 			Optional: true,
 		},
 	})
-	err := DiffToStructPointer(data{"new": "3"}, s, Nonsense{})
-	assert.EqualError(t, err, "pointer is expected, but got Struct: common.Nonsense{New:0}")
-
 	var n Nonsense
-	err = DiffToStructPointer(data{"new": 3}, s, &n)
-	assert.NoError(t, err)
+	DiffToStructPointer(data{"new": 3}, s, &n)
 	assert.Equal(t, 3, n.New)
 }
 

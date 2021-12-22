@@ -122,7 +122,8 @@ func ResourceIPAccessList() *schema.Resource {
 			if err != nil {
 				return err
 			}
-			return common.StructToData(status, s, d)
+			common.StructToData(status, s, d)
+			return nil
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var iacl ipAccessListUpdateRequest

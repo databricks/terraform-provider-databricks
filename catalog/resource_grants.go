@@ -214,9 +214,7 @@ func ResourceGrants() *schema.Resource {
 		Schema: s,
 		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, c interface{}) error {
 			var grants PermissionsList
-			if err := common.DiffToStructPointer(d, s, &grants); err != nil {
-				return err
-			}
+			common.DiffToStructPointer(d, s, &grants)
 			return mapping.validate(d, grants)
 		},
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {

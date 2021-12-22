@@ -449,10 +449,7 @@ func ResourceJob() *schema.Resource {
 		},
 		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, m interface{}) error {
 			var js JobSettings
-			err := common.DiffToStructPointer(d, jobSchema, &js)
-			if err != nil {
-				return err
-			}
+			common.DiffToStructPointer(d, jobSchema, &js)
 			alwaysRunning := d.Get("always_running").(bool)
 			if alwaysRunning && js.MaxConcurrentRuns > 1 {
 				return fmt.Errorf("`always_running` must be specified only with `max_concurrent_runs = 1`")
@@ -461,12 +458,12 @@ func ResourceJob() *schema.Resource {
 				if task.NewCluster == nil {
 					continue
 				}
-				if err = task.NewCluster.Validate(); err != nil {
+				if err := task.NewCluster.Validate(); err != nil {
 					return fmt.Errorf("task %s invalid: %w", task.TaskKey, err)
 				}
 			}
 			if js.NewCluster != nil {
-				if err = js.NewCluster.Validate(); err != nil {
+				if err := js.NewCluster.Validate(); err != nil {
 					return fmt.Errorf("invalid job cluster: %w", err)
 				}
 			}

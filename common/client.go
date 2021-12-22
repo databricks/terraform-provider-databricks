@@ -233,7 +233,8 @@ func (c *DatabricksClient) Authenticate(ctx context.Context) error {
 		name      string
 	}
 	providers := []auth{
-		{c.configureWithDirectParams, "direct"},
+		{c.configureWithPat, "PAT"},
+		{c.configureWithBasicAuth, "basic"},
 		{c.configureWithAzureClientSecret, "Azure Service Principal"},
 		{c.configureWithAzureManagedIdentity, "Azure MSI"},
 		{c.configureWithAzureCLI, "Azure CLI"},
@@ -310,25 +311,21 @@ func (c *DatabricksClient) fixHost() {
 	}
 }
 
-func (c *DatabricksClient) configureWithDirectParams(ctx context.Context) (func(*http.Request) error, error) {
-	authType := "Bearer"
-	var needsHostBecause string
-	if c.Username != "" && c.Password != "" {
-		authType = "Basic"
-		needsHostBecause = "basic_auth"
-		c.Token = c.encodeBasicAuth(c.Username, c.Password)
-		log.Printf("[INFO] Using basic auth for user '%s'", c.Username)
-	} else if c.Token != "" {
-		needsHostBecause = "token"
-	}
-	if needsHostBecause != "" && c.Host == "" {
-		return nil, fmt.Errorf("host is empty, but is required by %s", needsHostBecause)
-	}
-	if c.Token == "" || c.Host == "" {
+func (c *DatabricksClient) configureWithPat(ctx context.Context) (func(*http.Request) error, error) {
+	if c.Token == "" && c.Host == "" {
 		return nil, nil
 	}
-	log.Printf("[INFO] Using directly configured host+%s authentication", needsHostBecause)
-	return c.authorizer(authType, c.Token), nil
+	log.Printf("[INFO] Using directly configured PAT authentication")
+	return c.authorizer("Bearer", c.Token), nil
+}
+
+func (c *DatabricksClient) configureWithBasicAuth(ctx context.Context) (func(*http.Request) error, error) {
+	if c.Username == "" && c.Password == "" && c.Host == "" {
+		return nil, nil
+	}
+	b64 := c.encodeBasicAuth(c.Username, c.Password)
+	log.Printf("[INFO] Using directly configured basic authentication")
+	return c.authorizer("Basic", b64), nil
 }
 
 func (c *DatabricksClient) configureWithDatabricksCfg(ctx context.Context) (func(r *http.Request) error, error) {

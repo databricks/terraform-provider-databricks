@@ -60,6 +60,7 @@ func (a DbfsAPI) Create(path string, contents []byte, overwrite bool) (err error
 	handle, err := a.createHandle(path, overwrite)
 	if err != nil {
 		err = fmt.Errorf("cannot create handle: %w", err)
+		return
 	}
 	defer func() {
 		cerr := a.closeHandle(handle)

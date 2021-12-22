@@ -258,7 +258,7 @@ func readMountSource(ctx context.Context, mp MountPoint, d *schema.ResourceData)
 }
 
 // return resource reader function
-func mountRead(tpl Mount, r *schema.Resource) schema.ReadContextFunc {
+func mountRead(tpl interface{}, r *schema.Resource) func(context.Context, *schema.ResourceData, interface{}) diag.Diagnostics {
 	return func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 		_, mp, err := mountCluster(ctx, tpl, d, m, r)
 		if err != nil {
@@ -269,7 +269,7 @@ func mountRead(tpl Mount, r *schema.Resource) schema.ReadContextFunc {
 }
 
 // returns delete resource function
-func mountDelete(tpl Mount, r *schema.Resource) schema.DeleteContextFunc {
+func mountDelete(tpl interface{}, r *schema.Resource) func(context.Context, *schema.ResourceData, interface{}) diag.Diagnostics {
 	return func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 		_, mp, err := mountCluster(ctx, tpl, d, m, r)
 		if err != nil {

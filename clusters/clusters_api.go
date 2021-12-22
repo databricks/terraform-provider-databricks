@@ -445,7 +445,7 @@ type ClusterInfo struct {
 	LastStateLossTime         int64              `json:"last_state_loss_time,omitempty"`
 	LastActivityTime          int64              `json:"last_activity_time,omitempty"`
 	ClusterMemoryMb           int64              `json:"cluster_memory_mb,omitempty"`
-	ClusterCores              float32            `json:"cluster_cores,omitempty"`
+	ClusterCores              float64            `json:"cluster_cores,omitempty"`
 	DefaultTags               map[string]string  `json:"default_tags"`
 	ClusterLogStatus          *LogSyncStatus     `json:"cluster_log_status,omitempty"`
 	TerminationReason         *TerminationReason `json:"termination_reason,omitempty"`

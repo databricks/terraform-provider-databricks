@@ -25,6 +25,10 @@ func TestCreateFileFails(t *testing.T) {
 			Status:   404,
 			Response: common.NotFound("fails"),
 		},
+		{
+			Method:   "POST",
+			Resource: "/api/2.0/dbfs/close",
+		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		a := NewDbfsAPI(ctx, client)
 		err := a.Create("/create-fails", []byte("abc"), true)

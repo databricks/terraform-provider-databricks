@@ -76,11 +76,11 @@ func getBaseDBFSFileCreateFixtures(path string) []qa.HTTPFixture {
 		{
 			Method:   http.MethodPost,
 			Resource: "/api/2.0/dbfs/create",
-			ExpectedRequest: CreateHandle{
+			ExpectedRequest: createHandle{
 				Path:      path,
 				Overwrite: true,
 			},
-			Response: Handle{329874298374132},
+			Response: handleResponse{329874298374132},
 		},
 		{
 			Method:   http.MethodPost,
@@ -93,7 +93,7 @@ func getBaseDBFSFileCreateFixtures(path string) []qa.HTTPFixture {
 		{
 			Method:   http.MethodPost,
 			Resource: "/api/2.0/dbfs/close",
-			Response: Handle{329874298374132},
+			Response: handleResponse{329874298374132},
 		},
 		{
 			Method:   http.MethodGet,

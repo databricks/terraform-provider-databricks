@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/base64"
+	"fmt"
 
 	"github.com/databrickslabs/terraform-provider-databricks/common"
 )
@@ -20,19 +21,19 @@ type FileInfo struct {
 	FileSize int64  `json:"file_size,omitempty"`
 }
 
-// CreateHandle contains the payload to create a handle which is a connection for uploading blocks of file data
-type CreateHandle struct {
+// createHandle contains the payload to create a handle which is a connection for uploading blocks of file data
+type createHandle struct {
 	Path      string `json:"path,omitempty"`
 	Overwrite bool   `json:"overwrite,omitempty"`
 }
 
-// Handle contains the response from making an handle request
-type Handle struct {
+// handleResponse contains the response from making an handle request
+type handleResponse struct {
 	Handle int64 `json:"handle,omitempty"`
 }
 
-// AddBlock contains the payload to upload a block of base64 data to a handle
-type AddBlock struct {
+// addBlock contains the payload to upload a block of base64 data to a handle
+type addBlock struct {
 	Data   string `json:"data,omitempty"`
 	Handle int64  `json:"handle,omitempty"`
 }
@@ -55,18 +56,18 @@ type DbfsAPI struct {
 }
 
 // Create creates a file on DBFS
-func (a DbfsAPI) Create(path string, byteArr []byte, overwrite bool) (err error) {
+func (a DbfsAPI) Create(path string, contents []byte, overwrite bool) (err error) {
 	handle, err := a.createHandle(path, overwrite)
 	if err != nil {
-		return
+		err = fmt.Errorf("cannot create handle: %w", err)
 	}
 	defer func() {
 		cerr := a.closeHandle(handle)
 		if cerr != nil {
-			err = cerr
+			err = fmt.Errorf("cannot close handle: %w", cerr)
 		}
 	}()
-	buffer := bytes.NewBuffer(byteArr)
+	buffer := bytes.NewBuffer(contents)
 	for {
 		byteChunk := buffer.Next(1e6)
 		if len(byteChunk) == 0 {
@@ -75,24 +76,24 @@ func (a DbfsAPI) Create(path string, byteArr []byte, overwrite bool) (err error)
 		b64Data := base64.StdEncoding.EncodeToString(byteChunk)
 		err = a.addBlock(b64Data, handle)
 		if err != nil {
-			return
+			err = fmt.Errorf("cannot add block: %w", err)
 		}
 	}
 	return
 }
 
 func (a DbfsAPI) createHandle(path string, overwrite bool) (int64, error) {
-	var h Handle
-	err := a.client.Post(a.context, "/dbfs/create", CreateHandle{path, overwrite}, &h)
+	var h handleResponse
+	err := a.client.Post(a.context, "/dbfs/create", createHandle{path, overwrite}, &h)
 	return h.Handle, err
 }
 
 func (a DbfsAPI) addBlock(data string, handle int64) error {
-	return a.client.Post(a.context, "/dbfs/add-block", AddBlock{data, handle}, nil)
+	return a.client.Post(a.context, "/dbfs/add-block", addBlock{data, handle}, nil)
 }
 
 func (a DbfsAPI) closeHandle(handle int64) error {
-	return a.client.Post(a.context, "/dbfs/close", Handle{handle}, nil)
+	return a.client.Post(a.context, "/dbfs/close", handleResponse{handle}, nil)
 }
 
 // List returns a list of files in DBFS and the recursive flag lets you recursively list files
@@ -119,7 +120,7 @@ func (a DbfsAPI) recursiveAddPaths(path string, pathList *[]FileInfo) error {
 		} else if v.IsDir {
 			err := a.recursiveAddPaths(v.Path, pathList)
 			if err != nil {
-				return err
+				return fmt.Errorf("cannot list subfolder: %w", err)
 			}
 		}
 	}
@@ -131,6 +132,9 @@ func (a DbfsAPI) list(path string) ([]FileInfo, error) {
 	err := a.client.Get(a.context, "/dbfs/list", map[string]interface{}{
 		"path": path,
 	}, &dbfsList)
+	if err != nil {
+		err = fmt.Errorf("cannot list %s: %w", path, err)
+	}
 	return dbfsList.Files, err
 }
 
@@ -157,7 +161,7 @@ func (a DbfsAPI) Read(path string) (content []byte, err error) {
 	for fetchLoop {
 		bytesRead, bytes, err := a.read(path, offSet, length)
 		if err != nil {
-			return content, err
+			return content, fmt.Errorf("cannot read %s: %w", path, err)
 		}
 		if bytesRead == 0 || bytesRead < length {
 			fetchLoop = false

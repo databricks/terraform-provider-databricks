@@ -125,11 +125,8 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, c *commo
 	start := time.Now()
 	timeout := d.Timeout(schema.TimeoutCreate)
 	clusters := NewClustersAPI(ctx, c)
-	err := common.DataToStructPointer(d, clusterSchema, &cluster)
-	if err != nil {
-		return err
-	}
-	if err = cluster.Validate(); err != nil {
+	common.DataToStructPointer(d, clusterSchema, &cluster)
+	if err := cluster.Validate(); err != nil {
 		return err
 	}
 	cluster.ModifyRequestOnInstancePool()
@@ -148,9 +145,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, c *commo
 		}
 	}
 	var libraryList libraries.ClusterLibraryList
-	if err = common.DataToStructPointer(d, clusterSchema, &libraryList); err != nil {
-		return err
-	}
+	common.DataToStructPointer(d, clusterSchema, &libraryList)
 	libs := libraries.NewLibrariesAPI(ctx, c)
 	if len(libraryList.Libraries) > 0 {
 		if err = libs.Install(libraryList); err != nil {
@@ -242,14 +237,12 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, c *commo
 	clusters := NewClustersAPI(ctx, c)
 	clusterID := d.Id()
 	cluster := Cluster{ClusterID: clusterID}
-	err := common.DataToStructPointer(d, clusterSchema, &cluster)
-	if err != nil {
-		return err
-	}
+	common.DataToStructPointer(d, clusterSchema, &cluster)
 	var clusterInfo ClusterInfo
+	var err error
 	if hasClusterConfigChanged(d) {
 		log.Printf("[DEBUG] Cluster state has changed!")
-		if err = cluster.Validate(); err != nil {
+		if err := cluster.Validate(); err != nil {
 			return err
 		}
 		cluster.ModifyRequestOnInstancePool()
@@ -278,9 +271,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, c *commo
 	}
 
 	var libraryList libraries.ClusterLibraryList
-	if err = common.DataToStructPointer(d, clusterSchema, &libraryList); err != nil {
-		return err
-	}
+	common.DataToStructPointer(d, clusterSchema, &libraryList)
 	librariesAPI := libraries.NewLibrariesAPI(ctx, c)
 	libsClusterStatus, err := librariesAPI.ClusterStatus(clusterID)
 	if err != nil {

@@ -71,9 +71,7 @@ func ResourceCustomerManagedKey() *schema.Resource {
 	return common.Resource{
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var cmk CustomerManagedKey
-			if err := common.DataToStructPointer(d, s, &cmk); err != nil {
-				return err
-			}
+			common.DataToStructPointer(d, s, &cmk)
 			customerManagedKeyData, err := NewCustomerManagedKeysAPI(ctx, c).Create(cmk)
 			if err != nil {
 				return err

@@ -174,7 +174,7 @@ func TestEmitNoSearchSucceedsImportFails(t *testing.T) {
 		},
 		services: "e",
 	}).Emit(&resource{
-		Data: &schema.ResourceData{},
+		Data:      &schema.ResourceData{},
 		Resource:  "a",
 		Attribute: "b",
 		Value:     "d",

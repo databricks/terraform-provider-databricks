@@ -27,9 +27,7 @@ type VisualizationEntity struct {
 
 func (v *VisualizationEntity) toAPIObject(schema map[string]*schema.Schema, data *schema.ResourceData) (*api.Visualization, error) {
 	// Extract from ResourceData.
-	if err := common.DataToStructPointer(data, schema, v); err != nil {
-		return nil, err
-	}
+	common.DataToStructPointer(data, schema, v)
 
 	// Transform to API object.
 	var av api.Visualization

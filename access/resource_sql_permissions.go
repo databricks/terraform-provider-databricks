@@ -284,9 +284,7 @@ func (ta *SqlPermissions) getOrCreateCluster(clustersAPI clusters.ClustersAPI) (
 
 func tableAclForUpdate(ctx context.Context, d *schema.ResourceData,
 	s map[string]*schema.Schema, c *common.DatabricksClient) (ta SqlPermissions, err error) {
-	if err = common.DataToStructPointer(d, s, &ta); err != nil {
-		return
-	}
+	common.DataToStructPointer(d, s, &ta)
 	err = ta.initCluster(ctx, d, c)
 	return
 }
@@ -342,7 +340,8 @@ func ResourceSqlPermissions() *schema.Resource {
 				// reflect resource is skipping empty privilege_assignments
 				d.Set("privilege_assignments", []interface{}{})
 			}
-			return common.StructToData(ta, s, d)
+			common.StructToData(ta, s, d)
+			return nil
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			ta, err := tableAclForUpdate(ctx, d, s, c)

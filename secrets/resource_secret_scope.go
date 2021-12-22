@@ -144,9 +144,7 @@ func ResourceSecretScope() *schema.Resource {
 
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var scope SecretScope
-			if err := common.DataToStructPointer(d, s, &scope); err != nil {
-				return err
-			}
+			common.DataToStructPointer(d, s, &scope)
 			if err := NewSecretScopesAPI(ctx, c).Create(scope); err != nil {
 				return err
 			}

@@ -82,7 +82,7 @@ func TestResourceAwsS3MountGenericCreate(t *testing.T) {
 				},
 			},
 		},
-		Resource: ResourceDatabricksMount(),
+		Resource: ResourceMount(),
 		CommandMock: func(commandStr string) common.CommandResults {
 			trunc := internal.TrimLeadingWhitespace(commandStr)
 			t.Logf("Received command:\n%s", trunc)
@@ -125,7 +125,7 @@ func TestResourceAwsS3MountGenericCreate_NoName(t *testing.T) {
 				},
 			},
 		},
-		Resource: ResourceDatabricksMount(),
+		Resource: ResourceMount(),
 		CommandMock: func(commandStr string) common.CommandResults {
 			trunc := internal.TrimLeadingWhitespace(commandStr)
 			t.Logf("Received command:\n%s", trunc)
@@ -233,7 +233,7 @@ func TestResourceAwsS3MountGenericCreate_WithInstanceProfile(t *testing.T) {
 				},
 			},
 		},
-		Resource: ResourceDatabricksMount(),
+		Resource: ResourceMount(),
 		CommandMock: func(commandStr string) common.CommandResults {
 			trunc := internal.TrimLeadingWhitespace(commandStr)
 			t.Logf("Received command:\n%s", trunc)
@@ -264,7 +264,7 @@ func TestResourceAwsS3MountGenericCreate_WithInstanceProfile(t *testing.T) {
 
 func TestResourceAwsS3MountGenericCreate_nothing_specified(t *testing.T) {
 	_, err := qa.ResourceFixture{
-		Resource: ResourceDatabricksMount(),
+		Resource: ResourceMount(),
 		State: map[string]interface{}{
 			"name": "this_mount",
 			"s3": []interface{}{map[string]interface{}{
@@ -278,7 +278,7 @@ func TestResourceAwsS3MountGenericCreate_nothing_specified(t *testing.T) {
 
 func TestResourceAwsS3MountGenericCreate_invalid_arn(t *testing.T) {
 	_, err := qa.ResourceFixture{
-		Resource: ResourceDatabricksMount(),
+		Resource: ResourceMount(),
 		State: map[string]interface{}{
 			"name": "this_mount",
 			"s3": []interface{}{map[string]interface{}{
@@ -306,7 +306,7 @@ func TestResourceAwsS3MountGenericRead(t *testing.T) {
 				},
 			},
 		},
-		Resource: ResourceDatabricksMount(),
+		Resource: ResourceMount(),
 		CommandMock: func(commandStr string) common.CommandResults {
 			trunc := internal.TrimLeadingWhitespace(commandStr)
 			t.Logf("Received command:\n%s", trunc)
@@ -347,7 +347,7 @@ func TestResourceAwsS3MountGenericRead_NotFound(t *testing.T) {
 				},
 			},
 		},
-		Resource: ResourceDatabricksMount(),
+		Resource: ResourceMount(),
 		CommandMock: func(commandStr string) common.CommandResults {
 			trunc := internal.TrimLeadingWhitespace(commandStr)
 			t.Logf("Received command:\n%s", trunc)
@@ -384,7 +384,7 @@ func TestResourceAwsS3MountGenericRead_Error(t *testing.T) {
 				},
 			},
 		},
-		Resource: ResourceDatabricksMount(),
+		Resource: ResourceMount(),
 		CommandMock: func(commandStr string) common.CommandResults {
 			trunc := internal.TrimLeadingWhitespace(commandStr)
 			t.Logf("Received command:\n%s", trunc)
@@ -423,7 +423,7 @@ func TestResourceAwsS3MountDeleteGeneric(t *testing.T) {
 				},
 			},
 		},
-		Resource: ResourceDatabricksMount(),
+		Resource: ResourceMount(),
 		CommandMock: func(commandStr string) common.CommandResults {
 			trunc := internal.TrimLeadingWhitespace(commandStr)
 			t.Logf("Received command:\n%s", trunc)
@@ -463,7 +463,7 @@ func TestResourceAdlsGen1MountGeneric_Create(t *testing.T) {
 				},
 			},
 		},
-		Resource: ResourceDatabricksMount(),
+		Resource: ResourceMount(),
 		CommandMock: func(commandStr string) common.CommandResults {
 			trunc := internal.TrimLeadingWhitespace(commandStr)
 			t.Logf("Received command:\n%s", trunc)
@@ -507,7 +507,7 @@ func TestResourceAdlsGen1MountGeneric_Create_ResourceID(t *testing.T) {
 				},
 			},
 		},
-		Resource: ResourceDatabricksMount(),
+		Resource: ResourceMount(),
 		CommandMock: func(commandStr string) common.CommandResults {
 			trunc := internal.TrimLeadingWhitespace(commandStr)
 			t.Logf("Received command:\n%s", trunc)
@@ -541,7 +541,7 @@ func TestResourceAdlsGen1MountGeneric_Create_ResourceID(t *testing.T) {
 func TestResourceAdlsGen1MountGeneric_Create_ResourceID_Error1(t *testing.T) {
 	_, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{},
-		Resource: ResourceDatabricksMount(),
+		Resource: ResourceMount(),
 		State: map[string]interface{}{
 			"resource_id": "/subscriptions/123/resourceGroups/some-rg/providers/Microsoft.DataLakeStore/acc/gen1",
 			"adl": []interface{}{map[string]interface{}{
@@ -560,7 +560,7 @@ func TestResourceAdlsGen1MountGeneric_Create_ResourceID_Error1(t *testing.T) {
 func TestResourceAdlsGen1MountGeneric_Create_ResourceID_Error2(t *testing.T) {
 	_, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{},
-		Resource: ResourceDatabricksMount(),
+		Resource: ResourceMount(),
 		State: map[string]interface{}{
 			"adl": []interface{}{map[string]interface{}{
 				"tenant_id":           "a",
@@ -577,7 +577,7 @@ func TestResourceAdlsGen1MountGeneric_Create_ResourceID_Error2(t *testing.T) {
 
 func TestResourceAdlsGen1MountGeneric_Create_NoTenantID_Error(t *testing.T) {
 	_, err := qa.ResourceFixture{
-		Resource: ResourceDatabricksMount(),
+		Resource: ResourceMount(),
 		Azure:    true,
 		State: map[string]interface{}{
 			"resource_id": "/subscriptions/123/resourceGroups/some-rg/providers/Microsoft.DataLakeStore/accounts/gen1",
@@ -596,7 +596,7 @@ func TestResourceAdlsGen1MountGeneric_Create_NoTenantID_Error(t *testing.T) {
 
 func TestResourceAdlsGen1MountGeneric_Create_NoTenantID_Error_EmptyTenant(t *testing.T) {
 	_, err := qa.ResourceFixture{
-		Resource: ResourceDatabricksMount(),
+		Resource: ResourceMount(),
 		Token:    "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJPbmxpbmUgSldUIEJ1aWxkZXIiLCJpYXQiOjE2MzU3ODQxNTYsImV4cCI6MTY2NzMyMDE1NiwiYXVkIjoid3d3LmV4YW1wbGUuY29tIiwic3ViIjoianJvY2tldEBleGFtcGxlLmNvbSIsInRpZCI6IiAgIn0.faxuGAFghVxa1epYnovOxoQrzju7-z_EJj3oZtwIxdk",
 		Azure:    true,
 		State: map[string]interface{}{
@@ -628,7 +628,7 @@ func TestResourceAdlsGen2MountGeneric_Create(t *testing.T) {
 				},
 			},
 		},
-		Resource: ResourceDatabricksMount(),
+		Resource: ResourceMount(),
 		CommandMock: func(commandStr string) common.CommandResults {
 			trunc := internal.TrimLeadingWhitespace(commandStr)
 			t.Logf("Received command:\n%s", trunc)
@@ -673,7 +673,7 @@ func TestResourceAdlsGen2MountGeneric_Create_ResourceID(t *testing.T) {
 				},
 			},
 		},
-		Resource: ResourceDatabricksMount(),
+		Resource: ResourceMount(),
 		CommandMock: func(commandStr string) common.CommandResults {
 			trunc := internal.TrimLeadingWhitespace(commandStr)
 			t.Logf("Received command:\n%s", trunc)
@@ -716,7 +716,7 @@ func TestResourceAdlsGen2MountGeneric_Create_NoTenantID_SPN(t *testing.T) {
 				},
 			},
 		},
-		Resource: ResourceDatabricksMount(),
+		Resource: ResourceMount(),
 		CommandMock: func(commandStr string) common.CommandResults {
 			trunc := internal.TrimLeadingWhitespace(commandStr)
 			t.Logf("Received command:\n%s", trunc)
@@ -762,7 +762,7 @@ func TestResourceAdlsGen2MountGeneric_Create_NoTenantID_CLI(t *testing.T) {
 				},
 			},
 		},
-		Resource: ResourceDatabricksMount(),
+		Resource: ResourceMount(),
 		CommandMock: func(commandStr string) common.CommandResults {
 			trunc := internal.TrimLeadingWhitespace(commandStr)
 			t.Logf("Received command:\n%s", trunc)
@@ -800,7 +800,7 @@ func TestResourceAdlsGen2MountGeneric_Create_NoTenantID_CLI(t *testing.T) {
 
 func TestResourceAdlsGen2MountGeneric_Create_NoTenantID_Error(t *testing.T) {
 	_, err := qa.ResourceFixture{
-		Resource: ResourceDatabricksMount(),
+		Resource: ResourceMount(),
 		Azure:    true,
 		State: map[string]interface{}{
 			"name": "this_mount",
@@ -819,7 +819,7 @@ func TestResourceAdlsGen2MountGeneric_Create_NoTenantID_Error(t *testing.T) {
 
 func TestResourceAdlsGen2MountGeneric_Create_NoTenantID_Error_EmptyTenant(t *testing.T) {
 	_, err := qa.ResourceFixture{
-		Resource: ResourceDatabricksMount(),
+		Resource: ResourceMount(),
 		Token:    "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJPbmxpbmUgSldUIEJ1aWxkZXIiLCJpYXQiOjE2MzU3ODQxNTYsImV4cCI6MTY2NzMyMDE1NiwiYXVkIjoid3d3LmV4YW1wbGUuY29tIiwic3ViIjoianJvY2tldEBleGFtcGxlLmNvbSIsInRpZCI6IiAgIn0.faxuGAFghVxa1epYnovOxoQrzju7-z_EJj3oZtwIxdk",
 		Azure:    true,
 		State: map[string]interface{}{
@@ -851,7 +851,7 @@ func TestResourceAzureBlobMountCreateGeneric(t *testing.T) {
 				ReuseRequest: true,
 			},
 		},
-		Resource: ResourceDatabricksMount(),
+		Resource: ResourceMount(),
 		CommandMock: func(commandStr string) common.CommandResults {
 			trunc := internal.TrimLeadingWhitespace(commandStr)
 			t.Logf("Received command:\n%s", trunc)
@@ -897,7 +897,7 @@ func TestResourceAzureBlobMountCreateGeneric_SAS(t *testing.T) {
 				ReuseRequest: true,
 			},
 		},
-		Resource: ResourceDatabricksMount(),
+		Resource: ResourceMount(),
 		CommandMock: func(commandStr string) common.CommandResults {
 			trunc := internal.TrimLeadingWhitespace(commandStr)
 			t.Logf("Received command:\n%s", trunc)
@@ -943,7 +943,7 @@ func TestResourceAzureBlobMountCreateGeneric_Resource_ID(t *testing.T) {
 				ReuseRequest: true,
 			},
 		},
-		Resource: ResourceDatabricksMount(),
+		Resource: ResourceMount(),
 		CommandMock: func(commandStr string) common.CommandResults {
 			trunc := internal.TrimLeadingWhitespace(commandStr)
 			t.Logf("Received command:\n%s", trunc)
@@ -977,7 +977,7 @@ func TestResourceAzureBlobMountCreateGeneric_Resource_ID(t *testing.T) {
 
 func TestResourceAzureBlobMountCreateGeneric_Resource_ID_Error(t *testing.T) {
 	_, err := qa.ResourceFixture{
-		Resource: ResourceDatabricksMount(),
+		Resource: ResourceMount(),
 		State: map[string]interface{}{
 			"cluster_id":  "b",
 			"resource_id": "abc",
@@ -1004,7 +1004,7 @@ func TestResourceAzureBlobMountCreateGeneric_Error(t *testing.T) {
 				},
 			},
 		},
-		Resource: ResourceDatabricksMount(),
+		Resource: ResourceMount(),
 		CommandMock: func(commandStr string) common.CommandResults {
 			return common.CommandResults{
 				ResultType: "error",
@@ -1040,7 +1040,7 @@ func TestResourceAzureBlobMountCreateGeneric_Error_NoResourceID(t *testing.T) {
 				},
 			},
 		},
-		Resource: ResourceDatabricksMount(),
+		Resource: ResourceMount(),
 		CommandMock: func(commandStr string) common.CommandResults {
 			return common.CommandResults{
 				ResultType: "error",
@@ -1073,7 +1073,7 @@ func TestResourceAzureBlobMountGeneric_Read(t *testing.T) {
 				},
 			},
 		},
-		Resource: ResourceDatabricksMount(),
+		Resource: ResourceMount(),
 		CommandMock: func(commandStr string) common.CommandResults {
 			trunc := internal.TrimLeadingWhitespace(commandStr)
 			t.Logf("Received command:\n%s", trunc)
@@ -1115,7 +1115,7 @@ func TestResourceAzureBlobMountGenericRead_NotFound(t *testing.T) {
 				},
 			},
 		},
-		Resource: ResourceDatabricksMount(),
+		Resource: ResourceMount(),
 		CommandMock: func(commandStr string) common.CommandResults {
 			trunc := internal.TrimLeadingWhitespace(commandStr)
 			t.Logf("Received command:\n%s", trunc)
@@ -1153,7 +1153,7 @@ func TestResourceAzureBlobMountGenericRead_Error(t *testing.T) {
 				},
 			},
 		},
-		Resource: ResourceDatabricksMount(),
+		Resource: ResourceMount(),
 		CommandMock: func(commandStr string) common.CommandResults {
 			trunc := internal.TrimLeadingWhitespace(commandStr)
 			t.Logf("Received command:\n%s", trunc)
@@ -1193,7 +1193,7 @@ func TestResourceAzureBlobMountGenericDelete(t *testing.T) {
 				},
 			},
 		},
-		Resource: ResourceDatabricksMount(),
+		Resource: ResourceMount(),
 		CommandMock: func(commandStr string) common.CommandResults {
 			trunc := internal.TrimLeadingWhitespace(commandStr)
 			t.Logf("Received command:\n%s", trunc)
@@ -1263,7 +1263,7 @@ func TestResourceGcsMountGenericCreate_WithCluster(t *testing.T) {
 				},
 			},
 		},
-		Resource: ResourceDatabricksMount(),
+		Resource: ResourceMount(),
 		CommandMock: func(commandStr string) common.CommandResults {
 			trunc := internal.TrimLeadingWhitespace(commandStr)
 			t.Logf("Received command:\n%s", trunc)
@@ -1307,7 +1307,7 @@ func TestResourceGcsMountGenericCreate_WithCluster_NoName(t *testing.T) {
 				},
 			},
 		},
-		Resource: ResourceDatabricksMount(),
+		Resource: ResourceMount(),
 		CommandMock: func(commandStr string) common.CommandResults {
 			trunc := internal.TrimLeadingWhitespace(commandStr)
 			t.Logf("Received command:\n%s", trunc)
@@ -1412,7 +1412,7 @@ func TestResourceGcsMountGenericCreate_WithServiceAccount(t *testing.T) {
 				},
 			},
 		},
-		Resource: ResourceDatabricksMount(),
+		Resource: ResourceMount(),
 		CommandMock: func(commandStr string) common.CommandResults {
 			trunc := internal.TrimLeadingWhitespace(commandStr)
 			t.Logf("Received command:\n%s", trunc)
@@ -1443,7 +1443,7 @@ func TestResourceGcsMountGenericCreate_WithServiceAccount(t *testing.T) {
 
 func TestResourceGcsMountGenericCreate_nothing_specified(t *testing.T) {
 	_, err := qa.ResourceFixture{
-		Resource: ResourceDatabricksMount(),
+		Resource: ResourceMount(),
 		State: map[string]interface{}{
 			"name": "this_mount",
 			"gs": []interface{}{map[string]interface{}{
@@ -1470,7 +1470,7 @@ func TestResourceMountGenericCreate_WithUriAndOpts(t *testing.T) {
 				},
 			},
 		},
-		Resource: ResourceDatabricksMount(),
+		Resource: ResourceMount(),
 		CommandMock: func(commandStr string) common.CommandResults {
 			trunc := internal.TrimLeadingWhitespace(commandStr)
 			t.Logf("Received command:\n%s", trunc)

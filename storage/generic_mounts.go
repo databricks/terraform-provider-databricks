@@ -1,15 +1,12 @@
 package storage
 
 import (
-	"context"
-	"crypto/md5"
 	"fmt"
 	"log"
 	"regexp"
 	"strings"
 
 	"github.com/Azure/go-autorest/autorest/azure"
-	"github.com/databrickslabs/terraform-provider-databricks/clusters"
 	"github.com/databrickslabs/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -82,159 +79,6 @@ func (m GenericMount) ValidateAndApplyDefaults(d *schema.ResourceData, client *c
 	}
 	if _, ok := d.GetOk("uri"); !ok {
 		return fmt.Errorf("value of uri is not specified or empty")
-	}
-	return nil
-}
-
-// --------------- Google Cloud Storage
-
-// GSMount describes the object for a GS mount using google service account
-type GSMount struct {
-	BucketName     string `json:"bucket_name" tf:"force_new"`
-	ServiceAccount string `json:"service_account,omitempty" tf:"force_new"`
-}
-
-// Source ...
-func (m GSMount) Source() string {
-	return fmt.Sprintf("gs://%s", m.BucketName)
-}
-
-func (m GSMount) Name() string {
-	return m.BucketName
-}
-
-func (m GSMount) ValidateAndApplyDefaults(d *schema.ResourceData, client *common.DatabricksClient) error {
-	nm := d.Get("name").(string)
-	if nm != "" {
-		return nil
-	}
-	nm = m.Name()
-	if nm != "" {
-		d.Set("name", nm)
-		return nil
-	}
-	return fmt.Errorf("'name' is not detected & it's impossible to infer it")
-}
-
-// Config ...
-func (m GSMount) Config(client *common.DatabricksClient) map[string]string {
-	return make(map[string]string) // return empty map so nil map does not marshal to null
-}
-
-func preprocessGsMount(ctx context.Context, s map[string]*schema.Schema, d *schema.ResourceData, m interface{}) error {
-	var gm GenericMount
-	common.DataToStructPointer(d, s, &gm)
-	if !(strings.HasPrefix(gm.URI, "gs://") || gm.Gs != nil) {
-		return nil
-	}
-	clusterID := gm.ClusterID
-	serviceAccount := ""
-	if gm.Gs != nil {
-		serviceAccount = gm.Gs.ServiceAccount
-	}
-	clustersAPI := clusters.NewClustersAPI(ctx, m)
-	if clusterID != "" {
-		clusterInfo, err := clustersAPI.Get(clusterID)
-		if err != nil {
-			return err
-		}
-		if clusterInfo.GcpAttributes == nil {
-			return fmt.Errorf("cluster %s must have GCP attributes", clusterID)
-		}
-		if len(clusterInfo.GcpAttributes.GoogleServiceAccount) == 0 {
-			return fmt.Errorf("cluster %s must have GCP service account attached", clusterID)
-		}
-	} else if serviceAccount != "" {
-		cluster, err := GetOrCreateMountingClusterWithGcpServiceAccount(clustersAPI, serviceAccount)
-		if err != nil {
-			return err
-		}
-		return d.Set("cluster_id", cluster.ClusterID)
-	} else {
-		return fmt.Errorf("either cluster_id or service_account must be specified to mount GCS bucket")
-	}
-	return nil
-}
-
-// GetOrCreateMountingClusterWithGcpServiceAccount ...
-func GetOrCreateMountingClusterWithGcpServiceAccount(
-	clustersAPI clusters.ClustersAPI, serviceAccount string) (i clusters.ClusterInfo, err error) {
-	clusterName := fmt.Sprintf("terraform-mount-gcs-%x", md5.Sum([]byte(serviceAccount)))
-	cluster := getCommonClusterObject(clustersAPI, clusterName)
-	cluster.GcpAttributes = &clusters.GcpAttributes{GoogleServiceAccount: serviceAccount}
-	return clustersAPI.GetOrCreateRunningCluster(clusterName, cluster)
-}
-
-// --------------- Generic AWS S3
-
-// S3IamMount describes the object for a aws mount using iam role
-type S3IamMount struct {
-	BucketName      string `json:"bucket_name" tf:"force_new"`
-	InstanceProfile string `json:"instance_profile,omitempty" tf:"force_new"`
-}
-
-// Source ...
-func (m S3IamMount) Source() string {
-	return fmt.Sprintf("s3a://%s", m.BucketName)
-}
-
-// Name ...
-func (m S3IamMount) Name() string {
-	return m.BucketName
-}
-
-// Config ...
-func (m S3IamMount) Config(client *common.DatabricksClient) map[string]string {
-	return make(map[string]string) // return empty map so nil map does not marshal to null
-}
-
-func (m S3IamMount) ValidateAndApplyDefaults(d *schema.ResourceData, client *common.DatabricksClient) error {
-	nm := d.Get("name").(string)
-	if nm != "" {
-		return nil
-	}
-	nm = m.Name()
-	if nm != "" {
-		d.Set("name", nm)
-		return nil
-	}
-	return fmt.Errorf("'name' is not detected & it's impossible to infer it")
-}
-
-func preprocessS3MountGeneric(ctx context.Context, s map[string]*schema.Schema, d *schema.ResourceData, m interface{}) error {
-	var gm GenericMount
-	common.DataToStructPointer(d, s, &gm)
-	// TODO: move into Validate function
-	if !(strings.HasPrefix(gm.URI, "s3://") || strings.HasPrefix(gm.URI, "s3a://") || gm.S3 != nil) {
-		return nil
-	}
-	clusterID := gm.ClusterID
-	instanceProfile := ""
-	if gm.S3 != nil {
-		instanceProfile = gm.S3.InstanceProfile
-	}
-	if clusterID == "" && instanceProfile == "" {
-		return fmt.Errorf("either cluster_id or instance_profile must be specified to mount S3 bucket")
-	}
-	clustersAPI := clusters.NewClustersAPI(ctx, m)
-	if clusterID != "" {
-		clusterInfo, err := clustersAPI.Get(clusterID)
-		if err != nil {
-			return err
-		}
-		if clusterInfo.AwsAttributes == nil {
-			return fmt.Errorf("cluster %s must have AWS attributes", clusterID)
-		}
-		if len(clusterInfo.AwsAttributes.InstanceProfileArn) == 0 {
-			return fmt.Errorf("cluster %s must have EC2 instance profile attached", clusterID)
-		}
-	}
-	if instanceProfile != "" {
-		cluster, err := GetOrCreateMountingClusterWithInstanceProfile(clustersAPI, instanceProfile)
-		if err != nil {
-			return err
-		}
-		return d.Set("cluster_id", cluster.ClusterID)
 	}
 	return nil
 }

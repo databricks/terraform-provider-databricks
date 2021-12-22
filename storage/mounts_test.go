@@ -324,7 +324,7 @@ func TestMountCRD(t *testing.T) {
 			Response:     common.NotFound("nope"),
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
-		r := ResourceDatabricksMount()
+		r := ResourceMount()
 		d := r.TestResourceData()
 		client.WithCommandMock(func(commandStr string) common.CommandResults {
 			return common.CommandResults{}

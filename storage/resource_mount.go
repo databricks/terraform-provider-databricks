@@ -55,8 +55,8 @@ func ResourceDatabricksMountSchema() map[string]*schema.Schema {
 	return scm
 }
 
-// ResourceDatabricksMount mounts using given configuration
-func ResourceDatabricksMount() *schema.Resource {
+// ResourceMount mounts using given configuration
+func ResourceMount() *schema.Resource {
 	tpl := GenericMount{}
 	r := commonMountResource(tpl, ResourceDatabricksMountSchema())
 	r.CreateContext = mountCallback(mountCreate).preProcess(r)

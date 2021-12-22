@@ -13,7 +13,7 @@ data "databricks_group" "dev" {
 
 data "databricks_user" "dev" {
   for_each = data.databricks_group.dev.members
-  user_id = each.key
+  user_id  = each.key
 }
 ```
 
@@ -28,8 +28,8 @@ data "databricks_node_type" "smallest" {
 resource "databricks_cluster" "dev" {
   for_each = data.databricks_user.dev
 
-  cluster_name            = "${each.value.display_name} dev cluster"
-  single_user_name        = each.value.user_name
+  cluster_name     = "${each.value.display_name} dev cluster"
+  single_user_name = each.value.user_name
 
   spark_version           = data.databricks_spark_version.latest.id
   node_type_id            = data.databricks_node_type.smallest.id
@@ -41,7 +41,7 @@ resource "databricks_cluster" "dev" {
     "spark.master" : "local[*]",
 
     # Passthrough
-    "spark.databricks.passthrough.enabled": "true"
+    "spark.databricks.passthrough.enabled" : "true"
   }
 
   custom_tags = {
@@ -50,10 +50,10 @@ resource "databricks_cluster" "dev" {
 }
 
 resource "databricks_permissions" "dev_restart" {
-  for_each = data.databricks_user.dev
+  for_each   = data.databricks_user.dev
   cluster_id = databricks_cluster.dev[each.key].cluster_id
   access_control {
-    user_name = each.value.user_name
+    user_name        = each.value.user_name
     permission_level = "CAN_RESTART"
   }
 }

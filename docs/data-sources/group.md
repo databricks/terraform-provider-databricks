@@ -13,15 +13,15 @@ Adding user to administrative group
 
 ```hcl
 data "databricks_group" "admins" {
-    display_name = "admins"
+  display_name = "admins"
 }
 
 resource "databricks_user" "me" {
-  user_name    = "me@example.com"
+  user_name = "me@example.com"
 }
 
 resource "databricks_group_member" "my_member_a" {
-  group_id = data.databricks_group.admins.id
+  group_id  = data.databricks_group.admins.id
   member_id = databricks_user.me.id
 }
 ```

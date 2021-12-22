@@ -11,8 +11,8 @@ This data source allows to list notebooks in the workspace
 
 ```hcl
 data "databricks_notebook_paths" "prod" {
-    path = "/Production"
-    recursive = true
+  path      = "/Production"
+  recursive = true
 }
 ```
 

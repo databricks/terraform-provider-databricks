@@ -69,7 +69,7 @@ If you use Terraform 0.13 or newer, please refer to instructions specified at [r
 terraform {
   required_providers {
     databricks = {
-      source = "databrickslabs/databricks"
+      source  = "databrickslabs/databricks"
       version = "0.4.1"
     }
   }
@@ -80,7 +80,7 @@ Then create a small sample file, named `main.tf` with approximately following co
 
 ```terraform
 provider "databricks" {
-  host = "https://abc-defg-024.cloud.databricks.com/"
+  host  = "https://abc-defg-024.cloud.databricks.com/"
   token = "<your PAT token>"
 }
 

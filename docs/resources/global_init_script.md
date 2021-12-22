@@ -12,7 +12,7 @@ You can declare Terraform-managed global init script by specifying `source` attr
 ```hcl
 resource "databricks_global_init_script" "init1" {
   source = "${path.module}/init.sh"
-  name = "my init script"
+  name   = "my init script"
 }
 ```
 

@@ -26,42 +26,42 @@ Let us take a look at an example of how you can manage two teams: Marketing and 
 
 ```hcl
 variable "team" {
-    description = "Team that performs the work"
+  description = "Team that performs the work"
 }
 
 variable "policy_overrides" {
-    description = "Cluster policy overrides"
+  description = "Cluster policy overrides"
 }
 
 locals {
-    default_policy = {
-        "dbus_per_hour" : {
-            "type" : "range",
-            "maxValue" : 10
-        },
-        "autotermination_minutes": {
-            "type": "fixed",
-            "value": 20,
-            "hidden": true
-        },
-        "custom_tags.Team" : {
-            "type" : "fixed",
-            "value" : var.team
-        }
+  default_policy = {
+    "dbus_per_hour" : {
+      "type" : "range",
+      "maxValue" : 10
+    },
+    "autotermination_minutes" : {
+      "type" : "fixed",
+      "value" : 20,
+      "hidden" : true
+    },
+    "custom_tags.Team" : {
+      "type" : "fixed",
+      "value" : var.team
     }
+  }
 }
 
 resource "databricks_cluster_policy" "fair_use" {
-    name = "${var.team} cluster policy"
-    definition = jsonencode(merge(local.default_policy, var.policy_overrides))
+  name       = "${var.team} cluster policy"
+  definition = jsonencode(merge(local.default_policy, var.policy_overrides))
 }
 
 resource "databricks_permissions" "can_use_cluster_policyinstance_profile" {
-    cluster_policy_id = databricks_cluster_policy.fair_use.id
-    access_control {
-        group_name       = var.team
-        permission_level = "CAN_USE"
-    }
+  cluster_policy_id = databricks_cluster_policy.fair_use.id
+  access_control {
+    group_name       = var.team
+    permission_level = "CAN_USE"
+  }
 }
 ```
 
@@ -69,27 +69,27 @@ And custom instances of that base policy module for our marketing and data engin
 
 ```hcl
 module "marketing_compute_policy" {
-    source = "../modules/databricks-cluster-policy"
-    team = "marketing"
-    policy_overrides = {
-        // only marketing guys will benefit from delta cache this way
-        "spark_conf.spark.databricks.io.cache.enabled": {
-            "type": "fixed",
-            "value": "true"
-        },
-    }
+  source = "../modules/databricks-cluster-policy"
+  team   = "marketing"
+  policy_overrides = {
+    // only marketing guys will benefit from delta cache this way
+    "spark_conf.spark.databricks.io.cache.enabled" : {
+      "type" : "fixed",
+      "value" : "true"
+    },
+  }
 }
 
 module "engineering_compute_policy" {
-    source = "../modules/databricks-cluster-policy"
-    team = "engineering"
-    policy_overrides = {
-        "dbus_per_hour" : {
-            "type" : "range",
-            // only engineering guys can spin up big clusters
-            "maxValue" : 50
-        },
-    }
+  source = "../modules/databricks-cluster-policy"
+  team   = "engineering"
+  policy_overrides = {
+    "dbus_per_hour" : {
+      "type" : "range",
+      // only engineering guys can spin up big clusters
+      "maxValue" : 50
+    },
+  }
 }
 ```
 

@@ -11,16 +11,16 @@ This resource allows you to attach instance profiles to users.
 
 ```hcl
 resource "databricks_instance_profile" "instance_profile" {
-    instance_profile_arn = "my_instance_profile_arn"
+  instance_profile_arn = "my_instance_profile_arn"
 }
 
 resource "databricks_user" "my_user" {
-    user_name = "me@example.com"
+  user_name = "me@example.com"
 }
 
 resource "databricks_user_instance_profile" "my_user_instance_profile" {
-    user_id = databricks_user.my_user.id
-    instance_profile_id = databricks_instance_profile.instance_profile.id
+  user_id             = databricks_user.my_user.id
+  instance_profile_id = databricks_instance_profile.instance_profile.id
 }
 ```
 ## Argument Reference

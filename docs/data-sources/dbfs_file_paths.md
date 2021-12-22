@@ -11,8 +11,8 @@ This data source allows to get list of file names from DBFS
 
 ```hcl
 data "databricks_dbfs_file_paths" "partitions" {
-    path = "dbfs:/user/hive/default.db/table"
-    recursive = false
+  path      = "dbfs:/user/hive/default.db/table"
+  recursive = false
 }
 ```
 ## Argument Reference

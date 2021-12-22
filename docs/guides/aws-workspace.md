@@ -57,7 +57,7 @@ terraform {
       version = "0.4.1"
     }
     aws = {
-      source = "hashicorp/aws"
+      source  = "hashicorp/aws"
       version = "3.49.0"
     }
   }
@@ -131,10 +131,10 @@ module "vpc" {
   create_igw           = true
 
   private_subnets = [cidrsubnet(var.cidr_block, 3, 1),
-                     cidrsubnet(var.cidr_block, 3, 2)]
+  cidrsubnet(var.cidr_block, 3, 2)]
 
   manage_default_security_group = true
-  default_security_group_name = "${local.prefix}-sg"
+  default_security_group_name   = "${local.prefix}-sg"
 
   default_security_group_egress = [{
     cidr_blocks = "0.0.0.0/0"
@@ -147,7 +147,7 @@ module "vpc" {
 }
 
 module "vpc_endpoints" {
-  source = "terraform-aws-modules/vpc/aws//modules/vpc-endpoints"
+  source  = "terraform-aws-modules/vpc/aws//modules/vpc-endpoints"
   version = "3.2.0"
 
   vpc_id             = module.vpc.vpc_id
@@ -155,12 +155,12 @@ module "vpc_endpoints" {
 
   endpoints = {
     s3 = {
-      service         = "s3"
-      service_type    = "Gateway"
+      service      = "s3"
+      service_type = "Gateway"
       route_table_ids = flatten([
         module.vpc.private_route_table_ids,
-        module.vpc.public_route_table_ids])
-      tags            = {
+      module.vpc.public_route_table_ids])
+      tags = {
         Name = "${local.prefix}-s3-vpc-endpoint"
       }
     },
@@ -168,7 +168,7 @@ module "vpc_endpoints" {
       service             = "sts"
       private_dns_enabled = true
       subnet_ids          = module.vpc.private_subnets
-      tags                = {
+      tags = {
         Name = "${local.prefix}-sts-vpc-endpoint"
       }
     },
@@ -176,7 +176,7 @@ module "vpc_endpoints" {
       service             = "kinesis-streams"
       private_dns_enabled = true
       subnet_ids          = module.vpc.private_subnets
-      tags                = {
+      tags = {
         Name = "${local.prefix}-kinesis-vpc-endpoint"
       }
     },
@@ -287,7 +287,7 @@ In [the next step](workspace-management.md), please use the following configurat
 
 ```hcl
 provider "databricks" {
-  host = module.ai.databricks_host
+  host  = module.ai.databricks_host
   token = module.ai.databricks_token
 }
 ```
@@ -306,7 +306,7 @@ As a workaround give the `aws_iam_role` more time to be created with a `time_sle
 ```hcl
 resource "time_sleep" "wait" {
   depends_on = [
-    aws_iam_role.cross_account_role]
+  aws_iam_role.cross_account_role]
   create_duration = "10s"
 }
 ```

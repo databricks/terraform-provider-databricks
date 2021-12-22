@@ -23,11 +23,11 @@ data "databricks_group" "admins" {
 }
 
 resource "databricks_service_principal" "sp" {
-  application_id    = "00000000-0000-0000-0000-000000000000"
+  application_id = "00000000-0000-0000-0000-000000000000"
 }
 
 resource "databricks_group_member" "i-am-admin" {
-  group_id = data.databricks_group.admins.id
+  group_id  = data.databricks_group.admins.id
   member_id = databricks_service_principal.sp.id
 }
 ```
@@ -36,8 +36,8 @@ Creating service principal with cluster create permissions:
 
 ```hcl
 resource "databricks_service_principal" "sp" {
-  application_id    = "00000000-0000-0000-0000-000000000000"
-  display_name = "Example service principal"
+  application_id       = "00000000-0000-0000-0000-000000000000"
+  display_name         = "Example service principal"
   allow_cluster_create = true
 }
 ```

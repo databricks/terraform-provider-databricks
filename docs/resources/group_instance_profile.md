@@ -11,16 +11,16 @@ This resource allows you to attach instance profiles to groups created by the [g
 
 ```hcl
 resource "databricks_instance_profile" "instance_profile" {
-    instance_profile_arn = "my_instance_profile_arn"
+  instance_profile_arn = "my_instance_profile_arn"
 }
 
 resource "databricks_group" "my_group" {
-    display_name = "my_group_name"
+  display_name = "my_group_name"
 }
 
 resource "databricks_group_instance_profile" "my_group_instance_profile" {
-    group_id = databricks_group.my_group.id
-    instance_profile_id = databricks_instance_profile.instance_profile.id
+  group_id            = databricks_group.my_group.id
+  instance_profile_id = databricks_instance_profile.instance_profile.id
 }
 ```
 ## Argument Reference

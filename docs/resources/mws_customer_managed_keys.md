@@ -64,12 +64,12 @@ resource "aws_kms_alias" "managed_services_customer_managed_key_alias" {
 }
 
 resource "databricks_mws_customer_managed_keys" "managed_services" {
-    account_id   = var.databricks_account_id
-    aws_key_info {
-        key_arn   = aws_kms_key.managed_services_customer_managed_key.arn
-        key_alias = aws_kms_alias.managed_services_customer_managed_key_alias.name
-    }
-    use_cases = ["MANAGED_SERVICES"]
+  account_id = var.databricks_account_id
+  aws_key_info {
+    key_arn   = aws_kms_key.managed_services_customer_managed_key.arn
+    key_alias = aws_kms_alias.managed_services_customer_managed_key_alias.name
+  }
+  use_cases = ["MANAGED_SERVICES"]
 }
 # supply databricks_mws_customer_managed_keys.managed_services.customer_managed_key_id as managed_services_customer_managed_key_id for databricks_mws_workspaces
 ```
@@ -164,12 +164,12 @@ resource "aws_kms_alias" "storage_customer_managed_key_alias" {
 }
 
 resource "databricks_mws_customer_managed_keys" "storage" {
-    account_id   = var.databricks_account_id
-    aws_key_info {
-        key_arn   = aws_kms_key.storage_customer_managed_key.arn
-        key_alias = aws_kms_alias.storage_customer_managed_key_alias.name
-    }
-    use_cases = ["STORAGE"]
+  account_id = var.databricks_account_id
+  aws_key_info {
+    key_arn   = aws_kms_key.storage_customer_managed_key.arn
+    key_alias = aws_kms_alias.storage_customer_managed_key_alias.name
+  }
+  use_cases = ["STORAGE"]
 }
 # supply databricks_mws_customer_managed_keys.storage.customer_managed_key_id as storage_customer_managed_key_id for databricks_mws_workspaces
 ```

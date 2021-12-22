@@ -19,15 +19,15 @@ Creating user with administrative permissions - referencing special `admins` [da
 
 ```hcl
 data "databricks_group" "admins" {
-    display_name = "admins"
+  display_name = "admins"
 }
 
 resource "databricks_user" "me" {
-  user_name    = "me@example.com"
+  user_name = "me@example.com"
 }
 
 resource "databricks_group_member" "i-am-admin" {
-  group_id = data.databricks_group.admins.id
+  group_id  = data.databricks_group.admins.id
   member_id = databricks_user.me.id
 }
 ```
@@ -36,8 +36,8 @@ Creating user with cluster create permissions:
 
 ```hcl
 resource "databricks_user" "me" {
-  user_name    = "me@example.com"
-  display_name = "Example user"
+  user_name            = "me@example.com"
+  display_name         = "Example user"
   allow_cluster_create = true
 }
 ```

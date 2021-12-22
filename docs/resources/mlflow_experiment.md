@@ -9,9 +9,9 @@ This resource allows you to create MLflow experiments in Databricks.
 
 ```hcl
 resource "databricks_mlflow_experiment" "test" {
-  name = "/Users/myuserid/my-experiment"
+  name              = "/Users/myuserid/my-experiment"
   artifact_location = "dbfs:/tmp/my-experiment"
-  description = "My MLflow experiment description"
+  description       = "My MLflow experiment description"
 }
 ```
 

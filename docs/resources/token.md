@@ -10,9 +10,9 @@ This resource creates an api token that can be used to create Databricks resourc
 ```hcl
 // initialize provider in normal mode
 provider "databricks" {
-  alias = "created_workspace" 
-  
-  host  = databricks_mws_workspaces.this.workspace_url
+  alias = "created_workspace"
+
+  host = databricks_mws_workspaces.this.workspace_url
 }
 
 // create PAT token to provision entities within workspace

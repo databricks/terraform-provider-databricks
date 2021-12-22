@@ -11,25 +11,25 @@ After the following example, Bradley would have direct membership in group B and
 
 ```hcl
 resource "databricks_group" "a" {
-    display_name = "A"
+  display_name = "A"
 }
 
 resource "databricks_group" "b" {
-    display_name = "B"
+  display_name = "B"
 }
 
 resource "databricks_group_member" "ab" {
-    group_id = databricks_group.a.id
-    member_id = databricks_group.b.id
+  group_id  = databricks_group.a.id
+  member_id = databricks_group.b.id
 }
 
 resource "databricks_user" "bradley" {
-    user_name = "bradley@example.com"
+  user_name = "bradley@example.com"
 }
 
 resource "databricks_group_member" "bb" {
-    group_id = databricks_group.b.id
-    member_id = databricks_user.bradley.id
+  group_id  = databricks_group.b.id
+  member_id = databricks_user.bradley.id
 }
 ```
 

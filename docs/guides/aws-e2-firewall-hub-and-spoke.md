@@ -61,17 +61,17 @@ variable "prefix" {
 }
 
 locals {
-  prefix                           = "${var.prefix}${random_string.naming.result}"
-  spoke_db_private_subnets_cidr    = [cidrsubnet(var.spoke_cidr_block, 3, 0), cidrsubnet(var.spoke_cidr_block, 3, 1)]
-  spoke_tgw_private_subnets_cidr   = [cidrsubnet(var.spoke_cidr_block, 3, 2), cidrsubnet(var.spoke_cidr_block, 3, 3)]
-  hub_tgw_private_subnets_cidr     = [cidrsubnet(var.hub_cidr_block, 3, 0)]
-  hub_nat_public_subnets_cidr      = [cidrsubnet(var.hub_cidr_block, 3, 1)]
-  hub_firewall_subnets_cidr        = [cidrsubnet(var.hub_cidr_block, 3, 2)]
-  sg_egress_ports                  = [443, 3306, 6666]
-  sg_ingress_protocol              = ["tcp", "udp"]
-  sg_egress_protocol               = ["tcp", "udp"]
-  availability_zones               = ["${var.region}a", "${var.region}b"]
-  db_root_bucket                   = "${var.prefix}${random_string.naming.result}-rootbucket.s3.amazonaws.com"
+  prefix                         = "${var.prefix}${random_string.naming.result}"
+  spoke_db_private_subnets_cidr  = [cidrsubnet(var.spoke_cidr_block, 3, 0), cidrsubnet(var.spoke_cidr_block, 3, 1)]
+  spoke_tgw_private_subnets_cidr = [cidrsubnet(var.spoke_cidr_block, 3, 2), cidrsubnet(var.spoke_cidr_block, 3, 3)]
+  hub_tgw_private_subnets_cidr   = [cidrsubnet(var.hub_cidr_block, 3, 0)]
+  hub_nat_public_subnets_cidr    = [cidrsubnet(var.hub_cidr_block, 3, 1)]
+  hub_firewall_subnets_cidr      = [cidrsubnet(var.hub_cidr_block, 3, 2)]
+  sg_egress_ports                = [443, 3306, 6666]
+  sg_ingress_protocol            = ["tcp", "udp"]
+  sg_egress_protocol             = ["tcp", "udp"]
+  availability_zones             = ["${var.region}a", "${var.region}b"]
+  db_root_bucket                 = "${var.prefix}${random_string.naming.result}-rootbucket.s3.amazonaws.com"
 }
 ```
 
@@ -94,9 +94,9 @@ terraform {
       version = "0.4.1"
     }
     aws = {
-      source = "hashicorp/aws"
+      source  = "hashicorp/aws"
       version = "3.49.0"
-    }    
+    }
   }
 }
 
@@ -269,12 +269,12 @@ module "vpc_endpoints" {
 
   endpoints = {
     s3 = {
-      service         = "s3"
-      service_type    = "Gateway"
+      service      = "s3"
+      service_type = "Gateway"
       route_table_ids = flatten([
         aws_route_table.spoke_db_private_rt.id
       ])
-      tags            = {
+      tags = {
         Name = "${local.prefix}-s3-vpc-endpoint"
       }
     },
@@ -348,7 +348,7 @@ resource "aws_subnet" "hub_firewall_subnet" {
   cidr_block              = element(local.hub_firewall_subnets_cidr, count.index)
   availability_zone       = element(local.availability_zones, count.index)
   map_public_ip_on_launch = false
-    tags = merge(var.tags, {
+  tags = merge(var.tags, {
     Name = "${local.prefix}-hub-firewall-public-${element(local.availability_zones, count.index)}"
   })
 }
@@ -486,8 +486,8 @@ resource "aws_ec2_transit_gateway_vpc_attachment" "hub" {
   transit_gateway_default_route_table_association = true
   transit_gateway_default_route_table_propagation = true
   tags = merge(var.tags, {
-    Name = "${local.prefix}-hub"
-    Purpose     = "Transit Gateway Attachment - Hub VPC"
+    Name    = "${local.prefix}-hub"
+    Purpose = "Transit Gateway Attachment - Hub VPC"
   })
 }
 
@@ -501,8 +501,8 @@ resource "aws_ec2_transit_gateway_vpc_attachment" "spoke" {
   transit_gateway_default_route_table_association = true
   transit_gateway_default_route_table_propagation = true
   tags = merge(var.tags, {
-    Name = "${local.prefix}-spoke"
-    Purpose     = "Transit Gateway Attachment - Spoke VPC"
+    Name    = "${local.prefix}-spoke"
+    Purpose = "Transit Gateway Attachment - Spoke VPC"
   })
 }
 
@@ -559,14 +559,14 @@ resource "aws_networkfirewall_rule_group" "databricks_fqdns_rg" {
       rules_source_list {
         generated_rules_type = "ALLOWLIST"
         target_types         = ["TLS_SNI", "HTTP_HOST"]
-        targets              = concat([var.db_web_app, var.db_tunnel, var.db_rds,local.db_root_bucket], var.whitelisted_urls)
+        targets              = concat([var.db_web_app, var.db_tunnel, var.db_rds, local.db_root_bucket], var.whitelisted_urls)
       }
     }
     rule_variables {
       ip_sets {
         key = "HOME_NET"
         ip_set {
-          definition = [var.spoke_cidr_block,var.hub_cidr_block]
+          definition = [var.spoke_cidr_block, var.hub_cidr_block]
         }
       }
     }
@@ -594,7 +594,7 @@ resource "aws_networkfirewall_rule_group" "allow_db_cpl_protocols_rg" {
       ip_sets {
         key = "HOME_NET"
         ip_set {
-          definition = [var.spoke_cidr_block,var.hub_cidr_block]
+          definition = [var.spoke_cidr_block, var.hub_cidr_block]
         }
       }
     }
@@ -636,7 +636,7 @@ resource "aws_networkfirewall_rule_group" "deny_protocols_rg" {
       ip_sets {
         key = "HOME_NET"
         ip_set {
-          definition = [var.spoke_cidr_block,var.hub_cidr_block]
+          definition = [var.spoke_cidr_block, var.hub_cidr_block]
         }
       }
     }

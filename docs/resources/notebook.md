@@ -15,7 +15,7 @@ data "databricks_current_user" "me" {
 
 resource "databricks_notebook" "ddl" {
   source = "${path.module}/DDLgen.py"
-  path = "${data.databricks_current_user.me.home}/AA/BB/CC"
+  path   = "${data.databricks_current_user.me.home}/AA/BB/CC"
 }
 ```
 
@@ -28,7 +28,7 @@ resource "databricks_notebook" "notebook" {
     display(spark.range(10))
     EOT
   )
-  path = "/Shared/Demo"
+  path     = "/Shared/Demo"
   language = "PYTHON"
 }
 ```
@@ -38,7 +38,7 @@ You can also manage [Databricks Archives](https://docs.databricks.com/notebooks/
 ```hcl
 resource "databricks_notebook" "lesson" {
   source = "${path.module}/IntroNotebooks.dbc"
-  path = "/Shared/Intro" 
+  path   = "/Shared/Intro"
 }
 ```
 

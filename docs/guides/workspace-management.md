@@ -70,7 +70,7 @@ resource "databricks_job" "this" {
 }
 
 resource "databricks_cluster" "this" {
-  cluster_name = "Exploration (${data.databricks_current_user.me.alphanumeric})"
+  cluster_name            = "Exploration (${data.databricks_current_user.me.alphanumeric})"
   spark_version           = data.databricks_spark_version.latest.id
   instance_pool_id        = databricks_instance_pool.smallest_nodes.id
   autotermination_minutes = 20
@@ -214,14 +214,14 @@ data "http" "my" {
 
 resource "databricks_workspace_conf" "this" {
   custom_config = {
-    "enableIpAccessLists": true
+    "enableIpAccessLists" : true
   }
 }
 
 resource "databricks_ip_access_list" "only_me" {
-  label = "only ${data.http.my.body} is allowed to access workspace"
-  list_type = "ALLOW"
+  label        = "only ${data.http.my.body} is allowed to access workspace"
+  list_type    = "ALLOW"
   ip_addresses = ["${data.http.my.body}/32"]
-  depends_on = [databricks_workspace_conf.this]
+  depends_on   = [databricks_workspace_conf.this]
 }
 ```

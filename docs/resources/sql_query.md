@@ -14,9 +14,9 @@ A query may have one or more [visualizations](sql_visualization.md).
 ```hcl
 resource "databricks_sql_query" "q1" {
   data_source_id = databricks_sql_endpoint.example.data_source_id
-  name = "My Query Name"
-  query = "SELECT {{ p1 }} AS p1, 2 as p2"
-  run_as_role = "viewer"
+  name           = "My Query Name"
+  query          = "SELECT {{ p1 }} AS p1, 2 as p2"
+  run_as_role    = "viewer"
 
   schedule {
     continuous {
@@ -25,7 +25,7 @@ resource "databricks_sql_query" "q1" {
   }
 
   parameter {
-    name = "p1"
+    name  = "p1"
     title = "Title for p1"
     text {
       value = "default"

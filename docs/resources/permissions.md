@@ -14,45 +14,45 @@ It's possible to separate [cluster access control](https://docs.databricks.com/s
 
 ```hcl
 resource "databricks_group" "auto" {
-    display_name = "Automation"
+  display_name = "Automation"
 }
 
 resource "databricks_group" "eng" {
-    display_name = "Engineering"
+  display_name = "Engineering"
 }
 
 resource "databricks_group" "ds" {
-    display_name = "Data Science"
+  display_name = "Data Science"
 }
 
 resource "databricks_cluster" "shared_autoscaling" {
-    cluster_name            = "Shared Autoscaling"
-    spark_version           = "6.6.x-scala2.11"
-    node_type_id            = "Standard_DS3_v2"
-    autotermination_minutes = 60
-    autoscale {
-        min_workers = 1
-        max_workers = 10
-    }
+  cluster_name            = "Shared Autoscaling"
+  spark_version           = "6.6.x-scala2.11"
+  node_type_id            = "Standard_DS3_v2"
+  autotermination_minutes = 60
+  autoscale {
+    min_workers = 1
+    max_workers = 10
+  }
 }
 
 resource "databricks_permissions" "cluster_usage" {
-    cluster_id = databricks_cluster.shared_autoscaling.cluster_id
+  cluster_id = databricks_cluster.shared_autoscaling.cluster_id
 
-    access_control {
-        group_name = databricks_group.auto.display_name
-        permission_level = "CAN_ATTACH_TO"
-    }
+  access_control {
+    group_name       = databricks_group.auto.display_name
+    permission_level = "CAN_ATTACH_TO"
+  }
 
-    access_control {
-        group_name = databricks_group.eng.display_name
-        permission_level = "CAN_RESTART"
-    }
+  access_control {
+    group_name       = databricks_group.eng.display_name
+    permission_level = "CAN_RESTART"
+  }
 
-    access_control {
-        group_name = databricks_group.ds.display_name
-        permission_level = "CAN_MANAGE"
-    }
+  access_control {
+    group_name       = databricks_group.ds.display_name
+    permission_level = "CAN_MANAGE"
+  }
 }
 ```
 
@@ -62,37 +62,37 @@ Cluster policies allow creation of [clusters](cluster.md), that match [given pol
 
 ```hcl
 resource "databricks_group" "ds" {
-    display_name = "Data Science"
+  display_name = "Data Science"
 }
 
 resource "databricks_group" "eng" {
-    display_name = "Engineering"
+  display_name = "Engineering"
 }
 
 resource "databricks_cluster_policy" "something_simple" {
-    name = "Some simple policy"
-    definition = jsonencode({
-        "spark_conf.spark.hadoop.javax.jdo.option.ConnectionURL": {
-            "type": "forbidden"
-        },
-        "spark_conf.spark.secondkey": {
-            "type": "forbidden"
-        }
-    })
+  name = "Some simple policy"
+  definition = jsonencode({
+    "spark_conf.spark.hadoop.javax.jdo.option.ConnectionURL" : {
+      "type" : "forbidden"
+    },
+    "spark_conf.spark.secondkey" : {
+      "type" : "forbidden"
+    }
+  })
 }
 
 resource "databricks_permissions" "policy_usage" {
-    cluster_policy_id = databricks_cluster_policy.something_simple.id
+  cluster_policy_id = databricks_cluster_policy.something_simple.id
 
-    access_control {
-        group_name = databricks_group.ds.display_name
-        permission_level = "CAN_USE"
-    }
+  access_control {
+    group_name       = databricks_group.ds.display_name
+    permission_level = "CAN_USE"
+  }
 
-    access_control {
-        group_name = databricks_group.eng.display_name
-        permission_level = "CAN_USE"
-    }
+  access_control {
+    group_name       = databricks_group.eng.display_name
+    permission_level = "CAN_USE"
+  }
 }
 ```
 
@@ -102,33 +102,33 @@ resource "databricks_permissions" "policy_usage" {
 
 ```hcl
 resource "databricks_group" "auto" {
-    display_name = "Automation"
+  display_name = "Automation"
 }
 
 resource "databricks_group" "eng" {
-    display_name = "Engineering"
+  display_name = "Engineering"
 }
 
 resource "databricks_instance_pool" "this" {
-    instance_pool_name = "Reserved Instances"
-    idle_instance_autotermination_minutes = 60
-    node_type_id = "i3.xlarge"
-    min_idle_instances = 0
-    max_capacity = 10
+  instance_pool_name                    = "Reserved Instances"
+  idle_instance_autotermination_minutes = 60
+  node_type_id                          = "i3.xlarge"
+  min_idle_instances                    = 0
+  max_capacity                          = 10
 }
 
 resource "databricks_permissions" "pool_usage" {
-    instance_pool_id = databricks_instance_pool.this.id
+  instance_pool_id = databricks_instance_pool.this.id
 
-    access_control {
-        group_name = databricks_group.auto.display_name
-        permission_level = "CAN_ATTACH_TO"
-    }
+  access_control {
+    group_name       = databricks_group.auto.display_name
+    permission_level = "CAN_ATTACH_TO"
+  }
 
-    access_control {
-        group_name = databricks_group.eng.display_name
-        permission_level = "CAN_MANAGE"
-    }
+  access_control {
+    group_name       = databricks_group.eng.display_name
+    permission_level = "CAN_MANAGE"
+  }
 }
 ```
 
@@ -144,11 +144,11 @@ There are four assignable [permission levels](https://docs.databricks.com/securi
 
 ```hcl
 resource "databricks_group" "auto" {
-    display_name = "Automation"
+  display_name = "Automation"
 }
 
 resource "databricks_group" "eng" {
-    display_name = "Engineering"
+  display_name = "Engineering"
 }
 
 resource "databricks_service_principal" "aws_principal" {
@@ -156,42 +156,42 @@ resource "databricks_service_principal" "aws_principal" {
 }
 
 resource "databricks_job" "this" {
-    name = "Featurization"
-    max_concurrent_runs = 1
+  name                = "Featurization"
+  max_concurrent_runs = 1
 
-    new_cluster  {
-        num_workers   = 300
-        spark_version = "6.6.x-scala2.11"
-        node_type_id  = "Standard_DS3_v2"
-    }
+  new_cluster {
+    num_workers   = 300
+    spark_version = "6.6.x-scala2.11"
+    node_type_id  = "Standard_DS3_v2"
+  }
 
-    notebook_task {
-        notebook_path = "/Production/MakeFeatures"
-    }
+  notebook_task {
+    notebook_path = "/Production/MakeFeatures"
+  }
 }
 
 resource "databricks_permissions" "job_usage" {
-    job_id = databricks_job.this.id
+  job_id = databricks_job.this.id
 
-    access_control {
-        group_name = "users"
-        permission_level = "CAN_VIEW"
-    }
+  access_control {
+    group_name       = "users"
+    permission_level = "CAN_VIEW"
+  }
 
-    access_control {
-        group_name = databricks_group.auto.display_name
-        permission_level = "CAN_MANAGE_RUN"
-    }
+  access_control {
+    group_name       = databricks_group.auto.display_name
+    permission_level = "CAN_MANAGE_RUN"
+  }
 
-    access_control {
-        group_name = databricks_group.eng.display_name
-        permission_level = "CAN_MANAGE"
-    }
-    
-    access_control {
-        service_principal_name = databricks_service_principal.aws_principal.application_id
-        permission_level = "IS_OWNER"
-    }
+  access_control {
+    group_name       = databricks_group.eng.display_name
+    permission_level = "CAN_MANAGE"
+  }
+
+  access_control {
+    service_principal_name = databricks_service_principal.aws_principal.application_id
+    permission_level       = "IS_OWNER"
+  }
 }
 ```
 
@@ -201,36 +201,36 @@ Valid [permission levels](https://docs.databricks.com/security/access-control/wo
 
 ```hcl
 resource "databricks_group" "auto" {
-    display_name = "Automation"
+  display_name = "Automation"
 }
 
 resource "databricks_group" "eng" {
-    display_name = "Engineering"
+  display_name = "Engineering"
 }
 
 resource "databricks_notebook" "this" {
-    content_base64 = base64encode("# Welcome to your Python notebook")
-    path = "/Production/ETL/Features"
-    language = "PYTHON"
+  content_base64 = base64encode("# Welcome to your Python notebook")
+  path           = "/Production/ETL/Features"
+  language       = "PYTHON"
 }
 
 resource "databricks_permissions" "notebook_usage" {
-    notebook_path = databricks_notebook.this.path
+  notebook_path = databricks_notebook.this.path
 
-    access_control {
-        group_name = "users"
-        permission_level = "CAN_READ"
-    }
+  access_control {
+    group_name       = "users"
+    permission_level = "CAN_READ"
+  }
 
-    access_control {
-        group_name = databricks_group.auto.display_name
-        permission_level = "CAN_RUN"
-    }
+  access_control {
+    group_name       = databricks_group.auto.display_name
+    permission_level = "CAN_RUN"
+  }
 
-    access_control {
-        group_name = databricks_group.eng.display_name
-        permission_level = "CAN_EDIT"
-    }
+  access_control {
+    group_name       = databricks_group.eng.display_name
+    permission_level = "CAN_EDIT"
+  }
 }
 ```
 
@@ -245,35 +245,35 @@ Valid [permission levels](https://docs.databricks.com/security/access-control/wo
 
 ```hcl
 resource "databricks_group" "auto" {
-    display_name = "Automation"
+  display_name = "Automation"
 }
 
 resource "databricks_group" "eng" {
-    display_name = "Engineering"
+  display_name = "Engineering"
 }
 
 resource "databricks_directory" "this" {
-    path = "/Production/ETL"
+  path = "/Production/ETL"
 }
 
 resource "databricks_permissions" "folder_usage" {
-    directory_path = databricks_directory.this.path
-    depends_on = [databricks_directory.this]
+  directory_path = databricks_directory.this.path
+  depends_on     = [databricks_directory.this]
 
-    access_control {
-        group_name = "users"
-        permission_level = "CAN_READ"
-    }
+  access_control {
+    group_name       = "users"
+    permission_level = "CAN_READ"
+  }
 
-    access_control {
-        group_name = databricks_group.auto.display_name
-        permission_level = "CAN_RUN"
-    }
+  access_control {
+    group_name       = databricks_group.auto.display_name
+    permission_level = "CAN_RUN"
+  }
 
-    access_control {
-        group_name = databricks_group.eng.display_name
-        permission_level = "CAN_EDIT"
-    }
+  access_control {
+    group_name       = databricks_group.eng.display_name
+    permission_level = "CAN_EDIT"
+  }
 }
 ```
 
@@ -283,11 +283,11 @@ Valid [permission levels](https://docs.databricks.com/security/access-control/wo
 
 ```hcl
 resource "databricks_group" "auto" {
-    display_name = "Automation"
+  display_name = "Automation"
 }
 
 resource "databricks_group" "eng" {
-    display_name = "Engineering"
+  display_name = "Engineering"
 }
 
 resource "databricks_repo" "this" {
@@ -295,22 +295,22 @@ resource "databricks_repo" "this" {
 }
 
 resource "databricks_permissions" "repo_usage" {
-    repo_id = databricks_repo.this.id
+  repo_id = databricks_repo.this.id
 
-    access_control {
-        group_name = "users"
-        permission_level = "CAN_READ"
-    }
+  access_control {
+    group_name       = "users"
+    permission_level = "CAN_READ"
+  }
 
-    access_control {
-        group_name = databricks_group.auto.display_name
-        permission_level = "CAN_RUN"
-    }
+  access_control {
+    group_name       = databricks_group.auto.display_name
+    permission_level = "CAN_RUN"
+  }
 
-    access_control {
-        group_name = databricks_group.eng.display_name
-        permission_level = "CAN_EDIT"
-    }
+  access_control {
+    group_name       = databricks_group.eng.display_name
+    permission_level = "CAN_EDIT"
+  }
 }
 ```
 
@@ -320,16 +320,16 @@ By default on AWS deployments, all admin users can sign in to Databricks using e
 
 ```hcl
 resource "databricks_group" "guests" {
-    display_name = "Guest Users"
+  display_name = "Guest Users"
 }
 
 resource "databricks_permissions" "password_usage" {
-    authorization = "passwords"
+  authorization = "passwords"
 
-    access_control {
-        group_name = databricks_group.guests.display_name
-        permission_level = "CAN_USE"
-    }
+  access_control {
+    group_name       = databricks_group.guests.display_name
+    permission_level = "CAN_USE"
+  }
 }
 ```
 
@@ -339,25 +339,25 @@ Only [possible permission](https://docs.databricks.com/administration-guide/acce
 
 ```hcl
 resource "databricks_group" "auto" {
-    display_name = "Automation"
+  display_name = "Automation"
 }
 
 resource "databricks_group" "eng" {
-    display_name = "Engineering"
+  display_name = "Engineering"
 }
 
 resource "databricks_permissions" "token_usage" {
-    authorization = "tokens"
+  authorization = "tokens"
 
-    access_control {
-        group_name = databricks_group.auto.display_name
-        permission_level = "CAN_USE"
-    }
+  access_control {
+    group_name       = databricks_group.auto.display_name
+    permission_level = "CAN_USE"
+  }
 
-    access_control {
-        group_name = databricks_group.eng.display_name
-        permission_level = "CAN_USE"
-    }
+  access_control {
+    group_name       = databricks_group.eng.display_name
+    permission_level = "CAN_USE"
+  }
 }
 ```
 
@@ -369,38 +369,38 @@ resource "databricks_permissions" "token_usage" {
 data "databricks_current_user" "me" {}
 
 resource "databricks_group" "auto" {
-    display_name = "Automation"
+  display_name = "Automation"
 }
 
 resource "databricks_group" "eng" {
-    display_name = "Engineering"
+  display_name = "Engineering"
 }
 
 resource "databricks_sql_endpoint" "this" {
-  name = "Endpoint of ${data.databricks_current_user.me.alphanumeric}"
-  cluster_size = "Small"
+  name             = "Endpoint of ${data.databricks_current_user.me.alphanumeric}"
+  cluster_size     = "Small"
   max_num_clusters = 1
 
   tags {
     custom_tags {
-        key = "City"
-        value = "Amsterdam"
+      key   = "City"
+      value = "Amsterdam"
     }
   }
 }
 
 resource "databricks_permissions" "endpoint_usage" {
-    sql_endpoint_id = databricks_sql_endpoint.this.id
+  sql_endpoint_id = databricks_sql_endpoint.this.id
 
-    access_control {
-        group_name = databricks_group.auto.display_name
-        permission_level = "CAN_USE"
-    }
+  access_control {
+    group_name       = databricks_group.auto.display_name
+    permission_level = "CAN_USE"
+  }
 
-    access_control {
-        group_name = databricks_group.eng.display_name
-        permission_level = "CAN_MANAGE"
-    }
+  access_control {
+    group_name       = databricks_group.eng.display_name
+    permission_level = "CAN_MANAGE"
+  }
 }
 ```
 
@@ -410,25 +410,25 @@ resource "databricks_permissions" "endpoint_usage" {
 
 ```hcl
 resource "databricks_group" "auto" {
-    display_name = "Automation"
+  display_name = "Automation"
 }
 
 resource "databricks_group" "eng" {
-    display_name = "Engineering"
+  display_name = "Engineering"
 }
 
 resource "databricks_permissions" "endpoint_usage" {
-    sql_dashboard_id = "3244325"
+  sql_dashboard_id = "3244325"
 
-    access_control {
-        group_name = databricks_group.auto.display_name
-        permission_level = "CAN_RUN"
-    }
+  access_control {
+    group_name       = databricks_group.auto.display_name
+    permission_level = "CAN_RUN"
+  }
 
-    access_control {
-        group_name = databricks_group.eng.display_name
-        permission_level = "CAN_MANAGE"
-    }
+  access_control {
+    group_name       = databricks_group.eng.display_name
+    permission_level = "CAN_MANAGE"
+  }
 }
 ```
 
@@ -438,25 +438,25 @@ resource "databricks_permissions" "endpoint_usage" {
 
 ```hcl
 resource "databricks_group" "auto" {
-    display_name = "Automation"
+  display_name = "Automation"
 }
 
 resource "databricks_group" "eng" {
-    display_name = "Engineering"
+  display_name = "Engineering"
 }
 
 resource "databricks_permissions" "endpoint_usage" {
-    sql_query_id = "3244325"
+  sql_query_id = "3244325"
 
-    access_control {
-        group_name = databricks_group.auto.display_name
-        permission_level = "CAN_RUN"
-    }
+  access_control {
+    group_name       = databricks_group.auto.display_name
+    permission_level = "CAN_RUN"
+  }
 
-    access_control {
-        group_name = databricks_group.eng.display_name
-        permission_level = "CAN_MANAGE"
-    }
+  access_control {
+    group_name       = databricks_group.eng.display_name
+    permission_level = "CAN_MANAGE"
+  }
 }
 ```
 
@@ -466,25 +466,25 @@ resource "databricks_permissions" "endpoint_usage" {
 
 ```hcl
 resource "databricks_group" "auto" {
-    display_name = "Automation"
+  display_name = "Automation"
 }
 
 resource "databricks_group" "eng" {
-    display_name = "Engineering"
+  display_name = "Engineering"
 }
 
 resource "databricks_permissions" "endpoint_usage" {
-    sql_alert_id = "3244325"
+  sql_alert_id = "3244325"
 
-    access_control {
-        group_name = databricks_group.auto.display_name
-        permission_level = "CAN_RUN"
-    }
+  access_control {
+    group_name       = databricks_group.auto.display_name
+    permission_level = "CAN_RUN"
+  }
 
-    access_control {
-        group_name = databricks_group.eng.display_name
-        permission_level = "CAN_MANAGE"
-    }
+  access_control {
+    group_name       = databricks_group.eng.display_name
+    permission_level = "CAN_MANAGE"
+  }
 }
 ```
 
@@ -520,8 +520,8 @@ One or more `access_control` blocks are required to actually set the permission 
 
 ```hcl
 access_control {
-    group_name = databricks_group.datascience.display_name
-    permission_level = "CAN_USE"
+  group_name       = databricks_group.datascience.display_name
+  permission_level = "CAN_USE"
 }
 ```
 

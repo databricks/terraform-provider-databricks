@@ -31,12 +31,12 @@ This resource provides two ways of mounting a storage account:
 
 ```hcl
 locals {
-  tenant_id = "00000000-1111-2222-3333-444444444444"
-  client_id = "55555555-6666-7777-8888-999999999999"
+  tenant_id    = "00000000-1111-2222-3333-444444444444"
+  client_id    = "55555555-6666-7777-8888-999999999999"
   secret_scope = "some-kv"
-  secret_key = "some-sp-secret"
-  container = "test"
-  storage_acc = "lrs"
+  secret_key   = "some-sp-secret"
+  container    = "test"
+  storage_acc  = "lrs"
 }
 
 resource "databricks_mount" "this" {
@@ -44,12 +44,12 @@ resource "databricks_mount" "this" {
 
   uri = "abfss://${local.container}@${local.storage_acc}.dfs.core.windows.net"
   extra_configs = {
-    "fs.azure.account.auth.type":                          "OAuth",
-    "fs.azure.account.oauth.provider.type":                "org.apache.hadoop.fs.azurebfs.oauth2.ClientCredsTokenProvider",
-    "fs.azure.account.oauth2.client.id":                   local.client_id,
-    "fs.azure.account.oauth2.client.secret":               "{{secrets/${local.secret_scope}/${local.secret_key}}}",
-    "fs.azure.account.oauth2.client.endpoint":             "https://login.microsoftonline.com/${local.tenant_id}/oauth2/token",
-    "fs.azure.createRemoteFileSystemDuringInitialization": "false",
+    "fs.azure.account.auth.type" : "OAuth",
+    "fs.azure.account.oauth.provider.type" : "org.apache.hadoop.fs.azurebfs.oauth2.ClientCredsTokenProvider",
+    "fs.azure.account.oauth2.client.id" : local.client_id,
+    "fs.azure.account.oauth2.client.secret" : "{{secrets/${local.secret_scope}/${local.secret_key}}}",
+    "fs.azure.account.oauth2.client.endpoint" : "https://login.microsoftonline.com/${local.tenant_id}/oauth2/token",
+    "fs.azure.createRemoteFileSystemDuringInitialization" : "false",
   }
 }
 ```
@@ -64,12 +64,12 @@ provider "azurerm" {
 }
 
 variable "resource_group" {
-  type = string
+  type        = string
   description = "Resource group for Databricks Workspace"
 }
 
 variable "workspace_name" {
-  type = string
+  type        = string
   description = "Name of the Databricks Workspace"
 }
 
@@ -95,38 +95,38 @@ resource "databricks_cluster" "shared_passthrough" {
   spark_version           = data.databricks_spark_version.latest.id
   node_type_id            = data.databricks_node_type.smallest.id
   autotermination_minutes = 10
-  num_workers = 1
-  
+  num_workers             = 1
+
   spark_conf = {
-    "spark.databricks.cluster.profile":"serverless",
-    "spark.databricks.repl.allowedLanguages":"python,sql",
-    "spark.databricks.passthrough.enabled": "true",
-    "spark.databricks.pyspark.enableProcessIsolation": "true"
+    "spark.databricks.cluster.profile" : "serverless",
+    "spark.databricks.repl.allowedLanguages" : "python,sql",
+    "spark.databricks.passthrough.enabled" : "true",
+    "spark.databricks.pyspark.enableProcessIsolation" : "true"
   }
-  
+
   custom_tags = {
-    "ResourceClass": "Serverless"
+    "ResourceClass" : "Serverless"
   }
 }
 
 variable "storage_acc" {
-  type = string
+  type        = string
   description = "Name of the ADLS Gen2 storage container"
 }
 
 variable "container" {
-  type = string
+  type        = string
   description = "Name of container inside storage account"
 }
 
 resource "databricks_mount" "passthrough" {
-  name = "passthrough-test"
+  name       = "passthrough-test"
   cluster_id = databricks_cluster.shared_passthrough.id
-  
+
   uri = "abfss://${var.container}@${var.storage_acc}.dfs.core.windows.net"
   extra_configs = {
-    "fs.azure.account.auth.type": "CustomAccessToken",
-    "fs.azure.account.custom.token.provider.class": "{{sparkconf/spark.databricks.passthrough.adls.gen2.tokenProviderClassName}}",
+    "fs.azure.account.auth.type" : "CustomAccessToken",
+    "fs.azure.account.custom.token.provider.class" : "{{sparkconf/spark.databricks.passthrough.adls.gen2.tokenProviderClassName}}",
   }
 }
 ```
@@ -143,11 +143,11 @@ This block allows specifying parameters for mounting of the ADLS Gen2. The follo
 ```hcl
 // now you can do `%fs ls /mnt/experiments` in notebooks
 resource "databricks_mount" "this" {
-    name = "experiments"
-    s3 {
-      instance_profile = databricks_instance_profile.ds.id
-      bucket_name = aws_s3_bucket.this.bucket
-   }
+  name = "experiments"
+  s3 {
+    instance_profile = databricks_instance_profile.ds.id
+    bucket_name      = aws_s3_bucket.this.bucket
+  }
 }
 ```
 
@@ -170,14 +170,14 @@ In this example, we're using Azure authentication, so we can omit some parameter
 
 ```hcl
 resource "databricks_secret_scope" "terraform" {
-    name                     = "application"
-    initial_manage_principal = "users"
+  name                     = "application"
+  initial_manage_principal = "users"
 }
 
 resource "databricks_secret" "service_principal_key" {
-    key          = "service_principal_key"
-    string_value = "${var.ARM_CLIENT_SECRET}"
-    scope        = databricks_secret_scope.terraform.name
+  key          = "service_principal_key"
+  string_value = "${var.ARM_CLIENT_SECRET}"
+  scope        = databricks_secret_scope.terraform.name
 }
 
 resource "azurerm_storage_account" "this" {
@@ -203,14 +203,14 @@ resource "azurerm_storage_container" "this" {
 }
 
 resource "databricks_mount" "marketing" {
-    name             = "marketing"
-    resource_id      = azurerm_storage_container.this.id
-    abfs {
-      client_id              = data.azurerm_client_config.current.client_id
-      client_secret_scope    = databricks_secret_scope.terraform.name
-      client_secret_key      = databricks_secret.service_principal_key.key
-      initialize_file_system = true
-    }
+  name        = "marketing"
+  resource_id = azurerm_storage_container.this.id
+  abfs {
+    client_id              = data.azurerm_client_config.current.client_id
+    client_secret_scope    = databricks_secret_scope.terraform.name
+    client_secret_key      = databricks_secret.service_principal_key.key
+    initialize_file_system = true
+  }
 }
 ```
 
@@ -228,7 +228,7 @@ resource "databricks_mount" "this_gs" {
   name = "gs-mount"
   gs {
     service_account = "acc@company.iam.gserviceaccount.com"
-    bucket_name = "mybucket"
+    bucket_name     = "mybucket"
   }
 }
 ```
@@ -250,15 +250,15 @@ This block allows specifying parameters for mounting of the ADLS Gen1. The follo
 
 ```hcl
 resource "databricks_mount" "mount" {
-    name           = "{var.RANDOM}"
-    adl {
-      storage_resource_name = "{env.TEST_STORAGE_ACCOUNT_NAME}"
-      tenant_id              = data.azurerm_client_config.current.tenant_id
-      client_id              = data.azurerm_client_config.current.client_id
-      client_secret_scope    = databricks_secret_scope.terraform.name
-      client_secret_key      = databricks_secret.service_principal_key.key
-      spark_conf_prefix      = "fs.adl"
-    }
+  name = "{var.RANDOM}"
+  adl {
+    storage_resource_name = "{env.TEST_STORAGE_ACCOUNT_NAME}"
+    tenant_id             = data.azurerm_client_config.current.tenant_id
+    client_id             = data.azurerm_client_config.current.client_id
+    client_secret_scope   = databricks_secret_scope.terraform.name
+    client_secret_key     = databricks_secret.service_principal_key.key
+    spark_conf_prefix     = "fs.adl"
+  }
 }
 ```
 
@@ -292,25 +292,25 @@ resource "azurerm_storage_container" "marketing" {
 }
 
 resource "databricks_secret_scope" "terraform" {
-    name                     = "application"
-    initial_manage_principal = "users"
+  name                     = "application"
+  initial_manage_principal = "users"
 }
 
 resource "databricks_secret" "storage_key" {
-    key          = "blob_storage_key"
-    string_value = azurerm_storage_account.blobaccount.primary_access_key
-    scope        = databricks_secret_scope.terraform.name
+  key          = "blob_storage_key"
+  string_value = azurerm_storage_account.blobaccount.primary_access_key
+  scope        = databricks_secret_scope.terraform.name
 }
 
 resource "databricks_mount" "marketing" {
-    name           = "marketing"
-    wasb {
-      container_name       = azurerm_storage_container.marketing.name
-      storage_account_name = azurerm_storage_account.blobaccount.name
-      auth_type            = "ACCESS_KEY"
-      token_secret_scope   = databricks_secret_scope.terraform.name
-      token_secret_key     = databricks_secret.storage_key.key
-    }
+  name = "marketing"
+  wasb {
+    container_name       = azurerm_storage_container.marketing.name
+    storage_account_name = azurerm_storage_account.blobaccount.name
+    auth_type            = "ACCESS_KEY"
+    token_secret_scope   = databricks_secret_scope.terraform.name
+    token_secret_key     = databricks_secret.storage_key.key
+  }
 }
 ```
 

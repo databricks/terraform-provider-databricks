@@ -13,9 +13,9 @@ A visualization is always tied to a [query](sql_query.md). Every query may have 
 
 ```hcl
 resource "databricks_sql_visualization" "q1v1" {
-  query_id = databricks_sql_query.q1.id
-  type = "table"
-  name = "My Table"
+  query_id    = databricks_sql_query.q1.id
+  type        = "table"
+  name        = "My Table"
   description = "Some Description"
 
   // The options encoded in this field are passed verbatim to the SQLA API.

@@ -9,12 +9,12 @@ With this resource you can insert a secret under the provided scope with the giv
 
 ```hcl
 resource "databricks_secret_scope" "app" {
-    name = "application-secret-scope"
+  name = "application-secret-scope"
 }
 resource "databricks_secret" "publishing_api" {
-    key = "publishing_api"
-    string_value = data.azurerm_key_vault_secret.example.value
-    scope = databricks_secret_scope.app.id
+  key          = "publishing_api"
+  string_value = data.azurerm_key_vault_secret.example.value
+  scope        = databricks_secret_scope.app.id
 }
 ```
 

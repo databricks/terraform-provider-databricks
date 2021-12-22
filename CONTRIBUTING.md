@@ -168,14 +168,10 @@ func (a ExampleApi) Delete(id string) error {
 ```go
 func ResourceExample() *schema.Resource {
 	return common.Resource{
-		Schema:        exampleSchema,
-		SchemaVersion: 2,
+		Schema: exampleSchema,
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var e Example
-			err := common.DataToStructPointer(d, exampleSchema, &e)
-			if err != nil {
-				return err
-			}
+			common.DataToStructPointer(d, exampleSchema, &e)
 			id, err := NewExampleApi(ctx, c).Create(e)
 			if err != nil {
 				return err
@@ -192,10 +188,7 @@ func ResourceExample() *schema.Resource {
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var e Example
-			err := common.DataToStructPointer(d, exampleSchema, &e)
-			if err != nil {
-				return err
-			}
+			common.DataToStructPointer(d, exampleSchema, &e)
 			return NewExampleApi(ctx, c).Update(d.Id(), e)
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
@@ -207,13 +200,17 @@ func ResourceExample() *schema.Resource {
 
 *Add the resource to the top-level provider.* Simply add the resource to the provider definition in `provider/provider.go`.
 
-*Write unit tests for your resource.* To write your unit tests, you can make use of `ResourceFixture` and `HTTPFixture` structs defined in the `qa` package. This starts a fake HTTP server, asserting that your resource provdier generates the correct request for a given HCL template body for your resource. Update tests should have `InstanceState` field in order to test various corner-cases, like `ForceNew` schemas. It's possible to expect fixture to require new resource by specifying `RequiresNew` field.
+*Write unit tests for your resource.* To write your unit tests, you can make use of `ResourceFixture` and `HTTPFixture` structs defined in the `qa` package. This starts a fake HTTP server, asserting that your resource provdier generates the correct request for a given HCL template body for your resource. Update tests should have `InstanceState` field in order to test various corner-cases, like `ForceNew` schemas. It's possible to expect fixture to require new resource by specifying `RequiresNew` field. With the help of `qa.ResourceCornerCases` and `qa.ResourceFixture` one can achieve 100% code coverage for all of the new code.
 
 A simple example:
 
 ```go
+func TestExampleCornerCases(t *testing.T) {
+	qa.ResourceCornerCases(t, ResourceExample())
+}
+
 func TestExampleResourceCreate(t *testing.T) {
-		d, err := qa.ResourceFixture{
+	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:          "POST",
@@ -246,9 +243,7 @@ func TestExampleResourceCreate(t *testing.T) {
 		HCL: `the_field {
 			a = "test"
 		}`,
-	}.Apply(t)
-	assert.NoError(t, err, err)
-	assert.Equal(t, "abcd", d.Id())
+	}.ApplyNoError(t)
 }
 ```
 

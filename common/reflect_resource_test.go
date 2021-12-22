@@ -241,7 +241,7 @@ func TestStructToDataAndBack(t *testing.T) {
 }
 
 func TestStructToDataAndBackPanic(t *testing.T) {
-	defer func(){
+	defer func() {
 		p := recover()
 		err := p.(error)
 		assert.EqualError(t, err, "pointer is expected, but got Int: 1")
@@ -465,7 +465,6 @@ func (a data) GetOk(key string) (interface{}, bool) {
 	return v, ok
 }
 
-
 func TestDiffToStructPointerPanic(t *testing.T) {
 	type Nonsense struct {
 		New int `json:"new,omitempty"`
@@ -476,7 +475,7 @@ func TestDiffToStructPointerPanic(t *testing.T) {
 			Optional: true,
 		},
 	})
-	defer func(){
+	defer func() {
 		p := recover()
 		err := p.(error)
 		assert.EqualError(t, err, "pointer is expected, but got Struct: common.Nonsense{New:0}")

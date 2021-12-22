@@ -9,10 +9,10 @@ This resource configures the security policy, [databricks_instance_profile](inst
 
 ```hcl
 resource "databricks_sql_global_config" "this" {
-  security_policy = "DATA_ACCESS_CONTROL"
+  security_policy      = "DATA_ACCESS_CONTROL"
   instance_profile_arn = "arn:...."
   data_access_config = {
-    "spark.sql.session.timeZone": "UTC"
+    "spark.sql.session.timeZone" : "UTC"
   }
 }
 ```

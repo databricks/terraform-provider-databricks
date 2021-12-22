@@ -11,8 +11,8 @@ The following sample configuration assumes you have authorized with `az login` o
 ```hcl
 terraform {
   required_providers {
-    azurerm =  "~> 2.33"
-    random = "~> 2.2"
+    azurerm = "~> 2.33"
+    random  = "~> 2.2"
   }
 }
 
@@ -21,7 +21,7 @@ provider "azurerm" {
 }
 
 variable "region" {
-  type = string
+  type    = string
   default = "westeurope"
 }
 

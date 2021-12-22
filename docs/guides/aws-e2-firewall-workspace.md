@@ -92,9 +92,9 @@ terraform {
       version = "0.4.1"
     }
     aws = {
-      source = "hashicorp/aws"
+      source  = "hashicorp/aws"
       version = "3.49.0"
-    }    
+    }
   }
 }
 
@@ -351,12 +351,12 @@ module "vpc_endpoints" {
 
   endpoints = {
     s3 = {
-      service         = "s3"
-      service_type    = "Gateway"
+      service      = "s3"
+      service_type = "Gateway"
       route_table_ids = flatten([
         aws_route_table.db_private_rt.id
       ])
-      tags            = {
+      tags = {
         Name = "${local.prefix}-s3-vpc-endpoint"
       }
     },
@@ -401,7 +401,7 @@ resource "aws_networkfirewall_rule_group" "databricks_fqdns_rg" {
       rules_source_list {
         generated_rules_type = "ALLOWLIST"
         target_types         = ["TLS_SNI", "HTTP_HOST"]
-        targets              = concat([var.db_web_app, var.db_tunnel, var.db_rds,local.db_root_bucket], var.whitelisted_urls)
+        targets              = concat([var.db_web_app, var.db_tunnel, var.db_rds, local.db_root_bucket], var.whitelisted_urls)
       }
     }
     rule_variables {

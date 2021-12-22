@@ -11,8 +11,8 @@ This data source allows to export a notebook from workspace
 
 ```hcl
 data "databricks_notebook" "features" {
-    path = "/Production/Features"
-    format = "SOURCE"
+  path   = "/Production/Features"
+  format = "SOURCE"
 }
 ```
 

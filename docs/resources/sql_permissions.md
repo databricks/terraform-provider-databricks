@@ -10,11 +10,11 @@ resource "databricks_cluster" "cluster_with_table_access_control" {
   // ...
 
   spark_conf = {
-    "spark.databricks.acl.dfAclsEnabled": "true",
-    "spark.databricks.repl.allowedLanguages": "python,sql",
+    "spark.databricks.acl.dfAclsEnabled" : "true",
+    "spark.databricks.repl.allowedLanguages" : "python,sql",
   }
 
-}  
+}
 ```
 
 It could be combined with creation of High-Concurrency and Single-Node clusters - in this case it should have corresponding `custom_tags` and `spark.databricks.cluster.profile` in Spark configuration as described in [documentation for `databricks_cluster` resource](cluster.md).
@@ -40,17 +40,17 @@ The following resource definition will enforce access control on a table by exec
 
 ```hcl
 resource "databricks_sql_permissions" "foo_table" {
-    table = "foo"
+  table = "foo"
 
-    privilege_assignments {
-        principal = "serge@example.com"
-        privileges = ["SELECT", "MODIFY"]
-    }
+  privilege_assignments {
+    principal  = "serge@example.com"
+    privileges = ["SELECT", "MODIFY"]
+  }
 
-    privilege_assignments {
-        principal = "special group"
-        privileges = ["SELECT"]
-    }
+  privilege_assignments {
+    principal  = "special group"
+    privileges = ["SELECT"]
+  }
 }
 ```
 

@@ -11,8 +11,8 @@ This data source allows to get file content from DBFS
 
 ```hcl
 data "databricks_dbfs_file" "report" {
-    path = "dbfs:/reports/some.csv"
-    limit_file_size = 10240
+  path            = "dbfs:/reports/some.csv"
+  limit_file_size = 10240
 }
 ```
 ## Argument Reference

@@ -11,7 +11,7 @@ This resource allows you to set up [workspaces in E2 architecture on AWS](https:
 
 ```hcl
 provider "databricks" {
-  host = module.ai.databricks_host
+  host  = module.ai.databricks_host
   token = module.ai.databricks_token
 }
 ```
@@ -55,11 +55,11 @@ resource "databricks_mws_storage_configurations" "this" {
 
 // register VPC
 resource "databricks_mws_networks" "this" {
-  provider     = databricks.mws
-  account_id   = var.databricks_account_id
-  network_name = "${var.prefix}-network"
-  vpc_id       = var.vpc_id
-  subnet_ids = var.subnets_private
+  provider           = databricks.mws
+  account_id         = var.databricks_account_id
+  network_name       = "${var.prefix}-network"
+  vpc_id             = var.vpc_id
+  subnet_ids         = var.subnets_private
   security_group_ids = [var.security_group]
 }
 
@@ -71,9 +71,9 @@ resource "databricks_mws_workspaces" "this" {
   deployment_name = var.prefix
   aws_region      = var.region
 
-  credentials_id            = databricks_mws_credentials.this.credentials_id
-  storage_configuration_id  = databricks_mws_storage_configurations.this.storage_configuration_id
-  network_id                = databricks_mws_networks.this.network_id
+  credentials_id           = databricks_mws_credentials.this.credentials_id
+  storage_configuration_id = databricks_mws_storage_configurations.this.storage_configuration_id
+  network_id               = databricks_mws_networks.this.network_id
 
   token {}
 }
@@ -169,9 +169,9 @@ resource "databricks_mws_workspaces" "this" {
   deployment_name = local.prefix
   aws_region      = "us-east-1"
 
-  credentials_id            = databricks_mws_credentials.this.credentials_id
-  storage_configuration_id  = databricks_mws_storage_configurations.this.storage_configuration_id
-  
+  credentials_id           = databricks_mws_credentials.this.credentials_id
+  storage_configuration_id = databricks_mws_storage_configurations.this.storage_configuration_id
+
   token {}
 }
 

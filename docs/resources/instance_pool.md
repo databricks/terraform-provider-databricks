@@ -19,8 +19,8 @@ resource "databricks_instance_pool" "smallest_nodes" {
   max_capacity       = 300
   node_type_id       = data.databricks_node_type.smallest.id
   aws_attributes {
-    availability = "ON_DEMAND"
-    zone_id = "us-east-1a"
+    availability           = "ON_DEMAND"
+    zone_id                = "us-east-1a"
     spot_bid_price_percent = "100"
   }
   idle_instance_autotermination_minutes = 10
@@ -28,7 +28,7 @@ resource "databricks_instance_pool" "smallest_nodes" {
     disk_type {
       ebs_volume_type = "GENERAL_PURPOSE_SSD"
     }
-    disk_size = 80
+    disk_size  = 80
     disk_count = 1
   }
 }

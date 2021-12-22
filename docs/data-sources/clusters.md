@@ -13,7 +13,7 @@ Retrieve all clusters on this workspace on AWS or GCP:
 
 ```hcl
 data "databricks_clusters" "all" {
-    depends_on = [databricks_mws_workspaces.this]
+  depends_on = [databricks_mws_workspaces.this]
 }
 ```
 
@@ -21,8 +21,8 @@ Retrieve all clusters with "Shared" in their cluster name on this Azure Databric
 
 ```hcl
 data "databricks_clusters" "all_shared" {
-    depends_on = [azurerm_databricks_workspace.this]
-    cluster_name_contains = "shared"
+  depends_on            = [azurerm_databricks_workspace.this]
+  cluster_name_contains = "shared"
 }
 ```
 

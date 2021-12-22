@@ -12,7 +12,7 @@ In order to manage file on Databricks File System with Terraform, you must speci
 ```hcl
 resource "databricks_dbfs_file" "this" {
   source = "${path.module}/main.tf"
-  path = "/tmp/main.tf"
+  path   = "/tmp/main.tf"
 }
 ```
 
@@ -37,13 +37,13 @@ data "databricks_clusters" "all" {
 
 resource "databricks_dbfs_file" "app" {
   source = "${path.module}/baz.whl"
-  path = "/FileStore/baz.whl"
+  path   = "/FileStore/baz.whl"
 }
 
 resource "databricks_library" "app" {
-  for_each = data.databricks_clusters.all.ids
+  for_each   = data.databricks_clusters.all.ids
   cluster_id = each.key
-  whl = databricks_dbfs_file.app.dbfs_path
+  whl        = databricks_dbfs_file.app.dbfs_path
 }
 ```
 

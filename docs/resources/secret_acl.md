@@ -15,20 +15,20 @@ resource "databricks_group" "ds" {
 }
 
 resource "databricks_secret_scope" "app" {
-    name = "app-secret-scope"
+  name = "app-secret-scope"
 }
 
 resource "databricks_secret_acl" "my_secret_acl" {
-    principal = databricks_group.ds.display_name
-    permission = "READ"
-    scope = databricks_secret_scope.app.name
+  principal  = databricks_group.ds.display_name
+  permission = "READ"
+  scope      = databricks_secret_scope.app.name
 }
 
 resource "databricks_secret" "publishing_api" {
-    key = "publishing_api"
-    // replace it with secret management solution of your choice :-)
-    string_value = data.azurerm_key_vault_secret.example.value
-    scope = databricks_secret_scope.app.name
+  key = "publishing_api"
+  // replace it with secret management solution of your choice :-)
+  string_value = data.azurerm_key_vault_secret.example.value
+  scope        = databricks_secret_scope.app.name
 }
 ```
 

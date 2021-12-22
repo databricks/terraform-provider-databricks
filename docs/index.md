@@ -188,9 +188,9 @@ Since v0.3.8, it's possible to leverage [Azure Managed Service Identity](https:/
 ```hcl
 provider "databricks" {
   host = data.azurerm_databricks_workspace.this.workspace_url
-  
+
   # ARM_USE_MSI environment variable is recommended
-  azure_use_msi = true 
+  azure_use_msi = true
 }
 ```
 
@@ -204,10 +204,10 @@ provider "azurerm" {
 }
 
 resource "azurerm_databricks_workspace" "this" {
-  location                      = "centralus"
-  name                          = "my-workspace-name"
-  resource_group_name           = var.resource_group
-  sku                           = "premium"
+  location            = "centralus"
+  name                = "my-workspace-name"
+  resource_group_name = var.resource_group
+  sku                 = "premium"
 }
 
 provider "databricks" {
@@ -215,8 +215,8 @@ provider "databricks" {
 }
 
 resource "databricks_user" "my-user" {
-  user_name     = "test-user@databricks.com"
-  display_name  = "Test User"
+  user_name    = "test-user@databricks.com"
+  display_name = "Test User"
 }
 ```
 
@@ -224,17 +224,17 @@ resource "databricks_user" "my-user" {
 
 ```hcl
 provider "azurerm" {
-  client_id         = var.client_id
-  client_secret     = var.client_secret
-  tenant_id         = var.tenant_id
-  subscription_id   = var.subscription_id
+  client_id       = var.client_id
+  client_secret   = var.client_secret
+  tenant_id       = var.tenant_id
+  subscription_id = var.subscription_id
 }
 
 resource "azurerm_databricks_workspace" "this" {
-  location                      = "centralus"
-  name                          = "my-workspace-name"
-  resource_group_name           = var.resource_group
-  sku                           = "premium"
+  location            = "centralus"
+  name                = "my-workspace-name"
+  resource_group_name = var.resource_group
+  sku                 = "premium"
 }
 
 provider "databricks" {
@@ -334,7 +334,7 @@ If you notice below error, it might be due to the fact that [required_providers]
 terraform {
   required_providers {
     databricks = {
-      source = "databrickslabs/databricks"
+      source  = "databrickslabs/databricks"
       version = "0.4.1"
     }
   }

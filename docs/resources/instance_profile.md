@@ -58,11 +58,11 @@ resource "databricks_cluster" "this" {
     max_workers = 50
   }
   aws_attributes {
-    instance_profile_arn    = databricks_instance_profile.shared.id
-    availability            = "SPOT"
-    zone_id                 = "us-east-1"
-    first_on_demand         = 1
-    spot_bid_price_percent  = 100
+    instance_profile_arn   = databricks_instance_profile.shared.id
+    availability           = "SPOT"
+    zone_id                = "us-east-1"
+    first_on_demand        = 1
+    spot_bid_price_percent = 100
   }
 }
 ```
@@ -76,9 +76,9 @@ resource "databricks_cluster_policy" "this" {
   name = "Policy with predefined instance profile"
   definition = jsonencode({
     # most likely policy might have way more things init.
-    "aws_attributes.instance_profile_arn": {
-      "type": "fixed",
-      "value": databricks_instance_profile.shared.arn
+    "aws_attributes.instance_profile_arn" : {
+      "type" : "fixed",
+      "value" : databricks_instance_profile.shared.arn
     }
   })
 }

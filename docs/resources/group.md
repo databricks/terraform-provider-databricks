@@ -17,8 +17,8 @@ Creating some group
 
 ```hcl
 resource "databricks_group" "this" {
-  display_name = "Some Group"
-  allow_cluster_create = true
+  display_name               = "Some Group"
+  allow_cluster_create       = true
   allow_instance_pool_create = true
 }
 ```
@@ -27,18 +27,18 @@ Adding [databricks_user](user.md) as [databricks_group_member](group_member.md) 
 
 ```hcl
 resource "databricks_group" "this" {
-  display_name = "Some Group"
-  allow_cluster_create = true
+  display_name               = "Some Group"
+  allow_cluster_create       = true
   allow_instance_pool_create = true
 }
 
 resource "databricks_user" "this" {
-    user_name = "someone@example.com"
+  user_name = "someone@example.com"
 }
 
 resource "databricks_group_member" "vip_member" {
-    group_id = databricks_group.this.id
-    member_id = databricks_user.this.id
+  group_id  = databricks_group.this.id
+  member_id = databricks_user.this.id
 }
 ```
 

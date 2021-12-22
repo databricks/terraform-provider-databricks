@@ -12,12 +12,12 @@ Security-conscious enterprises that use cloud SaaS applications need to restrict
 ```hcl
 resource "databricks_workspace_conf" "this" {
   custom_config = {
-    "enableIpAccessLists": true
+    "enableIpAccessLists" : true
   }
 }
 
 resource "databricks_ip_access_list" "allowed-list" {
-  label = "allow_in"
+  label     = "allow_in"
   list_type = "ALLOW"
   ip_addresses = [
     "1.2.3.0/24",

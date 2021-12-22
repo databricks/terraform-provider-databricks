@@ -67,9 +67,9 @@ resource "databricks_cluster" "shared_autoscaling" {
     max_workers = 50
   }
   spark_conf = {
-    "spark.databricks.io.cache.enabled": true,
-    "spark.databricks.io.cache.maxDiskUsage": "50g",
-    "spark.databricks.io.cache.maxMetaDataCache": "1g"
+    "spark.databricks.io.cache.enabled" : true,
+    "spark.databricks.io.cache.maxDiskUsage" : "50g",
+    "spark.databricks.io.cache.maxMetaDataCache" : "1g"
   }
 }
 ```
@@ -222,7 +222,7 @@ Example of pushing all cluster logs to S3:
 cluster_log_conf {
   s3 {
     destination = "s3a://acmecorp-main/cluster-logs"
-    region = "us-east-1"
+    region      = "us-east-1"
   }
 }
 ```
@@ -255,7 +255,7 @@ Example of taking init script from S3:
 init_scripts {
   s3 {
     destination = "s3a://acmecorp-main/init-scripts/install-elk.sh"
-    region = "us-east-1"
+    region      = "us-east-1"
   }
 }
 ```
@@ -289,10 +289,10 @@ resource "databricks_cluster" "this" {
     max_workers = 50
   }
   aws_attributes {
-    availability            = "SPOT"
-    zone_id                 = "us-east-1"
-    first_on_demand         = 1
-    spot_bid_price_percent  = 100
+    availability           = "SPOT"
+    zone_id                = "us-east-1"
+    first_on_demand        = 1
+    spot_bid_price_percent = 100
   }
 }
 ```

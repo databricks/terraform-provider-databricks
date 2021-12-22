@@ -6,6 +6,10 @@ fmt:
 	@echo "✓ Formatting source code with gofmt ..."
 	@gofmt -w $(shell find . -type f -name '*.go' -not -path "./vendor/*")
 
+fmt-docs:
+	@echo "✓ Formatting code samples in documentation"
+	@terrafmt fmt -p '*.md' .
+
 lint: vendor
 	@echo "✓ Linting source code with https://staticcheck.io/ ..."
 	@staticcheck ./...

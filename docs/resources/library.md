@@ -16,7 +16,7 @@ data "databricks_clusters" "all" {
 }
 
 resource "databricks_library" "cli" {
-  for_each = data.databricks_clusters.all.ids
+  for_each   = data.databricks_clusters.all.ids
   cluster_id = each.key
   pypi {
     package = "databricks-cli"
@@ -29,12 +29,12 @@ resource "databricks_library" "cli" {
 ```hcl
 resource "databricks_dbfs_file" "app" {
   source = "${path.module}/app-0.0.1.jar"
-  path = "/FileStore/app-0.0.1.jar"
+  path   = "/FileStore/app-0.0.1.jar"
 }
 
 resource "databricks_library" "app" {
   cluster_id = databricks_cluster.this.id
-  jar = databricks_dbfs_file.app.dbfs_path
+  jar        = databricks_dbfs_file.app.dbfs_path
 }
 ```
 
@@ -58,12 +58,12 @@ resource "databricks_library" "deequ" {
 ```hcl
 resource "databricks_dbfs_file" "app" {
   source = "${path.module}/baz.whl"
-  path = "/FileStore/baz.whl"
+  path   = "/FileStore/baz.whl"
 }
 
 resource "databricks_library" "app" {
   cluster_id = databricks_cluster.this.id
-  whl = databricks_dbfs_file.app.dbfs_path
+  whl        = databricks_dbfs_file.app.dbfs_path
 }
 ```
 
@@ -88,12 +88,12 @@ resource "databricks_library" "fbprophet" {
 ```hcl
 resource "databricks_dbfs_file" "app" {
   source = "${path.module}/foo.egg"
-  path = "/FileStore/foo.egg"
+  path   = "/FileStore/foo.egg"
 }
 
 resource "databricks_library" "app" {
   cluster_id = databricks_cluster.this.id
-  egg = databricks_dbfs_file.app.dbfs_path
+  egg        = databricks_dbfs_file.app.dbfs_path
 }
 ```
 

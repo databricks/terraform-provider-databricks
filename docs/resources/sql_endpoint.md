@@ -11,14 +11,14 @@ To create [SQL endpoints](https://docs.databricks.com/sql/get-started/concepts.h
 data "databricks_current_user" "me" {}
 
 resource "databricks_sql_endpoint" "this" {
-  name = "Endpoint of ${data.databricks_current_user.me.alphanumeric}"
-  cluster_size = "Small"
+  name             = "Endpoint of ${data.databricks_current_user.me.alphanumeric}"
+  cluster_size     = "Small"
   max_num_clusters = 1
 
   tags {
     custom_tags {
-        key = "City"
-        value = "Amsterdam"
+      key   = "City"
+      value = "Amsterdam"
     }
   }
 }

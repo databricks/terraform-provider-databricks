@@ -180,7 +180,7 @@ func TestDbfsFileCornerCases_ReadFail(t *testing.T) {
 		err := resourcesMap["databricks_dbfs_file"].Body(ic, nil, &resource{
 			ID: "a",
 		})
-		assert.EqualError(t, err, "nope")
+		assert.EqualError(t, err, "cannot read a: nope")
 	})
 }
 

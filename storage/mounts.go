@@ -159,7 +159,7 @@ func getCommonClusterObject(clustersAPI clusters.ClustersAPI, clusterName string
 func getOrCreateMountingCluster(clustersAPI clusters.ClustersAPI) (string, error) {
 	cluster, err := clustersAPI.GetOrCreateRunningCluster("terraform-mount", getCommonClusterObject(clustersAPI, "terraform-mount"))
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("failed to get mouting cluster: %w", err)
 	}
 	return cluster.ClusterID, nil
 }
@@ -174,12 +174,12 @@ func getMountingClusterID(ctx context.Context, client *common.DatabricksClient, 
 		return getOrCreateMountingCluster(clustersAPI)
 	}
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("failed to re-create mounting cluster: %w", err)
 	}
 	if !clusterInfo.IsRunningOrResizing() {
 		err = clustersAPI.Start(clusterInfo.ClusterID)
 		if err != nil {
-			return "", err
+			return "", fmt.Errorf("failed to start mounting cluster: %w", err)
 		}
 	}
 	return clusterID, nil
@@ -203,10 +203,7 @@ func mountCluster(ctx context.Context, tpl interface{}, d *schema.ResourceData,
 	mountType := reflect.TypeOf(tpl)
 	mountTypePointer := reflect.New(mountType)
 	mountReflectValue := mountTypePointer.Elem()
-	err = common.DataToReflectValue(d, r, mountReflectValue)
-	if err != nil {
-		return mountConfig, mountPoint, err
-	}
+	common.DataToReflectValue(d, r, mountReflectValue)
 	mountInterface := mountReflectValue.Interface()
 	mountConfig = mountInterface.(Mount)
 
@@ -240,10 +237,7 @@ func mountCreate(tpl interface{}, r *schema.Resource) func(context.Context, *sch
 		if err != nil {
 			return diag.FromErr(err)
 		}
-		err = d.Set("source", source)
-		if err != nil {
-			return diag.FromErr(err)
-		}
+		d.Set("source", source)
 		return readMountSource(ctx, mountPoint, d)
 	}
 }
@@ -259,14 +253,12 @@ func readMountSource(ctx context.Context, mp MountPoint, d *schema.ResourceData)
 		}
 		return diag.FromErr(err)
 	}
-	if err = d.Set("source", source); err != nil {
-		return diag.FromErr(err)
-	}
+	d.Set("source", source)
 	return nil
 }
 
 // return resource reader function
-func mountRead(tpl Mount, r *schema.Resource) schema.ReadContextFunc {
+func mountRead(tpl interface{}, r *schema.Resource) func(context.Context, *schema.ResourceData, interface{}) diag.Diagnostics {
 	return func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 		_, mp, err := mountCluster(ctx, tpl, d, m, r)
 		if err != nil {
@@ -277,7 +269,7 @@ func mountRead(tpl Mount, r *schema.Resource) schema.ReadContextFunc {
 }
 
 // returns delete resource function
-func mountDelete(tpl Mount, r *schema.Resource) schema.DeleteContextFunc {
+func mountDelete(tpl interface{}, r *schema.Resource) func(context.Context, *schema.ResourceData, interface{}) diag.Diagnostics {
 	return func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 		_, mp, err := mountCluster(ctx, tpl, d, m, r)
 		if err != nil {

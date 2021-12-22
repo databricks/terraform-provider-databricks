@@ -257,3 +257,88 @@ func TestOldMountImplementations(t *testing.T) {
 	assert.Nil(t, m4.ValidateAndApplyDefaults(nil, nil))
 
 }
+
+type sampleCommand string
+
+func (s sampleCommand) Execute(clusterID, language, commandStr string) common.CommandResults {
+	return common.CommandResults{
+		ResultType: "text",
+		Data:       string(s),
+	}
+}
+
+func TestNewMountPoint(t *testing.T) {
+	mp := NewMountPoint(sampleCommand("abc"), "abc", "bcd")
+	r := mp.Exec.Execute("a", "b", "c")
+	assert.Equal(t, "abc", (&r).Text())
+}
+
+func TestGetMountingClusterID_Failures(t *testing.T) {
+	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/clusters/get?cluster_id=def",
+			Status:   518,
+			Response: common.APIError{
+				Message: "😤",
+			},
+		},
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/clusters/get?cluster_id=terminated",
+			Response: clusters.ClusterInfo{
+				ClusterID: "failing-id",
+				State:     clusters.ClusterStateTerminated,
+			},
+		},
+		{
+			MatchAny:     true,
+			ReuseRequest: true,
+			Status:       404,
+			Response:     common.NotFound("nope"),
+		},
+	}, func(ctx context.Context, client *common.DatabricksClient) {
+		// no mounting cluster given, try creating it
+		_, err := getMountingClusterID(ctx, client, "")
+		assert.EqualError(t, err, "failed to get mouting cluster: nope")
+
+		// mounting cluster given, but it's removed already
+		_, err = getMountingClusterID(ctx, client, "bcd")
+		assert.EqualError(t, err, "failed to get mouting cluster: nope")
+
+		// some other error happens
+		_, err = getMountingClusterID(ctx, client, "def")
+		assert.EqualError(t, err, "failed to re-create mounting cluster: 😤")
+
+		_, err = getMountingClusterID(ctx, client, "terminated")
+		assert.EqualError(t, err, "failed to start mounting cluster: nope")
+	})
+}
+
+func TestMountCRD(t *testing.T) {
+	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
+		{
+			MatchAny:     true,
+			ReuseRequest: true,
+			Status:       404,
+			Response:     common.NotFound("nope"),
+		},
+	}, func(ctx context.Context, client *common.DatabricksClient) {
+		r := ResourceMount()
+		d := r.TestResourceData()
+		client.WithCommandMock(func(commandStr string) common.CommandResults {
+			return common.CommandResults{}
+		})
+		diags := mountCreate(nil, r)(ctx, d, client)
+		assert.True(t, diags.HasError())
+		assert.Equal(t, "failed to get mouting cluster: nope", diags[0].Summary)
+
+		diags = mountRead(nil, r)(ctx, d, client)
+		assert.True(t, diags.HasError())
+		assert.Equal(t, "failed to get mouting cluster: nope", diags[0].Summary)
+
+		diags = mountDelete(nil, r)(ctx, d, client)
+		assert.True(t, diags.HasError())
+		assert.Equal(t, "failed to get mouting cluster: nope", diags[0].Summary)
+	})
+}

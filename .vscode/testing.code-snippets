@@ -54,5 +54,12 @@
 		  "assert.NoError(t, err)"
 		],
 		"description": "assert.NoError"
-	}
+	},
+	"err :=": {
+		"prefix": "e",
+		"body": [
+		  "err := "
+		],
+		"description": "err :="
+	  }
 }

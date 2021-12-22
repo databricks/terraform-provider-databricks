@@ -173,10 +173,7 @@ func DataSourceNodeType() *schema.Resource {
 		ReadContext: func(ctx context.Context, d *schema.ResourceData,
 			m interface{}) diag.Diagnostics {
 			var this NodeTypeRequest
-			err := common.DataToStructPointer(d, s, &this)
-			if err != nil {
-				return diag.FromErr(err)
-			}
+			common.DataToStructPointer(d, s, &this)
 			clustersAPI := NewClustersAPI(ctx, m)
 			d.SetId(clustersAPI.GetSmallestNodeType(this))
 			return nil

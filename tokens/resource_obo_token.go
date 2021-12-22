@@ -51,9 +51,7 @@ func ResourceOboToken() *schema.Resource {
 		Schema: oboTokenSchema,
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var request OboToken
-			if err := common.DataToStructPointer(d, oboTokenSchema, &request); err != nil {
-				return err
-			}
+			common.DataToStructPointer(d, oboTokenSchema, &request)
 			ot, err := NewTokenManagementAPI(ctx, c).CreateTokenOnBehalfOfServicePrincipal(request)
 			if err != nil {
 				return err

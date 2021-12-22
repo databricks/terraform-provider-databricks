@@ -237,11 +237,16 @@ func TestStructToDataAndBack(t *testing.T) {
 	assert.NoError(t, err)
 
 	var r testStruct
-	err = DataToStructPointer(d, scm, &r)
-	assert.NoError(t, err)
+	DataToStructPointer(d, scm, &r)
+}
 
-	err = DataToStructPointer(d, scm, 1)
-	assert.EqualError(t, err, "pointer is expected, but got Int: 1")
+func TestStructToDataAndBackPanic(t *testing.T) {
+	defer func(){
+		p := recover()
+		err := p.(error)
+		assert.EqualError(t, err, "pointer is expected, but got Int: 1")
+	}()
+	DataToStructPointer(nil, nil, 1)
 }
 
 func TestSetPrimitiveOfKind(t *testing.T) {
@@ -398,8 +403,7 @@ func TestStructToData(t *testing.T) {
 	}
 
 	var dummyCopy Dummy
-	err = DataToStructPointer(d, s, &dummyCopy)
-	assert.NoError(t, err)
+	DataToStructPointer(d, s, &dummyCopy)
 
 	assert.Equal(t, len(dummyCopy.Addresses), len(dummy.Addresses))
 	assert.Len(t, dummyCopy.Things, 2)
@@ -413,8 +417,7 @@ func TestStructToData(t *testing.T) {
 	})
 	assert.NoError(t, err)
 
-	err = DataToStructPointer(d, s, &dummyCopy)
-	assert.NoError(t, err)
+	DataToStructPointer(d, s, &dummyCopy)
 }
 
 func TestDiffSuppressor(t *testing.T) {

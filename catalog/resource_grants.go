@@ -219,9 +219,7 @@ func ResourceGrants() *schema.Resource {
 		},
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var grants PermissionsList
-			if err := common.DataToStructPointer(d, s, &grants); err != nil {
-				return err
-			}
+			common.DataToStructPointer(d, s, &grants)
 			securable, name := mapping.kv(d)
 			err := NewPermissionsAPI(ctx, c).updatePermissions(securable, name, grants.toCreate())
 			if err != nil {
@@ -248,9 +246,7 @@ func ResourceGrants() *schema.Resource {
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var grants PermissionsList
-			if err := common.DataToStructPointer(d, s, &grants); err != nil {
-				return err
-			}
+			common.DataToStructPointer(d, s, &grants)
 			securable, name := mapping.kv(d)
 			return NewPermissionsAPI(ctx, c).updatePermissions(securable, name, grants.toDelete())
 		},

@@ -200,9 +200,7 @@ func ResourceSQLEndpoint() *schema.Resource {
 	return common.Resource{
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var se SQLEndpoint
-			if err := common.DataToStructPointer(d, s, &se); err != nil {
-				return err
-			}
+			common.DataToStructPointer(d, s, &se)
 			if err := NewSQLEndpointsAPI(ctx, c).Create(&se, d.Timeout(schema.TimeoutCreate)); err != nil {
 				return err
 			}
@@ -223,9 +221,7 @@ func ResourceSQLEndpoint() *schema.Resource {
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var se SQLEndpoint
-			if err := common.DataToStructPointer(d, s, &se); err != nil {
-				return err
-			}
+			common.DataToStructPointer(d, s, &se)
 			return NewSQLEndpointsAPI(ctx, c).Edit(se)
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {

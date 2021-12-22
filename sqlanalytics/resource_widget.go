@@ -75,9 +75,7 @@ func (w *WidgetEntity) toAPIObject(schema map[string]*schema.Schema, data *schem
 	var aw api.Widget
 
 	// Extract from ResourceData.
-	if err := common.DataToStructPointer(data, schema, w); err != nil {
-		return nil, err
-	}
+	common.DataToStructPointer(data, schema, w)
 
 	aw.DashboardID = w.DashboardID
 	aw.Options.Title = w.Title

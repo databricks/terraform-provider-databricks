@@ -107,9 +107,7 @@ func ResourceIPAccessList() *schema.Resource {
 		Schema: s,
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var iacl createIPAccessListRequest
-			if err := common.DataToStructPointer(d, s, &iacl); err != nil {
-				return err
-			}
+			common.DataToStructPointer(d, s, &iacl)
 			status, err := NewIPAccessListsAPI(ctx, c).Create(iacl)
 			if err != nil {
 				return err
@@ -127,9 +125,7 @@ func ResourceIPAccessList() *schema.Resource {
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var iacl ipAccessListUpdateRequest
-			if err := common.DataToStructPointer(d, s, &iacl); err != nil {
-				return err
-			}
+			common.DataToStructPointer(d, s, &iacl)
 			return NewIPAccessListsAPI(ctx, c).Update(d.Id(), iacl)
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {

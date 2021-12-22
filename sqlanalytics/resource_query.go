@@ -146,9 +146,7 @@ const secondsInWeek = 7 * secondsInDay
 
 func (q *QueryEntity) toAPIObject(schema map[string]*schema.Schema, data *schema.ResourceData) (*api.Query, error) {
 	// Extract from ResourceData.
-	if err := common.DataToStructPointer(data, schema, q); err != nil {
-		return nil, err
-	}
+	common.DataToStructPointer(data, schema, q)
 
 	// Transform to API object.
 	var aq api.Query

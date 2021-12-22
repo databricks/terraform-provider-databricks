@@ -17,10 +17,8 @@ type DashboardEntity struct {
 
 func (d *DashboardEntity) toAPIObject(schema map[string]*schema.Schema, data *schema.ResourceData) (*api.Dashboard, error) {
 	// Extract from ResourceData.
-	if err := common.DataToStructPointer(data, schema, d); err != nil {
-		return nil, err
-	}
-
+	common.DataToStructPointer(data, schema, d)
+	
 	// Copy to API object.
 	var ad api.Dashboard
 	ad.ID = data.Id()

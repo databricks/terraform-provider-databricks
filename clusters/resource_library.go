@@ -34,10 +34,7 @@ func ResourceLibrary() *schema.Resource {
 				return err
 			}
 			var lib libraries.Library
-			err = common.DataToStructPointer(d, s, &lib)
-			if err != nil {
-				return err
-			}
+			common.DataToStructPointer(d, s, &lib)
 			librariesAPI := libraries.NewLibrariesAPI(ctx, c)
 			err = librariesAPI.Install(libraries.ClusterLibraryList{
 				ClusterID: clusterID,

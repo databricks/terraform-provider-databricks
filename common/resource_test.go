@@ -98,5 +98,5 @@ func TestRecoverableFromPanic(t *testing.T) {
 
 	diags := r.UpdateContext(ctx, d, client)
 	assert.True(t, diags.HasError())
-	assert.Equal(t, "cannot read sample: recovered: what to do?...", diags[0].Summary)
+	assert.Equal(t, "cannot read sample: panic: what to do?...", diags[0].Summary)
 }

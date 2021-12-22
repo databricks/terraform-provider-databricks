@@ -78,9 +78,7 @@ func ResourceMLFlowModel() *schema.Resource {
 	return common.Resource{
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var m Model
-			if err := common.DataToStructPointer(d, s, &m); err != nil {
-				return nil
-			}
+			common.DataToStructPointer(d, s, &m)
 			if err := NewModelsAPI(ctx, c).Create(&m); err != nil {
 				return err
 			}
@@ -96,16 +94,12 @@ func ResourceMLFlowModel() *schema.Resource {
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var m Model
-			if err := common.DataToStructPointer(d, s, &m); err != nil {
-				return nil
-			}
+			common.DataToStructPointer(d, s, &m)
 			return NewModelsAPI(ctx, c).Update(&m)
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var m Model
-			if err := common.DataToStructPointer(d, s, &m); err != nil {
-				return nil
-			}
+			common.DataToStructPointer(d, s, &m)
 			return NewModelsAPI(ctx, c).Delete(&m)
 		},
 		Schema: s,

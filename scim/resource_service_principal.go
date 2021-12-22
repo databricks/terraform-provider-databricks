@@ -71,9 +71,7 @@ func ResourceServicePrincipal() *schema.Resource {
 		})
 	spFromData := func(d *schema.ResourceData) (user User, err error) {
 		var u entity
-		if err = common.DataToStructPointer(d, servicePrincipalSchema, &u); err != nil {
-			return
-		}
+		common.DataToStructPointer(d, servicePrincipalSchema, &u)
 		return User{
 			ApplicationID: u.ApplicationID,
 			DisplayName:   u.DisplayName,

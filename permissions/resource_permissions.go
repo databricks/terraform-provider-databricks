@@ -399,10 +399,7 @@ func ResourcePermissions() *schema.Resource {
 		ReadContext: readContext,
 		CreateContext: func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 			var entity PermissionsEntity
-			err := common.DataToStructPointer(d, s, &entity)
-			if err != nil {
-				return diag.FromErr(err)
-			}
+			common.DataToStructPointer(d, s, &entity)
 			for _, mapping := range permissionsResourceIDFields() {
 				if v, ok := d.GetOk(mapping.field); ok {
 					id, err := mapping.idRetriever(ctx, m.(*common.DatabricksClient), v.(string))
@@ -424,11 +421,8 @@ func ResourcePermissions() *schema.Resource {
 		},
 		UpdateContext: func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 			var entity PermissionsEntity
-			err := common.DataToStructPointer(d, s, &entity)
-			if err != nil {
-				return diag.FromErr(err)
-			}
-			err = NewPermissionsAPI(ctx, m).Update(d.Id(), AccessControlChangeList{
+			common.DataToStructPointer(d, s, &entity)
+			err := NewPermissionsAPI(ctx, m).Update(d.Id(), AccessControlChangeList{
 				AccessControlList: entity.AccessControlList,
 			})
 			if err != nil {

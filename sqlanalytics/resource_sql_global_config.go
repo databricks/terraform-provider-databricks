@@ -89,9 +89,7 @@ func ResourceSQLGlobalConfig() *schema.Resource {
 	})
 	setGlobalConfig := func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 		var gc GlobalConfig
-		if err := common.DataToStructPointer(d, s, &gc); err != nil {
-			return err
-		}
+		common.DataToStructPointer(d, s, &gc)
 		if err := NewSqlGlobalConfigAPI(ctx, c).Set(gc); err != nil {
 			return err
 		}

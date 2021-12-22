@@ -35,15 +35,15 @@ func nicerError(ctx context.Context, err error, action string) error {
 
 func recoverable(cb func(
 	ctx context.Context, d *schema.ResourceData, c *DatabricksClient) error) func(
-		ctx context.Context, d *schema.ResourceData, c *DatabricksClient) error {
+	ctx context.Context, d *schema.ResourceData, c *DatabricksClient) error {
 	return func(ctx context.Context, d *schema.ResourceData, c *DatabricksClient) (err error) {
 		defer func() {
-			// this is deliberate decision to convert a panic into error, 
-			// so that any unforeseen bug would we visible to end-user 
-			// as an error and not a provider crash, which is way less 
+			// this is deliberate decision to convert a panic into error,
+			// so that any unforeseen bug would we visible to end-user
+			// as an error and not a provider crash, which is way less
 			// of pleasant experience.
 			if panic := recover(); panic != nil {
-				err = fmt.Errorf("recovered: %v", panic)
+				err = fmt.Errorf("panic: %v", panic)
 			}
 		}()
 		err = cb(ctx, d, c)
@@ -53,10 +53,10 @@ func recoverable(cb func(
 
 // ToResource converts to Terraform resource definition
 func (r Resource) ToResource() *schema.Resource {
-	var update func(ctx context.Context, d *schema.ResourceData, 
+	var update func(ctx context.Context, d *schema.ResourceData,
 		m interface{}) diag.Diagnostics
 	if r.Update != nil {
-		update = func(ctx context.Context, d *schema.ResourceData, 
+		update = func(ctx context.Context, d *schema.ResourceData,
 			m interface{}) diag.Diagnostics {
 			c := m.(*DatabricksClient)
 			if err := recoverable(r.Update)(ctx, d, c); err != nil {
@@ -91,7 +91,7 @@ func (r Resource) ToResource() *schema.Resource {
 			}
 		}
 	}
-	read := func(ctx context.Context, d *schema.ResourceData, 
+	read := func(ctx context.Context, d *schema.ResourceData,
 		m interface{}) diag.Diagnostics {
 		err := recoverable(r.Read)(ctx, d, m.(*DatabricksClient))
 		if IsMissing(err) {
@@ -111,7 +111,7 @@ func (r Resource) ToResource() *schema.Resource {
 		SchemaVersion:  r.SchemaVersion,
 		StateUpgraders: r.StateUpgraders,
 		CustomizeDiff:  r.CustomizeDiff,
-		CreateContext: func(ctx context.Context, d *schema.ResourceData, 
+		CreateContext: func(ctx context.Context, d *schema.ResourceData,
 			m interface{}) diag.Diagnostics {
 			c := m.(*DatabricksClient)
 			err := recoverable(r.Create)(ctx, d, c)
@@ -127,7 +127,7 @@ func (r Resource) ToResource() *schema.Resource {
 		},
 		ReadContext:   read,
 		UpdateContext: update,
-		DeleteContext: func(ctx context.Context, d *schema.ResourceData, 
+		DeleteContext: func(ctx context.Context, d *schema.ResourceData,
 			m interface{}) diag.Diagnostics {
 			if err := recoverable(r.Delete)(ctx, d, m.(*DatabricksClient)); err != nil {
 				err = nicerError(ctx, err, "delete")
@@ -136,7 +136,7 @@ func (r Resource) ToResource() *schema.Resource {
 			return nil
 		},
 		Importer: &schema.ResourceImporter{
-			StateContext: func(ctx context.Context, d *schema.ResourceData, 
+			StateContext: func(ctx context.Context, d *schema.ResourceData,
 				m interface{}) (data []*schema.ResourceData, e error) {
 				d.MarkNewResource()
 				diags := read(ctx, d, m)

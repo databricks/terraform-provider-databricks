@@ -52,9 +52,7 @@ func ResourceCatalog() *schema.Resource {
 		Schema: catalogSchema,
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var ci CatalogInfo
-			if err := common.DataToStructPointer(d, catalogSchema, &ci); err != nil {
-				return err
-			}
+			common.DataToStructPointer(d, catalogSchema, &ci)
 			if err := NewCatalogsAPI(ctx, c).createCatalog(&ci); err != nil {
 				return err
 			}
@@ -73,9 +71,7 @@ func ResourceCatalog() *schema.Resource {
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var ci CatalogInfo
-			if err := common.DataToStructPointer(d, catalogSchema, &ci); err != nil {
-				return err
-			}
+			common.DataToStructPointer(d, catalogSchema, &ci)
 			return NewCatalogsAPI(ctx, c).updateCatalog(ci)
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {

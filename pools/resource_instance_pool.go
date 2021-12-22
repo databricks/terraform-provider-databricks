@@ -174,9 +174,7 @@ func ResourceInstancePool() *schema.Resource {
 		Schema: s,
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var ip InstancePool
-			if err := common.DataToStructPointer(d, s, &ip); err != nil {
-				return err
-			}
+			common.DataToStructPointer(d, s, &ip)
 			instancePoolInfo, err := NewInstancePoolsAPI(ctx, c).Create(ip)
 			if err != nil {
 				return err
@@ -193,9 +191,7 @@ func ResourceInstancePool() *schema.Resource {
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var ip InstancePool
-			if err := common.DataToStructPointer(d, s, &ip); err != nil {
-				return err
-			}
+			common.DataToStructPointer(d, s, &ip)
 			ip.InstancePoolID = d.Id()
 			return NewInstancePoolsAPI(ctx, c).Update(ip)
 		},

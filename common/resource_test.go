@@ -2,6 +2,7 @@ package common
 
 import (
 	"context"
+	"fmt"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -68,4 +69,34 @@ func TestUpdate(t *testing.T) {
 	diags := r.UpdateContext(ctx, d, client)
 	assert.True(t, diags.HasError())
 	assert.Equal(t, "nope", diags[0].Summary)
+}
+
+func TestRecoverableFromPanic(t *testing.T) {
+	r := Resource{
+		Update: func(ctx context.Context,
+			d *schema.ResourceData,
+			c *DatabricksClient) error {
+			return d.Set("foo", 1)
+		},
+		Read: func(ctx context.Context,
+			d *schema.ResourceData,
+			c *DatabricksClient) error {
+			panic(fmt.Errorf("what to do?..."))
+		},
+		Schema: map[string]*schema.Schema{
+			"foo": {
+				Type:     schema.TypeInt,
+				Required: true,
+			},
+		},
+	}.ToResource()
+
+	client := &DatabricksClient{}
+	ctx := context.Background()
+	ctx = context.WithValue(ctx, ResourceName, "sample")
+	d := r.TestResourceData()
+
+	diags := r.UpdateContext(ctx, d, client)
+	assert.True(t, diags.HasError())
+	assert.Equal(t, "cannot read sample: panic: what to do?...", diags[0].Summary)
 }

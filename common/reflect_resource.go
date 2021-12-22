@@ -416,26 +416,32 @@ type attributeGetter interface {
 	GetOk(key string) (interface{}, bool)
 }
 
-// DiffToStructPointer reads resource diff with given schema onto result pointer
-func DiffToStructPointer(d attributeGetter, scm map[string]*schema.Schema, result interface{}) error {
+// DiffToStructPointer reads resource diff with given schema onto result pointer. Panics.
+func DiffToStructPointer(d attributeGetter, scm map[string]*schema.Schema, result interface{}) {
 	rv := reflect.ValueOf(result)
 	rk := rv.Kind()
 	if rk != reflect.Ptr {
-		return fmt.Errorf("pointer is expected, but got %s: %#v", reflectKind(rk), result)
+		panic(fmt.Errorf("pointer is expected, but got %s: %#v", reflectKind(rk), result))
 	}
 	rv = rv.Elem()
-	return readReflectValueFromData([]string{}, d, rv, scm)
+	err := readReflectValueFromData([]string{}, d, rv, scm)
+	if err != nil {
+		panic(err)
+	}
 }
 
-// DataToStructPointer reads resource data with given schema onto result pointer
-func DataToStructPointer(d *schema.ResourceData, scm map[string]*schema.Schema, result interface{}) error {
+// DataToStructPointer reads resource data with given schema onto result pointer. Panics.
+func DataToStructPointer(d *schema.ResourceData, scm map[string]*schema.Schema, result interface{}) {
 	rv := reflect.ValueOf(result)
 	rk := rv.Kind()
 	if rk != reflect.Ptr {
-		return fmt.Errorf("pointer is expected, but got %s: %#v", reflectKind(rk), result)
+		panic(fmt.Errorf("pointer is expected, but got %s: %#v", reflectKind(rk), result))
 	}
 	rv = rv.Elem()
-	return readReflectValueFromData([]string{}, d, rv, scm)
+	err := readReflectValueFromData([]string{}, d, rv, scm)
+	if err != nil {
+		panic(err)
+	}
 }
 
 // DataToReflectValue reads reflect value from data

@@ -133,10 +133,7 @@ func DataSourceSparkVersion() *schema.Resource {
 		Schema: s,
 		ReadContext: func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 			var this SparkVersionRequest
-			err := common.DataToStructPointer(d, s, &this)
-			if err != nil {
-				return diag.FromErr(err)
-			}
+			common.DataToStructPointer(d, s, &this)
 			version, err := NewClustersAPI(ctx, m).LatestSparkVersion(this)
 			if err != nil {
 				return diag.FromErr(err)

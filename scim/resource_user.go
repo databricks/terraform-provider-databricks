@@ -24,9 +24,7 @@ func ResourceUser() *schema.Resource {
 		})
 	scimUserFromData := func(d *schema.ResourceData) (user User, err error) {
 		var u entity
-		if err = common.DataToStructPointer(d, userSchema, &u); err != nil {
-			return
-		}
+		common.DataToStructPointer(d, userSchema, &u)
 		return User{
 			UserName:     u.UserName,
 			DisplayName:  u.DisplayName,

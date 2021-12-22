@@ -53,9 +53,7 @@ func ResourceSchema() *schema.Resource {
 		Schema: s,
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var si SchemaInfo
-			if err := common.DataToStructPointer(d, s, &si); err != nil {
-				return err
-			}
+			common.DataToStructPointer(d, s, &si)
 			if err := NewSchemasAPI(ctx, c).createSchema(&si); err != nil {
 				return err
 			}
@@ -71,9 +69,7 @@ func ResourceSchema() *schema.Resource {
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var si SchemaInfo
-			if err := common.DataToStructPointer(d, s, &si); err != nil {
-				return err
-			}
+			common.DataToStructPointer(d, s, &si)
 			si.FullName = d.Id()
 			return NewSchemasAPI(ctx, c).updateSchema(si)
 		},

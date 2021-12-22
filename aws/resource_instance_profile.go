@@ -157,9 +157,7 @@ func ResourceInstanceProfile() *schema.Resource {
 		},
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var profile InstanceProfileInfo
-			if err := common.DataToStructPointer(d, instanceProfileSchema, &profile); err != nil {
-				return err
-			}
+			common.DataToStructPointer(d, instanceProfileSchema, &profile)
 			if err := NewInstanceProfilesAPI(ctx, c).Create(profile); err != nil {
 				return err
 			}

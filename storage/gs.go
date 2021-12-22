@@ -58,7 +58,7 @@ func preprocessGsMount(ctx context.Context, s map[string]*schema.Schema, d *sche
 	return createOrValidateClusterForGoogleStorage(ctx, m, d, clusterID, serviceAccount)
 }
 
-func createOrValidateClusterForGoogleStorage(ctx context.Context, m interface{}, 
+func createOrValidateClusterForGoogleStorage(ctx context.Context, m interface{},
 	d *schema.ResourceData, clusterID, serviceAccount string) error {
 	clustersAPI := clusters.NewClustersAPI(ctx, m)
 	if clusterID != "" {

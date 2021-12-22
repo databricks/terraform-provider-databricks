@@ -323,10 +323,7 @@ type WorkspaceToken struct {
 func CreateTokenIfNeeded(workspacesAPI WorkspacesAPI,
 	workspaceSchema map[string]*schema.Schema, d *schema.ResourceData) error {
 	var wsToken WorkspaceToken
-	err := common.DataToStructPointer(d, workspaceSchema, &wsToken)
-	if err != nil {
-		return err
-	}
+	common.DataToStructPointer(d, workspaceSchema, &wsToken)
 	if wsToken.Token == nil {
 		return nil
 	}
@@ -348,10 +345,7 @@ func CreateTokenIfNeeded(workspacesAPI WorkspacesAPI,
 func EnsureTokenExistsIfNeeded(a WorkspacesAPI,
 	workspaceSchema map[string]*schema.Schema, d *schema.ResourceData) error {
 	var wsToken WorkspaceToken
-	err := common.DataToStructPointer(d, workspaceSchema, &wsToken)
-	if err != nil {
-		return err
-	}
+	common.DataToStructPointer(d, workspaceSchema, &wsToken)
 	if wsToken.Token == nil {
 		return nil
 	}
@@ -487,9 +481,7 @@ func ResourceWorkspace() *schema.Resource {
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var workspace Workspace
 			workspacesAPI := NewWorkspacesAPI(ctx, c)
-			if err := common.DataToStructPointer(d, workspaceSchema, &workspace); err != nil {
-				return err
-			}
+			common.DataToStructPointer(d, workspaceSchema, &workspace)
 			if err := requireFields(c.IsAws(), d, "aws_region", "credentials_id", "storage_configuration_id"); err != nil {
 				return err
 			}
@@ -532,9 +524,7 @@ func ResourceWorkspace() *schema.Resource {
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var workspace Workspace
-			if err := common.DataToStructPointer(d, workspaceSchema, &workspace); err != nil {
-				return err
-			}
+			common.DataToStructPointer(d, workspaceSchema, &workspace)
 			if len(workspace.CustomerManagedKeyID) > 0 && len(workspace.ManagedServicesCustomerManagedKeyID) == 0 {
 				log.Print("[INFO] Using existing customer_managed_key_id as value for new managed_services_customer_managed_key_id")
 				workspace.ManagedServicesCustomerManagedKeyID = workspace.CustomerManagedKeyID

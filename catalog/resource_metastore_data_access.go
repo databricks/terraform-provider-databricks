@@ -75,9 +75,7 @@ func ResourceDataAccessConfiguration() *schema.Resource {
 		Schema: s,
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var dac DataAccessConfiguration
-			if err := common.DataToStructPointer(d, s, &dac); err != nil {
-				return err
-			}
+			common.DataToStructPointer(d, s, &dac)
 			metastoreID := d.Get("metastore_id").(string)
 			if err := NewDataAccessConfigurationsAPI(ctx, c).Create(metastoreID, &dac); err != nil {
 				return err

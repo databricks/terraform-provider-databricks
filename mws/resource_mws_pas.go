@@ -69,9 +69,7 @@ func ResourcePrivateAccessSettings() *schema.Resource {
 		Schema: s,
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var pas PrivateAccessSettings
-			if err := common.DataToStructPointer(d, s, &pas); err != nil {
-				return err
-			}
+			common.DataToStructPointer(d, s, &pas)
 			if err := NewPrivateAccessSettingsAPI(ctx, c).Create(&pas); err != nil {
 				return err
 			}
@@ -96,9 +94,7 @@ func ResourcePrivateAccessSettings() *schema.Resource {
 				return err
 			}
 			var pas PrivateAccessSettings
-			if err := common.DataToStructPointer(d, s, &pas); err != nil {
-				return err
-			}
+			common.DataToStructPointer(d, s, &pas)
 			pas.PasID = pasID
 			return NewPrivateAccessSettingsAPI(ctx, c).Update(&pas)
 		},

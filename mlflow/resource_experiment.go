@@ -77,9 +77,7 @@ func ResourceMLFlowExperiment() *schema.Resource {
 	return common.Resource{
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var e Experiment
-			if err := common.DataToStructPointer(d, s, &e); err != nil {
-				return err
-			}
+			common.DataToStructPointer(d, s, &e)
 			if err := NewExperimentsAPI(ctx, c).Create(&e); err != nil {
 				return err
 			}
@@ -95,9 +93,7 @@ func ResourceMLFlowExperiment() *schema.Resource {
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var e Experiment
-			if err := common.DataToStructPointer(d, s, &e); err != nil {
-				return err
-			}
+			common.DataToStructPointer(d, s, &e)
 			updateDoc := experimentUpdate{ExperimentId: d.Id(), NewName: e.Name}
 			return NewExperimentsAPI(ctx, c).Update(&updateDoc)
 		},

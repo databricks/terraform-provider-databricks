@@ -71,9 +71,7 @@ func ResourceServicePrincipal() *schema.Resource {
 		})
 	spFromData := func(d *schema.ResourceData) (user User, err error) {
 		var u entity
-		if err = common.DataToStructPointer(d, servicePrincipalSchema, &u); err != nil {
-			return
-		}
+		common.DataToStructPointer(d, servicePrincipalSchema, &u)
 		return User{
 			ApplicationID: u.ApplicationID,
 			DisplayName:   u.DisplayName,
@@ -85,9 +83,7 @@ func ResourceServicePrincipal() *schema.Resource {
 		Schema: servicePrincipalSchema,
 		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, c interface{}) error {
 			var sp entity
-			if err := common.DiffToStructPointer(d, servicePrincipalSchema, &sp); err != nil {
-				return err
-			}
+			common.DiffToStructPointer(d, servicePrincipalSchema, &sp)
 			client := c.(*common.DatabricksClient)
 			if client.IsAzure() && sp.ApplicationID == "" {
 				// TODO: verify cases for non-existing resources

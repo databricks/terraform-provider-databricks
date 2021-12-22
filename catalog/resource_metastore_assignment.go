@@ -48,9 +48,7 @@ func ResourceMetastoreAssignment() *schema.Resource {
 		Schema: s,
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var ma MetastoreAssignment
-			if err := common.DataToStructPointer(d, s, &ma); err != nil {
-				return err
-			}
+			common.DataToStructPointer(d, s, &ma)
 			if err := NewMetastoreAssignmentAPI(ctx, c).createMetastoreAssignment(ma); err != nil {
 				return err
 			}
@@ -63,9 +61,7 @@ func ResourceMetastoreAssignment() *schema.Resource {
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var ma MetastoreAssignment
-			if err := common.DataToStructPointer(d, s, &ma); err != nil {
-				return err
-			}
+			common.DataToStructPointer(d, s, &ma)
 			return NewMetastoreAssignmentAPI(ctx, c).updateMetastoreAssignment(ma)
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {

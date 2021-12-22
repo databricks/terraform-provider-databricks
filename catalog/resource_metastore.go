@@ -98,9 +98,7 @@ func ResourceMetastore() *schema.Resource {
 		Schema: s,
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var create CreateMetastore
-			if err := common.DataToStructPointer(d, s, &create); err != nil {
-				return err
-			}
+			common.DataToStructPointer(d, s, &create)
 			mi, err := NewMetastoresAPI(ctx, c).createMetastore(create)
 			if err != nil {
 				return err

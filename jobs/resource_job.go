@@ -430,11 +430,7 @@ var jobSchema = common.StructToSchema(JobSettings{},
 func ResourceJob() *schema.Resource {
 	getReadCtx := func(ctx context.Context, d *schema.ResourceData) context.Context {
 		var js JobSettings
-		err := common.DataToStructPointer(d, jobSchema, &js)
-		if err != nil {
-			log.Printf("[INFO] no job resource data available. Returning default context")
-			return ctx
-		}
+		common.DataToStructPointer(d, jobSchema, &js)
 		if js.isMultiTask() {
 			return context.WithValue(ctx, common.Api, common.API_2_1)
 		}
@@ -449,10 +445,7 @@ func ResourceJob() *schema.Resource {
 		},
 		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, m interface{}) error {
 			var js JobSettings
-			err := common.DiffToStructPointer(d, jobSchema, &js)
-			if err != nil {
-				return err
-			}
+			common.DiffToStructPointer(d, jobSchema, &js)
 			alwaysRunning := d.Get("always_running").(bool)
 			if alwaysRunning && js.MaxConcurrentRuns > 1 {
 				return fmt.Errorf("`always_running` must be specified only with `max_concurrent_runs = 1`")
@@ -461,12 +454,12 @@ func ResourceJob() *schema.Resource {
 				if task.NewCluster == nil {
 					continue
 				}
-				if err = task.NewCluster.Validate(); err != nil {
+				if err := task.NewCluster.Validate(); err != nil {
 					return fmt.Errorf("task %s invalid: %w", task.TaskKey, err)
 				}
 			}
 			if js.NewCluster != nil {
-				if err = js.NewCluster.Validate(); err != nil {
+				if err := js.NewCluster.Validate(); err != nil {
 					return fmt.Errorf("invalid job cluster: %w", err)
 				}
 			}
@@ -474,10 +467,7 @@ func ResourceJob() *schema.Resource {
 		},
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var js JobSettings
-			err := common.DataToStructPointer(d, jobSchema, &js)
-			if err != nil {
-				return err
-			}
+			common.DataToStructPointer(d, jobSchema, &js)
 			if js.isMultiTask() {
 				ctx = context.WithValue(ctx, common.Api, common.API_2_1)
 			}
@@ -503,15 +493,12 @@ func ResourceJob() *schema.Resource {
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var js JobSettings
-			err := common.DataToStructPointer(d, jobSchema, &js)
-			if err != nil {
-				return err
-			}
+			common.DataToStructPointer(d, jobSchema, &js)
 			if js.isMultiTask() {
 				ctx = context.WithValue(ctx, common.Api, common.API_2_1)
 			}
 			jobsAPI := NewJobsAPI(ctx, c)
-			err = jobsAPI.Update(d.Id(), js)
+			err := jobsAPI.Update(d.Id(), js)
 			if err != nil {
 				return err
 			}

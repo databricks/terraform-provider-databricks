@@ -237,11 +237,16 @@ func TestStructToDataAndBack(t *testing.T) {
 	assert.NoError(t, err)
 
 	var r testStruct
-	err = DataToStructPointer(d, scm, &r)
-	assert.NoError(t, err)
+	DataToStructPointer(d, scm, &r)
+}
 
-	err = DataToStructPointer(d, scm, 1)
-	assert.EqualError(t, err, "pointer is expected, but got Int: 1")
+func TestStructToDataAndBackPanic(t *testing.T) {
+	defer func() {
+		p := recover()
+		err := p.(error)
+		assert.EqualError(t, err, "pointer is expected, but got Int: 1")
+	}()
+	DataToStructPointer(nil, nil, 1)
 }
 
 func TestSetPrimitiveOfKind(t *testing.T) {
@@ -398,8 +403,7 @@ func TestStructToData(t *testing.T) {
 	}
 
 	var dummyCopy Dummy
-	err = DataToStructPointer(d, s, &dummyCopy)
-	assert.NoError(t, err)
+	DataToStructPointer(d, s, &dummyCopy)
 
 	assert.Equal(t, len(dummyCopy.Addresses), len(dummy.Addresses))
 	assert.Len(t, dummyCopy.Things, 2)
@@ -413,8 +417,7 @@ func TestStructToData(t *testing.T) {
 	})
 	assert.NoError(t, err)
 
-	err = DataToStructPointer(d, s, &dummyCopy)
-	assert.NoError(t, err)
+	DataToStructPointer(d, s, &dummyCopy)
 }
 
 func TestDiffSuppressor(t *testing.T) {
@@ -462,6 +465,24 @@ func (a data) GetOk(key string) (interface{}, bool) {
 	return v, ok
 }
 
+func TestDiffToStructPointerPanic(t *testing.T) {
+	type Nonsense struct {
+		New int `json:"new,omitempty"`
+	}
+	s := schema.InternalMap(map[string]*schema.Schema{
+		"new": {
+			Type:     schema.TypeInt,
+			Optional: true,
+		},
+	})
+	defer func() {
+		p := recover()
+		err := p.(error)
+		assert.EqualError(t, err, "pointer is expected, but got Struct: common.Nonsense{New:0}")
+	}()
+	DiffToStructPointer(data{"new": "3"}, s, Nonsense{})
+}
+
 func TestDiffToStructPointer(t *testing.T) {
 	type Nonsense struct {
 		New int `json:"new,omitempty"`
@@ -472,12 +493,8 @@ func TestDiffToStructPointer(t *testing.T) {
 			Optional: true,
 		},
 	})
-	err := DiffToStructPointer(data{"new": "3"}, s, Nonsense{})
-	assert.EqualError(t, err, "pointer is expected, but got Struct: common.Nonsense{New:0}")
-
 	var n Nonsense
-	err = DiffToStructPointer(data{"new": 3}, s, &n)
-	assert.NoError(t, err)
+	DiffToStructPointer(data{"new": 3}, s, &n)
 	assert.Equal(t, 3, n.New)
 }
 

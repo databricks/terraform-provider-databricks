@@ -228,10 +228,7 @@ func ResourcePipeline() *schema.Resource {
 		Schema: pipelineSchema,
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var s pipelineSpec
-			err := common.DataToStructPointer(d, pipelineSchema, &s)
-			if err != nil {
-				return err
-			}
+			common.DataToStructPointer(d, pipelineSchema, &s)
 			api := newPipelinesAPI(ctx, c)
 			id, err := api.create(s, d.Timeout(schema.TimeoutCreate))
 			if err != nil {
@@ -253,9 +250,7 @@ func ResourcePipeline() *schema.Resource {
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var s pipelineSpec
-			if err := common.DataToStructPointer(d, pipelineSchema, &s); err != nil {
-				return err
-			}
+			common.DataToStructPointer(d, pipelineSchema, &s)
 			return newPipelinesAPI(ctx, c).update(d.Id(), s, d.Timeout(schema.TimeoutUpdate))
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {

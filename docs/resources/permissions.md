@@ -25,10 +25,16 @@ resource "databricks_group" "ds" {
   display_name = "Data Science"
 }
 
+data "databricks_spark_version" "latest" {}
+
+data "databricks_node_type" "smallest" {
+  local_disk = true
+}
+
 resource "databricks_cluster" "shared_autoscaling" {
   cluster_name            = "Shared Autoscaling"
-  spark_version           = "6.6.x-scala2.11"
-  node_type_id            = "Standard_DS3_v2"
+  spark_version           = data.databricks_spark_version.latest.id
+  node_type_id            = data.databricks_node_type.smallest.id
   autotermination_minutes = 60
   autoscale {
     min_workers = 1
@@ -109,10 +115,14 @@ resource "databricks_group" "eng" {
   display_name = "Engineering"
 }
 
+data "databricks_node_type" "smallest" {
+    local_disk = true
+}
+
 resource "databricks_instance_pool" "this" {
   instance_pool_name                    = "Reserved Instances"
   idle_instance_autotermination_minutes = 60
-  node_type_id                          = "i3.xlarge"
+  node_type_id                          = data.databricks_node_type.smallest.id
   min_idle_instances                    = 0
   max_capacity                          = 10
 }
@@ -155,14 +165,20 @@ resource "databricks_service_principal" "aws_principal" {
   display_name = "main"
 }
 
+data "databricks_spark_version" "latest" {}
+
+data "databricks_node_type" "smallest" {
+  local_disk = true
+}
+
 resource "databricks_job" "this" {
   name                = "Featurization"
   max_concurrent_runs = 1
 
   new_cluster {
     num_workers   = 300
-    spark_version = "6.6.x-scala2.11"
-    node_type_id  = "Standard_DS3_v2"
+    spark_version = data.databricks_spark_version.latest.id
+    node_type_id  = data.databricks_node_type.smallest.id
   }
 
   notebook_task {

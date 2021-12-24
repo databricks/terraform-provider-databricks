@@ -2,6 +2,7 @@
 
 ## 0.4.2
 
+* Fixed creating new `databricks_mws_workspaces` with `token {}` block ([#994](https://github.com/databrickslabs/terraform-provider-databricks/issues/994)).
 * Added `DBC` format support for `databricks_notebook` ([#989](https://github.com/databrickslabs/terraform-provider-databricks/pull/989)). 
 * Added optional `auth_type` provider conf to enforce specific auth type to be used in very rare cases, where a single Terraform state manages Databricks workspaces on more than one cloud and `More than one authorization method configured` error is a false positive. Valid values are `pat`, `basic`, `azure-client-secret`, `azure-msi`, `azure-cli`, and `databricks-cli`.
 * Added automated documentation formatting with `make fmt-docs`, so that all HCL examples look consistent.

@@ -3,6 +3,13 @@
 ## 0.4.2
 
 * Added `DBC` format support for `databricks_notebook` ([#989](https://github.com/databrickslabs/terraform-provider-databricks/pull/989)). 
+* Added optional `auth_type` provider conf to enforce specific auth type to be used in very rare cases, where a single Terraform state manages Databricks workspaces on more than one cloud and `More than one authorization method configured` error is a false positive. Valid values are `pat`, `basic`, `azure-client-secret`, `azure-msi`, `azure-cli`, and `databricks-cli`.
+* Added automated documentation formatting with `make fmt-docs`, so that all HCL examples look consistent.
+* Increased codebase unit test coverage to 91% to improve stability.
+
+Updated dependency versions:
+
+* Bump github.com/hashicorp/terraform-plugin-sdk/v2 from 2.10.0 to 2.10.1 
 
 ## 0.4.1
 

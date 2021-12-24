@@ -161,7 +161,7 @@ func makeEmptyBlockSuppressFunc(name string) func(k, old, new string, d *schema.
 	re := MustCompileKeyRE(name)
 	return func(k, old, new string, d *schema.ResourceData) bool {
 		if re.Match([]byte(name)) && old == "1" && new == "0" {
-			log.Printf("[DEBUG] Suppressing diff for name=%s k=%#v patform=%#v config=%#v", name, k, old, new)
+			log.Printf("[DEBUG] Suppressing diff for name=%s k=%#v platform=%#v config=%#v", name, k, old, new)
 			return true
 		}
 		return false

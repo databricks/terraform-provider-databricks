@@ -2,16 +2,14 @@ package common
 
 import (
 	"context"
+	"log"
 	"os"
+	"reflect"
 	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 )
-
-func AssertErrorStartsWith(t *testing.T, err error, message string) bool {
-	return assert.True(t, strings.HasPrefix(err.Error(), message), err.Error())
-}
 
 func configureAndAuthenticate(dc *DatabricksClient) (*DatabricksClient, error) {
 	err := dc.Configure()
@@ -21,22 +19,29 @@ func configureAndAuthenticate(dc *DatabricksClient) (*DatabricksClient, error) {
 	return dc, dc.Authenticate(context.Background())
 }
 
+func failsToAuthenticateWith(t *testing.T, dc *DatabricksClient, message string) {
+	_, err := configureAndAuthenticate(dc)
+	if dc.AuthType != "" {
+		log.Printf("[INFO] Auth is: %s", dc.AuthType)
+	}
+	if assert.NotNil(t, err, "expected to have error: %s", message) {
+		assert.True(t, strings.HasPrefix(err.Error(), message), err.Error())
+	}
+}
+
 func TestDatabricksClientConfigure_Nothing(t *testing.T) {
 	defer CleanupEnvironment()()
 	os.Setenv("PATH", "testdata:/bin")
-
-	_, err := configureAndAuthenticate(&DatabricksClient{})
-	AssertErrorStartsWith(t, err, "authentication is not configured for provider")
+	failsToAuthenticateWith(t, &DatabricksClient{},
+		"authentication is not configured for provider")
 }
 
 func TestDatabricksClientConfigure_BasicAuth_NoHost(t *testing.T) {
-	dc, err := configureAndAuthenticate(&DatabricksClient{
+	defer CleanupEnvironment()()
+	failsToAuthenticateWith(t, &DatabricksClient{
 		Username: "foo",
 		Password: "bar",
-	})
-
-	AssertErrorStartsWith(t, err, "cannot configure direct auth: host is empty, but is required by basic_auth")
-	assert.Equal(t, "Zm9vOmJhcg==", dc.Token)
+	}, "authentication is not configured for provider.")
 }
 
 func TestDatabricksClientConfigure_BasicAuth(t *testing.T) {
@@ -45,9 +50,8 @@ func TestDatabricksClientConfigure_BasicAuth(t *testing.T) {
 		Username: "foo",
 		Password: "bar",
 	})
-
-	assert.Equal(t, "Zm9vOmJhcg==", dc.Token)
 	assert.NoError(t, err)
+	assert.Equal(t, "basic", dc.AuthType)
 }
 
 func TestDatabricksClientConfigure_HostWithoutScheme(t *testing.T) {
@@ -55,40 +59,40 @@ func TestDatabricksClientConfigure_HostWithoutScheme(t *testing.T) {
 		Host:  "localhost:443",
 		Token: "...",
 	})
-
+	assert.NoError(t, err)
+	assert.Equal(t, "pat", dc.AuthType)
 	assert.Equal(t, "...", dc.Token)
 	assert.Equal(t, "https://localhost:443", dc.Host)
-	assert.NoError(t, err)
 }
 
 func TestDatabricksClientConfigure_Token_NoHost(t *testing.T) {
-	dc, err := configureAndAuthenticate(&DatabricksClient{
+	defer CleanupEnvironment()()
+	failsToAuthenticateWith(t, &DatabricksClient{
 		Token: "dapi345678",
-	})
-
-	AssertErrorStartsWith(t, err, "cannot configure direct auth: host is empty, but is required by token")
-	assert.Equal(t, "dapi345678", dc.Token)
+	}, "authentication is not configured for provider.")
 }
 
 func TestDatabricksClientConfigure_HostTokensTakePrecedence(t *testing.T) {
-	_, err := configureAndAuthenticate(&DatabricksClient{
+	dc, err := configureAndAuthenticate(&DatabricksClient{
 		Host:       "foo",
 		Token:      "connfigured",
 		ConfigFile: "testdata/.databrickscfg",
 	})
 	assert.NoError(t, err)
+	assert.Equal(t, "pat", dc.AuthType)
 }
 
 func TestDatabricksClientConfigure_BasicAuthTakePrecedence(t *testing.T) {
 	dc, err := configureAndAuthenticate(&DatabricksClient{
 		Host:       "foo",
-		Token:      "connfigured",
+		Token:      "configured",
 		Username:   "foo",
 		Password:   "bar",
 		ConfigFile: "testdata/.databrickscfg",
 	})
 	assert.NoError(t, err)
-	assert.Equal(t, "Zm9vOmJhcg==", dc.Token)
+	assert.Equal(t, "pat", dc.AuthType)
+	assert.Equal(t, "configured", dc.Token)
 }
 
 func TestDatabricksClientConfigure_ConfigRead(t *testing.T) {
@@ -96,52 +100,51 @@ func TestDatabricksClientConfigure_ConfigRead(t *testing.T) {
 		ConfigFile: "testdata/.databrickscfg",
 	})
 	assert.NoError(t, err)
+	assert.Equal(t, "databricks-cli", dc.AuthType)
 	assert.Equal(t, "PT0+IC9kZXYvdXJhbmRvbSA8PT0KYFZ", dc.Token)
 }
 
 func TestDatabricksClientConfigure_NoHostGivesError(t *testing.T) {
-	_, err := configureAndAuthenticate(&DatabricksClient{
+	failsToAuthenticateWith(t, &DatabricksClient{
 		Token:      "connfigured",
 		ConfigFile: "testdata/.databrickscfg",
 		Profile:    "nohost",
-	})
-	assert.Error(t, err)
+	}, "cannot configure databricks-cli auth: config file "+
+		"testdata/.databrickscfg is corrupt: cannot find host in nohost profile.")
 }
 
 func TestDatabricksClientConfigure_NoTokenGivesError(t *testing.T) {
-	_, err := configureAndAuthenticate(&DatabricksClient{
+	failsToAuthenticateWith(t, &DatabricksClient{
 		Token:      "connfigured",
 		ConfigFile: "testdata/.databrickscfg",
 		Profile:    "notoken",
-	})
-	assert.Error(t, err)
+	}, "cannot configure databricks-cli auth: config file "+
+		"testdata/.databrickscfg is corrupt: cannot find token in notoken profile.")
 }
 
 func TestDatabricksClientConfigure_InvalidProfileGivesError(t *testing.T) {
-	_, err := configureAndAuthenticate(&DatabricksClient{
+	failsToAuthenticateWith(t, &DatabricksClient{
 		Token:      "connfigured",
 		ConfigFile: "testdata/.databrickscfg",
 		Profile:    "invalidhost",
-	})
-	assert.Error(t, err)
+	}, "cannot configure databricks-cli auth: testdata/.databrickscfg "+
+		"has no invalidhost profile configured")
 }
 
 func TestDatabricksClientConfigure_MissingFile(t *testing.T) {
-	_, err := configureAndAuthenticate(&DatabricksClient{
+	failsToAuthenticateWith(t, &DatabricksClient{
 		Token:      "connfigured",
 		ConfigFile: "testdata/.invalid file",
 		Profile:    "invalidhost",
-	})
-	assert.Error(t, err)
+	}, "authentication is not configured for provider.")
 }
 
 func TestDatabricksClientConfigure_InvalidConfigFilePath(t *testing.T) {
-	_, err := configureAndAuthenticate(&DatabricksClient{
+	failsToAuthenticateWith(t, &DatabricksClient{
 		Token:      "connfigured",
-		ConfigFile: "testdata/policy01.json",
+		ConfigFile: "testdata/az",
 		Profile:    "invalidhost",
-	})
-	assert.Error(t, err)
+	}, "cannot configure databricks-cli auth: cannot parse config file")
 }
 
 func TestDatabricksClient_FormatURL(t *testing.T) {
@@ -151,7 +154,7 @@ func TestDatabricksClient_FormatURL(t *testing.T) {
 
 func TestClientAttributes(t *testing.T) {
 	ca := ClientAttributes()
-	assert.Len(t, ca, 19)
+	assert.Len(t, ca, 20)
 }
 
 func TestDatabricksClient_Authenticate(t *testing.T) {
@@ -223,7 +226,10 @@ func TestClientForHostAuthError(t *testing.T) {
 		Profile:    "notoken",
 	}
 	_, err := c.ClientForHost(context.Background(), "https://e2-workspace.cloud.databricks.com/")
-	AssertErrorStartsWith(t, err, "cannot authenticate parent client: cannot configure direct auth")
+	if assert.NotNil(t, err) {
+		assert.True(t, strings.HasPrefix(err.Error(),
+			"cannot authenticate parent client: cannot configure databricks-cli auth"), err.Error())
+	}
 }
 
 func TestDatabricksCliCouldNotFindHomeDir(t *testing.T) {
@@ -237,7 +243,10 @@ func TestDatabricksCliCouldNotParseIni(t *testing.T) {
 	_, err := (&DatabricksClient{
 		ConfigFile: "testdata/az",
 	}).configureWithDatabricksCfg(context.Background())
-	AssertErrorStartsWith(t, err, "cannot parse config file: key-value delimiter not found")
+	if assert.NotNil(t, err) {
+		assert.True(t, strings.HasPrefix(err.Error(),
+			"cannot parse config file: key-value delimiter not found"), err.Error())
+	}
 }
 
 func TestDatabricksCliWrongProfile(t *testing.T) {
@@ -273,4 +282,18 @@ func TestDatabricksBasicAuth(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, "abc", c.Username)
 	assert.Equal(t, "bcd", c.Password)
+}
+
+func TestDatabricksClientConfigure_NonsenseAuth(t *testing.T) {
+	defer CleanupEnvironment()()
+	failsToAuthenticateWith(t, &DatabricksClient{
+		AuthType: "nonsense",
+	}, "cannot configure nonsense auth.")
+}
+
+func TestConfigAttributeSetNonsense(t *testing.T) {
+	err := (&ConfigAttribute{
+		Kind: reflect.Chan,
+	}).Set(&DatabricksClient{}, 1)
+	assert.EqualError(t, err, "cannot set  of unknown type Chan")
 }

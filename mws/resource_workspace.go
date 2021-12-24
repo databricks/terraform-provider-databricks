@@ -144,6 +144,11 @@ func (a WorkspacesAPI) Create(ws *Workspace, timeout time.Duration) error {
 		}
 		return err
 	}
+	if ws.WorkspaceURL == "" {
+		// WorkspaceURL is computed, yet very important field
+		host := generateWorkspaceHostname(a.client, *ws)
+		ws.WorkspaceURL = fmt.Sprintf("https://%s", host)
+	}
 	return nil
 }
 
@@ -497,6 +502,7 @@ func ResourceWorkspace() *schema.Resource {
 				return err
 			}
 			d.Set("workspace_id", workspace.WorkspaceID)
+			d.Set("workspace_url", workspace.WorkspaceURL)
 			p.Pack(d)
 			return CreateTokenIfNeeded(workspacesAPI, workspaceSchema, d)
 		},

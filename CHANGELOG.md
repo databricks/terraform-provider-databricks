@@ -2,10 +2,11 @@
 
 ## 0.4.2
 
+* Added optional `auth_type` provider conf to enforce specific auth type to be used in very rare cases, where a single Terraform state manages Databricks workspaces on more than one cloud and `More than one authorization method configured` error is a false positive. Valid values are `pat`, `basic`, `azure-client-secret`, `azure-msi`, `azure-cli`, and `databricks-cli` ([#1000](https://github.com/databrickslabs/terraform-provider-databricks/pull/1000)).
 * Added `DBC` format support for `databricks_notebook` ([#989](https://github.com/databrickslabs/terraform-provider-databricks/pull/989)). 
-* Added optional `auth_type` provider conf to enforce specific auth type to be used in very rare cases, where a single Terraform state manages Databricks workspaces on more than one cloud and `More than one authorization method configured` error is a false positive. Valid values are `pat`, `basic`, `azure-client-secret`, `azure-msi`, `azure-cli`, and `databricks-cli`.
-* Added automated documentation formatting with `make fmt-docs`, so that all HCL examples look consistent.
-* Increased codebase unit test coverage to 91% to improve stability.
+* Fixed creating new `databricks_mws_workspaces` with `token {}` block ([#994](https://github.com/databrickslabs/terraform-provider-databricks/issues/994)).
+* Added automated documentation formatting with `make fmt-docs`, so that all HCL examples look consistent ([#999](https://github.com/databrickslabs/terraform-provider-databricks/pull/999)).
+* Increased codebase unit test coverage to 91% to improve stability ([#996](https://github.com/databrickslabs/terraform-provider-databricks/pull/996), [#992](https://github.com/databrickslabs/terraform-provider-databricks/pull/992), [#991](https://github.com/databrickslabs/terraform-provider-databricks/pull/991), [#990](https://github.com/databrickslabs/terraform-provider-databricks/pull/990)).
 
 Updated dependency versions:
 

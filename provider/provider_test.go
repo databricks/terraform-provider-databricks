@@ -24,9 +24,10 @@ type providerFixture struct {
 	azureClientSecret string
 	azureTenantID     string
 	azureResourceID   string
+	authType          string
 	env               map[string]string
 	assertError       string
-	assertToken       string
+	assertAuth        string
 	assertHost        string
 	assertAzure       bool
 }
@@ -63,6 +64,9 @@ func (tt providerFixture) rawConfig() map[string]interface{} {
 	if tt.azureResourceID != "" {
 		rawConfig["azure_workspace_resource_id"] = tt.azureResourceID
 	}
+	if tt.authType != "" {
+		rawConfig["auth_type"] = tt.authType
+	}
 	return rawConfig
 }
 
@@ -79,7 +83,7 @@ func (tc providerFixture) apply(t *testing.T) {
 		return
 	}
 	assert.Equal(t, tc.assertAzure, c.IsAzure())
-	assert.Equal(t, tc.assertToken, c.Token)
+	assert.Equal(t, tc.assertAuth, c.AuthType)
 	assert.Equal(t, tc.assertHost, c.Host)
 }
 
@@ -103,7 +107,7 @@ func TestConfig_TokenEnv(t *testing.T) {
 		env: map[string]string{
 			"DATABRICKS_TOKEN": "x",
 		},
-		assertError: "cannot configure direct auth: host is empty, but is required by token. Environment variables used: DATABRICKS_TOKEN",
+		assertError: "authentication is not configured for provider.. Environment variables used: DATABRICKS_TOKEN",
 	}.apply(t)
 }
 
@@ -113,8 +117,8 @@ func TestConfig_HostTokenEnv(t *testing.T) {
 			"DATABRICKS_HOST":  "x",
 			"DATABRICKS_TOKEN": "x",
 		},
-		assertToken: "x",
-		assertHost:  "https://x",
+		assertAuth: "pat",
+		assertHost: "https://x",
 	}.apply(t)
 }
 
@@ -124,8 +128,8 @@ func TestConfig_HostParamTokenEnv(t *testing.T) {
 		env: map[string]string{
 			"DATABRICKS_TOKEN": "x",
 		},
-		assertToken: "x",
-		assertHost:  "https://x",
+		assertAuth: "pat",
+		assertHost: "https://x",
 	}.apply(t)
 }
 
@@ -135,11 +139,9 @@ func TestConfig_UserPasswordEnv(t *testing.T) {
 			"DATABRICKS_USERNAME": "x",
 			"DATABRICKS_PASSWORD": "x",
 		},
-		assertError: "cannot configure direct auth: host is empty, but is required by basic_auth. " +
-			"Environment variables used: DATABRICKS_USERNAME, DATABRICKS_PASSWORD. " +
-			"Please check https://registry.terraform.io/providers/databrickslabs/databricks/latest/docs#authentication for details",
-		assertToken: "x",
-		assertHost:  "https://x",
+		assertError: "authentication is not configured for provider.." +
+			" Environment variables used: DATABRICKS_USERNAME, DATABRICKS_PASSWORD",
+		assertHost: "https://x",
 	}.apply(t)
 }
 
@@ -150,8 +152,8 @@ func TestConfig_BasicAuth(t *testing.T) {
 			"DATABRICKS_USERNAME": "x",
 			"DATABRICKS_PASSWORD": "x",
 		},
-		assertToken: "eDp4",
-		assertHost:  "https://x",
+		assertAuth: "basic",
+		assertHost: "https://x",
 	}.apply(t)
 }
 
@@ -163,8 +165,8 @@ func TestConfig_AttributePrecedence(t *testing.T) {
 			"DATABRICKS_USERNAME": "x",
 			"DATABRICKS_PASSWORD": "x",
 		},
-		assertToken: "eDp4",
-		assertHost:  "https://y",
+		assertAuth: "basic",
+		assertHost: "https://y",
 	}.apply(t)
 }
 
@@ -175,18 +177,18 @@ func TestConfig_BasicAuth_Mix(t *testing.T) {
 		env: map[string]string{
 			"DATABRICKS_PASSWORD": "x",
 		},
-		assertToken: "eDp4",
-		assertHost:  "https://y",
+		assertAuth: "basic",
+		assertHost: "https://y",
 	}.apply(t)
 }
 
 func TestConfig_BasicAuth_Attrs(t *testing.T) {
 	providerFixture{
-		host:        "y",
-		username:    "x",
-		password:    "x",
-		assertToken: "eDp4",
-		assertHost:  "https://y",
+		host:       "y",
+		username:   "x",
+		password:   "x",
+		assertAuth: "basic",
+		assertHost: "https://y",
 	}.apply(t)
 }
 
@@ -197,7 +199,7 @@ func TestConfig_AzurePAT(t *testing.T) {
 		token:       "y",
 		assertAzure: true,
 		assertHost:  "https://adb-xxx.y.azuredatabricks.net/",
-		assertToken: "y",
+		assertAuth:  "pat",
 	}.apply(t)
 }
 
@@ -210,6 +212,20 @@ func TestConfig_ConflictingEnvs(t *testing.T) {
 			"DATABRICKS_PASSWORD": "x",
 		},
 		assertError: "More than one authorization method configured: password and token",
+	}.apply(t)
+}
+
+func TestConfig_ConflictingEnvs_AuthType(t *testing.T) {
+	providerFixture{
+		env: map[string]string{
+			"DATABRICKS_HOST":     "x",
+			"DATABRICKS_TOKEN":    "x",
+			"DATABRICKS_USERNAME": "x",
+			"DATABRICKS_PASSWORD": "x",
+		},
+		authType:   "basic",
+		assertAuth: "basic",
+		assertHost: "https://x",
 	}.apply(t)
 }
 
@@ -228,8 +244,8 @@ func TestConfig_PatFromDatabricksCfg(t *testing.T) {
 		env: map[string]string{
 			"HOME": "../common/testdata",
 		},
-		assertHost:  "https://dbc-XXXXXXXX-YYYY.cloud.databricks.com/",
-		assertToken: "PT0+IC9kZXYvdXJhbmRvbSA8PT0KYFZ",
+		assertHost: "https://dbc-XXXXXXXX-YYYY.cloud.databricks.com/",
+		assertAuth: "databricks-cli",
 	}.apply(t)
 }
 
@@ -240,7 +256,8 @@ func TestConfig_PatFromDatabricksCfg_NohostProfile(t *testing.T) {
 			"HOME":                      "../common/testdata",
 			"DATABRICKS_CONFIG_PROFILE": "nohost",
 		},
-		assertError: "cannot configure Databricks CLI auth: config file ../common/testdata/.databrickscfg is corrupt: cannot find host in nohost profile",
+		assertError: "cannot configure databricks-cli auth: config " +
+			"file ../common/testdata/.databrickscfg is corrupt: cannot find host in nohost profile",
 	}.apply(t)
 }
 
@@ -280,7 +297,7 @@ func TestConfig_AzureCliHost(t *testing.T) {
 		},
 		assertAzure: true,
 		assertHost:  "https://x",
-		assertToken: "",
+		assertAuth:  "azure-cli",
 	}.apply(t)
 }
 
@@ -293,7 +310,8 @@ func TestConfig_AzureCliHost_Fail(t *testing.T) {
 			"HOME": "../common/testdata",
 			"FAIL": "yes",
 		},
-		assertError: "cannot configure Azure CLI auth: Invoking Azure CLI failed with the following error: This is just a failing script.",
+		assertError: "cannot configure azure-cli auth: Invoking Azure CLI " +
+			"failed with the following error: This is just a failing script.",
 	}.apply(t)
 }
 
@@ -305,7 +323,7 @@ func TestConfig_AzureCliHost_AzNotInstalled(t *testing.T) {
 			"PATH": "whatever",
 			"HOME": "../common/testdata",
 		},
-		assertError: "cannot configure Azure CLI auth: most likely Azure CLI is not installed.",
+		assertError: "cannot configure azure-cli auth: most likely Azure CLI is not installed.",
 	}.apply(t)
 }
 
@@ -334,6 +352,7 @@ func TestConfig_AzureCliHostAndResourceID(t *testing.T) {
 		},
 		assertAzure: true,
 		assertHost:  "https://x",
+		assertAuth:  "azure-cli",
 	}.apply(t)
 }
 
@@ -356,7 +375,8 @@ func TestConfig_CorruptConfig(t *testing.T) {
 		env: map[string]string{
 			"HOME": "../common/testdata/corrupt",
 		},
-		assertError: "cannot configure Databricks CLI auth: ../common/testdata/corrupt/.databrickscfg has no DEFAULT profile configured",
+		assertError: "cannot configure databricks-cli auth: " +
+			"../common/testdata/corrupt/.databrickscfg has no DEFAULT profile configured",
 	}.apply(t)
 }
 

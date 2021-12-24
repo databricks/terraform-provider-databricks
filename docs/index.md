@@ -176,6 +176,7 @@ Alternatively, you can provide this value as an environment variable `DATABRICKS
 * `profile` - (optional) Connection profile specified within ~/.databrickscfg. Please check [connection profiles section](https://docs.databricks.com/dev-tools/cli/index.html#connection-profiles) for more details. This field defaults to 
 `DEFAULT`.
 * `account_id` - (optional) Account Id that could be found in the bottom left corner of [Accounts Console](https://accounts.cloud.databricks.com/). Alternatively, you can provide this value as an environment variable `DATABRICKS_ACCOUNT_ID`. Only has effect when `host = "https://accounts.cloud.databricks.com/"` and currently used to provision account admins via [databricks_user](resources/user.md). In the future releases of the provider this property will also be used specify account for `databricks_mws_*` resources as well.
+* `auth_type` - (optional) enforce specific auth type to be used in very rare cases, where a single Terraform state manages Databricks workspaces on more than one cloud and `More than one authorization method configured` error is a false positive. Valid values are `pat`, `basic`, `azure-client-secret`, `azure-msi`, `azure-cli`, and `databricks-cli`.
 
 ## Special configurations for Azure
 

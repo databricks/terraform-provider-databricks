@@ -61,6 +61,10 @@ type DatabricksClient struct {
 	AzureTenantID      string `name:"azure_tenant_id" env:"ARM_TENANT_ID" auth:"azure"`
 	AzurermEnvironment string `name:"azure_environment" env:"ARM_ENVIRONMENT"`
 
+	// When multiple auth attributes are available in the environment, use the auth type
+	// specified by this argument. This argument also holds currently selected auth.
+	AuthType string `name:"auth_type" auth:"-"`
+
 	// Azure Enviroment endpoints
 	AzureEnvironment *azure.Environment
 
@@ -233,17 +237,22 @@ func (c *DatabricksClient) Authenticate(ctx context.Context) error {
 		name      string
 	}
 	providers := []auth{
-		{c.configureWithPat, "PAT"},
+		{c.configureWithPat, "pat"},
 		{c.configureWithBasicAuth, "basic"},
-		{c.configureWithAzureClientSecret, "Azure Service Principal"},
-		{c.configureWithAzureManagedIdentity, "Azure MSI"},
-		{c.configureWithAzureCLI, "Azure CLI"},
-		{c.configureWithGoogleForAccountsAPI, "Databricks Account on GCP"},
-		{c.configureWithGoogleForWorkspace, "Databricks on GCP"},
-		{c.configureWithDatabricksCfg, "Databricks CLI"},
+		{c.configureWithAzureClientSecret, "azure-client-secret"},
+		{c.configureWithAzureManagedIdentity, "azure-msi"},
+		{c.configureWithAzureCLI, "azure-cli"},
+		{c.configureWithGoogleForAccountsAPI, "google-accounts"},
+		{c.configureWithGoogleForWorkspace, "google-workspace"},
+		{c.configureWithDatabricksCfg, "databricks-cli"},
 	}
 	// try configuring authentication with different methods
 	for _, auth := range providers {
+		if c.AuthType != "" && auth.name != c.AuthType {
+			// ignore other auth types if one is explicitly enforced
+			log.Printf("[INFO] Ignoring %s auth, because %s is preferred", auth.name, c.AuthType)
+			continue
+		}
 		authorizer, err := auth.configure(ctx)
 		if err != nil {
 			return c.niceAuthError(fmt.Sprintf("cannot configure %s auth: %s", auth.name, err))
@@ -251,10 +260,15 @@ func (c *DatabricksClient) Authenticate(ctx context.Context) error {
 		if authorizer == nil {
 			continue
 		}
+		// even though this may complain about clear text loggin, passwords are replaced with `***`
 		log.Printf("[INFO] Configured %s auth: %s", auth.name, c.configDebugString()) // lgtm[go/clear-text-logging]
 		c.authVisitor = authorizer
+		c.AuthType = auth.name
 		c.fixHost()
 		return nil
+	}
+	if c.AuthType != "" {
+		return c.niceAuthError(fmt.Sprintf("cannot configure %s auth", c.AuthType))
 	}
 	if c.Host == "" && IsData.GetOrUnknown(ctx) == "yes" {
 		return c.niceAuthError("workspace is most likely not created yet, because the `host` " +
@@ -312,7 +326,7 @@ func (c *DatabricksClient) fixHost() {
 }
 
 func (c *DatabricksClient) configureWithPat(ctx context.Context) (func(*http.Request) error, error) {
-	if c.Token == "" && c.Host == "" {
+	if !(c.Token != "" && c.Host != "") {
 		return nil, nil
 	}
 	log.Printf("[INFO] Using directly configured PAT authentication")
@@ -320,7 +334,7 @@ func (c *DatabricksClient) configureWithPat(ctx context.Context) (func(*http.Req
 }
 
 func (c *DatabricksClient) configureWithBasicAuth(ctx context.Context) (func(*http.Request) error, error) {
-	if c.Username == "" && c.Password == "" && c.Host == "" {
+	if !(c.Username != "" && c.Password != "" && c.Host != "") {
 		return nil, nil
 	}
 	b64 := c.encodeBasicAuth(c.Username, c.Password)
@@ -339,8 +353,8 @@ func (c *DatabricksClient) configureWithDatabricksCfg(ctx context.Context) (func
 	}
 	_, err = os.Stat(configFile)
 	if os.IsNotExist(err) {
-		log.Printf("[INFO] ~/.databrickscfg not found on current host")
 		// early return for non-configured machines
+		log.Printf("[INFO] %s not found on current host", configFile)
 		return nil, nil
 	}
 	cfg, err := ini.Load(configFile)

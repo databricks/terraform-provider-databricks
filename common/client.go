@@ -260,7 +260,7 @@ func (c *DatabricksClient) Authenticate(ctx context.Context) error {
 		if authorizer == nil {
 			continue
 		}
-		// even though this may complain about clear text loggin, passwords are replaced with `***`
+		// even though this may complain about clear text logging, passwords are replaced with `***`
 		log.Printf("[INFO] Configured %s auth: %s", auth.name, c.configDebugString()) // lgtm[go/clear-text-logging]
 		c.authVisitor = authorizer
 		c.AuthType = auth.name

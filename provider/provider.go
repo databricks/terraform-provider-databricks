@@ -173,7 +173,7 @@ func configureDatabricksClient(ctx context.Context, d *schema.ResourceData) (int
 			authorizationMethodsUsed = append(authorizationMethodsUsed, name)
 		}
 	}
-	if len(authorizationMethodsUsed) > 1 {
+	if pc.AuthType == "" && len(authorizationMethodsUsed) > 1 {
 		sort.Strings(authorizationMethodsUsed)
 		return nil, diag.Errorf("More than one authorization method configured: %s",
 			strings.Join(authorizationMethodsUsed, " and "))

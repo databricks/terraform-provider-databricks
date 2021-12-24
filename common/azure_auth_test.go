@@ -374,7 +374,7 @@ func TestGetJWTProperty_Authenticate_Fail(t *testing.T) {
 		Host: "https://adb-1232.azuredatabricks.net",
 	}
 	_, err := client.GetAzureJwtProperty("tid")
-	require.EqualError(t, err, "cannot configure Azure CLI auth: "+
+	require.EqualError(t, err, "cannot configure azure-cli auth: "+
 		"Invoking Azure CLI failed with the following error: "+
 		"This is just a failing script.\n. "+
 		"Please check https://registry.terraform.io/providers/"+

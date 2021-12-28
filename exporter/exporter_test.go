@@ -104,7 +104,7 @@ func TestImportingMounts(t *testing.T) {
 					Status: "Finished",
 					Results: &common.CommandResults{
 						ResultType: "text",
-						Data: `{"foo": "s3a://foo", "bar": "abfss://bar@baz.com/thing", "third": "adls://foo.bar.com/path"}
+						Data: `{"foo": "s3a://foo", "bar": "abfss://bar@baz.com/thing", "third": "adls://foo3.bar.com/path", "fourth":"wasbs://bar4@baz4.com/dir", "fifth":"gs://foo5", "sixth":"abc://foo5"}
 					and some chatty messages`,
 					},
 				},
@@ -172,22 +172,14 @@ func TestImportingMounts(t *testing.T) {
 			ic.listing = "mounts"
 			ic.mounts = true
 
-			err := ic.Importables["databricks_aws_s3_mount"].List(ic)
+			err := ic.Importables["databricks_mount"].List(ic)
 			assert.NoError(t, err)
 
-			err = ic.Importables["databricks_azure_adls_gen2_mount"].List(ic)
-			assert.NoError(t, err)
-			err = ic.Importables["databricks_azure_adls_gen2_mount"].Body(ic,
-				hclwrite.NewEmptyFile().Body(), ic.Scope[1])
-			assert.NoError(t, err)
-
-			err = ic.Importables["databricks_azure_adls_gen1_mount"].List(ic)
-			assert.NoError(t, err)
-			err = ic.Importables["databricks_azure_adls_gen1_mount"].Body(ic,
-				hclwrite.NewEmptyFile().Body(), ic.Scope[2])
-			assert.NoError(t, err)
-
-			//Run("-listing", "mounts", "-mounts")
+			for i := 0; i < len(ic.Scope); i++ {
+				err = ic.Importables["databricks_mount"].Body(ic,
+					hclwrite.NewEmptyFile().Body(), ic.Scope[i])
+				assert.NoError(t, err)
+			}
 		})
 }
 

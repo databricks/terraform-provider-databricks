@@ -519,11 +519,11 @@ func TestAwsS3MountProfile(t *testing.T) {
 		URL:             "s3a://def",
 		InstanceProfile: "bcd",
 	}
-	err := resourcesMap["databricks_aws_s3_mount"].List(ic)
+	err := resourcesMap["databricks_mount"].List(ic)
 	assert.NoError(t, err)
 	assert.Len(t, ic.testEmits, 2)
 	assert.True(t, ic.testEmits["databricks_instance_profile[<unknown>] (id: bcd)"])
-	assert.True(t, ic.testEmits["databricks_aws_s3_mount[<unknown>] (id: /mnt/abc)"])
+	assert.True(t, ic.testEmits["databricks_mount[<unknown>] (id: /mnt/abc)"])
 }
 
 func TestGlobalInitScriptNameFromId(t *testing.T) {

@@ -354,7 +354,7 @@ func (c *DatabricksClient) configureWithDatabricksCfg(ctx context.Context) (func
 	_, err = os.Stat(configFile)
 	if os.IsNotExist(err) {
 		// early return for non-configured machines
-		log.Printf("[INFO] %s not found on current host", configFile)
+		log.Printf("[DEBUG] %s not found on current host", configFile)
 		return nil, nil
 	}
 	cfg, err := ini.Load(configFile)

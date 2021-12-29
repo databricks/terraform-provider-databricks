@@ -148,7 +148,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			}
 			// libraries installed with init scripts won't be exported.
 			b := body.AppendNewBlock("resource", []string{r.Resource, r.Name}).Body()
-			relativeFile := fmt.Sprintf("${path.module}/files/%s", fileName)
+			relativeFile := fmt.Sprintf("${path.module}/%s", fileName)
 			b.SetAttributeValue("path", cty.StringVal(strings.Replace(r.ID, "dbfs:", "", 1)))
 			b.SetAttributeRaw("source", hclwrite.Tokens{
 				&hclwrite.Token{Type: hclsyntax.TokenOQuote, Bytes: []byte{'"'}},
@@ -756,7 +756,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			if err != nil {
 				return err
 			}
-			relativeFile := fmt.Sprintf("${path.module}/files/%s", fileName)
+			relativeFile := fmt.Sprintf("${path.module}/%s", fileName)
 			b := body.AppendNewBlock("resource", []string{r.Resource, r.Name}).Body()
 			b.SetAttributeValue("name", cty.StringVal(gis.Name))
 			b.SetAttributeValue("enabled", cty.BoolVal(gis.Enabled))
@@ -893,6 +893,67 @@ var resourcesMap map[string]importable = map[string]importable{
 						}),
 				})
 			}
+			return nil
+		},
+	},
+	"databricks_notebook": {
+		Service: "notebooks",
+		Name: func(d *schema.ResourceData) string {
+			name := d.Get("path").(string)
+			if name == "" {
+				return d.Id()
+			} else {
+				name = strings.TrimPrefix(name, "/")
+			}
+			re := regexp.MustCompile(`[^0-9A-Za-z_]`)
+			return re.ReplaceAllString(name, "_")
+		},
+		List: func(ic *importContext) error {
+			notebooksAPI := workspace.NewNotebooksAPI(ic.Context, ic.Client)
+			notebookList, err := notebooksAPI.List("/", true)
+			if err != nil {
+				return err
+			}
+			// TODO: emit permissions for notebook folders if non-default,
+			// as per-notebook permission entry would be a noise in the state
+			for offset, notebook := range notebookList {
+				ic.Emit(&resource{
+					Resource: "databricks_notebook",
+					ID:       notebook.Path,
+				})
+				if offset%50 == 0 {
+					log.Printf("[INFO] Scanned %d of %d notebooks",
+						offset+1, len(notebookList))
+				}
+			}
+			return nil
+		},
+		Body: func(ic *importContext, body *hclwrite.Body, r *resource) error {
+			notebooksAPI := workspace.NewNotebooksAPI(ic.Context, ic.Client)
+			status, err := notebooksAPI.Read(r.ID)
+			if err != nil {
+				return err
+			}
+			contentB64, err := notebooksAPI.Export(r.ID, "SOURCE")
+			if err != nil {
+				return err
+			}
+			name := r.ID[1:] + status.Extension() // todo: replace non-alphanum+/ with _
+			content, _ := base64.StdEncoding.DecodeString(contentB64)
+			fileName, err := ic.createFileIn("notebooks", name, []byte(content))
+			log.Printf("Creating %s for %s", fileName, r)
+			if err != nil {
+				return err
+			}
+			// libraries installed with init scripts won't be exported.
+			b := body.AppendNewBlock("resource", []string{r.Resource, r.Name}).Body()
+			relativeFile := fmt.Sprintf("${path.module}/%s", fileName)
+			b.SetAttributeValue("path", cty.StringVal(r.ID))
+			b.SetAttributeRaw("source", hclwrite.Tokens{
+				&hclwrite.Token{Type: hclsyntax.TokenOQuote, Bytes: []byte{'"'}},
+				&hclwrite.Token{Type: hclsyntax.TokenQuotedLit, Bytes: []byte(relativeFile)},
+				&hclwrite.Token{Type: hclsyntax.TokenCQuote, Bytes: []byte{'"'}},
+			})
 			return nil
 		},
 	},

@@ -45,6 +45,15 @@ type ObjectStatus struct {
 	Language   string `json:"language,omitempty"`
 }
 
+func (a ObjectStatus) Extension() string {
+	for ext, nlf := range extMap {
+		if nlf.Language == a.Language {
+			return ext
+		}
+	}
+	return ""
+}
+
 // ExportPath contains the base64 content of the notebook
 type ExportPath struct {
 	Content string `json:"content,omitempty"`
@@ -110,6 +119,7 @@ func (a NotebooksAPI) Export(path string, format string) (string, error) {
 		Format: format,
 		Path:   path,
 	}, &notebookContent)
+	// TODO: return decoded []byte
 	return notebookContent.Content, err
 }
 

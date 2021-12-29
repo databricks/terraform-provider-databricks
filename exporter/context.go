@@ -220,7 +220,7 @@ func (ic *importContext) Run() error {
 			}
 		}
 		if i%50 == 0 {
-			log.Printf("[INFO] Generated %d of %d resources", i, scopeSize)
+			log.Printf("[INFO] Generated %d of %d resources", i+1, scopeSize)
 		}
 		if r.Mode != "data" && ic.Resources[r.Resource].Importer != nil {
 			// nolint

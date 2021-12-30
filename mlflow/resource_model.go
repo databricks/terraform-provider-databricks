@@ -7,10 +7,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-// Tag ...
 type Tag struct {
-	Key   string `json:"key" tf:"force_new"`
-	Value string `json:"value" tf:"force_new"`
+	Key   string `json:"key"`
+	Value string `json:"value"`
 }
 
 // Model defines the response object from the API
@@ -21,50 +20,49 @@ type Model struct {
 	UserID               string   `json:"user_id,omitempty" tf:"computed"`
 	LatestVersions       []string `json:"latest_versions,omitempty" tf:"computed"`
 	Description          string   `json:"description,omitempty"`
-	Tags                 []Tag    `json:"tags,omitempty" tf:"force_new"`
+	Tags                 []Tag    `json:"tags,omitempty"`
+	RegisteredModelID    string   `json:"id,omitempty" tf:"computed,alias:registered_model_id"`
 }
 
 // registeredModel defines response from GET API op
 type registeredModel struct {
-	RegisteredModel Model `json:"registered_model"`
+	RegisteredModelDatabricks Model `json:"registered_model_databricks"`
 }
 
-// ModelsAPI ...
 type ModelsAPI struct {
 	client  *common.DatabricksClient
 	context context.Context
 }
 
-// NewModelsAPI ...
 func NewModelsAPI(ctx context.Context, m interface{}) ModelsAPI {
 	return ModelsAPI{m.(*common.DatabricksClient), ctx}
 }
 
-// Create ...
 func (a ModelsAPI) Create(m *Model) error {
 	return a.client.Post(a.context, "/mlflow/registered-models/create", m, m)
 }
 
-// Read ...
 func (a ModelsAPI) Read(name string) (*Model, error) {
 	var m registeredModel
-	err := a.client.Get(a.context, "/mlflow/registered-models/get", map[string]string{
+	err := a.client.Get(a.context, "/mlflow/databricks/registered-models/get", map[string]string{
 		"name": name,
 	}, &m)
 	if err != nil {
 		return nil, err
 	}
-	return &m.RegisteredModel, nil
+	return &m.RegisteredModelDatabricks, nil
 }
 
-// Update ...
+// Update the model entity
 func (a ModelsAPI) Update(m *Model) error {
 	return a.client.Patch(a.context, "/mlflow/registered-models/update", m)
 }
 
-// Delete ...
-func (a ModelsAPI) Delete(m *Model) error {
-	return a.client.Delete(a.context, "/mlflow/registered-models/delete", m)
+// Delete removes the model by it's name
+func (a ModelsAPI) Delete(name string) error {
+	return a.client.Delete(a.context, "/mlflow/registered-models/delete", map[string]string{
+		"name": name,
+	})
 }
 
 func ResourceMLFlowModel() *schema.Resource {
@@ -98,9 +96,7 @@ func ResourceMLFlowModel() *schema.Resource {
 			return NewModelsAPI(ctx, c).Update(&m)
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			var m Model
-			common.DataToStructPointer(d, s, &m)
-			return NewModelsAPI(ctx, c).Delete(&m)
+			return NewModelsAPI(ctx, c).Delete(d.Id())
 		},
 		Schema: s,
 	}.ToResource()

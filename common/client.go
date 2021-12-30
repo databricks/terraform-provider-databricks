@@ -214,12 +214,16 @@ func (c *DatabricksClient) configDebugString() string {
 		if value == "" {
 			continue
 		}
+		if attr.Name == "azure_use_msi" && value == "false" {
+			// include Azure MSI info only when it's relevant
+			continue
+		}
 		if attr.Sensitive {
 			value = "***REDACTED***"
 		}
 		debug = append(debug, fmt.Sprintf("%s=%v", attr.Name, value))
 	}
-	return strings.Join(debug, ", ")
+	return strings.Join(debug, ", ") // lgtm[go/clear-text-logging]
 }
 
 // Authenticate lazily authenticates across authorizers or returns error

@@ -1,5 +1,12 @@
 # Version changelog
 
+## 0.4.3
+
+* Improved documentation with regards to public subnets in AWS quick start ([#1005](https://github.com/databrickslabs/terraform-provider-databricks/pull/1005)).
+* Added `databricks_mount` code genration for [exporter](https://registry.terraform.io/providers/databrickslabs/databricks/latest/docs/guides/experimental-exporter) tooling ([#1006](https://github.com/databrickslabs/terraform-provider-databricks/pull/1006)).
+* Increase dependency check frequency ([#1007](https://github.com/databrickslabs/terraform-provider-databricks/pull/1007)).
+* Added experimental resources.
+
 ## 0.4.2
 
 * Added optional `auth_type` provider conf to enforce specific auth type to be used in very rare cases, where a single Terraform state manages Databricks workspaces on more than one cloud and `More than one authorization method configured` error is a false positive. Valid values are `pat`, `basic`, `azure-client-secret`, `azure-msi`, `azure-cli`, and `databricks-cli` ([#1000](https://github.com/databrickslabs/terraform-provider-databricks/pull/1000)).

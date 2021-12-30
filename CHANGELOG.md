@@ -2,6 +2,7 @@
 
 ## 0.4.3
 
+* Added `Using XXX auth` explanation to HTTP 403 errors, which should help troubleshooting misconfigured authentication or provider aliasing. Example error message now looks like: *cannot create group: /2.0/preview/scim/v2/Groups is only accessible by admins. Using databricks-cli auth: host=https://XXX.cloud.databricks.com/, token=`***REDACTED***`, profile=demo.* All sensitive configuration parameters (`token`, `password`, and `azure_client_secret`) are redacted and replaced with `***REDACTED***` ([#821](https://github.com/databrickslabs/terraform-provider-databricks/issues/821)).
 * Improved documentation with regards to public subnets in AWS quick start ([#1005](https://github.com/databrickslabs/terraform-provider-databricks/pull/1005)).
 * Added `databricks_mount` code genration for [exporter](https://registry.terraform.io/providers/databrickslabs/databricks/latest/docs/guides/experimental-exporter) tooling ([#1006](https://github.com/databrickslabs/terraform-provider-databricks/pull/1006)).
 * Increase dependency check frequency ([#1007](https://github.com/databrickslabs/terraform-provider-databricks/pull/1007)).

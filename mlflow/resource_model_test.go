@@ -28,9 +28,9 @@ func TestModelCreate(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/mlflow/registered-models/get?name=xyz",
+				Resource: "/api/2.0/mlflow/databricks/registered-models/get?name=xyz",
 				Response: registeredModel{
-					RegisteredModel: m(),
+					RegisteredModelDatabricks: m(),
 				},
 			},
 		},
@@ -89,9 +89,9 @@ func TestModelRead(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/mlflow/registered-models/get?name=xyz",
+				Resource: "/api/2.0/mlflow/databricks/registered-models/get?name=xyz",
 				Response: registeredModel{
-					RegisteredModel: m(),
+					RegisteredModelDatabricks: m(),
 				},
 			},
 		},
@@ -109,9 +109,9 @@ func TestModelReadGetError(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/mlflow/registered-models/get?name=xyz",
+				Resource: "/api/2.0/mlflow/databricks/registered-models/get?name=xyz",
 				Response: registeredModel{
-					RegisteredModel: m(),
+					RegisteredModelDatabricks: m(),
 				},
 				Status: 400,
 			},
@@ -138,9 +138,9 @@ func TestModelUpdate(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/mlflow/registered-models/get?name=xyz",
+				Resource: "/api/2.0/mlflow/databricks/registered-models/get?name=xyz",
 				Response: registeredModel{
-					RegisteredModel: gm,
+					RegisteredModelDatabricks: gm,
 				},
 			},
 		},

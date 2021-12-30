@@ -28,6 +28,10 @@ resource "databricks_mlflow_model" "test" {
 
 The following arguments are supported:
 
-* `name` - (Required) Name of MLflow model.
+* `name` - (Required) Name of MLflow model. Change of name triggers new resource.
 * `description` - The description of the MLflow model.
 * `tags` - Tags for the MLflow model.
+
+## Access Control
+
+* [databricks_permissions](permissions.md#MLflow-Model-usage) can control which groups or individual users can *Read*, *Edit*, *Manage Staging Versions*, *Manage Production Versions*, and *Manage* individual models.

@@ -116,7 +116,7 @@ resource "databricks_group" "eng" {
 }
 
 data "databricks_node_type" "smallest" {
-    local_disk = true
+  local_disk = true
 }
 
 resource "databricks_instance_pool" "this" {
@@ -326,6 +326,84 @@ resource "databricks_permissions" "repo_usage" {
   access_control {
     group_name       = databricks_group.eng.display_name
     permission_level = "CAN_EDIT"
+  }
+}
+```
+
+## MLflow Experiment usage
+
+Valid [permission levels](https://docs.databricks.com/security/access-control/workspace-acl.html#mlflow-experiment-permissions-1) for [databricks_mlflow_experiment](mlflow_experiment.md) are: `CAN_READ`, `CAN_EDIT`, and `CAN_MANAGE`.
+
+```hcl
+data "databricks_current_user" "me" {}
+
+resource "databricks_mlflow_experiment" "this" {
+  name              = "${data.databricks_current_user.me.home}/Sample"
+  artifact_location = "dbfs:/tmp/my-experiment"
+  description       = "My MLflow experiment description"
+}
+
+resource "databricks_group" "auto" {
+  display_name = "Automation"
+}
+
+resource "databricks_group" "eng" {
+  display_name = "Engineering"
+}
+
+resource "databricks_permissions" "experiment_usage" {
+  experiment_id = databricks_mlflow_experiment.this.id
+
+  access_control {
+    group_name       = "users"
+    permission_level = "CAN_READ"
+  }
+
+  access_control {
+    group_name       = databricks_group.auto.display_name
+    permission_level = "CAN_MANAGE"
+  }
+
+  access_control {
+    group_name       = databricks_group.eng.display_name
+    permission_level = "CAN_EDIT"
+  }
+}
+```
+
+## MLflow Model usage
+
+Valid [permission levels](https://docs.databricks.com/security/access-control/workspace-acl.html#mlflow-model-permissions-1) for [databricks_mlflow_model](mlflow_model.md) are: `CAN_READ`, `CAN_EDIT`, `CAN_MANAGE_STAGING_VERSIONS`, `CAN_MANAGE_PRODUCTION_VERSIONS`, and `CAN_MANAGE`.
+
+```hcl
+resource "databricks_mlflow_model" "this" {
+  name = "SomePredictions"
+}
+
+resource "databricks_group" "auto" {
+  display_name = "Automation"
+}
+
+resource "databricks_group" "eng" {
+  display_name = "Engineering"
+}
+
+resource "databricks_permissions" "model_usage" {
+  registered_model_id = databricks_mlflow_model.this.registered_model_id
+
+  access_control {
+    group_name       = "users"
+    permission_level = "CAN_READ"
+  }
+
+  access_control {
+    group_name       = databricks_group.auto.display_name
+    permission_level = "CAN_MANAGE_PRODUCTION_VERSIONS"
+  }
+
+  access_control {
+    group_name       = databricks_group.eng.display_name
+    permission_level = "CAN_MANAGE_STAGING_VERSIONS"
   }
 }
 ```

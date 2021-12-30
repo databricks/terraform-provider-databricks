@@ -116,7 +116,7 @@ resource "databricks_group" "eng" {
 }
 
 data "databricks_node_type" "smallest" {
-    local_disk = true
+  local_disk = true
 }
 
 resource "databricks_instance_pool" "this" {

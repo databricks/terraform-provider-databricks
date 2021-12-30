@@ -9,45 +9,45 @@ Use `databricks_pipeline` to deploy [Delta Live Tables](https://docs.databricks.
 
 ```hcl
 resource "databricks_notebook" "dlt_demo" {
-...
+  #...
 }
 
 resource "databricks_pipeline" "this" {
-    name = "Pipeline Name"
-    storage = "/test/first-pipeline"
-    configuration = {
-        key1 = "value1"
-        key2 = "value2"
-    }
+  name    = "Pipeline Name"
+  storage = "/test/first-pipeline"
+  configuration = {
+    key1 = "value1"
+    key2 = "value2"
+  }
 
-    cluster {
-        label = "default"
-        num_workers = 2
-        custom_tags = {
-            cluster_type = "default"
-        }
+  cluster {
+    label       = "default"
+    num_workers = 2
+    custom_tags = {
+      cluster_type = "default"
     }
+  }
 
-    cluster {
-        label = "maintenance"
-        num_workers = 1
-        custom_tags = {
-            cluster_type = "maintenance"
-        }
+  cluster {
+    label       = "maintenance"
+    num_workers = 1
+    custom_tags = {
+      cluster_type = "maintenance"
     }
+  }
 
-    library {
-        notebook {
-            path = databricks_notebook.dlt_demo.id
-        }
+  library {
+    notebook {
+      path = databricks_notebook.dlt_demo.id
     }
+  }
 
-    filters {
-        include = ["com.databricks.include"]
-        exclude = ["com.databricks.exclude"]
-    }
+  filters {
+    include = ["com.databricks.include"]
+    exclude = ["com.databricks.exclude"]
+  }
 
-    continuous = false
+  continuous = false
 }
 ```
 

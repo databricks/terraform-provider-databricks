@@ -168,7 +168,7 @@ By default, all users can create and modify jobs unless an administrator [enable
 
 The `timeouts` block allows you to specify `create` and `update` timeouts if you have an `always_running` job. Please launch `TF_LOG=DEBUG terraform apply` whenever you observe timeout issues.
 
-```hcl
+```
 timeouts {
   create = "20m"
   update = "20m

@@ -131,6 +131,26 @@ func TestParseError_API12(t *testing.T) {
 		"Actual message: %s", err.Error())
 }
 
+func TestParseError_Enhance403(t *testing.T) {
+	ws := DatabricksClient{
+		Host:  "qwerty.cloud.databricks.com",
+		Token: "x",
+	}
+	assert.NoError(t, ws.Authenticate(context.Background()))
+	err := ws.parseError(&http.Response{
+		Request: httptest.NewRequest(
+			"GET", "https://querty.cloud.databricks.com/api/2.0/clusters/list",
+			nil),
+		StatusCode: 403,
+		Body: ioutil.NopCloser(bytes.NewReader([]byte(`{
+			"error_code": "PERMISSION_DENIED",
+			"message": "You are not authorized."
+		}`))),
+	})
+	assert.EqualError(t, err, "You are not authorized. Using pat auth: "+
+		"host=https://qwerty.cloud.databricks.com, token=***REDACTED***")
+}
+
 func TestParseError_SCIM(t *testing.T) {
 	ws := DatabricksClient{
 		Host: "qwerty.cloud.databricks.com",

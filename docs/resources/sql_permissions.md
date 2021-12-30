@@ -25,7 +25,7 @@ The created cluster could be referred to by providing its ID as `cluster_id` pro
 ```hcl
 resource "databricks_sql_permissions" "foo_table" {
   cluster_id = databricks_cluster.cluster_name.id
-  ...
+  #...
 }
 ```
 

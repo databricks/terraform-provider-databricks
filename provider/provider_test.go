@@ -403,12 +403,3 @@ func configureProviderAndReturnClient(t *testing.T, tt providerFixture) (*common
 
 	return client, nil
 }
-
-func TestAllResourcesMustHaveImport(t *testing.T) {
-	p := DatabricksProvider()
-	for name, r := range p.ResourcesMap {
-		if r.Importer == nil {
-			assert.Fail(t, "Missing importer: %s", name)
-		}
-	}
-}

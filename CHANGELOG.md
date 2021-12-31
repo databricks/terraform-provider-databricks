@@ -1,5 +1,9 @@
 # Version changelog
 
+## 0.4.4
+
+* Added support for [running provider in a debug mode](https://www.terraform.io/plugin/sdkv2/debugging#running-terraform-with-a-provider-in-debug-mode) from Visual Studio Code through `Debug Provider` run configuration in order to troubleshoot more complicated issues.
+
 ## 0.4.3
 
 * Added support for `databricks_permissions` for `databricks_mlflow_experiment` and `databricks_mlflow_model` ([#1013](https://github.com/databrickslabs/terraform-provider-databricks/pull/1013)).

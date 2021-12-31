@@ -327,11 +327,3 @@ In addition to all arguments above, the following attributes are exported:
 
 * `id` - mount name
 * `source` - (String) HDFS-compatible url
-
-## Import
-
-The resource can be imported using it's mount name
-
-```bash
-$ terraform import databricks_mount.this <mount_name>
-```

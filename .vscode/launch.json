@@ -5,6 +5,14 @@
    "version": "0.2.0",
    "configurations": [
        {
+           "name": "Debug Provider",
+           "type": "go",
+           "request": "launch",
+           "mode": "debug",
+           "program": "main.go",
+           "args": ["debug"],
+       },
+       {
            "name": "Launch test function",
            "type": "go",
            "request": "launch",

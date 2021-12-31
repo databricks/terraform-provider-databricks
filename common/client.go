@@ -65,7 +65,7 @@ type DatabricksClient struct {
 	// specified by this argument. This argument also holds currently selected auth.
 	AuthType string `name:"auth_type" auth:"-"`
 
-	// Azure Enviroment endpoints
+	// Azure Environment endpoints
 	AzureEnvironment *azure.Environment
 
 	// Skip SSL certificate verification for HTTP calls.

@@ -63,5 +63,6 @@ func ResourceMount() *schema.Resource {
 	r.CreateContext = mountCallback(mountCreate).preProcess(r)
 	r.ReadContext = mountCallback(mountRead).preProcess(r)
 	r.DeleteContext = mountCallback(mountDelete).preProcess(r)
+	r.Importer = nil
 	return r
 }

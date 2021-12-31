@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"os"
@@ -21,6 +22,14 @@ func main() {
 		if err := exporter.Run(os.Args...); err != nil {
 			log.Printf("[ERROR] %s", err.Error())
 			os.Exit(1)
+		}
+		return
+	}
+	if len(os.Args) > 1 && os.Args[1] == "debug" {
+		err := plugin.Debug(context.Background(), "registry.terraform.io/databrickslabs/databricks",
+			&plugin.ServeOpts{ProviderFunc: provider.DatabricksProvider})
+		if err != nil {
+			log.Fatal(err.Error())
 		}
 		return
 	}

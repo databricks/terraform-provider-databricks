@@ -69,7 +69,9 @@ After this, you should be able to run `make coverage` to run the tests and see t
 
 ## Debugging
 
-**TF_LOG=DEBUG terraform apply** allows you to see the internal logs from `terraform apply`.
+**TF_LOG_PROVIDER=DEBUG terraform apply** allows you to see the internal logs from `terraform apply`.
+
+You can [run provider in a debug mode](https://www.terraform.io/plugin/sdkv2/debugging#running-terraform-with-a-provider-in-debug-mode) from VScode IDE by launching `Debug Provider` run configuration and invoking `terraform apply` with `TF_REATTACH_PROVIDERS` environment variable.
 
 ## Adding a new resource
 

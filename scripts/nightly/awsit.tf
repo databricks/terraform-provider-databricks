@@ -96,7 +96,7 @@ resource "databricks_mws_storage_configurations" "this" {
   storage_configuration_name = "${local.prefix}-cx-terraform-it"
 }
 
-output "aws_bucket" {
+output "aws_root_bucket" {
   value = aws_s3_bucket.root_storage_bucket.bucket
 }
 
@@ -277,4 +277,17 @@ resource "azurerm_container_group" "aws" {
       protocol = "TCP"
     }
   }
+}
+
+output "aws_workspace_url" {
+  value = databricks_mws_workspaces.this.workspace_url
+}
+
+output "aws_workspace_id" {
+  value = databricks_mws_workspaces.this.workspace_id
+}
+
+output "aws_workspace_pat" {
+  value = databricks_mws_workspaces.this.token[0].token_value
+  sensitive = true
 }

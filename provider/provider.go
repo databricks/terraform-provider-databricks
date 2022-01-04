@@ -60,6 +60,7 @@ func DatabricksProvider() *schema.Provider {
 			"databricks_cluster_policy":              policies.ResourceClusterPolicy(),
 			"databricks_dbfs_file":                   storage.ResourceDBFSFile(),
 			"databricks_directory":                   workspace.ResourceDirectory(),
+			"databricks_external_location":           catalog.ResourceExternalLocation(),
 			"databricks_global_init_script":          workspace.ResourceGlobalInitScript(),
 			"databricks_grants":                      catalog.ResourceGrants(),
 			"databricks_group":                       scim.ResourceGroup(),

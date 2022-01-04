@@ -129,6 +129,18 @@ var mapping = securableMapping{
 		"USAGE":          true,
 		"ALL PRIVILEGES": true,
 	},
+	"storage_credential": {
+		"CREATE TABLE":    true,
+		"READ FILES":      true,
+		"WRITE FILES":     true,
+		"ALL PRIVILEGES":  true,
+	},
+	"external_location": {
+		"CREATE TABLE":   true,
+		"READ FILES":     true,
+		"WRITE FILES":    true,
+		"ALL PRIVILEGES": true,
+	},
 }
 
 func setToStrings(set *schema.Set) (ss []string) {
@@ -213,6 +225,10 @@ func ResourceGrants() *schema.Resource {
 	return common.Resource{
 		Schema: s,
 		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, c interface{}) error {
+			if d.Id() == "" {
+				// unfortunately we cannot do validation before dependent resources exist with tfsdkv2
+				return nil
+			}
 			var grants PermissionsList
 			common.DiffToStructPointer(d, s, &grants)
 			return mapping.validate(d, grants)

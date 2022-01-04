@@ -224,7 +224,7 @@ func (f ResourceFixture) Apply(t *testing.T) (*schema.ResourceData, error) {
 		return resourceData, fmt.Errorf("resource is not expected to be removed")
 	}
 	newState := resourceData.State()
-	diff, err = schemaMap.Diff(ctx, newState, resourceConfig, nil, client, true)
+	diff, err = schemaMap.Diff(ctx, newState, resourceConfig, f.Resource.CustomizeDiff, client, true)
 	if err != nil {
 		return nil, err
 	}

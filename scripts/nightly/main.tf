@@ -6,6 +6,10 @@ locals {
   tags       = azurerm_resource_group.this.tags
 }
 
+output "prefix" {
+  value = local.prefix
+}
+
 output "tags" {
   value = local.tags
 }

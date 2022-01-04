@@ -211,6 +211,52 @@ func TestGrantCreate(t *testing.T) {
 	}.ApplyNoError(t)
 }
 
+func TestGrantUpdate(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "PATCH",
+				Resource: "/api/2.0/unity-catalog/permissions/table/foo.bar.baz",
+				ExpectedRequest: PermissionsDiff{
+					Changes: []PermissionsChange{
+						{
+							Principal: "me",
+							Add:       []string{"MODIFY", "SELECT"},
+						},
+					},
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/unity-catalog/permissions/table/foo.bar.baz",
+
+				Response: PermissionsList{
+					Assignments: []PrivilegeAssignment{
+						{
+							Principal:  "me",
+							Privileges: []string{"MODIFY", "SELECT"},
+						},
+					},
+				},
+			},
+		},
+		Resource: ResourceGrants(),
+		Update:   true,
+		ID: "table/foo.bar.baz",
+		InstanceState: map[string]string{
+			"table": "foo.bar.baz",
+		},
+		HCL: `
+		table = "foo.bar.baz"
+
+		grant {
+			principal = "me"
+			privileges = ["MODIFY", "SELECT"]
+		}
+		`,
+	}.ApplyNoError(t)
+}
+
 func TestGrantReadMalformedId(t *testing.T) {
 	qa.ResourceFixture{
 		Resource: ResourceGrants(),

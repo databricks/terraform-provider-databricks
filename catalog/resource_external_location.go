@@ -2,6 +2,7 @@ package catalog
 
 import (
 	"context"
+	"net/url"
 
 	"github.com/databrickslabs/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -29,17 +30,17 @@ func (a ExternalLocationsAPI) create(el *ExternalLocationInfo) error {
 	return a.client.Post(a.context, "/unity-catalog/external-locations", el, &el)
 }
 
-func (a ExternalLocationsAPI) get(id string) (el ExternalLocationInfo, err error) {
-	err = a.client.Get(a.context, "/unity-catalog/external-locations/"+id, nil, &el)
+func (a ExternalLocationsAPI) get(name string) (el ExternalLocationInfo, err error) {
+	err = a.client.Get(a.context, "/unity-catalog/external-locations/"+url.PathEscape(name), nil, &el)
 	return
 }
 
 func (a ExternalLocationsAPI) update(name string, el ExternalLocationInfo) error {
-	return a.client.Patch(a.context, "/unity-catalog/external-locations/"+name, el)
+	return a.client.Patch(a.context, "/unity-catalog/external-locations/"+url.PathEscape(name), el)
 }
 
 func (a ExternalLocationsAPI) delete(name string) error {
-	return a.client.Delete(a.context, "/unity-catalog/external-locations/"+name, nil)
+	return a.client.Delete(a.context, "/unity-catalog/external-locations/"+url.PathEscape(name), nil)
 }
 
 func ResourceExternalLocation() *schema.Resource {

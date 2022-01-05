@@ -419,22 +419,6 @@ func TestResourceClusterRead(t *testing.T) {
 					TotalCount: 0,
 				},
 			},
-			{
-				Method:   "GET",
-				Resource: "/api/2.0/libraries/cluster-status?cluster_id=abc",
-				Response: libraries.ClusterLibraryStatuses{
-					LibraryStatuses: []libraries.LibraryStatus{
-						{
-							Library: &libraries.Library{
-								Pypi: &libraries.PyPi{
-									Package: "requests",
-								},
-							},
-							Status: "INSTALLED",
-						},
-					},
-				},
-			},
 		},
 		Resource: ResourceCluster(),
 		Read:     true,
@@ -447,7 +431,6 @@ func TestResourceClusterRead(t *testing.T) {
 	assert.Equal(t, "Shared Autoscaling", d.Get("cluster_name"))
 	assert.Equal(t, "i3.xlarge", d.Get("node_type_id"))
 	assert.Equal(t, 4, d.Get("autoscale.0.max_workers"))
-	assert.Equal(t, "requests", d.Get("library.2047590238.pypi.0.package"))
 	assert.Equal(t, "RUNNING", d.Get("state"))
 	assert.Equal(t, false, d.Get("is_pinned"))
 

@@ -3,6 +3,11 @@
 ## 0.4.4
 
 * Added support for [running provider in a debug mode](https://www.terraform.io/plugin/sdkv2/debugging#running-terraform-with-a-provider-in-debug-mode) from Visual Studio Code through `Debug Provider` run configuration in order to troubleshoot more complicated issues.
+* Allowed managing of libraries on `databricks_cluster` outside of Terraform state for resources without any `library` configuration blocks. This should simplify PaaS-like CI/CD workflows.
+
+**Behavior changes**
+
+* Whenever library is installed on `databricks_cluster` without any [`library` configuration blocks](https://registry.terraform.io/providers/databrickslabs/databricks/latest/docs/resources/cluster#library-configuration-block), it won't be removed anymore.
 
 ## 0.4.3
 

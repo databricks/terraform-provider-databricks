@@ -103,6 +103,7 @@ func DatabricksProvider() *schema.Provider {
 			"databricks_sql_visualization":           sqlanalytics.ResourceVisualization(),
 			"databricks_sql_widget":                  sqlanalytics.ResourceWidget(),
 			"databricks_storage_credential":          catalog.ResourceStorageCredential(),
+			"databricks_table":                       catalog.ResourceTable(),
 			"databricks_token":                       tokens.ResourceToken(),
 			"databricks_user":                        scim.ResourceUser(),
 			"databricks_user_instance_profile":       aws.ResourceUserInstanceProfile(),

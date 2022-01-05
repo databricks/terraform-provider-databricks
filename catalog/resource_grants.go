@@ -130,10 +130,10 @@ var mapping = securableMapping{
 		"ALL PRIVILEGES": true,
 	},
 	"storage_credential": {
-		"CREATE TABLE":    true,
-		"READ FILES":      true,
-		"WRITE FILES":     true,
-		"ALL PRIVILEGES":  true,
+		"CREATE TABLE":   true,
+		"READ FILES":     true,
+		"WRITE FILES":    true,
+		"ALL PRIVILEGES": true,
 	},
 	"external_location": {
 		"CREATE TABLE":   true,

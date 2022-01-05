@@ -25,9 +25,9 @@ func TestCreateExternalLocation(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/unity-catalog/external-locations/abc",				
-				Response: ExternalLocationInfo {
-					Owner: "efg",
+				Resource: "/api/2.0/unity-catalog/external-locations/abc",
+				Response: ExternalLocationInfo{
+					Owner:       "efg",
 					MetastoreID: "fgh",
 				},
 			},

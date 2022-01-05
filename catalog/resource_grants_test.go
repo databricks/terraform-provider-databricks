@@ -242,7 +242,7 @@ func TestGrantUpdate(t *testing.T) {
 		},
 		Resource: ResourceGrants(),
 		Update:   true,
-		ID: "table/foo.bar.baz",
+		ID:       "table/foo.bar.baz",
 		InstanceState: map[string]string{
 			"table": "foo.bar.baz",
 		},

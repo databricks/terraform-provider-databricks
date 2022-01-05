@@ -71,11 +71,11 @@ func ResourceExternalLocation() *schema.Resource {
 			var el ExternalLocationInfo
 			common.DataToStructPointer(d, s, &el)
 			return NewExternalLocationsAPI(ctx, c).update(d.Id(), ExternalLocationInfo{
-				Name:  d.Id(),
-				URL: el.URL,
+				Name:           d.Id(),
+				URL:            el.URL,
 				CredentialName: el.CredentialName,
-				Comment: el.Comment,
-				Owner: el.Owner,
+				Comment:        el.Comment,
+				Owner:          el.Owner,
 			})
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {

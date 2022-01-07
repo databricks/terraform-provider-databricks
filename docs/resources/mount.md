@@ -3,7 +3,7 @@ subcategory: "Storage"
 ---
 # databricks_mount Resource
 
-This resource will mount your cloud storage account on `dbfs:/mnt/yourname`. Right now it supports mounting AWS S3, Azure (Blob Storage, ADLS Gen1 & Gen2), Google Cloud Storage.  It is important to understand that this will start up the [cluster](cluster.md) if the cluster is terminated. The read and refresh terraform command will require a cluster and may take some time to validate the mount. If `cluster_id` is not specified, it will create the smallest possible cluster with name equal to or starting with `terraform-mount` for the shortest possible amount of time.
+This resource will [mount your cloud storage](https://docs.databricks.com/data/databricks-file-system.html#mount-object-storage-to-dbfs) on `dbfs:/mnt/name`. Right now it supports mounting AWS S3, Azure (Blob Storage, ADLS Gen1 & Gen2), Google Cloud Storage.  It is important to understand that this will start up the [cluster](cluster.md) if the cluster is terminated. The read and refresh terraform command will require a cluster and may take some time to validate the mount. If `cluster_id` is not specified, it will create the smallest possible cluster with name equal to or starting with `terraform-mount` for the shortest possible amount of time.
 
 This resource provides two ways of mounting a storage account:
 1. Use a storage-specific configuration block - this could be used for the most cases, as it will fill most of the necessary details. Currently we support following configuration blocks:
@@ -327,3 +327,16 @@ In addition to all arguments above, the following attributes are exported:
 
 * `id` - mount name
 * `source` - (String) HDFS-compatible url
+
+## Related Resources
+
+The following resources are often used in the same context:
+
+* [End to end workspace management](../guides/workspace-management.md) guide.
+* [databricks_aws_bucket_policy](../data-sources/aws_bucket_policy.md) data to configure a simple access policy for AWS S3 buckets, so that Databricks can access data in it.
+* [databricks_cluster](cluster.md) to create [Databricks Clusters](https://docs.databricks.com/clusters/index.html).
+* [databricks_dbfs_file](../data-sources/dbfs_file.md) data to get file content from [Databricks File System (DBFS)](https://docs.databricks.com/data/databricks-file-system.html).
+* [databricks_dbfs_file_paths](../data-sources/dbfs_file_paths.md) data to get list of file names from get file content from [Databricks File System (DBFS)](https://docs.databricks.com/data/databricks-file-system.html).
+* [databricks_dbfs_file](dbfs_file.md) to manage relatively small files on [Databricks File System (DBFS)](https://docs.databricks.com/data/databricks-file-system.html).
+* [databricks_instance_profile](instance_profile.md) to manage AWS EC2 instance profiles that users can launch [databricks_cluster](cluster.md) and access data, like [databricks_mount](mount.md).
+* [databricks_library](library.md) to install a [library](https://docs.databricks.com/libraries/index.html) on [databricks_cluster](cluster.md).

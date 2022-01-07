@@ -3,7 +3,7 @@ subcategory: "Workspace"
 ---
 # databricks_notebook Resource
 
-This resource allows you to manage Databricks notebooks. You can also work with [databricks_notebook](../data-sources/notebook.md) and [databricks_notebook_paths](../data-sources/notebook_paths.md) data sources.
+This resource allows you to manage [Databricks Notebooks](https://docs.databricks.com/notebooks/index.html). You can also work with [databricks_notebook](../data-sources/notebook.md) and [databricks_notebook_paths](../data-sources/notebook_paths.md) data sources.
 
 ## Example Usage
 
@@ -72,3 +72,21 @@ The resource notebook can be imported using notebook path
 ```bash
 $ terraform import databricks_notebook.this /path/to/notebook
 ```
+
+## Related Resources
+
+The following resources are often used in the same context:
+
+* [End to end workspace management](../guides/workspace-management.md) guide.
+* [databricks_cluster](cluster.md) to create [Databricks Clusters](https://docs.databricks.com/clusters/index.html).
+* [databricks_directory](directory.md) to manage directories in [Databricks Workpace](https://docs.databricks.com/workspace/workspace-objects.html).
+* [databricks_job](job.md) to manage [Databricks Jobs](https://docs.databricks.com/jobs.html) to run non-interactive code in a [databricks_cluster](cluster.md).
+* [databricks_notebook](../data-sources/notebook.md) data to export a notebook from Databricks Workspace.
+* [databricks_notebook_paths](../data-sources/notebook_paths.md) data to list notebooks in Databricks Workspace.
+* [databricks_pipeline](pipeline.md) to deploy [Delta Live Tables](https://docs.databricks.com/data-engineering/delta-live-tables/index.html). 
+* [databricks_repo](repo.md) to manage [Databricks Repos](https://docs.databricks.com/repos.html).
+* [databricks_secret](secret.md) to manage [secrets](https://docs.databricks.com/security/secrets/index.html#secrets-user-guide) in Databricks workspace.
+* [databricks_secret_acl](secret_acl.md) to manage access to [secrets](https://docs.databricks.com/security/secrets/index.html#secrets-user-guide) in Databricks workspace.
+* [databricks_secret_scope](secret_scope.md) to create [secret scopes](https://docs.databricks.com/security/secrets/index.html#secrets-user-guide) in Databricks workspace.
+* [databricks_user](user.md) to [manage users](https://docs.databricks.com/administration-guide/users-groups/users.html), that could be added to [databricks_group](group.md) within the workspace.
+* [databricks_user](../data-sources/user.md) data to retrieves information about [databricks_user](user.md).

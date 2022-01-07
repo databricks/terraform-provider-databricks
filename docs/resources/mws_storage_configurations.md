@@ -48,3 +48,14 @@ In addition to all arguments above, the following attributes are exported:
 
 * `id` - Canonical unique identifier for the mws storage configurations.
 * `storage_configuration_id` - (String) id of storage config to be used for `databricks_mws_workspace` resource.
+
+## Related Resources
+
+The following resources are used in the same context:
+
+* [Provisioning Databricks on AWS](../guides/aws-workspace.md) guide.
+* [databricks_mws_credentials](mws_credentials.md) to configure the cross-account role for creation of new workspaces within AWS.
+* [databricks_mws_customer_managed_keys](mws_customer_managed_keys.md) to configure KMS keys for new workspaces within AWS.
+* [databricks_mws_log_delivery](mws_log_delivery.md) to configure delivery of [billable usage logs](https://docs.databricks.com/administration-guide/account-settings/billable-usage-delivery.html) and [audit logs](https://docs.databricks.com/administration-guide/account-settings/audit-logs.html).
+* [databricks_mws_networks](mws_networks.md) to [configure VPC](https://docs.databricks.com/administration-guide/cloud-configurations/aws/customer-managed-vpc.html) & subnets for new workspaces within AWS.
+* [databricks_mws_workspaces](mws_workspaces.md) to set up [workspaces in E2 architecture on AWS](https://docs.databricks.com/getting-started/overview.html#e2-architecture-1).

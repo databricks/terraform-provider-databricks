@@ -4,7 +4,7 @@ subcategory: "Security"
 
 # databricks_permissions Resource
 
-This resource allows you to generically manage permissions for other resources in Databricks workspace. It would guarantee, that only _admins_, _authenticated principal_ and those declared within `access_control` blocks would have specified access. It is not possible to remove management rights from _admins_ group.
+This resource allows you to generically manage [access control](https://docs.databricks.com/security/access-control/index.html) in Databricks workspace. It would guarantee, that only _admins_, _authenticated principal_ and those declared within `access_control` blocks would have specified access. It is not possible to remove management rights from _admins_ group.
 
 -> **Note** It is not possible to lower permissions for `admins` or your own user anywhere from `CAN_MANAGE` level, so Databricks Terraform Provider [removes](https://github.com/databrickslabs/terraform-provider-databricks/blob/master/access/resource_permissions.go#L261-L271) those `access_control` blocks automatically. 
 

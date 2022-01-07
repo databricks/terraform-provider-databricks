@@ -8,7 +8,7 @@ This data source constructs necessary AWS STS assume role policy for you.
 
 ## Example Usage
 
-End-to-end example of provisioning Cross-account IAM role:
+End-to-end example of provisioning Cross-account IAM role with [databricks_mws_credentials](../resources/mws_credentials.md) and [aws_iam_role](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role):
 
 ```hcl
 variable "databricks_account_id" {
@@ -56,3 +56,11 @@ resource "databricks_mws_credentials" "this" {
 In addition to all arguments above, the following attributes are exported:
 
 * `json` - AWS IAM Policy JSON document
+
+## Related Resources
+
+The following resources are used in the same context:
+
+* [Provisioning AWS Databricks E2 with a Hub & Spoke firewall for data exfiltration protection](../guides/aws-e2-firewall-hub-and-spoke.md) guide
+* [databricks_aws_bucket_policy](aws_bucket_policy.md) data to configure a simple access policy for AWS S3 buckets, so that Databricks can access data in it.
+* [databricks_aws_crossaccount_policy](aws_crossaccount_policy.md) data to construct the necessary AWS cross-account policy for you, which is based on [official documentation](https://docs.databricks.com/administration-guide/account-api/iam-role.html#language-Your%C2%A0VPC,%C2%A0default).

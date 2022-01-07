@@ -147,3 +147,14 @@ This resource can be imported by specifying a combination of an account id and l
 ```bash
 $ terraform import databricks_mws_log_delivery.usage "<account-id>|<log-config-id>"
 ```
+
+## Related Resources
+
+The following resources are used in the same context:
+
+* [Provisioning Databricks on AWS](../guides/aws-workspace.md) guide.
+* [databricks_mws_credentials](mws_credentials.md) to configure the cross-account role for creation of new workspaces within AWS.
+* [databricks_mws_customer_managed_keys](mws_customer_managed_keys.md) to configure KMS keys for new workspaces within AWS.
+* [databricks_mws_networks](mws_networks.md) to [configure VPC](https://docs.databricks.com/administration-guide/cloud-configurations/aws/customer-managed-vpc.html) & subnets for new workspaces within AWS.
+* [databricks_mws_storage_configurations](mws_storage_configurations.md) to configure root bucket new workspaces within AWS.
+* [databricks_mws_workspaces](mws_workspaces.md) to set up [workspaces in E2 architecture on AWS](https://docs.databricks.com/getting-started/overview.html#e2-architecture-1).

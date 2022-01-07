@@ -5,7 +5,7 @@ subcategory: "Security"
 
 -> **Note** This resource has an evolving API, which may change in future versions of the provider.
 
-This resource allows you to attach instance profiles to users.
+This resource allows you to attach [databricks_instance_profile](instance_profile.md) (AWS) to [databricks_user](user.md).
 
 ## Example Usage
 
@@ -36,6 +36,13 @@ In addition to all arguments above, the following attributes are exported:
 
 *  `id` - The id in the format `<user_id>|<instance_profile_id>`.
 
-## Import
+## Related Resources
 
--> **Note** Importing this resource is not currently supported.
+The following resources are often used in the same context:
+
+* [End to end workspace management](../guides/workspace-management.md) guide.
+* [databricks_group_instance_profile](group_instance_profile.md) to attach [databricks_instance_profile](instance_profile.md) (AWS) to [databricks_group](group.md).
+* [databricks_group_member](group_member.md) to attach [users](user.md) and [groups](group.md) as group members.
+* [databricks_instance_profile](instance_profile.md) to manage AWS EC2 instance profiles that users can launch [databricks_cluster](cluster.md) and access data, like [databricks_mount](mount.md).
+* [databricks_user](user.md) to [manage users](https://docs.databricks.com/administration-guide/users-groups/users.html), that could be added to [databricks_group](group.md) within the workspace.
+* [databricks_user](../data-sources/user.md) data to retrieves information about [databricks_user](user.md).

@@ -98,3 +98,12 @@ The resource can be imported using a synthetic identifier. Examples of valid syn
 ```bash
 $ terraform import databricks_sql_permissions.foo /<object-type>/<object-name>
 ```
+
+## Related Resources
+
+The following resources are often used in the same context:
+
+* [End to end workspace management](../guides/workspace-management.md) guide.
+* [databricks_group](group.md) to manage [groups in Databricks Workspace](https://docs.databricks.com/administration-guide/users-groups/groups.html) or [Account Console](https://accounts.cloud.databricks.com/) (for AWS deployments).
+* [databricks_permissions](permissions.md) to manage [access control](https://docs.databricks.com/security/access-control/index.html) in Databricks workspace.
+* [databricks_user](user.md) to [manage users](https://docs.databricks.com/administration-guide/users-groups/users.html), that could be added to [databricks_group](group.md) within the workspace.

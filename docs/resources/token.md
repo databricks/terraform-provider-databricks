@@ -3,7 +3,7 @@ subcategory: "Security"
 ---
 # databricks_token Resource
 
-This resource creates an api token that can be used to create Databricks resources. This will create an API token for the user that has authenticated on the provider. So if you have used an admin user to setup the provider then you will be making API tokens for that admin user. 
+This resource creates [Personal Access Tokens](https://docs.databricks.com/sql/user/security/personal-access-tokens.html) for the same user, that is authenticated with the provider. Most likely you should use [databricks_obo_token](obo_token.md) to create [On-Behalf-Of tokens](https://docs.databricks.com/administration-guide/users-groups/service-principals.html#manage-personal-access-tokens-for-a-service-principal) for a [databricks_service_principal](service_principal.md) in Databricks workspaces on AWS. Databricks workspaces on other clouds use their own native OAuth token flows.
 
 ## Example Usage
 

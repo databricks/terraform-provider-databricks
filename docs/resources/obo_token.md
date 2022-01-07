@@ -3,7 +3,7 @@ subcategory: "Security"
 ---
 # databricks_obo_token Resource
 
-This resource creates On-Behalf-Of tokens for a Service Principal in Databricks workspaces on AWS. It is very useful, when you want to provision resources within a workspace through narrowly-scoped service principal, that has no access to other workspaces within the same Databricks Account.
+This resource creates [On-Behalf-Of tokens](https://docs.databricks.com/administration-guide/users-groups/service-principals.html#manage-personal-access-tokens-for-a-service-principal) for a [databricks_service_principal](service_principal.md) in Databricks workspaces on AWS. It is very useful, when you want to provision resources within a workspace through narrowly-scoped service principal, that has no access to other workspaces within the same Databricks Account.
 
 ## Example Usage
 
@@ -73,3 +73,14 @@ In addition to all arguments above, the following attributes are exported:
 
 * `id` - Canonical unique identifier for the token.
 * `token_value` - **Sensitive** value of the newly-created token.
+
+## Related Resources
+
+The following resources are often used in the same context:
+
+* [End to end workspace management](../guides/workspace-management.md) guide.
+* [databricks_group](../data-sources/group.md) data to retrieve information about [databricks_group](group.md) members, entitlements and instance profiles.
+* [databricks_group_member](group_member.md) to attach [users](user.md) and [groups](group.md) as group members.
+* [databricks_permissions](permissions.md) to manage [access control](https://docs.databricks.com/security/access-control/index.html) in Databricks workspace.
+* [databricks_service_principal](service_principal.md) to manage [Service Principals](https://docs.databricks.com/administration-guide/users-groups/service-principals.html) that could be added to [databricks_group](group.md) within workspace.
+* [databricks_sql_permissions](sql_permissions.md) to manage data object access control lists in Databricks workspaces for things like tables, views, databases, and [more](https://docs.databricks.com/security/access-control/table-acls/object-privileges.html).

@@ -3,7 +3,7 @@ subcategory: "Security"
 ---
 # databricks_user Resource
 
-Directly creates a user, that could be added to [databricks_group](group.md) within the workspace. Upon user creation the user will receive a password reset email. You can also get information about caller identity using [databricks_current_user](../data-sources/current_user.md) data source.
+This resource is used to [manage users](https://docs.databricks.com/administration-guide/users-groups/users.html), that could be added to [databricks_group](group.md) within the workspace. Upon user creation the user will receive a password reset email. You can also get information about caller identity using [databricks_current_user](../data-sources/current_user.md) data source.
 
 ## Example Usage
 
@@ -67,3 +67,15 @@ The resource scim user can be imported using id:
 ```bash
 $ terraform import databricks_user.me <user-id>
 ```
+
+## Related Resources
+
+The following resources are often used in the same context:
+
+* [End to end workspace management](../guides/workspace-management.md) guide.
+* [databricks_group](group.md) to manage [groups in Databricks Workspace](https://docs.databricks.com/administration-guide/users-groups/groups.html) or [Account Console](https://accounts.cloud.databricks.com/) (for AWS deployments).
+* [databricks_group](../data-sources/group.md) data to retrieve information about [databricks_group](group.md) members, entitlements and instance profiles.
+* [databricks_group_instance_profile](group_instance_profile.md) to attach [databricks_instance_profile](instance_profile.md) (AWS) to [databricks_group](group.md).
+* [databricks_group_member](group_member.md) to attach [users](user.md) and [groups](group.md) as group members.
+* [databricks_instance_profile](instance_profile.md) to manage AWS EC2 instance profiles that users can launch [databricks_cluster](cluster.md) and access data, like [databricks_mount](mount.md).
+* [databricks_user](../data-sources/user.md) data to retrieves information about [databricks_user](user.md).

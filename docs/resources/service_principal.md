@@ -3,7 +3,7 @@ subcategory: "Security"
 ---
 # databricks_service_principal Resource
 
-Directly creates a service principal that could be added to [databricks_group](group.md) within workspace.
+Directly manage [Service Principals](https://docs.databricks.com/administration-guide/users-groups/service-principals.html) that could be added to [databricks_group](group.md) within workspace.
 
 ## Example Usage
 
@@ -69,3 +69,14 @@ The resource scim service principal can be imported using id:
 ```bash
 $ terraform import databricks_service_principal.me <service-principal-id>
 ```
+
+## Related Resources
+
+The following resources are often used in the same context:
+
+* [End to end workspace management](../guides/workspace-management.md) guide.
+* [databricks_group](group.md) to manage [groups in Databricks Workspace](https://docs.databricks.com/administration-guide/users-groups/groups.html) or [Account Console](https://accounts.cloud.databricks.com/) (for AWS deployments).
+* [databricks_group](../data-sources/group.md) data to retrieve information about [databricks_group](group.md) members, entitlements and instance profiles.
+* [databricks_group_member](group_member.md) to attach [users](user.md) and [groups](group.md) as group members.
+* [databricks_permissions](permissions.md) to manage [access control](https://docs.databricks.com/security/access-control/index.html) in Databricks workspace.
+* [databricks_sql_permissions](sql_permissions.md) to manage data object access control lists in Databricks workspaces for things like tables, views, databases, and [more](https://docs.databricks.

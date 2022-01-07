@@ -243,3 +243,15 @@ You can reset local DNS caches before provisioning new workspaces with one of th
 * Mac OS X Yosemite - `sudo discoveryutil udnsflushcaches`
 * Mac OS X Snow Leopard - `sudo dscacheutil -flushcache`
 * Mac OS X Leopard and below - `sudo lookupd -flushcache`
+
+## Related Resources
+
+The following resources are used in the same context:
+
+* [Provisioning Databricks on AWS](../guides/aws-workspace.md) guide.
+* [Provisioning AWS Databricks E2 with a Hub & Spoke firewall for data exfiltration protection](../guides/aws-e2-firewall-hub-and-spoke.md) guide.
+* [databricks_mws_credentials](mws_credentials.md) to configure the cross-account role for creation of new workspaces within AWS.
+* [databricks_mws_customer_managed_keys](mws_customer_managed_keys.md) to configure KMS keys for new workspaces within AWS.
+* [databricks_mws_log_delivery](mws_log_delivery.md) to configure delivery of [billable usage logs](https://docs.databricks.com/administration-guide/account-settings/billable-usage-delivery.html) and [audit logs](https://docs.databricks.com/administration-guide/account-settings/audit-logs.html).
+* [databricks_mws_networks](mws_networks.md) to [configure VPC](https://docs.databricks.com/administration-guide/cloud-configurations/aws/customer-managed-vpc.html) & subnets for new workspaces within AWS.
+* [databricks_mws_storage_configurations](mws_storage_configurations.md) to configure root bucket new workspaces within AWS.

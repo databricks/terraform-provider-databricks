@@ -3,7 +3,7 @@ subcategory: "Compute"
 ---
 # databricks_cluster resource
 
-This resource allows you to create, update, and delete clusters.
+This resource allows you to manage [Databricks Clusters](https://docs.databricks.com/clusters/index.html).
 
 ```hcl
 data "databricks_node_type" "smallest" {
@@ -279,10 +279,14 @@ Take note that this can only be specified for clusters with [custom Docker conta
 Here is the example of shared autoscaling cluster with some of AWS options set:
 
 ```hcl
+data "databricks_spark_version" "latest" {}
+data "databricks_node_type" "smallest" {
+  local_disk = true
+}
 resource "databricks_cluster" "this" {
   cluster_name            = "Shared Autoscaling"
-  spark_version           = "6.6.x-scala2.11"
-  node_type_id            = "i3.xlarge"
+  spark_version           = data.databricks_spark_version.latest.id
+  node_type_id            = data.databricks_node_type.smallest.id
   autotermination_minutes = 20
   autoscale {
     min_workers = 1
@@ -315,10 +319,14 @@ The following options are available:
 Here is the example of shared autoscaling cluster with some of AWS options set:
 
 ```hcl
+data "databricks_spark_version" "latest" {}
+data "databricks_node_type" "smallest" {
+  local_disk = true
+}
 resource "databricks_cluster" "this" {
   cluster_name            = "Shared Autoscaling"
-  spark_version           = "6.6.x-scala2.11"
-  node_type_id            = "Standard_DS3_v2"
+  spark_version           = data.databricks_spark_version.latest.id
+  node_type_id            = data.databricks_node_type.smallest.id
   autotermination_minutes = 20
   autoscale {
     min_workers = 1
@@ -401,3 +409,23 @@ The resource cluster can be imported using cluster id.
 ```bash
 $ terraform import databricks_cluster.this <cluster-id>
 ```
+
+## Related Resources
+
+The following resources are often used in the same context:
+
+* [Dynamic Passthrough Clusters for a Group](../guides/passthrough-cluster-per-user.md) guide
+* [End to end workspace management](../guides/workspace-management.md) guide
+* [databricks_clusters](../data-sources/clusters.md) data to retrieve a list of [databricks_cluster](cluster.md) ids.
+* [databricks_cluster_policy](cluster_policy.md) to create a [databricks_cluster](cluster.md) policy, which limits the ability to create clusters based on a set of rules.
+* [databricks_current_user](../data-sources/current_user.md) data to retrieve information about [databricks_user](user.md) or [databricks_service_principal](service_principal.md), that is calling Databricks REST API.
+* [databricks_global_init_script](global_init_script.md) to manage [global init scripts](https://docs.databricks.com/clusters/init-scripts.html#global-init-scripts), which are run on all [databricks_cluster](cluster.md#init_scripts) and [databricks_job](job.md#new_cluster).
+* [databricks_instance_pool](instance_pool.md) to manage [instance pools](https://docs.databricks.com/clusters/instance-pools/index.html) to reduce [cluster](cluster.md) start and auto-scaling times by maintaining a set of idle, ready-to-use instances.
+* [databricks_instance_profile](instance_profile.md) to manage AWS EC2 instance profiles that users can launch [databricks_cluster](cluster.md) and access data, like [databricks_mount](mount.md).
+* [databricks_job](job.md) to manage [Databricks Jobs](https://docs.databricks.com/jobs.html) to run non-interactive code in a [databricks_cluster](cluster.md).
+* [databricks_library](library.md) to install a [library](https://docs.databricks.com/libraries/index.html) on [databricks_cluster](cluster.md).
+* [databricks_mount](mount.md) to [mount your cloud storage](https://docs.databricks.com/data/databricks-file-system.html#mount-object-storage-to-dbfs) on `dbfs:/mnt/name`.
+* [databricks_node_type](../data-sources/node_type.md) data to get the smallest node type for [databricks_cluster](cluster.md) that fits search criteria, like amount of RAM or number of cores.
+* [databricks_pipeline](pipeline.md) to deploy [Delta Live Tables](https://docs.databricks.com/data-engineering/delta-live-tables/index.html). 
+* [databricks_spark_version](../data-sources/spark_version.md) data to get [Databricks Runtime (DBR)](https://docs.databricks.com/runtime/dbr.html) version that could be used for `spark_version` parameter in [databricks_cluster](cluster.md) and other resources.
+* [databricks_zones](../data-sources/zones.md) data to fetch all available AWS availability zones on your workspace on AWS.

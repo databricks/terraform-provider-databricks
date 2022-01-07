@@ -3,7 +3,7 @@ subcategory: "AWS"
 ---
 # databricks_instance_profile Resource
 
-This resource allows you to register or unregister EC2 instance profiles that users can launch [databricks_cluster](cluster.md) and access data, like [databricks_mount](mount.md). The following example demonstrates how to create an instance profile and create a cluster with it. When creating new `databricks_instance_profile`, Databricks validates that it has sufficient permissions to launch instances with the instance profile. This validation uses AWS dry-run mode for the [AWS EC2 RunInstances API](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_RunInstances.html).
+This resource allows you to manage AWS EC2 instance profiles that users can launch [databricks_cluster](cluster.md) and access data, like [databricks_mount](mount.md). The following example demonstrates how to create an instance profile and create a cluster with it. When creating new `databricks_instance_profile`, Databricks validates that it has sufficient permissions to launch instances with the instance profile. This validation uses AWS dry-run mode for the [AWS EC2 RunInstances API](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_RunInstances.html).
 
 ```hcl
 variable "crossaccount_role_name" {
@@ -48,10 +48,14 @@ resource "aws_iam_instance_profile" "shared" {
 resource "databricks_instance_profile" "shared" {
   instance_profile_arn = aws_iam_instance_profile.shared.arn
 }
+data "databricks_spark_version" "latest" {}
+data "databricks_node_type" "smallest" {
+  local_disk = true
+}
 resource "databricks_cluster" "this" {
   cluster_name            = "Shared Autoscaling"
-  spark_version           = "6.6.x-scala2.11"
-  node_type_id            = "i3.xlarge"
+  spark_version           = data.databricks_spark_version.latest.id
+  node_type_id            = data.databricks_node_type.smallest.id
   autotermination_minutes = 20
   autoscale {
     min_workers = 1

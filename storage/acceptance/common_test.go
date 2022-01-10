@@ -33,14 +33,14 @@ func mountResourceCheck(name string,
 
 func testMounting(t *testing.T, mp storage.MountPoint, m storage.Mount) {
 	client := common.CommonEnvironmentClient()
-	source, err := mp.Mount(m, client)
-	assert.Equal(t, m.Source(), source)
+	info, err := mp.Mount(m, client)
+	assert.Equal(t, m.Source(), info.Source)
 	assert.NoError(t, err)
 	defer func() {
 		err = mp.Delete()
 		assert.NoError(t, err)
 	}()
-	source, err = mp.Source()
+	source, err := mp.Source()
 	require.Equalf(t, m.Source(), source, "Error: %v", err)
 }
 
@@ -93,7 +93,7 @@ func TestAccSourceOnInvalidMountFails(t *testing.T) {
 func TestAccInvalidSecretScopeFails(t *testing.T) {
 	_, mp := mountPointThroughReusedCluster(t)
 	client := common.CommonEnvironmentClient()
-	source, err := mp.Mount(storage.AzureADLSGen1Mount{
+	info, err := mp.Mount(storage.AzureADLSGen1Mount{
 		ClientID:        "abc",
 		TenantID:        "bcd",
 		PrefixType:      "dfs.adls",
@@ -102,6 +102,6 @@ func TestAccInvalidSecretScopeFails(t *testing.T) {
 		SecretKey:       "key",
 		SecretScope:     "y",
 	}, client)
-	assert.Equal(t, "", source)
+	assert.Equal(t, "", info.Source)
 	qa.AssertErrorStartsWith(t, err, "Secret does not exist with scope: y and key: key")
 }

@@ -57,41 +57,6 @@ func TestResourceAzureBlobMountCreate(t *testing.T) {
 	assert.Equal(t, "wasbs://c@f.blob.core.windows.net/d", d.Get("source"))
 }
 
-func TestResourceAzureBlobMountCreate_Error(t *testing.T) {
-	d, err := qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   "GET",
-				Resource: "/api/2.0/clusters/get?cluster_id=b",
-				Response: clusters.ClusterInfo{
-					State: clusters.ClusterStateRunning,
-				},
-			},
-		},
-		Resource: ResourceAzureBlobMount(),
-		CommandMock: func(commandStr string) common.CommandResults {
-			return common.CommandResults{
-				ResultType: "error",
-				Summary:    "Some error",
-			}
-		},
-		State: map[string]interface{}{
-			"auth_type":            "ACCESS_KEY",
-			"cluster_id":           "b",
-			"container_name":       "c",
-			"directory":            "/d",
-			"mount_name":           "e",
-			"storage_account_name": "f",
-			"token_secret_key":     "g",
-			"token_secret_scope":   "h",
-		},
-		Create: true,
-	}.Apply(t)
-	require.EqualError(t, err, "Some error")
-	assert.Equal(t, "e", d.Id())
-	assert.Equal(t, "", d.Get("source"))
-}
-
 func TestResourceAzureBlobMountRead(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{

@@ -994,7 +994,7 @@ func TestResourceAzureBlobMountCreateGeneric_Resource_ID_Error(t *testing.T) {
 }
 
 func TestResourceAzureBlobMountCreateGeneric_Error(t *testing.T) {
-	d, err := qa.ResourceFixture{
+	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
@@ -1023,10 +1023,7 @@ func TestResourceAzureBlobMountCreateGeneric_Error(t *testing.T) {
 				"token_secret_scope":   "h",
 			}}},
 		Create: true,
-	}.Apply(t)
-	require.EqualError(t, err, "Some error")
-	assert.Equal(t, "e", d.Id())
-	assert.Equal(t, "", d.Get("source"))
+	}.ExpectError(t, "Some error")
 }
 
 func TestResourceAzureBlobMountCreateGeneric_Error_NoResourceID(t *testing.T) {

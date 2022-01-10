@@ -66,8 +66,12 @@ func (mp MountPoint) Delete() error {
 	return result.Err()
 }
 
+type mountRemoteInfo struct {
+	Source string `json:"source"`
+}
+
 // Mount mounts object store on workspace
-func (mp MountPoint) Mount(mo Mount, client *common.DatabricksClient) (source string, err error) {
+func (mp MountPoint) Mount(mo Mount, client *common.DatabricksClient) (info mountRemoteInfo, err error) {
 	extraConfigs, err := json.Marshal(mo.Config(client))
 	if err != nil {
 		return
@@ -96,7 +100,9 @@ func (mp MountPoint) Mount(mo Mount, client *common.DatabricksClient) (source st
 		dbutils.notebook.exit(mount_source)
 	`, mp.Name, mo.Source(), extraConfigs, mp.EncryptionType) // lgtm[go/unsafe-quoting]
 	result := mp.Exec.Execute(mp.ClusterID, "python", command)
-	return result.Text(), result.Err()
+	return mountRemoteInfo{ // TODO: change to proper implementation
+		Source: result.Text(),
+	}, result.Err()
 }
 
 func commonMountResource(tpl Mount, s map[string]*schema.Schema) *schema.Resource {
@@ -137,8 +143,8 @@ func getCommonClusterObject(clustersAPI clusters.ClustersAPI, clusterName string
 		ClusterName: clusterName,
 		SparkVersion: clustersAPI.LatestSparkVersionOrDefault(
 			clusters.SparkVersionRequest{
-				Latest:          true,
-				LongTermSupport: true,
+				// updateMount works on DBR 10.2+
+				Latest: true,
 			}),
 		NodeTypeID: clustersAPI.GetSmallestNodeType(
 			clusters.NodeTypeRequest{
@@ -157,14 +163,16 @@ func getCommonClusterObject(clustersAPI clusters.ClustersAPI, clusterName string
 }
 
 func getOrCreateMountingCluster(clustersAPI clusters.ClustersAPI) (string, error) {
-	cluster, err := clustersAPI.GetOrCreateRunningCluster("terraform-mount", getCommonClusterObject(clustersAPI, "terraform-mount"))
+	cluster, err := clustersAPI.GetOrCreateRunningCluster("terraform-mount",
+		getCommonClusterObject(clustersAPI, "terraform-mount"))
 	if err != nil {
 		return "", fmt.Errorf("failed to get mouting cluster: %w", err)
 	}
 	return cluster.ClusterID, nil
 }
 
-func getMountingClusterID(ctx context.Context, client *common.DatabricksClient, clusterID string) (string, error) {
+func getMountingClusterID(ctx context.Context, client *common.DatabricksClient, 
+	clusterID string) (string, error) {
 	clustersAPI := clusters.NewClustersAPI(ctx, client)
 	if clusterID == "" {
 		return getOrCreateMountingCluster(clustersAPI)
@@ -215,8 +223,6 @@ func mountCluster(ctx context.Context, tpl interface{}, d *schema.ResourceData,
 		return mountConfig, mountPoint, fmt.Errorf("nor 'mount_name' or 'name' are set")
 	}
 
-	d.SetId(mountPoint.Name)
-
 	if v := d.Get("encryption_type"); v != nil {
 		mountPoint.EncryptionType = v.(string)
 	}
@@ -233,38 +239,34 @@ func mountCreate(tpl interface{}, r *schema.Resource) func(context.Context, *sch
 		}
 		client := m.(*common.DatabricksClient)
 		log.Printf("[INFO] Mounting %s at /mnt/%s", mountConfig.Source(), d.Id())
-		source, err := mountPoint.Mount(mountConfig, client)
+		info, err := mountPoint.Mount(mountConfig, client)
 		if err != nil {
 			return diag.FromErr(err)
 		}
-		d.Set("source", source)
-		return readMountSource(ctx, mountPoint, d)
+		d.Set("source", info.Source)
+		d.SetId(mountPoint.Name)
+		return nil
 	}
 }
 
-// reads and sets source of the mount
-func readMountSource(ctx context.Context, mp MountPoint, d *schema.ResourceData) diag.Diagnostics {
-	source, err := mp.Source()
-	if err != nil {
-		if err.Error() == "Mount not found" {
-			log.Printf("[INFO] /mnt/%s is not mounted", d.Id())
-			d.SetId("")
-			return nil
-		}
-		return diag.FromErr(err)
-	}
-	d.Set("source", source)
-	return nil
-}
-
-// return resource reader function
+// refreshes remote state of the mount
 func mountRead(tpl interface{}, r *schema.Resource) func(context.Context, *schema.ResourceData, interface{}) diag.Diagnostics {
 	return func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 		_, mp, err := mountCluster(ctx, tpl, d, m, r)
 		if err != nil {
 			return diag.FromErr(err)
 		}
-		return readMountSource(ctx, mp, d)
+		source, err := mp.Source()
+		if err != nil {
+			if err.Error() == "Mount not found" {
+				log.Printf("[INFO] /mnt/%s is not mounted", d.Id())
+				d.SetId("")
+				return nil
+			}
+			return diag.FromErr(err)
+		}
+		d.Set("source", source)
+		return nil
 	}
 }
 

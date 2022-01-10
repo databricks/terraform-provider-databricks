@@ -102,12 +102,13 @@ func TestMountPoint_Mount(t *testing.T) {
 		mount_source = safe_mount("/mnt/%s", %q, %s, "")
 		dbutils.notebook.exit(mount_source)
 	`, mountName, expectedMountSource, expectedMountConfig)
-	testMountFuncHelper(t, func(mp MountPoint, mount Mount) (s string, e error) {
+	testMountFuncHelper(t, func(mp MountPoint, mount Mount) (string, error) {
 		client := common.DatabricksClient{
 			Host:  ".",
 			Token: ".",
 		}
-		return mp.Mount(mount, &client)
+		info, err := mp.Mount(mount, &client)
+		return info.Source, err
 	}, mount, mountName, expectedCommand)
 }
 

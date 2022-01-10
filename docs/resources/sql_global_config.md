@@ -27,12 +27,11 @@ For Azure you should use the `data_access_config` to provide the service princip
 resource "databricks_sql_global_config" "this" {
   security_policy      = "DATA_ACCESS_CONTROL"
   data_access_config = {
-    "spark.sql.session.timeZone" : "UTC",
-    "spark.hadoop.fs.azure.account.auth.type.lakehouse.dfs.core.windows.net" : "OAuth",
-    "spark.hadoop.fs.azure.account.oauth.provider.type.lakehouse.dfs.core.windows.net" : "org.apache.hadoop.fs.azurebfs.oauth2.ClientCredsTokenProvider",
-    "spark.hadoop.fs.azure.account.oauth2.client.id.lakehouse.dfs.core.windows.net" : "...",
-    "spark.hadoop.fs.azure.account.oauth2.client.secret.lakehouse.dfs.core.windows.net" : "{{secrets/your-secret-scope-name/your-secret-name}}",
-    "spark.hadoop.fs.azure.account.oauth2.client.endpoint.lakehouse.dfs.core.windows.net" : "https://login.microsoftonline.com/.../oauth2/token"
+    "spark.hadoop.fs.azure.account.auth.type" : "OAuth",
+    "spark.hadoop.fs.azure.account.oauth.provider.type" : "org.apache.hadoop.fs.azurebfs.oauth2.ClientCredsTokenProvider",
+    "spark.hadoop.fs.azure.account.oauth2.client.id" : "${var.tenant_id}",
+    "spark.hadoop.fs.azure.account.oauth2.client.secret" : "{{secrets/${local.secret_scope}/${local.secret_key}}}",
+    "spark.hadoop.fs.azure.account.oauth2.client.endpoint" : "https://login.microsoftonline.com/${var.tenant_id}/oauth2/token"
   }
 }
 ```

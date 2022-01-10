@@ -70,7 +70,7 @@ func testWithNewSecretScope(t *testing.T, callback func(string, string),
 func TestAccSourceOnInvalidMountFails(t *testing.T) {
 	client, mp := mountPointThroughReusedCluster(t)
 	source, err := mp.Source(&storage.AzureADLSGen2MountGeneric{
-		ContainerName: "a",
+		ContainerName:      "a",
 		StorageAccountName: "b",
 	}, client)
 	assert.Equal(t, "", source)

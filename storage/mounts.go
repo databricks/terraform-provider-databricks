@@ -33,56 +33,30 @@ type MountPoint struct {
 	EncryptionType string
 }
 
-// Source returns mountpoint remote info
-func (mp MountPoint) Source(mo Mount, client *common.DatabricksClient) (mountRemoteInfo, error) {
-	result := mp.Exec.Execute(mp.ClusterID, "python", fmt.Sprintf(`
-		dbutils.fs.refreshMounts()
-		for mount in dbutils.fs.mounts():
-			if mount.mountPoint == "/mnt/%s":
-				dbutils.notebook.exit(mount.source)
-		raise Exception("Mount not found")
-	`, mp.Name))
-	return mountRemoteInfo{ // TODO: proper implementation
-		Source: result.Text(),
-	}, result.Err()
-}
-
-// Delete removes mount from workspace
-func (mp MountPoint) Delete() error {
-	result := mp.Exec.Execute(mp.ClusterID, "python", fmt.Sprintf(`
-		found = False
-		mount_point = "/mnt/%s"
-		dbutils.fs.refreshMounts()
-		for mount in dbutils.fs.mounts():
-			if mount.mountPoint == mount_point:
-				found = True
-		if not found:
-			dbutils.notebook.exit("success")
-		dbutils.fs.unmount(mount_point)
-		dbutils.fs.refreshMounts()
-		for mount in dbutils.fs.mounts():
-			if mount.mountPoint == mount_point:
-				raise Exception("Failed to unmount")
-		dbutils.notebook.exit("success")
-	`, mp.Name))
-	return result.Err()
-}
-
 type mountRemoteInfo struct {
-	Source string `json:"source"`
+	Source     string `json:"source"`
+	ConfigHash string `json:"config_hash"`
 }
 
-// Mount mounts object store on workspace
-func (mp MountPoint) Mount(mo Mount, client *common.DatabricksClient) (info mountRemoteInfo, err error) {
+var secretsRe = regexp.MustCompile(`"\{\{secrets/([^/]+)/([^\}]+)\}\}"`)
+var configHashCode = `hashlib.sha256(','.join(f'{k}:{v}' for k,v in sorted(extra_configs.items())).encode('utf-8')).hexdigest()`
+
+func (mp MountPoint) extraConfigs(mo Mount, client *common.DatabricksClient) string {
 	extraConfigs, err := json.Marshal(mo.Config(client))
 	if err != nil {
-		return
+		return "{}"
 	}
-	secretsRe := regexp.MustCompile(`"\{\{secrets/([^/]+)/([^\}]+)\}\}"`)
 	extraConfigs = secretsRe.ReplaceAll(extraConfigs, []byte(`dbutils.secrets.get("$1", "$2")`))
 	sparkConfRe := regexp.MustCompile(`"\{\{sparkconf/([^\}]+)\}\}"`)
 	extraConfigs = sparkConfRe.ReplaceAll(extraConfigs, []byte(`spark.conf.get("$1")`))
-	command := fmt.Sprintf(`
+	return string(extraConfigs)
+}
+
+// Mount creates new data storage mount on DBFS
+func (mp MountPoint) Mount(mo Mount, client *common.DatabricksClient) (info mountRemoteInfo, err error) {
+	extraConfigs := mp.extraConfigs(mo, client)
+	result := mp.Exec.Execute(mp.ClusterID, "python", `
+		import json, hashlib
 		def safe_mount(mount_point, mount_source, configs, encryptionType):
 			for mount in dbutils.fs.mounts():
 				if mount.mountPoint == mount_point and mount.source == mount_source:
@@ -100,13 +74,80 @@ func (mp MountPoint) Mount(mo Mount, client *common.DatabricksClient) (info moun
 				except Exception as e2:
 					print("Failed to unmount", e2)
 				raise e
-		mount_source = safe_mount("/mnt/%s", "%v", %s, "%s")
-		dbutils.notebook.exit(mount_source)
-	`, mp.Name, mo.Source(), extraConfigs, mp.EncryptionType) // lgtm[go/unsafe-quoting]
-	result := mp.Exec.Execute(mp.ClusterID, "python", command)
-	return mountRemoteInfo{ // TODO: change to proper implementation
-		Source: result.Text(),
-	}, result.Err()
+		extra_configs = `+extraConfigs+`
+		mount_source = safe_mount("/mnt/`+mp.Name+`", "`+mo.Source()+`", extra_configs, "`+mp.EncryptionType+`")
+		dbutils.notebook.exit(json.dumps({
+			"source": mount_source,
+			"config_hash": hashlib.sha256(','.join(f'{k}:{v}' for k,v
+				in sorted(extra_configs.items())).encode('utf-8')).hexdigest()
+		}))`) // lgtm[go/unsafe-quoting]
+	if result.Failed() {
+		return mountRemoteInfo{}, result.Err()
+	}
+	err = json.Unmarshal([]byte(result.Text()), &info)
+	return info, err
+}
+
+// Source returns mountpoint remote info
+func (mp MountPoint) Source(mo Mount, client *common.DatabricksClient) (info mountRemoteInfo, err error) {
+	extraConfigs := mp.extraConfigs(mo, client)
+	result := mp.Exec.Execute(mp.ClusterID, "python", `
+		import json, hashlib
+		dbutils.fs.refreshMounts()
+		extra_configs = `+extraConfigs+`
+		for mount in dbutils.fs.mounts():
+			if mount.mountPoint == "/mnt/`+mp.Name+`":
+				dbutils.notebook.exit(json.dumps({
+					"source": mount.source,
+					"config_hash": `+configHashCode+`
+				}))
+		raise Exception("Mount not found")`) // lgtm[go/unsafe-quoting]
+	if result.Failed() {
+		return mountRemoteInfo{}, result.Err()
+	}
+	err = json.Unmarshal([]byte(result.Text()), &info)
+	return info, err
+}
+
+// Update updates mount d
+func (mp MountPoint) Update(mo Mount, client *common.DatabricksClient) (info mountRemoteInfo, err error) {
+	extraConfigs := mp.extraConfigs(mo, client)
+	result := mp.Exec.Execute(mp.ClusterID, "python", `
+		extra_configs = `+extraConfigs+`
+		dbutils.fs.updateMount(
+			mount_point = "/mnt/`+mp.Name+`",
+			source = "`+mo.Source()+`",
+			extra_configs = extra_configs)
+		dbutils.notebook.exit(json.dumps({
+			"source": mount_source,
+			"config_hash": hashlib.sha256(','.join(f'{k}:{v}' for k,v
+				in sorted(extra_configs.items())).encode('utf-8')).hexdigest()
+		}))`) // lgtm[go/unsafe-quoting]
+	if result.Failed() {
+		return mountRemoteInfo{}, result.Err()
+	}
+	err = json.Unmarshal([]byte(result.Text()), &info)
+	return info, err
+}
+
+// Delete removes mount from workspace
+func (mp MountPoint) Delete() error {
+	result := mp.Exec.Execute(mp.ClusterID, "python", `
+		found = False
+		mount_point = "/mnt/`+mp.Name+`"
+		dbutils.fs.refreshMounts()
+		for mount in dbutils.fs.mounts():
+			if mount.mountPoint == mount_point:
+				found = True
+		if not found:
+			dbutils.notebook.exit("success")
+		dbutils.fs.unmount(mount_point)
+		dbutils.fs.refreshMounts()
+		for mount in dbutils.fs.mounts():
+			if mount.mountPoint == mount_point:
+				raise Exception("Failed to unmount")
+		dbutils.notebook.exit("success")`)
+	return result.Err()
 }
 
 func commonMountResource(tpl Mount, s map[string]*schema.Schema) *schema.Resource {
@@ -248,9 +289,13 @@ func mountCreate(tpl interface{}, r *schema.Resource) func(
 		if err != nil {
 			return diag.FromErr(err)
 		}
-		d.Set("source", info.Source)
 		d.SetId(mountPoint.Name)
-		return nil
+		d.Set("source", info.Source)
+		if _, ok := r.Schema["config_hash"]; ok {
+			// updates are only supported for `databricks_mount`
+			d.Set("config_hash", info.ConfigHash)
+		}
+		return mountRead(tpl, r)(ctx, d, m)
 	}
 }
 
@@ -272,6 +317,34 @@ func mountRead(tpl interface{}, r *schema.Resource) func(
 			return diag.FromErr(err)
 		}
 		d.Set("source", info.Source)
+		if _, ok := r.Schema["config_hash"]; ok {
+			// updates are only supported for `databricks_mount`
+			d.Set("config_hash", info.ConfigHash)
+		}
+		return nil
+	}
+}
+
+// updates mount with new config. technically, only required for Azure mounts & secret rotation
+func mountUpdate(tpl interface{}, r *schema.Resource) func(
+	context.Context, *schema.ResourceData, interface{}) diag.Diagnostics {
+	return func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+		mountConfig, mountPoint, err := mountCluster(ctx, tpl, d, m, r)
+		if err != nil {
+			return diag.FromErr(err)
+		}
+		client := m.(*common.DatabricksClient)
+		log.Printf("[INFO] Mounting %s at /mnt/%s", mountConfig.Source(), d.Id())
+		info, err := mountPoint.Update(mountConfig, client)
+		if err != nil {
+			return diag.FromErr(err)
+		}
+		d.SetId(mountPoint.Name)
+		d.Set("source", info.Source)
+		if _, ok := r.Schema["config_hash"]; ok {
+			// updates are only supported for `databricks_mount`
+			d.Set("config_hash", info.ConfigHash)
+		}
 		return nil
 	}
 }

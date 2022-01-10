@@ -43,6 +43,11 @@ func ResourceDatabricksMountSchema() map[string]*schema.Schema {
 			Type:     schema.TypeString,
 			Computed: true,
 		}
+		s["config_hash"] = &schema.Schema{
+			Type:     schema.TypeString,
+			Default:  "",
+			Optional: true,
+		}
 		s["uri"].ConflictsWith = []string{"abfs", "wasb", "s3", "adl", "gs"}
 		s["extra_configs"].ConflictsWith = []string{"abfs", "wasb", "s3", "adl", "gs"}
 		s["abfs"].ConflictsWith = []string{"uri", "extra_configs", "wasb", "s3", "adl", "gs"}
@@ -62,6 +67,7 @@ func ResourceMount() *schema.Resource {
 	r := commonMountResource(tpl, ResourceDatabricksMountSchema())
 	r.CreateContext = mountCallback(mountCreate).preProcess(r)
 	r.ReadContext = mountCallback(mountRead).preProcess(r)
+	r.UpdateContext = mountCallback(mountUpdate).preProcess(r)
 	r.DeleteContext = mountCallback(mountDelete).preProcess(r)
 	r.Importer = nil
 	return r

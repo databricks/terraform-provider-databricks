@@ -13,17 +13,17 @@ import (
 
 // TODO: add support for encryption parameters in S3
 type GenericMount struct {
-	URI     string                     `json:"uri,omitempty" tf:"force_new"`
-	Options map[string]string          `json:"extra_configs,omitempty" tf:"force_new"`
-	Abfs    *AzureADLSGen2MountGeneric `json:"abfs,omitempty" tf:"force_new,suppress_diff"`
-	S3      *S3IamMount                `json:"s3,omitempty" tf:"force_new,suppress_diff"`
-	Adl     *AzureADLSGen1MountGeneric `json:"adl,omitempty" tf:"force_new,suppress_diff"`
-	Wasb    *AzureBlobMountGeneric     `json:"wasb,omitempty" tf:"force_new,suppress_diff"`
-	Gs      *GSMount                   `json:"gs,omitempty" tf:"force_new,suppress_diff"`
+	URI     string                     `json:"uri,omitempty"`
+	Options map[string]string          `json:"extra_configs,omitempty"`
+	Abfs    *AzureADLSGen2MountGeneric `json:"abfs,omitempty" tf:"suppress_diff"`
+	S3      *S3IamMount                `json:"s3,omitempty" tf:"suppress_diff"`
+	Adl     *AzureADLSGen1MountGeneric `json:"adl,omitempty" tf:"suppress_diff"`
+	Wasb    *AzureBlobMountGeneric     `json:"wasb,omitempty" tf:"suppress_diff"`
+	Gs      *GSMount                   `json:"gs,omitempty" tf:"suppress_diff"`
 
-	ClusterID      string `json:"cluster_id,omitempty" tf:"computed,force_new"`
+	ClusterID      string `json:"cluster_id,omitempty" tf:"computed"`
 	MountName      string `json:"name,omitempty" tf:"computed,force_new"`
-	ResourceID     string `json:"resource_id,omitempty" tf:"force_new"`
+	ResourceID     string `json:"resource_id,omitempty"`
 	EncryptionType string `json:"encryption_type,omitempty" tf:"force_new"`
 }
 

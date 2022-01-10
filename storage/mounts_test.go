@@ -32,7 +32,7 @@ func TestValidateMountDirectory(t *testing.T) {
 	}
 }
 
-const expectedCommandResp = "done"
+const expectedCommandResp = `{"source":"done", "config_hash":"abc123"}`
 
 func testMountFuncHelper(t *testing.T, mountFunc func(mp MountPoint, mount Mount) (string, error), mount Mount,
 	mountName, expectedCommand string) {
@@ -116,10 +116,15 @@ func TestMountPoint_Mount(t *testing.T) {
 func TestMountPoint_Source(t *testing.T) {
 	mountName := "this_mount"
 	expectedCommand := fmt.Sprintf(`
+		import json, hashlib
 		dbutils.fs.refreshMounts()
+		extra_configs = {}
 		for mount in dbutils.fs.mounts():
 			if mount.mountPoint == "/mnt/%s":
-				dbutils.notebook.exit(mount.source)
+				dbutils.notebook.exit(json.dumps({
+			    	"source": mount.source,
+			        "config_hash": hashlib.sha256(','.join(f'{k}:{v}' for k,v in sorted(extra_configs.items())).encode('utf-8')).hexdigest()
+				}))
 		raise Exception("Mount not found")
 	`, mountName)
 	testMountFuncHelper(t, func(mp MountPoint, mount Mount) (string, error) {
@@ -128,7 +133,7 @@ func TestMountPoint_Source(t *testing.T) {
 			Token: ".",
 		})
 		return i.Source, err
-	}, nil, mountName, expectedCommand)
+	}, AWSIamMount{}, mountName, expectedCommand)
 }
 
 func TestMountPoint_Delete(t *testing.T) {

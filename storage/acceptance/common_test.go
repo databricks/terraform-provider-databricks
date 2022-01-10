@@ -5,31 +5,15 @@ import (
 	"os"
 	"testing"
 
-	"github.com/databrickslabs/terraform-provider-databricks/commands"
 	"github.com/databrickslabs/terraform-provider-databricks/common"
-	"github.com/databrickslabs/terraform-provider-databricks/internal/acceptance"
 	"github.com/databrickslabs/terraform-provider-databricks/internal/compute"
 	"github.com/databrickslabs/terraform-provider-databricks/qa"
 	"github.com/databrickslabs/terraform-provider-databricks/secrets"
 	"github.com/databrickslabs/terraform-provider-databricks/storage"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
-
-func mountResourceCheck(name string,
-	cb func(*common.DatabricksClient, storage.MountPoint) error) resource.TestCheckFunc {
-	return acceptance.ResourceCheck(name,
-		func(ctx context.Context, client *common.DatabricksClient, id string) error {
-			client.WithCommandExecutor(func(ctx context.Context, client *common.DatabricksClient) common.CommandExecutor {
-				return commands.NewCommandsAPI(ctx, client)
-			})
-			clusterInfo := compute.NewTinyClusterInCommonPoolPossiblyReused()
-			mp := storage.NewMountPoint(client.CommandExecutor(context.Background()), id, clusterInfo.ClusterID)
-			return cb(client, mp)
-		})
-}
 
 func testMounting(t *testing.T, mp storage.MountPoint, m storage.Mount) {
 	client := common.CommonEnvironmentClient()
@@ -40,7 +24,7 @@ func testMounting(t *testing.T, mp storage.MountPoint, m storage.Mount) {
 		err = mp.Delete()
 		assert.NoError(t, err)
 	}()
-	source, err := mp.Source()
+	source, err := mp.Source(m, client)
 	require.Equalf(t, m.Source(), source, "Error: %v", err)
 }
 
@@ -84,8 +68,11 @@ func testWithNewSecretScope(t *testing.T, callback func(string, string),
 }
 
 func TestAccSourceOnInvalidMountFails(t *testing.T) {
-	_, mp := mountPointThroughReusedCluster(t)
-	source, err := mp.Source()
+	client, mp := mountPointThroughReusedCluster(t)
+	source, err := mp.Source(&storage.AzureADLSGen2MountGeneric{
+		ContainerName: "a",
+		StorageAccountName: "b",
+	}, client)
 	assert.Equal(t, "", source)
 	qa.AssertErrorStartsWith(t, err, "Mount not found")
 }

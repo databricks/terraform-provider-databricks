@@ -33,8 +33,8 @@ type MountPoint struct {
 	EncryptionType string
 }
 
-// Source returns mountpoint source
-func (mp MountPoint) Source() (string, error) {
+// Source returns mountpoint remote info
+func (mp MountPoint) Source(mo Mount, client *common.DatabricksClient) (mountRemoteInfo, error) {
 	result := mp.Exec.Execute(mp.ClusterID, "python", fmt.Sprintf(`
 		dbutils.fs.refreshMounts()
 		for mount in dbutils.fs.mounts():
@@ -42,7 +42,9 @@ func (mp MountPoint) Source() (string, error) {
 				dbutils.notebook.exit(mount.source)
 		raise Exception("Mount not found")
 	`, mp.Name))
-	return result.Text(), result.Err()
+	return mountRemoteInfo{ // TODO: proper implementation
+		Source: result.Text(),
+	}, result.Err()
 }
 
 // Delete removes mount from workspace
@@ -86,7 +88,9 @@ func (mp MountPoint) Mount(mo Mount, client *common.DatabricksClient) (info moun
 				if mount.mountPoint == mount_point and mount.source == mount_source:
 					return
 			try:
-				dbutils.fs.mount(mount_source, mount_point, extra_configs=configs, encryption_type=encryptionType)
+				dbutils.fs.mount(mount_source, mount_point, 
+					extra_configs=configs, 
+					encryption_type=encryptionType)
 				dbutils.fs.refreshMounts()
 				dbutils.fs.ls(mount_point)
 				return mount_source
@@ -171,7 +175,7 @@ func getOrCreateMountingCluster(clustersAPI clusters.ClustersAPI) (string, error
 	return cluster.ClusterID, nil
 }
 
-func getMountingClusterID(ctx context.Context, client *common.DatabricksClient, 
+func getMountingClusterID(ctx context.Context, client *common.DatabricksClient,
 	clusterID string) (string, error) {
 	clustersAPI := clusters.NewClustersAPI(ctx, client)
 	if clusterID == "" {
@@ -231,7 +235,8 @@ func mountCluster(ctx context.Context, tpl interface{}, d *schema.ResourceData,
 }
 
 // returns resource create mount for object store on workspace
-func mountCreate(tpl interface{}, r *schema.Resource) func(context.Context, *schema.ResourceData, interface{}) diag.Diagnostics {
+func mountCreate(tpl interface{}, r *schema.Resource) func(
+	context.Context, *schema.ResourceData, interface{}) diag.Diagnostics {
 	return func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 		mountConfig, mountPoint, err := mountCluster(ctx, tpl, d, m, r)
 		if err != nil {
@@ -250,13 +255,14 @@ func mountCreate(tpl interface{}, r *schema.Resource) func(context.Context, *sch
 }
 
 // refreshes remote state of the mount
-func mountRead(tpl interface{}, r *schema.Resource) func(context.Context, *schema.ResourceData, interface{}) diag.Diagnostics {
+func mountRead(tpl interface{}, r *schema.Resource) func(
+	context.Context, *schema.ResourceData, interface{}) diag.Diagnostics {
 	return func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-		_, mp, err := mountCluster(ctx, tpl, d, m, r)
+		mountConfig, mp, err := mountCluster(ctx, tpl, d, m, r)
 		if err != nil {
 			return diag.FromErr(err)
 		}
-		source, err := mp.Source()
+		info, err := mp.Source(mountConfig, m.(*common.DatabricksClient))
 		if err != nil {
 			if err.Error() == "Mount not found" {
 				log.Printf("[INFO] /mnt/%s is not mounted", d.Id())
@@ -265,13 +271,14 @@ func mountRead(tpl interface{}, r *schema.Resource) func(context.Context, *schem
 			}
 			return diag.FromErr(err)
 		}
-		d.Set("source", source)
+		d.Set("source", info.Source)
 		return nil
 	}
 }
 
 // returns delete resource function
-func mountDelete(tpl interface{}, r *schema.Resource) func(context.Context, *schema.ResourceData, interface{}) diag.Diagnostics {
+func mountDelete(tpl interface{}, r *schema.Resource) func(
+	context.Context, *schema.ResourceData, interface{}) diag.Diagnostics {
 	return func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 		_, mp, err := mountCluster(ctx, tpl, d, m, r)
 		if err != nil {

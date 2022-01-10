@@ -89,7 +89,9 @@ func TestMountPoint_Mount(t *testing.T) {
 				if mount.mountPoint == mount_point and mount.source == mount_source:
 					return
 			try:
-				dbutils.fs.mount(mount_source, mount_point, extra_configs=configs, encryption_type=encryptionType)
+				dbutils.fs.mount(mount_source, mount_point, 
+					extra_configs=configs, 
+					encryption_type=encryptionType)
 				dbutils.fs.refreshMounts()
 				dbutils.fs.ls(mount_point)
 				return mount_source
@@ -103,11 +105,10 @@ func TestMountPoint_Mount(t *testing.T) {
 		dbutils.notebook.exit(mount_source)
 	`, mountName, expectedMountSource, expectedMountConfig)
 	testMountFuncHelper(t, func(mp MountPoint, mount Mount) (string, error) {
-		client := common.DatabricksClient{
+		info, err := mp.Mount(mount, &common.DatabricksClient{
 			Host:  ".",
 			Token: ".",
-		}
-		info, err := mp.Mount(mount, &client)
+		})
 		return info.Source, err
 	}, mount, mountName, expectedCommand)
 }
@@ -121,8 +122,12 @@ func TestMountPoint_Source(t *testing.T) {
 				dbutils.notebook.exit(mount.source)
 		raise Exception("Mount not found")
 	`, mountName)
-	testMountFuncHelper(t, func(mp MountPoint, mount Mount) (s string, e error) {
-		return mp.Source()
+	testMountFuncHelper(t, func(mp MountPoint, mount Mount) (string, error) {
+		i, err := mp.Source(mount, &common.DatabricksClient{
+			Host:  ".",
+			Token: ".",
+		})
+		return i.Source, err
 	}, nil, mountName, expectedCommand)
 }
 

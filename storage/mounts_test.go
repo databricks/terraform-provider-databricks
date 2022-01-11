@@ -339,7 +339,7 @@ func TestGetMountingClusterID_Failures(t *testing.T) {
 	})
 }
 
-func TestMountCRD(t *testing.T) {
+func TestMountCrudErrors(t *testing.T) {
 	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
 		{
 			MatchAny:     true,
@@ -358,6 +358,10 @@ func TestMountCRD(t *testing.T) {
 		assert.Equal(t, "failed to get mouting cluster: nope", diags[0].Summary)
 
 		diags = mountRead(nil, r)(ctx, d, client)
+		assert.True(t, diags.HasError())
+		assert.Equal(t, "failed to get mouting cluster: nope", diags[0].Summary)
+
+		diags = mountUpdate(nil, r)(ctx, d, client)
 		assert.True(t, diags.HasError())
 		assert.Equal(t, "failed to get mouting cluster: nope", diags[0].Summary)
 

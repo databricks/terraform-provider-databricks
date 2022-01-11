@@ -13,7 +13,7 @@ import (
 
 // GSMount describes the object for a GS mount using google service account
 type GSMount struct {
-	BucketName     string `json:"bucket_name" tf:"force_new"`
+	BucketName     string `json:"bucket_name"`
 	ServiceAccount string `json:"service_account,omitempty" tf:"force_new"`
 }
 

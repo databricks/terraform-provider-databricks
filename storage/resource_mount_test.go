@@ -386,6 +386,50 @@ func TestResourceAwsS3MountGenericRead_Error(t *testing.T) {
 	}.ExpectError(t, "Some error")
 }
 
+func TestResourceAzureStorageUpdate(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:       "GET",
+				ReuseRequest: true,
+				Resource:     "/api/2.0/clusters/get?cluster_id=this_cluster",
+				Response: clusters.ClusterInfo{
+					State: clusters.ClusterStateRunning,
+					AwsAttributes: &clusters.AwsAttributes{
+						InstanceProfileArn: "abc",
+					},
+				},
+			},
+		},
+		Resource: ResourceMount(),
+		CommandMock: func(commandStr string) common.CommandResults {
+			trunc := internal.TrimLeadingWhitespace(commandStr)
+			t.Logf("Received command:\n%s", trunc)
+			require.True(t, strings.Contains(commandStr, "dbutils.fs.updateMount"), 
+				"Cannot find update mount call")
+			return mockMountInfo(testS3BucketPath, "a1b2c3")
+		},
+		HCL: `
+		cluster_id = "this_cluster"
+		name = "this_mount"
+		abfs {
+			client_id = "a"
+			tenant_id = "b"
+			client_secret_key = "c"
+			client_secret_scope = "d"
+			container_name = "e"
+			storage_account_name = "f"
+		}
+		`,
+		InstanceState: map[string]string{
+			"name": "this_mount",
+			"cluster_id": "this_cluster",
+		},
+		ID:      "this_mount",
+		Update:    true,
+	}.ApplyNoError(t)
+}
+
 func TestResourceAwsS3MountDeleteGeneric(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{

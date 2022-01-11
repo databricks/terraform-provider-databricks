@@ -21,7 +21,7 @@ type GenericMount struct {
 	Wasb    *AzureBlobMountGeneric     `json:"wasb,omitempty" tf:"suppress_diff"`
 	Gs      *GSMount                   `json:"gs,omitempty" tf:"suppress_diff"`
 
-	ClusterID      string `json:"cluster_id,omitempty" tf:"computed"`
+	ClusterID      string `json:"cluster_id,omitempty" tf:"computed,force_new"`
 	MountName      string `json:"name,omitempty" tf:"computed,force_new"`
 	ResourceID     string `json:"resource_id,omitempty"`
 	EncryptionType string `json:"encryption_type,omitempty" tf:"force_new"`
@@ -131,7 +131,7 @@ type AzureADLSGen2MountGeneric struct {
 	TenantID             string `json:"tenant_id,omitempty"`
 	SecretScope          string `json:"client_secret_scope"`
 	SecretKey            string `json:"client_secret_key"`
-	InitializeFileSystem bool   `json:"initialize_file_system"`
+	InitializeFileSystem bool   `json:"initialize_file_system,omitempty"`
 }
 
 // Source returns ABFSS URI backing the mount
@@ -186,13 +186,13 @@ func (m *AzureADLSGen2MountGeneric) Config(client *common.DatabricksClient) map[
 
 // AzureADLSGen1Mount describes the object for a azure datalake gen 1 storage mount
 type AzureADLSGen1MountGeneric struct {
-	StorageResource string `json:"storage_resource_name,omitempty" tf:"computed,force_new"`
-	Directory       string `json:"directory,omitempty" tf:"force_new"`
-	PrefixType      string `json:"spark_conf_prefix,omitempty" tf:"default:fs.adl,force_new"`
-	ClientID        string `json:"client_id" tf:"force_new"`
-	TenantID        string `json:"tenant_id,omitempty" tf:"computed,force_new"`
-	SecretScope     string `json:"client_secret_scope" tf:"force_new"`
-	SecretKey       string `json:"client_secret_key" tf:"force_new"`
+	StorageResource string `json:"storage_resource_name,omitempty" tf:"computed"`
+	Directory       string `json:"directory,omitempty"`
+	PrefixType      string `json:"spark_conf_prefix,omitempty" tf:"default:fs.adl"`
+	ClientID        string `json:"client_id"`
+	TenantID        string `json:"tenant_id,omitempty" tf:"computed"`
+	SecretScope     string `json:"client_secret_scope"`
+	SecretKey       string `json:"client_secret_key"`
 }
 
 // Source ...
@@ -250,12 +250,12 @@ func (m *AzureADLSGen1MountGeneric) Config(client *common.DatabricksClient) map[
 
 // AzureBlobMount describes the object for a azure blob storage mount - a.k.a. NativeAzureFileSystem
 type AzureBlobMountGeneric struct {
-	ContainerName      string `json:"container_name,omitempty" tf:"computed,force_new"`
-	StorageAccountName string `json:"storage_account_name,omitempty" tf:"computed,force_new"`
-	Directory          string `json:"directory,omitempty" tf:"force_new"`
-	AuthType           string `json:"auth_type" tf:"force_new"`
-	SecretScope        string `json:"token_secret_scope" tf:"force_new"`
-	SecretKey          string `json:"token_secret_key" tf:"force_new"`
+	ContainerName      string `json:"container_name,omitempty" tf:"computed"`
+	StorageAccountName string `json:"storage_account_name,omitempty" tf:"computed"`
+	Directory          string `json:"directory,omitempty"`
+	AuthType           string `json:"auth_type"`
+	SecretScope        string `json:"token_secret_scope"`
+	SecretKey          string `json:"token_secret_key"`
 }
 
 // Source ...

@@ -34,10 +34,7 @@ func TestResourceAdlsGen1Mount_Create(t *testing.T) {
 				assert.Contains(t, trunc, `"fs.adl.oauth2.credential":dbutils.secrets.get("c", "d")`)
 			}
 			assert.Contains(t, trunc, "/mnt/this_mount")
-			return common.CommandResults{
-				ResultType: "text",
-				Data:       testS3BucketPath,
-			}
+			return mockMountInfo("adl://test-adls.azuredatalakestore.net", "a1b2c3")
 		},
 		State: map[string]interface{}{
 			"cluster_id":            "this_cluster",
@@ -52,5 +49,5 @@ func TestResourceAdlsGen1Mount_Create(t *testing.T) {
 	}.Apply(t)
 	require.NoError(t, err, err)
 	assert.Equal(t, "this_mount", d.Id())
-	assert.Equal(t, testS3BucketPath, d.Get("source"))
+	assert.Equal(t, "adl://test-adls.azuredatalakestore.net", d.Get("source"))
 }

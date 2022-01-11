@@ -35,10 +35,7 @@ func TestResourceAzureBlobMountCreate(t *testing.T) {
 				assert.Contains(t, trunc, `"fs.azure.account.key.f.blob.core.windows.net":dbutils.secrets.get("h", "g")`)
 			}
 			assert.Contains(t, trunc, "/mnt/e")
-			return common.CommandResults{
-				ResultType: "text",
-				Data:       "wasbs://c@f.blob.core.windows.net/d",
-			}
+			return mockMountInfo("wasbs://c@f.blob.core.windows.net/d", "a1b2c3")
 		},
 		State: map[string]interface{}{
 			"auth_type":            "ACCESS_KEY",
@@ -74,10 +71,7 @@ func TestResourceAzureBlobMountRead(t *testing.T) {
 			t.Logf("Received command:\n%s", trunc)
 			assert.Contains(t, trunc, "dbutils.fs.mounts()")
 			assert.Contains(t, trunc, `mount.mountPoint == "/mnt/e"`)
-			return common.CommandResults{
-				ResultType: "text",
-				Data:       "wasbs://c@f.blob.core.windows.net/d",
-			}
+			return mockMountInfo("wasbs://c@f.blob.core.windows.net/d", "a1b2c3")
 		},
 		State: map[string]interface{}{
 			"auth_type":            "ACCESS_KEY",

@@ -43,10 +43,7 @@ func TestResourceAwsS3MountCreate(t *testing.T) {
 				assert.Contains(t, trunc, `{}`)             // empty brackets for empty config
 			}
 			assert.Contains(t, trunc, "/mnt/this_mount")
-			return common.CommandResults{
-				ResultType: "text",
-				Data:       testS3BucketPath,
-			}
+			return mockMountInfo(testS3BucketPath, "a1b2c3")
 		},
 		State: map[string]interface{}{
 			"cluster_id":     "this_cluster",
@@ -106,10 +103,7 @@ func TestResourceAwsS3MountRead(t *testing.T) {
 			t.Logf("Received command:\n%s", trunc)
 			assert.Contains(t, trunc, "dbutils.fs.mounts()")
 			assert.Contains(t, trunc, `mount.mountPoint == "/mnt/this_mount"`)
-			return common.CommandResults{
-				ResultType: "text",
-				Data:       testS3BucketPath,
-			}
+			return mockMountInfo(testS3BucketPath, "a1b2c3")
 		},
 		State: map[string]interface{}{
 			"cluster_id":     "this_cluster",

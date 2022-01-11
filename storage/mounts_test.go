@@ -2,7 +2,6 @@ package storage
 
 import (
 	"context"
-	"fmt"
 	"testing"
 
 	"github.com/databrickslabs/terraform-provider-databricks/clusters"
@@ -32,8 +31,6 @@ func TestValidateMountDirectory(t *testing.T) {
 	}
 }
 
-const expectedCommandResp = `{"source":"done", "config_hash":"abc123"}`
-
 func testMountFuncHelper(t *testing.T, mountFunc func(mp MountPoint, mount Mount) (string, error), mount Mount,
 	mountName, expectedCommand string) {
 	c := common.DatabricksClient{
@@ -50,7 +47,7 @@ func testMountFuncHelper(t *testing.T, mountFunc func(mp MountPoint, mount Mount
 		assert.Equal(t, internal.TrimLeadingWhitespace(expectedCommand), internal.TrimLeadingWhitespace(commandStr))
 		return common.CommandResults{
 			ResultType: "text",
-			Data:       expectedCommandResp,
+			Data:       `{"source":"done", "config_hash":"abc123"}`,
 		}
 	})
 
@@ -64,26 +61,29 @@ func testMountFuncHelper(t *testing.T, mountFunc func(mp MountPoint, mount Mount
 	resp, err := mountFunc(mp, mount)
 	assert.NoError(t, err)
 	assert.True(t, called, "mocked command was not invoked")
-	assert.Equal(t, expectedCommandResp, resp)
+	assert.Equal(t, "done", resp)
 }
 
 type mockMount struct{}
 
-func (t mockMount) Source() string { return "fake-mount" }
+func (t mockMount) Source() string { return "dummy://things" }
 func (t mockMount) Name() string   { return "fake-mount" }
 func (t mockMount) Config(client *common.DatabricksClient) map[string]string {
-	return map[string]string{"fake-key": "fake-value"}
+	return map[string]string{"creds": "{{secrets/scope/key}}"}
 }
 func (m mockMount) ValidateAndApplyDefaults(d *schema.ResourceData, client *common.DatabricksClient) error {
 	return nil
 }
 
 func TestMountPoint_Mount(t *testing.T) {
-	mount := mockMount{}
-	expectedMountSource := "fake-mount"
-	expectedMountConfig := `{"fake-key":"fake-value"}`
-	mountName := "this_mount"
-	expectedCommand := fmt.Sprintf(`
+	testMountFuncHelper(t, func(mp MountPoint, mount Mount) (string, error) {
+		info, err := mp.Mount(mount, &common.DatabricksClient{
+			Host:  ".",
+			Token: ".",
+		})
+		return info.Source, err
+	}, mockMount{}, "dummy", `
+		import json, hashlib
 		def safe_mount(mount_point, mount_source, configs, encryptionType):
 			for mount in dbutils.fs.mounts():
 				if mount.mountPoint == mount_point and mount.source == mount_source:
@@ -101,46 +101,62 @@ func TestMountPoint_Mount(t *testing.T) {
 				except Exception as e2:
 					print("Failed to unmount", e2)
 				raise e
-		mount_source = safe_mount("/mnt/%s", %q, %s, "")
-		dbutils.notebook.exit(mount_source)
-	`, mountName, expectedMountSource, expectedMountConfig)
-	testMountFuncHelper(t, func(mp MountPoint, mount Mount) (string, error) {
-		info, err := mp.Mount(mount, &common.DatabricksClient{
-			Host:  ".",
-			Token: ".",
-		})
-		return info.Source, err
-	}, mount, mountName, expectedCommand)
+		extra_configs = {"creds":dbutils.secrets.get("scope", "key")}
+		mount_source = safe_mount("/mnt/dummy", "dummy://things", extra_configs, "")
+		dbutils.notebook.exit(json.dumps({
+			"source": mount_source,
+			"config_hash": `+configHashCode+`
+		}))
+	`)
 }
 
 func TestMountPoint_Source(t *testing.T) {
-	mountName := "this_mount"
-	expectedCommand := fmt.Sprintf(`
-		import json, hashlib
-		dbutils.fs.refreshMounts()
-		extra_configs = {}
-		for mount in dbutils.fs.mounts():
-			if mount.mountPoint == "/mnt/%s":
-				dbutils.notebook.exit(json.dumps({
-			    	"source": mount.source,
-			        "config_hash": hashlib.sha256(','.join(f'{k}:{v}' for k,v in sorted(extra_configs.items())).encode('utf-8')).hexdigest()
-				}))
-		raise Exception("Mount not found")
-	`, mountName)
 	testMountFuncHelper(t, func(mp MountPoint, mount Mount) (string, error) {
 		i, err := mp.Source(mount, &common.DatabricksClient{
 			Host:  ".",
 			Token: ".",
 		})
 		return i.Source, err
-	}, AWSIamMount{}, mountName, expectedCommand)
+	}, mockMount{}, "dummy", `
+		import json, hashlib
+		dbutils.fs.refreshMounts()
+		extra_configs = {"creds":dbutils.secrets.get("scope", "key")}
+		for mount in dbutils.fs.mounts():
+			if mount.mountPoint == "/mnt/dummy":
+				dbutils.notebook.exit(json.dumps({
+					"source": mount.source,
+					"config_hash": `+configHashCode+`
+				}))
+		raise Exception("Mount not found")
+	`)
+}
+
+func TestMountPoint_Update(t *testing.T) {
+	testMountFuncHelper(t, func(mp MountPoint, mount Mount) (s string, e error) {
+		i, err := mp.Update(mount, &common.DatabricksClient{
+			Host:  ".",
+			Token: ".",
+		})
+		return i.Source, err
+	}, mockMount{}, "dummy", `
+		extra_configs = {"creds":dbutils.secrets.get("scope", "key")}
+		dbutils.fs.updateMount(
+			mount_point = "/mnt/dummy",
+			source = "dummy://things",
+			extra_configs = extra_configs)
+		dbutils.notebook.exit(json.dumps({
+			"source": mount_source,
+			"config_hash": `+configHashCode+`
+		}))
+	`)
 }
 
 func TestMountPoint_Delete(t *testing.T) {
-	mountName := "this_mount"
-	expectedCommand := fmt.Sprintf(`
+	testMountFuncHelper(t, func(mp MountPoint, mount Mount) (s string, e error) {
+		return "done", mp.Delete()
+	}, mockMount{}, "dummy", `
 		found = False
-		mount_point = "/mnt/%s"
+		mount_point = "/mnt/dummy"
 		dbutils.fs.refreshMounts()
 		for mount in dbutils.fs.mounts():
 			if mount.mountPoint == mount_point:
@@ -153,10 +169,7 @@ func TestMountPoint_Delete(t *testing.T) {
 			if mount.mountPoint == mount_point:
 				raise Exception("Failed to unmount")
 		dbutils.notebook.exit("success")
-	`, mountName)
-	testMountFuncHelper(t, func(mp MountPoint, mount Mount) (s string, e error) {
-		return expectedCommandResp, mp.Delete()
-	}, nil, mountName, expectedCommand)
+	`)
 }
 
 func TestDeletedMountClusterRecreates(t *testing.T) {

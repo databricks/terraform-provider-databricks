@@ -34,10 +34,7 @@ func TestResourceAdlsGen2Mount_Create(t *testing.T) {
 				assert.Contains(t, trunc, `"fs.azure.account.oauth2.client.secret":dbutils.secrets.get("c", "d")`)
 			}
 			assert.Contains(t, trunc, "/mnt/this_mount")
-			return common.CommandResults{
-				ResultType: "text",
-				Data:       "abfss://e@test-adls-gen2.dfs.core.windows.net",
-			}
+			return mockMountInfo("abfss://e@test-adls-gen2.dfs.core.windows.net", "a1b2c3")
 		},
 		State: map[string]interface{}{
 			"cluster_id":             "this_cluster",

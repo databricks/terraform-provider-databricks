@@ -78,8 +78,7 @@ func (mp MountPoint) Mount(mo Mount, client *common.DatabricksClient) (info moun
 		mount_source = safe_mount("/mnt/`+mp.Name+`", "`+mo.Source()+`", extra_configs, "`+mp.EncryptionType+`")
 		dbutils.notebook.exit(json.dumps({
 			"source": mount_source,
-			"config_hash": hashlib.sha256(','.join(f'{k}:{v}' for k,v
-				in sorted(extra_configs.items())).encode('utf-8')).hexdigest()
+			"config_hash": `+configHashCode+`
 		}))`) // lgtm[go/unsafe-quoting]
 	if result.Failed() {
 		return mountRemoteInfo{}, result.Err()
@@ -120,8 +119,7 @@ func (mp MountPoint) Update(mo Mount, client *common.DatabricksClient) (info mou
 			extra_configs = extra_configs)
 		dbutils.notebook.exit(json.dumps({
 			"source": mount_source,
-			"config_hash": hashlib.sha256(','.join(f'{k}:{v}' for k,v
-				in sorted(extra_configs.items())).encode('utf-8')).hexdigest()
+			"config_hash": `+configHashCode+`
 		}))`) // lgtm[go/unsafe-quoting]
 	if result.Failed() {
 		return mountRemoteInfo{}, result.Err()

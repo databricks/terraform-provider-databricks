@@ -1,5 +1,14 @@
 # Version changelog
 
+## 0.4.5
+
+* Cross-linked resource documentation ([#1027](https://github.com/databrickslabs/terraform-provider-databricks/pull/1027)).
+* Added Azure example for sql_global_config ([#1028](https://github.com/databrickslabs/terraform-provider-databricks/pull/1028)).
+
+Updated dependency versions:
+
+* Bump google.golang.org/api from 0.63.0 to 0.65.0
+
 ## 0.4.4
 
 * Added support for [running provider in a debug mode](https://www.terraform.io/plugin/sdkv2/debugging#running-terraform-with-a-provider-in-debug-mode) from Visual Studio Code through `Debug Provider` run configuration in order to troubleshoot more complicated issues.

@@ -258,6 +258,19 @@ func (f ResourceFixture) ApplyNoError(t *testing.T) {
 	assert.NoError(t, err, err)
 }
 
+// ApplyAndExpectData is a convenience method for tests that doesn't expect error, but want to check data
+func (f ResourceFixture) ApplyAndExpectData(t *testing.T, data map[string]interface{}) {
+	d, err := f.Apply(t)
+	assert.NoError(t, err, err)
+	for k, expected := range data {
+		if k == "id" {
+			assert.Equal(t, expected, d.Id())
+		} else {
+			assert.Equal(t, expected, d.Get(k))
+		}
+	}
+}
+
 // ExpectError passes if there's an error
 func (f ResourceFixture) ExpectError(t *testing.T, msg string) {
 	_, err := f.Apply(t)

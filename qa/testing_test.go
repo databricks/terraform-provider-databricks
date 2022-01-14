@@ -228,6 +228,25 @@ func TestResourceFixture_ApplyDelete(t *testing.T) {
 	assert.Equal(t, true, d.Get("dummy"))
 }
 
+func TestResourceFixture_ApplyAndExpectData(t *testing.T) {
+	ResourceFixture{
+		CommandMock: func(commandStr string) common.CommandResults {
+			return common.CommandResults{
+				ResultType: "text",
+				Data:       "yes",
+			}
+		},
+		Azure:    true,
+		Resource: noopContextResource,
+		ID:       "x",
+		Delete:   true,
+		HCL: `
+		dummy = true
+		trigger = "now"
+		`,
+	}.ApplyAndExpectData(t, map[string]interface{}{"id": "x", "dummy": true, "trigger": "now"})
+}
+
 func TestResourceFixture_InstanceState(t *testing.T) {
 	ResourceFixture{
 		Resource: noopContextResource,

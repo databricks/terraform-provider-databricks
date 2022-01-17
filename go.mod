@@ -4,7 +4,7 @@ go 1.16
 
 require (
 	cloud.google.com/go/iam v0.1.0 // indirect
-	github.com/Azure/go-autorest/autorest v0.11.23
+	github.com/Azure/go-autorest/autorest v0.11.24
 	github.com/Azure/go-autorest/autorest/adal v0.9.18
 	github.com/Azure/go-autorest/autorest/azure/auth v0.5.10
 	github.com/Azure/go-autorest/autorest/azure/cli v0.4.3

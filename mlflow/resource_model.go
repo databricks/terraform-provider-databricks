@@ -58,7 +58,7 @@ func (a ModelsAPI) Update(m *Model) error {
 	return a.client.Patch(a.context, "/mlflow/registered-models/update", m)
 }
 
-// Delete removes the model by it's name
+// Delete removes the model by its name
 func (a ModelsAPI) Delete(name string) error {
 	return a.client.Delete(a.context, "/mlflow/registered-models/delete", map[string]string{
 		"name": name,

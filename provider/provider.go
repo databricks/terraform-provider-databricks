@@ -76,6 +76,7 @@ func DatabricksProvider() *schema.Provider {
 			"databricks_metastore_data_access":       catalog.ResourceDataAccessConfiguration(),
 			"databricks_mlflow_experiment":           mlflow.ResourceMLFlowExperiment(),
 			"databricks_mlflow_model":                mlflow.ResourceMLFlowModel(),
+			"databricks_mlflow_webhook":              mlflow.ResourceMLFlowWebhook(),
 			"databricks_mount":                       storage.ResourceMount(),
 			"databricks_mws_customer_managed_keys":   mws.ResourceCustomerManagedKey(),
 			"databricks_mws_credentials":             mws.ResourceCredentials(),

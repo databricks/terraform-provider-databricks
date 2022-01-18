@@ -6,7 +6,7 @@ require (
 	cloud.google.com/go/iam v0.1.0 // indirect
 	github.com/Azure/go-autorest/autorest v0.11.24
 	github.com/Azure/go-autorest/autorest/adal v0.9.18
-	github.com/Azure/go-autorest/autorest/azure/auth v0.5.10
+	github.com/Azure/go-autorest/autorest/azure/auth v0.5.11
 	github.com/Azure/go-autorest/autorest/azure/cli v0.4.5
 	github.com/golang-jwt/jwt/v4 v4.2.0
 	github.com/google/go-querystring v1.1.0

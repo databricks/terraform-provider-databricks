@@ -343,7 +343,7 @@ func (c *DatabricksClient) completeUrl(r *http.Request) error {
 // Scim sets SCIM headers
 func (c *DatabricksClient) Scim(ctx context.Context, method, path string, request interface{}, response interface{}) error {
 	body, err := c.authenticatedQuery(ctx, method, path, request, c.completeUrl, func(r *http.Request) error {
-		r.Header.Set("Content-Type", "application/scim+json")
+		r.Header.Set("Content-Type", "application/scim+json; charset=utf-8")
 		if c.isAccountsClient() && c.AccountID != "" {
 			// until `/preview` is there for workspace scim
 			r.URL.Path = strings.ReplaceAll(path, "/preview", fmt.Sprintf("/api/2.0/accounts/%s", c.AccountID))
@@ -397,6 +397,7 @@ func (c *DatabricksClient) redactedDump(body []byte) (res string) {
 	if len(body) == 0 {
 		return
 	}
+
 	var requestMap map[string]interface{}
 	err := json.Unmarshal(body, &requestMap)
 	if err != nil {
@@ -428,6 +429,22 @@ func (c *DatabricksClient) userAgent(ctx context.Context) string {
 		Version(), resource, terraformVersion)
 }
 
+func (c *DatabricksClient) createDebugHeaders(header http.Header, host string) string {
+	headers := ""
+	if c.DebugHeaders {
+		if host != "" {
+			headers += fmt.Sprintf("\n * Host: %s", host)
+		}
+		for k, v := range header {
+			headers += fmt.Sprintf("\n * %s: %s", k, onlyNBytes(strings.Join(v, ""), c.DebugTruncateBytes))
+		}
+		if len(headers) > 0 {
+			headers += "\n"
+		}
+	}
+	return headers
+}
+
 // todo: do is better name
 func (c *DatabricksClient) genericQuery(ctx context.Context, method, requestURL string, data interface{},
 	visitors ...func(*http.Request) error) (body []byte, err error) {
@@ -452,16 +469,7 @@ func (c *DatabricksClient) genericQuery(ctx context.Context, method, requestURL 
 			return nil, err
 		}
 	}
-	headers := ""
-	if c.DebugHeaders {
-		headers += fmt.Sprintf("\n * Host: %s", c.Host)
-		for k, v := range request.Header {
-			headers += fmt.Sprintf("\n * %s: %s", k, onlyNBytes(strings.Join(v, ""), c.DebugTruncateBytes))
-		}
-		if len(headers) > 0 {
-			headers += "\n"
-		}
-	}
+	headers := c.createDebugHeaders(request.Header, c.Host)
 	log.Printf("[DEBUG] %s %s %s%v", method, request.URL.Path, headers, c.redactedDump(requestBody)) // lgtm[go/clear-text-logging]
 
 	r, err := retryablehttp.FromRequest(request)
@@ -486,7 +494,8 @@ func (c *DatabricksClient) genericQuery(ctx context.Context, method, requestURL 
 	if err != nil {
 		return nil, err
 	}
-	log.Printf("[DEBUG] %s %v <- %s %s", resp.Status, c.redactedDump(body), method, request.URL.Path)
+	headers = c.createDebugHeaders(resp.Header, "")
+	log.Printf("[DEBUG] %s %s %s <- %s %s", resp.Status, headers, c.redactedDump(body), method, strings.ReplaceAll(request.URL.Path, "\n", ""))
 	return body, nil
 }
 

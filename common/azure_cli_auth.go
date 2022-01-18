@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"os/exec"
+	"strings"
 	"sync"
 	"time"
 
@@ -103,7 +104,7 @@ func (aa *DatabricksClient) configureWithAzureCLI(ctx context.Context) (func(*ht
 	// verify that Azure CLI is authenticated
 	_, err := cli.GetTokenFromCLI(armDatabricksResourceID)
 	if err != nil {
-		if err.Error() == "Invoking Azure CLI failed with the following error: " {
+		if strings.Contains(err.Error(), "executable file not found") {
 			return nil, fmt.Errorf("most likely Azure CLI is not installed. " +
 				"See https://docs.microsoft.com/en-us/cli/azure/?view=azure-cli-latest for details")
 		}

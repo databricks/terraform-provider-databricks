@@ -2,6 +2,7 @@ package scim
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/databrickslabs/terraform-provider-databricks/common"
 
@@ -20,6 +21,10 @@ func ResourceUser() *schema.Resource {
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
 			addEntitlementsToSchema(&m)
 			m["active"].Default = true
+			m["force"] = &schema.Schema{
+				Type: schema.TypeBool,
+				Optional: true,
+			}
 			return m
 		})
 	scimUserFromData := func(d *schema.ResourceData) (user User, err error) {
@@ -40,9 +45,25 @@ func ResourceUser() *schema.Resource {
 			if err != nil {
 				return err
 			}
-			user, err := NewUsersAPI(ctx, c).Create(u)
+			usersAPI := NewUsersAPI(ctx, c)
+			user, err := usersAPI.Create(u)
 			if err != nil {
-				return err
+				forceCreate := d.Get("force").(bool)
+				if !forceCreate {
+					return err
+				}
+				// corner-case for overriding manually provisioned users
+				force := fmt.Sprintf("User with username %s already exists.", u.UserName)
+				if err.Error() != force {
+					return err
+				}
+				userList, err := usersAPI.Filter(fmt.Sprintf("userName eq '%s'", u.UserName))
+				if err != nil {
+					return err
+				}
+				user = userList[0]
+				d.SetId(user.ID)
+				return usersAPI.Update(d.Id(), user)
 			}
 			d.SetId(user.ID)
 			return nil

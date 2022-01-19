@@ -5,6 +5,8 @@ subcategory: "Workspace"
 
 This resource allows you to manage [Databricks Repos](https://docs.databricks.com/repos.html).
 
+-> **Note** To create a Repo from a private repository you need to configure Git token as described in the [documentation](https://docs.databricks.com/repos.html#configure-your-git-integration-with-databricks).  **Right now this is possible only via Databricks UI due lack of corresponding REST API**.  For the same reason, it also doesn't work for Service Principals.
+
 ## Example Usage
 
 You can declare Terraform-managed Repo by specifying `url` attribute of Git repository. In addition to that you may need to specify `git_provider` attribute if Git provider doesn't belong to cloud Git providers (Github, GitLab, ...).  If `path` attribute isn't provided, then repo will be created in the user's repo directory (`/Repos/<username>/...`):

@@ -22,7 +22,7 @@ func ResourceUser() *schema.Resource {
 			addEntitlementsToSchema(&m)
 			m["active"].Default = true
 			m["force"] = &schema.Schema{
-				Type: schema.TypeBool,
+				Type:     schema.TypeBool,
 				Optional: true,
 			}
 			return m
@@ -48,22 +48,7 @@ func ResourceUser() *schema.Resource {
 			usersAPI := NewUsersAPI(ctx, c)
 			user, err := usersAPI.Create(u)
 			if err != nil {
-				forceCreate := d.Get("force").(bool)
-				if !forceCreate {
-					return err
-				}
-				// corner-case for overriding manually provisioned users
-				force := fmt.Sprintf("User with username %s already exists.", u.UserName)
-				if err.Error() != force {
-					return err
-				}
-				userList, err := usersAPI.Filter(fmt.Sprintf("userName eq '%s'", u.UserName))
-				if err != nil {
-					return err
-				}
-				user = userList[0]
-				d.SetId(user.ID)
-				return usersAPI.Update(d.Id(), user)
+				return createForceOverridesManuallyAddedUser(err, d, usersAPI, u)
 			}
 			d.SetId(user.ID)
 			return nil
@@ -90,4 +75,24 @@ func ResourceUser() *schema.Resource {
 			return NewUsersAPI(ctx, c).Delete(d.Id())
 		},
 	}.ToResource()
+}
+
+func createForceOverridesManuallyAddedUser(err error, d *schema.ResourceData, usersAPI UsersAPI, u User) error {
+	forceCreate := d.Get("force").(bool)
+	if !forceCreate {
+		return err
+	}
+	// corner-case for overriding manually provisioned users
+	userName := u.UserName
+	force := fmt.Sprintf("User with username %s already exists.", userName)
+	if err.Error() != force {
+		return err
+	}
+	userList, err := usersAPI.Filter(fmt.Sprintf("userName eq '%s'", userName))
+	if err != nil {
+		return err
+	}
+	user := userList[0]
+	d.SetId(user.ID)
+	return usersAPI.Update(d.Id(), u)
 }

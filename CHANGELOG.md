@@ -1,5 +1,15 @@
 # Version changelog
 
+## 0.4.6
+
+* Added optional `force` argument to `databricks_user` resource to ignore `cannot create user: User with username X already exists` errors and implicitly import the specific user into Terraform state, enforcing entitlements defined in the instance of resource.
+
+Updated dependency versions:
+
+* Bump github.com/Azure/go-autorest/autorest/azure/auth from 0.5.10 to 0.5.11
+* Bump github.com/Azure/go-autorest/autorest/azure/cli from 0.4.3 to 0.4.5
+* Bump github.com/Azure/go-autorest/autorest from 0.11.23 to 0.11.24
+
 ## 0.4.5
 
 * Cross-linked resource documentation ([#1027](https://github.com/databrickslabs/terraform-provider-databricks/pull/1027)).

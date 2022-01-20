@@ -3,6 +3,7 @@ package scim
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/databrickslabs/terraform-provider-databricks/common"
 
@@ -83,7 +84,7 @@ func createForceOverridesManuallyAddedUser(err error, d *schema.ResourceData, us
 		return err
 	}
 	// corner-case for overriding manually provisioned users
-	userName := u.UserName
+	userName := strings.ReplaceAll(u.UserName, "'", "")
 	force := fmt.Sprintf("User with username %s already exists.", userName)
 	if err.Error() != force {
 		return err

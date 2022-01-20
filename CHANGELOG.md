@@ -1,5 +1,9 @@
 # Version changelog
 
+## 0.4.6
+
+* Clarified error messages around `azure_workspace_resource_id` provider configuration ([#1049](https://github.com/databrickslabs/terraform-provider-databricks/issues/1049)).
+
 ## 0.4.5
 
 * Cross-linked resource documentation ([#1027](https://github.com/databrickslabs/terraform-provider-databricks/pull/1027)).

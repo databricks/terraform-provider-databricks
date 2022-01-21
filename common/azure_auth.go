@@ -185,7 +185,7 @@ func (aa *DatabricksClient) ensureWorkspaceURL(ctx context.Context,
 	}
 	resourceID := aa.AzureResourceID
 	if resourceID == "" {
-		return fmt.Errorf("somehow resource id is not set")
+		return fmt.Errorf("please set `azure_workspace_resource_id` provider argument")
 	}
 	log.Println("[DEBUG] Getting Workspace ID via management token.")
 	// All azure endpoints typically end with a trailing slash removing it because resourceID starts with slash

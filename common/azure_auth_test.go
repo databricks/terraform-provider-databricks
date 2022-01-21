@@ -90,7 +90,7 @@ func TestEnsureWorkspaceURL_CornerCases(t *testing.T) {
 	aa.AzureEnvironment = &env
 
 	err = aa.ensureWorkspaceURL(context.Background(), nil)
-	assert.EqualError(t, err, "somehow resource id is not set")
+	assert.EqualError(t, err, "please set `azure_workspace_resource_id` provider argument")
 }
 
 func TestDatabricksClient_ensureWorkspaceURL(t *testing.T) {
@@ -517,7 +517,7 @@ func TestSimpleAADRequestVisitor_FailWorkspaceUrl(t *testing.T) {
 		func(resource string) (autorest.Authorizer, error) {
 			return autorest.NullAuthorizer{}, nil
 		})
-	assert.EqualError(t, err, "cannot get workspace: somehow resource id is not set")
+	assert.EqualError(t, err, "cannot get workspace: please set `azure_workspace_resource_id` provider argument")
 }
 
 func TestSimpleAADRequestVisitor_FailPlatformAuth(t *testing.T) {

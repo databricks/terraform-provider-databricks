@@ -8,7 +8,7 @@
 
 **Deprecations**
 
-* `databricks_user_instance_profile` is deprecated in favor of `databricks_role`.
+* `databricks_user_instance_profile` is deprecated in favor of `databricks_user_role`.
 
 Updated dependency versions:
 

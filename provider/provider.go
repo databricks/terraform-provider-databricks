@@ -108,6 +108,7 @@ func DatabricksProvider() *schema.Provider {
 			"databricks_token":                       tokens.ResourceToken(),
 			"databricks_user":                        scim.ResourceUser(),
 			"databricks_user_instance_profile":       aws.ResourceUserInstanceProfile(),
+			"databricks_user_role":                   aws.ResourceUserRole(),
 			"databricks_workspace_conf":              workspace.ResourceWorkspaceConf(),
 		},
 		Schema: providerSchema(),

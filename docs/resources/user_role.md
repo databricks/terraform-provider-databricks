@@ -1,13 +1,13 @@
 ---
 subcategory: "Security"
 ---
-# databricks_user_instance_profile Resource
+# databricks_user_role Resource
 
--> **Deprecated** Please rewrite with [databricks_user_role](user_role.md). This resource will be removed in v0.5.x
-
-This resource allows you to attach [databricks_instance_profile](instance_profile.md) (AWS) to [databricks_user](user.md).
+This resource allows you to attach a role or [databricks_instance_profile](instance_profile.md) (AWS) to [databricks_user](user.md).
 
 ## Example Usage
+
+Adding AWS instance profile to a user
 
 ```hcl
 resource "databricks_instance_profile" "instance_profile" {
@@ -18,23 +18,44 @@ resource "databricks_user" "my_user" {
   user_name = "me@example.com"
 }
 
-resource "databricks_user_instance_profile" "my_user_instance_profile" {
-  user_id             = databricks_user.my_user.id
-  instance_profile_id = databricks_instance_profile.instance_profile.id
+resource "databricks_user_role" "my_user_role" {
+  user_id = databricks_user.my_user.id
+  role    = databricks_instance_profile.instance_profile.id
 }
 ```
+
+Adding user as administrator to Databricks Account
+
+```hcl
+provider "databricks" {
+  host       = "https://accounts.cloud.databricks.com"
+  account_id = var.databricks_account_id
+  username   = var.databricks_user
+  password   = var.databricks_password
+}
+
+resource "databricks_user" "my_user" {
+  user_name = "me@example.com"
+}
+
+resource "databricks_user_role" "my_user_account_admin" {
+  user_id = databricks_user.my_user.id
+  role    = "account_admin"
+}
+```
+
 ## Argument Reference
 
 The following arguments are supported:
 
 * `user_id` - (Required) This is the id of the [user](user.md) resource.
-* `instance_profile_id` -  (Required) This is the id of the [instance profile](instance_profile.md) resource.
+* `role` -  (Required) Either a role name or the id of the [instance profile](instance_profile.md) resource.
 
 ## Attribute Reference
 
 In addition to all arguments above, the following attributes are exported:
 
-*  `id` - The id in the format `<user_id>|<instance_profile_id>`.
+*  `id` - The id in the format `<user_id>|<role>`.
 
 ## Related Resources
 

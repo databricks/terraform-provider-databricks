@@ -1,6 +1,8 @@
 package scim
 
 import (
+	"context"
+	"fmt"
 	"testing"
 
 	"github.com/databrickslabs/terraform-provider-databricks/common"
@@ -369,4 +371,77 @@ func TestResourceUserDelete_Error(t *testing.T) {
 		ID:       "abc",
 	}.Apply(t)
 	require.Error(t, err, err)
+}
+
+func TestCreateForceOverridesManuallyAddedUserErrorNotMatched(t *testing.T) {
+	d := ResourceUser().TestResourceData()
+	d.Set("force", true)
+	rerr := createForceOverridesManuallyAddedUser(
+		fmt.Errorf("nonsense"), d,
+		NewUsersAPI(context.Background(), &common.DatabricksClient{}), User{})
+	assert.EqualError(t, rerr, "nonsense")
+}
+
+func TestCreateForceOverwriteCannotListUsers(t *testing.T) {
+	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/preview/scim/v2/Users?filter=userName%20eq%20%27me%40example.com%27",
+			Status:   417,
+			Response: common.APIError{
+				Message: "cannot find user",
+			},
+		},
+	}, func(ctx context.Context, client *common.DatabricksClient) {
+		d := ResourceUser().TestResourceData()
+		d.Set("force", true)
+		err := createForceOverridesManuallyAddedUser(
+			fmt.Errorf("User with username me@example.com already exists."),
+			d, NewUsersAPI(ctx, client), User{
+				UserName: "me@example.com",
+			})
+		assert.EqualError(t, err, "cannot find user")
+	})
+}
+
+func TestCreateForceOverwriteFindsAndSetsID(t *testing.T) {
+	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/preview/scim/v2/Users?filter=userName%20eq%20%27me%40example.com%27",
+			Response: UserList{
+				Resources: []User{
+					{
+						ID: "abc",
+					},
+				},
+			},
+		},
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/preview/scim/v2/Users/abc",
+			Response: User{
+				ID: "abc",
+			},
+		},
+		{
+			Method:   "PUT",
+			Resource: "/api/2.0/preview/scim/v2/Users/abc",
+			ExpectedRequest: User{
+				Schemas:  []URN{UserSchema},
+				UserName: "me@example.com",
+			},
+		},
+	}, func(ctx context.Context, client *common.DatabricksClient) {
+		d := ResourceUser().TestResourceData()
+		d.Set("force", true)
+		d.Set("user_name", "me@example.com")
+		err := createForceOverridesManuallyAddedUser(
+			fmt.Errorf("User with username me@example.com already exists."),
+			d, NewUsersAPI(ctx, client), User{
+				UserName: "me@example.com",
+			})
+		assert.NoError(t, err)
+		assert.Equal(t, "abc", d.Id())
+	})
 }

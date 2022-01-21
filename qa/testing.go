@@ -294,6 +294,10 @@ func CornerCaseSkipCRUD(method string) CornerCase {
 	return CornerCase{"skip_crud", method}
 }
 
+func CornerCaseData(key, value string) CornerCase {
+	return CornerCase{key, value}
+}
+
 // ResourceCornerCases checks for corner cases of error handling. Optional field name used to create error
 func ResourceCornerCases(t *testing.T, resource *schema.Resource, cc ...CornerCase) {
 	config := map[string]string{
@@ -333,7 +337,7 @@ func ResourceCornerCases(t *testing.T, resource *schema.Resource, cc ...CornerCa
 			}
 			diags := v(ctx, validData, client)
 			if assert.Len(t, diags, 1) {
-				assert.Equalf(t, diags[0].Summary, config["expect_error"],
+				assert.Equalf(t, config["expect_error"], diags[0].Summary,
 					"%s didn't handle correct error on valid data", n)
 			}
 		}

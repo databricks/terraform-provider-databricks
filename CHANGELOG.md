@@ -4,6 +4,11 @@
 
 * Clarified error messages around `azure_workspace_resource_id` provider configuration ([#1049](https://github.com/databrickslabs/terraform-provider-databricks/issues/1049)).
 * Added optional `force` argument to `databricks_user` resource to ignore `cannot create user: User with username X already exists` errors and implicitly import the specific user into Terraform state, enforcing entitlements defined in the instance of resource ([#1048](https://github.com/databrickslabs/terraform-provider-databricks/pull/1048)).
+* Added `databricks_user_role` resource, that can assign roles on Databricks Account or `databricks_instance_profile` for data access ([#1047](https://github.com/databrickslabs/terraform-provider-databricks/pull/1047)).
+
+**Deprecations**
+
+* `databricks_user_instance_profile` is deprecated in favor of `databricks_role`.
 
 Updated dependency versions:
 

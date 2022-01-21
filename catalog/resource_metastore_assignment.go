@@ -20,7 +20,7 @@ func NewMetastoreAssignmentAPI(ctx context.Context, m interface{}) MetastoreAssi
 type MetastoreAssignment struct {
 	WorkspaceID        int64  `json:"workspace_id" tf:"force_new"`
 	MetastoreID        string `json:"metastore_id"`
-	DefaultCatalogName string `json:"default_catalog_name,omitempty" tf:"default:main"`
+	DefaultCatalogName string `json:"default_catalog_name,omitempty" tf:"default:hive_metastore"`
 }
 
 func (a MetastoreAssignmentAPI) createMetastoreAssignment(ma MetastoreAssignment) error {

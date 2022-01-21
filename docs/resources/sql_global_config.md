@@ -25,7 +25,7 @@ For Azure you should use the `data_access_config` to provide the service princip
 
 ```hcl
 resource "databricks_sql_global_config" "this" {
-  security_policy      = "DATA_ACCESS_CONTROL"
+  security_policy = "DATA_ACCESS_CONTROL"
   data_access_config = {
     "spark.hadoop.fs.azure.account.auth.type" : "OAuth",
     "spark.hadoop.fs.azure.account.oauth.provider.type" : "org.apache.hadoop.fs.azurebfs.oauth2.ClientCredsTokenProvider",

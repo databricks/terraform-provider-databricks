@@ -333,7 +333,7 @@ func ResourceCornerCases(t *testing.T, resource *schema.Resource, cc ...CornerCa
 			}
 			diags := v(ctx, validData, client)
 			if assert.Len(t, diags, 1) {
-				assert.Equalf(t, diags[0].Summary, config["expect_error"],
+				assert.Equalf(t, config["expect_error"], diags[0].Summary,
 					"%s didn't handle correct error on valid data", n)
 			}
 		}

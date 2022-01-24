@@ -6,7 +6,7 @@ page_title: "Unity Catalog set up on AWS"
 
 -> **Private Preview** This feature is in [Private Preview](https://docs.databricks.com/release-notes/release-types.html). Contact your Databricks representative to request access. 
 
-Databricks Unity Catalog brings fine-grained governance and security to lakehouse data using a familiar, open interface. Deploying the underlying cloud resources and Unity Catalog objects can be done with Terraform to simplify the set up and enable automation
+Databricks Unity Catalog brings fine-grained governance and security to Lakehouse data using a familiar, open interface. You can use Terraform to deploy the underlying cloud resources and Unity Catalog objects automatically, using a programmatic approach.
 
 This guide assumes you have `databricks_account_username` and `databricks_account_password` for [https://accounts.cloud.databricks.com](https://accounts.cloud.databricks.com) and can find `databricks_account_id` in the bottom left corner of the page, once you're logged in. This guide is provided as-is and you can use this guide as the basis for your custom Terraform module
 

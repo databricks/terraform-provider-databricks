@@ -20,6 +20,7 @@ Below are the high level steps to get started with Unity Catalog:
 - [Create a Unity Catalog metastore and link it to workspaces](#create-a-unity-catalog-metastore)
 - [Create Unity Catalog objects in the metastore](#create-unity-catalog-objects)
 - [Configure external tables and credentials](#configure-external-tables)
+- [Configure Unity Catalog clusters](#configure-unity-catalog-clusters)
 
 ## Provider initialization
 
@@ -450,5 +451,46 @@ resource "databricks_grants" "some" {
     principal  = "Data Engineers"
     privileges = ["CREATE TABLE", "READ FILES"]
   }
+}
+```
+
+## Configure Unity Catalog clusters
+
+To ensure the integrity of ACLs, users are required to access Unity Catalog through compute resources configured with strong isolation guarantees and other security features. This is achieved through a new concept called ‘Security Modes’, which are applied to compute resources.
+
+To use Unity Catalog from a regular cluster, one must configure the cluster with a proper **Data Security Mode**.  Currently, Unity Catalog is supported in two security modes: **User Isolation** and **Single User**.
+
+- **User Isolation** clusters can be shared by multiple users, but only SQL language is allowed. Some advanced cluster features such as library installation, init scripts and the DBFS Fuse mount are also disabled in this mode to ensure security isolation among cluster users.
+
+- To use those advanced cluster features or languages like Python, Scala and R with Unity Catalog, one must choose **Single User** Mode when launching the cluster. The cluster can only be used exclusively by a single user (by default the owner of the cluster); other users are not allowed to attach to the cluster.
+
+```hcl
+resource "databricks_cluster" "unity_sql" {
+  provider                = databricks.workspace
+  cluster_name            = "Unity SQL"
+  spark_version           = "10.1.x-scala2.12"
+  node_type_id            = "i3.xlarge"
+  autotermination_minutes = 60
+  enable_elastic_disk     = false
+  num_workers             = 2
+  aws_attributes {
+    availability = "SPOT"
+  }  
+  data_security_mode = "USER_ISOLATION"
+}
+
+resource "databricks_cluster" "unity_mlr" {
+  provider                = databricks.workspace
+  cluster_name            = "Unity MLR"
+  spark_version           = "10.1.x-cpu-ml-scala2.12"
+  node_type_id            = "i3.xlarge"
+  autotermination_minutes = 60
+  enable_elastic_disk     = false
+  num_workers             = 2
+  aws_attributes {
+    availability = "SPOT"
+  }
+  data_security_mode = "SINGLE_USER"
+  single_user_name = "user@example.com"
 }
 ```

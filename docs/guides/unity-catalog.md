@@ -457,14 +457,20 @@ To use Unity Catalog from a regular [databricks_cluster](../resources/cluster.md
 
 - **User Isolation** clusters can be shared by multiple users, but only SQL language is allowed. Some advanced cluster features such as library installation, init scripts and the DBFS Fuse mount are also disabled in this mode to ensure security isolation among cluster users.
 
-- To use those advanced cluster features or languages like Python, Scala and R with Unity Catalog, one must choose **Single User** Mode when launching the cluster. The cluster can only be used exclusively by a single user (by default the owner of the cluster); other users are not allowed to attach to the cluster.
-
 ```hcl
+data "databricks_spark_version" "latest" {
+  provider = databricks.workspace
+}
+data "databricks_node_type" "smallest" {
+  provider   = databricks.workspace
+  local_disk = true
+}
+
 resource "databricks_cluster" "unity_sql" {
   provider                = databricks.workspace
   cluster_name            = "Unity SQL"
-  spark_version           = "10.1.x-scala2.12"
-  node_type_id            = "i3.xlarge"
+  spark_version           = data.databricks_spark_version.latest.id
+  node_type_id            = data.databricks_node_type.smallest.id
   autotermination_minutes = 60
   enable_elastic_disk     = false
   num_workers             = 2
@@ -473,19 +479,52 @@ resource "databricks_cluster" "unity_sql" {
   }
   data_security_mode = "USER_ISOLATION"
 }
+```
 
-resource "databricks_cluster" "unity_mlr" {
+- To use those advanced cluster features or languages like Python, Scala and R with Unity Catalog, one must choose **Single User** Mode when launching the cluster. The cluster can only be used exclusively by a single user (by default the owner of the cluster); other users are not allowed to attach to the cluster.
+This means a group of users, which is managed as a group through SCIM provisioning, will a collection of single-user [databricks_cluster](../resources/cluster.md), which they should be able to restart. Terraform's `for_each` meta-attribute helps to do this easily.
+
+First we use [databricks_group](../data-sources/group.md) and [databricks_user](../data-sources/user.md) data resources to get the list of user names, that belong to a group
+
+```hcl
+data "databricks_group" "dev" {
+  provider     = databricks.workspace
+  display_name = "dev-clusters"
+}
+
+data "databricks_user" "dev" {
+  provider = databricks.workspace
+  for_each = data.databricks_group.dev.members
+  user_id  = each.key
+}
+```
+
+Once we have a specific list of user resources, we could proceed creating single-user clusters and provide permissions with `for_each = data.databricks_user.dev` to ensure it's done for each user:
+
+```hcl
+resource "databricks_cluster" "dev" {
+  for_each                = data.databricks_user.dev
   provider                = databricks.workspace
-  cluster_name            = "Unity MLR"
-  spark_version           = "10.1.x-cpu-ml-scala2.12"
-  node_type_id            = "i3.xlarge"
-  autotermination_minutes = 60
+  cluster_name            = "${each.value.display_name} unity cluster"
+  spark_version           = data.databricks_spark_version.latest.id
+  node_type_id            = data.databricks_node_type.smallest.id
+  autotermination_minutes = 10
   enable_elastic_disk     = false
   num_workers             = 2
   aws_attributes {
     availability = "SPOT"
   }
   data_security_mode = "SINGLE_USER"
-  single_user_name   = "user@example.com"
+  single_user_name = each.value.user_name
+}
+
+resource "databricks_permissions" "dev_restart" {
+  for_each   = data.databricks_user.dev
+  provider   = databricks.workspace  
+  cluster_id = databricks_cluster.dev[each.key].cluster_id
+  access_control {
+    user_name        = each.value.user_name
+    permission_level = "CAN_RESTART"
+  }
 }
 ```

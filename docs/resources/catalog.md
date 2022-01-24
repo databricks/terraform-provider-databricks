@@ -5,7 +5,9 @@ subcategory: "Unity Catalog"
 
 -> **Private Preview** This feature is in [Private Preview](https://docs.databricks.com/release-notes/release-types.html). Contact your Databricks representative to request access. 
 
-Unity Catalog helps simplify security and governance of your data. It is contained within [databricks_metastore](metastore.md) and can have [databricks_schema](schema.md). By default, Databricks creates `default` schema for every new catalog, but Terraform plugin is removing this auto-created schema, so that resource destroy could be done in a clean way.
+Within a metastore, Unity Catalog provides a 3-level namespace for organizing data: Catalogs, databases (also called schemas), and tables / views.
+
+A `databricks_catalog` is contained within [databricks_metastore](metastore.md) and can contain [databricks_schema](schema.md). By default, Databricks creates `default` schema for every new catalog, but Terraform plugin is removing this auto-created schema, so that resource destroy could be done in a clean way.
 
 ## Example Usage
 

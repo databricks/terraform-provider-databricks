@@ -3,6 +3,8 @@ subcategory: "Security"
 ---
 # databricks_sql_permissions Resource
 
+-> **Note** Please switch to [databricks_grants](grants.md) with Unity Catalog to manage data access, which provides better and faster way for managing data security. `databricks_grants` resource *doesn't require a technical cluster to perform operations*. `databricks_sql_permissions` will be removed, once Unity Catalog is Generally Available.
+
 This resource manages data object access control lists in Databricks workspaces for things like tables, views, databases, and [more](https://docs.databricks.com/security/access-control/table-acls/object-privileges.html). In order to enable Table Access control, you have to login to the workspace as administrator, go to `Admin Console`, pick `Access Control` tab, click on `Enable` button in `Table Access Control` section, and click `Confirm`. The security guarantees of table access control **will only be effective if cluster access control is also turned on**. Please make sure that no users can create clusters in your workspace and all [databricks_cluster](cluster.md) have approximately the following configuration:
 
 ```hcl
@@ -105,5 +107,6 @@ The following resources are often used in the same context:
 
 * [End to end workspace management](../guides/workspace-management.md) guide.
 * [databricks_group](group.md) to manage [groups in Databricks Workspace](https://docs.databricks.com/administration-guide/users-groups/groups.html) or [Account Console](https://accounts.cloud.databricks.com/) (for AWS deployments).
+* [databricks_grants](grants.md) to manage data access in Unity Catalog.
 * [databricks_permissions](permissions.md) to manage [access control](https://docs.databricks.com/security/access-control/index.html) in Databricks workspace.
 * [databricks_user](user.md) to [manage users](https://docs.databricks.com/administration-guide/users-groups/users.html), that could be added to [databricks_group](group.md) within the workspace.

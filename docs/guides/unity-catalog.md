@@ -31,7 +31,7 @@ terraform {
   required_providers {
     databricks = {
       source  = "databrickslabs/databricks"
-      version = "0.4.6"
+      version = "0.4.7"
     }
     aws = {
       source  = "hashicorp/aws"
@@ -80,7 +80,7 @@ variable "region" {
 
 variable "databricks_workspace_ids" {
   description = <<EOT
-  List of Databricks workspace ids to be enabled with Unity Catalog.
+  List of Databricks workspace IDs to be enabled with Unity Catalog.
   Enter with square brackets and double quotes
   e.g. ["111111111", "222222222"]
   EOT
@@ -123,7 +123,7 @@ locals {
 
 ## Configure AWS objects
 The first step is to create the required AWS objects:
-- An S3 bucket, which be the default storage location for managed tables in Unity Catalog. Please use a dedicated bucket for each metastore.
+- An S3 bucket, which is the default storage location for managed tables in Unity Catalog. Please use a dedicated bucket for each metastore.
 - An IAM policy that provides Unity Catalog permissions to access and manage data in the bucket
 - An IAM role that will be assumed by Unity Catalog
 
@@ -482,7 +482,7 @@ resource "databricks_cluster" "unity_sql" {
 ```
 
 - To use those advanced cluster features or languages like Python, Scala and R with Unity Catalog, one must choose **Single User** Mode when launching the cluster. The cluster can only be used exclusively by a single user (by default the owner of the cluster); other users are not allowed to attach to the cluster.
-This means a group of users, which is managed as a group through SCIM provisioning, will a collection of single-user [databricks_cluster](../resources/cluster.md), which they should be able to restart. Terraform's `for_each` meta-attribute helps to do this easily.
+This means a group of users, which is managed as a group through SCIM provisioning, will be a collection of single-user [databricks_cluster](../resources/cluster.md), which they should be able to restart. Terraform's `for_each` meta-attribute helps to do this easily.
 
 First we use [databricks_group](../data-sources/group.md) and [databricks_user](../data-sources/user.md) data resources to get the list of user names, that belong to a group
 

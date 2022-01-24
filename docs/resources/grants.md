@@ -5,7 +5,7 @@ subcategory: "Unity Catalog"
 
 -> **Private Preview** This feature is in [Private Preview](https://docs.databricks.com/release-notes/release-types.html). Contact your Databricks representative to request access. 
 
-Initially in Unity Catalog all users have no access to data. Only Metastore Admins can create objects and can grant/revoke access on individual objects to users and groups. Every securable object in Unity Catalog has an owner. The owner can be any account-level user or group, called principals in general. The principal that creates an object becomes its owner. Owners receive all privileges on the securable object (e.g., `SELECT` and `MODIFY` on a table), as well as the permission to grant privileges to other principals.
+In Unity Catalog all users initially have no access to data. Only Metastore Admins can create objects and can grant/revoke access on individual objects to users and groups. Every securable object in Unity Catalog has an owner. The owner can be any account-level user or group, called principals in general. The principal that creates an object becomes its owner. Owners receive all privileges on the securable object (e.g., `SELECT` and `MODIFY` on a table), as well as the permission to grant privileges to other principals.
 
 Unity Catalog supports the following privileges on securable objects:
 * `SELECT` - Allows the grantee to read data from the securable (applicable to tables and views).
@@ -13,10 +13,10 @@ Unity Catalog supports the following privileges on securable objects:
 * `CREATE` - Allows the grantee to create child objects within this securable.
 * `USAGE` - This privilege does not grant access to the securable itself, but allows the grantee to traverse the securable in order to access its child objects. For example, to select data from a table, users need to have the `SELECT` privilege on that table and `USAGE` privileges on its parent schema and parent catalog. Thus, you can use this privilege to restrict access to sections of your data namespace to specific groups.
 
-Every `databricks_grants` resource must have exactly one securable identifier and one or more `grant` blocks with the following arugments:
+Every `databricks_grants` resource must have exactly one securable identifier and one or more `grant` blocks with the following arguments:
 
 * `principal` - User or group name.
-* `privileges` - One or more of privileges, that are specific to securable type.
+* `privileges` - One or more privileges that are specific to a securable type.
 
 Terraform will handle any configuration drift on every `terraform apply` run, even when grants are changed outside of Terraform state.
 

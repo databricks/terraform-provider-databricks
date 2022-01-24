@@ -30,13 +30,13 @@ resource "databricks_metastore_assignment" "this" {
 The following arguments are required:
 
 * `name` - Name of metastore.
-* `storage_root` - Path on cloud storage account, where managed [databricks_table](table.md) are stored. Change forces new resource.
+* `storage_root` - Path on cloud storage account, where managed [databricks_table](table.md) are stored. Change forces creation of a new resource.
 * `owner` - (Optional) Username/groupname of Metastore owner.
 * `force_destroy` - (Optional) Destroy metastore regardless of its contents.
 
 ## Import
 
-This resource can be imported via ID:
+This resource can be imported by ID:
 
 ```bash
 $ terraform import databricks_metastore.this <id>

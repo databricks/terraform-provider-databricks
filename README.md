@@ -11,6 +11,7 @@
 | [databricks_aws_assume_role_policy](docs/data-sources/aws_assume_role_policy.md) data
 | [databricks_aws_bucket_policy](docs/data-sources/aws_bucket_policy.md) data
 | [databricks_aws_crossaccount_policy](docs/data-sources/aws_crossaccount_policy.md) data
+| [databricks_catalog](docs/resources/catalog.md)
 | [databricks_cluster](docs/resources/cluster.md)
 | [databricks_clusters](docs/data-sources/clusters.md) data
 | [databricks_cluster_policy](docs/resources/cluster_policy.md)
@@ -28,6 +29,7 @@
 | [databricks_ip_access_list](docs/resources/ip_access_list.md)
 | [databricks_job](docs/resources/job.md)
 | [databricks_library](docs/resources/library.md)
+| [databricks_metastore](docs/resources/metastore.md)
 | [databricks_mlflow_model](docs/resources/mlflow_model.md)
 | [databricks_mlflow_experiment](docs/resources/mlflow_experiment.md)
 | [databricks_mws_credentials](docs/resources/mws_credentials.md)

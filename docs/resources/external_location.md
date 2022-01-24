@@ -5,7 +5,9 @@ subcategory: "Unity Catalog"
 
 -> **Private Preview** This feature is in [Private Preview](https://docs.databricks.com/release-notes/release-types.html). Contact your Databricks representative to request access. 
 
-Unity Catalog’s security and governance model provides excellent support for External Tables. This can then be used to define external paths/tables where you can control access. 
+To work with external tables, Unity Catalog introduces two new objects to access and work with external cloud storage:
+- [databricks_storage_credential](storage_credential.md)represent authentication methods to access cloud storage (e.g. an IAM role for Amazon S3 or a service principal for Azure Storage). Storage credentials are access-controlled to determine which users can use the credential.
+- `databricks_external_location` are objects that combine a cloud storage path with a Storage Credential that can be used to access the location. 
 
 ## Example Usage
 

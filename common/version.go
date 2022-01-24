@@ -3,7 +3,7 @@ package common
 import "context"
 
 var (
-	version = "0.4.6"
+	version = "0.4.7"
 	// ResourceName is resource name without databricks_ prefix
 	ResourceName contextKey = 1
 	// Provider is the current instance of provider

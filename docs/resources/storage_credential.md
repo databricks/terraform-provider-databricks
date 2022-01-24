@@ -45,7 +45,7 @@ The following arguments are required:
 `aws_iam_role` optional configuration block for credential details for AWS:
 * `role_arn` - The Amazon Resource Name (ARN) of the AWS IAM role for S3 data access, of the form `arn:aws:iam::1234567890:role/MyRole-AJJHDSKSDF`
 
-`azure_service_principal` optional configuration block for credential details for AWS:
+`azure_service_principal` optional configuration block for credential details for Azure:
 * `directory_id` - The directory ID corresponding to the Azure Active Directory (AAD) tenant of the application
 * `application_id` - The application ID of the application registration within the referenced AAD tenant
 * `client_secret` - The client secret generated for the above app ID in AAD. **This field is redacted on output**

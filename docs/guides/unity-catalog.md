@@ -277,7 +277,7 @@ resource "databricks_metastore" "this" {
   provider      = databricks.workspace
   name          = "primary"
   storage_root  = "s3://${aws_s3_bucket.metastore.id}/metastore"
-  owner         = "uc admins"
+  owner         = var.unity_admin_group
   force_destroy = true
 }
 

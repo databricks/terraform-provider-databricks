@@ -236,7 +236,7 @@ A Unity Catalog metastore can be shared across multiple Databricks workspaces. T
 ---
 **Note**
 
-Databricks does not allow a single user to be added to more than one account. You will receive the error `User already exists in another account`
+Databricks does not allow a single user to be added to more than one Databricks account. You will receive the error `User already exists in another account`
 
 ---
 

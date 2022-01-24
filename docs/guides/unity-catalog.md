@@ -8,7 +8,7 @@ page_title: "Unity Catalog set up on AWS"
 
 Databricks Unity Catalog brings fine-grained governance and security to lakehouse data using a familiar, open interface. Deploying the underlying cloud resources and Unity Catalog objects can be done with Terraform to simplify the set up and enable automation
 
-This guide assumes you have `databricks_account_username` and `databricks_account_password` for [https://accounts.cloud.databricks.com](https://accounts.cloud.databricks.com) and can find `databricks_account_id` in the bottom left corner of the page, once you're logged in. This guide is provided as-is and assumes you'll use it as the basis for your setup.
+This guide assumes you have `databricks_account_username` and `databricks_account_password` for [https://accounts.cloud.databricks.com](https://accounts.cloud.databricks.com) and can find `databricks_account_id` in the bottom left corner of the page, once you're logged in. This guide is provided as-is and you can use this guide as the basis for your custom Terraform module
 
 Below are the high level steps to get started with Unity Catalog:
 - [Initialize the required providers](#provider-initialization)
@@ -24,7 +24,7 @@ Below are the high level steps to get started with Unity Catalog:
 
 ## Provider initialization
 
-> Initialize provider in "MWS" mode to set up account-level resources
+Initialize provider in "MWS" mode to set up account-level resources. See [provider authentication](../index.md#authenticating-with-hostname,-username,-and-password)
 
 ```hcl
 terraform {
@@ -109,7 +109,7 @@ variable "unity_admin_group" {
   description = "Name of the admin group. This group will be set as the owner of the Unity Catalog metastore"
   type        = string
 }
-
+//generate a random string as the prefix for AWS resources, to ensure uniqueness
 resource "random_string" "naming" {
   special = false
   upper   = false
@@ -170,7 +170,7 @@ resource "aws_iam_policy" "unity_metastore" {
     Id      = "${local.prefix}-databricks-unity-metastore"
     Statement = [
       {
-        "Action": [
+        "Action" : [
           "s3:GetObject",
           "s3:GetObjectVersion",
           "s3:PutObject",
@@ -179,11 +179,11 @@ resource "aws_iam_policy" "unity_metastore" {
           "s3:ListBucket",
           "s3:GetBucketLocation"
         ],
-        "Resource": [
+        "Resource" : [
           aws_s3_bucket.unity_metastore.arn,
           "${aws_s3_bucket.unity_metastore.arn}/*"
         ],
-        "Effect": "Allow"
+        "Effect" : "Allow"
       }
     ]
   })
@@ -200,18 +200,18 @@ resource "aws_iam_policy" "sample_data" {
     Id      = "${local.prefix}-databricks-sample-data"
     Statement = [
       {
-        "Action": [
+        "Action" : [
           "s3:GetObject",
           "s3:GetObjectVersion",
           "s3:ListBucket",
           "s3:GetBucketLocation"
         ],
-        "Resource": [
+        "Resource" : [
           "arn:aws:s3:::databricks-datasets-oregon/*",
           "arn:aws:s3:::databricks-datasets-oregon"
 
         ],
-        "Effect": "Allow"
+        "Effect" : "Allow"
       }
     ]
   })
@@ -221,25 +221,20 @@ resource "aws_iam_policy" "sample_data" {
 }
 
 resource "aws_iam_role" "metastore_data_access" {
-  name               = "${local.prefix}-uc-access"
-  assume_role_policy = data.aws_iam_policy_document.passrole_for_uc.json
+  name                = "${local.prefix}-uc-access"
+  assume_role_policy  = data.aws_iam_policy_document.passrole_for_uc.json
   managed_policy_arns = [aws_iam_policy.unity_metastore.arn, aws_iam_policy.sample_data.arn]
   tags = merge(local.tags, {
     Name = "${local.prefix}-unity-catalog IAM role"
-  })  
+  })
 }
 ```
 
 ## Create users and groups
 
-A Unity Catalog metastore can be shared across multiple Databricks workspaces. To enable this, Databricks must have a consistent view of users and groups across all workspaces, and has introduced features within the account console to manage this. Users and groups that wish to use Unity Catalog must be created as account level identities
+A Unity Catalog [databricks_metastore](../resources/metastore.md) can be shared across multiple Databricks workspaces. To enable this, Databricks must have a consistent view of users and groups across all workspaces, and has introduced features within the account console to manage this. Users and groups that wish to use Unity Catalog must be created as account level identities
 
----
-**Note**
-
-Databricks does not allow a single user to be added to more than one Databricks account. You will receive the error `User already exists in another account`
-
----
+-> **Note** Databricks does not allow a single user to be added to more than one Databricks account. You will receive the error `User already exists in another account`
 
 ```hcl
 resource "databricks_user" "unity_users" {
@@ -270,7 +265,7 @@ resource "databricks_user_role" "my_user_account_admin" {
 ```
 ## Create a Unity Catalog metastore and link it to workspaces
 
-A metastore is the top level container for data in Unity Catalog. A single metastore can be shared across Databricks workspaces, and each linked workspace has a consistent view of the data and a single set of access policies. It is only recommended to have multiple metastores when organizations wish to have hard isolation boundaries between data (note that data cannot be easily joined/queried across metastores).
+A [databricks_metastore](../resources/metastore.md) is the top level container for data in Unity Catalog. A single metastore can be shared across Databricks workspaces, and each linked workspace has a consistent view of the data and a single set of access policies. It is only recommended to have multiple metastores when organizations wish to have hard isolation boundaries between data (note that data cannot be easily joined/queried across metastores).
 
 ```hcl
 resource "databricks_metastore" "this" {
@@ -340,7 +335,7 @@ resource "databricks_schema" "things" {
 }
 
 resource "databricks_grants" "things" {
-  provider = databricks.workspace  
+  provider = databricks.workspace
   schema   = databricks_schema.things.id
   grant {
     principal  = "Data Engineers"
@@ -352,8 +347,8 @@ resource "databricks_grants" "things" {
 ## Configure external tables and credentials
 
 To work with external tables, Unity Catalog introduces two new objects to access and work with external cloud storage:
-- **Storage credentials** represent authentication methods to access cloud storage (e.g. an IAM role for Amazon S3 or a service principal for Azure Storage). Storage credentials are access-controlled to determine which users can use the credential.
-- **External locations** are objects that combine a cloud storage path with a Storage Credential that can be used to access the location. 
+- [databricks_storage_credential](../resources/storage_credential.md) represent authentication methods to access cloud storage (e.g. an IAM role for Amazon S3 or a service principal for Azure Storage). Storage credentials are access-controlled to determine which users can use the credential.
+- [databricks_external_location](../resources/external_location.md) are objects that combine a cloud storage path with a Storage Credential that can be used to access the location. 
 
 First, create the required objects in AWS
 
@@ -384,7 +379,7 @@ resource "aws_iam_policy" "external_data_access" {
     Id      = "${aws_s3_bucket.external.id}-access"
     Statement = [
       {
-        "Action": [
+        "Action" : [
           "s3:GetObject",
           "s3:GetObjectVersion",
           "s3:PutObject",
@@ -393,11 +388,11 @@ resource "aws_iam_policy" "external_data_access" {
           "s3:ListBucket",
           "s3:GetBucketLocation"
         ],
-        "Resource": [
+        "Resource" : [
           aws_s3_bucket.external.arn,
           "${aws_s3_bucket.external.arn}/*"
         ],
-        "Effect": "Allow"
+        "Effect" : "Allow"
       }
     ]
   })
@@ -407,28 +402,28 @@ resource "aws_iam_policy" "external_data_access" {
 }
 
 resource "aws_iam_role" "external_data_access" {
-  name               = "${local.prefix}-external-access"
-  assume_role_policy = data.aws_iam_policy_document.passrole_for_uc.json
+  name                = "${local.prefix}-external-access"
+  assume_role_policy  = data.aws_iam_policy_document.passrole_for_uc.json
   managed_policy_arns = [aws_iam_policy.external_data_access.arn]
   tags = merge(local.tags, {
     Name = "${local.prefix}-unity-catalog external access IAM role"
   })
 }
 ```
-Then create the storage credentials and external locations in Unity Catalog
+Then create the [databricks_storage_credential](../resources/storage_credential.md) and [databricks_external_location](../resources/xternal_location.md) in Unity Catalog
 
 ```hcl
 resource "databricks_storage_credential" "external" {
-  provider = databricks.workspace 
+  provider = databricks.workspace
   name     = aws_iam_role.external_data_access.name
   aws_iam_role {
     role_arn = aws_iam_role.external_data_access.arn
   }
-  comment  = "Managed by TF"
+  comment = "Managed by TF"
 }
 
 resource "databricks_grants" "external_creds" {
-  provider           = databricks.workspace   
+  provider           = databricks.workspace
   storage_credential = databricks_storage_credential.external.id
   grant {
     principal  = "Data Engineers"
@@ -437,7 +432,7 @@ resource "databricks_grants" "external_creds" {
 }
 
 resource "databricks_external_location" "some" {
-  provider        = databricks.workspace   
+  provider        = databricks.workspace
   name            = "external"
   url             = "s3://${aws_s3_bucket.external.id}/some"
   credential_name = databricks_storage_credential.external.id
@@ -445,7 +440,7 @@ resource "databricks_external_location" "some" {
 }
 
 resource "databricks_grants" "some" {
-  provider          = databricks.workspace   
+  provider          = databricks.workspace
   external_location = databricks_external_location.some.id
   grant {
     principal  = "Data Engineers"
@@ -458,7 +453,7 @@ resource "databricks_grants" "some" {
 
 To ensure the integrity of ACLs, users are required to access Unity Catalog through compute resources configured with strong isolation guarantees and other security features. This is achieved through a new concept called ‘Security Modes’, which are applied to compute resources.
 
-To use Unity Catalog from a regular cluster, one must configure the cluster with a proper **Data Security Mode**.  Currently, Unity Catalog is supported in two security modes: **User Isolation** and **Single User**.
+To use Unity Catalog from a regular [databricks_cluster](../resources/cluster.md), one must configure the cluster with a proper **Data Security Mode**.  Currently, Unity Catalog is supported in two security modes: **User Isolation** and **Single User**.
 
 - **User Isolation** clusters can be shared by multiple users, but only SQL language is allowed. Some advanced cluster features such as library installation, init scripts and the DBFS Fuse mount are also disabled in this mode to ensure security isolation among cluster users.
 
@@ -475,7 +470,7 @@ resource "databricks_cluster" "unity_sql" {
   num_workers             = 2
   aws_attributes {
     availability = "SPOT"
-  }  
+  }
   data_security_mode = "USER_ISOLATION"
 }
 
@@ -491,6 +486,6 @@ resource "databricks_cluster" "unity_mlr" {
     availability = "SPOT"
   }
   data_security_mode = "SINGLE_USER"
-  single_user_name = "user@example.com"
+  single_user_name   = "user@example.com"
 }
 ```

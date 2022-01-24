@@ -149,7 +149,7 @@ provider "databricks" {
 
 ### Authenticating with hostname, username, and password
 
-!> **Warning** This approach is currently recommended only for provisioning AWS workspaces and should be avoided for regular use.
+!> **Warning** This approach is currently recommended only for provisioning account-level resources, e.g. AWS workspaces and should be avoided for regular use.
 
 You can use the `username` + `password` attributes to authenticate provider for E2 workspace setup. Respective `DATABRICKS_USERNAME` and `DATABRICKS_PASSWORD` environment variables are applicable as well.
 

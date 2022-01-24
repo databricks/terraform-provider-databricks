@@ -60,11 +60,11 @@ resource "databricks_table" "thing" {
 
 The following arguments are required:
 
-* `name` - Name of table relative to parent catalog and schema. Change forces new resource.
+* `name` - Name of table relative to parent catalog and schema. Change forces creation of a new resource.
 * `catalog_name` - Name of parent catalog
 * `schema_name` - Name of parent Schema relative to parent Catalog
 * `table_type` - Distinguishes a view vs. managed/external Table. `MANAGED`, `EXTERNAL` or `VIEW`
-* `storage_location` - URL of storage location for Table data (required for EXTERNAL Tables. For Managed Tables, if the path is provided it needs to be a Staging Table path that has been generated through the Sttaging Table API, otherwise should be empty)
+* `storage_location` - URL of storage location for Table data (required for EXTERNAL Tables. For Managed Tables, if the path is provided it needs to be a Staging Table path that has been generated through the Staging Table API, otherwise should be empty)
 * `data_source_format` - External tables are supported in multiple data source formats. The string constants identifying these formats are `DELTA`, `CSV`, `JSON`, `AVRO`, `PARQUET`, `ORC`, `TEXT`
 * `view_definition` - (Optional) SQL text defining the view (for `table_type == "VIEW"`)
 * `storage_credential_name` - (Optional) For EXTERNAL Tables only: the name of storage credential to use. This cannot be updated
@@ -88,7 +88,7 @@ For table columns
 
 ## Import
 
-This resource can be imported via name:
+This resource can be imported by name:
 
 ```bash
 $ terraform import databricks_table.this <name>

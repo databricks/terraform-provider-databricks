@@ -31,7 +31,7 @@ resource "databricks_metastore_data_access" "this" {
 
 The following arguments are required:
 
-* `name` - Name of Data Access Configuration, which must be unique within the [databricks_metastore](metastore.md). Change forces new resource.
+* `name` - Name of Data Access Configuration, which must be unique within the [databricks_metastore](metastore.md). Change forces creation of a new resource.
 * `metastore_id` - Unique identifier of the parent Metastore
 
 `aws_iam_role` optional configuration block for credential details for AWS:
@@ -44,7 +44,7 @@ The following arguments are required:
 
 ## Import
 
-This resource can be imported via ID:
+This resource can be imported by ID:
 
 ```bash
 $ terraform import databricks_metastore_data_access.this <id>

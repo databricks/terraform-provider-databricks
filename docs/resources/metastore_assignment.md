@@ -33,7 +33,7 @@ The following arguments are required:
 
 ## Import
 
-This resource can be imported via ID:
+This resource can be imported by ID:
 
 ```bash
 $ terraform import databricks_metastore_assignment.this <id>

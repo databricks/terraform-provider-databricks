@@ -89,6 +89,10 @@ func createForceOverridesManuallyAddedUser(err error, d *schema.ResourceData, us
 	if err.Error() != force {
 		return err
 	}
+	force_account := "User already exists in another account"
+	if err.Error() != force_account {
+		return err
+	}	
 	userList, err := usersAPI.Filter(fmt.Sprintf("userName eq '%s'", userName))
 	if err != nil {
 		return err

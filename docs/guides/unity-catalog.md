@@ -8,9 +8,15 @@ page_title: "Unity Catalog set up on AWS"
 
 Databricks Unity Catalog brings fine-grained governance and security to Lakehouse data using a familiar, open interface. You can use Terraform to deploy the underlying cloud resources and Unity Catalog objects automatically, using a programmatic approach.
 
-This guide assumes you have `databricks_account_username` and `databricks_account_password` for [https://accounts.cloud.databricks.com](https://accounts.cloud.databricks.com) and can find `databricks_account_id` in the bottom left corner of the page, once you're logged in. This guide is provided as-is and you can use this guide as the basis for your custom Terraform module
+This guide uses the following replacement variables in the templates and examples:
 
-Below are the high level steps to get started with Unity Catalog:
+ - `databricks_account_username`: The username an account-level admin uses to log in to  [https://accounts.cloud.databricks.com](https://accounts.cloud.databricks.com).
+- `databricks_account_password`: The password for `databricks_account_username`.
+- `databricks_account_id` The numeric ID for your Databricks account. When you are logged in, it appears in the bottom left corner of the page.
+
+This guide is provided as-is and you can use this guide as the basis for your custom Terraform module
+
+To get started with Unity Catalog, this guide takes you throw the following high-level steps:
 - [Initialize the required providers](#provider-initialization)
 - [Configure AWS objects](#configure-aws-objects)
   - A S3 bucket to store data from managed tables in Unity Catalog
@@ -125,7 +131,7 @@ locals {
 The first step is to create the required AWS objects:
 - An S3 bucket, which is the default storage location for managed tables in Unity Catalog. Please use a dedicated bucket for each metastore.
 - An IAM policy that provides Unity Catalog permissions to access and manage data in the bucket
-- An IAM role that will be assumed by Unity Catalog
+- An IAM role that is associated with the IAM policy and will be assumed by Unity Catalog
 
 ```hcl
 resource "aws_s3_bucket" "metastore" {
@@ -232,9 +238,9 @@ resource "aws_iam_role" "metastore_data_access" {
 
 ## Create users and groups
 
-A Unity Catalog [databricks_metastore](../resources/metastore.md) can be shared across multiple Databricks workspaces. To enable this, Databricks must have a consistent view of users and groups across all workspaces, and has introduced features within the account console to manage this. Users and groups that wish to use Unity Catalog must be created as account level identities
+A Unity Catalog [databricks_metastore](../resources/metastore.md) can be shared across multiple Databricks workspaces. To enable this, Databricks must have a consistent view of users and groups across all workspaces, and has introduced features within the account console to manage this. Users and groups that wish to use Unity Catalog must be created as account level identities and as workspace-level identities.
 
--> **Note** Databricks does not allow a single user to be added to more than one Databricks account. You will receive the error `User already exists in another account`
+-> **Note** Databricks does not allow a single user to be added to more than one Databricks account. You will receive the error `User already exists in another account`.
 
 ```hcl
 resource "databricks_user" "unity_users" {
@@ -265,7 +271,7 @@ resource "databricks_user_role" "my_user_account_admin" {
 ```
 ## Create a Unity Catalog metastore and link it to workspaces
 
-A [databricks_metastore](../resources/metastore.md) is the top level container for data in Unity Catalog. A single metastore can be shared across Databricks workspaces, and each linked workspace has a consistent view of the data and a single set of access policies. It is only recommended to have multiple metastores when organizations wish to have hard isolation boundaries between data (note that data cannot be easily joined/queried across metastores).
+A [databricks_metastore](../resources/metastore.md) is the top level container for data in Unity Catalog. A single metastore can be shared across Databricks workspaces, and each linked workspace has a consistent view of the data and a single set of access policies. Databricks recommends using a small number of metastores, except when organizations wish to have hard isolation boundaries between data. Data cannot be easily joined/queried across metastores.
 
 ```hcl
 resource "databricks_metastore" "this" {
@@ -410,6 +416,7 @@ resource "aws_iam_role" "external_data_access" {
   })
 }
 ```
+
 Then create the [databricks_storage_credential](../resources/storage_credential.md) and [databricks_external_location](../resources/xternal_location.md) in Unity Catalog
 
 ```hcl
@@ -451,9 +458,8 @@ resource "databricks_grants" "some" {
 
 ## Configure Unity Catalog clusters
 
-To ensure the integrity of ACLs, users are required to access Unity Catalog through compute resources configured with strong isolation guarantees and other security features. This is achieved through a new concept called ‘Security Modes’, which are applied to compute resources.
+To ensure the integrity of ACLs, Unity Catalog data can be accessed only through compute resources configured with strong isolation guarantees and other security features. A Unity Catalog [databricks_cluster](../resources/cluster.md) has a  ‘Security Mode’ set to either **User Isolation** or **Single User**.
 
-To use Unity Catalog from a regular [databricks_cluster](../resources/cluster.md), one must configure the cluster with a proper **Data Security Mode**.  Currently, Unity Catalog is supported in two security modes: **User Isolation** and **Single User**.
 
 - **User Isolation** clusters can be shared by multiple users, but only SQL language is allowed. Some advanced cluster features such as library installation, init scripts and the DBFS Fuse mount are also disabled in this mode to ensure security isolation among cluster users.
 

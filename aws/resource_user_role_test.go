@@ -8,8 +8,8 @@ import (
 )
 
 func TestUserRoleCornerCases(t *testing.T) {
-	qa.ResourceCornerCases(t, ResourceUserRole(), 
-		qa.CornerCaseID("a|b"), 
+	qa.ResourceCornerCases(t, ResourceUserRole(),
+		qa.CornerCaseID("a|b"),
 		qa.CornerCaseSkipCRUD("create"))
 }
 
@@ -17,8 +17,8 @@ func TestUserRoleCreate_AndGetResourceDrift(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
-				Method:   "PATCH",
-				Resource: "/api/2.0/preview/scim/v2/Users/a",
+				Method:          "PATCH",
+				Resource:        "/api/2.0/preview/scim/v2/Users/a",
 				ExpectedRequest: scim.PatchRequest("add", "roles", "b"),
 			},
 			{
@@ -27,7 +27,7 @@ func TestUserRoleCreate_AndGetResourceDrift(t *testing.T) {
 				Response: scim.User{},
 			},
 		},
-		Create: true,
+		Create:   true,
 		Resource: ResourceUserRole(),
 		HCL: `
 		user_id = "a"

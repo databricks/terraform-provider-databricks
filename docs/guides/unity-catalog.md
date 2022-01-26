@@ -8,13 +8,14 @@ page_title: "Unity Catalog set up on AWS"
 
 Databricks Unity Catalog brings fine-grained governance and security to Lakehouse data using a familiar, open interface. You can use Terraform to deploy the underlying cloud resources and Unity Catalog objects automatically, using a programmatic approach.
 
-This guide uses the following replacement variables in the templates and examples:
+This guide uses the following variables in configurations:
 
- - `databricks_account_username`: The username an account-level admin uses to log in to  [https://accounts.cloud.databricks.com](https://accounts.cloud.databricks.com).
+- `databricks_account_username`: The username an account-level admin uses to log in to  [https://accounts.cloud.databricks.com](https://accounts.cloud.databricks.com).
 - `databricks_account_password`: The password for `databricks_account_username`.
-- `databricks_account_id` The numeric ID for your Databricks account. When you are logged in, it appears in the bottom left corner of the page.
+- `databricks_account_id`: The numeric ID for your Databricks account. When you are logged in, it appears in the bottom left corner of the page.
+- `databricks_workspace_url`: Value of `workspace_url` attribute from [databricks_mws_workspaces](../resources/mws_workspaces.md#attribute-reference) resource.
 
-This guide is provided as-is and you can use this guide as the basis for your custom Terraform module
+This guide is provided as-is and you can use this guide as the basis for your custom Terraform module.
 
 To get started with Unity Catalog, this guide takes you throw the following high-level steps:
 - [Initialize the required providers](#provider-initialization)
@@ -30,7 +31,7 @@ To get started with Unity Catalog, this guide takes you throw the following high
 
 ## Provider initialization
 
-Initialize provider in "MWS" mode to set up account-level resources. See [provider authentication](../index.md#authenticating-with-hostname,-username,-and-password)
+Initialize [provider with `mws` alias](https://www.terraform.io/language/providers/configuration#alias-multiple-provider-configurations) to set up account-level resources. See [provider authentication](../index.md#authenticating-with-hostname,-username,-and-password) for more details.
 
 ```hcl
 terraform {
@@ -62,7 +63,7 @@ provider "databricks" {
 // initialize provider at workspace level, to create UC resources
 provider "databricks" {
   alias    = "workspace"
-  host     = var.databricks_workspace_host
+  host     = var.databricks_workspace_url
   username = var.databricks_account_username
   password = var.databricks_account_password
 }
@@ -74,7 +75,7 @@ Define the required variables
 variable "databricks_account_username" {}
 variable "databricks_account_password" {}
 variable "databricks_account_id" {}
-variable "databricks_workspace_host" {}
+variable "databricks_workspace_url" {}
 
 variable "tags" {
   default = {}
@@ -102,7 +103,7 @@ variable "databricks_users" {
   type        = list(string)
 }
 
-variable "databricks_unity_admins" {
+variable "databricks_metastore_admins" {
   description = <<EOT
   List of Admins to be added at account-level for Unity Catalog.
   Enter with square brackets and double quotes
@@ -115,6 +116,7 @@ variable "unity_admin_group" {
   description = "Name of the admin group. This group will be set as the owner of the Unity Catalog metastore"
   type        = string
 }
+
 //generate a random string as the prefix for AWS resources, to ensure uniqueness
 resource "random_string" "naming" {
   special = false
@@ -130,8 +132,8 @@ locals {
 ## Configure AWS objects
 The first step is to create the required AWS objects:
 - An S3 bucket, which is the default storage location for managed tables in Unity Catalog. Please use a dedicated bucket for each metastore.
-- An IAM policy that provides Unity Catalog permissions to access and manage data in the bucket
-- An IAM role that is associated with the IAM policy and will be assumed by Unity Catalog
+- An IAM policy that provides Unity Catalog permissions to access and manage data in the bucket.
+- An IAM role that is associated with the IAM policy and will be assumed by Unity Catalog.
 
 ```hcl
 resource "aws_s3_bucket" "metastore" {
@@ -169,8 +171,6 @@ data "aws_iam_policy_document" "passrole_for_uc" {
 }
 
 resource "aws_iam_policy" "unity_metastore" {
-  # Terraform's "jsonencode" function converts a
-  # Terraform expression's result to valid JSON syntax.
   policy = jsonencode({
     Version = "2012-10-17"
     Id      = "${local.prefix}-databricks-unity-metastore"
@@ -198,9 +198,8 @@ resource "aws_iam_policy" "unity_metastore" {
   })
 }
 
+// Required, in case https://docs.databricks.com/data/databricks-datasets.html are needed
 resource "aws_iam_policy" "sample_data" {
-  # Terraform's "jsonencode" function converts a
-  # Terraform expression's result to valid JSON syntax.
   policy = jsonencode({
     Version = "2012-10-17"
     Id      = "${local.prefix}-databricks-sample-data"
@@ -238,14 +237,14 @@ resource "aws_iam_role" "metastore_data_access" {
 
 ## Create users and groups
 
-A Unity Catalog [databricks_metastore](../resources/metastore.md) can be shared across multiple Databricks workspaces. To enable this, Databricks must have a consistent view of users and groups across all workspaces, and has introduced features within the account console to manage this. Users and groups that wish to use Unity Catalog must be created as account level identities and as workspace-level identities.
+A Unity Catalog [databricks_metastore](../resources/metastore.md) can be shared across multiple Databricks workspaces. To enable this, Databricks must have a consistent view of users and groups across all workspaces, and has introduced features within the account console to manage this. Users and groups that wish to use Unity Catalog must be created as account level identities and as workspace-level identities. All users are added to the `account users` group by default.
 
 -> **Note** Databricks does not allow a single user to be added to more than one Databricks account. You will receive the error `User already exists in another account`.
 
 ```hcl
 resource "databricks_user" "unity_users" {
   provider  = databricks.mws
-  for_each  = toset(concat(var.databricks_users, var.databricks_unity_admins))
+  for_each  = toset(concat(var.databricks_users, var.databricks_metastore_admins))
   user_name = each.key
   force     = true
 }
@@ -257,14 +256,14 @@ resource "databricks_group" "admin_group" {
 
 resource "databricks_group_member" "admin_group_member" {
   provider  = databricks.mws
-  for_each  = toset(var.databricks_unity_admins)
+  for_each  = toset(var.databricks_metastore_admins)
   group_id  = databricks_group.admin_group.id
   member_id = databricks_user.unity_users[each.value].id
 }
 
-resource "databricks_user_role" "my_user_account_admin" {
+resource "databricks_user_role" "metastore_admin" {
   provider = databricks.mws
-  for_each = toset(var.databricks_unity_admins)
+  for_each = toset(var.databricks_metastore_admins)
   user_id  = databricks_user.unity_users[each.value].id
   role     = "account_admin"
 }
@@ -356,7 +355,7 @@ To work with external tables, Unity Catalog introduces two new objects to access
 - [databricks_storage_credential](../resources/storage_credential.md) represent authentication methods to access cloud storage (e.g. an IAM role for Amazon S3 or a service principal for Azure Storage). Storage credentials are access-controlled to determine which users can use the credential.
 - [databricks_external_location](../resources/external_location.md) are objects that combine a cloud storage path with a Storage Credential that can be used to access the location. 
 
-First, create the required objects in AWS
+First, create the required objects in AWS.
 
 ```hcl
 resource "aws_s3_bucket" "external" {
@@ -365,6 +364,7 @@ resource "aws_s3_bucket" "external" {
   versioning {
     enabled = false
   }
+  // destroy all objects with bucket destroy
   force_destroy = true
   tags = merge(local.tags, {
     Name = "${local.prefix}-external"
@@ -378,8 +378,8 @@ resource "aws_s3_bucket_public_access_block" "external" {
 }
 
 resource "aws_iam_policy" "external_data_access" {
-  # Terraform's "jsonencode" function converts a
-  # Terraform expression's result to valid JSON syntax.
+  // Terraform's "jsonencode" function converts a
+  // Terraform expression's result to valid JSON syntax.
   policy = jsonencode({
     Version = "2012-10-17"
     Id      = "${aws_s3_bucket.external.id}-access"
@@ -417,7 +417,7 @@ resource "aws_iam_role" "external_data_access" {
 }
 ```
 
-Then create the [databricks_storage_credential](../resources/storage_credential.md) and [databricks_external_location](../resources/xternal_location.md) in Unity Catalog
+Then create the [databricks_storage_credential](../resources/storage_credential.md) and [databricks_external_location](../resources/xternal_location.md) in Unity Catalog.
 
 ```hcl
 resource "databricks_storage_credential" "external" {
@@ -460,7 +460,6 @@ resource "databricks_grants" "some" {
 
 To ensure the integrity of ACLs, Unity Catalog data can be accessed only through compute resources configured with strong isolation guarantees and other security features. A Unity Catalog [databricks_cluster](../resources/cluster.md) has a  ‘Security Mode’ set to either **User Isolation** or **Single User**.
 
-
 - **User Isolation** clusters can be shared by multiple users, but only SQL language is allowed. Some advanced cluster features such as library installation, init scripts and the DBFS Fuse mount are also disabled in this mode to ensure security isolation among cluster users.
 
 ```hcl
@@ -490,7 +489,7 @@ resource "databricks_cluster" "unity_sql" {
 - To use those advanced cluster features or languages like Python, Scala and R with Unity Catalog, one must choose **Single User** Mode when launching the cluster. The cluster can only be used exclusively by a single user (by default the owner of the cluster); other users are not allowed to attach to the cluster.
 This means a group of users, which is managed as a group through SCIM provisioning, will be a collection of single-user [databricks_cluster](../resources/cluster.md), which they should be able to restart. Terraform's `for_each` meta-attribute helps to do this easily.
 
-First we use [databricks_group](../data-sources/group.md) and [databricks_user](../data-sources/user.md) data resources to get the list of user names, that belong to a group
+First we use [databricks_group](../data-sources/group.md) and [databricks_user](../data-sources/user.md) data resources to get the list of user names, that belong to a group.
 
 ```hcl
 data "databricks_group" "dev" {
@@ -521,12 +520,12 @@ resource "databricks_cluster" "dev" {
     availability = "SPOT"
   }
   data_security_mode = "SINGLE_USER"
-  single_user_name = each.value.user_name
+  single_user_name   = each.value.user_name
 }
 
 resource "databricks_permissions" "dev_restart" {
   for_each   = data.databricks_user.dev
-  provider   = databricks.workspace  
+  provider   = databricks.workspace
   cluster_id = databricks_cluster.dev[each.key].cluster_id
   access_control {
     user_name        = each.value.user_name

@@ -86,12 +86,16 @@ func createForceOverridesManuallyAddedUser(err error, d *schema.ResourceData, us
 	// corner-case for overriding manually provisioned users
 	userName := strings.ReplaceAll(u.UserName, "'", "")
 	force := fmt.Sprintf("User with username %s already exists.", userName)
-	if err.Error() != force {
+	force_account := "User already exists in another account"
+	if (err.Error() != force) && (err.Error() != force_account) {
 		return err
 	}
 	userList, err := usersAPI.Filter(fmt.Sprintf("userName eq '%s'", userName))
 	if err != nil {
 		return err
+	}
+	if len(userList) == 0 {
+		return fmt.Errorf("cannot find %s for force import", userName)
 	}
 	user := userList[0]
 	d.SetId(user.ID)

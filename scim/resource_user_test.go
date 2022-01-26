@@ -404,6 +404,27 @@ func TestCreateForceOverwriteCannotListUsers(t *testing.T) {
 	})
 }
 
+func TestCreateForceOverwriteCannotListAccUsers(t *testing.T) {
+	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/preview/scim/v2/Users?filter=userName%20eq%20%27me%40example.com%27",
+			Response: UserList{
+				TotalResults: 0,
+			},
+		},
+	}, func(ctx context.Context, client *common.DatabricksClient) {
+		d := ResourceUser().TestResourceData()
+		d.Set("force", true)
+		err := createForceOverridesManuallyAddedUser(
+			fmt.Errorf("User already exists in another account"),
+			d, NewUsersAPI(ctx, client), User{
+				UserName: "me@example.com",
+			})
+		assert.EqualError(t, err, "cannot find me@example.com for force import")
+	})
+}
+
 func TestCreateForceOverwriteFindsAndSetsID(t *testing.T) {
 	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
 		{
@@ -438,6 +459,48 @@ func TestCreateForceOverwriteFindsAndSetsID(t *testing.T) {
 		d.Set("user_name", "me@example.com")
 		err := createForceOverridesManuallyAddedUser(
 			fmt.Errorf("User with username me@example.com already exists."),
+			d, NewUsersAPI(ctx, client), User{
+				UserName: "me@example.com",
+			})
+		assert.NoError(t, err)
+		assert.Equal(t, "abc", d.Id())
+	})
+}
+
+func TestCreateForceOverwriteFindsAndSetsAccID(t *testing.T) {
+	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/preview/scim/v2/Users?filter=userName%20eq%20%27me%40example.com%27",
+			Response: UserList{
+				Resources: []User{
+					{
+						ID: "abc",
+					},
+				},
+			},
+		},
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/preview/scim/v2/Users/abc",
+			Response: User{
+				ID: "abc",
+			},
+		},
+		{
+			Method:   "PUT",
+			Resource: "/api/2.0/preview/scim/v2/Users/abc",
+			ExpectedRequest: User{
+				Schemas:  []URN{UserSchema},
+				UserName: "me@example.com",
+			},
+		},
+	}, func(ctx context.Context, client *common.DatabricksClient) {
+		d := ResourceUser().TestResourceData()
+		d.Set("force", true)
+		d.Set("user_name", "me@example.com")
+		err := createForceOverridesManuallyAddedUser(
+			fmt.Errorf("User already exists in another account"),
 			d, NewUsersAPI(ctx, client), User{
 				UserName: "me@example.com",
 			})

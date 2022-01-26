@@ -94,6 +94,9 @@ func createForceOverridesManuallyAddedUser(err error, d *schema.ResourceData, us
 	if err != nil {
 		return err
 	}
+	if len(userList) == 0 {
+		return fmt.Errorf("cannot find %s for force import", userName)
+	}
 	user := userList[0]
 	d.SetId(user.ID)
 	return usersAPI.Update(d.Id(), u)

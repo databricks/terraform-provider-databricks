@@ -409,9 +409,8 @@ func TestCreateForceOverwriteCannotListAccUsers(t *testing.T) {
 		{
 			Method:   "GET",
 			Resource: "/api/2.0/preview/scim/v2/Users?filter=userName%20eq%20%27me%40example.com%27",
-			Status:   417,
-			Response: common.APIError{
-				Message: "cannot find user",
+			Response: UserList{
+				TotalResults: 0,
 			},
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
@@ -422,7 +421,7 @@ func TestCreateForceOverwriteCannotListAccUsers(t *testing.T) {
 			d, NewUsersAPI(ctx, client), User{
 				UserName: "me@example.com",
 			})
-		assert.EqualError(t, err, "cannot find user")
+		assert.EqualError(t, err, "cannot find me@example.com for force import")
 	})
 }
 

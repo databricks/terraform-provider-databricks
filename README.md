@@ -11,6 +11,7 @@
 | [databricks_aws_assume_role_policy](docs/data-sources/aws_assume_role_policy.md) data
 | [databricks_aws_bucket_policy](docs/data-sources/aws_bucket_policy.md) data
 | [databricks_aws_crossaccount_policy](docs/data-sources/aws_crossaccount_policy.md) data
+| [databricks_catalog](docs/resources/catalog.md)
 | [databricks_cluster](docs/resources/cluster.md)
 | [databricks_clusters](docs/data-sources/clusters.md) data
 | [databricks_cluster_policy](docs/resources/cluster_policy.md)
@@ -18,7 +19,9 @@
 | [databricks_dbfs_file](docs/resources/dbfs_file.md)
 | [databricks_dbfs_file_paths](docs/data-sources/dbfs_file_paths.md) data
 | [databricks_dbfs_file](docs/data-sources/dbfs_file.md) data
+| [databricks_external_location](docs/resources/external_location.md)
 | [databricks_global_init_script](docs/resources/global_init_script.md)
+| [databricks_grants](docs/resources/grants.md)
 | [databricks_group](docs/resources/group.md)
 | [databricks_group](docs/data-sources/group.md) data
 | [databricks_group_instance_profile](docs/resources/group_instance_profile.md)
@@ -28,6 +31,9 @@
 | [databricks_ip_access_list](docs/resources/ip_access_list.md)
 | [databricks_job](docs/resources/job.md)
 | [databricks_library](docs/resources/library.md)
+| [databricks_metastore](docs/resources/metastore.md)
+| [databricks_metastore_assignment](docs/resources/metastore_assignment.md)
+| [databricks_metastore_data_access](docs/resources/metastore_data_access.md)
 | [databricks_mlflow_model](docs/resources/mlflow_model.md)
 | [databricks_mlflow_experiment](docs/resources/mlflow_experiment.md)
 | [databricks_mws_credentials](docs/resources/mws_credentials.md)
@@ -44,6 +50,7 @@
 | [databricks_permissions](docs/resources/permissions.md)
 | [databricks_pipeline](docs/resources/pipeline.md)
 | [databricks_repo](docs/resources/repo.md)
+| [databricks_schema](docs/resources/schema.md)
 | [databricks_secret](docs/resources/secret.md)
 | [databricks_secret_acl](docs/resources/secret_acl.md)
 | [databricks_secret_scope](docs/resources/secret_scope.md)
@@ -55,6 +62,8 @@
 | [databricks_sql_query](docs/resources/sql_query.md)
 | [databricks_sql_visualization](docs/resources/sql_visualization.md)
 | [databricks_sql_widget](docs/resources/sql_widget.md)
+| [databricks_storage_credential](docs/resources/storage_credential.md)
+| [databricks_table](docs/resources/table.md)
 | [databricks_token](docs/resources/token.md)
 | [databricks_user](docs/resources/user.md)
 | [databricks_user_instance_profile](docs/resources/user_instance_profile.md)

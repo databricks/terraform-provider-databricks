@@ -2,6 +2,8 @@ package scim
 
 import (
 	"context"
+	"fmt"
+	"strings"
 
 	"github.com/databrickslabs/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -24,18 +26,24 @@ func ResourceGroup() *schema.Resource {
 			Optional: true,
 			ForceNew: true,
 		},
+		"force": {
+			Type:     schema.TypeBool,
+			Optional: true,
+		},
 	}
 	addEntitlementsToSchema(&groupSchema)
 	return common.Resource{
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			groupName := d.Get("display_name").(string)
-			group, err := NewGroupsAPI(ctx, c).Create(Group{
+			g := Group{
 				DisplayName:  groupName,
 				Entitlements: readEntitlementsFromData(d),
 				ExternalID:   d.Get("external_id").(string),
-			})
+			}
+			groupsAPI := NewGroupsAPI(ctx, c)
+			group, err := groupsAPI.Create(g)
 			if err != nil {
-				return err
+				return createForceOverridesManuallyAddedGroup(err, d, groupsAPI, g)
 			}
 			d.SetId(group.ID)
 			return nil
@@ -60,4 +68,23 @@ func ResourceGroup() *schema.Resource {
 		},
 		Schema: groupSchema,
 	}.ToResource()
+}
+
+func createForceOverridesManuallyAddedGroup(err error, d *schema.ResourceData, groupsAPI GroupsAPI, g Group) error {
+	forceCreate := d.Get("force").(bool)
+	if !forceCreate {
+		return err
+	}
+	// corner-case for overriding manually provisioned groups
+	groupName := strings.ReplaceAll(g.DisplayName, "'", "")
+	force := fmt.Sprintf("Group with name %s already exists.", groupName)
+	if err.Error() != force {
+		return err
+	}
+	group, err := groupsAPI.ReadByDisplayName(groupName)
+	if err != nil {
+		return err
+	}
+	d.SetId(group.ID)
+	return groupsAPI.UpdateNameAndEntitlements(d.Id(), g.DisplayName, g.ExternalID, g.Entitlements)
 }

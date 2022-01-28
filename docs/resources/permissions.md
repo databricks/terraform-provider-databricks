@@ -592,7 +592,11 @@ One can control access to [databricks_secret](secret.md) through `initial_manage
 
 ## Tables, Views and Databases
 
-General Permissions API does not apply to access control for tables and they have to be managed separately using the [databricks_sql_permissions](sql_permissions.md) resource.
+General Permissions API does not apply to access control for tables and they have to be managed separately using the [databricks_sql_permissions](sql_permissions.md) resource, though you're encouraged to use Unity Catalog or migrate to it.
+
+## Data Access with Unity Catalog
+
+Initially in Unity Catalog all users have no access to data, which has to be later assigned through [databricks_grants](grants.md) resource.
 
 ## Argument Reference
 

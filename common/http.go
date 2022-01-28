@@ -43,6 +43,7 @@ type APIErrorBody struct {
 	// for RFC 7644 Section 3.7.3 https://tools.ietf.org/html/rfc7644#section-3.7.3
 	ScimDetail string `json:"detail,omitempty"`
 	ScimStatus string `json:"status,omitempty"`
+	ScimType   string `json:"scimType,omitempty"`
 	API12Error string `json:"error,omitempty"`
 }
 
@@ -208,6 +209,9 @@ func (c *DatabricksClient) parseError(resp *http.Response) APIError {
 		} else {
 			errorBody.Message = errorBody.ScimDetail
 		}
+		// add more context from SCIM responses
+		errorBody.Message = fmt.Sprintf("%s %s", errorBody.ScimType, errorBody.Message)
+		errorBody.Message = strings.Trim(errorBody.Message, " ")
 		errorBody.ErrorCode = fmt.Sprintf("SCIM_%s", errorBody.ScimStatus)
 	}
 	if resp.StatusCode == 403 {

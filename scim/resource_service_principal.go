@@ -69,7 +69,7 @@ func ResourceServicePrincipal() *schema.Resource {
 			m["active"].Default = true
 			return m
 		})
-	spFromData := func(d *schema.ResourceData) (user User, err error) {
+	spFromData := func(d *schema.ResourceData) User {
 		var u entity
 		common.DataToStructPointer(d, servicePrincipalSchema, &u)
 		return User{
@@ -77,7 +77,7 @@ func ResourceServicePrincipal() *schema.Resource {
 			DisplayName:   u.DisplayName,
 			Active:        u.Active,
 			Entitlements:  readEntitlementsFromData(d),
-		}, nil
+		}
 	}
 	return common.Resource{
 		Schema: servicePrincipalSchema,
@@ -95,10 +95,7 @@ func ResourceServicePrincipal() *schema.Resource {
 			return nil
 		},
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			sp, err := spFromData(d)
-			if err != nil {
-				return err
-			}
+			sp := spFromData(d)
 			if c.IsAws() && sp.ApplicationID != "" {
 				return fmt.Errorf("application_id is not allowed for service principals in Databricks on AWS")
 			}
@@ -121,11 +118,11 @@ func ResourceServicePrincipal() *schema.Resource {
 			return sp.Entitlements.readIntoData(d)
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			sp, err := spFromData(d)
-			if err != nil {
-				return err
-			}
-			return NewServicePrincipalsAPI(ctx, c).Update(d.Id(), sp)
+			return NewServicePrincipalsAPI(ctx, c).Update(d.Id(), User{
+				DisplayName:  d.Get("display_name").(string),
+				Active:       d.Get("active").(bool),
+				Entitlements: readEntitlementsFromData(d),
+			})
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			return NewServicePrincipalsAPI(ctx, c).Delete(d.Id())

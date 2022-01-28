@@ -3,6 +3,7 @@ package scim
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/databrickslabs/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -74,17 +75,16 @@ func createForceOverridesManuallyAddedGroup(err error, d *schema.ResourceData, g
 	if !forceCreate {
 		return err
 	}
-	// corner-case for overriding manually provisioned users
-	groupName := g.DisplayName
+	// corner-case for overriding manually provisioned groups
+	groupName := strings.ReplaceAll(g.DisplayName, "'", "")
 	force := fmt.Sprintf("Group with name %s already exists.", groupName)
 	if err.Error() != force {
 		return err
 	}
-	groupList, err := groupsAPI.Filter(fmt.Sprintf("displayName eq '%s'", groupName))
+	group, err := groupsAPI.ReadByDisplayName(groupName)
 	if err != nil {
 		return err
 	}
-	group := groupList.Resources[0]
 	d.SetId(group.ID)
 	return groupsAPI.UpdateNameAndEntitlements(d.Id(), g.DisplayName, g.ExternalID, g.Entitlements)
 }

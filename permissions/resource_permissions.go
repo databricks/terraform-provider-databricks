@@ -145,8 +145,8 @@ func (a PermissionsAPI) put(objectID string, objectACL AccessControlChangeList) 
 
 // Update updates object permissions. Technically, it's using method named SetOrDelete, but here we do more
 func (a PermissionsAPI) Update(objectID string, objectACL AccessControlChangeList) error {
-	if objectID == "/authorization/tokens" {
-		// Cannot remove admins's CAN_MANAGE permission on tokens
+	if objectID == "/authorization/tokens" || objectID == "/registered-models/root" {
+		// Prevent "Cannot change permissions for group 'admins' to None."
 		objectACL.AccessControlList = append(objectACL.AccessControlList, AccessControlChange{
 			GroupName:       "admins",
 			PermissionLevel: "CAN_MANAGE",

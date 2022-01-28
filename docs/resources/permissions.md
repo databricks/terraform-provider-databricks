@@ -373,7 +373,7 @@ resource "databricks_permissions" "experiment_usage" {
 
 ## MLflow Model usage
 
-Valid [permission levels](https://docs.databricks.com/security/access-control/workspace-acl.html#mlflow-model-permissions-1) for [databricks_mlflow_model](mlflow_model.md) are: `CAN_READ`, `CAN_EDIT`, `CAN_MANAGE_STAGING_VERSIONS`, `CAN_MANAGE_PRODUCTION_VERSIONS`, and `CAN_MANAGE`.
+Valid [permission levels](https://docs.databricks.com/security/access-control/workspace-acl.html#mlflow-model-permissions-1) for [databricks_mlflow_model](mlflow_model.md) are: `CAN_READ`, `CAN_EDIT`, `CAN_MANAGE_STAGING_VERSIONS`, `CAN_MANAGE_PRODUCTION_VERSIONS`, and `CAN_MANAGE`. You can also manage permissions for all MLflow models by `registered_model_id = "root"`.
 
 ```hcl
 resource "databricks_mlflow_model" "this" {

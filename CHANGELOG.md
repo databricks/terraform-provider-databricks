@@ -3,6 +3,12 @@
 ## 0.4.7
 * Added optional `force` argument to `databricks_group` resource to ignore `cannot create group: Group with name X already exists.` errors and implicitly import the specific group into Terraform state, enforcing entitlements defined in the instance of resource ([#1066](https://github.com/databrickslabs/terraform-provider-databricks/pull/1066)).
 * Added support to configure permissions for all MLflow models ([#1044](https://github.com/databrickslabs/terraform-provider-databricks/issues/1044)).
+* Fixed `databricks_service_principal` `display_name` update ([#1065](https://github.com/databrickslabs/terraform-provider-databricks/issues/1065)).
+* Added documentation for Unity Catalog resources.
+
+Updated dependency versions:
+
+* Bump gopkg.in/ini.v1 from 1.66.2 to 1.66.3
 
 ## 0.4.6
 

@@ -1,6 +1,8 @@
 package scim
 
 import (
+	"context"
+	"fmt"
 	"testing"
 
 	"github.com/databrickslabs/terraform-provider-databricks/common"
@@ -345,4 +347,68 @@ func TestResourceGroupDelete_Error(t *testing.T) {
 		Delete:   true,
 		ID:       "abc",
 	}.ExpectError(t, "Internal error happened")
+}
+
+func TestCreateForceOverwriteCannotListGroups(t *testing.T) {
+	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/preview/scim/v2/Groups?filter=displayName%20eq%20%27abc%27",
+			Status:   417,
+			Response: common.APIError{
+				Message: "cannot find group",
+			},
+		},
+	}, func(ctx context.Context, client *common.DatabricksClient) {
+		d := ResourceGroup().TestResourceData()
+		d.Set("force", true)
+		err := createForceOverridesManuallyAddedGroup(
+			fmt.Errorf("Group with name abc already exists."),
+			d, NewGroupsAPI(ctx, client), Group{
+				DisplayName: "abc",
+			})
+		assert.EqualError(t, err, "cannot find group")
+	})
+}
+
+func TestCreateForceOverwriteFindsAndSetsGroupID(t *testing.T) {
+	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/preview/scim/v2/Groups?filter=displayName%20eq%20%27abc%27",
+			Response: GroupList{
+				Resources: []Group{
+					{
+						ID: "123",
+					},
+				},
+			},
+		},
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/preview/scim/v2/Groups/123",
+			Response: Group{
+				ID: "123",
+			},
+		},
+		{
+			Method:   "PUT",
+			Resource: "/api/2.0/preview/scim/v2/Groups/123",
+			ExpectedRequest: Group{
+				Schemas:     []URN{"urn:ietf:params:scim:schemas:core:2.0:Group"},
+				DisplayName: "abc",
+			},
+		},
+	}, func(ctx context.Context, client *common.DatabricksClient) {
+		d := ResourceGroup().TestResourceData()
+		d.Set("force", true)
+		d.Set("display_name", "abc")
+		err := createForceOverridesManuallyAddedGroup(
+			fmt.Errorf("Group with name abc already exists."),
+			d, NewGroupsAPI(ctx, client), Group{
+				DisplayName: "abc",
+			})
+		assert.NoError(t, err)
+		assert.Equal(t, "123", d.Id())
+	})
 }

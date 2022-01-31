@@ -1,5 +1,13 @@
 # Version changelog
 
+## 0.4.8
+
+* Added support for `tf:suppress_diff` on primitive types ([#984](https://github.com/databrickslabs/terraform-provider-databricks/issues/984)).
+
+Updated dependency versions:
+
+* Bump google.golang.org/api from 0.65.0 to 0.66.0
+
 ## 0.4.7
 * Added optional `force` argument to `databricks_group` resource to ignore `cannot create group: Group with name X already exists.` errors and implicitly import the specific group into Terraform state, enforcing entitlements defined in the instance of resource ([#1066](https://github.com/databrickslabs/terraform-provider-databricks/pull/1066)).
 * Added support to configure permissions for all MLflow models ([#1044](https://github.com/databrickslabs/terraform-provider-databricks/issues/1044)).

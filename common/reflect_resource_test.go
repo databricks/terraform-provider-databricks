@@ -197,7 +197,7 @@ type Address struct {
 
 type Dummy struct {
 	Enabled     bool              `json:"enabled" tf:"conflicts:workers"`
-	Workers     int               `json:"workers,omitempty"`
+	Workers     int               `json:"workers,omitempty" tf:"suppress_diff"`
 	Description string            `json:"description,omitempty"`
 	Addresses   []Address         `json:"addresses,omitempty" tf:"max_items:10"`
 	Unique      []Address         `json:"unique,omitempty" tf:"slice_set"`

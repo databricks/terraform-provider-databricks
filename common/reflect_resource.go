@@ -122,6 +122,16 @@ func handleSensitive(typeField reflect.StructField, schema *schema.Schema) {
 	}
 }
 
+func handleSuppressDiff(typeField reflect.StructField, v *schema.Schema) {
+	tfTags := strings.Split(typeField.Tag.Get("tf"), ",")
+	for _, tag := range tfTags {
+		if tag == "suppress_diff" {
+			v.DiffSuppressFunc = diffSuppressor(fmt.Sprintf("%v", v.Type.Zero()))
+			break
+		}
+	}
+}
+
 func getAlias(typeField reflect.StructField) string {
 	tfTags := strings.Split(typeField.Tag.Get("tf"), ",")
 	for _, tag := range tfTags {
@@ -198,12 +208,18 @@ func typeToSchema(v reflect.Value, t reflect.Type, path []string) map[string]*sc
 		switch typeField.Type.Kind() {
 		case reflect.Int, reflect.Int32, reflect.Int64:
 			scm[fieldName].Type = schema.TypeInt
+			// diff suppression needs type for zero value
+			handleSuppressDiff(typeField, scm[fieldName])
 		case reflect.Float64:
 			scm[fieldName].Type = schema.TypeFloat
+			// diff suppression needs type for zero value
+			handleSuppressDiff(typeField, scm[fieldName])
 		case reflect.Bool:
 			scm[fieldName].Type = schema.TypeBool
 		case reflect.String:
 			scm[fieldName].Type = schema.TypeString
+			// diff suppression needs type for zero value
+			handleSuppressDiff(typeField, scm[fieldName])
 		case reflect.Map:
 			scm[fieldName].Type = schema.TypeMap
 		case reflect.Ptr:

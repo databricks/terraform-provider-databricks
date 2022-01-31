@@ -42,13 +42,13 @@ type InstancePool struct {
 	InstancePoolID                     string                       `json:"instance_pool_id,omitempty" tf:"computed"`
 	InstancePoolName                   string                       `json:"instance_pool_name"`
 	MinIdleInstances                   int32                        `json:"min_idle_instances,omitempty"`
-	MaxCapacity                        int32                        `json:"max_capacity,omitempty"`
+	MaxCapacity                        int32                        `json:"max_capacity,omitempty" tf:"suppress_diff"`
 	IdleInstanceAutoTerminationMinutes int32                        `json:"idle_instance_autotermination_minutes"`
 	AwsAttributes                      *InstancePoolAwsAttributes   `json:"aws_attributes,omitempty" tf:"force_new,suppress_diff"`
 	AzureAttributes                    *InstancePoolAzureAttributes `json:"azure_attributes,omitempty" tf:"force_new,suppress_diff"`
 	NodeTypeID                         string                       `json:"node_type_id" tf:"force_new"`
 	CustomTags                         map[string]string            `json:"custom_tags,omitempty" tf:"force_new"`
-	EnableElasticDisk                  bool                         `json:"enable_elastic_disk,omitempty" tf:"force_new"`
+	EnableElasticDisk                  bool                         `json:"enable_elastic_disk,omitempty" tf:"force_new,suppress_diff"`
 	DiskSpec                           *InstancePoolDiskSpec        `json:"disk_spec,omitempty" tf:"force_new"`
 	PreloadedSparkVersions             []string                     `json:"preloaded_spark_versions,omitempty" tf:"force_new"`
 	PreloadedDockerImages              []clusters.DockerImage       `json:"preloaded_docker_images,omitempty" tf:"force_new,slice_set,alias:preloaded_docker_image"`

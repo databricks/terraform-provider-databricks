@@ -43,6 +43,7 @@ resource "databricks_mws_workspaces" "this" {
       project_id = data.google_client_config.current.project
     }
   }
+  token {}
 }
 
 // google_service_account configured via env
@@ -74,6 +75,11 @@ resource "databricks_group_member" "allow_me_to_admin" {
 
 output "databricks_host" {
   value = databricks_mws_workspaces.this.workspace_url
+}
+
+output "databricks_token" {
+  value     = databricks_mws_workspaces.this.token[0].token_value
+  sensitive = true
 }
 
 output "cloud_env" {

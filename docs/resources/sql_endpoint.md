@@ -37,7 +37,9 @@ The following arguments are supported:
 * `tags` - Databricks tags all endpoint resources with these tags.
 * `spot_instance_policy` - The spot policy to use for allocating instances to clusters: `COST_OPTIMIZED` or `RELIABILITY_OPTIMIZED`. This field is optional. Default is `COST_OPTIMIZED`.
 * `enable_photon` - Whether to enable [Photon](https://databricks.com/product/delta-engine). This field is optional and is enabled by default.
-
+* `channel` block, consisting of following fields:
+  * `name` - Name of the Databricks SQL release channel. Possible values are: `CHANNEL_NAME_PREVIEW` and `CHANNEL_NAME_CURRENT`. Default is `CHANNEL_NAME_CURRENT`.
+ 
 ## Attribute Reference
 
 In addition to all arguments above, the following attributes are exported:

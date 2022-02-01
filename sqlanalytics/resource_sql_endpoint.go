@@ -21,26 +21,32 @@ var (
 
 // SQLEndpoint ...
 type SQLEndpoint struct {
-	ID                      string      `json:"id,omitempty" tf:"computed"`
-	Name                    string      `json:"name"`
-	ClusterSize             string      `json:"cluster_size"`
-	AutoStopMinutes         int         `json:"auto_stop_mins,omitempty"`
-	MinNumClusters          int         `json:"min_num_clusters,omitempty"`
-	MaxNumClusters          int         `json:"max_num_clusters,omitempty"`
-	NumClusters             int         `json:"num_clusters,omitempty"`
-	EnablePhoton            bool        `json:"enable_photon,omitempty"`
-	EnableServerlessCompute bool        `json:"enable_serverless_compute,omitempty"`
-	InstanceProfileARN      string      `json:"instance_profile_arn,omitempty"`
-	State                   string      `json:"state,omitempty" tf:"computed"`
-	JdbcURL                 string      `json:"jdbc_url,omitempty" tf:"computed"`
-	OdbcParams              *OdbcParams `json:"odbc_params,omitempty" tf:"computed"`
-	Tags                    *Tags       `json:"tags,omitempty" tf:"suppress_diff"`
-	SpotInstancePolicy      string      `json:"spot_instance_policy,omitempty"`
+	ID                      string          `json:"id,omitempty" tf:"computed"`
+	Name                    string          `json:"name"`
+	ClusterSize             string          `json:"cluster_size"`
+	AutoStopMinutes         int             `json:"auto_stop_mins,omitempty" tf:"default:120"`
+	MinNumClusters          int             `json:"min_num_clusters,omitempty" tf:"default:1"`
+	MaxNumClusters          int             `json:"max_num_clusters,omitempty" tf:"default:1"`
+	NumClusters             int             `json:"num_clusters,omitempty" tf:"default:1"`
+	EnablePhoton            bool            `json:"enable_photon,omitempty" tf:"default:true"`
+	EnableServerlessCompute bool            `json:"enable_serverless_compute,omitempty"`
+	InstanceProfileARN      string          `json:"instance_profile_arn,omitempty"`
+	State                   string          `json:"state,omitempty" tf:"computed"`
+	JdbcURL                 string          `json:"jdbc_url,omitempty" tf:"computed"`
+	OdbcParams              *OdbcParams     `json:"odbc_params,omitempty" tf:"computed"`
+	Tags                    *Tags           `json:"tags,omitempty" tf:"suppress_diff"`
+	SpotInstancePolicy      string          `json:"spot_instance_policy,omitempty" tf:"default:COST_OPTIMIZED"`
+	Channel                 *ReleaseChannel `json:"channel,omitempty" tf:"suppress_diff"`
 
 	// The data source ID is not part of the endpoint API response.
 	// We manually resolve it by retrieving the list of data sources
 	// and matching this entity's endpoint ID.
 	DataSourceID string `json:"data_source_id,omitempty" tf:"computed"`
+}
+
+// ReleaseChannel holds information about DBSQL Release Channel
+type ReleaseChannel struct {
+	Name string `json:"name,omitempty" tf:"default:CHANNEL_NAME_CURRENT"`
 }
 
 // OdbcParams hold information required to submit SQL commands to the SQL endpoint using ODBC.
@@ -185,16 +191,10 @@ func (a SQLEndpointsAPI) Delete(endpointID string) error {
 func ResourceSQLEndpoint() *schema.Resource {
 	s := common.StructToSchema(SQLEndpoint{}, func(
 		m map[string]*schema.Schema) map[string]*schema.Schema {
-		m["auto_stop_mins"].Default = 120
 		m["cluster_size"].ValidateDiagFunc = validation.ToDiagFunc(
 			validation.StringInSlice(ClusterSizes, false))
-		m["max_num_clusters"].Default = 1
 		m["max_num_clusters"].ValidateDiagFunc = validation.ToDiagFunc(
 			validation.IntBetween(1, MaxNumClusters))
-		m["min_num_clusters"].Default = 1
-		m["num_clusters"].Default = 1
-		m["spot_instance_policy"].Default = "COST_OPTIMIZED"
-		m["enable_photon"].Default = true
 		return m
 	})
 	return common.Resource{

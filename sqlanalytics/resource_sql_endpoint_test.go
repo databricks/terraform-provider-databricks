@@ -295,3 +295,30 @@ func TestSQLEnpointAPI(t *testing.T) {
 		require.NoError(t, err)
 	})
 }
+
+func TestResolveDataSourceIDError(t *testing.T) {
+	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/preview/sql/data_sources",
+			Response: map[string]interface{}{},
+			Status:   404,
+		},
+	}, func(ctx context.Context, client *common.DatabricksClient) {
+		_, err := NewSQLEndpointsAPI(ctx, client).ResolveDataSourceID("any")
+		require.Error(t, err)
+	})
+}
+
+func TestResolveDataSourceIDNotFound(t *testing.T) {
+	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/preview/sql/data_sources",
+			Response: []interface{}{},
+		},
+	}, func(ctx context.Context, client *common.DatabricksClient) {
+		_, err := NewSQLEndpointsAPI(ctx, client).ResolveDataSourceID("any")
+		require.Error(t, err)
+	})
+}

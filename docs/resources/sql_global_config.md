@@ -33,6 +33,9 @@ resource "databricks_sql_global_config" "this" {
     "spark.hadoop.fs.azure.account.oauth2.client.secret" : "{{secrets/${local.secret_scope}/${local.secret_key}}}",
     "spark.hadoop.fs.azure.account.oauth2.client.endpoint" : "https://login.microsoftonline.com/${var.tenant_id}/oauth2/token"
   }
+  sql_config_params = {
+    "ANSI_MODE": "true"
+  }
 }
 ```
 
@@ -44,6 +47,7 @@ The following arguments are supported (see [documentation](https://docs.databric
 * `security_policy` (Optional, String) - The policy for controlling access to datasets. Default value: `DATA_ACCESS_CONTROL`, consult documentation for list of possible values
 * `data_access_config` (Optional, Map) - data access configuration for [databricks_sql_endpoint](sql_endpoint.md), such as configuration for an external Hive metastore, Hadoop Filesystem configuration, etc.  Please note that the list of supported configuration properties is limited, so refer to the [documentation](https://docs.databricks.com/sql/admin/data-access-configuration.html#supported-properties) for a full list.  Apply will fail if you're specifying not permitted configuration.
 * `instance_profile_arn` (Optional, String) - [databricks_instance_profile](instance_profile.md) used to access storage from [databricks_sql_endpoint](sql_endpoint.md). Please note that this parameter is only for AWS, and will generate an error if used on other clouds. 
+* `sql_config_params` (Optional, Map) - SQL Configuration Parameters let you override the default behavior for all sessions with all endpoints.
 
 ## Import
 

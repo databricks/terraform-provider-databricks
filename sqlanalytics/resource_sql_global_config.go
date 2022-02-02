@@ -9,9 +9,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-type ConfPair struct {
+type confPair struct {
 	Key   string `json:"key"`
 	Value string `json:"value"`
+}
+
+type repeatedEndpointConfPairs struct {
+	ConfigPairs []confPair `json:"configuration_pairs,omitempty"`
 }
 
 // GlobalConfig used to generate Terraform resource schema and bind to resource data
@@ -20,14 +24,16 @@ type GlobalConfig struct {
 	DataAccessConfig        map[string]string `json:"data_access_config,omitempty"`
 	InstanceProfileARN      string            `json:"instance_profile_arn,omitempty"`
 	EnableServerlessCompute bool              `json:"enable_serverless_compute,omitempty" tf:"default:false"`
+	SqlConfigParams         map[string]string `json:"sql_config_params,omitempty"`
 }
 
 // GlobalConfigForRead used to talk to REST API
 type GlobalConfigForRead struct {
-	SecurityPolicy          string     `json:"security_policy"`
-	DataAccessConfig        []ConfPair `json:"data_access_config"`
-	InstanceProfileARN      string     `json:"instance_profile_arn,omitempty"`
-	EnableServerlessCompute bool       `json:"enable_serverless_compute,omitempty"`
+	SecurityPolicy             string                     `json:"security_policy"`
+	DataAccessConfig           []confPair                 `json:"data_access_config"`
+	InstanceProfileARN         string                     `json:"instance_profile_arn,omitempty"`
+	EnableServerlessCompute    bool                       `json:"enable_serverless_compute"`
+	SqlConfigurationParameters *repeatedEndpointConfPairs `json:"sql_configuration_parameters,omitempty"`
 }
 
 func NewSqlGlobalConfigAPI(ctx context.Context, m interface{}) globalConfigAPI {
@@ -50,16 +56,26 @@ func (a globalConfigAPI) Set(gc GlobalConfig) error {
 			return err
 		}
 	}
-	if a.client.IsAws() {
-		data["instance_profile_arn"] = gc.InstanceProfileARN
-	} else if gc.InstanceProfileARN != "" {
-		return fmt.Errorf("can't use instance_profile_arn outside of AWS")
+	if gc.InstanceProfileARN != "" {
+		if a.client.IsAws() {
+			data["instance_profile_arn"] = gc.InstanceProfileARN
+		} else {
+			return fmt.Errorf("can't use instance_profile_arn outside of AWS")
+		}
 	}
-	cfg := make([]ConfPair, 0, len(gc.DataAccessConfig))
+	cfg := make([]confPair, 0, len(gc.DataAccessConfig))
 	for k, v := range gc.DataAccessConfig {
-		cfg = append(cfg, ConfPair{Key: k, Value: v})
+		cfg = append(cfg, confPair{Key: k, Value: v})
 	}
 	data["data_access_config"] = cfg
+	if len(gc.SqlConfigParams) > 0 {
+		sql_params := repeatedEndpointConfPairs{}
+		sql_params.ConfigPairs = make([]confPair, 0, len(gc.SqlConfigParams))
+		for k, v := range gc.SqlConfigParams {
+			sql_params.ConfigPairs = append(sql_params.ConfigPairs, confPair{Key: k, Value: v})
+		}
+		data["sql_configuration_parameters"] = sql_params
+	}
 
 	return a.client.Put(a.context, "/sql/config/endpoints", data)
 }
@@ -84,7 +100,6 @@ func (a globalConfigAPI) Get() (GlobalConfig, error) {
 func ResourceSQLGlobalConfig() *schema.Resource {
 	s := common.StructToSchema(GlobalConfig{}, func(
 		m map[string]*schema.Schema) map[string]*schema.Schema {
-		m["instance_profile_arn"].Default = ""
 		return m
 	})
 	setGlobalConfig := func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {

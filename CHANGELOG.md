@@ -5,6 +5,7 @@
 * Added support for `tf:suppress_diff` on primitive types ([#984](https://github.com/databrickslabs/terraform-provider-databricks/issues/984)).
 * Fixed issue arises when destroying `databricks_sql_global_config` with instance profile set ([#1076](https://github.com/databrickslabs/terraform-provider-databricks/issues/1076)).
 * Added setting of SQL configuration parameters in `databricks_sql_global_config` ([#1080](https://github.com/databrickslabs/terraform-provider-databricks/pull/1080)).
+* Added support for release channels in `databricks_sql_endpoint` configuration ([#1078])(https://github.com/databrickslabs/terraform-provider-databricks/pull/1078).
 
 Updated dependency versions:
 

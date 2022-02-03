@@ -34,7 +34,7 @@ resource "databricks_sql_global_config" "this" {
     "spark.hadoop.fs.azure.account.oauth2.client.endpoint" : "https://login.microsoftonline.com/${var.tenant_id}/oauth2/token"
   }
   sql_config_params = {
-    "ANSI_MODE": "true"
+    "ANSI_MODE" : "true"
   }
 }
 ```

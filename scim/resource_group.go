@@ -7,13 +7,17 @@ import (
 
 	"github.com/databrickslabs/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 // ResourceGroup manages user groups
 func ResourceGroup() *schema.Resource {
 	groupSchema := map[string]*schema.Schema{
 		"display_name": {
-			Type:     schema.TypeString,
+			Type: schema.TypeString,
+			ValidateDiagFunc: validation.ToDiagFunc(
+				validation.StringNotInSlice(
+					[]string{"users", "admins"}, false)),
 			Required: true,
 			ForceNew: true,
 		},

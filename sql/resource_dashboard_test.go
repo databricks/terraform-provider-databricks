@@ -1,10 +1,10 @@
-package sqlanalytics
+package sql
 
 import (
 	"testing"
 
 	"github.com/databrickslabs/terraform-provider-databricks/qa"
-	"github.com/databrickslabs/terraform-provider-databricks/sqlanalytics/api"
+	"github.com/databrickslabs/terraform-provider-databricks/sql/api"
 	"github.com/stretchr/testify/assert"
 )
 

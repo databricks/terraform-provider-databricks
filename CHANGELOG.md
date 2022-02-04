@@ -1,5 +1,9 @@
 # Version changelog
 
+## 0.4.9
+
+* Prevent creation of `databricks_group` with `users` and `admins` reserved names ([#1089](https://github.com/databrickslabs/terraform-provider-databricks/issues/1089)).
+
 ## 0.4.8
 
 * Added support for `tf:suppress_diff` on primitive types ([#984](https://github.com/databrickslabs/terraform-provider-databricks/issues/984)).

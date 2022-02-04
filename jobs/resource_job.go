@@ -74,6 +74,17 @@ type TaskDependency struct {
 	TaskKey string `json:"task_key,omitempty"`
 }
 
+// BEGIN Jobs + Repo integration preview
+type GitSource struct {
+	GitUrl      string `json:"git_url"`
+	GitProvider string `json:"git_provider"`
+	GitBranch   string `json:"git_branch,omitempty"`
+	GitTag      string `json:"git_tag,omitempty"`
+	GitCommit   string `json:"git_commit,omitempty"`
+}
+
+// End Jobs + Repo integration preview
+
 type JobTaskSettings struct {
 	TaskKey     string           `json:"task_key,omitempty"`
 	Description string           `json:"description,omitempty"`
@@ -119,6 +130,10 @@ type JobSettings struct {
 	Tasks  []JobTaskSettings `json:"tasks,omitempty" tf:"alias:task"`
 	Format string            `json:"format,omitempty" tf:"computed"`
 	// END Jobs API 2.1
+
+	// BEGIN Jobs + Repo integration preview
+	GitSource *GitSource `json:"git_source,omitempty" tf:"group:git_source"`
+	// END Jobs + Repo integration preview
 
 	Schedule           *CronSchedule       `json:"schedule,omitempty"`
 	MaxConcurrentRuns  int32               `json:"max_concurrent_runs,omitempty"`

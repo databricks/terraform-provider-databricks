@@ -1,4 +1,4 @@
-package sqlanalytics
+package sql
 
 import (
 	"bytes"
@@ -10,7 +10,7 @@ import (
 	"strings"
 
 	"github.com/databrickslabs/terraform-provider-databricks/common"
-	"github.com/databrickslabs/terraform-provider-databricks/sqlanalytics/api"
+	"github.com/databrickslabs/terraform-provider-databricks/sql/api"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 

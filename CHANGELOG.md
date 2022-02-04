@@ -1,11 +1,16 @@
 # Version changelog
 
+## 0.4.9
+
+* Prevent creation of `databricks_group` with `users` and `admins` reserved names ([#1089](https://github.com/databrickslabs/terraform-provider-databricks/issues/1089)).
+
 ## 0.4.8
 
 * Added support for `tf:suppress_diff` on primitive types ([#984](https://github.com/databrickslabs/terraform-provider-databricks/issues/984)).
 * Fixed issue arises when destroying `databricks_sql_global_config` with instance profile set ([#1076](https://github.com/databrickslabs/terraform-provider-databricks/issues/1076)).
 * Added setting of SQL configuration parameters in `databricks_sql_global_config` ([#1080](https://github.com/databrickslabs/terraform-provider-databricks/pull/1080)).
 * Added support for release channels in `databricks_sql_endpoint` configuration ([#1078](https://github.com/databrickslabs/terraform-provider-databricks/pull/1078)).
+* Added documentation for `databricks_mlflow_webhook` resource ([#1086](https://github.com/databrickslabs/terraform-provider-databricks/pull/1086)).
 
 Updated dependency versions:
 

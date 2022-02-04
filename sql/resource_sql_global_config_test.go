@@ -1,4 +1,4 @@
-package sqlanalytics
+package sql
 
 import (
 	"testing"

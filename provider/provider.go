@@ -25,7 +25,7 @@ import (
 	"github.com/databrickslabs/terraform-provider-databricks/pools"
 	"github.com/databrickslabs/terraform-provider-databricks/scim"
 	"github.com/databrickslabs/terraform-provider-databricks/secrets"
-	"github.com/databrickslabs/terraform-provider-databricks/sqlanalytics"
+	"github.com/databrickslabs/terraform-provider-databricks/sql"
 	"github.com/databrickslabs/terraform-provider-databricks/storage"
 	"github.com/databrickslabs/terraform-provider-databricks/tokens"
 	"github.com/databrickslabs/terraform-provider-databricks/workspace"
@@ -96,13 +96,13 @@ func DatabricksProvider() *schema.Provider {
 			"databricks_secret_scope":                secrets.ResourceSecretScope(),
 			"databricks_secret_acl":                  secrets.ResourceSecretACL(),
 			"databricks_service_principal":           scim.ResourceServicePrincipal(),
-			"databricks_sql_dashboard":               sqlanalytics.ResourceDashboard(),
-			"databricks_sql_endpoint":                sqlanalytics.ResourceSQLEndpoint(),
-			"databricks_sql_global_config":           sqlanalytics.ResourceSQLGlobalConfig(),
+			"databricks_sql_dashboard":               sql.ResourceDashboard(),
+			"databricks_sql_endpoint":                sql.ResourceSQLEndpoint(),
+			"databricks_sql_global_config":           sql.ResourceSQLGlobalConfig(),
 			"databricks_sql_permissions":             access.ResourceSqlPermissions(),
-			"databricks_sql_query":                   sqlanalytics.ResourceQuery(),
-			"databricks_sql_visualization":           sqlanalytics.ResourceVisualization(),
-			"databricks_sql_widget":                  sqlanalytics.ResourceWidget(),
+			"databricks_sql_query":                   sql.ResourceQuery(),
+			"databricks_sql_visualization":           sql.ResourceVisualization(),
+			"databricks_sql_widget":                  sql.ResourceWidget(),
 			"databricks_storage_credential":          catalog.ResourceStorageCredential(),
 			"databricks_table":                       catalog.ResourceTable(),
 			"databricks_token":                       tokens.ResourceToken(),

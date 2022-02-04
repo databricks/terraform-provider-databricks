@@ -1,11 +1,11 @@
-package sqlanalytics
+package sql
 
 import (
 	"encoding/json"
 	"testing"
 
 	"github.com/databrickslabs/terraform-provider-databricks/qa"
-	"github.com/databrickslabs/terraform-provider-databricks/sqlanalytics/api"
+	"github.com/databrickslabs/terraform-provider-databricks/sql/api"
 	"github.com/stretchr/testify/assert"
 )
 

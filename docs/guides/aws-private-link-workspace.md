@@ -110,12 +110,25 @@ The first step is to create the required AWS objects:
 
 ```hcl
 resource "aws_subnet" "vpce" {
- vpc_id     = var.vpc_id
- cidr_block = var.vpce_cidr
+  vpc_id     = var.vpc_id
+  cidr_block = var.vpce_cidr
 
- tags = {
-   Name = "vpce subnet for workspace"
- }
+  tags = {
+    Name = "vpce subnet for workspace"
+  }
+}
+
+resource "aws_route_table" "my_vpc_private" {
+    vpc_id = var.vpc_id
+
+    tags = {
+        Name = "Local Route Table for Isolated Private Subnet"
+    }
+}
+
+resource "aws_route_table_association" "my_vpc_us_east_1a_private" {
+    subnet_id = aws_subnet.vpce.id
+    route_table_id = aws_route_table.my_vpc_private.id
 }
 ```
 

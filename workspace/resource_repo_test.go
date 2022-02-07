@@ -15,12 +15,12 @@ import (
 )
 
 func TestGetProviderFromUrl(t *testing.T) {
-	assert.Equal(t, "bitbucketCloud", getProviderFromUrl("https://user@bitbucket.org/user/repo.git"))
-	assert.Equal(t, "gitHub", getProviderFromUrl("https://github.com//user/repo.git"))
-	assert.Equal(t, "azureDevOpsServices", getProviderFromUrl("https://user@dev.azure.com/user/project/_git/repo"))
-	//	assert.Equal(t, "bitbucketCloud", getProviderFromUrl("https://user@bitbucket.org/user/repo.git"))
-	assert.Equal(t, "", getProviderFromUrl("https://abc/user/repo.git"))
-	assert.Equal(t, "", getProviderFromUrl("ewfgwergfwe"))
+	assert.Equal(t, "bitbucketCloud", GetProviderFromUrl("https://user@bitbucket.org/user/repo.git"))
+	assert.Equal(t, "gitHub", GetProviderFromUrl("https://github.com//user/repo.git"))
+	assert.Equal(t, "azureDevOpsServices", GetProviderFromUrl("https://user@dev.azure.com/user/project/_git/repo"))
+	//	assert.Equal(t, "bitbucketCloud", GetProviderFromUrl("https://user@bitbucket.org/user/repo.git"))
+	assert.Equal(t, "", GetProviderFromUrl("https://abc/user/repo.git"))
+	assert.Equal(t, "", GetProviderFromUrl("ewfgwergfwe"))
 }
 
 func TestResourceRepoRead(t *testing.T) {

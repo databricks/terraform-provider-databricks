@@ -16,6 +16,7 @@ import (
 	"github.com/databrickslabs/terraform-provider-databricks/clusters"
 	"github.com/databrickslabs/terraform-provider-databricks/common"
 	"github.com/databrickslabs/terraform-provider-databricks/libraries"
+	"github.com/databrickslabs/terraform-provider-databricks/workspace"
 )
 
 // NotebookTask contains the information for notebook jobs
@@ -76,11 +77,11 @@ type TaskDependency struct {
 
 // BEGIN Jobs + Repo integration preview
 type GitSource struct {
-	GitUrl      string `json:"git_url"`
-	GitProvider string `json:"git_provider"`
-	GitBranch   string `json:"git_branch,omitempty"`
-	GitTag      string `json:"git_tag,omitempty"`
-	GitCommit   string `json:"git_commit,omitempty"`
+	Url      string `json:"git_url" tf:"alias:url"`
+	Provider string `json:"git_provider" tf:"alias:provider"`
+	Branch   string `json:"git_branch,omitempty" tf:"alias:provider"`
+	Tag      string `json:"git_tag,omitempty" tf:"alias:tag"`
+	Commit   string `json:"git_commit,omitempty" tf:"alias:commit"`
 }
 
 // End Jobs + Repo integration preview
@@ -336,6 +337,9 @@ func (a JobsAPI) Restart(id string, timeout time.Duration) error {
 func (a JobsAPI) Create(jobSettings JobSettings) (Job, error) {
 	var job Job
 	jobSettings.sortTasksByKey()
+	if jobSettings.GitSource != nil && jobSettings.GitSource.Provider == "" {
+		jobSettings.GitSource.Provider = workspace.GetProviderFromUrl(jobSettings.GitSource.Url)
+	}
 	err := a.client.Post(a.context, "/jobs/create", jobSettings, &job)
 	return job, err
 }
@@ -421,10 +425,20 @@ func jobSettingsSchema(s *map[string]*schema.Schema, prefix string) {
 	}
 }
 
+func gitSourceSchema(s *map[string]*schema.Schema, prefix string) {
+	if p, err := common.SchemaPath(*s, prefix, "url"); err == nil {
+		p.ValidateFunc = validation.IsURLWithHTTPS
+	}
+	(*s)["tag"].ConflictsWith = []string{"branch", "commit"}
+	(*s)["branch"].ConflictsWith = []string{"commit", "tag"}
+	(*s)["commit"].ConflictsWith = []string{"branch", "tag"}
+}
+
 var jobSchema = common.StructToSchema(JobSettings{},
 	func(s map[string]*schema.Schema) map[string]*schema.Schema {
 		jobSettingsSchema(&s, "")
 		jobSettingsSchema(&s["task"].Elem.(*schema.Resource).Schema, "task.0.")
+		gitSourceSchema(&s["git_source"].Elem.(*schema.Resource).Schema, "")
 		if p, err := common.SchemaPath(s, "schedule", "pause_status"); err == nil {
 			p.ValidateFunc = validation.StringInSlice([]string{"PAUSED", "UNPAUSED"}, false)
 		}

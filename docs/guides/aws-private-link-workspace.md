@@ -1,5 +1,5 @@
 ---
-page_title: "Enable AWS PrivateLink for Databricks Workspace"
+page_title: "Enable Backend AWS PrivateLink for Databricks Workspace"
 ---
 
 # Deploying pre-requisite resources and enabling PrivateLink connections (AWS Preview)

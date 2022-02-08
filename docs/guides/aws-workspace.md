@@ -288,10 +288,12 @@ In [the next step](workspace-management.md), please use the following configurat
 
 ```hcl
 provider "databricks" {
-  host  = module.ai.databricks_host
-  token = module.ai.databricks_token
+  host  = databricks_mws_workspaces.this.workspace_url
+  token = databricks_mws_workspaces.this.token[0].token_value
 }
 ```
+
+This will allow you to use the above generated token (in [Databricks E2 Workspace](#databricks-e2-workspace) section) to authenticate to the created workspace.
 
 ### Credentials validation checks errors
 

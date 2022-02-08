@@ -288,12 +288,13 @@ In [the next step](workspace-management.md), please use the following configurat
 
 ```hcl
 provider "databricks" {
-  host  = databricks_mws_workspaces.this.workspace_url
-  token = databricks_mws_workspaces.this.token[0].token_value
+  alias = "created_workspace"
+  host  = module.e2-workspace.workspace_url
+  token = module.e2-workspace.token_value
 }
 ```
+We assume that you have a terraform module in your project that creats a workspace (using [Databricks E2 Workspace](#databricks-e2-workspace) section) and you named it as `e2-workspace` while calling it in the **main.tf** file of your terraform project. And `workspace_url` and `token_value` are the output attributes of that module. This provider configuration will allow you to use the generated token during workspace creation to authenticate to the created workspace.
 
-This will allow you to use the above generated token (in [Databricks E2 Workspace](#databricks-e2-workspace) section) to authenticate to the created workspace.
 
 ### Credentials validation checks errors
 

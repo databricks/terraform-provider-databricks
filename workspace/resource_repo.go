@@ -47,7 +47,7 @@ type createRequest struct {
 func (a ReposAPI) Create(r createRequest) (ReposInformation, error) {
 	var resp ReposInformation
 	if r.Provider == "" { // trying to infer Git Provider from the URL
-		r.Provider = GetProviderFromUrl(r.Url)
+		r.Provider = GetGitProviderFromUrl(r.Url)
 	}
 	if r.Provider == "" {
 		return resp, fmt.Errorf("git_provider isn't specified and we can't detect provider from URL")
@@ -133,7 +133,7 @@ var gitProvidersMap = map[string]string{
 	"bitbucket.org": "bitbucketCloud",
 }
 
-func GetProviderFromUrl(uri string) string {
+func GetGitProviderFromUrl(uri string) string {
 	provider := ""
 	u, err := url.Parse(uri)
 	if err == nil {

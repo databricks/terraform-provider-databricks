@@ -78,8 +78,8 @@ type TaskDependency struct {
 // BEGIN Jobs + Repo integration preview
 type GitSource struct {
 	Url      string `json:"git_url" tf:"alias:url"`
-	Provider string `json:"git_provider" tf:"alias:provider"`
-	Branch   string `json:"git_branch,omitempty" tf:"alias:provider"`
+	Provider string `json:"git_provider,omitempty" tf:"alias:provider"`
+	Branch   string `json:"git_branch,omitempty" tf:"alias:branch"`
 	Tag      string `json:"git_tag,omitempty" tf:"alias:tag"`
 	Commit   string `json:"git_commit,omitempty" tf:"alias:commit"`
 }
@@ -133,7 +133,7 @@ type JobSettings struct {
 	// END Jobs API 2.1
 
 	// BEGIN Jobs + Repo integration preview
-	GitSource *GitSource `json:"git_source,omitempty" tf:"group:git_source"`
+	GitSource *GitSource `json:"git_source,omitempty"`
 	// END Jobs + Repo integration preview
 
 	Schedule           *CronSchedule       `json:"schedule,omitempty"`
@@ -337,8 +337,15 @@ func (a JobsAPI) Restart(id string, timeout time.Duration) error {
 func (a JobsAPI) Create(jobSettings JobSettings) (Job, error) {
 	var job Job
 	jobSettings.sortTasksByKey()
-	if jobSettings.GitSource != nil && jobSettings.GitSource.Provider == "" {
-		jobSettings.GitSource.Provider = workspace.GetProviderFromUrl(jobSettings.GitSource.Url)
+	var gitSource *GitSource = jobSettings.GitSource
+	if gitSource != nil && gitSource.Provider == "" {
+		gitSource.Provider = workspace.GetGitProviderFromUrl(gitSource.Url)
+		if gitSource.Provider == "" {
+			return job, fmt.Errorf("git Source is not empty but Git Provider is not specified and cannot be guessed by url %+v", gitSource)
+		}
+		if gitSource.Branch == "" && gitSource.Tag == "" && gitSource.Commit == "" {
+			return job, fmt.Errorf("git Source is not empty but none of branch, commit and tag is specified")
+		}
 	}
 	err := a.client.Post(a.context, "/jobs/create", jobSettings, &job)
 	return job, err
@@ -425,20 +432,20 @@ func jobSettingsSchema(s *map[string]*schema.Schema, prefix string) {
 	}
 }
 
-func gitSourceSchema(s *map[string]*schema.Schema, prefix string) {
-	if p, err := common.SchemaPath(*s, prefix, "url"); err == nil {
+func gitSourceSchema(s *schema.Resource, prefix string) {
+	if p, err := common.SchemaPath(s.Schema, prefix, "url"); err == nil {
 		p.ValidateFunc = validation.IsURLWithHTTPS
 	}
-	(*s)["tag"].ConflictsWith = []string{"branch", "commit"}
-	(*s)["branch"].ConflictsWith = []string{"commit", "tag"}
-	(*s)["commit"].ConflictsWith = []string{"branch", "tag"}
+	(*s.Schema["tag"]).ConflictsWith = []string{"git_source.0.branch", "git_source.0.commit"}
+	(*s.Schema["branch"]).ConflictsWith = []string{"git_source.0.commit", "git_source.0.tag"}
+	(*s.Schema["commit"]).ConflictsWith = []string{"git_source.0.branch", "git_source.0.tag"}
 }
 
 var jobSchema = common.StructToSchema(JobSettings{},
 	func(s map[string]*schema.Schema) map[string]*schema.Schema {
 		jobSettingsSchema(&s, "")
 		jobSettingsSchema(&s["task"].Elem.(*schema.Resource).Schema, "task.0.")
-		gitSourceSchema(&s["git_source"].Elem.(*schema.Resource).Schema, "")
+		gitSourceSchema(s["git_source"].Elem.(*schema.Resource), "")
 		if p, err := common.SchemaPath(s, "schedule", "pause_status"); err == nil {
 			p.ValidateFunc = validation.StringInSlice([]string{"PAUSED", "UNPAUSED"}, false)
 		}

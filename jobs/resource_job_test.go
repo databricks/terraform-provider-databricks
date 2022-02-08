@@ -2,6 +2,7 @@ package jobs
 
 import (
 	"context"
+	"fmt"
 	"strings"
 	"testing"
 	"time"
@@ -427,6 +428,161 @@ func TestResourceJobCreateNWorkers(t *testing.T) {
 	}.Apply(t)
 	assert.NoError(t, err, err)
 	assert.Equal(t, "789", d.Id())
+}
+
+func TestResourceJobCreateFromGitSource(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.1/jobs/create",
+				ExpectedRequest: JobSettings{
+					ExistingClusterID: "abc",
+					Tasks: []JobTaskSettings{
+						{
+							TaskKey: "b",
+							NotebookTask: &NotebookTask{
+								NotebookPath: "/GitSourcedNotebook",
+							},
+						},
+					},
+					Name:              "GitSourceJob",
+					MaxConcurrentRuns: 1,
+					GitSource: &GitSource{
+						Url:      "https://github.com/databrickslabs/terraform-provider-databricks",
+						Tag:      "0.4.8",
+						Provider: "gitHub",
+					},
+				},
+				Response: Job{
+					JobID: 789,
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/jobs/get?job_id=789",
+				Response: Job{
+					JobID: 789,
+					Settings: &JobSettings{
+						// good enough for mock
+						ExistingClusterID: "abc",
+						Tasks: []JobTaskSettings{
+							{
+								TaskKey: "b",
+							},
+						},
+						Name:              "GitSourceJob",
+						MaxConcurrentRuns: 1,
+					},
+				},
+			},
+		},
+		Create:   true,
+		Resource: ResourceJob(),
+		HCL: `existing_cluster_id = "abc"
+		max_concurrent_runs = 1
+		name = "GitSourceJob"
+
+		git_source {
+			url = "https://github.com/databrickslabs/terraform-provider-databricks"
+			tag = "0.4.8"
+		}
+
+		task {
+			task_key = "b"
+
+			notebook_task {
+				notebook_path = "/GitSourcedNotebook"
+			}
+		}`,
+	}.Apply(t)
+	assert.NoError(t, err, err)
+	assert.Equal(t, "789", d.Id())
+}
+
+func resourceJobCreateFromGitSourceConflict(t *testing.T, conflictingArgs []string, gitSource string) {
+	var hclTemplate = `existing_cluster_id = "abc"
+		max_concurrent_runs = 1
+		name = "GitSourceJob"
+		
+		%s
+		
+		task {
+			task_key = "b"
+
+			notebook_task {
+				notebook_path = "/GitSourcedNotebook"
+			}
+		}
+	`
+	var hcl = fmt.Sprintf(hclTemplate, gitSource)
+	_, err := qa.ResourceFixture{
+		Create:   true,
+		Resource: ResourceJob(),
+		HCL:      hcl,
+	}.Apply(t)
+	assert.Error(t, err, err)
+
+	var expectedErr = "invalid config supplied."
+	for idx, fieldName := range conflictingArgs {
+		expectedErr += fmt.Sprintf(" [git_source.#.%s] Conflicting configuration arguments", fieldName)
+		if idx == 0 {
+			expectedErr += "." // Akward error formatting ?
+		}
+	}
+	require.Equal(t, true, strings.Contains(err.Error(), expectedErr))
+}
+
+func TestResourceJobCreateFromGitSourceTagAndBranchConflict(t *testing.T) {
+	var gitSource = `git_source {
+		url = "https://github.com/databrickslabs/terraform-provider-databricks"
+		tag = "0.4.8"
+		branch = "main"
+	}`
+	resourceJobCreateFromGitSourceConflict(t, []string{"branch", "tag"}, gitSource)
+}
+func TestResourceJobCreateFromGitSourceTagAndCommitConflict(t *testing.T) {
+	var gitSource = `git_source {
+		url = "https://github.com/databrickslabs/terraform-provider-databricks"
+		tag = "0.4.8"
+		commit = "a26bf6"
+	}`
+	resourceJobCreateFromGitSourceConflict(t, []string{"commit", "tag"}, gitSource)
+}
+
+func TestResourceJobCreateFromGitSourceBranchAndCommitConflict(t *testing.T) {
+	var gitSource = `git_source {
+		url = "https://github.com/databrickslabs/terraform-provider-databricks"
+		branch = "main"
+		commit = "a26bf6"
+	}`
+	resourceJobCreateFromGitSourceConflict(t, []string{"branch", "commit"}, gitSource)
+}
+
+func TestResourceJobCreateFromGitSourceWithoutProviderFail(t *testing.T) {
+	_, err := qa.ResourceFixture{
+		Create:   true,
+		Resource: ResourceJob(),
+		HCL: `existing_cluster_id = "abc"
+		max_concurrent_runs = 1
+		name = "GitSourceJob"
+
+		git_source {
+			url = "https://custom.git.hosting.com/databrickslabs/terraform-provider-databricks"
+			tag = "0.4.8"
+		}
+
+		task {
+			task_key = "b"
+
+			notebook_task {
+				notebook_path = "/GitSourcedNotebook"
+			}
+		}
+	`,
+	}.Apply(t)
+	assert.Error(t, err, err)
+	require.Equal(t, true, strings.Contains(err.Error(), "git Source is not empty but Git Provider is not specified and cannot be guessed by url &{Url:https://custom.git.hosting.com/databrickslabs/terraform-provider-databricks Provider: Branch: Tag:0.4.8 Commit:}"))
 }
 
 func TestResourceJobCreateSingleNode_Fail(t *testing.T) {

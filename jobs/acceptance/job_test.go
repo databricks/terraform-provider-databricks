@@ -113,6 +113,16 @@ func TestPreviewAccJobTasks(t *testing.T) {
 
 			resource "databricks_job" "this" {
 				name = "{var.RANDOM}"
+
+				job_cluster {
+					job_cluster_key = "j"
+					new_cluster {
+						num_workers   = 20
+						spark_version = data.databricks_spark_version.latest.id
+						node_type_id  = data.databricks_node_type.smallest.id
+					}
+				}
+
 				task {
 					task_key = "a"
 
@@ -147,15 +157,11 @@ func TestPreviewAccJobTasks(t *testing.T) {
 
 				task {
 					task_key = "c"
+					
+					job_cluster_key = "j"
 
 					depends_on {
 						task_key = "b"
-					}
-
-					new_cluster {
-						num_workers   = 20
-						spark_version = data.databricks_spark_version.latest.id
-						node_type_id  = data.databricks_node_type.smallest.id
 					}
 
 					notebook_task {

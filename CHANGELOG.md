@@ -3,6 +3,7 @@
 ## 0.4.9
 
 * Prevent creation of `databricks_group` with `users` and `admins` reserved names ([#1089](https://github.com/databrickslabs/terraform-provider-databricks/issues/1089)).
+* Shared job cluster functionality added. ([#1082](https://github.com/databrickslabs/terraform-provider-databricks/issues/1082))
 
 ## 0.4.8
 

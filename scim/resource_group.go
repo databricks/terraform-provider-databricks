@@ -16,7 +16,6 @@ func ResourceGroup() *schema.Resource {
 		DisplayName string `json:"display_name" tf:"force_new"`
 		ExternalID  string `json:"external_id,omitempty" tf:"force_new,suppress_diff"`
 		URL         string `json:"url,omitempty" tf:"computed"`
-		Force       bool   `json:"bool,omitempty"`
 	}
 	groupSchema := common.StructToSchema(entity{},
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
@@ -24,6 +23,10 @@ func ResourceGroup() *schema.Resource {
 			// https://github.com/databrickslabs/terraform-provider-databricks/issues/1089
 			m["display_name"].ValidateDiagFunc = validation.ToDiagFunc(
 				validation.StringNotInSlice([]string{"users", "admins"}, false))
+			m["force"] = &schema.Schema{
+				Type:     schema.TypeBool,
+				Optional: true,
+			}
 			return m
 		})
 	addEntitlementsToSchema(&groupSchema)

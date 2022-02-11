@@ -1,14 +1,44 @@
 package acceptance
 
 import (
+	"context"
 	"os"
 	"testing"
 
+	"github.com/databrickslabs/terraform-provider-databricks/common"
 	"github.com/databrickslabs/terraform-provider-databricks/internal/acceptance"
+	"github.com/databrickslabs/terraform-provider-databricks/scim"
+	"github.com/stretchr/testify/assert"
 
 	"github.com/databrickslabs/terraform-provider-databricks/qa"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
+
+// https://github.com/databrickslabs/terraform-provider-databricks/issues/1097
+func TestAccForceUserImport(t *testing.T) {
+	if _, ok := os.LookupEnv("CLOUD_ENV"); !ok {
+		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
+	}
+	username := qa.RandomEmail()
+	os.Setenv("TEST_USERNAME", username) 
+	ctx := context.Background()
+	client := common.CommonEnvironmentClient()
+	usersAPI := scim.NewUsersAPI(ctx, client)
+	user, err := usersAPI.Create(scim.User{
+		UserName: username,
+		ExternalID: qa.RandomName("ext-id"),
+	})
+	assert.NoError(t, err)
+	defer usersAPI.Delete(user.ID)
+	acceptance.Test(t, []acceptance.Step{
+		{
+			Template: `resource "databricks_user" "this" {
+				user_name = "{env.TEST_USERNAME}"
+				force     = true
+			}`,
+		},
+	})
+}
 
 func TestAccUserResource(t *testing.T) {
 	if _, ok := os.LookupEnv("CLOUD_ENV"); !ok {

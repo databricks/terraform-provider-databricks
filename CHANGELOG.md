@@ -6,7 +6,12 @@
 * Added support for shared clusters in multi-task `databricks_job` ([#1082](https://github.com/databrickslabs/terraform-provider-databricks/issues/1082)).
 * Added diff suppression for `external_id` in `databricks_group` ([#1099](https://github.com/databrickslabs/terraform-provider-databricks/issues/1099)).
 * Added diff suppression for `external_id` in `databricks_user` ([#1097](https://github.com/databrickslabs/terraform-provider-databricks/issues/1097)).
+* Added `users`, `service_principals`, and `child_groups` exported properties to `databricks_group` data resource ([#1085](https://github.com/databrickslabs/terraform-provider-databricks/issues/1085)).
 * Added various documentation improvements.
+
+**Deprecations**
+
+* `databricks_group`.`members` is deprecated in favor of `users`, `service_principals`, and `child_groups` exported properties. Please do slight modifications of your configuration.
 
 Updated dependency versions:
 

@@ -521,14 +521,12 @@ func resourceJobCreateFromGitSourceConflict(t *testing.T, conflictingArgs []stri
 	}.Apply(t)
 	assert.Error(t, err, err)
 
-	var expectedErr = "invalid config supplied."
-	for idx, fieldName := range conflictingArgs {
-		expectedErr += fmt.Sprintf(" [git_source.#.%s] Conflicting configuration arguments", fieldName)
-		if idx == 0 {
-			expectedErr += "." // Akward error formatting ?
-		}
+	var found = false
+	for _, fieldName := range conflictingArgs {
+		require.Equal(t, true, strings.Contains(err.Error(), fieldName))
+		found = true
 	}
-	require.Equal(t, true, strings.Contains(err.Error(), expectedErr))
+	require.Equal(t, true, found)
 }
 
 func TestResourceJobCreateFromGitSourceTagAndBranchConflict(t *testing.T) {

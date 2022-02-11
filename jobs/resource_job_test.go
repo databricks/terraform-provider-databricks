@@ -431,7 +431,7 @@ func TestResourceJobCreateNWorkers(t *testing.T) {
 }
 
 func TestResourceJobCreateFromGitSource(t *testing.T) {
-	d, err := qa.ResourceFixture{
+	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "POST",
@@ -495,9 +495,7 @@ func TestResourceJobCreateFromGitSource(t *testing.T) {
 				notebook_path = "/GitSourcedNotebook"
 			}
 		}`,
-	}.Apply(t)
-	assert.NoError(t, err, err)
-	assert.Equal(t, "789", d.Id())
+	}.ApplyNoError(t)
 }
 
 func resourceJobCreateFromGitSourceConflict(t *testing.T, conflictingArgs []string, gitSource string) {
@@ -582,7 +580,7 @@ func TestResourceJobCreateFromGitSourceWithoutProviderFail(t *testing.T) {
 	`,
 	}.Apply(t)
 	assert.Error(t, err, err)
-	require.Equal(t, true, strings.Contains(err.Error(), "git Source is not empty but Git Provider is not specified and cannot be guessed by url &{Url:https://custom.git.hosting.com/databrickslabs/terraform-provider-databricks Provider: Branch: Tag:0.4.8 Commit:}"))
+	require.Equal(t, true, strings.Contains(err.Error(), "git source is not empty but Git Provider is not specified and cannot be guessed by url &{Url:https://custom.git.hosting.com/databrickslabs/terraform-provider-databricks Provider: Branch: Tag:0.4.8 Commit:}"))
 }
 
 func TestResourceJobCreateSingleNode_Fail(t *testing.T) {

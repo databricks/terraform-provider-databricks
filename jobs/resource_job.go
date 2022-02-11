@@ -341,10 +341,10 @@ func (a JobsAPI) Create(jobSettings JobSettings) (Job, error) {
 	if gitSource != nil && gitSource.Provider == "" {
 		gitSource.Provider = workspace.GetGitProviderFromUrl(gitSource.Url)
 		if gitSource.Provider == "" {
-			return job, fmt.Errorf("git Source is not empty but Git Provider is not specified and cannot be guessed by url %+v", gitSource)
+			return job, fmt.Errorf("git source is not empty but Git Provider is not specified and cannot be guessed by url %+v", gitSource)
 		}
 		if gitSource.Branch == "" && gitSource.Tag == "" && gitSource.Commit == "" {
-			return job, fmt.Errorf("git Source is not empty but none of branch, commit and tag is specified")
+			return job, fmt.Errorf("git source is not empty but none of branch, commit and tag is specified")
 		}
 	}
 	err := a.client.Post(a.context, "/jobs/create", jobSettings, &job)
@@ -432,13 +432,11 @@ func jobSettingsSchema(s *map[string]*schema.Schema, prefix string) {
 	}
 }
 
-func gitSourceSchema(s *schema.Resource, prefix string) {
-	if p, err := common.SchemaPath(s.Schema, prefix, "url"); err == nil {
-		p.ValidateFunc = validation.IsURLWithHTTPS
-	}
-	(*s.Schema["tag"]).ConflictsWith = []string{"git_source.0.branch", "git_source.0.commit"}
-	(*s.Schema["branch"]).ConflictsWith = []string{"git_source.0.commit", "git_source.0.tag"}
-	(*s.Schema["commit"]).ConflictsWith = []string{"git_source.0.branch", "git_source.0.tag"}
+func gitSourceSchema(r *schema.Resource, prefix string) {
+	r.Schema["url"].ValidateFunc = validation.IsURLWithHTTPS
+	(*r.Schema["tag"]).ConflictsWith = []string{"git_source.0.branch", "git_source.0.commit"}
+	(*r.Schema["branch"]).ConflictsWith = []string{"git_source.0.commit", "git_source.0.tag"}
+	(*r.Schema["commit"]).ConflictsWith = []string{"git_source.0.branch", "git_source.0.tag"}
 }
 
 var jobSchema = common.StructToSchema(JobSettings{},

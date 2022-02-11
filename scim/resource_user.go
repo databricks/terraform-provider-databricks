@@ -16,7 +16,7 @@ func ResourceUser() *schema.Resource {
 		UserName    string `json:"user_name" tf:"force_new"`
 		DisplayName string `json:"display_name,omitempty" tf:"computed"`
 		Active      bool   `json:"active,omitempty"`
-		ExternalID  string `json:"external_id,omitempty"`
+		ExternalID  string `json:"external_id,omitempty" tf:"suppress_diff"`
 	}
 	userSchema := common.StructToSchema(entity{},
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {

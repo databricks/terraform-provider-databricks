@@ -12,35 +12,28 @@ import (
 
 // ResourceGroup manages user groups
 func ResourceGroup() *schema.Resource {
-	groupSchema := map[string]*schema.Schema{
-		"display_name": {
-			Type: schema.TypeString,
-			ValidateDiagFunc: validation.ToDiagFunc(
-				validation.StringNotInSlice(
-					[]string{"users", "admins"}, false)),
-			Required: true,
-			ForceNew: true,
-		},
-		"url": {
-			Type:     schema.TypeString,
-			Computed: true,
-		},
-		"external_id": {
-			Type:     schema.TypeString,
-			Optional: true,
-			ForceNew: true,
-		},
-		"force": {
-			Type:     schema.TypeBool,
-			Optional: true,
-		},
+	type entity struct {
+		DisplayName string `json:"display_name" tf:"force_new"`
+		ExternalID  string `json:"external_id,omitempty" tf:"force_new,suppress_diff"`
+		URL         string `json:"url,omitempty" tf:"computed"`
 	}
+	groupSchema := common.StructToSchema(entity{},
+		func(m map[string]*schema.Schema) map[string]*schema.Schema {
+			addEntitlementsToSchema(&m)
+			// https://github.com/databrickslabs/terraform-provider-databricks/issues/1089
+			m["display_name"].ValidateDiagFunc = validation.ToDiagFunc(
+				validation.StringNotInSlice([]string{"users", "admins"}, false))
+			m["force"] = &schema.Schema{
+				Type:     schema.TypeBool,
+				Optional: true,
+			}
+			return m
+		})
 	addEntitlementsToSchema(&groupSchema)
 	return common.Resource{
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			groupName := d.Get("display_name").(string)
 			g := Group{
-				DisplayName:  groupName,
+				DisplayName:  d.Get("display_name").(string),
 				Entitlements: readEntitlementsFromData(d),
 				ExternalID:   d.Get("external_id").(string),
 			}

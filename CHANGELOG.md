@@ -5,7 +5,12 @@
 * Prevent creation of `databricks_group` with `users` and `admins` reserved names ([#1089](https://github.com/databrickslabs/terraform-provider-databricks/issues/1089)).
 * Added support for shared clusters in multi-task `databricks_job` ([#1082](https://github.com/databrickslabs/terraform-provider-databricks/issues/1082)).
 * Added diff suppression for `external_id` in `databricks_group` ([#1099](https://github.com/databrickslabs/terraform-provider-databricks/issues/1099)).
-* Various documentation improvements.
+* Added diff suppression for `external_id` in `databricks_user` ([#1097](https://github.com/databrickslabs/terraform-provider-databricks/issues/1097)).
+* Added various documentation improvements.
+
+Updated dependency versions:
+
+* Bump google.golang.org/api from 0.66.0 to 0.67.0
 
 ## 0.4.8
 

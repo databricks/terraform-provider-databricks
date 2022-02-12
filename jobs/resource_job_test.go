@@ -520,7 +520,6 @@ func resourceJobCreateFromGitSourceConflict(t *testing.T, conflictingArgs []stri
 		HCL:      hcl,
 	}.Apply(t)
 	assert.Error(t, err, err)
-
 	var found = false
 	for _, fieldName := range conflictingArgs {
 		require.Equal(t, true, strings.Contains(err.Error(), fieldName))
@@ -556,7 +555,7 @@ func TestResourceJobCreateFromGitSourceBranchAndCommitConflict(t *testing.T) {
 }
 
 func TestResourceJobCreateFromGitSourceWithoutProviderFail(t *testing.T) {
-	_, err := qa.ResourceFixture{
+	qa.ResourceFixture{
 		Create:   true,
 		Resource: ResourceJob(),
 		HCL: `existing_cluster_id = "abc"
@@ -576,9 +575,7 @@ func TestResourceJobCreateFromGitSourceWithoutProviderFail(t *testing.T) {
 			}
 		}
 	`,
-	}.Apply(t)
-	assert.Error(t, err, err)
-	require.Equal(t, true, strings.Contains(err.Error(), "git source is not empty but Git Provider is not specified and cannot be guessed by url &{Url:https://custom.git.hosting.com/databrickslabs/terraform-provider-databricks Provider: Branch: Tag:0.4.8 Commit:}"))
+	}.ExpectError(t, "git source is not empty but Git Provider is not specified and cannot be guessed by url &{Url:https://custom.git.hosting.com/databrickslabs/terraform-provider-databricks Provider: Branch: Tag:0.4.8 Commit:}")
 }
 
 func TestResourceJobCreateSingleNode_Fail(t *testing.T) {

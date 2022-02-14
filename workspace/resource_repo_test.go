@@ -14,13 +14,13 @@ import (
 	"github.com/databrickslabs/terraform-provider-databricks/qa"
 )
 
-func TestGetProviderFromUrl(t *testing.T) {
-	assert.Equal(t, "bitbucketCloud", getProviderFromUrl("https://user@bitbucket.org/user/repo.git"))
-	assert.Equal(t, "gitHub", getProviderFromUrl("https://github.com//user/repo.git"))
-	assert.Equal(t, "azureDevOpsServices", getProviderFromUrl("https://user@dev.azure.com/user/project/_git/repo"))
-	//	assert.Equal(t, "bitbucketCloud", getProviderFromUrl("https://user@bitbucket.org/user/repo.git"))
-	assert.Equal(t, "", getProviderFromUrl("https://abc/user/repo.git"))
-	assert.Equal(t, "", getProviderFromUrl("ewfgwergfwe"))
+func TestGetGitProviderFromUrl(t *testing.T) {
+	assert.Equal(t, "bitbucketCloud", GetGitProviderFromUrl("https://user@bitbucket.org/user/repo.git"))
+	assert.Equal(t, "gitHub", GetGitProviderFromUrl("https://github.com//user/repo.git"))
+	assert.Equal(t, "azureDevOpsServices", GetGitProviderFromUrl("https://user@dev.azure.com/user/project/_git/repo"))
+	//	assert.Equal(t, "bitbucketCloud", GetGitProviderFromUrl("https://user@bitbucket.org/user/repo.git"))
+	assert.Equal(t, "", GetGitProviderFromUrl("https://abc/user/repo.git"))
+	assert.Equal(t, "", GetGitProviderFromUrl("ewfgwergfwe"))
 }
 
 func TestResourceRepoRead(t *testing.T) {

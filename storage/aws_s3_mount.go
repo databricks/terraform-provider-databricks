@@ -115,8 +115,7 @@ func preprocessS3Mount(ctx context.Context, d *schema.ResourceData, m interface{
 		if len(clusterInfo.AwsAttributes.InstanceProfileArn) == 0 {
 			return fmt.Errorf("cluster %s must have EC2 instance profile attached", clusterID)
 		}
-	}
-	if instanceProfile != "" {
+	} else if instanceProfile != "" {
 		cluster, err := GetOrCreateMountingClusterWithInstanceProfile(clustersAPI, instanceProfile)
 		if err != nil {
 			return err

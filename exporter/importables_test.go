@@ -15,6 +15,7 @@ import (
 	"github.com/databrickslabs/terraform-provider-databricks/pools"
 	"github.com/databrickslabs/terraform-provider-databricks/provider"
 	"github.com/databrickslabs/terraform-provider-databricks/qa"
+	"github.com/databrickslabs/terraform-provider-databricks/repos"
 	"github.com/databrickslabs/terraform-provider-databricks/scim"
 	"github.com/databrickslabs/terraform-provider-databricks/secrets"
 	"github.com/databrickslabs/terraform-provider-databricks/storage"
@@ -589,7 +590,7 @@ func TestGlobalInitScriptsBodyErrors(t *testing.T) {
 }
 
 func TestRepoIdForName(t *testing.T) {
-	d := workspace.ResourceRepo().TestResourceData()
+	d := repos.ResourceRepo().TestResourceData()
 	d.SetId("x")
 	assert.Equal(t, "x", resourcesMap["databricks_repo"].Name(d))
 }

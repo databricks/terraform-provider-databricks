@@ -17,9 +17,9 @@ import (
 	"github.com/databrickslabs/terraform-provider-databricks/libraries"
 	"github.com/databrickslabs/terraform-provider-databricks/policies"
 	"github.com/databrickslabs/terraform-provider-databricks/qa"
+	"github.com/databrickslabs/terraform-provider-databricks/repos"
 	"github.com/databrickslabs/terraform-provider-databricks/scim"
 	"github.com/databrickslabs/terraform-provider-databricks/secrets"
-	"github.com/databrickslabs/terraform-provider-databricks/workspace"
 	"github.com/hashicorp/hcl/v2/hclwrite"
 
 	"github.com/stretchr/testify/assert"
@@ -200,7 +200,7 @@ var repoListFixture = qa.HTTPFixture{
 	Method:       "GET",
 	ReuseRequest: true,
 	Resource:     "/api/2.0/repos?",
-	Response:     workspace.ReposListResponse{},
+	Response:     repos.ReposListResponse{},
 }
 
 func TestImportingUsersGroupsSecretScopes(t *testing.T) {
@@ -937,7 +937,7 @@ func TestEitherString(t *testing.T) {
 }
 
 func TestImportingRepos(t *testing.T) {
-	resp := workspace.ReposInformation{
+	resp := repos.ReposInformation{
 		ID:           121232342,
 		Url:          "https://github.com/user/test.git",
 		Provider:     "gitHub",
@@ -952,8 +952,8 @@ func TestImportingRepos(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/repos?",
-				Response: workspace.ReposListResponse{
-					Repos: []workspace.ReposInformation{
+				Response: repos.ReposListResponse{
+					Repos: []repos.ReposInformation{
 						resp,
 					},
 				},

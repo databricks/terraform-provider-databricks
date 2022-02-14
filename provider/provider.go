@@ -23,6 +23,7 @@ import (
 	"github.com/databrickslabs/terraform-provider-databricks/pipelines"
 	"github.com/databrickslabs/terraform-provider-databricks/policies"
 	"github.com/databrickslabs/terraform-provider-databricks/pools"
+	"github.com/databrickslabs/terraform-provider-databricks/repos"
 	"github.com/databrickslabs/terraform-provider-databricks/scim"
 	"github.com/databrickslabs/terraform-provider-databricks/secrets"
 	"github.com/databrickslabs/terraform-provider-databricks/sql"
@@ -90,7 +91,7 @@ func DatabricksProvider() *schema.Provider {
 			"databricks_obo_token":                   tokens.ResourceOboToken(),
 			"databricks_permissions":                 permissions.ResourcePermissions(),
 			"databricks_pipeline":                    pipelines.ResourcePipeline(),
-			"databricks_repo":                        workspace.ResourceRepo(),
+			"databricks_repo":                        repos.ResourceRepo(),
 			"databricks_schema":                      catalog.ResourceSchema(),
 			"databricks_secret":                      secrets.ResourceSecret(),
 			"databricks_secret_scope":                secrets.ResourceSecretScope(),

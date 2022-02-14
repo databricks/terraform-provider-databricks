@@ -36,7 +36,16 @@ func TestDataSourceGroup(t *testing.T) {
 							},
 							Members: []ComplexValue{
 								{
+									Ref:   "Users/1112",
 									Value: "1112",
+								},
+								{
+									Ref:   "ServicePrincipals/1113",
+									Value: "1113",
+								},
+								{
+									Ref:   "Groups/1114",
+									Value: "1114",
 								},
 							},
 							Groups: []ComplexValue{
@@ -89,4 +98,8 @@ func TestDataSourceGroup(t *testing.T) {
 	assertContains(t, d.Get("groups"), "abc")
 	assert.Equal(t, true, d.Get("allow_instance_pool_create"))
 	assert.Equal(t, true, d.Get("allow_cluster_create"))
+
+	assertContains(t, d.Get("users"), "1112")
+	assertContains(t, d.Get("service_principals"), "1113")
+	assertContains(t, d.Get("child_groups"), "1114")
 }

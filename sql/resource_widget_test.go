@@ -1,11 +1,12 @@
-package sqlanalytics
+package sql
 
 import (
 	"encoding/json"
+	"sort"
 	"testing"
 
 	"github.com/databrickslabs/terraform-provider-databricks/qa"
-	"github.com/databrickslabs/terraform-provider-databricks/sqlanalytics/api"
+	"github.com/databrickslabs/terraform-provider-databricks/sql/api"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/stretchr/testify/assert"
 )
@@ -647,4 +648,19 @@ func TestWidgetDelete(t *testing.T) {
 
 func TestResourceWidgetCornerCases(t *testing.T) {
 	qa.ResourceCornerCases(t, ResourceWidget(), qa.CornerCaseID("foo/bar"))
+}
+
+func TestWidgetParameterSorter(t *testing.T) {
+	wp := sortWidgetParameter{
+		WidgetParameter{Name: "foo"},
+		WidgetParameter{Name: "bar"},
+	}
+
+	// Widget parameters should be sorted by their name to maintain deterministic ordering.
+	// Since they are not ordered in the API payload, not ordering them means users would
+	// see false state mismatches on comparison.
+	sort.Sort(wp)
+
+	assert.Equal(t, "bar", wp[0].Name)
+	assert.Equal(t, "foo", wp[1].Name)
 }

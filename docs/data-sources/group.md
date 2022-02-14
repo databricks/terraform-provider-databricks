@@ -39,7 +39,9 @@ Data source exposes the following attributes:
 
 * `id` -  The id for the group object.
 * `external_id` - ID of the group in an external identity provider.
-* `members` - Set of [user](../resources/user.md) identifiers, that can be modified with [databricks_group_member](../resources/group_member.md) resource.
+* `users` - Set of [databricks_user](../resources/user.md) identifiers, that can be modified with [databricks_group_member](../resources/group_member.md) resource.
+* `service_principals` - Set of [databricks_service_principal](../resources/service_principal.md) identifiers, that can be modified with [databricks_group_member](../resources/group_member.md) resource.
+* `child_groups` - Set of [databricks_group](../resources/group.md) identifiers, that can be modified with [databricks_group_member](../resources/group_member.md) resource.
 * `groups` - Set of [group](../resources/group.md) identifiers, that can be modified with [databricks_group_member](../resources/group_member.md) resource.
 * `instance_profiles` - Set of [instance profile](../resources/instance_profile.md) ARNs, that can be modified by [databricks_group_instance_profile](../resources/group_instance_profile.md) resource.
 * `allow_cluster_create` - True if group members can create [clusters](../resources/cluster.md)

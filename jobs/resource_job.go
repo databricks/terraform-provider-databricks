@@ -93,6 +93,7 @@ type JobTaskSettings struct {
 
 	ExistingClusterID      string              `json:"existing_cluster_id,omitempty" tf:"group:cluster_type"`
 	NewCluster             *clusters.Cluster   `json:"new_cluster,omitempty" tf:"group:cluster_type"`
+	JobClusterKey          string              `json:"job_cluster_key,omitempty" tf:"group:cluster_type"`
 	Libraries              []libraries.Library `json:"libraries,omitempty" tf:"slice_set,alias:library"`
 	NotebookTask           *NotebookTask       `json:"notebook_task,omitempty" tf:"group:task_type"`
 	SparkJarTask           *SparkJarTask       `json:"spark_jar_task,omitempty" tf:"group:task_type"`
@@ -105,6 +106,11 @@ type JobTaskSettings struct {
 	MaxRetries             int32               `json:"max_retries,omitempty"`
 	MinRetryIntervalMillis int32               `json:"min_retry_interval_millis,omitempty"`
 	RetryOnTimeout         bool                `json:"retry_on_timeout,omitempty" tf:"computed"`
+}
+
+type JobCluster struct {
+	JobClusterKey string            `json:"job_cluster_key,omitempty" tf:"group:cluster_type"`
+	NewCluster    *clusters.Cluster `json:"new_cluster,omitempty" tf:"group:cluster_type"`
 }
 
 // JobSettings contains the information for configuring a job on databricks
@@ -128,8 +134,9 @@ type JobSettings struct {
 	// END Jobs API 2.0
 
 	// BEGIN Jobs API 2.1
-	Tasks  []JobTaskSettings `json:"tasks,omitempty" tf:"alias:task"`
-	Format string            `json:"format,omitempty" tf:"computed"`
+	Tasks       []JobTaskSettings `json:"tasks,omitempty" tf:"alias:task"`
+	Format      string            `json:"format,omitempty" tf:"computed"`
+	JobClusters []JobCluster      `json:"job_clusters,omitempty" tf:"alias:job_cluster"`
 	// END Jobs API 2.1
 
 	// BEGIN Jobs + Repo integration preview

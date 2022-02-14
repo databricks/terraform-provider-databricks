@@ -433,14 +433,22 @@ func (c *DatabricksClient) userAgent(ctx context.Context) string {
 		Version(), resource, terraformVersion)
 }
 
+// CWE-117 prevention
+func escapeNewLines(in string) string {
+	in = strings.Replace(in, "\n", "", -1)
+	in = strings.Replace(in, "\r", "", -1)
+	return in
+}
+
 func (c *DatabricksClient) createDebugHeaders(header http.Header, host string) string {
 	headers := ""
 	if c.DebugHeaders {
 		if host != "" {
-			headers += fmt.Sprintf("\n * Host: %s", host)
+			headers += fmt.Sprintf("\n * Host: %s", escapeNewLines(host))
 		}
 		for k, v := range header {
-			headers += fmt.Sprintf("\n * %s: %s", k, onlyNBytes(strings.Join(v, ""), c.DebugTruncateBytes))
+			trunc := onlyNBytes(strings.Join(v, ""), c.DebugTruncateBytes)
+			headers += fmt.Sprintf("\n * %s: %s", k, escapeNewLines(trunc))
 		}
 		if len(headers) > 0 {
 			headers += "\n"
@@ -474,7 +482,8 @@ func (c *DatabricksClient) genericQuery(ctx context.Context, method, requestURL 
 		}
 	}
 	headers := c.createDebugHeaders(request.Header, c.Host)
-	log.Printf("[DEBUG] %s %s %s%v", method, request.URL.Path, headers, c.redactedDump(requestBody)) // lgtm[go/clear-text-logging]
+	log.Printf("[DEBUG] %s %s %s%v", method, escapeNewLines(request.URL.Path),
+		headers, c.redactedDump(requestBody)) // lgtm [go/log-injection]
 
 	r, err := retryablehttp.FromRequest(request)
 	if err != nil {

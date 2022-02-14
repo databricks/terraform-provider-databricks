@@ -208,6 +208,119 @@ func TestResourceJobCreate_MultiTask(t *testing.T) {
 	assert.Equal(t, "789", d.Id())
 }
 
+func TestResourceJobCreate_JobClusters(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.1/jobs/create",
+				ExpectedRequest: JobSettings{
+					Name: "JobClustered",
+					Tasks: []JobTaskSettings{
+						{
+							TaskKey:       "a",
+							JobClusterKey: "j",
+						},
+						{
+							TaskKey: "b",
+							NewCluster: &clusters.Cluster{
+								SparkVersion: "a",
+								NodeTypeID:   "b",
+								NumWorkers:   3,
+							},
+							NotebookTask: &NotebookTask{
+								NotebookPath: "/Stuff",
+							},
+						},
+					},
+					MaxConcurrentRuns: 1,
+					JobClusters: []JobCluster{
+						{
+							JobClusterKey: "j",
+							NewCluster: &clusters.Cluster{
+								SparkVersion: "b",
+								NodeTypeID:   "c",
+								NumWorkers:   7,
+							},
+						},
+						{
+							JobClusterKey: "k",
+							NewCluster: &clusters.Cluster{
+								SparkVersion: "x",
+								NodeTypeID:   "y",
+								NumWorkers:   9,
+							},
+						},
+					},
+				},
+				Response: Job{
+					JobID: 17,
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/jobs/get?job_id=17",
+				Response: Job{
+					// good enough for mock
+					Settings: &JobSettings{
+						Tasks: []JobTaskSettings{
+							{
+								TaskKey: "b",
+							},
+							{
+								TaskKey: "a",
+							},
+						},
+					},
+				},
+			},
+		},
+		Create:   true,
+		Resource: ResourceJob(),
+		HCL: `
+		name = "JobClustered"
+
+		job_cluster {
+			job_cluster_key = "j"
+			new_cluster {
+			  num_workers   = 7
+			  spark_version = "b"
+			  node_type_id  = "c"
+			}
+		}
+		
+		job_cluster {
+			job_cluster_key = "k"
+			new_cluster {
+			  num_workers   = 9
+			  spark_version = "x"
+			  node_type_id  = "y"
+			}
+		}
+		
+		task {
+			task_key = "a"
+			job_cluster_key = "j"
+		}
+
+		task {
+			task_key = "b"
+
+			new_cluster {
+				spark_version = "a"
+				node_type_id = "b"
+				num_workers = 3
+			}
+
+			notebook_task {
+				notebook_path = "/Stuff"
+			}
+		}`,
+	}.Apply(t)
+	assert.NoError(t, err, err)
+	assert.Equal(t, "17", d.Id())
+}
+
 func TestResourceJobCreate_AlwaysRunning(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{

@@ -57,6 +57,15 @@ It is possible to create [jobs with multiple tasks](https://docs.databricks.com/
 resource "databricks_job" "this" {
   name = "Job with multiple tasks"
 
+  job_cluster {
+    job_cluster_key = "j"
+    new_cluster {
+      num_workers   = 2
+      spark_version = data.databricks_spark_version.latest.id
+      node_type_id  = data.databricks_node_type.smallest.id
+    }
+  }
+
   task {
     task_key = "a"
 
@@ -84,6 +93,16 @@ resource "databricks_job" "this" {
       main_class_name = "com.acme.data.Main"
     }
   }
+
+  task {
+    task_key = "c"
+
+    job_cluster_key = "j"
+
+    notebook_task {
+      notebook_path = databricks_notebook.this.path
+    }
+  }
 }
 ```
 
@@ -105,6 +124,11 @@ The following arguments are required:
 * `max_concurrent_runs` - (Optional) (Integer) An optional maximum allowed number of concurrent runs of the job. Defaults to *1*.
 * `email_notifications` - (Optional) (List) An optional set of email addresses notified when runs of this job begin and complete and when this job is deleted. The default behavior is to not send any emails. This field is a block and is documented below.
 * `schedule` - (Optional) (List) An optional periodic schedule for this job. The default behavior is that the job runs when triggered by clicking Run Now in the Jobs UI or sending an API request to runNow. This field is a block and is documented below.
+
+### job_cluster Configuration Block
+[Shared job cluster](https://docs.databricks.com/jobs.html#use-shared-job-clusters) specification. Allows multiple tasks in the same job run to reuse the cluster. 
+* `job_cluster_key` - (Required) Identifier that can be referenced in `task` block, so that cluster is shared between tasks
+* `new_cluster` - Same set of parameters as for [databricks_cluster](cluster.md) resource.
 
 ### schedule Configuration Block
 

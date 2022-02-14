@@ -1,5 +1,26 @@
 # Version changelog
 
+## 0.5.0
+
+* Added `workspace_url` attribute to the `databricks_current_user` data source ([#1107](https://github.com/databrickslabs/terraform-provider-databricks/pull/1107))
+
+## 0.4.9
+
+* Prevent creation of `databricks_group` with `users` and `admins` reserved names ([#1089](https://github.com/databrickslabs/terraform-provider-databricks/issues/1089)).
+* Added support for shared clusters in multi-task `databricks_job` ([#1082](https://github.com/databrickslabs/terraform-provider-databricks/issues/1082)).
+* Added diff suppression for `external_id` in `databricks_group` ([#1099](https://github.com/databrickslabs/terraform-provider-databricks/issues/1099)).
+* Added diff suppression for `external_id` in `databricks_user` ([#1097](https://github.com/databrickslabs/terraform-provider-databricks/issues/1097)).
+* Added `users`, `service_principals`, and `child_groups` exported properties to `databricks_group` data resource ([#1085](https://github.com/databrickslabs/terraform-provider-databricks/issues/1085)).
+* Added various documentation improvements.
+
+**Deprecations**
+
+* `databricks_group`.`members` is deprecated in favor of `users`, `service_principals`, and `child_groups` exported properties. Please do slight modifications of your configuration.
+
+Updated dependency versions:
+
+* Bump google.golang.org/api from 0.66.0 to 0.67.0
+
 ## 0.4.8
 
 * Added support for `tf:suppress_diff` on primitive types ([#984](https://github.com/databrickslabs/terraform-provider-databricks/issues/984)).

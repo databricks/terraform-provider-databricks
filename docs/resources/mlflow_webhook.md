@@ -10,13 +10,6 @@ This resource allows you to create [MLflow Model Registry Webhooks](https://docs
 ### Triggering Databricks job
 
 ```hcl
-variable "dbhost" {
-  description = "URL of Databricks workspace"
-}
-variable "dbtoken" {
-  description = "Token to access Databricks workspace"
-}
-
 data "databricks_current_user" "me" {}
 data "databricks_spark_version" "latest" {}
 data "databricks_node_type" "smallest" {
@@ -50,14 +43,19 @@ resource "databricks_job" "this" {
   }
 }
 
+resource "databricks_token" "pat_for_webhook" {
+  comment          = "MLflow Webhook"
+  lifetime_seconds = 86400000
+}
+
 resource "databricks_mlflow_webhook" "job" {
   events      = ["TRANSITION_REQUEST_CREATED"]
   description = "Databricks Job webhook trigger"
   status      = "ACTIVE"
   job_spec {
     job_id        = databricks_job.this.id
-    workspace_url = var.dbhost
-    access_token  = var.dbtoken
+    workspace_url = data.databricks_current_user.me.workspace_url
+    access_token  = databricks_token.pat_for_webhook.token_value
   }
 }
 ```

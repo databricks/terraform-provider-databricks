@@ -482,7 +482,7 @@ func (c *DatabricksClient) genericQuery(ctx context.Context, method, requestURL 
 		}
 	}
 	headers := c.createDebugHeaders(request.Header, c.Host)
-	log.Printf("[DEBUG] %s %s %s%v", method, escapeNewLines(request.URL.Path), 
+	log.Printf("[DEBUG] %s %s %s%v", method, escapeNewLines(request.URL.Path),
 		headers, c.redactedDump(requestBody)) // lgtm [go/log-injection]
 
 	r, err := retryablehttp.FromRequest(request)

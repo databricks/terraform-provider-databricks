@@ -135,7 +135,7 @@ resource "databricks_mount" "passthrough" {
 
 This block allows specifying parameters for mounting of the ADLS Gen2. The following arguments are required inside the `s3` block:
 
-* `instance_profile` - (Optional) (String) ARN of registered [instance profile](instance_profile.md) for data access.  If it's not specified, then the `cluster_id` should be provided, and the cluster should have an instance profile attached to it. 
+* `instance_profile` - (Optional) (String) ARN of registered [instance profile](instance_profile.md) for data access.  If it's not specified, then the `cluster_id` should be provided, and the cluster should have an instance profile attached to it. If both `cluster_id` & `instance_profile` are specified, then `cluster_id` takes precedence.
 * `bucket_name` - (Required) (String) S3 bucket name to be mounted.
 
 ### Example of mounting S3

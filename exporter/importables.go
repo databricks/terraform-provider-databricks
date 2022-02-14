@@ -15,6 +15,7 @@ import (
 	"github.com/databrickslabs/terraform-provider-databricks/common"
 	"github.com/databrickslabs/terraform-provider-databricks/jobs"
 	"github.com/databrickslabs/terraform-provider-databricks/permissions"
+	"github.com/databrickslabs/terraform-provider-databricks/repos"
 	"github.com/databrickslabs/terraform-provider-databricks/secrets"
 	"github.com/databrickslabs/terraform-provider-databricks/workspace"
 
@@ -777,7 +778,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			return re.ReplaceAllString(name, "_")
 		},
 		List: func(ic *importContext) error {
-			repoList, err := workspace.NewReposAPI(ic.Context, ic.Client).ListAll()
+			repoList, err := repos.NewReposAPI(ic.Context, ic.Client).ListAll()
 			if err != nil {
 				return err
 			}

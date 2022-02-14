@@ -24,7 +24,7 @@ type SQLEndpoint struct {
 	ID                      string          `json:"id,omitempty" tf:"computed"`
 	Name                    string          `json:"name"`
 	ClusterSize             string          `json:"cluster_size"`
-	AutoStopMinutes         int             `json:"auto_stop_mins,omitempty" tf:"default:120"`
+	AutoStopMinutes         int             `json:"auto_stop_mins" tf:"default:120"`
 	MinNumClusters          int             `json:"min_num_clusters,omitempty" tf:"default:1"`
 	MaxNumClusters          int             `json:"max_num_clusters,omitempty" tf:"default:1"`
 	NumClusters             int             `json:"num_clusters,omitempty" tf:"default:1"`
@@ -191,6 +191,8 @@ func (a SQLEndpointsAPI) Delete(endpointID string) error {
 func ResourceSQLEndpoint() *schema.Resource {
 	s := common.StructToSchema(SQLEndpoint{}, func(
 		m map[string]*schema.Schema) map[string]*schema.Schema {
+		m["auto_stop_mins"].Required = false
+		m["auto_stop_mins"].Optional = true
 		m["cluster_size"].ValidateDiagFunc = validation.ToDiagFunc(
 			validation.StringInSlice(ClusterSizes, false))
 		m["max_num_clusters"].ValidateDiagFunc = validation.ToDiagFunc(

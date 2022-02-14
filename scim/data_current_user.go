@@ -36,6 +36,10 @@ func DataSourceCurrentUser() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"workspace_url": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
 		ReadContext: func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 			usersAPI := NewUsersAPI(ctx, m)
@@ -51,6 +55,7 @@ func DataSourceCurrentUser() *schema.Resource {
 			norm := nonAlphanumeric.ReplaceAllLiteralString(splits[0], "_")
 			norm = strings.ToLower(norm)
 			d.Set("alphanumeric", norm)
+			d.Set("workspace_url", usersAPI.client.Host)
 			d.SetId(me.ID)
 			return nil
 		},

@@ -16,7 +16,7 @@ import (
 	"github.com/databrickslabs/terraform-provider-databricks/clusters"
 	"github.com/databrickslabs/terraform-provider-databricks/common"
 	"github.com/databrickslabs/terraform-provider-databricks/libraries"
-	"github.com/databrickslabs/terraform-provider-databricks/workspace"
+	"github.com/databrickslabs/terraform-provider-databricks/repos"
 )
 
 // NotebookTask contains the information for notebook jobs
@@ -346,7 +346,7 @@ func (a JobsAPI) Create(jobSettings JobSettings) (Job, error) {
 	jobSettings.sortTasksByKey()
 	var gitSource *GitSource = jobSettings.GitSource
 	if gitSource != nil && gitSource.Provider == "" {
-		gitSource.Provider = workspace.GetGitProviderFromUrl(gitSource.Url)
+		gitSource.Provider = repos.GetGitProviderFromUrl(gitSource.Url)
 		if gitSource.Provider == "" {
 			return job, fmt.Errorf("git source is not empty but Git Provider is not specified and cannot be guessed by url %+v", gitSource)
 		}

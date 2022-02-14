@@ -1,4 +1,4 @@
-package workspace
+package repos
 
 import (
 	"context"
@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/databrickslabs/terraform-provider-databricks/common"
+	"github.com/databrickslabs/terraform-provider-databricks/workspace"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
@@ -61,7 +62,7 @@ func (a ReposAPI) Create(r createRequest) (ReposInformation, error) {
 			p = strings.TrimSuffix(r.Path, "/")
 		}
 		p = path.Dir(p)
-		if err := NewNotebooksAPI(a.context, a.client).Mkdirs(p); err != nil {
+		if err := workspace.NewNotebooksAPI(a.context, a.client).Mkdirs(p); err != nil {
 			return resp, err
 		}
 	}

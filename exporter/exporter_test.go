@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"net/http"
 	"os"
 	"testing"
 	"time"
@@ -203,11 +204,18 @@ var repoListFixture = qa.HTTPFixture{
 	Response:     repos.ReposListResponse{},
 }
 
+var emptyGitCredentials = qa.HTTPFixture{
+	Method:   http.MethodGet,
+	Resource: "/api/2.0/git-credentials",
+	Response: repos.GitCredentialList{},
+}
+
 func TestImportingUsersGroupsSecretScopes(t *testing.T) {
 	qa.HTTPFixturesApply(t,
 		[]qa.HTTPFixture{
 			meAdminFixture,
 			repoListFixture,
+			emptyGitCredentials,
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/preview/scim/v2/Groups?",
@@ -366,6 +374,7 @@ func TestImportingNoResourcesError(t *testing.T) {
 				Resource: "/api/2.0/preview/scim/v2/Groups?",
 				Response: scim.GroupList{Resources: []scim.Group{}},
 			},
+			emptyGitCredentials,
 			{
 				Method:       "GET",
 				Resource:     "/api/2.0/global-init-scripts",
@@ -958,6 +967,7 @@ func TestImportingRepos(t *testing.T) {
 					},
 				},
 			},
+			emptyGitCredentials,
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/repos/121232342",
@@ -976,9 +986,86 @@ func TestImportingRepos(t *testing.T) {
 			ic := newImportContext(client)
 			ic.Directory = tmpDir
 			ic.listing = "repos"
-			ic.services = "repos,access"
+			ic.services = "repos"
 
 			err := ic.Run()
 			assert.NoError(t, err)
+		})
+}
+
+func TestImportingGitCredentials(t *testing.T) {
+	provider := "gitHub"
+	user := "test"
+	resp := repos.GitCredentialResponse{
+		ID:       121232342,
+		Provider: provider,
+		UserName: user,
+	}
+	qa.HTTPFixturesApply(t,
+		[]qa.HTTPFixture{
+			meAdminFixture,
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/repos?",
+				Response: repos.ReposListResponse{
+					Repos: []repos.ReposInformation{},
+				},
+			},
+			{
+				Method:   http.MethodGet,
+				Resource: "/api/2.0/git-credentials",
+				Response: repos.GitCredentialList{
+					Credentials: []repos.GitCredentialResponse{resp},
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: fmt.Sprintf("/api/2.0/git-credentials/%d", resp.ID),
+				Response: resp,
+			},
+		},
+		func(ctx context.Context, client *common.DatabricksClient) {
+			tmpDir := fmt.Sprintf("/tmp/tf-%s", qa.RandomName())
+			defer os.RemoveAll(tmpDir)
+
+			ic := newImportContext(client)
+			ic.Directory = tmpDir
+			ic.listing = "repos"
+			ic.services = "repos"
+
+			err := ic.Run()
+			assert.NoError(t, err)
+		})
+}
+
+func TestImportingGitCredentials_Error(t *testing.T) {
+	qa.HTTPFixturesApply(t,
+		[]qa.HTTPFixture{
+			meAdminFixture,
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/repos?",
+				Response: repos.ReposListResponse{
+					Repos: []repos.ReposInformation{},
+				},
+			},
+			{
+				Method:   http.MethodGet,
+				Resource: "/api/2.0/git-credentials",
+				Response: repos.GitCredentialList{},
+				Status:   404,
+			},
+		},
+		func(ctx context.Context, client *common.DatabricksClient) {
+			tmpDir := fmt.Sprintf("/tmp/tf-%s", qa.RandomName())
+			defer os.RemoveAll(tmpDir)
+
+			ic := newImportContext(client)
+			ic.Directory = tmpDir
+			ic.listing = "repos"
+			ic.services = "repos"
+
+			err := ic.Run()
+			assert.Error(t, err)
 		})
 }

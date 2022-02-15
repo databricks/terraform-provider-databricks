@@ -34,18 +34,18 @@ type ReposInformation struct {
 	HeadCommitID string `json:"head_commit_id,omitempty" tf:"computed,alias:commit_hash"`
 }
 
-// ID returns job id as string
+// RepoID returns job id as string
 func (r ReposInformation) RepoID() string {
 	return fmt.Sprintf("%d", r.ID)
 }
 
-type createRequest struct {
+type reposCreateRequest struct {
 	Url      string `json:"url"`
 	Provider string `json:"provider"`
 	Path     string `json:"path,omitempty"`
 }
 
-func (a ReposAPI) Create(r createRequest) (ReposInformation, error) {
+func (a ReposAPI) Create(r reposCreateRequest) (ReposInformation, error) {
 	var resp ReposInformation
 	if r.Provider == "" { // trying to infer Git Provider from the URL
 		r.Provider = GetGitProviderFromUrl(r.Url)
@@ -168,7 +168,7 @@ func ResourceRepo() *schema.Resource {
 		SchemaVersion: 1,
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			reposAPI := NewReposAPI(ctx, c)
-			req := createRequest{Path: d.Get("path").(string), Provider: d.Get("git_provider").(string), Url: d.Get("url").(string)}
+			req := reposCreateRequest{Path: d.Get("path").(string), Provider: d.Get("git_provider").(string), Url: d.Get("url").(string)}
 			resp, err := reposAPI.Create(req)
 			if err != nil {
 				return err

@@ -30,7 +30,7 @@ func TestResourceRepoRead(t *testing.T) {
 	provider := "gitHub"
 	branch := "main"
 	path := "/Repos/Production/testrepo"
-	d, err := qa.ResourceFixture{
+	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   http.MethodGet,
@@ -49,14 +49,9 @@ func TestResourceRepoRead(t *testing.T) {
 		Read:     true,
 		New:      true,
 		ID:       repoIDStr,
-	}.Apply(t)
-	assert.NoError(t, err, err)
-	assert.Equal(t, repoIDStr, d.Id())
-	assert.Equal(t, path, d.Get("path"))
-	assert.Equal(t, branch, d.Get("branch"))
-	assert.Equal(t, provider, d.Get("git_provider"))
-	assert.Equal(t, url, d.Get("url"))
-	assert.Equal(t, "7e0847ede61f07adede22e2bcce6050216489171", d.Get("commit_hash"))
+	}.ApplyAndExpectData(t,
+		map[string]interface{}{"id": repoIDStr, "path": path, "branch": branch, "git_provider": provider,
+			"url": url, "commit_hash": "7e0847ede61f07adede22e2bcce6050216489171"})
 }
 
 func TestResourceRepoRead_NotFound(t *testing.T) {
@@ -82,7 +77,7 @@ func TestResourceRepoRead_NotFound(t *testing.T) {
 
 func TestResourceRepoDelete(t *testing.T) {
 	repoID := "48155820875912"
-	d, err := qa.ResourceFixture{
+	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   http.MethodDelete,
@@ -93,9 +88,8 @@ func TestResourceRepoDelete(t *testing.T) {
 		Resource: ResourceRepo(),
 		Delete:   true,
 		ID:       repoID,
-	}.Apply(t)
-	assert.NoError(t, err, err)
-	assert.Equal(t, repoID, d.Id())
+	}.ApplyAndExpectData(t,
+		map[string]interface{}{"id": repoID})
 }
 
 func TestResourceRepoCreateNoBranch(t *testing.T) {
@@ -107,12 +101,12 @@ func TestResourceRepoCreateNoBranch(t *testing.T) {
 		Path:         "/Repos/user@domain/test",
 		HeadCommitID: "1124323423abc23424",
 	}
-	d, err := qa.ResourceFixture{
+	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "POST",
 				Resource: "/api/2.0/repos",
-				ExpectedRequest: createRequest{
+				ExpectedRequest: reposCreateRequest{
 					Url:      "https://github.com/user/test.git",
 					Provider: "gitHub",
 				},
@@ -129,13 +123,9 @@ func TestResourceRepoCreateNoBranch(t *testing.T) {
 			"url": "https://github.com/user/test.git",
 		},
 		Create: true,
-	}.Apply(t)
-	assert.NoError(t, err, err)
-	assert.Equal(t, resp.RepoID(), d.Id())
-	assert.Equal(t, resp.Branch, d.Get("branch"))
-	assert.Equal(t, resp.Provider, d.Get("git_provider"))
-	assert.Equal(t, resp.Path, d.Get("path"))
-	assert.Equal(t, resp.HeadCommitID, d.Get("commit_hash"))
+	}.ApplyAndExpectData(t,
+		map[string]interface{}{"id": resp.RepoID(), "path": resp.Path, "branch": resp.Branch,
+			"git_provider": resp.Provider, "url": resp.Url, "commit_hash": resp.HeadCommitID})
 }
 
 func TestResourceRepoCreateCustomDirectory(t *testing.T) {
@@ -147,12 +137,12 @@ func TestResourceRepoCreateCustomDirectory(t *testing.T) {
 		Path:         "/Repos/user@domain/test",
 		HeadCommitID: "1124323423abc23424",
 	}
-	d, err := qa.ResourceFixture{
+	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "POST",
 				Resource: "/api/2.0/repos",
-				ExpectedRequest: createRequest{
+				ExpectedRequest: reposCreateRequest{
 					Url:      "https://github.com/user/test.git",
 					Provider: "gitHub",
 					Path:     "/Repos/Production/test/",
@@ -178,17 +168,13 @@ func TestResourceRepoCreateCustomDirectory(t *testing.T) {
 			"path": "/Repos/Production/test/",
 		},
 		Create: true,
-	}.Apply(t)
-	assert.NoError(t, err, err)
-	assert.Equal(t, resp.RepoID(), d.Id())
-	assert.Equal(t, resp.Branch, d.Get("branch"))
-	assert.Equal(t, resp.Provider, d.Get("git_provider"))
-	assert.Equal(t, resp.Path, d.Get("path"))
-	assert.Equal(t, resp.HeadCommitID, d.Get("commit_hash"))
+	}.ApplyAndExpectData(t,
+		map[string]interface{}{"id": resp.RepoID(), "path": resp.Path, "branch": resp.Branch,
+			"git_provider": resp.Provider, "url": resp.Url, "commit_hash": resp.HeadCommitID})
 }
 
 func TestResourceRepoCreateCustomDirectoryError(t *testing.T) {
-	_, err := qa.ResourceFixture{
+	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "POST",
@@ -209,20 +195,18 @@ func TestResourceRepoCreateCustomDirectoryError(t *testing.T) {
 			"path": "/Repos/Production/test/",
 		},
 		Create: true,
-	}.Apply(t)
-	qa.AssertErrorStartsWith(t, err, "Internal error happened")
+	}.ExpectError(t, "Internal error happened")
 }
 
 func TestResourceRepoCreateCustomDirectoryWrongLocation(t *testing.T) {
-	_, err := qa.ResourceFixture{
+	qa.ResourceFixture{
 		Resource: ResourceRepo(),
 		State: map[string]interface{}{
 			"url":  "https://github.com/user/test.git",
 			"path": "/NotRepos/Production/test/",
 		},
 		Create: true,
-	}.Apply(t)
-	qa.AssertErrorStartsWith(t, err, "path should start with /Repos/")
+	}.ExpectError(t, "path should start with /Repos/")
 }
 
 func TestResourceRepoCreateWithBranch(t *testing.T) {
@@ -236,12 +220,12 @@ func TestResourceRepoCreateWithBranch(t *testing.T) {
 	}
 	respPatch := resp
 	respPatch.Branch = "releases"
-	d, err := qa.ResourceFixture{
+	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "POST",
 				Resource: "/api/2.0/repos",
-				ExpectedRequest: createRequest{
+				ExpectedRequest: reposCreateRequest{
 					Url:      "https://github.com/user/test.git",
 					Provider: "gitHub",
 				},
@@ -265,12 +249,9 @@ func TestResourceRepoCreateWithBranch(t *testing.T) {
 			"branch": "releases",
 		},
 		Create: true,
-	}.Apply(t)
-	assert.NoError(t, err, err)
-	assert.Equal(t, resp.RepoID(), d.Id())
-	assert.Equal(t, respPatch.Branch, d.Get("branch"))
-	assert.Equal(t, resp.Provider, d.Get("git_provider"))
-	assert.Equal(t, resp.Path, d.Get("path"))
+	}.ApplyAndExpectData(t,
+		map[string]interface{}{"id": resp.RepoID(), "path": resp.Path, "branch": respPatch.Branch,
+			"git_provider": resp.Provider, "url": resp.Url, "commit_hash": resp.HeadCommitID})
 }
 
 func TestResourceRepoCreateWithTag(t *testing.T) {
@@ -284,12 +265,12 @@ func TestResourceRepoCreateWithTag(t *testing.T) {
 	}
 	respPatch := resp
 	respPatch.Branch = ""
-	d, err := qa.ResourceFixture{
+	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "POST",
 				Resource: "/api/2.0/repos",
-				ExpectedRequest: createRequest{
+				ExpectedRequest: reposCreateRequest{
 					Url:      "https://github.com/user/test.git",
 					Provider: "gitHub",
 				},
@@ -313,12 +294,9 @@ func TestResourceRepoCreateWithTag(t *testing.T) {
 			"tag": "v0.1",
 		},
 		Create: true,
-	}.Apply(t)
-	assert.NoError(t, err, err)
-	assert.Equal(t, resp.RepoID(), d.Id())
-	assert.Equal(t, respPatch.Branch, d.Get("branch"))
-	assert.Equal(t, resp.Provider, d.Get("git_provider"))
-	assert.Equal(t, resp.Path, d.Get("path"))
+	}.ApplyAndExpectData(t,
+		map[string]interface{}{"id": resp.RepoID(), "path": resp.Path,
+			"git_provider": resp.Provider, "url": resp.Url, "commit_hash": resp.HeadCommitID})
 }
 
 func TestResourceRepoCreateError(t *testing.T) {
@@ -340,7 +318,7 @@ func TestResourceReposUpdateSwitchToTag(t *testing.T) {
 		Path:         "/Repos/user@domain/test",
 		HeadCommitID: "1124323423abc23424",
 	}
-	d, err := qa.ResourceFixture{
+	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:          "PATCH",
@@ -370,9 +348,7 @@ func TestResourceReposUpdateSwitchToTag(t *testing.T) {
 		ID:          "121232342",
 		Update:      true,
 		RequiresNew: true,
-	}.Apply(t)
-	assert.NoError(t, err, err)
-	assert.Equal(t, "", d.Get("branch"))
+	}.ApplyAndExpectData(t, map[string]interface{}{"branch": ""})
 }
 
 func TestResourceReposUpdateSwitchToBranch(t *testing.T) {
@@ -384,7 +360,7 @@ func TestResourceReposUpdateSwitchToBranch(t *testing.T) {
 		HeadCommitID: "1124323423abc23424",
 		Branch:       "releases",
 	}
-	d, err := qa.ResourceFixture{
+	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:          "PATCH",
@@ -413,9 +389,7 @@ func TestResourceReposUpdateSwitchToBranch(t *testing.T) {
 		},
 		ID:     "121232342",
 		Update: true,
-	}.Apply(t)
-	assert.NoError(t, err, err)
-	assert.Equal(t, "releases", d.Get("branch"))
+	}.ApplyAndExpectData(t, map[string]interface{}{"branch": "releases"})
 }
 
 func TestReposListAll(t *testing.T) {

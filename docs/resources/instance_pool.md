@@ -61,8 +61,16 @@ The following options are [available](https://docs.databricks.com/dev-tools/api/
 
 The following options are [available](https://docs.microsoft.com/en-us/azure/databricks/dev-tools/api/latest/clusters#--azureattributes):
 
-* `availability` - (Optional) Availability type used for all subsequent nodes past the `first_on_demand` ones. Valid values are `SPOT_AZURE` and `ON_DEMAND_AZURE`.
+* `availability` - (Optional) Availability type used for all nodes. Valid values are `SPOT_AZURE` and `ON_DEMAND_AZURE`.
 * `spot_bid_max_price` - (Optional) The max price for Azure spot instances.  Use `-1` to specify lowest price.
+
+## gcp_attributes Configuration Block
+
+`gcp_attributes` optional configuration block contains attributes related to [instance pools on GCP](https://docs.gcp.databricks.com/dev-tools/api/latest/instance-pools.html#clusterinstancepoolgcpattributes).
+
+The following options are [available](https://docs.gcp.databricks.com/dev-tools/api/latest/clusters.html#gcpavailability):
+
+* `availability` - (Optional) Availability type used for all nodes. Valid values are `PREEMPTIBLE_GCP`, `PREEMPTIBLE_WITH_FALLBACK_GCP` and `ON_DEMAND_GCP`, default: `ON_DEMAND_GCP`.
 
 
 ### disk_spec Configuration Block

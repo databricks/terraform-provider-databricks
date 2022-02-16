@@ -5,6 +5,7 @@
 * Added `workspace_url` attribute to the `databricks_current_user` data source ([#1107](https://github.com/databrickslabs/terraform-provider-databricks/pull/1107)).
 * Fixed issue at `databricks_mount` where new cluster was created for S3 mount even when `cluster_id` was specified ([#1064](https://github.com/databrickslabs/terraform-provider-databricks/issues/1064)).
 * Allow to disable auto-termination for Databricks SQL endpoints ([#900](https://github.com/databrickslabs/terraform-provider-databricks/pull/900)).
+* Added new `gcp_attributes` to `databricks_cluster` and `databricks_instance_pool` ([#1126](https://github.com/databrickslabs/terraform-provider-databricks/pull/1126)).
 
 ## 0.4.9
 

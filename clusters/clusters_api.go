@@ -42,6 +42,17 @@ const (
 	AzureAvailabilitySpotWithFallback = "SPOT_WITH_FALLBACK_AZURE"
 )
 
+// https://docs.gcp.databricks.com/dev-tools/api/latest/clusters.html#gcpavailability
+const (
+	// GcpAvailabilityPreemptible is Preemptible instance type for clusters
+	GcpAvailabilityPreemptible = "PREEMPTIBLE_GCP"
+	// GcpAvailabilityOnDemand is OnDemand instance type for clusters
+	GcpAvailabilityOnDemand = "ON_DEMAND_GCP"
+	// GcpAvailabilityPreemptible is Preemptible instance type for clusters with option
+	// to fallback into on-demand if instance cannot be acquired
+	GcpAvailabilityPreemptibleWithFallback = "PREEMPTIBLE_WITH_FALLBACK_GCP"
+)
+
 // AzureDiskVolumeType is disk type on azure vms
 type AzureDiskVolumeType string
 
@@ -151,8 +162,11 @@ type AzureAttributes struct {
 // GcpAttributes encapsultes GCP specific attributes
 // https://docs.gcp.databricks.com/dev-tools/api/latest/clusters.html#clustergcpattributes
 type GcpAttributes struct {
-	UsePreemptibleExecutors bool   `json:"use_preemptible_executors,omitempty"`
-	GoogleServiceAccount    string `json:"google_service_account,omitempty"`
+	UsePreemptibleExecutors bool         `json:"use_preemptible_executors,omitempty"`
+	GoogleServiceAccount    string       `json:"google_service_account,omitempty"`
+	Availability            Availability `json:"availability,omitempty"`
+	BootDiskSize            int32        `json:"boot_disk_size,omitempty"`
+	ZoneId                  string       `json:"zone_id,omitempty"`
 }
 
 // DbfsStorageInfo contains the destination string for DBFS

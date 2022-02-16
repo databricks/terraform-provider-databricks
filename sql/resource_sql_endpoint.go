@@ -28,7 +28,7 @@ type SQLEndpoint struct {
 	MinNumClusters          int             `json:"min_num_clusters,omitempty" tf:"default:1"`
 	MaxNumClusters          int             `json:"max_num_clusters,omitempty" tf:"default:1"`
 	NumClusters             int             `json:"num_clusters,omitempty" tf:"default:1,suppress_diff"`
-	EnablePhoton            bool            `json:"enable_photon,omitempty" tf:"default:true"`
+	EnablePhoton            bool            `json:"enable_photon" tf:"default:true"`
 	EnableServerlessCompute bool            `json:"enable_serverless_compute,omitempty"`
 	InstanceProfileARN      string          `json:"instance_profile_arn,omitempty"`
 	State                   string          `json:"state,omitempty" tf:"computed"`
@@ -197,6 +197,8 @@ func ResourceSQLEndpoint() *schema.Resource {
 			validation.StringInSlice(ClusterSizes, false))
 		m["max_num_clusters"].ValidateDiagFunc = validation.ToDiagFunc(
 			validation.IntBetween(1, MaxNumClusters))
+		m["enable_photon"].Optional = true
+		m["enable_photon"].Required = false
 		return m
 	})
 	return common.Resource{

@@ -317,7 +317,7 @@ The following options are available:
 
 `azure_attributes` optional configuration block contains attributes related to [clusters running on Azure](https://docs.microsoft.com/en-us/azure/databricks/dev-tools/api/latest/clusters#--azureattributes).
 
-Here is the example of shared autoscaling cluster with some of AWS options set:
+Here is the example of shared autoscaling cluster with some of Azure options set:
 
 ```hcl
 data "databricks_spark_version" "latest" {}
@@ -351,10 +351,35 @@ The following options are [available](https://docs.microsoft.com/en-us/azure/dat
 
 `gcp_attributes` optional configuration block contains attributes related to [clusters running on GCP](https://docs.gcp.databricks.com/dev-tools/api/latest/clusters.html#clustergcpattributes).
 
+Here is the example of shared autoscaling cluster with some of GCP options set:
+
+```hcl
+resource "databricks_cluster" "this" {
+  cluster_name            = "Shared Autoscaling"
+  spark_version           = data.databricks_spark_version.latest.id
+  node_type_id            = data.databricks_node_type.smallest.id
+  autotermination_minutes = 20
+  autoscale {
+    min_workers = 1
+    max_workers = 50
+  }
+  gcp_attributes {
+    availability = "PREEMPTIBLE_WITH_FALLBACK_GCP"
+    zone_id      = "AUTO"
+  }
+}
+```
+
 The following options are available:
 
-* `use_preemptible_executors` - (Optional, bool) if we should use preemptible executors ([GCP documentation](https://cloud.google.com/compute/docs/instances/preemptible))
+* `use_preemptible_executors` - (Optional, bool) if we should use preemptible executors ([GCP documentation](https://cloud.google.com/compute/docs/instances/preemptible)). *Warning: this field is deprecated in favor of `availability`, and will be removed soon.*
 * `google_service_account` - (Optional, string) Google Service Account email address that the cluster uses to authenticate with Google Identity. This field is used for authentication with the GCS and BigQuery data sources.
+* `availability` - (Optional) Availability type used for all nodes. Valid values are `PREEMPTIBLE_GCP`, `PREEMPTIBLE_WITH_FALLBACK_GCP` and `ON_DEMAND_GCP`, default: `ON_DEMAND_GCP`.
+* `boot_disk_size` (optional, int) Boot disk size in GB
+* `zone_id` (optional)  Identifier for the availability zone in which the cluster resides. This can be one of the following:
+  * `HA` (default): High availability, spread nodes across availability zones for a Databricks deployment region.
+  * `AUTO`: Databricks picks an availability zone to schedule the cluster on.
+  * name of a GCP availability zone: pick one of the available zones from the [list of available availability zones](https://cloud.google.com/compute/docs/regions-zones#available).
 
 ## docker_image
 

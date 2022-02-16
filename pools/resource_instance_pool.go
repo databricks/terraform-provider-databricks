@@ -24,6 +24,12 @@ type InstancePoolAzureAttributes struct {
 	SpotBidMaxPrice float64               `json:"spot_bid_max_price,omitempty" tf:"force_new"`
 }
 
+// InstancePoolGcpAttributes contains aws attributes for GCP Databricks deployments for instance pools
+// https://docs.gcp.databricks.com/dev-tools/api/latest/instance-pools.html#instancepoolgcpattributes
+type InstancePoolGcpAttributes struct {
+	Availability clusters.Availability `json:"availability,omitempty" tf:"force_new"`
+}
+
 // InstancePoolDiskType contains disk type information for each of the different cloud service providers
 type InstancePoolDiskType struct {
 	AzureDiskVolumeType string `json:"azure_disk_volume_type,omitempty" tf:"force_new"`
@@ -46,6 +52,7 @@ type InstancePool struct {
 	IdleInstanceAutoTerminationMinutes int32                        `json:"idle_instance_autotermination_minutes"`
 	AwsAttributes                      *InstancePoolAwsAttributes   `json:"aws_attributes,omitempty" tf:"force_new,suppress_diff"`
 	AzureAttributes                    *InstancePoolAzureAttributes `json:"azure_attributes,omitempty" tf:"force_new,suppress_diff"`
+	GcpAttributes                      *InstancePoolGcpAttributes   `json:"gcp_attributes,omitempty" tf:"force_new,suppress_diff"`
 	NodeTypeID                         string                       `json:"node_type_id" tf:"force_new"`
 	CustomTags                         map[string]string            `json:"custom_tags,omitempty" tf:"force_new"`
 	EnableElasticDisk                  bool                         `json:"enable_elastic_disk,omitempty" tf:"force_new,suppress_diff"`
@@ -70,6 +77,7 @@ type InstancePoolAndStats struct {
 	MaxCapacity                        int32                        `json:"max_capacity,omitempty"`
 	AwsAttributes                      *InstancePoolAwsAttributes   `json:"aws_attributes,omitempty"`
 	AzureAttributes                    *InstancePoolAzureAttributes `json:"azure_attributes,omitempty"`
+	GcpAttributes                      *InstancePoolGcpAttributes   `json:"gcp_attributes,omitempty"`
 	NodeTypeID                         string                       `json:"node_type_id"`
 	DefaultTags                        map[string]string            `json:"default_tags,omitempty" tf:"computed"`
 	CustomTags                         map[string]string            `json:"custom_tags,omitempty"`
@@ -135,8 +143,9 @@ func (a InstancePoolsAPI) Delete(instancePoolID string) error {
 func ResourceInstancePool() *schema.Resource {
 	s := common.StructToSchema(InstancePool{}, func(s map[string]*schema.Schema) map[string]*schema.Schema {
 		s["enable_elastic_disk"].Default = true
-		s["aws_attributes"].ConflictsWith = []string{"azure_attributes"}
-		s["azure_attributes"].ConflictsWith = []string{"aws_attributes"}
+		s["aws_attributes"].ConflictsWith = []string{"azure_attributes", "gcp_attributes"}
+		s["azure_attributes"].ConflictsWith = []string{"aws_attributes", "gcp_attributes"}
+		s["gcp_attributes"].ConflictsWith = []string{"azure_attributes", "aws_attributes"}
 		if v, err := common.SchemaPath(s, "aws_attributes", "availability"); err == nil {
 			v.Default = clusters.AwsAvailabilitySpot
 			v.ValidateFunc = validation.StringInSlice([]string{
@@ -152,6 +161,14 @@ func ResourceInstancePool() *schema.Resource {
 			v.ValidateFunc = validation.StringInSlice([]string{
 				clusters.AzureAvailabilitySpot,
 				clusters.AzureAvailabilityOnDemand,
+			}, false)
+		}
+		if v, err := common.SchemaPath(s, "gcp_attributes", "availability"); err == nil {
+			v.Default = clusters.GcpAvailabilityOnDemand
+			v.ValidateFunc = validation.StringInSlice([]string{
+				clusters.GcpAvailabilityOnDemand,
+				clusters.GcpAvailabilityPreemptible,
+				clusters.GcpAvailabilityPreemptibleWithFallback,
 			}, false)
 		}
 		if v, err := common.SchemaPath(s, "disk_spec", "disk_type", "azure_disk_volume_type"); err == nil {

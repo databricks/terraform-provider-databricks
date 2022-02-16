@@ -9,8 +9,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
-type listIPAccessListsResponse struct {
-	ListIPAccessListsResponse []ipAccessListStatus `json:"ip_access_lists,omitempty"`
+type ListIPAccessListsResponse struct {
+	ListIPAccessListsResponse []IpAccessListStatus `json:"ip_access_lists,omitempty"`
 }
 
 type createIPAccessListRequest struct {
@@ -19,7 +19,7 @@ type createIPAccessListRequest struct {
 	IPAddresses []string `json:"ip_addresses"`
 }
 
-type ipAccessListStatus struct {
+type IpAccessListStatus struct {
 	ListID        string   `json:"list_id"`
 	Label         string   `json:"label"`
 	ListType      string   `json:"list_type"`
@@ -32,15 +32,15 @@ type ipAccessListStatus struct {
 	Enabled       bool     `json:"enabled,omitempty"`
 }
 
-type ipAccessListStatusWrapper struct {
-	IPAccessList ipAccessListStatus `json:"ip_access_list,omitempty"`
+type IpAccessListStatusWrapper struct {
+	IPAccessList IpAccessListStatus `json:"ip_access_list,omitempty"`
 }
 
 type ipAccessListUpdateRequest struct {
 	Label       string   `json:"label"`
 	ListType    string   `json:"list_type"`
 	IPAddresses []string `json:"ip_addresses"`
-	Enabled     bool     `json:"enabled,omitempty"`
+	Enabled     bool     `json:"enabled,omitempty" tf:"default:true"`
 }
 
 // Preview feature: https://docs.databricks.com/security/network/ip-access-list.html
@@ -59,8 +59,8 @@ func NewIPAccessListsAPI(ctx context.Context, m interface{}) ipAccessListsAPI {
 }
 
 // Create creates the IP Access List to given the instance pool configuration
-func (a ipAccessListsAPI) Create(cr createIPAccessListRequest) (status ipAccessListStatus, err error) {
-	wrapper := ipAccessListStatusWrapper{}
+func (a ipAccessListsAPI) Create(cr createIPAccessListRequest) (status IpAccessListStatus, err error) {
+	wrapper := IpAccessListStatusWrapper{}
 	err = a.client.Post(a.context, "/ip-access-lists", cr, &wrapper)
 	if err != nil {
 		return
@@ -78,16 +78,16 @@ func (a ipAccessListsAPI) Delete(objectID string) (err error) {
 	return
 }
 
-func (a ipAccessListsAPI) Read(objectID string) (status ipAccessListStatus, err error) {
-	wrapper := ipAccessListStatusWrapper{}
+func (a ipAccessListsAPI) Read(objectID string) (status IpAccessListStatus, err error) {
+	wrapper := IpAccessListStatusWrapper{}
 	err = a.client.Get(a.context, "/ip-access-lists/"+objectID, nil, &wrapper)
 	status = wrapper.IPAccessList
 	return
 }
 
-func (a ipAccessListsAPI) List() (listResponse listIPAccessListsResponse, err error) {
-	listResponse = listIPAccessListsResponse{}
-	err = a.client.Get(a.context, "/ip-access-lists", &listResponse, nil)
+func (a ipAccessListsAPI) List() (listResponse ListIPAccessListsResponse, err error) {
+	listResponse = ListIPAccessListsResponse{}
+	err = a.client.Get(a.context, "/ip-access-lists", nil, &listResponse)
 	return
 }
 
@@ -100,7 +100,6 @@ func ResourceIPAccessList() *schema.Resource {
 			Type:         schema.TypeString,
 			ValidateFunc: validation.Any(validation.IsIPv4Address, validation.IsCIDR),
 		}
-		s["enabled"].Default = true
 		return s
 	})
 	return common.Resource{

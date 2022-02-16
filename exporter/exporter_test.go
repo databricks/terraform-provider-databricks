@@ -10,6 +10,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/databrickslabs/terraform-provider-databricks/access"
 	"github.com/databrickslabs/terraform-provider-databricks/aws"
 	"github.com/databrickslabs/terraform-provider-databricks/clusters"
 	"github.com/databrickslabs/terraform-provider-databricks/commands"
@@ -210,12 +211,19 @@ var emptyGitCredentials = qa.HTTPFixture{
 	Response: repos.GitCredentialList{},
 }
 
+var emptyIpAccessLIst = qa.HTTPFixture{
+	Method:   http.MethodGet,
+	Resource: "/api/2.0/ip-access-lists",
+	Response: map[string]interface{}{},
+}
+
 func TestImportingUsersGroupsSecretScopes(t *testing.T) {
 	qa.HTTPFixturesApply(t,
 		[]qa.HTTPFixture{
 			meAdminFixture,
 			repoListFixture,
 			emptyGitCredentials,
+			emptyIpAccessLIst,
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/preview/scim/v2/Groups?",
@@ -375,6 +383,7 @@ func TestImportingNoResourcesError(t *testing.T) {
 				Response: scim.GroupList{Resources: []scim.Group{}},
 			},
 			emptyGitCredentials,
+			emptyIpAccessLIst,
 			{
 				Method:       "GET",
 				Resource:     "/api/2.0/global-init-scripts",
@@ -1067,5 +1076,71 @@ func TestImportingGitCredentials_Error(t *testing.T) {
 
 			err := ic.Run()
 			assert.Error(t, err)
+		})
+}
+
+func TestImportingIPAccessLists(t *testing.T) {
+	resp := access.IpAccessListStatus{
+		ListID:       "123",
+		Label:        "block_list",
+		ListType:     "BLOCK",
+		IPAddresses:  []string{"1.2.3.4"},
+		AddressCount: 2,
+		Enabled:      true,
+	}
+	resp2 := resp
+	resp2.IPAddresses = []string{}
+	resp2.ListID = "124"
+	qa.HTTPFixturesApply(t,
+		[]qa.HTTPFixture{
+			meAdminFixture,
+			repoListFixture,
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/global-init-scripts",
+				Response: map[string]interface{}{},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/ip-access-lists",
+				Response: access.ListIPAccessListsResponse{
+					ListIPAccessListsResponse: []access.IpAccessListStatus{resp, resp2},
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/ip-access-lists/123",
+				Response: access.IpAccessListStatusWrapper{
+					IPAccessList: resp,
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/ip-access-lists/124",
+				Response: access.IpAccessListStatusWrapper{
+					IPAccessList: resp2,
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/workspace-conf?keys=enableIpAccessLists%2CmaxTokenLifetimeDays%2CenableTokensConfig",
+				Response: map[string]interface{}{
+					"enableIpAccessLists":  "true",
+					"maxTokenLifetimeDays": nil,
+					"enableTokensConfig":   "true",
+				},
+			},
+		},
+		func(ctx context.Context, client *common.DatabricksClient) {
+			tmpDir := fmt.Sprintf("/tmp/tf-%s", qa.RandomName())
+			defer os.RemoveAll(tmpDir)
+
+			ic := newImportContext(client)
+			ic.Directory = tmpDir
+			ic.listing = "workspace,access"
+			ic.services = "workspace,access"
+
+			err := ic.Run()
+			assert.NoError(t, err)
 		})
 }

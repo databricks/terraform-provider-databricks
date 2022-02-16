@@ -32,7 +32,7 @@ The following arguments are supported:
 
 * `list_type` -  Can only be "ALLOW" or "BLOCK"
 * `ip_addresses` -  This is a field to allow the group to have instance pool create priviliges.
-* `label` - (Optional) This is the display name for the given IP ACL List.
+* `label` -  This is the display name for the given IP ACL List.
 * `enabled` - (Optional) Boolean `true` or `false` indicating whether this list should be active.  Defaults to `true`
 
 ## Attribute Reference

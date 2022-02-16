@@ -66,8 +66,8 @@ func TestIPACLCreate(t *testing.T) {
 					ListType:    TestingListType,
 					IPAddresses: TestingIPAddresses,
 				},
-				Response: ipAccessListStatusWrapper{
-					IPAccessList: ipAccessListStatus{
+				Response: IpAccessListStatusWrapper{
+					IPAccessList: IpAccessListStatus{
 						ListID:        TestingID,
 						Label:         TestingLabel,
 						ListType:      TestingListType,
@@ -84,8 +84,8 @@ func TestIPACLCreate(t *testing.T) {
 			{
 				Method:   http.MethodGet,
 				Resource: "/api/2.0/ip-access-lists/" + TestingID,
-				Response: ipAccessListStatusWrapper{
-					IPAccessList: ipAccessListStatus{
+				Response: IpAccessListStatusWrapper{
+					IPAccessList: IpAccessListStatus{
 						ListID:        TestingID,
 						Label:         TestingLabel,
 						ListType:      TestingListType,
@@ -148,8 +148,8 @@ func TestIPACLUpdate(t *testing.T) {
 			{
 				Method:   http.MethodGet,
 				Resource: "/api/2.0/ip-access-lists/" + TestingID,
-				Response: ipAccessListStatusWrapper{
-					IPAccessList: ipAccessListStatus{
+				Response: IpAccessListStatusWrapper{
+					IPAccessList: IpAccessListStatus{
 						ListID:        TestingID,
 						Label:         TestingLabel,
 						ListType:      TestingListType,
@@ -166,8 +166,8 @@ func TestIPACLUpdate(t *testing.T) {
 			{
 				Method:   http.MethodPut,
 				Resource: "/api/2.0/ip-access-lists/" + TestingID,
-				Response: ipAccessListStatusWrapper{
-					IPAccessList: ipAccessListStatus{
+				Response: IpAccessListStatusWrapper{
+					IPAccessList: IpAccessListStatus{
 						ListID:        TestingID,
 						Label:         TestingLabel,
 						ListType:      TestingListType,
@@ -225,8 +225,8 @@ func TestIPACLRead(t *testing.T) {
 			{
 				Method:   http.MethodGet,
 				Resource: "/api/2.0/ip-access-lists/" + TestingID,
-				Response: ipAccessListStatusWrapper{
-					IPAccessList: ipAccessListStatus{
+				Response: IpAccessListStatusWrapper{
+					IPAccessList: IpAccessListStatus{
 						ListID:        TestingID,
 						Label:         TestingLabel,
 						ListType:      TestingListType,
@@ -332,4 +332,21 @@ func TestIPACLDelete_Error(t *testing.T) {
 	assert.Error(t, err)
 	qa.AssertErrorStartsWith(t, err, "IP access list is not available in ")
 	assert.Equal(t, TestingID, d.Id())
+}
+
+func TestListIpAccessLists(t *testing.T) {
+	client, server, err := qa.HttpFixtureClient(t, []qa.HTTPFixture{
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/ip-access-lists",
+			Response: map[string]interface{}{},
+		},
+	})
+	defer server.Close()
+	require.NoError(t, err)
+
+	ctx := context.Background()
+	ipLists, err := NewIPAccessListsAPI(ctx, client).List()
+	require.NoError(t, err)
+	assert.Equal(t, len(ipLists.ListIPAccessListsResponse), 0)
 }

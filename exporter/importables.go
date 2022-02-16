@@ -11,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/databrickslabs/terraform-provider-databricks/access"
 	"github.com/databrickslabs/terraform-provider-databricks/clusters"
 	"github.com/databrickslabs/terraform-provider-databricks/common"
 	"github.com/databrickslabs/terraform-provider-databricks/jobs"
@@ -28,11 +29,12 @@ import (
 )
 
 var (
-	adlsGen2Regex = regexp.MustCompile(`^(abfss?)://([^@]+)@([^.]+)\.(?:[^/]+)(/.*)?$`)
-	adlsGen1Regex = regexp.MustCompile(`^(adls?)://([^.]+)\.(?:[^/]+)(/.*)?$`)
-	wasbsRegex    = regexp.MustCompile(`^(wasbs?)://([^@]+)@([^.]+)\.(?:[^/]+)(/.*)?$`)
-	s3Regex       = regexp.MustCompile(`^(s3a?)://([^/]+)(/.*)?$`)
-	gsRegex       = regexp.MustCompile(`^gs://([^/]+)(/.*)?$`)
+	adlsGen2Regex           = regexp.MustCompile(`^(abfss?)://([^@]+)@([^.]+)\.(?:[^/]+)(/.*)?$`)
+	adlsGen1Regex           = regexp.MustCompile(`^(adls?)://([^.]+)\.(?:[^/]+)(/.*)?$`)
+	wasbsRegex              = regexp.MustCompile(`^(wasbs?)://([^@]+)@([^.]+)\.(?:[^/]+)(/.*)?$`)
+	s3Regex                 = regexp.MustCompile(`^(s3a?)://([^/]+)(/.*)?$`)
+	gsRegex                 = regexp.MustCompile(`^gs://([^/]+)(/.*)?$`)
+	globalWorkspaceConfName = "global_workspace_conf"
 )
 
 func generateMountBody(ic *importContext, body *hclwrite.Body, r *resource) error {
@@ -843,6 +845,54 @@ var resourcesMap map[string]importable = map[string]importable{
 			b.SetAttributeRaw("personal_access_token", ic.variable("git_token_"+r.Name, "Git token for "+r.Name))
 			b.SetAttributeValue("git_provider", cty.StringVal(r.Data.Get("git_provider").(string)))
 			b.SetAttributeValue("git_username", cty.StringVal(r.Data.Get("git_username").(string)))
+			return nil
+		},
+	},
+	"databricks_workspace_conf": {
+		Service: "workspace",
+		Name: func(d *schema.ResourceData) string {
+			return globalWorkspaceConfName
+		},
+		Import: func(ic *importContext, r *resource) error {
+			wsConfAPI := workspace.NewWorkspaceConfAPI(ic.Context, ic.Client)
+			keys := map[string]interface{}{"enableIpAccessLists": false, "maxTokenLifetimeDays": 0, "enableTokensConfig": false}
+			err := wsConfAPI.Read(&keys)
+			if err != nil {
+				return err
+			}
+			r.Data.Set("custom_config", keys)
+			return nil
+		},
+	},
+	"databricks_ip_access_list": {
+		Service: "access",
+		Name: func(d *schema.ResourceData) string {
+			return d.Get("list_type").(string) + "_" + d.Get("label").(string)
+		},
+		List: func(ic *importContext) error {
+			ipListsResp, err := access.NewIPAccessListsAPI(ic.Context, ic.Client).List()
+			if err != nil {
+				return err
+			}
+			ipLists := ipListsResp.ListIPAccessListsResponse
+			for offset, ipList := range ipLists {
+				ic.Emit(&resource{
+					Resource: "databricks_ip_access_list",
+					ID:       ipList.ListID,
+				})
+				log.Printf("[INFO] Scanned %d of %d IP Access Lists", offset+1, len(ipLists))
+			}
+			if len(ipLists) > 0 {
+				ic.Emit(&resource{
+					Resource: "databricks_workspace_conf",
+					ID:       globalWorkspaceConfName,
+					Data: ic.Resources["databricks_workspace_conf"].Data(
+						&terraform.InstanceState{
+							ID:         globalWorkspaceConfName,
+							Attributes: map[string]string{},
+						}),
+				})
+			}
 			return nil
 		},
 	},

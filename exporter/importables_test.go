@@ -20,6 +20,7 @@ import (
 	"github.com/databrickslabs/terraform-provider-databricks/secrets"
 	"github.com/databrickslabs/terraform-provider-databricks/storage"
 	"github.com/databrickslabs/terraform-provider-databricks/workspace"
+	"github.com/hashicorp/hcl/v2/hclwrite"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -609,5 +610,72 @@ func TestRepoListFails(t *testing.T) {
 		ic.Context = ctx
 		err := resourcesMap["databricks_repo"].List(ic)
 		assert.EqualError(t, err, "nope")
+	})
+}
+
+func TestNotebookName(t *testing.T) {
+	d := workspace.ResourceNotebook().TestResourceData()
+	d.SetId("x")
+	assert.Equal(t, "x", resourcesMap["databricks_notebook"].Name(d))
+
+	d.Set("path", "/Foo/Bar/Baz")
+	assert.Equal(t, "foo_bar_baz", resourcesMap["databricks_notebook"].Name(d))
+}
+
+func TestNotebookList(t *testing.T) {
+	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/workspace/list?path=%2F",
+			Response: workspace.ObjectList{
+				Objects: []workspace.ObjectStatus{
+					{
+						Path: "/Repos/Foo/Bar",
+					},
+					{
+						Path:       "/First/Second",
+						ObjectType: "NOTEBOOK",
+					},
+				},
+			},
+		},
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/workspace/get-status?path=a",
+			Response: workspace.ObjectStatus{
+				ObjectID:   123,
+				ObjectType: "NOTEBOOK",
+				Path:       "a",
+				Language:   "PYTHON",
+			},
+		},
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/workspace/export?format=SOURCE&path=a",
+			Response: workspace.ExportPath{
+				Content: "YWJj",
+			},
+		},
+	}, func(ctx context.Context, client *common.DatabricksClient) {
+		ic := importContextForTest()
+		ic.Client = client
+		ic.Context = ctx
+
+		err := resourcesMap["databricks_notebook"].List(ic)
+		assert.NoError(t, err)
+		assert.True(t, ic.testEmits["databricks_notebook[<unknown>] (id: /First/Second)"])
+
+		ic.Directory = fmt.Sprintf("/tmp/tf-%s", qa.RandomName())
+		defer os.RemoveAll(ic.Directory)
+
+		// dstFile := fmt.Sprintf("%s/files/_abc_900150983cd24fb0d6963f7d28e17f72", ic.Directory)
+		// err := os.MkdirAll(dstFile, 0755)
+		// assert.NoError(t, err)
+		f := hclwrite.NewEmptyFile()
+		err = resourcesMap["databricks_notebook"].Body(ic, f.Body(), &resource{
+			ID:   "a",
+			Data: workspace.ResourceNotebook().TestResourceData(),
+		})
+		assert.NoError(t, err)
 	})
 }

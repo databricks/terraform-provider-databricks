@@ -327,7 +327,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			if job.NotebookTask != nil {
 				ic.Emit(&resource{
 					Resource: "databricks_notebook",
-					ID: job.NotebookTask.NotebookPath,
+					ID:       job.NotebookTask.NotebookPath,
 				})
 			}
 			return ic.importLibraries(r.Data, s)
@@ -913,7 +913,7 @@ var resourcesMap map[string]importable = map[string]importable{
 				name = strings.TrimPrefix(name, "/")
 			}
 			re := regexp.MustCompile(`[^0-9A-Za-z_]`)
-			return re.ReplaceAllString(name, "_")
+			return strings.ToLower(re.ReplaceAllString(name, "_"))
 		},
 		List: func(ic *importContext) error {
 			notebooksAPI := workspace.NewNotebooksAPI(ic.Context, ic.Client)
@@ -925,6 +925,8 @@ var resourcesMap map[string]importable = map[string]importable{
 				if strings.HasPrefix("/Repos", notebook.Path) {
 					continue
 				}
+				// TODO: emit permissions for notebook folders if non-default,
+				// as per-notebook permission entry would be a noise in the state
 				ic.Emit(&resource{
 					Resource: "databricks_notebook",
 					ID:       notebook.Path,
@@ -933,18 +935,6 @@ var resourcesMap map[string]importable = map[string]importable{
 					log.Printf("[INFO] Scanned %d of %d notebooks",
 						offset+1, len(notebookList))
 				}
-			}
-			return nil
-		},
-		Import: func(ic *importContext, r *resource) error {
-			if ic.meAdmin {
-				// TODO: emit permissions for notebook folders if non-default,
-				// as per-notebook permission entry would be a noise in the state
-				ic.Emit(&resource{
-					Resource: "databricks_permissions",
-					ID:       fmt.Sprintf("/notebooks/%s", r.Data.Get("object_id")),
-					Name:     "notebook_" + ic.Importables["databricks_notebook"].Name(r.Data),
-				})
 			}
 			return nil
 		},

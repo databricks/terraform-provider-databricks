@@ -22,6 +22,7 @@ import (
 	"github.com/databrickslabs/terraform-provider-databricks/repos"
 	"github.com/databrickslabs/terraform-provider-databricks/scim"
 	"github.com/databrickslabs/terraform-provider-databricks/secrets"
+	"github.com/databrickslabs/terraform-provider-databricks/workspace"
 	"github.com/hashicorp/hcl/v2/hclwrite"
 
 	"github.com/stretchr/testify/assert"
@@ -223,6 +224,11 @@ func TestImportingUsersGroupsSecretScopes(t *testing.T) {
 			meAdminFixture,
 			repoListFixture,
 			emptyGitCredentials,
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/workspace/list?path=%2F",
+				Response: workspace.ObjectList{},
+			},
 			emptyIpAccessLIst,
 			{
 				Method:   "GET",
@@ -396,6 +402,11 @@ func TestImportingNoResourcesError(t *testing.T) {
 				Method:   "GET",
 				Resource: "/api/2.0/jobs/list",
 				Response: jobs.JobList{},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/workspace/list?path=%2F",
+				Response: workspace.ObjectList{},
 			},
 			{
 				Method:   "GET",
@@ -784,10 +795,10 @@ func TestImportingJobs_JobList(t *testing.T) {
 }
 
 func TestImportingWithError(t *testing.T) {
-	err := Run("-directory", "/bin/sh", "-services", "groups,users")
+	err := Run("-directory", "/bin/sh", "-services", "groups,users", "-skip-interactive")
 	assert.EqualError(t, err, "the path /bin/sh is not a directory")
 
-	err = Run("-directory", "/bin/abcd", "-services", "groups,users", "-prefix", "abc")
+	err = Run("-directory", "/bin/abcd", "-services", "groups,users", "-prefix", "abc", "-skip-interactive")
 	assert.EqualError(t, err, "can't create directory /bin/abcd")
 }
 

@@ -168,12 +168,12 @@ func (a NotebooksAPI) recursiveAddPaths(path string, pathList *[]ObjectStatus) e
 	return err
 }
 
-type objectList struct {
+type ObjectList struct {
 	Objects []ObjectStatus `json:"objects,omitempty"`
 }
 
 func (a NotebooksAPI) list(path string) ([]ObjectStatus, error) {
-	var notebookList objectList
+	var notebookList ObjectList
 	err := a.client.Get(a.context, "/workspace/list", map[string]string{
 		"path": path,
 	}, &notebookList)

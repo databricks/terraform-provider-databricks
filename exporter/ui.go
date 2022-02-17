@@ -3,17 +3,19 @@ package exporter
 import (
 	"bufio"
 	"fmt"
+	"io"
 	"os"
 	"strings"
 )
 
-var input = os.Stdin
+var cliInput io.Reader = os.Stdin
+var cliOutput io.Writer = os.Stdout
 
 func askFor(prompt string) string {
 	var s string
-	r := bufio.NewReader(input)
+	r := bufio.NewReader(cliInput)
 	for {
-		fmt.Fprint(os.Stdout, prompt+" ")
+		fmt.Fprint(cliOutput, prompt+" ")
 		s, _ = r.ReadString('\n')
 		if s != "" {
 			break

@@ -2,6 +2,7 @@ package exporter
 
 import (
 	"bytes"
+	"context"
 	"testing"
 
 	"github.com/databrickslabs/terraform-provider-databricks/common"
@@ -20,6 +21,7 @@ func TestInteractivePrompts(t *testing.T) {
 	cliOutput = &bytes.Buffer{}
 	ic := &importContext{
 		Client: &common.DatabricksClient{},
+		Context: context.Background(),
 		Importables: map[string]importable{
 			"x": {
 				Service: "a",

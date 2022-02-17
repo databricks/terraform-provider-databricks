@@ -276,6 +276,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			{Path: "spark_python_task.python_file", Resource: "databricks_dbfs_file", Match: "dbfs_path"},
 			{Path: "spark_python_task.parameters", Resource: "databricks_dbfs_file", Match: "dbfs_path"},
 			{Path: "spark_jar_task.jar_uri", Resource: "databricks_dbfs_file", Match: "dbfs_path"},
+			{Path: "notebook_task.notebook_path", Resource: "databricks_notebook"},
 		},
 		Import: func(ic *importContext, r *resource) error {
 			var job jobs.JobSettings
@@ -322,6 +323,12 @@ var resourcesMap map[string]importable = map[string]importable{
 						r.Data.Set("library", libs)
 					}
 				}
+			}
+			if job.NotebookTask != nil {
+				ic.Emit(&resource{
+					Resource: "databricks_notebook",
+					ID: job.NotebookTask.NotebookPath,
+				})
 			}
 			return ic.importLibraries(r.Data, s)
 		},
@@ -914,9 +921,10 @@ var resourcesMap map[string]importable = map[string]importable{
 			if err != nil {
 				return err
 			}
-			// TODO: emit permissions for notebook folders if non-default,
-			// as per-notebook permission entry would be a noise in the state
 			for offset, notebook := range notebookList {
+				if strings.HasPrefix("/Repos", notebook.Path) {
+					continue
+				}
 				ic.Emit(&resource{
 					Resource: "databricks_notebook",
 					ID:       notebook.Path,
@@ -925,6 +933,18 @@ var resourcesMap map[string]importable = map[string]importable{
 					log.Printf("[INFO] Scanned %d of %d notebooks",
 						offset+1, len(notebookList))
 				}
+			}
+			return nil
+		},
+		Import: func(ic *importContext, r *resource) error {
+			if ic.meAdmin {
+				// TODO: emit permissions for notebook folders if non-default,
+				// as per-notebook permission entry would be a noise in the state
+				ic.Emit(&resource{
+					Resource: "databricks_permissions",
+					ID:       fmt.Sprintf("/notebooks/%s", r.Data.Get("object_id")),
+					Name:     "notebook_" + ic.Importables["databricks_notebook"].Name(r.Data),
+				})
 			}
 			return nil
 		},

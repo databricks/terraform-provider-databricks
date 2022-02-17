@@ -6,6 +6,8 @@
 * Fixed issue at `databricks_mount` where new cluster was created for S3 mount even when `cluster_id` was specified ([#1064](https://github.com/databrickslabs/terraform-provider-databricks/issues/1064)).
 * Allow to disable auto-termination for Databricks SQL endpoints ([#900](https://github.com/databrickslabs/terraform-provider-databricks/pull/900)).
 * Added new `gcp_attributes` to `databricks_cluster` and `databricks_instance_pool` ([#1126](https://github.com/databrickslabs/terraform-provider-databricks/pull/1126)).
+* Added exporter functionality for `databricks_ip_access_list` and `databricks_workspace_conf` ([#1125](https://github.com/databrickslabs/terraform-provider-databricks/pull/1125)).
+* Added `graviton` selector for `databricks_node_type` and `databricks_spark_version` data sources ([#1127](https://github.com/databrickslabs/terraform-provider-databricks/pull/1127)).
 
 ## 0.4.9
 

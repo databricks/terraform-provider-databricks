@@ -20,6 +20,7 @@ type NodeTypeRequest struct {
 	Category              string `json:"category,omitempty"`
 	PhotonWorkerCapable   bool   `json:"photon_worker_capable,omitempty"`
 	PhotonDriverCapable   bool   `json:"photon_driver_capable,omitempty"`
+	Graviton              bool   `json:"graviton,omitempty"`
 	IsIOCacheEnabled      bool   `json:"is_io_cache_enabled,omitempty"`
 	SupportPortForwarding bool   `json:"support_port_forwarding,omitempty"`
 }
@@ -97,6 +98,7 @@ type NodeType struct {
 	NodeInstanceType      *NodeInstanceType             `json:"node_instance_type,omitempty"`
 	PhotonWorkerCapable   bool                          `json:"photon_worker_capable,omitempty"`
 	PhotonDriverCapable   bool                          `json:"photon_driver_capable,omitempty"`
+	Graviton              bool                          `json:"is_graviton,omitempty"`
 }
 
 func (a ClustersAPI) defaultSmallestNodeType() string {
@@ -155,6 +157,9 @@ func (a ClustersAPI) GetSmallestNodeType(r NodeTypeRequest) string {
 			continue
 		}
 		if r.PhotonWorkerCapable && nt.PhotonWorkerCapable != r.PhotonWorkerCapable {
+			continue
+		}
+		if r.Graviton && nt.Graviton != r.Graviton {
 			continue
 		}
 		return nt.NodeTypeID

@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"sort"
 	"strconv"
 	"strings"
 
@@ -38,6 +39,7 @@ func (a WorkspaceConfAPI) Read(conf *map[string]interface{}) error {
 	for k := range *conf {
 		keys = append(keys, k)
 	}
+	sort.Strings(keys)
 	return a.client.Get(a.context, "/workspace-conf", map[string]string{
 		"keys": strings.Join(keys, ","),
 	}, &conf)

@@ -36,6 +36,7 @@ type SparkVersionRequest struct {
 	Scala           string `json:"scala,omitempty" tf:"optional,default:2.12"`
 	SparkVersion    string `json:"spark_version,omitempty" tf:"optional,default:"`
 	Photon          bool   `json:"photon,omitempty" tf:"optional,default:false"`
+	Graviton        bool   `json:"graviton,omitempty"`
 }
 
 // ListSparkVersions returns smallest (or default) node type id given the criteria
@@ -79,6 +80,7 @@ func (sparkVersions SparkVersionsList) LatestSparkVersion(req SparkVersionReques
 				(strings.Contains(version.Version, "-hls-") == req.Genomics) &&
 				(strings.Contains(version.Version, "-gpu-") == req.GPU) &&
 				(strings.Contains(version.Version, "-photon-") == req.Photon) &&
+				(strings.Contains(version.Version, "-aarch64-") == req.Graviton) &&
 				(strings.Contains(version.Description, "Beta") == req.Beta))
 			if matches && req.LongTermSupport {
 				matches = (matches && (strings.Contains(version.Description, "LTS") || strings.Contains(version.Version, "-esr-")))

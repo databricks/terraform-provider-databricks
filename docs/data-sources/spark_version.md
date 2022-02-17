@@ -40,15 +40,16 @@ resource "databricks_cluster" "research" {
 
 Data source allows you to pick groups by the following attributes:
 
-* `latest` - (boolean, optional) if we should return only the latest version if there is more than one result.  Default to `true`. If set to `false` and multiple versions are matching, throws an error
-* `long_term_support` - (boolean, optional) if we should limit the search only to LTS (long term support) & ESR (extended support) versions. Default to `false`
-* `ml` - (boolean, optional) if we should limit the search only to ML runtimes. Default to `false`
-* `genomics` - (boolean, optional)  if we should limit the search only to Genomics (HLS) runtimes. Default to `false`
-* `gpu` - (boolean, optional)  if we should limit the search only to runtimes that support GPUs. Default to `false`
-* `photon` - (boolean, optional)  if we should limit the search only to Photon runtimes. Default to `false`
-* `beta` - (boolean, optional) if we should limit the search only to runtimes that are in Beta stage. Default to `false`
-* `scala` - (string, optional) if we should limit the search only to runtimes that are based on specific Scala version. Default to `2.12`
-* `spark_version` - (string, optional) if we should limit the search only to runtimes that are based on specific Spark version. Default to empty string.  It could be specified as `3`, or `3.0`, or full version, like, `3.0.1`
+* `latest` - (boolean, optional) if we should return only the latest version if there is more than one result.  Default to `true`. If set to `false` and multiple versions are matching, throws an error.
+* `long_term_support` - (boolean, optional) if we should limit the search only to LTS (long term support) & ESR (extended support) versions. Default to `false`.
+* `ml` - (boolean, optional) if we should limit the search only to ML runtimes. Default to `false`.
+* `genomics` - (boolean, optional)  if we should limit the search only to Genomics (HLS) runtimes. Default to `false`.
+* `gpu` - (boolean, optional)  if we should limit the search only to runtimes that support GPUs. Default to `false`.
+* `photon` - (boolean, optional)  if we should limit the search only to Photon runtimes. Default to `false`.
+* `graviton` - (boolean, optional)  if we should limit the search only to runtimes supporting AWS Graviton CPUs. Default to `false`.
+* `beta` - (boolean, optional) if we should limit the search only to runtimes that are in Beta stage. Default to `false`.
+* `scala` - (string, optional) if we should limit the search only to runtimes that are based on specific Scala version. Default to `2.12`.
+* `spark_version` - (string, optional) if we should limit the search only to runtimes that are based on specific Spark version. Default to empty string.  It could be specified as `3`, or `3.0`, or full version, like, `3.0.1`.
 
 ## Attribute Reference
 

@@ -1123,12 +1123,13 @@ func TestImportingIPAccessLists(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/workspace-conf?keys=enableIpAccessLists%2CmaxTokenLifetimeDays%2CenableTokensConfig",
+				Resource: "/api/2.0/workspace-conf?keys=enableIpAccessLists%2CenableTokensConfig%2CmaxTokenLifetimeDays",
 				Response: map[string]interface{}{
 					"enableIpAccessLists":  "true",
-					"maxTokenLifetimeDays": nil,
+					"maxTokenLifetimeDays": "90",
 					"enableTokensConfig":   "true",
 				},
+				ReuseRequest: true,
 			},
 		},
 		func(ctx context.Context, client *common.DatabricksClient) {

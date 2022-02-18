@@ -12,7 +12,7 @@ func TestDataSourceNotebookPaths(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/workspace/list?path=%2Fa%2Fb%2Fc",
-				Response: objectList{
+				Response: ObjectList{
 					Objects: []ObjectStatus{
 						{
 							ObjectID:   987,
@@ -25,7 +25,7 @@ func TestDataSourceNotebookPaths(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/workspace/list?path=%2Fa%2Fb%2Fc%2Fd",
-				Response: objectList{
+				Response: ObjectList{
 					Objects: []ObjectStatus{
 						{
 							ObjectID:   988,
@@ -60,7 +60,7 @@ func TestDataSourceNotebookPaths_NoRecursive(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/workspace/list?path=%2Fa%2Fb%2Fc",
-				Response: objectList{
+				Response: ObjectList{
 					Objects: []ObjectStatus{
 						{
 							ObjectID:   988,

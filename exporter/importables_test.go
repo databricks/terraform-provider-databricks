@@ -30,8 +30,9 @@ func importContextForTest() *importContext {
 	return &importContext{
 		Importables: resourcesMap,
 		Resources:   p.ResourcesMap,
-		Files: map[string]*hclwrite.File{},
+		Files:       map[string]*hclwrite.File{},
 		testEmits:   map[string]bool{},
+		nameFixes:   nameFixes,
 	}
 }
 
@@ -542,15 +543,6 @@ func TestRepoListFails(t *testing.T) {
 	})
 }
 
-func TestNotebookName(t *testing.T) {
-	d := workspace.ResourceNotebook().TestResourceData()
-	d.SetId("x")
-	assert.Equal(t, "x", resourcesMap["databricks_notebook"].Name(d))
-
-	d.Set("path", "/Foo/Bar/Baz")
-	assert.Equal(t, "foo_bar_baz", resourcesMap["databricks_notebook"].Name(d))
-}
-
 func testGenerate(t *testing.T, fixtures []qa.HTTPFixture, services string, cb func(*importContext)) {
 	qa.HTTPFixturesApply(t, fixtures, func(ctx context.Context, client *common.DatabricksClient) {
 		ic := importContextForTest()
@@ -607,7 +599,7 @@ func TestNotebookGeneration(t *testing.T) {
 
 		ic.generateHclForResources(nil)
 		assert.Equal(t, internal.TrimLeadingWhitespace(`
-		resource "databricks_notebook" "first_second" {
+		resource "databricks_notebook" "firstsecond" {
 		  source = "${path.module}/notebooks/First/Second.py"
 		  path   = "/First/Second"
 		}`), string(ic.Files["notebooks"].Bytes()))
@@ -619,7 +611,7 @@ func TestGitCredentialGen(t *testing.T) {
 		{
 			Method:   "GET",
 			Resource: "/api/2.0/git-credentials/a",
-			Response: repos.GitCredentialResponse {
+			Response: repos.GitCredentialResponse{
 				UserName: "me",
 				Provider: "github",
 			},
@@ -627,7 +619,7 @@ func TestGitCredentialGen(t *testing.T) {
 	}, "repos", func(ic *importContext) {
 		ic.Emit(&resource{
 			Resource: "databricks_git_credential",
-			ID: "a",
+			ID:       "a",
 		})
 
 		ic.generateHclForResources(nil)
@@ -643,26 +635,26 @@ func TestGitCredentialGen(t *testing.T) {
 func TestGlobalInitScriptGen(t *testing.T) {
 	testGenerate(t, []qa.HTTPFixture{
 		{
-			Method:   "GET",
+			Method:       "GET",
 			ReuseRequest: true,
-			Resource: "/api/2.0/global-init-scripts/a",
-			Response: workspace.GlobalInitScriptInfo {
-				Name: "b",
-				Enabled: true,
+			Resource:     "/api/2.0/global-init-scripts/a",
+			Response: workspace.GlobalInitScriptInfo{
+				Name:          "New: Importing ^ Things",
+				Enabled:       true,
 				ContentBase64: "YWJj",
 			},
 		},
 	}, "workspace", func(ic *importContext) {
 		ic.Emit(&resource{
 			Resource: "databricks_global_init_script",
-			ID: "a",
+			ID:       "a",
 		})
 
 		ic.generateHclForResources(nil)
 		assert.Equal(t, internal.TrimLeadingWhitespace(`
-		resource "databricks_global_init_script" "b" {
-		  source  = "${path.module}/files/b.sh"
-		  name    = "b"
+		resource "databricks_global_init_script" "new_importing_things" {
+		  source  = "${path.module}/files/new_importing_things.sh"
+		  name    = "New: Importing ^ Things"
 		  enabled = true
 		}`), string(ic.Files["workspace"].Bytes()))
 	})
@@ -674,7 +666,7 @@ func TestSecretGen(t *testing.T) {
 			Method:   "GET",
 			Resource: "/api/2.0/secrets/list?scope=a",
 
-			Response: secrets.SecretsList {
+			Response: secrets.SecretsList{
 				Secrets: []secrets.SecretMetadata{
 					{
 						Key: "b",
@@ -685,7 +677,7 @@ func TestSecretGen(t *testing.T) {
 	}, "secrets", func(ic *importContext) {
 		ic.Emit(&resource{
 			Resource: "databricks_secret",
-			ID: "a|||b",
+			ID:       "a|||b",
 		})
 
 		ic.generateHclForResources(nil)
@@ -703,7 +695,7 @@ func TestDbfsFileGen(t *testing.T) {
 		{
 			Method:   "GET",
 			Resource: "/api/2.0/dbfs/get-status?path=a",
-			Response: storage.FileInfo {
+			Response: storage.FileInfo{
 				Path: "a",
 			},
 		},
@@ -718,7 +710,7 @@ func TestDbfsFileGen(t *testing.T) {
 	}, "storage", func(ic *importContext) {
 		ic.Emit(&resource{
 			Resource: "databricks_dbfs_file",
-			ID: "a",
+			ID:       "a",
 		})
 
 		ic.generateHclForResources(nil)

@@ -588,7 +588,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			if scopes, err := ssAPI.List(); err == nil {
 				for i, scope := range scopes {
 					if !ic.MatchesName(scope.Name) {
-						log.Printf("[INFO] Secret scope %s doesn't match %s filter", 
+						log.Printf("[INFO] Secret scope %s doesn't match %s filter",
 							scope.Name, ic.match)
 						continue
 					}
@@ -718,8 +718,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			if name == "" {
 				return d.Id()
 			}
-			re := regexp.MustCompile(`[^0-9A-Za-z_]`)
-			return re.ReplaceAllString(name, "_")
+			return name
 		},
 		List: func(ic *importContext) error {
 			globalInitScripts, err := workspace.NewGlobalInitScriptsAPI(ic.Context, ic.Client).List()
@@ -761,11 +760,8 @@ var resourcesMap map[string]importable = map[string]importable{
 			name := d.Get("path").(string)
 			if name == "" {
 				return d.Id()
-			} else {
-				name = strings.TrimPrefix(name, "/")
 			}
-			re := regexp.MustCompile(`[^0-9A-Za-z_]`)
-			return re.ReplaceAllString(name, "_")
+			return strings.TrimPrefix(name, "/")
 		},
 		List: func(ic *importContext) error {
 			repoList, err := repos.NewReposAPI(ic.Context, ic.Client).ListAll()
@@ -825,9 +821,9 @@ var resourcesMap map[string]importable = map[string]importable{
 		Import: func(ic *importContext, r *resource) error {
 			wsConfAPI := workspace.NewWorkspaceConfAPI(ic.Context, ic.Client)
 			keys := map[string]interface{}{
-				"enableIpAccessLists": false, 
-				"maxTokenLifetimeDays": 0, 
-				"enableTokensConfig": false,
+				"enableIpAccessLists":  false,
+				"maxTokenLifetimeDays": 0,
+				"enableTokensConfig":   false,
 			}
 			err := wsConfAPI.Read(&keys)
 			if err != nil {
@@ -875,11 +871,8 @@ var resourcesMap map[string]importable = map[string]importable{
 			name := d.Get("path").(string)
 			if name == "" {
 				return d.Id()
-			} else {
-				name = strings.TrimPrefix(name, "/")
 			}
-			re := regexp.MustCompile(`[^0-9A-Za-z_]`)
-			return strings.ToLower(re.ReplaceAllString(name, "_"))
+			return name
 		},
 		List: func(ic *importContext) error {
 			notebooksAPI := workspace.NewNotebooksAPI(ic.Context, ic.Client)
@@ -912,10 +905,10 @@ var resourcesMap map[string]importable = map[string]importable{
 			}
 			language := r.Data.Get("language").(string)
 			ext := map[string]string{
-				"SCALA": ".scala",
+				"SCALA":  ".scala",
 				"PYTHON": ".py",
-				"SQL": ".sql",
-				"R": ".r",
+				"SQL":    ".sql",
+				"R":      ".r",
 			}
 			name := r.ID[1:] + ext[language] // todo: replace non-alphanum+/ with _
 			content, _ := base64.StdEncoding.DecodeString(contentB64)

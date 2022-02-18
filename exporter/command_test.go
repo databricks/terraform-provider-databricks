@@ -20,7 +20,7 @@ func TestInteractivePrompts(t *testing.T) {
 	cliInput = dummyReader("y\n")
 	cliOutput = &bytes.Buffer{}
 	ic := &importContext{
-		Client: &common.DatabricksClient{},
+		Client:  &common.DatabricksClient{},
 		Context: context.Background(),
 		Importables: map[string]importable{
 			"x": {

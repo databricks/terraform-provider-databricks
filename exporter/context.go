@@ -82,6 +82,16 @@ type mount struct {
 	ClusterID       string
 }
 
+var nameFixes = []regexFix{
+	{regexp.MustCompile(`[0-9a-f]{8}[_-][0-9a-f]{4}[_-][0-9a-f]{4}` +
+		`[_-][0-9a-f]{4}[_-][0-9a-f]{12}[_-]`), ""},
+	{regexp.MustCompile(`[_-][0-9]+[\._-][0-9]+[\._-].*\.([a-z0-9]{1,4})`), "_$1"},
+	{regexp.MustCompile(`@.*$`), ""},
+	{regexp.MustCompile(`[-\s\.\|]`), "_"},
+	{regexp.MustCompile(`\W+`), ""},
+	{regexp.MustCompile(`[_]{2,}`), "_"},
+}
+
 func newImportContext(c *common.DatabricksClient) *importContext {
 	p := provider.DatabricksProvider()
 	p.TerraformVersion = "exporter"
@@ -103,16 +113,8 @@ func newImportContext(c *common.DatabricksClient) *importContext {
 		Files:       map[string]*hclwrite.File{},
 		Scope:       []*resource{},
 		importing:   map[string]bool{},
-		nameFixes: []regexFix{
-			{regexp.MustCompile(`[0-9a-f]{8}[_-][0-9a-f]{4}[_-][0-9a-f]{4}` +
-				`[_-][0-9a-f]{4}[_-][0-9a-f]{12}[_-]`), ""},
-			{regexp.MustCompile(`[_-][0-9]+[\._-][0-9]+[\._-].*\.([a-z0-9]{1,4})`), "_$1"},
-			{regexp.MustCompile(`@.*$`), ""},
-			{regexp.MustCompile(`[-\s\.\|]`), "_"},
-			{regexp.MustCompile(`\W+`), ""},
-			{regexp.MustCompile(`[_]{2,}`), "_"},
-		},
-		hclFixes: []regexFix{ // Be careful with that! it may break working code
+		nameFixes:   nameFixes,
+		hclFixes:    []regexFix{ // Be careful with that! it may break working code
 		},
 		allUsers:  []scim.User{},
 		variables: map[string]string{},

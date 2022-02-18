@@ -606,32 +606,6 @@ func TestNotebookGeneration(t *testing.T) {
 	})
 }
 
-func TestGitCredentialGen(t *testing.T) {
-	testGenerate(t, []qa.HTTPFixture{
-		{
-			Method:   "GET",
-			Resource: "/api/2.0/git-credentials/a",
-			Response: repos.GitCredentialResponse{
-				UserName: "me",
-				Provider: "github",
-			},
-		},
-	}, "repos", func(ic *importContext) {
-		ic.Emit(&resource{
-			Resource: "databricks_git_credential",
-			ID:       "a",
-		})
-
-		ic.generateHclForResources(nil)
-		assert.Equal(t, internal.TrimLeadingWhitespace(`
-		resource "databricks_git_credential" "github_me_a" {
-		  personal_access_token = var.personal_access_token_github_me_a
-		  git_username          = "me"
-		  git_provider          = "github"
-		}`), string(ic.Files["repos"].Bytes()))
-	})
-}
-
 func TestGlobalInitScriptGen(t *testing.T) {
 	testGenerate(t, []qa.HTTPFixture{
 		{

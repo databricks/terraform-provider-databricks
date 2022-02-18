@@ -790,29 +790,6 @@ var resourcesMap map[string]importable = map[string]importable{
 			return nil
 		},
 	},
-	"databricks_git_credential": {
-		Service: "repos",
-		Name: func(d *schema.ResourceData) string {
-			return d.Get("git_provider").(string) + "_" + d.Get("git_username").(string) + "_" + d.Id()
-		},
-		List: func(ic *importContext) error {
-			creds, err := repos.NewGitCredentialsAPI(ic.Context, ic.Client).List()
-			if err != nil {
-				return err
-			}
-			for offset, cred := range creds {
-				ic.Emit(&resource{
-					Resource: "databricks_git_credential",
-					ID:       fmt.Sprintf("%d", cred.ID),
-				})
-				log.Printf("[INFO] Scanned %d of %d Git credentials", offset+1, len(creds))
-			}
-			return nil
-		},
-		Depends: []reference{
-			{Path: "personal_access_token", Variable: true},
-		},
-	},
 	"databricks_workspace_conf": {
 		Service: "workspace",
 		Name: func(d *schema.ResourceData) string {

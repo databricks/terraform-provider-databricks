@@ -25,7 +25,6 @@ export DATABRICKS_TOKEN=...
     -listing=jobs,compute \
     -last-active-days=90 \
     -debug
-sh import.sh
 ```
 
 ## Argument Reference

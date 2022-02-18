@@ -9,6 +9,14 @@
 * Added exporter functionality for `databricks_ip_access_list` and `databricks_workspace_conf` ([#1125](https://github.com/databrickslabs/terraform-provider-databricks/pull/1125)).
 * Added `graviton` selector for `databricks_node_type` and `databricks_spark_version` data sources ([#1127](https://github.com/databrickslabs/terraform-provider-databricks/pull/1127)).
 * Added interactive mode to resource exporter ([#1010](https://github.com/databrickslabs/terraform-provider-databricks/pull/1010)).
+* Added preview support for `git_source` in `databricks_job` ([#1090](https://github.com/databrickslabs/terraform-provider-databricks/pull/1090)).
+* Multiple other fixes and documentation improvements.
+
+Updated dependency versions:
+
+* Bump github.com/golang-jwt/jwt/v4 from 4.2.0 to 4.3.0
+* Bump google.golang.org/api from 0.67.0 to 0.68.0
+* Bump gopkg.in/ini.v1 from 1.66.3 to 1.66.4
 
 ## 0.4.9
 

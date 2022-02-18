@@ -38,7 +38,6 @@ func TestInteractivePrompts(t *testing.T) {
 		},
 	}
 	ic.interactivePrompts()
-	assert.Equal(t, "a,mounts", ic.listing)
 	assert.Equal(t, "y", ic.match)
 	assert.True(t, ic.mounts)
 }

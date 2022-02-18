@@ -20,12 +20,11 @@ Exporter can also be used in a non-interactive mode:
 ```bash
 export DATABRICKS_HOST=...
 export DATABRICKS_TOKEN=...
-./terraform-provider-databricks exporter \
+./terraform-provider-databricks exporter -skip-interactive \
     -services=groups,secrets,access,compute,users,jobs,storage \
     -listing=jobs,compute \
     -last-active-days=90 \
     -debug
-sh import.sh
 ```
 
 ## Argument Reference
@@ -43,6 +42,7 @@ All arguments are optional and they tune what code is being generated.
 * `-mounts` - List DBFS mount points, which is a extremely slow operation and would not trigger unless explicitly specified.
 * `-generateProviderDeclaration` - flag that toggles generation of `databricks.tf` file with declaration of the Databricks Terraform provider that is necessary for Terraform versions since Terraform 0.13 (disabled by default).
 * `-prefix` - optional prefix that will be added to the name of all exported resources - that's useful for exporting resources multiple workspaces for merging into single one.
+* `-skip-interactive` - optionally run in a non-interactive mode.
 
 ## Services
 

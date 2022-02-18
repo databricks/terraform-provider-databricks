@@ -54,6 +54,8 @@ type reference struct {
 	Path     string
 	Resource string
 	Match    string
+	Variable bool
+	File     bool
 }
 
 type resource struct {

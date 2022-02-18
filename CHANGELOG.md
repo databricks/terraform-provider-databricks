@@ -8,6 +8,7 @@
 * Added new `gcp_attributes` to `databricks_cluster` and `databricks_instance_pool` ([#1126](https://github.com/databrickslabs/terraform-provider-databricks/pull/1126)).
 * Added exporter functionality for `databricks_ip_access_list` and `databricks_workspace_conf` ([#1125](https://github.com/databrickslabs/terraform-provider-databricks/pull/1125)).
 * Added `graviton` selector for `databricks_node_type` and `databricks_spark_version` data sources ([#1127](https://github.com/databrickslabs/terraform-provider-databricks/pull/1127)).
+* Added interactive mode to resource exporter ([#1010](https://github.com/databrickslabs/terraform-provider-databricks/pull/1010)).
 
 ## 0.4.9
 

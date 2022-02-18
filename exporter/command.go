@@ -2,6 +2,7 @@ package exporter
 
 import (
 	"flag"
+	"fmt"
 	"log"
 	"os"
 	"strings"
@@ -43,6 +44,31 @@ func (ic *importContext) allServicesAndListing() (string, string) {
 	return services, listing
 }
 
+func (ic *importContext) interactivePrompts() {
+	for ic.Client.Authenticate(ic.Context) != nil {
+		ic.Client.Host = askFor("🔑 Databricks Workspace URL:")
+		ic.Client.Token = askFor("🔑 Databricks Workspace PAT:")
+	}
+	ic.match = askFor("🔍 Match entity names (optional):")
+	listing := ""
+	for r, ir := range ic.Importables {
+		if ir.List == nil {
+			continue
+		}
+		if !askFlag(fmt.Sprintf("✅ Generate `%s` and related resources?", r)) {
+			continue
+		}
+		if len(listing) > 0 {
+			listing += ","
+		}
+		listing += ir.Service
+		if ir.Service == "mounts" {
+			ic.mounts = true
+		}
+	}
+	ic.listing = listing
+}
+
 // Run import according to flags
 func Run(args ...string) error {
 	log.SetOutput(&logLevel)
@@ -59,6 +85,8 @@ func Run(args ...string) error {
 	if err != nil {
 		return err
 	}
+	var skipInteractive bool
+	flags.BoolVar(&skipInteractive, "skip-interactive", false, "Skip interactive mode")
 	flags.StringVar(&ic.Directory, "directory", cwd,
 		"Directory to generate sources in. Defaults to current directory.")
 	flags.Int64Var(&ic.lastActiveDays, "last-active-days", 3650,
@@ -66,7 +94,7 @@ func Run(args ...string) error {
 	flags.BoolVar(&ic.debug, "debug", false, "Print extra debug information.")
 	flags.BoolVar(&ic.mounts, "mounts", false, "List DBFS mount points.")
 	flags.BoolVar(&ic.generateDeclaration, "generateProviderDeclaration", true,
-		"Generate Databricks provider declaration (for Terraform >= 0.13).")
+		"Generate Databricks provider declaration.")
 	services, listing := ic.allServicesAndListing()
 	flags.StringVar(&ic.services, "services", services,
 		"Comma-separated list of services to import. By default all services are imported.")
@@ -86,6 +114,9 @@ func Run(args ...string) error {
 	err = flags.Parse(newArgs)
 	if err != nil {
 		return err
+	}
+	if !skipInteractive {
+		ic.interactivePrompts()
 	}
 	if len(prefix) > 0 {
 		ic.prefix = prefix + "_"

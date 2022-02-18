@@ -767,15 +767,6 @@ func TestImportingJobs_JobList(t *testing.T) {
 			assert.NoError(t, err)
 
 			for _, res := range ic.Scope {
-				if res.Resource != "databricks_dbfs_file" {
-					continue
-				}
-				err = ic.Importables["databricks_dbfs_file"].Body(ic,
-					hclwrite.NewEmptyFile().Body(), res)
-				assert.NoError(t, err)
-			}
-
-			for _, res := range ic.Scope {
 				if res.Resource != "databricks_job" {
 					continue
 				}

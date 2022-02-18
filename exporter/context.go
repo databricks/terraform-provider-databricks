@@ -476,6 +476,9 @@ func (ic *importContext) reference(i importable, path []string, value string) hc
 				&hclwrite.Token{Type: hclsyntax.TokenCQuote, Bytes: []byte{'"'}},
 			}
 		}
+		if d.Variable {
+			return ic.variable(fmt.Sprintf("%s_%s", path[0], value), "")
+		}
 		attr := "id"
 		if d.Match != "" {
 			attr = d.Match
@@ -523,7 +526,15 @@ func (ic *importContext) dataToHcl(i importable, path []string,
 		if as.Computed {
 			continue
 		}
-		raw, ok := d.GetOk(strings.Join(append(path, a), "."))
+		pathString := strings.Join(append(path, a), ".")
+		raw, ok := d.GetOk(pathString)
+		for _, r := range i.Depends {
+			if r.Path == pathString && r.Variable {
+				// sensitive fields are moved to variable depends
+				raw = i.Name(d)
+				ok = true
+			}
+		}
 		if !ok {
 			continue
 		}

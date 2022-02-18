@@ -169,79 +169,6 @@ func TestSecretScope(t *testing.T) {
 	assert.Equal(t, "abc", name)
 }
 
-func TestDbfsFileCornerCases_ReadFail(t *testing.T) {
-	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
-		{
-			Method:   "GET",
-			Resource: "/api/2.0/dbfs/read?length=1000000&path=a",
-			Status:   404,
-			Response: common.NotFound("nope"),
-		},
-	}, func(ctx context.Context, client *common.DatabricksClient) {
-		ic := importContextForTest()
-		ic.Client = client
-		ic.Context = ctx
-		err := resourcesMap["databricks_dbfs_file"].Body(ic, nil, &resource{
-			ID: "a",
-		})
-		assert.EqualError(t, err, "cannot read a: nope")
-	})
-}
-
-func TestDbfsFileCornerCases_WriteWrongDir(t *testing.T) {
-	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
-		{
-			Method:   "GET",
-			Resource: "/api/2.0/dbfs/read?length=1000000&path=a",
-			Response: storage.ReadResponse{
-				Data:      "YWJj",
-				BytesRead: 3,
-			},
-		},
-	}, func(ctx context.Context, client *common.DatabricksClient) {
-		ic := importContextForTest()
-		ic.Client = client
-		ic.Context = ctx
-		err := resourcesMap["databricks_dbfs_file"].Body(ic, nil, &resource{
-			ID:   "a",
-			Data: storage.ResourceDBFSFile().TestResourceData(),
-		})
-		assert.NotNil(t, err) // mustn't match direct OS error
-	})
-}
-
-func TestDbfsFileCornerCases_WriteFileExists(t *testing.T) {
-	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
-		{
-			Method:   "GET",
-			Resource: "/api/2.0/dbfs/read?length=1000000&path=a",
-			Response: storage.ReadResponse{
-				Data:      "YWJj",
-				BytesRead: 3,
-			},
-		},
-	}, func(ctx context.Context, client *common.DatabricksClient) {
-		ic := importContextForTest()
-		ic.Client = client
-		ic.Context = ctx
-		ic.Directory = fmt.Sprintf("/tmp/tf-%s", qa.RandomName())
-		defer os.RemoveAll(ic.Directory)
-
-		dstFile := fmt.Sprintf("%s/files/_abc_900150983cd24fb0d6963f7d28e17f72", ic.Directory)
-		err := os.MkdirAll(dstFile, 0755)
-		assert.NoError(t, err)
-
-		d := storage.ResourceDBFSFile().TestResourceData()
-		d.SetId("abc")
-
-		err = resourcesMap["databricks_dbfs_file"].Body(ic, nil, &resource{
-			ID:   "a",
-			Data: d,
-		})
-		assert.Equal(t, err.Error(), fmt.Sprintf("open %s: is a directory", dstFile))
-	})
-}
-
 func TestInstancePoolNameFromID(t *testing.T) {
 	d := pools.ResourceInstancePool().TestResourceData()
 	d.SetId("a-b-c")
@@ -551,7 +478,7 @@ func TestGlobalInitScriptsErrors(t *testing.T) {
 		err := resourcesMap["databricks_global_init_script"].List(ic)
 		assert.EqualError(t, err, "nope")
 
-		err = resourcesMap["databricks_global_init_script"].Body(ic, nil, &resource{
+		err = resourcesMap["databricks_global_init_script"].Import(ic, &resource{
 			ID: "abc",
 		})
 		assert.EqualError(t, err, "nope")
@@ -580,12 +507,12 @@ func TestGlobalInitScriptsBodyErrors(t *testing.T) {
 		ic := importContextForTest()
 		ic.Client = client
 		ic.Context = ctx
-		err := resourcesMap["databricks_global_init_script"].Body(ic, nil, &resource{
+		err := resourcesMap["databricks_global_init_script"].Import(ic, &resource{
 			ID: "sad-emoji",
 		})
 		assert.EqualError(t, err, "illegal base64 data at input byte 0")
 
-		err = resourcesMap["databricks_global_init_script"].Body(ic, nil, &resource{
+		err = resourcesMap["databricks_global_init_script"].Import(ic, &resource{
 			ID: "second",
 		})
 		assert.NotNil(t, err) // no exact match because of OS diffs
@@ -624,8 +551,23 @@ func TestNotebookName(t *testing.T) {
 	assert.Equal(t, "foo_bar_baz", resourcesMap["databricks_notebook"].Name(d))
 }
 
+func testGenerate(t *testing.T, fixtures []qa.HTTPFixture, services string, cb func(*importContext)) {
+	qa.HTTPFixturesApply(t, fixtures, func(ctx context.Context, client *common.DatabricksClient) {
+		ic := importContextForTest()
+		ic.Directory = fmt.Sprintf("/tmp/tf-%s", qa.RandomName())
+		defer os.RemoveAll(ic.Directory)
+		ic.Client = client
+		ic.Context = ctx
+		ic.testEmits = nil
+		ic.importing = map[string]bool{}
+		ic.variables = map[string]string{}
+		ic.services = services
+		cb(ic)
+	})
+}
+
 func TestNotebookGeneration(t *testing.T) {
-	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
+	testGenerate(t, []qa.HTTPFixture{
 		{
 			Method:   "GET",
 			Resource: "/api/2.0/workspace/list?path=%2F",
@@ -659,17 +601,7 @@ func TestNotebookGeneration(t *testing.T) {
 				Content: "YWJj",
 			},
 		},
-	}, func(ctx context.Context, client *common.DatabricksClient) {
-		ic := importContextForTest()
-		ic.Directory = fmt.Sprintf("/tmp/tf-%s", qa.RandomName())
-		defer os.RemoveAll(ic.Directory)
-
-		ic.Client = client
-		ic.Context = ctx
-		ic.testEmits = nil
-		ic.importing = map[string]bool{}
-		ic.services = "notebooks"
-
+	}, "notebooks", func(ic *importContext) {
 		err := resourcesMap["databricks_notebook"].List(ic)
 		assert.NoError(t, err)
 
@@ -679,5 +611,121 @@ func TestNotebookGeneration(t *testing.T) {
 		  source = "${path.module}/notebooks/First/Second.py"
 		  path   = "/First/Second"
 		}`), string(ic.Files["notebooks"].Bytes()))
+	})
+}
+
+func TestGitCredentialGen(t *testing.T) {
+	testGenerate(t, []qa.HTTPFixture{
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/git-credentials/a",
+			Response: repos.GitCredentialResponse {
+				UserName: "me",
+				Provider: "github",
+			},
+		},
+	}, "repos", func(ic *importContext) {
+		ic.Emit(&resource{
+			Resource: "databricks_git_credential",
+			ID: "a",
+		})
+
+		ic.generateHclForResources(nil)
+		assert.Equal(t, internal.TrimLeadingWhitespace(`
+		resource "databricks_git_credential" "github_me_a" {
+		  personal_access_token = var.personal_access_token_github_me_a
+		  git_username          = "me"
+		  git_provider          = "github"
+		}`), string(ic.Files["repos"].Bytes()))
+	})
+}
+
+func TestGlobalInitScriptGen(t *testing.T) {
+	testGenerate(t, []qa.HTTPFixture{
+		{
+			Method:   "GET",
+			ReuseRequest: true,
+			Resource: "/api/2.0/global-init-scripts/a",
+			Response: workspace.GlobalInitScriptInfo {
+				Name: "b",
+				Enabled: true,
+				ContentBase64: "YWJj",
+			},
+		},
+	}, "workspace", func(ic *importContext) {
+		ic.Emit(&resource{
+			Resource: "databricks_global_init_script",
+			ID: "a",
+		})
+
+		ic.generateHclForResources(nil)
+		assert.Equal(t, internal.TrimLeadingWhitespace(`
+		resource "databricks_global_init_script" "b" {
+		  source  = "${path.module}/files/b.sh"
+		  name    = "b"
+		  enabled = true
+		}`), string(ic.Files["workspace"].Bytes()))
+	})
+}
+
+func TestSecretGen(t *testing.T) {
+	testGenerate(t, []qa.HTTPFixture{
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/secrets/list?scope=a",
+
+			Response: secrets.SecretsList {
+				Secrets: []secrets.SecretMetadata{
+					{
+						Key: "b",
+					},
+				},
+			},
+		},
+	}, "secrets", func(ic *importContext) {
+		ic.Emit(&resource{
+			Resource: "databricks_secret",
+			ID: "a|||b",
+		})
+
+		ic.generateHclForResources(nil)
+		assert.Equal(t, internal.TrimLeadingWhitespace(`
+		resource "databricks_secret" "a_b" {
+		  string_value = var.string_value_a_b
+		  scope        = "a"
+		  key          = "b"
+		}`), string(ic.Files["secrets"].Bytes()))
+	})
+}
+
+func TestDbfsFileGen(t *testing.T) {
+	testGenerate(t, []qa.HTTPFixture{
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/dbfs/get-status?path=a",
+			Response: storage.FileInfo {
+				Path: "a",
+			},
+		},
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/dbfs/read?length=1000000&path=a",
+			Response: storage.ReadResponse{
+				Data:      "YWJj",
+				BytesRead: 3,
+			},
+		},
+	}, "storage", func(ic *importContext) {
+		ic.Emit(&resource{
+			Resource: "databricks_dbfs_file",
+			ID: "a",
+		})
+
+		ic.generateHclForResources(nil)
+		assert.Equal(t, internal.TrimLeadingWhitespace(`
+		resource "databricks_dbfs_file" "_a_0cc175b9c0f1b6a831c399e269772661" {
+		  source = "${path.module}/files/_a_0cc175b9c0f1b6a831c399e269772661"
+		  path   = "a"
+		}`), string(ic.Files["storage"].Bytes()))
 	})
 }

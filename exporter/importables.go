@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
-	"path"
 	"regexp"
 	"strings"
 	"time"
@@ -21,7 +20,6 @@ import (
 	"github.com/databrickslabs/terraform-provider-databricks/workspace"
 
 	"github.com/databrickslabs/terraform-provider-databricks/storage"
-	"github.com/hashicorp/hcl/v2/hclsyntax"
 	"github.com/hashicorp/hcl/v2/hclwrite"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -134,7 +132,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			name := "_" + s[len(s)-1] + "_" + fileNameMd5
 			return name
 		},
-		Body: func(ic *importContext, body *hclwrite.Body, r *resource) error {
+		Import: func(ic *importContext, r *resource) error {
 			dbfsAPI := storage.NewDbfsAPI(ic.Context, ic.Client)
 			content, err := dbfsAPI.Read(r.ID)
 			if err != nil {
@@ -146,16 +144,11 @@ var resourcesMap map[string]importable = map[string]importable{
 			if err != nil {
 				return err
 			}
-			// libraries installed with init scripts won't be exported.
-			b := body.AppendNewBlock("resource", []string{r.Resource, r.Name}).Body()
-			relativeFile := fmt.Sprintf("${path.module}/%s", fileName)
-			b.SetAttributeValue("path", cty.StringVal(strings.Replace(r.ID, "dbfs:", "", 1)))
-			b.SetAttributeRaw("source", hclwrite.Tokens{
-				&hclwrite.Token{Type: hclsyntax.TokenOQuote, Bytes: []byte{'"'}},
-				&hclwrite.Token{Type: hclsyntax.TokenQuotedLit, Bytes: []byte(relativeFile)},
-				&hclwrite.Token{Type: hclsyntax.TokenCQuote, Bytes: []byte{'"'}},
-			})
+			r.Data.Set("source", fileName)
 			return nil
+		},
+		Depends: []reference{
+			{Path: "source", File: true},
 		},
 	},
 	"databricks_instance_pool": {
@@ -595,7 +588,8 @@ var resourcesMap map[string]importable = map[string]importable{
 			if scopes, err := ssAPI.List(); err == nil {
 				for i, scope := range scopes {
 					if !ic.MatchesName(scope.Name) {
-						log.Printf("[INFO] Secret scope %s doesn't match %s filter", scope.Name, ic.match)
+						log.Printf("[INFO] Secret scope %s doesn't match %s filter", 
+							scope.Name, ic.match)
 						continue
 					}
 					ic.Emit(&resource{
@@ -603,8 +597,7 @@ var resourcesMap map[string]importable = map[string]importable{
 						ID:       scope.Name,
 						Name:     scope.Name,
 					})
-					log.Printf("[INFO] Imported %d of %d secret scopes",
-						i, len(scopes))
+					log.Printf("[INFO] Imported %d of %d secret scopes", i, len(scopes))
 				}
 			}
 			return nil
@@ -635,22 +628,15 @@ var resourcesMap map[string]importable = map[string]importable{
 	"databricks_secret": {
 		Service: "secrets",
 		Depends: []reference{
+			{Path: "string_value", Variable: true},
 			{Path: "scope", Resource: "databricks_secret_scope"},
 			{Path: "string_value", Resource: "vault_generic_secret", Match: "data"},
 			{Path: "string_value", Resource: "aws_kms_secrets", Match: "plaintext"},
 			{Path: "string_value", Resource: "azurerm_key_vault_secret", Match: "value"},
 			{Path: "string_value", Resource: "aws_secretsmanager_secret_version", Match: "secret_string"},
 		},
-		Body: func(ic *importContext, body *hclwrite.Body, r *resource) error {
-			b := body.AppendNewBlock("resource", []string{r.Resource, r.Name}).Body()
-			b.SetAttributeRaw("scope", ic.reference(ic.Importables[r.Resource],
-				[]string{"scope"}, r.Data.Get("scope").(string)))
-			// secret data is exposed only within notebooks
-			b.SetAttributeRaw("string_value", ic.variable(
-				r.Name, fmt.Sprintf("Secret %s from %s scope",
-					r.Data.Get("key"), r.Data.Get("scope"))))
-			b.SetAttributeValue("key", cty.StringVal(r.Data.Get("key").(string)))
-			return nil
+		Name: func(d *schema.ResourceData) string {
+			return fmt.Sprintf("%s_%s", d.Get("scope"), d.Get("key"))
 		},
 	},
 	"databricks_secret_acl": {
@@ -749,7 +735,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			}
 			return nil
 		},
-		Body: func(ic *importContext, body *hclwrite.Body, r *resource) error {
+		Import: func(ic *importContext, r *resource) error {
 			gis, err := workspace.NewGlobalInitScriptsAPI(ic.Context, ic.Client).Get(r.ID)
 			if err != nil {
 				return err
@@ -758,21 +744,15 @@ var resourcesMap map[string]importable = map[string]importable{
 			if err != nil {
 				return err
 			}
-			fileName, err := ic.createFile(path.Base(r.Name), content)
+			fileName, err := ic.createFile(fmt.Sprintf("%s.sh", r.Name), content)
 			log.Printf("Creating %s for %s", fileName, r)
 			if err != nil {
 				return err
 			}
-			relativeFile := fmt.Sprintf("${path.module}/%s", fileName)
-			b := body.AppendNewBlock("resource", []string{r.Resource, r.Name}).Body()
-			b.SetAttributeValue("name", cty.StringVal(gis.Name))
-			b.SetAttributeValue("enabled", cty.BoolVal(gis.Enabled))
-			b.SetAttributeRaw("source", hclwrite.Tokens{
-				&hclwrite.Token{Type: hclsyntax.TokenOQuote, Bytes: []byte{'"'}},
-				&hclwrite.Token{Type: hclsyntax.TokenQuotedLit, Bytes: []byte(relativeFile)},
-				&hclwrite.Token{Type: hclsyntax.TokenCQuote, Bytes: []byte{'"'}},
-			})
-			return nil
+			return r.Data.Set("source", fileName)
+		},
+		Depends: []reference{
+			{Path: "source", File: true},
 		},
 	},
 	"databricks_repo": {
@@ -813,20 +793,6 @@ var resourcesMap map[string]importable = map[string]importable{
 			}
 			return nil
 		},
-		Body: func(ic *importContext, body *hclwrite.Body, r *resource) error {
-			b := body.AppendNewBlock("resource", []string{r.Resource, r.Name}).Body()
-			b.SetAttributeValue("url", cty.StringVal(r.Data.Get("url").(string)))
-			b.SetAttributeValue("git_provider", cty.StringVal(r.Data.Get("git_provider").(string)))
-			t := r.Data.Get("branch").(string)
-			if t != "" {
-				b.SetAttributeValue("branch", cty.StringVal(t))
-			}
-			t = r.Data.Get("path").(string)
-			if t != "" {
-				b.SetAttributeValue("path", cty.StringVal(t))
-			}
-			return nil
-		},
 	},
 	"databricks_git_credential": {
 		Service: "repos",
@@ -847,12 +813,8 @@ var resourcesMap map[string]importable = map[string]importable{
 			}
 			return nil
 		},
-		Body: func(ic *importContext, body *hclwrite.Body, r *resource) error {
-			b := body.AppendNewBlock("resource", []string{r.Resource, r.Name}).Body()
-			b.SetAttributeRaw("personal_access_token", ic.variable("git_token_"+r.Name, "Git token for "+r.Name))
-			b.SetAttributeValue("git_provider", cty.StringVal(r.Data.Get("git_provider").(string)))
-			b.SetAttributeValue("git_username", cty.StringVal(r.Data.Get("git_username").(string)))
-			return nil
+		Depends: []reference{
+			{Path: "personal_access_token", Variable: true},
 		},
 	},
 	"databricks_workspace_conf": {
@@ -862,7 +824,11 @@ var resourcesMap map[string]importable = map[string]importable{
 		},
 		Import: func(ic *importContext, r *resource) error {
 			wsConfAPI := workspace.NewWorkspaceConfAPI(ic.Context, ic.Client)
-			keys := map[string]interface{}{"enableIpAccessLists": false, "maxTokenLifetimeDays": 0, "enableTokensConfig": false}
+			keys := map[string]interface{}{
+				"enableIpAccessLists": false, 
+				"maxTokenLifetimeDays": 0, 
+				"enableTokensConfig": false,
+			}
 			err := wsConfAPI.Read(&keys)
 			if err != nil {
 				return err

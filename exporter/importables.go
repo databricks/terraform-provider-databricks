@@ -922,7 +922,7 @@ var resourcesMap map[string]importable = map[string]importable{
 				return err
 			}
 			for offset, notebook := range notebookList {
-				if strings.HasPrefix("/Repos", notebook.Path) {
+				if strings.HasPrefix(notebook.Path, "/Repos") {
 					continue
 				}
 				// TODO: emit permissions for notebook folders if non-default,
@@ -938,33 +938,31 @@ var resourcesMap map[string]importable = map[string]importable{
 			}
 			return nil
 		},
-		Body: func(ic *importContext, body *hclwrite.Body, r *resource) error {
+		Import: func(ic *importContext, r *resource) error {
 			notebooksAPI := workspace.NewNotebooksAPI(ic.Context, ic.Client)
-			status, err := notebooksAPI.Read(r.ID)
-			if err != nil {
-				return err
-			}
 			contentB64, err := notebooksAPI.Export(r.ID, "SOURCE")
 			if err != nil {
 				return err
 			}
-			name := r.ID[1:] + status.Extension() // todo: replace non-alphanum+/ with _
+			language := r.Data.Get("language").(string)
+			ext := map[string]string{
+				"SCALA": ".scala",
+				"PYTHON": ".py",
+				"SQL": ".sql",
+				"R": ".r",
+			}
+			name := r.ID[1:] + ext[language] // todo: replace non-alphanum+/ with _
 			content, _ := base64.StdEncoding.DecodeString(contentB64)
 			fileName, err := ic.createFileIn("notebooks", name, []byte(content))
-			log.Printf("Creating %s for %s", fileName, r)
 			if err != nil {
 				return err
 			}
-			// libraries installed with init scripts won't be exported.
-			b := body.AppendNewBlock("resource", []string{r.Resource, r.Name}).Body()
-			relativeFile := fmt.Sprintf("${path.module}/%s", fileName)
-			b.SetAttributeValue("path", cty.StringVal(r.ID))
-			b.SetAttributeRaw("source", hclwrite.Tokens{
-				&hclwrite.Token{Type: hclsyntax.TokenOQuote, Bytes: []byte{'"'}},
-				&hclwrite.Token{Type: hclsyntax.TokenQuotedLit, Bytes: []byte(relativeFile)},
-				&hclwrite.Token{Type: hclsyntax.TokenCQuote, Bytes: []byte{'"'}},
-			})
-			return nil
+			log.Printf("Creating %s for %s", fileName, r)
+			r.Data.Set("source", fileName)
+			return r.Data.Set("language", "")
+		},
+		Depends: []reference{
+			{Path: "source", File: true},
 		},
 	},
 }

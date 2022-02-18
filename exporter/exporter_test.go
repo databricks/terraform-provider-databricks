@@ -199,7 +199,7 @@ var meAdminFixture = qa.HTTPFixture{
 	},
 }
 
-var repoListFixture = qa.HTTPFixture{
+var emptyRepos = qa.HTTPFixture{
 	Method:       "GET",
 	ReuseRequest: true,
 	Resource:     "/api/2.0/repos?",
@@ -218,17 +218,19 @@ var emptyIpAccessLIst = qa.HTTPFixture{
 	Response: map[string]interface{}{},
 }
 
+var emptyWorkspace = qa.HTTPFixture{
+	Method:   "GET",
+	Resource: "/api/2.0/workspace/list?path=%2F",
+	Response: workspace.ObjectList{},
+}
+
 func TestImportingUsersGroupsSecretScopes(t *testing.T) {
 	qa.HTTPFixturesApply(t,
 		[]qa.HTTPFixture{
 			meAdminFixture,
-			repoListFixture,
+			emptyRepos,
 			emptyGitCredentials,
-			{
-				Method:   "GET",
-				Resource: "/api/2.0/workspace/list?path=%2F",
-				Response: workspace.ObjectList{},
-			},
+			emptyWorkspace,
 			emptyIpAccessLIst,
 			{
 				Method:   "GET",
@@ -382,7 +384,7 @@ func TestImportingNoResourcesError(t *testing.T) {
 	qa.HTTPFixturesApply(t,
 		[]qa.HTTPFixture{
 			meAdminFixture,
-			repoListFixture,
+			emptyRepos,
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/preview/scim/v2/Groups?",
@@ -390,6 +392,7 @@ func TestImportingNoResourcesError(t *testing.T) {
 			},
 			emptyGitCredentials,
 			emptyIpAccessLIst,
+			emptyWorkspace,
 			{
 				Method:       "GET",
 				Resource:     "/api/2.0/global-init-scripts",
@@ -402,11 +405,6 @@ func TestImportingNoResourcesError(t *testing.T) {
 				Method:   "GET",
 				Resource: "/api/2.0/jobs/list",
 				Response: jobs.JobList{},
-			},
-			{
-				Method:   "GET",
-				Resource: "/api/2.0/workspace/list?path=%2F",
-				Response: workspace.ObjectList{},
 			},
 			{
 				Method:   "GET",
@@ -440,7 +438,7 @@ func TestImportingClusters(t *testing.T) {
 	qa.HTTPFixturesApply(t,
 		[]qa.HTTPFixture{
 			meAdminFixture,
-			repoListFixture,
+			emptyRepos,
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/preview/scim/v2/Groups?",
@@ -589,7 +587,7 @@ func TestImportingJobs_JobList(t *testing.T) {
 	qa.HTTPFixturesApply(t,
 		[]qa.HTTPFixture{
 			meAdminFixture,
-			repoListFixture,
+			emptyRepos,
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/jobs/list",
@@ -806,7 +804,7 @@ func TestImportingSecrets(t *testing.T) {
 	qa.HTTPFixturesApply(t,
 		[]qa.HTTPFixture{
 			meAdminFixture,
-			repoListFixture,
+			emptyRepos,
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/preview/scim/v2/Groups?",
@@ -884,7 +882,7 @@ func TestImportingGlobalInitScripts(t *testing.T) {
 	qa.HTTPFixturesApply(t,
 		[]qa.HTTPFixture{
 			meAdminFixture,
-			repoListFixture,
+			emptyRepos,
 			{
 				Method:       "GET",
 				Resource:     "/api/2.0/global-init-scripts",
@@ -1105,7 +1103,7 @@ func TestImportingIPAccessLists(t *testing.T) {
 	qa.HTTPFixturesApply(t,
 		[]qa.HTTPFixture{
 			meAdminFixture,
-			repoListFixture,
+			emptyRepos,
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/global-init-scripts",

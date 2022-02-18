@@ -9,6 +9,7 @@ import (
 
 	"github.com/databrickslabs/terraform-provider-databricks/clusters"
 	"github.com/databrickslabs/terraform-provider-databricks/common"
+	"github.com/databrickslabs/terraform-provider-databricks/internal"
 	"github.com/databrickslabs/terraform-provider-databricks/jobs"
 	"github.com/databrickslabs/terraform-provider-databricks/permissions"
 	"github.com/databrickslabs/terraform-provider-databricks/policies"
@@ -29,6 +30,7 @@ func importContextForTest() *importContext {
 	return &importContext{
 		Importables: resourcesMap,
 		Resources:   p.ResourcesMap,
+		Files: map[string]*hclwrite.File{},
 		testEmits:   map[string]bool{},
 	}
 }
@@ -622,7 +624,7 @@ func TestNotebookName(t *testing.T) {
 	assert.Equal(t, "foo_bar_baz", resourcesMap["databricks_notebook"].Name(d))
 }
 
-func TestNotebookList(t *testing.T) {
+func TestNotebookGeneration(t *testing.T) {
 	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
 		{
 			Method:   "GET",
@@ -630,7 +632,8 @@ func TestNotebookList(t *testing.T) {
 			Response: workspace.ObjectList{
 				Objects: []workspace.ObjectStatus{
 					{
-						Path: "/Repos/Foo/Bar",
+						Path:       "/Repos/Foo/Bar",
+						ObjectType: "NOTEBOOK",
 					},
 					{
 						Path:       "/First/Second",
@@ -641,41 +644,40 @@ func TestNotebookList(t *testing.T) {
 		},
 		{
 			Method:   "GET",
-			Resource: "/api/2.0/workspace/get-status?path=a",
+			Resource: "/api/2.0/workspace/get-status?path=%2FFirst%2FSecond",
 			Response: workspace.ObjectStatus{
 				ObjectID:   123,
 				ObjectType: "NOTEBOOK",
-				Path:       "a",
+				Path:       "/First/Second",
 				Language:   "PYTHON",
 			},
 		},
 		{
 			Method:   "GET",
-			Resource: "/api/2.0/workspace/export?format=SOURCE&path=a",
+			Resource: "/api/2.0/workspace/export?format=SOURCE&path=%2FFirst%2FSecond",
 			Response: workspace.ExportPath{
 				Content: "YWJj",
 			},
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		ic := importContextForTest()
-		ic.Client = client
-		ic.Context = ctx
-
-		err := resourcesMap["databricks_notebook"].List(ic)
-		assert.NoError(t, err)
-		assert.True(t, ic.testEmits["databricks_notebook[<unknown>] (id: /First/Second)"])
-
 		ic.Directory = fmt.Sprintf("/tmp/tf-%s", qa.RandomName())
 		defer os.RemoveAll(ic.Directory)
 
-		// dstFile := fmt.Sprintf("%s/files/_abc_900150983cd24fb0d6963f7d28e17f72", ic.Directory)
-		// err := os.MkdirAll(dstFile, 0755)
-		// assert.NoError(t, err)
-		f := hclwrite.NewEmptyFile()
-		err = resourcesMap["databricks_notebook"].Body(ic, f.Body(), &resource{
-			ID:   "a",
-			Data: workspace.ResourceNotebook().TestResourceData(),
-		})
+		ic.Client = client
+		ic.Context = ctx
+		ic.testEmits = nil
+		ic.importing = map[string]bool{}
+		ic.services = "notebooks"
+
+		err := resourcesMap["databricks_notebook"].List(ic)
 		assert.NoError(t, err)
+
+		ic.generateHclForResources(nil)
+		assert.Equal(t, internal.TrimLeadingWhitespace(`
+		resource "databricks_notebook" "first_second" {
+		  source = "${path.module}/notebooks/First/Second.py"
+		  path   = "/First/Second"
+		}`), string(ic.Files["notebooks"].Bytes()))
 	})
 }

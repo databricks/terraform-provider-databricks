@@ -191,42 +191,7 @@ func (ic *importContext) Run() error {
 		  	`)
 		dcfile.Close()
 	}
-
-	sort.Sort(ic.Scope)
-	scopeSize := len(ic.Scope)
-	log.Printf("[INFO] Generating configuration for %d resources", scopeSize)
-	for i, r := range ic.Scope {
-		ir := ic.Importables[r.Resource]
-		f, ok := ic.Files[ir.Service]
-		if !ok {
-			f = hclwrite.NewEmptyFile()
-			ic.Files[ir.Service] = f
-		}
-		if ir.Ignore != nil && ir.Ignore(ic, r) {
-			continue
-		}
-		body := f.Body()
-		if ir.Body != nil {
-			err := ir.Body(ic, body, r)
-			if err != nil {
-				log.Printf("[ERROR] %s", err.Error())
-			}
-		} else {
-			resourceBlock := body.AppendNewBlock("resource", []string{r.Resource, r.Name})
-			err := ic.dataToHcl(ir, []string{}, ic.Resources[r.Resource],
-				r.Data, resourceBlock.Body())
-			if err != nil {
-				log.Printf("[ERROR] %s", err.Error())
-			}
-		}
-		if i%50 == 0 {
-			log.Printf("[INFO] Generated %d of %d resources", i+1, scopeSize)
-		}
-		if r.Mode != "data" && ic.Resources[r.Resource].Importer != nil {
-			// nolint
-			sh.WriteString(r.ImportCommand(ic) + "\n")
-		}
-	}
+	ic.generateHclForResources(sh)
 	for service, f := range ic.Files {
 		formatted := hclwrite.Format(f.Bytes())
 		// fix some formatting in a hacky way instead of writing 100 lines
@@ -266,6 +231,44 @@ func (ic *importContext) Run() error {
 	}
 	log.Printf("[INFO] Done. Please edit the files and roll out new environment.")
 	return nil
+}
+
+func (ic *importContext) generateHclForResources(sh *os.File) {
+	sort.Sort(ic.Scope)
+	scopeSize := len(ic.Scope)
+	log.Printf("[INFO] Generating configuration for %d resources", scopeSize)
+	for i, r := range ic.Scope {
+		ir := ic.Importables[r.Resource]
+		f, ok := ic.Files[ir.Service]
+		if !ok {
+			f = hclwrite.NewEmptyFile()
+			ic.Files[ir.Service] = f
+		}
+		if ir.Ignore != nil && ir.Ignore(ic, r) {
+			continue
+		}
+		body := f.Body()
+		if ir.Body != nil {
+			err := ir.Body(ic, body, r)
+			if err != nil {
+				log.Printf("[ERROR] %s", err.Error())
+			}
+		} else {
+			resourceBlock := body.AppendNewBlock("resource", []string{r.Resource, r.Name})
+			err := ic.dataToHcl(ir, []string{}, ic.Resources[r.Resource],
+				r.Data, resourceBlock.Body())
+			if err != nil {
+				log.Printf("[ERROR] %s", err.Error())
+			}
+		}
+		if i%50 == 0 {
+			log.Printf("[INFO] Generated %d of %d resources", i+1, scopeSize)
+		}
+		if r.Mode != "data" && ic.Resources[r.Resource].Importer != nil && sh != nil {
+			// nolint
+			sh.WriteString(r.ImportCommand(ic) + "\n")
+		}
+	}
 }
 
 func (ic *importContext) MatchesName(n string) bool {
@@ -464,6 +467,14 @@ func (ic *importContext) reference(i importable, path []string, value string) hc
 	for _, d := range i.Depends {
 		if d.Path != match {
 			continue
+		}
+		if d.File {
+			relativeFile := fmt.Sprintf("${path.module}/%s", value)
+			return hclwrite.Tokens{
+				&hclwrite.Token{Type: hclsyntax.TokenOQuote, Bytes: []byte{'"'}},
+				&hclwrite.Token{Type: hclsyntax.TokenQuotedLit, Bytes: []byte(relativeFile)},
+				&hclwrite.Token{Type: hclsyntax.TokenCQuote, Bytes: []byte{'"'}},
+			}
 		}
 		attr := "id"
 		if d.Match != "" {

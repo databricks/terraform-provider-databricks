@@ -20,7 +20,6 @@ export DATABRICKS_TOKEN=...
     -services=groups,secrets,access,compute,users,jobs,storage \
     -listing=jobs,compute \
     -last-active-days=90 \
-    -module=data_platform \
     -debug
 sh import.sh
 ```

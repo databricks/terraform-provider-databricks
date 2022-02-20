@@ -22,8 +22,6 @@ This guide uses the following variables in configurations:
 - `workspace_vpce_service` - Choose the region-specific service endpoint from this table.
 - `relay_vpce_service` - Choose the region-specific service from this table.
 - `vpce_subnet_cidr` - CIDR range for the subnet chosen for the VPC endpoint
-- `credentials_id` - Databricks workspace credential ID - The credentials ID is one of the attributes which is created as a result of configuring the cross-account IAM role, which Databricks uses to orchestrate EC2 resources. The credentials are created via [databricks_mws_credentials](https://registry.terraform.io/providers/databrickslabs/databricks/latest/docs/resources/mws_credentials). 
-- `storage_configuration_id` - Databricks workspace storage configuration ID - this is obtained from the [databricks_mws_storage_configurations](https://registry.terraform.io/providers/databrickslabs/databricks/latest/docs/resources/mws_storage_configurations) resource
 - `tags` - tags for the Private Link backend setup
 - `root_bucket_name` - AWS bucket name required for [storage mws resource](https://registry.terraform.io/providers/databrickslabs/databricks/latest/docs/resources/mws_storage_configurations) reference
 - `cross_account_arn` - AWS EC2 role ARN required for [credentials mws resource](https://registry.terraform.io/providers/databrickslabs/databricks/latest/docs/resources/mws_credentials)

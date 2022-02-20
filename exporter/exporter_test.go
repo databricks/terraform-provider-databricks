@@ -5,10 +5,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"net/http"
 	"os"
 	"testing"
 	"time"
 
+	"github.com/databrickslabs/terraform-provider-databricks/access"
 	"github.com/databrickslabs/terraform-provider-databricks/aws"
 	"github.com/databrickslabs/terraform-provider-databricks/clusters"
 	"github.com/databrickslabs/terraform-provider-databricks/commands"
@@ -17,6 +19,7 @@ import (
 	"github.com/databrickslabs/terraform-provider-databricks/libraries"
 	"github.com/databrickslabs/terraform-provider-databricks/policies"
 	"github.com/databrickslabs/terraform-provider-databricks/qa"
+	"github.com/databrickslabs/terraform-provider-databricks/repos"
 	"github.com/databrickslabs/terraform-provider-databricks/scim"
 	"github.com/databrickslabs/terraform-provider-databricks/secrets"
 	"github.com/databrickslabs/terraform-provider-databricks/workspace"
@@ -196,18 +199,39 @@ var meAdminFixture = qa.HTTPFixture{
 	},
 }
 
-var repoListFixture = qa.HTTPFixture{
+var emptyRepos = qa.HTTPFixture{
 	Method:       "GET",
 	ReuseRequest: true,
 	Resource:     "/api/2.0/repos?",
-	Response:     workspace.ReposListResponse{},
+	Response:     repos.ReposListResponse{},
+}
+
+var emptyGitCredentials = qa.HTTPFixture{
+	Method:   http.MethodGet,
+	Resource: "/api/2.0/git-credentials",
+	Response: repos.GitCredentialList{},
+}
+
+var emptyIpAccessLIst = qa.HTTPFixture{
+	Method:   http.MethodGet,
+	Resource: "/api/2.0/ip-access-lists",
+	Response: map[string]interface{}{},
+}
+
+var emptyWorkspace = qa.HTTPFixture{
+	Method:   "GET",
+	Resource: "/api/2.0/workspace/list?path=%2F",
+	Response: workspace.ObjectList{},
 }
 
 func TestImportingUsersGroupsSecretScopes(t *testing.T) {
 	qa.HTTPFixturesApply(t,
 		[]qa.HTTPFixture{
 			meAdminFixture,
-			repoListFixture,
+			emptyRepos,
+			emptyGitCredentials,
+			emptyWorkspace,
+			emptyIpAccessLIst,
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/preview/scim/v2/Groups?",
@@ -360,12 +384,15 @@ func TestImportingNoResourcesError(t *testing.T) {
 	qa.HTTPFixturesApply(t,
 		[]qa.HTTPFixture{
 			meAdminFixture,
-			repoListFixture,
+			emptyRepos,
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/preview/scim/v2/Groups?",
 				Response: scim.GroupList{Resources: []scim.Group{}},
 			},
+			emptyGitCredentials,
+			emptyIpAccessLIst,
+			emptyWorkspace,
 			{
 				Method:       "GET",
 				Resource:     "/api/2.0/global-init-scripts",
@@ -411,7 +438,7 @@ func TestImportingClusters(t *testing.T) {
 	qa.HTTPFixturesApply(t,
 		[]qa.HTTPFixture{
 			meAdminFixture,
-			repoListFixture,
+			emptyRepos,
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/preview/scim/v2/Groups?",
@@ -560,7 +587,7 @@ func TestImportingJobs_JobList(t *testing.T) {
 	qa.HTTPFixturesApply(t,
 		[]qa.HTTPFixture{
 			meAdminFixture,
-			repoListFixture,
+			emptyRepos,
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/jobs/list",
@@ -740,15 +767,6 @@ func TestImportingJobs_JobList(t *testing.T) {
 			assert.NoError(t, err)
 
 			for _, res := range ic.Scope {
-				if res.Resource != "databricks_dbfs_file" {
-					continue
-				}
-				err = ic.Importables["databricks_dbfs_file"].Body(ic,
-					hclwrite.NewEmptyFile().Body(), res)
-				assert.NoError(t, err)
-			}
-
-			for _, res := range ic.Scope {
 				if res.Resource != "databricks_job" {
 					continue
 				}
@@ -766,10 +784,10 @@ func TestImportingJobs_JobList(t *testing.T) {
 }
 
 func TestImportingWithError(t *testing.T) {
-	err := Run("-directory", "/bin/sh", "-services", "groups,users")
+	err := Run("-directory", "/bin/sh", "-services", "groups,users", "-skip-interactive")
 	assert.EqualError(t, err, "the path /bin/sh is not a directory")
 
-	err = Run("-directory", "/bin/abcd", "-services", "groups,users", "-prefix", "abc")
+	err = Run("-directory", "/bin/abcd", "-services", "groups,users", "-prefix", "abc", "-skip-interactive")
 	assert.EqualError(t, err, "can't create directory /bin/abcd")
 }
 
@@ -777,7 +795,7 @@ func TestImportingSecrets(t *testing.T) {
 	qa.HTTPFixturesApply(t,
 		[]qa.HTTPFixture{
 			meAdminFixture,
-			repoListFixture,
+			emptyRepos,
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/preview/scim/v2/Groups?",
@@ -855,7 +873,7 @@ func TestImportingGlobalInitScripts(t *testing.T) {
 	qa.HTTPFixturesApply(t,
 		[]qa.HTTPFixture{
 			meAdminFixture,
-			repoListFixture,
+			emptyRepos,
 			{
 				Method:       "GET",
 				Resource:     "/api/2.0/global-init-scripts",
@@ -937,7 +955,7 @@ func TestEitherString(t *testing.T) {
 }
 
 func TestImportingRepos(t *testing.T) {
-	resp := workspace.ReposInformation{
+	resp := repos.ReposInformation{
 		ID:           121232342,
 		Url:          "https://github.com/user/test.git",
 		Provider:     "gitHub",
@@ -952,12 +970,13 @@ func TestImportingRepos(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/repos?",
-				Response: workspace.ReposListResponse{
-					Repos: []workspace.ReposInformation{
+				Response: repos.ReposListResponse{
+					Repos: []repos.ReposInformation{
 						resp,
 					},
 				},
 			},
+			emptyGitCredentials,
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/repos/121232342",
@@ -976,7 +995,74 @@ func TestImportingRepos(t *testing.T) {
 			ic := newImportContext(client)
 			ic.Directory = tmpDir
 			ic.listing = "repos"
-			ic.services = "repos,access"
+			ic.services = "repos"
+
+			err := ic.Run()
+			assert.NoError(t, err)
+		})
+}
+
+func TestImportingIPAccessLists(t *testing.T) {
+	resp := access.IpAccessListStatus{
+		ListID:       "123",
+		Label:        "block_list",
+		ListType:     "BLOCK",
+		IPAddresses:  []string{"1.2.3.4"},
+		AddressCount: 2,
+		Enabled:      true,
+	}
+	resp2 := resp
+	resp2.IPAddresses = []string{}
+	resp2.ListID = "124"
+	qa.HTTPFixturesApply(t,
+		[]qa.HTTPFixture{
+			meAdminFixture,
+			emptyRepos,
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/global-init-scripts",
+				Response: map[string]interface{}{},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/ip-access-lists",
+				Response: access.ListIPAccessListsResponse{
+					ListIPAccessListsResponse: []access.IpAccessListStatus{resp, resp2},
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/ip-access-lists/123",
+				Response: access.IpAccessListStatusWrapper{
+					IPAccessList: resp,
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/ip-access-lists/124",
+				Response: access.IpAccessListStatusWrapper{
+					IPAccessList: resp2,
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/workspace-conf?keys=enableIpAccessLists%2CenableTokensConfig%2CmaxTokenLifetimeDays",
+				Response: map[string]interface{}{
+					"enableIpAccessLists":  "true",
+					"maxTokenLifetimeDays": "90",
+					"enableTokensConfig":   "true",
+				},
+				ReuseRequest: true,
+			},
+		},
+		func(ctx context.Context, client *common.DatabricksClient) {
+			tmpDir := fmt.Sprintf("/tmp/tf-%s", qa.RandomName())
+			defer os.RemoveAll(tmpDir)
+
+			ic := newImportContext(client)
+			ic.Directory = tmpDir
+			ic.listing = "workspace,access"
+			ic.services = "workspace,access"
 
 			err := ic.Run()
 			assert.NoError(t, err)

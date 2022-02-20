@@ -1,4 +1,4 @@
-package workspace
+package repos
 
 import (
 	"context"
@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/databrickslabs/terraform-provider-databricks/common"
+	"github.com/databrickslabs/terraform-provider-databricks/workspace"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
@@ -33,21 +34,21 @@ type ReposInformation struct {
 	HeadCommitID string `json:"head_commit_id,omitempty" tf:"computed,alias:commit_hash"`
 }
 
-// ID returns job id as string
+// RepoID returns job id as string
 func (r ReposInformation) RepoID() string {
 	return fmt.Sprintf("%d", r.ID)
 }
 
-type createRequest struct {
+type reposCreateRequest struct {
 	Url      string `json:"url"`
 	Provider string `json:"provider"`
 	Path     string `json:"path,omitempty"`
 }
 
-func (a ReposAPI) Create(r createRequest) (ReposInformation, error) {
+func (a ReposAPI) Create(r reposCreateRequest) (ReposInformation, error) {
 	var resp ReposInformation
 	if r.Provider == "" { // trying to infer Git Provider from the URL
-		r.Provider = getProviderFromUrl(r.Url)
+		r.Provider = GetGitProviderFromUrl(r.Url)
 	}
 	if r.Provider == "" {
 		return resp, fmt.Errorf("git_provider isn't specified and we can't detect provider from URL")
@@ -61,7 +62,7 @@ func (a ReposAPI) Create(r createRequest) (ReposInformation, error) {
 			p = strings.TrimSuffix(r.Path, "/")
 		}
 		p = path.Dir(p)
-		if err := NewNotebooksAPI(a.context, a.client).Mkdirs(p); err != nil {
+		if err := workspace.NewNotebooksAPI(a.context, a.client).Mkdirs(p); err != nil {
 			return resp, err
 		}
 	}
@@ -133,7 +134,7 @@ var gitProvidersMap = map[string]string{
 	"bitbucket.org": "bitbucketCloud",
 }
 
-func getProviderFromUrl(uri string) string {
+func GetGitProviderFromUrl(uri string) string {
 	provider := ""
 	u, err := url.Parse(uri)
 	if err == nil {
@@ -167,7 +168,7 @@ func ResourceRepo() *schema.Resource {
 		SchemaVersion: 1,
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			reposAPI := NewReposAPI(ctx, c)
-			req := createRequest{Path: d.Get("path").(string), Provider: d.Get("git_provider").(string), Url: d.Get("url").(string)}
+			req := reposCreateRequest{Path: d.Get("path").(string), Provider: d.Get("git_provider").(string), Url: d.Get("url").(string)}
 			resp, err := reposAPI.Create(req)
 			if err != nil {
 				return err

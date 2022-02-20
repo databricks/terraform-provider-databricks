@@ -54,7 +54,7 @@ terraform {
   required_providers {
     databricks = {
       source  = "databrickslabs/databricks"
-      version = "0.4.8"
+      version = "0.5.0"
     }
     aws = {
       source  = "hashicorp/aws"
@@ -288,10 +288,12 @@ In [the next step](workspace-management.md), please use the following configurat
 
 ```hcl
 provider "databricks" {
-  host  = module.ai.databricks_host
-  token = module.ai.databricks_token
+  host  = module.e2.workspace_url
+  token = module.e2.token_value
 }
 ```
+We assume that you have a terraform module in your project that creats a workspace (using [Databricks E2 Workspace](#databricks-e2-workspace) section) and you named it as `e2` while calling it in the **main.tf** file of your terraform project. And `workspace_url` and `token_value` are the output attributes of that module. This provider configuration will allow you to use the generated token during workspace creation to authenticate to the created workspace.
+
 
 ### Credentials validation checks errors
 

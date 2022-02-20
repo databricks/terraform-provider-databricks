@@ -61,6 +61,7 @@ Data source exposes the following attributes:
 * `home` - Home folder of the [user](../resources/user.md), e.g. `/Users/mr.foo@example.com`.
 * `repos` - Personal Repos location of the [user](../resources/user.md), e.g. `/Repos/mr.foo@example.com`.
 * `alphanumeric` - Alphanumeric representation of user local name. e.g. `mr_foo`.
+* `workspace_url` - URL of the current Databricks workspace.
 
 
 ## Related Resources

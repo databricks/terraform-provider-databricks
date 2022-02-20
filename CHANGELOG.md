@@ -1,8 +1,39 @@
 # Version changelog
 
+## 0.5.0
+
+* Added `workspace_url` attribute to the `databricks_current_user` data source ([#1107](https://github.com/databrickslabs/terraform-provider-databricks/pull/1107)).
+* Fixed issue at `databricks_mount` where new cluster was created for S3 mount even when `cluster_id` was specified ([#1064](https://github.com/databrickslabs/terraform-provider-databricks/issues/1064)).
+* Allow to disable auto-termination for Databricks SQL endpoints ([#900](https://github.com/databrickslabs/terraform-provider-databricks/pull/900)).
+* Added new `gcp_attributes` to `databricks_cluster` and `databricks_instance_pool` ([#1126](https://github.com/databrickslabs/terraform-provider-databricks/pull/1126)).
+* Added exporter functionality for `databricks_ip_access_list` and `databricks_workspace_conf` ([#1125](https://github.com/databrickslabs/terraform-provider-databricks/pull/1125)).
+* Added `graviton` selector for `databricks_node_type` and `databricks_spark_version` data sources ([#1127](https://github.com/databrickslabs/terraform-provider-databricks/pull/1127)).
+* Added interactive mode to resource exporter ([#1010](https://github.com/databrickslabs/terraform-provider-databricks/pull/1010)).
+* Added preview support for `git_source` in `databricks_job` ([#1090](https://github.com/databrickslabs/terraform-provider-databricks/pull/1090)).
+* Multiple other fixes and documentation improvements.
+
+Updated dependency versions:
+
+* Bump github.com/golang-jwt/jwt/v4 from 4.2.0 to 4.3.0
+* Bump google.golang.org/api from 0.67.0 to 0.68.0
+* Bump gopkg.in/ini.v1 from 1.66.3 to 1.66.4
+
 ## 0.4.9
 
 * Prevent creation of `databricks_group` with `users` and `admins` reserved names ([#1089](https://github.com/databrickslabs/terraform-provider-databricks/issues/1089)).
+* Added support for shared clusters in multi-task `databricks_job` ([#1082](https://github.com/databrickslabs/terraform-provider-databricks/issues/1082)).
+* Added diff suppression for `external_id` in `databricks_group` ([#1099](https://github.com/databrickslabs/terraform-provider-databricks/issues/1099)).
+* Added diff suppression for `external_id` in `databricks_user` ([#1097](https://github.com/databrickslabs/terraform-provider-databricks/issues/1097)).
+* Added `users`, `service_principals`, and `child_groups` exported properties to `databricks_group` data resource ([#1085](https://github.com/databrickslabs/terraform-provider-databricks/issues/1085)).
+* Added various documentation improvements.
+
+**Deprecations**
+
+* `databricks_group`.`members` is deprecated in favor of `users`, `service_principals`, and `child_groups` exported properties. Please do slight modifications of your configuration.
+
+Updated dependency versions:
+
+* Bump google.golang.org/api from 0.66.0 to 0.67.0
 
 ## 0.4.8
 

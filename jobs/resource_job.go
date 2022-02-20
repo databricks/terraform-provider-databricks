@@ -16,6 +16,7 @@ import (
 	"github.com/databrickslabs/terraform-provider-databricks/clusters"
 	"github.com/databrickslabs/terraform-provider-databricks/common"
 	"github.com/databrickslabs/terraform-provider-databricks/libraries"
+	"github.com/databrickslabs/terraform-provider-databricks/repos"
 )
 
 // NotebookTask contains the information for notebook jobs
@@ -74,6 +75,17 @@ type TaskDependency struct {
 	TaskKey string `json:"task_key,omitempty"`
 }
 
+// BEGIN Jobs + Repo integration preview
+type GitSource struct {
+	Url      string `json:"git_url" tf:"alias:url"`
+	Provider string `json:"git_provider,omitempty" tf:"alias:provider"`
+	Branch   string `json:"git_branch,omitempty" tf:"alias:branch"`
+	Tag      string `json:"git_tag,omitempty" tf:"alias:tag"`
+	Commit   string `json:"git_commit,omitempty" tf:"alias:commit"`
+}
+
+// End Jobs + Repo integration preview
+
 type JobTaskSettings struct {
 	TaskKey     string           `json:"task_key,omitempty"`
 	Description string           `json:"description,omitempty"`
@@ -81,6 +93,7 @@ type JobTaskSettings struct {
 
 	ExistingClusterID      string              `json:"existing_cluster_id,omitempty" tf:"group:cluster_type"`
 	NewCluster             *clusters.Cluster   `json:"new_cluster,omitempty" tf:"group:cluster_type"`
+	JobClusterKey          string              `json:"job_cluster_key,omitempty" tf:"group:cluster_type"`
 	Libraries              []libraries.Library `json:"libraries,omitempty" tf:"slice_set,alias:library"`
 	NotebookTask           *NotebookTask       `json:"notebook_task,omitempty" tf:"group:task_type"`
 	SparkJarTask           *SparkJarTask       `json:"spark_jar_task,omitempty" tf:"group:task_type"`
@@ -93,6 +106,11 @@ type JobTaskSettings struct {
 	MaxRetries             int32               `json:"max_retries,omitempty"`
 	MinRetryIntervalMillis int32               `json:"min_retry_interval_millis,omitempty"`
 	RetryOnTimeout         bool                `json:"retry_on_timeout,omitempty" tf:"computed"`
+}
+
+type JobCluster struct {
+	JobClusterKey string            `json:"job_cluster_key,omitempty" tf:"group:cluster_type"`
+	NewCluster    *clusters.Cluster `json:"new_cluster,omitempty" tf:"group:cluster_type"`
 }
 
 // JobSettings contains the information for configuring a job on databricks
@@ -116,9 +134,14 @@ type JobSettings struct {
 	// END Jobs API 2.0
 
 	// BEGIN Jobs API 2.1
-	Tasks  []JobTaskSettings `json:"tasks,omitempty" tf:"alias:task"`
-	Format string            `json:"format,omitempty" tf:"computed"`
+	Tasks       []JobTaskSettings `json:"tasks,omitempty" tf:"alias:task"`
+	Format      string            `json:"format,omitempty" tf:"computed"`
+	JobClusters []JobCluster      `json:"job_clusters,omitempty" tf:"alias:job_cluster"`
 	// END Jobs API 2.1
+
+	// BEGIN Jobs + Repo integration preview
+	GitSource *GitSource `json:"git_source,omitempty"`
+	// END Jobs + Repo integration preview
 
 	Schedule           *CronSchedule       `json:"schedule,omitempty"`
 	MaxConcurrentRuns  int32               `json:"max_concurrent_runs,omitempty"`
@@ -321,6 +344,16 @@ func (a JobsAPI) Restart(id string, timeout time.Duration) error {
 func (a JobsAPI) Create(jobSettings JobSettings) (Job, error) {
 	var job Job
 	jobSettings.sortTasksByKey()
+	var gitSource *GitSource = jobSettings.GitSource
+	if gitSource != nil && gitSource.Provider == "" {
+		gitSource.Provider = repos.GetGitProviderFromUrl(gitSource.Url)
+		if gitSource.Provider == "" {
+			return job, fmt.Errorf("git source is not empty but Git Provider is not specified and cannot be guessed by url %+v", gitSource)
+		}
+		if gitSource.Branch == "" && gitSource.Tag == "" && gitSource.Commit == "" {
+			return job, fmt.Errorf("git source is not empty but none of branch, commit and tag is specified")
+		}
+	}
 	err := a.client.Post(a.context, "/jobs/create", jobSettings, &job)
 	return job, err
 }
@@ -406,10 +439,18 @@ func jobSettingsSchema(s *map[string]*schema.Schema, prefix string) {
 	}
 }
 
+func gitSourceSchema(r *schema.Resource, prefix string) {
+	r.Schema["url"].ValidateFunc = validation.IsURLWithHTTPS
+	(*r.Schema["tag"]).ConflictsWith = []string{"git_source.0.branch", "git_source.0.commit"}
+	(*r.Schema["branch"]).ConflictsWith = []string{"git_source.0.commit", "git_source.0.tag"}
+	(*r.Schema["commit"]).ConflictsWith = []string{"git_source.0.branch", "git_source.0.tag"}
+}
+
 var jobSchema = common.StructToSchema(JobSettings{},
 	func(s map[string]*schema.Schema) map[string]*schema.Schema {
 		jobSettingsSchema(&s, "")
 		jobSettingsSchema(&s["task"].Elem.(*schema.Resource).Schema, "task.0.")
+		gitSourceSchema(s["git_source"].Elem.(*schema.Resource), "")
 		if p, err := common.SchemaPath(s, "schedule", "pause_status"); err == nil {
 			p.ValidateFunc = validation.StringInSlice([]string{"PAUSED", "UNPAUSED"}, false)
 		}

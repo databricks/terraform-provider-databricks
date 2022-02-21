@@ -1,5 +1,9 @@
 # Version changelog
 
+## 0.5.1
+
+* Added an extended documentation from provisioning AWS PrivateLink workspace ([#1084](https://github.com/databrickslabs/terraform-provider-databricks/pull/1084)).
+
 ## 0.5.0
 
 * Added `workspace_url` attribute to the `databricks_current_user` data source ([#1107](https://github.com/databrickslabs/terraform-provider-databricks/pull/1107)).

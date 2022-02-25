@@ -171,6 +171,11 @@ func diffSuppressor(zero string) func(k, old, new string, d *schema.ResourceData
 func typeToSchema(v reflect.Value, t reflect.Type, path []string) map[string]*schema.Schema {
 	scm := map[string]*schema.Schema{}
 	rk := v.Kind()
+	if rk == reflect.Ptr {
+		v = v.Elem()
+		t = v.Type()
+		rk = v.Kind()
+	}
 	if rk != reflect.Struct {
 		panic(fmt.Errorf("Schema value of Struct is expected, but got %s: %#v", reflectKind(rk), v))
 	}
@@ -384,7 +389,11 @@ func isValueNilOrEmpty(valueField *reflect.Value, fieldPath string) bool {
 
 // StructToData reads result using schema onto resource data
 func StructToData(result interface{}, s map[string]*schema.Schema, d *schema.ResourceData) error {
-	return iterFields(reflect.ValueOf(result), []string{}, s, func(
+	v := reflect.ValueOf(result)
+	if v.Kind() == reflect.Ptr {
+		v = v.Elem()
+	}
+	return iterFields(v, []string{}, s, func(
 		fieldSchema *schema.Schema, path []string, valueField *reflect.Value) error {
 		fieldValue := valueField.Interface()
 		if fieldValue == nil {

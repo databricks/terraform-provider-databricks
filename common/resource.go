@@ -167,3 +167,27 @@ func makeEmptyBlockSuppressFunc(name string) func(k, old, new string, d *schema.
 		return false
 	}
 }
+
+func DataResource(e interface{}, read func(context.Context, *DatabricksClient) error) *schema.Resource {
+	s := StructToSchema(e, func(m map[string]*schema.Schema) map[string]*schema.Schema { return m })
+	return &schema.Resource{
+		Schema: s,
+		ReadContext: func(ctx context.Context, d *schema.ResourceData, m interface{}) (diags diag.Diagnostics) {
+			defer func() {
+				// using recoverable() would cause more complex rewrapping of DataToStructPointer & StructToData
+				if panic := recover(); panic != nil {
+					diags = diag.Errorf("panic: %v", panic)
+				}
+			}()
+			DataToStructPointer(d, s, e)
+			err := read(ctx, m.(*DatabricksClient))
+			if err != nil {
+				err = nicerError(ctx, err, "read data")
+				diags = diag.FromErr(err)
+			}
+			StructToData(e, s, d)
+			d.SetId("_")
+			return
+		},
+	}
+}

@@ -44,6 +44,7 @@ func DatabricksProvider() *schema.Provider {
 			"databricks_dbfs_file":               storage.DataSourceDBFSFile(),
 			"databricks_dbfs_file_paths":         storage.DataSourceDBFSFilePaths(),
 			"databricks_group":                   scim.DataSourceGroup(),
+			"databricks_jobs":                    jobs.DataSourceJobs(),
 			"databricks_node_type":               clusters.DataSourceNodeType(),
 			"databricks_notebook":                workspace.DataSourceNotebook(),
 			"databricks_notebook_paths":          workspace.DataSourceNotebookPaths(),

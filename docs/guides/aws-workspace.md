@@ -53,8 +53,7 @@ Before [managing workspace](workspace-management.md), you have to create:
 terraform {
   required_providers {
     databricks = {
-      source  = "databrickslabs/databricks"
-      version = "0.5.0"
+      source = "databrickslabs/databricks"
     }
     aws = {
       source  = "hashicorp/aws"

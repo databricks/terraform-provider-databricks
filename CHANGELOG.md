@@ -5,6 +5,10 @@
 * Added an extended documentation from provisioning AWS PrivateLink workspace ([#1084](https://github.com/databrickslabs/terraform-provider-databricks/pull/1084)).
 * Added `databricks_jobs` data resource to get a map of all job names and their ids ([#1138](https://github.com/databrickslabs/terraform-provider-databricks/pull/1138)).
 
+Updated dependency versions:
+
+* Bump google.golang.org/api from 0.68.0 to 0.69.0
+
 ## 0.5.0
 
 * Added `workspace_url` attribute to the `databricks_current_user` data source ([#1107](https://github.com/databrickslabs/terraform-provider-databricks/pull/1107)).

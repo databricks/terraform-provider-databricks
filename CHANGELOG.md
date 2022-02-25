@@ -3,6 +3,7 @@
 ## 0.5.1
 
 * Added an extended documentation from provisioning AWS PrivateLink workspace ([#1084](https://github.com/databrickslabs/terraform-provider-databricks/pull/1084)).
+* Added `databricks_jobs` data resource to get a map of all job names and their ids ([#1138](https://github.com/databrickslabs/terraform-provider-databricks/pull/1138)).
 
 ## 0.5.0
 

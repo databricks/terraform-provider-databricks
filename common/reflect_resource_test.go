@@ -1,6 +1,7 @@
 package common
 
 import (
+	"context"
 	"fmt"
 	"reflect"
 	"testing"
@@ -578,4 +579,33 @@ func TestStructToData_CornerCases(t *testing.T) {
 func TestDataToReflectValueBypass(t *testing.T) {
 	err := DataToReflectValue(nil, &schema.Resource{Schema: map[string]*schema.Schema{}}, reflect.ValueOf(0))
 	assert.EqualError(t, err, "value of Struct is expected, but got Int: 0")
+}
+
+func TestDataResource(t *testing.T) {
+	r := func() *schema.Resource {
+		var dto struct {
+			In string `json:"in"`
+			Out string `json:"out,omitempty" tf:"computed"`
+		}
+		return DataResource(&dto, func(ctx context.Context, c *DatabricksClient) error {
+			dto.Out = "out: " + dto.In
+			if dto.In == "fail" {
+				return fmt.Errorf("happens")
+			}
+			return nil
+		})
+	}()
+	d := r.TestResourceData()
+	d.Set("in", "test")
+
+	diags := r.ReadContext(context.Background(), d, nil)
+	assert.Len(t, diags, 1)
+
+	diags = r.ReadContext(context.Background(), d, &DatabricksClient{})
+	assert.Len(t, diags, 0)
+	assert.Equal(t, "out: test", d.Get("out"))
+
+	d.Set("in", "fail")
+	diags = r.ReadContext(context.Background(), d, &DatabricksClient{})
+	assert.Len(t, diags, 1)
 }

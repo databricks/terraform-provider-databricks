@@ -2,6 +2,7 @@ package jobs
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/databrickslabs/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -19,8 +20,12 @@ func DataSourceJobs() *schema.Resource {
 		}
 		response.Ids = map[string]string{}
 		for _, v := range list.Jobs {
-			// TODO: return error on duplicate names
-			response.Ids[v.Settings.Name] = v.ID()
+			name := v.Settings.Name
+			_, duplicateName := response.Ids[name]
+			if duplicateName {
+				return fmt.Errorf("duplicate job name detected: %s", name)
+			}
+			response.Ids[name] = v.ID()
 		}
 		return nil
 	})

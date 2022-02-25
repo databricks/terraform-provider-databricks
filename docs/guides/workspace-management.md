@@ -10,8 +10,7 @@ Once you have the workspace setup on [Azure](azure-workspace.md) or [AWS](aws-wo
 terraform {
   required_providers {
     databricks = {
-      source  = "databrickslabs/databricks"
-      version = "0.5.0"
+      source = "databrickslabs/databricks"
     }
   }
 }

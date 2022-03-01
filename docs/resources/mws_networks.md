@@ -14,6 +14,8 @@ Use this resource to [configure VPC](https://docs.databricks.com/administration-
 * Subnets must have outbound access to the public network using a [aws_nat_gateway](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/nat_gateway) and [aws_internet_gateway](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/internet_gateway), or other similar customer-managed appliance infrastructure.
 * The NAT gateway must be set up in its subnet (public_subnets in the example below) that routes quad-zero (0.0.0.0/0) traffic to an internet gateway or other customer-managed appliance infrastructure.
 
+-> **Note** The NAT gateway needs only one IP address per AZ. Hence, the public subnet only needs two IP addresses. In order to limit the number of IP addresses in the public subnet, you can specify a secondary CIDR block (cidr_block_public) using the argument secondary_cidr_blocks then pass it to the public_subnets argument. Please review the [IPv4 CIDR block association restrictions](https://docs.aws.amazon.com/vpc/latest/userguide/VPC_Subnets.html) when choosing the secondary cidr block.
+
 Please follow this [complete runnable example](../guides/aws-workspace.md) with new VPC and new workspace setup. Please pay special attention to the fact that there you have two different instances of a databricks provider - one for deploying workspaces (with `host="https://accounts.cloud.databricks.com/") and another for the workspace you've created with `databricks_mws_workspaces` resource. If you want both creations of workspaces & clusters within the same Terraform module (essentially the same directory), you should use the provider aliasing feature of Terraform. We strongly recommend having one terraform module to create workspace + PAT token and the rest in different modules.
 
 ## Example Usage
@@ -31,6 +33,7 @@ module "vpc" {
 
   name = local.prefix
   cidr = var.cidr_block
+  secondary_cidr_blocks = [var.cidr_block_public]
   azs  = data.aws_availability_zones.available.names
   tags = var.tags
 
@@ -38,7 +41,7 @@ module "vpc" {
   enable_nat_gateway   = true
   create_igw           = true
 
-  public_subnets = [cidrsubnet(var.cidr_block, 3, 0)]
+  public_subnets = [cidrsubnet(var.cidr_block_public, 6, 0)]
   private_subnets = [cidrsubnet(var.cidr_block, 3, 1),
   cidrsubnet(var.cidr_block, 3, 2)]
 

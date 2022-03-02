@@ -29,6 +29,14 @@ The following arguments are supported:
 
 * [databricks_permissions](permissions.md#MLflow-Experiment-usage) can control which groups or individual users can *Read*, *Edit*, or *Manage* individual experiments.
 
+## Import
+
+The experiment resource can be imported using the id of the experiment
+
+```bash
+$ terraform import databricks_mlflow_experiment.this <experiment-id>
+```
+
 ## Related Resources
 
 The following resources are often used in the same context:

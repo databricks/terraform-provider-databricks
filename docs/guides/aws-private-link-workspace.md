@@ -271,7 +271,7 @@ resource "databricks_mws_networks" "this" {
 
 ## Configure workspace
 
-For a workspace to support any of the PrivateLink connectivity scenarios, the workspace must be created with an attached [databricks_mws_private_access_settings] resource (../resources/mws_private_access_settings.md)
+For a workspace to support any of the PrivateLink connectivity scenarios, the workspace must be created with an attached [databricks_mws_private_access_settings](../resources/mws_private_access_settings.md) resource.
 
 The credentials ID which is referenced below is one of the attributes which is created as a result of configuring the cross-account IAM role, which Databricks uses to orchestrate EC2 resources. The credentials are created via [databricks_mws_credentials](https://registry.terraform.io/providers/databrickslabs/databricks/latest/docs/resources/mws_credentials). Similarly, the storage configuration ID is obtained from the [databricks_mws_storage_configurations](https://registry.terraform.io/providers/databrickslabs/databricks/latest/docs/resources/mws_storage_configurations) resource.
 

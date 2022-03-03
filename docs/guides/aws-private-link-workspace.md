@@ -111,6 +111,12 @@ resource "databricks_mws_credentials" "this" {
 ```
 
 ## Configure networking
+In this section, the goal is to create the two back-end VPC endpoints:
+- Back-end VPC endpoint for SSC relay
+- Back-end VPC endpoint for REST APIs
+
+-> **Note** If you want to implement the front-end VPC endpoint as well for the connections from the user to the workspace front-end, use the transit (bastion) VPC that terminates your AWS Direct Connect or VPN gateway connection or one that is routable from such a transit (bastion) VPC. Once the front-end endpoint is created, it can be supplied to [databricks_mws_networks](../resources/mws_networks.md) resource using vpc_endpoints argument. Use the [databricks_mws_private_access_settings](../resources/mws_private_access_settings.md) resource to control which VPC endpoints can connect to the UI or API of any workspace that attaches this private access settings object.
+
 The first step is to create the required AWS objects:
 - A subnet dedicated to your VPC endpoints.
 - A security group dedicated to your VPC endpoints and satisfying required inbound/outbound TCP/HTTPS traffic rules on ports 443 and 6666, respectively.
@@ -264,6 +270,8 @@ resource "databricks_mws_networks" "this" {
 ```
 
 ## Configure workspace
+
+For a workspace to support any of the PrivateLink connectivity scenarios, the workspace must be created with an attached [databricks_mws_private_access_settings](../resources/mws_private_access_settings.md) resource.
 
 The credentials ID which is referenced below is one of the attributes which is created as a result of configuring the cross-account IAM role, which Databricks uses to orchestrate EC2 resources. The credentials are created via [databricks_mws_credentials](https://registry.terraform.io/providers/databrickslabs/databricks/latest/docs/resources/mws_credentials). Similarly, the storage configuration ID is obtained from the [databricks_mws_storage_configurations](https://registry.terraform.io/providers/databrickslabs/databricks/latest/docs/resources/mws_storage_configurations) resource.
 

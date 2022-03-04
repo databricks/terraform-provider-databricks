@@ -38,7 +38,7 @@ type TableInfo struct {
 	TableType             string            `json:"table_type"`
 	DataSourceFormat      string            `json:"data_source_format"`
 	ColumnInfos           []ColumnInfo      `json:"columns" tf:"alias:column"`
-	StorageLocation       string            `json:"storage_location"`
+	StorageLocation       string            `json:"storage_location,omitempty"`
 	StorageCredentialName string            `json:"storage_credential_name,omitempty"`
 	ViewDefinition        string            `json:"view_definition,omitempty"`
 	Owner                 string            `json:"owner,omitempty" tf:"computed"`

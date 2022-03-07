@@ -60,6 +60,10 @@ In addition to all arguments above, the following attributes are exported:
 * `private_access_settings_id` - Canonical unique identifier of Private Access Settings in Databricks Account
 * `status` - Status of Private Access Settings
 
+## Import
+
+-> **Note** Importing this resource is not currently supported.
+
 ## Related Resources
 
 The following resources are used in the same context:

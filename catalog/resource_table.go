@@ -50,6 +50,18 @@ func (ti TableInfo) FullName() string {
 	return fmt.Sprintf("%s.%s.%s", ti.CatalogName, ti.SchemaName, ti.Name)
 }
 
+type Tables struct {
+	Tables []TableInfo `json:"tables"`
+}
+
+func (a TablesAPI) listTables(catalogName, schemaName string) (tables Tables, err error) {
+	err = a.client.Get(a.context, "/unity-catalog/tables/", map[string]string{
+		"catalog_name": catalogName,
+		"schema_name":  schemaName,
+	}, &tables)
+	return
+}
+
 func (a TablesAPI) createTable(ti *TableInfo) error {
 	return a.client.Post(a.context, "/unity-catalog/tables", ti, ti)
 }

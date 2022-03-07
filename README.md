@@ -12,6 +12,7 @@
 | [databricks_aws_bucket_policy](docs/data-sources/aws_bucket_policy.md) data
 | [databricks_aws_crossaccount_policy](docs/data-sources/aws_crossaccount_policy.md) data
 | [databricks_catalog](docs/resources/catalog.md)
+| [databricks_catalogs](docs/data-sources/catalog.md) data
 | [databricks_cluster](docs/resources/cluster.md)
 | [databricks_clusters](docs/data-sources/clusters.md) data
 | [databricks_cluster_policy](docs/resources/cluster_policy.md)
@@ -51,6 +52,7 @@
 | [databricks_pipeline](docs/resources/pipeline.md)
 | [databricks_repo](docs/resources/repo.md)
 | [databricks_schema](docs/resources/schema.md)
+| [databricks_schemas](docs/data-sources/schema.md) data
 | [databricks_secret](docs/resources/secret.md)
 | [databricks_secret_acl](docs/resources/secret_acl.md)
 | [databricks_secret_scope](docs/resources/secret_scope.md)
@@ -64,6 +66,7 @@
 | [databricks_sql_widget](docs/resources/sql_widget.md)
 | [databricks_storage_credential](docs/resources/storage_credential.md)
 | [databricks_table](docs/resources/table.md)
+| [databricks_tables](docs/data-sources/table.md) data
 | [databricks_token](docs/resources/token.md)
 | [databricks_user](docs/resources/user.md)
 | [databricks_user_instance_profile](docs/resources/user_instance_profile.md)

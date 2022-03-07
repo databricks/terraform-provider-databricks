@@ -347,6 +347,22 @@ func TestMakeRequestBody(t *testing.T) {
 	assert.Equal(t, []byte("abc"), body)
 }
 
+func TestMakeRequestBodyForMap(t *testing.T) {
+	requestURL := "/a"
+	_, err := makeRequestBody("GET", &requestURL, map[string]int{
+		// i hope this will not trigger false positives too often
+		"e": 1,
+		"a": 2,
+		"f": 3,
+		"g": 4,
+		"c": 5,
+		"b": 6,
+		"d": 7,
+	}, true)
+	require.NoError(t, err)
+	assert.Equal(t, "/a?a=2&b=6&c=5&d=7&e=1&f=3&g=4", requestURL)
+}
+
 func TestClient_HandleErrors(t *testing.T) {
 	tests := []struct {
 		name               string

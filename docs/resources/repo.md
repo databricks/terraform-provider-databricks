@@ -16,7 +16,6 @@ You can declare Terraform-managed Repo by specifying `url` attribute of Git repo
 resource "databricks_repo" "nutter_in_home" {
   url = "https://github.com/user/demo.git"
 }
-
 ```
 
 ## Argument Reference

@@ -30,11 +30,3 @@ The following arguments are required:
 * `metastore_id` - Unique identifier of the parent Metastore
 * `workspace_id` - id of the workspace for the assignment
 * `default_catalog_name` - (Optional) Default catalog used for this assignment, default to `hive_metastore`
-
-## Import
-
-This resource can be imported by ID:
-
-```bash
-$ terraform import databricks_metastore_assignment.this <id>
-```

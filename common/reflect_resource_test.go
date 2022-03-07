@@ -584,7 +584,7 @@ func TestDataToReflectValueBypass(t *testing.T) {
 func TestDataResource(t *testing.T) {
 	r := func() *schema.Resource {
 		var dto struct {
-			In string `json:"in"`
+			In  string `json:"in"`
 			Out string `json:"out,omitempty" tf:"computed"`
 		}
 		return DataResource(&dto, func(ctx context.Context, c *DatabricksClient) error {

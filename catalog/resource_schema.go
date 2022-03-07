@@ -26,6 +26,17 @@ type SchemaInfo struct {
 	FullName    string            `json:"full_name,omitempty" tf:"computed"`
 }
 
+type Schemas struct {
+	Schemas []SchemaInfo `json:"schemas"`
+}
+
+func (a SchemasAPI) listByCatalog(catalogName string) (schemas Schemas, err error) {
+	err = a.client.Get(a.context, "/unity-catalog/schemas", map[string]string{
+		"catalog_name": catalogName,
+	}, &schemas)
+	return
+}
+
 func (a SchemasAPI) createSchema(si *SchemaInfo) error {
 	return a.client.Post(a.context, "/unity-catalog/schemas", si, si)
 }

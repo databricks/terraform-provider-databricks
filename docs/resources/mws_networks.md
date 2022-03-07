@@ -31,11 +31,11 @@ module "vpc" {
   source  = "terraform-aws-modules/vpc/aws"
   version = "2.70.0"
 
-  name = local.prefix
-  cidr = var.cidr_block
+  name                  = local.prefix
+  cidr                  = var.cidr_block
   secondary_cidr_blocks = [var.cidr_block_public]
-  azs  = data.aws_availability_zones.available.names
-  tags = var.tags
+  azs                   = data.aws_availability_zones.available.names
+  tags                  = var.tags
 
   enable_dns_hostnames = true
   enable_nat_gateway   = true

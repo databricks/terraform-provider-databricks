@@ -25,6 +25,15 @@ type CatalogInfo struct {
 	MetastoreID string            `json:"metastore_id,omitempty" tf:"computed"`
 }
 
+type Catalogs struct {
+	Catalogs []CatalogInfo `json:"catalogs"`
+}
+
+func (a CatalogsAPI) list() (catalogs Catalogs, err error) {
+	err = a.client.Get(a.context, "/unity-catalog/catalogs", nil, &catalogs)
+	return
+}
+
 func (a CatalogsAPI) createCatalog(ci *CatalogInfo) error {
 	return a.client.Post(a.context, "/unity-catalog/catalogs", ci, ci)
 }

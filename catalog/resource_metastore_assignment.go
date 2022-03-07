@@ -33,9 +33,17 @@ func (a MetastoreAssignmentAPI) updateMetastoreAssignment(ma MetastoreAssignment
 	return a.client.Patch(a.context, path, ma)
 }
 
-func (a MetastoreAssignmentAPI) clearMetastoreAssignment(workspaceID string) error {
+func (a MetastoreAssignmentAPI) getAssignedMetastoreID() (string, error) {
+	var ma MetastoreAssignment
+	err := a.client.Get(a.context, "/unity-catalog/metastore_summary", nil, &ma)
+	return ma.MetastoreID, err
+}
+
+func (a MetastoreAssignmentAPI) deleteMetastoreAssignment(workspaceID, metastoreID string) error {
 	path := fmt.Sprintf("/unity-catalog/workspaces/%s/metastore", workspaceID)
-	return a.client.Patch(a.context, path, map[string]string{})
+	return a.client.Patch(a.context, path, map[string]string{
+		"metastore_id": metastoreID,
+	})
 }
 
 func ResourceMetastoreAssignment() *schema.Resource {
@@ -56,8 +64,9 @@ func ResourceMetastoreAssignment() *schema.Resource {
 			return nil
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			// there are no working APIs at the moment to read the assignment
-			return nil
+			metastoreID, err := NewMetastoreAssignmentAPI(ctx, c).getAssignedMetastoreID()
+			d.Set("metastore_id", metastoreID)
+			return err
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var ma MetastoreAssignment
@@ -65,11 +74,11 @@ func ResourceMetastoreAssignment() *schema.Resource {
 			return NewMetastoreAssignmentAPI(ctx, c).updateMetastoreAssignment(ma)
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			workspaceID, _, err := pi.Unpack(d)
+			workspaceID, metastoreID, err := pi.Unpack(d)
 			if err != nil {
 				return err
 			}
-			return NewMetastoreAssignmentAPI(ctx, c).clearMetastoreAssignment(workspaceID)
+			return NewMetastoreAssignmentAPI(ctx, c).deleteMetastoreAssignment(workspaceID, metastoreID)
 		},
 	}.ToResource()
 }

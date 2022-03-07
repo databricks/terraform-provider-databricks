@@ -41,7 +41,7 @@ func (a MetastoreAssignmentAPI) getAssignedMetastoreID() (string, error) {
 
 func (a MetastoreAssignmentAPI) deleteMetastoreAssignment(workspaceID, metastoreID string) error {
 	path := fmt.Sprintf("/unity-catalog/workspaces/%s/metastore", workspaceID)
-	return a.client.Patch(a.context, path, map[string]string{
+	return a.client.Delete(a.context, path, map[string]string{
 		"metastore_id": metastoreID,
 	})
 }

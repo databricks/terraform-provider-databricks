@@ -294,13 +294,25 @@ func CornerCaseSkipCRUD(method string) CornerCase {
 	return CornerCase{"skip_crud", method}
 }
 
+var HTTPFailures = []HTTPFixture{
+	{
+		MatchAny:     true,
+		ReuseRequest: true,
+		Status:       418,
+		Response: common.APIError{
+			ErrorCode:  "NONSENSE",
+			StatusCode: 418,
+			Message:    "I'm a teapot",
+		},
+	},
+}
+
 // ResourceCornerCases checks for corner cases of error handling. Optional field name used to create error
 func ResourceCornerCases(t *testing.T, resource *schema.Resource, cc ...CornerCase) {
 	config := map[string]string{
 		"id":           "x",
 		"expect_error": "I'm a teapot",
 	}
-	teapot := "I'm a teapot"
 	m := map[string]func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics{
 		"create": resource.CreateContext,
 		"read":   resource.ReadContext,
@@ -313,18 +325,7 @@ func ResourceCornerCases(t *testing.T, resource *schema.Resource, cc ...CornerCa
 		}
 		config[corner.part] = corner.value
 	}
-	HTTPFixturesApply(t, []HTTPFixture{
-		{
-			MatchAny:     true,
-			ReuseRequest: true,
-			Status:       418,
-			Response: common.APIError{
-				ErrorCode:  "NONSENSE",
-				StatusCode: 418,
-				Message:    teapot,
-			},
-		},
-	}, func(ctx context.Context, client *common.DatabricksClient) {
+	HTTPFixturesApply(t, HTTPFailures, func(ctx context.Context, client *common.DatabricksClient) {
 		validData := resource.TestResourceData()
 		validData.SetId(config["id"])
 		for n, v := range m {

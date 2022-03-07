@@ -62,6 +62,10 @@ In addition to all arguments above, the following attributes are exported:
 * `creation_time` - (Integer) time of credentials registration
 * `credentials_id` - (String) identifier of credentials
 
+## Import
+
+-> **Note** Importing this resource is not currently supported.
+
 ## Related Resources
 
 The following resources are used in the same context:

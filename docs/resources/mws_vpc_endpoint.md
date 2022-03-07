@@ -147,6 +147,10 @@ In addition to all arguments above, the following attributes are exported:
 * `vpc_endpoint_id` - Canonical unique identifier of VPC Endpoint in Databricks Account
 * `state` - State of VPC Endpoint
 
+## Import
+
+-> **Note** Importing this resource is not currently supported.
+
 ## Related Resources
 
 The following resources are used in the same context:

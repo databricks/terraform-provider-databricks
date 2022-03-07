@@ -74,6 +74,10 @@ In addition to all arguments above, the following attributes are exported:
 * `id` - Canonical unique identifier for the token.
 * `token_value` - **Sensitive** value of the newly-created token.
 
+## Import
+
+-> **Note** Importing this resource is not currently supported.
+
 ## Related Resources
 
 The following resources are often used in the same context:

@@ -111,6 +111,10 @@ In addition to all arguments above, the following attributes are exported:
 * `vpc_status` - (String) VPC attachment status
 * `workspace_id` - (Integer) id of associated workspace
 
+## Import
+
+-> **Note** Importing this resource is not currently supported.
+
 ## Related Resources
 
 The following resources are used in the same context:

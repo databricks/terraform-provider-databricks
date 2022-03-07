@@ -42,6 +42,10 @@ resource "databricks_sql_visualization" "q1v1" {
 }
 ```
 
+## Import
+
+-> **Note** Importing this resource is not currently supported.
+
 ## Related Resources
 
 The following resources are often used in the same context:

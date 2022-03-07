@@ -200,6 +200,10 @@ In addition to all arguments above, the following attributes are exported:
 * `customer_managed_key_id` - (String) ID of the encryption key configuration object.
 * `creation_time` - (Integer) Time in epoch milliseconds when the customer key was created.
 
+## Import
+
+-> **Note** Importing this resource is not currently supported.
+
 ## Related Resources
 
 The following resources are used in the same context:

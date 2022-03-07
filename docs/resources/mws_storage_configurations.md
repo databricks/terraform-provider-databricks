@@ -49,6 +49,10 @@ In addition to all arguments above, the following attributes are exported:
 * `id` - Canonical unique identifier for the mws storage configurations.
 * `storage_configuration_id` - (String) id of storage config to be used for `databricks_mws_workspace` resource.
 
+## Import
+
+-> **Note** Importing this resource is not currently supported.
+
 ## Related Resources
 
 The following resources are used in the same context:

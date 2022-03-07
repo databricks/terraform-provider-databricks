@@ -2,7 +2,15 @@
 
 ## 0.5.2
 
+* Added `databricks_catalogs`, `databricks_schemas`, and `databricks_tables` data resources ([#1155](https://github.com/databrickslabs/terraform-provider-databricks/pull/1155)).
 * Fixed `databricks_metastore_assignment` configuration drift by properly deleting metastore assignment and detecting manual changes from Account console. This also means that de-assigned metastore from a workspace would mark it as remotely removed. Manual assignment of different metastore would also trigger resource updates ([#1146](https://github.com/databrickslabs/terraform-provider-databricks/issues/1146)).
+* Fixed `databricks_table` creation in managed mode ([#1151](https://github.com/databrickslabs/terraform-provider-databricks/issues/1151)).
+* Fixed `databricks_sql_endpoint` timeout propagation ([#1142](https://github.com/databrickslabs/terraform-provider-databricks/issues/1142)).
+* Multiple documentation fixes.
+
+Updated dependency versions:
+
+* Bump google.golang.org/api from 0.69.0 to 0.70.0
 
 ## 0.5.1
 

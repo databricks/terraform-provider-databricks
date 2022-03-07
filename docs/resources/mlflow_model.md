@@ -32,6 +32,14 @@ The following arguments are supported:
 * `description` - The description of the MLflow model.
 * `tags` - Tags for the MLflow model.
 
+## Import
+
+The model resource can be imported using the name
+
+```bash
+$ terraform import databricks_mlflow_model.this <name>
+```
+
 ## Access Control
 
 * [databricks_permissions](permissions.md#MLflow-Model-usage) can control which groups or individual users can *Read*, *Edit*, *Manage Staging Versions*, *Manage Production Versions*, and *Manage* individual models.

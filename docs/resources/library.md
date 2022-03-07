@@ -110,6 +110,10 @@ resource "databricks_library" "rkeops" {
 }
 ```
 
+## Import
+
+-> **Note** Importing this resource is not currently supported.
+
 ## Related Resources
 
 The following resources are often used in the same context:

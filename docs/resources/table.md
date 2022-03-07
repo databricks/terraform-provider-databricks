@@ -7,6 +7,8 @@ subcategory: "Unity Catalog"
 
 Within a metastore, Unity Catalog provides a 3-level namespace for organizing data: Catalogs, databases (also called schemas), and tables / views.
 
+-> **Note** This resource has an evolving API, which will change in the upcoming versions of the provider in order to simplify user experience.
+
 A `databricks_table` is contained within [databricks_schema](schema.md).
 
 ## Example Usage
@@ -34,10 +36,9 @@ resource "databricks_table" "thing" {
   provider           = databricks.workspace
   name               = "quickstart_table"
   catalog_name       = databricks_catalog.sandbox.id
-  schema_name        = databricks_schema.things.id
+  schema_name        = databricks_schema.things.name
   table_type         = "MANAGED"
   data_source_format = "DELTA"
-  storage_location   = ""
   column {
     name      = "id"
     position  = 0
@@ -73,6 +74,9 @@ The following arguments are required:
 * `properties` - (Optional) Extensible Table properties.
 
 ### `column` configuration block
+
+-> **Note** `column` block would be simplified in future versions of provider
+
 For table columns
 * `name` - User-visible name of column
 * `type_name` - Name of (outer) type

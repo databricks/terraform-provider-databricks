@@ -202,6 +202,9 @@ func ResourceSQLEndpoint() *schema.Resource {
 		return m
 	})
 	return common.Resource{
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(30 * time.Minute),
+		},
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var se SQLEndpoint
 			common.DataToStructPointer(d, s, &se)

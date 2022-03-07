@@ -24,6 +24,13 @@ func TestMetastoreAssignment_Create(t *testing.T) {
 					DefaultCatalogName: "hive_metastore",
 				},
 			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/unity-catalog/metastore_summary",
+				Response: MetastoreAssignment{
+					MetastoreID: "a",
+				},
+			},
 		},
 		Resource: ResourceMetastoreAssignment(),
 		Create:   true,

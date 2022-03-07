@@ -1,5 +1,9 @@
 # Version changelog
 
+## 0.5.2
+
+* Fixed `databricks_metastore_assignment` configuration drift by properly deleting metastore assignment and detecting manual changes from Account console. This also means that de-assigned metastore from a workspace would mark it as remotely removed. Manual assignment of different metastore would also trigger resource updates ([#1146](https://github.com/databrickslabs/terraform-provider-databricks/issues/1146)).
+
 ## 0.5.1
 
 * Added an extended documentation from provisioning AWS PrivateLink workspace ([#1084](https://github.com/databrickslabs/terraform-provider-databricks/pull/1084)).

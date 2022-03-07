@@ -12,6 +12,7 @@ import (
 	"net/url"
 	"reflect"
 	"regexp"
+	"sort"
 	"strings"
 
 	"github.com/google/go-querystring/query"
@@ -523,7 +524,12 @@ func makeRequestBody(method string, requestURL *string, data interface{}, marsha
 		switch inputType.Kind() {
 		case reflect.Map:
 			s := []string{}
-			for _, k := range inputVal.MapKeys() {
+			keys := inputVal.MapKeys()
+			// sort map keys by their string repr, so that tests can be deterministic
+			sort.Slice(keys, func(i, j int) bool {
+				return keys[i].String() < keys[j].String()
+			})
+			for _, k := range keys {
 				v := inputVal.MapIndex(k)
 				if v.IsZero() {
 					continue

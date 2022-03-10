@@ -102,16 +102,6 @@ func TestResourceServicePrincipalRead_NotFound(t *testing.T) {
 	}.ApplyNoError(t)
 }
 
-func TestResourceServicePrincipalRead_Invalid_Azure(t *testing.T) {
-	qa.ResourceFixture{
-		Resource: ResourceServicePrincipal(),
-		New:      true,
-		Read:     true,
-		Azure:    true,
-		ID:       "abc",
-	}.ExpectError(t, "application_id is required for service principals in Azure Databricks")
-}
-
 func TestResourceServicePrincipalRead_Invalid_AWS(t *testing.T) {
 	qa.ResourceFixture{
 		Resource: ResourceServicePrincipal(),
@@ -217,17 +207,6 @@ func TestResourceServicePrincipalCreate_Error(t *testing.T) {
 		`,
 	}.Apply(t)
 	require.Error(t, err, err)
-}
-
-func TestResourceServicePrincipalCreate_Error_AzureNoApplicationID(t *testing.T) {
-	qa.ResourceFixture{
-		Resource: ResourceServicePrincipal(),
-		Create:   true,
-		Azure:    true,
-		HCL: `
-		display_name = "abc"
-		`,
-	}.ExpectError(t, "application_id is required for service principals in Azure Databricks")
 }
 
 func TestResourceServicePrincipalUpdate(t *testing.T) {

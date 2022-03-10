@@ -111,8 +111,12 @@ type PermissionsAPI struct {
 	context context.Context
 }
 
+func isDbsqlPermissionsWorkaroundNecessary(objectID string) bool {
+	return strings.HasPrefix(objectID, "/sql/") && !strings.HasPrefix(objectID, "/sql/endpoints")
+}
+
 func urlPathForObjectID(objectID string) string {
-	if strings.HasPrefix(objectID, "/sql/") && !strings.HasPrefix(objectID, "/sql/endpoints") {
+	if isDbsqlPermissionsWorkaroundNecessary(objectID) {
 		// Permissions for SQLA entities are routed differently from the others.
 		return "/preview/sql/permissions" + objectID[4:]
 	}
@@ -121,7 +125,7 @@ func urlPathForObjectID(objectID string) string {
 
 // Helper function to select the correct HTTP method depending on the object types.
 func (a PermissionsAPI) put(objectID string, objectACL AccessControlChangeList) error {
-	if strings.HasPrefix(objectID, "/sql/") {
+	if isDbsqlPermissionsWorkaroundNecessary(objectID) {
 		// SQLA entities always have `CAN_MANAGE` permission for the calling user.
 		me, err := scim.NewUsersAPI(a.context, a.client).Me()
 		if err != nil {
@@ -131,15 +135,9 @@ func (a PermissionsAPI) put(objectID string, objectACL AccessControlChangeList) 
 			UserName:        me.UserName,
 			PermissionLevel: "CAN_MANAGE",
 		})
-
-		if strings.HasPrefix(objectID, "/sql/endpoints/") {
-			return a.client.Patch(a.context, urlPathForObjectID(objectID), objectACL)
-		} else {
-			// The rest of SQLA entities use HTTP POST for permission updates.
-			return a.client.Post(a.context, urlPathForObjectID(objectID), objectACL, nil)
-		}
+		// SQLA entities use POST for permission updates.
+		return a.client.Post(a.context, urlPathForObjectID(objectID), objectACL, nil)
 	}
-
 	return a.client.Put(a.context, urlPathForObjectID(objectID), objectACL)
 }
 

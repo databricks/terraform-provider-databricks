@@ -506,17 +506,13 @@ func TestResourcePermissionsCreate_SQLA_Endpoint(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			me,
 			{
-				Method:   http.MethodPatch,
+				Method:   "PUT",
 				Resource: "/api/2.0/permissions/sql/endpoints/abc",
 				ExpectedRequest: AccessControlChangeList{
 					AccessControlList: []AccessControlChange{
 						{
 							UserName:        TestingUser,
 							PermissionLevel: "CAN_USE",
-						},
-						{
-							UserName:        TestingAdminUser,
-							PermissionLevel: "CAN_MANAGE",
 						},
 					},
 				},
@@ -531,10 +527,6 @@ func TestResourcePermissionsCreate_SQLA_Endpoint(t *testing.T) {
 						{
 							UserName:        TestingUser,
 							PermissionLevel: "CAN_USE",
-						},
-						{
-							UserName:        TestingAdminUser,
-							PermissionLevel: "CAN_MANAGE",
 						},
 					},
 				},

@@ -3,6 +3,7 @@
 ## 0.5.3
 
 * Failures in [exporter](https://asciinema.org/a/Rv8ZFJQpfrfp6ggWddjtyXaOy) resource listing no longer halt the entire command run ([#1166](https://github.com/databrickslabs/terraform-provider-databricks/issues/1166)).
+* Removed client-side validation in `databricks_service_principal` for `application_id`, that may not always be available in the planning stage ([#1165](https://github.com/databrickslabs/terraform-provider-databricks/issues/1165)).
 
 Updated dependency versions:
 

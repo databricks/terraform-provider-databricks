@@ -1,5 +1,13 @@
 # Version changelog
 
+## 0.5.3
+
+* Failures in [exporter](https://asciinema.org/a/Rv8ZFJQpfrfp6ggWddjtyXaOy) resource listing no longer halt the entire command run ([#1166](https://github.com/databrickslabs/terraform-provider-databricks/issues/1166)).
+
+Updated dependency versions:
+
+* Bump google.golang.org/api from 0.70.0 to 0.71.0
+
 ## 0.5.2
 
 * Added `databricks_catalogs`, `databricks_schemas`, and `databricks_tables` data resources ([#1155](https://github.com/databrickslabs/terraform-provider-databricks/pull/1155)).

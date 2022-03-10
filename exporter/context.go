@@ -158,7 +158,9 @@ func (ic *importContext) Run() error {
 			continue
 		}
 		if err := ir.List(ic); err != nil {
-			return err
+			log.Printf("[ERROR] %s (%s service) listing failed: %s",
+				resourceName, ir.Service, err)
+			continue
 		}
 	}
 	if len(ic.Scope) == 0 {

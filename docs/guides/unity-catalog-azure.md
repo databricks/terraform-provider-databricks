@@ -10,9 +10,7 @@ Databricks Unity Catalog brings fine-grained governance and security to Lakehous
 
 This guide uses the following variables in configurations:
 
-- `databricks_workspace_url`: Value of `workspace_url` attribute from [databricks_mws_workspaces](../resources/mws_workspaces.md#attribute-reference) resource.
-- `tenant_id`: The Azure AD tenant ID should be used for the [azuread](https://registry.terraform.io/providers/hashicorp/azuread/latest/docs) provider.
-- `subscription_id`: The Azure subscription ID should be used for the [azurerm](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs) provider
+- `databricks_resource_id`: The Azure resource ID for the Databricks workspace where Unity Catalog will be deployed. It should be of the format `/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/group1/providers/Microsoft.Databricks/workspaces/workspace1`. To find the resource ID, navigate to your Databricks workspace in the Azure portal, select the JSON View link on the Overview page.
 
 This guide is provided as-is and you can use this guide as the basis for your custom Terraform module.
 
@@ -29,96 +27,66 @@ To get started with Unity Catalog, this guide takes you throw the following high
 
 Initialize the 3 providers to set up the required resources. See [Databricks provider authentication](../index.md#authenticating-with-hostname,-username,-and-password), [Azure AD provider authentication](https://registry.terraform.io/providers/hashicorp/azuread/latest/docs#authenticating-to-azure-active-directory) and [Azure provider authentication](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs#authenticating-to-azure) for more details.
 
+Define the required variables, and calculate the local values
+
+```hcl
+variable "databricks_resource_id" {
+  description = "The Azure resource ID for the databricks workspace deployment."
+}
+
+locals {
+  resource_regex            = "(?i)subscriptions/(.+)/resourceGroups/(.+)/providers/Microsoft.Databricks/workspaces/(.+)"
+  subscription_id           = regex(local.resource_regex, var.databricks_resource_id)[0]
+  resource_group            = regex(local.resource_regex, var.databricks_resource_id)[1]
+  databricks_workspace_name = regex(local.resource_regex, var.databricks_resource_id)[2]
+  tenant_id                 = data.azurerm_client_config.current.tenant_id
+  databricks_workspace_host = data.azurerm_databricks_workspace.this.workspace_url
+  databricks_workspace_id    = data.azurerm_databricks_workspace.this.workspace_id
+  prefix                    = replace(replace(lower(data.azurerm_resource_group.this.name), "rg", ""), "-", "")
+}
+
+data "azurerm_resource_group" "this" {
+  name = local.resource_group
+}
+
+data "azurerm_client_config" "current" {
+}
+
+data "azurerm_databricks_workspace" "this" {
+  name                = local.databricks_workspace_name
+  resource_group_name = local.resource_group
+}
+```
+
 ```hcl
 terraform {
   required_providers {
-    databricks = {
-      source = "databrickslabs/databricks"
-    }
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~>2.92.0"
+      version = "~>2.99.0"
     }
     azuread = {
       source  = "hashicorp/azuread"
-      version = "~>2.15.0"
+      version = "~>2.19.0"
+    }
+    databricks = {
+      source  = "databrickslabs/databricks"
+      version = "~>0.5.2"
     }
   }
 }
 
 provider "azuread" {
-  tenant_id = var.tenant_id
+  tenant_id = local.tenant_id
 }
 
 provider "azurerm" {
-  subscription_id = var.subscription_id
+  subscription_id = local.subscription_id
   features {}
 }
 
-// initialize provider at workspace level, to create UC resources
 provider "databricks" {
-  alias    = "workspace"
-  host     = var.databricks_workspace_url
-}
-```
-
-Define the required variables
-
-```hcl
-variable "databricks_workspace_url" {}
-
-variable "tags" {
-  default = {}
-}
-
-variable "reuse_rg" {
-  description = "Whether to reuse resource group, do not create a new resource group (enter true/false)"
-  type        = bool
-}
-
-variable "rg_name" {
-  description = "Enter the resource group name where the Azure objects are deployed in"
-  type        = string
-}
-
-variable "location" {
-  description = "Enter your location, i.e. West US or East US"
-  type        = string
-}
-
-variable "tenant_id" {
-  description = "Enter your tenant id from Azure Portal"
-  type        = string
-}
-
-variable "subscription_id" {
-  description = "Enter your subscription id from Azure Portal"
-  type        = string
-}
-
-variable "databricks_workspace_ids" {
-  description = <<EOT
-  List of Databricks workspace IDs to be enabled with Unity Catalog.
-  Enter with square brackets and double quotes
-  e.g. ["111111111", "222222222"]
-  EOT
-  type        = list(string)
-}
-
-//generate a random string as the prefix for AWS resources, to ensure uniqueness
-resource "random_string" "naming" {
-  special = false
-  upper   = false
-  length  = 6
-}
-
-variable "prefix" {
-  description = "Enter a prefix to prepend to any created resources"
-  type        = string
-}
-
-locals {
-  prefix = format("%s%s", var.prefix, random_string.naming.result)
+  host = local.databricks_workspace_host
 }
 ```
 
@@ -129,7 +97,7 @@ The first step is to create the required Azure objects:
 
 ```hcl
 resource "azuread_application" "unity_catalog" {
-  display_name = local.prefix
+  display_name = "${local.prefix}-root-sp"
 }
 
 resource "azuread_application_password" "unity_catalog" {
@@ -141,31 +109,18 @@ resource "azuread_service_principal" "unity_catalog" {
   app_role_assignment_required = false
 }
 
-
-resource "azurerm_resource_group" "unity_catalog" {
-  count    = var.reuse_rg ? 0 : 1
-  name     = var.rg_name
-  location = var.location
-}
-
-data "azurerm_resource_group" "unity_catalog" {
-  count = var.reuse_rg ? 1 : 0
-  name  = var.rg_name
-}
-
 resource "azurerm_storage_account" "unity_catalog" {
-  name                     = local.prefix
-  resource_group_name      = var.reuse_rg ? data.azurerm_resource_group.unity_catalog[0].name : azurerm_resource_group.unity_catalog[0].name
-  location                 = var.reuse_rg ? data.azurerm_resource_group.unity_catalog[0].location : azurerm_resource_group.unity_catalog[0].location
+  name                     = "${local.prefix}storage"
+  resource_group_name      = data.azurerm_resource_group.this.name
+  location                 = data.azurerm_resource_group.this.location
+  tags                     = data.azurerm_resource_group.this.tags
   account_tier             = "Standard"
   account_replication_type = "GRS"
   is_hns_enabled           = true
-
-  tags = var.tags
 }
 
 resource "azurerm_storage_container" "unity_catalog" {
-  name                  = local.prefix
+  name                  = "${local.prefix}-container"
   storage_account_name  = azurerm_storage_account.unity_catalog.name
   container_access_type = "private"
 }
@@ -183,13 +138,10 @@ A [databricks_metastore](../resources/metastore.md) is the top level container f
 
 ```hcl
 resource "databricks_metastore" "this" {
-  name = var.metastore_name
+  name         = "primary"
   storage_root = format("abfss://%s@%s.dfs.core.windows.net/",
     azurerm_storage_account.unity_catalog.name,
   azurerm_storage_container.unity_catalog.name)
-  owner = var.metastore_owner
-  // forcefully remove that auto-created
-  // catalog we have no access to
   force_destroy = true
 }
 
@@ -197,7 +149,7 @@ resource "databricks_metastore_data_access" "first" {
   metastore_id = databricks_metastore.this.id
   name         = "the-keys"
   azure_service_principal {
-    directory_id   = var.tenant_id
+    directory_id   = local.tenant_id
     application_id = azuread_application.unity_catalog.application_id
     client_secret  = azuread_application_password.unity_catalog.value
   }
@@ -206,8 +158,7 @@ resource "databricks_metastore_data_access" "first" {
 }
 
 resource "databricks_metastore_assignment" "this" {
-  for_each             = toset(var.workspace_ids)
-  workspace_id         = each.key
+  workspace_id         = local.databricks_workspace_id
   metastore_id         = databricks_metastore.this.id
   default_catalog_name = "hive_metastore"
 }
@@ -281,14 +232,13 @@ resource "azuread_service_principal" "ext_cred" {
 }
 
 resource "azurerm_storage_account" "ext_storage" {
-  name                     = "${local.prefix}ext"
-  resource_group_name      = var.reuse_rg ? data.azurerm_resource_group.unity_catalog[0].name : azurerm_resource_group.unity_catalog[0].name
-  location                 = var.reuse_rg ? data.azurerm_resource_group.unity_catalog[0].location : azurerm_resource_group.unity_catalog[0].location
+  name                     = "${local.prefix}extstorage"
+  resource_group_name      = data.azurerm_resource_group.this.name
+  location                 = data.azurerm_resource_group.this.location
+  tags                     = data.azurerm_resource_group.this.tags
   account_tier             = "Standard"
   account_replication_type = "GRS"
   is_hns_enabled           = true
-
-  tags = var.tags
 }
 
 resource "azurerm_storage_container" "ext_storage" {
@@ -307,11 +257,10 @@ resource "azurerm_role_assignment" "ext_storage" {
 Then create the [databricks_storage_credential](../resources/storage_credential.md) and [databricks_external_location](../resources/external_location.md) in Unity Catalog.
 
 ```hcl
-
 resource "databricks_storage_credential" "external" {
   name = azuread_application.ext_cred.display_name
   azure_service_principal {
-    directory_id   = var.tenant_id
+    directory_id   = local.tenant_id
     application_id = azuread_application.ext_cred.application_id
     client_secret  = azuread_application_password.ext_cred.value
   }
@@ -374,11 +323,15 @@ resource "databricks_cluster" "unity_sql" {
     availability = "SPOT"
   }
   data_security_mode = "USER_ISOLATION"
+  # need to wait until the metastore is assigned
+  depends_on = [
+    databricks_metastore_assignment.this
+  ]    
 }
 ```
 
 - To use those advanced cluster features or languages like Python, Scala and R with Unity Catalog, one must choose **Single User** mode when launching the cluster. The cluster can only be used exclusively by a single user (by default the owner of the cluster); other users are not allowed to attach to the cluster.
-The below example will create a collection of single-user [databricks_cluster](../resources/cluster.md) for each user in a group managed through SCIM provisioning. Individual user will be able to restart their cluster, but not anyone else. Terraform's `for_each` meta-attribute helps us achieve this
+The below example will create a collection of single-user [databricks_cluster](../resources/cluster.md) for each user in a group managed through SCIM provisioning. Individual user will be able to restart their cluster, but not anyone else. Terraform's `for_each` meta-attribute will help us achieve this.
 
 First we use [databricks_group](../data-sources/group.md) and [databricks_user](../data-sources/user.md) data resources to get the list of user names, that belong to a group.
 
@@ -409,6 +362,10 @@ resource "databricks_cluster" "dev" {
   }
   data_security_mode = "SINGLE_USER"
   single_user_name   = each.value.user_name
+  # need to wait until the metastore is assigned
+  depends_on = [
+    databricks_metastore_assignment.this
+  ]    
 }
 
 resource "databricks_permissions" "dev_restart" {

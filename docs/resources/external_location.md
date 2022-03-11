@@ -11,6 +11,8 @@ To work with external tables, Unity Catalog introduces two new objects to access
 
 ## Example Usage
 
+For AWS
+
 ```hcl
 resource "databricks_storage_credential" "external" {
   name = aws_iam_role.external_data_access.name
@@ -36,12 +38,49 @@ resource "databricks_grants" "some" {
 }
 ```
 
+For Azure
+
+```hcl
+resource "databricks_storage_credential" "external" {
+  name = azuread_application.ext_cred.display_name
+  azure_service_principal {
+    directory_id   = var.tenant_id
+    application_id = azuread_application.ext_cred.application_id
+    client_secret  = azuread_application_password.ext_cred.value
+  }
+  comment = "Managed by TF"
+  depends_on = [
+    databricks_metastore_assignment.this
+  ]  
+}
+
+resource "databricks_external_location" "some" {
+  name = "external"
+  url = format("abfss://%s@%s.dfs.core.windows.net/",
+    azurerm_storage_account.ext_storage.name,
+  azurerm_storage_container.ext_storage.name)
+  credential_name = databricks_storage_credential.external.id
+  comment         = "Managed by TF"
+  depends_on = [
+    databricks_metastore_assignment.this
+  ]
+}
+
+resource "databricks_grants" "some" {
+  external_location = databricks_external_location.some.id
+  grant {
+    principal  = "Data Engineers"
+    privileges = ["CREATE TABLE", "READ FILES"]
+  }
+}
+```
+
 ## Argument Reference
 
 The following arguments are required:
 
 * `name` - Name of External Location, which must be unique within the [databricks_metastore](metastore.md). Change forces creation of a new resource.
-* `url` - Path URL in cloud storage, of the form: `s3://bucket-host/[bucket-dir]` (AWS), `abfss://[user@]host/[path]` (Azure).
+* `url` - Path URL in cloud storage, of the form: `s3://[bucket-host]/[bucket-dir]` (AWS), `abfss://[user]@[host]/[path]` (Azure).
 * `credential_name` - Name of the [databricks_storage_credential](storage_credential.md) to use with this External Location.
 * `owner` - (Optional) Username/groupname of External Location owner. Currently this field can only be changed after the resource is created.
 * `comment` - (Optional) User-supplied free-form text.

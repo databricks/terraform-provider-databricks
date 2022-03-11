@@ -11,6 +11,8 @@ To work with external tables, Unity Catalog introduces two new objects to access
 
 ## Example Usage
 
+For AWS
+
 ```hcl
 resource "databricks_storage_credential" "external" {
   name = aws_iam_role.external_data_access.name
@@ -20,18 +22,33 @@ resource "databricks_storage_credential" "external" {
   comment = "Managed by TF"
 }
 
-resource "databricks_external_location" "some" {
-  name            = "external"
-  url             = "s3://${aws_s3_bucket.external.id}/some"
-  credential_name = databricks_storage_credential.external.id
-  comment         = "Managed by TF"
-}
-
-resource "databricks_grants" "some" {
-  external_location = databricks_external_location.some.id
+resource "databricks_grants" "external_creds" {
+  storage_credential = databricks_storage_credential.external.id
   grant {
     principal  = "Data Engineers"
-    privileges = ["CREATE TABLE", "READ FILES"]
+    privileges = ["CREATE TABLE"]
+  }
+}
+```
+
+For Azure
+
+```hcl
+resource "databricks_storage_credential" "external" {
+  name = azuread_application.ext_cred.display_name
+  azure_service_principal {
+    directory_id   = var.tenant_id
+    application_id = azuread_application.ext_cred.application_id
+    client_secret  = azuread_application_password.ext_cred.value
+  }
+  comment = "Managed by TF"
+}
+
+resource "databricks_grants" "external_creds" {
+  storage_credential = databricks_storage_credential.external.id
+  grant {
+    principal  = "Data Engineers"
+    privileges = ["CREATE TABLE"]
   }
 }
 ```

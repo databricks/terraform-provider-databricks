@@ -4,7 +4,8 @@
 
 * Failures in [exporter](https://asciinema.org/a/Rv8ZFJQpfrfp6ggWddjtyXaOy) resource listing no longer halt the entire command run ([#1166](https://github.com/databrickslabs/terraform-provider-databricks/issues/1166)).
 * Removed client-side validation in `databricks_service_principal` for `application_id`, that may not always be available in the planning stage ([#1165](https://github.com/databrickslabs/terraform-provider-databricks/issues/1165)).
-* Use correct HTTP verb for `databricks_permissions` on `databricks_sql_endpoint`. Authorized user, assumingly part of `admins` group, is no longer sending `CAN_MANAGE` permission in the HTTP PUT request ([#1163](https://github.com/databrickslabs/terraform-provider-databricks/issues/1163)).
+* Use correct HTTP verb for modifying `databricks_permissions` on `databricks_sql_endpoint` entities. Authorized user, assumingly part of `admins` group, is no longer sending `CAN_MANAGE` permission in the HTTP PUT request ([#1163](https://github.com/databrickslabs/terraform-provider-databricks/issues/1163)).
+* Added diff suppression for `min_num_clusters` field in `databricks_sql_endpoint` ([#1172](https://github.com/databrickslabs/terraform-provider-databricks/pull/1172)).
 
 Updated dependency versions:
 

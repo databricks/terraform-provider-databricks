@@ -600,6 +600,7 @@ func (a ClustersAPI) StartAndGetInfo(clusterID string) (ClusterInfo, error) {
 	return a.waitForClusterStatus(clusterID, ClusterStateRunning)
 }
 
+// make common/resource.go#ToResource read behavior consistent with "normal" resources
 func wrapMissingClusterError(err error, id string) error {
 	if err == nil {
 		return nil
@@ -610,6 +611,14 @@ func wrapMissingClusterError(err error, id string) error {
 	}
 	if apiErr.IsMissing() {
 		return err
+	}
+	// https://github.com/databrickslabs/terraform-provider-databricks/issues/1177
+	// Aligned with Clusters Core team to keep behavior of these workarounds 
+	// as is in the longer term, so that this keeps working.
+	if apiErr.ErrorCode == "INVALID_STATE" {
+		log.Printf("[WARN] assuming that cluster is removed on backend: %s", apiErr)
+		apiErr.StatusCode = 404
+		return apiErr
 	}
 	// fix non-compliant error code
 	if strings.Contains(apiErr.Message,

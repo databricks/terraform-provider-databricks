@@ -43,6 +43,6 @@ $ terraform import databricks_catalog.this <name>
 
 The following resources are used in the same context:
 
-* [databricks_table](../data-sources/table.md) data to list tables within Unity Catalog.
-* [databricks_schema](../data-sources/schema.md) data to list schemas within Unity Catalog.
-* [databricks_catalog](../data-sources/catalog.md) data to list catalogs within Unity Catalog.
+* [databricks_table](../data-sources/tables.md) data to list tables within Unity Catalog.
+* [databricks_schema](../data-sources/schemas.md) data to list schemas within Unity Catalog.
+* [databricks_catalog](../data-sources/catalogs.md) data to list catalogs within Unity Catalog.

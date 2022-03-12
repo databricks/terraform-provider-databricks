@@ -4,7 +4,7 @@ page_title: "Unity Catalog set up on AWS"
 
 # Deploying pre-requisite resources and enabling Unity Catalog (AWS Preview)
 
--> **Private Preview** This feature is in [Private Preview](https://docs.databricks.com/release-notes/release-types.html). Contact your Databricks representative to request access. 
+-> **Public Preview** This feature is in [Public Preview](https://docs.databricks.com/data-governance/unity-catalog/index.html). Contact your Databricks representative to request access. 
 
 Databricks Unity Catalog brings fine-grained governance and security to Lakehouse data using a familiar, open interface. You can use Terraform to deploy the underlying cloud resources and Unity Catalog objects automatically, using a programmatic approach.
 
@@ -18,16 +18,14 @@ This guide uses the following variables in configurations:
 This guide is provided as-is and you can use this guide as the basis for your custom Terraform module.
 
 To get started with Unity Catalog, this guide takes you throw the following high-level steps:
-- [Initialize the required providers](#provider-initialization)
-- [Configure AWS objects](#configure-aws-objects)
-  - A S3 bucket to store data from managed tables in Unity Catalog
-  - An IAM policy to define permissions to access data
-  - An IAM role that will be assumed by Unity Catalog to access data 
-- [Create users and groups who can access Unity Catalog](#create-users-and-groups)
-- [Create a Unity Catalog metastore and link it to workspaces](#create-a-unity-catalog-metastore)
-- [Create Unity Catalog objects in the metastore](#create-unity-catalog-objects)
-- [Configure external tables and credentials](#configure-external-tables)
-- [Configure Unity Catalog clusters](#configure-unity-catalog-clusters)
+- [Deploying pre-requisite resources and enabling Unity Catalog (AWS Preview)](#deploying-pre-requisite-resources-and-enabling-unity-catalog-aws-preview)
+  - [Provider initialization](#provider-initialization)
+  - [Configure AWS objects](#configure-aws-objects)
+  - [Create users and groups](#create-users-and-groups)
+  - [Create a Unity Catalog metastore and link it to workspaces](#create-a-unity-catalog-metastore-and-link-it-to-workspaces)
+  - [Create Unity Catalog objects in the metastore](#create-unity-catalog-objects-in-the-metastore)
+  - [Configure external tables and credentials](#configure-external-tables-and-credentials)
+  - [Configure Unity Catalog clusters](#configure-unity-catalog-clusters)
 
 ## Provider initialization
 
@@ -416,7 +414,7 @@ resource "aws_iam_role" "external_data_access" {
 }
 ```
 
-Then create the [databricks_storage_credential](../resources/storage_credential.md) and [databricks_external_location](../resources/xternal_location.md) in Unity Catalog.
+Then create the [databricks_storage_credential](../resources/storage_credential.md) and [databricks_external_location](../resources/external_location.md) in Unity Catalog.
 
 ```hcl
 resource "databricks_storage_credential" "external" {
@@ -485,8 +483,8 @@ resource "databricks_cluster" "unity_sql" {
 }
 ```
 
-- To use those advanced cluster features or languages like Python, Scala and R with Unity Catalog, one must choose **Single User** Mode when launching the cluster. The cluster can only be used exclusively by a single user (by default the owner of the cluster); other users are not allowed to attach to the cluster.
-This means a group of users, which is managed as a group through SCIM provisioning, will be a collection of single-user [databricks_cluster](../resources/cluster.md), which they should be able to restart. Terraform's `for_each` meta-attribute helps to do this easily.
+- To use those advanced cluster features or languages like Python, Scala and R with Unity Catalog, one must choose **Single User** mode when launching the cluster. The cluster can only be used exclusively by a single user (by default the owner of the cluster); other users are not allowed to attach to the cluster.
+The below example will create a collection of single-user [databricks_cluster](../resources/cluster.md) for each user in a group managed through SCIM provisioning. Individual user will be able to restart their cluster, but not anyone else. Terraform's `for_each` meta-attribute will help us achieve this.
 
 First we use [databricks_group](../data-sources/group.md) and [databricks_user](../data-sources/user.md) data resources to get the list of user names, that belong to a group.
 

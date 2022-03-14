@@ -50,6 +50,62 @@ type PermissionsDiff struct {
 	Changes []PermissionsChange `json:"changes"`
 }
 
+func newStringSet(in []string) *schema.Set {
+	var out []interface{}
+	for _, v := range in {
+		out = append(out, v)
+	}
+	return schema.NewSet(schema.HashString, out)
+}
+
+type innerChange struct {
+	Add *schema.Set
+	Remove *schema.Set
+}
+
+// remove returns new diff with PermissionsList properly.
+func (d PermissionsDiff) remove(remove PermissionsList) (merged PermissionsDiff) {
+	// diffs change sets
+	inner := map[string]innerChange{}
+	for _, v := range d.Changes {
+		inner[v.Principal] = innerChange{
+			Add: newStringSet(v.Add),
+			Remove: newStringSet(v.Remove),
+		}
+	}
+	// existing permissions that needs removal
+	cleanup := map[string]*schema.Set{}
+	for _, v := range remove.Assignments {
+		cleanup[v.Principal] = newStringSet(v.Privileges)
+	}
+	// STEP 1: detect overlaps
+	for principal, change := range inner {
+		remove, ok := cleanup[principal]
+		if ok {
+			change.Add = change.Add.Difference(remove)
+			alsoRemove := remove.Difference(change.Add)
+			change.Remove = change.Remove.Union(alsoRemove)
+		}
+		merged.Changes = append(merged.Changes, PermissionsChange{
+			Principal: principal,
+			Add: setToStrings(change.Add),
+			Remove: setToStrings(change.Remove),
+		})
+	}
+	// STEP 2: non overlap - simply remove
+	for principal, remove := range cleanup {
+		_, ok := inner[principal]
+		if ok { // already handled in STEP 1
+			continue
+		}
+		merged.Changes = append(merged.Changes, PermissionsChange{
+			Principal: principal,
+			Remove: setToStrings(remove),
+		})
+	}
+	return merged
+}
+
 type PermissionsChange struct {
 	Principal string   `json:"principal"`
 	Add       []string `json:"add,omitempty"`
@@ -67,6 +123,16 @@ func (a PermissionsAPI) getPermissions(securable, name string) (list Permissions
 
 func (a PermissionsAPI) updatePermissions(securable, name string, diff PermissionsDiff) error {
 	return a.client.Patch(a.context, fmt.Sprintf("/unity-catalog/permissions/%s/%s", securable, name), diff)
+}
+
+// replacePermissions merges removal diff of existing permissions on the platform
+func (a PermissionsAPI) replacePermissions(securable, name string, diff PermissionsDiff) error {
+	existing, err := a.getPermissions(securable, name)
+	if err != nil {
+		return err
+	}
+	merged := diff.remove(existing)
+	return a.updatePermissions(securable, name, merged)
 }
 
 type securableMapping map[string]map[string]bool
@@ -237,7 +303,7 @@ func ResourceGrants() *schema.Resource {
 			var grants PermissionsList
 			common.DataToStructPointer(d, s, &grants)
 			securable, name := mapping.kv(d)
-			err := NewPermissionsAPI(ctx, c).updatePermissions(securable, name, grants.toCreate())
+			err := NewPermissionsAPI(ctx, c).replacePermissions(securable, name, grants.toCreate())
 			if err != nil {
 				return err
 			}
@@ -258,13 +324,14 @@ func ResourceGrants() *schema.Resource {
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			securable, name := mapping.kv(d)
 			diff := permissionDiffFromRaw(d.GetChange("grant"))
-			return NewPermissionsAPI(ctx, c).updatePermissions(securable, name, diff)
+			return NewPermissionsAPI(ctx, c).replacePermissions(securable, name, diff)
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			var grants PermissionsList
-			common.DataToStructPointer(d, s, &grants)
-			securable, name := mapping.kv(d)
-			return NewPermissionsAPI(ctx, c).updatePermissions(securable, name, grants.toDelete())
+			split := strings.SplitN(d.Id(), "/", 2)
+			if len(split) != 2 {
+				return fmt.Errorf("ID must be two elements split by `/`: %s", d.Id())
+			}
+			return NewPermissionsAPI(ctx, c).replacePermissions(split[0], split[1], PermissionsDiff{})
 		},
 	}.ToResource()
 }

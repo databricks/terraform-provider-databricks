@@ -173,13 +173,34 @@ func TestGrantCreate(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
+				Method:   "GET",
+				Resource: "/api/2.0/unity-catalog/permissions/table/foo.bar.baz",
+				Response: PermissionsList{
+					Assignments: []PrivilegeAssignment{
+						{
+							Principal:  "me",
+							Privileges: []string{"SELECT"},
+						},
+						{
+							Principal:  "someone-else",
+							Privileges: []string{"MODIFY", "SELECT"},
+						},
+					},
+				},
+			},
+			{
 				Method:   "PATCH",
 				Resource: "/api/2.0/unity-catalog/permissions/table/foo.bar.baz",
 				ExpectedRequest: PermissionsDiff{
 					Changes: []PermissionsChange{
 						{
 							Principal: "me",
-							Add:       []string{"MODIFY", "SELECT"},
+							Add:       []string{"MODIFY"},
+							Remove:    []string{"SELECT"},
+						},
+						{
+							Principal: "someone-else",
+							Remove:    []string{"MODIFY", "SELECT"},
 						},
 					},
 				},
@@ -187,12 +208,11 @@ func TestGrantCreate(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/unity-catalog/permissions/table/foo.bar.baz",
-
 				Response: PermissionsList{
 					Assignments: []PrivilegeAssignment{
 						{
 							Principal:  "me",
-							Privileges: []string{"MODIFY", "SELECT"},
+							Privileges: []string{"MODIFY"},
 						},
 					},
 				},
@@ -205,15 +225,21 @@ func TestGrantCreate(t *testing.T) {
 
 		grant {
 			principal = "me"
-			privileges = ["MODIFY", "SELECT"]
-		}
-		`,
+			privileges = ["MODIFY"]
+		}`,
 	}.ApplyNoError(t)
 }
 
 func TestGrantUpdate(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/unity-catalog/permissions/table/foo.bar.baz",
+				Response: PermissionsList{
+					Assignments: []PrivilegeAssignment{},
+				},
+			},
 			{
 				Method:   "PATCH",
 				Resource: "/api/2.0/unity-catalog/permissions/table/foo.bar.baz",
@@ -229,7 +255,6 @@ func TestGrantUpdate(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/unity-catalog/permissions/table/foo.bar.baz",
-
 				Response: PermissionsList{
 					Assignments: []PrivilegeAssignment{
 						{

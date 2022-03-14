@@ -72,7 +72,7 @@ func (a TablesAPI) getTable(name string) (ti TableInfo, err error) {
 }
 
 func (a TablesAPI) updateTable(ti TableInfo) error {
-	return a.client.Patch(a.context, "/unity-catalog/tables/"+ti.Name, ti)
+	return a.client.Patch(a.context, "/unity-catalog/tables/"+ti.FullName(), ti)
 }
 
 func (a TablesAPI) deleteTable(name string) error {

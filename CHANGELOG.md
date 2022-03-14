@@ -7,6 +7,7 @@
 * Use correct HTTP verb for modifying `databricks_permissions` on `databricks_sql_endpoint` entities. Authorized user, assumingly part of `admins` group, is no longer sending `CAN_MANAGE` permission in the HTTP PUT request ([#1163](https://github.com/databrickslabs/terraform-provider-databricks/issues/1163)).
 * Added diff suppression for `min_num_clusters` field in `databricks_sql_endpoint` ([#1172](https://github.com/databrickslabs/terraform-provider-databricks/pull/1172)).
 * Added special case for handling `Cannot access cluster that was terminated or unpinned more than 30 days ago` error in `databricks_cluster` as an indication of resource removed on the platform side ([#1177](https://github.com/databrickslabs/terraform-provider-databricks/issues/1177)).
+* Fixed updating of `databricks_table` resources ([#1175](https://github.com/databrickslabs/terraform-provider-databricks/issues/1175)).
 
 Updated dependency versions:
 

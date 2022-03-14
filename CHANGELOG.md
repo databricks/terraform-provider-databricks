@@ -8,6 +8,7 @@
 * Added diff suppression for `min_num_clusters` field in `databricks_sql_endpoint` ([#1172](https://github.com/databrickslabs/terraform-provider-databricks/pull/1172)).
 * Added special case for handling `Cannot access cluster that was terminated or unpinned more than 30 days ago` error in `databricks_cluster` as an indication of resource removed on the platform side ([#1177](https://github.com/databrickslabs/terraform-provider-databricks/issues/1177)).
 * Fixed updating of `databricks_table` resources ([#1175](https://github.com/databrickslabs/terraform-provider-databricks/issues/1175)).
+* Fixed configuration drift in `databricks_grant` by reading existing permissions and removing them in subsequent update calls ([#1164](https://github.com/databrickslabs/terraform-provider-databricks/issues/1164)).
 
 Updated dependency versions:
 

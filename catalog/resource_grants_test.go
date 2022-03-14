@@ -4,7 +4,6 @@ import (
 	"testing"
 
 	"github.com/databrickslabs/terraform-provider-databricks/qa"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -12,174 +11,38 @@ func TestPermissionsCornerCases(t *testing.T) {
 	qa.ResourceCornerCases(t, ResourceGrants(), qa.CornerCaseID("schema/sandbox"))
 }
 
-type mvm map[string][]string
-
-func (a mvm) toRaw() *schema.Set {
-	grant := ResourceGrants().Schema["grant"]
-	items := []interface{}{}
-	for k, v := range a {
-		privs := []interface{}{}
-		for _, priv := range v {
-			privs = append(privs, priv)
-		}
-		items = append(items, map[string]interface{}{
-			"principal":  k,
-			"privileges": schema.NewSet(schema.HashString, privs),
-		})
-	}
-	result := schema.NewSet(schema.HashResource(grant.Elem.(*schema.Resource)), items)
-	return result
-}
-
-func (a mvm) diff(t *testing.T, b mvm, changes []PermissionsChange) {
-	old := a.toRaw()
-	new := b.toRaw()
-	diff := permissionDiffFromRaw(old, new)
-
-	assert.Equal(t, PermissionsDiff{
-		Changes: changes,
-	}, diff)
-}
-
-func TestPermissionsDiff_OnlyAdd(t *testing.T) {
-	mvm{
-		// nothing
-	}.diff(t, mvm{
-		"a": {"b", "c"},
-	}, []PermissionsChange{
-		{
-			Principal: "a",
-			Add:       []string{"c", "b"},
-		},
-	})
-}
-
-func TestPermissionsDiff_OnlyRemove(t *testing.T) {
-	mvm{
-		"a": {"b", "c"},
-	}.diff(t, mvm{
-		// nothing
-	}, []PermissionsChange{
-		{
-			Principal: "a",
-			Remove:    []string{"c", "b"},
-		},
-	})
-}
-
-func TestPermissionsDiff_RemovePriv(t *testing.T) {
-	mvm{
-		"a": {"b", "c"},
-	}.diff(t, mvm{
-		"a": {"b"},
-	}, []PermissionsChange{
-		{
-			Principal: "a",
-			Remove:    []string{"c"},
-		},
-	})
-}
-
-func TestPermissionsDiff_AddPriv(t *testing.T) {
-	mvm{
-		"a": {"b", "c"},
-	}.diff(t, mvm{
-		"a": {"b", "c", "d"},
-	}, []PermissionsChange{
-		{
-			Principal: "a",
-			Add:       []string{"d"},
-		},
-	})
-}
-
-func TestPermissionsDiff_AddAndRemovePriv(t *testing.T) {
-	mvm{
-		"a": {"b", "c"},
-	}.diff(t, mvm{
-		"a": {"c", "d"},
-	}, []PermissionsChange{
-		{
-			Principal: "a",
-			Remove:    []string{"b"},
-			Add:       []string{"d"},
-		},
-	})
-}
-
-func TestPermissionsDiff_RemovePrinc(t *testing.T) {
-	mvm{
-		"a": {"b", "c"},
-		"z": {"x", "y"},
-	}.diff(t, mvm{
-		"a": {"c", "d"},
-	}, []PermissionsChange{
-		{
-			Principal: "a",
-			Remove:    []string{"b"},
-			Add:       []string{"d"},
-		},
-		{
-			Principal: "z",
-			Remove:    []string{"x", "y"},
-		},
-	})
-}
-
-func TestPermissionsDiff_RemoveAndAddPrinc(t *testing.T) {
-	mvm{
-		"a": {"b", "c"},
-		"z": {"x", "y"},
-	}.diff(t, mvm{
-		"a": {"c", "d"},
-		"o": {"p", "r"},
-	}, []PermissionsChange{
-		{
-			Principal: "o",
-			Add:       []string{"r", "p"},
-		},
-		{
-			Principal: "a",
-			Remove:    []string{"b"},
-			Add:       []string{"d"},
-		},
-		{
-			Principal: "z",
-			Remove:    []string{"x", "y"},
-		},
-	})
-}
-
-func TestPermissionsDiff_What(t *testing.T) {
-	mvm{
-		"a": {"b", "c"},
-		"z": {"x", "y"},
-	}.diff(t, mvm{
-		"a": {"b"},
-		"z": {"x"},
-	}, []PermissionsChange{
-		{
-			Principal: "z",
-			Remove:    []string{"y"},
-		},
-		{
-			Principal: "a",
-			Remove:    []string{"c"},
-		},
-	})
-}
-
 func TestGrantCreate(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
+				Method:   "GET",
+				Resource: "/api/2.0/unity-catalog/permissions/table/foo.bar.baz",
+				Response: PermissionsList{
+					Assignments: []PrivilegeAssignment{
+						{
+							Principal:  "me",
+							Privileges: []string{"SELECT"},
+						},
+						{
+							Principal:  "someone-else",
+							Privileges: []string{"MODIFY", "SELECT"},
+						},
+					},
+				},
+			},
+			{
 				Method:   "PATCH",
 				Resource: "/api/2.0/unity-catalog/permissions/table/foo.bar.baz",
-				ExpectedRequest: PermissionsDiff{
-					Changes: []PermissionsChange{
+				ExpectedRequest: permissionsDiff{
+					Changes: []permissionsChange{
 						{
 							Principal: "me",
-							Add:       []string{"MODIFY", "SELECT"},
+							Add:       []string{"MODIFY"},
+							Remove:    []string{"SELECT"},
+						},
+						{
+							Principal: "someone-else",
+							Remove:    []string{"MODIFY", "SELECT"},
 						},
 					},
 				},
@@ -187,12 +50,11 @@ func TestGrantCreate(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/unity-catalog/permissions/table/foo.bar.baz",
-
 				Response: PermissionsList{
 					Assignments: []PrivilegeAssignment{
 						{
 							Principal:  "me",
-							Privileges: []string{"MODIFY", "SELECT"},
+							Privileges: []string{"MODIFY"},
 						},
 					},
 				},
@@ -205,9 +67,8 @@ func TestGrantCreate(t *testing.T) {
 
 		grant {
 			principal = "me"
-			privileges = ["MODIFY", "SELECT"]
-		}
-		`,
+			privileges = ["MODIFY"]
+		}`,
 	}.ApplyNoError(t)
 }
 
@@ -215,10 +76,17 @@ func TestGrantUpdate(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
+				Method:   "GET",
+				Resource: "/api/2.0/unity-catalog/permissions/table/foo.bar.baz",
+				Response: PermissionsList{
+					Assignments: []PrivilegeAssignment{},
+				},
+			},
+			{
 				Method:   "PATCH",
 				Resource: "/api/2.0/unity-catalog/permissions/table/foo.bar.baz",
-				ExpectedRequest: PermissionsDiff{
-					Changes: []PermissionsChange{
+				ExpectedRequest: permissionsDiff{
+					Changes: []permissionsChange{
 						{
 							Principal: "me",
 							Add:       []string{"MODIFY", "SELECT"},
@@ -229,7 +97,6 @@ func TestGrantUpdate(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/unity-catalog/permissions/table/foo.bar.baz",
-
 				Response: PermissionsList{
 					Assignments: []PrivilegeAssignment{
 						{
@@ -272,24 +139,6 @@ func TestGrantReadMalformedId(t *testing.T) {
 	}.ExpectError(t, "ID must be two elements split by `/`: foo.bar")
 }
 
-func TestPermissionsListToDelete(t *testing.T) {
-	assert.Equal(t, PermissionsDiff{
-		Changes: []PermissionsChange{
-			{
-				Principal: "me",
-				Remove:    []string{"x"},
-			},
-		},
-	}, PermissionsList{
-		Assignments: []PrivilegeAssignment{
-			{
-				Principal:  "me",
-				Privileges: []string{"x"},
-			},
-		},
-	}.toDelete())
-}
-
 type data map[string]string
 
 func (a data) Get(k string) interface{} {
@@ -313,4 +162,81 @@ func TestInvalidPrivilege(t *testing.T) {
 		},
 	})
 	assert.EqualError(t, err, "EVERYTHING is not allowed on table")
+}
+
+func TestPermissionsList_Diff_ExternallyAddedPrincipal(t *testing.T) {
+	diff := PermissionsList{ // config
+		Assignments: []PrivilegeAssignment{
+			{
+				Principal: "a",
+				Privileges: []string{"a"},
+			},
+			{
+				Principal: "c",
+				Privileges: []string{"a"},
+			},
+		},
+	}.diff(PermissionsList{
+		Assignments: []PrivilegeAssignment{ // platform
+			{
+				Principal: "a",
+				Privileges: []string{"a"},
+			},
+			{
+				Principal: "b",
+				Privileges: []string{"a"},
+			},
+		},
+	})
+	assert.Len(t, diff.Changes, 2)
+	assert.Len(t, diff.Changes[0].Add, 0)
+	assert.Len(t, diff.Changes[0].Remove, 1)
+	assert.Equal(t, "b", diff.Changes[0].Principal)
+	assert.Equal(t, "a", diff.Changes[0].Remove[0])
+	assert.Equal(t, "c", diff.Changes[1].Principal)
+}
+
+func TestPermissionsList_Diff_ExternallyAddedPriv(t *testing.T) {
+	diff := PermissionsList{ // config
+		Assignments: []PrivilegeAssignment{
+			{
+				Principal: "a",
+				Privileges: []string{"a"},
+			},
+		},
+	}.diff(PermissionsList{
+		Assignments: []PrivilegeAssignment{ // platform
+			{
+				Principal: "a",
+				Privileges: []string{"a", "b"},
+			},
+		},
+	})
+	assert.Len(t, diff.Changes, 1)
+	assert.Len(t, diff.Changes[0].Add, 0)
+	assert.Len(t, diff.Changes[0].Remove, 1)
+	assert.Equal(t, "b", diff.Changes[0].Remove[0])
+}
+
+func TestPermissionsList_Diff_LocalRemoteDiff(t *testing.T) {
+	diff := PermissionsList{ // config
+		Assignments: []PrivilegeAssignment{
+			{
+				Principal: "a",
+				Privileges: []string{"a", "b"},
+			},
+		},
+	}.diff(PermissionsList{
+		Assignments: []PrivilegeAssignment{ // platform
+			{
+				Principal: "a",
+				Privileges: []string{"b", "c"},
+			},
+		},
+	})
+	assert.Len(t, diff.Changes, 1)
+	assert.Len(t, diff.Changes[0].Add, 1)
+	assert.Len(t, diff.Changes[0].Remove, 1)
+	assert.Equal(t, "a", diff.Changes[0].Add[0])
+	assert.Equal(t, "c", diff.Changes[0].Remove[0])
 }

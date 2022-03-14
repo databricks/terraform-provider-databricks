@@ -163,3 +163,80 @@ func TestInvalidPrivilege(t *testing.T) {
 	})
 	assert.EqualError(t, err, "EVERYTHING is not allowed on table")
 }
+
+func TestPermissionsList_Diff_ExternallyAddedPrincipal(t *testing.T) {
+	diff := PermissionsList{ // config
+		Assignments: []PrivilegeAssignment{
+			{
+				Principal: "a",
+				Privileges: []string{"a"},
+			},
+			{
+				Principal: "c",
+				Privileges: []string{"a"},
+			},
+		},
+	}.diff(PermissionsList{
+		Assignments: []PrivilegeAssignment{ // platform
+			{
+				Principal: "a",
+				Privileges: []string{"a"},
+			},
+			{
+				Principal: "b",
+				Privileges: []string{"a"},
+			},
+		},
+	})
+	assert.Len(t, diff.Changes, 2)
+	assert.Len(t, diff.Changes[0].Add, 0)
+	assert.Len(t, diff.Changes[0].Remove, 1)
+	assert.Equal(t, "b", diff.Changes[0].Principal)
+	assert.Equal(t, "a", diff.Changes[0].Remove[0])
+	assert.Equal(t, "c", diff.Changes[1].Principal)
+}
+
+func TestPermissionsList_Diff_ExternallyAddedPriv(t *testing.T) {
+	diff := PermissionsList{ // config
+		Assignments: []PrivilegeAssignment{
+			{
+				Principal: "a",
+				Privileges: []string{"a"},
+			},
+		},
+	}.diff(PermissionsList{
+		Assignments: []PrivilegeAssignment{ // platform
+			{
+				Principal: "a",
+				Privileges: []string{"a", "b"},
+			},
+		},
+	})
+	assert.Len(t, diff.Changes, 1)
+	assert.Len(t, diff.Changes[0].Add, 0)
+	assert.Len(t, diff.Changes[0].Remove, 1)
+	assert.Equal(t, "b", diff.Changes[0].Remove[0])
+}
+
+func TestPermissionsList_Diff_LocalRemoteDiff(t *testing.T) {
+	diff := PermissionsList{ // config
+		Assignments: []PrivilegeAssignment{
+			{
+				Principal: "a",
+				Privileges: []string{"a", "b"},
+			},
+		},
+	}.diff(PermissionsList{
+		Assignments: []PrivilegeAssignment{ // platform
+			{
+				Principal: "a",
+				Privileges: []string{"b", "c"},
+			},
+		},
+	})
+	assert.Len(t, diff.Changes, 1)
+	assert.Len(t, diff.Changes[0].Add, 1)
+	assert.Len(t, diff.Changes[0].Remove, 1)
+	assert.Equal(t, "a", diff.Changes[0].Add[0])
+	assert.Equal(t, "c", diff.Changes[0].Remove[0])
+}

@@ -3,6 +3,7 @@ package catalog
 import (
 	"context"
 	"fmt"
+	"sort"
 	"strings"
 
 	"github.com/databrickslabs/terraform-provider-databricks/common"
@@ -40,32 +41,35 @@ type PermissionsList struct {
 // diff returns permissionsDiff of this permissions list with `diff` privileges removed
 func (pl PermissionsList) diff(existing PermissionsList) (diff permissionsDiff) {
 	// diffs change sets
-	new := map[string]*schema.Set{}
+	configured := map[string]*schema.Set{}
 	for _, v := range pl.Assignments {
-		new[v.Principal] = newStringSet(v.Privileges)
+		configured[v.Principal] = newStringSet(v.Privileges)
 	}
 	// existing permissions that needs removal
-	old := map[string]*schema.Set{}
+	remote := map[string]*schema.Set{}
 	for _, v := range existing.Assignments {
-		old[v.Principal] = newStringSet(v.Privileges)
+		remote[v.Principal] = newStringSet(v.Privileges)
 	}
 	// STEP 1: detect overlaps
-	for principal, add := range new {
-		remove, ok := old[principal]
-		if ok {
-			add = add.Difference(remove)
-		} else {
-			remove = newStringSet([]string{})
+	for principal, confPrivs := range configured {
+		remotePrivs, ok := remote[principal]
+		if !ok {
+			remotePrivs = newStringSet([]string{})
+		}
+		add := setToStrings(confPrivs.Difference(remotePrivs))
+		remove := setToStrings(remotePrivs.Difference(confPrivs))
+		if len(add) == 0 && len(remove) == 0 {
+			continue
 		}
 		diff.Changes = append(diff.Changes, permissionsChange{
 			Principal: principal,
-			Add:       setToStrings(add),
-			Remove:    setToStrings(remove),
+			Add:       add,
+			Remove:    remove,
 		})
 	}
 	// STEP 2: non overlap - simply remove
-	for principal, remove := range old {
-		_, ok := new[principal]
+	for principal, remove := range remote {
+		_, ok := configured[principal]
 		if ok { // already handled in STEP 1
 			continue
 		}
@@ -74,6 +78,10 @@ func (pl PermissionsList) diff(existing PermissionsList) (diff permissionsDiff) 
 			Remove:    setToStrings(remove),
 		})
 	}
+	// so that we can deterministic tests
+	sort.Slice(diff.Changes, func(i, j int) bool {
+		return diff.Changes[i].Principal < diff.Changes[j].Principal
+	})
 	return diff
 }
 
@@ -235,6 +243,9 @@ func ResourceGrants() *schema.Resource {
 			grants, err := NewPermissionsAPI(ctx, c).getPermissions(split[0], split[1])
 			if err != nil {
 				return err
+			}
+			if len(grants.Assignments) == 0 {
+				return common.NotFound("got empty permissions list")
 			}
 			return common.StructToData(grants, s, d)
 		},

@@ -37,41 +37,35 @@ type PermissionsList struct {
 	Assignments []PrivilegeAssignment `json:"privilege_assignments" tf:"slice_set,alias:grant"`
 }
 
-// remove returns new diff with PermissionsList properly.
-func (pl PermissionsList) without(remove PermissionsList) (diff permissionsDiff) {
-	type innerChange struct {
-		Add    *schema.Set
-		Remove *schema.Set
-	}
+// diff returns permissionsDiff of this permissions list with `diff` privileges removed
+func (pl PermissionsList) diff(existing PermissionsList) (diff permissionsDiff) {
 	// diffs change sets
-	inner := map[string]innerChange{}
+	new := map[string]*schema.Set{}
 	for _, v := range pl.Assignments {
-		inner[v.Principal] = innerChange{
-			Add:    newStringSet(v.Privileges),
-			Remove: newStringSet([]string{}),
-		}
+		new[v.Principal] = newStringSet(v.Privileges)
 	}
 	// existing permissions that needs removal
-	cleanup := map[string]*schema.Set{}
-	for _, v := range remove.Assignments {
-		cleanup[v.Principal] = newStringSet(v.Privileges)
+	old := map[string]*schema.Set{}
+	for _, v := range existing.Assignments {
+		old[v.Principal] = newStringSet(v.Privileges)
 	}
 	// STEP 1: detect overlaps
-	for principal, change := range inner {
-		remove, ok := cleanup[principal]
+	for principal, add := range new {
+		remove, ok := old[principal]
 		if ok {
-			change.Add = change.Add.Difference(remove)
-			change.Remove = remove.Difference(change.Add)
+			add = add.Difference(remove)
+		} else {
+			remove = newStringSet([]string{})
 		}
 		diff.Changes = append(diff.Changes, permissionsChange{
 			Principal: principal,
-			Add:       setToStrings(change.Add),
-			Remove:    setToStrings(change.Remove),
+			Add:       setToStrings(add),
+			Remove:    setToStrings(remove),
 		})
 	}
 	// STEP 2: non overlap - simply remove
-	for principal, remove := range cleanup {
-		_, ok := inner[principal]
+	for principal, remove := range old {
+		_, ok := new[principal]
 		if ok { // already handled in STEP 1
 			continue
 		}
@@ -110,7 +104,7 @@ func (a PermissionsAPI) replacePermissions(securable, name string, list Permissi
 	if err != nil {
 		return err
 	}
-	return a.updatePermissions(securable, name, list.without(existing))
+	return a.updatePermissions(securable, name, list.diff(existing))
 }
 
 type securableMapping map[string]map[string]bool

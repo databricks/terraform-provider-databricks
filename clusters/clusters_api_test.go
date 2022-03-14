@@ -1206,7 +1206,7 @@ func TestWrapMissingClusterError(t *testing.T) {
 func TestExpiredClusterAssumedAsRemoved(t *testing.T) {
 	err := wrapMissingClusterError(common.APIError{
 		ErrorCode: "INVALID_STATE",
-		Message: "Cannot access cluster X that was terminated or unpinned more than Y days ago.",
+		Message:   "Cannot access cluster X that was terminated or unpinned more than Y days ago.",
 	}, "X")
 	ae, _ := err.(common.APIError)
 	assert.Equal(t, 404, ae.StatusCode)

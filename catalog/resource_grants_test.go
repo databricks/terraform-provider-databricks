@@ -168,22 +168,22 @@ func TestPermissionsList_Diff_ExternallyAddedPrincipal(t *testing.T) {
 	diff := PermissionsList{ // config
 		Assignments: []PrivilegeAssignment{
 			{
-				Principal: "a",
+				Principal:  "a",
 				Privileges: []string{"a"},
 			},
 			{
-				Principal: "c",
+				Principal:  "c",
 				Privileges: []string{"a"},
 			},
 		},
 	}.diff(PermissionsList{
 		Assignments: []PrivilegeAssignment{ // platform
 			{
-				Principal: "a",
+				Principal:  "a",
 				Privileges: []string{"a"},
 			},
 			{
-				Principal: "b",
+				Principal:  "b",
 				Privileges: []string{"a"},
 			},
 		},
@@ -200,14 +200,14 @@ func TestPermissionsList_Diff_ExternallyAddedPriv(t *testing.T) {
 	diff := PermissionsList{ // config
 		Assignments: []PrivilegeAssignment{
 			{
-				Principal: "a",
+				Principal:  "a",
 				Privileges: []string{"a"},
 			},
 		},
 	}.diff(PermissionsList{
 		Assignments: []PrivilegeAssignment{ // platform
 			{
-				Principal: "a",
+				Principal:  "a",
 				Privileges: []string{"a", "b"},
 			},
 		},
@@ -222,14 +222,14 @@ func TestPermissionsList_Diff_LocalRemoteDiff(t *testing.T) {
 	diff := PermissionsList{ // config
 		Assignments: []PrivilegeAssignment{
 			{
-				Principal: "a",
+				Principal:  "a",
 				Privileges: []string{"a", "b"},
 			},
 		},
 	}.diff(PermissionsList{
 		Assignments: []PrivilegeAssignment{ // platform
 			{
-				Principal: "a",
+				Principal:  "a",
 				Privileges: []string{"b", "c"},
 			},
 		},

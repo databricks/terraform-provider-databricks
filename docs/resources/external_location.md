@@ -51,7 +51,7 @@ resource "databricks_storage_credential" "external" {
   comment = "Managed by TF"
   depends_on = [
     databricks_metastore_assignment.this
-  ]  
+  ]
 }
 
 resource "databricks_external_location" "some" {

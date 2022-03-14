@@ -41,7 +41,7 @@ locals {
   databricks_workspace_name = regex(local.resource_regex, var.databricks_resource_id)[2]
   tenant_id                 = data.azurerm_client_config.current.tenant_id
   databricks_workspace_host = data.azurerm_databricks_workspace.this.workspace_url
-  databricks_workspace_id    = data.azurerm_databricks_workspace.this.workspace_id
+  databricks_workspace_id   = data.azurerm_databricks_workspace.this.workspace_id
   prefix                    = replace(replace(lower(data.azurerm_resource_group.this.name), "rg", ""), "-", "")
 }
 
@@ -70,8 +70,7 @@ terraform {
       version = "~>2.19.0"
     }
     databricks = {
-      source  = "databrickslabs/databricks"
-      version = "~>0.5.2"
+      source = "databrickslabs/databricks"
     }
   }
 }
@@ -138,7 +137,7 @@ A [databricks_metastore](../resources/metastore.md) is the top level container f
 
 ```hcl
 resource "databricks_metastore" "this" {
-  name         = "primary"
+  name = "primary"
   storage_root = format("abfss://%s@%s.dfs.core.windows.net/",
     azurerm_storage_account.unity_catalog.name,
   azurerm_storage_container.unity_catalog.name)
@@ -180,7 +179,7 @@ resource "databricks_catalog" "sandbox" {
 }
 
 resource "databricks_grants" "sandbox" {
-  catalog  = databricks_catalog.sandbox.name
+  catalog = databricks_catalog.sandbox.name
   grant {
     principal  = "Data Scientists"
     privileges = ["USAGE", "CREATE"]
@@ -201,7 +200,7 @@ resource "databricks_schema" "things" {
 }
 
 resource "databricks_grants" "things" {
-  schema   = databricks_schema.things.id
+  schema = databricks_schema.things.id
   grant {
     principal  = "Data Engineers"
     privileges = ["USAGE"]
@@ -267,7 +266,7 @@ resource "databricks_storage_credential" "external" {
   comment = "Managed by TF"
   depends_on = [
     databricks_metastore_assignment.this
-  ]  
+  ]
 }
 
 resource "databricks_grants" "external_creds" {
@@ -326,7 +325,7 @@ resource "databricks_cluster" "unity_sql" {
   # need to wait until the metastore is assigned
   depends_on = [
     databricks_metastore_assignment.this
-  ]    
+  ]
 }
 ```
 
@@ -365,7 +364,7 @@ resource "databricks_cluster" "dev" {
   # need to wait until the metastore is assigned
   depends_on = [
     databricks_metastore_assignment.this
-  ]    
+  ]
 }
 
 resource "databricks_permissions" "dev_restart" {

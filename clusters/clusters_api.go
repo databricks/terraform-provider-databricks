@@ -613,7 +613,7 @@ func wrapMissingClusterError(err error, id string) error {
 		return err
 	}
 	// https://github.com/databrickslabs/terraform-provider-databricks/issues/1177
-	// Aligned with Clusters Core team to keep behavior of these workarounds 
+	// Aligned with Clusters Core team to keep behavior of these workarounds
 	// as is in the longer term, so that this keeps working.
 	if apiErr.ErrorCode == "INVALID_STATE" {
 		log.Printf("[WARN] assuming that cluster is removed on backend: %s", apiErr)

@@ -14,14 +14,14 @@ type Tag struct {
 
 // ModelVersion defines a MLFlow model version as returned by the API
 type ModelVersion struct {
-	Name                 string `json:"name" tf:"computed"`
-	Version              string `json:"version" tf:"computed"`
-	CreationTimestamp    int64  `json:"creation_timestamp,omitempty" tf:"computed"`
-	LastUpdatedTimestamp int64  `json:"last_updated_timestamp,omitempty" tf:"computed"`
-	UserID               string `json:"user_id,omitempty" tf:"computed"`
-	CurrentStage         string `json:"current_stage,omitempty" tf:"computed"`
-	Source               string `json:"source,omitempty" tf:"computed"`
-	Status               string `json:"status,omitempty" tf:"computed"`
+	Name                 string `json:"name"`
+	Version              string `json:"version"`
+	CreationTimestamp    int64  `json:"creation_timestamp,omitempty"`
+	LastUpdatedTimestamp int64  `json:"last_updated_timestamp,omitempty"`
+	UserID               string `json:"user_id,omitempty"`
+	CurrentStage         string `json:"current_stage,omitempty"`
+	Source               string `json:"source,omitempty"`
+	Status               string `json:"status,omitempty"`
 }
 
 // Model defines the response object from the API

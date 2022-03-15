@@ -18,6 +18,7 @@ import (
 	"github.com/databrickslabs/terraform-provider-databricks/repos"
 	"github.com/databrickslabs/terraform-provider-databricks/secrets"
 	"github.com/databrickslabs/terraform-provider-databricks/sql"
+	"github.com/databrickslabs/terraform-provider-databricks/sql/api"
 	"github.com/databrickslabs/terraform-provider-databricks/workspace"
 
 	"github.com/databrickslabs/terraform-provider-databricks/storage"
@@ -948,7 +949,7 @@ var resourcesMap map[string]importable = map[string]importable{
 	"databricks_sql_query": {
 		Service: "sql",
 		Name: func(d *schema.ResourceData) string {
-			return d.Get("id").(string)
+			return d.Get("name").(string) + "_" + d.Id()
 		},
 		List: func(ic *importContext) error {
 			qs, err := sqlaListObjects(ic, "/preview/sql/queries")
@@ -998,7 +999,7 @@ var resourcesMap map[string]importable = map[string]importable{
 		Name: func(d *schema.ResourceData) string {
 			name := d.Get("name").(string)
 			if name == "" {
-				name = d.Get("id").(string)
+				name = d.Id()
 			}
 			return name
 		},
@@ -1024,6 +1025,81 @@ var resourcesMap map[string]importable = map[string]importable{
 					Resource: "databricks_permissions",
 					ID:       fmt.Sprintf("/sql/endpoints/%s", r.ID),
 					Name:     "sql_endpoint_" + r.Data.Get("name").(string),
+				})
+			}
+			return nil
+		},
+	},
+	"databricks_sql_visualization": {
+		// TODO: reimplement together with widgets - we need to have a mapping of visualization ID into a full ID
+		Service: "sql",
+		Name: func(d *schema.ResourceData) string {
+			log.Printf("[DEBUG] visualiation: name='%v', id='%v'", d.Get("name"), d.Id())
+			name := d.Get("name").(string) + "_" + d.Id()
+			return name
+		},
+		List: func(ic *importContext) error {
+			qs, err := sqlaListObjects(ic, "/preview/sql/queries")
+			if err != nil {
+				return nil
+			}
+			queryApi := sql.NewQueryAPI(ic.Context, ic.Client)
+			for i, q := range qs {
+				queryID := q["id"].(string)
+				fullQuery, err := queryApi.Read(queryID)
+				if err != nil {
+					log.Printf("[WARN] Problems getting query with ID: %s", queryID)
+					continue
+				}
+				for _, rv := range fullQuery.Visualizations {
+					var vis api.Visualization
+					err = json.Unmarshal(rv, &vis)
+					if err != nil {
+						log.Printf("[WARN] Problems decoding visualization for query with ID: %s", queryID)
+						continue
+					}
+					log.Printf("[DEBUG] visualiation block: %v", vis)
+					ic.Emit(&resource{
+						Resource: "databricks_sql_visualization",
+						ID:       queryID + "/" + vis.ID.String(),
+					})
+
+				}
+				log.Printf("[INFO] Imported %d of %d SQLA queries", i+1, len(qs))
+			}
+			return nil
+		},
+		Depends: []reference{
+			{Path: "query_id", Resource: "databricks_sql_query", Match: "id"},
+		},
+	},
+	"databricks_sql_dashboard": {
+		Service: "sql",
+		Name: func(d *schema.ResourceData) string {
+			return d.Get("name").(string) + "_" + d.Id()
+		},
+		List: func(ic *importContext) error {
+			qs, err := sqlaListObjects(ic, "/preview/sql/dashboards")
+			if err != nil {
+				return nil
+			}
+			for i, q := range qs {
+				ic.Emit(&resource{
+					Resource: "databricks_sql_dashboard",
+					ID:       q["id"].(string),
+					Name:     q["name"].(string),
+				})
+				log.Printf("[INFO] Imported %d of %d SQLA dashboards", i+1, len(qs))
+			}
+
+			return nil
+		},
+		Import: func(ic *importContext, r *resource) error {
+			if ic.meAdmin {
+				ic.Emit(&resource{
+					Resource: "databricks_permissions",
+					ID:       fmt.Sprintf("/sql/dashboards/%s", r.ID),
+					Name:     "sql_dashboard_" + r.Data.Get("name").(string),
 				})
 			}
 			return nil

@@ -12,6 +12,7 @@ type Tag struct {
 	Value string `json:"value"`
 }
 
+// ModelVersion defines a MLFlow model version as returned by the API
 type ModelVersion struct {
 	Name                 string `json:"name" tf:"computed"`
 	Version              string `json:"version" tf:"computed"`

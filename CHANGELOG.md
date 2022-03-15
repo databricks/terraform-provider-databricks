@@ -1,5 +1,9 @@
 # Version changelog
 
+## 0.5.4
+
+* Completely removed custom client-side validation in `databricks_service_principal` ([#1193](https://github.com/databrickslabs/terraform-provider-databricks/issues/1193)).
+
 ## 0.5.3
 
 * Failures in [exporter](https://asciinema.org/a/Rv8ZFJQpfrfp6ggWddjtyXaOy) resource listing no longer halt the entire command run ([#1166](https://github.com/databrickslabs/terraform-provider-databricks/issues/1166)).

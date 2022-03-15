@@ -102,15 +102,6 @@ func TestResourceServicePrincipalRead_NotFound(t *testing.T) {
 	}.ApplyNoError(t)
 }
 
-func TestResourceServicePrincipalRead_Invalid_AWS(t *testing.T) {
-	qa.ResourceFixture{
-		Resource: ResourceServicePrincipal(),
-		New:      true,
-		Read:     true,
-		ID:       "abc",
-	}.ExpectError(t, "display_name is required for service principals in Databricks on AWS")
-}
-
 func TestResourceServicePrincipalRead_Error(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{

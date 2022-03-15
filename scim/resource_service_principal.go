@@ -81,18 +81,6 @@ func ResourceServicePrincipal() *schema.Resource {
 	}
 	return common.Resource{
 		Schema: servicePrincipalSchema,
-		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, c interface{}) error {
-			var sp entity
-			common.DiffToStructPointer(d, servicePrincipalSchema, &sp)
-			client := c.(*common.DatabricksClient)
-			if client.IsAws() && sp.DisplayName == "" {
-				return fmt.Errorf("display_name is required for service principals in Databricks on AWS")
-			}
-			if client.IsAws() && sp.ApplicationID != "" {
-				return fmt.Errorf("application_id is not allowed for service principals in Databricks on AWS")
-			}
-			return nil
-		},
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			sp := spFromData(d)
 			servicePrincipal, err := NewServicePrincipalsAPI(ctx, c).Create(sp)

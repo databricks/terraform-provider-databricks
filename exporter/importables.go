@@ -945,36 +945,54 @@ var resourcesMap map[string]importable = map[string]importable{
 			{Path: "source", File: true},
 		},
 	},
-	// "databricks_sql_query": {
-	// 	Service: "sqlanalytics",
-	// 	Name: func(d *schema.ResourceData) string {
-	// 		return d.Get("id").(string)
-	// 	},
-	// 	List: func(ic *importContext) error {
-	// 		if qs, err := sqlaListObjects(ic, "/preview/sql/queries"); err == nil {
-	// 			for i, q := range qs {
-	// 				ic.Emit(&resource{
-	// 					Resource: "databricks_sql_query",
-	// 					ID:       q["id"].(string),
-	// 					Name:     q["id"].(string),
-	// 				})
-	// 				log.Printf("[INFO] Imported %d of %d SQLA queries", i, len(qs))
-	// 			}
-	// 		}
-	// 		return nil
-	// 	},
-	// 	/*		Import: func(ic *importContext, r *resource) error {
-	// 			// TODO: implement
-	// 			// if ic.meAdmin {
-	// 			// 	ic.Emit(&resource{
-	// 			// 		Resource: "databricks_permissions",
-	// 			// 		ID:       fmt.Sprintf("/clusters/%s", r.ID),
-	// 			// 		Name:     r.Data.Get("cluster_name").(string),
-	// 			// 	})
-	// 			// }
-	// 			return nil
-	// 		},*/
-	// },
+	"databricks_sql_query": {
+		Service: "sql",
+		Name: func(d *schema.ResourceData) string {
+			return d.Get("id").(string)
+		},
+		List: func(ic *importContext) error {
+			qs, err := sqlaListObjects(ic, "/preview/sql/queries")
+			if err != nil {
+				return nil
+			}
+			data_sources := map[string]struct{}{}
+			for i, q := range qs {
+				ic.Emit(&resource{
+					Resource: "databricks_sql_query",
+					ID:       q["id"].(string),
+					Name:     q["name"].(string),
+				})
+				data_sources[q["data_source_id"].(string)] = struct{}{}
+				log.Printf("[INFO] Imported %d of %d SQLA queries", i+1, len(qs))
+			}
+			for data_source := range data_sources {
+				endpoint_id, err := ic.getSqlEndpoint(data_source)
+				if err == nil {
+					ic.Emit(&resource{
+						Resource: "databricks_sql_endpoint",
+						ID:       endpoint_id,
+					})
+				} else {
+					log.Printf("[WARN] Error finding SQL Endpoint for data source %s", data_source)
+				}
+			}
+
+			return nil
+		},
+		Import: func(ic *importContext, r *resource) error {
+			if ic.meAdmin {
+				ic.Emit(&resource{
+					Resource: "databricks_permissions",
+					ID:       fmt.Sprintf("/sql/queries/%s", r.ID),
+					Name:     "sql_query_" + r.Data.Get("name").(string),
+				})
+			}
+			return nil
+		},
+		Depends: []reference{
+			{Path: "data_source_id", Resource: "databricks_sql_endpoint", Match: "data_source_id"},
+		},
+	},
 	"databricks_sql_endpoint": {
 		Service: "sql",
 		Name: func(d *schema.ResourceData) string {
@@ -995,17 +1013,17 @@ var resourcesMap map[string]importable = map[string]importable{
 					ID:       q.ID,
 					Name:     q.Name,
 				})
-				log.Printf("[INFO] Imported %d of %d SQLA endpoints", i, len(endpoints))
+				log.Printf("[INFO] Imported %d of %d SQLA endpoints", i+1, len(endpoints))
 			}
+
 			return nil
 		},
 		Import: func(ic *importContext, r *resource) error {
-			// TODO: implement
 			if ic.meAdmin {
 				ic.Emit(&resource{
 					Resource: "databricks_permissions",
 					ID:       fmt.Sprintf("/sql/endpoints/%s", r.ID),
-					Name:     r.Data.Get("name").(string),
+					Name:     "sql_endpoint_" + r.Data.Get("name").(string),
 				})
 			}
 			return nil

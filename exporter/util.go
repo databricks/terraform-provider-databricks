@@ -125,7 +125,7 @@ func (ic *importContext) getSqlEndpoint(dataSourceId string) (string, error) {
 func (ic *importContext) getSqlVisualizations() (map[string]string, error) {
 	if ic.sqlVisualizations == nil {
 		ic.sqlVisualizations = make(map[string]string)
-		qs, err := sqlaListObjects(ic, "/preview/sql/queries")
+		qs, err := dbsqlListObjects(ic, "/preview/sql/queries")
 		if err != nil {
 			return nil, err
 		}

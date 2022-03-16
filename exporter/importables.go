@@ -37,16 +37,16 @@ var (
 	globalWorkspaceConfName = "global_workspace_conf"
 )
 
-type sqlaListResponse struct {
+type dbsqlListResponse struct {
 	Results    []map[string]interface{} `json:"results"`
 	Page       int64                    `json:"page"`
 	TotalCount int64                    `json:"count"`
 	PageSize   int64                    `json:"page_size"`
 }
 
-// Generic function to list objects related to the SQL Analytics
-func sqlaListObjects(ic *importContext, path string) ([]map[string]interface{}, error) {
-	var listResponse sqlaListResponse
+// Generic function to list objects related to the DBSQL
+func dbsqlListObjects(ic *importContext, path string) ([]map[string]interface{}, error) {
+	var listResponse dbsqlListResponse
 	err := ic.Client.Get(ic.Context, path, nil, &listResponse)
 	if err != nil {
 		return nil, err
@@ -952,7 +952,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			return d.Get("name").(string) + "_" + d.Id()
 		},
 		List: func(ic *importContext) error {
-			qs, err := sqlaListObjects(ic, "/preview/sql/queries")
+			qs, err := dbsqlListObjects(ic, "/preview/sql/queries")
 			if err != nil {
 				return nil
 			}
@@ -984,7 +984,7 @@ var resourcesMap map[string]importable = map[string]importable{
 				ic.Emit(&resource{
 					Resource: "databricks_permissions",
 					ID:       fmt.Sprintf("/sql/queries/%s", r.ID),
-					Name:     "sql_query_" + r.Data.Get("name").(string),
+					Name:     "sql_query_" + ic.Importables["databricks_sql_query"].Name(r.Data),
 				})
 			}
 			return nil
@@ -1003,16 +1003,16 @@ var resourcesMap map[string]importable = map[string]importable{
 			return name
 		},
 		List: func(ic *importContext) error {
-			endpoints, err := sql.NewSQLEndpointsAPI(ic.Context, ic.Client).List()
+			endpointsList, err := sql.NewSQLEndpointsAPI(ic.Context, ic.Client).List()
 			if err != nil {
 				return err
 			}
-			for i, q := range endpoints {
+			for i, q := range endpointsList.Endpoints {
 				ic.Emit(&resource{
 					Resource: "databricks_sql_endpoint",
 					ID:       q.ID,
 				})
-				log.Printf("[INFO] Imported %d of %d SQL endpoints", i+1, len(endpoints))
+				log.Printf("[INFO] Imported %d of %d SQL endpoints", i+1, len(endpointsList.Endpoints))
 			}
 			return nil
 		},
@@ -1021,7 +1021,7 @@ var resourcesMap map[string]importable = map[string]importable{
 				ic.Emit(&resource{
 					Resource: "databricks_permissions",
 					ID:       fmt.Sprintf("/sql/endpoints/%s", r.ID),
-					Name:     "sql_endpoint_" + r.Data.Get("name").(string),
+					Name:     "sql_endpoint_" + ic.Importables["databricks_sql_endpoint"].Name(r.Data),
 				})
 			}
 			return nil
@@ -1059,7 +1059,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			return d.Get("name").(string) + "_" + d.Id()
 		},
 		List: func(ic *importContext) error {
-			qs, err := sqlaListObjects(ic, "/preview/sql/dashboards")
+			qs, err := dbsqlListObjects(ic, "/preview/sql/dashboards")
 			if err != nil {
 				return nil
 			}
@@ -1078,7 +1078,7 @@ var resourcesMap map[string]importable = map[string]importable{
 				ic.Emit(&resource{
 					Resource: "databricks_permissions",
 					ID:       fmt.Sprintf("/sql/dashboards/%s", r.ID),
-					Name:     "sql_dashboard_" + r.Data.Get("name").(string),
+					Name:     "sql_dashboard_" + ic.Importables["databricks_sql_dashboard"].Name(r.Data),
 				})
 			}
 			return nil
@@ -1092,7 +1092,7 @@ var resourcesMap map[string]importable = map[string]importable{
 		List: func(ic *importContext) error {
 			visualizations := map[string]struct{}{}
 			dashboards := map[string]struct{}{}
-			dashboardList, err := sqlaListObjects(ic, "/preview/sql/dashboards")
+			dashboardList, err := dbsqlListObjects(ic, "/preview/sql/dashboards")
 			if err != nil {
 				return err
 			}

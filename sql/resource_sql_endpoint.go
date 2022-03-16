@@ -83,7 +83,7 @@ type DataSource struct {
 }
 
 // endpointList ...
-type endpointList struct {
+type EndpointList struct {
 	Endpoints []SQLEndpoint `json:"endpoints"`
 }
 
@@ -99,13 +99,9 @@ type SQLEndpointsAPI struct {
 }
 
 // List all SQL endpoints
-func (a SQLEndpointsAPI) List() ([]SQLEndpoint, error) {
-	var lst endpointList
-	if err := a.client.Get(a.context, "/sql/endpoints", nil, &lst); err != nil {
-		return nil, err
-	}
-
-	return lst.Endpoints, nil
+func (a SQLEndpointsAPI) List() (lst EndpointList, err error) {
+	a.client.Get(a.context, "/sql/endpoints", nil, &lst)
+	return
 }
 
 // Start ..
@@ -125,6 +121,7 @@ func (a SQLEndpointsAPI) Stop(endpointID string) error {
 // Get ...
 func (a SQLEndpointsAPI) Get(endpointID string) (se SQLEndpoint, err error) {
 	err = a.client.Get(a.context, fmt.Sprintf("/sql/endpoints/%s", endpointID), nil, &se)
+	// This is required because exporter will generate an empty tags block without actual tags and this breaks plan
 	if se.Tags != nil && len(se.Tags.CustomTags) == 0 {
 		se.Tags = nil
 	}

@@ -94,6 +94,7 @@ func TestResourceSQLEndpointCreate(t *testing.T) {
 					ClusterSize:    "Small",
 					ID:             "abc",
 					State:          "RUNNING",
+					Tags:           &Tags{},
 					MaxNumClusters: 1,
 				},
 			},
@@ -280,7 +281,7 @@ func TestSQLEnpointAPI(t *testing.T) {
 		a := NewSQLEndpointsAPI(ctx, client)
 		list, err := a.List()
 		require.NoError(t, err)
-		assert.Len(t, list, 1)
+		assert.Len(t, list.Endpoints, 1)
 
 		err = a.Start("failstart", 5*time.Minute)
 		assert.EqualError(t, err, "nope")

@@ -1,0 +1,10 @@
+{
+  "access_control_list": [
+    {
+      "permission_level": "CAN_MANAGE",
+      "user_name": "test@domain.com"
+    }
+  ],
+  "object_id": "queries/16c4f969-eea0-4aad-8f82-03d79b078dcc",
+  "object_type": "query"
+}

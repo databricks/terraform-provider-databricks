@@ -1,0 +1,36 @@
+{
+  "count": 1,
+  "page": 1,
+  "page_size": 25,
+  "results": [
+    {
+      "color_palette": null,
+      "created_at": "2021-12-03T13:37:52Z",
+      "dashboard_filters_enabled": false,
+      "data_source_id": "147164a6-8316-4a9d-beff-f57261801374",
+      "id": "9cb0c8f5-6262-4a1f-a741-2181de76028f",
+      "is_archived": false,
+      "is_draft": false,
+      "is_favorite": true,
+      "layout": [],
+      "name": "Test",
+      "options": {
+        "refresh_schedules": []
+      },
+      "refresh_schedules": [],
+      "slug": "test",
+      "tags": [],
+      "updated_at": "2021-08-31T09:03:18Z",
+      "user": {
+        "email": "user@domain.com",
+        "id": 661448457191611,
+        "is_db_admin": false,
+        "name": "Test",
+        "profile_image_url": "https://www.gravatar.com/avatar/121323?s=40\u0026d=identicon"
+      },
+      "user_id": 661448457191611,
+      "version": 9,
+      "widgets": null
+    }
+  ]
+}

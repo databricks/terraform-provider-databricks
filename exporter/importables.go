@@ -1137,7 +1137,7 @@ var resourcesMap map[string]importable = map[string]importable{
 					}
 				}
 			} else {
-				log.Printf("[WARN] Error getting all visualizations")
+				log.Printf("[WARN] Error retrieving all visualizations")
 			}
 
 			for dashboard := range dashboards {

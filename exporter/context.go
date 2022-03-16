@@ -47,24 +47,25 @@ import (
 */
 
 type importContext struct {
-	Module         string
-	Context        context.Context
-	Client         *common.DatabricksClient
-	State          stateApproximation
-	Importables    map[string]importable
-	Resources      map[string]*schema.Resource
-	Scope          importedResources
-	Files          map[string]*hclwrite.File
-	Directory      string
-	importing      map[string]bool
-	nameFixes      []regexFix
-	hclFixes       []regexFix
-	allUsers       []scim.User
-	allGroups      []scim.Group
-	mountMap       map[string]mount
-	variables      map[string]string
-	testEmits      map[string]bool
-	sqlDatasources map[string]string
+	Module            string
+	Context           context.Context
+	Client            *common.DatabricksClient
+	State             stateApproximation
+	Importables       map[string]importable
+	Resources         map[string]*schema.Resource
+	Scope             importedResources
+	Files             map[string]*hclwrite.File
+	Directory         string
+	importing         map[string]bool
+	nameFixes         []regexFix
+	hclFixes          []regexFix
+	allUsers          []scim.User
+	allGroups         []scim.Group
+	mountMap          map[string]mount
+	variables         map[string]string
+	testEmits         map[string]bool
+	sqlDatasources    map[string]string
+	sqlVisualizations map[string]string
 
 	debug               bool
 	mounts              bool

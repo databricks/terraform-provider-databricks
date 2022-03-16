@@ -125,6 +125,9 @@ func (a SQLEndpointsAPI) Stop(endpointID string) error {
 // Get ...
 func (a SQLEndpointsAPI) Get(endpointID string) (se SQLEndpoint, err error) {
 	err = a.client.Get(a.context, fmt.Sprintf("/sql/endpoints/%s", endpointID), nil, &se)
+	if se.Tags != nil && len(se.Tags.CustomTags) == 0 {
+		se.Tags = nil
+	}
 	return
 }
 

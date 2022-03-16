@@ -961,10 +961,9 @@ var resourcesMap map[string]importable = map[string]importable{
 				ic.Emit(&resource{
 					Resource: "databricks_sql_query",
 					ID:       q["id"].(string),
-					Name:     q["name"].(string),
 				})
 				data_sources[q["data_source_id"].(string)] = struct{}{}
-				log.Printf("[INFO] Imported %d of %d SQLA queries", i+1, len(qs))
+				log.Printf("[INFO] Imported %d of %d SQL queries", i+1, len(qs))
 			}
 			for data_source := range data_sources {
 				endpoint_id, err := ic.getSqlEndpoint(data_source)
@@ -1012,11 +1011,9 @@ var resourcesMap map[string]importable = map[string]importable{
 				ic.Emit(&resource{
 					Resource: "databricks_sql_endpoint",
 					ID:       q.ID,
-					Name:     q.Name,
 				})
-				log.Printf("[INFO] Imported %d of %d SQLA endpoints", i+1, len(endpoints))
+				log.Printf("[INFO] Imported %d of %d SQL endpoints", i+1, len(endpoints))
 			}
-
 			return nil
 		},
 		Import: func(ic *importContext, r *resource) error {
@@ -1031,41 +1028,24 @@ var resourcesMap map[string]importable = map[string]importable{
 		},
 	},
 	"databricks_sql_visualization": {
-		// TODO: reimplement together with widgets - we need to have a mapping of visualization ID into a full ID
 		Service: "sql",
 		Name: func(d *schema.ResourceData) string {
-			log.Printf("[DEBUG] visualiation: name='%v', id='%v'", d.Get("name"), d.Id())
 			name := d.Get("name").(string) + "_" + d.Id()
 			return name
 		},
 		List: func(ic *importContext) error {
-			qs, err := sqlaListObjects(ic, "/preview/sql/queries")
+			allVis, err := ic.getSqlVisualizations()
 			if err != nil {
-				return nil
+				return err
 			}
-			queryApi := sql.NewQueryAPI(ic.Context, ic.Client)
-			for i, q := range qs {
-				queryID := q["id"].(string)
-				fullQuery, err := queryApi.Read(queryID)
-				if err != nil {
-					log.Printf("[WARN] Problems getting query with ID: %s", queryID)
-					continue
-				}
-				for _, rv := range fullQuery.Visualizations {
-					var vis api.Visualization
-					err = json.Unmarshal(rv, &vis)
-					if err != nil {
-						log.Printf("[WARN] Problems decoding visualization for query with ID: %s", queryID)
-						continue
-					}
-					log.Printf("[DEBUG] visualiation block: %v", vis)
-					ic.Emit(&resource{
-						Resource: "databricks_sql_visualization",
-						ID:       queryID + "/" + vis.ID.String(),
-					})
-
-				}
-				log.Printf("[INFO] Imported %d of %d SQLA queries", i+1, len(qs))
+			i := 1
+			for _, visID := range allVis {
+				ic.Emit(&resource{
+					Resource: "databricks_sql_visualization",
+					ID:       visID,
+				})
+				log.Printf("[INFO] Imported %d of %d SQL Visualizations", i, len(allVis))
+				i++
 			}
 			return nil
 		},
@@ -1087,9 +1067,8 @@ var resourcesMap map[string]importable = map[string]importable{
 				ic.Emit(&resource{
 					Resource: "databricks_sql_dashboard",
 					ID:       q["id"].(string),
-					Name:     q["name"].(string),
 				})
-				log.Printf("[INFO] Imported %d of %d SQLA dashboards", i+1, len(qs))
+				log.Printf("[INFO] Imported %d of %d SQL dashboards", i+1, len(qs))
 			}
 
 			return nil
@@ -1103,6 +1082,76 @@ var resourcesMap map[string]importable = map[string]importable{
 				})
 			}
 			return nil
+		},
+	},
+	"databricks_sql_widget": {
+		Service: "sql",
+		Name: func(d *schema.ResourceData) string {
+			return d.Id()
+		},
+		List: func(ic *importContext) error {
+			visualizations := map[string]struct{}{}
+			dashboards := map[string]struct{}{}
+			dashboardList, err := sqlaListObjects(ic, "/preview/sql/dashboards")
+			if err != nil {
+				return err
+			}
+			dashboardAPI := sql.NewDashboardAPI(ic.Context, ic.Client)
+			cnt := 1
+			for i, d := range dashboardList {
+				dashboardID := d["id"].(string)
+				dashboards[dashboardID] = struct{}{}
+				dashboard, err := dashboardAPI.Read(dashboardID)
+				if err != nil {
+					log.Printf("[WARN] Error getting dashboard with ID %s", dashboardID)
+					continue
+				}
+				for _, rv := range dashboard.Widgets {
+					var widget api.Widget
+					err = json.Unmarshal(rv, &widget)
+					if err != nil {
+						log.Printf("[WARN] Problems decoding widget for dashboard with ID: %s", dashboardID)
+						continue
+					}
+					ic.Emit(&resource{
+						Resource: "databricks_sql_widget",
+						ID:       dashboardID + "/" + widget.ID.String(),
+					})
+					visualizations[widget.VisualizationID.String()] = struct{}{}
+					log.Printf("[DEBUG] Emitted %d widgets for %d of %d dashboards", cnt, i+1, len(dashboardList))
+					cnt++
+				}
+			}
+
+			allVis, err := ic.getSqlVisualizations()
+			if err == nil {
+				for vis := range visualizations {
+					visID, ok := allVis[vis]
+					if ok {
+						ic.Emit(&resource{
+							Resource: "databricks_sql_visualization",
+							ID:       visID,
+						})
+					} else {
+						log.Printf("[WARN] Error finding visualization for ID %s", vis)
+					}
+				}
+			} else {
+				log.Printf("[WARN] Error getting all visualizations")
+			}
+
+			for dashboard := range dashboards {
+				ic.Emit(&resource{
+					Resource: "databricks_sql_dashboard",
+					ID:       dashboard,
+				})
+			}
+
+			return nil
+		},
+		Depends: []reference{
+			{Path: "visualization_id", Resource: "databricks_sql_visualization", Match: "visualization_id"},
+			{Path: "dashboard_id", Resource: "databricks_sql_dashboard", Match: "id"},
 		},
 	},
 }

@@ -1,0 +1,57 @@
+---
+subcategory: "Security"
+---
+
+# databricks_service_principal Data Source
+
+-> **Note** If you have a fully automated setup with workspaces created by [databricks_mws_workspaces](../resources/mws_workspaces.md) or [azurerm_databricks_workspace](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/databricks_workspace), please make sure to add [depends_on attribute](../index.md#data-resources-and-authentication-is-not-configured-errors) in order to prevent _authentication is not configured for provider_ errors.
+
+Retrieves information about [databricks_service_principal](../resources/user.md).
+
+## Example Usage
+
+Adding service principal "813073e7-3b08-4c0d-8619-39bcfa4ac632" to administrative group
+
+```hcl
+data "databricks_group" "admins" {
+  display_name = "admins"
+}
+
+data "databricks_service_principal" "spn" {
+  application_id = "813073e7-3b08-4c0d-8619-39bcfa4ac632"
+}
+
+resource "databricks_group_member" "my_member_a" {
+  group_id  = data.databricks_group.admins.id
+  member_id = data.databricks_service_principal.spn.id
+}
+```
+
+## Argument Reference
+
+Data source allows you to pick service principals by the following attributes
+
+- `application_id` - (Required) ID of the service principal. The service principal must exist before this resource can be retrieved.
+
+## Attribute Reference
+
+Data source exposes the following attributes:
+
+- `id` - The id of the service principal.
+- `external_id` - ID of the service principal in an external identity provider.
+- `display_name` - Display name of the [service principal](../resources/service_principal.md), e.g. `Foo SPN`.
+- `home` - Home folder of the [service principal](../resources/service_principal.md), e.g. `/Users/813073e7-3b08-4c0d-8619-39bcfa4ac632`.
+- `repos` - Repos location of the [service principal](../resources/service_principal.md), e.g. `/Repos/813073e7-3b08-4c0d-8619-39bcfa4ac632`.
+
+## Related Resources
+
+The following resources are used in the same context:
+
+* [End to end workspace management](../guides/passthrough-cluster-per-user.md) guide
+* [databricks_current_user](current_user.md) data to retrieve information about [databricks_user](../resources/user.md) or [databricks_service_principal](../resources/service_principal.md), that is calling Databricks REST API.
+* [databricks_group](../resources/group.md) to manage [groups in Databricks Workspace](https://docs.databricks.com/administration-guide/users-groups/groups.html) or [Account Console](https://accounts.cloud.databricks.com/) (for AWS deployments).
+* [databricks_group](group.md) data to retrieve information about [databricks_group](../resources/group.md) members, entitlements and instance profiles.
+* [databricks_group_instance_profile](../resources/group_instance_profile.md) to attach [databricks_instance_profile](../resources/instance_profile.md) (AWS) to [databricks_group](../resources/group.md).
+* [databricks_group_member](../resources/group_member.md) to attach [users](../resources/user.md) and [groups](../resources/group.md) as group members.
+* [databricks_permissions](../resources/permissions.md) to manage [access control](https://docs.databricks.com/security/access-control/index.html) in Databricks workspace.
+* [databricks_service principal](../resources/service_principal.md) to manage [service principals](../resources/service_principal.md)

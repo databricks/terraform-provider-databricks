@@ -59,6 +59,10 @@ func DataSourceUser() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"application_id": {
+				Type:     schema.TypeString,
+				Computed: true
+			}
 		},
 		ReadContext: func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 			usersAPI := NewUsersAPI(ctx, m)
@@ -71,6 +75,7 @@ func DataSourceUser() *schema.Resource {
 			d.Set("home", fmt.Sprintf("/Users/%s", user.UserName))
 			d.Set("repos", fmt.Sprintf("/Repos/%s", user.UserName))
 			d.Set("external_id", user.ExternalID)
+			d.Set("application_id", user.ApplicationID)
 			splits := strings.Split(user.UserName, "@")
 			norm := nonAlphanumeric.ReplaceAllLiteralString(splits[0], "_")
 			norm = strings.ToLower(norm)

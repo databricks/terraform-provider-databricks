@@ -24,7 +24,7 @@ type CustomerManagedKey struct {
 	AccountID                 string      `json:"account_id" tf:"force_new"`
 	CreationTime              int64       `json:"creation_time,omitempty" tf:"computed"`
 	UseCases                  []string    `json:"use_cases"`
-	ReuseKeyForClusterVolumes bool        `json:"reuse_key_for_cluster_volumes"`
+	ReuseKeyForClusterVolumes bool        `json:"reuse_key_for_cluster_volumes,omitempty"`
 }
 
 // NewCustomerManagedKeysAPI creates CustomerManagedKeysAPI instance from provider meta

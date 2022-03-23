@@ -99,6 +99,61 @@ func TestResourceCustomerManagedKeyCreate(t *testing.T) {
 	assert.Equal(t, "key-alias", d.Get("aws_key_info.0.key_alias"))
 }
 
+func TestResourceCustomerManagedKeyCreateWithReuseKey(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/accounts/abc/customer-managed-keys",
+				ExpectedRequest: CustomerManagedKey{
+					AccountID: "abc",
+					AwsKeyInfo: &AwsKeyInfo{
+						KeyArn:   "key-arn",
+						KeyAlias: "key-alias",
+					},
+					ReuseKeyForClusterVolumes: true,
+					UseCases:                  []string{"MANAGED_SERVICES"},
+				},
+				Response: CustomerManagedKey{
+					CustomerManagedKeyID: "cmkid",
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/accounts/abc/customer-managed-keys/cmkid",
+				Response: CustomerManagedKey{
+					CustomerManagedKeyID: "cmkid",
+					AwsKeyInfo: &AwsKeyInfo{
+						KeyArn:    "key-arn",
+						KeyAlias:  "key-alias",
+						KeyRegion: "us-east-1",
+					},
+					AccountID:                 "abc",
+					ReuseKeyForClusterVolumes: true,
+					UseCases:                  []string{"MANAGED_SERVICES"},
+					CreationTime:              123,
+				},
+			},
+		},
+		Resource: ResourceCustomerManagedKey(),
+		HCL: `
+			account_id = "abc"
+
+			aws_key_info {
+				key_arn   = "key-arn"
+				key_alias = "key-alias"
+			}
+			reuse_key_for_cluster_volumes = true
+			use_cases = ["MANAGED_SERVICES"]
+		`,
+		Create: true,
+	}.Apply(t)
+	assert.NoError(t, err, err)
+	assert.Equal(t, "abc/cmkid", d.Id())
+	assert.Equal(t, "key-arn", d.Get("aws_key_info.0.key_arn"))
+	assert.Equal(t, "key-alias", d.Get("aws_key_info.0.key_alias"))
+}
+
 func TestResourceCustomerManagedKeyCreate_Error(t *testing.T) {
 	_, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{

@@ -19,11 +19,12 @@ type AwsKeyInfo struct {
 
 // CustomerManagedKey contains key information and metadata for BYOK for E2
 type CustomerManagedKey struct {
-	CustomerManagedKeyID string      `json:"customer_managed_key_id,omitempty" tf:"computed"`
-	AwsKeyInfo           *AwsKeyInfo `json:"aws_key_info" tf:"force_new"`
-	AccountID            string      `json:"account_id" tf:"force_new"`
-	CreationTime         int64       `json:"creation_time,omitempty" tf:"computed"`
-	UseCases             []string    `json:"use_cases"`
+	CustomerManagedKeyID      string      `json:"customer_managed_key_id,omitempty" tf:"computed"`
+	AwsKeyInfo                *AwsKeyInfo `json:"aws_key_info" tf:"force_new"`
+	AccountID                 string      `json:"account_id" tf:"force_new"`
+	CreationTime              int64       `json:"creation_time,omitempty" tf:"computed"`
+	UseCases                  []string    `json:"use_cases"`
+	ReuseKeyForClusterVolumes bool        `json:"reuse_key_for_cluster_volumes"`
 }
 
 // NewCustomerManagedKeysAPI creates CustomerManagedKeysAPI instance from provider meta

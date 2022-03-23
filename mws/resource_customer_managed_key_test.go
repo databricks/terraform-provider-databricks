@@ -57,7 +57,8 @@ func TestResourceCustomerManagedKeyCreate(t *testing.T) {
 						KeyArn:   "key-arn",
 						KeyAlias: "key-alias",
 					},
-					UseCases: []string{"MANAGED_SERVICES"},
+					ReuseKeyForClusterVolumes: true,
+					UseCases:                  []string{"MANAGED_SERVICES"},
 				},
 				Response: CustomerManagedKey{
 					CustomerManagedKeyID: "cmkid",
@@ -73,9 +74,10 @@ func TestResourceCustomerManagedKeyCreate(t *testing.T) {
 						KeyAlias:  "key-alias",
 						KeyRegion: "us-east-1",
 					},
-					AccountID:    "abc",
-					UseCases:     []string{"MANAGED_SERVICES"},
-					CreationTime: 123,
+					AccountID:                 "abc",
+					ReuseKeyForClusterVolumes: true,
+					UseCases:                  []string{"MANAGED_SERVICES"},
+					CreationTime:              123,
 				},
 			},
 		},
@@ -87,6 +89,7 @@ func TestResourceCustomerManagedKeyCreate(t *testing.T) {
 				key_arn   = "key-arn"
 				key_alias = "key-alias"
 			}
+			reuse_key_for_cluster_volumes = true
 			use_cases = ["MANAGED_SERVICES"]
 		`,
 		Create: true,
@@ -161,9 +164,10 @@ func TestResourceCustomerManagedKeyRead(t *testing.T) {
 						KeyAlias:  "key-alias",
 						KeyRegion: "us-east-1",
 					},
-					UseCases:     []string{"MANAGED_SERVICES"},
-					AccountID:    "abc",
-					CreationTime: 123,
+					ReuseKeyForClusterVolumes: true,
+					UseCases:                  []string{"MANAGED_SERVICES"},
+					AccountID:                 "abc",
+					CreationTime:              123,
 				},
 			},
 		},
@@ -175,6 +179,7 @@ func TestResourceCustomerManagedKeyRead(t *testing.T) {
 				key_arn   = "key-arn"
 				key_alias = "key-alias"
 			}
+			reuse_key_for_cluster_volumes = true
 			use_cases = ["MANAGED_SERVICES"]
 		`,
 		ID:   "abc/cmkid",
@@ -210,6 +215,7 @@ func TestResourceCustomerManagedKeyRead_NotFound(t *testing.T) {
 				key_arn   = "key-arn"
 				key_alias = "key-alias"
 			}
+			reuse_key_for_cluster_volumes = true
 			use_cases = ["MANAGED_SERVICES"]
 		`,
 		ID:      "abc/cmkid",
@@ -235,6 +241,7 @@ func TestResourceCustomerManagedKeyDelete(t *testing.T) {
 				key_arn   = "key-arn"
 				key_alias = "key-alias"
 			}
+			reuse_key_for_cluster_volumes = true
 			use_cases = ["MANAGED_SERVICES"]
 		`,
 		ID:     "abc/cmkid",

@@ -170,6 +170,7 @@ resource "databricks_mws_customer_managed_keys" "storage" {
     key_alias = aws_kms_alias.storage_customer_managed_key_alias.name
   }
   use_cases = ["STORAGE"]
+  reuse_key_for_cluster_volumes = false
 }
 # supply databricks_mws_customer_managed_keys.storage.customer_managed_key_id as storage_customer_managed_key_id for databricks_mws_workspaces
 ```
@@ -183,6 +184,7 @@ The following arguments are required:
 * `use_cases` - *(since v0.3.4)* List of use cases for which this key will be used. *If you've used the resource before, please add `use_cases = ["MANAGED_SERVICES"]` to keep the previous behaviour.* Possible values are:
   * `MANAGED_SERVICES` - for encryption of the workspace objects (notebooks, secrets) that are stored in the control plane
   * `STORAGE` - for encryption of the DBFS Storage & Cluster EBS Volumes
+* `reuse_key_for_cluster_volumes` - (Optional) If the use_case array contains STORAGE, this specifies whether to also use the key to encrypt cluster EBS volumes. The default value is true, which means Databricks also uses the key for cluster volumes. If you set this to false, Databricks does not encrypt the EBS volumes with your specified key. In that case, your Databricks EBS volumes are encrypted either with default AWS SSE encryption or if you enabled AWS account-level EBS encryption by default, AWS enforces account-level EBS encryption using a separate key that you provided to them.
 
 
 ### aws_key_info Configuration Block

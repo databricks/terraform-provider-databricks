@@ -57,7 +57,7 @@ func TestResourceCustomerManagedKeyCreate(t *testing.T) {
 						KeyArn:   "key-arn",
 						KeyAlias: "key-alias",
 					},
-					ReuseKeyForClusterVolumes: false,
+					ReuseKeyForClusterVolumes: true,
 					UseCases:                  []string{"MANAGED_SERVICES"},
 				},
 				Response: CustomerManagedKey{
@@ -75,7 +75,7 @@ func TestResourceCustomerManagedKeyCreate(t *testing.T) {
 						KeyRegion: "us-east-1",
 					},
 					AccountID:                 "abc",
-					ReuseKeyForClusterVolumes: false,
+					ReuseKeyForClusterVolumes: true,
 					UseCases:                  []string{"MANAGED_SERVICES"},
 					CreationTime:              123,
 				},
@@ -99,7 +99,7 @@ func TestResourceCustomerManagedKeyCreate(t *testing.T) {
 	assert.Equal(t, "key-alias", d.Get("aws_key_info.0.key_alias"))
 }
 
-func TestResourceCustomerManagedKeyCreateWithReuseKey(t *testing.T) {
+func TestResourceCustomerManagedKeyCreateWithoutReuseKey(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
@@ -111,7 +111,7 @@ func TestResourceCustomerManagedKeyCreateWithReuseKey(t *testing.T) {
 						KeyArn:   "key-arn",
 						KeyAlias: "key-alias",
 					},
-					ReuseKeyForClusterVolumes: true,
+					ReuseKeyForClusterVolumes: false,
 					UseCases:                  []string{"MANAGED_SERVICES"},
 				},
 				Response: CustomerManagedKey{
@@ -129,7 +129,7 @@ func TestResourceCustomerManagedKeyCreateWithReuseKey(t *testing.T) {
 						KeyRegion: "us-east-1",
 					},
 					AccountID:                 "abc",
-					ReuseKeyForClusterVolumes: true,
+					ReuseKeyForClusterVolumes: false,
 					UseCases:                  []string{"MANAGED_SERVICES"},
 					CreationTime:              123,
 				},
@@ -143,7 +143,7 @@ func TestResourceCustomerManagedKeyCreateWithReuseKey(t *testing.T) {
 				key_arn   = "key-arn"
 				key_alias = "key-alias"
 			}
-			reuse_key_for_cluster_volumes = true
+			reuse_key_for_cluster_volumes = false
 			use_cases = ["MANAGED_SERVICES"]
 		`,
 		Create: true,
@@ -166,6 +166,7 @@ func TestResourceCustomerManagedKeyCreate_Error(t *testing.T) {
 						KeyArn:   "key-arn",
 						KeyAlias: "key-alias",
 					},
+					ReuseKeyForClusterVolumes: true,
 					UseCases: []string{"MANAGED_SERVICE"},
 				},
 				Response: common.APIErrorBody{
@@ -184,6 +185,7 @@ func TestResourceCustomerManagedKeyCreate_Error(t *testing.T) {
 						KeyAlias:  "key-alias",
 						KeyRegion: "us-east-1",
 					},
+					ReuseKeyForClusterVolumes: true,
 					UseCases:     []string{"MANAGED_SERVICE"},
 					AccountID:    "abc",
 					CreationTime: 123,
@@ -218,7 +220,7 @@ func TestResourceCustomerManagedKeyRead(t *testing.T) {
 						KeyAlias:  "key-alias",
 						KeyRegion: "us-east-1",
 					},
-					ReuseKeyForClusterVolumes: false,
+					ReuseKeyForClusterVolumes: true,
 					UseCases:                  []string{"MANAGED_SERVICES"},
 					AccountID:                 "abc",
 					CreationTime:              123,

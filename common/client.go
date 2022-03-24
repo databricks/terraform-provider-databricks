@@ -53,6 +53,7 @@ type DatabricksClient struct {
 	ConfigFile string `name:"config_file" env:"DATABRICKS_CONFIG_FILE"`
 
 	GoogleServiceAccount string `name:"google_service_account" env:"DATABRICKS_GOOGLE_SERVICE_ACCOUNT" auth:"google"`
+	GoogleCredentials    string `name:"google_credentials" env:"GOOGLE_CREDENTIALS" auth:"google,sensitive"`
 
 	AzureResourceID    string `name:"azure_workspace_resource_id" env:"DATABRICKS_AZURE_RESOURCE_ID" auth:"azure"`
 	AzureUseMSI        bool   `name:"azure_use_msi" env:"ARM_USE_MSI" auth:"azure"`
@@ -246,6 +247,7 @@ func (c *DatabricksClient) Authenticate(ctx context.Context) error {
 		{c.configureWithAzureClientSecret, "azure-client-secret"},
 		{c.configureWithAzureManagedIdentity, "azure-msi"},
 		{c.configureWithAzureCLI, "azure-cli"},
+		{c.configureWithGoogleCrendentials, "google-creds"},
 		{c.configureWithGoogleForAccountsAPI, "google-accounts"},
 		{c.configureWithGoogleForWorkspace, "google-workspace"},
 		{c.configureWithDatabricksCfg, "databricks-cli"},
@@ -262,6 +264,7 @@ func (c *DatabricksClient) Authenticate(ctx context.Context) error {
 			return c.niceAuthError(fmt.Sprintf("cannot configure %s auth: %s", auth.name, err))
 		}
 		if authorizer == nil {
+			// try the next method.
 			continue
 		}
 		// even though this may complain about clear text logging, passwords are replaced with `***`
@@ -493,6 +496,7 @@ func (c *DatabricksClient) ClientForHost(ctx context.Context, url string) (*Data
 		Password:             c.Password,
 		Token:                c.Token,
 		GoogleServiceAccount: c.GoogleServiceAccount,
+		GoogleCredentials:    c.GoogleCredentials,
 		AzurermEnvironment:   c.AzurermEnvironment,
 		InsecureSkipVerify:   c.InsecureSkipVerify,
 		HTTPTimeoutSeconds:   c.HTTPTimeoutSeconds,

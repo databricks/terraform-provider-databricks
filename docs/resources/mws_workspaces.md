@@ -183,6 +183,31 @@ output "databricks_token" {
 
 In order to create a [Databricks Workspace that leverages AWS PrivateLink](https://docs.databricks.com/administration-guide/cloud-configurations/aws/privatelink.html) please ensure that you have read and understood the [Enable Private Link](https://docs.databricks.com/administration-guide/cloud-configurations/aws/privatelink.html) documentation and then customise the example above with the relevant examples from [mws_vpc_endpoint](mws_vpc_endpoint.md), [mws_private_access_settings](mws_private_access_settings.md) and [mws_networks](mws_networks.md).
 
+## OEM Term of Service
+
+-> **Note** The following describes how to tag the customer OEM workspace and have the customer sign the terms of service via a click through workflow
+
+After an external workspace (workspace with external_customer_info defined) has been created, an email containing the link to accept the Terms of Service for the workspace will be sent to the authoritative external customer defined in the external_customer_info object.
+
+```hcl
+resource "databricks_mws_workspaces" "this" {
+  provider        = databricks.mws
+  account_id      = var.databricks_account_id
+  workspace_name  = local.prefix
+  deployment_name = local.prefix
+  aws_region      = "us-east-1"
+
+  credentials_id           = databricks_mws_credentials.this.credentials_id
+  storage_configuration_id = databricks_mws_storage_configurations.this.storage_configuration_id
+
+  external_custoemr_info {
+     customer_name = "external-company-name"
+     authoritative_user_email = "firstname.lastname@company.com"
+     authoritative_user_full_name = "Firstname Lastname"
+  }
+}
+```
+
 ## Argument Reference
 
 -> **Note** All workspaces would be verified to get into runnable state or deleted upon failure. You can only update `credentials_id`, `network_id`, and `storage_customer_managed_key_id` on a running workspace.

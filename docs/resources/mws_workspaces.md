@@ -200,7 +200,7 @@ resource "databricks_mws_workspaces" "this" {
   credentials_id           = databricks_mws_credentials.this.credentials_id
   storage_configuration_id = databricks_mws_storage_configurations.this.storage_configuration_id
 
-  external_custoemr_info {
+  external_customer_info {
      customer_name = "external-company-name"
      authoritative_user_email = "firstname.lastname@company.com"
      authoritative_user_full_name = "Firstname Lastname"

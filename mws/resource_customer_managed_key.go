@@ -100,10 +100,10 @@ func ResourceCustomerManagedKey() *schema.Resource {
 			return NewCustomerManagedKeysAPI(ctx, c).Delete(accountID, cmkID)
 		},
 		Schema:        s,
-		SchemaVersion: 1,
+		SchemaVersion: 2,
 		StateUpgraders: []schema.StateUpgrader{
 			{
-				Version: 0,
+				Version: 1,
 				Type:    ResourceCustomerManagedKeyV0(),
 				Upgrade: migrateResourceCustomerManagedKeyV0,
 			},

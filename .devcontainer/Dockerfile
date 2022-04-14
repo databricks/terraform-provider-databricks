@@ -1,6 +1,7 @@
 FROM ubuntu:20.04
 
 ARG TERRAFORM_VERSION=0.14.8
+ARG TARGETARCH
 
 # Configure apt, install packages and tools
 RUN \
@@ -18,7 +19,7 @@ RUN \
 # Install terraform 
 RUN \
     mkdir -p /tmp/docker-downloads \
-    && curl -sSL -o /tmp/docker-downloads/terraform.zip https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_linux_amd64.zip \
+    && curl -sSL -o /tmp/docker-downloads/terraform.zip https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_linux_${TARGETARCH}.zip \
     && unzip /tmp/docker-downloads/terraform.zip \
     && mv terraform /usr/local/bin \
     && terraform -install-autocomplete
@@ -33,7 +34,7 @@ RUN \
 
 # GoLang
 RUN \
-    wget -c https://dl.google.com/go/go1.15.2.linux-amd64.tar.gz -O - | tar -xz -C /usr/local \
+    wget -c https://dl.google.com/go/go1.18.1.linux-${TARGETARCH}.tar.gz -O - | tar -xz -C /usr/local \
     && export PATH=$PATH:/usr/local/go/bin \
     && echo 'export PATH="/root/go/bin:/usr/local/go/bin:$PATH"' >> /root/.bashrc \
     && ln -s /usr/local/go/bin/go /bin/go
@@ -43,16 +44,15 @@ ENV GO111MODULE=on
 # Install Go tools
 RUN \
     # --> Delve for debugging
-    go get github.com/go-delve/delve/cmd/dlv \
+    go install -v github.com/go-delve/delve/cmd/dlv@latest \
     # --> Go language server
-    && go get -v golang.org/x/tools/gopls \
+    && go install -v golang.org/x/tools/gopls@latest \
     # --> Goimports
-    && go get golang.org/x/tools/cmd/goimports \
-    # --> Gotestsum
-    && go get gotest.tools/gotestsum \
-    # --> Go symbols and outline for go to symbol support and test support 
-    && go get github.com/acroca/go-symbols@v0.1.1 && go get github.com/ramya-rao-a/go-outline@7182a932836a71948db4a81991a494751eccfe77 \
-    # --> Static checker
-    && go install honnef.co/go/tools/cmd/staticcheck \
-
-USER developer
+    && go install -v golang.org/x/tools/cmd/goimports@latest \
+    # # --> Gotestsum
+    && go install -v gotest.tools/gotestsum@latest \
+    # # --> Go symbols and outline for go to symbol support and test support 
+    && go install github.com/acroca/go-symbols@v0.1.1 \
+    && go install github.com/ramya-rao-a/go-outline@7182a932836a71948db4a81991a494751eccfe77 \
+    # # --> Static checker
+    && go install honnef.co/go/tools/cmd/staticcheck@latest

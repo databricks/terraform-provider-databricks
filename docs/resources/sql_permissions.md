@@ -31,7 +31,7 @@ resource "databricks_sql_permissions" "foo_table" {
 }
 ```
 
-It is recommended to define all permissions for a securable in a single resource, otherwise Terraform cannot guarantee config drift prevention.
+It is required to define all permissions for a securable in a single resource, otherwise Terraform cannot guarantee config drift prevention.
 
 ## Example Usage
 

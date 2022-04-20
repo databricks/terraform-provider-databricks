@@ -20,7 +20,7 @@ Every `databricks_grants` resource must have exactly one securable identifier an
 
 Terraform will handle any configuration drift on every `terraform apply` run, even when grants are changed outside of Terraform state.
 
-It is recommended to define all permissions for a securable in a single resource, otherwise Terraform cannot guarantee config drift prevention.
+It is required to define all permissions for a securable in a single resource, otherwise Terraform cannot guarantee config drift prevention.
 
 ## Catalog grants
 

@@ -20,6 +20,8 @@ Every `databricks_grants` resource must have exactly one securable identifier an
 
 Terraform will handle any configuration drift on every `terraform apply` run, even when grants are changed outside of Terraform state.
 
+It is required to define all permissions for a securable in a single resource, otherwise Terraform cannot guarantee config drift prevention.
+
 ## Catalog grants
 
 You can grant `CREATE` and `USAGE` privileges to [databricks_catalog](catalog.md) specified in `catalog` attribute:
@@ -104,7 +106,7 @@ resource "databricks_grants" "customer360" {
 
 ## Storage credential grants
 
-You can grant `CREATE TABLE`, `READ FILES`, and `WRITE FILES` privileges to [databricks_storage_credential](storage_credential.md) id specified in `storage_credential` attribute:
+You can grant `CREATE_TABLE`, `READ_FILES`, and `WRITE_FILES` privileges to [databricks_storage_credential](storage_credential.md) id specified in `storage_credential` attribute:
 
 ```hcl
 resource "databricks_storage_credential" "external" {
@@ -119,14 +121,14 @@ resource "databricks_grants" "external_creds" {
   storage_credential = databricks_storage_credential.external.id
   grant {
     principal  = "Data Engineers"
-    privileges = ["CREATE TABLE"]
+    privileges = ["CREATE_TABLE"]
   }
 }
 ```
 
 ## Storage location grants
 
-You can grant `CREATE TABLE`, `READ FILES`, and `WRITE FILES` privileges to [databricks_external_location](external_location.md) id specified in `external_location` attribute:
+You can grant `CREATE_TABLE`, `READ_FILES`, and `WRITE_FILES` privileges to [databricks_external_location](external_location.md) id specified in `external_location` attribute:
 
 ```hcl
 resource "databricks_external_location" "some" {
@@ -140,7 +142,7 @@ resource "databricks_grants" "some" {
   external_location = databricks_external_location.some.id
   grant {
     principal  = "Data Engineers"
-    privileges = ["CREATE TABLE", "READ FILES"]
+    privileges = ["CREATE_TABLE", "READ_FILES"]
   }
 }
 ```

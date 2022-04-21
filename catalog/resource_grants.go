@@ -159,33 +159,27 @@ var mapping = securableMapping{
 	"table": {
 		"MODIFY":         true,
 		"SELECT":         true,
-		"ALL PRIVILEGES": true,
 	},
 	"view": {
 		"SELECT":         true,
-		"ALL PRIVILEGES": true,
 	},
 	"catalog": {
 		"CREATE":         true,
 		"USAGE":          true,
-		"ALL PRIVILEGES": true,
 	},
 	"schema": {
 		"CREATE":         true,
 		"USAGE":          true,
-		"ALL PRIVILEGES": true,
 	},
 	"storage_credential": {
-		"CREATE TABLE":   true,
-		"READ FILES":     true,
-		"WRITE FILES":    true,
-		"ALL PRIVILEGES": true,
+		"CREATE_TABLE":   true,
+		"READ_FILES":     true,
+		"WRITE_FILES":    true,
 	},
 	"external_location": {
-		"CREATE TABLE":   true,
-		"READ FILES":     true,
-		"WRITE FILES":    true,
-		"ALL PRIVILEGES": true,
+		"CREATE_TABLE":   true,
+		"READ_FILES":     true,
+		"WRITE_FILES":    true,
 	},
 }
 

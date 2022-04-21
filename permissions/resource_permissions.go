@@ -346,37 +346,7 @@ func ResourcePermissions() *schema.Resource {
 		}
 		return s
 	})
-	readContext := func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-		id := d.Id()
-		objectACL, err := NewPermissionsAPI(ctx, m).Read(id)
-		if common.IsMissing(err) {
-			log.Printf("[INFO] %s is removed on backend", d.Id())
-			d.SetId("")
-			return nil
-		}
-		if err != nil {
-			return diag.FromErr(err)
-		}
-		me, err := scim.NewUsersAPI(ctx, m).Me()
-		if err != nil {
-			return diag.FromErr(err)
-		}
-		entity, err := objectACL.ToPermissionsEntity(d, me.UserName)
-		if err != nil {
-			return diag.FromErr(err)
-		}
-		if len(entity.AccessControlList) == 0 {
-			// empty "modifiable" access control list is the same as resource absence
-			d.SetId("")
-			return nil
-		}
-		err = common.StructToData(entity, s, d)
-		if err != nil {
-			return diag.FromErr(err)
-		}
-		return nil
-	}
-	return &schema.Resource{
+	return common.Resource{
 		Schema: s,
 		CustomizeDiff: func(ctx context.Context, diff *schema.ResourceDiff, c interface{}) error {
 			client := c.(*common.DatabricksClient)
@@ -407,53 +377,58 @@ func ResourcePermissions() *schema.Resource {
 			}
 			return nil
 		},
-		ReadContext: readContext,
-		CreateContext: func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			id := d.Id()
+			objectACL, err := NewPermissionsAPI(ctx, c).Read(id)
+			if err != nil {
+				return err
+			}
+			me, err := scim.NewUsersAPI(ctx, c).Me()
+			if err != nil {
+				return err
+			}
+			entity, err := objectACL.ToPermissionsEntity(d, me.UserName)
+			if err != nil {
+				return err
+			}
+			if len(entity.AccessControlList) == 0 {
+				// empty "modifiable" access control list is the same as resource absence
+				d.SetId("")
+				return nil
+			}
+			return common.StructToData(entity, s, d)
+		},
+		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var entity PermissionsEntity
 			common.DataToStructPointer(d, s, &entity)
 			for _, mapping := range permissionsResourceIDFields() {
 				if v, ok := d.GetOk(mapping.field); ok {
-					id, err := mapping.idRetriever(ctx, m.(*common.DatabricksClient), v.(string))
+					id, err := mapping.idRetriever(ctx, c, v.(string))
 					if err != nil {
-						return diag.FromErr(err)
+						return err
 					}
 					objectID := fmt.Sprintf("/%s/%s", mapping.resourceType, id)
-					err = NewPermissionsAPI(ctx, m).Update(objectID, AccessControlChangeList{
+					err = NewPermissionsAPI(ctx, c).Update(objectID, AccessControlChangeList{
 						AccessControlList: entity.AccessControlList,
 					})
 					if err != nil {
-						return diag.FromErr(err)
+						return err
 					}
 					d.SetId(objectID)
-					return readContext(ctx, d, m)
+					return nil
 				}
 			}
-			return diag.Errorf("At least one type of resource identifiers must be set")
+			return errors.New("At least one type of resource identifiers must be set")
 		},
-		UpdateContext: func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var entity PermissionsEntity
 			common.DataToStructPointer(d, s, &entity)
-			err := NewPermissionsAPI(ctx, m).Update(d.Id(), AccessControlChangeList{
+			return NewPermissionsAPI(ctx, c).Update(d.Id(), AccessControlChangeList{
 				AccessControlList: entity.AccessControlList,
 			})
-			if err != nil {
-				return diag.FromErr(err)
-			}
-			return readContext(ctx, d, m)
 		},
-		DeleteContext: func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-			err := NewPermissionsAPI(ctx, m).Delete(d.Id())
-			if common.IsMissing(err) {
-				log.Printf("[INFO] %s is already removed on backend", d.Id())
-				return nil
-			}
-			if err != nil {
-				return diag.FromErr(err)
-			}
-			return nil
+		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			return NewPermissionsAPI(ctx, c).Delete(d.Id())
 		},
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
-	}
+	}.ToResource()
 }

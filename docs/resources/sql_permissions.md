@@ -31,6 +31,8 @@ resource "databricks_sql_permissions" "foo_table" {
 }
 ```
 
+It is required to define all permissions for a securable in a single resource, otherwise Terraform cannot guarantee config drift prevention.
+
 ## Example Usage
 
 The following resource definition will enforce access control on a table by executing the following SQL queries on a special auto-terminating cluster it would create for this operation:

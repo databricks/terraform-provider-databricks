@@ -273,7 +273,7 @@ resource "databricks_grants" "external_creds" {
   storage_credential = databricks_storage_credential.external.id
   grant {
     principal  = "Data Engineers"
-    privileges = ["CREATE TABLE"]
+    privileges = ["CREATE_TABLE"]
   }
 }
 
@@ -293,7 +293,7 @@ resource "databricks_grants" "some" {
   external_location = databricks_external_location.some.id
   grant {
     principal  = "Data Engineers"
-    privileges = ["CREATE TABLE", "READ FILES"]
+    privileges = ["CREATE_TABLE", "READ_FILES"]
   }
 }
 ```

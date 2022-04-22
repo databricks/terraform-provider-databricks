@@ -5,6 +5,8 @@ subcategory: "Security"
 
 -> **Note** Please switch to [databricks_grants](grants.md) with Unity Catalog to manage data access, which provides better and faster way for managing data security. `databricks_grants` resource *doesn't require a technical cluster to perform operations*. `databricks_sql_permissions` will be removed, once Unity Catalog is Generally Available.
 
+-> **Note** On workspaces with Unity Catalog enabled, you may run into errors such as `Error: cannot create sql permissions: cannot read current grants: For unity catalog, please specify the catalog name explicitly. E.g. SHOW GRANT ``your.address@email.com`` ON CATALOG main`. This happens if your default workspace catalog was set to a UC catalog instead of `hive_metastore`. The workaround is to re-assign the metastore again with the default catalog set to be `hive_metastore`.
+
 This resource manages data object access control lists in Databricks workspaces for things like tables, views, databases, and [more](https://docs.databricks.com/security/access-control/table-acls/object-privileges.html). In order to enable Table Access control, you have to login to the workspace as administrator, go to `Admin Console`, pick `Access Control` tab, click on `Enable` button in `Table Access Control` section, and click `Confirm`. The security guarantees of table access control **will only be effective if cluster access control is also turned on**. Please make sure that no users can create clusters in your workspace and all [databricks_cluster](cluster.md) have approximately the following configuration:
 
 ```hcl

@@ -292,11 +292,7 @@ func (oa *ObjectACL) ToPermissionsEntity(d *schema.ResourceData, me string) (Per
 			return entity, nil
 		}
 		identifier := path.Base(oa.ObjectID)
-		err := d.Set(mapping.field, identifier)
-		if err != nil {
-			return entity, err
-		}
-		return entity, nil
+		return entity, d.Set(mapping.field, identifier)
 	}
 	return entity, fmt.Errorf("unknown object type %s", oa.ObjectType)
 }

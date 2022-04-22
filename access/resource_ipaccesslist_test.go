@@ -319,17 +319,17 @@ func TestIPACLDelete_Error(t *testing.T) {
 				Method:   http.MethodDelete,
 				Resource: "/api/2.0/ip-access-lists/" + TestingID,
 				Response: common.APIErrorBody{
-					ErrorCode: "FEATURE_DISABLED",
-					Message:   "IP access list is not available in the pricing tier of this workspace",
+					ErrorCode: "INVALID_STATE",
+					Message:   "Something went wrong",
 				},
-				Status: 404,
+				Status: 400,
 			},
 		},
 		Resource: ResourceIPAccessList(),
 		Delete:   true,
 		Removed:  true,
 		ID:       TestingID,
-	}.ApplyNoError(t)
+	}.ExpectError(t, "Something went wrong")
 }
 
 func TestListIpAccessLists(t *testing.T) {

@@ -1,6 +1,9 @@
-FROM ubuntu:20.04
+ARG VARIANT=1.16-bullseye
+FROM mcr.microsoft.com/vscode/devcontainers/go:${VARIANT}
 
-ARG TERRAFORM_VERSION=0.14.8
+ARG TERRAFORM_VERSION=1.0.0
+ARG TARGETARCH
+ARG USERNAME=vscode
 
 # Configure apt, install packages and tools
 RUN \
@@ -18,41 +21,20 @@ RUN \
 # Install terraform 
 RUN \
     mkdir -p /tmp/docker-downloads \
-    && curl -sSL -o /tmp/docker-downloads/terraform.zip https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_linux_amd64.zip \
+    && curl -sSL -o /tmp/docker-downloads/terraform.zip https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_linux_${TARGETARCH}.zip \
     && unzip /tmp/docker-downloads/terraform.zip \
     && mv terraform /usr/local/bin \
     && terraform -install-autocomplete
 
-# Save command line history 
-RUN \
-    echo "export HISTFILE=/root/commandhistory/.bash_history" >> "/root/.bashrc" \
-    && echo "export PROMPT_COMMAND='history -a'" >> "/root/.bashrc" \
-    && mkdir -p /root/commandhistory \
-    && touch /root/commandhistory/.bash_history \
-    && echo "source /usr/share/bash-completion/bash_completion" >> "/root/.bashrc"
-
-# GoLang
-RUN \
-    wget -c https://dl.google.com/go/go1.15.2.linux-amd64.tar.gz -O - | tar -xz -C /usr/local \
-    && export PATH=$PATH:/usr/local/go/bin \
-    && echo 'export PATH="/root/go/bin:/usr/local/go/bin:$PATH"' >> /root/.bashrc \
-    && ln -s /usr/local/go/bin/go /bin/go
-
-ENV GO111MODULE=on
+USER $USERNAME
 
 # Install Go tools
 RUN \
-    # --> Delve for debugging
-    go get github.com/go-delve/delve/cmd/dlv \
-    # --> Go language server
-    && go get -v golang.org/x/tools/gopls \
     # --> Goimports
-    && go get golang.org/x/tools/cmd/goimports \
-    # --> Gotestsum
-    && go get gotest.tools/gotestsum \
-    # --> Go symbols and outline for go to symbol support and test support 
-    && go get github.com/acroca/go-symbols@v0.1.1 && go get github.com/ramya-rao-a/go-outline@7182a932836a71948db4a81991a494751eccfe77 \
-    # --> Static checker
-    && go install honnef.co/go/tools/cmd/staticcheck \
-
-USER developer
+    go install -v golang.org/x/tools/cmd/goimports@latest \
+    # # --> Gotestsum
+    && go install -v gotest.tools/gotestsum@latest \
+    # # --> Go symbols and outline for go to symbol support and test support 
+    && go install github.com/acroca/go-symbols@v0.1.1 \
+    # # --> Static checker
+    && go install honnef.co/go/tools/cmd/staticcheck@v0.2.2

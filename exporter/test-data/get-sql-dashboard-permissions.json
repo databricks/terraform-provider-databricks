@@ -1,0 +1,14 @@
+{
+  "access_control_list": [
+    {
+      "permission_level": "CAN_MANAGE",
+      "user_name": "test@domain.com"
+    },
+    {
+      "group_name": "users",
+      "permission_level": "CAN_RUN"
+    }
+  ],
+  "object_id": "dashboards/9cb0c8f5-6262-4a1f-a741-2181de76028f",
+  "object_type": "dashboard"
+}

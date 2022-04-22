@@ -15,6 +15,8 @@ import (
 	"github.com/databrickslabs/terraform-provider-databricks/jobs"
 	"github.com/databrickslabs/terraform-provider-databricks/libraries"
 	"github.com/databrickslabs/terraform-provider-databricks/scim"
+	"github.com/databrickslabs/terraform-provider-databricks/sql"
+	"github.com/databrickslabs/terraform-provider-databricks/sql/api"
 	"github.com/databrickslabs/terraform-provider-databricks/storage"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -98,6 +100,56 @@ func (ic *importContext) emitIfDbfsFile(path string) {
 			ID:       path,
 		})
 	}
+}
+
+func (ic *importContext) getSqlEndpoint(dataSourceId string) (string, error) {
+	if ic.sqlDatasources == nil {
+		var dss []sql.DataSource
+		err := ic.Client.Get(ic.Context, "/preview/sql/data_sources", nil, &dss)
+		if err != nil {
+			return "", err
+		}
+		ic.sqlDatasources = make(map[string]string, len(dss))
+		for _, ds := range dss {
+			ic.sqlDatasources[ds.ID] = ds.EndpointID
+		}
+	}
+	endpointID, ok := ic.sqlDatasources[dataSourceId]
+	if !ok {
+		return "", fmt.Errorf("can't find data source for SQL endpoint %s", dataSourceId)
+	}
+
+	return endpointID, nil
+}
+
+func (ic *importContext) getSqlVisualizations() (map[string]string, error) {
+	if ic.sqlVisualizations == nil {
+		ic.sqlVisualizations = make(map[string]string)
+		qs, err := dbsqlListObjects(ic, "/preview/sql/queries")
+		if err != nil {
+			return nil, err
+		}
+		queryApi := sql.NewQueryAPI(ic.Context, ic.Client)
+		for _, q := range qs {
+			queryID := q["id"].(string)
+			fullQuery, err := queryApi.Read(queryID)
+			if err != nil {
+				log.Printf("[WARN] Problems getting query with ID: %s", queryID)
+				continue
+			}
+			for _, rv := range fullQuery.Visualizations {
+				var vis api.Visualization
+				err = json.Unmarshal(rv, &vis)
+				if err != nil {
+					log.Printf("[WARN] Problems decoding visualization for query with ID: %s", queryID)
+					continue
+				}
+				ic.sqlVisualizations[vis.ID.String()] = queryID + "/" + vis.ID.String()
+			}
+		}
+	}
+
+	return ic.sqlVisualizations, nil
 }
 
 func (ic *importContext) refreshMounts() error {

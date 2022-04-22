@@ -145,10 +145,19 @@ resource "aws_s3_bucket" "metastore" {
   })
 }
 
-resource "aws_s3_bucket_public_access_block" "root_storage_bucket" {
+resource "aws_s3_bucket_public_access_block" "metastore" {
   bucket             = aws_s3_bucket.metastore.id
   ignore_public_acls = true
   depends_on         = [aws_s3_bucket.metastore]
+}
+
+resource "aws_s3_bucket_public_access_block" "metastore" {
+  bucket                  = aws_s3_bucket.metastore.id
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
+  depends_on              = [aws_s3_bucket.metastore]
 }
 
 data "aws_iam_policy_document" "passrole_for_uc" {

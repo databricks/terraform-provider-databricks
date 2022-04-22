@@ -1,5 +1,22 @@
 # Version changelog
 
+## 0.5.5
+
+* Added configuration generators for `databricks_sql_*` resources in _experimental_ [Resource Exporter](https://asciinema.org/a/Rv8ZFJQpfrfp6ggWddjtyXaOy) ([#1199](https://github.com/databrickslabs/terraform-provider-databricks/pull/1199)).
+* Added `google_credentials` provider agument that has the same semantics as [`credentials` argument](https://registry.terraform.io/providers/hashicorp/google/latest/docs/guides/provider_reference#credentials) in official [`google` provider](https://registry.terraform.io/providers/hashicorp/google/latest/docs) ([#1214](https://github.com/databrickslabs/terraform-provider-databricks/pull/1214)).
+* Fixed `databricks_grants` on UC external location empty list error ([#1202](https://github.com/databrickslabs/terraform-provider-databricks/issues/1202)).
+* Fixed errors in `databricks_permissions` resource for auto-purged `databricks_cluster` ([#1252](https://github.com/databrickslabs/terraform-provider-databricks/commit/dac42524f5037c796187c77ba49367b964b03e9f)). 
+* Various documentation fixes ([#1231](https://github.com/databrickslabs/terraform-provider-databricks/pull/1231), [#1239](https://github.com/databrickslabs/terraform-provider-databricks/pull/1239), [#1254](https://github.com/databrickslabs/terraform-provider-databricks/pull/1254), [#1240](https://github.com/databrickslabs/terraform-provider-databricks/commit/2dabfc90592d79249bd177bb975a84e0b98504f7)).
+
+Updated dependency versions:
+
+* Bump google.golang.org/api from 0.71.0 to 0.75.0
+* Bump github.com/golang-jwt/jwt/v4 from 4.3.0 to 4.4.1
+* Bump github.com/stretchr/testify from 1.7.0 to 1.7.1
+* Bump github.com/hashicorp/go-retryablehttp from 0.7.0 to 0.7.1
+* Bump github.com/hashicorp/terraform-plugin-sdk/v2 from 2.11.0 to 2.14.0
+* Bump github.com/Azure/go-autorest/autorest from 0.11.24 to 0.11.26
+
 ## 0.5.4
 
 * Completely removed custom client-side validation in `databricks_service_principal` ([#1193](https://github.com/databrickslabs/terraform-provider-databricks/issues/1193)).

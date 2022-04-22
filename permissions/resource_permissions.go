@@ -208,7 +208,7 @@ func (a PermissionsAPI) Read(objectID string) (objectACL ObjectACL, err error) {
 	// platform propagates INVALID_STATE error for auto-purged clusters in 
 	// the permissions api. this adds "a logical fix" also here, not to introduce
 	// cross-package dependency on "clusters".
-	if ok && strings.Contains(apiErr.Message, "Cannot access cluster") {
+	if ok && strings.Contains(apiErr.Message, "Cannot access cluster") && apiErr.StatusCode == 400 {
 		apiErr.StatusCode = 404
 		err = apiErr
 		return

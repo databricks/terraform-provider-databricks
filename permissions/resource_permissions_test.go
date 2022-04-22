@@ -98,6 +98,29 @@ func TestResourcePermissionsRead(t *testing.T) {
 	assert.Equal(t, "CAN_READ", firstElem["permission_level"])
 }
 
+// https://github.com/databrickslabs/terraform-provider-databricks/issues/1227
+func TestResourcePermissionsRead_RemovedCluster(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			me,
+			{
+				Method:   http.MethodGet,
+				Resource: "/api/2.0/permissions/clusters/abc",
+				Status:   400,
+				Response: common.APIError{
+					ErrorCode: "INVALID_STATE",
+					Message:   "Cannot access cluster X that was terminated or unpinned more than Y days ago.",
+				},
+			},
+		},
+		Resource: ResourcePermissions(),
+		Read:     true,
+		New:      true,
+		Removed:  true,
+		ID:       "/clusters/abc",
+	}.ApplyNoError(t)
+}
+
 func TestResourcePermissionsRead_SQLA_Asset(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{

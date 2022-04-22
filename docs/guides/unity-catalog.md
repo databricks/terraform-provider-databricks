@@ -146,12 +146,6 @@ resource "aws_s3_bucket" "metastore" {
 }
 
 resource "aws_s3_bucket_public_access_block" "metastore" {
-  bucket             = aws_s3_bucket.metastore.id
-  ignore_public_acls = true
-  depends_on         = [aws_s3_bucket.metastore]
-}
-
-resource "aws_s3_bucket_public_access_block" "metastore" {
   bucket                  = aws_s3_bucket.metastore.id
   block_public_acls       = true
   block_public_policy     = true

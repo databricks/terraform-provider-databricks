@@ -152,12 +152,12 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "root_storage_buck
 } 
 
 resource "aws_s3_bucket_public_access_block" "root_storage_bucket" {
-  bucket                  = aws_s3_bucket.root_bucket.id
+  bucket                  = aws_s3_bucket.root_storage_bucket.id
   block_public_acls       = true
   block_public_policy     = true
   ignore_public_acls      = true
   restrict_public_buckets = true
-  depends_on              = [aws_s3_bucket.root_bucket]
+  depends_on              = [aws_s3_bucket.root_storage_bucket]
 }
 
 data "databricks_aws_bucket_policy" "this" {

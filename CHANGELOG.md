@@ -3,6 +3,7 @@
 ## 0.5.4
 
 * Completely removed custom client-side validation in `databricks_service_principal` ([#1193](https://github.com/databrickslabs/terraform-provider-databricks/issues/1193)).
+* Added export functionality for Databricks SQL objects - endpoints, queries, dashboards, widgets, visualizations ([#1199](https://github.com/databrickslabs/terraform-provider-databricks/pull/1199)).
 
 Updated dependency versions:
 

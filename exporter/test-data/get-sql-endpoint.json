@@ -1,0 +1,29 @@
+{
+    "auto_resume": true,
+    "auto_stop_mins": 30,
+    "channel": {
+        "name": "CHANNEL_NAME_PREVIEW"
+    },
+    "cluster_size": "2X-Small",
+    "creator_id": 661448457191611,
+    "creator_name": "user@domain.com",
+    "enable_photon": true,
+    "enable_serverless_compute": false,
+    "id": "f562046bc1272886",
+    "jdbc_url": "jdbc:spark://adb-123445.9.azuredatabricks.net:443/default;transportMode=http;ssl=1;AuthMech=3;httpPath=/sql/1.0/endpoints/f562046bc1272886;",
+    "max_num_clusters": 1,
+    "min_num_clusters": 1,
+    "name": "Test",
+    "num_active_sessions": 0,
+    "num_clusters": 0,
+    "odbc_params": {
+        "hostname": "adb-123445.9.azuredatabricks.net",
+        "path": "/sql/1.0/endpoints/f562046bc1272886",
+        "port": 443,
+        "protocol": "https"
+    },
+    "size": "XXSMALL",
+    "spot_instance_policy": "COST_OPTIMIZED",
+    "state": "STOPPED",
+    "tags": {}
+}

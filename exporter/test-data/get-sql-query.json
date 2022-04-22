@@ -1,0 +1,106 @@
+{
+  "can_edit": true,
+  "created_at": "2021-04-03T13:03:51Z",
+  "data_source_id": "147164a6-8316-4a9d-beff-f57261801374",
+  "description": null,
+  "id": "16c4f969-eea0-4aad-8f82-03d79b078dcc",
+  "is_archived": false,
+  "is_draft": false,
+  "is_favorite": false,
+  "is_safe": true,
+  "last_modified_by": {
+    "email": "test@domain.com",
+    "id": 661448457191611,
+    "is_db_admin": false,
+    "name": "Test",
+    "profile_image_url": "https://www.gravatar.com/avatar/124242?s=40\u0026d=identicon"
+  },
+  "latest_query_data_id": "e39090e8-6cc0-4a6d-b989-6c7dc75a7a8f",
+  "name": "Jobs per day per status last 30 days",
+  "options": {
+    "apply_auto_limit": true,
+    "parameters": []
+  },
+  "permission_tier": "CAN_MANAGE",
+  "query": "select\n  to_date(job_runtime.startTS) as day,\n  job_terminal_state,\n  count(1) as cnt\nfrom\n  overwatch.jobrun\ngroup by\n  to_date(job_runtime.startTS),\n  job_terminal_state\nhaving day \u003e date_sub(current_date(), 30)\norder by\n  day desc",
+  "query_draft": null,
+  "schedule": null,
+  "tags": [
+    "test"
+  ],
+  "updated_at": "2021-09-21T16:04:23Z",
+  "user": {
+    "email": "test@domain.com",
+    "id": 661448457191611,
+    "is_db_admin": false,
+    "name": "Test",
+    "profile_image_url": "https://www.gravatar.com/avatar/12242?s=40\u0026d=identicon"
+  },
+  "user_id": 661448457191611,
+  "version": 1,
+  "visualizations": [
+    {
+      "created_at": "2021-04-03T13:35:21Z",
+      "description": "",
+      "id": "1a062d3a-eefe-11eb-9559-dc7cd9c86087",
+      "name": "Chart",
+      "options": {
+        "alignYAxesAtZero": false,
+        "coefficient": 1,
+        "columnMapping": {
+          "cnt": "y",
+          "day": "x",
+          "job_terminal_state": "series"
+        },
+        "dateTimeFormat": "DD/MM/YY HH:mm",
+        "direction": {
+          "type": "counterclockwise"
+        },
+        "error_y": {
+          "type": "data",
+          "visible": true
+        },
+        "globalSeriesType": "column",
+        "legend": {
+          "enabled": true,
+          "placement": "auto",
+          "traceorder": "normal"
+        },
+        "missingValuesAsZero": true,
+        "numberFormat": "0,0[.]00000",
+        "percentFormat": "0[.]00%",
+        "series": {
+          "error_y": {
+            "type": "data",
+            "visible": true
+          },
+          "stacking": null
+        },
+        "seriesOptions": {},
+        "showDataLabels": false,
+        "sizemode": "diameter",
+        "sortX": true,
+        "textFormat": "",
+        "valuesOptions": {},
+        "xAxis": {
+          "labels": {
+            "enabled": true
+          },
+          "type": "-"
+        },
+        "yAxis": [
+          {
+            "type": "linear"
+          },
+          {
+            "opposite": true,
+            "type": "linear"
+          }
+        ]
+      },
+      "query_plan": null,
+      "type": "CHART",
+      "updated_at": "2021-04-03T13:38:15Z"
+    }
+  ]
+}

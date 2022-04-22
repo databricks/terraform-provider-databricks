@@ -102,32 +102,27 @@ func (ic *importContext) emitIfDbfsFile(path string) {
 	}
 }
 
-func (ic *importContext) getSqlEndpoint(dataSourceId string) (string, error) {
-	if ic.sqlDatasources == nil {
-		var dss []sql.DataSource
-		err := ic.Client.Get(ic.Context, "/preview/sql/data_sources", nil, &dss)
-		if err != nil {
-			return "", err
-		}
-		ic.sqlDatasources = make(map[string]string, len(dss))
-		for _, ds := range dss {
-			ic.sqlDatasources[ds.ID] = ds.EndpointID
-		}
-	}
-	endpointID, ok := ic.sqlDatasources[dataSourceId]
-	if !ok {
-		return "", fmt.Errorf("can't find data source for SQL endpoint %s", dataSourceId)
-	}
-
-	return endpointID, nil
+type sqlVisInfo struct {
+	queryResourceID string
+	visResourceID string
+	endpointResourceID string
 }
 
-func (ic *importContext) getSqlVisualizations() (map[string]string, error) {
+func (ic *importContext) getSqlVisualizations() (map[string]sqlVisInfo, error) {
 	if ic.sqlVisualizations == nil {
-		ic.sqlVisualizations = make(map[string]string)
+		ic.sqlVisualizations = make(map[string]sqlVisInfo)
 		qs, err := dbsqlListObjects(ic, "/preview/sql/queries")
 		if err != nil {
 			return nil, err
+		}
+		var dss []sql.DataSource
+		err = ic.Client.Get(ic.Context, "/preview/sql/data_sources", nil, &dss)
+		if err != nil {
+			return nil, err
+		}
+		dataSources := make(map[string]string, len(dss))
+		for _, dataSource := range dss {
+			dataSources[dataSource.ID] = dataSource.EndpointID
 		}
 		queryApi := sql.NewQueryAPI(ic.Context, ic.Client)
 		for _, q := range qs {
@@ -144,11 +139,14 @@ func (ic *importContext) getSqlVisualizations() (map[string]string, error) {
 					log.Printf("[WARN] Problems decoding visualization for query with ID: %s", queryID)
 					continue
 				}
-				ic.sqlVisualizations[vis.ID.String()] = queryID + "/" + vis.ID.String()
+				ic.sqlVisualizations[vis.ID.String()] = sqlVisInfo{
+					queryResourceID: queryID,
+					visResourceID: queryID + "/" + vis.ID.String(),
+					endpointResourceID: dataSources[fullQuery.DataSourceID],
+				}
 			}
 		}
 	}
-
 	return ic.sqlVisualizations, nil
 }
 

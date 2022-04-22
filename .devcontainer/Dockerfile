@@ -1,7 +1,9 @@
-FROM ubuntu:20.04
+ARG VARIANT=1.16-bullseye
+FROM mcr.microsoft.com/vscode/devcontainers/go:${VARIANT}
 
-ARG TERRAFORM_VERSION=0.14.8
+ARG TERRAFORM_VERSION=1.0.0
 ARG TARGETARCH
+ARG USERNAME=vscode
 
 # Configure apt, install packages and tools
 RUN \
@@ -24,35 +26,15 @@ RUN \
     && mv terraform /usr/local/bin \
     && terraform -install-autocomplete
 
-# Save command line history 
-RUN \
-    echo "export HISTFILE=/root/commandhistory/.bash_history" >> "/root/.bashrc" \
-    && echo "export PROMPT_COMMAND='history -a'" >> "/root/.bashrc" \
-    && mkdir -p /root/commandhistory \
-    && touch /root/commandhistory/.bash_history \
-    && echo "source /usr/share/bash-completion/bash_completion" >> "/root/.bashrc"
-
-# GoLang
-RUN \
-    wget -c https://dl.google.com/go/go1.18.1.linux-${TARGETARCH}.tar.gz -O - | tar -xz -C /usr/local \
-    && export PATH=$PATH:/usr/local/go/bin \
-    && echo 'export PATH="/root/go/bin:/usr/local/go/bin:$PATH"' >> /root/.bashrc \
-    && ln -s /usr/local/go/bin/go /bin/go
-
-ENV GO111MODULE=on
+USER $USERNAME
 
 # Install Go tools
 RUN \
-    # --> Delve for debugging
-    go install -v github.com/go-delve/delve/cmd/dlv@latest \
-    # --> Go language server
-    && go install -v golang.org/x/tools/gopls@latest \
     # --> Goimports
-    && go install -v golang.org/x/tools/cmd/goimports@latest \
+    go install -v golang.org/x/tools/cmd/goimports@latest \
     # # --> Gotestsum
     && go install -v gotest.tools/gotestsum@latest \
     # # --> Go symbols and outline for go to symbol support and test support 
     && go install github.com/acroca/go-symbols@v0.1.1 \
-    && go install github.com/ramya-rao-a/go-outline@7182a932836a71948db4a81991a494751eccfe77 \
     # # --> Static checker
-    && go install honnef.co/go/tools/cmd/staticcheck@latest
+    && go install honnef.co/go/tools/cmd/staticcheck@v0.2.2

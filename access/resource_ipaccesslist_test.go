@@ -313,13 +313,13 @@ func TestIPACLDelete(t *testing.T) {
 }
 
 func TestIPACLDelete_Error(t *testing.T) {
-	d, err := qa.ResourceFixture{
+	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   http.MethodDelete,
 				Resource: "/api/2.0/ip-access-lists/" + TestingID,
 				Response: common.APIErrorBody{
-					ErrorCode: "FEATURE_DISABLE",
+					ErrorCode: "FEATURE_DISABLED",
 					Message:   "IP access list is not available in the pricing tier of this workspace",
 				},
 				Status: 404,
@@ -327,11 +327,9 @@ func TestIPACLDelete_Error(t *testing.T) {
 		},
 		Resource: ResourceIPAccessList(),
 		Delete:   true,
+		Removed:  true,
 		ID:       TestingID,
-	}.Apply(t)
-	assert.Error(t, err)
-	qa.AssertErrorStartsWith(t, err, "IP access list is not available in ")
-	assert.Equal(t, TestingID, d.Id())
+	}.ApplyNoError(t)
 }
 
 func TestListIpAccessLists(t *testing.T) {

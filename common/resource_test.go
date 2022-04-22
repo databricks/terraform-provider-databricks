@@ -37,6 +37,55 @@ func TestImportingCallsRead(t *testing.T) {
 	assert.Equal(t, 1, d.Get("foo"))
 }
 
+func TestHTTP404TriggersResourceRemovalForReadAndDelete(t *testing.T) {
+	nope := func(ctx context.Context,
+		d *schema.ResourceData,
+		c *DatabricksClient) error {
+		return NotFound("nope")
+	}
+	r := Resource{
+		Create: nope,
+		Read: nope,
+		Update: nope,
+		Delete: nope,
+		Schema: map[string]*schema.Schema{
+			"foo": {
+				Type:     schema.TypeInt,
+				Required: true,
+			},
+		},
+	}.ToResource()
+
+	client := &DatabricksClient{}
+	ctx := context.Background()
+	d := r.TestResourceData()
+	
+	// Create propagates 404 error
+	diags := r.CreateContext(ctx, d, client)
+	assert.True(t, diags.HasError())
+	assert.Equal(t, "nope", diags[0].Summary)
+
+	// Read removes the resource and swallows 404 error (clears ID)
+	d.SetId("a")
+	diags = r.ReadContext(ctx, d, client)
+	assert.False(t, diags.HasError())
+	assert.Equal(t, "", d.Id())
+
+	// Update propagates 404 error (keeps ID)
+	d.SetId("b")
+	diags = r.UpdateContext(ctx, d, client)
+	assert.True(t, diags.HasError())
+	assert.Equal(t, "nope", diags[0].Summary)
+	assert.Equal(t, "b", d.Id())
+
+	// Delete removes the resource and swallows 404 error
+	// if it was removed on backend (clears ID)
+	d.SetId("c")
+	diags = r.DeleteContext(ctx, d, client)
+	assert.False(t, diags.HasError())
+	assert.Equal(t, "", d.Id())
+}
+
 func TestUpdate(t *testing.T) {
 	r := Resource{
 		Update: func(ctx context.Context,
@@ -45,6 +94,11 @@ func TestUpdate(t *testing.T) {
 			return d.Set("foo", 1)
 		},
 		Read: func(ctx context.Context,
+			d *schema.ResourceData,
+			c *DatabricksClient) error {
+			return NotFound("nope")
+		},
+		Delete: func(ctx context.Context,
 			d *schema.ResourceData,
 			c *DatabricksClient) error {
 			return NotFound("nope")

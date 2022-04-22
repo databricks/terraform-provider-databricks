@@ -98,6 +98,29 @@ func TestResourcePermissionsRead(t *testing.T) {
 	assert.Equal(t, "CAN_READ", firstElem["permission_level"])
 }
 
+// https://github.com/databrickslabs/terraform-provider-databricks/issues/1227
+func TestResourcePermissionsRead_RemovedCluster(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			me,
+			{
+				Method:   http.MethodGet,
+				Resource: "/api/2.0/permissions/clusters/abc",
+				Status:   400,
+				Response: common.APIError{
+					ErrorCode: "INVALID_STATE",
+					Message:   "Cannot access cluster X that was terminated or unpinned more than Y days ago.",
+				},
+			},
+		},
+		Resource: ResourcePermissions(),
+		Read:     true,
+		New:      true,
+		Removed:  true,
+		ID:       "/clusters/abc",
+	}.ApplyNoError(t)
+}
+
 func TestResourcePermissionsRead_SQLA_Asset(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
@@ -178,8 +201,8 @@ func TestResourcePermissionsRead_some_error(t *testing.T) {
 	assert.Error(t, err)
 }
 
-func TestResourcePermissionsRead_ErrorOnScimMe(t *testing.T) {
-	_, err := qa.ResourceFixture{
+func TestResourcePermissionsCustomizeDiff_ErrorOnScimMe(t *testing.T) {
+	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   http.MethodGet,
@@ -222,8 +245,89 @@ func TestResourcePermissionsRead_ErrorOnScimMe(t *testing.T) {
 		Resource: ResourcePermissions(),
 		Read:     true,
 		ID:       "/clusters/abc",
-	}.Apply(t)
-	assert.Error(t, err)
+	}.ExpectError(t, "Internal error happened")
+}
+
+func TestResourcePermissionsRead_ErrorOnScimMe(t *testing.T) {
+	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
+		{
+			Method:   http.MethodGet,
+			Resource: "/api/2.0/permissions/clusters/abc",
+			Response: ObjectACL{
+				ObjectID:   "/clusters/abc",
+				ObjectType: "clusters",
+				AccessControlList: []AccessControl{
+					{
+						UserName: TestingUser,
+						AllPermissions: []Permission{
+							{
+								PermissionLevel: "CAN_READ",
+								Inherited:       false,
+							},
+						},
+					},
+				},
+			},
+		},
+		{
+			Method:   http.MethodGet,
+			Resource: "/api/2.0/preview/scim/v2/Me",
+			Response: common.APIErrorBody{
+				ErrorCode: "INVALID_REQUEST",
+				Message:   "Internal error happened",
+			},
+			Status: 400,
+		},
+	}, func(ctx context.Context, client *common.DatabricksClient) {
+		r := ResourcePermissions()
+		d := r.TestResourceData()
+		d.SetId("/clusters/abc")
+		diags := r.ReadContext(ctx, d, client)
+		assert.True(t, diags.HasError())
+		assert.Equal(t, "Internal error happened", diags[0].Summary)
+	})
+}
+
+func TestResourcePermissionsRead_ToPermissionsEntity_Error(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			me,
+			{
+				Method:   http.MethodGet,
+				Resource: "/api/2.0/permissions/clusters/abc",
+				Response: ObjectACL{
+					ObjectType: "teapot",
+				},
+			},
+		},
+		Resource: ResourcePermissions(),
+		Read:     true,
+		New:      true,
+		ID:       "/clusters/abc",
+	}.ExpectError(t, "unknown object type teapot")
+}
+
+func TestResourcePermissionsRead_EmptyListResultsInRemoval(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			me,
+			{
+				Method:   http.MethodGet,
+				Resource: "/api/2.0/permissions/clusters/abc",
+				Response: ObjectACL{
+					ObjectID:   "/clusters/abc",
+					ObjectType: "cluster",
+				},
+			},
+		},
+		Resource: ResourcePermissions(),
+		Read:     true,
+		Removed:  true,
+		InstanceState: map[string]string{
+			"cluster_id": "abc",
+		},
+		ID: "/clusters/abc",
+	}.ApplyNoError(t)
 }
 
 func TestResourcePermissionsDelete(t *testing.T) {
@@ -687,6 +791,40 @@ func TestResourcePermissionsCreate_error(t *testing.T) {
 			assert.Equal(t, "INVALID_REQUEST", e.ErrorCode)
 		}
 	}
+}
+
+func TestResourcePermissionsCreate_PathIdRetriever_Error(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			me,
+			qa.HTTPFailures[0],
+		},
+		Resource: ResourcePermissions(),
+		Create: true,
+		HCL: `notebook_path = "/foo/bar"
+
+		access_control {
+			user_name = "ben"
+			permission_level = "CAN_RUN"
+		}`,
+	}.ExpectError(t, "Cannot load path /foo/bar: I'm a teapot")
+}
+
+func TestResourcePermissionsCreate_ActualUpdate_Error(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			me,
+			qa.HTTPFailures[0],
+		},
+		Resource: ResourcePermissions(),
+		Create: true,
+		HCL: `cluster_id = "abc"
+
+		access_control {
+			user_name = "ben"
+			permission_level = "CAN_MANAGE"
+		}`,
+	}.ExpectError(t, "I'm a teapot")
 }
 
 func TestResourcePermissionsUpdate(t *testing.T) {

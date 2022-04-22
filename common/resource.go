@@ -129,7 +129,14 @@ func (r Resource) ToResource() *schema.Resource {
 		UpdateContext: update,
 		DeleteContext: func(ctx context.Context, d *schema.ResourceData,
 			m interface{}) diag.Diagnostics {
-			if err := recoverable(r.Delete)(ctx, d, m.(*DatabricksClient)); err != nil {
+			err := recoverable(r.Delete)(ctx, d, m.(*DatabricksClient))
+			if IsMissing(err) {
+				log.Printf("[INFO] %s[id=%s] is removed on backend",
+					ResourceName.GetOrUnknown(ctx), d.Id())
+				d.SetId("")
+				return nil
+			}
+			if err != nil {
 				err = nicerError(ctx, err, "delete")
 				return diag.FromErr(err)
 			}

@@ -53,7 +53,7 @@ Services are just logical groups of resources used for filtering and organizatio
 * `jobs` - **listing** [databricks_job](../resources/job.md). Usually there are more automated jobs, than interactive clusters, so they get their own file in this tool's output.
 * `access` - [databricks_permissions](../resources/permissions.md) and [databricks_instance_profile](../resources/instance_profile.md).
 * `secrets` - **listing** [databricks_secret_scope](../resources/secret_scope.md) along with [keys](../resources/secret.md) and [ACLs](../resources/secret_acl.md). 
-* `storage` - any [databricks_dbfs_file](../resources/dbfs_file.md) will be downloaded locally and propertly arranged into terraform state.
+* `storage` - any [databricks_dbfs_file](../resources/dbfs_file.md) will be downloaded locally and properly arranged into terraform state.
 * `mounts` - works only in combination with `-mounts`.
 * `notebooks` - [databricks_notebook](../resources/notebook.md)
 * `workspace` - [databricks_workspace_conf](../resources/workspace_conf.md) and [databricks_global_init_script](../resources/global_init_script.md)

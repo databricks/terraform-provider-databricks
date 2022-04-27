@@ -55,6 +55,7 @@ Services are just logical groups of resources used for filtering and organizatio
 * `secrets` - **listing** [databricks_secret_scope](../resources/secret_scope.md) along with [keys](../resources/secret.md) and [ACLs](../resources/secret_acl.md). 
 * `storage` - any [databricks_dbfs_file](../resources/dbfs_file.md) will be downloaded locally and propertly arranged into terraform state.
 * `mounts` - works only in combination with `-mounts`.
+* `notebooks` - [databricks_notebook](../resources/notebook.md)
 
 ## Secrets
 

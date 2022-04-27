@@ -56,6 +56,7 @@ Services are just logical groups of resources used for filtering and organizatio
 * `storage` - any [databricks_dbfs_file](../resources/dbfs_file.md) will be downloaded locally and propertly arranged into terraform state.
 * `mounts` - works only in combination with `-mounts`.
 * `notebooks` - [databricks_notebook](../resources/notebook.md)
+* `workspace` - [databricks_workspace_conf](../resources/workspace_conf.md) and [databricks_global_init_script](../resources/global_init_script.md)
 
 ## Secrets
 

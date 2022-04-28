@@ -449,7 +449,7 @@ func HttpFixtureClientWithToken(t *testing.T, fixtures []HTTPFixture, token stri
 							// golang styles, meh...
 							camel += strings.ToUpper(key)
 						} else {
-							camel += strings.Title(part)
+							camel += strings.Title(part) //lint:ignore SA1019 fix with go1.18 update
 						}
 					}
 					// best effort prediction of what struct should look like...

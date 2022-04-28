@@ -247,7 +247,7 @@ func TestGenerateTestCodeStubs(t *testing.T) {
 			if part == "acl" || part == "mws" {
 				stub.Name += strings.ToUpper(part)
 			} else {
-				stub.Name += strings.Title(part) //lint:ignore SA1019 fix with go1.18
+				stub.Name += strings.Title(part)
 			}
 		}
 		stub.Creates(t)

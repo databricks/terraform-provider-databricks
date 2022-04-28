@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"reflect"
 	"regexp"
 	"strings"
 
@@ -175,8 +176,9 @@ func makeEmptyBlockSuppressFunc(name string) func(k, old, new string, d *schema.
 	}
 }
 
-func DataResource(e interface{}, read func(context.Context, *DatabricksClient) error) *schema.Resource {
-	s := StructToSchema(e, func(m map[string]*schema.Schema) map[string]*schema.Schema { return m })
+func DataResource(sc interface{}, read func(context.Context, interface{}, *DatabricksClient) error) *schema.Resource {
+	// TODO: migrate to go1.18 and get schema from second function argument?..
+	s := StructToSchema(sc, func(m map[string]*schema.Schema) map[string]*schema.Schema { return m })
 	return &schema.Resource{
 		Schema: s,
 		ReadContext: func(ctx context.Context, d *schema.ResourceData, m interface{}) (diags diag.Diagnostics) {
@@ -186,13 +188,14 @@ func DataResource(e interface{}, read func(context.Context, *DatabricksClient) e
 					diags = diag.Errorf("panic: %v", panic)
 				}
 			}()
-			DataToStructPointer(d, s, e)
-			err := read(ctx, m.(*DatabricksClient))
+			ptr := reflect.New(reflect.ValueOf(sc).Type())
+			DataToReflectValue(d, &schema.Resource{Schema: s}, ptr.Elem())
+			err := read(ctx, ptr.Interface(), m.(*DatabricksClient))
 			if err != nil {
 				err = nicerError(ctx, err, "read data")
 				diags = diag.FromErr(err)
 			}
-			StructToData(e, s, d)
+			StructToData(ptr.Elem().Interface(), s, d)
 			d.SetId("_")
 			return
 		},

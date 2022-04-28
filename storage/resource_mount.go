@@ -2,6 +2,7 @@ package storage
 
 import (
 	"context"
+	"time"
 
 	"github.com/databrickslabs/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -64,5 +65,8 @@ func ResourceMount() *schema.Resource {
 	r.ReadContext = mountCallback(mountRead).preProcess(r)
 	r.DeleteContext = mountCallback(mountDelete).preProcess(r)
 	r.Importer = nil
+	r.Timeouts = &schema.ResourceTimeout{
+		Default: schema.DefaultTimeout(20*time.Minute),
+	}
 	return r
 }

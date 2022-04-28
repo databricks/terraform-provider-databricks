@@ -1117,7 +1117,9 @@ var resourcesMap map[string]importable = map[string]importable{
 						Resource: "databricks_sql_widget",
 						ID:       dashboardID + "/" + widget.ID.String(),
 					})
-					visualizations[widget.VisualizationID.String()] = struct{}{}
+					if widget.VisualizationID != nil {
+						visualizations[widget.VisualizationID.String()] = struct{}{}
+					}
 					log.Printf("[DEBUG] Emitted %d widgets for %d of %d dashboards", cnt, i+1, len(dashboardList))
 					cnt++
 				}

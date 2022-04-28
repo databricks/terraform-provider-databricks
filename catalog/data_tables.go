@@ -8,12 +8,13 @@ import (
 )
 
 func DataSourceTables() *schema.Resource {
-	var data struct {
+	type tablesData struct {
 		CatalogName string   `json:"catalog_name"`
 		SchemaName  string   `json:"schema_name"`
 		Ids         []string `json:"ids,omitempty" tf:"computed,slice_set"`
 	}
-	return common.DataResource(&data, func(ctx context.Context, c *common.DatabricksClient) error {
+	return common.DataResource(tablesData{}, func(ctx context.Context, e interface{}, c *common.DatabricksClient) error {
+		data := e.(*tablesData)
 		tablesAPI := NewTablesAPI(ctx, c)
 		tables, err := tablesAPI.listTables(data.CatalogName, data.SchemaName)
 		if err != nil {

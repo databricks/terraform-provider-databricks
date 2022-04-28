@@ -8,11 +8,12 @@ import (
 )
 
 func DataSourceSchemas() *schema.Resource {
-	var data struct {
+	type schemasData struct {
 		CatalogName string   `json:"catalog_name"`
 		Ids         []string `json:"ids,omitempty" tf:"computed,slice_set"`
 	}
-	return common.DataResource(&data, func(ctx context.Context, c *common.DatabricksClient) error {
+	return common.DataResource(schemasData{}, func(ctx context.Context, e interface{}, c *common.DatabricksClient) error {
+		data := e.(*schemasData)
 		schemasAPI := NewSchemasAPI(ctx, c)
 		schemas, err := schemasAPI.listByCatalog(data.CatalogName)
 		if err != nil {

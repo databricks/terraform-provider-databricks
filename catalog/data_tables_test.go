@@ -68,7 +68,7 @@ func TestTablesDataIssue1264(t *testing.T) {
 	require.NoError(t, err)
 	s := d.Get("ids").(*schema.Set)
 	assert.Equal(t, 2, s.Len())
-	assert.True(t, s.Contains("a"))
+	assert.True(t, s.Contains("..a"))
 
 	d, err = qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
@@ -98,7 +98,7 @@ func TestTablesDataIssue1264(t *testing.T) {
 	require.NoError(t, err)
 	s = d.Get("ids").(*schema.Set)
 	assert.Equal(t, 2, s.Len())
-	assert.True(t, s.Contains("c"))
+	assert.True(t, s.Contains("..c"))
 }
 
 func TestTablesData_Error(t *testing.T) {

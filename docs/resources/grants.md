@@ -90,6 +90,26 @@ resource "databricks_grants" "customers" {
 }
 ```
 
+You can also apply grants dynamically with [databricks_tables](../data-sources/tables.md) data resource:
+
+```hcl
+data "databricks_tables" "things" {
+  catalog_name = "sandbox"
+  schema_name = "things"
+}
+
+resource "databricks_grants" "things" {
+  for_each = data.databricks_tables.things.ids
+  
+  table = each.value
+
+  grant {
+    principal  = "sensitive"
+    privileges = ["SELECT", "MODIFY"]
+  }
+}
+```
+
 ## View grants
 
 You can grant `SELECT` privileges to [*`catalog`*.*`database`*.*`view`*](table.md) specified in `view` attribute. You can define a view through [databricks_table](table.md) resource.
@@ -100,6 +120,26 @@ resource "databricks_grants" "customer360" {
   grant {
     principal  = "Data Analysts"
     privileges = ["SELECT"]
+  }
+}
+```
+
+You can also apply grants dynamically with [databricks_views](../data-sources/views.md) data resource:
+
+```hcl
+data "databricks_views" "customers" {
+  catalog_name = "main"
+  schema_name = "customers"
+}
+
+resource "databricks_grants" "customers" {
+  for_each = data.databricks_views.customers.ids
+  
+  view = each.value
+
+  grant {
+    principal  = "sensitive"
+    privileges = ["SELECT", "MODIFY"]
   }
 }
 ```

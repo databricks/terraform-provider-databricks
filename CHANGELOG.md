@@ -1,5 +1,9 @@
 # Version changelog
 
+## 0.5.6
+
+* Added `databricks_views` data resource, making `databricks_tables` return only managed or external tables in Unity Catalog ([#1274](https://github.com/databrickslabs/terraform-provider-databricks/issues/1274)).
+
 ## 0.5.5
 
 * Added configuration generators for `databricks_sql_*` resources in _experimental_ [Resource Exporter](https://asciinema.org/a/Rv8ZFJQpfrfp6ggWddjtyXaOy) ([#1199](https://github.com/databrickslabs/terraform-provider-databricks/pull/1199)).

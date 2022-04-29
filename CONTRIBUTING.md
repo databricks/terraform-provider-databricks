@@ -2,6 +2,7 @@ Contributing to Databricks Terraform Provider
 ---
 
 - [Installing from source](#installing-from-source)
+- [Contributing documentation](#contributing-documentation)
 - [Developing provider](#developing-provider)
 - [Adding a new resource](#adding-a-new-resource)
 - [Code conventions](#code-conventions)
@@ -28,6 +29,14 @@ make install
 ```
 
 Most likely, `terraform init -upgrade -verify-plugins=false -lock=false` would be a very great command to use.
+
+## Contributing documentation
+
+All documentation contributions should be as detailed as possible and follow the [required format](https://www.terraform.io/registry/providers/docs). The following additional checks must also be valid:
+
+* `make fmt-docs` to make sure code examples are consistent
+* Correct rendering with Terraform Registry Doc Preview Tool - https://registry.terraform.io/tools/doc-preview
+* Cross-linking integrity between markdown files. Pay special attention, when resource doc refers to data doc or guide.
 
 ## Developing provider
 

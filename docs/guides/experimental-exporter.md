@@ -61,3 +61,43 @@ Services are just logical groups of resources used for filtering and organizatio
 ## Secrets
 
 For security reasons, [databricks_secret](../resources/secret.md) cannot contain actual plaintext secrets. Importer will create variable in `vars.tf`, that would have the same name as secret. You are supposed to [fill in the value of the secret](https://blog.gruntwork.io/a-comprehensive-guide-to-managing-secrets-in-your-terraform-code-1d586955ace1#0e7d) after that.
+
+## Support Matrix
+
+Exporter aims to generate HCL code for the most of resources within the Databricks workspace:
+
+| Resource | Generated code |
+| --- | --- |
+| [databricks_cluster](../resources/cluster.md) | Yes |
+| [databricks_cluster_policy](../resources/cluster_policy.md) | Yes |
+| [databricks_dbfs_file](../resources/dbfs_file.md) | Yes |
+| [databricks_global_init_script](../resources/global_init_script.md) | Yes |
+| [databricks_group](../resources/group.md) | Yes |
+| [databricks_group_instance_profile](../resources/group_instance_profile.md) | Yes |
+| [databricks_group_member](../resources/group_member.md) | Yes |
+| [databricks_instance_pool](../resources/instance_pool.md) | Yes |
+| [databricks_instance_profile](../resources/instance_profile.md) | Yes |
+| [databricks_ip_access_list](../resources/ip_access_list.md) | Yes |
+| [databricks_job](../resources/job.md) | Yes |
+| [databricks_library](../resources/library.md) | No |
+| [databricks_mlflow_model](../resources/mlflow_model.md) | No |
+| [databricks_mlflow_experiment](../resources/mlflow_experiment.md) | No |
+| [databricks_notebook](../resources/notebook.md) | Yes |
+| [databricks_obo_token](../resources/obo_token.md) | Not Applicable |
+| [databricks_permissions](../resources/permissions.md) | Yes |
+| [databricks_pipeline](../resources/pipeline.md) | No |
+| [databricks_repo](../resources/repo.md) | Yes |
+| [databricks_secret](../resources/secret.md) | Yes |
+| [databricks_secret_acl](../resources/secret_acl.md) | Yes |
+| [databricks_secret_scope](../resources/secret_scope.md) | Yes |
+| [databricks_sql_dashboard](../resources/sql_dashboard.md) | Yes |
+| [databricks_sql_endpoint](../resources/sql_endpoint.md) | Yes |
+| [databricks_sql_global_config](../resources/sql_global_config.md) | No |
+| [databricks_sql_permissions](../resources/sql_permissions.md) | No |
+| [databricks_sql_query](../resources/sql_query.md) | Yes |
+| [databricks_sql_visualization](../resources/sql_visualization.md) | Yes |
+| [databricks_sql_widget](../resources/sql_widget.md) | Yes |
+| [databricks_token](../resources/token.md) | Not Applicable |
+| [databricks_user](../resources/user.md) | Yes |
+| [databricks_user_instance_profile](../resources/user_instance_profile.md) | No (Deprecated) |
+| [databricks_workspace_conf](../resources/workspace_conf.md) | Not Applicable |

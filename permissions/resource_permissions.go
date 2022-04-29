@@ -233,7 +233,7 @@ func permissionsResourceIDFields() []permissionsIDFieldMapping {
 	PATH := func(ctx context.Context, client *common.DatabricksClient, path string) (string, error) {
 		info, err := workspace.NewNotebooksAPI(ctx, client).Read(path)
 		if err != nil {
-			return "", fmt.Errorf("Cannot load path %s", path)
+			return "", fmt.Errorf("cannot load path %s: %s", path, err)
 		}
 		return strconv.FormatInt(info.ObjectID, 10), nil
 	}
@@ -414,7 +414,7 @@ func ResourcePermissions() *schema.Resource {
 					return nil
 				}
 			}
-			return errors.New("At least one type of resource identifiers must be set")
+			return errors.New("at least one type of resource identifiers must be set")
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var entity PermissionsEntity

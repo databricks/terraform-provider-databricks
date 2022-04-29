@@ -1,6 +1,6 @@
-databricks-terraform
+Databricks Terraform Provider
 
-Copyright (2018) Databricks, Inc.
+Copyright (2020-2022) Databricks, Inc.
 
 
 This Software includes software developed at Databricks (https://www.databricks.com/) and its use is subject to the included LICENSE file.
@@ -8,4 +8,18 @@ This Software includes software developed at Databricks (https://www.databricks.
 
 Additionally, this Software contains code from the following open source projects:
 
-[Project Name - License]
+* Terraform Plugin SDK (MPL-2.0)
+* Azure go-autorest (Apache 2.0)
+* jwt-go (MIT) 
+* go-querystring (BSD-3-Clause)
+* cty (MIT)
+* go-retryablehttp (MPL-2.0)
+* HCL (MPL-2.0)
+* go-homedir (MIT)
+* pkg-errors (BSD-2-Clause)
+* Testify (MIT)
+* go-cty (MIT)
+* OAuth2 for Go (BSD-3-Clause)
+* Go Time (BSD-3-Clause)
+* Google APIs Client Library for Go (BSD-3-Clause)
+* INI (Apache-2.0)

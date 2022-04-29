@@ -3,6 +3,16 @@
 ## 0.5.6
 
 * Added `databricks_views` data resource, making `databricks_tables` return only managed or external tables in Unity Catalog ([#1274](https://github.com/databrickslabs/terraform-provider-databricks/issues/1274)).
+* Added default timeout of 20m to `databricks_mount` ([#1280](https://github.com/databrickslabs/terraform-provider-databricks/pull/1280)).
+* Made `common.DataResource` deterministic ([#1279](https://github.com/databrickslabs/terraform-provider-databricks/pull/1279)).
+* Fixed exporting text-only widgets ([#1278](https://github.com/databrickslabs/terraform-provider-databricks/pull/1278)).
+* Updated devcontainer to support ARM ([#1256](https://github.com/databrickslabs/terraform-provider-databricks/pull/1256)).
+* Various documentation fixes ([#1285](https://github.com/databrickslabs/terraform-provider-databricks/pull/1285), [#1282](https://github.com/databrickslabs/terraform-provider-databricks/pull/1282), [#1281](https://github.com/databrickslabs/terraform-provider-databricks/pull/1281), [#1276](https://github.com/databrickslabs/terraform-provider-databricks/pull/1276)).
+
+Updated dependency versions:
+
+* Bump github.com/hashicorp/hcl/v2 from 2.11.1 to 2.12.0
+* Bump github.com/Azure/go-autorest/autorest from 0.11.26 to 0.11.27
 
 ## 0.5.5
 

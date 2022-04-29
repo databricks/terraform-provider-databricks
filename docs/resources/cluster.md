@@ -189,7 +189,7 @@ library {
 }
 ```
 
-Installing artifacts from Maven repository. You can also optionally specify a `repo` parameter for custom Maven-style repository, that should be accessible without any authentication for the network that cluster runs in. It can even be properly configured [maven s3 wagon](https://github.com/seahen/maven-s3-wagon), [AWS CodeArtifact](https://aws.amazon.com/codeartifact/) or [Azure Artifacts](https://azure.microsoft.com/en-us/services/devops/artifacts/).
+Installing artifacts from Maven repository. You can also optionally specify a `repo` parameter for custom Maven-style repository, that should be accessible without any authentication. Maven libraries are resolved in Databricks Control Plane, so repo should be accessible from it. It can even be properly configured [maven s3 wagon](https://github.com/seahen/maven-s3-wagon), [AWS CodeArtifact](https://aws.amazon.com/codeartifact/) or [Azure Artifacts](https://azure.microsoft.com/en-us/services/devops/artifacts/).
 ```hcl
 library {
   maven {

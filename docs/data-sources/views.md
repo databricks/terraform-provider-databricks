@@ -1,26 +1,26 @@
 ---
 subcategory: "Unity Catalog"
 ---
-# databricks_tables Data Source
+# databricks_views Data Source
 
 -> **Note** If you have a fully automated setup with workspaces created by [databricks_mws_workspaces](../resources/mws_workspaces.md) or [azurerm_databricks_workspace](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/databricks_workspace), please make sure to add [depends_on attribute](../index.md#data-resources-and-authentication-is-not-configured-errors) in order to prevent _authentication is not configured for provider_ errors.
 
-Retrieves a list of managed or external table full names in Unity Catalog, that were created by Terraform or manually. Use [databricks_views](views.md) for retrieving a list of views.
+Retrieves a list of view full names in Unity Catalog, that were created by Terraform or manually. Use [databricks_tables](tables.md) for retrieving a list of tables.
 
 ## Example Usage
 
-Granting `SELECT` and `MODIFY` to `sensitive` group on all tables a _things_ [databricks_schema](../resources/schema.md) from _sandbox_ [databricks_catalog](../resources/catalog.md):
+Granting `SELECT` and `MODIFY` to `sensitive` group on all views in a _things_ [databricks_schema](../resources/schema.md) from _sandbox_ [databricks_catalog](../resources/catalog.md).
 
 ```hcl
-data "databricks_tables" "things" {
+data "databricks_views" "things" {
   catalog_name = "sandbox"
   schema_name = "things"
 }
 
 resource "databricks_grants" "things" {
-  for_each = data.databricks_tables.things.ids
+  for_each = data.databricks_views.things.ids
   
-  table = each.value
+  view = each.value
 
   grant {
     principal  = "sensitive"
@@ -38,7 +38,7 @@ resource "databricks_grants" "things" {
 
 This data source exports the following attributes:
 
-* `ids` - set of [databricks_table](../resources/table.md) full names: *`catalog`.`schema`.`table`*
+* `ids` - set of [databricks_table](../resources/table.md) full names: *`catalog`.`schema`.`view`*
 
 ## Related Resources
 

@@ -427,12 +427,11 @@ func TestResourcePermissionsDelete_error(t *testing.T) {
 }
 
 func TestResourcePermissionsCreate_invalid(t *testing.T) {
-	_, err := qa.ResourceFixture{
+	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{me},
 		Resource: ResourcePermissions(),
 		Create:   true,
-	}.Apply(t)
-	qa.AssertErrorStartsWith(t, err, "At least one type of resource identifiers must be set")
+	}.ExpectError(t, "at least one type of resource identifiers must be set")
 }
 
 func TestResourcePermissionsCreate_no_access_control(t *testing.T) {
@@ -807,7 +806,7 @@ func TestResourcePermissionsCreate_PathIdRetriever_Error(t *testing.T) {
 			user_name = "ben"
 			permission_level = "CAN_RUN"
 		}`,
-	}.ExpectError(t, "Cannot load path /foo/bar: I'm a teapot")
+	}.ExpectError(t, "cannot load path /foo/bar: I'm a teapot")
 }
 
 func TestResourcePermissionsCreate_ActualUpdate_Error(t *testing.T) {
@@ -1002,7 +1001,7 @@ func TestPathPermissionsResourceIDFields(t *testing.T) {
 		Host:  "localhost",
 		Token: "x",
 	}, "x")
-	assert.EqualError(t, err, "Cannot load path x: DatabricksClient is not configured")
+	assert.EqualError(t, err, "cannot load path x: DatabricksClient is not configured")
 }
 
 func TestObjectACLToPermissionsEntityCornerCases(t *testing.T) {

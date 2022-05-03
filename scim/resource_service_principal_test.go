@@ -2,6 +2,7 @@ package scim
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"testing"
 
@@ -371,4 +372,101 @@ func TestResourceServicePrincipalDelete_Error(t *testing.T) {
 		ID:       "abc",
 	}.Apply(t)
 	require.Error(t, err, err)
+}
+
+func TestCreateForceOverridesManuallyAddedServicePrincipalErrorNotMatched(t *testing.T) {
+	d := ResourceUser().TestResourceData()
+	d.Set("force", true)
+	rerr := createForceOverridesManuallyAddedServicePrincipal(
+		fmt.Errorf("nonsense"), d,
+		NewServicePrincipalsAPI(context.Background(), &common.DatabricksClient{}), User{})
+	assert.EqualError(t, rerr, "nonsense")
+}
+
+func TestCreateForceOverwriteCannotListServicePrincipals(t *testing.T) {
+	appID := "12344ca0-e1d7-45d1-951e-f4b93592f123"
+	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
+		{
+			Method:   "GET",
+			Resource: fmt.Sprintf("/api/2.0/preview/scim/v2/ServicePrincipals?filter=applicationId%%20eq%%20%%27%s%%27", appID),
+			Status:   417,
+			Response: common.APIError{
+				Message: "cannot find service principal",
+			},
+		},
+	}, func(ctx context.Context, client *common.DatabricksClient) {
+		d := ResourceUser().TestResourceData()
+		d.Set("force", true)
+		err := createForceOverridesManuallyAddedServicePrincipal(
+			fmt.Errorf("Service principal with application ID %s already exists.", appID),
+			d, NewServicePrincipalsAPI(ctx, client), User{
+				ApplicationID: appID,
+			})
+		assert.EqualError(t, err, "cannot find service principal")
+	})
+}
+
+func TestCreateForceOverwriteCannotListAccServicePrincipals(t *testing.T) {
+	appID := "12344ca0-e1d7-45d1-951e-f4b93592f123"
+	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
+		{
+			Method:   "GET",
+			Resource: fmt.Sprintf("/api/2.0/preview/scim/v2/ServicePrincipals?filter=applicationId%%20eq%%20%%27%s%%27", appID),
+			Response: UserList{
+				TotalResults: 0,
+			},
+		},
+	}, func(ctx context.Context, client *common.DatabricksClient) {
+		d := ResourceUser().TestResourceData()
+		d.Set("force", true)
+		err := createForceOverridesManuallyAddedServicePrincipal(
+			fmt.Errorf("Service principal with application ID %s already exists.", appID),
+			d, NewServicePrincipalsAPI(ctx, client), User{
+				ApplicationID: appID,
+			})
+		assert.EqualError(t, err, fmt.Sprintf("cannot find SP with ID %s for force import", appID))
+	})
+}
+
+func TestCreateForceOverwriteFindsAndSetsServicePrincipalID(t *testing.T) {
+	appID := "12344ca0-e1d7-45d1-951e-f4b93592f123"
+	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
+		{
+			Method:   "GET",
+			Resource: fmt.Sprintf("/api/2.0/preview/scim/v2/ServicePrincipals?filter=applicationId%%20eq%%20%%27%s%%27", appID),
+			Response: UserList{
+				Resources: []User{
+					{
+						ID: "abc",
+					},
+				},
+			},
+		},
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/preview/scim/v2/ServicePrincipals/abc",
+			Response: User{
+				ID: "abc",
+			},
+		},
+		{
+			Method:   "PUT",
+			Resource: "/api/2.0/preview/scim/v2/ServicePrincipals/abc",
+			ExpectedRequest: User{
+				Schemas:       []URN{ServicePrincipalSchema},
+				ApplicationID: appID,
+			},
+		},
+	}, func(ctx context.Context, client *common.DatabricksClient) {
+		d := ResourceUser().TestResourceData()
+		d.Set("force", true)
+		d.Set("application_id", appID)
+		err := createForceOverridesManuallyAddedServicePrincipal(
+			fmt.Errorf("Service principal with application ID %s already exists.", appID),
+			d, NewServicePrincipalsAPI(ctx, client), User{
+				ApplicationID: appID,
+			})
+		assert.NoError(t, err)
+		assert.Equal(t, "abc", d.Id())
+	})
 }

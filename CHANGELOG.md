@@ -1,5 +1,9 @@
 # Version changelog
 
+## 0.5.7
+
+* Added `external_id` and `force` attributes to `databricks_service_principal` resource ([#1293](https://github.com/databrickslabs/terraform-provider-databricks/pull/1293))
+
 ## 0.5.6
 
 * Added `databricks_views` data resource, making `databricks_tables` return only managed or external tables in Unity Catalog ([#1274](https://github.com/databrickslabs/terraform-provider-databricks/issues/1274)).

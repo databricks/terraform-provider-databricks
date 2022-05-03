@@ -50,11 +50,13 @@ The following arguments are available:
 
 * `application_id` - This is the application id of the given service principal and will be their form of access and identity. On other clouds than Azure this value is auto-generated.
 * `display_name` - (Required) This is an alias for the service principal and can be the full name of the service principal.
+* `external_id` - (Optional) ID of the service principal in an external identity provider.
 * `allow_cluster_create` -  (Optional) Allow the service principal to have [cluster](cluster.md) create privileges. Defaults to false. More fine grained permissions could be assigned with [databricks_permissions](permissions.md#Cluster-usage) and `cluster_id` argument. Everyone without `allow_cluster_create` argument set, but with [permission to use](permissions.md#Cluster-Policy-usage) Cluster Policy would be able to create clusters, but within the boundaries of that specific policy.
 * `allow_instance_pool_create` -  (Optional) Allow the service principal to have [instance pool](instance_pool.md) create privileges. Defaults to false. More fine grained permissions could be assigned with [databricks_permissions](permissions.md#Instance-Pool-usage) and [instance_pool_id](permissions.md#instance_pool_id) argument.
 * `databricks_sql_access` - (Optional) This is a field to allow the group to have access to [Databricks SQL](https://databricks.com/product/databricks-sql) feature through [databricks_sql_endpoint](sql_endpoint.md).
 * `workspace_access` - (Optional) This is a field to allow the group to have access to Databricks Workspace.
 * `active` - (Optional) Either service principal is active or not. True by default, but can be set to false in case of service principal deactivation with preserving service principal assets.
+* `force` - (Optional) Ignore `cannot create service principal: Service principal with application ID X already exists` errors and implicitly import the specific service principal into Terraform state, enforcing entitlements defined in the instance of resource. _This functionality is experimental_ and is designed to simplify corner cases, like Azure Active Directory synchronisation.
 
 ## Attribute Reference
 

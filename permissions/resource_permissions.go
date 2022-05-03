@@ -205,7 +205,7 @@ func (a PermissionsAPI) Read(objectID string) (objectACL ObjectACL, err error) {
 	err = a.client.Get(a.context, urlPathForObjectID(objectID), nil, &objectACL)
 	apiErr, ok := err.(common.APIError)
 	// https://github.com/databrickslabs/terraform-provider-databricks/issues/1227
-	// platform propagates INVALID_STATE error for auto-purged clusters in 
+	// platform propagates INVALID_STATE error for auto-purged clusters in
 	// the permissions api. this adds "a logical fix" also here, not to introduce
 	// cross-package dependency on "clusters".
 	if ok && strings.Contains(apiErr.Message, "Cannot access cluster") && apiErr.StatusCode == 400 {

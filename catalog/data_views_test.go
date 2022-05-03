@@ -16,15 +16,15 @@ func TestViewsData(t *testing.T) {
 					Tables: []TableInfo{
 						{
 							CatalogName: "a",
-							SchemaName: "b",
-							Name: "c",
-							TableType: "MANAGED",
+							SchemaName:  "b",
+							Name:        "c",
+							TableType:   "MANAGED",
 						},
 						{
 							CatalogName: "a",
-							SchemaName: "b",
-							Name: "d",
-							TableType: "VIEW",
+							SchemaName:  "b",
+							Name:        "d",
+							TableType:   "VIEW",
 						},
 					},
 				},

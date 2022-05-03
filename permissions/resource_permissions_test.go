@@ -799,7 +799,7 @@ func TestResourcePermissionsCreate_PathIdRetriever_Error(t *testing.T) {
 			qa.HTTPFailures[0],
 		},
 		Resource: ResourcePermissions(),
-		Create: true,
+		Create:   true,
 		HCL: `notebook_path = "/foo/bar"
 
 		access_control {
@@ -816,7 +816,7 @@ func TestResourcePermissionsCreate_ActualUpdate_Error(t *testing.T) {
 			qa.HTTPFailures[0],
 		},
 		Resource: ResourcePermissions(),
-		Create: true,
+		Create:   true,
 		HCL: `cluster_id = "abc"
 
 		access_control {

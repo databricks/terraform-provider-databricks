@@ -66,7 +66,7 @@ func ResourceMount() *schema.Resource {
 	r.DeleteContext = mountCallback(mountDelete).preProcess(r)
 	r.Importer = nil
 	r.Timeouts = &schema.ResourceTimeout{
-		Default: schema.DefaultTimeout(20*time.Minute),
+		Default: schema.DefaultTimeout(20 * time.Minute),
 	}
 	return r
 }

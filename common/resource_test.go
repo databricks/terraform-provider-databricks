@@ -45,7 +45,7 @@ func TestHTTP404TriggersResourceRemovalForReadAndDelete(t *testing.T) {
 	}
 	r := Resource{
 		Create: nope,
-		Read: nope,
+		Read:   nope,
 		Update: nope,
 		Delete: nope,
 		Schema: map[string]*schema.Schema{
@@ -59,7 +59,7 @@ func TestHTTP404TriggersResourceRemovalForReadAndDelete(t *testing.T) {
 	client := &DatabricksClient{}
 	ctx := context.Background()
 	d := r.TestResourceData()
-	
+
 	// Create propagates 404 error
 	diags := r.CreateContext(ctx, d, client)
 	assert.True(t, diags.HasError())

@@ -175,6 +175,16 @@ You can invoke Spark submit tasks only on new clusters. **In the `new_cluster` s
 * `on_start` - (Optional) (List) list of emails to notify on failure
 * `on_success` - (Optional) (List) list of emails to notify on failure
 
+### git_source Configuration Block
+
+This block is used to specify Git repository information & branch/tag/commit that will be used to pull source code from to execute a job. Supported options are:
+
+* `url` - (Required) URL of the Git repository to use.
+* `provider` - (Optional, if it's possible to detect Git provider by host name) case insensitive name of the Git provider.  Following values are supported right now (could be a subject for change, consult [Repos API documentation](https://docs.databricks.com/dev-tools/api/latest/repos.html)): `gitHub`, `gitHubEnterprise`, `bitbucketCloud`, `bitbucketServer`, `azureDevOpsServices`, `gitLab`, `gitLabEnterpriseEdition`.
+* `branch` - name of the Git branch to use. Conflicts with `tag` and `commit`.
+* `tag` - name of the Git branch to use. Conflicts with `branch` and `commit`.
+* `commit` - hash of Git commit to use. Conflicts with `branch` and `tag`.
+
 ### Exported attributes
 
 In addition to all arguments above, the following attributes are exported:

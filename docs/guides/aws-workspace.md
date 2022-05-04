@@ -217,10 +217,10 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "root_storage_buck
 
   rule {
     apply_server_side_encryption_by_default {
-      sse_algorithm     = "AES256"
+      sse_algorithm = "AES256"
     }
   }
-} 
+}
 
 resource "aws_s3_bucket_public_access_block" "root_storage_bucket" {
   bucket                  = aws_s3_bucket.root_storage_bucket.id

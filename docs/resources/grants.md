@@ -95,12 +95,12 @@ You can also apply grants dynamically with [databricks_tables](../data-sources/t
 ```hcl
 data "databricks_tables" "things" {
   catalog_name = "sandbox"
-  schema_name = "things"
+  schema_name  = "things"
 }
 
 resource "databricks_grants" "things" {
   for_each = data.databricks_tables.things.ids
-  
+
   table = each.value
 
   grant {
@@ -129,12 +129,12 @@ You can also apply grants dynamically with [databricks_views](../data-sources/vi
 ```hcl
 data "databricks_views" "customers" {
   catalog_name = "main"
-  schema_name = "customers"
+  schema_name  = "customers"
 }
 
 resource "databricks_grants" "customers" {
   for_each = data.databricks_views.customers.ids
-  
+
   view = each.value
 
   grant {

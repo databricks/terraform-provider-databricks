@@ -14,12 +14,12 @@ Granting `SELECT` and `MODIFY` to `sensitive` group on all views in a _things_ [
 ```hcl
 data "databricks_views" "things" {
   catalog_name = "sandbox"
-  schema_name = "things"
+  schema_name  = "things"
 }
 
 resource "databricks_grants" "things" {
   for_each = data.databricks_views.things.ids
-  
+
   view = each.value
 
   grant {

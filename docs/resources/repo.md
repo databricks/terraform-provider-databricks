@@ -5,7 +5,7 @@ subcategory: "Workspace"
 
 This resource allows you to manage [Databricks Repos](https://docs.databricks.com/repos.html).
 
--> **Note** To create a Repo from a private repository you need to configure Git token as described in the [documentation](https://docs.databricks.com/repos.html#configure-your-git-integration-with-databricks).  **Right now this is possible only via Databricks UI due lack of corresponding REST API**.  For the same reason, it also doesn't work for Service Principals.
+-> **Note** To create a Repo from a private repository you need to configure Git token as described in the [documentation](https://docs.databricks.com/repos.html#configure-your-git-integration-with-databricks).  To set this token you can use [databricks_git_credential](git_credential.md) resource.
 
 ## Example Usage
 
@@ -24,11 +24,11 @@ resource "databricks_repo" "nutter_in_home" {
 
 The following arguments are supported:
 
-* `url` -  (Required) The URL of the Git Repository to clone from. If value changes, repo is re-created
-* `git_provider` - (Optional, if it's possible to detect Git provider by host name) case insensitive name of the Git provider.  Following values are supported right now (maybe a subject for change, consult [Repos API documentation](https://docs.databricks.com/dev-tools/api/latest/repos.html)): `gitHub`, `gitHubEnterprise`, `bitbucketCloud`, `bitbucketServer`, `azureDevOpsServices`, `gitLab`, `gitLabEnterpriseEdition`
-* `path` - (Optional) path to put the checked out Repo. If not specified, then repo will be created in the user's repo directory (`/Repos/<username>/...`).  If value changes, repo is re-created
+* `url` -  (Required) The URL of the Git Repository to clone from. If value changes, repo is re-created.
+* `git_provider` - (Optional, if it's possible to detect Git provider by host name) case insensitive name of the Git provider.  Following values are supported right now (could be a subject for a change, consult [Repos API documentation](https://docs.databricks.com/dev-tools/api/latest/repos.html)): `gitHub`, `gitHubEnterprise`, `bitbucketCloud`, `bitbucketServer`, `azureDevOpsServices`, `gitLab`, `gitLabEnterpriseEdition`, , `awsCodeCommit`.
+* `path` - (Optional) path to put the checked out Repo. If not specified, then repo will be created in the user's repo directory (`/Repos/<username>/...`).  If value changes, repo is re-created.
 * `branch` - (Optional) name of the branch for initial checkout. If not specified, the default branch of the repository will be used.  Conflicts with `tag`.  If `branch` is removed, and `tag` isn't specified, then the repository will stay at the previously checked out state.
-* `tag` - (Optional) name of the tag for initial checkout.  Conflicts with `branch`
+* `tag` - (Optional) name of the tag for initial checkout.  Conflicts with `branch`.
 
 ## Attribute Reference
 
@@ -54,6 +54,7 @@ $ terraform import databricks_repo.this repo_id
 The following resources are often used in the same context:
 
 * [End to end workspace management](../guides/workspace-management.md) guide.
+* [databricks_git_credential](git_credential.md) to manage Git credentials.
 * [databricks_directory](directory.md) to manage directories in [Databricks Workpace](https://docs.databricks.com/workspace/workspace-objects.html).
 * [databricks_pipeline](pipeline.md) to deploy [Delta Live Tables](https://docs.databricks.com/data-engineering/delta-live-tables/index.html). 
 * [databricks_secret](secret.md) to manage [secrets](https://docs.databricks.com/security/secrets/index.html#secrets-user-guide) in Databricks workspace.

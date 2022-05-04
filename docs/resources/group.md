@@ -3,7 +3,7 @@ subcategory: "Security"
 ---
 # databricks_group Resource
 
-This resource allows you to manage [groups in Databricks Workspace](https://docs.databricks.com/administration-guide/users-groups/groups.html) or [Account Console](https://accounts.cloud.databricks.com/) (for AWS deployments). You can also [associate](group_member.md) Databricks users to groups. This is useful if you are using an application to sync users & groups with SCIM API.
+This resource allows you to manage [groups in Databricks Workspace](https://docs.databricks.com/administration-guide/users-groups/groups.html) or [Account Console](https://accounts.cloud.databricks.com/) (for AWS deployments). You can also [associate](group_member.md) Databricks users and [service principals](service_principal.md) to groups. This is useful if you are using an application to sync users & groups with SCIM API.
 
 Recommended to use along with Identity Provider SCIM provisioning to populate users into those groups:
 

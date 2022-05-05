@@ -38,7 +38,7 @@ resource "databricks_group_member" "bb" {
 The following arguments are supported:
 
 * `group_id` - (Required) This is the id of the [group](group.md) resource.
-* `member_id` - (Required) This is the id of the [group](group.md) or [user](user.md).
+* `member_id` - (Required) This is the id of the [group](group.md), [service principal](service_principal.md), or [user](user.md).
 
 ## Attribute Reference
 
@@ -59,6 +59,7 @@ The following resources are often used in the same context:
 * [databricks_group](../data-sources/group.md) data to retrieve information about [databricks_group](group.md) members, entitlements and instance profiles.
 * [databricks_group_instance_profile](group_instance_profile.md) to attach [databricks_instance_profile](instance_profile.md) (AWS) to [databricks_group](group.md).
 * [databricks_ip_access_list](ip_access_list.md) to allow access from [predefined IP ranges](https://docs.databricks.com/security/network/ip-access-list.html).
+* [databricks_service_principal](service_principal.md) to grant access to a workspace to an automation tool or application.
 * [databricks_user](user.md) to [manage users](https://docs.databricks.com/administration-guide/users-groups/users.html), that could be added to [databricks_group](group.md) within the workspace.
 * [databricks_user](../data-sources/user.md) data to retrieves information about [databricks_user](user.md).
 * [databricks_user_instance_profile](user_instance_profile.md) to attach [databricks_instance_profile](instance_profile.md) (AWS) to [databricks_user](user.md).

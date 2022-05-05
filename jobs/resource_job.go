@@ -450,6 +450,7 @@ var jobSchema = common.StructToSchema(JobSettings{},
 	func(s map[string]*schema.Schema) map[string]*schema.Schema {
 		jobSettingsSchema(&s, "")
 		jobSettingsSchema(&s["task"].Elem.(*schema.Resource).Schema, "task.0.")
+		jobSettingsSchema(&s["job_cluster"].Elem.(*schema.Resource).Schema, "job_cluster.0.")
 		gitSourceSchema(s["git_source"].Elem.(*schema.Resource), "")
 		if p, err := common.SchemaPath(s, "schedule", "pause_status"); err == nil {
 			p.ValidateFunc = validation.StringInSlice([]string{"PAUSED", "UNPAUSED"}, false)

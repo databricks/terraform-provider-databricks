@@ -20,6 +20,6 @@ require (
 	golang.org/x/mod v0.5.1
 	golang.org/x/oauth2 v0.0.0-20220411215720-9780585627b5
 	golang.org/x/time v0.0.0-20210723032227-1f47c861a9ac
-	google.golang.org/api v0.77.0
+	google.golang.org/api v0.78.0
 	gopkg.in/ini.v1 v1.66.4
 )

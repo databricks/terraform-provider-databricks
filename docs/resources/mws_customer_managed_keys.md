@@ -94,7 +94,7 @@ data "aws_iam_policy_document" "databricks_storage_cmk" {
     effect = "Allow"
     principals {
       type        = "AWS"
-      identifiers = ["*"]
+      identifiers = [data.aws_caller_identity.current.account_id]
     }
     actions   = ["kms:*"]
     resources = ["*"]

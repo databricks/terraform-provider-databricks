@@ -14,6 +14,7 @@ require (
 	github.com/hashicorp/hcl v1.0.0
 	github.com/hashicorp/hcl/v2 v2.12.0
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.14.0
+	github.com/katbyte/terrafmt v0.4.0 // indirect
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/stretchr/testify v1.7.1
 	github.com/zclconf/go-cty v1.10.0

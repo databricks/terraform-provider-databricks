@@ -27,6 +27,8 @@ variable "databricks_account_id" {
   description = "Account Id that could be found in the bottom left corner of https://accounts.cloud.databricks.com/"
 }
 
+data "aws_caller_identity" "current" {}
+
 data "aws_iam_policy_document" "databricks_managed_services_cmk" {
   version = "2012-10-17"
   statement {
@@ -34,7 +36,7 @@ data "aws_iam_policy_document" "databricks_managed_services_cmk" {
     effect = "Allow"
     principals {
       type        = "AWS"
-      identifiers = ["*"]
+      identifiers = [data.aws_caller_identity.current.account_id]
     }
     actions   = ["kms:*"]
     resources = ["*"]

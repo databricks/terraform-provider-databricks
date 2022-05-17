@@ -242,7 +242,9 @@ There are a few more advanced attributes for S3 log delivery:
 
 ## init_scripts
 
-You can specify up to 10 different init scripts for the specific cluster. If you want a shell script to run on all clusters and jobs within the same workspace, you should consider [databricks_global_init_script](global_init_script.md).
+To run a particular init script on all clusters within the same workspace, both automated/job and interactive/all-purpose cluster types, please consider the [databricks_global_init_script](global_init_script.md) resource.
+
+It is possible to specify up to 10 different cluster-scoped init scripts per cluster.  Like the `cluster_log_conf` configuration block, init scripts support DBFS and cloud storage locations. 
 
 Example of taking init script from DBFS:
 ```hcl
@@ -263,7 +265,16 @@ init_scripts {
 }
 ```
 
-Like the `cluster_log_conf` configuration block, init scripts support S3 and DBFS locations. In addition, you can also specify a local file as follows:
+Similarly, for an init script stored in GCS:
+```hcl
+init_scripts {
+  gcs {
+    destination = "gs://init-scripts/install-elk.sh"
+  }
+}
+```
+
+ Clusters with [custom Docker containers](https://docs.databricks.com/clusters/custom-containers.html) also allow a local file location for init scripts as follows:
 
 ```hcl
 init_scripts {
@@ -272,8 +283,6 @@ init_scripts {
   }
 }
 ```
-
-Take note that this can only be specified for clusters with [custom Docker containers](https://docs.databricks.com/clusters/custom-containers.html).
 
 ## aws_attributes
 

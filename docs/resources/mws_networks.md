@@ -81,7 +81,7 @@ resource "databricks_mws_networks" "this" {
   }
   depends_on = [aws_vpc_endpoint.workspace, aws_vpc_endpoint.relay]
 }
-  ```
+```
 
 ## Modifying networks on running workspaces
 

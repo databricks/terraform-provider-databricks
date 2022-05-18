@@ -68,7 +68,6 @@ resource "databricks_mws_workspaces" "this" {
   provider        = databricks.mws
   account_id      = var.databricks_account_id
   workspace_name  = var.prefix
-  deployment_name = var.prefix
   aws_region      = var.region
 
   credentials_id           = databricks_mws_credentials.this.credentials_id
@@ -181,7 +180,6 @@ resource "databricks_mws_workspaces" "this" {
   provider        = databricks.mws
   account_id      = var.databricks_account_id
   workspace_name  = local.prefix
-  deployment_name = local.prefix
   aws_region      = "us-east-1"
 
   credentials_id           = databricks_mws_credentials.this.credentials_id
@@ -206,7 +204,7 @@ The following arguments are available and cannot be changed after workspace is c
 
 * `account_id` - Account Id that could be found in the bottom left corner of [Accounts Console](https://accounts.cloud.databricks.com/).
 * `managed_services_customer_managed_key_id` - (Optional) `customer_managed_key_id` from [customer managed keys](mws_customer_managed_keys.md) with `use_cases` set to `MANAGED_SERVICES`. This is used to encrypt the workspace's notebook and secret data in the control plane.
-* `deployment_name` - (Optional) part of URL: `https://<deployment-name>.cloud.databricks.com`
+* `deployment_name` - (Optional) part of URL as in `https://<prefix>-<deployment-name>.cloud.databricks.com`. Deployment name cannot be used until a deployment name prefix is defined. Please contact your Databricks representative. Once a new deployment prefix is added/updated, it only will affect the new workspaces created.
 * `workspace_name` - name of the workspace, will appear on UI
 * `aws_region` - AWS region of VPC
 * `storage_configuration_id` - `storage_configuration_id` from [storage configuration](mws_storage_configurations.md)

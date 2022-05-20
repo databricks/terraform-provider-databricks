@@ -18,7 +18,7 @@ Updated dependency versions:
 ## 0.5.7
 
 * Added `external_id` and `force` attributes to `databricks_service_principal` resource ([#1293](https://github.com/databrickslabs/terraform-provider-databricks/pull/1293)).
-* Added documentation for `datarbicks_git_credential` resource ([#1295](https://github.com/databrickslabs/terraform-provider-databricks/pull/1295)).
+* Added documentation for `databicks_git_credential` resource ([#1295](https://github.com/databrickslabs/terraform-provider-databricks/pull/1295)).
 * Added documentation for `git_source` in `databricks_job` ([#1297](https://github.com/databrickslabs/terraform-provider-databricks/pull/1297)).
 * Fix `job_cluster`.`num_workers` in `databricks_job` ([#1284](https://github.com/databrickslabs/terraform-provider-databricks/pull/1284)).
 * Various documentation improvements ([#1292](https://github.com/databrickslabs/terraform-provider-databricks/pull/1292)), ([#1296](https://github.com/databrickslabs/terraform-provider-databricks/pull/1296)), ([#1298](https://github.com/databrickslabs/terraform-provider-databricks/pull/1298)).

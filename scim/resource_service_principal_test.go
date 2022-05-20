@@ -52,22 +52,19 @@ func TestAccServicePrincipalOnAzure(t *testing.T) {
 }
 
 func TestResourceServicePrincipalRead(t *testing.T) {
-	d, err := qa.ResourceFixture{
+	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/preview/scim/v2/ServicePrincipals/abc",
 				Response: User{
-					ID:          "abc",
-					DisplayName: "Example Service Principal",
-					Groups: []ComplexValue{
+					ID:            "abc",
+					ApplicationID: "bcd",
+					DisplayName:   "Example Service Principal",
+					Active:        true,
+					Entitlements: []ComplexValue{
 						{
-							Display: "admins",
-							Value:   "4567",
-						},
-						{
-							Display: "ds",
-							Value:   "9877",
+							Value: "allow-cluster-create",
 						},
 					},
 				},
@@ -78,11 +75,11 @@ func TestResourceServicePrincipalRead(t *testing.T) {
 		New:      true,
 		Read:     true,
 		ID:       "abc",
-	}.Apply(t)
-	require.NoError(t, err, err)
-	assert.Equal(t, "abc", d.Id(), "Id should not be empty")
-	assert.Equal(t, "Example Service Principal", d.Get("display_name"))
-	assert.Equal(t, false, d.Get("allow_cluster_create"))
+	}.ApplyAndExpectData(t, map[string]interface{}{
+		"display_name":         "Example Service Principal",
+		"application_id":       "bcd",
+		"allow_cluster_create": true,
+	})
 }
 
 func TestResourceServicePrincipalRead_NotFound(t *testing.T) {
@@ -125,7 +122,7 @@ func TestResourceServicePrincipalRead_Error(t *testing.T) {
 }
 
 func TestResourceServicePrincipalCreate(t *testing.T) {
-	d, err := qa.ResourceFixture{
+	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "POST",
@@ -175,134 +172,31 @@ func TestResourceServicePrincipalCreate(t *testing.T) {
 		display_name = "Example Service Principal"
 		allow_cluster_create = true
 		`,
-	}.Apply(t)
-	require.NoError(t, err, err)
-	assert.Equal(t, "abc", d.Id(), "Id should not be empty")
-	assert.Equal(t, "Example Service Principal", d.Get("display_name"))
-	assert.Equal(t, true, d.Get("allow_cluster_create"))
+	}.ApplyNoError(t)
 }
 
 func TestResourceServicePrincipalCreate_Error(t *testing.T) {
-	_, err := qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   "POST",
-				Resource: "/api/2.0/preview/scim/v2/ServicePrincipals",
-				Status:   400,
-			},
-		},
+	qa.ResourceFixture{
+		Fixtures: qa.HTTPFailures,
 		Resource: ResourceServicePrincipal(),
 		Create:   true,
 		HCL: `
 		display_name = "Example Service Principal"
 		allow_cluster_create = true
 		`,
-	}.Apply(t)
-	require.Error(t, err, err)
+	}.ExpectError(t, "I'm a teapot")
 }
 
-func TestResourceServicePrincipalUpdate(t *testing.T) {
-	newServicePrincipal := User{
-		Schemas:     []URN{ServicePrincipalSchema},
-		DisplayName: "Changed Name",
-		Active:      true,
-		Entitlements: entitlements{
-			{
-				Value: "allow-instance-pool-create",
-			},
-		},
-		Groups: []ComplexValue{
-			{
-				Display: "admins",
-				Value:   "4567",
-			},
-			{
-				Display: "ds",
-				Value:   "9877",
-			},
-		},
-	}
-	d, err := qa.ResourceFixture{
+func TestResourceServicePrincipalUpdateOnAWS(t *testing.T) {
+	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/preview/scim/v2/ServicePrincipals/abc",
 				Response: User{
-					DisplayName: "Example Service Principal",
-					Active:      true,
-					ID:          "abc",
-					Entitlements: entitlements{
-						{
-							Value: "allow-cluster-create",
-						},
-					},
-					Groups: []ComplexValue{
-						{
-							Display: "admins",
-							Value:   "4567",
-						},
-						{
-							Display: "ds",
-							Value:   "9877",
-						},
-					},
-				},
-			},
-			{
-				Method:          "PUT",
-				Resource:        "/api/2.0/preview/scim/v2/ServicePrincipals/abc",
-				ExpectedRequest: newServicePrincipal,
-			},
-			{
-				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/ServicePrincipals/abc",
-				Response: newServicePrincipal,
-			},
-		},
-		Resource: ResourceServicePrincipal(),
-		Update:   true,
-		ID:       "abc",
-		HCL: `
-		display_name = "Changed Name"
-		allow_cluster_create = false
-		allow_instance_pool_create = true
-		`,
-	}.Apply(t)
-	require.NoError(t, err, err)
-	assert.Equal(t, "abc", d.Id(), "Id should not be empty")
-	assert.Equal(t, "Changed Name", d.Get("display_name"))
-	assert.Equal(t, false, d.Get("allow_cluster_create"))
-	assert.Equal(t, true, d.Get("allow_instance_pool_create"))
-}
+					// application ID is created by platform on AWS
+					ApplicationID: "existing-application-id",
 
-func TestResourceServicePrincipalUpdate_Error(t *testing.T) {
-	_, err := qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/ServicePrincipals/abc",
-				Status:   400,
-			},
-		},
-		Resource: ResourceServicePrincipal(),
-		Update:   true,
-		ID:       "abc",
-		HCL: `
-		display_name = "Changed Name"
-		allow_cluster_create = false
-		allow_instance_pool_create = true
-		`,
-	}.Apply(t)
-	require.Error(t, err, err)
-}
-
-func TestResourceServicePrincipalUpdate_ErrorPut(t *testing.T) {
-	_, err := qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/ServicePrincipals/abc",
-				Response: User{
 					DisplayName: "Example Service Principal",
 					Active:      true,
 					ID:          "abc",
@@ -326,7 +220,53 @@ func TestResourceServicePrincipalUpdate_ErrorPut(t *testing.T) {
 			{
 				Method:   "PUT",
 				Resource: "/api/2.0/preview/scim/v2/ServicePrincipals/abc",
-				Status:   400,
+				ExpectedRequest: User{
+					// application ID is not allowed to be modified by client side on AWS
+
+					Schemas:     []URN{ServicePrincipalSchema},
+					DisplayName: "Changed Name",
+					Active:      true,
+					Entitlements: entitlements{
+						{
+							Value: "allow-instance-pool-create",
+						},
+					},
+					Groups: []ComplexValue{
+						{
+							Display: "admins",
+							Value:   "4567",
+						},
+						{
+							Display: "ds",
+							Value:   "9877",
+						},
+					},
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/preview/scim/v2/ServicePrincipals/abc",
+				Response: User{
+					Schemas:       []URN{ServicePrincipalSchema},
+					ApplicationID: "existing-application-id",
+					DisplayName:   "Changed Name",
+					Active:        true,
+					Entitlements: entitlements{
+						{
+							Value: "allow-instance-pool-create",
+						},
+					},
+					Groups: []ComplexValue{
+						{
+							Display: "admins",
+							Value:   "4567",
+						},
+						{
+							Display: "ds",
+							Value:   "9877",
+						},
+					},
+				},
 			},
 		},
 		Resource: ResourceServicePrincipal(),
@@ -337,12 +277,113 @@ func TestResourceServicePrincipalUpdate_ErrorPut(t *testing.T) {
 		allow_cluster_create = false
 		allow_instance_pool_create = true
 		`,
-	}.Apply(t)
-	require.Error(t, err, err)
+	}.ApplyAndExpectData(t, map[string]interface{}{
+		"display_name":               "Changed Name",
+		"allow_cluster_create":       false,
+		"allow_instance_pool_create": true,
+	})
+}
+
+// https://github.com/databrickslabs/terraform-provider-databricks/issues/1319
+func TestResourceServicePrincipalUpdateOnAzure(t *testing.T) {
+	qa.ResourceFixture{
+		Azure: true,
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/preview/scim/v2/ServicePrincipals/abc",
+				Response: User{
+					// application id is specified by user on Azure
+					ApplicationID: "existing-application-id",
+
+					DisplayName: "Example Service Principal",
+					Active:      true,
+					ID:          "abc",
+				},
+			},
+			{
+				Method:   "PUT",
+				Resource: "/api/2.0/preview/scim/v2/ServicePrincipals/abc",
+				ExpectedRequest: User{
+					// application id is specified by user on Azure and also must be part of modification
+					ApplicationID: "existing-application-id",
+
+					Schemas:     []URN{ServicePrincipalSchema},
+					DisplayName: "Changed Name",
+					Active:      true,
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/preview/scim/v2/ServicePrincipals/abc",
+				Response: User{
+					Schemas:       []URN{ServicePrincipalSchema},
+					ApplicationID: "existing-application-id",
+					DisplayName:   "Changed Name",
+					Active:        true,
+				},
+			},
+		},
+		Resource: ResourceServicePrincipal(),
+		Update:   true,
+		ID:       "abc",
+		InstanceState: map[string]string{
+			"application_id": "existing-application-id",
+			"display_name":   "Example Service Principal",
+		},
+		HCL: `
+		application_id = "existing-application-id"
+		display_name = "Changed Name"
+		`,
+	}.ApplyNoError(t)
+}
+
+func TestResourceServicePrincipalUpdate_Error(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: qa.HTTPFailures,
+		Resource: ResourceServicePrincipal(),
+		Update:   true,
+		ID:       "abc",
+		HCL: `
+		display_name = "Changed Name"
+		allow_cluster_create = false
+		allow_instance_pool_create = true
+		`,
+	}.ExpectError(t, "I'm a teapot")
+}
+
+func TestResourceServicePrincipalUpdate_ErrorPut(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/preview/scim/v2/ServicePrincipals/abc",
+				Response: User{
+					DisplayName: "Example Service Principal",
+					Active:      true,
+					ID:          "abc",
+					Entitlements: entitlements{
+						{
+							Value: "allow-cluster-create",
+						},
+					},
+				},
+			},
+			qa.HTTPFailures[0],
+		},
+		Resource: ResourceServicePrincipal(),
+		Update:   true,
+		ID:       "abc",
+		HCL: `
+		display_name = "Changed Name"
+		allow_cluster_create = false
+		allow_instance_pool_create = true
+		`,
+	}.ExpectError(t, "I'm a teapot")
 }
 
 func TestResourceServicePrincipalDelete(t *testing.T) {
-	d, err := qa.ResourceFixture{
+	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "DELETE",
@@ -353,25 +394,16 @@ func TestResourceServicePrincipalDelete(t *testing.T) {
 		HCL:      `display_name = "Squanchy"`,
 		Delete:   true,
 		ID:       "abc",
-	}.Apply(t)
-	require.NoError(t, err, err)
-	assert.Equal(t, "abc", d.Id(), "Id should not be empty")
+	}.ApplyNoError(t)
 }
 
 func TestResourceServicePrincipalDelete_Error(t *testing.T) {
-	_, err := qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   "DELETE",
-				Resource: "/api/2.0/preview/scim/v2/ServicePrincipals/abc",
-				Status:   400,
-			},
-		},
+	qa.ResourceFixture{
+		Fixtures: qa.HTTPFailures,
 		Resource: ResourceServicePrincipal(),
 		Delete:   true,
 		ID:       "abc",
-	}.Apply(t)
-	require.Error(t, err, err)
+	}.ExpectError(t, "I'm a teapot")
 }
 
 func TestCreateForceOverridesManuallyAddedServicePrincipalErrorNotMatched(t *testing.T) {

@@ -1,9 +1,24 @@
 # Version changelog
 
+## 0.5.8
+
+* Update `aws_iam_policy_document` in `databricks_mws_customer_managed_keys` docs to restrict KMS policy to caller AWS account ([#1309](https://github.com/databrickslabs/terraform-provider-databricks/pull/1309)).
+* Added `gcs` destination to `init_scripts` in `databricks_cluster` ([#1308](https://github.com/databrickslabs/terraform-provider-databricks/pull/1308)).
+* Clarify optionality of `databricks_mws_workspaces`.`deployment_name` in docs and examples ([#1315](https://github.com/databrickslabs/terraform-provider-databricks/pull/1315)).
+* Update `databricks_mws_log_delivery` docs ([#1320](https://github.com/databrickslabs/terraform-provider-databricks/pull/1320)).
+* Fix updating `databricks_service_principal` on Azure ([#1322](https://github.com/databrickslabs/terraform-provider-databricks/pull/1322)).
+* Added `tf:suppress_diff` on `artifact_location` for `databricks_mlflow_experiment` ([#1323](https://github.com/databrickslabs/terraform-provider-databricks/pull/1323)).
+
+Updated dependency versions:
+
+* Bump github.com/Azure/go-autorest/autorest/adal from 0.9.18 to 0.9.19
+* Bump github.com/hashicorp/terraform-plugin-sdk/v2 from 2.14.0 to 2.16.0
+* Bump google.golang.org/api from 0.77.0 to 0.79.0
+
 ## 0.5.7
 
 * Added `external_id` and `force` attributes to `databricks_service_principal` resource ([#1293](https://github.com/databrickslabs/terraform-provider-databricks/pull/1293)).
-* Added documentation for `datarbicks_git_credential` resource ([#1295](https://github.com/databrickslabs/terraform-provider-databricks/pull/1295)).
+* Added documentation for `databicks_git_credential` resource ([#1295](https://github.com/databrickslabs/terraform-provider-databricks/pull/1295)).
 * Added documentation for `git_source` in `databricks_job` ([#1297](https://github.com/databrickslabs/terraform-provider-databricks/pull/1297)).
 * Fix `job_cluster`.`num_workers` in `databricks_job` ([#1284](https://github.com/databrickslabs/terraform-provider-databricks/pull/1284)).
 * Various documentation improvements ([#1292](https://github.com/databrickslabs/terraform-provider-databricks/pull/1292)), ([#1296](https://github.com/databrickslabs/terraform-provider-databricks/pull/1296)), ([#1298](https://github.com/databrickslabs/terraform-provider-databricks/pull/1298)).

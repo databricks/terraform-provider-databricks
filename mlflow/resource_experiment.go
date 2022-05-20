@@ -12,7 +12,7 @@ type Experiment struct {
 	Name             string `json:"name"`
 	Description      string `json:"description,omitempty"`
 	ExperimentId     string `json:"experiment_id,omitempty" tf:"computed"`
-	ArtifactLocation string `json:"artifact_location,omitempty" tf:"force_new"`
+	ArtifactLocation string `json:"artifact_location,omitempty" tf:"force_new,suppress_diff"`
 	LifecycleStage   string `json:"lifecycle_stage,omitempty" tf:"computed"`
 	LastUpdateTime   int64  `json:"last_update_time,omitempty" tf:"computed"`
 	CreationTime     int64  `json:"creation_time,omitempty" tf:"computed"`

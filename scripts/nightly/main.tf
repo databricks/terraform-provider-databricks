@@ -15,7 +15,7 @@ output "tags" {
 }
 
 data "external" "env" {
-  program = ["python", "-c", "import sys,os,json;json.dump(dict(os.environ), sys.stdout)"]
+  program = ["python3", "-c", "import sys,os,json;json.dump(dict(os.environ), sys.stdout)"]
 }
 
 data "external" "me" {

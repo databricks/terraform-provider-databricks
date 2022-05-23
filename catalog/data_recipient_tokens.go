@@ -28,15 +28,12 @@ func DataSourceRecipientTokens() *schema.Resource {
 			return recipient.Tokens[i].CreatedAt > recipient.Tokens[j].CreatedAt
 		})
 		// get latest token
-		if data.Latest == true && len(recipient.Tokens) > 0 {
+		if data.Latest && len(recipient.Tokens) > 0 {
 			data.Tokens = append(data.Tokens, recipient.Tokens[0])
 			// break off
 			return nil
 		}
-
-		for _, token := range recipient.Tokens {
-			data.Tokens = append(data.Tokens, token)
-		}
+		data.Tokens = append(data.Tokens, recipient.Tokens...)
 		return nil
 	})
 }

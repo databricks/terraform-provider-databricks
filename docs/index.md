@@ -266,7 +266,9 @@ When a workspace is created using a service principal account, that service prin
 
 ## Miscellaneous configuration parameters
 
-This section covers configuration parameters not related to authentication.  They could be used when debugging problems, or do an additional tuning of provider's behaviour:
+!> **Warning** Combination of `debug_headers` and `debug_truncate_bytes` results in dumping of sensitive information to logs. Use it for troubleshooting purposes only.
+
+This section covers configuration parameters not related to authentication. They could be used when debugging problems, or do an additional tuning of provider's behaviour:
 
 * `rate_limit` - defines maximum number of requests per second made to Databricks REST API by Terraform. Default is *15*.
 * `debug_truncate_bytes` - Applicable only when `TF_LOG=DEBUG` is set. Truncate JSON fields in HTTP requests and responses above this limit. Default is *96*.

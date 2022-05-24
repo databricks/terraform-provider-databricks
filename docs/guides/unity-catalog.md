@@ -12,7 +12,7 @@ This guide uses the following variables in configurations:
 
 - `databricks_account_username`: The username an account-level admin uses to log in to  [https://accounts.cloud.databricks.com](https://accounts.cloud.databricks.com).
 - `databricks_account_password`: The password for `databricks_account_username`.
-- `databricks_account_id`: The numeric ID for your Databricks account. When you are logged in, it appears in the bottom left corner of the [Accounts Console](https://accounts.cloud.databricks.com).
+- `databricks_account_id`: The numeric ID for your Databricks account. When you are logged in, it appears in the bottom left corner of the [Databricks Account Console](https://accounts.cloud.databricks.com/) or [Azure Databricks Account Console](https://accounts.azuredatabricks.net).
 - `databricks_workspace_url`: Value of `workspace_url` attribute from [databricks_mws_workspaces](../resources/mws_workspaces.md#attribute-reference) resource.
 
 This guide is provided as-is and you can use this guide as the basis for your custom Terraform module.

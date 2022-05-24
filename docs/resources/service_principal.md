@@ -44,7 +44,6 @@ resource "databricks_service_principal" "sp" {
 }
 ```
 
-
 Creating service principal in AWS Databricks account:
 ```hcl
 // initialize provider at account-level

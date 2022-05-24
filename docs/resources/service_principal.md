@@ -3,7 +3,9 @@ subcategory: "Security"
 ---
 # databricks_service_principal Resource
 
-Directly manage [Service Principals](https://docs.databricks.com/administration-guide/users-groups/service-principals.html) that could be added to [databricks_group](group.md) within workspace.
+Directly manage [Service Principals](https://docs.databricks.com/administration-guide/users-groups/service-principals.html) that could be added to [databricks_group](group.md) in Databricks workspace or account.
+
+To create service principals in the Databricks account, the provider must be configured with `host = "https://accounts.azuredatabricks.net"` on AWS deployments or `host = "https://accounts.azuredatabricks.net"` and `auth_type  = "azure-cli"` on Azure deployments
 
 ## Example Usage
 
@@ -39,6 +41,40 @@ resource "databricks_service_principal" "sp" {
   application_id       = "00000000-0000-0000-0000-000000000000"
   display_name         = "Example service principal"
   allow_cluster_create = true
+}
+```
+
+
+Creating service principal in AWS Databricks account:
+```hcl
+// initialize provider at account-level
+provider "databricks" {
+  alias    = "mws"
+  host     = "https://accounts.cloud.databricks.com"
+  account_id = "00000000-0000-0000-0000-000000000000"
+  username = var.databricks_account_username
+  password = var.databricks_account_password
+}
+
+resource "databricks_service_principal" "sp" {
+  provider     = databricks.mws
+  display_name = "Automation-only SP"
+}
+```
+
+Creating group in Azure Databricks account:
+```hcl
+// initialize provider at Azure account-level
+provider "databricks" {
+  alias      = "azure_account"
+  host       = "https://accounts.azuredatabricks.net"
+  account_id = "00000000-0000-0000-0000-000000000000"
+  auth_type  = "azure-cli"
+}
+
+resource "databricks_service_principal" "sp" {
+  provider       = databricks.azure_account
+  application_id = "00000000-0000-0000-0000-000000000000"
 }
 ```
 

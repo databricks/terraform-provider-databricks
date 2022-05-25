@@ -97,3 +97,36 @@ func TestForceDeleteMetastore(t *testing.T) {
 		`,
 	}.ApplyNoError(t)
 }
+
+func TestUpdateMetastore_NoChanges(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/unity-catalog/metastores/abc",
+				Response: MetastoreInfo{
+					StorageRoot: "s3://b/abc",
+					Name:        "a",
+				},
+			},
+		},
+		Resource:    ResourceMetastore(),
+		ID:          "abc",
+		Update:      true,
+		RequiresNew: true,
+		InstanceState: map[string]string{
+			"name":                  "abc",
+			"storage_root":          "s3:/a",
+			"owner":                 "admin",
+			"delta_sharing_enabled": "true",
+			"delta_sharing_recipient_token_lifetime_in_seconds": "1002",
+		},
+		HCL: `
+		name = "abc"
+		storage_root = "s3:/a"
+		owner = "admin"
+        delta_sharing_enabled = true
+		delta_sharing_recipient_token_lifetime_in_seconds = 1002
+		`,
+	}.ApplyNoError(t)
+}

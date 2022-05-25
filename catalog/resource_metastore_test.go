@@ -125,7 +125,7 @@ func TestUpdateMetastore_NoChanges(t *testing.T) {
 		name = "abc"
 		storage_root = "s3:/a"
 		owner = "admin"
-        delta_sharing_enabled = true
+		delta_sharing_enabled = true
 		delta_sharing_recipient_token_lifetime_in_seconds = 1002
 		`,
 	}.ApplyNoError(t)

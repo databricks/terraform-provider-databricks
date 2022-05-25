@@ -30,7 +30,6 @@ func TestCreateMetastore(t *testing.T) {
 				Response: MetastoreInfo{
 					StorageRoot: "s3://b/abc",
 					Name:        "a",
-					//DeltaSharingRecipientTokenLifetimeInSeconds: 0,
 				},
 			},
 			{

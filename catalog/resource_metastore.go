@@ -19,12 +19,17 @@ func NewMetastoresAPI(ctx context.Context, m interface{}) MetastoresAPI {
 }
 
 type MetastoreInfo struct {
-	Name         string  `json:"name"`
-	StorageRoot  string  `json:"storage_root" tf:"force_new"`
-	DefaultDacID string  `json:"default_data_access_config_id,omitempty"`
-	Owner        string  `json:"owner,omitempty" tf:"computed"`
-	MetastoreID  string  `json:"metastore_id,omitempty" tf:"computed"`
-	WorkspaceIDs []int64 `json:"workspace_ids,omitempty" tf:"computed"`
+	Name                                        string  `json:"name"`
+	StorageRoot                                 string  `json:"storage_root" tf:"force_new"`
+	DefaultDacID                                string  `json:"default_data_access_config_id,omitempty"`
+	Owner                                       string  `json:"owner,omitempty" tf:"computed"`
+	MetastoreID                                 string  `json:"metastore_id,omitempty" tf:"computed"`
+	WorkspaceIDs                                []int64 `json:"workspace_ids,omitempty" tf:"computed"`
+	Region                                      string  `json:"region,omitempty" tf:"computed"`
+	Cloud                                       string  `json:"cloud,omitempty" tf:"computed"`
+	GlobalMetastoreId                           string  `json:"global_metastore_id,omitempty" tf:"computed"`
+	DeltaSharingEnabled                         bool    `json:"delta_sharing_enabled,omitempty"`
+	DeltaSharingRecipientTokenLifetimeInSeconds int32   `json:"delta_sharing_recipient_token_lifetime_in_seconds,omitempty" tf:"default:3600"`
 }
 
 type CreateMetastore struct {
@@ -66,6 +71,8 @@ func ResourceMetastore() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 			}
+			m["delta_sharing_enabled"].RequiredWith = []string{"delta_sharing_recipient_token_lifetime_in_seconds"}
+			m["delta_sharing_recipient_token_lifetime_in_seconds"].RequiredWith = []string{"delta_sharing_enabled"}
 			m["storage_root"].DiffSuppressFunc = func(k, old, new string, d *schema.ResourceData) bool {
 				if strings.HasPrefix(old, new) {
 					log.Printf("[DEBUG] Ignoring configuration drift from %s to %s", old, new)
@@ -77,11 +84,16 @@ func ResourceMetastore() *schema.Resource {
 		})
 	update := func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 		// other fields to come later
-		updatable := []string{"owner", "name"}
+		updatable := []string{"owner", "name", "delta_sharing_enabled",
+			"delta_sharing_recipient_token_lifetime_in_seconds"}
 		patch := map[string]interface{}{}
 		for _, field := range updatable {
 			old, new := d.GetChange(field)
-			if old == new {
+			//Int fields old will always be 0 and for this payload we need to send 0 in the request for unlimited
+			defaultLifetimeIntField := field == "delta_sharing_recipient_token_lifetime_in_seconds" &&
+				old == 0 && new == 0
+
+			if old == new && !defaultLifetimeIntField {
 				continue
 			}
 			if field == "name" && old == "" {

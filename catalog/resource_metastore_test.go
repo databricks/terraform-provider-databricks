@@ -30,13 +30,16 @@ func TestCreateMetastore(t *testing.T) {
 				Response: MetastoreInfo{
 					StorageRoot: "s3://b/abc",
 					Name:        "a",
+					//DeltaSharingRecipientTokenLifetimeInSeconds: 0,
 				},
 			},
 			{
 				Method:   "PATCH",
 				Resource: "/api/2.0/unity-catalog/metastores/abc",
 				ExpectedRequest: map[string]interface{}{
-					"owner": "administrators",
+					"owner":                 "administrators",
+					"delta_sharing_enabled": true,
+					"delta_sharing_recipient_token_lifetime_in_seconds": 0,
 				},
 			},
 		},
@@ -46,6 +49,8 @@ func TestCreateMetastore(t *testing.T) {
 		name = "a"
 		storage_root = "s3://b"
 		owner = "administrators"
+		delta_sharing_enabled = true
+		delta_sharing_recipient_token_lifetime_in_seconds = 0
 		`,
 	}.ApplyNoError(t)
 }

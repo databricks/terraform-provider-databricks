@@ -75,7 +75,7 @@ func createOrValidateClusterForGoogleStorage(ctx context.Context, m interface{},
 		if err != nil {
 			return fmt.Errorf("cannot create mounting cluster: %w", err)
 		}
-		return d.Set("cluster_id", cluster.ClusterID)
+		return nil
 	}
 	return fmt.Errorf("either cluster_id or service_account must be specified to mount GCS bucket")
 }

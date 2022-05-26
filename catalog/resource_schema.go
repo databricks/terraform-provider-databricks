@@ -17,7 +17,7 @@ func NewSchemasAPI(ctx context.Context, m interface{}) SchemasAPI {
 }
 
 type SchemaInfo struct {
-	Name        string            `json:"name" tf:"force_new"`
+	Name        string            `json:"name"`
 	CatalogName string            `json:"catalog_name"`
 	Comment     string            `json:"comment,omitempty"`
 	Properties  map[string]string `json:"properties,omitempty"`
@@ -60,25 +60,7 @@ func ResourceSchema() *schema.Resource {
 			delete(m, "full_name")
 			return m
 		})
-	update := func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-		// other fields to come later
-		updatable := []string{"owner", "name"}
-		patch := map[string]interface{}{}
-		for _, field := range updatable {
-			old, new := d.GetChange(field)
-			if old == new {
-				continue
-			}
-			if field == "name" && old == "" {
-				continue
-			}
-			patch[field] = new
-		}
-		if len(patch) == 0 {
-			return nil
-		}
-		return NewSchemasAPI(ctx, c).updateSchema(d.Id(), patch)
-	}
+	update := updateFunctionFactory("schema", []string{"owner", "name", "comment", "properties"})
 	return common.Resource{
 		Schema: s,
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {

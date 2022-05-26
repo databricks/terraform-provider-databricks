@@ -24,6 +24,7 @@ func TestCreateSchema(t *testing.T) {
 				},
 				Response: SchemaInfo{
 					FullName: "b.a",
+					Comment:  "c",
 					Owner:    "testers",
 				},
 			},
@@ -32,7 +33,8 @@ func TestCreateSchema(t *testing.T) {
 				Resource: "/api/2.0/unity-catalog/schemas/b.a",
 				Response: SchemaInfo{
 					MetastoreID: "d",
-					Owner:       "administrators",
+					Comment:     "c",
+					Owner:       "testers",
 				},
 			},
 			{

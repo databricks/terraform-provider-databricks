@@ -75,25 +75,7 @@ func ResourceMetastore() *schema.Resource {
 			}
 			return m
 		})
-	update := func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-		// other fields to come later
-		updatable := []string{"owner", "name"}
-		patch := map[string]interface{}{}
-		for _, field := range updatable {
-			old, new := d.GetChange(field)
-			if old == new {
-				continue
-			}
-			if field == "name" && old == "" {
-				continue
-			}
-			patch[field] = new
-		}
-		if len(patch) == 0 {
-			return nil
-		}
-		return NewMetastoresAPI(ctx, c).updateMetastore(d.Id(), patch)
-	}
+	update := updateFunctionFactory("metastore", []string{"owner", "name"})
 	return common.Resource{
 		Schema: s,
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {

@@ -32,7 +32,7 @@ type ColumnInfo struct {
 }
 
 type TableInfo struct {
-	Name                  string            `json:"name" tf:"force_new"`
+	Name                  string            `json:"name"`
 	CatalogName           string            `json:"catalog_name"`
 	SchemaName            string            `json:"schema_name"`
 	TableType             string            `json:"table_type"`
@@ -84,25 +84,7 @@ func ResourceTable() *schema.Resource {
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
 			return m
 		})
-	update := func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-		// other fields to come later
-		updatable := []string{"owner", "name"}
-		patch := map[string]interface{}{}
-		for _, field := range updatable {
-			old, new := d.GetChange(field)
-			if old == new {
-				continue
-			}
-			if field == "name" && old == "" {
-				continue
-			}
-			patch[field] = new
-		}
-		if len(patch) == 0 {
-			return nil
-		}
-		return NewTablesAPI(ctx, c).updateTable(d.Id(), patch)
-	}
+	update := updateFunctionFactory("table", []string{"owner", "name", "data_source_format", "columns", "storage_location", "view_definition", "comment", "properties"})
 	return common.Resource{
 		Schema: tableSchema,
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {

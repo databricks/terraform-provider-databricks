@@ -18,7 +18,7 @@ func NewCatalogsAPI(ctx context.Context, m interface{}) CatalogsAPI {
 }
 
 type CatalogInfo struct {
-	Name        string            `json:"name" tf:"force_new"`
+	Name        string            `json:"name"`
 	Comment     string            `json:"comment,omitempty"`
 	Properties  map[string]string `json:"properties,omitempty"`
 	Owner       string            `json:"owner,omitempty" tf:"computed"`
@@ -57,25 +57,7 @@ func ResourceCatalog() *schema.Resource {
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
 			return m
 		})
-	update := func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-		// other fields to come later
-		updatable := []string{"owner", "name"}
-		patch := map[string]interface{}{}
-		for _, field := range updatable {
-			old, new := d.GetChange(field)
-			if old == new {
-				continue
-			}
-			if field == "name" && old == "" {
-				continue
-			}
-			patch[field] = new
-		}
-		if len(patch) == 0 {
-			return nil
-		}
-		return NewCatalogsAPI(ctx, c).updateCatalog(d.Id(), patch)
-	}
+	update := updateFunctionFactory("catalog", []string{"owner", "name", "comment", "properties"})
 	return common.Resource{
 		Schema: catalogSchema,
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {

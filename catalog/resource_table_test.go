@@ -56,6 +56,24 @@ func TestTableCreate(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/unity-catalog/tables/main.foo.bar",
+				Response: TableInfo{
+					StorageLocation:  "s3://ext-main/foo/bar",
+					Name:             "bar",
+					CatalogName:      "main",
+					SchemaName:       "foo",
+					TableType:        "EXTERNAL",
+					DataSourceFormat: "JSON",
+					Owner:            "testers",
+					ColumnInfos: []ColumnInfo{
+						{
+							Name:     "id",
+							Nullable: true,
+							Position: 0,
+							TypeName: "int",
+							TypeText: "int",
+						},
+					},
+				},
 			},
 			{
 				Method:   "PATCH",

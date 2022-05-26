@@ -73,7 +73,7 @@ The following arguments are available to specify the data object you need to enf
 
 You must specify one or many `privilege_assignments` configuration blocks to declare `privileges` to a `principal`, which corresponds to `display_name` of [databricks_group](group.md#display_name) or [databricks_user](user.md#display_name). Terraform would ensure that only those principals and privileges defined in the resource are applied for the data object and would remove anything else. It would not remove any transitive privileges. `DENY` statements are intentionally not supported. Every `privilege_assignments` has the following required arguments:
 
-* `principal` - `display_name` for a [databricks_group](group.md#display_name) or [databricks_user](user.md#display_name), `application_id` for a [databricks_service_principal](service_principal.md)
+* `principal` - `display_name` for a [databricks_group](group.md#display_name) or [databricks_user](user.md#display_name), `application_id` for a [databricks_service_principal](service_principal.md).
 * `privileges` - set of available privilege names in upper case.
 
 [Available](https://docs.databricks.com/security/access-control/table-acls/object-privileges.html) privilege names are:

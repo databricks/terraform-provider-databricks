@@ -69,7 +69,7 @@ The following arguments are required:
 * `data_source_format` - External tables are supported in multiple data source formats. The string constants identifying these formats are `DELTA`, `CSV`, `JSON`, `AVRO`, `PARQUET`, `ORC`, `TEXT`
 * `view_definition` - (Optional) SQL text defining the view (for `table_type == "VIEW"`)
 * `storage_credential_name` - (Optional) For EXTERNAL Tables only: the name of storage credential to use. This cannot be updated
-* `owner` - (Optional) Username/groupname of Table owner. Currently this field can only be changed after the resource is created.
+* `owner` - (Optional) Username/groupname of Table owner.
 * `comment` - (Optional) User-supplied free-form text.
 * `properties` - (Optional) Extensible Table properties.
 

@@ -37,7 +37,7 @@ The following arguments are required:
 
 * `name` - Name of Schema relative to parent catalog. Change forces creation of a new resource.
 * `catalog_name` - Name of parent catalog
-* `owner` - (Optional) Username/groupname of schema owner. Currently this field can only be changed after the resource is created.
+* `owner` - (Optional) Username/groupname of schema owner.
 * `comment` - (Optional) User-supplied free-form text.
 * `properties` - (Optional) Extensible Schema properties.
 

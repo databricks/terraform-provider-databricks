@@ -27,7 +27,7 @@ resource "databricks_catalog" "sandbox" {
 The following arguments are required:
 
 * `name` - Name of Catalog relative to parent metastore. Change forces creation of a new resource.
-* `owner` - (Optional) Username/groupname of catalog owner. Currently this field can only be changed after the resource is created.
+* `owner` - (Optional) Username/groupname of catalog owner.
 * `comment` - (Optional) User-supplied free-form text.
 * `properties` - (Optional) Extensible Catalog properties.
 

@@ -20,9 +20,11 @@ func TestCreateSchema(t *testing.T) {
 					Name:        "a",
 					CatalogName: "b",
 					Comment:     "c",
+					Owner:       "administrators",
 				},
 				Response: SchemaInfo{
 					FullName: "b.a",
+					Owner:    "testers",
 				},
 			},
 			{
@@ -30,7 +32,14 @@ func TestCreateSchema(t *testing.T) {
 				Resource: "/api/2.0/unity-catalog/schemas/b.a",
 				Response: SchemaInfo{
 					MetastoreID: "d",
-					Owner:       "e",
+					Owner:       "administrators",
+				},
+			},
+			{
+				Method:   "PATCH",
+				Resource: "/api/2.0/unity-catalog/schemas/b.a",
+				ExpectedRequest: map[string]interface{}{
+					"owner": "administrators",
 				},
 			},
 		},
@@ -40,7 +49,7 @@ func TestCreateSchema(t *testing.T) {
 		name = "a"
 		catalog_name = "b"
 		comment = "c"
-		owner = "e"
+		owner = "administrators"
 		`,
 	}.ApplyNoError(t)
 }

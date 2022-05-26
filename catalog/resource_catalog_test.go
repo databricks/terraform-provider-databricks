@@ -22,6 +22,15 @@ func TestCatalogCreateAlsoDeletesDefaultSchema(t *testing.T) {
 					Properties: map[string]string{
 						"c": "d",
 					},
+					Owner: "administrators",
+				},
+				Response: CatalogInfo{
+					Name:    "a",
+					Comment: "b",
+					Properties: map[string]string{
+						"c": "d",
+					},
+					Owner: "testers",
 				},
 			},
 			{
@@ -38,7 +47,14 @@ func TestCatalogCreateAlsoDeletesDefaultSchema(t *testing.T) {
 						"c": "d",
 					},
 					MetastoreID: "e",
-					Owner:       "f",
+					Owner:       "administrators",
+				},
+			},
+			{
+				Method:   "PATCH",
+				Resource: "/api/2.0/unity-catalog/catalogs/a",
+				ExpectedRequest: map[string]interface{}{
+					"owner": "administrators",
 				},
 			},
 		},
@@ -50,7 +66,7 @@ func TestCatalogCreateAlsoDeletesDefaultSchema(t *testing.T) {
 		properties = {
 			c = "d"
 		}
-		owner = "f"
+		owner = "administrators"
 		`,
 	}.ApplyNoError(t)
 }

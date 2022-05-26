@@ -1,5 +1,9 @@
 # Version changelog
 
+## 0.5.9
+
+* Add ability to specify tags for jobs ([#1337](https://github.com/databrickslabs/terraform-provider-databricks/pull/1337))
+
 ## 0.5.8
 
 * Update `aws_iam_policy_document` in `databricks_mws_customer_managed_keys` docs to restrict KMS policy to caller AWS account ([#1309](https://github.com/databrickslabs/terraform-provider-databricks/pull/1309)).

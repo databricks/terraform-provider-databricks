@@ -146,6 +146,7 @@ type JobSettings struct {
 	Schedule           *CronSchedule       `json:"schedule,omitempty"`
 	MaxConcurrentRuns  int32               `json:"max_concurrent_runs,omitempty"`
 	EmailNotifications *EmailNotifications `json:"email_notifications,omitempty" tf:"suppress_diff"`
+	Tags               map[string]string   `json:"tags,omitempty"`
 }
 
 func (js *JobSettings) isMultiTask() bool {

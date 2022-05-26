@@ -71,8 +71,8 @@ func (a TablesAPI) getTable(name string) (ti TableInfo, err error) {
 	return
 }
 
-func (a TablesAPI) updateTable(ti TableInfo) error {
-	return a.client.Patch(a.context, "/unity-catalog/tables/"+ti.FullName(), ti)
+func (a TablesAPI) updateTable(name string, update map[string]interface{}) error {
+	return a.client.Patch(a.context, "/unity-catalog/tables/"+name, update)
 }
 
 func (a TablesAPI) deleteTable(name string) error {
@@ -84,6 +84,25 @@ func ResourceTable() *schema.Resource {
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
 			return m
 		})
+	update := func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+		// other fields to come later
+		updatable := []string{"owner", "name"}
+		patch := map[string]interface{}{}
+		for _, field := range updatable {
+			old, new := d.GetChange(field)
+			if old == new {
+				continue
+			}
+			if field == "name" && old == "" {
+				continue
+			}
+			patch[field] = new
+		}
+		if len(patch) == 0 {
+			return nil
+		}
+		return NewTablesAPI(ctx, c).updateTable(d.Id(), patch)
+	}
 	return common.Resource{
 		Schema: tableSchema,
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
@@ -93,7 +112,7 @@ func ResourceTable() *schema.Resource {
 				return err
 			}
 			d.SetId(ti.FullName())
-			return nil
+			return update(ctx, d, c)
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			ti, err := NewTablesAPI(ctx, c).getTable(d.Id())
@@ -102,11 +121,7 @@ func ResourceTable() *schema.Resource {
 			}
 			return common.StructToData(ti, tableSchema, d)
 		},
-		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			var ti TableInfo
-			common.DataToStructPointer(d, tableSchema, &ti)
-			return NewTablesAPI(ctx, c).updateTable(ti)
-		},
+		Update: update,
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			return NewTablesAPI(ctx, c).deleteTable(d.Id())
 		},

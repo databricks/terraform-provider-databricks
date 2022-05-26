@@ -43,8 +43,8 @@ func (a CatalogsAPI) getCatalog(name string) (ci CatalogInfo, err error) {
 	return
 }
 
-func (a CatalogsAPI) updateCatalog(ci CatalogInfo) error {
-	return a.client.Patch(a.context, "/unity-catalog/catalogs/"+ci.Name, ci)
+func (a CatalogsAPI) updateCatalog(name string, update map[string]interface{}) error {
+	return a.client.Patch(a.context, "/unity-catalog/catalogs/"+name, update)
 }
 
 func (a CatalogsAPI) deleteCatalog(name string) error {
@@ -57,6 +57,25 @@ func ResourceCatalog() *schema.Resource {
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
 			return m
 		})
+	update := func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+		// other fields to come later
+		updatable := []string{"owner", "name"}
+		patch := map[string]interface{}{}
+		for _, field := range updatable {
+			old, new := d.GetChange(field)
+			if old == new {
+				continue
+			}
+			if field == "name" && old == "" {
+				continue
+			}
+			patch[field] = new
+		}
+		if len(patch) == 0 {
+			return nil
+		}
+		return NewCatalogsAPI(ctx, c).updateCatalog(d.Id(), patch)
+	}
 	return common.Resource{
 		Schema: catalogSchema,
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
@@ -69,7 +88,7 @@ func ResourceCatalog() *schema.Resource {
 				return fmt.Errorf("cannot remove new catalog default schema: %w", err)
 			}
 			d.SetId(ci.Name)
-			return nil
+			return update(ctx, d, c)
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			ci, err := NewCatalogsAPI(ctx, c).getCatalog(d.Id())
@@ -78,11 +97,7 @@ func ResourceCatalog() *schema.Resource {
 			}
 			return common.StructToData(ci, catalogSchema, d)
 		},
-		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			var ci CatalogInfo
-			common.DataToStructPointer(d, catalogSchema, &ci)
-			return NewCatalogsAPI(ctx, c).updateCatalog(ci)
-		},
+		Update: update,
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			return NewCatalogsAPI(ctx, c).deleteCatalog(d.Id())
 		},

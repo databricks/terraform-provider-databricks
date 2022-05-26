@@ -50,6 +50,7 @@ func TestCatalogCreateAlsoDeletesDefaultSchema(t *testing.T) {
 		properties = {
 			c = "d"
 		}
+		owner = "f"
 		`,
 	}.ApplyNoError(t)
 }

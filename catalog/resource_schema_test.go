@@ -40,6 +40,7 @@ func TestCreateSchema(t *testing.T) {
 		name = "a"
 		catalog_name = "b"
 		comment = "c"
+		owner = "e"
 		`,
 	}.ApplyNoError(t)
 }

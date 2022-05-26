@@ -45,6 +45,7 @@ func TestTableCreate(t *testing.T) {
 		catalog_name = "main"
 		schema_name = "foo"
 		name = "bar"
+		owner = "f"
 		table_type = "EXTERNAL"
 		data_source_format = "JSON"
 		storage_location = "s3://ext-main/foo/bar"

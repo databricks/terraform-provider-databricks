@@ -46,8 +46,8 @@ func (a SchemasAPI) getSchema(name string) (si SchemaInfo, err error) {
 	return
 }
 
-func (a SchemasAPI) updateSchema(si SchemaInfo) error {
-	return a.client.Patch(a.context, "/unity-catalog/schemas/"+si.FullName, si)
+func (a SchemasAPI) updateSchema(name string, update map[string]interface{}) error {
+	return a.client.Patch(a.context, "/unity-catalog/schemas/"+name, update)
 }
 
 func (a SchemasAPI) deleteSchema(name string) error {
@@ -60,6 +60,25 @@ func ResourceSchema() *schema.Resource {
 			delete(m, "full_name")
 			return m
 		})
+	update := func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+		// other fields to come later
+		updatable := []string{"owner", "name"}
+		patch := map[string]interface{}{}
+		for _, field := range updatable {
+			old, new := d.GetChange(field)
+			if old == new {
+				continue
+			}
+			if field == "name" && old == "" {
+				continue
+			}
+			patch[field] = new
+		}
+		if len(patch) == 0 {
+			return nil
+		}
+		return NewSchemasAPI(ctx, c).updateSchema(d.Id(), patch)
+	}
 	return common.Resource{
 		Schema: s,
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
@@ -69,7 +88,7 @@ func ResourceSchema() *schema.Resource {
 				return err
 			}
 			d.SetId(si.FullName)
-			return nil
+			return update(ctx, d, c)
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			si, err := NewSchemasAPI(ctx, c).getSchema(d.Id())
@@ -78,12 +97,7 @@ func ResourceSchema() *schema.Resource {
 			}
 			return common.StructToData(si, s, d)
 		},
-		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			var si SchemaInfo
-			common.DataToStructPointer(d, s, &si)
-			si.FullName = d.Id()
-			return NewSchemasAPI(ctx, c).updateSchema(si)
-		},
+		Update: update,
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			return NewSchemasAPI(ctx, c).deleteSchema(d.Id())
 		},

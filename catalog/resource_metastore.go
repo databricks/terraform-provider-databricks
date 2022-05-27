@@ -28,8 +28,13 @@ type MetastoreInfo struct {
 	Region                                      string  `json:"region,omitempty" tf:"computed"`
 	Cloud                                       string  `json:"cloud,omitempty" tf:"computed"`
 	GlobalMetastoreId                           string  `json:"global_metastore_id,omitempty" tf:"computed"`
+	CreatedAt                                   int64   `json:"created_at,omitempty" tf:"computed"`
+	CreatedBy                                   string  `json:"created_by,omitempty" tf:"computed"`
+	UpdatedAt                                   int64   `json:"updated_at,omitempty" tf:"computed"`
+	UpdatedBy                                   string  `json:"updated_by,omitempty" tf:"computed"`
 	DeltaSharingEnabled                         bool    `json:"delta_sharing_enabled,omitempty"`
 	DeltaSharingRecipientTokenLifetimeInSeconds int32   `json:"delta_sharing_recipient_token_lifetime_in_seconds,omitempty" tf:"default:3600"`
+	DeltaSharingOrganizationName                string  `json:"delta_sharing_organization_name,omitempty"`
 }
 
 type CreateMetastore struct {
@@ -85,11 +90,12 @@ func ResourceMetastore() *schema.Resource {
 	update := func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 		// other fields to come later
 		updatable := []string{"owner", "name", "delta_sharing_enabled",
-			"delta_sharing_recipient_token_lifetime_in_seconds"}
+			"delta_sharing_recipient_token_lifetime_in_seconds", "delta_sharing_organization_name"}
 		patch := map[string]interface{}{}
 		for _, field := range updatable {
 			old, new := d.GetChange(field)
-			//Int fields old will always be 0 and for this payload we need to send 0 in the request for unlimited
+			//Int fields old will always be 0 and for this payload
+			//we need to send 0 in the request for infinite lifetime
 			defaultLifetimeIntField := field == "delta_sharing_recipient_token_lifetime_in_seconds" &&
 				old == 0 && new == 0
 
@@ -99,6 +105,14 @@ func ResourceMetastore() *schema.Resource {
 			if field == "name" && old == "" {
 				continue
 			}
+			// delta sharing enabled and new is true must always be accompanied by a value for
+			// delta_sharing_recipient_token_lifetime_in_seconds
+			if field == "delta_sharing_enabled" && old != new && new == true &&
+				!d.HasChange("delta_sharing_recipient_token_lifetime_in_seconds") {
+				patch["delta_sharing_recipient_token_lifetime_in_seconds"] =
+					d.Get("delta_sharing_recipient_token_lifetime_in_seconds")
+			}
+
 			patch[field] = new
 		}
 		if len(patch) == 0 {

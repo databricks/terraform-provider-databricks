@@ -10,7 +10,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestResourceServicePrincipalInstanceProfileCreate(t *testing.T) {
+func TestResourceServicePrincipalRoleCreate(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
@@ -39,10 +39,10 @@ func TestResourceServicePrincipalInstanceProfileCreate(t *testing.T) {
 				},
 			},
 		},
-		Resource: ResourceServicePrincipalInstanceProfile(),
+		Resource: ResourceServicePrincipalRole(),
 		State: map[string]interface{}{
-			"application_id":      "abc",
-			"instance_profile_id": "arn:aws:iam::999999999999:instance-profile/my-fake-instance-profile",
+			"service_principal_id": "abc",
+			"role":                 "arn:aws:iam::999999999999:instance-profile/my-fake-instance-profile",
 		},
 		Create: true,
 	}.Apply(t)
@@ -50,19 +50,7 @@ func TestResourceServicePrincipalInstanceProfileCreate(t *testing.T) {
 	assert.Equal(t, "abc|arn:aws:iam::999999999999:instance-profile/my-fake-instance-profile", d.Id())
 }
 
-func TestResourceServicePrincipalInstanceProfileCreate_Error_BadARN(t *testing.T) {
-	_, err := qa.ResourceFixture{
-		Resource: ResourceServicePrincipalInstanceProfile(),
-		State: map[string]interface{}{
-			"application_id":      "abc",
-			"instance_profile_id": "fake",
-		},
-		Create: true,
-	}.Apply(t)
-	assert.EqualError(t, err, "invalid config supplied. [instance_profile_id] Invalid ARN")
-}
-
-func TestResourceServicePrincipalInstanceProfileCreate_Error(t *testing.T) {
+func TestResourceServicePrincipalRoleCreate_Error(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
@@ -75,10 +63,10 @@ func TestResourceServicePrincipalInstanceProfileCreate_Error(t *testing.T) {
 				Status: 400,
 			},
 		},
-		Resource: ResourceServicePrincipalInstanceProfile(),
+		Resource: ResourceServicePrincipalRole(),
 		State: map[string]interface{}{
-			"application_id":      "abc",
-			"instance_profile_id": "arn:aws:iam::999999999999:instance-profile/my-fake-instance-profile",
+			"service_principal_id": "abc",
+			"role":                 "arn:aws:iam::999999999999:instance-profile/my-fake-instance-profile",
 		},
 		Create: true,
 	}.Apply(t)
@@ -86,7 +74,7 @@ func TestResourceServicePrincipalInstanceProfileCreate_Error(t *testing.T) {
 	assert.Equal(t, "", d.Id(), "Id should be empty for error creates")
 }
 
-func TestResourceServicePrincipalInstanceProfileRead(t *testing.T) {
+func TestResourceServicePrincipalRoleRead(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
@@ -104,7 +92,7 @@ func TestResourceServicePrincipalInstanceProfileRead(t *testing.T) {
 				},
 			},
 		},
-		Resource: ResourceServicePrincipalInstanceProfile(),
+		Resource: ResourceServicePrincipalRole(),
 		Read:     true,
 		ID:       "abc|arn:aws:iam::999999999999:instance-profile/my-fake-instance-profile",
 	}.Apply(t)
@@ -112,7 +100,7 @@ func TestResourceServicePrincipalInstanceProfileRead(t *testing.T) {
 	assert.Equal(t, "abc|arn:aws:iam::999999999999:instance-profile/my-fake-instance-profile", d.Id(), "Id should not be empty")
 }
 
-func TestResourceServicePrincipalInstanceProfileRead_NoRole(t *testing.T) {
+func TestResourceServicePrincipalRoleRead_NoRole(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
@@ -125,14 +113,14 @@ func TestResourceServicePrincipalInstanceProfileRead_NoRole(t *testing.T) {
 				},
 			},
 		},
-		Resource: ResourceServicePrincipalInstanceProfile(),
+		Resource: ResourceServicePrincipalRole(),
 		Read:     true,
 		Removed:  true,
 		ID:       "abc|arn:aws:iam::999999999999:instance-profile/my-fake-instance-profile",
 	}.ApplyNoError(t)
 }
 
-func TestResourceServicePrincipalInstanceProfileRead_NotFound(t *testing.T) {
+func TestResourceServicePrincipalRoleRead_NotFound(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
@@ -145,7 +133,7 @@ func TestResourceServicePrincipalInstanceProfileRead_NotFound(t *testing.T) {
 				Status: 404,
 			},
 		},
-		Resource: ResourceServicePrincipalInstanceProfile(),
+		Resource: ResourceServicePrincipalRole(),
 		Read:     true,
 		Removed:  true,
 		ID:       "abc|arn:aws:iam::999999999999:instance-profile/my-fake-instance-profile",

@@ -11,8 +11,8 @@ import (
 )
 
 // ResourceServicePrincipalInstanceProfile binds service principal and instance profile
-func ResourceServicePrincipalInstanceProfile() *schema.Resource {
-	r := common.NewPairID("application_id", "instance_profile_id").Schema(func(
+func ResourceServicePrincipalRole() *schema.Resource {
+	r := common.NewPairID("service_principal_id", "role").Schema(func(
 		m map[string]*schema.Schema) map[string]*schema.Schema {
 		m["instance_profile_id"].ValidateDiagFunc = ValidInstanceProfile
 		return m

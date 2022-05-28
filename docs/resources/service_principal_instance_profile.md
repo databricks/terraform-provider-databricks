@@ -12,13 +12,13 @@ resource "databricks_instance_profile" "instance_profile" {
   instance_profile_arn = "my_instance_profile_arn"
 }
 
-resource "databricks_service_principal" "my_service_principal" {
+resource "databricks_service_principal" "this" {
   display_name = "My Service Principal"
 }
 
 resource "databricks_service_principal_instance_profile" "my_service_principal_instance_profile" {
-  application_id      = databricks_service_principal.my_service_principal.id
-  instance_profile_id = databricks_instance_profile.instance_profile.id
+  service_principal_id      = databricks_service_principal.this.id
+  role = databricks_instance_profile.instance_profile.id
 }
 ```
 ## Argument Reference

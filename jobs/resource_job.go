@@ -62,6 +62,7 @@ type EmailNotifications struct {
 	OnSuccess             []string `json:"on_success,omitempty"`
 	OnFailure             []string `json:"on_failure,omitempty"`
 	NoAlertForSkippedRuns bool     `json:"no_alert_for_skipped_runs,omitempty"`
+	AlertOnLastAttempt    bool     `json:"alert_on_last_attempt,omitempty"`
 }
 
 // CronSchedule contains the information for the quartz cron expression

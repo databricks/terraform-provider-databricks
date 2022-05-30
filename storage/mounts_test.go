@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"github.com/databrickslabs/terraform-provider-databricks/clusters"
-	"github.com/databrickslabs/terraform-provider-databricks/internal"
+	"github.com/databrickslabs/terraform-provider-databricks/commands"
 
 	"github.com/databrickslabs/terraform-provider-databricks/qa"
 
@@ -47,7 +47,7 @@ func testMountFuncHelper(t *testing.T, mountFunc func(mp MountPoint, mount Mount
 
 	c.WithCommandMock(func(commandStr string) common.CommandResults {
 		called = true
-		assert.Equal(t, internal.TrimLeadingWhitespace(expectedCommand), internal.TrimLeadingWhitespace(commandStr))
+		assert.Equal(t, commands.TrimLeadingWhitespace(expectedCommand), commands.TrimLeadingWhitespace(commandStr))
 		return common.CommandResults{
 			ResultType: "text",
 			Data:       expectedCommandResp,

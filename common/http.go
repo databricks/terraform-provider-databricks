@@ -7,7 +7,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"net/url"
@@ -180,7 +179,7 @@ func (c *DatabricksClient) commonErrorClarity(resp *http.Response) *APIError {
 }
 
 func (c *DatabricksClient) parseError(resp *http.Response) APIError {
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return APIError{
 			Message:    err.Error(),
@@ -346,16 +345,21 @@ func (c *DatabricksClient) completeUrl(r *http.Request) error {
 	return nil
 }
 
+// scimPathVisitorFactory is a separate method for the sake of unit tests
+func (c *DatabricksClient) scimVisitor(r *http.Request) error {
+	r.Header.Set("Content-Type", "application/scim+json; charset=utf-8")
+	if c.isAccountsClient() && c.AccountID != "" {
+		// until `/preview` is there for workspace scim,
+		// `/api/2.0` is added by completeUrl visitor
+		r.URL.Path = strings.ReplaceAll(r.URL.Path, "/api/2.0/preview",
+			fmt.Sprintf("/api/2.0/accounts/%s", c.AccountID))
+	}
+	return nil
+}
+
 // Scim sets SCIM headers
 func (c *DatabricksClient) Scim(ctx context.Context, method, path string, request interface{}, response interface{}) error {
-	body, err := c.authenticatedQuery(ctx, method, path, request, c.completeUrl, func(r *http.Request) error {
-		r.Header.Set("Content-Type", "application/scim+json; charset=utf-8")
-		if c.isAccountsClient() && c.AccountID != "" {
-			// until `/preview` is there for workspace scim
-			r.URL.Path = strings.ReplaceAll(path, "/preview", fmt.Sprintf("/api/2.0/accounts/%s", c.AccountID))
-		}
-		return nil
-	})
+	body, err := c.authenticatedQuery(ctx, method, path, request, c.completeUrl, c.scimVisitor)
 	if err != nil {
 		return err
 	}
@@ -403,7 +407,9 @@ func (c *DatabricksClient) redactedDump(body []byte) (res string) {
 	if len(body) == 0 {
 		return
 	}
-
+	if body[0] != '{' {
+		return fmt.Sprintf("[non-JSON document of %d bytes]", len(body))
+	}
 	var requestMap map[string]interface{}
 	err := json.Unmarshal(body, &requestMap)
 	if err != nil {
@@ -466,21 +472,21 @@ func (c *DatabricksClient) genericQuery(ctx context.Context, method, requestURL 
 		return nil, fmt.Errorf("DatabricksClient is not configured")
 	}
 	if err = c.rateLimiter.Wait(ctx); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("rate limited: %w", err)
 	}
 	requestBody, err := makeRequestBody(method, &requestURL, data)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("request marshal: %w", err)
 	}
 	request, err := http.NewRequestWithContext(ctx, method, requestURL, bytes.NewBuffer(requestBody))
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("new request: %w", err)
 	}
 	request.Header.Set("User-Agent", c.userAgent(ctx))
 	for _, requestVisitor := range visitors {
 		err = requestVisitor(request)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("failed visitor: %w", err)
 		}
 	}
 	headers := c.createDebugHeaders(request.Header, c.Host)
@@ -489,29 +495,63 @@ func (c *DatabricksClient) genericQuery(ctx context.Context, method, requestURL 
 
 	r, err := retryablehttp.FromRequest(request)
 	if err != nil {
-		return nil, err
+		return nil, err // no error invariants possible because of `makeRequestBody`
 	}
 	resp, err := c.httpClient.Do(r)
 	// retryablehttp library now returns only wrapped errors
 	var ae APIError
 	if errors.As(err, &ae) {
+		// don't re-wrap, as upper layers may depend on handling common.APIError
 		return nil, ae
 	}
 	if err != nil {
-		return nil, err
+		// i don't even know which errors in the real world would end up here.
+		// `retryablehttp` package nicely wraps _everything_ to `url.Error`.
+		return nil, fmt.Errorf("failed request: %w", err)
 	}
 	defer func() {
 		if ferr := resp.Body.Close(); ferr != nil {
-			err = ferr
+			err = fmt.Errorf("failed to close: %w", ferr)
 		}
 	}()
-	body, err = ioutil.ReadAll(resp.Body)
+	body, err = io.ReadAll(resp.Body)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("response body: %w", err)
 	}
 	headers = c.createDebugHeaders(resp.Header, "")
 	log.Printf("[DEBUG] %s %s %s <- %s %s", resp.Status, headers, c.redactedDump(body), method, strings.ReplaceAll(request.URL.Path, "\n", ""))
 	return body, nil
+}
+
+func makeQueryString(data interface{}) (string, error) {
+	inputVal := reflect.ValueOf(data)
+	inputType := reflect.TypeOf(data)
+	if inputType.Kind() == reflect.Map {
+		s := []string{}
+		keys := inputVal.MapKeys()
+		// sort map keys by their string repr, so that tests can be deterministic
+		sort.Slice(keys, func(i, j int) bool {
+			return keys[i].String() < keys[j].String()
+		})
+		for _, k := range keys {
+			v := inputVal.MapIndex(k)
+			if v.IsZero() {
+				continue
+			}
+			s = append(s, fmt.Sprintf("%s=%s",
+				strings.Replace(url.QueryEscape(fmt.Sprintf("%v", k.Interface())), "+", "%20", -1),
+				strings.Replace(url.QueryEscape(fmt.Sprintf("%v", v.Interface())), "+", "%20", -1)))
+		}
+		return "?" + strings.Join(s, "&"), nil
+	}
+	if inputType.Kind() == reflect.Struct {
+		params, err := query.Values(data)
+		if err != nil {
+			return "", fmt.Errorf("cannot create query string: %w", err)
+		}
+		return "?" + params.Encode(), nil
+	}
+	return "", fmt.Errorf("unsupported query string data: %#v", data)
 }
 
 func makeRequestBody(method string, requestURL *string, data interface{}) ([]byte, error) {
@@ -520,35 +560,11 @@ func makeRequestBody(method string, requestURL *string, data interface{}) ([]byt
 		return requestBody, nil
 	}
 	if method == "GET" {
-		inputVal := reflect.ValueOf(data)
-		inputType := reflect.TypeOf(data)
-		switch inputType.Kind() {
-		case reflect.Map:
-			s := []string{}
-			keys := inputVal.MapKeys()
-			// sort map keys by their string repr, so that tests can be deterministic
-			sort.Slice(keys, func(i, j int) bool {
-				return keys[i].String() < keys[j].String()
-			})
-			for _, k := range keys {
-				v := inputVal.MapIndex(k)
-				if v.IsZero() {
-					continue
-				}
-				s = append(s, fmt.Sprintf("%s=%s",
-					strings.Replace(url.QueryEscape(fmt.Sprintf("%v", k.Interface())), "+", "%20", -1),
-					strings.Replace(url.QueryEscape(fmt.Sprintf("%v", v.Interface())), "+", "%20", -1)))
-			}
-			*requestURL += "?" + strings.Join(s, "&")
-		case reflect.Struct:
-			params, err := query.Values(data)
-			if err != nil {
-				return nil, err
-			}
-			*requestURL += "?" + params.Encode()
-		default:
-			return nil, fmt.Errorf("unsupported request data: %#v", data)
+		qs, err := makeQueryString(data)
+		if err != nil {
+			return nil, err
 		}
+		*requestURL += qs
 		return requestBody, nil
 	}
 	if reader, ok := data.(io.Reader); ok {
@@ -563,7 +579,7 @@ func makeRequestBody(method string, requestURL *string, data interface{}) ([]byt
 	}
 	bodyBytes, err := json.MarshalIndent(data, "", "  ")
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("request marshal failure: %w", err)
 	}
 	return bodyBytes, nil
 }

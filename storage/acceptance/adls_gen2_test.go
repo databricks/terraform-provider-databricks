@@ -22,7 +22,7 @@ func TestAzureAccAdlsGen2Mount_correctly_mounts(t *testing.T) {
 	acceptance.AccTest(t, resource.TestCase{
 		Steps: []resource.TestStep{
 			{
-				Config: qa.EnvironmentTemplate(t, `
+				Config: acceptance.EnvironmentTemplate(t, `
 				resource "databricks_secret_scope" "terraform" {
 					name                     = "terraform-{var.RANDOM}"
 					initial_manage_principal = "users"

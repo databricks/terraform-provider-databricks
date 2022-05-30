@@ -3,7 +3,9 @@ subcategory: "Security"
 ---
 # databricks_user Resource
 
-This resource is used to [manage users](https://docs.databricks.com/administration-guide/users-groups/users.html), that could be added to [databricks_group](group.md) within the workspace. Upon user creation the user will receive a password reset email. You can also get information about caller identity using [databricks_current_user](../data-sources/current_user.md) data source.
+This resource allows you to manage [users in Databricks Workspace](https://docs.databricks.com/administration-guide/users-groups/users.html), [Databricks Account Console](https://accounts.cloud.databricks.com/) or [Azure Databricks Account Console](https://accounts.azuredatabricks.net). You can also [associate](group_member.md) Databricks users to [databricks_group](group.md). Upon user creation the user will receive a password reset email. You can also get information about caller identity using [databricks_current_user](../data-sources/current_user.md) data source.
+
+To create users in the Databricks account, the provider must be configured with `host = "https://accounts.cloud.databricks.com"` on AWS deployments or `host = "https://accounts.azuredatabricks.net"` and authenticate using AAD tokens on Azure deployments
 
 ## Example Usage
 
@@ -39,6 +41,41 @@ resource "databricks_user" "me" {
   user_name            = "me@example.com"
   display_name         = "Example user"
   allow_cluster_create = true
+}
+```
+
+Creating user in AWS Databricks account:
+```hcl
+// initialize provider at account-level
+provider "databricks" {
+  alias    = "mws"
+  host     = "https://accounts.cloud.databricks.com"
+  account_id = "00000000-0000-0000-0000-000000000000"
+  username = var.databricks_account_username
+  password = var.databricks_account_password
+}
+
+resource "databricks_user" "account_user" {
+  provider     = databricks.mws
+  user_name    = "me@example.com"
+  display_name = "Example user"
+}
+```
+
+Creating user in Azure Databricks account:
+```hcl
+// initialize provider at Azure account-level
+provider "databricks" {
+  alias      = "azure_account"
+  host       = "https://accounts.azuredatabricks.net"
+  account_id = "00000000-0000-0000-0000-000000000000"
+  auth_type  = "azure-cli"
+}
+
+resource "databricks_user" "account_user" {
+  provider     = databricks.mws
+  user_name    = "me@example.com"
+  display_name = "Example user"
 }
 ```
 

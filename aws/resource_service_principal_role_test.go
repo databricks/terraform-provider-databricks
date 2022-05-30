@@ -7,11 +7,10 @@ import (
 	"github.com/databrickslabs/terraform-provider-databricks/scim"
 
 	"github.com/databrickslabs/terraform-provider-databricks/qa"
-	"github.com/stretchr/testify/assert"
 )
 
 func TestResourceServicePrincipalRoleCreate(t *testing.T) {
-	d, err := qa.ResourceFixture{
+	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "PATCH",
@@ -45,13 +44,11 @@ func TestResourceServicePrincipalRoleCreate(t *testing.T) {
 			"role":                 "arn:aws:iam::999999999999:instance-profile/my-fake-instance-profile",
 		},
 		Create: true,
-	}.Apply(t)
-	assert.NoError(t, err, err)
-	assert.Equal(t, "abc|arn:aws:iam::999999999999:instance-profile/my-fake-instance-profile", d.Id())
+	}.ApplyAndExpectData(t, map[string]interface{}{"id": "abc|arn:aws:iam::999999999999:instance-profile/my-fake-instance-profile"})
 }
 
 func TestResourceServicePrincipalRoleCreate_Error(t *testing.T) {
-	d, err := qa.ResourceFixture{
+	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "PATCH",
@@ -69,13 +66,11 @@ func TestResourceServicePrincipalRoleCreate_Error(t *testing.T) {
 			"role":                 "arn:aws:iam::999999999999:instance-profile/my-fake-instance-profile",
 		},
 		Create: true,
-	}.Apply(t)
-	qa.AssertErrorStartsWith(t, err, "Internal error happened")
-	assert.Equal(t, "", d.Id(), "Id should be empty for error creates")
+	}.ExpectError(t, "Internal error happened")
 }
 
 func TestResourceServicePrincipalRoleRead(t *testing.T) {
-	d, err := qa.ResourceFixture{
+	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
@@ -95,9 +90,7 @@ func TestResourceServicePrincipalRoleRead(t *testing.T) {
 		Resource: ResourceServicePrincipalRole(),
 		Read:     true,
 		ID:       "abc|arn:aws:iam::999999999999:instance-profile/my-fake-instance-profile",
-	}.Apply(t)
-	assert.NoError(t, err, err)
-	assert.Equal(t, "abc|arn:aws:iam::999999999999:instance-profile/my-fake-instance-profile", d.Id(), "Id should not be empty")
+	}.ApplyAndExpectData(t, map[string]interface{}{"id": "abc|arn:aws:iam::999999999999:instance-profile/my-fake-instance-profile"})
 }
 
 func TestResourceServicePrincipalRoleRead_NoRole(t *testing.T) {

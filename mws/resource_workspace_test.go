@@ -1151,7 +1151,7 @@ func TestWorkspaceTokenWrongAuthCornerCase(t *testing.T) {
 	wsApi := NewWorkspacesAPI(context.Background(), client)
 
 	noAuth := "cannot authenticate parent client: authentication is not configured " +
-		"for provider.. Please check https://registry.terraform.io/providers/" +
+		"for provider. Please check https://registry.terraform.io/providers/" +
 		"databrickslabs/databricks/latest/docs#authentication for details"
 	assert.EqualError(t, CreateTokenIfNeeded(wsApi, r.Schema, d), noAuth, "create")
 	assert.EqualError(t, EnsureTokenExistsIfNeeded(wsApi, r.Schema, d), noAuth, "ensure")

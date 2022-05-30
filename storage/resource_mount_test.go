@@ -288,7 +288,7 @@ func TestResourceAwsS3MountGenericCreate_invalid_arn(t *testing.T) {
 		},
 		Create: true,
 	}.Apply(t)
-	require.EqualError(t, err, "invalid arn: this_mount")
+	require.EqualError(t, err, "mount via profile: invalid arn: this_mount")
 }
 
 func TestResourceAwsS3MountGenericRead(t *testing.T) {

@@ -173,7 +173,6 @@ You can invoke Spark submit tasks only on new clusters. **In the `new_cluster` s
 
 * `on_failure` - (Optional) (List) list of emails to notify on failure
 * `no_alert_for_skipped_runs` - (Optional) (Bool) don't send alert for skipped runs
-* `alert_on_last_attempt` - (Optional) (Bool) sent alerts only for the last run attempt
 * `on_start` - (Optional) (List) list of emails to notify on failure
 * `on_success` - (Optional) (List) list of emails to notify on failure
 

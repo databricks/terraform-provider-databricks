@@ -43,7 +43,7 @@ func TestAwsAccS3IamMount_WithCluster(t *testing.T) {
 		if instanceProfilesAPI.IsRegistered(arn) {
 			return false
 		}
-		config := qa.EnvironmentTemplate(t, `
+		config := acceptance.EnvironmentTemplate(t, `
 		resource "databricks_instance_profile" "this" {
 			instance_profile_arn = "{env.TEST_EC2_INSTANCE_PROFILE}"
 		}
@@ -89,7 +89,7 @@ func TestAwsAccS3IamMount_NoClusterGiven(t *testing.T) {
 	ctx := context.WithValue(context.Background(), common.Current, t.Name())
 	instanceProfilesAPI := aws.NewInstanceProfilesAPI(ctx, client)
 	instanceProfilesAPI.Synchronized(arn, func() bool {
-		config := qa.EnvironmentTemplate(t, `
+		config := acceptance.EnvironmentTemplate(t, `
 		resource "databricks_instance_profile" "this" {
 			instance_profile_arn = "{env.TEST_EC2_INSTANCE_PROFILE}"
 		}

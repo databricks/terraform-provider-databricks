@@ -1,8 +1,9 @@
 package aws
 
 import (
-	"github.com/databrickslabs/terraform-provider-databricks/common"
 	"testing"
+
+	"github.com/databrickslabs/terraform-provider-databricks/common"
 
 	"github.com/databrickslabs/terraform-provider-databricks/scim"
 

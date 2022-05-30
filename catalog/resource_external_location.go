@@ -18,13 +18,13 @@ func NewExternalLocationsAPI(ctx context.Context, m interface{}) ExternalLocatio
 }
 
 type ExternalLocationInfo struct {
-	Name           	string `json:"name" tf:"force_new"`
-	URL            	string `json:"url"`
-	CredentialName 	string `json:"credential_name"`
-	Comment        	string `json:"comment,omitempty"`
-	SkipValidation  bool   `json:"skip_validation,omitempty"`
-	Owner          	string `json:"owner,omitempty" tf:"computed"`
-	MetastoreID    	string `json:"metastore_id,omitempty" tf:"computed"`
+	Name           string `json:"name" tf:"force_new"`
+	URL            string `json:"url"`
+	CredentialName string `json:"credential_name"`
+	Comment        string `json:"comment,omitempty"`
+	SkipValidation bool   `json:"skip_validation,omitempty"`
+	Owner          string `json:"owner,omitempty" tf:"computed"`
+	MetastoreID    string `json:"metastore_id,omitempty" tf:"computed"`
 }
 
 func (a ExternalLocationsAPI) create(el *ExternalLocationInfo) error {

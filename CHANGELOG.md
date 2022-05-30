@@ -2,7 +2,22 @@
 
 ## 0.5.9
 
-* Add ability to specify tags for jobs ([#1337](https://github.com/databrickslabs/terraform-provider-databricks/pull/1337))
+* Added warning section for debug mode ([#1325](https://github.com/databrickslabs/terraform-provider-databricks/pull/1325)).
+* Added ability to specify tags for `databricks_job` ([#1337](https://github.com/databrickslabs/terraform-provider-databricks/pull/1337)).
+* Upgraded AWS provider for AWS guides. Added examples for account-level identities ([#1332](https://github.com/databrickslabs/terraform-provider-databricks/pull/1332)).
+* Updated docs to use `application_id` as privilege for `databricks_service_principal` ([#1336](https://github.com/databrickslabs/terraform-provider-databricks/pull/1336)).
+* Added `databricks_service_principal_role` resource ([#1340](https://github.com/databrickslabs/terraform-provider-databricks/pull/1340)).
+* Fixed itegration testing image ([#1342](https://github.com/databrickslabs/terraform-provider-databricks/pull/1342), [#1343](https://github.com/databrickslabs/terraform-provider-databricks/pull/1343)).
+* Added `skip_validation` for `databricks_external_location` ([#1330](https://github.com/databrickslabs/terraform-provider-databricks/pull/1330)).
+* Added `alert_on_last_attempt` to `databricks_job` ([#1341](https://github.com/databrickslabs/terraform-provider-databricks/pull/1341)).
+* Skip `make test` on doc-only changes ([#1339](https://github.com/databrickslabs/terraform-provider-databricks/pull/1339)).
+* Improve common package test coverage ([#1344](https://github.com/databrickslabs/terraform-provider-databricks/pull/1344)).
+* Re-create purged cluster for `databricks_mount` for AWS S3 ([#1345](https://github.com/databrickslabs/terraform-provider-databricks/pull/1345)).
+
+Updated dependency versions:
+
+* Bump google.golang.org/api from 0.79.0 to 0.80.0
+* Bump github.com/Azure/go-autorest/autorest/adal from 0.9.19 to 0.9.20
 
 ## 0.5.8
 

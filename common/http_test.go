@@ -339,11 +339,18 @@ func TestMakeRequestBody(t *testing.T) {
 		Scope string `json:"scope" url:"scope"`
 	}
 	requestURL := "/a/b/c"
-	_, err := makeRequestBody("GET", &requestURL, x{"test"}, true)
+	_, err := makeRequestBody("GET", &requestURL, x{"test"})
 	require.NoError(t, err)
 	assert.Equal(t, "/a/b/c?scope=test", requestURL)
 
-	body, _ := makeRequestBody("POST", &requestURL, "abc", false)
+	body, _ := makeRequestBody("POST", &requestURL, "abc")
+	assert.Equal(t, []byte("abc"), body)
+}
+
+func TestMakeRequestBodyFromReader(t *testing.T) {
+	requestURL := "/a/b/c"
+	body, err := makeRequestBody("PUT", &requestURL, strings.NewReader("abc"))
+	require.NoError(t, err)
 	assert.Equal(t, []byte("abc"), body)
 }
 
@@ -358,7 +365,7 @@ func TestMakeRequestBodyForMap(t *testing.T) {
 		"c": 5,
 		"b": 6,
 		"d": 7,
-	}, true)
+	})
 	require.NoError(t, err)
 	assert.Equal(t, "/a?a=2&b=6&c=5&d=7&e=1&f=3&g=4", requestURL)
 }

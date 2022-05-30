@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -467,7 +468,7 @@ func (c *DatabricksClient) genericQuery(ctx context.Context, method, requestURL 
 	if err = c.rateLimiter.Wait(ctx); err != nil {
 		return nil, err
 	}
-	requestBody, err := makeRequestBody(method, &requestURL, data, true)
+	requestBody, err := makeRequestBody(method, &requestURL, data)
 	if err != nil {
 		return nil, err
 	}
@@ -513,7 +514,7 @@ func (c *DatabricksClient) genericQuery(ctx context.Context, method, requestURL 
 	return body, nil
 }
 
-func makeRequestBody(method string, requestURL *string, data interface{}, marshalJSON bool) ([]byte, error) {
+func makeRequestBody(method string, requestURL *string, data interface{}) ([]byte, error) {
 	var requestBody []byte
 	if data == nil && (method == "DELETE" || method == "GET") {
 		return requestBody, nil
@@ -546,20 +547,25 @@ func makeRequestBody(method string, requestURL *string, data interface{}, marsha
 			}
 			*requestURL += "?" + params.Encode()
 		default:
-			return requestBody, fmt.Errorf("unsupported request data: %#v", data)
+			return nil, fmt.Errorf("unsupported request data: %#v", data)
 		}
-	} else {
-		if marshalJSON {
-			bodyBytes, err := json.MarshalIndent(data, "", "  ")
-			if err != nil {
-				return nil, err
-			}
-			requestBody = bodyBytes
-		} else {
-			requestBody = []byte(data.(string))
-		}
+		return requestBody, nil
 	}
-	return requestBody, nil
+	if reader, ok := data.(io.Reader); ok {
+		raw, err := io.ReadAll(reader)
+		if err != nil {
+			return nil, fmt.Errorf("failed to read from reader: %w", err)
+		}
+		return raw, nil
+	}
+	if str, ok := data.(string); ok {
+		return []byte(str), nil
+	}
+	bodyBytes, err := json.MarshalIndent(data, "", "  ")
+	if err != nil {
+		return nil, err
+	}
+	return bodyBytes, nil
 }
 
 func onlyNBytes(j string, numBytes int) string {

@@ -5,8 +5,8 @@ import (
 	"testing"
 
 	"github.com/databrickslabs/terraform-provider-databricks/clusters"
-	"github.com/databrickslabs/terraform-provider-databricks/common"
 	"github.com/databrickslabs/terraform-provider-databricks/commands"
+	"github.com/databrickslabs/terraform-provider-databricks/common"
 
 	"github.com/databrickslabs/terraform-provider-databricks/qa"
 	"github.com/stretchr/testify/assert"
@@ -82,7 +82,7 @@ func TestResourceAwsS3MountCreate_invalid_arn(t *testing.T) {
 		},
 		Create: true,
 	}.Apply(t)
-	require.EqualError(t, err, "invalid arn: this_mount")
+	require.EqualError(t, err, "mount via profile: invalid arn: this_mount")
 }
 
 func TestResourceAwsS3MountRead(t *testing.T) {

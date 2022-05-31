@@ -3,6 +3,7 @@ name: build
 on:
   pull_request:
     types: [opened, synchronize]
+    paths-ignore: ['**.md']
   push:
     branches: [master]
 

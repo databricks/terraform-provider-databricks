@@ -6,7 +6,7 @@ import (
 
 	"github.com/databrickslabs/terraform-provider-databricks/clusters"
 	"github.com/databrickslabs/terraform-provider-databricks/common"
-	"github.com/databrickslabs/terraform-provider-databricks/internal"
+	"github.com/databrickslabs/terraform-provider-databricks/commands"
 	"github.com/databrickslabs/terraform-provider-databricks/qa"
 
 	"github.com/Azure/go-autorest/autorest/azure"
@@ -84,7 +84,7 @@ func TestResourceAwsS3MountGenericCreate(t *testing.T) {
 		},
 		Resource: ResourceMount(),
 		CommandMock: func(commandStr string) common.CommandResults {
-			trunc := internal.TrimLeadingWhitespace(commandStr)
+			trunc := commands.TrimLeadingWhitespace(commandStr)
 			t.Logf("Received command:\n%s", trunc)
 			if strings.HasPrefix(trunc, "def safe_mount") {
 				assert.Contains(t, trunc, testS3BucketPath) // bucketname
@@ -127,7 +127,7 @@ func TestResourceAwsS3MountGenericCreate_NoName(t *testing.T) {
 		},
 		Resource: ResourceMount(),
 		CommandMock: func(commandStr string) common.CommandResults {
-			trunc := internal.TrimLeadingWhitespace(commandStr)
+			trunc := commands.TrimLeadingWhitespace(commandStr)
 			t.Logf("Received command:\n%s", trunc)
 			if strings.HasPrefix(trunc, "def safe_mount") {
 				assert.Contains(t, trunc, testS3BucketPath) // bucketname
@@ -235,7 +235,7 @@ func TestResourceAwsS3MountGenericCreate_WithInstanceProfile(t *testing.T) {
 		},
 		Resource: ResourceMount(),
 		CommandMock: func(commandStr string) common.CommandResults {
-			trunc := internal.TrimLeadingWhitespace(commandStr)
+			trunc := commands.TrimLeadingWhitespace(commandStr)
 			t.Logf("Received command:\n%s", trunc)
 			if strings.HasPrefix(trunc, "def safe_mount") {
 				assert.Contains(t, trunc, testS3BucketPath) // bucketname
@@ -288,7 +288,7 @@ func TestResourceAwsS3MountGenericCreate_invalid_arn(t *testing.T) {
 		},
 		Create: true,
 	}.Apply(t)
-	require.EqualError(t, err, "invalid arn: this_mount")
+	require.EqualError(t, err, "mount via profile: invalid arn: this_mount")
 }
 
 func TestResourceAwsS3MountGenericRead(t *testing.T) {
@@ -308,7 +308,7 @@ func TestResourceAwsS3MountGenericRead(t *testing.T) {
 		},
 		Resource: ResourceMount(),
 		CommandMock: func(commandStr string) common.CommandResults {
-			trunc := internal.TrimLeadingWhitespace(commandStr)
+			trunc := commands.TrimLeadingWhitespace(commandStr)
 			t.Logf("Received command:\n%s", trunc)
 			assert.Contains(t, trunc, "dbutils.fs.mounts()")
 			assert.Contains(t, trunc, `mount.mountPoint == "/mnt/this_mount"`)
@@ -349,7 +349,7 @@ func TestResourceAwsS3MountGenericRead_NotFound(t *testing.T) {
 		},
 		Resource: ResourceMount(),
 		CommandMock: func(commandStr string) common.CommandResults {
-			trunc := internal.TrimLeadingWhitespace(commandStr)
+			trunc := commands.TrimLeadingWhitespace(commandStr)
 			t.Logf("Received command:\n%s", trunc)
 			return common.CommandResults{
 				ResultType: "error",
@@ -386,7 +386,7 @@ func TestResourceAwsS3MountGenericRead_Error(t *testing.T) {
 		},
 		Resource: ResourceMount(),
 		CommandMock: func(commandStr string) common.CommandResults {
-			trunc := internal.TrimLeadingWhitespace(commandStr)
+			trunc := commands.TrimLeadingWhitespace(commandStr)
 			t.Logf("Received command:\n%s", trunc)
 			return common.CommandResults{
 				ResultType: "error",
@@ -425,7 +425,7 @@ func TestResourceAwsS3MountDeleteGeneric(t *testing.T) {
 		},
 		Resource: ResourceMount(),
 		CommandMock: func(commandStr string) common.CommandResults {
-			trunc := internal.TrimLeadingWhitespace(commandStr)
+			trunc := commands.TrimLeadingWhitespace(commandStr)
 			t.Logf("Received command:\n%s", trunc)
 			assert.Contains(t, trunc, "/mnt/this_mount")
 			assert.Contains(t, trunc, "dbutils.fs.unmount(mount_point)")
@@ -465,7 +465,7 @@ func TestResourceAdlsGen1MountGeneric_Create(t *testing.T) {
 		},
 		Resource: ResourceMount(),
 		CommandMock: func(commandStr string) common.CommandResults {
-			trunc := internal.TrimLeadingWhitespace(commandStr)
+			trunc := commands.TrimLeadingWhitespace(commandStr)
 			t.Logf("Received command:\n%s", trunc)
 			if strings.HasPrefix(trunc, "def safe_mount") {
 				assert.Contains(t, trunc, "adl://test-adls.azuredatalakestore.net")
@@ -509,7 +509,7 @@ func TestResourceAdlsGen1MountGeneric_Create_ResourceID(t *testing.T) {
 		},
 		Resource: ResourceMount(),
 		CommandMock: func(commandStr string) common.CommandResults {
-			trunc := internal.TrimLeadingWhitespace(commandStr)
+			trunc := commands.TrimLeadingWhitespace(commandStr)
 			t.Logf("Received command:\n%s", trunc)
 			if strings.HasPrefix(trunc, "def safe_mount") {
 				assert.Contains(t, trunc, "adl://gen1.azuredatalakestore.net")
@@ -630,7 +630,7 @@ func TestResourceAdlsGen2MountGeneric_Create(t *testing.T) {
 		},
 		Resource: ResourceMount(),
 		CommandMock: func(commandStr string) common.CommandResults {
-			trunc := internal.TrimLeadingWhitespace(commandStr)
+			trunc := commands.TrimLeadingWhitespace(commandStr)
 			t.Logf("Received command:\n%s", trunc)
 			if strings.HasPrefix(trunc, "def safe_mount") {
 				assert.Contains(t, trunc, "abfss://e@test-adls-gen2.dfs.core.windows.net")
@@ -675,7 +675,7 @@ func TestResourceAdlsGen2MountGeneric_Create_ResourceID(t *testing.T) {
 		},
 		Resource: ResourceMount(),
 		CommandMock: func(commandStr string) common.CommandResults {
-			trunc := internal.TrimLeadingWhitespace(commandStr)
+			trunc := commands.TrimLeadingWhitespace(commandStr)
 			t.Logf("Received command:\n%s", trunc)
 			if strings.HasPrefix(trunc, "def safe_mount") {
 				assert.Contains(t, trunc, "abfss://e@test-adls-gen2.dfs.core.windows.net")
@@ -718,7 +718,7 @@ func TestResourceAdlsGen2MountGeneric_Create_NoTenantID_SPN(t *testing.T) {
 		},
 		Resource: ResourceMount(),
 		CommandMock: func(commandStr string) common.CommandResults {
-			trunc := internal.TrimLeadingWhitespace(commandStr)
+			trunc := commands.TrimLeadingWhitespace(commandStr)
 			t.Logf("Received command:\n%s", trunc)
 			if strings.HasPrefix(trunc, "def safe_mount") {
 				assert.Contains(t, trunc, "abfss://e@test-adls-gen2.dfs.core.windows.net")
@@ -764,7 +764,7 @@ func TestResourceAdlsGen2MountGeneric_Create_NoTenantID_CLI(t *testing.T) {
 		},
 		Resource: ResourceMount(),
 		CommandMock: func(commandStr string) common.CommandResults {
-			trunc := internal.TrimLeadingWhitespace(commandStr)
+			trunc := commands.TrimLeadingWhitespace(commandStr)
 			t.Logf("Received command:\n%s", trunc)
 			if strings.HasPrefix(trunc, "def safe_mount") {
 				assert.Contains(t, trunc, "abfss://e@test-adls-gen2.dfs.core.windows.net")
@@ -853,7 +853,7 @@ func TestResourceAzureBlobMountCreateGeneric(t *testing.T) {
 		},
 		Resource: ResourceMount(),
 		CommandMock: func(commandStr string) common.CommandResults {
-			trunc := internal.TrimLeadingWhitespace(commandStr)
+			trunc := commands.TrimLeadingWhitespace(commandStr)
 			t.Logf("Received command:\n%s", trunc)
 
 			if strings.HasPrefix(trunc, "def safe_mount") {
@@ -899,7 +899,7 @@ func TestResourceAzureBlobMountCreateGeneric_SAS(t *testing.T) {
 		},
 		Resource: ResourceMount(),
 		CommandMock: func(commandStr string) common.CommandResults {
-			trunc := internal.TrimLeadingWhitespace(commandStr)
+			trunc := commands.TrimLeadingWhitespace(commandStr)
 			t.Logf("Received command:\n%s", trunc)
 
 			if strings.HasPrefix(trunc, "def safe_mount") {
@@ -945,7 +945,7 @@ func TestResourceAzureBlobMountCreateGeneric_Resource_ID(t *testing.T) {
 		},
 		Resource: ResourceMount(),
 		CommandMock: func(commandStr string) common.CommandResults {
-			trunc := internal.TrimLeadingWhitespace(commandStr)
+			trunc := commands.TrimLeadingWhitespace(commandStr)
 			t.Logf("Received command:\n%s", trunc)
 
 			if strings.HasPrefix(trunc, "def safe_mount") {
@@ -1075,7 +1075,7 @@ func TestResourceAzureBlobMountGeneric_Read(t *testing.T) {
 		},
 		Resource: ResourceMount(),
 		CommandMock: func(commandStr string) common.CommandResults {
-			trunc := internal.TrimLeadingWhitespace(commandStr)
+			trunc := commands.TrimLeadingWhitespace(commandStr)
 			t.Logf("Received command:\n%s", trunc)
 			assert.Contains(t, trunc, "dbutils.fs.mounts()")
 			assert.Contains(t, trunc, `mount.mountPoint == "/mnt/e"`)
@@ -1117,7 +1117,7 @@ func TestResourceAzureBlobMountGenericRead_NotFound(t *testing.T) {
 		},
 		Resource: ResourceMount(),
 		CommandMock: func(commandStr string) common.CommandResults {
-			trunc := internal.TrimLeadingWhitespace(commandStr)
+			trunc := commands.TrimLeadingWhitespace(commandStr)
 			t.Logf("Received command:\n%s", trunc)
 			return common.CommandResults{
 				ResultType: "error",
@@ -1155,7 +1155,7 @@ func TestResourceAzureBlobMountGenericRead_Error(t *testing.T) {
 		},
 		Resource: ResourceMount(),
 		CommandMock: func(commandStr string) common.CommandResults {
-			trunc := internal.TrimLeadingWhitespace(commandStr)
+			trunc := commands.TrimLeadingWhitespace(commandStr)
 			t.Logf("Received command:\n%s", trunc)
 			return common.CommandResults{
 				ResultType: "error",
@@ -1195,7 +1195,7 @@ func TestResourceAzureBlobMountGenericDelete(t *testing.T) {
 		},
 		Resource: ResourceMount(),
 		CommandMock: func(commandStr string) common.CommandResults {
-			trunc := internal.TrimLeadingWhitespace(commandStr)
+			trunc := commands.TrimLeadingWhitespace(commandStr)
 			t.Logf("Received command:\n%s", trunc)
 			assert.Contains(t, trunc, "dbutils.fs.unmount(mount_point)")
 			return common.CommandResults{
@@ -1265,7 +1265,7 @@ func TestResourceGcsMountGenericCreate_WithCluster(t *testing.T) {
 		},
 		Resource: ResourceMount(),
 		CommandMock: func(commandStr string) common.CommandResults {
-			trunc := internal.TrimLeadingWhitespace(commandStr)
+			trunc := commands.TrimLeadingWhitespace(commandStr)
 			t.Logf("Received command:\n%s", trunc)
 			if strings.HasPrefix(trunc, "def safe_mount") {
 				assert.Contains(t, trunc, testGcsBucketPath) // bucketname
@@ -1309,7 +1309,7 @@ func TestResourceGcsMountGenericCreate_WithCluster_NoName(t *testing.T) {
 		},
 		Resource: ResourceMount(),
 		CommandMock: func(commandStr string) common.CommandResults {
-			trunc := internal.TrimLeadingWhitespace(commandStr)
+			trunc := commands.TrimLeadingWhitespace(commandStr)
 			t.Logf("Received command:\n%s", trunc)
 			if strings.HasPrefix(trunc, "def safe_mount") {
 				assert.Contains(t, trunc, testGcsBucketPath) // bucketname
@@ -1414,7 +1414,7 @@ func TestResourceGcsMountGenericCreate_WithServiceAccount(t *testing.T) {
 		},
 		Resource: ResourceMount(),
 		CommandMock: func(commandStr string) common.CommandResults {
-			trunc := internal.TrimLeadingWhitespace(commandStr)
+			trunc := commands.TrimLeadingWhitespace(commandStr)
 			t.Logf("Received command:\n%s", trunc)
 			if strings.HasPrefix(trunc, "def safe_mount") {
 				assert.Contains(t, trunc, testGcsBucketPath) // bucketname
@@ -1472,7 +1472,7 @@ func TestResourceMountGenericCreate_WithUriAndOpts(t *testing.T) {
 		},
 		Resource: ResourceMount(),
 		CommandMock: func(commandStr string) common.CommandResults {
-			trunc := internal.TrimLeadingWhitespace(commandStr)
+			trunc := commands.TrimLeadingWhitespace(commandStr)
 			t.Logf("Received command:\n%s", trunc)
 			if strings.HasPrefix(trunc, "def safe_mount") {
 				assert.Contains(t, trunc, abfssPath) // URI

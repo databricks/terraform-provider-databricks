@@ -9,7 +9,7 @@ import (
 
 	"github.com/databrickslabs/terraform-provider-databricks/clusters"
 	"github.com/databrickslabs/terraform-provider-databricks/common"
-	"github.com/databrickslabs/terraform-provider-databricks/internal"
+	"github.com/databrickslabs/terraform-provider-databricks/commands"
 	"github.com/databrickslabs/terraform-provider-databricks/jobs"
 	"github.com/databrickslabs/terraform-provider-databricks/permissions"
 	"github.com/databrickslabs/terraform-provider-databricks/policies"
@@ -598,7 +598,7 @@ func TestNotebookGeneration(t *testing.T) {
 		assert.NoError(t, err)
 
 		ic.generateHclForResources(nil)
-		assert.Equal(t, internal.TrimLeadingWhitespace(`
+		assert.Equal(t, commands.TrimLeadingWhitespace(`
 		resource "databricks_notebook" "firstsecond" {
 		  source = "${path.module}/notebooks/First/Second.py"
 		  path   = "/First/Second"
@@ -625,7 +625,7 @@ func TestGlobalInitScriptGen(t *testing.T) {
 		})
 
 		ic.generateHclForResources(nil)
-		assert.Equal(t, internal.TrimLeadingWhitespace(`
+		assert.Equal(t, commands.TrimLeadingWhitespace(`
 		resource "databricks_global_init_script" "new_importing_things" {
 		  source  = "${path.module}/files/new_importing_things.sh"
 		  name    = "New: Importing ^ Things"
@@ -655,7 +655,7 @@ func TestSecretGen(t *testing.T) {
 		})
 
 		ic.generateHclForResources(nil)
-		assert.Equal(t, internal.TrimLeadingWhitespace(`
+		assert.Equal(t, commands.TrimLeadingWhitespace(`
 		resource "databricks_secret" "a_b" {
 		  string_value = var.string_value_a_b
 		  scope        = "a"
@@ -688,7 +688,7 @@ func TestDbfsFileGen(t *testing.T) {
 		})
 
 		ic.generateHclForResources(nil)
-		assert.Equal(t, internal.TrimLeadingWhitespace(`
+		assert.Equal(t, commands.TrimLeadingWhitespace(`
 		resource "databricks_dbfs_file" "_a_0cc175b9c0f1b6a831c399e269772661" {
 		  source = "${path.module}/files/_a_0cc175b9c0f1b6a831c399e269772661"
 		  path   = "a"

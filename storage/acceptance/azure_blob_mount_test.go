@@ -36,7 +36,7 @@ func TestAzureAccBlobMount_correctly_mounts(t *testing.T) {
 	if _, ok := os.LookupEnv("CLOUD_ENV"); !ok {
 		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
 	}
-	config := qa.EnvironmentTemplate(t, `
+	config := acceptance.EnvironmentTemplate(t, `
 	resource "databricks_secret_scope" "terraform" {
 		name                     = "terraform-{var.RANDOM}"
 		initial_manage_principal = "users"

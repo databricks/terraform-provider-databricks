@@ -22,6 +22,7 @@ type ExternalLocationInfo struct {
 	URL            string `json:"url"`
 	CredentialName string `json:"credential_name"`
 	Comment        string `json:"comment,omitempty"`
+	SkipValidation bool   `json:"skip_validation,omitempty"`
 	Owner          string `json:"owner,omitempty" tf:"computed"`
 	MetastoreID    string `json:"metastore_id,omitempty" tf:"computed"`
 }
@@ -74,6 +75,7 @@ func ResourceExternalLocation() *schema.Resource {
 				Name:           d.Id(),
 				URL:            el.URL,
 				CredentialName: el.CredentialName,
+				SkipValidation: el.SkipValidation,
 				Comment:        el.Comment,
 				Owner:          el.Owner,
 			})

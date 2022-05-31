@@ -31,7 +31,7 @@ func (a ServicePrincipalsAPI) Create(rsp User) (sp User, err error) {
 	return sp, err
 }
 
-func (a ServicePrincipalsAPI) read(servicePrincipalID string) (sp User, err error) {
+func (a ServicePrincipalsAPI) Read(servicePrincipalID string) (sp User, err error) {
 	servicePrincipalPath := fmt.Sprintf("/preview/scim/v2/ServicePrincipals/%v", servicePrincipalID)
 	err = a.client.Scim(a.context, "GET", servicePrincipalPath, nil, &sp)
 	return
@@ -51,9 +51,14 @@ func (a ServicePrincipalsAPI) filter(filter string) (u []User, err error) {
 	return
 }
 
+// Patch updates resource-friendly entity
+func (a ServicePrincipalsAPI) Patch(servicePrincipalID string, r patchRequest) error {
+	return a.client.Scim(a.context, http.MethodPatch, fmt.Sprintf("/preview/scim/v2/ServicePrincipals/%v", servicePrincipalID), r, nil)
+}
+
 // Update replaces resource-friendly-entity
 func (a ServicePrincipalsAPI) Update(servicePrincipalID string, updateRequest User) error {
-	servicePrincipal, err := a.read(servicePrincipalID)
+	servicePrincipal, err := a.Read(servicePrincipalID)
 	if err != nil {
 		return err
 	}
@@ -114,7 +119,7 @@ func ResourceServicePrincipal() *schema.Resource {
 			return nil
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			sp, err := NewServicePrincipalsAPI(ctx, c).read(d.Id())
+			sp, err := NewServicePrincipalsAPI(ctx, c).Read(d.Id())
 			if err != nil {
 				return err
 			}

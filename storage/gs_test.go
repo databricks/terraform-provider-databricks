@@ -94,3 +94,22 @@ func TestCreateOrValidateClusterForGoogleStorage_WorksOnDeletedCluster(t *testin
 		assert.Equal(t, "new-cluster", d.Get("cluster_id"))
 	})
 }
+
+func TestCreateOrValidateClusterForGoogleStorage_FailsOnErrorGettingCluster(t *testing.T) {
+	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/clusters/get?cluster_id=my-cluster",
+			Status:   500,
+			Response: common.APIError{
+				ErrorCode:  "SERVER_ERROR",
+				StatusCode: 500,
+				Message:    "Server error",
+			},
+		},
+	}, func(ctx context.Context, client *common.DatabricksClient) {
+		d := ResourceMount().TestResourceData()
+		err := createOrValidateClusterForGoogleStorage(ctx, client, d, "my-cluster", "service-account")
+		assert.EqualError(t, err, "cannot get mounting cluster: Server error")
+	})
+}

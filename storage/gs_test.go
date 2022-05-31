@@ -20,7 +20,7 @@ func TestCreateOrValidateClusterForGoogleStorage_Failures(t *testing.T) {
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		d := ResourceMount().TestResourceData()
 		err := createOrValidateClusterForGoogleStorage(ctx, client, d, "a", "")
-		assert.EqualError(t, err, "cannot get mounting cluster: nope")
+		assert.EqualError(t, err, "cannot re-create mounting cluster: nope")
 
 		err = createOrValidateClusterForGoogleStorage(ctx, client, d, "", "b")
 		assert.EqualError(t, err, "cannot create mounting cluster: nope")

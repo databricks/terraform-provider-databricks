@@ -44,7 +44,11 @@ resource "databricks_sql_visualization" "q1v1" {
 
 ## Import
 
--> **Note** Importing this resource is not currently supported.
+You can import a `databricks_sql_visualization` resource with ID like the following:
+
+```bash
+$ terraform import databricks_sql_visualization.this <query-id>/<visualization-id>
+```
 
 ## Related Resources
 

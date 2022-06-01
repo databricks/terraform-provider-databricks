@@ -18,7 +18,7 @@ func NewExternalLocationsAPI(ctx context.Context, m interface{}) ExternalLocatio
 }
 
 type ExternalLocationInfo struct {
-	Name           string `json:"name" tf:"force_new"`
+	Name           string `json:"name"`
 	URL            string `json:"url"`
 	CredentialName string `json:"credential_name"`
 	Comment        string `json:"comment,omitempty"`
@@ -35,8 +35,8 @@ func (a ExternalLocationsAPI) get(name string) (el ExternalLocationInfo, err err
 	return
 }
 
-func (a ExternalLocationsAPI) update(name string, el ExternalLocationInfo) error {
-	return a.client.Patch(a.context, "/unity-catalog/external-locations/"+url.PathEscape(name), el)
+func (a ExternalLocationsAPI) update(name string, update map[string]interface{}) error {
+	return a.client.Patch(a.context, "/unity-catalog/external-locations/"+url.PathEscape(name), update)
 }
 
 func (a ExternalLocationsAPI) delete(name string) error {
@@ -48,6 +48,7 @@ func ResourceExternalLocation() *schema.Resource {
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
 			return m
 		})
+	update := updateFunctionFactory("external-location", []string{"owner", "name", "comment", "url", "credential_name"})
 	return common.Resource{
 		Schema: s,
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
@@ -58,7 +59,7 @@ func ResourceExternalLocation() *schema.Resource {
 				return err
 			}
 			d.SetId(el.Name)
-			return nil
+			return update(ctx, d, c)
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			el, err := NewExternalLocationsAPI(ctx, c).get(d.Id())
@@ -67,17 +68,7 @@ func ResourceExternalLocation() *schema.Resource {
 			}
 			return common.StructToData(el, s, d)
 		},
-		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			var el ExternalLocationInfo
-			common.DataToStructPointer(d, s, &el)
-			return NewExternalLocationsAPI(ctx, c).update(d.Id(), ExternalLocationInfo{
-				Name:           d.Id(),
-				URL:            el.URL,
-				CredentialName: el.CredentialName,
-				Comment:        el.Comment,
-				Owner:          el.Owner,
-			})
-		},
+		Update: update,
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			return NewExternalLocationsAPI(ctx, c).delete(d.Id())
 		},

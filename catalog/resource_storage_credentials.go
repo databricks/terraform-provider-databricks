@@ -17,8 +17,9 @@ func NewStorageCredentialsAPI(ctx context.Context, m interface{}) StorageCredent
 }
 
 type StorageCredentialInfo struct {
-	Name        string                 `json:"name" tf:"force_new"`
-	Comment     string                 `json:"comment,omitempty" tf:"force_new"`
+	Name        string                 `json:"name"`
+	Owner       string                 `json:"owner,omitempty" tf:"computed"`
+	Comment     string                 `json:"comment,omitempty"`
 	Aws         *AwsIamRole            `json:"aws_iam_role,omitempty" tf:"group:access"`
 	Azure       *AzureServicePrincipal `json:"azure_service_principal,omitempty" tf:"group:access"`
 	MetastoreID string                 `json:"metastore_id,omitempty" tf:"computed"`
@@ -33,8 +34,8 @@ func (a StorageCredentialsAPI) get(id string) (sci StorageCredentialInfo, err er
 	return
 }
 
-func (a StorageCredentialsAPI) update(name string, sci StorageCredentialInfo) error {
-	return a.client.Patch(a.context, "/unity-catalog/storage-credentials/"+name, sci)
+func (a StorageCredentialsAPI) update(name string, update map[string]interface{}) error {
+	return a.client.Patch(a.context, "/unity-catalog/storage-credentials/"+name, update)
 }
 
 func (a StorageCredentialsAPI) delete(id string) error {
@@ -49,6 +50,7 @@ func ResourceStorageCredential() *schema.Resource {
 			m["azure_service_principal"].AtLeastOneOf = alof
 			return m
 		})
+	update := updateFunctionFactory("storage-credential", []string{"owner", "name", "comment", "aws_iam_role", "azure_service_principal"})
 	return common.Resource{
 		Schema: s,
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
@@ -59,7 +61,7 @@ func ResourceStorageCredential() *schema.Resource {
 				return err
 			}
 			d.SetId(sci.Name)
-			return nil
+			return update(ctx, d, c)
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			sci, err := NewStorageCredentialsAPI(ctx, c).get(d.Id())
@@ -68,15 +70,7 @@ func ResourceStorageCredential() *schema.Resource {
 			}
 			return common.StructToData(sci, s, d)
 		},
-		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			var sci StorageCredentialInfo
-			common.DataToStructPointer(d, s, &sci)
-			return NewStorageCredentialsAPI(ctx, c).update(d.Id(), StorageCredentialInfo{
-				Name:  d.Id(),
-				Aws:   sci.Aws,
-				Azure: sci.Azure,
-			})
-		},
+		Update: update,
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			return NewStorageCredentialsAPI(ctx, c).delete(d.Id())
 		},

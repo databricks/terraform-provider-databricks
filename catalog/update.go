@@ -11,11 +11,8 @@ func updateFunctionFactory(securable string, updatable []string) func(context.Co
 	return func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 		patch := map[string]interface{}{}
 		for _, field := range updatable {
-			old, new := d.GetChange(field)
+			_, new := d.GetChange(field)
 			if !d.HasChange(field) {
-				continue
-			}
-			if field == "name" && old == "" {
 				continue
 			}
 			patch[field] = new
@@ -32,6 +29,10 @@ func updateFunctionFactory(securable string, updatable []string) func(context.Co
 			return NewSchemasAPI(ctx, c).updateSchema(d.Id(), patch)
 		case "table":
 			return NewTablesAPI(ctx, c).updateTable(d.Id(), patch)
+		case "external-location":
+			return NewExternalLocationsAPI(ctx, c).update(d.Id(), patch)
+		case "storage-credential":
+			return NewStorageCredentialsAPI(ctx, c).update(d.Id(), patch)
 		default:
 			return nil
 		}

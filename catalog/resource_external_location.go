@@ -22,6 +22,7 @@ type ExternalLocationInfo struct {
 	URL            string `json:"url"`
 	CredentialName string `json:"credential_name"`
 	Comment        string `json:"comment,omitempty"`
+	SkipValidation bool   `json:"skip_validation,omitempty"`
 	Owner          string `json:"owner,omitempty" tf:"computed"`
 	MetastoreID    string `json:"metastore_id,omitempty" tf:"computed"`
 }
@@ -48,7 +49,7 @@ func ResourceExternalLocation() *schema.Resource {
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
 			return m
 		})
-	update := updateFunctionFactory("external-location", []string{"owner", "name", "comment", "url", "credential_name"})
+	update := updateFunctionFactory("external-location", []string{"owner", "name", "comment", "url", "credential_name", "skip_validation"})
 	return common.Resource{
 		Schema: s,
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {

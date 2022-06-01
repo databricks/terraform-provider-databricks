@@ -10,25 +10,25 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestCreateOrValidateClusterForGoogleStorage_Failures(t *testing.T) {
+func TestPreprocessS3MountOnDeletedClusterNoInstanceProfileSpecifiedError(t *testing.T) {
 	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
 		{
-			MatchAny:     true,
-			ReuseRequest: true,
-			Status:       404,
-			Response:     common.NotFound("nope"),
+			Method:   "GET",
+			Resource: "/api/2.0/clusters/get?cluster_id=removed-cluster",
+			Status:   404,
+			Response: common.NotFound("cluster deleted"),
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
-		d := ResourceMount().TestResourceData()
-		err := createOrValidateClusterForGoogleStorage(ctx, client, d, "a", "")
-		assert.EqualError(t, err, "cannot re-create mounting cluster: nope")
-
-		err = createOrValidateClusterForGoogleStorage(ctx, client, d, "", "b")
-		assert.EqualError(t, err, "cannot create mounting cluster: nope")
+		r := ResourceMount()
+		d := r.TestResourceData()
+		d.Set("uri", "s3://bucket")
+		d.Set("cluster_id", "removed-cluster")
+		err := preprocessS3MountGeneric(ctx, r.Schema, d, client)
+		assert.EqualError(t, err, "instance profile is required to re-create mounting cluster")
 	})
 }
 
-func TestCreateOrValidateClusterForGoogleStorage_WorksOnDeletedCluster(t *testing.T) {
+func TestPreprocessS3MountOnDeletedClusterWorks(t *testing.T) {
 	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
 		{
 			Method:   "GET",
@@ -60,13 +60,14 @@ func TestCreateOrValidateClusterForGoogleStorage_WorksOnDeletedCluster(t *testin
 				CustomTags: map[string]string{
 					"ResourceClass": "SingleNode",
 				},
-				ClusterName: "terraform-mount-gcs-03a56ec1d1576b505aabf088337cbf36",
-				GcpAttributes: &clusters.GcpAttributes{
-					GoogleServiceAccount: "service-account",
+				ClusterName:  "terraform-mount-s3-access",
+				SparkVersion: "7.3.x-scala2.12",
+				NumWorkers:   0,
+				NodeTypeID:   "i3.xlarge",
+				AwsAttributes: &clusters.AwsAttributes{
+					Availability:       "SPOT",
+					InstanceProfileArn: "arn:aws:iam::1234567:instance-profile/s3-access",
 				},
-				SparkVersion:           "7.3.x-scala2.12",
-				NumWorkers:             0,
-				NodeTypeID:             "i3.xlarge",
 				AutoterminationMinutes: 10,
 				SparkConf: map[string]string{
 					"spark.databricks.cluster.profile": "singleNode",
@@ -88,28 +89,18 @@ func TestCreateOrValidateClusterForGoogleStorage_WorksOnDeletedCluster(t *testin
 			},
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
-		d := ResourceMount().TestResourceData()
-		err := createOrValidateClusterForGoogleStorage(ctx, client, d, "removed-cluster", "service-account")
+		r := ResourceMount()
+		d := r.TestResourceData()
+		d.MarkNewResource()
+		common.StructToData(GenericMount{
+			URI:       "s3://bucket",
+			ClusterID: "removed-cluster",
+			S3: &S3IamMount{
+				InstanceProfile: "arn:aws:iam::1234567:instance-profile/s3-access",
+			},
+		}, r.Schema, d)
+		err := preprocessS3MountGeneric(ctx, r.Schema, d, client)
 		assert.NoError(t, err)
 		assert.Equal(t, "new-cluster", d.Get("cluster_id"))
-	})
-}
-
-func TestCreateOrValidateClusterForGoogleStorage_FailsOnErrorGettingCluster(t *testing.T) {
-	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
-		{
-			Method:   "GET",
-			Resource: "/api/2.0/clusters/get?cluster_id=my-cluster",
-			Status:   500,
-			Response: common.APIError{
-				ErrorCode:  "SERVER_ERROR",
-				StatusCode: 500,
-				Message:    "Server error",
-			},
-		},
-	}, func(ctx context.Context, client *common.DatabricksClient) {
-		d := ResourceMount().TestResourceData()
-		err := createOrValidateClusterForGoogleStorage(ctx, client, d, "my-cluster", "service-account")
-		assert.EqualError(t, err, "cannot get mounting cluster: Server error")
 	})
 }

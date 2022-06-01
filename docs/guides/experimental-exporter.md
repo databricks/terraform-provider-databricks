@@ -3,15 +3,15 @@ page_title: "Experimental resource exporter"
 ---
 # Experimental resource exporter
 
--> **Note** This tooling is experimental and provided as is. It has an evolving interfaces, which may change or be removed in future versions of the provider.
+-> **Note** This tooling is experimental and provided as is. It has an evolving interface, which may change or be removed in future versions of the provider.
 
--> **Note** Use the same user who did the exporting to import the exported templates.  Otherwise it could cause the changes in the jobs ownership.
+-> **Note** Use the same user who did the exporting to import the exported templates.  Otherwise it could cause changes in the jobs ownership.
 
-Generates `*.tf` files for Databricks resources as well as `import.sh` to run import state. Available as part of provider binary. The only possible way to authenticate is through [environment variables](../index.md#Environment-variables). It's best used, when you need to quickly export Terraform configuration for an existing Databricks workspace. After generating configuration, we strongly recommend to manually review all created files.
+Generates `*.tf` files for Databricks resources as well as `import.sh` to run import state. Available as part of provider binary. The only possible way to authenticate is through [environment variables](../index.md#Environment-variables). It's best used when you need to quickly export Terraform configuration for an existing Databricks workspace. After generating configuration, we strongly recommend manually review all created files.
 
 ## Example Usage
 
-After downloading the [latest released binary](https://github.com/databrickslabs/terraform-provider-databricks/releases), unpack it and place it in the same folder. In fact, you may have already downloaded this binary - check `.terraform` folder of any state directory, where you've used `databricks` provider. It could also be in your plugin cache `~/.terraform.d/plugins/registry.terraform.io/databrickslabs/databricks/*/*/terraform-provider-databricks`. Here's the tool in action:
+After downloading the [latest released binary](https://github.com/databrickslabs/terraform-provider-databricks/releases), unpack it and place it in the same folder. In fact, you may have already downloaded this binary - check the `.terraform` folder of any state directory, where you've used the `databricks` provider. It could also be in your plugin cache `~/.terraform.d/plugins/registry.terraform.io/databrickslabs/databricks/*/*/terraform-provider-databricks`. Here's the tool in action:
 
 [![asciicast](https://asciinema.org/a/Rv8ZFJQpfrfp6ggWddjtyXaOy.svg)](https://asciinema.org/a/Rv8ZFJQpfrfp6ggWddjtyXaOy)
 
@@ -29,28 +29,28 @@ export DATABRICKS_TOKEN=...
 
 ## Argument Reference
 
-!> **Warning** This tooling was only extensively tested with administrator priviliges. 
+!> **Warning** This tooling was only extensively tested with administrator privileges. 
 
 All arguments are optional and they tune what code is being generated.
 
-* `-directory` - Path to directory, where `*.tf` and `import.sh` files would be written. By default it's set to current working directory.
+* `-directory` - Path to directory, where `*.tf` and `import.sh` files would be written. By default it's set to the current working directory.
 * `-module` - Name of module in Terraform state, that would affect reference resolution and prefixes for generated commands in `import.sh`.
-* `-last-active-days` - Items with older than `-last-active-days` won't be imported. By default the value is set to 3650 (10 years). Has effect on listing [databricks_cluster](../resources/cluster.md) and [databricks_job](../resources/job.md) resources.
-* `-services` - Coma-separated list of services to import. By default all services are imported. 
-* `-listing` - Coma-separated list of services to be listed and further passed on for importing. `-services` parameter controls which transitive dependencies will be processed. We recommend limiting with `-listing` more often, than with `-services`.
-* `-match` - Match resource names during listing operation. This filter applies to all resources that are getting listed, so if you want to import all dependencies of just one cluster, specify `-match=autoscaling -listing=compute`. By default is empty, which matches everything.
-* `-mounts` - List DBFS mount points, which is a extremely slow operation and would not trigger unless explicitly specified.
+* `-last-active-days` - Items older than `-last-active-days` won't be imported. By default the value is set to 3650 (10 years). Has an effect on listing [databricks_cluster](../resources/cluster.md) and [databricks_job](../resources/job.md) resources.
+* `-services` - Comma-separated list of services to import. By default all services are imported. 
+* `-listing` - Comma-separated list of services to be listed and further passed on for importing. `-services` parameter controls which transitive dependencies will be processed. We recommend limiting with `-listing` more often, than with `-services`.
+* `-match` - Match resource names during listing operation. This filter applies to all resources that are getting listed, so if you want to import all dependencies of just one cluster, specify `-match=autoscaling -listing=compute`. By default it is empty, which matches everything.
+* `-mounts` - List DBFS mount points, which is an extremely slow operation and would not trigger unless explicitly specified.
 * `-generateProviderDeclaration` - flag that toggles generation of `databricks.tf` file with declaration of the Databricks Terraform provider that is necessary for Terraform versions since Terraform 0.13 (disabled by default).
-* `-prefix` - optional prefix that will be added to the name of all exported resources - that's useful for exporting resources multiple workspaces for merging into single one.
+* `-prefix` - optional prefix that will be added to the name of all exported resources - that's useful for exporting resources multiple workspaces for merging into a single one.
 * `-skip-interactive` - optionally run in a non-interactive mode.
 
 ## Services
 
-Services are just logical groups of resources used for filtering and organization in files written in `-directory`. All resources are globally sorted by their resource name, which technically allows you to use generated files for compliance purposes. Nevertheless, managing entire Databricks workspace with Terraform is the prefered way. With the exception of notebooks and possibly libraries, which may have their own CI/CD processes.
+Services are just logical groups of resources used for filtering and organization in files written in `-directory`. All resources are globally sorted by their resource name, which technically allows you to use generated files for compliance purposes. Nevertheless, managing the entire Databricks workspace with Terraform is the prefered way. With the exception of notebooks and possibly libraries, which may have their own CI/CD processes.
 * `groups` - [databricks_group](../data-sources/group.md) with [membership](../resources/group_member.md) and [data access](../resources/group_instance_profile.md).
 * `users` - [databricks_user](../resources/user.md) are written to their own file, simply because of their amount. If you use SCIM provisioning, the only use-case for importing `users` service is to migrate workspaces.
 * `compute` - **listing** [databricks_cluster](../resources/cluster.md). Includes [policies](../resources/cluster_policy.md), [permissions](../resources/permissions.md), [pools](../resources/instance_pool.md).
-* `jobs` - **listing** [databricks_job](../resources/job.md). Usually there are more automated jobs, than interactive clusters, so they get their own file in this tool's output.
+* `jobs` - **listing** [databricks_job](../resources/job.md). Usually there are more automated jobs than interactive clusters, so they get their own file in this tool's output.
 * `access` - [databricks_permissions](../resources/permissions.md) and [databricks_instance_profile](../resources/instance_profile.md).
 * `secrets` - **listing** [databricks_secret_scope](../resources/secret_scope.md) along with [keys](../resources/secret.md) and [ACLs](../resources/secret_acl.md). 
 * `storage` - any [databricks_dbfs_file](../resources/dbfs_file.md) will be downloaded locally and properly arranged into terraform state.
@@ -60,7 +60,7 @@ Services are just logical groups of resources used for filtering and organizatio
 
 ## Secrets
 
-For security reasons, [databricks_secret](../resources/secret.md) cannot contain actual plaintext secrets. Importer will create variable in `vars.tf`, that would have the same name as secret. You are supposed to [fill in the value of the secret](https://blog.gruntwork.io/a-comprehensive-guide-to-managing-secrets-in-your-terraform-code-1d586955ace1#0e7d) after that.
+For security reasons, [databricks_secret](../resources/secret.md) cannot contain actual plaintext secrets. Importer will create a variable in `vars.tf`, that would have the same name as secret. You are supposed to [fill in the value of the secret](https://blog.gruntwork.io/a-comprehensive-guide-to-managing-secrets-in-your-terraform-code-1d586955ace1#0e7d) after that.
 
 ## Support Matrix
 

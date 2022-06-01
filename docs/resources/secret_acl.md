@@ -26,7 +26,7 @@ resource "databricks_secret_acl" "my_secret_acl" {
 
 resource "databricks_secret" "publishing_api" {
   key = "publishing_api"
-  // replace it with secret management solution of your choice :-)
+  // replace it with a secret management solution of your choice :-)
   string_value = data.azurerm_key_vault_secret.example.value
   scope        = databricks_secret_scope.app.name
 }

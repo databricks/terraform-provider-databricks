@@ -51,7 +51,7 @@ The following arguments are supported:
 
 The following options are [available](https://docs.databricks.com/dev-tools/api/latest/instance-pools.html#clusterinstancepoolawsattributes):
 
-* `zone_id` - (Required) (String) Identifier for the availability zone/datacenter in which the instance pool resides. This string is of a form like `"us-west-2a"`. The provided availability zone must be in the same region as the Databricks deployment. For example, `"us-west-2a"` is not a valid zone ID if the Databricks deployment resides in the `"us-east-1"` region. This is an optional field. If not specified, a default zone is used. You can find the list of available zones as well as the default value by using the [List Zones API](https://docs.databricks.com/dev-tools/api/latest/clusters.html#clusterclusterservicelistavailablezones).
+* `zone_id` - (Required) (String) Identifier for the availability zone/datacenter in which the instance pool resides. This string is of the form like `"us-west-2a"`. The provided availability zone must be in the same region as the Databricks deployment. For example, `"us-west-2a"` is not a valid zone ID if the Databricks deployment resides in the `"us-east-1"` region. This is an optional field. If not specified, a default zone is used. You can find the list of available zones as well as the default value by using the [List Zones API](https://docs.databricks.com/dev-tools/api/latest/clusters.html#clusterclusterservicelistavailablezones).
 * `spot_bid_price_percent` - (Optional) (Integer) The max price for AWS spot instances, as a percentage of the corresponding instance type’s on-demand price. For example, if this field is set to 50, and the instance pool needs a new i3.xlarge spot instance, then the max price is half of the price of on-demand i3.xlarge instances. Similarly, if this field is set to 200, the max price is twice the price of on-demand i3.xlarge instances. If not specified, the *default value is 100*. When spot instances are requested for this instance pool, only spot instances whose max price percentage matches this field are considered. *For safety, this field cannot be greater than 10000.*
 * `availability` - (Optional) (String) Availability type used for all instances in the pool. Only `ON_DEMAND` and `SPOT` are supported.
 
@@ -62,7 +62,7 @@ The following options are [available](https://docs.databricks.com/dev-tools/api/
 The following options are [available](https://docs.microsoft.com/en-us/azure/databricks/dev-tools/api/latest/clusters#--azureattributes):
 
 * `availability` - (Optional) Availability type used for all nodes. Valid values are `SPOT_AZURE` and `ON_DEMAND_AZURE`.
-* `spot_bid_max_price` - (Optional) The max price for Azure spot instances.  Use `-1` to specify lowest price.
+* `spot_bid_max_price` - (Optional) The max price for Azure spot instances.  Use `-1` to specify the lowest price.
 
 ## gcp_attributes Configuration Block
 
@@ -93,7 +93,7 @@ For disk_spec make sure to use **ebs_volume_type** only on AWS deployment of Dat
 
 ## preloaded_docker_image sub_block
 
-[Databricks Container Services](https://docs.databricks.com/clusters/custom-containers.html) lets you specify a Docker image when you create a cluster.  You need to enable Container Services in *Admin Console /  Advanced* page in the user interface. By enabling this feature, you acknowledge and agree that your usage of this feature is subject to the [applicable additional terms](http://www.databricks.com/product-specific-terms). You can instruct instance pool to pre-download the Docker image onto the instances so when node is acquired for a cluster that requires a custom Docker image the setup process will be faster.
+[Databricks Container Services](https://docs.databricks.com/clusters/custom-containers.html) lets you specify a Docker image when you create a cluster.  You need to enable Container Services in *Admin Console /  Advanced* page in the user interface. By enabling this feature, you acknowledge and agree that your usage of this feature is subject to the [applicable additional terms](http://www.databricks.com/product-specific-terms). You can instruct the instance pool to pre-download the Docker image onto the instances so when node is acquired for a cluster that requires a custom Docker image the setup process will be faster.
 
 `preloaded_docker_image` configuration block has the following attributes:
 

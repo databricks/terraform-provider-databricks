@@ -11,6 +11,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/hashicorp/go-retryablehttp"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -77,8 +78,11 @@ func (errReader) Read(p []byte) (n int, err error) {
 	return 0, fmt.Errorf("test error")
 }
 
-func (errReader) Close() error {
-	return fmt.Errorf("test error")
+func (i errReader) Close() error {
+	if int(i) > 100 {
+		return fmt.Errorf("test error")
+	}
+	return nil
 }
 
 func TestParseError_IO(t *testing.T) {
@@ -163,6 +167,7 @@ func TestParseError_SCIM(t *testing.T) {
 			"detail": "Detailed SCIM message",
 			"status": "MALFUNCTION",
 			"string_value": "sensitive",
+			"token_value": "sensitive",
 			"content": "sensitive"
 		}`))),
 	})
@@ -334,17 +339,121 @@ func TestScim(t *testing.T) {
 	require.NoError(t, err)
 }
 
+func TestScimFailingQuery(t *testing.T) {
+	err := (&DatabricksClient{
+		Host:  "https://localhost",
+		Token: "..",
+	}).Scim(context.Background(), "GET", "/foo", nil, nil)
+	assert.EqualError(t, err, "DatabricksClient is not configured")
+}
+
+func TestScimVisitorForAccounts(t *testing.T) {
+	request := &http.Request{
+		Header: http.Header{},
+		URL: &url.URL{
+			Path: "/api/2.0/preview/scim/v2/Users/abc",
+		},
+	}
+	err := (&DatabricksClient{
+		Host:      "https://accounts.everywhere",
+		AccountID: "uuid",
+	}).scimVisitor(request)
+	assert.NoError(t, err)
+	assert.Equal(t, "application/scim+json; charset=utf-8", request.Header.Get("Content-Type"))
+	assert.Equal(t, "/api/2.0/accounts/uuid/scim/v2/Users/abc", request.URL.Path)
+}
+
 func TestMakeRequestBody(t *testing.T) {
 	type x struct {
 		Scope string `json:"scope" url:"scope"`
 	}
 	requestURL := "/a/b/c"
-	_, err := makeRequestBody("GET", &requestURL, x{"test"}, true)
+	_, err := makeRequestBody("GET", &requestURL, x{"test"})
 	require.NoError(t, err)
 	assert.Equal(t, "/a/b/c?scope=test", requestURL)
 
-	body, _ := makeRequestBody("POST", &requestURL, "abc", false)
+	body, _ := makeRequestBody("POST", &requestURL, "abc")
 	assert.Equal(t, []byte("abc"), body)
+}
+
+func TestMakeRequestBodyFromReader(t *testing.T) {
+	requestURL := "/a/b/c"
+	body, err := makeRequestBody("PUT", &requestURL, strings.NewReader("abc"))
+	require.NoError(t, err)
+	assert.Equal(t, []byte("abc"), body)
+}
+
+func TestMakeRequestBodyReaderError(t *testing.T) {
+	requestURL := "/a/b/c"
+	_, err := makeRequestBody("POST", &requestURL, errReader(1))
+	assert.EqualError(t, err, "failed to read from reader: test error")
+}
+
+func TestMakeRequestBodyJsonError(t *testing.T) {
+	requestURL := "/a/b/c"
+	type x struct {
+		Foo chan string `json:"foo"`
+	}
+	_, err := makeRequestBody("POST", &requestURL, x{make(chan string)})
+	assert.EqualError(t, err, "request marshal failure: json: unsupported type: chan string")
+}
+
+type failingUrlEncode string
+
+func (fue failingUrlEncode) EncodeValues(key string, v *url.Values) error {
+	return fmt.Errorf(string(fue))
+}
+
+func TestMakeRequestBodyQueryFailingEncode(t *testing.T) {
+	requestURL := "/a/b/c"
+	type x struct {
+		Foo failingUrlEncode `url:"foo"`
+	}
+	_, err := makeRequestBody("GET", &requestURL, x{failingUrlEncode("always failing")})
+	assert.EqualError(t, err, "cannot create query string: always failing")
+}
+
+func TestMakeRequestBodyQueryUnsupported(t *testing.T) {
+	requestURL := "/a/b/c"
+	_, err := makeRequestBody("GET", &requestURL, true)
+	assert.EqualError(t, err, "unsupported query string data: true")
+}
+
+func TestReaderBodyIsNotDumped(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(
+		func(rw http.ResponseWriter, req *http.Request) {
+			raw, err := ioutil.ReadAll(req.Body)
+			assert.NoError(t, err)
+			assert.Equal(t, "abc", string(raw))
+			rw.WriteHeader(200)
+		}))
+	defer server.Close()
+	client := &DatabricksClient{
+		Host:               server.URL + "/",
+		Token:              "..",
+		InsecureSkipVerify: true,
+		DebugHeaders:       true,
+	}
+	err := client.Configure()
+	assert.NoError(t, err)
+	ctx := context.Background()
+	err = client.Post(ctx, "/workspace/import-file", strings.NewReader("abc"), nil)
+	assert.NoError(t, err)
+}
+
+func TestRedactedDumpMalformedJsonReturnsEmptyString(t *testing.T) {
+	client := &DatabricksClient{}
+	res := client.redactedDump([]byte("{..}"))
+	assert.Equal(t, "", res)
+}
+
+func TestRedactedDumpOverridesMaxBytes(t *testing.T) {
+	client := &DatabricksClient{
+		DebugTruncateBytes: 1300,
+	}
+	res := client.redactedDump([]byte(`{"foo":"` + strings.Repeat("x", 1500) + `"}`))
+	assert.Len(t, res, 1319)
+	assert.True(t, strings.HasSuffix(res, "... (35 more bytes)"))
 }
 
 func TestMakeRequestBodyForMap(t *testing.T) {
@@ -358,7 +467,7 @@ func TestMakeRequestBodyForMap(t *testing.T) {
 		"c": 5,
 		"b": 6,
 		"d": 7,
-	}, true)
+	})
 	require.NoError(t, err)
 	assert.Equal(t, "/a?a=2&b=6&c=5&d=7&e=1&f=3&g=4", requestURL)
 }
@@ -445,4 +554,91 @@ func TestClient_HandleErrors(t *testing.T) {
 			assert.Equal(t, tt.expectedStatusCode, err.(APIError).StatusCode, "status code is not the same")
 		})
 	}
+}
+
+func TestGenericQueryNotConfigured(t *testing.T) {
+	_, err := (&DatabricksClient{}).genericQuery(context.Background(), "GET", "/foo", true)
+	assert.EqualError(t, err, "DatabricksClient is not configured")
+}
+
+func TestGenericQueryStoppedContext(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+	client := &DatabricksClient{Host: "https://localhost", Token: ".."}
+	err := client.Configure()
+	assert.NoError(t, err)
+	_, err = client.genericQuery(ctx, "GET", "/foo", true)
+	assert.EqualError(t, err, "rate limited: context canceled")
+}
+
+func TestGenericQueryMarshalError(t *testing.T) {
+	ctx := context.Background()
+	client := &DatabricksClient{Host: "https://localhost", Token: ".."}
+	err := client.Configure()
+	assert.NoError(t, err)
+	_, err = client.genericQuery(ctx, "POST", "/foo", errReader(1))
+	assert.EqualError(t, err, "request marshal: failed to read from reader: test error")
+}
+
+func TestGenericQueryInvalidMethod(t *testing.T) {
+	ctx := context.Background()
+	client := &DatabricksClient{Host: "https://localhost", Token: ".."}
+	err := client.Configure()
+	assert.NoError(t, err)
+	_, err = client.genericQuery(ctx, "😃", "/foo", strings.NewReader("abc"))
+	assert.EqualError(t, err, `new request: net/http: invalid method "😃"`)
+}
+
+func TestGenericQueryFailingVisitor(t *testing.T) {
+	ctx := context.Background()
+	client := &DatabricksClient{Host: "https://localhost", Token: ".."}
+	err := client.Configure()
+	assert.NoError(t, err)
+	_, err = client.genericQuery(ctx, "POST", "/foo", strings.NewReader("abc"),
+		func(r *http.Request) error {
+			return fmt.Errorf("😃")
+		})
+	assert.EqualError(t, err, `failed visitor: 😃`)
+}
+
+func TestGenericQueryFailingRequest(t *testing.T) {
+	ctx := context.Background()
+	client := &DatabricksClient{Host: "https://localhost", Token: ".."}
+	err := client.Configure()
+	assert.NoError(t, err)
+	client.httpClient.RetryMax = 0
+	client.httpClient.ErrorHandler = func(_ *http.Response, _ error, _ int) (*http.Response, error) {
+		return nil, fmt.Errorf("😃")
+	}
+	_, err = client.genericQuery(ctx, "PUT", "https://127.0.0.1/foo", strings.NewReader("abc"))
+	assert.EqualError(t, err, `failed request: 😃`)
+}
+
+func TestGenericQueryFailingResponseBodyRead(t *testing.T) {
+	client, server := singleRequestServer(t, "GET", "/api/2.0/imaginary/endpoint", `{"a": "b"}`)
+	defer server.Close()
+	client.httpClient.RetryMax = 0
+	client.httpClient.ResponseLogHook = func(_ retryablehttp.Logger, r *http.Response) {
+		r.Body = errReader(1)
+	}
+	ctx := context.Background()
+	_, err := client.genericQuery(ctx, "GET", fmt.Sprintf("%s/api/2.0/imaginary/endpoint", server.URL), nil)
+	assert.EqualError(t, err, "response body: test error")
+}
+
+func TestGenericQueryFailingResponseBodyClose(t *testing.T) {
+	client, server := singleRequestServer(t, "GET", "/api/2.0/imaginary/endpoint", `{"a": "b"}`)
+	defer server.Close()
+	client.httpClient.RetryMax = 0
+	client.httpClient.ResponseLogHook = func(_ retryablehttp.Logger, r *http.Response) {
+		r.Body = errReader(1000)
+	}
+	ctx := context.Background()
+	_, err := client.genericQuery(ctx, "GET", fmt.Sprintf("%s/api/2.0/imaginary/endpoint", server.URL), nil)
+	assert.EqualError(t, err, "failed to close: test error")
+}
+
+func TestParseUnknownErrorStatusMalformed(t *testing.T) {
+	eb := (&DatabricksClient{}).parseUnknownError("malformed", nil, fmt.Errorf("test"))
+	assert.Equal(t, "UNKNOWN", eb.ErrorCode)
 }

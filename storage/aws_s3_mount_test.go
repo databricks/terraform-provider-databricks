@@ -5,8 +5,8 @@ import (
 	"testing"
 
 	"github.com/databrickslabs/terraform-provider-databricks/clusters"
+	"github.com/databrickslabs/terraform-provider-databricks/commands"
 	"github.com/databrickslabs/terraform-provider-databricks/common"
-	"github.com/databrickslabs/terraform-provider-databricks/internal"
 
 	"github.com/databrickslabs/terraform-provider-databricks/qa"
 	"github.com/stretchr/testify/assert"
@@ -36,7 +36,7 @@ func TestResourceAwsS3MountCreate(t *testing.T) {
 		},
 		Resource: ResourceAWSS3Mount(),
 		CommandMock: func(commandStr string) common.CommandResults {
-			trunc := internal.TrimLeadingWhitespace(commandStr)
+			trunc := commands.TrimLeadingWhitespace(commandStr)
 			t.Logf("Received command:\n%s", trunc)
 			if strings.HasPrefix(trunc, "def safe_mount") {
 				assert.Contains(t, trunc, testS3BucketPath) // bucketname
@@ -82,7 +82,7 @@ func TestResourceAwsS3MountCreate_invalid_arn(t *testing.T) {
 		},
 		Create: true,
 	}.Apply(t)
-	require.EqualError(t, err, "invalid arn: this_mount")
+	require.EqualError(t, err, "mount via profile: invalid arn: this_mount")
 }
 
 func TestResourceAwsS3MountRead(t *testing.T) {
@@ -102,7 +102,7 @@ func TestResourceAwsS3MountRead(t *testing.T) {
 		},
 		Resource: ResourceAWSS3Mount(),
 		CommandMock: func(commandStr string) common.CommandResults {
-			trunc := internal.TrimLeadingWhitespace(commandStr)
+			trunc := commands.TrimLeadingWhitespace(commandStr)
 			t.Logf("Received command:\n%s", trunc)
 			assert.Contains(t, trunc, "dbutils.fs.mounts()")
 			assert.Contains(t, trunc, `mount.mountPoint == "/mnt/this_mount"`)
@@ -141,7 +141,7 @@ func TestResourceAwsS3MountRead_NotFound(t *testing.T) {
 		},
 		Resource: ResourceAWSS3Mount(),
 		CommandMock: func(commandStr string) common.CommandResults {
-			trunc := internal.TrimLeadingWhitespace(commandStr)
+			trunc := commands.TrimLeadingWhitespace(commandStr)
 			t.Logf("Received command:\n%s", trunc)
 			return common.CommandResults{
 				ResultType: "error",
@@ -176,7 +176,7 @@ func TestResourceAwsS3MountRead_Error(t *testing.T) {
 		},
 		Resource: ResourceAWSS3Mount(),
 		CommandMock: func(commandStr string) common.CommandResults {
-			trunc := internal.TrimLeadingWhitespace(commandStr)
+			trunc := commands.TrimLeadingWhitespace(commandStr)
 			t.Logf("Received command:\n%s", trunc)
 			return common.CommandResults{
 				ResultType: "error",
@@ -213,7 +213,7 @@ func TestResourceAwsS3MountDelete(t *testing.T) {
 		},
 		Resource: ResourceAWSS3Mount(),
 		CommandMock: func(commandStr string) common.CommandResults {
-			trunc := internal.TrimLeadingWhitespace(commandStr)
+			trunc := commands.TrimLeadingWhitespace(commandStr)
 			t.Logf("Received command:\n%s", trunc)
 			assert.Contains(t, trunc, "/mnt/this_mount")
 			assert.Contains(t, trunc, "dbutils.fs.unmount(mount_point)")

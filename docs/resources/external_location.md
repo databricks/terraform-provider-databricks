@@ -84,6 +84,7 @@ The following arguments are required:
 * `credential_name` - Name of the [databricks_storage_credential](storage_credential.md) to use with this External Location.
 * `owner` - (Optional) Username/groupname of External Location owner. Currently this field can only be changed after the resource is created.
 * `comment` - (Optional) User-supplied free-form text.
+* `skip_validation` - (Optional) Suppress validation errors if any & force save the external location
 
 ## Import
 

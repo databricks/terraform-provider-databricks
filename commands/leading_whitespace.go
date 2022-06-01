@@ -1,10 +1,11 @@
-package internal
+package commands
 
 import (
 	"strings"
 )
 
-// TrimLeadingWhitespace removes leading whitespace
+// TrimLeadingWhitespace removes leading whitespace, so that Python code blocks
+// that are embedded into Go code still could be interpreted properly.
 func TrimLeadingWhitespace(commandStr string) (newCommand string) {
 	lines := strings.Split(strings.ReplaceAll(commandStr, "\t", "    "), "\n")
 	leadingWhitespace := 1<<31 - 1

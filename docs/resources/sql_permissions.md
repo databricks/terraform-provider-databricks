@@ -3,7 +3,7 @@ subcategory: "Security"
 ---
 # databricks_sql_permissions Resource
 
--> **Note** Please switch to [databricks_grants](grants.md) with Unity Catalog to manage data access, which provides better and faster way for managing data security. `databricks_grants` resource *doesn't require a technical cluster to perform operations*. On workspaces with Unity Catalog enabled, you may run into errors such as `Error: cannot create sql permissions: cannot read current grants: For unity catalog, please specify the catalog name explicitly. E.g. SHOW GRANT ``your.address@email.com`` ON CATALOG main`. This happens if your `default_catalog_name` was set to a UC catalog instead of `hive_metastore`. The workaround is to re-assign the metastore again with the default catalog set to be `hive_metastore`. See [databricks_metastore_assignment](metastore_assignment.md).
+-> **Note** Please switch to [databricks_grants](grants.md) with Unity Catalog to manage data access, which provides a better and faster way for managing data security. `databricks_grants` resource *doesn't require a technical cluster to perform operations*. On workspaces with Unity Catalog enabled, you may run into errors such as `Error: cannot create sql permissions: cannot read current grants: For unity catalog, please specify the catalog name explicitly. E.g. SHOW GRANT ``your.address@email.com`` ON CATALOG main`. This happens if your `default_catalog_name` was set to a UC catalog instead of `hive_metastore`. The workaround is to re-assign the metastore again with the default catalog set to be `hive_metastore`. See [databricks_metastore_assignment](metastore_assignment.md).
 
 This resource manages data object access control lists in Databricks workspaces for things like tables, views, databases, and [more](https://docs.databricks.com/security/access-control/table-acls/object-privileges.html). In order to enable Table Access control, you have to login to the workspace as administrator, go to `Admin Console`, pick `Access Control` tab, click on `Enable` button in `Table Access Control` section, and click `Confirm`. The security guarantees of table access control **will only be effective if cluster access control is also turned on**. Please make sure that no users can create clusters in your workspace and all [databricks_cluster](cluster.md) have approximately the following configuration:
 
@@ -73,7 +73,7 @@ The following arguments are available to specify the data object you need to enf
 
 You must specify one or many `privilege_assignments` configuration blocks to declare `privileges` to a `principal`, which corresponds to `display_name` of [databricks_group](group.md#display_name) or [databricks_user](user.md#display_name). Terraform would ensure that only those principals and privileges defined in the resource are applied for the data object and would remove anything else. It would not remove any transitive privileges. `DENY` statements are intentionally not supported. Every `privilege_assignments` has the following required arguments:
 
-* `principal` - `display_name` of [databricks_group](group.md#display_name) or [databricks_user](user.md#display_name).
+* `principal` - `display_name` for a [databricks_group](group.md#display_name) or [databricks_user](user.md#display_name), `application_id` for a [databricks_service_principal](service_principal.md).
 * `privileges` - set of available privilege names in upper case.
 
 [Available](https://docs.databricks.com/security/access-control/table-acls/object-privileges.html) privilege names are:

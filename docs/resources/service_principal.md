@@ -3,7 +3,9 @@ subcategory: "Security"
 ---
 # databricks_service_principal Resource
 
-Directly manage [Service Principals](https://docs.databricks.com/administration-guide/users-groups/service-principals.html) that could be added to [databricks_group](group.md) within workspace.
+Directly manage [Service Principals](https://docs.databricks.com/administration-guide/users-groups/service-principals.html) that could be added to [databricks_group](group.md) in Databricks workspace or account.
+
+To create service principals in the Databricks account, the provider must be configured with `host = "https://accounts.cloud.databricks.com"` on AWS deployments or `host = "https://accounts.azuredatabricks.net"` and authenticate using AAD tokens on Azure deployments
 
 ## Example Usage
 
@@ -42,6 +44,39 @@ resource "databricks_service_principal" "sp" {
 }
 ```
 
+Creating service principal in AWS Databricks account:
+```hcl
+// initialize provider at account-level
+provider "databricks" {
+  alias    = "mws"
+  host     = "https://accounts.cloud.databricks.com"
+  account_id = "00000000-0000-0000-0000-000000000000"
+  username = var.databricks_account_username
+  password = var.databricks_account_password
+}
+
+resource "databricks_service_principal" "sp" {
+  provider     = databricks.mws
+  display_name = "Automation-only SP"
+}
+```
+
+Creating group in Azure Databricks account:
+```hcl
+// initialize provider at Azure account-level
+provider "databricks" {
+  alias      = "azure_account"
+  host       = "https://accounts.azuredatabricks.net"
+  account_id = "00000000-0000-0000-0000-000000000000"
+  auth_type  = "azure-cli"
+}
+
+resource "databricks_service_principal" "sp" {
+  provider       = databricks.azure_account
+  application_id = "00000000-0000-0000-0000-000000000000"
+}
+```
+
 ## Argument Reference
 
 -> `application_id` is required on Azure Databricks and is not allowed on other clouds. `display_name` is required on all clouds except Azure.
@@ -56,7 +91,7 @@ The following arguments are available:
 * `databricks_sql_access` - (Optional) This is a field to allow the group to have access to [Databricks SQL](https://databricks.com/product/databricks-sql) feature through [databricks_sql_endpoint](sql_endpoint.md).
 * `workspace_access` - (Optional) This is a field to allow the group to have access to Databricks Workspace.
 * `active` - (Optional) Either service principal is active or not. True by default, but can be set to false in case of service principal deactivation with preserving service principal assets.
-* `force` - (Optional) Ignore `cannot create service principal: Service principal with application ID X already exists` errors and implicitly import the specific service principal into Terraform state, enforcing entitlements defined in the instance of resource. _This functionality is experimental_ and is designed to simplify corner cases, like Azure Active Directory synchronisation.
+* `force` - (Optional) Ignore `cannot create service principal: Service principal with application ID X already exists` errors and implicitly import the specified service principal into Terraform state, enforcing entitlements defined in the instance of resource. _This functionality is experimental_ and is designed to simplify corner cases, like Azure Active Directory synchronisation.
 
 ## Attribute Reference
 

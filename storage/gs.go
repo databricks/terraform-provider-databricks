@@ -63,6 +63,13 @@ func createOrValidateClusterForGoogleStorage(ctx context.Context, m interface{},
 	clustersAPI := clusters.NewClustersAPI(ctx, m)
 	if clusterID != "" {
 		clusterInfo, err := clustersAPI.Get(clusterID)
+		if common.IsMissing(err) {
+			cluster, err := GetOrCreateMountingClusterWithGcpServiceAccount(clustersAPI, serviceAccount)
+			if err != nil {
+				return fmt.Errorf("cannot re-create mounting cluster: %w", err)
+			}
+			return d.Set("cluster_id", cluster.ClusterID)
+		}
 		if err != nil {
 			return fmt.Errorf("cannot get mounting cluster: %w", err)
 		}

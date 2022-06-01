@@ -49,7 +49,7 @@ resource "databricks_notebook" "this" {
   language = "PYTHON"
   content_base64 = base64encode(<<-EOT
     token = dbutils.secrets.get('${databricks_secret_scope.this.name}', '${databricks_secret.token.key}')
-    print(f'This should be recacted: {token}')
+    print(f'This should be redacted: {token}')
     EOT
   )
 }
@@ -117,7 +117,7 @@ output "job_url" {
 
 ## Part 2: Workspace security
 
-Managing security requires administrative priviliges. More documentation is available at dedicated pages for [databricks_secret_acl](../resources/secret_acl.md), [databricks_group](../data-sources/group.md), [databricks_user](../resources/user.md), [databricks_group_member](../resources/group_member.md), [databricks_permissions](../resources/permissions.md).
+Managing security requires administrative privileges. More documentation is available at dedicated pages for [databricks_secret_acl](../resources/secret_acl.md), [databricks_group](../data-sources/group.md), [databricks_user](../resources/user.md), [databricks_group_member](../resources/group_member.md), [databricks_permissions](../resources/permissions.md).
 
 ```hcl
 resource "databricks_secret_acl" "spectators" {

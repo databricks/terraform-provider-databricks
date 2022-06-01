@@ -24,7 +24,7 @@ It is required to define all permissions for a securable in a single resource, o
 
 ## Catalog grants
 
-You can grant `CREATE` and `USAGE` privileges to [databricks_catalog](catalog.md) specified in `catalog` attribute:
+You can grant `CREATE` and `USAGE` privileges to [databricks_catalog](catalog.md) specified in the `catalog` attribute:
 
 ```hcl
 resource "databricks_catalog" "sandbox" {
@@ -51,7 +51,7 @@ resource "databricks_grants" "sandbox" {
 
 ## Schema grants
 
-You can grant `CREATE` and `USAGE` privileges to [*`catalog`*.*`database`*](schema.md) specified in `schema` attribute:
+You can grant `CREATE` and `USAGE` privileges to [*`catalog`*.*`database`*](schema.md) specified in the `schema` attribute:
 
 ```hcl
 resource "databricks_schema" "things" {
@@ -74,7 +74,7 @@ resource "databricks_grants" "things" {
 
 ## Table grants
 
-You can grant `MODIFY` and `SELECT` privileges to [*`catalog`*.*`database`*.*`table`*](table.md) specified in `table` attribute. You can define a table through [databricks_table](table.md) resource.
+You can grant `MODIFY` and `SELECT` privileges to [*`catalog`*.*`database`*.*`table`*](table.md) specified in the `table` attribute. You can define a table through [databricks_table](table.md) resource.
 
 ```hcl
 resource "databricks_grants" "customers" {

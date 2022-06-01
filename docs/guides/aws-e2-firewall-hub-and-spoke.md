@@ -459,7 +459,7 @@ resource "aws_main_route_table_association" "set-worker-default-rt-assoc" {
 ## AWS Transit Gateway
 Now that our spoke and inspection/egress VPCs are ready to go, all you need to do is link them all together, and AWS Transit Gateway is the perfect solution for that.
 First, we're going to create a Transit Gateway and link our Databricks data plane via TGW subnets.
-All of the logic that determines what routes where via a Transit Gateway is encapsulated within Transit Gateway Route Tables. We’re going to create some TGW routes tables for our Hub & Spoke networks.
+All of the logic that determines what routes are going via a Transit Gateway is encapsulated within Transit Gateway Route Tables. We’re going to create some TGW routes tables for our Hub & Spoke networks.
 
 ![TransitGateway](https://raw.githubusercontent.com/databrickslabs/terraform-provider-databricks/master/docs/images/aws-e2-firewall-tgw.png)
 
@@ -688,7 +688,7 @@ resource "aws_networkfirewall_firewall_policy" "egress_policy" {
 ```
 
 ### AWS Firewall 
-Next step is to create AWS Network Firewall with Firewall Policy we defined in previous step.
+Next step is to create an AWS Network Firewall with the Firewall Policy we defined in the previous step.
 ```hcl
 /* Create Firewall*/
 resource "aws_networkfirewall_firewall" "exfiltration_firewall" {

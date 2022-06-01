@@ -53,7 +53,7 @@ The following arguments are required:
 * `storage_root` - Path on cloud storage account, where managed [databricks_table](table.md) are stored. Change forces creation of a new resource.
 * `owner` - (Optional) Username/groupname of Metastore owner.
 * `delta_sharing_enabled` - (Optional) Required along with `delta_sharing_recipient_token_lifetime_in_seconds`. Used to enable delta sharing on the metastore.
-* `delta_sharing_recipient_token_lifetime_in_seconds` - (Optional) Required along with `delta_sharing_enabled`. Used to set expiration duratrion in seconds on recipient data access tokens. Set to 0 for unlimited duration. The default value is 3600 seconds.
+* `delta_sharing_recipient_token_lifetime_in_seconds` - (Optional) Required along with `delta_sharing_enabled`. Used to set expiration duratrion in seconds on recipient data access tokens. Set to 0 for unlimited duration. The default value is 7776000 seconds (90 days).
 * `delta_sharing_organization_name` - (Optional) The organization name of a Delta Sharing entity. This field is used for Databricks to Databricks sharing. Once this is set it cannot be removed and can only be modified to another valid value. To delete this value please taint and recreate the resource.
 * `force_destroy` - (Optional) Destroy metastore regardless of its contents.
 

@@ -33,7 +33,7 @@ type MetastoreInfo struct {
 	UpdatedAt                                   int64   `json:"updated_at,omitempty" tf:"computed"`
 	UpdatedBy                                   string  `json:"updated_by,omitempty" tf:"computed"`
 	DeltaSharingEnabled                         bool    `json:"delta_sharing_enabled,omitempty"`
-	DeltaSharingRecipientTokenLifetimeInSeconds int32   `json:"delta_sharing_recipient_token_lifetime_in_seconds,omitempty" tf:"default:3600"`
+	DeltaSharingRecipientTokenLifetimeInSeconds int64   `json:"delta_sharing_recipient_token_lifetime_in_seconds,omitempty" tf:"default:7776000"`
 	DeltaSharingOrganizationName                string  `json:"delta_sharing_organization_name,omitempty"`
 }
 

@@ -36,6 +36,47 @@ func TestCreateMetastore(t *testing.T) {
 				Method:   "PATCH",
 				Resource: "/api/2.0/unity-catalog/metastores/abc",
 				ExpectedRequest: map[string]interface{}{
+					"owner": "administrators",
+					"delta_sharing_recipient_token_lifetime_in_seconds": 7776000,
+				},
+			},
+		},
+		Resource: ResourceMetastore(),
+		Create:   true,
+		HCL: `
+		name = "a"
+		storage_root = "s3://b"
+		owner = "administrators"
+		`,
+	}.ApplyNoError(t)
+}
+
+func TestCreateMetastore_DeltaSharing(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/unity-catalog/metastores",
+				ExpectedRequest: MetastoreInfo{
+					StorageRoot: "s3://b",
+					Name:        "a",
+				},
+				Response: MetastoreInfo{
+					MetastoreID: "abc",
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/unity-catalog/metastores/abc",
+				Response: MetastoreInfo{
+					StorageRoot: "s3://b/abc",
+					Name:        "a",
+				},
+			},
+			{
+				Method:   "PATCH",
+				Resource: "/api/2.0/unity-catalog/metastores/abc",
+				ExpectedRequest: map[string]interface{}{
 					"owner":                 "administrators",
 					"delta_sharing_enabled": true,
 					"delta_sharing_recipient_token_lifetime_in_seconds": 0,

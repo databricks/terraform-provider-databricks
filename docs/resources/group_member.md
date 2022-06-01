@@ -63,5 +63,5 @@ The following resources are often used in the same context:
 * [databricks_ip_access_list](ip_access_list.md) to allow access from [predefined IP ranges](https://docs.databricks.com/security/network/ip-access-list.html).
 * [databricks_service_principal](service_principal.md) to grant access to a workspace to an automation tool or application.
 * [databricks_user](user.md) to [manage users](https://docs.databricks.com/administration-guide/users-groups/users.html), that could be added to [databricks_group](group.md) within the workspace.
-* [databricks_user](../data-sources/user.md) data to retrieves information about [databricks_user](user.md).
+* [databricks_user](../data-sources/user.md) data to retrieve information about [databricks_user](user.md).
 * [databricks_user_instance_profile](user_instance_profile.md) to attach [databricks_instance_profile](instance_profile.md) (AWS) to [databricks_user](user.md).

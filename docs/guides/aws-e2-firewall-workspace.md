@@ -389,7 +389,7 @@ Once [VPC](#vpc) is ready, create AWS Network Firewall for your VPC that restric
 
 ### AWS Firewall Rule Groups
 
-First we are going to create Firewall Rule group for accessing hive metastore and public repositories.
+First we are going to create a Firewall Rule group for accessing hive metastore and public repositories.
 ```hcl
 resource "aws_networkfirewall_rule_group" "databricks_fqdns_rg" {
   capacity = 100
@@ -416,7 +416,7 @@ resource "aws_networkfirewall_rule_group" "databricks_fqdns_rg" {
 }
 ```
 
-As next step, we are going to create Firewall Rule group that allows control plane traffic from the VPC.
+As the next step, we are going to create a Firewall Rule group that allows control plane traffic from the VPC.
 
 ```hcl
 resource "aws_networkfirewall_rule_group" "allow_db_cpl_protocols_rg" {
@@ -527,7 +527,7 @@ resource "aws_networkfirewall_firewall_policy" "egress_policy" {
 ```
 ### AWS Firewall
 
-As next step, we are going to create AWS Network Firewall with Firewall Policy that we defined in previous step.
+As the next step, we are going to create an AWS Network Firewall with the Firewall Policy that we defined in the previous step.
 
 ```hcl
 resource "aws_networkfirewall_firewall" "exfiltration_firewall" {

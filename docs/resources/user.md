@@ -116,4 +116,4 @@ The following resources are often used in the same context:
 * [databricks_group_instance_profile](group_instance_profile.md) to attach [databricks_instance_profile](instance_profile.md) (AWS) to [databricks_group](group.md).
 * [databricks_group_member](group_member.md) to attach [users](user.md) and [groups](group.md) as group members.
 * [databricks_instance_profile](instance_profile.md) to manage AWS EC2 instance profiles that users can launch [databricks_cluster](cluster.md) and access data, like [databricks_mount](mount.md).
-* [databricks_user](../data-sources/user.md) data to retrieves information about [databricks_user](user.md).
+* [databricks_user](../data-sources/user.md) data to retrieve information about [databricks_user](user.md).

@@ -58,7 +58,7 @@ The following arguments are required:
 * `name` - A user-friendly name for this pipeline. The name can be used to identify pipeline jobs in the UI.
 * `storage` - A location on DBFS or cloud storage where output data and metadata required for pipeline execution are stored. By default, tables are stored in a subdirectory of this location.
 * `configuration` - An optional list of values to apply to the entire pipeline. Elements must be formatted as key:value pairs.
-* `library` blocks - Specifies pipeline code and required artifacts. Syntax resembles [library](cluster.md#library-configuration-block) configuration block with the addition of a special `notebook` type of library that should have `path` attribute.
+* `library` blocks - Specifies pipeline code and required artifacts. Syntax resembles [library](cluster.md#library-configuration-block) configuration block with the addition of a special `notebook` type of library that should have the `path` attribute.
 * `cluster` blocks - [Clusters](cluster.md) to run the pipeline. If none is specified, pipelines will automatically select a default cluster configuration for the pipeline.
 * `continuous` - A flag indicating whether to run the pipeline continuously. The default value is `false`.
 * `target` - The name of a database for persisting pipeline output data. Configuring the target setting allows you to view and query the pipeline output data from the Databricks UI.

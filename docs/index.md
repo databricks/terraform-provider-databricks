@@ -151,7 +151,7 @@ provider "databricks" {
 
 !> **Warning** This approach is currently recommended only for provisioning account-level resources, e.g. AWS workspaces and should be avoided for regular use.
 
-You can use the `username` + `password` attributes to authenticate provider for E2 workspace setup. Respective `DATABRICKS_USERNAME` and `DATABRICKS_PASSWORD` environment variables are applicable as well.
+You can use the `username` + `password` attributes to authenticate the provider for E2 workspace setup. Respective `DATABRICKS_USERNAME` and `DATABRICKS_PASSWORD` environment variables are applicable as well.
 
 ``` hcl
 provider "databricks" {
@@ -175,7 +175,7 @@ Alternatively, you can provide this value as an environment variable `DATABRICKS
 * `config_file` - (optional) Location of the Databricks CLI credentials file created by `databricks configure --token` command (~/.databrickscfg by default). Check [Databricks CLI documentation](https://docs.databricks.com/dev-tools/cli/index.html#set-up-authentication) for more details. The provider uses configuration file credentials when you don't specify host/token/username/password/azure attributes. Alternatively, you can provide this value as an environment variable `DATABRICKS_CONFIG_FILE`. This field defaults to `~/.databrickscfg`. 
 * `profile` - (optional) Connection profile specified within ~/.databrickscfg. Please check [connection profiles section](https://docs.databricks.com/dev-tools/cli/index.html#connection-profiles) for more details. This field defaults to 
 `DEFAULT`.
-* `account_id` - (optional) Account Id that could be found in the bottom left corner of [Accounts Console](https://accounts.cloud.databricks.com/). Alternatively, you can provide this value as an environment variable `DATABRICKS_ACCOUNT_ID`. Only has effect when `host = "https://accounts.cloud.databricks.com/"` and currently used to provision account admins via [databricks_user](resources/user.md). In the future releases of the provider this property will also be used specify account for `databricks_mws_*` resources as well.
+* `account_id` - (optional) Account Id that could be found in the bottom left corner of [Accounts Console](https://accounts.cloud.databricks.com/). Alternatively, you can provide this value as an environment variable `DATABRICKS_ACCOUNT_ID`. Only has effect when `host = "https://accounts.cloud.databricks.com/"`, and is currently used to provision account admins via [databricks_user](resources/user.md). In the future releases of the provider this property will also be used specify account for `databricks_mws_*` resources as well.
 * `auth_type` - (optional) enforce specific auth type to be used in very rare cases, where a single Terraform state manages Databricks workspaces on more than one cloud and `More than one authorization method configured` error is a false positive. Valid values are `pat`, `basic`, `azure-client-secret`, `azure-msi`, `azure-cli`, and `databricks-cli`.
 
 ## Special configurations for Azure
@@ -272,7 +272,7 @@ This section covers configuration parameters not related to authentication. They
 
 * `rate_limit` - defines maximum number of requests per second made to Databricks REST API by Terraform. Default is *15*.
 * `debug_truncate_bytes` - Applicable only when `TF_LOG=DEBUG` is set. Truncate JSON fields in HTTP requests and responses above this limit. Default is *96*.
-* `debug_headers` - Applicable only when `TF_LOG=DEBUG` is set. Debug HTTP headers of requests made by the provider. Default is *false*. We recommend to turn this flag on only under exceptional circumstances, when troubleshooting authentication issues. Turning this flag on will log first `debug_truncate_bytes` of any HTTP header value in cleartext.
+* `debug_headers` - Applicable only when `TF_LOG=DEBUG` is set. Debug HTTP headers of requests made by the provider. Default is *false*. We recommend turning this flag on only under exceptional circumstances, when troubleshooting authentication issues. Turning this flag on will log first `debug_truncate_bytes` of any HTTP header value in cleartext.
 * `skip_verify` - skips SSL certificate verification for HTTP calls. *Use at your own risk.* Default is *false* (don't skip verification).
 
 
@@ -316,7 +316,7 @@ provider "databricks" {}
 7. Will check for Azure workspace ID presence, and if `AZ CLI` returns an access token, continue trying otherwise.
 8. Will check for the `~/.databrickscfg` file in the home directory, will fail otherwise.
 9. Will check for `profile` presence and try picking from that file will fail otherwise.
-10. Will check for `host` and `token` or `username`+`password` combination, will fail if nothing of these exist.
+10. Will check for `host` and `token` or `username`+`password` combination, and will fail if none of these exist.
 
 ## Data resources and Authentication is not configured errors
 
@@ -348,7 +348,7 @@ terraform {
 }
 ```
 
-... and copy the file in every module in your codebase. Our recommendation is to skip `version` field for `versions.tf` file on module level, and keep it only on environment level.
+... and copy the file in every module in your codebase. Our recommendation is to skip the `version` field for `versions.tf` file on module level, and keep it only on the environment level.
 
 ```
 ├── environments

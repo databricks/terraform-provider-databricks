@@ -7,7 +7,7 @@ This resource allows you to manage [Databricks Notebooks](https://docs.databrick
 
 ## Example Usage
 
-You can declare Terraform-managed notebook by specifying `source` attribute of corresponding local file. Only `.scala`, `.py`, `.sql` and `.r` extensions are supported, if you would like to omit `language` attribute.
+You can declare Terraform-managed notebook by specifying `source` attribute of corresponding local file. Only `.scala`, `.py`, `.sql` and `.r` extensions are supported, if you would like to omit the `language` attribute.
 
 ```hcl
 data "databricks_current_user" "me" {
@@ -19,7 +19,7 @@ resource "databricks_notebook" "ddl" {
 }
 ```
 
-You can also create managed notebook with inline sources through `content_base64` and `language` attributes.
+You can also create a managed notebook with inline sources through `content_base64` and `language` attributes.
 
 ```hcl
 resource "databricks_notebook" "notebook" {
@@ -33,7 +33,7 @@ resource "databricks_notebook" "notebook" {
 }
 ```
 
-You can also manage [Databricks Archives](https://docs.databricks.com/notebooks/notebooks-manage.html#databricks-archive) to import the whole folders of notebooks statically. Whenever you update `.dbc` file, terraform-managed notebook folder is removed and replaced with contents of the new `.dbc` file. You are strongly advised to use `.dbc` format only with `source` attribute of the resource:
+You can also manage [Databricks Archives](https://docs.databricks.com/notebooks/notebooks-manage.html#databricks-archive) to import the whole folders of notebooks statically. Whenever you update the `.dbc` file, the Terraform-managed notebook folder is removed and replaced with contents of the new `.dbc` file. You are strongly advised to use `.dbc` format only with `source` attribute of the resource:
 
 ```hcl
 resource "databricks_notebook" "lesson" {
@@ -46,7 +46,7 @@ resource "databricks_notebook" "lesson" {
 
 -> **Note** Notebook on Databricks workspace would only be changed, if Terraform stage did change. This means that any manual changes to managed notebook won't be overwritten by Terraform, if there's no local change to notebook sources. Notebooks are identified by their path, so changing notebook's name manually on the workspace and then applying Terraform state would result in creation of notebook from Terraform state.
 
-The size of a notebook source code must not exceed few megabytes. The following arguments are supported:
+The size of a notebook source code must not exceed a few megabytes. The following arguments are supported:
 
 * `path` -  (Required) The absolute path of the notebook or directory, beginning with "/", e.g. "/Demo". 
 * `source` - Path to notebook in source code format on local filesystem. Conflicts with `content_base64`.
@@ -89,4 +89,4 @@ The following resources are often used in the same context:
 * [databricks_secret_acl](secret_acl.md) to manage access to [secrets](https://docs.databricks.com/security/secrets/index.html#secrets-user-guide) in Databricks workspace.
 * [databricks_secret_scope](secret_scope.md) to create [secret scopes](https://docs.databricks.com/security/secrets/index.html#secrets-user-guide) in Databricks workspace.
 * [databricks_user](user.md) to [manage users](https://docs.databricks.com/administration-guide/users-groups/users.html), that could be added to [databricks_group](group.md) within the workspace.
-* [databricks_user](../data-sources/user.md) data to retrieves information about [databricks_user](user.md).
+* [databricks_user](../data-sources/user.md) data to retrieve information about [databricks_user](user.md).

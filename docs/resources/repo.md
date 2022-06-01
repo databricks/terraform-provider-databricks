@@ -24,9 +24,9 @@ resource "databricks_repo" "nutter_in_home" {
 
 The following arguments are supported:
 
-* `url` -  (Required) The URL of the Git Repository to clone from. If value changes, repo is re-created.
+* `url` -  (Required) The URL of the Git Repository to clone from. If the value changes, repo is re-created.
 * `git_provider` - (Optional, if it's possible to detect Git provider by host name) case insensitive name of the Git provider.  Following values are supported right now (could be a subject for a change, consult [Repos API documentation](https://docs.databricks.com/dev-tools/api/latest/repos.html)): `gitHub`, `gitHubEnterprise`, `bitbucketCloud`, `bitbucketServer`, `azureDevOpsServices`, `gitLab`, `gitLabEnterpriseEdition`, , `awsCodeCommit`.
-* `path` - (Optional) path to put the checked out Repo. If not specified, then repo will be created in the user's repo directory (`/Repos/<username>/...`).  If value changes, repo is re-created.
+* `path` - (Optional) path to put the checked out Repo. If not specified, then repo will be created in the user's repo directory (`/Repos/<username>/...`).  If the value changes, repo is re-created.
 * `branch` - (Optional) name of the branch for initial checkout. If not specified, the default branch of the repository will be used.  Conflicts with `tag`.  If `branch` is removed, and `tag` isn't specified, then the repository will stay at the previously checked out state.
 * `tag` - (Optional) name of the tag for initial checkout.  Conflicts with `branch`.
 

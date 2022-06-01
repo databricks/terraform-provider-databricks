@@ -96,7 +96,7 @@ Due to specifics of platform APIs, changing any attribute of network configurati
 The following arguments are available:
 
 * `account_id` - Account Id that could be found in the bottom left corner of [Accounts Console](https://accounts.cloud.databricks.com/)
-* `network_name` - name under which this network is regisstered
+* `network_name` - name under which this network is registered
 * `vpc_id` - [aws_vpc](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/vpc) id
 * `subnet_ids` - ids of [aws_subnet](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/subnet)
 * `security_group_ids` - ids of [aws_security_group](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/security_group)

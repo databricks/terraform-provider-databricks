@@ -87,7 +87,8 @@ func ResourceMetastore() *schema.Resource {
 			}
 			return m
 		})
-	updateOwner := updateFunctionFactory("/unity-catalog/metastores/", []string{"owner"})
+	updateOwner := updateFunctionFactory("/unity-catalog/metastores/", []string{"owner", "delta_sharing_enabled",
+		"delta_sharing_recipient_token_lifetime_in_seconds", "delta_sharing_organization_name"})
 	update := updateFunctionFactory("/unity-catalog/metastores/", []string{"owner", "name", "delta_sharing_enabled",
 		"delta_sharing_recipient_token_lifetime_in_seconds", "delta_sharing_organization_name"})
 

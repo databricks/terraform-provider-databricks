@@ -38,6 +38,7 @@ func TestCatalogCreateAlsoDeletesDefaultSchema(t *testing.T) {
 						"c": "d",
 					},
 					MetastoreID: "e",
+					Owner:       "f",
 				},
 			},
 		},

@@ -33,23 +33,6 @@ func TestTableCreate(t *testing.T) {
 						},
 					},
 				},
-				Response: TableInfo{
-					StorageLocation:  "s3://ext-main/foo/bar",
-					Name:             "bar",
-					CatalogName:      "main",
-					SchemaName:       "foo",
-					TableType:        "EXTERNAL",
-					DataSourceFormat: "JSON",
-					ColumnInfos: []ColumnInfo{
-						{
-							Name:     "id",
-							Nullable: true,
-							Position: 0,
-							TypeName: "int",
-							TypeText: "int",
-						},
-					},
-				},
 			},
 			{
 				Method:   "GET",
@@ -90,24 +73,6 @@ func TestTableCreateWithOwner(t *testing.T) {
 					TableType:        "EXTERNAL",
 					DataSourceFormat: "JSON",
 					Owner:            "administrators",
-					ColumnInfos: []ColumnInfo{
-						{
-							Name:     "id",
-							Nullable: true,
-							Position: 0,
-							TypeName: "int",
-							TypeText: "int",
-						},
-					},
-				},
-				Response: TableInfo{
-					StorageLocation:  "s3://ext-main/foo/bar",
-					Name:             "bar",
-					CatalogName:      "main",
-					SchemaName:       "foo",
-					TableType:        "EXTERNAL",
-					DataSourceFormat: "JSON",
-					Owner:            "testers",
 					ColumnInfos: []ColumnInfo{
 						{
 							Name:     "id",

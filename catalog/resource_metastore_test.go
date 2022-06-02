@@ -32,11 +32,44 @@ func TestCreateMetastore(t *testing.T) {
 					Name:        "a",
 				},
 			},
+		},
+		Resource: ResourceMetastore(),
+		Create:   true,
+		HCL: `
+		name = "a"
+		storage_root = "s3://b"
+		`,
+	}.ApplyNoError(t)
+}
+
+func TestCreateMetastoreWithOwner(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/unity-catalog/metastores",
+				ExpectedRequest: MetastoreInfo{
+					StorageRoot: "s3://b",
+					Name:        "a",
+				},
+				Response: MetastoreInfo{
+					MetastoreID: "abc",
+				},
+			},
 			{
 				Method:   "PATCH",
 				Resource: "/api/2.0/unity-catalog/metastores/abc",
 				ExpectedRequest: map[string]interface{}{
 					"owner": "administrators",
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/unity-catalog/metastores/abc",
+				Response: MetastoreInfo{
+					StorageRoot: "s3://b/abc",
+					Name:        "a",
+					Owner:       "administrators",
 				},
 			},
 		},

@@ -49,7 +49,8 @@ func ResourceExternalLocation() *schema.Resource {
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
 			return m
 		})
-	update := updateFunctionFactory("external-location", []string{"owner", "name", "comment", "url", "credential_name", "skip_validation"})
+	updateOwner := updateFunctionFactory("/unity-catalog/external-locations/", []string{"owner"})
+	update := updateFunctionFactory("/unity-catalog/external-locations/", []string{"owner", "name", "comment", "url", "credential_name", "skip_validation"})
 	return common.Resource{
 		Schema: s,
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
@@ -60,7 +61,7 @@ func ResourceExternalLocation() *schema.Resource {
 				return err
 			}
 			d.SetId(el.Name)
-			return update(ctx, d, c)
+			return updateOwner(ctx, d, c)
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			el, err := NewExternalLocationsAPI(ctx, c).get(d.Id())

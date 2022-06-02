@@ -111,7 +111,7 @@ func TestUpdateStorageCredentials(t *testing.T) {
 				Resource: "/api/2.0/unity-catalog/storage-credentials/a",
 				ExpectedRequest: map[string]interface{}{
 					"aws_iam_role": []interface{}{map[string]interface{}{
-						"rolearn": "CHANGED",
+						"role_arn": "CHANGED",
 					}},
 				},
 			},
@@ -136,46 +136,6 @@ func TestUpdateStorageCredentials(t *testing.T) {
 		},
 		HCL: `
 		name = "a"
-		aws_iam_role {
-			role_arn = "CHANGED"
-		}
-		comment = "c"
-		`,
-	}.ApplyNoError(t)
-}
-
-func TestUpdateStorageCredentialsName(t *testing.T) {
-	qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   "PATCH",
-				Resource: "/api/2.0/unity-catalog/storage-credentials/a",
-				ExpectedRequest: map[string]interface{}{
-					"name": "b",
-					"aws":  "CHANGED",
-				},
-			},
-			{
-				Method:   "GET",
-				Resource: "/api/2.0/unity-catalog/storage-credentials/b",
-				Response: StorageCredentialInfo{
-					Name: "b",
-					Aws: &AwsIamRole{
-						RoleARN: "CHANGED",
-					},
-					MetastoreID: "d",
-				},
-			},
-		},
-		Resource: ResourceStorageCredential(),
-		Update:   true,
-		ID:       "a",
-		InstanceState: map[string]string{
-			"name":    "a",
-			"comment": "c",
-		},
-		HCL: `
-		name = "b"
 		aws_iam_role {
 			role_arn = "CHANGED"
 		}

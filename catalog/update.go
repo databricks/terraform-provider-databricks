@@ -2,12 +2,13 @@ package catalog
 
 import (
 	"context"
+	"path"
 
 	"github.com/databrickslabs/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-func updateFunctionFactory(securable string, updatable []string) func(context.Context, *schema.ResourceData, *common.DatabricksClient) error {
+func updateFunctionFactory(pathPrefix string, updatable []string) func(context.Context, *schema.ResourceData, *common.DatabricksClient) error {
 	return func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 		patch := map[string]interface{}{}
 		for _, field := range updatable {
@@ -20,21 +21,7 @@ func updateFunctionFactory(securable string, updatable []string) func(context.Co
 		if len(patch) == 0 {
 			return nil
 		}
-		switch securable {
-		case "metastore":
-			return NewMetastoresAPI(ctx, c).updateMetastore(d.Id(), patch)
-		case "catalog":
-			return NewCatalogsAPI(ctx, c).updateCatalog(d.Id(), patch)
-		case "schema":
-			return NewSchemasAPI(ctx, c).updateSchema(d.Id(), patch)
-		case "table":
-			return NewTablesAPI(ctx, c).updateTable(d.Id(), patch)
-		case "external-location":
-			return NewExternalLocationsAPI(ctx, c).update(d.Id(), patch)
-		case "storage-credential":
-			return NewStorageCredentialsAPI(ctx, c).update(d.Id(), patch)
-		default:
-			return nil
-		}
+
+		return c.Patch(ctx, path.Join(pathPrefix, d.Id()), patch)
 	}
 }

@@ -57,7 +57,8 @@ func ResourceCatalog() *schema.Resource {
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
 			return m
 		})
-	update := updateFunctionFactory("catalog", []string{"owner", "name", "comment", "properties"})
+	updateOwner := updateFunctionFactory("/unity-catalog/catalogs/", []string{"owner"})
+	update := updateFunctionFactory("/unity-catalog/catalogs/", []string{"owner", "name", "comment", "properties"})
 	return common.Resource{
 		Schema: catalogSchema,
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
@@ -70,7 +71,7 @@ func ResourceCatalog() *schema.Resource {
 				return fmt.Errorf("cannot remove new catalog default schema: %w", err)
 			}
 			d.SetId(ci.Name)
-			return update(ctx, d, c)
+			return updateOwner(ctx, d, c)
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			ci, err := NewCatalogsAPI(ctx, c).getCatalog(d.Id())

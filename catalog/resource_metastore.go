@@ -75,7 +75,8 @@ func ResourceMetastore() *schema.Resource {
 			}
 			return m
 		})
-	update := updateFunctionFactory("metastore", []string{"owner", "name"})
+	updateOwner := updateFunctionFactory("/unity-catalog/metastores/", []string{"owner"})
+	update := updateFunctionFactory("/unity-catalog/metastores/", []string{"owner", "name"})
 	return common.Resource{
 		Schema: s,
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
@@ -86,7 +87,7 @@ func ResourceMetastore() *schema.Resource {
 				return err
 			}
 			d.SetId(mi.MetastoreID)
-			return update(ctx, d, c)
+			return updateOwner(ctx, d, c)
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			mi, err := NewMetastoresAPI(ctx, c).getMetastore(d.Id())

@@ -37,7 +37,6 @@ func TestCreateMetastore(t *testing.T) {
 				Resource: "/api/2.0/unity-catalog/metastores/abc",
 				ExpectedRequest: map[string]interface{}{
 					"owner": "administrators",
-					"delta_sharing_recipient_token_lifetime_in_seconds": 7776000,
 				},
 			},
 		},

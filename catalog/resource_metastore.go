@@ -33,7 +33,7 @@ type MetastoreInfo struct {
 	UpdatedAt                                   int64   `json:"updated_at,omitempty" tf:"computed"`
 	UpdatedBy                                   string  `json:"updated_by,omitempty" tf:"computed"`
 	DeltaSharingEnabled                         bool    `json:"delta_sharing_enabled,omitempty"`
-	DeltaSharingRecipientTokenLifetimeInSeconds int64   `json:"delta_sharing_recipient_token_lifetime_in_seconds,omitempty" tf:"default:7776000"`
+	DeltaSharingRecipientTokenLifetimeInSeconds int64   `json:"delta_sharing_recipient_token_lifetime_in_seconds,omitempty"`
 	DeltaSharingOrganizationName                string  `json:"delta_sharing_organization_name,omitempty"`
 }
 
@@ -94,12 +94,7 @@ func ResourceMetastore() *schema.Resource {
 		patch := map[string]interface{}{}
 		for _, field := range updatable {
 			old, new := d.GetChange(field)
-			//Int fields old will always be 0 and for this payload
-			//we need to send 0 in the request for infinite lifetime
-			defaultLifetimeIntField := field == "delta_sharing_recipient_token_lifetime_in_seconds" &&
-				old == 0 && new == 0
-
-			if old == new && !defaultLifetimeIntField {
+			if old == new {
 				continue
 			}
 			if field == "name" && old == "" {

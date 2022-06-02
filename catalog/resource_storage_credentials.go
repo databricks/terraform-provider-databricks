@@ -34,10 +34,6 @@ func (a StorageCredentialsAPI) get(id string) (sci StorageCredentialInfo, err er
 	return
 }
 
-func (a StorageCredentialsAPI) update(name string, update map[string]interface{}) error {
-	return a.client.Patch(a.context, "/unity-catalog/storage-credentials/"+name, update)
-}
-
 func (a StorageCredentialsAPI) delete(id string) error {
 	return a.client.Delete(a.context, "/unity-catalog/storage-credentials/"+id, nil)
 }

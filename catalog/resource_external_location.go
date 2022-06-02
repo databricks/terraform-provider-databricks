@@ -36,10 +36,6 @@ func (a ExternalLocationsAPI) get(name string) (el ExternalLocationInfo, err err
 	return
 }
 
-func (a ExternalLocationsAPI) update(name string, update map[string]interface{}) error {
-	return a.client.Patch(a.context, "/unity-catalog/external-locations/"+url.PathEscape(name), update)
-}
-
 func (a ExternalLocationsAPI) delete(name string) error {
 	return a.client.Delete(a.context, "/unity-catalog/external-locations/"+url.PathEscape(name), nil)
 }

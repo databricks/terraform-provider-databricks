@@ -46,10 +46,6 @@ func (a SchemasAPI) getSchema(name string) (si SchemaInfo, err error) {
 	return
 }
 
-func (a SchemasAPI) updateSchema(name string, update map[string]interface{}) error {
-	return a.client.Patch(a.context, "/unity-catalog/schemas/"+name, update)
-}
-
 func (a SchemasAPI) deleteSchema(name string) error {
 	return a.client.Delete(a.context, "/unity-catalog/schemas/"+name, nil)
 }

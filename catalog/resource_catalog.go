@@ -43,10 +43,6 @@ func (a CatalogsAPI) getCatalog(name string) (ci CatalogInfo, err error) {
 	return
 }
 
-func (a CatalogsAPI) updateCatalog(name string, update map[string]interface{}) error {
-	return a.client.Patch(a.context, "/unity-catalog/catalogs/"+name, update)
-}
-
 func (a CatalogsAPI) deleteCatalog(name string) error {
 	// TODO: force_destroy attribute
 	return a.client.Delete(a.context, "/unity-catalog/catalogs/"+name+"?force=true", nil)

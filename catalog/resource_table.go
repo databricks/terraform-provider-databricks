@@ -71,10 +71,6 @@ func (a TablesAPI) getTable(name string) (ti TableInfo, err error) {
 	return
 }
 
-func (a TablesAPI) updateTable(name string, update map[string]interface{}) error {
-	return a.client.Patch(a.context, "/unity-catalog/tables/"+name, update)
-}
-
 func (a TablesAPI) deleteTable(name string) error {
 	return a.client.Delete(a.context, "/unity-catalog/tables/"+name, nil)
 }

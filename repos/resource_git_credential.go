@@ -71,6 +71,11 @@ func ResourceGitCredential() *schema.Resource {
 			Type:     schema.TypeBool,
 			Optional: true,
 		}
+		s["personal_access_token"].DefaultFunc = schema.MultiEnvDefaultFunc([]string{
+			"GITHUB_TOKEN",               // https://registry.terraform.io/providers/integrations/github/latest/docs
+			"GITLAB_TOKEN",               // https://registry.terraform.io/providers/gitlabhq/gitlab/latest/docs
+			"AZDO_PERSONAL_ACCESS_TOKEN", // https://registry.terraform.io/providers/microsoft/azuredevops/latest/docs
+		}, nil)
 		return s
 	})
 

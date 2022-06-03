@@ -66,7 +66,6 @@ func ResourceCatalog() *schema.Resource {
 				return fmt.Errorf("cannot remove new catalog default schema: %w", err)
 			}
 			d.SetId(ci.Name)
-			d.MarkNewResource()
 			return update(ctx, d, c)
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {

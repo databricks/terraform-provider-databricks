@@ -62,12 +62,6 @@ func TestCreateStorageCredentialWithOwner(t *testing.T) {
 					Aws: &AwsIamRole{
 						RoleARN: "def",
 					},
-					Owner:   "administrators",
-					Comment: "c",
-				},
-				Response: StorageCredentialInfo{
-					Name:    "a",
-					Owner:   "not_admin",
 					Comment: "c",
 				},
 			},

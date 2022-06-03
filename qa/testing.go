@@ -112,7 +112,9 @@ func (f ResourceFixture) prepareExecution() (resourceCRUD, error) {
 		if f.ID != "" {
 			return nil, fmt.Errorf("ID is not available for Create")
 		}
-		return resourceCRUD(f.Resource.CreateContext), nil
+		return resourceCRUD(f.Resource.CreateContext).before(func(d *schema.ResourceData) {
+			d.MarkNewResource()
+		}), nil
 	case f.Read:
 		if f.ID == "" {
 			return nil, fmt.Errorf("ID must be set for Read")

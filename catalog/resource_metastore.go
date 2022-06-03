@@ -100,7 +100,6 @@ func ResourceMetastore() *schema.Resource {
 				return err
 			}
 			d.SetId(mi.MetastoreID)
-			d.MarkNewResource()
 			return update(ctx, d, c)
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {

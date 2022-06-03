@@ -66,7 +66,6 @@ func ResourceSchema() *schema.Resource {
 				return err
 			}
 			d.SetId(si.FullName)
-			d.MarkNewResource()
 			return update(ctx, d, c)
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {

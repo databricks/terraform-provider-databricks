@@ -51,12 +51,12 @@ func ResourceExternalLocation() *schema.Resource {
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var el ExternalLocationInfo
 			common.DataToStructPointer(d, s, &el)
+			el.Owner = ""
 			err := NewExternalLocationsAPI(ctx, c).create(&el)
 			if err != nil {
 				return err
 			}
 			d.SetId(el.Name)
-			d.MarkNewResource()
 			return update(ctx, d, c)
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {

@@ -52,12 +52,12 @@ func ResourceStorageCredential() *schema.Resource {
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var sci StorageCredentialInfo
 			common.DataToStructPointer(d, s, &sci)
+			sci.Owner = ""
 			err := NewStorageCredentialsAPI(ctx, c).create(&sci)
 			if err != nil {
 				return err
 			}
 			d.SetId(sci.Name)
-			d.MarkNewResource()
 			return update(ctx, d, c)
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {

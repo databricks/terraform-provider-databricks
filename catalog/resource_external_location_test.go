@@ -53,7 +53,6 @@ func TestCreateExternalLocationWithOwner(t *testing.T) {
 					Name:           "abc",
 					URL:            "s3://foo/bar",
 					CredentialName: "bcd",
-					Owner:          "administrators",
 					Comment:        "def",
 				},
 			},

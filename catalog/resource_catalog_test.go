@@ -1,9 +1,13 @@
 package catalog
 
 import (
+	"fmt"
 	"testing"
 
+	"github.com/databrickslabs/terraform-provider-databricks/common"
 	"github.com/databrickslabs/terraform-provider-databricks/qa"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestCatalogCornerCases(t *testing.T) {
@@ -113,4 +117,42 @@ func TestCatalogCreateWithOwnerAlsoDeletesDefaultSchema(t *testing.T) {
 		owner = "administrators"
 		`,
 	}.ApplyNoError(t)
+}
+
+func TestCatalogCreateCannotDeleteDefaultSchema(t *testing.T) {
+	_, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/unity-catalog/catalogs",
+				ExpectedRequest: CatalogInfo{
+					Name:    "a",
+					Comment: "b",
+					Properties: map[string]string{
+						"c": "d",
+					},
+				},
+			},
+			{
+				Method:   "DELETE",
+				Resource: "/api/2.0/unity-catalog/schemas/a.default",
+				Status:   400,
+				Response: common.APIErrorBody{
+					ScimDetail: "Something",
+					ScimStatus: "Else",
+				},
+			},
+		},
+		Resource: ResourceCatalog(),
+		Create:   true,
+		HCL: `
+		name = "a"
+		comment = "b"
+		properties = {
+			c = "d"
+		}
+		`,
+	}.Apply(t)
+	require.Error(t, err, err)
+	assert.Equal(t, "cannot remove new catalog default schema: Something", fmt.Sprint(err))
 }

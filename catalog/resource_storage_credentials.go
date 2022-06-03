@@ -17,7 +17,7 @@ func NewStorageCredentialsAPI(ctx context.Context, m interface{}) StorageCredent
 }
 
 type StorageCredentialInfo struct {
-	Name        string                 `json:"name"`
+	Name        string                 `json:"name" tf:"force_new"`
 	Owner       string                 `json:"owner,omitempty" tf:"computed"`
 	Comment     string                 `json:"comment,omitempty"`
 	Aws         *AwsIamRole            `json:"aws_iam_role,omitempty" tf:"group:access"`
@@ -46,7 +46,7 @@ func ResourceStorageCredential() *schema.Resource {
 			m["azure_service_principal"].AtLeastOneOf = alof
 			return m
 		})
-	update := updateFunctionFactory("/unity-catalog/storage-credentials", []string{"owner", "name", "comment", "aws_iam_role", "azure_service_principal"})
+	update := updateFunctionFactory("/unity-catalog/storage-credentials", []string{"owner", "comment", "aws_iam_role", "azure_service_principal"})
 	return common.Resource{
 		Schema: s,
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {

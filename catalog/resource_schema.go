@@ -17,7 +17,7 @@ func NewSchemasAPI(ctx context.Context, m interface{}) SchemasAPI {
 }
 
 type SchemaInfo struct {
-	Name        string            `json:"name"`
+	Name        string            `json:"name" tf:"force_new"`
 	CatalogName string            `json:"catalog_name"`
 	Comment     string            `json:"comment,omitempty"`
 	Properties  map[string]string `json:"properties,omitempty"`
@@ -56,7 +56,7 @@ func ResourceSchema() *schema.Resource {
 			delete(m, "full_name")
 			return m
 		})
-	update := updateFunctionFactory("/unity-catalog/schemas", []string{"owner", "name", "comment", "properties"})
+	update := updateFunctionFactory("/unity-catalog/schemas", []string{"owner", "comment", "properties"})
 	return common.Resource{
 		Schema: s,
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {

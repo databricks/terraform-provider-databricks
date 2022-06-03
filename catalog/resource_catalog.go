@@ -53,7 +53,7 @@ func ResourceCatalog() *schema.Resource {
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
 			return m
 		})
-	update := updateFunctionFactory("/unity-catalog/catalogs", []string{"owner", "name", "comment", "properties"})
+	update := updateFunctionFactory("/unity-catalog/catalogs", []string{"owner", "comment", "properties"})
 	return common.Resource{
 		Schema: catalogSchema,
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {

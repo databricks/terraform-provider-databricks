@@ -156,3 +156,40 @@ func TestCatalogCreateCannotDeleteDefaultSchema(t *testing.T) {
 	require.Error(t, err, err)
 	assert.Equal(t, "cannot remove new catalog default schema: Something", fmt.Sprint(err))
 }
+
+func TestUpdateCatalog(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "PATCH",
+				Resource: "/api/2.0/unity-catalog/catalogs/a",
+				ExpectedRequest: map[string]interface{}{
+					"owner": "administrators",
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/unity-catalog/catalogs/a",
+				Response: CatalogInfo{
+					Name:        "a",
+					MetastoreID: "d",
+					Comment:     "c",
+					Owner:       "administrators",
+				},
+			},
+		},
+		Resource: ResourceCatalog(),
+		Update:   true,
+		ID:       "a",
+		InstanceState: map[string]string{
+			"metastore_id": "d",
+			"name":         "a",
+			"comment":      "c",
+		},
+		HCL: `
+		name = "a"
+		comment = "c"
+		owner = "administrators"
+		`,
+	}.ApplyNoError(t)
+}

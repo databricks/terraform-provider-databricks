@@ -90,3 +90,41 @@ func TestCreateSchemaWithOwner(t *testing.T) {
 		`,
 	}.ApplyNoError(t)
 }
+
+func TestUpdateSchema(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "PATCH",
+				Resource: "/api/2.0/unity-catalog/schemas/b.a",
+				ExpectedRequest: map[string]interface{}{
+					"owner": "administrators",
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/unity-catalog/schemas/b.a",
+				Response: SchemaInfo{
+					MetastoreID: "d",
+					Comment:     "c",
+					Owner:       "administrators",
+				},
+			},
+		},
+		Resource: ResourceSchema(),
+		Update:   true,
+		ID:       "b.a",
+		InstanceState: map[string]string{
+			"metastore_id": "d",
+			"name":         "a",
+			"catalog_name": "b",
+			"comment":      "c",
+		},
+		HCL: `
+		name = "a"
+		catalog_name = "b"
+		comment = "c"
+		owner = "administrators"
+		`,
+	}.ApplyNoError(t)
+}

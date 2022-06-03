@@ -76,7 +76,7 @@ func ResourceCatalog() *schema.Resource {
 			}
 			return common.StructToData(ci, catalogSchema, d)
 		},
-		Update: update,
+		Update: updateFunctionFactory("/unity-catalog/catalogs/", []string{"owner", "name", "comment", "properties"}),
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			return NewCatalogsAPI(ctx, c).deleteCatalog(d.Id())
 		},

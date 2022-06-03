@@ -87,34 +87,9 @@ func ResourceMetastore() *schema.Resource {
 			}
 			return m
 		})
-	update := func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-		// other fields to come later
-		updatable := []string{"owner", "name", "delta_sharing_enabled",
-			"delta_sharing_recipient_token_lifetime_in_seconds", "delta_sharing_organization_name"}
-		patch := map[string]interface{}{}
-		for _, field := range updatable {
-			old, new := d.GetChange(field)
-			if old == new {
-				continue
-			}
-			if field == "name" && old == "" {
-				continue
-			}
-			// delta sharing enabled and new is true must always be accompanied by a value for
-			// delta_sharing_recipient_token_lifetime_in_seconds
-			if field == "delta_sharing_enabled" && old != new && new == true &&
-				!d.HasChange("delta_sharing_recipient_token_lifetime_in_seconds") {
-				patch["delta_sharing_recipient_token_lifetime_in_seconds"] =
-					d.Get("delta_sharing_recipient_token_lifetime_in_seconds")
-			}
+	update := updateFunctionFactory("/unity-catalog/metastores", []string{"owner", "name", "delta_sharing_enabled",
+		"delta_sharing_recipient_token_lifetime_in_seconds", "delta_sharing_organization_name"})
 
-			patch[field] = new
-		}
-		if len(patch) == 0 {
-			return nil
-		}
-		return NewMetastoresAPI(ctx, c).updateMetastore(d.Id(), patch)
-	}
 	return common.Resource{
 		Schema: s,
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {

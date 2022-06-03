@@ -66,6 +66,7 @@ The following arguments are required:
 * `directory_id` - The directory ID corresponding to the Azure Active Directory (AAD) tenant of the application
 * `application_id` - The application ID of the application registration within the referenced AAD tenant
 * `client_secret` - The client secret generated for the above app ID in AAD. **This field is redacted on output**
+* `owner` - (Optional) Username/groupname/sp application_id storage credential owner.
 
 ## Import
 

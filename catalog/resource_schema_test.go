@@ -32,6 +32,7 @@ func TestCreateSchema(t *testing.T) {
 				Response: SchemaInfo{
 					MetastoreID: "d",
 					Comment:     "c",
+					Owner:       "e",
 				},
 			},
 		},
@@ -105,6 +106,7 @@ func TestUpdateSchema(t *testing.T) {
 				Method:   "GET",
 				Resource: "/api/2.0/unity-catalog/schemas/b.a",
 				Response: SchemaInfo{
+					Name:        "a",
 					MetastoreID: "d",
 					Comment:     "c",
 					Owner:       "administrators",

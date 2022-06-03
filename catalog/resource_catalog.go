@@ -67,7 +67,7 @@ func ResourceCatalog() *schema.Resource {
 				return fmt.Errorf("cannot remove new catalog default schema: %w", err)
 			}
 			d.SetId(ci.Name)
-			return updateOwner(ctx, d, c)
+			return updateFunctionFactory("/unity-catalog/catalogs/", []string{"owner"})(ctx, d, c)
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			ci, err := NewCatalogsAPI(ctx, c).getCatalog(d.Id())

@@ -82,7 +82,7 @@ The following arguments are required:
 * `name` - Name of External Location, which must be unique within the [databricks_metastore](metastore.md). Change forces creation of a new resource.
 * `url` - Path URL in cloud storage, of the form: `s3://[bucket-host]/[bucket-dir]` (AWS), `abfss://[user]@[host]/[path]` (Azure).
 * `credential_name` - Name of the [databricks_storage_credential](storage_credential.md) to use with this External Location.
-* `owner` - (Optional) Username/groupname of External Location owner. Currently this field can only be changed after the resource is created.
+* `owner` - (Optional) Username/groupname/sp application_id External Location owner.
 * `comment` - (Optional) User-supplied free-form text.
 * `skip_validation` - (Optional) Suppress validation errors if any & force save the external location
 

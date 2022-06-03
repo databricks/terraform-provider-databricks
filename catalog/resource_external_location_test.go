@@ -56,13 +56,6 @@ func TestCreateExternalLocationWithOwner(t *testing.T) {
 					Owner:          "administrators",
 					Comment:        "def",
 				},
-				Response: ExternalLocationInfo{
-					Name:           "abc",
-					URL:            "s3://foo/bar",
-					CredentialName: "bcd",
-					Owner:          "wrong_owner",
-					Comment:        "def",
-				},
 			},
 			{
 				Method:   "PATCH",
@@ -87,6 +80,45 @@ func TestCreateExternalLocationWithOwner(t *testing.T) {
 		url = "s3://foo/bar"
 		credential_name = "bcd"
 		owner = "administrators"
+		comment = "def"
+		`,
+	}.ApplyNoError(t)
+}
+
+func TestUpdateExternalLocation(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "PATCH",
+				Resource: "/api/2.0/unity-catalog/external-locations/abc",
+				ExpectedRequest: map[string]interface{}{
+					"credential_name": "bcd",
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/unity-catalog/external-locations/abc",
+				Response: ExternalLocationInfo{
+					Name:           "abc",
+					URL:            "s3://foo/bar",
+					CredentialName: "bcd",
+					Comment:        "def",
+				},
+			},
+		},
+		Resource: ResourceExternalLocation(),
+		Update:   true,
+		ID:       "abc",
+		InstanceState: map[string]string{
+			"name":            "abc",
+			"url":             "s3://foo/bar",
+			"credential_name": "abc",
+			"comment":         "def",
+		},
+		HCL: `
+		name = "abc"
+		url = "s3://foo/bar"
+		credential_name = "bcd"
 		comment = "def"
 		`,
 	}.ApplyNoError(t)

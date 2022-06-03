@@ -87,9 +87,7 @@ func ResourceMetastore() *schema.Resource {
 			}
 			return m
 		})
-	updateOwner := updateFunctionFactory("/unity-catalog/metastores", []string{"owner", "delta_sharing_enabled",
-		"delta_sharing_recipient_token_lifetime_in_seconds", "delta_sharing_organization_name"})
-	update := updateFunctionFactory("/unity-catalog/metastores/", []string{"owner", "name", "delta_sharing_enabled",
+	update := updateFunctionFactory("/unity-catalog/metastores", []string{"owner", "name", "delta_sharing_enabled",
 		"delta_sharing_recipient_token_lifetime_in_seconds", "delta_sharing_organization_name"})
 
 	return common.Resource{
@@ -102,7 +100,8 @@ func ResourceMetastore() *schema.Resource {
 				return err
 			}
 			d.SetId(mi.MetastoreID)
-			return updateOwner(ctx, d, c)
+			d.MarkNewResource()
+			return update(ctx, d, c)
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			mi, err := NewMetastoresAPI(ctx, c).getMetastore(d.Id())

@@ -18,7 +18,7 @@ func NewExternalLocationsAPI(ctx context.Context, m interface{}) ExternalLocatio
 }
 
 type ExternalLocationInfo struct {
-	Name           string `json:"name"`
+	Name           string `json:"name" tf:"force_new"`
 	URL            string `json:"url"`
 	CredentialName string `json:"credential_name"`
 	Comment        string `json:"comment,omitempty"`
@@ -45,8 +45,7 @@ func ResourceExternalLocation() *schema.Resource {
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
 			return m
 		})
-	updateOwner := updateFunctionFactory("/unity-catalog/external-locations/", []string{"owner"})
-	update := updateFunctionFactory("/unity-catalog/external-locations/", []string{"owner", "name", "comment", "url", "credential_name", "skip_validation"})
+	update := updateFunctionFactory("/unity-catalog/external-locations", []string{"owner", "name", "comment", "url", "credential_name"})
 	return common.Resource{
 		Schema: s,
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
@@ -57,7 +56,8 @@ func ResourceExternalLocation() *schema.Resource {
 				return err
 			}
 			d.SetId(el.Name)
-			return updateOwner(ctx, d, c)
+			d.MarkNewResource()
+			return update(ctx, d, c)
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			el, err := NewExternalLocationsAPI(ctx, c).get(d.Id())

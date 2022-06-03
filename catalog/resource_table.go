@@ -80,7 +80,6 @@ func ResourceTable() *schema.Resource {
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
 			return m
 		})
-	updateOwner := updateFunctionFactory("/unity-catalog/tables", []string{"owner"})
 	update := updateFunctionFactory("/unity-catalog/tables", []string{"owner", "name", "data_source_format", "columns", "storage_location", "view_definition", "comment", "properties"})
 	return common.Resource{
 		Schema: tableSchema,
@@ -91,7 +90,8 @@ func ResourceTable() *schema.Resource {
 				return err
 			}
 			d.SetId(ti.FullName())
-			return updateOwner(ctx, d, c)
+			d.MarkNewResource()
+			return update(ctx, d, c)
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			ti, err := NewTablesAPI(ctx, c).getTable(d.Id())

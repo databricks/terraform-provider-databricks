@@ -46,7 +46,6 @@ func ResourceStorageCredential() *schema.Resource {
 			m["azure_service_principal"].AtLeastOneOf = alof
 			return m
 		})
-	updateOwner := updateFunctionFactory("/unity-catalog/storage-credentials", []string{"owner"})
 	update := updateFunctionFactory("/unity-catalog/storage-credentials", []string{"owner", "name", "comment", "aws_iam_role", "azure_service_principal"})
 	return common.Resource{
 		Schema: s,
@@ -58,7 +57,8 @@ func ResourceStorageCredential() *schema.Resource {
 				return err
 			}
 			d.SetId(sci.Name)
-			return updateOwner(ctx, d, c)
+			d.MarkNewResource()
+			return update(ctx, d, c)
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			sci, err := NewStorageCredentialsAPI(ctx, c).get(d.Id())

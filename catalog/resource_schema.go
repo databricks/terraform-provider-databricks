@@ -56,7 +56,6 @@ func ResourceSchema() *schema.Resource {
 			delete(m, "full_name")
 			return m
 		})
-	updateOwner := updateFunctionFactory("/unity-catalog/schemas", []string{"owner"})
 	update := updateFunctionFactory("/unity-catalog/schemas", []string{"owner", "name", "comment", "properties"})
 	return common.Resource{
 		Schema: s,
@@ -67,7 +66,8 @@ func ResourceSchema() *schema.Resource {
 				return err
 			}
 			d.SetId(si.FullName)
-			return updateOwner(ctx, d, c)
+			d.MarkNewResource()
+			return update(ctx, d, c)
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			si, err := NewSchemasAPI(ctx, c).getSchema(d.Id())

@@ -18,7 +18,7 @@ func NewCatalogsAPI(ctx context.Context, m interface{}) CatalogsAPI {
 }
 
 type CatalogInfo struct {
-	Name        string            `json:"name"`
+	Name        string            `json:"name" tf:"force_new"`
 	Comment     string            `json:"comment,omitempty"`
 	Properties  map[string]string `json:"properties,omitempty"`
 	Owner       string            `json:"owner,omitempty" tf:"computed"`
@@ -53,8 +53,7 @@ func ResourceCatalog() *schema.Resource {
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
 			return m
 		})
-	updateOwner := updateFunctionFactory("/unity-catalog/catalogs/", []string{"owner"})
-	update := updateFunctionFactory("/unity-catalog/catalogs/", []string{"owner", "name", "comment", "properties"})
+	update := updateFunctionFactory("/unity-catalog/catalogs", []string{"owner", "name", "comment", "properties"})
 	return common.Resource{
 		Schema: catalogSchema,
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
@@ -67,7 +66,8 @@ func ResourceCatalog() *schema.Resource {
 				return fmt.Errorf("cannot remove new catalog default schema: %w", err)
 			}
 			d.SetId(ci.Name)
-			return updateFunctionFactory("/unity-catalog/catalogs/", []string{"owner"})(ctx, d, c)
+			d.MarkNewResource()
+			return update(ctx, d, c)
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			ci, err := NewCatalogsAPI(ctx, c).getCatalog(d.Id())
@@ -76,7 +76,7 @@ func ResourceCatalog() *schema.Resource {
 			}
 			return common.StructToData(ci, catalogSchema, d)
 		},
-		Update: updateFunctionFactory("/unity-catalog/catalogs/", []string{"owner", "name", "comment", "properties"}),
+		Update: update,
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			return NewCatalogsAPI(ctx, c).deleteCatalog(d.Id())
 		},

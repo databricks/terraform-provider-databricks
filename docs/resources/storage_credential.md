@@ -34,12 +34,20 @@ resource "databricks_grants" "external_creds" {
 For Azure
 
 ```hcl
-resource "databricks_storage_credential" "external" {
+resource "databricks_storage_credential" "external_sp" {
   name = azuread_application.ext_cred.display_name
   azure_service_principal {
     directory_id   = var.tenant_id
     application_id = azuread_application.ext_cred.application_id
     client_secret  = azuread_application_password.ext_cred.value
+  }
+  comment = "Managed by TF"
+}
+
+resource "databricks_storage_credential" "external_mi" {
+  name = "mi_credential"
+  azure_managed_identity {
+    access_connector_id   = var.access_connector_id
   }
   comment = "Managed by TF"
 }

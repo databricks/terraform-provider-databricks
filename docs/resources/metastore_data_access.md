@@ -29,7 +29,7 @@ resource "databricks_metastore_data_access" "this" {
 }
 ```
 
-For Azure using service principal
+For Azure using service principal as credential
 
 ```hcl
 resource "databricks_metastore" "this" {
@@ -53,7 +53,7 @@ resource "databricks_metastore_data_access" "this" {
 }
 ```
 
-For Azure using MI (Private Preview)
+For Azure using managed identity as credential (Private Preview)
 
 ```hcl
 resource "databricks_metastore" "this" {
@@ -66,8 +66,8 @@ resource "databricks_metastore" "this" {
 }
 
 resource "databricks_metastore_data_access" "this" {
-  metastore_id = "mi_dac"
-  name         = aws_iam_role.metastore_data_access.name
+  metastore_id = databricks_metastore.this.id
+  name         = "mi_dac"
   azure_managed_identity {
     access_connector_id   = var.access_connector_id
   }

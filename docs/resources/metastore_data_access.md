@@ -29,7 +29,7 @@ resource "databricks_metastore_data_access" "this" {
 }
 ```
 
-For Azure
+For Azure using service principal
 
 ```hcl
 resource "databricks_metastore" "this" {
@@ -43,11 +43,33 @@ resource "databricks_metastore" "this" {
 
 resource "databricks_metastore_data_access" "this" {
   metastore_id = databricks_metastore.this.id
-  name         = aws_iam_role.metastore_data_access.name
+  name         = "sp_dac"
   azure_service_principal {
     directory_id   = var.tenant_id
     application_id = azuread_application.unity_catalog.application_id
     client_secret  = azuread_application_password.unity_catalog.value
+  }
+  is_default = true
+}
+```
+
+For Azure using MI (Private Preview)
+
+```hcl
+resource "databricks_metastore" "this" {
+  name = "primary"
+  storage_root = format("abfss://%s@%s.dfs.core.windows.net/",
+    azurerm_storage_account.unity_catalog.name,
+  azurerm_storage_container.unity_catalog.name)
+  owner         = "uc admins"
+  force_destroy = true
+}
+
+resource "databricks_metastore_data_access" "this" {
+  metastore_id = "mi_dac"
+  name         = aws_iam_role.metastore_data_access.name
+  azure_managed_identity {
+    access_connector_id   = var.access_connector_id
   }
   is_default = true
 }
@@ -67,6 +89,9 @@ The following arguments are required:
 * `directory_id` - The directory ID corresponding to the Azure Active Directory (AAD) tenant of the application
 * `application_id` - The application ID of the application registration within the referenced AAD tenant
 * `client_secret` - The client secret generated for the above app ID in AAD. **This field is redacted on output**
+
+`azure_managed_identity` optional configuration block for using managed identity as credential details for Azure:
+* `access_connector_id` - The Resource ID of the Azure Databricks Access Connector resource, of the form `"/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-name/providers/Microsoft.Databricks/accessConnectors/connector-name`
 
 ## Import
 

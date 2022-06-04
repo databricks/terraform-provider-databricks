@@ -137,3 +137,44 @@ func TestUpdateStorageCredentials(t *testing.T) {
 		`,
 	}.ApplyNoError(t)
 }
+
+func TestCreateStorageCredentialWithAzMI(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/unity-catalog/storage-credentials",
+				ExpectedRequest: StorageCredentialInfo{
+					Name: "a",
+					AzMI: &AzureManagedIdentity{
+						AccessConnectorID: "def",
+					},
+					Comment: "c",
+				},
+				Response: StorageCredentialInfo{
+					Name: "a",
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/unity-catalog/storage-credentials/a",
+				Response: StorageCredentialInfo{
+					Name: "a",
+					AzMI: &AzureManagedIdentity{
+						AccessConnectorID: "def",
+					},
+					MetastoreID: "d",
+				},
+			},
+		},
+		Resource: ResourceStorageCredential(),
+		Create:   true,
+		HCL: `
+		name = "a"
+		azure_managed_identity {
+			access_connector_id = "def"
+		}
+		comment = "c"
+		`,
+	}.ApplyNoError(t)
+}

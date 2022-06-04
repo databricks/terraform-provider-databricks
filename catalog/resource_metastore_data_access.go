@@ -27,12 +27,17 @@ type AzureServicePrincipal struct {
 	ClientSecret  string `json:"client_secret"`
 }
 
+type AzureManagedIdentity struct {
+	AccessConnectorID string `json:"access_connector_id"`
+}
+
 type DataAccessConfiguration struct {
 	ID                string                 `json:"id,omitempty" tf:"computed"`
 	Name              string                 `json:"name"`
 	ConfigurationType string                 `json:"configuration_type,omitempty" tf:"computed"`
 	Aws               *AwsIamRole            `json:"aws_iam_role,omitempty" tf:"group:access"`
 	Azure             *AzureServicePrincipal `json:"azure_service_principal,omitempty" tf:"group:access"`
+	AzMI              *AzureManagedIdentity  `json:"azure_managed_identity,omitempty" tf:"group:access"`
 }
 
 func (a DataAccessConfigurationsAPI) Create(metastoreID string, dac *DataAccessConfiguration) error {
@@ -65,9 +70,10 @@ func ResourceDataAccessConfiguration() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 			}
-			alof := []string{"aws_iam_role", "azure_service_principal"}
+			alof := []string{"aws_iam_role", "azure_service_principal", "azure_managed_identity"}
 			m["aws_iam_role"].AtLeastOneOf = alof
 			m["azure_service_principal"].AtLeastOneOf = alof
+			m["azure_managed_identity"].AtLeastOneOf = alof
 			return m
 		})
 	p := common.NewPairID("metastore_id", "id")

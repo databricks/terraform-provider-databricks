@@ -91,7 +91,7 @@ The following arguments are required:
 * `client_secret` - The client secret generated for the above app ID in AAD. **This field is redacted on output**
 
 `azure_managed_identity` optional configuration block for using managed identity as credential details for Azure:
-* `access_connector_id` - The Resource ID of the Azure Databricks Access Connector resource, of the form `"/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-name/providers/Microsoft.Databricks/accessConnectors/connector-name`
+* `access_connector_id` - The Resource ID of the Azure Databricks Access Connector resource, of the form `/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-name/providers/Microsoft.Databricks/accessConnectors/connector-name`
 
 ## Import
 

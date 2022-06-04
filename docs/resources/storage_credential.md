@@ -41,7 +41,7 @@ resource "databricks_storage_credential" "external_sp" {
     application_id = azuread_application.ext_cred.application_id
     client_secret  = azuread_application_password.ext_cred.value
   }
-  comment = "Managed by TF"
+  comment = "SP credential managed by TF"
 }
 
 resource "databricks_storage_credential" "external_mi" {
@@ -49,7 +49,7 @@ resource "databricks_storage_credential" "external_mi" {
   azure_managed_identity {
     access_connector_id   = var.access_connector_id
   }
-  comment = "Managed by TF"
+  comment = "Managed identity credential managed by TF"
 }
 
 resource "databricks_grants" "external_creds" {
@@ -76,7 +76,7 @@ The following arguments are required:
 * `client_secret` - The client secret generated for the above app ID in AAD. **This field is redacted on output**
 
 `azure_managed_identity` optional configuration block for using managed identity as credential details for Azure:
-* `access_connector_id` - The Resource ID of the Azure Databricks Access Connector resource, of the form `"/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-name/providers/Microsoft.Databricks/accessConnectors/connector-name`
+* `access_connector_id` - The Resource ID of the Azure Databricks Access Connector resource, of the form `/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-name/providers/Microsoft.Databricks/accessConnectors/connector-name`
 
 ## Import
 

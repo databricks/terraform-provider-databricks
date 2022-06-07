@@ -69,7 +69,7 @@ resource "databricks_metastore_data_access" "this" {
   metastore_id = databricks_metastore.this.id
   name         = "mi_dac"
   azure_managed_identity {
-    access_connector_id   = var.access_connector_id
+    access_connector_id = var.access_connector_id
   }
   is_default = true
 }

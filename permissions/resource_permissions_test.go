@@ -986,6 +986,61 @@ func TestShouldKeepAdminsOnAnythingExceptPasswordsAndAssignsOwnerForJob(t *testi
 	})
 }
 
+func TestShouldKeepAdminsOnAnythingExceptPasswordsAndAssignsOwnerForPipeline(t *testing.T) {
+	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/permissions/pipelines/123",
+			Response: ObjectACL{
+				ObjectID:   "/pipelines/123",
+				ObjectType: "pipeline",
+				AccessControlList: []AccessControl{
+					{
+						GroupName: "admins",
+						AllPermissions: []Permission{
+							{
+								PermissionLevel: "CAN_DO_EVERYTHING",
+								Inherited:       true,
+							},
+							{
+								PermissionLevel: "CAN_MANAGE",
+								Inherited:       false,
+							},
+						},
+					},
+				},
+			},
+		},
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/pipelines/123",
+			Response: jobs.Job{
+				CreatorUserName: "creator@example.com",
+			},
+		},
+		{
+			Method:   "PUT",
+			Resource: "/api/2.0/permissions/pipelines/123",
+			ExpectedRequest: ObjectACL{
+				AccessControlList: []AccessControl{
+					{
+						GroupName:       "admins",
+						PermissionLevel: "CAN_MANAGE",
+					},
+					{
+						UserName:        "creator@example.com",
+						PermissionLevel: "IS_OWNER",
+					},
+				},
+			},
+		},
+	}, func(ctx context.Context, client *common.DatabricksClient) {
+		p := NewPermissionsAPI(ctx, client)
+		err := p.Delete("/pipelines/123")
+		assert.NoError(t, err)
+	})
+}
+
 func TestCustomizeDiffNoHostYet(t *testing.T) {
 	assert.Nil(t, ResourcePermissions().CustomizeDiff(context.TODO(), nil, &common.DatabricksClient{}))
 }

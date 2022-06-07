@@ -248,7 +248,7 @@ func TestResourcePipelineRead(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/pipelines/abcd",
-				Response: pipelineInfo{
+				Response: PipelineInfo{
 					PipelineID: "abcd",
 					Spec:       &basicPipelineSpec,
 				},
@@ -335,7 +335,7 @@ func TestResourcePipelineUpdate(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/pipelines/abcd",
-				Response: pipelineInfo{
+				Response: PipelineInfo{
 					PipelineID: "abcd",
 					Spec:       &spec,
 					State:      &state,
@@ -344,7 +344,7 @@ func TestResourcePipelineUpdate(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/pipelines/abcd",
-				Response: pipelineInfo{
+				Response: PipelineInfo{
 					PipelineID: "abcd",
 					Spec:       &spec,
 					State:      &state,
@@ -427,7 +427,7 @@ func TestResourcePipelineUpdate_FailsAfterUpdate(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/pipelines/abcd",
-				Response: pipelineInfo{
+				Response: PipelineInfo{
 					PipelineID: "abcd",
 					Spec:       &spec,
 					State:      &state,
@@ -463,7 +463,7 @@ func TestResourcePipelineDelete(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/pipelines/abcd",
-				Response: pipelineInfo{
+				Response: PipelineInfo{
 					PipelineID: "abcd",
 					Spec:       &basicPipelineSpec,
 					State:      &state,

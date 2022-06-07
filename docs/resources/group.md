@@ -48,11 +48,11 @@ Creating group in AWS Databricks account:
 ```hcl
 // initialize provider at account-level
 provider "databricks" {
-  alias    = "mws"
-  host     = "https://accounts.cloud.databricks.com"
+  alias      = "mws"
+  host       = "https://accounts.cloud.databricks.com"
   account_id = "00000000-0000-0000-0000-000000000000"
-  username = var.databricks_account_username
-  password = var.databricks_account_password
+  username   = var.databricks_account_username
+  password   = var.databricks_account_password
 }
 
 resource "databricks_group" "this" {

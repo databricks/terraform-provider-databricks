@@ -129,6 +129,7 @@ func TestResourceWorkspaceCreateGcp(t *testing.T) {
 					},
 					"location": "bcd",
 					"network": map[string]interface{}{
+						"network_id": "net_id_a",
 						"gcp_common_network_config": map[string]interface{}{
 							"gke_cluster_master_ip_range": "e",
 							"gke_connectivity_type":       "d",
@@ -173,6 +174,7 @@ func TestResourceWorkspaceCreateGcp(t *testing.T) {
 			}
 		}
 		network {
+			network_id = "net_id_a"
 			gcp_managed_network_config {
 				subnet_cidr = "a"
 				gke_cluster_pod_ip_range = "b"

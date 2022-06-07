@@ -66,6 +66,7 @@ type GCPCommonNetworkConfig struct {
 }
 
 type GCPNetwork struct {
+	NetworkID               string                   `json:"network_id,omitempty"`
 	GCPManagedNetworkConfig *GCPManagedNetworkConfig `json:"gcp_managed_network_config"`
 	GCPCommonNetworkConfig  *GCPCommonNetworkConfig  `json:"gcp_common_network_config"`
 }

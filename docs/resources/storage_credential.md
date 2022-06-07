@@ -34,14 +34,22 @@ resource "databricks_grants" "external_creds" {
 For Azure
 
 ```hcl
-resource "databricks_storage_credential" "external" {
+resource "databricks_storage_credential" "external_sp" {
   name = azuread_application.ext_cred.display_name
   azure_service_principal {
     directory_id   = var.tenant_id
     application_id = azuread_application.ext_cred.application_id
     client_secret  = azuread_application_password.ext_cred.value
   }
-  comment = "Managed by TF"
+  comment = "SP credential managed by TF"
+}
+
+resource "databricks_storage_credential" "external_mi" {
+  name = "mi_credential"
+  azure_managed_identity {
+    access_connector_id   = var.access_connector_id
+  }
+  comment = "Managed identity credential managed by TF"
 }
 
 resource "databricks_grants" "external_creds" {
@@ -62,11 +70,13 @@ The following arguments are required:
 `aws_iam_role` optional configuration block for credential details for AWS:
 * `role_arn` - The Amazon Resource Name (ARN) of the AWS IAM role for S3 data access, of the form `arn:aws:iam::1234567890:role/MyRole-AJJHDSKSDF`
 
-`azure_service_principal` optional configuration block for credential details for Azure:
+`azure_service_principal` optional configuration block to use service principal as credential details for Azure:
 * `directory_id` - The directory ID corresponding to the Azure Active Directory (AAD) tenant of the application
 * `application_id` - The application ID of the application registration within the referenced AAD tenant
 * `client_secret` - The client secret generated for the above app ID in AAD. **This field is redacted on output**
-* `owner` - (Optional) Username/groupname/sp application_id storage credential owner.
+
+`azure_managed_identity` optional configuration block for using managed identity as credential details for Azure:
+* `access_connector_id` - The Resource ID of the Azure Databricks Access Connector resource, of the form `/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-name/providers/Microsoft.Databricks/accessConnectors/connector-name`
 
 ## Import
 

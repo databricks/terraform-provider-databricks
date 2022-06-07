@@ -22,6 +22,7 @@ type StorageCredentialInfo struct {
 	Comment     string                 `json:"comment,omitempty"`
 	Aws         *AwsIamRole            `json:"aws_iam_role,omitempty" tf:"group:access"`
 	Azure       *AzureServicePrincipal `json:"azure_service_principal,omitempty" tf:"group:access"`
+	AzMI        *AzureManagedIdentity  `json:"azure_managed_identity,omitempty" tf:"group:access"`
 	MetastoreID string                 `json:"metastore_id,omitempty" tf:"computed"`
 }
 
@@ -41,9 +42,10 @@ func (a StorageCredentialsAPI) delete(id string) error {
 func ResourceStorageCredential() *schema.Resource {
 	s := common.StructToSchema(StorageCredentialInfo{},
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
-			alof := []string{"aws_iam_role", "azure_service_principal"}
+			alof := []string{"aws_iam_role", "azure_service_principal", "azure_managed_identity"}
 			m["aws_iam_role"].AtLeastOneOf = alof
 			m["azure_service_principal"].AtLeastOneOf = alof
+			m["azure_managed_identity"].AtLeastOneOf = alof
 			return m
 		})
 	update := updateFunctionFactory("/unity-catalog/storage-credentials", []string{"owner", "comment", "aws_iam_role", "azure_service_principal"})

@@ -47,7 +47,7 @@ resource "databricks_storage_credential" "external_sp" {
 resource "databricks_storage_credential" "external_mi" {
   name = "mi_credential"
   azure_managed_identity {
-    access_connector_id   = var.access_connector_id
+    access_connector_id = var.access_connector_id
   }
   comment = "Managed identity credential managed by TF"
 }

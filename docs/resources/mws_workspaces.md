@@ -65,10 +65,10 @@ resource "databricks_mws_networks" "this" {
 
 // create workspace in given VPC with DBFS on root bucket
 resource "databricks_mws_workspaces" "this" {
-  provider        = databricks.mws
-  account_id      = var.databricks_account_id
-  workspace_name  = var.prefix
-  aws_region      = var.region
+  provider       = databricks.mws
+  account_id     = var.databricks_account_id
+  workspace_name = var.prefix
+  aws_region     = var.region
 
   credentials_id           = databricks_mws_credentials.this.credentials_id
   storage_configuration_id = databricks_mws_storage_configurations.this.storage_configuration_id
@@ -177,10 +177,10 @@ resource "databricks_mws_storage_configurations" "this" {
 }
 
 resource "databricks_mws_workspaces" "this" {
-  provider        = databricks.mws
-  account_id      = var.databricks_account_id
-  workspace_name  = local.prefix
-  aws_region      = "us-east-1"
+  provider       = databricks.mws
+  account_id     = var.databricks_account_id
+  workspace_name = local.prefix
+  aws_region     = "us-east-1"
 
   credentials_id           = databricks_mws_credentials.this.credentials_id
   storage_configuration_id = databricks_mws_storage_configurations.this.storage_configuration_id

@@ -211,6 +211,72 @@ resource "databricks_permissions" "job_usage" {
 }
 ```
 
+## Delta Live Tables usage
+
+There are four assignable [permission levels](https://docs.databricks.com/security/access-control/dlt-acl.html#delta-live-tables-permissions) for [databricks_pipeline](pipeline.md): `CAN_VIEW`, `CAN_RUN`, `CAN_MANAGE`, and `IS_OWNER`. Admins are granted the `CAN_MANAGE` permission by default, and they can assign that permission to non-admin users, and service principals.
+
+- The creator of a DLT Pipeline has `IS_OWNER` permission. Destroying `databricks_permissions` resource for a pipeline would revert ownership to the creator.
+- A DLT pipeline must have exactly one owner. If a resource is changed and no owner is specified, the currently authenticated principal would become the new owner of the pipeline. Nothing would change, per se, if the pipeline was created through Terraform.
+- A DLT pipeline cannot have a group as an owner.
+- DLT Pipelines triggered through _Start_ assume the permissions of the pipeline owner and not the user, and service principal who issued Run Now.
+- Read [main documentation](https://docs.databricks.com/security/access-control/dlt-acl.html) for additional detail.
+
+```hcl
+resource "databricks_group" "eng" {
+  display_name = "Engineering"
+}
+
+resource "databricks_notebook" "dlt_demo" {
+  content_base64 = base64encode(<<-EOT
+    import dlt
+    json_path = "/databricks-datasets/wikipedia-datasets/data-001/clickstream/raw-uncompressed-json/2015_2_clickstream.json"
+    @dlt.table(
+       comment="The raw wikipedia clickstream dataset, ingested from /databricks-datasets."
+    )
+    def clickstream_raw():
+        return (spark.read.format("json").load(json_path))
+    EOT
+  )
+  language = "PYTHON"
+  path     = "${data.databricks_current_user.me.home}/DLT_Demo"
+}
+
+resource "databricks_pipeline" "this" {
+  name    = "DLT Demo Pipeline (${data.databricks_current_user.me.alphanumeric})"
+  storage = "/test/tf-pipeline"
+  configuration = {
+    key1 = "value1"
+    key2 = "value2"
+  }
+
+  library {
+    notebook {
+      path = databricks_notebook.dlt_demo.id
+    }
+  }
+
+  continuous = false
+  filters {
+    include = ["com.databricks.include"]
+    exclude = ["com.databricks.exclude"]
+  }
+}
+
+resource "databricks_permissions" "dlt_usage" {
+  pipeline_id = databricks_pipeline.this.id
+
+  access_control {
+    group_name       = "users"
+    permission_level = "CAN_VIEW"
+  }
+
+  access_control {
+    group_name       = databricks_group.eng.display_name
+    permission_level = "CAN_MANAGE"
+  }
+}
+```
+
 ## Notebook usage
 
 Valid [permission levels](https://docs.databricks.com/security/access-control/workspace-acl.html#notebook-permissions) for [databricks_notebook](notebook.md) are: `CAN_READ`, `CAN_RUN`, `CAN_EDIT`, and `CAN_MANAGE`.

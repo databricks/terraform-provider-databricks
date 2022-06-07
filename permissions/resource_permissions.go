@@ -11,6 +11,7 @@ import (
 
 	"github.com/databrickslabs/terraform-provider-databricks/common"
 	"github.com/databrickslabs/terraform-provider-databricks/jobs"
+	"github.com/databrickslabs/terraform-provider-databricks/pipelines"
 	"github.com/databrickslabs/terraform-provider-databricks/scim"
 
 	"github.com/databrickslabs/terraform-provider-databricks/workspace"
@@ -150,7 +151,7 @@ func (a PermissionsAPI) Update(objectID string, objectACL AccessControlChangeLis
 			PermissionLevel: "CAN_MANAGE",
 		})
 	}
-	if strings.HasPrefix(objectID, "/jobs") {
+	if strings.HasPrefix(objectID, "/jobs") || strings.HasPrefix(objectID, "/pipelines") {
 		owners := 0
 		for _, acl := range objectACL.AccessControlList {
 			if acl.PermissionLevel == "IS_OWNER" {
@@ -189,6 +190,15 @@ func (a PermissionsAPI) Delete(objectID string) error {
 	}
 	if strings.HasPrefix(objectID, "/jobs") {
 		job, err := jobs.NewJobsAPI(a.context, a.client).Read(strings.ReplaceAll(objectID, "/jobs/", ""))
+		if err != nil {
+			return err
+		}
+		accl.AccessControlList = append(accl.AccessControlList, AccessControlChange{
+			UserName:        job.CreatorUserName,
+			PermissionLevel: "IS_OWNER",
+		})
+	} else if strings.HasPrefix(objectID, "/pipelines") {
+		job, err := pipelines.NewPipelinesAPI(a.context, a.client).Read(strings.ReplaceAll(objectID, "/pipelines/", ""))
 		if err != nil {
 			return err
 		}
@@ -241,6 +251,7 @@ func permissionsResourceIDFields() []permissionsIDFieldMapping {
 		{"cluster_policy_id", "cluster-policy", "cluster-policies", []string{"CAN_USE"}, SIMPLE},
 		{"instance_pool_id", "instance-pool", "instance-pools", []string{"CAN_ATTACH_TO", "CAN_MANAGE"}, SIMPLE},
 		{"cluster_id", "cluster", "clusters", []string{"CAN_ATTACH_TO", "CAN_RESTART", "CAN_MANAGE"}, SIMPLE},
+		{"pipeline_id", "pipelines", "pipelines", []string{"CAN_VIEW", "CAN_RUN", "CAN_MANAGE", "IS_OWNER"}, SIMPLE},
 		{"job_id", "job", "jobs", []string{"CAN_VIEW", "CAN_MANAGE_RUN", "IS_OWNER", "CAN_MANAGE"}, SIMPLE},
 		{"notebook_id", "notebook", "notebooks", []string{"CAN_READ", "CAN_RUN", "CAN_EDIT", "CAN_MANAGE"}, SIMPLE},
 		{"notebook_path", "notebook", "notebooks", []string{"CAN_READ", "CAN_RUN", "CAN_EDIT", "CAN_MANAGE"}, PATH},

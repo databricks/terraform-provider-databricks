@@ -61,8 +61,8 @@ func DataSourceUser() *schema.Resource {
 			},
 			"application_id": {
 				Type:     schema.TypeString,
-				Computed: true
-			}
+				Computed: true,
+			},
 		},
 		ReadContext: func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 			usersAPI := NewUsersAPI(ctx, m)

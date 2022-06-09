@@ -51,6 +51,7 @@ func DatabricksProvider() *schema.Provider {
 			"databricks_notebook_paths":          workspace.DataSourceNotebookPaths(),
 			"databricks_schemas":                 catalog.DataSourceSchemas(),
 			"databricks_service_principal":       scim.DataSourceServicePrincipal(),
+			"databricks_service_principals":      scim.DataSourceServicePrincipals(),
 			"databricks_spark_version":           clusters.DataSourceSparkVersion(),
 			"databricks_tables":                  catalog.DataSourceTables(),
 			"databricks_views":                   catalog.DataSourceViews(),

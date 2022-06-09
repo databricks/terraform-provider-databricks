@@ -2,28 +2,34 @@
 subcategory: "Security"
 ---
 
-# databricks_service_principal Data Source
+# databricks_service_principals Data Source
 
 -> **Note** If you have a fully automated setup with workspaces created by [databricks_mws_workspaces](../resources/mws_workspaces.md) or [azurerm_databricks_workspace](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/databricks_workspace), please make sure to add [depends_on attribute](../index.md#data-resources-and-authentication-is-not-configured-errors) in order to prevent _authentication is not configured for provider_ errors.
 
-Retrieves information about [databricks_service_principal](../resources/service_principal.md).
+Retrieves `application_ids` of all [databricks_service_principal](../resources/service_principal.md) based on their `display_name`
 
 ## Example Usage
 
-Adding service principal `11111111-2222-3333-4444-555666777888` to administrative group
+Adding all service principals with display name `my-spn` to admin group
 
 ```hcl
 data "databricks_group" "admins" {
   display_name = "admins"
 }
 
-data "databricks_service_principal" "spn" {
-  application_id = "11111111-2222-3333-4444-555666777888"
+data "databricks_service_principals" "spns" {
+  display_name = "my-spn"
 }
 
-resource "databricks_group_member" "my_member_a" {
+data "databricks_service_principal" "spn" {
+  for_each = toset(data.databricks_service_principals.spns.application_ids)
+  application_id = each.value
+}
+
+resource "databricks_group_member" "my_member_spn" {
+  for_each = toset(data.databricks_service_principals.spns.application_ids)
   group_id  = data.databricks_group.admins.id
-  member_id = data.databricks_service_principal.spn.id
+  member_id = data.databricks_service_principal.spn[each.value].sp_id
 }
 ```
 
@@ -31,19 +37,13 @@ resource "databricks_group_member" "my_member_a" {
 
 Data source allows you to pick service principals by the following attributes
 
-- `application_id` - (Required) ID of the service principal. The service principal must exist before this resource can be retrieved.
+- `display_name` - (Required) Display name of the service principals. The service principals must exist before this resource can be retrieved.
 
 ## Attribute Reference
 
 Data source exposes the following attributes:
 
-- `sp_id` - The id of the service principal.
-- `application_id` - This is the application id of the given service principal
-- `external_id` - ID of the service principal in an external identity provider.
-- `display_name` - Display name of the [service principal](../resources/service_principal.md), e.g. `Foo SPN`.
-- `home` - Home folder of the [service principal](../resources/service_principal.md), e.g. `/Users/11111111-2222-3333-4444-555666777888`.
-- `repos` - Repos location of the [service principal](../resources/service_principal.md), e.g. `/Repos/11111111-2222-3333-4444-555666777888`.
-- `active` - Whether service principal is active or not.
+- `application_ids` - List of `application_ids` of service principals with the display name. Individual service principal can be retrieved using [databricks_service_principal](databricks_service_principal.md) data source
 
 ## Related Resources
 

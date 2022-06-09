@@ -51,7 +51,7 @@ resource "databricks_pipeline" "this" {
 The following arguments are supported:
 
 * `name` - A user-friendly name for this pipeline. The name can be used to identify pipeline jobs in the UI.
-* `storage` - A location on DBFS or cloud storage where output data and metadata required for pipeline execution are stored. By default, tables are stored in a subdirectory of this location.  *Change of this parameter forces recreation of the pipeline!*
+* `storage` - A location on DBFS or cloud storage where output data and metadata required for pipeline execution are stored. By default, tables are stored in a subdirectory of this location. *Change of this parameter forces recreation of the pipeline.*
 * `configuration` - An optional list of values to apply to the entire pipeline. Elements must be formatted as key:value pairs.
 * `library` blocks - Specifies pipeline code and required artifacts. Syntax resembles [library](cluster.md#library-configuration-block) configuration block with the addition of a special `notebook` type of library that should have the `path` attribute.  *Right now only the `notebook` type is supported!*
 * `cluster` blocks - [Clusters](cluster.md) to run the pipeline. If none is specified, pipelines will automatically select a default cluster configuration for the pipeline. *Please note that DLT pipeline clusters are supporting only subset of attributes as described in [documentation](https://docs.databricks.com/data-engineering/delta-live-tables/delta-live-tables-api-guide.html#pipelinesnewcluster).*

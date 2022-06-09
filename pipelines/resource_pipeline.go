@@ -8,6 +8,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
 	"github.com/databrickslabs/terraform-provider-databricks/clusters"
 	"github.com/databrickslabs/terraform-provider-databricks/common"
@@ -27,10 +28,12 @@ type pipelineCluster struct {
 	NumWorkers int32               `json:"num_workers,omitempty" tf:"group:size"`
 	Autoscale  *clusters.AutoScale `json:"autoscale,omitempty" tf:"group:size"`
 
-	NodeTypeID       string                  `json:"node_type_id,omitempty" tf:"group:node_type,computed"`
-	DriverNodeTypeID string                  `json:"driver_node_type_id,omitempty" tf:"conflicts:instance_pool_id,computed"`
-	InstancePoolID   string                  `json:"instance_pool_id,omitempty" tf:"group:node_type"`
-	AwsAttributes    *clusters.AwsAttributes `json:"aws_attributes,omitempty" tf:"conflicts:instance_pool_id"`
+	NodeTypeID           string                  `json:"node_type_id,omitempty" tf:"group:node_type,computed"`
+	DriverNodeTypeID     string                  `json:"driver_node_type_id,omitempty" tf:"computed"`
+	InstancePoolID       string                  `json:"instance_pool_id,omitempty" tf:"group:node_type"`
+	DriverInstancePoolID string                  `json:"driver_instance_pool_id,omitempty"`
+	AwsAttributes        *clusters.AwsAttributes `json:"aws_attributes,omitempty" tf:"suppress_diff"`
+	GcpAttributes        *clusters.GcpAttributes `json:"gcp_attributes,omitempty" tf:"suppress_diff"`
 
 	SparkConf    map[string]string `json:"spark_conf,omitempty"`
 	SparkEnvVars map[string]string `json:"spark_env_vars,omitempty"`
@@ -60,14 +63,18 @@ type filters struct {
 type pipelineSpec struct {
 	ID                  string            `json:"id,omitempty" tf:"computed"`
 	Name                string            `json:"name,omitempty"`
-	Storage             string            `json:"storage,omitempty"`
+	Storage             string            `json:"storage,omitempty" tf:"force_new"`
 	Configuration       map[string]string `json:"configuration,omitempty"`
 	Clusters            []pipelineCluster `json:"clusters,omitempty" tf:"slice_set,alias:cluster"`
 	Libraries           []pipelineLibrary `json:"libraries,omitempty" tf:"slice_set,alias:library"`
-	Filters             *filters          `json:"filters"`
+	Filters             *filters          `json:"filters,omitempty"`
 	Continuous          bool              `json:"continuous,omitempty"`
+	Development         bool              `json:"development,omitempty"`
 	AllowDuplicateNames bool              `json:"allow_duplicate_names,omitempty"`
 	Target              string            `json:"target,omitempty"`
+	Photon              bool              `json:"photon,omitempty"`
+	Edition             string            `json:"edition,omitempty" tf:"suppress_diff,default:advanced"`
+	Channel             string            `json:"channel,omitempty" tf:"suppress_diff,default:current"`
 }
 
 type createPipelineResponse struct {
@@ -206,18 +213,26 @@ func adjustPipelineResourceSchema(m map[string]*schema.Schema) map[string]*schem
 
 	awsAttributes, _ := clustersSchema["aws_attributes"].Elem.(*schema.Resource)
 	awsAttributesSchema := awsAttributes.Schema
-	delete(awsAttributesSchema, "first_on_demand")
 	delete(awsAttributesSchema, "availability")
 	delete(awsAttributesSchema, "spot_bid_price_percent")
 	delete(awsAttributesSchema, "ebs_volume_type")
 	delete(awsAttributesSchema, "ebs_volume_count")
 	delete(awsAttributesSchema, "ebs_volume_size")
 
+	gcpAttributes, _ := clustersSchema["gcp_attributes"].Elem.(*schema.Resource)
+	gcpAttributesSchema := gcpAttributes.Schema
+	delete(gcpAttributesSchema, "use_preemptible_executors")
+	delete(gcpAttributesSchema, "availability")
+	delete(gcpAttributesSchema, "boot_disk_size")
+	delete(gcpAttributesSchema, "zone_id")
+
 	m["library"].MinItems = 1
 	m["url"] = &schema.Schema{
 		Type:     schema.TypeString,
 		Computed: true,
 	}
+	m["channel"].ValidateFunc = validation.StringInSlice([]string{"current", "preview"}, true)
+	m["edition"].ValidateFunc = validation.StringInSlice([]string{"pro", "core", "advanced"}, true)
 
 	return m
 }

@@ -12,7 +12,7 @@ This guide uses the following variables in configurations:
 
 - `databricks_account_username`: The username an account-level admin uses to log in to  [https://accounts.cloud.databricks.com](https://accounts.cloud.databricks.com).
 - `databricks_account_password`: The password for `databricks_account_username`.
-- `databricks_account_id`: The numeric ID for your Databricks account. When you are logged in, it appears in the bottom left corner of the page.
+- `databricks_account_id`: The numeric ID for your Databricks account. When you are logged in, it appears in the bottom left corner of the [Databricks Account Console](https://accounts.cloud.databricks.com/) or [Azure Databricks Account Console](https://accounts.azuredatabricks.net).
 - `databricks_workspace_url`: Value of `workspace_url` attribute from [databricks_mws_workspaces](../resources/mws_workspaces.md#attribute-reference) resource.
 
 This guide is provided as-is and you can use this guide as the basis for your custom Terraform module.
@@ -145,10 +145,13 @@ resource "aws_s3_bucket" "metastore" {
   })
 }
 
-resource "aws_s3_bucket_public_access_block" "root_storage_bucket" {
-  bucket             = aws_s3_bucket.metastore.id
-  ignore_public_acls = true
-  depends_on         = [aws_s3_bucket.metastore]
+resource "aws_s3_bucket_public_access_block" "metastore" {
+  bucket                  = aws_s3_bucket.metastore.id
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
+  depends_on              = [aws_s3_bucket.metastore]
 }
 
 data "aws_iam_policy_document" "passrole_for_uc" {
@@ -431,7 +434,7 @@ resource "databricks_grants" "external_creds" {
   storage_credential = databricks_storage_credential.external.id
   grant {
     principal  = "Data Engineers"
-    privileges = ["CREATE TABLE"]
+    privileges = ["CREATE_TABLE"]
   }
 }
 
@@ -448,7 +451,7 @@ resource "databricks_grants" "some" {
   external_location = databricks_external_location.some.id
   grant {
     principal  = "Data Engineers"
-    privileges = ["CREATE TABLE", "READ FILES"]
+    privileges = ["CREATE_TABLE", "READ_FILES"]
   }
 }
 ```
@@ -486,7 +489,7 @@ resource "databricks_cluster" "unity_sql" {
 - To use those advanced cluster features or languages like Python, Scala and R with Unity Catalog, one must choose **Single User** mode when launching the cluster. The cluster can only be used exclusively by a single user (by default the owner of the cluster); other users are not allowed to attach to the cluster.
 The below example will create a collection of single-user [databricks_cluster](../resources/cluster.md) for each user in a group managed through SCIM provisioning. Individual user will be able to restart their cluster, but not anyone else. Terraform's `for_each` meta-attribute will help us achieve this.
 
-First we use [databricks_group](../data-sources/group.md) and [databricks_user](../data-sources/user.md) data resources to get the list of user names, that belong to a group.
+First we use [databricks_group](../data-sources/group.md) and [databricks_user](../data-sources/user.md) data resources to get the list of user names that belong to a group.
 
 ```hcl
 data "databricks_group" "dev" {

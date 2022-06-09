@@ -3,7 +3,7 @@ page_title: "Migration from 0.2.x to 0.3.x"
 ---
 # Migration from 0.2.x to 0.3.x
 
-Certain resources undergone changes in order to ensure consistency with REST API and standard expected Terraform behavior. You can upgrade provider with `terraform init -upgrade`.
+Certain resources underwent changes in order to ensure consistency with REST API and standard expected Terraform behavior. You can upgrade the provider with `terraform init -upgrade`.
 
 ## provider
 
@@ -20,20 +20,20 @@ Certain resources undergone changes in order to ensure consistency with REST API
 
 ## databricks_dbfs_file
 
-* Rename `content` to `content_base64`, as this closer represents actual data within the field and simplifies internal code reusability.
-* Remove `overwrite` attribute. Starting from v0.3.0 it behaves as if it is set to `true`.
-* Remove `mkdirs` attribute. Starting from v0.3.0 it behaves as if it is set to `true`.
-* Remove `validate_remote_file` attribute. Due to performance reasons, starting from v0.3.0 it doesn't fetch the contents of remote file to verify the checksum. 
-* If you've relied on internal `content_b64_md5` attribute, please remove it. Starting from v0.3.0 its behavior is internalized.
+* Rename the `content` to `content_base64`, as this better represents actual data within the field and simplifies internal code reusability.
+* Remove the `overwrite` attribute. Starting from v0.3.0 it behaves as if it is set to `true`.
+* Remove the `mkdirs` attribute. Starting from v0.3.0 it behaves as if it is set to `true`.
+* Remove the `validate_remote_file` attribute. Due to performance reasons, starting from v0.3.0 it doesn't fetch the contents of the remote file to verify the checksum. 
+* If you've relied on the internal `content_b64_md5` attribute, please remove it. Starting from v0.3.0 its behavior is internalized.
 
 DBFS files would only be changed, if Terraform stage did change. This means that any manual changes to managed file won't be overwritten by Terraform, if there's no local change. 
 
 ## databricks_notebook
 
-* Rename `content` to `content_base64`, as this closer represents actual data within the field and simplifies internal code reusability.
-* Remove `format` attribute. Starting from v0.3.0 it behaves as if it is set to `SOURCE`.
-* Remove `overwrite` attribute. Starting from v0.3.0 it behaves as if it is set to `true`.
-* Remove `mkdirs` attributes. Starting from v0.3.0 it behaves as if it is set to `true`.
+* Rename the `content` to `content_base64`, as this better represents actual data within the field and simplifies internal code reusability.
+* Remove the `format` attribute. Starting from v0.3.0 it behaves as if it is set to `SOURCE`.
+* Remove the `overwrite` attribute. Starting from v0.3.0 it behaves as if it is set to `true`.
+* Remove the `mkdirs` attributes. Starting from v0.3.0 it behaves as if it is set to `true`.
 
 After changing the code, `terraform apply` would replace managed notebooks.
 
@@ -45,7 +45,7 @@ Notebook on Databricks workspace would only be changed, if Terraform stage did c
 
 ## databricks_instance_profile
 
-* Remove `skip_validation` from all `databricks_instance_profile` resources. In order to ensure consistency, all AWS EC2 profiles are now checked to work before returning state to main Terraform process.
+* Remove `skip_validation` from all `databricks_instance_profile` resources. In order to ensure consistency, all AWS EC2 profiles are now checked to work before returning the state to the main Terraform process.
 
 ## databricks_mws_workspaces
 

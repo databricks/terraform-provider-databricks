@@ -6,7 +6,7 @@ import (
 
 	"github.com/databrickslabs/terraform-provider-databricks/clusters"
 	"github.com/databrickslabs/terraform-provider-databricks/common"
-	"github.com/databrickslabs/terraform-provider-databricks/internal"
+	"github.com/databrickslabs/terraform-provider-databricks/commands"
 
 	"github.com/databrickslabs/terraform-provider-databricks/qa"
 	"github.com/stretchr/testify/assert"
@@ -27,7 +27,7 @@ func TestResourceAzureBlobMountCreate(t *testing.T) {
 		},
 		Resource: ResourceAzureBlobMount(),
 		CommandMock: func(commandStr string) common.CommandResults {
-			trunc := internal.TrimLeadingWhitespace(commandStr)
+			trunc := commands.TrimLeadingWhitespace(commandStr)
 			t.Logf("Received command:\n%s", trunc)
 
 			if strings.HasPrefix(trunc, "def safe_mount") {
@@ -105,7 +105,7 @@ func TestResourceAzureBlobMountRead(t *testing.T) {
 		},
 		Resource: ResourceAzureBlobMount(),
 		CommandMock: func(commandStr string) common.CommandResults {
-			trunc := internal.TrimLeadingWhitespace(commandStr)
+			trunc := commands.TrimLeadingWhitespace(commandStr)
 			t.Logf("Received command:\n%s", trunc)
 			assert.Contains(t, trunc, "dbutils.fs.mounts()")
 			assert.Contains(t, trunc, `mount.mountPoint == "/mnt/e"`)
@@ -145,7 +145,7 @@ func TestResourceAzureBlobMountRead_NotFound(t *testing.T) {
 		},
 		Resource: ResourceAzureBlobMount(),
 		CommandMock: func(commandStr string) common.CommandResults {
-			trunc := internal.TrimLeadingWhitespace(commandStr)
+			trunc := commands.TrimLeadingWhitespace(commandStr)
 			t.Logf("Received command:\n%s", trunc)
 			return common.CommandResults{
 				ResultType: "error",
@@ -181,7 +181,7 @@ func TestResourceAzureBlobMountRead_Error(t *testing.T) {
 		},
 		Resource: ResourceAzureBlobMount(),
 		CommandMock: func(commandStr string) common.CommandResults {
-			trunc := internal.TrimLeadingWhitespace(commandStr)
+			trunc := commands.TrimLeadingWhitespace(commandStr)
 			t.Logf("Received command:\n%s", trunc)
 			return common.CommandResults{
 				ResultType: "error",
@@ -219,7 +219,7 @@ func TestResourceAzureBlobMountDelete(t *testing.T) {
 		},
 		Resource: ResourceAzureBlobMount(),
 		CommandMock: func(commandStr string) common.CommandResults {
-			trunc := internal.TrimLeadingWhitespace(commandStr)
+			trunc := commands.TrimLeadingWhitespace(commandStr)
 			t.Logf("Received command:\n%s", trunc)
 			assert.Contains(t, trunc, "dbutils.fs.unmount(mount_point)")
 			return common.CommandResults{

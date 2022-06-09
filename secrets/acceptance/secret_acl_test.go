@@ -10,7 +10,6 @@ import (
 
 	"github.com/databrickslabs/terraform-provider-databricks/common"
 	"github.com/databrickslabs/terraform-provider-databricks/internal/acceptance"
-	"github.com/databrickslabs/terraform-provider-databricks/qa"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/stretchr/testify/assert"
@@ -24,7 +23,7 @@ func TestAccSecretAclResource(t *testing.T) {
 	acceptance.AccTest(t, resource.TestCase{
 		Steps: []resource.TestStep{
 			{
-				Config: qa.EnvironmentTemplate(t, `
+				Config: acceptance.EnvironmentTemplate(t, `
 					resource "databricks_group" "ds" {
 						display_name = "data-scientists-{var.RANDOM}"
 					}
@@ -69,7 +68,7 @@ func TestAccSecretAclResourceDefaultPrincipal(t *testing.T) {
 	acceptance.AccTest(t, resource.TestCase{
 		Steps: []resource.TestStep{
 			{
-				Config: qa.EnvironmentTemplate(t, `
+				Config: acceptance.EnvironmentTemplate(t, `
 					resource "databricks_secret_scope" "app" {
 						name = "app-{var.RANDOM}"
 						initial_manage_principal = "users"

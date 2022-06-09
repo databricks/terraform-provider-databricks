@@ -4,7 +4,7 @@ subcategory: "Security"
 
 # databricks_permissions Resource
 
-This resource allows you to generically manage [access control](https://docs.databricks.com/security/access-control/index.html) in Databricks workspace. It would guarantee, that only _admins_, _authenticated principal_ and those declared within `access_control` blocks would have specified access. It is not possible to remove management rights from _admins_ group.
+This resource allows you to generically manage [access control](https://docs.databricks.com/security/access-control/index.html) in Databricks workspace. It would guarantee that only _admins_, _authenticated principal_ and those declared within `access_control` blocks would have specified access. It is not possible to remove management rights from _admins_ group.
 
 -> **Note** It is not possible to lower permissions for `admins` or your own user anywhere from `CAN_MANAGE` level, so Databricks Terraform Provider [removes](https://github.com/databrickslabs/terraform-provider-databricks/blob/master/access/resource_permissions.go#L261-L271) those `access_control` blocks automatically. 
 
@@ -147,7 +147,7 @@ resource "databricks_permissions" "pool_usage" {
 There are four assignable [permission levels](https://docs.databricks.com/security/access-control/jobs-acl.html#job-permissions) for [databricks_job](job.md): `CAN_VIEW`, `CAN_MANAGE_RUN`, `IS_OWNER`, and `CAN_MANAGE`. Admins are granted the `CAN_MANAGE` permission by default, and they can assign that permission to non-admin users, and service principals.
 
 - The creator of a job has `IS_OWNER` permission. Destroying `databricks_permissions` resource for a job would revert ownership to the creator.
-- A job must have exactly one owner. If resource is changed and no owner is specified, currently authenticated principal would become new owner of the job. Nothing would change, per se, if the job was created through Terraform.
+- A job must have exactly one owner. If a resource is changed and no owner is specified, the currently authenticated principal would become the new owner of the job. Nothing would change, per se, if the job was created through Terraform.
 - A job cannot have a group as an owner.
 - Jobs triggered through _Run Now_ assume the permissions of the job owner and not the user, and service principal who issued Run Now.
 - Read [main documentation](https://docs.databricks.com/security/access-control/jobs-acl.html) for additional detail.

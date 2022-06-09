@@ -8,7 +8,6 @@ import (
 
 	"github.com/databrickslabs/terraform-provider-databricks/clusters"
 	"github.com/databrickslabs/terraform-provider-databricks/common"
-	"github.com/databrickslabs/terraform-provider-databricks/internal"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
@@ -52,7 +51,7 @@ func (a CommandsAPI) Execute(clusterID, language, commandStr string) common.Comm
 			Summary:    fmt.Sprintf("Cluster %s has to be running or resizing, but is %s", clusterID, cluster.State),
 		}
 	}
-	commandStr = internal.TrimLeadingWhitespace(commandStr)
+	commandStr = TrimLeadingWhitespace(commandStr)
 	log.Printf("[INFO] Executing %s command on %s:\n%s", language, clusterID, commandStr)
 	context, err := a.createContext(language, clusterID)
 	if err != nil {

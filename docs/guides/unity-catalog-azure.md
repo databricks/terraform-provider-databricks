@@ -139,8 +139,8 @@ A [databricks_metastore](../resources/metastore.md) is the top level container f
 resource "databricks_metastore" "this" {
   name = "primary"
   storage_root = format("abfss://%s@%s.dfs.core.windows.net/",
-    azurerm_storage_account.unity_catalog.name,
-  azurerm_storage_container.unity_catalog.name)
+    azurerm_storage_container.unity_catalog.name,
+  azurerm_storage_account.unity_catalog.name)
   force_destroy = true
 }
 
@@ -273,7 +273,7 @@ resource "databricks_grants" "external_creds" {
   storage_credential = databricks_storage_credential.external.id
   grant {
     principal  = "Data Engineers"
-    privileges = ["CREATE TABLE"]
+    privileges = ["CREATE_TABLE"]
   }
 }
 
@@ -293,7 +293,7 @@ resource "databricks_grants" "some" {
   external_location = databricks_external_location.some.id
   grant {
     principal  = "Data Engineers"
-    privileges = ["CREATE TABLE", "READ FILES"]
+    privileges = ["CREATE_TABLE", "READ_FILES"]
   }
 }
 ```
@@ -332,7 +332,7 @@ resource "databricks_cluster" "unity_sql" {
 - To use those advanced cluster features or languages like Python, Scala and R with Unity Catalog, one must choose **Single User** mode when launching the cluster. The cluster can only be used exclusively by a single user (by default the owner of the cluster); other users are not allowed to attach to the cluster.
 The below example will create a collection of single-user [databricks_cluster](../resources/cluster.md) for each user in a group managed through SCIM provisioning. Individual user will be able to restart their cluster, but not anyone else. Terraform's `for_each` meta-attribute will help us achieve this.
 
-First we use [databricks_group](../data-sources/group.md) and [databricks_user](../data-sources/user.md) data resources to get the list of user names, that belong to a group.
+First we use [databricks_group](../data-sources/group.md) and [databricks_user](../data-sources/user.md) data resources to get the list of user names that belong to a group.
 
 ```hcl
 data "databricks_group" "dev" {

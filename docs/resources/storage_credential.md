@@ -3,7 +3,7 @@ subcategory: "Unity Catalog"
 ---
 # databricks_storage_credential Resource
 
--> **Private Preview** This feature is in [Private Preview](https://docs.databricks.com/release-notes/release-types.html). Contact your Databricks representative to request access. 
+-> **Public Preview** This feature is in [Public Preview](https://docs.databricks.com/release-notes/release-types.html). Contact your Databricks representative to request access. 
 
 To work with external tables, Unity Catalog introduces two new objects to access and work with external cloud storage:
 - `databricks_storage_credential` represents authentication methods to access cloud storage (e.g. an IAM role for Amazon S3 or a service principal for Azure Storage). Storage credentials are access-controlled to determine which users can use the credential.
@@ -26,7 +26,7 @@ resource "databricks_grants" "external_creds" {
   storage_credential = databricks_storage_credential.external.id
   grant {
     principal  = "Data Engineers"
-    privileges = ["CREATE TABLE"]
+    privileges = ["CREATE_TABLE"]
   }
 }
 ```
@@ -48,7 +48,7 @@ resource "databricks_grants" "external_creds" {
   storage_credential = databricks_storage_credential.external.id
   grant {
     principal  = "Data Engineers"
-    privileges = ["CREATE TABLE"]
+    privileges = ["CREATE_TABLE"]
   }
 }
 ```
@@ -66,6 +66,7 @@ The following arguments are required:
 * `directory_id` - The directory ID corresponding to the Azure Active Directory (AAD) tenant of the application
 * `application_id` - The application ID of the application registration within the referenced AAD tenant
 * `client_secret` - The client secret generated for the above app ID in AAD. **This field is redacted on output**
+* `owner` - (Optional) Username/groupname/sp application_id storage credential owner.
 
 ## Import
 

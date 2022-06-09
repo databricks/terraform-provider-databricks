@@ -124,6 +124,7 @@ The following arguments are required:
 * `max_concurrent_runs` - (Optional) (Integer) An optional maximum allowed number of concurrent runs of the job. Defaults to *1*.
 * `email_notifications` - (Optional) (List) An optional set of email addresses notified when runs of this job begin and complete and when this job is deleted. The default behavior is to not send any emails. This field is a block and is documented below.
 * `schedule` - (Optional) (List) An optional periodic schedule for this job. The default behavior is that the job runs when triggered by clicking Run Now in the Jobs UI or sending an API request to runNow. This field is a block and is documented below.
+* `tags` - (Optional) (Map) An optional map of the tags associated with the job. Specified tags will be used as cluster tags for job clusters.
 
 ### job_cluster Configuration Block
 [Shared job cluster](https://docs.databricks.com/jobs.html#use-shared-job-clusters) specification. Allows multiple tasks in the same job run to reuse the cluster. 
@@ -174,6 +175,16 @@ You can invoke Spark submit tasks only on new clusters. **In the `new_cluster` s
 * `no_alert_for_skipped_runs` - (Optional) (Bool) don't send alert for skipped runs
 * `on_start` - (Optional) (List) list of emails to notify on failure
 * `on_success` - (Optional) (List) list of emails to notify on failure
+
+### git_source Configuration Block
+
+This block is used to specify Git repository information & branch/tag/commit that will be used to pull source code from to execute a job. Supported options are:
+
+* `url` - (Required) URL of the Git repository to use.
+* `provider` - (Optional, if it's possible to detect Git provider by host name) case insensitive name of the Git provider.  Following values are supported right now (could be a subject for change, consult [Repos API documentation](https://docs.databricks.com/dev-tools/api/latest/repos.html)): `gitHub`, `gitHubEnterprise`, `bitbucketCloud`, `bitbucketServer`, `azureDevOpsServices`, `gitLab`, `gitLabEnterpriseEdition`.
+* `branch` - name of the Git branch to use. Conflicts with `tag` and `commit`.
+* `tag` - name of the Git branch to use. Conflicts with `branch` and `commit`.
+* `commit` - hash of Git commit to use. Conflicts with `branch` and `tag`.
 
 ### Exported attributes
 

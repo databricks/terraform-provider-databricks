@@ -5,8 +5,8 @@ import (
 	"testing"
 
 	"github.com/databrickslabs/terraform-provider-databricks/clusters"
+	"github.com/databrickslabs/terraform-provider-databricks/commands"
 	"github.com/databrickslabs/terraform-provider-databricks/common"
-	"github.com/databrickslabs/terraform-provider-databricks/internal"
 
 	"github.com/databrickslabs/terraform-provider-databricks/qa"
 	"github.com/stretchr/testify/assert"
@@ -27,7 +27,7 @@ func TestResourceAdlsGen2Mount_Create(t *testing.T) {
 		},
 		Resource: ResourceAzureAdlsGen2Mount(),
 		CommandMock: func(commandStr string) common.CommandResults {
-			trunc := internal.TrimLeadingWhitespace(commandStr)
+			trunc := commands.TrimLeadingWhitespace(commandStr)
 			t.Logf("Received command:\n%s", trunc)
 			if strings.HasPrefix(trunc, "def safe_mount") {
 				assert.Contains(t, trunc, "abfss://e@test-adls-gen2.dfs.core.windows.net")

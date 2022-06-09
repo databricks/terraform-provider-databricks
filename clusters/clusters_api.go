@@ -186,6 +186,11 @@ type S3StorageInfo struct {
 	CannedACL        string `json:"canned_acl,omitempty"`
 }
 
+// GcsStorageInfo contains the struct for when storing files in GCS
+type GcsStorageInfo struct {
+	Destination string `json:"destination,omitempty" tf:"optional"`
+}
+
 // LocalFileInfo represents a local file on disk, e.g. in a customer's container.
 type LocalFileInfo struct {
 	Destination string `json:"destination,omitempty" tf:"optional"`
@@ -200,6 +205,7 @@ type StorageInfo struct {
 // InitScriptStorageInfo captures the allowed sources of init scripts.
 type InitScriptStorageInfo struct {
 	Dbfs *DbfsStorageInfo `json:"dbfs,omitempty" tf:"group:storage"`
+	Gcs  *GcsStorageInfo  `json:"gcs,omitempty" tf:"group:storage"`
 	S3   *S3StorageInfo   `json:"s3,omitempty" tf:"group:storage"`
 	File *LocalFileInfo   `json:"file,omitempty" tf:"optional"`
 }

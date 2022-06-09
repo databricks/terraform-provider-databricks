@@ -2,16 +2,20 @@
 // https://github.com/microsoft/vscode-dev-containers/tree/master/containers/go
 {
 	"name": "databricks-terraform",
-	"dockerFile": "Dockerfile",
+	"build": {
+		"dockerfile": "Dockerfile",
+		"args": {
+			// Update the VARIANT arg to pick a version of Go: 1, 1.18, 1.17
+			// Append -bullseye or -buster to pin to an OS version.
+			// Use -bullseye variants on local arm64/Apple Silicon.
+			"VARIANT": "1.16-bullseye",
+			// Options
+			"NODE_VERSION": "none"
+		}
+	},
 	"mounts": [
-		// Mount go mod cache
-		"source=databricks-terraform-gomodcache,target=/go/pkg,type=volume",
-		// Keep command history 
-		"source=databricks-terraform-bashhistory,target=/commandhistory,type=volume",
 		// Mount docker socket for docker builds
-		"source=/var/run/docker.sock,target=/var/run/docker.sock,type=bind",
-		// Mount home directory conveniently
-		"source=${localEnv:HOME},target=/home/me,type=bind,consistency=cached"
+		"source=/var/run/docker.sock,target=/var/run/docker.sock,type=bind"
 	],
 	"runArgs": [
 		// Uncomment the next line to use a non-root user. On Linux, this will prevent
@@ -44,7 +48,6 @@
 			"usePlaceholders": true, // add parameter placeholders when completing a function
 			// Experimental settings
 			"completeUnimported": true, // autocomplete unimported packages
-			"watchFileChanges": true, // watch file changes outside of the editor
 			"deepCompletion": true, // enable deep completion
 		},
 		"files.eol": "\n", // formatting only supports LF line endings	
@@ -59,5 +62,6 @@
 		"mauve.terraform",
 		"hashicorp.terraform",
 		"ms-vsliveshare.vsliveshare"
-	]
+	],
+	"remoteUser": "vscode"
 }

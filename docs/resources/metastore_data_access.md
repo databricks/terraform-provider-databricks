@@ -3,7 +3,7 @@ subcategory: "Unity Catalog"
 ---
 # databricks_metastore_data_access (Resource)
 
--> **Private Preview** This feature is in [Private Preview](https://docs.databricks.com/release-notes/release-types.html). Contact your Databricks representative to request access. 
+-> **Public Preview** This feature is in [Public Preview](https://docs.databricks.com/release-notes/release-types.html). Contact your Databricks representative to request access. 
 
 Each [databricks_metastore](docs/resources/metastore.md) requires an IAM role that will be assumed by Unity Catalog to access data. `databricks_metastore_data_access` defines this
 

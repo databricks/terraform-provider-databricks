@@ -157,35 +157,29 @@ func (sm securableMapping) validate(d attributeGetter, pl PermissionsList) error
 var mapping = securableMapping{
 	// add other securable mappings once needed
 	"table": {
-		"MODIFY":         true,
-		"SELECT":         true,
-		"ALL PRIVILEGES": true,
+		"MODIFY": true,
+		"SELECT": true,
 	},
 	"view": {
-		"SELECT":         true,
-		"ALL PRIVILEGES": true,
+		"SELECT": true,
 	},
 	"catalog": {
-		"CREATE":         true,
-		"USAGE":          true,
-		"ALL PRIVILEGES": true,
+		"CREATE": true,
+		"USAGE":  true,
 	},
 	"schema": {
-		"CREATE":         true,
-		"USAGE":          true,
-		"ALL PRIVILEGES": true,
+		"CREATE": true,
+		"USAGE":  true,
 	},
 	"storage_credential": {
-		"CREATE TABLE":   true,
-		"READ FILES":     true,
-		"WRITE FILES":    true,
-		"ALL PRIVILEGES": true,
+		"CREATE_TABLE": true,
+		"READ_FILES":   true,
+		"WRITE_FILES":  true,
 	},
 	"external_location": {
-		"CREATE TABLE":   true,
-		"READ FILES":     true,
-		"WRITE FILES":    true,
-		"ALL PRIVILEGES": true,
+		"CREATE_TABLE": true,
+		"READ_FILES":   true,
+		"WRITE_FILES":  true,
 	},
 }
 

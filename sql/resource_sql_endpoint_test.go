@@ -94,6 +94,7 @@ func TestResourceSQLEndpointCreate(t *testing.T) {
 					ClusterSize:    "Small",
 					ID:             "abc",
 					State:          "RUNNING",
+					Tags:           &Tags{},
 					MaxNumClusters: 1,
 				},
 			},
@@ -231,8 +232,8 @@ func TestSQLEnpointAPI(t *testing.T) {
 		{
 			Method:   "GET",
 			Resource: "/api/2.0/sql/endpoints",
-			Response: EndpointList{
-				Endpoints: []SQLEndpoint{
+			Response: map[string]interface{}{
+				"endpoints": []SQLEndpoint{
 					{
 						ID:   "foo",
 						Name: "bar",

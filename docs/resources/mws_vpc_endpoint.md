@@ -35,7 +35,7 @@ resource "aws_vpc_endpoint" "relay" {
 }
 ```
 
-Depending on your use case, you may need or chose to add VPC Endpoints for the AWS Services Databricks uses. See [Add VPC endpoints for other AWS services (recommended but optional)
+Depending on your use case, you may need or choose to add VPC Endpoints for the AWS Services Databricks uses. See [Add VPC endpoints for other AWS services (recommended but optional)
 ](https://docs.databricks.com/administration-guide/cloud-configurations/aws/privatelink.html#step-9-add-vpc-endpoints-for-other-aws-services-recommended-but-optional) for more information. For example:
 
 ```hcl
@@ -120,7 +120,6 @@ resource "databricks_mws_workspaces" "this" {
   account_id                 = var.databricks_account_id
   aws_region                 = var.region
   workspace_name             = local.prefix
-  deployment_name            = local.prefix
   credentials_id             = databricks_mws_credentials.this.credentials_id
   storage_configuration_id   = databricks_mws_storage_configurations.this.storage_configuration_id
   network_id                 = databricks_mws_networks.this.network_id

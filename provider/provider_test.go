@@ -107,7 +107,7 @@ func TestConfig_TokenEnv(t *testing.T) {
 		env: map[string]string{
 			"DATABRICKS_TOKEN": "x",
 		},
-		assertError: "authentication is not configured for provider.. Environment variables used: DATABRICKS_TOKEN",
+		assertError: "authentication is not configured for provider. Environment variables used: DATABRICKS_TOKEN",
 	}.apply(t)
 }
 
@@ -139,7 +139,7 @@ func TestConfig_UserPasswordEnv(t *testing.T) {
 			"DATABRICKS_USERNAME": "x",
 			"DATABRICKS_PASSWORD": "x",
 		},
-		assertError: "authentication is not configured for provider.." +
+		assertError: "authentication is not configured for provider." +
 			" Environment variables used: DATABRICKS_USERNAME, DATABRICKS_PASSWORD",
 		assertHost: "https://x",
 	}.apply(t)

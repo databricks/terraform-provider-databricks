@@ -3,6 +3,8 @@ package scim
 import (
 	"context"
 	"fmt"
+	"net/http"
+	"strings"
 
 	"github.com/databrickslabs/terraform-provider-databricks/common"
 
@@ -29,15 +31,34 @@ func (a ServicePrincipalsAPI) Create(rsp User) (sp User, err error) {
 	return sp, err
 }
 
-func (a ServicePrincipalsAPI) read(servicePrincipalID string) (sp User, err error) {
+func (a ServicePrincipalsAPI) Read(servicePrincipalID string) (sp User, err error) {
 	servicePrincipalPath := fmt.Sprintf("/preview/scim/v2/ServicePrincipals/%v", servicePrincipalID)
 	err = a.client.Scim(a.context, "GET", servicePrincipalPath, nil, &sp)
 	return
 }
 
+func (a ServicePrincipalsAPI) filter(filter string) (u []User, err error) {
+	var sps UserList
+	req := map[string]string{}
+	if filter != "" {
+		req["filter"] = filter
+	}
+	err = a.client.Scim(a.context, http.MethodGet, "/preview/scim/v2/ServicePrincipals", req, &sps)
+	if err != nil {
+		return
+	}
+	u = sps.Resources
+	return
+}
+
+// Patch updates resource-friendly entity
+func (a ServicePrincipalsAPI) Patch(servicePrincipalID string, r patchRequest) error {
+	return a.client.Scim(a.context, http.MethodPatch, fmt.Sprintf("/preview/scim/v2/ServicePrincipals/%v", servicePrincipalID), r, nil)
+}
+
 // Update replaces resource-friendly-entity
 func (a ServicePrincipalsAPI) Update(servicePrincipalID string, updateRequest User) error {
-	servicePrincipal, err := a.read(servicePrincipalID)
+	servicePrincipal, err := a.Read(servicePrincipalID)
 	if err != nil {
 		return err
 	}
@@ -62,11 +83,16 @@ func ResourceServicePrincipal() *schema.Resource {
 		ApplicationID string `json:"application_id,omitempty" tf:"computed,force_new"`
 		DisplayName   string `json:"display_name,omitempty" tf:"computed"`
 		Active        bool   `json:"active,omitempty"`
+		ExternalID    string `json:"external_id,omitempty" tf:"suppress_diff"`
 	}
 	servicePrincipalSchema := common.StructToSchema(entity{},
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
 			addEntitlementsToSchema(&m)
 			m["active"].Default = true
+			m["force"] = &schema.Schema{
+				Type:     schema.TypeBool,
+				Optional: true,
+			}
 			return m
 		})
 	spFromData := func(d *schema.ResourceData) User {
@@ -77,21 +103,23 @@ func ResourceServicePrincipal() *schema.Resource {
 			DisplayName:   u.DisplayName,
 			Active:        u.Active,
 			Entitlements:  readEntitlementsFromData(d),
+			ExternalID:    u.ExternalID,
 		}
 	}
 	return common.Resource{
 		Schema: servicePrincipalSchema,
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			sp := spFromData(d)
-			servicePrincipal, err := NewServicePrincipalsAPI(ctx, c).Create(sp)
+			spAPI := NewServicePrincipalsAPI(ctx, c)
+			servicePrincipal, err := spAPI.Create(sp)
 			if err != nil {
-				return err
+				return createForceOverridesManuallyAddedServicePrincipal(err, d, spAPI, sp)
 			}
 			d.SetId(servicePrincipal.ID)
 			return nil
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			sp, err := NewServicePrincipalsAPI(ctx, c).read(d.Id())
+			sp, err := NewServicePrincipalsAPI(ctx, c).Read(d.Id())
 			if err != nil {
 				return err
 			}
@@ -102,14 +130,42 @@ func ResourceServicePrincipal() *schema.Resource {
 			return sp.Entitlements.readIntoData(d)
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			var applicationId string
+			if c.IsAzure() {
+				applicationId = d.Get("application_id").(string)
+			}
 			return NewServicePrincipalsAPI(ctx, c).Update(d.Id(), User{
-				DisplayName:  d.Get("display_name").(string),
-				Active:       d.Get("active").(bool),
-				Entitlements: readEntitlementsFromData(d),
+				DisplayName:   d.Get("display_name").(string),
+				Active:        d.Get("active").(bool),
+				Entitlements:  readEntitlementsFromData(d),
+				ExternalID:    d.Get("external_id").(string),
+				ApplicationID: applicationId,
 			})
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			return NewServicePrincipalsAPI(ctx, c).Delete(d.Id())
 		},
 	}.ToResource()
+}
+
+func createForceOverridesManuallyAddedServicePrincipal(err error, d *schema.ResourceData, spAPI ServicePrincipalsAPI, u User) error {
+	forceCreate := d.Get("force").(bool)
+	if !forceCreate {
+		return err
+	}
+	// corner-case for overriding manually provisioned service principals
+	force := fmt.Sprintf("Service principal with application ID %s already exists.", u.ApplicationID)
+	if err.Error() != force {
+		return err
+	}
+	spList, err := spAPI.filter(fmt.Sprintf("applicationId eq '%s'", strings.ReplaceAll(u.ApplicationID, "'", "")))
+	if err != nil {
+		return err
+	}
+	if len(spList) == 0 {
+		return fmt.Errorf("cannot find SP with ID %s for force import", u.ApplicationID)
+	}
+	sp := spList[0]
+	d.SetId(sp.ID)
+	return spAPI.Update(d.Id(), u)
 }

@@ -1,0 +1,27 @@
+{
+  "object_id": "/sql/endpoints/f562046bc1272886",
+  "object_type": "endpoints",
+  "access_control_list": [
+    {
+      "user_name": "user@domain.com",
+      "all_permissions": [
+        {
+          "permission_level": "CAN_MANAGE",
+          "inherited": false
+        }
+      ]
+    },
+    {
+      "group_name": "admins",
+      "all_permissions": [
+        {
+          "permission_level": "CAN_MANAGE",
+          "inherited": true,
+          "inherited_from_object": [
+            "/sql/endpoints/"
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -37,7 +37,7 @@ resource "aws_iam_role_policy_attachment" "cross_account" {
   role       = aws_iam_role.cross_account.name
 }
 
-// required only in case of multiworkspace setup
+// required only in case of multi-workspace setup
 resource "databricks_mws_credentials" "this" {
   provider         = databricks.mws
   account_id       = var.databricks_account_id

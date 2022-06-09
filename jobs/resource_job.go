@@ -62,6 +62,7 @@ type EmailNotifications struct {
 	OnSuccess             []string `json:"on_success,omitempty"`
 	OnFailure             []string `json:"on_failure,omitempty"`
 	NoAlertForSkippedRuns bool     `json:"no_alert_for_skipped_runs,omitempty"`
+	AlertOnLastAttempt    bool     `json:"alert_on_last_attempt,omitempty"`
 }
 
 // CronSchedule contains the information for the quartz cron expression
@@ -146,6 +147,7 @@ type JobSettings struct {
 	Schedule           *CronSchedule       `json:"schedule,omitempty"`
 	MaxConcurrentRuns  int32               `json:"max_concurrent_runs,omitempty"`
 	EmailNotifications *EmailNotifications `json:"email_notifications,omitempty" tf:"suppress_diff"`
+	Tags               map[string]string   `json:"tags,omitempty"`
 }
 
 func (js *JobSettings) isMultiTask() bool {
@@ -450,6 +452,7 @@ var jobSchema = common.StructToSchema(JobSettings{},
 	func(s map[string]*schema.Schema) map[string]*schema.Schema {
 		jobSettingsSchema(&s, "")
 		jobSettingsSchema(&s["task"].Elem.(*schema.Resource).Schema, "task.0.")
+		jobSettingsSchema(&s["job_cluster"].Elem.(*schema.Resource).Schema, "job_cluster.0.")
 		gitSourceSchema(s["git_source"].Elem.(*schema.Resource), "")
 		if p, err := common.SchemaPath(s, "schedule", "pause_status"); err == nil {
 			p.ValidateFunc = validation.StringInSlice([]string{"PAUSED", "UNPAUSED"}, false)

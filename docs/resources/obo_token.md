@@ -7,7 +7,7 @@ This resource creates [On-Behalf-Of tokens](https://docs.databricks.com/administ
 
 ## Example Usage
 
-Creating a token for a narrowly-scoped service principal, that would be the only one (besides admins) allowed to use PAT token in this given workspace, keeping your automated deployment highly secure. Keep in mind, that given declaration of `databricks_permissions.token_usage` would remove permissions to use PAT tokens from `users` group.
+Creating a token for a narrowly-scoped service principal, that would be the only one (besides admins) allowed to use PAT token in this given workspace, keeping your automated deployment highly secure. Keep in mind that a given declaration of `databricks_permissions.token_usage` would remove permissions to use PAT tokens from the `users` group.
 
 ```hcl
 resource "databricks_service_principal" "this" {
@@ -63,7 +63,7 @@ resource "databricks_obo_token" "this" {
 
 The following arguments are required:
 
-* `application_id` - Application ID of [databricks_service_principal](service_principal.md#application_id) to create PAT token for.
+* `application_id` - Application ID of [databricks_service_principal](service_principal.md#application_id) to create a PAT token for.
 * `lifetime_seconds` - (Integer) The number of seconds before the token expires. Token resource is re-created when it expires.
 * `comment` - (String) Comment that describes the purpose of the token.
 

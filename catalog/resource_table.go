@@ -32,7 +32,7 @@ type ColumnInfo struct {
 }
 
 type TableInfo struct {
-	Name                  string            `json:"name" tf:"force_new"`
+	Name                  string            `json:"name"`
 	CatalogName           string            `json:"catalog_name"`
 	SchemaName            string            `json:"schema_name"`
 	TableType             string            `json:"table_type"`
@@ -71,10 +71,6 @@ func (a TablesAPI) getTable(name string) (ti TableInfo, err error) {
 	return
 }
 
-func (a TablesAPI) updateTable(ti TableInfo) error {
-	return a.client.Patch(a.context, "/unity-catalog/tables/"+ti.FullName(), ti)
-}
-
 func (a TablesAPI) deleteTable(name string) error {
 	return a.client.Delete(a.context, "/unity-catalog/tables/"+name, nil)
 }
@@ -84,6 +80,7 @@ func ResourceTable() *schema.Resource {
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
 			return m
 		})
+	update := updateFunctionFactory("/unity-catalog/tables", []string{"owner", "name", "data_source_format", "columns", "storage_location", "view_definition", "comment", "properties"})
 	return common.Resource{
 		Schema: tableSchema,
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
@@ -93,7 +90,7 @@ func ResourceTable() *schema.Resource {
 				return err
 			}
 			d.SetId(ti.FullName())
-			return nil
+			return update(ctx, d, c)
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			ti, err := NewTablesAPI(ctx, c).getTable(d.Id())
@@ -102,11 +99,7 @@ func ResourceTable() *schema.Resource {
 			}
 			return common.StructToData(ti, tableSchema, d)
 		},
-		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			var ti TableInfo
-			common.DataToStructPointer(d, tableSchema, &ti)
-			return NewTablesAPI(ctx, c).updateTable(ti)
-		},
+		Update: update,
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			return NewTablesAPI(ctx, c).deleteTable(d.Id())
 		},

@@ -22,6 +22,7 @@ import (
 	"github.com/databrickslabs/terraform-provider-databricks/repos"
 	"github.com/databrickslabs/terraform-provider-databricks/scim"
 	"github.com/databrickslabs/terraform-provider-databricks/secrets"
+	"github.com/databrickslabs/terraform-provider-databricks/sql"
 	"github.com/databrickslabs/terraform-provider-databricks/workspace"
 	"github.com/hashicorp/hcl/v2/hclwrite"
 
@@ -224,6 +225,27 @@ var emptyWorkspace = qa.HTTPFixture{
 	Response: workspace.ObjectList{},
 }
 
+var emptySqlEndpoints = qa.HTTPFixture{
+	Method:       "GET",
+	Resource:     "/api/2.0/sql/endpoints",
+	Response:     map[string]interface{}{},
+	ReuseRequest: true,
+}
+
+var emptySqlDashboards = qa.HTTPFixture{
+	Method:       "GET",
+	Resource:     "/api/2.0/preview/sql/dashboards",
+	Response:     map[string]interface{}{},
+	ReuseRequest: true,
+}
+
+var emptySqlQueries = qa.HTTPFixture{
+	Method:       "GET",
+	Resource:     "/api/2.0/preview/sql/queries",
+	Response:     map[string]interface{}{},
+	ReuseRequest: true,
+}
+
 func TestImportingUsersGroupsSecretScopes(t *testing.T) {
 	qa.HTTPFixturesApply(t,
 		[]qa.HTTPFixture{
@@ -232,6 +254,9 @@ func TestImportingUsersGroupsSecretScopes(t *testing.T) {
 			emptyGitCredentials,
 			emptyWorkspace,
 			emptyIpAccessLIst,
+			emptySqlDashboards,
+			emptySqlEndpoints,
+			emptySqlQueries,
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/preview/scim/v2/Groups?",
@@ -393,6 +418,9 @@ func TestImportingNoResourcesError(t *testing.T) {
 			emptyGitCredentials,
 			emptyIpAccessLIst,
 			emptyWorkspace,
+			emptySqlEndpoints,
+			emptySqlQueries,
+			emptySqlDashboards,
 			{
 				Method:       "GET",
 				Resource:     "/api/2.0/global-init-scripts",
@@ -1063,6 +1091,92 @@ func TestImportingIPAccessLists(t *testing.T) {
 			ic.Directory = tmpDir
 			ic.listing = "workspace,access"
 			ic.services = "workspace,access"
+
+			err := ic.Run()
+			assert.NoError(t, err)
+		})
+}
+
+func TestImportingSqlObjects(t *testing.T) {
+	qa.HTTPFixturesApply(t,
+		[]qa.HTTPFixture{
+			meAdminFixture,
+			emptyRepos,
+			emptyIpAccessLIst,
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/global-init-scripts",
+				Response: map[string]interface{}{},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/sql/endpoints",
+				Response: getJSONObject("test-data/get-sql-endpoints.json"),
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/sql/endpoints/f562046bc1272886",
+				Response: getJSONObject("test-data/get-sql-endpoint.json"),
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/preview/sql/data_sources",
+				Response: []sql.DataSource{
+					{
+						ID:         "147164a6-8316-4a9d-beff-f57261801374",
+						EndpointID: "f562046bc1272886",
+					},
+				},
+				ReuseRequest: true,
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/permissions/sql/endpoints/f562046bc1272886",
+				Response: getJSONObject("test-data/get-sql-endpoint-permissions.json"),
+			},
+			{
+				Method:       "GET",
+				Resource:     "/api/2.0/preview/sql/dashboards",
+				Response:     getJSONObject("test-data/get-sql-dashboards.json"),
+				ReuseRequest: true,
+			},
+			{
+				Method:       "GET",
+				Resource:     "/api/2.0/preview/sql/dashboards/9cb0c8f5-6262-4a1f-a741-2181de76028f",
+				Response:     getJSONObject("test-data/get-sql-dashboard.json"),
+				ReuseRequest: true,
+			},
+			{
+				Method:       "GET",
+				Resource:     "/api/2.0/preview/sql/queries",
+				Response:     getJSONObject("test-data/get-sql-queries.json"),
+				ReuseRequest: true,
+			},
+			{
+				Method:       "GET",
+				Resource:     "/api/2.0/preview/sql/queries/16c4f969-eea0-4aad-8f82-03d79b078dcc",
+				Response:     getJSONObject("test-data/get-sql-query.json"),
+				ReuseRequest: true,
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/preview/sql/permissions/queries/16c4f969-eea0-4aad-8f82-03d79b078dcc",
+				Response: getJSONObject("test-data/get-sql-query-permissions.json"),
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/preview/sql/permissions/dashboards/9cb0c8f5-6262-4a1f-a741-2181de76028f",
+				Response: getJSONObject("test-data/get-sql-dashboard-permissions.json"),
+			},
+		},
+		func(ctx context.Context, client *common.DatabricksClient) {
+			tmpDir := fmt.Sprintf("/tmp/tf-%s", qa.RandomName())
+			defer os.RemoveAll(tmpDir)
+
+			ic := newImportContext(client)
+			ic.Directory = tmpDir
+			ic.listing = "sql,access"
+			ic.services = "sql,access"
 
 			err := ic.Run()
 			assert.NoError(t, err)

@@ -1,5 +1,25 @@
 # Version changelog
 
+## 0.6.0
+
+* Added `delta_sharing_*` support to `databricks_metastore` ([#1334](https://github.com/databrickslabs/terraform-provider-databricks/pull/1334)).
+* Added `databricks_git_credentials` pat discovery from common environment variables ([#1353](https://github.com/databrickslabs/terraform-provider-databricks/pull/1353)).
+* Added `databricks_permissions` for `databricks_pipeline` ([#1361](https://github.com/databrickslabs/terraform-provider-databricks/pull/1361)).
+* Added `network_id` to `network` block in `databricks_mws_workspaces` for GCP ([#1360](https://github.com/databrickslabs/terraform-provider-databricks/pull/1360)).
+* Added `azure_managed_identity` block to `databricks_storage_credential` and `databricks_metastore_data_access` resources ([#1354](https://github.com/databrickslabs/terraform-provider-databricks/pull/1354)).
+* Update docs regarding importing of `databricks_sql_*` resources ([#1349](https://github.com/databrickslabs/terraform-provider-databricks/pull/1349)).
+* Apply ownership for UC objects during creation ([#1338](https://github.com/databrickslabs/terraform-provider-databricks/pull/1338)).
+* Re-create purged cluster for `databricks_mount` for Google Storage ([#1333](https://github.com/databrickslabs/terraform-provider-databricks/pull/1333)).
+* Various documentation fixes ([#1350](https://github.com/databrickslabs/terraform-provider-databricks/pull/1350)).
+
+Updated dependency versions:
+
+* Bump google.golang.org/api from 0.80.0 to 0.81.0
+* Bump gopkg.in/ini.v1 from 1.66.4 to 1.66.6
+* Bump google.golang.org/api from 0.81.0 to 0.82.0
+* Bump github.com/stretchr/testify from 1.7.1 to 1.7.2
+* Bump github.com/hashicorp/terraform-plugin-sdk/v2 from 2.16.0 to 2.17.0
+
 ## 0.5.9
 
 * Added warning section for debug mode ([#1325](https://github.com/databrickslabs/terraform-provider-databricks/pull/1325)).

@@ -4,7 +4,6 @@ import (
 	"testing"
 
 	"github.com/databrickslabs/terraform-provider-databricks/common"
-	"github.com/databrickslabs/terraform-provider-databricks/libraries"
 
 	"github.com/databrickslabs/terraform-provider-databricks/qa"
 	"github.com/stretchr/testify/assert"
@@ -27,11 +26,8 @@ var basicPipelineSpec = pipelineSpec{
 	},
 	Libraries: []pipelineLibrary{
 		{
-			Jar: "dbfs:/pipelines/code/abcde.jar",
-		},
-		{
-			Maven: &libraries.Maven{
-				Coordinates: "com.microsoft.azure:azure-eventhubs-spark_2.12:2.3.18",
+			Notebook: &notebookLibrary{
+				Path: "/Test",
 			},
 		},
 	},
@@ -97,11 +93,8 @@ func TestResourcePipelineCreate(t *testing.T) {
 		  }
 		}
 		library {
-		  jar = "dbfs:/pipelines/code/abcde.jar"
-		}
-		library {
-		  maven {
-			coordinates = "com.microsoft.azure:azure-eventhubs-spark_2.12:2.3.18"
+		  notebook {
+			path = "/Test"
 		  }
 		}
 		filters {
@@ -132,7 +125,9 @@ func TestResourcePipelineCreate_Error(t *testing.T) {
 		HCL: `name = "test"
 		storage = "/test/storage"
 		library {
-			jar = "jar"
+			notebook {
+				path = "/Test"
+			}
 		}
 		filters {
 			include = ["a"]
@@ -181,7 +176,9 @@ func TestResourcePipelineCreate_ErrorWhenWaitingFailedCleanup(t *testing.T) {
 		HCL: `name = "test"
 		storage = "/test/storage"
 		library {
-			jar = "jar"
+			notebook {
+				path = "/Test"
+			}
 		}
 		filters {
 			include = ["a"]
@@ -230,7 +227,9 @@ func TestResourcePipelineCreate_ErrorWhenWaitingSuccessfulCleanup(t *testing.T) 
 		HCL: `name = "test"
 		storage = "/test/storage"
 		library {
-			jar = "jar"
+			notebook {
+				path = "/Test"
+			}
 		}
 		filters {
 			include = ["a"]
@@ -316,14 +315,16 @@ func TestResourcePipelineUpdate(t *testing.T) {
 		Storage: "/test/storage",
 		Libraries: []pipelineLibrary{
 			{
-				Maven: &libraries.Maven{
-					Coordinates: "coordinates",
+				Notebook: &notebookLibrary{
+					Path: "/Test",
 				},
 			},
 		},
 		Filters: &filters{
 			Include: []string{"com.databricks.include"},
 		},
+		Channel: "current",
+		Edition: "advanced",
 	}
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
@@ -355,13 +356,17 @@ func TestResourcePipelineUpdate(t *testing.T) {
 		HCL: `name = "test"
 		storage = "/test/storage"
 		library {
-			maven {
-				coordinates = "coordinates"
+			notebook {
+				path = "/Test"
 			}
 		}
 		filters {
 			include = [ "com.databricks.include" ]
 		}`,
+		InstanceState: map[string]string{
+			"name":    "test",
+			"storage": "/test/storage",
+		},
 		Update: true,
 		ID:     "abcd",
 	}.Apply(t)
@@ -386,15 +391,19 @@ func TestResourcePipelineUpdate_Error(t *testing.T) {
 		HCL: `name = "test"
 		storage = "/test/storage"
 		library {
-			maven {
-				coordinates = "coordinates"
+			notebook {
+				path = "/Test"
 			}
 		}
 		filters {
 			include = [ "com.databricks.include" ]
 		}`,
 		Update: true,
-		ID:     "abcd",
+		InstanceState: map[string]string{
+			"name":    "test",
+			"storage": "/test/storage",
+		},
+		ID: "abcd",
 	}.Apply(t)
 	qa.AssertErrorStartsWith(t, err, "Internal error happened")
 	assert.Equal(t, "abcd", d.Id())
@@ -408,14 +417,16 @@ func TestResourcePipelineUpdate_FailsAfterUpdate(t *testing.T) {
 		Storage: "/test/storage",
 		Libraries: []pipelineLibrary{
 			{
-				Maven: &libraries.Maven{
-					Coordinates: "coordinates",
+				Notebook: &notebookLibrary{
+					Path: "/Test",
 				},
 			},
 		},
 		Filters: &filters{
 			Include: []string{"com.databricks.include"},
 		},
+		Channel: "current",
+		Edition: "advanced",
 	}
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
@@ -438,15 +449,19 @@ func TestResourcePipelineUpdate_FailsAfterUpdate(t *testing.T) {
 		HCL: `name = "test"
 		storage = "/test/storage"
 		library {
-			maven {
-				coordinates = "coordinates"
+			notebook {
+				path = "/Test"
 			}
 		}
 		filters {
 			include = [ "com.databricks.include" ]
 		}`,
 		Update: true,
-		ID:     "abcd",
+		InstanceState: map[string]string{
+			"name":    "test",
+			"storage": "/test/storage",
+		},
+		ID: "abcd",
 	}.Apply(t)
 	qa.AssertErrorStartsWith(t, err, "pipeline abcd has failed")
 	assert.Equal(t, "abcd", d.Id(), "Id should be the same as in reading")

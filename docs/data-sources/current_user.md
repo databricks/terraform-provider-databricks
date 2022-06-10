@@ -56,6 +56,7 @@ output "job_url" {
 Data source exposes the following attributes:
 
 * `id` -  The id of the calling user.
+* `application_id` - Application ID of the [service principal](../resources/service_principal.md) if the currently logged-in user is a service principal, e.g. `11111111-2222-3333-4444-555666777888`
 * `external_id` - ID of the user in an external identity provider.
 * `user_name` - Name of the [user](../resources/user.md), e.g. `mr.foo@example.com`.
 * `home` - Home folder of the [user](../resources/user.md), e.g. `/Users/mr.foo@example.com`.

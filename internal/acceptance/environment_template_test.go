@@ -10,7 +10,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-
 func TestEnvironmentTemplate(t *testing.T) {
 	defer common.CleanupEnvironment()
 	err := os.Setenv("USER", qa.RandomName())

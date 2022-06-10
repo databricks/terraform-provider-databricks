@@ -3,6 +3,7 @@ package scim
 import (
 	"context"
 	"fmt"
+	"sort"
 
 	"github.com/databrickslabs/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -28,6 +29,7 @@ func DataSourceServicePrincipals() *schema.Resource {
 		for _, sp := range spList {
 			response.ApplicationIDs = append(response.ApplicationIDs, sp.ApplicationID)
 		}
+		sort.Strings(response.ApplicationIDs)
 		return nil
 	})
 }

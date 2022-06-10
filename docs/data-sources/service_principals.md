@@ -10,7 +10,7 @@ Retrieves `application_ids` of all [databricks_service_principal](../resources/s
 
 ## Example Usage
 
-Adding all service principals with display name `my-spn` to admin group
+Adding all service principals of which display name contains `my-spn` to admin group
 
 ```hcl
 data "databricks_group" "admins" {
@@ -22,12 +22,12 @@ data "databricks_service_principals" "spns" {
 }
 
 data "databricks_service_principal" "spn" {
-  for_each = toset(data.databricks_service_principals.spns.application_ids)
+  for_each       = toset(data.databricks_service_principals.spns.application_ids)
   application_id = each.value
 }
 
 resource "databricks_group_member" "my_member_spn" {
-  for_each = toset(data.databricks_service_principals.spns.application_ids)
+  for_each  = toset(data.databricks_service_principals.spns.application_ids)
   group_id  = data.databricks_group.admins.id
   member_id = data.databricks_service_principal.spn[each.value].sp_id
 }
@@ -37,13 +37,13 @@ resource "databricks_group_member" "my_member_spn" {
 
 Data source allows you to pick service principals by the following attributes
 
-- `display_name` - (Required) Display name of the service principals. The service principals must exist before this resource can be retrieved.
+- `display_name_contains` - (Optional) Only return [databricks_service_principal](databricks_service_principal.md) display name that match the given name string
 
 ## Attribute Reference
 
 Data source exposes the following attributes:
 
-- `application_ids` - List of `application_ids` of service principals with the display name. Individual service principal can be retrieved using [databricks_service_principal](databricks_service_principal.md) data source
+- `application_ids` - List of `application_ids` of service principals Individual service principal can be retrieved using [databricks_service_principal](databricks_service_principal.md) data source
 
 ## Related Resources
 

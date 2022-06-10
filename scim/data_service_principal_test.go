@@ -50,40 +50,6 @@ func TestDataServicePrincipalReadByAppId(t *testing.T) {
 	})
 }
 
-func TestDataServicePrincipalsReadByDisplayName(t *testing.T) {
-	qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/ServicePrincipals?filter=displayName%20eq%20%27def%27",
-				Response: UserList{
-					Resources: []User{
-						{
-							ID:            "abc1",
-							DisplayName:   "def",
-							Active:        true,
-							ApplicationID: "123",
-						},
-						{
-							ID:            "abc2",
-							DisplayName:   "def",
-							Active:        true,
-							ApplicationID: "124",
-						},
-					},
-				},
-			},
-		},
-		Resource:    DataSourceServicePrincipals(),
-		HCL:         `display_name = "def"`,
-		Read:        true,
-		NonWritable: true,
-		ID:          "_",
-	}.ApplyAndExpectData(t, map[string]interface{}{
-		"application_ids": []string{"123", "124"},
-	})
-}
-
 func TestDataServicePrincipalReadNotFound(t *testing.T) {
 	_, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
@@ -102,17 +68,17 @@ func TestDataServicePrincipalReadNotFound(t *testing.T) {
 	require.Error(t, err, err)
 }
 
-func TestDataServicePrincipalsReadNotFound(t *testing.T) {
+func TestDataServicePrincipalReadError(t *testing.T) {
 	_, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/ServicePrincipals?filter=displayName%20eq%20%27def%27",
-				Response: UserList{},
+				Resource: "/api/2.0/preview/scim/v2/ServicePrincipals?filter=applicationId%20eq%20%27abc%27",
+				Status:   500,
 			},
 		},
-		Resource:    DataSourceServicePrincipals(),
-		HCL:         `display_name = "def"`,
+		Resource:    DataSourceServicePrincipal(),
+		HCL:         `application_id = "abc"`,
 		Read:        true,
 		NonWritable: true,
 		ID:          "_",

@@ -39,26 +39,3 @@ func DataSourceServicePrincipal() *schema.Resource {
 		return nil
 	})
 }
-
-// DataSourceServicePrincipal returns information about the spn specified by the application_id
-func DataSourceServicePrincipals() *schema.Resource {
-	type spnsData struct {
-		DisplayName    string   `json:"display_name,omitempty" tf:"computed"`
-		ApplicationIDs []string `json:"application_ids,omitempty" tf:"computed,slice_set"`
-	}
-	return common.DataResource(spnsData{}, func(ctx context.Context, e interface{}, c *common.DatabricksClient) error {
-		response := e.(*spnsData)
-		spnAPI := NewServicePrincipalsAPI(ctx, c)
-		spList, err := spnAPI.filter(fmt.Sprintf("displayName eq '%s'", response.DisplayName))
-		if err != nil {
-			return err
-		}
-		if len(spList) == 0 {
-			return fmt.Errorf("cannot find SPs with display name %s", response.DisplayName)
-		}
-		for _, sp := range spList {
-			response.ApplicationIDs = append(response.ApplicationIDs, sp.ApplicationID)
-		}
-		return nil
-	})
-}

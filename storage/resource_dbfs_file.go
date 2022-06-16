@@ -10,8 +10,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-// ResourceDBFSFile manages files on DBFS
-func ResourceDBFSFile() *schema.Resource {
+// ResourceDbfsFile manages files on DBFS
+func ResourceDbfsFile() *schema.Resource {
 	return common.Resource{
 		SchemaVersion: 1,
 		Schema: workspace.FileContentSchema(map[string]*schema.Schema{

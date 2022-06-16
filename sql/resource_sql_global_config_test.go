@@ -30,7 +30,7 @@ func TestResourceSQLGlobalConfigCreateDefault(t *testing.T) {
 				},
 			},
 		},
-		Resource: ResourceSQLGlobalConfig(),
+		Resource: ResourceSqlGlobalConfig(),
 		Create:   true,
 		HCL: `
 		`,
@@ -61,7 +61,7 @@ func TestResourceSQLGlobalConfigDelete(t *testing.T) {
 				},
 			},
 		},
-		Resource: ResourceSQLGlobalConfig(),
+		Resource: ResourceSqlGlobalConfig(),
 		Delete:   true,
 		ID:       "global",
 		HCL: `
@@ -104,7 +104,7 @@ func TestResourceSQLGlobalConfigCreateWithData(t *testing.T) {
 				},
 			},
 		},
-		Resource: ResourceSQLGlobalConfig(),
+		Resource: ResourceSqlGlobalConfig(),
 		Create:   true,
 		State: map[string]interface{}{
 			"security_policy":      "PASSTHROUGH",
@@ -124,7 +124,7 @@ func TestResourceSQLGlobalConfigCreateWithData(t *testing.T) {
 
 func TestResourceSQLGlobalConfigCreateError(t *testing.T) {
 	_, err := qa.ResourceFixture{
-		Resource: ResourceSQLGlobalConfig(),
+		Resource: ResourceSqlGlobalConfig(),
 		Create:   true,
 		Azure:    true,
 		State: map[string]interface{}{

@@ -341,3 +341,5 @@ tf.log
 scripts/tt
 
 .metals
+
+provider/completeness.md

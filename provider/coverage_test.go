@@ -221,10 +221,18 @@ func fields(r ResourceCoverage, s map[string]*schema.Schema, files FileSet) (fie
 		},
 	}
 	doc := File{Absolute: r.DocLocation()}
+
+	noisyDuplicates := map[string]bool{
+		"new_cluster": true,
+		"task":        true,
+	}
 	for {
 		head := queue[0]
 		queue = queue[1:]
 		for field, v := range head.r.Schema {
+			if noisyDuplicates[field] {
+				continue
+			}
 			path := append(head.path, field)
 			if nested, ok := v.Elem.(*schema.Resource); ok {
 				queue = append(queue, pathWrapper{

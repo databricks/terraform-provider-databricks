@@ -81,7 +81,7 @@ func ResourceTable() *schema.Resource {
 			return m
 		})
 	update := updateFunctionFactory("/unity-catalog/tables", []string{
-		"owner", "name", "data_source_format", "columns", "storage_location", 
+		"owner", "name", "data_source_format", "columns", "storage_location",
 		"view_definition", "comment", "properties"})
 	return common.Resource{
 		Schema: tableSchema,

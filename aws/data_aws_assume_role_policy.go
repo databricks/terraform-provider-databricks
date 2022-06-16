@@ -26,7 +26,6 @@ type awsIamPolicyStatement struct {
 	Condition    map[string]map[string]string `json:"Condition,omitempty"`
 }
 
-
 // DataAwsAssumeRolePolicy ...
 func DataAwsAssumeRolePolicy() *schema.Resource {
 	return &schema.Resource{

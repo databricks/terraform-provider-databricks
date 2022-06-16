@@ -20,7 +20,9 @@
 | [databricks_dbfs_file](docs/resources/dbfs_file.md)
 | [databricks_dbfs_file_paths](docs/data-sources/dbfs_file_paths.md) data
 | [databricks_dbfs_file](docs/data-sources/dbfs_file.md) data
+| [databricks_directory](docs/resources/directory.md)
 | [databricks_external_location](docs/resources/external_location.md)
+| [databricks_git_credential](docs/resources/git_credential.md)
 | [databricks_global_init_script](docs/resources/global_init_script.md)
 | [databricks_grants](docs/resources/grants.md)
 | [databricks_group](docs/resources/group.md)
@@ -31,17 +33,22 @@
 | [databricks_instance_profile](docs/resources/instance_profile.md)
 | [databricks_ip_access_list](docs/resources/ip_access_list.md)
 | [databricks_job](docs/resources/job.md)
+| [databricks_jobs](docs/data-sources/jobs.md)
 | [databricks_library](docs/resources/library.md)
 | [databricks_metastore](docs/resources/metastore.md)
 | [databricks_metastore_assignment](docs/resources/metastore_assignment.md)
 | [databricks_metastore_data_access](docs/resources/metastore_data_access.md)
 | [databricks_mlflow_model](docs/resources/mlflow_model.md)
 | [databricks_mlflow_experiment](docs/resources/mlflow_experiment.md)
+| [databricks_mlflow_webhook](docs/resources/mlflow_webhook.md)
+| [databricks_mount](docs/resources/mount.md)
 | [databricks_mws_credentials](docs/resources/mws_credentials.md)
 | [databricks_mws_customer_managed_keys](docs/resources/mws_customer_managed_keys.md)
 | [databricks_mws_log_delivery](docs/resources/mws_log_delivery.md)
 | [databricks_mws_networks](docs/resources/mws_networks.md)
+| [databricks_mws_private_access_settings](docs/resources/mws_private_access_settings.md)
 | [databricks_mws_storage_configurations](docs/resources/mws_storage_configurations.md)
+| [databricks_mws_vpc_endpoint](docs/resources/mws_vpc_endpoint.md)
 | [databricks_mws_workspaces](docs/resources/mws_workspaces.md)
 | [databricks_node_type](docs/data-sources/node_type.md) data
 | [databricks_notebook](docs/resources/notebook.md)
@@ -56,6 +63,8 @@
 | [databricks_secret](docs/resources/secret.md)
 | [databricks_secret_acl](docs/resources/secret_acl.md)
 | [databricks_secret_scope](docs/resources/secret_scope.md)
+| [databricks_service_principal](docs/resources/service_principal.md)
+| [databricks_service_principal_role](docs/resources/service_principal_role.md)
 | [databricks_spark_version](docs/data-sources/spark_version.md) data
 | [databricks_sql_dashboard](docs/resources/sql_dashboard.md)
 | [databricks_sql_endpoint](docs/resources/sql_endpoint.md)
@@ -69,8 +78,11 @@
 | [databricks_tables](docs/data-sources/table.md) data
 | [databricks_token](docs/resources/token.md)
 | [databricks_user](docs/resources/user.md)
+| [databricks_user_role](docs/resources/user_role.md)
 | [databricks_user_instance_profile](docs/resources/user_instance_profile.md)
+| [databricks_views](docs/data-sources/views.md) data
 | [databricks_workspace_conf](docs/resources/workspace_conf.md)
+| [databricks_zones](docs/data-sources/zones.md)
 | [Contributing and Development Guidelines](CONTRIBUTING.md)
 
 [![build](https://github.com/databrickslabs/terraform-provider-databricks/workflows/build/badge.svg?branch=master)](https://github.com/databrickslabs/terraform-provider-databricks/actions?query=workflow%3Abuild+branch%3Amaster) [![codecov](https://codecov.io/gh/databrickslabs/terraform-provider-databricks/branch/master/graph/badge.svg)](https://codecov.io/gh/databrickslabs/terraform-provider-databricks) ![lines](https://img.shields.io/tokei/lines/github/databrickslabs/terraform-provider-databricks) [![downloads](https://img.shields.io/github/downloads/databrickslabs/terraform-provider-databricks/total.svg)](https://hanadigital.github.io/grev/?user=databrickslabs&repo=terraform-provider-databricks)

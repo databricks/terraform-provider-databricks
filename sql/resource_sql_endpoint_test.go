@@ -100,7 +100,7 @@ func TestResourceSQLEndpointCreate(t *testing.T) {
 			},
 			dataSourceListHTTPFixture,
 		},
-		Resource: ResourceSQLEndpoint(),
+		Resource: ResourceSqlEndpoint(),
 		Create:   true,
 		HCL: `
 		name = "foo"
@@ -125,7 +125,7 @@ func TestResourceSQLEndpointCreate_ErrorDisabled(t *testing.T) {
 				},
 			},
 		},
-		Resource: ResourceSQLEndpoint(),
+		Resource: ResourceSqlEndpoint(),
 		Create:   true,
 		HCL: `
 		name = "foo"
@@ -150,7 +150,7 @@ func TestResourceSQLEndpointRead(t *testing.T) {
 			},
 			dataSourceListHTTPFixture,
 		},
-		Resource: ResourceSQLEndpoint(),
+		Resource: ResourceSqlEndpoint(),
 		ID:       "abc",
 		Read:     true,
 		HCL: `
@@ -194,7 +194,7 @@ func TestResourceSQLEndpointUpdate(t *testing.T) {
 			},
 			dataSourceListHTTPFixture,
 		},
-		Resource: ResourceSQLEndpoint(),
+		Resource: ResourceSqlEndpoint(),
 		ID:       "abc",
 		Update:   true,
 		HCL: `
@@ -215,7 +215,7 @@ func TestResourceSQLEndpointDelete(t *testing.T) {
 				Resource: "/api/2.0/sql/endpoints/abc",
 			},
 		},
-		Resource: ResourceSQLEndpoint(),
+		Resource: ResourceSqlEndpoint(),
 		ID:       "abc",
 		Delete:   true,
 	}.Apply(t)
@@ -224,7 +224,7 @@ func TestResourceSQLEndpointDelete(t *testing.T) {
 }
 
 func TestResourceSQLEndpoint_CornerCases(t *testing.T) {
-	qa.ResourceCornerCases(t, ResourceSQLEndpoint())
+	qa.ResourceCornerCases(t, ResourceSqlEndpoint())
 }
 
 func TestSQLEnpointAPI(t *testing.T) {

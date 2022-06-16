@@ -191,8 +191,7 @@ func (a SQLEndpointsAPI) Delete(endpointID string) error {
 		map[string]interface{}{})
 }
 
-// ResourceSQLEndpoint ...
-func ResourceSQLEndpoint() *schema.Resource {
+func ResourceSqlEndpoint() *schema.Resource {
 	s := common.StructToSchema(SQLEndpoint{}, func(
 		m map[string]*schema.Schema) map[string]*schema.Schema {
 		m["auto_stop_mins"].Required = false

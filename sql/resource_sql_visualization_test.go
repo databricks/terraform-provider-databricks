@@ -60,7 +60,7 @@ func TestVisualizationCreate(t *testing.T) {
 				},
 			},
 		},
-		Resource: ResourceVisualization(),
+		Resource: ResourceSqlVisualization(),
 		Create:   true,
 		State: map[string]interface{}{
 			"query_id":    "foo",
@@ -114,7 +114,7 @@ func TestVisualizationRead(t *testing.T) {
 				},
 			},
 		},
-		Resource: ResourceVisualization(),
+		Resource: ResourceSqlVisualization(),
 		Read:     true,
 		ID:       "foo/12345",
 		State: map[string]interface{}{
@@ -156,7 +156,7 @@ func TestVisualizationReadNotFound(t *testing.T) {
 				},
 			},
 		},
-		Resource:    ResourceVisualization(),
+		Resource:    ResourceSqlVisualization(),
 		Read:        true,
 		Removed:     true,
 		RequiresNew: true,
@@ -226,7 +226,7 @@ func TestVisualizationUpdate(t *testing.T) {
 				},
 			},
 		},
-		Resource: ResourceVisualization(),
+		Resource: ResourceSqlVisualization(),
 		Update:   true,
 		ID:       "foo/12345",
 		InstanceState: map[string]string{
@@ -264,7 +264,7 @@ func TestVisualizationDelete(t *testing.T) {
 				Resource: "/api/2.0/preview/sql/visualizations/12345",
 			},
 		},
-		Resource: ResourceVisualization(),
+		Resource: ResourceSqlVisualization(),
 		Delete:   true,
 		ID:       "foo/12345",
 	}.Apply(t)
@@ -274,5 +274,5 @@ func TestVisualizationDelete(t *testing.T) {
 }
 
 func TestResourceVisualizationCornerCases(t *testing.T) {
-	qa.ResourceCornerCases(t, ResourceVisualization(), qa.CornerCaseID("foo/bar"))
+	qa.ResourceCornerCases(t, ResourceSqlVisualization(), qa.CornerCaseID("foo/bar"))
 }

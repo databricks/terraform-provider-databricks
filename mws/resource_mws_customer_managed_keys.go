@@ -64,8 +64,7 @@ func (a CustomerManagedKeysAPI) List(accountID string) (kl []CustomerManagedKey,
 	return
 }
 
-// ResourceCustomerManagedKey ...
-func ResourceCustomerManagedKey() *schema.Resource {
+func ResourceMwsCustomerManagedKeys() *schema.Resource {
 	s := common.StructToSchema(CustomerManagedKey{}, nil)
 	p := common.NewPairSeparatedID("account_id", "customer_managed_key_id", "/")
 	return common.Resource{

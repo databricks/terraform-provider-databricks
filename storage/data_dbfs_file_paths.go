@@ -8,8 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-// DataSourceDBFSFilePaths ...
-func DataSourceDBFSFilePaths() *schema.Resource {
+func DataSourceDbfsFilePaths() *schema.Resource {
 	return &schema.Resource{
 		ReadContext: func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 			path := d.Get("path").(string)

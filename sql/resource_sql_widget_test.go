@@ -68,7 +68,7 @@ func TestWidgetCreateWithVisualization(t *testing.T) {
 				},
 			},
 		},
-		Resource: ResourceWidget(),
+		Resource: ResourceSqlWidget(),
 		Create:   true,
 		HCL: `
 			dashboard_id     = "some-uuid"
@@ -133,7 +133,7 @@ func TestWidgetCreateWithVisualizationByResourceID(t *testing.T) {
 				},
 			},
 		},
-		Resource: ResourceWidget(),
+		Resource: ResourceSqlWidget(),
 		Create:   true,
 		HCL: `
 			dashboard_id     = "some-uuid"
@@ -193,7 +193,7 @@ func TestWidgetCreateWithText(t *testing.T) {
 				},
 			},
 		},
-		Resource: ResourceWidget(),
+		Resource: ResourceSqlWidget(),
 		Create:   true,
 		HCL: `
 			dashboard_id = "some-uuid"
@@ -284,7 +284,7 @@ func TestWidgetCreateWithParamValue(t *testing.T) {
 				},
 			},
 		},
-		Resource: ResourceWidget(),
+		Resource: ResourceSqlWidget(),
 		Create:   true,
 		HCL: `
 			dashboard_id = "some-uuid"
@@ -399,7 +399,7 @@ func TestWidgetCreateWithPosition(t *testing.T) {
 				},
 			},
 		},
-		Resource: ResourceWidget(),
+		Resource: ResourceSqlWidget(),
 		Create:   true,
 		HCL: `
 			dashboard_id = "some-uuid"
@@ -492,7 +492,7 @@ func TestWidgetCreateWithPositionAndAutoheight(t *testing.T) {
 				},
 			},
 		},
-		Resource: ResourceWidget(),
+		Resource: ResourceSqlWidget(),
 		Create:   true,
 		HCL: `
 			dashboard_id = "some-uuid"
@@ -543,7 +543,7 @@ func TestWidgetReadNotFound(t *testing.T) {
 				},
 			},
 		},
-		Resource:    ResourceWidget(),
+		Resource:    ResourceSqlWidget(),
 		Read:        true,
 		Removed:     true,
 		RequiresNew: true,
@@ -603,7 +603,7 @@ func TestWidgetUpdate(t *testing.T) {
 				},
 			},
 		},
-		Resource: ResourceWidget(),
+		Resource: ResourceSqlWidget(),
 		Update:   true,
 		ID:       "some-uuid/12345",
 		InstanceState: map[string]string{
@@ -637,7 +637,7 @@ func TestWidgetDelete(t *testing.T) {
 				Resource: "/api/2.0/preview/sql/widgets/12345",
 			},
 		},
-		Resource: ResourceWidget(),
+		Resource: ResourceSqlWidget(),
 		Delete:   true,
 		ID:       "some-uuid/12345",
 	}.Apply(t)
@@ -647,7 +647,7 @@ func TestWidgetDelete(t *testing.T) {
 }
 
 func TestResourceWidgetCornerCases(t *testing.T) {
-	qa.ResourceCornerCases(t, ResourceWidget(), qa.CornerCaseID("foo/bar"))
+	qa.ResourceCornerCases(t, ResourceSqlWidget(), qa.CornerCaseID("foo/bar"))
 }
 
 func TestWidgetParameterSorter(t *testing.T) {

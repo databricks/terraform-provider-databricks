@@ -77,7 +77,7 @@ func (a ModelsAPI) Delete(name string) error {
 	})
 }
 
-func ResourceMLFlowModel() *schema.Resource {
+func ResourceMlflowModel() *schema.Resource {
 	s := common.StructToSchema(
 		Model{},
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {

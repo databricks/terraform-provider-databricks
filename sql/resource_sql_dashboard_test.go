@@ -34,7 +34,7 @@ func TestDashboardCreate(t *testing.T) {
 				},
 			},
 		},
-		Resource: ResourceDashboard(),
+		Resource: ResourceSqlDashboard(),
 		Create:   true,
 		State: map[string]interface{}{
 			"name": "Dashboard name",
@@ -60,7 +60,7 @@ func TestDashboardRead(t *testing.T) {
 				},
 			},
 		},
-		Resource: ResourceDashboard(),
+		Resource: ResourceSqlDashboard(),
 		Read:     true,
 		ID:       "xyz",
 	}.Apply(t)
@@ -91,7 +91,7 @@ func TestDashboardUpdate(t *testing.T) {
 				},
 			},
 		},
-		Resource: ResourceDashboard(),
+		Resource: ResourceSqlDashboard(),
 		Update:   true,
 		ID:       "xyz",
 		State: map[string]interface{}{
@@ -112,7 +112,7 @@ func TestDashboardDelete(t *testing.T) {
 				Resource: "/api/2.0/preview/sql/dashboards/xyz",
 			},
 		},
-		Resource: ResourceDashboard(),
+		Resource: ResourceSqlDashboard(),
 		Delete:   true,
 		ID:       "xyz",
 	}.Apply(t)
@@ -122,5 +122,5 @@ func TestDashboardDelete(t *testing.T) {
 }
 
 func TestResourceDashboardCornerCases(t *testing.T) {
-	qa.ResourceCornerCases(t, ResourceDashboard())
+	qa.ResourceCornerCases(t, ResourceSqlDashboard())
 }

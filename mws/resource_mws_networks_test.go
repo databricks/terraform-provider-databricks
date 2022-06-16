@@ -72,7 +72,7 @@ func TestResourceNetworkCreate(t *testing.T) {
 				},
 			},
 		},
-		Resource: ResourceNetwork(),
+		Resource: ResourceMwsNetworks(),
 		HCL: `
 		account_id = "abc"
 		network_name = "Open Workers"
@@ -99,7 +99,7 @@ func TestResourceNetworkCreate_Error(t *testing.T) {
 				Status: 400,
 			},
 		},
-		Resource: ResourceNetwork(),
+		Resource: ResourceMwsNetworks(),
 		State: map[string]interface{}{
 			"account_id":         "abc",
 			"network_name":       "Open Workers",
@@ -129,7 +129,7 @@ func TestResourceNetworkRead(t *testing.T) {
 				},
 			},
 		},
-		Resource: ResourceNetwork(),
+		Resource: ResourceMwsNetworks(),
 		Read:     true,
 		New:      true,
 		ID:       "abc/nid",
@@ -156,7 +156,7 @@ func TestResourceNetworkRead_NotFound(t *testing.T) {
 				Status: 404,
 			},
 		},
-		Resource: ResourceNetwork(),
+		Resource: ResourceMwsNetworks(),
 		Read:     true,
 		Removed:  true,
 		ID:       "abc/nid",
@@ -176,7 +176,7 @@ func TestResourceNetworkRead_Error(t *testing.T) {
 				Status: 400,
 			},
 		},
-		Resource: ResourceNetwork(),
+		Resource: ResourceMwsNetworks(),
 		Read:     true,
 		ID:       "abc/nid",
 	}.Apply(t)
@@ -212,7 +212,7 @@ func TestResourceNetworkDelete(t *testing.T) {
 				Status: 404,
 			},
 		},
-		Resource: ResourceNetwork(),
+		Resource: ResourceMwsNetworks(),
 		Delete:   true,
 		ID:       "abc/nid",
 	}.Apply(t)
@@ -233,7 +233,7 @@ func TestResourceNetworkDelete_Error(t *testing.T) {
 				Status: 400,
 			},
 		},
-		Resource: ResourceNetwork(),
+		Resource: ResourceMwsNetworks(),
 		Delete:   true,
 		ID:       "abc/nid",
 	}.Apply(t)

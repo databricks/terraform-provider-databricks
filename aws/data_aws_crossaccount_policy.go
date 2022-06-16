@@ -3,13 +3,13 @@ package aws
 import (
 	"context"
 	"encoding/json"
-	
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-// DataAwsCrossAccountPolicy defines the cross-account policy
-func DataAwsCrossAccountPolicy() *schema.Resource {
+// DataAwsCrossaccountPolicy defines the cross-account policy
+func DataAwsCrossaccountPolicy() *schema.Resource {
 	return &schema.Resource{
 		ReadContext: func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 			policy := awsIamPolicy{

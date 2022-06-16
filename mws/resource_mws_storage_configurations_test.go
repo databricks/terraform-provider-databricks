@@ -61,7 +61,7 @@ func TestResourceStorageConfigurationCreate(t *testing.T) {
 				},
 			},
 		},
-		Resource: ResourceStorageConfiguration(),
+		Resource: ResourceMwsStorageConfigurations(),
 		State: map[string]interface{}{
 			"account_id":                 "abc",
 			"bucket_name":                "bucket",
@@ -86,7 +86,7 @@ func TestResourceStorageConfigurationCreate_Error(t *testing.T) {
 				Status: 400,
 			},
 		},
-		Resource: ResourceStorageConfiguration(),
+		Resource: ResourceMwsStorageConfigurations(),
 		State: map[string]interface{}{
 			"account_id":                 "abc",
 			"bucket_name":                "bucket",
@@ -113,7 +113,7 @@ func TestResourceStorageConfigurationRead(t *testing.T) {
 				},
 			},
 		},
-		Resource: ResourceStorageConfiguration(),
+		Resource: ResourceMwsStorageConfigurations(),
 		Read:     true,
 		ID:       "abc/scid",
 	}.Apply(t)
@@ -138,7 +138,7 @@ func TestResourceStorageConfigurationRead_NotFound(t *testing.T) {
 				Status: 404,
 			},
 		},
-		Resource: ResourceStorageConfiguration(),
+		Resource: ResourceMwsStorageConfigurations(),
 		Read:     true,
 		Removed:  true,
 		ID:       "abc/scid",
@@ -158,7 +158,7 @@ func TestResourceStorageConfigurationRead_Error(t *testing.T) {
 				Status: 400,
 			},
 		},
-		Resource: ResourceStorageConfiguration(),
+		Resource: ResourceMwsStorageConfigurations(),
 		Read:     true,
 		ID:       "abc/scid",
 	}.Apply(t)
@@ -174,7 +174,7 @@ func TestResourceStorageConfigurationDelete(t *testing.T) {
 				Resource: "/api/2.0/accounts/abc/storage-configurations/scid",
 			},
 		},
-		Resource: ResourceStorageConfiguration(),
+		Resource: ResourceMwsStorageConfigurations(),
 		Delete:   true,
 		ID:       "abc/scid",
 	}.Apply(t)
@@ -195,7 +195,7 @@ func TestResourceStorageConfigurationDelete_Error(t *testing.T) {
 				Status: 400,
 			},
 		},
-		Resource: ResourceStorageConfiguration(),
+		Resource: ResourceMwsStorageConfigurations(),
 		Delete:   true,
 		ID:       "abc/scid",
 	}.Apply(t)

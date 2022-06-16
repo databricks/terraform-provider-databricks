@@ -7,7 +7,7 @@ import (
 )
 
 func TestDacCornerCases(t *testing.T) {
-	qa.ResourceCornerCases(t, ResourceDataAccessConfiguration(),
+	qa.ResourceCornerCases(t, ResourceMetastoreDataAccess(),
 		qa.CornerCaseID("a|b"))
 }
 
@@ -53,7 +53,7 @@ func TestCreateDac(t *testing.T) {
 			},
 		},
 		Create:   true,
-		Resource: ResourceDataAccessConfiguration(),
+		Resource: ResourceMetastoreDataAccess(),
 		HCL: `
 		metastore_id = "abc"
 		name = "bcd"
@@ -107,7 +107,7 @@ func TestCreateDacWithAzMI(t *testing.T) {
 			},
 		},
 		Create:   true,
-		Resource: ResourceDataAccessConfiguration(),
+		Resource: ResourceMetastoreDataAccess(),
 		HCL: `
 		metastore_id = "abc"
 		name = "bcd"

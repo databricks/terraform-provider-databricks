@@ -125,8 +125,7 @@ func jsonRemarshal(in []byte) ([]byte, error) {
 	return out, nil
 }
 
-// ResourceVisualization ...
-func ResourceVisualization() *schema.Resource {
+func ResourceSqlVisualization() *schema.Resource {
 	p := common.NewPairSeparatedID("query_id", "visualization_id", "/")
 	s := common.StructToSchema(
 		VisualizationEntity{},

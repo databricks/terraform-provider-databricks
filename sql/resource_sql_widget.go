@@ -254,8 +254,7 @@ func (a WidgetAPI) Delete(widgetID string) error {
 	return a.client.Delete(a.context, fmt.Sprintf("/preview/sql/widgets/%s", widgetID), nil)
 }
 
-// ResourceWidget ...
-func ResourceWidget() *schema.Resource {
+func ResourceSqlWidget() *schema.Resource {
 	p := common.NewPairSeparatedID("dashboard_id", "widget_id", "/")
 	s := common.StructToSchema(
 		WidgetEntity{},

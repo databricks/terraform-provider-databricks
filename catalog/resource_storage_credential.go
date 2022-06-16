@@ -48,7 +48,8 @@ func ResourceStorageCredential() *schema.Resource {
 			m["azure_managed_identity"].AtLeastOneOf = alof
 			return m
 		})
-	update := updateFunctionFactory("/unity-catalog/storage-credentials", []string{"owner", "comment", "aws_iam_role", "azure_service_principal"})
+	update := updateFunctionFactory("/unity-catalog/storage-credentials", []string{
+		"owner", "comment", "aws_iam_role", "azure_service_principal"})
 	return common.Resource{
 		Schema: s,
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {

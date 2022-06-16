@@ -10,7 +10,7 @@ import (
 func TestDataAwsCrossAccountPolicy(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Read:        true,
-		Resource:    DataAwsCrossAccountPolicy(),
+		Resource:    DataAwsCrossaccountPolicy(),
 		NonWritable: true,
 		ID:          ".",
 	}.Apply(t)
@@ -22,7 +22,7 @@ func TestDataAwsCrossAccountPolicy(t *testing.T) {
 func TestDataAwsCrossAccountPolicy_WithPassRoles(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Read:        true,
-		Resource:    DataAwsCrossAccountPolicy(),
+		Resource:    DataAwsCrossaccountPolicy(),
 		NonWritable: true,
 		HCL:         `pass_roles = ["a", "b", "c"]`,
 		ID:          ".",

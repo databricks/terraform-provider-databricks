@@ -99,7 +99,7 @@ func TestResourceLogDeliveryCreate(t *testing.T) {
 				},
 			},
 		},
-		Resource: ResourceLogDelivery(),
+		Resource: ResourceMwsLogDelivery(),
 		HCL: `
 		account_id = "abc"
 		credentials_id = "bcd"
@@ -130,7 +130,7 @@ func TestResourceLogDeliveryCreate_Error(t *testing.T) {
 				Status: 400,
 			},
 		},
-		Resource: ResourceLogDelivery(),
+		Resource: ResourceMwsLogDelivery(),
 		HCL: `
 		account_id = "abc"
 		credentials_id = "bcd"
@@ -170,7 +170,7 @@ func TestResourceLogDeliveryRead(t *testing.T) {
 				},
 			},
 		},
-		Resource: ResourceLogDelivery(),
+		Resource: ResourceMwsLogDelivery(),
 		Read:     true,
 		New:      true,
 		ID:       "abc|nid",
@@ -194,7 +194,7 @@ func TestResourceLogDeliveryRead_NotFound(t *testing.T) {
 				},
 			},
 		},
-		Resource: ResourceLogDelivery(),
+		Resource: ResourceMwsLogDelivery(),
 		Read:     true,
 		Removed:  true,
 		ID:       "abc|nid",
@@ -214,7 +214,7 @@ func TestResourceLogDeliveryRead_Error(t *testing.T) {
 				Status: 400,
 			},
 		},
-		Resource: ResourceLogDelivery(),
+		Resource: ResourceMwsLogDelivery(),
 		Read:     true,
 		ID:       "abc|nid",
 	}.Apply(t)
@@ -233,7 +233,7 @@ func TestResourceLogDeliveryDelete(t *testing.T) {
 				},
 			},
 		},
-		Resource: ResourceLogDelivery(),
+		Resource: ResourceMwsLogDelivery(),
 		Delete:   true,
 		ID:       "abc|nid",
 	}.Apply(t)
@@ -254,7 +254,7 @@ func TestResourceLogDeliveryDelete_Error(t *testing.T) {
 				Status: 400,
 			},
 		},
-		Resource: ResourceLogDelivery(),
+		Resource: ResourceMwsLogDelivery(),
 		Delete:   true,
 		ID:       "abc|nid",
 	}.Apply(t)

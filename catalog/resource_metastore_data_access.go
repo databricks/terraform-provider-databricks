@@ -56,7 +56,7 @@ func (a DataAccessConfigurationsAPI) Delete(metastoreID, dacID string) error {
 	return a.client.Delete(a.context, path, nil)
 }
 
-func ResourceDataAccessConfiguration() *schema.Resource {
+func ResourceMetastoreDataAccess() *schema.Resource {
 	s := common.StructToSchema(DataAccessConfiguration{},
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
 			m["metastore_id"] = &schema.Schema{

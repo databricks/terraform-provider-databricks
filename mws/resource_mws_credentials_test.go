@@ -67,7 +67,7 @@ func TestResourceCredentialsCreate(t *testing.T) {
 				},
 			},
 		},
-		Resource: ResourceCredentials(),
+		Resource: ResourceMwsCredentials(),
 		State: map[string]interface{}{
 			"account_id":       "abc",
 			"credentials_name": "Cross-account ARN",
@@ -92,7 +92,7 @@ func TestResourceCredentialsCreate_Error(t *testing.T) {
 				Status: 400,
 			},
 		},
-		Resource: ResourceCredentials(),
+		Resource: ResourceMwsCredentials(),
 		State: map[string]interface{}{
 			"account_id":       "abc",
 			"credentials_name": "Cross-account ARN",
@@ -121,7 +121,7 @@ func TestResourceCredentialsRead(t *testing.T) {
 				},
 			},
 		},
-		Resource: ResourceCredentials(),
+		Resource: ResourceMwsCredentials(),
 		Read:     true,
 		ID:       "abc/cid",
 	}.Apply(t)
@@ -147,7 +147,7 @@ func TestResourceCredentialsRead_NotFound(t *testing.T) {
 				Status: 404,
 			},
 		},
-		Resource: ResourceCredentials(),
+		Resource: ResourceMwsCredentials(),
 		Read:     true,
 		Removed:  true,
 		ID:       "abc/cid",
@@ -167,7 +167,7 @@ func TestResourceCredentialsRead_Error(t *testing.T) {
 				Status: 400,
 			},
 		},
-		Resource: ResourceCredentials(),
+		Resource: ResourceMwsCredentials(),
 		Read:     true,
 		ID:       "abc/cid",
 	}.Apply(t)
@@ -183,7 +183,7 @@ func TestResourceCredentialsDelete(t *testing.T) {
 				Resource: "/api/2.0/accounts/abc/credentials/cid",
 			},
 		},
-		Resource: ResourceCredentials(),
+		Resource: ResourceMwsCredentials(),
 		Delete:   true,
 		ID:       "abc/cid",
 	}.Apply(t)
@@ -204,7 +204,7 @@ func TestResourceCredentialsDelete_Error(t *testing.T) {
 				Status: 400,
 			},
 		},
-		Resource: ResourceCredentials(),
+		Resource: ResourceMwsCredentials(),
 		Delete:   true,
 		ID:       "abc/cid",
 	}.Apply(t)

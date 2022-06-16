@@ -84,7 +84,7 @@ func (a WebhooksAPI) Delete(ID string) error {
 	})
 }
 
-func ResourceMLFlowWebhook() *schema.Resource {
+func ResourceMlflowWebhook() *schema.Resource {
 	s := common.StructToSchema(
 		Webhook{},
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {

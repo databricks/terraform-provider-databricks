@@ -79,7 +79,7 @@ func TestResourceCustomerManagedKeyCreate(t *testing.T) {
 				},
 			},
 		},
-		Resource: ResourceCustomerManagedKey(),
+		Resource: ResourceMwsCustomerManagedKeys(),
 		HCL: `
 			account_id = "abc"
 
@@ -133,7 +133,7 @@ func TestResourceCustomerManagedKeyCreate_Error(t *testing.T) {
 				},
 			},
 		},
-		Resource: ResourceCustomerManagedKey(),
+		Resource: ResourceMwsCustomerManagedKeys(),
 		HCL: `
 			account_id = "abc"
 
@@ -167,7 +167,7 @@ func TestResourceCustomerManagedKeyRead(t *testing.T) {
 				},
 			},
 		},
-		Resource: ResourceCustomerManagedKey(),
+		Resource: ResourceMwsCustomerManagedKeys(),
 		HCL: `
 			account_id = "abc"
 
@@ -202,7 +202,7 @@ func TestResourceCustomerManagedKeyRead_NotFound(t *testing.T) {
 				Status: 404,
 			},
 		},
-		Resource: ResourceCustomerManagedKey(),
+		Resource: ResourceMwsCustomerManagedKeys(),
 		HCL: `
 			account_id = "abc"
 
@@ -227,7 +227,7 @@ func TestResourceCustomerManagedKeyDelete(t *testing.T) {
 				Status:   200,
 			},
 		},
-		Resource: ResourceCustomerManagedKey(),
+		Resource: ResourceMwsCustomerManagedKeys(),
 		HCL: `
 			account_id = "abc"
 

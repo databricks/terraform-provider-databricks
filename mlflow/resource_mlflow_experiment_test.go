@@ -32,7 +32,7 @@ func TestExperimentCreate(t *testing.T) {
 				},
 			},
 		},
-		Resource: ResourceMLFlowExperiment(),
+		Resource: ResourceMlflowExperiment(),
 		Create:   true,
 		HCL: `
 		name = "xyz"
@@ -57,7 +57,7 @@ func TestExperimentCreatePostError(t *testing.T) {
 				Status:          400,
 			},
 		},
-		Resource: ResourceMLFlowExperiment(),
+		Resource: ResourceMlflowExperiment(),
 		Create:   true,
 		HCL: `
 		name = "xyz"
@@ -87,7 +87,7 @@ func TestExperimentCreateGetError(t *testing.T) {
 				Status: 400,
 			},
 		},
-		Resource: ResourceMLFlowExperiment(),
+		Resource: ResourceMlflowExperiment(),
 		Create:   true,
 		HCL: `
 		name = "xyz"
@@ -110,7 +110,7 @@ func TestExperimentRead(t *testing.T) {
 				},
 			},
 		},
-		Resource: ResourceMLFlowExperiment(),
+		Resource: ResourceMlflowExperiment(),
 		Read:     true,
 		ID:       re.ExperimentId,
 	}.Apply(t)
@@ -133,7 +133,7 @@ func TestExperimentReadGetError(t *testing.T) {
 				Status: 400,
 			},
 		},
-		Resource: ResourceMLFlowExperiment(),
+		Resource: ResourceMlflowExperiment(),
 		Read:     true,
 		ID:       re.ExperimentId,
 	}.Apply(t)
@@ -161,7 +161,7 @@ func TestExperimentUpdate(t *testing.T) {
 				Response: resPost,
 			},
 		},
-		Resource: ResourceMLFlowExperiment(),
+		Resource: ResourceMlflowExperiment(),
 		Update:   true,
 		ID:       resPost.ExperimentId,
 		HCL: `
@@ -188,7 +188,7 @@ func TestExperimentUpdatePostError(t *testing.T) {
 				Status:   400,
 			},
 		},
-		Resource: ResourceMLFlowExperiment(),
+		Resource: ResourceMlflowExperiment(),
 		Update:   true,
 		ID:       resPost.ExperimentId,
 		HCL: `
@@ -211,7 +211,7 @@ func TestExperimentDelete(t *testing.T) {
 				ExpectedRequest: r,
 			},
 		},
-		Resource: ResourceMLFlowExperiment(),
+		Resource: ResourceMlflowExperiment(),
 		Delete:   true,
 		ID:       r["experiment_id"],
 		HCL: `
@@ -236,7 +236,7 @@ func TestExperimentDeleteError(t *testing.T) {
 				Status:          400,
 			},
 		},
-		Resource: ResourceMLFlowExperiment(),
+		Resource: ResourceMlflowExperiment(),
 		Delete:   true,
 		ID:       r["experiment_id"],
 		HCL: `

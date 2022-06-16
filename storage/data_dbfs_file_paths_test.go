@@ -44,7 +44,7 @@ func TestDataSourceFilePaths(t *testing.T) {
 		},
 		Read:        true,
 		NonWritable: true,
-		Resource:    DataSourceDBFSFilePaths(),
+		Resource:    DataSourceDbfsFilePaths(),
 		ID:          ".",
 		State: map[string]interface{}{
 			"path":      "/a/b/c",

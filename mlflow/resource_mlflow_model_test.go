@@ -34,7 +34,7 @@ func TestModelCreate(t *testing.T) {
 				},
 			},
 		},
-		Resource: ResourceMLFlowModel(),
+		Resource: ResourceMlflowModel(),
 		Create:   true,
 		HCL: `
 		name = "xyz"
@@ -66,7 +66,7 @@ func TestModelCreatePostError(t *testing.T) {
 				Status:          400,
 			},
 		},
-		Resource: ResourceMLFlowModel(),
+		Resource: ResourceMlflowModel(),
 		Create:   true,
 		HCL: `
 		name = "xyz"
@@ -95,7 +95,7 @@ func TestModelRead(t *testing.T) {
 				},
 			},
 		},
-		Resource: ResourceMLFlowModel(),
+		Resource: ResourceMlflowModel(),
 		Read:     true,
 		ID:       "xyz",
 	}.Apply(t)
@@ -116,7 +116,7 @@ func TestModelReadGetError(t *testing.T) {
 				Status: 400,
 			},
 		},
-		Resource: ResourceMLFlowModel(),
+		Resource: ResourceMlflowModel(),
 		Read:     true,
 		ID:       "xyz",
 	}.Apply(t)
@@ -144,7 +144,7 @@ func TestModelUpdate(t *testing.T) {
 				},
 			},
 		},
-		Resource:    ResourceMLFlowModel(),
+		Resource:    ResourceMlflowModel(),
 		Update:      true,
 		RequiresNew: true,
 		ID:          "xyz",
@@ -176,7 +176,7 @@ func TestModelUpdatePatchError(t *testing.T) {
 				Status:   400,
 			},
 		},
-		Resource:    ResourceMLFlowModel(),
+		Resource:    ResourceMlflowModel(),
 		Update:      true,
 		RequiresNew: true,
 		ID:          "xyz",
@@ -203,7 +203,7 @@ func TestModelDelete(t *testing.T) {
 				},
 			},
 		},
-		Resource: ResourceMLFlowModel(),
+		Resource: ResourceMlflowModel(),
 		Delete:   true,
 		ID:       "xyz",
 		HCL: `
@@ -227,7 +227,7 @@ func TestModelDeleteError(t *testing.T) {
 				Status: 400,
 			},
 		},
-		Resource: ResourceMLFlowModel(),
+		Resource: ResourceMlflowModel(),
 		Delete:   true,
 		ID:       "xyz",
 		HCL: `

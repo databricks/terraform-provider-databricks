@@ -59,8 +59,7 @@ func (a CredentialsAPI) List(mwsAcctID string) ([]Credentials, error) {
 	return mwsCredsList, err
 }
 
-// ResourceCredentials ...
-func ResourceCredentials() *schema.Resource {
+func ResourceMwsCredentials() *schema.Resource {
 	p := common.NewPairSeparatedID("account_id", "credentials_id", "/")
 	return common.Resource{
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {

@@ -60,7 +60,7 @@ func TestWebookCreateJobSpec(t *testing.T) {
 				},
 			},
 		},
-		Resource: ResourceMLFlowWebhook(),
+		Resource: ResourceMlflowWebhook(),
 		Create:   true,
 		HCL:      testWhHCL,
 	}.ApplyAndExpectData(t, map[string]interface{}{"id": testWhID, "status": "ACTIVE"})
@@ -113,7 +113,7 @@ func TestWebookCreateUrlSpec(t *testing.T) {
 				},
 			},
 		},
-		Resource: ResourceMLFlowWebhook(),
+		Resource: ResourceMlflowWebhook(),
 		Create:   true,
 		HCL: `
 		events = ["TRANSITION_REQUEST_CREATED"]
@@ -140,7 +140,7 @@ func TestWebookCreateError(t *testing.T) {
 				Status: 400,
 			},
 		},
-		Resource: ResourceMLFlowWebhook(),
+		Resource: ResourceMlflowWebhook(),
 		Create:   true,
 		HCL:      testWhHCL,
 	}.ExpectError(t, "error creating a webhook: ")
@@ -148,7 +148,7 @@ func TestWebookCreateError(t *testing.T) {
 
 func TestWebookCreateErrorNoUrlOrJobSpec(t *testing.T) {
 	qa.ResourceFixture{
-		Resource: ResourceMLFlowWebhook(),
+		Resource: ResourceMlflowWebhook(),
 		Create:   true,
 		HCL: `
 		events = ["TRANSITION_REQUEST_CREATED"]
@@ -169,7 +169,7 @@ func TestWebookRead(t *testing.T) {
 				},
 			},
 		},
-		Resource: ResourceMLFlowWebhook(),
+		Resource: ResourceMlflowWebhook(),
 		Read:     true,
 		ID:       testWhID,
 	}.ApplyAndExpectData(t, map[string]interface{}{"id": testWhID})
@@ -186,7 +186,7 @@ func TestWebookReadError(t *testing.T) {
 				},
 			},
 		},
-		Resource: ResourceMLFlowWebhook(),
+		Resource: ResourceMlflowWebhook(),
 		Read:     true,
 		ID:       "123456",
 	}.ExpectError(t, "Webhook with ID 123456 isn't found")
@@ -204,7 +204,7 @@ func TestWebookReadErrorBadResponse(t *testing.T) {
 				Status: 400,
 			},
 		},
-		Resource: ResourceMLFlowWebhook(),
+		Resource: ResourceMlflowWebhook(),
 		Read:     true,
 		ID:       "123456",
 	}.ExpectError(t, "error reading list of webhooks: ")
@@ -229,7 +229,7 @@ func TestWebookUpdate(t *testing.T) {
 				},
 			},
 		},
-		Resource:    ResourceMLFlowWebhook(),
+		Resource:    ResourceMlflowWebhook(),
 		Update:      true,
 		RequiresNew: false,
 		ID:          testWhID,
@@ -258,7 +258,7 @@ func TestWebookDelete(t *testing.T) {
 				},
 			},
 		},
-		Resource: ResourceMLFlowWebhook(),
+		Resource: ResourceMlflowWebhook(),
 		Delete:   true,
 		ID:       testWhID,
 		HCL:      testWhHCL,
@@ -277,7 +277,7 @@ func TestWebookDeleteError(t *testing.T) {
 				Status: 400,
 			},
 		},
-		Resource: ResourceMLFlowWebhook(),
+		Resource: ResourceMlflowWebhook(),
 		Delete:   true,
 		ID:       testWhID,
 		HCL:      testWhHCL,

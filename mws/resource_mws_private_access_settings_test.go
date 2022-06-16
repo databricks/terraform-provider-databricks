@@ -70,7 +70,7 @@ func TestResourcePASCreate(t *testing.T) {
 				},
 			},
 		},
-		Resource: ResourcePrivateAccessSettings(),
+		Resource: ResourceMwsPrivateAccessSettings(),
 		HCL: `
 		account_id = "abc"
 		private_access_settings_name = "pas_name"
@@ -95,7 +95,7 @@ func TestResourcePASCreate_Error(t *testing.T) {
 				Status: 400,
 			},
 		},
-		Resource: ResourcePrivateAccessSettings(),
+		Resource: ResourceMwsPrivateAccessSettings(),
 		State: map[string]interface{}{
 			"account_id":                   "abc",
 			"private_access_settings_name": "pas_name",
@@ -120,7 +120,7 @@ func TestResourcePASRead(t *testing.T) {
 				},
 			},
 		},
-		Resource: ResourcePrivateAccessSettings(),
+		Resource: ResourceMwsPrivateAccessSettings(),
 		Read:     true,
 		New:      true,
 		ID:       "abc/pas_id",
@@ -146,7 +146,7 @@ func TestResourcePAStRead_NotFound(t *testing.T) {
 				Status: 404,
 			},
 		},
-		Resource: ResourcePrivateAccessSettings(),
+		Resource: ResourceMwsPrivateAccessSettings(),
 		Read:     true,
 		Removed:  true,
 		ID:       "abc/pas_id",
@@ -166,7 +166,7 @@ func TestResourcePAS_Error(t *testing.T) {
 				Status: 400,
 			},
 		},
-		Resource: ResourcePrivateAccessSettings(),
+		Resource: ResourceMwsPrivateAccessSettings(),
 		Read:     true,
 		ID:       "abc/pas_id",
 	}.Apply(t)
@@ -202,7 +202,7 @@ func TestResourcePAS_Update(t *testing.T) {
 				},
 			},
 		},
-		Resource: ResourcePrivateAccessSettings(),
+		Resource: ResourceMwsPrivateAccessSettings(),
 		Update:   true,
 		ID:       "abc/pas_id",
 		HCL: `
@@ -243,7 +243,7 @@ func TestResourcePASDelete(t *testing.T) {
 				Status: 404,
 			},
 		},
-		Resource: ResourcePrivateAccessSettings(),
+		Resource: ResourceMwsPrivateAccessSettings(),
 		Delete:   true,
 		ID:       "abc/pas_id",
 	}.Apply(t)
@@ -264,7 +264,7 @@ func TestResourcePASDelete_Error(t *testing.T) {
 				Status: 400,
 			},
 		},
-		Resource: ResourcePrivateAccessSettings(),
+		Resource: ResourceMwsPrivateAccessSettings(),
 		Delete:   true,
 		ID:       "abc/pas_id",
 	}.Apply(t)

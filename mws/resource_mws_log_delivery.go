@@ -66,8 +66,7 @@ func (a LogDeliveryAPI) Disable(accountID, configID string) error {
 	})
 }
 
-// ResourceLogDelivery ..
-func ResourceLogDelivery() *schema.Resource {
+func ResourceMwsLogDelivery() *schema.Resource {
 	p := common.NewPairID("account_id", "config_id")
 	s := common.StructToSchema(LogDeliveryConfiguration{},
 		func(s map[string]*schema.Schema) map[string]*schema.Schema {

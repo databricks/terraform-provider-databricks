@@ -67,7 +67,7 @@ func (a ExperimentsAPI) Delete(id string) error {
 	}, nil)
 }
 
-func ResourceMLFlowExperiment() *schema.Resource {
+func ResourceMlflowExperiment() *schema.Resource {
 	s := common.StructToSchema(
 		Experiment{},
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {

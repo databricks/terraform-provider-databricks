@@ -488,8 +488,7 @@ func (a QueryAPI) Delete(queryID string) error {
 	return a.client.Delete(a.context, fmt.Sprintf("/preview/sql/queries/%s", queryID), nil)
 }
 
-// ResourceQuery ...
-func ResourceQuery() *schema.Resource {
+func ResourceSqlQuery() *schema.Resource {
 	s := common.StructToSchema(
 		QueryEntity{},
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {

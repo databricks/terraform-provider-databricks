@@ -75,7 +75,7 @@ func TestResourceVPCEndpointCreate(t *testing.T) {
 				},
 			},
 		},
-		Resource: ResourceVPCEndpoint(),
+		Resource: ResourceMwsVpcEndpoint(),
 		HCL: `
 		account_id = "abc"
 		vpc_endpoint_name = "ve_name"
@@ -101,7 +101,7 @@ func TestResourceVPCEndpointCreate_Error(t *testing.T) {
 				Status: 400,
 			},
 		},
-		Resource: ResourceVPCEndpoint(),
+		Resource: ResourceMwsVpcEndpoint(),
 		State: map[string]interface{}{
 			"account_id":          "abc",
 			"vpc_endpoint_name":   "ve_name",
@@ -128,7 +128,7 @@ func TestResourceVPCEndpointRead(t *testing.T) {
 				},
 			},
 		},
-		Resource: ResourceVPCEndpoint(),
+		Resource: ResourceMwsVpcEndpoint(),
 		Read:     true,
 		New:      true,
 		ID:       "abc/veid",
@@ -154,7 +154,7 @@ func TestResourceVPCEndpointRead_NotFound(t *testing.T) {
 				Status: 404,
 			},
 		},
-		Resource: ResourceVPCEndpoint(),
+		Resource: ResourceMwsVpcEndpoint(),
 		Read:     true,
 		Removed:  true,
 		ID:       "abc/veid",
@@ -174,7 +174,7 @@ func TestResourceVPCEndpoint_Error(t *testing.T) {
 				Status: 400,
 			},
 		},
-		Resource: ResourceVPCEndpoint(),
+		Resource: ResourceMwsVpcEndpoint(),
 		Read:     true,
 		ID:       "abc/veid",
 	}.Apply(t)
@@ -209,7 +209,7 @@ func TestResourceVPCEndpointDelete(t *testing.T) {
 				Status: 404,
 			},
 		},
-		Resource: ResourceVPCEndpoint(),
+		Resource: ResourceMwsVpcEndpoint(),
 		Delete:   true,
 		ID:       "abc/veid",
 	}.Apply(t)
@@ -230,7 +230,7 @@ func TestResourceVPCEndpointDelete_Error(t *testing.T) {
 				Status: 400,
 			},
 		},
-		Resource: ResourceVPCEndpoint(),
+		Resource: ResourceMwsVpcEndpoint(),
 		Delete:   true,
 		ID:       "abc/veid",
 	}.Apply(t)

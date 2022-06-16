@@ -57,8 +57,7 @@ func (a PrivateAccessSettingsAPI) List(mwsAcctID string) ([]PrivateAccessSetting
 	return pasList, err
 }
 
-// ResourcePrivateAccessSettings ...
-func ResourcePrivateAccessSettings() *schema.Resource {
+func ResourceMwsPrivateAccessSettings() *schema.Resource {
 	s := common.StructToSchema(PrivateAccessSettings{}, func(s map[string]*schema.Schema) map[string]*schema.Schema {
 		// nolint
 		s["private_access_settings_name"].ValidateFunc = validation.StringLenBetween(4, 256)

@@ -55,8 +55,7 @@ func (a StorageConfigurationsAPI) List(mwsAcctID string) ([]StorageConfiguration
 	return mwsStorageConfigurationsList, err
 }
 
-// ResourceStorageConfiguration ...
-func ResourceStorageConfiguration() *schema.Resource {
+func ResourceMwsStorageConfigurations() *schema.Resource {
 	p := common.NewPairSeparatedID("account_id", "storage_configuration_id", "/")
 	return common.Resource{
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {

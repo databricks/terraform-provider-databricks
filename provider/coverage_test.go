@@ -71,18 +71,19 @@ func (rc ResourceCoverage) AccFilename() string {
 func (rc ResourceCoverage) coverage(cb func(FieldCoverage) bool, green, yellow int) string {
 	var x float32
 	for _, v := range rc.Fields {
-		if v.Docs {
+		if cb(v) {
 			x++
 		}
 	}
 	coverage := int(100 * x / float32(len(rc.Fields)))
+	coverageStr := fmt.Sprintf("(%d%%)", coverage)
 	if coverage > green {
-		return fmt.Sprintf("✅ (%d%%)", coverage)
+		return fmt.Sprintf("✅ %6s", coverageStr)
 	}
-	if coverage > 50 {
-		return fmt.Sprintf("👎 (%d%%)", coverage)
+	if coverage > yellow {
+		return fmt.Sprintf("👎 %6s", coverageStr)
 	}
-	return fmt.Sprintf("❌ (%d%%)", coverage)
+	return fmt.Sprintf("❌ %6s", coverageStr)
 }
 
 func (rc ResourceCoverage) DocCoverage() string {
@@ -94,13 +95,13 @@ func (rc ResourceCoverage) DocCoverage() string {
 func (rc ResourceCoverage) AccCoverage() string {
 	return rc.coverage(func(fc FieldCoverage) bool {
 		return fc.AccTest
-	}, 50, 20)
+	}, 40, 20)
 }
 
 func (rc ResourceCoverage) UnitCoverage() string {
 	return rc.coverage(func(fc FieldCoverage) bool {
 		return fc.AccTest
-	}, 50, 20)
+	}, 40, 20)
 }
 
 type FieldCoverage struct {
@@ -117,6 +118,7 @@ func (fc FieldCoverage) EverythingCovered() bool {
 func newResourceCoverage(files FileSet, name string, s map[string]*schema.Schema, data bool) ResourceCoverage {
 	r := ResourceCoverage{
 		Name:    name,
+		Data:    data,
 		Readme:  files.Exists("../README.md", name),
 		AccTest: files.Exists(`acceptance/.*_test.go`, fmt.Sprintf(`"%s"`, name)),
 	}

@@ -416,8 +416,8 @@ func UpdateTokenIfNeeded(workspacesAPI WorkspacesAPI,
 	return nil
 }
 
-// ResourceWorkspace manages E2 workspaces
-func ResourceWorkspace() *schema.Resource {
+// ResourceMwsWorkspaces manages E2 workspaces
+func ResourceMwsWorkspaces() *schema.Resource {
 	workspaceSchema := common.StructToSchema(Workspace{},
 		func(s map[string]*schema.Schema) map[string]*schema.Schema {
 			for name, fieldSchema := range s {

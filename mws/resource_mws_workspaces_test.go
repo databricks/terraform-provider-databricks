@@ -94,7 +94,7 @@ func TestResourceWorkspaceCreate(t *testing.T) {
 				},
 			},
 		},
-		Resource: ResourceWorkspace(),
+		Resource: ResourceMwsWorkspaces(),
 		State: map[string]interface{}{
 			"account_id":     "abc",
 			"aws_region":     "us-east-1",
@@ -162,7 +162,7 @@ func TestResourceWorkspaceCreateGcp(t *testing.T) {
 				},
 			},
 		},
-		Resource: ResourceWorkspace(),
+		Resource: ResourceMwsWorkspaces(),
 		HCL: `
 		account_id      = "abc"
 		workspace_name  = "labdata"
@@ -234,7 +234,7 @@ func TestResourceWorkspaceCreateWithIsNoPublicIPEnabledFalse(t *testing.T) {
 				},
 			},
 		},
-		Resource: ResourceWorkspace(),
+		Resource: ResourceMwsWorkspaces(),
 		State: map[string]interface{}{
 			"account_id":     "abc",
 			"aws_region":     "us-east-1",
@@ -294,7 +294,7 @@ func TestResourceWorkspaceCreateLegacyConfig(t *testing.T) {
 				},
 			},
 		},
-		Resource: ResourceWorkspace(),
+		Resource: ResourceMwsWorkspaces(),
 		State: map[string]interface{}{
 			"account_id":               "abc",
 			"aws_region":               "us-east-1",
@@ -334,7 +334,7 @@ func TestResourceWorkspaceCreate_Error(t *testing.T) {
 				Status: 400,
 			},
 		},
-		Resource: ResourceWorkspace(),
+		Resource: ResourceMwsWorkspaces(),
 		State: map[string]interface{}{
 			"account_id":     "abc",
 			"aws_region":     "us-east-1",
@@ -375,7 +375,7 @@ func TestResourceWorkspaceRead(t *testing.T) {
 				},
 			},
 		},
-		Resource: ResourceWorkspace(),
+		Resource: ResourceMwsWorkspaces(),
 		Read:     true,
 		New:      true,
 		ID:       "abc/1234",
@@ -440,7 +440,7 @@ func TestResourceWorkspaceRead_Issue382(t *testing.T) {
 			"network_id":                               "fgh",
 			"storage_configuration_id":                 "ghi",
 		},
-		Resource: ResourceWorkspace(),
+		Resource: ResourceMwsWorkspaces(),
 		Read:     true,
 		New:      true,
 		ID:       "abc/1234",
@@ -464,7 +464,7 @@ func TestResourceWorkspaceRead_NotFound(t *testing.T) {
 				Status: 404,
 			},
 		},
-		Resource: ResourceWorkspace(),
+		Resource: ResourceMwsWorkspaces(),
 		Read:     true,
 		Removed:  true,
 		ID:       "abc/1234",
@@ -484,7 +484,7 @@ func TestResourceWorkspaceRead_Error(t *testing.T) {
 				Status: 400,
 			},
 		},
-		Resource: ResourceWorkspace(),
+		Resource: ResourceMwsWorkspaces(),
 		Read:     true,
 		ID:       "abc/1234",
 	}.Apply(t)
@@ -523,7 +523,7 @@ func TestResourceWorkspaceUpdate(t *testing.T) {
 				},
 			},
 		},
-		Resource: ResourceWorkspace(),
+		Resource: ResourceMwsWorkspaces(),
 		InstanceState: map[string]string{
 			"account_id":     "abc",
 			"aws_region":     "us-east-1",
@@ -559,7 +559,7 @@ func TestResourceWorkspaceUpdate(t *testing.T) {
 
 func TestResourceWorkspaceUpdate_NotAllowed(t *testing.T) {
 	qa.ResourceFixture{
-		Resource: ResourceWorkspace(),
+		Resource: ResourceMwsWorkspaces(),
 		InstanceState: map[string]string{
 			"account_id":     "abc",
 			"aws_region":     "us-east-1",
@@ -622,7 +622,7 @@ func TestResourceWorkspaceUpdateLegacyConfig(t *testing.T) {
 				},
 			},
 		},
-		Resource: ResourceWorkspace(),
+		Resource: ResourceMwsWorkspaces(),
 		InstanceState: map[string]string{
 			"account_id":               "abc",
 			"aws_region":               "us-east-1",
@@ -666,7 +666,7 @@ func TestResourceWorkspaceUpdate_Error(t *testing.T) {
 				Status: 400,
 			},
 		},
-		Resource: ResourceWorkspace(),
+		Resource: ResourceMwsWorkspaces(),
 		State: map[string]interface{}{
 			"account_id":     "abc",
 			"aws_region":     "us-east-1",
@@ -711,7 +711,7 @@ func TestResourceWorkspaceDelete(t *testing.T) {
 				Status: 404,
 			},
 		},
-		Resource: ResourceWorkspace(),
+		Resource: ResourceMwsWorkspaces(),
 		Delete:   true,
 		ID:       "abc/1234",
 	}.Apply(t)
@@ -732,7 +732,7 @@ func TestResourceWorkspaceDelete_Error(t *testing.T) {
 				Status: 400,
 			},
 		},
-		Resource: ResourceWorkspace(),
+		Resource: ResourceMwsWorkspaces(),
 		Delete:   true,
 		ID:       "abc/1234",
 	}.Apply(t)
@@ -984,7 +984,7 @@ func updateWorkspaceTokenFixture(t *testing.T, fixtures []qa.HTTPFixture, state 
 		state["is_no_public_ip_enabled"] = "false"
 		qa.ResourceFixture{
 			Fixtures:      accountsAPI,
-			Resource:      ResourceWorkspace(),
+			Resource:      ResourceMwsWorkspaces(),
 			InstanceState: state,
 			Update:        true,
 			ID:            "a",
@@ -1090,7 +1090,7 @@ func TestEnsureTokenExists(t *testing.T) {
 			},
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
-		r := ResourceWorkspace()
+		r := ResourceMwsWorkspaces()
 		d := r.TestResourceData()
 		d.Set("workspace_url", client.Host)
 		d.Set("token", []interface{}{
@@ -1120,7 +1120,7 @@ func TestEnsureTokenExists_NoRecreate(t *testing.T) {
 			},
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
-		r := ResourceWorkspace()
+		r := ResourceMwsWorkspaces()
 		d := r.TestResourceData()
 		d.Set("workspace_url", client.Host)
 		d.Set("token", []interface{}{
@@ -1139,7 +1139,7 @@ func TestEnsureTokenExists_NoRecreate(t *testing.T) {
 func TestWorkspaceTokenWrongAuthCornerCase(t *testing.T) {
 	defer common.CleanupEnvironment()()
 	client := &common.DatabricksClient{}
-	r := ResourceWorkspace()
+	r := ResourceMwsWorkspaces()
 	d := r.TestResourceData()
 	d.Set("workspace_url", client.Host)
 	d.Set("token", []interface{}{
@@ -1175,7 +1175,7 @@ func TestWorkspaceTokenHttpCornerCases(t *testing.T) {
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		wsApi := NewWorkspacesAPI(context.Background(), client)
-		r := ResourceWorkspace()
+		r := ResourceMwsWorkspaces()
 		d := r.TestResourceData()
 		d.Set("workspace_url", client.Host)
 		d.Set("token", []interface{}{

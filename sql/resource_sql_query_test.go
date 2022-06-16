@@ -50,7 +50,7 @@ func TestQueryCreate(t *testing.T) {
 				},
 			},
 		},
-		Resource: ResourceQuery(),
+		Resource: ResourceSqlQuery(),
 		Create:   true,
 		State: map[string]interface{}{
 			"data_source_id": "xyz",
@@ -73,7 +73,7 @@ func TestQueryCreate(t *testing.T) {
 
 func TestQueryCreateWithMultipleSchedules(t *testing.T) {
 	qa.ResourceFixture{
-		Resource: ResourceQuery(),
+		Resource: ResourceSqlQuery(),
 		Create:   true,
 		HCL: `
 			data_source_id = "xyz"
@@ -134,7 +134,7 @@ func TestQueryCreateWithContinuousSchedule(t *testing.T) {
 				},
 			},
 		},
-		Resource: ResourceQuery(),
+		Resource: ResourceSqlQuery(),
 		Create:   true,
 		HCL: `
 			data_source_id = "xyz"
@@ -198,7 +198,7 @@ func TestQueryCreateWithDailySchedule(t *testing.T) {
 				},
 			},
 		},
-		Resource: ResourceQuery(),
+		Resource: ResourceSqlQuery(),
 		Create:   true,
 		HCL: `
 			data_source_id = "xyz"
@@ -265,7 +265,7 @@ func TestQueryCreateWithWeeklySchedule(t *testing.T) {
 				},
 			},
 		},
-		Resource: ResourceQuery(),
+		Resource: ResourceSqlQuery(),
 		Create:   true,
 		HCL: `
 			data_source_id = "xyz"
@@ -332,7 +332,7 @@ func TestQueryCreateDeletesDefaultVisualization(t *testing.T) {
 				Resource: "/api/2.0/preview/sql/visualizations/12345",
 			},
 		},
-		Resource: ResourceQuery(),
+		Resource: ResourceSqlQuery(),
 		Create:   true,
 		State: map[string]interface{}{
 			"data_source_id": "xyz",
@@ -359,7 +359,7 @@ func TestQueryRead(t *testing.T) {
 				},
 			},
 		},
-		Resource: ResourceQuery(),
+		Resource: ResourceSqlQuery(),
 		Read:     true,
 		ID:       "foo",
 	}.Apply(t)
@@ -387,7 +387,7 @@ func TestQueryReadWithSchedule(t *testing.T) {
 				},
 			},
 		},
-		Resource: ResourceQuery(),
+		Resource: ResourceSqlQuery(),
 		Read:     true,
 		ID:       "foo",
 	}.Apply(t)
@@ -422,7 +422,7 @@ func TestQueryUpdate(t *testing.T) {
 				},
 			},
 		},
-		Resource: ResourceQuery(),
+		Resource: ResourceSqlQuery(),
 		Update:   true,
 		ID:       "foo",
 		State: map[string]interface{}{
@@ -552,7 +552,7 @@ func TestQueryUpdateWithParams(t *testing.T) {
 				Response: body,
 			},
 		},
-		Resource: ResourceQuery(),
+		Resource: ResourceSqlQuery(),
 		Update:   true,
 		ID:       "foo",
 		HCL: `
@@ -683,7 +683,7 @@ func TestQueryDelete(t *testing.T) {
 				Resource: "/api/2.0/preview/sql/queries/foo",
 			},
 		},
-		Resource: ResourceQuery(),
+		Resource: ResourceSqlQuery(),
 		Delete:   true,
 		ID:       "foo",
 	}.Apply(t)
@@ -693,5 +693,5 @@ func TestQueryDelete(t *testing.T) {
 }
 
 func TestResourceQueryCornerCases(t *testing.T) {
-	qa.ResourceCornerCases(t, ResourceQuery())
+	qa.ResourceCornerCases(t, ResourceSqlQuery())
 }

@@ -108,7 +108,7 @@ func DatabricksProvider() *schema.Provider {
 			"databricks_service_principal_role":      aws.ResourceServicePrincipalRole(),
 			"databricks_sql_dashboard":               sql.ResourceSqlDashboard(),
 			"databricks_sql_endpoint":                sql.ResourceSqlEndpoint(),
-			"databricks_sql_global_config":           sql.ResourceSQLGlobalConfig(),
+			"databricks_sql_global_config":           sql.ResourceSqlGlobalConfig(),
 			"databricks_sql_permissions":             access.ResourceSqlPermissions(),
 			"databricks_sql_query":                   sql.ResourceSqlQuery(),
 			"databricks_sql_visualization":           sql.ResourceSqlVisualization(),

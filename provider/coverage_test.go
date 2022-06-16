@@ -100,7 +100,7 @@ func (rc ResourceCoverage) AccCoverage() string {
 
 func (rc ResourceCoverage) UnitCoverage() string {
 	return rc.coverage(func(fc FieldCoverage) bool {
-		return fc.AccTest
+		return fc.UnitTest
 	}, 40, 20)
 }
 
@@ -177,7 +177,11 @@ func TestCoverageReport(t *testing.T) {
 				longestFieldName = len(field.Name)
 			}
 		}
-		report.WriteString(fmt.Sprintf(resSummaryFormat, r.Name,
+		name := r.Name
+		if r.Data {
+			name = "* " + name
+		}
+		report.WriteString(fmt.Sprintf(resSummaryFormat, name,
 			checkbox(r.Readme),
 			r.DocCoverage(),
 			r.AccCoverage(),

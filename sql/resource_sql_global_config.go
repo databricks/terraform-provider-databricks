@@ -97,7 +97,7 @@ func (a globalConfigAPI) Get() (GlobalConfig, error) {
 	return gc, nil
 }
 
-func ResourceSQLGlobalConfig() *schema.Resource {
+func ResourceSqlGlobalConfig() *schema.Resource {
 	s := common.StructToSchema(GlobalConfig{}, func(
 		m map[string]*schema.Schema) map[string]*schema.Schema {
 		return m

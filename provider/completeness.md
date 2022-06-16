@@ -1,85 +1,85 @@
 | Resource | Readme | Docs | Acceptance Test | Acceptance File | Resource File | Unit test |
 | --- | --- | --- | --- | --- | --- | --- |
-|      databricks_aws_assume_role_policy | ✅ | ✅ (100%) | ❌   (0%) | ❌ | ✅ | ❌   (0%) |
-|           databricks_aws_bucket_policy | ✅ | 👎  (75%) | ❌   (0%) | ❌ | ✅ | ❌   (0%) |
-|     databricks_aws_crossaccount_policy | ✅ | ✅ (100%) | ❌   (0%) | ❌ | ✅ | ❌   (0%) |
-|                databricks_aws_s3_mount | ❌ | ❌   (0%) | ✅ (100%) | ✅ | ❌ | ✅ (100%) |
-|       databricks_azure_adls_gen1_mount | ❌ | ❌   (0%) | ✅  (90%) | ❌ | ❌ | ✅  (90%) |
-|       databricks_azure_adls_gen2_mount | ❌ | ❌   (0%) | ✅ (100%) | ❌ | ❌ | ✅ (100%) |
-|            databricks_azure_blob_mount | ❌ | ❌   (0%) | ✅ (100%) | ✅ | ❌ | ✅ (100%) |
-|                     databricks_catalog | ✅ | ✅ (100%) | ❌   (0%) | ❌ | ✅ | ❌   (0%) |
-|                    databricks_catalogs | ✅ | ✅ (100%) | ❌   (0%) | ❌ | ✅ | ❌   (0%) |
-|                     databricks_cluster | ✅ | ✅  (98%) | ✅  (50%) | ✅ | ✅ | ✅  (50%) |
-|              databricks_cluster_policy | ✅ | ✅ (100%) | ✅  (66%) | ✅ | ✅ | ✅  (66%) |
-|                    databricks_clusters | ✅ | ✅ (100%) | ❌   (0%) | ❌ | ✅ | ❌   (0%) |
-|                databricks_current_user | ✅ | ✅ (100%) | ✅  (50%) | ❌ | ✅ | ✅  (50%) |
-|                   databricks_dbfs_file | ✅ | ✅ (100%) | ✅  (50%) | ✅ | ✅ | ✅  (50%) |
-|                   databricks_dbfs_file | ✅ | ✅  (83%) | ✅  (50%) | ✅ | ✅ | ✅  (50%) |
-|             databricks_dbfs_file_paths | ✅ | ✅ (100%) | ❌   (0%) | ❌ | ✅ | ❌   (0%) |
-|                   databricks_directory | ✅ | ✅ (100%) | ❌   (0%) | ❌ | ✅ | ❌   (0%) |
-|           databricks_external_location | ✅ | ✅  (85%) | ❌   (0%) | ❌ | ✅ | ❌   (0%) |
+|    * databricks_aws_assume_role_policy | ✅ | ✅ (100%) | ❌   (0%) | ❌ | ✅ | ✅  (50%) |
+|         * databricks_aws_bucket_policy | ✅ | 👎  (75%) | ❌   (0%) | ❌ | ✅ | ✅  (75%) |
+|   * databricks_aws_crossaccount_policy | ✅ | ✅ (100%) | ❌   (0%) | ❌ | ✅ | ✅ (100%) |
+|                databricks_aws_s3_mount | ❌ | ❌   (0%) | ✅ (100%) | ✅ | ❌ | ❌   (0%) |
+|       databricks_azure_adls_gen1_mount | ❌ | ❌   (0%) | ✅  (90%) | ✅ | ❌ | ❌   (0%) |
+|       databricks_azure_adls_gen2_mount | ❌ | ❌   (0%) | ✅ (100%) | ✅ | ❌ | ❌   (0%) |
+|            databricks_azure_blob_mount | ❌ | ❌   (0%) | ✅ (100%) | ✅ | ❌ | ❌   (0%) |
+|                     databricks_catalog | ✅ | ✅ (100%) | ❌   (0%) | ❌ | ✅ | ✅ (100%) |
+|                  * databricks_catalogs | ✅ | ✅ (100%) | ❌   (0%) | ❌ | ✅ | ❌   (0%) |
+|                     databricks_cluster | ✅ | ✅  (98%) | ✅  (50%) | ✅ | ✅ | ✅  (43%) |
+|              databricks_cluster_policy | ✅ | ✅ (100%) | ✅  (66%) | ✅ | ✅ | ✅ (100%) |
+|                  * databricks_clusters | ✅ | ✅ (100%) | ❌   (0%) | ❌ | ✅ | ✅ (100%) |
+|              * databricks_current_user | ✅ | ✅ (100%) | ✅  (50%) | ❌ | ✅ | ✅  (66%) |
+|                   databricks_dbfs_file | ✅ | ✅  (83%) | ✅  (50%) | ✅ | ✅ | 👎  (33%) |
+|                 * databricks_dbfs_file | ✅ | ✅ (100%) | ✅  (50%) | ✅ | ✅ | ✅ (100%) |
+|           * databricks_dbfs_file_paths | ✅ | ✅ (100%) | ❌   (0%) | ❌ | ✅ | ✅  (60%) |
+|                   databricks_directory | ✅ | ✅ (100%) | ❌   (0%) | ❌ | ✅ | ✅ (100%) |
+|           databricks_external_location | ✅ | ✅  (85%) | ❌   (0%) | ❌ | ✅ | ✅  (71%) |
 |              databricks_git_credential | ✅ | ✅ (100%) | ✅ (100%) | ✅ | ✅ | ✅ (100%) |
 |          databricks_global_init_script | ✅ | ✅  (83%) | ✅  (83%) | ✅ | ✅ | ✅  (83%) |
-|                      databricks_grants | ✅ | ✅ (100%) | ❌   (0%) | ❌ | ✅ | ❌   (0%) |
+|                      databricks_grants | ✅ | ✅ (100%) | ❌   (0%) | ❌ | ✅ | ✅  (66%) |
+|                     * databricks_group | ✅ | ✅  (84%) | ✅  (53%) | ✅ | ✅ | ✅  (69%) |
 |                       databricks_group | ✅ | ✅  (87%) | ✅  (62%) | ✅ | ✅ | ✅  (62%) |
-|                       databricks_group | ✅ | ✅  (84%) | ✅  (53%) | ✅ | ✅ | ✅  (53%) |
 |      databricks_group_instance_profile | ✅ | ✅ (100%) | ✅ (100%) | ❌ | ✅ | ✅ (100%) |
-|                databricks_group_member | ✅ | ✅ (100%) | ✅ (100%) | ❌ | ✅ | ✅ (100%) |
-|               databricks_instance_pool | ✅ | ✅  (96%) | ❌   (0%) | ❌ | ✅ | ❌   (0%) |
+|                databricks_group_member | ✅ | ✅ (100%) | ✅ (100%) | ✅ | ✅ | ✅ (100%) |
+|               databricks_instance_pool | ✅ | ✅  (96%) | ❌   (0%) | ❌ | ✅ | 👎  (27%) |
 |            databricks_instance_profile | ✅ | ✅ (100%) | 👎  (33%) | ✅ | ✅ | 👎  (33%) |
 |              databricks_ip_access_list | ✅ | ✅ (100%) | ✅ (100%) | ✅ | ✅ | ✅ (100%) |
-|                         databricks_job | ✅ | ❌  (39%) | ✅  (46%) | ✅ | ✅ | ✅  (46%) |
-|                        databricks_jobs | ✅ | ✅ (100%) | ❌   (0%) | ❌ | ✅ | ❌   (0%) |
-|                     databricks_library | ✅ | ✅ (100%) | ❌   (0%) | ❌ | ✅ | ❌   (0%) |
-|                   databricks_metastore | ✅ | 👎  (53%) | ❌   (0%) | ❌ | ✅ | ❌   (0%) |
-|        databricks_metastore_assignment | ✅ | ✅ (100%) | ❌   (0%) | ❌ | ✅ | ❌   (0%) |
-|       databricks_metastore_data_access | ✅ | ✅  (92%) | ❌   (0%) | ❌ | ✅ | ❌   (0%) |
-|           databricks_mlflow_experiment | ✅ | ❌  (42%) | ✅  (42%) | ❌ | ✅ | ✅  (42%) |
-|                databricks_mlflow_model | ✅ | 👎  (55%) | ✅  (55%) | ❌ | ✅ | ✅  (55%) |
-|              databricks_mlflow_webhook | ✅ | ✅ (100%) | ❌   (0%) | ❌ | ✅ | ❌   (0%) |
-|                       databricks_mount | ✅ | ✅ (100%) | ❌   (0%) | ❌ | ✅ | ❌   (0%) |
-|             databricks_mws_credentials | ✅ | ✅ (100%) | ✅  (66%) | ❌ | ✅ | ✅  (66%) |
-|   databricks_mws_customer_managed_keys | ✅ | ✅ (100%) | ✅  (75%) | ❌ | ✅ | ✅  (75%) |
-|            databricks_mws_log_delivery | ✅ | ✅  (90%) | ✅  (63%) | ❌ | ✅ | ✅  (63%) |
-|                databricks_mws_networks | ✅ | 👎  (73%) | 👎  (40%) | ❌ | ✅ | 👎  (40%) |
-| databricks_mws_private_access_settings | ✅ | ✅ (100%) | 👎  (37%) | ❌ | ✅ | 👎  (37%) |
-|  databricks_mws_storage_configurations | ✅ | 👎  (80%) | ✅  (80%) | ❌ | ✅ | ✅  (80%) |
-|            databricks_mws_vpc_endpoint | ✅ | 👎  (77%) | ✅  (77%) | ❌ | ✅ | ✅  (77%) |
-|              databricks_mws_workspaces | ✅ | 👎  (53%) | ✅  (46%) | ❌ | ✅ | ✅  (46%) |
-|                   databricks_node_type | ✅ | ✅ (100%) | ❌   (9%) | ❌ | ✅ | ❌   (9%) |
+|                         databricks_job | ✅ | ❌  (39%) | ✅  (46%) | ✅ | ✅ | 👎  (29%) |
+|                      * databricks_jobs | ✅ | ✅ (100%) | ❌   (0%) | ❌ | ✅ | ✅ (100%) |
+|                     databricks_library | ✅ | ✅ (100%) | ❌   (0%) | ❌ | ✅ | 👎  (28%) |
+|                   databricks_metastore | ✅ | 👎  (53%) | ❌   (0%) | ❌ | ✅ | ✅  (46%) |
+|        databricks_metastore_assignment | ✅ | ✅ (100%) | ❌   (0%) | ❌ | ✅ | ✅  (66%) |
+|       databricks_metastore_data_access | ✅ | ✅  (92%) | ❌   (0%) | ❌ | ✅ | ✅  (61%) |
+|           databricks_mlflow_experiment | ✅ | ❌  (42%) | ✅  (42%) | ✅ | ✅ | 👎  (28%) |
+|                databricks_mlflow_model | ✅ | 👎  (55%) | ✅  (55%) | ✅ | ✅ | ✅  (55%) |
+|              databricks_mlflow_webhook | ✅ | ✅ (100%) | ❌   (0%) | ❌ | ✅ | ✅  (84%) |
+|                       databricks_mount | ✅ | ✅ (100%) | ❌   (0%) | ❌ | ✅ | ✅  (97%) |
+|             databricks_mws_credentials | ✅ | ✅ (100%) | ✅  (66%) | ✅ | ✅ | ✅ (100%) |
+|   databricks_mws_customer_managed_keys | ✅ | ✅ (100%) | ✅  (75%) | ✅ | ✅ | ✅  (87%) |
+|            databricks_mws_log_delivery | ✅ | ✅  (90%) | ✅  (63%) | ✅ | ✅ | ✅ (100%) |
+|                databricks_mws_networks | ✅ | 👎  (73%) | 👎  (40%) | ✅ | ✅ | ✅  (53%) |
+| databricks_mws_private_access_settings | ✅ | ✅ (100%) | 👎  (37%) | ✅ | ✅ | ✅  (87%) |
+|  databricks_mws_storage_configurations | ✅ | 👎  (80%) | ✅  (80%) | ✅ | ✅ | ✅ (100%) |
+|            databricks_mws_vpc_endpoint | ✅ | 👎  (77%) | ✅  (77%) | ✅ | ✅ | ✅  (55%) |
+|              databricks_mws_workspaces | ✅ | 👎  (53%) | ✅  (46%) | ✅ | ✅ | ✅  (80%) |
+|                 * databricks_node_type | ✅ | ✅ (100%) | ❌   (9%) | ❌ | ✅ | ✅  (45%) |
+|                  * databricks_notebook | ✅ | ✅ (100%) | ✅  (83%) | ✅ | ✅ | ✅  (50%) |
 |                    databricks_notebook | ✅ | 👎  (77%) | ✅  (77%) | ✅ | ✅ | ✅  (77%) |
-|                    databricks_notebook | ✅ | ✅ (100%) | ✅  (83%) | ✅ | ✅ | ✅  (83%) |
-|              databricks_notebook_paths | ✅ | ✅ (100%) | ❌   (0%) | ❌ | ✅ | ❌   (0%) |
-|                   databricks_obo_token | ✅ | ✅ (100%) | ✅  (75%) | ❌ | ✅ | ✅  (75%) |
-|                 databricks_permissions | ✅ | ✅ (100%) | ✅  (41%) | ✅ | ✅ | ✅  (41%) |
-|                    databricks_pipeline | ✅ | ❌  (25%) | ✅  (61%) | ✅ | ✅ | ✅  (61%) |
-|                        databricks_repo | ✅ | ✅ (100%) | ✅  (66%) | ❌ | ✅ | ✅  (66%) |
-|                      databricks_schema | ✅ | ✅ (100%) | ❌   (0%) | ❌ | ✅ | ❌   (0%) |
-|                     databricks_schemas | ✅ | ✅ (100%) | ❌   (0%) | ❌ | ✅ | ❌   (0%) |
-|                      databricks_secret | ✅ | ✅ (100%) | ✅  (75%) | ✅ | ✅ | ✅  (75%) |
+|            * databricks_notebook_paths | ✅ | ✅ (100%) | ❌   (0%) | ❌ | ✅ | ✅  (60%) |
+|                   databricks_obo_token | ✅ | ✅ (100%) | ✅  (75%) | ✅ | ✅ | ✅  (75%) |
+|                 databricks_permissions | ✅ | ✅ (100%) | ✅  (41%) | ✅ | ✅ | ✅  (45%) |
+|                    databricks_pipeline | ✅ | ❌  (25%) | ✅  (61%) | ✅ | ✅ | 👎  (29%) |
+|                        databricks_repo | ✅ | ✅ (100%) | ✅  (66%) | ❌ | ✅ | ✅ (100%) |
+|                      databricks_schema | ✅ | ✅ (100%) | ❌   (0%) | ❌ | ✅ | ✅  (83%) |
+|                   * databricks_schemas | ✅ | ✅ (100%) | ❌   (0%) | ❌ | ✅ | ✅  (50%) |
+|                      databricks_secret | ✅ | ✅ (100%) | ✅  (75%) | ✅ | ✅ | ✅ (100%) |
 |                  databricks_secret_acl | ✅ | ✅ (100%) | ✅ (100%) | ✅ | ✅ | ✅ (100%) |
-|                databricks_secret_scope | ✅ | ✅ (100%) | ✅  (50%) | ✅ | ✅ | ✅  (50%) |
-|           databricks_service_principal | ✅ | ✅ (100%) | ✅  (55%) | ❌ | ✅ | ✅  (55%) |
-|      databricks_service_principal_role | ✅ | ✅ (100%) | ❌   (0%) | ❌ | ✅ | ❌   (0%) |
-|               databricks_spark_version | ✅ | ✅ (100%) | 👎  (40%) | ❌ | ✅ | 👎  (40%) |
-|               databricks_sql_dashboard | ✅ | ✅ (100%) | ✅ (100%) | ❌ | ✅ | ✅ (100%) |
-|                databricks_sql_endpoint | ✅ | ✅  (92%) | ✅  (57%) | ✅ | ✅ | ✅  (57%) |
-|           databricks_sql_global_config | ✅ | 👎  (80%) | 👎  (40%) | ✅ | ✅ | 👎  (40%) |
-|             databricks_sql_permissions | ✅ | ✅ (100%) | ✅  (60%) | ✅ | ✅ | ✅  (60%) |
-|                   databricks_sql_query | ✅ | ❌  (44%) | ✅  (55%) | ❌ | ✅ | ✅  (55%) |
+|                databricks_secret_scope | ✅ | ✅ (100%) | ✅  (50%) | ✅ | ✅ | ✅ (100%) |
+|           databricks_service_principal | ✅ | ✅ (100%) | ✅  (55%) | ✅ | ✅ | ✅  (55%) |
+|      databricks_service_principal_role | ✅ | ✅ (100%) | ❌   (0%) | ❌ | ✅ | ✅ (100%) |
+|             * databricks_spark_version | ✅ | ✅ (100%) | 👎  (40%) | ❌ | ✅ | ✅  (90%) |
+|               databricks_sql_dashboard | ✅ | ✅ (100%) | ✅ (100%) | ✅ | ✅ | ✅ (100%) |
+|                databricks_sql_endpoint | ✅ | ✅  (92%) | ✅  (57%) | ✅ | ✅ | 👎  (23%) |
+|           databricks_sql_global_config | ✅ | 👎  (80%) | 👎  (40%) | ✅ | ✅ | ✅ (100%) |
+|             databricks_sql_permissions | ✅ | ✅ (100%) | ✅  (60%) | ✅ | ✅ | ✅  (80%) |
+|                   databricks_sql_query | ✅ | ❌  (44%) | ✅  (55%) | ✅ | ✅ | ✅  (98%) |
 |           databricks_sql_visualization | ✅ | ✅  (83%) | ✅ (100%) | ❌ | ✅ | ✅ (100%) |
-|                  databricks_sql_widget | ✅ | ❌  (42%) | ✅  (84%) | ❌ | ✅ | ✅  (84%) |
-|          databricks_storage_credential | ✅ | ✅  (83%) | ❌   (0%) | ❌ | ✅ | ❌   (0%) |
-|                       databricks_table | ✅ | ✅ (100%) | ❌   (0%) | ❌ | ✅ | ❌   (0%) |
-|                      databricks_tables | ✅ | ✅ (100%) | ❌   (0%) | ❌ | ✅ | ❌   (0%) |
-|                       databricks_token | ✅ | ❌  (50%) | 👎  (33%) | ✅ | ✅ | 👎  (33%) |
-|                        databricks_user | ✅ | ✅ (100%) | ✅  (57%) | ❌ | ✅ | ✅  (57%) |
-|                        databricks_user | ✅ | ✅  (88%) | ✅  (55%) | ❌ | ✅ | ✅  (55%) |
-|       databricks_user_instance_profile | ✅ | ✅ (100%) | ❌   (0%) | ❌ | ✅ | ❌   (0%) |
-|                   databricks_user_role | ✅ | ✅ (100%) | ❌   (0%) | ❌ | ✅ | ❌   (0%) |
-|                       databricks_views | ✅ | ✅ (100%) | ❌   (0%) | ❌ | ✅ | ❌   (0%) |
+|                  databricks_sql_widget | ✅ | ❌  (42%) | ✅  (84%) | ❌ | ✅ | ✅  (94%) |
+|          databricks_storage_credential | ✅ | ✅  (83%) | ❌   (0%) | ❌ | ✅ | ✅  (58%) |
+|                       databricks_table | ✅ | ✅ (100%) | ❌   (0%) | ❌ | ✅ | ✅  (52%) |
+|                    * databricks_tables | ✅ | ✅ (100%) | ❌   (0%) | ❌ | ✅ | ✅ (100%) |
+|                       databricks_token | ✅ | ❌  (50%) | 👎  (33%) | ✅ | ✅ | ✅ (100%) |
+|                      * databricks_user | ✅ | ✅ (100%) | ✅  (57%) | ✅ | ✅ | ✅  (42%) |
+|                        databricks_user | ✅ | ✅  (88%) | ✅  (55%) | ✅ | ✅ | ✅  (55%) |
+|       databricks_user_instance_profile | ✅ | ✅ (100%) | ❌   (0%) | ❌ | ✅ | ✅ (100%) |
+|                   databricks_user_role | ✅ | ✅ (100%) | ❌   (0%) | ❌ | ✅ | ✅ (100%) |
+|                     * databricks_views | ✅ | ✅ (100%) | ❌   (0%) | ❌ | ✅ | ✅ (100%) |
 |              databricks_workspace_conf | ✅ | ✅ (100%) | ✅ (100%) | ✅ | ✅ | ✅ (100%) |
-|                       databricks_zones | ✅ | ✅ (100%) | ❌   (0%) | ❌ | ✅ | ❌   (0%) |
+|                     * databricks_zones | ✅ | ✅ (100%) | ❌   (0%) | ❌ | ✅ | ✅ (100%) |
 
 
 | Resource | Field | Docs | Acceptance Test | Unit Test |
@@ -202,12 +202,12 @@
 |                databricks_current_user |                                          alphanumeric (computed) | ✅ | ❌ | ✅ |
 |                databricks_current_user |                                           external_id (computed) | ✅ | ❌ | ❌ |
 |                databricks_current_user |                                         workspace_url (computed) | ✅ | ❌ | ❌ |
-|                   databricks_dbfs_file |                                             file_size (computed) | ✅ | ❌ | ✅ |
-|                   databricks_dbfs_file |                                                  limit_file_size | ✅ | ❌ | ✅ |
 |                   databricks_dbfs_file |                                                   content_base64 | ✅ | ✅ | ❌ |
 |                   databricks_dbfs_file |                                             dbfs_path (computed) | ✅ | ❌ | ❌ |
 |                   databricks_dbfs_file |                                             file_size (computed) | ✅ | ❌ | ❌ |
 |                   databricks_dbfs_file |                                                              md5 | ❌ | ❌ | ❌ |
+|                   databricks_dbfs_file |                                             file_size (computed) | ✅ | ❌ | ✅ |
+|                   databricks_dbfs_file |                                                  limit_file_size | ✅ | ❌ | ✅ |
 |             databricks_dbfs_file_paths |                                                             path | ✅ | ❌ | ✅ |
 |             databricks_dbfs_file_paths |                                             path_list (computed) | ✅ | ❌ | ❌ |
 |             databricks_dbfs_file_paths |                                              path_list.file_size | ✅ | ❌ | ❌ |
@@ -233,16 +233,16 @@
 |                      databricks_grants |                                               storage_credential | ✅ | ❌ | ❌ |
 |                      databricks_grants |                                                            table | ✅ | ❌ | ✅ |
 |                      databricks_grants |                                                             view | ✅ | ❌ | ❌ |
-|                       databricks_group |                                            databricks_sql_access | ✅ | ❌ | ✅ |
-|                       databricks_group |                                                      external_id | ✅ | ❌ | ❌ |
-|                       databricks_group |                                                   url (computed) | ❌ | ✅ | ❌ |
-|                       databricks_group |                                                 workspace_access | ✅ | ❌ | ❌ |
 |                       databricks_group |                                            databricks_sql_access | ❌ | ❌ | ❌ |
 |                       databricks_group |                                           external_id (computed) | ✅ | ❌ | ❌ |
 |                       databricks_group |                                     instance_profiles (computed) | ✅ | ❌ | ✅ |
 |                       databricks_group |                                               members (computed) | ✅ | ❌ | ✅ |
 |                       databricks_group |                                                        recursive | ✅ | ❌ | ❌ |
 |                       databricks_group |                                                 workspace_access | ❌ | ❌ | ❌ |
+|                       databricks_group |                                            databricks_sql_access | ✅ | ❌ | ✅ |
+|                       databricks_group |                                                      external_id | ✅ | ❌ | ❌ |
+|                       databricks_group |                                                   url (computed) | ❌ | ✅ | ❌ |
+|                       databricks_group |                                                 workspace_access | ✅ | ❌ | ❌ |
 |               databricks_instance_pool |                                                   aws_attributes | ✅ | ❌ | ❌ |
 |               databricks_instance_pool |                                      aws_attributes.availability | ✅ | ❌ | ❌ |
 |               databricks_instance_pool |                            aws_attributes.spot_bid_price_percent | ✅ | ❌ | ❌ |
@@ -317,8 +317,8 @@
 |                         databricks_job |                       job_cluster.new_cluster.data_security_mode | ❌ | ❌ | ❌ |
 |                         databricks_job |                             job_cluster.new_cluster.docker_image | ❌ | ❌ | ❌ |
 |                         databricks_job |                  job_cluster.new_cluster.docker_image.basic_auth | ❌ | ❌ | ❌ |
-|                         databricks_job |         job_cluster.new_cluster.docker_image.basic_auth.password | ❌ | ✅ | ❌ |
-|                         databricks_job |         job_cluster.new_cluster.docker_image.basic_auth.username | ❌ | ✅ | ❌ |
+|                         databricks_job |                job_cluster.new_cluster.docker_image.url.password | ❌ | ✅ | ❌ |
+|                         databricks_job |                job_cluster.new_cluster.docker_image.url.username | ❌ | ✅ | ❌ |
 |                         databricks_job |       job_cluster.new_cluster.driver_instance_pool_id (computed) | ❌ | ❌ | ❌ |
 |                         databricks_job |           job_cluster.new_cluster.driver_node_type_id (computed) | ❌ | ❌ | ❌ |
 |                         databricks_job |           job_cluster.new_cluster.enable_elastic_disk (computed) | ❌ | ❌ | ❌ |
@@ -507,16 +507,16 @@
 |                         databricks_job |        task.new_cluster.gcp_attributes.use_preemptible_executors | ❌ | ❌ | ❌ |
 |                         databricks_job |                               task.new_cluster.idempotency_token | ❌ | ❌ | ❌ |
 |                         databricks_job |                                    task.new_cluster.init_scripts | ✅ | ❌ | ❌ |
-|                         databricks_job |                    task.new_cluster.init_scripts.dbfs.canned_acl | ❌ | ❌ | ❌ |
-|                         databricks_job |                   task.new_cluster.init_scripts.dbfs.destination | ❌ | ❌ | ❌ |
-|                         databricks_job |                   task.new_cluster.init_scripts.dbfs.destination | ❌ | ❌ | ❌ |
-|                         databricks_job |                   task.new_cluster.init_scripts.dbfs.destination | ❌ | ❌ | ❌ |
-|                         databricks_job |                   task.new_cluster.init_scripts.dbfs.destination | ❌ | ❌ | ❌ |
-|                         databricks_job |             task.new_cluster.init_scripts.dbfs.enable_encryption | ❌ | ❌ | ❌ |
-|                         databricks_job |               task.new_cluster.init_scripts.dbfs.encryption_type | ❌ | ❌ | ❌ |
-|                         databricks_job |                      task.new_cluster.init_scripts.dbfs.endpoint | ❌ | ✅ | ❌ |
-|                         databricks_job |                       task.new_cluster.init_scripts.dbfs.kms_key | ❌ | ❌ | ❌ |
-|                         databricks_job |                        task.new_cluster.init_scripts.dbfs.region | ❌ | ✅ | ❌ |
+|                         databricks_job |                    task.new_cluster.init_scripts.file.canned_acl | ❌ | ❌ | ❌ |
+|                         databricks_job |                   task.new_cluster.init_scripts.file.destination | ❌ | ❌ | ❌ |
+|                         databricks_job |                   task.new_cluster.init_scripts.file.destination | ❌ | ❌ | ❌ |
+|                         databricks_job |                   task.new_cluster.init_scripts.file.destination | ❌ | ❌ | ❌ |
+|                         databricks_job |                   task.new_cluster.init_scripts.file.destination | ❌ | ❌ | ❌ |
+|                         databricks_job |             task.new_cluster.init_scripts.file.enable_encryption | ❌ | ❌ | ❌ |
+|                         databricks_job |               task.new_cluster.init_scripts.file.encryption_type | ❌ | ❌ | ❌ |
+|                         databricks_job |                      task.new_cluster.init_scripts.file.endpoint | ❌ | ✅ | ❌ |
+|                         databricks_job |                       task.new_cluster.init_scripts.file.kms_key | ❌ | ❌ | ❌ |
+|                         databricks_job |                        task.new_cluster.init_scripts.file.region | ❌ | ✅ | ❌ |
 |                         databricks_job |                                task.new_cluster.init_scripts.gcs | ❌ | ❌ | ❌ |
 |                         databricks_job |                                 task.new_cluster.init_scripts.s3 | ❌ | ✅ | ❌ |
 |                         databricks_job |                                task.new_cluster.instance_pool_id | ❌ | ✅ | ❌ |
@@ -714,12 +714,12 @@
 |                   databricks_node_type |                                            photon_driver_capable | ✅ | ❌ | ❌ |
 |                   databricks_node_type |                                            photon_worker_capable | ✅ | ❌ | ❌ |
 |                   databricks_node_type |                                          support_port_forwarding | ✅ | ❌ | ❌ |
-|                    databricks_notebook |                                                              md5 | ❌ | ❌ | ❌ |
-|                    databricks_notebook |                                             object_id (computed) | ✅ | ❌ | ✅ |
-|                    databricks_notebook |                                           object_type (computed) | ❌ | ✅ | ❌ |
 |                    databricks_notebook |                                              language (computed) | ✅ | ✅ | ❌ |
 |                    databricks_notebook |                                             object_id (computed) | ✅ | ❌ | ❌ |
 |                    databricks_notebook |                                           object_type (computed) | ✅ | ✅ | ❌ |
+|                    databricks_notebook |                                                              md5 | ❌ | ❌ | ❌ |
+|                    databricks_notebook |                                             object_id (computed) | ✅ | ❌ | ✅ |
+|                    databricks_notebook |                                           object_type (computed) | ❌ | ✅ | ❌ |
 |              databricks_notebook_paths |                                    notebook_path_list (computed) | ✅ | ❌ | ❌ |
 |              databricks_notebook_paths |                                      notebook_path_list.language | ✅ | ❌ | ❌ |
 |              databricks_notebook_paths |                                          notebook_path_list.path | ✅ | ❌ | ✅ |
@@ -838,11 +838,9 @@
 |                databricks_sql_endpoint |                                                 tags.custom_tags | ✅ | ✅ | ❌ |
 |                databricks_sql_endpoint |                                             tags.custom_tags.key | ✅ | ✅ | ❌ |
 |                databricks_sql_endpoint |                                           tags.custom_tags.value | ✅ | ✅ | ❌ |
-|           databricks_sql_global_config |                                               data_access_config | ✅ | ✅ | ❌ |
-|           databricks_sql_global_config |                                        enable_serverless_compute | ❌ | ❌ | ❌ |
-|           databricks_sql_global_config |                                             instance_profile_arn | ✅ | ✅ | ❌ |
-|           databricks_sql_global_config |                                                  security_policy | ✅ | ❌ | ❌ |
-|           databricks_sql_global_config |                                                sql_config_params | ✅ | ❌ | ❌ |
+|           databricks_sql_global_config |                                        enable_serverless_compute | ❌ | ❌ | ✅ |
+|           databricks_sql_global_config |                                                  security_policy | ✅ | ❌ | ✅ |
+|           databricks_sql_global_config |                                                sql_config_params | ✅ | ❌ | ✅ |
 |             databricks_sql_permissions |                                               anonymous_function | ✅ | ❌ | ❌ |
 |             databricks_sql_permissions |                                                         any_file | ✅ | ❌ | ❌ |
 |             databricks_sql_permissions |                                                          catalog | ✅ | ❌ | ✅ |
@@ -953,7 +951,9 @@
 |                       databricks_views |                                                      schema_name | ✅ | ❌ | ✅ |
 |                       databricks_zones |                                          default_zone (computed) | ✅ | ❌ | ✅ |
 |                       databricks_zones |                                                 zones (computed) | ✅ | ❌ | ✅ |
-n.name | ✅ | ❌ | ✅ |
+|                       databricks_zones |                                          default_zone (computed) | ✅ | ❌ | ✅ |
+|                       databricks_zones |                                                 zones (computed) | ✅ | ❌ | ✅ |
+name | ✅ | ❌ | ✅ |
 |                       databricks_table |                                                  column.nullable | ✅ | ❌ | ❌ |
 |                       databricks_table |                                           column.partition_index | ✅ | ❌ | ❌ |
 |                       databricks_table |                                                  column.position | ✅ | ❌ | ✅ |

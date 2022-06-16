@@ -1,5 +1,17 @@
 # Version changelog
 
+## 0.6.1
+
+* Added `databricks_service_principal` and `databricks_service_principals` data resources ([#1370](https://github.com/databrickslabs/terraform-provider-databricks/pull/1370)).
+* Updated `databricks_pipeline` resource to match latest APIs ([#1368](https://github.com/databrickslabs/terraform-provider-databricks/pull/1368)).
+* Made `gcp_managed_network_config` optional in `databricks_mws_workspaces` ([#1365](https://github.com/databrickslabs/terraform-provider-databricks/pull/1365)).
+* Enforced consistent naming for resource files ([#1366](https://github.com/databrickslabs/terraform-provider-databricks/pull/1366), [#1369](https://github.com/databrickslabs/terraform-provider-databricks/pull/1369)).
+* Updated resources diagram ([#1373](https://github.com/databrickslabs/terraform-provider-databricks/pull/1373)).
+
+Updated dependency versions:
+
+* Bump google.golang.org/api from 0.82.0 to 0.83.0
+
 ## 0.6.0
 
 * Added `delta_sharing_*` support to `databricks_metastore` ([#1334](https://github.com/databrickslabs/terraform-provider-databricks/pull/1334)).

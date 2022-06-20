@@ -318,58 +318,6 @@ provider "databricks" {}
 9. Will check for `profile` presence and try picking from that file will fail otherwise.
 10. Will check for `host` and `token` or `username`+`password` combination, and will fail if none of these exist.
 
-## Data resources and Authentication is not configured errors
-
-*In Terraform 0.13 and later*, data resources have the same dependency resolution behavior [as defined for managed resources](https://www.terraform.io/docs/language/resources/behavior.html#resource-dependencies). Most data resources make an API call to a workspace. If a workspace doesn't exist yet, `authentication is not configured for provider` error is raised. To work around this issue and guarantee a proper lazy authentication with data resources, you should add `depends_on = [azurerm_databricks_workspace.this]` or `depends_on = [databricks_mws_workspaces.this]` to the body. This issue doesn't occur if workspace is created *in one module* and resources [within the workspace](guides/workspace-management.md) are created *in another*. We do not recommend using Terraform 0.12 and earlier, if your usage involves data resources.
-
-## Multiple Provider Configurations
-
- The most common reason for technical difficulties might be related to missing `alias` attribute in `provider "databricks" {}` blocks or `provider` attribute in `resource "databricks_..." {}` blocks, when using multiple provider configurations. Please make sure to read [`alias`: Multiple Provider Configurations](https://www.terraform.io/docs/language/providers/configuration.html#alias-multiple-provider-configurations) documentation article. 
-
-## Error while installing: registry does not have a provider
-
-```
-Error while installing hashicorp/databricks: provider registry
-registry.terraform.io does not have a provider named
-registry.terraform.io/hashicorp/databricks
-```
-
-If you notice below error, it might be due to the fact that [required_providers](https://www.terraform.io/docs/language/providers/requirements.html#requiring-providers) block is not defined in *every module*, that uses Databricks Terraform Provider. Create `versions.tf` file with the following contents:
-
-```hcl
-# versions.tf
-terraform {
-  required_providers {
-    databricks = {
-      source  = "databrickslabs/databricks"
-      version = "0.6.1"
-    }
-  }
-}
-```
-
-... and copy the file in every module in your codebase. Our recommendation is to skip the `version` field for `versions.tf` file on module level, and keep it only on the environment level.
-
-```
-├── environments
-│   ├── sandbox
-│   │   ├── README.md
-│   │   ├── main.tf
-│   │   └── versions.tf
-│   └── production
-│       ├── README.md
-│       ├── main.tf
-│       └── versions.tf
-└── modules
-    ├── first-module
-    │   ├── ...
-    │   └── versions.tf
-    └── second-module
-        ├── ...
-        └── versions.tf
-```
-
-
 ## Project Support
 
 **Important:** Projects in the `databrickslabs` GitHub account, including the Databricks Terraform Provider, are not formally supported by Databricks. They are maintained by Databricks Field teams and provided as-is. There is no service level agreement (SLA). Databricks makes no guarantees of any kind. If you discover an issue with the provider, please file a GitHub Issue on the repo, and it will be reviewed by project maintainers as time permits.

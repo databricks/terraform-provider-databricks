@@ -19,8 +19,8 @@ This guide uses the following variables in configurations:
 - `region` - AWS region
 - `security_group_id` - Security groups set up for the existing VPC
 - `subnet_ids` - Existing subnets being used for the customer managed VPC
-- `workspace_vpce_service` - Choose the region-specific service endpoint from this table.
-- `relay_vpce_service` - Choose the region-specific service from this table.
+- `workspace_vpce_service` - Choose the region-specific service endpoint from the table referenced [here](https://docs.databricks.com/administration-guide/cloud-configurations/aws/privatelink.html#create-the-aws-vpc-endpoints-for-your-aws-region).
+- `relay_vpce_service` - Choose the region-specific service from the table reference [here](https://docs.databricks.com/administration-guide/cloud-configurations/aws/privatelink.html#create-the-aws-vpc-endpoints-for-your-aws-region).
 - `vpce_subnet_cidr` - CIDR range for the subnet chosen for the VPC endpoint
 - `tags` - tags for the Private Link backend setup
 - `root_bucket_name` - AWS bucket name required for [storage mws resource](https://registry.terraform.io/providers/databrickslabs/databricks/latest/docs/resources/mws_storage_configurations) reference

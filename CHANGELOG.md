@@ -1,5 +1,14 @@
 # Version changelog
 
+## 0.6.2
+
+* Add a warning in `databricks_permissions` token usage docs ([#1380](https://github.com/databrickslabs/terraform-provider-databricks/pull/1380)).
+
+Updated dependency versions:
+
+* Bump google.golang.org/api from 0.83.0 to 0.84.0
+* Bump github.com/stretchr/testify from 1.7.2 to 1.7.3
+
 ## 0.6.1
 
 * Added `databricks_service_principal` and `databricks_service_principals` data resources ([#1370](https://github.com/databrickslabs/terraform-provider-databricks/pull/1370)).

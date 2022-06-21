@@ -2,10 +2,10 @@
 
 ![Resources](docs/resources.png)
 
-[AWS](docs/guides/aws-workspace.md) tutorial
+[Troubleshooting Guide](docs/guides/troubleshooting.md)
+| [AWS](docs/guides/aws-workspace.md) tutorial
 | [Azure](docs/guides/azure-workspace.md) tutorial
 | [End-to-end](docs/guides/workspace-management.md) tutorial
-| Migration from [0.3.x to 0.4.x](docs/guides/migration-0.4.x.md)
 | [Changelog](CHANGELOG.md)
 | [Authentication](docs/index.md)
 | [databricks_aws_assume_role_policy](docs/data-sources/aws_assume_role_policy.md) data
@@ -148,3 +148,20 @@ output "job_url" {
 ```
 
 Then run `terraform init` then `terraform apply` to apply the hcl code to your Databricks workspace. 
+
+# Switching from `databrickslabs` to `databricks` namespace
+
+To make Databricks Terraform Provider generally available, we've moved it from [https://github.com/databrickslabs](https://github.com/databrickslabs) to [https://github.com/databricks](https://github.com/databricks). We've worked closely with the Terraform Registry team at Hashicorp to ensure a smooth migration. Existing terraform deployments continue to work as expected without any action from your side. We ask you to replace `databrickslabs/databricks` with `databricks/databricks` in all your `.tf` files. 
+
+You should have [`.terraform.lock.hcl`](https://github.com/databrickslabs/terraform-provider-databricks/blob/v0.6.2/scripts/versions-lock.hcl) file in your state directory that is checked into source control. terraform init will give you the following warning.
+
+```
+Warning: Additional provider information from registry 
+
+The remote registry returned warnings for registry.terraform.io/databrickslabs/databricks:
+- For users on Terraform 0.13 or greater, this provider has moved to databricks/databricks. Please update your source in required_providers.
+```
+
+After you replace `databrickslabs/databricks` with `databricks/databricks` in the `required_providers` block, the warning will disappear. Do a global "search and replace" in `*.tf` files. Alternatively you can run `python3 -c "$(curl -Ls https://dbricks.co/updtfns)"` from the command-line, that would do all the boring work for you.
+
+If you didn't check-in [`.terraform.lock.hcl`](https://www.terraform.io/language/files/dependency-lock#lock-file-location) to the source code version control, you may you may see `Failed to install provider` error. Please follow the simple steps described in the [troubleshooting guide](docs/guides/troubleshooting.md).

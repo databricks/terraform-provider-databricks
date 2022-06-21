@@ -26,7 +26,7 @@ If you have problems with code that uses Databricks Terraform provider, follow t
 TF_LOG=DEBUG DATABRICKS_DEBUG_TRUNCATE_BYTES=250000 terraform apply 2>&1 > tf-debug.log
 ```
 
-* Open a [new GitHub issue](https://github.com/databrickslabs/terraform-provider-databricks/issues/new/choose) providing all information described in the issue template - debug logs, your Terraform code, Terraform & plugin versions, etc.
+* Open a [new GitHub issue](https://github.com/databricks/terraform-provider-databricks/issues/new/choose) providing all information described in the issue template - debug logs, your Terraform code, Terraform & plugin versions, etc.
 
 
 # Typical problems
@@ -56,8 +56,8 @@ If you notice below error, it might be due to the fact that [required_providers]
 terraform {
   required_providers {
     databricks = {
-      source  = "databrickslabs/databricks"
-      version = "0.6.1"
+      source  = "databricks/databricks"
+      version = "1.0.0"
     }
   }
 }
@@ -86,23 +86,23 @@ terraform {
 
 ## Error: Failed to install provider
 
-Running the `terraform init` command, you may see `Failed to install provider` error if you didn't check-in `.terraform.lock.hcl` to the source code version control:
+Running the `terraform init` command, you may see `Failed to install provider` error if you didn't check-in [`.terraform.lock.hcl`](https://www.terraform.io/language/files/dependency-lock#lock-file-location) to the source code version control:
 
 ```sh
 Error: Failed to install provider
 
-Error while installing databrickslabs/databricks: v1.0.0: checksum list has no SHA-256 hash for "https://github.com/databricks/terraform-provider-databricks/releases/download/v1.0.0/terraform-provider-databricks_1.0.0_darwin_amd64.zip"
+Error while installing databricks/databricks: v1.0.0: checksum list has no SHA-256 hash for "https://github.com/databricks/terraform-provider-databricks/releases/download/v1.0.0/terraform-provider-databricks_1.0.0_darwin_amd64.zip"
 ```
 
 You can fix it by following three simple steps: 
 
-* Replace `databrickslabs/databricks` with `databricks/databricks` in all your `.tf` files with the `python3 -c "$(curl -Ls https://bit.ly/3Q9voKX)"` command. 
-
+* Replace `databrickslabs/databricks` with `databricks/databricks` in all your `.tf` files with the `python3 -c "$(curl -Ls https://dbricks.co/updtfns)"` command. 
 * Run the `terraform state replace-provider databrickslabs/databricks databricks/databricks` command and approve the changes. See [Terraform CLI](https://www.terraform.io/cli/commands/state/replace-provider) docs for more information.
-
 * Run `terraform init` to verify everything working.
 
 The terraform apply command should work as expected now.
+
+Alternatively, you can find the hashes of the last 30 provider versions in [`.terraform.lock.hcl`](https://github.com/databrickslabs/terraform-provider-databricks/blob/v0.6.2/scripts/versions-lock.hcl).
 
 ## Error: Failed to query available provider packages
 

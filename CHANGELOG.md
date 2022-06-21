@@ -1,5 +1,22 @@
 # Version changelog
 
+## 1.0.0
+
+To make Databricks Terraform Provider generally available, we've moved it from [https://github.com/databrickslabs](https://github.com/databrickslabs) to [https://github.com/databricks](https://github.com/databricks). We've worked closely with the Terraform Registry team at Hashicorp to ensure a smooth migration. Existing terraform deployments continue to work as expected without any action from your side. We ask you to replace `databrickslabs/databricks` with `databricks/databricks` in all your `.tf` files. 
+
+You should have .terraform.lock.hcl file in your state directory that is checked into source control. terraform init will give you the following warning.
+
+```
+Warning: Additional provider information from registry 
+
+The remote registry returned warnings for registry.terraform.io/databrickslabs/databricks:
+- For users on Terraform 0.13 or greater, this provider has moved to databricks/databricks. Please update your source in required_providers.
+```
+
+After you replace `databrickslabs/databricks` with `databricks/databricks` in the `required_providers` block, the warning will disappear. Do a global "search and replace" in `*.tf` files. Alternatively you can run `python3 -c "$(curl -Ls https://dbricks.co/updtfns)"` from the command-line, that would do all the boring work for you.
+
+If you didn't check-in [`.terraform.lock.hcl`](https://www.terraform.io/language/files/dependency-lock#lock-file-location) to the source code version control, you may you may see `Failed to install provider` error. Please follow the simple steps described in the [troubleshooting guide](https://github.com/databrickslabs/terraform-provider-databricks/blob/master/docs/guides/troubleshooting.md).
+
 ## 0.6.2
 
 * Add a warning in `databricks_permissions` token usage docs ([#1380](https://github.com/databricks/terraform-provider-databricks/pull/1380)).

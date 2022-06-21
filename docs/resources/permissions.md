@@ -495,9 +495,9 @@ resource "databricks_permissions" "password_usage" {
 
 ## Token usage
 
-!> **Warning** After applying the changes, users who previously had either `Can Use` or `Can Manage` permission but no longer have either permission have their access to token-based authentication revoked. Their active tokens are immediately deleted (revoked). One cannot retrieve deleted tokens.
-
 It is required to have at least 1 personal access token in the workspace before you can manage tokens permissions.
+
+!> **Warning** There can be only one `authorization = "tokens"` permissions resource per workspace, otherwise there'll be a permanent configuration drift. After applying changes, users who previously had either `CAN_USE` or `CAN_MANAGE` permission but no longer have either permission have their access to token-based authentication revoked. Their active tokens are immediately deleted (revoked).
 
 Only [possible permission](https://docs.databricks.com/administration-guide/access-control/tokens.html) to assign to non-admin group is `CAN_USE`, where _admins_ `CAN_MANAGE` all tokens:
 

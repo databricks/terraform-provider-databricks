@@ -15,7 +15,7 @@ We happily welcome contributions to databricks-terraform. We use GitHub Issues t
 If you use Terraform 0.12, please execute the following curl command in your shell:
 
 ```bash
-curl https://raw.githubusercontent.com/databrickslabs/databricks-terraform/master/godownloader-databricks-provider.sh | bash -s -- -b $HOME/.terraform.d/plugins
+curl https://raw.githubusercontent.com/databricks/databricks-terraform/master/godownloader-databricks-provider.sh | bash -s -- -b $HOME/.terraform.d/plugins
 ```
 
 ## Installing from source
@@ -23,7 +23,7 @@ curl https://raw.githubusercontent.com/databrickslabs/databricks-terraform/maste
 On MacOS X, you can install GoLang through `brew install go`, on Debian-based Linux, you can install it by `sudo apt-get install golang -y`.
 
 ```bash
-git clone https://github.com/databrickslabs/terraform-provider-databricks.git
+git clone https://github.com/databricks/terraform-provider-databricks.git
 cd terraform-provider-databricks
 make install
 ```
@@ -46,7 +46,7 @@ In order to simplify development workflow, you should use [dev_overrides](https:
 $ cat ~/.terraformrc
 provider_installation {
    dev_overrides {
-     "databrickslabs/databricks" = "provider-binary"
+     "databricks/databricks" = "provider-binary"
    }
    direct {}
 }

@@ -7,9 +7,9 @@ description: Terraform provider for the Databricks Lakehouse platform
 
 # Databricks Provider
 
-Use the Databricks Terraform provider to interact with almost all of [Databricks](http://databricks.com/) resources. If you're new to Databricks, please follow guide to create a workspace on [Azure](guides/azure-workspace.md) or [AWS](guides/aws-workspace.md) and then this [workspace management](guides/workspace-management.md) tutorial. If you're migrating from version *0.3.x*, please follow [this guide](guides/migration-0.4.x.md). Changelog is available [on GitHub](https://github.com/databrickslabs/terraform-provider-databricks/blob/master/CHANGELOG.md).
+Use the Databricks Terraform provider to interact with almost all of [Databricks](http://databricks.com/) resources. If you're new to Databricks, please follow guide to create a workspace on [Azure](guides/azure-workspace.md) or [AWS](guides/aws-workspace.md) and then this [workspace management](guides/workspace-management.md) tutorial. If you're migrating from version *0.3.x*, please follow [this guide](guides/migration-0.4.x.md). Changelog is available [on GitHub](https://github.com/databricks/terraform-provider-databricks/blob/master/CHANGELOG.md).
 
-![Resources](https://github.com/databrickslabs/terraform-provider-databricks/raw/master/docs/resources.png)
+![Resources](https://github.com/databricks/terraform-provider-databricks/raw/master/docs/resources.png)
 
 Compute resources
 * Deploy [databricks_cluster](resources/cluster.md) on selected [databricks_node_type](data-sources/node_type.md)
@@ -96,10 +96,13 @@ output "job_url" {
 }
 ```
 
+## Troubleshooting
+
+In case of the problems using Databricks Terraform provider follow the steps outlined in the [troubleshooting guide](guides/troubleshooting.md).
+
 ## Authentication
 
 !> **Warning** Please be aware that hard coding any credentials in plain text is not something that is recommended. We strongly recommend using a Terraform backend that supports encryption. Please use [environment variables](#environment-variables), `~/.databrickscfg` file, encrypted `.tfvars` files or secret store of your choice (Hashicorp [Vault](https://www.vaultproject.io/), AWS [Secrets Manager](https://aws.amazon.com/secrets-manager/), AWS [Param Store](https://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-parameter-store.html), Azure [Key Vault](https://azure.microsoft.com/en-us/services/key-vault/))
-
 
 There are currently three supported methods to [authenticate](https://docs.databricks.com/dev-tools/api/latest/authentication.html) into the Databricks platform to create resources:
 
@@ -317,11 +320,3 @@ provider "databricks" {}
 8. Will check for the `~/.databrickscfg` file in the home directory, will fail otherwise.
 9. Will check for `profile` presence and try picking from that file will fail otherwise.
 10. Will check for `host` and `token` or `username`+`password` combination, and will fail if none of these exist.
-
-## Troubleshooting
-
-In case of the problems using Databricks Terraform provider follow the steps outlined in the [troubleshooting guide](guides/troubleshooting.md).
-
-## Project Support
-
-**Important:** Projects in the `databrickslabs` GitHub account, including the Databricks Terraform Provider, are not formally supported by Databricks. They are maintained by Databricks Field teams and provided as-is. There is no service level agreement (SLA). Databricks makes no guarantees of any kind. If you discover an issue with the provider, please file a GitHub Issue on the repo, and it will be reviewed by project maintainers as time permits.

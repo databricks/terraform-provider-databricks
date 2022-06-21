@@ -8,7 +8,7 @@ You can provision multiple Databricks workspaces with Terraform. This example sh
 
 For more information please visit [Data Exfiltration Protection With Databricks on AWS](https://databricks.com/blog/2021/02/02/data-exfiltration-protection-with-databricks-on-aws.html).
 
-![Data Exfiltration_Workspace](https://raw.githubusercontent.com/databrickslabs/terraform-provider-databricks/master/docs/images/aws-e2-firewall-workspace.png)
+![Data Exfiltration_Workspace](https://raw.githubusercontent.com/databricks/terraform-provider-databricks/master/docs/images/aws-e2-firewall-workspace.png)
 
 ## Provider initialization for E2 workspaces
 
@@ -88,7 +88,7 @@ Before [managing workspace](workspace-management.md), you have to create:
 terraform {
   required_providers {
     databricks = {
-      source = "databrickslabs/databricks"
+      source = "databricks/databricks"
     }
     aws = {
       source  = "hashicorp/aws"

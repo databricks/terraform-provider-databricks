@@ -7,16 +7,16 @@ Certain resources underwent changes in order to ensure consistency with REST API
 
 ## provider
 
-* Rewrite `basic_auth` block with `username` and `password` fields, as specified in [main document](https://registry.terraform.io/providers/databrickslabs/databricks/latest/docs#authenticating-with-hostname-username-and-password).
-* Rewrite `azure_auth` block with appropriate [Azure configuration](https://registry.terraform.io/providers/databrickslabs/databricks/latest/docs#special-configurations-for-azure).
+* Rewrite `basic_auth` block with `username` and `password` fields, as specified in [main document](https://registry.terraform.io/providers/databricks/databricks/latest/docs#authenticating-with-hostname-username-and-password).
+* Rewrite `azure_auth` block with appropriate [Azure configuration](https://registry.terraform.io/providers/databricks/databricks/latest/docs#special-configurations-for-azure).
 
 ## databricks_job
 
-* Rewrite `spark_submit_parameters` with [spark_submit_task](https://registry.terraform.io/providers/databrickslabs/databricks/latest/docs/resources/job#spark_submit_task-configuration-block) configuration block.
-* Rewrite `python_file` and `python_parameters` with [spark_python_task](https://registry.terraform.io/providers/databrickslabs/databricks/latest/docs/resources/job#spark_python_task-configuration-block) configuration block.
-* Rewrite `jar_uri`, `jar_main_class_name`, and `jar_parameters` with [spark_jar_task](https://registry.terraform.io/providers/databrickslabs/databricks/latest/docs/resources/job#spark_jar_task-configuration-block) configuration block.
-* Rewrite `notebook_path` and `notebook_base_parameters` with [notebook_task](https://registry.terraform.io/providers/databrickslabs/databricks/latest/docs/resources/job#notebook_task-configuration-block) configuration block.
-* Rewrite `library_jar`, `library_egg`, `library_whl`, `library_pypi`, `library_cran`, and `library_maven` with [library](https://registry.terraform.io/providers/databrickslabs/databricks/latest/docs/resources/cluster#library-configuration-block) configuration block.
+* Rewrite `spark_submit_parameters` with [spark_submit_task](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/job#spark_submit_task-configuration-block) configuration block.
+* Rewrite `python_file` and `python_parameters` with [spark_python_task](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/job#spark_python_task-configuration-block) configuration block.
+* Rewrite `jar_uri`, `jar_main_class_name`, and `jar_parameters` with [spark_jar_task](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/job#spark_jar_task-configuration-block) configuration block.
+* Rewrite `notebook_path` and `notebook_base_parameters` with [notebook_task](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/job#notebook_task-configuration-block) configuration block.
+* Rewrite `library_jar`, `library_egg`, `library_whl`, `library_pypi`, `library_cran`, and `library_maven` with [library](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/cluster#library-configuration-block) configuration block.
 
 ## databricks_dbfs_file
 
@@ -41,7 +41,7 @@ Notebook on Databricks workspace would only be changed, if Terraform stage did c
 
 ## databricks_cluster
 
-* Rewrite `library_jar`, `library_egg`, `library_whl`, `library_pypi`, `library_cran`, and `library_maven` with [library](https://registry.terraform.io/providers/databrickslabs/databricks/latest/docs/resources/cluster#library-configuration-block) configuration block.
+* Rewrite `library_jar`, `library_egg`, `library_whl`, `library_pypi`, `library_cran`, and `library_maven` with [library](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/cluster#library-configuration-block) configuration block.
 
 ## databricks_instance_profile
 
@@ -49,7 +49,7 @@ Notebook on Databricks workspace would only be changed, if Terraform stage did c
 
 ## databricks_mws_workspaces
 
-* Remove `verify_workspace_runnning` attribute from all `databricks_mws_workspaces` resources. All workspaces are verified to be running automatically as of [this change](https://github.com/databrickslabs/terraform-provider-databricks/commit/ef64b5d26daa23ff2532f1076a0db01864e4f73c).
+* Remove `verify_workspace_runnning` attribute from all `databricks_mws_workspaces` resources. All workspaces are verified to be running automatically as of [this change](https://github.com/databricks/terraform-provider-databricks/commit/ef64b5d26daa23ff2532f1076a0db01864e4f73c).
 
 ## databricks_instance_pool
 

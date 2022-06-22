@@ -70,7 +70,7 @@ terraform {
       version = "~>2.19.0"
     }
     databricks = {
-      source = "databrickslabs/databricks"
+      source = "databricks/databricks"
     }
   }
 }

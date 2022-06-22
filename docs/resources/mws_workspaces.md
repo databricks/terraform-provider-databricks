@@ -18,7 +18,7 @@ provider "databricks" {
 
 ## Example Usage
 
-![Simplest multiworkspace](https://github.com/databrickslabs/terraform-provider-databricks/raw/master/docs/simplest-multiworkspace.png)
+![Simplest multiworkspace](https://github.com/databricks/terraform-provider-databricks/raw/master/docs/simplest-multiworkspace.png)
 
 To get workspace running, you have to configure a couple of things:
 

@@ -7,9 +7,9 @@ description: Terraform provider for the Databricks Lakehouse platform
 
 # Databricks Provider
 
-Use the Databricks Terraform provider to interact with almost all of [Databricks](http://databricks.com/) resources. If you're new to Databricks, please follow guide to create a workspace on [Azure](guides/azure-workspace.md) or [AWS](guides/aws-workspace.md) and then this [workspace management](guides/workspace-management.md) tutorial. If you're migrating from version *0.3.x*, please follow [this guide](guides/migration-0.4.x.md). Changelog is available [on GitHub](https://github.com/databrickslabs/terraform-provider-databricks/blob/master/CHANGELOG.md).
+Use the Databricks Terraform provider to interact with almost all of [Databricks](http://databricks.com/) resources. If you're new to Databricks, please follow guide to create a workspace on [Azure](guides/azure-workspace.md) or [AWS](guides/aws-workspace.md) and then this [workspace management](guides/workspace-management.md) tutorial. If you're migrating from version *0.3.x*, please follow [this guide](guides/migration-0.4.x.md). Changelog is available [on GitHub](https://github.com/databricks/terraform-provider-databricks/blob/master/CHANGELOG.md).
 
-![Resources](https://github.com/databrickslabs/terraform-provider-databricks/raw/master/docs/resources.png)
+![Resources](https://github.com/databricks/terraform-provider-databricks/raw/master/docs/resources.png)
 
 Compute resources
 * Deploy [databricks_cluster](resources/cluster.md) on selected [databricks_node_type](data-sources/node_type.md)
@@ -96,10 +96,30 @@ output "job_url" {
 }
 ```
 
+# Switching from `databrickslabs` to `databricks` namespace
+
+To make Databricks Terraform Provider generally available, we've moved it from [https://github.com/databrickslabs](https://github.com/databrickslabs) to [https://github.com/databricks](https://github.com/databricks). We've worked closely with the Terraform Registry team at Hashicorp to ensure a smooth migration. Existing terraform deployments continue to work as expected without any action from your side. We ask you to replace `databrickslabs/databricks` with `databricks/databricks` in all your `.tf` files. 
+
+You should have [`.terraform.lock.hcl`](https://github.com/databrickslabs/terraform-provider-databricks/blob/v0.6.2/scripts/versions-lock.hcl) file in your state directory that is checked into source control. terraform init will give you the following warning.
+
+```
+Warning: Additional provider information from registry 
+
+The remote registry returned warnings for registry.terraform.io/databrickslabs/databricks:
+- For users on Terraform 0.13 or greater, this provider has moved to databricks/databricks. Please update your source in required_providers.
+```
+
+After you replace `databrickslabs/databricks` with `databricks/databricks` in the `required_providers` block, the warning will disappear. Do a global "search and replace" in `*.tf` files. Alternatively you can run `python3 -c "$(curl -Ls https://dbricks.co/updtfns)"` from the command-line, that would do all the boring work for you.
+
+If you didn't check-in [`.terraform.lock.hcl`](https://www.terraform.io/language/files/dependency-lock#lock-file-location) to the source code version control, you may you may see `Failed to install provider` error. Please follow the simple steps described in the [troubleshooting guide](guides/troubleshooting.md).
+
+## Troubleshooting
+
+In case of the problems using Databricks Terraform provider follow the steps outlined in the [troubleshooting guide](guides/troubleshooting.md).
+
 ## Authentication
 
 !> **Warning** Please be aware that hard coding any credentials in plain text is not something that is recommended. We strongly recommend using a Terraform backend that supports encryption. Please use [environment variables](#environment-variables), `~/.databrickscfg` file, encrypted `.tfvars` files or secret store of your choice (Hashicorp [Vault](https://www.vaultproject.io/), AWS [Secrets Manager](https://aws.amazon.com/secrets-manager/), AWS [Param Store](https://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-parameter-store.html), Azure [Key Vault](https://azure.microsoft.com/en-us/services/key-vault/))
-
 
 There are currently three supported methods to [authenticate](https://docs.databricks.com/dev-tools/api/latest/authentication.html) into the Databricks platform to create resources:
 
@@ -317,59 +337,3 @@ provider "databricks" {}
 8. Will check for the `~/.databrickscfg` file in the home directory, will fail otherwise.
 9. Will check for `profile` presence and try picking from that file will fail otherwise.
 10. Will check for `host` and `token` or `username`+`password` combination, and will fail if none of these exist.
-
-## Data resources and Authentication is not configured errors
-
-*In Terraform 0.13 and later*, data resources have the same dependency resolution behavior [as defined for managed resources](https://www.terraform.io/docs/language/resources/behavior.html#resource-dependencies). Most data resources make an API call to a workspace. If a workspace doesn't exist yet, `authentication is not configured for provider` error is raised. To work around this issue and guarantee a proper lazy authentication with data resources, you should add `depends_on = [azurerm_databricks_workspace.this]` or `depends_on = [databricks_mws_workspaces.this]` to the body. This issue doesn't occur if workspace is created *in one module* and resources [within the workspace](guides/workspace-management.md) are created *in another*. We do not recommend using Terraform 0.12 and earlier, if your usage involves data resources.
-
-## Multiple Provider Configurations
-
- The most common reason for technical difficulties might be related to missing `alias` attribute in `provider "databricks" {}` blocks or `provider` attribute in `resource "databricks_..." {}` blocks, when using multiple provider configurations. Please make sure to read [`alias`: Multiple Provider Configurations](https://www.terraform.io/docs/language/providers/configuration.html#alias-multiple-provider-configurations) documentation article. 
-
-## Error while installing: registry does not have a provider
-
-```
-Error while installing hashicorp/databricks: provider registry
-registry.terraform.io does not have a provider named
-registry.terraform.io/hashicorp/databricks
-```
-
-If you notice below error, it might be due to the fact that [required_providers](https://www.terraform.io/docs/language/providers/requirements.html#requiring-providers) block is not defined in *every module*, that uses Databricks Terraform Provider. Create `versions.tf` file with the following contents:
-
-```hcl
-# versions.tf
-terraform {
-  required_providers {
-    databricks = {
-      source  = "databrickslabs/databricks"
-      version = "0.6.2"
-    }
-  }
-}
-```
-
-... and copy the file in every module in your codebase. Our recommendation is to skip the `version` field for `versions.tf` file on module level, and keep it only on the environment level.
-
-```
-├── environments
-│   ├── sandbox
-│   │   ├── README.md
-│   │   ├── main.tf
-│   │   └── versions.tf
-│   └── production
-│       ├── README.md
-│       ├── main.tf
-│       └── versions.tf
-└── modules
-    ├── first-module
-    │   ├── ...
-    │   └── versions.tf
-    └── second-module
-        ├── ...
-        └── versions.tf
-```
-
-
-## Project Support
-
-**Important:** Projects in the `databrickslabs` GitHub account, including the Databricks Terraform Provider, are not formally supported by Databricks. They are maintained by Databricks Field teams and provided as-is. There is no service level agreement (SLA). Databricks makes no guarantees of any kind. If you discover an issue with the provider, please file a GitHub Issue on the repo, and it will be reviewed by project maintainers as time permits.

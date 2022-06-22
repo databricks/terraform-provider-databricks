@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"net/url"
 	"os"
 	"reflect"
 	"strings"
@@ -237,6 +238,11 @@ func (c *DatabricksClient) Authenticate(ctx context.Context) error {
 	if c.authVisitor != nil {
 		return nil
 	}
+	// Fix host prior to auth, because it may be used in the OIDC flow as "audience" field.
+	// If necessary, this function adds a scheme and strips a trailing slash.
+	if err := c.fixHost(); err != nil {
+		return err
+	}
 	type auth struct {
 		configure func(context.Context) (func(*http.Request) error, error)
 		name      string
@@ -271,7 +277,6 @@ func (c *DatabricksClient) Authenticate(ctx context.Context) error {
 		log.Printf("[INFO] Configured %s auth: %s", auth.name, c.configDebugString()) // lgtm[go/clear-text-logging]
 		c.authVisitor = authorizer
 		c.AuthType = auth.name
-		c.fixHost()
 		return nil
 	}
 	if c.AuthType != "" {
@@ -326,12 +331,37 @@ func (c *DatabricksClient) niceAuthError(message string) error {
 	return fmt.Errorf("%s%s. Please check %s for details", message, info, docUrl)
 }
 
-func (c *DatabricksClient) fixHost() {
-	if c.Host != "" && !(strings.HasPrefix(c.Host, "https://") || strings.HasPrefix(c.Host, "http://")) {
-		// azurerm_databricks_workspace.*.workspace_url is giving URL without scheme
-		// so that is why this line is here
-		c.Host = "https://" + c.Host
+func (c *DatabricksClient) fixHost() error {
+	if c.Host != "" {
+		u, err := url.Parse(c.Host)
+		if err != nil {
+			return err
+		}
+
+		// If the scheme is not specified, default to https.
+		scheme := u.Scheme
+		if scheme == "" {
+			scheme = "https"
+		}
+
+		// If the host was specified without scheme, it is parsed as path.
+		// For example, azurerm_databricks_workspace.*.workspace_url returns an URL without scheme.
+		host := u.Host
+		if host == "" {
+			host = u.Path
+		}
+
+		// Create new instance to ensure other fields are initialized as empty.
+		u = &url.URL{
+			Scheme: scheme,
+			Host:   host,
+		}
+
+		// Store sanitized version of c.Host.
+		c.Host = u.String()
 	}
+
+	return nil
 }
 
 func (c *DatabricksClient) configureWithPat(ctx context.Context) (func(*http.Request) error, error) {

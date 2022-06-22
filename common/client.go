@@ -338,23 +338,18 @@ func (c *DatabricksClient) fixHost() error {
 			return err
 		}
 
-		// If the scheme is not specified, default to https.
-		scheme := u.Scheme
-		if scheme == "" {
-			scheme = "https"
-		}
-
-		// If the host was specified without scheme, it is parsed as path.
-		// For example, azurerm_databricks_workspace.*.workspace_url returns an URL without scheme.
-		host := u.Host
-		if host == "" {
-			host = u.Path
+		// If the host is empty, assume the scheme wasn't included.
+		if u.Host == "" {
+			u, err = url.Parse("https://" + c.Host)
+			if err != nil {
+				return err
+			}
 		}
 
 		// Create new instance to ensure other fields are initialized as empty.
 		u = &url.URL{
-			Scheme: scheme,
-			Host:   host,
+			Scheme: u.Scheme,
+			Host:   u.Host,
 		}
 
 		// Store sanitized version of c.Host.

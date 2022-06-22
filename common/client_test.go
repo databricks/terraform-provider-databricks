@@ -331,6 +331,13 @@ func TestDatabricksClientFixHost(t *testing.T) {
 	}
 
 	{
+		// Default scheme with port.
+		out, err := hostForInput("accounts.gcp.databricks.com:443")
+		assert.Nil(t, err)
+		assert.Equal(t, out, "https://accounts.gcp.databricks.com:443")
+	}
+
+	{
 		// Return error.
 		_, err := hostForInput("://@@@accounts.gcp.databricks.com/")
 		assert.NotNil(t, err)

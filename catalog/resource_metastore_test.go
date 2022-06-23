@@ -206,7 +206,7 @@ func TestUpdateMetastore_NoChanges(t *testing.T) {
 	}.ApplyNoError(t)
 }
 
-func TestUpdateMetastore_DeltaSharingEnableOnly(t *testing.T) {
+func TestUpdateMetastore_DeltaSharingScopeOnly(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{

@@ -198,7 +198,7 @@ func TestConfig_AzurePAT(t *testing.T) {
 		host:        "https://adb-xxx.y.azuredatabricks.net/",
 		token:       "y",
 		assertAzure: true,
-		assertHost:  "https://adb-xxx.y.azuredatabricks.net/",
+		assertHost:  "https://adb-xxx.y.azuredatabricks.net",
 		assertAuth:  "pat",
 	}.apply(t)
 }

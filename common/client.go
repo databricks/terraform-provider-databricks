@@ -332,30 +332,32 @@ func (c *DatabricksClient) niceAuthError(message string) error {
 }
 
 func (c *DatabricksClient) fixHost() error {
-	if c.Host != "" {
-		u, err := url.Parse(c.Host)
+	// Nothing to fix if the host isn't set.
+	if c.Host == "" {
+		return nil
+	}
+
+	u, err := url.Parse(c.Host)
+	if err != nil {
+		return err
+	}
+
+	// If the host is empty, assume the scheme wasn't included.
+	if u.Host == "" {
+		u, err = url.Parse("https://" + c.Host)
 		if err != nil {
 			return err
 		}
-
-		// If the host is empty, assume the scheme wasn't included.
-		if u.Host == "" {
-			u, err = url.Parse("https://" + c.Host)
-			if err != nil {
-				return err
-			}
-		}
-
-		// Create new instance to ensure other fields are initialized as empty.
-		u = &url.URL{
-			Scheme: u.Scheme,
-			Host:   u.Host,
-		}
-
-		// Store sanitized version of c.Host.
-		c.Host = u.String()
 	}
 
+	// Create new instance to ensure other fields are initialized as empty.
+	u = &url.URL{
+		Scheme: u.Scheme,
+		Host:   u.Host,
+	}
+
+	// Store sanitized version of c.Host.
+	c.Host = u.String()
 	return nil
 }
 

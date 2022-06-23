@@ -32,7 +32,7 @@ type MetastoreInfo struct {
 	CreatedBy                                   string  `json:"created_by,omitempty" tf:"computed"`
 	UpdatedAt                                   int64   `json:"updated_at,omitempty" tf:"computed"`
 	UpdatedBy                                   string  `json:"updated_by,omitempty" tf:"computed"`
-	DeltaSharingEnabled                         bool    `json:"delta_sharing_enabled,omitempty"`
+	DeltaSharingScope                           string  `json:"delta_sharing_scope,omitempty"`
 	DeltaSharingRecipientTokenLifetimeInSeconds int64   `json:"delta_sharing_recipient_token_lifetime_in_seconds,omitempty"`
 	DeltaSharingOrganizationName                string  `json:"delta_sharing_organization_name,omitempty"`
 }
@@ -76,8 +76,8 @@ func ResourceMetastore() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 			}
-			m["delta_sharing_enabled"].RequiredWith = []string{"delta_sharing_recipient_token_lifetime_in_seconds"}
-			m["delta_sharing_recipient_token_lifetime_in_seconds"].RequiredWith = []string{"delta_sharing_enabled"}
+			m["delta_sharing_scope"].RequiredWith = []string{"delta_sharing_recipient_token_lifetime_in_seconds"}
+			m["delta_sharing_recipient_token_lifetime_in_seconds"].RequiredWith = []string{"delta_sharing_scope"}
 			m["storage_root"].DiffSuppressFunc = func(k, old, new string, d *schema.ResourceData) bool {
 				if strings.HasPrefix(old, new) {
 					log.Printf("[DEBUG] Ignoring configuration drift from %s to %s", old, new)
@@ -87,7 +87,7 @@ func ResourceMetastore() *schema.Resource {
 			}
 			return m
 		})
-	update := updateFunctionFactory("/unity-catalog/metastores", []string{"owner", "name", "delta_sharing_enabled",
+	update := updateFunctionFactory("/unity-catalog/metastores", []string{"owner", "name", "delta_sharing_scope",
 		"delta_sharing_recipient_token_lifetime_in_seconds", "delta_sharing_organization_name"})
 
 	return common.Resource{

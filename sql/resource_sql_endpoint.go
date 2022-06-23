@@ -24,11 +24,11 @@ type SQLEndpoint struct {
 	ID                      string          `json:"id,omitempty" tf:"computed"`
 	Name                    string          `json:"name"`
 	ClusterSize             string          `json:"cluster_size"`
-	AutoStopMinutes         int             `json:"auto_stop_mins" tf:"default:120"`
+	AutoStopMinutes         int             `json:"auto_stop_mins" tf:"optional,default:120"`
 	MinNumClusters          int             `json:"min_num_clusters,omitempty" tf:"default:1,suppress_diff"`
 	MaxNumClusters          int             `json:"max_num_clusters,omitempty" tf:"default:1"`
 	NumClusters             int             `json:"num_clusters,omitempty" tf:"default:1,suppress_diff"`
-	EnablePhoton            bool            `json:"enable_photon" tf:"default:true"`
+	EnablePhoton            bool            `json:"enable_photon" tf:"optional,default:true"`
 	EnableServerlessCompute bool            `json:"enable_serverless_compute,omitempty" tf:"suppress_diff"`
 	InstanceProfileARN      string          `json:"instance_profile_arn,omitempty"`
 	State                   string          `json:"state,omitempty" tf:"computed"`
@@ -194,14 +194,10 @@ func (a SQLEndpointsAPI) Delete(endpointID string) error {
 func ResourceSqlEndpoint() *schema.Resource {
 	s := common.StructToSchema(SQLEndpoint{}, func(
 		m map[string]*schema.Schema) map[string]*schema.Schema {
-		m["auto_stop_mins"].Required = false
-		m["auto_stop_mins"].Optional = true
 		m["cluster_size"].ValidateDiagFunc = validation.ToDiagFunc(
 			validation.StringInSlice(ClusterSizes, false))
 		m["max_num_clusters"].ValidateDiagFunc = validation.ToDiagFunc(
 			validation.IntBetween(1, MaxNumClusters))
-		m["enable_photon"].Optional = true
-		m["enable_photon"].Required = false
 		return m
 	})
 	return common.Resource{

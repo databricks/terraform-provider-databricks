@@ -84,8 +84,21 @@ func StructToSchema(v any, customize func(map[string]*schema.Schema) map[string]
 	return scm
 }
 
-func handleOptional(typeField reflect.StructField, schema *schema.Schema) {
+func isOptional(typeField reflect.StructField) bool {
 	if strings.Contains(typeField.Tag.Get("json"), "omitempty") {
+		return true
+	}
+	tfTags := strings.Split(typeField.Tag.Get("tf"), ",")
+	for _, tag := range tfTags {
+		if tag == "optional" {
+			return true
+		}
+	}
+	return false
+}
+
+func handleOptional(typeField reflect.StructField, schema *schema.Schema) {
+	if isOptional(typeField) {
 		schema.Optional = true
 	} else {
 		schema.Required = true
@@ -284,7 +297,6 @@ func iterFields(rv reflect.Value, path []string, s map[string]*schema.Schema,
 	}
 	for i := 0; i < rv.NumField(); i++ {
 		typeField := rv.Type().Field(i)
-		jsonTag := typeField.Tag.Get("json")
 		fieldName := chooseFieldName(typeField)
 		if fieldName == "-" {
 			continue
@@ -293,7 +305,7 @@ func iterFields(rv reflect.Value, path []string, s map[string]*schema.Schema,
 		if !ok {
 			continue
 		}
-		omitEmpty := strings.Contains(jsonTag, "omitempty")
+		omitEmpty := isOptional(typeField)
 		if omitEmpty && !fieldSchema.Optional {
 			return fmt.Errorf("inconsistency: %s has omitempty, but is not optional", fieldName)
 		}

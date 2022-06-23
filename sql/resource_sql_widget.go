@@ -32,8 +32,8 @@ type WidgetEntity struct {
 type WidgetPosition struct {
 	SizeX      int  `json:"size_x"`
 	SizeY      int  `json:"size_y"`
-	PosX       int  `json:"pos_x" tf:"default:0"`
-	PosY       int  `json:"pos_y" tf:"default:0"`
+	PosX       int  `json:"pos_x" tf:"optional,default:0"`
+	PosY       int  `json:"pos_y" tf:"optional,default:0"`
 	AutoHeight bool `json:"auto_height,omitempty"`
 }
 
@@ -266,16 +266,6 @@ func ResourceSqlWidget() *schema.Resource {
 			// Terraform resource ID (e.g. `databricks_sql_visualization.name.id`)
 			m["visualization_id"].DiffSuppressFunc = func(_, old, new string, d *schema.ResourceData) bool {
 				return extractVisualizationID(old) == extractVisualizationID(new)
-			}
-			p, err := common.SchemaPath(m, "position", "pos_x")
-			if err == nil {
-				p.Optional = true
-				p.Required = false
-			}
-			p, err = common.SchemaPath(m, "position", "pos_y")
-			if err == nil {
-				p.Optional = true
-				p.Required = false
 			}
 
 			return m

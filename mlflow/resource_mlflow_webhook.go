@@ -11,7 +11,7 @@ import (
 
 type HttpUrlSpec struct {
 	URL                   string `json:"url"`
-	EnableSslVerification bool   `json:"enable_ssl_verification" tf:"default:true"`
+	EnableSslVerification bool   `json:"enable_ssl_verification" tf:"optional,default:true"`
 	Secret                string `json:"string,omitempty"`
 	Authorization         string `json:"authorization,omitempty" tf:"sensitive"`
 }
@@ -91,10 +91,6 @@ func ResourceMlflowWebhook() *schema.Resource {
 			m["status"].ValidateFunc = validation.StringInSlice([]string{"ACTIVE", "TEST_MODE", "DISABLED"}, true)
 			// TODO: do we need a validation for Events?
 			delete(m, "id")
-			if p, err := common.SchemaPath(m, "http_url_spec", "enable_ssl_verification"); err == nil {
-				p.Required = false
-				p.Optional = true
-			}
 			if p, err := common.SchemaPath(m, "http_url_spec", "url"); err == nil {
 				p.ValidateFunc = validation.IsURLWithHTTPS
 			}

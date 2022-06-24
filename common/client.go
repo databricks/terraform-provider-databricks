@@ -62,6 +62,10 @@ type DatabricksClient struct {
 	AzureTenantID      string `name:"azure_tenant_id" env:"ARM_TENANT_ID" auth:"azure"`
 	AzurermEnvironment string `name:"azure_environment" env:"ARM_ENVIRONMENT"`
 
+	// Resource ID of the Azure Databricks application.
+	// This is configured automatically when an Azure authentication method is used.
+	armDatabricksResourceID string
+
 	// When multiple auth attributes are available in the environment, use the auth type
 	// specified by this argument. This argument also holds currently selected auth.
 	AuthType string `name:"auth_type" auth:"-"`

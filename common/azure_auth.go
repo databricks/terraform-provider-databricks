@@ -17,7 +17,17 @@ import (
 )
 
 // List of management information
-const armDatabricksResourceID string = "2ff814a6-3304-4ab8-85cb-cd0e6f879c1d"
+const armDatabricksProductionResourceID string = "2ff814a6-3304-4ab8-85cb-cd0e6f879c1d"
+const armDatabricksStagingResourceID string = "4a67d088-db5c-48f1-9ff2-0aace800ae68"
+
+// configureArmDatabricksResourceID sets the resource ID to request a token for.
+// This resource ID is the global application ID of Azure Databricks.
+func (aa *DatabricksClient) configureArmDatabricksResourceID() {
+	aa.armDatabricksResourceID = armDatabricksProductionResourceID
+	if strings.Contains(aa.Host, ".staging.") {
+		aa.armDatabricksResourceID = armDatabricksStagingResourceID
+	}
+}
 
 //
 func (aa *DatabricksClient) GetAzureJwtProperty(key string) (interface{}, error) {
@@ -146,7 +156,8 @@ func (aa *DatabricksClient) simpleAADRequestVisitor(
 	if err != nil {
 		return nil, fmt.Errorf("cannot get workspace: %w", err)
 	}
-	platformAuthorizer, err := authorizerFactory(armDatabricksResourceID)
+	aa.configureArmDatabricksResourceID()
+	platformAuthorizer, err := authorizerFactory(aa.armDatabricksResourceID)
 	if err != nil {
 		return nil, fmt.Errorf("cannot authorize databricks: %w", err)
 	}
@@ -217,7 +228,7 @@ func (aa *DatabricksClient) getClientSecretAuthorizer(resource string) (autorest
 	if aa.azureAuthorizer != nil {
 		return aa.azureAuthorizer, nil
 	}
-	if resource != armDatabricksResourceID {
+	if resource != aa.armDatabricksResourceID {
 		es := auth.EnvironmentSettings{
 			Values: map[string]string{
 				auth.ClientID:     aa.AzureClientID,
@@ -240,7 +251,7 @@ func (aa *DatabricksClient) getClientSecretAuthorizer(resource string) (autorest
 		*platformTokenOAuthCfg,
 		aa.AzureClientID,
 		aa.AzureClientSecret,
-		armDatabricksResourceID)
+		aa.armDatabricksResourceID)
 	if err != nil {
 		return nil, maybeExtendAuthzError(err)
 	}

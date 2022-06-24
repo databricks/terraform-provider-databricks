@@ -35,7 +35,7 @@ Initialize [provider with `mws` alias](https://www.terraform.io/language/provide
 terraform {
   required_providers {
     databricks = {
-      source = "databrickslabs/databricks"
+      source = "databricks/databricks"
     }
     aws = {
       source  = "hashicorp/aws"

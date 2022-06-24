@@ -25,7 +25,7 @@ Please list the steps required to reproduce the issue, for example:
 
 ### Terraform and provider versions
 
-Please paste the output of `terraform version`. If version of `databricks` provider is not the latest (https://github.com/databrickslabs/terraform-provider-databricks/releases), please make sure to use the latest one.
+Please paste the output of `terraform version`. If version of `databricks` provider is not the latest (https://github.com/databricks/terraform-provider-databricks/releases), please make sure to use the latest one.
 
 ### Debug Output
 Please add turn on logging, e.g. `TF_LOG=DEBUG terraform apply` and run command again, paste it to gist & provide the link to gist. If you're still willing to paste in log output, make sure you provide only relevant log lines with requests.

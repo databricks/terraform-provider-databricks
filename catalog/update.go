@@ -33,10 +33,20 @@ func updateFunctionFactory(pathPrefix string, updatable []string) func(context.C
 			if !d.HasChange(field) {
 				continue
 			}
+			if contains([]string{
+				"aws_iam_role",
+				"azure_service_principal",
+				"azure_managed_identity",
+			}, field) {
+				patch[field] = d.Get(field).([]interface{})[0]
+				continue
+			}
+
 			if field == "delta_sharing_enabled" && old != new && new == true &&
 				!d.HasChange("delta_sharing_recipient_token_lifetime_in_seconds") {
 				patch["delta_sharing_recipient_token_lifetime_in_seconds"] =
 					d.Get("delta_sharing_recipient_token_lifetime_in_seconds")
+				continue
 			}
 			patch[field] = new
 		}

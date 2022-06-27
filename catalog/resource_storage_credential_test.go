@@ -225,3 +225,44 @@ func TestUpdateAzStorageCredentials(t *testing.T) {
 		`,
 	}.ApplyNoError(t)
 }
+
+func TestUpdateAzStorageCredentialMI(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "PATCH",
+				Resource: "/api/2.0/unity-catalog/storage-credentials/a",
+				ExpectedRequest: map[string]interface{}{
+					"azure_managed_identity": map[string]interface{}{
+						"access_connector_id": "CHANGED",
+					},
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/unity-catalog/storage-credentials/a",
+				Response: StorageCredentialInfo{
+					Name: "a",
+					AzMI: &AzureManagedIdentity{
+						AccessConnectorID: "CHANGED",
+					},
+					MetastoreID: "d",
+				},
+			},
+		},
+		Resource: ResourceStorageCredential(),
+		Update:   true,
+		ID:       "a",
+		InstanceState: map[string]string{
+			"name":    "a",
+			"comment": "c",
+		},
+		HCL: `
+		name = "a"
+		azure_managed_identity {
+			access_connector_id = "CHANGED"
+		}
+		comment = "c"
+		`,
+	}.ApplyNoError(t)
+}

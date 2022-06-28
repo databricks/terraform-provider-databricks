@@ -102,7 +102,13 @@ You can fix it by following three simple steps:
 
 The terraform apply command should work as expected now.
 
-Alternatively, you can find the hashes of the last 30 provider versions in [`.terraform.lock.hcl`](https://github.com/databrickslabs/terraform-provider-databricks/blob/v0.6.2/scripts/versions-lock.hcl).
+Alternatively, you can find the hashes of the last 30 provider versions in [`.terraform.lock.hcl`](https://github.com/databrickslabs/terraform-provider-databricks/blob/v0.6.2/scripts/versions-lock.hcl). As a temporary measure, you can lock on a prior version by following the following steps:
+
+* Copy [`versions-lock.hcl`](https://github.com/databrickslabs/terraform-provider-databricks/blob/v0.6.2/scripts/versions-lock.hcl) to the root folder of your terraform project.
+* Rename to `terraform.lock.hcl`
+* Run `terraform init` and verify the provider is installed.
+* Be sure to commit the new `.terraform.lock.hcl` file to your source code repository.
+
 
 ## Error: Failed to query available provider packages
 

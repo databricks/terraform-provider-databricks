@@ -18,6 +18,12 @@ func TestNodeType(t *testing.T) {
 				Response: NodeTypeList{
 					[]NodeType{
 						{
+							NodeTypeID:     "vcpu-worker",
+							InstanceTypeID: "vcpu-worker",
+							MemoryMB:       0,
+							NumCores:       0,
+						},
+						{
 							NodeTypeID:     "Random_05",
 							InstanceTypeID: "Random_05",
 							MemoryMB:       1024,
@@ -162,6 +168,47 @@ func TestNodeTypeCategory(t *testing.T) {
 	}.Apply(t)
 	assert.NoError(t, err)
 	assert.Equal(t, "Random_02", d.Id())
+}
+
+func TestNodeTypeVCPU(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:       "GET",
+				ReuseRequest: true,
+				Resource:     "/api/2.0/clusters/list-node-types",
+				Response: NodeTypeList{
+					[]NodeType{
+						{
+							NodeTypeID:     "Random_05",
+							InstanceTypeID: "Random_05",
+							MemoryMB:       1024,
+							NumCores:       32,
+							NodeInstanceType: &NodeInstanceType{
+								LocalDisks:      3,
+								LocalDiskSizeGB: 100,
+							},
+						},
+						{
+							NodeTypeID:     "vcpu-worker",
+							InstanceTypeID: "vcpu-worker",
+							MemoryMB:       0,
+							NumCores:       0,
+						},
+					},
+				},
+			},
+		},
+		Read:        true,
+		Resource:    DataSourceNodeType(),
+		NonWritable: true,
+		State: map[string]interface{}{
+			"vcpu": true,
+		},
+		ID: ".",
+	}.Apply(t)
+	assert.NoError(t, err)
+	assert.Equal(t, "vcpu-worker", d.Id())
 }
 
 func TestSmallestNodeTypeClouds(t *testing.T) {

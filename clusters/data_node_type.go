@@ -22,6 +22,7 @@ type NodeTypeRequest struct {
 	Graviton              bool   `json:"graviton,omitempty"`
 	IsIOCacheEnabled      bool   `json:"is_io_cache_enabled,omitempty"`
 	SupportPortForwarding bool   `json:"support_port_forwarding,omitempty"`
+	VCPU                  bool   `json:"vcpu,omitempty"`
 }
 
 // NodeTypeList contains a list of node types
@@ -109,11 +110,20 @@ func (a ClustersAPI) GetSmallestNodeType(r NodeTypeRequest) string {
 	// error is explicitly ingored here, because Azure returns
 	// apparently too big of a JSON for Go to parse
 	if len(list.NodeTypes) == 0 {
+		if r.VCPU {
+			return "vcpu-worker"
+		}
 		return a.defaultSmallestNodeType()
 	}
 	list.Sort()
 	for _, nt := range list.NodeTypes {
 		gbs := (nt.MemoryMB / 1024)
+		if r.VCPU && !strings.HasPrefix(nt.NodeTypeID, "vcpu") {
+			continue
+		}
+		if !r.VCPU && strings.HasPrefix(nt.NodeTypeID, "vcpu") {
+			continue
+		}
 		if r.MinMemoryGB > 0 && gbs < r.MinMemoryGB {
 			continue
 		}

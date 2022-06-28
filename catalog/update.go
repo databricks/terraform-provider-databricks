@@ -23,7 +23,7 @@ func updateFunctionFactory(pathPrefix string, updatable []string) func(context.C
 		for _, field := range updatable {
 			if d.IsNewResource() && !contains([]string{
 				"owner",
-				"delta_sharing_enabled",
+				"delta_sharing_scope",
 				"delta_sharing_recipient_token_lifetime_in_seconds",
 				"delta_sharing_organization_name",
 			}, field) {
@@ -33,6 +33,7 @@ func updateFunctionFactory(pathPrefix string, updatable []string) func(context.C
 			if !d.HasChange(field) {
 				continue
 			}
+
 			if contains([]string{
 				"aws_iam_role",
 				"azure_service_principal",
@@ -42,7 +43,7 @@ func updateFunctionFactory(pathPrefix string, updatable []string) func(context.C
 				continue
 			}
 
-			if field == "delta_sharing_enabled" && old != new && new == true &&
+			if field == "delta_sharing_scope" && old != new && new == "INTERNAL_AND_EXTERNAL" &&
 				!d.HasChange("delta_sharing_recipient_token_lifetime_in_seconds") {
 				patch["delta_sharing_recipient_token_lifetime_in_seconds"] =
 					d.Get("delta_sharing_recipient_token_lifetime_in_seconds")

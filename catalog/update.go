@@ -33,6 +33,7 @@ func updateFunctionFactory(pathPrefix string, updatable []string) func(context.C
 			if !d.HasChange(field) {
 				continue
 			}
+
 			if contains([]string{
 				"aws_iam_role",
 				"azure_service_principal",

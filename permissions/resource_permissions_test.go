@@ -610,7 +610,7 @@ func TestResourcePermissionsCreate_SQLA_Endpoint(t *testing.T) {
 			me,
 			{
 				Method:   "PUT",
-				Resource: "/api/2.0/permissions/sql/endpoints/abc",
+				Resource: "/api/2.0/permissions/sql/warehouses/abc",
 				ExpectedRequest: AccessControlChangeList{
 					AccessControlList: []AccessControlChange{
 						{
@@ -622,7 +622,7 @@ func TestResourcePermissionsCreate_SQLA_Endpoint(t *testing.T) {
 			},
 			{
 				Method:   http.MethodGet,
-				Resource: "/api/2.0/permissions/sql/endpoints/abc",
+				Resource: "/api/2.0/permissions/sql/warehouses/abc",
 				Response: ObjectACL{
 					ObjectID:   "/sql/dashboards/abc",
 					ObjectType: "dashboard",

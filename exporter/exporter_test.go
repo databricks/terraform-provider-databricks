@@ -227,7 +227,7 @@ var emptyWorkspace = qa.HTTPFixture{
 
 var emptySqlEndpoints = qa.HTTPFixture{
 	Method:       "GET",
-	Resource:     "/api/2.0/sql/endpoints",
+	Resource:     "/api/2.0/sql/warehouses",
 	Response:     map[string]interface{}{},
 	ReuseRequest: true,
 }
@@ -1110,12 +1110,12 @@ func TestImportingSqlObjects(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/sql/endpoints",
+				Resource: "/api/2.0/sql/warehouses",
 				Response: getJSONObject("test-data/get-sql-endpoints.json"),
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/sql/endpoints/f562046bc1272886",
+				Resource: "/api/2.0/sql/warehouses/f562046bc1272886",
 				Response: getJSONObject("test-data/get-sql-endpoint.json"),
 			},
 			{
@@ -1131,7 +1131,7 @@ func TestImportingSqlObjects(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/permissions/sql/endpoints/f562046bc1272886",
+				Resource: "/api/2.0/permissions/sql/warehouses/f562046bc1272886",
 				Response: getJSONObject("test-data/get-sql-endpoint-permissions.json"),
 			},
 			{

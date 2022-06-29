@@ -113,7 +113,7 @@ type PermissionsAPI struct {
 }
 
 func isDbsqlPermissionsWorkaroundNecessary(objectID string) bool {
-	return strings.HasPrefix(objectID, "/sql/") && !strings.HasPrefix(objectID, "/sql/endpoints")
+	return strings.HasPrefix(objectID, "/sql/") && !strings.HasPrefix(objectID, "/sql/warehouses")
 }
 
 func urlPathForObjectID(objectID string) string {
@@ -261,7 +261,7 @@ func permissionsResourceIDFields() []permissionsIDFieldMapping {
 		{"repo_path", "repo", "repos", []string{"CAN_READ", "CAN_RUN", "CAN_EDIT", "CAN_MANAGE"}, PATH},
 		{"authorization", "tokens", "authorization", []string{"CAN_USE"}, SIMPLE},
 		{"authorization", "passwords", "authorization", []string{"CAN_USE"}, SIMPLE},
-		{"sql_endpoint_id", "endpoints", "sql/endpoints", []string{"CAN_USE", "CAN_MANAGE"}, SIMPLE},
+		{"sql_endpoint_id", "warehouses", "sql/warehouses", []string{"CAN_USE", "CAN_MANAGE"}, SIMPLE},
 		{"sql_dashboard_id", "dashboard", "sql/dashboards", []string{"CAN_EDIT", "CAN_RUN", "CAN_MANAGE"}, SIMPLE},
 		{"sql_alert_id", "alert", "sql/alerts", []string{"CAN_EDIT", "CAN_RUN", "CAN_MANAGE"}, SIMPLE},
 		{"sql_query_id", "query", "sql/queries", []string{"CAN_EDIT", "CAN_RUN", "CAN_MANAGE"}, SIMPLE},

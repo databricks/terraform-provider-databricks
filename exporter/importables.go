@@ -1020,7 +1020,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			if ic.meAdmin {
 				ic.Emit(&resource{
 					Resource: "databricks_permissions",
-					ID:       fmt.Sprintf("/sql/endpoints/%s", r.ID),
+					ID:       fmt.Sprintf("/sql/warehouses/%s", r.ID),
 					Name:     "sql_endpoint_" + ic.Importables["databricks_sql_endpoint"].Name(r.Data),
 				})
 			}

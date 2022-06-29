@@ -14,7 +14,7 @@ func TestResourceSQLGlobalConfigCreateDefault(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "PUT",
-				Resource: "/api/2.0/sql/config/endpoints",
+				Resource: "/api/2.0/sql/config/warehouses",
 				ExpectedRequest: map[string]interface{}{
 					"data_access_config":        []interface{}{},
 					"enable_serverless_compute": false,
@@ -23,7 +23,7 @@ func TestResourceSQLGlobalConfigCreateDefault(t *testing.T) {
 			},
 			{
 				Method:       "GET",
-				Resource:     "/api/2.0/sql/config/endpoints",
+				Resource:     "/api/2.0/sql/config/warehouses",
 				ReuseRequest: true,
 				Response: GlobalConfigForRead{
 					SecurityPolicy: "DATA_ACCESS_CONTROL",
@@ -45,7 +45,7 @@ func TestResourceSQLGlobalConfigDelete(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "PUT",
-				Resource: "/api/2.0/sql/config/endpoints",
+				Resource: "/api/2.0/sql/config/warehouses",
 				ExpectedRequest: map[string]interface{}{
 					"data_access_config":        []interface{}{},
 					"enable_serverless_compute": false,
@@ -54,7 +54,7 @@ func TestResourceSQLGlobalConfigDelete(t *testing.T) {
 			},
 			{
 				Method:       "GET",
-				Resource:     "/api/2.0/sql/config/endpoints",
+				Resource:     "/api/2.0/sql/config/warehouses",
 				ReuseRequest: true,
 				Response: GlobalConfigForRead{
 					SecurityPolicy: "DATA_ACCESS_CONTROL",
@@ -77,7 +77,7 @@ func TestResourceSQLGlobalConfigCreateWithData(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "PUT",
-				Resource: "/api/2.0/sql/config/endpoints",
+				Resource: "/api/2.0/sql/config/warehouses",
 				ExpectedRequest: GlobalConfigForRead{
 					DataAccessConfig:           []confPair{{Key: "spark.sql.session.timeZone", Value: "UTC"}},
 					SqlConfigurationParameters: &repeatedEndpointConfPairs{ConfigPairs: []confPair{{Key: "ANSI_MODE", Value: "true"}}},
@@ -88,7 +88,7 @@ func TestResourceSQLGlobalConfigCreateWithData(t *testing.T) {
 			},
 			{
 				Method:       "GET",
-				Resource:     "/api/2.0/sql/config/endpoints",
+				Resource:     "/api/2.0/sql/config/warehouses",
 				ReuseRequest: true,
 				Response: GlobalConfigForRead{
 					SecurityPolicy: "PASSTHROUGH",

@@ -4,3 +4,6 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
+
+- name: Markdown SEO Check
+  uses: zentered/markdown-seo-check@v1.0.0

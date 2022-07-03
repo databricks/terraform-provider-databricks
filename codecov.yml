@@ -14,3 +14,6 @@ comment:
   require_base: yes       # [yes :: must have a base report to post]
   require_head: yes       # [yes :: must have a head report to post]
   branches: null          # branch names that can post comment
+
+- name: Setup Go environment
+  uses: actions/setup-go@v3.2.0

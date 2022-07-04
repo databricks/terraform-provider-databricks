@@ -94,7 +94,7 @@ func newStringSet(in []string) *schema.Set {
 }
 
 func NewPermissionsAPI(ctx context.Context, m interface{}) PermissionsAPI {
-	return PermissionsAPI{m.(*common.DatabricksClient), ctx}
+	return PermissionsAPI{m.(*common.DatabricksClient), context.WithValue(ctx, common.Api, common.API_2_1)}
 }
 
 func (a PermissionsAPI) getPermissions(securable, name string) (list PermissionsList, err error) {

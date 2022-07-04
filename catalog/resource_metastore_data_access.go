@@ -14,7 +14,7 @@ type DataAccessConfigurationsAPI struct {
 }
 
 func NewDataAccessConfigurationsAPI(ctx context.Context, m interface{}) DataAccessConfigurationsAPI {
-	return DataAccessConfigurationsAPI{m.(*common.DatabricksClient), ctx}
+	return DataAccessConfigurationsAPI{m.(*common.DatabricksClient), context.WithValue(ctx, common.Api, common.API_2_1)}
 }
 
 type AwsIamRole struct {

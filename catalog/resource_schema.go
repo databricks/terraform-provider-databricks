@@ -13,7 +13,7 @@ type SchemasAPI struct {
 }
 
 func NewSchemasAPI(ctx context.Context, m interface{}) SchemasAPI {
-	return SchemasAPI{m.(*common.DatabricksClient), ctx}
+	return SchemasAPI{m.(*common.DatabricksClient), context.WithValue(ctx, common.Api, common.API_2_1)}
 }
 
 type SchemaInfo struct {

@@ -14,7 +14,7 @@ type CatalogsAPI struct {
 }
 
 func NewCatalogsAPI(ctx context.Context, m interface{}) CatalogsAPI {
-	return CatalogsAPI{m.(*common.DatabricksClient), ctx}
+	return CatalogsAPI{m.(*common.DatabricksClient), context.WithValue(ctx, common.Api, common.API_2_1)}
 }
 
 type CatalogInfo struct {

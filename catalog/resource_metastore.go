@@ -16,7 +16,7 @@ type MetastoresAPI struct {
 }
 
 func NewMetastoresAPI(ctx context.Context, m interface{}) MetastoresAPI {
-	return MetastoresAPI{m.(*common.DatabricksClient), ctx}
+	return MetastoresAPI{m.(*common.DatabricksClient), context.WithValue(ctx, common.Api, common.API_2_1)}
 }
 
 type MetastoreInfo struct {

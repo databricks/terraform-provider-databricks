@@ -14,7 +14,7 @@ type MetastoreAssignmentAPI struct {
 }
 
 func NewMetastoreAssignmentAPI(ctx context.Context, m interface{}) MetastoreAssignmentAPI {
-	return MetastoreAssignmentAPI{m.(*common.DatabricksClient), ctx}
+	return MetastoreAssignmentAPI{m.(*common.DatabricksClient), context.WithValue(ctx, common.Api, common.API_2_1)}
 }
 
 type MetastoreAssignment struct {

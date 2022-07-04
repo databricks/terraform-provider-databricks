@@ -11,7 +11,7 @@ func TestViewsData(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/unity-catalog/tables/?catalog_name=a&schema_name=b",
+				Resource: "/api/2.1/unity-catalog/tables/?catalog_name=a&schema_name=b",
 				Response: Tables{
 					Tables: []TableInfo{
 						{

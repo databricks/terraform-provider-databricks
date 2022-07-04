@@ -14,7 +14,7 @@ type TablesAPI struct {
 }
 
 func NewTablesAPI(ctx context.Context, m interface{}) TablesAPI {
-	return TablesAPI{m.(*common.DatabricksClient), ctx}
+	return TablesAPI{m.(*common.DatabricksClient), context.WithValue(ctx, common.Api, common.API_2_1)}
 }
 
 type ColumnInfo struct {

@@ -11,7 +11,7 @@ func TestSchemasData(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/unity-catalog/schemas?catalog_name=a",
+				Resource: "/api/2.1/unity-catalog/schemas?catalog_name=a",
 				Response: Schemas{
 					Schemas: []SchemaInfo{
 						{

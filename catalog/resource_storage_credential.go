@@ -13,7 +13,7 @@ type StorageCredentialsAPI struct {
 }
 
 func NewStorageCredentialsAPI(ctx context.Context, m interface{}) StorageCredentialsAPI {
-	return StorageCredentialsAPI{m.(*common.DatabricksClient), ctx}
+	return StorageCredentialsAPI{m.(*common.DatabricksClient), context.WithValue(ctx, common.Api, common.API_2_1)}
 }
 
 type StorageCredentialInfo struct {

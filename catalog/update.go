@@ -47,7 +47,6 @@ func updateFunctionFactory(pathPrefix string, updatable []string) func(context.C
 				!d.HasChange("delta_sharing_recipient_token_lifetime_in_seconds") {
 				patch["delta_sharing_recipient_token_lifetime_in_seconds"] =
 					d.Get("delta_sharing_recipient_token_lifetime_in_seconds")
-				continue
 			}
 			patch[field] = new
 		}

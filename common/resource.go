@@ -92,20 +92,23 @@ func (r Resource) ToResource() *schema.Resource {
 			}
 		}
 	}
-	read := func(ctx context.Context, d *schema.ResourceData,
+	generateReadFunc := func(ignoreMissing bool) func(ctx context.Context, d *schema.ResourceData,
 		m interface{}) diag.Diagnostics {
-		err := recoverable(r.Read)(ctx, d, m.(*DatabricksClient))
-		if IsMissing(err) {
-			log.Printf("[INFO] %s[id=%s] is removed on backend",
-				ResourceName.GetOrUnknown(ctx), d.Id())
-			d.SetId("")
+		return func(ctx context.Context, d *schema.ResourceData,
+			m interface{}) diag.Diagnostics {
+			err := recoverable(r.Read)(ctx, d, m.(*DatabricksClient))
+			if ignoreMissing && IsMissing(err) {
+				log.Printf("[INFO] %s[id=%s] is removed on backend",
+					ResourceName.GetOrUnknown(ctx), d.Id())
+				d.SetId("")
+				return nil
+			}
+			if err != nil {
+				err = nicerError(ctx, err, "read")
+				return diag.FromErr(err)
+			}
 			return nil
 		}
-		if err != nil {
-			err = nicerError(ctx, err, "read")
-			return diag.FromErr(err)
-		}
-		return nil
 	}
 	return &schema.Resource{
 		Schema:         r.Schema,
@@ -126,7 +129,7 @@ func (r Resource) ToResource() *schema.Resource {
 			}
 			return nil
 		},
-		ReadContext:   read,
+		ReadContext:   generateReadFunc(true),
 		UpdateContext: update,
 		DeleteContext: func(ctx context.Context, d *schema.ResourceData,
 			m interface{}) diag.Diagnostics {
@@ -147,7 +150,7 @@ func (r Resource) ToResource() *schema.Resource {
 			StateContext: func(ctx context.Context, d *schema.ResourceData,
 				m interface{}) (data []*schema.ResourceData, e error) {
 				d.MarkNewResource()
-				diags := read(ctx, d, m)
+				diags := generateReadFunc(false)(ctx, d, m)
 				var err error
 				if diags.HasError() {
 					err = diags[0].Validate()

@@ -13,6 +13,7 @@ import (
 )
 
 func TestAccInstancePools(t *testing.T) {
+	t.Parallel()
 	cloud := os.Getenv("CLOUD_ENV")
 	if cloud == "" {
 		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")

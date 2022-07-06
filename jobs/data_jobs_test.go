@@ -3,7 +3,7 @@ package jobs
 import (
 	"testing"
 
-	"github.com/databrickslabs/terraform-provider-databricks/qa"
+	"github.com/databricks/terraform-provider-databricks/qa"
 )
 
 func TestJobsData(t *testing.T) {

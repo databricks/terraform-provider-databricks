@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/databrickslabs/terraform-provider-databricks/common"
-	"github.com/databrickslabs/terraform-provider-databricks/libraries"
+	"github.com/databricks/terraform-provider-databricks/common"
+	"github.com/databricks/terraform-provider-databricks/libraries"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 

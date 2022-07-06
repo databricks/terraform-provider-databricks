@@ -5,10 +5,10 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/databrickslabs/terraform-provider-databricks/common"
-	"github.com/databrickslabs/terraform-provider-databricks/libraries"
+	"github.com/databricks/terraform-provider-databricks/common"
+	"github.com/databricks/terraform-provider-databricks/libraries"
 
-	"github.com/databrickslabs/terraform-provider-databricks/qa"
+	"github.com/databricks/terraform-provider-databricks/qa"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -1186,7 +1186,7 @@ func TestModifyClusterRequestGcp(t *testing.T) {
 	assert.Equal(t, false, c.EnableElasticDisk)
 }
 
-// https://github.com/databrickslabs/terraform-provider-databricks/issues/952
+// https://github.com/databricks/terraform-provider-databricks/issues/952
 func TestReadOnStoppedClusterWithLibrariesDoesNotFail(t *testing.T) {
 	qa.ResourceFixture{
 		Resource: ResourceCluster(),
@@ -1224,7 +1224,7 @@ func TestReadOnStoppedClusterWithLibrariesDoesNotFail(t *testing.T) {
 	}.ApplyNoError(t)
 }
 
-// https://github.com/databrickslabs/terraform-provider-databricks/issues/599
+// https://github.com/databricks/terraform-provider-databricks/issues/599
 func TestRefreshOnRunningClusterWithFailedLibraryUninstallsIt(t *testing.T) {
 	qa.ResourceFixture{
 		Resource: ResourceCluster(),

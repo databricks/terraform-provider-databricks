@@ -3,7 +3,7 @@ package catalog
 import (
 	"testing"
 
-	"github.com/databrickslabs/terraform-provider-databricks/qa"
+	"github.com/databricks/terraform-provider-databricks/qa"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -37,7 +37,7 @@ func TestTablesData(t *testing.T) {
 	}.ApplyNoError(t)
 }
 
-// https://github.com/databrickslabs/terraform-provider-databricks/issues/1264
+// https://github.com/databricks/terraform-provider-databricks/issues/1264
 func TestTablesDataIssue1264(t *testing.T) {
 	r := DataSourceTables()
 	d, err := qa.ResourceFixture{

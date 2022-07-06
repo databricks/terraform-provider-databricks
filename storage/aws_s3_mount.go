@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/databrickslabs/terraform-provider-databricks/clusters"
-	"github.com/databrickslabs/terraform-provider-databricks/common"
+	"github.com/databricks/terraform-provider-databricks/clusters"
+	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -41,7 +41,7 @@ func ResourceAWSS3Mount() *schema.Resource {
 	r := &schema.Resource{
 		DeprecationMessage: "Resource is deprecated and will be removed in further versions. " +
 			"Please rewrite configuration using `databricks_mount` resource. More info at " +
-			"https://registry.terraform.io/providers/databrickslabs/databricks/latest/docs/" +
+			"https://registry.terraform.io/providers/databricks/databricks/latest/docs/" +
 			"resources/mount#migration-from-other-mount-resources",
 		Schema: map[string]*schema.Schema{
 			"cluster_id": {

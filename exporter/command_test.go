@@ -5,7 +5,7 @@ import (
 	"context"
 	"testing"
 
-	"github.com/databrickslabs/terraform-provider-databricks/common"
+	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/stretchr/testify/assert"
 )
 

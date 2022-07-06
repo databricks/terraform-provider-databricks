@@ -8,8 +8,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/databrickslabs/terraform-provider-databricks/commands"
-	"github.com/databrickslabs/terraform-provider-databricks/qa"
+	"github.com/databricks/terraform-provider-databricks/commands"
+	"github.com/databricks/terraform-provider-databricks/qa"
 )
 
 // For writing a unit test to intercept the errors (t.Fatalf literally ends the test in failure)

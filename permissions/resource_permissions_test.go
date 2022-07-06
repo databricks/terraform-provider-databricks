@@ -5,12 +5,12 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/databrickslabs/terraform-provider-databricks/common"
-	"github.com/databrickslabs/terraform-provider-databricks/jobs"
-	"github.com/databrickslabs/terraform-provider-databricks/scim"
+	"github.com/databricks/terraform-provider-databricks/common"
+	"github.com/databricks/terraform-provider-databricks/jobs"
+	"github.com/databricks/terraform-provider-databricks/scim"
 
-	"github.com/databrickslabs/terraform-provider-databricks/qa"
-	"github.com/databrickslabs/terraform-provider-databricks/workspace"
+	"github.com/databricks/terraform-provider-databricks/qa"
+	"github.com/databricks/terraform-provider-databricks/workspace"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -98,7 +98,7 @@ func TestResourcePermissionsRead(t *testing.T) {
 	assert.Equal(t, "CAN_READ", firstElem["permission_level"])
 }
 
-// https://github.com/databrickslabs/terraform-provider-databricks/issues/1227
+// https://github.com/databricks/terraform-provider-databricks/issues/1227
 func TestResourcePermissionsRead_RemovedCluster(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{

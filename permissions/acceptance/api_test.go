@@ -26,6 +26,7 @@ func permissionsTestHelper(t *testing.T,
 	if os.Getenv("CLOUD_ENV") == "" {
 		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
 	}
+	t.Parallel()
 	randomName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
 	client := common.NewClientFromEnvironment()
 

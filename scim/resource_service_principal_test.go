@@ -17,7 +17,7 @@ func TestAccServicePrincipalOnAzure(t *testing.T) {
 	if cloud, ok := os.LookupEnv("CLOUD_ENV"); !ok || cloud != "azure" {
 		t.Skip("Test will only run with CLOUD_ENV=azure")
 	}
-
+	t.Parallel()
 	client := common.NewClientFromEnvironment()
 	ctx := context.Background()
 

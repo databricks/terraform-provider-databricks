@@ -21,6 +21,7 @@ func TestAccGroupsExternalIdAndScimProvisioning(t *testing.T) {
 	if _, ok := os.LookupEnv("CLOUD_ENV"); !ok {
 		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
 	}
+	t.Parallel()
 	name := qa.RandomName("tfgroup")
 	acceptance.AccTest(t, resource.TestCase{
 		Steps: []resource.TestStep{
@@ -55,6 +56,7 @@ func TestAccGroupResource(t *testing.T) {
 	if _, ok := os.LookupEnv("CLOUD_ENV"); !ok {
 		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
 	}
+	t.Parallel()
 	randomStr := acctest.RandStringFromCharSet(5, acctest.CharSetAlphaNum)
 	displayName := fmt.Sprintf("tf group test %s", randomStr)
 	newDisplayName := fmt.Sprintf("new tf group test %s", randomStr)
@@ -78,6 +80,7 @@ func TestAccGroupResource(t *testing.T) {
 
 func TestAccGroupResource_verify_entitlements(t *testing.T) {
 	// TODO: CHECK THESE RESOURCES FOR GENERIC DESTROY
+	t.Parallel()
 	randomStr := acctest.RandStringFromCharSet(5, acctest.CharSetAlphaNum)
 	displayName := fmt.Sprintf("tf group test %s", randomStr)
 	newDisplayName := fmt.Sprintf("new tf group test %s", randomStr)

@@ -30,6 +30,7 @@ func TestAccIPACL(t *testing.T) {
 	if cloud == "" {
 		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
 	}
+	t.Parallel()
 	client := common.NewClientFromEnvironment()
 	ctx := context.Background()
 	ipAccessListsAPI := NewIPAccessListsAPI(ctx, client)

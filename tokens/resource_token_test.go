@@ -260,7 +260,7 @@ func TestAccCreateToken(t *testing.T) {
 	if _, ok := os.LookupEnv("CLOUD_ENV"); !ok {
 		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
 	}
-
+	t.Parallel()
 	client := common.NewClientFromEnvironment()
 	tokensAPI := NewTokensAPI(context.Background(), client)
 
@@ -289,7 +289,7 @@ func TestAccCreateToken_NoExpiration(t *testing.T) {
 	if _, ok := os.LookupEnv("CLOUD_ENV"); !ok {
 		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
 	}
-
+	t.Parallel()
 	client := common.NewClientFromEnvironment()
 	tokensAPI := NewTokensAPI(context.Background(), client)
 

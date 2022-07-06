@@ -155,7 +155,7 @@ func TestAccCreateFile(t *testing.T) {
 	if _, ok := os.LookupEnv("CLOUD_ENV"); !ok {
 		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
 	}
-
+	t.Parallel()
 	randomName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
 	dir := "/client-test/" + randomName
 	path := dir + "/randomfile"

@@ -19,7 +19,7 @@ func TestAccReadUser(t *testing.T) {
 	if _, ok := os.LookupEnv("CLOUD_ENV"); !ok {
 		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
 	}
-
+	t.Parallel()
 	client := common.NewClientFromEnvironment()
 	ctx := context.Background()
 	usersAPI := NewUsersAPI(ctx, client)
@@ -38,7 +38,7 @@ func TestAccCreateUser(t *testing.T) {
 	if _, ok := os.LookupEnv("CLOUD_ENV"); !ok {
 		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
 	}
-
+	t.Parallel()
 	client := common.NewClientFromEnvironment()
 	randomName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
 	ctx := context.Background()

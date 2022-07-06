@@ -11,6 +11,7 @@ import (
 )
 
 func TestAccWorkspaceConfFullLifecycle(t *testing.T) {
+	t.Parallel()
 	acceptance.Test(t, []acceptance.Step{
 		{
 			Template: `resource "databricks_workspace_conf" "this" {

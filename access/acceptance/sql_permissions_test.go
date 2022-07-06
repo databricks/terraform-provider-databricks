@@ -20,7 +20,7 @@ func TestAccTableACL(t *testing.T) {
 	if cloudEnv == "" {
 		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
 	}
-
+	t.Parallel()
 	client := common.CommonEnvironmentClient()
 	client.WithCommandExecutor(func(ctx context.Context,
 		dc *common.DatabricksClient) common.CommandExecutor {

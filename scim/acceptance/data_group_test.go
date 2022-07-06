@@ -29,7 +29,7 @@ func TestAccGroupDataSplitMembers(t *testing.T) {
 	if cloudEnv, ok := os.LookupEnv("CLOUD_ENV"); !ok || cloudEnv != "azure" {
 		t.Skip("This test will only run on Azure. For simplicity.")
 	}
-
+	t.Parallel()
 	ctx := context.Background()
 	client := common.CommonEnvironmentClient()
 

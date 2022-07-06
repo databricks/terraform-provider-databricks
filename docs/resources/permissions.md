@@ -698,8 +698,11 @@ Attributes are:
 -> **Note** It is not possible to lower permissions for `admins` or your own user anywhere from `CAN_MANAGE` level, so Databricks Terraform Provider [removes](https://github.com/databricks/terraform-provider-databricks/blob/master/access/resource_permissions.go#L261-L271) those `access_control` blocks automatically. 
 
 - `permission_level` - (Required) permission level according to specific resource. See examples above for the reference.
-- `user_name` - (Optional) name of the [user](user.md), which should be used if group name is not used
-- `group_name` - (Optional) name of the [group](group.md), which should be used if the user name is not used. We recommend setting permissions on groups.
+
+Exactly one of the below attributes is required:
+- `user_name` - (Optional) name of the [user](user.md).
+- `service_principal_name` - (Optional) Application ID of the [service_principal](service_principal.md#application_id).
+- `group_name` - (Optional) name of the [group](group.md). We recommend setting permissions on groups.
 
 ## Attribute Reference
 

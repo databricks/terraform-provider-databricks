@@ -17,6 +17,7 @@ func TestAccLibraryCreate(t *testing.T) {
 	if cloud == "" {
 		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
 	}
+	t.Parallel()
 	client := common.CommonEnvironmentClient()
 	clusterInfo, err := compute.NewTinyClusterInCommonPool()
 	assert.NoError(t, err, err)

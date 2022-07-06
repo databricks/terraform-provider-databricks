@@ -19,7 +19,7 @@ func TestAccListClustersIntegration(t *testing.T) {
 	if cloudEnv == "" {
 		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
 	}
-
+	t.Parallel()
 	client := common.CommonEnvironmentClient()
 	ctx := context.Background()
 	clustersAPI := clusters.NewClustersAPI(ctx, client)

@@ -11,6 +11,7 @@ import (
 )
 
 func TestAccGroupMemberResource(t *testing.T) {
+	t.Parallel()
 	acceptance.Test(t, []acceptance.Step{
 		{
 			Template: `

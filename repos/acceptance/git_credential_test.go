@@ -11,6 +11,7 @@ import (
 )
 
 func TestAccGitCredentials(t *testing.T) {
+	t.Parallel()
 	acceptance.Test(t, []acceptance.Step{
 		{
 			Template: `resource "databricks_git_credential" "this" {

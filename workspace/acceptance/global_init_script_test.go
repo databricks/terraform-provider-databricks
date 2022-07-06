@@ -7,6 +7,7 @@ import (
 )
 
 func TestAccGlobalInitScriptResource_Create(t *testing.T) {
+	t.Parallel()
 	acceptance.Test(t, []acceptance.Step{
 		{
 			Template: `

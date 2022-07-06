@@ -322,7 +322,7 @@ func (c *DatabricksClient) niceAuthError(message string) error {
 	}
 	info = strings.TrimSuffix(info, ".")
 	message = strings.TrimSuffix(message, ".")
-	docUrl := "https://registry.terraform.io/providers/databrickslabs/databricks/latest/docs#authentication"
+	docUrl := "https://registry.terraform.io/providers/databricks/databricks/latest/docs#authentication"
 	return fmt.Errorf("%s%s. Please check %s for details", message, info, docUrl)
 }
 

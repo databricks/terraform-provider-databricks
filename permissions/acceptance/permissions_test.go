@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/databrickslabs/terraform-provider-databricks/common"
-	"github.com/databrickslabs/terraform-provider-databricks/permissions"
+	"github.com/databricks/terraform-provider-databricks/common"
+	"github.com/databricks/terraform-provider-databricks/permissions"
 
-	"github.com/databrickslabs/terraform-provider-databricks/internal/acceptance"
+	"github.com/databricks/terraform-provider-databricks/internal/acceptance"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/stretchr/testify/assert"
@@ -96,7 +96,7 @@ func TestAccDatabricksReposPermissionsResourceFullLifecycle(t *testing.T) {
 			{
 				Config: fmt.Sprintf(`
 				resource "databricks_repo" "this" {
-					url = "https://github.com/databrickslabs/tempo.git"
+					url = "https://github.com/databricks/tempo.git"
 				}
 				resource "databricks_group" "first" {
 					display_name = "First %[1]s"

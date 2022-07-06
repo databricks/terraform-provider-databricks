@@ -4,9 +4,9 @@ import (
 	"context"
 	"testing"
 
-	"github.com/databrickslabs/terraform-provider-databricks/common"
-	"github.com/databrickslabs/terraform-provider-databricks/internal/acceptance"
-	"github.com/databrickslabs/terraform-provider-databricks/repos"
+	"github.com/databricks/terraform-provider-databricks/common"
+	"github.com/databricks/terraform-provider-databricks/internal/acceptance"
+	"github.com/databricks/terraform-provider-databricks/repos"
 	"github.com/stretchr/testify/assert"
 )
 

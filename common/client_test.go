@@ -168,7 +168,7 @@ func TestDatabricksClient_Authenticate(t *testing.T) {
 		"Please add `depends_on = [databricks_mws_workspaces.this]` or `depends_on = [azurerm_databricks"+
 		"_workspace.this]` to every data resource. See https://www.terraform.io/docs/language/resources/behavior.html more info. "+
 		"Attributes used: account_id, username. Environment variables used: DATABRICKS_PASSWORD. "+
-		"Please check https://registry.terraform.io/providers/databrickslabs/databricks/latest/docs#authentication for details")
+		"Please check https://registry.terraform.io/providers/databricks/databricks/latest/docs#authentication for details")
 }
 
 func TestDatabricksClient_AuthenticateAzure(t *testing.T) {
@@ -183,7 +183,7 @@ func TestDatabricksClient_AuthenticateAzure(t *testing.T) {
 		"Please add `depends_on = [databricks_mws_workspaces.this]` or `depends_on = [azurerm_databricks"+
 		"_workspace.this]` to every data resource. See https://www.terraform.io/docs/language/resources/"+
 		"behavior.html more info. Environment variables used: ARM_CLIENT_SECRET, ARM_CLIENT_ID. "+
-		"Please check https://registry.terraform.io/providers/databrickslabs/databricks/latest/docs#authentication for details")
+		"Please check https://registry.terraform.io/providers/databricks/databricks/latest/docs#authentication for details")
 }
 
 func TestDatabricksIsGcp(t *testing.T) {

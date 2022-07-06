@@ -11,8 +11,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/databrickslabs/terraform-provider-databricks/common"
-	"github.com/databrickslabs/terraform-provider-databricks/tokens"
+	"github.com/databricks/terraform-provider-databricks/common"
+	"github.com/databricks/terraform-provider-databricks/tokens"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -441,7 +441,7 @@ func ResourceMwsWorkspaces() *schema.Resource {
 				}
 				// Most of E2 accounts require a prefix and API returns it.
 				// This is certainly a hack to get things working for Terraform operating model.
-				// https://github.com/databrickslabs/terraform-provider-databricks/issues/382
+				// https://github.com/databricks/terraform-provider-databricks/issues/382
 				return !strings.HasSuffix(new, old)
 			}
 			// It cannot be marked as `omitempty` in the struct annotation because Go's JON marshaller

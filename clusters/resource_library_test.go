@@ -3,8 +3,8 @@ package clusters
 import (
 	"testing"
 
-	"github.com/databrickslabs/terraform-provider-databricks/libraries"
-	"github.com/databrickslabs/terraform-provider-databricks/qa"
+	"github.com/databricks/terraform-provider-databricks/libraries"
+	"github.com/databricks/terraform-provider-databricks/qa"
 )
 
 func TestLibraryCornerCases(t *testing.T) {

@@ -7,10 +7,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/databrickslabs/terraform-provider-databricks/clusters"
-	"github.com/databrickslabs/terraform-provider-databricks/common"
-	"github.com/databrickslabs/terraform-provider-databricks/libraries"
-	"github.com/databrickslabs/terraform-provider-databricks/qa"
+	"github.com/databricks/terraform-provider-databricks/clusters"
+	"github.com/databricks/terraform-provider-databricks/common"
+	"github.com/databricks/terraform-provider-databricks/libraries"
+	"github.com/databricks/terraform-provider-databricks/qa"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -562,7 +562,7 @@ func TestResourceJobCreateFromGitSource(t *testing.T) {
 					Name:              "GitSourceJob",
 					MaxConcurrentRuns: 1,
 					GitSource: &GitSource{
-						Url:      "https://github.com/databrickslabs/terraform-provider-databricks",
+						Url:      "https://github.com/databricks/terraform-provider-databricks",
 						Tag:      "0.4.8",
 						Provider: "gitHub",
 					},
@@ -597,7 +597,7 @@ func TestResourceJobCreateFromGitSource(t *testing.T) {
 		name = "GitSourceJob"
 
 		git_source {
-			url = "https://github.com/databrickslabs/terraform-provider-databricks"
+			url = "https://github.com/databricks/terraform-provider-databricks"
 			tag = "0.4.8"
 		}
 
@@ -643,7 +643,7 @@ func resourceJobCreateFromGitSourceConflict(t *testing.T, conflictingArgs []stri
 
 func TestResourceJobCreateFromGitSourceTagAndBranchConflict(t *testing.T) {
 	var gitSource = `git_source {
-		url = "https://github.com/databrickslabs/terraform-provider-databricks"
+		url = "https://github.com/databricks/terraform-provider-databricks"
 		tag = "0.4.8"
 		branch = "main"
 	}`
@@ -651,7 +651,7 @@ func TestResourceJobCreateFromGitSourceTagAndBranchConflict(t *testing.T) {
 }
 func TestResourceJobCreateFromGitSourceTagAndCommitConflict(t *testing.T) {
 	var gitSource = `git_source {
-		url = "https://github.com/databrickslabs/terraform-provider-databricks"
+		url = "https://github.com/databricks/terraform-provider-databricks"
 		tag = "0.4.8"
 		commit = "a26bf6"
 	}`
@@ -660,7 +660,7 @@ func TestResourceJobCreateFromGitSourceTagAndCommitConflict(t *testing.T) {
 
 func TestResourceJobCreateFromGitSourceBranchAndCommitConflict(t *testing.T) {
 	var gitSource = `git_source {
-		url = "https://github.com/databrickslabs/terraform-provider-databricks"
+		url = "https://github.com/databricks/terraform-provider-databricks"
 		branch = "main"
 		commit = "a26bf6"
 	}`
@@ -676,7 +676,7 @@ func TestResourceJobCreateFromGitSourceWithoutProviderFail(t *testing.T) {
 		name = "GitSourceJob"
 
 		git_source {
-			url = "https://custom.git.hosting.com/databrickslabs/terraform-provider-databricks"
+			url = "https://custom.git.hosting.com/databricks/terraform-provider-databricks"
 			tag = "0.4.8"
 		}
 
@@ -688,7 +688,7 @@ func TestResourceJobCreateFromGitSourceWithoutProviderFail(t *testing.T) {
 			}
 		}
 	`,
-	}.ExpectError(t, "git source is not empty but Git Provider is not specified and cannot be guessed by url &{Url:https://custom.git.hosting.com/databrickslabs/terraform-provider-databricks Provider: Branch: Tag:0.4.8 Commit:}")
+	}.ExpectError(t, "git source is not empty but Git Provider is not specified and cannot be guessed by url &{Url:https://custom.git.hosting.com/databricks/terraform-provider-databricks Provider: Branch: Tag:0.4.8 Commit:}")
 }
 
 func TestResourceJobCreateSingleNode_Fail(t *testing.T) {

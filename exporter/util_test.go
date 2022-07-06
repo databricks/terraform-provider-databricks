@@ -3,7 +3,7 @@ package exporter
 import (
 	"testing"
 
-	"github.com/databrickslabs/terraform-provider-databricks/clusters"
+	"github.com/databricks/terraform-provider-databricks/clusters"
 	"github.com/stretchr/testify/assert"
 )
 

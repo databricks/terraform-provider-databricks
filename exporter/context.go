@@ -12,10 +12,10 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/databrickslabs/terraform-provider-databricks/commands"
-	"github.com/databrickslabs/terraform-provider-databricks/common"
-	"github.com/databrickslabs/terraform-provider-databricks/provider"
-	"github.com/databrickslabs/terraform-provider-databricks/scim"
+	"github.com/databricks/terraform-provider-databricks/commands"
+	"github.com/databricks/terraform-provider-databricks/common"
+	"github.com/databricks/terraform-provider-databricks/provider"
+	"github.com/databricks/terraform-provider-databricks/scim"
 
 	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/hclsyntax"
@@ -186,7 +186,7 @@ func (ic *importContext) Run() error {
 			`terraform {
 				required_providers {
 			  		databricks = {
-						source = "databrickslabs/databricks"
+						source = "databricks/databricks"
 						version = "` + common.Version() + `"
 				  	}
 				}

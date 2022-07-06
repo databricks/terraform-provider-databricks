@@ -8,8 +8,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
-	"github.com/databrickslabs/terraform-provider-databricks/common"
-	"github.com/databrickslabs/terraform-provider-databricks/libraries"
+	"github.com/databricks/terraform-provider-databricks/common"
+	"github.com/databricks/terraform-provider-databricks/libraries"
 )
 
 // DefaultProvisionTimeout ...
@@ -227,7 +227,7 @@ func hasClusterConfigChanged(d *schema.ResourceData) bool {
 	return false
 }
 
-// https://github.com/databrickslabs/terraform-provider-databricks/issues/824
+// https://github.com/databricks/terraform-provider-databricks/issues/824
 func fixInstancePoolChangeIfAny(d *schema.ResourceData, cluster *Cluster) {
 	oldInstancePool, newInstancePool := d.GetChange("instance_pool_id")
 	oldDriverPool, newDriverPool := d.GetChange("driver_instance_pool_id")

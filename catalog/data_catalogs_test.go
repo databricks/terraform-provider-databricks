@@ -3,7 +3,7 @@ package catalog
 import (
 	"testing"
 
-	"github.com/databrickslabs/terraform-provider-databricks/qa"
+	"github.com/databricks/terraform-provider-databricks/qa"
 )
 
 func TestCatalogsData(t *testing.T) {

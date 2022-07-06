@@ -56,7 +56,6 @@ func TestAccInstancePools(t *testing.T) {
 	assert.NoError(t, err, err)
 	assert.Equal(t, poolInfo.InstancePoolID, poolReadInfo.InstancePoolID)
 	assert.Equal(t, pool.InstancePoolName, poolReadInfo.InstancePoolName)
-	assert.Equal(t, pool.MinIdleInstances, poolReadInfo.MinIdleInstances)
 	assert.Equal(t, pool.MaxCapacity, poolReadInfo.MaxCapacity)
 	assert.Equal(t, pool.NodeTypeID, poolReadInfo.NodeTypeID)
 	assert.Equal(t, pool.IdleInstanceAutoTerminationMinutes, poolReadInfo.IdleInstanceAutoTerminationMinutes)

@@ -7,6 +7,7 @@ import (
 )
 
 func TestAccClusterResource_CreateClusterWithLibraries(t *testing.T) {
+	t.Parallel()
 	acceptance.Test(t, []acceptance.Step{
 		{
 			Template: `
@@ -54,6 +55,7 @@ func TestAccClusterResource_CreateClusterWithLibraries(t *testing.T) {
 }
 
 func TestAccClusterResource_CreateSingleNodeCluster(t *testing.T) {
+	t.Parallel()
 	acceptance.Test(t, []acceptance.Step{
 		{
 			Template: `

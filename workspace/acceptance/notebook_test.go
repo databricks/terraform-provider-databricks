@@ -7,6 +7,7 @@ import (
 )
 
 func TestAccNotebookResourceScalability(t *testing.T) {
+	t.Parallel()
 	acceptance.Test(t, []acceptance.Step{
 		{
 			Template: `resource "databricks_notebook" "this" {

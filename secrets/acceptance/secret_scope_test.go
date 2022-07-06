@@ -23,6 +23,7 @@ func TestAccRemoveScopes(t *testing.T) {
 	if _, ok := os.LookupEnv("VSCODE_PID"); !ok {
 		t.Skip("Cleaning up tests only from IDE")
 	}
+	t.Parallel()
 	client := common.CommonEnvironmentClient()
 	scopesAPI := secrets.NewSecretScopesAPI(context.Background(), client)
 	scopeList, err := scopesAPI.List()
@@ -66,6 +67,7 @@ func TestAccInitialManagePrincipals(t *testing.T) {
 	if _, ok := os.LookupEnv("CLOUD_ENV"); !ok {
 		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
 	}
+	t.Parallel()
 	ctx := context.Background()
 	client := common.CommonEnvironmentClient()
 	scopesAPI := secrets.NewSecretScopesAPI(context.Background(), client)
@@ -92,6 +94,7 @@ func TestAccInitialManagePrincipalsGroup(t *testing.T) {
 	if _, ok := os.LookupEnv("CLOUD_ENV"); !ok {
 		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
 	}
+	t.Parallel()
 	client := common.CommonEnvironmentClient()
 	ctx := context.Background()
 	scopesAPI := secrets.NewSecretScopesAPI(ctx, client)
@@ -117,6 +120,7 @@ func TestAccSecretScopeResource(t *testing.T) {
 	if _, ok := os.LookupEnv("CLOUD_ENV"); !ok {
 		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
 	}
+	t.Parallel()
 	scope := qa.RandomName("tf-")
 	acceptance.AccTest(t, resource.TestCase{
 		Steps: []resource.TestStep{

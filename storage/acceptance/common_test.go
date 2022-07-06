@@ -48,6 +48,7 @@ func mountPointThroughReusedCluster(t *testing.T) (*common.DatabricksClient, sto
 	if _, ok := os.LookupEnv("CLOUD_ENV"); !ok {
 		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
 	}
+	t.Parallel()
 	ctx := context.Background()
 	client := common.CommonEnvironmentClient()
 	clusterInfo := compute.NewTinyClusterInCommonPoolPossiblyReused()

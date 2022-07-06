@@ -14,6 +14,7 @@ import (
 )
 
 func TestAccClusterPolicyResourceFullLifecycle(t *testing.T) {
+	t.Parallel()
 	randomName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
 	acceptance.AccTest(t, resource.TestCase{
 		Steps: []resource.TestStep{

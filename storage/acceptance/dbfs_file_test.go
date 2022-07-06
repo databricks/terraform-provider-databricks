@@ -7,6 +7,7 @@ import (
 )
 
 func TestAccDatabricksDBFSFile_CreateViaContent(t *testing.T) {
+	t.Parallel()
 	acceptance.Test(t, []acceptance.Step{
 		{
 			Template: `resource "databricks_dbfs_file" "this" {
@@ -24,6 +25,7 @@ func TestAccDatabricksDBFSFile_CreateViaContent(t *testing.T) {
 }
 
 func TestAccDatabricksDBFSFile_CreateViaSource(t *testing.T) {
+	t.Parallel()
 	acceptance.Test(t, []acceptance.Step{
 		{
 			Template: `resource "databricks_dbfs_file" "file_1" {

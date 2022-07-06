@@ -177,7 +177,7 @@ func TestAccJobResource(t *testing.T) {
 	if _, ok := os.LookupEnv("CLOUD_ENV"); !ok {
 		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
 	}
-
+	t.Parallel()
 	clustersAPI := clusters.NewClustersAPI(context.Background(), common.CommonEnvironmentClient())
 	sparkVersion := clustersAPI.LatestSparkVersionOrDefault(clusters.SparkVersionRequest{Latest: true, LongTermSupport: true})
 	acceptance.AccTest(t, resource.TestCase{

@@ -43,6 +43,9 @@ func (a ExternalLocationsAPI) delete(name string) error {
 func ResourceExternalLocation() *schema.Resource {
 	s := common.StructToSchema(ExternalLocationInfo{},
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
+			m["skip_validation"].DiffSuppressFunc = func(k, old, new string, d *schema.ResourceData) bool {
+				return old == "false" && new == "true"
+			}
 			return m
 		})
 	update := updateFunctionFactory("/unity-catalog/external-locations", []string{"owner", "comment", "url", "credential_name"})

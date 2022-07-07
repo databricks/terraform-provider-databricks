@@ -599,7 +599,7 @@ func TestNotebookGeneration(t *testing.T) {
 
 		ic.generateHclForResources(nil)
 		assert.Equal(t, commands.TrimLeadingWhitespace(`
-		resource "databricks_notebook" "firstsecond" {
+		resource "databricks_notebook" "first_second_123" {
 		  source = "${path.module}/notebooks/First/Second.py"
 		  path   = "/First/Second"
 		}`), string(ic.Files["notebooks"].Bytes()))

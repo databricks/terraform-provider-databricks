@@ -244,7 +244,7 @@ func TestConfig_PatFromDatabricksCfg(t *testing.T) {
 		env: map[string]string{
 			"HOME": "../common/testdata",
 		},
-		assertHost: "https://dbc-XXXXXXXX-YYYY.cloud.databricks.com/",
+		assertHost: "https://dbc-XXXXXXXX-YYYY.cloud.databricks.com",
 		assertAuth: "databricks-cli",
 	}.apply(t)
 }

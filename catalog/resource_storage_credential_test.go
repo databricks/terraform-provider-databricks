@@ -184,7 +184,7 @@ func TestUpdateAzStorageCredentials(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "PATCH",
-				Resource: "/api/2.0/unity-catalog/storage-credentials/a",
+				Resource: "/api/2.1/unity-catalog/storage-credentials/a",
 				ExpectedRequest: map[string]interface{}{
 					"azure_service_principal": map[string]interface{}{
 						"directory_id":   "CHANGED",
@@ -195,7 +195,7 @@ func TestUpdateAzStorageCredentials(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/unity-catalog/storage-credentials/a",
+				Resource: "/api/2.1/unity-catalog/storage-credentials/a",
 				Response: StorageCredentialInfo{
 					Name: "a",
 					Azure: &AzureServicePrincipal{
@@ -231,7 +231,7 @@ func TestUpdateAzStorageCredentialMI(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "PATCH",
-				Resource: "/api/2.0/unity-catalog/storage-credentials/a",
+				Resource: "/api/2.1/unity-catalog/storage-credentials/a",
 				ExpectedRequest: map[string]interface{}{
 					"azure_managed_identity": map[string]interface{}{
 						"access_connector_id": "CHANGED",
@@ -240,7 +240,7 @@ func TestUpdateAzStorageCredentialMI(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/unity-catalog/storage-credentials/a",
+				Resource: "/api/2.1/unity-catalog/storage-credentials/a",
 				Response: StorageCredentialInfo{
 					Name: "a",
 					AzMI: &AzureManagedIdentity{

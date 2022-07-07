@@ -125,7 +125,7 @@ func TestUpdateExternalLocation(t *testing.T) {
 }
 
 func TestUpdateExternalLocation_skipValidationSuppressDiff(t *testing.T) {
-	d, _ := qa.ResourceFixture{
+	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
@@ -156,5 +156,6 @@ func TestUpdateExternalLocation_skipValidationSuppressDiff(t *testing.T) {
 		skip_validation = true
 		`,
 	}.Apply(t)
+	assert.NoError(t, err, err)
 	assert.False(t, d.HasChanges("skip_validation"))
 }

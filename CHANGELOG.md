@@ -1,5 +1,28 @@
 # Version changelog
 
+## 1.0.1
+
+* Added better handling of missing objects during import ([#1417](https://github.com/databricks/terraform-provider-databricks/pull/1417)).
+* Fix problem in the `databricks_node_type` data source ([#1400](https://github.com/databricks/terraform-provider-databricks/pull/1400)).
+* Fix update for `databricks_storage_credential` resource ([#1403](https://github.com/databricks/terraform-provider-databricks/pull/1403)).
+* Improve `databricks_job` resource ([#1428](https://github.com/databricks/terraform-provider-databricks/pull/1428)).
+* Upgraded UC API from 2.0 to 2.1 ([#1418](https://github.com/databricks/terraform-provider-databricks/pull/1418)).
+* Sanitized `host` provider field prior to auth flow ([#1385](https://github.com/databricks/terraform-provider-databricks/pull/1385)).
+* Use `delta_sharing_scope` instead of `delta_sharing_enabled` ([#1398](https://github.com/databricks/terraform-provider-databricks/pull/1398)).
+* Added instructions to create missing `.terraform.lock.hcl` ([#1397](https://github.com/databricks/terraform-provider-databricks/pull/1397)).
+* Clarified `databricks_permissions` doc for service principals ([#1426](https://github.com/databricks/terraform-provider-databricks/pull/1426)).
+* Clarified `databricks_cluster` `autotermination_minutes` default value ([#1419](https://github.com/databricks/terraform-provider-databricks/pull/1419)).
+* Fully moved codebase from `databrickslabs` to `databricks` namespace ([#1429](https://github.com/databricks/terraform-provider-databricks/pull/1429)).
+* Various integration testing improvements ([#1425](https://github.com/databricks/terraform-provider-databricks/pull/1425), [#1427](https://github.com/databricks/terraform-provider-databricks/pull/1427), [#1420](https://github.com/databricks/terraform-provider-databricks/pull/1420)).
+
+Updated dependency versions:
+
+* Bump Go from 1.16.x to 1.18.x ([#1413](https://github.com/databricks/terraform-provider-databricks/pull/1413)).
+* Bump github.com/golang-jwt/jwt/v4 from 4.4.1 to 4.4.2 ([#1407](https://github.com/databricks/terraform-provider-databricks/pull/1407)).
+* Bump github.com/hashicorp/hcl/v2 from 2.12.0 to 2.13.0 ([#1406](https://github.com/databricks/terraform-provider-databricks/pull/1406)).
+* Bump github.com/stretchr/testify from 1.7.3 to 1.8.0 ([#1387](https://github.com/databricks/terraform-provider-databricks/pull/1387), [#1408](https://github.com/databricks/terraform-provider-databricks/pull/1408), [#1422](https://github.com/databricks/terraform-provider-databricks/pull/1422)).
+* Bump google.golang.org/api from 0.84.0 to 0.86.0 ([#1386](https://github.com/databricks/terraform-provider-databricks/pull/1386), [#1423](https://github.com/databricks/terraform-provider-databricks/pull/1423)).
+
 ## 1.0.0
 
 To make Databricks Terraform Provider generally available, we've moved it from [https://github.com/databrickslabs](https://github.com/databrickslabs) to [https://github.com/databricks](https://github.com/databricks). We've worked closely with the Terraform Registry team at Hashicorp to ensure a smooth migration. Existing terraform deployments continue to work as expected without any action from your side. We ask you to replace `databrickslabs/databricks` with `databricks/databricks` in all your `.tf` files. 

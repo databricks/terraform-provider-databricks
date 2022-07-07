@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/databrickslabs/terraform-provider-databricks/common"
+	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
@@ -20,7 +20,7 @@ func ResourceGroup() *schema.Resource {
 	groupSchema := common.StructToSchema(entity{},
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
 			addEntitlementsToSchema(&m)
-			// https://github.com/databrickslabs/terraform-provider-databricks/issues/1089
+			// https://github.com/databricks/terraform-provider-databricks/issues/1089
 			m["display_name"].ValidateDiagFunc = validation.ToDiagFunc(
 				validation.StringNotInSlice([]string{"users", "admins"}, false))
 			m["force"] = &schema.Schema{

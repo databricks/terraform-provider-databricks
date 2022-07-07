@@ -16,7 +16,7 @@ import (
 	"testing"
 
 	"github.com/Azure/go-autorest/autorest/azure"
-	"github.com/databrickslabs/terraform-provider-databricks/common"
+	"github.com/databricks/terraform-provider-databricks/common"
 
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/hcl"

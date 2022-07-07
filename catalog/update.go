@@ -4,7 +4,7 @@ import (
 	"context"
 	"path"
 
-	"github.com/databrickslabs/terraform-provider-databricks/common"
+	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -33,6 +33,16 @@ func updateFunctionFactory(pathPrefix string, updatable []string) func(context.C
 			if !d.HasChange(field) {
 				continue
 			}
+
+			if contains([]string{
+				"aws_iam_role",
+				"azure_service_principal",
+				"azure_managed_identity",
+			}, field) {
+				patch[field] = d.Get(field).([]interface{})[0]
+				continue
+			}
+
 			if field == "delta_sharing_scope" && old != new && new == "INTERNAL_AND_EXTERNAL" &&
 				!d.HasChange("delta_sharing_recipient_token_lifetime_in_seconds") {
 				patch["delta_sharing_recipient_token_lifetime_in_seconds"] =

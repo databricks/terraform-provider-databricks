@@ -4,7 +4,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"testing"
 
-	"github.com/databrickslabs/terraform-provider-databricks/qa"
+	"github.com/databricks/terraform-provider-databricks/qa"
 )
 
 func TestExternalLocationCornerCases(t *testing.T) {

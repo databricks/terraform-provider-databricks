@@ -6,7 +6,7 @@ import (
 	"log"
 	"time"
 
-	"github.com/databrickslabs/terraform-provider-databricks/common"
+	"github.com/databricks/terraform-provider-databricks/common"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -29,7 +29,7 @@ type SQLEndpoint struct {
 	MaxNumClusters          int             `json:"max_num_clusters,omitempty" tf:"default:1"`
 	NumClusters             int             `json:"num_clusters,omitempty" tf:"default:1,suppress_diff"`
 	EnablePhoton            bool            `json:"enable_photon" tf:"default:true"`
-	EnableServerlessCompute bool            `json:"enable_serverless_compute,omitempty"`
+	EnableServerlessCompute bool            `json:"enable_serverless_compute,omitempty" tf:"suppress_diff"`
 	InstanceProfileARN      string          `json:"instance_profile_arn,omitempty"`
 	State                   string          `json:"state,omitempty" tf:"computed"`
 	JdbcURL                 string          `json:"jdbc_url,omitempty" tf:"computed"`

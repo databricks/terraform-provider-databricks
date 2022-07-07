@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/databrickslabs/terraform-provider-databricks/common"
+	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -198,7 +198,7 @@ func TestConfig_AzurePAT(t *testing.T) {
 		host:        "https://adb-xxx.y.azuredatabricks.net/",
 		token:       "y",
 		assertAzure: true,
-		assertHost:  "https://adb-xxx.y.azuredatabricks.net/",
+		assertHost:  "https://adb-xxx.y.azuredatabricks.net",
 		assertAuth:  "pat",
 	}.apply(t)
 }
@@ -244,7 +244,7 @@ func TestConfig_PatFromDatabricksCfg(t *testing.T) {
 		env: map[string]string{
 			"HOME": "../common/testdata",
 		},
-		assertHost: "https://dbc-XXXXXXXX-YYYY.cloud.databricks.com/",
+		assertHost: "https://dbc-XXXXXXXX-YYYY.cloud.databricks.com",
 		assertAuth: "databricks-cli",
 	}.apply(t)
 }

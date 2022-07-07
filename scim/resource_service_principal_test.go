@@ -6,9 +6,9 @@ import (
 	"os"
 	"testing"
 
-	"github.com/databrickslabs/terraform-provider-databricks/common"
+	"github.com/databricks/terraform-provider-databricks/common"
 
-	"github.com/databrickslabs/terraform-provider-databricks/qa"
+	"github.com/databricks/terraform-provider-databricks/qa"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -17,7 +17,7 @@ func TestAccServicePrincipalOnAzure(t *testing.T) {
 	if cloud, ok := os.LookupEnv("CLOUD_ENV"); !ok || cloud != "azure" {
 		t.Skip("Test will only run with CLOUD_ENV=azure")
 	}
-
+	t.Parallel()
 	client := common.NewClientFromEnvironment()
 	ctx := context.Background()
 
@@ -284,7 +284,7 @@ func TestResourceServicePrincipalUpdateOnAWS(t *testing.T) {
 	})
 }
 
-// https://github.com/databrickslabs/terraform-provider-databricks/issues/1319
+// https://github.com/databricks/terraform-provider-databricks/issues/1319
 func TestResourceServicePrincipalUpdateOnAzure(t *testing.T) {
 	qa.ResourceFixture{
 		Azure: true,

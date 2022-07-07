@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"net/url"
 	"os"
 	"reflect"
 	"strings"
@@ -237,6 +238,11 @@ func (c *DatabricksClient) Authenticate(ctx context.Context) error {
 	if c.authVisitor != nil {
 		return nil
 	}
+	// Fix host prior to auth, because it may be used in the OIDC flow as "audience" field.
+	// If necessary, this function adds a scheme and strips a trailing slash.
+	if err := c.fixHost(); err != nil {
+		return err
+	}
 	type auth struct {
 		configure func(context.Context) (func(*http.Request) error, error)
 		name      string
@@ -322,16 +328,38 @@ func (c *DatabricksClient) niceAuthError(message string) error {
 	}
 	info = strings.TrimSuffix(info, ".")
 	message = strings.TrimSuffix(message, ".")
-	docUrl := "https://registry.terraform.io/providers/databrickslabs/databricks/latest/docs#authentication"
+	docUrl := "https://registry.terraform.io/providers/databricks/databricks/latest/docs#authentication"
 	return fmt.Errorf("%s%s. Please check %s for details", message, info, docUrl)
 }
 
-func (c *DatabricksClient) fixHost() {
-	if c.Host != "" && !(strings.HasPrefix(c.Host, "https://") || strings.HasPrefix(c.Host, "http://")) {
-		// azurerm_databricks_workspace.*.workspace_url is giving URL without scheme
-		// so that is why this line is here
-		c.Host = "https://" + c.Host
+func (c *DatabricksClient) fixHost() error {
+	// Nothing to fix if the host isn't set.
+	if c.Host == "" {
+		return nil
 	}
+
+	u, err := url.Parse(c.Host)
+	if err != nil {
+		return err
+	}
+
+	// If the host is empty, assume the scheme wasn't included.
+	if u.Host == "" {
+		u, err = url.Parse("https://" + c.Host)
+		if err != nil {
+			return err
+		}
+	}
+
+	// Create new instance to ensure other fields are initialized as empty.
+	u = &url.URL{
+		Scheme: u.Scheme,
+		Host:   u.Host,
+	}
+
+	// Store sanitized version of c.Host.
+	c.Host = u.String()
+	return nil
 }
 
 func (c *DatabricksClient) configureWithPat(ctx context.Context) (func(*http.Request) error, error) {

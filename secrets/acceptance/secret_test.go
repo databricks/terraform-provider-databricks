@@ -5,11 +5,11 @@ import (
 	"os"
 	"testing"
 
-	"github.com/databrickslabs/terraform-provider-databricks/qa"
-	"github.com/databrickslabs/terraform-provider-databricks/secrets"
+	"github.com/databricks/terraform-provider-databricks/qa"
+	"github.com/databricks/terraform-provider-databricks/secrets"
 
-	"github.com/databrickslabs/terraform-provider-databricks/common"
-	"github.com/databrickslabs/terraform-provider-databricks/internal/acceptance"
+	"github.com/databricks/terraform-provider-databricks/common"
+	"github.com/databricks/terraform-provider-databricks/internal/acceptance"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/stretchr/testify/assert"
@@ -19,6 +19,7 @@ func TestAccSecretResource(t *testing.T) {
 	if _, ok := os.LookupEnv("CLOUD_ENV"); !ok {
 		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
 	}
+	t.Parallel()
 	config := acceptance.EnvironmentTemplate(t, `
 	resource "databricks_secret_scope" "this" {
 		name = "tf-scope-{var.RANDOM}"

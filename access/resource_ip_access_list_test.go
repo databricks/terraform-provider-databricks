@@ -8,8 +8,8 @@ import (
 	"os"
 	"testing"
 
-	"github.com/databrickslabs/terraform-provider-databricks/common"
-	"github.com/databrickslabs/terraform-provider-databricks/qa"
+	"github.com/databricks/terraform-provider-databricks/common"
+	"github.com/databricks/terraform-provider-databricks/qa"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -30,6 +30,7 @@ func TestAccIPACL(t *testing.T) {
 	if cloud == "" {
 		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
 	}
+	t.Parallel()
 	client := common.NewClientFromEnvironment()
 	ctx := context.Background()
 	ipAccessListsAPI := NewIPAccessListsAPI(ctx, client)

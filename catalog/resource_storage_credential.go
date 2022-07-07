@@ -3,7 +3,7 @@ package catalog
 import (
 	"context"
 
-	"github.com/databrickslabs/terraform-provider-databricks/common"
+	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -49,7 +49,7 @@ func ResourceStorageCredential() *schema.Resource {
 			return m
 		})
 	update := updateFunctionFactory("/unity-catalog/storage-credentials", []string{
-		"owner", "comment", "aws_iam_role", "azure_service_principal"})
+		"owner", "comment", "aws_iam_role", "azure_service_principal", "azure_managed_identity"})
 	return common.Resource{
 		Schema: s,
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {

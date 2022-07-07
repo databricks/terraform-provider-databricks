@@ -168,7 +168,7 @@ func TestDatabricksClient_Authenticate(t *testing.T) {
 		"Please add `depends_on = [databricks_mws_workspaces.this]` or `depends_on = [azurerm_databricks"+
 		"_workspace.this]` to every data resource. See https://www.terraform.io/docs/language/resources/behavior.html more info. "+
 		"Attributes used: account_id, username. Environment variables used: DATABRICKS_PASSWORD. "+
-		"Please check https://registry.terraform.io/providers/databrickslabs/databricks/latest/docs#authentication for details")
+		"Please check https://registry.terraform.io/providers/databricks/databricks/latest/docs#authentication for details")
 }
 
 func TestDatabricksClient_AuthenticateAzure(t *testing.T) {
@@ -183,7 +183,7 @@ func TestDatabricksClient_AuthenticateAzure(t *testing.T) {
 		"Please add `depends_on = [databricks_mws_workspaces.this]` or `depends_on = [azurerm_databricks"+
 		"_workspace.this]` to every data resource. See https://www.terraform.io/docs/language/resources/"+
 		"behavior.html more info. Environment variables used: ARM_CLIENT_SECRET, ARM_CLIENT_ID. "+
-		"Please check https://registry.terraform.io/providers/databrickslabs/databricks/latest/docs#authentication for details")
+		"Please check https://registry.terraform.io/providers/databricks/databricks/latest/docs#authentication for details")
 }
 
 func TestDatabricksIsGcp(t *testing.T) {
@@ -296,4 +296,50 @@ func TestConfigAttributeSetNonsense(t *testing.T) {
 		Kind: reflect.Chan,
 	}).Set(&DatabricksClient{}, 1)
 	assert.EqualError(t, err, "cannot set  of unknown type Chan")
+}
+
+func TestDatabricksClientFixHost(t *testing.T) {
+	hostForInput := func(in string) (string, error) {
+		client := &DatabricksClient{
+			Host: in,
+		}
+		if err := client.fixHost(); err != nil {
+			return "", err
+		}
+		return client.Host, nil
+	}
+
+	{
+		// Strip trailing slash.
+		out, err := hostForInput("https://accounts.gcp.databricks.com/")
+		assert.Nil(t, err)
+		assert.Equal(t, out, "https://accounts.gcp.databricks.com")
+	}
+
+	{
+		// Keep port.
+		out, err := hostForInput("https://accounts.gcp.databricks.com:443")
+		assert.Nil(t, err)
+		assert.Equal(t, out, "https://accounts.gcp.databricks.com:443")
+	}
+
+	{
+		// Default scheme.
+		out, err := hostForInput("accounts.gcp.databricks.com")
+		assert.Nil(t, err)
+		assert.Equal(t, out, "https://accounts.gcp.databricks.com")
+	}
+
+	{
+		// Default scheme with port.
+		out, err := hostForInput("accounts.gcp.databricks.com:443")
+		assert.Nil(t, err)
+		assert.Equal(t, out, "https://accounts.gcp.databricks.com:443")
+	}
+
+	{
+		// Return error.
+		_, err := hostForInput("://@@@accounts.gcp.databricks.com/")
+		assert.NotNil(t, err)
+	}
 }

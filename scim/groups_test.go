@@ -5,8 +5,8 @@ import (
 	"os"
 	"testing"
 
-	"github.com/databrickslabs/terraform-provider-databricks/common"
-	"github.com/databrickslabs/terraform-provider-databricks/qa"
+	"github.com/databricks/terraform-provider-databricks/common"
+	"github.com/databricks/terraform-provider-databricks/qa"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -16,6 +16,7 @@ func TestAccGroup(t *testing.T) {
 	if _, ok := os.LookupEnv("CLOUD_ENV"); !ok {
 		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
 	}
+	t.Parallel()
 	client := common.NewClientFromEnvironment()
 
 	ctx := context.Background()
@@ -65,6 +66,7 @@ func TestAccFilterGroup(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping integration test in short mode.")
 	}
+	t.Parallel()
 	client := common.NewClientFromEnvironment()
 	ctx := context.Background()
 	groupsAPI := NewGroupsAPI(ctx, client)

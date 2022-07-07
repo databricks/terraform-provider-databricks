@@ -7,8 +7,8 @@ import (
 	"testing"
 
 	"github.com/Azure/go-autorest/autorest/azure"
-	"github.com/databrickslabs/terraform-provider-databricks/common"
-	"github.com/databrickslabs/terraform-provider-databricks/qa"
+	"github.com/databricks/terraform-provider-databricks/common"
+	"github.com/databricks/terraform-provider-databricks/qa"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

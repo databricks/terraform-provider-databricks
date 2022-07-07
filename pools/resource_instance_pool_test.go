@@ -5,14 +5,15 @@ import (
 	"os"
 	"testing"
 
-	"github.com/databrickslabs/terraform-provider-databricks/clusters"
-	"github.com/databrickslabs/terraform-provider-databricks/common"
+	"github.com/databricks/terraform-provider-databricks/clusters"
+	"github.com/databricks/terraform-provider-databricks/common"
 
-	"github.com/databrickslabs/terraform-provider-databricks/qa"
+	"github.com/databricks/terraform-provider-databricks/qa"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestAccInstancePools(t *testing.T) {
+	t.Parallel()
 	cloud := os.Getenv("CLOUD_ENV")
 	if cloud == "" {
 		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
@@ -55,8 +56,6 @@ func TestAccInstancePools(t *testing.T) {
 	assert.NoError(t, err, err)
 	assert.Equal(t, poolInfo.InstancePoolID, poolReadInfo.InstancePoolID)
 	assert.Equal(t, pool.InstancePoolName, poolReadInfo.InstancePoolName)
-	assert.Equal(t, pool.MinIdleInstances, poolReadInfo.MinIdleInstances)
-	assert.Equal(t, pool.MaxCapacity, poolReadInfo.MaxCapacity)
 	assert.Equal(t, pool.NodeTypeID, poolReadInfo.NodeTypeID)
 	assert.Equal(t, pool.IdleInstanceAutoTerminationMinutes, poolReadInfo.IdleInstanceAutoTerminationMinutes)
 

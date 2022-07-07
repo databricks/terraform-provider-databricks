@@ -64,6 +64,7 @@
 | [databricks_secret_acl](docs/resources/secret_acl.md)
 | [databricks_secret_scope](docs/resources/secret_scope.md)
 | [databricks_service_principal](docs/resources/service_principal.md)
+| [databricks_service_principals](docs/data-sources/service_principals.md) data
 | [databricks_service_principal_role](docs/resources/service_principal_role.md)
 | [databricks_spark_version](docs/data-sources/spark_version.md) data
 | [databricks_sql_dashboard](docs/resources/sql_dashboard.md)
@@ -94,7 +95,7 @@ terraform {
   required_providers {
     databricks = {
       source  = "databricks/databricks"
-      version = "1.0.0"
+      version = "1.0.1"
     }
   }
 }

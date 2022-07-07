@@ -3,8 +3,8 @@ package sql
 import (
 	"testing"
 
-	"github.com/databrickslabs/terraform-provider-databricks/qa"
-	"github.com/databrickslabs/terraform-provider-databricks/sql/api"
+	"github.com/databricks/terraform-provider-databricks/qa"
+	"github.com/databricks/terraform-provider-databricks/sql/api"
 	"github.com/stretchr/testify/assert"
 )
 

@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/databrickslabs/terraform-provider-databricks/common"
-	"github.com/databrickslabs/terraform-provider-databricks/scim"
+	"github.com/databricks/terraform-provider-databricks/common"
+	"github.com/databricks/terraform-provider-databricks/scim"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )

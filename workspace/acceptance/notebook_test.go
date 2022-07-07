@@ -3,10 +3,11 @@ package acceptance
 import (
 	"testing"
 
-	"github.com/databrickslabs/terraform-provider-databricks/internal/acceptance"
+	"github.com/databricks/terraform-provider-databricks/internal/acceptance"
 )
 
 func TestAccNotebookResourceScalability(t *testing.T) {
+	t.Parallel()
 	acceptance.Test(t, []acceptance.Step{
 		{
 			Template: `resource "databricks_notebook" "this" {

@@ -378,7 +378,7 @@ func TestGetJWTProperty_Authenticate_Fail(t *testing.T) {
 		"Invoking Azure CLI failed with the following error: "+
 		"This is just a failing script.\n. "+
 		"Please check https://registry.terraform.io/providers/"+
-		"databrickslabs/databricks/latest/docs#authentication for details")
+		"databricks/databricks/latest/docs#authentication for details")
 }
 
 func TestGetJWTProperty_makeGetRequest_Fail(t *testing.T) {

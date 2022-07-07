@@ -56,6 +56,36 @@ type PipelineTask struct {
 	PipelineID string `json:"pipeline_id"`
 }
 
+type sqlQuery struct {
+	QueryID string `json:"query_id"`
+}
+
+type sqlDashboard struct {
+	DashboardID string `json:"dashboard_id"`
+}
+
+type sqlAlert struct {
+	AlertID string `json:"alert_id"`
+}
+
+// SqlTask contains information about DBSQL task
+// TODO: add validation & conflictsWith
+type SqlTask struct {
+	Query       *sqlQuery         `json:"query,omitempty"`
+	Dashboard   *sqlDashboard     `json:"dashboard,omitempty"`
+	Alert       *sqlAlert         `json:"alert,omitempty"`
+	WarehouseID string            `json:"warehouse_id,omitempty"`
+	Parameters  map[string]string `json:"parameters,omitempty"`
+}
+
+// DbtTask contains information about DBT task
+// TODO: add validation for non-empty commands
+type DbtTask struct {
+	ProjectDirectory string   `json:"project_directory,omitempty"`
+	Commands         []string `json:"commands"`
+	Schema           string   `json:"schema,omitempty" tf:"default:default"`
+}
+
 // EmailNotifications contains the information for email notifications after job completion
 type EmailNotifications struct {
 	OnStart               []string `json:"on_start,omitempty"`
@@ -102,6 +132,8 @@ type JobTaskSettings struct {
 	SparkSubmitTask        *SparkSubmitTask    `json:"spark_submit_task,omitempty" tf:"group:task_type"`
 	PipelineTask           *PipelineTask       `json:"pipeline_task,omitempty" tf:"group:task_type"`
 	PythonWheelTask        *PythonWheelTask    `json:"python_wheel_task,omitempty" tf:"group:task_type"`
+	SqlTask                *SqlTask            `json:"sql_task,omitempty" tf:"group:task_type"`
+	DbtTask                *DbtTask            `json:"dbt_task,omitempty" tf:"group:task_type"`
 	EmailNotifications     *EmailNotifications `json:"email_notifications,omitempty" tf:"suppress_diff"`
 	TimeoutSeconds         int32               `json:"timeout_seconds,omitempty"`
 	MaxRetries             int32               `json:"max_retries,omitempty"`

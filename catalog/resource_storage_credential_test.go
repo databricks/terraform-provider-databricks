@@ -3,7 +3,7 @@ package catalog
 import (
 	"testing"
 
-	"github.com/databrickslabs/terraform-provider-databricks/qa"
+	"github.com/databricks/terraform-provider-databricks/qa"
 )
 
 func TestStorageCredentialsCornerCases(t *testing.T) {
@@ -15,7 +15,7 @@ func TestCreateStorageCredentials(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "POST",
-				Resource: "/api/2.0/unity-catalog/storage-credentials",
+				Resource: "/api/2.1/unity-catalog/storage-credentials",
 				ExpectedRequest: StorageCredentialInfo{
 					Name: "a",
 					Aws: &AwsIamRole{
@@ -29,7 +29,7 @@ func TestCreateStorageCredentials(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/unity-catalog/storage-credentials/a",
+				Resource: "/api/2.1/unity-catalog/storage-credentials/a",
 				Response: StorageCredentialInfo{
 					Name: "a",
 					Aws: &AwsIamRole{
@@ -56,7 +56,7 @@ func TestCreateStorageCredentialWithOwner(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "POST",
-				Resource: "/api/2.0/unity-catalog/storage-credentials",
+				Resource: "/api/2.1/unity-catalog/storage-credentials",
 				ExpectedRequest: StorageCredentialInfo{
 					Name: "a",
 					Aws: &AwsIamRole{
@@ -67,14 +67,14 @@ func TestCreateStorageCredentialWithOwner(t *testing.T) {
 			},
 			{
 				Method:   "PATCH",
-				Resource: "/api/2.0/unity-catalog/storage-credentials/a",
+				Resource: "/api/2.1/unity-catalog/storage-credentials/a",
 				ExpectedRequest: map[string]interface{}{
 					"owner": "administrators",
 				},
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/unity-catalog/storage-credentials/a",
+				Resource: "/api/2.1/unity-catalog/storage-credentials/a",
 				Response: StorageCredentialInfo{
 					Name: "a",
 					Aws: &AwsIamRole{
@@ -102,7 +102,7 @@ func TestUpdateStorageCredentials(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "PATCH",
-				Resource: "/api/2.0/unity-catalog/storage-credentials/a",
+				Resource: "/api/2.1/unity-catalog/storage-credentials/a",
 				ExpectedRequest: map[string]interface{}{
 					"aws_iam_role": []interface{}{map[string]interface{}{
 						"role_arn": "CHANGED",
@@ -111,7 +111,7 @@ func TestUpdateStorageCredentials(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/unity-catalog/storage-credentials/a",
+				Resource: "/api/2.1/unity-catalog/storage-credentials/a",
 				Response: StorageCredentialInfo{
 					Name: "a",
 					Aws: &AwsIamRole{
@@ -143,7 +143,7 @@ func TestCreateStorageCredentialWithAzMI(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "POST",
-				Resource: "/api/2.0/unity-catalog/storage-credentials",
+				Resource: "/api/2.1/unity-catalog/storage-credentials",
 				ExpectedRequest: StorageCredentialInfo{
 					Name: "a",
 					AzMI: &AzureManagedIdentity{
@@ -157,7 +157,7 @@ func TestCreateStorageCredentialWithAzMI(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/unity-catalog/storage-credentials/a",
+				Resource: "/api/2.1/unity-catalog/storage-credentials/a",
 				Response: StorageCredentialInfo{
 					Name: "a",
 					AzMI: &AzureManagedIdentity{

@@ -3,7 +3,7 @@ package catalog
 import (
 	"testing"
 
-	"github.com/databrickslabs/terraform-provider-databricks/qa"
+	"github.com/databricks/terraform-provider-databricks/qa"
 )
 
 func TestDacCornerCases(t *testing.T) {
@@ -16,7 +16,7 @@ func TestCreateDac(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "POST",
-				Resource: "/api/2.0/unity-catalog/metastores/abc/data-access-configurations",
+				Resource: "/api/2.1/unity-catalog/metastores/abc/data-access-configurations",
 				ExpectedRequest: DataAccessConfiguration{
 					Name: "bcd",
 					Aws: &AwsIamRole{
@@ -29,14 +29,14 @@ func TestCreateDac(t *testing.T) {
 			},
 			{
 				Method:   "PATCH",
-				Resource: "/api/2.0/unity-catalog/metastores/abc",
+				Resource: "/api/2.1/unity-catalog/metastores/abc",
 				ExpectedRequest: map[string]interface{}{
 					"default_data_access_config_id": "efg",
 				},
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/unity-catalog/metastores/abc/data-access-configurations/efg",
+				Resource: "/api/2.1/unity-catalog/metastores/abc/data-access-configurations/efg",
 				Response: DataAccessConfiguration{
 					Name: "bcd",
 					Aws: &AwsIamRole{
@@ -46,7 +46,7 @@ func TestCreateDac(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/unity-catalog/metastores/abc",
+				Resource: "/api/2.1/unity-catalog/metastores/abc",
 				Response: MetastoreInfo{
 					DefaultDacID: "efg",
 				},
@@ -70,7 +70,7 @@ func TestCreateDacWithAzMI(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "POST",
-				Resource: "/api/2.0/unity-catalog/metastores/abc/data-access-configurations",
+				Resource: "/api/2.1/unity-catalog/metastores/abc/data-access-configurations",
 				ExpectedRequest: DataAccessConfiguration{
 					Name: "bcd",
 					AzMI: &AzureManagedIdentity{
@@ -83,14 +83,14 @@ func TestCreateDacWithAzMI(t *testing.T) {
 			},
 			{
 				Method:   "PATCH",
-				Resource: "/api/2.0/unity-catalog/metastores/abc",
+				Resource: "/api/2.1/unity-catalog/metastores/abc",
 				ExpectedRequest: map[string]interface{}{
 					"default_data_access_config_id": "efg",
 				},
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/unity-catalog/metastores/abc/data-access-configurations/efg",
+				Resource: "/api/2.1/unity-catalog/metastores/abc/data-access-configurations/efg",
 				Response: DataAccessConfiguration{
 					Name: "bcd",
 					AzMI: &AzureManagedIdentity{
@@ -100,7 +100,7 @@ func TestCreateDacWithAzMI(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/unity-catalog/metastores/abc",
+				Resource: "/api/2.1/unity-catalog/metastores/abc",
 				Response: MetastoreInfo{
 					DefaultDacID: "efg",
 				},

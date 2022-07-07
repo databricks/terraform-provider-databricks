@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/databrickslabs/terraform-provider-databricks/common"
+	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -14,7 +14,7 @@ type DataAccessConfigurationsAPI struct {
 }
 
 func NewDataAccessConfigurationsAPI(ctx context.Context, m interface{}) DataAccessConfigurationsAPI {
-	return DataAccessConfigurationsAPI{m.(*common.DatabricksClient), ctx}
+	return DataAccessConfigurationsAPI{m.(*common.DatabricksClient), context.WithValue(ctx, common.Api, common.API_2_1)}
 }
 
 type AwsIamRole struct {

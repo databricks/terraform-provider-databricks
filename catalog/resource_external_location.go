@@ -4,7 +4,7 @@ import (
 	"context"
 	"net/url"
 
-	"github.com/databrickslabs/terraform-provider-databricks/common"
+	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -14,7 +14,7 @@ type ExternalLocationsAPI struct {
 }
 
 func NewExternalLocationsAPI(ctx context.Context, m interface{}) ExternalLocationsAPI {
-	return ExternalLocationsAPI{m.(*common.DatabricksClient), ctx}
+	return ExternalLocationsAPI{m.(*common.DatabricksClient), context.WithValue(ctx, common.Api, common.API_2_1)}
 }
 
 type ExternalLocationInfo struct {

@@ -9,8 +9,8 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/databrickslabs/terraform-provider-databricks/common"
-	"github.com/databrickslabs/terraform-provider-databricks/sql/api"
+	"github.com/databricks/terraform-provider-databricks/common"
+	"github.com/databricks/terraform-provider-databricks/sql/api"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 

@@ -3,7 +3,7 @@ package acceptance
 import (
 	"testing"
 
-	"github.com/databrickslabs/terraform-provider-databricks/internal/acceptance"
+	"github.com/databricks/terraform-provider-databricks/internal/acceptance"
 )
 
 func TestPreviewAccQuery(t *testing.T) {

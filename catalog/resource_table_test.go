@@ -3,7 +3,7 @@ package catalog
 import (
 	"testing"
 
-	"github.com/databrickslabs/terraform-provider-databricks/qa"
+	"github.com/databricks/terraform-provider-databricks/qa"
 )
 
 func TestTableCornerCases(t *testing.T) {
@@ -15,7 +15,7 @@ func TestTableCreate(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "POST",
-				Resource: "/api/2.0/unity-catalog/tables",
+				Resource: "/api/2.1/unity-catalog/tables",
 				ExpectedRequest: TableInfo{
 					StorageLocation:  "s3://ext-main/foo/bar",
 					Name:             "bar",
@@ -36,7 +36,7 @@ func TestTableCreate(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/unity-catalog/tables/main.foo.bar",
+				Resource: "/api/2.1/unity-catalog/tables/main.foo.bar",
 			},
 		},
 		Resource: ResourceTable(),
@@ -64,7 +64,7 @@ func TestTableCreateWithOwner(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "POST",
-				Resource: "/api/2.0/unity-catalog/tables",
+				Resource: "/api/2.1/unity-catalog/tables",
 				ExpectedRequest: TableInfo{
 					StorageLocation:  "s3://ext-main/foo/bar",
 					Name:             "bar",
@@ -86,7 +86,7 @@ func TestTableCreateWithOwner(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/unity-catalog/tables/main.foo.bar",
+				Resource: "/api/2.1/unity-catalog/tables/main.foo.bar",
 				Response: TableInfo{
 					StorageLocation:  "s3://ext-main/foo/bar",
 					Name:             "bar",
@@ -108,7 +108,7 @@ func TestTableCreateWithOwner(t *testing.T) {
 			},
 			{
 				Method:   "PATCH",
-				Resource: "/api/2.0/unity-catalog/tables/main.foo.bar",
+				Resource: "/api/2.1/unity-catalog/tables/main.foo.bar",
 				ExpectedRequest: map[string]interface{}{
 					"owner": "administrators",
 				},

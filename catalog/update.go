@@ -4,7 +4,7 @@ import (
 	"context"
 	"path"
 
-	"github.com/databrickslabs/terraform-provider-databricks/common"
+	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -43,6 +43,6 @@ func updateFunctionFactory(pathPrefix string, updatable []string) func(context.C
 		if len(patch) == 0 {
 			return nil
 		}
-		return c.Patch(ctx, path.Join(pathPrefix, d.Id()), patch)
+		return c.Patch(context.WithValue(ctx, common.Api, common.API_2_1), path.Join(pathPrefix, d.Id()), patch)
 	}
 }

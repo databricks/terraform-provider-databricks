@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/databrickslabs/terraform-provider-databricks/common"
+	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -14,7 +14,7 @@ type MetastoreAssignmentAPI struct {
 }
 
 func NewMetastoreAssignmentAPI(ctx context.Context, m interface{}) MetastoreAssignmentAPI {
-	return MetastoreAssignmentAPI{m.(*common.DatabricksClient), ctx}
+	return MetastoreAssignmentAPI{m.(*common.DatabricksClient), context.WithValue(ctx, common.Api, common.API_2_1)}
 }
 
 type MetastoreAssignment struct {

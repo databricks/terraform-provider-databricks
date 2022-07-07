@@ -3,7 +3,7 @@ package catalog
 import (
 	"testing"
 
-	"github.com/databrickslabs/terraform-provider-databricks/qa"
+	"github.com/databricks/terraform-provider-databricks/qa"
 )
 
 func TestExternalLocationCornerCases(t *testing.T) {
@@ -15,7 +15,7 @@ func TestCreateExternalLocation(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "POST",
-				Resource: "/api/2.0/unity-catalog/external-locations",
+				Resource: "/api/2.1/unity-catalog/external-locations",
 				ExpectedRequest: ExternalLocationInfo{
 					Name:           "abc",
 					URL:            "s3://foo/bar",
@@ -25,7 +25,7 @@ func TestCreateExternalLocation(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/unity-catalog/external-locations/abc",
+				Resource: "/api/2.1/unity-catalog/external-locations/abc",
 				Response: ExternalLocationInfo{
 					Owner:       "efg",
 					MetastoreID: "fgh",
@@ -48,7 +48,7 @@ func TestCreateExternalLocationWithOwner(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "POST",
-				Resource: "/api/2.0/unity-catalog/external-locations",
+				Resource: "/api/2.1/unity-catalog/external-locations",
 				ExpectedRequest: ExternalLocationInfo{
 					Name:           "abc",
 					URL:            "s3://foo/bar",
@@ -58,14 +58,14 @@ func TestCreateExternalLocationWithOwner(t *testing.T) {
 			},
 			{
 				Method:   "PATCH",
-				Resource: "/api/2.0/unity-catalog/external-locations/abc",
+				Resource: "/api/2.1/unity-catalog/external-locations/abc",
 				ExpectedRequest: map[string]interface{}{
 					"owner": "administrators",
 				},
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/unity-catalog/external-locations/abc",
+				Resource: "/api/2.1/unity-catalog/external-locations/abc",
 				Response: ExternalLocationInfo{
 					Owner:       "administrators",
 					MetastoreID: "fgh",
@@ -89,14 +89,14 @@ func TestUpdateExternalLocation(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "PATCH",
-				Resource: "/api/2.0/unity-catalog/external-locations/abc",
+				Resource: "/api/2.1/unity-catalog/external-locations/abc",
 				ExpectedRequest: map[string]interface{}{
 					"credential_name": "bcd",
 				},
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/unity-catalog/external-locations/abc",
+				Resource: "/api/2.1/unity-catalog/external-locations/abc",
 				Response: ExternalLocationInfo{
 					Name:           "abc",
 					URL:            "s3://foo/bar",

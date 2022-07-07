@@ -19,7 +19,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v1
         with:
-          go-version: 1.16.x
+          go-version: 1.18.x
 
       - name: Cache packages
         uses: actions/cache@v2
@@ -37,8 +37,8 @@ jobs:
         run: |
           echo "GOPATH=$(go env GOPATH)" >> $GITHUB_ENV
           echo "$(go env GOPATH)/bin" >> $GITHUB_PATH
-          go get gotest.tools/gotestsum
-          go install honnef.co/go/tools/cmd/staticcheck@v0.2.2
+          go install gotest.tools/gotestsum@latest
+          go install honnef.co/go/tools/cmd/staticcheck@v0.3.2
 
       - name: Pull external libraries
         run: make vendor

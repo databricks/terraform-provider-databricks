@@ -5,9 +5,9 @@ import (
 	"log"
 	"os"
 
-	"github.com/databrickslabs/terraform-provider-databricks/common"
-	"github.com/databrickslabs/terraform-provider-databricks/exporter"
-	"github.com/databrickslabs/terraform-provider-databricks/provider"
+	"github.com/databricks/terraform-provider-databricks/common"
+	"github.com/databricks/terraform-provider-databricks/exporter"
+	"github.com/databricks/terraform-provider-databricks/provider"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/plugin"
 )
 
@@ -32,7 +32,7 @@ func main() {
 
 Version %s
 
-https://registry.terraform.io/providers/databrickslabs/databricks/latest/docs
+https://registry.terraform.io/providers/databricks/databricks/latest/docs
 
 `, common.Version())
 	plugin.Serve(&plugin.ServeOpts{

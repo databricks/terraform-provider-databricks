@@ -5,7 +5,7 @@ import (
 	"log"
 	"strings"
 
-	"github.com/databrickslabs/terraform-provider-databricks/common"
+	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
@@ -16,7 +16,7 @@ type MetastoresAPI struct {
 }
 
 func NewMetastoresAPI(ctx context.Context, m interface{}) MetastoresAPI {
-	return MetastoresAPI{m.(*common.DatabricksClient), ctx}
+	return MetastoresAPI{m.(*common.DatabricksClient), context.WithValue(ctx, common.Api, common.API_2_1)}
 }
 
 type MetastoreInfo struct {

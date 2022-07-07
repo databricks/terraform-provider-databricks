@@ -9,12 +9,12 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/databrickslabs/terraform-provider-databricks/common"
-	"github.com/databrickslabs/terraform-provider-databricks/jobs"
-	"github.com/databrickslabs/terraform-provider-databricks/pipelines"
-	"github.com/databrickslabs/terraform-provider-databricks/scim"
+	"github.com/databricks/terraform-provider-databricks/common"
+	"github.com/databricks/terraform-provider-databricks/jobs"
+	"github.com/databricks/terraform-provider-databricks/pipelines"
+	"github.com/databricks/terraform-provider-databricks/scim"
 
-	"github.com/databrickslabs/terraform-provider-databricks/workspace"
+	"github.com/databricks/terraform-provider-databricks/workspace"
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -214,7 +214,7 @@ func (a PermissionsAPI) Delete(objectID string) error {
 func (a PermissionsAPI) Read(objectID string) (objectACL ObjectACL, err error) {
 	err = a.client.Get(a.context, urlPathForObjectID(objectID), nil, &objectACL)
 	apiErr, ok := err.(common.APIError)
-	// https://github.com/databrickslabs/terraform-provider-databricks/issues/1227
+	// https://github.com/databricks/terraform-provider-databricks/issues/1227
 	// platform propagates INVALID_STATE error for auto-purged clusters in
 	// the permissions api. this adds "a logical fix" also here, not to introduce
 	// cross-package dependency on "clusters".

@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/databrickslabs/terraform-provider-databricks/common"
-	"github.com/databrickslabs/terraform-provider-databricks/qa"
+	"github.com/databricks/terraform-provider-databricks/common"
+	"github.com/databricks/terraform-provider-databricks/qa"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -19,7 +19,7 @@ func TestCatalogCreateAlsoDeletesDefaultSchema(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "POST",
-				Resource: "/api/2.0/unity-catalog/catalogs",
+				Resource: "/api/2.1/unity-catalog/catalogs",
 				ExpectedRequest: CatalogInfo{
 					Name:    "a",
 					Comment: "b",
@@ -30,11 +30,11 @@ func TestCatalogCreateAlsoDeletesDefaultSchema(t *testing.T) {
 			},
 			{
 				Method:   "DELETE",
-				Resource: "/api/2.0/unity-catalog/schemas/a.default",
+				Resource: "/api/2.1/unity-catalog/schemas/a.default",
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/unity-catalog/catalogs/a",
+				Resource: "/api/2.1/unity-catalog/catalogs/a",
 				Response: CatalogInfo{
 					Name:    "a",
 					Comment: "b",
@@ -63,7 +63,7 @@ func TestCatalogCreateWithOwnerAlsoDeletesDefaultSchema(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "POST",
-				Resource: "/api/2.0/unity-catalog/catalogs",
+				Resource: "/api/2.1/unity-catalog/catalogs",
 				ExpectedRequest: CatalogInfo{
 					Name:    "a",
 					Comment: "b",
@@ -83,18 +83,18 @@ func TestCatalogCreateWithOwnerAlsoDeletesDefaultSchema(t *testing.T) {
 			},
 			{
 				Method:   "DELETE",
-				Resource: "/api/2.0/unity-catalog/schemas/a.default",
+				Resource: "/api/2.1/unity-catalog/schemas/a.default",
 			},
 			{
 				Method:   "PATCH",
-				Resource: "/api/2.0/unity-catalog/catalogs/a",
+				Resource: "/api/2.1/unity-catalog/catalogs/a",
 				ExpectedRequest: map[string]interface{}{
 					"owner": "administrators",
 				},
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/unity-catalog/catalogs/a",
+				Resource: "/api/2.1/unity-catalog/catalogs/a",
 				Response: CatalogInfo{
 					Name:    "a",
 					Comment: "b",
@@ -124,7 +124,7 @@ func TestCatalogCreateCannotDeleteDefaultSchema(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "POST",
-				Resource: "/api/2.0/unity-catalog/catalogs",
+				Resource: "/api/2.1/unity-catalog/catalogs",
 				ExpectedRequest: CatalogInfo{
 					Name:    "a",
 					Comment: "b",
@@ -135,7 +135,7 @@ func TestCatalogCreateCannotDeleteDefaultSchema(t *testing.T) {
 			},
 			{
 				Method:   "DELETE",
-				Resource: "/api/2.0/unity-catalog/schemas/a.default",
+				Resource: "/api/2.1/unity-catalog/schemas/a.default",
 				Status:   400,
 				Response: common.APIErrorBody{
 					ScimDetail: "Something",
@@ -162,14 +162,14 @@ func TestUpdateCatalog(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "PATCH",
-				Resource: "/api/2.0/unity-catalog/catalogs/a",
+				Resource: "/api/2.1/unity-catalog/catalogs/a",
 				ExpectedRequest: map[string]interface{}{
 					"owner": "administrators",
 				},
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/unity-catalog/catalogs/a",
+				Resource: "/api/2.1/unity-catalog/catalogs/a",
 				Response: CatalogInfo{
 					Name:        "a",
 					MetastoreID: "d",

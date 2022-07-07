@@ -6,9 +6,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/databrickslabs/terraform-provider-databricks/common"
+	"github.com/databricks/terraform-provider-databricks/common"
 
-	"github.com/databrickslabs/terraform-provider-databricks/qa"
+	"github.com/databricks/terraform-provider-databricks/qa"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -260,7 +260,7 @@ func TestAccCreateToken(t *testing.T) {
 	if _, ok := os.LookupEnv("CLOUD_ENV"); !ok {
 		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
 	}
-
+	t.Parallel()
 	client := common.NewClientFromEnvironment()
 	tokensAPI := NewTokensAPI(context.Background(), client)
 
@@ -289,7 +289,7 @@ func TestAccCreateToken_NoExpiration(t *testing.T) {
 	if _, ok := os.LookupEnv("CLOUD_ENV"); !ok {
 		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
 	}
-
+	t.Parallel()
 	client := common.NewClientFromEnvironment()
 	tokensAPI := NewTokensAPI(context.Background(), client)
 

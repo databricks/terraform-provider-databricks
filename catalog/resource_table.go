@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/databrickslabs/terraform-provider-databricks/common"
+	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -14,7 +14,7 @@ type TablesAPI struct {
 }
 
 func NewTablesAPI(ctx context.Context, m interface{}) TablesAPI {
-	return TablesAPI{m.(*common.DatabricksClient), ctx}
+	return TablesAPI{m.(*common.DatabricksClient), context.WithValue(ctx, common.Api, common.API_2_1)}
 }
 
 type ColumnInfo struct {

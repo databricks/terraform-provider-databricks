@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/databrickslabs/terraform-provider-databricks/common"
+	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -14,7 +14,7 @@ type CatalogsAPI struct {
 }
 
 func NewCatalogsAPI(ctx context.Context, m interface{}) CatalogsAPI {
-	return CatalogsAPI{m.(*common.DatabricksClient), ctx}
+	return CatalogsAPI{m.(*common.DatabricksClient), context.WithValue(ctx, common.Api, common.API_2_1)}
 }
 
 type CatalogInfo struct {

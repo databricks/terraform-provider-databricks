@@ -3,7 +3,7 @@ package catalog
 import (
 	"testing"
 
-	"github.com/databrickslabs/terraform-provider-databricks/qa"
+	"github.com/databricks/terraform-provider-databricks/qa"
 )
 
 func TestMetastoreCornerCases(t *testing.T) {
@@ -15,7 +15,7 @@ func TestCreateMetastore(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "POST",
-				Resource: "/api/2.0/unity-catalog/metastores",
+				Resource: "/api/2.1/unity-catalog/metastores",
 				ExpectedRequest: MetastoreInfo{
 					StorageRoot: "s3://b",
 					Name:        "a",
@@ -26,7 +26,7 @@ func TestCreateMetastore(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/unity-catalog/metastores/abc",
+				Resource: "/api/2.1/unity-catalog/metastores/abc",
 				Response: MetastoreInfo{
 					StorageRoot: "s3://b/abc",
 					Name:        "a",
@@ -47,7 +47,7 @@ func TestCreateMetastoreWithOwner(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "POST",
-				Resource: "/api/2.0/unity-catalog/metastores",
+				Resource: "/api/2.1/unity-catalog/metastores",
 				ExpectedRequest: MetastoreInfo{
 					StorageRoot: "s3://b",
 					Name:        "a",
@@ -58,14 +58,14 @@ func TestCreateMetastoreWithOwner(t *testing.T) {
 			},
 			{
 				Method:   "PATCH",
-				Resource: "/api/2.0/unity-catalog/metastores/abc",
+				Resource: "/api/2.1/unity-catalog/metastores/abc",
 				ExpectedRequest: map[string]interface{}{
 					"owner": "administrators",
 				},
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/unity-catalog/metastores/abc",
+				Resource: "/api/2.1/unity-catalog/metastores/abc",
 				Response: MetastoreInfo{
 					StorageRoot: "s3://b/abc",
 					Name:        "a",
@@ -88,7 +88,7 @@ func TestCreateMetastore_DeltaSharing(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "POST",
-				Resource: "/api/2.0/unity-catalog/metastores",
+				Resource: "/api/2.1/unity-catalog/metastores",
 				ExpectedRequest: MetastoreInfo{
 					StorageRoot: "s3://b",
 					Name:        "a",
@@ -99,7 +99,7 @@ func TestCreateMetastore_DeltaSharing(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/unity-catalog/metastores/abc",
+				Resource: "/api/2.1/unity-catalog/metastores/abc",
 				Response: MetastoreInfo{
 					StorageRoot: "s3://b/abc",
 					Name:        "a",
@@ -107,7 +107,7 @@ func TestCreateMetastore_DeltaSharing(t *testing.T) {
 			},
 			{
 				Method:   "PATCH",
-				Resource: "/api/2.0/unity-catalog/metastores/abc",
+				Resource: "/api/2.1/unity-catalog/metastores/abc",
 				ExpectedRequest: map[string]interface{}{
 					"owner":               "administrators",
 					"delta_sharing_scope": "INTERNAL_AND_EXTERNAL",
@@ -134,7 +134,7 @@ func TestDeleteMetastore(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "DELETE",
-				Resource: "/api/2.0/unity-catalog/metastores/abc",
+				Resource: "/api/2.1/unity-catalog/metastores/abc",
 				ExpectedRequest: map[string]bool{
 					"force": false,
 				},
@@ -155,7 +155,7 @@ func TestForceDeleteMetastore(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "DELETE",
-				Resource: "/api/2.0/unity-catalog/metastores/abc",
+				Resource: "/api/2.1/unity-catalog/metastores/abc",
 				ExpectedRequest: map[string]bool{
 					"force": true,
 				},
@@ -178,7 +178,7 @@ func TestUpdateMetastore_NoChanges(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/unity-catalog/metastores/abc",
+				Resource: "/api/2.1/unity-catalog/metastores/abc",
 				Response: MetastoreInfo{
 					StorageRoot: "s3://b/abc",
 					Name:        "a",
@@ -211,7 +211,7 @@ func TestUpdateMetastore_DeltaSharingScopeOnly(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "PATCH",
-				Resource: "/api/2.0/unity-catalog/metastores/abc",
+				Resource: "/api/2.1/unity-catalog/metastores/abc",
 				ExpectedRequest: map[string]interface{}{
 					"delta_sharing_scope":                               "INTERNAL_AND_EXTERNAL",
 					"delta_sharing_recipient_token_lifetime_in_seconds": 1002,
@@ -219,7 +219,7 @@ func TestUpdateMetastore_DeltaSharingScopeOnly(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/unity-catalog/metastores/abc",
+				Resource: "/api/2.1/unity-catalog/metastores/abc",
 				Response: MetastoreInfo{
 					StorageRoot: "s3://b/abc",
 					Name:        "a",

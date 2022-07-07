@@ -3,7 +3,7 @@ package catalog
 import (
 	"testing"
 
-	"github.com/databrickslabs/terraform-provider-databricks/qa"
+	"github.com/databricks/terraform-provider-databricks/qa"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -16,7 +16,7 @@ func TestGrantCreate(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/unity-catalog/permissions/table/foo.bar.baz",
+				Resource: "/api/2.1/unity-catalog/permissions/table/foo.bar.baz",
 				Response: PermissionsList{
 					Assignments: []PrivilegeAssignment{
 						{
@@ -32,7 +32,7 @@ func TestGrantCreate(t *testing.T) {
 			},
 			{
 				Method:   "PATCH",
-				Resource: "/api/2.0/unity-catalog/permissions/table/foo.bar.baz",
+				Resource: "/api/2.1/unity-catalog/permissions/table/foo.bar.baz",
 				ExpectedRequest: permissionsDiff{
 					Changes: []permissionsChange{
 						{
@@ -49,7 +49,7 @@ func TestGrantCreate(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/unity-catalog/permissions/table/foo.bar.baz",
+				Resource: "/api/2.1/unity-catalog/permissions/table/foo.bar.baz",
 				Response: PermissionsList{
 					Assignments: []PrivilegeAssignment{
 						{
@@ -77,14 +77,14 @@ func TestGrantUpdate(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/unity-catalog/permissions/table/foo.bar.baz",
+				Resource: "/api/2.1/unity-catalog/permissions/table/foo.bar.baz",
 				Response: PermissionsList{
 					Assignments: []PrivilegeAssignment{},
 				},
 			},
 			{
 				Method:   "PATCH",
-				Resource: "/api/2.0/unity-catalog/permissions/table/foo.bar.baz",
+				Resource: "/api/2.1/unity-catalog/permissions/table/foo.bar.baz",
 				ExpectedRequest: permissionsDiff{
 					Changes: []permissionsChange{
 						{
@@ -96,7 +96,7 @@ func TestGrantUpdate(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/unity-catalog/permissions/table/foo.bar.baz",
+				Resource: "/api/2.1/unity-catalog/permissions/table/foo.bar.baz",
 				Response: PermissionsList{
 					Assignments: []PrivilegeAssignment{
 						{

@@ -8,7 +8,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/databrickslabs/terraform-provider-databricks/common"
+	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
@@ -509,7 +509,7 @@ func (a ClustersAPI) Create(cluster Cluster) (info ClusterInfo, err error) {
 	}
 	info, err = a.waitForClusterStatus(ci.ClusterID, ClusterStateRunning)
 	if err != nil {
-		// https://github.com/databrickslabs/terraform-provider-databricks/issues/383
+		// https://github.com/databricks/terraform-provider-databricks/issues/383
 		log.Printf("[ERROR] Cleaning up created cluster, that failed to start: %s", err.Error())
 		deleteErr := a.PermanentDelete(ci.ClusterID)
 		if deleteErr != nil {
@@ -618,7 +618,7 @@ func wrapMissingClusterError(err error, id string) error {
 	if apiErr.IsMissing() {
 		return err
 	}
-	// https://github.com/databrickslabs/terraform-provider-databricks/issues/1177
+	// https://github.com/databricks/terraform-provider-databricks/issues/1177
 	// Aligned with Clusters Core team to keep behavior of these workarounds
 	// as is in the longer term, so that this keeps working.
 	if apiErr.ErrorCode == "INVALID_STATE" {
@@ -769,7 +769,7 @@ func (a ClustersAPI) List() ([]ClusterInfo, error) {
 
 // getOrCreateClusterMutex guards "mounting" cluster creation to prevent multiple
 // redundant instances created at the same name. Compute package private property.
-// https://github.com/databrickslabs/terraform-provider-databricks/issues/445
+// https://github.com/databricks/terraform-provider-databricks/issues/445
 var getOrCreateClusterMutex sync.Mutex
 
 // GetOrCreateRunningCluster creates an autoterminating cluster if it doesn't exist

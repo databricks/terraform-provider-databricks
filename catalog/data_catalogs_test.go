@@ -3,7 +3,7 @@ package catalog
 import (
 	"testing"
 
-	"github.com/databrickslabs/terraform-provider-databricks/qa"
+	"github.com/databricks/terraform-provider-databricks/qa"
 )
 
 func TestCatalogsData(t *testing.T) {
@@ -11,7 +11,7 @@ func TestCatalogsData(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/unity-catalog/catalogs",
+				Resource: "/api/2.1/unity-catalog/catalogs",
 				Response: Catalogs{
 					Catalogs: []CatalogInfo{
 						{

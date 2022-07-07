@@ -3,7 +3,7 @@ package catalog
 import (
 	"testing"
 
-	"github.com/databrickslabs/terraform-provider-databricks/qa"
+	"github.com/databricks/terraform-provider-databricks/qa"
 )
 
 func TestSchemaCornerCases(t *testing.T) {
@@ -15,7 +15,7 @@ func TestCreateSchema(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "POST",
-				Resource: "/api/2.0/unity-catalog/schemas",
+				Resource: "/api/2.1/unity-catalog/schemas",
 				ExpectedRequest: SchemaInfo{
 					Name:        "a",
 					CatalogName: "b",
@@ -28,7 +28,7 @@ func TestCreateSchema(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/unity-catalog/schemas/b.a",
+				Resource: "/api/2.1/unity-catalog/schemas/b.a",
 				Response: SchemaInfo{
 					MetastoreID: "d",
 					Comment:     "c",
@@ -51,7 +51,7 @@ func TestCreateSchemaWithOwner(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "POST",
-				Resource: "/api/2.0/unity-catalog/schemas",
+				Resource: "/api/2.1/unity-catalog/schemas",
 				ExpectedRequest: SchemaInfo{
 					Name:        "a",
 					CatalogName: "b",
@@ -66,14 +66,14 @@ func TestCreateSchemaWithOwner(t *testing.T) {
 			},
 			{
 				Method:   "PATCH",
-				Resource: "/api/2.0/unity-catalog/schemas/b.a",
+				Resource: "/api/2.1/unity-catalog/schemas/b.a",
 				ExpectedRequest: map[string]interface{}{
 					"owner": "administrators",
 				},
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/unity-catalog/schemas/b.a",
+				Resource: "/api/2.1/unity-catalog/schemas/b.a",
 				Response: SchemaInfo{
 					MetastoreID: "d",
 					Comment:     "c",
@@ -97,14 +97,14 @@ func TestUpdateSchema(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "PATCH",
-				Resource: "/api/2.0/unity-catalog/schemas/b.a",
+				Resource: "/api/2.1/unity-catalog/schemas/b.a",
 				ExpectedRequest: map[string]interface{}{
 					"owner": "administrators",
 				},
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/unity-catalog/schemas/b.a",
+				Resource: "/api/2.1/unity-catalog/schemas/b.a",
 				Response: SchemaInfo{
 					Name:        "a",
 					MetastoreID: "d",

@@ -1,4 +1,4 @@
-ARG VARIANT=1.16-bullseye
+ARG VARIANT=1.18-bullseye
 FROM mcr.microsoft.com/vscode/devcontainers/go:${VARIANT}
 
 ARG TERRAFORM_VERSION=1.0.0
@@ -37,6 +37,6 @@ RUN \
     # # --> Go symbols and outline for go to symbol support and test support 
     && go install github.com/acroca/go-symbols@v0.1.1 \
     # # --> Static checker
-    && go install honnef.co/go/tools/cmd/staticcheck@v0.2.2 \
+    && go install honnef.co/go/tools/cmd/staticcheck@v0.3.2 \
     # # --> TF formatter
     && go get github.com/katbyte/terrafmt

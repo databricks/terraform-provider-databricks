@@ -59,9 +59,9 @@ Make sure you have `$GOPATH/bin` in your `$PATH`:
 echo "export PATH=\$PATH:$(go env GOPATH)/bin" >> ~/.bash_profile
 ```
 
-Installing `staticcheck`:
+Installing `staticcheck` (the version that works with Go 1.18):
 ```bash
-go install honnef.co/go/tools/cmd/staticcheck
+go install honnef.co/go/tools/cmd/staticcheck@v0.3.2
 ```
 
 Installing `gotestsum`:

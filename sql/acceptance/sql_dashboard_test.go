@@ -6,7 +6,8 @@ import (
 	"github.com/databricks/terraform-provider-databricks/internal/acceptance"
 )
 
-func TestPreviewAccDashboard(t *testing.T) {
+func TestAccDashboard(t *testing.T) {
+	t.Parallel()
 	acceptance.Test(t, []acceptance.Step{
 		{
 			Template: `

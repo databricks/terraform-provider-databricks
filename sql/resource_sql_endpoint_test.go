@@ -14,10 +14,11 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestPreviewAccSQLEndpoints(t *testing.T) {
+func TestAccSQLEndpoints(t *testing.T) {
 	if _, ok := os.LookupEnv("CLOUD_ENV"); !ok {
 		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
 	}
+	t.Parallel()
 	ctx := context.Background()
 	client := common.NewClientFromEnvironment()
 	endpoitsAPI := NewSQLEndpointsAPI(ctx, client)

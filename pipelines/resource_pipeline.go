@@ -74,7 +74,7 @@ type pipelineSpec struct {
 	Target              string            `json:"target,omitempty"`
 	Photon              bool              `json:"photon,omitempty"`
 	Edition             string            `json:"edition,omitempty" tf:"suppress_diff,default:advanced"`
-	Channel             string            `json:"channel,omitempty" tf:"suppress_diff,default:current"`
+	Channel             string            `json:"channel,omitempty" tf:"suppress_diff,default:CURRENT"`
 }
 
 type createPipelineResponse struct {

@@ -6,7 +6,7 @@ import (
 	"github.com/databricks/terraform-provider-databricks/internal/acceptance"
 )
 
-func TestPreviewAccPipelineResource_CreatePipeline(t *testing.T) {
+func TestAccPipelineResource_CreatePipeline(t *testing.T) {
 	acceptance.Test(t, []acceptance.Step{
 		{
 			Template: `

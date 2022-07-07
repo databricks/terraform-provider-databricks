@@ -277,6 +277,7 @@ func (c *DatabricksClient) Authenticate(ctx context.Context) error {
 		log.Printf("[INFO] Configured %s auth: %s", auth.name, c.configDebugString()) // lgtm[go/clear-text-logging]
 		c.authVisitor = authorizer
 		c.AuthType = auth.name
+		c.fixHost()
 		return nil
 	}
 	if c.AuthType != "" {

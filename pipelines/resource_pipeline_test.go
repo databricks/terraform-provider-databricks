@@ -323,7 +323,7 @@ func TestResourcePipelineUpdate(t *testing.T) {
 		Filters: &filters{
 			Include: []string{"com.databricks.include"},
 		},
-		Channel: "current",
+		Channel: "CURRENT",
 		Edition: "advanced",
 	}
 	d, err := qa.ResourceFixture{
@@ -425,7 +425,7 @@ func TestResourcePipelineUpdate_FailsAfterUpdate(t *testing.T) {
 		Filters: &filters{
 			Include: []string{"com.databricks.include"},
 		},
-		Channel: "current",
+		Channel: "CURRENT",
 		Edition: "advanced",
 	}
 	d, err := qa.ResourceFixture{

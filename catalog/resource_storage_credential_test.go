@@ -104,9 +104,9 @@ func TestUpdateStorageCredentials(t *testing.T) {
 				Method:   "PATCH",
 				Resource: "/api/2.1/unity-catalog/storage-credentials/a",
 				ExpectedRequest: map[string]interface{}{
-					"aws_iam_role": []interface{}{map[string]interface{}{
+					"aws_iam_role": map[string]interface{}{
 						"role_arn": "CHANGED",
-					}},
+					},
 				},
 			},
 			{
@@ -173,6 +173,94 @@ func TestCreateStorageCredentialWithAzMI(t *testing.T) {
 		name = "a"
 		azure_managed_identity {
 			access_connector_id = "def"
+		}
+		comment = "c"
+		`,
+	}.ApplyNoError(t)
+}
+
+func TestUpdateAzStorageCredentials(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "PATCH",
+				Resource: "/api/2.1/unity-catalog/storage-credentials/a",
+				ExpectedRequest: map[string]interface{}{
+					"azure_service_principal": map[string]interface{}{
+						"directory_id":   "CHANGED",
+						"application_id": "CHANGED",
+						"client_secret":  "CHANGED",
+					},
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/unity-catalog/storage-credentials/a",
+				Response: StorageCredentialInfo{
+					Name: "a",
+					Azure: &AzureServicePrincipal{
+						DirectoryID:   "CHANGED",
+						ApplicationID: "CHANGED",
+						ClientSecret:  "CHANGED",
+					},
+					MetastoreID: "d",
+				},
+			},
+		},
+		Resource: ResourceStorageCredential(),
+		Update:   true,
+		ID:       "a",
+		InstanceState: map[string]string{
+			"name":    "a",
+			"comment": "c",
+		},
+		HCL: `
+		name = "a"
+		azure_service_principal {
+			directory_id   = "CHANGED"
+			application_id = "CHANGED"
+			client_secret  = "CHANGED"
+		}
+		comment = "c"
+		`,
+	}.ApplyNoError(t)
+}
+
+func TestUpdateAzStorageCredentialMI(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "PATCH",
+				Resource: "/api/2.1/unity-catalog/storage-credentials/a",
+				ExpectedRequest: map[string]interface{}{
+					"azure_managed_identity": map[string]interface{}{
+						"access_connector_id": "CHANGED",
+					},
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/unity-catalog/storage-credentials/a",
+				Response: StorageCredentialInfo{
+					Name: "a",
+					AzMI: &AzureManagedIdentity{
+						AccessConnectorID: "CHANGED",
+					},
+					MetastoreID: "d",
+				},
+			},
+		},
+		Resource: ResourceStorageCredential(),
+		Update:   true,
+		ID:       "a",
+		InstanceState: map[string]string{
+			"name":    "a",
+			"comment": "c",
+		},
+		HCL: `
+		name = "a"
+		azure_managed_identity {
+			access_connector_id = "CHANGED"
 		}
 		comment = "c"
 		`,

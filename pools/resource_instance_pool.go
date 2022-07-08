@@ -185,6 +185,19 @@ func ResourceInstancePool() *schema.Resource {
 				clusters.EbsVolumeTypeThroughputOptimizedHdd,
 			}, false)
 		}
+		if v, err := common.SchemaPath(s, "preloaded_docker_image", "url"); err == nil {
+			v.ForceNew = true
+		}
+		if v, err := common.SchemaPath(s, "preloaded_docker_image", "basic_auth"); err == nil {
+			v.ForceNew = true
+		}
+		if v, err := common.SchemaPath(s, "preloaded_docker_image", "basic_auth", "username"); err == nil {
+			v.ForceNew = true
+		}
+		if v, err := common.SchemaPath(s, "preloaded_docker_image", "basic_auth", "password"); err == nil {
+			v.ForceNew = true
+		}
+
 		return s
 	})
 	return common.Resource{

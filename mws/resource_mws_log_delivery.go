@@ -3,7 +3,6 @@ package mws
 import (
 	"context"
 	"fmt"
-	"log"
 
 	"github.com/databricks/terraform-provider-databricks/common"
 
@@ -18,16 +17,16 @@ type LogDelivery struct {
 
 // LogDeliveryConfiguration describes log delivery
 type LogDeliveryConfiguration struct {
-	AccountID              string  `json:"account_id"`
+	AccountID              string  `json:"account_id" tf:"force_new"`
 	ConfigID               string  `json:"config_id,omitempty" tf:"computed"`
-	CredentialsID          string  `json:"credentials_id"`
+	CredentialsID          string  `json:"credentials_id" tf:"force_new"`
 	StorageConfigurationID string  `json:"storage_configuration_id"`
-	WorkspaceIdsFilter     []int64 `json:"workspace_ids_filter,omitempty"`
+	WorkspaceIdsFilter     []int64 `json:"workspace_ids_filter,omitempty" tf:"force_new"`
 	ConfigName             string  `json:"config_name,omitempty"`
 	Status                 string  `json:"status,omitempty" tf:"computed"`
-	LogType                string  `json:"log_type"`
-	OutputFormat           string  `json:"output_format"`
-	DeliveryPathPrefix     string  `json:"delivery_path_prefix,omitempty"`
+	LogType                string  `json:"log_type" tf:"force_new"`
+	OutputFormat           string  `json:"output_format" tf:"force_new"`
+	DeliveryPathPrefix     string  `json:"delivery_path_prefix,omitempty" tf:"force_new"`
 	DeliveryStartTime      string  `json:"delivery_start_time,omitempty" tf:"computed,force_new"`
 }
 
@@ -59,10 +58,10 @@ func (a LogDeliveryAPI) Create(ldc LogDeliveryConfiguration) (string, error) {
 	return ld.LogDeliveryConfiguration.ConfigID, err
 }
 
-// Disable log delivery configuration - e.g. delete it
-func (a LogDeliveryAPI) Disable(accountID, configID string) error {
+// patch log delivery configuration - i.e. can only enable or disable it
+func (a LogDeliveryAPI) Patch(accountID, configID string, status string) error {
 	return a.client.Patch(a.context, fmt.Sprintf("/accounts/%s/log-delivery/%s", accountID, configID), map[string]string{
-		"status": "DISABLED",
+		"status": status,
 	})
 }
 
@@ -93,6 +92,15 @@ func ResourceMwsLogDelivery() *schema.Resource {
 			p.Pack(d)
 			return nil
 		},
+		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			var ldc LogDeliveryConfiguration
+			common.DataToStructPointer(d, s, &ldc)
+			err := NewLogDeliveryAPI(ctx, c).Patch(ldc.AccountID, ldc.ConfigID, ldc.Status)
+			if err != nil {
+				return err
+			}
+			return common.StructToData(ldc, s, d)
+		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			accountID, configID, err := p.Unpack(d)
 			if err != nil {
@@ -102,11 +110,6 @@ func ResourceMwsLogDelivery() *schema.Resource {
 			if err != nil {
 				return err
 			}
-			if ldc.Status == "DISABLED" {
-				log.Printf("[DEBUG] Log delivery configuration %s was disabled. Removing from state.", configID)
-				d.SetId("")
-				return nil
-			}
 			return common.StructToData(ldc, s, d)
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
@@ -114,7 +117,7 @@ func ResourceMwsLogDelivery() *schema.Resource {
 			if err != nil {
 				return err
 			}
-			return NewLogDeliveryAPI(ctx, c).Disable(accountID, configID)
+			return NewLogDeliveryAPI(ctx, c).Patch(accountID, configID, "DISABLED")
 		},
 	}.ToResource()
 }

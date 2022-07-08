@@ -241,14 +241,14 @@ type LogSyncStatus struct {
 
 // DockerBasicAuth contains the auth information when fetching containers
 type DockerBasicAuth struct {
-	Username string `json:"username" tf:"force_new"`
-	Password string `json:"password" tf:"force_new"`
+	Username string `json:"username"`
+	Password string `json:"password" tf:"sensitive"`
 }
 
 // DockerImage contains the image url and the auth for DCS
 type DockerImage struct {
-	URL       string           `json:"url" tf:"force_new"`
-	BasicAuth *DockerBasicAuth `json:"basic_auth,omitempty" tf:"force_new"`
+	URL       string           `json:"url"`
+	BasicAuth *DockerBasicAuth `json:"basic_auth,omitempty"`
 }
 
 // SortOrder - constants for API

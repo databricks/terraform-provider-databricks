@@ -69,10 +69,6 @@ func resourceClusterSchema() map[string]*schema.Schema {
 				return ss
 			})["library"]
 
-		p, err := common.SchemaPath(s, "docker_image", "basic_auth", "password")
-		if err == nil {
-			p.Sensitive = true
-		}
 		s["autotermination_minutes"].Default = 60
 		s["cluster_id"] = &schema.Schema{
 			Type:     schema.TypeString,

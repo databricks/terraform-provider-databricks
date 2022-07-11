@@ -71,7 +71,7 @@ func TestResourceSQLEndpointCreate(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "POST",
-				Resource: "/api/2.0/sql/endpoints",
+				Resource: "/api/2.0/sql/warehouses",
 				ExpectedRequest: SQLEndpoint{
 					Name:               "foo",
 					ClusterSize:        "Small",
@@ -88,7 +88,7 @@ func TestResourceSQLEndpointCreate(t *testing.T) {
 			},
 			{
 				Method:       "GET",
-				Resource:     "/api/2.0/sql/endpoints/abc",
+				Resource:     "/api/2.0/sql/warehouses/abc",
 				ReuseRequest: true,
 				Response: SQLEndpoint{
 					Name:           "foo",
@@ -118,7 +118,7 @@ func TestResourceSQLEndpointCreate_ErrorDisabled(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "POST",
-				Resource: "/api/2.0/sql/endpoints",
+				Resource: "/api/2.0/sql/warehouses",
 				Status:   404,
 				Response: common.APIError{
 					ErrorCode: "FEATURE_DISABLED",
@@ -140,7 +140,7 @@ func TestResourceSQLEndpointRead(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:       "GET",
-				Resource:     "/api/2.0/sql/endpoints/abc",
+				Resource:     "/api/2.0/sql/warehouses/abc",
 				ReuseRequest: true,
 				Response: SQLEndpoint{
 					Name:        "foo",
@@ -169,7 +169,7 @@ func TestResourceSQLEndpointUpdate(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "POST",
-				Resource: "/api/2.0/sql/endpoints/abc/edit",
+				Resource: "/api/2.0/sql/warehouses/abc/edit",
 				ExpectedRequest: SQLEndpoint{
 					ID:                 "abc",
 					Name:               "foo",
@@ -184,7 +184,7 @@ func TestResourceSQLEndpointUpdate(t *testing.T) {
 			},
 			{
 				Method:       "GET",
-				Resource:     "/api/2.0/sql/endpoints/abc",
+				Resource:     "/api/2.0/sql/warehouses/abc",
 				ReuseRequest: true,
 				Response: SQLEndpoint{
 					Name:        "foo",
@@ -213,7 +213,7 @@ func TestResourceSQLEndpointDelete(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "DELETE",
-				Resource: "/api/2.0/sql/endpoints/abc",
+				Resource: "/api/2.0/sql/warehouses/abc",
 			},
 		},
 		Resource: ResourceSqlEndpoint(),
@@ -232,7 +232,7 @@ func TestSQLEnpointAPI(t *testing.T) {
 	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
 		{
 			Method:   "GET",
-			Resource: "/api/2.0/sql/endpoints",
+			Resource: "/api/2.0/sql/warehouses",
 			Response: map[string]interface{}{
 				"endpoints": []SQLEndpoint{
 					{
@@ -244,31 +244,31 @@ func TestSQLEnpointAPI(t *testing.T) {
 		},
 		{
 			Method:   "POST",
-			Resource: "/api/2.0/sql/endpoints/failstart/start",
+			Resource: "/api/2.0/sql/warehouses/failstart/start",
 			Status:   404,
 			Response: common.NotFound("nope"),
 		},
 		{
 			Method:   "POST",
-			Resource: "/api/2.0/sql/endpoints/deleting/start",
+			Resource: "/api/2.0/sql/warehouses/deleting/start",
 		},
 		{
 			Method:   "GET",
-			Resource: "/api/2.0/sql/endpoints/deleting",
+			Resource: "/api/2.0/sql/warehouses/deleting",
 			Response: SQLEndpoint{
 				State: "STARTING",
 			},
 		},
 		{
 			Method:   "GET",
-			Resource: "/api/2.0/sql/endpoints/deleting",
+			Resource: "/api/2.0/sql/warehouses/deleting",
 			Response: SQLEndpoint{
 				State: "DELETED",
 			},
 		},
 		{
 			Method:   "GET",
-			Resource: "/api/2.0/sql/endpoints/cantwait",
+			Resource: "/api/2.0/sql/warehouses/cantwait",
 			Status:   500,
 			Response: common.APIError{
 				Message: "does not compute",
@@ -276,7 +276,7 @@ func TestSQLEnpointAPI(t *testing.T) {
 		},
 		{
 			Method:   "POST",
-			Resource: "/api/2.0/sql/endpoints/stopping/stop",
+			Resource: "/api/2.0/sql/warehouses/stopping/stop",
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		a := NewSQLEndpointsAPI(ctx, client)

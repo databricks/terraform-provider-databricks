@@ -203,7 +203,6 @@ var mapping = securableMapping{
 
 		// v1.0
 		"ALL_PRIVILEGES":        true,
-		"CREATE_MOUNT":          true,
 		"CREATE_EXTERNAL_TABLE": true,
 	},
 	"metastore": {

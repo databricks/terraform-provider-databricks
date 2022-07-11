@@ -347,6 +347,51 @@ func TestUpdateLogDelivery(t *testing.T) {
 	}.ApplyNoError(t)
 }
 
+func TestUpdateLogDeliveryError(t *testing.T) {
+	_, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "PATCH",
+				Resource: "/api/2.0/accounts/abc/log-delivery/nid",
+				Response: common.APIErrorBody{
+					ErrorCode: "INVALID_REQUEST",
+					Message:   "Internal error happened",
+				},
+				Status: 400,
+			},
+		},
+		Resource:    ResourceMwsLogDelivery(),
+		ID:          "abc|nid",
+		Update:      true,
+		RequiresNew: true,
+		InstanceState: map[string]string{
+			"account_id":               "abc",
+			"config_id":                "nid",
+			"config_name":              "Audit logs",
+			"credentials_id":           "bcd",
+			"delivery_path_prefix":     "/a/b",
+			"delivery_start_time":      "2020-10",
+			"id":                       "abc|nid",
+			"log_type":                 "AUDIT_LOGS",
+			"output_format":            "JSON",
+			"status":                   "DISABLED",
+			"storage_configuration_id": "def",
+		},
+		HCL: `
+		account_id = "abc"
+		credentials_id = "bcd"
+		storage_configuration_id = "def"
+		config_name = "Audit logs"
+		log_type = "AUDIT_LOGS"
+		output_format = "JSON"
+		delivery_path_prefix = "/a/b"
+		delivery_start_time = "2020-10"
+		status = "ENABLED"
+		`,
+	}.Apply(t)
+	qa.AssertErrorStartsWith(t, err, "Internal error happened")
+}
+
 func TestResourceLogDeliveryDelete(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{

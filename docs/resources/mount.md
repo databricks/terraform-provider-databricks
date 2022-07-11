@@ -206,7 +206,7 @@ resource "azurerm_storage_container" "this" {
 
 resource "databricks_mount" "marketing" {
   name        = "marketing"
-  resource_id = azurerm_storage_container.this.id
+  resource_id = azurerm_storage_container.this.resource_manager_id
   abfs {
     client_id              = data.azurerm_client_config.current.client_id
     client_secret_scope    = databricks_secret_scope.terraform.name

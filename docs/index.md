@@ -96,7 +96,7 @@ output "job_url" {
 }
 ```
 
-# Switching from `databrickslabs` to `databricks` namespace
+## Switching from `databrickslabs` to `databricks` namespace
 
 To make Databricks Terraform Provider generally available, we've moved it from [https://github.com/databrickslabs](https://github.com/databrickslabs) to [https://github.com/databricks](https://github.com/databricks). We've worked closely with the Terraform Registry team at Hashicorp to ensure a smooth migration. Existing terraform deployments continue to work as expected without any action from your side. We ask you to replace `databrickslabs/databricks` with `databricks/databricks` in all your `.tf` files. 
 
@@ -111,7 +111,7 @@ The remote registry returned warnings for registry.terraform.io/databrickslabs/d
 
 After you replace `databrickslabs/databricks` with `databricks/databricks` in the `required_providers` block, the warning will disappear. Do a global "search and replace" in `*.tf` files. Alternatively you can run `python3 -c "$(curl -Ls https://dbricks.co/updtfns)"` from the command-line, that would do all the boring work for you.
 
-If you didn't check-in [`.terraform.lock.hcl`](https://www.terraform.io/language/files/dependency-lock#lock-file-location) to the source code version control, you may you may see `Failed to install provider` error. Please follow the simple steps described in the [troubleshooting guide](guides/troubleshooting.md).
+If you didn't check-in [`.terraform.lock.hcl`](https://www.terraform.io/language/files/dependency-lock#lock-file-location) to the source code version control, you may see `Failed to install provider` error. Please follow the simple steps described in the [troubleshooting guide](guides/troubleshooting.md).
 
 ## Troubleshooting
 

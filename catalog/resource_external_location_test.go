@@ -1,6 +1,7 @@
 package catalog
 
 import (
+	"github.com/stretchr/testify/assert"
 	"testing"
 
 	"github.com/databricks/terraform-provider-databricks/qa"
@@ -121,4 +122,40 @@ func TestUpdateExternalLocation(t *testing.T) {
 		comment = "def"
 		`,
 	}.ApplyNoError(t)
+}
+
+func TestUpdateExternalLocation_skipValidationSuppressDiff(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/unity-catalog/external-locations/abc",
+				Response: ExternalLocationInfo{
+					Name:           "abc",
+					URL:            "s3://foo/bar",
+					CredentialName: "bcd",
+					Comment:        "def",
+				},
+			},
+		},
+		Resource: ResourceExternalLocation(),
+		Update:   true,
+		ID:       "abc",
+		InstanceState: map[string]string{
+			"name":            "abc",
+			"url":             "s3://foo/bar",
+			"credential_name": "abc",
+			"comment":         "def",
+			"skip_validation": "false",
+		},
+		HCL: `
+		name = "abc"
+		url = "s3://foo/bar"
+		credential_name = "abc"
+		comment = "def"
+		skip_validation = true
+		`,
+	}.Apply(t)
+	assert.NoError(t, err, err)
+	assert.False(t, d.HasChanges("skip_validation"))
 }

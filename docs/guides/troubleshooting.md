@@ -2,17 +2,6 @@
 page_title: "Troubleshooting Guide"
 ---
 
-* [How to troubleshoot your problem](#how-to-troubleshoot-your-problem)
-* [Typical problems](#typical-problems)
-   * [Data resources and Authentication is not configured errors](#data-resources-and-authentication-is-not-configured-errors)
-   * [Multiple Provider Configurations](#multiple-provider-configurations)
-   * [Error while installing: registry does not have a provider](#error-while-installing-registry-does-not-have-a-provider)
-   * [Error: Failed to install provider](#error-failed-to-install-provider)
-   * [Error: Failed to query available provider packages](#error-failed-to-query-available-provider-packages)
-   * [Error: Deployment name cannot be used until a deployment name prefix is defined](#error-deployment-name-cannot-be-used-until-a-deployment-name-prefix-is-defined)
-   * [Azure KeyVault cannot yet be configured for Service Principal authorization](#azure-keyvault-cannot-yet-be-configured-for-service-principal-authorization)
-
-
 # How to troubleshoot your problem
 
 If you have problems with code that uses Databricks Terraform provider, follow these steps to solve them:
@@ -43,7 +32,7 @@ The most common reason for technical difficulties might be related to missing `a
 
 ## Error while installing: registry does not have a provider
 
-```
+```sh
 Error while installing hashicorp/databricks: provider registry
 registry.terraform.io does not have a provider named
 registry.terraform.io/hashicorp/databricks
@@ -57,7 +46,7 @@ terraform {
   required_providers {
     databricks = {
       source  = "databricks/databricks"
-      version = "1.0.0"
+      version = "1.0.1"
     }
   }
 }
@@ -112,7 +101,7 @@ Alternatively, you can find the hashes of the last 30 provider versions in [`.te
 
 ## Error: Failed to query available provider packages
 
-see the same steps as in [Error: Failed to install provider](#error-failed-to-install-provider).
+See the same steps as in [Error: Failed to install provider](#error-failed-to-install-provider).
 
 
 ## Error: Deployment name cannot be used until a deployment name prefix is defined

@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"log"
 	"regexp"
+	"strconv"
 	"strings"
 	"time"
 
@@ -35,6 +36,7 @@ var (
 	s3Regex                 = regexp.MustCompile(`^(s3a?)://([^/]+)(/.*)?$`)
 	gsRegex                 = regexp.MustCompile(`^gs://([^/]+)(/.*)?$`)
 	globalWorkspaceConfName = "global_workspace_conf"
+	notebookPathToIdRegex   = regexp.MustCompile(`[^a-zA-Z0-9]+`)
 )
 
 type dbsqlListResponse struct {
@@ -893,6 +895,9 @@ var resourcesMap map[string]importable = map[string]importable{
 			name := d.Get("path").(string)
 			if name == "" {
 				return d.Id()
+			} else {
+				name = notebookPathToIdRegex.ReplaceAllString(name[1:], "_") + "_" +
+					strconv.FormatInt(int64(d.Get("object_id").(int)), 10)
 			}
 			return name
 		},

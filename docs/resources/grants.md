@@ -187,6 +187,10 @@ resource "databricks_grants" "some" {
 }
 ```
 
+## Metastore grants
+
+You can grant `CREATE_CATALOG`, `CREATE_EXTERNAL_LOCATION`, `CREATE_STORAGE_CREDENTIAL`, `CREATE_SHARE`, `CREATE_RECIPIENT`, and `CREATE_PROVIDER` privileges to [databricks_metastore](metastore.md) id specified in `metastore` attribute.
+
 ## Other access control
 
 You can control Databricks General Permissions through [databricks_permissions](permissions.md) resource.

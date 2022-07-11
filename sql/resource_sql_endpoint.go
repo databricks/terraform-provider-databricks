@@ -100,13 +100,13 @@ type SQLEndpointsAPI struct {
 
 // List all SQL endpoints
 func (a SQLEndpointsAPI) List() (lst EndpointList, err error) {
-	a.client.Get(a.context, "/sql/endpoints", nil, &lst)
+	a.client.Get(a.context, "/sql/warehouses", nil, &lst)
 	return
 }
 
 // Start ..
 func (a SQLEndpointsAPI) Start(endpointID string, timeout time.Duration) error {
-	err := a.client.Post(a.context, fmt.Sprintf("/sql/endpoints/%s/start", endpointID), nil, nil)
+	err := a.client.Post(a.context, fmt.Sprintf("/sql/warehouses/%s/start", endpointID), nil, nil)
 	if err != nil {
 		return err
 	}
@@ -115,12 +115,12 @@ func (a SQLEndpointsAPI) Start(endpointID string, timeout time.Duration) error {
 
 // Stop ...
 func (a SQLEndpointsAPI) Stop(endpointID string) error {
-	return a.client.Post(a.context, fmt.Sprintf("/sql/endpoints/%s/stop", endpointID), nil, nil)
+	return a.client.Post(a.context, fmt.Sprintf("/sql/warehouses/%s/stop", endpointID), nil, nil)
 }
 
 // Get ...
 func (a SQLEndpointsAPI) Get(endpointID string) (se SQLEndpoint, err error) {
-	err = a.client.Get(a.context, fmt.Sprintf("/sql/endpoints/%s", endpointID), nil, &se)
+	err = a.client.Get(a.context, fmt.Sprintf("/sql/warehouses/%s", endpointID), nil, &se)
 	// This is required because exporter will generate an empty tags block without actual tags and this breaks plan
 	if se.Tags != nil && len(se.Tags.CustomTags) == 0 {
 		se.Tags = nil
@@ -131,7 +131,7 @@ func (a SQLEndpointsAPI) Get(endpointID string) (se SQLEndpoint, err error) {
 // Create ...
 func (a SQLEndpointsAPI) Create(se *SQLEndpoint, timeout time.Duration) error {
 	// maybe response should be something else...
-	err := a.client.Post(a.context, "/sql/endpoints", se, se)
+	err := a.client.Post(a.context, "/sql/warehouses", se, se)
 	if err != nil {
 		return err
 	}
@@ -182,12 +182,12 @@ func (a SQLEndpointsAPI) waitForRunning(id string, timeout time.Duration) error 
 
 // Edit ...
 func (a SQLEndpointsAPI) Edit(se SQLEndpoint) error {
-	return a.client.Post(a.context, fmt.Sprintf("/sql/endpoints/%s/edit", se.ID), se, nil)
+	return a.client.Post(a.context, fmt.Sprintf("/sql/warehouses/%s/edit", se.ID), se, nil)
 }
 
 // Delete ...
 func (a SQLEndpointsAPI) Delete(endpointID string) error {
-	return a.client.Delete(a.context, fmt.Sprintf("/sql/endpoints/%s", endpointID),
+	return a.client.Delete(a.context, fmt.Sprintf("/sql/warehouses/%s", endpointID),
 		map[string]interface{}{})
 }
 

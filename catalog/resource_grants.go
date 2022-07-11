@@ -159,6 +159,9 @@ var mapping = securableMapping{
 	"table": {
 		"MODIFY": true,
 		"SELECT": true,
+
+		// v1.0
+		"ALL_PRIVILEGES": true,
 	},
 	"view": {
 		"SELECT": true,
@@ -166,20 +169,50 @@ var mapping = securableMapping{
 	"catalog": {
 		"CREATE": true,
 		"USAGE":  true,
+
+		// v1.0
+		"ALL_PRIVILEGES": true,
+		"USE_CATALOG":    true,
+		"CREATE_SCHEMA":  true,
 	},
 	"schema": {
 		"CREATE": true,
 		"USAGE":  true,
+
+		// v1.0
+		"ALL_PRIVILEGES":           true,
+		"USE_SCHEMA":               true,
+		"CREATE_TABLE":             true,
+		"CREATE_VIEW":              true,
+		"CREATE_FUNCTION":          true,
+		"CREATE_MATERIALIZED_VIEW": true,
 	},
 	"storage_credential": {
 		"CREATE_TABLE": true,
 		"READ_FILES":   true,
 		"WRITE_FILES":  true,
+
+		// v1.0
+		"ALL_PRIVILEGES":        true,
+		"CREATE_EXTERNAL_TABLE": true,
 	},
 	"external_location": {
 		"CREATE_TABLE": true,
 		"READ_FILES":   true,
 		"WRITE_FILES":  true,
+
+		// v1.0
+		"ALL_PRIVILEGES":        true,
+		"CREATE_EXTERNAL_TABLE": true,
+	},
+	"metastore": {
+		// v1.0
+		"CREATE_CATALOG":            true,
+		"CREATE_EXTERNAL_LOCATION":  true,
+		"CREATE_STORAGE_CREDENTIAL": true,
+		"CREATE_SHARE":              true,
+		"CREATE_RECIPIENT":          true,
+		"CREATE_PROVIDER":           true,
 	},
 }
 

@@ -18,11 +18,11 @@ type LogDelivery struct {
 // LogDeliveryConfiguration describes log delivery
 type LogDeliveryConfiguration struct {
 	AccountID              string  `json:"account_id" tf:"force_new"`
-	ConfigID               string  `json:"config_id,omitempty" tf:"computed"`
+	ConfigID               string  `json:"config_id,omitempty" tf:"computed,force_new"`
 	CredentialsID          string  `json:"credentials_id" tf:"force_new"`
-	StorageConfigurationID string  `json:"storage_configuration_id"`
+	StorageConfigurationID string  `json:"storage_configuration_id" tf:"force_new"`
 	WorkspaceIdsFilter     []int64 `json:"workspace_ids_filter,omitempty" tf:"force_new"`
-	ConfigName             string  `json:"config_name,omitempty"`
+	ConfigName             string  `json:"config_name,omitempty" tf:"force_new"`
 	Status                 string  `json:"status,omitempty" tf:"computed"`
 	LogType                string  `json:"log_type" tf:"force_new"`
 	OutputFormat           string  `json:"output_format" tf:"force_new"`

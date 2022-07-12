@@ -2,6 +2,9 @@ package catalog
 
 import (
 	"context"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"strings"
+	"time"
 
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -26,6 +29,8 @@ type StorageCredentialInfo struct {
 	MetastoreID string                 `json:"metastore_id,omitempty" tf:"computed"`
 }
 
+const IAMPropagationTimeout = 2 * time.Minute
+
 func (a StorageCredentialsAPI) create(sci *StorageCredentialInfo) error {
 	return a.client.Post(a.context, "/unity-catalog/storage-credentials", sci, &sci)
 }
@@ -48,15 +53,26 @@ func ResourceStorageCredential() *schema.Resource {
 			m["azure_managed_identity"].AtLeastOneOf = alof
 			return m
 		})
-	update := updateFunctionFactory("/unity-catalog/storage-credentials", []string{
-		"owner", "comment", "aws_iam_role", "azure_service_principal", "azure_managed_identity"})
+	update := func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+		err := waitIAMPropagation(ctx, c, func() error {
+			return updateFunctionFactory("/unity-catalog/storage-credentials", []string{
+				"owner", "comment", "aws_iam_role", "azure_service_principal", "azure_managed_identity"})(
+				ctx, d, c)
+		})
+		if err != nil {
+			return err
+		}
+		return nil
+	}
 	return common.Resource{
 		Schema: s,
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var sci StorageCredentialInfo
 			common.DataToStructPointer(d, s, &sci)
 			sci.Owner = ""
-			err := NewStorageCredentialsAPI(ctx, c).create(&sci)
+			err := waitIAMPropagation(ctx, c, func() error {
+				return NewStorageCredentialsAPI(ctx, c).create(&sci)
+			})
 			if err != nil {
 				return err
 			}
@@ -75,4 +91,18 @@ func ResourceStorageCredential() *schema.Resource {
 			return NewStorageCredentialsAPI(ctx, c).delete(d.Id())
 		},
 	}.ToResource()
+}
+
+func waitIAMPropagation(ctx context.Context, c *common.DatabricksClient, f func() error) error {
+	return resource.RetryContext(ctx, IAMPropagationTimeout,
+		func() *resource.RetryError {
+			cerr := f()
+			if e, ok := cerr.(common.APIError); ok && e.StatusCode == 403 && strings.Contains(cerr.Error(), "IAM role") {
+				return resource.RetryableError(cerr)
+			}
+			if cerr != nil {
+				return resource.NonRetryableError(cerr)
+			}
+			return nil
+		})
 }

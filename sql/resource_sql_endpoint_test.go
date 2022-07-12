@@ -113,6 +113,54 @@ func TestResourceSQLEndpointCreate(t *testing.T) {
 	assert.Equal(t, "d7c9d05c-7496-4c69-b089-48823edad40c", d.Get("data_source_id"))
 }
 
+func TestResourceSQLEndpointCreateNoAutoTermination(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/sql/warehouses",
+				ExpectedRequest: SQLEndpoint{
+					Name:               "foo",
+					ClusterSize:        "Small",
+					MaxNumClusters:     1,
+					AutoStopMinutes:    0,
+					MinNumClusters:     1,
+					NumClusters:        1,
+					EnablePhoton:       true,
+					SpotInstancePolicy: "COST_OPTIMIZED",
+				},
+				Response: SQLEndpoint{
+					ID: "abc",
+				},
+			},
+			{
+				Method:       "GET",
+				Resource:     "/api/2.0/sql/warehouses/abc",
+				ReuseRequest: true,
+				Response: SQLEndpoint{
+					Name:           "foo",
+					ClusterSize:    "Small",
+					ID:             "abc",
+					State:          "RUNNING",
+					Tags:           &Tags{},
+					MaxNumClusters: 1,
+				},
+			},
+			dataSourceListHTTPFixture,
+		},
+		Resource: ResourceSqlEndpoint(),
+		Create:   true,
+		HCL: `
+		name = "foo"
+  		cluster_size = "Small"
+		auto_stop_mins = 0
+		`,
+	}.Apply(t)
+	require.NoError(t, err, err)
+	assert.Equal(t, "abc", d.Id(), "Id should not be empty")
+	assert.Equal(t, "d7c9d05c-7496-4c69-b089-48823edad40c", d.Get("data_source_id"))
+}
+
 func TestResourceSQLEndpointCreate_ErrorDisabled(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{

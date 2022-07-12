@@ -82,7 +82,7 @@ resource "databricks_job" "this" {
 
   task {
     task_key = "b"
-
+    //this task will only run after task a
     depends_on {
       task_key = "a"
     }
@@ -103,6 +103,14 @@ resource "databricks_job" "this" {
       notebook_path = databricks_notebook.this.path
     }
   }
+  //this task starts a Delta Live Tables pipline update
+  task {
+    task_key = "d"
+
+    pipeline_task {
+      pipeline_id = databricks_pipeline.this.id
+    }
+  }  
 }
 ```
 

@@ -77,13 +77,13 @@ func (a globalConfigAPI) Set(gc GlobalConfig) error {
 		data["sql_configuration_parameters"] = sql_params
 	}
 
-	return a.client.Put(a.context, "/sql/config/endpoints", data)
+	return a.client.Put(a.context, "/sql/config/warehouses", data)
 }
 
 func (a globalConfigAPI) Get() (GlobalConfig, error) {
 	gc := GlobalConfig{}
 	gcr := GlobalConfigForRead{}
-	if err := a.client.Get(a.context, "/sql/config/endpoints", nil, &gcr); err != nil {
+	if err := a.client.Get(a.context, "/sql/config/warehouses", nil, &gcr); err != nil {
 		return gc, err
 	}
 	gc.InstanceProfileARN = gcr.InstanceProfileARN

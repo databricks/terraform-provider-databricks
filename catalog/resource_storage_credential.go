@@ -29,8 +29,6 @@ type StorageCredentialInfo struct {
 	MetastoreID string                 `json:"metastore_id,omitempty" tf:"computed"`
 }
 
-const IAMPropagationTimeout = 2 * time.Minute
-
 func (a StorageCredentialsAPI) create(sci *StorageCredentialInfo) error {
 	return a.client.Post(a.context, "/unity-catalog/storage-credentials", sci, &sci)
 }
@@ -54,7 +52,7 @@ func ResourceStorageCredential() *schema.Resource {
 			return m
 		})
 	update := func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-		err := waitIAMPropagation(ctx, c, func() error {
+		err := retryOnIAMError(ctx, d.Timeout(schema.TimeoutUpdate), func() error {
 			return updateFunctionFactory("/unity-catalog/storage-credentials", []string{
 				"owner", "comment", "aws_iam_role", "azure_service_principal", "azure_managed_identity"})(
 				ctx, d, c)
@@ -70,10 +68,9 @@ func ResourceStorageCredential() *schema.Resource {
 			var sci StorageCredentialInfo
 			common.DataToStructPointer(d, s, &sci)
 			sci.Owner = ""
-			err := waitIAMPropagation(ctx, c, func() error {
+			if err := retryOnIAMError(ctx, d.Timeout(schema.TimeoutCreate), func() error {
 				return NewStorageCredentialsAPI(ctx, c).create(&sci)
-			})
-			if err != nil {
+			}); err != nil {
 				return err
 			}
 			d.SetId(sci.Name)
@@ -93,11 +90,11 @@ func ResourceStorageCredential() *schema.Resource {
 	}.ToResource()
 }
 
-func waitIAMPropagation(ctx context.Context, c *common.DatabricksClient, f func() error) error {
-	return resource.RetryContext(ctx, IAMPropagationTimeout,
+func retryOnIAMError(ctx context.Context, timeout time.Duration, f func() error) error {
+	return resource.RetryContext(ctx, timeout,
 		func() *resource.RetryError {
 			cerr := f()
-			if e, ok := cerr.(common.APIError); ok && e.StatusCode == 403 && strings.Contains(cerr.Error(), "IAM role") {
+			if isIAMError(cerr) {
 				return resource.RetryableError(cerr)
 			}
 			if cerr != nil {
@@ -105,4 +102,13 @@ func waitIAMPropagation(ctx context.Context, c *common.DatabricksClient, f func(
 			}
 			return nil
 		})
+}
+
+func isIAMError(err error) bool {
+	if e, ok := err.(common.APIError); ok {
+		errMessage := strings.Join(strings.Fields(err.Error()), " ")
+		return e.StatusCode == 403 && strings.Contains(errMessage, "AWS IAM role in the metastore Data Access "+
+			"Configuration is not configured correctly.")
+	}
+	return false
 }

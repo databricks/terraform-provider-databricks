@@ -67,8 +67,10 @@ func TestCreateStorageCredentials_waitIAMPropagation(t *testing.T) {
 				},
 				Response: common.APIErrorBody{
 					ErrorCode: "PERMISSION_DENIED",
-					Message: "Failed to get credentials: " +
-						"AWS IAM role in the metastore Data Access Configuration is not configured correctly.",
+					Message: "/api/2.1/unity-catalog/storage-credentials/a:403 - \n       Failed to get credentials: " +
+						"AWS IAM role in the metastore Data Access Configuration is not\n       configured correctly. " +
+						"Please contact your account admin to update the configuration.\n    . " +
+						"Using pat auth: host=https://some-workspace.cloud.databricks.com, token=***REDACTED***.",
 				},
 				Status: 403,
 			},
@@ -210,8 +212,10 @@ func TestUpdateStorageCredentials_waitIAMPropagation(t *testing.T) {
 				},
 				Response: common.APIErrorBody{
 					ErrorCode: "PERMISSION_DENIED",
-					Message: "Failed to get credentials: " +
-						"AWS IAM role in the metastore Data Access Configuration is not configured correctly.",
+					Message: "/api/2.1/unity-catalog/storage-credentials/a:403 - \n       Failed to get credentials: " +
+						"AWS IAM role in the metastore Data Access Configuration is not\n       configured correctly. " +
+						"Please contact your account admin to update the configuration.\n    . " +
+						"Using pat auth: host=https://some-workspace.cloud.databricks.com, token=***REDACTED***.",
 				},
 				Status: 403,
 			},

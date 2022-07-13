@@ -63,6 +63,10 @@ func ResourceStorageCredential() *schema.Resource {
 		return nil
 	}
 	return common.Resource{
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(2 * time.Minute),
+			Update: schema.DefaultTimeout(2 * time.Minute),
+		},
 		Schema: s,
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var sci StorageCredentialInfo

@@ -6,7 +6,7 @@ subcategory: "Security"
 
 This resource allows you to generically manage [access control](https://docs.databricks.com/security/access-control/index.html) in Databricks workspace. It would guarantee that only _admins_, _authenticated principal_ and those declared within `access_control` blocks would have specified access. It is not possible to remove management rights from _admins_ group. 
 
-~> **Warning** Configuring this resource for an object will **OVERWRITE** any existing permissions of the same type unless imported, and changes made outside of Terraform will be reset unless the changes are also reflected in the configuration.
+-> **Note** Configuring this resource for an object will **OVERWRITE** any existing permissions of the same type unless imported, and changes made outside of Terraform will be reset unless the changes are also reflected in the configuration.
 
 -> **Note** It is not possible to lower permissions for `admins` or your own user anywhere from `CAN_MANAGE` level, so Databricks Terraform Provider [removes](https://github.com/databricks/terraform-provider-databricks/blob/master/access/resource_permissions.go#L261-L271) those `access_control` blocks automatically. 
 
@@ -693,7 +693,7 @@ Exactly one of the following arguments is required:
 - `sql_endpoint_id` - [SQL endpoint](sql_endpoint.md) id
 - `sql_dashboard_id` - [SQL dashboard](sql_dashboard.md) id
 - `sql_query_id` - [SQL query](sql_query.md) id
-- `sql_alert_id` - [SQL alert](sql_alert.md) id
+- `sql_alert_id` - [SQL alert](https://docs.databricks.com/sql/user/security/access-control/alert-acl.html) id
 
 ### Access Control Argument
 One or more `access_control` blocks are required to actually set the permission levels:

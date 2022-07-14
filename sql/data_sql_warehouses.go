@@ -2,6 +2,7 @@ package sql
 
 import (
 	"context"
+	"sort"
 	"strings"
 
 	"github.com/databricks/terraform-provider-databricks/common"
@@ -28,6 +29,8 @@ func DataSourceWarehouses() *schema.Resource {
 			}
 			data.Ids = append(data.Ids, e.ID)
 		}
+
+		sort.Strings(data.Ids)
 		return nil
 	})
 }

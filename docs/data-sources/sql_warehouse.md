@@ -17,7 +17,7 @@ data "databricks_sql_warehouses" "all" {
 
 data "databricks_sql_warehouse" "all" {
   for_each = data.databricks_sql.warehouses.ids
-  id       = each.value 
+  id       = each.value
 }
 
 ```

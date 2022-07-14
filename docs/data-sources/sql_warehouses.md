@@ -21,7 +21,7 @@ Retrieve all clusters with "Shared" in their cluster name on this Azure Databric
 
 ```hcl
 data "databricks_sql_warehouses" "all_shared" {
-  depends_on            = [azurerm_databricks_workspace.this]
+  depends_on              = [azurerm_databricks_workspace.this]
   warehouse_name_contains = "shared"
 }
 ```

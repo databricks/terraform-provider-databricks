@@ -17,7 +17,7 @@ data "databricks_clusters" "all" {
 
 data "databricks_cluster" "all" {
   for_each   = data.databricks_clusters.ids
-  cluster_id = each.value 
+  cluster_id = each.value
 }
 
 ```

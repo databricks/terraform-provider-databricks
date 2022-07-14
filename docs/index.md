@@ -135,6 +135,8 @@ It is the recommended way to use Databricks Terraform provider, in case you're a
 [AWS Shared Credentials File](https://www.terraform.io/docs/providers/aws/index.html#shared-credentials-file) 
 or [Azure CLI authentication](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/guides/azure_cli).
 
+-> **Note** If other authentication options are populated with empty strings or other misconfigurations, the provider will default to using the `~/.databrickscfg` file. 
+
 ``` hcl
 provider "databricks" {
 }

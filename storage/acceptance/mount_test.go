@@ -50,27 +50,6 @@ func TestAwsAccS3MountGeneric(t *testing.T) {
 	})
 }
 
-func TestAzureAccADLSv1MountGeneric(t *testing.T) {
-	client, mp := mountPointThroughReusedCluster(t)
-	if !client.IsAzureClientSecretSet() {
-		t.Skip("Test is meant only for client-secret conf Azure")
-	}
-	storageResource := qa.GetEnvOrSkipTest(t, "TEST_DATA_LAKE_STORE_NAME")
-	testWithNewSecretScope(t, func(scope, key string) {
-		testMounting(t, mp,
-			storage.GenericMount{
-				Adl: &storage.AzureADLSGen1MountGeneric{
-					ClientID:        client.AzureClientID,
-					TenantID:        client.AzureTenantID,
-					PrefixType:      "dfs.adls",
-					StorageResource: storageResource,
-					Directory:       "/",
-					SecretScope:     scope,
-					SecretKey:       key,
-				}})
-	}, client, mp.Name, client.AzureClientSecret)
-}
-
 func TestAzureAccADLSv2MountGeneric(t *testing.T) {
 	client, mp := mountPointThroughReusedCluster(t)
 	if !client.IsAzureClientSecretSet() {

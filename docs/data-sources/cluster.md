@@ -29,24 +29,24 @@ data "databricks_cluster" "all" {
 ## Attribute Reference
 
 This data source exports the following attributes:
-
-* `cluster_name` - Cluster name, which doesn’t have to be unique.
-* `spark_version` - [Runtime version](https://docs.databricks.com/runtime/index.html) of the cluster.
-* `driver_node_type_id` - The node type of the Spark driver.
-* `node_type_id` - Any supported [databricks_node_type](../data-sources/node_type.md) id.
-* `instance_pool_id` The [pool of idle instances](instance_pool.md) the cluster is attached to.
-* `driver_instance_pool_id` - similar to `instance_pool_id`, but for driver node.
-* `policy_id` - Identifier of [Cluster Policy](cluster_policy.md) to validate cluster and preset certain defaults.
-* `autotermination_minutes` - Automatically terminate the cluster after being inactive for this time in minutes. If specified, the threshold must be between 10 and 10000 minutes. You can also set this value to 0 to explicitly disable automatic termination.
-* `enable_elastic_disk` - Use autoscaling local storage.
-* `enable_local_disk_encryption` - Enable local disk encryption.
-* `data_security_mode` - Security features of the cluster. Unity Catalog requires `SINGLE_USER` or `USER_ISOLATION` mode. `LEGACY_PASSTHROUGH` for passthrough cluster and `LEGACY_TABLE_ACL` for Table ACL cluster. Default to `NONE`, i.e. no security feature enabled.
-* `single_user_name` - The optional user name of the user to assign to an interactive cluster. This field is required when using standard AAD Passthrough for Azure Data Lake Storage (ADLS) with a single-user cluster (i.e., not high-concurrency clusters).
-* `idempotency_token` - An optional token to guarantee the idempotency of cluster creation requests.
-* `ssh_public_keys` - SSH public key contents that will be added to each Spark node in this cluster.
-* `spark_env_vars` - Map with environment variable key-value pairs to fine-tune Spark clusters. Key-value pairs of the form (X,Y) are exported (i.e., X='Y') while launching the driver and workers.
-* `custom_tags` - Additional tags for cluster resources.
-* `spark_conf` - Map with key-value pairs to fine-tune Spark clusters.
+* `cluster_info` block, consisting of following fields:
+  * `cluster_name` - Cluster name, which doesn’t have to be unique.
+  * `spark_version` - [Runtime version](https://docs.databricks.com/runtime/index.html) of the cluster.
+  * `driver_node_type_id` - The node type of the Spark driver.
+  * `node_type_id` - Any supported [databricks_node_type](../data-sources/node_type.md) id.
+  * `instance_pool_id` The [pool of idle instances](instance_pool.md) the cluster is attached to.
+  * `driver_instance_pool_id` - similar to `instance_pool_id`, but for driver node.
+  * `policy_id` - Identifier of [Cluster Policy](cluster_policy.md) to validate cluster and preset certain defaults.
+  * `autotermination_minutes` - Automatically terminate the cluster after being inactive for this time in minutes. If specified, the threshold must be between 10 and 10000 minutes. You can also set this value to 0 to explicitly disable automatic termination.
+  * `enable_elastic_disk` - Use autoscaling local storage.
+  * `enable_local_disk_encryption` - Enable local disk encryption.
+  * `data_security_mode` - Security features of the cluster. Unity Catalog requires `SINGLE_USER` or `USER_ISOLATION` mode. `LEGACY_PASSTHROUGH` for passthrough cluster and `LEGACY_TABLE_ACL` for Table ACL cluster. Default to `NONE`, i.e. no security feature enabled.
+  * `single_user_name` - The optional user name of the user to assign to an interactive cluster. This field is required when using standard AAD Passthrough for Azure Data Lake Storage (ADLS) with a single-user cluster (i.e., not high-concurrency clusters).
+  * `idempotency_token` - An optional token to guarantee the idempotency of cluster creation requests.
+  * `ssh_public_keys` - SSH public key contents that will be added to each Spark node in this cluster.
+  * `spark_env_vars` - Map with environment variable key-value pairs to fine-tune Spark clusters. Key-value pairs of the form (X,Y) are exported (i.e., X='Y') while launching the driver and workers.
+  * `custom_tags` - Additional tags for cluster resources.
+  * `spark_conf` - Map with key-value pairs to fine-tune Spark clusters.
 
 ## Related Resources
 

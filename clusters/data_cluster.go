@@ -8,12 +8,16 @@ import (
 )
 
 func DataSourceCluster() *schema.Resource {
-
-	return common.DataResource(ClusterInfo{}, func(ctx context.Context, e interface{}, c *common.DatabricksClient) error {
-		data := e.(*ClusterInfo)
-		var err error
+	type clusterData struct {
+		ClusterId   string       `json:"cluster_id"`
+		ClusterInfo *ClusterInfo `json:"cluster_info,omitempty" tf:"computed"`
+	}
+	return common.DataResource(clusterData{}, func(ctx context.Context, e interface{}, c *common.DatabricksClient) error {
+		data := e.(*clusterData)
 		clusterAPI := NewClustersAPI(ctx, c)
-		*data, err = clusterAPI.Get(data.ClusterID)
+		clusterInfo, err := clusterAPI.Get(data.ClusterId)
+
+		data.ClusterInfo = &clusterInfo
 		if err != nil {
 			return err
 		}

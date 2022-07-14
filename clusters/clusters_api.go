@@ -428,48 +428,48 @@ type ClusterList struct {
 
 // ClusterInfo contains the information when getting cluster info from the get request.
 type ClusterInfo struct {
-	NumWorkers                int32              `json:"num_workers,omitempty" tf:"computed"`
-	AutoScale                 *AutoScale         `json:"autoscale,omitempty" tf:"computed"`
+	NumWorkers                int32              `json:"num_workers,omitempty"`
+	AutoScale                 *AutoScale         `json:"autoscale,omitempty"`
 	ClusterID                 string             `json:"cluster_id,omitempty"`
-	CreatorUserName           string             `json:"creator_user_name,omitempty" tf:"computed"`
-	Driver                    *SparkNode         `json:"driver,omitempty" tf:"computed"`
-	Executors                 []SparkNode        `json:"executors,omitempty" tf:"computed"`
-	SparkContextID            int64              `json:"spark_context_id,omitempty" tf:"computed"`
-	JdbcPort                  int32              `json:"jdbc_port,omitempty" tf:"computed"`
-	ClusterName               string             `json:"cluster_name,omitempty" tf:"computed"`
-	SparkVersion              string             `json:"spark_version,omitempty" tf:"computed"`
-	SparkConf                 map[string]string  `json:"spark_conf,omitempty" tf:"computed"`
-	AwsAttributes             *AwsAttributes     `json:"aws_attributes,omitempty" tf:"computed"`
-	AzureAttributes           *AzureAttributes   `json:"azure_attributes,omitempty" tf:"computed"`
-	GcpAttributes             *GcpAttributes     `json:"gcp_attributes,omitempty" tf:"computed"`
-	NodeTypeID                string             `json:"node_type_id,omitempty" tf:"computed"`
-	DriverNodeTypeID          string             `json:"driver_node_type_id,omitempty" tf:"computed"`
-	SSHPublicKeys             []string           `json:"ssh_public_keys,omitempty" tf:"computed"`
-	CustomTags                map[string]string  `json:"custom_tags,omitempty" tf:"computed"`
-	ClusterLogConf            *StorageInfo       `json:"cluster_log_conf,omitempty" tf:"computed"`
-	InitScripts               []StorageInfo      `json:"init_scripts,omitempty" tf:"computed"`
-	SparkEnvVars              map[string]string  `json:"spark_env_vars,omitempty" tf:"computed"`
-	AutoterminationMinutes    int32              `json:"autotermination_minutes,omitempty" tf:"computed"`
-	EnableElasticDisk         bool               `json:"enable_elastic_disk,omitempty" tf:"computed"`
-	EnableLocalDiskEncryption bool               `json:"enable_local_disk_encryption,omitempty" tf:"computed"`
-	InstancePoolID            string             `json:"instance_pool_id,omitempty" tf:"computed"`
+	CreatorUserName           string             `json:"creator_user_name,omitempty"`
+	Driver                    *SparkNode         `json:"driver,omitempty"`
+	Executors                 []SparkNode        `json:"executors,omitempty"`
+	SparkContextID            int64              `json:"spark_context_id,omitempty"`
+	JdbcPort                  int32              `json:"jdbc_port,omitempty"`
+	ClusterName               string             `json:"cluster_name,omitempty"`
+	SparkVersion              string             `json:"spark_version"`
+	SparkConf                 map[string]string  `json:"spark_conf,omitempty"`
+	AwsAttributes             *AwsAttributes     `json:"aws_attributes,omitempty"`
+	AzureAttributes           *AzureAttributes   `json:"azure_attributes,omitempty"`
+	GcpAttributes             *GcpAttributes     `json:"gcp_attributes,omitempty"`
+	NodeTypeID                string             `json:"node_type_id,omitempty"`
+	DriverNodeTypeID          string             `json:"driver_node_type_id,omitempty"`
+	SSHPublicKeys             []string           `json:"ssh_public_keys,omitempty"`
+	CustomTags                map[string]string  `json:"custom_tags,omitempty"`
+	ClusterLogConf            *StorageInfo       `json:"cluster_log_conf,omitempty"`
+	InitScripts               []StorageInfo      `json:"init_scripts,omitempty"`
+	SparkEnvVars              map[string]string  `json:"spark_env_vars,omitempty"`
+	AutoterminationMinutes    int32              `json:"autotermination_minutes,omitempty"`
+	EnableElasticDisk         bool               `json:"enable_elastic_disk,omitempty"`
+	EnableLocalDiskEncryption bool               `json:"enable_local_disk_encryption,omitempty"`
+	InstancePoolID            string             `json:"instance_pool_id,omitempty"`
 	DriverInstancePoolID      string             `json:"driver_instance_pool_id,omitempty" tf:"computed"`
-	PolicyID                  string             `json:"policy_id,omitempty" tf:"computed"`
-	SingleUserName            string             `json:"single_user_name,omitempty" tf:"computed"`
-	ClusterSource             Availability       `json:"cluster_source,omitempty" tf:"computed"`
-	DockerImage               *DockerImage       `json:"docker_image,omitempty" tf:"computed"`
-	State                     ClusterState       `json:"state,omitempty" tf:"computed"`
-	StateMessage              string             `json:"state_message,omitempty" tf:"computed"`
-	StartTime                 int64              `json:"start_time,omitempty" tf:"computed"`
-	TerminateTime             int64              `json:"terminate_time,omitempty" tf:"computed"`
-	LastStateLossTime         int64              `json:"last_state_loss_time,omitempty" tf:"computed"`
-	LastActivityTime          int64              `json:"last_activity_time,omitempty" tf:"computed"`
-	ClusterMemoryMb           int64              `json:"cluster_memory_mb,omitempty" tf:"computed"`
-	ClusterCores              float64            `json:"cluster_cores,omitempty" tf:"computed"`
-	DefaultTags               map[string]string  `json:"default_tags,omitempty" tf:"computed"`
-	ClusterLogStatus          *LogSyncStatus     `json:"cluster_log_status,omitempty" tf:"computed"`
-	TerminationReason         *TerminationReason `json:"termination_reason,omitempty" tf:"computed"`
-	DataSecurityMode          string             `json:"data_security_mode,omitempty" tf:"computed"`
+	PolicyID                  string             `json:"policy_id,omitempty"`
+	SingleUserName            string             `json:"single_user_name,omitempty"`
+	ClusterSource             Availability       `json:"cluster_source,omitempty"`
+	DockerImage               *DockerImage       `json:"docker_image,omitempty"`
+	State                     ClusterState       `json:"state"`
+	StateMessage              string             `json:"state_message,omitempty"`
+	StartTime                 int64              `json:"start_time,omitempty"`
+	TerminateTime             int64              `json:"terminate_time,omitempty"`
+	LastStateLossTime         int64              `json:"last_state_loss_time,omitempty"`
+	LastActivityTime          int64              `json:"last_activity_time,omitempty"`
+	ClusterMemoryMb           int64              `json:"cluster_memory_mb,omitempty"`
+	ClusterCores              float64            `json:"cluster_cores,omitempty"`
+	DefaultTags               map[string]string  `json:"default_tags"`
+	ClusterLogStatus          *LogSyncStatus     `json:"cluster_log_status,omitempty"`
+	TerminationReason         *TerminationReason `json:"termination_reason,omitempty"`
+	DataSecurityMode          string             `json:"data_security_mode,omitempty"`
 }
 
 // IsRunningOrResizing returns true if cluster is running or resizing

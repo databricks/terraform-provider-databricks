@@ -20,13 +20,13 @@ func DataSourceWarehouses() *schema.Resource {
 		if err != nil {
 			return err
 		}
-		name_contains := data.WarehouseNameContains
-		for _, v := range list.Endpoints {
-			match_name := strings.Contains(strings.ToLower(v.Name), name_contains)
+		name_contains := (*data).WarehouseNameContains
+		for _, e := range list.Endpoints {
+			match_name := strings.Contains(strings.ToLower(e.Name), name_contains)
 			if name_contains != "" && !match_name {
 				continue
 			}
-			data.Ids = append(data.Ids, v.ID)
+			data.Ids = append(data.Ids, e.ID)
 		}
 		return nil
 	})

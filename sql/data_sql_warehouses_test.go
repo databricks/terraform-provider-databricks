@@ -13,7 +13,7 @@ func TestWarehousesData(t *testing.T) {
 				Method:   "GET",
 				Resource: "/api/2.0/sql/warehouses",
 				Response: map[string]interface{}{
-					"endpoints": []SQLEndpoint{
+					"warehouses": []SQLEndpoint{
 						{
 							ID:   "1",
 							Name: "bar",
@@ -43,7 +43,7 @@ func TestWarehousesDataContains(t *testing.T) {
 				Method:   "GET",
 				Resource: "/api/2.0/sql/warehouses",
 				Response: map[string]interface{}{
-					"endpoints": []SQLEndpoint{
+					"warehouses": []SQLEndpoint{
 						{
 							ID:   "111",
 							Name: "bar",

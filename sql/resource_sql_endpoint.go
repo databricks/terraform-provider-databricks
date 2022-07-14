@@ -84,7 +84,7 @@ type DataSource struct {
 
 // endpointList ...
 type EndpointList struct {
-	Endpoints []SQLEndpoint `json:"endpoints"`
+	Endpoints []SQLEndpoint `json:"warehouses"`
 }
 
 // NewSQLEndpointsAPI ...

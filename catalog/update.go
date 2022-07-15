@@ -29,9 +29,18 @@ func updateFunctionFactory(pathPrefix string, updatable []string) func(context.C
 			}, field) {
 				continue
 			}
-			old, new := d.GetChange(field)
-			if !d.HasChange(field) {
-				continue
+
+			var old, new interface{}
+			if field == "columns" {
+				old, new = d.GetChange("column")
+				if !d.HasChange("column") {
+					continue
+				}
+			} else {
+				old, new = d.GetChange(field)
+				if !d.HasChange(field) {
+					continue
+				}
 			}
 
 			if contains([]string{

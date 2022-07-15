@@ -43,6 +43,11 @@ func updateFunctionFactory(pathPrefix string, updatable []string) func(context.C
 				}
 			}
 
+			//ignore storage_location for MANAGED tables
+			if field == "storage_location" && d.Get("table_type") != "EXTERNAL" {
+				continue
+			}
+
 			if contains([]string{
 				"aws_iam_role",
 				"azure_service_principal",

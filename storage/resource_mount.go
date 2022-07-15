@@ -9,15 +9,15 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-type mountCallback func(tpl interface{}, r *schema.Resource) func(context.Context,
-	*schema.ResourceData, interface{}) diag.Diagnostics
+type mountCallback func(tpl any, r *schema.Resource) func(context.Context,
+	*schema.ResourceData, any) diag.Diagnostics
 
 func (cb mountCallback) preProcess(r *schema.Resource) func(
 	ctx context.Context, d *schema.ResourceData,
-	m interface{}) diag.Diagnostics {
+	m any) diag.Diagnostics {
 	tpl := GenericMount{}
 	return func(ctx context.Context, d *schema.ResourceData,
-		m interface{}) diag.Diagnostics {
+		m any) diag.Diagnostics {
 		var gm GenericMount
 		scm := r.Schema
 		common.DataToStructPointer(d, scm, &gm)

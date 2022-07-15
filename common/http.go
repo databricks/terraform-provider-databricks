@@ -258,7 +258,7 @@ func (c *DatabricksClient) checkHTTPRetry(ctx context.Context, resp *http.Respon
 }
 
 // Get on path
-func (c *DatabricksClient) Get(ctx context.Context, path string, request interface{}, response interface{}) error {
+func (c *DatabricksClient) Get(ctx context.Context, path string, request any, response any) error {
 	body, err := c.authenticatedQuery(ctx, http.MethodGet, path, request, c.completeUrl)
 	if err != nil {
 		return err
@@ -267,7 +267,7 @@ func (c *DatabricksClient) Get(ctx context.Context, path string, request interfa
 }
 
 // Post on path
-func (c *DatabricksClient) Post(ctx context.Context, path string, request interface{}, response interface{}) error {
+func (c *DatabricksClient) Post(ctx context.Context, path string, request any, response any) error {
 	body, err := c.authenticatedQuery(ctx, http.MethodPost, path, request, c.completeUrl)
 	if err != nil {
 		return err
@@ -276,24 +276,24 @@ func (c *DatabricksClient) Post(ctx context.Context, path string, request interf
 }
 
 // Delete on path
-func (c *DatabricksClient) Delete(ctx context.Context, path string, request interface{}) error {
+func (c *DatabricksClient) Delete(ctx context.Context, path string, request any) error {
 	_, err := c.authenticatedQuery(ctx, http.MethodDelete, path, request, c.completeUrl)
 	return err
 }
 
 // Patch on path
-func (c *DatabricksClient) Patch(ctx context.Context, path string, request interface{}) error {
+func (c *DatabricksClient) Patch(ctx context.Context, path string, request any) error {
 	_, err := c.authenticatedQuery(ctx, http.MethodPatch, path, request, c.completeUrl)
 	return err
 }
 
 // Put on path
-func (c *DatabricksClient) Put(ctx context.Context, path string, request interface{}) error {
+func (c *DatabricksClient) Put(ctx context.Context, path string, request any) error {
 	_, err := c.authenticatedQuery(ctx, http.MethodPut, path, request, c.completeUrl)
 	return err
 }
 
-func (c *DatabricksClient) unmarshall(path string, body []byte, response interface{}) error {
+func (c *DatabricksClient) unmarshall(path string, body []byte, response any) error {
 	if response == nil {
 		return nil
 	}
@@ -358,7 +358,7 @@ func (c *DatabricksClient) scimVisitor(r *http.Request) error {
 }
 
 // Scim sets SCIM headers
-func (c *DatabricksClient) Scim(ctx context.Context, method, path string, request interface{}, response interface{}) error {
+func (c *DatabricksClient) Scim(ctx context.Context, method, path string, request any, response any) error {
 	body, err := c.authenticatedQuery(ctx, method, path, request, c.completeUrl, c.scimVisitor)
 	if err != nil {
 		return err
@@ -367,7 +367,7 @@ func (c *DatabricksClient) Scim(ctx context.Context, method, path string, reques
 }
 
 func (c *DatabricksClient) authenticatedQuery(ctx context.Context, method, requestURL string,
-	data interface{}, visitors ...func(*http.Request) error) (body []byte, err error) {
+	data any, visitors ...func(*http.Request) error) (body []byte, err error) {
 	err = c.Authenticate(ctx)
 	if err != nil {
 		return
@@ -376,7 +376,7 @@ func (c *DatabricksClient) authenticatedQuery(ctx context.Context, method, reque
 	return c.genericQuery(ctx, method, requestURL, data, visitors...)
 }
 
-func (c *DatabricksClient) recursiveMask(requestMap map[string]interface{}) interface{} {
+func (c *DatabricksClient) recursiveMask(requestMap map[string]any) any {
 	for k, v := range requestMap {
 		if k == "string_value" {
 			requestMap[k] = "**REDACTED**"
@@ -390,7 +390,7 @@ func (c *DatabricksClient) recursiveMask(requestMap map[string]interface{}) inte
 			requestMap[k] = "**REDACTED**"
 			continue
 		}
-		if m, ok := v.(map[string]interface{}); ok {
+		if m, ok := v.(map[string]any); ok {
 			requestMap[k] = c.recursiveMask(m)
 			continue
 		}
@@ -410,7 +410,7 @@ func (c *DatabricksClient) redactedDump(body []byte) (res string) {
 	if body[0] != '{' {
 		return fmt.Sprintf("[non-JSON document of %d bytes]", len(body))
 	}
-	var requestMap map[string]interface{}
+	var requestMap map[string]any
 	err := json.Unmarshal(body, &requestMap)
 	if err != nil {
 		// error in this case is not much relevant
@@ -466,7 +466,7 @@ func (c *DatabricksClient) createDebugHeaders(header http.Header, host string) s
 }
 
 // todo: do is better name
-func (c *DatabricksClient) genericQuery(ctx context.Context, method, requestURL string, data interface{},
+func (c *DatabricksClient) genericQuery(ctx context.Context, method, requestURL string, data any,
 	visitors ...func(*http.Request) error) (body []byte, err error) {
 	if c.httpClient == nil {
 		return nil, fmt.Errorf("DatabricksClient is not configured")
@@ -523,7 +523,7 @@ func (c *DatabricksClient) genericQuery(ctx context.Context, method, requestURL 
 	return body, nil
 }
 
-func makeQueryString(data interface{}) (string, error) {
+func makeQueryString(data any) (string, error) {
 	inputVal := reflect.ValueOf(data)
 	inputType := reflect.TypeOf(data)
 	if inputType.Kind() == reflect.Map {
@@ -554,7 +554,7 @@ func makeQueryString(data interface{}) (string, error) {
 	return "", fmt.Errorf("unsupported query string data: %#v", data)
 }
 
-func makeRequestBody(method string, requestURL *string, data interface{}) ([]byte, error) {
+func makeRequestBody(method string, requestURL *string, data any) ([]byte, error) {
 	var requestBody []byte
 	if data == nil && (method == "DELETE" || method == "GET") {
 		return requestBody, nil

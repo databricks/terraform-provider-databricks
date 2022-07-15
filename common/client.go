@@ -126,7 +126,7 @@ type ConfigAttribute struct {
 	num       int
 }
 
-func (ca *ConfigAttribute) Set(client *DatabricksClient, i interface{}) error {
+func (ca *ConfigAttribute) Set(client *DatabricksClient, i any) error {
 	rv := reflect.ValueOf(client)
 	field := rv.Elem().Field(ca.num)
 	switch ca.Kind {

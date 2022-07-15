@@ -34,7 +34,7 @@ type ExperimentsAPI struct {
 }
 
 // NewExperimentsAPI ...
-func NewExperimentsAPI(ctx context.Context, m interface{}) ExperimentsAPI {
+func NewExperimentsAPI(ctx context.Context, m any) ExperimentsAPI {
 	return ExperimentsAPI{m.(*common.DatabricksClient), ctx}
 }
 

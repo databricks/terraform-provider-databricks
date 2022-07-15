@@ -199,7 +199,7 @@ func (w *WidgetEntity) fromAPIObject(aw *api.Widget, schema map[string]*schema.S
 }
 
 // NewWidgetAPI ...
-func NewWidgetAPI(ctx context.Context, m interface{}) WidgetAPI {
+func NewWidgetAPI(ctx context.Context, m any) WidgetAPI {
 	return WidgetAPI{m.(*common.DatabricksClient), ctx}
 }
 

@@ -338,7 +338,7 @@ func ResourceSqlPermissions() *schema.Resource {
 			}
 			if len(ta.PrivilegeAssignments) == 0 {
 				// reflect resource is skipping empty privilege_assignments
-				d.Set("privilege_assignments", []interface{}{})
+				d.Set("privilege_assignments", []any{})
 			}
 			common.StructToData(ta, s, d)
 			return nil

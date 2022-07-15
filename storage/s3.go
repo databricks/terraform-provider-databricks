@@ -44,7 +44,7 @@ func (m S3IamMount) ValidateAndApplyDefaults(d *schema.ResourceData, client *com
 	return fmt.Errorf("'name' is not detected & it's impossible to infer it")
 }
 
-func preprocessS3MountGeneric(ctx context.Context, s map[string]*schema.Schema, d *schema.ResourceData, m interface{}) error {
+func preprocessS3MountGeneric(ctx context.Context, s map[string]*schema.Schema, d *schema.ResourceData, m any) error {
 	var gm GenericMount
 	common.DataToStructPointer(d, s, &gm)
 	// TODO: move into Validate function

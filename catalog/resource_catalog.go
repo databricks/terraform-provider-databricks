@@ -13,7 +13,7 @@ type CatalogsAPI struct {
 	context context.Context
 }
 
-func NewCatalogsAPI(ctx context.Context, m interface{}) CatalogsAPI {
+func NewCatalogsAPI(ctx context.Context, m any) CatalogsAPI {
 	return CatalogsAPI{m.(*common.DatabricksClient), context.WithValue(ctx, common.Api, common.API_2_1)}
 }
 

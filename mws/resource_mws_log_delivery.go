@@ -37,7 +37,7 @@ type LogDeliveryAPI struct {
 }
 
 // NewLogDeliveryAPI ...
-func NewLogDeliveryAPI(ctx context.Context, m interface{}) LogDeliveryAPI {
+func NewLogDeliveryAPI(ctx context.Context, m any) LogDeliveryAPI {
 	return LogDeliveryAPI{m.(*common.DatabricksClient), ctx}
 }
 

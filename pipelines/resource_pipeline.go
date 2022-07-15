@@ -122,7 +122,7 @@ type PipelinesAPI struct {
 	ctx    context.Context
 }
 
-func NewPipelinesAPI(ctx context.Context, m interface{}) PipelinesAPI {
+func NewPipelinesAPI(ctx context.Context, m any) PipelinesAPI {
 	return PipelinesAPI{m.(*common.DatabricksClient), ctx}
 }
 

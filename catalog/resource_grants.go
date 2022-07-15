@@ -86,14 +86,14 @@ func (pl PermissionsList) diff(existing PermissionsList) (diff permissionsDiff) 
 }
 
 func newStringSet(in []string) *schema.Set {
-	var out []interface{}
+	var out []any
 	for _, v := range in {
 		out = append(out, v)
 	}
 	return schema.NewSet(schema.HashString, out)
 }
 
-func NewPermissionsAPI(ctx context.Context, m interface{}) PermissionsAPI {
+func NewPermissionsAPI(ctx context.Context, m any) PermissionsAPI {
 	return PermissionsAPI{m.(*common.DatabricksClient), context.WithValue(ctx, common.Api, common.API_2_1)}
 }
 
@@ -119,7 +119,7 @@ type securableMapping map[string]map[string]bool
 
 // reuse ResourceDiff and ResourceData
 type attributeGetter interface {
-	Get(key string) interface{}
+	Get(key string) any
 }
 
 func (sm securableMapping) kv(d attributeGetter) (string, string) {
@@ -242,7 +242,7 @@ func ResourceGrants() *schema.Resource {
 		})
 	return common.Resource{
 		Schema: s,
-		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, c interface{}) error {
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, c any) error {
 			if d.Id() == "" {
 				// unfortunately we cannot do validation before dependent resources exist with tfsdkv2
 				return nil

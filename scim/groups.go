@@ -9,7 +9,7 @@ import (
 )
 
 // NewGroupsAPI creates GroupsAPI instance from provider meta
-func NewGroupsAPI(ctx context.Context, m interface{}) GroupsAPI {
+func NewGroupsAPI(ctx context.Context, m any) GroupsAPI {
 	return GroupsAPI{
 		client:  m.(*common.DatabricksClient),
 		context: ctx,

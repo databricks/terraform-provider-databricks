@@ -10,7 +10,7 @@ import (
 
 func DataSourceDbfsFilePaths() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+		ReadContext: func(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
 			path := d.Get("path").(string)
 			recursive := d.Get("recursive").(bool)
 			paths, err := NewDbfsAPI(ctx, m).List(path, recursive)
@@ -18,9 +18,9 @@ func DataSourceDbfsFilePaths() *schema.Resource {
 				return diag.FromErr(err)
 			}
 			d.SetId(path)
-			pathList := []map[string]interface{}{}
+			pathList := []map[string]any{}
 			for _, pathInfo := range paths {
-				pathData := map[string]interface{}{}
+				pathData := map[string]any{}
 				pathData["path"] = pathInfo.Path
 				pathData["file_size"] = pathInfo.FileSize
 				pathList = append(pathList, pathData)

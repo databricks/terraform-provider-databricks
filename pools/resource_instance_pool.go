@@ -96,7 +96,7 @@ type InstancePoolList struct {
 }
 
 // NewInstancePoolsAPI creates InstancePoolsAPI instance from provider meta
-func NewInstancePoolsAPI(ctx context.Context, m interface{}) InstancePoolsAPI {
+func NewInstancePoolsAPI(ctx context.Context, m any) InstancePoolsAPI {
 	return InstancePoolsAPI{m.(*common.DatabricksClient), ctx}
 }
 

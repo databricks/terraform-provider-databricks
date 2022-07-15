@@ -14,7 +14,7 @@ import (
 )
 
 // NewNetworksAPI creates MWSNetworksAPI instance from provider meta
-func NewNetworksAPI(ctx context.Context, m interface{}) NetworksAPI {
+func NewNetworksAPI(ctx context.Context, m any) NetworksAPI {
 	return NetworksAPI{m.(*common.DatabricksClient), ctx}
 }
 

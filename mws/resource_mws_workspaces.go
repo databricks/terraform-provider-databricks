@@ -24,7 +24,7 @@ import (
 const DefaultProvisionTimeout = 20 * time.Minute
 
 // NewWorkspacesAPI creates MWSWorkspacesAPI instance from provider meta
-func NewWorkspacesAPI(ctx context.Context, m interface{}) WorkspacesAPI {
+func NewWorkspacesAPI(ctx context.Context, m any) WorkspacesAPI {
 	return WorkspacesAPI{m.(*common.DatabricksClient), ctx}
 }
 
@@ -114,7 +114,7 @@ func (w *Workspace) MarshalJSON() ([]byte, error) {
 	if w.Cloud != "gcp" {
 		return json.Marshal(aWorkspace(*w))
 	}
-	workspaceCreationRequest := map[string]interface{}{
+	workspaceCreationRequest := map[string]any{
 		"account_id":            w.AccountID,
 		"cloud":                 w.Cloud,
 		"cloud_resource_bucket": w.CloudResourceBucket,
@@ -186,7 +186,7 @@ func (a WorkspacesAPI) verifyWorkspaceReachable(ws Workspace) *resource.RetryErr
 		return resource.NonRetryableError(err)
 	}
 	// make a request to Tokens API, just to verify there are no errors
-	var response map[string]interface{}
+	var response map[string]any
 	err = wsClient.Get(ctx, "/token/list", nil, &response)
 	if apiError, ok := err.(common.APIError); ok {
 		err = fmt.Errorf("workspace %s is not yet reachable: %s",
@@ -387,25 +387,25 @@ func removeTokenIfNeeded(a WorkspacesAPI,
 func UpdateTokenIfNeeded(workspacesAPI WorkspacesAPI,
 	workspaceSchema map[string]*schema.Schema, d *schema.ResourceData) error {
 	o, n := d.GetChange("token")
-	old, new := o.([]interface{}), n.([]interface{})
+	old, new := o.([]any), n.([]any)
 	if d.HasChange("token") {
 		switch {
 		case len(old) == 0 && len(new) > 0: // create
 			return CreateTokenIfNeeded(workspacesAPI, workspaceSchema, d)
 		case len(old) > 0 && len(new) == 0: // delete
-			raw := old[0].(map[string]interface{})
+			raw := old[0].(map[string]any)
 			return removeTokenIfNeeded(workspacesAPI, workspaceSchema,
 				raw["token_id"].(string), d)
 		case len(old) > 0 && len(new) > 0: // delete & create
-			rawOld := old[0].(map[string]interface{})
+			rawOld := old[0].(map[string]any)
 			err := removeTokenIfNeeded(workspacesAPI, workspaceSchema,
 				rawOld["token_id"].(string), d)
 			if err != nil {
 				return err
 			}
-			rawNew := new[0].(map[string]interface{})
-			d.Set("token", []interface{}{
-				map[string]interface{}{
+			rawNew := new[0].(map[string]any)
+			d.Set("token", []any{
+				map[string]any{
 					"lifetime_seconds": rawNew["lifetime_seconds"],
 					"comment":          rawNew["comment"],
 				},

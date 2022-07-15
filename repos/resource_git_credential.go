@@ -16,7 +16,7 @@ type GitCredentialsAPI struct {
 }
 
 // GitCredentialsAPI creates GitCredentialsAPI instance from provider meta
-func NewGitCredentialsAPI(ctx context.Context, m interface{}) GitCredentialsAPI {
+func NewGitCredentialsAPI(ctx context.Context, m any) GitCredentialsAPI {
 	return GitCredentialsAPI{m.(*common.DatabricksClient), ctx}
 }
 

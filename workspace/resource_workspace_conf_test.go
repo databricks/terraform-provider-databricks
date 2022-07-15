@@ -23,7 +23,7 @@ func TestWorkspaceConfCreate(t *testing.T) {
 			{
 				Method:   http.MethodGet,
 				Resource: "/api/2.0/workspace-conf?keys=enableIpAccessLists",
-				Response: map[string]interface{}{
+				Response: map[string]any{
 					"enableIpAccessLists": "true",
 				},
 			},

@@ -62,7 +62,7 @@ func resourceClusterSchema() map[string]*schema.Schema {
 		// adds `library` configuration block
 		s["library"] = common.StructToSchema(libraries.ClusterLibraryList{},
 			func(ss map[string]*schema.Schema) map[string]*schema.Schema {
-				ss["library"].Set = func(i interface{}) int {
+				ss["library"].Set = func(i any) int {
 					lib := libraries.NewLibraryFromInstanceState(i)
 					return schema.HashString(lib.String())
 				}

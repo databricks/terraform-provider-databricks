@@ -12,7 +12,7 @@ type SchemasAPI struct {
 	context context.Context
 }
 
-func NewSchemasAPI(ctx context.Context, m interface{}) SchemasAPI {
+func NewSchemasAPI(ctx context.Context, m any) SchemasAPI {
 	return SchemasAPI{m.(*common.DatabricksClient), context.WithValue(ctx, common.Api, common.API_2_1)}
 }
 

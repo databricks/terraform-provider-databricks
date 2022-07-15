@@ -45,7 +45,7 @@ type WebhooksAPI struct {
 	context context.Context
 }
 
-func NewWebhooksAPI(ctx context.Context, m interface{}) WebhooksAPI {
+func NewWebhooksAPI(ctx context.Context, m any) WebhooksAPI {
 	return WebhooksAPI{m.(*common.DatabricksClient), ctx}
 }
 

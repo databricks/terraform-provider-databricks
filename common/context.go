@@ -22,18 +22,18 @@ func AddContextToAllResources(p *schema.Provider, prefix string) {
 }
 
 // any of TF resource CRUD operation, that may need context enhancement
-type op func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics
+type op func(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics
 
 // wrap operation invokations with additional context
 func (f op) addContext(k contextKey, v string) op {
-	return func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+	return func(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
 		ctx = context.WithValue(ctx, k, v)
 		return f(ctx, d, m)
 	}
 }
 
 func addContextToResource(name string, r *schema.Resource) {
-	addName := func(a op) func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+	addName := func(a op) func(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
 		return a.addContext(ResourceName, name)
 	}
 	if r.CreateContext != nil {

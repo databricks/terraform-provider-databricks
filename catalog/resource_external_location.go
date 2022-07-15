@@ -13,7 +13,7 @@ type ExternalLocationsAPI struct {
 	context context.Context
 }
 
-func NewExternalLocationsAPI(ctx context.Context, m interface{}) ExternalLocationsAPI {
+func NewExternalLocationsAPI(ctx context.Context, m any) ExternalLocationsAPI {
 	return ExternalLocationsAPI{m.(*common.DatabricksClient), context.WithValue(ctx, common.Api, common.API_2_1)}
 }
 

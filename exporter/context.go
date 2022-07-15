@@ -344,7 +344,7 @@ func (ic *importContext) Add(r *resource) {
 		return
 	}
 	inst := instanceApproximation{
-		Attributes: map[string]interface{}{},
+		Attributes: map[string]any{},
 	}
 	for k, v := range state.Attributes {
 		inst.Attributes[k] = v
@@ -562,7 +562,7 @@ func (ic *importContext) dataToHcl(i importable, path []string,
 			body.SetAttributeValue(a, cty.NumberFloatVal(raw.(float64)))
 		case schema.TypeMap:
 			ov := map[string]cty.Value{}
-			for key, iv := range raw.(map[string]interface{}) {
+			for key, iv := range raw.(map[string]any) {
 				v := cty.StringVal(fmt.Sprintf("%v", iv))
 				ov[key] = v
 			}
@@ -578,7 +578,7 @@ func (ic *importContext) dataToHcl(i importable, path []string,
 				}
 			}
 		case schema.TypeList:
-			if rawList, ok := raw.([]interface{}); ok {
+			if rawList, ok := raw.([]any); ok {
 				err := ic.readListFromData(i, append(path, a), d, rawList, body, as, strconv.Itoa)
 				if err != nil {
 					return err
@@ -592,7 +592,7 @@ func (ic *importContext) dataToHcl(i importable, path []string,
 }
 
 func (ic *importContext) readListFromData(i importable, path []string, d *schema.ResourceData,
-	rawList []interface{}, body *hclwrite.Body, as *schema.Schema,
+	rawList []any, body *hclwrite.Body, as *schema.Schema,
 	offsetConverter func(i int) string) error {
 	if len(rawList) == 0 {
 		return nil

@@ -15,7 +15,7 @@ func DataSourceServicePrincipals() *schema.Resource {
 		DisplayNameContains string   `json:"display_name_contains,omitempty" tf:"computed"`
 		ApplicationIDs      []string `json:"application_ids,omitempty" tf:"computed,slice_set"`
 	}
-	return common.DataResource(spnsData{}, func(ctx context.Context, e interface{}, c *common.DatabricksClient) error {
+	return common.DataResource(spnsData{}, func(ctx context.Context, e any, c *common.DatabricksClient) error {
 		response := e.(*spnsData)
 		spnAPI := NewServicePrincipalsAPI(ctx, c)
 

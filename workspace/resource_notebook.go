@@ -66,7 +66,7 @@ type DeletePath struct {
 }
 
 // NewNotebooksAPI creates NotebooksAPI instance from provider meta
-func NewNotebooksAPI(ctx context.Context, m interface{}) NotebooksAPI {
+func NewNotebooksAPI(ctx context.Context, m any) NotebooksAPI {
 	return NotebooksAPI{m.(*common.DatabricksClient), ctx}
 }
 

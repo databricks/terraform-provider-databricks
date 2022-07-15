@@ -52,7 +52,7 @@ func TestQueryCreate(t *testing.T) {
 		},
 		Resource: ResourceSqlQuery(),
 		Create:   true,
-		State: map[string]interface{}{
+		State: map[string]any{
 			"data_source_id": "xyz",
 			"name":           "Query name",
 			"description":    "Query description",
@@ -334,7 +334,7 @@ func TestQueryCreateDeletesDefaultVisualization(t *testing.T) {
 		},
 		Resource: ResourceSqlQuery(),
 		Create:   true,
-		State: map[string]interface{}{
+		State: map[string]any{
 			"data_source_id": "xyz",
 			"name":           "Query name",
 			"query":          "SELECT 1",
@@ -425,7 +425,7 @@ func TestQueryUpdate(t *testing.T) {
 		Resource: ResourceSqlQuery(),
 		Update:   true,
 		ID:       "foo",
-		State: map[string]interface{}{
+		State: map[string]any{
 			"data_source_id": "xyz",
 			"name":           "Updated name",
 			"description":    "Updated description",
@@ -449,7 +449,7 @@ func TestQueryUpdateWithParams(t *testing.T) {
 		Name:         "Updated name",
 		Query:        "SELECT 1, 2, 3, 4",
 		Options: &api.QueryOptions{
-			Parameters: []interface{}{
+			Parameters: []any{
 				api.QueryParameterText{
 					QueryParameter: api.QueryParameter{
 						Name:  "1",
@@ -672,7 +672,7 @@ func TestQueryUpdateWithParams(t *testing.T) {
 	assert.Equal(t, "xyz", d.Get("data_source_id"))
 	assert.Equal(t, "Updated name", d.Get("name"))
 	assert.Equal(t, "SELECT 1, 2, 3, 4", d.Get("query"))
-	assert.Len(t, d.Get("parameter").([]interface{}), 12)
+	assert.Len(t, d.Get("parameter").([]any), 12)
 }
 
 func TestQueryDelete(t *testing.T) {

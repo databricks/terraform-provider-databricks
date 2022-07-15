@@ -262,7 +262,7 @@ func (ic *importContext) getMountsThroughCluster(
 	return
 }
 
-func eitherString(a interface{}, b interface{}) string {
+func eitherString(a any, b any) string {
 	if a != nil {
 		return a.(string)
 	}

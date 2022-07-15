@@ -37,7 +37,7 @@ func DataSourceGroup() *schema.Resource {
 
 	return &schema.Resource{
 		Schema: s,
-		ReadContext: func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+		ReadContext: func(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
 			var this entity
 			common.DataToStructPointer(d, s, &this)
 			groupsAPI := NewGroupsAPI(ctx, m)

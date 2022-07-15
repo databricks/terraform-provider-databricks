@@ -88,7 +88,7 @@ func TestCatalogCreateWithOwnerAlsoDeletesDefaultSchema(t *testing.T) {
 			{
 				Method:   "PATCH",
 				Resource: "/api/2.1/unity-catalog/catalogs/a",
-				ExpectedRequest: map[string]interface{}{
+				ExpectedRequest: map[string]any{
 					"owner": "administrators",
 				},
 			},
@@ -163,7 +163,7 @@ func TestUpdateCatalog(t *testing.T) {
 			{
 				Method:   "PATCH",
 				Resource: "/api/2.1/unity-catalog/catalogs/a",
-				ExpectedRequest: map[string]interface{}{
+				ExpectedRequest: map[string]any{
 					"owner": "administrators",
 				},
 			},

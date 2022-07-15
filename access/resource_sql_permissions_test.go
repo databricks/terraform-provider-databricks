@@ -52,9 +52,9 @@ func (md mockData) Execute(clusterID, language, commandStr string) common.Comman
 			Summary:    fmt.Sprintf("Query is not mocked: %s", commandStr),
 		}
 	}
-	var x []interface{}
+	var x []any
 	for _, a := range data {
-		var y []interface{}
+		var y []any
 		for _, b := range a {
 			y = append(y, b)
 		}
@@ -162,7 +162,7 @@ var createHighConcurrencyCluster = []qa.HTTPFixture{
 		Method:       "GET",
 		ReuseRequest: true,
 		Resource:     "/api/2.0/clusters/list",
-		Response:     map[string]interface{}{},
+		Response:     map[string]any{},
 	},
 	{
 		Method:       "GET",

@@ -68,7 +68,7 @@ func TestResourceCredentialsCreate(t *testing.T) {
 			},
 		},
 		Resource: ResourceMwsCredentials(),
-		State: map[string]interface{}{
+		State: map[string]any{
 			"account_id":       "abc",
 			"credentials_name": "Cross-account ARN",
 			"role_arn":         "arn:aws:iam::098765:role/cross-account",
@@ -93,7 +93,7 @@ func TestResourceCredentialsCreate_Error(t *testing.T) {
 			},
 		},
 		Resource: ResourceMwsCredentials(),
-		State: map[string]interface{}{
+		State: map[string]any{
 			"account_id":       "abc",
 			"credentials_name": "Cross-account ARN",
 			"role_arn":         "arn:aws:iam::098765:role/cross-account",

@@ -109,7 +109,7 @@ func TestTableCreateWithOwner(t *testing.T) {
 			{
 				Method:   "PATCH",
 				Resource: "/api/2.1/unity-catalog/tables/main.foo.bar",
-				ExpectedRequest: map[string]interface{}{
+				ExpectedRequest: map[string]any{
 					"owner": "administrators",
 				},
 			},

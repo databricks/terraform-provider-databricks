@@ -36,9 +36,9 @@ func TestDashboardCreate(t *testing.T) {
 		},
 		Resource: ResourceSqlDashboard(),
 		Create:   true,
-		State: map[string]interface{}{
+		State: map[string]any{
 			"name": "Dashboard name",
-			"tags": []interface{}{"t1", "t2"},
+			"tags": []any{"t1", "t2"},
 		},
 	}.Apply(t)
 
@@ -94,9 +94,9 @@ func TestDashboardUpdate(t *testing.T) {
 		Resource: ResourceSqlDashboard(),
 		Update:   true,
 		ID:       "xyz",
-		State: map[string]interface{}{
+		State: map[string]any{
 			"name": "Dashboard renamed",
-			"tags": []interface{}{"t2", "t3"},
+			"tags": []any{"t2", "t3"},
 		},
 	}.Apply(t)
 

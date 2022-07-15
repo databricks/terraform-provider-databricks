@@ -40,7 +40,7 @@ func TestResourceAzureBlobMountCreate(t *testing.T) {
 				Data:       "wasbs://c@f.blob.core.windows.net/d",
 			}
 		},
-		State: map[string]interface{}{
+		State: map[string]any{
 			"auth_type":            "ACCESS_KEY",
 			"cluster_id":           "b",
 			"container_name":       "c",
@@ -75,7 +75,7 @@ func TestResourceAzureBlobMountCreate_Error(t *testing.T) {
 				Summary:    "Some error",
 			}
 		},
-		State: map[string]interface{}{
+		State: map[string]any{
 			"auth_type":            "ACCESS_KEY",
 			"cluster_id":           "b",
 			"container_name":       "c",
@@ -114,7 +114,7 @@ func TestResourceAzureBlobMountRead(t *testing.T) {
 				Data:       "wasbs://c@f.blob.core.windows.net/d",
 			}
 		},
-		State: map[string]interface{}{
+		State: map[string]any{
 			"auth_type":            "ACCESS_KEY",
 			"cluster_id":           "b",
 			"container_name":       "c",
@@ -152,7 +152,7 @@ func TestResourceAzureBlobMountRead_NotFound(t *testing.T) {
 				Summary:    "Mount not found",
 			}
 		},
-		State: map[string]interface{}{
+		State: map[string]any{
 			"auth_type":            "ACCESS_KEY",
 			"cluster_id":           "b",
 			"container_name":       "c",
@@ -188,7 +188,7 @@ func TestResourceAzureBlobMountRead_Error(t *testing.T) {
 				Summary:    "Some error",
 			}
 		},
-		State: map[string]interface{}{
+		State: map[string]any{
 			"auth_type":            "ACCESS_KEY",
 			"cluster_id":           "b",
 			"container_name":       "c",
@@ -227,7 +227,7 @@ func TestResourceAzureBlobMountDelete(t *testing.T) {
 				Data:       "",
 			}
 		},
-		State: map[string]interface{}{
+		State: map[string]any{
 			"auth_type":            "ACCESS_KEY",
 			"cluster_id":           "b",
 			"container_name":       "c",

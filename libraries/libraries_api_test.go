@@ -326,21 +326,21 @@ func TestClusterLibraryStatuses_Errors(t *testing.T) {
 func TestNewLibraryFromInstanceState(t *testing.T) {
 	tests := []struct {
 		want string
-		give interface{}
+		give any
 	}{
-		{"jar:a", map[string]interface{}{"jar": "a"}},
-		{"egg:b", map[string]interface{}{"egg": "b"}},
-		{"whl:c", map[string]interface{}{"whl": "c"}},
-		{"pypi:d", map[string]interface{}{"pypi": []interface{}{
-			map[string]interface{}{"package": "d"},
+		{"jar:a", map[string]any{"jar": "a"}},
+		{"egg:b", map[string]any{"egg": "b"}},
+		{"whl:c", map[string]any{"whl": "c"}},
+		{"pypi:d", map[string]any{"pypi": []any{
+			map[string]any{"package": "d"},
 		}}},
-		{"mvn:e", map[string]interface{}{"maven": []interface{}{
-			map[string]interface{}{"coordinates": "e"},
+		{"mvn:e", map[string]any{"maven": []any{
+			map[string]any{"coordinates": "e"},
 		}}},
-		{"cran:f", map[string]interface{}{"cran": []interface{}{
-			map[string]interface{}{"package": "f"},
+		{"cran:f", map[string]any{"cran": []any{
+			map[string]any{"package": "f"},
 		}}},
-		{"unknown", map[string]interface{}{"bottle": "g"}},
+		{"unknown", map[string]any{"bottle": "g"}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.want, func(t *testing.T) {

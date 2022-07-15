@@ -148,7 +148,7 @@ func TestModelUpdate(t *testing.T) {
 		Update:      true,
 		RequiresNew: true,
 		ID:          "xyz",
-		State: map[string]interface{}{
+		State: map[string]any{
 			"name": "xyz",
 		},
 		HCL: `
@@ -180,7 +180,7 @@ func TestModelUpdatePatchError(t *testing.T) {
 		Update:      true,
 		RequiresNew: true,
 		ID:          "xyz",
-		State: map[string]interface{}{
+		State: map[string]any{
 			"name": "xyz",
 		},
 		HCL: `

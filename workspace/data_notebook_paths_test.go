@@ -47,7 +47,7 @@ func TestDataSourceNotebookPaths(t *testing.T) {
 		NonWritable: true,
 		Resource:    DataSourceNotebookPaths(),
 		ID:          ".",
-		State: map[string]interface{}{
+		State: map[string]any{
 			"path":      "/a/b/c",
 			"recursive": true,
 		},
@@ -82,7 +82,7 @@ func TestDataSourceNotebookPaths_NoRecursive(t *testing.T) {
 		NonWritable: true,
 		Resource:    DataSourceNotebookPaths(),
 		ID:          ".",
-		State: map[string]interface{}{
+		State: map[string]any{
 			"path":      "/a/b/c",
 			"recursive": false,
 		},

@@ -107,7 +107,7 @@ func TestResourceSecretCreate(t *testing.T) {
 			},
 		},
 		Resource: ResourceSecret(),
-		State: map[string]interface{}{
+		State: map[string]any{
 			"scope":        "foo",
 			"key":          "bar",
 			"string_value": "SparkIsTh3Be$t",
@@ -132,7 +132,7 @@ func TestResourceSecretCreate_Error(t *testing.T) {
 			},
 		},
 		Resource: ResourceSecret(),
-		State: map[string]interface{}{
+		State: map[string]any{
 			"key":          "...",
 			"scope":        "...",
 			"string_value": "...",

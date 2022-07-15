@@ -702,13 +702,13 @@ func TestSqlListObjects(t *testing.T) {
 			Method:   "GET",
 			Resource: "/api/2.0/preview/sql/queries",
 			Response: dbsqlListResponse{PageSize: 1, Page: 1, TotalCount: 2,
-				Results: []map[string]interface{}{{"key1": "value1"}}},
+				Results: []map[string]any{{"key1": "value1"}}},
 		},
 		{
 			Method:   "GET",
 			Resource: "/api/2.0/preview/sql/queries?page=2&page_size=1",
 			Response: dbsqlListResponse{PageSize: 1, Page: 2, TotalCount: 2,
-				Results: []map[string]interface{}{{"key2": "value2"}}},
+				Results: []map[string]any{{"key2": "value2"}}},
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		ic := importContextForTest()

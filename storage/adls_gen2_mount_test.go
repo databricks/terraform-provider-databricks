@@ -39,7 +39,7 @@ func TestResourceAdlsGen2Mount_Create(t *testing.T) {
 				Data:       "abfss://e@test-adls-gen2.dfs.core.windows.net",
 			}
 		},
-		State: map[string]interface{}{
+		State: map[string]any{
 			"cluster_id":             "this_cluster",
 			"container_name":         "e",
 			"mount_name":             "this_mount",

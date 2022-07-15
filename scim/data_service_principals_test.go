@@ -36,7 +36,7 @@ func TestDataServicePrincipalsReadByDisplayName(t *testing.T) {
 		Read:        true,
 		NonWritable: true,
 		ID:          "_",
-	}.ApplyAndExpectData(t, map[string]interface{}{
+	}.ApplyAndExpectData(t, map[string]any{
 		"application_ids": []string{"123", "124"},
 	})
 }
@@ -88,7 +88,7 @@ func TestDataServicePrincipalsReadNoFilter(t *testing.T) {
 		Read:        true,
 		NonWritable: true,
 		ID:          "_",
-	}.ApplyAndExpectData(t, map[string]interface{}{
+	}.ApplyAndExpectData(t, map[string]any{
 		"application_ids": []string{"123", "124"},
 	})
 }

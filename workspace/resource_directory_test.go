@@ -53,7 +53,7 @@ func TestResourceDirectoryDelete(t *testing.T) {
 		Resource: ResourceDirectory(),
 		Delete:   true,
 		ID:       path,
-		State: map[string]interface{}{
+		State: map[string]any{
 			"path":             "/foo/path.py",
 			"delete_recursive": delete_recursive,
 		},
@@ -127,7 +127,7 @@ func TestResourceDirectoryCreate(t *testing.T) {
 			},
 		},
 		Resource: ResourceDirectory(),
-		State: map[string]interface{}{
+		State: map[string]any{
 			"object_id":        4567,
 			"path":             path,
 			"delete_recursive": false,
@@ -156,7 +156,7 @@ func TestResourceDirectoryCreate_Error(t *testing.T) {
 			},
 		},
 		Resource: ResourceDirectory(),
-		State: map[string]interface{}{
+		State: map[string]any{
 			"path": path,
 		},
 		Create: true,
@@ -224,7 +224,7 @@ func TestResourceDirectoryUpdate(t *testing.T) {
 			"path":             path,
 			"delete_recursive": "true",
 		},
-		State: map[string]interface{}{
+		State: map[string]any{
 			"object_id": object_id,
 			"path":      path,
 		},

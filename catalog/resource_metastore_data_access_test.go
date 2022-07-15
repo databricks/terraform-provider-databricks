@@ -30,7 +30,7 @@ func TestCreateDac(t *testing.T) {
 			{
 				Method:   "PATCH",
 				Resource: "/api/2.1/unity-catalog/metastores/abc",
-				ExpectedRequest: map[string]interface{}{
+				ExpectedRequest: map[string]any{
 					"default_data_access_config_id": "efg",
 				},
 			},
@@ -84,7 +84,7 @@ func TestCreateDacWithAzMI(t *testing.T) {
 			{
 				Method:   "PATCH",
 				Resource: "/api/2.1/unity-catalog/metastores/abc",
-				ExpectedRequest: map[string]interface{}{
+				ExpectedRequest: map[string]any{
 					"default_data_access_config_id": "efg",
 				},
 			},

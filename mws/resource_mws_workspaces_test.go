@@ -95,7 +95,7 @@ func TestResourceWorkspaceCreate(t *testing.T) {
 			},
 		},
 		Resource: ResourceMwsWorkspaces(),
-		State: map[string]interface{}{
+		State: map[string]any{
 			"account_id":     "abc",
 			"aws_region":     "us-east-1",
 			"credentials_id": "bcd",
@@ -119,22 +119,22 @@ func TestResourceWorkspaceCreateGcp(t *testing.T) {
 				Method:   "POST",
 				Resource: "/api/2.0/accounts/abc/workspaces",
 				// retreating to raw JSON, as certain fields don't work well together
-				ExpectedRequest: map[string]interface{}{
+				ExpectedRequest: map[string]any{
 					"account_id": "abc",
 					"cloud":      "gcp",
-					"cloud_resource_bucket": map[string]interface{}{
-						"gcp": map[string]interface{}{
+					"cloud_resource_bucket": map[string]any{
+						"gcp": map[string]any{
 							"project_id": "def",
 						},
 					},
 					"location": "bcd",
-					"network": map[string]interface{}{
+					"network": map[string]any{
 						"network_id": "net_id_a",
-						"gcp_common_network_config": map[string]interface{}{
+						"gcp_common_network_config": map[string]any{
 							"gke_cluster_master_ip_range": "e",
 							"gke_connectivity_type":       "d",
 						},
-						"gcp_managed_network_config": map[string]interface{}{
+						"gcp_managed_network_config": map[string]any{
 							"gke_cluster_pod_ip_range":     "b",
 							"gke_cluster_service_ip_range": "c",
 							"subnet_cidr":                  "a",
@@ -235,7 +235,7 @@ func TestResourceWorkspaceCreateWithIsNoPublicIPEnabledFalse(t *testing.T) {
 			},
 		},
 		Resource: ResourceMwsWorkspaces(),
-		State: map[string]interface{}{
+		State: map[string]any{
 			"account_id":     "abc",
 			"aws_region":     "us-east-1",
 			"credentials_id": "bcd",
@@ -295,7 +295,7 @@ func TestResourceWorkspaceCreateLegacyConfig(t *testing.T) {
 			},
 		},
 		Resource: ResourceMwsWorkspaces(),
-		State: map[string]interface{}{
+		State: map[string]any{
 			"account_id":               "abc",
 			"aws_region":               "us-east-1",
 			"credentials_id":           "bcd",
@@ -335,7 +335,7 @@ func TestResourceWorkspaceCreate_Error(t *testing.T) {
 			},
 		},
 		Resource: ResourceMwsWorkspaces(),
-		State: map[string]interface{}{
+		State: map[string]any{
 			"account_id":     "abc",
 			"aws_region":     "us-east-1",
 			"credentials_id": "bcd",
@@ -429,7 +429,7 @@ func TestResourceWorkspaceRead_Issue382(t *testing.T) {
 			"network_id":                               "fgh",
 			"storage_configuration_id":                 "ghi",
 		},
-		State: map[string]interface{}{
+		State: map[string]any{
 			"account_id":     "abc",
 			"aws_region":     "us-east-1",
 			"credentials_id": "bcd",
@@ -498,7 +498,7 @@ func TestResourceWorkspaceUpdate(t *testing.T) {
 			{
 				Method:   "PATCH",
 				Resource: "/api/2.0/accounts/abc/workspaces/1234",
-				ExpectedRequest: map[string]interface{}{
+				ExpectedRequest: map[string]any{
 					"credentials_id":                  "bcd",
 					"network_id":                      "fgh",
 					"storage_customer_managed_key_id": "def",
@@ -537,7 +537,7 @@ func TestResourceWorkspaceUpdate(t *testing.T) {
 			"storage_configuration_id":                 "ghi",
 			"workspace_id":                             "1234",
 		},
-		State: map[string]interface{}{
+		State: map[string]any{
 			"account_id":     "abc",
 			"aws_region":     "us-east-1",
 			"credentials_id": "bcd",
@@ -573,7 +573,7 @@ func TestResourceWorkspaceUpdate_NotAllowed(t *testing.T) {
 			"storage_configuration_id":                 "ghi",
 			"workspace_id":                             "1234",
 		},
-		State: map[string]interface{}{
+		State: map[string]any{
 			"account_id": "THIS_IS_CHANGING",
 
 			"aws_region":     "us-east-1",
@@ -598,7 +598,7 @@ func TestResourceWorkspaceUpdateLegacyConfig(t *testing.T) {
 			{
 				Method:   "PATCH",
 				Resource: "/api/2.0/accounts/abc/workspaces/1234",
-				ExpectedRequest: map[string]interface{}{
+				ExpectedRequest: map[string]any{
 					"credentials_id": "bcd",
 					"network_id":     "fgh",
 				},
@@ -635,7 +635,7 @@ func TestResourceWorkspaceUpdateLegacyConfig(t *testing.T) {
 			"storage_configuration_id": "ghi",
 			"workspace_id":             "1234",
 		},
-		State: map[string]interface{}{
+		State: map[string]any{
 			"account_id":               "abc",
 			"aws_region":               "us-east-1",
 			"credentials_id":           "bcd",
@@ -667,7 +667,7 @@ func TestResourceWorkspaceUpdate_Error(t *testing.T) {
 			},
 		},
 		Resource: ResourceMwsWorkspaces(),
-		State: map[string]interface{}{
+		State: map[string]any{
 			"account_id":     "abc",
 			"aws_region":     "us-east-1",
 			"credentials_id": "bcd",
@@ -1021,7 +1021,7 @@ func TestUpdateWorkspace_DeleteToken(t *testing.T) {
 		{
 			Method:   "POST",
 			Resource: "/api/2.0/token/delete",
-			ExpectedRequest: map[string]interface{}{
+			ExpectedRequest: map[string]any{
 				"token_id": "abcdef",
 			},
 		},
@@ -1039,7 +1039,7 @@ func TestUpdateWorkspace_ReplaceToken(t *testing.T) {
 		{
 			Method:   "POST",
 			Resource: "/api/2.0/token/delete",
-			ExpectedRequest: map[string]interface{}{
+			ExpectedRequest: map[string]any{
 				"token_id": "abcdef",
 			},
 		},
@@ -1093,8 +1093,8 @@ func TestEnsureTokenExists(t *testing.T) {
 		r := ResourceMwsWorkspaces()
 		d := r.TestResourceData()
 		d.Set("workspace_url", client.Host)
-		d.Set("token", []interface{}{
-			map[string]interface{}{
+		d.Set("token", []any{
+			map[string]any{
 				"lifetime_seconds": 3600,
 				"comment":          "test",
 				"token_id":         "abcdef",
@@ -1123,8 +1123,8 @@ func TestEnsureTokenExists_NoRecreate(t *testing.T) {
 		r := ResourceMwsWorkspaces()
 		d := r.TestResourceData()
 		d.Set("workspace_url", client.Host)
-		d.Set("token", []interface{}{
-			map[string]interface{}{
+		d.Set("token", []any{
+			map[string]any{
 				"lifetime_seconds": 3600,
 				"comment":          "test",
 				"token_id":         "old-id",
@@ -1142,8 +1142,8 @@ func TestWorkspaceTokenWrongAuthCornerCase(t *testing.T) {
 	r := ResourceMwsWorkspaces()
 	d := r.TestResourceData()
 	d.Set("workspace_url", client.Host)
-	d.Set("token", []interface{}{
-		map[string]interface{}{
+	d.Set("token", []any{
+		map[string]any{
 			"lifetime_seconds": 3600,
 			"comment":          "test",
 			"token_id":         "old-id",
@@ -1178,8 +1178,8 @@ func TestWorkspaceTokenHttpCornerCases(t *testing.T) {
 		r := ResourceMwsWorkspaces()
 		d := r.TestResourceData()
 		d.Set("workspace_url", client.Host)
-		d.Set("token", []interface{}{
-			map[string]interface{}{
+		d.Set("token", []any{
+			map[string]any{
 				"lifetime_seconds": 3600,
 				"comment":          "test",
 				"token_id":         "old-id",

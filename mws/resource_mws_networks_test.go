@@ -100,11 +100,11 @@ func TestResourceNetworkCreate_Error(t *testing.T) {
 			},
 		},
 		Resource: ResourceMwsNetworks(),
-		State: map[string]interface{}{
+		State: map[string]any{
 			"account_id":         "abc",
 			"network_name":       "Open Workers",
-			"security_group_ids": []interface{}{"one", "two"},
-			"subnet_ids":         []interface{}{"three", "four"},
+			"security_group_ids": []any{"one", "two"},
+			"subnet_ids":         []any{"three", "four"},
 			"vpc_id":             "five",
 		},
 		Create: true,

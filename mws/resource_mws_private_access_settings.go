@@ -11,7 +11,7 @@ import (
 )
 
 // NewPrivateAccessSettingsAPI creates VPCEndpointAPI instance from provider meta
-func NewPrivateAccessSettingsAPI(ctx context.Context, m interface{}) PrivateAccessSettingsAPI {
+func NewPrivateAccessSettingsAPI(ctx context.Context, m any) PrivateAccessSettingsAPI {
 	return PrivateAccessSettingsAPI{m.(*common.DatabricksClient), ctx}
 }
 

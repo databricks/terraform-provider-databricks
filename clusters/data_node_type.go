@@ -173,7 +173,7 @@ func DataSourceNodeType() *schema.Resource {
 	return &schema.Resource{
 		Schema: s,
 		ReadContext: func(ctx context.Context, d *schema.ResourceData,
-			m interface{}) diag.Diagnostics {
+			m any) diag.Diagnostics {
 			var this NodeTypeRequest
 			common.DataToStructPointer(d, s, &this)
 			clustersAPI := NewClustersAPI(ctx, m)

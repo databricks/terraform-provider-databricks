@@ -113,7 +113,7 @@ func TestResourceGlobalInitScriptCreate(t *testing.T) {
 		},
 		Create:   true,
 		Resource: ResourceGlobalInitScript(),
-		State: map[string]interface{}{
+		State: map[string]any{
 			"name":           "test",
 			"content_base64": "ZWNobyBoZWxsbw==",
 		},
@@ -128,7 +128,7 @@ func TestResourceGlobalInitScriptCreateBigPayload(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{},
 		Create:   true,
 		Resource: ResourceGlobalInitScript(),
-		State: map[string]interface{}{
+		State: map[string]any{
 			"name":           "test",
 			"content_base64": base64.StdEncoding.EncodeToString([]byte(strings.Repeat("12", maxScriptSize))),
 		},
@@ -143,7 +143,7 @@ func TestResourceGlobalInitScriptUpdateBigPayload(t *testing.T) {
 		Update:   true,
 		Resource: ResourceGlobalInitScript(),
 		ID:       "1234",
-		State: map[string]interface{}{
+		State: map[string]any{
 			"name":           "test",
 			"content_base64": base64.StdEncoding.EncodeToString([]byte(strings.Repeat("12", maxScriptSize))),
 		},
@@ -182,7 +182,7 @@ func TestResourceGlobalInitScriptUpdate(t *testing.T) {
 		Update:   true,
 		ID:       "1234",
 		Resource: ResourceGlobalInitScript(),
-		State: map[string]interface{}{
+		State: map[string]any{
 			"name":           "test",
 			"content_base64": "ZWNobyBoZWxsbw==",
 			"position":       0,

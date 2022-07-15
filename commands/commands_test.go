@@ -34,7 +34,7 @@ func commonFixtureWithStatusResponse(response Command) []qa.HTTPFixture {
 		{
 			Method:   "POST",
 			Resource: "/api/1.2/contexts/create",
-			ExpectedRequest: map[string]interface{}{
+			ExpectedRequest: map[string]any{
 				"clusterId": "abc",
 				"language":  "python",
 			},

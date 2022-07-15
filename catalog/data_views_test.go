@@ -37,7 +37,7 @@ func TestViewsData(t *testing.T) {
 		Read:        true,
 		NonWritable: true,
 		ID:          "_",
-	}.ApplyAndExpectData(t, map[string]interface{}{
+	}.ApplyAndExpectData(t, map[string]any{
 		"ids": []string{"a.b.d"},
 	})
 }

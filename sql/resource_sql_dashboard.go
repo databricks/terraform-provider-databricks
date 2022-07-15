@@ -47,7 +47,7 @@ func (d *DashboardEntity) fromAPIObject(ad *api.Dashboard, schema map[string]*sc
 }
 
 // NewDashboardAPI ...
-func NewDashboardAPI(ctx context.Context, m interface{}) DashboardAPI {
+func NewDashboardAPI(ctx context.Context, m any) DashboardAPI {
 	return DashboardAPI{m.(*common.DatabricksClient), ctx}
 }
 

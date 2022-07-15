@@ -185,7 +185,7 @@ func TestResourceCustomerManagedKeyRead(t *testing.T) {
 	assert.Equal(t, "key-arn", d.Get("aws_key_info.0.key_arn"))
 	assert.Equal(t, "key-alias", d.Get("aws_key_info.0.key_alias"))
 	assert.Equal(t, "us-east-1", d.Get("aws_key_info.0.key_region"))
-	assert.Equal(t, []interface{}{"MANAGED_SERVICES"}, d.Get("use_cases"))
+	assert.Equal(t, []any{"MANAGED_SERVICES"}, d.Get("use_cases"))
 	assert.Equal(t, "abc", d.Get("account_id"))
 	assert.Equal(t, 123, d.Get("creation_time"))
 }
@@ -246,7 +246,7 @@ func TestResourceCustomerManagedKeyDelete(t *testing.T) {
 
 func TestCmkStateUpgrader(t *testing.T) {
 	state, err := migrateResourceCustomerManagedKeyV0(context.Background(),
-		map[string]interface{}{}, nil)
+		map[string]any{}, nil)
 	assert.NoError(t, err)
 	_, ok := state["use_cases"]
 	assert.True(t, ok)

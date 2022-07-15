@@ -62,7 +62,7 @@ func TestResourceStorageConfigurationCreate(t *testing.T) {
 			},
 		},
 		Resource: ResourceMwsStorageConfigurations(),
-		State: map[string]interface{}{
+		State: map[string]any{
 			"account_id":                 "abc",
 			"bucket_name":                "bucket",
 			"storage_configuration_name": "Main Storage",
@@ -87,7 +87,7 @@ func TestResourceStorageConfigurationCreate_Error(t *testing.T) {
 			},
 		},
 		Resource: ResourceMwsStorageConfigurations(),
-		State: map[string]interface{}{
+		State: map[string]any{
 			"account_id":                 "abc",
 			"bucket_name":                "bucket",
 			"storage_configuration_name": "Main Storage",

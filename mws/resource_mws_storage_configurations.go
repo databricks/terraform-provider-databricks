@@ -10,7 +10,7 @@ import (
 )
 
 // NewStorageConfigurationsAPI creates MWSStorageConfigurationsAPI instance from provider meta
-func NewStorageConfigurationsAPI(ctx context.Context, m interface{}) StorageConfigurationsAPI {
+func NewStorageConfigurationsAPI(ctx context.Context, m any) StorageConfigurationsAPI {
 	return StorageConfigurationsAPI{m.(*common.DatabricksClient), ctx}
 }
 

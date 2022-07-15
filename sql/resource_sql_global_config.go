@@ -36,7 +36,7 @@ type GlobalConfigForRead struct {
 	SqlConfigurationParameters *repeatedEndpointConfPairs `json:"sql_configuration_parameters,omitempty"`
 }
 
-func NewSqlGlobalConfigAPI(ctx context.Context, m interface{}) globalConfigAPI {
+func NewSqlGlobalConfigAPI(ctx context.Context, m any) globalConfigAPI {
 	return globalConfigAPI{m.(*common.DatabricksClient), ctx}
 }
 
@@ -46,7 +46,7 @@ type globalConfigAPI struct {
 }
 
 func (a globalConfigAPI) Set(gc GlobalConfig) error {
-	data := map[string]interface{}{
+	data := map[string]any{
 		"security_policy":           gc.SecurityPolicy,
 		"enable_serverless_compute": gc.EnableServerlessCompute,
 	}

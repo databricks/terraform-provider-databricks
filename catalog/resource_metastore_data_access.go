@@ -13,7 +13,7 @@ type DataAccessConfigurationsAPI struct {
 	context context.Context
 }
 
-func NewDataAccessConfigurationsAPI(ctx context.Context, m interface{}) DataAccessConfigurationsAPI {
+func NewDataAccessConfigurationsAPI(ctx context.Context, m any) DataAccessConfigurationsAPI {
 	return DataAccessConfigurationsAPI{m.(*common.DatabricksClient), context.WithValue(ctx, common.Api, common.API_2_1)}
 }
 
@@ -89,7 +89,7 @@ func ResourceMetastoreDataAccess() *schema.Resource {
 			d.Set("id", dac.ID)
 			p.Pack(d)
 			if d.Get("is_default").(bool) {
-				return NewMetastoresAPI(ctx, c).updateMetastore(metastoreID, map[string]interface{}{
+				return NewMetastoresAPI(ctx, c).updateMetastore(metastoreID, map[string]any{
 					"default_data_access_config_id": dac.ID,
 				})
 			}

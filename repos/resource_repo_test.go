@@ -50,7 +50,7 @@ func TestResourceRepoRead(t *testing.T) {
 		New:      true,
 		ID:       repoIDStr,
 	}.ApplyAndExpectData(t,
-		map[string]interface{}{"id": repoIDStr, "path": path, "branch": branch, "git_provider": provider,
+		map[string]any{"id": repoIDStr, "path": path, "branch": branch, "git_provider": provider,
 			"url": url, "commit_hash": "7e0847ede61f07adede22e2bcce6050216489171"})
 }
 
@@ -89,7 +89,7 @@ func TestResourceRepoDelete(t *testing.T) {
 		Delete:   true,
 		ID:       repoID,
 	}.ApplyAndExpectData(t,
-		map[string]interface{}{"id": repoID})
+		map[string]any{"id": repoID})
 }
 
 func TestResourceRepoCreateNoBranch(t *testing.T) {
@@ -119,12 +119,12 @@ func TestResourceRepoCreateNoBranch(t *testing.T) {
 			},
 		},
 		Resource: ResourceRepo(),
-		State: map[string]interface{}{
+		State: map[string]any{
 			"url": "https://github.com/user/test.git",
 		},
 		Create: true,
 	}.ApplyAndExpectData(t,
-		map[string]interface{}{"id": resp.RepoID(), "path": resp.Path, "branch": resp.Branch,
+		map[string]any{"id": resp.RepoID(), "path": resp.Path, "branch": resp.Branch,
 			"git_provider": resp.Provider, "url": resp.Url, "commit_hash": resp.HeadCommitID})
 }
 
@@ -163,13 +163,13 @@ func TestResourceRepoCreateCustomDirectory(t *testing.T) {
 			},
 		},
 		Resource: ResourceRepo(),
-		State: map[string]interface{}{
+		State: map[string]any{
 			"url":  "https://github.com/user/test.git",
 			"path": "/Repos/Production/test/",
 		},
 		Create: true,
 	}.ApplyAndExpectData(t,
-		map[string]interface{}{"id": resp.RepoID(), "path": resp.Path, "branch": resp.Branch,
+		map[string]any{"id": resp.RepoID(), "path": resp.Path, "branch": resp.Branch,
 			"git_provider": resp.Provider, "url": resp.Url, "commit_hash": resp.HeadCommitID})
 }
 
@@ -190,7 +190,7 @@ func TestResourceRepoCreateCustomDirectoryError(t *testing.T) {
 			},
 		},
 		Resource: ResourceRepo(),
-		State: map[string]interface{}{
+		State: map[string]any{
 			"url":  "https://github.com/user/test.git",
 			"path": "/Repos/Production/test/",
 		},
@@ -201,7 +201,7 @@ func TestResourceRepoCreateCustomDirectoryError(t *testing.T) {
 func TestResourceRepoCreateCustomDirectoryWrongLocation(t *testing.T) {
 	qa.ResourceFixture{
 		Resource: ResourceRepo(),
-		State: map[string]interface{}{
+		State: map[string]any{
 			"url":  "https://github.com/user/test.git",
 			"path": "/NotRepos/Production/test/",
 		},
@@ -234,7 +234,7 @@ func TestResourceRepoCreateWithBranch(t *testing.T) {
 			{
 				Method:          "PATCH",
 				Resource:        "/api/2.0/repos/121232342",
-				ExpectedRequest: map[string]interface{}{"branch": "releases"},
+				ExpectedRequest: map[string]any{"branch": "releases"},
 				Response:        respPatch,
 			},
 			{
@@ -244,13 +244,13 @@ func TestResourceRepoCreateWithBranch(t *testing.T) {
 			},
 		},
 		Resource: ResourceRepo(),
-		State: map[string]interface{}{
+		State: map[string]any{
 			"url":    "https://github.com/user/test.git",
 			"branch": "releases",
 		},
 		Create: true,
 	}.ApplyAndExpectData(t,
-		map[string]interface{}{"id": resp.RepoID(), "path": resp.Path, "branch": respPatch.Branch,
+		map[string]any{"id": resp.RepoID(), "path": resp.Path, "branch": respPatch.Branch,
 			"git_provider": resp.Provider, "url": resp.Url, "commit_hash": resp.HeadCommitID})
 }
 
@@ -279,7 +279,7 @@ func TestResourceRepoCreateWithTag(t *testing.T) {
 			{
 				Method:          "PATCH",
 				Resource:        "/api/2.0/repos/121232342",
-				ExpectedRequest: map[string]interface{}{"tag": "v0.1"},
+				ExpectedRequest: map[string]any{"tag": "v0.1"},
 				Response:        respPatch,
 			},
 			{
@@ -289,13 +289,13 @@ func TestResourceRepoCreateWithTag(t *testing.T) {
 			},
 		},
 		Resource: ResourceRepo(),
-		State: map[string]interface{}{
+		State: map[string]any{
 			"url": "https://github.com/user/test.git",
 			"tag": "v0.1",
 		},
 		Create: true,
 	}.ApplyAndExpectData(t,
-		map[string]interface{}{"id": resp.RepoID(), "path": resp.Path,
+		map[string]any{"id": resp.RepoID(), "path": resp.Path,
 			"git_provider": resp.Provider, "url": resp.Url, "commit_hash": resp.HeadCommitID})
 }
 
@@ -303,7 +303,7 @@ func TestResourceRepoCreateError(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{},
 		Resource: ResourceRepo(),
-		State: map[string]interface{}{
+		State: map[string]any{
 			"url": "https://somegit.com/user/test.git",
 		},
 		Create: true,
@@ -323,7 +323,7 @@ func TestResourceReposUpdateSwitchToTag(t *testing.T) {
 			{
 				Method:          "PATCH",
 				Resource:        "/api/2.0/repos/121232342",
-				ExpectedRequest: map[string]interface{}{"tag": "v0.1"},
+				ExpectedRequest: map[string]any{"tag": "v0.1"},
 				Response:        resp,
 			},
 			{
@@ -339,7 +339,7 @@ func TestResourceReposUpdateSwitchToTag(t *testing.T) {
 			"path":         "/Repos/user@domain/test",
 			"branch":       "main",
 		},
-		State: map[string]interface{}{
+		State: map[string]any{
 			"url":          "https://github.com/user/test.git",
 			"git_provider": "gitHub",
 			"path":         "/Repos/user@domain/test",
@@ -348,7 +348,7 @@ func TestResourceReposUpdateSwitchToTag(t *testing.T) {
 		ID:          "121232342",
 		Update:      true,
 		RequiresNew: true,
-	}.ApplyAndExpectData(t, map[string]interface{}{"branch": ""})
+	}.ApplyAndExpectData(t, map[string]any{"branch": ""})
 }
 
 func TestResourceReposUpdateSwitchToBranch(t *testing.T) {
@@ -365,7 +365,7 @@ func TestResourceReposUpdateSwitchToBranch(t *testing.T) {
 			{
 				Method:          "PATCH",
 				Resource:        "/api/2.0/repos/121232342",
-				ExpectedRequest: map[string]interface{}{"branch": "releases"},
+				ExpectedRequest: map[string]any{"branch": "releases"},
 				Response:        resp,
 			},
 			{
@@ -381,7 +381,7 @@ func TestResourceReposUpdateSwitchToBranch(t *testing.T) {
 			"path":         "/Repos/user@domain/test",
 			"branch":       "main",
 		},
-		State: map[string]interface{}{
+		State: map[string]any{
 			"url":          "https://github.com/user/test.git",
 			"git_provider": "gitHub",
 			"path":         "/Repos/user@domain/test",
@@ -389,7 +389,7 @@ func TestResourceReposUpdateSwitchToBranch(t *testing.T) {
 		},
 		ID:     "121232342",
 		Update: true,
-	}.ApplyAndExpectData(t, map[string]interface{}{"branch": "releases"})
+	}.ApplyAndExpectData(t, map[string]any{"branch": "releases"})
 }
 
 func TestReposListAll(t *testing.T) {

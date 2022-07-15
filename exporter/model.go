@@ -15,7 +15,7 @@ type regexFix struct {
 
 type instanceApproximation struct {
 	// not really interested in other than strings...
-	Attributes map[string]interface{} `json:"attributes"`
+	Attributes map[string]any `json:"attributes"`
 }
 
 type resourceApproximation struct {

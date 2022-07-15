@@ -263,7 +263,7 @@ type UpdateJobRequest struct {
 }
 
 // NewJobsAPI creates JobsAPI instance from provider meta
-func NewJobsAPI(ctx context.Context, m interface{}) JobsAPI {
+func NewJobsAPI(ctx context.Context, m any) JobsAPI {
 	client := m.(*common.DatabricksClient)
 	return JobsAPI{client, ctx}
 }
@@ -288,8 +288,8 @@ func (a JobsAPI) RunsList(r JobRunsListRequest) (jrl JobRunsList, err error) {
 
 // RunsCancel cancels job run and waits till it's finished
 func (a JobsAPI) RunsCancel(runID int64, timeout time.Duration) error {
-	var response interface{}
-	err := a.client.Post(a.context, "/jobs/runs/cancel", map[string]interface{}{
+	var response any
+	err := a.client.Post(a.context, "/jobs/runs/cancel", map[string]any{
 		"run_id": runID,
 	}, &response)
 	if err != nil {
@@ -333,7 +333,7 @@ func (a JobsAPI) RunNow(jobID int64) (int64, error) {
 // RunsGet to retrieve information about the run
 func (a JobsAPI) RunsGet(runID int64) (JobRun, error) {
 	var jr JobRun
-	err := a.client.Get(a.context, "/jobs/runs/get", map[string]interface{}{
+	err := a.client.Get(a.context, "/jobs/runs/get", map[string]any{
 		"run_id": runID,
 	}, &jr)
 	return jr, err
@@ -519,7 +519,7 @@ func ResourceJob() *schema.Resource {
 			Create: schema.DefaultTimeout(clusters.DefaultProvisionTimeout),
 			Update: schema.DefaultTimeout(clusters.DefaultProvisionTimeout),
 		},
-		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, m interface{}) error {
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, m any) error {
 			var js JobSettings
 			common.DiffToStructPointer(d, jobSchema, &js)
 			alwaysRunning := d.Get("always_running").(bool)

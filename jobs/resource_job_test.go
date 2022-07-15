@@ -1094,7 +1094,7 @@ func TestJobRestarts(t *testing.T) {
 		{
 			Method:   "POST",
 			Resource: "/api/2.0/jobs/runs/cancel",
-			ExpectedRequest: map[string]interface{}{
+			ExpectedRequest: map[string]any{
 				"run_id": 567,
 			},
 		},

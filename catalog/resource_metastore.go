@@ -15,7 +15,7 @@ type MetastoresAPI struct {
 	context context.Context
 }
 
-func NewMetastoresAPI(ctx context.Context, m interface{}) MetastoresAPI {
+func NewMetastoresAPI(ctx context.Context, m any) MetastoresAPI {
 	return MetastoresAPI{m.(*common.DatabricksClient), context.WithValue(ctx, common.Api, common.API_2_1)}
 }
 
@@ -58,12 +58,12 @@ func (a MetastoresAPI) getMetastore(id string) (mi MetastoreInfo, err error) {
 	return
 }
 
-func (a MetastoresAPI) updateMetastore(metastoreID string, update map[string]interface{}) error {
+func (a MetastoresAPI) updateMetastore(metastoreID string, update map[string]any) error {
 	return a.client.Patch(a.context, "/unity-catalog/metastores/"+metastoreID, update)
 }
 
 func (a MetastoresAPI) deleteMetastore(id string, force bool) error {
-	return a.client.Delete(a.context, "/unity-catalog/metastores/"+id, map[string]interface{}{
+	return a.client.Delete(a.context, "/unity-catalog/metastores/"+id, map[string]any{
 		"force": force,
 	})
 }

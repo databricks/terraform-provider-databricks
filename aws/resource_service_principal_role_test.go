@@ -40,12 +40,12 @@ func TestResourceServicePrincipalRoleCreate(t *testing.T) {
 			},
 		},
 		Resource: ResourceServicePrincipalRole(),
-		State: map[string]interface{}{
+		State: map[string]any{
 			"service_principal_id": "abc",
 			"role":                 "arn:aws:iam::999999999999:instance-profile/my-fake-instance-profile",
 		},
 		Create: true,
-	}.ApplyAndExpectData(t, map[string]interface{}{"id": "abc|arn:aws:iam::999999999999:instance-profile/my-fake-instance-profile"})
+	}.ApplyAndExpectData(t, map[string]any{"id": "abc|arn:aws:iam::999999999999:instance-profile/my-fake-instance-profile"})
 }
 
 func TestResourceServicePrincipalRoleCreate_Error(t *testing.T) {
@@ -62,7 +62,7 @@ func TestResourceServicePrincipalRoleCreate_Error(t *testing.T) {
 			},
 		},
 		Resource: ResourceServicePrincipalRole(),
-		State: map[string]interface{}{
+		State: map[string]any{
 			"service_principal_id": "abc",
 			"role":                 "arn:aws:iam::999999999999:instance-profile/my-fake-instance-profile",
 		},
@@ -91,7 +91,7 @@ func TestResourceServicePrincipalRoleRead(t *testing.T) {
 		Resource: ResourceServicePrincipalRole(),
 		Read:     true,
 		ID:       "abc|arn:aws:iam::999999999999:instance-profile/my-fake-instance-profile",
-	}.ApplyAndExpectData(t, map[string]interface{}{"id": "abc|arn:aws:iam::999999999999:instance-profile/my-fake-instance-profile"})
+	}.ApplyAndExpectData(t, map[string]any{"id": "abc|arn:aws:iam::999999999999:instance-profile/my-fake-instance-profile"})
 }
 
 func TestResourceServicePrincipalRoleRead_NoRole(t *testing.T) {

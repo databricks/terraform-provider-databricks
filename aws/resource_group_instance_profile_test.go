@@ -40,7 +40,7 @@ func TestResourceGroupInstanceProfileCreate(t *testing.T) {
 			},
 		},
 		Resource: ResourceGroupInstanceProfile(),
-		State: map[string]interface{}{
+		State: map[string]any{
 			"group_id":            "abc",
 			"instance_profile_id": "arn:aws:iam::999999999999:instance-profile/my-fake-instance-profile",
 		},
@@ -64,7 +64,7 @@ func TestResourceGroupInstanceProfileCreate_Error(t *testing.T) {
 			},
 		},
 		Resource: ResourceGroupInstanceProfile(),
-		State: map[string]interface{}{
+		State: map[string]any{
 			"group_id":            "abc",
 			"instance_profile_id": "arn:aws:iam::999999999999:instance-profile/my-fake-instance-profile",
 		},
@@ -88,7 +88,7 @@ func TestResourceGroupInstanceProfileCreate_Error_InvalidARN(t *testing.T) {
 			},
 		},
 		Resource: ResourceGroupInstanceProfile(),
-		State: map[string]interface{}{
+		State: map[string]any{
 			"group_id":            "abc",
 			"instance_profile_id": "my-fake-instance-profile",
 		},
@@ -111,7 +111,7 @@ func TestResourceGroupInstanceProfileCreate_Error_OtherARN(t *testing.T) {
 			},
 		},
 		Resource: ResourceGroupInstanceProfile(),
-		State: map[string]interface{}{
+		State: map[string]any{
 			"group_id":            "abc",
 			"instance_profile_id": "arn:aws:glue::999999999999:glue/my-fake-instance-profile",
 		},

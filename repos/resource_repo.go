@@ -20,7 +20,7 @@ type ReposAPI struct {
 }
 
 // NewReposAPI creates ReposAPI instance from provider meta
-func NewReposAPI(ctx context.Context, m interface{}) ReposAPI {
+func NewReposAPI(ctx context.Context, m any) ReposAPI {
 	return ReposAPI{m.(*common.DatabricksClient), ctx}
 }
 

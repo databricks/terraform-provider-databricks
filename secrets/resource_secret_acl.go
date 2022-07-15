@@ -9,7 +9,7 @@ import (
 )
 
 // NewSecretAclsAPI creates SecretAclsAPI instance from provider meta
-func NewSecretAclsAPI(ctx context.Context, m interface{}) SecretAclsAPI {
+func NewSecretAclsAPI(ctx context.Context, m any) SecretAclsAPI {
 	return SecretAclsAPI{m.(*common.DatabricksClient), ctx}
 }
 

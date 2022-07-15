@@ -102,7 +102,7 @@ func TestResourceInstancePoolCreate(t *testing.T) {
 			},
 		},
 		Resource: ResourceInstancePool(),
-		State: map[string]interface{}{
+		State: map[string]any{
 			"idle_instance_autotermination_minutes": 15,
 			"instance_pool_name":                    "Shared Pool",
 			"max_capacity":                          1000,
@@ -129,7 +129,7 @@ func TestResourceInstancePoolCreate_Error(t *testing.T) {
 			},
 		},
 		Resource: ResourceInstancePool(),
-		State: map[string]interface{}{
+		State: map[string]any{
 			"idle_instance_autotermination_minutes": 15,
 			"instance_pool_name":                    "Shared Pool",
 			"max_capacity":                          1000,
@@ -245,7 +245,7 @@ func TestResourceInstancePoolUpdate(t *testing.T) {
 			},
 		},
 		Resource: ResourceInstancePool(),
-		State: map[string]interface{}{
+		State: map[string]any{
 			"idle_instance_autotermination_minutes": 20,
 			"instance_pool_name":                    "Restricted Pool",
 			"max_capacity":                          500,
@@ -276,7 +276,7 @@ func TestResourceInstancePoolUpdate_Error(t *testing.T) {
 			},
 		},
 		Resource: ResourceInstancePool(),
-		State: map[string]interface{}{
+		State: map[string]any{
 			"idle_instance_autotermination_minutes": 20,
 			"instance_pool_name":                    "Restricted Pool",
 			"max_capacity":                          500,

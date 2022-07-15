@@ -39,7 +39,7 @@ func TestResourceAdlsGen1Mount_Create(t *testing.T) {
 				Data:       testS3BucketPath,
 			}
 		},
-		State: map[string]interface{}{
+		State: map[string]any{
 			"cluster_id":            "this_cluster",
 			"mount_name":            "this_mount",
 			"storage_resource_name": "test-adls",

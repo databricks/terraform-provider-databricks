@@ -69,7 +69,7 @@ func TestResourceClusterCreate(t *testing.T) {
 		},
 		Create:   true,
 		Resource: ResourceCluster(),
-		State: map[string]interface{}{
+		State: map[string]any{
 			"autotermination_minutes": 15,
 			"cluster_name":            "Shared Autoscaling",
 			"spark_version":           "7.1-scala12",
@@ -150,7 +150,7 @@ func TestResourceClusterCreatePinned(t *testing.T) {
 		},
 		Create:   true,
 		Resource: ResourceCluster(),
-		State: map[string]interface{}{
+		State: map[string]any{
 			"autotermination_minutes": 15,
 			"cluster_name":            "Shared Autoscaling",
 			"spark_version":           "7.1-scala12",
@@ -374,7 +374,7 @@ func TestResourceClusterCreate_Error(t *testing.T) {
 		},
 		Create:   true,
 		Resource: ResourceCluster(),
-		State: map[string]interface{}{
+		State: map[string]any{
 			"autotermination_minutes": 15,
 			"cluster_name":            "Shared Autoscaling",
 			"spark_version":           "7.1-scala12",
@@ -548,7 +548,7 @@ func TestResourceClusterUpdate(t *testing.T) {
 		ID:       "abc",
 		Update:   true,
 		Resource: ResourceCluster(),
-		State: map[string]interface{}{
+		State: map[string]any{
 			"autotermination_minutes": 15,
 			"cluster_name":            "Shared Autoscaling",
 			"spark_version":           "7.1-scala12",
@@ -628,7 +628,7 @@ func TestResourceClusterUpdateWithPinned(t *testing.T) {
 			"node_type_id":            "i3.xlarge",
 			"num_workers":             "100",
 		},
-		State: map[string]interface{}{
+		State: map[string]any{
 			"autotermination_minutes": 15,
 			"cluster_name":            "Shared Autoscaling",
 			"spark_version":           "7.1-scala12",
@@ -829,7 +829,7 @@ func TestResourceClusterUpdate_Error(t *testing.T) {
 		ID:       "abc",
 		Update:   true,
 		Resource: ResourceCluster(),
-		State: map[string]interface{}{
+		State: map[string]any{
 			"autotermination_minutes": 15,
 			"cluster_name":            "Shared Autoscaling",
 			"spark_version":           "7.1-scala12",
@@ -1059,17 +1059,17 @@ func TestResourceClusterCreate_SingleNode(t *testing.T) {
 		},
 		Create:   true,
 		Resource: ResourceCluster(),
-		State: map[string]interface{}{
+		State: map[string]any{
 			"autotermination_minutes": 120,
 			"cluster_name":            "Single Node Cluster",
 			"spark_version":           "7.3.x-scala12",
 			"node_type_id":            "Standard_F4s",
 			"is_pinned":               false,
-			"spark_conf": map[string]interface{}{
+			"spark_conf": map[string]any{
 				"spark.master":                     "local[*]",
 				"spark.databricks.cluster.profile": "singleNode",
 			},
-			"custom_tags": map[string]interface{}{
+			"custom_tags": map[string]any{
 				"ResourceClass": "SingleNode",
 			},
 		},
@@ -1082,7 +1082,7 @@ func TestResourceClusterCreate_SingleNodeFail(t *testing.T) {
 	_, err := qa.ResourceFixture{
 		Create:   true,
 		Resource: ResourceCluster(),
-		State: map[string]interface{}{
+		State: map[string]any{
 			"autotermination_minutes": 120,
 			"cluster_name":            "Single Node Cluster",
 			"spark_version":           "7.3.x-scala12",
@@ -1098,7 +1098,7 @@ func TestResourceClusterCreate_NegativeNumWorkers(t *testing.T) {
 	_, err := qa.ResourceFixture{
 		Create:   true,
 		Resource: ResourceCluster(),
-		State: map[string]interface{}{
+		State: map[string]any{
 			"autotermination_minutes": 120,
 			"cluster_name":            "Broken Cluster",
 			"spark_version":           "7.3.x-scala12",
@@ -1122,7 +1122,7 @@ func TestResourceClusterUpdate_FailNumWorkersZero(t *testing.T) {
 			"node_type_id":            "i3.xlarge",
 			"num_workers":             "100",
 		},
-		State: map[string]interface{}{
+		State: map[string]any{
 			"autotermination_minutes": 15,
 			"cluster_name":            "Shared Autoscaling",
 			"spark_version":           "7.1-scala12",

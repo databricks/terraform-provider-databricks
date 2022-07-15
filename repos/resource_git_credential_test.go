@@ -30,7 +30,7 @@ func TestResourceGitCredentialRead(t *testing.T) {
 		Read:     true,
 		New:      true,
 		ID:       credIDStr,
-	}.ApplyAndExpectData(t, map[string]interface{}{"id": credIDStr, "git_provider": provider, "git_username": user})
+	}.ApplyAndExpectData(t, map[string]any{"id": credIDStr, "git_provider": provider, "git_username": user})
 }
 
 func TestResourceGitCredentialRead_Error(t *testing.T) {
@@ -66,7 +66,7 @@ func TestResourceGitCredentialDelete(t *testing.T) {
 		Resource: ResourceGitCredential(),
 		Delete:   true,
 		ID:       credID,
-	}.ApplyAndExpectData(t, map[string]interface{}{"id": credID})
+	}.ApplyAndExpectData(t, map[string]any{"id": credID})
 }
 
 func TestResourceGitCredentialUpdate(t *testing.T) {
@@ -103,14 +103,14 @@ func TestResourceGitCredentialUpdate(t *testing.T) {
 			"git_username":          user,
 			"personal_access_token": token + "56",
 		},
-		State: map[string]interface{}{
+		State: map[string]any{
 			"git_provider":          provider,
 			"git_username":          user,
 			"personal_access_token": token,
 		},
 		ID:     "121232342",
 		Update: true,
-	}.ApplyAndExpectData(t, map[string]interface{}{"git_username": user})
+	}.ApplyAndExpectData(t, map[string]any{"git_username": user})
 }
 
 func TestResourceGitCredentialUpdate_Error(t *testing.T) {
@@ -141,7 +141,7 @@ func TestResourceGitCredentialUpdate_Error(t *testing.T) {
 			"git_username":          user,
 			"personal_access_token": token + "56",
 		},
-		State: map[string]interface{}{
+		State: map[string]any{
 			"git_provider":          provider,
 			"git_username":          user,
 			"personal_access_token": token,
@@ -179,13 +179,13 @@ func TestResourceGitCredentialCreate(t *testing.T) {
 			},
 		},
 		Resource: ResourceGitCredential(),
-		State: map[string]interface{}{
+		State: map[string]any{
 			"git_provider":          provider,
 			"git_username":          user,
 			"personal_access_token": token,
 		},
 		Create: true,
-	}.ApplyAndExpectData(t, map[string]interface{}{"id": resp.GitCredentialID(), "git_provider": provider, "git_username": user})
+	}.ApplyAndExpectData(t, map[string]any{"id": resp.GitCredentialID(), "git_provider": provider, "git_username": user})
 }
 
 func TestResourceGitCredentialCreate_Error(t *testing.T) {
@@ -210,7 +210,7 @@ func TestResourceGitCredentialCreate_Error(t *testing.T) {
 			},
 		},
 		Resource: ResourceGitCredential(),
-		State: map[string]interface{}{
+		State: map[string]any{
 			"git_provider":          provider,
 			"git_username":          user,
 			"personal_access_token": token,
@@ -268,14 +268,14 @@ func TestResourceGitCredentialCreateWithForce(t *testing.T) {
 			},
 		},
 		Resource: ResourceGitCredential(),
-		State: map[string]interface{}{
+		State: map[string]any{
 			"git_provider":          provider,
 			"git_username":          user,
 			"personal_access_token": token,
 			"force":                 true,
 		},
 		Create: true,
-	}.ApplyAndExpectData(t, map[string]interface{}{"id": resp.GitCredentialID(), "git_provider": provider, "git_username": user})
+	}.ApplyAndExpectData(t, map[string]any{"id": resp.GitCredentialID(), "git_provider": provider, "git_username": user})
 }
 
 func TestResourceGitCredentialCreateWithForce_Error_List(t *testing.T) {
@@ -309,7 +309,7 @@ func TestResourceGitCredentialCreateWithForce_Error_List(t *testing.T) {
 			},
 		},
 		Resource: ResourceGitCredential(),
-		State: map[string]interface{}{
+		State: map[string]any{
 			"git_provider":          provider,
 			"git_username":          user,
 			"personal_access_token": token,
@@ -346,7 +346,7 @@ func TestResourceGitCredentialCreateWithForce_ErrorEmptyList(t *testing.T) {
 			},
 		},
 		Resource: ResourceGitCredential(),
-		State: map[string]interface{}{
+		State: map[string]any{
 			"git_provider":          provider,
 			"git_username":          user,
 			"personal_access_token": token,
@@ -399,7 +399,7 @@ func TestResourceGitCredentialCreateWithForce_ErrorUpdate(t *testing.T) {
 			},
 		},
 		Resource: ResourceGitCredential(),
-		State: map[string]interface{}{
+		State: map[string]any{
 			"git_provider":          provider,
 			"git_username":          user,
 			"personal_access_token": token,

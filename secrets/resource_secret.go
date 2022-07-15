@@ -58,7 +58,7 @@ type SecretACLRequest struct {
 }
 
 // NewSecretsAPI creates SecretsAPI instance from provider meta
-func NewSecretsAPI(ctx context.Context, m interface{}) SecretsAPI {
+func NewSecretsAPI(ctx context.Context, m any) SecretsAPI {
 	return SecretsAPI{
 		client:  m.(*common.DatabricksClient),
 		context: ctx,

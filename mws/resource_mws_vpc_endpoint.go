@@ -14,7 +14,7 @@ import (
 )
 
 // NewVPCEndpointAPI creates VPCEndpointAPI instance from provider meta
-func NewVPCEndpointAPI(ctx context.Context, m interface{}) VPCEndpointAPI {
+func NewVPCEndpointAPI(ctx context.Context, m any) VPCEndpointAPI {
 	return VPCEndpointAPI{m.(*common.DatabricksClient), ctx}
 }
 

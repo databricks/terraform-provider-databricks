@@ -944,7 +944,7 @@ func TestListSparkVersionsWithError(t *testing.T) {
 	ctx := context.Background()
 	_, err = NewClustersAPI(ctx, client).ListSparkVersions()
 	require.Error(t, err)
-	require.Equal(t, true, strings.Contains(err.Error(), "Invalid JSON received"))
+	require.Equal(t, true, strings.Contains(err.Error(), "invalid character 'g' looking"))
 }
 
 func TestGetLatestSparkVersion(t *testing.T) {

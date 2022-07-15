@@ -66,12 +66,12 @@ go install honnef.co/go/tools/cmd/staticcheck@v0.3.2
 
 Installing `gotestsum`:
 ```bash
-go get gotest.tools/gotestsum
+go install gotest.tools/gotestsum
 ```
 
 Installing `goimports`:
 ```bash
-go get golang.org/x/tools/cmd/goimports
+go install golang.org/x/tools/cmd/goimports
 ```
 
 After this, you should be able to run `make coverage` to run the tests and see the coverage.

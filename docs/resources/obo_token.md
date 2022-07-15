@@ -7,7 +7,9 @@ This resource creates [On-Behalf-Of tokens](https://docs.databricks.com/administ
 
 ## Example Usage
 
-Creating a token for a narrowly-scoped service principal, that would be the only one (besides admins) allowed to use PAT token in this given workspace, keeping your automated deployment highly secure. Keep in mind that a given declaration of `databricks_permissions.token_usage` would remove permissions to use PAT tokens from the `users` group.
+Creating a token for a narrowly-scoped service principal, that would be the only one (besides admins) allowed to use PAT token in this given workspace, keeping your automated deployment highly secure. 
+
+-> **Note** A given declaration of `databricks_permissions.token_usage` would OVERWRITE permissions to use PAT tokens from any existing groups with token usage permissions such as the `users` group. To avoid this, be sure to include any desired groups in additional `access_control` blocks in the Terraform configuration file.
 
 ```hcl
 resource "databricks_service_principal" "this" {

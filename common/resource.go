@@ -18,7 +18,7 @@ type Resource struct {
 	Read           func(ctx context.Context, d *schema.ResourceData, c *DatabricksClient) error
 	Update         func(ctx context.Context, d *schema.ResourceData, c *DatabricksClient) error
 	Delete         func(ctx context.Context, d *schema.ResourceData, c *DatabricksClient) error
-	CustomizeDiff  func(ctx context.Context, d *schema.ResourceDiff, c interface{}) error
+	CustomizeDiff  func(ctx context.Context, d *schema.ResourceDiff, c any) error
 	StateUpgraders []schema.StateUpgrader
 	Schema         map[string]*schema.Schema
 	SchemaVersion  int
@@ -55,10 +55,10 @@ func recoverable(cb func(
 // ToResource converts to Terraform resource definition
 func (r Resource) ToResource() *schema.Resource {
 	var update func(ctx context.Context, d *schema.ResourceData,
-		m interface{}) diag.Diagnostics
+		m any) diag.Diagnostics
 	if r.Update != nil {
 		update = func(ctx context.Context, d *schema.ResourceData,
-			m interface{}) diag.Diagnostics {
+			m any) diag.Diagnostics {
 			c := m.(*DatabricksClient)
 			if err := recoverable(r.Update)(ctx, d, c); err != nil {
 				err = nicerError(ctx, err, "update")
@@ -93,9 +93,9 @@ func (r Resource) ToResource() *schema.Resource {
 		}
 	}
 	generateReadFunc := func(ignoreMissing bool) func(ctx context.Context, d *schema.ResourceData,
-		m interface{}) diag.Diagnostics {
+		m any) diag.Diagnostics {
 		return func(ctx context.Context, d *schema.ResourceData,
-			m interface{}) diag.Diagnostics {
+			m any) diag.Diagnostics {
 			err := recoverable(r.Read)(ctx, d, m.(*DatabricksClient))
 			if ignoreMissing && IsMissing(err) {
 				log.Printf("[INFO] %s[id=%s] is removed on backend",
@@ -116,7 +116,7 @@ func (r Resource) ToResource() *schema.Resource {
 		StateUpgraders: r.StateUpgraders,
 		CustomizeDiff:  r.CustomizeDiff,
 		CreateContext: func(ctx context.Context, d *schema.ResourceData,
-			m interface{}) diag.Diagnostics {
+			m any) diag.Diagnostics {
 			c := m.(*DatabricksClient)
 			err := recoverable(r.Create)(ctx, d, c)
 			if err != nil {
@@ -132,7 +132,7 @@ func (r Resource) ToResource() *schema.Resource {
 		ReadContext:   generateReadFunc(true),
 		UpdateContext: update,
 		DeleteContext: func(ctx context.Context, d *schema.ResourceData,
-			m interface{}) diag.Diagnostics {
+			m any) diag.Diagnostics {
 			err := recoverable(r.Delete)(ctx, d, m.(*DatabricksClient))
 			if IsMissing(err) {
 				log.Printf("[INFO] %s[id=%s] is removed on backend",
@@ -148,7 +148,7 @@ func (r Resource) ToResource() *schema.Resource {
 		},
 		Importer: &schema.ResourceImporter{
 			StateContext: func(ctx context.Context, d *schema.ResourceData,
-				m interface{}) (data []*schema.ResourceData, e error) {
+				m any) (data []*schema.ResourceData, e error) {
 				d.MarkNewResource()
 				diags := generateReadFunc(false)(ctx, d, m)
 				var err error
@@ -179,12 +179,12 @@ func makeEmptyBlockSuppressFunc(name string) func(k, old, new string, d *schema.
 	}
 }
 
-func DataResource(sc interface{}, read func(context.Context, interface{}, *DatabricksClient) error) *schema.Resource {
+func DataResource(sc any, read func(context.Context, any, *DatabricksClient) error) *schema.Resource {
 	// TODO: migrate to go1.18 and get schema from second function argument?..
 	s := StructToSchema(sc, func(m map[string]*schema.Schema) map[string]*schema.Schema { return m })
 	return &schema.Resource{
 		Schema: s,
-		ReadContext: func(ctx context.Context, d *schema.ResourceData, m interface{}) (diags diag.Diagnostics) {
+		ReadContext: func(ctx context.Context, d *schema.ResourceData, m any) (diags diag.Diagnostics) {
 			defer func() {
 				// using recoverable() would cause more complex rewrapping of DataToStructPointer & StructToData
 				if panic := recover(); panic != nil {

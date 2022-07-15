@@ -105,7 +105,7 @@ func TestNodeType(t *testing.T) {
 		Read:        true,
 		Resource:    DataSourceNodeType(),
 		NonWritable: true,
-		State: map[string]interface{}{
+		State: map[string]any{
 			"local_disk":    true,
 			"min_memory_gb": 8,
 			"min_cores":     8,
@@ -161,7 +161,7 @@ func TestNodeTypeCategory(t *testing.T) {
 		Read:        true,
 		Resource:    DataSourceNodeType(),
 		NonWritable: true,
-		State: map[string]interface{}{
+		State: map[string]any{
 			"category": "Storage optimized",
 		},
 		ID: ".",
@@ -202,7 +202,7 @@ func TestNodeTypeVCPU(t *testing.T) {
 		Read:        true,
 		Resource:    DataSourceNodeType(),
 		NonWritable: true,
-		State: map[string]interface{}{
+		State: map[string]any{
 			"vcpu": true,
 		},
 		ID: ".",

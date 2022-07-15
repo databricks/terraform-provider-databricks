@@ -51,7 +51,7 @@ type ipAccessListsAPI struct {
 }
 
 // NewIPAccessListsAPI ...
-func NewIPAccessListsAPI(ctx context.Context, m interface{}) ipAccessListsAPI {
+func NewIPAccessListsAPI(ctx context.Context, m any) ipAccessListsAPI {
 	return ipAccessListsAPI{
 		client:  m.(*common.DatabricksClient),
 		context: ctx,
@@ -74,7 +74,7 @@ func (a ipAccessListsAPI) Update(objectID string, ur ipAccessListUpdateRequest) 
 }
 
 func (a ipAccessListsAPI) Delete(objectID string) (err error) {
-	err = a.client.Delete(a.context, "/ip-access-lists/"+objectID, map[string]interface{}{})
+	err = a.client.Delete(a.context, "/ip-access-lists/"+objectID, map[string]any{})
 	return
 }
 

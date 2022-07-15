@@ -111,9 +111,9 @@ type GroupList struct {
 }
 
 type email struct {
-	Type    interface{} `json:"type,omitempty"`
-	Value   string      `json:"value,omitempty"`
-	Primary interface{} `json:"primary,omitempty"`
+	Type    any    `json:"type,omitempty"`
+	Value   string `json:"value,omitempty"`
+	Primary any    `json:"primary,omitempty"`
 }
 
 // User is a struct that contains all the information about a SCIM user
@@ -142,9 +142,9 @@ type UserList struct {
 }
 
 type patchOperation struct {
-	Op    string      `json:"op,omitempty"`
-	Path  string      `json:"path,omitempty"`
-	Value interface{} `json:"value,omitempty"`
+	Op    string `json:"op,omitempty"`
+	Path  string `json:"path,omitempty"`
+	Value any    `json:"value,omitempty"`
 }
 
 type patchRequest struct {

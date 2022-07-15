@@ -1,8 +1,9 @@
 package catalog
 
 import (
-	"github.com/stretchr/testify/assert"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 
 	"github.com/databricks/terraform-provider-databricks/qa"
 )
@@ -60,7 +61,7 @@ func TestCreateExternalLocationWithOwner(t *testing.T) {
 			{
 				Method:   "PATCH",
 				Resource: "/api/2.1/unity-catalog/external-locations/abc",
-				ExpectedRequest: map[string]interface{}{
+				ExpectedRequest: map[string]any{
 					"owner": "administrators",
 				},
 			},
@@ -91,7 +92,7 @@ func TestUpdateExternalLocation(t *testing.T) {
 			{
 				Method:   "PATCH",
 				Resource: "/api/2.1/unity-catalog/external-locations/abc",
-				ExpectedRequest: map[string]interface{}{
+				ExpectedRequest: map[string]any{
 					"credential_name": "bcd",
 				},
 			},

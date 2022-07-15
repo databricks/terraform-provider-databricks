@@ -30,9 +30,9 @@ import (
 )
 
 // nolint
-func getJSONObject(filename string) interface{} {
+func getJSONObject(filename string) any {
 	data, _ := ioutil.ReadFile(filename)
-	var obj map[string]interface{}
+	var obj map[string]any
 	err := json.Unmarshal(data, &obj)
 	if err != nil {
 		fmt.Printf("[ERROR] error! err=%v\n", err)
@@ -216,7 +216,7 @@ var emptyGitCredentials = qa.HTTPFixture{
 var emptyIpAccessLIst = qa.HTTPFixture{
 	Method:   http.MethodGet,
 	Resource: "/api/2.0/ip-access-lists",
-	Response: map[string]interface{}{},
+	Response: map[string]any{},
 }
 
 var emptyWorkspace = qa.HTTPFixture{
@@ -228,21 +228,21 @@ var emptyWorkspace = qa.HTTPFixture{
 var emptySqlEndpoints = qa.HTTPFixture{
 	Method:       "GET",
 	Resource:     "/api/2.0/sql/warehouses",
-	Response:     map[string]interface{}{},
+	Response:     map[string]any{},
 	ReuseRequest: true,
 }
 
 var emptySqlDashboards = qa.HTTPFixture{
 	Method:       "GET",
 	Resource:     "/api/2.0/preview/sql/dashboards",
-	Response:     map[string]interface{}{},
+	Response:     map[string]any{},
 	ReuseRequest: true,
 }
 
 var emptySqlQueries = qa.HTTPFixture{
 	Method:       "GET",
 	Resource:     "/api/2.0/preview/sql/queries",
-	Response:     map[string]interface{}{},
+	Response:     map[string]any{},
 	ReuseRequest: true,
 }
 
@@ -278,8 +278,8 @@ func TestImportingUsersGroupsSecretScopes(t *testing.T) {
 				Method:       "GET",
 				Resource:     "/api/2.0/global-init-scripts",
 				ReuseRequest: true,
-				Response: map[string]interface{}{
-					"scripts": []map[string]interface{}{},
+				Response: map[string]any{
+					"scripts": []map[string]any{},
 				},
 			},
 			{
@@ -425,8 +425,8 @@ func TestImportingNoResourcesError(t *testing.T) {
 				Method:       "GET",
 				Resource:     "/api/2.0/global-init-scripts",
 				ReuseRequest: true,
-				Response: map[string]interface{}{
-					"scripts": []map[string]interface{}{},
+				Response: map[string]any{
+					"scripts": []map[string]any{},
 				},
 			},
 			{
@@ -1049,7 +1049,7 @@ func TestImportingIPAccessLists(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/global-init-scripts",
-				Response: map[string]interface{}{},
+				Response: map[string]any{},
 			},
 			{
 				Method:   "GET",
@@ -1075,7 +1075,7 @@ func TestImportingIPAccessLists(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/workspace-conf?keys=enableIpAccessLists%2CenableTokensConfig%2CmaxTokenLifetimeDays",
-				Response: map[string]interface{}{
+				Response: map[string]any{
 					"enableIpAccessLists":  "true",
 					"maxTokenLifetimeDays": "90",
 					"enableTokensConfig":   "true",
@@ -1106,7 +1106,7 @@ func TestImportingSqlObjects(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/global-init-scripts",
-				Response: map[string]interface{}{},
+				Response: map[string]any{},
 			},
 			{
 				Method:   "GET",

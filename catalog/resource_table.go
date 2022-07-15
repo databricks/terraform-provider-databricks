@@ -13,7 +13,7 @@ type TablesAPI struct {
 	context context.Context
 }
 
-func NewTablesAPI(ctx context.Context, m interface{}) TablesAPI {
+func NewTablesAPI(ctx context.Context, m any) TablesAPI {
 	return TablesAPI{m.(*common.DatabricksClient), context.WithValue(ctx, common.Api, common.API_2_1)}
 }
 

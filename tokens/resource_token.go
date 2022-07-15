@@ -37,7 +37,7 @@ type TokenList struct {
 }
 
 // NewTokensAPI creates TokensAPI instance from provider meta
-func NewTokensAPI(ctx context.Context, m interface{}) TokensAPI {
+func NewTokensAPI(ctx context.Context, m any) TokensAPI {
 	return TokensAPI{m.(*common.DatabricksClient), ctx}
 }
 

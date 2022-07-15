@@ -60,13 +60,13 @@ type CommandExecutor interface {
 
 // CommandResults captures results of a command
 type CommandResults struct {
-	ResultType   string      `json:"resultType,omitempty"`
-	Summary      string      `json:"summary,omitempty"`
-	Cause        string      `json:"cause,omitempty"`
-	Data         interface{} `json:"data,omitempty"`
-	Schema       interface{} `json:"schema,omitempty"`
-	Truncated    bool        `json:"truncated,omitempty"`
-	IsJSONSchema bool        `json:"isJsonSchema,omitempty"`
+	ResultType   string `json:"resultType,omitempty"`
+	Summary      string `json:"summary,omitempty"`
+	Cause        string `json:"cause,omitempty"`
+	Data         any    `json:"data,omitempty"`
+	Schema       any    `json:"schema,omitempty"`
+	Truncated    bool   `json:"truncated,omitempty"`
+	IsJSONSchema bool   `json:"isJsonSchema,omitempty"`
 	pos          int
 }
 
@@ -120,15 +120,15 @@ func (cr *CommandResults) Error() string {
 }
 
 // Scan scans for results
-func (cr *CommandResults) Scan(dest ...interface{}) bool {
+func (cr *CommandResults) Scan(dest ...any) bool {
 	if cr.ResultType != "table" {
 		return false
 	}
-	if rows, ok := cr.Data.([]interface{}); ok {
+	if rows, ok := cr.Data.([]any); ok {
 		if cr.pos >= len(rows) {
 			return false
 		}
-		if cols, ok := rows[cr.pos].([]interface{}); ok {
+		if cols, ok := rows[cr.pos].([]any); ok {
 			for i := range dest {
 				switch d := dest[i].(type) {
 				case *string:

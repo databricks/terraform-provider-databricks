@@ -45,7 +45,7 @@ type ReadResponse struct {
 }
 
 // NewDbfsAPI creates DBFSAPI instance from provider meta
-func NewDbfsAPI(ctx context.Context, m interface{}) DbfsAPI {
+func NewDbfsAPI(ctx context.Context, m any) DbfsAPI {
 	return DbfsAPI{m.(*common.DatabricksClient), ctx}
 }
 
@@ -130,7 +130,7 @@ func (a DbfsAPI) recursiveAddPaths(path string, pathList *[]FileInfo) error {
 
 func (a DbfsAPI) list(path string) ([]FileInfo, error) {
 	var dbfsList FileList
-	err := a.client.Get(a.context, "/dbfs/list", map[string]interface{}{
+	err := a.client.Get(a.context, "/dbfs/list", map[string]any{
 		"path": path,
 	}, &dbfsList)
 	if err != nil {
@@ -195,7 +195,7 @@ func (a DbfsAPI) readString(path string, offset, length int64) (int64, string, e
 
 // Status returns the status of a file in DBFS
 func (a DbfsAPI) Status(path string) (f FileInfo, err error) {
-	err = a.client.Get(a.context, "/dbfs/get-status", map[string]interface{}{
+	err = a.client.Get(a.context, "/dbfs/get-status", map[string]any{
 		"path": path,
 	}, &f)
 	return

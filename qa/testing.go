@@ -58,9 +58,9 @@ func RandomName(prefix ...string) string {
 type HTTPFixture struct {
 	Method          string
 	Resource        string
-	Response        interface{}
+	Response        any
 	Status          int
-	ExpectedRequest interface{}
+	ExpectedRequest any
 	ReuseRequest    bool
 	MatchAny        bool
 }
@@ -71,7 +71,7 @@ type ResourceFixture struct {
 	Resource      *schema.Resource
 	RequiresNew   bool
 	InstanceState map[string]string
-	State         map[string]interface{}
+	State         map[string]any
 	// HCL might be useful to test nested blocks
 	HCL         string
 	CommandMock common.CommandMock
@@ -91,10 +91,10 @@ type ResourceFixture struct {
 }
 
 // wrapper type for calling resource methords
-type resourceCRUD func(context.Context, *schema.ResourceData, interface{}) diag.Diagnostics
+type resourceCRUD func(context.Context, *schema.ResourceData, any) diag.Diagnostics
 
 func (cb resourceCRUD) before(before func(d *schema.ResourceData)) resourceCRUD {
-	return func(ctx context.Context, d *schema.ResourceData, i interface{}) diag.Diagnostics {
+	return func(ctx context.Context, d *schema.ResourceData, i any) diag.Diagnostics {
 		before(d)
 		return cb(ctx, d, i)
 	}
@@ -169,13 +169,13 @@ func (f ResourceFixture) Apply(t *testing.T) (*schema.ResourceData, error) {
 		client.GoogleServiceAccount = "sa@prj.iam.gserviceaccount.com"
 	}
 	if len(f.HCL) > 0 {
-		var out interface{}
+		var out any
 		// TODO: update to HCLv2 somehow, so that importer and this use the same stuff
 		err = hcl.Decode(&out, f.HCL)
 		if err != nil {
 			return nil, err
 		}
-		f.State = fixHCL(out).(map[string]interface{})
+		f.State = fixHCL(out).(map[string]any)
 	}
 	resourceConfig := terraform.NewResourceConfigRaw(f.State)
 	execute, err := f.prepareExecution()
@@ -259,7 +259,7 @@ func (f ResourceFixture) ApplyNoError(t *testing.T) {
 }
 
 // ApplyAndExpectData is a convenience method for tests that doesn't expect error, but want to check data
-func (f ResourceFixture) ApplyAndExpectData(t *testing.T, data map[string]interface{}) {
+func (f ResourceFixture) ApplyAndExpectData(t *testing.T, data map[string]any) {
 	d, err := f.Apply(t)
 	require.NoError(t, err, err)
 	for k, expected := range data {
@@ -319,7 +319,7 @@ func ResourceCornerCases(t *testing.T, resource *schema.Resource, cc ...CornerCa
 		"id":           "x",
 		"expect_error": "I'm a teapot",
 	}
-	m := map[string]func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics{
+	m := map[string]func(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics{
 		"create": resource.CreateContext,
 		"read":   resource.ReadContext,
 		"update": resource.UpdateContext,
@@ -436,7 +436,7 @@ func HttpFixtureClientWithToken(t *testing.T, fixtures []HTTPFixture, token stri
 			}
 		}
 		if !found {
-			receivedRequest := map[string]interface{}{}
+			receivedRequest := map[string]any{}
 			buf := new(bytes.Buffer)
 			_, err := buf.ReadFrom(req.Body)
 			assert.NoError(t, err, err)
@@ -493,16 +493,16 @@ func HTTPFixturesApply(t *testing.T, fixtures []HTTPFixture, callback func(ctx c
 	callback(context.Background(), client)
 }
 
-func fixHCL(v interface{}) interface{} {
+func fixHCL(v any) any {
 	switch a := v.(type) {
-	case []map[string]interface{}:
-		vals := []interface{}{}
+	case []map[string]any:
+		vals := []any{}
 		for _, vv := range a {
 			vals = append(vals, fixHCL(vv))
 		}
 		return vals
-	case map[string]interface{}:
-		vals := map[string]interface{}{}
+	case map[string]any:
+		vals := map[string]any{}
 		for k, ev := range a {
 			vals[k] = fixHCL(ev)
 		}

@@ -40,14 +40,14 @@ var (
 )
 
 type dbsqlListResponse struct {
-	Results    []map[string]interface{} `json:"results"`
-	Page       int64                    `json:"page"`
-	TotalCount int64                    `json:"count"`
-	PageSize   int64                    `json:"page_size"`
+	Results    []map[string]any `json:"results"`
+	Page       int64            `json:"page"`
+	TotalCount int64            `json:"count"`
+	PageSize   int64            `json:"page_size"`
 }
 
 // Generic function to list objects related to the DBSQL
-func dbsqlListObjects(ic *importContext, path string) ([]map[string]interface{}, error) {
+func dbsqlListObjects(ic *importContext, path string) ([]map[string]any, error) {
 	var listResponse dbsqlListResponse
 	err := ic.Client.Get(ic.Context, path, nil, &listResponse)
 	if err != nil {
@@ -55,7 +55,7 @@ func dbsqlListObjects(ic *importContext, path string) ([]map[string]interface{},
 	}
 
 	totalCount := int(listResponse.TotalCount)
-	events := make([]map[string]interface{}, totalCount)
+	events := make([]map[string]any, totalCount)
 	if totalCount == 0 {
 		return events, nil
 	}
@@ -64,7 +64,7 @@ func dbsqlListObjects(ic *importContext, path string) ([]map[string]interface{},
 	copy(events[startPos:curPos], listResponse.Results)
 	for curPos < totalCount {
 		err := ic.Client.Get(ic.Context, path,
-			map[string]interface{}{"page_size": listResponse.PageSize, "page": listResponse.Page + 1},
+			map[string]any{"page_size": listResponse.PageSize, "page": listResponse.Page + 1},
 			&listResponse)
 		if err != nil {
 			return nil, err
@@ -345,8 +345,8 @@ var resourcesMap map[string]importable = map[string]importable{
 				if jarURI != "" {
 					if libs, ok := r.Data.Get("library").(*schema.Set); ok {
 						// nolint remove legacy jar uri support
-						r.Data.Set("spark_jar_task", []interface{}{
-							map[string]interface{}{
+						r.Data.Set("spark_jar_task", []any{
+							map[string]any{
 								"main_class_name": job.SparkJarTask.MainClassName,
 								"parameters":      job.SparkJarTask.Parameters,
 							},
@@ -356,7 +356,7 @@ var resourcesMap map[string]importable = map[string]importable{
 							jarURI = fmt.Sprintf("dbfs:/FileStore/job-jars/%s", jarURI)
 						}
 						ic.emitIfDbfsFile(jarURI)
-						libs.Add(map[string]interface{}{
+						libs.Add(map[string]any{
 							"jar": jarURI,
 						})
 						// nolint
@@ -390,7 +390,7 @@ var resourcesMap map[string]importable = map[string]importable{
 				ID:       fmt.Sprintf("/cluster-policies/%s", r.ID),
 				Name:     "clust_policy_" + ic.Importables["databricks_cluster_policy"].Name(r.Data),
 			})
-			var definition map[string]map[string]interface{}
+			var definition map[string]map[string]any
 			err := json.Unmarshal([]byte(r.Data.Get("definition").(string)), &definition)
 			if err != nil {
 				return err
@@ -844,7 +844,7 @@ var resourcesMap map[string]importable = map[string]importable{
 		},
 		Import: func(ic *importContext, r *resource) error {
 			wsConfAPI := workspace.NewWorkspaceConfAPI(ic.Context, ic.Client)
-			keys := map[string]interface{}{
+			keys := map[string]any{
 				"enableIpAccessLists":  false,
 				"maxTokenLifetimeDays": 0,
 				"enableTokensConfig":   false,

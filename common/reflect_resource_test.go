@@ -210,7 +210,7 @@ type Dummy struct {
 }
 
 func TestStructToDataAndBack(t *testing.T) {
-	d := schema.TestResourceDataRaw(t, scm, map[string]interface{}{})
+	d := schema.TestResourceDataRaw(t, scm, map[string]any{})
 	d.MarkNewResource()
 	err := StructToData(testStruct{
 		ComputedField: "x",
@@ -328,7 +328,7 @@ func TestIterFields(t *testing.T) {
 func TestCollectionToMaps(t *testing.T) {
 	v, err := collectionToMaps([]string{"a", "b"}, nil)
 	assert.NoError(t, err)
-	assert.Equal(t, []interface{}{"a", "b"}, v)
+	assert.Equal(t, []any{"a", "b"}, v)
 
 	_, err = collectionToMaps([]int{1, 2}, &schema.Schema{
 		Elem: schema.TypeBool,
@@ -378,7 +378,7 @@ func TestStructToData(t *testing.T) {
 		},
 	}
 
-	d := schema.TestResourceDataRaw(t, s, map[string]interface{}{})
+	d := schema.TestResourceDataRaw(t, s, map[string]any{})
 	d.MarkNewResource()
 	err = StructToData(dummy, s, d)
 	assert.NoError(t, err)
@@ -410,7 +410,7 @@ func TestStructToData(t *testing.T) {
 	assert.Len(t, dummyCopy.Things, 2)
 	assert.Len(t, dummy.Things, 3)
 
-	err = d.Set("addresses", []interface{}{
+	err = d.Set("addresses", []any{
 		map[string]string{
 			"line": "ABC",
 			"lijn": "CBA",
@@ -428,7 +428,7 @@ func TestDiffSuppressor(t *testing.T) {
 			Type:     schema.TypeBool,
 			Optional: true,
 		},
-	}, map[string]interface{}{})
+	}, map[string]any{})
 	// no suppress
 	assert.False(t, dsf("", "old", "new", d))
 	// suppress
@@ -459,9 +459,9 @@ func TestTypeToSchemaUnsupported(t *testing.T) {
 	typeToSchema(v, v.Type(), []string{})
 }
 
-type data map[string]interface{}
+type data map[string]any
 
-func (a data) GetOk(key string) (interface{}, bool) {
+func (a data) GetOk(key string) (any, bool) {
 	v, ok := a[key]
 	return v, ok
 }
@@ -500,11 +500,11 @@ func TestDiffToStructPointer(t *testing.T) {
 }
 
 func TestReadListFromData(t *testing.T) {
-	err := readListFromData([]string{}, data{}, []interface{}{}, nil, nil, nil)
+	err := readListFromData([]string{}, data{}, []any{}, nil, nil, nil)
 	assert.NoError(t, err)
 
 	x := reflect.ValueOf(0)
-	err = readListFromData([]string{}, data{}, []interface{}{1}, &x, nil, nil)
+	err = readListFromData([]string{}, data{}, []any{1}, &x, nil, nil)
 	assert.EqualError(t, err, "[[1]] unknown collection field")
 }
 
@@ -561,10 +561,10 @@ func TestStructToData_CornerCases(t *testing.T) {
 			},
 		},
 	})
-	d := schema.TestResourceDataRaw(t, s, map[string]interface{}{})
+	d := schema.TestResourceDataRaw(t, s, map[string]any{})
 	d.Set("ints", []int{1})
-	d.Set("addrs", []interface{}{
-		map[string]interface{}{
+	d.Set("addrs", []any{
+		map[string]any{
 			"line": "a",
 		},
 	})
@@ -587,7 +587,7 @@ func TestDataResource(t *testing.T) {
 			In  string `json:"in"`
 			Out string `json:"out,omitempty" tf:"computed"`
 		}
-		return DataResource(entry{}, func(ctx context.Context, e interface{}, c *DatabricksClient) error {
+		return DataResource(entry{}, func(ctx context.Context, e any, c *DatabricksClient) error {
 			dto := e.(*entry)
 			dto.Out = "out: " + dto.In
 			if dto.In == "fail" {

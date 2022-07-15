@@ -33,7 +33,7 @@ func TestResourceInstanceProfileCreate(t *testing.T) {
 			},
 		},
 		Resource: ResourceInstanceProfile(),
-		State: map[string]interface{}{
+		State: map[string]any{
 			"instance_profile_arn": "arn:aws:iam::999999999999:instance-profile/my-fake-instance-profile",
 		},
 		Create: true,
@@ -56,7 +56,7 @@ func TestResourceInstanceProfileCreate_Error(t *testing.T) {
 			},
 		},
 		Resource: ResourceInstanceProfile(),
-		State: map[string]interface{}{
+		State: map[string]any{
 			"instance_profile_arn": "arn:aws:iam::999999999999:instance-profile/my-fake-instance-profile",
 		},
 		Create: true,
@@ -68,7 +68,7 @@ func TestResourceInstanceProfileCreate_Error(t *testing.T) {
 func TestResourceInstanceProfileCreate_Error_InvalidARN(t *testing.T) {
 	_, err := qa.ResourceFixture{
 		Resource: ResourceInstanceProfile(),
-		State: map[string]interface{}{
+		State: map[string]any{
 			"instance_profile_arn": "abc",
 		},
 		Create: true,

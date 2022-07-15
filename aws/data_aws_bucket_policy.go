@@ -14,7 +14,7 @@ import (
 // DataAwsBucketPolicy ...
 func DataAwsBucketPolicy() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+		ReadContext: func(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
 			bucket := d.Get("bucket").(string)
 			policy := awsIamPolicy{
 				Version: "2012-10-17",

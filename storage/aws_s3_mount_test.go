@@ -48,7 +48,7 @@ func TestResourceAwsS3MountCreate(t *testing.T) {
 				Data:       testS3BucketPath,
 			}
 		},
-		State: map[string]interface{}{
+		State: map[string]any{
 			"cluster_id":     "this_cluster",
 			"mount_name":     "this_mount",
 			"s3_bucket_name": testS3BucketName,
@@ -63,7 +63,7 @@ func TestResourceAwsS3MountCreate(t *testing.T) {
 func TestResourceAwsS3MountCreate_nothing_specified(t *testing.T) {
 	_, err := qa.ResourceFixture{
 		Resource: ResourceAWSS3Mount(),
-		State: map[string]interface{}{
+		State: map[string]any{
 			"mount_name":     "this_mount",
 			"s3_bucket_name": testS3BucketName,
 		},
@@ -75,7 +75,7 @@ func TestResourceAwsS3MountCreate_nothing_specified(t *testing.T) {
 func TestResourceAwsS3MountCreate_invalid_arn(t *testing.T) {
 	_, err := qa.ResourceFixture{
 		Resource: ResourceAWSS3Mount(),
-		State: map[string]interface{}{
+		State: map[string]any{
 			"mount_name":       "this_mount",
 			"s3_bucket_name":   testS3BucketName,
 			"instance_profile": "this_mount",
@@ -111,7 +111,7 @@ func TestResourceAwsS3MountRead(t *testing.T) {
 				Data:       testS3BucketPath,
 			}
 		},
-		State: map[string]interface{}{
+		State: map[string]any{
 			"cluster_id":     "this_cluster",
 			"mount_name":     "this_mount",
 			"s3_bucket_name": testS3BucketName,
@@ -148,7 +148,7 @@ func TestResourceAwsS3MountRead_NotFound(t *testing.T) {
 				Summary:    "Mount not found",
 			}
 		},
-		State: map[string]interface{}{
+		State: map[string]any{
 			"cluster_id":     "this_cluster",
 			"mount_name":     "this_mount",
 			"s3_bucket_name": testS3BucketName,
@@ -183,7 +183,7 @@ func TestResourceAwsS3MountRead_Error(t *testing.T) {
 				Summary:    "Some error",
 			}
 		},
-		State: map[string]interface{}{
+		State: map[string]any{
 			"cluster_id":     "this_cluster",
 			"mount_name":     "this_mount",
 			"s3_bucket_name": testS3BucketName,
@@ -222,7 +222,7 @@ func TestResourceAwsS3MountDelete(t *testing.T) {
 				Data:       "",
 			}
 		},
-		State: map[string]interface{}{
+		State: map[string]any{
 			"cluster_id":     "this_cluster",
 			"mount_name":     "this_mount",
 			"s3_bucket_name": testS3BucketName,

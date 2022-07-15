@@ -185,8 +185,8 @@ func getMountingClusterID(ctx context.Context, client *common.DatabricksClient, 
 	return clusterID, nil
 }
 
-func mountCluster(ctx context.Context, tpl interface{}, d *schema.ResourceData,
-	m interface{}, r *schema.Resource) (Mount, MountPoint, error) {
+func mountCluster(ctx context.Context, tpl any, d *schema.ResourceData,
+	m any, r *schema.Resource) (Mount, MountPoint, error) {
 	var mountPoint MountPoint
 	var mountConfig Mount
 
@@ -225,8 +225,8 @@ func mountCluster(ctx context.Context, tpl interface{}, d *schema.ResourceData,
 }
 
 // returns resource create mount for object store on workspace
-func mountCreate(tpl interface{}, r *schema.Resource) func(context.Context, *schema.ResourceData, interface{}) diag.Diagnostics {
-	return func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func mountCreate(tpl any, r *schema.Resource) func(context.Context, *schema.ResourceData, any) diag.Diagnostics {
+	return func(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
 		mountConfig, mountPoint, err := mountCluster(ctx, tpl, d, m, r)
 		if err != nil {
 			return diag.FromErr(err)
@@ -258,8 +258,8 @@ func readMountSource(ctx context.Context, mp MountPoint, d *schema.ResourceData)
 }
 
 // return resource reader function
-func mountRead(tpl interface{}, r *schema.Resource) func(context.Context, *schema.ResourceData, interface{}) diag.Diagnostics {
-	return func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func mountRead(tpl any, r *schema.Resource) func(context.Context, *schema.ResourceData, any) diag.Diagnostics {
+	return func(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
 		_, mp, err := mountCluster(ctx, tpl, d, m, r)
 		if err != nil {
 			return diag.FromErr(err)
@@ -269,8 +269,8 @@ func mountRead(tpl interface{}, r *schema.Resource) func(context.Context, *schem
 }
 
 // returns delete resource function
-func mountDelete(tpl interface{}, r *schema.Resource) func(context.Context, *schema.ResourceData, interface{}) diag.Diagnostics {
-	return func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func mountDelete(tpl any, r *schema.Resource) func(context.Context, *schema.ResourceData, any) diag.Diagnostics {
+	return func(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
 		_, mp, err := mountCluster(ctx, tpl, d, m, r)
 		if err != nil {
 			return diag.FromErr(err)
@@ -284,7 +284,7 @@ func mountDelete(tpl interface{}, r *schema.Resource) func(context.Context, *sch
 }
 
 // ValidateMountDirectory is a ValidateFunc that ensures the mount directory starts with a '/'
-func ValidateMountDirectory(val interface{}, key string) (warns []string, errs []error) {
+func ValidateMountDirectory(val any, key string) (warns []string, errs []error) {
 	v := val.(string)
 	if v != "" && !strings.HasPrefix(v, "/") {
 		return nil, []error{fmt.Errorf("%s must start with /, got: %s", key, v)}

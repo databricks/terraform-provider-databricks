@@ -23,7 +23,7 @@ func TestDataSourceFile(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/dbfs/read?length=1000000&path=%2Fa%2Fb%2Fc",
-				Response: map[string]interface{}{
+				Response: map[string]any{
 					"bytes_read": 1024,
 					"data":       "SGVsbG8gd29ybGQK",
 				},
@@ -33,7 +33,7 @@ func TestDataSourceFile(t *testing.T) {
 		NonWritable: true,
 		Resource:    DataSourceDbfsFile(),
 		ID:          ".",
-		State: map[string]interface{}{
+		State: map[string]any{
 			"path":            "/a/b/c",
 			"limit_file_size": true,
 		},

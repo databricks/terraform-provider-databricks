@@ -99,7 +99,7 @@ func (acc AccessControlChange) String() string {
 }
 
 // NewPermissionsAPI creates PermissionsAPI instance from provider meta
-func NewPermissionsAPI(ctx context.Context, m interface{}) PermissionsAPI {
+func NewPermissionsAPI(ctx context.Context, m any) PermissionsAPI {
 	return PermissionsAPI{
 		client:  m.(*common.DatabricksClient),
 		context: ctx,
@@ -336,7 +336,7 @@ func ResourcePermissions() *schema.Resource {
 		s["access_control"].MinItems = 1
 		if groupNameSchema, err := common.SchemaPath(s,
 			"access_control", "group_name"); err == nil {
-			groupNameSchema.ValidateDiagFunc = func(i interface{}, p cty.Path) diag.Diagnostics {
+			groupNameSchema.ValidateDiagFunc = func(i any, p cty.Path) diag.Diagnostics {
 				if v, ok := i.(string); ok {
 					if strings.ToLower(v) == "admins" {
 						return diag.Diagnostics{
@@ -355,7 +355,7 @@ func ResourcePermissions() *schema.Resource {
 	})
 	return common.Resource{
 		Schema: s,
-		CustomizeDiff: func(ctx context.Context, diff *schema.ResourceDiff, c interface{}) error {
+		CustomizeDiff: func(ctx context.Context, diff *schema.ResourceDiff, c any) error {
 			client := c.(*common.DatabricksClient)
 			if client.Host == "" {
 				log.Printf("[WARN] cannot validate permission levels, because host is not known yet")
@@ -372,7 +372,7 @@ func ResourcePermissions() *schema.Resource {
 				}
 				access_control_list := diff.Get("access_control").(*schema.Set).List()
 				for _, access_control := range access_control_list {
-					m := access_control.(map[string]interface{})
+					m := access_control.(map[string]any)
 					permission_level := m["permission_level"].(string)
 					if !stringInSlice(permission_level, mapping.allowedPermissionLevels) {
 						return fmt.Errorf(`permission_level %s is not supported with %s objects`, permission_level, mapping.field)

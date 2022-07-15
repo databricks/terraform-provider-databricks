@@ -46,7 +46,7 @@ type ModelsAPI struct {
 	context context.Context
 }
 
-func NewModelsAPI(ctx context.Context, m interface{}) ModelsAPI {
+func NewModelsAPI(ctx context.Context, m any) ModelsAPI {
 	return ModelsAPI{m.(*common.DatabricksClient), ctx}
 }
 

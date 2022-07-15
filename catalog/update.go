@@ -19,7 +19,7 @@ func contains(s []string, e string) bool {
 
 func updateFunctionFactory(pathPrefix string, updatable []string) func(context.Context, *schema.ResourceData, *common.DatabricksClient) error {
 	return func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-		patch := map[string]interface{}{}
+		patch := map[string]any{}
 		for _, field := range updatable {
 			if d.IsNewResource() && !contains([]string{
 				"owner",
@@ -39,7 +39,7 @@ func updateFunctionFactory(pathPrefix string, updatable []string) func(context.C
 				"azure_service_principal",
 				"azure_managed_identity",
 			}, field) {
-				patch[field] = d.Get(field).([]interface{})[0]
+				patch[field] = d.Get(field).([]any)[0]
 				continue
 			}
 

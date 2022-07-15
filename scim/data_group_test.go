@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func assertContains(t *testing.T, s interface{}, e string) bool {
+func assertContains(t *testing.T, s any, e string) bool {
 	return assert.True(t, s.(*schema.Set).Contains(e), "%#v doesn't contain %s", s, e)
 }
 
@@ -85,7 +85,7 @@ func TestDataSourceGroup(t *testing.T) {
 		NonWritable: true,
 		Resource:    DataSourceGroup(),
 		ID:          ".",
-		State: map[string]interface{}{
+		State: map[string]any{
 			"display_name": "ds",
 		},
 	}.Apply(t)

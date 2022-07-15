@@ -110,7 +110,7 @@ resource "databricks_job" "this" {
     pipeline_task {
       pipeline_id = databricks_pipeline.this.id
     }
-  }  
+  }
 }
 ```
 

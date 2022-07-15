@@ -487,7 +487,7 @@ func (a ClustersAPI) defaultTimeout() time.Duration {
 }
 
 // NewClustersAPI creates ClustersAPI instance from provider meta
-func NewClustersAPI(ctx context.Context, m interface{}) ClustersAPI {
+func NewClustersAPI(ctx context.Context, m any) ClustersAPI {
 	return ClustersAPI{
 		client:  m.(*common.DatabricksClient),
 		context: ctx,

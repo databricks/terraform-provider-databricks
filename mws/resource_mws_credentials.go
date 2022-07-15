@@ -10,7 +10,7 @@ import (
 )
 
 // NewCredentialsAPI creates MWSCredentialsAPI instance from provider meta
-func NewCredentialsAPI(ctx context.Context, m interface{}) CredentialsAPI {
+func NewCredentialsAPI(ctx context.Context, m any) CredentialsAPI {
 	return CredentialsAPI{m.(*common.DatabricksClient), ctx}
 }
 

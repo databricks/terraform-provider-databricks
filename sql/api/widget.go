@@ -51,7 +51,7 @@ type WidgetParameterMapping struct {
 	MapTo string `json:"mapTo,omitempty"`
 
 	// The type of the value depends on the type of the parameter referred to by `name`.
-	Value interface{} `json:"value"`
+	Value any `json:"value"`
 
 	// This title overrides the title given to this parameter by the query, if specified.
 	Title string `json:"title,omitempty"`

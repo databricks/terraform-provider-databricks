@@ -21,7 +21,7 @@ func TestAccWorkspaceConfFullLifecycle(t *testing.T) {
 			}`,
 			Check: acceptance.ResourceCheck("databricks_workspace_conf.this",
 				func(ctx context.Context, client *common.DatabricksClient, id string) error {
-					conf := map[string]interface{}{
+					conf := map[string]any{
 						"enableIpAccessLists": nil,
 					}
 					err := workspace.NewWorkspaceConfAPI(ctx, client).Read(&conf)

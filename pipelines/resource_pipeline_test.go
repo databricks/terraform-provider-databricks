@@ -50,7 +50,7 @@ func TestResourcePipelineCreate(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/pipelines/abcd",
-				Response: map[string]interface{}{
+				Response: map[string]any{
 					"id":    "abcd",
 					"name":  "test-pipeline",
 					"state": "DEPLOYING",
@@ -60,7 +60,7 @@ func TestResourcePipelineCreate(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/pipelines/abcd",
-				Response: map[string]interface{}{
+				Response: map[string]any{
 					"id":    "abcd",
 					"name":  "test-pipeline",
 					"state": "RUNNING",
@@ -70,7 +70,7 @@ func TestResourcePipelineCreate(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/pipelines/abcd",
-				Response: map[string]interface{}{
+				Response: map[string]any{
 					"id":    "abcd",
 					"name":  "test-pipeline",
 					"state": "RUNNING",
@@ -152,7 +152,7 @@ func TestResourcePipelineCreate_ErrorWhenWaitingFailedCleanup(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/pipelines/abcd",
-				Response: map[string]interface{}{
+				Response: map[string]any{
 					"id":    "abcd",
 					"name":  "test-pipeline",
 					"state": "FAILED",
@@ -203,7 +203,7 @@ func TestResourcePipelineCreate_ErrorWhenWaitingSuccessfulCleanup(t *testing.T) 
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/pipelines/abcd",
-				Response: map[string]interface{}{
+				Response: map[string]any{
 					"id":    "abcd",
 					"name":  "test-pipeline",
 					"state": "FAILED",

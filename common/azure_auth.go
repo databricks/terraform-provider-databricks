@@ -20,7 +20,7 @@ import (
 const armDatabricksResourceID string = "2ff814a6-3304-4ab8-85cb-cd0e6f879c1d"
 
 //
-func (aa *DatabricksClient) GetAzureJwtProperty(key string) (interface{}, error) {
+func (aa *DatabricksClient) GetAzureJwtProperty(key string) (any, error) {
 	if !aa.IsAzure() {
 		return "", fmt.Errorf("can't get Azure JWT token in non-Azure environment")
 	}
@@ -256,10 +256,10 @@ type azureDatabricksWorkspace struct {
 	} `json:"sku"`
 	Location   string `json:"location"`
 	Properties struct {
-		ManagedResourceGroupID string      `json:"managedResourceGroupId"`
-		Parameters             interface{} `json:"parameters"`
-		ProvisioningState      string      `json:"provisioningState"`
-		UIDefinitionURI        string      `json:"uiDefinitionUri"`
+		ManagedResourceGroupID string `json:"managedResourceGroupId"`
+		Parameters             any    `json:"parameters"`
+		ProvisioningState      string `json:"provisioningState"`
+		UIDefinitionURI        string `json:"uiDefinitionUri"`
 		Authorizations         []struct {
 			PrincipalID      string `json:"principalId"`
 			RoleDefinitionID string `json:"roleDefinitionId"`

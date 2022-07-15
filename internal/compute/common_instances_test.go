@@ -133,7 +133,7 @@ func TestNewTinyClusterInCommonPoolPossiblyReused(t *testing.T) {
 		{
 			Method:   "GET",
 			Resource: "/api/2.0/clusters/list",
-			Response: map[string]interface{}{},
+			Response: map[string]any{},
 		},
 		{
 			Method:       "GET",

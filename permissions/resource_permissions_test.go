@@ -93,7 +93,7 @@ func TestResourcePermissionsRead(t *testing.T) {
 	assert.Equal(t, "/clusters/abc", d.Id())
 	ac := d.Get("access_control").(*schema.Set)
 	require.Equal(t, 1, len(ac.List()))
-	firstElem := ac.List()[0].(map[string]interface{})
+	firstElem := ac.List()[0].(map[string]any)
 	assert.Equal(t, TestingUser, firstElem["user_name"])
 	assert.Equal(t, "CAN_READ", firstElem["permission_level"])
 }
@@ -153,7 +153,7 @@ func TestResourcePermissionsRead_SQLA_Asset(t *testing.T) {
 	assert.Equal(t, "/sql/dashboards/abc", d.Id())
 	ac := d.Get("access_control").(*schema.Set)
 	require.Equal(t, 1, len(ac.List()))
-	firstElem := ac.List()[0].(map[string]interface{})
+	firstElem := ac.List()[0].(map[string]any)
 	assert.Equal(t, TestingUser, firstElem["user_name"])
 	assert.Equal(t, "CAN_READ", firstElem["permission_level"])
 }
@@ -439,7 +439,7 @@ func TestResourcePermissionsCreate_no_access_control(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{},
 		Resource: ResourcePermissions(),
 		Create:   true,
-		State: map[string]interface{}{
+		State: map[string]any{
 			"cluster_id": "abc",
 		},
 	}.ExpectError(t, "invalid config supplied. [access_control] Missing required argument")
@@ -450,11 +450,11 @@ func TestResourcePermissionsCreate_conflicting_fields(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{},
 		Resource: ResourcePermissions(),
 		Create:   true,
-		State: map[string]interface{}{
+		State: map[string]any{
 			"cluster_id":    "abc",
 			"notebook_path": "/Init",
-			"access_control": []interface{}{
-				map[string]interface{}{
+			"access_control": []any{
+				map[string]any{
 					"user_name":        TestingUser,
 					"permission_level": "CAN_READ",
 				},
@@ -526,10 +526,10 @@ func TestResourcePermissionsCreate(t *testing.T) {
 			},
 		},
 		Resource: ResourcePermissions(),
-		State: map[string]interface{}{
+		State: map[string]any{
 			"cluster_id": "abc",
-			"access_control": []interface{}{
-				map[string]interface{}{
+			"access_control": []any{
+				map[string]any{
 					"user_name":        TestingUser,
 					"permission_level": "CAN_ATTACH_TO",
 				},
@@ -540,7 +540,7 @@ func TestResourcePermissionsCreate(t *testing.T) {
 	assert.NoError(t, err, err)
 	ac := d.Get("access_control").(*schema.Set)
 	require.Equal(t, 1, len(ac.List()))
-	firstElem := ac.List()[0].(map[string]interface{})
+	firstElem := ac.List()[0].(map[string]any)
 	assert.Equal(t, TestingUser, firstElem["user_name"])
 	assert.Equal(t, "CAN_ATTACH_TO", firstElem["permission_level"])
 }
@@ -585,10 +585,10 @@ func TestResourcePermissionsCreate_SQLA_Asset(t *testing.T) {
 			},
 		},
 		Resource: ResourcePermissions(),
-		State: map[string]interface{}{
+		State: map[string]any{
 			"sql_dashboard_id": "abc",
-			"access_control": []interface{}{
-				map[string]interface{}{
+			"access_control": []any{
+				map[string]any{
 					"user_name":        TestingUser,
 					"permission_level": "CAN_RUN",
 				},
@@ -599,7 +599,7 @@ func TestResourcePermissionsCreate_SQLA_Asset(t *testing.T) {
 	assert.NoError(t, err, err)
 	ac := d.Get("access_control").(*schema.Set)
 	require.Equal(t, 1, len(ac.List()))
-	firstElem := ac.List()[0].(map[string]interface{})
+	firstElem := ac.List()[0].(map[string]any)
 	assert.Equal(t, TestingUser, firstElem["user_name"])
 	assert.Equal(t, "CAN_RUN", firstElem["permission_level"])
 }
@@ -636,10 +636,10 @@ func TestResourcePermissionsCreate_SQLA_Endpoint(t *testing.T) {
 			},
 		},
 		Resource: ResourcePermissions(),
-		State: map[string]interface{}{
+		State: map[string]any{
 			"sql_endpoint_id": "abc",
-			"access_control": []interface{}{
-				map[string]interface{}{
+			"access_control": []any{
+				map[string]any{
 					"user_name":        TestingUser,
 					"permission_level": "CAN_USE",
 				},
@@ -650,7 +650,7 @@ func TestResourcePermissionsCreate_SQLA_Endpoint(t *testing.T) {
 	assert.NoError(t, err, err)
 	ac := d.Get("access_control").(*schema.Set)
 	require.Equal(t, 1, len(ac.List()))
-	firstElem := ac.List()[0].(map[string]interface{})
+	firstElem := ac.List()[0].(map[string]any)
 	assert.Equal(t, TestingUser, firstElem["user_name"])
 	assert.Equal(t, "CAN_USE", firstElem["permission_level"])
 }
@@ -670,10 +670,10 @@ func TestResourcePermissionsCreate_NotebookPath_NotExists(t *testing.T) {
 			},
 		},
 		Resource: ResourcePermissions(),
-		State: map[string]interface{}{
+		State: map[string]any{
 			"notebook_path": "/Development/Init",
-			"access_control": []interface{}{
-				map[string]interface{}{
+			"access_control": []any{
+				map[string]any{
 					"user_name":        TestingUser,
 					"permission_level": "CAN_USE",
 				},
@@ -739,10 +739,10 @@ func TestResourcePermissionsCreate_NotebookPath(t *testing.T) {
 			},
 		},
 		Resource: ResourcePermissions(),
-		State: map[string]interface{}{
+		State: map[string]any{
 			"notebook_path": "/Development/Init",
-			"access_control": []interface{}{
-				map[string]interface{}{
+			"access_control": []any{
+				map[string]any{
 					"user_name":        TestingUser,
 					"permission_level": "CAN_READ",
 				},
@@ -754,7 +754,7 @@ func TestResourcePermissionsCreate_NotebookPath(t *testing.T) {
 	assert.NoError(t, err, err)
 	ac := d.Get("access_control").(*schema.Set)
 	require.Equal(t, 1, len(ac.List()))
-	firstElem := ac.List()[0].(map[string]interface{})
+	firstElem := ac.List()[0].(map[string]any)
 	assert.Equal(t, TestingUser, firstElem["user_name"])
 	assert.Equal(t, "CAN_READ", firstElem["permission_level"])
 }
@@ -774,10 +774,10 @@ func TestResourcePermissionsCreate_error(t *testing.T) {
 			},
 		},
 		Resource: ResourcePermissions(),
-		State: map[string]interface{}{
+		State: map[string]any{
 			"cluster_id": "abc",
-			"access_control": []interface{}{
-				map[string]interface{}{
+			"access_control": []any{
+				map[string]any{
 					"user_name":        TestingUser,
 					"permission_level": "CAN_USE",
 				},
@@ -894,7 +894,7 @@ func TestResourcePermissionsUpdate(t *testing.T) {
 	assert.Equal(t, "/jobs/9", d.Id())
 	ac := d.Get("access_control").(*schema.Set)
 	require.Equal(t, 1, len(ac.List()))
-	firstElem := ac.List()[0].(map[string]interface{})
+	firstElem := ac.List()[0].(map[string]any)
 	assert.Equal(t, TestingUser, firstElem["user_name"])
 	assert.Equal(t, "CAN_VIEW", firstElem["permission_level"])
 }
@@ -1159,10 +1159,10 @@ func TestResourcePermissionsCreate_RepoPath(t *testing.T) {
 			},
 		},
 		Resource: ResourcePermissions(),
-		State: map[string]interface{}{
+		State: map[string]any{
 			"repo_path": "/Repos/Development/Init",
-			"access_control": []interface{}{
-				map[string]interface{}{
+			"access_control": []any{
+				map[string]any{
 					"user_name":        TestingUser,
 					"permission_level": "CAN_READ",
 				},
@@ -1174,7 +1174,7 @@ func TestResourcePermissionsCreate_RepoPath(t *testing.T) {
 	assert.NoError(t, err, err)
 	ac := d.Get("access_control").(*schema.Set)
 	require.Equal(t, 1, len(ac.List()))
-	firstElem := ac.List()[0].(map[string]interface{})
+	firstElem := ac.List()[0].(map[string]any)
 	assert.Equal(t, TestingUser, firstElem["user_name"])
 	assert.Equal(t, "CAN_READ", firstElem["permission_level"])
 }

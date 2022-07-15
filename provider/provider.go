@@ -123,7 +123,7 @@ func DatabricksProvider() *schema.Provider {
 		},
 		Schema: providerSchema(),
 	}
-	p.ConfigureContextFunc = func(ctx context.Context, d *schema.ResourceData) (interface{}, diag.Diagnostics) {
+	p.ConfigureContextFunc = func(ctx context.Context, d *schema.ResourceData) (any, diag.Diagnostics) {
 		ctx = context.WithValue(ctx, common.Provider, p)
 		return configureDatabricksClient(ctx, d)
 	}
@@ -158,7 +158,7 @@ func providerSchema() map[string]*schema.Schema {
 	return ps
 }
 
-func configureDatabricksClient(ctx context.Context, d *schema.ResourceData) (interface{}, diag.Diagnostics) {
+func configureDatabricksClient(ctx context.Context, d *schema.ResourceData) (any, diag.Diagnostics) {
 	prov := ctx.Value(common.Provider).(*schema.Provider)
 	pc := common.DatabricksClient{
 		Provider: prov,

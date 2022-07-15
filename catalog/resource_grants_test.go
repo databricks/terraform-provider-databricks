@@ -141,7 +141,7 @@ func TestGrantReadMalformedId(t *testing.T) {
 
 type data map[string]string
 
-func (a data) Get(k string) interface{} {
+func (a data) Get(k string) any {
 	return a[k]
 }
 

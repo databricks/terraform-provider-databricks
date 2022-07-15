@@ -76,19 +76,19 @@ func ResourceAWSS3Mount() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 	}
-	r.CreateContext = func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+	r.CreateContext = func(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
 		if err := preprocessS3Mount(ctx, d, m); err != nil {
 			return diag.FromErr(err)
 		}
 		return mountCreate(tpl, r)(ctx, d, m)
 	}
-	r.ReadContext = func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+	r.ReadContext = func(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
 		if err := preprocessS3Mount(ctx, d, m); err != nil {
 			return diag.FromErr(err)
 		}
 		return mountRead(tpl, r)(ctx, d, m)
 	}
-	r.DeleteContext = func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+	r.DeleteContext = func(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
 		if err := preprocessS3Mount(ctx, d, m); err != nil {
 			return diag.FromErr(err)
 		}
@@ -97,7 +97,7 @@ func ResourceAWSS3Mount() *schema.Resource {
 	return r
 }
 
-func preprocessS3Mount(ctx context.Context, d *schema.ResourceData, m interface{}) error {
+func preprocessS3Mount(ctx context.Context, d *schema.ResourceData, m any) error {
 	clusterID := d.Get("cluster_id").(string)
 	instanceProfile := d.Get("instance_profile").(string)
 	if clusterID == "" && instanceProfile == "" {

@@ -23,18 +23,18 @@ type WorkspaceConfAPI struct {
 }
 
 // NewWorkspaceConfAPI returns workspace conf API
-func NewWorkspaceConfAPI(ctx context.Context, m interface{}) WorkspaceConfAPI {
+func NewWorkspaceConfAPI(ctx context.Context, m any) WorkspaceConfAPI {
 	return WorkspaceConfAPI{m.(*common.DatabricksClient), ctx}
 }
 
 // Update will handle creation of new values as well as deletes. Deleting just implies that a value of "" or
 // the appropriate disable string like "false" is sent with the appropriate key
-func (a WorkspaceConfAPI) Update(workspaceConfMap map[string]interface{}) error {
+func (a WorkspaceConfAPI) Update(workspaceConfMap map[string]any) error {
 	return a.client.Patch(a.context, "/workspace-conf", workspaceConfMap)
 }
 
 // Read just returns back a map of keys and values which keys are the configuration items and values are the settings
-func (a WorkspaceConfAPI) Read(conf *map[string]interface{}) error {
+func (a WorkspaceConfAPI) Read(conf *map[string]any) error {
 	keys := []string{}
 	for k := range *conf {
 		keys = append(keys, k)
@@ -50,13 +50,13 @@ func ResourceWorkspaceConf() *schema.Resource {
 	create := func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 		wsConfAPI := NewWorkspaceConfAPI(ctx, c)
 		o, n := d.GetChange("custom_config")
-		old, okOld := o.(map[string]interface{})
-		new, okNew := n.(map[string]interface{})
+		old, okOld := o.(map[string]any)
+		new, okNew := n.(map[string]any)
 		if !okNew || !okOld {
 			return fmt.Errorf("internal type casting error")
 		}
 		log.Printf("[DEBUG] Old workspace config: %v, new: %v", old, new)
-		patch := map[string]interface{}{}
+		patch := map[string]any{}
 		for k, v := range new {
 			patch[k] = v
 		}
@@ -92,7 +92,7 @@ func ResourceWorkspaceConf() *schema.Resource {
 		Update: create,
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			wsConfAPI := NewWorkspaceConfAPI(ctx, c)
-			config := d.Get("custom_config").(map[string]interface{})
+			config := d.Get("custom_config").(map[string]any)
 			log.Printf("[DEBUG] Config available in state: %v", config)
 			err := wsConfAPI.Read(&config)
 			if err != nil {
@@ -102,7 +102,7 @@ func ResourceWorkspaceConf() *schema.Resource {
 			return d.Set("custom_config", config)
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			config := d.Get("custom_config").(map[string]interface{})
+			config := d.Get("custom_config").(map[string]any)
 			for k, v := range config {
 				switch r := v.(type) {
 				default:

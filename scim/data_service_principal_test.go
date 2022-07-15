@@ -40,7 +40,7 @@ func TestDataServicePrincipalReadByAppId(t *testing.T) {
 		Read:        true,
 		NonWritable: true,
 		ID:          "_",
-	}.ApplyAndExpectData(t, map[string]interface{}{
+	}.ApplyAndExpectData(t, map[string]any{
 		"sp_id":          "abc",
 		"application_id": "abc",
 		"display_name":   "Example Service Principal",

@@ -88,7 +88,7 @@ type EndpointList struct {
 }
 
 // NewSQLEndpointsAPI ...
-func NewSQLEndpointsAPI(ctx context.Context, m interface{}) SQLEndpointsAPI {
+func NewSQLEndpointsAPI(ctx context.Context, m any) SQLEndpointsAPI {
 	return SQLEndpointsAPI{m.(*common.DatabricksClient), ctx}
 }
 
@@ -188,7 +188,7 @@ func (a SQLEndpointsAPI) Edit(se SQLEndpoint) error {
 // Delete ...
 func (a SQLEndpointsAPI) Delete(endpointID string) error {
 	return a.client.Delete(a.context, fmt.Sprintf("/sql/warehouses/%s", endpointID),
-		map[string]interface{}{})
+		map[string]any{})
 }
 
 func ResourceSqlEndpoint() *schema.Resource {

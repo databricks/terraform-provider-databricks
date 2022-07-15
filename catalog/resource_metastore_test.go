@@ -59,7 +59,7 @@ func TestCreateMetastoreWithOwner(t *testing.T) {
 			{
 				Method:   "PATCH",
 				Resource: "/api/2.1/unity-catalog/metastores/abc",
-				ExpectedRequest: map[string]interface{}{
+				ExpectedRequest: map[string]any{
 					"owner": "administrators",
 				},
 			},
@@ -108,7 +108,7 @@ func TestCreateMetastore_DeltaSharing(t *testing.T) {
 			{
 				Method:   "PATCH",
 				Resource: "/api/2.1/unity-catalog/metastores/abc",
-				ExpectedRequest: map[string]interface{}{
+				ExpectedRequest: map[string]any{
 					"owner":               "administrators",
 					"delta_sharing_scope": "INTERNAL_AND_EXTERNAL",
 					"delta_sharing_recipient_token_lifetime_in_seconds": 0,
@@ -212,7 +212,7 @@ func TestUpdateMetastore_DeltaSharingScopeOnly(t *testing.T) {
 			{
 				Method:   "PATCH",
 				Resource: "/api/2.1/unity-catalog/metastores/abc",
-				ExpectedRequest: map[string]interface{}{
+				ExpectedRequest: map[string]any{
 					"delta_sharing_scope":                               "INTERNAL_AND_EXTERNAL",
 					"delta_sharing_recipient_token_lifetime_in_seconds": 1002,
 				},

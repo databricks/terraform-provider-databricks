@@ -15,8 +15,8 @@ func TestResourceSQLGlobalConfigCreateDefault(t *testing.T) {
 			{
 				Method:   "PUT",
 				Resource: "/api/2.0/sql/config/warehouses",
-				ExpectedRequest: map[string]interface{}{
-					"data_access_config":        []interface{}{},
+				ExpectedRequest: map[string]any{
+					"data_access_config":        []any{},
 					"enable_serverless_compute": false,
 					"security_policy":           "DATA_ACCESS_CONTROL",
 				},
@@ -46,8 +46,8 @@ func TestResourceSQLGlobalConfigDelete(t *testing.T) {
 			{
 				Method:   "PUT",
 				Resource: "/api/2.0/sql/config/warehouses",
-				ExpectedRequest: map[string]interface{}{
-					"data_access_config":        []interface{}{},
+				ExpectedRequest: map[string]any{
+					"data_access_config":        []any{},
 					"enable_serverless_compute": false,
 					"security_policy":           "DATA_ACCESS_CONTROL",
 				},
@@ -106,13 +106,13 @@ func TestResourceSQLGlobalConfigCreateWithData(t *testing.T) {
 		},
 		Resource: ResourceSqlGlobalConfig(),
 		Create:   true,
-		State: map[string]interface{}{
+		State: map[string]any{
 			"security_policy":      "PASSTHROUGH",
 			"instance_profile_arn": "arn:...",
-			"data_access_config": map[string]interface{}{
+			"data_access_config": map[string]any{
 				"spark.sql.session.timeZone": "UTC",
 			},
-			"sql_config_params": map[string]interface{}{
+			"sql_config_params": map[string]any{
 				"ANSI_MODE": "true",
 			},
 		},
@@ -127,10 +127,10 @@ func TestResourceSQLGlobalConfigCreateError(t *testing.T) {
 		Resource: ResourceSqlGlobalConfig(),
 		Create:   true,
 		Azure:    true,
-		State: map[string]interface{}{
+		State: map[string]any{
 			"security_policy":      "PASSTHROUGH",
 			"instance_profile_arn": "arn:...",
-			"data_access_config": map[string]interface{}{
+			"data_access_config": map[string]any{
 				"spark.sql.session.timeZone": "UTC",
 			},
 		},

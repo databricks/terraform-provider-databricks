@@ -54,9 +54,9 @@ func TestCommandResults_Error(t *testing.T) {
 func TestCommandResults_Scan(t *testing.T) {
 	cr := CommandResults{
 		ResultType: "table",
-		Data: []interface{}{
-			[]interface{}{"foo", 1, true},
-			[]interface{}{"bar", 2, false},
+		Data: []any{
+			[]any{"foo", 1, true},
+			[]any{"bar", 2, false},
 		},
 	}
 	a := ""

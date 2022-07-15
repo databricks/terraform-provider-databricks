@@ -233,7 +233,7 @@ func TestSQLEnpointAPI(t *testing.T) {
 		{
 			Method:   "GET",
 			Resource: "/api/2.0/sql/warehouses",
-			Response: map[string]interface{}{
+			Response: map[string]any{
 				"endpoints": []SQLEndpoint{
 					{
 						ID:   "foo",
@@ -303,7 +303,7 @@ func TestResolveDataSourceIDError(t *testing.T) {
 		{
 			Method:   "GET",
 			Resource: "/api/2.0/preview/sql/data_sources",
-			Response: map[string]interface{}{},
+			Response: map[string]any{},
 			Status:   404,
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
@@ -317,7 +317,7 @@ func TestResolveDataSourceIDNotFound(t *testing.T) {
 		{
 			Method:   "GET",
 			Resource: "/api/2.0/preview/sql/data_sources",
-			Response: []interface{}{},
+			Response: []any{},
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		_, err := NewSQLEndpointsAPI(ctx, client).ResolveDataSourceID("any")

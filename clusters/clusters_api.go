@@ -188,12 +188,12 @@ type S3StorageInfo struct {
 
 // GcsStorageInfo contains the struct for when storing files in GCS
 type GcsStorageInfo struct {
-	Destination string `json:"destination,omitempty" tf:"optional"`
+	Destination string `json:"destination,omitempty"`
 }
 
 // LocalFileInfo represents a local file on disk, e.g. in a customer's container.
 type LocalFileInfo struct {
-	Destination string `json:"destination,omitempty" tf:"optional"`
+	Destination string `json:"destination,omitempty"`
 }
 
 // StorageInfo contains the struct for either DBFS or S3 storage depending on which one is relevant.
@@ -207,7 +207,7 @@ type InitScriptStorageInfo struct {
 	Dbfs *DbfsStorageInfo `json:"dbfs,omitempty" tf:"group:storage"`
 	Gcs  *GcsStorageInfo  `json:"gcs,omitempty" tf:"group:storage"`
 	S3   *S3StorageInfo   `json:"s3,omitempty" tf:"group:storage"`
-	File *LocalFileInfo   `json:"file,omitempty" tf:"optional"`
+	File *LocalFileInfo   `json:"file,omitempty"`
 }
 
 // SparkNodeAwsAttributes is the struct that determines if the node is a spot instance or not

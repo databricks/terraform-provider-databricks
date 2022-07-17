@@ -66,6 +66,7 @@ type testStruct struct {
 	IntSlice       []int             `json:"int_slice,omitempty"`
 	FloatSlice     []float64         `json:"float_slice,omitempty"`
 	BoolSlice      []bool            `json:"bool_slice,omitempty"`
+	TfOptional     string            `json:"tf_optional" tf:"optional"`
 	Hidden         string            `json:"-"`
 	Hidden2        string
 }
@@ -74,10 +75,10 @@ var scm = StructToSchema(testStruct{}, nil)
 
 var testStructFields = []string{"integer", "float", "non_optional", "string", "computed_field", "force_new_field", "map_field",
 	"slice_set_struct", "slice_set_string", "ptr_item", "string_slice", "bool", "int_slice", "float_slice",
-	"bool_slice"}
+	"bool_slice", "tf_optional"}
 
 var testStructOptionalFields = []string{"integer", "float", "string", "computed_field", "force_new_field", "map_field", "slice_set_struct",
-	"ptr_item", "slice_set_string", "bool", "int_slice", "float_slice", "bool_slice"}
+	"ptr_item", "slice_set_string", "bool", "int_slice", "float_slice", "bool_slice", "tf_optional"}
 
 var testStructRequiredFields = []string{"non_optional"}
 

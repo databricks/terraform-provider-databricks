@@ -91,7 +91,7 @@ type Workspace struct {
 	PricingTier                         string                `json:"pricing_tier,omitempty" tf:"computed"`
 	PrivateAccessSettingsID             string                `json:"private_access_settings_id,omitempty"`
 	NetworkID                           string                `json:"network_id,omitempty"`
-	IsNoPublicIPEnabled                 bool                  `json:"is_no_public_ip_enabled"`
+	IsNoPublicIPEnabled                 bool                  `json:"is_no_public_ip_enabled" tf:"optional,default:true"`
 	WorkspaceID                         int64                 `json:"workspace_id,omitempty" tf:"computed"`
 	WorkspaceURL                        string                `json:"workspace_url,omitempty" tf:"computed"`
 	WorkspaceStatus                     string                `json:"workspace_status,omitempty" tf:"computed"`
@@ -444,12 +444,6 @@ func ResourceMwsWorkspaces() *schema.Resource {
 				// https://github.com/databricks/terraform-provider-databricks/issues/382
 				return !strings.HasSuffix(new, old)
 			}
-			// It cannot be marked as `omitempty` in the struct annotation because Go's JON marshaller
-			// skips booleans set to `false` if set. Thus, we mark it optional here.
-			s["is_no_public_ip_enabled"].Optional = true
-			s["is_no_public_ip_enabled"].Required = false
-			// The API defaults this field to `true`. Apply the same behavior here.
-			s["is_no_public_ip_enabled"].Default = true
 			// The value of `is_no_public_ip_enabled` isn't part of the GET payload.
 			// Keep diff when creating (i.e. `old` == ""), suppress diff otherwise.
 			s["is_no_public_ip_enabled"].DiffSuppressFunc = func(k, old, new string, d *schema.ResourceData) bool {

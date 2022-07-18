@@ -96,6 +96,14 @@ const (
 	ClusterStateUnknown = "UNKNOWN"
 )
 
+// RuntimeEngine is for describing whether the Photon runtime engine was used
+type RuntimeEngine string
+
+const (
+	// Photon indicates that the Photon runtime engine is being used
+	Photon = "PHOTON"
+)
+
 var stateMachine = map[ClusterState][]ClusterState{
 	ClusterStatePending:     {ClusterStateRunning, ClusterStateTerminating},
 	ClusterStateRunning:     {ClusterStateResizing, ClusterStateRestarting, ClusterStateTerminating},
@@ -375,9 +383,10 @@ type Cluster struct {
 	ClusterLogConf *StorageInfo            `json:"cluster_log_conf,omitempty"`
 	DockerImage    *DockerImage            `json:"docker_image,omitempty"`
 
-	DataSecurityMode string `json:"data_security_mode,omitempty"`
-	SingleUserName   string `json:"single_user_name,omitempty"`
-	IdempotencyToken string `json:"idempotency_token,omitempty" tf:"force_new"`
+	DataSecurityMode string        `json:"data_security_mode,omitempty"`
+	SingleUserName   string        `json:"single_user_name,omitempty"`
+	IdempotencyToken string        `json:"idempotency_token,omitempty" tf:"force_new"`
+	RuntimeEngine    RuntimeEngine `json:"runtime_engine,omitempty"`
 }
 
 func (cluster Cluster) Validate() error {
@@ -470,6 +479,7 @@ type ClusterInfo struct {
 	ClusterLogStatus          *LogSyncStatus     `json:"cluster_log_status,omitempty"`
 	TerminationReason         *TerminationReason `json:"termination_reason,omitempty"`
 	DataSecurityMode          string             `json:"data_security_mode,omitempty"`
+	RuntimeEngine             RuntimeEngine      `json:"runtime_engine,omitempty"`
 }
 
 // IsRunningOrResizing returns true if cluster is running or resizing

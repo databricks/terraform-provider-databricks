@@ -25,10 +25,12 @@ func TestResourceClusterCreate(t *testing.T) {
 					SparkVersion:           "7.1-scala12",
 					NodeTypeID:             "i3.xlarge",
 					AutoterminationMinutes: 15,
+					RuntimeEngine:          Photon,
 				},
 				Response: ClusterInfo{
-					ClusterID: "abc",
-					State:     ClusterStateRunning,
+					ClusterID:     "abc",
+					State:         ClusterStateRunning,
+					RuntimeEngine: Photon,
 				},
 			},
 			{

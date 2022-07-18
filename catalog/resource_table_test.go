@@ -141,20 +141,22 @@ func TestTableUpdate(t *testing.T) {
 				Method:   "PATCH",
 				Resource: "/api/2.1/unity-catalog/tables/main.foo.bar",
 				ExpectedRequest: map[string]interface{}{
-					"columns": []interface{}{map[string]interface{}{
-						"comment":            "",
-						"name":               "id",
-						"nullable":           true,
-						"partition_index":    0,
-						"position":           0,
-						"type_interval_type": "",
-						"type_json":          "",
-						"type_name":          "string",
-						"type_precision":     0,
-						"type_scale":         0,
-						"type_text":          "string",
+					"columns": []interface{}{
+						map[string]interface{}{
+							"comment":            "",
+							"name":               "id",
+							"nullable":           true,
+							"partition_index":    0,
+							"position":           0,
+							"type_interval_type": "",
+							"type_json":          "",
+							"type_name":          "string",
+							"type_precision":     0,
+							"type_scale":         0,
+							"type_text":          "string",
+						},
 					},
-					},
+					"storage_location": "s3://ext-main/foo/bar1",
 				},
 			},
 			{
@@ -209,7 +211,7 @@ func TestTableUpdate(t *testing.T) {
 		name = "bar"
 		table_type = "EXTERNAL"
 		data_source_format = "JSON"
-		storage_location = "s3://ext-main/foo/bar"
+		storage_location = "s3://ext-main/foo/bar1"
 		
 		column {
 			name = "id"

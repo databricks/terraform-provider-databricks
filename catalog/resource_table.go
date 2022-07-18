@@ -33,13 +33,13 @@ type ColumnInfo struct {
 
 type TableInfo struct {
 	Name                  string            `json:"name"`
-	CatalogName           string            `json:"catalog_name"`
-	SchemaName            string            `json:"schema_name"`
-	TableType             string            `json:"table_type"`
+	CatalogName           string            `json:"catalog_name" tf:"force_new"`
+	SchemaName            string            `json:"schema_name" tf:"force_new"`
+	TableType             string            `json:"table_type" tf:"force_new"`
 	DataSourceFormat      string            `json:"data_source_format"`
 	ColumnInfos           []ColumnInfo      `json:"columns" tf:"alias:column"`
-	StorageLocation       string            `json:"storage_location,omitempty"`
-	StorageCredentialName string            `json:"storage_credential_name,omitempty"`
+	StorageLocation       string            `json:"storage_location,omitempty" tf:"suppress_diff"`
+	StorageCredentialName string            `json:"storage_credential_name,omitempty" tf:"force_new"`
 	ViewDefinition        string            `json:"view_definition,omitempty"`
 	Owner                 string            `json:"owner,omitempty" tf:"computed"`
 	Comment               string            `json:"comment,omitempty"`
@@ -85,6 +85,12 @@ func ResourceTable() *schema.Resource {
 		"view_definition", "comment", "properties"})
 	return common.Resource{
 		Schema: tableSchema,
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, c any) error {
+			if d.Get("table_type") != "EXTERNAL" {
+				return nil
+			}
+			return nil
+		},
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var ti TableInfo
 			common.DataToStructPointer(d, tableSchema, &ti)

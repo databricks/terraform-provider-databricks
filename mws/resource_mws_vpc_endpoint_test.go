@@ -14,6 +14,7 @@ import (
 )
 
 func TestMwsAccVPCEndpointIntegration(t *testing.T) {
+	t.SkipNow()
 	cloudEnv := os.Getenv("CLOUD_ENV")
 	if cloudEnv != "MWS" {
 		t.Skip("Cannot run test on non-MWS environment")

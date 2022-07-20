@@ -73,6 +73,8 @@
 | [databricks_sql_permissions](docs/resources/sql_permissions.md)
 | [databricks_sql_query](docs/resources/sql_query.md)
 | [databricks_sql_visualization](docs/resources/sql_visualization.md)
+| [databricks_sql_warehouse](docs/data-sources/sql_warehouse.md) data
+| [databricks_sql_warehouses](docs/data-sources/sql_warehouses.md) data
 | [databricks_sql_widget](docs/resources/sql_widget.md)
 | [databricks_storage_credential](docs/resources/storage_credential.md)
 | [databricks_table](docs/resources/table.md)

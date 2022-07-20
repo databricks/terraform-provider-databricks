@@ -21,6 +21,8 @@ func updateFunctionFactory(pathPrefix string, updatable []string) func(context.C
 	return func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 		patch := map[string]any{}
 		for _, field := range updatable {
+
+			// these fields cannot be set during creation
 			if d.IsNewResource() && !contains([]string{
 				"owner",
 				"delta_sharing_scope",
@@ -29,9 +31,25 @@ func updateFunctionFactory(pathPrefix string, updatable []string) func(context.C
 			}, field) {
 				continue
 			}
-			old, new := d.GetChange(field)
-			if !d.HasChange(field) {
-				continue
+
+			var old, new any
+			if field == "columns" {
+				old, new = d.GetChange("column")
+				if !d.HasChange("column") {
+					continue
+				}
+			} else {
+				old, new = d.GetChange(field)
+				if !d.HasChange(field) {
+					continue
+				}
+			}
+
+			// need to reset the delta sharing token lifetime
+			if field == "delta_sharing_scope" && old != new && new == "INTERNAL_AND_EXTERNAL" &&
+				!d.HasChange("delta_sharing_recipient_token_lifetime_in_seconds") {
+				patch["delta_sharing_recipient_token_lifetime_in_seconds"] =
+					d.Get("delta_sharing_recipient_token_lifetime_in_seconds")
 			}
 
 			if contains([]string{
@@ -43,12 +61,8 @@ func updateFunctionFactory(pathPrefix string, updatable []string) func(context.C
 				continue
 			}
 
-			if field == "delta_sharing_scope" && old != new && new == "INTERNAL_AND_EXTERNAL" &&
-				!d.HasChange("delta_sharing_recipient_token_lifetime_in_seconds") {
-				patch["delta_sharing_recipient_token_lifetime_in_seconds"] =
-					d.Get("delta_sharing_recipient_token_lifetime_in_seconds")
-			}
 			patch[field] = new
+
 		}
 		if len(patch) == 0 {
 			return nil

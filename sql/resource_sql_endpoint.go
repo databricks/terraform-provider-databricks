@@ -84,7 +84,7 @@ type DataSource struct {
 
 // endpointList ...
 type EndpointList struct {
-	Endpoints []SQLEndpoint `json:"endpoints"`
+	Endpoints []SQLEndpoint `json:"warehouses"`
 }
 
 // NewSQLEndpointsAPI ...
@@ -100,7 +100,7 @@ type SQLEndpointsAPI struct {
 
 // List all SQL endpoints
 func (a SQLEndpointsAPI) List() (lst EndpointList, err error) {
-	a.client.Get(a.context, "/sql/warehouses", nil, &lst)
+	err = a.client.Get(a.context, "/sql/warehouses", nil, &lst)
 	return
 }
 

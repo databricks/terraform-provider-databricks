@@ -282,7 +282,7 @@ func TestSQLEnpointAPI(t *testing.T) {
 			Method:   "GET",
 			Resource: "/api/2.0/sql/warehouses",
 			Response: map[string]any{
-				"endpoints": []SQLEndpoint{
+				"warehouses": []SQLEndpoint{
 					{
 						ID:   "foo",
 						Name: "bar",

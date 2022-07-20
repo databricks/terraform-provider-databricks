@@ -308,8 +308,7 @@ func (c *DatabricksClient) unmarshall(path string, body []byte, response any) er
 		ErrorCode:  "UNKNOWN",
 		StatusCode: 200,
 		Resource:   "..." + path,
-		Message: fmt.Sprintf("Invalid JSON received (%d bytes): %v",
-			len(body), string(body)),
+		Message:    fmt.Sprintf("%s\n%s", err.Error(), onlyNBytes(string(body), 32)),
 	}
 }
 

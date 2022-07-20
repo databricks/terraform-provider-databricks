@@ -101,11 +101,8 @@ func (aa *DatabricksClient) configureWithAzureCLI(ctx context.Context) (func(*ht
 	if aa.IsAzureClientSecretSet() {
 		return nil, nil
 	}
-	if aa.AzureDatabricksID == "" {
-		aa.AzureDatabricksID = armDatabricksResourceID
-	}
 	// verify that Azure CLI is authenticated
-	_, err := cli.GetTokenFromCLI(aa.AzureDatabricksID)
+	_, err := cli.GetTokenFromCLI(armDatabricksResourceID)
 	if err != nil {
 		if strings.Contains(err.Error(), "executable file not found") {
 			return nil, fmt.Errorf("most likely Azure CLI is not installed. " +

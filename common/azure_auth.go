@@ -146,10 +146,7 @@ func (aa *DatabricksClient) simpleAADRequestVisitor(
 	if err != nil {
 		return nil, fmt.Errorf("cannot get workspace: %w", err)
 	}
-	if aa.AzureDatabricksID == "" {
-		aa.AzureDatabricksID = armDatabricksResourceID
-	}
-	platformAuthorizer, err := authorizerFactory(aa.AzureDatabricksID)
+	platformAuthorizer, err := authorizerFactory(armDatabricksResourceID)
 	if err != nil {
 		return nil, fmt.Errorf("cannot authorize databricks: %w", err)
 	}
@@ -220,10 +217,7 @@ func (aa *DatabricksClient) getClientSecretAuthorizer(resource string) (autorest
 	if aa.azureAuthorizer != nil {
 		return aa.azureAuthorizer, nil
 	}
-	if aa.AzureDatabricksID == "" {
-		aa.AzureDatabricksID = armDatabricksResourceID
-	}
-	if resource != aa.AzureDatabricksID {
+	if resource != armDatabricksResourceID {
 		es := auth.EnvironmentSettings{
 			Values: map[string]string{
 				auth.ClientID:     aa.AzureClientID,
@@ -246,7 +240,7 @@ func (aa *DatabricksClient) getClientSecretAuthorizer(resource string) (autorest
 		*platformTokenOAuthCfg,
 		aa.AzureClientID,
 		aa.AzureClientSecret,
-		aa.AzureDatabricksID)
+		armDatabricksResourceID)
 	if err != nil {
 		return nil, maybeExtendAuthzError(err)
 	}

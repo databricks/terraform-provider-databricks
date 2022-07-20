@@ -10,13 +10,11 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+// TODO: move to `acceptance`
 func TestMwsAccCustomerManagedKeys(t *testing.T) {
-	if testing.Short() {
-		t.Skip("skipping integration test in short mode.")
-	}
 	acctID := qa.GetEnvOrSkipTest(t, "DATABRICKS_ACCOUNT_ID")
-	kmsKeyArn := qa.GetEnvOrSkipTest(t, "TEST_KMS_KEY_ARN")
-	kmsKeyAlias := qa.GetEnvOrSkipTest(t, "TEST_KMS_KEY_ALIAS")
+	kmsKeyArn := qa.GetEnvOrSkipTest(t, "TEST_MANAGED_KMS_KEY_ARN")
+	kmsKeyAlias := qa.GetEnvOrSkipTest(t, "TEST_MANAGED_KMS_KEY_ALIAS")
 	client := common.CommonEnvironmentClient()
 	cmkAPI := NewCustomerManagedKeysAPI(context.Background(), client)
 	cmkList, err := cmkAPI.List(acctID)

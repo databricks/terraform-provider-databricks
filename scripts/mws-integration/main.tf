@@ -14,7 +14,7 @@ resource "random_string" "naming" {
 locals {
   // dltp - databricks labs terraform provider
   prefix = "dltp${random_string.naming.result}"
-  region = data.external.env.result.TEST_REGION
+  region = data.external.env.result.AWS_REGION
   cidr = data.external.env.result.TEST_CIDR
   tags = {
     Environment = "Testing"
@@ -238,8 +238,12 @@ resource "aws_kms_alias" "customer_managed_key_alias" {
 
 data "aws_caller_identity" "current" {}
 
-output "test_aws_account_id" {
+output "aws_account_id" {
   value = data.aws_caller_identity.current.account_id
+}
+
+output "aws_region" {
+  value = local.region
 }
 
 output "test_rest_api_vpc_endpoint" {
@@ -289,10 +293,6 @@ output "test_kms_key_alias" {
 
 output "test_prefix" {
   value = local.prefix
-}
-
-output "test_region" {
-  value = local.region
 }
 
 output "databricks_account_id" {

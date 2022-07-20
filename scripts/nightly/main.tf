@@ -1,7 +1,7 @@
 locals {
   prefix     = "dltp${random_string.naming.result}"
   cidr_block = data.external.env.result.TEST_CIDR
-  region     = data.external.env.result.TEST_REGION
+  region     = data.external.env.result.AWS_REGION
   account_id = data.external.env.result.DATABRICKS_ACCOUNT_ID
   tags       = azurerm_resource_group.this.tags
 }

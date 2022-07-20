@@ -345,6 +345,16 @@ type EventsResponse struct {
 	TotalCount int64          `json:"total_count"`
 }
 
+type WorkloadTypeClients struct {
+	Notebooks bool `json:"notebooks" tf:"optional,default:true"`
+	Jobs      bool `json:"jobs" tf:"optional,default:true"`
+}
+
+// WorkloadType defines which workloads may run on the cluster
+type WorkloadType struct {
+	Clients *WorkloadTypeClients `json:"clients"`
+}
+
 // Cluster contains the information when trying to submit api calls or editing a cluster
 type Cluster struct {
 	ClusterID   string `json:"cluster_id,omitempty"`
@@ -375,9 +385,10 @@ type Cluster struct {
 	ClusterLogConf *StorageInfo            `json:"cluster_log_conf,omitempty"`
 	DockerImage    *DockerImage            `json:"docker_image,omitempty"`
 
-	DataSecurityMode string `json:"data_security_mode,omitempty"`
-	SingleUserName   string `json:"single_user_name,omitempty"`
-	IdempotencyToken string `json:"idempotency_token,omitempty" tf:"force_new"`
+	DataSecurityMode string        `json:"data_security_mode,omitempty"`
+	SingleUserName   string        `json:"single_user_name,omitempty"`
+	IdempotencyToken string        `json:"idempotency_token,omitempty" tf:"force_new"`
+	WorkloadType     *WorkloadType `json:"workload_type,omitempty"`
 }
 
 func (cluster Cluster) Validate() error {

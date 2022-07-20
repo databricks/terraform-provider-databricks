@@ -134,6 +134,17 @@ func (ta *SqlPermissions) read() error {
 			currentType = "CATALOG"
 			currentKey = ""
 		}
+
+		if ta.AnyFile {
+			currentType = "ANY FILE"
+			currentKey = ""
+		}
+
+		if ta.AnonymousFunction {
+			currentType = "ANONYMOUS FUNCTION"
+			currentKey = ""
+		}
+
 		if !strings.EqualFold(currentType, thisType) {
 			continue
 		}
@@ -347,6 +358,9 @@ func ResourceSqlPermissions() *schema.Resource {
 			ta, err := tableAclForUpdate(ctx, d, s, c)
 			if err != nil {
 				return err
+			}
+			if !d.HasChangesExcept("cluster_id") {
+				return nil
 			}
 			return ta.enforce()
 		},

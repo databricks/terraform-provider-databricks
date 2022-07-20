@@ -11,7 +11,7 @@ import (
 // DataAwsCrossaccountPolicy defines the cross-account policy
 func DataAwsCrossaccountPolicy() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+		ReadContext: func(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
 			policy := awsIamPolicy{
 				Version: "2012-10-17",
 				Statements: []*awsIamPolicyStatement{

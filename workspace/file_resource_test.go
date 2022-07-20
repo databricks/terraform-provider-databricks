@@ -11,7 +11,7 @@ import (
 )
 
 func TestMigrateV0(t *testing.T) {
-	migrated, err := MigrateV0(context.Background(), map[string]interface{}{
+	migrated, err := MigrateV0(context.Background(), map[string]any{
 		"overwrite": true,
 		"source":    "../storage/testdata/tf-test-python.py",
 		"foo":       "bar",
@@ -19,7 +19,7 @@ func TestMigrateV0(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, "e4ba3a99cc1b65aff280ed8b016686b9", migrated["md5"])
 
-	migrated, err = MigrateV0(context.Background(), map[string]interface{}{
+	migrated, err = MigrateV0(context.Background(), map[string]any{
 		"overwrite": true,
 		"content":   "eA==",
 		"foo":       "bar",

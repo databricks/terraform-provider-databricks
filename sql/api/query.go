@@ -38,7 +38,7 @@ type QuerySchedule struct {
 
 // QueryOptions ...
 type QueryOptions struct {
-	Parameters    []interface{}     `json:"-"`
+	Parameters    []any             `json:"-"`
 	RawParameters []json.RawMessage `json:"parameters,omitempty"`
 
 	RunAsRole string `json:"run_as_role,omitempty"`
@@ -69,7 +69,7 @@ func (o *QueryOptions) UnmarshalJSON(b []byte) error {
 		return err
 	}
 
-	o.Parameters = []interface{}{}
+	o.Parameters = []any{}
 	for _, rp := range o.RawParameters {
 		var qp QueryParameter
 
@@ -80,7 +80,7 @@ func (o *QueryOptions) UnmarshalJSON(b []byte) error {
 		}
 
 		// Acquire pointer to the correct parameter type.
-		var i interface{}
+		var i any
 		switch qp.Type {
 		case queryParameterTextTypeName:
 			i = &QueryParameterText{}

@@ -68,7 +68,7 @@ func TestCreateStorageCredentialWithOwner(t *testing.T) {
 			{
 				Method:   "PATCH",
 				Resource: "/api/2.1/unity-catalog/storage-credentials/a",
-				ExpectedRequest: map[string]interface{}{
+				ExpectedRequest: map[string]any{
 					"owner": "administrators",
 				},
 			},
@@ -103,8 +103,8 @@ func TestUpdateStorageCredentials(t *testing.T) {
 			{
 				Method:   "PATCH",
 				Resource: "/api/2.1/unity-catalog/storage-credentials/a",
-				ExpectedRequest: map[string]interface{}{
-					"aws_iam_role": map[string]interface{}{
+				ExpectedRequest: map[string]any{
+					"aws_iam_role": map[string]any{
 						"role_arn": "CHANGED",
 					},
 				},
@@ -185,8 +185,8 @@ func TestUpdateAzStorageCredentials(t *testing.T) {
 			{
 				Method:   "PATCH",
 				Resource: "/api/2.1/unity-catalog/storage-credentials/a",
-				ExpectedRequest: map[string]interface{}{
-					"azure_service_principal": map[string]interface{}{
+				ExpectedRequest: map[string]any{
+					"azure_service_principal": map[string]any{
 						"directory_id":   "CHANGED",
 						"application_id": "CHANGED",
 						"client_secret":  "CHANGED",
@@ -232,8 +232,8 @@ func TestUpdateAzStorageCredentialMI(t *testing.T) {
 			{
 				Method:   "PATCH",
 				Resource: "/api/2.1/unity-catalog/storage-credentials/a",
-				ExpectedRequest: map[string]interface{}{
-					"azure_managed_identity": map[string]interface{}{
+				ExpectedRequest: map[string]any{
+					"azure_managed_identity": map[string]any{
 						"access_connector_id": "CHANGED",
 					},
 				},

@@ -75,7 +75,7 @@ func TestResourceServicePrincipalRead(t *testing.T) {
 		New:      true,
 		Read:     true,
 		ID:       "abc",
-	}.ApplyAndExpectData(t, map[string]interface{}{
+	}.ApplyAndExpectData(t, map[string]any{
 		"display_name":         "Example Service Principal",
 		"application_id":       "bcd",
 		"allow_cluster_create": true,
@@ -277,7 +277,7 @@ func TestResourceServicePrincipalUpdateOnAWS(t *testing.T) {
 		allow_cluster_create = false
 		allow_instance_pool_create = true
 		`,
-	}.ApplyAndExpectData(t, map[string]interface{}{
+	}.ApplyAndExpectData(t, map[string]any{
 		"display_name":               "Changed Name",
 		"allow_cluster_create":       false,
 		"allow_instance_pool_create": true,

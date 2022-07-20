@@ -18,10 +18,10 @@ type awsIamPolicy struct {
 type awsIamPolicyStatement struct {
 	Sid          string                       `json:"Sid,omitempty"`
 	Effect       string                       `json:"Effect,omitempty"`
-	Actions      interface{}                  `json:"Action,omitempty"`
-	NotActions   interface{}                  `json:"NotAction,omitempty"`
-	Resources    interface{}                  `json:"Resource,omitempty"`
-	NotResources interface{}                  `json:"NotResource,omitempty"`
+	Actions      any                          `json:"Action,omitempty"`
+	NotActions   any                          `json:"NotAction,omitempty"`
+	Resources    any                          `json:"Resource,omitempty"`
+	NotResources any                          `json:"NotResource,omitempty"`
 	Principal    map[string]string            `json:"Principal,omitempty"`
 	Condition    map[string]map[string]string `json:"Condition,omitempty"`
 }
@@ -29,7 +29,7 @@ type awsIamPolicyStatement struct {
 // DataAwsAssumeRolePolicy ...
 func DataAwsAssumeRolePolicy() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+		ReadContext: func(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
 			externalID := d.Get("external_id").(string)
 			policy := awsIamPolicy{
 				Version: "2012-10-17",

@@ -123,7 +123,7 @@ func TestResourceTokenCreate(t *testing.T) {
 			},
 		},
 		Resource: ResourceToken(),
-		State: map[string]interface{}{
+		State: map[string]any{
 			"comment":          "Hello world!",
 			"lifetime_seconds": 300,
 		},
@@ -148,7 +148,7 @@ func TestResourceTokenCreate_Error(t *testing.T) {
 			},
 		},
 		Resource: ResourceToken(),
-		State: map[string]interface{}{
+		State: map[string]any{
 			"comment":          "Hello world!",
 			"lifetime_seconds": 300,
 		},
@@ -190,7 +190,7 @@ func TestResourceTokenCreate_NoExpiration(t *testing.T) {
 			},
 		},
 		Resource: ResourceToken(),
-		State:    map[string]interface{}{},
+		State:    map[string]any{},
 		Create:   true,
 	}.Apply(t)
 	assert.NoError(t, err, err)

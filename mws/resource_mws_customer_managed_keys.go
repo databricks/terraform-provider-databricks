@@ -27,7 +27,7 @@ type CustomerManagedKey struct {
 }
 
 // NewCustomerManagedKeysAPI creates CustomerManagedKeysAPI instance from provider meta
-func NewCustomerManagedKeysAPI(ctx context.Context, m interface{}) CustomerManagedKeysAPI {
+func NewCustomerManagedKeysAPI(ctx context.Context, m any) CustomerManagedKeysAPI {
 	return CustomerManagedKeysAPI{m.(*common.DatabricksClient), ctx}
 }
 
@@ -110,8 +110,8 @@ func ResourceMwsCustomerManagedKeys() *schema.Resource {
 }
 
 func migrateResourceCustomerManagedKeyV0(ctx context.Context,
-	rawState map[string]interface{},
-	meta interface{}) (map[string]interface{}, error) {
+	rawState map[string]any,
+	meta any) (map[string]any, error) {
 	rawState["use_cases"] = []string{"MANAGED_SERVICES"}
 	return rawState, nil
 }

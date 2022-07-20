@@ -4,7 +4,9 @@ subcategory: "Security"
 
 # databricks_permissions Resource
 
-This resource allows you to generically manage [access control](https://docs.databricks.com/security/access-control/index.html) in Databricks workspace. It would guarantee that only _admins_, _authenticated principal_ and those declared within `access_control` blocks would have specified access. It is not possible to remove management rights from _admins_ group.
+This resource allows you to generically manage [access control](https://docs.databricks.com/security/access-control/index.html) in Databricks workspace. It would guarantee that only _admins_, _authenticated principal_ and those declared within `access_control` blocks would have specified access. It is not possible to remove management rights from _admins_ group. 
+
+-> **Note** Configuring this resource for an object will **OVERWRITE** any existing permissions of the same type unless imported, and changes made outside of Terraform will be reset unless the changes are also reflected in the configuration.
 
 -> **Note** It is not possible to lower permissions for `admins` or your own user anywhere from `CAN_MANAGE` level, so Databricks Terraform Provider [removes](https://github.com/databricks/terraform-provider-databricks/blob/master/access/resource_permissions.go#L261-L271) those `access_control` blocks automatically. 
 
@@ -669,21 +671,31 @@ General Permissions API does not apply to access control for tables and they hav
 Initially in Unity Catalog all users have no access to data, which has to be later assigned through [databricks_grants](grants.md) resource.
 
 ## Argument Reference
+One type argument and at least one access control block argument are required.
 
-Exactly one of the following attributes is required:
+### Type Argument
+Exactly one of the following arguments is required:
 
 - `cluster_id` - [cluster](cluster.md) id
-- `job_id` - [job](job.md) id
-- `directory_id` - [directory](notebook.md) id
-- `directory_path` - path of directory
-- `notebook_id` - ID of [notebook](notebook.md) within workspace
-- `notebook_path` - path of notebook
-- `repo_id` - [repo](repo.md) id
-- `repo_path` - path of databricks repo directory(`/Repos/<username>/...`)
 - `cluster_policy_id` - [cluster policy](cluster_policy.md) id
 - `instance_pool_id` - [instance pool](instance_pool.md) id
+- `job_id` - [job](job.md) id
+- `pipeline_id` - [pipeline](pipeline.md) id
+- `notebook_id` - ID of [notebook](notebook.md) within workspace
+- `notebook_path` - path of notebook
+- `directory_id` - [directory](notebook.md) id
+- `directory_path` - path of directory
+- `repo_id` - [repo](repo.md) id
+- `repo_path` - path of databricks repo directory(`/Repos/<username>/...`)
+- `experiment_id` - [MLflow experiment](mlflow_experiment.md) id
+- `registered_model_id` - [MLflow registered model](mlflow_model.md) id
 - `authorization` - either [`tokens`](https://docs.databricks.com/administration-guide/access-control/tokens.html) or [`passwords`](https://docs.databricks.com/administration-guide/users-groups/single-sign-on/index.html#configure-password-permission).
+- `sql_endpoint_id` - [SQL endpoint](sql_endpoint.md) id
+- `sql_dashboard_id` - [SQL dashboard](sql_dashboard.md) id
+- `sql_query_id` - [SQL query](sql_query.md) id
+- `sql_alert_id` - [SQL alert](https://docs.databricks.com/sql/user/security/access-control/alert-acl.html) id
 
+### Access Control Argument
 One or more `access_control` blocks are required to actually set the permission levels:
 
 ```hcl
@@ -693,13 +705,13 @@ access_control {
 }
 ```
 
-Attributes are:
+Arguments for the `access_control` block are:
 
 -> **Note** It is not possible to lower permissions for `admins` or your own user anywhere from `CAN_MANAGE` level, so Databricks Terraform Provider [removes](https://github.com/databricks/terraform-provider-databricks/blob/master/access/resource_permissions.go#L261-L271) those `access_control` blocks automatically. 
 
 - `permission_level` - (Required) permission level according to specific resource. See examples above for the reference.
 
-Exactly one of the below attributes is required:
+Exactly one of the below arguments is required:
 - `user_name` - (Optional) name of the [user](user.md).
 - `service_principal_name` - (Optional) Application ID of the [service_principal](service_principal.md#application_id).
 - `group_name` - (Optional) name of the [group](group.md). We recommend setting permissions on groups.
@@ -717,4 +729,27 @@ The resource permissions can be imported using the object id
 
 ```bash
 $ terraform import databricks_permissions.this /<object type>/<object id>
+```
+
+### Import Example
+Configuration file:
+```hcl
+resource "databricks_mlflow_model" "model" {
+  name        = "example_model"
+  description = "MLflow registered model"
+}
+
+resource "databricks_permissions" "model_usage" {
+  registered_model_id = databricks_mlflow_model.model.registered_model_id
+
+  access_control {
+    group_name       = "users"
+    permission_level = "CAN_READ"
+  }
+}
+```
+
+Import command:
+```bash
+$ terraform import databricks_permissions.model_usage /registered-models/<registered_model_id>
 ```

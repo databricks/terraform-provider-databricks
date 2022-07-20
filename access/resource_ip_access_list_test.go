@@ -22,7 +22,7 @@ var (
 	TestingListType         = "BLOCK"
 	TestingEnabled          = true
 	TestingIPAddresses      = []string{"1.2.3.4", "1.2.4.0/24"}
-	TestingIPAddressesState = []interface{}{"1.2.3.4", "1.2.4.0/24"}
+	TestingIPAddressesState = []any{"1.2.3.4", "1.2.4.0/24"}
 )
 
 func TestAccIPACL(t *testing.T) {
@@ -102,7 +102,7 @@ func TestIPACLCreate(t *testing.T) {
 			},
 		},
 		Resource: ResourceIPAccessList(),
-		State: map[string]interface{}{
+		State: map[string]any{
 			"label":        TestingLabel,
 			"list_type":    TestingListTypeString,
 			"ip_addresses": TestingIPAddressesState,
@@ -131,7 +131,7 @@ func TestAPIACLCreate_Error(t *testing.T) {
 			},
 		},
 		Resource: ResourceIPAccessList(),
-		State: map[string]interface{}{
+		State: map[string]any{
 			"label":        TestingLabel,
 			"list_type":    TestingListTypeString,
 			"ip_addresses": TestingIPAddressesState,
@@ -184,7 +184,7 @@ func TestIPACLUpdate(t *testing.T) {
 			},
 		},
 		Resource: ResourceIPAccessList(),
-		State: map[string]interface{}{
+		State: map[string]any{
 			"label":        TestingLabel,
 			"list_type":    TestingListTypeString,
 			"ip_addresses": TestingIPAddressesState,
@@ -338,7 +338,7 @@ func TestListIpAccessLists(t *testing.T) {
 		{
 			Method:   "GET",
 			Resource: "/api/2.0/ip-access-lists",
-			Response: map[string]interface{}{},
+			Response: map[string]any{},
 		},
 	})
 	defer server.Close()

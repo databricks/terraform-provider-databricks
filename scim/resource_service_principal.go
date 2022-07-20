@@ -12,7 +12,7 @@ import (
 )
 
 // NewServicePrincipalsAPI creates ServicePrincipalsAPI instance from provider meta
-func NewServicePrincipalsAPI(ctx context.Context, m interface{}) ServicePrincipalsAPI {
+func NewServicePrincipalsAPI(ctx context.Context, m any) ServicePrincipalsAPI {
 	return ServicePrincipalsAPI{m.(*common.DatabricksClient), ctx}
 }
 

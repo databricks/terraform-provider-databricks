@@ -66,12 +66,12 @@ go install honnef.co/go/tools/cmd/staticcheck@v0.3.2
 
 Installing `gotestsum`:
 ```bash
-go get gotest.tools/gotestsum
+go install gotest.tools/gotestsum
 ```
 
 Installing `goimports`:
 ```bash
-go get golang.org/x/tools/cmd/goimports
+go install golang.org/x/tools/cmd/goimports
 ```
 
 After this, you should be able to run `make coverage` to run the tests and see the coverage.
@@ -110,6 +110,9 @@ Some interesting points to note here:
   * `default:X` to set a default value for a field
   * `max_items:N` to set the maximum number of items for a multi-valued parameter
   * `slice_set` to indicate that a the parameter should accept a set instead of a list
+  * `sensitive` to mark a field as sensitive and prevent Terraform from showing its value in the plan or apply output
+  * `force_new` to indicate a change in this value requires the replacement (destroy and create) of the resource
+  * `suppress_diff` to allow comparison based on something other than primitive, list or map equality, either via a `CustomizeDiffFunc`, or the default diff for the type of the schema
  * Do not use bare references to structs in the model; rather, use pointers to structs. Maps and slices are permitted, as well as the following primitive types: int, int32, int64, float64, bool, string.
 See `typeToSchema` in `common/reflect_resource.go` for the up-to-date list of all supported field types and values for the `tf` tag.
 

@@ -75,7 +75,7 @@ func MustSchemaPath(s map[string]*schema.Schema, path ...string) *schema.Schema 
 }
 
 // StructToSchema makes schema from a struct type & applies customizations from callback given
-func StructToSchema(v interface{}, customize func(map[string]*schema.Schema) map[string]*schema.Schema) map[string]*schema.Schema {
+func StructToSchema(v any, customize func(map[string]*schema.Schema) map[string]*schema.Schema) map[string]*schema.Schema {
 	rv := reflect.ValueOf(v)
 	scm := typeToSchema(rv, rv.Type(), []string{})
 	if customize != nil {
@@ -84,8 +84,21 @@ func StructToSchema(v interface{}, customize func(map[string]*schema.Schema) map
 	return scm
 }
 
-func handleOptional(typeField reflect.StructField, schema *schema.Schema) {
+func isOptional(typeField reflect.StructField) bool {
 	if strings.Contains(typeField.Tag.Get("json"), "omitempty") {
+		return true
+	}
+	tfTags := strings.Split(typeField.Tag.Get("tf"), ",")
+	for _, tag := range tfTags {
+		if tag == "optional" {
+			return true
+		}
+	}
+	return false
+}
+
+func handleOptional(typeField reflect.StructField, schema *schema.Schema) {
+	if isOptional(typeField) {
 		schema.Optional = true
 	} else {
 		schema.Required = true
@@ -284,7 +297,6 @@ func iterFields(rv reflect.Value, path []string, s map[string]*schema.Schema,
 	}
 	for i := 0; i < rv.NumField(); i++ {
 		typeField := rv.Type().Field(i)
-		jsonTag := typeField.Tag.Get("json")
 		fieldName := chooseFieldName(typeField)
 		if fieldName == "-" {
 			continue
@@ -293,7 +305,7 @@ func iterFields(rv reflect.Value, path []string, s map[string]*schema.Schema,
 		if !ok {
 			continue
 		}
-		omitEmpty := strings.Contains(jsonTag, "omitempty")
+		omitEmpty := isOptional(typeField)
 		if omitEmpty && !fieldSchema.Optional {
 			return fmt.Errorf("inconsistency: %s has omitempty, but is not optional", fieldName)
 		}
@@ -310,8 +322,8 @@ func iterFields(rv reflect.Value, path []string, s map[string]*schema.Schema,
 	return nil
 }
 
-func collectionToMaps(v interface{}, s *schema.Schema) ([]interface{}, error) {
-	resultList := []interface{}{}
+func collectionToMaps(v any, s *schema.Schema) ([]any, error) {
+	resultList := []any{}
 	if sl, ok := v.([]string); ok {
 		// most likely list of parameters to job task
 		for _, str := range sl {
@@ -333,7 +345,7 @@ func collectionToMaps(v interface{}, s *schema.Schema) ([]interface{}, error) {
 		}
 	}
 	for _, v := range allItems {
-		data := map[string]interface{}{}
+		data := map[string]any{}
 		if v.Kind() == reflect.Ptr {
 			if v.IsNil() {
 				continue
@@ -388,7 +400,7 @@ func isValueNilOrEmpty(valueField *reflect.Value, fieldPath string) bool {
 }
 
 // StructToData reads result using schema onto resource data
-func StructToData(result interface{}, s map[string]*schema.Schema, d *schema.ResourceData) error {
+func StructToData(result any, s map[string]*schema.Schema, d *schema.ResourceData) error {
 	v := reflect.ValueOf(result)
 	if v.Kind() == reflect.Ptr {
 		v = v.Elem()
@@ -438,11 +450,11 @@ func StructToData(result interface{}, s map[string]*schema.Schema, d *schema.Res
 // to those who'll be reading this code and would know public equivalent interface from
 // TF SDK - feel free to replace the usages of this interface in a PR.
 type attributeGetter interface {
-	GetOk(key string) (interface{}, bool)
+	GetOk(key string) (any, bool)
 }
 
 // DiffToStructPointer reads resource diff with given schema onto result pointer. Panics.
-func DiffToStructPointer(d attributeGetter, scm map[string]*schema.Schema, result interface{}) {
+func DiffToStructPointer(d attributeGetter, scm map[string]*schema.Schema, result any) {
 	rv := reflect.ValueOf(result)
 	rk := rv.Kind()
 	if rk != reflect.Ptr {
@@ -456,7 +468,7 @@ func DiffToStructPointer(d attributeGetter, scm map[string]*schema.Schema, resul
 }
 
 // DataToStructPointer reads resource data with given schema onto result pointer. Panics.
-func DataToStructPointer(d *schema.ResourceData, scm map[string]*schema.Schema, result interface{}) {
+func DataToStructPointer(d *schema.ResourceData, scm map[string]*schema.Schema, result any) {
 	rv := reflect.ValueOf(result)
 	rk := rv.Kind()
 	if rk != reflect.Ptr {
@@ -503,7 +515,7 @@ func readReflectValueFromData(path []string, d attributeGetter,
 		case schema.TypeMap:
 			mapValueKind := valueField.Type().Elem().Kind()
 			valueField.Set(reflect.MakeMap(valueField.Type()))
-			for key, ivalue := range raw.(map[string]interface{}) {
+			for key, ivalue := range raw.(map[string]any) {
 				vrv, err := primitiveReflectValueFromInterface(mapValueKind, ivalue, fieldPath, key)
 				if err != nil {
 					return err
@@ -520,7 +532,7 @@ func readReflectValueFromData(path []string, d attributeGetter,
 				})
 		case schema.TypeList:
 			// here we rely on Terraform SDK to perform validation, so we don't to it twice
-			rawList := raw.([]interface{})
+			rawList := raw.([]any)
 			return readListFromData(path, d, rawList, valueField, fieldSchema, strconv.Itoa)
 		default:
 			return fmt.Errorf("%s[%v] unsupported field type", fieldPath, raw)
@@ -530,7 +542,7 @@ func readReflectValueFromData(path []string, d attributeGetter,
 }
 
 func primitiveReflectValueFromInterface(rk reflect.Kind,
-	ivalue interface{}, fieldPath, key string) (rv reflect.Value, err error) {
+	ivalue any, fieldPath, key string) (rv reflect.Value, err error) {
 	switch rk {
 	case reflect.String:
 		return reflect.ValueOf(fmt.Sprintf("%v", ivalue)), nil
@@ -574,7 +586,7 @@ func primitiveReflectValueFromInterface(rk reflect.Kind,
 }
 
 func readListFromData(path []string, d attributeGetter,
-	rawList []interface{}, valueField *reflect.Value, fieldSchema *schema.Schema,
+	rawList []any, valueField *reflect.Value, fieldSchema *schema.Schema,
 	offsetConverter func(i int) string) error {
 	if len(rawList) == 0 {
 		return nil
@@ -621,7 +633,7 @@ func readListFromData(path []string, d attributeGetter,
 }
 
 func setPrimitiveValueOfKind(
-	fieldPath string, k reflect.Kind, item reflect.Value, elem interface{}) error {
+	fieldPath string, k reflect.Kind, item reflect.Value, elem any) error {
 	switch k {
 	case reflect.String:
 		v, ok := elem.(string)

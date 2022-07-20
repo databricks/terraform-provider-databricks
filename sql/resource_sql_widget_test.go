@@ -314,19 +314,19 @@ func TestWidgetCreateWithParamValue(t *testing.T) {
 	assert.Equal(t, 2, params.Len())
 
 	for _, param := range params.List() {
-		m := param.(map[string]interface{})
+		m := param.(map[string]any)
 		switch m["name"].(string) {
 		case "p1":
 			// First parameter
 			assert.Equal(t, "dashboard-level", m["type"])
 			assert.Equal(t, "v1", m["value"])
-			values := m["values"].([]interface{})
+			values := m["values"].([]any)
 			assert.Equal(t, 0, len(values))
 		case "p2":
 			// Second parameter
 			assert.Equal(t, "dashboard-level", m["type"])
 			assert.Equal(t, "", m["value"])
-			values := m["values"].([]interface{})
+			values := m["values"].([]any)
 			assert.Equal(t, 2, len(values))
 			assert.Equal(t, "v2_0", values[0].(string))
 			assert.Equal(t, "v2_1", values[1].(string))

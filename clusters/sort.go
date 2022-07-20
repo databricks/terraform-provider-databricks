@@ -5,7 +5,7 @@ import (
 )
 
 // readable chained sorting helper
-func sortByChain(s interface{}, fn func(int) sortCmp) {
+func sortByChain(s any, fn func(int) sortCmp) {
 	sort.Slice(s, func(i, j int) bool {
 		return fn(i).Less(fn(j))
 	})

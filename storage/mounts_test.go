@@ -159,7 +159,7 @@ func TestDeletedMountClusterRecreates(t *testing.T) {
 			Method:       "GET",
 			ReuseRequest: true,
 			Resource:     "/api/2.0/clusters/list",
-			Response:     map[string]interface{}{},
+			Response:     map[string]any{},
 		},
 		{
 			Method:       "GET",

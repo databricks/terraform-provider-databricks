@@ -96,7 +96,7 @@ func TestResourcePASCreate_Error(t *testing.T) {
 			},
 		},
 		Resource: ResourceMwsPrivateAccessSettings(),
-		State: map[string]interface{}{
+		State: map[string]any{
 			"account_id":                   "abc",
 			"private_access_settings_name": "pas_name",
 			"region":                       "ar",

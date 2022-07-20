@@ -102,7 +102,7 @@ func TestResourceVPCEndpointCreate_Error(t *testing.T) {
 			},
 		},
 		Resource: ResourceMwsVpcEndpoint(),
-		State: map[string]interface{}{
+		State: map[string]any{
 			"account_id":          "abc",
 			"vpc_endpoint_name":   "ve_name",
 			"region":              "ar",

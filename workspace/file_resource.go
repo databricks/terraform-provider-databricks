@@ -19,7 +19,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
-func readFileContent(s interface{}) (content []byte, err error) {
+func readFileContent(s any) (content []byte, err error) {
 	source := s.(string)
 	log.Printf("[INFO] Reading %s", source)
 	f, err := os.Open(source)
@@ -51,9 +51,9 @@ func ReadContent(d *schema.ResourceData) (content []byte, err error) {
 
 // MigrateV0 migrates from version 0.2.x state
 func MigrateV0(ctx context.Context,
-	rawState map[string]interface{},
-	meta interface{}) (map[string]interface{}, error) {
-	newState := map[string]interface{}{}
+	rawState map[string]any,
+	meta any) (map[string]any, error) {
+	newState := map[string]any{}
 	for k, v := range rawState {
 		switch k {
 		case "overwrite", "mkdirs", "validate_remote_file", "content_b64_md5":
@@ -107,7 +107,7 @@ func FileContentSchemaWithoutPath(extra map[string]*schema.Schema) map[string]*s
 			Type:          schema.TypeString,
 			Optional:      true,
 			ConflictsWith: []string{"content_base64"},
-			ValidateDiagFunc: func(i interface{}, p cty.Path) diag.Diagnostics {
+			ValidateDiagFunc: func(i any, p cty.Path) diag.Diagnostics {
 				v := i.(string)
 				if _, err := os.Stat(v); os.IsNotExist(err) {
 					return diag.Diagnostics{
@@ -135,7 +135,7 @@ func FileContentSchema(extra map[string]*schema.Schema) map[string]*schema.Schem
 			Type:     schema.TypeString,
 			Required: true,
 			ForceNew: true,
-			ValidateDiagFunc: func(i interface{}, p cty.Path) diag.Diagnostics {
+			ValidateDiagFunc: func(i any, p cty.Path) diag.Diagnostics {
 				v := i.(string)
 				if v == "" {
 					return diag.Diagnostics{
@@ -183,9 +183,9 @@ func FileContentSchema(extra map[string]*schema.Schema) map[string]*schema.Schem
 }
 
 // PathListHash ...
-func PathListHash(v interface{}) int {
+func PathListHash(v any) int {
 	h := fnv.New32a()
-	m := v.(map[string]interface{})
+	m := v.(map[string]any)
 	var err error
 	if v, ok := m["path"]; ok {
 		_, err = h.Write([]byte(v.(string)))

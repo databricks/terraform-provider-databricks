@@ -63,7 +63,7 @@ func TestWebookCreateJobSpec(t *testing.T) {
 		Resource: ResourceMlflowWebhook(),
 		Create:   true,
 		HCL:      testWhHCL,
-	}.ApplyAndExpectData(t, map[string]interface{}{"id": testWhID, "status": "ACTIVE"})
+	}.ApplyAndExpectData(t, map[string]any{"id": testWhID, "status": "ACTIVE"})
 }
 
 func TestWebookCreateUrlSpec(t *testing.T) {
@@ -124,7 +124,7 @@ func TestWebookCreateUrlSpec(t *testing.T) {
 			authorization = "Bearer dapi..."
 		}
 		`,
-	}.ApplyAndExpectData(t, map[string]interface{}{"id": testWhID, "status": "ACTIVE"})
+	}.ApplyAndExpectData(t, map[string]any{"id": testWhID, "status": "ACTIVE"})
 }
 
 func TestWebookCreateError(t *testing.T) {
@@ -172,7 +172,7 @@ func TestWebookRead(t *testing.T) {
 		Resource: ResourceMlflowWebhook(),
 		Read:     true,
 		ID:       testWhID,
-	}.ApplyAndExpectData(t, map[string]interface{}{"id": testWhID})
+	}.ApplyAndExpectData(t, map[string]any{"id": testWhID})
 }
 
 func TestWebookReadError(t *testing.T) {
@@ -233,18 +233,18 @@ func TestWebookUpdate(t *testing.T) {
 		Update:      true,
 		RequiresNew: false,
 		ID:          testWhID,
-		State: map[string]interface{}{
+		State: map[string]any{
 			"status":      "TEST_MODE",
 			"events":      []string{"TRANSITION_REQUEST_CREATED"},
 			"description": "Job webhook trigger",
-			"job_spec": map[string]interface{}{
+			"job_spec": map[string]any{
 				"job_id":        "1234",
 				"workspace_url": "https://test.cloud.databricks.com",
 				"access_token":  "dapi1234",
 			},
 		},
 		HCL: testWhHCL,
-	}.ApplyAndExpectData(t, map[string]interface{}{"id": testWhID, "status": "ACTIVE"})
+	}.ApplyAndExpectData(t, map[string]any{"id": testWhID, "status": "ACTIVE"})
 }
 
 func TestWebookDelete(t *testing.T) {
@@ -253,7 +253,7 @@ func TestWebookDelete(t *testing.T) {
 			{
 				Method:   "DELETE",
 				Resource: "/api/2.0/mlflow/registry-webhooks/delete",
-				ExpectedRequest: map[string]interface{}{
+				ExpectedRequest: map[string]any{
 					"id": testWhID,
 				},
 			},
@@ -262,7 +262,7 @@ func TestWebookDelete(t *testing.T) {
 		Delete:   true,
 		ID:       testWhID,
 		HCL:      testWhHCL,
-	}.ApplyAndExpectData(t, map[string]interface{}{"id": testWhID})
+	}.ApplyAndExpectData(t, map[string]any{"id": testWhID})
 }
 
 func TestWebookDeleteError(t *testing.T) {
@@ -271,7 +271,7 @@ func TestWebookDeleteError(t *testing.T) {
 			{
 				Method:   "DELETE",
 				Resource: "/api/2.0/mlflow/registry-webhooks/delete",
-				ExpectedRequest: map[string]interface{}{
+				ExpectedRequest: map[string]any{
 					"id": testWhID,
 				},
 				Status: 400,

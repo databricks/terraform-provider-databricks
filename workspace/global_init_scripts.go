@@ -7,7 +7,7 @@ import (
 )
 
 // NewGlobalInitScriptsAPI creates GlobalInitScriptsAPI instance from provider meta
-func NewGlobalInitScriptsAPI(ctx context.Context, m interface{}) GlobalInitScriptsAPI {
+func NewGlobalInitScriptsAPI(ctx context.Context, m any) GlobalInitScriptsAPI {
 	return GlobalInitScriptsAPI{
 		client:  m.(*common.DatabricksClient),
 		context: ctx,

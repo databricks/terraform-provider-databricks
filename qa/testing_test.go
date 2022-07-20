@@ -92,7 +92,7 @@ var noopContextResource = &schema.Resource{
 	},
 	ReadContext:   schema.NoopContext,
 	CreateContext: schema.NoopContext,
-	UpdateContext: func(_ context.Context, d *schema.ResourceData, _ interface{}) diag.Diagnostics {
+	UpdateContext: func(_ context.Context, d *schema.ResourceData, _ any) diag.Diagnostics {
 		// nolint
 		d.Set("trigger", "corrupt")
 		return nil
@@ -211,7 +211,7 @@ func TestResourceFixture_ApplyAndExpectData(t *testing.T) {
 		dummy = true
 		trigger = "now"
 		`,
-	}.ApplyAndExpectData(t, map[string]interface{}{"id": "x", "dummy": true, "trigger": "now"})
+	}.ApplyAndExpectData(t, map[string]any{"id": "x", "dummy": true, "trigger": "now"})
 }
 
 func TestResourceFixture_InstanceState(t *testing.T) {
@@ -223,7 +223,7 @@ func TestResourceFixture_InstanceState(t *testing.T) {
 			"dummy":   "false",
 			"trigger": "y",
 		},
-		State: map[string]interface{}{
+		State: map[string]any{
 			"dummy":   "true",
 			"trigger": "x",
 		},
@@ -240,7 +240,7 @@ func TestResourceFixture_Apply_Fail(t *testing.T) {
 		},
 		Resource: noopResource,
 		Create:   true,
-		State: map[string]interface{}{
+		State: map[string]any{
 			"dummy": true,
 			"check": false,
 		},
@@ -258,7 +258,7 @@ func TestUnionFixturesLists(t *testing.T) {
 }
 
 func TestFixHCL_CornerCase(t *testing.T) {
-	x := fixHCL([]map[string]interface{}{
+	x := fixHCL([]map[string]any{
 		{
 			"x": true,
 		},

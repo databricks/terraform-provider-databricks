@@ -49,7 +49,7 @@ func DataSourceNotebook() *schema.Resource {
 	}
 	return &schema.Resource{
 		Schema: s,
-		ReadContext: func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+		ReadContext: func(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
 			notebooksAPI := NewNotebooksAPI(ctx, m)
 			path := d.Get("path").(string)
 			format := d.Get("format").(string)

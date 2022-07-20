@@ -32,8 +32,8 @@ type providerFixture struct {
 	assertAzure       bool
 }
 
-func (tt providerFixture) rawConfig() map[string]interface{} {
-	rawConfig := map[string]interface{}{}
+func (tt providerFixture) rawConfig() map[string]any {
+	rawConfig := map[string]any{}
 	if tt.host != "" {
 		rawConfig["host"] = tt.host
 	}

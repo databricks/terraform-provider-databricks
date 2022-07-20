@@ -1,5 +1,24 @@
 # Version changelog
 
+## 1.0.2
+
+* Added `metastore` to `databricks_grants` ([#1447](https://github.com/databricks/terraform-provider-databricks/pull/1447)).
+* Added update support for `databricks_mws_log_delivery` ([#1439](https://github.com/databricks/terraform-provider-databricks/pull/1439)).
+* Fixed name generation for exported `databricks_notebook` ([#1435](https://github.com/databricks/terraform-provider-databricks/pull/1435)).
+* Fixed `databricks_job` recreation on changed `docker_image` URL ([#1437](https://github.com/databricks/terraform-provider-databricks/pull/1437)).
+* Fixed replace `databricks_mws_networks` on `vpc_endpoints` change ([#1453](https://github.com/databricks/terraform-provider-databricks/pull/1453)).
+* Fixed diff suppress in `databricks_external_location` on `skip_validation` ([#1421](https://github.com/databricks/terraform-provider-databricks/pull/1421)).
+* Switched to SQL warehouses API for `databricks_sql_endpoint` ([#1414](https://github.com/databricks/terraform-provider-databricks/pull/1414)).
+* Improve docs for `databricks_permissions` and `databricks_obo_token` ([#1462](https://github.com/databricks/terraform-provider-databricks/pull/1462)).
+* Improve docs for `abfs` block in `databricks_mount` ([#1446](https://github.com/databricks/terraform-provider-databricks/pull/1446)).
+* Improve dev docs for `tf:"suppress_diff"`, `tf:"force_new"` and `tf:"sensitive"` tags ([#1465](https://github.com/databricks/terraform-provider-databricks/pull/1465)).
+* Moved couple of acceptance tests out of preview ([#1433](https://github.com/databricks/terraform-provider-databricks/pull/1433)).
+* Migrated to Go 1.18: `interface{}` -> `any` ([#1466](https://github.com/databricks/terraform-provider-databricks/pull/1466)).
+
+Updated dependency versions:
+
+* Bump github.com/hashicorp/terraform-plugin-sdk/v2 from 2.17.0 to 2.18.0 ([#1450](https://github.com/databricks/terraform-provider-databricks/pull/1450)).
+
 ## 1.0.1
 
 * Added better handling of missing objects during import ([#1417](https://github.com/databricks/terraform-provider-databricks/pull/1417)).

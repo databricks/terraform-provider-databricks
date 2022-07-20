@@ -36,7 +36,7 @@ func TestResourceGroupMemberCreate(t *testing.T) {
 			},
 		},
 		Resource: ResourceGroupMember(),
-		State: map[string]interface{}{
+		State: map[string]any{
 			"group_id":  "abc",
 			"member_id": "bcd",
 		},
@@ -60,7 +60,7 @@ func TestResourceGroupMemberCreate_Error(t *testing.T) {
 			},
 		},
 		Resource: ResourceGroupMember(),
-		State: map[string]interface{}{
+		State: map[string]any{
 			"group_id":  "abc",
 			"member_id": "bcd",
 		},

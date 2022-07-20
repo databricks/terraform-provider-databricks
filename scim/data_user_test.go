@@ -30,7 +30,7 @@ func TestDataSourceUser(t *testing.T) {
 		NonWritable: true,
 		Resource:    DataSourceUser(),
 		ID:          ".",
-		State: map[string]interface{}{
+		State: map[string]any{
 			"user_name": "ds",
 		},
 	}.Apply(t)

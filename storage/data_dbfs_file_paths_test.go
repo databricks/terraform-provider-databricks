@@ -46,7 +46,7 @@ func TestDataSourceFilePaths(t *testing.T) {
 		NonWritable: true,
 		Resource:    DataSourceDbfsFilePaths(),
 		ID:          ".",
-		State: map[string]interface{}{
+		State: map[string]any{
 			"path":      "/a/b/c",
 			"recursive": true,
 		},

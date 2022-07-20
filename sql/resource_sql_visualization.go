@@ -54,7 +54,7 @@ func (v *VisualizationEntity) fromAPIObject(av *api.Visualization, schema map[st
 }
 
 // NewVisualizationAPI ...
-func NewVisualizationAPI(ctx context.Context, m interface{}) VisualizationAPI {
+func NewVisualizationAPI(ctx context.Context, m any) VisualizationAPI {
 	return VisualizationAPI{m.(*common.DatabricksClient), ctx}
 }
 
@@ -110,7 +110,7 @@ func (a VisualizationAPI) Delete(visualizationID string) error {
 }
 
 func jsonRemarshal(in []byte) ([]byte, error) {
-	var v interface{}
+	var v any
 	if len(in) == 0 {
 		return in, nil
 	}

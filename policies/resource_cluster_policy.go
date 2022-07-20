@@ -25,7 +25,7 @@ type ClusterPolicyCreate struct {
 
 // NewClusterPoliciesAPI creates ClusterPoliciesAPI instance from provider meta
 // Creation and editing is available to admins only.
-func NewClusterPoliciesAPI(ctx context.Context, m interface{}) ClusterPoliciesAPI {
+func NewClusterPoliciesAPI(ctx context.Context, m any) ClusterPoliciesAPI {
 	return ClusterPoliciesAPI{m.(*common.DatabricksClient), ctx}
 }
 

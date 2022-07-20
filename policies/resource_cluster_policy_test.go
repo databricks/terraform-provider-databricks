@@ -102,7 +102,7 @@ func TestResourceClusterPolicyCreate(t *testing.T) {
 			},
 		},
 		Resource: ResourceClusterPolicy(),
-		State: map[string]interface{}{
+		State: map[string]any{
 			"definition": `{"spark_conf.foo": {"type": "fixed", "value": "bar"}}`,
 			"name":       "Dummy",
 		},
@@ -126,7 +126,7 @@ func TestResourceClusterPolicyCreate_Error(t *testing.T) {
 			},
 		},
 		Resource: ResourceClusterPolicy(),
-		State: map[string]interface{}{
+		State: map[string]any{
 			"definition": `{"spark_conf.foo": {"type": "fixed", "value": "bar"}}`,
 			"name":       "Dummy",
 		},
@@ -161,7 +161,7 @@ func TestResourceClusterPolicyUpdate(t *testing.T) {
 			},
 		},
 		Resource: ResourceClusterPolicy(),
-		State: map[string]interface{}{
+		State: map[string]any{
 			"definition": `{"spark_conf.foo": {"type": "fixed", "value": "bar"}}`,
 			"name":       "Dummy Updated",
 		},
@@ -186,7 +186,7 @@ func TestResourceClusterPolicyUpdate_Error(t *testing.T) {
 			},
 		},
 		Resource: ResourceClusterPolicy(),
-		State: map[string]interface{}{
+		State: map[string]any{
 			"definition": `{"spark_conf.foo": {"type": "fixed", "value": "bar"}}`,
 			"name":       "Dummy Updated",
 		},

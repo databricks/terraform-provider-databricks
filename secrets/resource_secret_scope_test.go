@@ -146,7 +146,7 @@ func TestResourceSecretScopeCreate(t *testing.T) {
 			},
 		},
 		Resource: ResourceSecretScope(),
-		State: map[string]interface{}{
+		State: map[string]any{
 			"name": "Boom",
 		},
 		Create: true,
@@ -229,7 +229,7 @@ func TestResourceSecretScopeCreate_Users(t *testing.T) {
 			},
 		},
 		Resource: ResourceSecretScope(),
-		State: map[string]interface{}{
+		State: map[string]any{
 			"name":                     "Boom",
 			"initial_manage_principal": "users",
 		},
@@ -253,7 +253,7 @@ func TestResourceSecretScopeCreate_Error(t *testing.T) {
 			},
 		},
 		Resource: ResourceSecretScope(),
-		State: map[string]interface{}{
+		State: map[string]any{
 			"initial_manage_principal": "groups",
 			"name":                     "Boom",
 		},

@@ -33,7 +33,7 @@ func TestDataSourceNotebook(t *testing.T) {
 		NonWritable: true,
 		Resource:    DataSourceNotebook(),
 		ID:          ".",
-		State: map[string]interface{}{
+		State: map[string]any{
 			"path":   "/a/b/c",
 			"format": "SOURCE",
 		},

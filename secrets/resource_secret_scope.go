@@ -13,7 +13,7 @@ import (
 )
 
 // NewSecretScopesAPI creates SecretScopesAPI instance from provider meta
-func NewSecretScopesAPI(ctx context.Context, m interface{}) SecretScopesAPI {
+func NewSecretScopesAPI(ctx context.Context, m any) SecretScopesAPI {
 	return SecretScopesAPI{m.(*common.DatabricksClient), ctx}
 }
 
@@ -114,11 +114,11 @@ var validScope = validation.StringMatch(regexp.MustCompile(`^[\w\.@_/-]{1,128}$`
 	"Must consist of alphanumeric characters, dashes, underscores, and periods, "+
 		"and may not exceed 128 characters.")
 
-func kvDiffFunc(ctx context.Context, diff *schema.ResourceDiff, v interface{}) error {
+func kvDiffFunc(ctx context.Context, diff *schema.ResourceDiff, v any) error {
 	if diff == nil {
 		return nil
 	}
-	kvLst := diff.Get("keyvault_metadata").([]interface{})
+	kvLst := diff.Get("keyvault_metadata").([]any)
 	if len(kvLst) == 0 {
 		return nil
 	}

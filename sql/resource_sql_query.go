@@ -195,7 +195,7 @@ func (q *QueryEntity) toAPIObject(schema map[string]*schema.Schema, data *schema
 				Title: p.Title,
 			}
 
-			var iface interface{}
+			var iface any
 
 			switch {
 			case p.Text != nil:
@@ -294,8 +294,8 @@ func (q *QueryEntity) fromAPIObject(aq *api.Query, schema map[string]*schema.Sch
 		// interprets the server side value as a default and skips the field.
 		// This means, however, that if the schedule is configured out-of-band (e.g. manually),
 		// running `terraform apply` again won't remove the setting.
-		data.Set("schedule", []interface{}{
-			map[string][]interface{}{},
+		data.Set("schedule", []any{
+			map[string][]any{},
 		})
 
 		q.Schedule = &QuerySchedule{}
@@ -432,7 +432,7 @@ func (q *QueryEntity) fromAPIObject(aq *api.Query, schema map[string]*schema.Sch
 }
 
 // NewQueryAPI ...
-func NewQueryAPI(ctx context.Context, m interface{}) QueryAPI {
+func NewQueryAPI(ctx context.Context, m any) QueryAPI {
 	return QueryAPI{m.(*common.DatabricksClient), ctx}
 }
 

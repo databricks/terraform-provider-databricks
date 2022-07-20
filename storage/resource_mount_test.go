@@ -49,7 +49,7 @@ var nodeListResponse = clusters.NodeTypeList{
 
 func TestS3MountDefaults(t *testing.T) {
 	s := ResourceDatabricksMountSchema()
-	d := schema.TestResourceDataRaw(t, s, map[string]interface{}{})
+	d := schema.TestResourceDataRaw(t, s, map[string]any{})
 	client, server, err := qa.HttpFixtureClient(t, []qa.HTTPFixture{})
 	defer server.Close()
 	require.NoError(t, err, err)
@@ -57,11 +57,11 @@ func TestS3MountDefaults(t *testing.T) {
 	err = S3IamMount{}.ValidateAndApplyDefaults(d, client)
 	qa.AssertErrorStartsWith(t, err, "'name' is not detected & it's impossible to infer it")
 
-	d = schema.TestResourceDataRaw(t, s, map[string]interface{}{"name": "test"})
+	d = schema.TestResourceDataRaw(t, s, map[string]any{"name": "test"})
 	err = S3IamMount{}.ValidateAndApplyDefaults(d, client)
 	require.NoError(t, err, err)
 	assert.Equal(t, d.Get("name").(string), "test")
-	d = schema.TestResourceDataRaw(t, s, map[string]interface{}{})
+	d = schema.TestResourceDataRaw(t, s, map[string]any{})
 	err = S3IamMount{BucketName: "abc"}.ValidateAndApplyDefaults(d, client)
 	require.NoError(t, err, err)
 	assert.Equal(t, d.Get("name").(string), "abc")
@@ -96,10 +96,10 @@ func TestResourceAwsS3MountGenericCreate(t *testing.T) {
 				Data:       testS3BucketPath,
 			}
 		},
-		State: map[string]interface{}{
+		State: map[string]any{
 			"cluster_id": "this_cluster",
 			"name":       "this_mount",
-			"s3": []interface{}{map[string]interface{}{
+			"s3": []any{map[string]any{
 				"bucket_name": testS3BucketName,
 			}},
 		},
@@ -139,9 +139,9 @@ func TestResourceAwsS3MountGenericCreate_NoName(t *testing.T) {
 				Data:       testS3BucketPath,
 			}
 		},
-		State: map[string]interface{}{
+		State: map[string]any{
 			"cluster_id": "this_cluster",
-			"s3": []interface{}{map[string]interface{}{
+			"s3": []any{map[string]any{
 				"bucket_name": testS3BucketName,
 			}},
 		},
@@ -173,7 +173,7 @@ func TestResourceAwsS3MountGenericCreate_WithInstanceProfile(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/clusters/list",
-				Response: map[string]interface{}{},
+				Response: map[string]any{},
 			},
 			{
 				Method:   "GET",
@@ -247,9 +247,9 @@ func TestResourceAwsS3MountGenericCreate_WithInstanceProfile(t *testing.T) {
 				Data:       testS3BucketPath,
 			}
 		},
-		State: map[string]interface{}{
+		State: map[string]any{
 			"name": "this_mount",
-			"s3": []interface{}{map[string]interface{}{
+			"s3": []any{map[string]any{
 				"bucket_name":      testS3BucketName,
 				"instance_profile": instance_profile,
 			}},
@@ -265,9 +265,9 @@ func TestResourceAwsS3MountGenericCreate_WithInstanceProfile(t *testing.T) {
 func TestResourceAwsS3MountGenericCreate_nothing_specified(t *testing.T) {
 	_, err := qa.ResourceFixture{
 		Resource: ResourceMount(),
-		State: map[string]interface{}{
+		State: map[string]any{
 			"name": "this_mount",
-			"s3": []interface{}{map[string]interface{}{
+			"s3": []any{map[string]any{
 				"bucket_name": testS3BucketName,
 			}},
 		},
@@ -279,9 +279,9 @@ func TestResourceAwsS3MountGenericCreate_nothing_specified(t *testing.T) {
 func TestResourceAwsS3MountGenericCreate_invalid_arn(t *testing.T) {
 	_, err := qa.ResourceFixture{
 		Resource: ResourceMount(),
-		State: map[string]interface{}{
+		State: map[string]any{
 			"name": "this_mount",
-			"s3": []interface{}{map[string]interface{}{
+			"s3": []any{map[string]any{
 				"bucket_name":      testS3BucketName,
 				"instance_profile": "this_mount",
 			}},
@@ -317,10 +317,10 @@ func TestResourceAwsS3MountGenericRead(t *testing.T) {
 				Data:       testS3BucketPath,
 			}
 		},
-		State: map[string]interface{}{
+		State: map[string]any{
 			"cluster_id": "this_cluster",
 			"name":       "this_mount",
-			"s3": []interface{}{map[string]interface{}{
+			"s3": []any{map[string]any{
 				"bucket_name": testS3BucketName,
 			}},
 		},
@@ -356,10 +356,10 @@ func TestResourceAwsS3MountGenericRead_NotFound(t *testing.T) {
 				Summary:    "Mount not found",
 			}
 		},
-		State: map[string]interface{}{
+		State: map[string]any{
 			"cluster_id": "this_cluster",
 			"name":       "this_mount",
-			"s3": []interface{}{map[string]interface{}{
+			"s3": []any{map[string]any{
 				"bucket_name": testS3BucketName,
 			}},
 		},
@@ -393,10 +393,10 @@ func TestResourceAwsS3MountGenericRead_Error(t *testing.T) {
 				Summary:    "Some error",
 			}
 		},
-		State: map[string]interface{}{
+		State: map[string]any{
 			"cluster_id": "this_cluster",
 			"name":       "this_mount",
-			"s3": []interface{}{map[string]interface{}{
+			"s3": []any{map[string]any{
 				"bucket_name": testS3BucketName,
 			}},
 		},
@@ -434,10 +434,10 @@ func TestResourceAwsS3MountDeleteGeneric(t *testing.T) {
 				Data:       "",
 			}
 		},
-		State: map[string]interface{}{
+		State: map[string]any{
 			"cluster_id": "this_cluster",
 			"name":       "this_mount",
-			"s3": []interface{}{map[string]interface{}{
+			"s3": []any{map[string]any{
 				"bucket_name": testS3BucketName,
 			}},
 		},
@@ -477,10 +477,10 @@ func TestResourceAdlsGen1MountGeneric_Create(t *testing.T) {
 				Data:       testS3BucketPath,
 			}
 		},
-		State: map[string]interface{}{
+		State: map[string]any{
 			"cluster_id": "this_cluster",
 			"name":       "this_mount",
-			"adl": []interface{}{map[string]interface{}{
+			"adl": []any{map[string]any{
 				"storage_resource_name": "test-adls",
 				"tenant_id":             "a",
 				"client_id":             "b",
@@ -521,10 +521,10 @@ func TestResourceAdlsGen1MountGeneric_Create_ResourceID(t *testing.T) {
 				Data:       testS3BucketPath,
 			}
 		},
-		State: map[string]interface{}{
+		State: map[string]any{
 			"cluster_id":  "this_cluster",
 			"resource_id": "/subscriptions/123/resourceGroups/some-rg/providers/Microsoft.DataLakeStore/accounts/gen1",
-			"adl": []interface{}{map[string]interface{}{
+			"adl": []any{map[string]any{
 				"tenant_id":           "a",
 				"client_id":           "b",
 				"client_secret_scope": "c",
@@ -542,9 +542,9 @@ func TestResourceAdlsGen1MountGeneric_Create_ResourceID_Error1(t *testing.T) {
 	_, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{},
 		Resource: ResourceMount(),
-		State: map[string]interface{}{
+		State: map[string]any{
 			"resource_id": "/subscriptions/123/resourceGroups/some-rg/providers/Microsoft.DataLakeStore/acc/gen1",
-			"adl": []interface{}{map[string]interface{}{
+			"adl": []any{map[string]any{
 				"tenant_id":           "a",
 				"client_id":           "b",
 				"client_secret_scope": "c",
@@ -561,8 +561,8 @@ func TestResourceAdlsGen1MountGeneric_Create_ResourceID_Error2(t *testing.T) {
 	_, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{},
 		Resource: ResourceMount(),
-		State: map[string]interface{}{
-			"adl": []interface{}{map[string]interface{}{
+		State: map[string]any{
+			"adl": []any{map[string]any{
 				"tenant_id":           "a",
 				"client_id":           "b",
 				"client_secret_scope": "c",
@@ -579,11 +579,11 @@ func TestResourceAdlsGen1MountGeneric_Create_NoTenantID_Error(t *testing.T) {
 	_, err := qa.ResourceFixture{
 		Resource: ResourceMount(),
 		Azure:    true,
-		State: map[string]interface{}{
+		State: map[string]any{
 			"resource_id": "/subscriptions/123/resourceGroups/some-rg/providers/Microsoft.DataLakeStore/accounts/gen1",
 			"cluster_id":  "this_cluster",
 			"name":        "this_mount",
-			"adl": []interface{}{map[string]interface{}{
+			"adl": []any{map[string]any{
 				"client_id":           "b",
 				"client_secret_scope": "c",
 				"client_secret_key":   "d",
@@ -599,11 +599,11 @@ func TestResourceAdlsGen1MountGeneric_Create_NoTenantID_Error_EmptyTenant(t *tes
 		Resource: ResourceMount(),
 		Token:    "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJPbmxpbmUgSldUIEJ1aWxkZXIiLCJpYXQiOjE2MzU3ODQxNTYsImV4cCI6MTY2NzMyMDE1NiwiYXVkIjoid3d3LmV4YW1wbGUuY29tIiwic3ViIjoianJvY2tldEBleGFtcGxlLmNvbSIsInRpZCI6IiAgIn0.faxuGAFghVxa1epYnovOxoQrzju7-z_EJj3oZtwIxdk",
 		Azure:    true,
-		State: map[string]interface{}{
+		State: map[string]any{
 			"resource_id": "/subscriptions/123/resourceGroups/some-rg/providers/Microsoft.DataLakeStore/accounts/gen1",
 			"cluster_id":  "this_cluster",
 			"name":        "this_mount",
-			"adl": []interface{}{map[string]interface{}{
+			"adl": []any{map[string]any{
 				"client_id":           "b",
 				"client_secret_scope": "c",
 				"client_secret_key":   "d",
@@ -642,10 +642,10 @@ func TestResourceAdlsGen2MountGeneric_Create(t *testing.T) {
 				Data:       "abfss://e@test-adls-gen2.dfs.core.windows.net",
 			}
 		},
-		State: map[string]interface{}{
+		State: map[string]any{
 			"cluster_id": "this_cluster",
 			"name":       "this_mount",
-			"abfs": []interface{}{map[string]interface{}{
+			"abfs": []any{map[string]any{
 				"storage_account_name":   "test-adls-gen2",
 				"container_name":         "e",
 				"tenant_id":              "a",
@@ -687,10 +687,10 @@ func TestResourceAdlsGen2MountGeneric_Create_ResourceID(t *testing.T) {
 				Data:       "abfss://e@test-adls-gen2.dfs.core.windows.net",
 			}
 		},
-		State: map[string]interface{}{
+		State: map[string]any{
 			"cluster_id":  "this_cluster",
 			"resource_id": "/subscriptions/123/resourceGroups/some-rg/providers/Microsoft.Storage/storageAccounts/test-adls-gen2/blobServices/default/containers/e",
-			"abfs": []interface{}{map[string]interface{}{
+			"abfs": []any{map[string]any{
 				"tenant_id":              "a",
 				"client_id":              "b",
 				"client_secret_scope":    "c",
@@ -732,10 +732,10 @@ func TestResourceAdlsGen2MountGeneric_Create_NoTenantID_SPN(t *testing.T) {
 			}
 		},
 		AzureSPN: true,
-		State: map[string]interface{}{
+		State: map[string]any{
 			"cluster_id": "this_cluster",
 			"name":       "this_mount",
-			"abfs": []interface{}{map[string]interface{}{
+			"abfs": []any{map[string]any{
 				"storage_account_name":   "test-adls-gen2",
 				"container_name":         "e",
 				"client_id":              "b",
@@ -780,10 +780,10 @@ func TestResourceAdlsGen2MountGeneric_Create_NoTenantID_CLI(t *testing.T) {
 		Azure: true,
 		// sample JWT token for testing
 		Token: "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJPbmxpbmUgSldUIEJ1aWxkZXIiLCJpYXQiOjE2MzU2OTU4MzksImV4cCI6MTY2NzIzMTgzOSwiYXVkIjoid3d3LmV4YW1wbGUuY29tIiwic3ViIjoianJvY2tldEBleGFtcGxlLmNvbSIsInRpZCI6ImFiYyJ9._G1DrR4DspidISpsra8UnecV_FV4zMlJDtSNzaS0UxI",
-		State: map[string]interface{}{
+		State: map[string]any{
 			"cluster_id": "this_cluster",
 			"name":       "this_mount",
-			"abfs": []interface{}{map[string]interface{}{
+			"abfs": []any{map[string]any{
 				"storage_account_name":   "test-adls-gen2",
 				"container_name":         "e",
 				"client_id":              "b",
@@ -802,9 +802,9 @@ func TestResourceAdlsGen2MountGeneric_Create_NoTenantID_Error(t *testing.T) {
 	_, err := qa.ResourceFixture{
 		Resource: ResourceMount(),
 		Azure:    true,
-		State: map[string]interface{}{
+		State: map[string]any{
 			"name": "this_mount",
-			"abfs": []interface{}{map[string]interface{}{
+			"abfs": []any{map[string]any{
 				"storage_account_name":   "test-adls-gen2",
 				"container_name":         "e",
 				"client_id":              "b",
@@ -822,9 +822,9 @@ func TestResourceAdlsGen2MountGeneric_Create_NoTenantID_Error_EmptyTenant(t *tes
 		Resource: ResourceMount(),
 		Token:    "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJPbmxpbmUgSldUIEJ1aWxkZXIiLCJpYXQiOjE2MzU3ODQxNTYsImV4cCI6MTY2NzMyMDE1NiwiYXVkIjoid3d3LmV4YW1wbGUuY29tIiwic3ViIjoianJvY2tldEBleGFtcGxlLmNvbSIsInRpZCI6IiAgIn0.faxuGAFghVxa1epYnovOxoQrzju7-z_EJj3oZtwIxdk",
 		Azure:    true,
-		State: map[string]interface{}{
+		State: map[string]any{
 			"name": "this_mount",
-			"abfs": []interface{}{map[string]interface{}{
+			"abfs": []any{map[string]any{
 				"storage_account_name":   "test-adls-gen2",
 				"container_name":         "e",
 				"client_id":              "b",
@@ -866,10 +866,10 @@ func TestResourceAzureBlobMountCreateGeneric(t *testing.T) {
 				Data:       "wasbs://c@f.blob.core.windows.net/d",
 			}
 		},
-		State: map[string]interface{}{
+		State: map[string]any{
 			"cluster_id": "b",
 			"name":       "e",
-			"wasb": []interface{}{map[string]interface{}{
+			"wasb": []any{map[string]any{
 				"auth_type":            "ACCESS_KEY",
 				"storage_account_name": "f",
 				"token_secret_key":     "g",
@@ -912,10 +912,10 @@ func TestResourceAzureBlobMountCreateGeneric_SAS(t *testing.T) {
 				Data:       "wasbs://c@f.blob.core.windows.net/d",
 			}
 		},
-		State: map[string]interface{}{
+		State: map[string]any{
 			"cluster_id": "b",
 			"name":       "e",
-			"wasb": []interface{}{map[string]interface{}{
+			"wasb": []any{map[string]any{
 				"auth_type":            "SAS",
 				"storage_account_name": "f",
 				"token_secret_key":     "g",
@@ -958,10 +958,10 @@ func TestResourceAzureBlobMountCreateGeneric_Resource_ID(t *testing.T) {
 				Data:       "wasbs://c@f.blob.core.windows.net/d",
 			}
 		},
-		State: map[string]interface{}{
+		State: map[string]any{
 			"cluster_id":  "b",
 			"resource_id": "/subscriptions/123/resourceGroups/some-rg/providers/Microsoft.Storage/storageAccounts/f/blobServices/default/containers/c",
-			"wasb": []interface{}{map[string]interface{}{
+			"wasb": []any{map[string]any{
 				"auth_type":          "ACCESS_KEY",
 				"token_secret_key":   "g",
 				"token_secret_scope": "h",
@@ -978,10 +978,10 @@ func TestResourceAzureBlobMountCreateGeneric_Resource_ID(t *testing.T) {
 func TestResourceAzureBlobMountCreateGeneric_Resource_ID_Error(t *testing.T) {
 	_, err := qa.ResourceFixture{
 		Resource: ResourceMount(),
-		State: map[string]interface{}{
+		State: map[string]any{
 			"cluster_id":  "b",
 			"resource_id": "abc",
-			"wasb": []interface{}{map[string]interface{}{
+			"wasb": []any{map[string]any{
 				"auth_type":          "ACCESS_KEY",
 				"token_secret_key":   "g",
 				"token_secret_scope": "h",
@@ -1011,10 +1011,10 @@ func TestResourceAzureBlobMountCreateGeneric_Error(t *testing.T) {
 				Summary:    "Some error",
 			}
 		},
-		State: map[string]interface{}{
+		State: map[string]any{
 			"cluster_id": "b",
 			"name":       "e",
-			"wasb": []interface{}{map[string]interface{}{
+			"wasb": []any{map[string]any{
 				"container_name":       "c",
 				"auth_type":            "ACCESS_KEY",
 				"directory":            "/d",
@@ -1047,10 +1047,10 @@ func TestResourceAzureBlobMountCreateGeneric_Error_NoResourceID(t *testing.T) {
 				Summary:    "Some error",
 			}
 		},
-		State: map[string]interface{}{
+		State: map[string]any{
 			"cluster_id": "b",
 			"name":       "e",
-			"wasb": []interface{}{map[string]interface{}{
+			"wasb": []any{map[string]any{
 				"auth_type":          "ACCESS_KEY",
 				"directory":          "/d",
 				"token_secret_key":   "g",
@@ -1084,10 +1084,10 @@ func TestResourceAzureBlobMountGeneric_Read(t *testing.T) {
 				Data:       "wasbs://c@f.blob.core.windows.net/d",
 			}
 		},
-		State: map[string]interface{}{
+		State: map[string]any{
 			"cluster_id": "b",
 			"name":       "e",
-			"wasb": []interface{}{map[string]interface{}{
+			"wasb": []any{map[string]any{
 				"auth_type":            "ACCESS_KEY",
 				"container_name":       "c",
 				"directory":            "/d",
@@ -1124,10 +1124,10 @@ func TestResourceAzureBlobMountGenericRead_NotFound(t *testing.T) {
 				Summary:    "Mount not found",
 			}
 		},
-		State: map[string]interface{}{
+		State: map[string]any{
 			"cluster_id": "b",
 			"name":       "e",
-			"wasb": []interface{}{map[string]interface{}{
+			"wasb": []any{map[string]any{
 				"auth_type":            "ACCESS_KEY",
 				"container_name":       "c",
 				"directory":            "/d",
@@ -1162,10 +1162,10 @@ func TestResourceAzureBlobMountGenericRead_Error(t *testing.T) {
 				Summary:    "Some error",
 			}
 		},
-		State: map[string]interface{}{
+		State: map[string]any{
 			"cluster_id": "b",
 			"name":       "e",
-			"wasb": []interface{}{map[string]interface{}{
+			"wasb": []any{map[string]any{
 				"auth_type":            "ACCESS_KEY",
 				"container_name":       "c",
 				"directory":            "/d",
@@ -1203,10 +1203,10 @@ func TestResourceAzureBlobMountGenericDelete(t *testing.T) {
 				Data:       "",
 			}
 		},
-		State: map[string]interface{}{
+		State: map[string]any{
 			"cluster_id": "b",
 			"name":       "e",
-			"wasb": []interface{}{map[string]interface{}{
+			"wasb": []any{map[string]any{
 				"auth_type":            "ACCESS_KEY",
 				"container_name":       "c",
 				"directory":            "/d",
@@ -1229,7 +1229,7 @@ const testGcsBucketPath = "gs://" + testS3BucketName
 
 func TestGSMountDefaults(t *testing.T) {
 	s := ResourceDatabricksMountSchema()
-	d := schema.TestResourceDataRaw(t, s, map[string]interface{}{})
+	d := schema.TestResourceDataRaw(t, s, map[string]any{})
 	client, server, err := qa.HttpFixtureClient(t, []qa.HTTPFixture{})
 	defer server.Close()
 	require.NoError(t, err, err)
@@ -1237,11 +1237,11 @@ func TestGSMountDefaults(t *testing.T) {
 	err = GSMount{}.ValidateAndApplyDefaults(d, client)
 	qa.AssertErrorStartsWith(t, err, "'name' is not detected & it's impossible to infer it")
 
-	d = schema.TestResourceDataRaw(t, s, map[string]interface{}{"name": "test"})
+	d = schema.TestResourceDataRaw(t, s, map[string]any{"name": "test"})
 	err = GSMount{}.ValidateAndApplyDefaults(d, client)
 	require.NoError(t, err, err)
 	assert.Equal(t, d.Get("name").(string), "test")
-	d = schema.TestResourceDataRaw(t, s, map[string]interface{}{})
+	d = schema.TestResourceDataRaw(t, s, map[string]any{})
 	err = GSMount{BucketName: "abc"}.ValidateAndApplyDefaults(d, client)
 	require.NoError(t, err, err)
 	assert.Equal(t, d.Get("name").(string), "abc")
@@ -1277,10 +1277,10 @@ func TestResourceGcsMountGenericCreate_WithCluster(t *testing.T) {
 				Data:       testGcsBucketPath,
 			}
 		},
-		State: map[string]interface{}{
+		State: map[string]any{
 			"cluster_id": "this_cluster",
 			"name":       "this_mount",
-			"gs": []interface{}{map[string]interface{}{
+			"gs": []any{map[string]any{
 				"bucket_name": testS3BucketName,
 			}},
 		},
@@ -1321,9 +1321,9 @@ func TestResourceGcsMountGenericCreate_WithCluster_NoName(t *testing.T) {
 				Data:       testGcsBucketPath,
 			}
 		},
-		State: map[string]interface{}{
+		State: map[string]any{
 			"cluster_id": "this_cluster",
-			"gs": []interface{}{map[string]interface{}{
+			"gs": []any{map[string]any{
 				"bucket_name": testS3BucketName,
 			}},
 		},
@@ -1354,7 +1354,7 @@ func TestResourceGcsMountGenericCreate_WithServiceAccount(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/clusters/list",
-				Response: map[string]interface{}{},
+				Response: map[string]any{},
 			},
 			{
 				Method:   "GET",
@@ -1426,9 +1426,9 @@ func TestResourceGcsMountGenericCreate_WithServiceAccount(t *testing.T) {
 				Data:       testGcsBucketPath,
 			}
 		},
-		State: map[string]interface{}{
+		State: map[string]any{
 			"name": "this_mount",
-			"gs": []interface{}{map[string]interface{}{
+			"gs": []any{map[string]any{
 				"bucket_name":     testS3BucketName,
 				"service_account": googleAccount,
 			}},
@@ -1444,9 +1444,9 @@ func TestResourceGcsMountGenericCreate_WithServiceAccount(t *testing.T) {
 func TestResourceGcsMountGenericCreate_nothing_specified(t *testing.T) {
 	_, err := qa.ResourceFixture{
 		Resource: ResourceMount(),
-		State: map[string]interface{}{
+		State: map[string]any{
 			"name": "this_mount",
-			"gs": []interface{}{map[string]interface{}{
+			"gs": []any{map[string]any{
 				"bucket_name": testS3BucketName,
 			}},
 		},
@@ -1484,11 +1484,11 @@ func TestResourceMountGenericCreate_WithUriAndOpts(t *testing.T) {
 				Data:       abfssPath,
 			}
 		},
-		State: map[string]interface{}{
+		State: map[string]any{
 			"cluster_id": "this_cluster",
 			"name":       "this_mount",
 			"uri":        abfssPath,
-			"extra_configs": map[string]interface{}{
+			"extra_configs": map[string]any{
 				"fs.azure.account.auth.type": "CustomAccessToken",
 			},
 		},
@@ -1532,7 +1532,7 @@ func TestARMParsing2(t *testing.T) {
 
 func TestGenericMountDefaults(t *testing.T) {
 	s := ResourceDatabricksMountSchema()
-	d := schema.TestResourceDataRaw(t, s, map[string]interface{}{})
+	d := schema.TestResourceDataRaw(t, s, map[string]any{})
 	client, server, err := qa.HttpFixtureClient(t, []qa.HTTPFixture{})
 	defer server.Close()
 	require.NoError(t, err, err)
@@ -1543,12 +1543,12 @@ func TestGenericMountDefaults(t *testing.T) {
 	err = gm.ValidateAndApplyDefaults(d, client)
 	qa.AssertErrorStartsWith(t, err, "value of uri is not specified or empty")
 
-	d = schema.TestResourceDataRaw(t, s, map[string]interface{}{"uri": "s3://abc/"})
+	d = schema.TestResourceDataRaw(t, s, map[string]any{"uri": "s3://abc/"})
 	err = gm.ValidateAndApplyDefaults(d, client)
 	qa.AssertErrorStartsWith(t, err, "value of name is not specified or empty")
 
 	gm = GenericMount{Abfs: &AzureADLSGen2MountGeneric{}}
-	d = schema.TestResourceDataRaw(t, s, map[string]interface{}{"abfs": map[string]interface{}{}})
+	d = schema.TestResourceDataRaw(t, s, map[string]any{"abfs": map[string]any{}})
 	err = gm.ValidateAndApplyDefaults(d, client)
 	qa.AssertErrorStartsWith(t, err, "container_name or storage_account_name are empty, and resource_id or uri aren't specified")
 }

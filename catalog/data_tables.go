@@ -13,7 +13,7 @@ func DataSourceTables() *schema.Resource {
 		SchemaName  string   `json:"schema_name"`
 		Ids         []string `json:"ids,omitempty" tf:"computed,slice_set"`
 	}
-	return common.DataResource(tablesData{}, func(ctx context.Context, e interface{}, c *common.DatabricksClient) error {
+	return common.DataResource(tablesData{}, func(ctx context.Context, e any, c *common.DatabricksClient) error {
 		data := e.(*tablesData)
 		tablesAPI := NewTablesAPI(ctx, c)
 		tables, err := tablesAPI.listTables(data.CatalogName, data.SchemaName)

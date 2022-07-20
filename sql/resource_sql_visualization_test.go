@@ -62,7 +62,7 @@ func TestVisualizationCreate(t *testing.T) {
 		},
 		Resource: ResourceSqlVisualization(),
 		Create:   true,
-		State: map[string]interface{}{
+		State: map[string]any{
 			"query_id":    "foo",
 			"type":        "chart",
 			"name":        "My Chart",
@@ -117,7 +117,7 @@ func TestVisualizationRead(t *testing.T) {
 		Resource: ResourceSqlVisualization(),
 		Read:     true,
 		ID:       "foo/12345",
-		State: map[string]interface{}{
+		State: map[string]any{
 			"query_id":    "foo",
 			"type":        "chart",
 			"name":        "My Chart",
@@ -161,7 +161,7 @@ func TestVisualizationReadNotFound(t *testing.T) {
 		Removed:     true,
 		RequiresNew: true,
 		ID:          "foo/1234",
-		State: map[string]interface{}{
+		State: map[string]any{
 			"query_id":    "foo",
 			"type":        "chart",
 			"name":        "My Chart",
@@ -236,7 +236,7 @@ func TestVisualizationUpdate(t *testing.T) {
 			"description": "Some Description",
 			"options":     "{}",
 		},
-		State: map[string]interface{}{
+		State: map[string]any{
 			"query_id":    "foo",
 			"type":        "chart",
 			"name":        "My Updated Chart",

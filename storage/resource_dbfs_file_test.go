@@ -169,7 +169,7 @@ func TestDBFSFileCreate(t *testing.T) {
 				Fixtures: tt.fixtures,
 				Resource: ResourceDbfsFile(),
 				Create:   true,
-				State: map[string]interface{}{
+				State: map[string]any{
 					"source": tt.source,
 					"path":   tt.path,
 				},
@@ -193,7 +193,7 @@ func TestDBFSFileDelete(t *testing.T) {
 		Resource: ResourceDbfsFile(),
 		Delete:   true,
 		ID:       path,
-		State: map[string]interface{}{
+		State: map[string]any{
 			"source": "testdata/tf-test-python.py",
 			"path":   path,
 		},
@@ -211,7 +211,7 @@ func TestDBFSFileRead_IsMissingResource(t *testing.T) {
 		Read:     true,
 		ID:       path,
 		Removed:  true,
-		State: map[string]interface{}{
+		State: map[string]any{
 			"source": "testdata/tf-test-python.py",
 			"path":   path,
 		},

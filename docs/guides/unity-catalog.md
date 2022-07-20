@@ -4,7 +4,7 @@ page_title: "Unity Catalog set up on AWS"
 
 # Deploying pre-requisite resources and enabling Unity Catalog (AWS Preview)
 
--> **Public Preview** This feature is in [Public Preview](https://docs.databricks.com/data-governance/unity-catalog/index.html). Contact your Databricks representative to request access. 
+-> **Public Preview** This feature is in [Public Preview](https://docs.databricks.com/data-governance/unity-catalog/index.html). Contact your Databricks representative to request access.
 
 Databricks Unity Catalog brings fine-grained governance and security to Lakehouse data using a familiar, open interface. You can use Terraform to deploy the underlying cloud resources and Unity Catalog objects automatically, using a programmatic approach.
 
@@ -18,6 +18,7 @@ This guide uses the following variables in configurations:
 This guide is provided as-is and you can use this guide as the basis for your custom Terraform module.
 
 To get started with Unity Catalog, this guide takes you throw the following high-level steps:
+
 - [Deploying pre-requisite resources and enabling Unity Catalog (AWS Preview)](#deploying-pre-requisite-resources-and-enabling-unity-catalog-aws-preview)
   - [Provider initialization](#provider-initialization)
   - [Configure AWS objects](#configure-aws-objects)
@@ -127,7 +128,9 @@ locals {
 ```
 
 ## Configure AWS objects
+
 The first step is to create the required AWS objects:
+
 - An S3 bucket, which is the default storage location for managed tables in Unity Catalog. Please use a dedicated bucket for each metastore.
 - An IAM policy that provides Unity Catalog permissions to access and manage data in the bucket.
 - An IAM role that is associated with the IAM policy and will be assumed by Unity Catalog.
@@ -268,6 +271,7 @@ resource "databricks_user_role" "metastore_admin" {
   role     = "account_admin"
 }
 ```
+
 ## Create a Unity Catalog metastore and link it to workspaces
 
 A [databricks_metastore](../resources/metastore.md) is the top level container for data in Unity Catalog. A single metastore can be shared across Databricks workspaces, and each linked workspace has a consistent view of the data and a single set of access policies. Databricks recommends using a small number of metastores, except when organizations wish to have hard isolation boundaries between data. Data cannot be easily joined/queried across metastores.
@@ -302,7 +306,7 @@ resource "databricks_metastore_assignment" "default_metastore" {
 
 ## Create Unity Catalog objects in the metastore
 
-Each metastore exposes a 3-level namespace (catalog-schema-table) by which data can be organized. 
+Each metastore exposes a 3-level namespace (catalog-schema-table) by which data can be organized.
 
 ```hcl
 resource "databricks_catalog" "sandbox" {
@@ -352,8 +356,9 @@ resource "databricks_grants" "things" {
 ## Configure external tables and credentials
 
 To work with external tables, Unity Catalog introduces two new objects to access and work with external cloud storage:
+
 - [databricks_storage_credential](../resources/storage_credential.md) represent authentication methods to access cloud storage (e.g. an IAM role for Amazon S3 or a service principal for Azure Storage). Storage credentials are access-controlled to determine which users can use the credential.
-- [databricks_external_location](../resources/external_location.md) are objects that combine a cloud storage path with a Storage Credential that can be used to access the location. 
+- [databricks_external_location](../resources/external_location.md) are objects that combine a cloud storage path with a Storage Credential that can be used to access the location.
 
 First, create the required objects in AWS.
 

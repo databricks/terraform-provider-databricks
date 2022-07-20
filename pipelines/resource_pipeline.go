@@ -32,8 +32,8 @@ type pipelineCluster struct {
 	DriverNodeTypeID     string                  `json:"driver_node_type_id,omitempty" tf:"computed"`
 	InstancePoolID       string                  `json:"instance_pool_id,omitempty" tf:"group:node_type"`
 	DriverInstancePoolID string                  `json:"driver_instance_pool_id,omitempty"`
-	AwsAttributes        *clusters.AwsAttributes `json:"aws_attributes,omitempty" tf:"suppress_diff"`
-	GcpAttributes        *clusters.GcpAttributes `json:"gcp_attributes,omitempty" tf:"suppress_diff"`
+	AwsAttributes        *clusters.AwsAttributes `json:"aws_attributes,omitempty"`
+	GcpAttributes        *clusters.GcpAttributes `json:"gcp_attributes,omitempty"`
 
 	SparkConf    map[string]string `json:"spark_conf,omitempty"`
 	SparkEnvVars map[string]string `json:"spark_env_vars,omitempty"`

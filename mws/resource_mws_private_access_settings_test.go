@@ -17,7 +17,7 @@ func TestMwsAccPAS(t *testing.T) {
 		t.Skip("skipping integration test in short mode.")
 	}
 	acctID := qa.GetEnvOrSkipTest(t, "DATABRICKS_ACCOUNT_ID")
-	awsRegion := qa.GetEnvOrSkipTest(t, "TEST_REGION")
+	awsRegion := qa.GetEnvOrSkipTest(t, "AWS_REGION")
 	client := common.CommonEnvironmentClient()
 	ctx := context.Background()
 	pasAPI := NewPrivateAccessSettingsAPI(ctx, client)

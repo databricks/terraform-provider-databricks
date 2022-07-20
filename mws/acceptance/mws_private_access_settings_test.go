@@ -18,7 +18,7 @@ func TestMwsAccPrivateAccessSettings(t *testing.T) {
 			resource "databricks_mws_private_access_settings" "this" {
 				account_id = "{env.DATABRICKS_ACCOUNT_ID}"
 				private_access_settings_name = "tf-{var.RANDOM}"
-				region = "{env.TEST_REGION}"
+				region = "{env.AWS_REGION}"
 			}`,
 		},
 	})

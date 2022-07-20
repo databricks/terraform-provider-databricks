@@ -20,7 +20,7 @@ func TestMwsAccVPCEndpointIntegration(t *testing.T) {
 	}
 	acctID := qa.GetEnvOrSkipTest(t, "DATABRICKS_ACCOUNT_ID")
 	awsvreID := qa.GetEnvOrSkipTest(t, "TEST_REST_API_VPC_ENDPOINT")
-	awsRegion := qa.GetEnvOrSkipTest(t, "TEST_REGION")
+	awsRegion := qa.GetEnvOrSkipTest(t, "AWS_REGION")
 	client := common.CommonEnvironmentClient()
 	ctx := context.Background()
 	vpcEndpointAPI := NewVPCEndpointAPI(ctx, client)

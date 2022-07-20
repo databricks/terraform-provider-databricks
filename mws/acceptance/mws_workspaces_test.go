@@ -49,7 +49,7 @@ func TestMwsAccWorkspaces(t *testing.T) {
 				account_id      = "{env.DATABRICKS_ACCOUNT_ID}"
 				workspace_name  = "terra-{var.RANDOM}"
 				deployment_name = "terra-{var.RANDOM}"
-				aws_region      = "{env.TEST_REGION}"
+				aws_region      = "{env.AWS_REGION}"
 		
 				credentials_id = databricks_mws_credentials.this.credentials_id
 				storage_configuration_id = databricks_mws_storage_configurations.this.storage_configuration_id

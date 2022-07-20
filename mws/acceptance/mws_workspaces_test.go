@@ -23,10 +23,10 @@ func TestMwsAccWorkspaces(t *testing.T) {
 			resource "databricks_mws_customer_managed_keys" "this" {
 				account_id   = "{env.DATABRICKS_ACCOUNT_ID}"
 				aws_key_info {
-					key_arn   = "{env.TEST_KMS_KEY_ARN}"
-					key_alias = "{env.TEST_KMS_KEY_ALIAS}"
+					key_arn   = "{env.TEST_MANAGED_KMS_KEY_ARN}"
+					key_alias = "{env.TEST_MANAGED_KMS_KEY_ALIAS}"
 				}
-                use_cases = ["STORAGE", "MANAGED_SERVICES"]
+                use_cases = ["MANAGED_SERVICES"]
 			}
 			resource "databricks_mws_storage_configurations" "this" {
 				account_id                 = "{env.DATABRICKS_ACCOUNT_ID}"
@@ -48,13 +48,12 @@ func TestMwsAccWorkspaces(t *testing.T) {
 			resource "databricks_mws_workspaces" "this" {
 				account_id      = "{env.DATABRICKS_ACCOUNT_ID}"
 				workspace_name  = "terra-{var.RANDOM}"
-				deployment_name = "terra-{var.RANDOM}"
 				aws_region      = "{env.AWS_REGION}"
 		
+				network_id = databricks_mws_networks.this.network_id
 				credentials_id = databricks_mws_credentials.this.credentials_id
 				storage_configuration_id = databricks_mws_storage_configurations.this.storage_configuration_id
 				managed_services_customer_managed_key_id = databricks_mws_customer_managed_keys.this.customer_managed_key_id
-				network_id = databricks_mws_networks.this.network_id
 
 				token {
 					comment = "Test {var.RANDOM}"

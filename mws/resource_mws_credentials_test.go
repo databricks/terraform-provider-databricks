@@ -22,7 +22,9 @@ func TestMwsAccCreds(t *testing.T) {
 	assert.NoError(t, err, err)
 	t.Log(credsList)
 
-	myCreds, err := credsAPI.Create(acctID, "sri-mws-terraform-automation-role", "arn:aws:iam::997819999999:role/sri-e2-terraform-automation-role")
+	myCreds, err := credsAPI.Create(acctID, 
+		qa.RandomName("tf-test"), 
+		qa.GetEnvOrSkipTest(t, "TEST_CROSSACCOUNT_ARN"))
 	assert.NoError(t, err, err)
 
 	myCredsFull, err := credsAPI.Read(acctID, myCreds.CredentialsID)

@@ -283,7 +283,7 @@ output "test_security_group" {
   value = module.vpc.default_security_group_id
 }
 
-output "test_kms_key_arn" {
+output "test_managed_kms_key_arn" {
   value = aws_kms_key.customer_managed_key.arn
 }
 

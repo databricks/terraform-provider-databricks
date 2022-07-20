@@ -13,9 +13,7 @@ import (
 )
 
 func TestMwsAccPAS(t *testing.T) {
-	if testing.Short() {
-		t.Skip("skipping integration test in short mode.")
-	}
+	t.SkipNow()
 	acctID := qa.GetEnvOrSkipTest(t, "DATABRICKS_ACCOUNT_ID")
 	awsRegion := qa.GetEnvOrSkipTest(t, "AWS_REGION")
 	client := common.CommonEnvironmentClient()

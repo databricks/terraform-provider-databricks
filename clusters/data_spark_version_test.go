@@ -232,5 +232,5 @@ func TestSparkVersionErrorBadAnswer(t *testing.T) {
 		ID: ".",
 	}.Apply(t)
 	assert.Error(t, err)
-	require.Equal(t, true, strings.Contains(err.Error(), "Invalid JSON received"))
+	require.Equal(t, true, strings.Contains(err.Error(), "invalid character 'g' looking"))
 }

@@ -269,7 +269,7 @@ func TestPost_Error(t *testing.T) {
 		ScimDetail: "some",
 	}, &resp)
 	require.Error(t, err)
-	assert.True(t, strings.HasPrefix(err.Error(), "Invalid JSON received (16 bytes)"),
+	assert.True(t, strings.HasPrefix(err.Error(), "invalid character 'c'"),
 		"Actual message: %s", err.Error())
 }
 
@@ -309,6 +309,18 @@ func TestUnmarshall(t *testing.T) {
 	require.NoError(t, err)
 	err = ws.unmarshall("/a/b/c", nil, "abc")
 	require.NoError(t, err)
+}
+
+func TestUnmarshallError(t *testing.T) {
+	v := struct {
+		Correct   string `json:"c"`
+		Incorrect int    `json:"i"`
+	}{}
+	ws := DatabricksClient{}
+	err := ws.unmarshall("/a/b/c", []byte(`{"c":"val", "i":"123"}`), &v)
+	require.Error(t, err)
+	require.EqualError(t, err,
+		"json: cannot unmarshal string into Go struct field .i of type int\n{\"c\":\"val\", \"i\":\"123\"}")
 }
 
 func TestAPI2(t *testing.T) {

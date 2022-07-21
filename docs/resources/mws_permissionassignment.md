@@ -13,18 +13,18 @@ Adding account group
 
 ```hcl
 provider "databricks" {
-  <other properties>
-  account_id = <databricks account id>
+  // <other properties>
+  account_id = "<databricks account id>"
 }
 
 resource "databricks_group" "data_eng" {
-  display_name               = "Data Engineering"
+  display_name = "Data Engineering"
 }
 
 resource "databricks_mws_permissionassignment" "add_admin_group" {
-    workspace_id = databricks_mws_workspaces.this.workspace_id
-    principal_id = databricks_group.data_eng.id
-    permissions = ["ADMIN"]
+  workspace_id = databricks_mws_workspaces.this.workspace_id
+  principal_id = databricks_group.data_eng.id
+  permissions  = ["ADMIN"]
 }
 ```
 
@@ -32,8 +32,8 @@ Adding account user
 
 ```hcl
 provider "databricks" {
-  <other properties>
-  account_id = <databricks account id>
+  // <other properties>
+  account_id = "<databricks account id>"
 }
 
 resource "databricks_user" "me" {
@@ -41,9 +41,9 @@ resource "databricks_user" "me" {
 }
 
 resource "databricks_mws_permissionassignment" "add_user" {
-    workspace_id = databricks_mws_workspaces.this.workspace_id
-    principal_id = databricks_user.me.id
-    permissions = ["USER"]
+  workspace_id = databricks_mws_workspaces.this.workspace_id
+  principal_id = databricks_user.me.id
+  permissions  = ["USER"]
 }
 ```
 
@@ -51,8 +51,8 @@ Adding account service principal
 
 ```hcl
 provider "databricks" {
-  <other properties>
-  account_id = <databricks account id>
+  // <other properties>
+  account_id = "<databricks account id>"
 }
 
 resource "databricks_service_principal" "sp" {
@@ -60,8 +60,8 @@ resource "databricks_service_principal" "sp" {
 }
 
 resource "databricks_mws_permissionassignment" "add_admin_spn" {
-    workspace_id = databricks_mws_workspaces.this.workspace_id
-    principal_id = databricks_service_principal.sp.id
-    permissions = ["ADMIN"]
+  workspace_id = databricks_mws_workspaces.this.workspace_id
+  principal_id = databricks_service_principal.sp.id
+  permissions  = ["ADMIN"]
 }
 ```

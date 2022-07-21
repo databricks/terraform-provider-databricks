@@ -13,12 +13,12 @@ Adding workspace group
 
 ```hcl
 resource "databricks_group" "data_eng" {
-  display_name               = "Data Engineering"
+  display_name = "Data Engineering"
 }
 
 resource "databricks_permissionassignment" "add_admin_group" {
-    principal_id = databricks_group.data_eng.id
-    permissions = ["ADMIN"]
+  principal_id = databricks_group.data_eng.id
+  permissions  = ["ADMIN"]
 }
 ```
 
@@ -30,8 +30,8 @@ resource "databricks_user" "me" {
 }
 
 resource "databricks_permissionassignment" "add_user" {
-    principal_id = databricks_user.me.id
-    permissions = ["USER"]
+  principal_id = databricks_user.me.id
+  permissions  = ["USER"]
 }
 ```
 
@@ -43,7 +43,7 @@ resource "databricks_service_principal" "sp" {
 }
 
 resource "databricks_permissionassignment" "add_admin_spn" {
-    principal_id = databricks_service_principal.sp.id
-    permissions = ["ADMIN"]
+  principal_id = databricks_service_principal.sp.id
+  permissions  = ["ADMIN"]
 }
 ```

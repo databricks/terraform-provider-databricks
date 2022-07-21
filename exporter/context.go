@@ -447,6 +447,10 @@ func (ic *importContext) Emit(r *resource) {
 		r.Data.MarkNewResource()
 		resource := strings.ReplaceAll(r.Resource, "databricks_", "")
 		ctx := context.WithValue(ic.Context, common.ResourceName, resource)
+		apiVersion := ic.Importables[r.Resource].ApiVersion
+		if apiVersion != "" {
+			ctx = context.WithValue(ctx, common.Api, apiVersion)
+		}
 		if dia := pr.ReadContext(ctx, r.Data, ic.Client); dia != nil {
 			log.Printf("[ERROR] Error reading %s#%s: %v", r.Resource, r.ID, dia)
 			return

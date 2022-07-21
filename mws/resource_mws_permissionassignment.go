@@ -2,6 +2,7 @@ package mws
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strconv"
 
@@ -24,6 +25,9 @@ type Permissions struct {
 }
 
 func (a PermissionAssignmentAPI) CreateOrUpdate(workspaceId, principalId int64, r Permissions) error {
+	if a.client.AccountID == "" {
+		return errors.New("must have `account_id` on provider")
+	}
 	path := fmt.Sprintf(
 		"/preview/accounts/%s/workspaces/%d/permissionassignments/principals/%d",
 		a.client.AccountID, workspaceId, principalId)
@@ -31,6 +35,9 @@ func (a PermissionAssignmentAPI) CreateOrUpdate(workspaceId, principalId int64, 
 }
 
 func (a PermissionAssignmentAPI) Remove(workspaceId, principalId string) error {
+	if a.client.AccountID == "" {
+		return errors.New("must have `account_id` on provider")
+	}
 	path := fmt.Sprintf(
 		"/preview/accounts/%s/workspaces/%s/permissionassignments/principals/%s",
 		a.client.AccountID, workspaceId, principalId)
@@ -65,6 +72,9 @@ func (l PermissionAssignmentList) ForPrincipal(principalId int64) (res Permissio
 }
 
 func (a PermissionAssignmentAPI) List(workspaceId int64) (list PermissionAssignmentList, err error) {
+	if a.client.AccountID == "" {
+		return list, errors.New("must have `account_id` on provider")
+	}
 	path := fmt.Sprintf("/preview/accounts/%s/workspaces/%d/permissionassignments",
 		a.client.AccountID, workspaceId)
 	err = a.client.Get(a.context, path, nil, &list)
@@ -79,7 +89,7 @@ func mustInt64(s string) int64 {
 	return n
 }
 
-func ResourceMwsPermissionassigntments() *schema.Resource {
+func ResourceMwsPermissionassigntment() *schema.Resource {
 	type entity struct {
 		WorkspaceId int64    `json:"workspace_id"`
 		PrincipalId int64    `json:"principal_id"`

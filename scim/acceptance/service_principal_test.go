@@ -23,8 +23,8 @@ func TestAccServicePrincipalResourceOnAzure(t *testing.T) {
 }
 
 func TestAccServicePrincipalResourceOnAws(t *testing.T) {
-	if cloud, ok := os.LookupEnv("CLOUD_ENV"); !ok || cloud != "AWS" {
-		t.Skip("Test is only for CLOUD_ENV=AWS")
+	if cloud, ok := os.LookupEnv("CLOUD_ENV"); !ok || cloud != "aws" {
+		t.Skip("Test is only for CLOUD_ENV=aws")
 	}
 	t.Parallel()
 	acceptance.Test(t, []acceptance.Step{

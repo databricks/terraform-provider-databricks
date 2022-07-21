@@ -14,7 +14,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestAwsAccS3MountGeneric(t *testing.T) {
+func TestAccAwsS3MountGeneric(t *testing.T) {
 	client := common.NewClientFromEnvironment()
 	instanceProfile := qa.GetEnvOrSkipTest(t, "TEST_EC2_INSTANCE_PROFILE")
 	ctx := context.WithValue(context.Background(), common.Current, t.Name())

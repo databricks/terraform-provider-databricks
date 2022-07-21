@@ -34,7 +34,7 @@ func getRunningClusterWithInstanceProfile(t *testing.T, client *common.Databrick
 	})
 }
 
-func TestAwsAccS3IamMount_WithCluster(t *testing.T) {
+func TestAccAwsS3IamMount_WithCluster(t *testing.T) {
 	client := common.NewClientFromEnvironment()
 	arn := qa.GetEnvOrSkipTest(t, "TEST_EC2_INSTANCE_PROFILE")
 	ctx := context.WithValue(context.Background(), common.Current, t.Name())
@@ -83,7 +83,7 @@ func TestAwsAccS3IamMount_WithCluster(t *testing.T) {
 	})
 }
 
-func TestAwsAccS3IamMount_NoClusterGiven(t *testing.T) {
+func TestAccAwsS3IamMount_NoClusterGiven(t *testing.T) {
 	client := common.NewClientFromEnvironment()
 	arn := qa.GetEnvOrSkipTest(t, "TEST_EC2_INSTANCE_PROFILE")
 	ctx := context.WithValue(context.Background(), common.Current, t.Name())
@@ -138,7 +138,7 @@ func TestAwsAccS3IamMount_NoClusterGiven(t *testing.T) {
 	})
 }
 
-func TestAwsAccS3Mount(t *testing.T) {
+func TestAccAwsS3Mount(t *testing.T) {
 	client := common.NewClientFromEnvironment()
 	instanceProfile := qa.GetEnvOrSkipTest(t, "TEST_EC2_INSTANCE_PROFILE")
 	ctx := context.WithValue(context.Background(), common.Current, t.Name())

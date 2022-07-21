@@ -571,7 +571,7 @@ func TestPermanentDelete_Pinned(t *testing.T) {
 	require.NoError(t, err)
 }
 
-func TestAwsAccSmallestNodeType(t *testing.T) {
+func TestAccAwsSmallestNodeType(t *testing.T) {
 	cloudEnv := os.Getenv("CLOUD_ENV")
 	if cloudEnv == "" {
 		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")

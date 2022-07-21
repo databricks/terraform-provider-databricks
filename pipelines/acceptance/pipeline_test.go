@@ -94,7 +94,7 @@ func TestAccPipelineResource_CreatePipeline(t *testing.T) {
 }
 
 func TestAccAwsPipelineResource_CreatePipeline(t *testing.T) {
-	if cloud, ok := os.LookupEnv("CLOUD_ENV"); !ok || cloud != "AWS" {
+	if cloud, ok := os.LookupEnv("CLOUD_ENV"); !ok || cloud != "aws" {
 		t.Skip("Test is only for CLOUD_ENV=AWS")
 	}
 	acceptance.Test(t, []acceptance.Step{

@@ -298,7 +298,8 @@ var resourcesMap map[string]importable = map[string]importable{
 		},
 	},
 	"databricks_job": {
-		Service: "jobs",
+		ApiVersion: common.API_2_1,
+		Service:    "jobs",
 		Name: func(d *schema.ResourceData) string {
 			return fmt.Sprintf("%s_%s", d.Get("name").(string), d.Id())
 		},

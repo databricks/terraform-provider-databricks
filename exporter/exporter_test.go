@@ -821,6 +821,219 @@ func TestImportingJobs_JobList(t *testing.T) {
 		})
 }
 
+func TestImportingJobs_JobListMultiTask(t *testing.T) {
+	nowSeconds := time.Now().Unix()
+	jobRuns := jobs.JobRunsList{
+		Runs: []jobs.JobRun{
+			{
+				StartTime: nowSeconds * 1000,
+			},
+		},
+	}
+	qa.HTTPFixturesApply(t,
+		[]qa.HTTPFixture{
+			meAdminFixture,
+			emptyRepos,
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/jobs/list",
+				Response: jobs.JobList{
+					Jobs: []jobs.Job{
+						{
+							JobID: 14,
+							Settings: &jobs.JobSettings{
+								Name: "Demo job",
+							},
+						},
+					},
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/permissions/jobs/14",
+				Response: getJSONObject("test-data/get-job-14-permissions.json"),
+			},
+			{
+				Method:       "GET",
+				Resource:     "/api/2.0/dbfs/get-status?path=dbfs%3A%2FFileStore%2Fjars%2Ftest.jar",
+				ReuseRequest: true,
+				Response:     getJSONObject("test-data/get-dbfs-library-status.json"),
+			},
+			{
+				Method:       "GET",
+				Resource:     "/api/2.0/dbfs/read?length=1000000&path=dbfs%3A%2FFileStore%2Fjars%2Ftest.jar",
+				ReuseRequest: true,
+				Response:     getJSONObject("test-data/get-dbfs-library-data.json"),
+			},
+			{
+				Method:       "GET",
+				Resource:     "/api/2.0/instance-pools/get?instance_pool_id=pool1",
+				ReuseRequest: true,
+				Response:     getJSONObject("test-data/get-instance-pool1.json"),
+			},
+			{
+				Method:       "GET",
+				Resource:     "/api/2.0/permissions/instance-pools/pool1",
+				ReuseRequest: true,
+				Response:     getJSONObject("test-data/get-job-14-permissions.json"),
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/jobs/get?job_id=14",
+				Response: jobs.Job{
+					JobID: 14,
+					Settings: &jobs.JobSettings{
+						RetryOnTimeout: true,
+						Tasks: []jobs.JobTaskSettings{
+							{
+								TaskKey: "dummy",
+								Libraries: []libraries.Library{
+									{Jar: "dbfs:/FileStore/jars/test.jar"},
+								},
+								NewCluster: &clusters.Cluster{
+									InstancePoolID: "pool1",
+									NumWorkers:     2,
+									SparkVersion:   "6.4.x-scala2.11",
+									PolicyID:       "123",
+								},
+								SparkJarTask: &jobs.SparkJarTask{
+									JarURI:        "dbfs:/FileStore/jars/test.jar",
+									MainClassName: "com.databricks.examples.ProjectDriver",
+								},
+								SparkPythonTask: &jobs.SparkPythonTask{
+									// this makes no sense for prod, but does for tests ;-)
+									PythonFile: "/foo/bar.py",
+									Parameters: []string{
+										"dbfs:/FileStore/jars/test.jar",
+										"etc",
+									},
+								},
+							},
+						},
+						Name:   "Dummy",
+						Format: "MULTI_TASK",
+						JobClusters: []jobs.JobCluster{
+							{
+								JobClusterKey: "shared",
+								NewCluster: &clusters.Cluster{
+									InstancePoolID: "pool1",
+									NumWorkers:     2,
+									SparkVersion:   "6.4.x-scala2.11",
+									PolicyID:       "123",
+								},
+							},
+						},
+					},
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/policies/clusters/get?policy_id=123",
+				Response: policies.ClusterPolicy{
+					PolicyID: "123",
+					Name:     "dummy",
+					Definition: `{
+						"aws_attributes.instance_profile_arn": {
+							"type": "fixed",
+							"value": "arn:aws:iam::12345:instance-profile/shard-s3-access",
+							"hidden": true
+						},
+						"instance_pool_id": {
+							"type": "fixed",
+							"value": "pool1",
+							"hidden": true
+						}
+					}`,
+				},
+			},
+			{
+				Method:       "GET",
+				ReuseRequest: true,
+				Resource:     "/api/2.0/instance-profiles/list",
+				Response: aws.InstanceProfileList{
+					InstanceProfiles: []aws.InstanceProfileInfo{
+						{
+							InstanceProfileArn: "arn:aws:iam::12345:instance-profile/shard-s3-access",
+						},
+					},
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/permissions/cluster-policies/123",
+				Response: getJSONObject("test-data/get-cluster-policy-permissions.json"),
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/instance-profiles/list",
+				Response: getJSONObject("test-data/list-instance-profiles.json"),
+			},
+			{
+				Method:       "GET",
+				Resource:     "/api/2.0/instance-pools/get?instance_pool_id=pool1",
+				ReuseRequest: true,
+				Response:     getJSONObject("test-data/get-instance-pool1.json"),
+			},
+			{
+				Method:       "GET",
+				Resource:     "/api/2.0/permissions/instance-pools/pool1",
+				ReuseRequest: true,
+				Response:     getJSONObject("test-data/get-job-14-permissions.json"),
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/jobs/runs/list?completed_only=true&job_id=14&limit=1",
+				Response: jobRuns,
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/jobs/runs/list?completed_only=true&job_id=15&limit=1",
+				Response: jobs.JobRunsList{
+					Runs: []jobs.JobRun{},
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/jobs/runs/list?completed_only=true&job_id=16&limit=1",
+				Response: jobs.JobRunsList{
+					Runs: []jobs.JobRun{
+						{
+							StartTime: 0,
+						},
+					},
+				},
+			},
+		},
+		func(ctx context.Context, client *common.DatabricksClient) {
+			ic := newImportContext(client)
+			ic.services = "jobs,access,storage,clusters"
+			ic.listing = "jobs"
+			ic.mounts = true
+			ic.meAdmin = true
+			tmpDir := fmt.Sprintf("/tmp/tf-%s", qa.RandomName())
+			defer os.RemoveAll(tmpDir)
+			ic.Directory = tmpDir
+
+			err := ic.Importables["databricks_job"].List(ic)
+			assert.NoError(t, err)
+
+			for _, res := range ic.Scope {
+				if res.Resource != "databricks_job" {
+					continue
+				}
+				// simulate complex HCL write
+				err = ic.dataToHcl(
+					ic.Importables["databricks_job"],
+					[]string{},
+					ic.Resources["databricks_job"],
+					res.Data,
+					hclwrite.NewEmptyFile().Body())
+
+				assert.NoError(t, err)
+			}
+		})
+}
+
 func TestImportingWithError(t *testing.T) {
 	err := Run("-directory", "/bin/sh", "-services", "groups,users", "-skip-interactive")
 	assert.EqualError(t, err, "the path /bin/sh is not a directory")
@@ -1187,6 +1400,67 @@ func TestImportingSqlObjects(t *testing.T) {
 			ic.Directory = tmpDir
 			ic.listing = "sql,access"
 			ic.services = "sql,access"
+
+			err := ic.Run()
+			assert.NoError(t, err)
+		})
+}
+
+func TestImportingDLTPipelines(t *testing.T) {
+	qa.HTTPFixturesApply(t,
+		[]qa.HTTPFixture{
+			meAdminFixture,
+			emptyRepos,
+			emptyIpAccessLIst,
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/pipelines?max_results=50",
+
+				Response: pipelines.PipelineListResponse{
+					Statuses: []pipelines.PipelineStateInfo{
+						{
+							PipelineID: "123",
+							Name:       "Pipeline1",
+						},
+					},
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/pipelines/123",
+				Response: getJSONObject("test-data/get-dlt-pipeline.json"),
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/permissions/pipelines/123",
+				Response: getJSONObject("test-data/get-pipeline-permissions.json"),
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/workspace/get-status?path=%2FUsers%2Fuser%40domain.com%2FTest%20DLT",
+				Response: workspace.ObjectStatus{
+					Language:   workspace.Python,
+					ObjectID:   123,
+					ObjectType: workspace.Notebook,
+					Path:       "/Users/user@domain.com/Test DLT",
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/workspace/export?format=SOURCE&path=%2FUsers%2Fuser%40domain.com%2FTest+DLT",
+				Response: workspace.ExportPath{
+					Content: "spark.range(10)",
+				},
+			},
+		},
+		func(ctx context.Context, client *common.DatabricksClient) {
+			tmpDir := fmt.Sprintf("/tmp/tf-%s", qa.RandomName())
+			defer os.RemoveAll(tmpDir)
+
+			ic := newImportContext(client)
+			ic.Directory = tmpDir
+			ic.listing = "dlt"
+			ic.services = "dlt,access,notebooks"
 
 			err := ic.Run()
 			assert.NoError(t, err)

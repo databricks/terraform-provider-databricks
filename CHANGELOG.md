@@ -1,5 +1,26 @@
 # Version changelog
 
+## 1.1.0
+
+* Added `databricks_sql_warehouses` data resource to list all warehouses in a workspace with a name filter ([#1460](https://github.com/databricks/terraform-provider-databricks/pull/1460)).
+* Added `databricks_sql_warehouse` data resource to list SQL warehouse attributes based on single id ([#1460](https://github.com/databricks/terraform-provider-databricks/pull/1460)).
+* Added `databricks_cluster` data resource to list cluster attributes based on single id ([#1460](https://github.com/databricks/terraform-provider-databricks/pull/1460)).
+* Added Azure Managed Identity documentation examples ([#1471](https://github.com/databricks/terraform-provider-databricks/pull/1471)).
+* Added more attributes to `databricks_cluster` ([#1459](https://github.com/databricks/terraform-provider-databricks/pull/1459)).
+* Added more attributes to `databricks_instance_pool` ([#1463](https://github.com/databricks/terraform-provider-databricks/pull/1463)).
+* Added feature request GitHub issue template ([#1482](https://github.com/databricks/terraform-provider-databricks/pull/1482)).
+* Added `tf:optional` tag to simplify the code ([#1395](https://github.com/databricks/terraform-provider-databricks/pull/1395)).
+* Fixed `databricks_pipeline` incorrect generation of `cluster` blocks ([#1416](https://github.com/databricks/terraform-provider-databricks/pull/1416)).
+* Fixed `databricks_table` update for `column` block ([#1468](https://github.com/databricks/terraform-provider-databricks/pull/1468)).
+* Fixed reads for `any_file` and `anonymous_function` in `databricks_sql_permissions` ([#1477](https://github.com/databricks/terraform-provider-databricks/pull/1477)).
+* Tuned integration tests for `databricks_mws_*` ([#1483](https://github.com/databricks/terraform-provider-databricks/pull/1483)).
+* Removed integration tests for `databricks_azure_adls_gen1_mount` ([#1461](https://github.com/databricks/terraform-provider-databricks/pull/1461)).
+
+Updated dependency versions:
+
+* Bump github.com/hashicorp/terraform-plugin-sdk/v2 from 2.18.0 to 2.19.0 ([#1475](https://github.com/databricks/terraform-provider-databricks/pull/1475)).
+* Bump google.golang.org/api from 0.86.0 to 0.87.0 ([#1476](https://github.com/databricks/terraform-provider-databricks/pull/1476)).
+
 ## 1.0.2
 
 * Added `metastore` to `databricks_grants` ([#1447](https://github.com/databricks/terraform-provider-databricks/pull/1447)).

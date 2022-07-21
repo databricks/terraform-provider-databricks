@@ -17,6 +17,7 @@ import (
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/jobs"
 	"github.com/databricks/terraform-provider-databricks/libraries"
+	"github.com/databricks/terraform-provider-databricks/pipelines"
 	"github.com/databricks/terraform-provider-databricks/policies"
 	"github.com/databricks/terraform-provider-databricks/qa"
 	"github.com/databricks/terraform-provider-databricks/repos"
@@ -200,6 +201,13 @@ var meAdminFixture = qa.HTTPFixture{
 	},
 }
 
+var emptyPipelines = qa.HTTPFixture{
+	Method:       "GET",
+	ReuseRequest: true,
+	Resource:     "/api/2.0/pipelines?max_results=50",
+	Response:     pipelines.PipelineListResponse{},
+}
+
 var emptyRepos = qa.HTTPFixture{
 	Method:       "GET",
 	ReuseRequest: true,
@@ -257,6 +265,7 @@ func TestImportingUsersGroupsSecretScopes(t *testing.T) {
 			emptySqlDashboards,
 			emptySqlEndpoints,
 			emptySqlQueries,
+			emptyPipelines,
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/preview/scim/v2/Groups?",
@@ -421,6 +430,7 @@ func TestImportingNoResourcesError(t *testing.T) {
 			emptySqlEndpoints,
 			emptySqlQueries,
 			emptySqlDashboards,
+			emptyPipelines,
 			{
 				Method:       "GET",
 				Resource:     "/api/2.0/global-init-scripts",
@@ -673,7 +683,7 @@ func TestImportingJobs_JobList(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/jobs/get?job_id=14",
+				Resource: "/api/2.1/jobs/get?job_id=14",
 				Response: jobs.Job{
 					JobID: 14,
 					Settings: &jobs.JobSettings{

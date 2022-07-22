@@ -56,24 +56,24 @@ type PipelineTask struct {
 	PipelineID string `json:"pipeline_id"`
 }
 
-type sqlQuery struct {
+type SqlQueryTask struct {
 	QueryID string `json:"query_id"`
 }
 
-type sqlDashboard struct {
+type SqlDashboardTask struct {
 	DashboardID string `json:"dashboard_id"`
 }
 
-type sqlAlert struct {
+type SqlAlertTask struct {
 	AlertID string `json:"alert_id"`
 }
 
 // SqlTask contains information about DBSQL task
 // TODO: add validation & conflictsWith
 type SqlTask struct {
-	Query       *sqlQuery         `json:"query,omitempty"`
-	Dashboard   *sqlDashboard     `json:"dashboard,omitempty"`
-	Alert       *sqlAlert         `json:"alert,omitempty"`
+	Query       *SqlQueryTask     `json:"query,omitempty"`
+	Dashboard   *SqlDashboardTask `json:"dashboard,omitempty"`
+	Alert       *SqlAlertTask     `json:"alert,omitempty"`
 	WarehouseID string            `json:"warehouse_id,omitempty"`
 	Parameters  map[string]string `json:"parameters,omitempty"`
 }

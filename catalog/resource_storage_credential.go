@@ -28,8 +28,10 @@ type StorageCredentialInfo struct {
 	MetastoreID string                 `json:"metastore_id,omitempty" tf:"computed"`
 }
 
-func (a StorageCredentialsAPI) create(sci *StorageCredentialInfo) error {
-	return a.client.Post(a.context, "/unity-catalog/storage-credentials", sci, &sci)
+func (a StorageCredentialsAPI) create(sci *StorageCredentialInfo, timeout time.Duration) error {
+	return common.RetryOnError(a.context, timeout, isIAMError, func() error {
+		return a.client.Post(a.context, "/unity-catalog/storage-credentials", sci, &sci)
+	})
 }
 
 func (a StorageCredentialsAPI) get(id string) (sci StorageCredentialInfo, err error) {
@@ -67,9 +69,8 @@ func ResourceStorageCredential() *schema.Resource {
 			var sci StorageCredentialInfo
 			common.DataToStructPointer(d, s, &sci)
 			sci.Owner = ""
-			if err := common.RetryOnError(ctx, d.Timeout(schema.TimeoutCreate), isIAMError, func() error {
-				return NewStorageCredentialsAPI(ctx, c).create(&sci)
-			}); err != nil {
+			err := NewStorageCredentialsAPI(ctx, c).create(&sci, d.Timeout(schema.TimeoutCreate))
+			if err != nil {
 				return err
 			}
 			d.SetId(sci.Name)

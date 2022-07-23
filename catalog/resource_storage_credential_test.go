@@ -52,7 +52,7 @@ func TestCreateStorageCredentials(t *testing.T) {
 	}.ApplyNoError(t)
 }
 
-func TestCreateStorageCredentials_waitIAMPropagation(t *testing.T) {
+func TestCreateStorageCredentials_waitForIAMPropagation(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
@@ -199,7 +199,7 @@ func TestUpdateStorageCredentials(t *testing.T) {
 	}.ApplyNoError(t)
 }
 
-func TestUpdateStorageCredentials_waitIAMPropagation(t *testing.T) {
+func TestUpdateStorageCredentials_waitForIAMPropagation(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{

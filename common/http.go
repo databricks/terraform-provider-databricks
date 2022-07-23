@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"io"
 	"log"
 	"net/http"
@@ -14,6 +15,7 @@ import (
 	"regexp"
 	"sort"
 	"strings"
+	"time"
 
 	"github.com/google/go-querystring/query"
 	"github.com/hashicorp/go-retryablehttp"
@@ -590,4 +592,18 @@ func onlyNBytes(j string, numBytes int) string {
 		return fmt.Sprintf("%s... (%d more bytes)", j[:numBytes], diff)
 	}
 	return j
+}
+
+func RetryOnError(ctx context.Context, timeout time.Duration, errorCondition func(error) bool, f func() error) error {
+	return resource.RetryContext(ctx, timeout,
+		func() *resource.RetryError {
+			err := f()
+			if errorCondition(err) {
+				return resource.RetryableError(err)
+			}
+			if err != nil {
+				return resource.NonRetryableError(err)
+			}
+			return nil
+		})
 }

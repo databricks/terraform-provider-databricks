@@ -104,6 +104,68 @@ func TestResourceCredentialsCreate_Error(t *testing.T) {
 	assert.Equal(t, "", d.Id(), "Id should be empty for error creates")
 }
 
+func TestResourceCredentialsCreate_waitForIAMPropagation(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/accounts/abc/credentials",
+				ExpectedRequest: Credentials{
+					CredentialsName: "Cross-account ARN",
+					AwsCredentials: &AwsCredentials{
+						StsRole: &StsRole{
+							RoleArn: "arn:aws:iam::098765:role/cross-account",
+						},
+					},
+				},
+				Response: common.APIErrorBody{
+					ErrorCode: "MALFORMED_REQUEST",
+					Message: "Failed credential validation checks: please use a valid cross account IAM role with " +
+						"permissions setup correctly",
+				},
+				Status: 400,
+			},
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/accounts/abc/credentials",
+				ExpectedRequest: Credentials{
+					CredentialsName: "Cross-account ARN",
+					AwsCredentials: &AwsCredentials{
+						StsRole: &StsRole{
+							RoleArn: "arn:aws:iam::098765:role/cross-account",
+						},
+					},
+				},
+				Response: Credentials{
+					CredentialsID: "cid",
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/accounts/abc/credentials/cid",
+				Response: Credentials{
+					CredentialsID:   "cid",
+					CredentialsName: "Cross-account ARN",
+					AwsCredentials: &AwsCredentials{
+						StsRole: &StsRole{
+							RoleArn: "arn:aws:iam::098765:role/cross-account",
+						},
+					},
+				},
+			},
+		},
+		Resource: ResourceMwsCredentials(),
+		State: map[string]interface{}{
+			"account_id":       "abc",
+			"credentials_name": "Cross-account ARN",
+			"role_arn":         "arn:aws:iam::098765:role/cross-account",
+		},
+		Create: true,
+	}.Apply(t)
+	assert.NoError(t, err, err)
+	assert.Equal(t, "abc/cid", d.Id())
+}
+
 func TestResourceCredentialsRead(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{

@@ -2,6 +2,7 @@ package catalog
 
 import (
 	"context"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"strings"
 	"time"
 
@@ -29,7 +30,7 @@ type StorageCredentialInfo struct {
 }
 
 func (a StorageCredentialsAPI) create(sci *StorageCredentialInfo, timeout time.Duration) error {
-	return common.RetryOnError(a.context, timeout, isIAMError, func() error {
+	return retryOnError(a.context, timeout, isIAMError, func() error {
 		return a.client.Post(a.context, "/unity-catalog/storage-credentials", sci, &sci)
 	})
 }
@@ -53,7 +54,7 @@ func ResourceStorageCredential() *schema.Resource {
 			return m
 		})
 	update := func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-		return common.RetryOnError(ctx, d.Timeout(schema.TimeoutUpdate), isIAMError, func() error {
+		return retryOnError(ctx, d.Timeout(schema.TimeoutUpdate), isIAMError, func() error {
 			return updateFunctionFactory("/unity-catalog/storage-credentials", []string{
 				"owner", "comment", "aws_iam_role", "azure_service_principal", "azure_managed_identity"})(
 				ctx, d, c)
@@ -88,6 +89,20 @@ func ResourceStorageCredential() *schema.Resource {
 			return NewStorageCredentialsAPI(ctx, c).delete(d.Id())
 		},
 	}.ToResource()
+}
+
+func retryOnError(ctx context.Context, timeout time.Duration, errorCondition func(error) bool, f func() error) error {
+	return resource.RetryContext(ctx, timeout,
+		func() *resource.RetryError {
+			err := f()
+			if errorCondition(err) {
+				return resource.RetryableError(err)
+			}
+			if err != nil {
+				return resource.NonRetryableError(err)
+			}
+			return nil
+		})
 }
 
 func isIAMError(err error) bool {

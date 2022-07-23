@@ -3,6 +3,7 @@ package mws
 import (
 	"context"
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"strings"
 	"time"
 
@@ -32,7 +33,7 @@ func (a CredentialsAPI) Create(mwsAcctID, credentialsName, roleArn string) (Cred
 func (a CredentialsAPI) CreateWithTimeout(mwsAcctID, credentialsName, roleArn string, timeout time.Duration) (Credentials, error) {
 	var mwsCreds Credentials
 	credentialsAPIPath := fmt.Sprintf("/accounts/%s/credentials", mwsAcctID)
-	err := common.RetryOnError(a.context, timeout, isIAMError, func() error {
+	err := retryOnError(a.context, timeout, isIAMError, func() error {
 		return a.client.Post(a.context, credentialsAPIPath, Credentials{
 			CredentialsName: credentialsName,
 			AwsCredentials: &AwsCredentials{
@@ -138,6 +139,20 @@ func ResourceMwsCredentials() *schema.Resource {
 			},
 		},
 	}.ToResource()
+}
+
+func retryOnError(ctx context.Context, timeout time.Duration, errorCondition func(error) bool, f func() error) error {
+	return resource.RetryContext(ctx, timeout,
+		func() *resource.RetryError {
+			err := f()
+			if errorCondition(err) {
+				return resource.RetryableError(err)
+			}
+			if err != nil {
+				return resource.NonRetryableError(err)
+			}
+			return nil
+		})
 }
 
 func isIAMError(err error) bool {

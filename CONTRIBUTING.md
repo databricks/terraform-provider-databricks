@@ -84,6 +84,8 @@ You can [run provider in a debug mode](https://www.terraform.io/plugin/sdkv2/deb
 
 ## Adding a new resource
 
+Boilerplate for data sources could be generated via `go run provider/gen/main.go -name mws_workspaces -package mws -is-data -dry-run=false`.
+
 The general process for adding a new resource is:
 
 *Define the resource models.* The models for a resource are `struct`s defining the schemas of the objects in the Databricks REST API. Define structures used for multiple resources in a common `models.go` file; otherwise, you can define these directly in your resource file. An example model:

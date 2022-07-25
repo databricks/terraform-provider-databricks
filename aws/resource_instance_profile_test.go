@@ -180,7 +180,7 @@ func TestResourceInstanceProfileDelete_Error(t *testing.T) {
 	assert.Equal(t, "arn:aws:iam::999999999999:instance-profile/my-fake-instance-profile", d.Id())
 }
 
-func TestAwsAccInstanceProfiles(t *testing.T) {
+func TestAccAwsInstanceProfiles(t *testing.T) {
 	arn := qa.GetEnvOrSkipTest(t, "TEST_EC2_INSTANCE_PROFILE")
 	client := common.NewClientFromEnvironment()
 	ctx := context.WithValue(context.Background(), common.Current, t.Name())
@@ -204,7 +204,7 @@ func TestAwsAccInstanceProfiles(t *testing.T) {
 	})
 }
 
-func TestAwsAccInstanceProfilesSkippingValidation(t *testing.T) {
+func TestAccAwsInstanceProfilesSkippingValidation(t *testing.T) {
 	arn := qa.GetEnvOrSkipTest(t, "TEST_EC2_INSTANCE_PROFILE")
 	client := common.NewClientFromEnvironment()
 	ctx := context.WithValue(context.Background(), common.Current, t.Name())

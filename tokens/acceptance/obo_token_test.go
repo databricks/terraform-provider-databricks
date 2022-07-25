@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-func TestAwsAccOboTokenResource(t *testing.T) {
+func TestAccAwsOboTokenResource(t *testing.T) {
 	acceptance.Test(t, []acceptance.Step{
 		{
 			Template: `

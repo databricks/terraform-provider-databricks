@@ -85,6 +85,7 @@ type ResourceFixture struct {
 	Azure       bool
 	AzureSPN    bool
 	Gcp         bool
+	AccountID   string
 	Token       string
 	// new resource
 	New bool
@@ -167,6 +168,9 @@ func (f ResourceFixture) Apply(t *testing.T) (*schema.ResourceData, error) {
 	}
 	if f.Gcp {
 		client.GoogleServiceAccount = "sa@prj.iam.gserviceaccount.com"
+	}
+	if f.AccountID != "" {
+		client.AccountID = f.AccountID
 	}
 	if len(f.HCL) > 0 {
 		var out any

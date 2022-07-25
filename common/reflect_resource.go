@@ -240,6 +240,15 @@ func typeToSchema(v reflect.Value, t reflect.Type, path []string) map[string]*sc
 			handleSuppressDiff(typeField, scm[fieldName])
 		case reflect.Map:
 			scm[fieldName].Type = schema.TypeMap
+			elem := typeField.Type.Elem()
+			switch elem.Kind() {
+			case reflect.String:
+				scm[fieldName].Elem = schema.TypeString
+			case reflect.Int64:
+				scm[fieldName].Elem = schema.TypeInt
+			default:
+				panic(fmt.Errorf("unsupported map value for %s: %s", fieldName, reflectKind(elem.Kind())))
+			}
 		case reflect.Ptr:
 			scm[fieldName].MaxItems = 1
 			scm[fieldName].Type = schema.TypeList

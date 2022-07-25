@@ -710,6 +710,12 @@ func TestImportingJobs_JobList(t *testing.T) {
 								"etc",
 							},
 						},
+						NotebookTask: &jobs.NotebookTask{
+							NotebookPath: "/Test",
+						},
+						PipelineTask: &jobs.PipelineTask{
+							PipelineID: "123",
+						},
 					},
 				},
 			},
@@ -891,10 +897,11 @@ func TestImportingJobs_JobListMultiTask(t *testing.T) {
 									{Jar: "dbfs:/FileStore/jars/test.jar"},
 								},
 								NewCluster: &clusters.Cluster{
-									InstancePoolID: "pool1",
-									NumWorkers:     2,
-									SparkVersion:   "6.4.x-scala2.11",
-									PolicyID:       "123",
+									InstancePoolID:       "pool1",
+									DriverInstancePoolID: "pool1",
+									NumWorkers:           2,
+									SparkVersion:         "6.4.x-scala2.11",
+									PolicyID:             "123",
 								},
 								SparkJarTask: &jobs.SparkJarTask{
 									JarURI:        "dbfs:/FileStore/jars/test.jar",
@@ -906,6 +913,25 @@ func TestImportingJobs_JobListMultiTask(t *testing.T) {
 									Parameters: []string{
 										"dbfs:/FileStore/jars/test.jar",
 										"etc",
+									},
+								},
+								NotebookTask: &jobs.NotebookTask{
+									NotebookPath: "/Test",
+								},
+								PipelineTask: &jobs.PipelineTask{
+									PipelineID: "123",
+								},
+								SqlTask: &jobs.SqlTask{
+									Dashboard: &jobs.SqlDashboardTask{
+										DashboardID: "123",
+									},
+								},
+							},
+							{
+								TaskKey: "dummy2",
+								SqlTask: &jobs.SqlTask{
+									Query: &jobs.SqlQueryTask{
+										QueryID: "123",
 									},
 								},
 							},
@@ -1452,6 +1478,11 @@ func TestImportingDLTPipelines(t *testing.T) {
 					Content: "spark.range(10)",
 				},
 			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/instance-profiles/list",
+				Response: getJSONObject("test-data/list-instance-profiles.json"),
+			},
 		},
 		func(ctx context.Context, client *common.DatabricksClient) {
 			tmpDir := fmt.Sprintf("/tmp/tf-%s", qa.RandomName())
@@ -1461,6 +1492,56 @@ func TestImportingDLTPipelines(t *testing.T) {
 			ic.Directory = tmpDir
 			ic.listing = "dlt"
 			ic.services = "dlt,access,notebooks"
+
+			err := ic.Run()
+			assert.NoError(t, err)
+		})
+}
+
+func TestImportingDLTPipelinesMatchingOnly(t *testing.T) {
+	qa.HTTPFixturesApply(t,
+		[]qa.HTTPFixture{
+			meAdminFixture,
+			emptyRepos,
+			emptyIpAccessLIst,
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/pipelines?filter=name%20LIKE%20%27%25test%25%27&max_results=50",
+
+				Response: pipelines.PipelineListResponse{
+					Statuses: []pipelines.PipelineStateInfo{
+						{
+							PipelineID: "123",
+							Name:       "Pipeline1",
+						},
+					},
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/pipelines/123",
+				Response: getJSONObject("test-data/get-dlt-pipeline.json"),
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/permissions/pipelines/123",
+				Response: getJSONObject("test-data/get-pipeline-permissions.json"),
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/instance-profiles/list",
+				Response: getJSONObject("test-data/list-instance-profiles.json"),
+			},
+		},
+		func(ctx context.Context, client *common.DatabricksClient) {
+			tmpDir := fmt.Sprintf("/tmp/tf-%s", qa.RandomName())
+			defer os.RemoveAll(tmpDir)
+
+			ic := newImportContext(client)
+			ic.Directory = tmpDir
+			ic.match = "test"
+			ic.listing = "dlt"
+			ic.services = "dlt,access"
 
 			err := ic.Run()
 			assert.NoError(t, err)

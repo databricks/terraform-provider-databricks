@@ -11,7 +11,19 @@
     "clusters": [
       {
         "label": "default",
-        "num_workers": 1
+        "num_workers": 1,
+        "aws_attributes": {
+          "instance_profile_arn": "123"
+        },
+        "instance_pool_id": "123",
+        "driver_instance_pool_id": "123",
+        "init_scripts": [
+          {
+            "dbfs": {
+              "destination": "dbfs:/FileStore/jars/test.jar"
+            }
+          }
+        ]
       }
     ],
     "continuous": true,

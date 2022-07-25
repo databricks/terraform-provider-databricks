@@ -1,0 +1,21 @@
+package {{.Package}}
+
+import (
+	"context"
+
+	"github.com/databricks/terraform-provider-databricks/common"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+)
+
+func DataSource{{.CamelName}}() *schema.Resource {
+	type {{.LowerCamel}}Data struct {
+		// data resources output fields annotated with tf:"computed" 
+		Ids []string {{.BT}}json:"ids,omitempty" tf:"computed,slice_set"{{.BT}}
+	}
+	return common.DataResource({{.LowerCamel}}Data{}, func(ctx context.Context, e any, c *common.DatabricksClient) error {
+		data := e.(*{{.LowerCamel}}Data)
+		// TODO: implement me
+		data.Ids = append(data.Ids, "..") // replace
+		return nil
+	})
+}

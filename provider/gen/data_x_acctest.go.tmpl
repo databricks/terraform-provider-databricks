@@ -1,0 +1,17 @@
+package acceptance
+
+import (
+	"github.com/databricks/terraform-provider-databricks/internal/acceptance"
+
+	"testing"
+)
+
+func TestAccDataSource{{.CamelName}}(t *testing.T) {
+	acceptance.Test(t, []acceptance.Step{
+		{
+			Template: `
+			data "databricks_{{.Name}}" "this" {
+			}`,
+		},
+	})
+}

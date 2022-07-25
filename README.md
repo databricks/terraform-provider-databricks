@@ -50,6 +50,7 @@
 | [databricks_mws_storage_configurations](docs/resources/mws_storage_configurations.md)
 | [databricks_mws_vpc_endpoint](docs/resources/mws_vpc_endpoint.md)
 | [databricks_mws_workspaces](docs/resources/mws_workspaces.md)
+| [databricks_mws_workspaces](docs/data-sources/mws_workspaces.md) data
 | [databricks_node_type](docs/data-sources/node_type.md) data
 | [databricks_notebook](docs/resources/notebook.md)
 | [databricks_notebook](docs/data-sources/notebook.md) data
@@ -97,7 +98,7 @@ terraform {
   required_providers {
     databricks = {
       source  = "databricks/databricks"
-      version = "1.0.2"
+      version = "1.1.0"
     }
   }
 }

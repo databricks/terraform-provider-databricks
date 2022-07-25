@@ -45,7 +45,7 @@ func Test(t *testing.T, steps []Step, otherVars ...map[string]string) {
 		t.Skip(err.Error())
 	}
 	awsAttrs := ""
-	if cloudEnv == "AWS" {
+	if cloudEnv == "aws" {
 		awsAttrs = "aws_attributes {}"
 	}
 	instancePoolID := ""

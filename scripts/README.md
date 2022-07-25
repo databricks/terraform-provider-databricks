@@ -12,9 +12,9 @@ By default, we don't encourage creation/destruction of infrastructure multiple t
 * `azsp` - Azure authenticated with Service Principal's ID/Secret pairs. Runnable test name prefixes are `TestAcc` and `TestAzureAcc`. Service pricipal must have `Storage Blob Data Contributor` role on ADLS account used. `ARM_SUBSCRIPTION_ID`, `ARM_CLIENT_SECRET`, `ARM_CLIENT_ID`, `ARM_TENANT_ID`, `OWNER` environment vars required. Note that these integration tests will use service principal based auth. Even though it is using a service principal, it will still be generating a personal access token to perform creation of resources.
 
 * `mws` - AWS with Databricks Multiworkspace API. Runnable test name prefix is `TestMws`. Please [check if you're able to use it](https://docs.databricks.com/administration-guide/multiworkspace/new-workspace-aws.html). Required variables are `DATABRICKS_ACCOUNT_ID`, `DATABRICKS_USERNAME`, `DATABRICKS_PASSWORD` (something you use for https://accounts.cloud.databricks.com/), `AWS_REGION`, `TEST_CIDR`, `OWNER`. Only multiworkspace resources are tested.
-* `awsst` - `DATABRICKS_CONFIG_PROFILE` (section within Databricks CLI `~/.databrickscfg` file) & `CLOUD_ENV=AWS`. In case you want to test provider on existing development single-tenant shard. Runnable test name prefixes are `TestAcc` and `TestAwsAcc`.
+* `awsst` - `DATABRICKS_CONFIG_PROFILE` (section within Databricks CLI `~/.databrickscfg` file) & `CLOUD_ENV=aws`. In case you want to test provider on existing development single-tenant shard. Runnable test name prefixes are `TestAcc` and `TestAwsAcc`.
 * `awsmt` - AWS with Databricks Multitenant Workspace. Currently work in progress and the test environment cannot be fully started.
-* most of the tests should aim to be cloud-agnostic. Though, in case of specific branching needed, you can check `CLOUD_ENV` value (possible values are `Azure`, `AWS` & `MWS`).
+* most of the tests should aim to be cloud-agnostic. Though, in case of specific branching needed, you can check `CLOUD_ENV` value (possible values are `Azure`, `aws` & `MWS`).
 * all environment variables are used by *DatabricksClient*, *provider integration tests* and *terraform configuration*.
 * **each `output` becomes an environment variable** with the case changed to upper. This gives an easy way to manage the complexity of the testing environment. This is what gives those variables for `export $(scripts/run.sh azcli --export)` under the hood.
 * `qa.EnvironmentTemplate` must be used to make readable templates with environment variable presence validation.
@@ -94,7 +94,7 @@ func TestAccListClustersIntegration(t *testing.T) {
 		AutoterminationMinutes: 15,
 	}
 
-	if cloud == "AWS" {
+	if cloud == "aws" {
 		cluster.AwsAttributes = &AwsAttributes{
 			EbsVolumeType:  EbsVolumeTypeGeneralPurposeSsd,
 			EbsVolumeCount: 1,

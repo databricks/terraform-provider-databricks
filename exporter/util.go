@@ -46,6 +46,12 @@ func (ic *importContext) importCluster(c *clusters.Cluster) {
 			ID:       c.InstancePoolID,
 		})
 	}
+	if c.DriverInstancePoolID != "" {
+		ic.Emit(&resource{
+			Resource: "databricks_instance_pool",
+			ID:       c.DriverInstancePoolID,
+		})
+	}
 	if c.PolicyID != "" {
 		ic.Emit(&resource{
 			Resource: "databricks_cluster_policy",

@@ -13,7 +13,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestAwsAccOboFlow(t *testing.T) {
+func TestAccAwsOboFlow(t *testing.T) {
 	if _, ok := os.LookupEnv("CLOUD_ENV"); !ok {
 		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
 	}

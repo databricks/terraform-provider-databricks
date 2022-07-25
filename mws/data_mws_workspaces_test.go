@@ -40,6 +40,7 @@ func TestDataSourceMwsWorkspaces(t *testing.T) {
 
 func TestCatalogsData_Error(t *testing.T) {
 	qa.ResourceFixture{
+		AccountID:   "abc",
 		Fixtures:    qa.HTTPFailures,
 		Resource:    DataSourceMwsWorkspaces(),
 		Read:        true,

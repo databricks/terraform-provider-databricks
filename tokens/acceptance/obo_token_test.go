@@ -2,11 +2,13 @@ package acceptance
 
 import (
 	"github.com/databricks/terraform-provider-databricks/internal/acceptance"
+	"github.com/databricks/terraform-provider-databricks/qa"
 
 	"testing"
 )
 
 func TestAccAwsOboTokenResource(t *testing.T) {
+	qa.RequireCloudEnv(t, "aws")
 	acceptance.Test(t, []acceptance.Step{
 		{
 			Template: `

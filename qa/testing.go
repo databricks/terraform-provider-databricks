@@ -539,3 +539,17 @@ func GetEnvOrSkipTest(t *testing.T, name string) string {
 	}
 	return value
 }
+
+func RequireAnyCloudEnv(t *testing.T) {
+	value := os.Getenv("CLOUD_ENV")
+	if value == "" {
+		t.Skip("CLOUD_ENV is required to run this test")
+	}
+}
+
+func RequireCloudEnv(t *testing.T, cloudEnv string) {
+	value := os.Getenv("CLOUD_ENV")
+	if value != cloudEnv {
+		t.Skipf("CLOUD_ENV=%s is required to run this test", cloudEnv)
+	}
+}

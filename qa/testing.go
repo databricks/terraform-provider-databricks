@@ -38,7 +38,7 @@ func RandomLongName() string {
 
 // RandomEmail generates random email
 func RandomEmail() string {
-	return fmt.Sprintf("%s@example.com", RandomName("tf"))
+	return fmt.Sprintf("%s@example.com", RandomName("tf-"))
 }
 
 // RandomName gives random name with optional prefix. e.g. qa.RandomName("tf-")

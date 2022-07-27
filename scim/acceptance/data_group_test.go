@@ -38,26 +38,26 @@ func TestAccGroupDataSplitMembers(t *testing.T) {
 	spAPI := scim.NewServicePrincipalsAPI(ctx, client)
 
 	user, err := usersAPI.Create(scim.User{
-		UserName: fmt.Sprintf("%s@example.com", qa.RandomName("tfuser-")),
+		UserName: fmt.Sprintf("%s@example.com", qa.RandomName("tf-")),
 	})
 	assert.NoError(t, err)
 	defer usersAPI.Delete(user.ID)
 
 	sp, err := spAPI.Create(scim.User{
 		ApplicationID: createUuid(),
-		DisplayName:   qa.RandomName("spn-"),
+		DisplayName:   qa.RandomName("tf-spn-"),
 	})
 	assert.NoError(t, err)
 	defer spAPI.Delete(sp.ID)
 
 	childGroup, err := groupsAPI.Create(scim.Group{
-		DisplayName: qa.RandomName("child-"),
+		DisplayName: qa.RandomName("tf-child-"),
 	})
 	assert.NoError(t, err)
 	defer groupsAPI.Delete(childGroup.ID)
 
 	parentGroup, err := groupsAPI.Create(scim.Group{
-		DisplayName: qa.RandomName("parent-"),
+		DisplayName: qa.RandomName("tf-parent-"),
 		Members: []scim.ComplexValue{
 			{Value: user.ID},
 			{Value: sp.ID},

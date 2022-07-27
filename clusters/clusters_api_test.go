@@ -3,7 +3,6 @@ package clusters
 import (
 	"context"
 	"fmt"
-	"os"
 
 	// "reflect"
 	"strings"
@@ -572,11 +571,7 @@ func TestPermanentDelete_Pinned(t *testing.T) {
 }
 
 func TestAccAwsSmallestNodeType(t *testing.T) {
-	cloudEnv := os.Getenv("CLOUD_ENV")
-	if cloudEnv == "" {
-		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
-	}
-
+	qa.RequireCloudEnv(t, "aws")
 	client := common.CommonEnvironmentClient()
 	ctx := context.Background()
 	nodeType := NewClustersAPI(ctx, client).GetSmallestNodeType(NodeTypeRequest{

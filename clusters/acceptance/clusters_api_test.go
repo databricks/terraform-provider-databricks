@@ -2,7 +2,6 @@ package acceptance
 
 import (
 	"context"
-	"os"
 	"reflect"
 	"testing"
 
@@ -15,10 +14,7 @@ import (
 )
 
 func TestAccListClustersIntegration(t *testing.T) {
-	cloudEnv := os.Getenv("CLOUD_ENV")
-	if cloudEnv == "" {
-		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
-	}
+	qa.RequireAnyCloudEnv(t)
 	t.Parallel()
 	client := common.CommonEnvironmentClient()
 	ctx := context.Background()

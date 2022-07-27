@@ -2,7 +2,6 @@ package tokens
 
 import (
 	"context"
-	"os"
 	"testing"
 
 	"github.com/databricks/terraform-provider-databricks/common"
@@ -14,9 +13,7 @@ import (
 )
 
 func TestAccAwsOboFlow(t *testing.T) {
-	if _, ok := os.LookupEnv("CLOUD_ENV"); !ok {
-		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
-	}
+	qa.RequireCloudEnv(t, "aws")
 	ctx := context.Background()
 	client := common.CommonEnvironmentClient()
 	tmAPI := NewTokenManagementAPI(ctx, client)

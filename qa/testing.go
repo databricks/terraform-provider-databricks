@@ -38,7 +38,7 @@ func RandomLongName() string {
 
 // RandomEmail generates random email
 func RandomEmail() string {
-	return fmt.Sprintf("%s@example.com", RandomName("tf"))
+	return fmt.Sprintf("%s@example.com", RandomName("tf-"))
 }
 
 // RandomName gives random name with optional prefix. e.g. qa.RandomName("tf-")
@@ -538,4 +538,18 @@ func GetEnvOrSkipTest(t *testing.T, name string) string {
 		t.Skipf("Environment variable %s is missing", name)
 	}
 	return value
+}
+
+func RequireAnyCloudEnv(t *testing.T) {
+	value := os.Getenv("CLOUD_ENV")
+	if value == "" {
+		t.Skip("CLOUD_ENV is required to run this test")
+	}
+}
+
+func RequireCloudEnv(t *testing.T, cloudEnv string) {
+	value := os.Getenv("CLOUD_ENV")
+	if value != cloudEnv {
+		t.Skipf("CLOUD_ENV=%s is required to run this test", cloudEnv)
+	}
 }

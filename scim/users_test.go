@@ -2,7 +2,6 @@ package scim
 
 import (
 	"context"
-	"fmt"
 	"os"
 	"strings"
 	"testing"
@@ -10,7 +9,6 @@ import (
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/qa"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -40,27 +38,22 @@ func TestAccCreateUser(t *testing.T) {
 	}
 	t.Parallel()
 	client := common.NewClientFromEnvironment()
-	randomName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
 	ctx := context.Background()
 	usersAPI := NewUsersAPI(ctx, client)
 	user, err := usersAPI.Create(User{
-		UserName: fmt.Sprintf("test+%s@example.com", randomName),
+		UserName: qa.RandomEmail(),
 	})
 	assert.NoError(t, err, err)
-	assert.True(t, len(user.ID) > 0, "User id is empty")
-	idToDelete := user.ID
-	defer func() {
-		err := usersAPI.Delete(idToDelete)
-		assert.NoError(t, err, err)
-	}()
+	require.True(t, len(user.ID) > 0, "User id is empty")
+	defer usersAPI.Delete(user.ID)
 
 	user, err = usersAPI.Read(user.ID)
 	t.Log(user)
 	assert.NoError(t, err, err)
 
 	err = usersAPI.Update(user.ID, User{
-		UserName:    fmt.Sprintf("updated+%s@example.com", randomName),
-		DisplayName: "TU",
+		UserName:    qa.RandomEmail(),
+		DisplayName: "TestAccCreateUser",
 	})
 	assert.NoError(t, err, err)
 }

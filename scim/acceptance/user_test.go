@@ -48,18 +48,18 @@ func TestAccUserResource(t *testing.T) {
 	t.Parallel()
 	config := acceptance.EnvironmentTemplate(t, `
 	resource "databricks_user" "first" {
-		user_name = "eerste+{var.RANDOM}@example.com"
+		user_name = "tf-eerste+{var.RANDOM}@example.com"
 		display_name = "Eerste {var.RANDOM}"
 	}
 
 	resource "databricks_user" "second" {
-		user_name = "tweede+{var.RANDOM}@example.com"
+		user_name = "tf-tweede+{var.RANDOM}@example.com"
 		display_name = "Tweede {var.RANDOM}"
 		allow_cluster_create = true
 	}
 
 	resource "databricks_user" "third" {
-		user_name = "derde+{var.RANDOM}@example.com"
+		user_name = "tf-derde+{var.RANDOM}@example.com"
 		display_name = "Derde {var.RANDOM}"
 		allow_instance_pool_create = true
 	}`)

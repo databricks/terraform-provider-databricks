@@ -1,0 +1,10 @@
+blank_issues_enabled: false
+contact_links:
+  - name: General Databricks questions
+    url: https://help.databricks.com/
+    about: Issues related to Databricks and not related to Databricks Terraform Provider.
+
+  - name: General Terraform questions
+    url: https://www.terraform.io/community
+    about: Issues related to Terraform and not related to Databricks Terraform Provider.
+    

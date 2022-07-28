@@ -3,13 +3,11 @@ subcategory: "Unity Catalog"
 ---
 # databricks_mws_permission_assignment Resource
 
-TBA
-
 These resources are invoked in the account context. Provider must have `account_id` attribute configured.
 
 ## Example Usage
 
-Adding account group
+In account context, adding account-level group to a workspace:
 
 ```hcl
 provider "databricks" {
@@ -28,7 +26,7 @@ resource "databricks_mws_permission_assignment" "add_admin_group" {
 }
 ```
 
-Adding account user
+In account context, adding account-level user to a workspace:
 
 ```hcl
 provider "databricks" {
@@ -47,7 +45,7 @@ resource "databricks_mws_permission_assignment" "add_user" {
 }
 ```
 
-Adding account service principal
+In account context, adding account-level service principal to a workspace:
 
 ```hcl
 provider "databricks" {

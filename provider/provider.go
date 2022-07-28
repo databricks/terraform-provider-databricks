@@ -95,7 +95,7 @@ func DatabricksProvider() *schema.Provider {
 			"databricks_mws_credentials":             mws.ResourceMwsCredentials(),
 			"databricks_mws_log_delivery":            mws.ResourceMwsLogDelivery(),
 			"databricks_mws_networks":                mws.ResourceMwsNetworks(),
-			"databricks_mws_permissionassignment":    mws.ResourceMwsPermissionassigntment(),
+			"databricks_mws_permission_assignment":   mws.ResourceMwsPermissionAssigntment(),
 			"databricks_mws_private_access_settings": mws.ResourceMwsPrivateAccessSettings(),
 			"databricks_mws_storage_configurations":  mws.ResourceMwsStorageConfigurations(),
 			"databricks_mws_vpc_endpoint":            mws.ResourceMwsVpcEndpoint(),

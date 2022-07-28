@@ -89,7 +89,7 @@ func mustInt64(s string) int64 {
 	return n
 }
 
-func ResourceMwsPermissionassigntment() *schema.Resource {
+func ResourceMwsPermissionAssigntment() *schema.Resource {
 	type entity struct {
 		WorkspaceId int64    `json:"workspace_id"`
 		PrincipalId int64    `json:"principal_id"`
@@ -99,7 +99,10 @@ func ResourceMwsPermissionassigntment() *schema.Resource {
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
 			return m
 		})
-	pair := common.NewPairID("workspace_id", "principal_id")
+	pair := common.NewPairID("workspace_id", "principal_id").Schema(
+		func(m map[string]*schema.Schema) map[string]*schema.Schema {
+			return s
+		})
 	return common.Resource{
 		Schema: s,
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {

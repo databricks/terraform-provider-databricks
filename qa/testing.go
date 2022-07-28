@@ -304,6 +304,10 @@ func CornerCaseSkipCRUD(method string) CornerCase {
 	return CornerCase{"skip_crud", method}
 }
 
+func CornerCaseAccountID(id string) CornerCase {
+	return CornerCase{"account_id", id}
+}
+
 var HTTPFailures = []HTTPFixture{
 	{
 		MatchAny:     true,
@@ -322,6 +326,7 @@ func ResourceCornerCases(t *testing.T, resource *schema.Resource, cc ...CornerCa
 	config := map[string]string{
 		"id":           "x",
 		"expect_error": "I'm a teapot",
+		"account_id":   "",
 	}
 	m := map[string]func(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics{
 		"create": resource.CreateContext,
@@ -337,11 +342,12 @@ func ResourceCornerCases(t *testing.T, resource *schema.Resource, cc ...CornerCa
 	}
 	HTTPFixturesApply(t, HTTPFailures, func(ctx context.Context, client *common.DatabricksClient) {
 		validData := resource.TestResourceData()
-		validData.SetId(config["id"])
+		client.AccountID = config["account_id"]
 		for n, v := range m {
 			if v == nil {
 				continue
 			}
+			validData.SetId(config["id"])
 			diags := v(ctx, validData, client)
 			if assert.Len(t, diags, 1) {
 				assert.Equalf(t, config["expect_error"], diags[0].Summary,

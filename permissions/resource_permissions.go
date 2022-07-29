@@ -157,13 +157,9 @@ func (a PermissionsAPI) put(objectID string, objectACL AccessControlChangeList) 
 	if err != nil {
 		return err
 	}
-	if strings.HasPrefix(objectID, "/sql/") {
-		if strings.HasPrefix(objectID, "/sql/endpoints/") {
-			return a.client.Patch(a.context, urlPathForObjectID(objectID), objectACL)
-		} else {
-			// The rest of SQLA entities use HTTP POST for permission updates.
-			return a.client.Post(a.context, urlPathForObjectID(objectID), objectACL, nil)
-		}
+	if isDbsqlPermissionsWorkaroundNecessary(objectID) {
+		// SQLA entities use POST for permission updates.
+		return a.client.Post(a.context, urlPathForObjectID(objectID), objectACL, nil)
 	}
 	return a.client.Put(a.context, urlPathForObjectID(objectID), objectACL)
 }

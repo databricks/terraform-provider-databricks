@@ -119,19 +119,40 @@ func urlPathForObjectID(objectID string) string {
 	return "/permissions" + objectID
 }
 
-// Helper function to select the correct HTTP method depending on the object types.
-func (a PermissionsAPI) put(objectID string, objectACL AccessControlChangeList) error {
-	if strings.HasPrefix(objectID, "/sql/") {
-		// SQLA entities always have `CAN_MANAGE` permission for the calling user.
-		me, err := scim.NewUsersAPI(a.context, a.client).Me()
-		if err != nil {
-			return err
+func (a PermissionsAPI) shouldAddCallingUser(objectID string) bool {
+	// SQLA entities and Mlflow registered models always have `CAN_MANAGE` permission for the calling user.
+	for _, prefix := range [...]string{"/sql", "/registered-models"} {
+		if strings.HasPrefix(objectID, prefix) {
+			return true
 		}
-		objectACL.AccessControlList = append(objectACL.AccessControlList, AccessControlChange{
-			UserName:        me.UserName,
-			PermissionLevel: "CAN_MANAGE",
-		})
+	}
+	return false
+}
 
+func (a PermissionsAPI) ensureCurrentUserCanManageObject(objectID string, objectACL AccessControlChangeList) (AccessControlChangeList, error) {
+	if !a.shouldAddCallingUser(objectID) {
+		return objectACL, nil
+	}
+	me, err := scim.NewUsersAPI(a.context, a.client).Me()
+	if err != nil {
+		return objectACL, err
+	}
+	objectACL.AccessControlList = append(objectACL.AccessControlList, AccessControlChange{
+		UserName:        me.UserName,
+		PermissionLevel: "CAN_MANAGE",
+	})
+	return objectACL, nil
+}
+
+// Helper function for applying permissions changes. Ensures that
+// we select the correct HTTP method based on the object type and preserve the calling
+// user's ability to manage the specified object when applying permissions changes.
+func (a PermissionsAPI) put(objectID string, objectACL AccessControlChangeList) error {
+	objectACL, err := a.ensureCurrentUserCanManageObject(objectID, objectACL)
+	if err != nil {
+		return err
+	}
+	if strings.HasPrefix(objectID, "/sql/") {
 		if strings.HasPrefix(objectID, "/sql/endpoints/") {
 			return a.client.Patch(a.context, urlPathForObjectID(objectID), objectACL)
 		} else {
@@ -139,7 +160,6 @@ func (a PermissionsAPI) put(objectID string, objectACL AccessControlChangeList) 
 			return a.client.Post(a.context, urlPathForObjectID(objectID), objectACL, nil)
 		}
 	}
-
 	return a.client.Put(a.context, urlPathForObjectID(objectID), objectACL)
 }
 

@@ -2,21 +2,22 @@ package permissions
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"path"
 	"strconv"
 	"strings"
 
-	"github.com/databrickslabs/terraform-provider-databricks/common"
-	"github.com/databrickslabs/terraform-provider-databricks/jobs"
-	"github.com/databrickslabs/terraform-provider-databricks/scim"
+	"github.com/databricks/terraform-provider-databricks/common"
+	"github.com/databricks/terraform-provider-databricks/jobs"
+	"github.com/databricks/terraform-provider-databricks/pipelines"
+	"github.com/databricks/terraform-provider-databricks/scim"
 
-	"github.com/databrickslabs/terraform-provider-databricks/workspace"
+	"github.com/databricks/terraform-provider-databricks/workspace"
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/pkg/errors"
 )
 
 // ObjectACL is a structure to generically describe access control
@@ -98,7 +99,7 @@ func (acc AccessControlChange) String() string {
 }
 
 // NewPermissionsAPI creates PermissionsAPI instance from provider meta
-func NewPermissionsAPI(ctx context.Context, m interface{}) PermissionsAPI {
+func NewPermissionsAPI(ctx context.Context, m any) PermissionsAPI {
 	return PermissionsAPI{
 		client:  m.(*common.DatabricksClient),
 		context: ctx,
@@ -111,8 +112,12 @@ type PermissionsAPI struct {
 	context context.Context
 }
 
+func isDbsqlPermissionsWorkaroundNecessary(objectID string) bool {
+	return strings.HasPrefix(objectID, "/sql/") && !strings.HasPrefix(objectID, "/sql/warehouses")
+}
+
 func urlPathForObjectID(objectID string) string {
-	if strings.HasPrefix(objectID, "/sql/") && !strings.HasPrefix(objectID, "/sql/endpoints") {
+	if isDbsqlPermissionsWorkaroundNecessary(objectID) {
 		// Permissions for SQLA entities are routed differently from the others.
 		return "/preview/sql/permissions" + objectID[4:]
 	}
@@ -121,12 +126,12 @@ func urlPathForObjectID(objectID string) string {
 
 func (a PermissionsAPI) shouldAddCallingUser(objectID string) bool {
 	// SQLA entities and Mlflow registered models always have `CAN_MANAGE` permission for the calling user.
-	for _, prefix := range [...]string{"/sql", "/registered-models"} {
+	for _, prefix := range [...]string{"/registered-models/"} {
 		if strings.HasPrefix(objectID, prefix) {
 			return true
 		}
 	}
-	return false
+	return isDbsqlPermissionsWorkaroundNecessary(objectID)
 }
 
 func (a PermissionsAPI) ensureCurrentUserCanManageObject(objectID string, objectACL AccessControlChangeList) (AccessControlChangeList, error) {
@@ -172,7 +177,7 @@ func (a PermissionsAPI) Update(objectID string, objectACL AccessControlChangeLis
 			PermissionLevel: "CAN_MANAGE",
 		})
 	}
-	if strings.HasPrefix(objectID, "/jobs") {
+	if strings.HasPrefix(objectID, "/jobs") || strings.HasPrefix(objectID, "/pipelines") {
 		owners := 0
 		for _, acl := range objectACL.AccessControlList {
 			if acl.PermissionLevel == "IS_OWNER" {
@@ -218,6 +223,15 @@ func (a PermissionsAPI) Delete(objectID string) error {
 			UserName:        job.CreatorUserName,
 			PermissionLevel: "IS_OWNER",
 		})
+	} else if strings.HasPrefix(objectID, "/pipelines") {
+		job, err := pipelines.NewPipelinesAPI(a.context, a.client).Read(strings.ReplaceAll(objectID, "/pipelines/", ""))
+		if err != nil {
+			return err
+		}
+		accl.AccessControlList = append(accl.AccessControlList, AccessControlChange{
+			UserName:        job.CreatorUserName,
+			PermissionLevel: "IS_OWNER",
+		})
 	}
 	return a.put(objectID, accl)
 }
@@ -225,6 +239,16 @@ func (a PermissionsAPI) Delete(objectID string) error {
 // Read gets all relevant permissions for the object, including inherited ones
 func (a PermissionsAPI) Read(objectID string) (objectACL ObjectACL, err error) {
 	err = a.client.Get(a.context, urlPathForObjectID(objectID), nil, &objectACL)
+	apiErr, ok := err.(common.APIError)
+	// https://github.com/databricks/terraform-provider-databricks/issues/1227
+	// platform propagates INVALID_STATE error for auto-purged clusters in
+	// the permissions api. this adds "a logical fix" also here, not to introduce
+	// cross-package dependency on "clusters".
+	if ok && strings.Contains(apiErr.Message, "Cannot access cluster") && apiErr.StatusCode == 400 {
+		apiErr.StatusCode = 404
+		err = apiErr
+		return
+	}
 	return
 }
 
@@ -245,7 +269,7 @@ func permissionsResourceIDFields() []permissionsIDFieldMapping {
 	PATH := func(ctx context.Context, client *common.DatabricksClient, path string) (string, error) {
 		info, err := workspace.NewNotebooksAPI(ctx, client).Read(path)
 		if err != nil {
-			return "", errors.Wrapf(err, "Cannot load path %s", path)
+			return "", fmt.Errorf("cannot load path %s: %s", path, err)
 		}
 		return strconv.FormatInt(info.ObjectID, 10), nil
 	}
@@ -253,6 +277,7 @@ func permissionsResourceIDFields() []permissionsIDFieldMapping {
 		{"cluster_policy_id", "cluster-policy", "cluster-policies", []string{"CAN_USE"}, SIMPLE},
 		{"instance_pool_id", "instance-pool", "instance-pools", []string{"CAN_ATTACH_TO", "CAN_MANAGE"}, SIMPLE},
 		{"cluster_id", "cluster", "clusters", []string{"CAN_ATTACH_TO", "CAN_RESTART", "CAN_MANAGE"}, SIMPLE},
+		{"pipeline_id", "pipelines", "pipelines", []string{"CAN_VIEW", "CAN_RUN", "CAN_MANAGE", "IS_OWNER"}, SIMPLE},
 		{"job_id", "job", "jobs", []string{"CAN_VIEW", "CAN_MANAGE_RUN", "IS_OWNER", "CAN_MANAGE"}, SIMPLE},
 		{"notebook_id", "notebook", "notebooks", []string{"CAN_READ", "CAN_RUN", "CAN_EDIT", "CAN_MANAGE"}, SIMPLE},
 		{"notebook_path", "notebook", "notebooks", []string{"CAN_READ", "CAN_RUN", "CAN_EDIT", "CAN_MANAGE"}, PATH},
@@ -262,7 +287,7 @@ func permissionsResourceIDFields() []permissionsIDFieldMapping {
 		{"repo_path", "repo", "repos", []string{"CAN_READ", "CAN_RUN", "CAN_EDIT", "CAN_MANAGE"}, PATH},
 		{"authorization", "tokens", "authorization", []string{"CAN_USE"}, SIMPLE},
 		{"authorization", "passwords", "authorization", []string{"CAN_USE"}, SIMPLE},
-		{"sql_endpoint_id", "endpoints", "sql/endpoints", []string{"CAN_USE", "CAN_MANAGE"}, SIMPLE},
+		{"sql_endpoint_id", "warehouses", "sql/warehouses", []string{"CAN_USE", "CAN_MANAGE"}, SIMPLE},
 		{"sql_dashboard_id", "dashboard", "sql/dashboards", []string{"CAN_EDIT", "CAN_RUN", "CAN_MANAGE"}, SIMPLE},
 		{"sql_alert_id", "alert", "sql/alerts", []string{"CAN_EDIT", "CAN_RUN", "CAN_MANAGE"}, SIMPLE},
 		{"sql_query_id", "query", "sql/queries", []string{"CAN_EDIT", "CAN_RUN", "CAN_MANAGE"}, SIMPLE},
@@ -304,11 +329,7 @@ func (oa *ObjectACL) ToPermissionsEntity(d *schema.ResourceData, me string) (Per
 			return entity, nil
 		}
 		identifier := path.Base(oa.ObjectID)
-		err := d.Set(mapping.field, identifier)
-		if err != nil {
-			return entity, err
-		}
-		return entity, nil
+		return entity, d.Set(mapping.field, identifier)
 	}
 	return entity, fmt.Errorf("unknown object type %s", oa.ObjectType)
 }
@@ -341,7 +362,7 @@ func ResourcePermissions() *schema.Resource {
 		s["access_control"].MinItems = 1
 		if groupNameSchema, err := common.SchemaPath(s,
 			"access_control", "group_name"); err == nil {
-			groupNameSchema.ValidateDiagFunc = func(i interface{}, p cty.Path) diag.Diagnostics {
+			groupNameSchema.ValidateDiagFunc = func(i any, p cty.Path) diag.Diagnostics {
 				if v, ok := i.(string); ok {
 					if strings.ToLower(v) == "admins" {
 						return diag.Diagnostics{
@@ -358,39 +379,9 @@ func ResourcePermissions() *schema.Resource {
 		}
 		return s
 	})
-	readContext := func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-		id := d.Id()
-		objectACL, err := NewPermissionsAPI(ctx, m).Read(id)
-		if common.IsMissing(err) {
-			log.Printf("[INFO] %s is removed on backend", d.Id())
-			d.SetId("")
-			return nil
-		}
-		if err != nil {
-			return diag.FromErr(err)
-		}
-		me, err := scim.NewUsersAPI(ctx, m).Me()
-		if err != nil {
-			return diag.FromErr(err)
-		}
-		entity, err := objectACL.ToPermissionsEntity(d, me.UserName)
-		if err != nil {
-			return diag.FromErr(err)
-		}
-		if len(entity.AccessControlList) == 0 {
-			// empty "modifiable" access control list is the same as resource absence
-			d.SetId("")
-			return nil
-		}
-		err = common.StructToData(entity, s, d)
-		if err != nil {
-			return diag.FromErr(err)
-		}
-		return nil
-	}
-	return &schema.Resource{
+	return common.Resource{
 		Schema: s,
-		CustomizeDiff: func(ctx context.Context, diff *schema.ResourceDiff, c interface{}) error {
+		CustomizeDiff: func(ctx context.Context, diff *schema.ResourceDiff, c any) error {
 			client := c.(*common.DatabricksClient)
 			if client.Host == "" {
 				log.Printf("[WARN] cannot validate permission levels, because host is not known yet")
@@ -407,7 +398,7 @@ func ResourcePermissions() *schema.Resource {
 				}
 				access_control_list := diff.Get("access_control").(*schema.Set).List()
 				for _, access_control := range access_control_list {
-					m := access_control.(map[string]interface{})
+					m := access_control.(map[string]any)
 					permission_level := m["permission_level"].(string)
 					if !stringInSlice(permission_level, mapping.allowedPermissionLevels) {
 						return fmt.Errorf(`permission_level %s is not supported with %s objects`, permission_level, mapping.field)
@@ -419,53 +410,58 @@ func ResourcePermissions() *schema.Resource {
 			}
 			return nil
 		},
-		ReadContext: readContext,
-		CreateContext: func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			id := d.Id()
+			objectACL, err := NewPermissionsAPI(ctx, c).Read(id)
+			if err != nil {
+				return err
+			}
+			me, err := scim.NewUsersAPI(ctx, c).Me()
+			if err != nil {
+				return err
+			}
+			entity, err := objectACL.ToPermissionsEntity(d, me.UserName)
+			if err != nil {
+				return err
+			}
+			if len(entity.AccessControlList) == 0 {
+				// empty "modifiable" access control list is the same as resource absence
+				d.SetId("")
+				return nil
+			}
+			return common.StructToData(entity, s, d)
+		},
+		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var entity PermissionsEntity
 			common.DataToStructPointer(d, s, &entity)
 			for _, mapping := range permissionsResourceIDFields() {
 				if v, ok := d.GetOk(mapping.field); ok {
-					id, err := mapping.idRetriever(ctx, m.(*common.DatabricksClient), v.(string))
+					id, err := mapping.idRetriever(ctx, c, v.(string))
 					if err != nil {
-						return diag.FromErr(err)
+						return err
 					}
 					objectID := fmt.Sprintf("/%s/%s", mapping.resourceType, id)
-					err = NewPermissionsAPI(ctx, m).Update(objectID, AccessControlChangeList{
+					err = NewPermissionsAPI(ctx, c).Update(objectID, AccessControlChangeList{
 						AccessControlList: entity.AccessControlList,
 					})
 					if err != nil {
-						return diag.FromErr(err)
+						return err
 					}
 					d.SetId(objectID)
-					return readContext(ctx, d, m)
+					return nil
 				}
 			}
-			return diag.Errorf("At least one type of resource identifiers must be set")
+			return errors.New("at least one type of resource identifiers must be set")
 		},
-		UpdateContext: func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var entity PermissionsEntity
 			common.DataToStructPointer(d, s, &entity)
-			err := NewPermissionsAPI(ctx, m).Update(d.Id(), AccessControlChangeList{
+			return NewPermissionsAPI(ctx, c).Update(d.Id(), AccessControlChangeList{
 				AccessControlList: entity.AccessControlList,
 			})
-			if err != nil {
-				return diag.FromErr(err)
-			}
-			return readContext(ctx, d, m)
 		},
-		DeleteContext: func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-			err := NewPermissionsAPI(ctx, m).Delete(d.Id())
-			if common.IsMissing(err) {
-				log.Printf("[INFO] %s is already removed on backend", d.Id())
-				return nil
-			}
-			if err != nil {
-				return diag.FromErr(err)
-			}
-			return nil
+		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			return NewPermissionsAPI(ctx, c).Delete(d.Id())
 		},
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
-	}
+	}.ToResource()
 }

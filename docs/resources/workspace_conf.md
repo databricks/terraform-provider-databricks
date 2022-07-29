@@ -27,7 +27,7 @@ resource "databricks_workspace_conf" "this" {
 
 The following arguments are available:
 
-* `custom_config` - (Required) Key-value map of strings, that represent workspace configuration. Upon resource deletion, properties that start with `enable` or `enforce` will be reset to `false` value, regardless of initial default one.
+* `custom_config` - (Required) Key-value map of strings that represent workspace configuration. Upon resource deletion, properties that start with `enable` or `enforce` will be reset to `false` value, regardless of initial default one.
 
 ## Import
 

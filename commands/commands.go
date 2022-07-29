@@ -6,9 +6,8 @@ import (
 	"log"
 	"time"
 
-	"github.com/databrickslabs/terraform-provider-databricks/clusters"
-	"github.com/databrickslabs/terraform-provider-databricks/common"
-	"github.com/databrickslabs/terraform-provider-databricks/internal"
+	"github.com/databricks/terraform-provider-databricks/clusters"
+	"github.com/databricks/terraform-provider-databricks/common"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
@@ -21,7 +20,7 @@ type Command struct {
 }
 
 // NewCommandsAPI creates CommandsAPI instance from provider meta
-func NewCommandsAPI(ctx context.Context, m interface{}) CommandsAPI {
+func NewCommandsAPI(ctx context.Context, m any) CommandsAPI {
 	return CommandsAPI{
 		client:  m.(*common.DatabricksClient),
 		context: context.WithValue(ctx, common.Api, common.API_1_2),
@@ -52,7 +51,7 @@ func (a CommandsAPI) Execute(clusterID, language, commandStr string) common.Comm
 			Summary:    fmt.Sprintf("Cluster %s has to be running or resizing, but is %s", clusterID, cluster.State),
 		}
 	}
-	commandStr = internal.TrimLeadingWhitespace(commandStr)
+	commandStr = TrimLeadingWhitespace(commandStr)
 	log.Printf("[INFO] Executing %s command on %s:\n%s", language, clusterID, commandStr)
 	context, err := a.createContext(language, clusterID)
 	if err != nil {

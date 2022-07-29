@@ -3,15 +3,27 @@ package catalog
 import (
 	"context"
 	"fmt"
+	"sort"
 	"strings"
 
-	"github.com/databrickslabs/terraform-provider-databricks/common"
+	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 type PermissionsAPI struct {
 	client  *common.DatabricksClient
 	context context.Context
+}
+
+// permissionsDiff is the inner structure of updatePermissions RPC
+type permissionsDiff struct {
+	Changes []permissionsChange `json:"changes"`
+}
+
+type permissionsChange struct {
+	Principal string   `json:"principal"`
+	Add       []string `json:"add,omitempty"`
+	Remove    []string `json:"remove,omitempty"`
 }
 
 // PrivilegeAssignment reflects on `grant` block
@@ -26,38 +38,63 @@ type PermissionsList struct {
 	Assignments []PrivilegeAssignment `json:"privilege_assignments" tf:"slice_set,alias:grant"`
 }
 
-func (pl PermissionsList) toCreate() (diff PermissionsDiff) {
+// diff returns permissionsDiff of this permissions list with `diff` privileges removed
+func (pl PermissionsList) diff(existing PermissionsList) (diff permissionsDiff) {
+	// diffs change sets
+	configured := map[string]*schema.Set{}
 	for _, v := range pl.Assignments {
-		diff.Changes = append(diff.Changes, PermissionsChange{
-			Principal: v.Principal,
-			Add:       v.Privileges,
+		configured[v.Principal] = newStringSet(v.Privileges)
+	}
+	// existing permissions that needs removal
+	remote := map[string]*schema.Set{}
+	for _, v := range existing.Assignments {
+		remote[v.Principal] = newStringSet(v.Privileges)
+	}
+	// STEP 1: detect overlaps
+	for principal, confPrivs := range configured {
+		remotePrivs, ok := remote[principal]
+		if !ok {
+			remotePrivs = newStringSet([]string{})
+		}
+		add := setToStrings(confPrivs.Difference(remotePrivs))
+		remove := setToStrings(remotePrivs.Difference(confPrivs))
+		if len(add) == 0 && len(remove) == 0 {
+			continue
+		}
+		diff.Changes = append(diff.Changes, permissionsChange{
+			Principal: principal,
+			Add:       add,
+			Remove:    remove,
 		})
 	}
-	return
-}
-
-func (pl PermissionsList) toDelete() (diff PermissionsDiff) {
-	for _, v := range pl.Assignments {
-		diff.Changes = append(diff.Changes, PermissionsChange{
-			Principal: v.Principal,
-			Remove:    v.Privileges,
+	// STEP 2: non overlap - simply remove
+	for principal, remove := range remote {
+		_, ok := configured[principal]
+		if ok { // already handled in STEP 1
+			continue
+		}
+		diff.Changes = append(diff.Changes, permissionsChange{
+			Principal: principal,
+			Remove:    setToStrings(remove),
 		})
 	}
-	return
+	// so that we can deterministic tests
+	sort.Slice(diff.Changes, func(i, j int) bool {
+		return diff.Changes[i].Principal < diff.Changes[j].Principal
+	})
+	return diff
 }
 
-type PermissionsDiff struct {
-	Changes []PermissionsChange `json:"changes"`
+func newStringSet(in []string) *schema.Set {
+	var out []any
+	for _, v := range in {
+		out = append(out, v)
+	}
+	return schema.NewSet(schema.HashString, out)
 }
 
-type PermissionsChange struct {
-	Principal string   `json:"principal"`
-	Add       []string `json:"add,omitempty"`
-	Remove    []string `json:"remove,omitempty"`
-}
-
-func NewPermissionsAPI(ctx context.Context, m interface{}) PermissionsAPI {
-	return PermissionsAPI{m.(*common.DatabricksClient), ctx}
+func NewPermissionsAPI(ctx context.Context, m any) PermissionsAPI {
+	return PermissionsAPI{m.(*common.DatabricksClient), context.WithValue(ctx, common.Api, common.API_2_1)}
 }
 
 func (a PermissionsAPI) getPermissions(securable, name string) (list PermissionsList, err error) {
@@ -65,15 +102,24 @@ func (a PermissionsAPI) getPermissions(securable, name string) (list Permissions
 	return
 }
 
-func (a PermissionsAPI) updatePermissions(securable, name string, diff PermissionsDiff) error {
+func (a PermissionsAPI) updatePermissions(securable, name string, diff permissionsDiff) error {
 	return a.client.Patch(a.context, fmt.Sprintf("/unity-catalog/permissions/%s/%s", securable, name), diff)
+}
+
+// replacePermissions merges removal diff of existing permissions on the platform
+func (a PermissionsAPI) replacePermissions(securable, name string, list PermissionsList) error {
+	existing, err := a.getPermissions(securable, name)
+	if err != nil {
+		return err
+	}
+	return a.updatePermissions(securable, name, list.diff(existing))
 }
 
 type securableMapping map[string]map[string]bool
 
 // reuse ResourceDiff and ResourceData
 type attributeGetter interface {
-	Get(key string) interface{}
+	Get(key string) any
 }
 
 func (sm securableMapping) kv(d attributeGetter) (string, string) {
@@ -111,35 +157,62 @@ func (sm securableMapping) validate(d attributeGetter, pl PermissionsList) error
 var mapping = securableMapping{
 	// add other securable mappings once needed
 	"table": {
-		"MODIFY":         true,
-		"SELECT":         true,
-		"ALL PRIVILEGES": true,
+		"MODIFY": true,
+		"SELECT": true,
+
+		// v1.0
+		"ALL_PRIVILEGES": true,
 	},
 	"view": {
-		"SELECT":         true,
-		"ALL PRIVILEGES": true,
+		"SELECT": true,
 	},
 	"catalog": {
-		"CREATE":         true,
-		"USAGE":          true,
-		"ALL PRIVILEGES": true,
+		"CREATE": true,
+		"USAGE":  true,
+
+		// v1.0
+		"ALL_PRIVILEGES": true,
+		"USE_CATALOG":    true,
+		"CREATE_SCHEMA":  true,
 	},
 	"schema": {
-		"CREATE":         true,
-		"USAGE":          true,
-		"ALL PRIVILEGES": true,
+		"CREATE": true,
+		"USAGE":  true,
+
+		// v1.0
+		"ALL_PRIVILEGES":           true,
+		"USE_SCHEMA":               true,
+		"CREATE_TABLE":             true,
+		"CREATE_VIEW":              true,
+		"CREATE_FUNCTION":          true,
+		"CREATE_MATERIALIZED_VIEW": true,
 	},
 	"storage_credential": {
-		"CREATE TABLE":   true,
-		"READ FILES":     true,
-		"WRITE FILES":    true,
-		"ALL PRIVILEGES": true,
+		"CREATE_TABLE": true,
+		"READ_FILES":   true,
+		"WRITE_FILES":  true,
+
+		// v1.0
+		"ALL_PRIVILEGES":        true,
+		"CREATE_EXTERNAL_TABLE": true,
 	},
 	"external_location": {
-		"CREATE TABLE":   true,
-		"READ FILES":     true,
-		"WRITE FILES":    true,
-		"ALL PRIVILEGES": true,
+		"CREATE_TABLE": true,
+		"READ_FILES":   true,
+		"WRITE_FILES":  true,
+
+		// v1.0
+		"ALL_PRIVILEGES":        true,
+		"CREATE_EXTERNAL_TABLE": true,
+	},
+	"metastore": {
+		// v1.0
+		"CREATE_CATALOG":            true,
+		"CREATE_EXTERNAL_LOCATION":  true,
+		"CREATE_STORAGE_CREDENTIAL": true,
+		"CREATE_SHARE":              true,
+		"CREATE_RECIPIENT":          true,
+		"CREATE_PROVIDER":           true,
 	},
 }
 
@@ -148,61 +221,6 @@ func setToStrings(set *schema.Set) (ss []string) {
 		ss = append(ss, v.(string))
 	}
 	return
-}
-
-func principalAndPrivsFromRaw(v interface{}) (string, *schema.Set) {
-	item := v.(map[string]interface{})
-	principal := item["principal"].(string)
-	privileges := item["privileges"].(*schema.Set)
-	return principal, privileges
-}
-
-func permissionDiffFromRaw(old, new interface{}) PermissionsDiff {
-	o := old.(*schema.Set)
-	n := new.(*schema.Set)
-	prev := map[string]*schema.Set{}
-	for _, v := range o.List() {
-		principal, privileges := principalAndPrivsFromRaw(v)
-		prev[principal] = privileges
-	}
-	diff := PermissionsDiff{Changes: []PermissionsChange{}}
-	mix := map[string]bool{}
-	for _, v := range n.List() {
-		principal, newPrivs := principalAndPrivsFromRaw(v)
-		oldPrivs, exist := prev[principal]
-		if !exist {
-			// add new principal privileges
-			diff.Changes = append(diff.Changes, PermissionsChange{
-				Principal: principal,
-				Add:       setToStrings(newPrivs),
-			})
-			continue
-		}
-		// add or remove principal privileges
-		change := PermissionsChange{
-			Principal: principal,
-			Remove:    setToStrings(oldPrivs.Difference(newPrivs)),
-			Add:       setToStrings(newPrivs.Difference(oldPrivs)),
-		}
-		if len(change.Add) == 0 && len(change.Remove) == 0 {
-			continue
-		}
-		diff.Changes = append(diff.Changes, change)
-		mix[principal] = true
-	}
-	for _, v := range o.Difference(n).List() {
-		// remove old principal privs
-		principal, oldPrivs := principalAndPrivsFromRaw(v)
-		if mix[principal] {
-			// skip if mixed removes/adds were detected
-			continue
-		}
-		diff.Changes = append(diff.Changes, PermissionsChange{
-			Principal: principal,
-			Remove:    setToStrings(oldPrivs),
-		})
-	}
-	return diff
 }
 
 func ResourceGrants() *schema.Resource {
@@ -224,7 +242,7 @@ func ResourceGrants() *schema.Resource {
 		})
 	return common.Resource{
 		Schema: s,
-		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, c interface{}) error {
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, c any) error {
 			if d.Id() == "" {
 				// unfortunately we cannot do validation before dependent resources exist with tfsdkv2
 				return nil
@@ -237,7 +255,7 @@ func ResourceGrants() *schema.Resource {
 			var grants PermissionsList
 			common.DataToStructPointer(d, s, &grants)
 			securable, name := mapping.kv(d)
-			err := NewPermissionsAPI(ctx, c).updatePermissions(securable, name, grants.toCreate())
+			err := NewPermissionsAPI(ctx, c).replacePermissions(securable, name, grants)
 			if err != nil {
 				return err
 			}
@@ -253,18 +271,23 @@ func ResourceGrants() *schema.Resource {
 			if err != nil {
 				return err
 			}
+			if len(grants.Assignments) == 0 {
+				return common.NotFound("got empty permissions list")
+			}
 			return common.StructToData(grants, s, d)
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			securable, name := mapping.kv(d)
-			diff := permissionDiffFromRaw(d.GetChange("grant"))
-			return NewPermissionsAPI(ctx, c).updatePermissions(securable, name, diff)
-		},
-		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var grants PermissionsList
 			common.DataToStructPointer(d, s, &grants)
-			securable, name := mapping.kv(d)
-			return NewPermissionsAPI(ctx, c).updatePermissions(securable, name, grants.toDelete())
+			return NewPermissionsAPI(ctx, c).replacePermissions(securable, name, grants)
+		},
+		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			split := strings.SplitN(d.Id(), "/", 2)
+			if len(split) != 2 {
+				return fmt.Errorf("ID must be two elements split by `/`: %s", d.Id())
+			}
+			return NewPermissionsAPI(ctx, c).replacePermissions(split[0], split[1], PermissionsList{})
 		},
 	}.ToResource()
 }

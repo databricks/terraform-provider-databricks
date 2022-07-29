@@ -8,13 +8,10 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/databrickslabs/terraform-provider-databricks/common"
-	"github.com/databrickslabs/terraform-provider-databricks/internal"
-	"github.com/databrickslabs/terraform-provider-databricks/internal/compute"
-
-	"github.com/databrickslabs/terraform-provider-databricks/qa"
-
-	"github.com/databrickslabs/terraform-provider-databricks/provider"
+	"github.com/databricks/terraform-provider-databricks/commands"
+	"github.com/databricks/terraform-provider-databricks/common"
+	"github.com/databricks/terraform-provider-databricks/internal/compute"
+	"github.com/databricks/terraform-provider-databricks/provider"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -48,7 +45,7 @@ func Test(t *testing.T, steps []Step, otherVars ...map[string]string) {
 		t.Skip(err.Error())
 	}
 	awsAttrs := ""
-	if cloudEnv == "AWS" {
+	if cloudEnv == "aws" {
 		awsAttrs = "aws_attributes {}"
 	}
 	instancePoolID := ""
@@ -75,7 +72,7 @@ func Test(t *testing.T, steps []Step, otherVars ...map[string]string) {
 	stepConfig := ""
 	for _, s := range steps {
 		if s.Template != "" {
-			stepConfig = qa.EnvironmentTemplate(t, s.Template, vars)
+			stepConfig = EnvironmentTemplate(t, s.Template, vars)
 		}
 		ts = append(ts, resource.TestStep{
 			Config:                    stepConfig,
@@ -152,7 +149,7 @@ func AccTest(t *testing.T, tc resource.TestCase) {
 			if s.Config != "" {
 				t.Logf("Test %s (%s) step %d config is:\n%s",
 					t.Name(), cloudEnv, i,
-					internal.TrimLeadingWhitespace(s.Config))
+					commands.TrimLeadingWhitespace(s.Config))
 			}
 		}
 	}

@@ -8,8 +8,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
-	"github.com/databrickslabs/terraform-provider-databricks/common"
-	"github.com/databrickslabs/terraform-provider-databricks/libraries"
+	"github.com/databricks/terraform-provider-databricks/common"
+	"github.com/databricks/terraform-provider-databricks/libraries"
 )
 
 // DefaultProvisionTimeout ...
@@ -62,17 +62,13 @@ func resourceClusterSchema() map[string]*schema.Schema {
 		// adds `library` configuration block
 		s["library"] = common.StructToSchema(libraries.ClusterLibraryList{},
 			func(ss map[string]*schema.Schema) map[string]*schema.Schema {
-				ss["library"].Set = func(i interface{}) int {
+				ss["library"].Set = func(i any) int {
 					lib := libraries.NewLibraryFromInstanceState(i)
 					return schema.HashString(lib.String())
 				}
 				return ss
 			})["library"]
 
-		p, err := common.SchemaPath(s, "docker_image", "basic_auth", "password")
-		if err == nil {
-			p.Sensitive = true
-		}
 		s["autotermination_minutes"].Default = 60
 		s["cluster_id"] = &schema.Schema{
 			Type:     schema.TypeString,
@@ -227,7 +223,7 @@ func hasClusterConfigChanged(d *schema.ResourceData) bool {
 	return false
 }
 
-// https://github.com/databrickslabs/terraform-provider-databricks/issues/824
+// https://github.com/databricks/terraform-provider-databricks/issues/824
 func fixInstancePoolChangeIfAny(d *schema.ResourceData, cluster *Cluster) {
 	oldInstancePool, newInstancePool := d.GetChange("instance_pool_id")
 	oldDriverPool, newDriverPool := d.GetChange("driver_instance_pool_id")

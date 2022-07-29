@@ -1,0 +1,46 @@
+{
+  "creator_user_name": "user@domain.com",
+  "last_modified": 1658214361131,
+  "latest_updates": [
+  ],
+  "name": "Test DLT",
+  "pipeline_id": "123",
+  "run_as_user_name": "user@domain.com",
+  "spec": {
+    "channel": "CURRENT",
+    "clusters": [
+      {
+        "label": "default",
+        "num_workers": 1,
+        "aws_attributes": {
+          "instance_profile_arn": "123"
+        },
+        "instance_pool_id": "123",
+        "driver_instance_pool_id": "123",
+        "init_scripts": [
+          {
+            "dbfs": {
+              "destination": "dbfs:/FileStore/jars/test.jar"
+            }
+          }
+        ]
+      }
+    ],
+    "continuous": true,
+    "development": true,
+    "edition": "advanced",
+    "id": "123",
+    "libraries": [
+      {
+        "notebook": {
+          "path": "/Users/user@domain.com/Test DLT"
+        }
+      }
+    ],
+    "name": "Test DLT",
+    "photon": false,
+    "storage": "/tmp/test",
+    "target": "test"
+  },
+  "state": "IDLE"
+}

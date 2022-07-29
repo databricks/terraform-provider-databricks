@@ -18,7 +18,7 @@ provider "databricks" {
 
 ## Example Usage
 
-![Simplest multiworkspace](https://github.com/databrickslabs/terraform-provider-databricks/raw/master/docs/simplest-multiworkspace.png)
+![Simplest multiworkspace](https://github.com/databricks/terraform-provider-databricks/raw/master/docs/simplest-multiworkspace.png)
 
 To get workspace running, you have to configure a couple of things:
 
@@ -65,11 +65,10 @@ resource "databricks_mws_networks" "this" {
 
 // create workspace in given VPC with DBFS on root bucket
 resource "databricks_mws_workspaces" "this" {
-  provider        = databricks.mws
-  account_id      = var.databricks_account_id
-  workspace_name  = var.prefix
-  deployment_name = var.prefix
-  aws_region      = var.region
+  provider       = databricks.mws
+  account_id     = var.databricks_account_id
+  workspace_name = var.prefix
+  aws_region     = var.region
 
   credentials_id           = databricks_mws_credentials.this.credentials_id
   storage_configuration_id = databricks_mws_storage_configurations.this.storage_configuration_id
@@ -141,9 +140,23 @@ resource "aws_s3_bucket" "root_storage_bucket" {
   tags          = var.tags
 }
 
+resource "aws_s3_bucket_server_side_encryption_configuration" "root_storage_bucket" {
+  bucket = aws_s3_bucket.root_storage_bucket.bucket
+
+  rule {
+    apply_server_side_encryption_by_default {
+      sse_algorithm = "AES256"
+    }
+  }
+}
+
 resource "aws_s3_bucket_public_access_block" "root_storage_bucket" {
-  bucket             = aws_s3_bucket.root_storage_bucket.id
-  ignore_public_acls = true
+  bucket                  = aws_s3_bucket.root_storage_bucket.id
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
+  depends_on              = [aws_s3_bucket.root_storage_bucket]
 }
 
 data "databricks_aws_bucket_policy" "this" {
@@ -151,8 +164,9 @@ data "databricks_aws_bucket_policy" "this" {
 }
 
 resource "aws_s3_bucket_policy" "root_bucket_policy" {
-  bucket = aws_s3_bucket.root_storage_bucket.id
-  policy = data.databricks_aws_bucket_policy.this.json
+  bucket     = aws_s3_bucket.root_storage_bucket.id
+  policy     = data.databricks_aws_bucket_policy.this.json
+  depends_on = [aws_s3_bucket_public_access_block.root_storage_bucket]
 }
 
 resource "databricks_mws_storage_configurations" "this" {
@@ -163,11 +177,10 @@ resource "databricks_mws_storage_configurations" "this" {
 }
 
 resource "databricks_mws_workspaces" "this" {
-  provider        = databricks.mws
-  account_id      = var.databricks_account_id
-  workspace_name  = local.prefix
-  deployment_name = local.prefix
-  aws_region      = "us-east-1"
+  provider       = databricks.mws
+  account_id     = var.databricks_account_id
+  workspace_name = local.prefix
+  aws_region     = "us-east-1"
 
   credentials_id           = databricks_mws_credentials.this.credentials_id
   storage_configuration_id = databricks_mws_storage_configurations.this.storage_configuration_id
@@ -191,7 +204,7 @@ The following arguments are available and cannot be changed after workspace is c
 
 * `account_id` - Account Id that could be found in the bottom left corner of [Accounts Console](https://accounts.cloud.databricks.com/).
 * `managed_services_customer_managed_key_id` - (Optional) `customer_managed_key_id` from [customer managed keys](mws_customer_managed_keys.md) with `use_cases` set to `MANAGED_SERVICES`. This is used to encrypt the workspace's notebook and secret data in the control plane.
-* `deployment_name` - (Optional) part of URL: `https://<deployment-name>.cloud.databricks.com`
+* `deployment_name` - (Optional) part of URL as in `https://<prefix>-<deployment-name>.cloud.databricks.com`. Deployment name cannot be used until a deployment name prefix is defined. Please contact your Databricks representative. Once a new deployment prefix is added/updated, it only will affect the new workspaces created.
 * `workspace_name` - name of the workspace, will appear on UI
 * `aws_region` - AWS region of VPC
 * `storage_configuration_id` - `storage_configuration_id` from [storage configuration](mws_storage_configurations.md)
@@ -199,7 +212,7 @@ The following arguments are available and cannot be changed after workspace is c
 
 ## token block
 
-You can specify a `token` block in the body of workspace resource, so that Terraform manages the refresh of PAT token for the deployment user. The other option is to create [databricks_obo_token](obo_token.md), though it requires Premium or Enterprise plan enabled as well as more complex setup. Token block exposes `token_value`, that holds sensitive PAT token and optionally it can accept two arugments:
+You can specify a `token` block in the body of the workspace resource, so that Terraform manages the refresh of the PAT token for the deployment user. The other option is to create [databricks_obo_token](obo_token.md), though it requires Premium or Enterprise plan enabled as well as more complex setup. Token block exposes `token_value`, that holds sensitive PAT token and optionally it can accept two arguments:
 
 -> **Note** Tokens managed by `token {}` block are recreated when expired.
 

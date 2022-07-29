@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/databrickslabs/terraform-provider-databricks/clusters"
-	"github.com/databrickslabs/terraform-provider-databricks/common"
+	"github.com/databricks/terraform-provider-databricks/clusters"
+	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -44,7 +44,7 @@ func (m GSMount) Config(client *common.DatabricksClient) map[string]string {
 	return make(map[string]string) // return empty map so nil map does not marshal to null
 }
 
-func preprocessGsMount(ctx context.Context, s map[string]*schema.Schema, d *schema.ResourceData, m interface{}) error {
+func preprocessGsMount(ctx context.Context, s map[string]*schema.Schema, d *schema.ResourceData, m any) error {
 	var gm GenericMount
 	common.DataToStructPointer(d, s, &gm)
 	if !(strings.HasPrefix(gm.URI, "gs://") || gm.Gs != nil) {
@@ -58,11 +58,18 @@ func preprocessGsMount(ctx context.Context, s map[string]*schema.Schema, d *sche
 	return createOrValidateClusterForGoogleStorage(ctx, m, d, clusterID, serviceAccount)
 }
 
-func createOrValidateClusterForGoogleStorage(ctx context.Context, m interface{},
+func createOrValidateClusterForGoogleStorage(ctx context.Context, m any,
 	d *schema.ResourceData, clusterID, serviceAccount string) error {
 	clustersAPI := clusters.NewClustersAPI(ctx, m)
 	if clusterID != "" {
 		clusterInfo, err := clustersAPI.Get(clusterID)
+		if common.IsMissing(err) {
+			cluster, err := GetOrCreateMountingClusterWithGcpServiceAccount(clustersAPI, serviceAccount)
+			if err != nil {
+				return fmt.Errorf("cannot re-create mounting cluster: %w", err)
+			}
+			return d.Set("cluster_id", cluster.ClusterID)
+		}
 		if err != nil {
 			return fmt.Errorf("cannot get mounting cluster: %w", err)
 		}

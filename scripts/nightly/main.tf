@@ -1,7 +1,7 @@
 locals {
   prefix     = "dltp${random_string.naming.result}"
   cidr_block = data.external.env.result.TEST_CIDR
-  region     = data.external.env.result.TEST_REGION
+  region     = data.external.env.result.AWS_REGION
   account_id = data.external.env.result.DATABRICKS_ACCOUNT_ID
   tags       = azurerm_resource_group.this.tags
 }
@@ -15,7 +15,7 @@ output "tags" {
 }
 
 data "external" "env" {
-  program = ["python", "-c", "import sys,os,json;json.dump(dict(os.environ), sys.stdout)"]
+  program = ["python3", "-c", "import sys,os,json;json.dump(dict(os.environ), sys.stdout)"]
 }
 
 data "external" "me" {

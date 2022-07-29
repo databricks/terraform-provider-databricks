@@ -1,16 +1,17 @@
 package pipelines
 
 import (
+	"context"
 	"testing"
 
-	"github.com/databrickslabs/terraform-provider-databricks/common"
-	"github.com/databrickslabs/terraform-provider-databricks/libraries"
+	"github.com/databricks/terraform-provider-databricks/common"
 
-	"github.com/databrickslabs/terraform-provider-databricks/qa"
+	"github.com/databricks/terraform-provider-databricks/qa"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
-var basicPipelineSpec = pipelineSpec{
+var basicPipelineSpec = PipelineSpec{
 	Name:    "test-pipeline",
 	Storage: "/test/storage",
 	Configuration: map[string]string{
@@ -25,13 +26,10 @@ var basicPipelineSpec = pipelineSpec{
 			},
 		},
 	},
-	Libraries: []pipelineLibrary{
+	Libraries: []PipelineLibrary{
 		{
-			Jar: "dbfs:/pipelines/code/abcde.jar",
-		},
-		{
-			Maven: &libraries.Maven{
-				Coordinates: "com.microsoft.azure:azure-eventhubs-spark_2.12:2.3.18",
+			Notebook: &NotebookLibrary{
+				Path: "/Test",
 			},
 		},
 	},
@@ -54,7 +52,7 @@ func TestResourcePipelineCreate(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/pipelines/abcd",
-				Response: map[string]interface{}{
+				Response: map[string]any{
 					"id":    "abcd",
 					"name":  "test-pipeline",
 					"state": "DEPLOYING",
@@ -64,7 +62,7 @@ func TestResourcePipelineCreate(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/pipelines/abcd",
-				Response: map[string]interface{}{
+				Response: map[string]any{
 					"id":    "abcd",
 					"name":  "test-pipeline",
 					"state": "RUNNING",
@@ -74,7 +72,7 @@ func TestResourcePipelineCreate(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/pipelines/abcd",
-				Response: map[string]interface{}{
+				Response: map[string]any{
 					"id":    "abcd",
 					"name":  "test-pipeline",
 					"state": "RUNNING",
@@ -97,11 +95,8 @@ func TestResourcePipelineCreate(t *testing.T) {
 		  }
 		}
 		library {
-		  jar = "dbfs:/pipelines/code/abcde.jar"
-		}
-		library {
-		  maven {
-			coordinates = "com.microsoft.azure:azure-eventhubs-spark_2.12:2.3.18"
+		  notebook {
+			path = "/Test"
 		  }
 		}
 		filters {
@@ -132,7 +127,9 @@ func TestResourcePipelineCreate_Error(t *testing.T) {
 		HCL: `name = "test"
 		storage = "/test/storage"
 		library {
-			jar = "jar"
+			notebook {
+				path = "/Test"
+			}
 		}
 		filters {
 			include = ["a"]
@@ -157,7 +154,7 @@ func TestResourcePipelineCreate_ErrorWhenWaitingFailedCleanup(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/pipelines/abcd",
-				Response: map[string]interface{}{
+				Response: map[string]any{
 					"id":    "abcd",
 					"name":  "test-pipeline",
 					"state": "FAILED",
@@ -181,7 +178,9 @@ func TestResourcePipelineCreate_ErrorWhenWaitingFailedCleanup(t *testing.T) {
 		HCL: `name = "test"
 		storage = "/test/storage"
 		library {
-			jar = "jar"
+			notebook {
+				path = "/Test"
+			}
 		}
 		filters {
 			include = ["a"]
@@ -206,7 +205,7 @@ func TestResourcePipelineCreate_ErrorWhenWaitingSuccessfulCleanup(t *testing.T) 
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/pipelines/abcd",
-				Response: map[string]interface{}{
+				Response: map[string]any{
 					"id":    "abcd",
 					"name":  "test-pipeline",
 					"state": "FAILED",
@@ -230,7 +229,9 @@ func TestResourcePipelineCreate_ErrorWhenWaitingSuccessfulCleanup(t *testing.T) 
 		HCL: `name = "test"
 		storage = "/test/storage"
 		library {
-			jar = "jar"
+			notebook {
+				path = "/Test"
+			}
 		}
 		filters {
 			include = ["a"]
@@ -248,7 +249,7 @@ func TestResourcePipelineRead(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/pipelines/abcd",
-				Response: pipelineInfo{
+				Response: PipelineInfo{
 					PipelineID: "abcd",
 					Spec:       &basicPipelineSpec,
 				},
@@ -310,20 +311,22 @@ func TestResourcePipelineRead_Error(t *testing.T) {
 
 func TestResourcePipelineUpdate(t *testing.T) {
 	state := StateRunning
-	spec := pipelineSpec{
+	spec := PipelineSpec{
 		ID:      "abcd",
 		Name:    "test",
 		Storage: "/test/storage",
-		Libraries: []pipelineLibrary{
+		Libraries: []PipelineLibrary{
 			{
-				Maven: &libraries.Maven{
-					Coordinates: "coordinates",
+				Notebook: &NotebookLibrary{
+					Path: "/Test",
 				},
 			},
 		},
 		Filters: &filters{
 			Include: []string{"com.databricks.include"},
 		},
+		Channel: "CURRENT",
+		Edition: "advanced",
 	}
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
@@ -335,7 +338,7 @@ func TestResourcePipelineUpdate(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/pipelines/abcd",
-				Response: pipelineInfo{
+				Response: PipelineInfo{
 					PipelineID: "abcd",
 					Spec:       &spec,
 					State:      &state,
@@ -344,7 +347,7 @@ func TestResourcePipelineUpdate(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/pipelines/abcd",
-				Response: pipelineInfo{
+				Response: PipelineInfo{
 					PipelineID: "abcd",
 					Spec:       &spec,
 					State:      &state,
@@ -355,13 +358,17 @@ func TestResourcePipelineUpdate(t *testing.T) {
 		HCL: `name = "test"
 		storage = "/test/storage"
 		library {
-			maven {
-				coordinates = "coordinates"
+			notebook {
+				path = "/Test"
 			}
 		}
 		filters {
 			include = [ "com.databricks.include" ]
 		}`,
+		InstanceState: map[string]string{
+			"name":    "test",
+			"storage": "/test/storage",
+		},
 		Update: true,
 		ID:     "abcd",
 	}.Apply(t)
@@ -386,15 +393,19 @@ func TestResourcePipelineUpdate_Error(t *testing.T) {
 		HCL: `name = "test"
 		storage = "/test/storage"
 		library {
-			maven {
-				coordinates = "coordinates"
+			notebook {
+				path = "/Test"
 			}
 		}
 		filters {
 			include = [ "com.databricks.include" ]
 		}`,
 		Update: true,
-		ID:     "abcd",
+		InstanceState: map[string]string{
+			"name":    "test",
+			"storage": "/test/storage",
+		},
+		ID: "abcd",
 	}.Apply(t)
 	qa.AssertErrorStartsWith(t, err, "Internal error happened")
 	assert.Equal(t, "abcd", d.Id())
@@ -402,20 +413,22 @@ func TestResourcePipelineUpdate_Error(t *testing.T) {
 
 func TestResourcePipelineUpdate_FailsAfterUpdate(t *testing.T) {
 	state := StateFailed
-	spec := pipelineSpec{
+	spec := PipelineSpec{
 		ID:      "abcd",
 		Name:    "test",
 		Storage: "/test/storage",
-		Libraries: []pipelineLibrary{
+		Libraries: []PipelineLibrary{
 			{
-				Maven: &libraries.Maven{
-					Coordinates: "coordinates",
+				Notebook: &NotebookLibrary{
+					Path: "/Test",
 				},
 			},
 		},
 		Filters: &filters{
 			Include: []string{"com.databricks.include"},
 		},
+		Channel: "CURRENT",
+		Edition: "advanced",
 	}
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
@@ -427,7 +440,7 @@ func TestResourcePipelineUpdate_FailsAfterUpdate(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/pipelines/abcd",
-				Response: pipelineInfo{
+				Response: PipelineInfo{
 					PipelineID: "abcd",
 					Spec:       &spec,
 					State:      &state,
@@ -438,15 +451,19 @@ func TestResourcePipelineUpdate_FailsAfterUpdate(t *testing.T) {
 		HCL: `name = "test"
 		storage = "/test/storage"
 		library {
-			maven {
-				coordinates = "coordinates"
+			notebook {
+				path = "/Test"
 			}
 		}
 		filters {
 			include = [ "com.databricks.include" ]
 		}`,
 		Update: true,
-		ID:     "abcd",
+		InstanceState: map[string]string{
+			"name":    "test",
+			"storage": "/test/storage",
+		},
+		ID: "abcd",
 	}.Apply(t)
 	qa.AssertErrorStartsWith(t, err, "pipeline abcd has failed")
 	assert.Equal(t, "abcd", d.Id(), "Id should be the same as in reading")
@@ -463,7 +480,7 @@ func TestResourcePipelineDelete(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/pipelines/abcd",
-				Response: pipelineInfo{
+				Response: PipelineInfo{
 					PipelineID: "abcd",
 					Spec:       &basicPipelineSpec,
 					State:      &state,
@@ -506,4 +523,71 @@ func TestResourcePipelineDelete_Error(t *testing.T) {
 	}.Apply(t)
 	qa.AssertErrorStartsWith(t, err, "Internal error happened")
 	assert.Equal(t, "abcd", d.Id())
+}
+
+func TestListPipelines(t *testing.T) {
+	client, server, err := qa.HttpFixtureClient(t, []qa.HTTPFixture{
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/pipelines?max_results=1",
+			Response: PipelineListResponse{
+				Statuses: []PipelineStateInfo{
+					{
+						PipelineID:      "123",
+						Name:            "Pipeline1",
+						CreatorUserName: "user1",
+					},
+				},
+				NextPageToken: "token1",
+			},
+		},
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/pipelines?max_results=1&page_token=token1",
+			Response: PipelineListResponse{
+				Statuses: []PipelineStateInfo{
+					{
+						PipelineID:      "456",
+						Name:            "Pipeline2",
+						CreatorUserName: "user2",
+					},
+				},
+				PrevPageToken: "token0",
+			},
+		},
+	})
+	defer server.Close()
+	require.NoError(t, err)
+
+	ctx := context.Background()
+	data, err := NewPipelinesAPI(ctx, client).List(1, "")
+	require.NoError(t, err)
+	require.Equal(t, 2, len(data))
+	require.Equal(t, "Pipeline1", data[0].Name)
+	require.Equal(t, "456", data[1].PipelineID)
+}
+
+func TestListPipelinesWithFilter(t *testing.T) {
+	client, server, err := qa.HttpFixtureClient(t, []qa.HTTPFixture{
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/pipelines?filter=name%20LIKE%20%27Pipeline1%27&max_results=1",
+			Response: PipelineListResponse{
+				Statuses: []PipelineStateInfo{
+					{
+						PipelineID:      "123",
+						Name:            "Pipeline1",
+						CreatorUserName: "user1",
+					},
+				},
+			},
+		},
+	})
+	defer server.Close()
+	require.NoError(t, err)
+
+	ctx := context.Background()
+	data, err := NewPipelinesAPI(ctx, client).List(1, "name LIKE 'Pipeline1'")
+	require.NoError(t, err)
+	require.Equal(t, 1, len(data))
 }

@@ -7,7 +7,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/databrickslabs/terraform-provider-databricks/common"
+	"github.com/databricks/terraform-provider-databricks/common"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -66,7 +66,7 @@ type DeletePath struct {
 }
 
 // NewNotebooksAPI creates NotebooksAPI instance from provider meta
-func NewNotebooksAPI(ctx context.Context, m interface{}) NotebooksAPI {
+func NewNotebooksAPI(ctx context.Context, m any) NotebooksAPI {
 	return NotebooksAPI{m.(*common.DatabricksClient), ctx}
 }
 

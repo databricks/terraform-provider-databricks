@@ -3,7 +3,7 @@ subcategory: "Unity Catalog"
 ---
 # databricks_table (Resource)
 
--> **Private Preview** This feature is in [Private Preview](https://docs.databricks.com/release-notes/release-types.html). Contact your Databricks representative to request access. 
+-> **Public Preview** This feature is in [Public Preview](https://docs.databricks.com/release-notes/release-types.html). Contact your Databricks representative to request access. 
 
 Within a metastore, Unity Catalog provides a 3-level namespace for organizing data: Catalogs, databases (also called schemas), and tables / views.
 
@@ -69,7 +69,7 @@ The following arguments are required:
 * `data_source_format` - External tables are supported in multiple data source formats. The string constants identifying these formats are `DELTA`, `CSV`, `JSON`, `AVRO`, `PARQUET`, `ORC`, `TEXT`
 * `view_definition` - (Optional) SQL text defining the view (for `table_type == "VIEW"`)
 * `storage_credential_name` - (Optional) For EXTERNAL Tables only: the name of storage credential to use. This cannot be updated
-* `owner` - (Optional) Username/groupname of Table owner. Currently this field can only be changed after the resource is created.
+* `owner` - (Optional) Username/groupname/sp application_id Table owner.
 * `comment` - (Optional) User-supplied free-form text.
 * `properties` - (Optional) Extensible Table properties.
 
@@ -102,6 +102,6 @@ $ terraform import databricks_table.this <full-name>
 
 The following resources are used in the same context:
 
-* [databricks_table](../data-sources/table.md) data to list tables within Unity Catalog.
-* [databricks_schema](../data-sources/schema.md) data to list schemas within Unity Catalog.
-* [databricks_catalog](../data-sources/catalog.md) data to list catalogs within Unity Catalog.
+* [databricks_table](../data-sources/tables.md) data to list tables within Unity Catalog.
+* [databricks_schema](../data-sources/schemas.md) data to list schemas within Unity Catalog.
+* [databricks_catalog](../data-sources/catalogs.md) data to list catalogs within Unity Catalog.

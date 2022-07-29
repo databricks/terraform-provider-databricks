@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/databrickslabs/terraform-provider-databricks/common"
+	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -32,8 +32,8 @@ type providerFixture struct {
 	assertAzure       bool
 }
 
-func (tt providerFixture) rawConfig() map[string]interface{} {
-	rawConfig := map[string]interface{}{}
+func (tt providerFixture) rawConfig() map[string]any {
+	rawConfig := map[string]any{}
 	if tt.host != "" {
 		rawConfig["host"] = tt.host
 	}
@@ -107,7 +107,7 @@ func TestConfig_TokenEnv(t *testing.T) {
 		env: map[string]string{
 			"DATABRICKS_TOKEN": "x",
 		},
-		assertError: "authentication is not configured for provider.. Environment variables used: DATABRICKS_TOKEN",
+		assertError: "authentication is not configured for provider. Environment variables used: DATABRICKS_TOKEN",
 	}.apply(t)
 }
 
@@ -139,7 +139,7 @@ func TestConfig_UserPasswordEnv(t *testing.T) {
 			"DATABRICKS_USERNAME": "x",
 			"DATABRICKS_PASSWORD": "x",
 		},
-		assertError: "authentication is not configured for provider.." +
+		assertError: "authentication is not configured for provider." +
 			" Environment variables used: DATABRICKS_USERNAME, DATABRICKS_PASSWORD",
 		assertHost: "https://x",
 	}.apply(t)
@@ -198,7 +198,7 @@ func TestConfig_AzurePAT(t *testing.T) {
 		host:        "https://adb-xxx.y.azuredatabricks.net/",
 		token:       "y",
 		assertAzure: true,
-		assertHost:  "https://adb-xxx.y.azuredatabricks.net/",
+		assertHost:  "https://adb-xxx.y.azuredatabricks.net",
 		assertAuth:  "pat",
 	}.apply(t)
 }
@@ -244,7 +244,7 @@ func TestConfig_PatFromDatabricksCfg(t *testing.T) {
 		env: map[string]string{
 			"HOME": "../common/testdata",
 		},
-		assertHost: "https://dbc-XXXXXXXX-YYYY.cloud.databricks.com/",
+		assertHost: "https://dbc-XXXXXXXX-YYYY.cloud.databricks.com",
 		assertAuth: "databricks-cli",
 	}.apply(t)
 }

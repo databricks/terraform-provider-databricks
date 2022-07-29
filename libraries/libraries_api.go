@@ -8,12 +8,12 @@ import (
 	"strings"
 	"time"
 
-	"github.com/databrickslabs/terraform-provider-databricks/common"
+	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
 // NewLibrariesAPI creates LibrariesAPI instance from provider meta
-func NewLibrariesAPI(ctx context.Context, m interface{}) LibrariesAPI {
+func NewLibrariesAPI(ctx context.Context, m any) LibrariesAPI {
 	// TODO: context.WithValue
 	return LibrariesAPI{
 		client:  m.(*common.DatabricksClient),
@@ -162,31 +162,31 @@ type Cran struct {
 // TestAccClusterLibraryList is flaky. As an alternative, i tried reflect
 // resource, but init of everything takes way more lines of code, than
 // this thing. And this function is readable enough.
-func NewLibraryFromInstanceState(i interface{}) (lib Library) {
-	raw := i.(map[string]interface{})
+func NewLibraryFromInstanceState(i any) (lib Library) {
+	raw := i.(map[string]any)
 	// set field value to "default value", if there's no raw map value
 	lib.Jar, _ = raw["jar"].(string)
 	lib.Egg, _ = raw["egg"].(string)
 	lib.Whl, _ = raw["whl"].(string)
 	// remember - nested blocks are lists for terraform
-	pypiList, ok := raw["pypi"].([]interface{})
+	pypiList, ok := raw["pypi"].([]any)
 	if ok && len(pypiList) == 1 {
 		lib.Pypi = &PyPi{}
-		pypi := pypiList[0].(map[string]interface{})
+		pypi := pypiList[0].(map[string]any)
 		lib.Pypi.Package, _ = pypi["package"].(string)
 		lib.Pypi.Repo, _ = pypi["repo"].(string)
 	}
-	mavenList, ok := raw["maven"].([]interface{})
+	mavenList, ok := raw["maven"].([]any)
 	if ok && len(mavenList) == 1 {
 		lib.Maven = &Maven{}
-		maven := mavenList[0].(map[string]interface{})
+		maven := mavenList[0].(map[string]any)
 		lib.Maven.Coordinates, _ = maven["coordinates"].(string)
 		lib.Maven.Repo, _ = maven["repo"].(string)
 	}
-	cranList, ok := raw["cran"].([]interface{})
+	cranList, ok := raw["cran"].([]any)
 	if ok && len(cranList) == 1 {
 		lib.Cran = &Cran{}
-		cran := cranList[0].(map[string]interface{})
+		cran := cranList[0].(map[string]any)
 		lib.Cran.Package, _ = cran["package"].(string)
 		lib.Cran.Repo, _ = cran["repo"].(string)
 	}

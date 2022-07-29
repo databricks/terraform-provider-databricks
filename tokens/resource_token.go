@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/databrickslabs/terraform-provider-databricks/common"
+	"github.com/databricks/terraform-provider-databricks/common"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -37,7 +37,7 @@ type TokenList struct {
 }
 
 // NewTokensAPI creates TokensAPI instance from provider meta
-func NewTokensAPI(ctx context.Context, m interface{}) TokensAPI {
+func NewTokensAPI(ctx context.Context, m any) TokensAPI {
 	return TokensAPI{m.(*common.DatabricksClient), ctx}
 }
 

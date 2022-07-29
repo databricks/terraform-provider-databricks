@@ -3,7 +3,7 @@ package policies
 import (
 	"context"
 
-	"github.com/databrickslabs/terraform-provider-databricks/common"
+	"github.com/databricks/terraform-provider-databricks/common"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -25,7 +25,7 @@ type ClusterPolicyCreate struct {
 
 // NewClusterPoliciesAPI creates ClusterPoliciesAPI instance from provider meta
 // Creation and editing is available to admins only.
-func NewClusterPoliciesAPI(ctx context.Context, m interface{}) ClusterPoliciesAPI {
+func NewClusterPoliciesAPI(ctx context.Context, m any) ClusterPoliciesAPI {
 	return ClusterPoliciesAPI{m.(*common.DatabricksClient), ctx}
 }
 

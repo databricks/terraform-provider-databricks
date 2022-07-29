@@ -3,8 +3,8 @@ package pools
 import (
 	"context"
 
-	"github.com/databrickslabs/terraform-provider-databricks/clusters"
-	"github.com/databrickslabs/terraform-provider-databricks/common"
+	"github.com/databricks/terraform-provider-databricks/clusters"
+	"github.com/databricks/terraform-provider-databricks/common"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -43,22 +43,48 @@ type InstancePoolDiskSpec struct {
 	DiskSize  int32                 `json:"disk_size,omitempty"`
 }
 
+type AwsAllocationStrategy string
+
+const (
+	// AwsAllocationStrategyLowestPrice is allocation type for AWS Instance fleets
+	AwsAllocationStrategyLowestPrice = "LOWEST_PRICE"
+	// AwsAllocationStrategyCapacityOptimized is allocation type for AWS Instance fleets
+	AwsAllocationStrategyCapacityOptimized = "CAPACITY_OPTIMIZED"
+)
+
+type AwsFleetOption struct {
+	AllocationStrategy      AwsAllocationStrategy `json:"allocation_strategy" tf:"force_new,suppress_diff"`
+	InstancePoolsToUseCount int32                 `json:"instance_pools_to_use_count,omitempty" tf:"suppress_diff"`
+}
+
+type AwsFleetLaunchTemplateOverride struct {
+	AvailabilityZone string `json:"availability_zone" tf:"force_new,suppress_diff"`
+	InstanceType     string `json:"instance_type" tf:"force_new,suppress_diff"`
+}
+
+type AwsInstancePoolFleetAttributes struct {
+	FleetSpotOption             *AwsFleetOption                  `json:"fleet_spot_option,omitempty" tf:"force_new,suppress_diff,conflicts:fleet_on_demand_option"`
+	FleetOnDemandOption         *AwsFleetOption                  `json:"fleet_on_demand_option,omitempty" tf:"force_new,suppress_diff,conflicts:fleet_spot_option"`
+	FleetLaunchTemplateOverride []AwsFleetLaunchTemplateOverride `json:"launch_template_overrides" tf:"suppress_diff,force_new,slice_set,alias:launch_template_override"`
+}
+
 // InstancePool describes the instance pool object on Databricks
 type InstancePool struct {
-	InstancePoolID                     string                       `json:"instance_pool_id,omitempty" tf:"computed"`
-	InstancePoolName                   string                       `json:"instance_pool_name"`
-	MinIdleInstances                   int32                        `json:"min_idle_instances,omitempty"`
-	MaxCapacity                        int32                        `json:"max_capacity,omitempty" tf:"suppress_diff"`
-	IdleInstanceAutoTerminationMinutes int32                        `json:"idle_instance_autotermination_minutes"`
-	AwsAttributes                      *InstancePoolAwsAttributes   `json:"aws_attributes,omitempty" tf:"force_new,suppress_diff"`
-	AzureAttributes                    *InstancePoolAzureAttributes `json:"azure_attributes,omitempty" tf:"force_new,suppress_diff"`
-	GcpAttributes                      *InstancePoolGcpAttributes   `json:"gcp_attributes,omitempty" tf:"force_new,suppress_diff"`
-	NodeTypeID                         string                       `json:"node_type_id" tf:"force_new"`
-	CustomTags                         map[string]string            `json:"custom_tags,omitempty" tf:"force_new"`
-	EnableElasticDisk                  bool                         `json:"enable_elastic_disk,omitempty" tf:"force_new,suppress_diff"`
-	DiskSpec                           *InstancePoolDiskSpec        `json:"disk_spec,omitempty" tf:"force_new"`
-	PreloadedSparkVersions             []string                     `json:"preloaded_spark_versions,omitempty" tf:"force_new"`
-	PreloadedDockerImages              []clusters.DockerImage       `json:"preloaded_docker_images,omitempty" tf:"force_new,slice_set,alias:preloaded_docker_image"`
+	InstancePoolID                     string                          `json:"instance_pool_id,omitempty" tf:"computed"`
+	InstancePoolName                   string                          `json:"instance_pool_name"`
+	MinIdleInstances                   int32                           `json:"min_idle_instances,omitempty"`
+	MaxCapacity                        int32                           `json:"max_capacity,omitempty" tf:"suppress_diff"`
+	IdleInstanceAutoTerminationMinutes int32                           `json:"idle_instance_autotermination_minutes"`
+	AwsAttributes                      *InstancePoolAwsAttributes      `json:"aws_attributes,omitempty" tf:"force_new,suppress_diff,computed"`
+	AwsInstancePoolFleetAttributes     *AwsInstancePoolFleetAttributes `json:"instance_pool_fleet_attributes,omitempty" tf:"force_new,suppress_diff,conflicts:node_type_id"`
+	AzureAttributes                    *InstancePoolAzureAttributes    `json:"azure_attributes,omitempty" tf:"force_new,suppress_diff"`
+	GcpAttributes                      *InstancePoolGcpAttributes      `json:"gcp_attributes,omitempty" tf:"force_new,suppress_diff"`
+	NodeTypeID                         string                          `json:"node_type_id,omitempty" tf:"suppress_diff,force_new,conflicts:instance_pool_fleet_attributes"`
+	CustomTags                         map[string]string               `json:"custom_tags,omitempty" tf:"force_new"`
+	EnableElasticDisk                  bool                            `json:"enable_elastic_disk,omitempty" tf:"force_new,suppress_diff"`
+	DiskSpec                           *InstancePoolDiskSpec           `json:"disk_spec,omitempty" tf:"force_new"`
+	PreloadedSparkVersions             []string                        `json:"preloaded_spark_versions,omitempty" tf:"force_new"`
+	PreloadedDockerImages              []clusters.DockerImage          `json:"preloaded_docker_images,omitempty" tf:"force_new,slice_set,alias:preloaded_docker_image"`
 }
 
 // InstancePoolStats contains the stats on a given pool
@@ -71,23 +97,24 @@ type InstancePoolStats struct {
 
 // InstancePoolAndStats encapsulates a get response from the GET api for instance pools on Databricks
 type InstancePoolAndStats struct {
-	InstancePoolID                     string                       `json:"instance_pool_id,omitempty" tf:"computed"`
-	InstancePoolName                   string                       `json:"instance_pool_name"`
-	MinIdleInstances                   int32                        `json:"min_idle_instances,omitempty"`
-	MaxCapacity                        int32                        `json:"max_capacity,omitempty"`
-	AwsAttributes                      *InstancePoolAwsAttributes   `json:"aws_attributes,omitempty"`
-	AzureAttributes                    *InstancePoolAzureAttributes `json:"azure_attributes,omitempty"`
-	GcpAttributes                      *InstancePoolGcpAttributes   `json:"gcp_attributes,omitempty"`
-	NodeTypeID                         string                       `json:"node_type_id"`
-	DefaultTags                        map[string]string            `json:"default_tags,omitempty" tf:"computed"`
-	CustomTags                         map[string]string            `json:"custom_tags,omitempty"`
-	IdleInstanceAutoTerminationMinutes int32                        `json:"idle_instance_autotermination_minutes"`
-	EnableElasticDisk                  bool                         `json:"enable_elastic_disk,omitempty"`
-	DiskSpec                           *InstancePoolDiskSpec        `json:"disk_spec,omitempty"`
-	PreloadedSparkVersions             []string                     `json:"preloaded_spark_versions,omitempty"`
-	State                              string                       `json:"state,omitempty"`
-	Stats                              *InstancePoolStats           `json:"stats,omitempty"`
-	PreloadedDockerImages              []clusters.DockerImage       `json:"preloaded_docker_images,omitempty" tf:"slice_set,alias:preloaded_docker_image"`
+	InstancePoolID                     string                           `json:"instance_pool_id,omitempty" tf:"computed"`
+	InstancePoolName                   string                           `json:"instance_pool_name"`
+	MinIdleInstances                   int32                            `json:"min_idle_instances,omitempty"`
+	MaxCapacity                        int32                            `json:"max_capacity,omitempty"`
+	AwsAttributes                      *InstancePoolAwsAttributes       `json:"aws_attributes,omitempty"`
+	AwsInstancePoolFleetAttributes     []AwsInstancePoolFleetAttributes `json:"instance_pool_fleet_attributes,omitempty"`
+	AzureAttributes                    *InstancePoolAzureAttributes     `json:"azure_attributes,omitempty"`
+	GcpAttributes                      *InstancePoolGcpAttributes       `json:"gcp_attributes,omitempty"`
+	NodeTypeID                         string                           `json:"node_type_id,omitempty"`
+	DefaultTags                        map[string]string                `json:"default_tags,omitempty" tf:"computed"`
+	CustomTags                         map[string]string                `json:"custom_tags,omitempty"`
+	IdleInstanceAutoTerminationMinutes int32                            `json:"idle_instance_autotermination_minutes"`
+	EnableElasticDisk                  bool                             `json:"enable_elastic_disk,omitempty"`
+	DiskSpec                           *InstancePoolDiskSpec            `json:"disk_spec,omitempty"`
+	PreloadedSparkVersions             []string                         `json:"preloaded_spark_versions,omitempty"`
+	State                              string                           `json:"state,omitempty"`
+	Stats                              *InstancePoolStats               `json:"stats,omitempty"`
+	PreloadedDockerImages              []clusters.DockerImage           `json:"preloaded_docker_images,omitempty" tf:"slice_set,alias:preloaded_docker_image"`
 }
 
 // InstancePoolList shows list of instance pools
@@ -96,7 +123,7 @@ type InstancePoolList struct {
 }
 
 // NewInstancePoolsAPI creates InstancePoolsAPI instance from provider meta
-func NewInstancePoolsAPI(ctx context.Context, m interface{}) InstancePoolsAPI {
+func NewInstancePoolsAPI(ctx context.Context, m any) InstancePoolsAPI {
 	return InstancePoolsAPI{m.(*common.DatabricksClient), ctx}
 }
 
@@ -185,6 +212,28 @@ func ResourceInstancePool() *schema.Resource {
 				clusters.EbsVolumeTypeThroughputOptimizedHdd,
 			}, false)
 		}
+		if v, err := common.SchemaPath(s, "instance_pool_fleet_attributes", "fleet_on_demand_option", "allocation_strategy"); err == nil {
+			v.ValidateFunc = validation.StringInSlice([]string{AwsAllocationStrategyLowestPrice}, false)
+		}
+		if v, err := common.SchemaPath(s, "instance_pool_fleet_attributes", "fleet_spot_option", "allocation_strategy"); err == nil {
+			v.ValidateFunc = validation.StringInSlice([]string{
+				AwsAllocationStrategyLowestPrice,
+				AwsAllocationStrategyCapacityOptimized,
+			}, false)
+		}
+		if v, err := common.SchemaPath(s, "preloaded_docker_image", "url"); err == nil {
+			v.ForceNew = true
+		}
+		if v, err := common.SchemaPath(s, "preloaded_docker_image", "basic_auth"); err == nil {
+			v.ForceNew = true
+		}
+		if v, err := common.SchemaPath(s, "preloaded_docker_image", "basic_auth", "username"); err == nil {
+			v.ForceNew = true
+		}
+		if v, err := common.SchemaPath(s, "preloaded_docker_image", "basic_auth", "password"); err == nil {
+			v.ForceNew = true
+		}
+
 		return s
 	})
 	return common.Resource{

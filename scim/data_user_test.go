@@ -4,8 +4,8 @@ import (
 	"context"
 	"testing"
 
-	"github.com/databrickslabs/terraform-provider-databricks/common"
-	"github.com/databrickslabs/terraform-provider-databricks/qa"
+	"github.com/databricks/terraform-provider-databricks/common"
+	"github.com/databricks/terraform-provider-databricks/qa"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -30,7 +30,7 @@ func TestDataSourceUser(t *testing.T) {
 		NonWritable: true,
 		Resource:    DataSourceUser(),
 		ID:          ".",
-		State: map[string]interface{}{
+		State: map[string]any{
 			"user_name": "ds",
 		},
 	}.Apply(t)

@@ -4,8 +4,8 @@ import (
 	"context"
 	"testing"
 
-	"github.com/databrickslabs/terraform-provider-databricks/common"
-	"github.com/databrickslabs/terraform-provider-databricks/qa"
+	"github.com/databricks/terraform-provider-databricks/common"
+	"github.com/databricks/terraform-provider-databricks/qa"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -33,7 +33,7 @@ func TestResourceInstanceProfileCreate(t *testing.T) {
 			},
 		},
 		Resource: ResourceInstanceProfile(),
-		State: map[string]interface{}{
+		State: map[string]any{
 			"instance_profile_arn": "arn:aws:iam::999999999999:instance-profile/my-fake-instance-profile",
 		},
 		Create: true,
@@ -56,7 +56,7 @@ func TestResourceInstanceProfileCreate_Error(t *testing.T) {
 			},
 		},
 		Resource: ResourceInstanceProfile(),
-		State: map[string]interface{}{
+		State: map[string]any{
 			"instance_profile_arn": "arn:aws:iam::999999999999:instance-profile/my-fake-instance-profile",
 		},
 		Create: true,
@@ -68,7 +68,7 @@ func TestResourceInstanceProfileCreate_Error(t *testing.T) {
 func TestResourceInstanceProfileCreate_Error_InvalidARN(t *testing.T) {
 	_, err := qa.ResourceFixture{
 		Resource: ResourceInstanceProfile(),
-		State: map[string]interface{}{
+		State: map[string]any{
 			"instance_profile_arn": "abc",
 		},
 		Create: true,
@@ -180,7 +180,7 @@ func TestResourceInstanceProfileDelete_Error(t *testing.T) {
 	assert.Equal(t, "arn:aws:iam::999999999999:instance-profile/my-fake-instance-profile", d.Id())
 }
 
-func TestAwsAccInstanceProfiles(t *testing.T) {
+func TestAccAwsInstanceProfiles(t *testing.T) {
 	arn := qa.GetEnvOrSkipTest(t, "TEST_EC2_INSTANCE_PROFILE")
 	client := common.NewClientFromEnvironment()
 	ctx := context.WithValue(context.Background(), common.Current, t.Name())
@@ -204,7 +204,7 @@ func TestAwsAccInstanceProfiles(t *testing.T) {
 	})
 }
 
-func TestAwsAccInstanceProfilesSkippingValidation(t *testing.T) {
+func TestAccAwsInstanceProfilesSkippingValidation(t *testing.T) {
 	arn := qa.GetEnvOrSkipTest(t, "TEST_EC2_INSTANCE_PROFILE")
 	client := common.NewClientFromEnvironment()
 	ctx := context.WithValue(context.Background(), common.Current, t.Name())

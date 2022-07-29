@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"regexp"
 
+	"github.com/databricks/terraform-provider-databricks/common"
+
 	"github.com/hashicorp/hcl/v2/hclwrite"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -15,7 +17,7 @@ type regexFix struct {
 
 type instanceApproximation struct {
 	// not really interested in other than strings...
-	Attributes map[string]interface{} `json:"attributes"`
+	Attributes map[string]any `json:"attributes"`
 }
 
 type resourceApproximation struct {
@@ -48,6 +50,8 @@ type importable struct {
 	Body func(ic *importContext, body *hclwrite.Body, r *resource) error
 	// Function to detect if the given resource should be ignored or not
 	Ignore func(ic *importContext, r *resource) bool
+	// Defines which API version should be used for this specific resource
+	ApiVersion common.ApiVersion
 }
 
 type reference struct {

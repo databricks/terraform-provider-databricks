@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/databrickslabs/terraform-provider-databricks/common"
+	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -13,8 +13,8 @@ type TablesAPI struct {
 	context context.Context
 }
 
-func NewTablesAPI(ctx context.Context, m interface{}) TablesAPI {
-	return TablesAPI{m.(*common.DatabricksClient), ctx}
+func NewTablesAPI(ctx context.Context, m any) TablesAPI {
+	return TablesAPI{m.(*common.DatabricksClient), context.WithValue(ctx, common.Api, common.API_2_1)}
 }
 
 type ColumnInfo struct {
@@ -32,14 +32,14 @@ type ColumnInfo struct {
 }
 
 type TableInfo struct {
-	Name                  string            `json:"name" tf:"force_new"`
-	CatalogName           string            `json:"catalog_name"`
-	SchemaName            string            `json:"schema_name"`
-	TableType             string            `json:"table_type"`
+	Name                  string            `json:"name"`
+	CatalogName           string            `json:"catalog_name" tf:"force_new"`
+	SchemaName            string            `json:"schema_name" tf:"force_new"`
+	TableType             string            `json:"table_type" tf:"force_new"`
 	DataSourceFormat      string            `json:"data_source_format"`
 	ColumnInfos           []ColumnInfo      `json:"columns" tf:"alias:column"`
-	StorageLocation       string            `json:"storage_location,omitempty"`
-	StorageCredentialName string            `json:"storage_credential_name,omitempty"`
+	StorageLocation       string            `json:"storage_location,omitempty" tf:"suppress_diff"`
+	StorageCredentialName string            `json:"storage_credential_name,omitempty" tf:"force_new"`
 	ViewDefinition        string            `json:"view_definition,omitempty"`
 	Owner                 string            `json:"owner,omitempty" tf:"computed"`
 	Comment               string            `json:"comment,omitempty"`
@@ -71,10 +71,6 @@ func (a TablesAPI) getTable(name string) (ti TableInfo, err error) {
 	return
 }
 
-func (a TablesAPI) updateTable(ti TableInfo) error {
-	return a.client.Patch(a.context, "/unity-catalog/tables/"+ti.Name, ti)
-}
-
 func (a TablesAPI) deleteTable(name string) error {
 	return a.client.Delete(a.context, "/unity-catalog/tables/"+name, nil)
 }
@@ -84,8 +80,17 @@ func ResourceTable() *schema.Resource {
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
 			return m
 		})
+	update := updateFunctionFactory("/unity-catalog/tables", []string{
+		"owner", "name", "data_source_format", "columns", "storage_location",
+		"view_definition", "comment", "properties"})
 	return common.Resource{
 		Schema: tableSchema,
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, c any) error {
+			if d.Get("table_type") != "EXTERNAL" {
+				return nil
+			}
+			return nil
+		},
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var ti TableInfo
 			common.DataToStructPointer(d, tableSchema, &ti)
@@ -93,7 +98,7 @@ func ResourceTable() *schema.Resource {
 				return err
 			}
 			d.SetId(ti.FullName())
-			return nil
+			return update(ctx, d, c)
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			ti, err := NewTablesAPI(ctx, c).getTable(d.Id())
@@ -102,11 +107,7 @@ func ResourceTable() *schema.Resource {
 			}
 			return common.StructToData(ti, tableSchema, d)
 		},
-		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			var ti TableInfo
-			common.DataToStructPointer(d, tableSchema, &ti)
-			return NewTablesAPI(ctx, c).updateTable(ti)
-		},
+		Update: update,
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			return NewTablesAPI(ctx, c).deleteTable(d.Id())
 		},

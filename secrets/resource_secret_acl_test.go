@@ -5,9 +5,9 @@ import (
 	"os"
 	"testing"
 
-	"github.com/databrickslabs/terraform-provider-databricks/common"
+	"github.com/databricks/terraform-provider-databricks/common"
 
-	"github.com/databrickslabs/terraform-provider-databricks/qa"
+	"github.com/databricks/terraform-provider-databricks/qa"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -163,7 +163,7 @@ func TestResourceSecretACLCreate(t *testing.T) {
 			},
 		},
 		Resource: ResourceSecretACL(),
-		State: map[string]interface{}{
+		State: map[string]any{
 			"permission": "CAN_MANAGE",
 			"principal":  "something",
 			"scope":      "global",
@@ -195,7 +195,7 @@ func TestResourceSecretACLCreate_ScopeWithSlash(t *testing.T) {
 			},
 		},
 		Resource: ResourceSecretACL(),
-		State: map[string]interface{}{
+		State: map[string]any{
 			"permission": "CAN_MANAGE",
 			"principal":  "something",
 			"scope":      "myapplication/branch",
@@ -220,7 +220,7 @@ func TestResourceSecretACLCreate_Error(t *testing.T) {
 			},
 		},
 		Resource: ResourceSecretACL(),
-		State: map[string]interface{}{
+		State: map[string]any{
 			"permission": "CAN_MANAGE",
 			"principal":  "something",
 			"scope":      "global",

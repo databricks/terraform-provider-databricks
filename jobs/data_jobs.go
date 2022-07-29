@@ -4,15 +4,16 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/databrickslabs/terraform-provider-databricks/common"
+	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func DataSourceJobs() *schema.Resource {
-	var response struct {
+	type jobsData struct {
 		Ids map[string]string `json:"ids,omitempty" tf:"computed"`
 	}
-	return common.DataResource(&response, func(ctx context.Context, c *common.DatabricksClient) error {
+	return common.DataResource(jobsData{}, func(ctx context.Context, e any, c *common.DatabricksClient) error {
+		response := e.(*jobsData)
 		jobsAPI := NewJobsAPI(ctx, c)
 		list, err := jobsAPI.List()
 		if err != nil {

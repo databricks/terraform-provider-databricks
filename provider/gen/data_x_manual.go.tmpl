@@ -1,0 +1,16 @@
+In provider/provider.go, add an entry to `DataSourcesMap`
+
+```go
+func DatabricksProvider() *schema.Provider {
+	p := &schema.Provider{
+		DataSourcesMap: map[string]*schema.Resource{ // must be in alphabetical order
+            // ...
+            "databricks_{{.Name}}": {{.Package}}.DataSource{{.CamelName}}(),
+
+```
+
+In README.md, add an entry in alphabetical order:
+
+```
+| [databricks_{{.Name}}](docs/data-sources/{{.Name}}.md) data
+```

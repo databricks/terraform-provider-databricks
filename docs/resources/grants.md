@@ -3,7 +3,7 @@ subcategory: "Unity Catalog"
 ---
 # databricks_grants Resource
 
--> **Private Preview** This feature is in [Private Preview](https://docs.databricks.com/release-notes/release-types.html). Contact your Databricks representative to request access. 
+-> **Public Preview** This feature is in [Public Preview](https://docs.databricks.com/release-notes/release-types.html). Contact your Databricks representative to request access. 
 
 In Unity Catalog all users initially have no access to data. Only Metastore Admins can create objects and can grant/revoke access on individual objects to users and groups. Every securable object in Unity Catalog has an owner. The owner can be any account-level user or group, called principals in general. The principal that creates an object becomes its owner. Owners receive all privileges on the securable object (e.g., `SELECT` and `MODIFY` on a table), as well as the permission to grant privileges to other principals.
 
@@ -20,9 +20,11 @@ Every `databricks_grants` resource must have exactly one securable identifier an
 
 Terraform will handle any configuration drift on every `terraform apply` run, even when grants are changed outside of Terraform state.
 
+It is required to define all permissions for a securable in a single resource, otherwise Terraform cannot guarantee config drift prevention.
+
 ## Catalog grants
 
-You can grant `CREATE` and `USAGE` privileges to [databricks_catalog](catalog.md) specified in `catalog` attribute:
+You can grant `CREATE` and `USAGE` privileges to [databricks_catalog](catalog.md) specified in the `catalog` attribute:
 
 ```hcl
 resource "databricks_catalog" "sandbox" {
@@ -49,7 +51,7 @@ resource "databricks_grants" "sandbox" {
 
 ## Schema grants
 
-You can grant `CREATE` and `USAGE` privileges to [*`catalog`*.*`database`*](schema.md) specified in `schema` attribute:
+You can grant `CREATE` and `USAGE` privileges to [*`catalog`*.*`database`*](schema.md) specified in the `schema` attribute:
 
 ```hcl
 resource "databricks_schema" "things" {
@@ -72,7 +74,7 @@ resource "databricks_grants" "things" {
 
 ## Table grants
 
-You can grant `MODIFY` and `SELECT` privileges to [*`catalog`*.*`database`*.*`table`*](table.md) specified in `table` attribute. You can define a table through [databricks_table](table.md) resource.
+You can grant `MODIFY` and `SELECT` privileges to [*`catalog`*.*`database`*.*`table`*](table.md) specified in the `table` attribute. You can define a table through [databricks_table](table.md) resource.
 
 ```hcl
 resource "databricks_grants" "customers" {
@@ -84,6 +86,26 @@ resource "databricks_grants" "customers" {
   grant {
     principal  = "Data Analysts"
     privileges = ["SELECT"]
+  }
+}
+```
+
+You can also apply grants dynamically with [databricks_tables](../data-sources/tables.md) data resource:
+
+```hcl
+data "databricks_tables" "things" {
+  catalog_name = "sandbox"
+  schema_name  = "things"
+}
+
+resource "databricks_grants" "things" {
+  for_each = data.databricks_tables.things.ids
+
+  table = each.value
+
+  grant {
+    principal  = "sensitive"
+    privileges = ["SELECT", "MODIFY"]
   }
 }
 ```
@@ -102,9 +124,29 @@ resource "databricks_grants" "customer360" {
 }
 ```
 
+You can also apply grants dynamically with [databricks_views](../data-sources/views.md) data resource:
+
+```hcl
+data "databricks_views" "customers" {
+  catalog_name = "main"
+  schema_name  = "customers"
+}
+
+resource "databricks_grants" "customers" {
+  for_each = data.databricks_views.customers.ids
+
+  view = each.value
+
+  grant {
+    principal  = "sensitive"
+    privileges = ["SELECT", "MODIFY"]
+  }
+}
+```
+
 ## Storage credential grants
 
-You can grant `CREATE TABLE`, `READ FILES`, and `WRITE FILES` privileges to [databricks_storage_credential](storage_credential.md) id specified in `storage_credential` attribute:
+You can grant `CREATE_TABLE`, `READ_FILES`, and `WRITE_FILES` privileges to [databricks_storage_credential](storage_credential.md) id specified in `storage_credential` attribute:
 
 ```hcl
 resource "databricks_storage_credential" "external" {
@@ -119,14 +161,14 @@ resource "databricks_grants" "external_creds" {
   storage_credential = databricks_storage_credential.external.id
   grant {
     principal  = "Data Engineers"
-    privileges = ["CREATE TABLE"]
+    privileges = ["CREATE_TABLE"]
   }
 }
 ```
 
 ## Storage location grants
 
-You can grant `CREATE TABLE`, `READ FILES`, and `WRITE FILES` privileges to [databricks_external_location](external_location.md) id specified in `external_location` attribute:
+You can grant `CREATE_TABLE`, `READ_FILES`, and `WRITE_FILES` privileges to [databricks_external_location](external_location.md) id specified in `external_location` attribute:
 
 ```hcl
 resource "databricks_external_location" "some" {
@@ -140,10 +182,14 @@ resource "databricks_grants" "some" {
   external_location = databricks_external_location.some.id
   grant {
     principal  = "Data Engineers"
-    privileges = ["CREATE TABLE", "READ FILES"]
+    privileges = ["CREATE_TABLE", "READ_FILES"]
   }
 }
 ```
+
+## Metastore grants
+
+You can grant `CREATE_CATALOG`, `CREATE_EXTERNAL_LOCATION`, `CREATE_STORAGE_CREDENTIAL`, `CREATE_SHARE`, `CREATE_RECIPIENT`, and `CREATE_PROVIDER` privileges to [databricks_metastore](metastore.md) id specified in `metastore` attribute.
 
 ## Other access control
 

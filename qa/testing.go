@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"log"
 	"math/rand"
@@ -17,8 +16,7 @@ import (
 	"testing"
 
 	"github.com/Azure/go-autorest/autorest/azure"
-	"github.com/databrickslabs/terraform-provider-databricks/common"
-	"github.com/databrickslabs/terraform-provider-databricks/internal"
+	"github.com/databricks/terraform-provider-databricks/common"
 
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/hcl"
@@ -40,7 +38,7 @@ func RandomLongName() string {
 
 // RandomEmail generates random email
 func RandomEmail() string {
-	return fmt.Sprintf("%s@example.com", RandomName("tf"))
+	return fmt.Sprintf("%s@example.com", RandomName("tf-"))
 }
 
 // RandomName gives random name with optional prefix. e.g. qa.RandomName("tf-")
@@ -60,9 +58,9 @@ func RandomName(prefix ...string) string {
 type HTTPFixture struct {
 	Method          string
 	Resource        string
-	Response        interface{}
+	Response        any
 	Status          int
-	ExpectedRequest interface{}
+	ExpectedRequest any
 	ReuseRequest    bool
 	MatchAny        bool
 }
@@ -73,7 +71,7 @@ type ResourceFixture struct {
 	Resource      *schema.Resource
 	RequiresNew   bool
 	InstanceState map[string]string
-	State         map[string]interface{}
+	State         map[string]any
 	// HCL might be useful to test nested blocks
 	HCL         string
 	CommandMock common.CommandMock
@@ -87,16 +85,17 @@ type ResourceFixture struct {
 	Azure       bool
 	AzureSPN    bool
 	Gcp         bool
+	AccountID   string
 	Token       string
 	// new resource
 	New bool
 }
 
 // wrapper type for calling resource methords
-type resourceCRUD func(context.Context, *schema.ResourceData, interface{}) diag.Diagnostics
+type resourceCRUD func(context.Context, *schema.ResourceData, any) diag.Diagnostics
 
 func (cb resourceCRUD) before(before func(d *schema.ResourceData)) resourceCRUD {
-	return func(ctx context.Context, d *schema.ResourceData, i interface{}) diag.Diagnostics {
+	return func(ctx context.Context, d *schema.ResourceData, i any) diag.Diagnostics {
 		before(d)
 		return cb(ctx, d, i)
 	}
@@ -114,7 +113,9 @@ func (f ResourceFixture) prepareExecution() (resourceCRUD, error) {
 		if f.ID != "" {
 			return nil, fmt.Errorf("ID is not available for Create")
 		}
-		return resourceCRUD(f.Resource.CreateContext), nil
+		return resourceCRUD(f.Resource.CreateContext).before(func(d *schema.ResourceData) {
+			d.MarkNewResource()
+		}), nil
 	case f.Read:
 		if f.ID == "" {
 			return nil, fmt.Errorf("ID must be set for Read")
@@ -168,14 +169,17 @@ func (f ResourceFixture) Apply(t *testing.T) (*schema.ResourceData, error) {
 	if f.Gcp {
 		client.GoogleServiceAccount = "sa@prj.iam.gserviceaccount.com"
 	}
+	if f.AccountID != "" {
+		client.AccountID = f.AccountID
+	}
 	if len(f.HCL) > 0 {
-		var out interface{}
+		var out any
 		// TODO: update to HCLv2 somehow, so that importer and this use the same stuff
 		err = hcl.Decode(&out, f.HCL)
 		if err != nil {
 			return nil, err
 		}
-		f.State = fixHCL(out).(map[string]interface{})
+		f.State = fixHCL(out).(map[string]any)
 	}
 	resourceConfig := terraform.NewResourceConfigRaw(f.State)
 	execute, err := f.prepareExecution()
@@ -259,12 +263,18 @@ func (f ResourceFixture) ApplyNoError(t *testing.T) {
 }
 
 // ApplyAndExpectData is a convenience method for tests that doesn't expect error, but want to check data
-func (f ResourceFixture) ApplyAndExpectData(t *testing.T, data map[string]interface{}) {
+func (f ResourceFixture) ApplyAndExpectData(t *testing.T, data map[string]any) {
 	d, err := f.Apply(t)
 	require.NoError(t, err, err)
 	for k, expected := range data {
 		if k == "id" {
 			assert.Equal(t, expected, d.Id())
+		} else if that, ok := d.Get(k).(*schema.Set); ok {
+			this := expected.([]string)
+			assert.Equal(t, len(this), that.Len(), "set has different length")
+			for _, item := range this {
+				assert.True(t, that.Contains(item), "set does not contain %s", item)
+			}
 		} else {
 			assert.Equal(t, expected, d.Get(k))
 		}
@@ -313,7 +323,7 @@ func ResourceCornerCases(t *testing.T, resource *schema.Resource, cc ...CornerCa
 		"id":           "x",
 		"expect_error": "I'm a teapot",
 	}
-	m := map[string]func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics{
+	m := map[string]func(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics{
 		"create": resource.CreateContext,
 		"read":   resource.ReadContext,
 		"update": resource.UpdateContext,
@@ -430,7 +440,7 @@ func HttpFixtureClientWithToken(t *testing.T, fixtures []HTTPFixture, token stri
 			}
 		}
 		if !found {
-			receivedRequest := map[string]interface{}{}
+			receivedRequest := map[string]any{}
 			buf := new(bytes.Buffer)
 			_, err := buf.ReadFrom(req.Body)
 			assert.NoError(t, err, err)
@@ -487,16 +497,16 @@ func HTTPFixturesApply(t *testing.T, fixtures []HTTPFixture, callback func(ctx c
 	callback(context.Background(), client)
 }
 
-func fixHCL(v interface{}) interface{} {
+func fixHCL(v any) any {
 	switch a := v.(type) {
-	case []map[string]interface{}:
-		vals := []interface{}{}
+	case []map[string]any:
+		vals := []any{}
 		for _, vv := range a {
 			vals = append(vals, fixHCL(vv))
 		}
 		return vals
-	case map[string]interface{}:
-		vals := map[string]interface{}{}
+	case map[string]any:
+		vals := map[string]any{}
 		for k, ev := range a {
 			vals[k] = fixHCL(ev)
 		}
@@ -504,55 +514,6 @@ func fixHCL(v interface{}) interface{} {
 	default:
 		return v
 	}
-}
-
-// For writing a unit test to intercept the errors (t.Fatalf literally ends the test in failure)
-func environmentTemplate(t *testing.T, template string, otherVars ...map[string]string) (string, error) {
-	vars := map[string]string{
-		"RANDOM": RandomName("t"),
-	}
-	if len(otherVars) > 1 {
-		return "", errors.New("cannot have more than one custom variable map")
-	}
-	if len(otherVars) == 1 {
-		for k, v := range otherVars[0] {
-			vars[k] = v
-		}
-	}
-	// pullAll otherVars
-	missing := 0
-	var varType, varName, value string
-	r := regexp.MustCompile(`{(env|var).([^{}]*)}`)
-	for _, variableMatch := range r.FindAllStringSubmatch(template, -1) {
-		value = ""
-		varType = variableMatch[1]
-		varName = variableMatch[2]
-		switch varType {
-		case "env":
-			value = os.Getenv(varName)
-		case "var":
-			value = vars[varName]
-		}
-		if value == "" {
-			t.Logf("Missing %s %s variable.", varType, varName)
-			missing++
-			continue
-		}
-		template = strings.ReplaceAll(template, `{`+varType+`.`+varName+`}`, value)
-	}
-	if missing > 0 {
-		return "", fmt.Errorf("please set %d variables and restart", missing)
-	}
-	return internal.TrimLeadingWhitespace(template), nil
-}
-
-// EnvironmentTemplate asserts existence and fills in {env.VAR} & {var.RANDOM} placeholders in template
-func EnvironmentTemplate(t *testing.T, template string, otherVars ...map[string]string) string {
-	resp, err := environmentTemplate(t, template, otherVars...)
-	if err != nil {
-		t.Skipf(err.Error())
-	}
-	return resp
 }
 
 // FirstKeyValue gets it from HCL string
@@ -577,4 +538,18 @@ func GetEnvOrSkipTest(t *testing.T, name string) string {
 		t.Skipf("Environment variable %s is missing", name)
 	}
 	return value
+}
+
+func RequireAnyCloudEnv(t *testing.T) {
+	value := os.Getenv("CLOUD_ENV")
+	if value == "" {
+		t.Skip("CLOUD_ENV is required to run this test")
+	}
+}
+
+func RequireCloudEnv(t *testing.T, cloudEnv string) {
+	value := os.Getenv("CLOUD_ENV")
+	if value != cloudEnv {
+		t.Skipf("CLOUD_ENV=%s is required to run this test", cloudEnv)
+	}
 }

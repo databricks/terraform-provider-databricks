@@ -3,7 +3,7 @@ package sql
 import (
 	"testing"
 
-	"github.com/databrickslabs/terraform-provider-databricks/qa"
+	"github.com/databricks/terraform-provider-databricks/qa"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -14,23 +14,23 @@ func TestResourceSQLGlobalConfigCreateDefault(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "PUT",
-				Resource: "/api/2.0/sql/config/endpoints",
-				ExpectedRequest: map[string]interface{}{
-					"data_access_config":        []interface{}{},
+				Resource: "/api/2.0/sql/config/warehouses",
+				ExpectedRequest: map[string]any{
+					"data_access_config":        []any{},
 					"enable_serverless_compute": false,
 					"security_policy":           "DATA_ACCESS_CONTROL",
 				},
 			},
 			{
 				Method:       "GET",
-				Resource:     "/api/2.0/sql/config/endpoints",
+				Resource:     "/api/2.0/sql/config/warehouses",
 				ReuseRequest: true,
 				Response: GlobalConfigForRead{
 					SecurityPolicy: "DATA_ACCESS_CONTROL",
 				},
 			},
 		},
-		Resource: ResourceSQLGlobalConfig(),
+		Resource: ResourceSqlGlobalConfig(),
 		Create:   true,
 		HCL: `
 		`,
@@ -45,23 +45,23 @@ func TestResourceSQLGlobalConfigDelete(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "PUT",
-				Resource: "/api/2.0/sql/config/endpoints",
-				ExpectedRequest: map[string]interface{}{
-					"data_access_config":        []interface{}{},
+				Resource: "/api/2.0/sql/config/warehouses",
+				ExpectedRequest: map[string]any{
+					"data_access_config":        []any{},
 					"enable_serverless_compute": false,
 					"security_policy":           "DATA_ACCESS_CONTROL",
 				},
 			},
 			{
 				Method:       "GET",
-				Resource:     "/api/2.0/sql/config/endpoints",
+				Resource:     "/api/2.0/sql/config/warehouses",
 				ReuseRequest: true,
 				Response: GlobalConfigForRead{
 					SecurityPolicy: "DATA_ACCESS_CONTROL",
 				},
 			},
 		},
-		Resource: ResourceSQLGlobalConfig(),
+		Resource: ResourceSqlGlobalConfig(),
 		Delete:   true,
 		ID:       "global",
 		HCL: `
@@ -77,7 +77,7 @@ func TestResourceSQLGlobalConfigCreateWithData(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "PUT",
-				Resource: "/api/2.0/sql/config/endpoints",
+				Resource: "/api/2.0/sql/config/warehouses",
 				ExpectedRequest: GlobalConfigForRead{
 					DataAccessConfig:           []confPair{{Key: "spark.sql.session.timeZone", Value: "UTC"}},
 					SqlConfigurationParameters: &repeatedEndpointConfPairs{ConfigPairs: []confPair{{Key: "ANSI_MODE", Value: "true"}}},
@@ -88,7 +88,7 @@ func TestResourceSQLGlobalConfigCreateWithData(t *testing.T) {
 			},
 			{
 				Method:       "GET",
-				Resource:     "/api/2.0/sql/config/endpoints",
+				Resource:     "/api/2.0/sql/config/warehouses",
 				ReuseRequest: true,
 				Response: GlobalConfigForRead{
 					SecurityPolicy: "PASSTHROUGH",
@@ -104,15 +104,15 @@ func TestResourceSQLGlobalConfigCreateWithData(t *testing.T) {
 				},
 			},
 		},
-		Resource: ResourceSQLGlobalConfig(),
+		Resource: ResourceSqlGlobalConfig(),
 		Create:   true,
-		State: map[string]interface{}{
+		State: map[string]any{
 			"security_policy":      "PASSTHROUGH",
 			"instance_profile_arn": "arn:...",
-			"data_access_config": map[string]interface{}{
+			"data_access_config": map[string]any{
 				"spark.sql.session.timeZone": "UTC",
 			},
-			"sql_config_params": map[string]interface{}{
+			"sql_config_params": map[string]any{
 				"ANSI_MODE": "true",
 			},
 		},
@@ -124,13 +124,13 @@ func TestResourceSQLGlobalConfigCreateWithData(t *testing.T) {
 
 func TestResourceSQLGlobalConfigCreateError(t *testing.T) {
 	_, err := qa.ResourceFixture{
-		Resource: ResourceSQLGlobalConfig(),
+		Resource: ResourceSqlGlobalConfig(),
 		Create:   true,
 		Azure:    true,
-		State: map[string]interface{}{
+		State: map[string]any{
 			"security_policy":      "PASSTHROUGH",
 			"instance_profile_arn": "arn:...",
-			"data_access_config": map[string]interface{}{
+			"data_access_config": map[string]any{
 				"spark.sql.session.timeZone": "UTC",
 			},
 		},

@@ -24,7 +24,7 @@ This resource provides two ways of mounting a storage account:
   * `storage_resource_name` for ADLS Gen1
 * `uri` - (Optional, String) the URI for accessing specific storage (`s3a://....`, `abfss://....`, `gs://....`, etc.)
 * `extra_configs` - (Optional, String map) configuration parameters that are necessary for mounting of specific storage
-* `resource_id` - (Optional, String) resource ID for given storage account. Could be used to fill defaults, such as storage account & container names on Azure.
+* `resource_id` - (Optional, String) resource ID for a given storage account. Could be used to fill defaults, such as storage account & container names on Azure.
 * `encryption_type` - (Optional, String) encryption type. Currently used only for [AWS S3 mounts](https://docs.databricks.com/data/data-sources/aws/amazon-s3.html#encrypt-data-in-s3-buckets)
 
 ### Example mounting ADLS Gen2 using uri and extra_configs
@@ -206,7 +206,7 @@ resource "azurerm_storage_container" "this" {
 
 resource "databricks_mount" "marketing" {
   name        = "marketing"
-  resource_id = azurerm_storage_container.this.id
+  resource_id = azurerm_storage_container.this.resource_manager_id
   abfs {
     client_id              = data.azurerm_client_config.current.client_id
     client_secret_scope    = databricks_secret_scope.terraform.name

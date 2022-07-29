@@ -5,15 +5,16 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/databrickslabs/terraform-provider-databricks/common"
-	"github.com/databrickslabs/terraform-provider-databricks/internal/acceptance"
-	"github.com/databrickslabs/terraform-provider-databricks/policies"
+	"github.com/databricks/terraform-provider-databricks/common"
+	"github.com/databricks/terraform-provider-databricks/internal/acceptance"
+	"github.com/databricks/terraform-provider-databricks/policies"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestAccClusterPolicyResourceFullLifecycle(t *testing.T) {
+	t.Parallel()
 	randomName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
 	acceptance.AccTest(t, resource.TestCase{
 		Steps: []resource.TestStep{

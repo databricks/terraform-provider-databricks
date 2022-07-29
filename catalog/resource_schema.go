@@ -3,7 +3,7 @@ package catalog
 import (
 	"context"
 
-	"github.com/databrickslabs/terraform-provider-databricks/common"
+	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -12,8 +12,8 @@ type SchemasAPI struct {
 	context context.Context
 }
 
-func NewSchemasAPI(ctx context.Context, m interface{}) SchemasAPI {
-	return SchemasAPI{m.(*common.DatabricksClient), ctx}
+func NewSchemasAPI(ctx context.Context, m any) SchemasAPI {
+	return SchemasAPI{m.(*common.DatabricksClient), context.WithValue(ctx, common.Api, common.API_2_1)}
 }
 
 type SchemaInfo struct {
@@ -46,10 +46,6 @@ func (a SchemasAPI) getSchema(name string) (si SchemaInfo, err error) {
 	return
 }
 
-func (a SchemasAPI) updateSchema(si SchemaInfo) error {
-	return a.client.Patch(a.context, "/unity-catalog/schemas/"+si.FullName, si)
-}
-
 func (a SchemasAPI) deleteSchema(name string) error {
 	return a.client.Delete(a.context, "/unity-catalog/schemas/"+name, nil)
 }
@@ -60,6 +56,7 @@ func ResourceSchema() *schema.Resource {
 			delete(m, "full_name")
 			return m
 		})
+	update := updateFunctionFactory("/unity-catalog/schemas", []string{"owner", "comment", "properties"})
 	return common.Resource{
 		Schema: s,
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
@@ -69,7 +66,7 @@ func ResourceSchema() *schema.Resource {
 				return err
 			}
 			d.SetId(si.FullName)
-			return nil
+			return update(ctx, d, c)
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			si, err := NewSchemasAPI(ctx, c).getSchema(d.Id())
@@ -78,12 +75,7 @@ func ResourceSchema() *schema.Resource {
 			}
 			return common.StructToData(si, s, d)
 		},
-		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			var si SchemaInfo
-			common.DataToStructPointer(d, s, &si)
-			si.FullName = d.Id()
-			return NewSchemasAPI(ctx, c).updateSchema(si)
-		},
+		Update: update,
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			return NewSchemasAPI(ctx, c).deleteSchema(d.Id())
 		},

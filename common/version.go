@@ -3,7 +3,7 @@ package common
 import "context"
 
 var (
-	version = "0.5.3"
+	version = "1.1.0" // TODO: check if automatable via https://pkg.go.dev/runtime/debug@master#ReadBuildInfo
 	// ResourceName is resource name without databricks_ prefix
 	ResourceName contextKey = 1
 	// Provider is the current instance of provider

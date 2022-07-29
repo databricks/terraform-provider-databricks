@@ -10,48 +10,55 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
-	"github.com/databrickslabs/terraform-provider-databricks/access"
-	"github.com/databrickslabs/terraform-provider-databricks/aws"
-	"github.com/databrickslabs/terraform-provider-databricks/catalog"
-	"github.com/databrickslabs/terraform-provider-databricks/clusters"
-	"github.com/databrickslabs/terraform-provider-databricks/commands"
-	"github.com/databrickslabs/terraform-provider-databricks/common"
-	"github.com/databrickslabs/terraform-provider-databricks/jobs"
-	"github.com/databrickslabs/terraform-provider-databricks/mlflow"
-	"github.com/databrickslabs/terraform-provider-databricks/mws"
-	"github.com/databrickslabs/terraform-provider-databricks/permissions"
-	"github.com/databrickslabs/terraform-provider-databricks/pipelines"
-	"github.com/databrickslabs/terraform-provider-databricks/policies"
-	"github.com/databrickslabs/terraform-provider-databricks/pools"
-	"github.com/databrickslabs/terraform-provider-databricks/repos"
-	"github.com/databrickslabs/terraform-provider-databricks/scim"
-	"github.com/databrickslabs/terraform-provider-databricks/secrets"
-	"github.com/databrickslabs/terraform-provider-databricks/sql"
-	"github.com/databrickslabs/terraform-provider-databricks/storage"
-	"github.com/databrickslabs/terraform-provider-databricks/tokens"
-	"github.com/databrickslabs/terraform-provider-databricks/workspace"
+	"github.com/databricks/terraform-provider-databricks/access"
+	"github.com/databricks/terraform-provider-databricks/aws"
+	"github.com/databricks/terraform-provider-databricks/catalog"
+	"github.com/databricks/terraform-provider-databricks/clusters"
+	"github.com/databricks/terraform-provider-databricks/commands"
+	"github.com/databricks/terraform-provider-databricks/common"
+	"github.com/databricks/terraform-provider-databricks/jobs"
+	"github.com/databricks/terraform-provider-databricks/mlflow"
+	"github.com/databricks/terraform-provider-databricks/mws"
+	"github.com/databricks/terraform-provider-databricks/permissions"
+	"github.com/databricks/terraform-provider-databricks/pipelines"
+	"github.com/databricks/terraform-provider-databricks/policies"
+	"github.com/databricks/terraform-provider-databricks/pools"
+	"github.com/databricks/terraform-provider-databricks/repos"
+	"github.com/databricks/terraform-provider-databricks/scim"
+	"github.com/databricks/terraform-provider-databricks/secrets"
+	"github.com/databricks/terraform-provider-databricks/sql"
+	"github.com/databricks/terraform-provider-databricks/storage"
+	"github.com/databricks/terraform-provider-databricks/tokens"
+	"github.com/databricks/terraform-provider-databricks/workspace"
 )
 
 // DatabricksProvider returns the entire terraform provider object
 func DatabricksProvider() *schema.Provider {
 	p := &schema.Provider{
 		DataSourcesMap: map[string]*schema.Resource{ // must be in alphabetical order
-			"databricks_aws_crossaccount_policy": aws.DataAwsCrossAccountPolicy(),
+			"databricks_aws_crossaccount_policy": aws.DataAwsCrossaccountPolicy(),
 			"databricks_aws_assume_role_policy":  aws.DataAwsAssumeRolePolicy(),
 			"databricks_aws_bucket_policy":       aws.DataAwsBucketPolicy(),
+			"databricks_cluster":                 clusters.DataSourceCluster(),
 			"databricks_clusters":                clusters.DataSourceClusters(),
 			"databricks_catalogs":                catalog.DataSourceCatalogs(),
 			"databricks_current_user":            scim.DataSourceCurrentUser(),
-			"databricks_dbfs_file":               storage.DataSourceDBFSFile(),
-			"databricks_dbfs_file_paths":         storage.DataSourceDBFSFilePaths(),
+			"databricks_dbfs_file":               storage.DataSourceDbfsFile(),
+			"databricks_dbfs_file_paths":         storage.DataSourceDbfsFilePaths(),
 			"databricks_group":                   scim.DataSourceGroup(),
 			"databricks_jobs":                    jobs.DataSourceJobs(),
+			"databricks_mws_workspaces":          mws.DataSourceMwsWorkspaces(),
 			"databricks_node_type":               clusters.DataSourceNodeType(),
 			"databricks_notebook":                workspace.DataSourceNotebook(),
 			"databricks_notebook_paths":          workspace.DataSourceNotebookPaths(),
 			"databricks_schemas":                 catalog.DataSourceSchemas(),
+			"databricks_service_principal":       scim.DataSourceServicePrincipal(),
+			"databricks_service_principals":      scim.DataSourceServicePrincipals(),
 			"databricks_spark_version":           clusters.DataSourceSparkVersion(),
+			"databricks_sql_warehouse":           sql.DataSourceWarehouse(),
+			"databricks_sql_warehouses":          sql.DataSourceWarehouses(),
 			"databricks_tables":                  catalog.DataSourceTables(),
+			"databricks_views":                   catalog.DataSourceViews(),
 			"databricks_user":                    scim.DataSourceUser(),
 			"databricks_zones":                   clusters.DataSourceClusterZones(),
 		},
@@ -63,7 +70,7 @@ func DatabricksProvider() *schema.Provider {
 			"databricks_catalog":                     catalog.ResourceCatalog(),
 			"databricks_cluster":                     clusters.ResourceCluster(),
 			"databricks_cluster_policy":              policies.ResourceClusterPolicy(),
-			"databricks_dbfs_file":                   storage.ResourceDBFSFile(),
+			"databricks_dbfs_file":                   storage.ResourceDbfsFile(),
 			"databricks_directory":                   workspace.ResourceDirectory(),
 			"databricks_external_location":           catalog.ResourceExternalLocation(),
 			"databricks_git_credential":              repos.ResourceGitCredential(),
@@ -79,19 +86,19 @@ func DatabricksProvider() *schema.Provider {
 			"databricks_library":                     clusters.ResourceLibrary(),
 			"databricks_metastore":                   catalog.ResourceMetastore(),
 			"databricks_metastore_assignment":        catalog.ResourceMetastoreAssignment(),
-			"databricks_metastore_data_access":       catalog.ResourceDataAccessConfiguration(),
-			"databricks_mlflow_experiment":           mlflow.ResourceMLFlowExperiment(),
-			"databricks_mlflow_model":                mlflow.ResourceMLFlowModel(),
-			"databricks_mlflow_webhook":              mlflow.ResourceMLFlowWebhook(),
+			"databricks_metastore_data_access":       catalog.ResourceMetastoreDataAccess(),
+			"databricks_mlflow_experiment":           mlflow.ResourceMlflowExperiment(),
+			"databricks_mlflow_model":                mlflow.ResourceMlflowModel(),
+			"databricks_mlflow_webhook":              mlflow.ResourceMlflowWebhook(),
 			"databricks_mount":                       storage.ResourceMount(),
-			"databricks_mws_customer_managed_keys":   mws.ResourceCustomerManagedKey(),
-			"databricks_mws_credentials":             mws.ResourceCredentials(),
-			"databricks_mws_log_delivery":            mws.ResourceLogDelivery(),
-			"databricks_mws_networks":                mws.ResourceNetwork(),
-			"databricks_mws_private_access_settings": mws.ResourcePrivateAccessSettings(),
-			"databricks_mws_storage_configurations":  mws.ResourceStorageConfiguration(),
-			"databricks_mws_vpc_endpoint":            mws.ResourceVPCEndpoint(),
-			"databricks_mws_workspaces":              mws.ResourceWorkspace(),
+			"databricks_mws_customer_managed_keys":   mws.ResourceMwsCustomerManagedKeys(),
+			"databricks_mws_credentials":             mws.ResourceMwsCredentials(),
+			"databricks_mws_log_delivery":            mws.ResourceMwsLogDelivery(),
+			"databricks_mws_networks":                mws.ResourceMwsNetworks(),
+			"databricks_mws_private_access_settings": mws.ResourceMwsPrivateAccessSettings(),
+			"databricks_mws_storage_configurations":  mws.ResourceMwsStorageConfigurations(),
+			"databricks_mws_vpc_endpoint":            mws.ResourceMwsVpcEndpoint(),
+			"databricks_mws_workspaces":              mws.ResourceMwsWorkspaces(),
 			"databricks_notebook":                    workspace.ResourceNotebook(),
 			"databricks_obo_token":                   tokens.ResourceOboToken(),
 			"databricks_permissions":                 permissions.ResourcePermissions(),
@@ -102,13 +109,14 @@ func DatabricksProvider() *schema.Provider {
 			"databricks_secret_scope":                secrets.ResourceSecretScope(),
 			"databricks_secret_acl":                  secrets.ResourceSecretACL(),
 			"databricks_service_principal":           scim.ResourceServicePrincipal(),
-			"databricks_sql_dashboard":               sql.ResourceDashboard(),
-			"databricks_sql_endpoint":                sql.ResourceSQLEndpoint(),
-			"databricks_sql_global_config":           sql.ResourceSQLGlobalConfig(),
+			"databricks_service_principal_role":      aws.ResourceServicePrincipalRole(),
+			"databricks_sql_dashboard":               sql.ResourceSqlDashboard(),
+			"databricks_sql_endpoint":                sql.ResourceSqlEndpoint(),
+			"databricks_sql_global_config":           sql.ResourceSqlGlobalConfig(),
 			"databricks_sql_permissions":             access.ResourceSqlPermissions(),
-			"databricks_sql_query":                   sql.ResourceQuery(),
-			"databricks_sql_visualization":           sql.ResourceVisualization(),
-			"databricks_sql_widget":                  sql.ResourceWidget(),
+			"databricks_sql_query":                   sql.ResourceSqlQuery(),
+			"databricks_sql_visualization":           sql.ResourceSqlVisualization(),
+			"databricks_sql_widget":                  sql.ResourceSqlWidget(),
 			"databricks_storage_credential":          catalog.ResourceStorageCredential(),
 			"databricks_table":                       catalog.ResourceTable(),
 			"databricks_token":                       tokens.ResourceToken(),
@@ -119,7 +127,7 @@ func DatabricksProvider() *schema.Provider {
 		},
 		Schema: providerSchema(),
 	}
-	p.ConfigureContextFunc = func(ctx context.Context, d *schema.ResourceData) (interface{}, diag.Diagnostics) {
+	p.ConfigureContextFunc = func(ctx context.Context, d *schema.ResourceData) (any, diag.Diagnostics) {
 		ctx = context.WithValue(ctx, common.Provider, p)
 		return configureDatabricksClient(ctx, d)
 	}
@@ -154,7 +162,7 @@ func providerSchema() map[string]*schema.Schema {
 	return ps
 }
 
-func configureDatabricksClient(ctx context.Context, d *schema.ResourceData) (interface{}, diag.Diagnostics) {
+func configureDatabricksClient(ctx context.Context, d *schema.ResourceData) (any, diag.Diagnostics) {
 	prov := ctx.Value(common.Provider).(*schema.Provider)
 	pc := common.DatabricksClient{
 		Provider: prov,

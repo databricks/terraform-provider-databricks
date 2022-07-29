@@ -3,16 +3,16 @@ package acceptance
 import (
 	"context"
 
-	"github.com/databrickslabs/terraform-provider-databricks/aws"
-	"github.com/databrickslabs/terraform-provider-databricks/common"
-	"github.com/databrickslabs/terraform-provider-databricks/internal/acceptance"
-	"github.com/databrickslabs/terraform-provider-databricks/qa"
+	"github.com/databricks/terraform-provider-databricks/aws"
+	"github.com/databricks/terraform-provider-databricks/common"
+	"github.com/databricks/terraform-provider-databricks/internal/acceptance"
+	"github.com/databricks/terraform-provider-databricks/qa"
 
 	"os"
 	"testing"
 )
 
-func TestAwsAccGroupInstanceProfileResource(t *testing.T) {
+func TestAccAwsGroupInstanceProfileResource(t *testing.T) {
 	if _, ok := os.LookupEnv("CLOUD_ENV"); !ok {
 		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
 	}

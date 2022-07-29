@@ -6,7 +6,7 @@ page_title: "Provisioning AWS Databricks E2"
 
 You can provision multiple Databricks workspaces with Terraform.
 
-![Simplest multiworkspace](https://github.com/databrickslabs/terraform-provider-databricks/raw/master/docs/simplest-multiworkspace.png)
+![Simplest multiworkspace](https://github.com/databricks/terraform-provider-databricks/raw/master/docs/simplest-multiworkspace.png)
 
 ## Provider initialization for E2 workspaces
 
@@ -53,11 +53,11 @@ Before [managing workspace](workspace-management.md), you have to create:
 terraform {
   required_providers {
     databricks = {
-      source = "databrickslabs/databricks"
+      source = "databricks/databricks"
     }
     aws = {
       source  = "hashicorp/aws"
-      version = "3.49.0"
+      version = "~> 4.15.0"
     }
   }
 }
@@ -110,7 +110,7 @@ resource "databricks_mws_credentials" "this" {
 
 ## VPC
 
-The very first step is VPC creation with necessary firewall rules. Please consult [main documetation page](https://docs.databricks.com/administration-guide/cloud-configurations/aws/customer-managed-vpc.html) for **the most complete and up-to-date details on networking**. AWS VPS is registered as [databricks_mws_networks](../resources/mws_networks.md) resource. For STS, S3 and Kinesis, you can create VPC gateway or interface endpoints such that the relevant in-region traffic from clusters could transit over the secure AWS backbone rather than the public network, for more direct connections and reduced cost compared to AWS global endpoints. For more information, see [Regional endpoints](https://docs.databricks.com/administration-guide/cloud-configurations/aws/customer-managed-vpc.html#regional-endpoints-1).
+The very first step is VPC creation with necessary firewall rules. Please consult [main documentation page](https://docs.databricks.com/administration-guide/cloud-configurations/aws/customer-managed-vpc.html) for **the most complete and up-to-date details on networking**. AWS VPS is registered as [databricks_mws_networks](../resources/mws_networks.md) resource. For STS, S3 and Kinesis, you can create VPC gateway or interface endpoints such that the relevant in-region traffic from clusters could transit over the secure AWS backbone rather than the public network, for more direct connections and reduced cost compared to AWS global endpoints. For more information, see [Regional endpoints](https://docs.databricks.com/administration-guide/cloud-configurations/aws/customer-managed-vpc.html#regional-endpoints-1).
 
 ```hcl
 data "aws_availability_zones" "available" {}
@@ -197,7 +197,7 @@ resource "databricks_mws_networks" "this" {
 
 ## Root bucket
 
-Once [VPC](#vpc) is ready, create AWS S3 bucket for DBFS workspace storage, which is commonly referred to as **root bucket**. This provider has [databricks_aws_bucket_policy](../data-sources/aws_bucket_policy.md) with the necessary IAM policy template. AWS S3 bucket has to be registered through [databricks_mws_storage_configurations](../resources/mws_storage_configurations.md).
+Once [VPC](#vpc) is ready, create AWS S3 bucket for DBFS workspace storage, which is commonly referred to as **root bucket**. This provider has [databricks_aws_bucket_policy](../data-sources/aws_bucket_policy.md) with the necessary IAM policy template. The AWS S3 bucket has to be registered through [databricks_mws_storage_configurations](../resources/mws_storage_configurations.md).
 
 ```hcl
 resource "aws_s3_bucket" "root_storage_bucket" {
@@ -212,10 +212,23 @@ resource "aws_s3_bucket" "root_storage_bucket" {
   })
 }
 
+resource "aws_s3_bucket_server_side_encryption_configuration" "root_storage_bucket" {
+  bucket = aws_s3_bucket.root_storage_bucket.bucket
+
+  rule {
+    apply_server_side_encryption_by_default {
+      sse_algorithm = "AES256"
+    }
+  }
+}
+
 resource "aws_s3_bucket_public_access_block" "root_storage_bucket" {
-  bucket             = aws_s3_bucket.root_storage_bucket.id
-  ignore_public_acls = true
-  depends_on         = [aws_s3_bucket.root_storage_bucket]
+  bucket                  = aws_s3_bucket.root_storage_bucket.id
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
+  depends_on              = [aws_s3_bucket.root_storage_bucket]
 }
 
 data "databricks_aws_bucket_policy" "this" {
@@ -238,19 +251,18 @@ resource "databricks_mws_storage_configurations" "this" {
 
 ## Databricks E2 Workspace
 
-Once  [VPC](#vpc), [cross-account role](#cross-account-iam-role), and [root bucket](#root-bucket) are setup, you can create Databricks AWS E2 workspace through [databricks_mws_workspaces](../resources/mws_workspaces.md) resource.
+Once  [VPC](#vpc), [cross-account role](#cross-account-iam-role), and [root bucket](#root-bucket) are set up, you can create Databricks AWS E2 workspace through [databricks_mws_workspaces](../resources/mws_workspaces.md) resource.
 
-Code that creates workspaces and code that [manages workspaces](workspace-management.md) must be in separate terraform modules to avoid common confusion between `provider = databricks.mws` and `provider = databricks.created_workspace`. This is why we specify `databricks_host` and `databricks_token` outputs, that have to be used in the latter modules.
+Code that creates workspaces and code that [manages workspaces](workspace-management.md) must be in separate terraform modules to avoid common confusion between `provider = databricks.mws` and `provider = databricks.created_workspace`. This is why we specify `databricks_host` and `databricks_token` outputs, which have to be used in the latter modules.
 
 -> **Note** If you experience technical difficulties with rolling out resources in this example, please make sure that [environment variables](../index.md#environment-variables) don't [conflict with other](../index.md#empty-provider-block) provider block attributes. When in doubt, please run `TF_LOG=DEBUG terraform apply` to enable [debug mode](https://www.terraform.io/docs/internals/debugging.html) through the [`TF_LOG`](https://www.terraform.io/docs/cli/config/environment-variables.html#tf_log) environment variable. Look specifically for `Explicit and implicit attributes` lines, that should indicate authentication attributes used. The other common reason for technical difficulties might be related to missing `alias` attribute in `provider "databricks" {}` blocks or `provider` attribute in `resource "databricks_..." {}` blocks. Please make sure to read [`alias`: Multiple Provider Configurations](https://www.terraform.io/docs/language/providers/configuration.html#alias-multiple-provider-configurations) documentation article.
 
 ```hcl
 resource "databricks_mws_workspaces" "this" {
-  provider        = databricks.mws
-  account_id      = var.databricks_account_id
-  aws_region      = var.region
-  workspace_name  = local.prefix
-  deployment_name = local.prefix
+  provider       = databricks.mws
+  account_id     = var.databricks_account_id
+  aws_region     = var.region
+  workspace_name = local.prefix
 
   credentials_id           = databricks_mws_credentials.this.credentials_id
   storage_configuration_id = databricks_mws_storage_configurations.this.storage_configuration_id
@@ -296,7 +308,7 @@ We assume that you have a terraform module in your project that creats a workspa
 
 ### Credentials validation checks errors
 
-Due to a bug in the Terraform AWS provider (spotted in v3.28) the Databricks AWS crossaccount policy creation and attachment to the IAM role takes longer than the AWS request confirmation to Terraform. As Terraform continues creating the Workspace, validation checks for the credentials are failing, as the policy doesn't get applied quick enough. Showing the error:
+Due to a bug in the Terraform AWS provider (spotted in v3.28) the Databricks AWS cross-account policy creation and attachment to the IAM role takes longer than the AWS request confirmation to Terraform. As Terraform continues creating the Workspace, validation checks for the credentials are failing, as the policy doesn't get applied quick enough. Showing the error:
 
 ```
 Error: MALFORMED_REQUEST: Failed credentials validation checks: Spot Cancellation, Create Placement Group, Delete Tags, Describe Availability Zones, Describe instances, Describe Instance Status, Describe Placement Group, Describe Route Tables, Describe Security Groups, Describe Spot Instances, Describe Spot Price History, Describe Subnets, Describe Volumes, Describe Vpcs, Request Spot Instances
@@ -323,10 +335,10 @@ Error: MALFORMED_REQUEST: Failed credentials validation checks: Spot Cancellatio
 
 - Try creating workspace from UI:
 
-![create_workspace_error](https://github.com/databrickslabs/terraform-provider-databricks/raw/master/docs/images/create_workspace_error.png)
+![create_workspace_error](https://github.com/databricks/terraform-provider-databricks/raw/master/docs/images/create_workspace_error.png)
 
 
 - Verify if the role and policy exists (assume role should allow external id)
 
-![iam_role_trust_error](https://github.com/databrickslabs/terraform-provider-databricks/raw/master/docs/images/iam_role_trust_error.png)
+![iam_role_trust_error](https://github.com/databricks/terraform-provider-databricks/raw/master/docs/images/iam_role_trust_error.png)
 

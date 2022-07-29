@@ -3,7 +3,7 @@ subcategory: "Unity Catalog"
 ---
 # databricks_schema Resource
 
--> **Private Preview** This feature is in [Private Preview](https://docs.databricks.com/release-notes/release-types.html). Contact your Databricks representative to request access. 
+-> **Public Preview** This feature is in [Public Preview](https://docs.databricks.com/release-notes/release-types.html). Contact your Databricks representative to request access. 
 
 Within a metastore, Unity Catalog provides a 3-level namespace for organizing data: Catalogs, Databases (also called Schemas), and Tables / Views.
 
@@ -37,7 +37,7 @@ The following arguments are required:
 
 * `name` - Name of Schema relative to parent catalog. Change forces creation of a new resource.
 * `catalog_name` - Name of parent catalog
-* `owner` - (Optional) Username/groupname of schema owner. Currently this field can only be changed after the resource is created.
+* `owner` - (Optional) Username/groupname/sp application_id schema owner.
 * `comment` - (Optional) User-supplied free-form text.
 * `properties` - (Optional) Extensible Schema properties.
 
@@ -53,6 +53,6 @@ $ terraform import databricks_schema.this <name>
 
 The following resources are used in the same context:
 
-* [databricks_table](../data-sources/table.md) data to list tables within Unity Catalog.
-* [databricks_schema](../data-sources/schema.md) data to list schemas within Unity Catalog.
-* [databricks_catalog](../data-sources/catalog.md) data to list catalogs within Unity Catalog.
+* [databricks_table](../data-sources/tables.md) data to list tables within Unity Catalog.
+* [databricks_schema](../data-sources/schemas.md) data to list schemas within Unity Catalog.
+* [databricks_catalog](../data-sources/catalogs.md) data to list catalogs within Unity Catalog.

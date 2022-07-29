@@ -3,10 +3,9 @@ package qa
 import (
 	"context"
 	"fmt"
-	"os"
 	"testing"
 
-	"github.com/databrickslabs/terraform-provider-databricks/common"
+	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -26,38 +25,6 @@ func TestRandomLongName(t *testing.T) {
 func TestRandomName(t *testing.T) {
 	n := RandomName("x", "y")
 	assert.Equal(t, 14, len(n))
-}
-
-func TestEnvironmentTemplate(t *testing.T) {
-	defer common.CleanupEnvironment()
-	err := os.Setenv("USER", RandomName())
-	assert.NoError(t, err)
-
-	res := EnvironmentTemplate(t, `
-	resource "user" "me" {
-		name  = "{env.USER}"
-		email = "{env.USER}+{var.RANDOM}@example.com"
-	}`)
-	assert.Equal(t, os.Getenv("USER"), FirstKeyValue(t, res, "name"))
-}
-
-func TestEnvironmentTemplate_other_vars(t *testing.T) {
-	otherVar := map[string]string{"TEST": "value"}
-	res := EnvironmentTemplate(t, `
-	resource "user" "me" {
-		name  = "{var.TEST}"
-	}`, otherVar)
-	assert.Equal(t, otherVar["TEST"], FirstKeyValue(t, res, "name"))
-}
-
-func TestEnvironmentTemplate_unset_env(t *testing.T) {
-	res, err := environmentTemplate(t, `
-	resource "user" "me" {
-		name  = "{env.USER}"
-		email = "{env.USER}+{var.RANDOM}@example.com"
-	}`)
-	assert.Equal(t, "", res)
-	assert.Errorf(t, err, fmt.Sprintf("please set %d variables and restart.", 2))
 }
 
 func TestResourceFixture(t *testing.T) {
@@ -125,7 +92,7 @@ var noopContextResource = &schema.Resource{
 	},
 	ReadContext:   schema.NoopContext,
 	CreateContext: schema.NoopContext,
-	UpdateContext: func(_ context.Context, d *schema.ResourceData, _ interface{}) diag.Diagnostics {
+	UpdateContext: func(_ context.Context, d *schema.ResourceData, _ any) diag.Diagnostics {
 		// nolint
 		d.Set("trigger", "corrupt")
 		return nil
@@ -244,7 +211,7 @@ func TestResourceFixture_ApplyAndExpectData(t *testing.T) {
 		dummy = true
 		trigger = "now"
 		`,
-	}.ApplyAndExpectData(t, map[string]interface{}{"id": "x", "dummy": true, "trigger": "now"})
+	}.ApplyAndExpectData(t, map[string]any{"id": "x", "dummy": true, "trigger": "now"})
 }
 
 func TestResourceFixture_InstanceState(t *testing.T) {
@@ -256,7 +223,7 @@ func TestResourceFixture_InstanceState(t *testing.T) {
 			"dummy":   "false",
 			"trigger": "y",
 		},
-		State: map[string]interface{}{
+		State: map[string]any{
 			"dummy":   "true",
 			"trigger": "x",
 		},
@@ -273,7 +240,7 @@ func TestResourceFixture_Apply_Fail(t *testing.T) {
 		},
 		Resource: noopResource,
 		Create:   true,
-		State: map[string]interface{}{
+		State: map[string]any{
 			"dummy": true,
 			"check": false,
 		},
@@ -291,7 +258,7 @@ func TestUnionFixturesLists(t *testing.T) {
 }
 
 func TestFixHCL_CornerCase(t *testing.T) {
-	x := fixHCL([]map[string]interface{}{
+	x := fixHCL([]map[string]any{
 		{
 			"x": true,
 		},

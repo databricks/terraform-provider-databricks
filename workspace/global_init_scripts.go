@@ -3,11 +3,11 @@ package workspace
 import (
 	"context"
 
-	"github.com/databrickslabs/terraform-provider-databricks/common"
+	"github.com/databricks/terraform-provider-databricks/common"
 )
 
 // NewGlobalInitScriptsAPI creates GlobalInitScriptsAPI instance from provider meta
-func NewGlobalInitScriptsAPI(ctx context.Context, m interface{}) GlobalInitScriptsAPI {
+func NewGlobalInitScriptsAPI(ctx context.Context, m any) GlobalInitScriptsAPI {
 	return GlobalInitScriptsAPI{
 		client:  m.(*common.DatabricksClient),
 		context: ctx,

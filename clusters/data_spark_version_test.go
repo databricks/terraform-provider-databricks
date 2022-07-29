@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/databrickslabs/terraform-provider-databricks/qa"
+	"github.com/databricks/terraform-provider-databricks/qa"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -68,7 +68,7 @@ func TestSparkVersionLatest(t *testing.T) {
 		Read:        true,
 		Resource:    DataSourceSparkVersion(),
 		NonWritable: true,
-		State:       map[string]interface{}{},
+		State:       map[string]any{},
 		ID:          ".",
 	}.Apply(t)
 	assert.NoError(t, err)
@@ -81,7 +81,7 @@ func TestSparkVersionLTS(t *testing.T) {
 		Read:        true,
 		Resource:    DataSourceSparkVersion(),
 		NonWritable: true,
-		State: map[string]interface{}{
+		State: map[string]any{
 			"long_term_support": true,
 		},
 		ID: ".",
@@ -96,7 +96,7 @@ func TestSparkVersionESR(t *testing.T) {
 		Read:        true,
 		Resource:    DataSourceSparkVersion(),
 		NonWritable: true,
-		State: map[string]interface{}{
+		State: map[string]any{
 			"long_term_support": true,
 			"scala":             "2.11",
 			"ml":                true,
@@ -113,7 +113,7 @@ func TestSparkVersionGpuMl(t *testing.T) {
 		Read:        true,
 		Resource:    DataSourceSparkVersion(),
 		NonWritable: true,
-		State: map[string]interface{}{
+		State: map[string]any{
 			"gpu": true,
 			"ml":  true,
 		},
@@ -129,7 +129,7 @@ func TestSparkVersionGenomics(t *testing.T) {
 		Read:        true,
 		Resource:    DataSourceSparkVersion(),
 		NonWritable: true,
-		State: map[string]interface{}{
+		State: map[string]any{
 			"genomics": true,
 		},
 		ID: ".",
@@ -144,7 +144,7 @@ func TestSparkVersion300(t *testing.T) {
 		Read:        true,
 		Resource:    DataSourceSparkVersion(),
 		NonWritable: true,
-		State: map[string]interface{}{
+		State: map[string]any{
 			"spark_version": "3.0.0",
 		},
 		ID: ".",
@@ -159,7 +159,7 @@ func TestSparkVersionBeta(t *testing.T) {
 		Read:        true,
 		Resource:    DataSourceSparkVersion(),
 		NonWritable: true,
-		State: map[string]interface{}{
+		State: map[string]any{
 			"beta": true,
 		},
 		ID: ".",
@@ -174,7 +174,7 @@ func TestSparkVersionPhoton(t *testing.T) {
 		Read:        true,
 		Resource:    DataSourceSparkVersion(),
 		NonWritable: true,
-		State: map[string]interface{}{
+		State: map[string]any{
 			"photon": true,
 		},
 		ID: ".",
@@ -189,7 +189,7 @@ func TestSparkVersionErrorNoResults(t *testing.T) {
 		Read:        true,
 		Resource:    DataSourceSparkVersion(),
 		NonWritable: true,
-		State: map[string]interface{}{
+		State: map[string]any{
 			"beta":              true,
 			"long_term_support": true,
 		},
@@ -205,7 +205,7 @@ func TestSparkVersionErrorMultipleResults(t *testing.T) {
 		Read:        true,
 		Resource:    DataSourceSparkVersion(),
 		NonWritable: true,
-		State: map[string]interface{}{
+		State: map[string]any{
 			"latest": false,
 		},
 		ID: ".",
@@ -226,11 +226,11 @@ func TestSparkVersionErrorBadAnswer(t *testing.T) {
 		Read:        true,
 		Resource:    DataSourceSparkVersion(),
 		NonWritable: true,
-		State: map[string]interface{}{
+		State: map[string]any{
 			"latest": false,
 		},
 		ID: ".",
 	}.Apply(t)
 	assert.Error(t, err)
-	require.Equal(t, true, strings.Contains(err.Error(), "Invalid JSON received"))
+	require.Equal(t, true, strings.Contains(err.Error(), "invalid character 'g' looking"))
 }

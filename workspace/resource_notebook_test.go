@@ -4,9 +4,9 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/databrickslabs/terraform-provider-databricks/common"
+	"github.com/databricks/terraform-provider-databricks/common"
 
-	"github.com/databrickslabs/terraform-provider-databricks/qa"
+	"github.com/databricks/terraform-provider-databricks/qa"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -139,7 +139,7 @@ func TestResourceNotebookCreate(t *testing.T) {
 			},
 		},
 		Resource: ResourceNotebook(),
-		State: map[string]interface{}{
+		State: map[string]any{
 			"content_base64": "YWJjCg==",
 			"language":       "PYTHON",
 			"path":           "/foo/path.py",
@@ -178,7 +178,7 @@ func TestResourceNotebookCreateSource(t *testing.T) {
 			},
 		},
 		Resource: ResourceNotebook(),
-		State: map[string]interface{}{
+		State: map[string]any{
 			"source": "acceptance/testdata/tf-test-sql.sql",
 			"path":   "/Dashboard",
 		},
@@ -202,7 +202,7 @@ func TestResourceNotebookCreate_Error(t *testing.T) {
 			},
 		},
 		Resource: ResourceNotebook(),
-		State: map[string]interface{}{
+		State: map[string]any{
 			"content_base64": "YWJjCg==",
 			"language":       "R",
 			"path":           "/path.py",
@@ -260,7 +260,7 @@ func TestResourceNotebookUpdate(t *testing.T) {
 			},
 		},
 		Resource: ResourceNotebook(),
-		State: map[string]interface{}{
+		State: map[string]any{
 			"content_base64": "YWJjCg==",
 			"language":       "R",
 			"path":           "/path.py",
@@ -302,7 +302,7 @@ func TestResourceNotebookUpdate_DBC(t *testing.T) {
 			},
 		},
 		Resource: ResourceNotebook(),
-		State: map[string]interface{}{
+		State: map[string]any{
 			"content_base64": "YWJjCg==",
 
 			// technically language is not needed, but makes the test simpler

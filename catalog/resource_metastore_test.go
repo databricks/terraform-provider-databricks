@@ -3,7 +3,7 @@ package catalog
 import (
 	"testing"
 
-	"github.com/databrickslabs/terraform-provider-databricks/qa"
+	"github.com/databricks/terraform-provider-databricks/qa"
 )
 
 func TestMetastoreCornerCases(t *testing.T) {
@@ -15,7 +15,7 @@ func TestCreateMetastore(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "POST",
-				Resource: "/api/2.0/unity-catalog/metastores",
+				Resource: "/api/2.1/unity-catalog/metastores",
 				ExpectedRequest: MetastoreInfo{
 					StorageRoot: "s3://b",
 					Name:        "a",
@@ -26,17 +26,50 @@ func TestCreateMetastore(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/unity-catalog/metastores/abc",
+				Resource: "/api/2.1/unity-catalog/metastores/abc",
 				Response: MetastoreInfo{
 					StorageRoot: "s3://b/abc",
 					Name:        "a",
 				},
 			},
+		},
+		Resource: ResourceMetastore(),
+		Create:   true,
+		HCL: `
+		name = "a"
+		storage_root = "s3://b"
+		`,
+	}.ApplyNoError(t)
+}
+
+func TestCreateMetastoreWithOwner(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.1/unity-catalog/metastores",
+				ExpectedRequest: MetastoreInfo{
+					StorageRoot: "s3://b",
+					Name:        "a",
+				},
+				Response: MetastoreInfo{
+					MetastoreID: "abc",
+				},
+			},
 			{
 				Method:   "PATCH",
-				Resource: "/api/2.0/unity-catalog/metastores/abc",
-				ExpectedRequest: map[string]interface{}{
+				Resource: "/api/2.1/unity-catalog/metastores/abc",
+				ExpectedRequest: map[string]any{
 					"owner": "administrators",
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/unity-catalog/metastores/abc",
+				Response: MetastoreInfo{
+					StorageRoot: "s3://b/abc",
+					Name:        "a",
+					Owner:       "administrators",
 				},
 			},
 		},
@@ -50,12 +83,58 @@ func TestCreateMetastore(t *testing.T) {
 	}.ApplyNoError(t)
 }
 
+func TestCreateMetastore_DeltaSharing(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.1/unity-catalog/metastores",
+				ExpectedRequest: MetastoreInfo{
+					StorageRoot: "s3://b",
+					Name:        "a",
+				},
+				Response: MetastoreInfo{
+					MetastoreID: "abc",
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/unity-catalog/metastores/abc",
+				Response: MetastoreInfo{
+					StorageRoot: "s3://b/abc",
+					Name:        "a",
+				},
+			},
+			{
+				Method:   "PATCH",
+				Resource: "/api/2.1/unity-catalog/metastores/abc",
+				ExpectedRequest: map[string]any{
+					"owner":               "administrators",
+					"delta_sharing_scope": "INTERNAL_AND_EXTERNAL",
+					"delta_sharing_recipient_token_lifetime_in_seconds": 0,
+					"delta_sharing_organization_name":                   "acme",
+				},
+			},
+		},
+		Resource: ResourceMetastore(),
+		Create:   true,
+		HCL: `
+		name = "a"
+		storage_root = "s3://b"
+		owner = "administrators"
+		delta_sharing_scope = "INTERNAL_AND_EXTERNAL"
+		delta_sharing_recipient_token_lifetime_in_seconds = 0
+		delta_sharing_organization_name = "acme"
+		`,
+	}.ApplyNoError(t)
+}
+
 func TestDeleteMetastore(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "DELETE",
-				Resource: "/api/2.0/unity-catalog/metastores/abc",
+				Resource: "/api/2.1/unity-catalog/metastores/abc",
 				ExpectedRequest: map[string]bool{
 					"force": false,
 				},
@@ -76,7 +155,7 @@ func TestForceDeleteMetastore(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "DELETE",
-				Resource: "/api/2.0/unity-catalog/metastores/abc",
+				Resource: "/api/2.1/unity-catalog/metastores/abc",
 				ExpectedRequest: map[string]bool{
 					"force": true,
 				},
@@ -90,6 +169,80 @@ func TestForceDeleteMetastore(t *testing.T) {
 		storage_root = "s3://b"
 
 		force_destroy = true
+		`,
+	}.ApplyNoError(t)
+}
+
+func TestUpdateMetastore_NoChanges(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/unity-catalog/metastores/abc",
+				Response: MetastoreInfo{
+					StorageRoot: "s3://b/abc",
+					Name:        "a",
+				},
+			},
+		},
+		Resource:    ResourceMetastore(),
+		ID:          "abc",
+		Update:      true,
+		RequiresNew: true,
+		InstanceState: map[string]string{
+			"name":                "abc",
+			"storage_root":        "s3:/a",
+			"owner":               "admin",
+			"delta_sharing_scope": "INTERNAL_AND_EXTERNAL",
+			"delta_sharing_recipient_token_lifetime_in_seconds": "1002",
+		},
+		HCL: `
+		name = "abc"
+		storage_root = "s3:/a"
+		owner = "admin"
+		delta_sharing_scope = "INTERNAL_AND_EXTERNAL"
+		delta_sharing_recipient_token_lifetime_in_seconds = 1002
+		`,
+	}.ApplyNoError(t)
+}
+
+func TestUpdateMetastore_DeltaSharingScopeOnly(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "PATCH",
+				Resource: "/api/2.1/unity-catalog/metastores/abc",
+				ExpectedRequest: map[string]any{
+					"delta_sharing_scope":                               "INTERNAL_AND_EXTERNAL",
+					"delta_sharing_recipient_token_lifetime_in_seconds": 1002,
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/unity-catalog/metastores/abc",
+				Response: MetastoreInfo{
+					StorageRoot: "s3://b/abc",
+					Name:        "a",
+				},
+			},
+		},
+		Resource:    ResourceMetastore(),
+		ID:          "abc",
+		Update:      true,
+		RequiresNew: true,
+		InstanceState: map[string]string{
+			"name":                "abc",
+			"storage_root":        "s3:/a",
+			"owner":               "admin",
+			"delta_sharing_scope": "INTERNAL",
+			"delta_sharing_recipient_token_lifetime_in_seconds": "1002",
+		},
+		HCL: `
+		name = "abc"
+		storage_root = "s3:/a"
+		owner = "admin"
+		delta_sharing_scope = "INTERNAL_AND_EXTERNAL"
+		delta_sharing_recipient_token_lifetime_in_seconds = 1002
 		`,
 	}.ApplyNoError(t)
 }

@@ -41,7 +41,7 @@ func DataSourceCurrentUser() *schema.Resource {
 				Computed: true,
 			},
 		},
-		ReadContext: func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+		ReadContext: func(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
 			usersAPI := NewUsersAPI(ctx, m)
 			me, err := usersAPI.Me()
 			if err != nil {

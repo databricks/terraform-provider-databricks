@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/databrickslabs/terraform-provider-databricks/clusters"
-	"github.com/databrickslabs/terraform-provider-databricks/common"
+	"github.com/databricks/terraform-provider-databricks/clusters"
+	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -44,7 +44,7 @@ func (m S3IamMount) ValidateAndApplyDefaults(d *schema.ResourceData, client *com
 	return fmt.Errorf("'name' is not detected & it's impossible to infer it")
 }
 
-func preprocessS3MountGeneric(ctx context.Context, s map[string]*schema.Schema, d *schema.ResourceData, m interface{}) error {
+func preprocessS3MountGeneric(ctx context.Context, s map[string]*schema.Schema, d *schema.ResourceData, m any) error {
 	var gm GenericMount
 	common.DataToStructPointer(d, s, &gm)
 	// TODO: move into Validate function
@@ -62,6 +62,12 @@ func preprocessS3MountGeneric(ctx context.Context, s map[string]*schema.Schema, 
 	clustersAPI := clusters.NewClustersAPI(ctx, m)
 	if clusterID != "" {
 		clusterInfo, err := clustersAPI.Get(clusterID)
+		if common.IsMissing(err) {
+			if instanceProfile == "" {
+				return fmt.Errorf("instance profile is required to re-create mounting cluster")
+			}
+			return mountS3ViaProfileAndSetClusterID(clustersAPI, instanceProfile, d)
+		}
 		if err != nil {
 			return err
 		}
@@ -69,11 +75,16 @@ func preprocessS3MountGeneric(ctx context.Context, s map[string]*schema.Schema, 
 			return fmt.Errorf("cluster %s must have EC2 instance profile attached", clusterID)
 		}
 	} else if instanceProfile != "" {
-		cluster, err := GetOrCreateMountingClusterWithInstanceProfile(clustersAPI, instanceProfile)
-		if err != nil {
-			return err
-		}
-		return d.Set("cluster_id", cluster.ClusterID)
+		return mountS3ViaProfileAndSetClusterID(clustersAPI, instanceProfile, d)
 	}
 	return nil
+}
+
+func mountS3ViaProfileAndSetClusterID(clustersAPI clusters.ClustersAPI,
+	instanceProfile string, d *schema.ResourceData) error {
+	cluster, err := GetOrCreateMountingClusterWithInstanceProfile(clustersAPI, instanceProfile)
+	if err != nil {
+		return fmt.Errorf("mount via profile: %w", err)
+	}
+	return d.Set("cluster_id", cluster.ClusterID)
 }

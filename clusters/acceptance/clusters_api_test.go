@@ -2,24 +2,20 @@ package acceptance
 
 import (
 	"context"
-	"os"
 	"reflect"
 	"testing"
 
-	"github.com/databrickslabs/terraform-provider-databricks/clusters"
-	"github.com/databrickslabs/terraform-provider-databricks/common"
-	"github.com/databrickslabs/terraform-provider-databricks/internal/compute"
-	"github.com/databrickslabs/terraform-provider-databricks/qa"
+	"github.com/databricks/terraform-provider-databricks/clusters"
+	"github.com/databricks/terraform-provider-databricks/common"
+	"github.com/databricks/terraform-provider-databricks/internal/compute"
+	"github.com/databricks/terraform-provider-databricks/qa"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func TestAccListClustersIntegration(t *testing.T) {
-	cloudEnv := os.Getenv("CLOUD_ENV")
-	if cloudEnv == "" {
-		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
-	}
-
+	qa.RequireAnyCloudEnv(t)
+	t.Parallel()
 	client := common.CommonEnvironmentClient()
 	ctx := context.Background()
 	clustersAPI := clusters.NewClustersAPI(ctx, client)

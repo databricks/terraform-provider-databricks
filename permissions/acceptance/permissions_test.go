@@ -5,16 +5,17 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/databrickslabs/terraform-provider-databricks/common"
-	"github.com/databrickslabs/terraform-provider-databricks/permissions"
+	"github.com/databricks/terraform-provider-databricks/common"
+	"github.com/databricks/terraform-provider-databricks/permissions"
 
-	"github.com/databrickslabs/terraform-provider-databricks/internal/acceptance"
+	"github.com/databricks/terraform-provider-databricks/internal/acceptance"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestAccDatabricksPermissionsResourceFullLifecycle(t *testing.T) {
+	t.Parallel()
 	randomName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
 	acceptance.AccTest(t, resource.TestCase{
 		Steps: []resource.TestStep{
@@ -88,6 +89,7 @@ func TestAccDatabricksPermissionsResourceFullLifecycle(t *testing.T) {
 }
 
 func TestAccDatabricksReposPermissionsResourceFullLifecycle(t *testing.T) {
+	t.Parallel()
 	randomName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
 	acceptance.AccTest(t, resource.TestCase{
 		Steps: []resource.TestStep{

@@ -3,10 +3,11 @@ package acceptance
 import (
 	"testing"
 
-	"github.com/databrickslabs/terraform-provider-databricks/internal/acceptance"
+	"github.com/databricks/terraform-provider-databricks/internal/acceptance"
 )
 
 func TestAccClusterResource_CreateClusterWithLibraries(t *testing.T) {
+	t.Parallel()
 	acceptance.Test(t, []acceptance.Step{
 		{
 			Template: `
@@ -54,6 +55,7 @@ func TestAccClusterResource_CreateClusterWithLibraries(t *testing.T) {
 }
 
 func TestAccClusterResource_CreateSingleNodeCluster(t *testing.T) {
+	t.Parallel()
 	acceptance.Test(t, []acceptance.Step{
 		{
 			Template: `

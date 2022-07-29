@@ -8,7 +8,7 @@ page_title: "Provisioning Databricks on AWS with PrivateLink"
 
 Databricks PrivateLink support enables private connectivity between users and their Databricks workspaces and between clusters on the data plane and core services on the control plane within the Databricks workspace infrastructure. You can use Terraform to deploy the underlying cloud resources and the private access settings resources automatically, using a programmatic approach. This guide assumes you are deploying into an existing VPC and you have set up credentials and storage configurations as per prior examples, notably here.
 
-![Private link backend](https://raw.githubusercontent.com/databrickslabs/terraform-provider-databricks/master/docs/images/aws-e2-private-link-backend.png)
+![Private link backend](https://raw.githubusercontent.com/databricks/terraform-provider-databricks/master/docs/images/aws-e2-private-link-backend.png)
 
 This guide uses the following variables in configurations:
 
@@ -23,8 +23,8 @@ This guide uses the following variables in configurations:
 - `relay_vpce_service` - Choose the region-specific service from this table.
 - `vpce_subnet_cidr` - CIDR range for the subnet chosen for the VPC endpoint.
 - `tags` - tags for the Private Link backend setup.
-- `root_bucket_name` - AWS bucket name required for [databricks_mws_storage_configurations](https://registry.terraform.io/providers/databrickslabs/databricks/latest/docs/resources/mws_storage_configurations).
-- `cross_account_arn` - AWS EC2 role ARN required for [databricks_mws_credentials](https://registry.terraform.io/providers/databrickslabs/databricks/latest/docs/resources/mws_credentials).
+- `root_bucket_name` - AWS bucket name required for [databricks_mws_storage_configurations](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/mws_storage_configurations).
+- `cross_account_arn` - AWS EC2 role ARN required for [databricks_mws_credentials](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/mws_credentials).
 
 This guide is provided as-is and you can use this guide as the basis for your custom Terraform module.
 
@@ -44,11 +44,11 @@ Initialize [provider with `mws` alias](https://www.terraform.io/language/provide
 terraform {
   required_providers {
     databricks = {
-      source = "databrickslabs/databricks"
+      source = "databricks/databricks"
     }
     aws = {
       source  = "hashicorp/aws"
-      version = "3.49.0"
+      version = "~> 4.15.0"
     }
   }
 }
@@ -273,7 +273,7 @@ resource "databricks_mws_networks" "this" {
 
 For a workspace to support any of the PrivateLink connectivity scenarios, the workspace must be created with an attached [databricks_mws_private_access_settings](../resources/mws_private_access_settings.md) resource.
 
-The credentials ID which is referenced below is one of the attributes which is created as a result of configuring the cross-account IAM role, which Databricks uses to orchestrate EC2 resources. The credentials are created via [databricks_mws_credentials](https://registry.terraform.io/providers/databrickslabs/databricks/latest/docs/resources/mws_credentials). Similarly, the storage configuration ID is obtained from the [databricks_mws_storage_configurations](https://registry.terraform.io/providers/databrickslabs/databricks/latest/docs/resources/mws_storage_configurations) resource.
+The credentials ID which is referenced below is one of the attributes which is created as a result of configuring the cross-account IAM role, which Databricks uses to orchestrate EC2 resources. The credentials are created via [databricks_mws_credentials](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/mws_credentials). Similarly, the storage configuration ID is obtained from the [databricks_mws_storage_configurations](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/mws_storage_configurations) resource.
 
 ```hcl
 resource "databricks_mws_private_access_settings" "pas" {
@@ -289,7 +289,6 @@ resource "databricks_mws_workspaces" "this" {
   account_id                 = var.databricks_account_id
   aws_region                 = var.region
   workspace_name             = local.prefix
-  deployment_name            = local.prefix
   credentials_id             = databricks_mws_credentials.this.credentials_id
   storage_configuration_id   = databricks_mws_storage_configurations.this.storage_configuration_id
   network_id                 = databricks_mws_networks.this.network_id

@@ -6,7 +6,7 @@ import (
 	"net/url"
 	"testing"
 
-	"github.com/databrickslabs/terraform-provider-databricks/qa"
+	"github.com/databricks/terraform-provider-databricks/qa"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -167,9 +167,9 @@ func TestDBFSFileCreate(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			d, err := qa.ResourceFixture{
 				Fixtures: tt.fixtures,
-				Resource: ResourceDBFSFile(),
+				Resource: ResourceDbfsFile(),
 				Create:   true,
-				State: map[string]interface{}{
+				State: map[string]any{
 					"source": tt.source,
 					"path":   tt.path,
 				},
@@ -190,10 +190,10 @@ func TestDBFSFileDelete(t *testing.T) {
 	path := "/abc"
 	d, err := qa.ResourceFixture{
 		Fixtures: getBaseDBFSDeleteFixtures(path, false),
-		Resource: ResourceDBFSFile(),
+		Resource: ResourceDbfsFile(),
 		Delete:   true,
 		ID:       path,
-		State: map[string]interface{}{
+		State: map[string]any{
 			"source": "testdata/tf-test-python.py",
 			"path":   path,
 		},
@@ -207,11 +207,11 @@ func TestDBFSFileRead_IsMissingResource(t *testing.T) {
 	path := "/abc"
 	qa.ResourceFixture{
 		Fixtures: getBaseDBFSFileGetStatusFixtures(path, false, true),
-		Resource: ResourceDBFSFile(),
+		Resource: ResourceDbfsFile(),
 		Read:     true,
 		ID:       path,
 		Removed:  true,
-		State: map[string]interface{}{
+		State: map[string]any{
 			"source": "testdata/tf-test-python.py",
 			"path":   path,
 		},

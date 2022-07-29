@@ -3,7 +3,7 @@ package storage
 import (
 	"testing"
 
-	"github.com/databrickslabs/terraform-provider-databricks/qa"
+	"github.com/databricks/terraform-provider-databricks/qa"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -44,9 +44,9 @@ func TestDataSourceFilePaths(t *testing.T) {
 		},
 		Read:        true,
 		NonWritable: true,
-		Resource:    DataSourceDBFSFilePaths(),
+		Resource:    DataSourceDbfsFilePaths(),
 		ID:          ".",
-		State: map[string]interface{}{
+		State: map[string]any{
 			"path":      "/a/b/c",
 			"recursive": true,
 		},

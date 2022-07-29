@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/databrickslabs/terraform-provider-databricks/common"
+	"github.com/databricks/terraform-provider-databricks/common"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -36,7 +36,7 @@ type GlobalConfigForRead struct {
 	SqlConfigurationParameters *repeatedEndpointConfPairs `json:"sql_configuration_parameters,omitempty"`
 }
 
-func NewSqlGlobalConfigAPI(ctx context.Context, m interface{}) globalConfigAPI {
+func NewSqlGlobalConfigAPI(ctx context.Context, m any) globalConfigAPI {
 	return globalConfigAPI{m.(*common.DatabricksClient), ctx}
 }
 
@@ -46,7 +46,7 @@ type globalConfigAPI struct {
 }
 
 func (a globalConfigAPI) Set(gc GlobalConfig) error {
-	data := map[string]interface{}{
+	data := map[string]any{
 		"security_policy":           gc.SecurityPolicy,
 		"enable_serverless_compute": gc.EnableServerlessCompute,
 	}
@@ -77,13 +77,13 @@ func (a globalConfigAPI) Set(gc GlobalConfig) error {
 		data["sql_configuration_parameters"] = sql_params
 	}
 
-	return a.client.Put(a.context, "/sql/config/endpoints", data)
+	return a.client.Put(a.context, "/sql/config/warehouses", data)
 }
 
 func (a globalConfigAPI) Get() (GlobalConfig, error) {
 	gc := GlobalConfig{}
 	gcr := GlobalConfigForRead{}
-	if err := a.client.Get(a.context, "/sql/config/endpoints", nil, &gcr); err != nil {
+	if err := a.client.Get(a.context, "/sql/config/warehouses", nil, &gcr); err != nil {
 		return gc, err
 	}
 	gc.InstanceProfileARN = gcr.InstanceProfileARN
@@ -97,7 +97,7 @@ func (a globalConfigAPI) Get() (GlobalConfig, error) {
 	return gc, nil
 }
 
-func ResourceSQLGlobalConfig() *schema.Resource {
+func ResourceSqlGlobalConfig() *schema.Resource {
 	s := common.StructToSchema(GlobalConfig{}, func(
 		m map[string]*schema.Schema) map[string]*schema.Schema {
 		return m

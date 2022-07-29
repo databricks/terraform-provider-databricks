@@ -3,7 +3,7 @@ package jobs
 import (
 	"testing"
 
-	"github.com/databrickslabs/terraform-provider-databricks/qa"
+	"github.com/databricks/terraform-provider-databricks/qa"
 )
 
 func TestJobsData(t *testing.T) {
@@ -34,8 +34,8 @@ func TestJobsData(t *testing.T) {
 		Read:        true,
 		NonWritable: true,
 		ID:          "_",
-	}.ApplyAndExpectData(t, map[string]interface{}{
-		"ids": map[string]interface{}{
+	}.ApplyAndExpectData(t, map[string]any{
+		"ids": map[string]any{
 			"First":  "123",
 			"Second": "234",
 		},

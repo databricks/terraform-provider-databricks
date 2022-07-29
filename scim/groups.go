@@ -5,11 +5,11 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/databrickslabs/terraform-provider-databricks/common"
+	"github.com/databricks/terraform-provider-databricks/common"
 )
 
 // NewGroupsAPI creates GroupsAPI instance from provider meta
-func NewGroupsAPI(ctx context.Context, m interface{}) GroupsAPI {
+func NewGroupsAPI(ctx context.Context, m any) GroupsAPI {
 	return GroupsAPI{
 		client:  m.(*common.DatabricksClient),
 		context: ctx,

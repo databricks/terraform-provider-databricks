@@ -3,14 +3,13 @@ package clusters
 import (
 	"context"
 	"fmt"
-	"os"
 
 	// "reflect"
 	"strings"
 	"testing"
 
-	"github.com/databrickslabs/terraform-provider-databricks/common"
-	"github.com/databrickslabs/terraform-provider-databricks/qa"
+	"github.com/databricks/terraform-provider-databricks/common"
+	"github.com/databricks/terraform-provider-databricks/qa"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -20,7 +19,7 @@ func TestGetOrCreateRunningCluster_AzureAuth(t *testing.T) {
 		{
 			Method:   "GET",
 			Resource: "/api/2.0/clusters/list",
-			Response: map[string]interface{}{},
+			Response: map[string]any{},
 		},
 		{
 			Method:       "GET",
@@ -571,12 +570,8 @@ func TestPermanentDelete_Pinned(t *testing.T) {
 	require.NoError(t, err)
 }
 
-func TestAwsAccSmallestNodeType(t *testing.T) {
-	cloudEnv := os.Getenv("CLOUD_ENV")
-	if cloudEnv == "" {
-		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
-	}
-
+func TestAccAwsSmallestNodeType(t *testing.T) {
+	qa.RequireCloudEnv(t, "aws")
 	client := common.CommonEnvironmentClient()
 	ctx := context.Background()
 	nodeType := NewClustersAPI(ctx, client).GetSmallestNodeType(NodeTypeRequest{
@@ -944,7 +939,7 @@ func TestListSparkVersionsWithError(t *testing.T) {
 	ctx := context.Background()
 	_, err = NewClustersAPI(ctx, client).ListSparkVersions()
 	require.Error(t, err)
-	require.Equal(t, true, strings.Contains(err.Error(), "Invalid JSON received"))
+	require.Equal(t, true, strings.Contains(err.Error(), "invalid character 'g' looking"))
 }
 
 func TestGetLatestSparkVersion(t *testing.T) {
@@ -1201,4 +1196,13 @@ func TestWrapMissingClusterError(t *testing.T) {
 	assert.EqualError(t, wrapMissingClusterError(common.APIError{
 		Message: "Cluster abc does not exist",
 	}, "abc"), "Cluster abc does not exist")
+}
+
+func TestExpiredClusterAssumedAsRemoved(t *testing.T) {
+	err := wrapMissingClusterError(common.APIError{
+		ErrorCode: "INVALID_STATE",
+		Message:   "Cannot access cluster X that was terminated or unpinned more than Y days ago.",
+	}, "X")
+	ae, _ := err.(common.APIError)
+	assert.Equal(t, 404, ae.StatusCode)
 }

@@ -3,10 +3,10 @@ package aws
 import (
 	"testing"
 
-	"github.com/databrickslabs/terraform-provider-databricks/common"
-	"github.com/databrickslabs/terraform-provider-databricks/scim"
+	"github.com/databricks/terraform-provider-databricks/common"
+	"github.com/databricks/terraform-provider-databricks/scim"
 
-	"github.com/databrickslabs/terraform-provider-databricks/qa"
+	"github.com/databricks/terraform-provider-databricks/qa"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -40,7 +40,7 @@ func TestResourceUserInstanceProfileCreate(t *testing.T) {
 			},
 		},
 		Resource: ResourceUserInstanceProfile(),
-		State: map[string]interface{}{
+		State: map[string]any{
 			"user_id":             "abc",
 			"instance_profile_id": "arn:aws:iam::999999999999:instance-profile/my-fake-instance-profile",
 		},
@@ -53,7 +53,7 @@ func TestResourceUserInstanceProfileCreate(t *testing.T) {
 func TestResourceUserInstanceProfileCreate_Error_BadARN(t *testing.T) {
 	_, err := qa.ResourceFixture{
 		Resource: ResourceUserInstanceProfile(),
-		State: map[string]interface{}{
+		State: map[string]any{
 			"user_id":             "abc",
 			"instance_profile_id": "fake",
 		},
@@ -76,7 +76,7 @@ func TestResourceUserInstanceProfileCreate_Error(t *testing.T) {
 			},
 		},
 		Resource: ResourceUserInstanceProfile(),
-		State: map[string]interface{}{
+		State: map[string]any{
 			"user_id":             "abc",
 			"instance_profile_id": "arn:aws:iam::999999999999:instance-profile/my-fake-instance-profile",
 		},

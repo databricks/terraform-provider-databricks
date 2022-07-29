@@ -3,13 +3,16 @@ subcategory: "Unity Catalog"
 ---
 # databricks_storage_credential Resource
 
--> **Private Preview** This feature is in [Private Preview](https://docs.databricks.com/release-notes/release-types.html). Contact your Databricks representative to request access. 
+-> **Public Preview** This feature is in [Public Preview](https://docs.databricks.com/release-notes/release-types.html). Contact your Databricks representative to request access.
 
 To work with external tables, Unity Catalog introduces two new objects to access and work with external cloud storage:
-- `databricks_storage_credential` represents authentication methods to access cloud storage (e.g. an IAM role for Amazon S3 or a service principal for Azure Storage). Storage credentials are access-controlled to determine which users can use the credential.
-- [databricks_external_location](external_location.md) are objects that combine a cloud storage path with a Storage Credential that can be used to access the location. 
+
+- `databricks_storage_credential` represents authentication methods to access cloud storage (e.g. an IAM role for Amazon S3 or a service principal/managed identity for Azure Storage). Storage credentials are access-controlled to determine which users can use the credential.
+- [databricks_external_location](external_location.md) are objects that combine a cloud storage path with a Storage Credential that can be used to access the location.
 
 ## Example Usage
+
+For AWS
 
 ```hcl
 resource "databricks_storage_credential" "external" {
@@ -20,18 +23,88 @@ resource "databricks_storage_credential" "external" {
   comment = "Managed by TF"
 }
 
-resource "databricks_external_location" "some" {
-  name            = "external"
-  url             = "s3://${aws_s3_bucket.external.id}/some"
-  credential_name = databricks_storage_credential.external.id
-  comment         = "Managed by TF"
-}
-
-resource "databricks_grants" "some" {
-  external_location = databricks_external_location.some.id
+resource "databricks_grants" "external_creds" {
+  storage_credential = databricks_storage_credential.external.id
   grant {
     principal  = "Data Engineers"
-    privileges = ["CREATE TABLE", "READ FILES"]
+    privileges = ["CREATE_TABLE"]
+  }
+}
+```
+
+For Azure
+
+```hcl
+resource "azurerm_resource_group_template_deployment" "access_connector" {
+  name                = "databricks-access-connectors"
+  resource_group_name = "vn-sandbox"
+  deployment_mode     = "Incremental"
+  parameters_content = jsonencode({
+    "connectorName" = {
+      value = "vn-databricks-mi"
+    }
+    "accessConnectorRegion" = {
+      value = "uksouth"
+    }
+    "enableSystemAssignedIdentity" = {
+      value = true
+    }
+  })
+  template_content = <<TEMPLATE
+{
+   "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+   "contentVersion": "1.0.0.0",
+   "parameters": {
+      "connectorName": {
+         "defaultValue": "testConnector",
+         "type": "String",
+         "metadata": {
+               "description": "The name of the Azure Databricks Access Connector to create."
+         }
+      },
+      "accessConnectorRegion": {
+         "defaultValue": "[resourceGroup().location]",
+         "type": "String",
+         "metadata": {
+               "description": "Location for the access connector resource."
+         }
+      },
+      "enableSystemAssignedIdentity": {
+         "defaultValue": true,
+         "type": "Bool",
+         "metadata": {
+               "description": "Whether the system assigned managed identity is enabled"
+         }
+      }
+   },
+   "resources": [
+      {
+         "type": "Microsoft.Databricks/accessConnectors",
+         "apiVersion": "2022-04-01-preview",
+         "name": "[parameters('connectorName')]",
+         "location": "[parameters('accessConnectorRegion')]",
+         "identity": {
+               "type": "[if(parameters('enableSystemAssignedIdentity'), 'SystemAssigned', 'None')]"
+         }
+      }
+   ]
+}
+TEMPLATE
+}
+
+resource "databricks_storage_credential" "external_mi" {
+  name = "mi_credential"
+  azure_managed_identity {
+    access_connector_id = "${split("/Microsoft.Resources", azurerm_resource_group_template_deployment.access_connector.id)[0]}/Microsoft.Databricks/accessConnectors/${jsondecode(azurerm_resource_group_template_deployment.access_connector.parameters_content).connectorName.value}"
+  }
+  comment = "Managed identity credential managed by TF"
+}
+
+resource "databricks_grants" "external_creds" {
+  storage_credential = databricks_storage_credential.external.id
+  grant {
+    principal  = "Data Engineers"
+    privileges = ["CREATE_TABLE"]
   }
 }
 ```
@@ -40,20 +113,26 @@ resource "databricks_grants" "some" {
 
 The following arguments are required:
 
-* `name` - Name of Storage Credentials, which must be unique within the [databricks_metastore](metastore.md). Change forces creation of a new resource.
+- `name` - Name of Storage Credentials, which must be unique within the [databricks_metastore](metastore.md). Change forces creation of a new resource.
 
 `aws_iam_role` optional configuration block for credential details for AWS:
-* `role_arn` - The Amazon Resource Name (ARN) of the AWS IAM role for S3 data access, of the form `arn:aws:iam::1234567890:role/MyRole-AJJHDSKSDF`
 
-`azure_service_principal` optional configuration block for credential details for Azure:
-* `directory_id` - The directory ID corresponding to the Azure Active Directory (AAD) tenant of the application
-* `application_id` - The application ID of the application registration within the referenced AAD tenant
-* `client_secret` - The client secret generated for the above app ID in AAD. **This field is redacted on output**
+- `role_arn` - The Amazon Resource Name (ARN) of the AWS IAM role for S3 data access, of the form `arn:aws:iam::1234567890:role/MyRole-AJJHDSKSDF`
+
+`azure_managed_identity` optional configuration block for using managed identity as credential details for Azure (recommended over service principal):
+
+- `access_connector_id` - The Resource ID of the Azure Databricks Access Connector resource, of the form `/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-name/providers/Microsoft.Databricks/accessConnectors/connector-name`
+
+`azure_service_principal` optional configuration block to use service principal as credential details for Azure:
+
+- `directory_id` - The directory ID corresponding to the Azure Active Directory (AAD) tenant of the application
+- `application_id` - The application ID of the application registration within the referenced AAD tenant
+- `client_secret` - The client secret generated for the above app ID in AAD. **This field is redacted on output**
 
 ## Import
 
 This resource can be imported by name:
 
 ```bash
-$ terraform import databricks_storage_credential.this <name>
+terraform import databricks_storage_credential.this <name>
 ```

@@ -5,13 +5,13 @@ import (
 	"os"
 	"testing"
 
-	"github.com/databrickslabs/terraform-provider-databricks/commands"
-	"github.com/databrickslabs/terraform-provider-databricks/common"
-	"github.com/databrickslabs/terraform-provider-databricks/internal/acceptance"
-	"github.com/databrickslabs/terraform-provider-databricks/internal/compute"
-	"github.com/databrickslabs/terraform-provider-databricks/qa"
-	"github.com/databrickslabs/terraform-provider-databricks/secrets"
-	"github.com/databrickslabs/terraform-provider-databricks/storage"
+	"github.com/databricks/terraform-provider-databricks/commands"
+	"github.com/databricks/terraform-provider-databricks/common"
+	"github.com/databricks/terraform-provider-databricks/internal/acceptance"
+	"github.com/databricks/terraform-provider-databricks/internal/compute"
+	"github.com/databricks/terraform-provider-databricks/qa"
+	"github.com/databricks/terraform-provider-databricks/secrets"
+	"github.com/databricks/terraform-provider-databricks/storage"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/stretchr/testify/assert"
@@ -48,6 +48,7 @@ func mountPointThroughReusedCluster(t *testing.T) (*common.DatabricksClient, sto
 	if _, ok := os.LookupEnv("CLOUD_ENV"); !ok {
 		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
 	}
+	t.Parallel()
 	ctx := context.Background()
 	client := common.CommonEnvironmentClient()
 	clusterInfo := compute.NewTinyClusterInCommonPoolPossiblyReused()

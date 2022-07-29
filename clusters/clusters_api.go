@@ -8,7 +8,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/databrickslabs/terraform-provider-databricks/common"
+	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
@@ -186,9 +186,14 @@ type S3StorageInfo struct {
 	CannedACL        string `json:"canned_acl,omitempty"`
 }
 
+// GcsStorageInfo contains the struct for when storing files in GCS
+type GcsStorageInfo struct {
+	Destination string `json:"destination,omitempty"`
+}
+
 // LocalFileInfo represents a local file on disk, e.g. in a customer's container.
 type LocalFileInfo struct {
-	Destination string `json:"destination,omitempty" tf:"optional"`
+	Destination string `json:"destination,omitempty"`
 }
 
 // StorageInfo contains the struct for either DBFS or S3 storage depending on which one is relevant.
@@ -200,8 +205,9 @@ type StorageInfo struct {
 // InitScriptStorageInfo captures the allowed sources of init scripts.
 type InitScriptStorageInfo struct {
 	Dbfs *DbfsStorageInfo `json:"dbfs,omitempty" tf:"group:storage"`
+	Gcs  *GcsStorageInfo  `json:"gcs,omitempty" tf:"group:storage"`
 	S3   *S3StorageInfo   `json:"s3,omitempty" tf:"group:storage"`
-	File *LocalFileInfo   `json:"file,omitempty" tf:"optional"`
+	File *LocalFileInfo   `json:"file,omitempty"`
 }
 
 // SparkNodeAwsAttributes is the struct that determines if the node is a spot instance or not
@@ -235,14 +241,14 @@ type LogSyncStatus struct {
 
 // DockerBasicAuth contains the auth information when fetching containers
 type DockerBasicAuth struct {
-	Username string `json:"username" tf:"force_new"`
-	Password string `json:"password" tf:"force_new"`
+	Username string `json:"username"`
+	Password string `json:"password" tf:"sensitive"`
 }
 
 // DockerImage contains the image url and the auth for DCS
 type DockerImage struct {
-	URL       string           `json:"url" tf:"force_new"`
-	BasicAuth *DockerBasicAuth `json:"basic_auth,omitempty" tf:"force_new"`
+	URL       string           `json:"url"`
+	BasicAuth *DockerBasicAuth `json:"basic_auth,omitempty"`
 }
 
 // SortOrder - constants for API
@@ -339,6 +345,16 @@ type EventsResponse struct {
 	TotalCount int64          `json:"total_count"`
 }
 
+type WorkloadTypeClients struct {
+	Notebooks bool `json:"notebooks" tf:"optional,default:true"`
+	Jobs      bool `json:"jobs" tf:"optional,default:true"`
+}
+
+// WorkloadType defines which workloads may run on the cluster
+type WorkloadType struct {
+	Clients *WorkloadTypeClients `json:"clients"`
+}
+
 // Cluster contains the information when trying to submit api calls or editing a cluster
 type Cluster struct {
 	ClusterID   string `json:"cluster_id,omitempty"`
@@ -369,9 +385,10 @@ type Cluster struct {
 	ClusterLogConf *StorageInfo            `json:"cluster_log_conf,omitempty"`
 	DockerImage    *DockerImage            `json:"docker_image,omitempty"`
 
-	DataSecurityMode string `json:"data_security_mode,omitempty"`
-	SingleUserName   string `json:"single_user_name,omitempty"`
-	IdempotencyToken string `json:"idempotency_token,omitempty" tf:"force_new"`
+	DataSecurityMode string        `json:"data_security_mode,omitempty"`
+	SingleUserName   string        `json:"single_user_name,omitempty"`
+	IdempotencyToken string        `json:"idempotency_token,omitempty" tf:"force_new"`
+	WorkloadType     *WorkloadType `json:"workload_type,omitempty"`
 }
 
 func (cluster Cluster) Validate() error {
@@ -481,7 +498,7 @@ func (a ClustersAPI) defaultTimeout() time.Duration {
 }
 
 // NewClustersAPI creates ClustersAPI instance from provider meta
-func NewClustersAPI(ctx context.Context, m interface{}) ClustersAPI {
+func NewClustersAPI(ctx context.Context, m any) ClustersAPI {
 	return ClustersAPI{
 		client:  m.(*common.DatabricksClient),
 		context: ctx,
@@ -503,7 +520,7 @@ func (a ClustersAPI) Create(cluster Cluster) (info ClusterInfo, err error) {
 	}
 	info, err = a.waitForClusterStatus(ci.ClusterID, ClusterStateRunning)
 	if err != nil {
-		// https://github.com/databrickslabs/terraform-provider-databricks/issues/383
+		// https://github.com/databricks/terraform-provider-databricks/issues/383
 		log.Printf("[ERROR] Cleaning up created cluster, that failed to start: %s", err.Error())
 		deleteErr := a.PermanentDelete(ci.ClusterID)
 		if deleteErr != nil {
@@ -600,6 +617,7 @@ func (a ClustersAPI) StartAndGetInfo(clusterID string) (ClusterInfo, error) {
 	return a.waitForClusterStatus(clusterID, ClusterStateRunning)
 }
 
+// make common/resource.go#ToResource read behavior consistent with "normal" resources
 func wrapMissingClusterError(err error, id string) error {
 	if err == nil {
 		return nil
@@ -610,6 +628,14 @@ func wrapMissingClusterError(err error, id string) error {
 	}
 	if apiErr.IsMissing() {
 		return err
+	}
+	// https://github.com/databricks/terraform-provider-databricks/issues/1177
+	// Aligned with Clusters Core team to keep behavior of these workarounds
+	// as is in the longer term, so that this keeps working.
+	if apiErr.ErrorCode == "INVALID_STATE" {
+		log.Printf("[WARN] assuming that cluster is removed on backend: %s", apiErr)
+		apiErr.StatusCode = 404
+		return apiErr
 	}
 	// fix non-compliant error code
 	if strings.Contains(apiErr.Message,
@@ -754,7 +780,7 @@ func (a ClustersAPI) List() ([]ClusterInfo, error) {
 
 // getOrCreateClusterMutex guards "mounting" cluster creation to prevent multiple
 // redundant instances created at the same name. Compute package private property.
-// https://github.com/databrickslabs/terraform-provider-databricks/issues/445
+// https://github.com/databricks/terraform-provider-databricks/issues/445
 var getOrCreateClusterMutex sync.Mutex
 
 // GetOrCreateRunningCluster creates an autoterminating cluster if it doesn't exist

@@ -4,9 +4,9 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/databrickslabs/terraform-provider-databricks/common"
+	"github.com/databricks/terraform-provider-databricks/common"
 
-	"github.com/databrickslabs/terraform-provider-databricks/qa"
+	"github.com/databricks/terraform-provider-databricks/qa"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -23,7 +23,7 @@ func TestWorkspaceConfCreate(t *testing.T) {
 			{
 				Method:   http.MethodGet,
 				Resource: "/api/2.0/workspace-conf?keys=enableIpAccessLists",
-				Response: map[string]interface{}{
+				Response: map[string]any{
 					"enableIpAccessLists": "true",
 				},
 			},

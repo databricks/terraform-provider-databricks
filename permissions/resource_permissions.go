@@ -124,7 +124,7 @@ func urlPathForObjectID(objectID string) string {
 	return "/permissions" + objectID
 }
 
-func (a PermissionsAPI) shouldCallingUserHaveManagePermissions(objectID string) bool {
+func (a PermissionsAPI) shouldExplicitlyGrantCallingUserManagePermissions(objectID string) bool {
 	for _, prefix := range [...]string{"/registered-models/"} {
 		if strings.HasPrefix(objectID, prefix) {
 			return true
@@ -134,7 +134,7 @@ func (a PermissionsAPI) shouldCallingUserHaveManagePermissions(objectID string) 
 }
 
 func (a PermissionsAPI) ensureCurrentUserCanManageObject(objectID string, objectACL AccessControlChangeList) (AccessControlChangeList, error) {
-	if !a.shouldCallingUserHaveManagePermissions(objectID) {
+	if !a.shouldExplicitlyGrantCallingUserManagePermissions(objectID) {
 		return objectACL, nil
 	}
 	me, err := scim.NewUsersAPI(a.context, a.client).Me()

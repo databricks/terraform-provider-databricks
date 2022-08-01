@@ -124,8 +124,7 @@ func urlPathForObjectID(objectID string) string {
 	return "/permissions" + objectID
 }
 
-func (a PermissionsAPI) shouldAddCallingUser(objectID string) bool {
-	// SQLA entities and Mlflow registered models always have `CAN_MANAGE` permission for the calling user.
+func (a PermissionsAPI) shouldCallingUserHaveManagePermissions(objectID string) bool {
 	for _, prefix := range [...]string{"/registered-models/"} {
 		if strings.HasPrefix(objectID, prefix) {
 			return true
@@ -135,7 +134,7 @@ func (a PermissionsAPI) shouldAddCallingUser(objectID string) bool {
 }
 
 func (a PermissionsAPI) ensureCurrentUserCanManageObject(objectID string, objectACL AccessControlChangeList) (AccessControlChangeList, error) {
-	if !a.shouldAddCallingUser(objectID) {
+	if !a.shouldCallingUserHaveManagePermissions(objectID) {
 		return objectACL, nil
 	}
 	me, err := scim.NewUsersAPI(a.context, a.client).Me()

@@ -124,6 +124,10 @@ func urlPathForObjectID(objectID string) string {
 	return "/permissions" + objectID
 }
 
+// As described in https://github.com/databricks/terraform-provider-databricks/issues/1504,
+// certain object types require that we explicitly grant the calling user CAN_MANAGE
+// permissions when POSTing permissions changes through the REST API, to avoid accidentally
+// revoking the calling user's ability to manage the current object.
 func (a PermissionsAPI) shouldExplicitlyGrantCallingUserManagePermissions(objectID string) bool {
 	for _, prefix := range [...]string{"/registered-models/"} {
 		if strings.HasPrefix(objectID, prefix) {

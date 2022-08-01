@@ -28,12 +28,14 @@ type pipelineCluster struct {
 	NumWorkers int32               `json:"num_workers,omitempty" tf:"group:size"`
 	Autoscale  *clusters.AutoScale `json:"autoscale,omitempty" tf:"group:size"`
 
-	NodeTypeID           string                  `json:"node_type_id,omitempty" tf:"group:node_type,computed"`
-	DriverNodeTypeID     string                  `json:"driver_node_type_id,omitempty" tf:"computed"`
-	InstancePoolID       string                  `json:"instance_pool_id,omitempty" tf:"group:node_type"`
-	DriverInstancePoolID string                  `json:"driver_instance_pool_id,omitempty"`
-	AwsAttributes        *clusters.AwsAttributes `json:"aws_attributes,omitempty"`
-	GcpAttributes        *clusters.GcpAttributes `json:"gcp_attributes,omitempty"`
+	PolicyId                 string                  `json:"policy_id,omitempty"`
+	ApplyPolicyDefaultValues bool                    `json:"apply_policy_default_values,omitempty"`
+	NodeTypeID               string                  `json:"node_type_id,omitempty" tf:"group:node_type,computed"`
+	DriverNodeTypeID         string                  `json:"driver_node_type_id,omitempty" tf:"computed"`
+	InstancePoolID           string                  `json:"instance_pool_id,omitempty" tf:"group:node_type"`
+	DriverInstancePoolID     string                  `json:"driver_instance_pool_id,omitempty"`
+	AwsAttributes            *clusters.AwsAttributes `json:"aws_attributes,omitempty"`
+	GcpAttributes            *clusters.GcpAttributes `json:"gcp_attributes,omitempty"`
 
 	SparkConf    map[string]string `json:"spark_conf,omitempty"`
 	SparkEnvVars map[string]string `json:"spark_env_vars,omitempty"`

@@ -65,7 +65,7 @@ type PipelineSpec struct {
 	Name                string            `json:"name,omitempty"`
 	Storage             string            `json:"storage,omitempty" tf:"force_new"`
 	Configuration       map[string]string `json:"configuration,omitempty"`
-	Clusters            []pipelineCluster `json:"clusters,omitempty" tf:"slice_set,alias:cluster"`
+	Clusters            []pipelineCluster `json:"clusters,omitempty" tf:"alias:cluster"`
 	Libraries           []PipelineLibrary `json:"libraries,omitempty" tf:"slice_set,alias:library"`
 	Filters             *filters          `json:"filters,omitempty"`
 	Continuous          bool              `json:"continuous,omitempty"`

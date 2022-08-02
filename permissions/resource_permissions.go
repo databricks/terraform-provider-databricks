@@ -124,18 +124,43 @@ func urlPathForObjectID(objectID string) string {
 	return "/permissions" + objectID
 }
 
-// Helper function to select the correct HTTP method depending on the object types.
-func (a PermissionsAPI) put(objectID string, objectACL AccessControlChangeList) error {
-	if isDbsqlPermissionsWorkaroundNecessary(objectID) {
-		// SQLA entities always have `CAN_MANAGE` permission for the calling user.
-		me, err := scim.NewUsersAPI(a.context, a.client).Me()
-		if err != nil {
-			return err
+// As described in https://github.com/databricks/terraform-provider-databricks/issues/1504,
+// certain object types require that we explicitly grant the calling user CAN_MANAGE
+// permissions when POSTing permissions changes through the REST API, to avoid accidentally
+// revoking the calling user's ability to manage the current object.
+func (a PermissionsAPI) shouldExplicitlyGrantCallingUserManagePermissions(objectID string) bool {
+	for _, prefix := range [...]string{"/registered-models/"} {
+		if strings.HasPrefix(objectID, prefix) {
+			return true
 		}
-		objectACL.AccessControlList = append(objectACL.AccessControlList, AccessControlChange{
-			UserName:        me.UserName,
-			PermissionLevel: "CAN_MANAGE",
-		})
+	}
+	return isDbsqlPermissionsWorkaroundNecessary(objectID)
+}
+
+func (a PermissionsAPI) ensureCurrentUserCanManageObject(objectID string, objectACL AccessControlChangeList) (AccessControlChangeList, error) {
+	if !a.shouldExplicitlyGrantCallingUserManagePermissions(objectID) {
+		return objectACL, nil
+	}
+	me, err := scim.NewUsersAPI(a.context, a.client).Me()
+	if err != nil {
+		return objectACL, err
+	}
+	objectACL.AccessControlList = append(objectACL.AccessControlList, AccessControlChange{
+		UserName:        me.UserName,
+		PermissionLevel: "CAN_MANAGE",
+	})
+	return objectACL, nil
+}
+
+// Helper function for applying permissions changes. Ensures that
+// we select the correct HTTP method based on the object type and preserve the calling
+// user's ability to manage the specified object when applying permissions changes.
+func (a PermissionsAPI) put(objectID string, objectACL AccessControlChangeList) error {
+	objectACL, err := a.ensureCurrentUserCanManageObject(objectID, objectACL)
+	if err != nil {
+		return err
+	}
+	if isDbsqlPermissionsWorkaroundNecessary(objectID) {
 		// SQLA entities use POST for permission updates.
 		return a.client.Post(a.context, urlPathForObjectID(objectID), objectACL, nil)
 	}

@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"reflect"
 	"regexp"
 	"sort"
 	"strings"
@@ -266,15 +267,18 @@ func (f ResourceFixture) ApplyNoError(t *testing.T) {
 func (f ResourceFixture) ApplyAndExpectData(t *testing.T, data map[string]any) {
 	d, err := f.Apply(t)
 	require.NoError(t, err, err)
+	// assert.True(t, reflect.DeepEqual(data, d), "%s did not have expected value %s", d, data)
 	for k, expected := range data {
 		if k == "id" {
 			assert.Equal(t, expected, d.Id())
-		} else if that, ok := d.Get(k).(*schema.Set); ok {
-			this := expected.([]string)
-			assert.Equal(t, len(this), that.Len(), "set has different length")
-			for _, item := range this {
-				assert.True(t, that.Contains(item), "set does not contain %s", item)
-			}
+		} else if that, ok := d.GetOk(k); ok {
+			assert.True(t, reflect.DeepEqual(expected, that), "%s did not have expected value %s", that, expected)
+
+			// this := expected.([]string)
+			// assert.Equal(t, len(this), that.Len(), "set has different length")
+			// for _, item := range this {
+			// 	assert.True(t, that.Contains(item), "set does not contain %s", item)
+			// }
 		} else {
 			assert.Equal(t, expected, d.Get(k))
 		}

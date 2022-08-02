@@ -122,16 +122,7 @@ func TestResourcePermissionsRead_RemovedCluster(t *testing.T) {
 }
 
 func TestResourcePermissionsRead_Mlflow_Model(t *testing.T) {
-	expectedData := map[string]any{
-		"registered_model_id": "fakeuuid123",
-		"access_control": []any{
-			map[string]any{
-				"user_name":        TestingUser,
-				"permission_level": "CAN_READ",
-			},
-		},
-	}
-	qa.ResourceFixture{
+	d, err := qa.ResourceFixture{
 		// Pass list of API request mocks
 		Fixtures: []qa.HTTPFixture{
 			me,
@@ -158,21 +149,18 @@ func TestResourcePermissionsRead_Mlflow_Model(t *testing.T) {
 		Read:     true,
 		New:      true,
 		ID:       "/registered-models/fakeuuid123",
-	}.ApplyAndExpectData(t, expectedData)
-	// assert.NoError(t, err, err)
-	// assert.Equal(t, "/registered-models/fakeuuid123", d.Id())
-	// ac := d.Get("access_control").(*schema.Set)
-	// require.Equal(t, 1, len(ac.List()))
-	// firstElem := ac.List()[0].(map[string]any)
-	// assert.Equal(t, TestingUser, firstElem["user_name"])
-	// assert.Equal(t, "CAN_READ", firstElem["permission_level"])
+	}.Apply(t)
+	assert.NoError(t, err, err)
+	assert.Equal(t, "/registered-models/fakeuuid123", d.Id())
+	ac := d.Get("access_control").(*schema.Set)
+	require.Equal(t, 1, len(ac.List()))
+	firstElem := ac.List()[0].(map[string]any)
+	assert.Equal(t, TestingUser, firstElem["user_name"])
+	assert.Equal(t, "CAN_READ", firstElem["permission_level"])
 }
 
 func TestResourcePermissionsCreate_Mlflow_Model(t *testing.T) {
-	expectedData := map[string]any{
-		"Id": "/registered-models/fakeuuid123",
-	}
-	qa.ResourceFixture{
+	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			me,
 			{
@@ -221,13 +209,13 @@ func TestResourcePermissionsCreate_Mlflow_Model(t *testing.T) {
 			},
 		},
 		Create: true,
-	}.ApplyAndExpectData(t, expectedData)
-	// assert.NoError(t, err, err)
-	// ac := d.Get("access_control").(*schema.Set)
-	// require.Equal(t, 1, len(ac.List()))
-	// firstElem := ac.List()[0].(map[string]any)
-	// assert.Equal(t, TestingUser, firstElem["user_name"])
-	// assert.Equal(t, "CAN_READ", firstElem["permission_level"])
+	}.Apply(t)
+	assert.NoError(t, err, err)
+	ac := d.Get("access_control").(*schema.Set)
+	require.Equal(t, 1, len(ac.List()))
+	firstElem := ac.List()[0].(map[string]any)
+	assert.Equal(t, TestingUser, firstElem["user_name"])
+	assert.Equal(t, "CAN_READ", firstElem["permission_level"])
 }
 
 func TestResourcePermissionsUpdate_Mlflow_Model(t *testing.T) {
@@ -292,6 +280,49 @@ func TestResourcePermissionsUpdate_Mlflow_Model(t *testing.T) {
 	firstElem := ac.List()[0].(map[string]any)
 	assert.Equal(t, TestingUser, firstElem["user_name"])
 	assert.Equal(t, "CAN_READ", firstElem["permission_level"])
+}
+
+func TestResourcePermissionsDelete_Mlflow_Model(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			me,
+			{
+				Method:   http.MethodGet,
+				Resource: "/api/2.0/permissions/registered-models/fakeuuid123",
+				Response: ObjectACL{
+					ObjectID:   "/registered-models/fakeuuid123",
+					ObjectType: "registered-model",
+					AccessControlList: []AccessControl{
+						{
+							UserName:        TestingUser,
+							PermissionLevel: "CAN_READ",
+						},
+						{
+							UserName:        TestingAdminUser,
+							PermissionLevel: "CAN_MANAGE",
+						},
+					},
+				},
+			},
+			{
+				Method:   http.MethodPut,
+				Resource: "/api/2.0/permissions/registered-models/fakeuuid123",
+				ExpectedRequest: AccessControlChangeList{
+					AccessControlList: []AccessControlChange{
+						{
+							UserName:        TestingAdminUser,
+							PermissionLevel: "CAN_MANAGE",
+						},
+					},
+				},
+			},
+		},
+		Resource: ResourcePermissions(),
+		Delete:   true,
+		ID:       "/registered-models/fakeuuid123",
+	}.Apply(t)
+	assert.NoError(t, err, err)
+	assert.Equal(t, "/registered-models/fakeuuid123", d.Id())
 }
 
 func TestResourcePermissionsRead_SQLA_Asset(t *testing.T) {

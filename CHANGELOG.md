@@ -1,5 +1,23 @@
 # Version changelog
 
+## 1.2.0
+
+ * Added [databricks_mws_permission_assignment](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/mws_permission_assignment) resource ([#1491](https://github.com/databricks/terraform-provider-databricks/pull/1491)).
+ * Added [databricks_mws_workspaces](https://registry.terraform.io/providers/databricks/databricks/latest/docs/data-sources/mws_workspaces) data resource ([#1497](https://github.com/databricks/terraform-provider-databricks/pull/1497)).
+ * Added exporter for [databricks_pipeline](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/pipeline) and [databricks_job](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/job) ([#1484](https://github.com/databricks/terraform-provider-databricks/pull/1484)).
+ * Fixed [databricks_permissions](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/permissions) for calling user to `CAN_MANAGE` on [databricks_mlflow_model](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/mlflow_model) ([#1507](https://github.com/databricks/terraform-provider-databricks/pull/1507)).
+ * Fixed phantom `cluster` blocks in [databricks_pipeline](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/pipeline) ([#1508](https://github.com/databricks/terraform-provider-databricks/pull/1508)).
+ * Improve test coverage of multitask [databricks_job](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/job) and [databricks_pipeline](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/pipeline) ([#1493](https://github.com/databricks/terraform-provider-databricks/pull/1493)).
+ * Minor stability improvements ([#1505](https://github.com/databricks/terraform-provider-databricks/pull/1505), [#1487](https://github.com/databricks/terraform-provider-databricks/pull/1487), [#1496](https://github.com/databricks/terraform-provider-databricks/pull/1496), [#1503](https://github.com/databricks/terraform-provider-databricks/pull/1503)).
+ 
+Updated dependency versions:
+
+ * Bump github.com/Azure/go-autorest/autorest from 0.11.27 to 0.11.28 ([#1513](https://github.com/databricks/terraform-provider-databricks/pull/1513)).
+ * Bump github.com/Azure/go-autorest/autorest/adal from 0.9.20 to 0.9.21 ([#1512](https://github.com/databricks/terraform-provider-databricks/pull/1512)).
+ * Bump github.com/Azure/go-autorest/autorest/azure/cli from 0.4.5 to 0.4.6 ([#1515](https://github.com/databricks/terraform-provider-databricks/pull/1515)).
+ * Bump github.com/hashicorp/terraform-plugin-sdk/v2 from 2.19.0 to 2.20.0 ([#1516](https://github.com/databricks/terraform-provider-databricks/pull/1516)).
+ * Bump google.golang.org/api from 0.87.0 to 0.90.0 ([#1499](https://github.com/databricks/terraform-provider-databricks/pull/1499), [#1514](https://github.com/databricks/terraform-provider-databricks/pull/1514)).
+
 ## 1.1.0
 
 * Added `databricks_sql_warehouses` data resource to list all warehouses in a workspace with a name filter ([#1460](https://github.com/databricks/terraform-provider-databricks/pull/1460)).

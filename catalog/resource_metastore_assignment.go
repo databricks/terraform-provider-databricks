@@ -51,7 +51,10 @@ func ResourceMetastoreAssignment() *schema.Resource {
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
 			return m
 		})
-	pi := common.NewPairID("workspace_id", "metastore_id")
+	pi := common.NewPairID("workspace_id", "metastore_id").Schema(
+		func(m map[string]*schema.Schema) map[string]*schema.Schema {
+			return s
+		})
 	return common.Resource{
 		Schema: s,
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {

@@ -49,7 +49,8 @@ func Test(t *testing.T, steps []Step, otherVars ...map[string]string) {
 		awsAttrs = "aws_attributes {}"
 	}
 	instancePoolID := ""
-	if cloudEnv != "MWS" && cloudEnv != "gcp-accounts" {
+	if cloudEnv != "MWS" && cloudEnv != "gcp-accounts" && !strings.HasPrefix(cloudEnv, "unity-catalog-") {
+		// TODO: replace this with data resource
 		instancePoolID = compute.CommonInstancePoolID()
 	}
 	vars := map[string]string{

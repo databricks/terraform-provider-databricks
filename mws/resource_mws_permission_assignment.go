@@ -14,7 +14,6 @@ func NewPermissionAssignmentAPI(ctx context.Context, m any) PermissionAssignment
 	return PermissionAssignmentAPI{m.(*common.DatabricksClient), ctx}
 }
 
-// NetworksAPI exposes the mws networks API
 type PermissionAssignmentAPI struct {
 	client  *common.DatabricksClient
 	context context.Context
@@ -89,7 +88,7 @@ func mustInt64(s string) int64 {
 	return n
 }
 
-func ResourceMwsPermissionAssigntment() *schema.Resource {
+func ResourceMwsPermissionAssignment() *schema.Resource {
 	type entity struct {
 		WorkspaceId int64    `json:"workspace_id"`
 		PrincipalId int64    `json:"principal_id"`

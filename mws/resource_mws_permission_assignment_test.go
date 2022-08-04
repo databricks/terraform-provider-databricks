@@ -6,7 +6,7 @@ import (
 	"github.com/databricks/terraform-provider-databricks/qa"
 )
 
-func TestPermssionAssignmentCreate(t *testing.T) {
+func TestPermissionAssignmentCreate(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
@@ -31,7 +31,7 @@ func TestPermssionAssignmentCreate(t *testing.T) {
 				},
 			},
 		},
-		Resource:  ResourceMwsPermissionAssigntment(),
+		Resource:  ResourceMwsPermissionAssignment(),
 		Create:    true,
 		AccountID: "abc",
 		HCL: `
@@ -42,7 +42,7 @@ func TestPermssionAssignmentCreate(t *testing.T) {
 	}.ApplyNoError(t)
 }
 
-func TestPermssionAssignmentReadNotFound(t *testing.T) {
+func TestPermissionAssignmentReadNotFound(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
@@ -60,7 +60,7 @@ func TestPermssionAssignmentReadNotFound(t *testing.T) {
 				},
 			},
 		},
-		Resource:  ResourceMwsPermissionAssigntment(),
+		Resource:  ResourceMwsPermissionAssignment(),
 		Read:      true,
 		Removed:   true,
 		AccountID: "abc",
@@ -68,7 +68,7 @@ func TestPermssionAssignmentReadNotFound(t *testing.T) {
 	}.ApplyNoError(t)
 }
 
-func TestPermssionAssignmentDelete(t *testing.T) {
+func TestPermissionAssignmentDelete(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
@@ -76,28 +76,28 @@ func TestPermssionAssignmentDelete(t *testing.T) {
 				Resource: "/api/2.0/preview/accounts/abc/workspaces/123/permissionassignments/principals/456",
 			},
 		},
-		Resource:  ResourceMwsPermissionAssigntment(),
+		Resource:  ResourceMwsPermissionAssignment(),
 		Delete:    true,
 		ID:        "123|456",
 		AccountID: "abc",
 	}.ApplyNoError(t)
 }
 
-func TestPermssionAssignmentFuzz_NoAccountID(t *testing.T) {
-	qa.ResourceCornerCases(t, ResourceMwsPermissionAssigntment(),
+func TestPermissionAssignmentFuzz_NoAccountID(t *testing.T) {
+	qa.ResourceCornerCases(t, ResourceMwsPermissionAssignment(),
 		qa.CornerCaseID("123|456"),
 		qa.CornerCaseExpectError("must have `account_id` on provider"))
 }
 
-func TestPermssionAssignmentFuzz_InvalidID(t *testing.T) {
-	qa.ResourceCornerCases(t, ResourceMwsPermissionAssigntment(),
+func TestPermissionAssignmentFuzz_InvalidID(t *testing.T) {
+	qa.ResourceCornerCases(t, ResourceMwsPermissionAssignment(),
 		qa.CornerCaseExpectError("parse id: invalid ID: x"),
 		qa.CornerCaseSkipCRUD("create"),
 		qa.CornerCaseAccountID("abc"))
 }
 
-func TestPermssionAssignmentFuzz_ApiErrors(t *testing.T) {
-	qa.ResourceCornerCases(t, ResourceMwsPermissionAssigntment(),
+func TestPermissionAssignmentFuzz_ApiErrors(t *testing.T) {
+	qa.ResourceCornerCases(t, ResourceMwsPermissionAssignment(),
 		qa.CornerCaseAccountID("abc"),
 		qa.CornerCaseID("123|456"))
 }

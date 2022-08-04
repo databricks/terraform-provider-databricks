@@ -46,6 +46,7 @@
 | [databricks_mws_customer_managed_keys](docs/resources/mws_customer_managed_keys.md)
 | [databricks_mws_log_delivery](docs/resources/mws_log_delivery.md)
 | [databricks_mws_networks](docs/resources/mws_networks.md)
+| [databricks_mws_permission_assignment](docs/resources/mws_permission_assignment.md)
 | [databricks_mws_private_access_settings](docs/resources/mws_private_access_settings.md)
 | [databricks_mws_storage_configurations](docs/resources/mws_storage_configurations.md)
 | [databricks_mws_vpc_endpoint](docs/resources/mws_vpc_endpoint.md)

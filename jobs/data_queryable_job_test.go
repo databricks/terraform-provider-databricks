@@ -5,32 +5,34 @@ import (
 	"testing"
 )
 
-var fixtures = []qa.HTTPFixture{
-	{
-		Method:   "GET",
-		Resource: "/api/2.0/jobs/list",
-		Response: JobList{
-			Jobs: []Job{
-				{
-					JobID: 123,
-					Settings: &JobSettings{
-						Name: "First",
+func commonFixtures() []qa.HTTPFixture {
+	return []qa.HTTPFixture{
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/jobs/list",
+			Response: JobList{
+				Jobs: []Job{
+					{
+						JobID: 123,
+						Settings: &JobSettings{
+							Name: "First",
+						},
 					},
-				},
-				{
-					JobID: 234,
-					Settings: &JobSettings{
-						Name: "Second",
+					{
+						JobID: 234,
+						Settings: &JobSettings{
+							Name: "Second",
+						},
 					},
 				},
 			},
 		},
-	},
-}
+	}
 
+}
 func TestDataSourceQueryableJobMatchesId(t *testing.T) {
 	qa.ResourceFixture{
-		Fixtures:    fixtures,
+		Fixtures:    commonFixtures(),
 		Resource:    DataSourceQueryableJob(),
 		Read:        true,
 		NonWritable: true,
@@ -45,7 +47,7 @@ func TestDataSourceQueryableJobMatchesId(t *testing.T) {
 
 func TestDataSourceQueryableJobMatchesName(t *testing.T) {
 	qa.ResourceFixture{
-		Fixtures:    fixtures,
+		Fixtures:    commonFixtures(),
 		Resource:    DataSourceQueryableJob(),
 		Read:        true,
 		NonWritable: true,
@@ -60,7 +62,7 @@ func TestDataSourceQueryableJobMatchesName(t *testing.T) {
 
 func TestDataSourceQueryableJobNoMatchName(t *testing.T) {
 	qa.ResourceFixture{
-		Fixtures:    fixtures,
+		Fixtures:    commonFixtures(),
 		Resource:    DataSourceQueryableJob(),
 		Read:        true,
 		NonWritable: true,
@@ -73,7 +75,7 @@ func TestDataSourceQueryableJobNoMatchName(t *testing.T) {
 
 func TestDataSourceQueryableJobNoMatchId(t *testing.T) {
 	qa.ResourceFixture{
-		Fixtures:    fixtures,
+		Fixtures:    commonFixtures(),
 		Resource:    DataSourceQueryableJob(),
 		Read:        true,
 		NonWritable: true,

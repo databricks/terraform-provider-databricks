@@ -8,7 +8,7 @@ import (
 var fixtures = []qa.HTTPFixture{
 	{
 		Method:   "GET",
-		Resource: "/api/2.1/jobs/list",
+		Resource: "/api/2.0/jobs/list",
 		Response: JobList{
 			Jobs: []Job{
 				{

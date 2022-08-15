@@ -121,7 +121,7 @@ type User struct {
 	ID            string            `json:"id,omitempty"`
 	Emails        []email           `json:"emails,omitempty"`
 	DisplayName   string            `json:"displayName,omitempty" tf:"alias:display_name"`
-	Active        bool              `json:"active,omitempty"`
+	Active        bool              `json:"active"`
 	Schemas       []URN             `json:"schemas,omitempty"`
 	UserName      string            `json:"userName,omitempty" tf:"alias:user_name"`
 	ApplicationID string            `json:"applicationId,omitempty" tf:"alias:application_id"`

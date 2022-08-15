@@ -81,9 +81,11 @@ type SqlTask struct {
 // DbtTask contains information about DBT task
 // TODO: add validation for non-empty commands
 type DbtTask struct {
-	ProjectDirectory string   `json:"project_directory,omitempty"`
-	Commands         []string `json:"commands"`
-	Schema           string   `json:"schema,omitempty" tf:"default:default"`
+	Commands          []string `json:"commands"`
+	ProfilesDirectory string   `json:"profiles_directory,omitempty"`
+	ProjectDirectory  string   `json:"project_directory,omitempty"`
+	Schema            string   `json:"schema,omitempty" tf:"default:default"`
+	WarehouseId       string   `json:"warehouse_id,omitempty"`
 }
 
 // EmailNotifications contains the information for email notifications after job completion

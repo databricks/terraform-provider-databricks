@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -286,14 +287,15 @@ func TestConfig_ConfigProfileAndPassword(t *testing.T) {
 var azResourceID = "/subscriptions/a/resourceGroups/b/providers/Microsoft.Databricks/workspaces/c"
 
 func TestConfig_AzureCliHost(t *testing.T) {
+	p, _ := filepath.Abs("../common/testdata")
 	providerFixture{
 		// this test will skip ensureWorkspaceUrl
 		host:            "x",
 		azureResourceID: azResourceID,
 		env: map[string]string{
 			// // these may fail on windows. use docker container for testing.
-			"PATH": "../common/testdata",
-			"HOME": "../common/testdata",
+			"PATH": p,
+			"HOME": p,
 		},
 		assertAzure: true,
 		assertHost:  "https://x",
@@ -302,12 +304,13 @@ func TestConfig_AzureCliHost(t *testing.T) {
 }
 
 func TestConfig_AzureCliHost_Fail(t *testing.T) {
+	p, _ := filepath.Abs("../common/testdata")
 	providerFixture{
 		azureResourceID: azResourceID,
 		env: map[string]string{
 			// these may fail on windows. use docker container for testing.
-			"PATH": "../common/testdata",
-			"HOME": "../common/testdata",
+			"PATH": p,
+			"HOME": p,
 			"FAIL": "yes",
 		},
 		assertError: "cannot configure azure-cli auth: Invoking Azure CLI " +
@@ -328,27 +331,29 @@ func TestConfig_AzureCliHost_AzNotInstalled(t *testing.T) {
 }
 
 func TestConfig_AzureCliHost_PatConflict(t *testing.T) {
+	p, _ := filepath.Abs("../common/testdata")
 	providerFixture{
 		azureResourceID: azResourceID,
 		token:           "x",
 		env: map[string]string{
 			// these may fail on windows. use docker container for testing.
-			"PATH": "../common/testdata",
-			"HOME": "../common/testdata",
+			"PATH": p,
+			"HOME": p,
 		},
 		assertError: "More than one authorization method configured: azure and token",
 	}.apply(t)
 }
 
 func TestConfig_AzureCliHostAndResourceID(t *testing.T) {
+	p, _ := filepath.Abs("../common/testdata")
 	providerFixture{
 		// omit request to management endpoint to get workspace properties
 		azureResourceID: azResourceID,
 		host:            "x",
 		env: map[string]string{
 			// these may fail on windows. use docker container for testing.
-			"PATH": "../common/testdata",
-			"HOME": "../common/testdata",
+			"PATH": p,
+			"HOME": p,
 		},
 		assertAzure: true,
 		assertHost:  "https://x",
@@ -357,13 +362,14 @@ func TestConfig_AzureCliHostAndResourceID(t *testing.T) {
 }
 
 func TestConfig_AzureAndPasswordConflict(t *testing.T) {
+	p, _ := filepath.Abs("../common/testdata")
 	providerFixture{
 		host:            "x",
 		azureResourceID: azResourceID,
 		env: map[string]string{
 			// these may fail on windows. use docker container for testing.
-			"PATH":                "../common/testdata",
-			"HOME":                "../common/testdata",
+			"PATH":                p,
+			"HOME":                p,
 			"DATABRICKS_USERNAME": "x",
 		},
 		assertError: "More than one authorization method configured: azure and password",

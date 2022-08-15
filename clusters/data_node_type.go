@@ -50,6 +50,11 @@ func (l *NodeTypeList) Sort() {
 	})
 }
 
+const (
+	CloudProviderNodeStatusNotEnabled           = "NotEnabledOnSubscription"
+	CloudProviderNodeStatusNotAvailableInRegion = "NotAvailableInRegion"
+)
+
 // ClusterCloudProviderNodeInfo encapsulates the existing quota available from the cloud service provider.
 type ClusterCloudProviderNodeInfo struct {
 	Status             []string `json:"status,omitempty"`
@@ -89,6 +94,19 @@ type NodeType struct {
 	Graviton              bool                          `json:"is_graviton,omitempty"`
 }
 
+func (nt NodeType) shouldBeSkipped() bool {
+	if nt.NodeInfo == nil {
+		return false
+	}
+	for _, st := range nt.NodeInfo.Status {
+		switch st {
+		case CloudProviderNodeStatusNotAvailableInRegion, CloudProviderNodeStatusNotEnabled:
+			return true
+		}
+	}
+	return false
+}
+
 func (a ClustersAPI) defaultSmallestNodeType() string {
 	if a.client.IsAzure() {
 		return "Standard_D3_v2"
@@ -117,6 +135,9 @@ func (a ClustersAPI) GetSmallestNodeType(r NodeTypeRequest) string {
 	}
 	list.Sort()
 	for _, nt := range list.NodeTypes {
+		if nt.shouldBeSkipped() {
+			continue
+		}
 		gbs := (nt.MemoryMB / 1024)
 		if r.VCPU && !strings.HasPrefix(nt.NodeTypeID, "vcpu") {
 			continue

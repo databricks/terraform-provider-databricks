@@ -8,14 +8,14 @@ Contributing to Databricks Terraform Provider
 - [Code conventions](#code-conventions)
 - [Linting](#linting)
 
-We happily welcome contributions to databricks-terraform. We use GitHub Issues to track community reported issues and GitHub Pull Requests for accepting changes.
+We happily welcome contributions to the Databricks Terraform Provider. We use GitHub Issues to track community reported issues and GitHub Pull Requests for accepting changes.
 
 ## Installing for Terraform 0.12
 
 If you use Terraform 0.12, please execute the following curl command in your shell:
 
 ```bash
-curl https://raw.githubusercontent.com/databricks/databricks-terraform/master/godownloader-databricks-provider.sh | bash -s -- -b $HOME/.terraform.d/plugins
+curl https://raw.githubusercontent.com/databricks/terraform-provider-databricks/master/godownloader-databricks-provider.sh | bash -s -- -b $HOME/.terraform.d/plugins
 ```
 
 ## Installing from source

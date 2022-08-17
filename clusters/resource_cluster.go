@@ -272,9 +272,6 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, c *commo
 			return err
 		}
 
-		// TODO : Add unit tests to check that await is being called for resize
-		// TODO : Add tests for the new wait for function I will create
-
 		// We prefer to use the resize API in cases when only the number of workers
 		// is changed because a resizing cluster can still serve queries
 		if !isValidClusterConfigChangeForResizeAPI {
@@ -296,7 +293,6 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, c *commo
 			} else if isNonAutoScalingToAutoscalingResize {
 				clusterInfo, err = clusters.Resize(ResizeRequest{ClusterID: clusterID, AutoScale: cluster.Autoscale})
 			} else if isAutoScalingToNonAutoscalingResize {
-				// TODO: Add unit test for this case
 				clusterInfo, err = clusters.Resize(ResizeRequest{ClusterID: clusterID, NumWorkers: cluster.NumWorkers})
 			} else {
 				log.Printf("[DEBUG] We should never reach this line of code! There is something very wrong with the boolean logic determing whether resize or edit api should be called!")

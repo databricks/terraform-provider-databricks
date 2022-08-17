@@ -307,8 +307,14 @@ type EventsRequest struct {
 // ClusterSize is structure to keep
 // https://docs.databricks.com/dev-tools/api/latest/clusters.html#clusterclustersize
 type ClusterSize struct {
-	NumWorkers int32      `json:"num_workers"`
-	AutoScale  *AutoScale `json:"autoscale"`
+	NumWorkers int32      `json:"num_workers,omitempty" tf:"conflicts:autoscale"`
+	AutoScale  *AutoScale `json:"autoscale,omitempty" tf:"conflicts:num_workers"`
+}
+
+type ResizeRequest struct {
+	ClusterID  string     `json:"cluster_id"`
+	NumWorkers int32      `json:"num_workers,omitempty" tf:"conflicts:autoscale"`
+	AutoScale  *AutoScale `json:"autoscale,omitempty" tf:"conflicts:num_workers"`
 }
 
 // ResizeCause holds reason for resizing
@@ -361,8 +367,8 @@ type Cluster struct {
 	ClusterName string `json:"cluster_name,omitempty"`
 
 	SparkVersion              string     `json:"spark_version"`
-	NumWorkers                int32      `json:"num_workers" tf:"group:size"`
-	Autoscale                 *AutoScale `json:"autoscale,omitempty" tf:"group:size"`
+	NumWorkers                int32      `json:"num_workers,omitempty" tf:"group:size,conflicts:autoscale"`
+	Autoscale                 *AutoScale `json:"autoscale,omitempty" tf:"group:size,conflicts:num_workers"`
 	EnableElasticDisk         bool       `json:"enable_elastic_disk,omitempty" tf:"computed"`
 	EnableLocalDiskEncryption bool       `json:"enable_local_disk_encryption,omitempty" tf:"computed"`
 
@@ -439,8 +445,8 @@ type ClusterList struct {
 
 // ClusterInfo contains the information when getting cluster info from the get request.
 type ClusterInfo struct {
-	NumWorkers                int32              `json:"num_workers,omitempty"`
-	AutoScale                 *AutoScale         `json:"autoscale,omitempty"`
+	NumWorkers                int32              `json:"num_workers,omitempty" tf:"conflicts:autoscale"`
+	AutoScale                 *AutoScale         `json:"autoscale,omitempty" tf:"conflicts:num_workers"`
 	ClusterID                 string             `json:"cluster_id,omitempty"`
 	CreatorUserName           string             `json:"creator_user_name,omitempty"`
 	Driver                    *SparkNode         `json:"driver,omitempty"`
@@ -529,6 +535,24 @@ func (a ClustersAPI) Create(cluster Cluster) (info ClusterInfo, err error) {
 		}
 	}
 	return
+}
+
+// Resize api can only be used when the cluster is in Running State
+func (a ClustersAPI) Resize(resizeRequest ResizeRequest) (info ClusterInfo, err error) {
+	info, err = a.Get(resizeRequest.ClusterID)
+	if err != nil {
+		return info, err
+	}
+	if info.State != ClusterStateRunning {
+		return info, fmt.Errorf("/clusters/resize can only be called on clusters in RUNNING state. Cluster %v is in %v state", info.ClusterID, info.State)
+	}
+
+	err = a.client.Post(a.context, "/clusters/resize", resizeRequest, &info)
+	if err != nil {
+		return info, err
+	}
+	info, err = a.waitForClusterStatus(resizeRequest.ClusterID, ClusterStateRunning)
+	return info, err
 }
 
 // Edit edits the configuration of a cluster to match the provided attributes and size

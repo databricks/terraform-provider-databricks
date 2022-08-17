@@ -241,6 +241,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, c *commo
 	common.DataToStructPointer(d, clusterSchema, &cluster)
 	var clusterInfo ClusterInfo
 	var err error
+
 	if hasClusterConfigChanged(d) {
 		log.Printf("[DEBUG] Cluster state has changed!")
 		if err := cluster.Validate(); err != nil {
@@ -248,7 +249,46 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, c *commo
 		}
 		cluster.ModifyRequestOnInstancePool()
 		fixInstancePoolChangeIfAny(d, &cluster)
-		clusterInfo, err = clusters.Edit(cluster)
+
+		numberOfClusterConfigChanges := 0
+		for k := range clusterSchema {
+			if k == "library" || k == "is_pinned" {
+				continue
+			}
+			if d.HasChange(k) {
+				numberOfClusterConfigChanges += 1
+			}
+		}
+		// We can only call the resize api if the cluster is in the running state
+		// and only the cluster size (ie num_workers OR autoscale) is being changed
+		isNumWorkersResizeForNonAutoscalingCluster := numberOfClusterConfigChanges == 1 && d.HasChange("num_workers")
+		isAutoscaleConfigResizeForAutoscalingCluster := numberOfClusterConfigChanges == 1 && d.HasChange("autoscale")
+		isNonAutoScalingToAutoscalingResize := numberOfClusterConfigChanges == 2 && d.HasChange("autoscale") && d.HasChange("num_workers") && cluster.Autoscale != nil
+		isAutoScalingToNonAutoscalingResize := numberOfClusterConfigChanges == 2 && d.HasChange("autoscale") && d.HasChange("num_workers") && cluster.Autoscale == nil
+		isValidClusterConfigChangeForResizeAPI := isNumWorkersResizeForNonAutoscalingCluster || isAutoscaleConfigResizeForAutoscalingCluster || isNonAutoScalingToAutoscalingResize || isAutoScalingToNonAutoscalingResize
+
+		clusterInfo, err = clusters.Get(clusterID)
+		if err != nil {
+			return err
+		}
+
+		// We prefer to use the resize API in cases when only the number of workers
+		// is changed because a resizing cluster can still serve queries
+		if clusterInfo.State != ClusterStateRunning || !isValidClusterConfigChangeForResizeAPI {
+			clusterInfo, err = clusters.Edit(cluster)
+		} else if isNumWorkersResizeForNonAutoscalingCluster {
+			clusterInfo, err = clusters.Resize(ResizeRequest{ClusterID: clusterID, NumWorkers: cluster.NumWorkers})
+		} else if isAutoscaleConfigResizeForAutoscalingCluster {
+			clusterInfo, err = clusters.Resize(ResizeRequest{ClusterID: clusterID, AutoScale: cluster.Autoscale})
+		} else if isNonAutoScalingToAutoscalingResize {
+			clusterInfo, err = clusters.Resize(ResizeRequest{ClusterID: clusterID, AutoScale: cluster.Autoscale})
+		} else if isAutoScalingToNonAutoscalingResize {
+			clusterInfo, err = clusters.Resize(ResizeRequest{ClusterID: clusterID, NumWorkers: cluster.NumWorkers})
+		} else {
+			log.Printf("[DEBUG] We should never reach this line of code! There is something very wrong with the boolean logic determing whether resize or edit api should be called!")
+			// Falling back to the edit API if we ever reach here!
+			clusterInfo, err = clusters.Edit(cluster)
+		}
 		if err != nil {
 			return err
 		}

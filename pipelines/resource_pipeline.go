@@ -25,8 +25,8 @@ const DefaultTimeout = 20 * time.Minute
 type pipelineCluster struct {
 	Label string `json:"label,omitempty"` // used only by pipelines
 
-	NumWorkers int32               `json:"num_workers,omitempty" tf:"group:size"`
-	Autoscale  *clusters.AutoScale `json:"autoscale,omitempty" tf:"group:size"`
+	NumWorkers int32               `json:"num_workers,omitempty" tf:"group:size, conflicts:autoscale"`
+	Autoscale  *clusters.AutoScale `json:"autoscale,omitempty" tf:"group:size, conflicts:num_workers"`
 
 	NodeTypeID           string                  `json:"node_type_id,omitempty" tf:"group:node_type,computed"`
 	DriverNodeTypeID     string                  `json:"driver_node_type_id,omitempty" tf:"computed"`

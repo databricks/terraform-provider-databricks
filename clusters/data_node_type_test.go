@@ -224,3 +224,83 @@ func TestSmallestNodeTypeClouds(t *testing.T) {
 		},
 	}.defaultSmallestNodeType())
 }
+
+func TestNodeTypeCategoryNotAvailable(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:       "GET",
+				ReuseRequest: true,
+				Resource:     "/api/2.0/clusters/list-node-types",
+				Response: NodeTypeList{
+					[]NodeType{
+						{
+							NodeTypeID:     "Random_05",
+							InstanceTypeID: "Random_05",
+							MemoryMB:       1024,
+							NumCores:       32,
+							NodeInstanceType: &NodeInstanceType{
+								LocalDisks:      3,
+								LocalDiskSizeGB: 100,
+							},
+						},
+						{
+							NodeTypeID:     "Random_01",
+							InstanceTypeID: "Random_01",
+							MemoryMB:       8192,
+							NumCores:       8,
+							NodeInstanceType: &NodeInstanceType{
+								InstanceTypeID: "_",
+							},
+							Category: "Memory Optimized",
+						},
+						{
+							NodeTypeID:     "Random_02",
+							InstanceTypeID: "Random_02",
+							MemoryMB:       8192,
+							NumCores:       8,
+							NumGPUs:        2,
+							Category:       "Storage Optimized",
+							NodeInfo: &ClusterCloudProviderNodeInfo{
+								Status: []string{CloudProviderNodeStatusNotAvailableInRegion, CloudProviderNodeStatusNotEnabled},
+							},
+						},
+						{
+							NodeTypeID:     "Random_03",
+							InstanceTypeID: "Random_03",
+							MemoryMB:       8192,
+							NumCores:       8,
+							NumGPUs:        2,
+							Category:       "Storage Optimized",
+						},
+					},
+				},
+			},
+		},
+		Read:        true,
+		Resource:    DataSourceNodeType(),
+		NonWritable: true,
+		State: map[string]any{
+			"category": "Storage optimized",
+		},
+		ID: ".",
+	}.Apply(t)
+	assert.NoError(t, err)
+	assert.Equal(t, "Random_03", d.Id())
+}
+
+func TestNodeTypeShouldBeSkipped(t *testing.T) {
+	toBeSkipped := NodeType{
+		NodeTypeID:     "Random_02",
+		InstanceTypeID: "Random_02",
+		MemoryMB:       8192,
+		NumCores:       8,
+		NumGPUs:        2,
+		Category:       "Storage Optimized",
+		NodeInfo: &ClusterCloudProviderNodeInfo{
+			Status: []string{CloudProviderNodeStatusNotAvailableInRegion, CloudProviderNodeStatusNotEnabled},
+		},
+	}
+	assert.Equal(t, true, toBeSkipped.shouldBeSkipped())
+	assert.Equal(t, false, NodeType{}.shouldBeSkipped())
+}

@@ -299,10 +299,10 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, c *commo
 				// TODO: Add unit test for this case
 				clusterInfo, err = clusters.Resize(ResizeRequest{ClusterID: clusterID, NumWorkers: cluster.NumWorkers})
 			} else {
-			   log.Printf("[DEBUG] We should never reach this line of code! There is something very wrong with the boolean logic determing whether resize or edit api should be called!")
-			   // Falling back to the edit API if we ever reach here!
-			   clusterInfo, err = clusters.Edit(cluster)
-		   }
+				log.Printf("[DEBUG] We should never reach this line of code! There is something very wrong with the boolean logic determing whether resize or edit api should be called!")
+				// Falling back to the edit API if we ever reach here!
+				clusterInfo, err = clusters.Edit(cluster)
+			}
 		}
 		if err != nil {
 			return err

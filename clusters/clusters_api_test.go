@@ -446,13 +446,13 @@ func TestEditCluster_Pending(t *testing.T) {
 
 func TestResizeCluster_FailsForNonRunningCluster(t *testing.T) {
 	clusterStates := []ClusterState{ClusterStateUnknown,
-		 ClusterStateError,
-		 ClusterStatePending,
-		 ClusterStateRestarting,
-		 ClusterStateResizing,
-		 ClusterStateTerminating,
-		 ClusterStateTerminated,
-		}
+		ClusterStateError,
+		ClusterStatePending,
+		ClusterStateRestarting,
+		ClusterStateResizing,
+		ClusterStateTerminating,
+		ClusterStateTerminated,
+	}
 	for _, clusterState := range clusterStates {
 		t.Run(fmt.Sprintf("CLUSTER STATE %s", clusterState), func(t *testing.T) {
 			client, server, err := qa.HttpFixtureClient(t, []qa.HTTPFixture{
@@ -464,17 +464,16 @@ func TestResizeCluster_FailsForNonRunningCluster(t *testing.T) {
 						ClusterID: "abc",
 					},
 				},
-
 			})
 			require.NoError(t, err)
 
 			ctx := context.Background()
 			_, err = NewClustersAPI(ctx, client).Resize(ResizeRequest{
-				ClusterID:   "abc",
+				ClusterID:  "abc",
 				NumWorkers: 10,
 			})
 			require.Error(t, err)
-			assert.Contains(t, err.Error(), "Resize API can only be called on clusters in RUNNING state. Cluster abc is in " + clusterState + " state")
+			assert.Contains(t, err.Error(), "Resize API can only be called on clusters in RUNNING state. Cluster abc is in "+clusterState+" state")
 			server.Close()
 		})
 	}
@@ -486,8 +485,8 @@ func TestResizeCluster_NormalRun(t *testing.T) {
 			Method:   "GET",
 			Resource: "/api/2.0/clusters/get?cluster_id=abc",
 			Response: ClusterInfo{
-				State:     ClusterStateRunning,
-				ClusterID: "abc",
+				State:      ClusterStateRunning,
+				ClusterID:  "abc",
 				NumWorkers: 4,
 			},
 		},
@@ -495,7 +494,7 @@ func TestResizeCluster_NormalRun(t *testing.T) {
 			Method:   "POST",
 			Resource: "/api/2.0/clusters/resize",
 			ExpectedRequest: ResizeRequest{
-				ClusterID: "abc",
+				ClusterID:  "abc",
 				NumWorkers: 10,
 			},
 		},
@@ -503,8 +502,8 @@ func TestResizeCluster_NormalRun(t *testing.T) {
 			Method:   "GET",
 			Resource: "/api/2.0/clusters/get?cluster_id=abc",
 			Response: ClusterInfo{
-				State:     ClusterStateResizing,
-				ClusterID: "abc",
+				State:      ClusterStateResizing,
+				ClusterID:  "abc",
 				NumWorkers: 10,
 			},
 		},
@@ -512,8 +511,8 @@ func TestResizeCluster_NormalRun(t *testing.T) {
 			Method:   "GET",
 			Resource: "/api/2.0/clusters/get?cluster_id=abc",
 			Response: ClusterInfo{
-				State:     ClusterStateRunning,
-				ClusterID: "abc",
+				State:      ClusterStateRunning,
+				ClusterID:  "abc",
 				NumWorkers: 10,
 			},
 		},
@@ -523,7 +522,7 @@ func TestResizeCluster_NormalRun(t *testing.T) {
 
 	ctx := context.Background()
 	clusterInfo, err := NewClustersAPI(ctx, client).Resize(ResizeRequest{
-		ClusterID:   "abc",
+		ClusterID:  "abc",
 		NumWorkers: 10,
 	})
 	require.NoError(t, err)

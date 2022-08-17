@@ -489,7 +489,7 @@ func TestResourceClusterUpdate_ResizeForNonAutoscalingToAutoscalingCluster(t *te
 				Resource:     "/api/2.0/clusters/get?cluster_id=abc",
 				ReuseRequest: true,
 				Response: ClusterInfo{
-					ClusterID: "abc",
+					ClusterID:  "abc",
 					NumWorkers: 3,
 
 					ClusterName:            "Non Autoscaling Cluster",
@@ -517,7 +517,7 @@ func TestResourceClusterUpdate_ResizeForNonAutoscalingToAutoscalingCluster(t *te
 				Method:   "POST",
 				Resource: "/api/2.0/clusters/resize",
 				ExpectedRequest: ResizeRequest{
-					ClusterID:  "abc",
+					ClusterID: "abc",
 					AutoScale: &AutoScale{
 						MinWorkers: 4,
 						MaxWorkers: 10,

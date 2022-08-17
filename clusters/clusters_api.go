@@ -544,7 +544,7 @@ func (a ClustersAPI) Resize(resizeRequest ResizeRequest) (info ClusterInfo, err 
 		return info, err
 	}
 	if info.State != ClusterStateRunning {
-		return info, fmt.Errorf("/clusters/resize can only be called on clusters in RUNNING state. Cluster %v is in %v state", info.ClusterID, info.State)
+		return info, fmt.Errorf("Resize API can only be called on clusters in RUNNING state. Cluster %v is in %v state", info.ClusterID, info.State)
 	}
 
 	err = a.client.Post(a.context, "/clusters/resize", resizeRequest, &info)

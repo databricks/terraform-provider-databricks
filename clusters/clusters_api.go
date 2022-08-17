@@ -542,8 +542,8 @@ func (a ClustersAPI) Edit(cluster Cluster) (info ClusterInfo, err error) {
 		// it's already running or terminated, so we're safe to edit
 		break
 	case ClusterStatePending, ClusterStateResizing, ClusterStateRestarting:
-		// let's wait tiny bit, so we return RUNNING cluster info
-		info, err = a.waitForClusterStatus(info.ClusterID, ClusterStateRunning)
+		// let's wait tiny bit, so we return RUNNING or TERMINATED cluster info
+		info, err = a.waitForClusterStatusRunningOrTerminated(info.ClusterID)
 		if err != nil {
 			return info, err
 		}
@@ -644,6 +644,34 @@ func wrapMissingClusterError(err error, id string) error {
 		return apiErr
 	}
 	return err
+}
+
+func (a ClustersAPI) waitForClusterStatusRunningOrTerminated(clusterID string) (result ClusterInfo, err error) {
+	return result, resource.RetryContext(a.context, a.defaultTimeout(), func() *resource.RetryError {
+		clusterInfo, err := a.Get(clusterID)
+		if common.IsMissing(err) {
+			log.Printf("[INFO] Cluster %s not found. Retrying", clusterID)
+			return resource.RetryableError(err)
+		}
+		if err != nil {
+			return resource.NonRetryableError(err)
+		}
+		result = clusterInfo
+		log.Printf("[DEBUG] Cluster %s is %s: %s", clusterID, clusterInfo.State, clusterInfo.StateMessage)
+		if clusterInfo.State == ClusterStateRunning || clusterInfo.State == ClusterStateTerminated {
+			return nil
+		}
+		// A cluster can reach RUNNING / TERMINATED from all states except UNKNOWN and ERROR
+		// see https://docs.databricks.com/dev-tools/api/latest/clusters.html#clusterclusterstate for details about possible state transitions
+		if clusterInfo.State == ClusterStateUnknown || clusterInfo.State == ClusterStateError {
+			docLink := "https://docs.databricks.com/dev-tools/api/latest/clusters.html#clusterclusterstate"
+			return resource.NonRetryableError(fmt.Errorf(
+				"Unexpected cluster state enncountered. %s is not able to transition from %s to RUNNING or TERMINATED : %s. Please see %s for more details",
+				clusterID, clusterInfo.State, clusterInfo.StateMessage, docLink))
+		}
+		return resource.RetryableError(
+			fmt.Errorf("%s is %s, but has to be either RUNNING or TERMINATED", clusterID, clusterInfo.State))
+	})
 }
 
 func (a ClustersAPI) waitForClusterStatus(clusterID string, desired ClusterState) (result ClusterInfo, err error) {

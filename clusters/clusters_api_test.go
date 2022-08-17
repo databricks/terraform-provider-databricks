@@ -166,6 +166,137 @@ func TestGetOrCreateRunningCluster_Existing_AzureAuth(t *testing.T) {
 	assert.NotNil(t, clusterInfo)
 }
 
+func TestWaitForClusterStatusRunningOrTerminated_RetryOnNotFound(t *testing.T) {
+	client, server, err := qa.HttpFixtureClient(t, []qa.HTTPFixture{
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/clusters/get?cluster_id=abc",
+			Response: common.APIErrorBody{
+				Message: "Nope",
+			},
+			Status: 404,
+		},
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/clusters/get?cluster_id=abc",
+			Response: ClusterInfo{
+				State: "RUNNING",
+			},
+		},
+	})
+	defer server.Close()
+	require.NoError(t, err)
+
+	client.AzureResourceID = "/a/b/c"
+
+	ctx := context.Background()
+	clusterInfo, err := NewClustersAPI(ctx, client).waitForClusterStatusRunningOrTerminated("abc")
+	require.NoError(t, err)
+
+	assert.NotNil(t, clusterInfo)
+}
+
+func TestWaitForClusterStatusRunningOrTerminated_StopRetryingEarly(t *testing.T) {
+	client, server, err := qa.HttpFixtureClient(t, []qa.HTTPFixture{
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/clusters/get?cluster_id=abc",
+			Response: common.APIErrorBody{
+				Message: "I am a teapot. The cutest little teapot.",
+			},
+			Status: 418,
+		},
+	})
+	defer server.Close()
+	require.NoError(t, err)
+
+	ctx := context.Background()
+	_, err = NewClustersAPI(ctx, client).waitForClusterStatusRunningOrTerminated("abc")
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "I am a teapot. The cutest little teapot.")
+}
+
+func TestWaitForClusterStatusRunningOrTerminated_NotReachable(t *testing.T) {
+	clusterStates := []ClusterState{ClusterStateUnknown, ClusterStateError}
+	for _, clusterState := range clusterStates {
+		t.Run(fmt.Sprintf("CLUSTER STATE %s", clusterState), func(t *testing.T) {
+			client, server, err := qa.HttpFixtureClient(t, []qa.HTTPFixture{
+				{
+					Method:   "GET",
+					Resource: "/api/2.0/clusters/get?cluster_id=abc",
+					Response: ClusterInfo{
+						State:        clusterState,
+						StateMessage: "Ooh, Something strange is going on",
+						ClusterID:    "abc",
+					},
+				},
+			})
+			require.NoError(t, err)
+
+			client.AzureResourceID = "/a/b/c"
+
+			ctx := context.Background()
+			_, err = NewClustersAPI(ctx, client).waitForClusterStatusRunningOrTerminated("abc")
+			require.Error(t, err)
+			assert.Contains(t, err.Error(), "Unexpected cluster state enncountered. abc is not able to transition from "+clusterState+" to RUNNING or TERMINATED")
+
+			server.Close()
+		})
+	}
+}
+
+func TestWaitForClusterStatusRunningOrTerminated_NormalRetryUntilRunning(t *testing.T) {
+	client, server, err := qa.HttpFixtureClient(t, []qa.HTTPFixture{
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/clusters/get?cluster_id=abc",
+			Response: ClusterInfo{
+				State: ClusterStatePending,
+			},
+		},
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/clusters/get?cluster_id=abc",
+			Response: ClusterInfo{
+				State: ClusterStateRunning,
+			},
+		},
+	})
+	defer server.Close()
+	require.NoError(t, err)
+
+	ctx := context.Background()
+	clusterInfo, err := NewClustersAPI(ctx, client).waitForClusterStatusRunningOrTerminated("abc")
+	require.NoError(t, err)
+	assert.Equal(t, ClusterStateRunning, string(clusterInfo.State))
+}
+
+func TestWaitForClusterStatusRunningOrTerminated_NormalRetryUntilTerminated(t *testing.T) {
+	client, server, err := qa.HttpFixtureClient(t, []qa.HTTPFixture{
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/clusters/get?cluster_id=abc",
+			Response: ClusterInfo{
+				State: ClusterStatePending,
+			},
+		},
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/clusters/get?cluster_id=abc",
+			Response: ClusterInfo{
+				State: ClusterStateTerminated,
+			},
+		},
+	})
+	defer server.Close()
+	require.NoError(t, err)
+
+	ctx := context.Background()
+	clusterInfo, err := NewClustersAPI(ctx, client).waitForClusterStatusRunningOrTerminated("abc")
+	require.NoError(t, err)
+	assert.Equal(t, ClusterStateTerminated, string(clusterInfo.State))
+}
+
 func TestWaitForClusterStatus_RetryOnNotFound(t *testing.T) {
 	client, server, err := qa.HttpFixtureClient(t, []qa.HTTPFixture{
 		{
@@ -357,6 +488,49 @@ func TestEditCluster_Terminating(t *testing.T) {
 	})
 	require.NoError(t, err)
 	assert.Equal(t, ClusterStateTerminated, string(clusterInfo.State))
+}
+
+func TestEditCluster_WaitForTerminatedState(t *testing.T) {
+	initialStatesForTests := []ClusterState{ClusterStatePending, ClusterStateResizing, ClusterStateRestarting}
+	for _, initialState := range initialStatesForTests {
+		t.Run(fmt.Sprintf("INITIAL STATE %s", initialState), func(t *testing.T) {
+			client, server, err := qa.HttpFixtureClient(t, []qa.HTTPFixture{
+				{
+					Method:   "GET",
+					Resource: "/api/2.0/clusters/get?cluster_id=abc",
+					Response: ClusterInfo{
+						State:     initialState,
+						ClusterID: "abc",
+					},
+				},
+				{
+					Method:   "GET",
+					Resource: "/api/2.0/clusters/get?cluster_id=abc",
+					Response: ClusterInfo{
+						State:     ClusterStateTerminated,
+						ClusterID: "abc",
+					},
+				},
+				{
+					Method:   "POST",
+					Resource: "/api/2.0/clusters/edit",
+					Response: Cluster{
+						ClusterID:   "abc",
+						ClusterName: "Morty",
+					},
+				},
+			})
+			require.NoError(t, err)
+
+			ctx := context.Background()
+			_, err = NewClustersAPI(ctx, client).Edit(Cluster{
+				ClusterID:   "abc",
+				ClusterName: "Morty",
+			})
+			require.NoError(t, err)
+			server.Close()
+		})
+	}
 }
 
 func TestEditCluster_Error(t *testing.T) {

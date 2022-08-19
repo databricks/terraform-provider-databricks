@@ -5,7 +5,7 @@ subcategory: "Security"
 
 -> **Note** If you have a fully automated setup with workspaces created by [databricks_mws_workspaces](../resources/mws_workspaces.md) or [azurerm_databricks_workspace](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/databricks_workspace), please make sure to add [depends_on attribute](../index.md#data-resources-and-authentication-is-not-configured-errors) in order to prevent _authentication is not configured for provider_ errors.
 
-Retrieves information about [databricks_user](../resources/user.md) or [databricks_service_principal](../resources/service_principal.md), that is calling Databricks REST API. Might be useful in applying the same Terraform by different users in the shared workspace for testing purposes. 
+Retrieves information about [databricks_user](../resources/user.md) or [databricks_service_principal](../resources/service_principal.md), that is calling Databricks REST API. Might be useful in applying the same Terraform by different users in the shared workspace for testing purposes.
 
 ## Example Usage
 
@@ -56,14 +56,12 @@ output "job_url" {
 Data source exposes the following attributes:
 
 * `id` -  The id of the calling user.
-* `application_id` - Application ID of the [service principal](../resources/service_principal.md) if the currently logged-in user is a service principal, e.g. `11111111-2222-3333-4444-555666777888`
 * `external_id` - ID of the user in an external identity provider.
-* `user_name` - Name of the [user](../resources/user.md), e.g. `mr.foo@example.com`.
+* `user_name` - Name of the [user](../resources/user.md), e.g. `mr.foo@example.com`. If the currently logged-in identity is a [service principal](../resources/service_principal.md), returns the application ID, e.g. `11111111-2222-3333-4444-555666777888`
 * `home` - Home folder of the [user](../resources/user.md), e.g. `/Users/mr.foo@example.com`.
 * `repos` - Personal Repos location of the [user](../resources/user.md), e.g. `/Repos/mr.foo@example.com`.
 * `alphanumeric` - Alphanumeric representation of user local name. e.g. `mr_foo`.
 * `workspace_url` - URL of the current Databricks workspace.
-
 
 ## Related Resources
 

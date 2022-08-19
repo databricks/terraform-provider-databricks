@@ -56,17 +56,23 @@ func (p *Pair) Unpack(d *schema.ResourceData) (string, string, error) {
 		d.SetId("")
 		return "", "", fmt.Errorf("%s cannot be empty", p.right)
 	}
-	d.Set(p.left, parts[0])
-	if p.schema[p.right].Type == schema.TypeInt {
-		i64, err := strconv.ParseInt(parts[1], 10, 64)
-		if err != nil {
-			return parts[0], parts[1], err
-		}
-		d.Set(p.right, i64)
-	} else {
-		d.Set(p.right, parts[1])
+	err := p.setField(d, p.left, parts[0])
+	if err != nil {
+		return parts[0], parts[1], err
 	}
-	return parts[0], parts[1], nil
+	err = p.setField(d, p.right, parts[1])
+	return parts[0], parts[1], err
+}
+
+func (p *Pair) setField(d *schema.ResourceData, col, val string) error {
+	if p.schema[col].Type != schema.TypeInt {
+		return d.Set(col, val)
+	}
+	i64, err := strconv.ParseInt(val, 10, 64)
+	if err != nil {
+		return err
+	}
+	return d.Set(col, i64)
 }
 
 // Pack data attributes to ID

@@ -35,6 +35,9 @@ type pipelineCluster struct {
 	AwsAttributes        *clusters.AwsAttributes `json:"aws_attributes,omitempty"`
 	GcpAttributes        *clusters.GcpAttributes `json:"gcp_attributes,omitempty"`
 
+	PolicyID                 string `json:"policy_id,omitempty"`
+	ApplyPolicyDefaultValues bool   `json:"apply_policy_default_values,omitempty"`
+
 	SparkConf    map[string]string `json:"spark_conf,omitempty"`
 	SparkEnvVars map[string]string `json:"spark_env_vars,omitempty"`
 	CustomTags   map[string]string `json:"custom_tags,omitempty"`

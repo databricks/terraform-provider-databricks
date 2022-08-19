@@ -370,11 +370,13 @@ type Cluster struct {
 	DriverNodeTypeID       string           `json:"driver_node_type_id,omitempty" tf:"group:node_type,computed"`
 	InstancePoolID         string           `json:"instance_pool_id,omitempty" tf:"group:node_type"`
 	DriverInstancePoolID   string           `json:"driver_instance_pool_id,omitempty" tf:"group:node_type,computed"`
-	PolicyID               string           `json:"policy_id,omitempty"`
 	AwsAttributes          *AwsAttributes   `json:"aws_attributes,omitempty" tf:"conflicts:instance_pool_id,suppress_diff"`
 	AzureAttributes        *AzureAttributes `json:"azure_attributes,omitempty" tf:"conflicts:instance_pool_id,suppress_diff"`
 	GcpAttributes          *GcpAttributes   `json:"gcp_attributes,omitempty" tf:"conflicts:instance_pool_id,suppress_diff"`
 	AutoterminationMinutes int32            `json:"autotermination_minutes,omitempty"`
+
+	PolicyID                 string `json:"policy_id,omitempty"`
+	ApplyPolicyDefaultValues bool   `json:"apply_policy_default_values,omitempty"`
 
 	SparkConf    map[string]string `json:"spark_conf,omitempty"`
 	SparkEnvVars map[string]string `json:"spark_env_vars,omitempty"`

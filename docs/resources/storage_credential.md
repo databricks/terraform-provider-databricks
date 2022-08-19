@@ -78,6 +78,8 @@ resource "databricks_grants" "external_creds" {
 The following arguments are required:
 
 - `name` - Name of Storage Credentials, which must be unique within the [databricks_metastore](metastore.md). Change forces creation of a new resource.
+- `owner` - (Optional) Username/groupname/sp application_id of the storage credential owner.
+
 
 `aws_iam_role` optional configuration block for credential details for AWS:
 

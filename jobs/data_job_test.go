@@ -39,8 +39,8 @@ func TestDataSourceQueryableJobMatchesId(t *testing.T) {
 		HCL:         `job_id = "234"`,
 		ID:          "_",
 	}.ApplyAndExpectData(t, map[string]any{
-		"job_id":            "234",
-		"settings.0.0.name": "Second",
+		"job_id":              "234",
+		"job_settings.0.name": "Second",
 	})
 }
 

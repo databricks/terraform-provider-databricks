@@ -3,11 +3,12 @@ subcategory: "Unity Catalog"
 ---
 # databricks_grants Resource
 
--> **Public Preview** This feature is in [Public Preview](https://docs.databricks.com/release-notes/release-types.html). Contact your Databricks representative to request access. 
+-> **Public Preview** This feature is in [Public Preview](https://docs.databricks.com/release-notes/release-types.html). Contact your Databricks representative to request access.
 
 In Unity Catalog all users initially have no access to data. Only Metastore Admins can create objects and can grant/revoke access on individual objects to users and groups. Every securable object in Unity Catalog has an owner. The owner can be any account-level user or group, called principals in general. The principal that creates an object becomes its owner. Owners receive all privileges on the securable object (e.g., `SELECT` and `MODIFY` on a table), as well as the permission to grant privileges to other principals.
 
 Unity Catalog supports the following privileges on securable objects:
+
 * `SELECT` - Allows the grantee to read data from the securable (applicable to tables and views).
 * `MODIFY` - Allows the grantee to add, update and delete data to or from the securable. (applicable to tables)
 * `CREATE` - Allows the grantee to create child objects within this securable.
@@ -112,11 +113,11 @@ resource "databricks_grants" "things" {
 
 ## View grants
 
-You can grant `SELECT` privileges to [*`catalog`*.*`database`*.*`view`*](table.md) specified in `view` attribute. You can define a view through [databricks_table](table.md) resource.
+You can grant `SELECT` privileges to [*`catalog`*.*`database`*.*`view`*](table.md) specified in `table` attribute. You can define a view through [databricks_table](table.md) resource.
 
 ```hcl
 resource "databricks_grants" "customer360" {
-  view = "main.reporting.customer360"
+  table = "main.reporting.customer360"
   grant {
     principal  = "Data Analysts"
     privileges = ["SELECT"]
@@ -135,7 +136,7 @@ data "databricks_views" "customers" {
 resource "databricks_grants" "customers" {
   for_each = data.databricks_views.customers.ids
 
-  view = each.value
+  table = each.value
 
   grant {
     principal  = "sensitive"

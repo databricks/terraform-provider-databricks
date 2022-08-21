@@ -6,18 +6,37 @@ subcategory: "Unity Catalog"
 -> **Public Preview** This feature is in [Public Preview](https://docs.databricks.com/release-notes/release-types.html). Contact your Databricks representative to request access.
 
 In Unity Catalog all users initially have no access to data. Only Metastore Admins can create objects and can grant/revoke access on individual objects to users and groups. Every securable object in Unity Catalog has an owner. The owner can be any account-level user or group, called principals in general. The principal that creates an object becomes its owner. Owners receive all privileges on the securable object (e.g., `SELECT` and `MODIFY` on a table), as well as the permission to grant privileges to other principals.
-
+<!--This matches https://github.com/databricks/docs/blob/master/source/shared/unity-catalog/privileges.md-->
 Unity Catalog supports the following privileges on securable objects:
 
-* `SELECT` - Allows the grantee to read data from the securable (applicable to tables and views).
-* `MODIFY` - Allows the grantee to add, update and delete data to or from the securable. (applicable to tables)
-* `CREATE` - Allows the grantee to create child objects within this securable.
-* `USAGE` - This privilege does not grant access to the securable itself, but allows the grantee to traverse the securable in order to access its child objects. For example, to select data from a table, users need to have the `SELECT` privilege on that table and `USAGE` privileges on its parent schema and parent catalog. Thus, you can use this privilege to restrict access to sections of your data namespace to specific groups.
+- `USAGE`: Applicable object types: CATALOG, SCHEMA. This privilege does not grant access to the securable itself, but is needed for a user to interact with any object within the securable. For example, to select data from a table, users need to have the SELECT privilege on that table and USAGE privileges on its parent schema and parent catalog.
+  
+  This is useful for allowing schema and catalog owners to be able to limit how far individual table owners can share data they produce. A table owner granting SELECT to another user does not allow that user read access to the table unless they also have USAGE on the schema and catalog.
+
+- `SELECT`: Applicable object types: TABLE, VIEW. Allows a user to select from a table or view, if the user also has `USAGE` on its parent catalog and schema.
+
+- `MODIFY`: Applicable object types: TABLE. Allows a user to add, update, and delete data to or from the table if the user also has `USAGE` on its parent catalog and schema.
+
+- `CREATE`: Applicable object types: CATALOG, SCHEMA. If applied to a catalog, allows a user to create a schema. The user also requires the `USAGE` permission on the catalog.
+
+  If applied to a schema, allows a user to create a table or view in the schema. The user also requires the USAGE permission on its parent catalog and the schema.
+
+- `EXECUTE`: Applicable object types: FUNCTION. Allows a user to invoke a user defined function, if the user also has `USAGE` on its parent catalog and schema.
+
+- `CREATE TABLE`: Applicable object types: EXTERNAL LOCATION, STORAGE CREDENTIAL. Allows a user to create external tables directly in your cloud tenant using an external location or storage credential. Databricks recommends granting this privilege on an external location rather than storage credential; because the privilege is scoped to a path, it allows more control over where users can create external tables in your cloud tenant.
+
+- `READ FILES`: Applicable object types: EXTERNAL LOCATION, STORAGE CREDENTIAL. Allows a user to read files directly from your cloud tenant (for example from S3 or ADLS). Databricks recommends granting this privilege on an external location rather than storage credential; because the privilege is scoped to a path it allows more control over from where users can read data.
+
+- `WRITE FILES`: Applicable object types: EXTERNAL LOCATION, STORAGE CREDENTIAL. Allows a user to write files directly into your cloud tenant (for example into S3 or ADLS). We recommend granting this privilege on an external location rather than storage credential (since it is scoped to a path it allows more control over where users can write data to).
+
+- `ALL PRIVILEGES`: Applicable object types: All object types. Allows a user to grant or revoke all privileges applicable to the securable without explicitly specifying them. This expands to all available privileges at the time of the grant.
+
+In Unity Catalog, privileges are not inherited on child securable objects. For example, if you grant the `CREATE` privilege on a catalog to a user, the user does not automatically have the `CREATE` privilege on all databases in the catalog.
 
 Every `databricks_grants` resource must have exactly one securable identifier and one or more `grant` blocks with the following arguments:
 
-* `principal` - User or group name.
-* `privileges` - One or more privileges that are specific to a securable type.
+- `principal` - User or group name.
+- `privileges` - One or more privileges that are specific to a securable type.
 
 Terraform will handle any configuration drift on every `terraform apply` run, even when grants are changed outside of Terraform state.
 
@@ -147,7 +166,7 @@ resource "databricks_grants" "customers" {
 
 ## Storage credential grants
 
-You can grant `CREATE_TABLE`, `READ_FILES`, and `WRITE_FILES` privileges to [databricks_storage_credential](storage_credential.md) id specified in `storage_credential` attribute:
+You can grant `CREATE_TABLE`, `READ_FILES`, `WRITE_FILES` and `CREATE_EXTERNAL_LOCATION` privileges to [databricks_storage_credential](storage_credential.md) id specified in `storage_credential` attribute:
 
 ```hcl
 resource "databricks_storage_credential" "external" {

@@ -223,6 +223,18 @@ func hasClusterConfigChanged(d *schema.ResourceData) bool {
 	return false
 }
 
+func hasOnlyResizeClusterConfigChanged(d *schema.ResourceData) bool {
+	for k := range clusterSchema {
+		if k == "library" || k == "is_pinned" || k == "num_workers" || k == "autoscale" {
+			continue
+		}
+		if d.HasChange(k) {
+			return false
+		}
+	}
+	return true
+}
+
 // https://github.com/databricks/terraform-provider-databricks/issues/824
 func fixInstancePoolChangeIfAny(d *schema.ResourceData, cluster *Cluster) {
 	oldInstancePool, newInstancePool := d.GetChange("instance_pool_id")
@@ -250,21 +262,17 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, c *commo
 		cluster.ModifyRequestOnInstancePool()
 		fixInstancePoolChangeIfAny(d, &cluster)
 
-		numberOfClusterConfigChanges := 0
-		for k := range clusterSchema {
-			if k == "library" || k == "is_pinned" {
-				continue
-			}
-			if d.HasChange(k) {
-				numberOfClusterConfigChanges += 1
-			}
-		}
 		// We can only call the resize api if the cluster is in the running state
 		// and only the cluster size (ie num_workers OR autoscale) is being changed
-		isNumWorkersResizeForNonAutoscalingCluster := numberOfClusterConfigChanges == 1 && d.HasChange("num_workers")
-		isAutoscaleConfigResizeForAutoscalingCluster := numberOfClusterConfigChanges == 1 && d.HasChange("autoscale")
-		isNonAutoScalingToAutoscalingResize := numberOfClusterConfigChanges == 2 && d.HasChange("autoscale") && d.HasChange("num_workers") && cluster.Autoscale != nil
-		isAutoScalingToNonAutoscalingResize := numberOfClusterConfigChanges == 2 && d.HasChange("autoscale") && d.HasChange("num_workers") && cluster.Autoscale == nil
+		hasNumWorkersChanged := d.HasChange("num_workers")
+		hasAutoscaleChanged := d.HasChange("autoscale")
+		hasOnlyResizeClusterConfigChanged := hasOnlyResizeClusterConfigChanged(d)
+
+		isNumWorkersResizeForNonAutoscalingCluster := hasOnlyResizeClusterConfigChanged && hasNumWorkersChanged && !hasAutoscaleChanged
+		isAutoscaleConfigResizeForAutoscalingCluster := hasOnlyResizeClusterConfigChanged && hasAutoscaleChanged && !hasNumWorkersChanged
+		isNonAutoScalingToAutoscalingResize := hasOnlyResizeClusterConfigChanged && hasAutoscaleChanged && hasNumWorkersChanged && cluster.Autoscale != nil
+		isAutoScalingToNonAutoscalingResize := hasOnlyResizeClusterConfigChanged && hasAutoscaleChanged && hasNumWorkersChanged && cluster.Autoscale == nil
+		
 		isValidClusterConfigChangeForResizeAPI := isNumWorkersResizeForNonAutoscalingCluster || isAutoscaleConfigResizeForAutoscalingCluster || isNonAutoScalingToAutoscalingResize || isAutoScalingToNonAutoscalingResize
 
 		clusterInfo, err = clusters.Get(clusterID)
@@ -276,14 +284,10 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, c *commo
 		// is changed because a resizing cluster can still serve queries
 		if !isValidClusterConfigChangeForResizeAPI || clusterInfo.State != ClusterStateRunning {
 			clusterInfo, err = clusters.Edit(cluster)
-		} else if isNumWorkersResizeForNonAutoscalingCluster {
+		} else if isNumWorkersResizeForNonAutoscalingCluster || isAutoScalingToNonAutoscalingResize {
 			clusterInfo, err = clusters.Resize(ResizeRequest{ClusterID: clusterID, NumWorkers: cluster.NumWorkers})
-		} else if isAutoscaleConfigResizeForAutoscalingCluster {
+		} else if isAutoscaleConfigResizeForAutoscalingCluster || isNonAutoScalingToAutoscalingResize {
 			clusterInfo, err = clusters.Resize(ResizeRequest{ClusterID: clusterID, AutoScale: cluster.Autoscale})
-		} else if isNonAutoScalingToAutoscalingResize {
-			clusterInfo, err = clusters.Resize(ResizeRequest{ClusterID: clusterID, AutoScale: cluster.Autoscale})
-		} else if isAutoScalingToNonAutoscalingResize {
-			clusterInfo, err = clusters.Resize(ResizeRequest{ClusterID: clusterID, NumWorkers: cluster.NumWorkers})
 		} else {
 			log.Printf("[DEBUG] We should never reach this line of code! There is something very wrong with the boolean logic determing whether resize or edit api should be called!")
 			// Falling back to the edit API if we ever reach here!

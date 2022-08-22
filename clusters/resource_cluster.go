@@ -274,31 +274,20 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, c *commo
 
 		// We prefer to use the resize API in cases when only the number of workers
 		// is changed because a resizing cluster can still serve queries
-		if !isValidClusterConfigChangeForResizeAPI {
+		if !isValidClusterConfigChangeForResizeAPI || clusterInfo.State != ClusterStateRunning {
 			clusterInfo, err = clusters.Edit(cluster)
+		} else if isNumWorkersResizeForNonAutoscalingCluster {
+			clusterInfo, err = clusters.Resize(ResizeRequest{ClusterID: clusterID, NumWorkers: cluster.NumWorkers})
+		} else if isAutoscaleConfigResizeForAutoscalingCluster {
+			clusterInfo, err = clusters.Resize(ResizeRequest{ClusterID: clusterID, AutoScale: cluster.Autoscale})
+		} else if isNonAutoScalingToAutoscalingResize {
+			clusterInfo, err = clusters.Resize(ResizeRequest{ClusterID: clusterID, AutoScale: cluster.Autoscale})
+		} else if isAutoScalingToNonAutoscalingResize {
+			clusterInfo, err = clusters.Resize(ResizeRequest{ClusterID: clusterID, NumWorkers: cluster.NumWorkers})
 		} else {
-			// We need to wait for the cluster to reach RUNNING or TERMINATED
-			// state to determine whether we can use /clusters/resize API
-			clusterInfo, err = clusters.waitForClusterStatusRunningOrTerminated(clusterID)
-			if err != nil {
-				return err
-			}
-
-			if clusterInfo.State != ClusterStateRunning {
-				clusterInfo, err = clusters.Edit(cluster)
-			} else if isNumWorkersResizeForNonAutoscalingCluster {
-				clusterInfo, err = clusters.Resize(ResizeRequest{ClusterID: clusterID, NumWorkers: cluster.NumWorkers})
-			} else if isAutoscaleConfigResizeForAutoscalingCluster {
-				clusterInfo, err = clusters.Resize(ResizeRequest{ClusterID: clusterID, AutoScale: cluster.Autoscale})
-			} else if isNonAutoScalingToAutoscalingResize {
-				clusterInfo, err = clusters.Resize(ResizeRequest{ClusterID: clusterID, AutoScale: cluster.Autoscale})
-			} else if isAutoScalingToNonAutoscalingResize {
-				clusterInfo, err = clusters.Resize(ResizeRequest{ClusterID: clusterID, NumWorkers: cluster.NumWorkers})
-			} else {
-				log.Printf("[DEBUG] We should never reach this line of code! There is something very wrong with the boolean logic determing whether resize or edit api should be called!")
-				// Falling back to the edit API if we ever reach here!
-				clusterInfo, err = clusters.Edit(cluster)
-			}
+			log.Printf("[DEBUG] We should never reach this line of code! There is something very wrong with the boolean logic determing whether resize or edit api should be called!")
+			// Falling back to the edit API if we ever reach here!
+			clusterInfo, err = clusters.Edit(cluster)
 		}
 		if err != nil {
 			return err

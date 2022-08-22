@@ -225,7 +225,7 @@ Example of pushing all cluster logs to S3:
 ```hcl
 cluster_log_conf {
   s3 {
-    destination = "s3a://acmecorp-main/cluster-logs"
+    destination = "s3://acmecorp-main/cluster-logs"
     region      = "us-east-1"
   }
 }
@@ -260,7 +260,7 @@ Example of taking init script from S3:
 ```hcl
 init_scripts {
   s3 {
-    destination = "s3a://acmecorp-main/init-scripts/install-elk.sh"
+    destination = "s3://acmecorp-main/init-scripts/install-elk.sh"
     region      = "us-east-1"
   }
 }

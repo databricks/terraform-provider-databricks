@@ -445,49 +445,6 @@ func TestEditCluster_Terminating(t *testing.T) {
 	assert.Equal(t, ClusterStateTerminated, string(clusterInfo.State))
 }
 
-func TestEditCluster_WaitForTerminatedState(t *testing.T) {
-	initialStatesForTests := []ClusterState{ClusterStatePending, ClusterStateResizing, ClusterStateRestarting}
-	for _, initialState := range initialStatesForTests {
-		t.Run(fmt.Sprintf("INITIAL STATE %s", initialState), func(t *testing.T) {
-			client, server, err := qa.HttpFixtureClient(t, []qa.HTTPFixture{
-				{
-					Method:   "GET",
-					Resource: "/api/2.0/clusters/get?cluster_id=abc",
-					Response: ClusterInfo{
-						State:     initialState,
-						ClusterID: "abc",
-					},
-				},
-				{
-					Method:   "GET",
-					Resource: "/api/2.0/clusters/get?cluster_id=abc",
-					Response: ClusterInfo{
-						State:     ClusterStateTerminated,
-						ClusterID: "abc",
-					},
-				},
-				{
-					Method:   "POST",
-					Resource: "/api/2.0/clusters/edit",
-					Response: Cluster{
-						ClusterID:   "abc",
-						ClusterName: "Morty",
-					},
-				},
-			})
-			require.NoError(t, err)
-
-			ctx := context.Background()
-			_, err = NewClustersAPI(ctx, client).Edit(Cluster{
-				ClusterID:   "abc",
-				ClusterName: "Morty",
-			})
-			require.NoError(t, err)
-			server.Close()
-		})
-	}
-}
-
 func TestEditCluster_Error(t *testing.T) {
 	client, server, err := qa.HttpFixtureClient(t, []qa.HTTPFixture{
 		{

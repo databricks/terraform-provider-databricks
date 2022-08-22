@@ -549,7 +549,7 @@ func (a ClustersAPI) Resize(resizeRequest ResizeRequest) (info ClusterInfo, err 
 
 	err = a.client.Post(a.context, "/clusters/resize", resizeRequest, &info)
 	if err != nil {
-		return info, err
+		return info, fmt.Errorf("resize: %w", err)
 	}
 	info, err = a.waitForClusterStatus(resizeRequest.ClusterID, ClusterStateRunning)
 	return info, err

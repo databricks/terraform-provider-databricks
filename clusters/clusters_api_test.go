@@ -342,7 +342,7 @@ func TestResizeCluster_FailsForNonRunningCluster(t *testing.T) {
 				NumWorkers: 10,
 			})
 			require.Error(t, err)
-			assert.Contains(t, err.Error(), "resize: Cluster abc is in " + clusterState + " state. RUNNING state required to use resize API")
+			assert.Contains(t, err.Error(), "resize: Cluster abc is in "+clusterState+" state. RUNNING state required to use resize API")
 			server.Close()
 		})
 	}

@@ -223,18 +223,6 @@ func hasClusterConfigChanged(d *schema.ResourceData) bool {
 	return false
 }
 
-func hasOnlyResizeClusterConfigChanged(d *schema.ResourceData) bool {
-	for k := range clusterSchema {
-		if k == "library" || k == "is_pinned" || k == "num_workers" || k == "autoscale" {
-			continue
-		}
-		if d.HasChange(k) {
-			return false
-		}
-	}
-	return true
-}
-
 // https://github.com/databricks/terraform-provider-databricks/issues/824
 func fixInstancePoolChangeIfAny(d *schema.ResourceData, cluster *Cluster) {
 	oldInstancePool, newInstancePool := d.GetChange("instance_pool_id")
@@ -266,36 +254,52 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, c *commo
 		// and only the cluster size (ie num_workers OR autoscale) is being changed
 		hasNumWorkersChanged := d.HasChange("num_workers")
 		hasAutoscaleChanged := d.HasChange("autoscale")
-		hasOnlyResizeClusterConfigChanged := hasOnlyResizeClusterConfigChanged(d)
-
-		isNumWorkersResizeForNonAutoscalingCluster := hasOnlyResizeClusterConfigChanged && hasNumWorkersChanged && !hasAutoscaleChanged
-		isAutoscaleConfigResizeForAutoscalingCluster := hasOnlyResizeClusterConfigChanged && hasAutoscaleChanged && !hasNumWorkersChanged
-		isNonAutoScalingToAutoscalingResize := hasOnlyResizeClusterConfigChanged && hasAutoscaleChanged && hasNumWorkersChanged && cluster.Autoscale != nil
-		isAutoScalingToNonAutoscalingResize := hasOnlyResizeClusterConfigChanged && hasAutoscaleChanged && hasNumWorkersChanged && cluster.Autoscale == nil
-		
-		isValidClusterConfigChangeForResizeAPI := isNumWorkersResizeForNonAutoscalingCluster || isAutoscaleConfigResizeForAutoscalingCluster || isNonAutoScalingToAutoscalingResize || isAutoScalingToNonAutoscalingResize
-
+		hasOnlyResizeClusterConfigChanged := true
+		for k := range clusterSchema {
+			if k == "library" || k == "is_pinned" || k == "num_workers" || k == "autoscale" {
+				continue
+			}
+			if d.HasChange(k) {
+				hasOnlyResizeClusterConfigChanged = false
+			}
+		}
 		clusterInfo, err = clusters.Get(clusterID)
 		if err != nil {
 			return err
 		}
 
+		isNumWorkersResizeForNonAutoscalingCluster := hasOnlyResizeClusterConfigChanged &&
+			hasNumWorkersChanged &&
+			!hasAutoscaleChanged &&
+			clusterInfo.State == ClusterStateRunning
+		isAutoscaleConfigResizeForAutoscalingCluster := hasOnlyResizeClusterConfigChanged &&
+			hasAutoscaleChanged &&
+			!hasNumWorkersChanged &&
+			clusterInfo.State == ClusterStateRunning
+		isNonAutoScalingToAutoscalingResize := hasOnlyResizeClusterConfigChanged &&
+			hasAutoscaleChanged &&
+			hasNumWorkersChanged &&
+			cluster.Autoscale != nil &&
+			clusterInfo.State == ClusterStateRunning
+		isAutoScalingToNonAutoscalingResize := hasOnlyResizeClusterConfigChanged &&
+			hasAutoscaleChanged &&
+			hasNumWorkersChanged &&
+			cluster.Autoscale == nil &&
+			clusterInfo.State == ClusterStateRunning
+
 		// We prefer to use the resize API in cases when only the number of workers
 		// is changed because a resizing cluster can still serve queries
-		if !isValidClusterConfigChangeForResizeAPI || clusterInfo.State != ClusterStateRunning {
-			clusterInfo, err = clusters.Edit(cluster)
-		} else if isNumWorkersResizeForNonAutoscalingCluster || isAutoScalingToNonAutoscalingResize {
+		if isNumWorkersResizeForNonAutoscalingCluster || isAutoScalingToNonAutoscalingResize {
 			clusterInfo, err = clusters.Resize(ResizeRequest{ClusterID: clusterID, NumWorkers: cluster.NumWorkers})
 		} else if isAutoscaleConfigResizeForAutoscalingCluster || isNonAutoScalingToAutoscalingResize {
 			clusterInfo, err = clusters.Resize(ResizeRequest{ClusterID: clusterID, AutoScale: cluster.Autoscale})
 		} else {
-			log.Printf("[DEBUG] We should never reach this line of code! There is something very wrong with the boolean logic determing whether resize or edit api should be called!")
-			// Falling back to the edit API if we ever reach here!
 			clusterInfo, err = clusters.Edit(cluster)
 		}
 		if err != nil {
 			return err
 		}
+
 	} else {
 		clusterInfo, err = clusters.Get(clusterID)
 		if err != nil {

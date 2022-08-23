@@ -482,7 +482,7 @@ func TestResourceClusterRead_Error(t *testing.T) {
 
 // resize api should be called when autoscaling cluster is converted to a non autoscaling one
 func TestResourceClusterUpdate_ResizeForAutoscalingToNumWorkersCluster(t *testing.T) {
-	d, err := qa.ResourceFixture{
+	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:       "GET",
@@ -544,14 +544,12 @@ func TestResourceClusterUpdate_ResizeForAutoscalingToNumWorkersCluster(t *testin
 				max_workers = 4
 			}"`,
 		},
-	}.Apply(t)
-	assert.NoError(t, err, err)
-	assert.Equal(t, "abc", d.Id(), "Id should be the same as in reading")
+	}.ApplyNoError(t)
 }
 
 // resize api should be called when non autoscaling cluster is converted to a autoscaling one
 func TestResourceClusterUpdate_ResizeForNumWorkersToAutoscalingCluster(t *testing.T) {
-	d, err := qa.ResourceFixture{
+	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:       "GET",
@@ -613,14 +611,12 @@ func TestResourceClusterUpdate_ResizeForNumWorkersToAutoscalingCluster(t *testin
 			"node_type_id":            "i3.xlarge",
 			"num_workers":             "150",
 		},
-	}.Apply(t)
-	assert.NoError(t, err, err)
-	assert.Equal(t, "abc", d.Id(), "Id should be the same as in reading")
+	}.ApplyNoError(t)
 }
 
 // provider should call the edit api and not the resize api when the cluster is not running
 func TestResourceClusterUpdate_EditNumWorkersWhenClusterTerminated(t *testing.T) {
-	d, err := qa.ResourceFixture{
+	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:       "GET",
@@ -680,13 +676,11 @@ func TestResourceClusterUpdate_EditNumWorkersWhenClusterTerminated(t *testing.T)
 			"node_type_id":            "i3.xlarge",
 			"num_workers":             "150",
 		},
-	}.Apply(t)
-	assert.NoError(t, err, err)
-	assert.Equal(t, "abc", d.Id(), "Id should be the same as in reading")
+	}.ApplyNoError(t)
 }
 
 func TestResourceClusterUpdate_ResizeAutoscale(t *testing.T) {
-	d, err := qa.ResourceFixture{
+	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:       "GET",
@@ -753,13 +747,11 @@ func TestResourceClusterUpdate_ResizeAutoscale(t *testing.T) {
 			max_workers = 10
 		}
 		`,
-	}.Apply(t)
-	assert.NoError(t, err, err)
-	assert.Equal(t, "abc", d.Id(), "Id should be the same as in reading")
+	}.ApplyNoError(t)
 }
 
 func TestResourceClusterUpdate_ResizeNumWorkers(t *testing.T) {
-	d, err := qa.ResourceFixture{
+	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:       "GET",
@@ -815,9 +807,7 @@ func TestResourceClusterUpdate_ResizeNumWorkers(t *testing.T) {
 			"node_type_id":            "i3.xlarge",
 			"num_workers":             "150",
 		},
-	}.Apply(t)
-	assert.NoError(t, err, err)
-	assert.Equal(t, "abc", d.Id(), "Id should be the same as in reading")
+	}.ApplyAndExpectData(t)
 }
 
 func TestResourceClusterUpdate(t *testing.T) {

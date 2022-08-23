@@ -807,7 +807,7 @@ func TestResourceClusterUpdate_ResizeNumWorkers(t *testing.T) {
 			"node_type_id":            "i3.xlarge",
 			"num_workers":             "150",
 		},
-	}.ApplyAndExpectData(t)
+	}.ApplyNoError(t)
 }
 
 func TestResourceClusterUpdate(t *testing.T) {

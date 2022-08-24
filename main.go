@@ -37,6 +37,7 @@ https://registry.terraform.io/providers/databricks/databricks/latest/docs
 `, common.Version())
 	plugin.Serve(&plugin.ServeOpts{
 		ProviderFunc: provider.DatabricksProvider,
+		ProviderAddr: "registry.terraform.io/databricks/databricks",
 		Debug:        debug,
 	})
 }

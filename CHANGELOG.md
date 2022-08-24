@@ -6,7 +6,7 @@
 * Updated to latest Unity Catalog privileges model ([#1556](https://github.com/databricks/terraform-provider-databricks/pull/1556)).
 * Added cluster policy support for `databricks_pipeline` ([#1554](https://github.com/databricks/terraform-provider-databricks/pull/1554)).
 * Fixed `databricks_node_type` by skipping nodes that aren't available in subscription/region ([#1534](https://github.com/databricks/terraform-provider-databricks/pull/1534)).
-* Fixed sending of `active` flag in the `resource_user` ([#1536](https://github.com/databricks/terraform-provider-databricks/pull/1536)).
+* Fixed sending of `active` flag in the `databricks_user` ([#1536](https://github.com/databricks/terraform-provider-databricks/pull/1536)).
 * Fixed Azure CLI tests on Go 1.19 ([#1538](https://github.com/databricks/terraform-provider-databricks/pull/1538)).
 * Various doc updates ([#1553](https://github.com/databricks/terraform-provider-databricks/pull/1553), [#1552](https://github.com/databricks/terraform-provider-databricks/pull/1552), [#1544](https://github.com/databricks/terraform-provider-databricks/pull/1544), [#1543](https://github.com/databricks/terraform-provider-databricks/pull/1543)).
 

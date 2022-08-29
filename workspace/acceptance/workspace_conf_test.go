@@ -4,13 +4,14 @@ import (
 	"context"
 	"testing"
 
-	"github.com/databrickslabs/terraform-provider-databricks/common"
-	"github.com/databrickslabs/terraform-provider-databricks/internal/acceptance"
-	"github.com/databrickslabs/terraform-provider-databricks/workspace"
+	"github.com/databricks/terraform-provider-databricks/common"
+	"github.com/databricks/terraform-provider-databricks/internal/acceptance"
+	"github.com/databricks/terraform-provider-databricks/workspace"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestAccWorkspaceConfFullLifecycle(t *testing.T) {
+	t.Parallel()
 	acceptance.Test(t, []acceptance.Step{
 		{
 			Template: `resource "databricks_workspace_conf" "this" {
@@ -20,7 +21,7 @@ func TestAccWorkspaceConfFullLifecycle(t *testing.T) {
 			}`,
 			Check: acceptance.ResourceCheck("databricks_workspace_conf.this",
 				func(ctx context.Context, client *common.DatabricksClient, id string) error {
-					conf := map[string]interface{}{
+					conf := map[string]any{
 						"enableIpAccessLists": nil,
 					}
 					err := workspace.NewWorkspaceConfAPI(ctx, client).Read(&conf)

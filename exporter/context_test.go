@@ -24,7 +24,7 @@ func TestImportContextFindSkips(t *testing.T) {
 					Type: "a",
 					Instances: []instanceApproximation{
 						{
-							Attributes: map[string]interface{}{
+							Attributes: map[string]any{
 								"b": nil,
 							},
 						},
@@ -47,7 +47,7 @@ func TestImportContextHas(t *testing.T) {
 					Type: "a",
 					Instances: []instanceApproximation{
 						{
-							Attributes: map[string]interface{}{
+							Attributes: map[string]any{
 								"b": "d",
 							},
 						},

@@ -3,13 +3,13 @@ package secrets
 import (
 	"context"
 
-	"github.com/databrickslabs/terraform-provider-databricks/common"
+	"github.com/databricks/terraform-provider-databricks/common"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 // NewSecretAclsAPI creates SecretAclsAPI instance from provider meta
-func NewSecretAclsAPI(ctx context.Context, m interface{}) SecretAclsAPI {
+func NewSecretAclsAPI(ctx context.Context, m any) SecretAclsAPI {
 	return SecretAclsAPI{m.(*common.DatabricksClient), ctx}
 }
 

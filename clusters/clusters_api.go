@@ -8,7 +8,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/databrickslabs/terraform-provider-databricks/common"
+	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
@@ -188,12 +188,12 @@ type S3StorageInfo struct {
 
 // GcsStorageInfo contains the struct for when storing files in GCS
 type GcsStorageInfo struct {
-	Destination string `json:"destination,omitempty" tf:"optional"`
+	Destination string `json:"destination,omitempty"`
 }
 
 // LocalFileInfo represents a local file on disk, e.g. in a customer's container.
 type LocalFileInfo struct {
-	Destination string `json:"destination,omitempty" tf:"optional"`
+	Destination string `json:"destination,omitempty"`
 }
 
 // StorageInfo contains the struct for either DBFS or S3 storage depending on which one is relevant.
@@ -207,7 +207,7 @@ type InitScriptStorageInfo struct {
 	Dbfs *DbfsStorageInfo `json:"dbfs,omitempty" tf:"group:storage"`
 	Gcs  *GcsStorageInfo  `json:"gcs,omitempty" tf:"group:storage"`
 	S3   *S3StorageInfo   `json:"s3,omitempty" tf:"group:storage"`
-	File *LocalFileInfo   `json:"file,omitempty" tf:"optional"`
+	File *LocalFileInfo   `json:"file,omitempty"`
 }
 
 // SparkNodeAwsAttributes is the struct that determines if the node is a spot instance or not
@@ -241,14 +241,14 @@ type LogSyncStatus struct {
 
 // DockerBasicAuth contains the auth information when fetching containers
 type DockerBasicAuth struct {
-	Username string `json:"username" tf:"force_new"`
-	Password string `json:"password" tf:"force_new"`
+	Username string `json:"username"`
+	Password string `json:"password" tf:"sensitive"`
 }
 
 // DockerImage contains the image url and the auth for DCS
 type DockerImage struct {
-	URL       string           `json:"url" tf:"force_new"`
-	BasicAuth *DockerBasicAuth `json:"basic_auth,omitempty" tf:"force_new"`
+	URL       string           `json:"url"`
+	BasicAuth *DockerBasicAuth `json:"basic_auth,omitempty"`
 }
 
 // SortOrder - constants for API
@@ -311,6 +311,12 @@ type ClusterSize struct {
 	AutoScale  *AutoScale `json:"autoscale"`
 }
 
+type ResizeRequest struct {
+	ClusterID  string     `json:"cluster_id"`
+	NumWorkers int32      `json:"num_workers"`
+	AutoScale  *AutoScale `json:"autoscale,omitempty"`
+}
+
 // ResizeCause holds reason for resizing
 type ResizeCause string
 
@@ -345,6 +351,16 @@ type EventsResponse struct {
 	TotalCount int64          `json:"total_count"`
 }
 
+type WorkloadTypeClients struct {
+	Notebooks bool `json:"notebooks" tf:"optional,default:true"`
+	Jobs      bool `json:"jobs" tf:"optional,default:true"`
+}
+
+// WorkloadType defines which workloads may run on the cluster
+type WorkloadType struct {
+	Clients *WorkloadTypeClients `json:"clients"`
+}
+
 // Cluster contains the information when trying to submit api calls or editing a cluster
 type Cluster struct {
 	ClusterID   string `json:"cluster_id,omitempty"`
@@ -360,11 +376,13 @@ type Cluster struct {
 	DriverNodeTypeID       string           `json:"driver_node_type_id,omitempty" tf:"group:node_type,computed"`
 	InstancePoolID         string           `json:"instance_pool_id,omitempty" tf:"group:node_type"`
 	DriverInstancePoolID   string           `json:"driver_instance_pool_id,omitempty" tf:"group:node_type,computed"`
-	PolicyID               string           `json:"policy_id,omitempty"`
 	AwsAttributes          *AwsAttributes   `json:"aws_attributes,omitempty" tf:"conflicts:instance_pool_id,suppress_diff"`
 	AzureAttributes        *AzureAttributes `json:"azure_attributes,omitempty" tf:"conflicts:instance_pool_id,suppress_diff"`
 	GcpAttributes          *GcpAttributes   `json:"gcp_attributes,omitempty" tf:"conflicts:instance_pool_id,suppress_diff"`
 	AutoterminationMinutes int32            `json:"autotermination_minutes,omitempty"`
+
+	PolicyID                 string `json:"policy_id,omitempty"`
+	ApplyPolicyDefaultValues bool   `json:"apply_policy_default_values,omitempty"`
 
 	SparkConf    map[string]string `json:"spark_conf,omitempty"`
 	SparkEnvVars map[string]string `json:"spark_env_vars,omitempty"`
@@ -375,9 +393,10 @@ type Cluster struct {
 	ClusterLogConf *StorageInfo            `json:"cluster_log_conf,omitempty"`
 	DockerImage    *DockerImage            `json:"docker_image,omitempty"`
 
-	DataSecurityMode string `json:"data_security_mode,omitempty"`
-	SingleUserName   string `json:"single_user_name,omitempty"`
-	IdempotencyToken string `json:"idempotency_token,omitempty" tf:"force_new"`
+	DataSecurityMode string        `json:"data_security_mode,omitempty"`
+	SingleUserName   string        `json:"single_user_name,omitempty"`
+	IdempotencyToken string        `json:"idempotency_token,omitempty" tf:"force_new"`
+	WorkloadType     *WorkloadType `json:"workload_type,omitempty"`
 }
 
 func (cluster Cluster) Validate() error {
@@ -487,7 +506,7 @@ func (a ClustersAPI) defaultTimeout() time.Duration {
 }
 
 // NewClustersAPI creates ClustersAPI instance from provider meta
-func NewClustersAPI(ctx context.Context, m interface{}) ClustersAPI {
+func NewClustersAPI(ctx context.Context, m any) ClustersAPI {
 	return ClustersAPI{
 		client:  m.(*common.DatabricksClient),
 		context: ctx,
@@ -509,7 +528,7 @@ func (a ClustersAPI) Create(cluster Cluster) (info ClusterInfo, err error) {
 	}
 	info, err = a.waitForClusterStatus(ci.ClusterID, ClusterStateRunning)
 	if err != nil {
-		// https://github.com/databrickslabs/terraform-provider-databricks/issues/383
+		// https://github.com/databricks/terraform-provider-databricks/issues/383
 		log.Printf("[ERROR] Cleaning up created cluster, that failed to start: %s", err.Error())
 		deleteErr := a.PermanentDelete(ci.ClusterID)
 		if deleteErr != nil {
@@ -518,6 +537,24 @@ func (a ClustersAPI) Create(cluster Cluster) (info ClusterInfo, err error) {
 		}
 	}
 	return
+}
+
+// Resize api can only be used when the cluster is in Running State
+func (a ClustersAPI) Resize(resizeRequest ResizeRequest) (info ClusterInfo, err error) {
+	info, err = a.Get(resizeRequest.ClusterID)
+	if err != nil {
+		return info, err
+	}
+	if info.State != ClusterStateRunning {
+		return info, fmt.Errorf("resize: Cluster %v is in %v state. RUNNING state required to use resize API", info.ClusterID, info.State)
+	}
+
+	err = a.client.Post(a.context, "/clusters/resize", resizeRequest, &info)
+	if err != nil {
+		return info, fmt.Errorf("resize: %w", err)
+	}
+	info, err = a.waitForClusterStatus(resizeRequest.ClusterID, ClusterStateRunning)
+	return info, err
 }
 
 // Edit edits the configuration of a cluster to match the provided attributes and size
@@ -618,7 +655,7 @@ func wrapMissingClusterError(err error, id string) error {
 	if apiErr.IsMissing() {
 		return err
 	}
-	// https://github.com/databrickslabs/terraform-provider-databricks/issues/1177
+	// https://github.com/databricks/terraform-provider-databricks/issues/1177
 	// Aligned with Clusters Core team to keep behavior of these workarounds
 	// as is in the longer term, so that this keeps working.
 	if apiErr.ErrorCode == "INVALID_STATE" {
@@ -769,7 +806,7 @@ func (a ClustersAPI) List() ([]ClusterInfo, error) {
 
 // getOrCreateClusterMutex guards "mounting" cluster creation to prevent multiple
 // redundant instances created at the same name. Compute package private property.
-// https://github.com/databrickslabs/terraform-provider-databricks/issues/445
+// https://github.com/databricks/terraform-provider-databricks/issues/445
 var getOrCreateClusterMutex sync.Mutex
 
 // GetOrCreateRunningCluster creates an autoterminating cluster if it doesn't exist

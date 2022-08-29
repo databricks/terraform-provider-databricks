@@ -5,14 +5,14 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/databrickslabs/terraform-provider-databricks/clusters"
-	"github.com/databrickslabs/terraform-provider-databricks/internal"
+	"github.com/databricks/terraform-provider-databricks/clusters"
+	"github.com/databricks/terraform-provider-databricks/commands"
 
-	"github.com/databrickslabs/terraform-provider-databricks/qa"
+	"github.com/databricks/terraform-provider-databricks/qa"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
-	"github.com/databrickslabs/terraform-provider-databricks/common"
+	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -47,7 +47,7 @@ func testMountFuncHelper(t *testing.T, mountFunc func(mp MountPoint, mount Mount
 
 	c.WithCommandMock(func(commandStr string) common.CommandResults {
 		called = true
-		assert.Equal(t, internal.TrimLeadingWhitespace(expectedCommand), internal.TrimLeadingWhitespace(commandStr))
+		assert.Equal(t, commands.TrimLeadingWhitespace(expectedCommand), commands.TrimLeadingWhitespace(commandStr))
 		return common.CommandResults{
 			ResultType: "text",
 			Data:       expectedCommandResp,
@@ -159,7 +159,7 @@ func TestDeletedMountClusterRecreates(t *testing.T) {
 			Method:       "GET",
 			ReuseRequest: true,
 			Resource:     "/api/2.0/clusters/list",
-			Response:     map[string]interface{}{},
+			Response:     map[string]any{},
 		},
 		{
 			Method:       "GET",

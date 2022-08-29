@@ -6,7 +6,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/databrickslabs/terraform-provider-databricks/common"
+	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -86,15 +86,15 @@ func (pl PermissionsList) diff(existing PermissionsList) (diff permissionsDiff) 
 }
 
 func newStringSet(in []string) *schema.Set {
-	var out []interface{}
+	var out []any
 	for _, v := range in {
 		out = append(out, v)
 	}
 	return schema.NewSet(schema.HashString, out)
 }
 
-func NewPermissionsAPI(ctx context.Context, m interface{}) PermissionsAPI {
-	return PermissionsAPI{m.(*common.DatabricksClient), ctx}
+func NewPermissionsAPI(ctx context.Context, m any) PermissionsAPI {
+	return PermissionsAPI{m.(*common.DatabricksClient), context.WithValue(ctx, common.Api, common.API_2_1)}
 }
 
 func (a PermissionsAPI) getPermissions(securable, name string) (list PermissionsList, err error) {
@@ -119,7 +119,7 @@ type securableMapping map[string]map[string]bool
 
 // reuse ResourceDiff and ResourceData
 type attributeGetter interface {
-	Get(key string) interface{}
+	Get(key string) any
 }
 
 func (sm securableMapping) kv(d attributeGetter) (string, string) {
@@ -159,6 +159,9 @@ var mapping = securableMapping{
 	"table": {
 		"MODIFY": true,
 		"SELECT": true,
+
+		// v1.0
+		"ALL_PRIVILEGES": true,
 	},
 	"view": {
 		"SELECT": true,
@@ -166,20 +169,54 @@ var mapping = securableMapping{
 	"catalog": {
 		"CREATE": true,
 		"USAGE":  true,
+
+		// v1.0
+		"ALL_PRIVILEGES": true,
+		"USE_CATALOG":    true,
+		"CREATE_SCHEMA":  true,
 	},
 	"schema": {
 		"CREATE": true,
 		"USAGE":  true,
+
+		// v1.0
+		"ALL_PRIVILEGES":           true,
+		"USE_SCHEMA":               true,
+		"CREATE_TABLE":             true,
+		"CREATE_VIEW":              true,
+		"CREATE_FUNCTION":          true,
+		"CREATE_MATERIALIZED_VIEW": true,
 	},
 	"storage_credential": {
-		"CREATE_TABLE": true,
-		"READ_FILES":   true,
-		"WRITE_FILES":  true,
+		"CREATE_TABLE":             true,
+		"READ_FILES":               true,
+		"WRITE_FILES":              true,
+		"CREATE_EXTERNAL_LOCATION": true,
+
+		// v1.0
+		"ALL_PRIVILEGES":        true,
+		"CREATE_EXTERNAL_TABLE": true,
 	},
 	"external_location": {
 		"CREATE_TABLE": true,
 		"READ_FILES":   true,
 		"WRITE_FILES":  true,
+
+		// v1.0
+		"ALL_PRIVILEGES":        true,
+		"CREATE_EXTERNAL_TABLE": true,
+	},
+	"metastore": {
+		// v1.0
+		"CREATE_CATALOG":            true,
+		"CREATE_EXTERNAL_LOCATION":  true,
+		"CREATE_STORAGE_CREDENTIAL": true,
+		"CREATE_SHARE":              true,
+		"CREATE_RECIPIENT":          true,
+		"CREATE_PROVIDER":           true,
+	},
+	"function": {
+		"EXECUTE": true,
 	},
 }
 
@@ -209,7 +246,7 @@ func ResourceGrants() *schema.Resource {
 		})
 	return common.Resource{
 		Schema: s,
-		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, c interface{}) error {
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, c any) error {
 			if d.Id() == "" {
 				// unfortunately we cannot do validation before dependent resources exist with tfsdkv2
 				return nil

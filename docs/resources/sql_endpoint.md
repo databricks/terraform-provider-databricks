@@ -46,7 +46,7 @@ In addition to all arguments above, the following attributes are exported:
 
 * `jdbc_url` - JDBC connection string.
 * `odbc_params` - ODBC connection params: `odbc_params.hostname`, `odbc_params.path`, `odbc_params.protocol`, and `odbc_params.port`.
-* `data_source_id` - ID of the data source for this endpoint. This is used to bind an SQLA query to an endpoint.
+* `data_source_id` - ID of the data source for this endpoint. This is used to bind an Databricks SQL query to an endpoint.
 
 ## Access Control
 
@@ -55,7 +55,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Timeouts
 
-The `timeouts` block allows you to specify `create` timeouts. It usually takes 10-20 minutes to provision Databricks SQL endpoint.
+The `timeouts` block allows you to specify `create` timeouts. It usually takes 10-20 minutes to provision a Databricks SQL endpoint.
 
 ```hcl
 timeouts {

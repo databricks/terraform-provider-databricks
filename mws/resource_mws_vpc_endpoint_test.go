@@ -5,22 +5,23 @@ import (
 	"os"
 	"testing"
 
-	"github.com/databrickslabs/terraform-provider-databricks/common"
+	"github.com/databricks/terraform-provider-databricks/common"
 
-	"github.com/databrickslabs/terraform-provider-databricks/qa"
+	"github.com/databricks/terraform-provider-databricks/qa"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func TestMwsAccVPCEndpointIntegration(t *testing.T) {
+	t.SkipNow()
 	cloudEnv := os.Getenv("CLOUD_ENV")
 	if cloudEnv != "MWS" {
 		t.Skip("Cannot run test on non-MWS environment")
 	}
 	acctID := qa.GetEnvOrSkipTest(t, "DATABRICKS_ACCOUNT_ID")
 	awsvreID := qa.GetEnvOrSkipTest(t, "TEST_REST_API_VPC_ENDPOINT")
-	awsRegion := qa.GetEnvOrSkipTest(t, "TEST_REGION")
+	awsRegion := qa.GetEnvOrSkipTest(t, "AWS_REGION")
 	client := common.CommonEnvironmentClient()
 	ctx := context.Background()
 	vpcEndpointAPI := NewVPCEndpointAPI(ctx, client)
@@ -75,7 +76,7 @@ func TestResourceVPCEndpointCreate(t *testing.T) {
 				},
 			},
 		},
-		Resource: ResourceVPCEndpoint(),
+		Resource: ResourceMwsVpcEndpoint(),
 		HCL: `
 		account_id = "abc"
 		vpc_endpoint_name = "ve_name"
@@ -101,8 +102,8 @@ func TestResourceVPCEndpointCreate_Error(t *testing.T) {
 				Status: 400,
 			},
 		},
-		Resource: ResourceVPCEndpoint(),
-		State: map[string]interface{}{
+		Resource: ResourceMwsVpcEndpoint(),
+		State: map[string]any{
 			"account_id":          "abc",
 			"vpc_endpoint_name":   "ve_name",
 			"region":              "ar",
@@ -128,7 +129,7 @@ func TestResourceVPCEndpointRead(t *testing.T) {
 				},
 			},
 		},
-		Resource: ResourceVPCEndpoint(),
+		Resource: ResourceMwsVpcEndpoint(),
 		Read:     true,
 		New:      true,
 		ID:       "abc/veid",
@@ -154,7 +155,7 @@ func TestResourceVPCEndpointRead_NotFound(t *testing.T) {
 				Status: 404,
 			},
 		},
-		Resource: ResourceVPCEndpoint(),
+		Resource: ResourceMwsVpcEndpoint(),
 		Read:     true,
 		Removed:  true,
 		ID:       "abc/veid",
@@ -174,7 +175,7 @@ func TestResourceVPCEndpoint_Error(t *testing.T) {
 				Status: 400,
 			},
 		},
-		Resource: ResourceVPCEndpoint(),
+		Resource: ResourceMwsVpcEndpoint(),
 		Read:     true,
 		ID:       "abc/veid",
 	}.Apply(t)
@@ -209,7 +210,7 @@ func TestResourceVPCEndpointDelete(t *testing.T) {
 				Status: 404,
 			},
 		},
-		Resource: ResourceVPCEndpoint(),
+		Resource: ResourceMwsVpcEndpoint(),
 		Delete:   true,
 		ID:       "abc/veid",
 	}.Apply(t)
@@ -230,7 +231,7 @@ func TestResourceVPCEndpointDelete_Error(t *testing.T) {
 				Status: 400,
 			},
 		},
-		Resource: ResourceVPCEndpoint(),
+		Resource: ResourceMwsVpcEndpoint(),
 		Delete:   true,
 		ID:       "abc/veid",
 	}.Apply(t)

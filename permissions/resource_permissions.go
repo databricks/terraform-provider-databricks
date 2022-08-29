@@ -9,11 +9,12 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/databrickslabs/terraform-provider-databricks/common"
-	"github.com/databrickslabs/terraform-provider-databricks/jobs"
-	"github.com/databrickslabs/terraform-provider-databricks/scim"
+	"github.com/databricks/terraform-provider-databricks/common"
+	"github.com/databricks/terraform-provider-databricks/jobs"
+	"github.com/databricks/terraform-provider-databricks/pipelines"
+	"github.com/databricks/terraform-provider-databricks/scim"
 
-	"github.com/databrickslabs/terraform-provider-databricks/workspace"
+	"github.com/databricks/terraform-provider-databricks/workspace"
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -98,7 +99,7 @@ func (acc AccessControlChange) String() string {
 }
 
 // NewPermissionsAPI creates PermissionsAPI instance from provider meta
-func NewPermissionsAPI(ctx context.Context, m interface{}) PermissionsAPI {
+func NewPermissionsAPI(ctx context.Context, m any) PermissionsAPI {
 	return PermissionsAPI{
 		client:  m.(*common.DatabricksClient),
 		context: ctx,
@@ -112,7 +113,7 @@ type PermissionsAPI struct {
 }
 
 func isDbsqlPermissionsWorkaroundNecessary(objectID string) bool {
-	return strings.HasPrefix(objectID, "/sql/") && !strings.HasPrefix(objectID, "/sql/endpoints")
+	return strings.HasPrefix(objectID, "/sql/") && !strings.HasPrefix(objectID, "/sql/warehouses")
 }
 
 func urlPathForObjectID(objectID string) string {
@@ -123,18 +124,43 @@ func urlPathForObjectID(objectID string) string {
 	return "/permissions" + objectID
 }
 
-// Helper function to select the correct HTTP method depending on the object types.
-func (a PermissionsAPI) put(objectID string, objectACL AccessControlChangeList) error {
-	if isDbsqlPermissionsWorkaroundNecessary(objectID) {
-		// SQLA entities always have `CAN_MANAGE` permission for the calling user.
-		me, err := scim.NewUsersAPI(a.context, a.client).Me()
-		if err != nil {
-			return err
+// As described in https://github.com/databricks/terraform-provider-databricks/issues/1504,
+// certain object types require that we explicitly grant the calling user CAN_MANAGE
+// permissions when POSTing permissions changes through the REST API, to avoid accidentally
+// revoking the calling user's ability to manage the current object.
+func (a PermissionsAPI) shouldExplicitlyGrantCallingUserManagePermissions(objectID string) bool {
+	for _, prefix := range [...]string{"/registered-models/"} {
+		if strings.HasPrefix(objectID, prefix) {
+			return true
 		}
-		objectACL.AccessControlList = append(objectACL.AccessControlList, AccessControlChange{
-			UserName:        me.UserName,
-			PermissionLevel: "CAN_MANAGE",
-		})
+	}
+	return isDbsqlPermissionsWorkaroundNecessary(objectID)
+}
+
+func (a PermissionsAPI) ensureCurrentUserCanManageObject(objectID string, objectACL AccessControlChangeList) (AccessControlChangeList, error) {
+	if !a.shouldExplicitlyGrantCallingUserManagePermissions(objectID) {
+		return objectACL, nil
+	}
+	me, err := scim.NewUsersAPI(a.context, a.client).Me()
+	if err != nil {
+		return objectACL, err
+	}
+	objectACL.AccessControlList = append(objectACL.AccessControlList, AccessControlChange{
+		UserName:        me.UserName,
+		PermissionLevel: "CAN_MANAGE",
+	})
+	return objectACL, nil
+}
+
+// Helper function for applying permissions changes. Ensures that
+// we select the correct HTTP method based on the object type and preserve the calling
+// user's ability to manage the specified object when applying permissions changes.
+func (a PermissionsAPI) put(objectID string, objectACL AccessControlChangeList) error {
+	objectACL, err := a.ensureCurrentUserCanManageObject(objectID, objectACL)
+	if err != nil {
+		return err
+	}
+	if isDbsqlPermissionsWorkaroundNecessary(objectID) {
 		// SQLA entities use POST for permission updates.
 		return a.client.Post(a.context, urlPathForObjectID(objectID), objectACL, nil)
 	}
@@ -150,7 +176,7 @@ func (a PermissionsAPI) Update(objectID string, objectACL AccessControlChangeLis
 			PermissionLevel: "CAN_MANAGE",
 		})
 	}
-	if strings.HasPrefix(objectID, "/jobs") {
+	if strings.HasPrefix(objectID, "/jobs") || strings.HasPrefix(objectID, "/pipelines") {
 		owners := 0
 		for _, acl := range objectACL.AccessControlList {
 			if acl.PermissionLevel == "IS_OWNER" {
@@ -196,6 +222,15 @@ func (a PermissionsAPI) Delete(objectID string) error {
 			UserName:        job.CreatorUserName,
 			PermissionLevel: "IS_OWNER",
 		})
+	} else if strings.HasPrefix(objectID, "/pipelines") {
+		job, err := pipelines.NewPipelinesAPI(a.context, a.client).Read(strings.ReplaceAll(objectID, "/pipelines/", ""))
+		if err != nil {
+			return err
+		}
+		accl.AccessControlList = append(accl.AccessControlList, AccessControlChange{
+			UserName:        job.CreatorUserName,
+			PermissionLevel: "IS_OWNER",
+		})
 	}
 	return a.put(objectID, accl)
 }
@@ -204,7 +239,7 @@ func (a PermissionsAPI) Delete(objectID string) error {
 func (a PermissionsAPI) Read(objectID string) (objectACL ObjectACL, err error) {
 	err = a.client.Get(a.context, urlPathForObjectID(objectID), nil, &objectACL)
 	apiErr, ok := err.(common.APIError)
-	// https://github.com/databrickslabs/terraform-provider-databricks/issues/1227
+	// https://github.com/databricks/terraform-provider-databricks/issues/1227
 	// platform propagates INVALID_STATE error for auto-purged clusters in
 	// the permissions api. this adds "a logical fix" also here, not to introduce
 	// cross-package dependency on "clusters".
@@ -241,6 +276,7 @@ func permissionsResourceIDFields() []permissionsIDFieldMapping {
 		{"cluster_policy_id", "cluster-policy", "cluster-policies", []string{"CAN_USE"}, SIMPLE},
 		{"instance_pool_id", "instance-pool", "instance-pools", []string{"CAN_ATTACH_TO", "CAN_MANAGE"}, SIMPLE},
 		{"cluster_id", "cluster", "clusters", []string{"CAN_ATTACH_TO", "CAN_RESTART", "CAN_MANAGE"}, SIMPLE},
+		{"pipeline_id", "pipelines", "pipelines", []string{"CAN_VIEW", "CAN_RUN", "CAN_MANAGE", "IS_OWNER"}, SIMPLE},
 		{"job_id", "job", "jobs", []string{"CAN_VIEW", "CAN_MANAGE_RUN", "IS_OWNER", "CAN_MANAGE"}, SIMPLE},
 		{"notebook_id", "notebook", "notebooks", []string{"CAN_READ", "CAN_RUN", "CAN_EDIT", "CAN_MANAGE"}, SIMPLE},
 		{"notebook_path", "notebook", "notebooks", []string{"CAN_READ", "CAN_RUN", "CAN_EDIT", "CAN_MANAGE"}, PATH},
@@ -250,7 +286,7 @@ func permissionsResourceIDFields() []permissionsIDFieldMapping {
 		{"repo_path", "repo", "repos", []string{"CAN_READ", "CAN_RUN", "CAN_EDIT", "CAN_MANAGE"}, PATH},
 		{"authorization", "tokens", "authorization", []string{"CAN_USE"}, SIMPLE},
 		{"authorization", "passwords", "authorization", []string{"CAN_USE"}, SIMPLE},
-		{"sql_endpoint_id", "endpoints", "sql/endpoints", []string{"CAN_USE", "CAN_MANAGE"}, SIMPLE},
+		{"sql_endpoint_id", "warehouses", "sql/warehouses", []string{"CAN_USE", "CAN_MANAGE"}, SIMPLE},
 		{"sql_dashboard_id", "dashboard", "sql/dashboards", []string{"CAN_EDIT", "CAN_RUN", "CAN_MANAGE"}, SIMPLE},
 		{"sql_alert_id", "alert", "sql/alerts", []string{"CAN_EDIT", "CAN_RUN", "CAN_MANAGE"}, SIMPLE},
 		{"sql_query_id", "query", "sql/queries", []string{"CAN_EDIT", "CAN_RUN", "CAN_MANAGE"}, SIMPLE},
@@ -325,7 +361,7 @@ func ResourcePermissions() *schema.Resource {
 		s["access_control"].MinItems = 1
 		if groupNameSchema, err := common.SchemaPath(s,
 			"access_control", "group_name"); err == nil {
-			groupNameSchema.ValidateDiagFunc = func(i interface{}, p cty.Path) diag.Diagnostics {
+			groupNameSchema.ValidateDiagFunc = func(i any, p cty.Path) diag.Diagnostics {
 				if v, ok := i.(string); ok {
 					if strings.ToLower(v) == "admins" {
 						return diag.Diagnostics{
@@ -344,7 +380,7 @@ func ResourcePermissions() *schema.Resource {
 	})
 	return common.Resource{
 		Schema: s,
-		CustomizeDiff: func(ctx context.Context, diff *schema.ResourceDiff, c interface{}) error {
+		CustomizeDiff: func(ctx context.Context, diff *schema.ResourceDiff, c any) error {
 			client := c.(*common.DatabricksClient)
 			if client.Host == "" {
 				log.Printf("[WARN] cannot validate permission levels, because host is not known yet")
@@ -361,7 +397,7 @@ func ResourcePermissions() *schema.Resource {
 				}
 				access_control_list := diff.Get("access_control").(*schema.Set).List()
 				for _, access_control := range access_control_list {
-					m := access_control.(map[string]interface{})
+					m := access_control.(map[string]any)
 					permission_level := m["permission_level"].(string)
 					if !stringInSlice(permission_level, mapping.allowedPermissionLevels) {
 						return fmt.Errorf(`permission_level %s is not supported with %s objects`, permission_level, mapping.field)

@@ -5,8 +5,9 @@ import (
 	"log"
 	"strings"
 
-	"github.com/databrickslabs/terraform-provider-databricks/common"
+	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 type MetastoresAPI struct {
@@ -14,17 +15,27 @@ type MetastoresAPI struct {
 	context context.Context
 }
 
-func NewMetastoresAPI(ctx context.Context, m interface{}) MetastoresAPI {
-	return MetastoresAPI{m.(*common.DatabricksClient), ctx}
+func NewMetastoresAPI(ctx context.Context, m any) MetastoresAPI {
+	return MetastoresAPI{m.(*common.DatabricksClient), context.WithValue(ctx, common.Api, common.API_2_1)}
 }
 
 type MetastoreInfo struct {
-	Name         string  `json:"name"`
-	StorageRoot  string  `json:"storage_root" tf:"force_new"`
-	DefaultDacID string  `json:"default_data_access_config_id,omitempty"`
-	Owner        string  `json:"owner,omitempty" tf:"computed"`
-	MetastoreID  string  `json:"metastore_id,omitempty" tf:"computed"`
-	WorkspaceIDs []int64 `json:"workspace_ids,omitempty" tf:"computed"`
+	Name                                        string  `json:"name"`
+	StorageRoot                                 string  `json:"storage_root" tf:"force_new"`
+	DefaultDacID                                string  `json:"default_data_access_config_id,omitempty"`
+	Owner                                       string  `json:"owner,omitempty" tf:"computed"`
+	MetastoreID                                 string  `json:"metastore_id,omitempty" tf:"computed"`
+	WorkspaceIDs                                []int64 `json:"workspace_ids,omitempty" tf:"computed"`
+	Region                                      string  `json:"region,omitempty" tf:"computed"`
+	Cloud                                       string  `json:"cloud,omitempty" tf:"computed"`
+	GlobalMetastoreId                           string  `json:"global_metastore_id,omitempty" tf:"computed"`
+	CreatedAt                                   int64   `json:"created_at,omitempty" tf:"computed"`
+	CreatedBy                                   string  `json:"created_by,omitempty" tf:"computed"`
+	UpdatedAt                                   int64   `json:"updated_at,omitempty" tf:"computed"`
+	UpdatedBy                                   string  `json:"updated_by,omitempty" tf:"computed"`
+	DeltaSharingScope                           string  `json:"delta_sharing_scope,omitempty"`
+	DeltaSharingRecipientTokenLifetimeInSeconds int64   `json:"delta_sharing_recipient_token_lifetime_in_seconds,omitempty"`
+	DeltaSharingOrganizationName                string  `json:"delta_sharing_organization_name,omitempty"`
 }
 
 type CreateMetastore struct {
@@ -47,12 +58,12 @@ func (a MetastoresAPI) getMetastore(id string) (mi MetastoreInfo, err error) {
 	return
 }
 
-func (a MetastoresAPI) updateMetastore(metastoreID string, update map[string]interface{}) error {
+func (a MetastoresAPI) updateMetastore(metastoreID string, update map[string]any) error {
 	return a.client.Patch(a.context, "/unity-catalog/metastores/"+metastoreID, update)
 }
 
 func (a MetastoresAPI) deleteMetastore(id string, force bool) error {
-	return a.client.Delete(a.context, "/unity-catalog/metastores/"+id, map[string]interface{}{
+	return a.client.Delete(a.context, "/unity-catalog/metastores/"+id, map[string]any{
 		"force": force,
 	})
 }
@@ -66,6 +77,9 @@ func ResourceMetastore() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 			}
+			m["delta_sharing_scope"].RequiredWith = []string{"delta_sharing_recipient_token_lifetime_in_seconds"}
+			m["delta_sharing_scope"].ValidateFunc = validation.StringInSlice([]string{"INTERNAL", "INTERNAL_AND_EXTERNAL"}, false)
+			m["delta_sharing_recipient_token_lifetime_in_seconds"].RequiredWith = []string{"delta_sharing_scope"}
 			m["storage_root"].DiffSuppressFunc = func(k, old, new string, d *schema.ResourceData) bool {
 				if strings.HasPrefix(old, new) {
 					log.Printf("[DEBUG] Ignoring configuration drift from %s to %s", old, new)
@@ -75,25 +89,9 @@ func ResourceMetastore() *schema.Resource {
 			}
 			return m
 		})
-	update := func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-		// other fields to come later
-		updatable := []string{"owner", "name"}
-		patch := map[string]interface{}{}
-		for _, field := range updatable {
-			old, new := d.GetChange(field)
-			if old == new {
-				continue
-			}
-			if field == "name" && old == "" {
-				continue
-			}
-			patch[field] = new
-		}
-		if len(patch) == 0 {
-			return nil
-		}
-		return NewMetastoresAPI(ctx, c).updateMetastore(d.Id(), patch)
-	}
+	update := updateFunctionFactory("/unity-catalog/metastores", []string{"owner", "name", "delta_sharing_scope",
+		"delta_sharing_recipient_token_lifetime_in_seconds", "delta_sharing_organization_name"})
+
 	return common.Resource{
 		Schema: s,
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {

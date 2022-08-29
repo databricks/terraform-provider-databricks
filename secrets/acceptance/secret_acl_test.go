@@ -5,12 +5,11 @@ import (
 	"os"
 	"testing"
 
-	"github.com/databrickslabs/terraform-provider-databricks/scim"
-	"github.com/databrickslabs/terraform-provider-databricks/secrets"
+	"github.com/databricks/terraform-provider-databricks/scim"
+	"github.com/databricks/terraform-provider-databricks/secrets"
 
-	"github.com/databrickslabs/terraform-provider-databricks/common"
-	"github.com/databrickslabs/terraform-provider-databricks/internal/acceptance"
-	"github.com/databrickslabs/terraform-provider-databricks/qa"
+	"github.com/databricks/terraform-provider-databricks/common"
+	"github.com/databricks/terraform-provider-databricks/internal/acceptance"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/stretchr/testify/assert"
@@ -21,10 +20,11 @@ func TestAccSecretAclResource(t *testing.T) {
 	if _, ok := os.LookupEnv("CLOUD_ENV"); !ok {
 		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
 	}
+	t.Parallel()
 	acceptance.AccTest(t, resource.TestCase{
 		Steps: []resource.TestStep{
 			{
-				Config: qa.EnvironmentTemplate(t, `
+				Config: acceptance.EnvironmentTemplate(t, `
 					resource "databricks_group" "ds" {
 						display_name = "data-scientists-{var.RANDOM}"
 					}
@@ -66,10 +66,11 @@ func TestAccSecretAclResource(t *testing.T) {
 }
 
 func TestAccSecretAclResourceDefaultPrincipal(t *testing.T) {
+	t.Parallel()
 	acceptance.AccTest(t, resource.TestCase{
 		Steps: []resource.TestStep{
 			{
-				Config: qa.EnvironmentTemplate(t, `
+				Config: acceptance.EnvironmentTemplate(t, `
 					resource "databricks_secret_scope" "app" {
 						name = "app-{var.RANDOM}"
 						initial_manage_principal = "users"

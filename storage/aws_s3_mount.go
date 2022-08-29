@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/databrickslabs/terraform-provider-databricks/clusters"
-	"github.com/databrickslabs/terraform-provider-databricks/common"
+	"github.com/databricks/terraform-provider-databricks/clusters"
+	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -41,7 +41,7 @@ func ResourceAWSS3Mount() *schema.Resource {
 	r := &schema.Resource{
 		DeprecationMessage: "Resource is deprecated and will be removed in further versions. " +
 			"Please rewrite configuration using `databricks_mount` resource. More info at " +
-			"https://registry.terraform.io/providers/databrickslabs/databricks/latest/docs/" +
+			"https://registry.terraform.io/providers/databricks/databricks/latest/docs/" +
 			"resources/mount#migration-from-other-mount-resources",
 		Schema: map[string]*schema.Schema{
 			"cluster_id": {
@@ -76,19 +76,19 @@ func ResourceAWSS3Mount() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 	}
-	r.CreateContext = func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+	r.CreateContext = func(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
 		if err := preprocessS3Mount(ctx, d, m); err != nil {
 			return diag.FromErr(err)
 		}
 		return mountCreate(tpl, r)(ctx, d, m)
 	}
-	r.ReadContext = func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+	r.ReadContext = func(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
 		if err := preprocessS3Mount(ctx, d, m); err != nil {
 			return diag.FromErr(err)
 		}
 		return mountRead(tpl, r)(ctx, d, m)
 	}
-	r.DeleteContext = func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+	r.DeleteContext = func(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
 		if err := preprocessS3Mount(ctx, d, m); err != nil {
 			return diag.FromErr(err)
 		}
@@ -97,7 +97,7 @@ func ResourceAWSS3Mount() *schema.Resource {
 	return r
 }
 
-func preprocessS3Mount(ctx context.Context, d *schema.ResourceData, m interface{}) error {
+func preprocessS3Mount(ctx context.Context, d *schema.ResourceData, m any) error {
 	clusterID := d.Get("cluster_id").(string)
 	instanceProfile := d.Get("instance_profile").(string)
 	if clusterID == "" && instanceProfile == "" {
@@ -116,11 +116,7 @@ func preprocessS3Mount(ctx context.Context, d *schema.ResourceData, m interface{
 			return fmt.Errorf("cluster %s must have EC2 instance profile attached", clusterID)
 		}
 	} else if instanceProfile != "" {
-		cluster, err := GetOrCreateMountingClusterWithInstanceProfile(clustersAPI, instanceProfile)
-		if err != nil {
-			return err
-		}
-		return d.Set("cluster_id", cluster.ClusterID)
+		return mountS3ViaProfileAndSetClusterID(clustersAPI, instanceProfile, d)
 	}
 	return nil
 }

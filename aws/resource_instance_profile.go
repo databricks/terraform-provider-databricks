@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/databrickslabs/terraform-provider-databricks/common"
+	"github.com/databricks/terraform-provider-databricks/common"
 
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -29,7 +29,7 @@ type InstanceProfileList struct {
 }
 
 // NewInstanceProfilesAPI creates InstanceProfilesAPI instance from provider meta
-func NewInstanceProfilesAPI(ctx context.Context, m interface{}) InstanceProfilesAPI {
+func NewInstanceProfilesAPI(ctx context.Context, m any) InstanceProfilesAPI {
 	return InstanceProfilesAPI{
 		client:  m.(*common.DatabricksClient),
 		context: ctx,
@@ -78,7 +78,7 @@ func (a InstanceProfilesAPI) List() ([]InstanceProfileInfo, error) {
 
 // Delete deletes the instance profile given an instance profile arn
 func (a InstanceProfilesAPI) Delete(instanceProfileARN string) error {
-	return a.client.Post(a.context, "/instance-profiles/remove", map[string]interface{}{
+	return a.client.Post(a.context, "/instance-profiles/remove", map[string]any{
 		"instance_profile_arn": instanceProfileARN,
 	}, nil)
 }
@@ -171,7 +171,7 @@ func ResourceInstanceProfile() *schema.Resource {
 }
 
 // ValidInstanceProfile validate if it's valid instance profile ARN
-func ValidInstanceProfile(v interface{}, c cty.Path) diag.Diagnostics {
+func ValidInstanceProfile(v any, c cty.Path) diag.Diagnostics {
 	s, ok := v.(string)
 	if !ok {
 		return diag.Diagnostics{

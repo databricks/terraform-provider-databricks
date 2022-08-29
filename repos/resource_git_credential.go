@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/databrickslabs/terraform-provider-databricks/common"
+	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -16,7 +16,7 @@ type GitCredentialsAPI struct {
 }
 
 // GitCredentialsAPI creates GitCredentialsAPI instance from provider meta
-func NewGitCredentialsAPI(ctx context.Context, m interface{}) GitCredentialsAPI {
+func NewGitCredentialsAPI(ctx context.Context, m any) GitCredentialsAPI {
 	return GitCredentialsAPI{m.(*common.DatabricksClient), ctx}
 }
 
@@ -71,6 +71,11 @@ func ResourceGitCredential() *schema.Resource {
 			Type:     schema.TypeBool,
 			Optional: true,
 		}
+		s["personal_access_token"].DefaultFunc = schema.MultiEnvDefaultFunc([]string{
+			"GITHUB_TOKEN",               // https://registry.terraform.io/providers/integrations/github/latest/docs
+			"GITLAB_TOKEN",               // https://registry.terraform.io/providers/gitlabhq/gitlab/latest/docs
+			"AZDO_PERSONAL_ACCESS_TOKEN", // https://registry.terraform.io/providers/microsoft/azuredevops/latest/docs
+		}, nil)
 		return s
 	})
 

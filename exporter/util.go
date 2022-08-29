@@ -9,15 +9,15 @@ import (
 	"strings"
 	"time"
 
-	"github.com/databrickslabs/terraform-provider-databricks/aws"
-	"github.com/databrickslabs/terraform-provider-databricks/clusters"
-	"github.com/databrickslabs/terraform-provider-databricks/common"
-	"github.com/databrickslabs/terraform-provider-databricks/jobs"
-	"github.com/databrickslabs/terraform-provider-databricks/libraries"
-	"github.com/databrickslabs/terraform-provider-databricks/scim"
-	"github.com/databrickslabs/terraform-provider-databricks/sql"
-	"github.com/databrickslabs/terraform-provider-databricks/sql/api"
-	"github.com/databrickslabs/terraform-provider-databricks/storage"
+	"github.com/databricks/terraform-provider-databricks/aws"
+	"github.com/databricks/terraform-provider-databricks/clusters"
+	"github.com/databricks/terraform-provider-databricks/common"
+	"github.com/databricks/terraform-provider-databricks/jobs"
+	"github.com/databricks/terraform-provider-databricks/libraries"
+	"github.com/databricks/terraform-provider-databricks/scim"
+	"github.com/databricks/terraform-provider-databricks/sql"
+	"github.com/databricks/terraform-provider-databricks/sql/api"
+	"github.com/databricks/terraform-provider-databricks/storage"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -44,6 +44,12 @@ func (ic *importContext) importCluster(c *clusters.Cluster) {
 		ic.Emit(&resource{
 			Resource: "databricks_instance_pool",
 			ID:       c.InstancePoolID,
+		})
+	}
+	if c.DriverInstancePoolID != "" {
+		ic.Emit(&resource{
+			Resource: "databricks_instance_pool",
+			ID:       c.DriverInstancePoolID,
 		})
 	}
 	if c.PolicyID != "" {
@@ -262,7 +268,7 @@ func (ic *importContext) getMountsThroughCluster(
 	return
 }
 
-func eitherString(a interface{}, b interface{}) string {
+func eitherString(a any, b any) string {
 	if a != nil {
 		return a.(string)
 	}

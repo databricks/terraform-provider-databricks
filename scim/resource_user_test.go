@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/databrickslabs/terraform-provider-databricks/common"
+	"github.com/databricks/terraform-provider-databricks/common"
 
-	"github.com/databrickslabs/terraform-provider-databricks/qa"
+	"github.com/databricks/terraform-provider-databricks/qa"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -139,6 +139,69 @@ func TestResourceUserCreate(t *testing.T) {
 		user_name    = "me@example.com"
 		display_name = "Example user"
 		allow_cluster_create = true
+		`,
+	}.Apply(t)
+	require.NoError(t, err, err)
+	assert.Equal(t, "abc", d.Id(), "Id should not be empty")
+	assert.Equal(t, "me@example.com", d.Get("user_name"))
+	assert.Equal(t, "Example user", d.Get("display_name"))
+	assert.Equal(t, true, d.Get("allow_cluster_create"))
+}
+
+func TestResourceUserCreateInactive(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/preview/scim/v2/Users",
+				ExpectedRequest: User{
+					DisplayName: "Example user",
+					Active:      false,
+					Entitlements: entitlements{
+						{
+							Value: "allow-cluster-create",
+						},
+					},
+					UserName: "me@example.com",
+					Schemas:  []URN{UserSchema},
+				},
+				Response: User{
+					ID: "abc",
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/preview/scim/v2/Users/abc",
+				Response: User{
+					DisplayName: "Example user",
+					Active:      false,
+					UserName:    "me@example.com",
+					ID:          "abc",
+					Entitlements: entitlements{
+						{
+							Value: "allow-cluster-create",
+						},
+					},
+					Groups: []ComplexValue{
+						{
+							Display: "admins",
+							Value:   "4567",
+						},
+						{
+							Display: "ds",
+							Value:   "9877",
+						},
+					},
+				},
+			},
+		},
+		Resource: ResourceUser(),
+		Create:   true,
+		HCL: `
+		user_name    = "me@example.com"
+		display_name = "Example user"
+		allow_cluster_create = true
+		active = false
 		`,
 	}.Apply(t)
 	require.NoError(t, err, err)

@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/databrickslabs/terraform-provider-databricks/common"
+	"github.com/databricks/terraform-provider-databricks/common"
 
-	"github.com/databrickslabs/terraform-provider-databricks/qa"
+	"github.com/databricks/terraform-provider-databricks/qa"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -88,7 +88,7 @@ func TestResourceGroupCreate_Error(t *testing.T) {
 			},
 		},
 		Resource: ResourceGroup(),
-		State: map[string]interface{}{
+		State: map[string]any{
 			"display_name": "Data Scientists",
 		},
 		Create: true,
@@ -306,7 +306,7 @@ func TestResourceGroupUpdate_Error(t *testing.T) {
 			},
 		},
 		Resource: ResourceGroup(),
-		State: map[string]interface{}{
+		State: map[string]any{
 			"display_name":               "Data Ninjas",
 			"allow_instance_pool_create": true,
 		},

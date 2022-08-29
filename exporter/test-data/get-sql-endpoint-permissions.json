@@ -1,5 +1,5 @@
 {
-  "object_id": "/sql/endpoints/f562046bc1272886",
+  "object_id": "/sql/warehouses/f562046bc1272886",
   "object_type": "endpoints",
   "access_control_list": [
     {
@@ -18,7 +18,7 @@
           "permission_level": "CAN_MANAGE",
           "inherited": true,
           "inherited_from_object": [
-            "/sql/endpoints/"
+            "/sql/warehouses/"
           ]
         }
       ]

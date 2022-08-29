@@ -8,10 +8,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-// DataSourceDBFSFile ...
-func DataSourceDBFSFile() *schema.Resource {
+func DataSourceDbfsFile() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+		ReadContext: func(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
 			limitFileSize := d.Get("limit_file_size").(bool)
 			dbfsAPI := NewDbfsAPI(ctx, m)
 			fileInfo, err := dbfsAPI.Status(d.Get("path").(string))

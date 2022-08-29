@@ -10,12 +10,12 @@ import (
 
 func DataSourceClusters() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: func(ctx context.Context, d *schema.ResourceData, i interface{}) diag.Diagnostics {
+		ReadContext: func(ctx context.Context, d *schema.ResourceData, i any) diag.Diagnostics {
 			clusters, err := NewClustersAPI(ctx, i).List()
 			if err != nil {
 				return diag.FromErr(err)
 			}
-			ids := schema.NewSet(schema.HashString, []interface{}{})
+			ids := schema.NewSet(schema.HashString, []any{})
 			name_contains := strings.ToLower(d.Get("cluster_name_contains").(string))
 			for _, v := range clusters {
 				match_name := strings.Contains(strings.ToLower(v.ClusterName), name_contains)

@@ -5,11 +5,11 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/databrickslabs/terraform-provider-databricks/common"
+	"github.com/databricks/terraform-provider-databricks/common"
 )
 
 // NewUsersAPI creates UsersAPI instance from provider meta
-func NewUsersAPI(ctx context.Context, m interface{}) UsersAPI {
+func NewUsersAPI(ctx context.Context, m any) UsersAPI {
 	return UsersAPI{
 		client:  m.(*common.DatabricksClient),
 		context: ctx,

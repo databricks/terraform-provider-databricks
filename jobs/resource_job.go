@@ -13,10 +13,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
-	"github.com/databrickslabs/terraform-provider-databricks/clusters"
-	"github.com/databrickslabs/terraform-provider-databricks/common"
-	"github.com/databrickslabs/terraform-provider-databricks/libraries"
-	"github.com/databrickslabs/terraform-provider-databricks/repos"
+	"github.com/databricks/terraform-provider-databricks/clusters"
+	"github.com/databricks/terraform-provider-databricks/common"
+	"github.com/databricks/terraform-provider-databricks/libraries"
+	"github.com/databricks/terraform-provider-databricks/repos"
 )
 
 // NotebookTask contains the information for notebook jobs
@@ -56,12 +56,43 @@ type PipelineTask struct {
 	PipelineID string `json:"pipeline_id"`
 }
 
+type SqlQueryTask struct {
+	QueryID string `json:"query_id"`
+}
+
+type SqlDashboardTask struct {
+	DashboardID string `json:"dashboard_id"`
+}
+
+type SqlAlertTask struct {
+	AlertID string `json:"alert_id"`
+}
+
+// SqlTask contains information about DBSQL task
+// TODO: add validation & conflictsWith
+type SqlTask struct {
+	Query       *SqlQueryTask     `json:"query,omitempty"`
+	Dashboard   *SqlDashboardTask `json:"dashboard,omitempty"`
+	Alert       *SqlAlertTask     `json:"alert,omitempty"`
+	WarehouseID string            `json:"warehouse_id,omitempty"`
+	Parameters  map[string]string `json:"parameters,omitempty"`
+}
+
+// DbtTask contains information about DBT task
+// TODO: add validation for non-empty commands
+type DbtTask struct {
+	ProjectDirectory string   `json:"project_directory,omitempty"`
+	Commands         []string `json:"commands"`
+	Schema           string   `json:"schema,omitempty" tf:"default:default"`
+}
+
 // EmailNotifications contains the information for email notifications after job completion
 type EmailNotifications struct {
 	OnStart               []string `json:"on_start,omitempty"`
 	OnSuccess             []string `json:"on_success,omitempty"`
 	OnFailure             []string `json:"on_failure,omitempty"`
 	NoAlertForSkippedRuns bool     `json:"no_alert_for_skipped_runs,omitempty"`
+	AlertOnLastAttempt    bool     `json:"alert_on_last_attempt,omitempty"`
 }
 
 // CronSchedule contains the information for the quartz cron expression
@@ -101,6 +132,8 @@ type JobTaskSettings struct {
 	SparkSubmitTask        *SparkSubmitTask    `json:"spark_submit_task,omitempty" tf:"group:task_type"`
 	PipelineTask           *PipelineTask       `json:"pipeline_task,omitempty" tf:"group:task_type"`
 	PythonWheelTask        *PythonWheelTask    `json:"python_wheel_task,omitempty" tf:"group:task_type"`
+	SqlTask                *SqlTask            `json:"sql_task,omitempty" tf:"group:task_type"`
+	DbtTask                *DbtTask            `json:"dbt_task,omitempty" tf:"group:task_type"`
 	EmailNotifications     *EmailNotifications `json:"email_notifications,omitempty" tf:"suppress_diff"`
 	TimeoutSeconds         int32               `json:"timeout_seconds,omitempty"`
 	MaxRetries             int32               `json:"max_retries,omitempty"`
@@ -146,6 +179,7 @@ type JobSettings struct {
 	Schedule           *CronSchedule       `json:"schedule,omitempty"`
 	MaxConcurrentRuns  int32               `json:"max_concurrent_runs,omitempty"`
 	EmailNotifications *EmailNotifications `json:"email_notifications,omitempty" tf:"suppress_diff"`
+	Tags               map[string]string   `json:"tags,omitempty"`
 }
 
 func (js *JobSettings) isMultiTask() bool {
@@ -229,7 +263,7 @@ type UpdateJobRequest struct {
 }
 
 // NewJobsAPI creates JobsAPI instance from provider meta
-func NewJobsAPI(ctx context.Context, m interface{}) JobsAPI {
+func NewJobsAPI(ctx context.Context, m any) JobsAPI {
 	client := m.(*common.DatabricksClient)
 	return JobsAPI{client, ctx}
 }
@@ -254,8 +288,8 @@ func (a JobsAPI) RunsList(r JobRunsListRequest) (jrl JobRunsList, err error) {
 
 // RunsCancel cancels job run and waits till it's finished
 func (a JobsAPI) RunsCancel(runID int64, timeout time.Duration) error {
-	var response interface{}
-	err := a.client.Post(a.context, "/jobs/runs/cancel", map[string]interface{}{
+	var response any
+	err := a.client.Post(a.context, "/jobs/runs/cancel", map[string]any{
 		"run_id": runID,
 	}, &response)
 	if err != nil {
@@ -299,7 +333,7 @@ func (a JobsAPI) RunNow(jobID int64) (int64, error) {
 // RunsGet to retrieve information about the run
 func (a JobsAPI) RunsGet(runID int64) (JobRun, error) {
 	var jr JobRun
-	err := a.client.Get(a.context, "/jobs/runs/get", map[string]interface{}{
+	err := a.client.Get(a.context, "/jobs/runs/get", map[string]any{
 		"run_id": runID,
 	}, &jr)
 	return jr, err
@@ -485,7 +519,7 @@ func ResourceJob() *schema.Resource {
 			Create: schema.DefaultTimeout(clusters.DefaultProvisionTimeout),
 			Update: schema.DefaultTimeout(clusters.DefaultProvisionTimeout),
 		},
-		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, m interface{}) error {
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, m any) error {
 			var js JobSettings
 			common.DiffToStructPointer(d, jobSchema, &js)
 			alwaysRunning := d.Get("always_running").(bool)

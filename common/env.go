@@ -21,7 +21,7 @@ func NewClientFromEnvironment() *DatabricksClient {
 	client := DatabricksClient{}
 	for _, attr := range ClientAttributes() {
 		found := false
-		var value interface{}
+		var value any
 		for _, envName := range attr.EnvVars {
 			v := os.Getenv(envName)
 			if v == "" {

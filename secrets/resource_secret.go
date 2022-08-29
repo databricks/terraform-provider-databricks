@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/databrickslabs/terraform-provider-databricks/common"
+	"github.com/databricks/terraform-provider-databricks/common"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -58,7 +58,7 @@ type SecretACLRequest struct {
 }
 
 // NewSecretsAPI creates SecretsAPI instance from provider meta
-func NewSecretsAPI(ctx context.Context, m interface{}) SecretsAPI {
+func NewSecretsAPI(ctx context.Context, m any) SecretsAPI {
 	return SecretsAPI{
 		client:  m.(*common.DatabricksClient),
 		context: ctx,

@@ -18,7 +18,7 @@ func TestQueryMarshalUnmarshal(t *testing.T) {
 			Interval: 1000,
 		},
 		Options: &QueryOptions{
-			Parameters: []interface{}{
+			Parameters: []any{
 				&QueryParameterText{
 					QueryParameter: QueryParameter{
 						Name:  "n1",

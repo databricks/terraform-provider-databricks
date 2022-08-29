@@ -3,14 +3,13 @@ package clusters
 import (
 	"context"
 	"fmt"
-	"os"
 
 	// "reflect"
 	"strings"
 	"testing"
 
-	"github.com/databrickslabs/terraform-provider-databricks/common"
-	"github.com/databrickslabs/terraform-provider-databricks/qa"
+	"github.com/databricks/terraform-provider-databricks/common"
+	"github.com/databricks/terraform-provider-databricks/qa"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -20,7 +19,7 @@ func TestGetOrCreateRunningCluster_AzureAuth(t *testing.T) {
 		{
 			Method:   "GET",
 			Resource: "/api/2.0/clusters/list",
-			Response: map[string]interface{}{},
+			Response: map[string]any{},
 		},
 		{
 			Method:       "GET",
@@ -314,6 +313,92 @@ func TestEditCluster_Pending(t *testing.T) {
 	assert.Equal(t, ClusterStateRunning, string(clusterInfo.State))
 }
 
+func TestResizeCluster_FailsForNonRunningCluster(t *testing.T) {
+	clusterStates := []ClusterState{ClusterStateUnknown,
+		ClusterStateError,
+		ClusterStatePending,
+		ClusterStateRestarting,
+		ClusterStateResizing,
+		ClusterStateTerminating,
+		ClusterStateTerminated,
+	}
+	for _, clusterState := range clusterStates {
+		t.Run(fmt.Sprintf("CLUSTER STATE %s", clusterState), func(t *testing.T) {
+			client, server, err := qa.HttpFixtureClient(t, []qa.HTTPFixture{
+				{
+					Method:   "GET",
+					Resource: "/api/2.0/clusters/get?cluster_id=abc",
+					Response: ClusterInfo{
+						State:     clusterState,
+						ClusterID: "abc",
+					},
+				},
+			})
+			require.NoError(t, err)
+
+			ctx := context.Background()
+			_, err = NewClustersAPI(ctx, client).Resize(ResizeRequest{
+				ClusterID:  "abc",
+				NumWorkers: 10,
+			})
+			require.Error(t, err)
+			assert.Contains(t, err.Error(), "resize: Cluster abc is in "+clusterState+" state. RUNNING state required to use resize API")
+			server.Close()
+		})
+	}
+}
+
+func TestResizeCluster_NormalRun(t *testing.T) {
+	client, server, err := qa.HttpFixtureClient(t, []qa.HTTPFixture{
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/clusters/get?cluster_id=abc",
+			Response: ClusterInfo{
+				State:      ClusterStateRunning,
+				ClusterID:  "abc",
+				NumWorkers: 4,
+			},
+		},
+		{
+			Method:   "POST",
+			Resource: "/api/2.0/clusters/resize",
+			ExpectedRequest: ResizeRequest{
+				ClusterID:  "abc",
+				NumWorkers: 10,
+			},
+		},
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/clusters/get?cluster_id=abc",
+			Response: ClusterInfo{
+				State:      ClusterStateResizing,
+				ClusterID:  "abc",
+				NumWorkers: 10,
+			},
+		},
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/clusters/get?cluster_id=abc",
+			Response: ClusterInfo{
+				State:      ClusterStateRunning,
+				ClusterID:  "abc",
+				NumWorkers: 10,
+			},
+		},
+	})
+	defer server.Close()
+	require.NoError(t, err)
+
+	ctx := context.Background()
+	clusterInfo, err := NewClustersAPI(ctx, client).Resize(ResizeRequest{
+		ClusterID:  "abc",
+		NumWorkers: 10,
+	})
+	require.NoError(t, err)
+	assert.Equal(t, ClusterStateRunning, string(clusterInfo.State))
+	assert.Equal(t, 10, int(clusterInfo.NumWorkers))
+}
+
 func TestEditCluster_Terminating(t *testing.T) {
 	client, server, err := qa.HttpFixtureClient(t, []qa.HTTPFixture{
 		{
@@ -571,12 +656,8 @@ func TestPermanentDelete_Pinned(t *testing.T) {
 	require.NoError(t, err)
 }
 
-func TestAwsAccSmallestNodeType(t *testing.T) {
-	cloudEnv := os.Getenv("CLOUD_ENV")
-	if cloudEnv == "" {
-		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
-	}
-
+func TestAccAwsSmallestNodeType(t *testing.T) {
+	qa.RequireCloudEnv(t, "aws")
 	client := common.CommonEnvironmentClient()
 	ctx := context.Background()
 	nodeType := NewClustersAPI(ctx, client).GetSmallestNodeType(NodeTypeRequest{
@@ -944,7 +1025,7 @@ func TestListSparkVersionsWithError(t *testing.T) {
 	ctx := context.Background()
 	_, err = NewClustersAPI(ctx, client).ListSparkVersions()
 	require.Error(t, err)
-	require.Equal(t, true, strings.Contains(err.Error(), "Invalid JSON received"))
+	require.Equal(t, true, strings.Contains(err.Error(), "invalid character 'g' looking"))
 }
 
 func TestGetLatestSparkVersion(t *testing.T) {

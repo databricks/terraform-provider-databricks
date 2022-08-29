@@ -6,8 +6,8 @@ import (
 	"log"
 	"strings"
 
-	"github.com/databrickslabs/terraform-provider-databricks/clusters"
-	"github.com/databrickslabs/terraform-provider-databricks/common"
+	"github.com/databricks/terraform-provider-databricks/clusters"
+	"github.com/databricks/terraform-provider-databricks/common"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -134,6 +134,17 @@ func (ta *SqlPermissions) read() error {
 			currentType = "CATALOG"
 			currentKey = ""
 		}
+
+		if ta.AnyFile {
+			currentType = "ANY FILE"
+			currentKey = ""
+		}
+
+		if ta.AnonymousFunction {
+			currentType = "ANONYMOUS FUNCTION"
+			currentKey = ""
+		}
+
 		if !strings.EqualFold(currentType, thisType) {
 			continue
 		}
@@ -338,7 +349,7 @@ func ResourceSqlPermissions() *schema.Resource {
 			}
 			if len(ta.PrivilegeAssignments) == 0 {
 				// reflect resource is skipping empty privilege_assignments
-				d.Set("privilege_assignments", []interface{}{})
+				d.Set("privilege_assignments", []any{})
 			}
 			common.StructToData(ta, s, d)
 			return nil
@@ -347,6 +358,9 @@ func ResourceSqlPermissions() *schema.Resource {
 			ta, err := tableAclForUpdate(ctx, d, s, c)
 			if err != nil {
 				return err
+			}
+			if !d.HasChangesExcept("cluster_id") {
+				return nil
 			}
 			return ta.enforce()
 		},

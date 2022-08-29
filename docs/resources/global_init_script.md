@@ -16,7 +16,7 @@ resource "databricks_global_init_script" "init1" {
 }
 ```
 
-You can also create managed global init script with inline sources through `content_base64` attribute.
+You can also create a managed global init script with inline sources through `content_base64` attribute.
 
 ```hcl
 resource "databricks_global_init_script" "init2" {

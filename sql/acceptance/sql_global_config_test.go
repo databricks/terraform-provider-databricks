@@ -3,10 +3,11 @@ package acceptance
 import (
 	"testing"
 
-	"github.com/databrickslabs/terraform-provider-databricks/internal/acceptance"
+	"github.com/databricks/terraform-provider-databricks/internal/acceptance"
 )
 
-func TestPreviewAccSQLGlobalConfig(t *testing.T) {
+func TestAccSQLGlobalConfig(t *testing.T) {
+	t.Parallel()
 	acceptance.Test(t, []acceptance.Step{
 		{
 			Template: `resource "databricks_sql_global_config" "this" {

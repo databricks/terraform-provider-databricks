@@ -3,8 +3,8 @@ package aws
 import (
 	"testing"
 
-	"github.com/databrickslabs/terraform-provider-databricks/qa"
-	"github.com/databrickslabs/terraform-provider-databricks/scim"
+	"github.com/databricks/terraform-provider-databricks/qa"
+	"github.com/databricks/terraform-provider-databricks/scim"
 )
 
 func TestUserRoleCornerCases(t *testing.T) {

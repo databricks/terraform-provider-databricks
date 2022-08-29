@@ -5,13 +5,13 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/databrickslabs/terraform-provider-databricks/aws"
-	"github.com/databrickslabs/terraform-provider-databricks/clusters"
-	"github.com/databrickslabs/terraform-provider-databricks/common"
-	"github.com/databrickslabs/terraform-provider-databricks/internal/acceptance"
-	"github.com/databrickslabs/terraform-provider-databricks/internal/compute"
-	"github.com/databrickslabs/terraform-provider-databricks/qa"
-	"github.com/databrickslabs/terraform-provider-databricks/storage"
+	"github.com/databricks/terraform-provider-databricks/aws"
+	"github.com/databricks/terraform-provider-databricks/clusters"
+	"github.com/databricks/terraform-provider-databricks/common"
+	"github.com/databricks/terraform-provider-databricks/internal/acceptance"
+	"github.com/databricks/terraform-provider-databricks/internal/compute"
+	"github.com/databricks/terraform-provider-databricks/qa"
+	"github.com/databricks/terraform-provider-databricks/storage"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -34,7 +34,7 @@ func getRunningClusterWithInstanceProfile(t *testing.T, client *common.Databrick
 	})
 }
 
-func TestAwsAccS3IamMount_WithCluster(t *testing.T) {
+func TestAccAwsS3IamMount_WithCluster(t *testing.T) {
 	client := common.NewClientFromEnvironment()
 	arn := qa.GetEnvOrSkipTest(t, "TEST_EC2_INSTANCE_PROFILE")
 	ctx := context.WithValue(context.Background(), common.Current, t.Name())
@@ -43,7 +43,7 @@ func TestAwsAccS3IamMount_WithCluster(t *testing.T) {
 		if instanceProfilesAPI.IsRegistered(arn) {
 			return false
 		}
-		config := qa.EnvironmentTemplate(t, `
+		config := acceptance.EnvironmentTemplate(t, `
 		resource "databricks_instance_profile" "this" {
 			instance_profile_arn = "{env.TEST_EC2_INSTANCE_PROFILE}"
 		}
@@ -83,13 +83,13 @@ func TestAwsAccS3IamMount_WithCluster(t *testing.T) {
 	})
 }
 
-func TestAwsAccS3IamMount_NoClusterGiven(t *testing.T) {
+func TestAccAwsS3IamMount_NoClusterGiven(t *testing.T) {
 	client := common.NewClientFromEnvironment()
 	arn := qa.GetEnvOrSkipTest(t, "TEST_EC2_INSTANCE_PROFILE")
 	ctx := context.WithValue(context.Background(), common.Current, t.Name())
 	instanceProfilesAPI := aws.NewInstanceProfilesAPI(ctx, client)
 	instanceProfilesAPI.Synchronized(arn, func() bool {
-		config := qa.EnvironmentTemplate(t, `
+		config := acceptance.EnvironmentTemplate(t, `
 		resource "databricks_instance_profile" "this" {
 			instance_profile_arn = "{env.TEST_EC2_INSTANCE_PROFILE}"
 		}
@@ -138,7 +138,7 @@ func TestAwsAccS3IamMount_NoClusterGiven(t *testing.T) {
 	})
 }
 
-func TestAwsAccS3Mount(t *testing.T) {
+func TestAccAwsS3Mount(t *testing.T) {
 	client := common.NewClientFromEnvironment()
 	instanceProfile := qa.GetEnvOrSkipTest(t, "TEST_EC2_INSTANCE_PROFILE")
 	ctx := context.WithValue(context.Background(), common.Current, t.Name())

@@ -1,21 +1,26 @@
 Contributing to Databricks Terraform Provider
 ---
 
+- [Contributing to Databricks Terraform Provider](#contributing-to-databricks-terraform-provider)
+- [Installing for Terraform 0.12](#installing-for-terraform-012)
 - [Installing from source](#installing-from-source)
 - [Contributing documentation](#contributing-documentation)
 - [Developing provider](#developing-provider)
+- [Debugging](#debugging)
 - [Adding a new resource](#adding-a-new-resource)
+- [Testing](#testing)
 - [Code conventions](#code-conventions)
 - [Linting](#linting)
+- [Developing with Visual Studio Code Devcontainers](#developing-with-visual-studio-code-devcontainers)
 
-We happily welcome contributions to databricks-terraform. We use GitHub Issues to track community reported issues and GitHub Pull Requests for accepting changes.
+We happily welcome contributions to the Databricks Terraform Provider. We use GitHub Issues to track community reported issues and GitHub Pull Requests for accepting changes.
 
 ## Installing for Terraform 0.12
 
 If you use Terraform 0.12, please execute the following curl command in your shell:
 
 ```bash
-curl https://raw.githubusercontent.com/databrickslabs/databricks-terraform/master/godownloader-databricks-provider.sh | bash -s -- -b $HOME/.terraform.d/plugins
+curl https://raw.githubusercontent.com/databricks/terraform-provider-databricks/master/godownloader-databricks-provider.sh | bash -s -- -b $HOME/.terraform.d/plugins
 ```
 
 ## Installing from source
@@ -23,7 +28,7 @@ curl https://raw.githubusercontent.com/databrickslabs/databricks-terraform/maste
 On MacOS X, you can install GoLang through `brew install go`, on Debian-based Linux, you can install it by `sudo apt-get install golang -y`.
 
 ```bash
-git clone https://github.com/databrickslabs/terraform-provider-databricks.git
+git clone https://github.com/databricks/terraform-provider-databricks.git
 cd terraform-provider-databricks
 make install
 ```
@@ -46,7 +51,7 @@ In order to simplify development workflow, you should use [dev_overrides](https:
 $ cat ~/.terraformrc
 provider_installation {
    dev_overrides {
-     "databrickslabs/databricks" = "provider-binary"
+     "databricks/databricks" = "provider-binary"
    }
    direct {}
 }
@@ -59,19 +64,19 @@ Make sure you have `$GOPATH/bin` in your `$PATH`:
 echo "export PATH=\$PATH:$(go env GOPATH)/bin" >> ~/.bash_profile
 ```
 
-Installing `staticcheck`:
+Installing `staticcheck` (the version that works with Go 1.18):
 ```bash
-go install honnef.co/go/tools/cmd/staticcheck
+go install honnef.co/go/tools/cmd/staticcheck@v0.3.2
 ```
 
 Installing `gotestsum`:
 ```bash
-go get gotest.tools/gotestsum
+go install gotest.tools/gotestsum@latest
 ```
 
 Installing `goimports`:
 ```bash
-go get golang.org/x/tools/cmd/goimports
+go install golang.org/x/tools/cmd/goimports@latest
 ```
 
 After this, you should be able to run `make coverage` to run the tests and see the coverage.
@@ -83,6 +88,8 @@ After this, you should be able to run `make coverage` to run the tests and see t
 You can [run provider in a debug mode](https://www.terraform.io/plugin/sdkv2/debugging#running-terraform-with-a-provider-in-debug-mode) from VScode IDE by launching `Debug Provider` run configuration and invoking `terraform apply` with `TF_REATTACH_PROVIDERS` environment variable.
 
 ## Adding a new resource
+
+Boilerplate for data sources could be generated via `go run provider/gen/main.go -name mws_workspaces -package mws -is-data -dry-run=false`.
 
 The general process for adding a new resource is:
 
@@ -110,6 +117,9 @@ Some interesting points to note here:
   * `default:X` to set a default value for a field
   * `max_items:N` to set the maximum number of items for a multi-valued parameter
   * `slice_set` to indicate that a the parameter should accept a set instead of a list
+  * `sensitive` to mark a field as sensitive and prevent Terraform from showing its value in the plan or apply output
+  * `force_new` to indicate a change in this value requires the replacement (destroy and create) of the resource
+  * `suppress_diff` to allow comparison based on something other than primitive, list or map equality, either via a `CustomizeDiffFunc`, or the default diff for the type of the schema
  * Do not use bare references to structs in the model; rather, use pointers to structs. Maps and slices are permitted, as well as the following primitive types: int, int32, int64, float64, bool, string.
 See `typeToSchema` in `common/reflect_resource.go` for the up-to-date list of all supported field types and values for the `tf` tag.
 
@@ -280,7 +290,9 @@ So please run `make lint` instead.
 
 ## Developing with Visual Studio Code Devcontainers
 
-This project has configuration for working with [Visual Studio Code Devcontainers](https://code.visualstudio.com/docs/remote/containers) - this allows you to containerise your development prerequisites (e.g. golang, terraform). To use this you will need [Visual Studio Code](https://code.visualstudio.com/) and [Docker](https://www.docker.com/products/docker-desktop).
+NOTE: This use of devcontainers for terraform-provider-databricks development is **experimental** and not officially supported by Databricks
+
+This project has configuration for working with [Visual Studio Code Devcontainers](https://code.visualstudio.com/docs/remote/containers) - this allows you to containerise your development rerequisites (e.g. golang, terraform). To use this you will need [Visual Studio Code](https://code.visualstudio.com/) and [Docker](https://www.docker.com/products/docker-desktop).
 
 To get started, clone this repo and open the folder with Visual Studio Code. If you don't have the [Remote Development extension](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.vscode-remote-extensionpack) then you should be prompted to install it.
 

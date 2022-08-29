@@ -4,7 +4,7 @@ page_title: "Unity Catalog set up on Azure"
 
 # Deploying pre-requisite resources and enabling Unity Catalog (Azure Preview)
 
--> **Public Preview** This feature is in [Public Preview](https://docs.microsoft.com/en-us/azure/databricks/data-governance/unity-catalog). Contact your Databricks representative to request access. 
+-> **Public Preview** This feature is in [Public Preview](https://docs.microsoft.com/en-us/azure/databricks/data-governance/unity-catalog). Contact your Databricks representative to request access.
 
 Databricks Unity Catalog brings fine-grained governance and security to Lakehouse data using a familiar, open interface. You can use Terraform to deploy the underlying cloud resources and Unity Catalog objects automatically, using a programmatic approach.
 
@@ -15,6 +15,7 @@ This guide uses the following variables in configurations:
 This guide is provided as-is and you can use this guide as the basis for your custom Terraform module.
 
 To get started with Unity Catalog, this guide takes you throw the following high-level steps:
+
 - [Deploying pre-requisite resources and enabling Unity Catalog (Azure Preview)](#deploying-pre-requisite-resources-and-enabling-unity-catalog-azure-preview)
   - [Provider initialization](#provider-initialization)
   - [Configure Azure objects](#configure-azure-objects)
@@ -61,22 +62,20 @@ data "azurerm_databricks_workspace" "this" {
 ```hcl
 terraform {
   required_providers {
-    azurerm = {
-      source  = "hashicorp/azurerm"
-      version = "~>2.99.0"
+    azapi = {
+      source = "azure/azapi"
     }
-    azuread = {
-      source  = "hashicorp/azuread"
-      version = "~>2.19.0"
+    azurerm = {
+      source = "hashicorp/azurerm"
     }
     databricks = {
-      source = "databrickslabs/databricks"
+      source = "databricks/databricks"
     }
   }
 }
 
-provider "azuread" {
-  tenant_id = local.tenant_id
+provider "azapi" {
+  subscription_id = local.subscription_id
 }
 
 provider "azurerm" {
@@ -90,22 +89,24 @@ provider "databricks" {
 ```
 
 ## Configure Azure objects
+
 The first step is to create the required Azure objects:
+
 - An Azure storage account, which is the default storage location for managed tables in Unity Catalog. Please use a dedicated account for each metastore.
-- An AAD service principal that provides Unity Catalog permissions to access and manage data in the bucket.
+- A Databricks Access Connector that provides Unity Catalog permissions to access and manage data in the storage account.
 
 ```hcl
-resource "azuread_application" "unity_catalog" {
-  display_name = "${local.prefix}-root-sp"
-}
-
-resource "azuread_application_password" "unity_catalog" {
-  application_object_id = azuread_application.unity_catalog.object_id
-}
-
-resource "azuread_service_principal" "unity_catalog" {
-  application_id               = azuread_application.unity_catalog.application_id
-  app_role_assignment_required = false
+resource "azapi_resource" "access_connector" {
+  type      = "Microsoft.Databricks/accessConnectors@2022-04-01-preview"
+  name      = "${local.prefix}-databricks-mi"
+  location  = data.azurerm_resource_group.this.location
+  parent_id = data.azurerm_resource_group.this.id
+  identity {
+    type = "SystemAssigned"
+  }
+  body = jsonencode({
+    properties = {}
+  })
 }
 
 resource "azurerm_storage_account" "unity_catalog" {
@@ -127,7 +128,7 @@ resource "azurerm_storage_container" "unity_catalog" {
 resource "azurerm_role_assignment" "example" {
   scope                = azurerm_storage_account.unity_catalog.id
   role_definition_name = "Storage Blob Data Contributor"
-  principal_id         = azuread_service_principal.unity_catalog.object_id
+  principal_id         = azapi_resource.access_connector.identity[0].principal_id
 }
 ```
 
@@ -147,10 +148,8 @@ resource "databricks_metastore" "this" {
 resource "databricks_metastore_data_access" "first" {
   metastore_id = databricks_metastore.this.id
   name         = "the-keys"
-  azure_service_principal {
-    directory_id   = local.tenant_id
-    application_id = azuread_application.unity_catalog.application_id
-    client_secret  = azuread_application_password.unity_catalog.value
+  azure_managed_identity {
+    access_connector_id = azapi_resource.access_connector.id
   }
 
   is_default = true
@@ -165,7 +164,7 @@ resource "databricks_metastore_assignment" "this" {
 
 ## Create Unity Catalog objects in the metastore
 
-Each metastore exposes a 3-level namespace (catalog-schema-table) by which data can be organized. 
+Each metastore exposes a 3-level namespace (catalog-schema-table) by which data can be organized.
 
 ```hcl
 resource "databricks_catalog" "sandbox" {
@@ -211,23 +210,24 @@ resource "databricks_grants" "things" {
 ## Configure external tables and credentials
 
 To work with external tables, Unity Catalog introduces two new objects to access and work with external cloud storage:
-- [databricks_storage_credential](../resources/storage_credential.md) represent authentication methods to access cloud storage (e.g. an IAM role for Amazon S3 or a service principal for Azure Storage). Storage credentials are access-controlled to determine which users can use the credential.
-- [databricks_external_location](../resources/external_location.md) are objects that combine a cloud storage path with a Storage Credential that can be used to access the location. 
+
+- [databricks_storage_credential](../resources/storage_credential.md) represent authentication methods to access cloud storage (e.g. an IAM role for Amazon S3 or a managed identity for Azure Storage). Storage credentials are access-controlled to determine which users can use the credential.
+- [databricks_external_location](../resources/external_location.md) are objects that combine a cloud storage path with a Storage Credential that can be used to access the location.
 
 First, create the required objects in Azure.
 
 ```hcl
-resource "azuread_application" "ext_cred" {
-  display_name = "${local.prefix}-cred"
-}
-
-resource "azuread_application_password" "ext_cred" {
-  application_object_id = azuread_application.ext_cred.object_id
-}
-
-resource "azuread_service_principal" "ext_cred" {
-  application_id               = azuread_application.ext_cred.application_id
-  app_role_assignment_required = false
+resource "azapi_resource" "ext_access_connector" {
+  type      = "Microsoft.Databricks/accessConnectors@2022-04-01-preview"
+  name      = "ext-databricks-mi"
+  location  = data.azurerm_resource_group.this.location
+  parent_id = data.azurerm_resource_group.this.id
+  identity {
+    type = "SystemAssigned"
+  }
+  body = jsonencode({
+    properties = {}
+  })
 }
 
 resource "azurerm_storage_account" "ext_storage" {
@@ -249,19 +249,16 @@ resource "azurerm_storage_container" "ext_storage" {
 resource "azurerm_role_assignment" "ext_storage" {
   scope                = azurerm_storage_account.ext_storage.id
   role_definition_name = "Storage Blob Data Contributor"
-  principal_id         = azuread_service_principal.ext_cred.object_id
-}
+  principal_id         = azapi_resource.ext_access_connector.identity[0].principal_id
 ```
 
 Then create the [databricks_storage_credential](../resources/storage_credential.md) and [databricks_external_location](../resources/external_location.md) in Unity Catalog.
 
 ```hcl
 resource "databricks_storage_credential" "external" {
-  name = azuread_application.ext_cred.display_name
-  azure_service_principal {
-    directory_id   = local.tenant_id
-    application_id = azuread_application.ext_cred.application_id
-    client_secret  = azuread_application_password.ext_cred.value
+  name = azapi_resource.ext_access_connector.name
+  azure_managed_identity {
+    access_connector_id = azapi_resource.ext_access_connector.id
   }
   comment = "Managed by TF"
   depends_on = [
@@ -332,7 +329,7 @@ resource "databricks_cluster" "unity_sql" {
 - To use those advanced cluster features or languages like Python, Scala and R with Unity Catalog, one must choose **Single User** mode when launching the cluster. The cluster can only be used exclusively by a single user (by default the owner of the cluster); other users are not allowed to attach to the cluster.
 The below example will create a collection of single-user [databricks_cluster](../resources/cluster.md) for each user in a group managed through SCIM provisioning. Individual user will be able to restart their cluster, but not anyone else. Terraform's `for_each` meta-attribute will help us achieve this.
 
-First we use [databricks_group](../data-sources/group.md) and [databricks_user](../data-sources/user.md) data resources to get the list of user names, that belong to a group.
+First we use [databricks_group](../data-sources/group.md) and [databricks_user](../data-sources/user.md) data resources to get the list of user names that belong to a group.
 
 ```hcl
 data "databricks_group" "dev" {

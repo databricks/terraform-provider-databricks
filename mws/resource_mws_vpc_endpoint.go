@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/databrickslabs/terraform-provider-databricks/common"
+	"github.com/databricks/terraform-provider-databricks/common"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -14,7 +14,7 @@ import (
 )
 
 // NewVPCEndpointAPI creates VPCEndpointAPI instance from provider meta
-func NewVPCEndpointAPI(ctx context.Context, m interface{}) VPCEndpointAPI {
+func NewVPCEndpointAPI(ctx context.Context, m any) VPCEndpointAPI {
 	return VPCEndpointAPI{m.(*common.DatabricksClient), ctx}
 }
 
@@ -72,8 +72,7 @@ func (a VPCEndpointAPI) List(mwsAcctID string) ([]VPCEndpoint, error) {
 	return mwsVPCEndpointList, err
 }
 
-// ResourceVPCEndpoint ...
-func ResourceVPCEndpoint() *schema.Resource {
+func ResourceMwsVpcEndpoint() *schema.Resource {
 	s := common.StructToSchema(VPCEndpoint{}, func(s map[string]*schema.Schema) map[string]*schema.Schema {
 		// nolint
 		s["vpc_endpoint_name"].ValidateFunc = validation.StringLenBetween(4, 256)

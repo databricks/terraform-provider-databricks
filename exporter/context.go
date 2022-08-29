@@ -12,10 +12,10 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/databrickslabs/terraform-provider-databricks/commands"
-	"github.com/databrickslabs/terraform-provider-databricks/common"
-	"github.com/databrickslabs/terraform-provider-databricks/provider"
-	"github.com/databrickslabs/terraform-provider-databricks/scim"
+	"github.com/databricks/terraform-provider-databricks/commands"
+	"github.com/databricks/terraform-provider-databricks/common"
+	"github.com/databricks/terraform-provider-databricks/provider"
+	"github.com/databricks/terraform-provider-databricks/scim"
 
 	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/hclsyntax"
@@ -186,7 +186,7 @@ func (ic *importContext) Run() error {
 			`terraform {
 				required_providers {
 			  		databricks = {
-						source = "databrickslabs/databricks"
+						source = "databricks/databricks"
 						version = "` + common.Version() + `"
 				  	}
 				}
@@ -344,7 +344,7 @@ func (ic *importContext) Add(r *resource) {
 		return
 	}
 	inst := instanceApproximation{
-		Attributes: map[string]interface{}{},
+		Attributes: map[string]any{},
 	}
 	for k, v := range state.Attributes {
 		inst.Attributes[k] = v
@@ -447,6 +447,10 @@ func (ic *importContext) Emit(r *resource) {
 		r.Data.MarkNewResource()
 		resource := strings.ReplaceAll(r.Resource, "databricks_", "")
 		ctx := context.WithValue(ic.Context, common.ResourceName, resource)
+		apiVersion := ic.Importables[r.Resource].ApiVersion
+		if apiVersion != "" {
+			ctx = context.WithValue(ctx, common.Api, apiVersion)
+		}
 		if dia := pr.ReadContext(ctx, r.Data, ic.Client); dia != nil {
 			log.Printf("[ERROR] Error reading %s#%s: %v", r.Resource, r.ID, dia)
 			return
@@ -562,7 +566,7 @@ func (ic *importContext) dataToHcl(i importable, path []string,
 			body.SetAttributeValue(a, cty.NumberFloatVal(raw.(float64)))
 		case schema.TypeMap:
 			ov := map[string]cty.Value{}
-			for key, iv := range raw.(map[string]interface{}) {
+			for key, iv := range raw.(map[string]any) {
 				v := cty.StringVal(fmt.Sprintf("%v", iv))
 				ov[key] = v
 			}
@@ -578,7 +582,7 @@ func (ic *importContext) dataToHcl(i importable, path []string,
 				}
 			}
 		case schema.TypeList:
-			if rawList, ok := raw.([]interface{}); ok {
+			if rawList, ok := raw.([]any); ok {
 				err := ic.readListFromData(i, append(path, a), d, rawList, body, as, strconv.Itoa)
 				if err != nil {
 					return err
@@ -592,7 +596,7 @@ func (ic *importContext) dataToHcl(i importable, path []string,
 }
 
 func (ic *importContext) readListFromData(i importable, path []string, d *schema.ResourceData,
-	rawList []interface{}, body *hclwrite.Body, as *schema.Schema,
+	rawList []any, body *hclwrite.Body, as *schema.Schema,
 	offsetConverter func(i int) string) error {
 	if len(rawList) == 0 {
 		return nil

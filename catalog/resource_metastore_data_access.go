@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/databrickslabs/terraform-provider-databricks/common"
+	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -13,8 +13,8 @@ type DataAccessConfigurationsAPI struct {
 	context context.Context
 }
 
-func NewDataAccessConfigurationsAPI(ctx context.Context, m interface{}) DataAccessConfigurationsAPI {
-	return DataAccessConfigurationsAPI{m.(*common.DatabricksClient), ctx}
+func NewDataAccessConfigurationsAPI(ctx context.Context, m any) DataAccessConfigurationsAPI {
+	return DataAccessConfigurationsAPI{m.(*common.DatabricksClient), context.WithValue(ctx, common.Api, common.API_2_1)}
 }
 
 type AwsIamRole struct {
@@ -27,12 +27,17 @@ type AzureServicePrincipal struct {
 	ClientSecret  string `json:"client_secret"`
 }
 
+type AzureManagedIdentity struct {
+	AccessConnectorID string `json:"access_connector_id"`
+}
+
 type DataAccessConfiguration struct {
 	ID                string                 `json:"id,omitempty" tf:"computed"`
 	Name              string                 `json:"name"`
 	ConfigurationType string                 `json:"configuration_type,omitempty" tf:"computed"`
 	Aws               *AwsIamRole            `json:"aws_iam_role,omitempty" tf:"group:access"`
 	Azure             *AzureServicePrincipal `json:"azure_service_principal,omitempty" tf:"group:access"`
+	AzMI              *AzureManagedIdentity  `json:"azure_managed_identity,omitempty" tf:"group:access"`
 }
 
 func (a DataAccessConfigurationsAPI) Create(metastoreID string, dac *DataAccessConfiguration) error {
@@ -51,7 +56,7 @@ func (a DataAccessConfigurationsAPI) Delete(metastoreID, dacID string) error {
 	return a.client.Delete(a.context, path, nil)
 }
 
-func ResourceDataAccessConfiguration() *schema.Resource {
+func ResourceMetastoreDataAccess() *schema.Resource {
 	s := common.StructToSchema(DataAccessConfiguration{},
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
 			m["metastore_id"] = &schema.Schema{
@@ -65,9 +70,10 @@ func ResourceDataAccessConfiguration() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 			}
-			alof := []string{"aws_iam_role", "azure_service_principal"}
+			alof := []string{"aws_iam_role", "azure_service_principal", "azure_managed_identity"}
 			m["aws_iam_role"].AtLeastOneOf = alof
 			m["azure_service_principal"].AtLeastOneOf = alof
+			m["azure_managed_identity"].AtLeastOneOf = alof
 			return m
 		})
 	p := common.NewPairID("metastore_id", "id")
@@ -83,7 +89,7 @@ func ResourceDataAccessConfiguration() *schema.Resource {
 			d.Set("id", dac.ID)
 			p.Pack(d)
 			if d.Get("is_default").(bool) {
-				return NewMetastoresAPI(ctx, c).updateMetastore(metastoreID, map[string]interface{}{
+				return NewMetastoresAPI(ctx, c).updateMetastore(metastoreID, map[string]any{
 					"default_data_access_config_id": dac.ID,
 				})
 			}

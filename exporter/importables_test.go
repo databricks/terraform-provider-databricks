@@ -7,20 +7,20 @@ import (
 	"os"
 	"testing"
 
-	"github.com/databrickslabs/terraform-provider-databricks/clusters"
-	"github.com/databrickslabs/terraform-provider-databricks/common"
-	"github.com/databrickslabs/terraform-provider-databricks/internal"
-	"github.com/databrickslabs/terraform-provider-databricks/jobs"
-	"github.com/databrickslabs/terraform-provider-databricks/permissions"
-	"github.com/databrickslabs/terraform-provider-databricks/policies"
-	"github.com/databrickslabs/terraform-provider-databricks/pools"
-	"github.com/databrickslabs/terraform-provider-databricks/provider"
-	"github.com/databrickslabs/terraform-provider-databricks/qa"
-	"github.com/databrickslabs/terraform-provider-databricks/repos"
-	"github.com/databrickslabs/terraform-provider-databricks/scim"
-	"github.com/databrickslabs/terraform-provider-databricks/secrets"
-	"github.com/databrickslabs/terraform-provider-databricks/storage"
-	"github.com/databrickslabs/terraform-provider-databricks/workspace"
+	"github.com/databricks/terraform-provider-databricks/clusters"
+	"github.com/databricks/terraform-provider-databricks/commands"
+	"github.com/databricks/terraform-provider-databricks/common"
+	"github.com/databricks/terraform-provider-databricks/jobs"
+	"github.com/databricks/terraform-provider-databricks/permissions"
+	"github.com/databricks/terraform-provider-databricks/policies"
+	"github.com/databricks/terraform-provider-databricks/pools"
+	"github.com/databricks/terraform-provider-databricks/provider"
+	"github.com/databricks/terraform-provider-databricks/qa"
+	"github.com/databricks/terraform-provider-databricks/repos"
+	"github.com/databricks/terraform-provider-databricks/scim"
+	"github.com/databricks/terraform-provider-databricks/secrets"
+	"github.com/databricks/terraform-provider-databricks/storage"
+	"github.com/databricks/terraform-provider-databricks/workspace"
 	"github.com/hashicorp/hcl/v2/hclwrite"
 	"github.com/stretchr/testify/assert"
 )
@@ -598,8 +598,8 @@ func TestNotebookGeneration(t *testing.T) {
 		assert.NoError(t, err)
 
 		ic.generateHclForResources(nil)
-		assert.Equal(t, internal.TrimLeadingWhitespace(`
-		resource "databricks_notebook" "firstsecond" {
+		assert.Equal(t, commands.TrimLeadingWhitespace(`
+		resource "databricks_notebook" "first_second_123" {
 		  source = "${path.module}/notebooks/First/Second.py"
 		  path   = "/First/Second"
 		}`), string(ic.Files["notebooks"].Bytes()))
@@ -625,7 +625,7 @@ func TestGlobalInitScriptGen(t *testing.T) {
 		})
 
 		ic.generateHclForResources(nil)
-		assert.Equal(t, internal.TrimLeadingWhitespace(`
+		assert.Equal(t, commands.TrimLeadingWhitespace(`
 		resource "databricks_global_init_script" "new_importing_things" {
 		  source  = "${path.module}/files/new_importing_things.sh"
 		  name    = "New: Importing ^ Things"
@@ -655,7 +655,7 @@ func TestSecretGen(t *testing.T) {
 		})
 
 		ic.generateHclForResources(nil)
-		assert.Equal(t, internal.TrimLeadingWhitespace(`
+		assert.Equal(t, commands.TrimLeadingWhitespace(`
 		resource "databricks_secret" "a_b" {
 		  string_value = var.string_value_a_b
 		  scope        = "a"
@@ -688,7 +688,7 @@ func TestDbfsFileGen(t *testing.T) {
 		})
 
 		ic.generateHclForResources(nil)
-		assert.Equal(t, internal.TrimLeadingWhitespace(`
+		assert.Equal(t, commands.TrimLeadingWhitespace(`
 		resource "databricks_dbfs_file" "_a_0cc175b9c0f1b6a831c399e269772661" {
 		  source = "${path.module}/files/_a_0cc175b9c0f1b6a831c399e269772661"
 		  path   = "a"
@@ -702,13 +702,13 @@ func TestSqlListObjects(t *testing.T) {
 			Method:   "GET",
 			Resource: "/api/2.0/preview/sql/queries",
 			Response: dbsqlListResponse{PageSize: 1, Page: 1, TotalCount: 2,
-				Results: []map[string]interface{}{{"key1": "value1"}}},
+				Results: []map[string]any{{"key1": "value1"}}},
 		},
 		{
 			Method:   "GET",
 			Resource: "/api/2.0/preview/sql/queries?page=2&page_size=1",
 			Response: dbsqlListResponse{PageSize: 1, Page: 2, TotalCount: 2,
-				Results: []map[string]interface{}{{"key2": "value2"}}},
+				Results: []map[string]any{{"key2": "value2"}}},
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		ic := importContextForTest()

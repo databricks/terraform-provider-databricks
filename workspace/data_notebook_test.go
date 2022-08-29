@@ -3,7 +3,7 @@ package workspace
 import (
 	"testing"
 
-	"github.com/databrickslabs/terraform-provider-databricks/qa"
+	"github.com/databricks/terraform-provider-databricks/qa"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -33,7 +33,7 @@ func TestDataSourceNotebook(t *testing.T) {
 		NonWritable: true,
 		Resource:    DataSourceNotebook(),
 		ID:          ".",
-		State: map[string]interface{}{
+		State: map[string]any{
 			"path":   "/a/b/c",
 			"format": "SOURCE",
 		},

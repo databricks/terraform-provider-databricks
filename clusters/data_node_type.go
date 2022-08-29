@@ -4,7 +4,7 @@ import (
 	"context"
 	"strings"
 
-	"github.com/databrickslabs/terraform-provider-databricks/common"
+	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -22,6 +22,7 @@ type NodeTypeRequest struct {
 	Graviton              bool   `json:"graviton,omitempty"`
 	IsIOCacheEnabled      bool   `json:"is_io_cache_enabled,omitempty"`
 	SupportPortForwarding bool   `json:"support_port_forwarding,omitempty"`
+	VCPU                  bool   `json:"vcpu,omitempty"`
 }
 
 // NodeTypeList contains a list of node types
@@ -48,6 +49,11 @@ func (l *NodeTypeList) Sort() {
 		}
 	})
 }
+
+const (
+	CloudProviderNodeStatusNotEnabled           = "NotEnabledOnSubscription"
+	CloudProviderNodeStatusNotAvailableInRegion = "NotAvailableInRegion"
+)
 
 // ClusterCloudProviderNodeInfo encapsulates the existing quota available from the cloud service provider.
 type ClusterCloudProviderNodeInfo struct {
@@ -88,6 +94,19 @@ type NodeType struct {
 	Graviton              bool                          `json:"is_graviton,omitempty"`
 }
 
+func (nt NodeType) shouldBeSkipped() bool {
+	if nt.NodeInfo == nil {
+		return false
+	}
+	for _, st := range nt.NodeInfo.Status {
+		switch st {
+		case CloudProviderNodeStatusNotAvailableInRegion, CloudProviderNodeStatusNotEnabled:
+			return true
+		}
+	}
+	return false
+}
+
 func (a ClustersAPI) defaultSmallestNodeType() string {
 	if a.client.IsAzure() {
 		return "Standard_D3_v2"
@@ -109,11 +128,23 @@ func (a ClustersAPI) GetSmallestNodeType(r NodeTypeRequest) string {
 	// error is explicitly ingored here, because Azure returns
 	// apparently too big of a JSON for Go to parse
 	if len(list.NodeTypes) == 0 {
+		if r.VCPU {
+			return "vcpu-worker"
+		}
 		return a.defaultSmallestNodeType()
 	}
 	list.Sort()
 	for _, nt := range list.NodeTypes {
+		if nt.shouldBeSkipped() {
+			continue
+		}
 		gbs := (nt.MemoryMB / 1024)
+		if r.VCPU && !strings.HasPrefix(nt.NodeTypeID, "vcpu") {
+			continue
+		}
+		if !r.VCPU && strings.HasPrefix(nt.NodeTypeID, "vcpu") {
+			continue
+		}
 		if r.MinMemoryGB > 0 && gbs < r.MinMemoryGB {
 			continue
 		}
@@ -163,7 +194,7 @@ func DataSourceNodeType() *schema.Resource {
 	return &schema.Resource{
 		Schema: s,
 		ReadContext: func(ctx context.Context, d *schema.ResourceData,
-			m interface{}) diag.Diagnostics {
+			m any) diag.Diagnostics {
 			var this NodeTypeRequest
 			common.DataToStructPointer(d, s, &this)
 			clustersAPI := NewClustersAPI(ctx, m)

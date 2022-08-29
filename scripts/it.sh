@@ -14,7 +14,7 @@ fi
 export TMPDIR=/tmp
 export TF_ACC=1
 
-gotestsum --format short-verbose \
+gotestsum --junitfile junit.xml --format short-verbose \
     --raw-command go test -v -json \
     -test.timeout 30m \
     -run $TEST_FILTER ./... 2>&1 | tee out.log

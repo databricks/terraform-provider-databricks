@@ -7,7 +7,7 @@ This is a resource that lets you manage relatively small files on [Databricks Fi
 
 ## Example Usage
 
-In order to manage file on Databricks File System with Terraform, you must specify `source` attribute containing full path to the file on local filesystem.
+In order to manage a file on Databricks File System with Terraform, you must specify the `source` attribute containing the full path to the file on the local filesystem.
 
 ```hcl
 resource "databricks_dbfs_file" "this" {

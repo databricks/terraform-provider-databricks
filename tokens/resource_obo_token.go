@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/databrickslabs/terraform-provider-databricks/common"
+	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -14,7 +14,7 @@ type OboToken struct {
 	Comment         string `json:"comment"`
 }
 
-func NewTokenManagementAPI(ctx context.Context, m interface{}) TokenManagementAPI {
+func NewTokenManagementAPI(ctx context.Context, m any) TokenManagementAPI {
 	return TokenManagementAPI{m.(*common.DatabricksClient), ctx}
 }
 
@@ -29,7 +29,7 @@ func (a TokenManagementAPI) CreateTokenOnBehalfOfServicePrincipal(request OboTok
 }
 
 func (a TokenManagementAPI) Delete(tokenID string) error {
-	return a.client.Delete(a.context, fmt.Sprintf("/token-management/tokens/%s", tokenID), map[string]interface{}{})
+	return a.client.Delete(a.context, fmt.Sprintf("/token-management/tokens/%s", tokenID), map[string]any{})
 }
 
 func (a TokenManagementAPI) Read(tokenID string) (ti TokenResponse, err error) {

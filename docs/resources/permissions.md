@@ -4,9 +4,11 @@ subcategory: "Security"
 
 # databricks_permissions Resource
 
-This resource allows you to generically manage [access control](https://docs.databricks.com/security/access-control/index.html) in Databricks workspace. It would guarantee, that only _admins_, _authenticated principal_ and those declared within `access_control` blocks would have specified access. It is not possible to remove management rights from _admins_ group.
+This resource allows you to generically manage [access control](https://docs.databricks.com/security/access-control/index.html) in Databricks workspace. It would guarantee that only _admins_, _authenticated principal_ and those declared within `access_control` blocks would have specified access. It is not possible to remove management rights from _admins_ group. 
 
--> **Note** It is not possible to lower permissions for `admins` or your own user anywhere from `CAN_MANAGE` level, so Databricks Terraform Provider [removes](https://github.com/databrickslabs/terraform-provider-databricks/blob/master/access/resource_permissions.go#L261-L271) those `access_control` blocks automatically. 
+-> **Note** Configuring this resource for an object will **OVERWRITE** any existing permissions of the same type unless imported, and changes made outside of Terraform will be reset unless the changes are also reflected in the configuration.
+
+-> **Note** It is not possible to lower permissions for `admins` or your own user anywhere from `CAN_MANAGE` level, so Databricks Terraform Provider [removes](https://github.com/databricks/terraform-provider-databricks/blob/master/access/resource_permissions.go#L261-L271) those `access_control` blocks automatically. 
 
 ## Cluster usage
 
@@ -147,7 +149,7 @@ resource "databricks_permissions" "pool_usage" {
 There are four assignable [permission levels](https://docs.databricks.com/security/access-control/jobs-acl.html#job-permissions) for [databricks_job](job.md): `CAN_VIEW`, `CAN_MANAGE_RUN`, `IS_OWNER`, and `CAN_MANAGE`. Admins are granted the `CAN_MANAGE` permission by default, and they can assign that permission to non-admin users, and service principals.
 
 - The creator of a job has `IS_OWNER` permission. Destroying `databricks_permissions` resource for a job would revert ownership to the creator.
-- A job must have exactly one owner. If resource is changed and no owner is specified, currently authenticated principal would become new owner of the job. Nothing would change, per se, if the job was created through Terraform.
+- A job must have exactly one owner. If a resource is changed and no owner is specified, the currently authenticated principal would become the new owner of the job. Nothing would change, per se, if the job was created through Terraform.
 - A job cannot have a group as an owner.
 - Jobs triggered through _Run Now_ assume the permissions of the job owner and not the user, and service principal who issued Run Now.
 - Read [main documentation](https://docs.databricks.com/security/access-control/jobs-acl.html) for additional detail.
@@ -207,6 +209,72 @@ resource "databricks_permissions" "job_usage" {
   access_control {
     service_principal_name = databricks_service_principal.aws_principal.application_id
     permission_level       = "IS_OWNER"
+  }
+}
+```
+
+## Delta Live Tables usage
+
+There are four assignable [permission levels](https://docs.databricks.com/security/access-control/dlt-acl.html#delta-live-tables-permissions) for [databricks_pipeline](pipeline.md): `CAN_VIEW`, `CAN_RUN`, `CAN_MANAGE`, and `IS_OWNER`. Admins are granted the `CAN_MANAGE` permission by default, and they can assign that permission to non-admin users, and service principals.
+
+- The creator of a DLT Pipeline has `IS_OWNER` permission. Destroying `databricks_permissions` resource for a pipeline would revert ownership to the creator.
+- A DLT pipeline must have exactly one owner. If a resource is changed and no owner is specified, the currently authenticated principal would become the new owner of the pipeline. Nothing would change, per se, if the pipeline was created through Terraform.
+- A DLT pipeline cannot have a group as an owner.
+- DLT Pipelines triggered through _Start_ assume the permissions of the pipeline owner and not the user, and service principal who issued Run Now.
+- Read [main documentation](https://docs.databricks.com/security/access-control/dlt-acl.html) for additional detail.
+
+```hcl
+resource "databricks_group" "eng" {
+  display_name = "Engineering"
+}
+
+resource "databricks_notebook" "dlt_demo" {
+  content_base64 = base64encode(<<-EOT
+    import dlt
+    json_path = "/databricks-datasets/wikipedia-datasets/data-001/clickstream/raw-uncompressed-json/2015_2_clickstream.json"
+    @dlt.table(
+       comment="The raw wikipedia clickstream dataset, ingested from /databricks-datasets."
+    )
+    def clickstream_raw():
+        return (spark.read.format("json").load(json_path))
+    EOT
+  )
+  language = "PYTHON"
+  path     = "${data.databricks_current_user.me.home}/DLT_Demo"
+}
+
+resource "databricks_pipeline" "this" {
+  name    = "DLT Demo Pipeline (${data.databricks_current_user.me.alphanumeric})"
+  storage = "/test/tf-pipeline"
+  configuration = {
+    key1 = "value1"
+    key2 = "value2"
+  }
+
+  library {
+    notebook {
+      path = databricks_notebook.dlt_demo.id
+    }
+  }
+
+  continuous = false
+  filters {
+    include = ["com.databricks.include"]
+    exclude = ["com.databricks.exclude"]
+  }
+}
+
+resource "databricks_permissions" "dlt_usage" {
+  pipeline_id = databricks_pipeline.this.id
+
+  access_control {
+    group_name       = "users"
+    permission_level = "CAN_VIEW"
+  }
+
+  access_control {
+    group_name       = databricks_group.eng.display_name
+    permission_level = "CAN_MANAGE"
   }
 }
 ```
@@ -429,7 +497,9 @@ resource "databricks_permissions" "password_usage" {
 
 ## Token usage
 
--> **Note** It is required to have at least 1 personal access token in the workspace before you can manage tokens permissions.
+It is required to have at least 1 personal access token in the workspace before you can manage tokens permissions.
+
+!> **Warning** There can be only one `authorization = "tokens"` permissions resource per workspace, otherwise there'll be a permanent configuration drift. After applying changes, users who previously had either `CAN_USE` or `CAN_MANAGE` permission but no longer have either permission have their access to token-based authentication revoked. Their active tokens are immediately deleted (revoked).
 
 Only [possible permission](https://docs.databricks.com/administration-guide/access-control/tokens.html) to assign to non-admin group is `CAN_USE`, where _admins_ `CAN_MANAGE` all tokens:
 
@@ -601,21 +671,31 @@ General Permissions API does not apply to access control for tables and they hav
 Initially in Unity Catalog all users have no access to data, which has to be later assigned through [databricks_grants](grants.md) resource.
 
 ## Argument Reference
+One type argument and at least one access control block argument are required.
 
-Exactly one of the following attributes is required:
+### Type Argument
+Exactly one of the following arguments is required:
 
 - `cluster_id` - [cluster](cluster.md) id
-- `job_id` - [job](job.md) id
-- `directory_id` - [directory](notebook.md) id
-- `directory_path` - path of directory
-- `notebook_id` - ID of [notebook](notebook.md) within workspace
-- `notebook_path` - path of notebook
-- `repo_id` - [repo](repo.md) id
-- `repo_path` - path of databricks repo directory(`/Repos/<username>/...`)
 - `cluster_policy_id` - [cluster policy](cluster_policy.md) id
 - `instance_pool_id` - [instance pool](instance_pool.md) id
+- `job_id` - [job](job.md) id
+- `pipeline_id` - [pipeline](pipeline.md) id
+- `notebook_id` - ID of [notebook](notebook.md) within workspace
+- `notebook_path` - path of notebook
+- `directory_id` - [directory](notebook.md) id
+- `directory_path` - path of directory
+- `repo_id` - [repo](repo.md) id
+- `repo_path` - path of databricks repo directory(`/Repos/<username>/...`)
+- `experiment_id` - [MLflow experiment](mlflow_experiment.md) id
+- `registered_model_id` - [MLflow registered model](mlflow_model.md) id
 - `authorization` - either [`tokens`](https://docs.databricks.com/administration-guide/access-control/tokens.html) or [`passwords`](https://docs.databricks.com/administration-guide/users-groups/single-sign-on/index.html#configure-password-permission).
+- `sql_endpoint_id` - [SQL endpoint](sql_endpoint.md) id
+- `sql_dashboard_id` - [SQL dashboard](sql_dashboard.md) id
+- `sql_query_id` - [SQL query](sql_query.md) id
+- `sql_alert_id` - [SQL alert](https://docs.databricks.com/sql/user/security/access-control/alert-acl.html) id
 
+### Access Control Argument
 One or more `access_control` blocks are required to actually set the permission levels:
 
 ```hcl
@@ -625,13 +705,16 @@ access_control {
 }
 ```
 
-Attributes are:
+Arguments for the `access_control` block are:
 
--> **Note** It is not possible to lower permissions for `admins` or your own user anywhere from `CAN_MANAGE` level, so Databricks Terraform Provider [removes](https://github.com/databrickslabs/terraform-provider-databricks/blob/master/access/resource_permissions.go#L261-L271) those `access_control` blocks automatically. 
+-> **Note** It is not possible to lower permissions for `admins` or your own user anywhere from `CAN_MANAGE` level, so Databricks Terraform Provider [removes](https://github.com/databricks/terraform-provider-databricks/blob/master/access/resource_permissions.go#L261-L271) those `access_control` blocks automatically. 
 
 - `permission_level` - (Required) permission level according to specific resource. See examples above for the reference.
-- `user_name` - (Optional) name of the [user](user.md), which should be used if group name is not used
-- `group_name` - (Optional) name of the [group](group.md), which should be used if the user name is not used. We recommend setting permissions on groups.
+
+Exactly one of the below arguments is required:
+- `user_name` - (Optional) name of the [user](user.md).
+- `service_principal_name` - (Optional) Application ID of the [service_principal](service_principal.md#application_id).
+- `group_name` - (Optional) name of the [group](group.md). We recommend setting permissions on groups.
 
 ## Attribute Reference
 
@@ -646,4 +729,27 @@ The resource permissions can be imported using the object id
 
 ```bash
 $ terraform import databricks_permissions.this /<object type>/<object id>
+```
+
+### Import Example
+Configuration file:
+```hcl
+resource "databricks_mlflow_model" "model" {
+  name        = "example_model"
+  description = "MLflow registered model"
+}
+
+resource "databricks_permissions" "model_usage" {
+  registered_model_id = databricks_mlflow_model.model.registered_model_id
+
+  access_control {
+    group_name       = "users"
+    permission_level = "CAN_READ"
+  }
+}
+```
+
+Import command:
+```bash
+$ terraform import databricks_permissions.model_usage /registered-models/<registered_model_id>
 ```

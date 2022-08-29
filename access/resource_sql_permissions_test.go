@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/databrickslabs/terraform-provider-databricks/clusters"
-	"github.com/databrickslabs/terraform-provider-databricks/common"
-	"github.com/databrickslabs/terraform-provider-databricks/qa"
+	"github.com/databricks/terraform-provider-databricks/clusters"
+	"github.com/databricks/terraform-provider-databricks/common"
+	"github.com/databricks/terraform-provider-databricks/qa"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -52,9 +52,9 @@ func (md mockData) Execute(clusterID, language, commandStr string) common.Comman
 			Summary:    fmt.Sprintf("Query is not mocked: %s", commandStr),
 		}
 	}
-	var x []interface{}
+	var x []any
 	for _, a := range data {
-		var y []interface{}
+		var y []any
 		for _, b := range a {
 			y = append(y, b)
 		}
@@ -162,7 +162,7 @@ var createHighConcurrencyCluster = []qa.HTTPFixture{
 		Method:       "GET",
 		ReuseRequest: true,
 		Resource:     "/api/2.0/clusters/list",
-		Response:     map[string]interface{}{},
+		Response:     map[string]any{},
 	},
 	{
 		Method:       "GET",
@@ -432,4 +432,72 @@ func TestResourceSqlPermissions_Delete(t *testing.T) {
 
 func TestResourceSqlPermissions_CornerCases(t *testing.T) {
 	qa.ResourceCornerCases(t, ResourceSqlPermissions(), qa.CornerCaseID("database/foo"))
+}
+
+func TestResourceSqlPermissions_NoUpdateAnyFile(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		CommandMock: mockData{
+			"SHOW GRANT ON ANY FILE ": {
+				{"users", "SELECT", "ANY_FILE", "None"},
+			},
+		}.toCommandMock(),
+		HCL: `
+		any_file = "true"
+		privilege_assignments {
+			principal = "users"
+			privileges = ["SELECT"]
+		}
+		`,
+		Fixtures: createHighConcurrencyCluster,
+		Resource: ResourceSqlPermissions(),
+		Update:   true,
+		InstanceState: map[string]string{
+			"any_file":                             "true",
+			"privilege_assignments.#":              "1",
+			"privilege_assignments.0.principal":    "users",
+			"privilege_assignments.0.privileges.#": "1",
+			"privilege_assignments.0.privileges.0": "SELECT",
+		},
+		ID: "any file/",
+	}.Apply(t)
+	assert.NoError(t, err, err)
+	assert.Equal(t, 1, d.Get("privilege_assignments.#"))
+	assert.Equal(t, 1, d.Get("privilege_assignments.0.privileges.#"))
+	assert.Equal(t, "users", d.Get("privilege_assignments.0.principal"))
+	assert.Equal(t, "SELECT", d.Get("privilege_assignments.0.privileges.0"))
+	assert.Equal(t, true, d.Get("any_file"))
+}
+
+func TestResourceSqlPermissions_NoUpdateAnonymousFunction(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		CommandMock: mockData{
+			"SHOW GRANT ON ANONYMOUS FUNCTION ": {
+				{"users", "SELECT", "ANONYMOUS_FUNCTION", "None"},
+			},
+		}.toCommandMock(),
+		HCL: `
+		anonymous_function = "true"
+		privilege_assignments {
+			principal = "users"
+			privileges = ["SELECT"]
+		}
+		`,
+		Fixtures: createHighConcurrencyCluster,
+		Resource: ResourceSqlPermissions(),
+		Update:   true,
+		InstanceState: map[string]string{
+			"anonymous_function":                   "true",
+			"privilege_assignments.#":              "1",
+			"privilege_assignments.0.principal":    "users",
+			"privilege_assignments.0.privileges.#": "1",
+			"privilege_assignments.0.privileges.0": "SELECT",
+		},
+		ID: "anonymous function/",
+	}.Apply(t)
+	assert.NoError(t, err, err)
+	assert.Equal(t, 1, d.Get("privilege_assignments.#"))
+	assert.Equal(t, 1, d.Get("privilege_assignments.0.privileges.#"))
+	assert.Equal(t, "users", d.Get("privilege_assignments.0.principal"))
+	assert.Equal(t, "SELECT", d.Get("privilege_assignments.0.privileges.0"))
+	assert.Equal(t, true, d.Get("anonymous_function"))
 }

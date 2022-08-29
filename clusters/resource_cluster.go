@@ -8,8 +8,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
-	"github.com/databrickslabs/terraform-provider-databricks/common"
-	"github.com/databrickslabs/terraform-provider-databricks/libraries"
+	"github.com/databricks/terraform-provider-databricks/common"
+	"github.com/databricks/terraform-provider-databricks/libraries"
 )
 
 // DefaultProvisionTimeout ...
@@ -62,17 +62,13 @@ func resourceClusterSchema() map[string]*schema.Schema {
 		// adds `library` configuration block
 		s["library"] = common.StructToSchema(libraries.ClusterLibraryList{},
 			func(ss map[string]*schema.Schema) map[string]*schema.Schema {
-				ss["library"].Set = func(i interface{}) int {
+				ss["library"].Set = func(i any) int {
 					lib := libraries.NewLibraryFromInstanceState(i)
 					return schema.HashString(lib.String())
 				}
 				return ss
 			})["library"]
 
-		p, err := common.SchemaPath(s, "docker_image", "basic_auth", "password")
-		if err == nil {
-			p.Sensitive = true
-		}
 		s["autotermination_minutes"].Default = 60
 		s["cluster_id"] = &schema.Schema{
 			Type:     schema.TypeString,
@@ -227,7 +223,7 @@ func hasClusterConfigChanged(d *schema.ResourceData) bool {
 	return false
 }
 
-// https://github.com/databrickslabs/terraform-provider-databricks/issues/824
+// https://github.com/databricks/terraform-provider-databricks/issues/824
 func fixInstancePoolChangeIfAny(d *schema.ResourceData, cluster *Cluster) {
 	oldInstancePool, newInstancePool := d.GetChange("instance_pool_id")
 	oldDriverPool, newDriverPool := d.GetChange("driver_instance_pool_id")
@@ -245,6 +241,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, c *commo
 	common.DataToStructPointer(d, clusterSchema, &cluster)
 	var clusterInfo ClusterInfo
 	var err error
+
 	if hasClusterConfigChanged(d) {
 		log.Printf("[DEBUG] Cluster state has changed!")
 		if err := cluster.Validate(); err != nil {
@@ -252,10 +249,68 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, c *commo
 		}
 		cluster.ModifyRequestOnInstancePool()
 		fixInstancePoolChangeIfAny(d, &cluster)
-		clusterInfo, err = clusters.Edit(cluster)
+
+		// We can only call the resize api if the cluster is in the running state
+		// and only the cluster size (ie num_workers OR autoscale) is being changed
+		hasNumWorkersChanged := d.HasChange("num_workers")
+		hasAutoscaleChanged := d.HasChange("autoscale")
+		hasOnlyResizeClusterConfigChanged := true
+		for k := range clusterSchema {
+			if k == "library" ||
+				k == "is_pinned" ||
+				k == "num_workers" ||
+				k == "autoscale" {
+				continue
+			}
+			if d.HasChange(k) {
+				hasOnlyResizeClusterConfigChanged = false
+			}
+		}
+		clusterInfo, err = clusters.Get(clusterID)
 		if err != nil {
 			return err
 		}
+
+		isNumWorkersResizeForNonAutoscalingCluster := hasOnlyResizeClusterConfigChanged &&
+			hasNumWorkersChanged &&
+			!hasAutoscaleChanged &&
+			clusterInfo.State == ClusterStateRunning
+		isAutoScalingToNonAutoscalingResize := hasOnlyResizeClusterConfigChanged &&
+			hasAutoscaleChanged &&
+			hasNumWorkersChanged &&
+			cluster.Autoscale == nil &&
+			clusterInfo.State == ClusterStateRunning
+		isAutoscaleConfigResizeForAutoscalingCluster := hasOnlyResizeClusterConfigChanged &&
+			hasAutoscaleChanged &&
+			!hasNumWorkersChanged &&
+			clusterInfo.State == ClusterStateRunning
+		isNonAutoScalingToAutoscalingResize := hasOnlyResizeClusterConfigChanged &&
+			hasAutoscaleChanged &&
+			hasNumWorkersChanged &&
+			cluster.Autoscale != nil &&
+			clusterInfo.State == ClusterStateRunning
+
+		// We prefer to use the resize API in cases when only the number of
+		// workers is changed because a resizing cluster can still serve queries
+		if isNumWorkersResizeForNonAutoscalingCluster ||
+			isAutoScalingToNonAutoscalingResize {
+			clusterInfo, err = clusters.Resize(ResizeRequest{
+				ClusterID:  clusterID,
+				NumWorkers: cluster.NumWorkers,
+			})
+		} else if isAutoscaleConfigResizeForAutoscalingCluster ||
+			isNonAutoScalingToAutoscalingResize {
+			clusterInfo, err = clusters.Resize(ResizeRequest{
+				ClusterID: clusterID,
+				AutoScale: cluster.Autoscale,
+			})
+		} else {
+			clusterInfo, err = clusters.Edit(cluster)
+		}
+		if err != nil {
+			return err
+		}
+
 	} else {
 		clusterInfo, err = clusters.Get(clusterID)
 		if err != nil {

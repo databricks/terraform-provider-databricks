@@ -3,7 +3,7 @@ package catalog
 import (
 	"testing"
 
-	"github.com/databrickslabs/terraform-provider-databricks/qa"
+	"github.com/databricks/terraform-provider-databricks/qa"
 )
 
 func TestMetastoreAssignmentCornerCases(t *testing.T) {
@@ -17,7 +17,7 @@ func TestMetastoreAssignment_Create(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "PUT",
-				Resource: "/api/2.0/unity-catalog/workspaces/123/metastore",
+				Resource: "/api/2.1/unity-catalog/workspaces/123/metastore",
 				ExpectedRequest: MetastoreAssignment{
 					WorkspaceID:        123,
 					MetastoreID:        "a",
@@ -26,7 +26,7 @@ func TestMetastoreAssignment_Create(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/unity-catalog/metastore_summary",
+				Resource: "/api/2.1/unity-catalog/metastore_summary",
 				Response: MetastoreAssignment{
 					MetastoreID: "a",
 				},

@@ -8,7 +8,7 @@ This resource allows you to manage directories in [Databricks Workpace](https://
 
 ## Example Usage
 
-You can declare Terraform-managed directory by specifying `path` attribute of corresponding directory.
+You can declare a Terraform-managed directory by specifying the `path` attribute of the corresponding directory.
 
 ```hcl
 resource "databricks_directory" "my_custom_directory" {
@@ -21,7 +21,7 @@ resource "databricks_directory" "my_custom_directory" {
 The following arguments are supported:
 
 - `path` - (Required) The absolute path of the directory, beginning with "/", e.g. "/Demo".
-- `delete_recursive` - Wether or not to trigger a recursive delete of this directory and its resources when deleting this on Terraform. Defaults to `false`
+- `delete_recursive` - Whether or not to trigger a recursive delete of this directory and its resources when deleting this on Terraform. Defaults to `false`
 
 ## Attribute Reference
 

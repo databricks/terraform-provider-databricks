@@ -53,7 +53,7 @@ type Network struct {
 	NetworkName      string               `json:"network_name"`
 	VPCID            string               `json:"vpc_id"`
 	SubnetIds        []string             `json:"subnet_ids" tf:"slice_set"`
-	VPCEndpoints     *NetworkVPCEndpoints `json:"vpc_endpoints,omitempty" tf:"computed"`
+	VPCEndpoints     *NetworkVPCEndpoints `json:"vpc_endpoints,omitempty" tf:"computed,force_new"`
 	SecurityGroupIds []string             `json:"security_group_ids" tf:"slice_set"`
 	VPCStatus        string               `json:"vpc_status,omitempty" tf:"computed"`
 	ErrorMessages    []NetworkHealth      `json:"error_messages,omitempty" tf:"computed"`
@@ -82,6 +82,6 @@ type PrivateAccessSettings struct {
 	Region                string   `json:"region"`
 	Status                string   `json:"status,omitempty" tf:"computed"`
 	PublicAccessEnabled   bool     `json:"public_access_enabled,omitempty"`
-	PrivateAccessLevel    string   `json:"private_access_level,omitempty" tf:"default:ANY"`
+	PrivateAccessLevel    string   `json:"private_access_level,omitempty" tf:"default:ACCOUNT"`
 	AllowedVpcEndpointIDS []string `json:"allowed_vpc_endpoint_ids,omitempty"`
 }

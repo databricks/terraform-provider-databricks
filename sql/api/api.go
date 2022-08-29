@@ -38,7 +38,7 @@ func (s stringOrInt) MarshalJSON() ([]byte, error) {
 }
 
 func (s *stringOrInt) UnmarshalJSON(b []byte) error {
-	var tmp interface{}
+	var tmp any
 	err := json.Unmarshal(b, &tmp)
 	if err != nil {
 		return err

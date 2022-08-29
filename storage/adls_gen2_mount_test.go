@@ -4,11 +4,11 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/databrickslabs/terraform-provider-databricks/clusters"
-	"github.com/databrickslabs/terraform-provider-databricks/common"
-	"github.com/databrickslabs/terraform-provider-databricks/internal"
+	"github.com/databricks/terraform-provider-databricks/clusters"
+	"github.com/databricks/terraform-provider-databricks/commands"
+	"github.com/databricks/terraform-provider-databricks/common"
 
-	"github.com/databrickslabs/terraform-provider-databricks/qa"
+	"github.com/databricks/terraform-provider-databricks/qa"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -27,7 +27,7 @@ func TestResourceAdlsGen2Mount_Create(t *testing.T) {
 		},
 		Resource: ResourceAzureAdlsGen2Mount(),
 		CommandMock: func(commandStr string) common.CommandResults {
-			trunc := internal.TrimLeadingWhitespace(commandStr)
+			trunc := commands.TrimLeadingWhitespace(commandStr)
 			t.Logf("Received command:\n%s", trunc)
 			if strings.HasPrefix(trunc, "def safe_mount") {
 				assert.Contains(t, trunc, "abfss://e@test-adls-gen2.dfs.core.windows.net")
@@ -39,7 +39,7 @@ func TestResourceAdlsGen2Mount_Create(t *testing.T) {
 				Data:       "abfss://e@test-adls-gen2.dfs.core.windows.net",
 			}
 		},
-		State: map[string]interface{}{
+		State: map[string]any{
 			"cluster_id":             "this_cluster",
 			"container_name":         "e",
 			"mount_name":             "this_mount",

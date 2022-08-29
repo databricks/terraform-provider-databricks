@@ -4,9 +4,8 @@ RUN apk add jq \
     && apk add go \
     && apk add python3 \
     && apk add make \
-    && go get gotest.tools/gotestsum \
-    && go get honnef.co/go/tools/cmd/staticcheck \
-    && go get github.com/katbyte/terrafmt
+    && go install gotest.tools/gotestsum@latest \
+    && go install honnef.co/go/tools/cmd/staticcheck@latest
 
 RUN mkdir /src \
     && ln -s /root/go/bin/gotestsum /bin/gotestsum \

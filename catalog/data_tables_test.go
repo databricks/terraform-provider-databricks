@@ -3,7 +3,7 @@ package catalog
 import (
 	"testing"
 
-	"github.com/databrickslabs/terraform-provider-databricks/qa"
+	"github.com/databricks/terraform-provider-databricks/qa"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -14,7 +14,7 @@ func TestTablesData(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/unity-catalog/tables/?catalog_name=a&schema_name=b",
+				Resource: "/api/2.1/unity-catalog/tables/?catalog_name=a&schema_name=b",
 				Response: Tables{
 					Tables: []TableInfo{
 						{
@@ -37,14 +37,14 @@ func TestTablesData(t *testing.T) {
 	}.ApplyNoError(t)
 }
 
-// https://github.com/databrickslabs/terraform-provider-databricks/issues/1264
+// https://github.com/databricks/terraform-provider-databricks/issues/1264
 func TestTablesDataIssue1264(t *testing.T) {
 	r := DataSourceTables()
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/unity-catalog/tables/?catalog_name=a&schema_name=b",
+				Resource: "/api/2.1/unity-catalog/tables/?catalog_name=a&schema_name=b",
 				Response: Tables{
 					Tables: []TableInfo{
 						{
@@ -74,7 +74,7 @@ func TestTablesDataIssue1264(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/unity-catalog/tables/?catalog_name=a&schema_name=b",
+				Resource: "/api/2.1/unity-catalog/tables/?catalog_name=a&schema_name=b",
 				Response: Tables{
 					Tables: []TableInfo{
 						{

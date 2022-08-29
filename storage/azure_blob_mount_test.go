@@ -4,11 +4,11 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/databrickslabs/terraform-provider-databricks/clusters"
-	"github.com/databrickslabs/terraform-provider-databricks/common"
-	"github.com/databrickslabs/terraform-provider-databricks/internal"
+	"github.com/databricks/terraform-provider-databricks/clusters"
+	"github.com/databricks/terraform-provider-databricks/commands"
+	"github.com/databricks/terraform-provider-databricks/common"
 
-	"github.com/databrickslabs/terraform-provider-databricks/qa"
+	"github.com/databricks/terraform-provider-databricks/qa"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -27,7 +27,7 @@ func TestResourceAzureBlobMountCreate(t *testing.T) {
 		},
 		Resource: ResourceAzureBlobMount(),
 		CommandMock: func(commandStr string) common.CommandResults {
-			trunc := internal.TrimLeadingWhitespace(commandStr)
+			trunc := commands.TrimLeadingWhitespace(commandStr)
 			t.Logf("Received command:\n%s", trunc)
 
 			if strings.HasPrefix(trunc, "def safe_mount") {
@@ -40,7 +40,7 @@ func TestResourceAzureBlobMountCreate(t *testing.T) {
 				Data:       "wasbs://c@f.blob.core.windows.net/d",
 			}
 		},
-		State: map[string]interface{}{
+		State: map[string]any{
 			"auth_type":            "ACCESS_KEY",
 			"cluster_id":           "b",
 			"container_name":       "c",
@@ -75,7 +75,7 @@ func TestResourceAzureBlobMountCreate_Error(t *testing.T) {
 				Summary:    "Some error",
 			}
 		},
-		State: map[string]interface{}{
+		State: map[string]any{
 			"auth_type":            "ACCESS_KEY",
 			"cluster_id":           "b",
 			"container_name":       "c",
@@ -105,7 +105,7 @@ func TestResourceAzureBlobMountRead(t *testing.T) {
 		},
 		Resource: ResourceAzureBlobMount(),
 		CommandMock: func(commandStr string) common.CommandResults {
-			trunc := internal.TrimLeadingWhitespace(commandStr)
+			trunc := commands.TrimLeadingWhitespace(commandStr)
 			t.Logf("Received command:\n%s", trunc)
 			assert.Contains(t, trunc, "dbutils.fs.mounts()")
 			assert.Contains(t, trunc, `mount.mountPoint == "/mnt/e"`)
@@ -114,7 +114,7 @@ func TestResourceAzureBlobMountRead(t *testing.T) {
 				Data:       "wasbs://c@f.blob.core.windows.net/d",
 			}
 		},
-		State: map[string]interface{}{
+		State: map[string]any{
 			"auth_type":            "ACCESS_KEY",
 			"cluster_id":           "b",
 			"container_name":       "c",
@@ -145,14 +145,14 @@ func TestResourceAzureBlobMountRead_NotFound(t *testing.T) {
 		},
 		Resource: ResourceAzureBlobMount(),
 		CommandMock: func(commandStr string) common.CommandResults {
-			trunc := internal.TrimLeadingWhitespace(commandStr)
+			trunc := commands.TrimLeadingWhitespace(commandStr)
 			t.Logf("Received command:\n%s", trunc)
 			return common.CommandResults{
 				ResultType: "error",
 				Summary:    "Mount not found",
 			}
 		},
-		State: map[string]interface{}{
+		State: map[string]any{
 			"auth_type":            "ACCESS_KEY",
 			"cluster_id":           "b",
 			"container_name":       "c",
@@ -181,14 +181,14 @@ func TestResourceAzureBlobMountRead_Error(t *testing.T) {
 		},
 		Resource: ResourceAzureBlobMount(),
 		CommandMock: func(commandStr string) common.CommandResults {
-			trunc := internal.TrimLeadingWhitespace(commandStr)
+			trunc := commands.TrimLeadingWhitespace(commandStr)
 			t.Logf("Received command:\n%s", trunc)
 			return common.CommandResults{
 				ResultType: "error",
 				Summary:    "Some error",
 			}
 		},
-		State: map[string]interface{}{
+		State: map[string]any{
 			"auth_type":            "ACCESS_KEY",
 			"cluster_id":           "b",
 			"container_name":       "c",
@@ -219,7 +219,7 @@ func TestResourceAzureBlobMountDelete(t *testing.T) {
 		},
 		Resource: ResourceAzureBlobMount(),
 		CommandMock: func(commandStr string) common.CommandResults {
-			trunc := internal.TrimLeadingWhitespace(commandStr)
+			trunc := commands.TrimLeadingWhitespace(commandStr)
 			t.Logf("Received command:\n%s", trunc)
 			assert.Contains(t, trunc, "dbutils.fs.unmount(mount_point)")
 			return common.CommandResults{
@@ -227,7 +227,7 @@ func TestResourceAzureBlobMountDelete(t *testing.T) {
 				Data:       "",
 			}
 		},
-		State: map[string]interface{}{
+		State: map[string]any{
 			"auth_type":            "ACCESS_KEY",
 			"cluster_id":           "b",
 			"container_name":       "c",

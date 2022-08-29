@@ -7,10 +7,10 @@ import (
 	"os"
 	"testing"
 
-	"github.com/databrickslabs/terraform-provider-databricks/common"
-	"github.com/databrickslabs/terraform-provider-databricks/internal/acceptance"
-	"github.com/databrickslabs/terraform-provider-databricks/qa"
-	"github.com/databrickslabs/terraform-provider-databricks/scim"
+	"github.com/databricks/terraform-provider-databricks/common"
+	"github.com/databricks/terraform-provider-databricks/internal/acceptance"
+	"github.com/databricks/terraform-provider-databricks/qa"
+	"github.com/databricks/terraform-provider-databricks/scim"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -29,7 +29,7 @@ func TestAccGroupDataSplitMembers(t *testing.T) {
 	if cloudEnv, ok := os.LookupEnv("CLOUD_ENV"); !ok || cloudEnv != "azure" {
 		t.Skip("This test will only run on Azure. For simplicity.")
 	}
-
+	t.Parallel()
 	ctx := context.Background()
 	client := common.CommonEnvironmentClient()
 
@@ -38,26 +38,26 @@ func TestAccGroupDataSplitMembers(t *testing.T) {
 	spAPI := scim.NewServicePrincipalsAPI(ctx, client)
 
 	user, err := usersAPI.Create(scim.User{
-		UserName: fmt.Sprintf("%s@example.com", qa.RandomName("tfuser-")),
+		UserName: fmt.Sprintf("%s@example.com", qa.RandomName("tf-")),
 	})
 	assert.NoError(t, err)
 	defer usersAPI.Delete(user.ID)
 
 	sp, err := spAPI.Create(scim.User{
 		ApplicationID: createUuid(),
-		DisplayName:   qa.RandomName("spn-"),
+		DisplayName:   qa.RandomName("tf-spn-"),
 	})
 	assert.NoError(t, err)
 	defer spAPI.Delete(sp.ID)
 
 	childGroup, err := groupsAPI.Create(scim.Group{
-		DisplayName: qa.RandomName("child-"),
+		DisplayName: qa.RandomName("tf-child-"),
 	})
 	assert.NoError(t, err)
 	defer groupsAPI.Delete(childGroup.ID)
 
 	parentGroup, err := groupsAPI.Create(scim.Group{
-		DisplayName: qa.RandomName("parent-"),
+		DisplayName: qa.RandomName("tf-parent-"),
 		Members: []scim.ComplexValue{
 			{Value: user.ID},
 			{Value: sp.ID},

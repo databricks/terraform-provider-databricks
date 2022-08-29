@@ -10,7 +10,7 @@ import (
 // DataSourceNotebookPaths ...
 func DataSourceNotebookPaths() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+		ReadContext: func(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
 			path := d.Get("path").(string)
 			recursive := d.Get("recursive").(bool)
 			notebookList, err := NewNotebooksAPI(ctx, m).List(path, recursive)

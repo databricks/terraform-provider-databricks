@@ -8,10 +8,11 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
-	"github.com/databrickslabs/terraform-provider-databricks/clusters"
-	"github.com/databrickslabs/terraform-provider-databricks/common"
-	"github.com/databrickslabs/terraform-provider-databricks/libraries"
+	"github.com/databricks/terraform-provider-databricks/clusters"
+	"github.com/databricks/terraform-provider-databricks/common"
+	"github.com/databricks/terraform-provider-databricks/libraries"
 )
 
 // DefaultTimeout is the default amount of time that Terraform will wait when creating, updating and deleting pipelines.
@@ -27,10 +28,15 @@ type pipelineCluster struct {
 	NumWorkers int32               `json:"num_workers,omitempty" tf:"group:size"`
 	Autoscale  *clusters.AutoScale `json:"autoscale,omitempty" tf:"group:size"`
 
-	NodeTypeID       string                  `json:"node_type_id,omitempty" tf:"group:node_type,computed"`
-	DriverNodeTypeID string                  `json:"driver_node_type_id,omitempty" tf:"conflicts:instance_pool_id,computed"`
-	InstancePoolID   string                  `json:"instance_pool_id,omitempty" tf:"group:node_type"`
-	AwsAttributes    *clusters.AwsAttributes `json:"aws_attributes,omitempty" tf:"conflicts:instance_pool_id"`
+	NodeTypeID           string                  `json:"node_type_id,omitempty" tf:"group:node_type,computed"`
+	DriverNodeTypeID     string                  `json:"driver_node_type_id,omitempty" tf:"computed"`
+	InstancePoolID       string                  `json:"instance_pool_id,omitempty" tf:"group:node_type"`
+	DriverInstancePoolID string                  `json:"driver_instance_pool_id,omitempty"`
+	AwsAttributes        *clusters.AwsAttributes `json:"aws_attributes,omitempty"`
+	GcpAttributes        *clusters.GcpAttributes `json:"gcp_attributes,omitempty"`
+
+	PolicyID                 string `json:"policy_id,omitempty"`
+	ApplyPolicyDefaultValues bool   `json:"apply_policy_default_values,omitempty"`
 
 	SparkConf    map[string]string `json:"spark_conf,omitempty"`
 	SparkEnvVars map[string]string `json:"spark_env_vars,omitempty"`
@@ -41,15 +47,15 @@ type pipelineCluster struct {
 	ClusterLogConf *clusters.StorageInfo            `json:"cluster_log_conf,omitempty"`
 }
 
-type notebookLibrary struct {
+type NotebookLibrary struct {
 	Path string `json:"path"`
 }
 
-type pipelineLibrary struct {
+type PipelineLibrary struct {
 	Jar      string           `json:"jar,omitempty"`
 	Maven    *libraries.Maven `json:"maven,omitempty"`
 	Whl      string           `json:"whl,omitempty"`
-	Notebook *notebookLibrary `json:"notebook,omitempty"`
+	Notebook *NotebookLibrary `json:"notebook,omitempty"`
 }
 
 type filters struct {
@@ -57,17 +63,21 @@ type filters struct {
 	Exclude []string `json:"exclude,omitempty"`
 }
 
-type pipelineSpec struct {
+type PipelineSpec struct {
 	ID                  string            `json:"id,omitempty" tf:"computed"`
 	Name                string            `json:"name,omitempty"`
-	Storage             string            `json:"storage,omitempty"`
+	Storage             string            `json:"storage,omitempty" tf:"force_new"`
 	Configuration       map[string]string `json:"configuration,omitempty"`
-	Clusters            []pipelineCluster `json:"clusters,omitempty" tf:"slice_set,alias:cluster"`
-	Libraries           []pipelineLibrary `json:"libraries,omitempty" tf:"slice_set,alias:library"`
-	Filters             *filters          `json:"filters"`
+	Clusters            []pipelineCluster `json:"clusters,omitempty" tf:"alias:cluster"`
+	Libraries           []PipelineLibrary `json:"libraries,omitempty" tf:"slice_set,alias:library"`
+	Filters             *filters          `json:"filters,omitempty"`
 	Continuous          bool              `json:"continuous,omitempty"`
+	Development         bool              `json:"development,omitempty"`
 	AllowDuplicateNames bool              `json:"allow_duplicate_names,omitempty"`
 	Target              string            `json:"target,omitempty"`
+	Photon              bool              `json:"photon,omitempty"`
+	Edition             string            `json:"edition,omitempty" tf:"suppress_diff,default:advanced"`
+	Channel             string            `json:"channel,omitempty" tf:"suppress_diff,default:CURRENT"`
 }
 
 type createPipelineResponse struct {
@@ -99,26 +109,50 @@ const (
 	HealthStatusUnhealthy PipelineHealthStatus = "UNHEALTHY"
 )
 
-type pipelineInfo struct {
-	PipelineID string                `json:"pipeline_id"`
-	Spec       *pipelineSpec         `json:"spec"`
-	State      *PipelineState        `json:"state"`
-	Cause      string                `json:"cause"`
-	ClusterID  string                `json:"cluster_id"`
-	Name       string                `json:"name"`
-	Health     *PipelineHealthStatus `json:"health"`
+type PipelineInfo struct {
+	PipelineID      string                `json:"pipeline_id"`
+	Spec            *PipelineSpec         `json:"spec"`
+	State           *PipelineState        `json:"state"`
+	Cause           string                `json:"cause"`
+	ClusterID       string                `json:"cluster_id"`
+	Name            string                `json:"name"`
+	Health          *PipelineHealthStatus `json:"health"`
+	CreatorUserName string                `json:"creator_user_name"`
 }
 
-type pipelinesAPI struct {
+type PipelineUpdateStateInfo struct {
+	UpdateID     string         `json:"update_id"`
+	State        *PipelineState `json:"state"`
+	CreationTime string         `json:"creation_time"`
+}
+
+type PipelineStateInfo struct {
+	PipelineID      string                    `json:"pipeline_id"`
+	State           *PipelineState            `json:"state"`
+	ClusterID       string                    `json:"cluster_id"`
+	Name            string                    `json:"name"`
+	Health          *PipelineHealthStatus     `json:"health"`
+	CreatorUserName string                    `json:"creator_user_name"`
+	RunAsUserName   string                    `json:"run_as_user_name"`
+	LatestUpdates   []PipelineUpdateStateInfo `json:"latest_updates,omitempty"`
+}
+
+type PipelineListResponse struct {
+	Statuses      []PipelineStateInfo `json:"statuses"`
+	NextPageToken string              `json:"next_page_token,omitempty"`
+	PrevPageToken string              `json:"prev_page_token,omitempty"`
+}
+
+type PipelinesAPI struct {
 	client *common.DatabricksClient
 	ctx    context.Context
 }
 
-func newPipelinesAPI(ctx context.Context, m interface{}) pipelinesAPI {
-	return pipelinesAPI{m.(*common.DatabricksClient), ctx}
+func NewPipelinesAPI(ctx context.Context, m any) PipelinesAPI {
+	return PipelinesAPI{m.(*common.DatabricksClient), ctx}
 }
 
-func (a pipelinesAPI) create(s pipelineSpec, timeout time.Duration) (string, error) {
+func (a PipelinesAPI) Create(s PipelineSpec, timeout time.Duration) (string, error) {
 	var resp createPipelineResponse
 	err := a.client.Post(a.ctx, "/pipelines", s, &resp)
 	if err != nil {
@@ -128,7 +162,7 @@ func (a pipelinesAPI) create(s pipelineSpec, timeout time.Duration) (string, err
 	err = a.waitForState(id, timeout, StateRunning)
 	if err != nil {
 		log.Printf("[INFO] Pipeline creation failed, attempting to clean up pipeline %s", id)
-		err2 := a.delete(id, timeout)
+		err2 := a.Delete(id, timeout)
 		if err2 != nil {
 			log.Printf("[WARN] Unable to delete pipeline %s; this resource needs to be manually cleaned up", id)
 			return "", fmt.Errorf("multiple errors occurred when creating pipeline. Error while waiting for creation: \"%v\"; error while attempting to clean up failed pipeline: \"%v\"", err, err2)
@@ -139,12 +173,12 @@ func (a pipelinesAPI) create(s pipelineSpec, timeout time.Duration) (string, err
 	return id, nil
 }
 
-func (a pipelinesAPI) read(id string) (p pipelineInfo, err error) {
+func (a PipelinesAPI) Read(id string) (p PipelineInfo, err error) {
 	err = a.client.Get(a.ctx, "/pipelines/"+id, nil, &p)
 	return
 }
 
-func (a pipelinesAPI) update(id string, s pipelineSpec, timeout time.Duration) error {
+func (a PipelinesAPI) Update(id string, s PipelineSpec, timeout time.Duration) error {
 	err := a.client.Put(a.ctx, "/pipelines/"+id, s)
 	if err != nil {
 		return err
@@ -152,14 +186,14 @@ func (a pipelinesAPI) update(id string, s pipelineSpec, timeout time.Duration) e
 	return a.waitForState(id, timeout, StateRunning)
 }
 
-func (a pipelinesAPI) delete(id string, timeout time.Duration) error {
+func (a PipelinesAPI) Delete(id string, timeout time.Duration) error {
 	err := a.client.Delete(a.ctx, "/pipelines/"+id, map[string]string{})
 	if err != nil {
 		return err
 	}
 	return resource.RetryContext(a.ctx, timeout,
 		func() *resource.RetryError {
-			i, err := a.read(id)
+			i, err := a.Read(id)
 			if err != nil {
 				if common.IsMissing(err) {
 					return nil
@@ -172,10 +206,34 @@ func (a pipelinesAPI) delete(id string, timeout time.Duration) error {
 		})
 }
 
-func (a pipelinesAPI) waitForState(id string, timeout time.Duration, desiredState PipelineState) error {
+// List returns a list of the DLT pipelines. List could be filtered by name
+func (a PipelinesAPI) List(pageSize int, filter string) ([]PipelineStateInfo, error) {
+	payload := map[string]any{"max_results": pageSize}
+	if filter != "" {
+		payload["filter"] = filter
+	}
+	result := []PipelineStateInfo{}
+
+	for {
+		var resp PipelineListResponse
+		err := a.client.Get(a.ctx, "/pipelines", payload, &resp)
+		if err != nil {
+			return []PipelineStateInfo{}, err
+		}
+		result = append(result, resp.Statuses...)
+		if resp.NextPageToken == "" {
+			break
+		}
+		payload["page_token"] = resp.NextPageToken
+	}
+
+	return result, nil
+}
+
+func (a PipelinesAPI) waitForState(id string, timeout time.Duration, desiredState PipelineState) error {
 	return resource.RetryContext(a.ctx, timeout,
 		func() *resource.RetryError {
-			i, err := a.read(id)
+			i, err := a.Read(id)
 			if err != nil {
 				return resource.NonRetryableError(err)
 			}
@@ -205,32 +263,40 @@ func adjustPipelineResourceSchema(m map[string]*schema.Schema) map[string]*schem
 
 	awsAttributes, _ := clustersSchema["aws_attributes"].Elem.(*schema.Resource)
 	awsAttributesSchema := awsAttributes.Schema
-	delete(awsAttributesSchema, "first_on_demand")
 	delete(awsAttributesSchema, "availability")
 	delete(awsAttributesSchema, "spot_bid_price_percent")
 	delete(awsAttributesSchema, "ebs_volume_type")
 	delete(awsAttributesSchema, "ebs_volume_count")
 	delete(awsAttributesSchema, "ebs_volume_size")
 
+	gcpAttributes, _ := clustersSchema["gcp_attributes"].Elem.(*schema.Resource)
+	gcpAttributesSchema := gcpAttributes.Schema
+	delete(gcpAttributesSchema, "use_preemptible_executors")
+	delete(gcpAttributesSchema, "availability")
+	delete(gcpAttributesSchema, "boot_disk_size")
+	delete(gcpAttributesSchema, "zone_id")
+
 	m["library"].MinItems = 1
 	m["url"] = &schema.Schema{
 		Type:     schema.TypeString,
 		Computed: true,
 	}
+	m["channel"].ValidateFunc = validation.StringInSlice([]string{"current", "preview"}, true)
+	m["edition"].ValidateFunc = validation.StringInSlice([]string{"pro", "core", "advanced"}, true)
 
 	return m
 }
 
 // ResourcePipeline defines the Terraform resource for pipelines.
 func ResourcePipeline() *schema.Resource {
-	var pipelineSchema = common.StructToSchema(pipelineSpec{}, adjustPipelineResourceSchema)
+	var pipelineSchema = common.StructToSchema(PipelineSpec{}, adjustPipelineResourceSchema)
 	return common.Resource{
 		Schema: pipelineSchema,
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			var s pipelineSpec
+			var s PipelineSpec
 			common.DataToStructPointer(d, pipelineSchema, &s)
-			api := newPipelinesAPI(ctx, c)
-			id, err := api.create(s, d.Timeout(schema.TimeoutCreate))
+			api := NewPipelinesAPI(ctx, c)
+			id, err := api.Create(s, d.Timeout(schema.TimeoutCreate))
 			if err != nil {
 				return err
 			}
@@ -239,7 +305,7 @@ func ResourcePipeline() *schema.Resource {
 			return nil
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			i, err := newPipelinesAPI(ctx, c).read(d.Id())
+			i, err := NewPipelinesAPI(ctx, c).Read(d.Id())
 			if err != nil {
 				return err
 			}
@@ -249,13 +315,13 @@ func ResourcePipeline() *schema.Resource {
 			return common.StructToData(*i.Spec, pipelineSchema, d)
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			var s pipelineSpec
+			var s PipelineSpec
 			common.DataToStructPointer(d, pipelineSchema, &s)
-			return newPipelinesAPI(ctx, c).update(d.Id(), s, d.Timeout(schema.TimeoutUpdate))
+			return NewPipelinesAPI(ctx, c).Update(d.Id(), s, d.Timeout(schema.TimeoutUpdate))
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			api := newPipelinesAPI(ctx, c)
-			return api.delete(d.Id(), d.Timeout(schema.TimeoutDelete))
+			api := NewPipelinesAPI(ctx, c)
+			return api.Delete(d.Id(), d.Timeout(schema.TimeoutDelete))
 		},
 		Timeouts: &schema.ResourceTimeout{
 			Default: schema.DefaultTimeout(DefaultTimeout),

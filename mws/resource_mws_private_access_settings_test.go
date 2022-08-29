@@ -50,7 +50,7 @@ func TestResourcePASCreate(t *testing.T) {
 					AccountID:          "abc",
 					Region:             "ar",
 					PasName:            "pas_name",
-					PrivateAccessLevel: "ANY",
+					PrivateAccessLevel: "ACCOUNT",
 				},
 				Response: PrivateAccessSettings{
 					PasID: "pas_id",

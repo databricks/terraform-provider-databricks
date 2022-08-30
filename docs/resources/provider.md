@@ -24,6 +24,7 @@ resource "databricks_provider" "dbprovider" {
         "expirationTime":"expiration-time"})
     }
   )
+}
 ```
 
 ## Argument Reference
